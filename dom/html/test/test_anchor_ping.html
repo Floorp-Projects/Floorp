@@ -227,18 +227,18 @@ function createFromPathHandler(server, path, href, lazyPing) {
 // page we can use as the href attribute for links. It returns a promise that
 // will be resolved once the page has been requested.
 function createToPathHandler(server, path) {
-  let deferred = Promise.defer();
+  return new Promise(resolve => {
 
-  server.registerPathHandler(path, function (request, response) {
-    response.setStatusLine(request.httpVersion, 200, "OK");
-    response.setHeader("Content-Type", "text/html;charset=utf-8", false);
-    response.setHeader("Cache-Control", "no-cache", false);
-    response.write("OK");
+    server.registerPathHandler(path, function (request, response) {
+      response.setStatusLine(request.httpVersion, 200, "OK");
+      response.setHeader("Content-Type", "text/html;charset=utf-8", false);
+      response.setHeader("Cache-Control", "no-cache", false);
+      response.write("OK");
 
-    deferred.resolve();
+      resolve();
+    });
+
   });
-
-  return deferred.promise;
 }
 
 // Register multiple path handlers for the given server that will receive
@@ -255,47 +255,47 @@ function createPingPathHandlers(server, paths, lazyHeaders) {
 // are given as expected. It returns a promise that will be resolved once the
 // ping has been received.
 function createPingPathHandler(server, path, lazyHeaders) {
-  let deferred = Promise.defer();
+  return new Promise(resolve => {
 
-  server.registerPathHandler(path, function (request, response) {
-    let headers = lazyHeaders();
+    server.registerPathHandler(path, function (request, response) {
+      let headers = lazyHeaders();
 
-    is(request.method, "POST", "correct http method used");
-    is(request.getHeader("Ping-To"), headers.to, "valid ping-to header");
+      is(request.method, "POST", "correct http method used");
+      is(request.getHeader("Ping-To"), headers.to, "valid ping-to header");
 
-    if ("from" in headers) {
-      is(request.getHeader("Ping-From"), headers.from, "valid ping-from header");
-    } else {
-      ok(!request.hasHeader("Ping-From"), "no ping-from header");
-    }
+      if ("from" in headers) {
+        is(request.getHeader("Ping-From"), headers.from, "valid ping-from header");
+      } else {
+        ok(!request.hasHeader("Ping-From"), "no ping-from header");
+      }
 
-    if ("referrer" in headers) {
-      is(request.getHeader("Referer"), headers.referrer, "valid referer header");
-    } else {
-      ok(!request.hasHeader("Referer"), "no referer header");
-    }
+      if ("referrer" in headers) {
+        is(request.getHeader("Referer"), headers.referrer, "valid referer header");
+      } else {
+        ok(!request.hasHeader("Referer"), "no referer header");
+      }
 
-    let bs = request.bodyInputStream;
-    let body = NetUtil.readInputStreamToString(bs, bs.available());
-    is(body, "PING", "correct body sent");
+      let bs = request.bodyInputStream;
+      let body = NetUtil.readInputStreamToString(bs, bs.available());
+      is(body, "PING", "correct body sent");
 
-    response.setStatusLine(request.httpVersion, 200, "OK");
-    response.setHeader("Content-Type", "text/html;charset=utf-8", false);
-    response.setHeader("Cache-Control", "no-cache", false);
-    response.write("OK");
+      response.setStatusLine(request.httpVersion, 200, "OK");
+      response.setHeader("Content-Type", "text/html;charset=utf-8", false);
+      response.setHeader("Cache-Control", "no-cache", false);
+      response.write("OK");
 
-    deferred.resolve();
+      resolve();
+    });
+
   });
-
-  return deferred.promise;
 }
 
 // Returns a promise that is resolved when the given http server instance has
 // been stopped.
 function stopServer(server) {
-  let deferred = Promise.defer();
-  server.stop(deferred.resolve);
-  return deferred.promise;
+  return new Promise(resolve => {
+    server.stop(resolve);
+  });
 }
 
   </script>

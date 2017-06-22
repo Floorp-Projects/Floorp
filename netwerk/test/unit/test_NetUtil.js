@@ -170,9 +170,9 @@ function test_async_copy()
         let TEST_DATA = "[" + make_sample(text) + "]";
         let source = make_input(bufferedInput, TEST_DATA);
         let {file, sink} = make_output(bufferedOutput);
-        let deferred = Promise.defer();
-        NetUtil.asyncCopy(source, sink, deferred.resolve);
-        let result = await deferred.promise;
+        let result = await new Promise(resolve => {
+          NetUtil.asyncCopy(source, sink, resolve);
+        });
 
         // Make sure the copy was successful!
         if (!Components.isSuccessCode(result)) {

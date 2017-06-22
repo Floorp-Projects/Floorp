@@ -22,22 +22,22 @@ var _pendingEmulatorCmdCount = 0;
  * @return A deferred promise.
  */
 function runEmulatorCmdSafe(aCommand) {
-  let deferred = Promise.defer();
+  return new Promise((resolve, reject) => {
 
-  ++_pendingEmulatorCmdCount;
-  runEmulatorCmd(aCommand, function(aResult) {
-    --_pendingEmulatorCmdCount;
+    ++_pendingEmulatorCmdCount;
+    runEmulatorCmd(aCommand, function(aResult) {
+      --_pendingEmulatorCmdCount;
 
-    ok(true, "Emulator response: " + JSON.stringify(aResult));
-    if (Array.isArray(aResult) &&
-        aResult[aResult.length - 1] === "OK") {
-      deferred.resolve(aResult);
-    } else {
-      deferred.reject(aResult);
-    }
+      ok(true, "Emulator response: " + JSON.stringify(aResult));
+      if (Array.isArray(aResult) &&
+          aResult[aResult.length - 1] === "OK") {
+        resolve(aResult);
+      } else {
+        reject(aResult);
+      }
+    });
+
   });
-
-  return deferred.promise;
 }
 
 /**
@@ -100,14 +100,14 @@ function setEmulatorOrientationValues(aAzimuth, aPitch, aRoll) {
  * @return A deferred promise.
  */
 function waitForWindowEvent(aEventName) {
-  let deferred = Promise.defer();
+  return new Promise(resolve => {
 
-  window.addEventListener(aEventName, function(aEvent) {
-    ok(true, "Window event '" + aEventName + "' got.");
-    deferred.resolve(aEvent);
-  }, {once: true});
+    window.addEventListener(aEventName, function(aEvent) {
+      ok(true, "Window event '" + aEventName + "' got.");
+      resolve(aEvent);
+    }, {once: true});
 
-  return deferred.promise;
+  });
 }
 
 /**
