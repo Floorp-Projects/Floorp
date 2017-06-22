@@ -627,9 +627,9 @@ var gDevToolsBrowser = exports.gDevToolsBrowser = {
       let utils = window.QueryInterface(Ci.nsIInterfaceRequestor)
                          .getInterface(Ci.nsIDOMWindowUtils);
       utils.enterModalState();
-      while (!setupFinished) {
-        tm.currentThread.processNextEvent(true);
-      }
+      tm.spinEventLoopUntil(() => {
+        return setupFinished;
+      });
       utils.leaveModalState();
     };
 

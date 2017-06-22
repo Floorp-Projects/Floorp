@@ -24,14 +24,18 @@ treecol {
 
 #engineList treechildren::-moz-tree-image(engineShown, checked),
 #blocklistsTree treechildren::-moz-tree-image(selectionCol, checked) {
-  list-style-image: url("chrome://global/skin/in-content/check.svg#check");
+  list-style-image: url("chrome://global/skin/in-content/check.svg");
+  -moz-context-properties: fill, stroke;
+  fill: #2292d0;
+  stroke: none;
   width: 21px;
   height: 21px;
 }
 
 #engineList treechildren::-moz-tree-image(engineShown, checked, selected),
 #blocklistsTree treechildren::-moz-tree-image(selectionCol, checked, selected) {
-  list-style-image: url("chrome://global/skin/in-content/check.svg#check-inverted");
+  fill: white;
+  stroke: #0095dd;
 }
 
 #engineList treechildren::-moz-tree-row,

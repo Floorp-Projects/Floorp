@@ -37,6 +37,7 @@
 #include "xpcpublic.h"
 #include "nsContentUtils.h"
 #include "nsXULAppAPI.h"
+#include "GeckoProfiler.h"
 #include "WrapperFactory.h"
 
 #include "AutoMemMap.h"
@@ -359,6 +360,10 @@ mozJSComponentLoader::LoadModule(FileLocation& aFile)
         if (NS_FAILED(rv))
             return nullptr;
     }
+
+    PROFILER_LABEL_DYNAMIC("mozJSComponentLoader", "LoadModule",
+                           js::ProfileEntry::Category::OTHER,
+                           spec.get());
 
     ModuleEntry* mod;
     if (mModules.Get(spec, &mod))

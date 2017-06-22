@@ -10097,6 +10097,17 @@
     "kind": "count",
     "description": "Reports the command name used in GCLI e.g. 'screenshot'"
   },
+  "DEVTOOLS_NUMBER_OF_CSS_GRIDS_IN_A_PAGE": {
+    "record_in_processes": ["main", "content"],
+    "alert_emails": ["dev-developer-tools@lists.mozilla.org"],
+    "expires_in_version": "never",
+    "kind": "linear",
+    "high": 30,
+    "n_buckets": 29,
+    "bug_numbers": [1373483],
+    "description": "On page load, record the number of CSS Grid elements present on a page when the DevTools is open",
+    "releaseChannelCollection": "opt-out"
+  },
   "VIEW_SOURCE_IN_BROWSER_OPENED_BOOLEAN": {
     "record_in_processes": ["main", "content"],
     "alert_emails": ["mozilla-dev-developer-tools@lists.mozilla.org", "jryans@mozilla.com"],

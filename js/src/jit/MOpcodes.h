@@ -294,12 +294,12 @@ namespace jit {
     _(CheckIsCallable)                                                      \
     _(CheckObjCoercible)                                                    \
     _(DebugCheckSelfHosted)                                                 \
-    _(AsmJSNeg)                                                             \
     _(AsmJSLoadHeap)                                                        \
     _(AsmJSStoreHeap)                                                       \
     _(AsmJSCompareExchangeHeap)                                             \
     _(AsmJSAtomicExchangeHeap)                                              \
     _(AsmJSAtomicBinopHeap)                                                 \
+    _(WasmNeg)                                                              \
     _(WasmBoundsCheck)                                                      \
     _(WasmLoadTls)                                                          \
     _(WasmAddOffset)                                                        \

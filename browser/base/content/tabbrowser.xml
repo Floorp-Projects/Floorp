@@ -1111,7 +1111,8 @@
               oldBrowser.docShellIsActive = false;
               newBrowser.setAttribute("primary", "true");
               newBrowser.docShellIsActive =
-                (window.windowState != window.STATE_MINIMIZED);
+                (window.windowState != window.STATE_MINIMIZED &&
+                 !window.isFullyOccluded);
             }
 
             var updateBlockedPopups = false;
@@ -3885,7 +3886,8 @@
               return this._switcher.shouldActivateDocShell(aBrowser);
             }
             return (aBrowser == this.selectedBrowser &&
-                    window.windowState != window.STATE_MINIMIZED) ||
+                    window.windowState != window.STATE_MINIMIZED &&
+                    !window.isFullyOccluded) ||
                    this._printPreviewBrowsers.has(aBrowser);
           ]]>
         </body>
@@ -4035,7 +4037,7 @@
               let browser = tab.linkedBrowser;
               let {tabParent} = browser.QueryInterface(Ci.nsIFrameLoaderOwner).frameLoader;
               if (state == this.STATE_LOADING) {
-                this.assert(!this.minimized);
+                this.assert(!this.minimizedOrFullyOccluded);
                 browser.docShellIsActive = true;
                 if (!tabParent) {
                   this.onLayersReady(browser);
@@ -4061,8 +4063,9 @@
               }
             },
 
-            get minimized() {
-              return window.windowState == window.STATE_MINIMIZED;
+            get minimizedOrFullyOccluded() {
+              return window.windowState == window.STATE_MINIMIZED ||
+                     window.isFullyOccluded;
             },
 
             init() {
@@ -4078,6 +4081,7 @@
               window.addEventListener("MozLayerTreeCleared", this);
               window.addEventListener("TabRemotenessChange", this);
               window.addEventListener("sizemodechange", this);
+              window.addEventListener("occlusionstatechange", this);
               window.addEventListener("SwapDocShells", this, true);
               window.addEventListener("EndSwapDocShells", this, true);
 
@@ -4086,7 +4090,7 @@
               let tabIsLoaded = !browser.isRemoteBrowser ||
                                 browser.frameLoader.tabParent.hasPresented;
 
-              if (!this.minimized) {
+              if (!this.minimizedOrFullyOccluded) {
                 this.log("Initial tab is loaded?: " + tabIsLoaded);
                 this.setTabState(tab, tabIsLoaded ? this.STATE_LOADED
                                                   : this.STATE_LOADING);
@@ -4108,6 +4112,7 @@
               window.removeEventListener("MozLayerTreeCleared", this);
               window.removeEventListener("TabRemotenessChange", this);
               window.removeEventListener("sizemodechange", this);
+              window.removeEventListener("occlusionstatechange", this);
               window.removeEventListener("SwapDocShells", this, true);
               window.removeEventListener("EndSwapDocShells", this, true);
 
@@ -4129,7 +4134,8 @@
               this.assert(!this.loadTimer);
               this.assert(!this.loadingTab);
               this.assert(this.lastVisibleTab === this.requestedTab);
-              this.assert(this.minimized || this.getTabState(this.requestedTab) == this.STATE_LOADED);
+              this.assert(this.minimizedOrFullyOccluded ||
+                          this.getTabState(this.requestedTab) == this.STATE_LOADED);
 
               this.destroy();
 
@@ -4182,7 +4188,7 @@
                   requestedBrowser.currentURI.spec != "about:blank";
 
                 let fl = requestedBrowser.frameLoader;
-                shouldBeBlank = !this.minimized &&
+                shouldBeBlank = !this.minimizedOrFullyOccluded &&
                                 (!fl.tabParent ||
                                  (!hasSufficientlyLoaded && !fl.tabParent.hasPresented));
               }
@@ -4218,7 +4224,7 @@
 
               // Show or hide the spinner as needed.
               let needSpinner = this.getTabState(showTab) != this.STATE_LOADED &&
-                                !this.minimized &&
+                                !this.minimizedOrFullyOccluded &&
                                 !shouldBeBlank;
 
               if (!needSpinner && this.spinnerTab) {
@@ -4280,7 +4286,7 @@
             // We've decided to try to load requestedTab.
             loadRequestedTab() {
               this.assert(!this.loadTimer);
-              this.assert(!this.minimized);
+              this.assert(!this.minimizedOrFullyOccluded);
 
               // loadingTab can be non-null here if we timed out loading the current tab.
               // In that case we just overwrite it with a different tab; it's had its chance.
@@ -4349,7 +4355,7 @@
 
               // If we're not loading anything, try loading the requested tab.
               let requestedState = this.getTabState(this.requestedTab);
-              if (!this.loadTimer && !this.minimized &&
+              if (!this.loadTimer && !this.minimizedOrFullyOccluded &&
                   (requestedState == this.STATE_UNLOADED ||
                    requestedState == this.STATE_UNLOADING)) {
                 this.loadRequestedTab();
@@ -4504,8 +4510,8 @@
               }
             },
 
-            onSizeModeChange() {
-              if (this.minimized) {
+            onSizeModeOrOcclusionStateChange() {
+              if (this.minimizedOrFullyOccluded) {
                 for (let [tab, state] of this.tabState) {
                   // Skip print preview browsers since they shouldn't affect tab switching.
                   if (this.tabbrowser._printPreviewBrowsers.has(tab.linkedBrowser)) {
@@ -4639,8 +4645,9 @@
                 this.onLayersCleared(event.originalTarget);
               } else if (event.type == "TabRemotenessChange") {
                 this.onRemotenessChange(event.target);
-              } else if (event.type == "sizemodechange") {
-                this.onSizeModeChange();
+              } else if (event.type == "sizemodechange" ||
+                         event.type == "occlusionstatechange") {
+                this.onSizeModeOrOcclusionStateChange();
               } else if (event.type == "SwapDocShells") {
                 this.onSwapDocShells(event.originalTarget, event.detail);
               } else if (event.type == "EndSwapDocShells") {
@@ -5115,8 +5122,10 @@
               this._handleKeyPressEventMac(aEvent);
               break;
             case "sizemodechange":
+            case "occlusionstatechange":
               if (aEvent.target == window && !this._switcher) {
-                this.mCurrentBrowser.preserveLayers(window.windowState == window.STATE_MINIMIZED);
+                this.mCurrentBrowser.preserveLayers(
+                  window.windowState == window.STATE_MINIMIZED || window.isFullyOccluded);
                 this.mCurrentBrowser.docShellIsActive = this.shouldActivateDocShell(this.mCurrentBrowser);
               }
               break;
@@ -5343,6 +5352,7 @@
             els.addSystemEventListener(document, "keypress", this, false);
           }
           window.addEventListener("sizemodechange", this);
+          window.addEventListener("occlusionstatechange", this);
 
           var uniqueId = this._generateUniquePanelID();
           this.mPanelContainer.childNodes[0].id = uniqueId;
@@ -5466,6 +5476,7 @@
             els.removeSystemEventListener(document, "keypress", this, false);
           }
           window.removeEventListener("sizemodechange", this);
+          window.removeEventListener("occlusionstatechange", this);
 
           if (gMultiProcessBrowser) {
             let messageManager = window.getGroupMessageManager("browsers");

@@ -165,16 +165,13 @@ public:
   virtual mozilla::ipc::IPCResult
   RecvSetHasBeforeUnload(const bool& aHasBeforeUnload) override;
 
-  virtual mozilla::ipc::IPCResult RecvBrowserFrameOpenWindow(PBrowserParent* aOpener,
-                                                             PRenderFrameParent* aRenderFrame,
-                                                             const nsString& aURL,
-                                                             const nsString& aName,
-                                                             const nsString& aFeatures,
-                                                             bool* aOutWindowOpened,
-                                                             TextureFactoryIdentifier* aTextureFactoryIdentifier,
-                                                             uint64_t* aLayersId,
-                                                             CompositorOptions* aCompositorOptions,
-                                                             uint32_t* aMaxTouchPoints) override;
+  virtual mozilla::ipc::IPCResult
+  RecvBrowserFrameOpenWindow(PBrowserParent* aOpener,
+                             PRenderFrameParent* aRenderFrame,
+                             const nsString& aURL,
+                             const nsString& aName,
+                             const nsString& aFeatures,
+                             BrowserFrameOpenWindowResolver&& aResolve) override;
 
   virtual mozilla::ipc::IPCResult
   RecvSyncMessage(const nsString& aMessage,
@@ -307,8 +304,6 @@ public:
   virtual mozilla::ipc::IPCResult RecvGetDefaultScale(double* aValue) override;
 
   virtual mozilla::ipc::IPCResult RecvGetWidgetRounding(int32_t* aValue) override;
-
-  virtual mozilla::ipc::IPCResult RecvGetWidgetNativeData(WindowsHandle* aValue) override;
 
   virtual mozilla::ipc::IPCResult RecvSetNativeChildOfShareableWindow(const uintptr_t& childWindow) override;
 

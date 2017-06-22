@@ -591,14 +591,15 @@ Assert.prototype = {
     var timeoutInterval = hwindow.setInterval(wait, interval);
     var thread = Services.tm.currentThread;
 
-    while (self.result !== true && !self.timeIsUp) {
-      thread.processNextEvent(true);
-
+    Services.tm.spinEventLoopUntil(() => {
       let type = typeof(self.result);
-      if (type !== 'boolean')
+      if (type !== 'boolean') {
         throw TypeError("waitFor() callback has to return a boolean" +
                         " instead of '" + type + "'");
-    }
+      }
+
+      return self.result === true || self.timeIsUp;
+    });
 
     hwindow.clearInterval(timeoutInterval);
 

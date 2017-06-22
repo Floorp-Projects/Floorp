@@ -33,6 +33,8 @@ public:
   // nsIObserver
   NS_DECL_NSIOBSERVER
 
+  static already_AddRefed<nsIClipboard> GetInstance();
+
   // nsIClipboard
   NS_IMETHOD HasDataMatchingFlavors(const char** aFlavorList, uint32_t aLength,
                                     int32_t aWhichClipboard, bool *_retval) override; 

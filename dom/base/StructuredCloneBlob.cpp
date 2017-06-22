@@ -133,9 +133,14 @@ StructuredCloneBlob::ReadStructuredCloneInternal(JSContext* aCx, JSStructuredClo
     BlobImpls().AppendElements(&aHolder->BlobImpls()[blobOffset], blobCount);
   }
 
-  JSStructuredCloneData data(length, length, 4096);
-  if (!JS_ReadBytes(aReader, data.Start(), length)) {
-    return false;
+  JSStructuredCloneData data;
+  while (length) {
+    size_t size;
+    char* buffer = data.AllocateBytes(length, &size);
+    if (!buffer || !JS_ReadBytes(aReader, buffer, size)) {
+      return false;
+    }
+    length -= size;
   }
 
   mBuffer = MakeUnique<JSAutoStructuredCloneBuffer>(mStructuredCloneScope,
