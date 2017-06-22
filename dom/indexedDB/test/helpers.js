@@ -25,15 +25,14 @@ function executeSoon(aFun)
 {
   let comp = SpecialPowers.wrap(Components);
 
-  let thread = comp.classes["@mozilla.org/thread-manager;1"]
-                   .getService(comp.interfaces.nsIThreadManager)
-                   .mainThread;
+  let tm = comp.classes["@mozilla.org/thread-manager;1"]
+               .getService(comp.interfaces.nsIThreadManager);
 
-  thread.dispatch({
+  tm.dispatchToMainThread({
     run() {
       aFun();
     }
-  }, Components.interfaces.nsIThread.DISPATCH_NORMAL);
+  });
 }
 
 function clearAllDatabases(callback) {

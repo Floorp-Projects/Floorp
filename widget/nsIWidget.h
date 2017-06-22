@@ -837,6 +837,11 @@ class nsIWidget : public nsISupports
     virtual nsSizeMode SizeMode() = 0;
 
     /**
+     * Ask wether the widget is fully occluded
+     */
+    virtual bool IsFullyOccluded() const = 0;
+
+    /**
      * Enable or disable this Widget
      *
      * @param aState true to enable the Widget, false to disable it.

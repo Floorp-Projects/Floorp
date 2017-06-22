@@ -915,10 +915,10 @@ class Buffer extends PP_Resource {
 class Flash_MessageLoop extends PP_Resource {
   run() {
     this._running = true;
-    let thread = Cc["@mozilla.org/thread-manager;1"].getService().currentThread;
-    while (this._running) {
-      thread.processNextEvent(true);
-    }
+    let tm = Cc["@mozilla.org/thread-manager;1"].getService();
+    tm.spinEventLoopUntil(() => {
+      return !this._running;
+    });
   }
   quit() {
     this._running = false;
@@ -2079,12 +2079,11 @@ dump(`callFromJSON: < ${JSON.stringify(call)}\n`);
       return result ? JSON.parse(result) : result;
     }
 
-    let thread = Services.tm.currentThread;
-    thread.dispatch(() => {
+    Services.tm.dispatchToMainThread(() => {
 dump(`callFromJSON (async): > ${JSON.stringify(call)}\n`);
       let result = this.process.sendMessage(JSON.stringify(call));
 dump(`callFromJSON: < ${JSON.stringify(call)}\n`);
-    }, Ci.nsIThread.DISPATCH_NORMAL);
+    });
   },
 
   table: {

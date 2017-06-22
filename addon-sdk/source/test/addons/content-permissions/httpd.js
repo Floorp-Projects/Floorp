@@ -5175,13 +5175,9 @@ function server(port, basePath)
   srv.registerContentType("sjs", SJS_TYPE);
   srv.start(port);
 
-  var thread = gThreadManager.currentThread;
-  while (!srv.isStopped())
-    thread.processNextEvent(true);
+  gThreadManager.spinEventLoopUntil(() => srv.isStopped());
 
-  // get rid of any pending requests
-  while (thread.hasPendingEvents())
-    thread.processNextEvent(true);
+  gThreadManager.spinEventLoopUntilEmpty();
 
   DEBUG = false;
 }

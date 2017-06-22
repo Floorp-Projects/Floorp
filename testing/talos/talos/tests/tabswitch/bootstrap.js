@@ -48,7 +48,7 @@ function promiseOneEvent(target, eventName, capture) {
 }
 
 function executeSoon(callback) {
-  Services.tm.mainThread.dispatch(callback, Ci.nsIThread.DISPATCH_NORMAL);
+  Services.tm.dispatchToMainThread(callback);
 }
 
 /**

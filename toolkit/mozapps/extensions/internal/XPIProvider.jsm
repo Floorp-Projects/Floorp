@@ -1012,10 +1012,7 @@ function syncLoadManifestFromFile(aFile, aInstallLocation) {
     result = val
   });
 
-  let thread = Services.tm.currentThread;
-
-  while (success === undefined)
-    thread.processNextEvent(true);
+  Services.tm.spinEventLoopUntil(() => success !== undefined);
 
   if (!success)
     throw result;

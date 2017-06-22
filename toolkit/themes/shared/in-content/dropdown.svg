@@ -1,22 +1,7 @@
-<?xml version="1.0" encoding="utf-8"?>
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
-<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 16 16">
-  <style>
-    use:not(:target) {
-      display: none;
-    }
-    use {
-      fill: -moz-DialogText;
-    }
-    use[id$="-disabled"] {
-      fill: GrayText;
-    }
-  </style>
-  <defs>
-    <path id="dropdown-shape" d="M12,6l-4.016,4L4,6H12z"/>
-  </defs>
-  <use id="dropdown" xlink:href="#dropdown-shape"/>
-  <use id="dropdown-disabled" xlink:href="#dropdown-shape"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16">
+  <path fill="context-fill" d="M12,6l-4.016,4L4,6H12z"/>
 </svg>
+
