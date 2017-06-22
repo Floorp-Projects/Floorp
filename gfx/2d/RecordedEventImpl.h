@@ -25,8 +25,12 @@ class RecordedEventDerived : public RecordedEvent {
   void RecordToStream(std::ostream &aStream) const {
     static_cast<const Derived*>(this)->Record(aStream);
   }
-  void RecordToStream(MemWriter &aStream) const {
-    static_cast<const Derived*>(this)->Record(aStream);
+  void RecordToStream(MemStream &aStream) const {
+    SizeCollector size;
+    static_cast<const Derived*>(this)->Record(size);
+    aStream.Resize(aStream.mLength + size.mTotalSize);
+    MemWriter writer(aStream.mData + aStream.mLength - size.mTotalSize);
+    static_cast<const Derived*>(this)->Record(writer);
   }
 };
 
