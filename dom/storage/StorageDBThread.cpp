@@ -343,7 +343,7 @@ StorageDBThread::SetDefaultPriority()
 void
 StorageDBThread::ThreadFunc(void* aArg)
 {
-  AutoProfilerRegister registerThread("localStorage DB");
+  AutoProfilerRegisterThread registerThread("localStorage DB");
   NS_SetCurrentThreadName("localStorage DB");
   mozilla::IOInterposer::RegisterCurrentThread();
 
