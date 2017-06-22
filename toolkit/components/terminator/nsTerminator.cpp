@@ -216,7 +216,7 @@ PRMonitor* gWriteReady = nullptr;
 
 void RunWriter(void* arg)
 {
-  AutoProfilerRegister registerThread("Shutdown Statistics Writer");
+  AutoProfilerRegisterThread registerThread("Shutdown Statistics Writer");
   NS_SetCurrentThreadName("Shutdown Statistics Writer");
 
   MOZ_LSAN_INTENTIONALLY_LEAK_OBJECT(arg);
