@@ -6,6 +6,7 @@
 
 "use strict";
 
+const Services = require("Services");
 const {Task} = require("devtools/shared/task");
 const EventEmitter = require("devtools/shared/event-emitter");
 const { VIEW_NODE_VALUE_TYPE } = require("devtools/client/inspector/shared/node-types");
@@ -107,14 +108,18 @@ HighlightersOverlay.prototype = {
    *         The NodeFront of the grid container element to highlight.
    * @param  {Object} options
    *         Object used for passing options to the grid highlighter.
+   * @param. {String|null} trigger
+   *         String name matching "grid" or "rule" to indicate where the
+   *         grid highlighter was toggled on from. "grid" represents the grid view
+   *         "rule" represents the rule view.
    */
-  toggleGridHighlighter: Task.async(function* (node, options = {}) {
+  toggleGridHighlighter: Task.async(function* (node, options = {}, trigger) {
     if (node == this.gridHighlighterShown) {
       yield this.hideGridHighlighter(node);
       return;
     }
 
-    yield this.showGridHighlighter(node, options);
+    yield this.showGridHighlighter(node, options, trigger);
   }),
 
   /**
@@ -125,7 +130,7 @@ HighlightersOverlay.prototype = {
    * @param  {Object} options
    *         Object used for passing options to the grid highlighter.
    */
-  showGridHighlighter: Task.async(function* (node, options) {
+  showGridHighlighter: Task.async(function* (node, options, trigger) {
     let highlighter = yield this._getHighlighter("CssGridHighlighter");
     if (!highlighter) {
       return;
@@ -137,6 +142,12 @@ HighlightersOverlay.prototype = {
     }
 
     this._toggleRuleViewGridIcon(node, true);
+
+    if (trigger == "grid") {
+      Services.telemetry.scalarAdd("devtools.grid.gridinspector.opened", 1);
+    } else if (trigger == "rule") {
+      Services.telemetry.scalarAdd("devtools.rules.gridinspector.opened", 1);
+    }
 
     try {
       // Save grid highlighter state.
@@ -391,7 +402,8 @@ HighlightersOverlay.prototype = {
 
     highlighterSettings.color = grid ? grid.color : DEFAULT_GRID_COLOR;
 
-    this.toggleGridHighlighter(this.inspector.selection.nodeFront, highlighterSettings);
+    this.toggleGridHighlighter(this.inspector.selection.nodeFront, highlighterSettings,
+      "rule");
   },
 
   onMouseMove: function (event) {
@@ -516,6 +528,7 @@ HighlightersOverlay.prototype = {
     this.highlighters = null;
     this.highlighterUtils = null;
     this.supportsHighlighters = null;
+    this.state = null;
 
     this.geometryEditorHighlighterShown = null;
     this.gridHighlighterShown = null;

@@ -80,6 +80,16 @@ function shouldSkipTest(test) {
   return false;
 }
 
+function waitForEvent(eventTarget, eventName, checkFn, callback) {
+  eventTarget.addEventListener(eventName, function listener(event) {
+    if (checkFn && !checkFn(event)) {
+      return;
+    }
+    eventTarget.removeEventListener(eventName, listener);
+    callback();
+  });
+}
+
 function runNextTest() {
   if (gTestIndex < gTestWindows.length) {
     let test = gTestWindows[gTestIndex];
@@ -95,7 +105,18 @@ function runNextTest() {
       // OS X Lion before we run the test.
       testWindow.addEventListener("load", function() {
         SimpleTest.waitForFocus(function() {
-          SimpleTest.waitForFocus(testWindow.begin, testWindow);
+          SimpleTest.waitForFocus(function() {
+            // For the platforms that support reporting occlusion state (e.g. Mac),
+            // we should wait until the docshell has been activated again,
+            // otherwise, the fullscreen request might be denied.
+            if (testWindow.document.hidden) {
+              waitForEvent(testWindow.document, "visibilitychange", (event) => {
+                return !testWindow.document.hidden;
+              }, testWindow.begin);
+              return;
+            }
+            testWindow.begin();
+          }, testWindow);
         });
       }, {once: true});
     }

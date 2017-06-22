@@ -135,10 +135,8 @@ function execAsync(aStmt, aOptions, aResults) {
   if ("cancel" in aOptions && aOptions.cancel)
     pending.cancel();
 
-  let curThread = Components.classes["@mozilla.org/thread-manager;1"]
-                            .getService().currentThread;
-  while (!completed && !_quit)
-    curThread.processNextEvent(true);
+  let tm = Cc["@mozilla.org/thread-manager;1"].getService(Ci.nsIThreadManager);
+  tm.spinEventLoopUntil(() => completed || _quit);
 
   return pending;
 }

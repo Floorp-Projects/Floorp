@@ -28,8 +28,7 @@ function awaitPromise(promise) {
     value = val;
   });
 
-  while (resolved === null)
-    Services.tm.mainThread.processNextEvent(true);
+  Services.tm.spinEventLoopUntil(() => resolved !== null);
 
   if (resolved === true)
     return value;

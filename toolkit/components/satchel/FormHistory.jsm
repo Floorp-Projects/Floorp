@@ -605,10 +605,7 @@ function dbClose(aShutdown) {
   _dbConnection.asyncClose(() => closed = true);
 
   if (!aShutdown) {
-    let thread = Services.tm.currentThread;
-    while (!closed) {
-      thread.processNextEvent(true);
-    }
+    Services.tm.spinEventLoopUntil(() => closed);
   }
 }
 

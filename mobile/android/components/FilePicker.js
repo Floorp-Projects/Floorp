@@ -179,9 +179,7 @@ FilePicker.prototype = {
     this._promptActive = true;
     this._sendMessage();
 
-    let thread = Services.tm.currentThread;
-    while (this._promptActive)
-      thread.processNextEvent(true);
+    Services.tm.spinEventLoopUntil(() => !this._promptActive);
     delete this._promptActive;
 
     if (this._domWin) {

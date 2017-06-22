@@ -30,7 +30,8 @@ xul|checkbox {
   }
 
   xul|*.checkbox-check[checked] {
-    list-style-image: url("chrome://global/skin/in-content/check.svg#check-native");
+    fill: -moz-dialogText;
+    stroke: none;
     background-color: -moz-dialog;
   }
 }
@@ -46,8 +47,8 @@ xul|radio {
   }
 
   xul|*.radio-check[selected] {
-    list-style-image: url("chrome://global/skin/in-content/radio.svg#radio-native");
     background-color: -moz-dialog;
+    fill: -moz-dialogText;
   }
 }
 

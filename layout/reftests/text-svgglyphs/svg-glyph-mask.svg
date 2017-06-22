@@ -6,7 +6,7 @@
     }
   </style>
   <mask id="m" x="0" y="0" width="200" height="200">
-    <text x="20" y="150" style="font: 100px Liberation">L</text>
+    <text x="20" y="150" style="font: 100px Liberation" stroke="black">L</text>
   </mask>
   <rect width="200" height="200" mask="url(#m)"/>
 </svg>

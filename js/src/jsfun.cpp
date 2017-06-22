@@ -1089,7 +1089,21 @@ js::FunctionToString(JSContext* cx, HandleFunction fun, bool prettyPrint)
             if (!out.append(")"))
                 return nullptr;
         }
-    } else if (fun->isInterpreted() && !fun->isSelfHostedBuiltin()) {
+    } else if (fun->isInterpreted() &&
+               (!fun->isSelfHostedBuiltin() ||
+                fun->infallibleIsDefaultClassConstructor(cx)))
+    {
+        // Default class constructors should always haveSource except;
+        //
+        // 1. Source has been discarded for the whole compartment.
+        //
+        // 2. The source is marked as "lazy", i.e., retrieved on demand, and
+        // the embedding has not provided a hook to retrieve sources.
+        MOZ_ASSERT_IF(fun->infallibleIsDefaultClassConstructor(cx),
+                      !cx->runtime()->sourceHook.ref() ||
+                      !script->scriptSource()->sourceRetrievable() ||
+                      fun->compartment()->behaviors().discardSource());
+
         if (!AppendPrelude() ||
             !out.append("() {\n    ") ||
             !out.append("[sourceless code]") ||
@@ -1098,11 +1112,6 @@ js::FunctionToString(JSContext* cx, HandleFunction fun, bool prettyPrint)
             return nullptr;
         }
     } else {
-        // Default class constructors should always haveSource unless source
-        // has been discarded for the whole compartment.
-        MOZ_ASSERT(!fun->infallibleIsDefaultClassConstructor(cx) ||
-                   fun->compartment()->behaviors().discardSource());
-
         if (!AppendPrelude() ||
             !out.append("() {\n    "))
             return nullptr;

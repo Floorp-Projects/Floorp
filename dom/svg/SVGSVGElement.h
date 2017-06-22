@@ -214,11 +214,6 @@ private:
   // invalidate viewbox -> viewport xform & inform frames
   void InvalidateTransformNotifyFrame();
 
-  // Returns true if we have at least one of the following:
-  // - a (valid or invalid) value for the preserveAspectRatio attribute
-  // - a SMIL-animated value for the preserveAspectRatio attribute
-  bool HasPreserveAspectRatio();
-
   // Methods for <image> elements to override my "PreserveAspectRatio" value.
   // These are private so that only our friends
   // (AutoPreserveAspectRatioOverride in particular) have access.

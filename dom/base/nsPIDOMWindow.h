@@ -895,16 +895,6 @@ public:
 
   bool IsRunningTimeout();
 
-  // Increase/Decrease the number of active IndexedDB transactions/databases for
-  // the decision making of timer-throttling.
-  void UpdateActiveIndexedDBTransactionCount(int32_t aDelta);
-  void UpdateActiveIndexedDBDatabaseCount(int32_t aDelta);
-
-  // Return true if there is any active IndexedDB trasnsaction/databases in any
-  // window of the same tab.
-  bool HasActiveIndexedDBTransactions();
-  bool HasActiveIndexedDBDatabases();
-
 protected:
   void CreatePerformanceObjectIfNeeded();
 };

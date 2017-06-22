@@ -460,10 +460,7 @@ PromptDelegate.prototype = {
       this.asyncShowPrompt(aMsg, res => result = res);
 
       // Spin this thread while we wait for a result
-      let thread = Services.tm.currentThread;
-      while (result === undefined) {
-        thread.processNextEvent(true);
-      }
+      Services.tm.spinEventLoopUntil(() => result !== undefined);
     } finally {
       this._changeModalState(/* aEntering */ false);
     }

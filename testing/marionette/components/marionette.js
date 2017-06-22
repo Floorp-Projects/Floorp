@@ -251,9 +251,9 @@ MarionetteComponent.prototype.init = function () {
   }
 
   // Delay initialization until we are done with delayed startup...
-  Services.tm.mainThread.idleDispatch(() => {
+  Services.tm.idleDispatchToMainThread(() => {
     // ... and with startup tests.
-    Services.tm.mainThread.idleDispatch(() => {
+    Services.tm.idleDispatchToMainThread(() => {
       let s;
       try {
         Cu.import("chrome://marionette/content/server.js");
