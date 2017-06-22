@@ -18,6 +18,9 @@ var gSearchResultsPane = {
     if (!this.searchInput.hidden) {
       this.searchInput.addEventListener("command", this);
       this.searchInput.addEventListener("focus", this);
+      if (!this.categoriesInitialized) {
+        this.searchInput.focus();
+      }
     }
   },
 
