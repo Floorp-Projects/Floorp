@@ -219,6 +219,63 @@ function test()
   ok(!('foo' in storage), "Really should not have a 'foo' property again");
   is(storage.getItem("foo"), null, "Should not have an item named 'foo' again");
 
+  // Non-static properties are not exposed on interface objects or instances.
+  is(win.HTMLInputElement.checkValidity, undefined,
+     "Shouldn't see non-static property on interface objects");
+  is(Object.getOwnPropertyDescriptor(win.HTMLInputElement, "checkValidity"), undefined,
+     "Shouldn't see non-static property on interface objects");
+  is(Object.getOwnPropertyNames(win.HTMLInputElement).indexOf("checkValidity"), -1,
+     "Shouldn't see non-static property on interface objects");
+  isnot(typeof doc.createElement("input").checkValidity, "undefined",
+        "Should see non-static property on prototype objects");
+  is(Object.getOwnPropertyDescriptor(doc.createElement("input"), "checkValidity"), undefined,
+     "Shouldn't see non-static property on instances");
+  isnot(typeof Object.getOwnPropertyDescriptor(win.HTMLInputElement.prototype, "checkValidity"), "undefined",
+        "Should see non-static property on prototype objects");
+
+  // Static properties are not exposed on prototype objects or instances.
+  isnot(typeof win.URL.createObjectURL, "undefined",
+        "Should see static property on interface objects");
+  isnot(typeof Object.getOwnPropertyDescriptor(win.URL, "createObjectURL"), "undefined",
+        "Should see static property on interface objects");
+  isnot(Object.getOwnPropertyNames(win.URL).indexOf("createObjectURL"), -1,
+        "Should see static property on interface objects");
+  is(new URL('http://example.org').createObjectURL, undefined,
+     "Shouldn't see static property on instances and prototype ojbects");
+  is(Object.getOwnPropertyDescriptor(new URL('http://example.org'), "createObjectURL"), undefined,
+     "Shouldn't see static property on instances");
+  is(Object.getOwnPropertyDescriptor(win.URL.prototype, "createObjectURL"), undefined,
+     "Shouldn't see static property on prototype objects");
+
+  // Unforgeable properties are not exposed on prototype objects or interface
+  // objects.
+  is(Window.document, undefined,
+     "Shouldn't see unforgeable property on interface objects");
+  is(Object.getOwnPropertyDescriptor(Window, "document"), undefined,
+     "Shouldn't see unforgeable property on interface objects");
+  is(Object.getOwnPropertyNames(Window).indexOf("document"), -1,
+     "Shouldn't see unforgeable property on interface objects");
+  isnot(typeof win.document, "undefined",
+        "Should see unforgeable property on instances");
+  isnot(typeof Object.getOwnPropertyDescriptor(win, "document"), "undefined",
+        "Should see unforgeable property on instances");
+  is(Object.getOwnPropertyDescriptor(Window.prototype, "document"), undefined,
+     "Shouldn't see unforgeable property on prototype objects");
+
+  // Constant properties are not exposted on instances.
+  isnot(typeof win.Node.ELEMENT_NODE, "undefined",
+        "Should see constant property on interface objects");
+  isnot(typeof Object.getOwnPropertyDescriptor(win.Node, "ELEMENT_NODE"), "undefined",
+        "Should see constant property on interface objects");
+  isnot(Object.getOwnPropertyNames(win.Node).indexOf("ELEMENT_NODE"), -1,
+        "Should see constant property on interface objects");
+  isnot(typeof elem.ELEMENT_NODE, "undefined",
+        "Should see constant property on prototype objects");
+  is(Object.getOwnPropertyDescriptor(elem, "ELEMENT_NODE"), undefined,
+     "Shouldn't see constant property on instances");
+  isnot(typeof Object.getOwnPropertyDescriptor(win.Node.prototype, "ELEMENT_NODE"), "undefined",
+        "Should see constant property on prototype objects");
+
   SimpleTest.finish();
 }
 
