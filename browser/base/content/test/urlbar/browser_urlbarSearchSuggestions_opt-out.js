@@ -56,7 +56,7 @@ add_task(async function focus() {
 
   // Check the Change Options link.
   let changeOptionsLink = document.getElementById("search-suggestions-change-settings");
-  let prefsPromise = BrowserTestUtils.waitForLocationChange(gBrowser, "about:preferences#general-search");
+  let prefsPromise = BrowserTestUtils.waitForLocationChange(gBrowser, "about:preferences#search");
   changeOptionsLink.click();
   await prefsPromise;
   Assert.ok(!gURLBar.popup.popupOpen, "popup should be closed");
