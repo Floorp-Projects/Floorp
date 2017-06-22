@@ -53,9 +53,3 @@ if (json.substs.MOZ_ANDROID_PACKAGE_INSTALL_BOUNCER) {
 // tries to configure the project even once, and as a side benefit
 // saves invoking |mach environment| multiple times.
 gradle.ext.mozconfig = json
-
-if (!gradle.ext.mozconfig.substs.COMPILE_ENVIRONMENT) {
-    // These should really come from the included binaries, but that's not easy.
-    gradle.ext.mozconfig.substs.TARGET_XPCOM_ABI = 'arm-eabi-gcc3'
-}
-gradle.ext.mozconfig.substs.MOZ_APP_ABI = gradle.ext.mozconfig.substs.TARGET_XPCOM_ABI
