@@ -25,6 +25,9 @@ class RecordedEventDerived : public RecordedEvent {
   void RecordToStream(std::ostream &aStream) const {
     static_cast<const Derived*>(this)->Record(aStream);
   }
+  void RecordToStream(MemWriter &aStream) const {
+    static_cast<const Derived*>(this)->Record(aStream);
+  }
 };
 
 template<class Derived>
@@ -1170,8 +1173,9 @@ static std::string NameFromBackend(BackendType aType)
   }
 }
 
-inline void
-RecordedEvent::RecordPatternData(std::ostream &aStream, const PatternStorage &aPattern) const
+template<class S>
+void
+RecordedEvent::RecordPatternData(S &aStream, const PatternStorage &aPattern) const
 {
   WriteElement(aStream, aPattern.mType);
 
@@ -1286,8 +1290,9 @@ RecordedEvent::StorePattern(PatternStorage &aDestination, const Pattern &aSource
   }
 }
 
-inline void
-RecordedEvent::RecordStrokeOptions(std::ostream &aStream, const StrokeOptions &aStrokeOptions) const
+template<class S>
+void
+RecordedEvent::RecordStrokeOptions(S &aStream, const StrokeOptions &aStrokeOptions) const
 {
   JoinStyle joinStyle = aStrokeOptions.mLineJoin;
   CapStyle capStyle = aStrokeOptions.mLineCap;
