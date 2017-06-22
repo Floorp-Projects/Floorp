@@ -22,7 +22,7 @@ function run_test() {
 
   prefs.unlockPref(PREF_NAME);
   prefs.setCharPref(PREF_NAME, "test1");
-  ps.readUserPrefs(file);
+  ps.readUserPrefsFromFile(file);
 
   do_check_eq("test1", userprefs.getCharPref(PREF_NAME));
   do_check_eq(false, userprefs.prefHasUserValue(PREF_NAME));

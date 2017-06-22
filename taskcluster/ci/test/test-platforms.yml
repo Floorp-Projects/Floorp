@@ -67,6 +67,7 @@ linux64-devedition/opt:
         - opt-only-tests
         - desktop-screenshot-capture
         - headless
+        - talos
 
 # TODO: use 'pgo' and 'asan' labels here, instead of -pgo/opt
 linux64-pgo/opt:

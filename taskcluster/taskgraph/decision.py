@@ -41,7 +41,7 @@ PER_PROJECT_PARAMETERS = {
         'optimize_target_tasks': True,
         # By default, the `try_option_syntax` `target_task_method` ignores this
         # parameter, and enables/disables nightlies depending whether
-        # `--include-nightly` is specified in the commmit message.
+        # `--include-nightly` is specified in the commit message.
         # We're setting the `include_nightly` parameter to True here for when
         # we submit decision tasks against Try that use other
         # `target_task_method`s, like `nightly_fennec` or `mozilla_beta_tasks`,

@@ -45,13 +45,41 @@ G_BEGIN_DECLS
  *@ATK_RELATION_EMBEDS: Indicates that the object visually embeds 
  *  another object's content, i.e. this object's content flows around 
  *  another's content.
- *@ATK_RELATION_EMBEDDED_BY: Inverse of %ATK_RELATION_EMBEDS, indicates that
+ *@ATK_RELATION_EMBEDDED_BY: Reciprocal of %ATK_RELATION_EMBEDS, indicates that
  *  this object's content is visualy embedded in another object.
  *@ATK_RELATION_POPUP_FOR: Indicates that an object is a popup for another object.
  *@ATK_RELATION_PARENT_WINDOW_OF: Indicates that an object is a parent window of another object.
- *@ATK_RELATION_DESCRIBED_BY: Indicates that another object provides descriptive information about this object; more verbose than ATK_RELATION_LABELLED_BY.
- *@ATK_RELATION_DESCRIPTION_FOR: Indicates that an object provides descriptive information about another object; more verbose than ATK_RELATION_LABEL_FOR.
+ *@ATK_RELATION_DESCRIBED_BY: Reciprocal of %ATK_RELATION_DESCRIPTION_FOR. Indicates that one
+ * or more target objects provide descriptive information about this object. This relation
+ * type is most appropriate for information that is not essential as its presentation may
+ * be user-configurable and/or limited to an on-demand mechanism such as an assistive
+ * technology command. For brief, essential information such as can be found in a widget's
+ * on-screen label, use %ATK_RELATION_LABELLED_BY. For an on-screen error message, use
+ * %ATK_RELATION_ERROR_MESSAGE. For lengthy extended descriptive information contained in
+ * an on-screen object, consider using %ATK_RELATION_DETAILS as assistive technologies may
+ * provide a means for the user to navigate to objects containing detailed descriptions so
+ * that their content can be more closely reviewed.
+ *@ATK_RELATION_DESCRIPTION_FOR: Reciprocal of %ATK_RELATION_DESCRIBED_BY. Indicates that this
+ * object provides descriptive information about the target object(s). See also
+ * %ATK_RELATION_DETAILS_FOR and %ATK_RELATION_ERROR_FOR.
  *@ATK_RELATION_NODE_PARENT_OF: Indicates an object is a cell in a treetable and is expanded to display other cells in the same column.
+ *@ATK_RELATION_DETAILS: Reciprocal of %ATK_RELATION_DETAILS_FOR. Indicates that this object
+ * has a detailed or extended description, the contents of which can be found in the target
+ * object(s). This relation type is most appropriate for information that is sufficiently
+ * lengthy as to make navigation to the container of that information desirable. For less
+ * verbose information suitable for announcement only, see %ATK_RELATION_DESCRIBED_BY. If
+ * the detailed information describes an error condition, %ATK_RELATION_ERROR_FOR should be
+ * used instead. @Since: ATK-2.26.
+ *@ATK_RELATION_DETAILS_FOR: Reciprocal of %ATK_RELATION_DETAILS. Indicates that this object
+ * provides a detailed or extended description about the target object(s). See also
+ * %ATK_RELATION_DESCRIPTION_FOR and %ATK_RELATION_ERROR_FOR. @Since: ATK-2.26.
+ *@ATK_RELATION_ERROR_MESSAGE: Reciprocal of %ATK_RELATION_ERROR_FOR. Indicates that this object
+ * has one or more errors, the nature of which is described in the contents of the target
+ * object(s). Objects that have this relation type should also contain %ATK_STATE_INVALID_ENTRY
+ * in their #AtkStateSet. @Since: ATK-2.26.
+ *@ATK_RELATION_ERROR_FOR: Reciprocal of %ATK_RELATION_ERROR_MESSAGE. Indicates that this object
+ * contains an error message describing an invalid condition in the target object(s). @Since:
+ * ATK_2.26.
  *@ATK_RELATION_LAST_DEFINED: Not used, this value indicates the end of the enumeration.
  * 
  *Describes the type of the relation
@@ -75,6 +103,10 @@ typedef enum
   ATK_RELATION_DESCRIBED_BY,
   ATK_RELATION_DESCRIPTION_FOR,
   ATK_RELATION_NODE_PARENT_OF,
+  ATK_RELATION_DETAILS,
+  ATK_RELATION_DETAILS_FOR,
+  ATK_RELATION_ERROR_MESSAGE,
+  ATK_RELATION_ERROR_FOR,
   ATK_RELATION_LAST_DEFINED
 } AtkRelationType;
 
