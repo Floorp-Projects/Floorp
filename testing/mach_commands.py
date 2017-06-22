@@ -1003,6 +1003,7 @@ class TestInfoCommand(MachCommandBase):
         # This function attempts to find appropriate names for different
         # queries based on the specified test name.
 
+        import posixpath
         import re
 
         # full_test_name is full path to file in hg (or git)
@@ -1023,6 +1024,7 @@ class TestInfoCommand(MachCommandBase):
                 for line in out:
                     print(line)
         if self.full_test_name:
+            self.full_test_name.replace(os.sep, posixpath.sep)
             print("Found %s in source control." % self.full_test_name)
         else:
             print("Unable to validate test name '%s'!" % self.test_name)

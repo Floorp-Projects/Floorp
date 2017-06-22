@@ -732,7 +732,7 @@ WR_FUNC;
 WR_INLINE
 void wr_dp_push_built_display_list(WrState *aState,
                                    WrBuiltDisplayListDescriptor aDlDescriptor,
-                                   WrVecU8 aDlData)
+                                   WrVecU8 *aDlData)
 WR_FUNC;
 
 WR_INLINE

@@ -33,6 +33,7 @@
 #include <map>
 #include <math.h>
 #include <stack>
+#include <vector>
 
 namespace mozilla {
 namespace ipc {
@@ -253,6 +254,22 @@ class MessageChannel : HasResultCodes, MessageLoop::DestructionObserver
 
     bool IsInTransaction() const;
     void CancelCurrentTransaction();
+
+    // Force all calls to Send to defer actually sending messages. This will
+    // cause sync messages to block until another thread calls
+    // StopPostponingSends.
+    //
+    // This must be called from the worker thread.
+    void BeginPostponingSends();
+
+    // Stop postponing sent messages, and immediately flush all postponed
+    // messages to the link. This may be called from any thread.
+    //
+    // Note that there are no ordering guarantees between two different
+    // MessageChannels. If channel B sends a message, then stops postponing
+    // channel A, messages from A may arrive before B. The easiest way to order
+    // this, if needed, is to make B send a sync message.
+    void StopPostponingSends();
 
     /**
      * This function is used by hang annotation code to determine which IPDL
@@ -490,6 +507,10 @@ class MessageChannel : HasResultCodes, MessageLoop::DestructionObserver
     // Otherwise, the result of ShouldDeferMessage(aMsg) may be true or false,
     // depending on context.
     static bool IsAlwaysDeferred(const Message& aMsg);
+
+    // Helper for sending a message via the link. This should only be used for
+    // non-special messages that might have to be postponed.
+    void SendMessageToLink(Message* aMsg);
 
     bool WasTransactionCanceled(int transaction);
     bool ShouldDeferMessage(const Message& aMsg);
@@ -797,6 +818,11 @@ class MessageChannel : HasResultCodes, MessageLoop::DestructionObserver
     RefPtr<CancelableRunnable> mOnChannelConnectedTask;
     bool mPeerPidSet;
     int32_t mPeerPid;
+
+    // Channels can enter messages are not sent immediately; instead, they are
+    // held in a queue until another thread deems it is safe to send them.
+    bool mIsPostponingSends;
+    std::vector<UniquePtr<Message>> mPostponedSends;
 };
 
 void

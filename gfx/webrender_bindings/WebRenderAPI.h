@@ -161,7 +161,7 @@ public:
                 const WrImageMask* aMask);
   void PopClip();
 
-  void PushBuiltDisplayList(wr::BuiltDisplayList dl);
+  void PushBuiltDisplayList(wr::BuiltDisplayList &dl);
 
   void PushScrollLayer(const layers::FrameMetrics::ViewID& aScrollId,
                        const WrRect& aContentRect, // TODO: We should work with strongly typed rects

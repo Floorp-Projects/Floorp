@@ -157,10 +157,15 @@ TestCustomAccessor()
 
   listTwo.pushBack(&one);
   listTwo.pushBack(&two);
+  { unsigned int check[] { 1, 2 }; CheckListValues(listOne, check); }
   { unsigned int check[] { 1, 2 }; CheckListValues(listTwo, check); }
 
   (void)listTwo.popBack();
   { unsigned int check[] { 1, 2 }; CheckListValues(listOne, check); }
+  { unsigned int check[] { 1 }; CheckListValues(listTwo, check); }
+
+  (void)listOne.popBack();
+  { unsigned int check[] { 1 }; CheckListValues(listOne, check); }
   { unsigned int check[] { 1 }; CheckListValues(listTwo, check); }
 }
 

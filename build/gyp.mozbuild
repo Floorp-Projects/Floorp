@@ -51,6 +51,8 @@ gyp_vars.update({
 
     'use_x11': 1 if CONFIG['MOZ_X11'] else 0,
     'use_glib': 1 if CONFIG['GLIB_LIBS'] else 0,
+    # bug 1373485 - avoid pkg-config for gtk2 in webrtc
+    'use_gtk': 0,
 
      # turn off mandatory use of NEON and instead use NEON detection
     'arm_neon': 0,

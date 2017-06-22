@@ -109,6 +109,13 @@ gfx::ScaleFactor<SourceUnits, NewTargetUnits> ViewTargetAs(
     PixelCastJustification) {
   return gfx::ScaleFactor<SourceUnits, NewTargetUnits>(aScaleFactor.scale);
 }
+template <class TargetUnits, class SourceUnits>
+Maybe<gfx::IntRectTyped<TargetUnits>> ViewAs(const Maybe<gfx::IntRectTyped<SourceUnits>>& aRect, PixelCastJustification aJustification) {
+  if (aRect.isSome()) {
+    return Some(ViewAs<TargetUnits>(aRect.value(), aJustification));
+  }
+  return Nothing();
+}
 // Unlike the other functions in this category, this function takes the
 // target matrix type, rather than its source and target unit types, as
 // the explicit template argument, so an example invocation is:

@@ -178,12 +178,12 @@ public:
       MOZ_ASSERT(NS_IsMainThread());
     }
   }
-  operator JSErrorResult &() { return *mRv; }
   operator ErrorResult &() { return *mRv; }
 private:
   mozilla::UniquePtr<JSErrorResult> mRv;
   bool isCopy;
 };
+
 }
 
 static nsresult InitNSSInContent()

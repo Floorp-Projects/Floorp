@@ -805,11 +805,13 @@ protected:
     MOZ_ASSERT(mActorDestroyed);
   }
 
+#ifdef DEBUG
   State
   GetState() const
   {
     return mState;
   }
+#endif
 
   void
   SetState(State aState)

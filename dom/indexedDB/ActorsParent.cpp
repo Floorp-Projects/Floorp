@@ -2712,15 +2712,8 @@ private:
   DoUpgradeInternal(mozIStorageConnection* aConnection,
                     const nsACString& aOrigin);
 
-  UpgradeSchemaFrom17_0To18_0Helper()
-  {
-    MOZ_ASSERT_UNREACHABLE("Don't create instances of this class!");
-  }
-
-  ~UpgradeSchemaFrom17_0To18_0Helper()
-  {
-    MOZ_ASSERT_UNREACHABLE("Don't create instances of this class!");
-  }
+  UpgradeSchemaFrom17_0To18_0Helper() = delete;
+  ~UpgradeSchemaFrom17_0To18_0Helper() = delete;
 };
 
 class UpgradeSchemaFrom17_0To18_0Helper::InsertIndexDataValuesFunction final
@@ -6454,12 +6447,6 @@ public:
   void
   Invalidate();
 
-  const PrincipalInfo&
-  GetPrincipalInfo() const
-  {
-    return mPrincipalInfo;
-  }
-
   bool
   IsOwnedByProcess(ContentParentId aContentParentId) const
   {
@@ -6534,12 +6521,6 @@ public:
 
     return mFactory->GetLoggingInfo();
   }
-
-  void
-  ReleaseTransactionThreadObjects();
-
-  void
-  ReleaseBackgroundThreadObjects();
 
   bool
   RegisterTransaction(TransactionBase* aTransaction);
@@ -7700,12 +7681,6 @@ struct FactoryOp::MaybeBlockedDatabaseInfo final
     return mDatabase == aOther.mDatabase;
   }
 
-  bool
-  operator<(const MaybeBlockedDatabaseInfo& aOther) const
-  {
-    return mDatabase < aOther.mDatabase;
-  }
-
   Database*
   operator->() MOZ_NO_ADDREF_RELEASE_ON_RETURN
   {
@@ -7742,12 +7717,6 @@ public:
   OpenDatabaseOp(Factory* aFactory,
                  already_AddRefed<ContentParent> aContentParent,
                  const CommonFactoryRequestParams& aParams);
-
-  bool
-  IsOtherProcessActor() const
-  {
-    return mOptionalContentParentId.isSome();
-  }
 
 private:
   ~OpenDatabaseOp() override

@@ -59,11 +59,6 @@ AsyncCanvasRenderer::NotifyElementAboutAttributesChanged()
       return NS_OK;
     }
 
-    void Revoke()
-    {
-      mRenderer = nullptr;
-    }
-
   private:
     RefPtr<AsyncCanvasRenderer> mRenderer;
   };
@@ -92,11 +87,6 @@ AsyncCanvasRenderer::NotifyElementAboutInvalidation()
       }
 
       return NS_OK;
-    }
-
-    void Revoke()
-    {
-      mRenderer = nullptr;
     }
 
   private:
