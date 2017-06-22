@@ -69,6 +69,8 @@ WebRenderPaintedLayerBlob::RenderLayer(wr::DisplayListBuilder& aBuilder,
 
     recorder->Finish();
 
+    AddToValidRegion(regionToPaint);
+
     wr::ByteBuffer bytes;
     bytes.Allocate(recorder->RecordingSize());
     DebugOnly<bool> ok = recorder->CopyRecording((char*)bytes.AsSlice().begin().get(), bytes.AsSlice().length());
