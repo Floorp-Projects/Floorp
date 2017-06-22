@@ -144,8 +144,10 @@ EditActionCanceled(nsresult aRv = NS_OK)
 }
 
 /***************************************************************************
- * stack based helper class for batching a collection of txns inside a
- * placeholder txn.
+ * stack based helper class for batching a collection of transactions inside a
+ * placeholder transaction.
+ * XXX This is used by mozInlineSpellChecker.  Therefore, cannot use concrete
+ *     editor class.
  */
 class MOZ_RAII AutoPlaceHolderBatch
 {

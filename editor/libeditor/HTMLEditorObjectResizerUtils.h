@@ -6,6 +6,7 @@
 #ifndef HTMLEditorObjectResizerUtils_h
 #define HTMLEditorObjectResizerUtils_h
 
+#include "mozilla/HTMLEditor.h"
 #include "nsIDOMEventListener.h"
 #include "nsISelectionListener.h"
 #include "nsISupportsImpl.h"
@@ -32,7 +33,7 @@ namespace mozilla {
 class ResizerSelectionListener final : public nsISelectionListener
 {
 public:
-  explicit ResizerSelectionListener(nsIHTMLEditor* aEditor);
+  explicit ResizerSelectionListener(HTMLEditor& aHTMLEditor);
   void Reset();
 
   NS_DECL_ISUPPORTS
@@ -40,7 +41,7 @@ public:
 
 protected:
   virtual ~ResizerSelectionListener() {}
-  nsWeakPtr mEditor;
+  CachedWeakPtr<HTMLEditor, nsIHTMLEditor> mHTMLEditorWeak;
 };
 
 /******************************************************************************
@@ -50,14 +51,14 @@ protected:
 class ResizerMouseMotionListener final : public nsIDOMEventListener
 {
 public:
-  explicit ResizerMouseMotionListener(nsIHTMLEditor* aEditor);
+  explicit ResizerMouseMotionListener(HTMLEditor& aHTMLEditor);
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIDOMEVENTLISTENER
 
 protected:
   virtual ~ResizerMouseMotionListener() {}
-  nsWeakPtr mEditor;
+  CachedWeakPtr<HTMLEditor, nsIHTMLEditor> mHTMLEditorWeak;
 };
 
 /******************************************************************************
@@ -67,14 +68,14 @@ protected:
 class DocumentResizeEventListener final : public nsIDOMEventListener
 {
 public:
-  explicit DocumentResizeEventListener(nsIHTMLEditor* aEditor);
+  explicit DocumentResizeEventListener(HTMLEditor& aHTMLEditor);
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIDOMEVENTLISTENER
 
 protected:
   virtual ~DocumentResizeEventListener() {}
-  nsWeakPtr mEditor;
+  CachedWeakPtr<HTMLEditor, nsIHTMLEditor> mHTMLEditorWeak;
 };
 
 } // namespace mozilla
