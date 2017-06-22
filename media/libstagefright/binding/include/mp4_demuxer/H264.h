@@ -457,6 +457,7 @@ private:
   static bool vui_parameters(BitReader& aBr, SPSData& aDest);
   // Read HRD parameters, all data is ignored.
   static void hrd_parameters(BitReader& aBr);
+  static uint8_t NumSPS(const mozilla::MediaByteBuffer* aExtraData);
 };
 
 } // namespace mp4_demuxer
