@@ -190,6 +190,11 @@
           this._isRTLScrollbox ? "paddingRight" : "paddingLeft"
         ]);
       ]]></field>
+      <field name="scrollboxPaddingEnd"><![CDATA[
+        parseFloat(window.getComputedStyle(this._scrollbox)[
+          this._isRTLScrollbox ? "paddingLeft" : "paddingRight"
+        ]);
+      ]]></field>
       <property name="scrollPosition">
         <getter><![CDATA[
           return this.orient == "vertical" ?
@@ -634,40 +639,70 @@
         ]]></body>
       </method>
 
+      <field name="_scrollButtonUpdatePending">false</field>
       <method name="_updateScrollButtonsDisabledState">
-        <parameter name="aScrolling"/>
         <body><![CDATA[
-          let scrolledToStart;
-          let scrolledToEnd;
-
-          // Avoid flushing layout when not overflowing or when scrolling.
           if (this.hasAttribute("notoverflowing")) {
-            scrolledToStart = true;
-            scrolledToEnd = true;
-          } else if (aScrolling) {
-            scrolledToStart = false;
-            scrolledToEnd = false;
-          } else if (this.scrollPosition == 0) {
-            // In the RTL case, this means the _last_ element in the
-            // scrollbox is visible
-            scrolledToEnd = this._isRTLScrollbox;
-            scrolledToStart = !this._isRTLScrollbox;
-          } else if (this.scrollClientSize + this.scrollPosition == this.scrollSize) {
-            // In the RTL case, this means the _first_ element in the
-            // scrollbox is visible
-            scrolledToStart = this._isRTLScrollbox;
-            scrolledToEnd = !this._isRTLScrollbox;
+            this.setAttribute("scrolledtoend", "true");
+            this.setAttribute("scrolledtostart", "true");
+            return;
           }
 
-          if (scrolledToEnd)
-            this.setAttribute("scrolledtoend", "true");
-          else
-            this.removeAttribute("scrolledtoend");
+          if (this._scrollButtonUpdatePending) {
+            return;
+          }
+          this._scrollButtonUpdatePending = true;
 
-          if (scrolledToStart)
-            this.setAttribute("scrolledtostart", "true");
-          else
-            this.removeAttribute("scrolledtostart");
+          // Wait until after the next paint to get current layout data from
+          // getBoundsWithoutFlushing.
+          window.requestAnimationFrame(() => {
+            setTimeout(() => {
+              this._scrollButtonUpdatePending = false;
+
+              let scrolledToStart = false;
+              let scrolledToEnd = false;
+
+              if (this.hasAttribute("notoverflowing")) {
+                scrolledToStart = true;
+                scrolledToEnd = true;
+              } else {
+                let scrollboxPaddingStart = Math.round(this.scrollboxPaddingStart);
+                let scrollboxPaddingEnd = Math.round(this.scrollboxPaddingEnd);
+                let [start, end] = this._startEndProps;
+                if (this._isRTLScrollbox) {
+                  [start, end] = [end, start];
+                  scrollboxPaddingStart = -scrollboxPaddingStart;
+                  scrollboxPaddingEnd = -scrollboxPaddingEnd;
+                }
+
+                let scrollboxRect = this._boundsWithoutFlushing(this._scrollbox);
+                let elements = this._getScrollableElements();
+                let [firstElement, lastElement] = [elements[0], elements[elements.length - 1]];
+
+                if (firstElement &&
+                    Math.round(this._boundsWithoutFlushing(firstElement)[start]) - scrollboxPaddingStart ==
+                      Math.round(scrollboxRect[start])) {
+                  scrolledToStart = true;
+                } else if (lastElement &&
+                           Math.round(this._boundsWithoutFlushing(lastElement)[end]) + scrollboxPaddingEnd ==
+                             Math.round(scrollboxRect[end])) {
+                  scrolledToEnd = true;
+                }
+              }
+
+              if (scrolledToEnd) {
+                this.setAttribute("scrolledtoend", "true");
+              } else {
+                this.removeAttribute("scrolledtoend");
+              }
+
+              if (scrolledToStart) {
+                this.setAttribute("scrolledtostart", "true");
+              } else {
+                this.removeAttribute("scrolledtostart");
+              }
+            }, 0);
+          });
         ]]></body>
       </method>
     </implementation>
@@ -820,27 +855,7 @@
       ]]></handler>
 
       <handler event="scroll"><![CDATA[
-        if (!this._delayedUpdateScrollButtonsTimer) {
-          // This is the beginning of a scrolling animation. We need to update
-          // scroll buttons now in case we were scrolled to the start or to the
-          // end before we started scrolling.
-          this._updateScrollButtonsDisabledState(true);
-        } else {
-          // We're in the middle of the scrolling animation. We'll restart the
-          // delayed update request so that we only update the scroll buttons
-          // a second time once we're done scrolling.
-          window.clearTimeout(this._delayedUpdateScrollButtonsTimer);
-        }
-
-        // Try to detect the end of the scrolling animation to update the
-        // scroll buttons again. To avoid false positives, this timeout needs
-        // to be big enough to account for intermediate frames that don't move
-        // the scroll position in case we're scrolling slowly.
-        this._delayedUpdateScrollButtonsTimer = setTimeout(() => {
-          // Scrolling animation has finished.
-          this._delayedUpdateScrollButtonsTimer = 0;
-          this._updateScrollButtonsDisabledState();
-        }, 200);
+        this._updateScrollButtonsDisabledState();
       ]]></handler>
     </handlers>
   </binding>

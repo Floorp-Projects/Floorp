@@ -34,6 +34,8 @@
 #ifdef XP_WIN
 #include "gfxWindowsPlatform.h"
 #include <d3d10_1.h>
+#include "mozilla/gfx/DeviceManagerDx.h"
+#include "mozilla/layers/D3D11YCbCrImage.h"
 #endif
 
 namespace mozilla {
@@ -430,6 +432,40 @@ ImageContainer::NotifyComposite(const ImageCompositeNotification& aNotification)
         aNotification.imageTimeStamp();
   }
 }
+
+#ifdef XP_WIN
+D3D11YCbCrRecycleAllocator*
+ImageContainer::GetD3D11YCbCrRecycleAllocator(KnowsCompositor* aAllocator)
+{
+  if (mD3D11YCbCrRecycleAllocator &&
+      aAllocator == mD3D11YCbCrRecycleAllocator->GetAllocator()) {
+    return mD3D11YCbCrRecycleAllocator;
+  }
+
+  RefPtr<ID3D11Device> device = gfx::DeviceManagerDx::Get()->GetContentDevice();
+  if (!device) {
+    device = gfx::DeviceManagerDx::Get()->GetCompositorDevice();
+  }
+
+  LayersBackend backend = aAllocator->GetCompositorBackendType();
+  if (!device || backend != LayersBackend::LAYERS_D3D11) {
+    return nullptr;
+  }
+
+  RefPtr<ID3D10Multithread> multi;
+  HRESULT hr =
+    device->QueryInterface((ID3D10Multithread**)getter_AddRefs(multi));
+  if (FAILED(hr) || !multi) {
+    gfxWarning() << "Multithread safety interface not supported. " << hr;
+    return nullptr;
+  }
+  multi->SetMultithreadProtected(TRUE);
+
+  mD3D11YCbCrRecycleAllocator =
+    new D3D11YCbCrRecycleAllocator(aAllocator, device);
+  return mD3D11YCbCrRecycleAllocator;
+}
+#endif
 
 PlanarYCbCrImage::PlanarYCbCrImage()
   : Image(nullptr, ImageFormat::PLANAR_YCBCR)

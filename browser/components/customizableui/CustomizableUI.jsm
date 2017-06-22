@@ -246,6 +246,9 @@ var CustomizableUIInternal = {
       "home-button",
     ];
 
+    if (AppConstants.MOZ_PHOTON_THEME) {
+      navbarPlacements.push("sidebar-button");
+    }
     if (AppConstants.MOZ_DEV_EDITION) {
       navbarPlacements.splice(2, 0, "developer-button");
     }

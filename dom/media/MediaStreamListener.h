@@ -19,21 +19,6 @@ class MediaStreamGraph;
 class MediaStreamVideoSink;
 class VideoSegment;
 
-enum MediaStreamGraphEvent : uint32_t {
-  EVENT_FINISHED,
-  EVENT_REMOVED,
-  EVENT_HAS_DIRECT_LISTENERS, // transition from no direct listeners
-  EVENT_HAS_NO_DIRECT_LISTENERS,  // transition to no direct listeners
-};
-
-// maskable flags, not a simple enumerated value
-enum TrackEventCommand : uint32_t {
-  TRACK_EVENT_NONE = 0x00,
-  TRACK_EVENT_CREATED = 0x01,
-  TRACK_EVENT_ENDED = 0x02,
-  TRACK_EVENT_UNUSED = ~(TRACK_EVENT_ENDED | TRACK_EVENT_CREATED),
-};
-
 /**
  * This is a base class for media graph thread listener callbacks.
  * Override methods to be notified of audio or video data or changes in stream

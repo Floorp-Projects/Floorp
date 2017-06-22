@@ -1,3 +1,5 @@
+/* global Services */
+
 const injector = require("inject!lib/TelemetryFeed.jsm");
 const {GlobalOverrider} = require("test/unit/utils");
 const {actionCreators: ac, actionTypes: at} = require("common/Actions.jsm");
@@ -15,10 +17,18 @@ const FAKE_UUID = "{foo-123-foo}";
 describe("TelemetryFeed", () => {
   let globals;
   let sandbox;
-  let store = {getState() { return {App: {version: "1.0.0", locale: "en-US"}}; }};
+  let store = {
+    dispatch() {},
+    getState() { return {App: {version: "1.0.0", locale: "en-US"}}; }
+  };
   let instance;
   class TelemetrySender {sendPing() {} uninit() {}}
-  const {TelemetryFeed} = injector({"lib/TelemetrySender.jsm": {TelemetrySender}});
+  class PerfService {getMostRecentAbsMarkStartByName() { return 1234; } mark() {}}
+  const perfService = new PerfService();
+  const {TelemetryFeed} = injector({
+    "lib/TelemetrySender.jsm": {TelemetrySender},
+    "common/PerfService.jsm": {perfService}
+  });
 
   function addSession(id) {
     instance.addSession(id);
@@ -47,6 +57,15 @@ describe("TelemetryFeed", () => {
       await instance.init();
       assert.equal(instance.telemetryClientId, FAKE_TELEMETRY_ID);
     });
+    it("should make this.browserOpenNewtabStart() observe browser-open-newtab-start", async () => {
+      sandbox.spy(Services.obs, "addObserver");
+
+      await instance.init();
+
+      assert.calledOnce(Services.obs.addObserver);
+      assert.calledWithExactly(Services.obs.addObserver,
+        instance.browserOpenNewtabStart, "browser-open-newtab-start");
+    });
   });
   describe("#addSession", () => {
     it("should add a session", () => {
@@ -70,6 +89,17 @@ describe("TelemetryFeed", () => {
       assert.equal(session.page, "about:newtab"); // This is hardcoded for now.
     });
   });
+  describe("#browserOpenNewtabStart", () => {
+    it("should call perfService.mark with browser-open-newtab-start", () => {
+      sandbox.stub(perfService, "mark");
+
+      instance.browserOpenNewtabStart();
+
+      assert.calledOnce(perfService.mark);
+      assert.calledWithExactly(perfService.mark, "browser-open-newtab-start");
+    });
+  });
+
   describe("#endSession", () => {
     it("should not throw if there is no session for the given port ID", () => {
       assert.doesNotThrow(() => instance.endSession("doesn't exist"));
@@ -189,7 +219,12 @@ describe("TelemetryFeed", () => {
         const ping = instance.createSessionEndEvent({
           session_id: FAKE_UUID,
           page: "about:newtab",
-          session_duration: 12345
+          session_duration: 12345,
+          perf: {
+            load_trigger_ts: 10,
+            load_trigger_type: "menu_plus_or_keyboard",
+            visibility_event_rcvd_ts: 20
+          }
         });
         // Is it valid?
         assert.validate(ping, SessionPing);
@@ -216,6 +251,17 @@ describe("TelemetryFeed", () => {
       assert.calledOnce(stub);
       assert.isNull(instance.telemetrySender);
     });
+    it("should make this.browserOpenNewtabStart() stop observing browser-open-newtab-start", async () => {
+      await instance.init();
+      sandbox.spy(Services.obs, "removeObserver");
+      sandbox.stub(instance.telemetrySender, "uninit");
+
+      await instance.uninit();
+
+      assert.calledOnce(Services.obs.removeObserver);
+      assert.calledWithExactly(Services.obs.removeObserver,
+        instance.browserOpenNewtabStart, "browser-open-newtab-start");
+    });
   });
   describe("#onAction", () => {
     it("should call .init() on an INIT action", () => {
@@ -225,7 +271,10 @@ describe("TelemetryFeed", () => {
     });
     it("should call .addSession() on a NEW_TAB_VISIBLE action", () => {
       const stub = sandbox.stub(instance, "addSession");
-      instance.onAction(ac.SendToMain({type: at.NEW_TAB_VISIBLE}, "port123"));
+      instance.onAction(ac.SendToMain({
+        type: at.NEW_TAB_VISIBLE,
+        data: {absVisibilityChangeTime: 789}
+      }, "port123"));
       assert.calledWith(stub, "port123");
     });
     it("should call .endSession() on a NEW_TAB_UNLOAD action", () => {

@@ -7,22 +7,6 @@
 #if !defined(MediaDecoder_h_)
 #define MediaDecoder_h_
 
-#include "mozilla/Atomics.h"
-#include "mozilla/CDMProxy.h"
-#include "mozilla/MozPromise.h"
-#include "mozilla/ReentrantMonitor.h"
-#include "mozilla/StateMirroring.h"
-#include "mozilla/StateWatching.h"
-
-#include "mozilla/dom/AudioChannelBinding.h"
-
-#include "necko-config.h"
-#include "nsAutoPtr.h"
-#include "nsCOMPtr.h"
-#include "nsIObserver.h"
-#include "nsISupports.h"
-#include "nsITimer.h"
-
 #include "AbstractMediaDecoder.h"
 #include "DecoderDoctorDiagnostics.h"
 #include "MediaDecoderOwner.h"
@@ -32,8 +16,21 @@
 #include "MediaResourceCallback.h"
 #include "MediaStatistics.h"
 #include "MediaStreamGraph.h"
-#include "TimeUnits.h"
 #include "SeekTarget.h"
+#include "TimeUnits.h"
+#include "mozilla/Atomics.h"
+#include "mozilla/CDMProxy.h"
+#include "mozilla/MozPromise.h"
+#include "mozilla/ReentrantMonitor.h"
+#include "mozilla/StateMirroring.h"
+#include "mozilla/StateWatching.h"
+#include "mozilla/dom/AudioChannelBinding.h"
+#include "necko-config.h"
+#include "nsAutoPtr.h"
+#include "nsCOMPtr.h"
+#include "nsIObserver.h"
+#include "nsISupports.h"
+#include "nsITimer.h"
 
 class nsIStreamListener;
 class nsIPrincipal;

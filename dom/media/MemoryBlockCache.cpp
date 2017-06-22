@@ -9,6 +9,7 @@
 #include "MediaPrefs.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/Logging.h"
+#include "mozilla/Telemetry.h"
 #include "prsystem.h"
 
 namespace mozilla {

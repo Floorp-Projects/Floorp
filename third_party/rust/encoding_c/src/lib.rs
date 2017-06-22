@@ -7,7 +7,7 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-#![doc(html_root_url = "https://docs.rs/encoding_c/0.7.4")]
+#![doc(html_root_url = "https://docs.rs/encoding_c/0.7.6")]
 
 //! The C API for encoding_rs.
 //!

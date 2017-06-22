@@ -592,6 +592,68 @@ telemetry:
     record_in_processes:
       - 'main'
 
+telemetry.discarded:
+  accumulations:
+    bug_numbers:
+      - 1369041
+    description: >
+      Number of discarded accumulations to histograms in child processes
+    expires: "never"
+    kind: uint
+    notification_emails:
+      - telemetry-client-dev@mozilla.com
+    release_channel_collection: opt-out
+    record_in_processes:
+      - 'all_childs'
+  keyed_accumulations:
+    bug_numbers:
+      - 1369041
+    description: >
+      Number of discarded accumulations to keyed histograms in child processes
+    expires: "never"
+    kind: uint
+    notification_emails:
+      - telemetry-client-dev@mozilla.com
+    release_channel_collection: opt-out
+    record_in_processes:
+      - 'all_childs'
+  scalar_actions:
+    bug_numbers:
+      - 1369041
+    description: >
+      Number of discarded actions on scalars in child processes
+    expires: "never"
+    kind: uint
+    notification_emails:
+      - telemetry-client-dev@mozilla.com
+    release_channel_collection: opt-out
+    record_in_processes:
+      - 'all_childs'
+  keyed_scalar_actions:
+    bug_numbers:
+      - 1369041
+    description: >
+      Number of discarded actions on keyed scalars in child processes
+    expires: "never"
+    kind: uint
+    notification_emails:
+      - telemetry-client-dev@mozilla.com
+    release_channel_collection: opt-out
+    record_in_processes:
+      - 'all_childs'
+  child_events:
+    bug_numbers:
+      - 1369041
+    description: >
+      Number of discarded events in child processes
+    expires: "never"
+    kind: uint
+    notification_emails:
+      - telemetry-client-dev@mozilla.com
+    release_channel_collection: opt-out
+    record_in_processes:
+      - 'all_childs'
+
 # The following section is for probes testing the Telemetry system. They will not be
 # submitted in pings and are only used for testing.
 telemetry.test:

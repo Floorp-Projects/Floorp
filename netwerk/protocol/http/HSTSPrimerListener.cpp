@@ -31,8 +31,9 @@ NS_IMPL_ISUPPORTS(HSTSPrimingListener, nsIStreamListener,
                   nsIRequestObserver, nsIInterfaceRequestor,
                   nsITimerCallback)
 
-// default to 3000ms, same as the preference
-uint32_t HSTSPrimingListener::sHSTSPrimingTimeout = 3000;
+// default to 2000ms, same as the preference
+// security.mixed_content.hsts_priming_request_timeout
+uint32_t HSTSPrimingListener::sHSTSPrimingTimeout = 2000;
 
 
 HSTSPrimingListener::HSTSPrimingListener(nsIHstsPrimingCallback* aCallback)

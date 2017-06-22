@@ -15,10 +15,6 @@
 var as = Cc["@mozilla.org/browser/annotation-service;1"].
          getService(Ci.nsIAnnotationService);
 
-function run_test() {
-  run_next_test();
-}
-
 add_task(async function test_annos_expire_history() {
   // Set interval to a large value so we don't expire on it.
   setInterval(3600); // 1h

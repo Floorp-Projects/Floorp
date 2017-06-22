@@ -6,7 +6,6 @@
  */
 
 var iconsvc = PlacesUtils.favicons;
-var histsvc = PlacesUtils.history;
 
 var originalFavicon = {
   file: do_get_file("favicon-normal16.png"),

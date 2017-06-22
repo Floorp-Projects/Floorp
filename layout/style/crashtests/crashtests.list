@@ -75,7 +75,6 @@ load 621596-1.html
 load 622314-1.xhtml
 load 637242.xhtml
 load 645142.html
-fails-if(stylo) == 645951-1.html 645951-1-ref.html # bug 1367213
 load 652976-1.svg
 load 665209-1.html
 load 671799-1.html

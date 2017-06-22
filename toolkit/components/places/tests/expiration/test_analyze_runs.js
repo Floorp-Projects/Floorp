@@ -45,10 +45,6 @@ function do_check_analyze_ran(aTableName, aRan) {
 
 // Tests
 
-function run_test() {
-  run_next_test();
-}
-
 add_task(async function init_tests() {
   const TEST_URI = NetUtil.newURI("http://mozilla.org/");
   const TEST_TITLE = "This is a test";

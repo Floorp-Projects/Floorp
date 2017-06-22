@@ -8,12 +8,7 @@
   * Test bookmarksService.getBookmarkedURIFor(aURI);
   */
 
-var hs = PlacesUtils.history;
 var bs = PlacesUtils.bookmarks;
-
-function run_test() {
-  run_next_test();
-}
 
 add_task(async function test_getBookmarkedURIFor() {
   let now = Date.now() * 1000;

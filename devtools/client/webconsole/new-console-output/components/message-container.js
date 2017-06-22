@@ -9,7 +9,6 @@
 // React & Redux
 const {
   createClass,
-
   PropTypes
 } = require("devtools/client/shared/vendor/react");
 
@@ -31,20 +30,18 @@ const MessageContainer = createClass({
   displayName: "MessageContainer",
 
   propTypes: {
-    message: PropTypes.object.isRequired,
     open: PropTypes.bool.isRequired,
     serviceContainer: PropTypes.object.isRequired,
-    indent: PropTypes.number.isRequired,
     tableData: PropTypes.object,
     timestampsVisible: PropTypes.bool.isRequired,
     repeat: PropTypes.number,
     networkMessageUpdate: PropTypes.object,
+    getMessage: PropTypes.func.isRequired,
   },
 
   getDefaultProps: function () {
     return {
       open: false,
-      indent: 0,
     };
   },
 
@@ -52,8 +49,6 @@ const MessageContainer = createClass({
     const repeatChanged = this.props.repeat !== nextProps.repeat;
     const openChanged = this.props.open !== nextProps.open;
     const tableDataChanged = this.props.tableData !== nextProps.tableData;
-    const responseChanged = this.props.message.response !== nextProps.message.response;
-    const totalTimeChanged = this.props.message.totalTime !== nextProps.message.totalTime;
     const timestampVisibleChanged =
       this.props.timestampsVisible !== nextProps.timestampsVisible;
     const networkMessageUpdateChanged =
@@ -62,17 +57,15 @@ const MessageContainer = createClass({
     return repeatChanged
       || openChanged
       || tableDataChanged
-      || responseChanged
-      || totalTimeChanged
       || timestampVisibleChanged
       || networkMessageUpdateChanged;
   },
 
   render() {
-    const { message } = this.props;
+    const message = this.props.getMessage();
 
     let MessageComponent = getMessageComponent(message);
-    return MessageComponent(this.props);
+    return MessageComponent(Object.assign({message, indent: message.indent}, this.props));
   }
 });
 

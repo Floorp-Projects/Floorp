@@ -4,25 +4,26 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "MediaFormatReader.h"
+
 #include "AutoTaskQueue.h"
-#include "mozilla/SizePrintfMacros.h"
 #include "Layers.h"
 #include "MediaData.h"
 #include "MediaInfo.h"
-#include "MediaFormatReader.h"
 #include "MediaResource.h"
-#include "VideoUtils.h"
 #include "VideoFrameContainer.h"
-#include "mozilla/dom/HTMLMediaElement.h"
-#include "mozilla/layers/ShadowLayers.h"
+#include "VideoUtils.h"
 #include "mozilla/AbstractThread.h"
 #include "mozilla/CDMProxy.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/Preferences.h"
-#include "mozilla/Telemetry.h"
 #include "mozilla/SharedThreadPool.h"
+#include "mozilla/SizePrintfMacros.h"
 #include "mozilla/SyncRunnable.h"
+#include "mozilla/Telemetry.h"
 #include "mozilla/Unused.h"
+#include "mozilla/dom/HTMLMediaElement.h"
+#include "mozilla/layers/ShadowLayers.h"
 #include "nsContentUtils.h"
 #include "nsPrintfCString.h"
 #include "nsSize.h"
@@ -2281,6 +2282,15 @@ MediaFormatReader::Update(TrackType aTrack)
         nsCString error;
         mVideo.mIsHardwareAccelerated =
           mVideo.mDecoder && mVideo.mDecoder->IsHardwareAccelerated(error);
+#ifdef XP_WIN
+        // D3D11_YCBCR_IMAGE images are GPU based, we try to limit the amount
+        // of GPU RAM used.
+        VideoData* videoData = static_cast<VideoData*>(output.get());
+        mVideo.mIsHardwareAccelerated =
+          mVideo.mIsHardwareAccelerated ||
+          (videoData->mImage &&
+           videoData->mImage->GetFormat() == ImageFormat::D3D11_YCBCR_IMAGE);
+#endif
       }
     } else if (decoder.HasFatalError()) {
       LOG("Rejecting %s promise: DECODE_ERROR", TrackTypeToStr(aTrack));

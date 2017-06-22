@@ -109,9 +109,6 @@ function ensure_results_internal(uris, searchTerm) {
 
 // Get history service
 try {
-  var histsvc = Cc["@mozilla.org/browser/nav-history-service;1"].
-                getService(Ci.nsINavHistoryService);
-  var bhist = histsvc.QueryInterface(Ci.nsIBrowserHistory);
   var tagssvc = Cc["@mozilla.org/browser/tagging-service;1"].
                 getService(Ci.nsITaggingService);
   var bmksvc = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
