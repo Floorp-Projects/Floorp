@@ -11,8 +11,9 @@
 #include "mozilla/EventStateManager.h"
 #include "mozilla/EventStates.h"
 #include "mozilla/GenericSpecifiedValuesInlines.h"
-#include "mozilla/MouseEvents.h"
 #include "mozilla/Likely.h"
+#include "mozilla/MouseEvents.h"
+#include "mozilla/TextEditor.h"
 
 #include "nscore.h"
 #include "nsGenericHTMLElement.h"
@@ -1877,13 +1878,15 @@ nsGenericHTMLFormElement::GetForm(nsIDOMHTMLFormElement** aForm)
 nsIContent::IMEState
 nsGenericHTMLFormElement::GetDesiredIMEState()
 {
-  nsIEditor* editor = GetEditorInternal();
-  if (!editor)
+  TextEditor* textEditor = GetTextEditorInternal();
+  if (!textEditor) {
     return nsGenericHTMLElement::GetDesiredIMEState();
+  }
   IMEState state;
-  nsresult rv = editor->GetPreferredIMEState(&state);
-  if (NS_FAILED(rv))
+  nsresult rv = textEditor->GetPreferredIMEState(&state);
+  if (NS_FAILED(rv)) {
     return nsGenericHTMLElement::GetDesiredIMEState();
+  }
   return state;
 }
 
@@ -2606,20 +2609,13 @@ nsGenericHTMLElement::DispatchSimulatedClick(nsGenericHTMLElement* aElement,
   return EventDispatcher::Dispatch(ToSupports(aElement), aPresContext, &event);
 }
 
-nsresult
-nsGenericHTMLElement::GetEditor(nsIEditor** aEditor)
-{
-  NS_IF_ADDREF(*aEditor = GetEditorInternal());
-  return NS_OK;
-}
-
 already_AddRefed<nsIEditor>
 nsGenericHTMLElement::GetAssociatedEditor()
 {
   // If contenteditable is ever implemented, it might need to do something different here?
 
-  nsCOMPtr<nsIEditor> editor = GetEditorInternal();
-  return editor.forget();
+  RefPtr<TextEditor> textEditor = GetTextEditorInternal();
+  return textEditor.forget();
 }
 
 bool

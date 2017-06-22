@@ -70,6 +70,7 @@
 #include "mozilla/EventStates.h"
 #include "mozilla/GenericSpecifiedValuesInlines.h"
 #include "mozilla/InternalMutationEvent.h"
+#include "mozilla/TextEditor.h"
 #include "mozilla/TextEvents.h"
 #include "mozilla/TouchEvents.h"
 
@@ -2618,6 +2619,12 @@ HTMLInputElement::SetUserInput(const nsAString& aValue)
 nsIEditor*
 HTMLInputElement::GetEditor()
 {
+  return GetTextEditorFromState();
+}
+
+TextEditor*
+HTMLInputElement::GetTextEditorFromState()
+{
   nsTextEditorState* state = GetEditorState();
   if (state) {
     return state->GetTextEditor();
@@ -2625,10 +2632,10 @@ HTMLInputElement::GetEditor()
   return nullptr;
 }
 
-NS_IMETHODIMP_(nsIEditor*)
+NS_IMETHODIMP_(TextEditor*)
 HTMLInputElement::GetTextEditor()
 {
-  return GetEditor();
+  return GetTextEditorFromState();
 }
 
 NS_IMETHODIMP_(nsISelectionController*)
