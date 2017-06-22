@@ -280,7 +280,7 @@ class RTPSender {
 
   RtpHeaderExtensionMap rtp_header_extension_map_ GUARDED_BY(send_critsect_);
 
-  char* rid_;
+  char rid_[kRIDSize + 1] GUARDED_BY(send_critsect_);
 
   // Tracks the current request for playout delay limits from application
   // and decides whether the current RTP frame should include the playout
