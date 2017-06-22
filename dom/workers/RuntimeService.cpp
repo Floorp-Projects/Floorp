@@ -1649,6 +1649,7 @@ RuntimeService::RegisterWorker(WorkerPrivate* aWorkerPrivate)
     domainInfo = mDomainMap.LookupForAdd(domain).OrInsert(
       [&domain, parent] () {
         NS_ASSERTION(!parent, "Shouldn't have a parent here!");
+        Unused << parent; // silence clang -Wunused-lambda-capture in opt builds
         WorkerDomainInfo* wdi = new WorkerDomainInfo();
         wdi->mDomain = domain;
         return wdi;
