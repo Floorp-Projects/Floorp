@@ -834,15 +834,6 @@ nsHtml5StreamParser::WriteStreamBytes(const uint8_t* aFromSegment,
     MarkAsBroken(NS_ERROR_NULL_POINTER);
     return NS_ERROR_NULL_POINTER;
   }
-  if (mLastBuffer->getEnd() == NS_HTML5_STREAM_PARSER_READ_BUFFER_SIZE) {
-    RefPtr<nsHtml5OwningUTF16Buffer> newBuf =
-      nsHtml5OwningUTF16Buffer::FalliblyCreate(
-        NS_HTML5_STREAM_PARSER_READ_BUFFER_SIZE);
-    if (!newBuf) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-    mLastBuffer = (mLastBuffer->next = newBuf.forget());
-  }
   size_t totalRead = 0;
   auto src = MakeSpan(aFromSegment, aCount);
   for (;;) {
@@ -862,12 +853,10 @@ nsHtml5StreamParser::WriteStreamBytes(const uint8_t* aFromSegment,
         nsHtml5OwningUTF16Buffer::FalliblyCreate(
           NS_HTML5_STREAM_PARSER_READ_BUFFER_SIZE);
       if (!newBuf) {
+        MarkAsBroken(NS_ERROR_OUT_OF_MEMORY);
         return NS_ERROR_OUT_OF_MEMORY;
       }
       mLastBuffer = (mLastBuffer->next = newBuf.forget());
-      // All input may have been consumed if there is a pending surrogate pair
-      // that doesn't fit in the output buffer. Loop back to push a zero-length
-      // input to the decoder in that case.
     } else {
       MOZ_ASSERT(totalRead == aCount,
                  "The Unicode decoder consumed the wrong number of bytes.");
@@ -1055,6 +1044,43 @@ nsHtml5StreamParser::DoStopRequest()
   } else if (mFeedChardet) {
     mChardet->Done();
   }
+
+  MOZ_ASSERT(mUnicodeDecoder, "Should have a decoder after finalizing sniffing.");
+
+  // mLastBuffer should always point to a buffer of the size
+  // NS_HTML5_STREAM_PARSER_READ_BUFFER_SIZE.
+  if (!mLastBuffer) {
+    NS_WARNING("mLastBuffer should not be null!");
+    MarkAsBroken(NS_ERROR_NULL_POINTER);
+    return;
+  }
+
+  Span<uint8_t> src; // empty span
+  for (;;) {
+    auto dst = mLastBuffer->TailAsSpan(NS_HTML5_STREAM_PARSER_READ_BUFFER_SIZE);
+    uint32_t result;
+    size_t read;
+    size_t written;
+    bool hadErrors;
+    Tie(result, read, written, hadErrors) =
+      mUnicodeDecoder->DecodeToUTF16(src, dst, true);
+    Unused << hadErrors;
+    MOZ_ASSERT(read == 0, "How come an empty span was read form?");
+    mLastBuffer->AdvanceEnd(written);
+    if (result == kOutputFull) {
+      RefPtr<nsHtml5OwningUTF16Buffer> newBuf =
+        nsHtml5OwningUTF16Buffer::FalliblyCreate(
+          NS_HTML5_STREAM_PARSER_READ_BUFFER_SIZE);
+      if (!newBuf) {
+        MarkAsBroken(NS_ERROR_OUT_OF_MEMORY);
+        return;
+      }
+      mLastBuffer = (mLastBuffer->next = newBuf.forget());
+    } else {
+      break;
+    }
+  }
+
 
   if (IsTerminatedOrInterrupted()) {
     return;
