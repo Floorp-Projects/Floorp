@@ -159,26 +159,17 @@ public:
   size_t RecordingSize();
 
   /**
-   * Copies at most aBufferLen chars of the recording into aBuffer.
-   *
-   * @param aBuffer buffer to receive the recording chars
-   * @param aBufferLen length of aBuffer
-   * @return true if copied successfully
-   */
-  bool CopyRecording(char* aBuffer, size_t aBufferLen);
-
-  /**
    * Wipes the internal recording buffer, but the recorder does NOT forget which
    * objects it has recorded. This can be used so that a recording can be copied
    * and processed in chunks, releasing memory as it goes.
    */
   void WipeRecording();
 
+  MemStream mOutputStream;
 private:
   ~DrawEventRecorderMemory() {};
 
   void Flush() override;
-  MemStream mOutputStream;
 };
 
 } // namespace gfx

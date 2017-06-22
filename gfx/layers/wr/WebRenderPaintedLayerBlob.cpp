@@ -71,10 +71,7 @@ WebRenderPaintedLayerBlob::RenderLayer(wr::DisplayListBuilder& aBuilder,
 
     AddToValidRegion(regionToPaint);
 
-    wr::ByteBuffer bytes;
-    bytes.Allocate(recorder->RecordingSize());
-    DebugOnly<bool> ok = recorder->CopyRecording((char*)bytes.AsSlice().begin().get(), bytes.AsSlice().length());
-    MOZ_ASSERT(ok);
+    wr::ByteBuffer bytes(recorder->mOutputStream.mLength, (uint8_t*)recorder->mOutputStream.mData);
 
     //XXX: We should switch to updating the blob image instead of adding a new one
     //     That will get rid of this discard bit
