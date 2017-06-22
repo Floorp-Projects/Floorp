@@ -328,11 +328,19 @@ public:
    *   - Recomputes visible regions to account for async transforms.
    *     Each layer accumulates into |aVisibleRegion| its post-transform
    *     (including async transforms) visible region.
+   *
+   *   - aRenderTargetClip is the exact clip required for aLayer, in the coordinates
+   *     of the nearest render target (the same as GetEffectiveTransform).
+   *
+   *   - aClipFromAncestors is the approximate combined clip from all ancestors, in
+   *     the coordinate space of our parent, but maybe be an overestimate in the
+   *     presence of complex transforms.
    */
   void PostProcessLayers(nsIntRegion& aOpaqueRegion);
   void PostProcessLayers(Layer* aLayer,
                          nsIntRegion& aOpaqueRegion,
                          LayerIntRegion& aVisibleRegion,
+                         const Maybe<RenderTargetIntRect>& aRenderTargetClip,
                          const Maybe<ParentLayerIntRect>& aClipFromAncestors);
 
   /**
