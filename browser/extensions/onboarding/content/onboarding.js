@@ -193,6 +193,12 @@ class Onboarding {
     this._window = contentWindow;
     this._tourItems = [];
     this._tourPages = [];
+
+    // we only support the new user tour at this moment
+    if (Services.prefs.getStringPref("browser.onboarding.tour-type", "update") !== "new") {
+      return;
+    }
+
     // We want to create and append elements after CSS is loaded so
     // no flash of style changes and no additional reflow.
     await this._loadCSS();
