@@ -139,11 +139,11 @@ AnimationEffectTiming::SetEasing(const nsAString& aEasing, ErrorResult& aRv)
     return;
   }
 
-  if (mTiming.Function() == newFunction) {
+  if (mTiming.TimingFunction() == newFunction) {
     return;
   }
 
-  mTiming.SetFunction(Move(newFunction));
+  mTiming.SetTimingFunction(Move(newFunction));
 
   PostSpecifiedTimingUpdated(mEffect);
 }
