@@ -55,7 +55,6 @@ cppunit:
                         windows.*:
                             - unittests/win_taskcluster_unittest.py
                         macosx.*:
-                            - remove_executables.py
                             - unittests/mac_unittest.py
                         linux.*:
                             - unittests/linux_unittest.py
@@ -103,7 +102,6 @@ crashtest:
                         windows.*:
                             - unittests/win_taskcluster_unittest.py
                         macosx.*:
-                            - remove_executables.py
                             - unittests/mac_unittest.py
                         linux.*:
                             - unittests/linux_unittest.py
@@ -136,6 +134,8 @@ external-media-tests-base:
             by-test-platform:
                 windows.*:
                     - mediatests/taskcluster_windows_config.py
+                macosx.*:
+                    - mediatests/taskcluster_posix_config.py
                 default:
                     - mediatests/taskcluster_posix_config.py
                     - remove_executables.py
@@ -164,6 +164,8 @@ external-media-tests-twitch:
             by-test-platform:
                 windows.*:
                     - mediatests/taskcluster_windows_config.py
+                macosx.*:
+                    - mediatests/taskcluster_posix_config.py
                 default:
                     - mediatests/taskcluster_posix_config.py
                     - remove_executables.py
@@ -191,6 +193,8 @@ external-media-tests-youtube:
             by-test-platform:
                 windows.*:
                     - mediatests/taskcluster_windows_config.py
+                macosx.*:
+                    - mediatests/taskcluster_posix_config.py
                 default:
                     - mediatests/taskcluster_posix_config.py
                     - remove_executables.py
@@ -278,7 +282,6 @@ gtest:
                 windows.*:
                     - unittests/win_taskcluster_unittest.py
                 macosx.*:
-                    - remove_executables.py
                     - unittests/mac_unittest.py
                 linux.*:
                     - unittests/linux_unittest.py
@@ -314,7 +317,6 @@ jittest:
                 windows.*:
                     - unittests/win_taskcluster_unittest.py
                 macosx.*:
-                    - remove_executables.py
                     - unittests/mac_unittest.py
                 linux.*:
                     - unittests/linux_unittest.py
@@ -378,7 +380,6 @@ jsreftest:
                         windows.*:
                             - unittests/win_taskcluster_unittest.py
                         macosx.*:
-                            - remove_executables.py
                             - unittests/mac_unittest.py
                         linux.*:
                             - unittests/linux_unittest.py
@@ -441,6 +442,8 @@ marionette:
                     by-test-platform:
                         windows.*:
                             - marionette/windows_taskcluster_config.py
+                        macosx.*:
+                            - marionette/prod_config.py
                         default:
                             - marionette/prod_config.py
                             - remove_executables.py
@@ -475,6 +478,8 @@ marionette-headless:
                 no-read-buildbot-config: true
                 config:
                     by-test-platform:
+                        macosx.*: 
+                            - marionette/prod_config.py
                         default:
                             - marionette/prod_config.py
                             - remove_executables.py
@@ -540,7 +545,6 @@ mochitest:
                         windows.*:
                             - unittests/win_taskcluster_unittest.py
                         macosx.*:
-                            - remove_executables.py
                             - unittests/mac_unittest.py
                         linux.*:
                             - unittests/linux_unittest.py
@@ -576,7 +580,6 @@ mochitest-a11y:
                 windows.*:
                     - unittests/win_taskcluster_unittest.py
                 macosx.*:
-                    - remove_executables.py
                     - unittests/mac_unittest.py
                 linux.*:
                     - unittests/linux_unittest.py
@@ -626,7 +629,6 @@ mochitest-browser-chrome:
                 windows.*:
                     - unittests/win_taskcluster_unittest.py
                 macosx.*:
-                    - remove_executables.py
                     - unittests/mac_unittest.py
                 linux.*:
                     - unittests/linux_unittest.py
@@ -746,6 +748,8 @@ mochitest-chrome-style:
         no-read-buildbot-config: true
         config:
             by-test-platform:
+                macosx.*:
+                    - unittests/mac_unittest.py
                 default:
                     - unittests/linux_unittest.py
                     - remove_executables.py
@@ -837,7 +841,6 @@ mochitest-devtools-chrome:
                 windows.*:
                     - unittests/win_taskcluster_unittest.py
                 macosx.*:
-                    - remove_executables.py
                     - unittests/mac_unittest.py
                 linux.*:
                     - unittests/linux_unittest.py
@@ -893,7 +896,6 @@ mochitest-gpu:
                         windows.*:
                             - unittests/win_taskcluster_unittest.py
                         macosx.*:
-                            - remove_executables.py
                             - unittests/mac_unittest.py
                         linux.*:
                             - unittests/linux_unittest.py
@@ -930,7 +932,6 @@ mochitest-jetpack:
                 windows.*:
                     - unittests/win_taskcluster_unittest.py
                 macosx.*:
-                    - remove_executables.py
                     - unittests/mac_unittest.py
                 linux.*:
                     - unittests/linux_unittest.py
@@ -987,7 +988,6 @@ mochitest-media:
                         windows.*:
                             - unittests/win_taskcluster_unittest.py
                         macosx.*:
-                            - remove_executables.py
                             - unittests/mac_unittest.py
                         linux.*:
                             - unittests/linux_unittest.py
@@ -1012,6 +1012,8 @@ mochitest-style:
         no-read-buildbot-config: true
         config:
             by-test-platform:
+                macosx.*:
+                    - unittests/mac_unittest.py
                 default:
                     - unittests/linux_unittest.py
                     - remove_executables.py
@@ -1039,6 +1041,8 @@ mochitest-valgrind:
             by-test-platform:
                 windows.*:
                     - unittests/win_taskcluster_unittest.py
+                macosx.*:
+                    - unittests/mac_unittest.py
                 linux.*:
                     - unittests/linux_unittest.py
                     - remove_executables.py
@@ -1094,7 +1098,6 @@ mochitest-webgl:
                         windows.*:
                             - unittests/win_taskcluster_unittest.py
                         macosx.*:
-                            - remove_executables.py
                             - unittests/mac_unittest.py
                         linux.*:
                             - unittests/linux_unittest.py
@@ -1155,7 +1158,6 @@ reftest:
                         windows.*:
                             - unittests/win_taskcluster_unittest.py
                         macosx.*:
-                            - remove_executables.py
                             - unittests/mac_unittest.py
                         linux.*:
                             - unittests/linux_unittest.py
@@ -1189,7 +1191,6 @@ reftest-no-accel:
                 windows.*:
                     - unittests/win_taskcluster_unittest.py
                 macosx.*:
-                    - remove_executables.py
                     - unittests/mac_unittest.py
                 linux.*:
                     - unittests/linux_unittest.py
@@ -1237,8 +1238,12 @@ reftest-stylo:
         script: desktop_unittest.py
         no-read-buildbot-config: true
         config:
-            - unittests/linux_unittest.py
-            - remove_executables.py
+            by-test-platform:
+                macosx.*:
+                    - unittests/mac_unittest.py
+                default:
+                    - unittests/linux_unittest.py
+                    - remove_executables.py
         extra-options:
             - --reftest-suite=reftest-stylo
 
@@ -1342,7 +1347,7 @@ talos-g2:
     suite: talos
     try-name: g2
     treeherder-symbol: tc-T(g2)
-    max-run-time: 3600
+    max-run-time: 7200
     run-on-projects:
         by-test-platform:
             linux64-stylo/.*: ['mozilla-central', 'try']
@@ -1430,7 +1435,6 @@ talos-g5:
         config:
             by-test-platform:
                 macosx.*:
-                    - remove_executables.py
                     - talos/mac_config.py
                 default:
                     - talos/linux_config.py
@@ -1568,6 +1572,8 @@ web-platform-tests:
             by-test-platform:
                 windows.*:
                     - web_platform_tests/prod_config_windows_taskcluster.py
+                macosx.*:
+                    - web_platform_tests/prod_config.py
                 default:
                     - web_platform_tests/prod_config.py
                     - remove_executables.py
@@ -1600,6 +1606,8 @@ web-platform-tests-reftests:
             by-test-platform:
                 windows.*:
                     - web_platform_tests/prod_config_windows_taskcluster.py
+                macosx.*:
+                    - web_platform_tests/prod_config.py
                 default:
                     - web_platform_tests/prod_config.py
                     - remove_executables.py
@@ -1621,6 +1629,8 @@ web-platform-tests-wdspec:
             by-test-platform:
                 windows.*:
                     - web_platform_tests/prod_config_windows_taskcluster.py
+                macosx.*:
+                    - web_platform_tests/prod_config.py
                 default:
                     - web_platform_tests/prod_config.py
                     - remove_executables.py
@@ -1675,7 +1685,6 @@ xpcshell:
                         windows.*:
                             - unittests/win_taskcluster_unittest.py
                         macosx.*:
-                            - remove_executables.py
                             - unittests/mac_unittest.py
                         linux.*:
                             - unittests/linux_unittest.py
