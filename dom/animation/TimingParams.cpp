@@ -40,10 +40,10 @@ GetTimingProperties(
 }
 
 template <class OptionsType>
-static TimingParams
-TimingParamsFromOptionsUnion(const OptionsType& aOptions,
-                             nsIDocument* aDocument,
-                             ErrorResult& aRv)
+/* static */ TimingParams
+TimingParams::FromOptionsType(const OptionsType& aOptions,
+                              nsIDocument* aDocument,
+                              ErrorResult& aRv)
 {
   TimingParams result;
   if (aOptions.IsUnrestrictedDouble()) {
@@ -53,6 +53,7 @@ TimingParamsFromOptionsUnion(const OptionsType& aOptions,
         StickyTimeDuration::FromMilliseconds(durationInMs));
     } else {
       aRv.Throw(NS_ERROR_DOM_TYPE_ERR);
+      return result;
     }
   } else {
     const dom::AnimationEffectTimingProperties& timing =
@@ -95,7 +96,7 @@ TimingParams::FromOptionsUnion(
   nsIDocument* aDocument,
   ErrorResult& aRv)
 {
-  return TimingParamsFromOptionsUnion(aOptions, aDocument, aRv);
+  return FromOptionsType(aOptions, aDocument, aRv);
 }
 
 /* static */ TimingParams
@@ -104,7 +105,7 @@ TimingParams::FromOptionsUnion(
   nsIDocument* aDocument,
   ErrorResult& aRv)
 {
-  return TimingParamsFromOptionsUnion(aOptions, aDocument, aRv);
+  return FromOptionsType(aOptions, aDocument, aRv);
 }
 
 /* static */ Maybe<ComputedTimingFunction>

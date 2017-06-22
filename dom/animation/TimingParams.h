@@ -35,6 +35,11 @@ struct TimingParams
 {
   TimingParams() = default;
 
+  template <class OptionsType>
+  static TimingParams FromOptionsType(
+    const OptionsType& aOptions,
+    nsIDocument* aDocument,
+    ErrorResult& aRv);
   static TimingParams FromOptionsUnion(
     const dom::UnrestrictedDoubleOrKeyframeEffectOptions& aOptions,
     nsIDocument* aDocument, ErrorResult& aRv);
