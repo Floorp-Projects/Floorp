@@ -1165,6 +1165,8 @@ WebGLTexture::TexStorage(const char* funcName, TexTarget target, GLsizei levels,
     GLenum error = DoTexStorage(mContext->gl, target.get(), levels, sizedFormat, width,
                                 height, depth);
 
+    mContext->OnDataAllocCall();
+
     if (error == LOCAL_GL_OUT_OF_MEMORY) {
         mContext->ErrorOutOfMemory("%s: Ran out of memory during texture allocation.",
                                    funcName);
@@ -1296,6 +1298,8 @@ WebGLTexture::TexImage(const char* funcName, TexImageTarget target, GLint level,
     {
         return;
     }
+
+    mContext->OnDataAllocCall();
 
     if (glError == LOCAL_GL_OUT_OF_MEMORY) {
         mContext->ErrorOutOfMemory("%s: Driver ran out of memory during upload.",
@@ -1502,6 +1506,7 @@ WebGLTexture::CompressedTexImage(const char* funcName, TexImageTarget target, GL
     GLenum error = DoCompressedTexImage(mContext->gl, target, level, internalFormat,
                                         blob->mWidth, blob->mHeight, blob->mDepth,
                                         blob->mAvailBytes, blob->mPtr);
+    mContext->OnDataAllocCall();
     if (error == LOCAL_GL_OUT_OF_MEMORY) {
         mContext->ErrorOutOfMemory("%s: Ran out of memory during upload.", funcName);
         return;
@@ -2166,6 +2171,8 @@ WebGLTexture::CopyTexImage2D(TexImageTarget target, GLint level, GLenum internal
     {
         return;
     }
+
+    mContext->OnDataAllocCall();
 
     ////////////////////////////////////
     // Update our specification data.
