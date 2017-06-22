@@ -27,7 +27,7 @@ class TestMainTabScalars(TelemetryTestCase):
             self.browser.tabbar.switch_to(tab1)
         self.restart_browser()
         ping = self.wait_for_ping(lambda p: p['type'] == 'main'
-                                  and p['payload']['info']['reason'] == 'shutdown')
+                                  and p['payload']['info']['reason'] == 'shutdown')gi
         assert ping['type'] == 'main'
         assert ping['clientId'] == self.client_id
         scalars = ping['payload']['processes']['parent']['scalars']
