@@ -57,10 +57,10 @@ function FormAutofillParent() {
     let {profileStorage} = Cu.import("resource://formautofill/ProfileStorage.jsm", {});
     log.debug("Loading profileStorage");
 
-    profileStorage.initialize().then(function onStorageInitialized() {
+    profileStorage.initialize().then(() => {
       // Update the saved field names to compute the status and update child processes.
       this._updateSavedFieldNames();
-    }.bind(this));
+    });
 
     return profileStorage;
   });
