@@ -106,23 +106,13 @@
         android:clickable="true"
         android:visibility="gone" />
 
-    <org.mozilla.gecko.widget.themed.ThemedFrameLayout
+    <org.mozilla.gecko.widget.themed.ThemedImageButton
         android:id="@+id/menu"
         style="@style/UrlBar.Menu"
         android:layout_alignWithParentIfMissing="true"
         android:background="@drawable/browser_toolbar_action_bar_button"
-        android:contentDescription="@string/menu">
-
-        <org.mozilla.gecko.widget.themed.ThemedImageView
-            android:id="@+id/menu_icon"
-            style="@style/UrlBar.ImageButton.BrowserToolbarColors"
-            android:layout_width="wrap_content"
-            android:layout_height="@dimen/browser_toolbar_menu_icon_height"
-            android:layout_gravity="center"
-            android:scaleType="centerInside"
-            android:src="@drawable/menu" />
-
-    </org.mozilla.gecko.widget.themed.ThemedFrameLayout>
+        android:contentDescription="@string/menu"
+        android:src="@drawable/menu" />
 
     <!-- We draw after the menu items so when they are hidden, the cancel button,
          which is thus drawn on top, may be pressed. -->
