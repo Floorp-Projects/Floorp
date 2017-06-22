@@ -411,7 +411,6 @@ TabChild::TabChild(nsIContentChild* aManager,
   , mPendingDocShellPreserveLayers(false)
   , mPendingDocShellReceivedMessage(false)
   , mPendingDocShellBlockers(0)
-  , mWidgetNativeData(0)
 {
   nsWeakPtr weakPtrThis(do_GetWeakReference(static_cast<nsITabChild*>(this)));  // for capture by the lambda
   mSetAllowedTouchBehaviorCallback = [weakPtrThis](uint64_t aInputBlockId,
@@ -3210,13 +3209,6 @@ TabChild::RecvSetOriginAttributes(const OriginAttributes& aOriginAttributes)
   nsCOMPtr<nsIDocShell> docShell = do_GetInterface(WebNavigation());
   nsDocShell::Cast(docShell)->SetOriginAttributes(aOriginAttributes);
 
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult
-TabChild::RecvSetWidgetNativeData(const WindowsHandle& aWidgetNativeData)
-{
-  mWidgetNativeData = aWidgetNativeData;
   return IPC_OK();
 }
 
