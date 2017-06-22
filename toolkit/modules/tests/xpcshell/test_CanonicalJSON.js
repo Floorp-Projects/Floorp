@@ -5,13 +5,13 @@ function stringRepresentation(obj) {
   return JSON.stringify(clone);
 }
 
-add_task(function* test_canonicalJSON_should_preserve_array_order() {
+add_task(async function test_canonicalJSON_should_preserve_array_order() {
   const input = ["one", "two", "three"];
   // No sorting should be done on arrays.
   do_check_eq(CanonicalJSON.stringify(input), '["one","two","three"]');
 });
 
-add_task(function* test_canonicalJSON_orders_object_keys() {
+add_task(async function test_canonicalJSON_orders_object_keys() {
   const input = [{
     b: ["two", "three"],
     a: ["zero", "one"]
@@ -22,7 +22,7 @@ add_task(function* test_canonicalJSON_orders_object_keys() {
   );
 });
 
-add_task(function* test_canonicalJSON_orders_nested_object_keys() {
+add_task(async function test_canonicalJSON_orders_nested_object_keys() {
   const input = [{
     b: {d: "d", c: "c"},
     a: {b: "b", a: "a"}
@@ -33,7 +33,7 @@ add_task(function* test_canonicalJSON_orders_nested_object_keys() {
   );
 });
 
-add_task(function* test_canonicalJSON_escapes_unicode_values() {
+add_task(async function test_canonicalJSON_escapes_unicode_values() {
   do_check_eq(
     CanonicalJSON.stringify([{key: "✓"}]),
     '[{"key":"\\u2713"}]'
@@ -45,7 +45,7 @@ add_task(function* test_canonicalJSON_escapes_unicode_values() {
   );
 });
 
-add_task(function* test_canonicalJSON_escapes_unicode_object_keys() {
+add_task(async function test_canonicalJSON_escapes_unicode_object_keys() {
   do_check_eq(
     CanonicalJSON.stringify([{"é": "check"}]),
     '[{"\\u00e9":"check"}]'
@@ -53,7 +53,7 @@ add_task(function* test_canonicalJSON_escapes_unicode_object_keys() {
 });
 
 
-add_task(function* test_canonicalJSON_does_not_alter_input() {
+add_task(async function test_canonicalJSON_does_not_alter_input() {
   const records = [
     {"foo": "bar", "last_modified": "12345", "id": "1"},
     {"bar": "baz", "last_modified": "45678", "id": "2"}
@@ -64,7 +64,7 @@ add_task(function* test_canonicalJSON_does_not_alter_input() {
 });
 
 
-add_task(function* test_canonicalJSON_preserves_data() {
+add_task(async function test_canonicalJSON_preserves_data() {
   const records = [
     {"foo": "bar", "last_modified": "12345", "id": "1"},
     {"bar": "baz", "last_modified": "45678", "id": "2"},
@@ -74,7 +74,7 @@ add_task(function* test_canonicalJSON_preserves_data() {
   do_check_eq(CanonicalJSON.stringify(records), expected);
 });
 
-add_task(function* test_canonicalJSON_does_not_add_space_separators() {
+add_task(async function test_canonicalJSON_does_not_add_space_separators() {
   const records = [
     {"foo": "bar", "last_modified": "12345", "id": "1"},
     {"bar": "baz", "last_modified": "45678", "id": "2"},
@@ -83,40 +83,40 @@ add_task(function* test_canonicalJSON_does_not_add_space_separators() {
   do_check_false(serialized.includes(" "));
 });
 
-add_task(function* test_canonicalJSON_serializes_empty_object() {
+add_task(async function test_canonicalJSON_serializes_empty_object() {
   do_check_eq(CanonicalJSON.stringify({}), "{}");
 });
 
-add_task(function* test_canonicalJSON_serializes_empty_array() {
+add_task(async function test_canonicalJSON_serializes_empty_array() {
   do_check_eq(CanonicalJSON.stringify([]), "[]");
 });
 
-add_task(function* test_canonicalJSON_serializes_NaN() {
+add_task(async function test_canonicalJSON_serializes_NaN() {
   do_check_eq(CanonicalJSON.stringify(NaN), "null");
 });
 
-add_task(function* test_canonicalJSON_serializes_inf() {
+add_task(async function test_canonicalJSON_serializes_inf() {
   // This isn't part of the JSON standard.
   do_check_eq(CanonicalJSON.stringify(Infinity), "null");
 });
 
 
-add_task(function* test_canonicalJSON_serializes_empty_string() {
+add_task(async function test_canonicalJSON_serializes_empty_string() {
   do_check_eq(CanonicalJSON.stringify(""), '""');
 });
 
-add_task(function* test_canonicalJSON_escapes_backslashes() {
+add_task(async function test_canonicalJSON_escapes_backslashes() {
   do_check_eq(CanonicalJSON.stringify("This\\and this"), '"This\\\\and this"');
 });
 
-add_task(function* test_canonicalJSON_handles_signed_zeros() {
+add_task(async function test_canonicalJSON_handles_signed_zeros() {
   // do_check_eq doesn't support comparison of -0 and 0 properly.
   do_check_true(CanonicalJSON.stringify(-0) === "-0");
   do_check_true(CanonicalJSON.stringify(0) === "0");
 });
 
 
-add_task(function* test_canonicalJSON_with_deeply_nested_dicts() {
+add_task(async function test_canonicalJSON_with_deeply_nested_dicts() {
   const records = [{
     "a": {
       "b": "b",

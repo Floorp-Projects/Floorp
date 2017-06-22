@@ -15,7 +15,7 @@ const TEST_PARTNER_A          = "TestPartnerA";
 const PREF_PARTNER_B          = "app.partner.test_partner_b";
 const TEST_PARTNER_B          = "TestPartnerB";
 
-add_task(function* test_updatechannel() {
+add_task(async function test_updatechannel() {
   let defaultPrefs = new Preferences({ defaultBranch: true });
   let currentChannel = defaultPrefs.get(PREF_APP_UPDATE_CHANNEL);
 

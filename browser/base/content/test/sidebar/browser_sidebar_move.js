@@ -27,8 +27,8 @@ function getBrowserChildrenWithOrdinals() {
   });
 }
 
-add_task(function* () {
-  yield SidebarUI.show("viewBookmarksSidebar");
+add_task(async function() {
+  await SidebarUI.show("viewBookmarksSidebar");
   SidebarUI.showSwitcherPanel();
 
   let reversePositionButton = document.getElementById("sidebar-reverse-position");

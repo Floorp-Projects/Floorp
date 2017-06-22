@@ -121,7 +121,7 @@ function runHeuristicsTest(patterns, fixturePathPrefix) {
   Cu.import("resource://formautofill/FormAutofillUtils.jsm");
 
   patterns.forEach(testPattern => {
-    add_task(function* () {
+    add_task(async function() {
       do_print("Starting test fixture: " + testPattern.fixturePath);
       let file = do_get_file(fixturePathPrefix + testPattern.fixturePath);
       let doc = MockDocument.createTestDocumentFromFile("http://localhost:8080/test/", file);

@@ -70,22 +70,22 @@ https://trac.torproject.org/projects/tor/ticket/1517
     worker.terminate();
   }
 
-  add_task(function* testWorker() {
+  add_task(async function testWorker() {
     // Create one worker before setting the pref, and one after, in order to
     // check that the resolution is updated whether or not the worker was
     // already started
     let worker1 = new Worker("worker_child.js");
-    yield SpecialPowers.pushPrefEnv({
+    await SpecialPowers.pushPrefEnv({
       "set": [["privacy.resistFingerprinting", true]]});
     let worker2 = new Worker("worker_child.js");
     // Allow ~550 ms to elapse, so we can get non-zero
     // time values for all elements.
-    yield new Promise(resolve => window.setTimeout(resolve, 550));
-    yield checkWorker(worker1);
-    yield checkWorker(worker2);
+    await new Promise(resolve => window.setTimeout(resolve, 550));
+    await checkWorker(worker1);
+    await checkWorker(worker2);
   });
 
-  add_task(function* testDOM() {
+  add_task(async function testDOM() {
     let timeStampCodesDOM = timeStampCodes.concat([
       'audioContext.currentTime * 1000',
       'canvasStream.currentTime * 1000',
