@@ -36,4 +36,14 @@
         <item name="menuItemSecondaryActionBarStyle">@style/Widget.MenuItemSecondaryActionBar</item>
     </style>
 
+    <style name="OverlayActivity.V21" parent="OverlayActivity.Base">
+        <!-- Set the app's title bar color in the recent app switcher.
+
+             Note: We'd prefer not to show up in the recent app switcher (bug 1137928). -->
+        <item name="android:colorPrimary">@color/text_and_tabs_tray_grey</item>
+        <!-- We display the overlay on top of other Activities so show their status bar. -->
+        <item name="android:statusBarColor">@android:color/transparent</item>
+    </style>
+    <style name="OverlayActivity" parent="OverlayActivity.V21"/>
+
 </resources>

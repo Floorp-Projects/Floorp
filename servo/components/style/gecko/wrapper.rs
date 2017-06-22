@@ -616,7 +616,7 @@ fn get_animation_rule(element: &GeckoElement,
                       -> Option<Arc<Locked<PropertyDeclarationBlock>>> {
     use gecko_bindings::sugar::ownership::HasSimpleFFI;
     // Also, we should try to reuse the PDB, to avoid creating extra rule nodes.
-    let mut animation_values = AnimationValueMap::new();
+    let mut animation_values = AnimationValueMap::default();
     if unsafe { Gecko_GetAnimationRule(element.0,
                                        cascade_level,
                                        AnimationValueMap::as_ffi_mut(&mut animation_values)) } {
@@ -672,7 +672,7 @@ impl FontMetricsProvider for GeckoFontMetricsProvider {
              in_media_query: bool, device: &Device) -> FontMetricsQueryResult {
         use gecko_bindings::bindings::Gecko_GetFontMetrics;
         let gecko_metrics = unsafe {
-            Gecko_GetFontMetrics(&*device.pres_context,
+            Gecko_GetFontMetrics(device.pres_context(),
                                  wm.is_vertical() && !wm.is_sideways(),
                                  font.gecko(),
                                  font_size.0,
@@ -769,6 +769,11 @@ impl<'le> TElement for GeckoElement<'le> {
 
     fn as_node(&self) -> Self::ConcreteNode {
         unsafe { GeckoNode(&*(self.0 as *const _ as *const RawGeckoNode)) }
+    }
+
+    fn owner_doc_matches_for_testing(&self, device: &Device) -> bool {
+        self.as_node().owner_doc() as *const structs::nsIDocument ==
+            device.pres_context().mDocument.raw::<structs::nsIDocument>()
     }
 
     fn style_attribute(&self) -> Option<&Arc<Locked<PropertyDeclarationBlock>>> {

@@ -13,8 +13,8 @@
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsIContentInlines.h"
+#include "nsIdentifierMapEntry.h"
 #include "nsTHashtable.h"
-#include "nsDocument.h"
 
 class nsIAtom;
 class nsIContent;

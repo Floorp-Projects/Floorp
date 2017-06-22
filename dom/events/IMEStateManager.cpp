@@ -708,12 +708,12 @@ IMEStateManager::OnClickInEditor(nsPresContext* aPresContext,
 void
 IMEStateManager::OnFocusInEditor(nsPresContext* aPresContext,
                                  nsIContent* aContent,
-                                 nsIEditor* aEditor)
+                                 EditorBase& aEditorBase)
 {
   MOZ_LOG(sISMLog, LogLevel::Info,
-    ("OnFocusInEditor(aPresContext=0x%p, aContent=0x%p, aEditor=0x%p), "
+    ("OnFocusInEditor(aPresContext=0x%p, aContent=0x%p, aEditorBase=0x%p), "
      "sPresContext=0x%p, sContent=0x%p, sActiveIMEContentObserver=0x%p",
-     aPresContext, aContent, aEditor, sPresContext.get(), sContent.get(),
+     aPresContext, aContent, &aEditorBase, sPresContext.get(), sContent.get(),
      sActiveIMEContentObserver.get()));
 
   if (sPresContext != aPresContext || sContent != aContent) {
@@ -735,7 +735,7 @@ IMEStateManager::OnFocusInEditor(nsPresContext* aPresContext,
     DestroyIMEContentObserver();
   }
 
-  CreateIMEContentObserver(aEditor);
+  CreateIMEContentObserver(&aEditorBase);
 
   // Let's flush the focus notification now.
   if (sActiveIMEContentObserver) {
@@ -748,32 +748,32 @@ IMEStateManager::OnFocusInEditor(nsPresContext* aPresContext,
 
 // static
 void
-IMEStateManager::OnEditorInitialized(nsIEditor* aEditor)
+IMEStateManager::OnEditorInitialized(EditorBase& aEditorBase)
 {
   if (!sActiveIMEContentObserver ||
-      sActiveIMEContentObserver->GetEditor() != aEditor) {
+      !sActiveIMEContentObserver->WasInitializedWith(aEditorBase)) {
     return;
   }
 
   MOZ_LOG(sISMLog, LogLevel::Info,
-    ("OnEditorInitialized(aEditor=0x%p)",
-     aEditor));
+    ("OnEditorInitialized(aEditorBase=0x%p)",
+     &aEditorBase));
 
   sActiveIMEContentObserver->UnsuppressNotifyingIME();
 }
 
 // static
 void
-IMEStateManager::OnEditorDestroying(nsIEditor* aEditor)
+IMEStateManager::OnEditorDestroying(EditorBase& aEditorBase)
 {
   if (!sActiveIMEContentObserver ||
-      sActiveIMEContentObserver->GetEditor() != aEditor) {
+      !sActiveIMEContentObserver->WasInitializedWith(aEditorBase)) {
     return;
   }
 
   MOZ_LOG(sISMLog, LogLevel::Info,
-    ("OnEditorDestroying(aEditor=0x%p)",
-     aEditor));
+    ("OnEditorDestroying(aEditorBase=0x%p)",
+     &aEditorBase));
 
   // The IMEContentObserver shouldn't notify IME of anything until reframing
   // is finished.
@@ -1669,14 +1669,14 @@ IMEStateManager::DestroyIMEContentObserver()
 
 // static
 void
-IMEStateManager::CreateIMEContentObserver(nsIEditor* aEditor)
+IMEStateManager::CreateIMEContentObserver(EditorBase* aEditorBase)
 {
   MOZ_LOG(sISMLog, LogLevel::Info,
-    ("CreateIMEContentObserver(aEditor=0x%p), "
+    ("CreateIMEContentObserver(aEditorBase=0x%p), "
      "sPresContext=0x%p, sContent=0x%p, sWidget=0x%p (available: %s), "
      "sActiveIMEContentObserver=0x%p, "
      "sActiveIMEContentObserver->IsManaging(sPresContext, sContent)=%s",
-     aEditor, sPresContext.get(), sContent.get(),
+     aEditorBase, sPresContext.get(), sContent.get(),
      sWidget, GetBoolName(sWidget && !sWidget->Destroyed()),
      sActiveIMEContentObserver.get(),
      GetBoolName(sActiveIMEContentObserver ?
@@ -1725,7 +1725,7 @@ IMEStateManager::CreateIMEContentObserver(nsIEditor* aEditor)
   // instance.  So, sActiveIMEContentObserver would be replaced with new one.
   // We should hold the current instance here.
   RefPtr<IMEContentObserver> activeIMEContentObserver(sActiveIMEContentObserver);
-  activeIMEContentObserver->Init(widget, sPresContext, sContent, aEditor);
+  activeIMEContentObserver->Init(widget, sPresContext, sContent, aEditorBase);
 }
 
 // static

@@ -22,7 +22,6 @@
 #include "nsIContent.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMNode.h"
-#include "nsIEditor.h"
 #include "nsIFrame.h"
 #include "nsINode.h"
 #include "nsIPresShell.h"
