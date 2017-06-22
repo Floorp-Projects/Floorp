@@ -141,32 +141,50 @@ struct IMEState;
  * CachedWeakPtr stores a pointer to a class which inherits nsIWeakReference.
  * If the instance of the class has already been destroyed, this returns
  * nullptr.  Otherwise, returns cached pointer.
+ * If class T inherits nsISupports a lot, specify Base explicitly for avoiding
+ * ambiguous conversion to nsISupports.
  */
-template<class T>
+template<class T, class Base = nsISupports>
 class CachedWeakPtr final
 {
 public:
-  CachedWeakPtr<T>()
+  CachedWeakPtr<T, Base>()
     : mCache(nullptr)
   {
   }
-
-  CachedWeakPtr<T>& operator=(T* aObject)
+  explicit CachedWeakPtr<T, Base>(T* aObject)
   {
-    mWeakPtr = do_GetWeakReference(aObject);
+    mWeakPtr = do_GetWeakReference(static_cast<Base*>(aObject));
+    mCache = aObject;
+  }
+  explicit CachedWeakPtr<T, Base>(const nsCOMPtr<T>& aOther)
+  {
+    mWeakPtr = do_GetWeakReference(static_cast<Base*>(aOther.get()));
+    mCache = aOther;
+  }
+  explicit CachedWeakPtr<T, Base>(already_AddRefed<T>& aOther)
+  {
+    RefPtr<T> other = aOther;
+    mWeakPtr = do_GetWeakReference(static_cast<Base*>(other.get()));
+    mCache = other;
+  }
+
+  CachedWeakPtr<T, Base>& operator=(T* aObject)
+  {
+    mWeakPtr = do_GetWeakReference(static_cast<Base*>(aObject));
     mCache = aObject;
     return *this;
   }
-  CachedWeakPtr<T>& operator=(const nsCOMPtr<T>& aOther)
+  CachedWeakPtr<T, Base>& operator=(const nsCOMPtr<T>& aOther)
   {
-    mWeakPtr = do_GetWeakReference(aOther);
+    mWeakPtr = do_GetWeakReference(static_cast<Base*>(aOther.get()));
     mCache = aOther;
     return *this;
   }
-  CachedWeakPtr<T>& operator=(already_AddRefed<T>& aOther)
+  CachedWeakPtr<T, Base>& operator=(already_AddRefed<T>& aOther)
   {
-    nsCOMPtr<T> other = aOther;
-    mWeakPtr = do_GetWeakReference(other);
+    RefPtr<T> other = aOther;
+    mWeakPtr = do_GetWeakReference(static_cast<Base*>(other.get()));
     mCache = other;
     return *this;
   }
@@ -178,7 +196,7 @@ public:
   T* get() const
   {
     if (mCache && !mWeakPtr->IsAlive()) {
-      const_cast<CachedWeakPtr<T>*>(this)->mCache = nullptr;
+      const_cast<CachedWeakPtr<T, Base>*>(this)->mCache = nullptr;
     }
     return mCache;
   }
