@@ -18,7 +18,7 @@ add_task(async function test_unknown_permissions() {
   const {WebExtensionPolicy} = Cu.import("resource://gre/modules/Extension.jsm", {});
 
   let policy = WebExtensionPolicy.getByID(extension.id);
-  Assert.deepEqual(policy.permissions, ["activeTab", "http://*/*"]);
+  Assert.deepEqual(Array.from(policy.permissions).sort(), ["activeTab", "http://*/*"]);
 
   ok(messages.some(message => /Error processing permissions\.1: Value "fooUnknownPermission" must/.test(message)),
      'Got expected error for "fooUnknownPermission"');
