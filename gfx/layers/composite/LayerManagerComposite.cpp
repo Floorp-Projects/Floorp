@@ -242,7 +242,11 @@ void
 LayerManagerComposite::PostProcessLayers(nsIntRegion& aOpaqueRegion)
 {
   LayerIntRegion visible;
-  PostProcessLayers(mRoot, aOpaqueRegion, visible, Nothing());
+  LayerComposite* rootComposite = static_cast<LayerComposite*>(mRoot->AsHostLayer());
+  PostProcessLayers(mRoot, aOpaqueRegion, visible,
+                    ViewAs<RenderTargetPixel>(rootComposite->GetShadowClipRect(),
+                                              PixelCastJustification::RenderTargetIsParentLayerForRoot),
+                    Nothing());
 }
 
 // We want to skip directly through ContainerLayers that don't have an intermediate
@@ -251,8 +255,7 @@ LayerManagerComposite::PostProcessLayers(nsIntRegion& aOpaqueRegion)
 // effective transform.
 bool ShouldProcessLayer(Layer* aLayer)
 {
-  if (!aLayer->GetParent() ||
-      !aLayer->AsContainerLayer()) {
+  if (!aLayer->AsContainerLayer()) {
     return true;
   }
 
@@ -278,6 +281,7 @@ void
 LayerManagerComposite::PostProcessLayers(Layer* aLayer,
                                          nsIntRegion& aOpaqueRegion,
                                          LayerIntRegion& aVisibleRegion,
+                                         const Maybe<RenderTargetIntRect>& aRenderTargetClip,
                                          const Maybe<ParentLayerIntRect>& aClipFromAncestors)
 {
 
@@ -295,7 +299,9 @@ LayerManagerComposite::PostProcessLayers(Layer* aLayer,
   if (aLayer->Extend3DContext()) {
     // If we're preserve-3d just pass the clip rect down directly, and we'll do the
     // conversion at the preserve-3d leaf Layer.
-    insideClip = Some(ViewAs<LayerPixel>(*outsideClip, PixelCastJustification::MovingDownToChildren));
+    if (outsideClip) {
+      insideClip = Some(ViewAs<LayerPixel>(*outsideClip, PixelCastJustification::MovingDownToChildren));
+    }
   } else if (outsideClip) {
     // Convert the combined clip into our pre-transform coordinate space, so
     // that it can later be intersected with our visible region.
@@ -322,15 +328,25 @@ LayerManagerComposite::PostProcessLayers(Layer* aLayer,
   }
 
   if (!ShouldProcessLayer(aLayer)) {
-    MOZ_ASSERT(!aLayer->AsContainerLayer() || !aLayer->AsContainerLayer()->UseIntermediateSurface());
+    MOZ_ASSERT(aLayer->AsContainerLayer() && !aLayer->AsContainerLayer()->UseIntermediateSurface());
     // For layers participating 3D rendering context, their visible
     // region should be empty (invisible), so we pass through them
     // without doing anything.
     for (Layer* child = aLayer->GetLastChild();
          child;
          child = child->GetPrevSibling()) {
+      LayerComposite* childComposite = static_cast<LayerComposite*>(child->AsHostLayer());
+      Maybe<RenderTargetIntRect> renderTargetClip = aRenderTargetClip;
+      if (childComposite->GetShadowClipRect()) {
+        RenderTargetIntRect clip = TransformBy(ViewAs<ParentLayerToRenderTargetMatrix4x4>(
+          aLayer->GetEffectiveTransform(),
+          PixelCastJustification::RenderTargetIsParentLayerForRoot),
+                                               *childComposite->GetShadowClipRect());
+        renderTargetClip = IntersectMaybeRects(renderTargetClip, Some(clip));
+      }
+
       PostProcessLayers(child, aOpaqueRegion, aVisibleRegion,
-                        ancestorClipForChildren);
+                        renderTargetClip, ancestorClipForChildren);
     }
     return;
   }
@@ -364,7 +380,12 @@ LayerManagerComposite::PostProcessLayers(Layer* aLayer,
 
   bool hasPreserve3DChild = false;
   for (Layer* child = aLayer->GetLastChild(); child; child = child->GetPrevSibling()) {
-    PostProcessLayers(child, localOpaque, descendantsVisibleRegion, ancestorClipForChildren);
+    MOZ_ASSERT(aLayer->AsContainerLayer()->UseIntermediateSurface());
+    LayerComposite* childComposite = static_cast<LayerComposite*>(child->AsHostLayer());
+    PostProcessLayers(child, localOpaque, descendantsVisibleRegion,
+                      ViewAs<RenderTargetPixel>(childComposite->GetShadowClipRect(),
+                                                PixelCastJustification::RenderTargetIsParentLayerForRoot),
+                      ancestorClipForChildren);
     if (child->Extend3DContext()) {
       hasPreserve3DChild = true;
     }
@@ -406,10 +427,10 @@ LayerManagerComposite::PostProcessLayers(Layer* aLayer,
     if (aLayer->IsOpaque()) {
       localOpaque.OrWith(composite->GetFullyRenderedRegion());
     }
-    if (insideClip) {
-      localOpaque.AndWith(insideClip->ToUnknownRect());
-    }
     localOpaque.MoveBy(*integerTranslation);
+    if (aRenderTargetClip) {
+      localOpaque.AndWith(aRenderTargetClip->ToUnknownRect());
+    }
     aOpaqueRegion.OrWith(localOpaque);
   }
 }
