@@ -6913,12 +6913,14 @@ nsComputedDOMStyle::DoGetCustomProperty(const nsAString& aPropertyName)
 {
   MOZ_ASSERT(nsCSSProps::IsCustomPropertyName(aPropertyName));
 
-  const nsStyleVariables* variables = StyleVariables();
-
   nsString variableValue;
   const nsAString& name = Substring(aPropertyName,
                                     CSS_CUSTOM_NAME_PREFIX_LENGTH);
-  if (!variables->mVariables.Get(name, variableValue)) {
+  bool present = mStyleContext->IsServo()
+    ? Servo_GetCustomProperty(mStyleContext->ComputedValues(),
+                              &name, &variableValue)
+    : StyleVariables()->mVariables.Get(name, variableValue);
+  if (!present) {
     return nullptr;
   }
 
