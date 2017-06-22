@@ -14,7 +14,7 @@ let cm = Cc["@mozilla.org/cookiemanager;1"].getService(Ci.nsICookieManager2);
 
 // opens `uri' in a new tab with the provided userContextId and focuses it.
 // returns the newly opened tab
-function* openTabInUserContext(uri, userContextId) {
+async function openTabInUserContext(uri, userContextId) {
   // open the tab in the correct userContextId
   let tab = BrowserTestUtils.addTab(gBrowser, uri, {userContextId});
 
@@ -24,28 +24,28 @@ function* openTabInUserContext(uri, userContextId) {
 
   let browser = gBrowser.getBrowserForTab(tab);
   // wait for tab load
-  yield BrowserTestUtils.browserLoaded(browser);
+  await BrowserTestUtils.browserLoaded(browser);
 
   return {tab, browser};
 }
 
-add_task(function* setup() {
+add_task(async function setup() {
   // make sure userContext is enabled.
-  yield new Promise(resolve => {
+  await new Promise(resolve => {
     SpecialPowers.pushPrefEnv({"set": [
       ["privacy.userContext.enabled", true]
     ]}, resolve);
   });
 });
 
-add_task(function* test() {
+add_task(async function test() {
   // load the page in 3 different contexts and set a cookie
   // which should only be visible in that context
   for (let userContextId of Object.keys(USER_CONTEXTS)) {
     // open our tab in the given user context
-    let {tab, browser} = yield* openTabInUserContext(TEST_URL, userContextId);
+    let {tab, browser} = await openTabInUserContext(TEST_URL, userContextId);
 
-    yield ContentTask.spawn(browser,
+    await ContentTask.spawn(browser,
         {names: COOKIE_NAMES, value: USER_CONTEXTS[userContextId]},
         function(opts) {
           for (let name of opts.names) {
@@ -58,18 +58,18 @@ add_task(function* test() {
   }
 
   let expectedValues = USER_CONTEXTS.slice(0);
-  yield checkCookies(expectedValues, "before removal");
+  await checkCookies(expectedValues, "before removal");
 
   // remove cookies that belongs to user context id #1
   cm.removeCookiesWithOriginAttributes(JSON.stringify({userContextId: 1}));
 
   expectedValues[1] = undefined;
-  yield checkCookies(expectedValues, "after removal");
+  await checkCookies(expectedValues, "after removal");
 });
 
-function *checkCookies(expectedValues, time) {
+async function checkCookies(expectedValues, time) {
   for (let userContextId of Object.keys(expectedValues)) {
-    let cookiesFromTitle = yield* getCookiesFromJS(userContextId);
+    let cookiesFromTitle = await getCookiesFromJS(userContextId);
     let cookiesFromManager = getCookiesFromManager(userContextId);
 
     let expectedValue = expectedValues[userContextId];
@@ -93,11 +93,11 @@ function getCookiesFromManager(userContextId) {
   return cookies;
 }
 
-function* getCookiesFromJS(userContextId) {
-  let {tab, browser} = yield* openTabInUserContext(TEST_URL, userContextId);
+async function getCookiesFromJS(userContextId) {
+  let {tab, browser} = await openTabInUserContext(TEST_URL, userContextId);
 
   // get the cookies
-  let cookieString = yield ContentTask.spawn(browser, null, function() {
+  let cookieString = await ContentTask.spawn(browser, null, function() {
     return content.document.cookie;
   });
 

@@ -397,41 +397,6 @@ BackgroundParentImpl::DeallocPCamerasParent(camera::PCamerasParent *aActor)
   return true;
 }
 
-namespace {
-
-class InitUDPSocketParentCallback final : public Runnable
-{
-public:
-  InitUDPSocketParentCallback(UDPSocketParent* aActor,
-                              const nsACString& aFilter)
-    : mActor(aActor)
-    , mFilter(aFilter)
-  {
-    AssertIsInMainProcess();
-    AssertIsOnBackgroundThread();
-  }
-
-  NS_IMETHOD
-  Run() override
-  {
-    AssertIsInMainProcess();
-
-    IPC::Principal principal;
-    if (!mActor->Init(principal, mFilter)) {
-      MOZ_CRASH("UDPSocketCallback - failed init");
-    }
-    return NS_OK;
-  }
-
-private:
-  ~InitUDPSocketParentCallback() override = default;
-
-  RefPtr<UDPSocketParent> mActor;
-  nsCString mFilter;
-};
-
-} // namespace
-
 auto
 BackgroundParentImpl::AllocPUDPSocketParent(const OptionalPrincipalInfo& /* unused */,
                                             const nsCString& /* unused */)

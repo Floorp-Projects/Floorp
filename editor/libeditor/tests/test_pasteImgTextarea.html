@@ -6,8 +6,8 @@
 
 <script>
 let loaded = new Promise(resolve => addLoadEvent(resolve));
-    add_task(function*() {
-        yield loaded;
+    add_task(async function() {
+        await loaded;
         SpecialPowers.setCommandNode(window, document.getElementById("i"));
         SpecialPowers.doCommand(window, "cmd_copyImageContents");
         let input = document.getElementById("t");

@@ -14,7 +14,7 @@ const TELEMETRY_HISTOGRAM_KEY = "settings-changes-monitoring";
 
 // Check to ensure maybeSync is called with correct values when a changes
 // document contains information on when a collection was last modified
-add_task(function* test_check_maybeSync() {
+add_task(async function test_check_maybeSync() {
   const changesPath = "/v1/buckets/monitor/collections/changes/records";
 
   // register a handler
@@ -71,7 +71,7 @@ add_task(function* test_check_maybeSync() {
 
   const startHistogram = getUptakeTelemetrySnapshot(TELEMETRY_HISTOGRAM_KEY);
 
-  yield updater.checkVersions();
+  await updater.checkVersions();
 
   // check the last_update is updated
   do_check_eq(Services.prefs.getIntPref(PREF_LAST_UPDATE), 2);
@@ -92,7 +92,7 @@ add_task(function* test_check_maybeSync() {
   updater.addTestBlocklistClient("test-collection", {
     maybeSync: () => { throw new Error("Should not be called"); }
   });
-  yield updater.checkVersions();
+  await updater.checkVersions();
   // Last update is overwritten
   do_check_eq(Services.prefs.getIntPref(PREF_LAST_UPDATE), 2);
 
@@ -113,7 +113,7 @@ add_task(function* test_check_maybeSync() {
   // checkVersions() fails with adequate error.
   let error;
   try {
-    yield updater.checkVersions();
+    await updater.checkVersions();
   } catch (e) {
     error = e;
   }
@@ -126,7 +126,7 @@ add_task(function* test_check_maybeSync() {
   // set to a time in the future
   server.registerPathHandler(changesPath, handleResponse.bind(null, Date.now() + 10000));
 
-  yield updater.checkVersions();
+  await updater.checkVersions();
 
   clockDifference = Services.prefs.getIntPref(PREF_CLOCK_SKEW_SECONDS);
   // we previously set the serverTime to Date.now() + 10000 ms past epoch
@@ -143,10 +143,10 @@ add_task(function* test_check_maybeSync() {
   }
   server.registerPathHandler(changesPath, simulateBackoffResponse);
   // First will work.
-  yield updater.checkVersions();
+  await updater.checkVersions();
   // Second will fail because we haven't waited.
   try {
-    yield updater.checkVersions();
+    await updater.checkVersions();
     // The previous line should have thrown an error.
     do_check_true(false);
   } catch (e) {
@@ -155,7 +155,7 @@ add_task(function* test_check_maybeSync() {
   // Once backoff time has expired, polling for changes can start again.
   server.registerPathHandler(changesPath, handleResponse.bind(null, 2000));
   Services.prefs.setCharPref(PREF_SETTINGS_SERVER_BACKOFF, `${Date.now() - 1000}`);
-  yield updater.checkVersions();
+  await updater.checkVersions();
   // Backoff tracking preference was cleared.
   do_check_false(Services.prefs.prefHasUserValue(PREF_SETTINGS_SERVER_BACKOFF));
 
@@ -163,7 +163,7 @@ add_task(function* test_check_maybeSync() {
   // Simulate a network error (to check telemetry report).
   Services.prefs.setCharPref(PREF_SETTINGS_SERVER, "http://localhost:42/v1");
   try {
-    yield updater.checkVersions();
+    await updater.checkVersions();
   } catch (e) {}
 
   const endHistogram = getUptakeTelemetrySnapshot(TELEMETRY_HISTOGRAM_KEY);

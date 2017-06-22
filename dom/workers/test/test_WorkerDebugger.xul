@@ -21,7 +21,7 @@
     const SHARED_WORKER_URL = "WorkerDebugger_sharedWorker.js";
 
     function test() {
-      Task.spawn(function* () {
+      (async function() {
         SimpleTest.waitForExplicitFinish();
 
         info("Create a top-level chrome worker that creates a non-top-level " +
@@ -31,7 +31,7 @@
           waitForRegister(CHILD_WORKER_URL)
         ]);
         worker = new ChromeWorker(WORKER_URL);
-        let [dbg, childDbg] = yield promise;
+        let [dbg, childDbg] = await promise;
 
         info("Check that the top-level chrome worker debugger has the " +
              "correct properties.");
@@ -65,13 +65,13 @@
           waitForDebuggerClose(dbg),
         ]);
         worker.terminate();
-        yield promise;
+        await promise;
 
         info("Create a shared worker and wait for its debugger to be " + 
              "registered");
         promise = waitForRegister(SHARED_WORKER_URL);
         worker = new SharedWorker(SHARED_WORKER_URL);
-        let sharedDbg = yield promise;
+        let sharedDbg = await promise;
 
         info("Check that the shared worker debugger has the correct " +
              "properties.");
@@ -103,11 +103,11 @@
         ]);
         worker.port.start();
         worker.port.postMessage("close");
-        yield promise;
+        await promise;
 
         wdm.removeListener(listener);
         SimpleTest.finish();
-      });
+      })();
     }
 
   ]]>

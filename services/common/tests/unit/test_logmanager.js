@@ -24,7 +24,7 @@ function getAppenders(log) {
 }
 
 // Test that the correct thing happens when no prefs exist for the log manager.
-add_task(function* test_noPrefs() {
+add_task(async function test_noPrefs() {
   // tell the log manager to init with a pref branch that doesn't exist.
   let lm = new LogManager("no-such-branch.", ["TestLog"], "test");
 
@@ -40,7 +40,7 @@ add_task(function* test_noPrefs() {
 });
 
 // Test that changes to the prefs used by the log manager are updated dynamically.
-add_task(function* test_PrefChanges() {
+add_task(async function test_PrefChanges() {
   Services.prefs.setCharPref("log-manager.test.log.appender.console", "Trace");
   Services.prefs.setCharPref("log-manager.test.log.appender.dump", "Trace");
   Services.prefs.setCharPref("log-manager.test.log.appender.file.level", "Trace");
@@ -69,7 +69,7 @@ add_task(function* test_PrefChanges() {
 });
 
 // Test that the same log used by multiple log managers does the right thing.
-add_task(function* test_SharedLogs() {
+add_task(async function test_SharedLogs() {
   // create the prefs for the first instance.
   Services.prefs.setCharPref("log-manager-1.test.log.appender.console", "Trace");
   Services.prefs.setCharPref("log-manager-1.test.log.appender.dump", "Trace");
@@ -123,12 +123,12 @@ function checkLogFile(prefix) {
 }
 
 // Test that we correctly write error logs by default
-add_task(function* test_logFileErrorDefault() {
+add_task(async function test_logFileErrorDefault() {
   let lm = new LogManager("log-manager.test.", ["TestLog2"], "test");
 
   let log = Log.repository.getLogger("TestLog2");
   log.error("an error message");
-  yield lm.resetFileLog(lm.REASON_ERROR);
+  await lm.resetFileLog(lm.REASON_ERROR);
   // One error log file exists.
   checkLogFile("error");
 
@@ -136,7 +136,7 @@ add_task(function* test_logFileErrorDefault() {
 });
 
 // Test that we correctly write success logs.
-add_task(function* test_logFileSuccess() {
+add_task(async function test_logFileSuccess() {
   Services.prefs.setBoolPref("log-manager.test.log.appender.file.logOnError", false);
   Services.prefs.setBoolPref("log-manager.test.log.appender.file.logOnSuccess", false);
 
@@ -144,40 +144,40 @@ add_task(function* test_logFileSuccess() {
 
   let log = Log.repository.getLogger("TestLog2");
   log.info("an info message");
-  yield lm.resetFileLog();
+  await lm.resetFileLog();
   // Zero log files exist.
   checkLogFile(null);
 
   // Reset logOnSuccess and do it again - log should appear.
   Services.prefs.setBoolPref("log-manager.test.log.appender.file.logOnSuccess", true);
   log.info("an info message");
-  yield lm.resetFileLog();
+  await lm.resetFileLog();
 
   checkLogFile("success");
 
   // Now test with no "reason" specified and no "error" record.
   log.info("an info message");
-  yield lm.resetFileLog();
+  await lm.resetFileLog();
   // should get a "success" entry.
   checkLogFile("success");
 
   // With no "reason" and an error record - should get no success log.
   log.error("an error message");
-  yield lm.resetFileLog();
+  await lm.resetFileLog();
   // should get no entry
   checkLogFile(null);
 
   // And finally now with no error, to ensure that the fact we had an error
   // previously doesn't persist after the .resetFileLog call.
   log.info("an info message");
-  yield lm.resetFileLog();
+  await lm.resetFileLog();
   checkLogFile("success");
 
   lm.finalize();
 });
 
 // Test that we correctly write error logs.
-add_task(function* test_logFileError() {
+add_task(async function test_logFileError() {
   Services.prefs.setBoolPref("log-manager.test.log.appender.file.logOnError", false);
   Services.prefs.setBoolPref("log-manager.test.log.appender.file.logOnSuccess", false);
 
@@ -185,7 +185,7 @@ add_task(function* test_logFileError() {
 
   let log = Log.repository.getLogger("TestLog2");
   log.info("an info message");
-  let reason = yield lm.resetFileLog();
+  let reason = await lm.resetFileLog();
   Assert.equal(reason, null, "null returned when no file created.");
   // Zero log files exist.
   checkLogFile(null);
@@ -193,7 +193,7 @@ add_task(function* test_logFileError() {
   // Reset logOnSuccess - success logs should appear if no error records.
   Services.prefs.setBoolPref("log-manager.test.log.appender.file.logOnSuccess", true);
   log.info("an info message");
-  reason = yield lm.resetFileLog();
+  reason = await lm.resetFileLog();
   Assert.equal(reason, lm.SUCCESS_LOG_WRITTEN);
   checkLogFile("success");
 
@@ -201,20 +201,20 @@ add_task(function* test_logFileError() {
   Services.prefs.setBoolPref("log-manager.test.log.appender.file.logOnSuccess", false);
   Services.prefs.setBoolPref("log-manager.test.log.appender.file.logOnError", true);
   log.error("an error message");
-  reason = yield lm.resetFileLog();
+  reason = await lm.resetFileLog();
   Assert.equal(reason, lm.ERROR_LOG_WRITTEN);
   checkLogFile("error");
 
   // Now test with no "error" record.
   log.info("an info message");
-  reason = yield lm.resetFileLog();
+  reason = await lm.resetFileLog();
   // should get no file
   Assert.equal(reason, null);
   checkLogFile(null);
 
   // With an error record we should get an error log.
   log.error("an error message");
-  reason = yield lm.resetFileLog();
+  reason = await lm.resetFileLog();
   // should get en error log
   Assert.equal(reason, lm.ERROR_LOG_WRITTEN);
   checkLogFile("error");
@@ -222,7 +222,7 @@ add_task(function* test_logFileError() {
   // And finally now with success, to ensure that the fact we had an error
   // previously doesn't persist after the .resetFileLog call.
   log.info("an info message");
-  yield lm.resetFileLog();
+  await lm.resetFileLog();
   checkLogFile(null);
 
   lm.finalize();

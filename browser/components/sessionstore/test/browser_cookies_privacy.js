@@ -38,7 +38,7 @@ function compareCookies(a) {
 }
 
 // Setup and cleanup.
-add_task(function* test_setup() {
+add_task(async function test_setup() {
   Services.prefs.clearUserPref("browser.sessionstore.privacy_level");
 
   registerCleanupFunction(() => {
@@ -48,7 +48,7 @@ add_task(function* test_setup() {
 });
 
 // Test privacy_level=none (default). We store all session cookies.
-add_task(function* test_level_none() {
+add_task(async function test_level_none() {
   Services.cookies.removeAll();
 
   // Set level=none, store all cookies.
@@ -68,7 +68,7 @@ add_task(function* test_level_none() {
 });
 
 // Test privacy_level=encrypted. We store all non-secure session cookies.
-add_task(function* test_level_encrypted() {
+add_task(async function test_level_encrypted() {
   Services.cookies.removeAll();
 
   // Set level=encrypted, don't store any secure cookies.
@@ -90,7 +90,7 @@ add_task(function* test_level_encrypted() {
 });
 
 // Test privacy_level=full. We store no session cookies.
-add_task(function* test_level_full() {
+add_task(async function test_level_full() {
   Services.cookies.removeAll();
 
   // Set level=full, don't store any cookies.

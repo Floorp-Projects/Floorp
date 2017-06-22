@@ -41,7 +41,7 @@ function run_test() {
   run_next_test();
 }
 
-add_task(function* test_setup() {
+add_task(async function test_setup() {
 
   db = PushServiceHttp2.newPushDB();
   do_register_cleanup(() => {
@@ -50,14 +50,14 @@ add_task(function* test_setup() {
 
 });
 
-add_task(function* test_pushSubscriptionSuccess() {
+add_task(async function test_pushSubscriptionSuccess() {
 
   PushService.init({
     serverURI: serverURL + "/pushSubscriptionSuccess/subscribe",
     db
   });
 
-  let newRecord = yield PushService.register({
+  let newRecord = await PushService.register({
     scope: 'https://example.org/1',
     originAttributes: ChromeUtils.originAttributesToSuffix(
       { appId: Ci.nsIScriptSecurityManager.NO_APP_ID, inIsolatedMozBrowser: false }),
@@ -72,7 +72,7 @@ add_task(function* test_pushSubscriptionSuccess() {
   equal(newRecord.pushReceiptEndpoint, pushReceiptEndpoint,
     'Wrong push endpoint receipt in registration record');
 
-  let record = yield db.getByKeyID(subscriptionUri);
+  let record = await db.getByKeyID(subscriptionUri);
   equal(record.subscriptionUri, subscriptionUri,
     'Wrong subscription ID in database record');
   equal(record.pushEndpoint, pushEndpoint,
@@ -85,14 +85,14 @@ add_task(function* test_pushSubscriptionSuccess() {
   PushService.uninit()
 });
 
-add_task(function* test_pushSubscriptionMissingLink2() {
+add_task(async function test_pushSubscriptionMissingLink2() {
 
   PushService.init({
     serverURI: serverURL + "/pushSubscriptionMissingLink2/subscribe",
     db
   });
 
-  let newRecord = yield PushService.register({
+  let newRecord = await PushService.register({
     scope: 'https://example.org/no_receiptEndpoint',
     originAttributes: ChromeUtils.originAttributesToSuffix(
       { appId: Ci.nsIScriptSecurityManager.NO_APP_ID, inIsolatedMozBrowser: false }),
@@ -107,7 +107,7 @@ add_task(function* test_pushSubscriptionMissingLink2() {
   equal(newRecord.pushReceiptEndpoint, pushReceiptEndpoint,
     'Wrong push endpoint receipt in registration record');
 
-  let record = yield db.getByKeyID(subscriptionUri);
+  let record = await db.getByKeyID(subscriptionUri);
   equal(record.subscriptionUri, subscriptionUri,
     'Wrong subscription ID in database record');
   equal(record.pushEndpoint, pushEndpoint,
@@ -118,7 +118,7 @@ add_task(function* test_pushSubscriptionMissingLink2() {
     'Wrong scope in database record');
 });
 
-add_task(function* test_complete() {
+add_task(async function test_complete() {
   prefs.setBoolPref("dom.push.enabled", pushEnabled);
   prefs.setBoolPref("dom.push.connection.enabled", pushConnectionEnabled);
 });

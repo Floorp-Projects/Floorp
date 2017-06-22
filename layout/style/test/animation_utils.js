@@ -371,9 +371,12 @@ function runOMTATest(aTestFunction, aOnSkip, specialPowersForPrefs) {
     SpecialPowers.DOMWindowUtils.advanceTimeAndRefresh(0);
 
     // Run test
-    generator = aTestFunc();
-    return step()
-    .catch(function(err) {
+    var promise = aTestFunc();
+    if (!promise.then) {
+      generator = promise;
+      promise = step();
+    }
+    return promise.catch(function(err) {
       ok(false, err.message);
       if (typeof aOnAbort == "function") {
         aOnAbort();

@@ -13,11 +13,11 @@
 <script language="javascript" type="text/javascript">
 
 async function painted() {
+  window.removeEventListener("MozAfterPaint", painted, true);
+
   await TalosContentProfiler.pause();
   await TalosContentProfiler.initFromURLQueryParams(location.search);
   await TalosContentProfiler.finishStartupProfiling();
-
-  window.removeEventListener("MozAfterPaint", painted, true);
 
   let startupInfo = await TalosPowersContent.getStartupInfo();
 

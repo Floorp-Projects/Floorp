@@ -7,7 +7,7 @@
  * clicking a link within that view-source page is not blocked by security checks.
  */
 
-add_task(function* test_click_link_within_view_source() {
+add_task(async function test_click_link_within_view_source() {
   let TEST_FILE = "file_click_link_within_view_source.html";
   let TEST_FILE_URI = getChromeDir(getResolvedURI(gTestPath));
   TEST_FILE_URI.append(TEST_FILE);
@@ -18,7 +18,7 @@ add_task(function* test_click_link_within_view_source() {
   DUMMY_FILE_URI.append(DUMMY_FILE);
   DUMMY_FILE_URI = Services.io.newFileURI(DUMMY_FILE_URI).spec;
 
-  yield BrowserTestUtils.withNewTab(TEST_FILE_URI, function*(aBrowser) {
+  await BrowserTestUtils.withNewTab(TEST_FILE_URI, async function(aBrowser) {
     let tabSpec = gBrowser.selectedBrowser.currentURI.spec;
     info("loading: " + tabSpec);
     ok(tabSpec.startsWith("file://") && tabSpec.endsWith(TEST_FILE),
@@ -28,7 +28,7 @@ add_task(function* test_click_link_within_view_source() {
     let tabPromise = BrowserTestUtils.waitForNewTab(gBrowser);
     document.getElementById("View:PageSource").doCommand();
 
-    let tab = yield tabPromise;
+    let tab = await tabPromise;
     tabSpec = gBrowser.selectedBrowser.currentURI.spec;
     info("loading: " + tabSpec);
     ok(tabSpec.startsWith("view-source:file://") && tabSpec.endsWith(TEST_FILE),
@@ -36,9 +36,9 @@ add_task(function* test_click_link_within_view_source() {
 
     info("click testlink within view-source page");
     let loadPromise = BrowserTestUtils.browserLoaded(tab.linkedBrowser, false, url => url.endsWith("dummy_page.html"));
-    yield ContentTask.spawn(gBrowser.selectedBrowser, {}, function*() {
+    await ContentTask.spawn(gBrowser.selectedBrowser, {}, async function() {
       if (content.document.readyState != "complete") {
-        yield ContentTaskUtils.waitForEvent(content.document, "readystatechange", false, () =>
+        await ContentTaskUtils.waitForEvent(content.document, "readystatechange", false, () =>
           content.document.readyState == "complete");
       }
       // document.getElementById() does not work on a view-source page, hence we use document.links
@@ -48,13 +48,13 @@ add_task(function* test_click_link_within_view_source() {
       myLink.click();
     });
 
-    yield loadPromise;
+    await loadPromise;
 
     tabSpec = gBrowser.selectedBrowser.currentURI.spec;
     info("loading: " + tabSpec);
     ok(tabSpec.startsWith("view-source:file://") && tabSpec.endsWith(DUMMY_FILE),
        "loading view-source of html succeeded");
 
-    yield BrowserTestUtils.removeTab(tab);
+    await BrowserTestUtils.removeTab(tab);
   });
 });

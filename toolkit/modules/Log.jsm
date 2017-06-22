@@ -191,7 +191,11 @@ this.Log = {
     }
     // Standard JS exception
     if (e.stack) {
-      return "JS Stack trace: " + Task.Debugging.generateReadableStack(e.stack).trim()
+      let stack = e.stack;
+      // Avoid loading Task.jsm if there's no task on the stack.
+      if (stack.includes("/Task.jsm:"))
+        stack = Task.Debugging.generateReadableStack(stack);
+      return "JS Stack trace: " + stack.trim()
         .replace(/\n/g, " < ").replace(/@[^@]*?([^\/\.]+\.\w+:)/g, "@$1");
     }
 

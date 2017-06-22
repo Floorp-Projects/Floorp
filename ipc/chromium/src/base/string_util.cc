@@ -28,16 +28,6 @@
 
 namespace {
 
-// Force the singleton used by Empty[W]String[16] to be a unique type. This
-// prevents other code that might accidentally use Singleton<string> from
-// getting our internal one.
-struct EmptyStrings {
-  EmptyStrings() {}
-  const std::string s;
-  const std::wstring ws;
-  const string16 s16;
-};
-
 // Hack to convert any char-like type to its unsigned counterpart.
 // For example, it will convert char, signed char and unsigned char to unsigned
 // char.

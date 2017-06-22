@@ -16,8 +16,8 @@
 <script class="testbody" type="application/javascript">
   "use strict";
 
-  add_task(function*() {
-    yield new Promise((r) => {
+  add_task(async function() {
+    await new Promise((r) => {
       let xhr = new XMLHttpRequest();
       xhr.open('GET', 'file_explicit_user_agent.sjs', true);
       xhr.onreadystatechange = function() {
@@ -30,7 +30,7 @@
       xhr.send(null);
     });
 
-    yield new Promise((r) => {
+    await new Promise((r) => {
       let xhr = new XMLHttpRequest();
       xhr.open('GET', 'file_explicit_user_agent.sjs', true);
       xhr.setRequestHeader('User-Agent', 'custom-ua/10.0');
@@ -44,7 +44,7 @@
       xhr.send(null);
     });
 
-    var response = yield fetch('file_explicit_user_agent.sjs', {
+    var response = await fetch('file_explicit_user_agent.sjs', {
       method: 'GET'
     });
     is(response.headers.get("Result-User-Agent"), navigator.userAgent,
@@ -52,7 +52,7 @@
 
     var headers = new Headers();
     headers.set('User-Agent', 'custom-ua/20.0');
-    var response2 = yield fetch('file_explicit_user_agent.sjs', {
+    var response2 = await fetch('file_explicit_user_agent.sjs', {
       method: 'GET',
       headers: headers,
     });

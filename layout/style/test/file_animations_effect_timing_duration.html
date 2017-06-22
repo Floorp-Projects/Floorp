@@ -38,12 +38,12 @@ runOMTATest(function() {
   });
 }, finish, opener.SpecialPowers);
 
-addAsyncAnimTest(function *() {
+addAsyncAnimTest(async function() {
   var [ div ] = new_div("");
   var animation = div.animate(
     [ { transform: 'translate(0px)', easing: "steps(2, start)" },
       { transform: 'translate(100px)' } ], 4000);
-  yield waitForPaints();
+  await waitForPaints();
 
   advance_clock(500);
   omta_is(div, "transform", { tx: 50 }, RunningOn.Compositor,
@@ -54,7 +54,7 @@ addAsyncAnimTest(function *() {
   // to tick the refresh driver before we can wait on the next paint.
   advance_clock(0);
 
-  yield waitForPaints();
+  await waitForPaints();
   omta_is(div, "transform", { tx: 50 }, RunningOn.Compositor,
           "Animation remains on compositor");
 
@@ -65,17 +65,17 @@ addAsyncAnimTest(function *() {
   done_div();
 });
 
-addAsyncAnimTest(function *() {
+addAsyncAnimTest(async function() {
   var [ div ] = new_div("");
   var animation = div.animate(
     [ { transform: 'translate(0px)', easing: "steps(2, end)" },
       { transform: 'translate(100px)' } ], 4000);
-  yield waitForPaints();
+  await waitForPaints();
 
   advance_clock(1000);
   animation.effect.timing.duration = 2000;
   advance_clock(0);
-  yield waitForPaints();
+  await waitForPaints();
   omta_is(div, "transform", { tx: 50 }, RunningOn.Compositor,
           "Animation is running on compositor");
   done_div();

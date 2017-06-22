@@ -189,8 +189,8 @@ add_test(function test_arm_async() {
  * Checks that "arm" accepts a Task.jsm generator function.
  */
 add_test(function test_arm_async_generator() {
-  let deferredTask = new DeferredTask(function*() {
-    yield Promise.resolve();
+  let deferredTask = new DeferredTask(async function() {
+    await Promise.resolve();
     run_next_test();
   }, 50);
 

@@ -61,7 +61,7 @@ WebRenderDisplayItemLayer::RenderLayer(wr::DisplayListBuilder& aBuilder,
     }
   }
 
-  aBuilder.PushBuiltDisplayList(Move(mBuiltDisplayList));
+  aBuilder.PushBuiltDisplayList(mBuiltDisplayList);
   WrBridge()->AddWebRenderParentCommands(mParentCommands);
 }
 

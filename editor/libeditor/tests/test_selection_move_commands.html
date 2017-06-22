@@ -193,7 +193,7 @@ function cleanup() {
   SimpleTest.finish();
 }
 
-function* testRunner() {
+async function testRunner() {
   let curTest = runTests();
   while (true) {
     winUtils.advanceTimeAndRefresh(100);
@@ -201,7 +201,7 @@ function* testRunner() {
       break;
     }
     winUtils.advanceTimeAndRefresh(100);
-    yield new Promise(resolve => setTimeout(resolve, 20));
+    await new Promise(resolve => setTimeout(resolve, 20));
   }
 }
 

@@ -7,23 +7,23 @@ const CONTENT_CREATED = "ipc:content-created";
 async function spawnNewAndTest(recur, pids) {
   let processCreated = TestUtils.topicObserved(CONTENT_CREATED);
   await BrowserTestUtils.withNewTab({ gBrowser, url: "about:blank", forceNewProcess: true },
-                                    function* (browser) {
+                                    async function(browser) {
       // Make sure our new browser is in its own process. The processCreated
       // promise should have already resolved by this point.
-      yield processCreated;
+      await processCreated;
       let newPid = browser.frameLoader.tabParent.osPid;
       ok(!pids.has(newPid), "new tab is in its own process");
       pids.add(newPid);
 
       if (recur) {
-        yield spawnNewAndTest(recur - 1, pids);
+        await spawnNewAndTest(recur - 1, pids);
       } else {
         let observer = () => {
           ok(false, "shouldn't have created a new process");
         };
         Services.obs.addObserver(observer, CONTENT_CREATED);
 
-        yield BrowserTestUtils.withNewTab({ gBrowser, url: "about:blank" }, function* (browser) {
+        await BrowserTestUtils.withNewTab({ gBrowser, url: "about:blank" }, function(browser) {
           // If this new tab caused us to create a new process, the ok(false)
           // should have already happened. Therefore, if we get here, we've
           // passed. Simply remove the observer.

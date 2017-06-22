@@ -16,10 +16,10 @@ function run_test() {
   run_next_test();
 }
 
-add_task(function* test_unregister_success() {
+add_task(async function test_unregister_success() {
   let db = PushServiceWebSocket.newPushDB();
   do_register_cleanup(() => {return db.drop().then(_ => db.close());});
-  yield db.put({
+  await db.put({
     channelID,
     pushEndpoint: 'https://example.org/update/unregister-success',
     scope: 'https://example.com/page/unregister-success',
@@ -60,17 +60,17 @@ add_task(function* test_unregister_success() {
   let subModifiedPromise = promiseObserverNotification(
     PushServiceComponent.subscriptionModifiedTopic);
 
-  yield PushService.unregister({
+  await PushService.unregister({
     scope: 'https://example.com/page/unregister-success',
     originAttributes: '',
   });
 
-  let {data: subModifiedScope} = yield subModifiedPromise;
+  let {data: subModifiedScope} = await subModifiedPromise;
   equal(subModifiedScope, 'https://example.com/page/unregister-success',
     'Should fire a subscription modified event after unsubscribing');
 
-  let record = yield db.getByKeyID(channelID);
+  let record = await db.getByKeyID(channelID);
   ok(!record, 'Unregister did not remove record');
 
-  yield unregisterPromise;
+  await unregisterPromise;
 });
