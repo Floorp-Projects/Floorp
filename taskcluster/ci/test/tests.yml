@@ -1509,6 +1509,24 @@ talos-tp5o:
             - --add-option
             - --webServer,localhost
 
+telemetry-tests-client:
+    description: "Telemetry tests client run"
+    suite: telemetry-tests-client
+    treeherder-symbol: tc-e10s
+    max-run-time: 5400
+    checkout: true
+    e10s: true
+    tier: 2
+    docker-image: {"in-tree": "desktop1604-test"}
+    mozharness:
+        script: telemetry/telemetry_client.py
+        config:
+            by-test-platform:
+                linux.*:
+                    - remove_executables.py
+                windows.*: []
+
+
 web-platform-tests:
     description: "Web platform test run"
     suite: web-platform-tests
