@@ -107,7 +107,7 @@ public:
   void InitXPCOM(const XPCOMInitData& aXPCOMInit,
                  const mozilla::dom::ipc::StructuredCloneData& aInitialData);
 
-  void InitGraphicsDeviceData();
+  void InitGraphicsDeviceData(const ContentDeviceData& aData);
 
   static ContentChild* GetSingleton()
   {
