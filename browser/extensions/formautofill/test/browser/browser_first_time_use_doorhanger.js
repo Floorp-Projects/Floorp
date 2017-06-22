@@ -6,7 +6,7 @@ const ENABLED_PREF = "extensions.formautofill.addresses.enabled";
 
 add_task(async function test_first_time_save() {
   let addresses = await getAddresses();
-  is(addresses.length, 0, "No profile in storage");
+  is(addresses.length, 0, "No address in storage");
   await SpecialPowers.pushPrefEnv({
     "set": [
       [FTU_PREF, true],
@@ -33,9 +33,8 @@ add_task(async function test_first_time_save() {
 
       await promiseShown;
       let notificationElement = PopupNotifications.panel.firstChild;
-      // Open the panel via link
-      let link = notificationElement.querySelector("popupnotificationcontent label");
-      link.click();
+      // Open the panel via main button
+      notificationElement.button.click();
       let tab = await tabPromise;
       ok(tab, "Privacy panel opened");
       await BrowserTestUtils.removeTab(tab);
@@ -43,7 +42,7 @@ add_task(async function test_first_time_save() {
   );
 
   addresses = await getAddresses();
-  is(addresses.length, 1, "Profile saved");
+  is(addresses.length, 1, "Address saved");
   let ftuPref = SpecialPowers.getBoolPref(FTU_PREF);
   is(ftuPref, false, "First time use flag is false");
 });
