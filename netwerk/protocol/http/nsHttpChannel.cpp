@@ -112,7 +112,6 @@
 #include "nsIFileStreams.h"
 #include "nsIMIMEInputStream.h"
 #include "nsIMultiplexInputStream.h"
-#include "../../cache2/CacheFileUtils.h"
 
 #ifdef MOZ_TASK_TRACER
 #include "GeckoTaskTracer.h"
@@ -4487,19 +4486,6 @@ nsHttpChannel::OnNormalCacheEntryAvailable(nsICacheEntry *aEntry,
     if (NS_SUCCEEDED(aEntryStatus)) {
         mCacheEntry = aEntry;
         mCacheEntryIsWriteOnly = aNew;
-
-        if (!aNew && !mAsyncOpenTime.IsNull()) {
-            // We use microseconds for IO operations. For consistency let's use
-            // microseconds here too.
-            uint32_t duration = (TimeStamp::Now() - mAsyncOpenTime).ToMicroseconds();
-            bool isSlow = false;
-            if ((mCacheOpenWithPriority && mCacheQueueSizeWhenOpen >= sRCWNQueueSizePriority) ||
-                (!mCacheOpenWithPriority && mCacheQueueSizeWhenOpen >= sRCWNQueueSizeNormal)) {
-                isSlow = true;
-            }
-            CacheFileUtils::CachePerfStats::AddValue(
-                CacheFileUtils::CachePerfStats::ENTRY_OPEN, duration, isSlow);
-        }
 
         if (mLoadFlags & LOAD_INITIAL_DOCUMENT_URI) {
             Telemetry::Accumulate(Telemetry::HTTP_OFFLINE_CACHE_DOCUMENT_LOAD,
@@ -9206,22 +9192,16 @@ nsHttpChannel::MaybeRaceCacheWithNetwork()
         return NS_OK;
     }
 
-    uint32_t delay;
-    if (CacheFileUtils::CachePerfStats::IsCacheSlow()) {
-        // If the cache is slow, trigger the network request immediately.
-        delay = 0;
-    } else {
-        // Give cache a headstart of 3 times the average cache entry open time.
-        delay = CacheFileUtils::CachePerfStats::GetAverage(
-                CacheFileUtils::CachePerfStats::ENTRY_OPEN, true) * 3;
-        // We use microseconds in CachePerfStats but we need milliseconds
-        // for TriggerNetwork.
-        delay /= 1000;
+    uint32_t threshold = mCacheOpenWithPriority ? sRCWNQueueSizePriority
+                                                : sRCWNQueueSizeNormal;
+    // No need to trigger to trigger the racing, since most likely the cache
+    // will be faster.
+    if (mCacheQueueSizeWhenOpen < threshold) {
+        return NS_OK;
     }
 
     MOZ_ASSERT(sRCWNEnabled, "The pref must be truned on.");
-    LOG(("nsHttpChannel::MaybeRaceCacheWithNetwork [this=%p, delay=%u]\n",
-         this, delay));
+    LOG(("nsHttpChannel::MaybeRaceCacheWithNetwork [this=%p]\n", this));
 
     if (!mOnCacheAvailableCalled) {
         // If the network was triggered before onCacheEntryAvailable was
@@ -9229,7 +9209,7 @@ nsHttpChannel::MaybeRaceCacheWithNetwork()
         mRaceCacheWithNetwork = true;
     }
 
-    return TriggerNetwork(delay);
+    return TriggerNetwork(0);
 }
 
 NS_IMETHODIMP

@@ -234,7 +234,6 @@ CacheIOThread::CacheIOThread()
 , mRerunCurrentEvent(false)
 , mShutdown(false)
 , mIOCancelableEvents(0)
-, mEventCounter(0)
 #ifdef DEBUG
 , mInsideLoop(true)
 #endif
@@ -492,7 +491,6 @@ loopStart:
           nsIThread *thread = mXPCOMThread;
           rv = thread->ProcessNextEvent(false, &processedEvent);
 
-          ++mEventCounter;
           MOZ_ASSERT(mBlockingIOWatcher);
           mBlockingIOWatcher->NotifyOperationDone();
         } while (NS_SUCCEEDED(rv) && processedEvent);
@@ -578,7 +576,6 @@ void CacheIOThread::LoopOneLevel(uint32_t aLevel)
         break;
       }
 
-      ++mEventCounter;
       --mQueueLength[aLevel];
 
       // Release outside the lock.
