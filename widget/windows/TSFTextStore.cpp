@@ -2486,6 +2486,18 @@ TSFTextStore::GetSelection(ULONG ulIndex,
 
   Selection& selectionForTSF = SelectionForTSFRef();
   if (selectionForTSF.IsDirty()) {
+    if (DoNotReturnErrorFromGetSelection()) {
+      AutoSetTemporarySelection temprarySetter(selectionForTSF);
+      *pSelection = selectionForTSF.ACP();
+      *pcFetched = 1;
+      MOZ_LOG(sTextStoreLog, LogLevel::Info,
+        ("0x%p   TSFTextStore::GetSelection() returns fake selection range "
+         "for avoiding a crash in TSF, "
+         "acpStart=%d, acpEnd=%d (length=%d), reverted=%s",
+         this, selectionForTSF.StartOffset(), selectionForTSF.EndOffset(),
+         selectionForTSF.Length(), GetBoolName(selectionForTSF.IsReversed())));
+      return S_OK;
+    }
     MOZ_LOG(sTextStoreLog, LogLevel::Error,
       ("0x%p   TSFTextStore::GetSelection() FAILED due to "
        "SelectionForTSFRef() failure", this));
@@ -2494,8 +2506,24 @@ TSFTextStore::GetSelection(ULONG ulIndex,
   *pSelection = selectionForTSF.ACP();
   *pcFetched = 1;
   MOZ_LOG(sTextStoreLog, LogLevel::Info,
-    ("0x%p   TSFTextStore::GetSelection() succeeded", this));
+    ("0x%p   TSFTextStore::GetSelection() succeeded, "
+     "acpStart=%d, acpEnd=%d (length=%d), reverted=%s",
+     this, selectionForTSF.StartOffset(), selectionForTSF.EndOffset(),
+     selectionForTSF.Length(), GetBoolName(selectionForTSF.IsReversed())));
   return S_OK;
+}
+
+// static
+bool
+TSFTextStore::DoNotReturnErrorFromGetSelection()
+{
+  // There is a crash bug of TSF if we return error from GetSelection().
+  // That was introduced in Anniversary Update (build 14393, see bug 1312302)
+  // TODO: We should avoid to run this hack on fixed builds.  When we get
+  //       exact build number, we should get back here.
+  static bool sTSFMayCrashIfGetSelectionReturnsError =
+    IsWindows10BuildOrLater(14393);
+  return sTSFMayCrashIfGetSelectionReturnsError;
 }
 
 bool
@@ -5227,14 +5255,7 @@ TSFTextStore::CreateAndSetFocus(nsWindowBase* aFocusedWidget,
 
   HRESULT hr;
   RefPtr<ITfThreadMgr> threadMgr = sThreadMgr;
-  {
-    // Windows 10's softwware keyboard requires that SetSelection must be
-    // always successful into SetFocus.  If returning error, it might crash
-    // into TextInputFramework.dll.
-    AutoSetTemporarySelection setSelection(textStore->SelectionForTSFRef());
-
-    hr = threadMgr->SetFocus(newDocMgr);
-  }
+  hr = threadMgr->SetFocus(newDocMgr);
 
   if (NS_WARN_IF(FAILED(hr))) {
     MOZ_LOG(sTextStoreLog, LogLevel::Error,
