@@ -10,10 +10,14 @@
 #include "mozilla/UniquePtr.h"
 #include "mozilla/ipc/Shmem.h"
 #include "base/process.h"
+#ifdef MOZ_CRASHREPORTER
 #include "nsExceptionHandler.h"
+#endif
 
 namespace mozilla {
 namespace ipc {
+
+class GeckoChildProcessHost;
 
 // This is the newer replacement for CrashReporterParent. It is created in
 // response to a InitCrashReporter message on a top-level actor, and simply
@@ -23,12 +27,18 @@ namespace ipc {
 class CrashReporterHost
 {
   typedef mozilla::ipc::Shmem Shmem;
+#ifdef MOZ_CRASHREPORTER
   typedef CrashReporter::AnnotationTable AnnotationTable;
+  typedef CrashReporter::ThreadId ThreadId;
+#else
+  // unused in this case
+  typedef int32_t ThreadId;
+#endif
 
 public:
   CrashReporterHost(GeckoProcessType aProcessType,
                     const Shmem& aShmem,
-                    CrashReporter::ThreadId aThreadId);
+                    ThreadId aThreadId);
 
 #ifdef MOZ_CRASHREPORTER
   // Helper function for generating a crash report for a process that probably
@@ -53,35 +63,10 @@ public:
   // GenerateCrashReport does. After this, FinalizeCrashReport may be called.
   //
   // This calls TakeCrashedChildMinidump and FinalizeCrashReport.
-  template <typename Toplevel>
-  bool GenerateMinidumpAndPair(Toplevel* aToplevelProtocol,
-                               nsIFile* aMinidumpToPair,
-                               const nsACString& aPairName)
-  {
-    ScopedProcessHandle childHandle;
-#ifdef XP_MACOSX
-    childHandle = aToplevelProtocol->Process()->GetChildTask();
-#else
-    if (!base::OpenPrivilegedProcessHandle(aToplevelProtocol->OtherPid(),
-                                           &childHandle.rwget()))
-    {
-      NS_WARNING("Failed to open child process handle.");
-      return false;
-    }
-#endif
-
-    nsCOMPtr<nsIFile> targetDump;
-    if (!CrashReporter::CreateMinidumpsAndPair(childHandle,
-                                               mThreadId,
-                                               aPairName,
-                                               aMinidumpToPair,
-                                               getter_AddRefs(targetDump)))
-    {
-      return false;
-    }
-
-    return CrashReporter::GetIDFromMinidump(targetDump, mDumpID);
-  }
+  bool
+  GenerateMinidumpAndPair(GeckoChildProcessHost* aChildProcess,
+                          nsIFile* aMinidumpToPair,
+                          const nsACString& aPairName);
 
   // This is a static helper function to notify the crash service that a
   // crash has occurred. When PCrashReporter is removed, we can make this
@@ -111,9 +96,11 @@ private:
 private:
   GeckoProcessType mProcessType;
   Shmem mShmem;
-  CrashReporter::ThreadId mThreadId;
+  ThreadId mThreadId;
   time_t mStartTime;
+#ifdef MOZ_CRASHREPORTER
   AnnotationTable mExtraNotes;
+#endif
   nsString mDumpID;
   bool mFinalized;
 };
