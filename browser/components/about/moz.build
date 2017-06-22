@@ -11,8 +11,6 @@ EXPORTS.mozilla.browser += [
     'AboutRedirector.h',
 ]
 
-XPCSHELL_TESTS_MANIFESTS += ['test/unit/xpcshell.ini']
-
 SOURCES += [
     'AboutRedirector.cpp',
 ]
