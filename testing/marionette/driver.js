@@ -3195,6 +3195,12 @@ GeckoDriver.prototype.commands = {
   "Marionette:Quit": GeckoDriver.prototype.quit,
   "quit": GeckoDriver.prototype.quit,  // deprecated, remove in Firefox 60
 
+  // Addon service
+  "Addon:Install": GeckoDriver.prototype.installAddon,
+  "addon:install": GeckoDriver.prototype.installAddon,  // deprecated, remove in Firefox 60
+  "Addon:Uninstall": GeckoDriver.prototype.uninstallAddon,
+  "addon:uninstall": GeckoDriver.prototype.uninstallAddon,  // deprecated, remove in Firefox 60
+
   "newSession": GeckoDriver.prototype.newSession,
   "getSessionCapabilities": GeckoDriver.prototype.getSessionCapabilities,
   "executeScript": GeckoDriver.prototype.executeScript,
@@ -3266,9 +3272,6 @@ GeckoDriver.prototype.commands = {
 
   "localization:l10n:localizeEntity": GeckoDriver.prototype.localizeEntity,
   "localization:l10n:localizeProperty": GeckoDriver.prototype.localizeProperty,
-
-  "addon:install": GeckoDriver.prototype.installAddon,
-  "addon:uninstall": GeckoDriver.prototype.uninstallAddon,
 };
 
 function copy (obj) {
