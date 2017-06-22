@@ -285,19 +285,24 @@ FormAutofillParent.prototype = {
       }
       this.profileStorage.addresses.notifyUsed(address.guid);
     } else {
-      if (!Services.prefs.getBoolPref("extensions.formautofill.firstTimeUse")) {
-        let changedGUIDs = this.profileStorage.addresses.mergeToStorage(address.record);
-        if (!changedGUIDs.length) {
-          changedGUIDs.push(this.profileStorage.addresses.add(address.record));
-        }
-        changedGUIDs.forEach(guid => this.profileStorage.addresses.notifyUsed(guid));
-        return;
+      let changedGUIDs = this.profileStorage.addresses.mergeToStorage(address.record);
+      if (!changedGUIDs.length) {
+        changedGUIDs.push(this.profileStorage.addresses.add(address.record));
       }
+      changedGUIDs.forEach(guid => this.profileStorage.addresses.notifyUsed(guid));
 
-      let guid = this.profileStorage.addresses.add(address.record);
-      this.profileStorage.addresses.notifyUsed(guid);
-      Services.prefs.setBoolPref("extensions.formautofill.firstTimeUse", false);
-      FormAutofillDoorhanger.show(target, "firstTimeUse");
+      // Show first time use doorhanger
+      if (Services.prefs.getBoolPref("extensions.formautofill.firstTimeUse")) {
+        Services.prefs.setBoolPref("extensions.formautofill.firstTimeUse", false);
+        FormAutofillDoorhanger.show(target, "firstTimeUse").then((state) => {
+          if (state !== "open-pref") {
+            return;
+          }
+
+          target.ownerGlobal.openPreferences("panePrivacy",
+                                             {origin: "autofillDoorhanger"});
+        });
+      }
     }
   },
 };

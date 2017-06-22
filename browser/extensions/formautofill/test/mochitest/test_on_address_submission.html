@@ -50,6 +50,7 @@ add_task(async function check_storage_after_form_submitted() {
   expectedAddresses[0].timesUsed = 1;
   let matching = await checkAddresses(expectedAddresses);
   ok(matching, "Address saved as expected");
+  delete expectedAddresses[0].timesUsed;
 });
 
 // Submit another new address.
@@ -76,6 +77,26 @@ add_task(async function check_storage_after_another_address_submitted() {
   checkMenuEntries(addressesInMenu.map(address =>
     JSON.stringify({primary: address.organization, secondary: address["street-address"]})
   ));
+});
+
+// Submit another new address that is mergeable.
+add_task(async function new_address_submitted_and_merged() {
+  document.querySelector("form").reset();
+  for (let key in TEST_ADDRESSES[0]) {
+    await setInput("#" + key, TEST_ADDRESSES[0][key]);
+  }
+  // Add country to first address in storage
+  await setInput("#country", "US");
+  TEST_ADDRESSES[0].country = "US";
+  clickOnElement("input[type=submit]");
+
+  let expectedAddresses = TEST_ADDRESSES.slice(0);
+  // Check if timesUsed is set correctly
+  expectedAddresses[0].timesUsed = 2;
+  await onAddressChanged("merge");
+  let matching = await checkAddresses(expectedAddresses);
+  ok(matching, "Address merged as expected");
+  delete expectedAddresses[0].timesUsed;
 });
 
 </script>
