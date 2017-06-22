@@ -275,9 +275,10 @@ license file's hash.
         )
         for (lib, crate_root) in crates_and_roots:
             path = mozpath.join(self.topsrcdir, crate_root)
+            # We use check_call instead of mozprocess to ensure errors are displayed.
             # We do an |update -p| here to regenerate the Cargo.lock file with minimal changes. See bug 1324462
-            self._run_command_in_srcdir(args=[cargo, 'update', '--manifest-path', mozpath.join(path, 'Cargo.toml'), '-p', lib])
-            self._run_command_in_srcdir(args=[cargo, 'vendor', '--no-delete', '--sync', mozpath.join(path, 'Cargo.lock'), vendor_dir])
+            subprocess.check_call([cargo, 'update', '--manifest-path', mozpath.join(path, 'Cargo.toml'), '-p', lib], cwd=self.topsrcdir)
+            subprocess.check_call([cargo, 'vendor', '--quiet', '--no-delete', '--sync', mozpath.join(path, 'Cargo.lock'), vendor_dir], cwd=self.topsrcdir)
 
         if not self._check_licenses(vendor_dir):
             self.log(logging.ERROR, 'license_check_failed', {},
