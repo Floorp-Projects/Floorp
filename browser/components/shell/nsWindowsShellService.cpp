@@ -5,6 +5,7 @@
 
 #include "nsWindowsShellService.h"
 
+#include "BinaryPath.h"
 #include "city.h"
 #include "imgIContainer.h"
 #include "imgIRequest.h"
@@ -228,13 +229,10 @@ nsWindowsShellService::IsDefaultBrowser(bool aStartupCheck,
     return NS_OK;
   }
 
-  wchar_t exePath[MAX_BUF] = L"";
-  if (!::GetModuleFileNameW(0, exePath, MAX_BUF)) {
-    return NS_OK;
-  }
-  // Convert the path to a long path since GetModuleFileNameW returns the path
-  // that was used to launch Firefox which is not necessarily a long path.
-  if (!::GetLongPathNameW(exePath, exePath, MAX_BUF)) {
+  wchar_t exePath[MAXPATHLEN] = L"";
+  nsresult rv = BinaryPath::GetLong(exePath);
+
+  if (NS_FAILED(rv)) {
     return NS_OK;
   }
 
