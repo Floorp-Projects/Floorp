@@ -740,6 +740,25 @@ WebGLFramebuffer::DetachRenderbuffer(const char* funcName, const WebGLRenderbuff
 // Completeness
 
 bool
+WebGLFramebuffer::HasDuplicateAttachments() const
+{
+   std::set<WebGLFBAttachPoint::Ordered> uniqueAttachSet;
+
+   for (const auto& attach : mColorAttachments) {
+      if (!attach.IsDefined())
+          continue;
+
+      const WebGLFBAttachPoint::Ordered ordered(attach);
+
+      const bool didInsert = uniqueAttachSet.insert(ordered).second;
+      if (!didInsert)
+         return true;
+   }
+
+   return false;
+}
+
+bool
 WebGLFramebuffer::HasDefinedAttachments() const
 {
     bool hasAttachments = false;
@@ -850,6 +869,9 @@ WebGLFramebuffer::PrecheckFramebufferStatus(nsCString* const out_info) const
 
     if (!AllImageSamplesMatch())
         return LOCAL_GL_FRAMEBUFFER_INCOMPLETE_MULTISAMPLE; // Inconsistent samples
+
+    if (HasDuplicateAttachments())
+       return LOCAL_GL_FRAMEBUFFER_UNSUPPORTED;
 
     if (mContext->IsWebGL2()) {
         MOZ_ASSERT(!mDepthStencilAttachment.IsDefined());
