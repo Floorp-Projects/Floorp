@@ -16,20 +16,17 @@ from marionette_driver.wait import Wait
 from marionette_harness import MarionetteTestCase
 from marionette_harness.runner import httpd
 
-here = os.path.abspath(os.path.dirname(__file__))
-doc_root = os.path.join(os.path.dirname(here), "www")
-resources_dir = os.path.join(os.path.dirname(here), "resources")
-
 
 class TelemetryTestCase(PuppeteerMixin, MarionetteTestCase):
 
     ping_list = []
 
-    def setUp(self, *args, **kwargs):
-        super(TelemetryTestCase, self).setUp()
+    def __init__(self, *args, **kwargs):
+        super(TelemetryTestCase, self).__init__(*args, **kwargs)
 
-        # Start and configure server
-        self.httpd = httpd.FixtureServer(doc_root)
+    def setUp(self, *args, **kwargs):
+        super(TelemetryTestCase, self).setUp(*args, **kwargs)
+        self.httpd = httpd.FixtureServer(self.testvars['server_root'])
         ping_route = [("POST", re.compile('/pings'), self.pings)]
         self.httpd.routes.extend(ping_route)
         self.httpd.start()
@@ -53,7 +50,7 @@ class TelemetryTestCase(PuppeteerMixin, MarionetteTestCase):
     def wait_for_ping(self, ping_filter_func):
         if len(self.ping_list) == 0:
             try:
-                Wait(self.marionette, 60).until(lambda t: len(self.ping_list) > 0)
+                Wait(self.marionette, 60).until(lambda _: len(self.ping_list) > current_ping_list_size)
             except Exception as e:
                 self.fail('Error generating ping: {}'.format(e.message))
 
