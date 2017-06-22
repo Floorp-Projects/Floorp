@@ -545,6 +545,11 @@ SERVO_BINDING_FUNC(Servo_SerializeFontValueForCanvas, void,
                    RawServoDeclarationBlockBorrowed declarations,
                    nsAString* buffer)
 
+// Get custom property value.
+SERVO_BINDING_FUNC(Servo_GetCustomProperty, bool,
+                   ServoComputedValuesBorrowed computed_values,
+                   const nsAString* name, nsAString* value)
+
 // Style-struct management.
 #define STYLE_STRUCT(name, checkdata_cb)                            \
   struct nsStyle##name;                                             \
