@@ -6,17 +6,17 @@
 const testPageURL =
   "https://example.com/browser/dom/quota/test/browser_permissionsPrompt.html";
 
-add_task(function* testPermissionUnknownInPrivateWindow() {
+add_task(async function testPermissionUnknownInPrivateWindow() {
   removePermission(testPageURL, "persistent-storage");
   info("Creating private window");
-  let win = yield BrowserTestUtils.openNewBrowserWindow({ private : true });
+  let win = await BrowserTestUtils.openNewBrowserWindow({ private : true });
 
   info("Creating private tab");
   win.gBrowser.selectedTab = win.gBrowser.addTab();
 
   info("Loading test page: " + testPageURL);
   win.gBrowser.selectedBrowser.loadURI(testPageURL);
-  yield BrowserTestUtils.browserLoaded(win.gBrowser.selectedBrowser);
+  await BrowserTestUtils.browserLoaded(win.gBrowser.selectedBrowser);
 
   registerPopupEventHandler("popupshowing", function () {
     ok(false, "Shouldn't show a popup this time");
@@ -28,7 +28,7 @@ add_task(function* testPermissionUnknownInPrivateWindow() {
     ok(false, "Shouldn't show a popup this time");
   }, win);
 
-  yield promiseMessage(false, win.gBrowser);
+  await promiseMessage(false, win.gBrowser);
 
   is(getPermission(testPageURL, "persistent-storage"),
      Components.interfaces.nsIPermissionManager.UNKNOWN_ACTION,

@@ -43,7 +43,7 @@ add_task(function test_updateClockOffset() {
   do_check_true(Math.abs(client.localtimeOffsetMsec + HOUR_MS) <= SECOND_MS);
 });
 
-add_task(function* test_authenticated_get_request() {
+add_task(async function test_authenticated_get_request() {
   let message = "{\"msg\": \"Great Success!\"}";
   let method = "GET";
 
@@ -57,15 +57,15 @@ add_task(function* test_authenticated_get_request() {
 
   let client = new HawkClient(server.baseURI);
 
-  let response = yield client.request("/foo", method, TEST_CREDS);
+  let response = await client.request("/foo", method, TEST_CREDS);
   let result = JSON.parse(response.body);
 
   do_check_eq("Great Success!", result.msg);
 
-  yield deferredStop(server);
+  await deferredStop(server);
 });
 
-function* check_authenticated_request(method) {
+async function check_authenticated_request(method) {
   let server = httpd_setup({"/foo": (request, response) => {
       do_check_true(request.hasHeader("Authorization"));
 
@@ -77,12 +77,12 @@ function* check_authenticated_request(method) {
 
   let client = new HawkClient(server.baseURI);
 
-  let response = yield client.request("/foo", method, TEST_CREDS, {foo: "bar"});
+  let response = await client.request("/foo", method, TEST_CREDS, {foo: "bar"});
   let result = JSON.parse(response.body);
 
   do_check_eq("bar", result.foo);
 
-  yield deferredStop(server);
+  await deferredStop(server);
 }
 
 add_task(function test_authenticated_post_request() {
@@ -97,7 +97,7 @@ add_task(function test_authenticated_patch_request() {
   check_authenticated_request("PATCH");
 });
 
-add_task(function* test_extra_headers() {
+add_task(async function test_extra_headers() {
   let server = httpd_setup({"/foo": (request, response) => {
       do_check_true(request.hasHeader("Authorization"));
       do_check_true(request.hasHeader("myHeader"));
@@ -111,16 +111,16 @@ add_task(function* test_extra_headers() {
 
   let client = new HawkClient(server.baseURI);
 
-  let response = yield client.request("/foo", "POST", TEST_CREDS, {foo: "bar"},
+  let response = await client.request("/foo", "POST", TEST_CREDS, {foo: "bar"},
                                       {"myHeader": "fake"});
   let result = JSON.parse(response.body);
 
   do_check_eq("bar", result.foo);
 
-  yield deferredStop(server);
+  await deferredStop(server);
 });
 
-add_task(function* test_credentials_optional() {
+add_task(async function test_credentials_optional() {
   let method = "GET";
   let server = httpd_setup({
     "/foo": (request, response) => {
@@ -134,13 +134,13 @@ add_task(function* test_credentials_optional() {
   });
 
   let client = new HawkClient(server.baseURI);
-  let result = yield client.request("/foo", method); // credentials undefined
+  let result = await client.request("/foo", method); // credentials undefined
   do_check_eq(JSON.parse(result.body).msg, "you're in the friend zone");
 
-  yield deferredStop(server);
+  await deferredStop(server);
 });
 
-add_task(function* test_server_error() {
+add_task(async function test_server_error() {
   let message = "Ohai!";
   let method = "GET";
 
@@ -153,17 +153,17 @@ add_task(function* test_server_error() {
   let client = new HawkClient(server.baseURI);
 
   try {
-    yield client.request("/foo", method, TEST_CREDS);
+    await client.request("/foo", method, TEST_CREDS);
     do_throw("Expected an error");
   } catch (err) {
     do_check_eq(418, err.code);
     do_check_eq("I am a Teapot", err.message);
   }
 
-  yield deferredStop(server);
+  await deferredStop(server);
 });
 
-add_task(function* test_server_error_json() {
+add_task(async function test_server_error_json() {
   let message = JSON.stringify({error: "Cannot get ye flask."});
   let method = "GET";
 
@@ -176,16 +176,16 @@ add_task(function* test_server_error_json() {
   let client = new HawkClient(server.baseURI);
 
   try {
-    yield client.request("/foo", method, TEST_CREDS);
+    await client.request("/foo", method, TEST_CREDS);
     do_throw("Expected an error");
   } catch (err) {
     do_check_eq("Cannot get ye flask.", err.error);
   }
 
-  yield deferredStop(server);
+  await deferredStop(server);
 });
 
-add_task(function* test_offset_after_request() {
+add_task(async function test_offset_after_request() {
   let message = "Ohai!";
   let method = "GET";
 
@@ -201,14 +201,14 @@ add_task(function* test_offset_after_request() {
 
   do_check_eq(client.localtimeOffsetMsec, 0);
 
-  yield client.request("/foo", method, TEST_CREDS);
+  await client.request("/foo", method, TEST_CREDS);
   // Should be about an hour off
   do_check_true(Math.abs(client.localtimeOffsetMsec + HOUR_MS) < SECOND_MS);
 
-  yield deferredStop(server);
+  await deferredStop(server);
 });
 
-add_task(function* test_offset_in_hawk_header() {
+add_task(async function test_offset_in_hawk_header() {
   let message = "Ohai!";
   let method = "GET";
 
@@ -241,17 +241,17 @@ add_task(function* test_offset_in_hawk_header() {
 
   // We begin with no offset
   do_check_eq(client.localtimeOffsetMsec, 0);
-  yield client.request("/first", method, TEST_CREDS);
+  await client.request("/first", method, TEST_CREDS);
 
   // After the first server response, our offset is updated to -12 hours.
   // We should be safely in the window, now.
   do_check_true(Math.abs(client.localtimeOffsetMsec + 12 * HOUR_MS) < MINUTE_MS);
-  yield client.request("/second", method, TEST_CREDS);
+  await client.request("/second", method, TEST_CREDS);
 
-  yield deferredStop(server);
+  await deferredStop(server);
 });
 
-add_task(function* test_2xx_success() {
+add_task(async function test_2xx_success() {
   // Just to ensure that we're not biased toward 200 OK for success
   let credentials = {
     id: "eyJleHBpcmVzIjogMTM2NTAxMDg5OC4x",
@@ -267,15 +267,15 @@ add_task(function* test_2xx_success() {
 
   let client = new HawkClient(server.baseURI);
 
-  let response = yield client.request("/foo", method, credentials);
+  let response = await client.request("/foo", method, credentials);
 
   // Shouldn't be any content in a 202
   do_check_eq(response.body, "");
 
-  yield deferredStop(server);
+  await deferredStop(server);
 });
 
-add_task(function* test_retry_request_on_fail() {
+add_task(async function test_retry_request_on_fail() {
   let attempts = 0;
   let credentials = {
     id: "eyJleHBpcmVzIjogMTM2NTAxMDg5OC4x",
@@ -320,13 +320,13 @@ add_task(function* test_retry_request_on_fail() {
   do_check_eq(client.localtimeOffsetMsec, 0);
 
   // Request will have bad timestamp; client will retry once
-  let response = yield client.request("/maybe", method, credentials);
+  let response = await client.request("/maybe", method, credentials);
   do_check_eq(response.body, "i love you!!!");
 
-  yield deferredStop(server);
+  await deferredStop(server);
 });
 
-add_task(function* test_multiple_401_retry_once() {
+add_task(async function test_multiple_401_retry_once() {
   // Like test_retry_request_on_fail, but always return a 401
   // and ensure that the client only retries once.
   let attempts = 0;
@@ -362,17 +362,17 @@ add_task(function* test_multiple_401_retry_once() {
 
   // Request will have bad timestamp; client will retry once
   try {
-    yield client.request("/maybe", method, credentials);
+    await client.request("/maybe", method, credentials);
     do_throw("Expected an error");
   } catch (err) {
     do_check_eq(err.code, 401);
   }
   do_check_eq(attempts, 2);
 
-  yield deferredStop(server);
+  await deferredStop(server);
 });
 
-add_task(function* test_500_no_retry() {
+add_task(async function test_500_no_retry() {
   // If we get a 500 error, the client should not retry (as it would with a
   // 401)
   let credentials = {
@@ -400,16 +400,16 @@ add_task(function* test_500_no_retry() {
 
   // Request will 500; no retries
   try {
-    yield client.request("/no-shutup", method, credentials);
+    await client.request("/no-shutup", method, credentials);
     do_throw("Expected an error");
   } catch (err) {
     do_check_eq(err.code, 500);
   }
 
-  yield deferredStop(server);
+  await deferredStop(server);
 });
 
-add_task(function* test_401_then_500() {
+add_task(async function test_401_then_500() {
   // Like test_multiple_401_retry_once, but return a 500 to the
   // second request, ensuring that the promise is properly rejected
   // in client.request.
@@ -460,19 +460,19 @@ add_task(function* test_401_then_500() {
 
   // Request will have bad timestamp; client will retry once
   try {
-    yield client.request("/maybe", method, credentials);
+    await client.request("/maybe", method, credentials);
   } catch (err) {
     do_check_eq(err.code, 500);
   }
   do_check_eq(attempts, 2);
 
-  yield deferredStop(server);
+  await deferredStop(server);
 });
 
-add_task(function* throw_if_not_json_body() {
+add_task(async function throw_if_not_json_body() {
   let client = new HawkClient("https://example.com");
   try {
-    yield client.request("/bogus", "GET", {}, "I am not json");
+    await client.request("/bogus", "GET", {}, "I am not json");
     do_throw("Expected an error");
   } catch (err) {
     do_check_true(!!err.message);

@@ -42,7 +42,7 @@
         ["dom.serviceWorkers.idle_timeout", 0],
         ["dom.serviceWorkers.testing.enabled", true],
       ]}, function () {
-        Task.spawn(function *() {
+        (async function() {
           let iframe = $("iframe");
           let promise = new Promise(function (resolve) {
             iframe.onload = function () {
@@ -50,7 +50,7 @@
             };
           });
           iframe.src = IFRAME_URL;
-          yield promise;
+          await promise;
 
           info("Check that a service worker eventually shuts down.");
           promise = Promise.all([
@@ -58,10 +58,10 @@
             waitForServiceWorkerShutdown()
           ]);
           iframe.contentWindow.postMessage("register", "*");
-          let [registration] = yield promise;
+          let [registration] = await promise;
 
           // Make sure the worker is active.
-          registration = yield wait_for_active_worker(registration);
+          registration = await wait_for_active_worker(registration);
 
           let activeWorker = registration.activeWorker;
           ok(activeWorker !== null, "Worker is not active!");
@@ -90,15 +90,15 @@
                "the service worker eventually shuts down again.");
           promise = waitForServiceWorkerShutdown();
           activeWorker.detachDebugger();
-          yield promise;
+          await promise;
           ok(activeWorker.debugger === null);
 
           promise = waitForUnregister(EXAMPLE_URL);
           iframe.contentWindow.postMessage("unregister", "*");
-          registration = yield promise;
+          registration = await promise;
 
           SimpleTest.finish();
-        });
+        })();
       });
     }
 

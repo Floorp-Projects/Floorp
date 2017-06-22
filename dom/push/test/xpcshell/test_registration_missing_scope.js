@@ -11,14 +11,14 @@ function run_test() {
   run_next_test();
 }
 
-add_task(function* test_registration_missing_scope() {
+add_task(async function test_registration_missing_scope() {
   PushService.init({
     serverURI: "wss://push.example.org/",
     makeWebSocket(uri) {
       return new MockWebSocket(uri);
     }
   });
-  yield rejects(
+  await rejects(
     PushService.registration({ scope: '', originAttributes: '' }),
     'Record missing page and manifest URLs'
   );

@@ -19,16 +19,16 @@ function enableOnAppInstalledPref() {
 
 // Send a message for the even to be fired.
 // This cause file_reg_install_event.html to be dynamically change.
-function* theTest(aBrowser) {
+async function theTest(aBrowser) {
   aBrowser.allowEvents = true;
-  let waitForInstall = ContentTask.spawn(aBrowser, null, function*() {
-    yield ContentTaskUtils.waitForEvent(content.window, "appinstalled");
+  let waitForInstall = ContentTask.spawn(aBrowser, null, async function() {
+    await ContentTaskUtils.waitForEvent(content.window, "appinstalled");
   });
-  const { data: { success } } = yield PromiseMessage
+  const { data: { success } } = await PromiseMessage
     .send(aBrowser.messageManager, "DOM:Manifest:FireAppInstalledEvent");
   ok(success, "message sent and received successfully.");
   try {
-    yield waitForInstall;
+    await waitForInstall;
     ok(true, "AppInstalled event fired");
   } catch (err) {
     ok(false, "AppInstalled event didn't fire: " + err.message);
@@ -36,13 +36,13 @@ function* theTest(aBrowser) {
 }
 
 // Open a tab and run the test
-add_task(function*() {
-  yield enableOnAppInstalledPref();
+add_task(async function() {
+  await enableOnAppInstalledPref();
   let tabOptions = {
     gBrowser: gBrowser,
     url: testURL.href,
   };
-  yield BrowserTestUtils.withNewTab(
+  await BrowserTestUtils.withNewTab(
     tabOptions,
     theTest
   );

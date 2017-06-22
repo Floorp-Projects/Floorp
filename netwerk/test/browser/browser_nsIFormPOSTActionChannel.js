@@ -5,7 +5,6 @@
 
 Components.utils.import("resource://gre/modules/Services.jsm");
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
-Components.utils.import("resource://gre/modules/Task.jsm");
 
 const SCHEME = "x-bug1241377";
 
@@ -255,7 +254,7 @@ function loadTestTab(uri) {
   });
 }
 
-add_task(function*() {
+add_task(async function() {
   var handler = new CustomProtocolHandler();
   var registrar = Components.manager.QueryInterface(Ci.nsIComponentRegistrar);
   registrar.registerFactory(handler.classID, "",
@@ -266,22 +265,22 @@ add_task(function*() {
   });
 });
 
-add_task(function*() {
-  var [hasUploadStream, postData] = yield loadTestTab(NORMAL_FORM_URI);
+add_task(async function() {
+  var [hasUploadStream, postData] = await loadTestTab(NORMAL_FORM_URI);
   is(hasUploadStream, "no", "normal action should not have uploadStream");
 
   gBrowser.removeCurrentTab();
 });
 
-add_task(function*() {
-  var [hasUploadStream, postData] = yield loadTestTab(UPLOAD_FORM_URI);
+add_task(async function() {
+  var [hasUploadStream, postData] = await loadTestTab(UPLOAD_FORM_URI);
   is(hasUploadStream, "no", "upload action should not have uploadStream");
 
   gBrowser.removeCurrentTab();
 });
 
-add_task(function*() {
-  var [hasUploadStream, postData, headers] = yield loadTestTab(POST_FORM_URI);
+add_task(async function() {
+  var [hasUploadStream, postData, headers] = await loadTestTab(POST_FORM_URI);
 
   is(hasUploadStream, "yes", "post action should have uploadStream");
   is(postData, "foo=bar\r\n",

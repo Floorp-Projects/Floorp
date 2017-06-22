@@ -10,15 +10,15 @@
 
 <body>
 <script type="application/javascript">
-  add_task(function*() {
-    yield SpecialPowers.pushPrefEnv(
+  add_task(async function() {
+    await SpecialPowers.pushPrefEnv(
       { "set": [["dom.mozBrowserFramesEnabled", true],
                 ["network.disable.ipc.security", true]] });
   });
 
-  add_task(function*() {
+  add_task(async function() {
     // Create <iframe mozbrowser>
-    let frame = yield loadFrame({
+    let frame = await loadFrame({
       mozbrowser: "true",
       // FIXME: Bug 1270790
       remote: true

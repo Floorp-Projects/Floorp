@@ -10,10 +10,10 @@ function run_test() {
   run_next_test();
 }
 
-add_task(function* test_service_parent() {
+add_task(async function test_service_parent() {
   let db = PushServiceWebSocket.newPushDB();
   do_register_cleanup(() => {return db.drop().then(_ => db.close());});
-  yield setUpServiceInParent(PushService, db);
+  await setUpServiceInParent(PushService, db);
 
   // Accessing the lazy service getter will start the service in the main
   // process.
@@ -22,7 +22,7 @@ add_task(function* test_service_parent() {
   equal(PushServiceComponent.subscriptionChangeTopic,
     "push-subscription-change", "Wrong subscription change observer topic");
 
-  yield run_test_in_child('./test_service_child.js');
+  await run_test_in_child('./test_service_child.js');
 
-  yield tearDownServiceInParent(db);
+  await tearDownServiceInParent(db);
 });

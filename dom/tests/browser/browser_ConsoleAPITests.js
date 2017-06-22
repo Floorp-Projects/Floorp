@@ -5,22 +5,22 @@
 
 const TEST_URI = "http://example.com/browser/dom/tests/browser/test-console-api.html";
 
-add_task(function*() {
-  let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_URI);
+add_task(async function() {
+  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_URI);
   registerCleanupFunction(() => gBrowser.removeTab(tab));
   let browser = gBrowser.selectedBrowser;
 
-  yield* consoleAPISanityTest(browser);
-  yield* observeConsoleTest(browser);
-  yield* startTraceTest(browser);
-  yield* startLocationTest(browser);
-  yield* startNativeCallbackTest(browser);
-  yield* startGroupTest(browser);
-  yield* startTimeTest(browser);
-  yield* startTimeEndTest(browser);
-  yield* startTimeStampTest(browser);
-  yield* startEmptyTimeStampTest(browser);
-  yield* startEmptyTimerTest(browser);
+  await consoleAPISanityTest(browser);
+  await observeConsoleTest(browser);
+  await startTraceTest(browser);
+  await startLocationTest(browser);
+  await startNativeCallbackTest(browser);
+  await startGroupTest(browser);
+  await startTimeTest(browser);
+  await startTimeEndTest(browser);
+  await startTimeStampTest(browser);
+  await startEmptyTimeStampTest(browser);
+  await startEmptyTimerTest(browser);
 });
 
 function spawnWithObserver(browser, observerFunc, func) {
@@ -76,8 +76,8 @@ function waitForResolve(browser) {
   });
 }
 
-function* consoleAPISanityTest(browser) {
-  yield ContentTask.spawn(browser, null, function() {
+async function consoleAPISanityTest(browser) {
+  await ContentTask.spawn(browser, null, function() {
     let win = XPCNativeWrapper.unwrap(content.window);
 
     ok(win.console, "we have a console attached");
@@ -144,8 +144,8 @@ function testConsoleData(aMessageObject) {
   }
 }
 
-function* observeConsoleTest(browser) {
-  yield spawnWithObserver(browser, testConsoleData, function(opts) {
+async function observeConsoleTest(browser) {
+  await spawnWithObserver(browser, testConsoleData, function(opts) {
     let win = XPCNativeWrapper.unwrap(content.window);
     expect("log", "arg");
     win.console.log("arg");
@@ -261,9 +261,9 @@ function testTraceConsoleData(aMessageObject) {
   resolve();
 }
 
-function* startTraceTest(browser) {
+async function startTraceTest(browser) {
   dump("HERE\n");
-  yield spawnWithObserver(browser, testTraceConsoleData, function(opts) {
+  await spawnWithObserver(browser, testTraceConsoleData, function(opts) {
     dump("Observer attached\n");
     gLevel = "trace";
     gArgs = [
@@ -276,7 +276,7 @@ function* startTraceTest(browser) {
   });
 
   BrowserTestUtils.synthesizeMouseAtCenter("#test-trace", {}, browser);
-  yield waitForResolve(browser);
+  await waitForResolve(browser);
 }
 
 function testLocationData(aMessageObject) {
@@ -297,8 +297,8 @@ function testLocationData(aMessageObject) {
   resolve();
 }
 
-function* startLocationTest(browser) {
-  yield spawnWithObserver(browser, testLocationData, function(opts) {
+async function startLocationTest(browser) {
+  await spawnWithObserver(browser, testLocationData, function(opts) {
     gLevel = "log";
     gArgs = [
       {filename: TEST_URI, functionName: "foobar646025", arguments: ["omg", "o", "d"], lineNumber: 19}
@@ -306,7 +306,7 @@ function* startLocationTest(browser) {
   });
 
   BrowserTestUtils.synthesizeMouseAtCenter("#test-location", {}, browser);
-  yield waitForResolve(browser);
+  await waitForResolve(browser);
 }
 
 function testNativeCallback(aMessageObject) {
@@ -318,11 +318,11 @@ function testNativeCallback(aMessageObject) {
   resolve();
 }
 
-function* startNativeCallbackTest(browser) {
-  yield spawnWithObserver(browser, testNativeCallback);
+async function startNativeCallbackTest(browser) {
+  await spawnWithObserver(browser, testNativeCallback);
 
   BrowserTestUtils.synthesizeMouseAtCenter("#test-nativeCallback", {}, browser);
-  yield waitForResolve(browser);
+  await waitForResolve(browser);
 }
 
 function testConsoleGroup(aMessageObject) {
@@ -356,11 +356,11 @@ function testConsoleGroup(aMessageObject) {
   }
 }
 
-function* startGroupTest(browser) {
-  yield spawnWithObserver(browser, testConsoleGroup);
+async function startGroupTest(browser) {
+  await spawnWithObserver(browser, testConsoleGroup);
 
   BrowserTestUtils.synthesizeMouseAtCenter("#test-groups", {}, browser);
-  yield waitForResolve(browser);
+  await waitForResolve(browser);
 }
 
 function testConsoleTime(aMessageObject) {
@@ -381,8 +381,8 @@ function testConsoleTime(aMessageObject) {
   resolve();
 }
 
-function* startTimeTest(browser) {
-  yield spawnWithObserver(browser, testConsoleTime, function(opts) {
+async function startTimeTest(browser) {
+  await spawnWithObserver(browser, testConsoleTime, function(opts) {
     gLevel = "time";
     gArgs = [
       {filename: TEST_URI, lineNumber: 23, functionName: "startTimer",
@@ -393,7 +393,7 @@ function* startTimeTest(browser) {
   });
 
   BrowserTestUtils.synthesizeMouseAtCenter("#test-time", {}, browser);
-  yield waitForResolve(browser);
+  await waitForResolve(browser);
 }
 
 function testConsoleTimeEnd(aMessageObject) {
@@ -419,8 +419,8 @@ function testConsoleTimeEnd(aMessageObject) {
   resolve();
 }
 
-function* startTimeEndTest(browser) {
-  yield spawnWithObserver(browser, testConsoleTimeEnd, function(opts) {
+async function startTimeEndTest(browser) {
+  await spawnWithObserver(browser, testConsoleTimeEnd, function(opts) {
     gLevel = "timeEnd";
     gArgs = [
       {filename: TEST_URI, lineNumber: 27, functionName: "stopTimer",
@@ -431,7 +431,7 @@ function* startTimeEndTest(browser) {
   });
 
   BrowserTestUtils.synthesizeMouseAtCenter("#test-timeEnd", {}, browser);
-  yield waitForResolve(browser);
+  await waitForResolve(browser);
 }
 
 function testConsoleTimeStamp(aMessageObject) {
@@ -452,8 +452,8 @@ function testConsoleTimeStamp(aMessageObject) {
   resolve();
 }
 
-function* startTimeStampTest(browser) {
-  yield spawnWithObserver(browser, testConsoleTimeStamp, function() {
+async function startTimeStampTest(browser) {
+  await spawnWithObserver(browser, testConsoleTimeStamp, function() {
     gLevel = "timeStamp";
     gArgs = [
       {filename: TEST_URI, lineNumber: 58, functionName: "timeStamp",
@@ -463,7 +463,7 @@ function* startTimeStampTest(browser) {
   });
 
   BrowserTestUtils.synthesizeMouseAtCenter("#test-timeStamp", {}, browser);
-  yield waitForResolve(browser);
+  await waitForResolve(browser);
 }
 
 function testEmptyConsoleTimeStamp(aMessageObject) {
@@ -481,8 +481,8 @@ function testEmptyConsoleTimeStamp(aMessageObject) {
   resolve();
 }
 
-function* startEmptyTimeStampTest(browser) {
-  yield spawnWithObserver(browser, testEmptyConsoleTimeStamp, function() {
+async function startEmptyTimeStampTest(browser) {
+  await spawnWithObserver(browser, testEmptyConsoleTimeStamp, function() {
     gLevel = "timeStamp";
     gArgs = [
       {filename: TEST_URI, lineNumber: 58, functionName: "timeStamp",
@@ -492,7 +492,7 @@ function* startEmptyTimeStampTest(browser) {
   });
 
   BrowserTestUtils.synthesizeMouseAtCenter("#test-emptyTimeStamp", {}, browser);
-  yield waitForResolve(browser);
+  await waitForResolve(browser);
 }
 
 function testEmptyTimer(aMessageObject) {
@@ -512,9 +512,9 @@ function testEmptyTimer(aMessageObject) {
   resolve();
 }
 
-function* startEmptyTimerTest(browser) {
-  yield spawnWithObserver(browser, testEmptyTimer);
+async function startEmptyTimerTest(browser) {
+  await spawnWithObserver(browser, testEmptyTimer);
 
   BrowserTestUtils.synthesizeMouseAtCenter("#test-namelessTimer", {}, browser);
-  yield waitForResolve(browser);
+  await waitForResolve(browser);
 }

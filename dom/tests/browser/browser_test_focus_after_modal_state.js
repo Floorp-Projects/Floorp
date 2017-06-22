@@ -24,18 +24,18 @@ function waitForMessage(message) {
   });
 }
 
-add_task(function* () {
-  let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_URL);
+add_task(async function() {
+  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_URL);
   let browser = tab.linkedBrowser;
 
   // Focus on editable iframe.
-  yield BrowserTestUtils.synthesizeMouseAtCenter("#edit", {}, browser);
-  yield ContentTask.spawn(browser, null, function* () {
+  await BrowserTestUtils.synthesizeMouseAtCenter("#edit", {}, browser);
+  await ContentTask.spawn(browser, null, async function() {
     is(content.document.activeElement, content.document.getElementById("edit"),
        "Focus should be on iframe element");
   });
 
-  yield ContentTask.spawn(browser, null, function* () {
+  await ContentTask.spawn(browser, null, async function() {
     content.document.getElementById("edit").contentDocument.addEventListener(
       "focus", function(event) {
         sendAsyncMessage("Test:FocusReceived");
@@ -52,18 +52,18 @@ add_task(function* () {
   let dialogShown = awaitAndClosePrompt();
   let waitForBlur = waitForMessage("Test:BlurReceived");
   let waitForFocus = waitForMessage("Test:FocusReceived");
-  yield ContentTask.spawn(tab.linkedBrowser, null, function*() {
+  await ContentTask.spawn(tab.linkedBrowser, null, async function() {
     let div = content.document.getElementById("clickMeDiv");
     div.click();
   });
-  yield dialogShown;
-  yield Promise.all([waitForBlur, waitForFocus]);
-  yield ContentTask.spawn(browser, null, function* () {
+  await dialogShown;
+  await Promise.all([waitForBlur, waitForFocus]);
+  await ContentTask.spawn(browser, null, async function() {
     is(content.document.activeElement, content.document.getElementById("edit"),
        "Focus should be back on iframe element");
   });
   is(lastMessageReceived, "Test:FocusReceived",
      "Should receive blur and then focus event");
 
-  yield BrowserTestUtils.removeTab(tab);
+  await BrowserTestUtils.removeTab(tab);
 });

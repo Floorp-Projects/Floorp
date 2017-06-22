@@ -6,10 +6,10 @@ const CHROME_REMOTE_WINDOW = Ci.nsIWebBrowserChrome.CHROME_REMOTE_WINDOW;
  * Tests that when we open new browser windows from content they
  * get the full browser chrome.
  */
-add_task(function* () {
+add_task(async function() {
   // Make sure that the window.open call will open a new
   // window instead of a new tab.
-  yield new Promise(resolve => {
+  await new Promise(resolve => {
     SpecialPowers.pushPrefEnv({
       "set": [
         ["browser.link.open_newwindow", 2],
@@ -17,13 +17,13 @@ add_task(function* () {
     }, resolve);
   });
 
-  yield BrowserTestUtils.withNewTab({
+  await BrowserTestUtils.withNewTab({
     gBrowser,
     url: TEST_PAGE
-  }, function*(browser) {
+  }, async function(browser) {
     let openedPromise = BrowserTestUtils.waitForNewWindow();
     BrowserTestUtils.synthesizeMouse("a", 0, 0, {}, browser);
-    let win = yield openedPromise;
+    let win = await openedPromise;
 
     let chromeFlags = win.QueryInterface(Ci.nsIInterfaceRequestor)
                          .getInterface(Ci.nsIWebNavigation)

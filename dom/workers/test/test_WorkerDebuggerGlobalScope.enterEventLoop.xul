@@ -21,7 +21,7 @@
     const DEBUGGER_URL = BASE_URL + "WorkerDebuggerGlobalScope.enterEventLoop_debugger.js";
 
     function test() {
-      Task.spawn(function* () {
+      (async function() {
         SimpleTest.waitForExplicitFinish();
 
         info("Create a worker that creates a child worker, wait for their " +
@@ -31,19 +31,19 @@
           waitForRegister(CHILD_WORKER_URL, DEBUGGER_URL)
         ]);
         let worker = new Worker(WORKER_URL);
-        let [dbg, childDbg] = yield promise;
+        let [dbg, childDbg] = await promise;
 
         info("Send a request to the child worker. This should cause the " +
              "child worker debugger to enter a nested event loop.");
         promise = waitForDebuggerMessage(childDbg, "paused");
         worker.postMessage("child:ping");
-        yield promise;
+        await promise;
 
         info("Send a request to the child worker debugger. This should cause " +
              "the child worker debugger to enter a second nested event loop.");
         promise = waitForDebuggerMessage(childDbg, "paused");
         childDbg.postMessage("eval");
-        yield promise;
+        await promise;
 
         info("Send a request to the child worker debugger. This should cause " +
              "the child worker debugger to leave its second nested event " +
@@ -55,7 +55,7 @@
           waitForDebuggerMessage(childDbg, "evalled")
         ]);
         childDbg.postMessage("resume");
-        yield promise;
+        await promise;
 
         info("Send a request to the child worker debugger. This should cause " +
              "the child worker debugger to leave its first nested event loop." +
@@ -67,13 +67,13 @@
           waitForWorkerMessage(worker, "child:pong")
         ]);
         childDbg.postMessage("resume");
-        yield promise;
+        await promise;
 
         info("Send a request to the worker. This should cause the worker " +
              "debugger to enter a nested event loop.");
         promise = waitForDebuggerMessage(dbg, "paused");
         worker.postMessage("ping");
-        yield promise;
+        await promise;
 
         info("Terminate the worker. This should not cause the worker " +
              "debugger to terminate as well.");
@@ -87,7 +87,7 @@
              "worker debugger to enter a second nested event loop.");
         promise = waitForDebuggerMessage(dbg, "paused");
         dbg.postMessage("eval");
-        yield promise;
+        await promise;
 
         info("Send a request to the worker debugger. This should cause the " +
              "worker debugger to leave its second nested event loop. The " +
@@ -98,7 +98,7 @@
           waitForDebuggerMessage(dbg, "evalled")
         ]);
         dbg.postMessage("resume");
-        yield promise;
+        await promise;
 
         info("Send a request to the worker debugger. This should cause the " +
              "worker debugger to leave its first nested event loop. The " +
@@ -108,10 +108,10 @@
           waitForDebuggerMessage(dbg, "resumed"),
         ]);
         dbg.postMessage("resume");
-        yield promise;
+        await promise;
 
         SimpleTest.finish();
-      });
+      })();
     }
 
   ]]>

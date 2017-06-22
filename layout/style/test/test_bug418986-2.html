@@ -14,8 +14,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=418986
   <script type="text/javascript">
     // Run all tests now.
     window.onload = function () {
-      add_task(function* () {
-        yield test(true);
+      add_task(async function() {
+        await test(true);
       });
     };
   </script>

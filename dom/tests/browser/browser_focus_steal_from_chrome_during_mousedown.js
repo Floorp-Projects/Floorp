@@ -1,4 +1,4 @@
-add_task(function* test() {
+add_task(async function test() {
   const kTestURI =
     "data:text/html," +
     "<script type=\"text/javascript\">" +
@@ -11,7 +11,7 @@ add_task(function* test() {
     "<button onmousedown=\"onMouseDown(event);\" style=\"width: 100px; height: 100px;\">click here</button>" +
     "<input id=\"willBeFocused\"></body>";
 
-  let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, kTestURI);
+  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, kTestURI);
 
   let fm = Components.classes["@mozilla.org/focus-manager;1"].
         getService(Components.interfaces.nsIFocusManager);
@@ -30,7 +30,7 @@ add_task(function* test() {
     isnot(fm.focusedElement, document.getElementById("urlbar").inputField,
        "Failed to move focus away from search bar: button=" + button);
 
-    yield ContentTask.spawn(tab.linkedBrowser, button, function (button) {
+    await ContentTask.spawn(tab.linkedBrowser, button, function (button) {
       let fm = Components.classes["@mozilla.org/focus-manager;1"].
             getService(Components.interfaces.nsIFocusManager);
 

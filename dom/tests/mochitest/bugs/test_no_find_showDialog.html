@@ -57,7 +57,7 @@
   }
 
   function startTest() {
-    add_task(function*() {
+    add_task(async function() {
       ok(doWraparoundFind("text to search for", false),
          "Found the text in the document body.");
 

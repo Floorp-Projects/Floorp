@@ -27,35 +27,35 @@ function do_get_kinto_collection(sqliteHandle, collection = "test_collection") {
   return new Kinto(config).collection(collection);
 }
 
-function* clear_collection() {
+async function clear_collection() {
   let sqliteHandle;
   try {
-    sqliteHandle = yield do_get_kinto_sqliteHandle();
+    sqliteHandle = await do_get_kinto_sqliteHandle();
     const collection = do_get_kinto_collection(sqliteHandle);
-    yield collection.clear();
+    await collection.clear();
   } finally {
-    yield sqliteHandle.close();
+    await sqliteHandle.close();
   }
 }
 
 // test some operations on a local collection
-add_task(function* test_kinto_add_get() {
+add_task(async function test_kinto_add_get() {
   let sqliteHandle;
   try {
-    sqliteHandle = yield do_get_kinto_sqliteHandle();
+    sqliteHandle = await do_get_kinto_sqliteHandle();
     const collection = do_get_kinto_collection(sqliteHandle);
 
     let newRecord = { foo: "bar" };
     // check a record is created
-    let createResult = yield collection.create(newRecord);
+    let createResult = await collection.create(newRecord);
     do_check_eq(createResult.data.foo, newRecord.foo);
     // check getting the record gets the same info
-    let getResult = yield collection.get(createResult.data.id);
+    let getResult = await collection.get(createResult.data.id);
     deepEqual(createResult.data, getResult.data);
     // check what happens if we create the same item again (it should throw
     // since you can't create with id)
     try {
-      yield collection.create(createResult.data);
+      await collection.create(createResult.data);
       do_throw("Creation of a record with an id should fail");
     } catch (err) { }
     // try a few creates without waiting for the first few to resolve
@@ -63,20 +63,20 @@ add_task(function* test_kinto_add_get() {
     promises.push(collection.create(newRecord));
     promises.push(collection.create(newRecord));
     promises.push(collection.create(newRecord));
-    yield collection.create(newRecord);
-    yield Promise.all(promises);
+    await collection.create(newRecord);
+    await Promise.all(promises);
   } finally {
-    yield sqliteHandle.close();
+    await sqliteHandle.close();
   }
 });
 
 add_task(clear_collection);
 
 // test some operations on multiple connections
-add_task(function* test_kinto_add_get() {
+add_task(async function test_kinto_add_get() {
   let sqliteHandle;
   try {
-    sqliteHandle = yield do_get_kinto_sqliteHandle();
+    sqliteHandle = await do_get_kinto_sqliteHandle();
     const collection1 = do_get_kinto_collection(sqliteHandle);
     const collection2 = do_get_kinto_collection(sqliteHandle, "test_collection_2");
 
@@ -91,109 +91,109 @@ add_task(function* test_kinto_add_get() {
     }
 
     // ensure subsequent operations still work
-    yield Promise.all([collection1.create(newRecord),
+    await Promise.all([collection1.create(newRecord),
                        collection2.create(newRecord)]);
-    yield Promise.all(promises);
+    await Promise.all(promises);
   } finally {
-    yield sqliteHandle.close();
+    await sqliteHandle.close();
   }
 });
 
 add_task(clear_collection);
 
-add_task(function* test_kinto_update() {
+add_task(async function test_kinto_update() {
   let sqliteHandle;
   try {
-    sqliteHandle = yield do_get_kinto_sqliteHandle();
+    sqliteHandle = await do_get_kinto_sqliteHandle();
     const collection = do_get_kinto_collection(sqliteHandle);
     const newRecord = { foo: "bar" };
     // check a record is created
-    let createResult = yield collection.create(newRecord);
+    let createResult = await collection.create(newRecord);
     do_check_eq(createResult.data.foo, newRecord.foo);
     do_check_eq(createResult.data._status, "created");
     // check we can update this OK
     let copiedRecord = Object.assign(createResult.data, {});
     deepEqual(createResult.data, copiedRecord);
     copiedRecord.foo = "wibble";
-    let updateResult = yield collection.update(copiedRecord);
+    let updateResult = await collection.update(copiedRecord);
     // check the field was updated
     do_check_eq(updateResult.data.foo, copiedRecord.foo);
     // check the status is still "created", since we haven't synced
     // the record
     do_check_eq(updateResult.data._status, "created");
   } finally {
-    yield sqliteHandle.close();
+    await sqliteHandle.close();
   }
 });
 
 add_task(clear_collection);
 
-add_task(function* test_kinto_clear() {
+add_task(async function test_kinto_clear() {
   let sqliteHandle;
   try {
-    sqliteHandle = yield do_get_kinto_sqliteHandle();
+    sqliteHandle = await do_get_kinto_sqliteHandle();
     const collection = do_get_kinto_collection(sqliteHandle);
 
     // create an expected number of records
     const expected = 10;
     const newRecord = { foo: "bar" };
     for (let i = 0; i < expected; i++) {
-      yield collection.create(newRecord);
+      await collection.create(newRecord);
     }
     // check the collection contains the correct number
-    let list = yield collection.list();
+    let list = await collection.list();
     do_check_eq(list.data.length, expected);
     // clear the collection and check again - should be 0
-    yield collection.clear();
-    list = yield collection.list();
+    await collection.clear();
+    list = await collection.list();
     do_check_eq(list.data.length, 0);
   } finally {
-    yield sqliteHandle.close();
+    await sqliteHandle.close();
   }
 });
 
 add_task(clear_collection);
 
-add_task(function* test_kinto_delete() {
+add_task(async function test_kinto_delete() {
   let sqliteHandle;
   try {
-    sqliteHandle = yield do_get_kinto_sqliteHandle();
+    sqliteHandle = await do_get_kinto_sqliteHandle();
     const collection = do_get_kinto_collection(sqliteHandle);
     const newRecord = { foo: "bar" };
     // check a record is created
-    let createResult = yield collection.create(newRecord);
+    let createResult = await collection.create(newRecord);
     do_check_eq(createResult.data.foo, newRecord.foo);
     // check getting the record gets the same info
-    let getResult = yield collection.get(createResult.data.id);
+    let getResult = await collection.get(createResult.data.id);
     deepEqual(createResult.data, getResult.data);
     // delete that record
-    let deleteResult = yield collection.delete(createResult.data.id);
+    let deleteResult = await collection.delete(createResult.data.id);
     // check the ID is set on the result
     do_check_eq(getResult.data.id, deleteResult.data.id);
     // and check that get no longer returns the record
     try {
-      getResult = yield collection.get(createResult.data.id);
+      getResult = await collection.get(createResult.data.id);
       do_throw("there should not be a result");
     } catch (e) { }
   } finally {
-    yield sqliteHandle.close();
+    await sqliteHandle.close();
   }
 });
 
-add_task(function* test_kinto_list() {
+add_task(async function test_kinto_list() {
   let sqliteHandle;
   try {
-    sqliteHandle = yield do_get_kinto_sqliteHandle();
+    sqliteHandle = await do_get_kinto_sqliteHandle();
     const collection = do_get_kinto_collection(sqliteHandle);
     const expected = 10;
     const created = [];
     for (let i = 0; i < expected; i++) {
       let newRecord = { foo: "test " + i };
-      let createResult = yield collection.create(newRecord);
+      let createResult = await collection.create(newRecord);
       created.push(createResult.data);
     }
     // check the collection contains the correct number
-    let list = yield collection.list();
+    let list = await collection.list();
     do_check_eq(list.data.length, expected);
 
     // check that all created records exist in the retrieved list
@@ -208,74 +208,74 @@ add_task(function* test_kinto_list() {
       do_check_true(found);
     }
   } finally {
-    yield sqliteHandle.close();
+    await sqliteHandle.close();
   }
 });
 
 add_task(clear_collection);
 
-add_task(function* test_loadDump_ignores_already_imported_records() {
+add_task(async function test_loadDump_ignores_already_imported_records() {
   let sqliteHandle;
   try {
-    sqliteHandle = yield do_get_kinto_sqliteHandle();
+    sqliteHandle = await do_get_kinto_sqliteHandle();
     const collection = do_get_kinto_collection(sqliteHandle);
     const record = {id: "41b71c13-17e9-4ee3-9268-6a41abf9730f", title: "foo", last_modified: 1457896541};
-    yield collection.loadDump([record]);
-    let impactedRecords = yield collection.loadDump([record]);
+    await collection.loadDump([record]);
+    let impactedRecords = await collection.loadDump([record]);
     do_check_eq(impactedRecords.length, 0);
   } finally {
-    yield sqliteHandle.close();
+    await sqliteHandle.close();
   }
 });
 
 add_task(clear_collection);
 
-add_task(function* test_loadDump_should_overwrite_old_records() {
+add_task(async function test_loadDump_should_overwrite_old_records() {
   let sqliteHandle;
   try {
-    sqliteHandle = yield do_get_kinto_sqliteHandle();
+    sqliteHandle = await do_get_kinto_sqliteHandle();
     const collection = do_get_kinto_collection(sqliteHandle);
     const record = {id: "41b71c13-17e9-4ee3-9268-6a41abf9730f", title: "foo", last_modified: 1457896541};
-    yield collection.loadDump([record]);
+    await collection.loadDump([record]);
     const updated = Object.assign({}, record, {last_modified: 1457896543});
-    let impactedRecords = yield collection.loadDump([updated]);
+    let impactedRecords = await collection.loadDump([updated]);
     do_check_eq(impactedRecords.length, 1);
   } finally {
-    yield sqliteHandle.close();
+    await sqliteHandle.close();
   }
 });
 
 add_task(clear_collection);
 
-add_task(function* test_loadDump_should_not_overwrite_unsynced_records() {
+add_task(async function test_loadDump_should_not_overwrite_unsynced_records() {
   let sqliteHandle;
   try {
-    sqliteHandle = yield do_get_kinto_sqliteHandle();
+    sqliteHandle = await do_get_kinto_sqliteHandle();
     const collection = do_get_kinto_collection(sqliteHandle);
     const recordId = "41b71c13-17e9-4ee3-9268-6a41abf9730f";
-    yield collection.create({id: recordId, title: "foo"}, {useRecordId: true});
+    await collection.create({id: recordId, title: "foo"}, {useRecordId: true});
     const record = {id: recordId, title: "bar", last_modified: 1457896541};
-    let impactedRecords = yield collection.loadDump([record]);
+    let impactedRecords = await collection.loadDump([record]);
     do_check_eq(impactedRecords.length, 0);
   } finally {
-    yield sqliteHandle.close();
+    await sqliteHandle.close();
   }
 });
 
 add_task(clear_collection);
 
-add_task(function* test_loadDump_should_not_overwrite_records_without_last_modified() {
+add_task(async function test_loadDump_should_not_overwrite_records_without_last_modified() {
   let sqliteHandle;
   try {
-    sqliteHandle = yield do_get_kinto_sqliteHandle();
+    sqliteHandle = await do_get_kinto_sqliteHandle();
     const collection = do_get_kinto_collection(sqliteHandle);
     const recordId = "41b71c13-17e9-4ee3-9268-6a41abf9730f";
-    yield collection.create({id: recordId, title: "foo"}, {synced: true});
+    await collection.create({id: recordId, title: "foo"}, {synced: true});
     const record = {id: recordId, title: "bar", last_modified: 1457896541};
-    let impactedRecords = yield collection.loadDump([record]);
+    let impactedRecords = await collection.loadDump([record]);
     do_check_eq(impactedRecords.length, 0);
   } finally {
-    yield sqliteHandle.close();
+    await sqliteHandle.close();
   }
 });
 
@@ -284,7 +284,7 @@ add_task(clear_collection);
 // Now do some sanity checks against a server - we're not looking to test
 // core kinto.js functionality here (there is excellent test coverage in
 // kinto.js), more making sure things are basically working as expected.
-add_task(function* test_kinto_sync() {
+add_task(async function test_kinto_sync() {
   const configPath = "/v1/";
   const recordsPath = "/v1/buckets/default/collections/test_collection/records";
   // register a handler
@@ -316,31 +316,31 @@ add_task(function* test_kinto_sync() {
   let sqliteHandle;
   try {
     let result;
-    sqliteHandle = yield do_get_kinto_sqliteHandle();
+    sqliteHandle = await do_get_kinto_sqliteHandle();
     const collection = do_get_kinto_collection(sqliteHandle);
 
-    result = yield collection.sync();
+    result = await collection.sync();
     do_check_true(result.ok);
 
     // our test data has a single record; it should be in the local collection
-    let list = yield collection.list();
+    let list = await collection.list();
     do_check_eq(list.data.length, 1);
 
     // now sync again; we should now have 2 records
-    result = yield collection.sync();
+    result = await collection.sync();
     do_check_true(result.ok);
-    list = yield collection.list();
+    list = await collection.list();
     do_check_eq(list.data.length, 2);
 
     // sync again; the second records should have been modified
     const before = list.data[0].title;
-    result = yield collection.sync();
+    result = await collection.sync();
     do_check_true(result.ok);
-    list = yield collection.list();
+    list = await collection.list();
     const after = list.data[0].title;
     do_check_neq(before, after);
   } finally {
-    yield sqliteHandle.close();
+    await sqliteHandle.close();
   }
 });
 

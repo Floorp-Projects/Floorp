@@ -180,17 +180,17 @@ function startClient(port, beConservative, expectSuccess) {
   return deferred.promise;
 }
 
-add_task(function*() {
+add_task(async function() {
   Services.prefs.setIntPref("security.tls.version.max", 4);
   Services.prefs.setCharPref("network.dns.localDomains", hostname);
-  let cert = yield getCert();
+  let cert = await getCert();
 
   // First run a server that accepts TLS 1.2 and 1.3. A conservative client
   // should succeed in connecting.
   let server = startServer(cert, Ci.nsITLSClientStatus.TLS_VERSION_1_2,
                            Ci.nsITLSClientStatus.TLS_VERSION_1_3);
   storeCertOverride(server.port, cert);
-  yield startClient(server.port, true /*be conservative*/,
+  await startClient(server.port, true /*be conservative*/,
                     true /*should succeed*/);
   server.close();
 
@@ -199,11 +199,11 @@ add_task(function*() {
   server = startServer(cert, Ci.nsITLSClientStatus.TLS_VERSION_1_3,
                        Ci.nsITLSClientStatus.TLS_VERSION_1_3);
   storeCertOverride(server.port, cert);
-  yield startClient(server.port, true /*be conservative*/,
+  await startClient(server.port, true /*be conservative*/,
                     false /*should fail*/);
 
   // However, a non-conservative client should succeed.
-  yield startClient(server.port, false /*don't be conservative*/,
+  await startClient(server.port, false /*don't be conservative*/,
                     true /*should succeed*/);
   server.close();
 });

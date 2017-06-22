@@ -43,8 +43,8 @@ function captureUnexpectedFullscreenChange() {
 
 const kPage = "http://example.org/browser/dom/html/test/dummy_page.html";
 
-add_task(function* () {
-  yield pushPrefs(
+add_task(async function() {
+  await pushPrefs(
     ["full-screen-api.transition-duration.enter", "0 0"],
     ["full-screen-api.transition-duration.leave", "0 0"]);
 
@@ -52,7 +52,7 @@ add_task(function* () {
   registerCleanupFunction(() => gBrowser.removeTab(tab));
   let browser = tab.linkedBrowser;
   gBrowser.selectedTab = tab;
-  yield waitForDocLoadComplete();
+  await waitForDocLoadComplete();
 
   gMessageManager = browser.messageManager;
   gMessageManager.loadFrameScript(
@@ -60,7 +60,7 @@ add_task(function* () {
 
   // Wait for the document being activated, so that
   // fullscreen request won't be denied.
-  yield promiseOneMessage("Test:Activated");
+  await promiseOneMessage("Test:Activated");
 
   let contextMenu = document.getElementById("contentAreaContextMenu");
   ok(contextMenu, "Got context menu");
@@ -68,7 +68,7 @@ add_task(function* () {
   let state;
   info("Enter DOM fullscreen");
   gMessageManager.sendAsyncMessage("Test:RequestFullscreen");
-  state = yield promiseOneMessage("Test:FullscreenChanged");
+  state = await promiseOneMessage("Test:FullscreenChanged");
   ok(state, "The content should have entered fullscreen");
   ok(document.fullscreenElement, "The chrome should also be in fullscreen");
   gMessageManager.addMessageListener(
@@ -79,20 +79,20 @@ add_task(function* () {
   let popupShownPromise = promiseWaitForEvent(window, "popupshown");
   EventUtils.synthesizeMouse(browser, screen.width / 2, screen.height / 2,
                              {type: "contextmenu", button: 2}, window);
-  yield popupShownPromise;
+  await popupShownPromise;
   is(contextMenu.state, "open", "Should have opened context menu");
 
   info("Send the first escape");
   let popupHidePromise = promiseWaitForEvent(window, "popuphidden");
   EventUtils.synthesizeKey("VK_ESCAPE", {});
-  yield popupHidePromise;
+  await popupHidePromise;
   is(contextMenu.state, "closed", "Should have closed context menu");
 
   // Wait a small time to confirm that the first ESC key
   // does not exit fullscreen.
-  yield new Promise(resolve => setTimeout(resolve, 1000));
+  await new Promise(resolve => setTimeout(resolve, 1000));
   gMessageManager.sendAsyncMessage("Test:QueryFullscreenState");
-  state = yield promiseOneMessage("Test:FullscreenState");
+  state = await promiseOneMessage("Test:FullscreenState");
   ok(state, "The content should still be in fullscreen");
   ok(document.fullscreenElement, "The chrome should still be in fullscreen");
 
@@ -101,7 +101,7 @@ add_task(function* () {
     "Test:FullscreenChanged", captureUnexpectedFullscreenChange);
   let fullscreenExitPromise = promiseOneMessage("Test:FullscreenChanged");
   EventUtils.synthesizeKey("VK_ESCAPE", {});
-  state = yield fullscreenExitPromise;
+  state = await fullscreenExitPromise;
   ok(!state, "The content should have exited fullscreen");
   ok(!document.fullscreenElement, "The chrome should have exited fullscreen");
 });

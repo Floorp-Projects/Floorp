@@ -131,11 +131,11 @@ function startClient(port) {
   return promise.all([inputDeferred.promise, outputDeferred.promise]);
 }
 
-add_task(function*() {
-  let cert = yield getCert();
+add_task(async function() {
+  let cert = await getCert();
   ok(!!cert, "Got self-signed cert");
   let port = startServer(cert);
   storeCertOverride(port, cert);
-  yield startClient(port);
-  yield startClient(port);
+  await startClient(port);
+  await startClient(port);
 });

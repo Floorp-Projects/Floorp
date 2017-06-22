@@ -16,17 +16,17 @@ const engine = Service.engineManager.get("extension-storage");
 do_get_profile();   // so we can use FxAccounts
 loadWebExtensionTestFunctions();
 
-add_task(function* test_changing_extension_storage_changes_score() {
+add_task(async function test_changing_extension_storage_changes_score() {
   const tracker = engine._tracker;
   const extension = {id: "my-extension-id"};
   Svc.Obs.notify("weave:engine:start-tracking");
-  yield withSyncContext(async function(context) {
+  await withSyncContext(async function(context) {
     await extensionStorageSync.set(extension, {"a": "b"}, context);
   });
   do_check_eq(tracker.score, SCORE_INCREMENT_MEDIUM);
 
   tracker.resetScore();
-  yield withSyncContext(async function(context) {
+  await withSyncContext(async function(context) {
     await extensionStorageSync.remove(extension, "a", context);
   });
   do_check_eq(tracker.score, SCORE_INCREMENT_MEDIUM);

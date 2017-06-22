@@ -7,7 +7,6 @@ const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 Cu.import("resource://gre/modules/osfile.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/Task.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "FileUtils",
                                   "resource://gre/modules/FileUtils.jsm");
@@ -214,12 +213,12 @@ HandlerService.prototype = {
   },
 
   _onDBChange() {
-    return Task.spawn(function* () {
+    return (async function() {
       if (this.__store) {
-        yield this.__store.finalize();
+        await this.__store.finalize();
       }
       this.__store = null;
-    }.bind(this)).catch(Cu.reportError);
+    }.bind(this))().catch(Cu.reportError);
   },
 
   // nsIObserver

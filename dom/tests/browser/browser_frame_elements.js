@@ -12,8 +12,8 @@ function getWindowUtils(window) {
     getInterface(Components.interfaces.nsIDOMWindowUtils);
 }
 
-add_task(function* test() {
-  yield BrowserTestUtils.withNewTab({ gBrowser, url: TEST_URI }, function* (browser) {
+add_task(async function test() {
+  await BrowserTestUtils.withNewTab({ gBrowser, url: TEST_URI }, async function(browser) {
     if (!browser.isRemoteBrowser) {
       // Non-e10s, access contentWindow and confirm its container is the browser:
       let windowUtils = getWindowUtils(browser.contentWindow);
@@ -22,8 +22,8 @@ add_task(function* test() {
 
     }
 
-    yield ContentTask.spawn(browser, null, startTests);
-    yield Task.spawn(mozBrowserTests(browser));
+    await ContentTask.spawn(browser, null, startTests);
+    await (mozBrowserTests(browser))();
   });
 });
 
@@ -65,13 +65,13 @@ function startTests() {
   Assert.equal(objectDataUrl.contentWindow.parent, gWindow, "gWindow is parent");
 }
 
-function* mozBrowserTests(browser) {
+async function mozBrowserTests(browser) {
   info("Granting special powers for mozbrowser");
   SpecialPowers.addPermission("browser", true, TEST_URI);
   SpecialPowers.setBoolPref('dom.mozBrowserFramesEnabled', true);
   SpecialPowers.setBoolPref('network.disable.ipc.security', true);
 
-  yield ContentTask.spawn(browser, null, function() {
+  await ContentTask.spawn(browser, null, function() {
     info("Checking mozbrowser iframe");
     let mozBrowserFrame = content.document.createElement("iframe");
     mozBrowserFrame.setAttribute("mozbrowser", "");

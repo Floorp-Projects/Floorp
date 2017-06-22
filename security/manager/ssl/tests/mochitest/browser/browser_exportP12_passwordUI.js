@@ -77,18 +77,18 @@ function openSetP12PasswordDialog() {
 
 // Tests that the first password textbox is the element that is initially
 // focused.
-add_task(function* testFocus() {
-  let [win] = yield openSetP12PasswordDialog();
+add_task(async function testFocus() {
+  let [win] = await openSetP12PasswordDialog();
   Assert.equal(win.document.activeElement,
                win.document.getElementById("pw1").inputField,
                "First password textbox should have focus");
-  yield BrowserTestUtils.closeWindow(win);
+  await BrowserTestUtils.closeWindow(win);
 });
 
 // Tests that the password strength algorithm used is reasonable, and that the
 // Accept button is only enabled if the two passwords match.
-add_task(function* testPasswordStrengthAndEquality() {
-  let [win] = yield openSetP12PasswordDialog();
+add_task(async function testPasswordStrengthAndEquality() {
+  let [win] = await openSetP12PasswordDialog();
   let password1Textbox = win.document.getElementById("pw1");
   let password2Textbox = win.document.getElementById("pw2");
   let strengthProgressBar = win.document.getElementById("pwmeter");
@@ -110,18 +110,18 @@ add_task(function* testPasswordStrengthAndEquality() {
                  `${testCase.name}`);
   }
 
-  yield BrowserTestUtils.closeWindow(win);
+  await BrowserTestUtils.closeWindow(win);
 });
 
 // Test that the right values are returned when the dialog is accepted.
-add_task(function* testAcceptDialogReturnValues() {
-  let [win, retVals] = yield openSetP12PasswordDialog();
+add_task(async function testAcceptDialogReturnValues() {
+  let [win, retVals] = await openSetP12PasswordDialog();
   const password = "fooBAR 1234567890`~!@#$%^&*()-_=+{[}]|\\:;'\",<.>/?一二三";
   win.document.getElementById("pw1").value = password;
   win.document.getElementById("pw2").value = password;
   info("Accepting dialog");
   win.document.getElementById("setp12password").acceptDialog();
-  yield BrowserTestUtils.windowClosed(win);
+  await BrowserTestUtils.windowClosed(win);
 
   Assert.ok(retVals.get("confirmedPassword"),
             "Return value should signal user confirmed a password");
@@ -130,11 +130,11 @@ add_task(function* testAcceptDialogReturnValues() {
 });
 
 // Test that the right values are returned when the dialog is canceled.
-add_task(function* testCancelDialogReturnValues() {
-  let [win, retVals] = yield openSetP12PasswordDialog();
+add_task(async function testCancelDialogReturnValues() {
+  let [win, retVals] = await openSetP12PasswordDialog();
   info("Canceling dialog");
   win.document.getElementById("setp12password").cancelDialog();
-  yield BrowserTestUtils.windowClosed(win);
+  await BrowserTestUtils.windowClosed(win);
 
   Assert.ok(!retVals.get("confirmedPassword"),
             "Return value should signal user didn't confirm a password");

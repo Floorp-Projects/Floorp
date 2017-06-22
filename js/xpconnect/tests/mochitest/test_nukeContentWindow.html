@@ -32,10 +32,10 @@ function waitForWindowDestroyed(winID, callback) {
   SpecialPowers.addObserver(observer, "outer-window-nuked");
 }
 
-add_task(function* () {
+add_task(async function() {
   let frame = $('subframe');
   frame.src = "data:text/html,";
-  yield new Promise(resolve => frame.addEventListener("load", resolve, {once: true}));
+  await new Promise(resolve => frame.addEventListener("load", resolve, {once: true}));
 
   let win = frame.contentWindow;
   let winID = SpecialPowers.getDOMWindowUtils(win).outerWindowID;
@@ -65,7 +65,7 @@ add_task(function* () {
   frame.remove();
 
   // Give the nuke wrappers task a chance to run.
-  yield new Promise(resolve => waitForWindowDestroyed(winID, resolve));
+  await new Promise(resolve => waitForWindowDestroyed(winID, resolve));
 
   is(isWrapperDead(), true, "Sandbox wrapper for content window should be dead");
   is(obj.foo.bar, "baz", "Content wrappers into and out of content window should be alive");

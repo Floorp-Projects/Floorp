@@ -50,7 +50,7 @@ function promiseStopServer(server) {
   });
 }
 
-add_task(function* getAndRevokeToken() {
+add_task(async function getAndRevokeToken() {
   let server = startServer();
   let clientOptions = {
     serverURL: "http://localhost:" + server.identity.primaryPort + "/v1",
@@ -58,12 +58,12 @@ add_task(function* getAndRevokeToken() {
   }
 
   let client = new FxAccountsOAuthGrantClient(clientOptions);
-  let result = yield client.getTokenFromAssertion("assertion", "scope");
+  let result = await client.getTokenFromAssertion("assertion", "scope");
   equal(result.access_token, "token0");
   equal(numTokenFetches, 1, "we hit the server to fetch a token");
-  yield client.destroyToken("token0");
+  await client.destroyToken("token0");
   equal(activeTokens.size, 0, "We hit the server to revoke it");
-  yield promiseStopServer(server);
+  await promiseStopServer(server);
 });
 
 // XXX - TODO - we should probably add more tests for unexpected responses etc.

@@ -44,11 +44,11 @@ function removeCert(nickname) {
   });
 }
 
-add_task(function* () {
+add_task(async function() {
   // No master password, so no prompt required here
   ok(!certService.loginPromptRequired);
 
-  let certA = yield getOrCreateCert(gNickname);
+  let certA = await getOrCreateCert(gNickname);
   // The local cert service implementation takes the given nickname and uses it
   // as the common name for the certificate it creates. nsIX509Cert.displayName
   // uses the common name if it is present, so these should match. Should either
@@ -56,7 +56,7 @@ add_task(function* () {
   equal(certA.displayName, gNickname);
 
   // Getting again should give the same cert
-  let certB = yield getOrCreateCert(gNickname);
+  let certB = await getOrCreateCert(gNickname);
   equal(certB.displayName, gNickname);
 
   // Should be matching instances
@@ -67,12 +67,12 @@ add_task(function* () {
   equal(certA.certType, Ci.nsIX509Cert.USER_CERT);
 
   // New nickname should give a different cert
-  let diffNameCert = yield getOrCreateCert("cool-stuff");
+  let diffNameCert = await getOrCreateCert("cool-stuff");
   ok(!diffNameCert.equals(certA));
 
   // Remove the cert, and get a new one again
-  yield removeCert(gNickname);
-  let newCert = yield getOrCreateCert(gNickname);
+  await removeCert(gNickname);
+  let newCert = await getOrCreateCert(gNickname);
   ok(!newCert.equals(certA));
 
   // Drop all cert references and GC
@@ -82,6 +82,6 @@ add_task(function* () {
   Cu.forceCC();
 
   // Should still get the same cert back
-  let certAfterGC = yield getOrCreateCert(gNickname);
+  let certAfterGC = await getOrCreateCert(gNickname);
   equal(certAfterGC.serialNumber, serial);
 });

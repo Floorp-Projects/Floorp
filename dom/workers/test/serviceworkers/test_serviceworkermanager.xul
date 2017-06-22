@@ -21,20 +21,20 @@
         ["dom.serviceWorkers.enabled", true],
         ["dom.serviceWorkers.testing.enabled", true],
       ]}, function () {
-        Task.spawn(function* () {
+        (async function() {
           let registrations = swm.getAllRegistrations();
           is(registrations.length, 0);
 
           let iframe = $("iframe");
           let promise = waitForIframeLoad(iframe);
           iframe.src = IFRAME_URL;
-          yield promise;
+          await promise;
 
           info("Check that the service worker manager notifies its listeners " +
                "when a service worker is registered.");
           promise = waitForRegister(EXAMPLE_URL);
           iframe.contentWindow.postMessage("register", "*");
-          let registration = yield promise;
+          let registration = await promise;
 
           registrations = swm.getAllRegistrations();
           is(registrations.length, 1);
@@ -56,14 +56,14 @@
                "when a service worker is unregistered.");
           promise = waitForUnregister(EXAMPLE_URL);
           iframe.contentWindow.postMessage("unregister", "*");
-          registration = yield promise;
+          registration = await promise;
           swm.removeListener(listener);
 
           registrations = swm.getAllRegistrations();
           is(registrations.length, 0);
 
           SimpleTest.finish();
-        });
+        })();
       }); 
     }
 

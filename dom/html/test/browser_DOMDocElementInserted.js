@@ -1,5 +1,5 @@
 // Tests that the DOMDocElementInserted event is visible on the frame
-add_task(function*() {
+add_task(async function() {
   let tab = BrowserTestUtils.addTab(gBrowser);
   let uri = "data:text/html;charset=utf-8,<html/>"
 
@@ -17,7 +17,7 @@ add_task(function*() {
   });
 
   tab.linkedBrowser.loadURI(uri);
-  let loadedURI = yield eventPromise;
+  let loadedURI = await eventPromise;
   is(loadedURI, uri, "Should have seen the event for the right URI");
 
   gBrowser.removeTab(tab);

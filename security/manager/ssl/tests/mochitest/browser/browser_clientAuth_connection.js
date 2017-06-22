@@ -73,7 +73,7 @@ const gClientAuthDialogs = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIClientAuthDialogs])
 };
 
-add_task(function* setup() {
+add_task(async function setup() {
   let clientAuthDialogsCID =
     MockRegistrar.register("@mozilla.org/nsClientAuthDialogs;1",
                            gClientAuthDialogs);
@@ -92,17 +92,17 @@ add_task(function* setup() {
  *        should load. If the connection is expected to fail and result in an
  *        error page, |undefined|.
  */
-function* testHelper(prefValue, expectedURL) {
-  yield SpecialPowers.pushPrefEnv({"set": [
+async function testHelper(prefValue, expectedURL) {
+  await SpecialPowers.pushPrefEnv({"set": [
     ["security.default_personal_cert", prefValue],
   ]});
 
-  yield BrowserTestUtils.loadURI(gBrowser.selectedBrowser,
+  await BrowserTestUtils.loadURI(gBrowser.selectedBrowser,
                                  "https://requireclientcert.example.com:443");
 
   // |loadedURL| will be a string URL if browserLoaded() wins the race, or
   // |undefined| if waitForErrorPage() wins the race.
-  let loadedURL = yield Promise.race([
+  let loadedURL = await Promise.race([
     BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser),
     BrowserTestUtils.waitForErrorPage(gBrowser.selectedBrowser),
   ]);
@@ -114,22 +114,22 @@ function* testHelper(prefValue, expectedURL) {
 
 // Test that if a certificate is chosen automatically the connection succeeds,
 // and that nsIClientAuthDialogs.chooseCertificate() is never called.
-add_task(function* testCertChosenAutomatically() {
+add_task(async function testCertChosenAutomatically() {
   gClientAuthDialogs.state = DialogState.ASSERT_NOT_CALLED;
-  yield* testHelper("Select Automatically",
+  await testHelper("Select Automatically",
                     "https://requireclientcert.example.com/");
 });
 
 // Test that if the user doesn't choose a certificate, the connection fails and
 // an error page is displayed.
-add_task(function* testCertNotChosenByUser() {
+add_task(async function testCertNotChosenByUser() {
   gClientAuthDialogs.state = DialogState.RETURN_CERT_NOT_SELECTED;
-  yield* testHelper("Ask Every Time", undefined);
+  await testHelper("Ask Every Time", undefined);
 });
 
 // Test that if the user chooses a certificate the connection suceeeds.
-add_task(function* testCertChosenByUser() {
+add_task(async function testCertChosenByUser() {
   gClientAuthDialogs.state = DialogState.RETURN_CERT_SELECTED;
-  yield* testHelper("Ask Every Time",
+  await testHelper("Ask Every Time",
                     "https://requireclientcert.example.com/");
 });

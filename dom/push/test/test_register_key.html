@@ -39,8 +39,8 @@ http://creativecommons.org/licenses/publicdomain/
   }
 
   var registration;
-  add_task(function* start() {
-    yield setupPrefsAndReplaceService({
+  add_task(async function start() {
+    await setupPrefsAndReplaceService({
       register(pageRecord) {
         ok(pageRecord.appServerKey.length > 0,
           "App server key should not be empty");
@@ -65,22 +65,22 @@ http://creativecommons.org/licenses/publicdomain/
         };
       },
     });
-    yield setPushPermission(true);
-    testKey = yield generateKey();
+    await setPushPermission(true);
+    testKey = await generateKey();
 
     var url = "worker.js" + "?" + (Math.random());
-    registration = yield navigator.serviceWorker.register(url, {scope: "."});
-    yield waitForActive(registration);
+    registration = await navigator.serviceWorker.register(url, {scope: "."});
+    await waitForActive(registration);
   });
 
   var controlledFrame;
-  add_task(function* createControlledIFrame() {
-    controlledFrame = yield injectControlledFrame();
+  add_task(async function createControlledIFrame() {
+    controlledFrame = await injectControlledFrame();
   });
 
-  add_task(function* emptyKey() {
+  add_task(async function emptyKey() {
     try {
-      yield registration.pushManager.subscribe({
+      await registration.pushManager.subscribe({
         applicationServerKey: new ArrayBuffer(0),
       });
       ok(false, "Should reject for empty app server keys");
@@ -92,9 +92,9 @@ http://creativecommons.org/licenses/publicdomain/
     }
   });
 
-  add_task(function* invalidKey() {
+  add_task(async function invalidKey() {
     try {
-      yield registration.pushManager.subscribe({
+      await registration.pushManager.subscribe({
         applicationServerKey: new Uint8Array([0]),
       });
       ok(false, "Should reject for invalid app server keys");
@@ -106,9 +106,9 @@ http://creativecommons.org/licenses/publicdomain/
     }
   });
 
-  add_task(function* validKey() {
-    var pushSubscription = yield registration.pushManager.subscribe({
-      applicationServerKey: yield generateKey(),
+  add_task(async function validKey() {
+    var pushSubscription = await registration.pushManager.subscribe({
+      applicationServerKey: await generateKey(),
     });
     is(pushSubscription.endpoint, "https://example.com/push/1",
       "Wrong endpoint for subscription with key");
@@ -117,8 +117,8 @@ http://creativecommons.org/licenses/publicdomain/
        "App server key getter should return the same object");
   });
 
-  add_task(function* retrieveKey() {
-    var pushSubscription = yield registration.pushManager.getSubscription();
+  add_task(async function retrieveKey() {
+    var pushSubscription = await registration.pushManager.getSubscription();
     is(pushSubscription.endpoint, "https://example.com/push/subWithKey",
       "Got wrong endpoint for subscription with key");
     isDeeply(
@@ -128,11 +128,11 @@ http://creativecommons.org/licenses/publicdomain/
     );
   });
 
-  add_task(function* mismatchedKey() {
+  add_task(async function mismatchedKey() {
     isTestingMismatchedKey = true;
     try {
-      yield registration.pushManager.subscribe({
-        applicationServerKey: yield generateKey(),
+      await registration.pushManager.subscribe({
+        applicationServerKey: await generateKey(),
       });
       ok(false, "Should reject for mismatched app server keys");
     } catch (error) {
@@ -145,8 +145,8 @@ http://creativecommons.org/licenses/publicdomain/
     }
   });
 
-  add_task(function* emptyKeyInWorker() {
-    var errorInfo = yield sendRequestToWorker({
+  add_task(async function emptyKeyInWorker() {
+    var errorInfo = await sendRequestToWorker({
       type: "subscribeWithKey",
       key: new ArrayBuffer(0),
     });
@@ -156,8 +156,8 @@ http://creativecommons.org/licenses/publicdomain/
       "Wrong exception name in worker for empty key");
   });
 
-  add_task(function* invalidKeyInWorker() {
-    var errorInfo = yield sendRequestToWorker({
+  add_task(async function invalidKeyInWorker() {
+    var errorInfo = await sendRequestToWorker({
       type: "subscribeWithKey",
       key: new Uint8Array([1]),
     });
@@ -167,9 +167,9 @@ http://creativecommons.org/licenses/publicdomain/
       "Wrong exception name in worker for invalid key");
   });
 
-  add_task(function* validKeyInWorker() {
-    var key = yield generateKey();
-    var data = yield sendRequestToWorker({
+  add_task(async function validKeyInWorker() {
+    var key = await generateKey();
+    var data = await sendRequestToWorker({
       type: "subscribeWithKey",
       key: key,
     });
@@ -179,12 +179,12 @@ http://creativecommons.org/licenses/publicdomain/
       "Wrong app server key for subscription created in worker");
   });
 
-  add_task(function* mismatchedKeyInWorker() {
+  add_task(async function mismatchedKeyInWorker() {
     isTestingMismatchedKey = true;
     try {
-      var errorInfo = yield sendRequestToWorker({
+      var errorInfo = await sendRequestToWorker({
         type: "subscribeWithKey",
-        key: yield generateKey(),
+        key: await generateKey(),
       });
       ok(errorInfo.isDOMException,
         "Wrong exception type in worker for mismatched key");
@@ -195,9 +195,9 @@ http://creativecommons.org/licenses/publicdomain/
     }
   });
 
-  add_task(function* validKeyBuffer() {
-    var key = yield generateKey();
-    var pushSubscription = yield registration.pushManager.subscribe({
+  add_task(async function validKeyBuffer() {
+    var key = await generateKey();
+    var pushSubscription = await registration.pushManager.subscribe({
       applicationServerKey: key.buffer,
     });
     is(pushSubscription.endpoint, "https://example.com/push/3",
@@ -207,9 +207,9 @@ http://creativecommons.org/licenses/publicdomain/
       "App server key getter should match given key");
   });
 
-  add_task(function* validKeyBufferInWorker() {
-    var key = yield generateKey();
-    var data = yield sendRequestToWorker({
+  add_task(async function validKeyBufferInWorker() {
+    var key = await generateKey();
+    var data = await sendRequestToWorker({
       type: "subscribeWithKey",
       key: key.buffer,
     });
@@ -219,10 +219,10 @@ http://creativecommons.org/licenses/publicdomain/
       "App server key getter should match given key for subscription created in worker");
   });
 
-  add_task(function* validKeyString() {
+  add_task(async function validKeyString() {
     var base64Key = "BOp8kf30nj6mKFFSPw_w3JAMS99Bac8zneMJ6B6lmKixUO5XTf4AtdPgYUgWke-XE25JHdcooyLgJML1R57jhKY";
     var key = base64UrlDecode(base64Key);
-    var pushSubscription = yield registration.pushManager.subscribe({
+    var pushSubscription = await registration.pushManager.subscribe({
       applicationServerKey: base64Key,
     });
     is(pushSubscription.endpoint, "https://example.com/push/5",
@@ -231,10 +231,10 @@ http://creativecommons.org/licenses/publicdomain/
       "App server key getter should match Base64-decoded key");
   });
 
-  add_task(function* validKeyStringInWorker() {
+  add_task(async function validKeyStringInWorker() {
     var base64Key = "BOp8kf30nj6mKFFSPw_w3JAMS99Bac8zneMJ6B6lmKixUO5XTf4AtdPgYUgWke-XE25JHdcooyLgJML1R57jhKY";
     var key = base64UrlDecode(base64Key);
-    var data = yield sendRequestToWorker({
+    var data = await sendRequestToWorker({
       type: "subscribeWithKey",
       key: base64Key,
     });
@@ -244,9 +244,9 @@ http://creativecommons.org/licenses/publicdomain/
       "App server key getter should match decoded key for subscription created in worker");
   });
 
-  add_task(function* invalidKeyString() {
+  add_task(async function invalidKeyString() {
     try {
-      yield registration.pushManager.subscribe({
+      await registration.pushManager.subscribe({
         applicationServerKey: "!@#$^&*",
       });
       ok(false, "Should reject for invalid Base64-encoded keys");
@@ -258,8 +258,8 @@ http://creativecommons.org/licenses/publicdomain/
     }
   });
 
-  add_task(function* invalidKeyStringInWorker() {
-    var errorInfo = yield sendRequestToWorker({
+  add_task(async function invalidKeyStringInWorker() {
+    var errorInfo = await sendRequestToWorker({
       type: "subscribeWithKey",
       key: "!@#$^&*",
     });
@@ -269,9 +269,9 @@ http://creativecommons.org/licenses/publicdomain/
       "Wrong exception name in worker for invalid Base64-encoded key");
   });
 
-  add_task(function* emptyKeyString() {
+  add_task(async function emptyKeyString() {
     try {
-      yield registration.pushManager.subscribe({
+      await registration.pushManager.subscribe({
         applicationServerKey: "",
       });
       ok(false, "Should reject for empty key strings");
@@ -283,8 +283,8 @@ http://creativecommons.org/licenses/publicdomain/
     }
   });
 
-  add_task(function* emptyKeyStringInWorker() {
-    var errorInfo = yield sendRequestToWorker({
+  add_task(async function emptyKeyStringInWorker() {
+    var errorInfo = await sendRequestToWorker({
       type: "subscribeWithKey",
       key: "",
     });
@@ -294,13 +294,13 @@ http://creativecommons.org/licenses/publicdomain/
       "Wrong exception name in worker for empty key string");
   });
 
-  add_task(function* unsubscribe() {
+  add_task(async function unsubscribe() {
     is(subscriptions, 6, "Wrong subscription count");
     controlledFrame.remove();
   });
 
-  add_task(function* unregister() {
-    yield registration.unregister();
+  add_task(async function unregister() {
+    await registration.unregister();
   });
 
 </script>

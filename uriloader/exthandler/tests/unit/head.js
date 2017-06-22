@@ -15,7 +15,6 @@ Cu.import("resource://gre/modules/FileUtils.jsm");
 Cu.import("resource://gre/modules/NetUtil.jsm");
 Cu.import("resource://gre/modules/osfile.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 Cu.import("resource://testing-common/HandlerServiceTestUtils.jsm", this);
@@ -39,7 +38,7 @@ let rdfFile = FileUtils.getFile("ProfD", ["mimeTypes.rdf"]);
  * Unloads the nsIHandlerService data store, so the back-end file can be
  * accessed or modified, and the new data will be loaded at the next access.
  */
-let unloadHandlerStoreJSON = Task.async(function* () {
+let unloadHandlerStoreJSON = async function() {
   // If this function is called before the nsIHandlerService instance has been
   // initialized for the first time, the observer below will not be registered.
   // We have to force initialization to prevent the function from stalling.
@@ -47,9 +46,9 @@ let unloadHandlerStoreJSON = Task.async(function* () {
 
   let promise = TestUtils.topicObserved("handlersvc-json-replace-complete");
   Services.obs.notifyObservers(null, "handlersvc-json-replace", null);
-  yield promise;
-});
-let unloadHandlerStoreRDF = Task.async(function* () {
+  await promise;
+};
+let unloadHandlerStoreRDF = async function() {
   // If this function is called before the nsIHandlerService instance has been
   // initialized for the first time, the observer below will not be registered.
   // We have to force initialization to prevent the function from stalling.
@@ -57,38 +56,38 @@ let unloadHandlerStoreRDF = Task.async(function* () {
 
   let promise = TestUtils.topicObserved("handlersvc-rdf-replace-complete");
   Services.obs.notifyObservers(null, "handlersvc-rdf-replace", null);
-  yield promise;
-});
+  await promise;
+};
 
 /**
  * Unloads the data store and deletes it.
  */
-let deleteHandlerStoreJSON = Task.async(function* () {
-  yield unloadHandlerStoreJSON();
+let deleteHandlerStoreJSON = async function() {
+  await unloadHandlerStoreJSON();
 
-  yield OS.File.remove(jsonPath, { ignoreAbsent: true });
-});
-let deleteHandlerStoreRDF = Task.async(function* () {
-  yield unloadHandlerStoreRDF();
+  await OS.File.remove(jsonPath, { ignoreAbsent: true });
+};
+let deleteHandlerStoreRDF = async function() {
+  await unloadHandlerStoreRDF();
 
-  yield OS.File.remove(rdfFile.path, { ignoreAbsent: true });
-});
+  await OS.File.remove(rdfFile.path, { ignoreAbsent: true });
+};
 
 /**
  * Unloads the data store and replaces it with the test data file.
  */
-let copyTestDataToHandlerStoreJSON = Task.async(function* () {
-  yield unloadHandlerStoreJSON();
+let copyTestDataToHandlerStoreJSON = async function() {
+  await unloadHandlerStoreJSON();
 
-  yield OS.File.copy(do_get_file("handlers.json").path, jsonPath);
-});
-let copyTestDataToHandlerStoreRDF = Task.async(function* () {
-  yield unloadHandlerStoreRDF();
+  await OS.File.copy(do_get_file("handlers.json").path, jsonPath);
+};
+let copyTestDataToHandlerStoreRDF = async function() {
+  await unloadHandlerStoreRDF();
 
   let fileName = AppConstants.platform == "android" ? "mimeTypes-android.rdf"
                                                     : "mimeTypes.rdf";
-  yield OS.File.copy(do_get_file(fileName).path, rdfFile.path);
-});
+  await OS.File.copy(do_get_file(fileName).path, rdfFile.path);
+};
 
 /**
  * Ensures the JSON implementation doesn't migrate entries from the legacy RDF
@@ -96,7 +95,7 @@ let copyTestDataToHandlerStoreRDF = Task.async(function* () {
  * because the JSON implementation is the default one and is always invoked by
  * the MIME service when building new nsIHandlerInfo objects.
  */
-add_task(function* test_initialize() {
+add_task(async function test_initialize() {
   // We don't need to reset this preference when the tests end, because it's
   // irrelevant for any other test in the tree.
   Services.prefs.setBoolPref("gecko.handlerService.migrated", true);
@@ -105,7 +104,7 @@ add_task(function* test_initialize() {
 /**
  * Ensures the files are removed and the services unloaded when the tests end.
  */
-do_register_cleanup(function* test_terminate() {
-  yield deleteHandlerStoreJSON();
-  yield deleteHandlerStoreRDF();
+do_register_cleanup(async function test_terminate() {
+  await deleteHandlerStoreJSON();
+  await deleteHandlerStoreRDF();
 });

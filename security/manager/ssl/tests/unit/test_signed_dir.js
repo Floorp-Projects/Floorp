@@ -108,89 +108,89 @@ function verifyDirAsync(expectedRv, tamper) {
 //
 // the tests
 //
-add_task(function* testValid() {
-  yield verifyDirAsync(Cr.NS_OK, {} /* no tampering */);
+add_task(async function testValid() {
+  await verifyDirAsync(Cr.NS_OK, {} /* no tampering */);
 });
 
-add_task(function* testNoMetaDir() {
-  yield verifyDirAsync(Cr.NS_ERROR_SIGNED_JAR_NOT_SIGNED,
+add_task(async function testNoMetaDir() {
+  await verifyDirAsync(Cr.NS_ERROR_SIGNED_JAR_NOT_SIGNED,
                        {delete: ["META-INF"]});
 });
 
-add_task(function* testEmptyMetaDir() {
-  yield verifyDirAsync(Cr.NS_ERROR_SIGNED_JAR_NOT_SIGNED,
+add_task(async function testEmptyMetaDir() {
+  await verifyDirAsync(Cr.NS_ERROR_SIGNED_JAR_NOT_SIGNED,
                        {delete: ["META-INF/mozilla.rsa",
                                  "META-INF/mozilla.sf",
                                  "META-INF/manifest.mf"]});
 });
 
-add_task(function* testTwoRSAFiles() {
-  yield verifyDirAsync(Cr.NS_ERROR_SIGNED_JAR_MANIFEST_INVALID,
+add_task(async function testTwoRSAFiles() {
+  await verifyDirAsync(Cr.NS_ERROR_SIGNED_JAR_MANIFEST_INVALID,
                        {copy: [["META-INF/mozilla.rsa", "extra.rsa"]]});
 });
 
-add_task(function* testCorruptRSAFile() {
-  yield verifyDirAsync(Cr.NS_ERROR_SIGNED_JAR_MANIFEST_INVALID,
+add_task(async function testCorruptRSAFile() {
+  await verifyDirAsync(Cr.NS_ERROR_SIGNED_JAR_MANIFEST_INVALID,
                        {corrupt: ["META-INF/mozilla.rsa"]});
 });
 
-add_task(function* testMissingSFFile() {
-  yield verifyDirAsync(Cr.NS_ERROR_SIGNED_JAR_MANIFEST_INVALID,
+add_task(async function testMissingSFFile() {
+  await verifyDirAsync(Cr.NS_ERROR_SIGNED_JAR_MANIFEST_INVALID,
                        {delete: ["META-INF/mozilla.sf"]});
 });
 
-add_task(function* testCorruptSFFile() {
-  yield verifyDirAsync(Cr.NS_ERROR_SIGNED_JAR_MANIFEST_INVALID,
+add_task(async function testCorruptSFFile() {
+  await verifyDirAsync(Cr.NS_ERROR_SIGNED_JAR_MANIFEST_INVALID,
                        {corrupt: ["META-INF/mozilla.sf"]});
 });
 
-add_task(function* testExtraInvalidSFFile() {
-  yield verifyDirAsync(Cr.NS_ERROR_SIGNED_JAR_UNSIGNED_ENTRY,
+add_task(async function testExtraInvalidSFFile() {
+  await verifyDirAsync(Cr.NS_ERROR_SIGNED_JAR_UNSIGNED_ENTRY,
                        {copy: [["META-INF/mozilla.rsa", "extra.sf"]]});
 });
 
-add_task(function* testExtraValidSFFile() {
-  yield verifyDirAsync(Cr.NS_ERROR_SIGNED_JAR_UNSIGNED_ENTRY,
+add_task(async function testExtraValidSFFile() {
+  await verifyDirAsync(Cr.NS_ERROR_SIGNED_JAR_UNSIGNED_ENTRY,
                        {copy: [["META-INF/mozilla.sf", "extra.sf"]]});
 });
 
-add_task(function* testMissingManifest() {
-  yield verifyDirAsync(Cr.NS_ERROR_SIGNED_JAR_MANIFEST_INVALID,
+add_task(async function testMissingManifest() {
+  await verifyDirAsync(Cr.NS_ERROR_SIGNED_JAR_MANIFEST_INVALID,
                        {delete: ["META-INF/manifest.mf"]});
 });
 
-add_task(function* testCorruptManifest() {
-  yield verifyDirAsync(Cr.NS_ERROR_SIGNED_JAR_MANIFEST_INVALID,
+add_task(async function testCorruptManifest() {
+  await verifyDirAsync(Cr.NS_ERROR_SIGNED_JAR_MANIFEST_INVALID,
                        {corrupt: ["META-INF/manifest.mf"]});
 });
 
-add_task(function* testMissingFile() {
-  yield verifyDirAsync(Cr.NS_ERROR_SIGNED_JAR_ENTRY_MISSING,
+add_task(async function testMissingFile() {
+  await verifyDirAsync(Cr.NS_ERROR_SIGNED_JAR_ENTRY_MISSING,
                        {delete: ["bootstrap.js"]});
 });
 
-add_task(function* testCorruptFile() {
-  yield verifyDirAsync(Cr.NS_ERROR_SIGNED_JAR_MODIFIED_ENTRY,
+add_task(async function testCorruptFile() {
+  await verifyDirAsync(Cr.NS_ERROR_SIGNED_JAR_MODIFIED_ENTRY,
                        {corrupt: ["bootstrap.js"]});
 });
 
-add_task(function* testExtraFile() {
-  yield verifyDirAsync(Cr.NS_ERROR_SIGNED_JAR_UNSIGNED_ENTRY,
+add_task(async function testExtraFile() {
+  await verifyDirAsync(Cr.NS_ERROR_SIGNED_JAR_UNSIGNED_ENTRY,
                        {copy: [["bootstrap.js", "extra"]]});
 });
 
-add_task(function* testMissingFileInDir() {
-  yield verifyDirAsync(Cr.NS_ERROR_SIGNED_JAR_ENTRY_MISSING,
+add_task(async function testMissingFileInDir() {
+  await verifyDirAsync(Cr.NS_ERROR_SIGNED_JAR_ENTRY_MISSING,
                        {delete: ["lib/ui.js"]});
 });
 
-add_task(function* testCorruptFileInDir() {
-  yield verifyDirAsync(Cr.NS_ERROR_SIGNED_JAR_MODIFIED_ENTRY,
+add_task(async function testCorruptFileInDir() {
+  await verifyDirAsync(Cr.NS_ERROR_SIGNED_JAR_MODIFIED_ENTRY,
                        {corrupt: ["lib/ui.js"]});
 });
 
-add_task(function* testExtraFileInDir() {
-  yield verifyDirAsync(Cr.NS_ERROR_SIGNED_JAR_UNSIGNED_ENTRY,
+add_task(async function testExtraFileInDir() {
+  await verifyDirAsync(Cr.NS_ERROR_SIGNED_JAR_UNSIGNED_ENTRY,
                        {copy: [["lib/ui.js", "extra"]]});
 });
 

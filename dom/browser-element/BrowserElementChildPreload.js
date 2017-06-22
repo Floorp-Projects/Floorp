@@ -16,7 +16,6 @@ var { classes: Cc, interfaces: Ci, results: Cr, utils: Cu }  = Components;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/BrowserElementPromptService.jsm");
-Cu.import("resource://gre/modules/Task.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "ManifestFinder",
                                   "resource://gre/modules/ManifestFinder.jsm");
@@ -1308,13 +1307,13 @@ BrowserElementChild.prototype = {
     docShell.contentViewer.fullZoom = data.json.zoom;
   },
 
-  _recvGetWebManifest: Task.async(function* (data) {
+  async _recvGetWebManifest(data) {
     debug(`Received GetWebManifest message: (${data.json.id})`);
     let manifest = null;
     let hasManifest = ManifestFinder.contentHasManifestLink(content);
     if (hasManifest) {
       try {
-        manifest = yield ManifestObtainer.contentObtainManifest(content);
+        manifest = await ManifestObtainer.contentObtainManifest(content);
       } catch (e) {
         sendAsyncMsg('got-web-manifest', {
           id: data.json.id,
@@ -1327,7 +1326,7 @@ BrowserElementChild.prototype = {
       id: data.json.id,
       successRv: manifest
     });
-  }),
+  },
 
   _initFinder: function() {
     if (!this._finder) {

@@ -17,7 +17,7 @@ const DUMMY_PAGE_DATA_URI = `data:text/html,
  * Tests the MEMORY_DISTRIBUTION_AMONG_CONTENT probe by opening a few tabs, then triggering
  * the memory probes and waiting for the "gather-memory-telemetry-finished" notification.
  */
-add_task(function* test_memory_distribution() {
+add_task(async function test_memory_distribution() {
   waitForExplicitFinish();
 
   if (SpecialPowers.getIntPref("dom.ipc.processCount", 1) < 2) {
@@ -26,15 +26,15 @@ add_task(function* test_memory_distribution() {
     return;
   }
 
-  yield SpecialPowers.pushPrefEnv({set: [["toolkit.telemetry.enabled", true]]});
+  await SpecialPowers.pushPrefEnv({set: [["toolkit.telemetry.enabled", true]]});
   Services.telemetry.canRecordExtended = true;
 
   let histogram = Services.telemetry.getKeyedHistogramById("MEMORY_DISTRIBUTION_AMONG_CONTENT");
   histogram.clear();
 
-  let tab1 = yield BrowserTestUtils.openNewForegroundTab(gBrowser, DUMMY_PAGE_DATA_URI);
-  let tab2 = yield BrowserTestUtils.openNewForegroundTab(gBrowser, DUMMY_PAGE_DATA_URI);
-  let tab3 = yield BrowserTestUtils.openNewForegroundTab(gBrowser, DUMMY_PAGE_DATA_URI);
+  let tab1 = await BrowserTestUtils.openNewForegroundTab(gBrowser, DUMMY_PAGE_DATA_URI);
+  let tab2 = await BrowserTestUtils.openNewForegroundTab(gBrowser, DUMMY_PAGE_DATA_URI);
+  let tab3 = await BrowserTestUtils.openNewForegroundTab(gBrowser, DUMMY_PAGE_DATA_URI);
 
   let finishedGathering = new Promise(resolve => {
     let obs = function () {
@@ -46,7 +46,7 @@ add_task(function* test_memory_distribution() {
 
   session.TelemetrySession.getPayload();
 
-  yield finishedGathering;
+  await finishedGathering;
 
   let s = histogram.snapshot();
   ok("0 - 10 tabs" in s, "We should have some samples by now in this bucket.")
@@ -64,8 +64,8 @@ add_task(function* test_memory_distribution() {
 
   histogram.clear();
 
-  yield BrowserTestUtils.removeTab(tab3);
-  yield BrowserTestUtils.removeTab(tab2);
-  yield BrowserTestUtils.removeTab(tab1);
+  await BrowserTestUtils.removeTab(tab3);
+  await BrowserTestUtils.removeTab(tab2);
+  await BrowserTestUtils.removeTab(tab1);
   finish();
 });

@@ -21,11 +21,11 @@
         ["dom.serviceWorkers.enabled", true],
         ["dom.serviceWorkers.testing.enabled", true],
       ]}, function () {
-        Task.spawn(function* () {
+        (async function() {
           let iframe = $("iframe");
           let promise = waitForIframeLoad(iframe);
           iframe.src = IFRAME_URL;
-          yield promise;
+          await promise;
 
           // The change handler is not guaranteed to be called within the same
           // tick of the event loop as the one in which the change happened.
@@ -83,7 +83,7 @@
             });
           });
           iframe.contentWindow.postMessage("register", "*");
-          let registration = yield promise;
+          let registration = await promise;
 
           promise = waitForServiceWorkerRegistrationChange(registration, function () {
             // Got change event for updating (byte-check)
@@ -122,13 +122,13 @@
             });
           });
           iframe.contentWindow.postMessage("register", "*");
-          yield promise;
+          await promise;
 
           iframe.contentWindow.postMessage("unregister", "*");
-          yield waitForUnregister(EXAMPLE_URL);
+          await waitForUnregister(EXAMPLE_URL);
 
           SimpleTest.finish();
-        });
+        })();
       });
     }
 

@@ -20,24 +20,23 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/NetUtil.jsm");
 Cu.import("resource://testing-common/httpd.js");
 Cu.import("resource://gre/modules/Promise.jsm");
-Cu.import("resource://gre/modules/Task.jsm");
 
 addLoadEvent(function () {
-  Task.spawn(function* run_tests() {
+  (async function run_tests() {
     while (tests.length) {
       let test = tests.shift();
       info("-- running " + test.name);
-      yield* test();
+      await test();
     }
 
     SimpleTest.finish();
-  });
+  })();
 });
 
 let tests = [
 
   // Ensure that sending pings is enabled.
-  function* setup() {
+  function setup() {
     Services.prefs.setBoolPref("browser.send_pings", true);
     Services.prefs.setIntPref("browser.send_pings.max_per_link", -1);
     Services.prefs.setBoolPref("security.mixed_content.block_active_content", false);
@@ -57,7 +56,7 @@ let tests = [
   // HTTP header with, as its value, the address of the document containing the
   // hyperlink, and a Ping-To HTTP header with, as its value, the target URL.
   // The request must not include a Referer (sic) HTTP header.
-  function* same_origin() {
+  async function same_origin() {
     let from = "/ping-from/" + Math.random();
     let to = "/ping-to/" + Math.random();
     let ping = "/ping/" + Math.random();
@@ -82,10 +81,10 @@ let tests = [
     navigate(base + from);
 
     // Wait until the target and ping url have loaded.
-    yield Promise.all([promiseHref, promisePing]);
+    await Promise.all([promiseHref, promisePing]);
 
     // Cleanup.
-    yield stopServer(server);
+    await stopServer(server);
   },
 
   // If the origins are different, but the document containing the hyperlink
@@ -94,7 +93,7 @@ let tests = [
   // address of the document containing the hyperlink, a Ping-From HTTP header
   // with the same value, and a Ping-To HTTP header with, as its value, target
   // URL.
-  function* diff_origin() {
+  async function diff_origin() {
     let from = "/ping-from/" + Math.random();
     let to = "/ping-to/" + Math.random();
     let ping = "/ping/" + Math.random();
@@ -125,11 +124,11 @@ let tests = [
     navigate(base + from);
 
     // Wait until the target and ping url have loaded.
-    yield Promise.all([promiseHref, promisePing]);
+    await Promise.all([promiseHref, promisePing]);
 
     // Cleanup.
-    yield stopServer(server);
-    yield stopServer(server2);
+    await stopServer(server);
+    await stopServer(server2);
   },
 
   // If the origins are different and the document containing the hyperlink
@@ -137,7 +136,7 @@ let tests = [
   // must include a Ping-To HTTP header with, as its value, target URL. The
   // request must neither include a Referer (sic) HTTP header nor include a
   // Ping-From HTTP header.
-  function* diff_origin_secure_referrer() {
+  async function diff_origin_secure_referrer() {
     let ping = "/ping/" + Math.random();
     let server = new HttpServer();
 
@@ -155,15 +154,15 @@ let tests = [
              server.identity.primaryPort + ping);
 
     // Wait until the ping has been sent.
-    yield promisePing;
+    await promisePing;
 
     // Cleanup.
-    yield stopServer(server);
+    await stopServer(server);
   },
 
   // Test that the <a ping> attribute is properly tokenized using ASCII white
   // space characters as separators.
-  function* tokenize_white_space() {
+  async function tokenize_white_space() {
     let from = "/ping-from/" + Math.random();
     let to = "/ping-to/" + Math.random();
 
@@ -197,10 +196,10 @@ let tests = [
     navigate(base + from);
 
     // Wait until the target and ping url have loaded.
-    yield Promise.all([promiseHref, ...pingPathHandlers]);
+    await Promise.all([promiseHref, ...pingPathHandlers]);
 
     // Cleanup.
-    yield stopServer(server);
+    await stopServer(server);
   }
 ];
 

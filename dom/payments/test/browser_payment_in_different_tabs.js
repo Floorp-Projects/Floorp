@@ -5,12 +5,12 @@ const kTestPage = kTestRoot + "simple_payment_request.html";
 
 registerCleanupFunction(cleanup);
 
-add_task(function*() {
+add_task(async function() {
   Services.prefs.setBoolPref("dom.payments.request.enabled", true);
-  yield BrowserTestUtils.withNewTab(kTestPage,
-    function*(browser) {
-      yield BrowserTestUtils.withNewTab(kTestPage,
-        function*(browser) {
+  await BrowserTestUtils.withNewTab(kTestPage,
+    async function(browser) {
+      await BrowserTestUtils.withNewTab(kTestPage,
+        function(browser) {
           const paymentSrv = Cc["@mozilla.org/dom/payments/payment-request-service;1"].getService(Ci.nsIPaymentRequestService);
           ok(paymentSrv, "Fail to get PaymentRequestService.");
 
