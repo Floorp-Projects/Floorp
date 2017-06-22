@@ -3197,8 +3197,6 @@ GeckoDriver.prototype.localizeProperty = function (cmd, resp) {
 }
 
 GeckoDriver.prototype.commands = {
-  "getMarionetteID": GeckoDriver.prototype.getMarionetteID,
-  "sayHello": GeckoDriver.prototype.sayHello,
   "newSession": GeckoDriver.prototype.newSession,
   "getSessionCapabilities": GeckoDriver.prototype.getSessionCapabilities,
   "setContext": GeckoDriver.prototype.setContext,
@@ -3254,7 +3252,6 @@ GeckoDriver.prototype.commands = {
   "getAppCacheStatus": GeckoDriver.prototype.getAppCacheStatus,
   "close": GeckoDriver.prototype.close,
   "closeChromeWindow": GeckoDriver.prototype.closeChromeWindow,
-  "setTestName": GeckoDriver.prototype.setTestName,
   "takeScreenshot": GeckoDriver.prototype.takeScreenshot,
   "addCookie": GeckoDriver.prototype.addCookie,
   "getCookies": GeckoDriver.prototype.getCookies,
