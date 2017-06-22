@@ -105,21 +105,31 @@ CrashReporterHost::FinalizeCrashReport()
   return true;
 }
 
-bool
+void
 CrashReporterHost::GenerateMinidumpAndPair(GeckoChildProcessHost* aChildProcess,
                                            nsIFile* aMinidumpToPair,
-                                           const nsACString& aPairName)
+                                           const nsACString& aPairName,
+                                           std::function<void(bool)>&& aCallback,
+                                           bool aAsync)
 {
   base::ProcessHandle childHandle;
 #ifdef XP_MACOSX
   childHandle = aChildProcess->GetChildTask();
 #else
   childHandle = aChildProcess->GetChildProcessHandle();
+#endif
+
+  if (!mCreateMinidumpCallback.IsEmpty()) {
+    aCallback(false);
+    return;
+  }
+  mCreateMinidumpCallback.Init(Move(aCallback), aAsync);
+
   if (!childHandle) {
     NS_WARNING("Failed to get child process handle.");
-    return false;
+    mCreateMinidumpCallback.Invoke(false);
+    return;
   }
-#endif
 
   nsCOMPtr<nsIFile> targetDump;
   if (!CrashReporter::CreateMinidumpsAndPair(childHandle,
@@ -127,10 +137,16 @@ CrashReporterHost::GenerateMinidumpAndPair(GeckoChildProcessHost* aChildProcess,
                                              aPairName,
                                              aMinidumpToPair,
                                              getter_AddRefs(targetDump))) {
-    return false;
+    mCreateMinidumpCallback.Invoke(false);
+    return;
   }
 
-  return CrashReporter::GetIDFromMinidump(targetDump, mDumpID);
+  if (!CrashReporter::GetIDFromMinidump(targetDump, mDumpID)) {
+    mCreateMinidumpCallback.Invoke(false);
+    return;
+  }
+
+  mCreateMinidumpCallback.Invoke(true);
 }
 
 /* static */ void
