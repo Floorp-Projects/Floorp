@@ -23,9 +23,6 @@ The following accessible states aren't translated, just ignored:
                          This is supported via STATE_MULTISELECTABLE.
   STATE_PROTECTED:       The object is a password-protected edit control.
                          Supported via ATK_ROLE_PASSWORD_TEXT
-  STATE_HASPOPUP:        Object displays a pop-up menu or window when invoked.
-                         No ATK equivalent. The accessible state is not
-                         currently supported.
   STATE_PINNED:          The object is pinned, usually indicating it is fixed in
                          place and has permanence. No ATK equivalent. The
                          accessible state is not currently supported.
@@ -95,7 +92,7 @@ static const AtkStateMap gAtkStateMap[] = {                     // Cross Platfor
   { kNone,                                    kMapDirectly },   // states::ALERT_MEDIUM            = 1 << 27
   { ATK_STATE_INVALID_ENTRY,                  kMapDirectly },   // states::INVALID                 = 1 << 28
   { kNone,                                    kMapDirectly },   // states::PROTECTED               = 1 << 29
-  { kNone,                                    kMapDirectly },   // states::HASPOPUP                = 1 << 30
+  { ATK_STATE_HAS_POPUP,                      kMapDirectly },   // states::HASPOPUP                = 1 << 30
   { ATK_STATE_SUPPORTS_AUTOCOMPLETION,        kMapDirectly },   // states::SUPPORTS_AUTOCOMPLETION = 1 << 31
   { ATK_STATE_DEFUNCT,                        kMapDirectly },   // states::DEFUNCT                 = 1 << 32
   { ATK_STATE_SELECTABLE_TEXT,                kMapDirectly },   // states::SELECTABLE_TEXT         = 1 << 33
