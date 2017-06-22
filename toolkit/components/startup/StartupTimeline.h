@@ -71,7 +71,7 @@ public:
 
 #ifdef MOZILLA_INTERNAL_API
   static void Record(Event ev) {
-    PROFILER_MARKER(Describe(ev));
+    profiler_add_marker(Describe(ev));
     Record(ev, TimeStamp::Now());
   }
 

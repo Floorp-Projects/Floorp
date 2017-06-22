@@ -112,16 +112,6 @@ using UniqueProfilerBacktrace =
   PROFILER_APPEND_LINE_NUMBER(profiler_raii)(name_space "::" info, dynamicStr, \
                                              __LINE__, category)
 
-// Insert a marker in the profile timeline. This is useful to delimit something
-// important happening such as the first paint. Unlike labels, which are only
-// recorded in the profile buffer if a sample is collected while the label is
-// on the pseudostack, markers will always be recorded in the profile buffer.
-#define PROFILER_MARKER(marker_name) profiler_add_marker(marker_name)
-
-// Like PROFILER_MARKER, but with an additional payload.
-#define PROFILER_MARKER_PAYLOAD(marker_name, payload) \
-  profiler_add_marker(marker_name, payload)
-
 // Higher-order macro containing all the feature info in one place. Define
 // |macro| appropriately to extract the relevant parts. Note that the number
 // values are used internally only and so can be changed without consequence.
@@ -376,8 +366,11 @@ PROFILER_FUNC_VOID(profiler_suspend_and_sample_thread(int aThreadId,
                                                       const std::function<void(void**, size_t)>& aCallback,
                                                       bool aSampleNative = true))
 
-// Adds a marker to the PseudoStack. A no-op if the profiler is inactive or in
-// privacy mode.
+// Insert a marker in the profile timeline. This is useful to delimit something
+// important happening such as the first paint. Unlike labels, which are only
+// recorded in the profile buffer if a sample is collected while the label is
+// on the pseudostack, markers will always be recorded in the profile buffer.
+// A no-op if the profiler is inactive or in privacy mode.
 PROFILER_FUNC_VOID(profiler_add_marker(const char* aMarkerName))
 PROFILER_FUNC_VOID(profiler_add_marker(const char* aMarkerName,
                                        mozilla::UniquePtr<ProfilerMarkerPayload> aPayload))
