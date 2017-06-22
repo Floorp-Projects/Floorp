@@ -11,6 +11,7 @@
 #include "mozilla/FileUtils.h"
 #include "mozilla/HangAnnotations.h"
 #include "mozilla/PluginLibrary.h"
+#include "mozilla/ipc/CrashReporterHost.h"
 #include "mozilla/plugins/PluginProcessParent.h"
 #include "mozilla/plugins/PPluginModuleParent.h"
 #include "mozilla/plugins/PluginMessageUtils.h"
@@ -38,9 +39,6 @@ class nsPluginTag;
 
 namespace mozilla {
 
-namespace ipc {
-class CrashReporterHost;
-} // namespace ipc
 namespace layers {
 class TextureClientRecycleAllocator;
 } // namespace layers
@@ -420,6 +418,10 @@ class PluginModuleChromeParent
     , public mozilla::HangMonitor::Annotator
 {
     friend class mozilla::ipc::CrashReporterHost;
+    using TerminateChildProcessCallback =
+        mozilla::ipc::CrashReporterHost::CallbackWrapper<bool>;
+    using TakeFullMinidumpCallback =
+        mozilla::ipc::CrashReporterHost::CallbackWrapper<nsString>;
   public:
     /**
      * LoadModule
@@ -452,12 +454,16 @@ class PluginModuleChromeParent
      *   provided TakeFullMinidump will use this dump file instead of
      *   generating a new one. If not provided a browser dump will be taken at
      *   the time of this call.
-     * @param aDumpId Returns the ID of the newly generated crash dump. Left
-     *   untouched upon failure.
+     * @param aCallback a callback invoked when the operation completes. The ID
+     *   of the newly generated crash dump is provided in the callback argument.
+     *   An empty string will be provided upon failure.
+     * @param aAsync whether to perform the dump asynchronously.
      */
-    void TakeFullMinidump(base::ProcessId aContentPid,
-                          const nsAString& aBrowserDumpId,
-                          nsString& aDumpId);
+    void
+    TakeFullMinidump(base::ProcessId aContentPid,
+                     const nsAString& aBrowserDumpId,
+                     std::function<void(nsString)>&& aCallback,
+                     bool aAsync);
 
     /*
      * Terminates the plugin process associated with this plugin module. Also
@@ -475,11 +481,47 @@ class PluginModuleChromeParent
      *   TerminateChildProcess will use this dump file instead of generating a
      *   multi-process crash report. If not provided a multi-process dump will
      *   be taken at the time of this call.
+     * @param aCallback a callback invoked when the operation completes. The
+     *   argument denotes whether the operation succeeded.
+     * @param aAsync whether to perform the operation asynchronously.
      */
-    void TerminateChildProcess(MessageLoop* aMsgLoop,
-                               base::ProcessId aContentPid,
-                               const nsCString& aMonitorDescription,
-                               const nsAString& aDumpId);
+    void
+    TerminateChildProcess(MessageLoop* aMsgLoop,
+                          base::ProcessId aContentPid,
+                          const nsCString& aMonitorDescription,
+                          const nsAString& aDumpId,
+                          std::function<void(bool)>&& aCallback,
+                          bool aAsync);
+
+    /**
+     * Helper for passing a dummy callback in calling the above function if it
+     * is called synchronously and the caller doesn't care about the callback
+     * result.
+     */
+    template<typename T>
+    static std::function<void(T)> DummyCallback()
+    {
+        return std::function<void(T)>([](T aResult) { });
+    }
+
+  private:
+#ifdef MOZ_CRASHREPORTER
+    // The following methods are callbacks invoked after calling
+    // TakeFullMinidump(). The methods are invoked in the following order:
+    void TakeBrowserAndPluginMinidumps(bool aReportsReady,
+                                       base::ProcessId aContentPid,
+                                       const nsAString& aBrowserDumpId,
+                                       bool aAsync);
+    void OnTakeFullMinidumpComplete(bool aReportsReady,
+                                    base::ProcessId aContentPid,
+                                    const nsAString& aBrowserDumpId);
+
+#endif
+    // The following method is the callback invoked after calling
+    // TerminateChidlProcess().
+    void TerminateChildProcessOnDumpComplete(MessageLoop* aMsgLoop,
+                                             const nsCString& aMonitorDescription);
+  public:
 
 #ifdef XP_WIN
     /**
@@ -537,6 +579,8 @@ private:
 #ifdef MOZ_CRASHREPORTER
     void ProcessFirstMinidump();
     void WriteExtraDataForMinidump();
+    void RetainPluginRef();
+    void ReleasePluginRef();
 #endif
 
     PluginProcessParent* Process() const { return mSubprocess; }
@@ -666,6 +710,12 @@ private:
 #if defined(XP_WIN) && defined(MOZ_SANDBOX)
     mozilla::SandboxPermissions mSandboxPermissions;
 #endif
+
+#ifdef MOZ_CRASHREPORTER
+    nsCOMPtr<nsIFile> mBrowserDumpFile;
+    TakeFullMinidumpCallback mTakeFullMinidumpCallback;
+#endif
+    TerminateChildProcessCallback mTerminateChildProcessCallback;
 };
 
 } // namespace plugins
