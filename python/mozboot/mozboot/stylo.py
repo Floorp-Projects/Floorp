@@ -5,5 +5,4 @@
 from __future__ import print_function, unicode_literals
 
 WINDOWS = 'browser/config/tooltool-manifests/win64/clang.manifest'
-OSX = 'browser/config/tooltool-manifests/macosx64/releng.manifest'
 LINUX = 'browser/config/tooltool-manifests/linux64/clang.manifest'
