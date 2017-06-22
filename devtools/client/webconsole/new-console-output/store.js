@@ -13,10 +13,12 @@ const {
 } = require("devtools/client/shared/vendor/redux");
 const { thunk } = require("devtools/client/shared/redux/middleware/thunk");
 const {
+  BATCH_ACTIONS
+} = require("devtools/client/shared/redux/middleware/debounce");
+const {
   MESSAGE_ADD,
   MESSAGES_CLEAR,
   REMOVED_MESSAGES_CLEAR,
-  BATCH_ACTIONS,
   PREFS,
 } = require("devtools/client/webconsole/new-console-output/constants");
 const { reducers } = require("./reducers/index");

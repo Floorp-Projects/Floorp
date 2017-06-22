@@ -3,7 +3,8 @@
 
 const {GlobalOverrider, FakePrefs} = require("test/unit/utils");
 const {TelemetrySender, TelemetrySenderConstants} = require("lib/TelemetrySender.jsm");
-const {ENDPOINT_PREF, TELEMETRY_PREF, LOGGING_PREF} = TelemetrySenderConstants;
+const {ENDPOINT_PREF, FHR_UPLOAD_ENABLED_PREF, TELEMETRY_PREF, LOGGING_PREF} =
+  TelemetrySenderConstants;
 
 /**
  * A reference to the fake preferences object created by the TelemetrySender
@@ -13,6 +14,7 @@ let fakePrefs;
 const prefInitHook = function() {
   fakePrefs = this; // eslint-disable-line consistent-this
 };
+
 const tsArgs = {prefInitHook};
 
 describe("TelemetrySender", () => {
@@ -48,34 +50,108 @@ describe("TelemetrySender", () => {
     assert.calledOnce(global.Preferences);
   });
 
-  it("should set the enabled prop to false if the pref is false", () => {
-    FakePrefs.prototype.prefs = {};
-    FakePrefs.prototype.prefs[TELEMETRY_PREF] = false;
+  describe("#enabled", () => {
+    let testParams = [
+      {enabledPref: true, fhrPref: true, result: true},
+      {enabledPref: false, fhrPref: true, result: false},
+      {enabledPref: true, fhrPref: false, result: false},
+      {enabledPref: false, fhrPref: false, result: false}
+    ];
 
-    tSender = new TelemetrySender(tsArgs);
+    function testEnabled(p) {
+      FakePrefs.prototype.prefs[TELEMETRY_PREF] = p.enabledPref;
+      FakePrefs.prototype.prefs[FHR_UPLOAD_ENABLED_PREF] = p.fhrPref;
 
-    assert.isFalse(tSender.enabled);
-  });
+      tSender = new TelemetrySender(tsArgs);
 
-  it("should set the enabled prop to true if the pref is true", () => {
-    FakePrefs.prototype.prefs = {};
-    FakePrefs.prototype.prefs[TELEMETRY_PREF] = true;
+      assert.equal(tSender.enabled, p.result);
+    }
 
-    tSender = new TelemetrySender(tsArgs);
+    for (let p of testParams) {
+      it(`should return ${p.result} if the fhrPref is ${p.fhrPref} and telemetry.enabled is ${p.enabledPref}`, () => {
+        testEnabled(p);
+      });
+    }
 
-    assert.isTrue(tSender.enabled);
+    describe("telemetry.enabled pref changes from true to false", () => {
+      beforeEach(() => {
+        FakePrefs.prototype.prefs = {};
+        FakePrefs.prototype.prefs[TELEMETRY_PREF] = true;
+        FakePrefs.prototype.prefs[FHR_UPLOAD_ENABLED_PREF] = true;
+        tSender = new TelemetrySender(tsArgs);
+        assert.propertyVal(tSender, "enabled", true);
+      });
+
+      it("should set the enabled property to false", () => {
+        fakePrefs.set(TELEMETRY_PREF, false);
+
+        assert.propertyVal(tSender, "enabled", false);
+      });
+    });
+
+    describe("telemetry.enabled pref changes from false to true", () => {
+      beforeEach(() => {
+        FakePrefs.prototype.prefs = {};
+        FakePrefs.prototype.prefs[FHR_UPLOAD_ENABLED_PREF] = true;
+        FakePrefs.prototype.prefs[TELEMETRY_PREF] = false;
+        tSender = new TelemetrySender(tsArgs);
+
+        assert.propertyVal(tSender, "enabled", false);
+      });
+
+      it("should set the enabled property to true", () => {
+        fakePrefs.set(TELEMETRY_PREF, true);
+
+        assert.propertyVal(tSender, "enabled", true);
+      });
+    });
+
+    describe("FHR enabled pref changes from true to false", () => {
+      beforeEach(() => {
+        FakePrefs.prototype.prefs = {};
+        FakePrefs.prototype.prefs[TELEMETRY_PREF] = true;
+        FakePrefs.prototype.prefs[FHR_UPLOAD_ENABLED_PREF] = true;
+        tSender = new TelemetrySender(tsArgs);
+        assert.propertyVal(tSender, "enabled", true);
+      });
+
+      it("should set the enabled property to false", () => {
+        fakePrefs.set(FHR_UPLOAD_ENABLED_PREF, false);
+
+        assert.propertyVal(tSender, "enabled", false);
+      });
+    });
+
+    describe("FHR enabled pref changes from false to true", () => {
+      beforeEach(() => {
+        FakePrefs.prototype.prefs = {};
+        FakePrefs.prototype.prefs[FHR_UPLOAD_ENABLED_PREF] = false;
+        FakePrefs.prototype.prefs[TELEMETRY_PREF] = true;
+        tSender = new TelemetrySender(tsArgs);
+
+        assert.propertyVal(tSender, "enabled", false);
+      });
+
+      it("should set the enabled property to true", () => {
+        fakePrefs.set(FHR_UPLOAD_ENABLED_PREF, true);
+
+        assert.propertyVal(tSender, "enabled", true);
+      });
+    });
   });
 
   describe("#sendPing()", () => {
     beforeEach(() => {
       FakePrefs.prototype.prefs = {};
+      FakePrefs.prototype.prefs[FHR_UPLOAD_ENABLED_PREF] = true;
       FakePrefs.prototype.prefs[TELEMETRY_PREF] = true;
       FakePrefs.prototype.prefs[ENDPOINT_PREF] = fakeEndpointUrl;
       tSender = new TelemetrySender(tsArgs);
     });
 
     it("should not send if the TelemetrySender is disabled", async () => {
-      tSender.enabled = false;
+      FakePrefs.prototype.prefs[TELEMETRY_PREF] = false;
+      tSender = new TelemetrySender(tsArgs);
 
       await tSender.sendPing(fakePingJSON);
 
@@ -132,6 +208,15 @@ describe("TelemetrySender", () => {
       assert.notProperty(fakePrefs.observers, TELEMETRY_PREF);
     });
 
+    it("should remove the fhrpref listener", () => {
+      tSender = new TelemetrySender(tsArgs);
+      assert.property(fakePrefs.observers, FHR_UPLOAD_ENABLED_PREF);
+
+      tSender.uninit();
+
+      assert.notProperty(fakePrefs.observers, FHR_UPLOAD_ENABLED_PREF);
+    });
+
     it("should remove the telemetry log listener", () => {
       tSender = new TelemetrySender(tsArgs);
       assert.property(fakePrefs.observers, LOGGING_PREF);
@@ -152,36 +237,6 @@ describe("TelemetrySender", () => {
   });
 
   describe("Misc pref changes", () => {
-    describe("telemetry changes from true to false", () => {
-      beforeEach(() => {
-        FakePrefs.prototype.prefs = {};
-        FakePrefs.prototype.prefs[TELEMETRY_PREF] = true;
-        tSender = new TelemetrySender(tsArgs);
-        assert.propertyVal(tSender, "enabled", true);
-      });
-
-      it("should set the enabled property to false", () => {
-        fakePrefs.set(TELEMETRY_PREF, false);
-
-        assert.propertyVal(tSender, "enabled", false);
-      });
-    });
-
-    describe("telemetry changes from false to true", () => {
-      beforeEach(() => {
-        FakePrefs.prototype.prefs = {};
-        FakePrefs.prototype.prefs[TELEMETRY_PREF] = false;
-        tSender = new TelemetrySender(tsArgs);
-        assert.propertyVal(tSender, "enabled", false);
-      });
-
-      it("should set the enabled property to true", () => {
-        fakePrefs.set(TELEMETRY_PREF, true);
-
-        assert.propertyVal(tSender, "enabled", true);
-      });
-    });
-
     describe("performance.log changes from false to true", () => {
       it("should change this.logging from false to true", () => {
         FakePrefs.prototype.prefs = {};

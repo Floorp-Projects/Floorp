@@ -347,10 +347,6 @@ var DataHelper = {
   }
 };
 
-function run_test() {
-  run_next_test();
-}
-
 add_task(async function test_async() {
   for (let test of tests) {
     await PlacesUtils.bookmarks.eraseEverything();

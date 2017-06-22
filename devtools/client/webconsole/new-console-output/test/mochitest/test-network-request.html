@@ -1,0 +1,46 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<!DOCTYPE HTML>
+<html dir="ltr" xml:lang="en-US" lang="en-US">
+  <head>
+    <meta charset="utf-8">
+    <title>Console HTTP test page</title>
+    <script type="text/javascript">
+      /* exported testXhrGet, testXhrWarn, testXhrPost */
+      "use strict";
+
+      function makeXhr(method, url, requestBody, callback) {
+        let xmlhttp = new XMLHttpRequest();
+        xmlhttp.open(method, url, true);
+        xmlhttp.onreadystatechange = function () {
+          if (callback && xmlhttp.readyState == 4) {
+            callback();
+          }
+        };
+        xmlhttp.send(requestBody);
+      }
+
+      function testXhrGet(callback) {
+        makeXhr("get", "test-data.json", null, callback);
+      }
+
+      function testXhrWarn(callback) {
+        makeXhr("get", "http://example.com/browser/devtools/client/netmonitor/test/sjs_cors-test-server.sjs", null, callback);
+      }
+
+      function testXhrPost(callback) {
+        makeXhr("post", "test-data.json", "Hello world!", callback);
+      }
+    </script>
+  </head>
+  <body>
+    <h1>Heads Up Display HTTP Logging Testpage</h1>
+    <h2>This page is used to test the HTTP logging.</h2>
+
+    <form action="https://example.com/browser/devtools/client/webconsole/test/test-network-request.html" method="post">
+      <input name="name" type="text" value="foo bar"><br>
+      <input name="age" type="text" value="144"><br>
+    </form>
+  </body>
+</html>

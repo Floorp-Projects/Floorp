@@ -10119,8 +10119,12 @@ nsGlobalWindow::ShowModalDialog(JSContext* aCx, const nsAString& aUrl,
 
   JS::Rooted<JS::Value> result(aCx);
   if (retVal) {
+    JS::Rooted<JSObject*> global(aCx, JS::CurrentGlobalOrNull(aCx));
+    if (!global) {
+      global = FastGetGlobalJSObject();
+    }
     aError = nsContentUtils::XPConnect()->VariantToJS(aCx,
-                                                      FastGetGlobalJSObject(),
+                                                      global,
                                                       retVal, aRetval);
   } else {
     aRetval.setNull();

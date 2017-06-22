@@ -27,10 +27,6 @@ function modHistoryTypes(val) {
   return TRANSITION_TYPED;
 }
 
-function run_test() {
-  run_next_test();
-}
-
 /**
  * Builds a test database by hand using various times, annotations and
  * visit numbers for this test

@@ -180,9 +180,9 @@ function hideContextMenu(hud) {
   return onPopupHidden;
 }
 
-function loadDocument(browser) {
+function loadDocument(browser, url) {
   return new Promise(resolve => {
     browser.addEventListener("load", resolve, {capture: true, once: true});
-    BrowserTestUtils.loadURI(gBrowser.selectedBrowser, TEST_PATH);
+    BrowserTestUtils.loadURI(gBrowser.selectedBrowser, url);
   });
 }

@@ -2,5 +2,6 @@ fuzzy-if(webrender,212,342) == counter-style-rule-clone.html glyphs-ref.html # p
 # because "Dynamic change on @counter-style not yet supported"
 == document-rule-clone.html shouldbegreen-ref.html
 == media-rule-clone.html shouldbegreen-ref.html
+== insert-after-clone.html shouldbegreen-ref.html
 == style-rule-clone.html shouldbegreen-ref.html
 == supports-rule-clone.html shouldbegreen-ref.html

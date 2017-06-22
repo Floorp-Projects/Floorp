@@ -5,17 +5,19 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "MediaDecoderReader.h"
+
 #include "AbstractMediaDecoder.h"
-#include "MediaResource.h"
-#include "VideoUtils.h"
 #include "ImageContainer.h"
 #include "MediaPrefs.h"
-
-#include "nsPrintfCString.h"
-#include "mozilla/mozalloc.h"
+#include "MediaResource.h"
+#include "VideoUtils.h"
 #include "mozilla/Mutex.h"
-#include <stdint.h>
+#include "mozilla/SharedThreadPool.h"
+#include "mozilla/TaskQueue.h"
+#include "mozilla/mozalloc.h"
+#include "nsPrintfCString.h"
 #include <algorithm>
+#include <stdint.h>
 
 using namespace mozilla::media;
 

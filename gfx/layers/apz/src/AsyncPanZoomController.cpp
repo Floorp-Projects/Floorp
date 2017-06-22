@@ -2424,7 +2424,7 @@ bool AsyncPanZoomController::AttemptScroll(ParentLayerPoint& aStartPoint,
 
     if (!IsZero(adjustedDisplacement)) {
       ScrollBy(adjustedDisplacement / mFrameMetrics.GetZoom());
-      if (CancelableBlockState* block = GetCurrentInputBlock()) {
+      if (InputBlockState* block = GetCurrentInputBlock()) {
 #if defined(MOZ_WIDGET_ANDROID)
         if (block->AsTouchBlock() && (block->GetScrolledApzc() != this) && IsRootContent()) {
           if (APZCTreeManager* manager = GetApzcTreeManager()) {
@@ -3756,7 +3756,7 @@ void AsyncPanZoomController::ZoomToRect(CSSRect aRect, const uint32_t aFlags) {
   }
 }
 
-CancelableBlockState*
+InputBlockState*
 AsyncPanZoomController::GetCurrentInputBlock() const
 {
   return GetInputQueue()->GetCurrentBlock();

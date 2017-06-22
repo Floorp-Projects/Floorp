@@ -144,11 +144,13 @@ windows-gpu-tests:
 #    - mochitest-chrome
 #    - mochitest-clipboard
 
-macosx64-tests-debug:
+macosx64-tests:
     - cppunit
     - crashtest
     - external-media-tests-base
     - external-media-tests-youtube
+    - firefox-ui-functional-local
+    - firefox-ui-functional-remote
     - gtest
     - jittest
     - jsreftest

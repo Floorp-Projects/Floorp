@@ -2459,7 +2459,7 @@
             // transition in that case.
             let animate = !aSkipAnimation &&
                           this.tabContainer.getAttribute("overflow") != "true" &&
-                          Services.prefs.getBoolPref("toolkit.cosmeticAnimations.enabled");
+                          this.animationsEnabled;
             if (!animate) {
               t.setAttribute("fadein", "true");
 
@@ -2814,7 +2814,7 @@
                 this._removingTabs.length > 3 /* don't want lots of concurrent animations */ ||
                 aTab.getAttribute("fadein") != "true" /* fade-in transition hasn't been triggered yet */ ||
                 window.getComputedStyle(aTab).maxWidth == "0.1px" /* fade-in transition hasn't moved yet */ ||
-                !Services.prefs.getBoolPref("toolkit.cosmeticAnimations.enabled")) {
+                !this.animationsEnabled) {
               // We're not animating, so we can cancel the animation stopwatch.
               TelemetryStopwatch.cancel("FX_TAB_CLOSE_TIME_ANIM_MS", aTab);
               this._endRemoveTab(aTab);
@@ -5418,6 +5418,9 @@
           messageManager.addMessageListener("Prerender:Request", this);
           messageManager.addMessageListener("Prerender:Cancel", this);
           messageManager.addMessageListener("Prerender:Swap", this);
+
+          XPCOMUtils.defineLazyPreferenceGetter(this, "animationsEnabled",
+                                                "toolkit.cosmeticAnimations.enabled", true);
         ]]>
       </constructor>
 
@@ -7060,7 +7063,8 @@
           if (dropIndex && dropIndex > draggedTab._tPos)
             dropIndex--;
 
-          if (oldTranslateX && oldTranslateX != newTranslateX) {
+          let animate = this.tabbrowser.animationsEnabled;
+          if (oldTranslateX && oldTranslateX != newTranslateX && animate) {
             draggedTab.setAttribute("tabdrop-samewindow", "true");
             draggedTab.style.transform = "translateX(" + newTranslateX + "px)";
             let onTransitionEnd = transitionendEvent => {

@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Test for telemetry for content script injection</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SpawnTask.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script src="head.js"></script>
+  <link rel="stylesheet" href="chrome://mochikit/contents/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<script>
+"use strict";
+
+const HISTOGRAM = "WEBEXT_CONTENT_SCRIPT_INJECTION_MS";
+
+add_task(async function test_contentscript_telemetry() {
+  function background() {
+    browser.test.onMessage.addListener(() => {
+      browser.tabs.executeScript({code: 'browser.test.sendMessage("content-script-run");'});
+    });
+  }
+
+  let extensionData = {
+    manifest: {
+      permissions: ["<all_urls>"],
+    },
+    background,
+  };
+
+  let win = window.open("http://example.com/");
+
+  let extension = ExtensionTestUtils.loadExtension(extensionData);
+
+  let histogram = SpecialPowers.Services.telemetry.getHistogramById(HISTOGRAM);
+  histogram.clear();
+  is(histogram.snapshot().sum, 0,
+     `No data recorded for histogram: ${HISTOGRAM}.`);
+
+  await extension.startup();
+  is(histogram.snapshot().sum, 0,
+     `No data recorded for histogram after startup: ${HISTOGRAM}.`);
+
+  extension.sendMessage();
+  await extension.awaitMessage("content-script-run");
+
+  let histogramSum = histogram.snapshot().sum;
+  ok(histogramSum > 0,
+     `Data recorded for first extension for histogram: ${HISTOGRAM}.`);
+
+  win.close();
+  await extension.unload();
+});
+</script>
+
+</body>
+</html>

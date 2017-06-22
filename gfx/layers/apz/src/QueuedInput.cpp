@@ -44,7 +44,7 @@ QueuedInput::Input()
   return mInput.get();
 }
 
-CancelableBlockState*
+InputBlockState*
 QueuedInput::Block()
 {
   return mBlock.get();

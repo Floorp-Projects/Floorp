@@ -23,6 +23,20 @@ adapt the header to their replacements of standard-library types.
 
 ## Release Notes
 
+### 0.7.6
+
+* Rename `ENCODING_RS_NON_NULL_CONST_ENCODING_PTR` to
+  `ENCODING_RS_NOT_NULL_CONST_ENCODING_PTR`. (Not a breaking change,
+  because defining that macro broke the build previously, so the
+  macro couldn't have been used.)
+* Use the macro only for statics and not for return values.
+
+### 0.7.5
+
+* Annotate the encoding pointers that should be wrapped with a
+  same-representation not-null type in C++ as
+  `ENCODING_RS_NON_NULL_CONST_ENCODING_PTR`.
+
 ### 0.7.4
 
 * Wrap `has_pending_state()`.

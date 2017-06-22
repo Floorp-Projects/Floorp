@@ -174,7 +174,8 @@ var Provider = {
                       .getService(Ci.nsIUrlListManager);
 
     let pref = "browser.safebrowsing.provider." + provider + ".lists";
-    let table = Services.prefs.getCharPref(pref, "").split(",")[0];
+    let tables = Services.prefs.getCharPref(pref, "").split(",");
+    let table = tables.find(t => listmanager.getUpdateUrl(t) != "");
 
     let updateUrl = listmanager.getUpdateUrl(table);
     if (!listmanager.checkForUpdates(updateUrl)) {

@@ -4,26 +4,25 @@
 
 #include "VideoUtils.h"
 
-#include "mozilla/Base64.h"
-#include "mozilla/TaskQueue.h"
-#include "mozilla/Telemetry.h"
-
+#include "ImageContainer.h"
 #include "MediaContainerType.h"
 #include "MediaPrefs.h"
 #include "MediaResource.h"
 #include "TimeUnits.h"
-#include "nsMathUtils.h"
-#include "nsSize.h"
 #include "VorbisUtils.h"
-#include "ImageContainer.h"
+#include "mozilla/Base64.h"
 #include "mozilla/SharedThreadPool.h"
-#include "nsIRandomGenerator.h"
-#include "nsIServiceManager.h"
-#include "nsServiceManagerUtils.h"
-#include "nsIConsoleService.h"
-#include "nsThreadUtils.h"
+#include "mozilla/TaskQueue.h"
+#include "mozilla/Telemetry.h"
 #include "nsCharSeparatedTokenizer.h"
 #include "nsContentTypeParser.h"
+#include "nsIConsoleService.h"
+#include "nsIRandomGenerator.h"
+#include "nsIServiceManager.h"
+#include "nsMathUtils.h"
+#include "nsServiceManagerUtils.h"
+#include "nsSize.h"
+#include "nsThreadUtils.h"
 
 #include <functional>
 #include <stdint.h>

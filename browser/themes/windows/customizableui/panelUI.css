@@ -155,8 +155,7 @@ photonpanelmultiview .panel-banner-item > .toolbarbutton-multiline-text {
   margin: 0;
 }
 
-photonpanelmultiview .subviewbutton > .toolbarbutton-icon,
-photonpanelmultiview .panel-banner-item > .toolbarbutton-multiline-text {
+photonpanelmultiview .subviewbutton > .toolbarbutton-icon {
   padding: 0;
 }
 

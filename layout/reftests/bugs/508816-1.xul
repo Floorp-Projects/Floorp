@@ -2,6 +2,12 @@
 <!DOCTYPE window>
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" title="RTL overflow test" width="640px" height="480px" style="direction: rtl">
 
+<style type="text/css" xmlns="http://www.w3.org/1999/xhtml"><![CDATA[
+button {
+  margin: 0;
+}
+]]></style>
+
 <hbox style="max-width: 200px; border: 1px solid red;">
 <scrollbox align="start" pack="start" orient="horizontal" flex="1">
   <button label="test1"/><button label="test2"/><button label="test3"/><button label="test4"/><button label="test5"/>

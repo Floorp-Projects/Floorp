@@ -32,7 +32,7 @@ add_task(async function task() {
     }]
   });
 
-  await loadDocument(currentTab.linkedBrowser);
+  await loadDocument(currentTab.linkedBrowser, TEST_PATH);
   info("Document loaded.");
 
   await onMessageAdded;

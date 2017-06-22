@@ -10,6 +10,7 @@
 #include "MediaInfo.h"
 #include "MP4Decoder.h"
 #include "VPXDecoder.h"
+#include "mozilla/layers/KnowsCompositor.h"
 
 #include "libavutil/pixfmt.h"
 #if LIBAVCODEC_VERSION_MAJOR < 54
@@ -103,8 +104,10 @@ FFmpegVideoDecoder<LIBAV_VER>::PtsCorrectionContext::Reset()
 
 FFmpegVideoDecoder<LIBAV_VER>::FFmpegVideoDecoder(
   FFmpegLibWrapper* aLib, TaskQueue* aTaskQueue, const VideoInfo& aConfig,
-  ImageContainer* aImageContainer, bool aLowLatency)
+  KnowsCompositor* aAllocator, ImageContainer* aImageContainer,
+  bool aLowLatency)
   : FFmpegDataDecoder(aLib, aTaskQueue, GetCodecId(aConfig.mMimeType))
+  , mImageAllocator(aAllocator)
   , mImageContainer(aImageContainer)
   , mInfo(aConfig)
   , mCodecParser(nullptr)
@@ -349,7 +352,8 @@ FFmpegVideoDecoder<LIBAV_VER>::DoDecode(MediaRawData* aSample,
                                   !!mFrame->key_frame,
                                   TimeUnit::FromMicroseconds(-1),
                                   mInfo.ScaledImageRect(mFrame->width,
-                                                        mFrame->height));
+                                                        mFrame->height),
+                                  mImageAllocator);
 
   if (!v) {
     return MediaResult(NS_ERROR_OUT_OF_MEMORY,

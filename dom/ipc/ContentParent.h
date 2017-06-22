@@ -1177,6 +1177,8 @@ private:
     InfallibleTArray<KeyedScalarAction>&& aScalarActions) override;
   virtual mozilla::ipc::IPCResult RecvRecordChildEvents(
     nsTArray<ChildEventData>&& events) override;
+  virtual mozilla::ipc::IPCResult RecvRecordDiscardedData(
+    const DiscardedData& aDiscardedData) override;
 public:
   void SendGetFilesResponseAndForget(const nsID& aID,
                                      const GetFilesResponseResult& aResult);
