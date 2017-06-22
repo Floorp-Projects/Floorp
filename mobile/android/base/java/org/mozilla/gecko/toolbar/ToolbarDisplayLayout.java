@@ -24,6 +24,7 @@ import org.mozilla.gecko.Experiments;
 import org.mozilla.gecko.util.HardwareUtils;
 import org.mozilla.gecko.util.StringUtils;
 import org.mozilla.gecko.util.ViewUtil;
+import org.mozilla.gecko.widget.themed.ThemedImageButton;
 import org.mozilla.gecko.widget.themed.ThemedLinearLayout;
 import org.mozilla.gecko.widget.themed.ThemedTextView;
 
@@ -103,7 +104,7 @@ public class ToolbarDisplayLayout extends ThemedLinearLayout {
     private ToolbarPrefs mPrefs;
     private OnTitleChangeListener mTitleChangeListener;
 
-    private final ImageButton mSiteSecurity;
+    private final ThemedImageButton mSiteSecurity;
 
     private final ImageButton mStop;
     private OnStopListener mStopListener;
@@ -151,7 +152,7 @@ public class ToolbarDisplayLayout extends ThemedLinearLayout {
         mPrivateDomainColorSpan = new ForegroundColorSpan(ContextCompat.getColor(context, R.color.url_bar_domaintext_private));
         mCertificateOwnerColorSpan = new ForegroundColorSpan(ContextCompat.getColor(context, R.color.affirmative_green));
 
-        mSiteSecurity = (ImageButton) findViewById(R.id.site_security);
+        mSiteSecurity = (ThemedImageButton) findViewById(R.id.site_security);
 
         mSiteIdentityPopup = new SiteIdentityPopup(mActivity);
         mSiteIdentityPopup.setAnchor(this);
@@ -160,6 +161,13 @@ public class ToolbarDisplayLayout extends ThemedLinearLayout {
         mStop = (ImageButton) findViewById(R.id.stop);
         mPageActionLayout = (PageActionLayout) findViewById(R.id.page_action_layout);
     }
+
+    @Override
+    public void setPrivateMode(boolean isPrivate) {
+        super.setPrivateMode(isPrivate);
+        mSiteSecurity.setPrivateMode(isPrivate);
+    }
+
 
     @Override
     public void onAttachedToWindow() {
