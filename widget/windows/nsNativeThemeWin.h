@@ -128,6 +128,10 @@ protected:
                                  uint8_t aWidgetType, int32_t aPart, int32_t aState,
                                  nsIntMargin* aResult);
 
+  nsresult GetCachedMinimumWidgetSize(nsIFrame* aFrame, HANDLE aTheme, nsUXThemeClass aThemeClass,
+                                      uint8_t aWidgetType, int32_t aPart, int32_t aState,
+                                      THEMESIZE aSizeReq, mozilla::LayoutDeviceIntSize* aResult);
+
 private:
   TimeStamp mProgressDeterminateTimeStamp;
   TimeStamp mProgressIndeterminateTimeStamp;
@@ -139,6 +143,12 @@ private:
   // we derive some theme parts from other arguments.
   uint8_t mBorderCacheValid[(eUXNumClasses * THEME_PART_DISTINCT_VALUE_COUNT + 7) / 8];
   nsIntMargin mBorderCache[eUXNumClasses * THEME_PART_DISTINCT_VALUE_COUNT];
+
+  // See the above not for mBorderCache and friends. However mozilla::LayoutDeviceIntSize
+  // is half the size of nsIntMargin, making the cache roughly half as large. In total
+  // the caches should come to about 18KB.
+  uint8_t mMinimumWidgetSizeCacheValid[(eUXNumClasses * THEME_PART_DISTINCT_VALUE_COUNT + 7) / 8];
+  mozilla::LayoutDeviceIntSize mMinimumWidgetSizeCache[eUXNumClasses * THEME_PART_DISTINCT_VALUE_COUNT];
 };
 
 #endif
