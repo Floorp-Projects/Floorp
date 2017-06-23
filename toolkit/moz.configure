@@ -696,7 +696,7 @@ with only_when(building_stylo_bindgen):
             '''.format(version, min_version)))
 
     @depends(llvm_config, '--with-libclang-path', '--with-clang-path',
-             library_name_info, host)
+             host_library_name_info, host)
     @imports('os.path')
     @imports(_from='textwrap', _import='dedent')
     def bindgen_config_paths(llvm_config, libclang_path, clang_path,

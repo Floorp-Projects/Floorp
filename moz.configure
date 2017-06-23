@@ -143,9 +143,10 @@ include('build/moz.configure/headers.configure',
 include('build/moz.configure/warnings.configure',
         when='--enable-compile-environment')
 
-@depends(target)
-def is_openbsd(target):
-    return target.kernel == 'OpenBSD'
+
+@depends(target, host)
+def is_openbsd(target, host):
+    return target.kernel == 'OpenBSD' or host.kernel == 'OpenBSD'
 
 option(env='SO_VERSION', nargs=1, default='1.0', when=is_openbsd,
        help='Shared library version for OpenBSD systems')
@@ -154,48 +155,61 @@ option(env='SO_VERSION', nargs=1, default='1.0', when=is_openbsd,
 def so_version(value):
     return value
 
-@depends(target, c_compiler, so_version)
-def library_name_info(target, c_compiler, so_version):
-    if target.kernel == 'WINNT':
-        # There aren't artifacts for mingw builds, so it's OK that the results
-        # are inaccurate in that case.
-        if c_compiler and c_compiler.type not in ('msvc', 'clang-cl'):
+@template
+def library_name_info_template(host_or_target):
+    assert host_or_target in (host, target)
+    compiler = {
+        host: host_c_compiler,
+        target: c_compiler,
+    }[host_or_target]
+
+    @depends(host_or_target, compiler, so_version)
+    def library_name_info_impl(host_or_target, compiler, so_version):
+        if host_or_target.kernel == 'WINNT':
+            # There aren't artifacts for mingw builds, so it's OK that the
+            # results are inaccurate in that case.
+            if compiler and compiler.type not in ('msvc', 'clang-cl'):
+                return namespace(
+                    dll=namespace(prefix='', suffix='.dll'),
+                    lib=namespace(prefix='lib', suffix='a'),
+                    import_lib=namespace(prefix='lib', suffix='a'),
+                    rust_lib=namespace(prefix='', suffix='lib'),
+                    obj=namespace(prefix='', suffix='o'),
+                )
+
             return namespace(
                 dll=namespace(prefix='', suffix='.dll'),
-                lib=namespace(prefix='lib', suffix='a'),
-                import_lib=namespace(prefix='lib', suffix='a'),
+                lib=namespace(prefix='', suffix='lib'),
+                import_lib=namespace(prefix='', suffix='lib'),
                 rust_lib=namespace(prefix='', suffix='lib'),
-                obj=namespace(prefix='', suffix='o'),
+                obj=namespace(prefix='', suffix='obj'),
             )
 
-        return namespace(
-            dll=namespace(prefix='', suffix='.dll'),
-            lib=namespace(prefix='', suffix='lib'),
-            import_lib=namespace(prefix='', suffix='lib'),
-            rust_lib=namespace(prefix='', suffix='lib'),
-            obj=namespace(prefix='', suffix='obj'),
-        )
+        elif host_or_target.kernel == 'Darwin':
+            return namespace(
+                dll=namespace(prefix='lib', suffix='.dylib'),
+                lib=namespace(prefix='lib', suffix='a'),
+                import_lib=namespace(prefix=None, suffix=''),
+                rust_lib=namespace(prefix='lib', suffix='a'),
+                obj=namespace(prefix='', suffix='o'),
+            )
+        elif so_version:
+            so = '.so.%s' % so_version
+        else:
+            so = '.so'
 
-    elif target.kernel == 'Darwin':
         return namespace(
-            dll=namespace(prefix='lib', suffix='.dylib'),
+            dll=namespace(prefix='lib', suffix=so),
             lib=namespace(prefix='lib', suffix='a'),
             import_lib=namespace(prefix=None, suffix=''),
             rust_lib=namespace(prefix='lib', suffix='a'),
             obj=namespace(prefix='', suffix='o'),
         )
-    elif so_version:
-        so = '.so.%s' % so_version
-    else:
-        so = '.so'
 
-    return namespace(
-        dll=namespace(prefix='lib', suffix=so),
-        lib=namespace(prefix='lib', suffix='a'),
-        import_lib=namespace(prefix=None, suffix=''),
-        rust_lib=namespace(prefix='lib', suffix='a'),
-        obj=namespace(prefix='', suffix='o'),
-    )
+    return library_name_info_impl
+
+host_library_name_info = library_name_info_template(host)
+library_name_info = library_name_info_template(target)
 
 set_config('DLL_PREFIX', library_name_info.dll.prefix)
 set_config('DLL_SUFFIX', library_name_info.dll.suffix)
