@@ -1054,7 +1054,13 @@ button.button-link:not([disabled="true"]):active:hover {
 
 .addon-control.replacement {
   background-color: #0095dd;
+  border-color: #0095dd;
   color: #FFF;
+}
+
+.addon-control.replacement:hover {
+  background-color: #006b9d;
+  border-color: #006b9d;
 }
 
 /*** telemetry experiments ***/
