@@ -151,7 +151,6 @@ devtools.jar:
     skin/images/editor-error.png (themes/images/editor-error.png)
     skin/images/breakpoint.svg (themes/images/breakpoint.svg)
     skin/webconsole.css (themes/webconsole.css)
-    skin/new-webconsole.css (themes/new-webconsole.css)
     skin/images/webconsole.svg (themes/images/webconsole.svg)
     skin/images/breadcrumbs-scrollbutton.png (themes/images/breadcrumbs-scrollbutton.png)
     skin/images/breadcrumbs-scrollbutton@2x.png (themes/images/breadcrumbs-scrollbutton@2x.png)
