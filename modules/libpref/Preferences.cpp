@@ -105,15 +105,6 @@ Preferences::DirtyCallback()
 
     NS_WARNING_ASSERTION(!sPreferences->mProfileShutdown,
                          "Setting user pref after profile shutdown.");
-
-    if (sPreferences->AllowOffMainThreadSave()) {
-      static const int MAX_PREF_DELAY_MS = 2000;
-      NS_IdleDispatchToCurrentThread(
-        mozilla::NewRunnableMethod("Preferences::SavePrefFileAsynchronous",
-                                   sPreferences,
-                                   &Preferences::SavePrefFileAsynchronous),
-        MAX_PREF_DELAY_MS);
-    }
   }
 }
 
