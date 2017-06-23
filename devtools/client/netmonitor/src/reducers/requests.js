@@ -168,8 +168,8 @@ function requestsReducer(state = new Requests(), action) {
               request.urlDetails = getUrlDetails(value);
               break;
             case "totalTime":
-              const endedMillis = request.startedMillis + value;
-              lastEndedMillis = Math.max(lastEndedMillis, endedMillis);
+              request.endedMillis = request.startedMillis + value;
+              lastEndedMillis = Math.max(lastEndedMillis, request.endedMillis);
               break;
             case "requestPostData":
               request.requestHeadersFromUploadStream = {
