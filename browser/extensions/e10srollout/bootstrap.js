@@ -10,6 +10,7 @@ Cu.import("resource://gre/modules/Preferences.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/UpdateUtils.jsm");
 Cu.import("resource://gre/modules/AppConstants.jsm");
+Cu.import("resource://gre/modules/TelemetryEnvironment.jsm");
 
 // The amount of people to be part of e10s
 const TEST_THRESHOLD = {
@@ -239,6 +240,9 @@ function getUserSample(multi) {
 
 function setCohort(cohortName) {
   Preferences.set(PREF_COHORT_NAME, cohortName);
+  if (cohortName != "unsupportedChannel") {
+    TelemetryEnvironment.setExperimentActive("e10sCohort", cohortName);
+  }
   try {
     if (Ci.nsICrashReporter) {
       Services.appinfo.QueryInterface(Ci.nsICrashReporter).annotateCrashReport("E10SCohort", cohortName);
