@@ -2778,7 +2778,6 @@ gfxPlatform::ImportGPUDeviceData(const mozilla::gfx::GPUDeviceData& aData)
   MOZ_ASSERT(XRE_IsParentProcess());
 
   gfxConfig::ImportChange(Feature::OPENGL_COMPOSITING, aData.oglCompositing());
-  gfxConfig::ImportChange(Feature::ADVANCED_LAYERS, aData.advancedLayers());
 }
 
 bool
