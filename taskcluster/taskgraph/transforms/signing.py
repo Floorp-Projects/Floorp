@@ -132,7 +132,8 @@ def make_task_description(config, jobs):
             'routes': job.get('routes', []),
         }
 
-        if job.get('use-funsize-route', False):
+        if 'macosx' not in dep_job.attributes.get('build_platform') and \
+                job.get('use-funsize-route', False):
             task['routes'].append("project.releng.funsize.level-{level}.{project}".format(
                 project=config.params['project'], level=config.params['level']))
 
