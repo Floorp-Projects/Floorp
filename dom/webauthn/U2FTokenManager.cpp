@@ -6,6 +6,7 @@
 
 #include "mozilla/dom/U2FTokenManager.h"
 #include "mozilla/dom/U2FTokenTransport.h"
+#include "mozilla/dom/U2FHIDTokenManager.h"
 #include "mozilla/dom/U2FSoftTokenManager.h"
 #include "mozilla/dom/WebAuthnTransactionParent.h"
 #include "mozilla/MozPromise.h"
@@ -19,9 +20,10 @@
 
 // Not named "security.webauth.u2f_softtoken_counter" because setting that
 // name causes the window.u2f object to disappear until preferences get
-// reloaded, as its' pref is a substring!
+// reloaded, as its pref is a substring!
 #define PREF_U2F_NSSTOKEN_COUNTER "security.webauth.softtoken_counter"
 #define PREF_WEBAUTHN_SOFTTOKEN_ENABLED "security.webauth.webauthn_enable_softtoken"
+#define PREF_WEBAUTHN_USBTOKEN_ENABLED "security.webauth.webauthn_enable_usbtoken"
 
 namespace mozilla {
 namespace dom {
@@ -44,10 +46,7 @@ private:
   U2FPrefManager() :
     mPrefMutex("U2FPrefManager Mutex")
   {
-    MOZ_ASSERT(NS_IsMainThread());
-    MutexAutoLock lock(mPrefMutex);
-    mSoftTokenEnabled = Preferences::GetBool(PREF_WEBAUTHN_SOFTTOKEN_ENABLED);
-    mSoftTokenCounter = Preferences::GetUint(PREF_U2F_NSSTOKEN_COUNTER);
+    UpdateValues();
   }
   ~U2FPrefManager() = default;
 
@@ -61,6 +60,7 @@ public:
       gPrefManager = new U2FPrefManager();
       Preferences::AddStrongObserver(gPrefManager, PREF_WEBAUTHN_SOFTTOKEN_ENABLED);
       Preferences::AddStrongObserver(gPrefManager, PREF_U2F_NSSTOKEN_COUNTER);
+      Preferences::AddStrongObserver(gPrefManager, PREF_WEBAUTHN_USBTOKEN_ENABLED);
       ClearOnShutdown(&gPrefManager, ShutdownPhase::ShutdownThreads);
     }
     return gPrefManager;
@@ -83,21 +83,33 @@ public:
     return mSoftTokenCounter;
   }
 
+  bool GetUsbTokenEnabled()
+  {
+    MutexAutoLock lock(mPrefMutex);
+    return mUsbTokenEnabled;
+  }
+
   NS_IMETHODIMP
   Observe(nsISupports* aSubject,
           const char* aTopic,
           const char16_t* aData) override
   {
+    UpdateValues();
+    return NS_OK;
+  }
+private:
+  void UpdateValues() {
     MOZ_ASSERT(NS_IsMainThread());
     MutexAutoLock lock(mPrefMutex);
     mSoftTokenEnabled = Preferences::GetBool(PREF_WEBAUTHN_SOFTTOKEN_ENABLED);
     mSoftTokenCounter = Preferences::GetUint(PREF_U2F_NSSTOKEN_COUNTER);
-    return NS_OK;
+    mUsbTokenEnabled = Preferences::GetBool(PREF_WEBAUTHN_USBTOKEN_ENABLED);
   }
-private:
+
   Mutex mPrefMutex;
   bool mSoftTokenEnabled;
   int mSoftTokenCounter;
+  bool mUsbTokenEnabled;
 };
 
 NS_IMPL_ISUPPORTS(U2FPrefManager, nsIObserver);
@@ -185,6 +197,34 @@ U2FTokenManager::ClearTransaction()
   mTransactionId++;
 }
 
+RefPtr<U2FTokenTransport>
+U2FTokenManager::GetTokenManagerImpl()
+{
+  if (mTokenManagerImpl) {
+    return mTokenManagerImpl;
+  }
+
+  auto pm = U2FPrefManager::Get();
+  bool useSoftToken = pm->GetSoftTokenEnabled();
+  bool useUsbToken = pm->GetUsbTokenEnabled();
+
+  // At least one token type must be enabled.
+  // We currently don't support soft and USB tokens enabled at
+  // the same time as the softtoken would always win the race to register.
+  // We could support it for signing though...
+  if (!(useSoftToken ^ useUsbToken)) {
+    return nullptr;
+  }
+
+  if (useSoftToken) {
+    return new U2FSoftTokenManager(pm->GetSoftTokenCounter());
+  }
+
+  // TODO Use WebAuthnRequest to aggregate results from all transports,
+  //      once we have multiple HW transport types.
+  return new U2FHIDTokenManager();
+}
+
 void
 U2FTokenManager::Register(WebAuthnTransactionParent* aTransactionParent,
                           const WebAuthnTransactionInfo& aTransactionInfo)
@@ -194,19 +234,11 @@ U2FTokenManager::Register(WebAuthnTransactionParent* aTransactionParent,
 
   uint64_t tid = ++mTransactionId;
   mTransactionParent = aTransactionParent;
-
-  // Since we only have soft token available at the moment, use that if the pref
-  // is on.
-  //
-  // TODO Check all transports and use WebAuthnRequest to aggregate
-  // replies
-  if (!U2FPrefManager::Get()->GetSoftTokenEnabled()) {
-    AbortTransaction(NS_ERROR_DOM_NOT_ALLOWED_ERR);
-    return;
-  }
+  mTokenManagerImpl = GetTokenManagerImpl();
 
   if (!mTokenManagerImpl) {
-    mTokenManagerImpl = new U2FSoftTokenManager(U2FPrefManager::Get()->GetSoftTokenCounter());
+    AbortTransaction(NS_ERROR_DOM_NOT_ALLOWED_ERR);
+    return;
   }
 
   // Check if all the supplied parameters are syntactically well-formed and
@@ -262,19 +294,11 @@ U2FTokenManager::Sign(WebAuthnTransactionParent* aTransactionParent,
 
   uint64_t tid = ++mTransactionId;
   mTransactionParent = aTransactionParent;
-
-  // Since we only have soft token available at the moment, use that if the pref
-  // is on.
-  //
-  // TODO Check all transports and use WebAuthnRequest to aggregate
-  // replies
-  if (!U2FPrefManager::Get()->GetSoftTokenEnabled()) {
-    AbortTransaction(NS_ERROR_DOM_NOT_ALLOWED_ERR);
-    return;
-  }
+  mTokenManagerImpl = GetTokenManagerImpl();
 
   if (!mTokenManagerImpl) {
-    mTokenManagerImpl = new U2FSoftTokenManager(U2FPrefManager::Get()->GetSoftTokenCounter());
+    AbortTransaction(NS_ERROR_DOM_NOT_ALLOWED_ERR);
+    return;
   }
 
   if ((aTransactionInfo.RpIdHash().Length() != SHA256_LENGTH) ||
