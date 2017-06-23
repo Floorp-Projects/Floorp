@@ -11,33 +11,8 @@ add_task(function* database_is_valid() {
   Assert.equal((yield db.getSchemaVersion()), CURRENT_SCHEMA_VERSION);
 });
 
-add_task(function* test_new_fields() {
-  let path = OS.Path.join(OS.Constants.Path.profileDir, DB_FILENAME);
-  let db = yield Sqlite.openConnection({ path });
-
-  // Manually update these two fields for a places record.
-  yield db.execute(`
-    UPDATE moz_places
-    SET description = :description, preview_image_url = :previewImageURL
-    WHERE id = 1`, { description: "Page description",
-                     previewImageURL: "https://example.com/img.png" });
-  let rows = yield db.execute(`SELECT description FROM moz_places
-                               WHERE description IS NOT NULL
-                               AND preview_image_url IS NOT NULL`);
-  Assert.equal(rows.length, 1,
-    "should fetch one record with not null description and preview_image_url");
-
-  // Reset them to the default value
-  yield db.execute(`
-    UPDATE moz_places
-    SET description = NULL,
-        preview_image_url = NULL
-    WHERE id = 1`);
-  rows = yield db.execute(`SELECT description FROM moz_places
-                           WHERE description IS NOT NULL
-                           AND preview_image_url IS NOT NULL`);
-  Assert.equal(rows.length, 0,
-    "should fetch 0 record with not null description and preview_image_url");
-
-  yield db.close();
+add_task(function* test_select_new_fields() {
+  let db = yield PlacesUtils.promiseDBConnection();
+  yield db.execute(`SELECT description, preview_image_url FROM moz_places`);
+  Assert.ok(true, "should be able to select description and preview_image_url");
 });
