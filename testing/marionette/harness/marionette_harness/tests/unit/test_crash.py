@@ -5,13 +5,11 @@
 import glob
 import shutil
 
-from marionette_driver import Wait
-from marionette_driver.errors import MarionetteException, NoSuchWindowException
-
-from marionette_harness import MarionetteTestCase, expectedFailure, run_if_e10s
-
+from marionette_driver.errors import MarionetteException
 # Import runner module to monkey patch mozcrash module
 from mozrunner.base import runner
+
+from marionette_harness import MarionetteTestCase, expectedFailure, run_if_e10s
 
 
 class MockMozCrash(object):
@@ -33,7 +31,7 @@ class MockMozCrash(object):
 
     def check_for_crashes(self, dump_directory, *args, **kwargs):
         minidump_files = glob.glob('{}/*.dmp'.format(dump_directory))
-        shutil.rmtree(dump_directory)
+        shutil.rmtree(dump_directory, ignore_errors=True)
 
         if self.crash_reporter_enabled:
             return len(minidump_files)
@@ -52,18 +50,12 @@ class BaseCrashTestCase(MarionetteTestCase):
     def setUp(self):
         super(BaseCrashTestCase, self).setUp()
 
-        # Monkey patch mozcrash to avoid crash info output only for our triggered crashes.
-        self.mozcrash = runner.mozcrash
-        runner.mozcrash = MockMozCrash(self.marionette)
-
+        self.mozcrash_mock = MockMozCrash(self.marionette)
         self.crash_count = self.marionette.crashed
         self.pid = self.marionette.process_id
         self.remote_uri = self.marionette.absolute_url("javascriptPage.html")
 
     def tearDown(self):
-        # Replace mockup with original mozcrash instance
-        runner.mozcrash = self.mozcrash
-
         self.marionette.crashed = self.crash_count
 
         super(BaseCrashTestCase, self).tearDown()
@@ -72,11 +64,15 @@ class BaseCrashTestCase(MarionetteTestCase):
         context = 'chrome' if chrome else 'content'
         sandbox = None if chrome else 'system'
 
+        # Monkey patch mozcrash to avoid crash info output only for our triggered crashes.
+        mozcrash = runner.mozcrash
+        runner.mozcrash = self.mozcrash_mock
+
         socket_timeout = self.marionette.client.socket_timeout
-        self.marionette.client.socket_timeout = self.socket_timeout
 
         self.marionette.set_context(context)
         try:
+            self.marionette.client.socket_timeout = self.socket_timeout
             self.marionette.execute_script("""
               // Copied from crash me simple
               Components.utils.import("resource://gre/modules/ctypes.jsm");
@@ -87,6 +83,7 @@ class BaseCrashTestCase(MarionetteTestCase):
               var crash = badptr.contents;
             """, sandbox=sandbox)
         finally:
+            runner.mozcrash = mozcrash
             self.marionette.client.socket_timeout = socket_timeout
 
 
@@ -103,29 +100,17 @@ class TestCrash(BaseCrashTestCase):
         self.marionette.start_session()
         self.assertNotEqual(self.marionette.process_id, self.pid)
 
-        self.marionette.get_url()
+        # TODO: Bug 1314594 - Causes a hang for the communication between the
+        # chrome and frame script.
+        # self.marionette.get_url()
 
     @run_if_e10s("Content crashes only exist in e10s mode")
     def test_crash_content_process(self):
+        # If e10s is disabled the chrome process crashes
         self.marionette.navigate(self.remote_uri)
 
-        # With MOZ_CRASHREPORTER_SHUTDOWN each window of the browser will be
-        # closed in case of a content crash. So the "unload" handler fires for
-        # the current window, which causes the command to return early.
-        # To check for an IOError, further commands have to be executed until
-        # Firefox has been shutdown.
-        self.crash(chrome=False)
-        with self.assertRaises(IOError):
-            Wait(self.marionette, timeout=self.socket_timeout,
-                 ignored_exceptions=NoSuchWindowException).until(
-                lambda _: self.marionette.get_url(),
-                message="Expected IOError exception for content crash not raised."
-            )
-
-        # In the case of a content crash Firefox will be closed and its
-        # returncode will report 0 (this will change with 1370520).
-        self.assertEqual(self.marionette.instance.runner.returncode, 0)
-
+        self.assertRaisesRegexp(IOError, 'Content process crashed',
+                                self.crash, chrome=False)
         self.assertEqual(self.marionette.crashed, 1)
         self.assertIsNone(self.marionette.session)
         self.assertRaisesRegexp(MarionetteException, 'Please start a session',
