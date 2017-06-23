@@ -1066,7 +1066,7 @@ SpecialPowersAPI.prototype = {
           prefType = pref_string[prefs.getPrefType(prefName)];
           if ((prefs.prefHasUserValue(prefName) && action == "clear") ||
               (action == "set"))
-            originalValue = this._getPref(prefName, prefType);
+            originalValue = this._getPref(prefName, prefType, {});
         } else if (action == "set") {
           /* prefName doesn't exist, so 'clear' is pointless */
           if (aPref.length == 3) {
@@ -1277,17 +1277,17 @@ SpecialPowersAPI.prototype = {
   },
 
   // Mimic the get*Pref API
-  getBoolPref(prefName) {
-    return this._getPref(prefName, "BOOL");
+  getBoolPref(prefName, defaultValue) {
+    return this._getPref(prefName, "BOOL", { defaultValue });
   },
-  getIntPref(prefName) {
-    return this._getPref(prefName, "INT");
+  getIntPref(prefName, defaultValue) {
+    return this._getPref(prefName, "INT", { defaultValue });
   },
-  getCharPref(prefName) {
-    return this._getPref(prefName, "CHAR");
+  getCharPref(prefName, defaultValue) {
+    return this._getPref(prefName, "CHAR", { defaultValue });
   },
   getComplexValue(prefName, iid) {
-    return this._getPref(prefName, "COMPLEX", iid);
+    return this._getPref(prefName, "COMPLEX", { iid });
   },
 
   // Mimic the set*Pref API
@@ -1315,34 +1315,28 @@ SpecialPowersAPI.prototype = {
   },
 
   // Private pref functions to communicate to chrome
-  _getPref(prefName, prefType, iid) {
+  _getPref(prefName, prefType, { defaultValue, iid }) {
     let msg = {
       op: "get",
       prefName,
       prefType,
+      iid, // Only used with complex prefs
+      defaultValue, // Optional default value
     };
-    if (iid) {
-      // Overloading prefValue to handle complex prefs
-      msg.prefValue = [iid];
-    }
     let val = this._sendSyncMessage("SPPrefService", msg);
     if (val == null || val[0] == null) {
       throw "Error getting pref '" + prefName + "'";
     }
     return val[0];
   },
-  _setPref(prefName, prefType, value, iid) {
+  _setPref(prefName, prefType, prefValue, iid) {
     let msg = {
       op: "set",
       prefName,
       prefType,
+      iid, // Only used with complex prefs
+      prefValue,
     };
-    if (iid) {
-      // Overloading prefValue to handle complex prefs
-      msg.prefValue = [iid, value];
-    } else {
-      msg.prefValue = value;
-    }
     return this._sendSyncMessage("SPPrefService", msg)[0];
   },
 
