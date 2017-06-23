@@ -152,6 +152,19 @@ PaymentRequest::IsValidDetailsInit(const PaymentDetailsInit& aDetails, nsAString
 }
 
 bool
+PaymentRequest::IsValidDetailsUpdate(const PaymentDetailsUpdate& aDetails)
+{
+  nsAutoString message;
+  // Check the amount.value of detail.total
+  if (!IsNonNegativeNumber(NS_LITERAL_STRING("details.total"),
+                           aDetails.mTotal.mAmount.mValue, message)) {
+    return false;
+  }
+
+  return IsValidDetailsBase(aDetails, message);
+}
+
+bool
 PaymentRequest::IsValidDetailsBase(const PaymentDetailsBase& aDetails, nsAString& aErrorMsg)
 {
   // Check the amount.value of each item in the display items
@@ -262,6 +275,7 @@ PaymentRequest::PaymentRequest(nsPIDOMWindowInner* aWindow, const nsAString& aIn
   , mInternalId(aInternalId)
   , mShippingAddress(nullptr)
   , mUpdating(false)
+  , mUpdateError(NS_OK)
   , mState(eCreated)
 {
   MOZ_ASSERT(aWindow);
@@ -431,6 +445,22 @@ PaymentRequest::Abort(ErrorResult& aRv)
 void
 PaymentRequest::RespondAbortPayment(bool aSuccess)
 {
+  // Check whether we are aborting the update:
+  //
+  // - If |mUpdateError| is not NS_OK, we are aborting the update as
+  //   |mUpdateError| was set in method |AbortUpdate|.
+  //   => Reject |mAcceptPromise| and reset |mUpdateError| to complete
+  //      the action, regardless of |aSuccess|.
+  //
+  // - Otherwise, we are handling |Abort| method call from merchant.
+  //   => Resolve/Reject |mAbortPromise| based on |aSuccess|.
+  if (NS_FAILED(mUpdateError)) {
+    RespondShowPayment(false, EmptyString(), EmptyString(), EmptyString(),
+                       EmptyString(), EmptyString(), mUpdateError);
+    mUpdateError = NS_OK;
+    return;
+  }
+
   MOZ_ASSERT(mAbortPromise);
   MOZ_ASSERT(mState == eInteractive);
 
@@ -442,6 +472,40 @@ PaymentRequest::RespondAbortPayment(bool aSuccess)
     mAbortPromise->MaybeReject(NS_ERROR_DOM_INVALID_STATE_ERR);
     mAbortPromise = nullptr;
   }
+}
+
+nsresult
+PaymentRequest::UpdatePayment(const PaymentDetailsUpdate& aDetails)
+{
+  RefPtr<PaymentRequestManager> manager = PaymentRequestManager::GetSingleton();
+  if (NS_WARN_IF(!manager)) {
+    return NS_ERROR_FAILURE;
+  }
+  nsresult rv = manager->UpdatePayment(mInternalId, aDetails);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  return NS_OK;
+}
+
+void
+PaymentRequest::AbortUpdate(nsresult aRv)
+{
+  MOZ_ASSERT(NS_FAILED(aRv));
+
+  // Close down any remaining user interface.
+  RefPtr<PaymentRequestManager> manager = PaymentRequestManager::GetSingleton();
+  MOZ_ASSERT(manager);
+  nsresult rv = manager->AbortPayment(mInternalId);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return;
+  }
+
+  // Remember update error |aRv| and do the following steps in RespondShowPayment.
+  // 1. Set target.state to closed
+  // 2. Reject the promise target.acceptPromise with exception "aRv"
+  // 3. Abort the algorithm with update error
+  mUpdateError = aRv;
 }
 
 void
@@ -480,6 +544,22 @@ PaymentRequest::SetUpdating(bool aUpdating)
   mUpdating = aUpdating;
 }
 
+nsresult
+PaymentRequest::DispatchUpdateEvent(const nsAString& aType)
+{
+  MOZ_ASSERT(ReadyForUpdate());
+
+  PaymentRequestUpdateEventInit init;
+  init.mBubbles = false;
+  init.mCancelable = false;
+
+  RefPtr<PaymentRequestUpdateEvent> event =
+    PaymentRequestUpdateEvent::Constructor(this, aType, init);
+  event->SetTrusted(true);
+
+  return DispatchDOMEvent(nullptr, event, nullptr, nullptr);
+}
+
 already_AddRefed<PaymentAddress>
 PaymentRequest::GetShippingAddress() const
 {
@@ -487,10 +567,41 @@ PaymentRequest::GetShippingAddress() const
   return address.forget();
 }
 
+nsresult
+PaymentRequest::UpdateShippingAddress(const nsAString& aCountry,
+                                      const nsTArray<nsString>& aAddressLine,
+                                      const nsAString& aRegion,
+                                      const nsAString& aCity,
+                                      const nsAString& aDependentLocality,
+                                      const nsAString& aPostalCode,
+                                      const nsAString& aSortingCode,
+                                      const nsAString& aLanguageCode,
+                                      const nsAString& aOrganization,
+                                      const nsAString& aRecipient,
+                                      const nsAString& aPhone)
+{
+  mShippingAddress = new PaymentAddress(GetOwner(), aCountry, aAddressLine,
+                                        aRegion, aCity, aDependentLocality,
+                                        aPostalCode, aSortingCode, aLanguageCode,
+                                        aOrganization, aRecipient, aPhone);
+
+  // Fire shippingaddresschange event
+  return DispatchUpdateEvent(NS_LITERAL_STRING("shippingaddresschange"));
+}
+
 void
 PaymentRequest::GetShippingOption(nsAString& aRetVal) const
 {
   aRetVal = mShippingOption;
+}
+
+nsresult
+PaymentRequest::UpdateShippingOption(const nsAString& aShippingOption)
+{
+  mShippingOption = aShippingOption;
+
+  // Fire shippingaddresschange event
+  return DispatchUpdateEvent(NS_LITERAL_STRING("shippingoptionchange"));
 }
 
 Nullable<PaymentShippingType>
