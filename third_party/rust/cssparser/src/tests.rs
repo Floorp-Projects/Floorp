@@ -118,7 +118,7 @@ fn component_value_list() {
 fn one_component_value() {
     run_json_tests(include_str!("css-parsing-tests/one_component_value.json"), |input| {
         let result: Result<Json, ParseError<()>> = input.parse_entirely(|input| {
-            Ok(one_component_value_to_json(try!(input.next()), input))
+            Ok(one_component_value_to_json(input.next()?, input))
         });
         result.unwrap_or(JArray!["error", "invalid"])
     });
@@ -426,7 +426,7 @@ fn serializer(preserve_comments: bool) {
 #[test]
 fn serialize_current_color() {
     let c = Color::CurrentColor;
-    assert!(c.to_css_string() == "currentColor");
+    assert!(c.to_css_string() == "currentcolor");
 }
 
 #[test]
@@ -622,7 +622,7 @@ impl ToJson for Color {
             Color::RGBA(ref rgba) => {
                 [rgba.red, rgba.green, rgba.blue, rgba.alpha].to_json()
             },
-            Color::CurrentColor => "currentColor".to_json(),
+            Color::CurrentColor => "currentcolor".to_json(),
         }
     }
 }
@@ -879,5 +879,44 @@ fn procedural_masquerade_whitespace() {
         "  \t\n" => panic!("3"),
         " " => {},
         _ => panic!("4"),
+    }
+}
+
+#[test]
+fn parse_until_before_stops_at_delimiter_or_end_of_input() {
+    // For all j and k, inputs[i].1[j] should parse the same as inputs[i].1[k]
+    // when we use delimiters inputs[i].0.
+    let inputs = vec![
+        (Delimiter::Bang | Delimiter::Semicolon,
+         // Note that the ';extra' is fine, because the ';' acts the same as
+         // the end of input.
+         vec!["token stream;extra", "token stream!", "token stream"]),
+        (Delimiter::Bang | Delimiter::Semicolon,
+         vec![";", "!", ""]),
+    ];
+    for equivalent in inputs {
+        for (j, x) in equivalent.1.iter().enumerate() {
+            for y in equivalent.1[j + 1..].iter() {
+                let mut ix = ParserInput::new(x);
+                let mut ix = Parser::new(&mut ix);
+
+                let mut iy = ParserInput::new(y);
+                let mut iy = Parser::new(&mut iy);
+
+                let _ = ix.parse_until_before::<_, _, ()>(equivalent.0, |ix| {
+                    iy.parse_until_before::<_, _, ()>(equivalent.0, |iy| {
+                        loop {
+                            let ox = ix.next();
+                            let oy = iy.next();
+                            assert_eq!(ox, oy);
+                            if let Err(_) = ox {
+                                break
+                            }
+                        }
+                        Ok(())
+                    })
+                });
+            }
+        }
     }
 }
