@@ -442,8 +442,6 @@ const CustomizableWidgets = [
           }
         }
         this._tabsList.appendChild(fragment);
-        let panelView = this._tabsList.closest("panelview");
-        panelView.panelMultiView.descriptionHeightWorkaround(panelView);
       }).catch(err => {
         Cu.reportError(err);
       }).then(() => {
