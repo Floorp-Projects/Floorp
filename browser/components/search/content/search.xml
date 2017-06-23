@@ -1093,7 +1093,7 @@
         // Ensure the panel is wide enough to fit at least 3 engines.
         let minWidth = Math.max(textboxRect.width,
                                 this.oneOffButtons.buttonWidth * 3);
-        this.style.minWidth = minWidth + "px";
+        this.style.minWidth = Math.round(minWidth) + "px";
         // Alignment of the panel with the searchbar is obtained with negative
         // margins.
         this.style.marginLeft = (textboxRect.left - inputRect.left) + "px";
