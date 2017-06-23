@@ -106,8 +106,9 @@ NS_IMPL_ISUPPORTS(U2FPrefManager, nsIObserver);
  * U2FManager Implementation
  **********************************************************************/
 
-U2FTokenManager::U2FTokenManager() :
-  mTransactionParent(nullptr)
+U2FTokenManager::U2FTokenManager()
+  : mTransactionParent(nullptr)
+  , mTransactionId(0)
 {
   MOZ_ASSERT(XRE_IsParentProcess());
   // Create on the main thread to make sure ClearOnShutdown() works.
@@ -145,6 +146,17 @@ U2FTokenManager::Get()
 }
 
 void
+U2FTokenManager::MaybeAbortTransaction(uint64_t aTransactionId,
+                                       const nsresult& aError)
+{
+  if (mTransactionId != aTransactionId) {
+    return;
+  }
+
+  AbortTransaction(aError);
+}
+
+void
 U2FTokenManager::AbortTransaction(const nsresult& aError)
 {
   Unused << mTransactionParent->SendCancel(aError);
@@ -167,6 +179,10 @@ U2FTokenManager::ClearTransaction()
   mTransactionParent = nullptr;
   // Drop managers at the end of all transactions
   mTokenManagerImpl = nullptr;
+  // Drop promise.
+  mResultPromise = nullptr;
+  // Increase in case we're called by the WebAuthnTransactionParent.
+  mTransactionId++;
 }
 
 void
@@ -175,6 +191,8 @@ U2FTokenManager::Register(WebAuthnTransactionParent* aTransactionParent,
 {
   MOZ_LOG(gU2FTokenManagerLog, LogLevel::Debug, ("U2FAuthRegister"));
   MOZ_ASSERT(U2FPrefManager::Get());
+
+  uint64_t tid = ++mTransactionId;
   mTransactionParent = aTransactionParent;
 
   // Since we only have soft token available at the moment, use that if the pref
@@ -203,17 +221,35 @@ U2FTokenManager::Register(WebAuthnTransactionParent* aTransactionParent,
 
   nsTArray<uint8_t> reg;
   nsTArray<uint8_t> sig;
-  nsresult rv = mTokenManagerImpl->Register(aTransactionInfo.Descriptors(),
-                                            aTransactionInfo.RpIdHash(),
-                                            aTransactionInfo.ClientDataHash(),
-                                            reg,
-                                            sig);
-  if (NS_FAILED(rv)) {
-    AbortTransaction(rv);
+  mResultPromise = mTokenManagerImpl->Register(aTransactionInfo.Descriptors(),
+                                               aTransactionInfo.RpIdHash(),
+                                               aTransactionInfo.ClientDataHash(),
+                                               reg,
+                                               sig);
+
+  mResultPromise->Then(GetCurrentThreadSerialEventTarget(), __func__,
+                       [tid, reg, sig](nsresult rv) {
+                         MOZ_ASSERT(NS_SUCCEEDED(rv));
+                         U2FTokenManager* mgr = U2FTokenManager::Get();
+                         mgr->MaybeConfirmRegister(tid, reg, sig);
+                       },
+                       [tid](nsresult rv) {
+                         MOZ_ASSERT(NS_FAILED(rv));
+                         U2FTokenManager* mgr = U2FTokenManager::Get();
+                         mgr->MaybeAbortTransaction(tid, rv);
+                       });
+}
+
+void
+U2FTokenManager::MaybeConfirmRegister(uint64_t aTransactionId,
+                                      const nsTArray<uint8_t>& aRegister,
+                                      const nsTArray<uint8_t>& aSignature)
+{
+  if (mTransactionId != aTransactionId) {
     return;
   }
 
-  Unused << mTransactionParent->SendConfirmRegister(reg, sig);
+  Unused << mTransactionParent->SendConfirmRegister(aRegister, aSignature);
   ClearTransaction();
 }
 
@@ -223,6 +259,8 @@ U2FTokenManager::Sign(WebAuthnTransactionParent* aTransactionParent,
 {
   MOZ_LOG(gU2FTokenManagerLog, LogLevel::Debug, ("U2FAuthSign"));
   MOZ_ASSERT(U2FPrefManager::Get());
+
+  uint64_t tid = ++mTransactionId;
   mTransactionParent = aTransactionParent;
 
   // Since we only have soft token available at the moment, use that if the pref
@@ -247,17 +285,35 @@ U2FTokenManager::Sign(WebAuthnTransactionParent* aTransactionParent,
 
   nsTArray<uint8_t> id;
   nsTArray<uint8_t> sig;
-  nsresult rv = mTokenManagerImpl->Sign(aTransactionInfo.Descriptors(),
-                                        aTransactionInfo.RpIdHash(),
-                                        aTransactionInfo.ClientDataHash(),
-                                        id,
-                                        sig);
-  if (NS_FAILED(rv)) {
-    AbortTransaction(rv);
+  mResultPromise = mTokenManagerImpl->Sign(aTransactionInfo.Descriptors(),
+                                           aTransactionInfo.RpIdHash(),
+                                           aTransactionInfo.ClientDataHash(),
+                                           id,
+                                           sig);
+
+  mResultPromise->Then(GetCurrentThreadSerialEventTarget(), __func__,
+                       [tid, id, sig](nsresult rv) {
+                         MOZ_ASSERT(NS_SUCCEEDED(rv));
+                         U2FTokenManager* mgr = U2FTokenManager::Get();
+                         mgr->MaybeConfirmSign(tid, id, sig);
+                       },
+                       [tid](nsresult rv) {
+                         MOZ_ASSERT(NS_FAILED(rv));
+                         U2FTokenManager* mgr = U2FTokenManager::Get();
+                         mgr->MaybeAbortTransaction(tid, rv);
+                       });
+}
+
+void
+U2FTokenManager::MaybeConfirmSign(uint64_t aTransactionId,
+                                  const nsTArray<uint8_t>& aKeyHandle,
+                                  const nsTArray<uint8_t>& aSignature)
+{
+  if (mTransactionId != aTransactionId) {
     return;
   }
 
-  Unused << mTransactionParent->SendConfirmSign(id, sig);
+  Unused << mTransactionParent->SendConfirmSign(aKeyHandle, aSignature);
   ClearTransaction();
 }
 
