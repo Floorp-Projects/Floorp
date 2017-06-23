@@ -343,7 +343,7 @@
   bottom: 0;
   width: 100%;
   height: 122px;
-  min-width: 1060px;
+  min-width: 640px;
   background: rgba(255, 255, 255, 0.97);
   border-top: 2px solid #e9e9e9;
   transition: transform 0.8s;
@@ -406,6 +406,10 @@
   margin: 0 15px;
   color: #0c0c0d;;
   display: inline-block;
+  max-height: 100%;
+  overflow: auto;
+  padding: 15px 0;
+  box-sizing: border-box;
 }
 
 #onboarding-notification-body * {
@@ -431,4 +435,15 @@
   font-size: 14px;
   color: #fff;
   box-shadow: 0 1px 0 rgba(0,0,0,0.23);
+}
+
+@media all and (max-width: 960px) {
+  #onboarding-notification-icon {
+    display: none;
+  }
+}
+@media all and (max-width: 720px) {
+  #onboarding-notification-body {
+    width: 340px;
+  }
 }
