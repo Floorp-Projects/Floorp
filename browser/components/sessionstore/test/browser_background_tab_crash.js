@@ -242,12 +242,7 @@ add_task(async function test_preload_crash() {
   // Create a fresh preloaded browser
   gBrowser._createPreloadBrowser();
 
-  // XXX Temporarily disabled until bug 1365643 relands.  At that time, this
-  // this statement, as well as the eslint-disable-line below, should be
-  // removed.
-  return;
-
-  await BrowserTestUtils.crashBrowser(gBrowser._preloadedBrowser, false); // eslint-disable-line no-unreachable
+  await BrowserTestUtils.crashBrowser(gBrowser._preloadedBrowser, false);
 
   Assert.ok(!gBrowser._preloadedBrowser);
 });
