@@ -484,9 +484,14 @@ class Build(MachCommandBase):
                                                 "tools",
                                                "rewriting",
                                                "ThirdPartyPaths.txt")
-                with open(pathToThirdparty) as f:
-                    # Normalize the path (no trailing /)
-                    LOCAL_SUPPRESS_DIRS = tuple(d.rstrip('/') for d in f.read().splitlines())
+
+                if os.path.exists(pathToThirdparty):
+                    with open(pathToThirdparty) as f:
+                        # Normalize the path (no trailing /)
+                        LOCAL_SUPPRESS_DIRS = tuple(d.rstrip('/') for d in f.read().splitlines())
+                else:
+                    # For application based on gecko like thunderbird
+                    LOCAL_SUPPRESS_DIRS = ()
 
                 suppressed_by_dir = collections.Counter()
 
