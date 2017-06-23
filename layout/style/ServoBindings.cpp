@@ -2359,7 +2359,7 @@ Gecko_CSSKeywordString(nsCSSKeyword aKeyword, uint32_t* aLength)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aLength);
-  const nsAFlatCString& value = nsCSSKeywords::GetStringValue(aKeyword);
+  const nsCString& value = nsCSSKeywords::GetStringValue(aKeyword);
   *aLength = value.Length();
   return value.get();
 }

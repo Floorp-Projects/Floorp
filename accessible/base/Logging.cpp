@@ -1026,7 +1026,7 @@ logging::IsEnabled(const nsAString& aModuleStr)
 }
 
 void
-logging::Enable(const nsAFlatCString& aModules)
+logging::Enable(const nsCString& aModules)
 {
   EnableLogging(aModules.get());
 }

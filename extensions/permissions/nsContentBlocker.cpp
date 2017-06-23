@@ -346,7 +346,7 @@ nsContentBlocker::TestPermission(nsIURI *aCurrentURI,
 
     // Get the domain, ie the last part of the host (www.domain.com -> domain.com)
     // This will break on co.uk
-    const nsCSubstring &tail =
+    const nsACString& tail =
       Substring(currentHost, dot, currentHost.Length() - dot);
 
     nsAutoCString firstHost;
@@ -360,7 +360,7 @@ nsContentBlocker::TestPermission(nsIURI *aCurrentURI,
     }
     
     // Get the last part of the firstUri with the same length as |tail|
-    const nsCSubstring &firstTail = 
+    const nsACString& firstTail =
       Substring(firstHost, firstHost.Length() - tail.Length(), tail.Length());
 
     // Check that both tails are the same, and that just before the tail in

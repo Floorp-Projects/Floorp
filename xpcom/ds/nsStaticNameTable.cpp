@@ -19,7 +19,7 @@ using namespace mozilla;
 struct NameTableKey
 {
   NameTableKey(const nsDependentCString aNameArray[],
-               const nsAFlatCString* aKeyStr)
+               const nsCString* aKeyStr)
     : mNameArray(aNameArray)
     , mIsUnichar(false)
   {
@@ -27,7 +27,7 @@ struct NameTableKey
   }
 
   NameTableKey(const nsDependentCString aNameArray[],
-               const nsAFlatString* aKeyStr)
+               const nsString* aKeyStr)
     : mNameArray(aNameArray)
     , mIsUnichar(true)
   {
@@ -37,8 +37,8 @@ struct NameTableKey
   const nsDependentCString* mNameArray;
   union
   {
-    const nsAFlatCString* m1b;
-    const nsAFlatString* m2b;
+    const nsCString* m1b;
+    const nsString* m2b;
   } mKeyStr;
   bool mIsUnichar;
 };
@@ -167,7 +167,7 @@ nsStaticCaseInsensitiveNameTable::Lookup(const nsACString& aName)
 {
   NS_ASSERTION(mNameArray, "not inited");
 
-  const nsAFlatCString& str = PromiseFlatCString(aName);
+  const nsCString& str = PromiseFlatCString(aName);
 
   NameTableKey key(mNameArray, &str);
   auto entry = static_cast<NameTableEntry*>(mNameTable.Search(&key));
@@ -180,7 +180,7 @@ nsStaticCaseInsensitiveNameTable::Lookup(const nsAString& aName)
 {
   NS_ASSERTION(mNameArray, "not inited");
 
-  const nsAFlatString& str = PromiseFlatString(aName);
+  const nsString& str = PromiseFlatString(aName);
 
   NameTableKey key(mNameArray, &str);
   auto entry = static_cast<NameTableEntry*>(mNameTable.Search(&key));
@@ -188,7 +188,7 @@ nsStaticCaseInsensitiveNameTable::Lookup(const nsAString& aName)
   return entry ? entry->mIndex : nsStaticCaseInsensitiveNameTable::NOT_FOUND;
 }
 
-const nsAFlatCString&
+const nsCString&
 nsStaticCaseInsensitiveNameTable::GetStringValue(int32_t aIndex)
 {
   NS_ASSERTION(mNameArray, "not inited");

@@ -212,7 +212,7 @@ SandboxBrokerPolicyFactory::GetContentPolicy(int aPid)
   nsAdoptingCString extraPathString =
     Preferences::GetCString("security.sandbox.content.write_path_whitelist");
   if (extraPathString) {
-    for (const nsCSubstring& path : extraPathString.Split(',')) {
+    for (const nsACString& path : extraPathString.Split(',')) {
       nsCString trimPath(path);
       trimPath.Trim(" ", true, true);
       policy->AddDynamic(rdwr, trimPath.get());

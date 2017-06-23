@@ -827,7 +827,7 @@ RDFServiceImpl::GetResource(const nsACString& aURI, nsIRDFResource** aResource)
     if (aURI.IsEmpty())
         return NS_ERROR_INVALID_ARG;
 
-    const nsAFlatCString& flatURI = PromiseFlatCString(aURI);
+    const nsCString& flatURI = PromiseFlatCString(aURI);
     MOZ_LOG(gLog, LogLevel::Debug, ("rdfserv get-resource %s", flatURI.get()));
 
     // First, check the cache to see if we've already created and

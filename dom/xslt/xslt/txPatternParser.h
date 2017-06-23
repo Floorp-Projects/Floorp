@@ -14,7 +14,7 @@ class txStylesheetCompilerState;
 class txPatternParser : public txExprParser
 {
 public:
-    static nsresult createPattern(const nsAFlatString& aPattern,
+    static nsresult createPattern(const nsString& aPattern,
                                   txIParseContext* aContext,
                                   txPattern** aResult);
 protected:

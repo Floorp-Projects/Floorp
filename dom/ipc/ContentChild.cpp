@@ -1519,7 +1519,7 @@ ContentChild::RecvSetProcessSandbox(const MaybeFileDesc& aBroker)
     nsAdoptingCString extraSyscalls =
       Preferences::GetCString("security.sandbox.content.syscall_whitelist");
     if (extraSyscalls) {
-      for (const nsCSubstring& callNrString : extraSyscalls.Split(',')) {
+      for (const nsACString& callNrString : extraSyscalls.Split(',')) {
         nsresult rv;
         int callNr = PromiseFlatCString(callNrString).ToInteger(&rv);
         if (NS_SUCCEEDED(rv)) {

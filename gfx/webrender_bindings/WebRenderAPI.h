@@ -153,6 +153,7 @@ public:
                            const uint64_t& aAnimationId,
                            const float* aOpacity,
                            const gfx::Matrix4x4* aTransform,
+                           WrTransformStyle aTransformStyle,
                            const WrMixBlendMode& aMixBlendMode,
                            const nsTArray<WrFilterOp>& aFilters);
   void PopStackingContext();

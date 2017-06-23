@@ -198,7 +198,7 @@ class nsScannerSubstring
       void Rebind( const nsScannerSubstring&, const nsScannerIterator&, const nsScannerIterator& );
       void Rebind( const nsAString& );
 
-      const nsSubstring& AsString() const;
+      const nsAString& AsString() const;
 
       bool GetNextFragment( nsScannerFragment& ) const;
       bool GetPrevFragment( nsScannerFragment& ) const;
@@ -294,7 +294,7 @@ class nsScannerSharedSubstring
                               const nsScannerIterator& aEnd);
 
        // Get a mutable reference to this string
-      nsSubstring& writable()
+      nsAString& writable()
         {
           if (mBufferList)
             MakeMutable();
@@ -303,7 +303,7 @@ class nsScannerSharedSubstring
         }
 
         // Get a const reference to this string
-      const nsSubstring& str() const { return mString; }
+      const nsAString& str() const { return mString; }
 
     private:
       typedef nsScannerBufferList::Buffer Buffer;

@@ -70,9 +70,9 @@ public:
   // http2PushedStream overrides it
   virtual Http2Stream *GetConsumerStream() { return nullptr; };
 
-  const nsAFlatCString &Origin() const { return mOrigin; }
-  const nsAFlatCString &Host() const { return mHeaderHost; }
-  const nsAFlatCString &Path() const { return mHeaderPath; }
+  const nsCString& Origin() const { return mOrigin; }
+  const nsCString& Host() const { return mHeaderHost; }
+  const nsCString& Path() const { return mHeaderPath; }
 
   bool RequestBlockedOnRead()
   {
@@ -173,7 +173,7 @@ protected:
                                 const nsCString &hostHeader,
                                 const mozilla::OriginAttributes &originAttributes,
                                 uint64_t serial,
-                                const nsCSubstring &pathInfo,
+                                const nsACString& pathInfo,
                                 nsCString &outOrigin,
                                 nsCString &outKey);
 

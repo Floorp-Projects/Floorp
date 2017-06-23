@@ -14,6 +14,10 @@ class SpliceableJSONWriter;
 class ThreadInfo;
 class UniqueStacks;
 
+namespace mozilla {
+class TimeStamp;
+}
+
 // ProfilerBacktrace encapsulates a synchronous sample.
 class ProfilerBacktrace
 {
