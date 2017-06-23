@@ -2513,6 +2513,13 @@ nsresult HTMLMediaElement::LoadResource()
     }
     ChangeDelayLoadStatus(false);
     decoder->CreateResource(mMediaSource->GetPrincipal());
+    nsresult rv = decoder->Load();
+    if (NS_FAILED(rv)) {
+      decoder->Shutdown();
+      LOG(LogLevel::Debug,
+          ("%p Failed to load for decoder %p", this, decoder.get()));
+      return rv;
+    }
     return FinishDecoderSetup(decoder, nullptr);
   }
 
@@ -4656,6 +4663,14 @@ HTMLMediaElement::InitializeDecoderAsClone(ChannelMediaDecoder* aOriginal)
     return rv;
   }
 
+  rv = decoder->Load(nullptr);
+  if (NS_FAILED(rv)) {
+    decoder->Shutdown();
+    LOG(LogLevel::Debug,
+        ("%p Failed to load for decoder %p", this, decoder.get()));
+    return rv;
+  }
+
   return FinishDecoderSetup(decoder, nullptr);
 }
 
@@ -4709,12 +4724,21 @@ nsresult HTMLMediaElement::InitializeDecoderForChannel(nsIChannel* aChannel,
     mChannelLoader = nullptr;
   }
 
+  rv = decoder->Load(aListener);
+  if (NS_FAILED(rv)) {
+    decoder->Shutdown();
+    LOG(LogLevel::Debug,
+        ("%p Failed to load for decoder %p", this, decoder.get()));
+    return rv;
+  }
+
   rv = FinishDecoderSetup(decoder, aListener);
   if (NS_SUCCEEDED(rv)) {
     AddMediaElementToURITable();
     NS_ASSERTION(MediaElementTableCount(this, mLoadingSrc) == 1,
       "Media element should have single table entry if decode initialized");
   }
+
   return rv;
 }
 
@@ -4736,13 +4760,6 @@ nsresult HTMLMediaElement::FinishDecoderSetup(MediaDecoder* aDecoder,
   // Update decoder principal before we start decoding, since it
   // can affect how we feed data to MediaStreams
   NotifyDecoderPrincipalChanged();
-
-  nsresult rv = aDecoder->Load(aListener);
-  if (NS_FAILED(rv)) {
-    ShutdownDecoder();
-    LOG(LogLevel::Debug, ("%p Failed to load for decoder %p", this, aDecoder));
-    return rv;
-  }
 
   for (OutputMediaStream& ms : mOutputStreams) {
     if (ms.mCapturingMediaStream) {
@@ -4781,6 +4798,7 @@ nsresult HTMLMediaElement::FinishDecoderSetup(MediaDecoder* aDecoder,
   // This will also do an AddRemoveSelfReference.
   NotifyOwnerDocumentActivityChanged();
 
+  nsresult rv = NS_OK;
   if (!mPaused) {
     SetPlayedOrSeeked(true);
     if (!mPausedForInactiveDocumentOrChannel) {

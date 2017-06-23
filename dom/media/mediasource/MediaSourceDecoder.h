@@ -38,7 +38,7 @@ public:
   explicit MediaSourceDecoder(MediaDecoderInit& aInit);
 
   MediaDecoderStateMachine* CreateStateMachine() override;
-  nsresult Load(nsIStreamListener**) override;
+  nsresult Load();
   media::TimeIntervals GetSeekable() override;
   media::TimeIntervals GetBuffered() override;
 

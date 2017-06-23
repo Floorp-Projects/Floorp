@@ -6,6 +6,7 @@
 
 #include "ChannelMediaDecoder.h"
 #include "MediaResource.h"
+#include "MediaShutdownManager.h"
 
 namespace mozilla {
 
@@ -178,6 +179,36 @@ ChannelMediaDecoder::CreateResource(MediaResource* aOriginal)
   MOZ_ASSERT(!mResource);
   mResource = aOriginal->CloneData(mResourceCallback);
   return mResource ? NS_OK : NS_ERROR_FAILURE;
+}
+
+nsresult
+ChannelMediaDecoder::OpenResource(nsIStreamListener** aStreamListener)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  if (aStreamListener) {
+    *aStreamListener = nullptr;
+  }
+  return mResource->Open(aStreamListener);
+}
+
+nsresult
+ChannelMediaDecoder::Load(nsIStreamListener** aStreamListener)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(mResource, "Can't load without a MediaResource");
+
+  nsresult rv = MediaShutdownManager::Instance().Register(this);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = OpenResource(aStreamListener);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  SetStateMachine(CreateStateMachine());
+  NS_ENSURE_TRUE(GetStateMachine(), NS_ERROR_FAILURE);
+
+  return InitializeStateMachine();
 }
 
 } // namespace mozilla
