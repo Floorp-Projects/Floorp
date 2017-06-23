@@ -237,7 +237,8 @@ def target_tasks_mozilla_beta(full_task_graph, parameters):
             # Don't do some nightlies on-push until it's ready.
             return False
         if platform in ('linux64', 'linux'):
-            if task.attributes['build_type'] == 'opt':
+            if task.attributes['build_type'] == 'opt' and \
+                task.attributes.get('unittest_suite') != 'talos':
                 return False
         # skip l10n, beetmover, balrog
         if task.kind in [
