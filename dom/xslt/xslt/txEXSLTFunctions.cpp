@@ -117,7 +117,7 @@ createDocFragment(txIEvalContext *aContext)
 }
 
 static nsresult
-createAndAddToResult(nsIAtom* aName, const nsSubstring& aValue,
+createAndAddToResult(nsIAtom* aName, const nsAString& aValue,
                      txNodeSet* aResultSet, nsIContent* aResultHolder)
 {
     NS_ASSERTION(aResultHolder->IsNodeOfType(nsINode::eDOCUMENT_FRAGMENT) &&

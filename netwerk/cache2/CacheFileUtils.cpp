@@ -183,9 +183,9 @@ public:
 } // namespace
 
 already_AddRefed<nsILoadContextInfo>
-ParseKey(const nsCSubstring &aKey,
-         nsCSubstring *aIdEnhance,
-         nsCSubstring *aURISpec)
+ParseKey(const nsACString& aKey,
+         nsACString* aIdEnhance,
+         nsACString* aURISpec)
 {
   KeyParser parser(aKey);
   RefPtr<LoadContextInfo> info = parser.Parse();
@@ -228,7 +228,7 @@ AppendKeyPrefix(nsILoadContextInfo* aInfo, nsACString &_retval)
 }
 
 void
-AppendTagWithValue(nsACString & aTarget, char const aTag, nsCSubstring const & aValue)
+AppendTagWithValue(nsACString& aTarget, char const aTag, const nsACString& aValue)
 {
   aTarget.Append(aTag);
 

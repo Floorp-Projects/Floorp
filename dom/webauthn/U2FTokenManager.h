@@ -34,7 +34,6 @@ class U2FTokenManager final
     bool softTokenEnabled;
     uint32_t softTokenCounter;
   };
-  typedef MozPromise<bool, nsresult, false> PrefPromise;
 public:
   enum TransactionType
   {
@@ -58,7 +57,7 @@ private:
   // the PBackground protocol code. This means we cannot be left holding an
   // invalid IPC protocol object after the transaction is finished.
   WebAuthnTransactionParent* mTransactionParent;
-  RefPtr<U2FSoftTokenManager> mSoftTokenManager;
+  RefPtr<U2FTokenTransport> mTokenManagerImpl;
 };
 
 } // namespace dom

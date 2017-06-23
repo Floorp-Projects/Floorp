@@ -356,13 +356,11 @@ body {
 :root.theme-dark .CodeMirror-scrollbar-filler {
   background: transparent;
 }
-:root.theme-light,
-:root .theme-light {
+:root.theme-light, :root .theme-light {
   --search-overlays-semitransparent: rgba(221, 225, 228, 0.66);
 }
 
-:root.theme-dark,
-:root .theme-dark {
+:root.theme-dark, :root .theme-dark {
   --search-overlays-semitransparent: rgba(42, 46, 56, 0.66);
 }
 .debugger {
@@ -463,8 +461,7 @@ menuseparator {
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-.theme-dark,
-.theme-light {
+.theme-dark, .theme-light {
   --number-color: var(--theme-highlight-green);
   --string-color: var(--theme-highlight-orange);
   --null-color: var(--theme-comment);
@@ -506,10 +503,7 @@ menuseparator {
   white-space: pre-wrap;
 }
 
-.objectBox-string,
-.objectBox-text,
-.objectLink-textNode,
-.objectBox-table {
+.objectBox-string, .objectBox-text, .objectLink-textNode, .objectBox-table {
   white-space: pre-wrap;
 }
 
@@ -525,9 +519,7 @@ menuseparator {
   color: var(--string-color);
 }
 
-.objectLink-function,
-.objectBox-stackTrace,
-.objectLink-profile {
+.objectLink-function, .objectBox-stackTrace, .objectLink-profile {
   color: var(--object-color);
 }
 
@@ -536,10 +528,7 @@ menuseparator {
   color: var(--location-color);
 }
 
-.objectBox-null,
-.objectBox-undefined,
-.objectBox-hint,
-.logRowHint {
+.objectBox-null, .objectBox-undefined, .objectBox-hint, .logRowHint {
   font-style: italic;
   color: var(--null-color);
 }
@@ -583,21 +572,16 @@ menuseparator {
 
 /******************************************************************************/
 
-.objectLeftBrace,
-.objectRightBrace,
-.arrayLeftBracket,
-.arrayRightBracket {
+.objectLeftBrace, .objectRightBrace, .arrayLeftBracket, .arrayRightBracket {
   cursor: pointer;
   font-weight: bold;
 }
 
-.objectLeftBrace,
-.arrayLeftBracket {
+.objectLeftBrace, .arrayLeftBracket {
   margin-right: 4px;
 }
 
-.objectRightBrace,
-.arrayRightBracket {
+.objectRightBrace, .arrayRightBracket {
   margin-left: 4px;
 }
 
@@ -616,7 +600,7 @@ menuseparator {
 
 .caption {
   font-weight: bold;
-  color:  var(--caption-color);
+  color: var(--caption-color);
 }
 
 /******************************************************************************/
@@ -629,14 +613,12 @@ menuseparator {
   font-style: normal;
 }
 
-.theme-dark .objectBox-object,
-.theme-light .objectBox-object {
+.theme-dark .objectBox-object, .theme-light .objectBox-object {
   font-weight: normal;
   white-space: pre-wrap;
 }
 
-.theme-dark .caption,
-.theme-light .caption {
+.theme-dark .caption, .theme-light .caption {
   font-weight: normal;
 }
 /* vim:set ts=2 sw=2 sts=2 et: */
@@ -727,7 +709,6 @@ menuseparator {
 .split-box.dragging > .uncontrolled {
   pointer-events: none;
 }
-
 .search-container {
   position: absolute;
   top: 30px;
@@ -747,37 +728,21 @@ menuseparator {
 .theme-dark .result-list li .subtitle {
   color: var(--theme-comment-alt);
 }
-
-.arrow,
-.folder,
-.domain,
-.file,
-.worker,
-.refresh,
-.add-button {
+.arrow, .folder, .domain, .file, .worker, .refresh, .add-button {
   fill: var(--theme-splitter-color);
 }
 
-.worker,
-.folder {
+.worker, .folder {
   position: relative;
   top: 2px;
 }
 
-.domain,
-.file,
-.worker,
-.refresh,
-.add-button {
+.domain, .file, .worker, .refresh, .add-button {
   position: relative;
   top: 1px;
 }
 
-.domain svg,
-.folder svg,
-.worker svg,
-.refresh svg,
-.add-button svg {
+.domain svg, .folder svg, .worker svg, .refresh svg, .add-button svg {
   width: 15px;
 }
 
@@ -785,11 +750,7 @@ menuseparator {
   width: 13px;
 }
 
-.file svg,
-.domain svg,
-.folder svg,
-.refresh svg,
-.worker svg {
+.file svg, .domain svg, .folder svg, .refresh svg, .worker svg {
   margin-inline-end: 5px;
 }
 
@@ -818,7 +779,6 @@ html .arrow.expanded svg {
 .arrow.hidden {
   visibility: hidden;
 }
-
 .autocomplete {
   flex: 1;
   width: 100%;
@@ -894,7 +854,6 @@ html .arrow.expanded svg {
 .close-btn.big .close svg {
   width: 9px;
 }
-
 .search-field {
   width: calc(100% - 1px);
   height: 27px;
@@ -936,20 +895,17 @@ html .arrow.expanded svg {
   color: var(--theme-body-color-inactive);
 }
 
-.search-field i.magnifying-glass,
-.search-field i.sad-face {
+.search-field i.magnifying-glass, .search-field i.sad-face {
   padding: 6px;
   width: 24px;
 }
 
-.search-field.big i.magnifying-glass,
-.search-field.big i.sad-face {
+.search-field.big i.magnifying-glass, .search-field.big i.sad-face {
   padding: 14px;
   width: 40px;
 }
 
-.search-field .magnifying-glass path,
-.search-field .magnifying-glass ellipse {
+.search-field .magnifying-glass path, .search-field .magnifying-glass ellipse {
   stroke: var(--theme-splitter-color);
 }
 
@@ -1132,6 +1088,10 @@ html[dir="rtl"] .tree .node > div {
 .tree-node button {
   position: fixed;
 }
+.project-text-search {
+  flex-grow: 1;
+}
+
 .project-text-search .result {
   display: flex;
   margin-left: 20px;
@@ -1151,6 +1111,12 @@ html[dir="rtl"] .tree .node > div {
 
 .project-text-search .result .line-number {
   padding-right: 5px;
+}
+
+.project-text-search .search-field {
+  display: flex;
+  align-self: stretch;
+  flex-grow: 1;
 }
 .sources-panel {
   flex: 1;
@@ -1267,19 +1233,25 @@ html[dir="rtl"] .tree .node > div {
   border-top-color: transparent;
 }
 
-.source-footer .tab.active path,
-.source-footer .tab:hover path {
+.source-footer .tab.active path, .source-footer .tab:hover path {
   fill: var(--theme-body-color);
 }
 .outline-list {
-  list-style-type: "-";
+  list-style-type: none;
+  padding-left: 0px;
+  width: 100%;
 }
 
 .outline-list__element {
   color: blue;
-  padding-left: 0.5rem;
+  padding-left: 1rem;
+  padding-right: 0.5rem;
+  cursor: pointer;
 }
 
+.outline-list__element:hover {
+  background: var(--theme-toolbar-background-hover);
+}
 .function-signature {
   line-height: 20px;
   align-self: center;
@@ -1334,27 +1306,23 @@ html[dir="rtl"] .tree .node > div {
 .conditional-breakpoint-panel input:focus {
   outline-width: 0;
 }
-.toggle-button-start,
-.toggle-button-end {
+.toggle-button-start, .toggle-button-end {
   transform: translate(0, 2px);
   transition: transform 0.25s ease-in-out;
   cursor: pointer;
   padding: 5px 2px;
 }
 
-.toggle-button-start.vertical,
-.toggle-button-end.vertical {
+.toggle-button-start.vertical, .toggle-button-end.vertical {
   padding: 4px 2px;
 }
 
-.toggle-button-start svg,
-.toggle-button-end svg {
+.toggle-button-start svg, .toggle-button-end svg {
   width: 16px;
   fill: var(--theme-comment);
 }
 
-.theme-dark .toggle-button-start svg,
-.theme-dark .toggle-button-end svg {
+.theme-dark .toggle-button-start svg, .theme-dark .toggle-button-end svg {
   fill: var(--theme-comment-alt);
 }
 
@@ -1376,8 +1344,7 @@ html .toggle-button-end.vertical svg {
   transform: rotate(-90deg);
 }
 
-.toggle-button-start.collapsed,
-.toggle-button-end.collapsed {
+.toggle-button-start.collapsed, .toggle-button-end.collapsed {
   transform: rotate(180deg);
 }
 .source-footer {
@@ -1590,8 +1557,7 @@ html .toggle-button-end.vertical svg {
   position: absolute;
 }
 
-.bracket-arrow::before,
-.bracket-arrow::after {
+.bracket-arrow::before, .bracket-arrow::after {
   content: '';
   height: 0;
   width: 0;
@@ -1749,7 +1715,6 @@ html .toggle-button-end.vertical svg {
   --debug-line-border: rgb(145, 188, 219);
   --editor-searchbar-height: 27px;
   --editor-second-searchbar-height: 27px;
-
 }
 
 .theme-dark .editor-wrapper {
@@ -1769,9 +1734,12 @@ html .toggle-button-end.vertical svg {
   --theme-conditional-breakpoint-color: #ccd1d5;
 }
 
-.out-of-scope .CodeMirror-line,
-.out-of-scope .CodeMirror-linenumber {
-  opacity: 0.8;
+.paused .in-scope .CodeMirror-line, .paused .in-scope .CodeMirror-linenumber {
+  opacity: 1;
+}
+
+.paused .CodeMirror-line, .paused .CodeMirror-linenumber {
+  opacity: 0.7;
 }
 
 /**
@@ -1924,8 +1892,12 @@ html[dir="rtl"] .editor-mount {
 }
 
 @keyframes fade-highlight-out {
-  0% { background-color: var(--theme-highlight-gray); }
-  100% { background-color: transparent; }
+  0% {
+    background-color: var(--theme-highlight-gray);
+  }
+  100% {
+    background-color: transparent;
+  }
 }
 
 .theme-dark .highlight-line .CodeMirror-line {
@@ -1933,8 +1905,12 @@ html[dir="rtl"] .editor-mount {
 }
 
 @keyframes fade-highlight-out-dark {
-  0% { background-color: var(--theme-content-color3); }
-  100% { background-color: transparent; }
+  0% {
+    background-color: var(--theme-content-color3);
+  }
+  100% {
+    background-color: transparent;
+  }
 }
 
 .welcomebox {
@@ -2077,8 +2053,7 @@ html .breakpoints-list .breakpoint.paused {
   order: 3;
 }
 
-:root.theme-light .breakpoint-snippet,
-:root.theme-firebug .breakpoint-snippet {
+:root.theme-light .breakpoint-snippet, :root.theme-firebug .breakpoint-snippet {
   color: var(--theme-comment);
 }
 
@@ -2191,8 +2166,7 @@ html .breakpoints-list .breakpoint.paused {
 .expression-error {
   color: var(--theme-highlight-red);
 }
-.frames ul .frames-group .group,
-.frames ul .frames-group .group .location {
+.frames ul .frames-group .group, .frames ul .frames-group .group .location {
   font-weight: 500;
 }
 
@@ -2213,7 +2187,6 @@ html .breakpoints-list .breakpoint.paused {
   border-top: 1px solid var(--theme-splitter-color);
   border-bottom: 1px solid var(--theme-splitter-color);
 }
-
 .why-paused {
   background-color: var(--theme-body-background);
   color: var(--theme-body-color);
@@ -2279,8 +2252,7 @@ html .breakpoints-list .breakpoint.paused {
   margin: 0;
 }
 
-:root.theme-light .frames .location,
-:root.theme-firebug .frames .location {
+:root.theme-light .frames .location, :root.theme-firebug .frames .location {
   color: var(--theme-comment);
 }
 
@@ -2295,14 +2267,12 @@ html .breakpoints-list .breakpoint.paused {
   margin-right: 1em;
 }
 
-.frames ul li:hover,
-.frames ul li:focus {
+.frames ul li:hover, .frames ul li:focus {
   background-color: var(--theme-toolbar-background-alt);
   outline: none;
 }
 
-.theme-dark .frames ul li:hover,
-.theme-dark .frames ul li:focus {
+.theme-dark .frames ul li:hover, .theme-dark .frames ul li:focus {
   background-color: var(--theme-tab-toolbar-background);
 }
 
@@ -2424,8 +2394,7 @@ html .breakpoints-list .breakpoint.paused {
   background-color: var(--theme-toolbar-background-hover);
 }
 
-.accordion ._header button svg,
-.accordion ._header:hover button svg {
+.accordion ._header button svg, .accordion ._header:hover button svg {
   fill: currentColor;
   height: 16px;
 }
@@ -2489,7 +2458,6 @@ html[dir="rtl"] .command-bar {
   cursor: pointer;
   display: inline-block;
   text-align: center;
-  transition: all 0.25s ease;
   padding: 8px 5px;
   position: relative;
   fill: currentColor;
@@ -2507,8 +2475,12 @@ html[dir="rtl"] .command-bar {
   margin-inline-end: 0.7em;
 }
 
+.command-bar > button:focus {
+  outline: none;
+}
+
 html .command-bar > button:disabled {
-  opacity: 0.3;
+  opacity: 0.8;
   cursor: default;
 }
 
@@ -2538,7 +2510,6 @@ html .command-bar > button:disabled {
 .command-bar button.pause-exceptions.all {
   color: var(--theme-highlight-blue);
 }
-
 .object-node.default-property {
   opacity: 0.6;
 }
@@ -2689,8 +2660,7 @@ html .welcomebox .toggle-button-end.collapsed {
   border-bottom-color: transparent;
 }
 
-.source-tab.active path,
-.source-tab:hover path {
+.source-tab.active path, .source-tab:hover path {
   fill: var(--theme-body-color);
 }
 
@@ -2707,8 +2677,7 @@ html .welcomebox .toggle-button-end.collapsed {
   fill: var(--theme-textbox-box-shadow);
 }
 
-.source-tab .blackBox,
-.source-tab .prettyPrint {
+.source-tab .blackBox, .source-tab .prettyPrint {
   line-height: 0;
   align-self: center;
 }

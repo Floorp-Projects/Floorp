@@ -37,7 +37,7 @@ public:
   //    Special case: if aKeyBegin == aEquals, then there is only one string
   //    and no equal sign, so we treat the entire thing as a key with no value
 
-  QueryKeyValuePair(const nsCSubstring& aSource, int32_t aKeyBegin,
+  QueryKeyValuePair(const nsACString& aSource, int32_t aKeyBegin,
                     int32_t aEquals, int32_t aPastEnd)
   {
     if (aEquals == aKeyBegin)

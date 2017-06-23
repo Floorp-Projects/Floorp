@@ -633,9 +633,9 @@ nsCoreUtils::ScrollTo(nsIPresShell* aPresShell, nsIContent* aContent,
 }
 
 bool
-nsCoreUtils::IsWhitespaceString(const nsSubstring& aString)
+nsCoreUtils::IsWhitespaceString(const nsAString& aString)
 {
-  nsSubstring::const_char_iterator iterBegin, iterEnd;
+  nsAString::const_char_iterator iterBegin, iterEnd;
 
   aString.BeginReading(iterBegin);
   aString.EndReading(iterEnd);

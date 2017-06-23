@@ -72,7 +72,7 @@ public:
     const nsCString &EntityID() {
         return mEntityID;
     }
-    void SetEntityID(const nsCSubstring &entityID) {
+    void SetEntityID(const nsACString& entityID) {
         mEntityID = entityID;
     }
 

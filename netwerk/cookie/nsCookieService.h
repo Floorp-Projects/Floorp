@@ -302,7 +302,7 @@ class nsCookieService final : public nsICookieService
     void                          RemoveCookieFromList(const nsListIter &aIter, mozIStorageBindingParamsArray *aParamsArray = nullptr);
     void                          AddCookieToList(const nsCookieKey& aKey, nsCookie *aCookie, DBState *aDBState, mozIStorageBindingParamsArray *aParamsArray, bool aWriteToDB = true);
     void                          UpdateCookieInList(nsCookie *aCookie, int64_t aLastAccessed, mozIStorageBindingParamsArray *aParamsArray);
-    static bool                   GetTokenValue(nsASingleFragmentCString::const_char_iterator &aIter, nsASingleFragmentCString::const_char_iterator &aEndIter, nsDependentCSubstring &aTokenString, nsDependentCSubstring &aTokenValue, bool &aEqualsFound);
+    static bool                   GetTokenValue(nsACString::const_char_iterator &aIter, nsACString::const_char_iterator &aEndIter, nsDependentCSubstring &aTokenString, nsDependentCSubstring &aTokenValue, bool &aEqualsFound);
     static bool                   ParseAttributes(nsDependentCString &aCookieHeader, nsCookieAttributes &aCookie);
     bool                          RequireThirdPartyCheck();
     CookieStatus                  CheckPrefs(nsIURI *aHostURI, bool aIsForeign, const char *aCookieHeader);
@@ -312,7 +312,7 @@ class nsCookieService final : public nsICookieService
     static bool                   GetExpiry(nsCookieAttributes &aCookie, int64_t aServerTime, int64_t aCurrentTime);
     void                          RemoveAllFromMemory();
     already_AddRefed<nsIArray>    PurgeCookies(int64_t aCurrentTimeInUsec);
-    bool                          FindCookie(const nsCookieKey& aKey, const nsAFlatCString &aHost, const nsAFlatCString &aName, const nsAFlatCString &aPath, nsListIter &aIter);
+    bool                          FindCookie(const nsCookieKey& aKey, const nsCString& aHost, const nsCString& aName, const nsCString& aPath, nsListIter &aIter);
     bool                          FindSecureCookie(const nsCookieKey& aKey, nsCookie* aCookie);
     int64_t                       FindStaleCookie(nsCookieEntry *aEntry, int64_t aCurrentTime, nsIURI* aSource, const mozilla::Maybe<bool> &aIsSecure, nsListIter &aIter);
     void                          TelemetryForEvictingStaleCookie(nsCookie* aEvicted, int64_t oldestCookieTime);

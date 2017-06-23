@@ -53,7 +53,7 @@ nsBase64Encoder::IsNonBlocking(bool* aNonBlocking)
 }
 
 nsresult
-nsBase64Encoder::Finish(nsCSubstring& result)
+nsBase64Encoder::Finish(nsACString& result)
 {
   char* b64 = PL_Base64Encode(mData.get(), mData.Length(), nullptr);
   if (!b64)

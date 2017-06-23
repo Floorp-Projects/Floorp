@@ -13398,7 +13398,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	const { isDevelopment } = __webpack_require__(828);
 	const { Services, PrefsHelper } = __webpack_require__(830);
 
-	const prefsSchemaVersion = "1.0.0";
+	const prefsSchemaVersion = "1.0.1";
 
 	const pref = Services.pref;
 
@@ -13413,9 +13413,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	  pref("devtools.debugger.tabs", "[]");
 	  pref("devtools.debugger.ui.framework-grouping-on", true);
 	  pref("devtools.debugger.pending-selected-location", "{}");
-	  pref("devtools.debugger.pending-breakpoints", "[]");
+	  pref("devtools.debugger.pending-breakpoints", "{}");
 	  pref("devtools.debugger.expressions", "[]");
-	  pref("devtools.debugger.file-search-case-sensitive", true);
+	  pref("devtools.debugger.file-search-case-sensitive", false);
 	  pref("devtools.debugger.file-search-whole-word", false);
 	  pref("devtools.debugger.file-search-regex-match", false);
 	  pref("devtools.debugger.prefs-schema-version", "1.0.0");
@@ -13442,7 +13442,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	if (prefs.debuggerPrefsSchemaVersion !== prefsSchemaVersion) {
 	  // clear pending Breakpoints
-	  prefs.pendingBreakpoints = [];
+	  prefs.pendingBreakpoints = {};
 	  prefs.debuggerPrefsSchemaVersion = prefsSchemaVersion;
 	}
 
@@ -13736,7 +13736,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	exports.getNewSelectedSourceId = getNewSelectedSourceId;
 	exports.getSource = getSource;
 	exports.getSourceByURL = getSourceByURL;
-	exports.getSourceText = getSourceText;
 	exports.getPendingSelectedLocation = getPendingSelectedLocation;
 	exports.getPrettySource = getPrettySource;
 	exports.getSourceInSources = getSourceInSources;
@@ -13887,10 +13886,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	// "start" and "error" states but we don't type it like that. We need
 	// to rethink how we type async actions.
 	function setSourceTextProps(state, action) {
-	  var source = action.source;
 	  var text = getTextPropsFromAction(action);
-	  var updatedState = state.setIn(["sourcesText", source.id], I.Map(text));
-	  return updateSource(updatedState, text);
+	  return updateSource(state, text);
 	}
 
 	function updateSource(state, source) {
@@ -14008,12 +14005,6 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	function getSourceByURL(state, url) {
 	  return getSourceByUrlInSources(state.sources.sources, url);
-	}
-
-	function getSourceText(state, id) {
-	  if (id) {
-	    return state.sources.sourcesText.get(id);
-	  }
 	}
 
 	function getPendingSelectedLocation(state) {
@@ -14194,9 +14185,20 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * @static
 	 */
 
-	function getMode(sourceText) {
-	  var contentType = sourceText.contentType,
-	      text = sourceText.text;
+	function getMode(source) {
+	  if (!source.text) {
+	    return { name: "text" };
+	  }
+
+	  if (!source.contentType) {
+	    // Use HTML mode for files in which the first non whitespace
+	    // character is `<` regardless of extension.
+	    var name = source.text.match(/^\s*</) ? "htmlmixed" : "text";
+	    return { name };
+	  }
+
+	  var contentType = source.contentType,
+	      text = source.text;
 
 	  // //  or /*  */
 
@@ -14210,12 +14212,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	    }
 
 	    return contentTypeModeMap["text/javascript"];
-	  }
-
-	  // Use HTML mode for files in which the first non whitespace
-	  // character is `<` regardless of extension.
-	  if (text.match(/^\s*</)) {
-	    return { name: "htmlmixed" };
 	  }
 
 	  return { name: "text" };
@@ -15449,7 +15445,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	  getSourceByURL: sources.getSourceByURL,
 	  getSourceInSources: sources.getSourceInSources,
 	  getSources: sources.getSources,
-	  getSourceText: sources.getSourceText,
 	  getSourceTabs: sources.getSourceTabs,
 	  getSourcesForTabs: sources.getSourcesForTabs,
 	  getSelectedSource: sources.getSelectedSource,
@@ -17245,12 +17240,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	        sourceMaps = _ref16.sourceMaps;
 
 	    var source = (0, _selectors.getSource)(getState(), sourceId).toJS();
-	    var sourceText = (0, _selectors.getSourceText)(getState(), sourceId);
-	    if (sourceText) {
-	      sourceText = sourceText.toJS();
-	    }
 
-	    if (sourceText && sourceText.loading) {
+	    if (source && source.loading) {
 	      return {};
 	    }
 
@@ -17267,7 +17258,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	      [_promise.PROMISE]: _asyncToGenerator(function* () {
 	        var _ref18 = yield (0, _prettyPrint.prettyPrint)({
 	          source,
-	          sourceText,
 	          url
 	        }),
 	            code = _ref18.code,
@@ -17325,10 +17315,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	          sourceMaps = _ref22.sourceMaps;
 
 	      // Fetch the source text only once.
-	      var textInfo = (0, _selectors.getSourceText)(getState(), source.id);
-	      if (textInfo) {
-	        // It's already loaded or is loading
-	        return Promise.resolve(textInfo);
+	      if (source.text) {
+	        return Promise.resolve(source);
 	      }
 
 	      yield dispatch({
@@ -17352,7 +17340,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	      });
 
 	      // get the symbols for the source as well
-	      return dispatch((0, _ast.setSymbols)(source));
+	      return dispatch((0, _ast.setSymbols)(source.id));
 	    });
 
 	    return function (_x15) {
@@ -17393,9 +17381,9 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    var _loop = function (actor) {
 	      var source = (0, _selectors.getSource)(getState(), actor);
-	      dispatch(loadSourceText(source)).then((_ref33) => {
-	        var text = _ref33.text,
-	            contentType = _ref33.contentType;
+	      dispatch(loadSourceText(source)).then((_ref31) => {
+	        var text = _ref31.text,
+	            contentType = _ref31.contentType;
 
 	        onFetch([source, text, contentType]);
 	      }, err => {
@@ -17432,12 +17420,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	    }
 
 	    /* Called if fetching a source failed because of an error. */
-	    function onError(_ref27) {
-	      var _ref28 = _slicedToArray(_ref27, 2),
-	          aSource = _ref28[0],
-	          aError = _ref28[1];
-
-	      pending.delete(aSource.actor);
+	    function onError(source, error) {
+	      pending.delete(source.actor);
 	      maybeFinish();
 	    }
 
@@ -17448,12 +17432,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	      if (pending.size == 0) {
 	        // Sort the fetched sources alphabetically by their url.
 	        if (deferred) {
-	          deferred.resolve(fetched.sort((_ref29, _ref30) => {
-	            var _ref32 = _slicedToArray(_ref29, 1),
-	                aFirst = _ref32[0];
+	          deferred.resolve(fetched.sort((_ref27, _ref28) => {
+	            var _ref30 = _slicedToArray(_ref27, 1),
+	                aFirst = _ref30[0];
 
-	            var _ref31 = _slicedToArray(_ref30, 1),
-	                aSecond = _ref31[0];
+	            var _ref29 = _slicedToArray(_ref28, 1),
+	                aSecond = _ref29[0];
 
 	            return aFirst > aSecond ? -1 : 1;
 	          }));
@@ -17652,14 +17636,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	  });
 	}
 
-	function updateDocument(editor, selectedSource, sourceText) {
-	  if (selectedSource) {
-	    var sourceId = selectedSource.get("id");
-	    var doc = getDocument(sourceId) || editor.createDocument();
-	    editor.replaceDocument(doc);
-	  } else if (sourceText) {
-	    this.setText(sourceText.get("text"));
+	function updateDocument(editor, selectedSource) {
+	  if (!selectedSource) {
+	    return;
 	  }
+	  var sourceId = selectedSource.get("id");
+	  var doc = getDocument(sourceId) || editor.createDocument();
+	  editor.replaceDocument(doc);
 	}
 
 	module.exports = Object.assign({}, expressionUtils, sourceDocumentUtils, sourceSearchUtils, _devtoolsSourceEditor.SourceEditorUtils, {
@@ -19990,6 +19973,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  value: true
 	});
 	exports.willNavigate = willNavigate;
+	exports.navigate = navigate;
 	exports.navigated = navigated;
 
 	var _editor = __webpack_require__(257);
@@ -20022,16 +20006,20 @@ return /******/ (function(modules) { // webpackBootstrap
 	      yield sourceMaps.clearSourceMaps();
 	      (0, _editor.clearDocuments)();
 
-	      dispatch({
-	        type: "NAVIGATE",
-	        url: event.url
-	      });
+	      dispatch(navigate(event.url));
 	    });
 
 	    return function (_x) {
 	      return _ref.apply(this, arguments);
 	    };
 	  })();
+	}
+
+	function navigate(url) {
+	  return {
+	    type: "NAVIGATE",
+	    url
+	  };
 	}
 
 	/**
@@ -22050,6 +22038,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  jquery: __webpack_require__(999),
 	  underscore: __webpack_require__(1117),
 	  lodash: __webpack_require__(1118),
+	  ember: __webpack_require__(1119),
 	  "magnifying-glass": __webpack_require__(357),
 	  "arrow-up": __webpack_require__(919),
 	  "arrow-down": __webpack_require__(920),
@@ -22937,6 +22926,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }
 
 	  componentWillReceiveProps(nextProps) {
+	    if (this.props.debuggeeUrl != nextProps.debuggeeUrl) {
+	      // Recreate tree because the sort order changed
+	      this.setState((0, _sourcesTree.createTree)(this.props.sources, nextProps.debuggeeUrl));
+	      return;
+	    }
 	    var selectedSource = this.props.selectedSource;
 
 	    if (nextProps.shownSource && nextProps.shownSource != this.props.shownSource) {
@@ -22960,10 +22954,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	    }
 
 	    if (nextProps.sources.size === 0) {
+	      // remove all sources
 	      this.setState((0, _sourcesTree.createTree)(nextProps.sources, this.props.debuggeeUrl));
 	      return;
 	    }
 
+	    // TODO: do not run this every time a source is clicked,
+	    // only when a new source is added
 	    var next = (0, _immutable.Set)(nextProps.sources.valueSeq());
 	    var prev = (0, _immutable.Set)(this.props.sources.valueSeq());
 	    var newSet = next.subtract(prev);
@@ -23341,7 +23338,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  var path = "";
 	  var subtree = tree;
 
-	  for (var i = 0; i < parts.length; i++) {
+	  var _loop = function (i) {
 	    var part = parts[i];
 	    var isLastPart = i === parts.length - 1;
 
@@ -23356,10 +23353,11 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    var index = determineFileSortOrder(children, part, isLastPart, i === 0 ? debuggeeUrl : "");
 
-	    if (index >= 0 && children[index].name === part) {
+	    var child = children.find(c => c.name === part);
+	    if (child) {
 	      // A node with the same name already exists, simply traverse
 	      // into it.
-	      subtree = children[index];
+	      subtree = child;
 	    } else {
 	      // No node with this name exists, so insert a new one in the
 	      // place that is alphabetically sorted.
@@ -23371,14 +23369,18 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    // Keep track of the children so we can tag each node with them.
 	    path = `${path}/${part}`;
+	  };
+
+	  for (var i = 0; i < parts.length; i++) {
+	    _loop(i);
 	  }
 
 	  // Overwrite the contents of the final node to store the source
 	  // there.
-	  if (isDir) {
-	    subtree.contents.unshift(createNode("(index)", source.get("url"), source));
-	  } else {
+	  if (!isDir) {
 	    subtree.contents = source;
+	  } else if (!subtree.contents.find(c => c.name === "(index)")) {
+	    subtree.contents.unshift(createNode("(index)", source.get("url"), source));
 	  }
 	}
 
@@ -23491,8 +23493,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	  var returnTarget = null;
 	  function _traverse(subtree) {
 	    if (nodeHasChildren(subtree)) {
-	      for (var child of subtree.contents) {
-	        _traverse(child);
+	      for (var _child of subtree.contents) {
+	        _traverse(_child);
 	      }
 	    } else if (!returnTarget && subtree.path.replace(/http(s)?:\//, "") == sourceUrl) {
 	      returnTarget = subtree;
@@ -24723,15 +24725,11 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _devtoolsLaunchpad = __webpack_require__(131);
 
-	var _range = __webpack_require__(1026);
-
-	var _range2 = _interopRequireDefault(_range);
-
-	var _flatMap = __webpack_require__(1067);
-
-	var _flatMap2 = _interopRequireDefault(_flatMap);
-
 	var _selectors = __webpack_require__(242);
+
+	var _linesInScope = __webpack_require__(1124);
+
+	var _linesInScope2 = _interopRequireDefault(_linesInScope);
 
 	var _breakpoint = __webpack_require__(1057);
 
@@ -24853,8 +24851,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	      this.showSourceText(selectedSource, selectedLocation);
 	    }
 
-	    if (this.props.outOfScopeLocations !== nextProps.outOfScopeLocations) {
-	      (0, _editor.clearLineClass)(this.editor.codeMirror, "out-of-scope");
+	    if (this.props.linesInScope !== nextProps.linesInScope) {
+	      this.editor.codeMirror.operation(() => {
+	        (0, _editor.clearLineClass)(this.editor.codeMirror, "in-scope");
+	      });
 	    }
 
 	    this.setDebugLine(nextProps.selectedFrame, selectedLocation);
@@ -24916,9 +24916,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    this.cbPanel = null;
 	    this.editor = this.setupEditor();
 
-	    var _props = this.props,
-	        selectedSource = _props.selectedSource,
-	        sourceText = _props.sourceText;
+	    var selectedSource = this.props.selectedSource;
 	    var shortcuts = this.context.shortcuts;
 
 
@@ -24931,7 +24929,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    shortcuts.on(searchAgainPrevKey, this.onSearchAgain);
 	    shortcuts.on(searchAgainKey, this.onSearchAgain);
 
-	    (0, _editor.updateDocument)(this.editor, selectedSource, sourceText);
+	    (0, _editor.updateDocument)(this.editor, selectedSource);
 	  }
 
 	  componentWillUnmount() {
@@ -24951,9 +24949,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	    // This is in `componentDidUpdate` so helper functions can expect
 	    // `this.props` to be the current props. This lifecycle method is
 	    // responsible for updating the editor annotations.
-	    var _props2 = this.props,
-	        selectedLocation = _props2.selectedLocation,
-	        selectedSource = _props2.selectedSource;
+	    var _props = this.props,
+	        selectedLocation = _props.selectedLocation,
+	        selectedSource = _props.selectedSource;
 
 	    // If the location is different and a new line is requested,
 	    // update the pending jump line. Note that if jumping to a line in
@@ -25033,11 +25031,21 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	  onMouseOver(e) {
 	    var target = e.target;
+	    var linesInScope = this.props.linesInScope;
 
-	    if (!this.inSelectedFrameSource() || !target.parentElement.closest(".CodeMirror-line") || target.parentElement.closest(".out-of-scope")) {
+
+	    if (!this.inSelectedFrameSource() || !target.parentElement.closest(".CodeMirror-line")) {
 	      return;
 	    }
-	    this.previewSelectedToken(e);
+	    var location = (0, _editor.getTokenLocation)(this.editor.codeMirror, target);
+	    var line = location.line;
+
+
+	    if (!linesInScope.includes(line)) {
+	      return;
+	    }
+
+	    this.previewSelectedToken(target, location);
 	  }
 
 	  onTokenClick(e) {
@@ -25055,9 +25063,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }
 
 	  onSearchAgain(_, e) {
-	    var _props3 = this.props,
-	        query = _props3.query,
-	        searchModifiers = _props3.searchModifiers;
+	    var _props2 = this.props,
+	        query = _props2.query,
+	        searchModifiers = _props2.searchModifiers;
 	    var codeMirror = this.editor.editor.codeMirror;
 
 	    var ctx = { ed: this.editor, cm: codeMirror };
@@ -25071,38 +25079,35 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return this.setState({ selectedToken: null });
 	  }
 
-	  previewSelectedToken(e) {
+	  previewSelectedToken(token, location) {
 	    var _this = this;
 
 	    return _asyncToGenerator(function* () {
-	      var _props4 = _this.props,
-	          selectedFrame = _props4.selectedFrame,
-	          selectedSource = _props4.selectedSource,
-	          sourceText = _props4.sourceText,
-	          setSelection = _props4.setSelection,
-	          selection = _props4.selection;
+	      var _props3 = _this.props,
+	          selectedFrame = _props3.selectedFrame,
+	          selectedSource = _props3.selectedSource,
+	          setSelection = _props3.setSelection,
+	          selection = _props3.selection;
 
-	      var token = e.target;
 	      var tokenText = token.innerText.trim();
 
-	      if (selection && selection.updating || !selectedFrame || !sourceText || !selectedSource || tokenText === "" || tokenText.match(/\s/) || selectedFrame.location.sourceId !== selectedSource.get("id")) {
+	      if (selection && selection.updating || !selectedFrame || !selectedSource || tokenText === "" || tokenText.match(/\s/) || selectedFrame.location.sourceId !== selectedSource.get("id")) {
 	        return;
 	      }
 
-	      var location = (0, _editor.getTokenLocation)(_this.editor.codeMirror, token);
 	      setSelection(tokenText, location);
 	      _this.setState({ selectedToken: token });
 	    })();
 	  }
 
 	  openMenu(event, codeMirror) {
-	    var _props5 = this.props,
-	        selectedSource = _props5.selectedSource,
-	        selectedLocation = _props5.selectedLocation,
-	        showSource = _props5.showSource,
-	        jumpToMappedLocation = _props5.jumpToMappedLocation,
-	        addExpression = _props5.addExpression,
-	        toggleBlackBox = _props5.toggleBlackBox;
+	    var _props4 = this.props,
+	        selectedSource = _props4.selectedSource,
+	        selectedLocation = _props4.selectedLocation,
+	        showSource = _props4.showSource,
+	        jumpToMappedLocation = _props4.jumpToMappedLocation,
+	        addExpression = _props4.addExpression,
+	        toggleBlackBox = _props4.toggleBlackBox;
 
 
 	    return (0, _EditorMenu2.default)({
@@ -25123,12 +25128,12 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    // ignore right clicks in the gutter
 
-	    if (ev.which === 3 || selectedSource && selectedSource.get("isBlackBoxed")) {
+	    if (ev.ctrlKey && ev.button === 0 || ev.which === 3 || selectedSource && selectedSource.get("isBlackBoxed")) {
 	      return;
 	    }
 
 	    if (this.isCbPanelOpen()) {
-	      return this.closeConditionalPanel(line);
+	      return this.closeConditionalPanel();
 	    }
 
 	    if (gutter !== "CodeMirror-foldgutter") {
@@ -25164,10 +25169,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	      return this.closeConditionalPanel();
 	    }
 
-	    var _props6 = this.props,
-	        selectedLocation = _props6.selectedLocation,
-	        setBreakpointCondition = _props6.setBreakpointCondition,
-	        breakpoints = _props6.breakpoints;
+	    var _props5 = this.props,
+	        selectedLocation = _props5.selectedLocation,
+	        setBreakpointCondition = _props5.setBreakpointCondition,
+	        breakpoints = _props5.breakpoints;
 
 	    var sourceId = selectedLocation ? selectedLocation.sourceId : "";
 
@@ -25204,12 +25209,12 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	  toggleBreakpoint(line) {
 	    var column = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : undefined;
-	    var _props7 = this.props,
-	        selectedSource = _props7.selectedSource,
-	        selectedLocation = _props7.selectedLocation,
-	        breakpoints = _props7.breakpoints,
-	        addBreakpoint = _props7.addBreakpoint,
-	        removeBreakpoint = _props7.removeBreakpoint;
+	    var _props6 = this.props,
+	        selectedSource = _props6.selectedSource,
+	        selectedLocation = _props6.selectedLocation,
+	        breakpoints = _props6.breakpoints,
+	        addBreakpoint = _props6.addBreakpoint,
+	        removeBreakpoint = _props6.removeBreakpoint;
 
 	    var bp = (0, _editor.breakpointAtLocation)(breakpoints, { line, column });
 
@@ -25334,7 +25339,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	   * document with the correct mode and text.
 	   *
 	   */
-	  showSourceText(sourceText, selectedLocation) {
+	  showSourceText(source, selectedLocation) {
 	    if (!selectedLocation) {
 	      return;
 	    }
@@ -25349,8 +25354,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	    (0, _editor.setDocument)(selectedLocation.sourceId, doc);
 	    this.editor.replaceDocument(doc);
 
-	    this.setText(sourceText.get("text"));
-	    this.editor.setMode((0, _source.getMode)(sourceText.toJS()));
+	    this.setText(source.get("text"));
+	    this.editor.setMode((0, _source.getMode)(source.toJS()));
 	  }
 
 	  renderHighlightLines() {
@@ -25368,14 +25373,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }
 
 	  renderBreakpoints() {
-	    var _props8 = this.props,
-	        breakpoints = _props8.breakpoints,
-	        sourceText = _props8.sourceText,
-	        selectedSource = _props8.selectedSource;
+	    var _props7 = this.props,
+	        breakpoints = _props7.breakpoints,
+	        selectedSource = _props7.selectedSource;
 
-	    var isLoading = sourceText && sourceText.get("loading");
 
-	    if (isLoading || !breakpoints || selectedSource && selectedSource.get("isBlackBoxed")) {
+	    if (!selectedSource || selectedSource.get("loading") || !breakpoints || selectedSource && selectedSource.get("isBlackBoxed")) {
 	      return;
 	    }
 
@@ -25395,13 +25398,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }
 
 	  renderHitCounts() {
-	    var _props9 = this.props,
-	        hitCount = _props9.hitCount,
-	        sourceText = _props9.sourceText;
+	    var _props8 = this.props,
+	        hitCount = _props8.hitCount,
+	        selectedSource = _props8.selectedSource;
 
-	    var isLoading = sourceText && sourceText.get("loading");
 
-	    if (isLoading || !hitCount || !this.editor) {
+	    if (!selectedSource || selectedSource.get("loading") || !hitCount || !this.editor) {
 	      return;
 	    }
 
@@ -25413,10 +25415,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }
 
 	  getInlineEditorStyles() {
-	    var _props10 = this.props,
-	        selectedSource = _props10.selectedSource,
-	        horizontal = _props10.horizontal,
-	        searchOn = _props10.searchOn;
+	    var _props9 = this.props,
+	        selectedSource = _props9.selectedSource,
+	        horizontal = _props9.horizontal,
+	        searchOn = _props9.searchOn;
 
 
 	    var subtractions = [];
@@ -25437,12 +25439,12 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	  renderPreview() {
 	    var selectedToken = this.state.selectedToken;
-	    var _props11 = this.props,
-	        sourceText = _props11.sourceText,
-	        selection = _props11.selection;
+	    var _props10 = this.props,
+	        selectedSource = _props10.selectedSource,
+	        selection = _props10.selection;
 
 
-	    if (!this.editor || !sourceText) {
+	    if (!this.editor || !selectedSource) {
 	      return null;
 	    }
 
@@ -25466,51 +25468,54 @@ return /******/ (function(modules) { // webpackBootstrap
 	    });
 	  }
 
+	  renderInScopeLines() {
+	    var linesInScope = this.props.linesInScope;
+
+	    if (!(0, _devtoolsConfig.isEnabled)("highlightScopeLines") || !linesInScope || !this.inSelectedFrameSource()) {
+	      return;
+	    }
+
+	    this.editor.codeMirror.operation(() => {
+	      linesInScope.forEach(line => {
+	        this.editor.codeMirror.addLineClass(line - 1, "line", "in-scope");
+	      });
+	    });
+	  }
+
 	  inSelectedFrameSource() {
-	    var _props12 = this.props,
-	        selectedLocation = _props12.selectedLocation,
-	        selectedFrame = _props12.selectedFrame;
+	    var _props11 = this.props,
+	        selectedLocation = _props11.selectedLocation,
+	        selectedFrame = _props11.selectedFrame;
 
 	    return selectedFrame && selectedLocation && selectedFrame.location.sourceId == selectedLocation.sourceId;
 	  }
 
-	  renderOutOfScopedLocations() {
-	    var outOfScopeLocations = this.props.outOfScopeLocations;
-
-
-	    if (!this.inSelectedFrameSource() || !outOfScopeLocations || !this.editor) {
-	      return;
-	    }
-
-	    (0, _flatMap2.default)(outOfScopeLocations, location => (0, _range2.default)(location.start.line, location.end.line)).forEach(line => {
-	      this.editor.codeMirror.addLineClass(line - 1, "line", "out-of-scope");
-	    });
-	  }
-
 	  render() {
-	    var _props13 = this.props,
-	        sourceText = _props13.sourceText,
-	        selectSource = _props13.selectSource,
-	        selectedSource = _props13.selectedSource,
-	        highlightLineRange = _props13.highlightLineRange,
-	        clearHighlightLineRange = _props13.clearHighlightLineRange,
-	        coverageOn = _props13.coverageOn,
-	        horizontal = _props13.horizontal;
+	    var _props12 = this.props,
+	        selectSource = _props12.selectSource,
+	        selectedSource = _props12.selectedSource,
+	        highlightLineRange = _props12.highlightLineRange,
+	        clearHighlightLineRange = _props12.clearHighlightLineRange,
+	        coverageOn = _props12.coverageOn,
+	        pauseData = _props12.pauseData,
+	        horizontal = _props12.horizontal;
 
 
 	    return _react.DOM.div({
-	      className: (0, _classnames2.default)("editor-wrapper", { "coverage-on": coverageOn })
+	      className: (0, _classnames2.default)("editor-wrapper", {
+	        "coverage-on": coverageOn,
+	        paused: !!pauseData && (0, _devtoolsConfig.isEnabled)("highlightScopeLines")
+	      })
 	    }, SearchBar({
 	      editor: this.editor,
 	      selectSource,
 	      selectedSource,
 	      highlightLineRange,
-	      clearHighlightLineRange,
-	      sourceText
+	      clearHighlightLineRange
 	    }), _react.DOM.div({
 	      className: "editor-mount devtools-monospace",
 	      style: this.getInlineEditorStyles()
-	    }), this.renderOutOfScopedLocations(), this.renderHighlightLines(), this.renderBreakpoints(), this.renderHitCounts(), Footer({ editor: this.editor, horizontal }), this.renderPreview());
+	    }), this.renderHighlightLines(), this.renderBreakpoints(), this.renderInScopeLines(), this.renderHitCounts(), Footer({ editor: this.editor, horizontal }), this.renderPreview());
 	  }
 	}
 
@@ -25524,7 +25529,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	  highlightLineRange: _react.PropTypes.func,
 	  clearHighlightLineRange: _react.PropTypes.func,
 	  highlightedLineRange: _react.PropTypes.object,
-	  sourceText: _reactImmutableProptypes2.default.map,
 	  searchOn: _react.PropTypes.bool,
 	  addBreakpoint: _react.PropTypes.func.isRequired,
 	  disableBreakpoint: _react.PropTypes.func.isRequired,
@@ -25551,7 +25555,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  startPanelSize: _react.PropTypes.number,
 	  endPanelSize: _react.PropTypes.number,
 	  clearSelection: _react.PropTypes.func.isRequired,
-	  outOfScopeLocations: _react.PropTypes.array
+	  linesInScope: _react.PropTypes.array
 	};
 
 	Editor.contextTypes = {
@@ -25571,7 +25575,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	    selectedSource,
 	    highlightedLineRange: (0, _selectors.getHighlightedLineRange)(state),
 	    searchOn: (0, _selectors.getFileSearchState)(state),
-	    sourceText: (0, _selectors.getSourceText)(state, sourceId),
 	    loadedObjects: (0, _selectors.getLoadedObjects)(state),
 	    breakpoints: (0, _selectors.getBreakpointsForSource)(state, sourceId || ""),
 	    hitCount: (0, _selectors.getHitCountForSource)(state, sourceId),
@@ -25581,7 +25584,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    coverageOn: (0, _selectors.getCoverageEnabled)(state),
 	    query: (0, _selectors.getFileSearchQueryState)(state),
 	    searchModifiers: (0, _selectors.getFileSearchModifierState)(state),
-	    outOfScopeLocations: (0, _selectors.getOutOfScopeLocations)(state),
+	    linesInScope: (0, _linesInScope2.default)(state),
 	    selection: (0, _selectors.getSelection)(state)
 	  };
 	}, dispatch => (0, _redux.bindActionCreators)(_actions2.default, dispatch))(Editor);
@@ -25942,6 +25945,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    self.closeSearch = this.closeSearch.bind(this);
 	    self.toggleSearch = this.toggleSearch.bind(this);
 	    self.toggleSymbolSearch = this.toggleSymbolSearch.bind(this);
+	    self.toggleTextSearch = this.toggleTextSearch.bind(this);
 	    self.setSearchValue = this.setSearchValue.bind(this);
 	    self.selectSearchInput = this.selectSearchInput.bind(this);
 	    self.searchInput = this.searchInput.bind(this);
@@ -26060,10 +26064,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	  closeSearch(e) {
 	    var _props3 = this.props,
 	        editor = _props3.editor,
-	        setFileSearchQuery = _props3.setFileSearchQuery;
+	        setFileSearchQuery = _props3.setFileSearchQuery,
+	        searchOn = _props3.searchOn,
+	        symbolSearchOn = _props3.symbolSearchOn;
 
 
-	    if (this.props.searchOn && editor) {
+	    if (editor && (searchOn || symbolSearchOn)) {
 	      setFileSearchQuery("");
 	      this.clearSearch();
 	      this.props.toggleFileSearch(false);
@@ -26078,14 +26084,16 @@ return /******/ (function(modules) { // webpackBootstrap
 	  toggleSearch(e) {
 	    e.stopPropagation();
 	    e.preventDefault();
-	    var editor = this.props.editor;
+	    var _props4 = this.props,
+	        editor = _props4.editor,
+	        symbolSearchOn = _props4.symbolSearchOn;
 
 
 	    if (!this.props.searchOn) {
 	      this.props.toggleFileSearch();
 	    }
 
-	    if (this.props.symbolSearchOn) {
+	    if (symbolSearchOn) {
 	      this.clearSearch();
 	      this.props.toggleSymbolSearch(false);
 	      this.props.setSelectedSymbolType("functions");
@@ -26101,6 +26109,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	    }
 	  }
 
+	  ignoreEvent(e) {
+	    if (e) {
+	      e.preventDefault();
+	      e.stopPropagation();
+	    }
+	  }
+
 	  toggleSymbolSearch(e) {
 	    var _ref = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
 	        toggle = _ref.toggle,
@@ -26108,19 +26123,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    var selectedSource = this.props.selectedSource;
 
-
-	    if (e) {
-	      e.preventDefault();
-	      e.stopPropagation();
-	    }
-
 	    if (!selectedSource) {
 	      return;
 	    }
-
-	    if (!this.props.searchOn) {
-	      this.props.toggleFileSearch();
-	    }
+	    this.ignoreEvent(e);
 
 	    if (this.props.symbolSearchOn) {
 	      if (toggle) {
@@ -26131,11 +26137,26 @@ return /******/ (function(modules) { // webpackBootstrap
 	      return;
 	    }
 
-	    if (this.props.selectedSource) {
-	      this.clearSearch();
-	      this.props.toggleSymbolSearch(true);
-	      this.props.setSelectedSymbolType(searchType);
+	    this.clearSearch();
+	    this.props.toggleSymbolSearch(true);
+	    this.props.setSelectedSymbolType(searchType);
+	  }
+
+	  toggleTextSearch(e) {
+	    var selectedSource = this.props.selectedSource;
+
+	    this.ignoreEvent(e);
+
+	    if (!selectedSource) {
+	      return;
 	    }
+
+	    if (!this.props.searchOn) {
+	      this.props.toggleFileSearch();
+	    }
+
+	    this.clearSearch();
+	    this.props.toggleSymbolSearch(false);
 	  }
 
 	  setSearchValue(value) {
@@ -26151,6 +26172,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    var searchInput = this.searchInput();
 	    if (searchInput) {
 	      searchInput.setSelectionRange(0, searchInput.value.length);
+	      searchInput.focus();
 	    }
 	  }
 
@@ -26166,12 +26188,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }
 
 	  updateSymbolSearchResults(query) {
-	    var _props4 = this.props,
-	        selectedSource = _props4.selectedSource,
-	        updateSearchResults = _props4.updateSearchResults,
-	        updateSymbolSearchResults = _props4.updateSymbolSearchResults,
-	        selectedSymbolType = _props4.selectedSymbolType,
-	        symbols = _props4.symbols;
+	    var _props5 = this.props,
+	        selectedSource = _props5.selectedSource,
+	        updateSearchResults = _props5.updateSearchResults,
+	        updateSymbolSearchResults = _props5.updateSymbolSearchResults,
+	        selectedSymbolType = _props5.selectedSymbolType,
+	        symbols = _props5.symbols;
 
 
 	    if (query == "" || !selectedSource) {
@@ -26187,10 +26209,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }
 
 	  doSearch(query) {
-	    var _props5 = this.props,
-	        selectedSource = _props5.selectedSource,
-	        setFileSearchQuery = _props5.setFileSearchQuery,
-	        ed = _props5.editor;
+	    var _props6 = this.props,
+	        selectedSource = _props6.selectedSource,
+	        setFileSearchQuery = _props6.setFileSearchQuery,
+	        ed = _props6.editor;
 
 	    if (!selectedSource || !selectedSource.get("text")) {
 	      return;
@@ -26209,11 +26231,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	    var _this = this;
 
 	    return _asyncToGenerator(function* () {
-	      var _props6 = _this.props,
-	          selectedSource = _props6.selectedSource,
-	          modifiers = _props6.modifiers,
-	          ed = _props6.editor,
-	          index = _props6.searchResults.index;
+	      var _props7 = _this.props,
+	          selectedSource = _props7.selectedSource,
+	          modifiers = _props7.modifiers,
+	          ed = _props7.editor,
+	          index = _props7.searchResults.index;
 
 
 	      if (!ed || !selectedSource || !selectedSource.get("text") || !modifiers) {
@@ -26270,13 +26292,13 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    var ctx = { ed, cm: ed.codeMirror };
 
-	    var _props7 = this.props,
-	        query = _props7.query,
-	        modifiers = _props7.modifiers,
-	        updateSearchResults = _props7.updateSearchResults,
-	        _props7$searchResults = _props7.searchResults,
-	        count = _props7$searchResults.count,
-	        index = _props7$searchResults.index;
+	    var _props8 = this.props,
+	        query = _props8.query,
+	        modifiers = _props8.modifiers,
+	        updateSearchResults = _props8.updateSearchResults,
+	        _props8$searchResults = _props8.searchResults,
+	        count = _props8$searchResults.count,
+	        index = _props8$searchResults.index;
 
 
 	    if (query === "") {
@@ -26313,9 +26335,9 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	  // Handlers
 	  selectResultItem(e, item) {
-	    var _props8 = this.props,
-	        selectSource = _props8.selectSource,
-	        selectedSource = _props8.selectedSource;
+	    var _props9 = this.props,
+	        selectSource = _props9.selectSource,
+	        selectedSource = _props9.selectedSource;
 
 
 	    if (selectedSource) {
@@ -26328,11 +26350,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }
 
 	  onSelectResultItem(item) {
-	    var _props9 = this.props,
-	        selectSource = _props9.selectSource,
-	        selectedSource = _props9.selectedSource,
-	        selectedSymbolType = _props9.selectedSymbolType,
-	        highlightLineRange = _props9.highlightLineRange;
+	    var _props10 = this.props,
+	        selectSource = _props10.selectSource,
+	        selectedSource = _props10.selectedSource,
+	        selectedSymbolType = _props10.selectedSymbolType,
+	        highlightLineRange = _props10.highlightLineRange;
 
 
 	    if (selectedSource && selectedSymbolType !== "functions") {
@@ -26364,9 +26386,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }
 
 	  onKeyDown(e) {
-	    var _props10 = this.props,
-	        symbolSearchOn = _props10.symbolSearchOn,
-	        symbolSearchResults = _props10.symbolSearchResults;
+	    var _props11 = this.props,
+	        symbolSearchOn = _props11.symbolSearchOn,
+	        symbolSearchResults = _props11.symbolSearchResults;
 
 	    if (!symbolSearchOn || this.props.query == "") {
 	      return;
@@ -26394,9 +26416,9 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	  // Renderers
 	  buildSummaryMsg() {
-	    var _props11 = this.props,
-	        symbolSearchOn = _props11.symbolSearchOn,
-	        symbolSearchResults = _props11.symbolSearchResults;
+	    var _props12 = this.props,
+	        symbolSearchOn = _props12.symbolSearchOn,
+	        symbolSearchResults = _props12.symbolSearchResults;
 
 	    if (symbolSearchOn) {
 	      if (symbolSearchResults.length > 1) {
@@ -26406,11 +26428,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	      }
 	    }
 
-	    var _props12 = this.props,
-	        _props12$searchResult = _props12.searchResults,
-	        count = _props12$searchResult.count,
-	        index = _props12$searchResult.index,
-	        query = _props12.query;
+	    var _props13 = this.props,
+	        _props13$searchResult = _props13.searchResults,
+	        count = _props13$searchResult.count,
+	        index = _props13$searchResult.index,
+	        query = _props13.query;
 
 
 	    if (query.trim() == "") {
@@ -26429,9 +26451,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }
 
 	  buildPlaceHolder() {
-	    var _props13 = this.props,
-	        symbolSearchOn = _props13.symbolSearchOn,
-	        selectedSymbolType = _props13.selectedSymbolType;
+	    var _props14 = this.props,
+	        symbolSearchOn = _props14.symbolSearchOn,
+	        selectedSymbolType = _props14.selectedSymbolType;
 
 	    if (symbolSearchOn) {
 	      // prettier-ignore
@@ -26442,10 +26464,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }
 
 	  renderSearchModifiers() {
-	    var _props14 = this.props,
-	        modifiers = _props14.modifiers,
-	        toggleFileSearchModifier = _props14.toggleFileSearchModifier,
-	        symbolSearchOn = _props14.symbolSearchOn;
+	    var _props15 = this.props,
+	        modifiers = _props15.modifiers,
+	        toggleFileSearchModifier = _props15.toggleFileSearchModifier,
+	        symbolSearchOn = _props15.symbolSearchOn;
 
 
 	    if (symbolSearchOn) {
@@ -26466,28 +26488,49 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }
 
 	  renderSearchTypeToggle() {
-	    var toggleSymbolSearch = this.toggleSymbolSearch;
-	    var _props15 = this.props,
-	        symbolSearchOn = _props15.symbolSearchOn,
-	        selectedSymbolType = _props15.selectedSymbolType;
+	    var toggleSymbolSearch = this.toggleSymbolSearch,
+	        toggleTextSearch = this.toggleTextSearch;
+	    var _props16 = this.props,
+	        symbolSearchOn = _props16.symbolSearchOn,
+	        selectedSymbolType = _props16.selectedSymbolType;
 
 
-	    function searchTypeBtn(searchType) {
+	    function isButtonActive(searchType) {
+	      switch (searchType) {
+	        case "functions":
+	        case "variables":
+	          return symbolSearchOn && selectedSymbolType == searchType;
+	        // text search
+	        default:
+	          return !symbolSearchOn;
+	      }
+	    }
+
+	    function searchTextBtn() {
+	      var searchType = "text";
+	      var active = isButtonActive(searchType);
+
 	      return _react.DOM.button({
 	        className: (0, _classnames2.default)("search-type-btn", {
-	          active: symbolSearchOn && selectedSymbolType == searchType
+	          active
 	        }),
-	        onClick: e => {
-	          if (selectedSymbolType == searchType) {
-	            toggleSymbolSearch(e, { toggle: true, searchType });
-	            return;
-	          }
-	          toggleSymbolSearch(e, { toggle: false, searchType });
-	        }
+	        onClick: e => toggleTextSearch(e)
 	      }, searchType);
 	    }
 
-	    return _react.DOM.section({ className: "search-type-toggles" }, _react.DOM.h1({ className: "search-toggle-title" }, L10N.getStr("editor.searchTypeToggleTitle")), searchTypeBtn("functions"), searchTypeBtn("variables"));
+	    function searchTypeBtn(searchType) {
+	      var active = isButtonActive(searchType);
+	      var toggle = selectedSymbolType == searchType;
+
+	      return _react.DOM.button({
+	        className: (0, _classnames2.default)("search-type-btn", {
+	          active
+	        }),
+	        onClick: e => toggleSymbolSearch(e, { toggle, searchType })
+	      }, searchType);
+	    }
+
+	    return _react.DOM.section({ className: "search-type-toggles" }, _react.DOM.h1({ className: "search-toggle-title" }, L10N.getStr("editor.searchTypeToggleTitle")), searchTextBtn(), searchTypeBtn("functions"), searchTypeBtn("variables"));
 	  }
 
 	  renderBottomBar() {
@@ -26496,10 +26539,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	  renderResults() {
 	    var selectedResultIndex = this.state.selectedResultIndex;
-	    var _props16 = this.props,
-	        query = _props16.query,
-	        symbolSearchResults = _props16.symbolSearchResults,
-	        symbolSearchOn = _props16.symbolSearchOn;
+	    var _props17 = this.props,
+	        query = _props17.query,
+	        symbolSearchResults = _props17.symbolSearchResults,
+	        symbolSearchOn = _props17.symbolSearchOn;
 
 	    if (query == "" || !symbolSearchOn || !symbolSearchResults.length) {
 	      return;
@@ -26514,13 +26557,14 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }
 
 	  render() {
-	    var _props17 = this.props,
-	        count = _props17.searchResults.count,
-	        query = _props17.query,
-	        searchOn = _props17.searchOn;
+	    var _props18 = this.props,
+	        count = _props18.searchResults.count,
+	        query = _props18.query,
+	        searchOn = _props18.searchOn,
+	        symbolSearchOn = _props18.symbolSearchOn;
 
 
-	    if (!searchOn) {
+	    if (!searchOn && !symbolSearchOn) {
 	      return _react.DOM.div();
 	    }
 
@@ -26701,15 +26745,287 @@ return /******/ (function(modules) { // webpackBootstrap
 /* 558 */,
 /* 559 */,
 /* 560 */,
-/* 561 */,
-/* 562 */,
-/* 563 */,
-/* 564 */,
-/* 565 */,
-/* 566 */,
-/* 567 */,
-/* 568 */,
-/* 569 */,
+/* 561 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var baseUniq = __webpack_require__(562);
+
+	/**
+	 * Creates a duplicate-free version of an array, using
+	 * [`SameValueZero`](http://ecma-international.org/ecma-262/7.0/#sec-samevaluezero)
+	 * for equality comparisons, in which only the first occurrence of each element
+	 * is kept. The order of result values is determined by the order they occur
+	 * in the array.
+	 *
+	 * @static
+	 * @memberOf _
+	 * @since 0.1.0
+	 * @category Array
+	 * @param {Array} array The array to inspect.
+	 * @returns {Array} Returns the new duplicate free array.
+	 * @example
+	 *
+	 * _.uniq([2, 1, 2]);
+	 * // => [2, 1]
+	 */
+	function uniq(array) {
+	  return (array && array.length) ? baseUniq(array) : [];
+	}
+
+	module.exports = uniq;
+
+
+/***/ },
+/* 562 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var SetCache = __webpack_require__(276),
+	    arrayIncludes = __webpack_require__(563),
+	    arrayIncludesWith = __webpack_require__(567),
+	    cacheHas = __webpack_require__(280),
+	    createSet = __webpack_require__(568),
+	    setToArray = __webpack_require__(283);
+
+	/** Used as the size to enable large array optimizations. */
+	var LARGE_ARRAY_SIZE = 200;
+
+	/**
+	 * The base implementation of `_.uniqBy` without support for iteratee shorthands.
+	 *
+	 * @private
+	 * @param {Array} array The array to inspect.
+	 * @param {Function} [iteratee] The iteratee invoked per element.
+	 * @param {Function} [comparator] The comparator invoked per element.
+	 * @returns {Array} Returns the new duplicate free array.
+	 */
+	function baseUniq(array, iteratee, comparator) {
+	  var index = -1,
+	      includes = arrayIncludes,
+	      length = array.length,
+	      isCommon = true,
+	      result = [],
+	      seen = result;
+
+	  if (comparator) {
+	    isCommon = false;
+	    includes = arrayIncludesWith;
+	  }
+	  else if (length >= LARGE_ARRAY_SIZE) {
+	    var set = iteratee ? null : createSet(array);
+	    if (set) {
+	      return setToArray(set);
+	    }
+	    isCommon = false;
+	    includes = cacheHas;
+	    seen = new SetCache;
+	  }
+	  else {
+	    seen = iteratee ? [] : result;
+	  }
+	  outer:
+	  while (++index < length) {
+	    var value = array[index],
+	        computed = iteratee ? iteratee(value) : value;
+
+	    value = (comparator || value !== 0) ? value : 0;
+	    if (isCommon && computed === computed) {
+	      var seenIndex = seen.length;
+	      while (seenIndex--) {
+	        if (seen[seenIndex] === computed) {
+	          continue outer;
+	        }
+	      }
+	      if (iteratee) {
+	        seen.push(computed);
+	      }
+	      result.push(value);
+	    }
+	    else if (!includes(seen, computed, comparator)) {
+	      if (seen !== result) {
+	        seen.push(computed);
+	      }
+	      result.push(value);
+	    }
+	  }
+	  return result;
+	}
+
+	module.exports = baseUniq;
+
+
+/***/ },
+/* 563 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var baseIndexOf = __webpack_require__(564);
+
+	/**
+	 * A specialized version of `_.includes` for arrays without support for
+	 * specifying an index to search from.
+	 *
+	 * @private
+	 * @param {Array} [array] The array to inspect.
+	 * @param {*} target The value to search for.
+	 * @returns {boolean} Returns `true` if `target` is found, else `false`.
+	 */
+	function arrayIncludes(array, value) {
+	  var length = array == null ? 0 : array.length;
+	  return !!length && baseIndexOf(array, value, 0) > -1;
+	}
+
+	module.exports = arrayIncludes;
+
+
+/***/ },
+/* 564 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var baseFindIndex = __webpack_require__(263),
+	    baseIsNaN = __webpack_require__(565),
+	    strictIndexOf = __webpack_require__(566);
+
+	/**
+	 * The base implementation of `_.indexOf` without `fromIndex` bounds checks.
+	 *
+	 * @private
+	 * @param {Array} array The array to inspect.
+	 * @param {*} value The value to search for.
+	 * @param {number} fromIndex The index to search from.
+	 * @returns {number} Returns the index of the matched value, else `-1`.
+	 */
+	function baseIndexOf(array, value, fromIndex) {
+	  return value === value
+	    ? strictIndexOf(array, value, fromIndex)
+	    : baseFindIndex(array, baseIsNaN, fromIndex);
+	}
+
+	module.exports = baseIndexOf;
+
+
+/***/ },
+/* 565 */
+/***/ function(module, exports) {
+
+	/**
+	 * The base implementation of `_.isNaN` without support for number objects.
+	 *
+	 * @private
+	 * @param {*} value The value to check.
+	 * @returns {boolean} Returns `true` if `value` is `NaN`, else `false`.
+	 */
+	function baseIsNaN(value) {
+	  return value !== value;
+	}
+
+	module.exports = baseIsNaN;
+
+
+/***/ },
+/* 566 */
+/***/ function(module, exports) {
+
+	/**
+	 * A specialized version of `_.indexOf` which performs strict equality
+	 * comparisons of values, i.e. `===`.
+	 *
+	 * @private
+	 * @param {Array} array The array to inspect.
+	 * @param {*} value The value to search for.
+	 * @param {number} fromIndex The index to search from.
+	 * @returns {number} Returns the index of the matched value, else `-1`.
+	 */
+	function strictIndexOf(array, value, fromIndex) {
+	  var index = fromIndex - 1,
+	      length = array.length;
+
+	  while (++index < length) {
+	    if (array[index] === value) {
+	      return index;
+	    }
+	  }
+	  return -1;
+	}
+
+	module.exports = strictIndexOf;
+
+
+/***/ },
+/* 567 */
+/***/ function(module, exports) {
+
+	/**
+	 * This function is like `arrayIncludes` except that it accepts a comparator.
+	 *
+	 * @private
+	 * @param {Array} [array] The array to inspect.
+	 * @param {*} target The value to search for.
+	 * @param {Function} comparator The comparator invoked per element.
+	 * @returns {boolean} Returns `true` if `target` is found, else `false`.
+	 */
+	function arrayIncludesWith(array, value, comparator) {
+	  var index = -1,
+	      length = array == null ? 0 : array.length;
+
+	  while (++index < length) {
+	    if (comparator(value, array[index])) {
+	      return true;
+	    }
+	  }
+	  return false;
+	}
+
+	module.exports = arrayIncludesWith;
+
+
+/***/ },
+/* 568 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var Set = __webpack_require__(201),
+	    noop = __webpack_require__(569),
+	    setToArray = __webpack_require__(283);
+
+	/** Used as references for various `Number` constants. */
+	var INFINITY = 1 / 0;
+
+	/**
+	 * Creates a set object of `values`.
+	 *
+	 * @private
+	 * @param {Array} values The values to add to the set.
+	 * @returns {Object} Returns the new set.
+	 */
+	var createSet = !(Set && (1 / setToArray(new Set([,-0]))[1]) == INFINITY) ? noop : function(values) {
+	  return new Set(values);
+	};
+
+	module.exports = createSet;
+
+
+/***/ },
+/* 569 */
+/***/ function(module, exports) {
+
+	/**
+	 * This method returns `undefined`.
+	 *
+	 * @static
+	 * @memberOf _
+	 * @since 2.3.0
+	 * @category Util
+	 * @example
+	 *
+	 * _.times(2, _.noop);
+	 * // => [undefined, undefined]
+	 */
+	function noop() {
+	  // No operation performed.
+	}
+
+	module.exports = noop;
+
+
+/***/ },
 /* 570 */,
 /* 571 */,
 /* 572 */,
@@ -27429,7 +27745,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    }
 
 	    if (value.type === "object") {
-	      return _react.DOM.div({}, this.renderObjectPreview(expression, root), this.renderAddToExpressionBar(expression, value));
+	      return _react.DOM.div({}, this.renderObjectPreview(expression, root), this.renderAddToExpressionBar(expression));
 	    }
 
 	    return this.renderSimplePreview(value);
@@ -30198,8 +30514,6 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _react = __webpack_require__(2);
 
-	var _reactDom = __webpack_require__(31);
-
 	var _reactRedux = __webpack_require__(151);
 
 	var _redux = __webpack_require__(3);
@@ -30272,21 +30586,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	  return (0, _text.formatKeyShortcut)(key);
 	}
 
-	function handlePressAnimation(button) {
-	  if (!button) {
-	    return;
-	  }
-
-	  button.style.opacity = "0";
-	  button.style.transform = "scale(1.3)";
-	  setTimeout(() => {
-	    if (button) {
-	      button.style.opacity = "1";
-	      button.style.transform = "none";
-	    }
-	  }, 200);
-	}
-
 	function debugBtn(onClick, type, className, tooltip) {
 	  var disabled = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : false;
 
@@ -30328,10 +30627,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	    e.stopPropagation();
 
 	    this.props[action]();
-	    var node = (0, _reactDom.findDOMNode)(this);
-	    if (node instanceof HTMLElement) {
-	      handlePressAnimation(node.querySelector(`.${action}`));
-	    }
 	  }
 
 	  renderStepButtons() {
@@ -31973,7 +32268,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  });
 	}
 
-	function initPage() {}
+	function initPage(options) {}
 
 	module.exports = {
 	  connectClient,
@@ -32178,6 +32473,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        actions,
 	        selectors,
 	        client: client.clientCommands,
+	        prefs: _prefs.prefs,
 	        connection
 	      };
 	    };
@@ -32277,6 +32573,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    // bfcache) so explicity fire `newSource` events for all returned
 	    // sources.
 	    var sources = yield _commands.clientCommands.fetchSources();
+	    actions.navigate(tabTarget._form.url);
 	    yield actions.newSources(sources);
 
 	    // If the threadClient is already paused, make sure to show a
@@ -33479,10 +33776,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	var prettyPrint = exports.prettyPrint = (() => {
 	  var _ref = _asyncToGenerator(function* (_ref2) {
 	    var source = _ref2.source,
-	        sourceText = _ref2.sourceText,
 	        url = _ref2.url;
 
-	    var contentType = sourceText ? sourceText.contentType : "";
+	    var contentType = source.contentType;
 	    var indent = 2;
 
 	    (0, _assert2.default)((0, _source.isJavaScript)(source.url, contentType), "Can't prettify non-javascript files.");
@@ -33490,7 +33786,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return yield _prettyPrint({
 	      url,
 	      indent,
-	      source: sourceText ? sourceText.text : undefined
+	      source: source.text
 	    });
 	  });
 
@@ -47393,7 +47689,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _Group3 = _interopRequireDefault(_Group2);
 
-	var _WhyPaused = __webpack_require__(1119);
+	var _WhyPaused = __webpack_require__(1120);
 
 	var _WhyPaused2 = _interopRequireDefault(_WhyPaused);
 
@@ -47770,6 +48066,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	  return getFrameUrl(frame).match(/lodash/i);
 	}
 
+	function isEmber(frame) {
+	  return getFrameUrl(frame).match(/ember/i);
+	}
+
 	function getLibraryFromUrl(frame) {
 	  // @TODO each of these fns calls getFrameUrl, just call it once
 	  // (assuming there's not more complex logic to identify a lib)
@@ -47813,6 +48113,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	  if (isLodash(frame)) {
 	    return "Lodash";
 	  }
+
+	  if (isEmber(frame)) {
+	    return "Ember";
+	  }
 	}
 
 	var displayNameMap = {
@@ -47825,7 +48129,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	  },
 	  React: {
 	    // eslint-disable-next-line max-len
-	    "ReactCompositeComponent._renderValidatedComponentWithoutOwnerOrContext/renderedElement<": "Render"
+	    "ReactCompositeComponent._renderValidatedComponentWithoutOwnerOrContext/renderedElement<": "Render",
+	    _renderValidatedComponentWithoutOwnerOrContext: "Render"
 	  },
 	  Webpack: {
 	    // eslint-disable-next-line camelcase
@@ -66177,16 +66482,21 @@ return /******/ (function(modules) { // webpackBootstrap
 	        }
 
 	        var _action$value = action.value,
-	            expression = _action$value.expression,
-	            location = _action$value.location,
-	            result = _action$value.result;
+	            _expression = _action$value.expression,
+	            _location = _action$value.location,
+	            _result = _action$value.result;
 
 	        return state.set("selection", {
 	          updating: false,
-	          expression,
-	          location,
-	          result
+	          expression: _expression,
+	          location: _location,
+	          result: _result
 	        });
+	      }
+
+	    case "RESUMED":
+	      {
+	        return state.set("outOfScopeLocations", null);
 	      }
 
 	    default:
@@ -66252,22 +66562,23 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, arguments); return new Promise(function (resolve, reject) { function step(key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { return Promise.resolve(value).then(function (value) { step("next", value); }, function (err) { step("throw", err); }); } } return step("next"); }); }; }
 
-	function setSymbols(source) {
+	function setSymbols(sourceId) {
 	  return (() => {
 	    var _ref = _asyncToGenerator(function* (_ref2) {
 	      var dispatch = _ref2.dispatch,
 	          getState = _ref2.getState;
 
-	      if ((0, _selectors.hasSymbols)(getState(), source)) {
+	      var sourceRecord = (0, _selectors.getSource)(getState(), sourceId);
+	      if (!sourceRecord) {
 	        return;
 	      }
 
-	      var sourceText = (0, _selectors.getSourceText)(getState(), source.id);
-	      if (!sourceText) {
+	      var source = sourceRecord.toJS();
+	      if (!source.text || (0, _selectors.hasSymbols)(getState(), source)) {
 	        return;
 	      }
 
-	      var symbols = yield parser.getSymbols(sourceText.toJS());
+	      var symbols = yield parser.getSymbols(source);
 
 	      dispatch({
 	        type: "SET_SYMBOLS",
@@ -66289,16 +66600,20 @@ return /******/ (function(modules) { // webpackBootstrap
 	          getState = _ref4.getState;
 
 	      var location = (0, _selectors.getSelectedLocation)(getState());
-	      var sourceText = (0, _selectors.getSourceText)(getState(), location.sourceId);
+	      if (!location) {
+	        return;
+	      }
 
-	      if (!location.line || !sourceText) {
+	      var source = (0, _selectors.getSource)(getState(), location.sourceId);
+
+	      if (!location.line || !source) {
 	        return dispatch({
 	          type: "OUT_OF_SCOPE_LOCATIONS",
 	          locations: null
 	        });
 	      }
 
-	      var locations = yield parser.getOutOfScopeLocations(sourceText.toJS(), location);
+	      var locations = yield parser.getOutOfScopeLocations(source.toJS(), location);
 
 	      return dispatch({
 	        type: "OUT_OF_SCOPE_LOCATIONS",
@@ -66341,13 +66656,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	        return;
 	      }
 
-	      var sourceText = (0, _selectors.getSelectedSourceText)(getState());
-	      var selectedFrame = (0, _selectors.getSelectedFrame)(getState());
-
 	      yield dispatch({
 	        type: "SET_SELECTION",
 	        [_promise.PROMISE]: _asyncToGenerator(function* () {
-	          var closestExpression = yield parser.getClosestExpression(sourceText.toJS(), token, position);
+	          var source = (0, _selectors.getSelectedSource)(getState());
+	          var closestExpression = yield parser.getClosestExpression(source.toJS(), token, position);
 
 	          if (!closestExpression) {
 	            return;
@@ -66360,6 +66673,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	          if (!expression) {
 	            return;
 	          }
+
+	          var selectedFrame = (0, _selectors.getSelectedFrame)(getState());
 
 	          var _ref9 = yield client.evaluate(expression, {
 	            frameId: selectedFrame.id
@@ -66478,7 +66793,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	      inputValue: ""
 	    };
 
-	    this.toggle = this.toggle.bind(this);
+	    this.toggleProjectSearch = this.toggleProjectSearch.bind(this);
 	    this.onEscape = this.onEscape.bind(this);
 	    this.close = this.close.bind(this);
 	  }
@@ -66486,18 +66801,18 @@ return /******/ (function(modules) { // webpackBootstrap
 	  componentWillUnmount() {
 	    var shortcuts = this.context.shortcuts;
 	    var searchKeys = [L10N.getStr("sources.search.key2"), L10N.getStr("sources.search.key2")];
-	    searchKeys.forEach(key => shortcuts.off(key, this.toggle));
+	    searchKeys.forEach(key => shortcuts.off(key, this.toggleProjectSearch));
 	    shortcuts.off("Escape", this.onEscape);
 	  }
 
 	  componentDidMount() {
 	    var shortcuts = this.context.shortcuts;
 	    var searchKeys = [L10N.getStr("sources.search.key2"), L10N.getStr("sources.search.alt.key")];
-	    searchKeys.forEach(key => shortcuts.on(key, this.toggle));
+	    searchKeys.forEach(key => shortcuts.on(key, this.toggleProjectSearch));
 	    shortcuts.on("Escape", this.onEscape);
 	  }
 
-	  toggle(key, e) {
+	  toggleProjectSearch(key, e) {
 	    e.preventDefault();
 	    this.props.toggleProjectSearch();
 	  }
@@ -66583,8 +66898,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	  var _ref;
 
 	  var text = source.text,
-	      id = source.id,
-	      url = source.url,
 	      loading = source.loading;
 
 	  if (loading || !text || queryText == "") {
@@ -66603,9 +66916,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	        line: line + 1,
 	        column: result.index,
 	        match: result[0],
-	        text: result.input,
-	        id,
-	        url
+	        value: _text,
+	        text: result.input
 	      });
 	    }
 	    return indices;
@@ -66646,20 +66958,63 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _ManagedTree3 = _interopRequireDefault(_ManagedTree2);
 
+	var _SearchInput2 = __webpack_require__(377);
+
+	var _SearchInput3 = _interopRequireDefault(_SearchInput2);
+
+	var _projectSearch = __webpack_require__(1061);
+
 	__webpack_require__(1065);
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
+	function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, arguments); return new Promise(function (resolve, reject) { function step(key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { return Promise.resolve(value).then(function (value) { step("next", value); }, function (err) { step("throw", err); }); } } return step("next"); }); }; }
+
 	var ManagedTree = (0, _react.createFactory)(_ManagedTree3.default);
+
+	var SearchInput = (0, _react.createFactory)(_SearchInput3.default);
+
+	function search(query, sources) {
+	  var validSources = sources.valueSeq().filter(s => s.has("text")).toJS();
+	  return validSources.map(source => ({
+	    source,
+	    filepath: source.url,
+	    matches: (0, _projectSearch.searchSource)(source, query)
+	  }));
+	}
 
 	class TextSearch extends _react.Component {
 	  constructor(props) {
 	    super(props);
+	    this.state = {
+	      results: [],
+	      inputValue: props.inputValue || "",
+	      selectedIndex: 0,
+	      focused: false
+	    };
+	  }
+
+	  inputOnChange(e) {
+	    var _this = this;
+
+	    return _asyncToGenerator(function* () {
+	      var sources = _this.props.sources;
+
+	      var inputValue = e.target.value;
+	      var results = yield search(inputValue, sources);
+
+	      _this.setState({
+	        results,
+	        inputValue,
+	        selectedIndex: 0
+	      });
+	    })();
 	  }
 
 	  renderFile(file, expanded) {
 	    return _react.DOM.div({
-	      className: "file-result"
+	      className: "file-result",
+	      key: file.filepath
 	    }, (0, _Svg2.default)("arrow", {
 	      className: (0, _classnames2.default)({
 	        expanded
@@ -66667,14 +67022,14 @@ return /******/ (function(modules) { // webpackBootstrap
 	    }), file.filepath);
 	  }
 
-	  renderLine(match) {
-	    return _react.DOM.div({ className: "result" }, _react.DOM.span({
+	  renderMatch(match) {
+	    return _react.DOM.div({ className: "result", key: `${match.line}/${match.column}` }, _react.DOM.span({
 	      className: "line-number"
 	    }, match.line), _react.DOM.span({ className: "line-match" }, match.value));
 	  }
 
 	  renderResults() {
-	    var results = this.props.results;
+	    var results = this.state.results;
 
 	    return ManagedTree({
 	      getRoots: () => results,
@@ -66686,14 +67041,38 @@ return /******/ (function(modules) { // webpackBootstrap
 	      autoExpandDepth: 1,
 	      getParent: item => null,
 	      getKey: item => item.filepath || `${item.value}/${item.line}`,
-	      renderItem: (item, depth, focused, _, expanded) => item.filepath ? this.renderFile(item, expanded) : this.renderLine(item)
+	      renderItem: (item, depth, focused, _, expanded) => item.filepath ? this.renderFile(item, expanded) : this.renderMatch(item)
+	    });
+	  }
+
+	  resultCount() {
+	    var results = this.state.results;
+
+	    return results.reduce((count, file) => count + (file.matches ? file.matches.length : 0), 0);
+	  }
+
+	  renderInput() {
+	    var resultCount = this.resultCount();
+	    var summaryMsg = L10N.getFormatStr("sourceSearch.resultsSummary1", resultCount);
+
+	    return SearchInput({
+	      query: this.state.inputValue,
+	      count: resultCount,
+	      placeholder: "Search Project",
+	      size: "big",
+	      summaryMsg,
+	      onChange: e => this.inputOnChange(e),
+	      onFocus: () => this.setState({ focused: true }),
+	      onBlur: () => this.setState({ focused: false }),
+	      onKeyDown: this.onKeyDown,
+	      handleClose: this.props.close
 	    });
 	  }
 
 	  render() {
 	    return _react.DOM.div({
 	      className: "project-text-search"
-	    }, this.renderResults());
+	    }, this.renderInput(), this.renderResults());
 	  }
 	}
 
@@ -67052,6 +67431,12 @@ return /******/ (function(modules) { // webpackBootstrap
 
 /***/ },
 /* 1119 */
+/***/ function(module, exports) {
+
+	module.exports = "<svg viewBox=\"0 0 94 37\" xmlns=\"http://www.w3.org/2000/svg\"><g fill=\"none\" fill-rule=\"evenodd\"><path d=\"M65.21 27.865s-.43-1.546 1.17-4.52c1.6-2.974 2.85-1.348 2.85-1.348s1.364 1.507-.196 3.767-3.823 2.1-3.823 2.1zm-12.288 2.14c-1.833 4.877-6.28 2.895-6.28 2.895s-.507-1.744.936-6.62c1.443-4.878 4.837-2.975 4.837-2.975s2.34 1.824.507 6.7zM49.607 9.588s2.77-7.334 3.432-3.766c.663 3.57-5.813 14.195-5.813 14.195.078-2.38 2.38-10.428 2.38-10.428zM10.01 27.865c.118-4.718 3.16-6.78 4.214-5.75 1.054 1.032.664 3.252-1.326 4.64-1.99 1.387-2.887 1.11-2.887 1.11zm83.912-.783c-.156-1.586-1.56-.996-1.56-.996S90.1 27.868 88.11 27.67c-1.99-.2-1.366-4.72-1.366-4.72s.43-4.143-.74-4.49c-1.17-.348-2.615 1.08-2.615 1.08s-1.795 2.02-2.653 4.598l-.234.08s.273-4.52-.04-5.55c-.234-.517-2.38-.477-2.73.435-.35.912-2.068 7.255-2.185 9.912 0 0-3.355 2.894-6.28 3.37-2.926.475-3.628-1.388-3.628-1.388s7.958-2.26 7.685-8.722c-.273-6.463-6.417-4.074-7.113-3.542-.673.513-4.264 2.715-5.31 8.81-.037.21-.1 1.115-.1 1.115s-3.08 2.1-4.798 2.656c0 0 4.798-8.207-1.053-11.934-2.652-1.625-4.758 1.784-4.758 1.784s7.92-8.96 6.163-16.533c-.836-3.605-2.61-3.992-4.238-3.41-2.47.993-3.408 2.46-3.408 2.46s-3.2 4.718-3.94 11.736c-.742 7.017-1.834 15.502-1.834 15.502s-1.522 1.506-2.926 1.586c-1.404.08-.78-4.243-.78-4.243s1.092-6.58 1.014-7.69c-.078-1.11-.156-1.705-1.443-2.102-1.287-.396-2.69 1.27-2.69 1.27s-3.707 5.708-4.02 6.58l-.194.357-.195-.237s2.615-7.77.118-7.89c-2.497-.12-4.135 2.775-4.135 2.775s-2.848 4.837-2.965 5.392l-.195-.238s1.17-5.63.936-7.017c-.235-1.388-1.522-1.11-1.522-1.11s-1.638-.2-2.068.872c-.43 1.07-1.99 8.167-2.184 10.427 0 0-4.096 2.973-6.788 3.012-2.692.04-2.42-1.735-2.42-1.735s9.87-3.434 7.18-10.214c-1.21-1.744-2.614-2.292-4.604-2.252-1.99.04-4.46 1.273-6.058 4.92-.763 1.742-1.042 3.392-1.198 4.642 0 0-1.728.358-2.664-.435-.936-.793-1.418 0-1.418 0S.11 29.67 1.71 30.304c1.598.634 4.095.93 4.095.93h-.002c.23 1.11.897 2.996 2.844 4.5 2.926 2.26 8.543-.208 8.543-.208l2.3-1.313s.08 2.146 1.756 2.46c1.678.313 2.38-.005 5.306-7.22 1.716-3.688 1.833-3.49 1.833-3.49l.195-.04s-1.326 7.057-.82 8.96c.508 1.903 2.732 1.704 2.732 1.704s1.21.238 2.184-3.25C33.65 29.846 35.524 26 35.524 26h.234s-.82 7.217.43 9.517c1.247 2.3 4.485.773 4.485.773s2.263-1.16 2.614-1.517c0 0 2.686 2.323 6.473 1.902 8.468-1.693 11.48-3.98 11.48-3.98s1.454 3.745 5.96 4.092c5.15.396 7.958-2.895 7.958-2.895s-.04 2.14 1.756 2.894c1.794.753 3.003-3.48 3.003-3.48l3.004-8.415h.274s.156 5.473 3.12 6.345c2.966.872 6.828-2.042 6.828-2.042s.936-.525.78-2.11z\" fill=\"#E34C32\"></path></g></svg>"
+
+/***/ },
+/* 1120 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -67073,7 +67458,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _pause = __webpack_require__(255);
 
-	__webpack_require__(1120);
+	__webpack_require__(1121);
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -67120,10 +67505,183 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 /***/ },
-/* 1120 */
+/* 1121 */
 /***/ function(module, exports) {
 
 	// removed by extract-text-webpack-plugin
+
+/***/ },
+/* 1122 */,
+/* 1123 */,
+/* 1124 */
+/***/ function(module, exports, __webpack_require__) {
+
+	"use strict";
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	exports.default = getInScopeLines;
+
+	var _selectors = __webpack_require__(242);
+
+	var _range = __webpack_require__(1026);
+
+	var _range2 = _interopRequireDefault(_range);
+
+	var _flatMap = __webpack_require__(1067);
+
+	var _flatMap2 = _interopRequireDefault(_flatMap);
+
+	var _uniq = __webpack_require__(561);
+
+	var _uniq2 = _interopRequireDefault(_uniq);
+
+	var _without = __webpack_require__(1125);
+
+	var _without2 = _interopRequireDefault(_without);
+
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+	function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
+
+	function getOutOfScopeLines(outOfScopeLocations) {
+	  if (!outOfScopeLocations) {
+	    return null;
+	  }
+
+	  return (0, _uniq2.default)((0, _flatMap2.default)(outOfScopeLocations, location => (0, _range2.default)(location.start.line, location.end.line)));
+	}
+
+	function getInScopeLines(state) {
+	  var source = (0, _selectors.getSelectedSource)(state);
+	  var outOfScopeLocations = (0, _selectors.getOutOfScopeLocations)(state);
+
+	  if (!source || !source.get("text")) {
+	    return;
+	  }
+
+	  var linesOutOfScope = getOutOfScopeLines(outOfScopeLocations, source.toJS());
+
+	  var sourceNumLines = source.get("text").split("\n").length;
+	  var sourceLines = (0, _range2.default)(1, sourceNumLines + 1);
+
+	  if (!linesOutOfScope) {
+	    return sourceLines;
+	  }
+
+	  return _without2.default.apply(undefined, [sourceLines].concat(_toConsumableArray(linesOutOfScope)));
+	}
+
+/***/ },
+/* 1125 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var baseDifference = __webpack_require__(1126),
+	    baseRest = __webpack_require__(411),
+	    isArrayLikeObject = __webpack_require__(404);
+
+	/**
+	 * Creates an array excluding all given values using
+	 * [`SameValueZero`](http://ecma-international.org/ecma-262/7.0/#sec-samevaluezero)
+	 * for equality comparisons.
+	 *
+	 * **Note:** Unlike `_.pull`, this method returns a new array.
+	 *
+	 * @static
+	 * @memberOf _
+	 * @since 0.1.0
+	 * @category Array
+	 * @param {Array} array The array to inspect.
+	 * @param {...*} [values] The values to exclude.
+	 * @returns {Array} Returns the new array of filtered values.
+	 * @see _.difference, _.xor
+	 * @example
+	 *
+	 * _.without([2, 1, 2, 3], 1, 2);
+	 * // => [3]
+	 */
+	var without = baseRest(function(array, values) {
+	  return isArrayLikeObject(array)
+	    ? baseDifference(array, values)
+	    : [];
+	});
+
+	module.exports = without;
+
+
+/***/ },
+/* 1126 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var SetCache = __webpack_require__(276),
+	    arrayIncludes = __webpack_require__(563),
+	    arrayIncludesWith = __webpack_require__(567),
+	    arrayMap = __webpack_require__(110),
+	    baseUnary = __webpack_require__(215),
+	    cacheHas = __webpack_require__(280);
+
+	/** Used as the size to enable large array optimizations. */
+	var LARGE_ARRAY_SIZE = 200;
+
+	/**
+	 * The base implementation of methods like `_.difference` without support
+	 * for excluding multiple arrays or iteratee shorthands.
+	 *
+	 * @private
+	 * @param {Array} array The array to inspect.
+	 * @param {Array} values The values to exclude.
+	 * @param {Function} [iteratee] The iteratee invoked per element.
+	 * @param {Function} [comparator] The comparator invoked per element.
+	 * @returns {Array} Returns the new array of filtered values.
+	 */
+	function baseDifference(array, values, iteratee, comparator) {
+	  var index = -1,
+	      includes = arrayIncludes,
+	      isCommon = true,
+	      length = array.length,
+	      result = [],
+	      valuesLength = values.length;
+
+	  if (!length) {
+	    return result;
+	  }
+	  if (iteratee) {
+	    values = arrayMap(values, baseUnary(iteratee));
+	  }
+	  if (comparator) {
+	    includes = arrayIncludesWith;
+	    isCommon = false;
+	  }
+	  else if (values.length >= LARGE_ARRAY_SIZE) {
+	    includes = cacheHas;
+	    isCommon = false;
+	    values = new SetCache(values);
+	  }
+	  outer:
+	  while (++index < length) {
+	    var value = array[index],
+	        computed = iteratee == null ? value : iteratee(value);
+
+	    value = (comparator || value !== 0) ? value : 0;
+	    if (isCommon && computed === computed) {
+	      var valuesIndex = valuesLength;
+	      while (valuesIndex--) {
+	        if (values[valuesIndex] === computed) {
+	          continue outer;
+	        }
+	      }
+	      result.push(value);
+	    }
+	    else if (!includes(values, computed, comparator)) {
+	      result.push(value);
+	    }
+	  }
+	  return result;
+	}
+
+	module.exports = baseDifference;
+
 
 /***/ }
 /******/ ])

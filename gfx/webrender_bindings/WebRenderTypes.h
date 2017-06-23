@@ -14,6 +14,7 @@
 #include "mozilla/layers/LayersTypes.h"
 #include "mozilla/Range.h"
 #include "Units.h"
+#include "RoundedRect.h"
 #include "nsStyleConsts.h"
 
 typedef mozilla::Maybe<WrImageMask> MaybeImageMask;
@@ -237,6 +238,16 @@ static inline WrRect ToWrRect(const gfx::RectTyped<T>& rect)
   return r;
 }
 
+static inline WrRect ToWrRect(const gfxRect rect)
+{
+  WrRect r;
+  r.x = rect.x;
+  r.y = rect.y;
+  r.width = rect.width;
+  r.height = rect.height;
+  return r;
+}
+
 template<class T>
 static inline WrRect ToWrRect(const gfx::IntRectTyped<T>& rect)
 {
@@ -250,6 +261,17 @@ static inline WrSize ToWrSize(const gfx::SizeTyped<T>& size)
   ls.width = size.width;
   ls.height = size.height;
   return ls;
+}
+
+static inline WrComplexClipRegion ToWrComplexClipRegion(const RoundedRect& rect)
+{
+  WrComplexClipRegion ret;
+  ret.rect               = ToWrRect(rect.rect);
+  ret.radii.top_left     = ToWrSize(rect.corners.radii[mozilla::eCornerTopLeft]);
+  ret.radii.top_right    = ToWrSize(rect.corners.radii[mozilla::eCornerTopRight]);
+  ret.radii.bottom_left  = ToWrSize(rect.corners.radii[mozilla::eCornerBottomLeft]);
+  ret.radii.bottom_right = ToWrSize(rect.corners.radii[mozilla::eCornerBottomRight]);
+  return ret;
 }
 
 template<class T>

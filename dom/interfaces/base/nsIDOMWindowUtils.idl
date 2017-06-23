@@ -1417,6 +1417,11 @@ interface nsIDOMWindowUtils : nsISupports {
   readonly attribute boolean layerManagerRemote;
 
   /**
+   * True if advanced layers is enabled on this window, false otherwise.
+   */
+  readonly attribute boolean usingAdvancedLayers;
+
+  /**
    * Returns a Promise that will be resolved with a string once the capabilities
    * of the h264 decoder have been determined.
    * Success does not mean that all h264 video decoding will be done

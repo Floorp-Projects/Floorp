@@ -1855,7 +1855,7 @@ nsFtpState::StopProcessing()
 }
 
 nsresult 
-nsFtpState::SendFTPCommand(const nsCSubstring& command)
+nsFtpState::SendFTPCommand(const nsACString& command)
 {
     NS_ASSERTION(mControlConnection, "null control connection");        
     

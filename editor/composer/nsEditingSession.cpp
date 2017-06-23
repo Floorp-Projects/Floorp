@@ -48,7 +48,7 @@
 #include "nsPIDOMWindow.h"              // for nsPIDOMWindow
 #include "nsPresContext.h"              // for nsPresContext
 #include "nsReadableUtils.h"            // for AppendUTF16toUTF8
-#include "nsStringFwd.h"                // for nsAFlatString
+#include "nsStringFwd.h"                // for nsString
 #include "mozilla/dom/Selection.h"      // for AutoHideSelectionChanges
 #include "nsFrameSelection.h"           // for nsFrameSelection
 

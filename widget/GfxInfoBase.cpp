@@ -170,6 +170,9 @@ GetPrefNameForFeature(int32_t aFeature)
     case nsIGfxInfo::FEATURE_WEBGL2:
       name = BLACKLIST_PREF_BRANCH "webgl2";
       break;
+    case nsIGfxInfo::FEATURE_ADVANCED_LAYERS:
+      name = BLACKLIST_PREF_BRANCH "layers.advanced";
+      break;
     case nsIGfxInfo::FEATURE_VP8_HW_DECODE:
     case nsIGfxInfo::FEATURE_VP9_HW_DECODE:
     case nsIGfxInfo::FEATURE_DX_INTEROP2:
@@ -1369,8 +1372,16 @@ void
 GfxInfoBase::DescribeFeatures(JSContext* aCx, JS::Handle<JSObject*> aObj)
 {
   JS::Rooted<JSObject*> obj(aCx);
+
   gfx::FeatureStatus gpuProcess = gfxConfig::GetValue(Feature::GPU_PROCESS);
   InitFeatureObject(aCx, aObj, "gpuProcess", FEATURE_GPU_PROCESS, Some(gpuProcess), &obj);
+
+  // Only include AL if the platform attempted to use it.
+  gfx::FeatureStatus advancedLayers = gfxConfig::GetValue(Feature::ADVANCED_LAYERS);
+  if (advancedLayers != FeatureStatus::Unused) {
+    InitFeatureObject(aCx, aObj, "advancedLayers", FEATURE_ADVANCED_LAYERS,
+                      Some(advancedLayers), &obj);
+  }
 }
 
 bool

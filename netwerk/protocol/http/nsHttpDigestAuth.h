@@ -45,22 +45,22 @@ class nsHttpDigestAuth final : public nsIHttpAuthenticator
 
     MOZ_MUST_USE nsresult CalculateResponse(const char * ha1_digest,
                                             const char * ha2_digest,
-                                            const nsAFlatCString & nonce,
+                                            const nsCString&  nonce,
                                             uint16_t qop,
                                             const char * nonce_count,
-                                            const nsAFlatCString & cnonce,
+                                            const nsCString&  cnonce,
                                             char * result);
 
-    MOZ_MUST_USE nsresult CalculateHA1(const nsAFlatCString & username,
-                                       const nsAFlatCString & password,
-                                       const nsAFlatCString & realm,
+    MOZ_MUST_USE nsresult CalculateHA1(const nsCString& username,
+                                       const nsCString& password,
+                                       const nsCString& realm,
                                        uint16_t algorithm,
-                                       const nsAFlatCString & nonce,
-                                       const nsAFlatCString & cnonce,
+                                       const nsCString& nonce,
+                                       const nsCString& cnonce,
                                        char * result);
 
-    MOZ_MUST_USE nsresult CalculateHA2(const nsAFlatCString & http_method,
-                                       const nsAFlatCString & http_uri_path,
+    MOZ_MUST_USE nsresult CalculateHA2(const nsCString& http_method,
+                                       const nsCString& http_uri_path,
                                        uint16_t qop,
                                        const char * body_digest,
                                        char * result);

@@ -84,7 +84,7 @@ protected:
   int16_t  GetNextChar(uint32_t numBytesInBuffer);
   nsresult ProcessNextChunk(nsIRequest * aRequest, nsISupports * aContext, uint32_t numBytesInBuffer);
   nsresult ProcessNextState(nsIRequest * aRequest, nsISupports * aContext);
-  nsresult DetectContentType(nsIRequest * aRequest, const nsAFlatCString &aFilename);
+  nsresult DetectContentType(nsIRequest * aRequest, const nsCString& aFilename);
 
 protected:
   nsCOMPtr<nsIStreamListener> mNextListener;

@@ -14,7 +14,7 @@
 #include "gfxFontVariations.h"
 #include "mozilla/RefPtr.h"             // for RefPtr
 #include "nsCoord.h"                    // for nscoord
-#include "nsStringFwd.h"                // for nsSubstring
+#include "nsStringFwd.h"                // for nsAString
 #include "nsString.h"               // for nsString
 #include "nsTArray.h"                   // for nsTArray
 

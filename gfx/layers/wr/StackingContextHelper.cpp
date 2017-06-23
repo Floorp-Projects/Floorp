@@ -31,6 +31,7 @@ StackingContextHelper::StackingContextHelper(const StackingContextHelper& aParen
   float opacity = 1.0f;
   mBuilder->PushStackingContext(scBounds, 0, &opacity,
                                 mTransform.IsIdentity() ? nullptr : &mTransform,
+                                WrTransformStyle::Flat,
                                 wr::ToWrMixBlendMode(layer->GetMixBlendMode()),
                                 aFilters);
   mOrigin = aLayer->Bounds().TopLeft();
@@ -54,6 +55,7 @@ StackingContextHelper::StackingContextHelper(const StackingContextHelper& aParen
                                 aAnimationsId,
                                 aOpacityPtr,
                                 aTransformPtr,
+                                WrTransformStyle::Flat,
                                 wr::ToWrMixBlendMode(aLayer->GetLayer()->GetMixBlendMode()),
                                 aFilters);
   mOrigin = aLayer->Bounds().TopLeft();
