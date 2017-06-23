@@ -235,12 +235,6 @@ protected:
   nsresult BackupAndReplaceDatabaseFile(nsCOMPtr<mozIStorageService>& aStorage);
 
   /**
-   * This should be used as a last resort in case the database is corrupt and
-   * there's no way to fix it in-place.
-   */
-  nsresult ForceCrashAndReplaceDatabase(const nsCString& aReason);
-
-  /**
    * Set up the connection environment through PRAGMAs.
    * Will return NS_ERROR_FILE_CORRUPTED if any critical setting fails.
    *
