@@ -22,9 +22,10 @@ a {
     color: #FFFFFF;
 }
 
-p.title {
-    font-family: sans-serif-medium;
-    font-size: 18px;
+p.subtitle {
+    text-align: center;
+    opacity: .7;
+    margin: 0;
 }
 
 img#wordmark {
@@ -35,5 +36,4 @@ img#wordmark {
     margin-left: auto;
     margin-right: auto;
     padding-top: 24px;
-    padding-bottom: 24px;
 }

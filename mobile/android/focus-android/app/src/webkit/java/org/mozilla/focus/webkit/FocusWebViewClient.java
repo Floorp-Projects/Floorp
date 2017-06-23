@@ -5,6 +5,7 @@
 package org.mozilla.focus.webkit;
 
 import android.content.Context;
+import android.content.pm.PackageManager;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.net.Uri;
@@ -34,9 +35,11 @@ import java.util.Map;
 
     private IWebView.Callback callback;
     private boolean errorReceived;
+    private Context context;
 
     public FocusWebViewClient(Context context) {
         super(context);
+        this.context = context;
     }
 
     public void setCallback(IWebView.Callback callback) {
@@ -282,6 +285,14 @@ import java.util.Map;
         final Map<String, String> substitutionMap = new ArrayMap<>();
         final String appName = webView.getContext().getResources().getString(R.string.app_name);
         final String learnMoreURL = SupportUtils.getManifestoURL();
+
+        String aboutVersion = "";
+        try {
+            aboutVersion = context.getPackageManager().getPackageInfo(context.getPackageName(), 0).versionName;
+        } catch (PackageManager.NameNotFoundException e) {
+            // Nothing to do if we can't find the package name.
+        }
+        substitutionMap.put("%about-version%", aboutVersion);
 
         final String aboutContent = resources.getString(R.string.about_content, appName, learnMoreURL);
         substitutionMap.put("%about-content%", aboutContent);
