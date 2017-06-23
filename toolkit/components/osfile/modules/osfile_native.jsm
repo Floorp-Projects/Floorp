@@ -22,7 +22,6 @@ if (SharedAll.Constants.Win) {
 } else {
   throw new Error("I am neither under Windows nor under a Posix system");
 }
-var {Promise} = Cu.import("resource://gre/modules/Promise.jsm", {});
 var {XPCOMUtils} = Cu.import("resource://gre/modules/XPCOMUtils.jsm", {});
 
 /**

@@ -21,7 +21,6 @@ this.EXPORTED_SYMBOLS = [
 Cu.import("resource://gre/modules/CrashManager.jsm", this);
 Cu.import("resource://gre/modules/Log.jsm", this);
 Cu.import("resource://gre/modules/osfile.jsm", this);
-Cu.import("resource://gre/modules/Promise.jsm", this);
 Cu.import("resource://gre/modules/Timer.jsm", this);
 
 var loggingConfigured = false;
