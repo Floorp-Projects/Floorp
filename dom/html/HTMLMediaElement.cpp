@@ -3555,7 +3555,7 @@ HTMLMediaElement::MozCaptureStream(ErrorResult& aRv)
   }
 
   MediaStreamGraph* graph =
-    MediaStreamGraph::GetInstance(graphDriverType, mAudioChannel);
+    MediaStreamGraph::GetInstance(graphDriverType, mAudioChannel, window);
 
   RefPtr<DOMMediaStream> stream =
     CaptureStreamInternal(false, false, graph);
@@ -3586,7 +3586,7 @@ HTMLMediaElement::MozCaptureStreamUntilEnded(ErrorResult& aRv)
   }
 
   MediaStreamGraph* graph =
-    MediaStreamGraph::GetInstance(graphDriverType, mAudioChannel);
+    MediaStreamGraph::GetInstance(graphDriverType, mAudioChannel, window);
 
   RefPtr<DOMMediaStream> stream =
     CaptureStreamInternal(true, false, graph);
@@ -7212,7 +7212,7 @@ HTMLMediaElement::AudioCaptureStreamChange(bool aCapture)
     uint64_t id = window->WindowID();
     MediaStreamGraph* msg =
       MediaStreamGraph::GetInstance(MediaStreamGraph::AUDIO_THREAD_DRIVER,
-                                    mAudioChannel);
+                                    mAudioChannel, window);
 
     if (GetSrcMediaStream()) {
       mCaptureStreamPort = msg->ConnectToCaptureStream(id, GetSrcMediaStream());

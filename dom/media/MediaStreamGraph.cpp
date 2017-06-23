@@ -1706,10 +1706,13 @@ MediaStreamGraphImpl::RunInStableState(bool aSourceIsMSG)
         NS_DispatchToMainThread(event.forget());
 
         LOG(LogLevel::Debug, ("Disconnecting MediaStreamGraph %p", this));
-        MediaStreamGraphImpl* graph;
-        if (gGraphs.Get(uint32_t(mAudioChannel), &graph) && graph == this) {
-          // null out gGraph if that's the graph being shut down
-          gGraphs.Remove(uint32_t(mAudioChannel));
+
+        // Find the graph in the hash table and remove it.
+        for (auto iter = gGraphs.Iter(); !iter.Done(); iter.Next()) {
+          if (iter.UserData() == this) {
+            iter.Remove();
+            break;
+          }
         }
       }
     } else {
@@ -1861,9 +1864,12 @@ MediaStreamGraphImpl::AppendMessage(UniquePtr<ControlMessage> aMessage)
     if (IsEmpty() &&
         mLifecycleState >= LIFECYCLE_WAITING_FOR_STREAM_DESTRUCTION) {
 
-      MediaStreamGraphImpl* graph;
-      if (gGraphs.Get(uint32_t(mAudioChannel), &graph) && graph == this) {
-        gGraphs.Remove(uint32_t(mAudioChannel));
+      // Find the graph in the hash table and remove it.
+      for (auto iter = gGraphs.Iter(); !iter.Done(); iter.Next()) {
+        if (iter.UserData() == this) {
+          iter.Remove();
+          break;
+        }
       }
 
       Destroy();
@@ -3469,16 +3475,36 @@ MediaStreamGraphImpl::Destroy()
   mSelfRef = nullptr;
 }
 
+static
+uint32_t ChannelAndWindowToHash(dom::AudioChannel aChannel,
+                                nsPIDOMWindowInner* aWindow)
+{
+  uint32_t hashkey = 0;
+
+  hashkey = AddToHash(hashkey, static_cast<uint32_t>(aChannel));
+  hashkey = AddToHash(hashkey, aWindow);
+
+  return hashkey;
+}
+
 MediaStreamGraph*
 MediaStreamGraph::GetInstance(MediaStreamGraph::GraphDriverType aGraphDriverRequested,
-                              dom::AudioChannel aChannel)
+                              dom::AudioChannel aChannel,
+                              nsPIDOMWindowInner* aWindow)
 {
   NS_ASSERTION(NS_IsMainThread(), "Main thread only");
 
   uint32_t channel = static_cast<uint32_t>(aChannel);
   MediaStreamGraphImpl* graph = nullptr;
 
-  if (!gGraphs.Get(channel, &graph)) {
+  // We hash the AudioChannel and the nsPIDOMWindowInner together to form a key
+  // to the gloabl MediaStreamGraph hashtable. Effectively, this means there is
+  // a graph per document and AudioChannel.
+
+
+  uint32_t hashkey = ChannelAndWindowToHash(aChannel, aWindow);
+
+  if (!gGraphs.Get(hashkey, &graph)) {
     if (!gMediaStreamGraphShutdownBlocker) {
 
       class Blocker : public media::ShutdownBlocker
@@ -3518,12 +3544,11 @@ MediaStreamGraph::GetInstance(MediaStreamGraph::GraphDriverType aGraphDriverRequ
                                      CubebUtils::PreferredSampleRate(),
                                      aChannel);
 
-    gGraphs.Put(channel, graph);
+    gGraphs.Put(hashkey, graph);
 
     LOG(LogLevel::Debug,
-        ("Starting up MediaStreamGraph %p for channel %s",
-         graph,
-         AudioChannelValues::strings[channel].value));
+        ("Starting up MediaStreamGraph %p for channel %s and window %p",
+         graph, AudioChannelValues::strings[channel].value, aWindow));
   }
 
   return graph;

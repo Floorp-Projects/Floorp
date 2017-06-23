@@ -172,8 +172,10 @@ nsSpeechTask::~nsSpeechTask()
 void
 nsSpeechTask::InitDirectAudio()
 {
+  // nullptr as final argument here means that this is not tied to a window.
+  // This is a global MSG.
   mStream = MediaStreamGraph::GetInstance(MediaStreamGraph::AUDIO_THREAD_DRIVER,
-                                          AudioChannel::Normal)->
+                                          AudioChannel::Normal, nullptr)->
     CreateSourceStream(AbstractThread::MainThread() /* Non DocGroup-version for the task in parent. */);
   mIndirectAudio = false;
   mInited = true;
