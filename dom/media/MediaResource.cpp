@@ -1266,30 +1266,26 @@ nsresult FileMediaResource::GetCachedRanges(MediaByteRangeSet& aRanges)
 nsresult FileMediaResource::Open(nsIStreamListener** aStreamListener)
 {
   NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
+  MOZ_ASSERT(aStreamListener);
 
-  if (aStreamListener) {
-    *aStreamListener = nullptr;
-  }
-
+  *aStreamListener = nullptr;
   nsresult rv = NS_OK;
-  if (aStreamListener) {
-    // The channel is already open. We need a synchronous stream that
-    // implements nsISeekableStream, so we have to find the underlying
-    // file and reopen it
-    nsCOMPtr<nsIFileChannel> fc(do_QueryInterface(mChannel));
-    if (fc) {
-      nsCOMPtr<nsIFile> file;
-      rv = fc->GetFile(getter_AddRefs(file));
-      NS_ENSURE_SUCCESS(rv, rv);
 
-      rv = NS_NewLocalFileInputStream(
-        getter_AddRefs(mInput), file, -1, -1, nsIFileInputStream::SHARE_DELETE);
-    } else if (IsBlobURI(mURI)) {
-      rv = NS_GetStreamForBlobURI(mURI, getter_AddRefs(mInput));
-    }
-  } else {
-    rv = mChannel->Open2(getter_AddRefs(mInput));
+  // The channel is already open. We need a synchronous stream that
+  // implements nsISeekableStream, so we have to find the underlying
+  // file and reopen it
+  nsCOMPtr<nsIFileChannel> fc(do_QueryInterface(mChannel));
+  if (fc) {
+    nsCOMPtr<nsIFile> file;
+    rv = fc->GetFile(getter_AddRefs(file));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = NS_NewLocalFileInputStream(
+      getter_AddRefs(mInput), file, -1, -1, nsIFileInputStream::SHARE_DELETE);
+  } else if (IsBlobURI(mURI)) {
+    rv = NS_GetStreamForBlobURI(mURI, getter_AddRefs(mInput));
   }
+
   NS_ENSURE_SUCCESS(rv, rv);
 
   mSeekable = do_QueryInterface(mInput);
