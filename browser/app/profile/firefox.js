@@ -1266,16 +1266,16 @@ pref("browser.newtabpage.enabled", true);
 sticky_pref("browser.newtabpage.enhanced", true);
 
 // enables Activity Stream inspired layout
-pref("browser.newtabpage.compact", false);
+pref("browser.newtabpage.compact", true);
 
 // enables showing basic placeholders for missing thumbnails
 pref("browser.newtabpage.thumbnailPlaceholder", false);
 
 // number of rows of newtab grid
-pref("browser.newtabpage.rows", 3);
+pref("browser.newtabpage.rows", 2);
 
 // number of columns of newtab grid
-pref("browser.newtabpage.columns", 5);
+pref("browser.newtabpage.columns", 6);
 
 // directory tiles download URL
 pref("browser.newtabpage.directory.source", "https://tiles.services.mozilla.com/v3/links/fetch/%LOCALE%/%CHANNEL%");
