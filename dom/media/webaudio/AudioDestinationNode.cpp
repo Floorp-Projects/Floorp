@@ -335,9 +335,10 @@ AudioDestinationNode::AudioDestinationNode(AudioContext* aContext,
   , mCaptured(false)
   , mAudible(AudioChannelService::AudibleState::eAudible)
 {
+  nsPIDOMWindowInner* window = aContext->GetParentObject();
   MediaStreamGraph* graph = aIsOffline ?
                             MediaStreamGraph::CreateNonRealtimeInstance(aSampleRate) :
-                            MediaStreamGraph::GetInstance(MediaStreamGraph::AUDIO_THREAD_DRIVER, aChannel);
+                            MediaStreamGraph::GetInstance(MediaStreamGraph::AUDIO_THREAD_DRIVER, aChannel, window);
   AudioNodeEngine* engine = aIsOffline ?
                             new OfflineDestinationNodeEngine(this, aNumberOfChannels,
                                                              aLength, aSampleRate) :
