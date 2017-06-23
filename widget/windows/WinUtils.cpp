@@ -1861,31 +1861,6 @@ WinUtils::ResolveJunctionPointsAndSymLinks(std::wstring& aPath)
 
 /* static */
 bool
-WinUtils::ResolveJunctionPointsAndSymLinks(nsIFile* aPath)
-{
-  MOZ_ASSERT(aPath);
-
-  nsAutoString filePath;
-  nsresult rv = aPath->GetPath(filePath);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return false;
-  }
-
-  std::wstring resolvedPath(filePath.get());
-  if (!ResolveJunctionPointsAndSymLinks(resolvedPath)) {
-    return false;
-  }
-
-  rv = aPath->InitWithPath(nsDependentString(resolvedPath.c_str()));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return false;
-  }
-
-  return true;
-}
-
-/* static */
-bool
 WinUtils::SanitizePath(const wchar_t* aInputPath, nsAString& aOutput)
 {
   aOutput.Truncate();

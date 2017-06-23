@@ -51,7 +51,6 @@
 #if defined(MOZ_SANDBOX)
 #include "mozilla/Preferences.h"
 #include "mozilla/sandboxing/sandboxLogging.h"
-#include "WinUtils.h"
 #endif
 #endif
 
@@ -502,17 +501,7 @@ GeckoChildProcessHost::SetChildLogName(const char* varName, const char* origLogN
   // the path against the sanboxing rules as passed to fopen (left relative).
   char absPath[MAX_PATH + 2];
   if (_fullpath(absPath, origLogName, sizeof(absPath))) {
-#ifdef MOZ_SANDBOX
-    // We need to make sure the child log name doesn't contain any junction
-    // points or symlinks or the sandbox will reject rules to allow writing.
-    std::wstring resolvedPath(NS_ConvertUTF8toUTF16(absPath).get());
-    if (widget::WinUtils::ResolveJunctionPointsAndSymLinks(resolvedPath)) {
-      AppendUTF16toUTF8(resolvedPath.c_str(), buffer);
-    } else
-#endif
-    {
-      buffer.Append(absPath);
-    }
+    buffer.Append(absPath);
   } else
 #endif
   {

@@ -68,9 +68,6 @@
 #if (defined(XP_WIN) || defined(XP_MACOSX))
 #include "nsIUUIDGenerator.h"
 #include "mozilla/Unused.h"
-#if defined(XP_WIN)
-#include "WinUtils.h"
-#endif
 #endif
 #endif
 
@@ -122,20 +119,6 @@ nsXREDirProvider::Initialize(nsIFile *aXULAppDir,
   mAppProvider = aAppProvider;
   mXULAppDir = aXULAppDir;
   mGREDir = aGREDir;
-#if defined(XP_WIN) && defined(MOZ_CONTENT_SANDBOX)
-  // The GRE directory can be used in sandbox rules, so we need to make sure
-  // it doesn't contain any junction points or symlinks or the sandbox will
-  // reject those rules.
-  if (!mozilla::widget::WinUtils::ResolveJunctionPointsAndSymLinks(mGREDir)) {
-    NS_WARNING("Failed to resolve GRE Dir.");
-  }
-  // If the mXULAppDir is different it lives below the mGREDir. To avoid
-  // confusion resolve that as well even though we don't need it for sandbox
-  // rules. Some tests rely on this for example.
-  if (!mozilla::widget::WinUtils::ResolveJunctionPointsAndSymLinks(mXULAppDir)) {
-    NS_WARNING("Failed to resolve XUL App Dir.");
-  }
-#endif
   mGREDir->Clone(getter_AddRefs(mGREBinDir));
 #ifdef XP_MACOSX
   mGREBinDir->SetNativeLeafName(NS_LITERAL_CSTRING("MacOS"));
@@ -199,14 +182,6 @@ nsXREDirProvider::SetProfile(nsIFile* aDir, nsIFile* aLocalDir)
 
   mProfileDir = aDir;
   mProfileLocalDir = aLocalDir;
-#if defined(XP_WIN) && defined(MOZ_CONTENT_SANDBOX)
-  // The profile directory can be used in sandbox rules, so we need to make sure
-  // it doesn't contain any junction points or symlinks or the sandbox will
-  // reject those rules.
-  if (!mozilla::widget::WinUtils::ResolveJunctionPointsAndSymLinks(mProfileDir)) {
-    NS_WARNING("Failed to resolve Profile Dir.");
-  }
-#endif
   return NS_OK;
 }
 
@@ -703,24 +678,12 @@ nsXREDirProvider::LoadContentProcessTempDir()
     mContentTempDir = GetContentProcessSandboxTempDir();
   }
 
-  if (!mContentTempDir) {
-    nsresult rv = NS_GetSpecialDirectory(NS_OS_TEMP_DIR,
-                                         getter_AddRefs(mContentTempDir));
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+  if (mContentTempDir) {
+    return NS_OK;
+  } else {
+    return NS_GetSpecialDirectory(NS_OS_TEMP_DIR,
+                                  getter_AddRefs(mContentTempDir));
   }
-
-#if defined(XP_WIN)
-  // The content temp dir can be used in sandbox rules, so we need to make sure
-  // it doesn't contain any junction points or symlinks or the sandbox will
-  // reject those rules.
-  if (!mozilla::widget::WinUtils::ResolveJunctionPointsAndSymLinks(mContentTempDir)) {
-    NS_WARNING("Failed to resolve Content Temp Dir.");
-  }
-#endif
-
-  return NS_OK;
 }
 
 static bool

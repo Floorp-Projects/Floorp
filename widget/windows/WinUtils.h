@@ -479,7 +479,6 @@ public:
    *               remain unchanged.
    */
   static bool ResolveJunctionPointsAndSymLinks(std::wstring& aPath);
-  static bool ResolveJunctionPointsAndSymLinks(nsIFile* aPath);
 
   static void Initialize();
 
