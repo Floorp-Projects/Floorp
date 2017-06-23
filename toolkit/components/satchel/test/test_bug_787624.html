@@ -62,8 +62,8 @@ function waitForNextPopup() {
 }
 
 add_task(async function test_popup_not_move_input() {
-  var input = $_(1, "field1");
-  var rect = input.getBoundingClientRect();
+  let input = $_(1, "field1");
+  let rect = input.getBoundingClientRect();
 
   await new Promise(resolve => updateFormHistory([
     { op: "remove" },
@@ -76,11 +76,11 @@ add_task(async function test_popup_not_move_input() {
   doKey("down");
   await popupShown;
 
-  var newRect = input.getBoundingClientRect();
+  let newRect = input.getBoundingClientRect();
   is(newRect.left, rect.left,
-    "autocomplete popup does not disturb the input position");
+     "autocomplete popup does not disturb the input position");
   is(newRect.top, rect.top,
-    "autocomplete popup does not disturb the input position");
+     "autocomplete popup does not disturb the input position");
 });
 
 </script>

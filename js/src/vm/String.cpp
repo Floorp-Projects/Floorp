@@ -29,6 +29,7 @@ using mozilla::PodCopy;
 using mozilla::PodEqual;
 using mozilla::RangedPtr;
 using mozilla::RoundUpPow2;
+using mozilla::Unused;
 
 using JS::AutoCheckCannotGC;
 
@@ -1538,6 +1539,7 @@ FillWithRepresentatives(JSContext* cx, HandleArrayObject array, uint32_t* index,
         [&check](JSContext* cx, HandleArrayObject array, uint32_t* index, HandleString s)
     {
         MOZ_ASSERT(check(s));
+        Unused << check; // silence clang -Wunused-lambda-capture in opt builds
         RootedValue val(cx, StringValue(s));
         return JS_DefineElement(cx, array, (*index)++, val, 0);
     };

@@ -113,94 +113,6 @@ crashtest:
             linux64-qr/.*: 1
             default: default
 
-external-media-tests-base:
-    description: "External Media Test run"
-    suite: external-media-tests
-    try-name: 'media-tests'
-    treeherder-symbol: tc-VP(b-m)
-    e10s: false
-    tier: 2
-    max-run-time: 5400
-    docker-image: {"in-tree": "desktop1604-test"}
-    run-on-projects:
-        by-test-platform:
-            windows.*: ['mozilla-central', 'try']
-            windows7-32-vm/debug: built-projects
-            windows7-32/debug: built-projects
-            default: built-projects
-    mozharness:
-        script: firefox_media_tests_taskcluster.py
-        config:
-            by-test-platform:
-                windows.*:
-                    - mediatests/taskcluster_windows_config.py
-                macosx.*:
-                    - mediatests/taskcluster_posix_config.py
-                default:
-                    - mediatests/taskcluster_posix_config.py
-                    - remove_executables.py
-
-external-media-tests-twitch:
-    description: "External Media Test Twitch run"
-    suite: external-media-tests/twitch
-    treeherder-symbol: tc-VP(b-t)
-    try-name: media-twitch-tests
-    e10s: false
-    instance-size:
-        by-test-platform:
-            default: default
-    tier: 2
-    max-run-time: 5400
-    docker-image: {"in-tree": "desktop1604-test"}
-    run-on-projects:
-        by-test-platform:
-            windows.*: ['mozilla-central', 'try']
-            windows7-32-vm/debug: built-projects
-            windows7-32/debug: built-projects
-            default: built-projects
-    mozharness:
-        script: firefox_media_tests_taskcluster.py
-        config:
-            by-test-platform:
-                windows.*:
-                    - mediatests/taskcluster_windows_config.py
-                macosx.*:
-                    - mediatests/taskcluster_posix_config.py
-                default:
-                    - mediatests/taskcluster_posix_config.py
-                    - remove_executables.py
-        extra-options:
-            - "--suite=media-twitch-tests"
-
-external-media-tests-youtube:
-    description: "External Media Test Youtube run"
-    suite: external-media-tests/youtube
-    try-name: media-youtube-tests
-    treeherder-symbol: tc-VP(b-y)
-    e10s: false
-    tier: 2
-    max-run-time: 5400
-    docker-image: {"in-tree": "desktop1604-test"}
-    run-on-projects:
-        by-test-platform:
-            windows.*: ['mozilla-central', 'try']
-            windows7-32-vm/debug: built-projects
-            windows7-32/debug: built-projects
-            default: built-projects
-    mozharness:
-        script: firefox_media_tests_taskcluster.py
-        config:
-            by-test-platform:
-                windows.*:
-                    - mediatests/taskcluster_windows_config.py
-                macosx.*:
-                    - mediatests/taskcluster_posix_config.py
-                default:
-                    - mediatests/taskcluster_posix_config.py
-                    - remove_executables.py
-        extra-options:
-            - "--suite=media-youtube-tests"
-
 firefox-ui-functional-local:
     description: "Firefox-ui-tests functional run"
     suite: "firefox-ui/functional local"
@@ -1557,7 +1469,6 @@ web-platform-tests:
     max-run-time: 7200
     instance-size: xlarge
     docker-image: {"in-tree": "desktop1604-test"}
-    checkout: true
     run-on-projects:
         by-test-platform:
             windows10.*: ['mozilla-central', 'try']
@@ -1592,7 +1503,6 @@ web-platform-tests-reftests:
             macosx.*: true
             default: both
     docker-image: {"in-tree": "desktop1604-test"}
-    checkout: true
     run-on-projects:
         by-test-platform:
             windows10.*: ['mozilla-central', 'try']
@@ -1622,7 +1532,6 @@ web-platform-tests-wdspec:
     max-run-time: 5400
     instance-size: xlarge
     docker-image: {"in-tree": "desktop1604-test"}
-    checkout: true
     mozharness:
         script: web_platform_tests.py
         no-read-buildbot-config: true

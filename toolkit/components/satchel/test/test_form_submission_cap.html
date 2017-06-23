@@ -31,16 +31,16 @@ var numInputFields = 101;
 
 function checkInitialState() {
   countEntries(null, null,
-    function(num) {
-      ok(!num, "checking for initially empty storage");
-      startTest();
-    });
+               function(num) {
+                 ok(!num, "checking for initially empty storage");
+                 startTest();
+               });
 }
 
 function startTest() {
-  var form = document.getElementById("form1");
+  let form = document.getElementById("form1");
   for (let i = 1; i <= numInputFields; i++) {
-    var newField = document.createElement("input");
+    let newField = document.createElement("input");
     newField.setAttribute("type", "text");
     newField.setAttribute("name", "test" + i);
     form.appendChild(newField);
@@ -54,11 +54,11 @@ function startTest() {
   }
 
   // submit the first form.
-  var button = getFormSubmitButton(1);
+  let button = getFormSubmitButton(1);
   button.click();
 }
 
-
+/* exported checkSubmit */
 // Called by each form's onsubmit handler.
 function checkSubmit(formNum) {
   ok(true, "form " + formNum + " submitted");

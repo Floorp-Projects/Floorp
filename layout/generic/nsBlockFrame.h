@@ -44,6 +44,8 @@ class nsBlockInFlowLineIterator;
 class nsBulletFrame;
 namespace mozilla {
 class BlockReflowInput;
+class ServoRestyleState;
+class StyleSetHandle;
 } // namespace mozilla
 
 /**
@@ -394,6 +396,12 @@ public:
     nsLineList mLines;
     nsFrameList mFrames;
   };
+
+  /**
+   * Update the styles of our various pseudo-elements (bullets, first-letter,
+   * first-line, etc).
+   */
+  void UpdatePseudoElementStyles(mozilla::ServoRestyleState& aRestyleState);
 
 protected:
   explicit nsBlockFrame(nsStyleContext* aContext, ClassID aID = kClassID)
@@ -902,6 +910,13 @@ protected:
   nsFrameList* EnsurePushedFloats();
   // Remove and return the pushed floats list.
   nsFrameList* RemovePushedFloats();
+
+  // Resolve a style context for our bullet frame.  aType should be
+  // mozListBullet or mozListNumber.  Passing in the style set is an
+  // optimization, because all callsites have it.
+  already_AddRefed<nsStyleContext> ResolveBulletStyle(
+    mozilla::CSSPseudoElementType aType,
+    mozilla::StyleSetHandle aStyleSet);
 
 #ifdef DEBUG
   void VerifyLines(bool aFinalCheckOK);

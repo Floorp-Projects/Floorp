@@ -14,8 +14,6 @@
 %include ../shared/browser.inc.css
 
 :root {
-  --tabs-toolbar-color: #333;
-
   --toolbarbutton-vertical-text-padding: calc(var(--toolbarbutton-inner-padding) + 1px);
 
 %ifdef MOZ_PHOTON_THEME
@@ -122,7 +120,11 @@ toolbar:-moz-lwtheme {
 }
 
 #main-window:not(:-moz-lwtheme) > #titlebar {
+%ifdef MOZ_PHOTON_THEME
+  background-color: #232323;
+%else
   -moz-appearance: -moz-window-titlebar;
+%endif
 }
 
 #main-window:not([tabsintitlebar]) > #titlebar {
@@ -162,9 +164,11 @@ toolbar:-moz-lwtheme {
   margin-top: 3px;
 }
 
+%ifndef MOZ_PHOTON_THEME
 #main-window[customize-entered] > #titlebar {
   -moz-appearance: none;
 }
+%endif
 
 /** End titlebar **/
 
@@ -1524,7 +1528,11 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 
 .tabbrowser-tab[visuallyselected=true]:not(:-moz-lwtheme) {
   /* overriding tabbox.css */
+%ifdef MOZ_PHOTON_THEME
+  color: hsl(240, 5%, 5%);
+%else
   color: inherit;
+%endif
 }
 
 .tabbrowser-tab[visuallyselected=true] {
@@ -1556,9 +1564,16 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 }
 
 #TabsToolbar:not(:-moz-lwtheme) {
-  color: var(--tabs-toolbar-color);
+  color: #333;
   text-shadow: @loweredShadow@;
 }
+
+%ifdef MOZ_PHOTON_THEME
+:root[tabsintitlebar] #TabsToolbar:not(:-moz-lwtheme) {
+  color: hsl(240, 9%, 98%);
+  text-shadow: none;
+}
+%endif
 
 %ifndef MOZ_PHOTON_THEME
 #navigator-toolbox[inFullscreen] > #TabsToolbar {

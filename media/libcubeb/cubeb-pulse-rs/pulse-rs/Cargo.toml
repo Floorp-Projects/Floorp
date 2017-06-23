@@ -1,0 +1,8 @@
+[package]
+name = "pulse"
+version = "0.1.0"
+authors = ["Dan Glastonbury <dglastonbury@mozilla.com>"]
+
+[dependencies]
+bitflags = "^0.7.0"
+pulse-ffi = { path = "../pulse-ffi" }

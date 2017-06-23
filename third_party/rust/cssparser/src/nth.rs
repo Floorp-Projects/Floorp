@@ -12,7 +12,7 @@ use super::{Token, Parser, BasicParseError};
 /// in which case the caller needs to check if the arguments’ parser is exhausted.
 /// Return `Ok((A, B))`, or `Err(())` for a syntax error.
 pub fn parse_nth<'i, 't>(input: &mut Parser<'i, 't>) -> Result<(i32, i32), BasicParseError<'i>> {
-    let token = try!(input.next());
+    let token = input.next()?;
     match token {
         Token::Number { int_value: Some(b), .. } => {
             Ok((0, b))
@@ -42,7 +42,7 @@ pub fn parse_nth<'i, 't>(input: &mut Parser<'i, 't>) -> Result<(i32, i32), Basic
                 }
             }
         }
-        Token::Delim('+') => match try!(input.next_including_whitespace()) {
+        Token::Delim('+') => match input.next_including_whitespace()? {
             Token::Ident(value) => {
                 match_ignore_ascii_case! { &value,
                     "n" => Ok(try!(parse_b(input, 1))),
@@ -61,8 +61,8 @@ fn parse_b<'i, 't>(input: &mut Parser<'i, 't>, a: i32) -> Result<(i32, i32), Bas
     let start_position = input.position();
     let token = input.next();
     match token {
-        Ok(Token::Delim('+')) => Ok(try!(parse_signless_b(input, a, 1))),
-        Ok(Token::Delim('-')) => Ok(try!(parse_signless_b(input, a, -1))),
+        Ok(Token::Delim('+')) => Ok(parse_signless_b(input, a, 1)?),
+        Ok(Token::Delim('-')) => Ok(parse_signless_b(input, a, -1)?),
         Ok(Token::Number { has_sign: true, int_value: Some(b), .. }) => Ok((a, b)),
         _ => {
             input.reset(start_position);
@@ -72,7 +72,7 @@ fn parse_b<'i, 't>(input: &mut Parser<'i, 't>, a: i32) -> Result<(i32, i32), Bas
 }
 
 fn parse_signless_b<'i, 't>(input: &mut Parser<'i, 't>, a: i32, b_sign: i32) -> Result<(i32, i32), BasicParseError<'i>> {
-    let token = try!(input.next());
+    let token = input.next()?;
     match token {
         Token::Number { has_sign: false, int_value: Some(b), .. } => Ok((a, b_sign * b)),
         _ => Err(())

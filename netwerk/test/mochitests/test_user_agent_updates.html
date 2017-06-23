@@ -221,7 +221,7 @@ const chromeScript = SpecialPowers.loadChromeScript(_ => {
   Components.utils.import("resource://gre/modules/FileUtils.jsm");
   var FU = FileUtils;
 
-  const { TextDecoder, TextEncoder, OS } = Components.utils.import("resource://gre/modules/osfile.jsm");
+  const { OS } = Components.utils.import("resource://gre/modules/osfile.jsm");
   var OSF = OS.File;
 
   const KEY_PREFDIR = "PrefD";
@@ -235,7 +235,7 @@ const chromeScript = SpecialPowers.loadChromeScript(_ => {
   const PREF_UPDATES_ENABLED = PREF_UPDATES + "enabled";
   const PREF_UPDATES_LASTUPDATED = PREF_UPDATES + "lastupdated";
 
-  Components.utils.import("resource://gre/modules/Services.jsm");
+  let { Services } = Components.utils.import("resource://gre/modules/Services.jsm", {});
   Services.prefs.addObserver(PREF_UPDATES_LASTUPDATED, () => {
     if (_notifyOnUpdate) {
       _notifyOnUpdate = false; // Only notify once, for the first update.
@@ -312,7 +312,7 @@ const chromeScript = SpecialPowers.loadChromeScript(_ => {
   addMessageListener("testProfileLoad", testProfileLoad);
   addMessageListener("set-overrides", function(overrides) { OVERRIDES = overrides});
   addMessageListener("notify-on-update", () => { _notifyOnUpdate = true });
-});
+}, { wantGlobalProperties: ["TextEncoder", "TextDecoder"]});
 
 chromeScript.addMessageListener("testProfileSaveDone", SimpleTest.finish);
 chromeScript.addMessageListener("testProfileLoadDone", function() {

@@ -1046,3 +1046,18 @@ option(env='RUSTFLAGS',
        nargs=1,
        help='Rust compiler flags')
 set_config('RUSTFLAGS', depends('RUSTFLAGS')(lambda flags: flags))
+
+
+imply_option('--enable-release', mozilla_official)
+imply_option('--enable-release', depends_if('MOZ_AUTOMATION')(lambda x: True))
+
+js_option('--enable-release',
+          help='Build with more conservative, release engineering-oriented '
+               'options. This may slow down builds.')
+
+@depends('--enable-release')
+def developer_options(value):
+    if not value:
+        return True
+
+add_old_configure_assignment('DEVELOPER_OPTIONS', developer_options)

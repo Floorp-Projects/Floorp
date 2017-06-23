@@ -6,7 +6,7 @@
 
 "use strict";
 
-document.getElementById("onboarding-overlay-dialog")
+document.getElementById("onboarding-overlay")
                         .addEventListener("click", evt => {
   switch (evt.target.id) {
     case "onboarding-tour-addons-button":
@@ -24,5 +24,13 @@ document.getElementById("onboarding-overlay-dialog")
     case "onboarding-tour-search-button":
       Mozilla.UITour.openSearchPanel(() => {});
       break;
+    case "onboarding-overlay":
+    case "onboarding-overlay-close-btn":
+      // Dismiss any highlights if a user tries to close the dialog.
+      Mozilla.UITour.hideHighlight();
+  }
+  // Dismiss any highlights if a user tries to change to other tours.
+  if (evt.target.classList.contains("onboarding-tour-item")) {
+    Mozilla.UITour.hideHighlight();
   }
 });

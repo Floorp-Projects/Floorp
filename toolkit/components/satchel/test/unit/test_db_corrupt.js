@@ -12,13 +12,15 @@ function run_test() {
   // Cleanup from any previous tests or failures.
   let destFile = profileDir.clone();
   destFile.append("formhistory.sqlite");
-  if (destFile.exists())
+  if (destFile.exists()) {
     destFile.remove(false);
+  }
 
   bakFile = profileDir.clone();
   bakFile.append("formhistory.sqlite.corrupt");
-  if (bakFile.exists())
+  if (bakFile.exists()) {
     bakFile.remove(false);
+  }
 
   testfile.copyTo(profileDir, "formhistory.sqlite");
   run_next_test();
@@ -53,12 +55,12 @@ add_test(function test_corruptFormHistoryDB_emptyInit() {
         },
         handleError(aError2) {
           do_throw("DB initialized after reading a corrupt DB file found an entry.");
-        }
+        },
       });
     },
     handleError(aError) {
       do_throw("DB initialized after reading a corrupt DB file is not empty.");
-    }
+    },
   });
 });
 
@@ -66,24 +68,24 @@ add_test(function test_corruptFormHistoryDB_addEntry() {
   do_log_info("test adding an entry to the empty DB.");
 
   updateEntry("add", "name-A", "value-A",
-    function() {
-      countEntries("name-A", "value-A",
-        function(count) {
-          do_check_true(count == 1);
-          run_next_test();
-        });
-    });
-  });
+              function() {
+                countEntries("name-A", "value-A",
+                             function(count) {
+                               do_check_true(count == 1);
+                               run_next_test();
+                             });
+              });
+});
 
 add_test(function test_corruptFormHistoryDB_removeEntry() {
   do_log_info("test removing an entry to the empty DB.");
 
   updateEntry("remove", "name-A", "value-A",
-    function() {
-      countEntries("name-A", "value-A",
-        function(count) {
-          do_check_true(count == 0);
-          run_next_test();
-        });
-    });
-  });
+              function() {
+                countEntries("name-A", "value-A",
+                             function(count) {
+                               do_check_true(count == 0);
+                               run_next_test();
+                             });
+              });
+});

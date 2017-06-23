@@ -5,3 +5,7 @@
 [features/onboarding@mozilla.org] chrome.jar:
 % resource onboarding %content/
   content/ (content/*)
+  # Package UITour-lib.js in here rather than under
+  # /browser/components/uitour to avoid "unreferenced files" error when
+  # Onboarding extension is not built.
+  content/lib/UITour-lib.js (/browser/components/uitour/UITour-lib.js)

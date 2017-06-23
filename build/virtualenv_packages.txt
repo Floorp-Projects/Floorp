@@ -28,7 +28,6 @@ mozilla.pth:build/pymake
 mozilla.pth:config
 mozilla.pth:dom/bindings
 mozilla.pth:dom/bindings/parser
-mozilla.pth:dom/media/test/external
 mozilla.pth:layout/tools/reftest
 mozilla.pth:other-licenses/ply/
 mozilla.pth:taskcluster

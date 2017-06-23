@@ -5,7 +5,7 @@ add_task(async function() {
   // Load a page registering a protocol handler.
   let browser = gBrowser.selectedBrowser;
   browser.loadURI(testURL);
-  await BrowserTestUtils.browserLoaded(browser, testURL);
+  await BrowserTestUtils.browserLoaded(browser, false, testURL);
 
   // Register the protocol handler by clicking the notificationbar button.
   let notificationValue = "Protocol Registration: testprotocol";

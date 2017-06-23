@@ -29,6 +29,7 @@
 <!ENTITY  doNotTrack.post.label         ".">
 
 <!ENTITY  history.label                 "History">
+<!ENTITY  permissions.label             "Permissions">
 
 <!ENTITY  locationBar.label             "Location Bar">
 

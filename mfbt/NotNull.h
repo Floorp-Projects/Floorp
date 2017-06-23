@@ -63,6 +63,7 @@
 // for the last one, where the handle type is |void|. See below.
 
 #include "mozilla/Assertions.h"
+#include <stddef.h>
 
 namespace mozilla {
 
@@ -114,7 +115,12 @@ public:
 
   // Construct/assign from another NotNull with a compatible base pointer type.
   template <typename U>
-  MOZ_IMPLICIT NotNull(const NotNull<U>& aOther) : mBasePtr(aOther.get()) {}
+  MOZ_IMPLICIT NotNull(const NotNull<U>& aOther) : mBasePtr(aOther.get()) {
+    static_assert(sizeof(T) == sizeof(NotNull<T>),
+                  "NotNull must have zero space overhead.");
+    static_assert(offsetof(NotNull<T>, mBasePtr) == 0,
+                  "mBasePtr must have zero offset.");
+  }
 
   // Default copy/move construction and assignment.
   NotNull(const NotNull<T>&) = default;

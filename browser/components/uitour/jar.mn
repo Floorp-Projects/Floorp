@@ -4,4 +4,3 @@
 
 browser.jar:
        content/browser/content-UITour.js
-       content/browser/UITour-lib.js

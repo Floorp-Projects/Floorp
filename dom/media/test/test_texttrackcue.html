@@ -243,7 +243,7 @@ SpecialPowers.pushPrefEnv({"set": [["media.webvtt.regions.enabled", true]]},
 
         for (var i = 0; i < cueInfo.length; i++) {
           var cue = cueInfo[i];
-          if (playbackTime >= cue.startTime && playbackTime <= cue.endTime) {
+          if (playbackTime >= cue.startTime && playbackTime < cue.endTime) {
             is(activeCues.length, cue.ids.length, "There should be " + cue.ids.length + " currently active cue(s).");
             for (var j = 0; j < cue.ids.length; j++) {
               isnot(activeCues.getCueById(cue.ids[j]), undefined, "The cue with ID " + cue.ids[j] + " should be active.");

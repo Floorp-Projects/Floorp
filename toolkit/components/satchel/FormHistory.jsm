@@ -119,7 +119,7 @@ var Prefs = {
     this._debug = Services.prefs.getBoolPref("browser.formfill.debug");
     this._enabled = Services.prefs.getBoolPref("browser.formfill.enable");
     this._expireDays = Services.prefs.getIntPref("browser.formfill.expire_days");
-  }
+  },
 };
 
 function log(aMessage) {
@@ -130,13 +130,13 @@ function log(aMessage) {
 
 function sendNotification(aType, aData) {
   if (typeof aData == "string") {
-    let strWrapper = Cc["@mozilla.org/supports-string;1"].
-                     createInstance(Ci.nsISupportsString);
+    let strWrapper = Cc["@mozilla.org/supports-string;1"]
+                     .createInstance(Ci.nsISupportsString);
     strWrapper.data = aData;
     aData = strWrapper;
   } else if (typeof aData == "number") {
-    let intWrapper = Cc["@mozilla.org/supports-PRInt64;1"].
-                     createInstance(Ci.nsISupportsPRInt64);
+    let intWrapper = Cc["@mozilla.org/supports-PRInt64;1"]
+                     .createInstance(Ci.nsISupportsPRInt64);
     intWrapper.data = aData;
     aData = intWrapper;
   } else if (aData) {
@@ -163,25 +163,25 @@ const dbSchema = {
       "guid": "TEXT",
     },
     moz_deleted_formhistory: {
-        "id": "INTEGER PRIMARY KEY",
-        "timeDeleted": "INTEGER",
-        "guid": "TEXT"
-    }
+      "id": "INTEGER PRIMARY KEY",
+      "timeDeleted": "INTEGER",
+      "guid": "TEXT",
+    },
   },
   indices: {
     moz_formhistory_index: {
       table: "moz_formhistory",
-      columns: [ "fieldname" ]
+      columns: ["fieldname"],
     },
     moz_formhistory_lastused_index: {
       table: "moz_formhistory",
-      columns: [ "lastUsed" ]
+      columns: ["lastUsed"],
     },
     moz_formhistory_guid_index: {
       table: "moz_formhistory",
-      columns: [ "guid" ]
+      columns: ["guid"],
     },
-  }
+  },
 };
 
 /**
@@ -276,7 +276,8 @@ function makeSearchStatement(aSearchData, aSelectTerms) {
 }
 
 function makeAddStatement(aNewData, aNow, aBindingArrays) {
-  let query = "INSERT INTO moz_formhistory (fieldname, value, timesUsed, firstUsed, lastUsed, guid) " +
+  let query = "INSERT INTO moz_formhistory " +
+              "(fieldname, value, timesUsed, firstUsed, lastUsed, guid) " +
               "VALUES (:fieldname, :value, :timesUsed, :firstUsed, :lastUsed, :guid)";
 
   aNewData.timesUsed = aNewData.timesUsed || 1;
@@ -286,7 +287,8 @@ function makeAddStatement(aNewData, aNow, aBindingArrays) {
 }
 
 function makeBumpStatement(aGuid, aNow, aBindingArrays) {
-  let query = "UPDATE moz_formhistory SET timesUsed = timesUsed + 1, lastUsed = :lastUsed WHERE guid = :guid";
+  let query = "UPDATE moz_formhistory " +
+              "SET timesUsed = timesUsed + 1, lastUsed = :lastUsed WHERE guid = :guid";
   let queryParams = {
     lastUsed: aNow,
     guid: aGuid,
@@ -321,7 +323,7 @@ function makeUpdateStatement(aGuid, aNewData, aBindingArrays) {
   }
 
   query += queryTerms + " WHERE guid = :existing_guid";
-  aNewData["existing_guid"] = aGuid;
+  aNewData.existing_guid = aGuid;
 
   return dbCreateAsyncStatement(query, aNewData, aBindingArrays);
 }
@@ -336,8 +338,9 @@ function makeMoveToDeletedStatement(aGuid, aNow, aData, aBindingArrays) {
     } else {
       // TODO: Add these items to the deleted items table once we've sorted
       //       out the issues from bug 756701
-      if (!queryTerms)
+      if (!queryTerms) {
         return undefined;
+      }
 
       query += " SELECT guid, :timeDeleted FROM moz_formhistory WHERE " + queryTerms;
     }
@@ -355,7 +358,7 @@ function generateGUID() {
   let uuid = uuidService.generateUUID().toString();
   let raw = ""; // A string with the low bytes set to random values
   let bytes = 0;
-  for (let i = 1; bytes < 12 ; i += 2) {
+  for (let i = 1; bytes < 12; i += 2) {
     // Skip dashes
     if (uuid[i] == "-") {
       i++;
@@ -383,8 +386,9 @@ XPCOMUtils.defineLazyGetter(this, "dbConnection", function() {
     _dbConnection = Services.storage.openUnsharedDatabase(dbFile);
     dbInit();
   } catch (e) {
-    if (e.result != Cr.NS_ERROR_FILE_CORRUPTED)
+    if (e.result != Cr.NS_ERROR_FILE_CORRUPTED) {
       throw e;
+    }
     dbCleanup(dbFile);
     _dbConnection = Services.storage.openUnsharedDatabase(dbFile);
     dbInit();
@@ -438,8 +442,6 @@ function dbCreateAsyncStatement(aQuery, aParams, aBindingArrays) {
 }
 
 /**
- * dbInit
- *
  * Attempts to initialize the database. This creates the file if it doesn't
  * exist, performs any migrations, etc.
  */
@@ -461,6 +463,20 @@ function dbInit() {
     dbMigrate(version);
   }
 }
+
+var Migrators = {
+  /*
+   * Updates the DB schema to v3 (bug 506402).
+   * Adds deleted form history table.
+   */
+  dbMigrateToVersion4() {
+    if (!_dbConnection.tableExists("moz_deleted_formhistory")) {
+      let table = dbSchema.tables.moz_deleted_formhistory;
+      let tSQL = Object.keys(table).map(col => [col, table[col]].join(" ")).join(", ");
+      _dbConnection.createTable("moz_deleted_formhistory", tSQL);
+    }
+  },
+};
 
 function dbCreate() {
   log("Creating DB -- tables");
@@ -525,25 +541,10 @@ function dbMigrate(oldVersion) {
   log("DB migration completed.");
 }
 
-var Migrators = {
-  /*
-   * Updates the DB schema to v3 (bug 506402).
-   * Adds deleted form history table.
-   */
-  dbMigrateToVersion4() {
-    if (!_dbConnection.tableExists("moz_deleted_formhistory")) {
-      let table = dbSchema.tables["moz_deleted_formhistory"];
-      let tSQL = Object.keys(table).map(col => [col, table[col]].join(" ")).join(", ");
-      _dbConnection.createTable("moz_deleted_formhistory", tSQL);
-    }
-  }
-};
-
 /**
- * dbAreExpectedColumnsPresent
- *
  * Sanity check to ensure that the columns this version of the code expects
  * are present in the DB we're using.
+ * @returns {boolean} whether expected columns are present
  */
 function dbAreExpectedColumnsPresent() {
   for (let name in dbSchema.tables) {
@@ -565,10 +566,9 @@ function dbAreExpectedColumnsPresent() {
 }
 
 /**
- * dbCleanup
- *
  * Called when database creation fails. Finalizes database statements,
  * closes the database connection, deletes the database file.
+ * @param {Object} dbFile database file to close
  */
 function dbCleanup(dbFile) {
   log("Cleaning up DB file - close & remove & backup");
@@ -610,10 +610,11 @@ function dbClose(aShutdown) {
 }
 
 /**
- * updateFormHistoryWrite
- *
  * Constructs and executes database statements from a pre-processed list of
  * inputted changes.
+ *
+ * @param {Array.<Object>} aChanges changes to form history
+ * @param {Object} aCallbacks
  */
 function updateFormHistoryWrite(aChanges, aCallbacks) {
   log("updateFormHistoryWrite  " + aChanges.length);
@@ -644,7 +645,7 @@ function updateFormHistoryWrite(aChanges, aCallbacks) {
           delete change.timeDeleted;
         }
         stmt = makeRemoveStatement(change, bindingArrays);
-        notifications.push([ "formhistory-remove", change.guid ]);
+        notifications.push(["formhistory-remove", change.guid]);
         break;
       case "update":
         log("Update form history " + change);
@@ -653,28 +654,28 @@ function updateFormHistoryWrite(aChanges, aCallbacks) {
         // a special case for updating the GUID - the new value can be
         // specified in newGuid.
         if (change.newGuid) {
-          change.guid = change.newGuid
+          change.guid = change.newGuid;
           delete change.newGuid;
         }
         stmt = makeUpdateStatement(guid, change, bindingArrays);
-        notifications.push([ "formhistory-update", guid ]);
+        notifications.push(["formhistory-update", guid]);
         break;
       case "bump":
         log("Bump form history " + change);
         if (change.guid) {
           stmt = makeBumpStatement(change.guid, now, bindingArrays);
-          notifications.push([ "formhistory-update", change.guid ]);
+          notifications.push(["formhistory-update", change.guid]);
         } else {
           change.guid = generateGUID();
           stmt = makeAddStatement(change, now, bindingArrays);
-          notifications.push([ "formhistory-add", change.guid ]);
+          notifications.push(["formhistory-add", change.guid]);
         }
         break;
       case "add":
         log("Add to form history " + change);
         change.guid = generateGUID();
         stmt = makeAddStatement(change, now, bindingArrays);
-        notifications.push([ "formhistory-add", change.guid ]);
+        notifications.push(["formhistory-add", change.guid]);
         break;
       default:
         // We should've already guaranteed that change.op is one of the above
@@ -702,7 +703,11 @@ function updateFormHistoryWrite(aChanges, aCallbacks) {
       }
 
       if (aCallbacks && aCallbacks.handleCompletion) {
-        aCallbacks.handleCompletion(aReason == Ci.mozIStorageStatementCallback.REASON_FINISHED ? 0 : 1);
+        aCallbacks.handleCompletion(
+          aReason == Ci.mozIStorageStatementCallback.REASON_FINISHED ?
+            0 :
+            1
+        );
       }
     },
     handleError(aError) {
@@ -710,7 +715,7 @@ function updateFormHistoryWrite(aChanges, aCallbacks) {
         aCallbacks.handleError(aError);
       }
     },
-    handleResult: NOOP
+    handleResult: NOOP,
   };
 
   dbConnection.executeAsync(stmts, stmts.length, handlers);
@@ -722,31 +727,32 @@ function updateFormHistoryWrite(aChanges, aCallbacks) {
  */
 
 /**
- * expireOldEntriesDeletion
- *
  * Removes entries from database.
+ *
+ * @param {number} aExpireTime expiration timestamp
+ * @param {number} aBeginningCount numer of entries at first
  */
 function expireOldEntriesDeletion(aExpireTime, aBeginningCount) {
   log("expireOldEntriesDeletion(" + aExpireTime + "," + aBeginningCount + ")");
 
-  FormHistory.update([
-    {
-      op: "remove",
-      lastUsedEnd: aExpireTime,
-    }], {
-      handleCompletion() {
-        expireOldEntriesVacuum(aExpireTime, aBeginningCount);
-      },
-      handleError(aError) {
-        log("expireOldEntriesDeletionFailure");
-      }
+  FormHistory.update([{
+    op: "remove",
+    lastUsedEnd: aExpireTime,
+  }], {
+    handleCompletion() {
+      expireOldEntriesVacuum(aExpireTime, aBeginningCount);
+    },
+    handleError(aError) {
+      log("expireOldEntriesDeletionFailure");
+    },
   });
 }
 
 /**
- * expireOldEntriesVacuum
- *
  * Counts number of entries removed and shrinks database as necessary.
+ *
+ * @param {number} aExpireTime expiration timestamp
+ * @param {number} aBeginningCount number of entries at first
  */
 function expireOldEntriesVacuum(aExpireTime, aBeginningCount) {
   FormHistory.count({}, {
@@ -760,7 +766,7 @@ function expireOldEntriesVacuum(aExpireTime, aBeginningCount) {
           handleError(aError) {
             log("expireVacuumError");
           },
-          handleCompletion: NOOP
+          handleCompletion: NOOP,
         });
       }
 
@@ -768,7 +774,7 @@ function expireOldEntriesVacuum(aExpireTime, aBeginningCount) {
     },
     handleError(aError) {
       log("expireEndCountFailure");
-    }
+    },
   });
 }
 
@@ -808,9 +814,13 @@ this.FormHistory = {
 
       handleCompletion(aReason) {
         if (aCallbacks && aCallbacks.handleCompletion) {
-          aCallbacks.handleCompletion(aReason == Ci.mozIStorageStatementCallback.REASON_FINISHED ? 0 : 1);
+          aCallbacks.handleCompletion(
+            aReason == Ci.mozIStorageStatementCallback.REASON_FINISHED ?
+              0 :
+              1
+          );
         }
-      }
+      },
     };
 
     stmt.executeAsync(handlers);
@@ -836,9 +846,13 @@ this.FormHistory = {
 
       handleCompletion(aReason) {
         if (aCallbacks && aCallbacks.handleCompletion) {
-          aCallbacks.handleCompletion(aReason == Ci.mozIStorageStatementCallback.REASON_FINISHED ? 0 : 1);
+          aCallbacks.handleCompletion(
+            aReason == Ci.mozIStorageStatementCallback.REASON_FINISHED ?
+              0 :
+              1
+          );
         }
-      }
+      },
     };
 
     stmt.executeAsync(handlers);
@@ -852,7 +866,8 @@ this.FormHistory = {
     let searchFailed = false;
 
     function validIdentifier(change) {
-      // The identifier is only valid if one of either the guid or the (fieldname/value) are set (so an X-OR)
+      // The identifier is only valid if one of either the guid
+      // or the (fieldname/value) are set (so an X-OR)
       return Boolean(change.guid) != Boolean(change.fieldname && change.value);
     }
 
@@ -865,7 +880,7 @@ this.FormHistory = {
       if (aCallbacks && aCallbacks.handleError) {
         aCallbacks.handleError({
           message: "Form history is disabled, only remove operations are allowed",
-          result: Ci.mozIStorageError.MISUSE
+          result: Ci.mozIStorageError.MISUSE,
         });
       }
       if (aCallbacks && aCallbacks.handleCompletion) {
@@ -922,10 +937,10 @@ this.FormHistory = {
       numSearches++;
       let changeToUpdate = change;
       FormHistory.search(
-        [ "guid" ],
+        ["guid"],
         {
           fieldname: change.fieldname,
-          value: change.value
+          value: change.value,
         }, {
           foundResult: false,
           handleResult(aResult) {
@@ -935,7 +950,7 @@ this.FormHistory = {
                 aCallbacks.handleError({
                   message:
                     "Database contains multiple entries with the same fieldname/value pair.",
-                  result: 19 // Constraint violation
+                  result: 19, // Constraint violation
                 });
               }
 
@@ -944,7 +959,7 @@ this.FormHistory = {
             }
 
             this.foundResult = true;
-            changeToUpdate.guid = aResult["guid"];
+            changeToUpdate.guid = aResult.guid;
           },
 
           handleError(aError) {
@@ -962,7 +977,7 @@ this.FormHistory = {
                 aCallbacks.handleCompletion(1);
               }
             }
-          }
+          },
         });
     }
 
@@ -975,35 +990,35 @@ this.FormHistory = {
   getAutoCompleteResults(searchString, params, aCallbacks) {
     // only do substring matching when the search string contains more than one character
     let searchTokens;
-    let where = ""
+    let where = "";
     let boundaryCalc = "";
     if (searchString.length > 1) {
-        searchTokens = searchString.split(/\s+/);
+      searchTokens = searchString.split(/\s+/);
 
-        // build up the word boundary and prefix match bonus calculation
-        boundaryCalc = "MAX(1, :prefixWeight * (value LIKE :valuePrefix ESCAPE '/') + (";
-        // for each word, calculate word boundary weights for the SELECT clause and
-        // add word to the WHERE clause of the query
-        let tokenCalc = [];
-        let searchTokenCount = Math.min(searchTokens.length, MAX_SEARCH_TOKENS);
-        for (let i = 0; i < searchTokenCount; i++) {
-            tokenCalc.push("(value LIKE :tokenBegin" + i + " ESCAPE '/') + " +
+      // build up the word boundary and prefix match bonus calculation
+      boundaryCalc = "MAX(1, :prefixWeight * (value LIKE :valuePrefix ESCAPE '/') + (";
+      // for each word, calculate word boundary weights for the SELECT clause and
+      // add word to the WHERE clause of the query
+      let tokenCalc = [];
+      let searchTokenCount = Math.min(searchTokens.length, MAX_SEARCH_TOKENS);
+      for (let i = 0; i < searchTokenCount; i++) {
+        tokenCalc.push("(value LIKE :tokenBegin" + i + " ESCAPE '/') + " +
                             "(value LIKE :tokenBoundary" + i + " ESCAPE '/')");
-            where += "AND (value LIKE :tokenContains" + i + " ESCAPE '/') ";
-        }
-        // add more weight if we have a traditional prefix match and
-        // multiply boundary bonuses by boundary weight
-        boundaryCalc += tokenCalc.join(" + ") + ") * :boundaryWeight)";
+        where += "AND (value LIKE :tokenContains" + i + " ESCAPE '/') ";
+      }
+      // add more weight if we have a traditional prefix match and
+      // multiply boundary bonuses by boundary weight
+      boundaryCalc += tokenCalc.join(" + ") + ") * :boundaryWeight)";
     } else if (searchString.length == 1) {
-        where = "AND (value LIKE :valuePrefix ESCAPE '/') ";
-        boundaryCalc = "1";
-        delete params.prefixWeight;
-        delete params.boundaryWeight;
+      where = "AND (value LIKE :valuePrefix ESCAPE '/') ";
+      boundaryCalc = "1";
+      delete params.prefixWeight;
+      delete params.boundaryWeight;
     } else {
-        where = "";
-        boundaryCalc = "1";
-        delete params.prefixWeight;
-        delete params.boundaryWeight;
+      where = "";
+      boundaryCalc = "1";
+      delete params.prefixWeight;
+      delete params.boundaryWeight;
     }
 
     params.now = Date.now() * 1000; // convert from ms to microseconds
@@ -1060,7 +1075,7 @@ this.FormHistory = {
             text:          value,
             textLowerCase: value.toLowerCase(),
             frecency,
-            totalScore:    Math.round(frecency * row.getResultByName("boundaryBonuses"))
+            totalScore:    Math.round(frecency * row.getResultByName("boundaryBonuses")),
           };
           if (aCallbacks && aCallbacks.handleResult) {
             aCallbacks.handleResult(entry);
@@ -1076,9 +1091,13 @@ this.FormHistory = {
 
       handleCompletion(aReason) {
         if (aCallbacks && aCallbacks.handleCompletion) {
-          aCallbacks.handleCompletion(aReason == Ci.mozIStorageStatementCallback.REASON_FINISHED ? 0 : 1);
+          aCallbacks.handleCompletion(
+            aReason == Ci.mozIStorageStatementCallback.REASON_FINISHED ?
+              0 :
+              1
+          );
         }
-      }
+      },
     });
     return pending;
   },
@@ -1115,11 +1134,11 @@ this.FormHistory = {
       },
       handleError(aError) {
         log("expireStartCountFailure");
-      }
+      },
     });
   },
 
-  shutdown() { dbClose(true); }
+  shutdown() { dbClose(true); },
 };
 
 // Prevent add-ons from redefining this API

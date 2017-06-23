@@ -18,7 +18,7 @@ FormHistoryStartup.prototype = {
   QueryInterface: XPCOMUtils.generateQI([
     Ci.nsIObserver,
     Ci.nsISupportsWeakReference,
-    Ci.nsIFrameMessageListener
+    Ci.nsIFrameMessageListener,
   ]),
 
   observe(subject, topic, data) {
@@ -35,7 +35,6 @@ FormHistoryStartup.prototype = {
         break;
       case "profile-after-change":
         this.init();
-      default:
         break;
     }
   },
@@ -58,8 +57,8 @@ FormHistoryStartup.prototype = {
     Services.ppmm.loadProcessScript("chrome://satchel/content/formSubmitListener.js", true);
     Services.ppmm.addMessageListener("FormHistory:FormSubmitEntries", this);
 
-    let messageManager = Cc["@mozilla.org/globalmessagemanager;1"].
-                         getService(Ci.nsIMessageListenerManager);
+    let messageManager = Cc["@mozilla.org/globalmessagemanager;1"]
+                         .getService(Ci.nsIMessageListenerManager);
     // For each of these messages, we could receive them from content,
     // or we might receive them from the ppmm if the searchbar is
     // having its history queried.
@@ -92,6 +91,7 @@ FormHistoryStartup.prototype = {
         }
 
         let mm;
+        let query = null;
         if (message.target instanceof Ci.nsIMessageListenerManager) {
           // The target is the PPMM, meaning that the parent process
           // is requesting FormHistory data on the searchbar.
@@ -110,18 +110,17 @@ FormHistoryStartup.prototype = {
             // Check that the current query is still the one we created. Our
             // query might have been canceled shortly before completing, in
             // that case we don't want to call the callback anymore.
-            if (query == this.pendingQuery) {
+            if (query === this.pendingQuery) {
               this.pendingQuery = null;
               if (!aReason) {
                 mm.sendAsyncMessage("FormHistory:AutoCompleteSearchResults",
                                     { id, results });
               }
             }
-          }
+          },
         };
 
-        let query = FormHistory.getAutoCompleteResults(searchString, params,
-                                                       processResults);
+        query = FormHistory.getAutoCompleteResults(searchString, params, processResults);
         this.pendingQuery = query;
         break;
       }
@@ -135,9 +134,8 @@ FormHistoryStartup.prototype = {
         });
         break;
       }
-
     }
-  }
+  },
 };
 
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory([FormHistoryStartup]);
