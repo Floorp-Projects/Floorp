@@ -164,24 +164,6 @@ ChannelMediaDecoder::Shutdown()
 }
 
 nsresult
-ChannelMediaDecoder::CreateResource(nsIChannel* aChannel,
-                                    bool aIsPrivateBrowsing)
-{
-  MOZ_ASSERT(!mResource);
-  mResource =
-    MediaResource::Create(mResourceCallback, aChannel, aIsPrivateBrowsing);
-  return mResource ? NS_OK : NS_ERROR_FAILURE;
-}
-
-nsresult
-ChannelMediaDecoder::CreateResource(MediaResource* aOriginal)
-{
-  MOZ_ASSERT(!mResource);
-  mResource = aOriginal->CloneData(mResourceCallback);
-  return mResource ? NS_OK : NS_ERROR_FAILURE;
-}
-
-nsresult
 ChannelMediaDecoder::OpenResource(nsIStreamListener** aStreamListener)
 {
   MOZ_ASSERT(NS_IsMainThread());
@@ -192,10 +174,18 @@ ChannelMediaDecoder::OpenResource(nsIStreamListener** aStreamListener)
 }
 
 nsresult
-ChannelMediaDecoder::Load(nsIStreamListener** aStreamListener)
+ChannelMediaDecoder::Load(nsIChannel* aChannel,
+                          bool aIsPrivateBrowsing,
+                          nsIStreamListener** aStreamListener)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(mResource, "Can't load without a MediaResource");
+  MOZ_ASSERT(!mResource);
+
+  mResource =
+    MediaResource::Create(mResourceCallback, aChannel, aIsPrivateBrowsing);
+  if (!mResource) {
+    return NS_ERROR_FAILURE;
+  }
 
   nsresult rv = MediaShutdownManager::Instance().Register(this);
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -203,6 +193,31 @@ ChannelMediaDecoder::Load(nsIStreamListener** aStreamListener)
   }
 
   rv = OpenResource(aStreamListener);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  SetStateMachine(CreateStateMachine());
+  NS_ENSURE_TRUE(GetStateMachine(), NS_ERROR_FAILURE);
+
+  return InitializeStateMachine();
+}
+
+nsresult
+ChannelMediaDecoder::Load(MediaResource* aOriginal)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(!mResource);
+
+  mResource = aOriginal->CloneData(mResourceCallback);
+  if (!mResource) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsresult rv = MediaShutdownManager::Instance().Register(this);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = OpenResource(nullptr);
   NS_ENSURE_SUCCESS(rv, rv);
 
   SetStateMachine(CreateStateMachine());

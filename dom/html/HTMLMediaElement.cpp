@@ -2512,8 +2512,7 @@ nsresult HTMLMediaElement::LoadResource()
       return NS_ERROR_FAILURE;
     }
     ChangeDelayLoadStatus(false);
-    decoder->CreateResource(mMediaSource->GetPrincipal());
-    nsresult rv = decoder->Load();
+    nsresult rv = decoder->Load(mMediaSource->GetPrincipal());
     if (NS_FAILED(rv)) {
       decoder->Shutdown();
       LOG(LogLevel::Debug,
@@ -4656,14 +4655,7 @@ HTMLMediaElement::InitializeDecoderAsClone(ChannelMediaDecoder* aOriginal)
 
   LOG(LogLevel::Debug, ("%p Cloned decoder %p from %p", this, decoder.get(), aOriginal));
 
-  nsresult rv = decoder->CreateResource(originalResource);
-  if (NS_FAILED(rv)) {
-    decoder->Shutdown();
-    LOG(LogLevel::Debug, ("%p Failed to cloned stream for decoder %p", this, decoder.get()));
-    return rv;
-  }
-
-  rv = decoder->Load(nullptr);
+  nsresult rv = decoder->Load(originalResource);
   if (NS_FAILED(rv)) {
     decoder->Shutdown();
     LOG(LogLevel::Debug,
@@ -4712,19 +4704,13 @@ nsresult HTMLMediaElement::InitializeDecoderForChannel(nsIChannel* aChannel,
 
   LOG(LogLevel::Debug, ("%p Created decoder %p for type %s", this, decoder.get(), mimeType.get()));
 
-  bool isPrivateBrowsing = NodePrincipal()->GetPrivateBrowsingId() > 0;
-  nsresult rv = decoder->CreateResource(aChannel, isPrivateBrowsing);
-  if (NS_FAILED(rv)) {
-    decoder->Shutdown();
-    return rv;
-  }
-
   if (mChannelLoader) {
     mChannelLoader->Done();
     mChannelLoader = nullptr;
   }
 
-  rv = decoder->Load(aListener);
+  bool isPrivateBrowsing = NodePrincipal()->GetPrivateBrowsingId() > 0;
+  nsresult rv = decoder->Load(aChannel, isPrivateBrowsing, aListener);
   if (NS_FAILED(rv)) {
     decoder->Shutdown();
     LOG(LogLevel::Debug,

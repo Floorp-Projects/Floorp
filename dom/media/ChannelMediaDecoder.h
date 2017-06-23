@@ -63,9 +63,10 @@ public:
   // Subclasses must implement this.
   virtual ChannelMediaDecoder* Clone(MediaDecoderInit& aInit) = 0;
 
-  nsresult CreateResource(nsIChannel* aChannel, bool aIsPrivateBrowsing);
-  nsresult CreateResource(MediaResource* aOriginal);
-  nsresult Load(nsIStreamListener** aStreamListener);
+  nsresult Load(nsIChannel* aChannel,
+                bool aIsPrivateBrowsing,
+                nsIStreamListener** aStreamListener);
+  nsresult Load(MediaResource* aOriginal);
 
 private:
   nsresult OpenResource(nsIStreamListener** aStreamListener);
