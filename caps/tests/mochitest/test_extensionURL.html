@@ -13,7 +13,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1161831
   /** Test for Bug 1161831 **/
   SimpleTest.waitForExplicitFinish();
 
-  let module = SpecialPowers.Cu.import("resource://gre/modules/Services.jsm", {});
+  let module = SpecialPowers.Cu.getGlobalForObject(SpecialPowers.Cu.import("resource://gre/modules/Services.jsm", {}));
   var {MatchGlob, MatchPatternSet, WebExtensionPolicy} = module;
 
   var policy1, policy2;
