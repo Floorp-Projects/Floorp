@@ -727,46 +727,11 @@ H264::vui_parameters(BitReader& aBr, SPSData& aDest)
 H264::DecodeSPSFromExtraData(const mozilla::MediaByteBuffer* aExtraData,
                              SPSData& aDest)
 {
-  if (!HasSPS(aExtraData)) {
+  SPSNALIterator it(aExtraData);
+  if (!it) {
     return false;
   }
-  ByteReader reader(aExtraData);
-
-  if (!reader.Read(5)) {
-    return false;
-  }
-
-  uint8_t numSps = reader.ReadU8() & 0x1f;
-  if (!numSps) {
-    // No SPS.
-    return false;
-  }
-
-  if (numSps > 1) {
-    NS_WARNING("Multiple SPS, only decoding the first one");
-  }
-
-  uint16_t length = reader.ReadU16();
-  if (length == 0) {
-    return false;
-  }
-
-  if ((reader.PeekU8() & 0x1f) != H264_NAL_SPS) {
-    // Not a SPS NAL type.
-    return false;
-  }
-  const uint8_t* ptr = reader.Read(length);
-  if (!ptr) {
-    return false;
-  }
-
-  RefPtr<mozilla::MediaByteBuffer> sps = DecodeNALUnit(ptr, length);
-
-  if (!sps) {
-    return false;
-  }
-
-  return DecodeSPS(sps, aDest);
+  return (*it).GetSPSData(aDest);
 }
 
 /* static */ bool
