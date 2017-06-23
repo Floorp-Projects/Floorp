@@ -28,7 +28,6 @@ include protocol PFileChannel;
 
 include protocol PRtspController;
 include protocol PRtspChannel;
-include IPCStream;
 include URIParams;
 include NeckoChannelParams;
 include PBrowserOrId;
@@ -127,14 +126,6 @@ parent:
   async PStunAddrsRequest();
 
   prio(high) async NotifyCurrentTopLevelOuterContentWindowId(uint64_t windowId);
-
-  /**
-   * WebExtension-specific remote resource loading
-   */
-  async GetExtensionStream(URIParams uri, LoadInfoArgs loadInfo) returns
-                          (OptionalIPCStream stream);
-  async GetExtensionFD(URIParams uri, OptionalLoadInfoArgs loadInfo) returns
-                      (FileDescriptor fd);
 
 child:
   /*

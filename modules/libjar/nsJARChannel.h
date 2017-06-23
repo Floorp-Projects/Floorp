@@ -51,8 +51,6 @@ public:
 
     nsresult Init(nsIURI *uri);
 
-    void SetFile(nsIFile *file);
-
 private:
     virtual ~nsJARChannel();
 
@@ -100,7 +98,6 @@ private:
     // to the request if we get called back via RetargetDeliveryTo.
     nsCOMPtr<nsIRequest>            mRequest;
     nsCOMPtr<nsIFile>               mJarFile;
-    nsCOMPtr<nsIFile>               mJarFileOverride;
     nsCOMPtr<nsIURI>                mJarBaseURI;
     nsCString                       mJarEntry;
     nsCString                       mInnerJarEntry;

@@ -106,9 +106,6 @@ async function test_reload_addon() {
   });
 
   let waitShutdown = promiseWebExtensionShutdown();
-  // Disabling the add-on before uninstalling is necessary to cause tests to
-  // pass. This might be indicative of a bug in XPIProvider. Bug 992396.
-  addon.userDisabled = true;
   addon.uninstall();
   await waitShutdown;
 
