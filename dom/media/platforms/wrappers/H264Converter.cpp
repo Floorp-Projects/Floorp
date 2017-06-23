@@ -35,7 +35,7 @@ H264Converter::H264Converter(PlatformDecoderModule* aPDM,
 {
   CreateDecoder(mOriginalConfig, aParams.mDiagnostics);
   if (mDecoder) {
-    MOZ_ASSERT(mp4_demuxer::H264::HasSPS(mOriginalConfig.mExtraData));
+    MOZ_ASSERT(mp4_demuxer::AnnexB::HasSPS(mOriginalConfig.mExtraData));
     // The video metadata contains out of band SPS/PPS (AVC1) store it.
     mOriginalExtraData = mOriginalConfig.mExtraData;
   }
@@ -240,7 +240,7 @@ nsresult
 H264Converter::CreateDecoder(const VideoInfo& aConfig,
                              DecoderDoctorDiagnostics* aDiagnostics)
 {
-  if (!mp4_demuxer::H264::HasSPS(aConfig.mExtraData)) {
+  if (!mp4_demuxer::AnnexB::HasSPS(aConfig.mExtraData)) {
     // nothing found yet, will try again later
     return NS_ERROR_NOT_INITIALIZED;
   }
@@ -290,10 +290,10 @@ nsresult
 H264Converter::CreateDecoderAndInit(MediaRawData* aSample)
 {
   RefPtr<MediaByteBuffer> extra_data =
-    mp4_demuxer::H264::ExtractExtraData(aSample);
-  bool inbandExtradata = mp4_demuxer::H264::HasSPS(extra_data);
+    mp4_demuxer::AnnexB::ExtractExtraData(aSample);
+  bool inbandExtradata = mp4_demuxer::AnnexB::HasSPS(extra_data);
   if (!inbandExtradata &&
-      !mp4_demuxer::H264::HasSPS(mCurrentConfig.mExtraData)) {
+      !mp4_demuxer::AnnexB::HasSPS(mCurrentConfig.mExtraData)) {
     return NS_ERROR_NOT_INITIALIZED;
   }
 
@@ -393,8 +393,8 @@ nsresult
 H264Converter::CheckForSPSChange(MediaRawData* aSample)
 {
   RefPtr<MediaByteBuffer> extra_data =
-    mp4_demuxer::H264::ExtractExtraData(aSample);
-  if (!mp4_demuxer::H264::HasSPS(extra_data)) {
+    mp4_demuxer::AnnexB::ExtractExtraData(aSample);
+  if (!mp4_demuxer::AnnexB::HasSPS(extra_data)) {
     MOZ_ASSERT(mCanRecycleDecoder.isSome());
     if (!*mCanRecycleDecoder) {
       // If the decoder can't be recycled, the out of band extradata will never
@@ -406,15 +406,15 @@ H264Converter::CheckForSPSChange(MediaRawData* aSample)
     // We now check if the out of band one has changed.
     // This scenario can only occur on Android with devices that can recycle a
     // decoder.
-    if (!mp4_demuxer::H264::HasSPS(aSample->mExtraData) ||
-        mp4_demuxer::H264::CompareExtraData(aSample->mExtraData,
-                                            mOriginalExtraData)) {
+    if (!mp4_demuxer::AnnexB::HasSPS(aSample->mExtraData) ||
+        mp4_demuxer::AnnexB::CompareExtraData(aSample->mExtraData,
+                                              mOriginalExtraData)) {
       return NS_OK;
     }
     extra_data = mOriginalExtraData = aSample->mExtraData;
   }
-  if (mp4_demuxer::H264::CompareExtraData(extra_data,
-                                          mCurrentConfig.mExtraData)) {
+  if (mp4_demuxer::AnnexB::CompareExtraData(extra_data,
+                                            mCurrentConfig.mExtraData)) {
     return NS_OK;
   }
 

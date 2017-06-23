@@ -413,16 +413,6 @@ public:
   static already_AddRefed<mozilla::MediaByteBuffer> DecodeNALUnit(
     const mozilla::MediaByteBuffer* aNAL);
 
-  static bool HasSPS(const mozilla::MediaRawData* aSample);
-  static bool HasSPS(const mozilla::MediaByteBuffer* aExtraData);
-  // Extract SPS and PPS NALs from aSample by looking into each NALs.
-  // aSample must be in AVCC format.
-  static already_AddRefed<mozilla::MediaByteBuffer> ExtractExtraData(
-    const mozilla::MediaRawData* aSample);
-  // Return true if both extradata are equal.
-  static bool CompareExtraData(const mozilla::MediaByteBuffer* aExtraData1,
-                               const mozilla::MediaByteBuffer* aExtraData2);
-
   // Ensure that SPS data makes sense, Return true if SPS data was, and false
   // otherwise. If false, then content will be adjusted accordingly.
   static bool EnsureSPSIsSane(SPSData& aSPS);

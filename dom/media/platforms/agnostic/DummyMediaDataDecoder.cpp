@@ -19,7 +19,7 @@ DummyMediaDataDecoder::DummyMediaDataDecoder(UniquePtr<DummyDataCreator>&& aCrea
   , mIsH264(MP4Decoder::IsH264(aParams.mConfig.mMimeType))
   , mMaxRefFrames(
       mIsH264
-      ? mp4_demuxer::H264::HasSPS(aParams.VideoConfig().mExtraData)
+      ? mp4_demuxer::AnnexB::HasSPS(aParams.VideoConfig().mExtraData)
         ? mp4_demuxer::H264::ComputeMaxRefFrames(aParams.VideoConfig().mExtraData)
         : 16
       : 0)
