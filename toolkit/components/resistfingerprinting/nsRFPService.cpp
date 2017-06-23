@@ -5,6 +5,8 @@
 
 #include "nsRFPService.h"
 
+#include <time.h>
+
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
@@ -13,6 +15,7 @@
 #include "nsCOMPtr.h"
 #include "nsServiceManagerUtils.h"
 #include "nsString.h"
+#include "nsXULAppAPI.h"
 
 #include "nsIObserverService.h"
 #include "nsIPrefBranch.h"
@@ -120,6 +123,19 @@ nsRFPService::Init()
   // Call UpdatePref() here to cache the value of 'privacy.resistFingerprinting'
   // and set the timezone.
   UpdatePref();
+
+#if defined(XP_WIN)
+  // If we're e10s, then we don't need to run this, since the child process will
+  // simply inherit the environment variable from the parent process, in which
+  // case it's unnecessary to call _tzset().
+  if (XRE_IsParentProcess() && !XRE_IsE10sParentProcess()) {
+    // Windows does not follow POSIX. Updates to the TZ environment variable
+    // are not reflected immediately on that platform as they are on UNIX
+    // systems without this call.
+    _tzset();
+  }
+#endif
+
   return rv;
 }
 
@@ -152,8 +168,6 @@ nsRFPService::UpdatePref()
     }
   }
 
-  // We don't have to call _tzset() here for Windows since the following
-  // function nsJSUtils::ResetTimeZone() will call it for us.
   nsJSUtils::ResetTimeZone();
 }
 
@@ -184,6 +198,15 @@ nsRFPService::Observe(nsISupports* aObject, const char* aTopic,
 
     if (pref.EqualsLiteral(RESIST_FINGERPRINTING_PREF)) {
       UpdatePref();
+
+#if defined(XP_WIN)
+      if (!XRE_IsE10sParentProcess()) {
+        // Windows does not follow POSIX. Updates to the TZ environment variable
+        // are not reflected immediately on that platform as they are on UNIX
+        // systems without this call.
+        _tzset();
+      }
+#endif
     }
   }
 
