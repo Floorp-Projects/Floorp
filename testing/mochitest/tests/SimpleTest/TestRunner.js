@@ -449,7 +449,10 @@ TestRunner.runNextTest = function() {
         {
             // No |$('testframe').contentWindow|, so manually update: ...
             // ... the log,
-            TestRunner.structuredLogger.error("SimpleTest/TestRunner.js | No checks actually run");
+            TestRunner.structuredLogger.testEnd('SimpleTest/TestRunner.js',
+                                                "ERROR",
+                                                "OK",
+                                                "No checks actually run");
             // ... the count,
             $("fail-count").innerHTML = 1;
             // ... the indicator.
@@ -508,11 +511,6 @@ TestRunner.expectChildProcessCrash = function() {
  * This stub is called by SimpleTest when a test is finished.
 **/
 TestRunner.testFinished = function(tests) {
-    // Need to track subtests recorded here separately or else they'll
-    // trigger the `result after SimpleTest.finish()` error.
-    var extraTests = [];
-    var result = "OK";
-
     // Prevent a test from calling finish() multiple times before we
     // have a chance to unload it.
     if (TestRunner._currentTest == TestRunner._lastTestFinished &&
@@ -542,31 +540,23 @@ TestRunner.testFinished = function(tests) {
 
     function cleanUpCrashDumpFiles() {
         if (!SpecialPowers.removeExpectedCrashDumpFiles(TestRunner._expectingProcessCrash)) {
-            var subtest = "expected-crash-dump-missing";
-            TestRunner.structuredLogger.testStatus(TestRunner.currentTestURL,
-                                                   subtest,
-                                                   "ERROR",
-                                                   "PASS",
-                                                   "This test did not leave any crash dumps behind, but we were expecting some!");
-            extraTests.push({ name: subtest, result: false });
-            result = "ERROR";
+            TestRunner.structuredLogger.testEnd(TestRunner.currentTestURL,
+                                                "ERROR",
+                                                "OK",
+                                                "This test did not leave any crash dumps behind, but we were expecting some!");
+            tests.push({ result: false });
         }
-
         var unexpectedCrashDumpFiles =
             SpecialPowers.findUnexpectedCrashDumpFiles();
         TestRunner._expectingProcessCrash = false;
         if (unexpectedCrashDumpFiles.length) {
-            var subtest = "unexpected-crash-dump-found";
-            TestRunner.structuredLogger.testStatus(TestRunner.currentTestURL,
-                                                   subtest,
-                                                   "ERROR",
-                                                   "PASS",
-                                                   "This test left crash dumps behind, but we " +
-                                                   "weren't expecting it to!",
-                                                   null,
-                                                   {unexpected_crashdump_files: unexpectedCrashDumpFiles});
-            extraTests.push({ name: subtest, result: false });
-            result = "CRASH";
+            TestRunner.structuredLogger.testEnd(TestRunner.currentTestURL,
+                                                "ERROR",
+                                                "OK",
+                                                "This test left crash dumps behind, but we " +
+                                                "weren't expecting it to!",
+                                                {unexpected_crashdump_files: unexpectedCrashDumpFiles});
+            tests.push({ result: false });
             unexpectedCrashDumpFiles.sort().forEach(function(aFilename) {
                 TestRunner.structuredLogger.info("Found unexpected crash dump file " +
                                                  aFilename + ".");
@@ -580,33 +570,6 @@ TestRunner.testFinished = function(tests) {
         }
     }
 
-    function checkForAssertions() {
-        // If we're in a debug build, check assertion counts.  This code is
-        // similar to the code in Tester_nextTest in browser-test.js used
-        // for browser-chrome mochitests.
-        if (SpecialPowers.isDebugBuild) {
-            var newAssertionCount = SpecialPowers.assertionCount();
-            var numAsserts = newAssertionCount - TestRunner._lastAssertionCount;
-            TestRunner._lastAssertionCount = newAssertionCount;
-
-            var max = TestRunner._expectedMaxAsserts;
-            var min = TestRunner._expectedMinAsserts;
-            if (Array.isArray(TestRunner.expected)) {
-                // Accumulate all assertion counts recorded in the failure pattern file.
-                let additionalAsserts = TestRunner.expected.reduce((acc, [pat, count]) => {
-                    return pat == "ASSERTION" ? acc + count : acc;
-                }, 0);
-                min += additionalAsserts;
-                max += additionalAsserts;
-            }
-            TestRunner.structuredLogger.assertionCount(TestRunner.currentTestURL, numAsserts, min, max);
-
-            var expected = min <= numAsserts && numAsserts <= max;
-            extraTests.push({ name: "assertion-check", result: expected });
-            result = !expected && result == "OK" ? "ASSERT": result;
-        }
-    }
-
     function runNextTest() {
         if (TestRunner.currentTestURL != TestRunner.getLoadedTestURL()) {
             TestRunner.structuredLogger.testStatus(TestRunner.currentTestURL,
@@ -616,15 +579,14 @@ TestRunner.testFinished = function(tests) {
                                                    "finished in a non-clean fashion, probably" +
                                                    " because it didn't call SimpleTest.finish()",
                                                    {loaded_test_url: TestRunner.getLoadedTestURL()});
-            extraTests.push({ name: "clean-finish", result: false });
-            result = result != "CRASH" ? "ERROR": result
+            tests.push({ result: false });
         }
 
         var runtime = new Date().valueOf() - TestRunner._currentTestStartTime;
 
         TestRunner.structuredLogger.testEnd(TestRunner.currentTestURL,
-                                            result,
                                             "OK",
+                                            undefined,
                                             "Finished in " + runtime + "ms",
                                             {runtime: runtime}
         );
@@ -634,7 +596,7 @@ TestRunner.testFinished = function(tests) {
           TestRunner.slowestTestURL = TestRunner.currentTestURL;
         }
 
-        TestRunner.updateUI(tests.concat(extraTests));
+        TestRunner.updateUI(tests);
 
         // Don't show the interstitial if we just run one test with no repeats:
         if (TestRunner._urls.length == 1 && TestRunner.repeat <= 1) {
@@ -656,7 +618,7 @@ TestRunner.testFinished = function(tests) {
              var wrongtestname = '';
              for (var i = 0; i < wrongtestlength; i++) {
                wrongtestname = testwin.SimpleTest._tests[testwin.SimpleTest.testsLength + i].name;
-               TestRunner.structuredLogger.error(TestRunner.currentTestURL + " logged result after SimpleTest.finish(): " + wrongtestname);
+               TestRunner.structuredLogger.testStatus(TestRunner.currentTestURL, wrongtestname, 'FAIL', 'PASS', "Result logged after SimpleTest.finish()");
              }
              TestRunner.updateUI([{ result: false }]);
            }
@@ -666,12 +628,55 @@ TestRunner.testFinished = function(tests) {
 
     SpecialPowers.executeAfterFlushingMessageQueue(function() {
         cleanUpCrashDumpFiles();
-        checkForAssertions();
         SpecialPowers.flushPermissions(function () { SpecialPowers.flushPrefEnv(runNextTest); });
     });
 };
 
 TestRunner.testUnloaded = function() {
+    // If we're in a debug build, check assertion counts.  This code is
+    // similar to the code in Tester_nextTest in browser-test.js used
+    // for browser-chrome mochitests.
+    if (SpecialPowers.isDebugBuild) {
+        var newAssertionCount = SpecialPowers.assertionCount();
+        var numAsserts = newAssertionCount - TestRunner._lastAssertionCount;
+        TestRunner._lastAssertionCount = newAssertionCount;
+
+        var url = TestRunner.getNextUrl();
+        var max = TestRunner._expectedMaxAsserts;
+        var min = TestRunner._expectedMinAsserts;
+        if (Array.isArray(TestRunner.expected)) {
+            // Accumulate all assertion counts recorded in the failure pattern file.
+            let additionalAsserts = TestRunner.expected.reduce((acc, [pat, count]) => {
+                return pat == "ASSERTION" ? acc + count : acc;
+            }, 0);
+            min += additionalAsserts;
+            max += additionalAsserts;
+        }
+        if (numAsserts > max) {
+            TestRunner.structuredLogger.testEnd(url,
+                                                "ERROR",
+                                                "OK",
+                                                "Assertion count " + numAsserts + " is greater than expected range " +
+                                                min + "-" + max + " assertions.",
+                                                {assertions: numAsserts, min_asserts: min, max_asserts: max});
+            TestRunner.updateUI([{ result: false }]);
+        } else if (numAsserts < min) {
+            TestRunner.structuredLogger.testEnd(url,
+                                                "OK",
+                                                "ERROR",
+                                                "Assertion count " + numAsserts + " is less than expected range " +
+                                                min + "-" + max + " assertions.",
+                                                {assertions: numAsserts, min_asserts: min, max_asserts: max});
+            TestRunner.updateUI([{ result: false }]);
+        } else if (numAsserts > 0) {
+            TestRunner.structuredLogger.testEnd(url,
+                                                "ERROR",
+                                                "ERROR",
+                                                "Assertion count " + numAsserts + " within expected range " +
+                                                min + "-" + max + " assertions.",
+                                                {assertions: numAsserts, min_asserts: min, max_asserts: max});
+        }
+    }
     TestRunner._currentTest++;
     if (TestRunner.runSlower) {
         setTimeout(TestRunner.runNextTest, 1000);
