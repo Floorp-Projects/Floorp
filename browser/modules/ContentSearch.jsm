@@ -547,9 +547,8 @@ this.ContentSearch = {
 
   _initService() {
     if (!this._initServicePromise) {
-      let deferred = Promise.defer();
-      this._initServicePromise = deferred.promise;
-      Services.search.init(() => deferred.resolve());
+      this._initServicePromise =
+        new Promise(resolve => Services.search.init(resolve));
     }
     return this._initServicePromise;
   },
