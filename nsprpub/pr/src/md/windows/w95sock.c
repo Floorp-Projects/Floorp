@@ -413,12 +413,9 @@ _PR_MD_TCPSENDTO(PRFileDesc *fd, const void *buf, PRInt32 amount, PRIntn flags,
     /* ConnectEx requires the socket to be initially bound. We will use INADDR_ANY. */
     PRNetAddr bindAddr;
     memset(&bindAddr, 0, sizeof(bindAddr));
-    if (addr->raw.family == PR_AF_INET) {
-        bindAddr.inet.family = PR_AF_INET;
-    } else if (addr->raw.family == PR_AF_INET6) {
-        bindAddr.ipv6.family = PR_AF_INET6;
-    }
-    rv = bind((SOCKET)osfd, (SOCKADDR*) &bindAddr, sizeof(bindAddr));
+    bindAddr.raw.family = addr->raw.family;
+
+    rv = bind((SOCKET)osfd, (const struct sockaddr *)&(bindAddr.inet), PR_NETADDR_SIZE(&bindAddr));
     if (rv != 0) {
         err = WSAGetLastError();
         PR_LOG(_pr_io_lm, PR_LOG_MIN,
@@ -470,7 +467,10 @@ _PR_MD_TCPSENDTO(PRFileDesc *fd, const void *buf, PRInt32 amount, PRIntn flags,
              * this data already send. */
             return amount;
         }
-        while (err == ERROR_IO_PENDING) {
+        // err is ERROR_IO_PENDING and socket is blocking, so query
+        // GetOverlappedResult.
+        err = ERROR_IO_INCOMPLETE;
+        while (err == ERROR_IO_INCOMPLETE) {
             rv = socket_io_wait(osfd, WRITE_FD, timeout);
             if ( rv < 0 ) {
                 return -1;
@@ -480,7 +480,7 @@ _PR_MD_TCPSENDTO(PRFileDesc *fd, const void *buf, PRInt32 amount, PRIntn flags,
                 return rvSent;
             } else {
                 err = WSAGetLastError();
-                if (err != ERROR_IO_PENDING) {
+                if (err != ERROR_IO_INCOMPLETE) {
                     _PR_MD_MAP_CONNECT_ERROR(err);
                     return -1;
                 }

@@ -3316,11 +3316,11 @@ int _MD_unix_get_nonblocking_connect_error(int osfd)
                 return errno;
             } else {
                 return err;
-            }		
+            }
         }
     } else {
         return ECONNREFUSED;
-    }	
+    }
 #elif defined(UNIXWARE)
     /*
      * getsockopt() fails with EPIPE, so use getmsg() instead.
@@ -3331,17 +3331,17 @@ int _MD_unix_get_nonblocking_connect_error(int osfd)
     rv = getmsg(osfd, NULL, NULL, &flags);
     PR_ASSERT(-1 == rv || 0 == rv);
     if (-1 == rv && errno != EAGAIN && errno != EWOULDBLOCK) {
-        return errno;
+      return errno;
     }
-    return 0;  /* no error */
+    return 0; /* no error */
 #else
-    int err;
-    _PRSockLen_t optlen = sizeof(err);
-    if (getsockopt(osfd, SOL_SOCKET, SO_ERROR, (char *) &err, &optlen) == -1) {
-        return errno;
-    } else {
-        return err;
-    }
+  int err;
+  _PRSockLen_t optlen = sizeof(err);
+  if (getsockopt(osfd, SOL_SOCKET, SO_ERROR, (char*)&err, &optlen) == -1) {
+    return errno;
+  }
+  return err;
+
 #endif
 }
 
