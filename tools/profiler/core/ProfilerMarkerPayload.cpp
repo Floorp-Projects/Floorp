@@ -24,10 +24,6 @@ ProfilerMarkerPayload::ProfilerMarkerPayload(const TimeStamp& aStartTime,
   , mStack(Move(aStack))
 {}
 
-ProfilerMarkerPayload::~ProfilerMarkerPayload()
-{
-}
-
 void
 ProfilerMarkerPayload::StreamCommonProps(const char* aMarkerType,
                                          SpliceableJSONWriter& aWriter,
@@ -116,15 +112,11 @@ IOMarkerPayload::IOMarkerPayload(const char* aSource,
                                  const TimeStamp& aStartTime,
                                  const TimeStamp& aEndTime,
                                  UniqueProfilerBacktrace aStack)
-  : ProfilerMarkerPayload(aStartTime, aEndTime, Move(aStack)),
-    mSource(aSource)
+  : ProfilerMarkerPayload(aStartTime, aEndTime, Move(aStack))
+  , mSource(aSource)
+  , mFilename(aFilename ? strdup(aFilename) : nullptr)
 {
-  mFilename = aFilename ? strdup(aFilename) : nullptr;
   MOZ_ASSERT(aSource);
-}
-
-IOMarkerPayload::~IOMarkerPayload(){
-  free(mFilename);
 }
 
 void
@@ -134,8 +126,8 @@ IOMarkerPayload::StreamPayload(SpliceableJSONWriter& aWriter,
 {
   StreamCommonProps("io", aWriter, aProcessStartTime, aUniqueStacks);
   aWriter.StringProperty("source", mSource);
-  if (mFilename != nullptr) {
-    aWriter.StringProperty("filename", mFilename);
+  if (mFilename) {
+    aWriter.StringProperty("filename", mFilename.get());
   }
 }
 
@@ -156,10 +148,6 @@ UserTimingMarkerPayload::UserTimingMarkerPayload(const nsAString& aName,
 {
 }
 
-UserTimingMarkerPayload::~UserTimingMarkerPayload()
-{
-}
-
 void
 UserTimingMarkerPayload::StreamPayload(SpliceableJSONWriter& aWriter,
                                        const TimeStamp& aProcessStartTime,
@@ -176,10 +164,6 @@ DOMEventMarkerPayload::DOMEventMarkerPayload(const nsAString& aType, uint16_t aP
   : ProfilerMarkerPayload(aStartTime, aEndTime, nullptr)
   , mType(aType)
   , mPhase(aPhase)
-{
-}
-
-DOMEventMarkerPayload::~DOMEventMarkerPayload()
 {
 }
 
