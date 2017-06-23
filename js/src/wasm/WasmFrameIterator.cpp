@@ -72,11 +72,11 @@ FrameIterator::FrameIterator(WasmActivation* activation, Unwind unwind)
     // but this is fine because CallSite is only used for line number for which
     // we can use the beginning of the function from the CodeRange instead.
 
-    code_ = activation_->compartment()->wasm.lookupCode(activation->resumePC());
+    code_ = activation_->compartment()->wasm.lookupCode(activation->unwindPC());
     MOZ_ASSERT(code_);
     MOZ_ASSERT(&fp_->tls->instance->code() == code_);
 
-    codeRange_ = code_->lookupRange(activation->resumePC());
+    codeRange_ = code_->lookupRange(activation->unwindPC());
     MOZ_ASSERT(codeRange_->kind() == CodeRange::Function);
 
     MOZ_ASSERT(!done());

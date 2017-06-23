@@ -1547,6 +1547,17 @@ Simulator::exclusiveMonitorClear()
     exclusiveMonitorHeld_ = false;
 }
 
+void
+Simulator::startInterrupt(WasmActivation* activation)
+{
+    JS::ProfilingFrameIterator::RegisterState state;
+    state.pc = (void*) get_pc();
+    state.fp = (void*) get_register(fp);
+    state.sp = (void*) get_register(sp);
+    state.lr = (void*) get_register(lr);
+    activation->startInterrupt(state);
+}
+
 // The signal handler only redirects the PC to the interrupt stub when the PC is
 // in function code. However, this guard is racy for the ARM simulator since the
 // signal handler samples PC in the middle of simulating an instruction and thus
@@ -1568,7 +1579,7 @@ Simulator::handleWasmInterrupt()
     if (!fp)
         return;
 
-    activation->startInterrupt(pc, fp);
+    startInterrupt(activation);
     set_pc(int32_t(segment->interruptCode()));
 }
 
@@ -1594,7 +1605,7 @@ Simulator::handleWasmFault(int32_t addr, unsigned numBytes)
     const wasm::CodeSegment* segment;
     const wasm::MemoryAccess* memoryAccess = instance->code().lookupMemoryAccess(pc, &segment);
     if (!memoryAccess) {
-        act->startInterrupt(pc, fp);
+        startInterrupt(act);
         if (!instance->code().containsCodePC(pc, &segment))
             MOZ_CRASH("Cannot map PC to trap handler");
         set_pc(int32_t(segment->outOfBoundsCode()));
