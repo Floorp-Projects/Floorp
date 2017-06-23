@@ -720,8 +720,8 @@ MLGTextureD3D11::GetShaderResourceView()
 }
 
 MLGDeviceD3D11::MLGDeviceD3D11(ID3D11Device* aDevice)
- : mDevice(aDevice)
- , mScissored(false)
+ : mDevice(aDevice),
+   mScissored(false)
 {
 }
 
@@ -958,6 +958,7 @@ MLGDeviceD3D11::Initialize()
   }
 
   mCtx->RSSetState(mRasterizerStateNoScissor);
+
   return MLGDevice::Initialize();
 }
 
