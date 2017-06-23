@@ -5095,9 +5095,7 @@ fi
 AC_SUBST(MOZ_PKG_SPECIAL)
 AC_SUBST(MOZ_SIMPLE_PACKAGE_NAME)
 
-AC_SUBST(MOZILLA_OFFICIAL)
 if test "$MOZILLA_OFFICIAL"; then
-    AC_DEFINE(MOZILLA_OFFICIAL)
     # Build revisions should always be present in official builds
     MOZ_INCLUDE_SOURCE_INFO=1
 fi

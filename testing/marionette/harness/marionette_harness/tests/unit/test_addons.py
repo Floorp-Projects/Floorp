@@ -33,7 +33,7 @@ class TestAddons(MarionetteTestCase):
         return addons
 
     def test_install_and_remove_temporary_unsigned_addon(self):
-        addon_path = os.path.join(here, 'mn-restartless-unsigned.xpi')
+        addon_path = os.path.join(here, 'webextension-unsigned.xpi')
 
         addon_id = self.addons.install(addon_path, temp=True)
         self.assertIn(addon_id, self.all_addon_ids)
@@ -42,7 +42,7 @@ class TestAddons(MarionetteTestCase):
         self.assertNotIn(addon_id, self.all_addon_ids)
 
     def test_install_unsigned_addon(self):
-        addon_path = os.path.join(here, 'mn-restartless-unsigned.xpi')
+        addon_path = os.path.join(here, 'webextension-unsigned.xpi')
 
         with self.assertRaises(AddonInstallException):
             self.addons.install(addon_path)

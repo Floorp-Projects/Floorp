@@ -74,6 +74,18 @@ def enable_tests(value):
 set_config('ENABLE_TESTS', enable_tests)
 set_define('ENABLE_TESTS', enable_tests)
 
+js_option(env='MOZILLA_OFFICIAL',
+          help='Build an official release')
+
+@depends('MOZILLA_OFFICIAL')
+def mozilla_official(official):
+    if official:
+        return True
+
+set_config('MOZILLA_OFFICIAL', mozilla_official)
+set_define('MOZILLA_OFFICIAL', mozilla_official)
+add_old_configure_assignment('MOZILLA_OFFICIAL', mozilla_official)
+
 @depends(enable_tests)
 def gtest_has_rtti(value):
     if value:

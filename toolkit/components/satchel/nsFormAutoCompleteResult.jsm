@@ -2,21 +2,20 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-this.EXPORTED_SYMBOLS = [ "FormAutoCompleteResult" ];
+this.EXPORTED_SYMBOLS = ["FormAutoCompleteResult"];
 
 const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
-this.FormAutoCompleteResult =
- function FormAutoCompleteResult(searchString,
-                                 searchResult,
-                                 defaultIndex,
-                                 errorDescription,
-                                 values,
-                                 labels,
-                                 comments,
-                                 prevResult) {
+this.FormAutoCompleteResult = function FormAutoCompleteResult(searchString,
+                                                              searchResult,
+                                                              defaultIndex,
+                                                              errorDescription,
+                                                              values,
+                                                              labels,
+                                                              comments,
+                                                              prevResult) {
   this.searchString = searchString;
   this._searchResult = searchResult;
   this._defaultIndex = defaultIndex;
@@ -25,13 +24,8 @@ this.FormAutoCompleteResult =
   this._labels = labels;
   this._comments = comments;
   this._formHistResult = prevResult;
-
-  if (prevResult) {
-    this.entries = prevResult.wrappedJSObject.entries;
-  } else {
-    this.entries = [];
-  }
-}
+  this.entries = prevResult ? prevResult.wrappedJSObject.entries : [];
+};
 
 FormAutoCompleteResult.prototype = {
 
@@ -60,7 +54,7 @@ FormAutoCompleteResult.prototype = {
   },
 
   /**
-   * @return the result code of this result object, either:
+   * @returns {number} the result code of this result object, either:
    *         RESULT_IGNORED   (invalid searchString)
    *         RESULT_FAILURE   (failure)
    *         RESULT_NOMATCH   (no matches found)
@@ -71,21 +65,21 @@ FormAutoCompleteResult.prototype = {
   },
 
   /**
-   * @return the default item that should be entered if none is selected
+   * @returns {number} the default item that should be entered if none is selected
    */
   get defaultIndex() {
     return this._defaultIndex;
   },
 
   /**
-   * @return the reason the search failed
+   * @returns {string} the reason the search failed
    */
   get errorDescription() {
     return this._errorDescription;
   },
 
   /**
-   * @return the number of results
+   * @returns {number} the number of results
    */
   get matchCount() {
     return this._values.length;
@@ -99,8 +93,8 @@ FormAutoCompleteResult.prototype = {
 
   /**
    * Retrieves a result
-   * @param  index    the index of the result requested
-   * @return          the result at the specified index
+   * @param   {number} index   the index of the result requested
+   * @returns {string}         the result at the specified index
    */
   getValueAt(index) {
     this._checkIndexBounds(index);
@@ -114,8 +108,8 @@ FormAutoCompleteResult.prototype = {
 
   /**
    * Retrieves a comment (metadata instance)
-   * @param  index    the index of the comment requested
-   * @return          the comment at the specified index
+   * @param {number} index    the index of the comment requested
+   * @returns {Object}        the comment at the specified index
    */
   getCommentAt(index) {
     this._checkIndexBounds(index);
@@ -124,8 +118,8 @@ FormAutoCompleteResult.prototype = {
 
   /**
    * Retrieves a style hint specific to a particular index.
-   * @param  index    the index of the style hint requested
-   * @return          the style hint at the specified index
+   * @param   {number} index   the index of the style hint requested
+   * @returns {string|null}    the style hint at the specified index
    */
   getStyleAt(index) {
     this._checkIndexBounds(index);
@@ -145,8 +139,8 @@ FormAutoCompleteResult.prototype = {
 
   /**
    * Retrieves an image url.
-   * @param  index    the index of the image url requested
-   * @return          the image url at the specified index
+   * @param   {number} index  the index of the image url requested
+   * @returns {string}        the image url at the specified index
    */
   getImageAt(index) {
     this._checkIndexBounds(index);
@@ -155,8 +149,8 @@ FormAutoCompleteResult.prototype = {
 
   /**
    * Retrieves a result
-   * @param  index    the index of the result requested
-   * @return          the result at the specified index
+   * @param   {number} index   the index of the result requested
+   * @returns {string}         the result at the specified index
    */
   getFinalCompleteValueAt(index) {
     return this.getValueAt(index);
@@ -164,7 +158,8 @@ FormAutoCompleteResult.prototype = {
 
   /**
    * Removes a result from the resultset
-   * @param  index    the index of the result to remove
+   * @param {number}  index    the index of the result to remove
+   * @param {boolean} removeFromDatabase
    */
   removeValueAt(index, removeFromDatabase) {
     this._checkIndexBounds(index);
@@ -182,5 +177,5 @@ FormAutoCompleteResult.prototype = {
   },
 
   // nsISupports
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIAutoCompleteResult])
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIAutoCompleteResult]),
 };

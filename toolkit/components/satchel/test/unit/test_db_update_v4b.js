@@ -14,43 +14,42 @@ function run_test() {
 
 function* next_test() {
   try {
-
   // ===== test init =====
-  var testfile = do_get_file("formhistory_v3v4.sqlite");
-  var profileDir = dirSvc.get("ProfD", Ci.nsIFile);
+    let testfile = do_get_file("formhistory_v3v4.sqlite");
+    let profileDir = dirSvc.get("ProfD", Ci.nsIFile);
 
-  // Cleanup from any previous tests or failures.
-  var destFile = profileDir.clone();
-  destFile.append("formhistory.sqlite");
-  if (destFile.exists())
-    destFile.remove(false);
-
-  testfile.copyTo(profileDir, "formhistory.sqlite");
-  do_check_eq(3, getDBVersion(testfile));
-
-  // ===== 1 =====
-  testnum++;
-
-  destFile = profileDir.clone();
-  destFile.append("formhistory.sqlite");
-  let dbConnection = Services.storage.openUnsharedDatabase(destFile);
-
-  // check for upgraded schema.
-  do_check_eq(CURRENT_SCHEMA, FormHistory.schemaVersion);
-
-  // Check that the index was added
-  do_check_true(dbConnection.tableExists("moz_deleted_formhistory"));
-  dbConnection.close();
-
-  // check that an entry still exists
-  yield countEntries("name-A", "value-A",
-    function(num) {
-      do_check_true(num > 0);
-      do_test_finished();
+    // Cleanup from any previous tests or failures.
+    let destFile = profileDir.clone();
+    destFile.append("formhistory.sqlite");
+    if (destFile.exists()) {
+      destFile.remove(false);
     }
-  );
 
+    testfile.copyTo(profileDir, "formhistory.sqlite");
+    do_check_eq(3, getDBVersion(testfile));
+
+    // ===== 1 =====
+    testnum++;
+
+    destFile = profileDir.clone();
+    destFile.append("formhistory.sqlite");
+    let dbConnection = Services.storage.openUnsharedDatabase(destFile);
+
+    // check for upgraded schema.
+    do_check_eq(CURRENT_SCHEMA, FormHistory.schemaVersion);
+
+    // Check that the index was added
+    do_check_true(dbConnection.tableExists("moz_deleted_formhistory"));
+    dbConnection.close();
+
+    // check that an entry still exists
+    yield countEntries("name-A", "value-A",
+                       function(num) {
+                         do_check_true(num > 0);
+                         do_test_finished();
+                       }
+    );
   } catch (e) {
-    throw "FAILED in test #" + testnum + " -- " + e;
+    throw new Error(`FAILED in test #${testnum} -- ${e}`);
   }
 }

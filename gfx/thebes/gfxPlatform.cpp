@@ -154,6 +154,8 @@ using namespace mozilla::gfx;
 gfxPlatform *gPlatform = nullptr;
 static bool gEverInitialized = false;
 
+const ContentDeviceData* gContentDeviceInitData = nullptr;
+
 static Mutex* gGfxPlatformPrefsLock = nullptr;
 
 // These two may point to the same profile
@@ -529,6 +531,8 @@ gfxPlatform*
 gfxPlatform::GetPlatform()
 {
     if (!gPlatform) {
+        MOZ_RELEASE_ASSERT(!XRE_IsContentProcess(),
+                           "Content Process should have called InitChild() before first GetPlatform()");
         Init();
     }
     return gPlatform;
@@ -538,6 +542,19 @@ bool
 gfxPlatform::Initialized()
 {
   return !!gPlatform;
+}
+
+/* static */ void
+gfxPlatform::InitChild(const ContentDeviceData& aData)
+{
+  MOZ_ASSERT(XRE_IsContentProcess());
+  MOZ_RELEASE_ASSERT(!gPlatform,
+                     "InitChild() should be called before first GetPlatform()");
+  // Make the provided initial ContentDeviceData available to the init
+  // routines, so they don't have to do a sync request from the parent.
+  gContentDeviceInitData = &aData;
+  Init();
+  gContentDeviceInitData = nullptr;
 }
 
 void RecordingPrefChanged(const char *aPrefName, void *aClosure)
@@ -2721,6 +2738,11 @@ void
 gfxPlatform::FetchAndImportContentDeviceData()
 {
   MOZ_ASSERT(XRE_IsContentProcess());
+
+  if (gContentDeviceInitData) {
+    ImportContentDeviceData(*gContentDeviceInitData);
+    return;
+  }
 
   mozilla::dom::ContentChild* cc = mozilla::dom::ContentChild::GetSingleton();
 

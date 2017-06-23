@@ -5,6 +5,7 @@
 
 use backend;
 use cubeb;
+use std::ffi::CStr;
 use std::os::raw::{c_char, c_void};
 
 unsafe extern "C" fn capi_init(c: *mut *mut cubeb::Context, context_name: *const c_char) -> i32 {
@@ -114,21 +115,18 @@ unsafe extern "C" fn capi_stream_init(c: *mut cubeb::Context,
                                       state_callback: cubeb::StateCallback,
                                       user_ptr: *mut c_void)
                                       -> i32 {
+    fn try_stream_params_from(sp: *mut cubeb::StreamParams) -> Option<cubeb::StreamParams> {
+        if sp.is_null() { None } else { Some(unsafe { *sp }) }
+    }
+
     let mut ctx = &mut *(c as *mut backend::Context);
+    let stream_name = CStr::from_ptr(stream_name);
 
     match ctx.new_stream(stream_name,
                          input_device,
-                         if input_stream_params.is_null() {
-                             None
-                         } else {
-                             Some(*input_stream_params)
-                         },
+                         try_stream_params_from(input_stream_params),
                          output_device,
-                         if output_stream_params.is_null() {
-                             None
-                         } else {
-                             Some(*output_stream_params)
-                         },
+                         try_stream_params_from(output_stream_params),
                          latency_frames,
                          data_callback,
                          state_callback,

@@ -128,20 +128,19 @@ FormAutofillHandler.prototype = {
         }
         this.changeFieldState(fieldDetail, "AUTO_FILLED");
       } else if (element instanceof Ci.nsIDOMHTMLSelectElement) {
-        for (let option of element.options) {
-          if (value === option.textContent || value === option.value) {
-            // Do not change value if the option is already selected.
-            // Use case for multiple select is not considered here.
-            if (option.selected) {
-              break;
-            }
-            option.selected = true;
-            element.dispatchEvent(new element.ownerGlobal.UIEvent("input", {bubbles: true}));
-            element.dispatchEvent(new element.ownerGlobal.Event("change", {bubbles: true}));
-            this.changeFieldState(fieldDetail, "AUTO_FILLED");
-            break;
-          }
+        let option = FormAutofillUtils.findSelectOption(element, profile, fieldDetail.fieldName);
+        if (!option) {
+          continue;
         }
+        // Do not change value or dispatch events if the option is already selected.
+        // Use case for multiple select is not considered here.
+        if (!option.selected) {
+          option.selected = true;
+          element.dispatchEvent(new element.ownerGlobal.UIEvent("input", {bubbles: true}));
+          element.dispatchEvent(new element.ownerGlobal.Event("change", {bubbles: true}));
+        }
+        // Autofill highlight appears regardless if value is changed or not
+        this.changeFieldState(fieldDetail, "AUTO_FILLED");
       }
 
       // Unlike using setUserInput directly, FormFillController dispatches an
@@ -210,13 +209,25 @@ FormAutofillHandler.prototype = {
       let element = fieldDetail.elementWeakRef.get();
       let value = profile[fieldDetail.fieldName] || "";
 
-      // Skip the field that is null or already has text entered
-      if (!element || element.value) {
+      // Skip the field that is null
+      if (!element) {
         continue;
       }
 
-      element.previewValue = value;
-      this.changeFieldState(fieldDetail, value ? "PREVIEW" : "NORMAL");
+      if (element instanceof Ci.nsIDOMHTMLSelectElement) {
+        // Unlike text input, select element is always previewed even if
+        // the option is already selected.
+        let option = FormAutofillUtils.findSelectOption(element, profile, fieldDetail.fieldName);
+        element.previewValue = option ? option.text : "";
+        this.changeFieldState(fieldDetail, option ? "PREVIEW" : "NORMAL");
+      } else {
+        // Skip the field if it already has text entered
+        if (element.value) {
+          continue;
+        }
+        element.previewValue = value;
+        this.changeFieldState(fieldDetail, value ? "PREVIEW" : "NORMAL");
+      }
     }
   },
 

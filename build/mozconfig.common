@@ -14,8 +14,6 @@ mk_add_options AUTOCLOBBER=1
 
 ac_add_options --enable-crashreporter
 
-ac_add_options --enable-release
-
 # Tell the build system where to find llvm-config for builds on automation.
 export LLVM_CONFIG="${TOOLTOOL_DIR:-$topsrcdir}/clang/bin/llvm-config"
 

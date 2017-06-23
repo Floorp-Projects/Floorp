@@ -11,9 +11,9 @@ add_task(async function() {
   partialURLTab = BrowserTestUtils.addTab(gBrowser);
   testURL = "http://example.org/browser/browser/base/content/test/urlbar/dummy_page.html";
 
-  let loaded1 = BrowserTestUtils.browserLoaded(deletedURLTab.linkedBrowser, testURL);
-  let loaded2 = BrowserTestUtils.browserLoaded(fullURLTab.linkedBrowser, testURL);
-  let loaded3 = BrowserTestUtils.browserLoaded(partialURLTab.linkedBrowser, testURL);
+  let loaded1 = BrowserTestUtils.browserLoaded(deletedURLTab.linkedBrowser, false, testURL);
+  let loaded2 = BrowserTestUtils.browserLoaded(fullURLTab.linkedBrowser, false, testURL);
+  let loaded3 = BrowserTestUtils.browserLoaded(partialURLTab.linkedBrowser, false, testURL);
   deletedURLTab.linkedBrowser.loadURI(testURL);
   fullURLTab.linkedBrowser.loadURI(testURL);
   partialURLTab.linkedBrowser.loadURI(testURL);

@@ -116,7 +116,7 @@ associated with the expected result.
     the output as one of:
 
     * null if the input is not a valid color in CSS syntax
-    * The string "currentColor" for the currentColor keyword
+    * The string "currentcolor" for the currentcolor keyword
     * An array of length 4 for every other values:
       four (floating point) numbers for the Red, Green, Blue and Alpha channel.
       Each value is between 0 and 1.

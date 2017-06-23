@@ -32,15 +32,14 @@ function isAutocompleteDisabled(aField) {
  * However, nsFormAutoComplete might call remove() any number of
  * times with the same instance of the client.
  *
- * @param Object with the following properties:
- *
- *        formField (DOM node):
- *          A DOM node that we're requesting form history for.
- *
- *        inputName (string):
- *          The name of the input to do the FormHistory look-up
- *          with. If this is searchbar-history, then formField
- *          needs to be null, otherwise constructing will throw.
+ * @param {Object} clientInfo
+ *        Info required to build the FormHistoryClient
+ * @param {Node} clientInfo.formField
+ *        A DOM node that we're requesting form history for.
+ * @param {string} clientInfo.inputName
+ *        The name of the input to do the FormHistory look-up with.
+ *        If this is searchbar-history, then formField needs to be null,
+ *        otherwise constructing will throw.
  */
 function FormHistoryClient({ formField, inputName }) {
   if (formField && inputName != this.SEARCHBAR_ID) {
@@ -81,13 +80,13 @@ FormHistoryClient.prototype = {
   /**
    * Query FormHistory for some results.
    *
-   * @param searchString (string)
+   * @param {string} searchString
    *        The string to search FormHistory for. See
    *        FormHistory.getAutoCompleteResults.
-   * @param params (object)
+   * @param {Object} params
    *        An Object with search properties. See
    *        FormHistory.getAutoCompleteResults.
-   * @param callback
+   * @param {function} callback
    *        A callback function that will take a single
    *        argument (the found entries).
    */
@@ -114,7 +113,7 @@ FormHistoryClient.prototype = {
   /**
    * Remove an item from FormHistory.
    *
-   * @param value (string)
+   * @param {string} value
    *
    *        The value to remove for this particular
    *        field.
@@ -155,8 +154,6 @@ function FormAutoComplete() {
 }
 
 /**
- * FormAutoComplete
- *
  * Implements the nsIFormAutoComplete interface in the main process.
  */
 FormAutoComplete.prototype = {
@@ -199,8 +196,10 @@ FormAutoComplete.prototype = {
   observer: {
     _self: null,
 
-    QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver,
-                                           Ci.nsISupportsWeakReference]),
+    QueryInterface: XPCOMUtils.generateQI([
+      Ci.nsIObserver,
+      Ci.nsISupportsWeakReference,
+    ]),
 
     observe(subject, topic, data) {
       let self = this._self;
@@ -238,7 +237,7 @@ FormAutoComplete.prototype = {
             self.log("Oops! Pref not handled, change ignored.");
         }
       }
-    }
+    },
   },
 
   // AutoCompleteE10S needs to be able to call autoCompleteSearchAsync without
@@ -293,13 +292,11 @@ FormAutoComplete.prototype = {
     let client = new FormHistoryClient({ formField: aField, inputName: aInputName });
 
     // If we have datalist results, they become our "empty" result.
-    let emptyResult = aDatalistResult || new FormAutoCompleteResult(
-                                               client,
-                                               [],
-                                               aInputName,
-                                               aUntrimmedSearchString,
-                                               null
-                                             );
+    let emptyResult = aDatalistResult || new FormAutoCompleteResult(client,
+                                                                    [],
+                                                                    aInputName,
+                                                                    aUntrimmedSearchString,
+                                                                    null);
     if (!this._enabled) {
       if (aListener) {
         aListener.onSearchCompletion(emptyResult);
@@ -430,7 +427,7 @@ FormAutoComplete.prototype = {
         if (aListener) {
           aListener.onSearchCompletion(result);
         }
-      }
+      };
 
       this.getAutoCompleteValues(client, aInputName, searchString, processEntry);
     }
@@ -458,11 +455,16 @@ FormAutoComplete.prototype = {
     // that we use the one defined here. To get around that, we explicitly
     // import the module here, out of the way of the other uses of
     // FormAutoCompleteResult.
-    let {FormAutoCompleteResult} = Cu.import("resource://gre/modules/nsFormAutoCompleteResult.jsm", {});
+    let {FormAutoCompleteResult} = Cu.import("resource://gre/modules/nsFormAutoCompleteResult.jsm",
+                                             {});
     return new FormAutoCompleteResult(datalistResult.searchString,
-                      Ci.nsIAutoCompleteResult.RESULT_SUCCESS,
-                      0, "", finalValues, finalLabels,
-                      finalComments, historyResult);
+                                      Ci.nsIAutoCompleteResult.RESULT_SUCCESS,
+                                      0,
+                                      "",
+                                      finalValues,
+                                      finalLabels,
+                                      finalComments,
+                                      historyResult);
   },
 
   stopAutoCompleteSearch() {
@@ -491,8 +493,8 @@ FormAutoComplete.prototype = {
       maxTimeGroupings:   this._maxTimeGroupings,
       timeGroupingSize:   this._timeGroupingSize,
       prefixWeight:       this._prefixWeight,
-      boundaryWeight:     this._boundaryWeight
-    }
+      boundaryWeight:     this._boundaryWeight,
+    };
 
     this.stopAutoCompleteSearch();
     client.requestAutoCompleteResults(searchString, params, (entries) => {
@@ -529,7 +531,7 @@ FormAutoComplete.prototype = {
       boundaryCalc += this._prefixWeight;
     }
     entry.totalScore = Math.round(entry.frecency * Math.max(1, boundaryCalc));
-  }
+  },
 
 }; // end of FormAutoComplete implementation
 
@@ -621,7 +623,7 @@ FormAutoCompleteResult.prototype = {
     if (removeFromDB) {
       this.client.remove(removedEntry.text);
     }
-  }
+  },
 };
 
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory([FormAutoComplete]);

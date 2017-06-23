@@ -217,6 +217,10 @@ ManageProfileDialog.prototype = {
         this.uninit();
         break;
       }
+      case "keypress": {
+        this.handleKeyPress(event);
+        break;
+      }
     }
   },
 
@@ -232,6 +236,17 @@ ManageProfileDialog.prototype = {
       this.openEditDialog();
     } else if (event.target == this._elements.edit) {
       this.openEditDialog(this._selectedOptions[0].address);
+    }
+  },
+
+  /**
+   * Handle key press events
+   *
+   * @param  {DOMEvent} event
+   */
+  handleKeyPress(event) {
+    if (event.keyCode == KeyEvent.DOM_VK_ESCAPE) {
+      window.close();
     }
   },
 
@@ -252,6 +267,7 @@ ManageProfileDialog.prototype = {
    */
   attachEventListeners() {
     window.addEventListener("unload", this, {once: true});
+    window.addEventListener("keypress", this);
     this._elements.addresses.addEventListener("change", this);
     this._elements.controlsContainer.addEventListener("click", this);
     Services.obs.addObserver(this, "formautofill-storage-changed");
@@ -261,6 +277,7 @@ ManageProfileDialog.prototype = {
    * Remove event listener
    */
   detachEventListeners() {
+    window.removeEventListener("keypress", this);
     this._elements.addresses.removeEventListener("change", this);
     this._elements.controlsContainer.removeEventListener("click", this);
     Services.obs.removeObserver(this, "formautofill-storage-changed");

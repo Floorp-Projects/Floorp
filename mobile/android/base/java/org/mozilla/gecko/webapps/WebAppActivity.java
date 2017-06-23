@@ -9,10 +9,12 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
+import android.annotation.TargetApi;
 import android.app.ActivityManager;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
@@ -118,12 +120,16 @@ public class WebAppActivity extends AppCompatActivity
     }
 
     private void loadManifest(String manifestPath) {
+        if (AppConstants.Versions.feature21Plus) {
+            loadManifestV21(manifestPath);
+        }
+    }
+
+    // The customisations defined in the manifest only work on Android API 21+
+    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
+    private void loadManifestV21(String manifestPath) {
         if (TextUtils.isEmpty(manifestPath)) {
             Log.e(LOGTAG, "Missing manifest");
-            return;
-        }
-        // The customisations defined in the manifest only work on Android API 21+
-        if (AppConstants.Versions.preLollipop) {
             return;
         }
 
@@ -139,7 +145,7 @@ public class WebAppActivity extends AppCompatActivity
                     ? new ActivityManager.TaskDescription(name, icon)
                     : new ActivityManager.TaskDescription(name, icon, color);
 
-            updateStatusBarColor(color);
+            updateStatusBarColorV21(color);
             setTaskDescription(taskDescription);
 
         } catch (IOException | JSONException e) {
@@ -147,7 +153,8 @@ public class WebAppActivity extends AppCompatActivity
         }
     }
 
-    private void updateStatusBarColor(final Integer themeColor) {
+    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
+    private void updateStatusBarColorV21(final Integer themeColor) {
         if (themeColor != null) {
             final Window window = getWindow();
             window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);

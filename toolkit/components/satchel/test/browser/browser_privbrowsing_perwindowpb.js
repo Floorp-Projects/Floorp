@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-var FormHistory = (Components.utils.import("resource://gre/modules/FormHistory.jsm", {})).FormHistory;
+var {FormHistory} = (Components.utils.import("resource://gre/modules/FormHistory.jsm", {}));
 
 /** Test for Bug 472396 **/
 add_task(async function test() {
@@ -38,7 +38,7 @@ add_task(async function test() {
                           }
 
                           doneCounting.resolve();
-                        }
+                        },
                       });
     await doneCounting.promise;
   }

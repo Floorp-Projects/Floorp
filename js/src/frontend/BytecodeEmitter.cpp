@@ -55,6 +55,7 @@ using mozilla::Nothing;
 using mozilla::NumberIsInt32;
 using mozilla::PodCopy;
 using mozilla::Some;
+using mozilla::Unused;
 
 class BreakableControl;
 class LabelControl;
@@ -6224,6 +6225,7 @@ BytecodeEmitter::emitSingleDeclaration(ParseNode* declList, ParseNode* decl,
             MOZ_ASSERT(declList->isKind(PNK_LET),
                        "var declarations without initializers handled above, "
                        "and const declarations must have initializers");
+            Unused << declList; // silence clang -Wunused-lambda-capture in opt builds
             return bce->emit1(JSOP_UNDEFINED);
         }
 

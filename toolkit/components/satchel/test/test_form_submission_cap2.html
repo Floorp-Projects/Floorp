@@ -129,10 +129,10 @@ var numInputFields = 101;
 
 function checkInitialState() {
   countEntries(null, null,
-    function(num) {
-      ok(!num, "checking for initially empty storage");
-      startTest();
-    });
+               function(num) {
+                 ok(!num, "checking for initially empty storage");
+                 startTest();
+               });
 }
 
 function startTest() {
@@ -142,7 +142,7 @@ function startTest() {
   $_(1, "test" + numInputFields).value = numInputFields + " changed";
 
   // submit the first form.
-  var button = getFormSubmitButton(1);
+  let button = getFormSubmitButton(1);
   button.click();
 }
 
@@ -150,23 +150,26 @@ function startTest() {
 // Call done() when finished.
 function checkCountEntries(formNum, index, done) {
   countEntries("test" + index, index,
-    function(num) {
-      ok(!num, "checking unsaved value " + index);
-      if (index < numInputFields) {
-        checkCountEntries(formNum, index + 1, done);
-      } else {
-        done(formNum);
-      }
-    });
+               function(num) {
+                 ok(!num, "checking unsaved value " + index);
+                 if (index < numInputFields) {
+                   checkCountEntries(formNum, index + 1, done);
+                 } else {
+                   done(formNum);
+                 }
+               });
 }
 
+/* exported checkSubmit */
 // Called by each form's onsubmit handler.
 function checkSubmit(formNum) {
   ok(true, "form " + formNum + " submitted");
   numSubmittedForms++;
 
   // make sure that the field # numInputFields was saved
-  checkForSave("test" + numInputFields, numInputFields + " changed", "checking saved value " + numInputFields);
+  checkForSave("test" + numInputFields,
+               numInputFields + " changed",
+               "checking saved value " + numInputFields);
 
   checkCountEntries(formNum, 1, checkSubmitCounted);
 

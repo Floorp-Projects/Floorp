@@ -261,6 +261,11 @@ this.BrowserTestUtils = {
    * @resolves When a load event is triggered for the browser.
    */
   browserLoaded(browser, includeSubFrames=false, wantLoad=null) {
+    // Passing a url as second argument is a common mistake we should prevent.
+    if (includeSubFrames && typeof includeSubFrames != "boolean") {
+      throw("The second argument to browserLoaded should be a boolean.");
+    }
+
     // If browser belongs to tabbrowser-tab, ensure it has been
     // inserted into the document.
     let tabbrowser = browser.ownerGlobal.gBrowser;

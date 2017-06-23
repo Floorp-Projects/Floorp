@@ -408,9 +408,7 @@ nsNodeUtils::CloneNodeImpl(nsINode *aNode, bool aDeep, nsINode **aResult)
   *aResult = nullptr;
 
   nsCOMPtr<nsINode> newNode;
-  nsCOMArray<nsINode> nodesWithProperties;
-  nsresult rv = Clone(aNode, aDeep, nullptr, nodesWithProperties,
-                      getter_AddRefs(newNode));
+  nsresult rv = Clone(aNode, aDeep, nullptr, nullptr, getter_AddRefs(newNode));
   NS_ENSURE_SUCCESS(rv, rv);
 
   newNode.forget(aResult);
@@ -422,7 +420,7 @@ nsresult
 nsNodeUtils::CloneAndAdopt(nsINode *aNode, bool aClone, bool aDeep,
                            nsNodeInfoManager *aNewNodeInfoManager,
                            JS::Handle<JSObject*> aReparentScope,
-                           nsCOMArray<nsINode> &aNodesWithProperties,
+                           nsCOMArray<nsINode> *aNodesWithProperties,
                            nsINode *aParent, nsINode **aResult)
 {
   NS_PRECONDITION((!aClone && aNewNodeInfoManager) || !aReparentScope,
@@ -653,10 +651,10 @@ nsNodeUtils::CloneAndAdopt(nsINode *aNode, bool aClone, bool aDeep,
   }
 #endif
 
-  if (aNode->HasProperties()) {
-    bool ok = aNodesWithProperties.AppendObject(aNode);
+  if (aNodesWithProperties && aNode->HasProperties()) {
+    bool ok = aNodesWithProperties->AppendObject(aNode);
     if (aClone) {
-      ok = ok && aNodesWithProperties.AppendObject(clone);
+      ok = ok && aNodesWithProperties->AppendObject(clone);
     }
 
     NS_ENSURE_TRUE(ok, NS_ERROR_OUT_OF_MEMORY);

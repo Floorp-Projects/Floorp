@@ -2031,13 +2031,33 @@ var setupIceServerConfig = useIceServer => {
     .then(addTurnsSelfsignedCerts);
 };
 
-function runNetworkTest(testFunction, fixtureOptions) {
-  fixtureOptions = fixtureOptions || {}
-  return scriptsReady.then(() =>
-    runTestWhenReady(options =>
-      startNetworkAndTest()
-        .then(() => setupIceServerConfig(fixtureOptions.useIceServer))
-        .then(() => testFunction(options))
-    )
+async function runNetworkTest(testFunction, fixtureOptions = {}) {
+
+  let version = SpecialPowers.Cc["@mozilla.org/xre/app-info;1"].
+    getService(SpecialPowers.Ci.nsIXULAppInfo).version;
+  let isNightly = version.endsWith("a1");
+  let isAndroid = !!navigator.userAgent.includes("Android");
+
+  await scriptsReady;
+  await runTestWhenReady(async options =>
+    {
+      await startNetworkAndTest();
+      await setupIceServerConfig(fixtureOptions.useIceServer);
+
+      // currently we set android hardware encoder default enabled in nightly.
+      // But before QA approves the quality, we want to ensure the legacy
+      // encoder is working fine.
+      if (isNightly && isAndroid) {
+        let value = Math.random() >= 0.5;
+        await SpecialPowers.pushPrefEnv(
+        {
+          set: [
+            ['media.navigator.hardware.vp8_encode.acceleration_enabled', value],
+            ['media.navigator.hardware.vp8_encode.acceleration_remote_enabled', value]
+          ]
+        });
+      }
+      await testFunction(options);
+    }
   );
 }

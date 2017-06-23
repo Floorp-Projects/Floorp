@@ -2,8 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-var dbFile, oldSize;
-var currentTestIndex = 0;
+var dbFile;
 
 function triggerExpiration() {
   // We can't easily fake a "daily idle" event, so for testing purposes form
@@ -12,8 +11,8 @@ function triggerExpiration() {
   Services.obs.notifyObservers(null, "formhistory-expire-now");
 }
 
-var checkExists = function(num) { do_check_true(num > 0); next_test(); }
-var checkNotExists = function(num) { do_check_true(!num); next_test(); }
+var checkExists = function(num) { do_check_true(num > 0); next_test(); };
+var checkNotExists = function(num) { do_check_true(!num); next_test(); };
 
 var TestObserver = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver, Ci.nsISupportsWeakReference]),
@@ -24,13 +23,14 @@ var TestObserver = {
     if (data == "formhistory-expireoldentries") {
       next_test();
     }
-  }
+  },
 };
 
 function test_finished() {
   // Make sure we always reset prefs.
-  if (Services.prefs.prefHasUserValue("browser.formfill.expire_days"))
+  if (Services.prefs.prefHasUserValue("browser.formfill.expire_days")) {
     Services.prefs.clearUserPref("browser.formfill.expire_days");
+  }
 
   do_test_finished();
 }
@@ -50,14 +50,15 @@ function* tests() {
   Services.obs.addObserver(TestObserver, "satchel-storage-changed", true);
 
   // ===== test init =====
-  var testfile = do_get_file("asyncformhistory_expire.sqlite");
-  var profileDir = do_get_profile();
+  let testfile = do_get_file("asyncformhistory_expire.sqlite");
+  let profileDir = do_get_profile();
 
   // Cleanup from any previous tests or failures.
   dbFile = profileDir.clone();
   dbFile.append("formhistory.sqlite");
-  if (dbFile.exists())
+  if (dbFile.exists()) {
     dbFile.remove(false);
+  }
 
   testfile.copyTo(profileDir, "formhistory.sqlite");
   do_check_true(dbFile.exists());
@@ -78,17 +79,17 @@ function* tests() {
   yield countEntries("name-C", "value-C", checkExists);
 
   // Update some existing entries to have ages relative to when the test runs.
-  var now = 1000 * Date.now();
+  let now = 1000 * Date.now();
   let updateLastUsed = function updateLastUsedFn(results, age) {
     let lastUsed = now - age * 24 * PR_HOURS;
 
-    let changes = [ ];
+    let changes = [];
     for (let r = 0; r < results.length; r++) {
       changes.push({ op: "update", lastUsed, guid: results[r].guid });
     }
 
     return changes;
-  }
+  };
 
   let results = yield searchEntries(["guid"], { lastUsed: 181 }, iter);
   yield updateFormHistory(updateLastUsed(results, 181), next_test);

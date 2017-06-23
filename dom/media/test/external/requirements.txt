@@ -1,5 +1,0 @@
-firefox-puppeteer >= 52.1.0, <53.0.0
-manifestparser==1.1
-marionette-driver==2.2.0
-marionette-harness==4.0.0
-mozlog==3.3

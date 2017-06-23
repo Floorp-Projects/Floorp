@@ -51,7 +51,7 @@ add_task(async function openKeywordBookmarkWithWindowOpen() {
   let browser = tab.linkedBrowser;
   if (!browser.currentURI || browser.currentURI.spec != TEST_URL) {
     info("Waiting for browser load");
-    await BrowserTestUtils.browserLoaded(browser);
+    await BrowserTestUtils.browserLoaded(browser, false, TEST_URL);
   }
   is(browser.currentURI && browser.currentURI.spec, TEST_URL, "Tab with expected URL loaded.");
   info("Waiting to remove tab");

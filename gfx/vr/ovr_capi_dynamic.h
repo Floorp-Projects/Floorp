@@ -59,15 +59,14 @@ extern "C" {
 
 typedef int32_t ovrResult;
 
+
+
 typedef enum {
   ovrSuccess = 0,
-  ovrSuccess_NotVisible = 1000,
-  ovrSuccess_HMDFirmwareMismatch = 4100,
-  ovrSuccess_TrackerFirmwareMismatch = 4101,
-  ovrSuccess_ControllerFirmwareMismatch = 4104,
 } ovrSuccessType;
 
 typedef char ovrBool;
+typedef struct OVR_ALIGNAS(4) { float r, g, b, a; } ovrColorf;
 typedef struct OVR_ALIGNAS(4) { int x, y; } ovrVector2i;
 typedef struct OVR_ALIGNAS(4) { int w, h; } ovrSizei;
 typedef struct OVR_ALIGNAS(4) { ovrVector2i Pos; ovrSizei Size; } ovrRecti;
@@ -167,6 +166,12 @@ typedef struct OVR_ALIGNAS(OVR_PTR_SIZE) {
 
 typedef struct ovrHmdStruct* ovrSession;
 
+#ifdef XP_WIN
+typedef uint32_t ovrProcessId;
+#else
+typedef pid_t ovrProcessId;
+#endif
+
 typedef enum {
   ovrStatus_OrientationTracked    = 0x0001,
   ovrStatus_PositionTracked       = 0x0002,
@@ -215,7 +220,7 @@ typedef struct OVR_ALIGNAS(4) {
 } ovrTimewarpProjectionDesc;
 
 typedef struct OVR_ALIGNAS(4) {
-  ovrVector3f HmdToEyeViewOffset[ovrEye_Count];
+  ovrVector3f HmdToEyeOffset[ovrEye_Count];
   float HmdSpaceToWorldScaleInMeters;
 } ovrViewScaleDesc;
 
@@ -236,32 +241,33 @@ typedef enum {
 } ovrTextureBindFlags;
 
 typedef enum {
-  OVR_FORMAT_UNKNOWN,
-  OVR_FORMAT_B5G6R5_UNORM,
-  OVR_FORMAT_B5G5R5A1_UNORM,
-  OVR_FORMAT_B4G4R4A4_UNORM,
-  OVR_FORMAT_R8G8B8A8_UNORM,
-  OVR_FORMAT_R8G8B8A8_UNORM_SRGB,
-  OVR_FORMAT_B8G8R8A8_UNORM,
-  OVR_FORMAT_B8G8R8A8_UNORM_SRGB,
-  OVR_FORMAT_B8G8R8X8_UNORM,
-  OVR_FORMAT_B8G8R8X8_UNORM_SRGB,
-  OVR_FORMAT_R16G16B16A16_FLOAT,
-  OVR_FORMAT_D16_UNORM,
-  OVR_FORMAT_D24_UNORM_S8_UINT,
-  OVR_FORMAT_D32_FLOAT,
-  OVR_FORMAT_D32_FLOAT_S8X24_UINT,
-  OVR_FORMAT_BC1_UNORM,
-  OVR_FORMAT_BC1_UNORM_SRGB,
-  OVR_FORMAT_BC2_UNORM,
-  OVR_FORMAT_BC2_UNORM_SRGB,
-  OVR_FORMAT_BC3_UNORM,
-  OVR_FORMAT_BC3_UNORM_SRGB,
-  OVR_FORMAT_BC6H_UF16,
-  OVR_FORMAT_BC6H_SF16,
-  OVR_FORMAT_BC7_UNORM,
-  OVR_FORMAT_BC7_UNORM_SRGB,
-  OVR_FORMAT_R11G11B10_FLOAT,
+  OVR_FORMAT_UNKNOWN = 0,
+  OVR_FORMAT_B5G6R5_UNORM = 1,
+  OVR_FORMAT_B5G5R5A1_UNORM = 2,
+  OVR_FORMAT_B4G4R4A4_UNORM = 3,
+  OVR_FORMAT_R8G8B8A8_UNORM = 4,
+  OVR_FORMAT_R8G8B8A8_UNORM_SRGB = 5,
+  OVR_FORMAT_B8G8R8A8_UNORM = 6,
+  OVR_FORMAT_B8G8R8A8_UNORM_SRGB = 7,
+  OVR_FORMAT_B8G8R8X8_UNORM = 8,
+  OVR_FORMAT_B8G8R8X8_UNORM_SRGB = 9,
+  OVR_FORMAT_R16G16B16A16_FLOAT = 10,
+  OVR_FORMAT_R11G11B10_FLOAT = 25,
+  OVR_FORMAT_D16_UNORM = 11,
+  OVR_FORMAT_D24_UNORM_S8_UINT = 12,
+  OVR_FORMAT_D32_FLOAT = 13,
+  OVR_FORMAT_D32_FLOAT_S8X24_UINT = 14,
+  OVR_FORMAT_BC1_UNORM = 15,
+  OVR_FORMAT_BC1_UNORM_SRGB = 16,
+  OVR_FORMAT_BC2_UNORM = 17,
+  OVR_FORMAT_BC2_UNORM_SRGB = 18,
+  OVR_FORMAT_BC3_UNORM = 19,
+  OVR_FORMAT_BC3_UNORM_SRGB = 20,
+  OVR_FORMAT_BC6H_UF16 = 21,
+  OVR_FORMAT_BC6H_SF16 = 22,
+  OVR_FORMAT_BC7_UNORM = 23,
+  OVR_FORMAT_BC7_UNORM_SRGB = 24,
+
   OVR_FORMAT_ENUMSIZE = 0x7fffffff
 } ovrTextureFormat;
 
@@ -291,9 +297,10 @@ typedef struct {
   int Width;
   int Height;
   unsigned int MiscFlags;
+  unsigned int MirrorOptions;
 } ovrMirrorTextureDesc;
 
-typedef void* ovrTextureSwapChain;
+typedef struct ovrTextureSwapChainData* ovrTextureSwapChain;
 typedef struct ovrMirrorTextureData* ovrMirrorTexture;
 
 typedef enum {
@@ -301,12 +308,10 @@ typedef enum {
   ovrButton_B = 0x00000002,
   ovrButton_RThumb = 0x00000004,
   ovrButton_RShoulder = 0x00000008,
-  ovrButton_RMask = ovrButton_A | ovrButton_B | ovrButton_RThumb | ovrButton_RShoulder,
   ovrButton_X = 0x00000100,
   ovrButton_Y = 0x00000200,
   ovrButton_LThumb = 0x00000400,
   ovrButton_LShoulder = 0x00000800,
-  ovrButton_LMask = ovrButton_X | ovrButton_Y | ovrButton_LThumb | ovrButton_LShoulder,
   ovrButton_Up = 0x00010000,
   ovrButton_Down = 0x00020000,
   ovrButton_Left = 0x00040000,
@@ -317,6 +322,8 @@ typedef enum {
   ovrButton_VolDown = 0x00800000,
   ovrButton_Home = 0x01000000,
   ovrButton_Private = ovrButton_VolUp | ovrButton_VolDown | ovrButton_Home,
+  ovrButton_RMask = ovrButton_A | ovrButton_B | ovrButton_RThumb | ovrButton_RShoulder,
+  ovrButton_LMask = ovrButton_X | ovrButton_Y | ovrButton_LThumb | ovrButton_LShoulder | ovrButton_Enter,
   ovrButton_EnumSize = 0x7fffffff
 } ovrButton;
 
@@ -335,9 +342,9 @@ typedef enum {
   ovrTouch_LButtonMask = ovrTouch_X | ovrTouch_Y | ovrTouch_LThumb | ovrTouch_LThumbRest | ovrTouch_LIndexTrigger,
   ovrTouch_RIndexPointing = 0x00000020,
   ovrTouch_RThumbUp = 0x00000040,
-  ovrTouch_RPoseMask = ovrTouch_RIndexPointing | ovrTouch_RThumbUp,
   ovrTouch_LIndexPointing = 0x00002000,
   ovrTouch_LThumbUp = 0x00004000,
+  ovrTouch_RPoseMask = ovrTouch_RIndexPointing | ovrTouch_RThumbUp,
   ovrTouch_LPoseMask = ovrTouch_LIndexPointing | ovrTouch_LThumbUp,
   ovrTouch_EnumSize = 0x7fffffff
 } ovrTouch;
@@ -352,13 +359,17 @@ typedef struct OVR_ALIGNAS(OVR_PTR_SIZE) {
 } ovrTouchHapticsDesc;
 
 typedef enum {
-  ovrControllerType_None = 0x00,
-  ovrControllerType_LTouch = 0x01,
-  ovrControllerType_RTouch = 0x02,
-  ovrControllerType_Touch = 0x03,
-  ovrControllerType_Remote = 0x04,
-  ovrControllerType_XBox = 0x10,
-  ovrControllerType_Active = 0xff,
+  ovrControllerType_None = 0x0000,
+  ovrControllerType_LTouch = 0x0001,
+  ovrControllerType_RTouch = 0x0002,
+  ovrControllerType_Touch = (ovrControllerType_LTouch | ovrControllerType_RTouch),
+  ovrControllerType_Remote = 0x0004,
+  ovrControllerType_XBox = 0x0010,
+  ovrControllerType_Object0 = 0x0100,
+  ovrControllerType_Object1 = 0x0200,
+  ovrControllerType_Object2 = 0x0400,
+  ovrControllerType_Object3 = 0x0800,
+  ovrControllerType_Active = 0xffffffff,
   ovrControllerType_EnumSize = 0x7fffffff
 } ovrControllerType;
 
@@ -378,12 +389,33 @@ typedef struct {
 } ovrHapticsPlaybackState;
 
 typedef enum {
+  ovrTrackedDevice_None = 0x0000,
   ovrTrackedDevice_HMD = 0x0001,
   ovrTrackedDevice_LTouch = 0x0002,
   ovrTrackedDevice_RTouch = 0x0004,
-  ovrTrackedDevice_Touch = 0x0006,
+  ovrTrackedDevice_Touch = (ovrTrackedDevice_LTouch | ovrTrackedDevice_RTouch),
+  ovrTrackedDevice_Object0 = 0x0010,
+  ovrTrackedDevice_Object1 = 0x0020,
+  ovrTrackedDevice_Object2 = 0x0040,
+  ovrTrackedDevice_Object3 = 0x0080,
   ovrTrackedDevice_All = 0xFFFF,
 } ovrTrackedDeviceType;
+
+typedef enum {
+  ovrBoundary_Outer = 0x0001,
+  ovrBoundary_PlayArea = 0x0100,
+} ovrBoundaryType;
+
+typedef struct {
+  ovrColorf Color;
+} ovrBoundaryLookAndFeel;
+
+typedef struct {
+  ovrBool IsTriggering;
+  float ClosestDistance;
+  ovrVector3f ClosestPoint;
+  ovrVector3f ClosestPointNormal;
+} ovrBoundaryTestResult;
 
 typedef enum {
   ovrHand_Left = 0,
@@ -403,7 +435,47 @@ typedef struct {
   float IndexTriggerNoDeadzone[ovrHand_Count];
   float HandTriggerNoDeadzone[ovrHand_Count];
   ovrVector2f ThumbstickNoDeadzone[ovrHand_Count];
+  float IndexTriggerRaw[ovrHand_Count];
+  float HandTriggerRaw[ovrHand_Count];
+  ovrVector2f ThumbstickRaw[ovrHand_Count];
 } ovrInputState;
+
+typedef struct {
+  double LastChangedTime;
+  ovrFovPort FOVPort;
+  float VirtualNearPlaneDistanceMeters;
+  float VirtualFarPlaneDistanceMeters;
+  ovrSizei ImageSensorPixelResolution;
+  ovrMatrix4f LensDistortionMatrix;
+  double ExposurePeriodSeconds;
+  double ExposureDurationSeconds;
+} ovrCameraIntrinsics;
+
+typedef enum {
+  ovrCameraStatus_None = 0x0,
+  ovrCameraStatus_Connected = 0x1,
+  ovrCameraStatus_Calibrating = 0x2,
+  ovrCameraStatus_CalibrationFailed = 0x4,
+  ovrCameraStatus_Calibrated = 0x8,
+  ovrCameraStatus_EnumSize = 0x7fffffff
+} ovrCameraStatusFlags;
+
+typedef struct {
+  double LastChangedTimeSeconds;
+  unsigned int CameraStatusFlags;
+  ovrTrackedDeviceType AttachedToDevice;
+  ovrPosef RelativePose;
+  double LastExposureTimeSeconds;
+  double ExposureLatencySeconds;
+  double AdditionalLatencySeconds;
+} ovrCameraExtrinsics;
+
+#define OVR_EXTERNAL_CAMERA_NAME_SIZE 32
+typedef struct {
+  char Name[OVR_EXTERNAL_CAMERA_NAME_SIZE];
+  ovrCameraIntrinsics Intrinsics;
+  ovrCameraExtrinsics Extrinsics;
+} ovrExternalCamera;
 
 typedef enum {
   ovrInit_Debug          = 0x00000001,
@@ -443,9 +515,10 @@ typedef struct {
 typedef void (OVR_PFN* pfn_ovr_GetLastErrorInfo)(ovrErrorInfo* errorInfo);
 typedef const char* (OVR_PFN* pfn_ovr_GetVersionString)();
 typedef int (OVR_PFN* pfn_ovr_TraceMessage)(int level, const char* message);
+typedef ovrResult (OVR_PFN* pfn_ovr_IdentifyClient)(const char* identity);
 typedef ovrHmdDesc (OVR_PFN* pfn_ovr_GetHmdDesc)(ovrSession session);
 typedef unsigned int (OVR_PFN* pfn_ovr_GetTrackerCount)(ovrSession session);
-typedef ovrTrackerDesc* (OVR_PFN* pfn_ovr_GetTrackerDesc)(ovrSession session, unsigned int trackerDescIndex);
+typedef ovrTrackerDesc (OVR_PFN* pfn_ovr_GetTrackerDesc)(ovrSession session, unsigned int trackerDescIndex);
 typedef ovrResult (OVR_PFN* pfn_ovr_Create)(ovrSession* pSession, ovrGraphicsLuid* pLuid);
 typedef void (OVR_PFN* pfn_ovr_Destroy)(ovrSession session);
 
@@ -459,16 +532,47 @@ typedef struct {
 } ovrSessionStatus;
 
 typedef ovrResult (OVR_PFN* pfn_ovr_GetSessionStatus)(ovrSession session, ovrSessionStatus* sessionStatus);
-
 typedef ovrResult (OVR_PFN* pfn_ovr_SetTrackingOriginType)(ovrSession session, ovrTrackingOrigin origin);
 typedef ovrTrackingOrigin (OVR_PFN* pfn_ovr_GetTrackingOriginType)(ovrSession session);
 typedef ovrResult (OVR_PFN* pfn_ovr_RecenterTrackingOrigin)(ovrSession session);
+typedef ovrResult (OVR_PFN* pfn_ovr_SpecifyTrackingOrigin)(ovrSession session, ovrPosef originPose);
 typedef void (OVR_PFN* pfn_ovr_ClearShouldRecenterFlag)(ovrSession session);
 typedef ovrTrackingState (OVR_PFN* pfn_ovr_GetTrackingState)(ovrSession session, double absTime, ovrBool latencyMarker);
+typedef ovrResult  (OVR_PFN* pfn_ovr_GetDevicePoses)(ovrSession session,
+                                                     ovrTrackedDeviceType* deviceTypes,
+                                                     int deviceCount,
+                                                     double absTime,
+                                                     ovrPoseStatef* outDevicePoses);
 typedef ovrTrackerPose (OVR_PFN* pfn_ovr_GetTrackerPose)(ovrSession session, unsigned int trackerPoseIndex);
 typedef ovrResult (OVR_PFN* pfn_ovr_GetInputState)(ovrSession session, ovrControllerType controllerType, ovrInputState* inputState);
 typedef unsigned int (OVR_PFN* pfn_ovr_GetConnectedControllerTypes)(ovrSession session);
+typedef ovrTouchHapticsDesc (OVR_PFN* pfn_ovr_GetTouchHapticsDesc)(ovrSession session, ovrControllerType controllerType);
 typedef ovrResult (OVR_PFN* pfn_ovr_SetControllerVibration)(ovrSession session, ovrControllerType controllerType, float frequency, float amplitude);
+typedef ovrResult (OVR_PFN* pfn_ovr_SubmitControllerVibration)(ovrSession session,
+                                                               ovrControllerType controllerType,
+                                                               const ovrHapticsBuffer* buffer);
+typedef ovrResult (OVR_PFN* pfn_ovr_GetControllerVibrationState)(ovrSession session,
+                                                                 ovrControllerType controllerType,
+                                                                 ovrHapticsPlaybackState* outState);
+typedef ovrResult (OVR_PFN* pfn_ovr_TestBoundary)(ovrSession session,
+                                                  ovrTrackedDeviceType deviceBitmask,
+                                                  ovrBoundaryType boundaryType,
+                                                  ovrBoundaryTestResult* outTestResult);
+typedef ovrResult (OVR_PFN* pfn_ovr_TestBoundaryPoint)(ovrSession session,
+                                                       const ovrVector3f* point,
+                                                       ovrBoundaryType singleBoundaryType,
+                                                       ovrBoundaryTestResult* outTestResult);
+typedef ovrResult (OVR_PFN* pfn_ovr_SetBoundaryLookAndFeel)(ovrSession session, const ovrBoundaryLookAndFeel* lookAndFeel);
+typedef ovrResult (OVR_PFN* pfn_ovr_ResetBoundaryLookAndFeel)(ovrSession session);
+typedef ovrResult (OVR_PFN* pfn_ovr_GetBoundaryGeometry)(ovrSession session,
+                                                         ovrBoundaryType boundaryType,
+                                                         ovrVector3f* outFloorPoints,
+                                                         int* outFloorPointsCount);
+typedef ovrResult (OVR_PFN* pfn_ovr_GetBoundaryDimensions)(ovrSession session,
+                                                           ovrBoundaryType boundaryType,
+                                                           ovrVector3f* outDimensions);
+typedef ovrResult (OVR_PFN* pfn_ovr_GetBoundaryVisible)(ovrSession session, ovrBool* outIsVisible);
+typedef ovrResult (OVR_PFN* pfn_ovr_RequestBoundaryVisible)(ovrSession session, ovrBool visible);
 
 enum {
   ovrMaxLayerCount = 16
@@ -537,9 +641,43 @@ typedef ovrEyeRenderDesc(OVR_PFN* pfn_ovr_GetRenderDesc)(ovrSession session, ovr
 typedef ovrResult(OVR_PFN* pfn_ovr_SubmitFrame)(ovrSession session, long long frameIndex,
 	const ovrViewScaleDesc* viewScaleDesc,
 	ovrLayerHeader const * const * layerPtrList, unsigned int layerCount);
+
+typedef struct OVR_ALIGNAS(4) {
+  int HmdVsyncIndex;
+  int AppFrameIndex;
+  int AppDroppedFrameCount;
+  float AppMotionToPhotonLatency;
+  float AppQueueAheadTime;
+  float AppCpuElapsedTime;
+  float AppGpuElapsedTime;
+  int CompositorFrameIndex;
+  int CompositorDroppedFrameCount;
+  float CompositorLatency;
+  float CompositorCpuElapsedTime;
+  float CompositorGpuElapsedTime;
+  float CompositorCpuStartToGpuEndElapsedTime;
+  float CompositorGpuEndToVsyncElapsedTime;
+  ovrBool AswIsActive;
+  int AswActivatedToggleCount;
+  int AswPresentedFrameCount;
+  int AswFailedFrameCount;
+} ovrPerfStatsPerCompositorFrame;
+
+enum { ovrMaxProvidedFrameStats = 5 };
+
+typedef struct OVR_ALIGNAS(4) {
+  ovrPerfStatsPerCompositorFrame FrameStats[ovrMaxProvidedFrameStats];
+  int FrameStatsCount;
+  ovrBool AnyFrameStatsDropped;
+  float AdaptiveGpuPerformanceScale;
+  ovrBool AswIsAvailable;
+  ovrProcessId VisibleProcessId;
+} ovrPerfStats;
+
+typedef ovrResult (OVR_PFN* pfn_ovr_GetPerfStats)(ovrSession session, ovrPerfStats* outStats);
+typedef ovrResult (OVR_PFN* pfn_ovr_ResetPerfStats)(ovrSession session);
 typedef double (OVR_PFN* pfn_ovr_GetPredictedDisplayTime)(ovrSession session, long long frameIndex);
 typedef double (OVR_PFN* pfn_ovr_GetTimeInSeconds)();
-
 
 typedef enum {
   ovrPerfHud_Off = 0,
@@ -547,8 +685,9 @@ typedef enum {
   ovrPerfHud_LatencyTiming = 2,
   ovrPerfHud_AppRenderTiming = 3,
   ovrPerfHud_CompRenderTiming = 4,
+  ovrPerfHud_AswStats = 6,
   ovrPerfHud_VersionInfo = 5,
-  ovrPerfHud_Count = 6,
+  ovrPerfHud_Count = 7,
   ovrPerfHud_EnumSize = 0x7fffffff
 } ovrPerfHudMode;
 
@@ -567,13 +706,6 @@ typedef enum {
   ovrDebugHudStereo_EnumSize = 0x7fffffff
 } ovrDebugHudStereoMode;
 
-typedef enum {
-  // Outer boundary - closely represents user setup walls
-  ovrBoundary_Outer = 0x0001,
-  // Play area - safe rectangular area inside outer boundary which can optionally be used to restrict user interactions and motion.
-  ovrBoundary_PlayArea = 0x0100,
-} ovrBoundaryType;
-
 typedef ovrBool(OVR_PFN* pfn_ovr_GetBool)(ovrSession session, const char* propertyName, ovrBool defaultVal);
 typedef ovrBool(OVR_PFN* pfn_ovr_SetBool)(ovrSession session, const char* propertyName, ovrBool value);
 typedef int (OVR_PFN* pfn_ovr_GetInt)(ovrSession session, const char* propertyName, int defaultVal);
@@ -588,13 +720,23 @@ typedef const char* (OVR_PFN* pfn_ovr_GetString)(ovrSession session, const char*
   const char* defaultVal);
 typedef ovrBool (OVR_PFN* pfn_ovr_SetString)(ovrSession session, const char* propertyName,
   const char* value);
-typedef ovrResult (OVR_PFN* pfn_ovr_GetBoundaryDimensions)(ovrSession session,
-                                                           ovrBoundaryType boundaryType,
-                                                           ovrVector3f* outDimensions);
+
+typedef ovrResult (OVR_PFN* pfn_ovr_GetExternalCameras)(ovrSession session,
+                                                    ovrExternalCamera* cameras,
+                                                    unsigned int* inoutCameraCount);
+typedef ovrResult (OVR_PFN* pfn_ovr_SetExternalCameraProperties)(ovrSession session,
+                                                             const char* name,
+                                                             const ovrCameraIntrinsics* const intrinsics,
+                                                             const ovrCameraExtrinsics* const extrinsics);
+
+typedef enum {
+  ovrSuccess_NotVisible = 1000,
+  ovrSuccess_BoundaryInvalid = 1001,
+  ovrSuccess_DeviceUnavailable = 1002,
+} ovrSuccessTypes;
 
 typedef enum {
   ovrError_MemoryAllocationFailure = -1000,
-  ovrError_SocketCreationFailure = -1001,
   ovrError_InvalidSession = -1002,
   ovrError_Timeout = -1003,
   ovrError_NotInitialized = -1004,
@@ -606,10 +748,12 @@ typedef enum {
   ovrError_InvalidHeadsetOrientation = -1011,
   ovrError_ClientSkippedDestroy = -1012,
   ovrError_ClientSkippedShutdown = -1013,
-  ovrError_AudioReservedBegin = -2000,
+  ovrError_ServiceDeadlockDetected = -1014,
+  ovrError_InvalidOperation = -1015,
+  ovrError_InsufficientArraySize = -1016,
+  ovrError_NoExternalCameraInfo = -1017,
   ovrError_AudioDeviceNotFound = -2001,
   ovrError_AudioComError = -2002,
-  ovrError_AudioReservedEnd = -2999,
   ovrError_Initialize = -3000,
   ovrError_LibLoad = -3001,
   ovrError_LibVersion = -3002,
@@ -631,49 +775,24 @@ typedef enum {
   ovrError_HybridGraphicsNotSupported = -3018,
   ovrError_DisplayManagerInit = -3019,
   ovrError_TrackerDriverInit = -3020,
-  ovrError_InvalidBundleAdjustment = -4000,
-  ovrError_USBBandwidth = -4001,
-  ovrError_USBEnumeratedSpeed = -4002,
-  ovrError_ImageSensorCommError = -4003,
-  ovrError_GeneralTrackerFailure = -4004,
-  ovrError_ExcessiveFrameTruncation = -4005,
-  ovrError_ExcessiveFrameSkipping = -4006,
-  ovrError_SyncDisconnected = -4007,
-  ovrError_TrackerMemoryReadFailure = -4008,
-  ovrError_TrackerMemoryWriteFailure = -4009,
-  ovrError_TrackerFrameTimeout = -4010,
-  ovrError_TrackerTruncatedFrame = -4011,
-  ovrError_TrackerDriverFailure = -4012,
-  ovrError_TrackerNRFFailure = -4013,
-  ovrError_HardwareGone = -4014,
-  ovrError_NordicEnabledNoSync = -4015,
-  ovrError_NordicSyncNoFrames = -4016,
-  ovrError_CatastrophicFailure = -4017,
-  ovrError_HMDFirmwareMismatch = -4100,
-  ovrError_TrackerFirmwareMismatch = -4101,
-  ovrError_BootloaderDeviceDetected = -4102,
-  ovrError_TrackerCalibrationError = -4103,
-  ovrError_ControllerFirmwareMismatch = -4104,
-  ovrError_IMUTooManyLostSamples = -4200,
-  ovrError_IMURateError = -4201,
-  ovrError_FeatureReportFailure = -4202,
-  ovrError_Incomplete = -5000,
-  ovrError_Abandoned = -5001,
+  ovrError_LibSignCheck = -3021,
+  ovrError_LibPath = -3022,
+  ovrError_LibSymbols = -3023,
+  ovrError_RemoteSession = -3024,
+  ovrError_InitializeVulkan = -3025,
   ovrError_DisplayLost = -6000,
   ovrError_TextureSwapChainFull = -6001,
   ovrError_TextureSwapChainInvalid = -6002,
+  ovrError_GraphicsDeviceReset = -6003,
+  ovrError_DisplayRemoved = -6004,
+  ovrError_ContentProtectionNotAvailable = -6005,
+  ovrError_ApplicationInvisible = -6006,
+  ovrError_Disallowed = -6007,
+  ovrError_DisplayPluggedIncorrectly = -6008,
   ovrError_RuntimeException = -7000,
-  ovrError_MetricsUnknownApp = -90000,
-  ovrError_MetricsDuplicateApp = -90001,
-  ovrError_MetricsNoEvents = -90002,
-  ovrError_MetricsRuntime = -90003,
-  ovrError_MetricsFile = -90004,
-  ovrError_MetricsNoClientInfo = -90005,
-  ovrError_MetricsNoAppMetaData = -90006,
-  ovrError_MetricsNoApp = -90007,
-  ovrError_MetricsOafFailure = -90008,
-  ovrError_MetricsSessionAlreadyActive = -90009,
-  ovrError_MetricsSessionNotActive = -90010,
+  ovrError_NoCalibration = -9000,
+  ovrError_OldVersion = -9001,
+  ovrError_MisformattedBlock = -9002,
 } ovrErrorType;
 
 

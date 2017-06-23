@@ -251,22 +251,6 @@ private:
 };
 
 static void
-UpdateBlockFramePseudoElements(nsBlockFrame* aFrame,
-                               ServoRestyleState& aRestyleState)
-{
-  if (nsBulletFrame* bullet = aFrame->GetBullet()) {
-    RefPtr<nsStyleContext> newContext =
-      aRestyleState.StyleSet().ResolvePseudoElementStyle(
-        aFrame->GetContent()->AsElement(),
-        bullet->StyleContext()->GetPseudoType(),
-        aFrame->StyleContext(),
-        /* aPseudoElement = */ nullptr);
-
-    aFrame->UpdateStyleOfOwnedChildFrame(bullet, newContext, aRestyleState);
-  }
-}
-
-static void
 UpdateBackdropIfNeeded(nsIFrame* aFrame, ServoRestyleState& aRestyleState)
 {
   const nsStyleDisplay* display = aFrame->StyleContext()->StyleDisplay();
@@ -307,8 +291,7 @@ UpdateFramePseudoElementStyles(nsIFrame* aFrame,
                                ServoRestyleState& aRestyleState)
 {
   if (aFrame->IsFrameOfType(nsIFrame::eBlockFrame)) {
-    UpdateBlockFramePseudoElements(static_cast<nsBlockFrame*>(aFrame),
-                                   aRestyleState);
+    static_cast<nsBlockFrame*>(aFrame)->UpdatePseudoElementStyles(aRestyleState);
   }
 
   UpdateBackdropIfNeeded(aFrame, aRestyleState);

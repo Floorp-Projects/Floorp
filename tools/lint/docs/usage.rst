@@ -24,18 +24,13 @@ To restrict which linters are invoked manually, pass in ``-l/--linter``:
 
     ./mach lint -l eslint path/to/files
 
-Finally, ``mozlint`` can lint the files touched by a set of revisions or the working directory using
-the ``-r/--rev`` and ``-w/--workdir`` arguments respectively. These work both with mercurial and
-git. In the case of ``--rev`` the value is passed directly to the underlying vcs, so normal revision
-specifiers will work. For example, say we want to lint all files touched by the last three commits.
-In mercurial, this would be:
+Finally, ``mozlint`` can lint the files touched by outgoing revisions or the working directory using
+the ``-o/--outgoing`` and ``-w/--workdir`` arguments respectively. These work both with mercurial and
+git. In the case of ``--outgoing``, the default remote repository the changes would be pushed to is
+used as the comparison. If desired, a remote can be specified manually:
 
 .. parsed-literal::
 
-    ./mach lint -r ".~2::."
-
-In git, this would be:
-
-.. parsed-literal::
-
-    ./mach lint -r "HEAD~2 HEAD"
+    ./mach lint --workdir
+    ./mach lint --outgoing
+    ./mach lint --outgoing origin/master

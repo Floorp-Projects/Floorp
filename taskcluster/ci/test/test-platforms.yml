@@ -137,14 +137,11 @@ windows7-32-vm/debug:
     build-platform: win32/debug
     test-sets:
         - windows-vm-tests
-        - external-media-tests
         - headless
 windows7-32-vm/opt:
     build-platform: win32/opt
     test-sets:
         - windows-vm-tests
-        - external-media-tests
-        - external-media-tests-slow
         - awsy
         - desktop-screenshot-capture
         - headless
@@ -165,14 +162,11 @@ windows10-64-vm/debug:
     build-platform: win64/debug
     test-sets:
         - windows-vm-tests
-        - external-media-tests
         - headless
 windows10-64-vm/opt:
     build-platform: win64/opt
     test-sets:
         - windows-vm-tests
-        - external-media-tests
-        - external-media-tests-slow
         - awsy
         - desktop-screenshot-capture
         - headless

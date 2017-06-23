@@ -40,7 +40,7 @@ use webdriver::command::{
     SwitchToFrameParameters, LocatorParameters, JavascriptCommandParameters,
     GetNamedCookieParameters, AddCookieParameters, TimeoutsParameters,
     ActionsParameters, TakeScreenshotParameters};
-use webdriver::response::{CloseWindowResponse, Cookie, CookieResponse, CookiesResponse,
+use webdriver::response::{CloseWindowResponse, Cookie, CookiesResponse,
                           RectResponse, NewSessionResponse, TimeoutsResponse, ValueResponse,
                           WebDriverResponse};
 use webdriver::common::{
