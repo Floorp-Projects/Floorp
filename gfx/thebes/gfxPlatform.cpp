@@ -137,7 +137,6 @@ class mozilla::gl::SkiaGLGlue : public GenericAtomicRefCounted {
 #include "gfxVR.h"
 #include "VRManagerChild.h"
 #include "mozilla/gfx/GPUParent.h"
-#include "mozilla/layers/MemoryReportingMLGPU.h"
 #include "prsystem.h"
 
 namespace mozilla {
@@ -798,7 +797,6 @@ gfxPlatform::Init()
     }
 
     RegisterStrongMemoryReporter(new GfxMemoryImageReporter());
-    mlg::InitializeMemoryReporters();
 
     if (XRE_IsParentProcess()) {
       if (gfxPlatform::ForceSoftwareVsync()) {
@@ -2780,7 +2778,6 @@ gfxPlatform::ImportGPUDeviceData(const mozilla::gfx::GPUDeviceData& aData)
   MOZ_ASSERT(XRE_IsParentProcess());
 
   gfxConfig::ImportChange(Feature::OPENGL_COMPOSITING, aData.oglCompositing());
-  gfxConfig::ImportChange(Feature::ADVANCED_LAYERS, aData.advancedLayers());
 }
 
 bool
