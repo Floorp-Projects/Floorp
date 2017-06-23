@@ -90,14 +90,6 @@ SurfaceFormatToDXGIFormat(gfx::SurfaceFormat aFormat)
   }
 }
 
-void
-ReportTextureMemoryUsage(ID3D11Texture2D* aTexture, size_t aBytes)
-{
-  aTexture->SetPrivateDataInterface(
-    sD3D11TextureUsage,
-    new TextureMemoryMeasurer(aBytes));
-}
-
 static uint32_t
 GetRequiredTilesD3D11(uint32_t aSize, uint32_t aMaxSize)
 {

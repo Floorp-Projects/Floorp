@@ -12,14 +12,11 @@
 #include "mozilla/D3DMessageUtils.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/WindowsVersion.h"
-#include "mozilla/gfx/GPUParent.h"
 #include "mozilla/gfx/GraphicsMessages.h"
 #include "mozilla/gfx/Logging.h"
 #include "mozilla/layers/CompositorThread.h"
 #include "mozilla/layers/DeviceAttachmentsD3D11.h"
-#include "mozilla/layers/MLGDeviceD3D11.h"
 #include "nsIGfxInfo.h"
-#include "nsString.h"
 #include <d3d11.h>
 #include <ddraw.h>
 
@@ -32,7 +29,6 @@ namespace mozilla {
 namespace gfx {
 
 using namespace mozilla::widget;
-using namespace mozilla::layers;
 
 StaticAutoPtr<DeviceManagerDx> DeviceManagerDx::sInstance;
 
@@ -136,14 +132,6 @@ DeviceManagerDx::CreateCompositorDevices()
   if (!d3d11.IsEnabled()) {
     MOZ_ASSERT(!mCompositorDevice);
     ReleaseD3D11();
-
-    // Sync Advanced-Layers with D3D11.
-    if (gfxConfig::IsEnabled(Feature::ADVANCED_LAYERS)) {
-      gfxConfig::SetFailed(Feature::ADVANCED_LAYERS,
-                           FeatureStatus::Unavailable,
-                           "Requires D3D11",
-                           NS_LITERAL_CSTRING("FEATURE_FAILURE_NO_D3D11"));
-    }
     return false;
   }
 
@@ -619,86 +607,6 @@ DeviceManagerDx::CreateDecoderDevice()
   return device;
 }
 
-RefPtr<MLGDevice>
-DeviceManagerDx::GetMLGDevice()
-{
-  MutexAutoLock lock(mDeviceLock);
-  if (!mMLGDevice) {
-    MutexAutoUnlock unlock(mDeviceLock);
-    CreateMLGDevice();
-  }
-  return mMLGDevice;
-}
-
-static void
-DisableAdvancedLayers(FeatureStatus aStatus, const nsCString aMessage, const nsCString& aFailureId)
-{
-  if (!NS_IsMainThread()) {
-    NS_DispatchToMainThread(NS_NewRunnableFunction([aStatus, aMessage, aFailureId] () -> void {
-      DisableAdvancedLayers(aStatus, aMessage, aFailureId);
-    }));
-    return;
-  }
-
-  MOZ_ASSERT(NS_IsMainThread());
-
-  FeatureState& al = gfxConfig::GetFeature(Feature::ADVANCED_LAYERS);
-  if (!al.IsEnabled()) {
-    return;
-  }
-
-  al.SetFailed(aStatus, aMessage.get(), aFailureId);
-
-  FeatureFailure info(aStatus, aMessage, aFailureId);
-  if (GPUParent* gpu = GPUParent::GetSingleton()) {
-    gpu->SendUpdateFeature(Feature::ADVANCED_LAYERS, info);
-  }
-
-  if (aFailureId.Length()) {
-    nsString failureId = NS_ConvertUTF8toUTF16(aFailureId.get());
-    Telemetry::ScalarAdd(Telemetry::ScalarID::GFX_ADVANCED_LAYERS_FAILURE_ID, failureId, 1);
-  }
-
-  // Notify TelemetryEnvironment.jsm.
-  if (RefPtr<nsIObserverService> obs = mozilla::services::GetObserverService()) {
-    obs->NotifyObservers(nullptr, "gfx-features-ready", nullptr);
-  }
-}
-
-void
-DeviceManagerDx::CreateMLGDevice()
-{
-  MOZ_ASSERT(layers::CompositorThreadHolder::IsInCompositorThread());
-
-  RefPtr<ID3D11Device> d3d11Device = GetCompositorDevice();
-  if (!d3d11Device) {
-    DisableAdvancedLayers(FeatureStatus::Unavailable,
-                          NS_LITERAL_CSTRING("Advanced-layers requires a D3D11 device"),
-                          NS_LITERAL_CSTRING("FEATURE_FAILURE_NEED_D3D11_DEVICE"));
-    return;
-  }
-
-  RefPtr<MLGDeviceD3D11> device = new MLGDeviceD3D11(d3d11Device);
-  if (!device->Initialize()) {
-    DisableAdvancedLayers(FeatureStatus::Failed,
-                          device->GetFailureMessage(),
-                          device->GetFailureId());
-    return;
-  }
-
-  // While the lock was unheld, we should not have created an MLGDevice, since
-  // this should only be called on the compositor thread.
-  MutexAutoLock lock(mDeviceLock);
-  MOZ_ASSERT(!mMLGDevice);
-
-  // Only set the MLGDevice if the compositor device is still the same.
-  // Otherwise we could possibly have a bad MLGDevice if a device reset
-  // just occurred.
-  if (mCompositorDevice == d3d11Device) {
-    mMLGDevice = device;
-  }
-}
-
 void
 DeviceManagerDx::ResetDevices()
 {
@@ -706,7 +614,6 @@ DeviceManagerDx::ResetDevices()
 
   mAdapter = nullptr;
   mCompositorAttachments = nullptr;
-  mMLGDevice = nullptr;
   mCompositorDevice = nullptr;
   mContentDevice = nullptr;
   mDeviceStatus = Nothing();
@@ -1069,17 +976,11 @@ DeviceManagerDx::PreloadAttachmentsOnCompositorThread()
     return;
   }
 
-  bool enableAL = gfxConfig::IsEnabled(Feature::ADVANCED_LAYERS);
-
-  RefPtr<Runnable> task = NS_NewRunnableFunction([enableAL]() -> void {
+  RefPtr<Runnable> task = NS_NewRunnableFunction([]() -> void {
     if (DeviceManagerDx* dm = DeviceManagerDx::Get()) {
-      if (enableAL) {
-        dm->GetMLGDevice();
-      } else {
-        RefPtr<ID3D11Device> device;
-        RefPtr<layers::DeviceAttachmentsD3D11> attachments;
-        dm->GetCompositorDevices(&device, &attachments);
-      }
+      RefPtr<ID3D11Device> device;
+      RefPtr<layers::DeviceAttachmentsD3D11> attachments;
+      dm->GetCompositorDevices(&device, &attachments);
     }
   });
   loop->PostTask(task.forget());
