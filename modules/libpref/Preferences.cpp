@@ -11,7 +11,6 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/HashFunctions.h"
 #include "mozilla/ServoStyleSet.h"
-#include "mozilla/Telemetry.h"
 #include "mozilla/UniquePtrExtensions.h"
 
 #include "nsXULAppAPI.h"
@@ -55,8 +54,6 @@
 #include "nsThreadUtils.h"
 #include "GeckoProfiler.h"
 
-using namespace mozilla;
-
 #ifdef DEBUG
 #define ENSURE_MAIN_PROCESS(message, pref) do {                                \
   if (MOZ_UNLIKELY(!XRE_IsParentProcess())) {                                  \
@@ -94,12 +91,6 @@ static NS_DEFINE_CID(kZipReaderCID, NS_ZIPREADER_CID);
 void
 Preferences::DirtyCallback()
 {
-  if (!XRE_IsParentProcess()) {
-    // TODO: this should really assert because you can't set prefs in a
-    // content process. But so much code currently does this that we just
-    // ignore it for now.
-    return;
-  }
   if (gHashTable && sPreferences && !sPreferences->mDirty) {
     sPreferences->mDirty = true;
   }
@@ -769,20 +760,7 @@ nsresult
 Preferences::ResetAndReadUserPrefs()
 {
   sPreferences->ResetUserPrefs();
-
-  MOZ_ASSERT(!sPreferences->mCurrentFile, "Should only initialize prefs once");
-
-  nsresult rv = sPreferences->UseDefaultPrefFile();
-  sPreferences->UseUserPrefFile();
-
-  // Migrate the old prerelease telemetry pref
-  if (!Preferences::GetBool(kOldTelemetryPref, true)) {
-    Preferences::SetBool(kTelemetryPref, false);
-    Preferences::ClearUser(kOldTelemetryPref);
-  }
-
-  sPreferences->NotifyServiceObservers(NS_PREFSERVICE_READ_TOPIC_ID);
-  return rv;
+  return sPreferences->ReadUserPrefs(nullptr);
 }
 
 NS_IMETHODIMP
@@ -817,19 +795,39 @@ Preferences::Observe(nsISupports *aSubject, const char *aTopic,
 
 
 NS_IMETHODIMP
-Preferences::ReadUserPrefsFromFile(nsIFile *aFile)
+Preferences::ReadUserPrefs(nsIFile *aFile)
 {
   if (MOZ_UNLIKELY(!XRE_IsParentProcess())) {
     NS_ERROR("must load prefs from parent process");
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  if (!aFile) {
-    NS_ERROR("ReadUserPrefsFromFile requires a parameter");
-    return NS_ERROR_INVALID_ARG;
+  nsresult rv;
+
+  if (nullptr == aFile) {
+    // We should not be re-reading the user preferences, but if we
+    // are going to try, make sure there are no outstanding saves
+    if (AllowOffMainThreadSave()) {
+      PreferencesWriter::Flush();
+    }
+
+    rv = UseDefaultPrefFile();
+    // A user pref file is optional.
+    // Ignore all errors related to it, so we retain 'rv' value :-|
+    (void) UseUserPrefFile();
+
+    // Migrate the old prerelease telemetry pref
+    if (!Preferences::GetBool(kOldTelemetryPref, true)) {
+      Preferences::SetBool(kTelemetryPref, false);
+      Preferences::ClearUser(kOldTelemetryPref);
+    }
+
+    NotifyServiceObservers(NS_PREFSERVICE_READ_TOPIC_ID);
+  } else {
+    rv = ReadAndOwnUserPrefFile(aFile);
   }
 
-  return openPrefFile(aFile);
+  return rv;
 }
 
 NS_IMETHODIMP
@@ -1060,48 +1058,46 @@ Preferences::NotifyServiceObservers(const char *aTopic)
 nsresult
 Preferences::UseDefaultPrefFile()
 {
-  nsCOMPtr<nsIFile> file;
-  nsresult rv = NS_GetSpecialDirectory(NS_APP_PREFS_50_FILE,
-                                       getter_AddRefs(file));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  nsCOMPtr<nsIFile> aFile;
+  nsresult rv = NS_GetSpecialDirectory(NS_APP_PREFS_50_FILE, getter_AddRefs(aFile));
 
-  mCurrentFile = file;
-
-  rv = openPrefFile(file);
-  if (rv == NS_ERROR_FILE_NOT_FOUND) {
-    // this is a normal case for new users
-    Telemetry::ScalarSet(Telemetry::ScalarID::PREFERENCES_CREATED_NEW_USER_PREFS_FILE, true);
-    rv = NS_OK;
-  } else if (NS_FAILED(rv)) {
-    // Save a backup copy of the current (invalid) prefs file, since all prefs
-    // from the error line to the end of the file will be lost (bug 361102).
-    // TODO we should notify the user about it (bug 523725).
-    Telemetry::ScalarSet(Telemetry::ScalarID::PREFERENCES_PREFS_FILE_WAS_INVALID, true);
-    MakeBackupPrefFile(file);
+  if (NS_SUCCEEDED(rv)) {
+    rv = ReadAndOwnUserPrefFile(aFile);
+    // Most likely cause of failure here is that the file didn't
+    // exist, so save a new one. mUserPrefReadFailed will be
+    // used to catch an error in actually reading the file.
+    if (NS_FAILED(rv)) {
+      if (NS_FAILED(SavePrefFileInternal(aFile, SaveMethod::Blocking)))
+        NS_ERROR("Failed to save new shared pref file");
+      else
+        rv = NS_OK;
+    }
   }
 
   return rv;
 }
 
-void
+nsresult
 Preferences::UseUserPrefFile()
 {
+  nsresult rv = NS_OK;
   nsCOMPtr<nsIFile> aFile;
-  nsresult rv = NS_GetSpecialDirectory(NS_APP_PREFS_50_DIR,
-                                       getter_AddRefs(aFile));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return;
-  }
+  nsDependentCString prefsDirProp(NS_APP_PREFS_50_DIR);
 
-  aFile->AppendNative(NS_LITERAL_CSTRING("user.js"));
-  rv = openPrefFile(aFile);
-  if (rv != NS_ERROR_FILE_NOT_FOUND) {
-    // If the file exists and was at least partially read, record that
-    // in telemetry as it may be a sign of pref injection.
-    Telemetry::ScalarSet(Telemetry::ScalarID::PREFERENCES_READ_USER_JS, true);
+  rv = NS_GetSpecialDirectory(prefsDirProp.get(), getter_AddRefs(aFile));
+  if (NS_SUCCEEDED(rv) && aFile) {
+    rv = aFile->AppendNative(NS_LITERAL_CSTRING("user.js"));
+    if (NS_SUCCEEDED(rv)) {
+      bool exists = false;
+      aFile->Exists(&exists);
+      if (exists) {
+        rv = openPrefFile(aFile);
+      } else {
+        rv = NS_ERROR_FILE_NOT_FOUND;
+      }
+    }
   }
+  return rv;
 }
 
 nsresult
@@ -1126,6 +1122,40 @@ Preferences::MakeBackupPrefFile(nsIFile *aFile)
   }
   rv = aFile->CopyTo(nullptr, newFilename);
   NS_ENSURE_SUCCESS(rv, rv);
+  return rv;
+}
+
+nsresult
+Preferences::ReadAndOwnUserPrefFile(nsIFile *aFile)
+{
+  NS_ENSURE_ARG(aFile);
+  
+  if (mCurrentFile == aFile)
+    return NS_OK;
+
+  // Since we're changing the pref file, we may have to make
+  // sure the outstanding writes are handled first.
+  if (AllowOffMainThreadSave()) {
+    PreferencesWriter::Flush();
+  }
+
+  mCurrentFile = aFile;
+
+  nsresult rv = NS_OK;
+  bool exists = false;
+  mCurrentFile->Exists(&exists);
+  if (exists) {
+    rv = openPrefFile(mCurrentFile);
+    if (NS_FAILED(rv)) {
+      // Save a backup copy of the current (invalid) prefs file, since all prefs
+      // from the error line to the end of the file will be lost (bug 361102).
+      // TODO we should notify the user about it (bug 523725).
+      MakeBackupPrefFile(mCurrentFile);
+    }
+  } else {
+    rv = NS_ERROR_FILE_NOT_FOUND;
+  }
+
   return rv;
 }
 
