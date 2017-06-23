@@ -1553,6 +1553,9 @@ toolbarbutton[panel-multiview-anchor="true"]:-moz-locale-dir(rtl) {
   background-position: left calc(@menuPanelButtonWidth@ / 2 - var(--panel-ui-exit-subview-gutter-width) + 2px) center;
 }
 
+toolbarpaletteitem[place="palette"] > .toolbarbutton-1 > .toolbarbutton-menu-dropmarker,
+#bookmarks-menu-button[cui-areatype="menu-panel"] > .toolbarbutton-menu-dropmarker,
+#bookmarks-menu-button[overflowedItem] > .toolbarbutton-menu-dropmarker,
 toolbarpaletteitem[place="palette"] > .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker,
 #bookmarks-menu-button[cui-areatype="menu-panel"] > .toolbarbutton-menubutton-dropmarker {
   display: none;

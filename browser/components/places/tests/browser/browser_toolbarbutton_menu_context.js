@@ -18,10 +18,13 @@ add_task(async function testPopup() {
 });
 
 async function checkPopupContextMenu() {
-  let dropmarker = document.getAnonymousElementByAttribute(bookmarksMenuButton, "anonid", "dropmarker");
+  let clickTarget = bookmarksMenuButton;
+  if (!AppConstants.MOZ_PHOTON_THEME) {
+    clickTarget = document.getAnonymousElementByAttribute(bookmarksMenuButton, "anonid", "dropmarker");
+  }
   BMB_menuPopup.setAttribute("style", "transition: none;");
   let popupShownPromise = onPopupEvent(BMB_menuPopup, "shown");
-  EventUtils.synthesizeMouseAtCenter(dropmarker, {});
+  EventUtils.synthesizeMouseAtCenter(clickTarget, {});
   info("Waiting for bookmarks menu to be shown.");
   await popupShownPromise;
   let contextMenuShownPromise = onPopupEvent(contextMenu, "shown");
