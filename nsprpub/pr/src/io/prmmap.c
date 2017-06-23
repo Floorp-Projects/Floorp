@@ -24,17 +24,16 @@ PR_IMPLEMENT(PRFileMap *) PR_CreateFileMap(
             || prot == PR_PROT_WRITECOPY);
     fmap = PR_NEWZAP(PRFileMap);
     if (NULL == fmap) {
-	PR_SetError(PR_OUT_OF_MEMORY_ERROR, 0);
-	return NULL;
+      PR_SetError(PR_OUT_OF_MEMORY_ERROR, 0);
+      return NULL;
     }
     fmap->fd = fd;
     fmap->prot = prot;
     if (_PR_MD_CREATE_FILE_MAP(fmap, size) == PR_SUCCESS) {
-	return fmap;
-    } else {
+      return fmap;
+    }
 	PR_DELETE(fmap);
 	return NULL;
-    }
 }
 
 PR_IMPLEMENT(PRInt32) PR_GetMemMapAlignment(void)

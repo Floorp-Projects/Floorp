@@ -340,7 +340,7 @@ static PRStatus PR_CALLBACK SocketConnectContinue(
             err = WSAGetLastError();
             PR_LOG(_pr_io_lm, PR_LOG_MIN,
                ("SocketConnectContinue GetOverlappedResult failed %d\n", err));
-            if (err != ERROR_IO_PENDING) {
+            if (err != ERROR_IO_INCOMPLETE) {
                 _PR_MD_MAP_CONNECT_ERROR(err);
                 fd->secret->overlappedActive = FALSE;
                 return PR_FAILURE;
