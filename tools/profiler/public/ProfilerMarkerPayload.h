@@ -7,9 +7,10 @@
 #ifndef ProfilerMarkerPayload_h
 #define ProfilerMarkerPayload_h
 
-#include "mozilla/TimeStamp.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/RefPtr.h"
+#include "mozilla/TimeStamp.h"
+#include "mozilla/UniquePtrExtensions.h"
 
 #include "nsString.h"
 #include "GeckoProfiler.h"
@@ -39,7 +40,7 @@ public:
                         const mozilla::TimeStamp& aEndTime,
                         UniqueProfilerBacktrace aStack = nullptr);
 
-  virtual ~ProfilerMarkerPayload();
+  virtual ~ProfilerMarkerPayload() {}
 
   virtual void StreamPayload(SpliceableJSONWriter& aWriter,
                              const mozilla::TimeStamp& aProcessStartTime,
@@ -86,7 +87,6 @@ public:
                   const mozilla::TimeStamp& aStartTime,
                   const mozilla::TimeStamp& aEndTime,
                   UniqueProfilerBacktrace aStack);
-  ~IOMarkerPayload();
 
   virtual void StreamPayload(SpliceableJSONWriter& aWriter,
                              const mozilla::TimeStamp& aProcessStartTime,
@@ -94,7 +94,7 @@ public:
 
 private:
   const char* mSource;
-  char* mFilename;
+  mozilla::UniqueFreePtr<char> mFilename;
 };
 
 class DOMEventMarkerPayload : public ProfilerMarkerPayload
@@ -103,7 +103,6 @@ public:
   DOMEventMarkerPayload(const nsAString& aType, uint16_t aPhase,
                         const mozilla::TimeStamp& aStartTime,
                         const mozilla::TimeStamp& aEndTime);
-  ~DOMEventMarkerPayload();
 
   virtual void StreamPayload(SpliceableJSONWriter& aWriter,
                              const mozilla::TimeStamp& aProcessStartTime,
@@ -122,7 +121,6 @@ public:
   UserTimingMarkerPayload(const nsAString& aName,
                           const mozilla::TimeStamp& aStartTime,
                           const mozilla::TimeStamp& aEndTime);
-  ~UserTimingMarkerPayload();
 
   virtual void StreamPayload(SpliceableJSONWriter& aWriter,
                              const mozilla::TimeStamp& aProcessStartTime,
@@ -158,7 +156,6 @@ class VsyncMarkerPayload : public ProfilerMarkerPayload
 {
 public:
   explicit VsyncMarkerPayload(mozilla::TimeStamp aVsyncTimestamp);
-  virtual ~VsyncMarkerPayload() {}
 
   virtual void StreamPayload(SpliceableJSONWriter& aWriter,
                              const mozilla::TimeStamp& aProcessStartTime,
@@ -175,7 +172,6 @@ public:
                    const mozilla::TimeStamp& aCpuTimeEnd,
                    uint64_t aGpuTimeStart,
                    uint64_t aGpuTimeEnd);
-  ~GPUMarkerPayload() {}
 
   virtual void StreamPayload(SpliceableJSONWriter& aWriter,
                              const mozilla::TimeStamp& aProcessStartTime,
@@ -198,8 +194,6 @@ public:
      mTimingJSON(mozilla::Move(aTimingJSON))
   {}
 
-  virtual ~GCSliceMarkerPayload() {}
-
   void StreamPayload(SpliceableJSONWriter& aWriter,
                      const mozilla::TimeStamp& aProcessStartTime,
                      UniqueStacks& aUniqueStacks) override;
@@ -218,8 +212,6 @@ public:
      mTimingJSON(mozilla::Move(aTimingJSON))
   {}
 
-  virtual ~GCMajorMarkerPayload() {}
-
   void StreamPayload(SpliceableJSONWriter& aWriter,
                      const mozilla::TimeStamp& aProcessStartTime,
                      UniqueStacks& aUniqueStacks) override;
@@ -237,8 +229,6 @@ public:
    : ProfilerMarkerPayload(aStartTime, aEndTime, nullptr),
      mTimingData(mozilla::Move(aTimingData))
   {}
-
-  virtual ~GCMinorMarkerPayload() {};
 
   void StreamPayload(SpliceableJSONWriter& aWriter,
                      const mozilla::TimeStamp& aProcessStartTime,
