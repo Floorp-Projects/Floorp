@@ -1012,10 +1012,10 @@ this.PanelMultiView = class {
   /**
    * If the main view or a subview contains wrapping elements, the attribute
    * "descriptionheightworkaround" should be set on the view to force all the
-   * wrapping "description", "label" or "toolbarbutton" elements to a fixed
-   * height. If the attribute is set and the visibility, contents, or width
-   * of any of these elements changes, this function should be called to
-   * refresh the calculated heights.
+   * "description" or wrapping toolbarbutton elements to a fixed height.
+   * If the attribute is set and the visibility, contents, or width of any of
+   * these elements changes, this function should be called to refresh the
+   * calculated heights.
    *
    * This may trigger a synchronous layout.
    *
@@ -1024,7 +1024,7 @@ this.PanelMultiView = class {
    *        view if omitted.
    */
   descriptionHeightWorkaround(viewNode = this._mainView) {
-    if (!viewNode.hasAttribute("descriptionheightworkaround")) {
+    if (!this.node.hasAttribute("descriptionheightworkaround")) {
       // This view does not require the workaround.
       return;
     }
@@ -1033,20 +1033,8 @@ this.PanelMultiView = class {
     // First we reset any change we may have made previously. The first time
     // this is called, and in the best case scenario, this has no effect.
     let items = [];
-    // Non-hidden <label> or <description> elements that also aren't empty
-    // and also don't have a value attribute can be multiline (if their
-    // text content is long enough).
-    let isMultiline = ":not(:-moz-any([hidden],[value],:empty))";
-    let selector = [
-      "description" + isMultiline,
-      "label" + isMultiline,
-      "toolbarbutton[wrap]:not([hidden])",
-    ].join(",");
-    for (let element of viewNode.querySelectorAll(selector)) {
-      // Ignore items in hidden containers.
-      if (element.closest("[hidden]")) {
-        continue;
-      }
+    for (let element of viewNode.querySelectorAll(
+         "description:not([hidden]):not([value]),toolbarbutton[wrap]:not([hidden])")) {
       // Take the label for toolbarbuttons; it only exists on those elements.
       element = element.labelElement || element;
 
