@@ -62,7 +62,13 @@ function addDiv(t, attrs) {
   return div;
 }
 
-var isStylo = SpecialPowers.getBoolPref('layout.css.servo.enabled');
+var isStylo = false;
+// 'layout.css.servo.enabled' is not yet defined on gecko, so we need a try
+// block.
+try {
+  isStylo = SpecialPowers.getBoolPref('layout.css.servo.enabled');
+} catch(e) {
+}
 
 test(function(t) {
   addStyle(t,
