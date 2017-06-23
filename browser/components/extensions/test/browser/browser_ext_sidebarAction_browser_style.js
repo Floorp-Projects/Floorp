@@ -33,7 +33,7 @@ async function testSidebarBrowserStyle(sidebarAction, assertMessage) {
       "panel.html": `
         <!DOCTYPE html>
         <html>
-          <button id="button" name="button" class="default">Default</button>
+          <button id="button" name="button" class="browser-style default">Default</button>
           <script src="panel.js" type="text/javascript"></script>
         </html>`,
       "panel.js": sidebarScript,
