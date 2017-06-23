@@ -50,7 +50,10 @@ LayerManagerMLGPU::LayerManagerMLGPU(widget::CompositorWidget* aWidget)
     return;
   }
 
-  if (!mDevice) {
+#ifdef WIN32
+  mDevice = DeviceManagerDx::Get()->GetMLGDevice();
+#endif
+  if (!mDevice || !mDevice->IsValid()) {
     gfxWarning() << "Could not acquire an MLGDevice!";
     return;
   }
