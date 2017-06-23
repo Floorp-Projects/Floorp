@@ -770,15 +770,12 @@ impl MarionetteSession {
             },
             GetCookies => {
                 let cookies = try!(self.process_cookies(&resp.result));
-                WebDriverResponse::Cookies(CookiesResponse { value: cookies })
+                WebDriverResponse::Cookies(CookiesResponse {value: cookies})
             },
             GetNamedCookie(ref name) => {
                 let mut cookies = try!(self.process_cookies(&resp.result));
                 cookies.retain(|x| x.name == *name);
-                let cookie = try_opt!(cookies.pop(),
-                                      ErrorStatus::NoSuchCookie,
-                                      format!("No cookie with name {}", name));
-                WebDriverResponse::Cookie(CookieResponse { value: cookie })
+                WebDriverResponse::Cookies(CookiesResponse { value : cookies })
             }
             FindElement(_) | FindElementElement(_, _) => {
                 let element = try!(self.to_web_element(
@@ -872,28 +869,28 @@ impl MarionetteSession {
             let name = try_opt!(
                 try_opt!(x.find("name"),
                          ErrorStatus::UnknownError,
-                         "Cookie must have a name field").as_string(),
+                         "Failed to find name field").as_string(),
                 ErrorStatus::UnknownError,
-                "Cookie must have string name").to_string();
+                "Failed to interpret name as string").to_string();
             let value = try_opt!(
                 try_opt!(x.find("value"),
                          ErrorStatus::UnknownError,
-                         "Cookie must have a value field").as_string(),
+                         "Failed to find value field").as_string(),
                 ErrorStatus::UnknownError,
-                "Cookie must have a string value").to_string();
+                "Failed to interpret value as string").to_string();
             let path = try!(
                 Nullable::from_json(x.find("path").unwrap_or(&Json::Null),
                                     |x| {
                                         Ok((try_opt!(x.as_string(),
                                                      ErrorStatus::UnknownError,
-                                                     "Cookie path must be string")).to_string())
+                                                     "Failed to interpret path as String")).to_string())
                                     }));
             let domain = try!(
                 Nullable::from_json(x.find("domain").unwrap_or(&Json::Null),
                                     |x| {
                                         Ok((try_opt!(x.as_string(),
                                                      ErrorStatus::UnknownError,
-                                                     "Cookie domain must be string")).to_string())
+                                                     "Failed to interpret domain as String")).to_string())
                                     }));
             let expiry = try!(
                 Nullable::from_json(x.find("expiry").unwrap_or(&Json::Null),
@@ -901,27 +898,18 @@ impl MarionetteSession {
                                         Ok(Date::new((try_opt!(
                                             x.as_u64(),
                                             ErrorStatus::UnknownError,
-                                            "Cookie expiry must be a positive integer"))))
+                                            "Failed to interpret expiry as u64"))))
                                     }));
             let secure = try_opt!(
                 x.find("secure").map_or(Some(false), |x| x.as_boolean()),
                 ErrorStatus::UnknownError,
-                "Cookie secure flag must be boolean");
+                "Failed to interpret secure as boolean");
             let http_only = try_opt!(
                 x.find("httpOnly").map_or(Some(false), |x| x.as_boolean()),
                 ErrorStatus::UnknownError,
-                "Cookie httpOnly flag must be boolean");
-
-            let new_cookie = Cookie {
-                name: name,
-                value: value,
-                path: path,
-                domain: domain,
-                expiry: expiry,
-                secure: secure,
-                httpOnly: http_only,
-            };
-            Ok(new_cookie)
+                "Failed to interpret httpOnly as boolean");
+            Ok(Cookie {name: name , value: value, path: path, domain: domain,
+                      expiry: expiry, secure: secure , httpOnly: http_only})
         }).collect::<Result<Vec<_>, _>>()
     }
 
