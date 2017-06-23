@@ -10229,7 +10229,8 @@ nsIFrame::UpdateStyleOfChildAnonBox(nsIFrame* aChildFrame,
 
   // Now that we've updated the style on aChildFrame, check whether it itself
   // has anon boxes to deal with.
-  ServoRestyleState childrenState(aRestyleState, childHint);
+  ServoRestyleState childrenState(
+      *aChildFrame, aRestyleState, childHint, ServoRestyleState::Type::InFlow);
   aChildFrame->UpdateStyleOfOwnedAnonBoxes(childrenState);
 
   // Assuming anon boxes don't have ::backdrop associated with them... if that
@@ -10266,7 +10267,8 @@ nsIFrame::UpdateStyleOfOwnedChildFrame(
     aNewStyleContext,
     &equalStructs,
     &samePointerStructs);
-  childHint = NS_RemoveSubsumedHints(childHint, aRestyleState.ChangesHandled());
+  childHint = NS_RemoveSubsumedHints(
+    childHint, aRestyleState.ChangesHandledFor(*aChildFrame));
   if (childHint) {
     if (childHint & nsChangeHint_ReconstructFrame) {
       // If we generate a reconstruct here, remove any non-reconstruct hints we
