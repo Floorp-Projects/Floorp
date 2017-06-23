@@ -1600,13 +1600,13 @@ function getCookies() {
   let rv = [];
 
   for (let cookie of cookies) {
-    let expiry = cookie.expiry;
+    let expires = cookie.expires;
     // session cookie, don't return an expiry
-    if (expiry == 0) {
-      expiry = null;
+    if (expires == 0) {
+      expires = null;
     // date before epoch time, cap to epoch
-    } else if (expiry == 1) {
-      expiry = 0;
+    } else if (expires == 1) {
+      expires = 0;
     }
     rv.push({
       'name': cookie.name,
@@ -1615,7 +1615,7 @@ function getCookies() {
       'domain': cookie.host,
       'secure': cookie.isSecure,
       'httpOnly': cookie.httpOnly,
-      'expiry': expiry,
+      'expiry': expires
     });
   }
 
