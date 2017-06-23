@@ -6,5 +6,4 @@
 
 DevToolsModules(
     'l10n.js',
-    'utils.js',
 )

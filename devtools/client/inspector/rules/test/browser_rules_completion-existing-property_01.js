@@ -120,8 +120,8 @@ function* testCompletion([key, completion, open, selected],
   info("Synthesizing key " + key);
   EventUtils.synthesizeKey(key, {}, view.styleWindow);
 
-  // Flush the debounce for the preview text.
-  view.debounce.flush();
+  // Flush the throttle for the preview text.
+  view.throttle.flush();
 
   yield onSuggest;
   yield onPopupEvent;
