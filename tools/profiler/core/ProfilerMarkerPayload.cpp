@@ -12,18 +12,6 @@
 
 using namespace mozilla;
 
-ProfilerMarkerPayload::ProfilerMarkerPayload(UniqueProfilerBacktrace aStack)
-  : mStack(Move(aStack))
-{}
-
-ProfilerMarkerPayload::ProfilerMarkerPayload(const TimeStamp& aStartTime,
-                                             const TimeStamp& aEndTime,
-                                             UniqueProfilerBacktrace aStack)
-  : mStartTime(aStartTime)
-  , mEndTime(aEndTime)
-  , mStack(Move(aStack))
-{}
-
 void
 ProfilerMarkerPayload::StreamCommonProps(const char* aMarkerType,
                                          SpliceableJSONWriter& aWriter,
@@ -49,17 +37,6 @@ ProfilerMarkerPayload::StreamCommonProps(const char* aMarkerType,
   }
 }
 
-TracingMarkerPayload::TracingMarkerPayload(const char* aCategory,
-                                           TracingKind aKind,
-                                           UniqueProfilerBacktrace aCause)
-  : mCategory(aCategory)
-  , mKind(aKind)
-{
-  if (aCause) {
-    SetStack(Move(aCause));
-  }
-}
-
 void
 TracingMarkerPayload::StreamPayload(SpliceableJSONWriter& aWriter,
                                     const TimeStamp& aProcessStartTime,
@@ -78,19 +55,6 @@ TracingMarkerPayload::StreamPayload(SpliceableJSONWriter& aWriter,
   }
 }
 
-GPUMarkerPayload::GPUMarkerPayload(
-  const TimeStamp& aCpuTimeStart,
-  const TimeStamp& aCpuTimeEnd,
-  uint64_t aGpuTimeStart,
-  uint64_t aGpuTimeEnd)
-
-  : ProfilerMarkerPayload(aCpuTimeStart, aCpuTimeEnd)
-  , mCpuTimeStart(aCpuTimeStart)
-  , mCpuTimeEnd(aCpuTimeEnd)
-  , mGpuTimeStart(aGpuTimeStart)
-  , mGpuTimeEnd(aGpuTimeEnd)
-{ }
-
 void
 GPUMarkerPayload::StreamPayload(SpliceableJSONWriter& aWriter,
                                 const TimeStamp& aProcessStartTime,
@@ -107,18 +71,6 @@ GPUMarkerPayload::StreamPayload(SpliceableJSONWriter& aWriter,
   aWriter.IntProperty("gpuend", (int)mGpuTimeEnd);
 }
 
-IOMarkerPayload::IOMarkerPayload(const char* aSource,
-                                 const char* aFilename,
-                                 const TimeStamp& aStartTime,
-                                 const TimeStamp& aEndTime,
-                                 UniqueProfilerBacktrace aStack)
-  : ProfilerMarkerPayload(aStartTime, aEndTime, Move(aStack))
-  , mSource(aSource)
-  , mFilename(aFilename ? strdup(aFilename) : nullptr)
-{
-  MOZ_ASSERT(aSource);
-}
-
 void
 IOMarkerPayload::StreamPayload(SpliceableJSONWriter& aWriter,
                                const TimeStamp& aProcessStartTime,
@@ -131,23 +83,6 @@ IOMarkerPayload::StreamPayload(SpliceableJSONWriter& aWriter,
   }
 }
 
-UserTimingMarkerPayload::UserTimingMarkerPayload(const nsAString& aName,
-                                                 const TimeStamp& aStartTime)
-  : ProfilerMarkerPayload(aStartTime, aStartTime, nullptr)
-  , mEntryType("mark")
-  , mName(aName)
-{
-}
-
-UserTimingMarkerPayload::UserTimingMarkerPayload(const nsAString& aName,
-                                                 const TimeStamp& aStartTime,
-                                                 const TimeStamp& aEndTime)
-  : ProfilerMarkerPayload(aStartTime, aEndTime, nullptr)
-  , mEntryType("measure")
-  , mName(aName)
-{
-}
-
 void
 UserTimingMarkerPayload::StreamPayload(SpliceableJSONWriter& aWriter,
                                        const TimeStamp& aProcessStartTime,
@@ -158,15 +93,6 @@ UserTimingMarkerPayload::StreamPayload(SpliceableJSONWriter& aWriter,
   aWriter.StringProperty("entryType", mEntryType);
 }
 
-DOMEventMarkerPayload::DOMEventMarkerPayload(const nsAString& aType, uint16_t aPhase,
-                                             const TimeStamp& aStartTime,
-                                             const TimeStamp& aEndTime)
-  : ProfilerMarkerPayload(aStartTime, aEndTime, nullptr)
-  , mType(aType)
-  , mPhase(aPhase)
-{
-}
-
 void
 DOMEventMarkerPayload::StreamPayload(SpliceableJSONWriter& aWriter,
                                      const TimeStamp& aProcessStartTime,
@@ -175,14 +101,6 @@ DOMEventMarkerPayload::StreamPayload(SpliceableJSONWriter& aWriter,
   StreamCommonProps("DOMEvent", aWriter, aProcessStartTime, aUniqueStacks);
   aWriter.StringProperty("type", NS_ConvertUTF16toUTF8(mType).get());
   aWriter.IntProperty("phase", mPhase);
-}
-
-LayerTranslationMarkerPayload::LayerTranslationMarkerPayload(layers::Layer* aLayer,
-                                                             gfx::Point aPoint)
-  : ProfilerMarkerPayload(TimeStamp::Now(), TimeStamp::Now(), nullptr)
-  , mLayer(aLayer)
-  , mPoint(aPoint)
-{
 }
 
 void
@@ -198,12 +116,6 @@ LayerTranslationMarkerPayload::StreamPayload(SpliceableJSONWriter& aWriter,
   aWriter.IntProperty("x", mPoint.x);
   aWriter.IntProperty("y", mPoint.y);
   aWriter.StringProperty("category", "LayerTranslation");
-}
-
-VsyncMarkerPayload::VsyncMarkerPayload(TimeStamp aVsyncTimestamp)
-  : ProfilerMarkerPayload(aVsyncTimestamp, aVsyncTimestamp, nullptr)
-  , mVsyncTimestamp(aVsyncTimestamp)
-{
 }
 
 void
