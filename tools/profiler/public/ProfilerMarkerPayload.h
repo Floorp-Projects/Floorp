@@ -67,9 +67,8 @@ private:
 class TracingMarkerPayload : public ProfilerMarkerPayload
 {
 public:
-  TracingMarkerPayload(const char* aCategory, TracingKind aKind);
   TracingMarkerPayload(const char* aCategory, TracingKind aKind,
-                       UniqueProfilerBacktrace aCause);
+                       UniqueProfilerBacktrace aCause = nullptr);
 
   virtual void StreamPayload(SpliceableJSONWriter& aWriter,
                              const mozilla::TimeStamp& aProcessStartTime,
@@ -141,7 +140,7 @@ class LayerTranslationMarkerPayload : public ProfilerMarkerPayload
 {
 public:
   LayerTranslationMarkerPayload(mozilla::layers::Layer* aLayer,
-                          mozilla::gfx::Point aPoint);
+                                mozilla::gfx::Point aPoint);
 
   virtual void StreamPayload(SpliceableJSONWriter& aWriter,
                              const mozilla::TimeStamp& aProcessStartTime,

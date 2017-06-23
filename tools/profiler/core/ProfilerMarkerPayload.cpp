@@ -54,13 +54,6 @@ ProfilerMarkerPayload::StreamCommonProps(const char* aMarkerType,
 }
 
 TracingMarkerPayload::TracingMarkerPayload(const char* aCategory,
-                                           TracingKind aKind)
-  : mCategory(aCategory)
-  , mKind(aKind)
-{
-}
-
-TracingMarkerPayload::TracingMarkerPayload(const char* aCategory,
                                            TracingKind aKind,
                                            UniqueProfilerBacktrace aCause)
   : mCategory(aCategory)
