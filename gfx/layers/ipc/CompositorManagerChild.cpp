@@ -19,19 +19,21 @@ namespace layers {
 StaticRefPtr<CompositorManagerChild> CompositorManagerChild::sInstance;
 
 /* static */ bool
-CompositorManagerChild::IsInitialized()
+CompositorManagerChild::IsInitialized(base::ProcessId aGPUPid)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  return sInstance && sInstance->CanSend();
+  // Since GPUChild and CompositorManagerChild will race on ActorDestroy, we
+  // cannot know if the CompositorManagerChild is about to be released but has
+  // yet to be. As such, we need to verify the GPU PID matches as well.
+  return sInstance && sInstance->CanSend() && sInstance->OtherPid() == aGPUPid;
 }
 
 /* static */ bool
 CompositorManagerChild::InitSameProcess(uint32_t aNamespace)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  if (NS_WARN_IF(sInstance &&
-                 sInstance->OtherPid() == base::GetCurrentProcId())) {
-    MOZ_ASSERT_UNREACHABLE("Already initialized");
+  if (NS_WARN_IF(IsInitialized(base::GetCurrentProcId()))) {
+    MOZ_ASSERT_UNREACHABLE("Already initialized same process");
     return false;
   }
 
@@ -47,8 +49,12 @@ CompositorManagerChild::Init(Endpoint<PCompositorManagerChild>&& aEndpoint,
 {
   MOZ_ASSERT(NS_IsMainThread());
   if (sInstance) {
+    // Since GPUChild and CompositorManagerChild will race on ActorDestroy, we
+    // cannot know if the CompositorManagerChild has yet to be released or not.
+    // To avoid an unnecessary reinitialization, we verify the GPU PID actually
+    // changed.
     MOZ_ASSERT(sInstance->mNamespace != aNamespace);
-    MOZ_RELEASE_ASSERT(!sInstance->CanSend());
+    MOZ_RELEASE_ASSERT(sInstance->OtherPid() != aEndpoint.OtherPid());
   }
 
   sInstance = new CompositorManagerChild(Move(aEndpoint), aNamespace);
