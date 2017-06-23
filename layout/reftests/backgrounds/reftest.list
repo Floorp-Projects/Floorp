@@ -159,8 +159,8 @@ HTTP == background-referrer.html background-referrer-ref.html
 == attachment-local-clipping-color-1.html attachment-local-clipping-color-1-ref.html
 == attachment-local-clipping-color-2.html attachment-local-clipping-color-1-ref.html  # Same ref as the previous test.
 == attachment-local-clipping-color-3.html attachment-local-clipping-color-3-ref.html
-fuzzy-if(skiaContent,1,300) == attachment-local-clipping-color-4.html attachment-local-clipping-color-4-ref.html
-fuzzy-if(skiaContent,1,400) == attachment-local-clipping-color-5.html attachment-local-clipping-color-4-ref.html
+fuzzy-if(skiaContent,1,300) fuzzy-if(webrender,14-14,1134-1134) == attachment-local-clipping-color-4.html attachment-local-clipping-color-4-ref.html
+fuzzy-if(skiaContent,1,400) fuzzy-if(webrender,14-14,1134-1134) == attachment-local-clipping-color-5.html attachment-local-clipping-color-4-ref.html
 fuzzy(50,500) fuzzy-if(skiaContent,51,320) fails-if(webrender) == attachment-local-clipping-color-6.html attachment-local-clipping-color-6-ref.html
 
 == attachment-local-clipping-image-1.html attachment-local-clipping-image-1-ref.html
