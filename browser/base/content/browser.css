@@ -1233,10 +1233,34 @@ toolbarpaletteitem[place="palette"] > #downloads-button[indicator] > #downloads-
 
 #customization-panelHolder > #widget-overflow-fixed-list {
   padding-bottom: 50px; /* Make sure there's always space to drop stuff. */
+  flex: 0 1 auto; /* Size to content, but allow ourselves to shrink */
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
 }
 
-#customization-panelHolder {
+#customization-container:not([photon]) #customization-panelHolder {
   overflow-y: hidden;
+}
+
+#customization-container[photon] #customization-panel-container {
+  display: flex;
+  flex-direction: column;
+  flex: none;
+}
+
+#customization-container[photon] #customization-panelWrapper,
+#customization-container[photon] #customization-panelWrapper > .panel-arrowcontent,
+#customization-container[photon] #customization-panelHolder {
+  flex-direction: column;
+  display: flex;
+  min-height: 0;
+}
+
+#customization-container[photon] #customization-panelWrapper {
+  flex: 1 1 auto;
+  height: 0; /* Don't let my contents affect ancestors' content-based sizing */
+  align-items: end; /* align to the end on the cross-axis (affects arrow) */
 }
 
 #customization-panelWrapper,
@@ -1244,8 +1268,7 @@ toolbarpaletteitem[place="palette"] > #downloads-button[indicator] > #downloads-
   -moz-box-flex: 1;
 }
 
-#customization-panelWrapper > .panel-arrowcontent {
-  padding: 0 !important;
+#customization-container:not([photon]) #customization-panelWrapper > .panel-arrowcontent {
   overflow: hidden;
 }
 
