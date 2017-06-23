@@ -491,6 +491,7 @@ function HandleSignonKeyPress(e) {
       (AppConstants.platform == "macosx" &&
        e.keyCode == KeyboardEvent.DOM_VK_BACK_SPACE)) {
     DeleteSignon();
+    e.preventDefault();
   }
 }
 
