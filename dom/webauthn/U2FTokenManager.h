@@ -34,7 +34,6 @@ class U2FTokenManager final
     bool softTokenEnabled;
     uint32_t softTokenCounter;
   };
-  typedef MozPromise<bool, nsresult, false> PrefPromise;
 public:
   enum TransactionType
   {
