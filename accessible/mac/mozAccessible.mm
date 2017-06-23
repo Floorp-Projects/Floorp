@@ -33,6 +33,7 @@
 using namespace mozilla;
 using namespace mozilla::a11y;
 
+#define NSAccessibilityDOMIdentifierAttribute @"AXDOMIdentifier"
 #define NSAccessibilityMathRootRadicandAttribute @"AXMathRootRadicand"
 #define NSAccessibilityMathRootIndexAttribute @"AXMathRootIndex"
 #define NSAccessibilityMathFractionNumeratorAttribute @"AXMathFractionNumerator"
@@ -159,6 +160,7 @@ ConvertToNSArray(nsTArray<ProxyAccessible*>& aArray)
 - (NSArray*)additionalAccessibilityAttributeNames
 {
   NSMutableArray* additional = [NSMutableArray array];
+  [additional addObject:NSAccessibilityDOMIdentifierAttribute];
   switch (mRole) {
     case roles::MATHML_ROOT:
       [additional addObject:NSAccessibilityMathRootIndexAttribute];
@@ -321,6 +323,14 @@ ConvertToNSArray(nsTArray<ProxyAccessible*>& aArray)
   }
   if ([attribute isEqualToString:NSAccessibilityHelpAttribute])
     return [self help];
+  if ([attribute isEqualToString:NSAccessibilityDOMIdentifierAttribute]) {
+    nsAutoString id;
+    if (accWrap)
+      nsCoreUtils::GetID(accWrap->GetContent(), id);
+    else
+      proxy->DOMNodeID(id);
+    return nsCocoaUtils::ToNSString(id);
+  }
 
   switch (mRole) {
   case roles::MATHML_ROOT:
