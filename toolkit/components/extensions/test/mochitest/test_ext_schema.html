@@ -50,7 +50,7 @@ add_task(async function testUnknownProperties() {
   });
 
   let messages = [
-    {message: /processing permissions\.0: Unknown permission "unknownPermission"/},
+    {message: /processing permissions\.0: Value "unknownPermission"/},
     {message: /processing unknown_property: An unexpected property was found in the WebExtension manifest/},
   ];
 
