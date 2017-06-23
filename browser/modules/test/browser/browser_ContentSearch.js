@@ -57,7 +57,7 @@ add_task(async function SetCurrentEngine() {
     type: "SetCurrentEngine",
     data: newCurrentEngine.name,
   });
-  let deferred = Promise.defer();
+  let deferred = PromiseUtils.defer();
   Services.obs.addObserver(function obs(subj, topic, data) {
     info("Test observed " + data);
     if (data == "engine-current") {
@@ -189,7 +189,7 @@ add_task(async function GetSuggestions_AddFormHistoryEntry_RemoveFormHistoryEntr
     type: "AddFormHistoryEntry",
     data: searchStr + "form",
   });
-  let deferred = Promise.defer();
+  let deferred = PromiseUtils.defer();
   Services.obs.addObserver(function onAdd(subj, topic, data) {
     if (data == "formhistory-add") {
       Services.obs.removeObserver(onAdd, "satchel-storage-changed");
@@ -225,7 +225,7 @@ add_task(async function GetSuggestions_AddFormHistoryEntry_RemoveFormHistoryEntr
     type: "RemoveFormHistoryEntry",
     data: searchStr + "form",
   });
-  deferred = Promise.defer();
+  deferred = PromiseUtils.defer();
   Services.obs.addObserver(function onRemove(subj, topic, data) {
     if (data == "formhistory-remove") {
       Services.obs.removeObserver(onRemove, "satchel-storage-changed");
@@ -329,7 +329,7 @@ function waitForNewEngine(basename, numImages) {
   let eventPromises = expectedSearchEvents.map(e => waitForTestMsg(e));
 
   // Wait for addEngine().
-  let addDeferred = Promise.defer();
+  let addDeferred = PromiseUtils.defer();
   let url = getRootDirectory(gTestPath) + basename;
   Services.search.addEngine(url, null, "", false, {
     onSuccess(engine) {

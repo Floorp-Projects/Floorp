@@ -2,7 +2,6 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-Cu.import("resource://gre/modules/Promise.jsm");
 
 XPCOMUtils.defineLazyGetter(this, "FxAccountsCommon", function() {
   return Components.utils.import("resource://gre/modules/FxAccountsCommon.js", {});

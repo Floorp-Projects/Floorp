@@ -1,7 +1,6 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-Components.utils.import("resource://gre/modules/Promise.jsm");
 
 // Worker must be loaded from a chrome:// uri, not a file://
 // uri, so we first need to load it.
