@@ -2272,11 +2272,6 @@ void HTMLMediaElement::LoadFromSourceChildren()
   NS_ASSERTION(mIsLoadingFromSourceChildren,
                "Must remember we're loading from source children");
 
-  nsIDocument* parentDoc = OwnerDoc()->GetParentDocument();
-  if (parentDoc) {
-    parentDoc->FlushPendingNotifications(FlushType::Layout);
-  }
-
   AddMutationObserverUnlessExists(this);
 
   while (true) {
