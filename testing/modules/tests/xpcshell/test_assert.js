@@ -18,7 +18,7 @@ function run_test() {
 
   function protoCtrChain(o) {
     let result = [];
-    while (o = o.__proto__) {
+    while ((o = o.__proto__)) {
       result.push(o.constructor);
     }
     return result.join();
@@ -151,8 +151,8 @@ function run_test() {
   function thrower(errorConstructor) {
     throw new errorConstructor("test");
   }
-  let aethrow = makeBlock(thrower, ns.Assert.AssertionError);
-  aethrow = makeBlock(thrower, ns.Assert.AssertionError);
+  makeBlock(thrower, ns.Assert.AssertionError);
+  makeBlock(thrower, ns.Assert.AssertionError);
 
   // the basic calls work
   assert.throws(makeBlock(thrower, ns.Assert.AssertionError),
@@ -207,12 +207,14 @@ function run_test() {
     if ((err instanceof TypeError) && /test/.test(err)) {
       return true;
     }
+    return false;
   });
   // do the same with an arrow function
   assert.throws(makeBlock(thrower, TypeError), err => {
     if ((err instanceof TypeError) && /test/.test(err)) {
       return true;
     }
+    return false;
   });
 
   function testAssertionMessage(actual, expected) {

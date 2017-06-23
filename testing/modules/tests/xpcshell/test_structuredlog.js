@@ -38,7 +38,7 @@ function run_test() {
   });
 
   logger.info("Test message",
-              extra = {foo: "bar"});
+              {foo: "bar"});
   assertLastMsg({
     action: "log",
     message: "Test message",
