@@ -98,7 +98,7 @@ if CONFIG['CLANG_CL'] or not CONFIG['_MSC_VER']:
         elif f.endswith('avx2.c'):
             SOURCES[f].flags += ['-mavx2']
 
-if CONFIG['_MSC_VER'] and not config['CLANG_CL']:
+if CONFIG['_MSC_VER'] and not CONFIG['CLANG_CL']:
     for f in SOURCES:
         if f.endswith('avx.c'):
             SOURCES[f].flags += ['-arch:AVX']
