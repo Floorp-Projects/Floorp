@@ -8,7 +8,7 @@
 
 "use strict";
 
-const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
+var {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
@@ -28,8 +28,8 @@ do_get_profile();
 // Load mocking/stubbing library, sinon
 // docs: http://sinonjs.org/releases/v2.3.2/
 Cu.import("resource://gre/modules/Timer.jsm");
-const {Loader} = Cu.import("resource://gre/modules/commonjs/toolkit/loader.js", {});
-const loader = new Loader.Loader({
+var {Loader} = Cu.import("resource://gre/modules/commonjs/toolkit/loader.js", {});
+var loader = new Loader.Loader({
   paths: {
     "": "resource://testing-common/",
   },
@@ -40,8 +40,8 @@ const loader = new Loader.Loader({
     clearInterval,
   },
 });
-const require = Loader.Require(loader, {id: ""});
-const sinon = require("sinon-2.3.2");
+var require = Loader.Require(loader, {id: ""});
+var sinon = require("sinon-2.3.2");
 // ================================================
 
 // Load our bootstrap extension manifest so we can access our chrome/resource URIs.
