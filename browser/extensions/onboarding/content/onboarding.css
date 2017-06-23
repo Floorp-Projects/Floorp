@@ -37,8 +37,7 @@
   display: none;
 }
 
-#onboarding-overlay-close-btn,
-#onboarding-notification-close-btn {
+#onboarding-overlay-close-btn {
   position: absolute;
   top: 15px;
   offset-inline-end: 15px;
@@ -51,8 +50,7 @@
   padding: 12px;
 }
 
-#onboarding-overlay-close-btn:hover,
-#onboarding-notification-close-btn:hover {
+#onboarding-overlay-close-btn:hover {
   background-color: rgba(204, 204, 204, 0.6);
 }
 
@@ -238,8 +236,7 @@
 }
 
 #onboarding-tour-search.onboarding-active,
-#onboarding-tour-search:hover,
-#onboarding-notification-bar[data-target-tour-id=onboarding-tour-search] #onboarding-notification-tour-icon {
+#onboarding-tour-search:hover {
   background-image: url("img/icons_search-colored.svg");
 }
 
@@ -248,8 +245,7 @@
 }
 
 #onboarding-tour-private-browsing.onboarding-active,
-#onboarding-tour-private-browsing:hover,
-#onboarding-notification-bar[data-target-tour-id=onboarding-tour-private-browsing] #onboarding-notification-tour-icon {
+#onboarding-tour-private-browsing:hover {
   background-image: url("img/icons_private-colored.svg");
 }
 
@@ -258,8 +254,7 @@
 }
 
 #onboarding-tour-addons.onboarding-active,
-#onboarding-tour-addons:hover,
-#onboarding-notification-bar[data-target-tour-id=onboarding-tour-addons] #onboarding-notification-tour-icon {
+#onboarding-tour-addons:hover {
   background-image: url("img/icons_addons-colored.svg");
 }
 
@@ -268,8 +263,7 @@
 }
 
 #onboarding-tour-customize.onboarding-active,
-#onboarding-tour-customize:hover,
-#onboarding-notification-bar[data-target-tour-id=onboarding-tour-customize] #onboarding-notification-tour-icon {
+#onboarding-tour-customize:hover {
   background-image: url("img/icons_customize-colored.svg");
 }
 
@@ -278,105 +272,6 @@
 }
 
 #onboarding-tour-default-browser.onboarding-active,
-#onboarding-tour-default-browser:hover,
-#onboarding-notification-bar[data-target-tour-id=onboarding-tour-default-browser] #onboarding-notification-tour-icon {
+#onboarding-tour-default-browser:hover {
   background-image: url("img/icons_default-colored.svg");
-}
-
-
-/* Tour Notifications */
-#onboarding-notification-bar {
-  position: fixed;
-  z-index: 998; /* We want this always under #onboarding-overlay */
-  left: 0;
-  bottom: 0;
-  width: 100%;
-  height: 122px;
-  min-width: 1060px;
-  background: rgba(255, 255, 255, 0.97);
-  border-top: 2px solid #e9e9e9;
-  transition: transform 0.8s;
-  transform: translateY(122px);
-}
-
-#onboarding-notification-bar.onboarding-opened {
-  transform: translateY(0px);
-}
-
-#onboarding-notification-icon {
-  height: 36px;
-  background: url("img/overlay-icon.svg") no-repeat;
-  background-size: 36px;
-  background-position: 34px;
-  padding-inline-start: 190px;
-  position: absolute;
-  offset-block-start: 50%;
-  transform: translateY(-50%);
-}
-
-#onboarding-notification-icon::after {
-  --height: 22px;
-  content: attr(data-tooltip);
-  background: #5ce6e6;
-  position: absolute;
-  top: 0;
-  offset-inline-start: 68px;
-  color: #10404a;
-  font-size: 12px;
-  min-height: var(--height);
-  line-height: var(--height);
-  border-radius: calc(var(--height) / 2);
-  border: 1px solid #fff;
-  padding: 0 10px;
-  text-align: center;
-}
-
-#onboarding-notification-close-btn {
-  background-color: rgba(255, 255, 255, 0.97);
-  border: none;
-  position: absolute;
-  offset-block-start: 50%;
-  offset-inline-end: 34px;
-  transform: translateY(-50%);
-}
-
-#onboarding-notification-message-section {
-  height: 100%;
-  display: flex;
-  align-items: center;
-  position: absolute;
-  offset-block-start: 50%;
-  offset-inline-start: 50%;
-  transform: translate(-50%, -50%);
-}
-
-#onboarding-notification-body {
-  width: 420px;
-  margin: 0 15px;
-  color: #0c0c0d;;
-  display: inline-block;
-}
-
-#onboarding-notification-body * {
-  font-size: 13px
-}
-
-#onboarding-notification-tour-title {
-  margin: 0;
-}
-
-#onboarding-notification-tour-icon {
-  width: 64px;
-  height: 64px;
-  background-repeat: no-repeat;
-}
-
-#onboarding-notification-action-btn {
-  background: #0d96ff;
-  border: none;
-  border-radius: 3px;
-  padding: 10px 20px;
-  font-size: 14px;
-  color: #fff;
-  box-shadow: 0 1px 0 rgba(0,0,0,0.23);
 }
