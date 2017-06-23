@@ -335,12 +335,17 @@ public:
   // These methods must be called on a different thread from the main
   // thread. They should always be called on the same thread for a given
   // stream.
+  // This can fail when aWhence is NS_SEEK_END and no stream length
+  // is known.
+  nsresult Seek(int32_t aWhence, int64_t aOffset);
   int64_t Tell();
-  // Seeks to aOffset in the stream then performs a Read operation.
   // *aBytes gets the number of bytes that were actually read. This can
   // be less than aCount. If the first byte of data is not in the cache,
   // this will block until the data is available or the stream is
   // closed, otherwise it won't block.
+  nsresult Read(char* aBuffer, uint32_t aCount, uint32_t* aBytes);
+  // Seeks to aOffset in the stream then performs a Read operation. See
+  // 'Read' for argument and return details.
   nsresult ReadAt(int64_t aOffset, char* aBuffer,
                   uint32_t aCount, uint32_t* aBytes);
 
@@ -433,13 +438,6 @@ private:
   void CloseInternal(ReentrantMonitorAutoEnter& aReentrantMonitor);
   // Update mPrincipal given that data has been received from aPrincipal
   bool UpdatePrincipal(nsIPrincipal* aPrincipal);
-
-  nsresult SeekInternal(int64_t aOffset);
-  // *aBytes gets the number of bytes that were actually read. This can
-  // be less than aCount. If the first byte of data is not in the cache,
-  // this will block until the data is available or the stream is
-  // closed, otherwise it won't block.
-  nsresult ReadInternal(char* aBuffer, uint32_t aCount, uint32_t* aBytes);
 
   // Instance of MediaCache to use with this MediaCacheStream.
   RefPtr<MediaCache> mMediaCache;
