@@ -145,8 +145,8 @@ include('build/moz.configure/warnings.configure',
 
 option(env='SO_VERSION', nargs=1, help='Shared library version for OpenBSD systems')
 
-@depends(target, target_is_windows, target_is_darwin, building_with_gcc, 'SO_VERSION')
-def library_name_info(target, is_windows, is_darwin, building_with_gcc, so_version):
+@depends(target, target_is_windows, target_is_darwin, c_compiler, 'SO_VERSION')
+def library_name_info(target, is_windows, is_darwin, c_compiler, so_version):
     dll_prefix = 'lib'
     dll_suffix = '.so'
     lib_prefix = 'lib'
@@ -163,9 +163,9 @@ def library_name_info(target, is_windows, is_darwin, building_with_gcc, so_versi
         rust_lib_prefix = ''
         rust_lib_suffix = 'lib'
 
-        # It's OK if we're doing an artifact build and building_with_gcc is
-        # inaccurate.  Artifact builds with mingw ought to be pretty rare anyway.
-        if building_with_gcc:
+        # There aren't artifacts for mingw builds, so it's OK that the results
+        # are inaccurate in that case.
+        if c_compiler and c_compiler.type not in ('msvc', 'clang-cl'):
             import_lib_suffix = 'a'
         else:
             import_lib_suffix = 'lib'
