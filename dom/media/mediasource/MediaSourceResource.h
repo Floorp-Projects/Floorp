@@ -33,8 +33,6 @@ public:
   nsresult Close() override { return NS_OK; }
   void Suspend(bool aCloseImmediately) override { UNIMPLEMENTED(); }
   void Resume() override { UNIMPLEMENTED(); }
-  bool CanClone() override { UNIMPLEMENTED(); return false; }
-  already_AddRefed<MediaResource> CloneData(MediaResourceCallback*) override { UNIMPLEMENTED(); return nullptr; }
   void SetReadMode(MediaCacheStream::ReadMode aMode) override { UNIMPLEMENTED(); }
   void SetPlaybackRate(uint32_t aBytesPerSecond) override  { UNIMPLEMENTED(); }
   nsresult ReadAt(int64_t aOffset, char* aBuffer, uint32_t aCount, uint32_t* aBytes) override { UNIMPLEMENTED(); return NS_ERROR_FAILURE; }
