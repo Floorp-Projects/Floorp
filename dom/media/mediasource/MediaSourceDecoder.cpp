@@ -44,7 +44,7 @@ MediaSourceDecoder::CreateStateMachine()
 }
 
 nsresult
-MediaSourceDecoder::Load(nsIStreamListener**)
+MediaSourceDecoder::Load()
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(!GetStateMachine());
