@@ -99,7 +99,8 @@ PrintUniformityInfo(Layer* aLayer)
   Point translation = transform.As2D().GetTranslation();
   profiler_add_marker(
     "LayerTranslation",
-    MakeUnique<LayerTranslationMarkerPayload>(aLayer, translation));
+    MakeUnique<LayerTranslationMarkerPayload>(aLayer, translation,
+                                              TimeStamp::Now()));
 }
 
 static Maybe<gfx::Polygon>
