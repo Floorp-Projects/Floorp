@@ -107,7 +107,8 @@
       </menupopup>
 
       <panelmultiview id="downloadsPanel-multiView"
-                      mainViewId="downloadsPanel-mainView">
+                      mainViewId="downloadsPanel-mainView"
+                      descriptionheightworkaround="true">
 
         <panelview id="downloadsPanel-mainView">
           <vbox class="panel-view-body-unscrollable">
@@ -156,8 +157,7 @@
           </vbox>
         </panelview>
 
-        <panelview id="downloadsPanel-blockedSubview"
-                   descriptionheightworkaround="true">
+        <panelview id="downloadsPanel-blockedSubview">
           <vbox class="panel-view-body-unscrollable">
             <description id="downloadsPanel-blockedSubview-title"/>
             <description id="downloadsPanel-blockedSubview-details1"/>
