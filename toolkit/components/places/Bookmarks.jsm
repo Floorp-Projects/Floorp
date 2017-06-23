@@ -620,6 +620,19 @@ var Bookmarks = Object.freeze({
                                                updatedItem.parentGuid, "",
                                                updatedItem.source ]);
         }
+        if (info.hasOwnProperty("dateAdded") &&
+            updateInfo.hasOwnProperty("dateAdded") &&
+            item.dateAdded != updatedItem.dateAdded) {
+          notify(observers, "onItemChanged", [ updatedItem._id, "dateAdded",
+                                               false, `${PlacesUtils.toPRTime(updatedItem.dateAdded)}`,
+                                               PlacesUtils.toPRTime(updatedItem.lastModified),
+                                               updatedItem.type,
+                                               updatedItem._parentId,
+                                               updatedItem.guid,
+                                               updatedItem.parentGuid,
+                                               "",
+                                               updatedItem.source ]);
+        }
         if (updateInfo.hasOwnProperty("title")) {
           notify(observers, "onItemChanged", [ updatedItem._id, "title",
                                                false, updatedItem.title,
