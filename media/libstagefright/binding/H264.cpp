@@ -220,28 +220,35 @@ public:
     if (!mDecodedNAL || !aOther.mDecodedNAL) {
       return false;
     }
-    if (mLength != aOther.mLength) {
-      return false;
-    }
 
-    MOZ_ASSERT(mLength / 8 <= mDecodedNAL->Length());
-
-    if (memcmp(mDecodedNAL->Elements(),
-               aOther.mDecodedNAL->Elements(),
-               mLength / 8)) {
-      return false;
-    }
-
-    uint32_t remaining = mLength - (mLength & ~7);
-
-    BitReader b1(mDecodedNAL->Elements() + mLength / 8, remaining);
-    BitReader b2(aOther.mDecodedNAL->Elements() + mLength / 8, remaining);
-    for (uint32_t i = 0; i < remaining; i++) {
-      if (b1.ReadBit() != b2.ReadBit()) {
+    SPSData decodedSPS1;
+    SPSData decodedSPS2;
+    if (!GetSPSData(decodedSPS1) || !aOther.GetSPSData(decodedSPS2)) {
+      // Couldn't decode one SPS, perform a binary comparison
+      if (mLength != aOther.mLength) {
         return false;
       }
+      MOZ_ASSERT(mLength / 8 <= mDecodedNAL->Length());
+
+      if (memcmp(mDecodedNAL->Elements(),
+                 aOther.mDecodedNAL->Elements(),
+                 mLength / 8)) {
+        return false;
+      }
+
+      uint32_t remaining = mLength - (mLength & ~7);
+
+      BitReader b1(mDecodedNAL->Elements() + mLength / 8, remaining);
+      BitReader b2(aOther.mDecodedNAL->Elements() + mLength / 8, remaining);
+      for (uint32_t i = 0; i < remaining; i++) {
+        if (b1.ReadBit() != b2.ReadBit()) {
+          return false;
+        }
+      }
+      return true;
     }
-    return true;
+
+    return decodedSPS1 == decodedSPS2;
   }
 
   bool operator!=(const SPSNAL& aOther) const
@@ -249,7 +256,7 @@ public:
     return !(operator==(aOther));
   }
 
-  bool GetSPSData(SPSData& aDest)
+  bool GetSPSData(SPSData& aDest) const
   {
     return H264::DecodeSPS(mDecodedNAL, aDest);
   }
