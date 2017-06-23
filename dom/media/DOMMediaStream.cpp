@@ -570,7 +570,7 @@ DOMMediaStream::Constructor(const GlobalObject& aGlobal,
     MOZ_ASSERT(aTracks.IsEmpty());
     MediaStreamGraph* graph =
       MediaStreamGraph::GetInstance(MediaStreamGraph::SYSTEM_THREAD_DRIVER,
-                                    AudioChannel::Normal);
+                                    AudioChannel::Normal, ownerWindow);
     newStream->InitPlaybackStreamCommon(graph);
   }
 
@@ -1576,7 +1576,7 @@ DOMHwMediaStream::CreateHwStream(nsPIDOMWindowInner* aWindow,
 
   MediaStreamGraph* graph =
     MediaStreamGraph::GetInstance(MediaStreamGraph::SYSTEM_THREAD_DRIVER,
-                                  AudioChannel::Normal);
+                                  AudioChannel::Normal, aWindow);
   stream->InitSourceStream(graph);
   stream->Init(stream->GetInputStream(), aImage);
 

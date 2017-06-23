@@ -22,6 +22,7 @@
 #include <speex/speex_resampler.h>
 
 class nsIRunnable;
+class nsPIDOMWindowInner;
 
 template <>
 class nsAutoRefTraits<SpeexResamplerState> : public nsPointerRefTraits<SpeexResamplerState>
@@ -1273,7 +1274,8 @@ public:
 
   // Main thread only
   static MediaStreamGraph* GetInstance(GraphDriverType aGraphDriverRequested,
-                                       dom::AudioChannel aChannel);
+                                       dom::AudioChannel aChannel,
+                                       nsPIDOMWindowInner* aWindow);
   static MediaStreamGraph* CreateNonRealtimeInstance(TrackRate aSampleRate);
   // Idempotent
   static void DestroyNonRealtimeInstance(MediaStreamGraph* aGraph);

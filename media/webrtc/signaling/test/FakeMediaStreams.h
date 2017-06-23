@@ -63,7 +63,9 @@ public:
     OFFLINE_THREAD_DRIVER
   };
   static MediaStreamGraph* GetInstance(GraphDriverType aDriverType,
-                                       uint32_t aType) {
+                                       uint32_t aType,
+                                       nsPIDOMWindowInner* aWindow) {
+    // We don't care about the AudioChannel type nor the window here.
     if (gGraph) {
       return gGraph;
     }
