@@ -6,8 +6,6 @@ from marionette_driver.errors import SessionNotCreatedException
 
 from marionette_harness import MarionetteTestCase
 
-import os.path
-
 
 class TestCapabilities(MarionetteTestCase):
 
@@ -58,9 +56,9 @@ class TestCapabilities(MarionetteTestCase):
             if self.caps["browserName"] == "fennec":
                 current_profile = self.marionette.instance.runner.device.app_ctx.remote_profile
             else:
-                current_profile = os.path.normcase(self.marionette.instance.runner.profile.profile)
-            self.assertEqual(os.path.normcase(str(self.caps["moz:profile"])), current_profile)
-            self.assertEqual(os.path.normcase(str(self.marionette.profile)), current_profile)
+                current_profile = self.marionette.instance.runner.profile.profile
+            self.assertEqual(self.caps["moz:profile"], current_profile)
+            self.assertEqual(self.marionette.profile, current_profile)
 
         self.assertIn("moz:accessibilityChecks", self.caps)
         self.assertFalse(self.caps["moz:accessibilityChecks"])
