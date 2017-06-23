@@ -441,7 +441,6 @@ panel[type="arrow"] {
   -moz-binding: url("chrome://global/content/bindings/popup.xml#arrowpanel");
 }
 
-%ifdef MOZ_PHOTON_ANIMATIONS
 %ifdef MOZ_WIDGET_COCOA
 
 /* On Mac, use the properties "-moz-window-transform" and "-moz-window-opacity"
@@ -452,63 +451,6 @@ panel[type="arrow"] {
    lot faster. In fact, Gecko no longer triggers shadow shape recomputations
    for repaints.
    These properties are not implemented on other platforms. */
-panel[type="arrow"]:not([animate="false"]) {
-  -moz-window-opacity: 0;
-  -moz-window-transform: translateY(-70px);
-  transition-property: -moz-window-transform, -moz-window-opacity;
-  transition-duration: 0.18s, 0.18s;
-  transition-timing-function:
-    var(--animation-easing-function), ease-out;
-}
-
-panel[type="arrow"][side="bottom"]:not([animate="false"]) {
-  -moz-window-transform: translateY(70px);
-}
-
-panel[type="arrow"][animate="open"] {
-  -moz-window-opacity: 1.0;
-  transition-duration: 0.20s, 0.10s;
-  -moz-window-transform: none;
-  transition-timing-function:
-    var(--animation-easing-function), ease-in-out;
-}
-
-panel[type="arrow"][animate="cancel"] {
-  -moz-window-transform: none;
-}
-
-%elifndef MOZ_WIDGET_GTK
-
-panel[type="arrow"]:not([animate="false"]) {
-  opacity: 0;
-  transform: translateY(-70px);
-  transition-property: transform, opacity;
-  transition-duration: 0.18s, 0.18s;
-  transition-timing-function:
-    var(--animation-easing-function), ease-out;
-}
-
-panel[type="arrow"][side="bottom"]:not([animate="false"]) {
-  transform: translateY(70px);
-}
-
-panel[type="arrow"][animate="open"] {
-  opacity: 1.0;
-  transition-duration: 0.20s, 0.10s;
-  transform: none;
-  transition-timing-function:
-    var(--animation-easing-function), ease-in-out;
-}
-
-panel[type="arrow"][animate="cancel"] {
-  transform: none;
-}
-
-%endif
-
-%else
-
-%ifdef MOZ_WIDGET_COCOA
 panel[type="arrow"]:not([animate="false"]) {
   -moz-window-transform: scale(.4);
   -moz-window-opacity: 0;
@@ -625,7 +567,6 @@ panel[arrowposition="start_after"]:-moz-locale-dir(rtl) {
   transform-origin: left calc(100% - 20px);
 }
 
-%endif
 %endif
 
 %ifdef XP_MACOSX
