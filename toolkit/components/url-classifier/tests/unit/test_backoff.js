@@ -1,9 +1,12 @@
 // Some unittests (e.g., paste into JS shell)
 var jslib = Cc["@mozilla.org/url-classifier/jslib;1"].
             getService().wrappedJSObject;
-var _Datenow = jslib.Date.now;
+
+var jslibDate = Cu.getGlobalForObject(jslib).Date;
+
+var _Datenow = jslibDate.now;
 function setNow(time) {
-  jslib.Date.now = function() {
+  jslibDate.now = function() {
     return time;
   }
 }
@@ -85,5 +88,5 @@ function run_test() {
   setNow(211);
   do_check_true(rb.canMakeRequest());
 
-  jslib.Date.now = _Datenow;
+  jslibDate.now = _Datenow;
 }
