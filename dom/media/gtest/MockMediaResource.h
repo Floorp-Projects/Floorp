@@ -25,12 +25,6 @@ public:
   {
     return nullptr;
   }
-  bool CanClone() override { return false; }
-  already_AddRefed<MediaResource> CloneData(MediaResourceCallback*)
-    override
-  {
-    return nullptr;
-  }
   void SetReadMode(MediaCacheStream::ReadMode aMode) override {}
   void SetPlaybackRate(uint32_t aBytesPerSecond) override {}
   nsresult ReadAt(int64_t aOffset, char* aBuffer, uint32_t aCount,

@@ -183,7 +183,11 @@ public:
   // Create a new stream of the same type that refers to the same URI
   // with a new channel. Any cached data associated with the original
   // stream should be accessible in the new stream too.
-  virtual already_AddRefed<MediaResource> CloneData(MediaResourceCallback* aCallback) = 0;
+  virtual already_AddRefed<MediaResource> CloneData(
+    MediaResourceCallback* aCallback)
+  {
+    return nullptr;
+  }
 
   // These methods are called off the main thread.
   // The mode is initially MODE_PLAYBACK.

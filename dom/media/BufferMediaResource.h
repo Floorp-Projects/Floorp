@@ -47,12 +47,6 @@ private:
     nsCOMPtr<nsIPrincipal> principal = mPrincipal;
     return principal.forget();
   }
-  bool CanClone() override { return false; }
-  already_AddRefed<MediaResource> CloneData(MediaResourceCallback*) override
-  {
-    return nullptr;
-  }
-
   // These methods are called off the main thread.
   // The mode is initially MODE_PLAYBACK.
   void SetReadMode(MediaCacheStream::ReadMode aMode) override {}
