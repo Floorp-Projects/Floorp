@@ -83,14 +83,6 @@ public:
     return mArray[size_t(aIndex)];
   }
 
-  EnumeratedArray& operator =(EnumeratedArray&& aOther)
-  {
-    for (size_t i = 0; i < kSize; i++) {
-      mArray[i] = Move(aOther.mArray[i]);
-    }
-    return *this;
-  }
-
   typedef typename ArrayType::iterator               iterator;
   typedef typename ArrayType::const_iterator         const_iterator;
   typedef typename ArrayType::reverse_iterator       reverse_iterator;
