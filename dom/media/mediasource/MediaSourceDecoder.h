@@ -38,7 +38,7 @@ public:
   explicit MediaSourceDecoder(MediaDecoderInit& aInit);
 
   MediaDecoderStateMachine* CreateStateMachine() override;
-  nsresult Load();
+  nsresult Load(nsIPrincipal* aPrincipal);
   media::TimeIntervals GetSeekable() override;
   media::TimeIntervals GetBuffered() override;
 
@@ -76,8 +76,6 @@ public:
   bool IsMSE() const override { return true; }
 
   void NotifyInitDataArrived();
-
-  void CreateResource(nsIPrincipal* aPrincipal);
 
 private:
   void DoSetMediaSourceDuration(double aDuration);
