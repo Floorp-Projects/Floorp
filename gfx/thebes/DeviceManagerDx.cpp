@@ -19,6 +19,7 @@
 #include "mozilla/layers/DeviceAttachmentsD3D11.h"
 #include "mozilla/layers/MLGDeviceD3D11.h"
 #include "nsIGfxInfo.h"
+#include "nsString.h"
 #include <d3d11.h>
 #include <ddraw.h>
 
@@ -651,6 +652,16 @@ DisableAdvancedLayers(FeatureStatus aStatus, const nsCString aMessage, const nsC
   FeatureFailure info(aStatus, aMessage, aFailureId);
   if (GPUParent* gpu = GPUParent::GetSingleton()) {
     gpu->SendUpdateFeature(Feature::ADVANCED_LAYERS, info);
+  }
+
+  if (aFailureId.Length()) {
+    nsString failureId = NS_ConvertUTF8toUTF16(aFailureId.get());
+    Telemetry::ScalarAdd(Telemetry::ScalarID::GFX_ADVANCED_LAYERS_FAILURE_ID, failureId, 1);
+  }
+
+  // Notify TelemetryEnvironment.jsm.
+  if (RefPtr<nsIObserverService> obs = mozilla::services::GetObserverService()) {
+    obs->NotifyObservers(nullptr, "gfx-features-ready", nullptr);
   }
 }
 
