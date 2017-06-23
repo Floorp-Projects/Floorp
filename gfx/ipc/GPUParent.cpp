@@ -168,6 +168,7 @@ GPUParent::RecvInit(nsTArray<GfxPrefSetting>&& prefs,
   gfxConfig::Inherit(Feature::HW_COMPOSITING, devicePrefs.hwCompositing());
   gfxConfig::Inherit(Feature::D3D11_COMPOSITING, devicePrefs.d3d11Compositing());
   gfxConfig::Inherit(Feature::OPENGL_COMPOSITING, devicePrefs.oglCompositing());
+  gfxConfig::Inherit(Feature::ADVANCED_LAYERS, devicePrefs.advancedLayers());
   gfxConfig::Inherit(Feature::DIRECT2D, devicePrefs.useD2D1());
 
   for (const LayerTreeIdMapping& map : aMappings) {
@@ -300,6 +301,7 @@ GPUParent::RecvGetDeviceStatus(GPUDeviceData* aOut)
 {
   CopyFeatureChange(Feature::D3D11_COMPOSITING, &aOut->d3d11Compositing());
   CopyFeatureChange(Feature::OPENGL_COMPOSITING, &aOut->oglCompositing());
+  CopyFeatureChange(Feature::ADVANCED_LAYERS, &aOut->advancedLayers());
 
 #if defined(XP_WIN)
   if (DeviceManagerDx* dm = DeviceManagerDx::Get()) {
