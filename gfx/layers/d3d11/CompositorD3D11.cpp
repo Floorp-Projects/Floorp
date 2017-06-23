@@ -47,7 +47,7 @@ using namespace gfx;
 
 namespace layers {
 
-static bool CanUsePartialPresents(ID3D11Device* aDevice);
+bool CanUsePartialPresents(ID3D11Device* aDevice);
 
 const FLOAT sBlendFactor[] = { 0, 0, 0, 0 };
 
@@ -255,7 +255,7 @@ CompositorD3D11::Initialize(nsCString* const out_failureReason)
   return true;
 }
 
-static bool
+bool
 CanUsePartialPresents(ID3D11Device* aDevice)
 {
   if (gfxPrefs::PartialPresent() > 0) {
