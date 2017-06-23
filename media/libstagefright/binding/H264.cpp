@@ -586,7 +586,7 @@ H264::vui_parameters(BitReader& aBr, SPSData& aDest)
 H264::DecodeSPSFromExtraData(const mozilla::MediaByteBuffer* aExtraData,
                              SPSData& aDest)
 {
-  if (!HasSPS(aExtraData)) {
+  if (!AnnexB::HasSPS(aExtraData)) {
     return false;
   }
   ByteReader reader(aExtraData);
@@ -702,117 +702,6 @@ H264::GetFrameType(const mozilla::MediaRawData* aSample)
   }
 
   return FrameType::OTHER;
-}
-
-/* static */ already_AddRefed<mozilla::MediaByteBuffer>
-H264::ExtractExtraData(const mozilla::MediaRawData* aSample)
-{
-  MOZ_ASSERT(AnnexB::IsAVCC(aSample));
-
-  RefPtr<mozilla::MediaByteBuffer> extradata = new mozilla::MediaByteBuffer;
-
-  // SPS content
-  nsTArray<uint8_t> sps;
-  ByteWriter spsw(sps);
-  int numSps = 0;
-  // PPS content
-  nsTArray<uint8_t> pps;
-  ByteWriter ppsw(pps);
-  int numPps = 0;
-
-  int nalLenSize = ((*aSample->mExtraData)[4] & 3) + 1;
-
-  size_t sampleSize = aSample->Size();
-  if (aSample->mCrypto.mValid) {
-    // The content is encrypted, we can only parse the non-encrypted data.
-    MOZ_ASSERT(aSample->mCrypto.mPlainSizes.Length() > 0);
-    if (aSample->mCrypto.mPlainSizes.Length() == 0 ||
-        aSample->mCrypto.mPlainSizes[0] > sampleSize) {
-      // This is invalid content.
-      return nullptr;
-    }
-    sampleSize = aSample->mCrypto.mPlainSizes[0];
-  }
-
-  ByteReader reader(aSample->Data(), sampleSize);
-
-  // Find SPS and PPS NALUs in AVCC data
-  while (reader.Remaining() > nalLenSize) {
-    uint32_t nalLen;
-    switch (nalLenSize) {
-      case 1: nalLen = reader.ReadU8();  break;
-      case 2: nalLen = reader.ReadU16(); break;
-      case 3: nalLen = reader.ReadU24(); break;
-      case 4: nalLen = reader.ReadU32(); break;
-    }
-    uint8_t nalType = reader.PeekU8() & 0x1f;
-    const uint8_t* p = reader.Read(nalLen);
-    if (!p) {
-      return extradata.forget();
-    }
-
-    if (nalType == 0x7) { /* SPS */
-      numSps++;
-      if (!spsw.WriteU16(nalLen)
-          || !spsw.Write(p, nalLen)) {
-        return extradata.forget();
-      }
-    } else if (nalType == 0x8) { /* PPS */
-      numPps++;
-      if (!ppsw.WriteU16(nalLen)
-          || !ppsw.Write(p, nalLen)) {
-        return extradata.forget();
-      }
-    }
-  }
-
-  if (numSps && sps.Length() > 5) {
-    extradata->AppendElement(1);        // version
-    extradata->AppendElement(sps[3]);   // profile
-    extradata->AppendElement(sps[4]);   // profile compat
-    extradata->AppendElement(sps[5]);   // level
-    extradata->AppendElement(0xfc | 3); // nal size - 1
-    extradata->AppendElement(0xe0 | numSps);
-    extradata->AppendElements(sps.Elements(), sps.Length());
-    extradata->AppendElement(numPps);
-    if (numPps) {
-      extradata->AppendElements(pps.Elements(), pps.Length());
-    }
-  }
-
-  return extradata.forget();
-}
-
-/* static */ bool
-H264::HasSPS(const mozilla::MediaRawData* aSample)
-{
-  return HasSPS(aSample->mExtraData);
-}
-
-/* static */ bool
-H264::HasSPS(const mozilla::MediaByteBuffer* aExtraData)
-{
-  if (!aExtraData) {
-    return false;
-  }
-
-  ByteReader reader(aExtraData);
-  const uint8_t* ptr = reader.Read(5);
-  if (!ptr || !reader.CanRead8()) {
-    return false;
-  }
-  uint8_t numSps = reader.ReadU8() & 0x1f;
-
-  return numSps > 0;
-}
-
-
-/* static */ bool
-H264::CompareExtraData(const mozilla::MediaByteBuffer* aExtraData1,
-                       const mozilla::MediaByteBuffer* aExtraData2)
-{
-  // Very crude comparison.
-  return aExtraData1 == aExtraData2 || *aExtraData1 == *aExtraData2;
 }
 
 #undef READUE
