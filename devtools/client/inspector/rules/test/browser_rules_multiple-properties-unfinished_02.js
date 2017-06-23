@@ -15,7 +15,7 @@ add_task(function* () {
 
   // Turn off throttling, which can cause intermittents. Throttling is used by
   // the TextPropertyEditor.
-  view.debounce = () => {};
+  view.throttle = () => {};
 
   yield selectNode("div", inspector);
 

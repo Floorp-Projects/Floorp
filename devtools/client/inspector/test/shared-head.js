@@ -78,9 +78,9 @@ var openInspectorSidebarTab = Task.async(function* (id) {
  */
 function openRuleView() {
   return openInspectorSidebarTab("ruleview").then(data => {
-    // Replace the view to use a custom debounce function that can be triggered manually
+    // Replace the view to use a custom throttle function that can be triggered manually
     // through an additional ".flush()" property.
-    data.inspector.getPanel("ruleview").view.debounce = manualDebounce();
+    data.inspector.getPanel("ruleview").view.throttle = manualThrottle();
 
     return {
       toolbox: data.toolbox,
@@ -199,16 +199,16 @@ var selectNode = Task.async(function* (selector, inspector, reason = "test") {
 
 /**
  * Create a throttling function that can be manually "flushed". This is to replace the
- * use of the `debounce` function from `devtools/client/inspector/shared/utils.js`, which
+ * use of the `throttle` function from `devtools/client/inspector/shared/utils.js`, which
  * has a setTimeout that can cause intermittents.
- * @return {Function} This function has the same function signature as debounce, but
+ * @return {Function} This function has the same function signature as throttle, but
  *                    the property `.flush()` has been added for flushing out any
- *                    debounced calls.
+ *                    throttled calls.
  */
-function manualDebounce() {
+function manualThrottle() {
   let calls = [];
 
-  function debounce(func, wait, scope) {
+  function throttle(func, wait, scope) {
     return function () {
       let existingCall = calls.find(call => call.func === func);
       if (existingCall) {
@@ -219,12 +219,12 @@ function manualDebounce() {
     };
   }
 
-  debounce.flush = function () {
+  throttle.flush = function () {
     calls.forEach(({func, scope, args}) => func.apply(scope, args));
     calls = [];
   };
 
-  return debounce;
+  return throttle;
 }
 
 /**

@@ -8,8 +8,6 @@ const Services = require("Services");
 const { Task } = require("devtools/shared/task");
 
 const SwatchColorPickerTooltip = require("devtools/client/shared/widgets/tooltip/SwatchColorPickerTooltip");
-const { throttle } = require("devtools/client/inspector/shared/utils");
-const { compareFragmentsGeometry } = require("devtools/client/inspector/grids/utils/utils");
 
 const {
   updateGridColor,
@@ -55,7 +53,7 @@ function GridInspector(inspector, window) {
 
   this.onGridLayoutChange = this.onGridLayoutChange.bind(this);
   this.onHighlighterChange = this.onHighlighterChange.bind(this);
-  this.onReflow = throttle(this.onReflow, 500, this);
+  this.onReflow = this.onReflow.bind(this);
   this.onSetGridOverlayColor = this.onSetGridOverlayColor.bind(this);
   this.onShowGridAreaHighlight = this.onShowGridAreaHighlight.bind(this);
   this.onShowGridCellHighlight = this.onShowGridCellHighlight.bind(this);
@@ -213,7 +211,7 @@ GridInspector.prototype = {
    * Returns true if the layout panel is visible, and false otherwise.
    */
   isPanelVisible() {
-    return this.inspector && this.inspector.toolbox && this.inspector.sidebar &&
+    return this.inspector.toolbox && this.inspector.sidebar &&
            this.inspector.toolbox.currentToolId === "inspector" &&
            this.inspector.sidebar.getCurrentTabID() === "layoutview";
   },
@@ -280,19 +278,13 @@ GridInspector.prototype = {
     for (let i = 0; i < gridFronts.length; i++) {
       let grid = gridFronts[i];
 
-      let nodeFront = grid.containerNodeFront;
-
-      // If the GridFront didn't yet have access to the NodeFront for its container, then
-      // get it from the walker. This happens when the walker hasn't yet seen this
-      // particular DOM Node in the tree yet, or when we are connected to an older server.
-      if (!nodeFront) {
-        try {
-          nodeFront = yield this.walker.getNodeFromActor(grid.actorID, ["containerEl"]);
-        } catch (e) {
-          // This call might fail if called asynchrously after the toolbox is finished
-          // closing.
-          return;
-        }
+      let nodeFront;
+      try {
+        nodeFront = yield this.walker.getNodeFromActor(grid.actorID, ["containerEl"]);
+      } catch (e) {
+        // This call might fail if called asynchrously after the toolbox is finished
+        // closing.
+        return;
       }
 
       let fallbackColor = GRID_COLORS[i % GRID_COLORS.length];
@@ -353,80 +345,14 @@ GridInspector.prototype = {
   },
 
   /**
-   * Given a list of new grid fronts, and if we have a currently highlighted grid, check
-   * if its fragments have changed.
-   *
-   * @param  {Array} newGridFronts
-   *         A list of GridFront objects.
-   * @return {Boolean}
-   */
-  haveCurrentFragmentsChanged(newGridFronts) {
-    const currentNode = this.highlighters.gridHighlighterShown;
-    if (!currentNode) {
-      return false;
-    }
-
-    const newGridFront = newGridFronts.find(g => g.containerNodeFront === currentNode);
-    if (!newGridFront) {
-      return false;
-    }
-
-    const { grids } = this.store.getState();
-    const oldFragments = grids.find(g => g.nodeFront === currentNode).gridFragments;
-    const newFragments = newGridFront.gridFragments;
-
-    return !compareFragmentsGeometry(oldFragments, newFragments);
-  },
-
-  /**
    * Handler for the "reflow" event fired by the inspector's reflow tracker. On reflows,
-   * update the grid panel content, because the shape or number of grids on the page may
-   * have changed.
-   *
-   * Note that there may be frequent reflows on the page and that not all of them actually
-   * cause the grids to change. So, we want to limit how many times we update the grid
-   * panel to only reflows that actually either change the list of grids, or those that
-   * change the current outlined grid.
-   * To achieve this, this function compares the list of grid containers from before and
-   * after the reflow, as well as the grid fragment data on the currently highlighted
-   * grid.
+   * update the grid panel content.
    */
-  onReflow: Task.async(function* () {
-    if (!this.isPanelVisible()) {
-      return;
+  onReflow() {
+    if (this.isPanelVisible()) {
+      this.updateGridPanel();
     }
-
-    // The list of grids currently displayed.
-    const { grids } = this.store.getState();
-
-    // The new list of grids from the server.
-    let newGridFronts;
-    try {
-      newGridFronts = yield this.layoutInspector.getAllGrids(this.walker.rootNode);
-    } catch (e) {
-      // This call might fail if called asynchrously after the toolbox is finished
-      // closing.
-      return;
-    }
-
-    // Compare the list of DOM nodes which define these grids.
-    const oldNodeFronts = grids.map(grid => grid.nodeFront.actorID);
-    const newNodeFronts = newGridFronts.filter(grid => grid.containerNodeFront)
-                                       .map(grid => grid.containerNodeFront.actorID);
-    if (oldNodeFronts.length === newNodeFronts.length &&
-        oldNodeFronts.sort().join(",") == newNodeFronts.sort().join(",")) {
-      // Same list of containers, but let's check if the geometry of the current grid has
-      // changed, if it hasn't we can safely abort.
-      if (!this.highlighters.gridHighlighterShown ||
-          (this.highlighters.gridHighlighterShown &&
-           !this.haveCurrentFragmentsChanged(newGridFronts))) {
-        return;
-      }
-    }
-
-    // Either the list of containers or the current fragments have changed, do update.
-    this.updateGridPanel(newGridFronts);
-  }),
+  },
 
   /**
    * Handler for a change in the grid overlay color picker for a grid container.

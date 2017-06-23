@@ -61,7 +61,7 @@ add_task(function* () {
   info("Entering a value and bluring the field to expect a rule change");
   onRuleViewChanged = view.once("ruleview-changed");
   editor.input.value = "100%";
-  view.debounce.flush();
+  view.throttle.flush();
   yield onRuleViewChanged;
 
   onRuleViewChanged = view.once("ruleview-changed");
