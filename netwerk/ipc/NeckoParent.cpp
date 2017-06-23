@@ -8,8 +8,6 @@
 #include "necko-config.h"
 #include "nsHttp.h"
 #include "mozilla/BasePrincipal.h"
-#include "mozilla/ipc/IPCStreamUtils.h"
-#include "mozilla/net/ExtensionProtocolHandler.h"
 #include "mozilla/net/NeckoParent.h"
 #include "mozilla/net/HttpChannelParent.h"
 #include "mozilla/net/CookieServiceParent.h"
@@ -40,7 +38,6 @@
 #include "mozilla/dom/network/UDPSocketParent.h"
 #include "mozilla/dom/workers/ServiceWorkerManager.h"
 #include "mozilla/LoadContext.h"
-#include "mozilla/MozPromise.h"
 #include "nsPrintfCString.h"
 #include "nsHTMLDNSPrefetch.h"
 #include "nsEscape.h"
@@ -65,10 +62,8 @@ using mozilla::dom::TCPServerSocketParent;
 using mozilla::net::PUDPSocketParent;
 using mozilla::dom::UDPSocketParent;
 using mozilla::dom::workers::ServiceWorkerManager;
-using mozilla::ipc::AutoIPCStream;
 using mozilla::ipc::OptionalPrincipalInfo;
 using mozilla::ipc::PrincipalInfo;
-using mozilla::ipc::LoadInfoArgsToLoadInfo;
 using IPC::SerializedLoadContext;
 
 namespace mozilla {
@@ -955,102 +950,6 @@ NeckoParent::RecvNotifyCurrentTopLevelOuterContentWindowId(const uint64_t& aWind
 {
   if (NS_FAILED(NS_NotifyCurrentTopLevelOuterContentWindowId(aWindowId))) {
     NS_WARNING("NS_NotifyCurrentTopLevelOuterContentWindowId failed!");
-  }
-
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult
-NeckoParent::RecvGetExtensionStream(const URIParams& aURI,
-                                    const LoadInfoArgs& aLoadInfo,
-                                    GetExtensionStreamResolver&& aResolve)
-{
-  nsCOMPtr<nsIURI> deserializedURI = DeserializeURI(aURI);
-  if (!deserializedURI) {
-    return IPC_FAIL_NO_REASON(this);
-  }
-
-  nsCOMPtr<nsILoadInfo> deserializedLoadInfo;
-  nsresult rv;
-  rv = LoadInfoArgsToLoadInfo(aLoadInfo, getter_AddRefs(deserializedLoadInfo));
-  if (NS_FAILED(rv)) {
-    return IPC_FAIL_NO_REASON(this);
-  }
-
-  RefPtr<ExtensionProtocolHandler> ph(ExtensionProtocolHandler::GetSingleton());
-  MOZ_ASSERT(ph);
-
-  // Ask the ExtensionProtocolHandler to give us a new input stream for
-  // this URI. The request comes from an ExtensionProtocolHandler in the
-  // child process, but is not guaranteed to be a valid moz-extension URI,
-  // and not guaranteed to represent a resource that the child should be
-  // allowed to access. The ExtensionProtocolHandler is responsible for
-  // validating the request. Specifically, only URI's for local files that
-  // an extension is allowed to access via moz-extension URI's should be
-  // accepted.
-  AutoIPCStream autoStream;
-  nsCOMPtr<nsIInputStream> inputStream;
-  bool terminateSender = true;
-  auto inputStreamOrReason = ph->NewStream(deserializedURI,
-                                           deserializedLoadInfo,
-                                           &terminateSender);
-  if (inputStreamOrReason.isOk()) {
-    inputStream = inputStreamOrReason.unwrap();
-    ContentParent* contentParent = static_cast<ContentParent*>(Manager());
-    Unused << autoStream.Serialize(inputStream, contentParent);
-  }
-
-  // If NewStream failed, we send back an invalid stream to the child so
-  // it can handle the error. MozPromise rejection is reserved for channel
-  // errors/disconnects.
-  aResolve(autoStream.TakeOptionalValue());
-
-  if (terminateSender) {
-    return IPC_FAIL_NO_REASON(this);
-  } else {
-    return IPC_OK();
-  }
-}
-
-mozilla::ipc::IPCResult
-NeckoParent::RecvGetExtensionFD(const URIParams& aURI,
-                                const OptionalLoadInfoArgs& aLoadInfo,
-                                GetExtensionFDResolver&& aResolve)
-{
-  nsCOMPtr<nsIURI> deserializedURI = DeserializeURI(aURI);
-  if (!deserializedURI) {
-    return IPC_FAIL_NO_REASON(this);
-  }
-
-  nsCOMPtr<nsILoadInfo> deserializedLoadInfo;
-  nsresult rv;
-  rv = LoadInfoArgsToLoadInfo(aLoadInfo, getter_AddRefs(deserializedLoadInfo));
-  if (NS_FAILED(rv)) {
-    return IPC_FAIL_NO_REASON(this);
-  }
-
-  RefPtr<ExtensionProtocolHandler> ph(ExtensionProtocolHandler::GetSingleton());
-  MOZ_ASSERT(ph);
-
-  // Ask the ExtensionProtocolHandler to give us a new input stream for
-  // this URI. The request comes from an ExtensionProtocolHandler in the
-  // child process, but is not guaranteed to be a valid moz-extension URI,
-  // and not guaranteed to represent a resource that the child should be
-  // allowed to access. The ExtensionProtocolHandler is responsible for
-  // validating the request. Specifically, only URI's for local files that
-  // an extension is allowed to access via moz-extension URI's should be
-  // accepted.
-  bool terminateSender = true;
-  auto result = ph->NewFD(deserializedURI, deserializedLoadInfo,
-                          &terminateSender, aResolve);
-
-  if (result.isErr() && terminateSender) {
-    return IPC_FAIL_NO_REASON(this);
-  }
-
-  if (result.isErr()) {
-    FileDescriptor invalidFD;
-    aResolve(invalidFD);
   }
 
   return IPC_OK();

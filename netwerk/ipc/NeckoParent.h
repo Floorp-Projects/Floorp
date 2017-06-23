@@ -236,17 +236,6 @@ protected:
   virtual mozilla::ipc::IPCResult RecvRemoveRequestContext(const uint64_t& rcid) override;
 
   virtual mozilla::ipc::IPCResult RecvNotifyCurrentTopLevelOuterContentWindowId(const uint64_t& aWindowId) override;
-
-  /* WebExtensions */
-  virtual mozilla::ipc::IPCResult
-    RecvGetExtensionStream(const URIParams& aURI,
-                           const LoadInfoArgs& aLoadInfo,
-                           GetExtensionStreamResolver&& aResolve) override;
-
-  virtual mozilla::ipc::IPCResult
-    RecvGetExtensionFD(const URIParams& aURI,
-                       const OptionalLoadInfoArgs& aLoadInfo,
-                       GetExtensionFDResolver&& aResolve) override;
 };
 
 } // namespace net

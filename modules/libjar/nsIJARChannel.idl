@@ -21,11 +21,8 @@ interface nsIJARChannel : nsIChannel
 
     /**
      * Returns the JAR file.  May be null if the jar is remote.
-     * Setting the JAR file is optional and overrides the JAR
-     * file used for local file JARs. Setting the JAR file after
-     * the channel has been opened is not permitted.
      */
-    attribute nsIFile jarFile;
+    readonly attribute nsIFile jarFile;
 
     /**
      * Returns the zip entry if the file is synchronously accessible.

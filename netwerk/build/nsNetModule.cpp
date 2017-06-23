@@ -310,8 +310,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(NamedPipeService, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsResProtocolHandler, Init)
 
 namespace mozilla {
-NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(ExtensionProtocolHandler,
-    ExtensionProtocolHandler::GetSingleton)
+NS_GENERIC_FACTORY_CONSTRUCTOR(ExtensionProtocolHandler)
 NS_GENERIC_FACTORY_CONSTRUCTOR(SubstitutingURL)
 } // namespace mozilla
 #endif

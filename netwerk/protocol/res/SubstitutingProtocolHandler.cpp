@@ -297,7 +297,6 @@ SubstitutingProtocolHandler::SetSubstitution(const nsACString& root, nsIURI *bas
 {
   if (!baseURI) {
     mSubstitutions.Remove(root);
-    NotifyObservers(root, baseURI);
     return SendSubstitution(root, baseURI);
   }
 
@@ -313,7 +312,6 @@ SubstitutingProtocolHandler::SetSubstitution(const nsACString& root, nsIURI *bas
     }
 
     mSubstitutions.Put(root, baseURI);
-    NotifyObservers(root, baseURI);
     return SendSubstitution(root, baseURI);
   }
 
@@ -327,7 +325,6 @@ SubstitutingProtocolHandler::SetSubstitution(const nsACString& root, nsIURI *bas
   NS_ENSURE_SUCCESS(rv, rv);
 
   mSubstitutions.Put(root, newBaseURI);
-  NotifyObservers(root, baseURI);
   return SendSubstitution(root, newBaseURI);
 }
 
@@ -409,39 +406,6 @@ SubstitutingProtocolHandler::ResolveURI(nsIURI *uri, nsACString &result)
     MOZ_LOG(gResLog, LogLevel::Debug, ("%s\n -> %s\n", spec.get(), PromiseFlatCString(result).get()));
   }
   return rv;
-}
-
-nsresult
-SubstitutingProtocolHandler::AddObserver(nsISubstitutionObserver* aObserver)
-{
-  NS_ENSURE_ARG(aObserver);
-  if (mObservers.Contains(aObserver)) {
-    return NS_ERROR_DUPLICATE_HANDLE;
-  }
-
-  mObservers.AppendElement(aObserver);
-  return NS_OK;
-}
-
-nsresult
-SubstitutingProtocolHandler::RemoveObserver(nsISubstitutionObserver* aObserver)
-{
-  NS_ENSURE_ARG(aObserver);
-  if (!mObservers.Contains(aObserver)) {
-    return NS_ERROR_INVALID_ARG;
-  }
-
-  mObservers.RemoveElement(aObserver);
-  return NS_OK;
-}
-
-void
-SubstitutingProtocolHandler::NotifyObservers(const nsACString& aRoot,
-                                             nsIURI* aBaseURI)
-{
-  for (size_t i = 0; i < mObservers.Length(); ++i) {
-    mObservers[i]->OnSetSubstitution(aRoot, aBaseURI);
-  }
 }
 
 } // namespace net
