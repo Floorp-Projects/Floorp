@@ -64,7 +64,7 @@ WebGLContext::ValidateBlendEquationEnum(GLenum mode, const char* info)
 }
 
 bool
-WebGLContext::ValidateBlendFuncDstEnum(GLenum factor, const char* info)
+WebGLContext::ValidateBlendFuncEnum(GLenum factor, const char *funcName, const char* varName)
 {
     switch (factor) {
     case LOCAL_GL_ZERO:
@@ -81,21 +81,14 @@ WebGLContext::ValidateBlendFuncDstEnum(GLenum factor, const char* info)
     case LOCAL_GL_ONE_MINUS_CONSTANT_COLOR:
     case LOCAL_GL_CONSTANT_ALPHA:
     case LOCAL_GL_ONE_MINUS_CONSTANT_ALPHA:
+    case LOCAL_GL_SRC_ALPHA_SATURATE:
         return true;
 
     default:
-        ErrorInvalidEnumInfo(info, factor);
+        const nsPrintfCString err("%s: %s", funcName, varName);
+        ErrorInvalidEnumInfo(err.get(), factor);
         return false;
     }
-}
-
-bool
-WebGLContext::ValidateBlendFuncSrcEnum(GLenum factor, const char* info)
-{
-    if (factor == LOCAL_GL_SRC_ALPHA_SATURATE)
-        return true;
-
-    return ValidateBlendFuncDstEnum(factor, info);
 }
 
 bool
