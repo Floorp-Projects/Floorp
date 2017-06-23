@@ -254,7 +254,6 @@ nsRange::nsRange(nsINode* aNode)
   , mIsGenerated(false)
   , mStartOffsetWasIncremented(false)
   , mEndOffsetWasIncremented(false)
-  , mEnableGravitationOnElementRemoval(true)
   , mCalledByJS(false)
 #ifdef DEBUG
   , mAssertNextInsertOrAppendIndex(-1)
@@ -702,11 +701,6 @@ nsRange::ContentRemoved(nsIDocument* aDocument,
     gravitateEnd = gravitateStart;
   } else {
     gravitateEnd = nsContentUtils::ContentIsDescendantOf(mEndParent, aChild);
-  }
-
-  if (!mEnableGravitationOnElementRemoval) {
-    // Do not gravitate.
-    return;
   }
 
   if (gravitateStart || gravitateEnd) {
