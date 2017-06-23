@@ -31,6 +31,22 @@ interface nsIFile;
 interface nsIPrefService : nsISupports
 {
   /**
+   * Called to read in the preferences specified in a user preference file.
+   *
+   * @param aFile The file to be read.
+   *
+   * @note
+   * If nullptr is passed in for the aFile parameter the default preferences
+   * file(s) [prefs.js, user.js] will be read and processed.
+   *
+   * @throws Error File failed to read or contained invalid data.
+   *
+   * @see savePrefFile
+   * @see nsIFile
+   */
+  void readUserPrefs(in nsIFile aFile);
+
+  /**
    * Called to completely flush and re-initialize the preferences system.
    *
    * @throws Error The preference service failed to restart correctly.
@@ -109,17 +125,6 @@ interface nsIPrefService : nsISupports
    * that have not been written to disk
    */
   readonly attribute boolean dirty;
-
-  /**
-   * Read in the preferences specified in a user preference file. This method
-   * does not clear user preferences that were already set.
-   *
-   * @param aFile The file to be read.
-   *
-   * @throws Error File failed to read or contained invalid data.
-   * @note This method is intended for internal unit testing only!
-   */
-  void readUserPrefsFromFile(in nsIFile aFile);
 };
 
 %{C++

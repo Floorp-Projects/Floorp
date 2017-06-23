@@ -348,7 +348,7 @@ function run_test() {
 }
 
 function end_test() {
-  gUTM.observe(null, "profile-before-change", "");
+  gUTM.observe(null, "xpcom-shutdown", "");
   do_test_finished();
 }
 
