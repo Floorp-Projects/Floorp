@@ -1974,7 +1974,13 @@ var Impl = {
       if (!gLastMemoryPoll
           || (TELEMETRY_INTERVAL <= now - gLastMemoryPoll)) {
         gLastMemoryPoll = now;
-        this.gatherMemory();
+
+        this._log.trace("Dispatching idle gatherMemory task");
+        Services.tm.mainThread.idleDispatch(() => {
+          this._log.trace("Running idle gatherMemory task");
+          this.gatherMemory();
+          return true;
+        });
       }
       break;
     case "xul-window-visible":
