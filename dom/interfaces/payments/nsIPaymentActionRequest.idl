@@ -7,6 +7,7 @@
 #include "nsIVariant.idl"
 #include "nsIPaymentRequest.idl"
 #include "nsIPaymentActionResponse.idl"
+#include "nsIPaymentAddress.idl"
 
 interface nsIArray;
 
@@ -14,6 +15,8 @@ interface nsIArray;
 interface nsIPaymentActionCallback : nsISupports
 {
   void respondPayment(in nsIPaymentActionResponse aResponse);
+  void changeShippingAddress(in AString aRequestId, in nsIPaymentAddress aAddress);
+  void changeShippingOption(in AString aRequestId, in AString aOption);
 };
 
 [builtinclass, uuid(7ddbe8be-beac-4952-96f6-619981dff7a6)]
@@ -25,6 +28,7 @@ interface nsIPaymentActionRequest : nsISupports
   const uint32_t SHOW_ACTION = 3;
   const uint32_t ABORT_ACTION = 4;
   const uint32_t COMPLETE_ACTION = 5;
+  const uint32_t UPDATE_ACTION = 6;
 
   /*
    *  The payment request identifier.
@@ -99,6 +103,21 @@ interface nsIPaymentCompleteActionRequest : nsIPaymentActionRequest
                    in AString aCompleteStatus);
 };
 
+[builtinclass, uuid(21f631e8-c047-4fd8-b3c6-68e26c62639a)]
+interface nsIPaymentUpdateActionRequest : nsIPaymentActionRequest
+{
+  /*
+   *  The details information for updating the specified payment request.
+   */
+  readonly attribute nsIPaymentDetails details;
+
+  /*
+   *  Initialize function for this request.
+   */
+  void initRequest(in AString aRequestId,
+                   in nsIPaymentActionCallback aCallback,
+                   in nsIPaymentDetails aDetails);
+};
 
 %{C++
 #define NS_PAYMENT_ACTION_REQUEST_CID \
@@ -116,4 +135,8 @@ interface nsIPaymentCompleteActionRequest : nsIPaymentActionRequest
 #define NS_PAYMENT_COMPLETE_ACTION_REQUEST_CONTRACT_ID \
   "@mozilla.org/dom/payments/payment-complete-action-request;1"
 
+#define NS_PAYMENT_UPDATE_ACTION_REQUEST_CID \
+  { 0x21f631e8, 0xc047, 0x4fd8, { 0xb3, 0xc6, 0x68, 0xe2, 0x6c, 0x62, 0x63, 0x9a } }
+#define NS_PAYMENT_UPDATE_ACTION_REQUEST_CONTRACT_ID \
+  "@mozilla.org/dom/payments/payment-update-action-request;1"
 %}

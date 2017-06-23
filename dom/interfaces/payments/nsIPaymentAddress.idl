@@ -1,0 +1,43 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIArray;
+
+[builtinclass, scriptable, uuid(49a02241-7e48-477a-9345-9f246925dcb3)]
+interface nsIPaymentAddress : nsISupports
+{
+  readonly attribute AString country;
+  readonly attribute nsIArray addressLine;
+  readonly attribute AString region;
+  readonly attribute AString city;
+  readonly attribute AString dependentLocality;
+  readonly attribute AString postalCode;
+  readonly attribute AString sortingCode;
+  readonly attribute AString languageCode;
+  readonly attribute AString organization;
+  readonly attribute AString recipient;
+  readonly attribute AString phone;
+
+  void init(in AString aCountry,
+            in nsIArray aAddressLine,
+            in AString aRegion,
+            in AString aCity,
+            in AString aDependentLocality,
+            in AString aPostalCode,
+            in AString aSortingCode,
+            in AString aLanguageCode,
+            in AString aOrganization,
+            in AString aRecipient,
+            in AString aPhone);
+};
+
+%{C++
+#define NS_PAYMENT_ADDRESS_CID \
+  { 0x49a02241, 0x7e48, 0x477a, { 0x93, 0x45, 0x9f, 0x24, 0x69, 0x25, 0xdc, 0xb3 } }
+#define NS_PAYMENT_ADDRESS_CONTRACT_ID \
+  "@mozilla.org/dom/payments/payment-address;1"
+%}

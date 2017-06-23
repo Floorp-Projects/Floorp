@@ -14,6 +14,16 @@ namespace mozilla {
 namespace dom {
 
 nsresult
+SerializeFromJSObject(JSContext* aCx,
+                      JS::HandleObject aObject,
+                      nsAString& aSerializedObject);
+
+nsresult
+DeserializeToJSObject(const nsAString& aSerializedObject,
+                      JSContext* aCx,
+                      JS::MutableHandleObject aObject);
+
+nsresult
 ConvertStringstoISupportsStrings(const nsTArray<nsString>& aStrings,
                                  nsIArray** aIStrings);
 
