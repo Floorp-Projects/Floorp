@@ -396,10 +396,6 @@ struct SPSData
   */
   uint8_t chroma_sample_loc_type_top_field;
   uint8_t chroma_sample_loc_type_bottom_field;
-  bool timing_info_present_flag;
-  uint32_t num_units_in_tick;
-  uint32_t time_scale;
-  bool fixed_frame_rate_flag;
 
   bool scaling_matrix_present;
   uint8_t scaling_matrix4x4[6][16];
