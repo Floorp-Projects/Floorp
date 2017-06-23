@@ -164,6 +164,7 @@ class AutoSetHandlingSegFault
 #  define EPC_sig(p) ((p)->uc_mcontext.pc)
 #  define RFP_sig(p) ((p)->uc_mcontext.regs[29])
 #  define RLR_sig(p) ((p)->uc_mcontext.regs[30])
+#  define R31_sig(p) ((p)->uc_mcontext.regs[31])
 # endif
 # if defined(__linux__) && defined(__mips__)
 #  define EPC_sig(p) ((p)->uc_mcontext.pc)
@@ -402,7 +403,7 @@ struct macos_arm_context {
 #elif defined(__aarch64__)
 # define PC_sig(p) EPC_sig(p)
 # define FP_sig(p) RFP_sig(p)
-# define SP_sig(p) RSP_sig(p)
+# define SP_sig(p) R31_sig(p)
 # define LR_sig(p) RLR_sig(p)
 #elif defined(__mips__)
 # define PC_sig(p) EPC_sig(p)
