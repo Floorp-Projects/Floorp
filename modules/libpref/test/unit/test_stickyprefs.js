@@ -18,7 +18,7 @@ do_register_cleanup(saveAndReload);
 function resetAndLoad(filenames) {
   ps.resetPrefs();
   for (let filename of filenames) {
-    ps.readUserPrefsFromFile(do_get_file(filename));
+    ps.readUserPrefs(do_get_file(filename));
   }
 }
 
@@ -33,12 +33,7 @@ function saveAndReload() {
 
   // Now reset the pref service and re-read what we saved.
   ps.resetPrefs();
-
-  // Hack alert: on Windows nsLocalFile caches the size of savePrefFile from
-  // the .create() call above as 0. We call .exists() to reset the cache.
-  file.exists();
-
-  ps.readUserPrefsFromFile(file);
+  ps.readUserPrefs(file);
 }
 
 function run_test() {

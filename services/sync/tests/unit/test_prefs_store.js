@@ -25,7 +25,15 @@ function makePersona(id) {
 function run_test() {
   _("Test fixtures.");
   // read our custom prefs file before doing anything.
-  Services.prefs.readUserPrefsFromFile(do_get_file("prefs_test_prefs_store.js"));
+  Services.prefs.readUserPrefs(do_get_file("prefs_test_prefs_store.js"));
+  // Now we've read from this file, any writes the pref service makes will be
+  // back to this prefs_test_prefs_store.js directly in the obj dir. This
+  // upsets things in confusing ways :) We avoid this by explicitly telling the
+  // pref service to use a file in our profile dir.
+  let prefFile = do_get_profile();
+  prefFile.append("prefs.js");
+  Services.prefs.savePrefFile(prefFile);
+  Services.prefs.readUserPrefs(prefFile);
 
   let store = Service.engineManager.get("prefs")._store;
   let prefs = new Preferences();

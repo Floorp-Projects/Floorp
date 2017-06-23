@@ -50,7 +50,7 @@ function run_test() {
     ps.getBoolPref("testPref.bool1");
   }, Cr.NS_ERROR_UNEXPECTED);
   
-  ps.readUserPrefsFromFile(prefFile);
+  ps.readUserPrefs(prefFile);
 
   do_check_true(ps.getBoolPref("testPref.bool1"));
   ps.setBoolPref("testPref.bool1", false);
