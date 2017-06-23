@@ -2016,46 +2016,67 @@ TelemetryHistogram::RegisteredKeyedHistograms(uint32_t aDataset,
 
 nsresult
 TelemetryHistogram::GetKeyedHistogramSnapshots(JSContext *cx,
-                                               JS::MutableHandle<JS::Value> ret)
+                                               JS::MutableHandle<JS::Value> ret,
+                                               bool subsession,
+                                               bool clearSubsession)
 {
   // Runs without protection from |gTelemetryHistogramMutex|
   JS::Rooted<JSObject*> obj(cx, JS_NewPlainObject(cx));
   if (!obj) {
     return NS_ERROR_FAILURE;
   }
+  ret.setObject(*obj);
 
-  // for (auto iter = gKeyedHistograms.Iter(); !iter.Done(); iter.Next()) {
-  for (uint32_t id = 0; id < HistogramCount; ++id) {
-    if (!gHistogramInfos[id].keyed) {
-      continue;
-    }
-
-    // TODO: This won't get us data from different processes.
-    // We'll have to refactor this function to return {"parent": {...}, "content": {...}}.
-
-    // We don't want to trigger instantiation of empty keyed histograms.
-    KeyedHistogram* keyed = internal_GetKeyedHistogramById(HistogramID(id), ProcessID::Parent,
-                                                           /* instantiate = */ false);
-    if (!keyed) {
-      continue;
-    }
-
-    JS::RootedObject snapshot(cx, JS_NewPlainObject(cx));
-    if (!snapshot) {
-      return NS_ERROR_FAILURE;
-    }
-
-    if (!NS_SUCCEEDED(keyed->GetJSSnapshot(cx, snapshot, false, false))) {
-      return NS_ERROR_FAILURE;
-    }
-
-    if (!JS_DefineProperty(cx, obj, gHistogramInfos[id].name(),
-                           snapshot, JSPROP_ENUMERATE)) {
-      return NS_ERROR_FAILURE;
-    }
+  // Include the GPU process in histogram snapshots only if we actually tried
+  // to launch a process for it.
+  bool includeGPUProcess = false;
+  if (auto gpm = mozilla::gfx::GPUProcessManager::Get()) {
+    includeGPUProcess = gpm->AttemptedGPUProcess();
   }
 
-  ret.setObject(*obj);
+  for (uint32_t process = 0; process < static_cast<uint32_t>(ProcessID::Count); ++process) {
+    JS::Rooted<JSObject*> processObject(cx, JS_NewPlainObject(cx));
+    if (!processObject) {
+      return NS_ERROR_FAILURE;
+    }
+    if (!JS_DefineProperty(cx, obj, GetNameForProcessID(ProcessID(process)),
+                           processObject, JSPROP_ENUMERATE)) {
+      return NS_ERROR_FAILURE;
+    }
+    for (size_t id = 0; id < HistogramCount; ++id) {
+      const HistogramInfo& info = gHistogramInfos[id];
+      if (!info.keyed) {
+        continue;
+      }
+
+      if (!CanRecordInProcess(info.record_in_processes, ProcessID(process)) ||
+        ((ProcessID(process) == ProcessID::Gpu) && !includeGPUProcess)) {
+        continue;
+      }
+
+      KeyedHistogram* keyed = internal_GetKeyedHistogramById(HistogramID(id),
+                                                             ProcessID(process),
+                                                             /* instantiate = */ false);
+      if (!keyed) {
+        continue;
+      }
+
+      JS::RootedObject snapshot(cx, JS_NewPlainObject(cx));
+      if (!snapshot) {
+        return NS_ERROR_FAILURE;
+      }
+
+      if (!NS_SUCCEEDED(keyed->GetJSSnapshot(cx, snapshot, subsession,
+                                             clearSubsession))) {
+        return NS_ERROR_FAILURE;
+      }
+
+      if (!JS_DefineProperty(cx, processObject, gHistogramInfos[id].name(),
+                             snapshot, JSPROP_ENUMERATE)) {
+        return NS_ERROR_FAILURE;
+      }
+    }
+  }
   return NS_OK;
 }
 
