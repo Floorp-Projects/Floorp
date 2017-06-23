@@ -33,8 +33,6 @@ marionette.jar:
   content/transport.js (transport.js)
   content/packets.js (packets.js)
   content/stream-utils.js (stream-utils.js)
-  content/reftest.js (reftest.js)
-  content/reftest.xul (reftest.xul)
 #ifdef ENABLE_TESTS
   content/test.xul (chrome/test.xul)
   content/test2.xul (chrome/test2.xul)
