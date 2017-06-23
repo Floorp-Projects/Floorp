@@ -11,14 +11,45 @@ async function testOptionsBrowserStyle(optionsUI, assertMessage) {
         browser.test.notifyFail("options-ui-browser_style");
       }
 
-      let style = window.getComputedStyle(document.getElementById("button"));
-      let buttonBackgroundColor = style.backgroundColor;
-      let browserStyleBackgroundColor = "rgb(9, 150, 248)";
-      if (!("browser_style" in optionsUI) || optionsUI.browser_style) {
-        browser.test.assertEq(browserStyleBackgroundColor, buttonBackgroundColor, assertMessage);
-      } else {
-        browser.test.assertTrue(browserStyleBackgroundColor !== buttonBackgroundColor, assertMessage);
+      let browserStyle = !("browser_style" in optionsUI) || optionsUI.browser_style;
+
+      function verifyButton(buttonElement, expected) {
+        let buttonStyle = window.getComputedStyle(buttonElement);
+        let buttonBackgroundColor = buttonStyle.backgroundColor;
+        if (browserStyle && expected.hasBrowserStyleClass) {
+          browser.test.assertEq("rgb(9, 150, 248)", buttonBackgroundColor, assertMessage);
+        } else {
+          browser.test.assertTrue(buttonBackgroundColor !== "rgb(9, 150, 248)", assertMessage);
+        }
       }
+
+      function verifyCheckboxOrRadio(type, element, expected) {
+        let style = window.getComputedStyle(element);
+        if (browserStyle && expected.hasBrowserStyleClass) {
+          browser.test.assertEq("none", style.display, `Expected ${type} item to be hidden`);
+        } else {
+          browser.test.assertTrue(style.display != "none", `Expected ${type} item to be visible`);
+        }
+      }
+
+      let normalButton = document.getElementById("normalButton");
+      let browserStyleButton = document.getElementById("browserStyleButton");
+      verifyButton(normalButton, {hasBrowserStyleClass: false});
+      verifyButton(browserStyleButton, {hasBrowserStyleClass: true});
+
+      let normalCheckbox1 = document.getElementById("normalCheckbox1");
+      let normalCheckbox2 = document.getElementById("normalCheckbox2");
+      let browserStyleCheckbox = document.getElementById("browserStyleCheckbox");
+      verifyCheckboxOrRadio("checkbox", normalCheckbox1, {hasBrowserStyleClass: false});
+      verifyCheckboxOrRadio("checkbox", normalCheckbox2, {hasBrowserStyleClass: false});
+      verifyCheckboxOrRadio("checkbox", browserStyleCheckbox, {hasBrowserStyleClass: true});
+
+      let normalRadio1 = document.getElementById("normalRadio1");
+      let normalRadio2 = document.getElementById("normalRadio2");
+      let browserStyleRadio = document.getElementById("browserStyleRadio");
+      verifyCheckboxOrRadio("radio", normalRadio1, {hasBrowserStyleClass: false});
+      verifyCheckboxOrRadio("radio", normalRadio2, {hasBrowserStyleClass: false});
+      verifyCheckboxOrRadio("radio", browserStyleRadio, {hasBrowserStyleClass: true});
 
       browser.test.notifyPass("options-ui-browser_style");
     });
@@ -36,7 +67,21 @@ async function testOptionsBrowserStyle(optionsUI, assertMessage) {
       "options.html": `
         <!DOCTYPE html>
         <html>
-          <button id="button" name="button" class="default">Default</button>
+          <button id="normalButton" name="button" class="default">Default</button>
+          <button id="browserStyleButton" name="button" class="browser-style default">Default</button>
+
+          <input id="normalCheckbox1" type="checkbox"/>
+          <input id="normalCheckbox2" type="checkbox"/><label>Checkbox</label>
+          <div class="browser-style">
+            <input id="browserStyleCheckbox" type="checkbox"><label for="browserStyleCheckbox">Checkbox</label>
+          </div>
+
+          <input id="normalRadio1" type="radio"/>
+          <input id="normalRadio2" type="radio"/><label>Radio</label>
+          <div class="browser-style">
+            <input id="browserStyleRadio" checked="" type="radio"><label for="browserStyleRadio">Radio</label>
+          </div>
+
           <script src="options.js" type="text/javascript"></script>
         </html>`,
       "options.js": optionsScript,
@@ -53,7 +98,6 @@ async function testOptionsBrowserStyle(optionsUI, assertMessage) {
 
   extension.sendMessage("check-style", optionsUI, assertMessage);
   await extension.awaitFinish("options-ui-browser_style");
-
   await BrowserTestUtils.removeTab(tab);
 
   await extension.unload();
