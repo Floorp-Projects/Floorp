@@ -57,7 +57,7 @@ private:
   // the PBackground protocol code. This means we cannot be left holding an
   // invalid IPC protocol object after the transaction is finished.
   WebAuthnTransactionParent* mTransactionParent;
-  RefPtr<U2FSoftTokenManager> mSoftTokenManager;
+  RefPtr<U2FTokenTransport> mTokenManagerImpl;
 };
 
 } // namespace dom
