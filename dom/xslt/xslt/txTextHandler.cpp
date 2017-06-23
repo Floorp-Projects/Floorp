@@ -20,7 +20,7 @@ txTextHandler::attribute(nsIAtom* aPrefix, nsIAtom* aLocalName,
 }
 
 nsresult
-txTextHandler::attribute(nsIAtom* aPrefix, const nsSubstring& aLocalName,
+txTextHandler::attribute(nsIAtom* aPrefix, const nsAString& aLocalName,
                          const int32_t aNsID,
                          const nsString& aValue)
 {
@@ -28,7 +28,7 @@ txTextHandler::attribute(nsIAtom* aPrefix, const nsSubstring& aLocalName,
 }
 
 nsresult
-txTextHandler::characters(const nsSubstring& aData, bool aDOE)
+txTextHandler::characters(const nsAString& aData, bool aDOE)
 {
     if (mLevel == 0)
         mValue.Append(aData);
@@ -80,7 +80,7 @@ txTextHandler::startElement(nsIAtom* aPrefix, nsIAtom* aLocalName,
 }
 
 nsresult
-txTextHandler::startElement(nsIAtom* aPrefix, const nsSubstring& aLocalName,
+txTextHandler::startElement(nsIAtom* aPrefix, const nsAString& aLocalName,
                             const int32_t aNsID)
 {
     if (mOnlyText)

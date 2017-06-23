@@ -111,8 +111,7 @@ private:
 
   nsresult SetModDate(int64_t aLastModifiedTime, const wchar_t* aFilePath);
   nsresult HasFileAttribute(DWORD aFileAttrib, bool* aResult);
-  nsresult AppendInternal(const nsAFlatString& aNode,
-                          bool aMultipleComponents);
+  nsresult AppendInternal(const nsString& aNode, bool aMultipleComponents);
 
   nsresult OpenNSPRFileDescMaybeShareDelete(int32_t aFlags,
                                             int32_t aMode,

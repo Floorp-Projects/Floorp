@@ -24,10 +24,7 @@ class nsCStringRepr;
 } // namespace detail
 } // namespace mozilla
 
-/**
- * double-byte (char16_t) string types
- */
-
+// Double-byte (char16_t) string types.
 class nsAString;
 class nsSubstringTuple;
 class nsString;
@@ -39,11 +36,7 @@ class nsStringComparator;
 class nsDefaultStringComparator;
 class nsXPIDLString;
 
-
-/**
- * single-byte (char) string types
- */
-
+// Single-byte (char) string types.
 class nsACString;
 class nsCSubstringTuple;
 class nsCString;
@@ -54,20 +47,5 @@ class nsPromiseFlatCString;
 class nsCStringComparator;
 class nsDefaultCStringComparator;
 class nsXPIDLCString;
-
-
-/**
- * typedefs for backwards compatibility
- */
-
-typedef nsAString             nsSubstring;
-typedef nsACString            nsCSubstring;
-
-typedef nsString              nsAFlatString;
-typedef nsSubstring           nsASingleFragmentString;
-
-typedef nsCString             nsAFlatCString;
-typedef nsCSubstring          nsASingleFragmentCString;
-
 
 #endif /* !defined(nsStringFwd_h___) */

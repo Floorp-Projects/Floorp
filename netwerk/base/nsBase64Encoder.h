@@ -20,7 +20,7 @@ class nsBase64Encoder final : public nsIOutputStream {
     NS_DECL_ISUPPORTS
     NS_DECL_NSIOUTPUTSTREAM
 
-    nsresult Finish(nsCSubstring& _result);
+    nsresult Finish(nsACString& _result);
   private:
     ~nsBase64Encoder() {}
 

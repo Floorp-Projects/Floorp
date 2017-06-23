@@ -110,7 +110,7 @@ class txStartElementTransaction : public txOutputTransaction
 {
 public:
     txStartElementTransaction(nsIAtom* aPrefix,
-                              const nsSubstring& aLocalName, int32_t aNsID)
+                              const nsAString& aLocalName, int32_t aNsID)
         : txOutputTransaction(eStartElementTransaction),
           mPrefix(aPrefix),
           mLocalName(aLocalName),
@@ -131,7 +131,7 @@ class txAttributeTransaction : public txOutputTransaction
 {
 public:
     txAttributeTransaction(nsIAtom* aPrefix,
-                           const nsSubstring& aLocalName, int32_t aNsID,
+                           const nsAString& aLocalName, int32_t aNsID,
                            const nsString& aValue)
         : txOutputTransaction(eAttributeTransaction),
           mPrefix(aPrefix),
@@ -208,7 +208,7 @@ txBufferingHandler::attribute(nsIAtom* aPrefix, nsIAtom* aLocalName,
 }
 
 nsresult
-txBufferingHandler::attribute(nsIAtom* aPrefix, const nsSubstring& aLocalName,
+txBufferingHandler::attribute(nsIAtom* aPrefix, const nsAString& aLocalName,
                               const int32_t aNsID, const nsString& aValue)
 {
     NS_ENSURE_TRUE(mBuffer, NS_ERROR_OUT_OF_MEMORY);
@@ -224,7 +224,7 @@ txBufferingHandler::attribute(nsIAtom* aPrefix, const nsSubstring& aLocalName,
 }
 
 nsresult
-txBufferingHandler::characters(const nsSubstring& aData, bool aDOE)
+txBufferingHandler::characters(const nsAString& aData, bool aDOE)
 {
     NS_ENSURE_TRUE(mBuffer, NS_ERROR_OUT_OF_MEMORY);
 
@@ -320,7 +320,7 @@ txBufferingHandler::startElement(nsIAtom* aPrefix, nsIAtom* aLocalName,
 
 nsresult
 txBufferingHandler::startElement(nsIAtom* aPrefix,
-                                 const nsSubstring& aLocalName,
+                                 const nsAString& aLocalName,
                                  const int32_t aNsID)
 {
     NS_ENSURE_TRUE(mBuffer, NS_ERROR_OUT_OF_MEMORY);
@@ -357,7 +357,7 @@ txResultBuffer::addTransaction(txOutputTransaction* aTransaction)
 static nsresult
 flushTransaction(txOutputTransaction* aTransaction,
                  txAXMLEventHandler* aHandler,
-                 nsAFlatString::const_char_iterator& aIter)
+                 nsString::const_char_iterator& aIter)
 {
     switch (aTransaction->mType) {
         case txOutputTransaction::eAttributeAtomTransaction:
@@ -384,8 +384,8 @@ flushTransaction(txOutputTransaction* aTransaction,
         {
             txCharacterTransaction* charTransaction =
                 static_cast<txCharacterTransaction*>(aTransaction);
-            nsAFlatString::const_char_iterator start = aIter;
-            nsAFlatString::const_char_iterator end =
+            nsString::const_char_iterator start = aIter;
+            nsString::const_char_iterator end =
                 start + charTransaction->mLength;
             aIter = end;
             return aHandler->characters(Substring(start, end),
@@ -442,7 +442,7 @@ flushTransaction(txOutputTransaction* aTransaction,
 nsresult
 txResultBuffer::flushToHandler(txAXMLEventHandler* aHandler)
 {
-    nsAFlatString::const_char_iterator iter;
+    nsString::const_char_iterator iter;
     mStringValue.BeginReading(iter);
 
     for (uint32_t i = 0, len = mTransactions.Length(); i < len; ++i) {

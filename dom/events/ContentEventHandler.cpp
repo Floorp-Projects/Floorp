@@ -424,7 +424,7 @@ static bool IsMozBR(nsIContent* aContent)
   return aContent->IsHTMLElement(nsGkAtoms::br) && !IsContentBR(aContent);
 }
 
-static void ConvertToNativeNewlines(nsAFlatString& aString)
+static void ConvertToNativeNewlines(nsString& aString)
 {
 #if defined(XP_WIN)
   aString.ReplaceSubstring(NS_LITERAL_STRING("\n"), NS_LITERAL_STRING("\r\n"));
@@ -664,7 +664,7 @@ ContentEventHandler::ShouldBreakLineBefore(nsIContent* aContent,
 
 nsresult
 ContentEventHandler::GenerateFlatTextContent(nsIContent* aContent,
-                                             nsAFlatString& aString,
+                                             nsString& aString,
                                              LineBreakType aLineBreakType)
 {
   MOZ_ASSERT(aString.IsEmpty());
@@ -680,7 +680,7 @@ ContentEventHandler::GenerateFlatTextContent(nsIContent* aContent,
 
 nsresult
 ContentEventHandler::GenerateFlatTextContent(nsRange* aRange,
-                                             nsAFlatString& aString,
+                                             nsString& aString,
                                              LineBreakType aLineBreakType)
 {
   MOZ_ASSERT(aString.IsEmpty());

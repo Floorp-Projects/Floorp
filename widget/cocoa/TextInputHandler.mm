@@ -456,7 +456,7 @@ TISInputSourceWrapper::InitByInputSourceID(const char* aID)
 }
 
 void
-TISInputSourceWrapper::InitByInputSourceID(const nsAFlatString &aID)
+TISInputSourceWrapper::InitByInputSourceID(const nsString& aID)
 {
   Clear();
   if (aID.IsEmpty())

@@ -99,7 +99,7 @@ nsresult net_ExtractURLScheme(const nsACString &inURI,
 /* check that the given scheme conforms to RFC 2396 */
 bool net_IsValidScheme(const char *scheme, uint32_t schemeLen);
 
-inline bool net_IsValidScheme(const nsAFlatCString &scheme)
+inline bool net_IsValidScheme(const nsCString& scheme)
 {
     return net_IsValidScheme(scheme.get(), scheme.Length());
 }
@@ -228,7 +228,7 @@ inline char *net_RFindCharNotInSet(const char *str, const char *set)
  * This function returns true if the given hostname does not include any
  * restricted characters.  Otherwise, false is returned.
  */
-bool net_IsValidHostName(const nsCSubstring &host);
+bool net_IsValidHostName(const nsACString& host);
 
 /**
  * Checks whether the IPv4 address is valid according to RFC 3986 section 3.2.2.

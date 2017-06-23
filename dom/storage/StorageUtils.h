@@ -22,7 +22,7 @@ PrincipalsEqual(nsIPrincipal* aObjectPrincipal,
                 nsIPrincipal* aSubjectPrincipal);
 
 void
-ReverseString(const nsCSubstring& aSource, nsCSubstring& aResult);
+ReverseString(const nsACString& aSource, nsACString& aResult);
 
 nsresult
 CreateReversedDomain(const nsACString& aAsciiDomain,

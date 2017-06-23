@@ -130,6 +130,7 @@ EventListenerManagerBase::EventListenerManagerBase()
   , mMayHavePointerEnterLeaveEventListener(false)
   , mMayHaveKeyEventListener(false)
   , mMayHaveInputOrCompositionEventListener(false)
+  , mMayHaveSelectionChangeEventListener(false)
   , mClearingListeners(false)
   , mIsMainThreadELM(NS_IsMainThread())
 {
@@ -416,6 +417,11 @@ EventListenerManager::AddEventListenerInternal(
              aTypeAtom == nsGkAtoms::oninput) {
     if (!aFlags.mInSystemGroup) {
       mMayHaveInputOrCompositionEventListener = true;
+    }
+  } else if (aEventMessage == eSelectionChange) {
+    mMayHaveSelectionChangeEventListener = true;
+     if (nsPIDOMWindowInner* window = GetInnerWindowForTarget()) {
+      window->SetHasSelectionChangeEventListeners();
     }
   }
 
@@ -1299,12 +1305,10 @@ EventListenerManager::HandleEventInternal(nsPresContext* aPresContext,
               TimeStamp endTime = TimeStamp::Now();
               uint16_t phase;
               (*aDOMEvent)->GetEventPhase(&phase);
-              PROFILER_MARKER_PAYLOAD(
+              profiler_add_marker(
                 "DOMEvent",
                 MakeUnique<DOMEventMarkerPayload>(typeStr, phase,
                                                   startTime, endTime));
-#else
-              MOZ_CRASH("Gecko Profiler is N/A but profiler_is_active() returned true");
 #endif
             } else {
               rv = HandleEventSubType(listener, *aDOMEvent, aCurrentTarget);

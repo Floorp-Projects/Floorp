@@ -12,105 +12,99 @@ namespace gfx {
 
 using namespace std;
 
-DrawEventRecorderPrivate::DrawEventRecorderPrivate(std::ostream *aStream)
-  : mOutputStream(aStream)
+DrawEventRecorderPrivate::DrawEventRecorderPrivate()
 {
 }
 
+template<class S>
 void
-DrawEventRecorderPrivate::WriteHeader()
+DrawEventRecorderPrivate::WriteHeader(S &aStream)
 {
-  WriteElement(*mOutputStream, kMagicInt);
-  WriteElement(*mOutputStream, kMajorRevision);
-  WriteElement(*mOutputStream, kMinorRevision);
+  WriteElement(aStream, kMagicInt);
+  WriteElement(aStream, kMajorRevision);
+  WriteElement(aStream, kMinorRevision);
 }
 
 void
-DrawEventRecorderPrivate::RecordEvent(const RecordedEvent &aEvent)
+DrawEventRecorderFile::RecordEvent(const RecordedEvent &aEvent)
 {
-  WriteElement(*mOutputStream, aEvent.mType);
+  WriteElement(mOutputStream, aEvent.mType);
 
-  aEvent.RecordToStream(*mOutputStream);
+  aEvent.RecordToStream(mOutputStream);
 
   Flush();
 }
 
-DrawEventRecorderFile::DrawEventRecorderFile(const char *aFilename)
-  : DrawEventRecorderPrivate(nullptr)
-  , mOutputFile(aFilename, ofstream::binary)
+void
+DrawEventRecorderMemory::RecordEvent(const RecordedEvent &aEvent)
 {
-  mOutputStream = &mOutputFile;
+  WriteElement(mOutputStream, aEvent.mType);
 
-  WriteHeader();
+  aEvent.RecordToStream(mOutputStream);
+}
+
+DrawEventRecorderFile::DrawEventRecorderFile(const char *aFilename)
+  : mOutputStream(aFilename, ofstream::binary)
+{
+  WriteHeader(mOutputStream);
 }
 
 DrawEventRecorderFile::~DrawEventRecorderFile()
 {
-  mOutputFile.close();
+  mOutputStream.close();
 }
 
 void
 DrawEventRecorderFile::Flush()
 {
-  mOutputFile.flush();
+  mOutputStream.flush();
 }
 
 bool
 DrawEventRecorderFile::IsOpen()
 {
-  return mOutputFile.is_open();
+  return mOutputStream.is_open();
 }
 
 void
 DrawEventRecorderFile::OpenNew(const char *aFilename)
 {
-  MOZ_ASSERT(!mOutputFile.is_open());
+  MOZ_ASSERT(!mOutputStream.is_open());
 
-  mOutputFile.open(aFilename, ofstream::binary);
-  WriteHeader();
+  mOutputStream.open(aFilename, ofstream::binary);
+  WriteHeader(mOutputStream);
 }
 
 void
 DrawEventRecorderFile::Close()
 {
-  MOZ_ASSERT(mOutputFile.is_open());
+  MOZ_ASSERT(mOutputStream.is_open());
 
-  mOutputFile.close();
+  mOutputStream.close();
 }
 
 DrawEventRecorderMemory::DrawEventRecorderMemory()
-  : DrawEventRecorderPrivate(nullptr)
 {
-  mOutputStream = &mMemoryStream;
-
-  WriteHeader();
+  WriteHeader(mOutputStream);
 }
 
 void
 DrawEventRecorderMemory::Flush()
 {
-   mOutputStream->flush();
 }
 
 size_t
 DrawEventRecorderMemory::RecordingSize()
 {
-  return mMemoryStream.tellp();
-}
-
-bool
-DrawEventRecorderMemory::CopyRecording(char* aBuffer, size_t aBufferLen)
-{
-  return !!mMemoryStream.read(aBuffer, aBufferLen);
+  return mOutputStream.mLength;
 }
 
 void
 DrawEventRecorderMemory::WipeRecording()
 {
-  mMemoryStream.str(std::string());
-  mMemoryStream.clear();
+  mOutputStream = MemStream();
 
-  WriteHeader();
+  WriteHeader(mOutputStream);
 }
 
 } // namespace gfx

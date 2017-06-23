@@ -5637,11 +5637,14 @@ pref("media.block-autoplay-until-in-foreground", false);
 pref("media.block-autoplay-until-in-foreground", true);
 #endif
 
-// Is the Servo-backed style system enabled?
+// Is Stylo CSS support built and enabled?
+// Only define this pref if Stylo support is actually built in.
+#ifdef MOZ_STYLO
 #ifdef MOZ_STYLO_ENABLE
 pref("layout.css.servo.enabled", true);
 #else
 pref("layout.css.servo.enabled", false);
+#endif
 #endif
 
 // HSTS Priming
@@ -5711,6 +5714,14 @@ pref("dom.payments.request.enabled", false);
 
 #ifdef FUZZING
 pref("fuzzing.enabled", false);
+#endif
+
+#if defined(XP_WIN)
+pref("layers.mlgpu.dev-enabled", false);
+
+// Both this and the master "enabled" pref must be on to use Advanced LAyers
+// on Windows 7.
+pref("layers.mlgpu.enable-on-windows7", false);
 #endif
 
 // Set advanced layers preferences here to have them show up in about:config or

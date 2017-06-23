@@ -246,11 +246,11 @@ protected:
   // optimized for native IMEs.  For example, <br> element and some block
   // elements causes "\n" (or "\r\n"), see also ShouldBreakLineBefore().
   nsresult GenerateFlatTextContent(nsIContent* aContent,
-                                   nsAFlatString& aString,
+                                   nsString& aString,
                                    LineBreakType aLineBreakType);
   // Get the contents of aRange as plain text.
   nsresult GenerateFlatTextContent(nsRange* aRange,
-                                   nsAFlatString& aString,
+                                   nsString& aString,
                                    LineBreakType aLineBreakType);
   // Get offset of start of aRange.  Note that the result includes the length
   // of line breaker caused by the start of aContent because aRange never

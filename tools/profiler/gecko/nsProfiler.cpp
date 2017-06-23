@@ -168,7 +168,7 @@ nsProfiler::ResumeSampling()
 NS_IMETHODIMP
 nsProfiler::AddMarker(const char *aMarker)
 {
-  PROFILER_MARKER(aMarker);
+  profiler_add_marker(aMarker);
   return NS_OK;
 }
 

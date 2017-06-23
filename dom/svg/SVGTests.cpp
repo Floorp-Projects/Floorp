@@ -72,7 +72,7 @@ SVGTests::IsConditionalProcessingAttribute(const nsIAtom* aAttribute) const
 }
 
 int32_t
-SVGTests::GetBestLanguagePreferenceRank(const nsSubstring& aAcceptLangs) const
+SVGTests::GetBestLanguagePreferenceRank(const nsAString& aAcceptLangs) const
 {
   const nsDefaultStringComparator defaultComparator;
 
@@ -86,7 +86,7 @@ SVGTests::GetBestLanguagePreferenceRank(const nsSubstring& aAcceptLangs) const
     nsCharSeparatedTokenizer languageTokenizer(aAcceptLangs, ',');
     int32_t index = 0;
     while (languageTokenizer.hasMoreTokens()) {
-      const nsSubstring &languageToken = languageTokenizer.nextToken();
+      const nsAString& languageToken = languageTokenizer.nextToken();
       bool exactMatch = (languageToken == mStringListAttributes[LANGUAGE][i]);
       bool prefixOnlyMatch =
         !exactMatch &&

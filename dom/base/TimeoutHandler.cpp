@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "TimeoutHandler.h"
+#include "nsJSUtils.h"
 
 namespace mozilla {
 namespace dom {

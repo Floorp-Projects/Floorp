@@ -22,15 +22,15 @@ namespace CacheFileUtils {
 extern const char *kAltDataKey;
 
 already_AddRefed<nsILoadContextInfo>
-ParseKey(const nsCSubstring &aKey,
-         nsCSubstring *aIdEnhance = nullptr,
-         nsCSubstring *aURISpec = nullptr);
+ParseKey(const nsACString& aKey,
+         nsACString* aIdEnhance = nullptr,
+         nsACString* aURISpec = nullptr);
 
 void
 AppendKeyPrefix(nsILoadContextInfo *aInfo, nsACString &_retval);
 
 void
-AppendTagWithValue(nsACString & aTarget, char const aTag, nsCSubstring const & aValue);
+AppendTagWithValue(nsACString& aTarget, char const aTag, const nsACString& aValue);
 
 nsresult
 KeyMatchesLoadContextInfo(const nsACString &aKey,

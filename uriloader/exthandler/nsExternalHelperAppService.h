@@ -237,7 +237,7 @@ public:
    * @param aReason         A constant from nsIHelperAppLauncherDialog indicating
    *                        why the request is handled by a helper app.
    */
-  nsExternalAppHandler(nsIMIMEInfo * aMIMEInfo, const nsCSubstring& aFileExtension,
+  nsExternalAppHandler(nsIMIMEInfo * aMIMEInfo, const nsACString& aFileExtension,
                        nsIInterfaceRequestor * aContentContext,
                        nsIInterfaceRequestor * aWindowContext,
                        nsExternalHelperAppService * aExtProtSvc,
@@ -417,8 +417,8 @@ protected:
    * This is called by SaveToDisk to decide what's the final
    * file destination chosen by the user or by auto-download settings.
    */
-  void RequestSaveDestination(const nsAFlatString &aDefaultFile,
-                              const nsAFlatString &aDefaultFileExt);
+  void RequestSaveDestination(const nsString& aDefaultFile,
+                              const nsString& aDefaultFileExt);
 
   /**
    * When SaveToDisk is called, it possibly delegates to RequestSaveDestination
@@ -464,7 +464,7 @@ protected:
   /**
    * Utility function to send proper error notification to web progress listener
    */
-  void SendStatusChange(ErrorType type, nsresult aStatus, nsIRequest *aRequest, const nsAFlatString &path);
+  void SendStatusChange(ErrorType type, nsresult aStatus, nsIRequest *aRequest, const nsString& path);
 
   /**
    * Closes the window context if it does not have a refresh header

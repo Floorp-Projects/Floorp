@@ -373,7 +373,7 @@ TypeUtils::ProcessURL(nsACString& aUrl, bool* aSchemeValidOut,
                       nsACString* aUrlWithoutQueryOut,nsACString* aUrlQueryOut,
                       ErrorResult& aRv)
 {
-  const nsAFlatCString& flatURL = PromiseFlatCString(aUrl);
+  const nsCString& flatURL = PromiseFlatCString(aUrl);
   const char* url = flatURL.get();
 
   // off the main thread URL parsing using nsStdURLParser.

@@ -1493,7 +1493,7 @@ CacheStorageService::AddStorageEntry(CacheStorage const* aStorage,
 }
 
 nsresult
-CacheStorageService::AddStorageEntry(nsCSubstring const& aContextKey,
+CacheStorageService::AddStorageEntry(const nsACString& aContextKey,
                                      const nsACString & aURI,
                                      const nsACString & aIdExtension,
                                      bool aWriteToDisk,
@@ -1849,7 +1849,7 @@ CacheStorageService::DoomStorageEntries(CacheStorage const* aStorage,
 }
 
 nsresult
-CacheStorageService::DoomStorageEntries(nsCSubstring const& aContextKey,
+CacheStorageService::DoomStorageEntries(const nsACString& aContextKey,
                                         nsILoadContextInfo* aContext,
                                         bool aDiskStorage,
                                         bool aPinned,

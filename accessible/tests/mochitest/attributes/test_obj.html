@@ -38,7 +38,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=558036
       testAttrs("checkedTreeitem", {"checkable" : "true"}, true);
       testAttrs("dropeffect", {"dropeffect" : "copy"}, true);
       testAttrs("grabbed", {"grabbed" : "true"}, true);
-      testAbsentAttrs("haspopup", { "haspopup": "false" });
+      testAttrs("haspopupTrue", { "haspopup": "true" }, true);
+      testAbsentAttrs("haspopupFalse", { "haspopup": "false" });
+      testAbsentAttrs("haspopupEmpty", { "haspopup": "" });
       testAttrs("hidden", {"hidden" : "true"}, true);
       testAbsentAttrs("hidden_false", { "hidden": "false" });
       testAbsentAttrs("modal", {"modal" : "true"});
@@ -214,7 +216,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=558036
   <div id="checkedTreeitem" role="treeitem" aria-checked="true"></div>
   <div id="dropeffect" aria-dropeffect="copy"></div>
   <div id="grabbed" aria-grabbed="true"></div>
-  <div id="haspopup" aria-haspopup="true"></div>
+  <div id="haspopupTrue" aria-haspopup="true"></div>
+  <div id="haspopupFalse" aria-haspopup="false"></div>
+  <div id="haspopupEmpty" aria-haspopup=""></div>
   <div id="hidden" aria-hidden="true"></div>
   <div id="hidden_false" aria-hidden="false"></div>
   <div id="modal" aria-modal="true"></div>

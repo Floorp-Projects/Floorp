@@ -356,7 +356,7 @@ nsContentSink::DoProcessLinkHeader()
 // see <http://tools.ietf.org/html/rfc5988#section-5.2>
 
 bool
-nsContentSink::LinkContextIsOurDocument(const nsSubstring& aAnchor)
+nsContentSink::LinkContextIsOurDocument(const nsAString& aAnchor)
 {
   if (aAnchor.IsEmpty()) {
     // anchor parameter not present or empty -> same document reference
@@ -680,10 +680,10 @@ nsContentSink::ProcessLinkHeader(const nsAString& aLinkData)
 
 
 nsresult
-nsContentSink::ProcessLink(const nsSubstring& aAnchor, const nsSubstring& aHref,
-                           const nsSubstring& aRel, const nsSubstring& aTitle,
-                           const nsSubstring& aType, const nsSubstring& aMedia,
-                           const nsSubstring& aCrossOrigin)
+nsContentSink::ProcessLink(const nsAString& aAnchor, const nsAString& aHref,
+                           const nsAString& aRel, const nsAString& aTitle,
+                           const nsAString& aType, const nsAString& aMedia,
+                           const nsAString& aCrossOrigin)
 {
   uint32_t linkTypes =
     nsStyleLinkElement::ParseLinkTypes(aRel);
@@ -734,11 +734,11 @@ nsContentSink::ProcessLink(const nsSubstring& aAnchor, const nsSubstring& aHref,
 
 nsresult
 nsContentSink::ProcessStyleLink(nsIContent* aElement,
-                                const nsSubstring& aHref,
+                                const nsAString& aHref,
                                 bool aAlternate,
-                                const nsSubstring& aTitle,
-                                const nsSubstring& aType,
-                                const nsSubstring& aMedia)
+                                const nsAString& aTitle,
+                                const nsAString& aType,
+                                const nsAString& aMedia)
 {
   if (aAlternate && aTitle.IsEmpty()) {
     // alternates must have title return without error, for now

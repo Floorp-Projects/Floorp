@@ -10,6 +10,8 @@
 #include "nsCOMPtr.h"
 #include "nsISupports.h"
 #include "nsITimeoutHandler.h"
+#include "nsCycleCollectionParticipant.h"
+#include "nsString.h"
 
 namespace mozilla {
 namespace dom {

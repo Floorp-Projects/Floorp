@@ -46,11 +46,11 @@ public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIINPUTSTREAMCALLBACK
 
-    nsFtpControlConnection(const nsCSubstring& host, uint32_t port);
+    nsFtpControlConnection(const nsACString& host, uint32_t port);
 
     nsresult Connect(nsIProxyInfo* proxyInfo, nsITransportEventSink* eventSink);
     nsresult Disconnect(nsresult status);
-    nsresult Write(const nsCSubstring& command);
+    nsresult Write(const nsACString& command);
 
     bool IsAlive();
 

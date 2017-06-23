@@ -1012,7 +1012,7 @@ txFnStartStripSpace(int32_t aNamespaceID,
     nsAutoPtr<txStripSpaceItem> stripItem(new txStripSpaceItem);
     nsWhitespaceTokenizer tokenizer(attr->mValue);
     while (tokenizer.hasMoreTokens()) {
-        const nsASingleFragmentString& name = tokenizer.nextToken();
+        const nsAString& name = tokenizer.nextToken();
         int32_t ns = kNameSpaceID_None;
         nsCOMPtr<nsIAtom> prefix, localName;
         rv = XMLUtils::splitQName(name, getter_AddRefs(prefix),

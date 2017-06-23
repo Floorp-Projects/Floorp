@@ -169,7 +169,7 @@ nsresult TextEditorTest::TestTextProperties()
   bool all = false;
   bool first=false;
 
-  const nsAFlatString& empty = EmptyString();
+  const nsString& empty = EmptyString();
 
   rv = htmlEditor->GetInlineProperty(nsGkAtoms::b, empty, empty, &first,
                                      &any, &all);

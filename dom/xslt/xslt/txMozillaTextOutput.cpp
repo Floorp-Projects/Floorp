@@ -49,7 +49,7 @@ txMozillaTextOutput::attribute(nsIAtom* aPrefix, nsIAtom* aLocalName,
 }
 
 nsresult
-txMozillaTextOutput::attribute(nsIAtom* aPrefix, const nsSubstring& aName,
+txMozillaTextOutput::attribute(nsIAtom* aPrefix, const nsAString& aName,
                                const int32_t aNsID,
                                const nsString& aValue)
 {
@@ -57,7 +57,7 @@ txMozillaTextOutput::attribute(nsIAtom* aPrefix, const nsSubstring& aName,
 }
 
 nsresult
-txMozillaTextOutput::characters(const nsSubstring& aData, bool aDOE)
+txMozillaTextOutput::characters(const nsAString& aData, bool aDOE)
 {
     mText.Append(aData);
 
@@ -237,7 +237,7 @@ txMozillaTextOutput::startElement(nsIAtom* aPrefix, nsIAtom* aLocalName,
 }
 
 nsresult
-txMozillaTextOutput::startElement(nsIAtom* aPrefix, const nsSubstring& aName,
+txMozillaTextOutput::startElement(nsIAtom* aPrefix, const nsAString& aName,
                                   const int32_t aNsID)
 {
     return NS_OK;

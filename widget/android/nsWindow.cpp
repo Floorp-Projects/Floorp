@@ -430,8 +430,6 @@ public:
 public:
     void SetIsLongpressEnabled(bool aIsLongpressEnabled)
     {
-        MOZ_ASSERT(AndroidBridge::IsJavaUiThread());
-
         RefPtr<IAPZCTreeManager> controller;
 
         if (LockedWindowPtr window{mWindow}) {

@@ -97,34 +97,55 @@ SharedLibraryInfo SharedLibraryInfo::GetInfoForSelf()
 {
   SharedLibraryInfo sharedLibraryInfo;
 
-  task_dyld_info_data_t task_dyld_info;
-  mach_msg_type_number_t count = TASK_DYLD_INFO_COUNT;
-  if (task_info(mach_task_self (), TASK_DYLD_INFO, (task_info_t)&task_dyld_info,
-                &count) != KERN_SUCCESS) {
-    return sharedLibraryInfo;
-  }
+  const dyld_image_info* infoArray = nullptr;
+  size_t infoCount = 0;
 
-  struct dyld_all_image_infos* aii = (struct dyld_all_image_infos*)task_dyld_info.all_image_info_addr;
-  size_t infoCount = aii->infoArrayCount;
+  // Getting the info array can fail if it is currently being modified, so we
+  // might have to try more than once. Attempt to get the library info for the
+  // currently loaded libraries 100 times before giving up. Between each run we
+  // sleep a bit to give the loader some time to finish the load.
+  int retryCount = 100;
+  while (!infoArray && --retryCount > 0) {
+    task_dyld_info_data_t task_dyld_info;
+    mach_msg_type_number_t count = TASK_DYLD_INFO_COUNT;
+    if (task_info(mach_task_self (), TASK_DYLD_INFO, (task_info_t)&task_dyld_info,
+                  &count) != KERN_SUCCESS) {
+      return sharedLibraryInfo;
+    }
+
+    struct dyld_all_image_infos* aii =
+      (struct dyld_all_image_infos*)task_dyld_info.all_image_info_addr;
+    infoCount = aii->infoArrayCount;
+    infoArray = aii->infoArray;
+
+    // If we don't have infoArray, that means that dyld is currently loading an
+    // array. Wait for a bit and then try again until we run out of retries.
+    if (!infoArray) {
+      // Set infoCount to 0 to ensure that we don't try to dereference the null
+      // infoArray if we run out of retries.
+      infoCount = 0;
+      PR_Sleep(0);
+    }
+  }
 
   // Iterate through all dyld images (loaded libraries) to get their names
   // and offests.
   for (size_t i = 0; i < infoCount; ++i) {
-    const dyld_image_info *info = &aii->infoArray[i];
+    const dyld_image_info& info = infoArray[i];
 
     // If the magic number doesn't match then go no further
     // since we're not pointing to where we think we are.
-    if (info->imageLoadAddress->magic != MACHO_MAGIC_NUMBER) {
+    if (info.imageLoadAddress->magic != MACHO_MAGIC_NUMBER) {
       continue;
     }
 
     const platform_mach_header* header =
-      reinterpret_cast<const platform_mach_header*>(info->imageLoadAddress);
+      reinterpret_cast<const platform_mach_header*>(info.imageLoadAddress);
 
     // Add the entry for this image.
-    addSharedLibrary(header, (char*)info->imageFilePath, sharedLibraryInfo);
-
+    addSharedLibrary(header, (char*)info.imageFilePath, sharedLibraryInfo);
   }
+
   return sharedLibraryInfo;
 }
 

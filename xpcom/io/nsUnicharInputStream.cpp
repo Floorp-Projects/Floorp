@@ -323,8 +323,8 @@ UTF8InputStream::Fill(nsresult* aErrorCode)
 
   ConvertUTF8toUTF16 converter(mUnicharData.Elements());
 
-  nsASingleFragmentCString::const_char_iterator start = mByteData.Elements();
-  nsASingleFragmentCString::const_char_iterator end = mByteData.Elements() + srcLen;
+  nsACString::const_char_iterator start = mByteData.Elements();
+  nsACString::const_char_iterator end = mByteData.Elements() + srcLen;
 
   copy_string(start, end, converter);
   if (converter.Length() != dstLen) {

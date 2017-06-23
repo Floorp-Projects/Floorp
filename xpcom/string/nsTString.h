@@ -157,7 +157,7 @@ public:
                int32_t aOffset = 0, int32_t aCount = -1) const;
 
 #ifdef CharT_is_PRUnichar
-  int32_t Find(const nsAFlatString& aString, int32_t aOffset = 0,
+  int32_t Find(const nsString& aString, int32_t aOffset = 0,
                int32_t aCount = -1) const;
   int32_t Find(const char16_t* aString, int32_t aOffset = 0,
                int32_t aCount = -1) const;
@@ -189,7 +189,7 @@ public:
                 int32_t aOffset = -1, int32_t aCount = -1) const;
 
 #ifdef CharT_is_PRUnichar
-  int32_t RFind(const nsAFlatString& aString, int32_t aOffset = -1,
+  int32_t RFind(const nsString& aString, int32_t aOffset = -1,
                 int32_t aCount = -1) const;
   int32_t RFind(const char16_t* aString, int32_t aOffset = -1,
                 int32_t aCount = -1) const;

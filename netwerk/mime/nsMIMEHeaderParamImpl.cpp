@@ -913,7 +913,7 @@ internalDecodeParameter(const nsACString& aParamValue, const char* aCharset,
           true, true, 1, aResult);
   }
 
-  const nsAFlatCString& param = PromiseFlatCString(aParamValue);
+  const nsCString& param = PromiseFlatCString(aParamValue);
   nsAutoCString unQuoted;
   nsACString::const_iterator s, e;
   param.BeginReading(s);

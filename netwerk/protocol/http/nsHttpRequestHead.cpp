@@ -57,14 +57,14 @@ nsHttpRequestHead::SetVersion(nsHttpVersion version)
 }
 
 void
-nsHttpRequestHead::SetRequestURI(const nsCSubstring &s)
+nsHttpRequestHead::SetRequestURI(const nsACString& s)
 {
     ReentrantMonitorAutoEnter mon(mReentrantMonitor);
     mRequestURI = s;
 }
 
 void
-nsHttpRequestHead::SetPath(const nsCSubstring &s)
+nsHttpRequestHead::SetPath(const nsACString& s)
 {
     ReentrantMonitorAutoEnter mon(mReentrantMonitor);
     mPath = s;

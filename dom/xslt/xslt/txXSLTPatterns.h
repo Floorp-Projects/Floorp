@@ -188,7 +188,7 @@ private:
 class txIdPattern : public txPattern
 {
 public:
-    explicit txIdPattern(const nsSubstring& aString);
+    explicit txIdPattern(const nsAString& aString);
 
     TX_DECL_PATTERN;
 

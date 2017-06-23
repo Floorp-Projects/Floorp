@@ -10,7 +10,7 @@
 
 
 // In nsStandardURL.cpp
-extern nsresult Test_NormalizeIPv4(const nsCSubstring& host, nsCString& result);
+extern nsresult Test_NormalizeIPv4(const nsACString& host, nsCString& result);
 
 
 TEST(TestStandardURL, Simple) {

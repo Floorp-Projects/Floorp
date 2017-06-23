@@ -72,7 +72,7 @@ public:
 
     nsresult closePrevious(bool aFlushText);
 
-    nsresult createResultDocument(const nsSubstring& aName, int32_t aNsID,
+    nsresult createResultDocument(const nsAString& aName, int32_t aNsID,
                                   nsIDOMDocument* aSourceDocument,
                                   bool aLoadedAsData);
 

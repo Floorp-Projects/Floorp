@@ -47,7 +47,7 @@ public:
      * @param aValue the value of the attribute
      */
     virtual nsresult attribute(nsIAtom* aPrefix,
-                               const nsSubstring& aLocalName,
+                               const nsAString& aLocalName,
                                const int32_t aNsID,
                                const nsString& aValue) = 0;
 
@@ -57,7 +57,7 @@ public:
      * @param aData the characters to receive
      * @param aDOE disable output escaping for these characters
      */
-    virtual nsresult characters(const nsSubstring& aData, bool aDOE) = 0;
+    virtual nsresult characters(const nsAString& aData, bool aDOE) = 0;
 
     /**
      * Signals to receive data that should be treated as a comment.
@@ -113,7 +113,7 @@ public:
      * @param aNsID the namespace ID of the element
      */
     virtual nsresult startElement(nsIAtom* aPrefix,
-                                  const nsSubstring& aLocalName,
+                                  const nsAString& aLocalName,
                                   const int32_t aNsID) = 0;
 };
 
@@ -122,10 +122,10 @@ public:
                                nsIAtom* aLowercaseLocalName, int32_t aNsID,  \
                                const nsString& aValue);                      \
     virtual nsresult attribute(nsIAtom* aPrefix,                             \
-                               const nsSubstring& aLocalName,                \
+                               const nsAString& aLocalName,                  \
                                const int32_t aNsID,                          \
                                const nsString& aValue);                      \
-    virtual nsresult characters(const nsSubstring& aData, bool aDOE);      \
+    virtual nsresult characters(const nsAString& aData, bool aDOE);          \
     virtual nsresult comment(const nsString& aData);                         \
     virtual nsresult endDocument(nsresult aResult = NS_OK);                  \
     virtual nsresult endElement();                                           \
@@ -137,7 +137,7 @@ public:
                                   nsIAtom* aLowercaseLocalName,              \
                                   int32_t aNsID);                            \
     virtual nsresult startElement(nsIAtom* aPrefix,                          \
-                                  const nsSubstring& aName,                  \
+                                  const nsAString& aName,                    \
                                   const int32_t aNsID);
 
 
@@ -182,7 +182,7 @@ public:
      */
     virtual nsresult
     createHandlerWith(txOutputFormat* aFormat,
-                      const nsSubstring& aName,
+                      const nsAString& aName,
                       int32_t aNsID,
                       txAXMLEventHandler** aHandler) = 0;
 };
@@ -191,7 +191,7 @@ public:
     nsresult createHandlerWith(txOutputFormat* aFormat,        \
                                txAXMLEventHandler** aHandler); \
     nsresult createHandlerWith(txOutputFormat* aFormat,        \
-                               const nsSubstring& aName,       \
+                               const nsAString& aName,         \
                                int32_t aNsID,                  \
                                txAXMLEventHandler** aHandler);
 

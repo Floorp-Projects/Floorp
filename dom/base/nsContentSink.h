@@ -113,7 +113,7 @@ class nsContentSink : public nsICSSLoaderObserver,
   virtual void UpdateChildCounts() = 0;
 
   bool IsTimeToNotify();
-  bool LinkContextIsOurDocument(const nsSubstring& aAnchor);
+  bool LinkContextIsOurDocument(const nsAString& aAnchor);
   bool Decode5987Format(nsAString& aEncoded);
 
   static void InitializeStatics();
@@ -151,17 +151,17 @@ protected:
   nsresult ProcessHeaderData(nsIAtom* aHeader, const nsAString& aValue,
                              nsIContent* aContent = nullptr);
   nsresult ProcessLinkHeader(const nsAString& aLinkData);
-  nsresult ProcessLink(const nsSubstring& aAnchor,
-                       const nsSubstring& aHref, const nsSubstring& aRel,
-                       const nsSubstring& aTitle, const nsSubstring& aType,
-                       const nsSubstring& aMedia, const nsSubstring& aCrossOrigin);
+  nsresult ProcessLink(const nsAString& aAnchor,
+                       const nsAString& aHref, const nsAString& aRel,
+                       const nsAString& aTitle, const nsAString& aType,
+                       const nsAString& aMedia, const nsAString& aCrossOrigin);
 
   virtual nsresult ProcessStyleLink(nsIContent* aElement,
-                                    const nsSubstring& aHref,
+                                    const nsAString& aHref,
                                     bool aAlternate,
-                                    const nsSubstring& aTitle,
-                                    const nsSubstring& aType,
-                                    const nsSubstring& aMedia);
+                                    const nsAString& aTitle,
+                                    const nsAString& aType,
+                                    const nsAString& aMedia);
 
   void PrefetchHref(const nsAString &aHref, nsINode *aSource,
                     bool aExplicit);

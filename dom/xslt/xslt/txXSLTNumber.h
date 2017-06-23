@@ -64,7 +64,7 @@ public:
     
     virtual void appendNumber(int32_t aNumber, nsAString& aDest) = 0;
 
-    static nsresult getCounterFor(const nsAFlatString& aToken, int aGroupSize,
+    static nsresult getCounterFor(const nsString& aToken, int aGroupSize,
                                   const nsAString& aGroupSeparator,
                                   txFormattedCounter*& aCounter);
     

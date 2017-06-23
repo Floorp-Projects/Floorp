@@ -19,12 +19,12 @@ class nsISerializable;
  * Serialize an object to an ASCII string.
  */
 nsresult NS_SerializeToString(nsISerializable* obj,
-                              nsCSubstring& str);
+                              nsACString& str);
 
 /**
  * Deserialize an object.
  */
-nsresult NS_DeserializeObject(const nsCSubstring& str,
+nsresult NS_DeserializeObject(const nsACString& str,
                               nsISupports** obj);
 
 class nsSerializationHelper final : public nsISerializationHelper

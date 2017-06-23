@@ -31,8 +31,8 @@ public:
                                 const nsAString& aSelectorValue,
                                 const nsStringComparator& aComparator);
 
- static bool ValueIncludes(const nsSubstring& aValueList,
-                           const nsSubstring& aValue,
+ static bool ValueIncludes(const nsAString& aValueList,
+                           const nsAString& aValue,
                            const nsStringComparator& aComparator);
 
   // Append a quoted (with 'quoteChar') and escaped version of aString
@@ -192,7 +192,7 @@ public:
                                    nsIPrincipal* aPrincipal,
                                    nsIURI* aSourceURI,
                                    uint32_t aLineNumber,
-                                   const nsSubstring& aStyleText,
+                                   const nsAString& aStyleText,
                                    nsresult* aRv);
 
   template<size_t N>
