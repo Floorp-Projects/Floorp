@@ -284,21 +284,13 @@ class TcpTransport(object):
         return self.receive()
 
     def close(self):
-        """Close the socket.
-
-        First forces the socket to not send data anymore, and then explicitly
-        close it to free up its resources.
-
-        See: https://docs.python.org/2/howto/sockets.html#disconnecting
-        """
+        """Close the socket."""
         if self.sock:
             try:
                 self.sock.shutdown(socket.SHUT_RDWR)
             except IOError as exc:
-                # If the socket is already closed, don't care about:
-                #   Errno  57: Socket not connected
-                #   Errno 107: Transport endpoint is not connected
-                if exc.errno not in (57, 107):
+                # Errno 57 is "socket not connected", which we don't care about here.
+                if exc.errno != 57:
                     raise
 
             self.sock.close()
