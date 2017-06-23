@@ -102,9 +102,6 @@ Preferences::DirtyCallback()
   }
   if (gHashTable && sPreferences && !sPreferences->mDirty) {
     sPreferences->mDirty = true;
-
-    NS_WARNING_ASSERTION(!sPreferences->mProfileShutdown,
-                         "Setting user pref after profile shutdown.");
   }
 }
 
@@ -665,6 +662,7 @@ Preferences::Shutdown()
  */
 
 Preferences::Preferences()
+  : mDirty(false)
 {
 }
 
@@ -798,19 +796,11 @@ Preferences::Observe(nsISupports *aSubject, const char *aTopic,
   nsresult rv = NS_OK;
 
   if (!nsCRT::strcmp(aTopic, "profile-before-change")) {
-    // Normally prefs aren't written after this point, and so we kick off
-    // an asynchronous pref save so that I/O can be done in parallel with
-    // other shutdown.
-    if (AllowOffMainThreadSave()) {
-      SavePrefFile(nullptr);
-    }
+    rv = SavePrefFile(nullptr);
   } else if (!nsCRT::strcmp(aTopic, "profile-before-change-telemetry")) {
-    // It's possible that a profile-before-change observer after ours
-    // set a pref. A blocking save here re-saves if necessary and also waits
-    // for any pending saves to complete.
-    SavePrefFileBlocking();
-    MOZ_ASSERT(!mDirty, "Preferences should not be dirty");
-    mProfileShutdown = true;
+    if (AllowOffMainThreadSave()) {
+      PreferencesWriter::Flush();
+    }
   } else if (!strcmp(aTopic, "load-extension-defaults")) {
     pref_LoadPrefsInDirList(NS_EXT_PREFS_DEFAULTS_DIR_LIST);
   } else if (!nsCRT::strcmp(aTopic, "reload-default-prefs")) {
@@ -1162,13 +1152,6 @@ Preferences::SavePrefFileInternal(nsIFile *aFile, SaveMethod aSaveMethod)
     // we only check this flag when the caller wants to write to the default
     if (!mDirty) {
       return NS_OK;
-    }
-
-    // check for profile shutdown after mDirty because the runnables from
-    // DirtyCallback can still be pending
-    if (mProfileShutdown) {
-      NS_WARNING("Cannot save pref file after profile shutdown.");
-      return NS_ERROR_ILLEGAL_DURING_SHUTDOWN;
     }
 
     // It's possible that we never got a prefs file.
