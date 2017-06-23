@@ -370,11 +370,6 @@ NS_IdleDispatchToCurrentThread(already_AddRefed<nsIRunnable>&& aEvent,
 {
   nsCOMPtr<nsIRunnable> event(Move(aEvent));
   NS_ENSURE_TRUE(event, NS_ERROR_INVALID_ARG);
-
-  //XXX Using current thread for now as the nsIEventTarget.
-  nsIEventTarget* target = mozilla::GetCurrentThreadEventTarget();
-  NS_ENSURE_STATE(target);
-
   nsCOMPtr<nsIIdleRunnable> idleEvent = do_QueryInterface(event);
 
   if (!idleEvent) {
@@ -382,7 +377,9 @@ NS_IdleDispatchToCurrentThread(already_AddRefed<nsIRunnable>&& aEvent,
     event = do_QueryInterface(idleEvent);
     MOZ_DIAGNOSTIC_ASSERT(event);
   }
-  idleEvent->SetTimer(aTimeout, target);
+
+  //XXX Using current thread for now as the nsIEventTarget.
+  idleEvent->SetTimer(aTimeout, NS_GetCurrentThread());
 
   return NS_IdleDispatchToCurrentThread(event.forget());
 }
