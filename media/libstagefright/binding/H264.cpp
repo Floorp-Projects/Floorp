@@ -920,50 +920,27 @@ H264::ExtractExtraData(const mozilla::MediaRawData* aSample)
 /* static */ bool
 H264::HasSPS(const mozilla::MediaByteBuffer* aExtraData)
 {
-  return NumSPS(aExtraData) > 0;
-}
-
-/* static */ uint8_t
-H264::NumSPS(const mozilla::MediaByteBuffer* aExtraData)
-{
   if (!aExtraData) {
-    return 0;
+    return false;
   }
 
   ByteReader reader(aExtraData);
   const uint8_t* ptr = reader.Read(5);
   if (!ptr || !reader.CanRead8()) {
-    return 0;
+    return false;
   }
-  return reader.ReadU8() & 0x1f;
+  uint8_t numSps = reader.ReadU8() & 0x1f;
+
+  return numSps > 0;
 }
+
 
 /* static */ bool
 H264::CompareExtraData(const mozilla::MediaByteBuffer* aExtraData1,
                        const mozilla::MediaByteBuffer* aExtraData2)
 {
-  if (aExtraData1 == aExtraData2) {
-    return true;
-  }
-  uint8_t numSPS = NumSPS(aExtraData1);
-  if (numSPS == 0 || numSPS != NumSPS(aExtraData2)) {
-    return false;
-  }
-
-  // We only compare if the SPS are the same as the various H264 decoders can
-  // deal with in-band change of PPS.
-
-  SPSNALIterator it1(aExtraData1);
-  SPSNALIterator it2(aExtraData2);
-
-  while (it1 && it2) {
-    if (*it1 != *it2) {
-      return false;
-    }
-    ++it1;
-    ++it2;
-  }
-  return true;
+  // Very crude comparison.
+  return aExtraData1 == aExtraData2 || *aExtraData1 == *aExtraData2;
 }
 
 #undef READUE
