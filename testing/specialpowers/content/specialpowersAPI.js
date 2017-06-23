@@ -1277,62 +1277,73 @@ SpecialPowersAPI.prototype = {
   },
 
   // Mimic the get*Pref API
-  getBoolPref(aPrefName) {
-    return (this._getPref(aPrefName, "BOOL"));
+  getBoolPref(prefName) {
+    return this._getPref(prefName, "BOOL");
   },
-  getIntPref(aPrefName) {
-    return (this._getPref(aPrefName, "INT"));
+  getIntPref(prefName) {
+    return this._getPref(prefName, "INT");
   },
-  getCharPref(aPrefName) {
-    return (this._getPref(aPrefName, "CHAR"));
+  getCharPref(prefName) {
+    return this._getPref(prefName, "CHAR");
   },
-  getComplexValue(aPrefName, aIid) {
-    return (this._getPref(aPrefName, "COMPLEX", aIid));
+  getComplexValue(prefName, iid) {
+    return this._getPref(prefName, "COMPLEX", iid);
   },
 
   // Mimic the set*Pref API
-  setBoolPref(aPrefName, aValue) {
-    return (this._setPref(aPrefName, "BOOL", aValue));
+  setBoolPref(prefName, value) {
+    return this._setPref(prefName, "BOOL", value);
   },
-  setIntPref(aPrefName, aValue) {
-    return (this._setPref(aPrefName, "INT", aValue));
+  setIntPref(prefName, value) {
+    return this._setPref(prefName, "INT", value);
   },
-  setCharPref(aPrefName, aValue) {
-    return (this._setPref(aPrefName, "CHAR", aValue));
+  setCharPref(prefName, value) {
+    return this._setPref(prefName, "CHAR", value);
   },
-  setComplexValue(aPrefName, aIid, aValue) {
-    return (this._setPref(aPrefName, "COMPLEX", aValue, aIid));
+  setComplexValue(prefName, iid, value) {
+    return this._setPref(prefName, "COMPLEX", value, iid);
   },
 
   // Mimic the clearUserPref API
-  clearUserPref(aPrefName) {
-    var msg = {"op": "clear", "prefName": aPrefName, "prefType": ""};
+  clearUserPref(prefName) {
+    let msg = {
+      op: "clear",
+      prefName,
+      prefType: "",
+    };
     this._sendSyncMessage("SPPrefService", msg);
   },
 
   // Private pref functions to communicate to chrome
-  _getPref(aPrefName, aPrefType, aIid) {
-    var msg = {};
-    if (aIid) {
+  _getPref(prefName, prefType, iid) {
+    let msg = {
+      op: "get",
+      prefName,
+      prefType,
+    };
+    if (iid) {
       // Overloading prefValue to handle complex prefs
-      msg = {"op": "get", "prefName": aPrefName, "prefType": aPrefType, "prefValue": [aIid]};
-    } else {
-      msg = {"op": "get", "prefName": aPrefName, "prefType": aPrefType};
+      msg.prefValue = [iid];
     }
-    var val = this._sendSyncMessage("SPPrefService", msg);
-
-    if (val == null || val[0] == null)
-      throw "Error getting pref '" + aPrefName + "'";
+    let val = this._sendSyncMessage("SPPrefService", msg);
+    if (val == null || val[0] == null) {
+      throw "Error getting pref '" + prefName + "'";
+    }
     return val[0];
   },
-  _setPref(aPrefName, aPrefType, aValue, aIid) {
-    var msg = {};
-    if (aIid) {
-      msg = {"op": "set", "prefName": aPrefName, "prefType": aPrefType, "prefValue": [aIid, aValue]};
+  _setPref(prefName, prefType, value, iid) {
+    let msg = {
+      op: "set",
+      prefName,
+      prefType,
+    };
+    if (iid) {
+      // Overloading prefValue to handle complex prefs
+      msg.prefValue = [iid, value];
     } else {
-      msg = {"op": "set", "prefName": aPrefName, "prefType": aPrefType, "prefValue": aValue};
+      msg.prefValue = value;
     }
-    return (this._sendSyncMessage("SPPrefService", msg)[0]);
+    return this._sendSyncMessage("SPPrefService", msg)[0];
   },
 
   _getDocShell(window) {

@@ -341,20 +341,20 @@ SpecialPowersObserverAPI.prototype = {
         switch (prefType) {
           case "BOOL":
             if (aMessage.json.op == "get")
-              return (prefs.getBoolPref(prefName));
-            return (prefs.setBoolPref(prefName, prefValue));
+              return prefs.getBoolPref(prefName);
+            return prefs.setBoolPref(prefName, prefValue);
           case "INT":
             if (aMessage.json.op == "get")
-              return (prefs.getIntPref(prefName));
-            return (prefs.setIntPref(prefName, prefValue));
+              return prefs.getIntPref(prefName);
+            return prefs.setIntPref(prefName, prefValue);
           case "CHAR":
             if (aMessage.json.op == "get")
-              return (prefs.getCharPref(prefName));
-            return (prefs.setCharPref(prefName, prefValue));
+              return prefs.getCharPref(prefName);
+            return prefs.setCharPref(prefName, prefValue);
           case "COMPLEX":
             if (aMessage.json.op == "get")
-              return (prefs.getComplexValue(prefName, prefValue[0]));
-            return (prefs.setComplexValue(prefName, prefValue[0], prefValue[1]));
+              return prefs.getComplexValue(prefName, prefValue[0]);
+            return prefs.setComplexValue(prefName, prefValue[0], prefValue[1]);
           case "":
             if (aMessage.json.op == "clear") {
               prefs.clearUserPref(prefName);
