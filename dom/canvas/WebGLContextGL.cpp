@@ -215,14 +215,39 @@ void WebGLContext::BlendEquationSeparate(GLenum modeRGB, GLenum modeAlpha)
     gl->fBlendEquationSeparate(modeRGB, modeAlpha);
 }
 
+static bool
+ValidateBlendFuncEnums(WebGLContext* webgl, GLenum srcRGB, GLenum srcAlpha,
+                       GLenum dstRGB, GLenum dstAlpha, const char* funcName)
+{
+    if (!webgl->IsWebGL2()) {
+       if (dstRGB == LOCAL_GL_SRC_ALPHA_SATURATE || dstAlpha == LOCAL_GL_SRC_ALPHA_SATURATE) {
+          const nsPrintfCString err("%s: LOCAL_GL_SRC_ALPHA_SATURATE as a destination"
+                                    " blend function is disallowed in WebGL 1 (dstRGB ="
+                                    " 0x%04x, dstAlpha = 0x%04x).",
+                                    funcName, dstRGB, dstAlpha);
+          webgl->ErrorInvalidEnum("%s", err.get());
+          return false;
+       }
+    }
+
+    if (!webgl->ValidateBlendFuncEnum(srcRGB, funcName, "srcRGB") ||
+        !webgl->ValidateBlendFuncEnum(srcAlpha, funcName, "srcAlpha") ||
+        !webgl->ValidateBlendFuncEnum(dstRGB, funcName, "dstRGB") ||
+        !webgl->ValidateBlendFuncEnum(dstAlpha, funcName, "dstAlpha"))
+    {
+       return false;
+    }
+
+    return true;
+}
+
 void WebGLContext::BlendFunc(GLenum sfactor, GLenum dfactor)
 {
     if (IsContextLost())
         return;
 
-    if (!ValidateBlendFuncSrcEnum(sfactor, "blendFunc: sfactor") ||
-        !ValidateBlendFuncDstEnum(dfactor, "blendFunc: dfactor"))
-        return;
+    if (!ValidateBlendFuncEnums(this, sfactor, sfactor, dfactor, dfactor, "blendFunc"))
+       return;
 
     if (!ValidateBlendFuncEnumsCompatibility(sfactor, dfactor, "blendFuncSeparate: srcRGB and dstRGB"))
         return;
@@ -238,11 +263,8 @@ WebGLContext::BlendFuncSeparate(GLenum srcRGB, GLenum dstRGB,
     if (IsContextLost())
         return;
 
-    if (!ValidateBlendFuncSrcEnum(srcRGB, "blendFuncSeparate: srcRGB") ||
-        !ValidateBlendFuncSrcEnum(srcAlpha, "blendFuncSeparate: srcAlpha") ||
-        !ValidateBlendFuncDstEnum(dstRGB, "blendFuncSeparate: dstRGB") ||
-        !ValidateBlendFuncDstEnum(dstAlpha, "blendFuncSeparate: dstAlpha"))
-        return;
+    if (!ValidateBlendFuncEnums(this, srcRGB, srcAlpha, dstRGB, dstAlpha, "blendFuncSeparate"))
+       return;
 
     // note that we only check compatibity for the RGB enums, no need to for the Alpha enums, see
     // "Section 6.8 forgetting to mention alpha factors?" thread on the public_webgl mailing list
