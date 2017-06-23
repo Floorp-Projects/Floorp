@@ -941,47 +941,45 @@ this.UITour = {
 
   getTarget(aWindow, aTargetName, aSticky = false) {
     log.debug("getTarget:", aTargetName);
-    let deferred = Promise.defer();
     if (typeof aTargetName != "string" || !aTargetName) {
       log.warn("getTarget: Invalid target name specified");
-      deferred.reject("Invalid target name specified");
-      return deferred.promise;
+      return Promise.reject("Invalid target name specified");
     }
 
     let targetObject = this.targets.get(aTargetName);
     if (!targetObject) {
       log.warn("getTarget: The specified target name is not in the allowed set");
-      deferred.reject("The specified target name is not in the allowed set");
-      return deferred.promise;
+      return Promise.reject("The specified target name is not in the allowed set");
     }
 
-    let targetQuery = targetObject.query;
-    aWindow.PanelUI.ensureReady().then(() => {
-      let node;
-      if (typeof targetQuery == "function") {
-        try {
-          node = targetQuery(aWindow.document);
-        } catch (ex) {
-          log.warn("getTarget: Error running target query:", ex);
-          node = null;
+    return new Promise(resolve => {
+      let targetQuery = targetObject.query;
+      aWindow.PanelUI.ensureReady().then(() => {
+        let node;
+        if (typeof targetQuery == "function") {
+          try {
+            node = targetQuery(aWindow.document);
+          } catch (ex) {
+            log.warn("getTarget: Error running target query:", ex);
+            node = null;
+          }
+        } else {
+          node = aWindow.document.querySelector(targetQuery);
         }
-      } else {
-        node = aWindow.document.querySelector(targetQuery);
-      }
 
-      deferred.resolve({
-        addTargetListener: targetObject.addTargetListener,
-        infoPanelOffsetX: targetObject.infoPanelOffsetX,
-        infoPanelOffsetY: targetObject.infoPanelOffsetY,
-        infoPanelPosition: targetObject.infoPanelPosition,
-        node,
-        removeTargetListener: targetObject.removeTargetListener,
-        targetName: aTargetName,
-        widgetName: targetObject.widgetName,
-        allowAdd: targetObject.allowAdd,
-      });
-    }).catch(log.error);
-    return deferred.promise;
+        resolve({
+          addTargetListener: targetObject.addTargetListener,
+          infoPanelOffsetX: targetObject.infoPanelOffsetX,
+          infoPanelOffsetY: targetObject.infoPanelOffsetY,
+          infoPanelPosition: targetObject.infoPanelPosition,
+          node,
+          removeTargetListener: targetObject.removeTargetListener,
+          targetName: aTargetName,
+          widgetName: targetObject.widgetName,
+          allowAdd: targetObject.allowAdd,
+        });
+      }).catch(log.error);
+    });
   },
 
   targetIsInAppMenu(aTarget) {
