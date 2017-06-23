@@ -1,0 +1,277 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1345366
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1345366</title>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript">
+
+  "use strict";
+  SimpleTest.waitForExplicitFinish();
+
+  var gUrl = SimpleTest.getTestFileURL('ShowPaymentChromeScript.js');
+  var gScript = SpecialPowers.loadChromeScript(gUrl);
+
+  function testFailHandler(message) {
+    ok(false, message);
+  }
+  gScript.addMessageListener("test-fail", testFailHandler);
+
+  const defaultMethods = [{
+    supportedMethods: ["basic-card"],
+    data: { 
+      supportedNetworks: ['unionpay', 'visa', 'mastercard', 'amex', 'discover',
+                          'diners', 'jcb', 'mir',
+      ],
+      supportedTypes: ['prepaid', 'debit', 'credit'],
+    },
+  }];
+  const defaultDetails = {
+    id: "test payment",
+    total: {
+      label: "Total",
+      amount: {
+        currency: "USD",
+        value: "1.00"
+      }
+    },
+    shippingOptions: [
+      {
+        id: "NormalShipping",
+        label: "NormalShipping",
+        amount: {
+          currency: "USD",
+          value: "10.00"
+        },
+        selected: false,
+      },
+      {
+        id: "FastShipping",
+        label: "FastShipping",
+        amount: {
+          currency: "USD",
+          value: "30.00"
+        },
+        selected: false,
+      },
+    ],
+  };
+
+  const defaultOptions = {
+    requestPayerName: true,
+    requestPayerEmail: false,
+    reqeustPayerPhone: false,
+    requestShipping: true,
+    shippingType: "shipping"
+  };
+
+  const updatedOptionDetails = {
+    total: {
+      label: "Total",
+      amount: {
+        currency: "USD",
+        value: "1.00"
+      }
+    },
+    shippingOptions: [
+      {
+        id: "NormalShipping",
+        label: "NormalShipping",
+        amount: {
+          currency: "USD",
+          value: "10.00"
+        },
+        selected: false,
+      },
+      {
+        id: "FastShipping",
+        label: "FastShipping",
+        amount: {
+          currency: "USD",
+          value: "30.00"
+        },
+        selected: true,
+      },
+    ],
+  };
+
+  const updatedErrorDetails = {
+    total: {
+      label: "Total",
+      amount: {
+        currency: "USD",
+        value: "1.00"
+      }
+    },
+    shippingOptions: [
+      {
+        id: "NormalShipping",
+        label: "NormalShipping",
+        amount: {
+          currency: "USD",
+          value: "10.00"
+        },
+        selected: false,
+      },
+      {
+        id: "FastShipping",
+        label: "FastShipping",
+        amount: {
+          currency: "USD",
+          value: "30.00"
+        },
+        selected: false,
+      },
+    ],
+    error: "Update with Error",
+  };
+
+  function updateWithShippingAddress() {
+    return new Promise((resolve, reject) => {
+      resolve(defaultDetails);
+    });
+  }
+
+  function updateWithShippingOption() {
+    return new Promise((resolve, reject) => {
+      resolve(updatedOptionDetails);
+    });
+  }
+
+  function updateWithError() {
+    return new Promise((resolve, reject) => {
+      resolve(updatedErrorDetails);
+    });
+  }
+
+  function testShow() {
+    gScript.sendAsyncMessage("set-normal-ui-service");
+    return new Promise((resolve, reject) => {
+      const payRequest = new PaymentRequest(defaultMethods, defaultDetails, defaultOptions);
+      payRequest.addEventListener("shippingaddresschange", event => {
+        event.updateWith(updateWithShippingAddress());
+      });
+      payRequest.addEventListener("shippingoptionchange", event => {
+        event.updateWith(updateWithShippingOption());
+      });
+      payRequest.show().then(response => {
+        is(response.requestId, "test payment", "response.requestId should be 'test payment'.");
+        is(response.methodName, "basic-card", "response.methodName should be 'basic-card'.");
+        is(response.details.cardholderName, "Bill A. Pacheco", "response.details.cardholderName should be 'Bill A. Pacheco'.");
+        is(response.details.cardNumber, "4024007191304152", "response.details.cardNumber should be '4024007191304152'.");
+        is(response.details.expiryMonth, "05", "response.details.expiryMonth should be '05'.");
+        is(response.details.expiryYear, "2019", "response.details.expiryYear should be '2019'.");
+        is(response.details.cardSecurityCode, "024", "response.details.cardSecurityCode should be '024'.");
+        is(response.shippingAddress.country, "USA", "response.shippingAddress.country should be 'USA'.");
+        is(response.shippingAddress.addressLine.length, 1, "response.shippingAddress.addressLine.length should be 1.");
+        is(response.shippingAddress.addressLine[0], "Easton Ave", "response.shippingAddress.addressLine[0] should be 'Easton Ave'.");
+        is(response.shippingAddress.region, "CA", "response.shippingAddress.region should be 'CA'.");
+        is(response.shippingAddress.city, "San Bruno", "response.shippingAddress.city should be 'San Bruno'.");
+        is(response.shippingAddress.dependentLocality, "", "response.shippingAddress.dependentLocality should be empty.");
+        is(response.shippingAddress.postalCode, "94066", "response.shippingAddress.postalCode should be '94066'.");
+        is(response.shippingAddress.sortingCode, "123456", "response.shippingAddress.sortingCode should be '123456'.");
+        is(response.shippingAddress.organization, "", "response.shippingAddress.organization should be empty.");
+        is(response.shippingAddress.recipient, "Bill A. Pacheco", "response.shippingAddress.recipient should be 'Bill A. Pacheco'.");
+        is(response.shippingAddress.phone, "+1-434-441-3879", "response.shippingAddress.phone should be '+1-434-441-3879'.");
+        is(response.shippingOption, "FastShipping", "response.shippingOption should be 'FastShipping'.");
+        is(response.payerName, "Bill A. Pacheco", "response.payerName should be 'Bill A. Pacheco'.");
+        ok(!response.payerEamil, "response.payerEmail should be empty");
+        ok(!response.payerPhone, "response.payerPhone should be empty");
+        response.complete("success").then(() =>{
+          resolve();
+        }).catch(e => {
+          ok(false, "Unexpected error: " + e.name);
+          resolve();
+        });
+      }).catch( e => {
+        ok(false, "Unexpected error: " + e.name);
+        resolve();
+      });
+    });
+  }
+
+  function testRejectShow() {
+    gScript.sendAsyncMessage("set-reject-ui-service");
+    return new Promise((resolve, reject) => {
+      const payRequest = new PaymentRequest(defaultMethods, defaultDetails, defaultOptions);
+      payRequest.show().then((result) => {
+        ok(false, "Should be rejected with 'AbortError', but got resolved");
+        resolve();
+      }, (result) => {
+        is(result.name, "AbortError", "Should be rejected with 'AbortError', but got " + result.name + ".");
+        resolve();
+      }).catch(e => {
+        ok(false, "Unexpected error: " + e.name);
+        resolve();
+      });
+    });
+  }
+
+  function testUpdateWithError() {
+    gScript.sendAsyncMessage("set-update-with-error-ui-service");
+    return new Promise((resolve, reject) => {
+      const payRequest = new PaymentRequest(defaultMethods, defaultDetails, defaultOptions);
+      payRequest.addEventListener("shippingaddresschange", event => {
+        event.updateWith(updateWithError());
+      });
+      payRequest.addEventListener("shippingoptionchange", event => {
+        event.updateWith(updateWithError());
+      });
+      payRequest.show().then((result) => {
+        ok(false, "Should be rejected with 'AbortError', but got resolved");
+        resolve();
+      }, (result) => {
+        is(result.name, "AbortError", "Should be rejected with 'AbortError', but got " + result.name + ".");
+        resolve();
+      }).catch(e => {
+        ok(false, "Unexpected error: " + e.name);
+        resolve();
+      });
+    });
+  }
+
+  function teardown() {
+    gScript.addMessageListener("teardown-complete", function teardownCompleteHandler() {
+      gScript.removeMessageListener("teardown-complete", teardownCompleteHandler);
+      gScript.removeMessageListener("test-fail", testFailHandler)
+      gScript.destroy();
+      SimpleTest.finish();
+    });
+    gScript.sendAsyncMessage("teardown");
+  }
+
+  function runTests() {
+    testRejectShow()
+    .then(testShow)
+    .then(testUpdateWithError)
+    .then(teardown)
+    .catch( e => {
+      ok(false, "Unexpected error: " + e.name);
+      SimpleTest.finish();
+    });
+  }
+
+  window.addEventListener('load', function() {
+    SpecialPowers.pushPrefEnv({
+      'set': [
+        ['dom.payments.request.enabled', true],
+      ]
+    }, runTests);
+  });
+
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1345366">Mozilla Bug 1345366</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>
