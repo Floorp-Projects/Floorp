@@ -1234,6 +1234,7 @@ var PlacesToolbarHelper = {
  */
 
 var BookmarkingUI = {
+  STAR_ID: "star-button",
   BOOKMARK_BUTTON_ID: "bookmarks-menu-button",
   BOOKMARK_BUTTON_SHORTCUT: "addBookmarkAsKb",
   get button() {
@@ -1242,14 +1243,21 @@ var BookmarkingUI = {
     return this.button = widgetGroup.forWindow(window).node;
   },
 
-  /* Can't make this a self-deleting getter because it's anonymous content
-   * and might lose/regain bindings at some point. */
   get star() {
+    if (AppConstants.MOZ_PHOTON_THEME) {
+      delete this.star;
+      return this.star = document.getElementById(this.STAR_ID);
+    }
+    /* Can't make this a self-deleting getter because it's anonymous content
+     * and might lose/regain bindings at some point. */
     return document.getAnonymousElementByAttribute(this.button, "anonid",
                                                    "button");
   },
 
   get anchor() {
+    if (AppConstants.MOZ_PHOTON_THEME) {
+      return this.star;
+    }
     if (!this._shouldUpdateStarState()) {
       return null;
     }
@@ -1289,8 +1297,8 @@ var BookmarkingUI = {
     }
     if (this._pendingUpdate)
       return this.STATUS_UPDATING;
-    return this.button.hasAttribute("starred") ? this.STATUS_STARRED
-                                               : this.STATUS_UNSTARRED;
+    return this.broadcaster.hasAttribute("starred") ? this.STATUS_STARRED
+                                                    : this.STATUS_UNSTARRED;
   },
 
   get _starredTooltip() {
@@ -1319,7 +1327,9 @@ var BookmarkingUI = {
    */
   _currentAreaType: null,
   _shouldUpdateStarState() {
-    return this._currentAreaType == CustomizableUI.TYPE_TOOLBAR;
+    // Remove everything checking _shouldUpdateStarState when non-photon goes away.
+    return AppConstants.MOZ_PHOTON_THEME ||
+           this._currentAreaType == CustomizableUI.TYPE_TOOLBAR;
   },
 
   /**
@@ -1338,10 +1348,14 @@ var BookmarkingUI = {
     if (event.target != event.currentTarget)
       return;
 
-    // Ideally this code would never be reached, but if you click the outer
-    // button's border, some cpp code for the menu button's so-called XBL binding
-    // decides to open the popup even though the dropmarker is invisible.
-    if (this._currentAreaType == CustomizableUI.TYPE_MENU_PANEL) {
+    // On non-photon, this code should never be reached. However, if you click
+    // the outer button's border, some cpp code for the menu button's XBL
+    // binding decides to open the popup even though the dropmarker is invisible.
+    //
+    // Separately, in Photon, if the button is in the dynamic portion of the
+    // overflow panel, we want to show a subview instead.
+    if (this.button.getAttribute("cui-areatype") == CustomizableUI.TYPE_MENU_PANEL ||
+        (AppConstants.MOZ_PHOTON_THEME && this.button.hasAttribute("overflowedItem"))) {
       this._showSubview();
       event.preventDefault();
       event.stopPropagation();
@@ -1643,7 +1657,9 @@ var BookmarkingUI = {
 
   init() {
     CustomizableUI.addListener(this);
-    this._updateCustomizationState();
+    if (!AppConstants.MOZ_PHOTON_THEME) {
+      this._updateCustomizationState();
+    }
   },
 
   _hasBookmarksObserver: false,
@@ -1716,6 +1732,7 @@ var BookmarkingUI = {
       if (this.broadcaster.hasAttribute("starred")) {
         this.broadcaster.removeAttribute("starred");
         this.broadcaster.removeAttribute("buttontooltiptext");
+        this.broadcaster.removeAttribute("tooltiptext");
       }
       return;
     }
@@ -1723,13 +1740,15 @@ var BookmarkingUI = {
     if (this._itemGuids.size > 0) {
       this.broadcaster.setAttribute("starred", "true");
       this.broadcaster.setAttribute("buttontooltiptext", this._starredTooltip);
-      if (this.button.getAttribute("overflowedItem") == "true") {
+      this.broadcaster.setAttribute("tooltiptext", this._starredTooltip);
+      if (!AppConstants.MOZ_PHOTON_THEME && this.button.getAttribute("overflowedItem") == "true") {
         this.button.setAttribute("label", this._starButtonOverflowedStarredLabel);
       }
     } else {
       this.broadcaster.removeAttribute("starred");
       this.broadcaster.setAttribute("buttontooltiptext", this._unstarredTooltip);
-      if (this.button.getAttribute("overflowedItem") == "true") {
+      this.broadcaster.setAttribute("tooltiptext", this._unstarredTooltip);
+      if (!AppConstants.MOZ_PHOTON_THEME && this.button.getAttribute("overflowedItem") == "true") {
         this.button.setAttribute("label", this._starButtonOverflowedLabel);
       }
     }
@@ -1837,9 +1856,7 @@ var BookmarkingUI = {
     }
 
     // Handle special case when the button is in the panel.
-    let isBookmarked = this._itemGuids.size > 0;
-
-    if (this._currentAreaType == CustomizableUI.TYPE_MENU_PANEL) {
+    if (this.button.getAttribute("cui-areatype") == CustomizableUI.TYPE_MENU_PANEL) {
       this._showSubview();
       return;
     }
@@ -1849,10 +1866,15 @@ var BookmarkingUI = {
       // Close the overflow panel because the Edit Bookmark panel will appear.
       widget.node.removeAttribute("closemenu");
     }
+    this.onStarCommand(aEvent);
+  },
 
+  onStarCommand(aEvent) {
     // Ignore clicks on the star if we are updating its state.
     if (!this._pendingUpdate) {
-      if (!isBookmarked)
+      let isBookmarked = this._itemGuids.size > 0;
+      // Disable the old animation in photon
+      if (!isBookmarked && !AppConstants.MOZ_PHOTON_THEME)
         this._showBookmarkedNotification();
       PlacesCommandHook.bookmarkCurrentPage(true);
     }
@@ -1982,8 +2004,9 @@ var BookmarkingUI = {
   },
   onWidgetOverflow(aNode, aContainer) {
     let win = aNode.ownerGlobal;
-    if (aNode.id != this.BOOKMARK_BUTTON_ID || win != window)
+    if (AppConstants.MOZ_PHOTON_THEME || aNode.id != this.BOOKMARK_BUTTON_ID || win != window)
       return;
+
 
     let currentLabel = aNode.getAttribute("label");
     if (!this._starButtonLabel)
@@ -2004,6 +2027,9 @@ var BookmarkingUI = {
     // The view gets broken by being removed and reinserted. Uninit
     // here so popupshowing will generate a new one:
     this._uninitView();
+
+    if (AppConstants.MOZ_PHOTON_THEME)
+      return;
 
     if (aNode.getAttribute("label") != this._starButtonLabel)
       aNode.setAttribute("label", this._starButtonLabel);
