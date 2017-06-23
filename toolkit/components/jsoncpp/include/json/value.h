@@ -42,6 +42,8 @@
 #pragma warning(disable : 4251)
 #endif // if defined(JSONCPP_DISABLE_DLL_INTERFACE_WARNING)
 
+#pragma pack(push, 8)
+
 /** \brief JSON (JavaScript Object Notation).
  */
 namespace Json {
@@ -53,8 +55,8 @@ namespace Json {
 class JSON_API Exception : public std::exception {
 public:
   Exception(JSONCPP_STRING const& msg);
-  ~Exception() throw() JSONCPP_OVERRIDE;
-  char const* what() const throw() JSONCPP_OVERRIDE;
+  ~Exception() JSONCPP_NOEXCEPT JSONCPP_OVERRIDE;
+  char const* what() const JSONCPP_NOEXCEPT JSONCPP_OVERRIDE;
 protected:
   JSONCPP_STRING msg_;
 };
@@ -859,6 +861,7 @@ template<>
 inline void swap(Json::Value& a, Json::Value& b) { a.swap(b); }
 }
 
+#pragma pack(pop)
 
 #if defined(JSONCPP_DISABLE_DLL_INTERFACE_WARNING)
 #pragma warning(pop)
