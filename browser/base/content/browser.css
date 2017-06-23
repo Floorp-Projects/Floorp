@@ -1054,7 +1054,6 @@ toolbarpaletteitem[place="palette"] > #downloads-button[indicator] > #downloads-
   -moz-image-region: auto;
 }
 
-%ifdef MOZ_PHOTON_ANIMATIONS
 %ifdef MOZ_WIDGET_COCOA
 
 /* On Mac, use the properties "-moz-window-transform" and "-moz-window-opacity"
@@ -1065,61 +1064,6 @@ toolbarpaletteitem[place="palette"] > #downloads-button[indicator] > #downloads-
    lot faster. In fact, Gecko no longer triggers shadow shape recomputations
    for repaints.
    These properties are not implemented on other platforms. */
-#BMB_bookmarksPopup {
-  -moz-window-opacity: 0;
-  -moz-window-transform: translateY(-70px);
-  transition-property: -moz-window-transform, -moz-window-opacity;
-  transition-duration: 0.18s, 0.18s;
-  transition-timing-function:
-    var(--animation-easing-function), ease-out;
-}
-
-#BMB_bookmarksPopup[side="bottom"] {
-  -moz-window-transform: translateY(70px);
-}
-
-#BMB_bookmarksPopup[animate="open"] {
-  -moz-window-opacity: 1.0;
-  transition-duration: 0.20s, 0.10s;
-  -moz-window-transform: none;
-  transition-timing-function:
-    var(--animation-easing-function), ease-in-out;
-}
-
-#BMB_bookmarksPopup[animate="cancel"] {
-  -moz-window-transform: none;
-}
-
-%elifndef MOZ_WIDGET_GTK
-
-#BMB_bookmarksPopup {
-  opacity: 0;
-  transform: translateY(-70px);
-  transition-property: transform, opacity;
-  transition-duration: 0.18s, 0.18s;
-  transition-timing-function:
-    var(--animation-easing-function), ease-out;
-}
-
-#BMB_bookmarksPopup[side="bottom"] {
-  transform: translateY(70px);
-}
-
-#BMB_bookmarksPopup[animate="open"] {
-  opacity: 1.0;
-  transition-duration: 0.20s, 0.10s;
-  transform: none;
-  transition-timing-function:
-    var(--animation-easing-function), ease-in-out;
-}
-
-#BMB_bookmarksPopup[animate="cancel"] {
-  transform: none;
-}
-%endif
-
-%else
-%ifdef MOZ_WIDGET_COCOA
 #BMB_bookmarksPopup {
   -moz-window-transform: scale(.4);
   -moz-window-opacity: 0;
@@ -1195,7 +1139,6 @@ toolbarpaletteitem[place="palette"] > #downloads-button[indicator] > #downloads-
 #BMB_bookmarksPopup[arrowposition="before_start"]:-moz-locale-dir(rtl) {
   transform-origin: calc(100% - 20px) bottom;
 }
-%endif
 %endif
 
 /* Customize mode */
