@@ -170,7 +170,7 @@ class nsCharSeparatedTokenizerTemplate
   : public nsTCharSeparatedTokenizer<nsDependentSubstring, IsWhitespace>
 {
 public:
-  nsCharSeparatedTokenizerTemplate(const nsSubstring& aSource,
+  nsCharSeparatedTokenizerTemplate(const nsAString& aSource,
                                    char16_t aSeparatorChar,
                                    uint32_t aFlags = 0)
     : nsTCharSeparatedTokenizer<nsDependentSubstring,
@@ -186,7 +186,7 @@ class nsCCharSeparatedTokenizerTemplate
   : public nsTCharSeparatedTokenizer<nsDependentCSubstring, IsWhitespace>
 {
 public:
-  nsCCharSeparatedTokenizerTemplate(const nsCSubstring& aSource,
+  nsCCharSeparatedTokenizerTemplate(const nsACString& aSource,
                                     char aSeparatorChar,
                                     uint32_t aFlags = 0)
     : nsTCharSeparatedTokenizer<nsDependentCSubstring,

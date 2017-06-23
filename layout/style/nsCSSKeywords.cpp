@@ -72,7 +72,7 @@ nsCSSKeywords::LookupKeyword(const nsAString& aKeyword)
   return eCSSKeyword_UNKNOWN;
 }
 
-const nsAFlatCString& 
+const nsCString&
 nsCSSKeywords::GetStringValue(nsCSSKeyword aKeyword)
 {
   NS_ASSERTION(gKeywordTable, "no lookup table, needs addref");

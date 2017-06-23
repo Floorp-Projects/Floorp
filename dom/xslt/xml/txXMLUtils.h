@@ -43,7 +43,7 @@ public:
     /**
      * Returns true if the given string has only whitespace characters
      */
-    static bool isWhitespace(const nsAFlatString& aText);
+    static bool isWhitespace(const nsString& aText);
 
     /**
      * Normalizes the value of a XML processingInstruction
@@ -53,8 +53,7 @@ public:
     /**
      * Returns true if the given string is a valid XML QName
      */
-    static bool isValidQName(const nsAFlatString& aQName,
-                             const char16_t** aColon);
+    static bool isValidQName(const nsString& aQName, const char16_t** aColon);
 
     /**
      * Returns true if the given character represents an Alpha letter

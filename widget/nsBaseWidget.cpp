@@ -80,6 +80,7 @@
 #include "gfxConfig.h"
 #include "mozilla/layers/CompositorSession.h"
 #include "VRManagerChild.h"
+#include "gfxConfig.h"
 
 #ifdef DEBUG
 #include "nsIObserver.h"
@@ -1259,6 +1260,9 @@ void nsBaseWidget::CreateCompositor(int aWidth, int aHeight)
   bool enableWR = gfx::gfxVars::UseWebRender();
   bool enableAPZ = UseAPZ();
   CompositorOptions options(enableAPZ, enableWR);
+
+  bool enableAL = gfx::gfxConfig::IsEnabled(gfx::Feature::ADVANCED_LAYERS);
+  options.SetUseAdvancedLayers(enableAL);
 
   RefPtr<LayerManager> lm;
   if (options.UseWebRender()) {

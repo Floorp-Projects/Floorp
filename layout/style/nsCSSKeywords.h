@@ -36,7 +36,7 @@ public:
   static nsCSSKeyword LookupKeyword(const nsAString& aKeyword);
 
   // Given a keyword enum, get the string value
-  static const nsAFlatCString& GetStringValue(nsCSSKeyword aKeyword);
+  static const nsCString& GetStringValue(nsCSSKeyword aKeyword);
 };
 
 #endif /* nsCSSKeywords_h___ */

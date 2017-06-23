@@ -563,7 +563,7 @@ nsHttpChannelAuthProvider::PrepareForAuthentication(bool proxyAuth)
 nsresult
 nsHttpChannelAuthProvider::GetCredentials(const char     *challenges,
                                           bool            proxyAuth,
-                                          nsAFlatCString &creds)
+                                          nsCString& creds)
 {
     nsCOMPtr<nsIHttpAuthenticator> auth;
     nsAutoCString challenge;
@@ -660,10 +660,10 @@ nsHttpChannelAuthProvider::GetCredentials(const char     *challenges,
 
 nsresult
 nsHttpChannelAuthProvider::GetAuthorizationMembers(bool                 proxyAuth,
-                                                   nsCSubstring&        scheme,
+                                                   nsACString&        scheme,
                                                    const char*&         host,
                                                    int32_t&             port,
-                                                   nsCSubstring&        path,
+                                                   nsACString&        path,
                                                    nsHttpAuthIdentity*& ident,
                                                    nsISupports**&       continuationState)
 {
@@ -701,7 +701,7 @@ nsHttpChannelAuthProvider::GetCredentialsForChallenge(const char *challenge,
                                                       const char *authType,
                                                       bool        proxyAuth,
                                                       nsIHttpAuthenticator *auth,
-                                                      nsAFlatCString     &creds)
+                                                      nsCString& creds)
 {
     LOG(("nsHttpChannelAuthProvider::GetCredentialsForChallenge "
          "[this=%p channel=%p proxyAuth=%d challenges=%s]\n",
@@ -1488,7 +1488,7 @@ NS_IMETHODIMP nsHttpChannelAuthProvider::OnCredsGenerated(const char *aGenerated
 }
 
 nsresult
-nsHttpChannelAuthProvider::ContinueOnAuthAvailable(const nsCSubstring& creds)
+nsHttpChannelAuthProvider::ContinueOnAuthAvailable(const nsACString& creds)
 {
     nsresult rv;
     if (mProxyAuth)

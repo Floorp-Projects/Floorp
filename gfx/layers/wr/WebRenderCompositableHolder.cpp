@@ -271,6 +271,7 @@ WebRenderCompositableHolder::ApplyAsyncImages(wr::WebRenderAPI* aApi)
                                   0,
                                   &opacity,
                                   holder->mScTransform.IsIdentity() ? nullptr : &holder->mScTransform,
+                                  WrTransformStyle::Flat,
                                   holder->mMixBlendMode,
                                   nsTArray<WrFilterOp>());
 

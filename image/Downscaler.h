@@ -16,10 +16,7 @@
 #include "mozilla/UniquePtr.h"
 #include "gfxPoint.h"
 #include "nsRect.h"
-
-namespace skia {
-  class ConvolutionFilter1D;
-} // namespace skia
+#include "mozilla/gfx/ConvolutionFilter.h"
 
 namespace mozilla {
 namespace image {
@@ -130,8 +127,8 @@ private:
   UniquePtr<uint8_t[]> mRowBuffer;
   UniquePtr<uint8_t*[]> mWindow;
 
-  UniquePtr<skia::ConvolutionFilter1D> mXFilter;
-  UniquePtr<skia::ConvolutionFilter1D> mYFilter;
+  gfx::ConvolutionFilter mXFilter;
+  gfx::ConvolutionFilter mYFilter;
 
   int32_t mWindowCapacity;
 

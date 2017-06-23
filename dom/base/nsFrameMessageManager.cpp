@@ -1521,12 +1521,13 @@ void
 nsMessageManagerScriptExecutor::LoadScriptInternal(const nsAString& aURL,
                                                    bool aRunInGlobalScope)
 {
-#ifdef MOZ_GECKO_PROFILER
-  NS_LossyConvertUTF16toASCII urlCStr(aURL);
-  PROFILER_LABEL_DYNAMIC("nsMessageManagerScriptExecutor", "LoadScriptInternal",
-                          js::ProfileEntry::Category::OTHER,
-                          urlCStr.get());
-#endif
+  if (profiler_is_active()) {
+    NS_LossyConvertUTF16toASCII urlCStr(aURL);
+    PROFILER_LABEL_DYNAMIC("nsMessageManagerScriptExecutor",
+                           "LoadScriptInternal",
+                           js::ProfileEntry::Category::OTHER,
+                           urlCStr.get());
+  }
 
   if (!mGlobal || !sCachedScripts) {
     return;

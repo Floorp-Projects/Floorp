@@ -2143,7 +2143,7 @@ IMMHandler::GetTargetClauseRange(uint32_t* aOffset,
 }
 
 bool
-IMMHandler::ConvertToANSIString(const nsAFlatString& aStr,
+IMMHandler::ConvertToANSIString(const nsString& aStr,
                                 UINT aCodePage,
                                 nsACString& aANSIStr)
 {

@@ -16,16 +16,30 @@
 #ifndef GeckoProfiler_h
 #define GeckoProfiler_h
 
-#include <stdint.h>
-#include <stdarg.h>
 #include <functional>
+#include <signal.h>
+#include <stdarg.h>
+#include <stdint.h>
+#include <stdlib.h>
 
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
-#include "js/TypeDecls.h"
 #include "mozilla/GuardObjects.h"
+#include "mozilla/Sprintf.h"
+#include "mozilla/ThreadLocal.h"
 #include "mozilla/UniquePtr.h"
+#include "js/TypeDecls.h"
+#include "js/ProfilingStack.h"
+#include "nscore.h"
 
+// Make sure that we can use std::min here without the Windows headers messing
+// with us.
+#ifdef min
+# undef min
+#endif
+
+class ProfilerBacktrace;
+class ProfilerMarkerPayload;
 class SpliceableJSONWriter;
 
 namespace mozilla {
@@ -39,55 +53,13 @@ enum TracingKind {
   TRACING_INTERVAL_END,
 };
 
-class ProfilerBacktrace;
-
 struct ProfilerBacktraceDestructor
 {
   void operator()(ProfilerBacktrace*);
 };
+
 using UniqueProfilerBacktrace =
   mozilla::UniquePtr<ProfilerBacktrace, ProfilerBacktraceDestructor>;
-
-#if defined(MOZ_GECKO_PROFILER)
-
-// Use these for functions below that must be visible whether the profiler is
-// enabled or not. When the profiler is disabled they are static inline
-// functions (with a simple return value if they are non-void) that should be
-// optimized away during compilation.
-#define PROFILER_FUNC(decl, rv)  decl;
-#define PROFILER_FUNC_VOID(decl) void decl;
-
-// Uncomment this to turn on systrace or build with
-// ac_add_options --enable-systace
-//#define MOZ_USE_SYSTRACE
-#ifdef MOZ_USE_SYSTRACE
-# ifndef ATRACE_TAG
-#  define ATRACE_TAG ATRACE_TAG_ALWAYS
-# endif
-// We need HAVE_ANDROID_OS to be defined for Trace.h.
-// If its not set we will set it temporary and remove it.
-# ifndef HAVE_ANDROID_OS
-#  define HAVE_ANDROID_OS
-#  define REMOVE_HAVE_ANDROID_OS
-# endif
-// Android source code will include <cutils/trace.h> before this. There is no
-// HAVE_ANDROID_OS defined in Firefox OS build at that time. Enabled it globally
-// will cause other build break. So atrace_begin and atrace_end are not defined.
-// It will cause a build-break when we include <utils/Trace.h>. Use undef
-// _LIBS_CUTILS_TRACE_H will force <cutils/trace.h> to define atrace_begin and
-// atrace_end with defined HAVE_ANDROID_OS again. Then there is no build-break.
-# undef _LIBS_CUTILS_TRACE_H
-# include <utils/Trace.h>
-# define PROFILER_PLATFORM_TRACING(name) \
-    android::ScopedTrace \
-    PROFILER_APPEND_LINE_NUMBER(scopedTrace)(ATRACE_TAG, name);
-# ifdef REMOVE_HAVE_ANDROID_OS
-#  undef HAVE_ANDROID_OS
-#  undef REMOVE_HAVE_ANDROID_OS
-# endif
-#else
-# define PROFILER_PLATFORM_TRACING(name)
-#endif
 
 #define PROFILER_APPEND_LINE_NUMBER_PASTE(id, line) id ## line
 #define PROFILER_APPEND_LINE_NUMBER_EXPAND(id, line) \
@@ -108,7 +80,6 @@ using UniqueProfilerBacktrace =
 // Use PROFILER_LABEL_DYNAMIC if you want to add additional / dynamic
 // information to the pseudo stack frame.
 #define PROFILER_LABEL(name_space, info, category) \
-  PROFILER_PLATFORM_TRACING(name_space "::" info) \
   mozilla::AutoProfilerLabel \
   PROFILER_APPEND_LINE_NUMBER(profiler_raii)(name_space "::" info, nullptr, \
                                              __LINE__, category)
@@ -116,7 +87,6 @@ using UniqueProfilerBacktrace =
 // Similar to PROFILER_LABEL, PROFILER_LABEL_FUNC will push/pop the enclosing
 // functon name as the pseudostack label.
 #define PROFILER_LABEL_FUNC(category) \
-  PROFILER_PLATFORM_TRACING(PROFILER_FUNCTION_NAME) \
   mozilla::AutoProfilerLabel \
   PROFILER_APPEND_LINE_NUMBER(profiler_raii)(PROFILER_FUNCTION_NAME, nullptr, \
                                              __LINE__, category)
@@ -138,41 +108,9 @@ using UniqueProfilerBacktrace =
 // PROFILER_LABEL frames take up considerably less space in the profile buffer
 // than PROFILER_LABEL_DYNAMIC frames.
 #define PROFILER_LABEL_DYNAMIC(name_space, info, category, dynamicStr) \
-  PROFILER_PLATFORM_TRACING(name_space "::" info) \
   mozilla::AutoProfilerLabel \
   PROFILER_APPEND_LINE_NUMBER(profiler_raii)(name_space "::" info, dynamicStr, \
                                              __LINE__, category)
-
-// Insert a marker in the profile timeline. This is useful to delimit something
-// important happening such as the first paint. Unlike labels, which are only
-// recorded in the profile buffer if a sample is collected while the label is
-// on the pseudostack, markers will always be recorded in the profile buffer.
-#define PROFILER_MARKER(marker_name) profiler_add_marker(marker_name)
-
-// Like PROFILER_MARKER, but with an additional payload.
-#define PROFILER_MARKER_PAYLOAD(marker_name, payload) \
-  profiler_add_marker(marker_name, payload)
-
-#else   // defined(MOZ_GECKO_PROFILER)
-
-#define PROFILER_FUNC(decl, rv)  static inline decl { return rv; }
-#define PROFILER_FUNC_VOID(decl) static inline void decl {}
-
-#define PROFILER_LABEL(name_space, info, category) do {} while (0)
-#define PROFILER_LABEL_FUNC(category) do {} while (0)
-#define PROFILER_LABEL_DYNAMIC(name_space, info, category, dynamicStr) \
-  do {} while (0)
-
-#define PROFILER_MARKER(marker_name) do {} while (0)
-
-// Note: this is deliberately not defined when MOZ_GECKO_PROFILER is undefined.
-// This macro should not be used in that case -- i.e. all uses of this macro
-// should be guarded by a MOZ_GECKO_PROFILER check -- because payload creation
-// requires allocation, which is something we should not do in builds that
-// don't contain the profiler.
-//#define PROFILER_MARKER_PAYLOAD(marker_name, payload) /* undefined */
-
-#endif  // defined(MOZ_GECKO_PROFILER)
 
 // Higher-order macro containing all the feature info in one place. Define
 // |macro| appropriately to extract the relevant parts. Note that the number
@@ -234,7 +172,16 @@ struct ProfilerFeature
   #undef DECLARE
 };
 
-// These functions are defined whether the profiler is enabled or not.
+// When the profiler is disabled functions declared with these macros are
+// static inline functions (with a trivial return value if they are non-void)
+// that will be optimized away during compilation.
+#ifdef MOZ_GECKO_PROFILER
+# define PROFILER_FUNC(decl, rv)  decl;
+# define PROFILER_FUNC_VOID(decl) void decl;
+#else
+# define PROFILER_FUNC(decl, rv)  static inline decl { return rv; }
+# define PROFILER_FUNC_VOID(decl) static inline void decl {}
+#endif
 
 // Adds a tracing marker to the PseudoStack. A no-op if the profiler is
 // inactive or in privacy mode.
@@ -292,7 +239,7 @@ PROFILER_FUNC_VOID(profiler_get_backtrace_noalloc(char* aOutput,
                                                   size_t aOutputSize))
 
 // Free a ProfilerBacktrace returned by profiler_get_backtrace().
-#if !defined(MOZ_GECKO_PROFILER)
+#ifndef MOZ_GECKO_PROFILER
 inline void
 ProfilerBacktraceDestructor::operator()(ProfilerBacktrace* aBacktrace) {}
 #endif
@@ -419,33 +366,21 @@ PROFILER_FUNC_VOID(profiler_suspend_and_sample_thread(int aThreadId,
                                                       const std::function<void(void**, size_t)>& aCallback,
                                                       bool aSampleNative = true))
 
-// End of the functions defined whether the profiler is enabled or not.
+// Insert a marker in the profile timeline. This is useful to delimit something
+// important happening such as the first paint. Unlike labels, which are only
+// recorded in the profile buffer if a sample is collected while the label is
+// on the pseudostack, markers will always be recorded in the profile buffer.
+// A no-op if the profiler is inactive or in privacy mode.
+PROFILER_FUNC_VOID(profiler_add_marker(const char* aMarkerName))
+PROFILER_FUNC_VOID(profiler_add_marker(const char* aMarkerName,
+                                       mozilla::UniquePtr<ProfilerMarkerPayload> aPayload))
 
-#if defined(MOZ_GECKO_PROFILER)
+// Get the current thread's PseudoStack.
+PROFILER_FUNC(PseudoStack* profiler_get_pseudo_stack(), nullptr)
 
-#include <stdlib.h>
-#include <signal.h>
-#include "js/ProfilingStack.h"
-#include "mozilla/Sprintf.h"
-#include "mozilla/ThreadLocal.h"
-#include "nscore.h"
-
-// Make sure that we can use std::min here without the Windows headers messing with us.
-#ifdef min
-# undef min
-#endif
-
-class ProfilerMarkerPayload;
-
-// This exists purely for AutoProfilerLabel. See the comment on the
-// definition in platform.cpp for details.
-extern MOZ_THREAD_LOCAL(PseudoStack*) sPseudoStack;
-
-// Adds a marker to the PseudoStack. A no-op if the profiler is inactive or in
-// privacy mode.
-void profiler_add_marker(const char* aMarkerName);
-void profiler_add_marker(const char* aMarkerName,
-                         mozilla::UniquePtr<ProfilerMarkerPayload> aPayload);
+// Set and clear the current thread's JSContext.
+PROFILER_FUNC_VOID(profiler_set_js_context(JSContext* aCx))
+PROFILER_FUNC_VOID(profiler_clear_js_context())
 
 #if !defined(ARCH_ARMV6)
 # define PROFILER_DEFAULT_ENTRIES 1000000
@@ -461,7 +396,8 @@ namespace mozilla {
 // are stack-allocated, and so exist within a thread, and are thus bounded by
 // the lifetime of the thread, which ensures that the references held can't be
 // used after the PseudoStack is destroyed.
-class MOZ_RAII AutoProfilerLabel {
+class MOZ_RAII AutoProfilerLabel
+{
 public:
   AutoProfilerLabel(const char* aLabel, const char* aDynamicString,
                     uint32_t aLine, js::ProfileEntry::Category aCategory
@@ -471,39 +407,39 @@ public:
 
     // This function runs both on and off the main thread.
 
+#ifdef MOZ_GECKO_PROFILER
     mPseudoStack = sPseudoStack.get();
     if (mPseudoStack) {
       mPseudoStack->pushCppFrame(aLabel, aDynamicString, this, aLine,
                                  js::ProfileEntry::Kind::CPP_NORMAL, aCategory);
     }
+#endif
   }
 
   ~AutoProfilerLabel()
   {
     // This function runs both on and off the main thread.
 
+#ifdef MOZ_GECKO_PROFILER
     if (mPseudoStack) {
       mPseudoStack->pop();
     }
+#endif
   }
 
 private:
   MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
+
+#ifdef MOZ_GECKO_PROFILER
   // We save a PseudoStack pointer in the ctor so we don't have to redo the TLS
   // lookup in the dtor.
   PseudoStack* mPseudoStack;
+
+public:
+  // See the comment on the definition in platform.cpp for details about this.
+  static MOZ_THREAD_LOCAL(PseudoStack*) sPseudoStack;
+#endif
 };
-
-} // namespace mozilla
-
-PseudoStack* profiler_get_pseudo_stack();
-
-void profiler_set_js_context(JSContext* aCx);
-void profiler_clear_js_context();
-
-#endif  // defined(MOZ_GECKO_PROFILER)
-
-namespace mozilla {
 
 class MOZ_RAII AutoProfilerInit
 {

@@ -28,7 +28,7 @@ using mozilla::Move;
  * This should move to XSLProcessor class
  */
 nsresult
-txExprParser::createAVT(const nsSubstring& aAttrValue,
+txExprParser::createAVT(const nsAString& aAttrValue,
                         txIParseContext* aContext,
                         Expr** aResult)
 {
@@ -39,7 +39,7 @@ txExprParser::createAVT(const nsSubstring& aAttrValue,
 
     nsAutoString literalString;
     bool inExpr = false;
-    nsSubstring::const_char_iterator iter, start, end, avtStart;
+    nsAString::const_char_iterator iter, start, end, avtStart;
     aAttrValue.BeginReading(iter);
     aAttrValue.EndReading(end);
     avtStart = iter;
@@ -146,7 +146,7 @@ txExprParser::createAVT(const nsSubstring& aAttrValue,
 }
 
 nsresult
-txExprParser::createExprInternal(const nsSubstring& aExpression,
+txExprParser::createExprInternal(const nsAString& aExpression,
                                  uint32_t aSubStringPos,
                                  txIParseContext* aContext, Expr** aExpr)
 {
@@ -155,7 +155,7 @@ txExprParser::createExprInternal(const nsSubstring& aExpression,
     txExprLexer lexer;
     nsresult rv = lexer.parse(aExpression);
     if (NS_FAILED(rv)) {
-        nsASingleFragmentString::const_char_iterator start;
+        nsAString::const_char_iterator start;
         aExpression.BeginReading(start);
         aContext->SetErrorOffset(lexer.mPosition - start + aSubStringPos);
         return rv;
@@ -166,7 +166,7 @@ txExprParser::createExprInternal(const nsSubstring& aExpression,
         rv = NS_ERROR_XPATH_BINARY_EXPECTED;
     }
     if (NS_FAILED(rv)) {
-        nsASingleFragmentString::const_char_iterator start;
+        nsAString::const_char_iterator start;
         aExpression.BeginReading(start);
         aContext->SetErrorOffset(lexer.peek()->mStart - start + aSubStringPos);
 

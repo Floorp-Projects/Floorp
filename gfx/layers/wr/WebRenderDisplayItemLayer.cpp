@@ -136,10 +136,7 @@ WebRenderDisplayItemLayer::PushItemAsBlobImage(wr::DisplayListBuilder& aBuilder,
     mItem->Paint(mBuilder, context);
   }
 
-  wr::ByteBuffer bytes;
-  bytes.Allocate(recorder->RecordingSize());
-  DebugOnly<bool> ok = recorder->CopyRecording((char*)bytes.AsSlice().begin().get(), bytes.AsSlice().length());
-  MOZ_ASSERT(ok);
+  wr::ByteBuffer bytes(recorder->mOutputStream.mLength, (uint8_t*)recorder->mOutputStream.mData);
 
   WrRect dest = aSc.ToRelativeWrRect(imageRect + offset);
   WrClipRegionToken clipRegion = aBuilder.PushClipRegion(dest);

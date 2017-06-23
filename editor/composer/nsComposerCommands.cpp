@@ -25,7 +25,7 @@
 #include "nsLiteralString.h"            // for NS_LITERAL_STRING
 #include "nsReadableUtils.h"            // for EmptyString
 #include "nsString.h"                   // for nsAutoString, nsString, etc
-#include "nsStringFwd.h"                // for nsAFlatString
+#include "nsStringFwd.h"                // for nsString
 
 class nsISupports;
 

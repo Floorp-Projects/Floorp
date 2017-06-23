@@ -16,8 +16,8 @@ namespace auth {
 namespace detail {
 
 bool
-MatchesBaseURI(const nsCSubstring &matchScheme,
-               const nsCSubstring &matchHost,
+MatchesBaseURI(const nsACString& matchScheme,
+               const nsACString& matchHost,
                int32_t             matchPort,
                nsDependentCSubstring const& url)
 {

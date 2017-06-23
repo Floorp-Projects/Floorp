@@ -38,7 +38,7 @@ txUnknownHandler::attribute(nsIAtom* aPrefix, nsIAtom* aLocalName,
 }
 
 nsresult
-txUnknownHandler::attribute(nsIAtom* aPrefix, const nsSubstring& aLocalName,
+txUnknownHandler::attribute(nsIAtom* aPrefix, const nsAString& aLocalName,
                             const int32_t aNsID, const nsString& aValue)
 {
     return mFlushed ?
@@ -47,7 +47,7 @@ txUnknownHandler::attribute(nsIAtom* aPrefix, const nsSubstring& aLocalName,
 }
 
 nsresult
-txUnknownHandler::characters(const nsSubstring& aData, bool aDOE)
+txUnknownHandler::characters(const nsAString& aData, bool aDOE)
 {
     return mFlushed ?
            mEs->mResultHandler->characters(aData, aDOE) :
@@ -147,7 +147,7 @@ txUnknownHandler::startElement(nsIAtom* aPrefix, nsIAtom* aLocalName,
 }
 
 nsresult
-txUnknownHandler::startElement(nsIAtom* aPrefix, const nsSubstring& aLocalName,
+txUnknownHandler::startElement(nsIAtom* aPrefix, const nsAString& aLocalName,
                                const int32_t aNsID)
 {
     if (!mFlushed) {
@@ -167,7 +167,7 @@ txUnknownHandler::startElement(nsIAtom* aPrefix, const nsSubstring& aLocalName,
 }
 
 nsresult txUnknownHandler::createHandlerAndFlush(bool aHTMLRoot,
-                                                 const nsSubstring& aName,
+                                                 const nsAString& aName,
                                                  const int32_t aNsID)
 {
     NS_ENSURE_TRUE(mBuffer, NS_ERROR_NOT_INITIALIZED);

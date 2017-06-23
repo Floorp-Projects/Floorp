@@ -430,7 +430,7 @@ txCoreFunctionCall::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
                 return NS_OK;
             }
 
-            const nsSubstring& result = Substring(arg1, idx + arg2.Length());
+            const nsAString& result = Substring(arg1, idx + arg2.Length());
             return aContext->recycler()->getStringResult(result, aResult);
         }
         case SUBSTRING_BEFORE:

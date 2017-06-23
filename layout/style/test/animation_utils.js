@@ -412,7 +412,11 @@ const ExpectComparisonTo = {
 // to a nearest |app_units::Au| (i.e. i32), so we might have a tiny difference
 // between the results from getOMTAStyle() and getComputedStyle().
 // Note: 1 AU ~= 60 CSS pixel unit.
-const isServo = SpecialPowers.getBoolPref('layout.css.servo.enabled');
+let isServo = false;
+try {
+  isServo = SpecialPowers.getBoolPref('layout.css.servo.enabled');
+} catch (e) {
+}
 const toleranceForServoBackend = isServo ? 0.5 / 60.0 : 0.0;
 
 (function() {

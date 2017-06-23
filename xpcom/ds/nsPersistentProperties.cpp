@@ -495,7 +495,7 @@ nsPersistentProperties::SetStringProperty(const nsACString& aKey,
                                           const nsAString& aNewValue,
                                           nsAString& aOldValue)
 {
-  const nsAFlatCString&  flatKey = PromiseFlatCString(aKey);
+  const nsCString& flatKey = PromiseFlatCString(aKey);
   auto entry = static_cast<PropertyTableEntry*>
                           (mTable.Add(flatKey.get()));
 
@@ -523,7 +523,7 @@ NS_IMETHODIMP
 nsPersistentProperties::GetStringProperty(const nsACString& aKey,
                                           nsAString& aValue)
 {
-  const nsAFlatCString&  flatKey = PromiseFlatCString(aKey);
+  const nsCString& flatKey = PromiseFlatCString(aKey);
 
   auto entry = static_cast<PropertyTableEntry*>(mTable.Search(flatKey.get()));
   if (!entry) {

@@ -28,6 +28,7 @@
 #include "mozilla/dom/nsMixedContentBlocker.h"
 #include "nsIContentSecurityPolicy.h"
 #include "mozilla/dom/TabGroup.h"
+#include "mozilla/TaskCategory.h"
 
 using mozilla::LogLevel;
 
@@ -139,7 +140,7 @@ nsContentPolicy::CheckPolicy(CPMethod          policyMethod,
         nsCOMPtr<nsIContentSecurityPolicy> csp;
         requestPrincipal->GetCsp(getter_AddRefs(csp));
         if (csp && window) {
-            csp->EnsureEventTarget(window->EventTargetFor(TaskCategory::Other));
+            csp->EnsureEventTarget(window->EventTargetFor(mozilla::TaskCategory::Other));
         }
     }
 

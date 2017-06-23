@@ -417,7 +417,7 @@ ParseCodecsString(const nsAString& aCodecs, nsTArray<nsString>& aOutCodecs)
   bool expectMoreTokens = false;
   nsCharSeparatedTokenizer tokenizer(aCodecs, ',');
   while (tokenizer.hasMoreTokens()) {
-    const nsSubstring& token = tokenizer.nextToken();
+    const nsAString& token = tokenizer.nextToken();
     expectMoreTokens = tokenizer.separatorAfterCurrentToken();
     aOutCodecs.AppendElement(token);
   }

@@ -163,8 +163,8 @@ extern const char kLoadAsData[];
 
 // Stolen from nsReadableUtils, but that's OK, since we can declare the same
 // name multiple times.
-const nsAFlatString& EmptyString();
-const nsAFlatCString& EmptyCString();
+const nsString& EmptyString();
+const nsCString& EmptyCString();
 
 enum EventNameType {
   EventNameType_None = 0x0000,
@@ -630,7 +630,7 @@ public:
                              const char16_t** aColon = nullptr);
 
   static nsresult SplitQName(const nsIContent* aNamespaceResolver,
-                             const nsAFlatString& aQName,
+                             const nsString& aQName,
                              int32_t *aNamespace, nsIAtom **aLocalName);
 
   static nsresult GetNodeInfoFromQName(const nsAString& aNamespaceURI,
@@ -922,7 +922,7 @@ public:
                                               const nsACString& aCategory,
                                               const nsIDocument* aDocument,
                                               nsIURI* aURI = nullptr,
-                                              const nsAFlatString& aSourceLine
+                                              const nsString& aSourceLine
                                                 = EmptyString(),
                                               uint32_t aLineNumber = 0,
                                               uint32_t aColumnNumber = 0,
@@ -953,7 +953,7 @@ public:
                                             const nsACString& aCategory,
                                             uint64_t aInnerWindowID,
                                             nsIURI* aURI = nullptr,
-                                            const nsAFlatString& aSourceLine
+                                            const nsString& aSourceLine
                                               = EmptyString(),
                                             uint32_t aLineNumber = 0,
                                             uint32_t aColumnNumber = 0,
@@ -1004,7 +1004,7 @@ public:
                                   const char16_t **aParams = nullptr,
                                   uint32_t aParamsLength = 0,
                                   nsIURI* aURI = nullptr,
-                                  const nsAFlatString& aSourceLine
+                                  const nsString& aSourceLine
                                     = EmptyString(),
                                   uint32_t aLineNumber = 0,
                                   uint32_t aColumnNumber = 0);

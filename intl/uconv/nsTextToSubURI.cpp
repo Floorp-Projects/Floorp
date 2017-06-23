@@ -102,8 +102,8 @@ static bool statefulCharset(const char *charset)
 }
 
 nsresult
-nsTextToSubURI::convertURItoUnicode(const nsAFlatCString& aCharset,
-                                    const nsAFlatCString& aURI,
+nsTextToSubURI::convertURItoUnicode(const nsCString& aCharset,
+                                    const nsCString& aURI,
                                     nsAString& aOut)
 {
   // check for 7bit encoding the data may not be ASCII after we decode

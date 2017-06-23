@@ -1018,14 +1018,14 @@ TEST(Strings, Split)
   nsString wide(u"hello world");
 
   size_t counter = 0;
-  for (const nsCSubstring& token : one.Split(',')) {
+  for (const nsACString& token : one.Split(',')) {
     EXPECT_TRUE(token.Equals(NS_LITERAL_CSTRING("one")));
     counter++;
   }
   EXPECT_EQ(counter, (size_t)1);
 
   counter = 0;
-  for (const nsCSubstring& token : two.Split(';')) {
+  for (const nsACString& token : two.Split(';')) {
     if (counter == 0) {
       EXPECT_TRUE(token.Equals(NS_LITERAL_CSTRING("one")));
     } else if (counter == 1) {
@@ -1036,7 +1036,7 @@ TEST(Strings, Split)
   EXPECT_EQ(counter, (size_t)2);
 
   counter = 0;
-  for (const nsCSubstring& token : three.Split('-')) {
+  for (const nsACString& token : three.Split('-')) {
     if (counter == 0) {
       EXPECT_TRUE(token.Equals(NS_LITERAL_CSTRING("one")));
     } else if (counter == 1) {
@@ -1049,14 +1049,14 @@ TEST(Strings, Split)
   EXPECT_EQ(counter, (size_t)3);
 
   counter = 0;
-  for (const nsCSubstring& token : empty.Split(',')) {
+  for (const nsACString& token : empty.Split(',')) {
     mozilla::Unused << token;
     counter++;
   }
   EXPECT_EQ(counter, (size_t)0);
 
   counter = 0;
-  for (const nsCSubstring& token : delimStart.Split('-')) {
+  for (const nsACString& token : delimStart.Split('-')) {
     if (counter == 0) {
       EXPECT_TRUE(token.Equals(NS_LITERAL_CSTRING("")));
     } else if (counter == 1) {
@@ -1067,7 +1067,7 @@ TEST(Strings, Split)
   EXPECT_EQ(counter, (size_t)2);
 
   counter = 0;
-  for (const nsCSubstring& token : delimEnd.Split('-')) {
+  for (const nsACString& token : delimEnd.Split('-')) {
     if (counter == 0) {
       EXPECT_TRUE(token.Equals(NS_LITERAL_CSTRING("one")));
     } else if (counter == 1) {
@@ -1078,7 +1078,7 @@ TEST(Strings, Split)
   EXPECT_EQ(counter, (size_t)2);
 
   counter = 0;
-  for (const nsSubstring& token : wide.Split(' ')) {
+  for (const nsAString& token : wide.Split(' ')) {
     if (counter == 0) {
       EXPECT_TRUE(token.Equals(NS_LITERAL_STRING("hello")));
     } else if (counter == 1) {

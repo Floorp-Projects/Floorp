@@ -283,8 +283,8 @@ function waitForPaused(dbg) {
       // Make sure the source text is completely loaded for the
       // source we are paused in.
       const sourceId = pause && pause.frame && pause.frame.location.sourceId;
-      const sourceText = dbg.selectors.getSourceText(dbg.getState(), sourceId);
-      return sourceText && !sourceText.get("loading");
+      const source = dbg.selectors.getSource(dbg.getState(), sourceId);
+      return source && source.has("loading") && !source.get("loading");
     });
   });
 }
@@ -381,7 +381,7 @@ function findSource(dbg, url) {
 function selectSource(dbg, url, line) {
   info("Selecting source: " + url);
   const source = findSource(dbg, url);
-  const hasText = !!dbg.selectors.getSourceText(dbg.getState(), source.id);
+  const hasText = !!source.text && !source.loading;
   dbg.actions.selectSource(source.id, { line });
 
   if (!hasText) {
