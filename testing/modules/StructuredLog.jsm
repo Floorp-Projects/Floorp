@@ -252,7 +252,8 @@ StructuredFormatter.prototype = {
     } else {
         return "TEST-" + message.status + " | " + statusInfo;
     }
-    result = " | took " + message.time - startTime + "ms";
+    result = result + " | took " + message.time - startTime + "ms";
+    return result;
   },
 
   suite_end(message) {
