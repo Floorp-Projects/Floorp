@@ -525,6 +525,21 @@ PseudoTagAndCorrectElementForAnimation(const Element*& aElementOrPseudo) {
   return nullptr;
 }
 
+static CSSPseudoElementType
+GetPseudoTypeFromElementForAnimation(const Element*& aElementOrPseudo) {
+  if (aElementOrPseudo->IsGeneratedContentContainerForBefore()) {
+    aElementOrPseudo = aElementOrPseudo->GetParent()->AsElement();
+    return CSSPseudoElementType::before;
+  }
+
+  if (aElementOrPseudo->IsGeneratedContentContainerForAfter()) {
+    aElementOrPseudo = aElementOrPseudo->GetParent()->AsElement();
+    return CSSPseudoElementType::after;
+  }
+
+  return CSSPseudoElementType::NotPseudo;
+}
+
 bool
 Gecko_GetAnimationRule(RawGeckoElementBorrowed aElement,
                        EffectCompositor::CascadeLevel aCascadeLevel,
@@ -542,12 +557,8 @@ Gecko_GetAnimationRule(RawGeckoElementBorrowed aElement,
     return false;
   }
 
-  nsIAtom* pseudoTag = PseudoTagAndCorrectElementForAnimation(aElement);
-
   CSSPseudoElementType pseudoType =
-    nsCSSPseudoElements::GetPseudoType(
-      pseudoTag,
-      nsCSSProps::EnabledState::eIgnoreEnabledState);
+    GetPseudoTypeFromElementForAnimation(aElement);
 
   return presContext->EffectCompositor()
     ->GetServoAnimationRule(aElement,
@@ -581,10 +592,8 @@ Gecko_UpdateAnimations(RawGeckoElementBorrowed aElement,
     return;
   }
 
-  nsIAtom* pseudoTag = PseudoTagAndCorrectElementForAnimation(aElement);
   CSSPseudoElementType pseudoType =
-    nsCSSPseudoElements::GetPseudoType(pseudoTag,
-                                       CSSEnabledState::eForAllContent);
+    GetPseudoTypeFromElementForAnimation(aElement);
 
   if (aTasks & UpdateAnimationsTasks::CSSAnimations) {
     presContext->AnimationManager()->
@@ -629,10 +638,8 @@ Gecko_UpdateAnimations(RawGeckoElementBorrowed aElement,
 bool
 Gecko_ElementHasAnimations(RawGeckoElementBorrowed aElement)
 {
-  nsIAtom* pseudoTag = PseudoTagAndCorrectElementForAnimation(aElement);
   CSSPseudoElementType pseudoType =
-    nsCSSPseudoElements::GetPseudoType(pseudoTag,
-                                       CSSEnabledState::eForAllContent);
+    GetPseudoTypeFromElementForAnimation(aElement);
 
   return !!EffectSet::GetEffectSet(aElement, pseudoType);
 }
