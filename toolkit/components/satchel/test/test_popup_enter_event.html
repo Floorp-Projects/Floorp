@@ -59,16 +59,20 @@ function popupShownListener(evt) {
 
 function runTest() {
   input.addEventListener("keypress", handleEnter, true);
-  form.addEventListener("submit", evt => {
+  form.addEventListener("submit", function submitCallback(evt) {
     is(input.value, expectedValue, "Check input value in the submit handler");
     evt.preventDefault();
+
+    input.removeEventListener("keypress", handleEnter, true);
+    form.removeEventListener("submit", submitCallback);
+
     SimpleTest.finish();
   });
 
   // Focus the input before adjusting.value so that the caret goes to the end
   // (since OS X doesn't show the dropdown otherwise).
   input.focus();
-  input.value = "value"
+  input.value = "value";
   input.focus();
   doKey("down");
 }

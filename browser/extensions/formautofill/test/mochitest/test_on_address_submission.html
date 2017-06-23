@@ -29,7 +29,9 @@ let TEST_ADDRESSES = [{
   tel: "1-650-903-0800",
 }];
 
-// Autofill the address from dropdown menu.
+initPopupListener();
+
+// Submit first address for saving.
 add_task(async function check_storage_after_form_submitted() {
   // We already verified the first time use case in browser test
   await SpecialPowers.pushPrefEnv({
@@ -48,6 +50,32 @@ add_task(async function check_storage_after_form_submitted() {
   expectedAddresses[0].timesUsed = 1;
   let matching = await checkAddresses(expectedAddresses);
   ok(matching, "Address saved as expected");
+});
+
+// Submit another new address.
+add_task(async function check_storage_after_another_address_submitted() {
+  document.querySelector("form").reset();
+  for (let key in TEST_ADDRESSES[1]) {
+    await setInput("#" + key, TEST_ADDRESSES[1][key]);
+  }
+
+  clickOnElement("input[type=submit]");
+
+  // The 2nd test address should be on the top since it's the last used one.
+  let addressesInMenu = TEST_ADDRESSES.slice(1);
+  addressesInMenu.push(TEST_ADDRESSES[0]);
+
+  // let expectedAddresses = TEST_ADDRESSES.slice(0);
+  await onAddressChanged("add");
+  let matching = await checkAddresses(TEST_ADDRESSES);
+  ok(matching, "New address saved as expected");
+
+  await setInput("#organization", "");
+  doKey("down");
+  await expectPopup();
+  checkMenuEntries(addressesInMenu.map(address =>
+    JSON.stringify({primary: address.organization, secondary: address["street-address"]})
+  ));
 });
 
 </script>

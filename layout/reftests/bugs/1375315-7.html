@@ -1,0 +1,10 @@
+<!DOCTYPE html>
+<script>
+  onload = function() {
+    var height = document.body.offsetHeight; // Flush layout
+    document.querySelector("legend").style.color = "green";
+  }
+</script>
+<fieldset>
+  <legend style="display: list-item; color: red">Bullet should be green</legend>
+</fieldset>

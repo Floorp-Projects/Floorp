@@ -16,13 +16,19 @@ InputListAutoComplete.prototype = {
 
   autoCompleteSearch(aUntrimmedSearchString, aField) {
     let [values, labels] = this.getListSuggestions(aField);
-    let searchResult = values.length > 0 ? Ci.nsIAutoCompleteResult.RESULT_SUCCESS
-                                         : Ci.nsIAutoCompleteResult.RESULT_NOMATCH;
+    let searchResult = values.length > 0 ?
+      Ci.nsIAutoCompleteResult.RESULT_SUCCESS :
+      Ci.nsIAutoCompleteResult.RESULT_NOMATCH;
     let defaultIndex = values.length > 0 ? 0 : -1;
 
     return new FormAutoCompleteResult(aUntrimmedSearchString,
-                                      searchResult, defaultIndex, "",
-                                      values, labels, [], null);
+                                      searchResult,
+                                      defaultIndex,
+                                      "",
+                                      values,
+                                      labels,
+                                      [],
+                                      null);
   },
 
   getListSuggestions(aField) {
@@ -55,8 +61,7 @@ InputListAutoComplete.prototype = {
     }
 
     return [values, labels];
-
-  }
+  },
 };
 
 var component = [InputListAutoComplete];

@@ -2015,3 +2015,16 @@ fails-if(!stylo||styloVsGecko) == 1365162-1.html 1365162-1-ref.html
 == 1369954-1.xhtml 1369954-1-ref.xhtml
 == 1369985-1.html 1369985-1-ref.html
 == 1371130.xhtml 1371130-ref.xhtml
+== 1375315-1.html 1375315-1-ref.html
+== 1375315-2.html 1375315-2-ref.html
+== 1375315-3.html 1375315-3-ref.html
+== 1375315-4.html 1375315-4-ref.html
+== 1375315-5.html 1375315-5-ref.html
+== 1375315-6.html 1375315-6-ref.html
+== 1375315-7.html 1375315-7-ref.html
+== 1375315-8.html 1375315-8-ref.html
+== 1375315-9.html 1375315-9-ref.html
+== 1375315-10.html 1375315-10-ref.html
+== 1375315-11.html 1375315-11-ref.html
+== 1375315-12.html 1375315-12-ref.html
+== 1374062.html 1374062-ref.html

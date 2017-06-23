@@ -190,7 +190,6 @@ class AutoTry(object):
         "jsreftest",
         "marionette",
         "marionette-e10s",
-        "media-tests",
         "mochitests",
         "reftest",
         "web-platform-tests",

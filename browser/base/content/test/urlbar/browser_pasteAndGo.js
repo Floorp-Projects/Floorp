@@ -27,7 +27,7 @@ add_task(async function() {
       await cxmenuPromise;
       let menuitem = document.getAnonymousElementByAttribute(textBox,
         "anonid", "paste-and-go");
-      let browserLoadedPromise = BrowserTestUtils.browserLoaded(browser, url.replace(/\n/g, ""));
+      let browserLoadedPromise = BrowserTestUtils.browserLoaded(browser, false, url.replace(/\n/g, ""));
       EventUtils.synthesizeMouseAtCenter(menuitem, {});
       // Using toSource in order to get the newlines escaped:
       info("Paste and go, loading " + url.toSource());

@@ -242,6 +242,8 @@
 <pre id="test">
 <script class="testbody" type="text/javascript">
 /* import-globals-from satchel_common.js */
+/* eslint-disable complexity */
+
 var numSubmittedForms = 0;
 
 var ccNumbers = {
@@ -257,30 +259,30 @@ var ccNumbers = {
     "0580828863575793", "5015290610002932",
     "9465714503078607", "4302068493801686",
     "2721398408985465", "6160334316984331",
-    "8643619970075142", "0218246069710785"
+    "8643619970075142", "0218246069710785",
   ],
   invalid15: [
     "526931005800649", "724952425140686",
     "379761391174135", "030551436468583",
     "947377014076746", "254848023655752",
     "226871580283345", "708025346034339",
-    "917585839076788", "918632588027666"
+    "917585839076788", "918632588027666",
   ],
   invalid16: [
     "9946177098017064", "4081194386488872",
     "3095975979578034", "3662215692222536",
     "6723210018630429", "4411962856225025",
     "8276996369036686", "4449796938248871",
-    "3350852696538147", "5011802870046957"
+    "3350852696538147", "5011802870046957",
   ],
 };
 
 function checkInitialState() {
   countEntries(null, null,
-    function(num) {
-      ok(!num, "checking for initially empty storage");
-      startTest();
-    });
+               function(num) {
+                 ok(!num, "checking for initially empty storage");
+                 startTest();
+               });
 }
 
 function startTest() {
@@ -299,14 +301,20 @@ function startTest() {
   is(input.type, "text", "checking we got unidentified input");
   input.value = "dontSaveThis";
   // Form 9 has nothing to modify.
-  $_(10, "12345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890").value = "dontSaveThis";
-  $_(11, "test1").value = "12345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890";
+  $_(10, "12345678901234567890123456789012345678901234567890123456789012345678901234567890123456" +
+     "789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456" +
+     "789012345678901234567890123456789012345678901234567890123456789012345678901234567890").value
+    = "dontSaveThis";
+  $_(11, "test1").value = "123456789012345678901234567890123456789012345678901234567890123456789" +
+                          "012345678901234567890123456789012345678901234567890123456789012345678" +
+                          "901234567890123456789012345678901234567890123456789012345678901234567" +
+                          "89012345678901234567890123456789012345678901234567890";
   $_(12, "test1").value = " ";
   $_(13, "test1").value = "dontSaveThis";
   $_(14, "test1").type  = "password";
   $_(14, "test1").value = "dontSaveThis";
 
-  var testData = ccNumbers.valid16;
+  let testData = ccNumbers.valid16;
   for (let i = 0; i != testData.length; i++) {
     $_(15, "test" + (i + 1)).value = testData[i];
   }
@@ -342,14 +350,14 @@ function startTest() {
   $_(109, "test9").value = "savedValue";
 
   // submit the first form.
-  var button = getFormSubmitButton(1);
+  let button = getFormSubmitButton(1);
   button.click();
 }
 
 
+/* exported checkSubmit */
 // Called by each form's onsubmit handler.
 function checkSubmit(formNum) {
-
   ok(true, "form " + formNum + " submitted");
   numSubmittedForms++;
 
@@ -379,48 +387,50 @@ function checkSubmit(formNum) {
     case 21:
     case 22:
       countEntries(null, null,
-        function(num) {
-          ok(!num, "checking for empty storage");
-          submitForm(formNum);
-        });
-        return false;
+                   function(num) {
+                     ok(!num, "checking for empty storage");
+                     submitForm(formNum);
+                   });
+      return false;
     case 100:
-        checkForSave("subtest2", "subtestValue", "checking saved subtest value");
-        break;
+      checkForSave("subtest2", "subtestValue", "checking saved subtest value");
+      break;
     case 101:
-        checkForSave("test1", "savedValue", "checking saved value");
-        break;
+      checkForSave("test1", "savedValue", "checking saved value");
+      break;
     case 102:
-        checkForSave("test2", "savedValue", "checking saved value");
-        break;
+      checkForSave("test2", "savedValue", "checking saved value");
+      break;
     case 103:
-        checkForSave("test3", "savedValue", "checking saved value");
-        break;
+      checkForSave("test3", "savedValue", "checking saved value");
+      break;
     case 104:
-        checkForSave("test4", "trimTrailingAndLeadingSpace", "checking saved value is trimmed on both sides");
-        break;
+      checkForSave("test4", "trimTrailingAndLeadingSpace",
+                   "checking saved value is trimmed on both sides");
+      break;
     case 105:
-        checkForSave("test5", "trimTrailingAndLeadingWhitespace", "checking saved value is trimmed on both sides");
-        break;
+      checkForSave("test5", "trimTrailingAndLeadingWhitespace",
+                   "checking saved value is trimmed on both sides");
+      break;
     case 106:
-        checkForSave("test6", "00000000109181", "checking saved value");
-        break;
+      checkForSave("test6", "00000000109181", "checking saved value");
+      break;
     case 107:
-        for (let i = 0; i != ccNumbers.invalid16.length; i++) {
-          checkForSave("test7_" + (i + 1), ccNumbers.invalid16[i], "checking saved value");
-        }
-        break;
+      for (let i = 0; i != ccNumbers.invalid16.length; i++) {
+        checkForSave("test7_" + (i + 1), ccNumbers.invalid16[i], "checking saved value");
+      }
+      break;
     case 108:
-        for (let i = 0; i != ccNumbers.invalid15.length; i++) {
-          checkForSave("test8_" + (i + 1), ccNumbers.invalid15[i], "checking saved value");
-        }
-        break;
+      for (let i = 0; i != ccNumbers.invalid15.length; i++) {
+        checkForSave("test8_" + (i + 1), ccNumbers.invalid15[i], "checking saved value");
+      }
+      break;
     case 109:
-        checkForSave("test9", "savedValue", "checking saved value");
-        break;
+      checkForSave("test9", "savedValue", "checking saved value");
+      break;
     default:
-        ok(false, "Unexpected form submission");
-        break;
+      ok(false, "Unexpected form submission");
+      break;
   }
 
   return submitForm(formNum);
@@ -457,15 +467,16 @@ function submitForm(formNum) {
   //
   setTimeout(function() {
     checkObserver.waitForChecks(function() {
-      var nextFormNum = formNum == 22 ? 100 : (formNum + 1);
+      let nextFormNum = formNum == 22 ? 100 : (formNum + 1);
 
       // Submit the next form. Special cases are Forms 21 and 100, which happen
       // from an HTTPS domain in an iframe.
       if (nextFormNum == 100) {
         ok(true, "submitting iframe test " + nextFormNum);
-        SpecialPowers.wrap(document.getElementById("iframe").contentWindow).wrappedJSObject.clickButton(nextFormNum);
+        SpecialPowers.wrap(document.getElementById("iframe").contentWindow)
+        .wrappedJSObject.clickButton(nextFormNum);
       } else {
-        var button = getFormSubmitButton(nextFormNum);
+        let button = getFormSubmitButton(nextFormNum);
         button.click();
       }
     });

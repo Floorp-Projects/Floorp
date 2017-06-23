@@ -5,10 +5,10 @@
  *
  */
 
-var expectedNotification;
-var expectedData;
+let expectedNotification;
+let expectedData;
 
-var TestObserver = {
+let TestObserver = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver, Ci.nsISupportsWeakReference]),
 
   observe(subject, topic, data) {
@@ -16,24 +16,24 @@ var TestObserver = {
     do_check_eq(data, expectedNotification);
 
     switch (data) {
-        case "formhistory-add":
-        case "formhistory-update":
-            do_check_true(subject instanceof Ci.nsISupportsString);
-            do_check_true(isGUID.test(subject.toString()));
-            break;
-        case "formhistory-remove":
-            do_check_eq(null, subject);
-            break;
-        default:
-            do_throw("Unhandled notification: " + data + " / " + topic);
+      case "formhistory-add":
+      case "formhistory-update":
+        do_check_true(subject instanceof Ci.nsISupportsString);
+        do_check_true(isGUID.test(subject.toString()));
+        break;
+      case "formhistory-remove":
+        do_check_eq(null, subject);
+        break;
+      default:
+        do_throw("Unhandled notification: " + data + " / " + topic);
     }
 
     expectedNotification = null;
     expectedData = null;
-  }
+  },
 };
 
-var testIterator = null;
+let testIterator = null;
 
 function run_test() {
   do_test_pending();
@@ -46,112 +46,128 @@ function next_test() {
 }
 
 function* run_test_steps() {
+  let testnum = 0;
+  let testdesc = "Setup of test form history entries";
 
-try {
+  try {
+    let entry1 = ["entry1", "value1"];
 
-var testnum = 0;
-var testdesc = "Setup of test form history entries";
+    /* ========== 1 ========== */
+    testnum = 1;
+    testdesc = "Initial connection to storage module";
 
-var entry1 = ["entry1", "value1"];
+    yield updateEntry("remove", null, null, next_test);
+    yield countEntries(null, null, function(num) {
+      do_check_false(num, "Checking initial DB is empty");
+      next_test();
+    });
 
-/* ========== 1 ========== */
-testnum = 1;
-testdesc = "Initial connection to storage module"
+    // Add the observer
+    let os = Cc["@mozilla.org/observer-service;1"].getService(Ci.nsIObserverService);
+    os.addObserver(TestObserver, "satchel-storage-changed");
 
-yield updateEntry("remove", null, null, next_test);
-yield countEntries(null, null, function(num) { do_check_false(num, "Checking initial DB is empty"); next_test(); });
+    /* ========== 2 ========== */
+    testnum++;
+    testdesc = "addEntry";
 
-// Add the observer
-var os = Cc["@mozilla.org/observer-service;1"].
-         getService(Ci.nsIObserverService);
-os.addObserver(TestObserver, "satchel-storage-changed");
+    expectedNotification = "formhistory-add";
+    expectedData = entry1;
 
-/* ========== 2 ========== */
-testnum++;
-testdesc = "addEntry";
+    yield updateEntry("add", entry1[0], entry1[1], next_test);
+    do_check_eq(expectedNotification, null); // check that observer got a notification
 
-expectedNotification = "formhistory-add";
-expectedData = entry1;
+    yield countEntries(entry1[0], entry1[1], function(num) {
+      do_check_true(num > 0);
+      next_test();
+    });
 
-yield updateEntry("add", entry1[0], entry1[1], next_test);
-do_check_eq(expectedNotification, null); // check that observer got a notification
+    /* ========== 3 ========== */
+    testnum++;
+    testdesc = "modifyEntry";
 
-yield countEntries(entry1[0], entry1[1], function(num) { do_check_true(num > 0); next_test(); });
+    expectedNotification = "formhistory-update";
+    expectedData = entry1;
+    // will update previous entry
+    yield updateEntry("update", entry1[0], entry1[1], next_test);
+    yield countEntries(entry1[0], entry1[1], function(num) {
+      do_check_true(num > 0);
+      next_test();
+    });
 
-/* ========== 3 ========== */
-testnum++;
-testdesc = "modifyEntry";
+    do_check_eq(expectedNotification, null);
 
-expectedNotification = "formhistory-update";
-expectedData = entry1;
-// will update previous entry
-yield updateEntry("update", entry1[0], entry1[1], next_test);
-yield countEntries(entry1[0], entry1[1], function(num) { do_check_true(num > 0); next_test(); });
+    /* ========== 4 ========== */
+    testnum++;
+    testdesc = "removeEntry";
 
-do_check_eq(expectedNotification, null);
+    expectedNotification = "formhistory-remove";
+    expectedData = entry1;
+    yield updateEntry("remove", entry1[0], entry1[1], next_test);
 
-/* ========== 4 ========== */
-testnum++;
-testdesc = "removeEntry";
+    do_check_eq(expectedNotification, null);
+    yield countEntries(entry1[0], entry1[1], function(num) {
+      do_check_false(num, "doesn't exist after remove");
+      next_test();
+    });
 
-expectedNotification = "formhistory-remove";
-expectedData = entry1;
-yield updateEntry("remove", entry1[0], entry1[1], next_test);
+    /* ========== 5 ========== */
+    testnum++;
+    testdesc = "removeAllEntries";
 
-do_check_eq(expectedNotification, null);
-yield countEntries(entry1[0], entry1[1], function(num) { do_check_false(num, "doesn't exist after remove"); next_test(); });
+    expectedNotification = "formhistory-remove";
+    expectedData = null; // no data expected
+    yield updateEntry("remove", null, null, next_test);
 
-/* ========== 5 ========== */
-testnum++;
-testdesc = "removeAllEntries";
+    do_check_eq(expectedNotification, null);
 
-expectedNotification = "formhistory-remove";
-expectedData = null; // no data expected
-yield updateEntry("remove", null, null, next_test);
+    /* ========== 6 ========== */
+    testnum++;
+    testdesc = "removeAllEntries (again)";
 
-do_check_eq(expectedNotification, null);
+    expectedNotification = "formhistory-remove";
+    expectedData = null;
+    yield updateEntry("remove", null, null, next_test);
 
-/* ========== 6 ========== */
-testnum++;
-testdesc = "removeAllEntries (again)";
+    do_check_eq(expectedNotification, null);
 
-expectedNotification = "formhistory-remove";
-expectedData = null;
-yield updateEntry("remove", null, null, next_test);
+    /* ========== 7 ========== */
+    testnum++;
+    testdesc = "removeEntriesForName";
 
-do_check_eq(expectedNotification, null);
+    expectedNotification = "formhistory-remove";
+    expectedData = "field2";
+    yield updateEntry("remove", null, "field2", next_test);
 
-/* ========== 7 ========== */
-testnum++;
-testdesc = "removeEntriesForName";
+    do_check_eq(expectedNotification, null);
 
-expectedNotification = "formhistory-remove";
-expectedData = "field2";
-yield updateEntry("remove", null, "field2", next_test);
+    /* ========== 8 ========== */
+    testnum++;
+    testdesc = "removeEntriesByTimeframe";
 
-do_check_eq(expectedNotification, null);
+    expectedNotification = "formhistory-remove";
+    expectedData = [10, 99999999999];
 
-/* ========== 8 ========== */
-testnum++;
-testdesc = "removeEntriesByTimeframe";
+    yield FormHistory.update({
+      op: "remove",
+      firstUsedStart: expectedData[0],
+      firstUsedEnd: expectedData[1],
+    }, {
+      handleCompletion(reason) {
+        if (!reason) {
+          next_test();
+        }
+      },
+      handleErrors(error) {
+        do_throw("Error occurred updating form history: " + error);
+      },
+    });
 
-expectedNotification = "formhistory-remove";
-expectedData = [10, 99999999999];
+    do_check_eq(expectedNotification, null);
 
-yield FormHistory.update({ op: "remove", firstUsedStart: expectedData[0], firstUsedEnd: expectedData[1] },
-                         { handleCompletion(reason) { if (!reason) next_test() },
-                           handleErrors(error) {
-                             do_throw("Error occurred updating form history: " + error);
-                           }
-                         });
+    os.removeObserver(TestObserver, "satchel-storage-changed");
 
-do_check_eq(expectedNotification, null);
-
-os.removeObserver(TestObserver, "satchel-storage-changed");
-
-do_test_finished();
-
-} catch (e) {
-    throw "FAILED in test #" + testnum + " -- " + testdesc + ": " + e;
-}
+    do_test_finished();
+  } catch (e) {
+    throw new Error(`FAILED in test #${testnum} -- ${testdesc}: ${e}`);
+  }
 }

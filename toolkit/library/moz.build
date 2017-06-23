@@ -63,8 +63,9 @@ def Libxul(name):
 
     # This option should go away in bug 1290972, but we need to wait until
     # Rust 1.12 has been released.
+    # We're also linking against libresolv to solve bug 1367932.
     if CONFIG['OS_ARCH'] == 'Darwin':
-        LDFLAGS += ['-Wl,-no_compact_unwind']
+        LDFLAGS += ['-Wl,-no_compact_unwind,-lresolv']
 
 Libxul('xul')
 

@@ -16,7 +16,7 @@ use super::{Token, Parser, Delimiter, SourcePosition, ParseError, BasicParseErro
 /// Typical usage is `input.try(parse_important).is_ok()`
 /// at the end of a `DeclarationParser::parse_value` implementation.
 pub fn parse_important<'i, 't>(input: &mut Parser<'i, 't>) -> Result<(), BasicParseError<'i>> {
-    try!(input.expect_delim('!'));
+    input.expect_delim('!')?;
     input.expect_ident_matching("important")
 }
 
@@ -246,7 +246,7 @@ where P: DeclarationParser<'i, Declaration = I, Error = E> +
                         let parser = &mut self.parser;
                         // FIXME: https://github.com/rust-lang/rust/issues/42508
                         parse_until_after::<'i, 't, _, _, _>(self.input, Delimiter::Semicolon, |input| {
-                            try!(input.expect_colon());
+                            input.expect_colon()?;
                             parser.parse_value(name, input)
                         })
                     }.map_err(|e| PreciseParseError {
@@ -370,8 +370,8 @@ pub fn parse_one_declaration<'i, 't, P, E>(input: &mut Parser<'i, 't>, parser: &
                                            where P: DeclarationParser<'i, Error = E> {
     let start_position = input.position();
     input.parse_entirely(|input| {
-        let name = try!(input.expect_ident());
-        try!(input.expect_colon());
+        let name = input.expect_ident()?;
+        input.expect_colon()?;
         parser.parse_value(name, input)
     }).map_err(|e| PreciseParseError {
         error: e,
@@ -388,7 +388,7 @@ where P: QualifiedRuleParser<'i, QualifiedRule = R, Error = E> +
     input.parse_entirely(|input| {
         loop {
             let start_position = input.position();
-            match try!(input.next_including_whitespace_and_comments()) {
+            match input.next_including_whitespace_and_comments()? {
                 Token::WhiteSpace(_) | Token::Comment(_) => {}
                 Token::AtKeyword(name) => {
                     return parse_at_rule(start_position, name, input, parser).map_err(|e| e.error)
@@ -486,10 +486,10 @@ fn parse_qualified_rule<'i, 't, P, E>(input: &mut Parser<'i, 't>, parser: &mut P
     let prelude = parse_until_before::<'i, 't, _, _, _>(input, Delimiter::CurlyBracketBlock, |input| {
         parser.parse_prelude(input)
     });
-    match try!(input.next()) {
+    match input.next()? {
         Token::CurlyBracketBlock => {
             // Do this here so that we consume the `{` even if the prelude is `Err`.
-            let prelude = try!(prelude);
+            let prelude = prelude?;
             // FIXME: https://github.com/rust-lang/rust/issues/42508
             parse_nested_block::<'i, 't, _, _, _>(input, move |input| parser.parse_block(prelude, input))
         }

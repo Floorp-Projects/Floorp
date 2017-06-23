@@ -10231,6 +10231,17 @@ nsIFrame::UpdateStyleOfChildAnonBox(nsIFrame* aChildFrame,
   // has anon boxes to deal with.
   ServoRestyleState childrenState(aRestyleState, childHint);
   aChildFrame->UpdateStyleOfOwnedAnonBoxes(childrenState);
+
+  // Assuming anon boxes don't have ::backdrop associated with them... if that
+  // ever changes, we'd need to handle that here, like we do in
+  // ServoRestyleManager::ProcessPostTraversal
+
+  // We do need to handle block pseudo-elements here, though.  Especially list
+  // bullets.
+  if (aChildFrame->IsFrameOfType(nsIFrame::eBlockFrame)) {
+    auto block = static_cast<nsBlockFrame*>(aChildFrame);
+    block->UpdatePseudoElementStyles(childrenState);
+  }
 }
 
 nsChangeHint

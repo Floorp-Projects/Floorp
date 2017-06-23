@@ -3,10 +3,11 @@
   <meta charset=UTF-8>
   <title>Subtest for bug 472396</title>
   <script>
+  /* exported submitForm */
   function submitForm() {
     if (location.search.indexOf("field") == -1) {
-      var form  = document.getElementById("form");
-      var field = document.getElementById("field");
+      let form  = document.getElementById("form");
+      let field = document.getElementById("field");
       field.value = "value";
       form.submit();
     }

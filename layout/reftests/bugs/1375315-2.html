@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<script>
+  onload = function() {
+    var height = document.body.offsetHeight; // Flush layout
+    document.querySelector("li").style.color = "green";
+  }
+</script>
+<ul>
+  <li style="column-count: 2; width: 50px; list-style-position: inside; color: red">
+    Bullet should be green.
+  </li>
+</ul>

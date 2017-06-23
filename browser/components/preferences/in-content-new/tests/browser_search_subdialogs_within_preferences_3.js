@@ -15,7 +15,7 @@ add_task(async function() {
  */
 add_task(async function() {
   await openPreferencesViaOpenPreferencesAPI("paneGeneral", {leaveOpen: true});
-  evaluateSearchResults("allowed to install add-ons", "addonsPhishingGroup");
+  evaluateSearchResults("allowed to install add-ons", "permissionsGroup");
   await BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
 

@@ -12,13 +12,15 @@
 </form>
 
 <script>
+  /* exported checkSubmit clickButton */
   function checkSubmit(num) {
     return SpecialPowers.wrap(parent).wrappedJSObject.checkSubmit(num);
   }
 
   function clickButton(num) {
-    if (num == 100)
+    if (num == 100) {
       document.querySelectorAll("button")[0].click();
+    }
   }
 
   // set the input's value (can't use a default value, as satchel will ignore it)

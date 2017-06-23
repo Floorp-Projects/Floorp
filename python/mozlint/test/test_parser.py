@@ -35,6 +35,8 @@ def test_parse_valid_linter(parse):
     assert 'description' in lintobj
     assert 'type' in lintobj
     assert 'payload' in lintobj
+    assert 'extensions' in lintobj
+    assert set(lintobj['extensions']) == set(['js', 'jsm'])
 
 
 @pytest.mark.parametrize('linter', [

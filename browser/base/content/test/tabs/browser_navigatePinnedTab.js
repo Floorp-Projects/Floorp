@@ -31,7 +31,7 @@ add_task(async function() {
 
   // Now check that opening a link that does create a new tab works,
   // and also that it nulls out the opener.
-  let pageLoadPromise = BrowserTestUtils.browserLoaded(appTab.linkedBrowser, "http://example.com/");
+  let pageLoadPromise = BrowserTestUtils.browserLoaded(appTab.linkedBrowser, false, "http://example.com/");
   await BrowserTestUtils.loadURI(appTab.linkedBrowser, "http://example.com/");
   info("Started loading example.com");
   await pageLoadPromise;

@@ -181,12 +181,13 @@ public:
    *                            shouldn't be changed.
    * @param aNodesWithProperties All nodes (from amongst aNode and its
    *                             descendants) with properties. Every node will
-   *                             be followed by its clone.
+   *                             be followed by its clone. Null can be passed to
+   *                             prevent this from being used.
    * @param aResult *aResult will contain the cloned node.
    */
   static nsresult Clone(nsINode *aNode, bool aDeep,
                         nsNodeInfoManager *aNewNodeInfoManager,
-                        nsCOMArray<nsINode> &aNodesWithProperties,
+                        nsCOMArray<nsINode> *aNodesWithProperties,
                         nsINode **aResult)
   {
     return CloneAndAdopt(aNode, true, aDeep, aNewNodeInfoManager,
@@ -198,9 +199,8 @@ public:
    */
   static nsresult Clone(nsINode *aNode, bool aDeep, nsINode **aResult)
   {
-    nsCOMArray<nsINode> dummyNodeWithProperties;
-    return CloneAndAdopt(aNode, true, aDeep, nullptr, nullptr,
-                         dummyNodeWithProperties, aNode->GetParent(), aResult);
+    return CloneAndAdopt(aNode, true, aDeep, nullptr, nullptr, nullptr,
+                         aNode->GetParent(), aResult);
   }
 
   /**
@@ -226,7 +226,7 @@ public:
   {
     nsCOMPtr<nsINode> node;
     nsresult rv = CloneAndAdopt(aNode, false, true, aNewNodeInfoManager,
-                                aReparentScope, aNodesWithProperties,
+                                aReparentScope, &aNodesWithProperties,
                                 nullptr, getter_AddRefs(node));
 
     nsMutationGuard::DidMutate();
@@ -299,7 +299,8 @@ private:
    * @param aNodesWithProperties All nodes (from amongst aNode and its
    *                             descendants) with properties. If aClone is
    *                             true every node will be followed by its
-   *                             clone.
+   *                             clone. Null can be passed to prevent this from
+   *                             being populated.
    * @param aParent If aClone is true the cloned node will be appended to
    *                aParent's children. May be null. If not null then aNode
    *                must be an nsIContent.
@@ -309,7 +310,7 @@ private:
   static nsresult CloneAndAdopt(nsINode *aNode, bool aClone, bool aDeep,
                                 nsNodeInfoManager *aNewNodeInfoManager,
                                 JS::Handle<JSObject*> aReparentScope,
-                                nsCOMArray<nsINode> &aNodesWithProperties,
+                                nsCOMArray<nsINode> *aNodesWithProperties,
                                 nsINode *aParent, nsINode **aResult);
 
   enum class AnimationMutationType

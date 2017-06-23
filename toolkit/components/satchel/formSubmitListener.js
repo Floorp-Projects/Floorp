@@ -5,17 +5,18 @@
 /* eslint-env mozilla/frame-script */
 
 (function() {
-
 const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/PrivateBrowsingUtils.jsm");
 
-var satchelFormListener = {
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIFormSubmitObserver,
-                                         Ci.nsIObserver,
-                                         Ci.nsISupportsWeakReference]),
+let satchelFormListener = {
+  QueryInterface: XPCOMUtils.generateQI([
+    Ci.nsIFormSubmitObserver,
+    Ci.nsIObserver,
+    Ci.nsISupportsWeakReference,
+  ]),
 
   debug: true,
   enabled: true,
@@ -49,7 +50,7 @@ var satchelFormListener = {
 
     let total = 0;
     for (let i = 0; i < len; i++) {
-      let ch = parseInt(ccNumber[len - i - 1]);
+      let ch = parseInt(ccNumber[len - i - 1], 10);
       if (i % 2 == 1) {
         // Double it, add digits together if > 10
         ch *= 2;
@@ -139,7 +140,7 @@ var satchelFormListener = {
         }
 
         if (name == "searchbar-history") {
-          this.log('addEntry for input name "' + name + '" is denied')
+          this.log('addEntry for input name "' + name + '" is denied');
           continue;
         }
 
@@ -165,9 +166,8 @@ var satchelFormListener = {
     } catch (e) {
       this.log("notify failed: " + e);
     }
-  }
+  },
 };
 
 satchelFormListener.init();
-
 })();

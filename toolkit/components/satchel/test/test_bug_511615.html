@@ -51,6 +51,9 @@ SimpleTest.requestFlakyTimeout("Must ensure that an event does not happen.");
 
 /**
  * Checks that the popup does not open in response to the given function.
+ *
+ * @param {Function} triggerFn - function that triggers an event
+ * @returns {Promise}
  */
 function expectPopupDoesNotOpen(triggerFn) {
   let popupShown = waitForNextPopup();
@@ -63,6 +66,9 @@ function expectPopupDoesNotOpen(triggerFn) {
 
 /**
  * Checks that the selected index in the popup still matches the given value.
+ *
+ * @param {number} expectedIndex
+ * @returns {Promise}
  */
 function checkSelectedIndexAfterResponseTime(expectedIndex) {
   return new Promise(resolve => {
@@ -73,20 +79,23 @@ function checkSelectedIndexAfterResponseTime(expectedIndex) {
   });
 }
 
+let input = $_(1, "field1");
+
 function doKeyUnprivileged(key) {
   let keyName = "DOM_VK_" + key.toUpperCase();
   let keycode, charcode, alwaysval;
 
   if (key.length == 1) {
-      keycode = 0;
-      charcode = key.charCodeAt(0);
-      alwaysval = charcode;
+    keycode = 0;
+    charcode = key.charCodeAt(0);
+    alwaysval = charcode;
   } else {
-      keycode = KeyEvent[keyName];
-      if (!keycode)
-          throw "invalid keyname in test";
-      charcode = 0;
-      alwaysval = keycode;
+    keycode = KeyEvent[keyName];
+    if (!keycode) {
+      throw new Error("invalid keyname in test");
+    }
+    charcode = 0;
+    alwaysval = keycode;
   }
 
   let dnEvent = document.createEvent("KeyboardEvent");
@@ -109,18 +118,16 @@ function doClickWithMouseEventUnprivileged() {
   let upEvent = document.createEvent("MouseEvent");
   let ckEvent = document.createEvent("MouseEvent");
 
-  /* eslint-disable no-multi-spaces */
+  /* eslint-disable no-multi-spaces, max-len */
   dnEvent.initMouseEvent("mousedown",  true, true, window, 1, 0, 0, 0, 0, false, false, false, false, 0, null);
   upEvent.initMouseEvent("mouseup",    true, true, window, 1, 0, 0, 0, 0, false, false, false, false, 0, null);
   ckEvent.initMouseEvent("mouseclick", true, true, window, 1, 0, 0, 0, 0, false, false, false, false, 0, null);
-  /* eslint-enable no-multi-spaces */
+  /* eslint-enable no-multi-spaces, max-len */
 
   input.dispatchEvent(dnEvent);
   input.dispatchEvent(upEvent);
   input.dispatchEvent(ckEvent);
 }
-
-let input = $_(1, "field1");
 
 add_task(async function test_initialize() {
   await new Promise(resolve => updateFormHistory([

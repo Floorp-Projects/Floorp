@@ -213,7 +213,6 @@ def old_configure_options(*options):
     '--enable-raw',
     '--enable-readline',
     '--enable-reflow-perf',
-    '--enable-release',
     '--enable-safe-browsing',
     '--enable-sandbox',
     '--enable-signmar',

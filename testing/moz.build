@@ -73,9 +73,6 @@ with Files("config/mozbase_requirements.txt"):
 with Files("config/firefox_ui_requirements.txt"):
     BUG_COMPONENT = ("Testing", "Firfox UI Tests")
 
-with Files("config/external-media-tests-requirements.txt"):
-    BUG_COMPONENT = ("Testing", "external-media-tests")
-
 with Files("tools/**"):
     BUG_COMPONENT = ("Testing", "General")
 

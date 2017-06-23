@@ -34,7 +34,7 @@ Form History test: form field autocomplete
 /* import-globals-from ../../../../testing/mochitest/tests/SimpleTest/SpawnTask.js */
 /* import-globals-from satchel_common.js */
 
-var input = $_(1, "field1");
+let input = $_(1, "field1");
 
 function setupFormHistory(aCallback) {
   updateFormHistory([
@@ -57,7 +57,7 @@ function restoreForm() {
 
 // Check for expected form data.
 function checkForm(expectedValue) {
-  var formID = input.parentNode.id;
+  let formID = input.parentNode.id;
   is(input.value, expectedValue, "Checking " + formID + " input");
 }
 
@@ -93,10 +93,11 @@ function waitForMenuChange(expectedCount) {
 registerPopupShownListener(popupShownListener);
 
 function checkMenuEntries(expectedValues) {
-  var actualValues = getMenuEntries();
+  let actualValues = getMenuEntries();
   is(actualValues.length, expectedValues.length, testNum + " Checking length of expected menu");
-  for (var i = 0; i < expectedValues.length; i++)
+  for (let i = 0; i < expectedValues.length; i++) {
     is(actualValues[i], expectedValues[i], testNum + " Checking menu entry #" + i);
+  }
 }
 
 async function runTests() {

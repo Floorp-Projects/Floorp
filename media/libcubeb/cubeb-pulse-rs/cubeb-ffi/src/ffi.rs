@@ -11,45 +11,45 @@ pub enum Context {}
 pub enum Stream {}
 
 // These need to match cubeb_sample_format
-pub const SAMPLE_S16LE: c_int = 0;
-pub const SAMPLE_S16BE: c_int = 1;
-pub const SAMPLE_FLOAT32LE: c_int = 2;
-pub const SAMPLE_FLOAT32BE: c_int = 3;
 pub type SampleFormat = c_int;
+pub const SAMPLE_S16LE: SampleFormat = 0;
+pub const SAMPLE_S16BE: SampleFormat = 1;
+pub const SAMPLE_FLOAT32LE: SampleFormat = 2;
+pub const SAMPLE_FLOAT32BE: SampleFormat = 3;
 
 #[cfg(target_endian = "little")]
-pub const SAMPLE_S16NE: c_int = SAMPLE_S16LE;
+pub const SAMPLE_S16NE: SampleFormat = SAMPLE_S16LE;
 #[cfg(target_endian = "little")]
-pub const SAMPLE_FLOAT32NE: c_int = SAMPLE_FLOAT32LE;
+pub const SAMPLE_FLOAT32NE: SampleFormat = SAMPLE_FLOAT32LE;
 #[cfg(target_endian = "big")]
-pub const SAMPLE_S16NE: c_int = SAMPLE_S16BE;
+pub const SAMPLE_S16NE: SampleFormat = SAMPLE_S16BE;
 #[cfg(target_endian = "big")]
-pub const SAMPLE_FLOAT32NE: c_int = SAMPLE_FLOAT32BE;
+pub const SAMPLE_FLOAT32NE: SampleFormat = SAMPLE_FLOAT32BE;
 
 pub type DeviceId = *const c_void;
 
 // These need to match cubeb_channel_layout
-pub const LAYOUT_UNDEFINED: c_int = 0;
-pub const LAYOUT_DUAL_MONO: c_int = 1;
-pub const LAYOUT_DUAL_MONO_LFE: c_int = 2;
-pub const LAYOUT_MONO: c_int = 3;
-pub const LAYOUT_MONO_LFE: c_int = 4;
-pub const LAYOUT_STEREO: c_int = 5;
-pub const LAYOUT_STEREO_LFE: c_int = 6;
-pub const LAYOUT_3F: c_int = 7;
-pub const LAYOUT_3F_LFE: c_int = 8;
-pub const LAYOUT_2F1: c_int = 9;
-pub const LAYOUT_2F1_LFE: c_int = 10;
-pub const LAYOUT_3F1: c_int = 11;
-pub const LAYOUT_3F1_LFE: c_int = 12;
-pub const LAYOUT_2F2: c_int = 13;
-pub const LAYOUT_2F2_LFE: c_int = 14;
-pub const LAYOUT_3F2: c_int = 15;
-pub const LAYOUT_3F2_LFE: c_int = 16;
-pub const LAYOUT_3F3R_LFE: c_int = 17;
-pub const LAYOUT_3F4_LFE: c_int = 18;
-pub const LAYOUT_MAX: c_int = 19;
 pub type ChannelLayout = c_int;
+pub const LAYOUT_UNDEFINED: ChannelLayout = 0;
+pub const LAYOUT_DUAL_MONO: ChannelLayout = 1;
+pub const LAYOUT_DUAL_MONO_LFE: ChannelLayout = 2;
+pub const LAYOUT_MONO: ChannelLayout = 3;
+pub const LAYOUT_MONO_LFE: ChannelLayout = 4;
+pub const LAYOUT_STEREO: ChannelLayout = 5;
+pub const LAYOUT_STEREO_LFE: ChannelLayout = 6;
+pub const LAYOUT_3F: ChannelLayout = 7;
+pub const LAYOUT_3F_LFE: ChannelLayout = 8;
+pub const LAYOUT_2F1: ChannelLayout = 9;
+pub const LAYOUT_2F1_LFE: ChannelLayout = 10;
+pub const LAYOUT_3F1: ChannelLayout = 11;
+pub const LAYOUT_3F1_LFE: ChannelLayout = 12;
+pub const LAYOUT_2F2: ChannelLayout = 13;
+pub const LAYOUT_2F2_LFE: ChannelLayout = 14;
+pub const LAYOUT_3F2: ChannelLayout = 15;
+pub const LAYOUT_3F2_LFE: ChannelLayout = 16;
+pub const LAYOUT_3F3R_LFE: ChannelLayout = 17;
+pub const LAYOUT_3F4_LFE: ChannelLayout = 18;
+pub const LAYOUT_MAX: ChannelLayout = 256;
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug)]
@@ -77,11 +77,11 @@ impl Default for Device {
 }
 
 // These need to match cubeb_state
-pub const STATE_STARTED: c_int = 0;
-pub const STATE_STOPPED: c_int = 1;
-pub const STATE_DRAINED: c_int = 2;
-pub const STATE_ERROR: c_int = 3;
 pub type State = c_int;
+pub const STATE_STARTED: State = 0;
+pub const STATE_STOPPED: State = 1;
+pub const STATE_DRAINED: State = 2;
+pub const STATE_ERROR: State = 3;
 
 pub const OK: i32 = 0;
 pub const ERROR: i32 = -1;
@@ -249,32 +249,42 @@ pub struct LayoutMap {
 }
 
 // cubeb_mixer.h
-
-// These need to match cubeb_channel
-pub const CHANNEL_INVALID: c_int = -1;
-pub const CHANNEL_MONO: c_int = 0;
-pub const CHANNEL_LEFT: c_int = 1;
-pub const CHANNEL_RIGHT: c_int = 2;
-pub const CHANNEL_CENTER: c_int = 3;
-pub const CHANNEL_LS: c_int = 4;
-pub const CHANNEL_RS: c_int = 5;
-pub const CHANNEL_RLS: c_int = 6;
-pub const CHANNEL_RCENTER: c_int = 7;
-pub const CHANNEL_RRS: c_int = 8;
-pub const CHANNEL_LFE: c_int = 9;
-pub const CHANNEL_MAX: c_int = 256;
 pub type Channel = c_int;
 
+// These need to match cubeb_channel
+pub const CHANNEL_INVALID: Channel = -1;
+pub const CHANNEL_MONO: Channel = 0;
+pub const CHANNEL_LEFT: Channel = 1;
+pub const CHANNEL_RIGHT: Channel = 2;
+pub const CHANNEL_CENTER: Channel = 3;
+pub const CHANNEL_LS: Channel = 4;
+pub const CHANNEL_RS: Channel = 5;
+pub const CHANNEL_RLS: Channel = 6;
+pub const CHANNEL_RCENTER: Channel = 7;
+pub const CHANNEL_RRS: Channel = 8;
+pub const CHANNEL_LFE: Channel = 9;
+pub const CHANNEL_MAX: Channel = 10;
+
 #[repr(C)]
+#[derive(Clone, Copy, Debug)]
 pub struct ChannelMap {
     pub channels: c_uint,
-    pub map: [Channel; 256],
+    pub map: [Channel; CHANNEL_MAX as usize],
 }
 impl ::std::default::Default for ChannelMap {
     fn default() -> Self {
         ChannelMap {
             channels: 0,
-            map: unsafe { ::std::mem::zeroed() },
+            map: [CHANNEL_INVALID,
+                  CHANNEL_INVALID,
+                  CHANNEL_INVALID,
+                  CHANNEL_INVALID,
+                  CHANNEL_INVALID,
+                  CHANNEL_INVALID,
+                  CHANNEL_INVALID,
+                  CHANNEL_INVALID,
+                  CHANNEL_INVALID,
+                  CHANNEL_INVALID],
         }
     }
 }

@@ -180,6 +180,41 @@
   <label class="header-name" flex="1">&panePrivacySecurity.title;</label>
 </hbox>
 
+<!-- Permissions -->
+<groupbox id="permissionsGroup" data-category="panePrivacy" hidden="true">
+  <caption><label>&permissions.label;</label></caption>
+  <separator class="thin"/>
+  <hbox align="start">
+    <checkbox id="popupPolicy" preference="dom.disable_open_during_load"
+              label="&blockPopups.label;" accesskey="&blockPopups.accesskey;"
+              onsyncfrompreference="return gPrivacyPane.updateButtons('popupPolicyButton',
+                                         'dom.disable_open_during_load');"
+              flex="1" />
+    <button id="popupPolicyButton"
+            class="accessory-button"
+            label="&popupExceptions.label;"
+            accesskey="&popupExceptions.accesskey;"
+            searchkeywords="&address.label; &button.cancel.label; &button.ok.label;"/>
+  </hbox>
+  <hbox id="addonInstallBox">
+    <checkbox id="warnAddonInstall"
+              label="&warnOnAddonInstall.label;"
+              accesskey="&warnOnAddonInstall.accesskey;"
+              preference="xpinstall.whitelist.required"
+              onsyncfrompreference="return gPrivacyPane.readWarnAddonInstall();"
+              flex="1" />
+    <button id="addonExceptions"
+            class="accessory-button"
+            label="&addonExceptions.label;"
+            accesskey="&addonExceptions.accesskey;"
+            searchkeywords="&address.label;
+                            &allow.label;
+                            &removepermission.label;
+                            &removeallpermissions.label;
+                            &button.cancel.label;
+                            &button.ok.label;"/>
+  </hbox>
+</groupbox>
 
 <!-- History -->
 <groupbox id="historyGroup" data-category="panePrivacy" hidden="true">
@@ -431,23 +466,6 @@
   </vbox>
 </groupbox>
 
-<!-- Pop-ups -->
-<groupbox id="miscGroup" data-category="panePrivacy" hidden="true">
-  <caption><label>&popups.label;</label></caption>
-  <hbox align="start">
-    <checkbox id="popupPolicy" preference="dom.disable_open_during_load"
-              label="&blockPopups.label;" accesskey="&blockPopups.accesskey;"
-              onsyncfrompreference="return gPrivacyPane.updateButtons('popupPolicyButton',
-                                         'dom.disable_open_during_load');"
-              flex="1" />
-    <button id="popupPolicyButton"
-            class="accessory-button"
-            label="&popupExceptions.label;"
-            accesskey="&popupExceptions.accesskey;"
-            searchkeywords="&address.label; &button.cancel.label; &button.ok.label;"/>
-  </hbox>
-</groupbox>
-
 <!-- Notifications -->
 <groupbox id="notificationsGroup" data-category="panePrivacy" hidden="true">
   <caption><label>&notificationsPolicy.label;</label></caption>
@@ -504,30 +522,9 @@
   </label>
 </groupbox>
 
-<!-- addons, forgery (phishing) UI Security -->
-<groupbox id="addonsPhishingGroup" data-category="panePrivacy" hidden="true">
+<!-- Forgery (phishing) UI Security -->
+<groupbox id="phishingGroup" data-category="panePrivacy" hidden="true">
   <caption><label>&security.label;</label></caption>
-
-  <hbox id="addonInstallBox">
-    <checkbox id="warnAddonInstall"
-              label="&warnOnAddonInstall.label;"
-              accesskey="&warnOnAddonInstall.accesskey;"
-              preference="xpinstall.whitelist.required"
-              onsyncfrompreference="return gPrivacyPane.readWarnAddonInstall();"
-              flex="1" />
-    <button id="addonExceptions"
-            class="accessory-button"
-            label="&addonExceptions.label;"
-            accesskey="&addonExceptions.accesskey;"
-            searchkeywords="&address.label;
-                            &allow.label;
-                            &removepermission.label;
-                            &removeallpermissions.label;
-                            &button.cancel.label;
-                            &button.ok.label;"/>
-  </hbox>
-
-  <separator class="thin"/>
   <checkbox id="enableSafeBrowsing"
             label="&enableSafeBrowsing.label;"
             accesskey="&enableSafeBrowsing.accesskey;" />
