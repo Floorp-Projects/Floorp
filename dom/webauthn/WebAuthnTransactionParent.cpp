@@ -30,7 +30,7 @@ mozilla::ipc::IPCResult
 WebAuthnTransactionParent::RecvRequestCancel()
 {
   U2FTokenManager* mgr = U2FTokenManager::Get();
-  mgr->MaybeClearTransaction(this);
+  mgr->Cancel(this);
   return IPC_OK();
 }
 
