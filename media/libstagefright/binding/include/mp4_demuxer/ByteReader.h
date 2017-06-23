@@ -50,14 +50,14 @@ public:
   {
   }
 
-  size_t Offset() const
+  size_t Offset()
   {
     return mLength - mRemaining;
   }
 
   size_t Remaining() const { return mRemaining; }
 
-  bool CanRead8() const { return mRemaining >= 1; }
+  bool CanRead8() { return mRemaining >= 1; }
 
   uint8_t ReadU8()
   {
@@ -188,7 +188,7 @@ public:
     return mPtr;
   }
 
-  uint8_t PeekU8() const
+  uint8_t PeekU8()
   {
     auto ptr = Peek(1);
     if (!ptr) {
@@ -198,7 +198,7 @@ public:
     return *ptr;
   }
 
-  uint16_t PeekU16() const
+  uint16_t PeekU16()
   {
     auto ptr = Peek(2);
     if (!ptr) {
@@ -208,7 +208,7 @@ public:
     return mozilla::BigEndian::readUint16(ptr);
   }
 
-  uint32_t PeekU24() const
+  uint32_t PeekU24()
   {
     auto ptr = Peek(3);
     if (!ptr) {
@@ -218,12 +218,12 @@ public:
     return ptr[0] << 16 | ptr[1] << 8 | ptr[2];
   }
 
-  uint32_t Peek24() const
+  uint32_t Peek24()
   {
     return (uint32_t)PeekU24();
   }
 
-  uint32_t PeekU32() const
+  uint32_t PeekU32()
   {
     auto ptr = Peek(4);
     if (!ptr) {
@@ -233,7 +233,7 @@ public:
     return mozilla::BigEndian::readUint32(ptr);
   }
 
-  int32_t Peek32() const
+  int32_t Peek32()
   {
     auto ptr = Peek(4);
     if (!ptr) {
@@ -243,7 +243,7 @@ public:
     return mozilla::BigEndian::readInt32(ptr);
   }
 
-  uint64_t PeekU64() const
+  uint64_t PeekU64()
   {
     auto ptr = Peek(8);
     if (!ptr) {
@@ -253,7 +253,7 @@ public:
     return mozilla::BigEndian::readUint64(ptr);
   }
 
-  int64_t Peek64() const
+  int64_t Peek64()
   {
     auto ptr = Peek(8);
     if (!ptr) {
@@ -263,7 +263,7 @@ public:
     return mozilla::BigEndian::readInt64(ptr);
   }
 
-  const uint8_t* Peek(size_t aCount) const
+  const uint8_t* Peek(size_t aCount)
   {
     if (aCount > mRemaining) {
       return nullptr;
@@ -290,12 +290,12 @@ public:
     return mPtr;
   }
 
-  uint32_t Align() const
+  uint32_t Align()
   {
     return 4 - ((intptr_t)mPtr & 3);
   }
 
-  template <typename T> bool CanReadType() const { return mRemaining >= sizeof(T); }
+  template <typename T> bool CanReadType() { return mRemaining >= sizeof(T); }
 
   template <typename T> T ReadType()
   {
