@@ -24,7 +24,7 @@ class CompositorManagerChild : public PCompositorManagerChild
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(CompositorManagerChild)
 
 public:
-  static bool IsInitialized();
+  static bool IsInitialized(base::ProcessId aPid);
   static bool InitSameProcess(uint32_t aNamespace);
   static bool Init(Endpoint<PCompositorManagerChild>&& aEndpoint,
                    uint32_t aNamespace);
