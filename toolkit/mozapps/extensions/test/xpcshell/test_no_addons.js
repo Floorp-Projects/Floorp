@@ -5,7 +5,6 @@
 // Test startup and restart when no add-ons are installed
 // bug 944006
 
-Components.utils.import("resource://gre/modules/Promise.jsm");
 
 // Load XPI Provider to get schema version ID
 var XPIScope = Components.utils.import("resource://gre/modules/addons/XPIProvider.jsm", {});

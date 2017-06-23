@@ -43,13 +43,13 @@ async function checkPopupContextMenu() {
 
 function onPopupEvent(popup, evt) {
   let fullEvent = "popup" + evt;
-  let deferred = new Promise.defer();
-  let onPopupHandler = (e) => {
-    if (e.target == popup) {
-      popup.removeEventListener(fullEvent, onPopupHandler);
-      deferred.resolve();
-    }
-  };
-  popup.addEventListener(fullEvent, onPopupHandler);
-  return deferred.promise;
+  return new Promise(resolve => {
+    let onPopupHandler = (e) => {
+      if (e.target == popup) {
+        popup.removeEventListener(fullEvent, onPopupHandler);
+        resolve();
+      }
+    };
+    popup.addEventListener(fullEvent, onPopupHandler);
+  });
 }

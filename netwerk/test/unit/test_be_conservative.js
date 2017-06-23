@@ -11,27 +11,25 @@
 
 const { Services } = Cu.import("resource://gre/modules/Services.jsm", {});
 const { NetUtil } = Cu.import("resource://gre/modules/NetUtil.jsm", {});
-const { Promise: promise } =
-  Cu.import("resource://gre/modules/Promise.jsm", {});
 
 // Get a profile directory and ensure PSM initializes NSS.
 do_get_profile();
 Cc["@mozilla.org/psm;1"].getService(Ci.nsISupports);
 
 function getCert() {
-  let deferred = promise.defer();
-  let certService = Cc["@mozilla.org/security/local-cert-service;1"]
-                      .getService(Ci.nsILocalCertService);
-  certService.getOrCreateCert("beConservative-test", {
-    handleCert: function(c, rv) {
-      if (rv) {
-        deferred.reject(rv);
-        return;
+  return new Promise((resolve, reject) => {
+    let certService = Cc["@mozilla.org/security/local-cert-service;1"]
+                        .getService(Ci.nsILocalCertService);
+    certService.getOrCreateCert("beConservative-test", {
+      handleCert: function(c, rv) {
+        if (rv) {
+          reject(rv);
+          return;
+        }
+        resolve(c);
       }
-      deferred.resolve(c);
-    }
+    });
   });
-  return deferred.promise;
 }
 
 class InputStreamCallback {
@@ -163,21 +161,21 @@ function startClient(port, beConservative, expectSuccess) {
   req.open("GET", `https://${hostname}:${port}`);
   let internalChannel = req.channel.QueryInterface(Ci.nsIHttpChannelInternal);
   internalChannel.beConservative = beConservative;
-  let deferred = promise.defer();
-  req.onload = () => {
-    ok(expectSuccess,
-       `should ${expectSuccess ? "" : "not "}have gotten load event`);
-    equal(req.responseText, "OK", "response text should be 'OK'");
-    deferred.resolve();
-  };
-  req.onerror = () => {
-    ok(!expectSuccess,
-       `should ${!expectSuccess ? "" : "not "}have gotten an error`);
-    deferred.resolve();
-  };
+  return new Promise((resolve, reject) => {
+    req.onload = () => {
+      ok(expectSuccess,
+         `should ${expectSuccess ? "" : "not "}have gotten load event`);
+      equal(req.responseText, "OK", "response text should be 'OK'");
+      resolve();
+    };
+    req.onerror = () => {
+      ok(!expectSuccess,
+         `should ${!expectSuccess ? "" : "not "}have gotten an error`);
+      resolve();
+    };
 
-  req.send();
-  return deferred.promise;
+    req.send();
+  });
 }
 
 add_task(async function() {

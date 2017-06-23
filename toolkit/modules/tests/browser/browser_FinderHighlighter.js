@@ -2,7 +2,6 @@
 
 Cu.import("resource://testing-common/BrowserTestUtils.jsm", this);
 Cu.import("resource://testing-common/ContentTask.jsm", this);
-Cu.import("resource://gre/modules/Promise.jsm", this);
 Cu.import("resource://gre/modules/Services.jsm", this);
 Cu.import("resource://gre/modules/Timer.jsm", this);
 Cu.import("resource://gre/modules/AppConstants.jsm");

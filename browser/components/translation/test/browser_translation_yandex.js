@@ -18,7 +18,6 @@ const kEnginePref = "browser.translation.engine";
 const kApiKeyPref = "browser.translation.yandex.apiKeyOverride";
 const kShowUIPref = "browser.translation.ui.show";
 
-const {Promise} = Cu.import("resource://gre/modules/Promise.jsm", {});
 const {Translation} = Cu.import("resource:///modules/translation/Translation.jsm", {});
 
 add_task(async function setup() {
