@@ -708,8 +708,8 @@ with only_when(building_stylo_bindgen):
             libclang_choices = []
             if host.os == 'WINNT':
                 libclang_choices.append('libclang.dll')
-            libclang_choices.append('%sclang%s' % (library_name_info.dll_prefix,
-                                                   library_name_info.dll_suffix))
+            libclang_choices.append('%sclang%s' % (library_name_info.dll.prefix,
+                                                   library_name_info.dll.suffix))
             if host.kernel == 'Linux':
                 libclang_choices.append('libclang.so.1')
 
