@@ -243,6 +243,7 @@ public:
 
   virtual bool Initialize();
 
+  // If Initialize returns false, these may return more useful messages.
   virtual TextureFactoryIdentifier GetTextureFactoryIdentifier() const = 0;
   virtual int32_t GetMaxTextureSize() const = 0;
   virtual LayersBackend GetLayersBackend() const = 0;
