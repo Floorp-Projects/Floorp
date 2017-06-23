@@ -2520,7 +2520,7 @@ nsresult HTMLMediaElement::LoadResource()
           ("%p Failed to load for decoder %p", this, decoder.get()));
       return rv;
     }
-    return FinishDecoderSetup(decoder, nullptr);
+    return FinishDecoderSetup(decoder);
   }
 
   RefPtr<ChannelLoader> loader = new ChannelLoader;
@@ -4671,7 +4671,7 @@ HTMLMediaElement::InitializeDecoderAsClone(ChannelMediaDecoder* aOriginal)
     return rv;
   }
 
-  return FinishDecoderSetup(decoder, nullptr);
+  return FinishDecoderSetup(decoder);
 }
 
 nsresult HTMLMediaElement::InitializeDecoderForChannel(nsIChannel* aChannel,
@@ -4732,7 +4732,7 @@ nsresult HTMLMediaElement::InitializeDecoderForChannel(nsIChannel* aChannel,
     return rv;
   }
 
-  rv = FinishDecoderSetup(decoder, aListener);
+  rv = FinishDecoderSetup(decoder);
   if (NS_SUCCEEDED(rv)) {
     AddMediaElementToURITable();
     NS_ASSERTION(MediaElementTableCount(this, mLoadingSrc) == 1,
@@ -4742,8 +4742,8 @@ nsresult HTMLMediaElement::InitializeDecoderForChannel(nsIChannel* aChannel,
   return rv;
 }
 
-nsresult HTMLMediaElement::FinishDecoderSetup(MediaDecoder* aDecoder,
-                                              nsIStreamListener** aListener)
+nsresult
+HTMLMediaElement::FinishDecoderSetup(MediaDecoder* aDecoder)
 {
   ChangeNetworkState(nsIDOMHTMLMediaElement::NETWORK_LOADING);
 
