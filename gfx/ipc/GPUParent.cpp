@@ -29,7 +29,6 @@
 #include "mozilla/layers/ImageBridgeParent.h"
 #include "mozilla/layers/LayerTreeOwnerTracker.h"
 #include "mozilla/layers/UiCompositorControllerParent.h"
-#include "mozilla/layers/MemoryReportingMLGPU.h"
 #include "mozilla/webrender/RenderThread.h"
 #include "nsDebugImpl.h"
 #include "nsExceptionHandler.h"
@@ -105,7 +104,6 @@ GPUParent::Init(base::ProcessId aParentPid,
   gfxPlatform::InitNullMetadata();
   // Ensure our Factory is initialised, mainly for gfx logging to work.
   gfxPlatform::InitMoz2DLogging();
-  mlg::InitializeMemoryReporters();
 #if defined(XP_WIN)
   DeviceManagerDx::Init();
 #endif
