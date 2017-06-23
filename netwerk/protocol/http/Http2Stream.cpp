@@ -349,7 +349,7 @@ Http2Stream::CreatePushHashKey(const nsCString &scheme,
                                const nsCString &hostHeader,
                                const mozilla::OriginAttributes &originAttributes,
                                uint64_t serial,
-                               const nsCSubstring &pathInfo,
+                               const nsACString& pathInfo,
                                nsCString &outOrigin,
                                nsCString &outKey)
 {

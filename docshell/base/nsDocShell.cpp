@@ -11427,7 +11427,7 @@ nsDocShell::AddHeadersToChannel(nsIInputStream* aHeadersData,
       return NS_OK;
     }
 
-    const nsCSubstring& oneHeader = StringHead(headersString, crlf);
+    const nsACString& oneHeader = StringHead(headersString, crlf);
 
     colon = oneHeader.FindChar(':');
     if (colon == kNotFound) {

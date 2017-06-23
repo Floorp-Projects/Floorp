@@ -1132,7 +1132,7 @@ nsCORSPreflightListener::AddResultToCache(nsIRequest *aRequest)
   // http://dev.w3.org/2006/waf/access-control (digits 0-9 with no leading or
   // trailing non-whitespace characters).
   uint32_t age = 0;
-  nsCSubstring::const_char_iterator iter, end;
+  nsACString::const_char_iterator iter, end;
   headerVal.BeginReading(iter);
   headerVal.EndReading(end);
   while (iter != end) {

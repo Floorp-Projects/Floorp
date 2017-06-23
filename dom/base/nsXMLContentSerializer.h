@@ -113,7 +113,7 @@ class nsXMLContentSerializer : public nsIContentSerializer {
    * It updates the column position.
    */
   MOZ_MUST_USE
-  bool AppendToStringWrapped(const nsASingleFragmentString& aStr,
+  bool AppendToStringWrapped(const nsAString& aStr,
                              nsAString& aOutputStr);
 
   /**
@@ -121,32 +121,32 @@ class nsXMLContentSerializer : public nsIContentSerializer {
    * It updates the column position.
    */
   MOZ_MUST_USE
-  bool AppendToStringFormatedWrapped(const nsASingleFragmentString& aStr,
+  bool AppendToStringFormatedWrapped(const nsAString& aStr,
                                      nsAString& aOutputStr);
 
   // used by AppendToStringWrapped
   MOZ_MUST_USE
   bool AppendWrapped_WhitespaceSequence(
-          nsASingleFragmentString::const_char_iterator &aPos,
-          const nsASingleFragmentString::const_char_iterator aEnd,
-          const nsASingleFragmentString::const_char_iterator aSequenceStart,
+          nsAString::const_char_iterator &aPos,
+          const nsAString::const_char_iterator aEnd,
+          const nsAString::const_char_iterator aSequenceStart,
           nsAString &aOutputStr);
 
   // used by AppendToStringFormatedWrapped
   MOZ_MUST_USE
   bool AppendFormatedWrapped_WhitespaceSequence(
-          nsASingleFragmentString::const_char_iterator &aPos,
-          const nsASingleFragmentString::const_char_iterator aEnd,
-          const nsASingleFragmentString::const_char_iterator aSequenceStart,
+          nsAString::const_char_iterator &aPos,
+          const nsAString::const_char_iterator aEnd,
+          const nsAString::const_char_iterator aSequenceStart,
           bool &aMayIgnoreStartOfLineWhitespaceSequence,
           nsAString &aOutputStr);
 
   // used by AppendToStringWrapped and AppendToStringFormatedWrapped
   MOZ_MUST_USE
   bool AppendWrapped_NonWhitespaceSequence(
-          nsASingleFragmentString::const_char_iterator &aPos,
-          const nsASingleFragmentString::const_char_iterator aEnd,
-          const nsASingleFragmentString::const_char_iterator aSequenceStart,
+          nsAString::const_char_iterator &aPos,
+          const nsAString::const_char_iterator aEnd,
+          const nsAString::const_char_iterator aSequenceStart,
           bool &aMayIgnoreStartOfLineWhitespaceSequence,
           bool &aSequenceStartAfterAWhiteSpace,
           nsAString &aOutputStr);

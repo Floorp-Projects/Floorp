@@ -180,9 +180,7 @@ public:
         case Work::Type::SHUTDOWN:
           DecodePoolImpl::ShutdownThread(thisThread);
 
-#ifdef MOZ_GECKO_PROFILER
           profiler_unregister_thread();
-#endif // MOZ_GECKO_PROFILER
 
           return NS_OK;
 

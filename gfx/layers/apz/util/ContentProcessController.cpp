@@ -9,6 +9,7 @@
 #include "mozilla/dom/TabChild.h"
 #include "mozilla/layers/APZCCallbackHelper.h"
 #include "mozilla/layers/APZChild.h"
+#include "nsIContentInlines.h"
 
 #include "InputData.h"                  // for InputData
 

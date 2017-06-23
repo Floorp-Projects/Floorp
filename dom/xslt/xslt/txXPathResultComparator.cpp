@@ -17,7 +17,7 @@
 
 txResultStringComparator::txResultStringComparator(bool aAscending,
                                                    bool aUpperFirst,
-                                                   const nsAFlatString& aLanguage)
+                                                   const nsString& aLanguage)
 {
     mSorting = 0;
     if (aAscending)
@@ -29,7 +29,7 @@ txResultStringComparator::txResultStringComparator(bool aAscending,
         NS_ERROR("Failed to initialize txResultStringComparator");
 }
 
-nsresult txResultStringComparator::init(const nsAFlatString& aLanguage)
+nsresult txResultStringComparator::init(const nsString& aLanguage)
 {
     nsresult rv;
 

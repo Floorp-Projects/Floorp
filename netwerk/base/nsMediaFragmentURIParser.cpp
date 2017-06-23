@@ -342,7 +342,7 @@ void nsMediaFragmentURIParser::Parse(nsACString& aRef)
   nsCCharSeparatedTokenizer tokenizer(aRef, '&');
 
   while (tokenizer.hasMoreTokens()) {
-    const nsCSubstring& nv = tokenizer.nextToken();
+    const nsACString& nv = tokenizer.nextToken();
     int32_t index = nv.FindChar('=');
     if (index >= 0) {
       nsAutoCString name;

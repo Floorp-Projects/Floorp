@@ -381,14 +381,14 @@ TEST(GeckoProfiler, Markers)
   profiler_add_marker("M1");
   profiler_add_marker("M2",
                       MakeUnique<TracingMarkerPayload>("C", TRACING_EVENT));
-  PROFILER_MARKER("M3");
-  PROFILER_MARKER_PAYLOAD(
+  profiler_add_marker("M3");
+  profiler_add_marker(
     "M4",
     MakeUnique<TracingMarkerPayload>("C", TRACING_EVENT,
                                      profiler_get_backtrace()));
 
   for (int i = 0; i < 10; i++) {
-    PROFILER_MARKER_PAYLOAD("M5", MakeUnique<GTestMarkerPayload>(i));
+    profiler_add_marker("M5", MakeUnique<GTestMarkerPayload>(i));
   }
 
   // Sleep briefly to ensure a sample is taken and the pending markers are
@@ -417,7 +417,7 @@ TEST(GeckoProfiler, Markers)
   ASSERT_TRUE(GTestMarkerPayload::sNumDestroyed == 10);
 
   for (int i = 0; i < 10; i++) {
-    PROFILER_MARKER_PAYLOAD("M5", MakeUnique<GTestMarkerPayload>(i));
+    profiler_add_marker("M5", MakeUnique<GTestMarkerPayload>(i));
   }
 
   profiler_start(PROFILER_DEFAULT_ENTRIES, PROFILER_DEFAULT_INTERVAL,
@@ -581,13 +581,11 @@ TEST(GeckoProfiler, PseudoStack)
     ASSERT_TRUE(profiler_get_backtrace());
   }
 
-#if defined(MOZ_GECKO_PROFILER)
   AutoProfilerLabel label1("A", nullptr, 888,
                            js::ProfileEntry::Category::STORAGE);
   AutoProfilerLabel label2("A", dynamic.get(), 888,
                            js::ProfileEntry::Category::NETWORK);
   ASSERT_TRUE(profiler_get_backtrace());
-#endif
 
   profiler_stop();
 

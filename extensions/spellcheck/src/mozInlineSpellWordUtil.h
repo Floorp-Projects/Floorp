@@ -90,7 +90,7 @@ public:
 
   // Call to normalize some punctuation. This function takes an autostring
   // so we can access characters directly.
-  static void NormalizeWord(nsSubstring& aWord);
+  static void NormalizeWord(nsAString& aWord);
 
   nsIDOMDocument* GetDOMDocument() const { return mDOMDocument; }
   nsIDocument* GetDocument() const { return mDocument; }

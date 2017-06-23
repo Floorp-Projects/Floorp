@@ -13,7 +13,7 @@
 #include "txPatternOptimizer.h"
 
 
-nsresult txPatternParser::createPattern(const nsAFlatString& aPattern,
+nsresult txPatternParser::createPattern(const nsString& aPattern,
                                         txIParseContext* aContext,
                                         txPattern** aResult)
 {

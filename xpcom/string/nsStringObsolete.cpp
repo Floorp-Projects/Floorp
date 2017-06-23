@@ -864,7 +864,7 @@ RFind_ComputeSearchRange( uint32_t bigLen, uint32_t littleLen, int32_t& offset, 
 // specialized methods:
 
 int32_t
-nsString::Find( const nsAFlatString& aString, int32_t aOffset, int32_t aCount ) const
+nsString::Find( const nsString& aString, int32_t aOffset, int32_t aCount ) const
 {
   // this method changes the meaning of aOffset and aCount:
   Find_ComputeSearchRange(mLength, aString.Length(), aOffset, aCount);
@@ -882,7 +882,7 @@ nsString::Find( const char16_t* aString, int32_t aOffset, int32_t aCount ) const
 }
 
 int32_t
-nsString::RFind( const nsAFlatString& aString, int32_t aOffset, int32_t aCount ) const
+nsString::RFind( const nsString& aString, int32_t aOffset, int32_t aCount ) const
 {
   // this method changes the meaning of aOffset and aCount:
   RFind_ComputeSearchRange(mLength, aString.Length(), aOffset, aCount);

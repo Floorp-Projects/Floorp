@@ -22,15 +22,11 @@ if CONFIG['OS_ARCH'] == 'WINNT':
     ]
 
 SOURCES += [
+    'AutoProfilerLabel.cpp',
     'Printf.cpp',
     'StackWalk.cpp',
     'TimeStamp.cpp',
 ]
-
-if CONFIG['MOZ_GECKO_PROFILER']:
-    SOURCES += [
-	'AutoProfilerLabel.cpp',
-    ]
 
 OS_LIBS += CONFIG['REALTIME_LIBS']
 
