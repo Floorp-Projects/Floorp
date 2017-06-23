@@ -198,6 +198,11 @@ namespace {
 #define DEFAULT_MAX_CONSECUTIVE_CALLBACKS_MILLISECONDS 4
 uint32_t gMaxConsecutiveCallbacksMilliseconds;
 
+// Only propagate the open window click permission if the setTimeout() is equal
+// to or less than this value.
+#define DEFAULT_DISABLE_OPEN_CLICK_DELAY 0
+int32_t gDisableOpenClickDelay;
+
 } // anonymous namespace
 
 TimeoutManager::TimeoutManager(nsGlobalWindow& aWindow)
@@ -258,6 +263,10 @@ TimeoutManager::Initialize()
   Preferences::AddUintVarCache(&gMaxConsecutiveCallbacksMilliseconds,
                                "dom.timeout.max_consecutive_callbacks_ms",
                                DEFAULT_MAX_CONSECUTIVE_CALLBACKS_MILLISECONDS);
+
+  Preferences::AddIntVarCache(&gDisableOpenClickDelay,
+                              "dom.disable_open_click_delay",
+                              DEFAULT_DISABLE_OPEN_CLICK_DELAY);
 }
 
 uint32_t
@@ -374,13 +383,10 @@ TimeoutManager::SetTimeout(nsITimeoutHandler* aHandler,
     // its delay (interval) is equal to or less than what
     // "dom.disable_open_click_delay" is set to (in ms).
 
-    int32_t delay =
-      Preferences::GetInt("dom.disable_open_click_delay");
-
     // This is checking |interval|, not realInterval, on purpose,
     // because our lower bound for |realInterval| could be pretty high
     // in some cases.
-    if (interval <= delay) {
+    if (interval <= gDisableOpenClickDelay) {
       timeout->mPopupState = mWindow.GetPopupControlState();
     }
   }
