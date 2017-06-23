@@ -23,6 +23,7 @@
 #include "mozilla/StateWatching.h"
 #include "nsGkAtoms.h"
 #include "PrincipalChangeObserver.h"
+#include "nsStubMutationObserver.h"
 
 // X.h on Linux #defines CurrentTime as 0L, so we have to #undef it here.
 #ifdef CurrentTime
@@ -84,7 +85,8 @@ class HTMLMediaElement : public nsGenericHTMLElement,
                          public nsIDOMHTMLMediaElement,
                          public MediaDecoderOwner,
                          public PrincipalChangeObserver<DOMMediaStream>,
-                         public SupportsWeakPtr<HTMLMediaElement>
+                         public SupportsWeakPtr<HTMLMediaElement>,
+                         public nsStubMutationObserver
 {
 public:
   typedef mozilla::TimeStamp TimeStamp;
@@ -96,6 +98,8 @@ public:
   typedef mozilla::MetadataTags MetadataTags;
 
   MOZ_DECLARE_WEAKREFERENCE_TYPENAME(HTMLMediaElement)
+  NS_DECL_NSIMUTATIONOBSERVER_CONTENTINSERTED
+  NS_DECL_NSIMUTATIONOBSERVER_CONTENTREMOVED
 
   CORSMode GetCORSMode() {
     return mCORSMode;
@@ -1378,8 +1382,10 @@ protected:
   uint32_t mCurrentLoadID;
 
   // Points to the child source elements, used to iterate through the children
-  // when selecting a resource to load.
-  RefPtr<nsRange> mSourcePointer;
+  // when selecting a resource to load.  This is the index of the child element
+  // that is the current 'candidate' in:
+  // https://html.spec.whatwg.org/multipage/media.html#concept-media-load-algorithm
+  uint32_t mSourcePointer;
 
   // Points to the document whose load we're blocking. This is the document
   // we're bound to when loading starts.
