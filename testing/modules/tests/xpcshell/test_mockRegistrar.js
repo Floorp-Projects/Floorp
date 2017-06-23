@@ -17,7 +17,7 @@ userInfo.prototype = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIUserInfo]),
 };
 
-function run_test () {
+function run_test() {
   run_next_test();
 }
 
