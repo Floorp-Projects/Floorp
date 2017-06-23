@@ -31,16 +31,12 @@ var xr = Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime);
 var windows = SpecialPowers.Services.ww.getWindowEnumerator();
 var windowutils;
 var acceleratedWindows = 0;
-var advancedLayersWindows = 0;
 while (windows.hasMoreElements()) {
   windowutils = windows.getNext().QueryInterface(Ci.nsIInterfaceRequestor)
                                  .getInterface(Ci.nsIDOMWindowUtils);
   try {
     if (windowutils.layerManagerType != "Basic") {
       acceleratedWindows++;
-    }
-    if (windowutils.usingAdvancedLayers) {
-      advancedLayersWindows++;
     }
   } catch (e) {
     // The window may not have a layer manager, in which case we get an error.
@@ -81,7 +77,6 @@ switch(osName)
           todo(false, "Acceleration not supported on Windows XP or newer" +
                       " (This is expected on SeaMonkey (tinderboxes).)");
           break;
-
         }
       }
 
@@ -95,22 +90,6 @@ switch(osName)
     } else {
       ok(gfxInfo.D2DEnabled, "Direct2D enabled on Windows 8 or newer");
       ok(gfxInfo.DWriteEnabled, "DirectWrite enabled on Windows 8 or newer");
-    }
-
-    var advancedLayersEnabled = false;
-    var advancedLayersEnabledOnWin7 = false;
-    try {
-      advancedLayersEnabled = SpecialPowers.getBoolPref("layers.mlgpu.dev-enabled");
-      advancedLayersEnabledOnWin7 = SpecialPowers.getBoolPref("layers.mlgpu.enable-on-windows7");
-    } catch (e) {}
-    var shouldGetAL = advancedLayersEnabled;
-    if (version < 6.2) {
-      shouldGetAL &= advancedLayersEnabledOnWin7;
-    }
-    if (shouldGetAL) {
-      isnot(advancedLayersWindows, 0, "Advanced Layers enabled on Windows");
-    } else {
-      is(advancedLayersWindows, 0, "Advanced Layers disabled on Windows");
     }
     break;
 

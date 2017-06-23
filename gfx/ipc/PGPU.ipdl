@@ -21,7 +21,6 @@ using mozilla::Telemetry::ScalarAction from "mozilla/TelemetryComms.h";
 using mozilla::Telemetry::KeyedScalarAction from "mozilla/TelemetryComms.h";
 using mozilla::Telemetry::ChildEventData from "mozilla/TelemetryComms.h";
 using mozilla::Telemetry::DiscardedData from "mozilla/TelemetryComms.h";
-using mozilla::gfx::Feature from "gfxFeature.h";
 
 namespace mozilla {
 namespace gfx {
@@ -116,10 +115,6 @@ child:
 
   async AddMemoryReport(MemoryReport aReport);
   async FinishMemoryReport(uint32_t aGeneration);
-
-  // Update the UI process after a feature's status has changed. This is used
-  // outside of the normal startup flow.
-  async UpdateFeature(Feature aFeature, FeatureFailure aChange);
 };
 
 } // namespace gfx
