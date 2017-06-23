@@ -47,11 +47,6 @@ public:
     UNIMPLEMENTED();
     return nullptr;
   }
-  already_AddRefed<MediaResource> CloneData(MediaResourceCallback*) override
-  {
-    UNIMPLEMENTED();
-    return nullptr;
-  }
   void SetReadMode(MediaCacheStream::ReadMode aMode) override
   {
     UNIMPLEMENTED();
