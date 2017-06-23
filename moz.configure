@@ -154,9 +154,9 @@ option(env='SO_VERSION', nargs=1, default='1.0', when=is_openbsd,
 def so_version(value):
     return value
 
-@depends(target, target_is_windows, target_is_darwin, c_compiler, so_version)
-def library_name_info(target, is_windows, is_darwin, c_compiler, so_version):
-    if is_windows:
+@depends(target, c_compiler, so_version)
+def library_name_info(target, c_compiler, so_version):
+    if target.kernel == 'WINNT':
         # There aren't artifacts for mingw builds, so it's OK that the results
         # are inaccurate in that case.
         if c_compiler and c_compiler.type not in ('msvc', 'clang-cl'):
@@ -176,7 +176,7 @@ def library_name_info(target, is_windows, is_darwin, c_compiler, so_version):
             obj=namespace(prefix='', suffix='obj'),
         )
 
-    elif is_darwin:
+    elif target.kernel == 'Darwin':
         return namespace(
             dll=namespace(prefix='lib', suffix='.dylib'),
             lib=namespace(prefix='lib', suffix='a'),
