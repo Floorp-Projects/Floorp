@@ -642,7 +642,7 @@ pref("media.decoder.skip-to-next-key-frame.enabled", true);
 
 // Log level for cubeb, the audio input/output system. Valid values are
 // "verbose", "normal" and "" (log disabled).
-pref("media.cubeb.log_level", "");
+pref("media.cubeb.logging_level", "");
 
 // Set to true to force demux/decode warnings to be treated as errors.
 pref("media.playback.warnings-as-errors", false);
