@@ -1135,8 +1135,6 @@ public:
   void     Suspend(bool aCloseImmediately) override {}
   void     Resume() override {}
   already_AddRefed<nsIPrincipal> GetCurrentPrincipal() override;
-  bool     CanClone() override;
-  already_AddRefed<MediaResource> CloneData(MediaResourceCallback* aCallback) override;
   nsresult ReadFromCache(char* aBuffer, int64_t aOffset, uint32_t aCount) override;
 
   // These methods are called off the main thread.
@@ -1330,52 +1328,6 @@ already_AddRefed<nsIPrincipal> FileMediaResource::GetCurrentPrincipal()
     return nullptr;
   secMan->GetChannelResultPrincipal(mChannel, getter_AddRefs(principal));
   return principal.forget();
-}
-
-bool FileMediaResource::CanClone()
-{
-  return true;
-}
-
-already_AddRefed<MediaResource> FileMediaResource::CloneData(MediaResourceCallback* aCallback)
-{
-  NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
-
-  MediaDecoderOwner* owner = mCallback->GetMediaOwner();
-  if (!owner) {
-    // The decoder is being shut down, so we can't clone
-    return nullptr;
-  }
-  dom::HTMLMediaElement* element = owner->GetMediaElement();
-  if (!element) {
-    // The decoder is being shut down, so we can't clone
-    return nullptr;
-  }
-  nsCOMPtr<nsILoadGroup> loadGroup = element->GetDocumentLoadGroup();
-  NS_ENSURE_TRUE(loadGroup, nullptr);
-
-  MOZ_ASSERT(element->IsAnyOfHTMLElements(nsGkAtoms::audio, nsGkAtoms::video));
-  nsContentPolicyType contentPolicyType = element->IsHTMLElement(nsGkAtoms::audio) ?
-    nsIContentPolicy::TYPE_INTERNAL_AUDIO : nsIContentPolicy::TYPE_INTERNAL_VIDEO;
-
-  nsLoadFlags loadFlags = nsIRequest::LOAD_NORMAL | nsIChannel::LOAD_CLASSIFY_URI;
-
-  nsCOMPtr<nsIChannel> channel;
-  nsresult rv =
-    NS_NewChannel(getter_AddRefs(channel),
-                  mURI,
-                  element,
-                  nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_INHERITS,
-                  contentPolicyType,
-                  loadGroup,
-                  nullptr,  // aCallbacks
-                  loadFlags);
-
-  if (NS_FAILED(rv))
-    return nullptr;
-
-  RefPtr<MediaResource> resource(new FileMediaResource(aCallback, channel, mURI, GetContentType()));
-  return resource.forget();
 }
 
 nsresult FileMediaResource::ReadFromCache(char* aBuffer, int64_t aOffset, uint32_t aCount)
