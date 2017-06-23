@@ -183,6 +183,7 @@ LayerManagerMLGPU::GetTextureFactoryIdentifier()
     ident = mDevice->GetTextureFactoryIdentifier();
   }
   ident.mSupportsBackdropCopyForComponentAlpha = SupportsBackdropCopyForComponentAlpha();
+  ident.mUsingAdvancedLayers = true;
   return ident;
 }
 
