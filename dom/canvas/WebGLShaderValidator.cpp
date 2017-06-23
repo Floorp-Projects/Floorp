@@ -54,9 +54,7 @@ ChooseValidatorCompileOptions(const ShBuiltInResources& resources,
         options |= SH_REGENERATE_STRUCT_NAMES;
         options |= SH_INIT_OUTPUT_VARIABLES;
 
-        // Work around that Intel drivers on Mac OSX handle for-loop incorrectly.
-        if (gl->Vendor() == gl::GLVendor::Intel) {
-            options |= SH_ADD_AND_TRUE_TO_LOOP_CONDITION;
+        }
 #endif
 
     if (gfxPrefs::WebGLAllANGLEOptions()) {
