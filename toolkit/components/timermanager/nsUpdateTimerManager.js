@@ -57,7 +57,7 @@ function LOG(string) {
  *  @constructor
  */
 function TimerManager() {
-  Services.obs.addObserver(this, "profile-before-change");
+  Services.obs.addObserver(this, "xpcom-shutdown");
 }
 TimerManager.prototype = {
   /**
@@ -109,8 +109,8 @@ TimerManager.prototype = {
         this._canEnsureTimer = true;
         this._ensureTimer(firstInterval);
         break;
-      case "profile-before-change":
-        Services.obs.removeObserver(this, "profile-before-change");
+      case "xpcom-shutdown":
+        Services.obs.removeObserver(this, "xpcom-shutdown");
 
         // Release everything we hold onto.
         this._cancelTimer();
