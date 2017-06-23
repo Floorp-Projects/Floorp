@@ -275,7 +275,10 @@ var gSearchResultsPane = {
    */
   searchWithinNode(nodeObject, searchPhrase) {
     let matchesFound = false;
-    if (nodeObject.childElementCount == 0 || nodeObject.tagName == "menulist") {
+    if (nodeObject.childElementCount == 0 ||
+        nodeObject.tagName == "label" ||
+        nodeObject.tagName == "description" ||
+        nodeObject.tagName == "menulist") {
       let simpleTextNodes = this.textNodeDescendants(nodeObject);
 
       for (let node of simpleTextNodes) {
@@ -283,11 +286,15 @@ var gSearchResultsPane = {
         matchesFound = matchesFound || result;
       }
 
-      // Collecting data from boxObject
+      // Collecting data from boxObject / label / description
       let nodeSizes = [];
       let allNodeText = "";
       let runningSize = 0;
       let accessKeyTextNodes = this.textNodeDescendants(nodeObject.boxObject);
+
+      if (nodeObject.tagName == "label" || nodeObject.tagName == "description") {
+        accessKeyTextNodes.push(...this.textNodeDescendants(nodeObject));
+      }
 
       for (let node of accessKeyTextNodes) {
         runningSize += node.textContent.length;
