@@ -480,4 +480,76 @@ toolbarpaletteitem[place="toolbar"]:not([mousedown="true"]):-moz-focusring {
   border-inline-end: 1px solid var(--panel-separator-color);
 }
 
+#customization-panelWrapper > .panel-arrowcontent {
+  color: var(--arrowpanel-color);
+  background: var(--arrowpanel-background);
+  background-clip: padding-box;
+  border: 1px solid var(--arrowpanel-border-color);
+%ifdef XP_MACOSX
+  box-shadow: 0 0 0 1px var(--arrowpanel-border-color);
+  -moz-appearance: none;
+  border-radius: var(--arrowpanel-border-radius);
+%else
+  box-shadow: 0 0 4px hsla(0,0%,0%,.2);
+%endif
+}
+
+#customization-panelWrapper > .panel-arrowbox {
+  position: relative;
+  height: 10px;
+%ifndef XP_MACOSX
+  margin-bottom: 2px;
+%endif
+}
+
+#customization-panelWrapper > .panel-arrowbox > .panel-arrow[side="top"] {
+%ifdef XP_MACOSX
+  list-style-image: var(--panel-arrow-image-vertical,
+                        url("chrome://global/skin/arrow/panelarrow-vertical.png"));
+  /* The OS X image is 2px narrower than the windows/linux one.
+   * Add padding to compensate: */
+  padding: 0 1px;
+  /* specify width for hidpi image to fit correctly */
+  width: 20px;
+%else
+  list-style-image: var(--panel-arrow-image-vertical,
+                        url("chrome://global/skin/arrow/panelarrow-vertical-themed.svg"));
+%endif
+  /* The arrow needs to point to the overflow button. The numbers involved
+   * are:
+   * overflow button width: (16px + 2 * 2px padding
+   * + 2 * toolbarbutton-inner-padding)
+   * hamburger button width: (16px + 2 * 5px padding
+   * + 2 * toolbarbutton-inner-padding)
+   * hamburger button border + margin: 1px + 2px
+   * The total desired offset from the right edge of the window is thus:
+   * 10px + toolbarbutton-inner-padding (center of overflow button) +
+   * 29px + 2 * toolbarbutton-inner-padding
+   * The #customization-panel-container has a 25px margin, so that leaves:
+   * 14px + 3 * toolbarbutton-inner-padding
+   * Finally, we need to center the arrow, which is 20px wide, so subtract
+   * 10px.
+   */
+  margin-inline-end: calc(4px + 3 * var(--toolbarbutton-inner-padding));
+}
+
+%ifdef XP_MACOSX
+@media (min-resolution: 2dppx) {
+  #customization-panelWrapper > .panel-arrowbox > .panel-arrow[side="top"] {
+    list-style-image: var(--panel-arrow-image-vertical,
+                          url("chrome://global/skin/arrow/panelarrow-vertical@2x.png"));
+  }
+}
+%endif
+
+/* Non-photon adjustments. Remove when we stop supporting non-photon. */
+#customization-container:not([photon]) #customization-panelWrapper > .panel-arrowbox {
+  margin-bottom: -1px;
+}
+
+#customization-container:not([photon]) #customization-panelWrapper > .panel-arrowbox > .panel-arrow[side="top"] {
+  margin-inline-end: 0;
+  margin-inline-start: 22.35em;
+}
+
 %include customizeTip.inc.css
