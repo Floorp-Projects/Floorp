@@ -780,44 +780,53 @@ Database::BackupAndReplaceDatabaseFile(nsCOMPtr<mozIStorageService>& aStorage)
   // If anything fails from this point on, we have a stale connection or
   // database file, and there's not much more we can do.
   // The only thing we can try to do is to replace the database on the next
-  // start, and enforce a crash, so it gets reported to us.
+  // startup, and report the problem through telemetry.
+  {
+    enum eCorruptDBReplaceStage : int8_t {
+      stage_closing = 0,
+      stage_removing,
+      stage_reopening,
+      stage_replaced
+    };
+    eCorruptDBReplaceStage stage = stage_closing;
+    auto guard = MakeScopeExit([&]() {
+      if (stage != stage_replaced) {
+        // Reaching this point means the database is corrupt and we failed to
+        // replace it.  For this session part of the application related to
+        // bookmarks and history will misbehave.  The frontend may show a
+        // "locked" notification to the user though.
+        // Set up a pref to try replacing the database at the next startup.
+        Preferences::SetBool(PREF_FORCE_DATABASE_REPLACEMENT, true);
+      }
+      // Report the corruption through telemetry.
+      Telemetry::Accumulate(Telemetry::PLACES_DATABASE_CORRUPTION_HANDLING_STAGE,
+                            static_cast<int8_t>(stage));
+    });
 
-  // Close database connection if open.
-  if (mMainConn) {
-    rv = mMainConn->SpinningSynchronousClose();
-    NS_ENSURE_SUCCESS(rv, ForceCrashAndReplaceDatabase(
-      NS_LITERAL_CSTRING("Unable to close the corrupt database.")));
+    // Close database connection if open.
+    if (mMainConn) {
+      rv = mMainConn->SpinningSynchronousClose();
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+
+    // Remove the broken database.
+    stage = stage_removing;
+    rv = databaseFile->Remove(false);
+    if (NS_FAILED(rv) && rv != NS_ERROR_FILE_TARGET_DOES_NOT_EXIST) {
+      return rv;
+    }
+
+    // Create a new database file.
+    // Use an unshared connection, it will consume more memory but avoid shared
+    // cache contentions across threads.
+    stage = stage_reopening;
+    rv = aStorage->OpenUnsharedDatabase(databaseFile, getter_AddRefs(mMainConn));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    stage = stage_replaced;
   }
-
-  // Remove the broken database.
-  rv = databaseFile->Remove(false);
-  if (NS_FAILED(rv) && rv != NS_ERROR_FILE_TARGET_DOES_NOT_EXIST) {
-    return ForceCrashAndReplaceDatabase(
-      NS_LITERAL_CSTRING("Unable to remove the corrupt database file."));
-  }
-
-  // Create a new database file.
-  // Use an unshared connection, it will consume more memory but avoid shared
-  // cache contentions across threads.
-  rv = aStorage->OpenUnsharedDatabase(databaseFile, getter_AddRefs(mMainConn));
-  NS_ENSURE_SUCCESS(rv, ForceCrashAndReplaceDatabase(
-    NS_LITERAL_CSTRING("Unable to open a new database connection.")));
 
   return NS_OK;
-}
-
-nsresult
-Database::ForceCrashAndReplaceDatabase(const nsCString& aReason)
-{
-  Preferences::SetBool(PREF_FORCE_DATABASE_REPLACEMENT, true);
-  // Ensure that prefs get saved, or we could crash before storing them.
-  nsIPrefService* prefService = Preferences::GetService();
-  if (prefService && NS_SUCCEEDED(static_cast<Preferences *>(prefService)->SavePrefFileBlocking())) {
-    // We could force an application restart here, but we'd like to get these
-    // cases reported to us, so let's force a crash instead.
-    MOZ_CRASH_UNSAFE_OOL(aReason.get());
-  }
-  return NS_ERROR_FAILURE;
 }
 
 nsresult
