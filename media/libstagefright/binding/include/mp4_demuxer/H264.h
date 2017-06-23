@@ -39,7 +39,6 @@ class BitReader;
 struct SPSData
 {
   bool operator==(const SPSData& aOther) const;
-  bool operator!=(const SPSData& aOther) const;
 
   bool valid;
 
@@ -411,6 +410,13 @@ struct SPSData
 class H264
 {
 public:
+  /* Extract RAW BYTE SEQUENCE PAYLOAD from NAL content.
+     Returns nullptr if invalid content.
+     This is compliant to ITU H.264 7.3.1 Syntax in tabular form NAL unit syntax
+   */
+  static already_AddRefed<mozilla::MediaByteBuffer> DecodeNALUnit(
+    const mozilla::MediaByteBuffer* aNAL);
+
   /* Check if out of band extradata contains a SPS NAL */
   static bool HasSPS(const mozilla::MediaByteBuffer* aExtraData);
   // Extract SPS and PPS NALs from aSample by looking into each NALs.
@@ -445,13 +451,6 @@ public:
   static FrameType GetFrameType(const mozilla::MediaRawData* aSample);
 
 private:
-  friend class SPSNAL;
-  /* Extract RAW BYTE SEQUENCE PAYLOAD from NAL content.
-     Returns nullptr if invalid content.
-     This is compliant to ITU H.264 7.3.1 Syntax in tabular form NAL unit syntax
-   */
-  static already_AddRefed<mozilla::MediaByteBuffer> DecodeNALUnit(
-    const uint8_t* aNAL, size_t aLength);
   /* Decode SPS NAL RBSP and fill SPSData structure */
   static bool DecodeSPS(const mozilla::MediaByteBuffer* aSPS, SPSData& aDest);
   static bool vui_parameters(BitReader& aBr, SPSData& aDest);
