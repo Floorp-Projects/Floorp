@@ -2327,26 +2327,6 @@ nsDOMWindowUtils::GetLayerManagerRemote(bool* retval)
 }
 
 NS_IMETHODIMP
-nsDOMWindowUtils::GetUsingAdvancedLayers(bool* retval)
-{
-  nsCOMPtr<nsIWidget> widget = GetWidget();
-  if (!widget) {
-    return NS_ERROR_FAILURE;
-  }
-
-  LayerManager *mgr = widget->GetLayerManager();
-  if (!mgr) {
-    return NS_ERROR_FAILURE;
-  }
-
-  *retval = false;
-  if (KnowsCompositor* fwd = mgr->AsKnowsCompositor()) {
-    *retval = fwd->GetTextureFactoryIdentifier().mUsingAdvancedLayers;
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsDOMWindowUtils::GetSupportsHardwareH264Decoding(JS::MutableHandle<JS::Value> aPromise)
 {
   nsCOMPtr<nsPIDOMWindowOuter> window = do_QueryReferent(mWindow);
