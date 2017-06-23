@@ -8031,14 +8031,20 @@ nsTableFrame::UpdateStyleOfOwnedAnonBoxesForTableWrapper(
   // this, even though all the wrapper's changes are due to properties it
   // inherits from us, because it's possible that no one ever asked us for those
   // style structs and hence changes to them aren't reflected in
-  // aHintForThisFrame at all.
+  // the handled changes at all.
+  //
+  // Also note that extensions can add/remove stylesheets that change the styles
+  // of anonymous boxes directly, so we need to handle that potential change
+  // here.
+  //
+  // NOTE(emilio): We can't use the ChangesHandledFor optimization (and we
+  // assert against that), because the table wrapper is up in the frame tree
+  // compared to the owner frame.
   uint32_t equalStructs, samePointerStructs; // Not used, actually.
   nsChangeHint wrapperHint = aWrapperFrame->StyleContext()->CalcStyleDifference(
     newContext,
     &equalStructs,
     &samePointerStructs);
-  wrapperHint =
-    NS_RemoveSubsumedHints(wrapperHint, aRestyleState.ChangesHandled());
   if (wrapperHint) {
     aRestyleState.ChangeList().AppendChange(
       aWrapperFrame, aWrapperFrame->GetContent(), wrapperHint);

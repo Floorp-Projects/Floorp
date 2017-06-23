@@ -10256,7 +10256,7 @@ nsIFrame::UpdateStyleOfOwnedChildFrame(
   //
   // 1) Even if all the child's changes are due to properties it inherits from
   //    us, it's possible that no one ever asked us for those style structs and
-  //    hence changes to them aren't reflected in aHintForThisFrame at all.
+  //    hence changes to them aren't reflected in the changes handled at all.
   //
   // 2) Content can change stylesheets that change the styles of pseudos, and
   //    extensions can add/remove stylesheets that change the styles of
