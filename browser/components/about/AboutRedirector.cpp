@@ -22,6 +22,7 @@ namespace browser {
 NS_IMPL_ISUPPORTS(AboutRedirector, nsIAboutModule)
 
 bool AboutRedirector::sUseOldPreferences = false;
+bool AboutRedirector::sActivityStreamEnabled = false;
 
 struct RedirEntry {
   const char* id;
@@ -206,8 +207,26 @@ AboutRedirector::GetURIFlags(nsIURI *aURI, uint32_t *result)
 
   nsAutoCString name = GetAboutModuleName(aURI);
 
+  static bool sASEnabledCacheInited = false;
+  if (!sASEnabledCacheInited) {
+    Preferences::AddBoolVarCache(&sActivityStreamEnabled,
+                                 "browser.newtabpage.activity-stream.enabled");
+    sASEnabledCacheInited = true;
+  }
+
   for (auto & redir : kRedirMap) {
     if (name.Equals(redir.id)) {
+
+      // Once ActivityStream is fully rolled out and we've removed Tiles,
+      // this special case can go away and the flag can just become part
+      // of the normal about:newtab entry in kRedirMap.
+      if (name.EqualsLiteral("newtab")) {
+        if (sActivityStreamEnabled) {
+          *result = redir.flags | nsIAboutModule::URI_MUST_LOAD_IN_CHILD;
+          return NS_OK;
+        }
+      }
+
       *result = redir.flags;
       return NS_OK;
     }
