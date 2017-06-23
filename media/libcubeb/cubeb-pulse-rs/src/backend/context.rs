@@ -120,7 +120,7 @@ impl Context {
                 let mut ctx = unsafe { &mut *(u as *mut Context) };
                 if eol == 0 {
                     let info = unsafe { &*i };
-                    let flags = pulse::SinkFlags::try_from(info.flags).expect("SinkInfo contains invalid flags");
+                    let flags = pulse::SinkFlags::from_bits_truncate(info.flags);
                     ctx.default_sink_info = Some(DefaultInfo {
                                                      sample_spec: info.sample_spec,
                                                      channel_map: info.channel_map,
