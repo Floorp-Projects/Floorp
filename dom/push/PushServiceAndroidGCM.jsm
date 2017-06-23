@@ -16,7 +16,6 @@ const {PushCrypto} = Cu.import("resource://gre/modules/PushCrypto.jsm");
 Cu.import("resource://gre/modules/Messaging.jsm"); /*global: EventDispatcher */
 Cu.import("resource://gre/modules/Services.jsm"); /*global: Services */
 Cu.import("resource://gre/modules/Preferences.jsm"); /*global: Preferences */
-Cu.import("resource://gre/modules/Promise.jsm"); /*global: Promise */
 Cu.import("resource://gre/modules/XPCOMUtils.jsm"); /*global: XPCOMUtils */
 
 const Log = Cu.import("resource://gre/modules/AndroidLog.jsm", {}).AndroidLog.bind("Push");

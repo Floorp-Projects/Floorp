@@ -30,7 +30,6 @@ const THUMBNAIL_DIRECTORY = "thumbnails";
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm", this);
 Cu.import("resource://gre/modules/PromiseWorker.jsm", this);
-Cu.import("resource://gre/modules/Promise.jsm", this);
 Cu.import("resource://gre/modules/osfile.jsm", this);
 
 Cu.importGlobalProperties(["FileReader"]);
