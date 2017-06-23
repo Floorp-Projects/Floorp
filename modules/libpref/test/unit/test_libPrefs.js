@@ -309,7 +309,6 @@ function run_test() {
   let savePrefFile = do_get_cwd();
   savePrefFile.append("data");
   savePrefFile.append("savePref.js");
-
   if (savePrefFile.exists())
     savePrefFile.remove(false);
   savePrefFile.create(Ci.nsIFile.NORMAL_FILE_TYPE, 0o666);
@@ -318,7 +317,7 @@ function run_test() {
 
   // load a preexisting pref file
   let prefFile = do_get_file("data/testPref.js");
-  ps.readUserPrefsFromFile(prefFile);
+  ps.readUserPrefs(prefFile);
 
   // former prefs should have been replaced/lost
   do_check_throws(function() {
@@ -338,12 +337,7 @@ function run_test() {
   do_check_eq(pb.getCharPref("char2"), "älskar");
 
   // loading our former savePrefFile should allow us to read former prefs
-
-  // Hack alert: on Windows nsLocalFile caches the size of savePrefFile from
-  // the .create() call above as 0. We call .exists() to reset the cache.
-  savePrefFile.exists();
-
-  ps.readUserPrefsFromFile(savePrefFile);
+  ps.readUserPrefs(savePrefFile);
   // cleanup the file now we don't need it
   savePrefFile.remove(false);
   do_check_eq(ps.getBoolPref("ReadPref.bool"), true);

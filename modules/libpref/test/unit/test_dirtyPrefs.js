@@ -20,6 +20,17 @@ function run_test() {
   let prefFile = do_get_profile();
   prefFile.append("prefs.js");
 
+  // dirty flag only applies to the default pref file save, not all of them,
+  // so we need to set the default pref file first.  Chances are, the file
+  // does not exist, but we don't need it to - we just want to set the
+  // name/location to match
+  //
+  try {
+    ps.readUserPrefs(prefFile);
+  } catch (e) {
+    // we're fine if the file isn't there
+  }
+
   //**************************************************************************//
   // prefs are not dirty after a write
   ps.savePrefFile(null);
