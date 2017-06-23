@@ -11,6 +11,7 @@
 #include "MediaResourceCallback.h"
 
 class nsIChannel;
+class nsIStreamListener;
 
 namespace mozilla {
 
@@ -64,6 +65,10 @@ public:
 
   nsresult CreateResource(nsIChannel* aChannel, bool aIsPrivateBrowsing);
   nsresult CreateResource(MediaResource* aOriginal);
+  nsresult Load(nsIStreamListener** aStreamListener);
+
+private:
+  nsresult OpenResource(nsIStreamListener** aStreamListener);
 };
 
 } // namespace mozilla
