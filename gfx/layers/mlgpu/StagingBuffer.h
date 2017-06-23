@@ -6,6 +6,7 @@
 #ifndef mozilla_gfx_layers_mlgpu_StagingBuffer_h
 #define mozilla_gfx_layers_mlgpu_StagingBuffer_h
 
+#include "mozilla/MathAlgorithms.h"
 #include "mozilla/UniquePtr.h"
 #include "UtilityMLGPU.h"
 #include <algorithm>
