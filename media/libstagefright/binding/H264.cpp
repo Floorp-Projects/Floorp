@@ -721,11 +721,11 @@ H264::vui_parameters(BitReader& aBr, SPSData& aDest)
     READUE(chroma_sample_loc_type_bottom_field, 5);
   }
 
-  bool timing_info_present_flag = aBr.ReadBit();
-  if (timing_info_present_flag) {
-    aBr.ReadBits(32); // num_units_in_tick
-    aBr.ReadBits(32); // time_scale
-    aBr.ReadBit(); // fixed_frame_rate_flag
+  aDest.timing_info_present_flag = aBr.ReadBit();
+  if (aDest.timing_info_present_flag) {
+    aDest.num_units_in_tick = aBr.ReadBits(32);
+    aDest.time_scale = aBr.ReadBits(32);
+    aDest.fixed_frame_rate_flag = aBr.ReadBit();
   }
   return true;
 }
