@@ -760,6 +760,12 @@ class AutofillRecords {
     }
   }
 
+  // A test-only helper.
+  _nukeAllRecords() {
+    this._store.data[this._collectionName] = [];
+    // test-only, so there's no good reason to request a save!
+  }
+
   _stripComputedFields(record) {
     this.VALID_COMPUTED_FIELDS.forEach(field => delete record[field]);
   }
