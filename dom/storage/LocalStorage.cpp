@@ -175,9 +175,9 @@ LocalStorage::Clear(nsIPrincipal& aSubjectPrincipal, ErrorResult& aRv)
 }
 
 void
-LocalStorage::BroadcastChangeNotification(const nsSubstring& aKey,
-                                          const nsSubstring& aOldValue,
-                                          const nsSubstring& aNewValue)
+LocalStorage::BroadcastChangeNotification(const nsAString& aKey,
+                                          const nsAString& aOldValue,
+                                          const nsAString& aNewValue)
 {
   if (!XRE_IsParentProcess() && Principal()) {
     // If we are in a child process, we want to send a message to the parent in

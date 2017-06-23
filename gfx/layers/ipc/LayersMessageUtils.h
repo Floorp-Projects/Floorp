@@ -304,6 +304,7 @@ struct ParamTraits<mozilla::layers::TextureFactoryIdentifier>
     WriteParam(aMsg, aParam.mSupportsPartialUploads);
     WriteParam(aMsg, aParam.mSupportsComponentAlpha);
     WriteParam(aMsg, aParam.mSupportsBackdropCopyForComponentAlpha);
+    WriteParam(aMsg, aParam.mUsingAdvancedLayers);
     WriteParam(aMsg, aParam.mSyncHandle);
   }
 
@@ -317,6 +318,7 @@ struct ParamTraits<mozilla::layers::TextureFactoryIdentifier>
                   ReadParam(aMsg, aIter, &aResult->mSupportsPartialUploads) &&
                   ReadParam(aMsg, aIter, &aResult->mSupportsComponentAlpha) &&
                   ReadParam(aMsg, aIter, &aResult->mSupportsBackdropCopyForComponentAlpha) &&
+                  ReadParam(aMsg, aIter, &aResult->mUsingAdvancedLayers) &&
                   ReadParam(aMsg, aIter, &aResult->mSyncHandle);
     return result;
   }
@@ -474,11 +476,13 @@ struct ParamTraits<mozilla::layers::CompositorOptions>
   static void Write(Message* aMsg, const paramType& aParam) {
     WriteParam(aMsg, aParam.mUseAPZ);
     WriteParam(aMsg, aParam.mUseWebRender);
+    WriteParam(aMsg, aParam.mUseAdvancedLayers);
   }
 
   static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult) {
     return ReadParam(aMsg, aIter, &aResult->mUseAPZ)
-        && ReadParam(aMsg, aIter, &aResult->mUseWebRender);
+        && ReadParam(aMsg, aIter, &aResult->mUseWebRender)
+        && ReadParam(aMsg, aIter, &aResult->mUseAdvancedLayers);
   }
 };
 

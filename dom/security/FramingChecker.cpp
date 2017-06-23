@@ -239,7 +239,7 @@ FramingChecker::CheckFrameOptions(nsIChannel* aChannel,
   // be many.  If any want to deny the load, deny the load.
   nsCharSeparatedTokenizer tokenizer(xfoHeaderValue, ',');
   while (tokenizer.hasMoreTokens()) {
-    const nsSubstring& tok = tokenizer.nextToken();
+    const nsAString& tok = tokenizer.nextToken();
     if (!CheckOneFrameOptionsPolicy(httpChannel, tok, aDocShell)) {
       // cancel the load and display about:blank
       httpChannel->Cancel(NS_BINDING_ABORTED);

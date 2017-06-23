@@ -134,6 +134,9 @@ private:
   TimeDuration
   MinSchedulingDelay() const;
 
+  void RecordExecution(mozilla::dom::Timeout* aRunningTimeout,
+                       mozilla::dom::Timeout* aTimeout);
+
 private:
   struct Timeouts {
     explicit Timeouts(const TimeoutManager& aManager)

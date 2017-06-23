@@ -278,7 +278,7 @@ protected:
                           nsIWidget* aNewOriginWidget,
                           mozilla::LayoutDeviceIntRect& aOutRect);
 
-  bool ConvertToANSIString(const nsAFlatString& aStr,
+  bool ConvertToANSIString(const nsString& aStr,
                              UINT aCodePage,
                              nsACString& aANSIStr);
 

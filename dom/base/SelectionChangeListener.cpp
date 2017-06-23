@@ -109,6 +109,13 @@ SelectionChangeListener::NotifySelectionChanged(nsIDOMDocument* aDoc,
     mOldRanges.AppendElement(RawRangeData(sel->GetRangeAt(i)));
   }
 
+  if (doc) {
+    nsPIDOMWindowInner* inner = doc->GetInnerWindow();
+    if (inner && !inner->HasSelectionChangeEventListeners()) {
+      return NS_OK;
+    }
+  }
+
   // If we are hiding changes, then don't do anything else. We do this after we
   // update mOldRanges so that changes after the changes stop being hidden don't
   // incorrectly trigger a change, even though they didn't change anything

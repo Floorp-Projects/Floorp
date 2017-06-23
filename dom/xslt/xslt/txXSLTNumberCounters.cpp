@@ -50,7 +50,7 @@ private:
 
 
 nsresult
-txFormattedCounter::getCounterFor(const nsAFlatString& aToken,
+txFormattedCounter::getCounterFor(const nsString& aToken,
                                   int32_t aGroupSize,
                                   const nsAString& aGroupSeparator,
                                   txFormattedCounter*& aCounter)

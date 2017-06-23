@@ -666,12 +666,12 @@ PopupAllowedForEvent(const char *eventName)
 
   nsDependentCString events(sPopupAllowedEvents);
 
-  nsAFlatCString::const_iterator start, end;
-  nsAFlatCString::const_iterator startiter(events.BeginReading(start));
+  nsCString::const_iterator start, end;
+  nsCString::const_iterator startiter(events.BeginReading(start));
   events.EndReading(end);
 
   while (startiter != end) {
-    nsAFlatCString::const_iterator enditer(end);
+    nsCString::const_iterator enditer(end);
 
     if (!FindInReadable(nsDependentCString(eventName), startiter, enditer))
       return false;

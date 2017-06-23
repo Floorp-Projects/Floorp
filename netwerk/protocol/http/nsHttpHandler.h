@@ -74,7 +74,7 @@ public:
                                               uint32_t capabilities);
     bool     IsAcceptableEncoding(const char *encoding, bool isSecure);
 
-    const nsAFlatCString &UserAgent();
+    const nsCString& UserAgent();
 
     nsHttpVersion  HttpVersion()             { return mHttpVersion; }
     nsHttpVersion  ProxyHttpVersion()        { return mProxyHttpVersion; }

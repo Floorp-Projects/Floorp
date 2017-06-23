@@ -10,6 +10,7 @@
 #include "mozilla/gfx/Rect.h"
 #include "mozilla/gfx/Matrix.h"
 #include "mozilla/gfx/Polygon.h"
+#include "nsRegion.h"
 #include "nsTArray.h"
 
 namespace mozilla {

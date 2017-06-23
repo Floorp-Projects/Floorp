@@ -1,0 +1,540 @@
+float4 BlendMultiplyPS(const VS_BLEND_OUTPUT aInput) : SV_Target
+{
+  if (!RectContainsPoint(aInput.vClipRect, aInput.vPosition.xy)) {
+    discard;
+  }
+
+  float4 backdrop = tBackdrop.Sample(sSampler, aInput.vBackdropCoords);
+  float4 source = simpleTex.Sample(sSampler, aInput.vTexCoords);
+
+  source *= ReadMask(aInput.vMaskCoords);
+
+  // Shortcut when the backdrop or source alpha is 0, otherwise we may leak
+  // infinity into the blend function and return incorrect results.
+  if (backdrop.a == 0.0) {
+    return source;
+  }
+  if (source.a == 0.0) {
+    return float4(0, 0, 0, 0);
+  }
+
+  // The spec assumes there is no premultiplied alpha. The backdrop and
+  // source are both render targets and always premultiplied, so we undo
+  // that here.
+  backdrop.rgb /= backdrop.a;
+  source.rgb /= source.a;
+
+  float4 result;
+  result.rgb = BlendMultiply(backdrop.rgb, source.rgb);
+  result.a = source.a;
+
+  // Factor backdrop alpha, then premultiply for the final OP_OVER.
+  result.rgb = (1.0 - backdrop.a) * source.rgb + backdrop.a * result.rgb;
+  result.rgb *= result.a;
+  return result;
+}
+
+float4 BlendScreenPS(const VS_BLEND_OUTPUT aInput) : SV_Target
+{
+  if (!RectContainsPoint(aInput.vClipRect, aInput.vPosition.xy)) {
+    discard;
+  }
+
+  float4 backdrop = tBackdrop.Sample(sSampler, aInput.vBackdropCoords);
+  float4 source = simpleTex.Sample(sSampler, aInput.vTexCoords);
+
+  source *= ReadMask(aInput.vMaskCoords);
+
+  // Shortcut when the backdrop or source alpha is 0, otherwise we may leak
+  // infinity into the blend function and return incorrect results.
+  if (backdrop.a == 0.0) {
+    return source;
+  }
+  if (source.a == 0.0) {
+    return float4(0, 0, 0, 0);
+  }
+
+  // The spec assumes there is no premultiplied alpha. The backdrop and
+  // source are both render targets and always premultiplied, so we undo
+  // that here.
+  backdrop.rgb /= backdrop.a;
+  source.rgb /= source.a;
+
+  float4 result;
+  result.rgb = BlendScreen(backdrop.rgb, source.rgb);
+  result.a = source.a;
+
+  // Factor backdrop alpha, then premultiply for the final OP_OVER.
+  result.rgb = (1.0 - backdrop.a) * source.rgb + backdrop.a * result.rgb;
+  result.rgb *= result.a;
+  return result;
+}
+
+float4 BlendOverlayPS(const VS_BLEND_OUTPUT aInput) : SV_Target
+{
+  if (!RectContainsPoint(aInput.vClipRect, aInput.vPosition.xy)) {
+    discard;
+  }
+
+  float4 backdrop = tBackdrop.Sample(sSampler, aInput.vBackdropCoords);
+  float4 source = simpleTex.Sample(sSampler, aInput.vTexCoords);
+
+  source *= ReadMask(aInput.vMaskCoords);
+
+  // Shortcut when the backdrop or source alpha is 0, otherwise we may leak
+  // infinity into the blend function and return incorrect results.
+  if (backdrop.a == 0.0) {
+    return source;
+  }
+  if (source.a == 0.0) {
+    return float4(0, 0, 0, 0);
+  }
+
+  // The spec assumes there is no premultiplied alpha. The backdrop and
+  // source are both render targets and always premultiplied, so we undo
+  // that here.
+  backdrop.rgb /= backdrop.a;
+  source.rgb /= source.a;
+
+  float4 result;
+  result.rgb = BlendOverlay(backdrop.rgb, source.rgb);
+  result.a = source.a;
+
+  // Factor backdrop alpha, then premultiply for the final OP_OVER.
+  result.rgb = (1.0 - backdrop.a) * source.rgb + backdrop.a * result.rgb;
+  result.rgb *= result.a;
+  return result;
+}
+
+float4 BlendDarkenPS(const VS_BLEND_OUTPUT aInput) : SV_Target
+{
+  if (!RectContainsPoint(aInput.vClipRect, aInput.vPosition.xy)) {
+    discard;
+  }
+
+  float4 backdrop = tBackdrop.Sample(sSampler, aInput.vBackdropCoords);
+  float4 source = simpleTex.Sample(sSampler, aInput.vTexCoords);
+
+  source *= ReadMask(aInput.vMaskCoords);
+
+  // Shortcut when the backdrop or source alpha is 0, otherwise we may leak
+  // infinity into the blend function and return incorrect results.
+  if (backdrop.a == 0.0) {
+    return source;
+  }
+  if (source.a == 0.0) {
+    return float4(0, 0, 0, 0);
+  }
+
+  // The spec assumes there is no premultiplied alpha. The backdrop and
+  // source are both render targets and always premultiplied, so we undo
+  // that here.
+  backdrop.rgb /= backdrop.a;
+  source.rgb /= source.a;
+
+  float4 result;
+  result.rgb = BlendDarken(backdrop.rgb, source.rgb);
+  result.a = source.a;
+
+  // Factor backdrop alpha, then premultiply for the final OP_OVER.
+  result.rgb = (1.0 - backdrop.a) * source.rgb + backdrop.a * result.rgb;
+  result.rgb *= result.a;
+  return result;
+}
+
+float4 BlendLightenPS(const VS_BLEND_OUTPUT aInput) : SV_Target
+{
+  if (!RectContainsPoint(aInput.vClipRect, aInput.vPosition.xy)) {
+    discard;
+  }
+
+  float4 backdrop = tBackdrop.Sample(sSampler, aInput.vBackdropCoords);
+  float4 source = simpleTex.Sample(sSampler, aInput.vTexCoords);
+
+  source *= ReadMask(aInput.vMaskCoords);
+
+  // Shortcut when the backdrop or source alpha is 0, otherwise we may leak
+  // infinity into the blend function and return incorrect results.
+  if (backdrop.a == 0.0) {
+    return source;
+  }
+  if (source.a == 0.0) {
+    return float4(0, 0, 0, 0);
+  }
+
+  // The spec assumes there is no premultiplied alpha. The backdrop and
+  // source are both render targets and always premultiplied, so we undo
+  // that here.
+  backdrop.rgb /= backdrop.a;
+  source.rgb /= source.a;
+
+  float4 result;
+  result.rgb = BlendLighten(backdrop.rgb, source.rgb);
+  result.a = source.a;
+
+  // Factor backdrop alpha, then premultiply for the final OP_OVER.
+  result.rgb = (1.0 - backdrop.a) * source.rgb + backdrop.a * result.rgb;
+  result.rgb *= result.a;
+  return result;
+}
+
+float4 BlendColorDodgePS(const VS_BLEND_OUTPUT aInput) : SV_Target
+{
+  if (!RectContainsPoint(aInput.vClipRect, aInput.vPosition.xy)) {
+    discard;
+  }
+
+  float4 backdrop = tBackdrop.Sample(sSampler, aInput.vBackdropCoords);
+  float4 source = simpleTex.Sample(sSampler, aInput.vTexCoords);
+
+  source *= ReadMask(aInput.vMaskCoords);
+
+  // Shortcut when the backdrop or source alpha is 0, otherwise we may leak
+  // infinity into the blend function and return incorrect results.
+  if (backdrop.a == 0.0) {
+    return source;
+  }
+  if (source.a == 0.0) {
+    return float4(0, 0, 0, 0);
+  }
+
+  // The spec assumes there is no premultiplied alpha. The backdrop and
+  // source are both render targets and always premultiplied, so we undo
+  // that here.
+  backdrop.rgb /= backdrop.a;
+  source.rgb /= source.a;
+
+  float4 result;
+  result.rgb = BlendColorDodge(backdrop.rgb, source.rgb);
+  result.a = source.a;
+
+  // Factor backdrop alpha, then premultiply for the final OP_OVER.
+  result.rgb = (1.0 - backdrop.a) * source.rgb + backdrop.a * result.rgb;
+  result.rgb *= result.a;
+  return result;
+}
+
+float4 BlendColorBurnPS(const VS_BLEND_OUTPUT aInput) : SV_Target
+{
+  if (!RectContainsPoint(aInput.vClipRect, aInput.vPosition.xy)) {
+    discard;
+  }
+
+  float4 backdrop = tBackdrop.Sample(sSampler, aInput.vBackdropCoords);
+  float4 source = simpleTex.Sample(sSampler, aInput.vTexCoords);
+
+  source *= ReadMask(aInput.vMaskCoords);
+
+  // Shortcut when the backdrop or source alpha is 0, otherwise we may leak
+  // infinity into the blend function and return incorrect results.
+  if (backdrop.a == 0.0) {
+    return source;
+  }
+  if (source.a == 0.0) {
+    return float4(0, 0, 0, 0);
+  }
+
+  // The spec assumes there is no premultiplied alpha. The backdrop and
+  // source are both render targets and always premultiplied, so we undo
+  // that here.
+  backdrop.rgb /= backdrop.a;
+  source.rgb /= source.a;
+
+  float4 result;
+  result.rgb = BlendColorBurn(backdrop.rgb, source.rgb);
+  result.a = source.a;
+
+  // Factor backdrop alpha, then premultiply for the final OP_OVER.
+  result.rgb = (1.0 - backdrop.a) * source.rgb + backdrop.a * result.rgb;
+  result.rgb *= result.a;
+  return result;
+}
+
+float4 BlendHardLightPS(const VS_BLEND_OUTPUT aInput) : SV_Target
+{
+  if (!RectContainsPoint(aInput.vClipRect, aInput.vPosition.xy)) {
+    discard;
+  }
+
+  float4 backdrop = tBackdrop.Sample(sSampler, aInput.vBackdropCoords);
+  float4 source = simpleTex.Sample(sSampler, aInput.vTexCoords);
+
+  source *= sOpacity;
+
+  // Shortcut when the backdrop or source alpha is 0, otherwise we may leak
+  // infinity into the blend function and return incorrect results.
+  if (backdrop.a == 0.0) {
+    return source;
+  }
+  if (source.a == 0.0) {
+    return float4(0, 0, 0, 0);
+  }
+
+  // The spec assumes there is no premultiplied alpha. The backdrop and
+  // source are both render targets and always premultiplied, so we undo
+  // that here.
+  backdrop.rgb /= backdrop.a;
+  source.rgb /= source.a;
+
+  float4 result;
+  result.rgb = BlendHardLight(backdrop.rgb, source.rgb);
+  result.a = source.a;
+
+  // Factor backdrop alpha, then premultiply for the final OP_OVER.
+  result.rgb = (1.0 - backdrop.a) * source.rgb + backdrop.a * result.rgb;
+  result.rgb *= result.a;
+  return result;
+}
+
+float4 BlendSoftLightPS(const VS_BLEND_OUTPUT aInput) : SV_Target
+{
+  if (!RectContainsPoint(aInput.vClipRect, aInput.vPosition.xy)) {
+    discard;
+  }
+
+  float4 backdrop = tBackdrop.Sample(sSampler, aInput.vBackdropCoords);
+  float4 source = simpleTex.Sample(sSampler, aInput.vTexCoords);
+
+  source *= ReadMask(aInput.vMaskCoords);
+
+  // Shortcut when the backdrop or source alpha is 0, otherwise we may leak
+  // infinity into the blend function and return incorrect results.
+  if (backdrop.a == 0.0) {
+    return source;
+  }
+  if (source.a == 0.0) {
+    return float4(0, 0, 0, 0);
+  }
+
+  // The spec assumes there is no premultiplied alpha. The backdrop and
+  // source are both render targets and always premultiplied, so we undo
+  // that here.
+  backdrop.rgb /= backdrop.a;
+  source.rgb /= source.a;
+
+  float4 result;
+  result.rgb = BlendSoftLight(backdrop.rgb, source.rgb);
+  result.a = source.a;
+
+  // Factor backdrop alpha, then premultiply for the final OP_OVER.
+  result.rgb = (1.0 - backdrop.a) * source.rgb + backdrop.a * result.rgb;
+  result.rgb *= result.a;
+  return result;
+}
+
+float4 BlendDifferencePS(const VS_BLEND_OUTPUT aInput) : SV_Target
+{
+  if (!RectContainsPoint(aInput.vClipRect, aInput.vPosition.xy)) {
+    discard;
+  }
+
+  float4 backdrop = tBackdrop.Sample(sSampler, aInput.vBackdropCoords);
+  float4 source = simpleTex.Sample(sSampler, aInput.vTexCoords);
+
+  source *= ReadMask(aInput.vMaskCoords);
+
+  // Shortcut when the backdrop or source alpha is 0, otherwise we may leak
+  // infinity into the blend function and return incorrect results.
+  if (backdrop.a == 0.0) {
+    return source;
+  }
+  if (source.a == 0.0) {
+    return float4(0, 0, 0, 0);
+  }
+
+  // The spec assumes there is no premultiplied alpha. The backdrop and
+  // source are both render targets and always premultiplied, so we undo
+  // that here.
+  backdrop.rgb /= backdrop.a;
+  source.rgb /= source.a;
+
+  float4 result;
+  result.rgb = BlendDifference(backdrop.rgb, source.rgb);
+  result.a = source.a;
+
+  // Factor backdrop alpha, then premultiply for the final OP_OVER.
+  result.rgb = (1.0 - backdrop.a) * source.rgb + backdrop.a * result.rgb;
+  result.rgb *= result.a;
+  return result;
+}
+
+float4 BlendExclusionPS(const VS_BLEND_OUTPUT aInput) : SV_Target
+{
+  if (!RectContainsPoint(aInput.vClipRect, aInput.vPosition.xy)) {
+    discard;
+  }
+
+  float4 backdrop = tBackdrop.Sample(sSampler, aInput.vBackdropCoords);
+  float4 source = simpleTex.Sample(sSampler, aInput.vTexCoords);
+
+  source *= ReadMask(aInput.vMaskCoords);
+
+  // Shortcut when the backdrop or source alpha is 0, otherwise we may leak
+  // infinity into the blend function and return incorrect results.
+  if (backdrop.a == 0.0) {
+    return source;
+  }
+  if (source.a == 0.0) {
+    return float4(0, 0, 0, 0);
+  }
+
+  // The spec assumes there is no premultiplied alpha. The backdrop and
+  // source are both render targets and always premultiplied, so we undo
+  // that here.
+  backdrop.rgb /= backdrop.a;
+  source.rgb /= source.a;
+
+  float4 result;
+  result.rgb = BlendExclusion(backdrop.rgb, source.rgb);
+  result.a = source.a;
+
+  // Factor backdrop alpha, then premultiply for the final OP_OVER.
+  result.rgb = (1.0 - backdrop.a) * source.rgb + backdrop.a * result.rgb;
+  result.rgb *= result.a;
+  return result;
+}
+
+float4 BlendHuePS(const VS_BLEND_OUTPUT aInput) : SV_Target
+{
+  if (!RectContainsPoint(aInput.vClipRect, aInput.vPosition.xy)) {
+    discard;
+  }
+
+  float4 backdrop = tBackdrop.Sample(sSampler, aInput.vBackdropCoords);
+  float4 source = simpleTex.Sample(sSampler, aInput.vTexCoords);
+
+  source *= ReadMask(aInput.vMaskCoords);
+
+  // Shortcut when the backdrop or source alpha is 0, otherwise we may leak
+  // infinity into the blend function and return incorrect results.
+  if (backdrop.a == 0.0) {
+    return source;
+  }
+  if (source.a == 0.0) {
+    return float4(0, 0, 0, 0);
+  }
+
+  // The spec assumes there is no premultiplied alpha. The backdrop and
+  // source are both render targets and always premultiplied, so we undo
+  // that here.
+  backdrop.rgb /= backdrop.a;
+  source.rgb /= source.a;
+
+  float4 result;
+  result.rgb = BlendHue(backdrop.rgb, source.rgb);
+  result.a = source.a;
+
+  // Factor backdrop alpha, then premultiply for the final OP_OVER.
+  result.rgb = (1.0 - backdrop.a) * source.rgb + backdrop.a * result.rgb;
+  result.rgb *= result.a;
+  return result;
+}
+
+float4 BlendSaturationPS(const VS_BLEND_OUTPUT aInput) : SV_Target
+{
+  if (!RectContainsPoint(aInput.vClipRect, aInput.vPosition.xy)) {
+    discard;
+  }
+
+  float4 backdrop = tBackdrop.Sample(sSampler, aInput.vBackdropCoords);
+  float4 source = simpleTex.Sample(sSampler, aInput.vTexCoords);
+
+  source *= ReadMask(aInput.vMaskCoords);
+
+  // Shortcut when the backdrop or source alpha is 0, otherwise we may leak
+  // infinity into the blend function and return incorrect results.
+  if (backdrop.a == 0.0) {
+    return source;
+  }
+  if (source.a == 0.0) {
+    return float4(0, 0, 0, 0);
+  }
+
+  // The spec assumes there is no premultiplied alpha. The backdrop and
+  // source are both render targets and always premultiplied, so we undo
+  // that here.
+  backdrop.rgb /= backdrop.a;
+  source.rgb /= source.a;
+
+  float4 result;
+  result.rgb = BlendSaturation(backdrop.rgb, source.rgb);
+  result.a = source.a;
+
+  // Factor backdrop alpha, then premultiply for the final OP_OVER.
+  result.rgb = (1.0 - backdrop.a) * source.rgb + backdrop.a * result.rgb;
+  result.rgb *= result.a;
+  return result;
+}
+
+float4 BlendColorPS(const VS_BLEND_OUTPUT aInput) : SV_Target
+{
+  if (!RectContainsPoint(aInput.vClipRect, aInput.vPosition.xy)) {
+    discard;
+  }
+
+  float4 backdrop = tBackdrop.Sample(sSampler, aInput.vBackdropCoords);
+  float4 source = simpleTex.Sample(sSampler, aInput.vTexCoords);
+
+  source *= ReadMask(aInput.vMaskCoords);
+
+  // Shortcut when the backdrop or source alpha is 0, otherwise we may leak
+  // infinity into the blend function and return incorrect results.
+  if (backdrop.a == 0.0) {
+    return source;
+  }
+  if (source.a == 0.0) {
+    return float4(0, 0, 0, 0);
+  }
+
+  // The spec assumes there is no premultiplied alpha. The backdrop and
+  // source are both render targets and always premultiplied, so we undo
+  // that here.
+  backdrop.rgb /= backdrop.a;
+  source.rgb /= source.a;
+
+  float4 result;
+  result.rgb = BlendColor(backdrop.rgb, source.rgb);
+  result.a = source.a;
+
+  // Factor backdrop alpha, then premultiply for the final OP_OVER.
+  result.rgb = (1.0 - backdrop.a) * source.rgb + backdrop.a * result.rgb;
+  result.rgb *= result.a;
+  return result;
+}
+
+float4 BlendLuminosityPS(const VS_BLEND_OUTPUT aInput) : SV_Target
+{
+  if (!RectContainsPoint(aInput.vClipRect, aInput.vPosition.xy)) {
+    discard;
+  }
+
+  float4 backdrop = tBackdrop.Sample(sSampler, aInput.vBackdropCoords);
+  float4 source = simpleTex.Sample(sSampler, aInput.vTexCoords);
+
+  source *= ReadMask(aInput.vMaskCoords);
+
+  // Shortcut when the backdrop or source alpha is 0, otherwise we may leak
+  // infinity into the blend function and return incorrect results.
+  if (backdrop.a == 0.0) {
+    return source;
+  }
+  if (source.a == 0.0) {
+    return float4(0, 0, 0, 0);
+  }
+
+  // The spec assumes there is no premultiplied alpha. The backdrop and
+  // source are both render targets and always premultiplied, so we undo
+  // that here.
+  backdrop.rgb /= backdrop.a;
+  source.rgb /= source.a;
+
+  float4 result;
+  result.rgb = BlendLuminosity(backdrop.rgb, source.rgb);
+  result.a = source.a;
+
+  // Factor backdrop alpha, then premultiply for the final OP_OVER.
+  result.rgb = (1.0 - backdrop.a) * source.rgb + backdrop.a * result.rgb;
+  result.rgb *= result.a;
+  return result;
+}
+

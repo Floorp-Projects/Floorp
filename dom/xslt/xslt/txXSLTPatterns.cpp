@@ -300,7 +300,7 @@ txRootPattern::toString(nsAString& aDest)
  * This looks like the id() function, but may only have LITERALs as
  * argument.
  */
-txIdPattern::txIdPattern(const nsSubstring& aString)
+txIdPattern::txIdPattern(const nsAString& aString)
 {
     nsWhitespaceTokenizer tokenizer(aString);
     while (tokenizer.hasMoreTokens()) {

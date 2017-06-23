@@ -187,8 +187,8 @@ public:
   NS_DECL_NSIRUNNABLE
   NS_DECL_NSICACHELISTENER
 
-  _OldCacheLoad(nsCSubstring const& aScheme,
-                nsCSubstring const& aCacheKey,
+  _OldCacheLoad(const nsACString& aScheme,
+                const nsACString& aCacheKey,
                 nsICacheEntryOpenCallback* aCallback,
                 nsIApplicationCache* aAppCache,
                 nsILoadContextInfo* aLoadInfo,
@@ -241,7 +241,7 @@ private:
   virtual ~_OldStorage();
   nsresult AssembleCacheKey(nsIURI *aURI, nsACString const & aIdExtension,
                             nsACString & aCacheKey, nsACString & aScheme);
-  nsresult ChooseApplicationCache(nsCSubstring const &cacheKey, nsIApplicationCache** aCache);
+  nsresult ChooseApplicationCache(const nsACString& cacheKey, nsIApplicationCache** aCache);
 
   nsCOMPtr<nsILoadContextInfo> mLoadInfo;
   nsCOMPtr<nsIApplicationCache> mAppCache;

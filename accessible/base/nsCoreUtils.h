@@ -299,7 +299,7 @@ public:
    * only. In contrast to nsWhitespaceTokenizer class it takes into account
    * non-breaking space (0xa0).
    */
-  static bool IsWhitespaceString(const nsSubstring& aString);
+  static bool IsWhitespaceString(const nsAString& aString);
 
   /**
    * Returns true if the given character is whitespace symbol.

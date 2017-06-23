@@ -6,8 +6,7 @@
 
 #include "PaintThread.h"
 
-#include "mozilla/gfx/DrawEventRecorder.h"
-#include "mozilla/gfx/InlineTranslator.h"
+#include "mozilla/gfx/2D.h"
 #include "mozilla/SyncRunnable.h"
 
 namespace mozilla {
@@ -95,27 +94,22 @@ PaintThread::IsOnPaintThread()
 }
 
 void
-PaintThread::PaintContents(DrawEventRecorderMemory* aRecording,
+PaintThread::PaintContents(DrawTargetCapture* aCapture,
                            DrawTarget* aTarget)
 {
   if (!IsOnPaintThread()) {
     MOZ_ASSERT(NS_IsMainThread());
     nsCOMPtr<nsIRunnable> paintTask =
-      NewRunnableMethod<DrawEventRecorderMemory*, DrawTarget*>(this,
-                                                  &PaintThread::PaintContents,
-                                                  aRecording, aTarget);
+      NewRunnableMethod<DrawTargetCapture*, DrawTarget*>(this,
+                                                         &PaintThread::PaintContents,
+                                                         aCapture, aTarget);
 
     SyncRunnable::DispatchToThread(mThread, paintTask);
     return;
   }
 
   // Draw all the things into the actual dest target.
-  // This shouldn't exist in the future. For now, its just testing
-  // to make sure we properly record and can replay all the draw
-  // commands
-  std::istream& stream = aRecording->GetInputStream();
-  InlineTranslator translator(aTarget, nullptr);
-  translator.TranslateRecording(stream);
+  aTarget->DrawCapturedDT(aCapture, Matrix());
 }
 
 } // namespace layers

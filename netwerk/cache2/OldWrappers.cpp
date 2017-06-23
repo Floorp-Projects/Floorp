@@ -523,7 +523,7 @@ namespace {
 
 nsresult
 GetCacheSessionNameForStoragePolicy(
-        nsCSubstring const &scheme,
+        const nsACString& scheme,
         nsCacheStoragePolicy storagePolicy,
         bool isPrivate,
         OriginAttributes const *originAttribs,
@@ -587,7 +587,7 @@ GetCacheSessionNameForStoragePolicy(
 }
 
 nsresult
-GetCacheSession(nsCSubstring const &aScheme,
+GetCacheSession(const nsACString& aScheme,
                 bool aWriteToDisk,
                 nsILoadContextInfo* aLoadInfo,
                 nsIApplicationCache* aAppCache,
@@ -653,8 +653,8 @@ GetCacheSession(nsCSubstring const &aScheme,
 
 NS_IMPL_ISUPPORTS_INHERITED(_OldCacheLoad, Runnable, nsICacheListener)
 
-_OldCacheLoad::_OldCacheLoad(nsCSubstring const& aScheme,
-                             nsCSubstring const& aCacheKey,
+_OldCacheLoad::_OldCacheLoad(const nsACString& aScheme,
+                             const nsACString& aCacheKey,
                              nsICacheEntryOpenCallback* aCallback,
                              nsIApplicationCache* aAppCache,
                              nsILoadContextInfo* aLoadInfo,
@@ -1137,7 +1137,7 @@ nsresult _OldStorage::AssembleCacheKey(nsIURI *aURI,
   return NS_OK;
 }
 
-nsresult _OldStorage::ChooseApplicationCache(nsCSubstring const &cacheKey,
+nsresult _OldStorage::ChooseApplicationCache(const nsACString& cacheKey,
                                              nsIApplicationCache** aCache)
 {
   nsresult rv;

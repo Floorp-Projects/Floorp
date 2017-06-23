@@ -92,11 +92,11 @@ protected:
 
   // nsContentSink overrides
   virtual nsresult ProcessStyleLink(nsIContent* aElement,
-                                    const nsSubstring& aHref,
+                                    const nsAString& aHref,
                                     bool aAlternate,
-                                    const nsSubstring& aTitle,
-                                    const nsSubstring& aType,
-                                    const nsSubstring& aMedia) override;
+                                    const nsAString& aTitle,
+                                    const nsAString& aType,
+                                    const nsAString& aMedia) override;
   nsresult LoadXSLStyleSheet(nsIURI* aUrl);
   void StartLayout();
 
@@ -328,11 +328,11 @@ nsXMLFragmentContentSink::ReportError(const char16_t* aErrorText,
 
 nsresult
 nsXMLFragmentContentSink::ProcessStyleLink(nsIContent* aElement,
-                                           const nsSubstring& aHref,
+                                           const nsAString& aHref,
                                            bool aAlternate,
-                                           const nsSubstring& aTitle,
-                                           const nsSubstring& aType,
-                                           const nsSubstring& aMedia)
+                                           const nsAString& aTitle,
+                                           const nsAString& aType,
+                                           const nsAString& aMedia)
 {
   // don't process until moved to document
   return NS_OK;

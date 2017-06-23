@@ -302,9 +302,7 @@ private:
   JS::GCSliceCallback mPrevGCSliceCallback;
   JS::GCNurseryCollectionCallback mPrevGCNurseryCollectionCallback;
 
-#ifdef MOZ_GECKO_PROFILER
   mozilla::TimeStamp mLatestNurseryCollectionStart;
-#endif
 
   nsDataHashtable<nsPtrHashKey<void>, nsScriptObjectTracer*> mJSHolders;
 

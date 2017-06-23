@@ -399,7 +399,7 @@ loser:
 nsresult
 nsKeygenFormProcessor::GetPublicKey(const nsAString& aValue,
                                     const nsAString& aChallenge,
-                                    const nsAFlatString& aKeyType,
+                                    const nsString& aKeyType,
                                     nsAString& aOutPublicKey,
                                     const nsAString& aKeyParams)
 {

@@ -160,7 +160,7 @@ HTMLEditor::LoadHTML(const nsAString& aInputString)
 NS_IMETHODIMP
 HTMLEditor::InsertHTML(const nsAString& aInString)
 {
-  const nsAFlatString& empty = EmptyString();
+  const nsString& empty = EmptyString();
 
   return InsertHTMLWithContext(aInString, empty, empty, empty,
                                nullptr,  nullptr, 0, true);
@@ -951,8 +951,8 @@ HTMLEditor::ParseCFHTML(nsCString& aCfhtml,
   RemoveFragComments(contextUTF8);
 
   // convert both strings to usc2
-  const nsAFlatString& fragUcs2Str = NS_ConvertUTF8toUTF16(fragmentUTF8);
-  const nsAFlatString& cntxtUcs2Str = NS_ConvertUTF8toUTF16(contextUTF8);
+  const nsString& fragUcs2Str = NS_ConvertUTF8toUTF16(fragmentUTF8);
+  const nsString& cntxtUcs2Str = NS_ConvertUTF8toUTF16(contextUTF8);
 
   // translate platform linebreaks for fragment
   int32_t oldLengthInChars = fragUcs2Str.Length() + 1;  // +1 to include null terminator
@@ -1511,7 +1511,7 @@ HTMLEditor::PasteNoFormatting(int32_t aSelectionType)
     // Get the Data from the clipboard
     if (NS_SUCCEEDED(clipboard->GetData(trans, aSelectionType)) &&
         IsModifiable()) {
-      const nsAFlatString& empty = EmptyString();
+      const nsString& empty = EmptyString();
       rv = InsertFromTransferable(trans, nullptr, empty, empty, false, nullptr, 0,
                                   true);
     }

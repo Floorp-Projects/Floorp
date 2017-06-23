@@ -66,12 +66,14 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
             'd3d11/DeviceAttachmentsD3D11.h',
             'd3d11/DiagnosticsD3D11.h',
             'd3d11/HelpersD3D11.h',
+            'd3d11/MLGDeviceD3D11.h',
             'd3d11/ReadbackManagerD3D11.h',
             'd3d11/ShaderDefinitionsD3D11.h',
             'd3d11/TextureD3D11.h',
         ]
         UNIFIED_SOURCES += [
             'd3d11/DiagnosticsD3D11.cpp',
+            'd3d11/MLGDeviceD3D11.cpp',
             'd3d11/TextureD3D11.cpp',
         ]
         SOURCES += [
@@ -148,6 +150,7 @@ EXPORTS.mozilla.layers += [
     'composite/ImageLayerComposite.h',
     'composite/LayerManagerComposite.h',
     'composite/PaintedLayerComposite.h',
+    'composite/TextRenderer.h',
     'composite/TextureHost.h',
     'composite/TiledContentHost.h',
     'Compositor.h',
@@ -195,6 +198,13 @@ EXPORTS.mozilla.layers += [
     'LayerMetricsWrapper.h',
     'LayersHelpers.h',
     'LayersTypes.h',
+    'mlgpu/LayerManagerMLGPU.h',
+    'mlgpu/LayerMLGPU.h',
+    'mlgpu/MemoryReportingMLGPU.h',
+    'mlgpu/MLGDevice.h',
+    'mlgpu/MLGDeviceTypes.h',
+    'mlgpu/ShaderDefinitionsMLGPU.h',
+    'mlgpu/UtilityMLGPU.h',
     'opengl/CompositingRenderTargetOGL.h',
     'opengl/CompositorOGL.h',
     'opengl/MacIOSurfaceTextureClientOGL.h',
@@ -394,6 +404,24 @@ UNIFIED_SOURCES += [
     'LayersLogging.cpp',
     'LayerSorter.cpp',
     'LayersTypes.cpp',
+    'mlgpu/BufferCache.cpp',
+    'mlgpu/CanvasLayerMLGPU.cpp',
+    'mlgpu/ContainerLayerMLGPU.cpp',
+    'mlgpu/FrameBuilder.cpp',
+    'mlgpu/ImageLayerMLGPU.cpp',
+    'mlgpu/LayerManagerMLGPU.cpp',
+    'mlgpu/LayerMLGPU.cpp',
+    'mlgpu/MaskOperation.cpp',
+    'mlgpu/MemoryReportingMLGPU.cpp',
+    'mlgpu/MLGDevice.cpp',
+    'mlgpu/PaintedLayerMLGPU.cpp',
+    'mlgpu/RenderPassMLGPU.cpp',
+    'mlgpu/RenderViewMLGPU.cpp',
+    'mlgpu/ShaderDefinitionsMLGPU.cpp',
+    'mlgpu/SharedBufferMLGPU.cpp',
+    'mlgpu/StagingBuffer.cpp',
+    'mlgpu/TexturedLayerMLGPU.cpp',
+    'mlgpu/TextureSourceProviderMLGPU.cpp',
     'opengl/CompositingRenderTargetOGL.cpp',
     'opengl/CompositorOGL.cpp',
     'opengl/GLBlitTextureImageHelper.cpp',
@@ -481,11 +509,15 @@ include('/ipc/chromium/chromium-config.mozbuild')
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
   GENERATED_FILES = [
       'CompositorD3D11Shaders.h',
+      'MLGShaders.h',
   ]
 
   d3d11_shaders = GENERATED_FILES['CompositorD3D11Shaders.h']
   d3d11_shaders.script = 'd3d11/genshaders.py'
   d3d11_shaders.inputs = ['d3d11/shaders.manifest']
+  mlg_shaders = GENERATED_FILES['MLGShaders.h']
+  mlg_shaders.script = 'd3d11/genshaders.py'
+  mlg_shaders.inputs = ['d3d11/mlgshaders/shaders.manifest']
 
 LOCAL_INCLUDES += [
     '/docshell/base',  # for nsDocShell.h

@@ -37,8 +37,8 @@ public:
 
     void SetMethod(const nsACString &method);
     void SetVersion(nsHttpVersion version);
-    void SetRequestURI(const nsCSubstring &s);
-    void SetPath(const nsCSubstring &s);
+    void SetRequestURI(const nsACString& s);
+    void SetPath(const nsACString& s);
     uint32_t HeaderCount();
 
     // Using this function it is possible to itereate through all headers

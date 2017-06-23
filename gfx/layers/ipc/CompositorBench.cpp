@@ -286,7 +286,7 @@ static void RunCompositorBench(Compositor* aCompositor, const gfx::Rect& aScreen
     BenchTest* test = tests[i];
     std::vector<TimeDuration> results;
     int testsOverThreshold = 0;
-    PROFILER_MARKER(test->ToString());
+    profiler_add_marker(test->ToString());
     for (size_t j = 0; j < TEST_STEPS; j++) {
       test->Setup(aCompositor, j);
 

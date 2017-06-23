@@ -9,19 +9,6 @@
 # ==============================================================
 # Some of the options here imply an option from js/moz.configure,
 # so, need to be declared before the include.
-option('--enable-systrace', env='MOZ_USE_SYSTRACE',
-       help='Turn on systrace for the Gecko profiler on android/b2g')
-
-@depends('--enable-systrace', target)
-def systrace(value, target):
-    if value and target.os != 'Android':
-        die('--enable-systrace cannot be used when targeting %s',
-            target.os)
-    if value:
-        return True
-
-set_define('MOZ_USE_SYSTRACE', systrace)
-
 
 option('--enable-jprof', env='MOZ_JPROF',
        help='Enable jprof profiling tool (needs mozilla/tools/jprof)')
@@ -658,11 +645,26 @@ def building_stylo_bindgen(stylo_config, bindgen_enabled, compile_environment):
 # configure options.  The Windows installer of LLVM/Clang doesn't provide
 # llvm-config, so we need both methods to support all of our tier-1
 # platforms.
-llvm_config = check_prog('LLVM_CONFIG', ('llvm-config-4.0',
-                                         'llvm-config40',
-                                         'llvm-config-3.9',
-                                         'llvm-config39',
-                                         'llvm-config',),
+@imports('os')
+def llvm_config_paths():
+    llvm_config_progs = [
+        'llvm-config-4.0',
+        'llvm-config40',
+        'llvm-config-3.9',
+        'llvm-config39',
+        'llvm-config',
+    ]
+
+    # Also add in the location to which `mach bootstrap` installs clang.
+    mozbuild_state_dir = os.environ.get('MOZBUILD_STATE_PATH',
+                                        os.path.expanduser(os.path.join('~', '.mozbuild')))
+    bootstrap_llvm_config = os.path.join(mozbuild_state_dir, 'clang', 'bin', 'llvm-config')
+
+    llvm_config_progs.append(bootstrap_llvm_config)
+
+    return llvm_config_progs
+
+llvm_config = check_prog('LLVM_CONFIG', llvm_config_paths,
                          when=building_stylo_bindgen,
                          what='llvm-config', allow_missing=True)
 
@@ -773,6 +775,9 @@ with only_when(building_stylo_bindgen):
             You must provide both of --with-libclang-path and --with-clang-path
             or neither of them.'''))
 
+        libclang_path = libclang_path[0]
+        clang_path = clang_path[0]
+
         if not os.path.exists(libclang_path) or \
            not os.path.isdir(libclang_path):
             die(dedent('''\
@@ -793,8 +798,8 @@ with only_when(building_stylo_bindgen):
             '''.format(clang_path)))
 
         return namespace(
-            libclang_path=libclang_path[0],
-            clang_path=clang_path[0],
+            libclang_path=libclang_path,
+            clang_path=clang_path,
         )
 
     set_config('MOZ_LIBCLANG_PATH', bindgen_config_paths.libclang_path)

@@ -11,28 +11,28 @@
 namespace mozilla {
 namespace gfx {
 
-template<class T>
+template<class S, class T>
 struct ElementStreamFormat
 {
-  static void Write(std::ostream &aStream, const T &aElement)
+  static void Write(S &aStream, const T &aElement)
   {
     aStream.write(reinterpret_cast<const char*>(&aElement), sizeof(T));
   }
-  static void Read(std::istream &aStream, T &aElement)
+  static void Read(S &aStream, T &aElement)
   {
     aStream.read(reinterpret_cast<char *>(&aElement), sizeof(T));
   }
 };
 
-template<class T>
-void WriteElement(std::ostream &aStream, const T &aElement)
+template<class S, class T>
+void WriteElement(S &aStream, const T &aElement)
 {
-  ElementStreamFormat<T>::Write(aStream, aElement);
+  ElementStreamFormat<S, T>::Write(aStream, aElement);
 }
-template<class T>
-void ReadElement(std::istream &aStream, T &aElement)
+template<class S, class T>
+void ReadElement(S &aStream, T &aElement)
 {
-  ElementStreamFormat<T>::Read(aStream, aElement);
+  ElementStreamFormat<S, T>::Read(aStream, aElement);
 }
 
 } // namespace gfx

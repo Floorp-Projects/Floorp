@@ -113,12 +113,9 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('gtk2', 'gtk3'):
     ]
 
 if CONFIG['MOZ_ENABLE_SKIA']:
-    UNIFIED_SOURCES += [
-        'convolver.cpp',
-    ]
     SOURCES += [
+        'ConvolutionFilter.cpp',
         'DrawTargetSkia.cpp',
-        'image_operations.cpp', # Uses _USE_MATH_DEFINES
         'PathSkia.cpp',
         'SourceSurfaceSkia.cpp',
     ]
@@ -128,6 +125,7 @@ if CONFIG['MOZ_ENABLE_SKIA']:
         SOURCES['PathSkia.cpp'].flags += ['-Wno-implicit-fallthrough']
         SOURCES['SourceSurfaceSkia.cpp'].flags += ['-Wno-implicit-fallthrough']
     EXPORTS.mozilla.gfx += [
+        'ConvolutionFilter.h',
         'HelpersSkia.h',
     ]
 
@@ -140,10 +138,6 @@ if CONFIG['INTEL_ARCHITECTURE']:
         'ssse3-scaler.c',
         'SwizzleSSE2.cpp',
     ]
-    if CONFIG['MOZ_ENABLE_SKIA']:
-        SOURCES += [
-            'convolverSSE2.cpp',
-        ]
     DEFINES['USE_SSE2'] = True
     # The file uses SSE2 intrinsics, so it needs special compile flags on some
     # compilers.
@@ -152,16 +146,10 @@ if CONFIG['INTEL_ARCHITECTURE']:
     SOURCES['ImageScalingSSE2.cpp'].flags += CONFIG['SSE2_FLAGS']
     SOURCES['SwizzleSSE2.cpp'].flags += CONFIG['SSE2_FLAGS']
     SOURCES['ssse3-scaler.c'].flags += CONFIG['SSSE3_FLAGS']
-    if CONFIG['MOZ_ENABLE_SKIA']:
-        SOURCES['convolverSSE2.cpp'].flags += CONFIG['SSE2_FLAGS']
 elif CONFIG['CPU_ARCH'].startswith('mips'):
     SOURCES += [
         'BlurLS3.cpp',
     ]
-    if CONFIG['MOZ_ENABLE_SKIA']:
-        SOURCES += [
-            'convolverLS3.cpp',
-        ]
 
 UNIFIED_SOURCES += [
     'BezierUtils.cpp',

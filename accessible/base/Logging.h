@@ -209,7 +209,7 @@ void Stack();
 /**
  * Enable logging of the specified modules, all other modules aren't logged.
  */
-void Enable(const nsAFlatCString& aModules);
+void Enable(const nsCString& aModules);
 
 /**
  * Enable logging of modules specified by A11YLOG environment variable,

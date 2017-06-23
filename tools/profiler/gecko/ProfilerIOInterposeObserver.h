@@ -5,8 +5,6 @@
 #ifndef PROFILERIOINTERPOSEOBSERVER_H
 #define PROFILERIOINTERPOSEOBSERVER_H
 
-#ifdef MOZ_GECKO_PROFILER
-
 #include "mozilla/IOInterposer.h"
 #include "nsISupportsImpl.h"
 
@@ -28,7 +26,5 @@ protected:
 };
 
 } // namespace mozilla
-
-#endif // MOZ_GECKO_PROFILER
 
 #endif // PROFILERIOINTERPOSEOBSERVER_H
