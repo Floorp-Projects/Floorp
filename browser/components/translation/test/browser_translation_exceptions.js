@@ -6,8 +6,7 @@
 
 var tmp = {};
 Cu.import("resource:///modules/translation/Translation.jsm", tmp);
-Cu.import("resource://gre/modules/Promise.jsm", tmp);
-var {Translation, Promise} = tmp;
+var {Translation} = tmp;
 
 const kLanguagesPref = "browser.translation.neverForLanguages";
 const kShowUIPref = "browser.translation.ui.show";

@@ -10,8 +10,7 @@ Cc["@mozilla.org/psm;1"].getService(Ci.nsISupports);
 
 const { Services } = Cu.import("resource://gre/modules/Services.jsm", {});
 const { NetUtil } = Cu.import("resource://gre/modules/NetUtil.jsm", {});
-const { Promise: promise } =
-  Cu.import("resource://gre/modules/Promise.jsm", {});
+const { PromiseUtils } = Cu.import("resource://gre/modules/PromiseUtils.jsm", {});
 const certService = Cc["@mozilla.org/security/local-cert-service;1"]
                     .getService(Ci.nsILocalCertService);
 const certOverrideService = Cc["@mozilla.org/security/certoverride;1"]
@@ -28,17 +27,17 @@ function run_test() {
 }
 
 function getCert() {
-  let deferred = promise.defer();
-  certService.getOrCreateCert("tls-test", {
-    handleCert: function(c, rv) {
-      if (rv) {
-        deferred.reject(rv);
-        return;
+  return new Promise((resolve, reject) => {
+    certService.getOrCreateCert("tls-test", {
+      handleCert: function(c, rv) {
+        if (rv) {
+          reject(rv);
+          return;
+        }
+        resolve(c);
       }
-      deferred.resolve(c);
-    }
+    });
   });
-  return deferred.promise;
 }
 
 function startServer(cert, expectingPeerCert, clientCertificateConfig,
@@ -118,8 +117,8 @@ function startClient(port, cert, expectingBadCertAlert) {
   let input;
   let output;
 
-  let inputDeferred = promise.defer();
-  let outputDeferred = promise.defer();
+  let inputDeferred = PromiseUtils.defer();
+  let outputDeferred = PromiseUtils.defer();
 
   let handler = {
 
@@ -178,7 +177,7 @@ function startClient(port, cert, expectingBadCertAlert) {
   transport.setEventSink(handler, Services.tm.currentThread);
   output = transport.openOutputStream(0, 0, 0);
 
-  return promise.all([inputDeferred.promise, outputDeferred.promise]);
+  return Promise.all([inputDeferred.promise, outputDeferred.promise]);
 }
 
 // Replace the UI dialog that prompts the user to pick a client certificate.

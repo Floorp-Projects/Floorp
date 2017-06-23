@@ -6,7 +6,6 @@
 var {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
 var {CrashStore, CrashManager} = Cu.import("resource://gre/modules/CrashManager.jsm", {});
-Cu.import("resource://gre/modules/Promise.jsm", this);
 Cu.import("resource://gre/modules/osfile.jsm", this);
 Cu.import("resource://gre/modules/TelemetryEnvironment.jsm", this);
 

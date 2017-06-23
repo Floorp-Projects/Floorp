@@ -4,7 +4,6 @@
 
 // Test that we only check manifest age for disabled extensions
 
-Components.utils.import("resource://gre/modules/Promise.jsm");
 
 createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");
 
