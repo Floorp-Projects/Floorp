@@ -22,8 +22,6 @@ window.onload = function () {
     require("devtools/shared/dom-node-filter-constants");
   const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
-  const isStylo = SpecialPowers.getBoolPref("layout.css.servo.enabled");
-
   SpecialPowers.pushPrefEnv({"set": [
     ["dom.webcomponents.enabled", true]
   ]});
@@ -146,12 +144,6 @@ window.onload = function () {
   });
 
   addAsyncTest(function* testShadowAnonymous() {
-    // Stylo doesn't currently support shadow DOM (bug 1293844)
-    if (isStylo) {
-      runNextTest();
-      return;
-    }
-
     info("Testing shadow DOM content.");
 
     let shadow = yield gWalker.querySelector(gWalker.rootNode, "#shadow");
