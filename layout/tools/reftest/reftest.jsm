@@ -684,6 +684,8 @@ function BuildConditionSandbox(aURL) {
       gWindowUtils.layerManagerType == "WebRender";
     sandbox.layersOMTC =
       gWindowUtils.layerManagerRemote == true;
+    sandbox.advancedLayers =
+      gWindowUtils.usingAdvancedLayers == true;
 
     // Shortcuts for widget toolkits.
     sandbox.Android = xr.OS == "Android";
