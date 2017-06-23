@@ -11,8 +11,7 @@ Cu.import("resource://gre/modules/Preferences.jsm");
 const PREF_WHITELIST = [
   "browser.onboarding.enabled",
   "browser.onboarding.hidden",
-  "browser.onboarding.notification.finished",
-  "browser.onboarding.notification.lastPrompted"
+  "browser.onboarding.notification.finished"
 ];
 
 /**

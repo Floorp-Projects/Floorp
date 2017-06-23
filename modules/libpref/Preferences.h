@@ -442,7 +442,9 @@ protected:
    *         or the error code related to the read attempt.
    */
   nsresult UseDefaultPrefFile();
-  void UseUserPrefFile();
+  nsresult UseUserPrefFile();
+  nsresult ReadAndOwnUserPrefFile(nsIFile *aFile);
+  nsresult ReadAndOwnSharedUserPrefFile(nsIFile *aFile);
   nsresult MakeBackupPrefFile(nsIFile *aFile);
 
   // Default pref file save can be blocking or not.
@@ -485,8 +487,7 @@ protected:
 
 private:
   nsCOMPtr<nsIFile>        mCurrentFile;
-  bool                     mDirty = false;
-  bool                     mProfileShutdown = false;
+  bool                     mDirty;
 
   static Preferences*      sPreferences;
   static nsIPrefBranch*    sRootBranch;
