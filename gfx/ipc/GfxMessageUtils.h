@@ -13,7 +13,6 @@
 #include "RegionBuilder.h"
 #include "base/process_util.h"
 #include "chrome/common/ipc_message_utils.h"
-#include "gfxFeature.h"
 #include "gfxPoint.h"
 #include "gfxRect.h"
 #include "gfxTelemetry.h"
@@ -218,14 +217,6 @@ struct ParamTraits<mozilla::gfx::BackendType>
              mozilla::gfx::BackendType,
              mozilla::gfx::BackendType::NONE,
              mozilla::gfx::BackendType::BACKEND_LAST>
-{};
-
-template <>
-struct ParamTraits<mozilla::gfx::Feature>
-  : public ContiguousEnumSerializer<
-             mozilla::gfx::Feature,
-             mozilla::gfx::Feature::HW_COMPOSITING,
-             mozilla::gfx::Feature::NumValues>
 {};
 
 template <>
@@ -912,7 +903,6 @@ struct ParamTraits<mozilla::Array<T, Length>>
     return true;
   }
 };
-
 
 } /* namespace IPC */
 
