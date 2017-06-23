@@ -2777,7 +2777,6 @@ PaintedLayerDataNode::FindPaintedLayerFor(const nsIntRect& aVisibleRect,
           DisplayItemClipChain::Equal(data.mClipChain, aClipChain)) {
         lowestUsableLayer = &data;
       }
-      nsIntRegion visibleRegion = data.mVisibleRegion;
       // Also check whether the event-regions intersect the visible rect,
       // unless we're in an inactive layer, in which case the event-regions
       // will be hoisted out into their own layer.
@@ -2795,7 +2794,7 @@ PaintedLayerDataNode::FindPaintedLayerFor(const nsIntRect& aVisibleRect,
       // If we're trying to minimize painted layer size and we don't
       // intersect the current visible region, then make sure we don't
       // use this painted layer.
-      if (visibleRegion.Intersects(aVisibleRect)) {
+      if (data.mVisibleRegion.Intersects(aVisibleRect)) {
         break;
       } else if (gfxPrefs::LayoutSmallerPaintedLayers()) {
         lowestUsableLayer = nullptr;
