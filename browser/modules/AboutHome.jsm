@@ -21,8 +21,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "fxAccounts",
   "resource://gre/modules/FxAccounts.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PrivateBrowsingUtils",
   "resource://gre/modules/PrivateBrowsingUtils.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "Promise",
-  "resource://gre/modules/Promise.jsm");
 
 // Url to fetch snippets, in the urlFormatter service format.
 const SNIPPETS_URL_PREF = "browser.aboutHomeSnippets.updateUrl";
