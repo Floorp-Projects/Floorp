@@ -20,9 +20,7 @@ extern crate webdriver;
 #[macro_use]
 extern crate log;
 
-use std::borrow::ToOwned;
 use std::fmt;
-use std::fmt::Display;
 use std::io::Write;
 use std::net::{IpAddr, SocketAddr};
 use std::path::PathBuf;
@@ -49,6 +47,14 @@ use marionette::{MarionetteHandler, MarionetteSettings, extension_routes};
 
 include!(concat!(env!("OUT_DIR"), "/build-info.rs"));
 
+type ProgramResult = std::result::Result<(), (ExitCode, String)>;
+
+enum ExitCode {
+    Ok = 0,
+    Usage = 64,
+    Unavailable = 69,
+}
+
 struct BuildInfo;
 impl BuildInfo {
     pub fn version() -> &'static str {
@@ -64,24 +70,26 @@ impl BuildInfo {
     }
 }
 
-impl Display for BuildInfo {
+impl fmt::Display for BuildInfo {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}", BuildInfo::version())?;
         match (BuildInfo::hash(), BuildInfo::date()) {
             (Some(hash), Some(date)) => write!(f, " ({} {})", hash, date)?,
             (Some(hash), None) => write!(f, " ({})", hash)?,
-            _ => {},
+            _ => {}
         }
         Ok(())
     }
 }
 
-type ProgramResult = std::result::Result<(), (ExitCode, String)>;
-
-enum ExitCode {
-    Ok = 0,
-    Usage = 64,
-    Unavailable = 69,
+fn print_version() {
+    println!("geckodriver {}", BuildInfo);
+    println!("");
+    println!("The source code of this program is available from");
+    println!("testing/geckodriver in https://hg.mozilla.org/mozilla-central.");
+    println!("");
+    println!("This program is subject to the terms of the Mozilla Public License 2.0.");
+    println!("You can obtain a copy of the license at https://mozilla.org/MPL/2.0/.");
 }
 
 fn app<'a, 'b>() -> App<'a, 'b> {
@@ -135,40 +143,37 @@ fn run() -> ProgramResult {
     let matches = app().get_matches();
 
     if matches.is_present("version") {
-        println!("geckodriver {}\n\n{}", BuildInfo,
-"The source code of this program is available at
-https://github.com/mozilla/geckodriver.
-
-This program is subject to the terms of the Mozilla Public License 2.0.
-You can obtain a copy of the license at https://mozilla.org/MPL/2.0/.");
-        return Ok(())
+        print_version();
+        return Ok(());
     }
 
     let host = matches.value_of("webdriver_host").unwrap_or("127.0.0.1");
-    let port = match u16::from_str(matches.value_of("webdriver_port")
-        .or(matches.value_of("webdriver_port_alias"))
-        .unwrap_or("4444")) {
+    let port = match u16::from_str(
+        matches
+            .value_of("webdriver_port")
+            .or(matches.value_of("webdriver_port_alias"))
+            .unwrap_or("4444"),
+    ) {
         Ok(x) => x,
-        Err(_) => return Err((ExitCode::Usage, "invalid WebDriver port".to_owned())),
+        Err(_) => return Err((ExitCode::Usage, "invalid WebDriver port".into())),
     };
     let addr = match IpAddr::from_str(host) {
         Ok(addr) => SocketAddr::new(addr, port),
-        Err(_) => return Err((ExitCode::Usage, "invalid host address".to_owned())),
+        Err(_) => return Err((ExitCode::Usage, "invalid host address".into())),
     };
 
     let binary = matches.value_of("binary").map(|x| PathBuf::from(x));
 
     let marionette_port = match matches.value_of("marionette_port") {
-        Some(x) => match u16::from_str(x) {
-            Ok(x) => Some(x),
-            Err(_) => return Err((ExitCode::Usage, "invalid Marionette port".to_owned())),
-        },
-        None => None
+        Some(x) => {
+            match u16::from_str(x) {
+                Ok(x) => Some(x),
+                Err(_) => return Err((ExitCode::Usage, "invalid Marionette port".into())),
+            }
+        }
+        None => None,
     };
 
-    // overrides defaults in Gecko
-    // which are info for optimised builds
-    // and debug for debug builds
     let log_level = if matches.is_present("log_level") {
         LogLevel::from_str(matches.value_of("log_level").unwrap()).ok()
     } else {
@@ -180,17 +185,19 @@ You can obtain a copy of the license at https://mozilla.org/MPL/2.0/.");
     };
     logging::init(&log_level);
 
+    info!("geckodriver {}", BuildInfo);
+
     let settings = MarionetteSettings {
         port: marionette_port,
         binary: binary,
         connect_existing: matches.is_present("connect_existing"),
         log_level: log_level,
     };
-
     let handler = MarionetteHandler::new(settings);
-    let listening = try!(webdriver::server::start(addr, handler, &extension_routes()[..])
-        .map_err(|err| (ExitCode::Unavailable, err.to_string())));
+    let listening = webdriver::server::start(addr, handler, &extension_routes()[..])
+        .map_err(|err| (ExitCode::Unavailable, err.to_string()))?;
     info!("Listening on {}", listening.socket);
+
     Ok(())
 }
 
@@ -200,7 +207,7 @@ fn main() {
         Err((exit_code, reason)) => {
             error!("{}", reason);
             exit_code
-        },
+        }
     };
 
     std::io::stdout().flush().unwrap();
