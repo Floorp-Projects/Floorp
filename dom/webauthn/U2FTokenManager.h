@@ -7,8 +7,7 @@
 #ifndef mozilla_dom_U2FTokenManager_h
 #define mozilla_dom_U2FTokenManager_h
 
-#include "mozilla/dom/PWebAuthnTransaction.h"
-#include "mozilla/MozPromise.h"
+#include "mozilla/dom/U2FTokenTransport.h"
 
 /*
  * Parent process manager for U2F and WebAuthn API transactions. Handles process
@@ -23,7 +22,6 @@
 namespace mozilla {
 namespace dom {
 
-class U2FTokenTransport;
 class U2FSoftTokenManager;
 class WebAuthnTransactionParent;
 
@@ -55,11 +53,24 @@ private:
   ~U2FTokenManager();
   void AbortTransaction(const nsresult& aError);
   void ClearTransaction();
+  void MaybeAbortTransaction(uint64_t aTransactionId,
+                             const nsresult& aError);
+  void MaybeConfirmRegister(uint64_t aTransactionId,
+                            const nsTArray<uint8_t>& aRegister,
+                            const nsTArray<uint8_t>& aSignature);
+  void MaybeConfirmSign(uint64_t aTransactionId,
+                        const nsTArray<uint8_t>& aKeyHandle,
+                        const nsTArray<uint8_t>& aSignature);
   // Using a raw pointer here, as the lifetime of the IPC object is managed by
   // the PBackground protocol code. This means we cannot be left holding an
   // invalid IPC protocol object after the transaction is finished.
   WebAuthnTransactionParent* mTransactionParent;
   RefPtr<U2FTokenTransport> mTokenManagerImpl;
+  RefPtr<ResultPromise> mResultPromise;
+  // Guards the asynchronous promise resolution of token manager impls.
+  // We don't need to protect this with a lock as it will only be modified
+  // and checked on the PBackground thread in the parent process.
+  uint64_t mTransactionId;
 };
 
 } // namespace dom
