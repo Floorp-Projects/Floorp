@@ -843,6 +843,13 @@ class BookmarkValidator {
     let result = await this.compareServerWithClient(serverState, clientTree);
     let end = Date.now();
     let duration = end - start;
+
+    engine._log.debug(`Validated bookmarks in ${duration}ms`);
+    engine._log.debug(`Problem summary`);
+    for (let { name, count } of result.problemData.getSummary()) {
+      engine._log.debug(`  ${name}: ${count}`);
+    }
+
     return {
       duration,
       version: this.version,
