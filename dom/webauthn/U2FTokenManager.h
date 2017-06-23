@@ -27,11 +27,6 @@ class WebAuthnTransactionParent;
 
 class U2FTokenManager final
 {
-  struct U2FPrefs
-  {
-    bool softTokenEnabled;
-    uint32_t softTokenCounter;
-  };
 public:
   enum TransactionType
   {
@@ -51,6 +46,7 @@ public:
 private:
   U2FTokenManager();
   ~U2FTokenManager();
+  RefPtr<U2FTokenTransport> GetTokenManagerImpl();
   void AbortTransaction(const nsresult& aError);
   void ClearTransaction();
   void MaybeAbortTransaction(uint64_t aTransactionId,
