@@ -447,7 +447,6 @@ function WaitForTestEnd(contentRootElement, inPrintMode, spellCheckedElements) {
     var state = STATE_WAITING_TO_FIRE_INVALIDATE_EVENT;
 
     function AfterPaintListener(event) {
-        dump("AfterPaintListener\n");
         LogInfo("AfterPaintListener in " + event.target.document.location.href);
         if (event.target.document != currentDoc) {
             // ignore paint events for subframes or old documents in the window.
