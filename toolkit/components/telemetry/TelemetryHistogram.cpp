@@ -148,7 +148,7 @@ public:
   nsresult GetJSSnapshot(JSContext* cx, JS::Handle<JSObject*> obj,
                          bool subsession, bool clearSubsession);
 
-  nsresult Add(const nsCString& key, uint32_t aSample);
+  nsresult Add(const nsCString& key, uint32_t aSample, ProcessID aProcessType);
   void Clear(bool subsession);
 
   HistogramID GetHistogramID() const { return mId; }
@@ -513,13 +513,17 @@ internal_CreateHistogramInstance(const HistogramInfo& passedInfo)
 nsresult
 internal_HistogramAdd(Histogram& histogram,
                       const HistogramID id,
-                      int32_t value)
+                      int32_t value,
+                      ProcessID aProcessType)
 {
   // Check if we are allowed to record the data.
   bool canRecordDataset = CanRecordDataset(gHistogramInfos[id].dataset,
                                            internal_CanRecordBase(),
                                            internal_CanRecordExtended());
-  if (!canRecordDataset || !internal_IsRecordingEnabled(id)) {
+  // If `histogram` is a non-parent-process histogram, then recording-enabled
+  // has been checked in its owner process.
+  if (!canRecordDataset ||
+    (aProcessType == ProcessID::Parent && !internal_IsRecordingEnabled(id))) {
     return NS_OK;
   }
 
@@ -680,12 +684,16 @@ KeyedHistogram::GetHistogram(const nsCString& key, bool subsession)
 }
 
 nsresult
-KeyedHistogram::Add(const nsCString& key, uint32_t sample)
+KeyedHistogram::Add(const nsCString& key, uint32_t sample,
+                    ProcessID aProcessType)
 {
   bool canRecordDataset = CanRecordDataset(mHistogramInfo.dataset,
                                            internal_CanRecordBase(),
                                            internal_CanRecordExtended());
-  if (!canRecordDataset || !internal_IsRecordingEnabled(mId)) {
+  // If `histogram` is a non-parent-process histogram, then recording-enabled
+  // has been checked in its owner process.
+  if (!canRecordDataset ||
+    (aProcessType == ProcessID::Parent && !internal_IsRecordingEnabled(mId))) {
     return NS_OK;
   }
 
@@ -860,12 +868,12 @@ void internal_Accumulate(HistogramID aId, uint32_t aSample)
 
   Histogram *h = internal_GetHistogramById(aId, ProcessID::Parent, SessionType::Session);
   MOZ_ASSERT(h);
-  internal_HistogramAdd(*h, aId, aSample);
+  internal_HistogramAdd(*h, aId, aSample, ProcessID::Parent);
 
 #if !defined(MOZ_WIDGET_ANDROID)
   h = internal_GetHistogramById(aId, ProcessID::Parent, SessionType::Subsession);
   MOZ_ASSERT(h);
-  internal_HistogramAdd(*h, aId, aSample);
+  internal_HistogramAdd(*h, aId, aSample, ProcessID::Parent);
 #endif
 }
 
@@ -880,7 +888,7 @@ internal_Accumulate(HistogramID aId,
 
   KeyedHistogram* keyed = internal_GetKeyedHistogramById(aId, ProcessID::Parent);
   MOZ_ASSERT(keyed);
-  keyed->Add(aKey, aSample);
+  keyed->Add(aKey, aSample, ProcessID::Parent);
 }
 
 void
@@ -891,14 +899,14 @@ internal_AccumulateChild(ProcessID aProcessType, HistogramID aId, uint32_t aSamp
   }
 
   if (Histogram* h = internal_GetHistogramById(aId, aProcessType, SessionType::Session)) {
-    internal_HistogramAdd(*h, aId, aSample);
+    internal_HistogramAdd(*h, aId, aSample, aProcessType);
   } else {
     NS_WARNING("Failed GetHistogramById for CHILD");
   }
 
 #if !defined(MOZ_WIDGET_ANDROID)
   if (Histogram* h = internal_GetHistogramById(aId, aProcessType, SessionType::Subsession)) {
-    internal_HistogramAdd(*h, aId, aSample);
+    internal_HistogramAdd(*h, aId, aSample, aProcessType);
   } else {
     NS_WARNING("Failed GetHistogramById for CHILD");
   }
@@ -915,7 +923,7 @@ internal_AccumulateChildKeyed(ProcessID aProcessType, HistogramID aId,
 
   KeyedHistogram* keyed = internal_GetKeyedHistogramById(aId, aProcessType);
   MOZ_ASSERT(keyed);
-  keyed->Add(aKey, aSample);
+  keyed->Add(aKey, aSample, aProcessType);
 }
 
 void
@@ -1180,7 +1188,6 @@ internal_WrapAndReturnHistogram(HistogramID id, JSContext *cx,
     return NS_ERROR_FAILURE;
   }
 
-  // TODO: delete in finalizer
   JSHistogramData* data = new JSHistogramData{id};
   JS_SetPrivate(obj, data);
   ret.setObject(*obj);
@@ -1536,7 +1543,6 @@ internal_WrapAndReturnKeyedHistogram(HistogramID id, JSContext *cx,
     return NS_ERROR_FAILURE;
   }
 
-  // TODO: delete in finalizer
   JSHistogramData* data = new JSHistogramData{id};
   JS_SetPrivate(obj, data);
   ret.setObject(*obj);
