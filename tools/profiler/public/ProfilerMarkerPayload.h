@@ -175,9 +175,9 @@ class LayerTranslationMarkerPayload : public ProfilerMarkerPayload
 {
 public:
   LayerTranslationMarkerPayload(mozilla::layers::Layer* aLayer,
-                                mozilla::gfx::Point aPoint)
-    : ProfilerMarkerPayload(mozilla::TimeStamp::Now(),
-                            mozilla::TimeStamp::Now())
+                                mozilla::gfx::Point aPoint,
+                                mozilla::TimeStamp aStartTime)
+    : ProfilerMarkerPayload(aStartTime, aStartTime)
     , mLayer(aLayer)
     , mPoint(aPoint)
   {}
