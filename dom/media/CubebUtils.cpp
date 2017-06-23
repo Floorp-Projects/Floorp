@@ -27,7 +27,7 @@
 #define PREF_CUBEB_BACKEND "media.cubeb.backend"
 #define PREF_CUBEB_LATENCY_PLAYBACK "media.cubeb_latency_playback_ms"
 #define PREF_CUBEB_LATENCY_MSG "media.cubeb_latency_msg_frames"
-#define PREF_CUBEB_LOG_LEVEL "media.cubeb.log_level"
+#define PREF_CUBEB_LOGGING_LEVEL "media.cubeb.logging_level"
 
 #define MASK_MONO       (1 << AudioConfig::CHANNEL_MONO)
 #define MASK_MONO_LFE   (MASK_MONO | (1 << AudioConfig::CHANNEL_LFE))
@@ -160,7 +160,7 @@ void PrefChanged(const char* aPref, void* aClosure)
     // We don't want to limit the upper limit too much, so that people can
     // experiment.
     sCubebMSGLatencyInFrames = std::min<uint32_t>(std::max<uint32_t>(value, 128), 1e6);
-  } else if (strcmp(aPref, PREF_CUBEB_LOG_LEVEL) == 0) {
+  } else if (strcmp(aPref, PREF_CUBEB_LOGGING_LEVEL) == 0) {
     nsAdoptingString value = Preferences::GetString(aPref);
     NS_ConvertUTF16toUTF8 utf8(value);
     LogModule* cubebLog = LogModule::Get("cubeb");
@@ -423,7 +423,11 @@ void InitLibrary()
   Preferences::RegisterCallbackAndCall(PrefChanged, PREF_CUBEB_LATENCY_PLAYBACK);
   Preferences::RegisterCallbackAndCall(PrefChanged, PREF_CUBEB_LATENCY_MSG);
   Preferences::RegisterCallbackAndCall(PrefChanged, PREF_CUBEB_BACKEND);
-  Preferences::RegisterCallbackAndCall(PrefChanged, PREF_CUBEB_LOG_LEVEL);
+  // We don't want to call the callback on startup, because the pref is the
+  // empty string by default ("", which means "logging disabled"). Because the
+  // logging can be enabled via environment variables (MOZ_LOG="module:5"),
+  // calling this callback on init would immediately re-disble the logging.
+  Preferences::RegisterCallback(PrefChanged, PREF_CUBEB_LOGGING_LEVEL);
 #ifndef MOZ_WIDGET_ANDROID
   NS_DispatchToMainThread(
     NS_NewRunnableFunction("CubebUtils::InitLibrary", &InitBrandName));
@@ -436,7 +440,7 @@ void ShutdownLibrary()
   Preferences::UnregisterCallback(PrefChanged, PREF_CUBEB_BACKEND);
   Preferences::UnregisterCallback(PrefChanged, PREF_CUBEB_LATENCY_PLAYBACK);
   Preferences::UnregisterCallback(PrefChanged, PREF_CUBEB_LATENCY_MSG);
-  Preferences::UnregisterCallback(PrefChanged, PREF_CUBEB_LOG_LEVEL);
+  Preferences::UnregisterCallback(PrefChanged, PREF_CUBEB_LOGGING_LEVEL);
 
   StaticMutexAutoLock lock(sMutex);
   if (sCubebContext) {
