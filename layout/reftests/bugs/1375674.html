@@ -1,0 +1,18 @@
+<!doctype html>
+<title>
+  Reftest for bug 1375674: display: contents changes were assumed handled
+  incorrectly
+</title>
+<style>
+  .contents { color: red; display: contents; }
+  .contents.restyled { will-change: opacity; color: green; }
+</style>
+<div class="contents">
+  Should be green.
+</div>
+<script>
+onload = () => {
+  document.body.offsetTop;
+  document.querySelector('.contents').classList.add('restyled');
+}
+</script>
