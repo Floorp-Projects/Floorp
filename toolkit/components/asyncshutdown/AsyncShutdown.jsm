@@ -44,8 +44,6 @@ const Ci = Components.interfaces;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm", this);
 Cu.import("resource://gre/modules/Services.jsm", this);
 
-XPCOMUtils.defineLazyModuleGetter(this, "Promise",
-  "resource://gre/modules/Promise.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PromiseUtils",
   "resource://gre/modules/PromiseUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Task",
@@ -275,7 +273,7 @@ function looseTimer(delay) {
   let DELAY_BEAT = 1000;
   let timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
   let beats = Math.ceil(delay / DELAY_BEAT);
-  let deferred = Promise.defer();
+  let deferred = PromiseUtils.defer();
   timer.initWithCallback(function() {
     if (beats <= 0) {
       deferred.resolve();

@@ -8,7 +8,7 @@ var Cc = Components.classes, Ci = Components.interfaces, Cu = Components.utils;
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/PrivateBrowsingUtils.jsm");
-Cu.import("resource://gre/modules/Promise.jsm");
+Cu.import("resource://gre/modules/PromiseUtils.jsm");
 
 const NOTIFICATION_EVENT_DISMISSED = "dismissed";
 const NOTIFICATION_EVENT_REMOVED = "removed";
@@ -700,7 +700,7 @@ PopupNotifications.prototype = {
     if (this._ignoreDismissal) {
       return this._ignoreDismissal.promise;
     }
-    let deferred = Promise.defer();
+    let deferred = PromiseUtils.defer();
     this._ignoreDismissal = deferred;
     this.panel.hidePopup();
     return deferred.promise;

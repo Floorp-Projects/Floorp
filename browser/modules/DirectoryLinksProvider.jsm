@@ -14,8 +14,8 @@ Cu.import("resource://gre/modules/Services.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "OS",
   "resource://gre/modules/osfile.jsm")
-XPCOMUtils.defineLazyModuleGetter(this, "Promise",
-  "resource://gre/modules/Promise.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "PromiseUtils",
+  "resource://gre/modules/PromiseUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "UpdateUtils",
   "resource://gre/modules/UpdateUtils.jsm");
 XPCOMUtils.defineLazyGetter(this, "gTextDecoder", () => {
@@ -193,7 +193,7 @@ var DirectoryLinksProvider = {
     }
 
     if (forceDownload || this._needsDownload) {
-      this._downloadDeferred = Promise.defer();
+      this._downloadDeferred = PromiseUtils.defer();
       this._fetchAndCacheLinks(this._linksURL).then(() => {
         // the new file was successfully downloaded and cached, so update a timestamp
         this._lastDownloadMS = Date.now();
