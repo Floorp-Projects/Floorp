@@ -13,8 +13,6 @@
 #include "nsWeakReference.h"
 #include "nsStandardURL.h"
 
-class nsISubstitutionObserver;
-
 struct SubstitutionMapping;
 class nsResProtocolHandler final : public nsIResProtocolHandler,
                                    public mozilla::SubstitutingProtocolHandler,
@@ -48,16 +46,6 @@ public:
     NS_IMETHOD ResolveURI(nsIURI *aResURI, nsACString& aResult) override
     {
         return mozilla::SubstitutingProtocolHandler::ResolveURI(aResURI, aResult);
-    }
-
-    NS_IMETHOD AddObserver(nsISubstitutionObserver *aObserver) override
-    {
-        return mozilla::SubstitutingProtocolHandler::AddObserver(aObserver);
-    }
-
-    NS_IMETHOD RemoveObserver(nsISubstitutionObserver *aObserver) override
-    {
-        return mozilla::SubstitutingProtocolHandler::RemoveObserver(aObserver);
     }
 
 protected:

@@ -7,15 +7,9 @@
 XPIDL_SOURCES += [
     'nsIResProtocolHandler.idl',
     'nsISubstitutingProtocolHandler.idl',
-    'nsISubstitutionObserver.idl',
 ]
 
 XPIDL_MODULE = 'necko_res'
-
-EXPORTS.mozilla.net += [
-    'ExtensionProtocolHandler.h',
-    'SubstitutingProtocolHandler.h',
-]
 
 UNIFIED_SOURCES += [
     'ExtensionProtocolHandler.cpp',
