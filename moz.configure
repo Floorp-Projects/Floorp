@@ -143,9 +143,18 @@ include('build/moz.configure/headers.configure',
 include('build/moz.configure/warnings.configure',
         when='--enable-compile-environment')
 
-option(env='SO_VERSION', nargs=1, help='Shared library version for OpenBSD systems')
+@depends(target)
+def is_openbsd(target):
+    return target.kernel == 'OpenBSD'
 
-@depends(target, target_is_windows, target_is_darwin, c_compiler, 'SO_VERSION')
+option(env='SO_VERSION', nargs=1, default='1.0', when=is_openbsd,
+       help='Shared library version for OpenBSD systems')
+
+@depends('SO_VERSION', when=is_openbsd)
+def so_version(value):
+    return value
+
+@depends(target, target_is_windows, target_is_darwin, c_compiler, so_version)
 def library_name_info(target, is_windows, is_darwin, c_compiler, so_version):
     dll_prefix = 'lib'
     dll_suffix = '.so'
@@ -174,11 +183,8 @@ def library_name_info(target, is_windows, is_darwin, c_compiler, so_version):
             obj_suffix = 'obj'
     elif is_darwin:
         dll_suffix = '.dylib'
-    elif target.kernel == 'OpenBSD':
-        if so_version:
-            dll_suffix = '.so.%s' % so_version
-        else:
-            dll_suffix = '.so.1.0'
+    elif so_version:
+        dll_suffix = '.so.%s' % so_version
 
     assert dll_suffix[0] == '.'
     assert obj_suffix[0] != '.'
