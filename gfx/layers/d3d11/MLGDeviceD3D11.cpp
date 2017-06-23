@@ -11,6 +11,7 @@
 #include "mozilla/gfx/StackArray.h"
 #include "mozilla/layers/DiagnosticsD3D11.h"
 #include "mozilla/layers/LayerMLGPU.h"
+#include "mozilla/layers/MemoryReportingMLGPU.h"
 #include "mozilla/layers/ShaderDefinitionsMLGPU.h"
 #include "mozilla/widget/CompositorWidget.h"
 #include "mozilla/widget/WinCompositorWidget.h"
@@ -39,6 +40,9 @@ MLGRenderTargetD3D11::MLGRenderTargetD3D11(const gfx::IntSize& aSize, MLGRenderT
 
 MLGRenderTargetD3D11::~MLGRenderTargetD3D11()
 {
+  if (mDepthBuffer) {
+    sRenderTargetUsage -= mSize.width * mSize.height * 1;
+  }
   ForgetTexture();
 }
 
@@ -119,13 +123,17 @@ MLGRenderTargetD3D11::UpdateTexture(ID3D11Texture2D* aTexture)
 
   mTexture = aTexture;
   mRTView = view.forget();
+  sRenderTargetUsage += mSize.width * mSize.height * 4;
   return true;
 }
 
 void
 MLGRenderTargetD3D11::ForgetTexture()
 {
-  mTexture = nullptr;
+  if (mTexture) {
+    sRenderTargetUsage -= mSize.width * mSize.height * 4;
+    mTexture = nullptr;
+  }
   mRTView = nullptr;
   mTextureSource = nullptr;
 }
@@ -166,6 +174,7 @@ MLGRenderTargetD3D11::CreateDepthBuffer(ID3D11Device* aDevice)
 
   mDepthBuffer = buffer;
   mDepthStencilView = dsv;
+  sRenderTargetUsage += mSize.width * mSize.height * 1;
   return true;
 }
 
@@ -624,10 +633,26 @@ MLGBufferD3D11::MLGBufferD3D11(ID3D11Buffer* aBuffer, MLGBufferType aType, size_
    mType(aType),
    mSize(aSize)
 {
+  switch (mType) {
+  case MLGBufferType::Vertex:
+    mlg::sVertexBufferUsage += mSize;
+    break;
+  case MLGBufferType::Constant:
+    mlg::sConstantBufferUsage += mSize;
+    break;
+  }
 }
 
 MLGBufferD3D11::~MLGBufferD3D11()
 {
+  switch (mType) {
+  case MLGBufferType::Vertex:
+    mlg::sVertexBufferUsage -= mSize;
+    break;
+  case MLGBufferType::Constant:
+    mlg::sConstantBufferUsage -= mSize;
+    break;
+  }
 }
 
 MLGTextureD3D11::MLGTextureD3D11(ID3D11Texture2D* aTexture)
