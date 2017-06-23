@@ -6,7 +6,9 @@
 #include "Layers.h"
 #include "BasicLayers.h"
 #include "BasicEvents.h"
+#include "mozilla/gfx/gfxVars.h"
 
+using namespace mozilla::gfx;
 using namespace mozilla::layers;
 
 /*static*/ already_AddRefed<nsIWidget>
@@ -18,6 +20,14 @@ nsIWidget::CreateHeadlessWidget()
 
 namespace mozilla {
 namespace widget {
+
+already_AddRefed<gfxContext>
+CreateDefaultTarget(IntSize aSize)
+{
+  RefPtr<DrawTarget> target = Factory::CreateDrawTarget(gfxVars::ContentBackend(), aSize, SurfaceFormat::B8G8R8A8);
+  RefPtr<gfxContext> ctx = gfxContext::CreatePreservingTransformOrNull(target);
+  return ctx.forget();
+}
 
 NS_IMPL_ISUPPORTS_INHERITED0(HeadlessWidget, nsBaseWidget)
 
@@ -134,7 +144,10 @@ HeadlessWidget::GetLayerManager(PLayerTransactionChild* aShadowManager,
                                 LayerManagerPersistence aPersistence)
 {
   if (!mLayerManager) {
-    mLayerManager = new BasicLayerManager(this);
+    RefPtr<BasicLayerManager> layerManager = new BasicLayerManager(this);
+    RefPtr<gfxContext> ctx = CreateDefaultTarget(IntSize(mBounds.width, mBounds.height));
+    layerManager->SetDefaultTarget(ctx);
+    mLayerManager = layerManager;
   }
 
   return mLayerManager;
@@ -147,6 +160,10 @@ HeadlessWidget::Resize(double aWidth,
 {
   mBounds.SizeTo(LayoutDeviceIntSize(NSToIntRound(aWidth),
                                      NSToIntRound(aHeight)));
+  if (mLayerManager) {
+    RefPtr<gfxContext> ctx = CreateDefaultTarget(IntSize(mBounds.width, mBounds.height));
+    mLayerManager->AsBasicLayerManager()->SetDefaultTarget(ctx);
+  }
   if (mWidgetListener) {
     mWidgetListener->WindowResized(this, mBounds.width, mBounds.height);
   }
