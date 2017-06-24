@@ -955,6 +955,7 @@ static const RoleDescrMap sRoleDescrMap[] = {
   { @"AXLandmarkContentInfo", NS_LITERAL_STRING("content") },
   { @"AXLandmarkMain", NS_LITERAL_STRING("main") },
   { @"AXLandmarkNavigation", NS_LITERAL_STRING("navigation") },
+  { @"AXLandmarkRegion", NS_LITERAL_STRING("region") },
   { @"AXLandmarkSearch", NS_LITERAL_STRING("search") },
   { @"AXSearchField", NS_LITERAL_STRING("searchTextField") },
   { @"AXTabPanel", NS_LITERAL_STRING("tabPanel") },
