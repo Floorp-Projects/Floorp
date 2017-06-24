@@ -2346,12 +2346,12 @@ TelemetryScalar::RecordDiscardedData(ProcessID aProcessType,
   rv = internal_GetScalarByEnum(ScalarID::TELEMETRY_DISCARDED_ACCUMULATIONS,
                                 aProcessType, &scalar);
   MOZ_ASSERT(NS_SUCCEEDED(rv));
-  scalar->AddValue(aDiscardedData.mDiscardedAccumulations);
+  scalar->AddValue(aDiscardedData.mDiscardedHistogramAccumulations);
 
   rv = internal_GetScalarByEnum(ScalarID::TELEMETRY_DISCARDED_KEYED_ACCUMULATIONS,
                                 aProcessType, &scalar);
   MOZ_ASSERT(NS_SUCCEEDED(rv));
-  scalar->AddValue(aDiscardedData.mDiscardedKeyedAccumulations);
+  scalar->AddValue(aDiscardedData.mDiscardedKeyedHistogramAccumulations);
 
   rv = internal_GetScalarByEnum(ScalarID::TELEMETRY_DISCARDED_SCALAR_ACTIONS,
                                 aProcessType, &scalar);
