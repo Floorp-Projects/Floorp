@@ -248,7 +248,6 @@
 #include "nsWindowMemoryReporter.h"
 #include "mozilla/dom/Location.h"
 #include "mozilla/dom/FontFaceSet.h"
-#include "mozilla/dom/BoxObject.h"
 #include "gfxPrefs.h"
 #include "nsISupportsPrimitives.h"
 #include "mozilla/StyleSetHandle.h"
@@ -7083,18 +7082,17 @@ nsDocument::GetBoxObjectFor(Element* aElement, ErrorResult& aRv)
                                     "UseOfGetBoxObjectForWarning");
   }
 
+  RefPtr<BoxObject> boxObject;
   if (!mBoxObjectTable) {
-    mBoxObjectTable = new nsInterfaceHashtable<nsPtrHashKey<nsIContent>, nsPIBoxObject>(6);
+    mBoxObjectTable = new nsRefPtrHashtable<nsPtrHashKey<nsIContent>, BoxObject>(6);
   } else {
-    nsCOMPtr<nsPIBoxObject> boxObject = mBoxObjectTable->Get(aElement);
-    if (boxObject) {
-      return boxObject.forget().downcast<BoxObject>();
+    if (mBoxObjectTable->Get(aElement, getter_AddRefs(boxObject))) {
+      return boxObject.forget();
     }
   }
 
   int32_t namespaceID;
   nsCOMPtr<nsIAtom> tag = BindingManager()->ResolveTag(aElement, &namespaceID);
-  RefPtr<BoxObject> boxObject;
 #ifdef MOZ_XUL
   if (namespaceID == kNameSpaceID_XUL) {
     if (tag == nsGkAtoms::browser ||
