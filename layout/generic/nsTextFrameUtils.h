@@ -29,7 +29,8 @@ public:
     TEXT_HAS_TAB             = 0x01,
     // the original text has at least one soft hyphen character
     TEXT_HAS_SHY             = 0x02,
-    TEXT_UNUSED_FLAGS        = 0x0C,
+    TEXT_WAS_TRANSFORMED     = 0x04,
+    TEXT_UNUSED_FLAG         = 0x08,
 
     // The following flags are set by nsTextFrame
 
