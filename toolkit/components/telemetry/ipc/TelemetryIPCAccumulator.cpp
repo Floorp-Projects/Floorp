@@ -147,7 +147,7 @@ TelemetryIPCAccumulator::AccumulateChildHistogram(mozilla::Telemetry::HistogramI
   }
   if (gHistogramAccumulations->Length() >=
       kWaterMarkDiscardFactor * kHistogramAccumulationsArrayHighWaterMark) {
-    gDiscardedData.mDiscardedAccumulations++;
+    gDiscardedData.mDiscardedHistogramAccumulations++;
     return;
   }
   if (gHistogramAccumulations->Length() == kHistogramAccumulationsArrayHighWaterMark) {
@@ -167,7 +167,7 @@ TelemetryIPCAccumulator::AccumulateChildKeyedHistogram(mozilla::Telemetry::Histo
   }
   if (gKeyedHistogramAccumulations->Length() >=
       kWaterMarkDiscardFactor * kHistogramAccumulationsArrayHighWaterMark) {
-    gDiscardedData.mDiscardedKeyedAccumulations++;
+    gDiscardedData.mDiscardedKeyedHistogramAccumulations++;
     return;
   }
   if (gKeyedHistogramAccumulations->Length() == kHistogramAccumulationsArrayHighWaterMark) {
