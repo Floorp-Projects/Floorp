@@ -886,9 +886,6 @@ ConvertToNSArray(nsTArray<ProxyAccessible*>& aArray)
     case roles::ALERT:
       return @"AXApplicationAlert";
 
-    case roles::SEPARATOR:
-      return @"AXContentSeparator";
-
     case roles::PROPERTYPAGE:
       return @"AXTabPanel";
 
