@@ -216,6 +216,34 @@ void WebGLContext::BlendEquationSeparate(GLenum modeRGB, GLenum modeAlpha)
 }
 
 static bool
+ValidateBlendFuncEnum(WebGLContext* webgl, GLenum factor, const char* funcName, const char* varName)
+{
+    switch (factor) {
+    case LOCAL_GL_ZERO:
+    case LOCAL_GL_ONE:
+    case LOCAL_GL_SRC_COLOR:
+    case LOCAL_GL_ONE_MINUS_SRC_COLOR:
+    case LOCAL_GL_DST_COLOR:
+    case LOCAL_GL_ONE_MINUS_DST_COLOR:
+    case LOCAL_GL_SRC_ALPHA:
+    case LOCAL_GL_ONE_MINUS_SRC_ALPHA:
+    case LOCAL_GL_DST_ALPHA:
+    case LOCAL_GL_ONE_MINUS_DST_ALPHA:
+    case LOCAL_GL_CONSTANT_COLOR:
+    case LOCAL_GL_ONE_MINUS_CONSTANT_COLOR:
+    case LOCAL_GL_CONSTANT_ALPHA:
+    case LOCAL_GL_ONE_MINUS_CONSTANT_ALPHA:
+    case LOCAL_GL_SRC_ALPHA_SATURATE:
+        return true;
+
+    default:
+        const nsPrintfCString err("%s: %s", funcName, varName);
+        webgl->ErrorInvalidEnumInfo(err.get(), factor);
+        return false;
+    }
+}
+
+static bool
 ValidateBlendFuncEnums(WebGLContext* webgl, GLenum srcRGB, GLenum srcAlpha,
                        GLenum dstRGB, GLenum dstAlpha, const char* funcName)
 {
@@ -230,10 +258,10 @@ ValidateBlendFuncEnums(WebGLContext* webgl, GLenum srcRGB, GLenum srcAlpha,
        }
     }
 
-    if (!webgl->ValidateBlendFuncEnum(srcRGB, funcName, "srcRGB") ||
-        !webgl->ValidateBlendFuncEnum(srcAlpha, funcName, "srcAlpha") ||
-        !webgl->ValidateBlendFuncEnum(dstRGB, funcName, "dstRGB") ||
-        !webgl->ValidateBlendFuncEnum(dstAlpha, funcName, "dstAlpha"))
+    if (!ValidateBlendFuncEnum(webgl, srcRGB, funcName, "srcRGB") ||
+        !ValidateBlendFuncEnum(webgl, srcAlpha, funcName, "srcAlpha") ||
+        !ValidateBlendFuncEnum(webgl, dstRGB, funcName, "dstRGB") ||
+        !ValidateBlendFuncEnum(webgl, dstAlpha, funcName, "dstAlpha"))
     {
        return false;
     }

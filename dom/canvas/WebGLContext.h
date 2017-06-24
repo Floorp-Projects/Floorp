@@ -1580,7 +1580,6 @@ public:
             , info(nsCString(_info))
         { }
     };
-    bool ValidateBlendFuncEnum(GLenum factor, const char *funcName, const char* varName);
 protected:
     bool InitWebGL2(FailureReason* const out_failReason);
 
