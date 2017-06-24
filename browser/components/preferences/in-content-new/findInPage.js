@@ -18,7 +18,6 @@ var gSearchResultsPane = {
     if (!this.searchInput.hidden) {
       this.searchInput.addEventListener("command", this);
       this.searchInput.addEventListener("focus", this);
-      this.searchInput.focus();
     }
   },
 

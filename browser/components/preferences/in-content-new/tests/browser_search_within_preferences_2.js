@@ -27,10 +27,7 @@ add_task(async function() {
 
   // Performs search.
   let searchInput = gBrowser.contentDocument.getElementById("searchInput");
-
-  is(searchInput, gBrowser.contentDocument.activeElement.closest("#searchInput"),
-    "Search input should be focused when visiting preferences");
-
+  searchInput.focus();
   searchInput.value = "Create Account";
   searchInput.doCommand();
 
