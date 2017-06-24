@@ -917,6 +917,7 @@ ConvertToNSArray(nsTArray<ProxyAccessible*>& aArray)
     // macOS added an AXSubrole value to distinguish generic AXGroup objects
     // from those which are AXGroups as a result of an explicit ARIA role,
     // such as the non-landmark, non-listitem text containers in DPub ARIA.
+    case roles::FOOTNOTE:
     case roles::SECTION:
       if (roleAtom)
         return @"AXApplicationGroup";
