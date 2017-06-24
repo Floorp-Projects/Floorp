@@ -114,7 +114,7 @@ async function runTests(options) {
         pageActionId = `${makeWidgetId(extension.id)}-page-action`;
       }
 
-      await promiseAnimationFrame();
+      await promiseAnimationFrame(currentWindow);
 
       checkDetails(expecting);
 
