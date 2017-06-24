@@ -29,3 +29,4 @@ fuzzy-if(skiaContent,1,11) fuzzy-if(webrender,1,30) == calc-transform-origin-1.h
 == calc-width-block-intrinsic-1.html calc-width-block-intrinsic-1-ref.html
 == calc-width-table-auto-1.html calc-width-table-auto-1-ref.html
 == calc-width-table-fixed-1.html calc-width-table-fixed-1-ref.html
+== rem-root-font-size-restyle-1.html rem-root-font-size-restyle-1-ref.html
