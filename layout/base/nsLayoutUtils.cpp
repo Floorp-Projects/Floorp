@@ -4497,15 +4497,12 @@ nsLayoutUtils::GetNextContinuationOrIBSplitSibling(nsIFrame *aFrame)
 }
 
 nsIFrame*
-nsLayoutUtils::FirstContinuationOrIBSplitSibling(nsIFrame *aFrame)
+nsLayoutUtils::FirstContinuationOrIBSplitSibling(const nsIFrame* aFrame)
 {
-  nsIFrame *result = aFrame->FirstContinuation();
+  nsIFrame* result = aFrame->FirstContinuation();
+
   if (result->GetStateBits() & NS_FRAME_PART_OF_IBSPLIT) {
-    while (true) {
-      nsIFrame* f =
-        result->GetProperty(nsIFrame::IBSplitPrevSibling());
-      if (!f)
-        break;
+    while (auto* f = result->GetProperty(nsIFrame::IBSplitPrevSibling())) {
       result = f;
     }
   }
@@ -4514,22 +4511,17 @@ nsLayoutUtils::FirstContinuationOrIBSplitSibling(nsIFrame *aFrame)
 }
 
 nsIFrame*
-nsLayoutUtils::LastContinuationOrIBSplitSibling(nsIFrame *aFrame)
+nsLayoutUtils::LastContinuationOrIBSplitSibling(const nsIFrame* aFrame)
 {
-  nsIFrame *result = aFrame->FirstContinuation();
+  nsIFrame* result = aFrame->FirstContinuation();
+
   if (result->GetStateBits() & NS_FRAME_PART_OF_IBSPLIT) {
-    while (true) {
-      nsIFrame* f = result->GetProperty(nsIFrame::IBSplitSibling());
-      if (!f) {
-        break;
-      }
+    while (auto* f = result->GetProperty(nsIFrame::IBSplitSibling())) {
       result = f;
     }
   }
 
-  result = result->LastContinuation();
-
-  return result;
+  return result->LastContinuation();
 }
 
 bool
