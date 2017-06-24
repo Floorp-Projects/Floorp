@@ -189,9 +189,6 @@ TransformWhiteSpaces(const CharT* aText, uint32_t aLength,
       aSkipChars->KeepChar();
       aInWhitespace = IsSpaceOrTab(ch);
     } else if (keepTransformedWhiteSpace) {
-      if (ch != ' ') {
-        aFlags |= nsTextFrameUtils::Flags::TEXT_WAS_TRANSFORMED;
-      }
       *aOutput++ = ' ';
       aSkipChars->KeepChar();
       aInWhitespace = true;
@@ -233,7 +230,6 @@ nsTextFrameUtils::TransformText(const CharT* aText, uint32_t aLength,
         } else if (aCompression == COMPRESS_NONE_TRANSFORM_TO_SPACE) {
           if (ch == '\t' || ch == '\n') {
             ch = ' ';
-            flags |= Flags::TEXT_WAS_TRANSFORMED;
           }
         } else {
           // aCompression == COMPRESS_NONE
@@ -332,9 +328,6 @@ nsTextFrameUtils::TransformText(const CharT* aText, uint32_t aLength,
     }
   }
 
-  if (outputStart + aLength != aOutput) {
-    flags |= Flags::TEXT_WAS_TRANSFORMED;
-  }
   *aAnalysisFlags = flags;
 
 #ifdef DEBUG
