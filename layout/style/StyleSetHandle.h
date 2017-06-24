@@ -167,8 +167,7 @@ public:
     ProbePseudoElementStyle(dom::Element* aParentElement,
                             mozilla::CSSPseudoElementType aType,
                             nsStyleContext* aParentContext,
-                            TreeMatchContext* aTreeMatchContext,
-                            dom::Element* aPseudoElement = nullptr);
+                            TreeMatchContext* aTreeMatchContext);
     inline nsRestyleHint HasStateDependentStyle(dom::Element* aElement,
                                                 EventStates aStateMask);
     inline nsRestyleHint HasStateDependentStyle(
