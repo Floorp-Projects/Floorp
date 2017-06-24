@@ -43,12 +43,14 @@ SimpleTest.waitForFocus(function() {
         // Make sure that typing something into the textarea will cause the
         // page to scroll down
         synthesizeKey("a", {}, win);
-        setTimeout(function() {
-          isnot(win.scrollY, 0, "Page is scrolled down again");
+        requestAnimationFrame(function() {
+          setTimeout(function() {
+            isnot(win.scrollY, 0, "Page is scrolled down again");
 
-          win.close();
-          SimpleTest.finish();
-        }, 0);
+            win.close();
+            SimpleTest.finish();
+          }, 0);
+        });
       }, 0);
     }, 0);
   }, win);
