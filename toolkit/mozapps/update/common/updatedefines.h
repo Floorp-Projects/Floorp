@@ -66,10 +66,12 @@ static inline int mywcsprintf(WCHAR* dest, size_t count, const WCHAR* fmt, ...)
 }
 #define NS_tsnprintf mywcsprintf
 # define NS_taccess _waccess
+# define NS_tatoi _wtoi64
 # define NS_tchdir _wchdir
 # define NS_tchmod _wchmod
 # define NS_tfopen _wfopen
 # define NS_tmkdir(path, perms) _wmkdir(path)
+# define NS_tpid __int64
 # define NS_tremove _wremove
 // _wrename is used to avoid the link tracking service.
 # define NS_trename _wrename
@@ -112,10 +114,12 @@ static inline int mywcsprintf(WCHAR* dest, size_t count, const WCHAR* fmt, ...)
 # define NS_SLASH NS_T('/')
 # define NS_tsnprintf snprintf
 # define NS_taccess access
+# define NS_tatoi atoi
 # define NS_tchdir chdir
 # define NS_tchmod chmod
 # define NS_tfopen fopen
 # define NS_tmkdir mkdir
+# define NS_tpid int
 # define NS_tremove remove
 # define NS_trename rename
 # define NS_trmdir rmdir
