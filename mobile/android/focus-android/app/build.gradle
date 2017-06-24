@@ -24,7 +24,7 @@ android {
     }
 
     // We have a three dimensional build configuration:
-    // BUILD TYPES (debug, beta, release) X PRODUCT FLAVOR (focus, klar) X ENGINE FLAVOR (webkit, gecko(
+    // BUILD TYPE (debug, beta, release) X PRODUCT FLAVOR (focus, klar) X ENGINE FLAVOR (webkit, gecko)
 
     buildTypes {
         release {
