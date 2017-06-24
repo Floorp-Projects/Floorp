@@ -127,6 +127,8 @@ statusbarpanel {
 sidebarheader {
   min-height: 25px;
   background-color: -moz-Dialog;
+  color: -moz-dialogText;
+  text-shadow: none;
 }
 
 sidebarheader > label {
@@ -147,10 +149,6 @@ toolbar[mode="text"] .toolbarbutton-text {
 :root:-moz-lwtheme,
 statusbarpanel:-moz-lwtheme {
   -moz-appearance: none;
-}
-
-sidebarheader:-moz-lwtheme {
-  background: none;
 }
 
 :root:-moz-lwtheme-darktext {
