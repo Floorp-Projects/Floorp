@@ -268,8 +268,7 @@ public:
   already_AddRefed<nsStyleContext>
   ProbePseudoElementStyle(dom::Element* aOriginatingElement,
                           mozilla::CSSPseudoElementType aType,
-                          nsStyleContext* aParentContext,
-                          dom::Element* aPseudoElement = nullptr);
+                          nsStyleContext* aParentContext);
 
   // Test if style is dependent on content state
   nsRestyleHint HasStateDependentStyle(dom::Element* aElement,
