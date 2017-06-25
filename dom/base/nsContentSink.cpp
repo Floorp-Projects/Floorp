@@ -845,9 +845,10 @@ nsContentSink::PrefetchHref(const nsAString &aHref,
   nsCOMPtr<nsIPrefetchService> prefetchService(do_GetService(NS_PREFETCHSERVICE_CONTRACTID));
   if (prefetchService) {
     // construct URI using document charset
-    auto encoding = mDocument->GetDocumentCharacterSet();
+    const nsACString &charset = mDocument->GetDocumentCharacterSet();
     nsCOMPtr<nsIURI> uri;
-    NS_NewURI(getter_AddRefs(uri), aHref, encoding,
+    NS_NewURI(getter_AddRefs(uri), aHref,
+              charset.IsEmpty() ? nullptr : PromiseFlatCString(charset).get(),
               mDocument->GetDocBaseURI());
     if (uri) {
       nsCOMPtr<nsIDOMNode> domNode = do_QueryInterface(aSource);
@@ -891,9 +892,10 @@ void
 nsContentSink::Preconnect(const nsAString& aHref, const nsAString& aCrossOrigin)
 {
   // construct URI using document charset
-  auto encoding = mDocument->GetDocumentCharacterSet();
+  const nsACString& charset = mDocument->GetDocumentCharacterSet();
   nsCOMPtr<nsIURI> uri;
-  NS_NewURI(getter_AddRefs(uri), aHref, encoding,
+  NS_NewURI(getter_AddRefs(uri), aHref,
+            charset.IsEmpty() ? nullptr : PromiseFlatCString(charset).get(),
             mDocument->GetDocBaseURI());
 
   if (uri && mDocument) {

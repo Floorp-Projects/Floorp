@@ -93,18 +93,26 @@ nsScanner::nsScanner(nsString& aFilename, bool aCreateStream)
   mUnicodeDecoder = nullptr;
   mCharsetSource = kCharsetUninitialized;
   // XML defaults to UTF-8 and about:blank is UTF-8, too.
-  SetDocumentCharset(UTF_8_ENCODING, kCharsetFromDocTypeDefault);
+  SetDocumentCharset(NS_LITERAL_CSTRING("UTF-8"), kCharsetFromDocTypeDefault);
 }
 
-nsresult nsScanner::SetDocumentCharset(NotNull<const Encoding*> aEncoding,
-                                       int32_t aSource)
+nsresult nsScanner::SetDocumentCharset(const nsACString& aCharset , int32_t aSource)
 {
   if (aSource < mCharsetSource) // priority is lower than the current one
     return NS_OK;
 
   mCharsetSource = aSource;
+
+  const Encoding* encoding;
+  if (aCharset.EqualsLiteral("replacement")) {
+    encoding = REPLACEMENT_ENCODING;
+  } else {
+    encoding = Encoding::ForLabel(aCharset);
+    MOZ_ASSERT(encoding, "Should never call with a bogus aCharset.");
+  }
+
   nsCString charsetName;
-  aEncoding->Name(charsetName);
+  encoding->Name(charsetName);
   if (!mCharset.IsEmpty() && charsetName.Equals(mCharset)) {
     return NS_OK; // no difference, don't change it
   }
@@ -113,7 +121,7 @@ nsresult nsScanner::SetDocumentCharset(NotNull<const Encoding*> aEncoding,
 
   mCharset.Assign(charsetName);
 
-  mUnicodeDecoder = aEncoding->NewDecoderWithBOMRemoval();
+  mUnicodeDecoder = encoding->NewDecoderWithBOMRemoval();
 
   return NS_OK;
 }

@@ -36,33 +36,34 @@ FallbackEncoding* FallbackEncoding::sInstance = nullptr;
 bool FallbackEncoding::sGuessFallbackFromTopLevelDomain = true;
 
 FallbackEncoding::FallbackEncoding()
-  : mFallback(nullptr)
 {
   MOZ_ASSERT(!FallbackEncoding::sInstance,
              "Singleton already exists.");
 }
 
-NotNull<const Encoding*>
-FallbackEncoding::Get()
+void
+FallbackEncoding::Get(nsACString& aFallback)
 {
-  if (mFallback) {
-    return WrapNotNull(mFallback);
+  if (!mFallback.IsEmpty()) {
+    aFallback = mFallback;
+    return;
   }
 
   const nsAdoptingCString& override =
     Preferences::GetCString("intl.charset.fallback.override");
   // Don't let the user break things by setting the override to unreasonable
   // values via about:config
-  auto encoding = Encoding::ForLabel(override);
+  const Encoding* encoding = Encoding::ForLabel(override);
   if (!encoding || !encoding->IsAsciiCompatible() ||
       encoding == UTF_8_ENCODING) {
-    mFallback = nullptr;
+    mFallback.Truncate();
   } else {
-    mFallback = encoding;
+    encoding->Name(mFallback);
   }
 
-  if (mFallback) {
-    return WrapNotNull(mFallback);
+  if (!mFallback.IsEmpty()) {
+    aFallback = mFallback;
+    return;
   }
 
   nsAutoCString locale;
@@ -79,8 +80,9 @@ FallbackEncoding::Get()
       locale.EqualsLiteral("zh-hk") ||
       locale.EqualsLiteral("zh-mo") ||
       locale.EqualsLiteral("zh-hant")) {
-    mFallback = BIG5_ENCODING;
-    return WrapNotNull(mFallback);
+    mFallback.AssignLiteral("Big5");
+    aFallback = mFallback;
+    return;
   }
 
   // Throw away regions and other variants to accommodate weird stuff seen
@@ -90,23 +92,20 @@ FallbackEncoding::Get()
     locale.Truncate(index);
   }
 
-  nsAutoCString fallback;
   if (NS_FAILED(nsUConvPropertySearch::SearchPropertyValue(
-      localesFallbacks, ArrayLength(localesFallbacks), locale, fallback))) {
-    mFallback = WINDOWS_1252_ENCODING;
-  } else {
-    mFallback = Encoding::ForName(fallback);
+      localesFallbacks, ArrayLength(localesFallbacks), locale, mFallback))) {
+    mFallback.AssignLiteral("windows-1252");
   }
 
-  return WrapNotNull(mFallback);
+  aFallback = mFallback;
 }
 
-NotNull<const Encoding*>
-FallbackEncoding::FromLocale()
+void
+FallbackEncoding::FromLocale(nsACString& aFallback)
 {
   MOZ_ASSERT(FallbackEncoding::sInstance,
              "Using uninitialized fallback cache.");
-  return FallbackEncoding::sInstance->Get();
+  FallbackEncoding::sInstance->Get(aFallback);
 }
 
 // PrefChangedFunc
@@ -170,15 +169,14 @@ FallbackEncoding::IsParticipatingTopLevelDomain(const nsACString& aTLD)
       dummy));
 }
 
-NotNull<const Encoding*>
-FallbackEncoding::FromTopLevelDomain(const nsACString& aTLD)
+void
+FallbackEncoding::FromTopLevelDomain(const nsACString& aTLD,
+                                     nsACString& aFallback)
 {
-  nsAutoCString fallback;
   if (NS_FAILED(nsUConvPropertySearch::SearchPropertyValue(
-      domainsFallbacks, ArrayLength(domainsFallbacks), aTLD, fallback))) {
-    return WINDOWS_1252_ENCODING;
+      domainsFallbacks, ArrayLength(domainsFallbacks), aTLD, aFallback))) {
+    aFallback.AssignLiteral("windows-1252");
   }
-  return Encoding::ForName(fallback);
 }
 
 } // namespace dom
