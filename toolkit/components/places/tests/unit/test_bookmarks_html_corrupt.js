@@ -9,10 +9,6 @@ const LOAD_IN_SIDEBAR_ANNO = "bookmarkProperties/loadInSidebar";
 const TEST_FAVICON_PAGE_URL = "http://en-US.www.mozilla.com/en-US/firefox/central/";
 const TEST_FAVICON_DATA_SIZE = 580;
 
-function run_test() {
-  run_next_test();
-}
-
 add_task(async function test_corrupt_file() {
   // avoid creating the places smart folder during tests
   Services.prefs.setIntPref("browser.places.smartBookmarksVersion", -1);
@@ -63,8 +59,12 @@ var database_check = async function() {
   let folderNode = root.getChild(1);
   Assert.equal(folderNode.type, folderNode.RESULT_TYPE_FOLDER);
   Assert.equal(folderNode.title, "test");
-  Assert.equal(PlacesUtils.bookmarks.getItemDateAdded(folderNode.itemId), 1177541020000000);
-  Assert.equal(PlacesUtils.bookmarks.getItemLastModified(folderNode.itemId), 1177541050000000);
+
+  let bookmark = await PlacesUtils.bookmarks.fetch({
+    guid: folderNode.bookmarkGuid
+  });
+  Assert.equal(PlacesUtils.toPRTime(bookmark.dateAdded), 1177541020000000);
+  Assert.equal(PlacesUtils.toPRTime(bookmark.lastModified), 1177541050000000);
   Assert.equal("folder test comment",
                PlacesUtils.annotations.getItemAnnotation(folderNode.itemId,
                                                          DESCRIPTION_ANNO));

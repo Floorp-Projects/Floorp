@@ -4,10 +4,6 @@
 
 Cu.import("resource://gre/modules/BookmarkJSONUtils.jsm");
 
-function run_test() {
-  run_next_test();
-}
-
 const LOAD_IN_SIDEBAR_ANNO = "bookmarkProperties/loadInSidebar";
 const DESCRIPTION_ANNO = "bookmarkProperties/description";
 
@@ -161,88 +157,86 @@ async function testImportedBookmarks() {
   }
 }
 
-function checkItem(aExpected, aNode) {
+async function checkItem(aExpected, aNode) {
   let id = aNode.itemId;
+  let bookmark = await PlacesUtils.bookmarks.fetch(aNode.bookmarkGuid);
 
-  return (async function() {
-    for (let prop in aExpected) {
-      switch (prop) {
-        case "type":
-          do_check_eq(aNode.type, aExpected.type);
-          break;
-        case "title":
-          do_check_eq(aNode.title, aExpected.title);
-          break;
-        case "description":
-          do_check_eq(PlacesUtils.annotations.getItemAnnotation(
-                      id, DESCRIPTION_ANNO), aExpected.description);
-          break;
-        case "dateAdded":
-          do_check_eq(PlacesUtils.bookmarks.getItemDateAdded(id),
-                      aExpected.dateAdded);
-          break;
-        case "lastModified":
-          do_check_eq(PlacesUtils.bookmarks.getItemLastModified(id),
-                      aExpected.lastModified);
-          break;
-        case "url":
-          if (!("feedUrl" in aExpected))
-            do_check_eq(aNode.uri, aExpected.url);
-          break;
-        case "icon":
-          let deferred = Promise.defer();
-          PlacesUtils.favicons.getFaviconDataForPage(
-            NetUtil.newURI(aExpected.url),
-            function(aURI, aDataLen, aData, aMimeType) {
-              deferred.resolve(aData);
-            });
-          let data = await deferred.promise;
-          let base64Icon = "data:image/png;base64," +
-                           base64EncodeString(String.fromCharCode.apply(String, data));
-          do_check_eq(base64Icon, aExpected.icon);
-          break;
-        case "keyword": {
-          let entry = await PlacesUtils.keywords.fetch({ url: aNode.uri });
-          Assert.equal(entry.keyword, aExpected.keyword);
-          break;
-        }
-        case "guid":
-          let guid = await PlacesUtils.promiseItemGuid(id);
-          do_check_eq(guid, aExpected.guid);
-          break;
-        case "sidebar":
-          do_check_eq(PlacesUtils.annotations.itemHasAnnotation(
-                      id, LOAD_IN_SIDEBAR_ANNO), aExpected.sidebar);
-          break;
-        case "postData": {
-          let entry = await PlacesUtils.keywords.fetch({ url: aNode.uri });
-          Assert.equal(entry.postData, aExpected.postData);
-          break;
-        }
-        case "charset":
-          let testURI = NetUtil.newURI(aNode.uri);
-          do_check_eq((await PlacesUtils.getCharsetForURI(testURI)), aExpected.charset);
-          break;
-        case "feedUrl":
-          let livemark = await PlacesUtils.livemarks.getLivemark({ id });
-          do_check_eq(livemark.siteURI.spec, aExpected.url);
-          do_check_eq(livemark.feedURI.spec, aExpected.feedUrl);
-          break;
-        case "children":
-          let folder = aNode.QueryInterface(Ci.nsINavHistoryContainerResultNode);
-          do_check_eq(folder.hasChildren, aExpected.children.length > 0);
-          folder.containerOpen = true;
-          do_check_eq(folder.childCount, aExpected.children.length);
-
-          for (let index = 0; index < aExpected.children.length; index++) {
-            await checkItem(aExpected.children[index], folder.getChild(index));
-          }
-
-          folder.containerOpen = false;
-          break;
-        default:
-          throw new Error("Unknown property");
+  for (let prop in aExpected) {
+    switch (prop) {
+      case "type":
+        do_check_eq(aNode.type, aExpected.type);
+        break;
+      case "title":
+        do_check_eq(aNode.title, aExpected.title);
+        break;
+      case "description":
+        do_check_eq(PlacesUtils.annotations.getItemAnnotation(
+                    id, DESCRIPTION_ANNO), aExpected.description);
+        break;
+      case "dateAdded":
+        do_check_eq(PlacesUtils.toPRTime(bookmark.dateAdded),
+                    aExpected.dateAdded);
+        break;
+      case "lastModified":
+        do_check_eq(PlacesUtils.toPRTime(bookmark.lastModified),
+                    aExpected.lastModified);
+        break;
+      case "url":
+        if (!("feedUrl" in aExpected))
+          do_check_eq(aNode.uri, aExpected.url);
+        break;
+      case "icon":
+        let deferred = Promise.defer();
+        PlacesUtils.favicons.getFaviconDataForPage(
+          NetUtil.newURI(aExpected.url),
+          function(aURI, aDataLen, aData, aMimeType) {
+            deferred.resolve(aData);
+          });
+        let data = await deferred.promise;
+        let base64Icon = "data:image/png;base64," +
+                         base64EncodeString(String.fromCharCode.apply(String, data));
+        do_check_eq(base64Icon, aExpected.icon);
+        break;
+      case "keyword": {
+        let entry = await PlacesUtils.keywords.fetch({ url: aNode.uri });
+        Assert.equal(entry.keyword, aExpected.keyword);
+        break;
       }
+      case "guid":
+        do_check_eq(bookmark.guid, aExpected.guid);
+        break;
+      case "sidebar":
+        do_check_eq(PlacesUtils.annotations.itemHasAnnotation(
+                    id, LOAD_IN_SIDEBAR_ANNO), aExpected.sidebar);
+        break;
+      case "postData": {
+        let entry = await PlacesUtils.keywords.fetch({ url: aNode.uri });
+        Assert.equal(entry.postData, aExpected.postData);
+        break;
+      }
+      case "charset":
+        let testURI = NetUtil.newURI(aNode.uri);
+        do_check_eq((await PlacesUtils.getCharsetForURI(testURI)), aExpected.charset);
+        break;
+      case "feedUrl":
+        let livemark = await PlacesUtils.livemarks.getLivemark({ id });
+        do_check_eq(livemark.siteURI.spec, aExpected.url);
+        do_check_eq(livemark.feedURI.spec, aExpected.feedUrl);
+        break;
+      case "children":
+        let folder = aNode.QueryInterface(Ci.nsINavHistoryContainerResultNode);
+        do_check_eq(folder.hasChildren, aExpected.children.length > 0);
+        folder.containerOpen = true;
+        do_check_eq(folder.childCount, aExpected.children.length);
+
+        for (let index = 0; index < aExpected.children.length; index++) {
+          await checkItem(aExpected.children[index], folder.getChild(index));
+        }
+
+        folder.containerOpen = false;
+        break;
+      default:
+        throw new Error("Unknown property");
     }
-  })();
+  }
 }

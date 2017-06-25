@@ -8,18 +8,20 @@
  * Tests nsNavHistoryContainerResultNode::GetChildIndex(aNode) functionality.
  */
 
-function run_test() {
+add_task(async function test_get_child_index() {
   // Add a bookmark to the menu.
-  PlacesUtils.bookmarks.insertBookmark(PlacesUtils.bookmarksMenuFolderId,
-                                       uri("http://test.mozilla.org/bookmark/"),
-                                       Ci.nsINavBookmarksService.DEFAULT_INDEX,
-                                       "Test bookmark");
+  await PlacesUtils.bookmarks.insert({
+    parentGuid: PlacesUtils.bookmarks.menuGuid,
+    url: "http://test.mozilla.org/bookmark/",
+    title: "Test bookmark"
+  });
 
   // Add a bookmark to unfiled folder.
-  PlacesUtils.bookmarks.insertBookmark(PlacesUtils.unfiledBookmarksFolderId,
-                                       uri("http://test.mozilla.org/unfiled/"),
-                                       Ci.nsINavBookmarksService.DEFAULT_INDEX,
-                                       "Unfiled bookmark");
+  await PlacesUtils.bookmarks.insert({
+    parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+    url: "http://test.mozilla.org/unfiled/",
+    title: "Unfiled bookmark"
+  });
 
   // Get the unfiled bookmark node.
   let unfiledNode = getNodeAt(PlacesUtils.unfiledBookmarksFolderId, 0);
@@ -51,7 +53,7 @@ function run_test() {
   }
 
   root.containerOpen = false;
-}
+});
 
 function getNodeAt(aFolderId, aIndex) {
   let hs = PlacesUtils.history;

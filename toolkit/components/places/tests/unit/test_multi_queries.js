@@ -20,10 +20,6 @@ async function add_visit(aURI, aDayOffset, aTransition) {
   });
 }
 
-function run_test() {
-  run_next_test();
-}
-
 add_task(async function test_execute() {
   await add_visit(uri("http://mirror1.mozilla.com/a"), -1, TRANSITION_LINK);
   await add_visit(uri("http://mirror2.mozilla.com/b"), -2, TRANSITION_LINK);

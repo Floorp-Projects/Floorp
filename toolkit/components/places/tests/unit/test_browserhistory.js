@@ -32,10 +32,11 @@ add_task(async function test_removePages() {
   PlacesUtils.annotations.setPageAnnotation(pages[ANNO_INDEX],
                                             ANNO_NAME, ANNO_VALUE, 0,
                                             Ci.nsIAnnotationService.EXPIRE_NEVER);
-  PlacesUtils.bookmarks.insertBookmark(PlacesUtils.unfiledBookmarksFolderId,
-                                       pages[BOOKMARK_INDEX],
-                                       PlacesUtils.bookmarks.DEFAULT_INDEX,
-                                       "test bookmark");
+  await PlacesUtils.bookmarks.insert({
+    parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+    url: pages[BOOKMARK_INDEX],
+    title: "test bookmark"
+  });
   PlacesUtils.annotations.setPageAnnotation(pages[BOOKMARK_INDEX],
                                             ANNO_NAME, ANNO_VALUE, 0,
                                             Ci.nsIAnnotationService.EXPIRE_NEVER);
@@ -44,7 +45,8 @@ add_task(async function test_removePages() {
   do_check_eq(0, PlacesUtils.history.hasHistoryEntries);
 
   // Check that the bookmark and its annotation still exist.
-  do_check_true(PlacesUtils.bookmarks.getIdForItemAt(PlacesUtils.unfiledBookmarksFolderId, 0) > 0);
+  let folder = await PlacesUtils.getFolderContents(PlacesUtils.unfiledBookmarksFolderId);
+  do_check_eq(folder.root.childCount, 1);
   do_check_eq(PlacesUtils.annotations.getPageAnnotation(pages[BOOKMARK_INDEX], ANNO_NAME),
               ANNO_VALUE);
 
@@ -55,7 +57,7 @@ add_task(async function test_removePages() {
   } catch (ex) {}
 
   // Cleanup.
-  PlacesUtils.bookmarks.removeFolderChildren(PlacesUtils.unfiledBookmarksFolderId);
+  await PlacesUtils.bookmarks.eraseEverything();
   await PlacesTestUtils.clearHistory();
 });
 
@@ -123,7 +125,3 @@ add_task(async function test_getObservers() {
     });
   });
 });
-
-function run_test() {
-  run_next_test();
-}

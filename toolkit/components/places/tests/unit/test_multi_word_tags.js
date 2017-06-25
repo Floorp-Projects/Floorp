@@ -12,14 +12,6 @@ try {
   do_throw("Could not get history service\n");
 }
 
-// Get bookmark service
-try {
-  var bmsvc = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
-              getService(Ci.nsINavBookmarksService);
-} catch (ex) {
-  do_throw("Could not get the nav-bookmarks-service\n");
-}
-
 // Get tagging service
 try {
   var tagssvc = Cc["@mozilla.org/browser/tagging-service;1"].
@@ -28,8 +20,7 @@ try {
   do_throw("Could not get tagging service\n");
 }
 
-// main
-function run_test() {
+add_task(async function run_test() {
   var uri1 = uri("http://site.tld/1");
   var uri2 = uri("http://site.tld/2");
   var uri3 = uri("http://site.tld/3");
@@ -37,12 +28,13 @@ function run_test() {
   var uri5 = uri("http://site.tld/5");
   var uri6 = uri("http://site.tld/6");
 
-  bmsvc.insertBookmark(bmsvc.bookmarksMenuFolder, uri1, bmsvc.DEFAULT_INDEX, null);
-  bmsvc.insertBookmark(bmsvc.bookmarksMenuFolder, uri2, bmsvc.DEFAULT_INDEX, null);
-  bmsvc.insertBookmark(bmsvc.bookmarksMenuFolder, uri3, bmsvc.DEFAULT_INDEX, null);
-  bmsvc.insertBookmark(bmsvc.bookmarksMenuFolder, uri4, bmsvc.DEFAULT_INDEX, null);
-  bmsvc.insertBookmark(bmsvc.bookmarksMenuFolder, uri5, bmsvc.DEFAULT_INDEX, null);
-  bmsvc.insertBookmark(bmsvc.bookmarksMenuFolder, uri6, bmsvc.DEFAULT_INDEX, null);
+  await PlacesUtils.bookmarks.insertTree({
+    guid: PlacesUtils.bookmarks.menuGuid,
+    children: [
+      { url: uri1 }, { url: uri2 }, { url: uri3 },
+      { url: uri4 }, { url: uri5 }, { url: uri6 },
+    ]
+  });
 
   tagssvc.tagURI(uri1, ["foo"]);
   tagssvc.tagURI(uri2, ["bar"]);
@@ -146,4 +138,4 @@ function run_test() {
   do_check_eq(root.childCount, 1);
   do_check_eq(root.getChild(0).uri, "http://site.tld/6");
   root.containerOpen = false;
-}
+});

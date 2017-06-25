@@ -17,12 +17,10 @@ function run_test() {
   // XXX Full testing coverage for QueriesToQueryString and
   // QueryStringToQueries
 
-  var bs = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
-           getService(Ci.nsINavBookmarksService);
   const NHQO = Ci.nsINavHistoryQueryOptions;
   // Bug 376798
   var query = histsvc.getNewQuery();
-  query.setFolders([bs.placesRoot], 1);
+  query.setFolders([PlacesUtils.bookmarks.placesRoot], 1);
   do_check_eq(histsvc.queriesToQueryString([query], 1, histsvc.getNewQueryOptions()),
               "place:folder=PLACES_ROOT");
 
