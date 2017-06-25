@@ -299,6 +299,7 @@ pref("browser.urlbar.doubleClickSelectsAll", false);
 // Control autoFill behavior
 pref("browser.urlbar.autoFill", true);
 pref("browser.urlbar.autoFill.typed", true);
+pref("browser.urlbar.speculativeConnect.enabled", true);
 
 // 0: Match anywhere (e.g., middle of words)
 // 1: Match on word boundaries and then try matching anywhere
