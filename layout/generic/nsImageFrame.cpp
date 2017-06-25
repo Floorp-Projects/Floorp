@@ -11,7 +11,6 @@
 #include "gfxContext.h"
 #include "gfxUtils.h"
 #include "mozilla/DebugOnly.h"
-#include "mozilla/Encoding.h"
 #include "mozilla/EventStates.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/Helpers.h"
@@ -2252,7 +2251,7 @@ nsImageFrame::GetDocumentCharacterSet(nsACString& aCharset) const
   if (mContent) {
     NS_ASSERTION(mContent->GetComposedDoc(),
                  "Frame still alive after content removed from document!");
-    mContent->GetComposedDoc()->GetDocumentCharacterSet()->Name(aCharset);
+    aCharset = mContent->GetComposedDoc()->GetDocumentCharacterSet();
   }
 }
 

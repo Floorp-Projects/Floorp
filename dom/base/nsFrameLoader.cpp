@@ -272,15 +272,16 @@ nsFrameLoader::LoadFrame()
   }
 
   nsCOMPtr<nsIURI> base_uri = mOwnerContent->GetBaseURI();
-  auto encoding = doc->GetDocumentCharacterSet();
+  const nsCString& doc_charset = doc->GetDocumentCharacterSet();
+  const char *charset = doc_charset.IsEmpty() ? nullptr : doc_charset.get();
 
   nsCOMPtr<nsIURI> uri;
-  nsresult rv = NS_NewURI(getter_AddRefs(uri), src, encoding, base_uri);
+  nsresult rv = NS_NewURI(getter_AddRefs(uri), src, charset, base_uri);
 
   // If the URI was malformed, try to recover by loading about:blank.
   if (rv == NS_ERROR_MALFORMED_URI) {
     rv = NS_NewURI(getter_AddRefs(uri), NS_LITERAL_STRING("about:blank"),
-                   encoding, base_uri);
+                   charset, base_uri);
   }
 
   if (NS_SUCCEEDED(rv)) {
