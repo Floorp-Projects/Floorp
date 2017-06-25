@@ -217,9 +217,8 @@ WebRenderBridgeChild::PushGlyphs(wr::DisplayListBuilder& aBuilder, const nsTArra
               LayerPoint::FromUnknownPoint(glyphs[j].mPosition));
     }
 
-    WrClipRegionToken clipRegion = aBuilder.PushClipRegion(aSc.ToRelativeWrRect(aClip));
     aBuilder.PushText(aSc.ToRelativeWrRect(aBounds),
-                      clipRegion,
+                      aSc.ToRelativeWrRect(aClip),
                       glyph_array.color().value(),
                       key,
                       Range<const WrGlyphInstance>(wr_glyph_instances.Elements(), wr_glyph_instances.Length()),

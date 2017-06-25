@@ -910,7 +910,7 @@ DXGITextureHostD3D11::AddWRImage(wr::WebRenderAPI* aAPI,
 void
 DXGITextureHostD3D11::PushExternalImage(wr::DisplayListBuilder& aBuilder,
                                         const WrRect& aBounds,
-                                        const WrClipRegionToken aClip,
+                                        const WrRect& aClip,
                                         wr::ImageRendering aFilter,
                                         Range<const wr::ImageKey>& aImageKeys)
 {
@@ -1077,7 +1077,7 @@ DXGIYCbCrTextureHostD3D11::AddWRImage(wr::WebRenderAPI* aAPI,
 void
 DXGIYCbCrTextureHostD3D11::PushExternalImage(wr::DisplayListBuilder& aBuilder,
                                              const WrRect& aBounds,
-                                             const WrClipRegionToken aClip,
+                                             const WrRect& aClip,
                                              wr::ImageRendering aFilter,
                                              Range<const wr::ImageKey>& aImageKeys)
 {
