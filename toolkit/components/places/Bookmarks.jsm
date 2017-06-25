@@ -538,11 +538,18 @@ var Bookmarks = Object.freeze({
         return Object.assign({}, item);
       }
       const now = new Date();
+      let lastModifiedDefault = now;
+      // In the case where `dateAdded` is specified, but `lastModified` is not,
+      // we only update `lastModified` if it is older than the new `dateAdded`.
+      if (!("lastModified" in updateInfo) &&
+          "dateAdded" in updateInfo) {
+        lastModifiedDefault = new Date(Math.max(item.lastModified, updateInfo.dateAdded));
+      }
       updateInfo = validateBookmarkObject(updateInfo,
         { url: { validIf: () => item.type == this.TYPE_BOOKMARK },
           title: { validIf: () => [ this.TYPE_BOOKMARK,
                                     this.TYPE_FOLDER ].includes(item.type) },
-          lastModified: { defaultValue: now,
+          lastModified: { defaultValue: lastModifiedDefault,
                           validIf: b => b.lastModified >= now ||
                                         b.lastModified >= (b.dateAdded || item.dateAdded) },
           dateAdded: { defaultValue: item.dateAdded }
