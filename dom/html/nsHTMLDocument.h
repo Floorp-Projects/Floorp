@@ -321,24 +321,21 @@ protected:
 
   static void TryHintCharset(nsIContentViewer* aContentViewer,
                              int32_t& aCharsetSource,
-                             NotNull<const Encoding*>& aEncoding);
+                             nsACString& aCharset);
   void TryUserForcedCharset(nsIContentViewer* aCv,
                             nsIDocShell*  aDocShell,
                             int32_t& aCharsetSource,
-                            NotNull<const Encoding*>& aEncoding);
+                            nsACString& aCharset);
   static void TryCacheCharset(nsICachingChannel* aCachingChannel,
-                              int32_t& aCharsetSource,
-                              NotNull<const Encoding*>& aEncoding);
+                                int32_t& aCharsetSource,
+                                nsACString& aCharset);
   void TryParentCharset(nsIDocShell*  aDocShell,
-                        int32_t& charsetSource,
-                        NotNull<const Encoding*>& aEncoding);
-  void TryTLD(int32_t& aCharsetSource, NotNull<const Encoding*>& aCharset);
-  static void TryFallback(int32_t& aCharsetSource,
-                          NotNull<const Encoding*>& aEncoding);
+                        int32_t& charsetSource, nsACString& aCharset);
+  void TryTLD(int32_t& aCharsetSource, nsACString& aCharset);
+  static void TryFallback(int32_t& aCharsetSource, nsACString& aCharset);
 
   // Override so we can munge the charset on our wyciwyg channel as needed.
-  virtual void
-    SetDocumentCharacterSet(NotNull<const Encoding*> aEncoding) override;
+  virtual void SetDocumentCharacterSet(const nsACString& aCharSetID) override;
 
   // Tracks if we are currently processing any document.write calls (either
   // implicit or explicit). Note that if a write call writes out something which

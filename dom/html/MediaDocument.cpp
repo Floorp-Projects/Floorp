@@ -171,16 +171,17 @@ MediaDocument::StartDocumentLoad(const char*         aCommand,
   // not being able to set the charset is not critical.
   NS_ENSURE_TRUE(docShell, NS_OK); 
 
-  const Encoding* encoding;
+  nsAutoCString charset;
   int32_t source;
   nsCOMPtr<nsIPrincipal> principal;
   // opening in a new tab
-  docShell->GetParentCharset(encoding, &source, getter_AddRefs(principal));
+  docShell->GetParentCharset(charset, &source, getter_AddRefs(principal));
 
-  if (encoding && encoding != UTF_8_ENCODING &&
+  if (!charset.IsEmpty() &&
+      !charset.EqualsLiteral("UTF-8") &&
       NodePrincipal()->Equals(principal)) {
     SetDocumentCharacterSetSource(source);
-    SetDocumentCharacterSet(WrapNotNull(encoding));
+    SetDocumentCharacterSet(charset);
   }
 
   return NS_OK;
@@ -298,14 +299,11 @@ MediaDocument::GetFileName(nsAString& aResult, nsIChannel* aChannel)
   // window or a new tab, in which case |originCharset| of |nsIURI| is not 
   // reliable.
   if (mCharacterSetSource != kCharsetUninitialized) {  
-    mCharacterSet->Name(docCharset);
+    docCharset = mCharacterSet;
   } else {  
     // resort to |originCharset|
     url->GetOriginCharset(docCharset);
-    auto encoding = Encoding::ForLabelNoReplacement(docCharset);
-    if (encoding) {
-      SetDocumentCharacterSet(WrapNotNull(encoding));
-    }
+    SetDocumentCharacterSet(docCharset);
   }
 
   nsresult rv;
