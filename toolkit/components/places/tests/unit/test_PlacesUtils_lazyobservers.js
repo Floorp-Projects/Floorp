@@ -1,10 +1,11 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-function run_test() {
-  do_test_pending();
+add_task(async function test_lazyBookmarksObservers() {
+  const TEST_URI = Services.io.newURI("http://moz.org/");
 
-  const TEST_URI = NetUtil.newURI("http://moz.org/")
+  let promise = PromiseUtils.defer();
+
   let observer = {
     QueryInterface: XPCOMUtils.generateQI([
       Ci.nsINavBookmarkObserver,
@@ -15,7 +16,7 @@ function run_test() {
     onItemAdded(aItemId, aParentId, aIndex, aItemType, aURI) {
       do_check_true(aURI.equals(TEST_URI));
       PlacesUtils.removeLazyBookmarkObserver(this);
-      do_test_finished();
+      promise.resolve();
     },
     onItemRemoved() {},
     onItemChanged() {},
@@ -40,8 +41,11 @@ function run_test() {
     do_throw("Trying to remove a nonexisting observer should throw!");
   } catch (ex) {}
 
-  PlacesUtils.bookmarks.insertBookmark(PlacesUtils.unfiledBookmarksFolderId,
-                                       TEST_URI,
-                                       PlacesUtils.bookmarks.DEFAULT_INDEX,
-                                       "Bookmark title");
-}
+  await PlacesUtils.bookmarks.insert({
+    parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+    url: TEST_URI,
+    title: "Bookmark title"
+  });
+
+  await promise;
+});

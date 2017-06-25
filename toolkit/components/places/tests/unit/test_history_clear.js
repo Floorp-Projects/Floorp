@@ -65,10 +65,11 @@ add_task(async function test_history_clear() {
   ]);
 
   // add a place: bookmark
-  PlacesUtils.bookmarks.insertBookmark(PlacesUtils.unfiledBookmarksFolderId,
-                                       uri("place:folder=4"),
-                                       PlacesUtils.bookmarks.DEFAULT_INDEX,
-                                       "shortcut");
+  await PlacesUtils.bookmarks.insert({
+    parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+    url: "place:folder=4",
+    title: "shortcut"
+  });
 
   // Add an expire never annotation
   // Actually expire never annotations are removed as soon as a page is removed
@@ -79,10 +80,11 @@ add_task(async function test_history_clear() {
 
   // Add a bookmark
   // Bookmarked page should have history cleared and frecency = -1
-  PlacesUtils.bookmarks.insertBookmark(PlacesUtils.unfiledBookmarksFolderId,
-                                       uri("http://typed.mozilla.org/"),
-                                       PlacesUtils.bookmarks.DEFAULT_INDEX,
-                                       "bookmark");
+  await PlacesUtils.bookmarks.insert({
+    parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+    url: "http://typed.mozilla.org/",
+    title: "bookmark"
+  });
 
   await PlacesTestUtils.addVisits([
     { uri: uri("http://typed.mozilla.org/"),

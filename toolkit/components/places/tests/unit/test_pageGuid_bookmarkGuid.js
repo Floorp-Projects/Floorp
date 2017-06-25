@@ -4,25 +4,35 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const bmsvc = PlacesUtils.bookmarks;
 const histsvc = PlacesUtils.history;
 
-function run_test() {
-  run_next_test();
-}
-
 add_task(async function test_addBookmarksAndCheckGuids() {
-  let folder = bmsvc.createFolder(bmsvc.placesRoot, "test folder", bmsvc.DEFAULT_INDEX);
-  bmsvc.insertBookmark(folder, uri("http://test1.com/"),
-                       bmsvc.DEFAULT_INDEX, "1 title");
-  bmsvc.insertBookmark(folder, uri("http://test2.com/"),
-                       bmsvc.DEFAULT_INDEX, "2 title");
-  bmsvc.insertBookmark(folder, uri("http://test3.com/"),
-                       bmsvc.DEFAULT_INDEX, "3 title");
-  bmsvc.insertSeparator(folder, bmsvc.DEFAULT_INDEX);
-  bmsvc.createFolder(folder, "test folder 2", bmsvc.DEFAULT_INDEX);
+  let bookmarks = await PlacesUtils.bookmarks.insertTree({
+    guid: PlacesUtils.bookmarks.menuGuid,
+    children: [{
+      title: "test folder",
+      type: PlacesUtils.bookmarks.TYPE_FOLDER,
+      children: [{
+        url: "http://test1.com/",
+        title: "1 title",
+      }, {
+        url: "http://test2.com/",
+        title: "2 title",
+      }, {
+        url: "http://test3.com/",
+        title: "3 title",
+      }, {
+        type: PlacesUtils.bookmarks.TYPE_SEPARATOR,
+      }, {
+        title: "test folder 2",
+        type: PlacesUtils.bookmarks.TYPE_FOLDER,
+      }]
+    }]
+  });
 
-  let root = PlacesUtils.getFolderContents(folder).root;
+  let folderId = await PlacesUtils.promiseItemId(bookmarks[0].guid);
+
+  let root = PlacesUtils.getFolderContents(folderId).root;
   do_check_eq(root.childCount, 5);
 
   // check bookmark guids
@@ -60,25 +70,44 @@ add_task(async function test_addBookmarksAndCheckGuids() {
 });
 
 add_task(async function test_updateBookmarksAndCheckGuids() {
-  let folder = bmsvc.createFolder(bmsvc.placesRoot, "test folder", bmsvc.DEFAULT_INDEX);
-  let b1 = bmsvc.insertBookmark(folder, uri("http://test1.com/"),
-                                bmsvc.DEFAULT_INDEX, "1 title");
-  let f1 = bmsvc.createFolder(folder, "test folder 2", bmsvc.DEFAULT_INDEX);
+  let bookmarks = await PlacesUtils.bookmarks.insertTree({
+    guid: PlacesUtils.bookmarks.menuGuid,
+    children: [{
+      title: "test folder",
+      type: PlacesUtils.bookmarks.TYPE_FOLDER,
+      children: [{
+        url: "http://test1.com/",
+        title: "1 title",
+      }, {
+        title: "test folder 2",
+        type: PlacesUtils.bookmarks.TYPE_FOLDER,
+      }]
+    }]
+  });
 
-  let root = PlacesUtils.getFolderContents(folder).root;
+  let folderId = await PlacesUtils.promiseItemId(bookmarks[0].guid);
+
+  let root = PlacesUtils.getFolderContents(folderId).root;
   do_check_eq(root.childCount, 2);
 
   // ensure the bookmark and page guids remain the same after modifing other property.
   let bookmarkGuidZero = root.getChild(0).bookmarkGuid;
   let pageGuidZero = root.getChild(0).pageGuid;
-  bmsvc.setItemTitle(b1, "1 title mod");
+  await PlacesUtils.bookmarks.update({
+    guid: bookmarks[1].guid,
+    title: "1 title mod",
+  });
   do_check_eq(root.getChild(0).title, "1 title mod");
   do_check_eq(root.getChild(0).bookmarkGuid, bookmarkGuidZero);
   do_check_eq(root.getChild(0).pageGuid, pageGuidZero);
 
   let bookmarkGuidOne = root.getChild(1).bookmarkGuid;
   let pageGuidOne = root.getChild(1).pageGuid;
-  bmsvc.setItemTitle(f1, "test foolder 234");
+
+  await PlacesUtils.bookmarks.update({
+    guid: bookmarks[2].guid,
+    title: "test foolder 234",
+  });
   do_check_eq(root.getChild(1).title, "test foolder 234");
   do_check_eq(root.getChild(1).bookmarkGuid, bookmarkGuidOne);
   do_check_eq(root.getChild(1).pageGuid, pageGuidOne);
@@ -92,7 +121,7 @@ add_task(async function test_addVisitAndCheckGuid() {
   // add a visit and test page guid and non-existing bookmark guids.
   let sourceURI = uri("http://test4.com/");
   await PlacesTestUtils.addVisits({ uri: sourceURI });
-  do_check_eq(bmsvc.getBookmarkedURIFor(sourceURI), null);
+  do_check_eq(await PlacesUtils.bookmarks.fetch({ url: sourceURI }, null));
 
   let options = histsvc.getNewQueryOptions();
   let query = histsvc.getNewQuery();
@@ -111,21 +140,36 @@ add_task(async function test_addVisitAndCheckGuid() {
 add_task(async function test_addItemsWithInvalidGUIDsFails() {
   const INVALID_GUID = "XYZ";
   try {
-    bmsvc.createFolder(bmsvc.placesRoot, "XYZ folder",
-                       bmsvc.DEFAULT_INDEX, INVALID_GUID);
+    await PlacesUtils.bookmarks.insert({
+      parentGuid: PlacesUtils.bookmarks.menuGuid,
+      guid: INVALID_GUID,
+      title: "XYZ folder",
+      type: PlacesUtils.bookmarks.TYPE_FOLDER,
+    });
     do_throw("Adding a folder with an invalid guid should fail");
   } catch (ex) { }
 
-  let folder = bmsvc.createFolder(bmsvc.placesRoot, "test folder",
-                                  bmsvc.DEFAULT_INDEX);
+  let folder = await PlacesUtils.bookmarks.insert({
+    parentGuid: PlacesUtils.bookmarks.menuGuid,
+    title: "test folder",
+    type: PlacesUtils.bookmarks.TYPE_FOLDER,
+  });
   try {
-    bmsvc.insertBookmark(folder, uri("http://test.tld"), bmsvc.DEFAULT_INDEX,
-                         "title", INVALID_GUID);
+    PlacesUtils.bookmarks.insert({
+      parentGuid: folder.guid,
+      guid: INVALID_GUID,
+      title: "title",
+      url: "http://test.tld",
+    });
     do_throw("Adding a bookmark with an invalid guid should fail");
   } catch (ex) { }
 
   try {
-    bmsvc.insertSeparator(folder, bmsvc.DEFAULT_INDEX, INVALID_GUID);
+    PlacesUtils.bookmarks.insert({
+      parentGuid: folder.guid,
+      guid: INVALID_GUID,
+      type: PlacesUtils.bookmarks.TYPE_SEPARATOR
+    });
     do_throw("Adding a separator with an invalid guid should fail");
   } catch (ex) { }
 
@@ -137,13 +181,26 @@ add_task(async function test_addItemsWithGUIDs() {
   const BOOKMARK_GUID   = "BM------GUID";
   const SEPARATOR_GUID  = "SEP-----GUID";
 
-  let folder = bmsvc.createFolder(bmsvc.placesRoot, "test folder",
-                                  bmsvc.DEFAULT_INDEX, FOLDER_GUID);
-  bmsvc.insertBookmark(folder, uri("http://test1.com/"), bmsvc.DEFAULT_INDEX,
-                       "1 title", BOOKMARK_GUID);
-  bmsvc.insertSeparator(folder, bmsvc.DEFAULT_INDEX, SEPARATOR_GUID);
+  let bookmarks = await PlacesUtils.bookmarks.insertTree({
+    guid: PlacesUtils.bookmarks.menuGuid,
+    children: [{
+      title: "test folder",
+      type: PlacesUtils.bookmarks.TYPE_FOLDER,
+      guid: FOLDER_GUID,
+      children: [{
+        url: "http://test1.com",
+        title: "1 title",
+        guid: BOOKMARK_GUID,
+      }, {
+        type: PlacesUtils.bookmarks.TYPE_SEPARATOR,
+        guid: SEPARATOR_GUID,
+      }]
+    }]
+  });
 
-  let root = PlacesUtils.getFolderContents(folder).root;
+  let folderId = await PlacesUtils.promiseItemId(bookmarks[0].guid);
+
+  let root = PlacesUtils.getFolderContents(folderId).root;
   do_check_eq(root.childCount, 2);
   do_check_eq(root.bookmarkGuid, FOLDER_GUID);
   do_check_eq(root.getChild(0).bookmarkGuid, BOOKMARK_GUID);
@@ -153,21 +210,34 @@ add_task(async function test_addItemsWithGUIDs() {
   await PlacesUtils.bookmarks.eraseEverything();
 });
 
-add_task(async function test_emptyGUIDIgnored() {
-  let folder = bmsvc.createFolder(bmsvc.placesRoot, "test folder",
-                                  bmsvc.DEFAULT_INDEX, "");
-  do_check_valid_places_guid(PlacesUtils.getFolderContents(folder)
-                                        .root.bookmarkGuid);
-  await PlacesUtils.bookmarks.eraseEverything();
+add_task(async function test_emptyGUIDFails() {
+  try {
+    await PlacesUtils.bookmarks.insert({
+      parentGuid: PlacesUtils.bookmarks.menuGuid,
+      guid: "",
+      title: "test folder",
+      type: PlacesUtils.bookmarks.TYPE_FOLDER
+    });
+    do_throw("Adding a folder with an empty guid should fail")
+  } catch (ex) {
+  }
 });
 
 add_task(async function test_usingSameGUIDFails() {
   const GUID = "XYZXYZXYZXYZ";
-  bmsvc.createFolder(bmsvc.placesRoot, "test folder",
-                     bmsvc.DEFAULT_INDEX, GUID);
+  await PlacesUtils.bookmarks.insert({
+    parentGuid: PlacesUtils.bookmarks.menuGuid,
+    guid: GUID,
+    title: "test folder",
+    type: PlacesUtils.bookmarks.TYPE_FOLDER,
+  });
   try {
-    bmsvc.createFolder(bmsvc.placesRoot, "test folder 2",
-                       bmsvc.DEFAULT_INDEX, GUID);
+    await PlacesUtils.bookmarks.insert({
+      parentGuid: PlacesUtils.bookmarks.menuGuid,
+      guid: GUID,
+      title: "test folder 2",
+      type: PlacesUtils.bookmarks.TYPE_FOLDER,
+    });
     do_throw("Using the same guid twice should fail");
   } catch (ex) { }
 
