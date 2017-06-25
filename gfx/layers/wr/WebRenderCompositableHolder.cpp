@@ -279,22 +279,20 @@ WebRenderCompositableHolder::ApplyAsyncImages(wr::WebRenderAPI* aApi)
       if (holder->mScaleToSize.isSome()) {
         rect = LayerRect(0, 0, holder->mScaleToSize.value().width, holder->mScaleToSize.value().height);
       }
-      WrClipRegionToken clip = builder.PushClipRegion(
-        wr::ToWrRect(rect), nullptr);
 
       if (useExternalImage) {
         MOZ_ASSERT(holder->mCurrentTexture->AsWebRenderTextureHost());
         Range<const wr::ImageKey> range_keys(&keys[0], keys.Length());
         holder->mCurrentTexture->PushExternalImage(builder,
                                                    wr::ToWrRect(rect),
-                                                   clip,
+                                                   wr::ToWrRect(rect),
                                                    holder->mFilter,
                                                    range_keys);
         HoldExternalImage(pipelineId, epoch, holder->mCurrentTexture->AsWebRenderTextureHost());
       } else {
         MOZ_ASSERT(keys.Length() == 1);
         builder.PushImage(wr::ToWrRect(rect),
-                          clip,
+                          wr::ToWrRect(rect),
                           holder->mFilter,
                           keys[0]);
       }
