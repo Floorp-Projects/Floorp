@@ -2,12 +2,13 @@
 
 #nav-bar #pocket-button > .toolbarbutton-icon {
 %ifndef MOZ_PHOTON_THEME
-  padding: var(--toolbarbutton-inner-padding) 6px;
+  padding: 2px 6px;
 %else
   padding: calc(var(--toolbarbutton-inner-padding) - 1px);
 %endif
 }
 
-#PanelUI-pocketView[mainview=true] > .panel-subview-body > #pocket-panel-iframe {
-  border-radius: var(--arrowpanel-border-radius);
+:-moz-any(#TabsToolbar, .widget-overflow-list) #pocket-button > .toolbarbutton-icon {
+    max-width: 18px;
+    padding: 0;
 }
