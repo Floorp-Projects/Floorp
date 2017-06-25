@@ -77,10 +77,6 @@ var resultObserver = {
 
 var testURI = uri("http://mozilla.com");
 
-function run_test() {
-  run_next_test();
-}
-
 add_test(function check_history_query() {
   var options = PlacesUtils.history.getNewQueryOptions();
   options.sortingMode = options.SORT_BY_DATE_DESCENDING;
@@ -153,7 +149,7 @@ add_test(function check_history_query() {
   });
 });
 
-add_test(function check_bookmarks_query() {
+add_task(async function check_bookmarks_query() {
   var options = PlacesUtils.history.getNewQueryOptions();
   var query = PlacesUtils.history.getNewQuery();
   query.setFolders([PlacesUtils.bookmarks.bookmarksMenuFolder], 1);
@@ -167,10 +163,11 @@ add_test(function check_bookmarks_query() {
   // nsINavHistoryResultObserver.nodeInserted
   // add a bookmark
   var testBookmark =
-    PlacesUtils.bookmarks.insertBookmark(PlacesUtils.bookmarks.bookmarksMenuFolder,
-                                         testURI,
-                                         PlacesUtils.bookmarks.DEFAULT_INDEX,
-                                         "foo");
+    await PlacesUtils.bookmarks.insert({
+      parentGuid: PlacesUtils.bookmarks.menuGuid,
+      url: testURI,
+      title: "foo"
+  });
   do_check_eq("foo", resultObserver.insertedNode.title);
   do_check_eq(testURI.spec, resultObserver.insertedNode.uri);
 
@@ -179,21 +176,29 @@ add_test(function check_bookmarks_query() {
   do_check_eq(root.uri, resultObserver.nodeChangedByHistoryDetails.uri);
 
   // nsINavHistoryResultObserver.nodeTitleChanged for a leaf node
-  PlacesUtils.bookmarks.setItemTitle(testBookmark, "baz");
+  await PlacesUtils.bookmarks.update({
+    guid: testBookmark.guid,
+    title: "baz",
+  });
   do_check_eq(resultObserver.nodeChangedByTitle.title, "baz");
   do_check_eq(resultObserver.newTitle, "baz");
 
-  var testBookmark2 =
-    PlacesUtils.bookmarks.insertBookmark(PlacesUtils.bookmarks.bookmarksMenuFolder,
-                                         uri("http://google.com"),
-                                         PlacesUtils.bookmarks.DEFAULT_INDEX,
-                                         "foo");
-  PlacesUtils.bookmarks.moveItem(testBookmark2, PlacesUtils.bookmarks.bookmarksMenuFolder, 0);
-  do_check_eq(resultObserver.movedNode.itemId, testBookmark2);
+  var testBookmark2 = await PlacesUtils.bookmarks.insert({
+    parentGuid: PlacesUtils.bookmarks.menuGuid,
+    url: "http://google.com",
+    title: "foo"
+  });
+
+  await PlacesUtils.bookmarks.update({
+    guid: testBookmark2.guid,
+    index: 0,
+    parentGuid: PlacesUtils.bookmarks.menuGuid,
+  });
+  do_check_eq(resultObserver.movedNode.bookmarkGuid, testBookmark2.guid);
 
   // nsINavHistoryResultObserver.nodeRemoved
-  PlacesUtils.bookmarks.removeItem(testBookmark2);
-  do_check_eq(testBookmark2, resultObserver.removedNode.itemId);
+  await PlacesUtils.bookmarks.remove(testBookmark2.guid);
+  do_check_eq(testBookmark2.guid, resultObserver.removedNode.bookmarkGuid);
 
   // XXX nsINavHistoryResultObserver.invalidateContainer
 

@@ -1,27 +1,23 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-function run_test() {
-  run_next_test();
-}
-
-add_task(async function test_execute() {
-  PlacesUtils.bookmarks.insertBookmark(
-    PlacesUtils.unfiledBookmarksFolderId, NetUtil.newURI("http://1.moz.org/"),
-    PlacesUtils.bookmarks.DEFAULT_INDEX, "Bookmark 1"
-  );
-  let id1 = PlacesUtils.bookmarks.insertBookmark(
-    PlacesUtils.unfiledBookmarksFolderId, NetUtil.newURI("place:folder=1234"),
-    PlacesUtils.bookmarks.DEFAULT_INDEX, "Shortcut 1"
-  );
-  let id2 = PlacesUtils.bookmarks.insertBookmark(
-    PlacesUtils.unfiledBookmarksFolderId, NetUtil.newURI("place:folder=-1"),
-    PlacesUtils.bookmarks.DEFAULT_INDEX, "Shortcut 2"
-  );
-  PlacesUtils.bookmarks.insertBookmark(
-    PlacesUtils.unfiledBookmarksFolderId, NetUtil.newURI("http://2.moz.org/"),
-    PlacesUtils.bookmarks.DEFAULT_INDEX, "Bookmark 2"
-  );
+add_task(async function test_brokenFolderShortcut() {
+  let bookmarks = await PlacesUtils.bookmarks.insertTree({
+    guid: PlacesUtils.bookmarks.unfiledGuid,
+    children: [{
+      url: "http://1.moz.org/",
+      title: "Bookmark 1",
+    }, {
+      url: "place:folder=1234",
+      title: "Shortcut 1",
+    }, {
+      url: "place:folder=-1",
+      title: "Shortcut 2",
+    }, {
+      url: "http://2.moz.org/",
+      title: "Bookmark 2",
+    }]
+  });
 
   // Add also a simple visit.
   await PlacesTestUtils.addVisits(uri(("http://3.moz.org/")));
@@ -42,7 +38,7 @@ add_task(async function test_execute() {
   do_check_eq(shortcut.childCount, 0);
   shortcut.containerOpen = false;
   // Remove the broken shortcut while the containing result is open.
-  PlacesUtils.bookmarks.removeItem(id1);
+  await PlacesUtils.bookmarks.remove(bookmarks[1]);
   do_check_eq(root.childCount, 3);
 
   shortcut = root.getChild(1);
@@ -52,7 +48,7 @@ add_task(async function test_execute() {
   do_check_eq(shortcut.childCount, 0);
   shortcut.containerOpen = false;
   // Remove the broken shortcut while the containing result is open.
-  PlacesUtils.bookmarks.removeItem(id2);
+  await PlacesUtils.bookmarks.remove(bookmarks[2]);
   do_check_eq(root.childCount, 2);
 
   root.containerOpen = false;
