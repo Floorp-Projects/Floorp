@@ -19,7 +19,7 @@ interface SVGStyleElement : SVGElement {
   attribute DOMString media;
   [SetterThrows]
   attribute DOMString title;
-  [SetterThrows, Pref="layout.css.scoped-style.enabled"]
+  [SetterThrows]
   attribute boolean scoped;
 };
 SVGStyleElement implements LinkStyle;
