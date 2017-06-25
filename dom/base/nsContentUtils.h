@@ -2282,15 +2282,6 @@ public:
   }
 
   /**
-   * Returns true if <style scoped> is enabled for the specified document.
-   */
-  static bool IsScopedStyleEnabled(nsIDocument* aDocument)
-  {
-    MOZ_ASSERT(aDocument);
-    return sIsScopedStyleEnabled || IsChromeDoc(aDocument);
-  }
-
-  /**
    * Return true if this doc is controlled by a ServiceWorker.
    */
   static bool IsControlledByServiceWorker(nsIDocument* aDocument);
@@ -3201,7 +3192,6 @@ private:
 #ifndef RELEASE_OR_BETA
   static bool sBypassCSSOMOriginCheck;
 #endif
-  static bool sIsScopedStyleEnabled;
   static bool sIsBytecodeCacheEnabled;
   static int32_t sBytecodeCacheStrategy;
   static uint32_t sCookiesLifetimePolicy;
