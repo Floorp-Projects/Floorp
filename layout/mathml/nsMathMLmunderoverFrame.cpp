@@ -107,7 +107,8 @@ nsMathMLmunderoverFrame::SetIncrementScriptLevel(uint32_t aChildIndex,
                                                  bool aIncrement)
 {
   nsIFrame* child = PrincipalChildList().FrameAt(aChildIndex);
-  if (!child || !child->GetContent()->IsMathMLElement()) {
+  if (!child || !child->GetContent()->IsMathMLElement() ||
+      child->GetContent()->GetPrimaryFrame() != child) {
     return;
   }
 
