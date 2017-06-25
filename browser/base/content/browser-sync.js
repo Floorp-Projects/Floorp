@@ -265,7 +265,8 @@ var gSync = {
     }
     let url = "about:accounts?" + params;
     switchToTabHavingURI(url, true, {
-      replaceQueryString: true
+      replaceQueryString: true,
+      triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
     });
   },
 
@@ -276,7 +277,8 @@ var gSync = {
   async openDevicesManagementPage(entryPoint) {
     let url = await fxAccounts.promiseAccountsManageDevicesURI(entryPoint);
     switchToTabHavingURI(url, true, {
-      replaceQueryString: true
+      replaceQueryString: true,
+      triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
     });
   },
 
