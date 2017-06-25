@@ -12,13 +12,13 @@
   skin/shared (skin/shared/*)
 #ifdef XP_WIN
   skin/windows/ (skin/windows/*.png)
-  skin/windows/pocket.css (skin/shared/pocket.css)
+* skin/windows/pocket.css (skin/windows/pocket.css)
 #elifdef XP_MACOSX
   skin/osx/ (skin/osx/*.png)
-  skin/osx/pocket.css (skin/osx/pocket.css)
+* skin/osx/pocket.css (skin/osx/pocket.css)
 #else
   skin/linux/ (skin/linux/*.png)
-  skin/linux/pocket.css (skin/shared/pocket.css)
+* skin/linux/pocket.css (skin/linux/pocket.css)
 #endif
 
 # windows overrides
