@@ -6,7 +6,6 @@
 
 #include "mozilla/dom/Notification.h"
 
-#include "mozilla/Encoding.h"
 #include "mozilla/JSONWriter.h"
 #include "mozilla/Move.h"
 #include "mozilla/OwningNonNull.h"
@@ -1923,7 +1922,7 @@ Notification::ResolveIconAndSoundURL(nsString& iconUrl, nsString& soundUrl)
   // the API base URL and no override encoding. So we've to use UTF-8 on
   // workers, but for backwards compat keeping it document charset on main
   // thread.
-  auto encoding = UTF_8_ENCODING;
+  const char* charset = "UTF-8";
 
   if (mWorkerPrivate) {
     baseUri = mWorkerPrivate->GetBaseURI();
@@ -1931,7 +1930,7 @@ Notification::ResolveIconAndSoundURL(nsString& iconUrl, nsString& soundUrl)
     nsIDocument* doc = GetOwner() ? GetOwner()->GetExtantDoc() : nullptr;
     if (doc) {
       baseUri = doc->GetBaseURI();
-      encoding = doc->GetDocumentCharacterSet();
+      charset = doc->GetDocumentCharacterSet().get();
     } else {
       NS_WARNING("No document found for main thread notification!");
       return NS_ERROR_FAILURE;
@@ -1941,7 +1940,7 @@ Notification::ResolveIconAndSoundURL(nsString& iconUrl, nsString& soundUrl)
   if (baseUri) {
     if (mIconUrl.Length() > 0) {
       nsCOMPtr<nsIURI> srcUri;
-      rv = NS_NewURI(getter_AddRefs(srcUri), mIconUrl, encoding, baseUri);
+      rv = NS_NewURI(getter_AddRefs(srcUri), mIconUrl, charset, baseUri);
       if (NS_SUCCEEDED(rv)) {
         nsAutoCString src;
         srcUri->GetSpec(src);
@@ -1950,7 +1949,7 @@ Notification::ResolveIconAndSoundURL(nsString& iconUrl, nsString& soundUrl)
     }
     if (mBehavior.mSoundFile.Length() > 0) {
       nsCOMPtr<nsIURI> srcUri;
-      rv = NS_NewURI(getter_AddRefs(srcUri), mBehavior.mSoundFile, encoding, baseUri);
+      rv = NS_NewURI(getter_AddRefs(srcUri), mBehavior.mSoundFile, charset, baseUri);
       if (NS_SUCCEEDED(rv)) {
         nsAutoCString src;
         srcUri->GetSpec(src);

@@ -6,7 +6,6 @@
 #include "mozilla/EditorBase.h"
 
 #include "mozilla/DebugOnly.h"          // for DebugOnly
-#include "mozilla/Encoding.h"           // for Encoding
 
 #include <stdio.h>                      // for nullptr, stdout
 #include <string.h>                     // for strcmp
@@ -1181,7 +1180,7 @@ EditorBase::GetDocumentCharacterSet(nsACString& characterSet)
   if (NS_WARN_IF(!document)) {
     return NS_ERROR_UNEXPECTED;
   }
-  document->GetDocumentCharacterSet()->Name(characterSet);
+  characterSet = document->GetDocumentCharacterSet();
   return NS_OK;
 }
 
@@ -1192,13 +1191,7 @@ EditorBase::SetDocumentCharacterSet(const nsACString& characterSet)
   if (NS_WARN_IF(!document)) {
     return NS_ERROR_UNEXPECTED;
   }
-  // This method is scriptable, so add-ons could pass in something other
-  // than a canonical name.
-  auto encoding = Encoding::ForLabelNoReplacement(characterSet);
-  if (!encoding) {
-    return NS_ERROR_INVALID_ARG;
-  }
-  document->SetDocumentCharacterSet(WrapNotNull(encoding));
+  document->SetDocumentCharacterSet(characterSet);
   return NS_OK;
 }
 

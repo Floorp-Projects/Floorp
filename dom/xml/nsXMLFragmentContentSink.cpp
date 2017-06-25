@@ -62,7 +62,7 @@ public:
   // nsIContentSink
   NS_IMETHOD WillBuildModel(nsDTDMode aDTDMode) override;
   NS_IMETHOD DidBuildModel(bool aTerminated) override;
-  virtual void SetDocumentCharset(NotNull<const Encoding*> aEncoding) override;
+  NS_IMETHOD SetDocumentCharset(nsACString& aCharset) override;
   virtual nsISupports* GetTarget() override;
   NS_IMETHOD DidProcessATokenImpl();
 
@@ -173,11 +173,11 @@ nsXMLFragmentContentSink::DidBuildModel(bool aTerminated)
   return NS_OK;
 }
 
-void 
-nsXMLFragmentContentSink::SetDocumentCharset(
-  NotNull<const Encoding*> aEncoding)
+NS_IMETHODIMP 
+nsXMLFragmentContentSink::SetDocumentCharset(nsACString& aCharset)
 {
   NS_NOTREACHED("fragments shouldn't set charset");
+  return NS_OK;
 }
 
 nsISupports *

@@ -213,7 +213,7 @@ XULDocument::XULDocument(void)
       mHandlingDelayedBroadcasters(false)
 {
     // Override the default in nsDocument
-    mCharacterSet = UTF_8_ENCODING;
+    mCharacterSet.AssignLiteral("UTF-8");
 
     mDefaultElementType = kNameSpaceID_XUL;
     mType = eXUL;
@@ -2021,7 +2021,7 @@ XULDocument::PrepareToLoadPrototype(nsIURI* aURI, const char* aCommand,
     parser->SetCommand(nsCRT::strcmp(aCommand, "view-source") ? eViewNormal :
                        eViewSource);
 
-    parser->SetDocumentCharset(UTF_8_ENCODING,
+    parser->SetDocumentCharset(NS_LITERAL_CSTRING("UTF-8"),
                                kCharsetFromDocTypeDefault);
     parser->SetContentSink(sink); // grabs a reference to the parser
 

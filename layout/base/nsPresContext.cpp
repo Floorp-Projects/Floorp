@@ -7,7 +7,6 @@
 
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/DebugOnly.h"
-#include "mozilla/Encoding.h"
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/EventStateManager.h"
 
@@ -121,7 +120,7 @@ class CharSetChangingRunnable : public Runnable
 {
 public:
   CharSetChangingRunnable(nsPresContext* aPresContext,
-                          NotNull<const Encoding*> aCharSet)
+                          const nsCString& aCharSet)
     : Runnable("CharSetChangingRunnable"),
       mPresContext(aPresContext),
       mCharSet(aCharSet)
@@ -136,7 +135,7 @@ public:
 
 private:
   RefPtr<nsPresContext> mPresContext;
-  NotNull<const Encoding*> mCharSet;
+  nsCString mCharSet;
 };
 
 } // namespace
@@ -197,9 +196,15 @@ nsPresContext::PrefChangedUpdateTimerCallback(nsITimer *aTimer, void *aClosure)
 }
 
 static bool
-IsVisualCharset(NotNull<const Encoding*> aCharset)
+IsVisualCharset(const nsCString& aCharset)
 {
-  return aCharset == ISO_8859_8_ENCODING;
+  if (aCharset.LowerCaseEqualsLiteral("ibm862")             // Hebrew
+      || aCharset.LowerCaseEqualsLiteral("iso-8859-8") ) {  // Hebrew
+    return true; // visual text type
+  }
+  else {
+    return false; // logical text type
+  }
 }
 
 nsPresContext::nsPresContext(nsIDocument* aDocument, nsPresContextType aType)
@@ -1065,7 +1070,7 @@ nsPresContext::DetachShell()
 }
 
 void
-nsPresContext::DoChangeCharSet(NotNull<const Encoding*> aCharSet)
+nsPresContext::DoChangeCharSet(const nsCString& aCharSet)
 {
   UpdateCharSet(aCharSet);
   mDeviceContext->FlushFontCache();
@@ -1073,7 +1078,7 @@ nsPresContext::DoChangeCharSet(NotNull<const Encoding*> aCharSet)
 }
 
 void
-nsPresContext::UpdateCharSet(NotNull<const Encoding*> aCharSet)
+nsPresContext::UpdateCharSet(const nsCString& aCharSet)
 {
   mLanguage = mLangService->LookupCharSet(aCharSet);
   // this will be a language group (or script) code rather than a true language code
@@ -1107,9 +1112,8 @@ nsPresContext::Observe(nsISupports* aSubject,
                         const char16_t* aData)
 {
   if (!nsCRT::strcmp(aTopic, "charset")) {
-    auto encoding = Encoding::ForName(NS_LossyConvertUTF16toASCII(aData));
     RefPtr<CharSetChangingRunnable> runnable =
-      new CharSetChangingRunnable(this, encoding);
+      new CharSetChangingRunnable(this, NS_LossyConvertUTF16toASCII(aData));
     return Document()->Dispatch("CharSetChangingRunnable",
                                 TaskCategory::Other,
                                 runnable.forget());

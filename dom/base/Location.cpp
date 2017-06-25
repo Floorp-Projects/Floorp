@@ -39,6 +39,18 @@
 namespace mozilla {
 namespace dom {
 
+static nsresult
+GetDocumentCharacterSetForURI(const nsAString& aHref, nsACString& aCharset)
+{
+  aCharset.Truncate();
+
+  if (nsIDocument* doc = GetEntryDocument()) {
+    aCharset = doc->GetDocumentCharacterSet();
+  }
+
+  return NS_OK;
+}
+
 Location::Location(nsPIDOMWindowInner* aWindow, nsIDocShell *aDocShell)
   : mInnerWindow(aWindow)
 {
@@ -494,12 +506,11 @@ Location::SetHrefWithBase(const nsAString& aHref, nsIURI* aBase,
 
   nsCOMPtr<nsIDocShell> docShell(do_QueryReferent(mDocShell));
 
-  if (nsIDocument* doc = GetEntryDocument()) {
-    result = NS_NewURI(getter_AddRefs(newUri), aHref,
-                       doc->GetDocumentCharacterSet(), aBase);
-  } else {
+  nsAutoCString docCharset;
+  if (NS_SUCCEEDED(GetDocumentCharacterSetForURI(aHref, docCharset)))
+    result = NS_NewURI(getter_AddRefs(newUri), aHref, docCharset.get(), aBase);
+  else
     result = NS_NewURI(getter_AddRefs(newUri), aHref, nullptr, aBase);
-  }
 
   if (newUri) {
     /* Check with the scriptContext if it is currently processing a script tag.

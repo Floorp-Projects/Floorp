@@ -731,12 +731,14 @@ nsXMLContentSink::ProcessStyleLink(nsIContent* aElement,
   return rv;
 }
 
-void
-nsXMLContentSink::SetDocumentCharset(NotNull<const Encoding*> aEncoding)
+NS_IMETHODIMP
+nsXMLContentSink::SetDocumentCharset(nsACString& aCharset)
 {
   if (mDocument) {
-    mDocument->SetDocumentCharacterSet(aEncoding);
+    mDocument->SetDocumentCharacterSet(aCharset);
   }
+
+  return NS_OK;
 }
 
 nsISupports *

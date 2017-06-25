@@ -77,7 +77,6 @@ nsHtml5MetaScanner::nsHtml5MetaScanner(nsHtml5TreeBuilder* tb)
   , charset(nullptr)
   , httpEquivState(HTTP_EQUIV_NOT_SEEN)
   , treeBuilder(tb)
-  , mEncoding(nullptr)
 {
   MOZ_COUNT_CTOR(nsHtml5MetaScanner);
 }

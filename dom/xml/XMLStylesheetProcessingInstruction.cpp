@@ -114,14 +114,15 @@ XMLStylesheetProcessingInstruction::GetStyleSheetURL(bool* aIsInline)
   }
 
   nsIURI *baseURL;
+  nsAutoCString charset;
   nsIDocument *document = OwnerDoc();
   baseURL = mOverriddenBaseURI ?
             mOverriddenBaseURI.get() :
             document->GetDocBaseURI();
-  auto encoding = document->GetDocumentCharacterSet();
+  charset = document->GetDocumentCharacterSet();
 
   nsCOMPtr<nsIURI> aURI;
-  NS_NewURI(getter_AddRefs(aURI), href, encoding, baseURL);
+  NS_NewURI(getter_AddRefs(aURI), href, charset.get(), baseURL);
   return aURI.forget();
 }
 

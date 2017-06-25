@@ -23,8 +23,6 @@ enum eHtml5FlushState {
 
 class nsHtml5DocumentBuilder : public nsContentSink
 {
-  using Encoding = mozilla::Encoding;
-  template <typename T> using NotNull = mozilla::NotNull<T>;
 public:
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsHtml5DocumentBuilder,
                                            nsContentSink)
@@ -89,8 +87,7 @@ public:
     return mFlushState == eInDocUpdate;
   }
 
-  void SetDocumentCharsetAndSource(NotNull<const Encoding*> aEncoding,
-                                   int32_t aCharsetSource);
+  void SetDocumentCharsetAndSource(nsACString& aCharset, int32_t aCharsetSource);
 
   /**
    * Sets up style sheet load / parse
