@@ -8,6 +8,7 @@
 %endif
 }
 
-#PanelUI-pocketView[mainview=true] > .panel-subview-body > #pocket-panel-iframe {
-  border-radius: var(--arrowpanel-border-radius);
+:-moz-any(#TabsToolbar, .widget-overflow-list) #pocket-button > .toolbarbutton-icon {
+    max-width: 18px;
+    padding: 0;
 }
