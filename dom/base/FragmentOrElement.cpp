@@ -429,7 +429,7 @@ nsIContent::GetBaseURI(bool aTryUseXHRDocBaseURI) const
     for (uint32_t i = baseAttrs.Length() - 1; i != uint32_t(-1); --i) {
       nsCOMPtr<nsIURI> newBase;
       nsresult rv = NS_NewURI(getter_AddRefs(newBase), baseAttrs[i],
-                              doc->GetDocumentCharacterSet(), base);
+                              doc->GetDocumentCharacterSet().get(), base);
       // Do a security check, almost the same as nsDocument::SetBaseURL()
       // Only need to do this on the final uri
       if (NS_SUCCEEDED(rv) && i == 0) {

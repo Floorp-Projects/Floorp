@@ -6,7 +6,6 @@
 
 #include "nsDOMSerializer.h"
 
-#include "mozilla/Encoding.h"
 #include "nsIDocument.h"
 #include "nsIDocumentEncoder.h"
 #include "nsIDOMDocument.h"
@@ -72,7 +71,7 @@ SetUpEncoder(nsIDOMNode *aRoot, const nsACString& aCharset,
   if (charset.IsEmpty()) {
     nsCOMPtr<nsIDocument> doc = do_QueryInterface(domDoc);
     NS_ASSERTION(doc, "Need a document");
-    doc->GetDocumentCharacterSet()->Name(charset);
+    charset = doc->GetDocumentCharacterSet();
   }
   rv = encoder->SetCharset(charset);
   if (NS_FAILED(rv))

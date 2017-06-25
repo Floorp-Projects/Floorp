@@ -47,13 +47,11 @@ GetAbsoluteURL(const nsAString& aUrl,
                nsAString& aAbsoluteUrl)
 {
   nsCOMPtr<nsIURI> uri;
-  nsresult rv;
-  if (aDocument) {
-    rv = NS_NewURI(getter_AddRefs(uri), aUrl,
-                   aDocument->GetDocumentCharacterSet(), aBaseUri);
-  } else {
-    rv = NS_NewURI(getter_AddRefs(uri), aUrl, nullptr, aBaseUri);
-  }
+  nsresult rv = NS_NewURI(getter_AddRefs(uri),
+                          aUrl,
+                          aDocument ? aDocument->GetDocumentCharacterSet().get()
+                                    : nullptr,
+                          aBaseUri);
 
   if (NS_FAILED(rv)) {
     return rv;

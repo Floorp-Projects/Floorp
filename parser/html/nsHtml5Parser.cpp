@@ -99,15 +99,19 @@ nsHtml5Parser::SetCommand(eParserCommands aParserCommand)
                "Parser command was not eViewNormal.");
 }
 
-void
-nsHtml5Parser::SetDocumentCharset(NotNull<const Encoding*> aEncoding,
+NS_IMETHODIMP_(void)
+nsHtml5Parser::SetDocumentCharset(const nsACString& aCharset,
                                   int32_t aCharsetSource)
 {
   NS_PRECONDITION(!mExecutor->HasStarted(),
                   "Document charset set too late.");
   NS_PRECONDITION(GetStreamParser(), "Setting charset on a script-only parser.");
-  GetStreamParser()->SetDocumentCharset(aEncoding, aCharsetSource);
-  mExecutor->SetDocumentCharsetAndSource(aEncoding, aCharsetSource);
+  nsAutoCString trimmed;
+  trimmed.Assign(aCharset);
+  trimmed.Trim(" \t\r\n\f");
+  GetStreamParser()->SetDocumentCharset(trimmed, aCharsetSource);
+  mExecutor->SetDocumentCharsetAndSource(trimmed,
+                                         aCharsetSource);
 }
 
 NS_IMETHODIMP

@@ -9,7 +9,6 @@
 #include "nsIAtom.h"
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/ClearOnShutdown.h"
-#include "mozilla/Encoding.h"
 #include "mozilla/intl/OSPreferences.h"
 #include "mozilla/ServoBindings.h"
 
@@ -47,13 +46,11 @@ nsLanguageAtomService::LookupLanguage(const nsACString &aLanguage)
 }
 
 already_AddRefed<nsIAtom>
-nsLanguageAtomService::LookupCharSet(NotNull<const Encoding*> aEncoding)
+nsLanguageAtomService::LookupCharSet(const nsACString& aCharSet)
 {
-  nsAutoCString charset;
-  aEncoding->Name(charset);
   nsAutoCString group;
   if (NS_FAILED(nsUConvPropertySearch::SearchPropertyValue(
-      encodingsGroups, ArrayLength(encodingsGroups), charset, group))) {
+      encodingsGroups, ArrayLength(encodingsGroups), aCharSet, group))) {
     return RefPtr<nsIAtom>(nsGkAtoms::Unicode).forget();
   }
   return NS_Atomize(group);
