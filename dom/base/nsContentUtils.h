@@ -3038,6 +3038,11 @@ public:
   // if we want to lower the priority of the channel.
   static bool IsLowerNetworkPriority() { return sLowerNetworkPriority; }
 
+  // Check pref "dom.placeholder.show_on_focus" to see
+  // if we want to show the placeholder inside input elements
+  // when they have focus.
+  static bool ShowInputPlaceholderOnFocus() { return sShowInputPlaceholderOnFocus; }
+
   // Check pref "dom.script_loader.bytecode_cache.enabled" to see
   // if we want to cache JS bytecode on the cache entry.
   static bool IsBytecodeCacheEnabled() { return sIsBytecodeCacheEnabled; }
@@ -3197,6 +3202,7 @@ private:
   static bool sSkipCursorMoveForSameValueSet;
   static bool sRequestIdleCallbackEnabled;
   static bool sLowerNetworkPriority;
+  static bool sShowInputPlaceholderOnFocus;
 #ifndef RELEASE_OR_BETA
   static bool sBypassCSSOMOriginCheck;
 #endif
