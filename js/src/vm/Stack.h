@@ -1760,9 +1760,10 @@ class WasmActivation : public Activation
     // Interrupts are started from the interrupt signal handler (or the ARM
     // simulator) and cleared by WasmHandleExecutionInterrupt or WasmHandleThrow
     // when the interrupt is handled.
-    void startInterrupt(void* pc, uint8_t* fp);
+    void startInterrupt(const JS::ProfilingFrameIterator::RegisterState& state);
     void finishInterrupt();
     bool interrupted() const;
+    void* unwindPC() const;
     void* resumePC() const;
 
     // Used by wasm::FrameIterator during stack unwinding.

@@ -31,7 +31,7 @@ let origPlatformInfo = Cc["@mozilla.org/xre/app-info;1"]
  *   crashReporter:   nsICrashReporter interface is implemented if true
  *   extraProps:      extra properties added to XULAppInfo
  */
-this.newAppInfo = function (options={}) {
+this.newAppInfo = function(options = {}) {
   let ID = ("ID" in options) ? options.ID : "xpcshell@tests.mozilla.org";
   let name = ("name" in options) ? options.name : "xpcshell";
   let version = ("version" in options) ? options.version : "1";
@@ -43,19 +43,19 @@ this.newAppInfo = function (options={}) {
   let appInfo = {
     // nsIXULAppInfo
     vendor: "Mozilla",
-    name: name,
-    ID: ID,
-    version: version,
+    name,
+    ID,
+    version,
     appBuildID: "20160315",
 
     // nsIPlatformInfo
-    platformVersion: platformVersion,
+    platformVersion,
     platformBuildID: origPlatformInfo.platformBuildID,
 
     // nsIXULRuntime
     inSafeMode: false,
     logConsoleErrors: true,
-    OS: OS,
+    OS,
     XPCOMABI: "noarch-spidermonkey",
     invalidateCachesOnRestart() {},
 
@@ -95,7 +95,7 @@ var currentAppInfo = newAppInfo();
 /**
  * Obtain a reference to the current object used to define XULAppInfo.
  */
-this.getAppInfo = function () { return currentAppInfo; };
+this.getAppInfo = function() { return currentAppInfo; };
 
 /**
  * Update the current application info.
@@ -105,7 +105,7 @@ this.getAppInfo = function () { return currentAppInfo; };
  * To change the current XULAppInfo, simply call this function. If there was
  * a previously registered app info object, it will be unloaded and replaced.
  */
-this.updateAppInfo = function (options) {
+this.updateAppInfo = function(options) {
   currentAppInfo = newAppInfo(options);
 
   let id = Components.ID("{fbfae60b-64a4-44ef-a911-08ceb70b9f31}");
@@ -119,7 +119,7 @@ this.updateAppInfo = function (options) {
   } catch (ex) {}
 
   let factory = {
-    createInstance: function (outer, iid) {
+    createInstance(outer, iid) {
       if (outer != null) {
         throw Cr.NS_ERROR_NO_AGGREGATION;
       }

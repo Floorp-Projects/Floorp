@@ -2,7 +2,6 @@
 
 requestLongerTimeout(2);
 
-var {Promise: promise} = Cu.import("resource://gre/modules/Promise.jsm", {});
 Cu.import("resource://gre/modules/Services.jsm");
 
 const gHttpTestRoot = "http://example.com/browser/dom/base/test/";
@@ -89,7 +88,7 @@ add_task(async function() {
 
 
 function waitForDestroyedDocuments() {
-  let deferred = promise.defer();
+  let deferred = PromiseUtils.defer();
   SpecialPowers.exactGC(deferred.resolve);
   return deferred.promise;
 }

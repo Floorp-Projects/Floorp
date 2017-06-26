@@ -66,8 +66,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
                                   "resource://gre/modules/NetUtil.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "OS",
                                   "resource://gre/modules/osfile.jsm")
-XPCOMUtils.defineLazyModuleGetter(this, "Promise",
-                                  "resource://gre/modules/Promise.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "PromiseUtils",
+                                  "resource://gre/modules/PromiseUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Services",
                                   "resource://gre/modules/Services.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PrivateBrowsingUtils",
@@ -146,7 +146,7 @@ const kProgressUpdateIntervalMs = 400;
  * managed by the user interface and persisted across sessions.
  */
 this.Download = function() {
-  this._deferSucceeded = Promise.defer();
+  this._deferSucceeded = PromiseUtils.defer();
 }
 
 this.Download.prototype = {
@@ -385,7 +385,7 @@ this.Download.prototype = {
 
     // Create a new deferred object and an associated promise before starting
     // the actual download.  We store it on the download as the current attempt.
-    let deferAttempt = Promise.defer();
+    let deferAttempt = PromiseUtils.defer();
     let currentAttempt = deferAttempt.promise;
     this._currentAttempt = currentAttempt;
 
@@ -773,10 +773,9 @@ this.Download.prototype = {
 
     if (!this._promiseCanceled) {
       // Start a new cancellation request.
-      let deferCanceled = Promise.defer();
-      this._currentAttempt.then(() => deferCanceled.resolve(),
-                                () => deferCanceled.resolve());
-      this._promiseCanceled = deferCanceled.promise;
+      this._promiseCanceled = new Promise(resolve => {
+        this._currentAttempt.then(resolve, resolve);
+      });
 
       // The download can already be restarted.
       this._currentAttempt = null;
@@ -841,35 +840,28 @@ this.Download.prototype = {
       return Promise.resolve();
     }
 
-    let promiseRemovePartialData = this._promiseRemovePartialData;
-
-    if (!promiseRemovePartialData) {
-      let deferRemovePartialData = Promise.defer();
-      promiseRemovePartialData = deferRemovePartialData.promise;
-      this._promiseRemovePartialData = promiseRemovePartialData;
-
-      deferRemovePartialData.resolve(
-        (async () => {
-          try {
-            // Wait upon any pending cancellation request.
-            if (this._promiseCanceled) {
-              await this._promiseCanceled;
-            }
-            // Ask the saver object to remove any partial data.
-            await this.saver.removePartialData();
-            // For completeness, clear the number of bytes transferred.
-            if (this.currentBytes != 0 || this.hasPartialData) {
-              this.currentBytes = 0;
-              this.hasPartialData = false;
-              this._notifyChange();
-            }
-          } finally {
-            this._promiseRemovePartialData = null;
+    if (!this._promiseRemovePartialData) {
+      this._promiseRemovePartialData = (async () => {
+        try {
+          // Wait upon any pending cancellation request.
+          if (this._promiseCanceled) {
+            await this._promiseCanceled;
           }
-        })());
+          // Ask the saver object to remove any partial data.
+          await this.saver.removePartialData();
+          // For completeness, clear the number of bytes transferred.
+          if (this.currentBytes != 0 || this.hasPartialData) {
+            this.currentBytes = 0;
+            this.hasPartialData = false;
+            this._notifyChange();
+          }
+        } finally {
+          this._promiseRemovePartialData = null;
+        }
+      })();
     }
 
-    return promiseRemovePartialData;
+    return this._promiseRemovePartialData;
   },
 
   /**
@@ -1925,7 +1917,7 @@ this.DownloadCopySaver.prototype = {
       }
 
       try {
-        let deferSaveComplete = Promise.defer();
+        let deferSaveComplete = PromiseUtils.defer();
 
         if (this._canceled) {
           // Don't create the BackgroundFileSaver object if we have been
@@ -2312,8 +2304,8 @@ this.DownloadCopySaver.fromSerializable = function(aSerializable) {
  * For more background on the process, see the DownloadLegacyTransfer object.
  */
 this.DownloadLegacySaver = function() {
-  this.deferExecuted = Promise.defer();
-  this.deferCanceled = Promise.defer();
+  this.deferExecuted = PromiseUtils.defer();
+  this.deferCanceled = PromiseUtils.defer();
 }
 
 this.DownloadLegacySaver.prototype = {

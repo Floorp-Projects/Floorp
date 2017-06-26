@@ -10,7 +10,7 @@ const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/Promise.jsm");
+Cu.import("resource://gre/modules/PromiseUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "NS_ASSERT", "resource://gre/modules/debug.js");
 
 const SEARCH_RESPONSE_SUGGESTION_JSON = "application/x-suggestions+json";
@@ -142,8 +142,7 @@ this.SearchSuggestionController.prototype = {
 
     // Local results from form history
     if (this.maxLocalResults) {
-      let deferredHistoryResult = this._fetchFormHistory(searchTerm);
-      promises.push(deferredHistoryResult.promise);
+      promises.push(this._fetchFormHistory(searchTerm));
     }
 
     function handleRejection(reason) {
@@ -177,57 +176,56 @@ this.SearchSuggestionController.prototype = {
   // Private methods
 
   _fetchFormHistory(searchTerm) {
-    let deferredFormHistory = Promise.defer();
+    return new Promise(resolve => {
+      let acSearchObserver = {
+        // Implements nsIAutoCompleteSearch
+        onSearchResult: (search, result) => {
+          this._formHistoryResult = result;
 
-    let acSearchObserver = {
-      // Implements nsIAutoCompleteSearch
-      onSearchResult: (search, result) => {
-        this._formHistoryResult = result;
+          if (this._request) {
+            this._remoteResultTimer = Cc["@mozilla.org/timer;1"].
+                                      createInstance(Ci.nsITimer);
+            this._remoteResultTimer.initWithCallback(this._onRemoteTimeout.bind(this),
+                                                     this.remoteTimeout, Ci.nsITimer.TYPE_ONE_SHOT);
+          }
 
-        if (this._request) {
-          this._remoteResultTimer = Cc["@mozilla.org/timer;1"].
-                                    createInstance(Ci.nsITimer);
-          this._remoteResultTimer.initWithCallback(this._onRemoteTimeout.bind(this),
-                                                   this.remoteTimeout, Ci.nsITimer.TYPE_ONE_SHOT);
-        }
+          switch (result.searchResult) {
+            case Ci.nsIAutoCompleteResult.RESULT_SUCCESS:
+            case Ci.nsIAutoCompleteResult.RESULT_NOMATCH:
+              if (result.searchString !== this._searchString) {
+                resolve("Unexpected response, this._searchString does not match form history response");
+                return;
+              }
+              let fhEntries = [];
+              for (let i = 0; i < result.matchCount; ++i) {
+                fhEntries.push(result.getValueAt(i));
+              }
+              resolve({
+                result: fhEntries,
+                formHistoryResult: result,
+              });
+              break;
+            case Ci.nsIAutoCompleteResult.RESULT_FAILURE:
+            case Ci.nsIAutoCompleteResult.RESULT_IGNORED:
+              resolve("Form History returned RESULT_FAILURE or RESULT_IGNORED");
+              break;
+          }
+        },
+      };
 
-        switch (result.searchResult) {
-          case Ci.nsIAutoCompleteResult.RESULT_SUCCESS:
-          case Ci.nsIAutoCompleteResult.RESULT_NOMATCH:
-            if (result.searchString !== this._searchString) {
-              deferredFormHistory.resolve("Unexpected response, this._searchString does not match form history response");
-              return;
-            }
-            let fhEntries = [];
-            for (let i = 0; i < result.matchCount; ++i) {
-              fhEntries.push(result.getValueAt(i));
-            }
-            deferredFormHistory.resolve({
-              result: fhEntries,
-              formHistoryResult: result,
-            });
-            break;
-          case Ci.nsIAutoCompleteResult.RESULT_FAILURE:
-          case Ci.nsIAutoCompleteResult.RESULT_IGNORED:
-            deferredFormHistory.resolve("Form History returned RESULT_FAILURE or RESULT_IGNORED");
-            break;
-        }
-      },
-    };
-
-    let formHistory = Cc["@mozilla.org/autocomplete/search;1?name=form-history"].
-                      createInstance(Ci.nsIAutoCompleteSearch);
-    formHistory.startSearch(searchTerm, this.formHistoryParam || DEFAULT_FORM_HISTORY_PARAM,
-                            this._formHistoryResult,
-                            acSearchObserver);
-    return deferredFormHistory;
+      let formHistory = Cc["@mozilla.org/autocomplete/search;1?name=form-history"].
+                        createInstance(Ci.nsIAutoCompleteSearch);
+      formHistory.startSearch(searchTerm, this.formHistoryParam || DEFAULT_FORM_HISTORY_PARAM,
+                              this._formHistoryResult,
+                              acSearchObserver);
+    });
   },
 
   /**
    * Fetch suggestions from the search engine over the network.
    */
   _fetchRemote(searchTerm, engine, privateMode, userContextId) {
-    let deferredResponse = Promise.defer();
+    let deferredResponse = PromiseUtils.defer();
     this._request = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].
                     createInstance(Ci.nsIXMLHttpRequest);
     let submission = engine.getSubmission(searchTerm,

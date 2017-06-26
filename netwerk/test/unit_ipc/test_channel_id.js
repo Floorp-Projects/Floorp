@@ -1,6 +1,5 @@
 Cu.import("resource://testing-common/httpd.js");
 Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/Promise.jsm");
 
 /*
  * Test that when doing HTTP requests, the nsIHttpChannel is detected in

@@ -29,7 +29,7 @@ var tests = [
     const myDocIdentifier = "Hello, I'm a unique expando to identify this document.";
 
     let highlight = document.getElementById("UITourHighlight");
-    let windowDestroyedDeferred = Promise.defer();
+    let windowDestroyedDeferred = PromiseUtils.defer();
     let onDOMWindowDestroyed = (aWindow) => {
       if (gContentWindow && aWindow == gContentWindow) {
         Services.obs.removeObserver(onDOMWindowDestroyed, "dom-window-destroyed");
@@ -37,7 +37,7 @@ var tests = [
       }
     };
 
-    let browserStartupDeferred = Promise.defer();
+    let browserStartupDeferred = PromiseUtils.defer();
     Services.obs.addObserver(function onBrowserDelayedStartup(aWindow) {
       Services.obs.removeObserver(onBrowserDelayedStartup, "browser-delayed-startup-finished");
       browserStartupDeferred.resolve(aWindow);

@@ -1893,7 +1893,8 @@ nsUrlClassifierDBService::ClassifyLocalWithTables(nsIURI *aURI,
     return NS_ERROR_FAILURE;
   }
 
-  PROFILER_LABEL_FUNC(js::ProfileEntry::Category::OTHER);
+  AUTO_PROFILER_LABEL("nsUrlClassifierDBService::ClassifyLocalWithTables",
+                      OTHER);
   Telemetry::AutoTimer<Telemetry::URLCLASSIFIER_CLASSIFYLOCAL_TIME> timer;
 
   nsCOMPtr<nsIURI> uri = NS_GetInnermostURI(aURI);

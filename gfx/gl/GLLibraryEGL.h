@@ -134,7 +134,7 @@ public:
     ////
 
 #ifdef MOZ_WIDGET_ANDROID
-#define PROFILE_CALL PROFILER_LABEL_FUNC(js::ProfileEntry::Category::GRAPHICS);
+#define PROFILE_CALL AUTO_PROFILER_LABEL(__func__, GRAPHICS);
 #else
 #define PROFILE_CALL
 #endif

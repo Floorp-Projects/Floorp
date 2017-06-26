@@ -96,8 +96,6 @@ const Cr = Components.results;
 // permit them in this scope, but this support will go away soon.
 Cu.permitCPOWsInScope(this);
 
-Cu.import("resource://gre/modules/Promise.jsm");
-
 // The following error types are considered programmer errors, which should be
 // reported (possibly redundantly) so as to let programmers fix their code.
 const ERRORS_TO_REPORT = ["EvalError", "RangeError", "ReferenceError", "TypeError"];
@@ -251,7 +249,7 @@ function createAsyncFunction(aTask) {
 
     if (isGenerator(result)) {
       // This is an iterator resulting from calling a generator function.
-      return new TaskImpl(result).deferred.promise;
+      return new TaskImpl(result).promise;
     }
 
     // Just propagate the given value to the caller as a resolved promise.
@@ -273,7 +271,10 @@ function TaskImpl(iterator) {
   if (gMaintainStack) {
     this._stack = (new Error()).stack;
   }
-  this.deferred = Promise.defer();
+  this.promise = new Promise((resolve, reject) => {
+    this._resolve = resolve;
+    this._reject = reject;
+  });
   this._iterator = iterator;
   this._isStarGenerator = !("send" in iterator);
   this._run(true);
@@ -281,10 +282,19 @@ function TaskImpl(iterator) {
 
 TaskImpl.prototype = {
   /**
-   * Includes the promise object where task completion callbacks are registered,
-   * and methods to resolve or reject the promise at task completion.
+   * The promise object where task completion callbacks are registered.
    */
-  deferred: null,
+  promise: null,
+
+  /**
+   * The method to resolve the promise at task completion.
+   */
+  _resolve: null,
+
+  /**
+   * The method to reject the promise at task completion.
+   */
+  _reject: null,
 
   /**
    * The iterator returned by the generator function associated with this task.
@@ -315,7 +325,7 @@ TaskImpl.prototype = {
 
       if (this._isStarGenerator) {
         if (Cu.isDeadWrapper(this._iterator)) {
-          this.deferred.resolve(undefined);
+          this._resolve(undefined);
         } else {
           try {
             let result = aSendResolved ? this._iterator.next(aSendValue)
@@ -323,7 +333,7 @@ TaskImpl.prototype = {
 
             if (result.done) {
               // The generator function returned.
-              this.deferred.resolve(result.value);
+              this._resolve(result.value);
             } else {
               // The generator function yielded.
               this._handleResultValue(result.value);
@@ -342,10 +352,10 @@ TaskImpl.prototype = {
           if (ex instanceof Task.Result) {
             // The generator function threw the special exception that allows it to
             // return a specific value on resolution.
-            this.deferred.resolve(ex.value);
+            this._resolve(ex.value);
           } else if (ex instanceof StopIteration) {
             // The generator function terminated with no specific result.
-            this.deferred.resolve(undefined);
+            this._resolve(undefined);
           } else {
             // The generator function failed with an uncaught exception.
             this._handleException(ex);
@@ -454,7 +464,7 @@ TaskImpl.prototype = {
       }
     }
 
-    this.deferred.reject(aException);
+    this._reject(aException);
   },
 
   get callerStack() {

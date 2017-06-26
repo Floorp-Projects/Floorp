@@ -19,7 +19,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
 XPCOMUtils.defineLazyModuleGetter(this, "Services",
   "resource://gre/modules/Services.jsm");
 
-var {Promise} = Cu.import("resource://gre/modules/Promise.jsm", {});
 
 Services.prefs.setBoolPref("toolkit.osfile.log", true);
 

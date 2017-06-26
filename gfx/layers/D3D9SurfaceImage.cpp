@@ -37,7 +37,7 @@ DXGID3D9TextureData::Create(gfx::IntSize aSize, gfx::SurfaceFormat aFormat,
                             TextureFlags aFlags,
                             IDirect3DDevice9* aDevice)
 {
-  PROFILER_LABEL_FUNC(js::ProfileEntry::Category::GRAPHICS);
+  AUTO_PROFILER_LABEL("DXGID3D9TextureData::Create", GRAPHICS);
   MOZ_ASSERT(aFormat == gfx::SurfaceFormat::B8G8R8A8);
   if (aFormat != gfx::SurfaceFormat::B8G8R8A8) {
     return nullptr;

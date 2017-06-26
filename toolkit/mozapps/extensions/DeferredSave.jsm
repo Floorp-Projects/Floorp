@@ -10,7 +10,7 @@ const Ci = Components.interfaces;
 
 Cu.import("resource://gre/modules/osfile.jsm");
 /* globals OS*/
-Cu.import("resource://gre/modules/Promise.jsm");
+Cu.import("resource://gre/modules/PromiseUtils.jsm");
 
 // Make it possible to mock out timers for testing
 var MakeTimer = () => Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
@@ -181,7 +181,7 @@ this.DeferredSave.prototype = {
           this.logger.debug("Data changed while write in progress");
         this.overlappedSaves++;
       }
-      this._pending = Promise.defer();
+      this._pending = PromiseUtils.defer();
       // Wait until the most recent write completes or fails (if it hasn't already)
       // and then restart our timer
       this._writing.then(count => this._startTimer(), error => this._startTimer());

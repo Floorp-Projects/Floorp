@@ -279,8 +279,7 @@ static int IsLeapYear(PRInt16 year)
 {
     if ((year % 4 == 0 && year % 100 != 0) || year % 400 == 0)
         return 1;
-    else
-        return 0;
+    return 0;
 }
 
 /*
@@ -1236,7 +1235,7 @@ PR_ParseTimeStringToExplodedTime(
                                 if ((end - rest) > 2)
                                   /* it is [0-9][0-9][0-9]+: */
                                   break;
-                                else if ((end - rest) == 2)
+                                if ((end - rest) == 2)
                                   tmp_hour = ((rest[0]-'0')*10 +
                                                           (rest[1]-'0'));
                                 else
@@ -1251,12 +1250,12 @@ PR_ParseTimeStringToExplodedTime(
                                 if (end == rest)
                                   /* no digits after first colon? */
                                   break;
-                                else if ((end - rest) > 2)
+                                if ((end - rest) > 2)
                                   /* it is [0-9][0-9][0-9]+: */
                                   break;
-                                else if ((end - rest) == 2)
+                                if ((end - rest) == 2)
                                   tmp_min = ((rest[0]-'0')*10 +
-                                                         (rest[1]-'0'));
+                                             (rest[1]-'0'));
                                 else
                                   tmp_min = (rest[0]-'0');
 
@@ -1274,7 +1273,7 @@ PR_ParseTimeStringToExplodedTime(
                                 else if ((end - rest) > 2)
                                   /* it is [0-9][0-9][0-9]+: */
                                   break;
-                                else if ((end - rest) == 2)
+                                if ((end - rest) == 2)
                                   tmp_sec = ((rest[0]-'0')*10 +
                                                          (rest[1]-'0'));
                                 else
@@ -1308,7 +1307,7 @@ PR_ParseTimeStringToExplodedTime(
                                 rest = end;
                                 break;
                           }
-                        else if ((*end == '/' || *end == '-') &&
+                        if ((*end == '/' || *end == '-') &&
                                          end[1] >= '0' && end[1] <= '9')
                           {
                                 /* Perhaps this is 6/16/95, 16/6/95, 6-16-95, or 16-6-95
@@ -2014,24 +2013,22 @@ pr_WeekOfYear(const PRExplodedTime* time, unsigned int firstDayOfWeek)
   dayOfWeek = time->tm_wday - firstDayOfWeek;
   if (dayOfWeek < 0)
     dayOfWeek += 7;
-  
-  dayOfYear = time->tm_yday - dayOfWeek;
 
+  dayOfYear = time->tm_yday - dayOfWeek;
 
   if( dayOfYear <= 0 )
   {
      /* If dayOfYear is <= 0, it is in the first partial week of the year. */
      return 0;
   }
-  else
-  {
-     /* Count the number of full weeks ( dayOfYear / 7 ) then add a week if there
-      * are any days left over ( dayOfYear % 7 ).  Because we are only counting to
-      * the first day of the week containing the given time, rather than to the
-      * actual day representing the given time, any days in week 0 will be "absorbed"
-      * as extra days in the given week.
-      */
-     return (dayOfYear / 7) + ( (dayOfYear % 7) == 0 ? 0 : 1 );
-  }
+
+  /* Count the number of full weeks ( dayOfYear / 7 ) then add a week if there
+   * are any days left over ( dayOfYear % 7 ).  Because we are only counting to
+   * the first day of the week containing the given time, rather than to the
+   * actual day representing the given time, any days in week 0 will be "absorbed"
+   * as extra days in the given week.
+   */
+  return (dayOfYear / 7) + ( (dayOfYear % 7) == 0 ? 0 : 1 );
+
 }
 

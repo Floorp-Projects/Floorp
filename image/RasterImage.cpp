@@ -1193,16 +1193,12 @@ LaunchDecodingTask(IDecodingTask* aTask,
 
     // If we have all the data, we can sync decode if requested.
     if (aFlags & imgIContainer::FLAG_SYNC_DECODE) {
-      PROFILER_LABEL_DYNAMIC("DecodePool", "SyncRunIfPossible",
-        js::ProfileEntry::Category::GRAPHICS, uri.get());
-      DecodePool::Singleton()->SyncRunIfPossible(aTask);
+      DecodePool::Singleton()->SyncRunIfPossible(aTask, uri);
       return true;
     }
 
     if (aFlags & imgIContainer::FLAG_SYNC_DECODE_IF_FAST) {
-      PROFILER_LABEL_DYNAMIC("DecodePool", "SyncRunIfPreferred",
-        js::ProfileEntry::Category::GRAPHICS, uri.get());
-      return DecodePool::Singleton()->SyncRunIfPreferred(aTask);
+      return DecodePool::Singleton()->SyncRunIfPreferred(aTask, uri);
     }
   }
 
