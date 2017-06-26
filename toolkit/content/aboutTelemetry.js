@@ -280,10 +280,11 @@ var Settings = {
 var PingPicker = {
   viewCurrentPingData: null,
   _archivedPings: null,
+  TYPE_ALL: bundle.GetStringFromName("telemetryPingTypeAll"),
 
   attachObservers() {
-    let elements = document.getElementsByName("choose-ping-source");
-    for (let el of elements) {
+    let pingSourceElements = document.getElementsByName("choose-ping-source");
+    for (let el of pingSourceElements) {
       el.addEventListener("change", () => this.onPingSourceChanged());
     }
 
@@ -301,7 +302,10 @@ var PingPicker = {
       this._updateArchivedPingData();
     });
     document.getElementById("choose-ping-id").addEventListener("change", () => {
-      this._updateArchivedPingData()
+      this._updateArchivedPingData();
+    });
+    document.getElementById("choose-ping-type").addEventListener("change", () => {
+      this.filterDisplayedPings();
     });
 
     document.getElementById("newer-ping")
@@ -333,13 +337,37 @@ var PingPicker = {
   render() {
     let pings = bundle.GetStringFromName("pingExplanationLink");
     let pingLink = "<a href=\"http://gecko.readthedocs.io/en/latest/toolkit/components/telemetry/telemetry/concepts/pings.html\">&quot;" + pings + "&quot;</a>";
-    let pingName = "<span class=\"change-ping\">" + this._getSelectedPingName() + "</span>";
+    let pingName = this._getSelectedPingName();
 
-    let explanation = bundle.formatStringFromName("pingExplanation", [pingLink, pingName], 2);
+    let pingDate = document.getElementById("ping-date");
+    pingDate.textContent = pingName;
+    pingDate.setAttribute("title", pingName);
+
+    let pingType = document.getElementById("ping-type");
+    let older = document.getElementById("older-ping");
+    let newer = document.getElementById("newer-ping");
+    if (pingName !== "current") {
+      pingType.hidden = false;
+      older.hidden = false;
+      newer.hidden = false;
+      pingType.textContent = this._getSelectedPingType();
+    } else {
+      pingType.hidden = true;
+      older.hidden = true;
+      newer.hidden = true;
+    }
+
+    if (pingName !== "current") {
+      pingName += ", " + this._getSelectedPingType();
+    }
+    let pingNameHtml = "<span class=\"change-ping\">" + pingName + "</span>";
+
+    let explanation = bundle.formatStringFromName("pingExplanation", [pingLink, pingNameHtml], 2);
     let pingExplanation = document.getElementById("ping-explanation");
 
     // eslint-disable-next-line no-unsanitized/property
     pingExplanation.innerHTML = explanation;
+
     GenericSubsection.deleteAllSubSections();
   },
 
@@ -451,21 +479,56 @@ var PingPicker = {
       (p) => p.timestampCreated >= weekRange.startDate.getTime() &&
              p.timestampCreated < weekRange.endDate.getTime());
 
+    let pingTypes = new Set();
+    pingTypes.add(this.TYPE_ALL);
     for (let p of pings) {
+      pingTypes.add(p.type);
       let date = new Date(p.timestampCreated);
       let text = shortDateString(date)
-                 + " " + shortTimeString(date)
-                 + " - " + p.type;
+                 + " " + shortTimeString(date);
 
       let option = document.createElement("option");
       let content = document.createTextNode(text);
       option.appendChild(content);
       option.setAttribute("value", p.id);
+      option.dataset.type = p.type;
       if (id && p.id == id) {
         option.selected = true;
       }
       pingSelector.appendChild(option);
     }
+    this._renderPingTypes(pingTypes);
+  },
+
+  filterDisplayedPings() {
+    let pingSelector = document.getElementById("choose-ping-id");
+    let typeSelector = document.getElementById("choose-ping-type");
+    let type = typeSelector.selectedOptions.item(0).value;
+    if (type == this.TYPE_ALL) {
+      Array.from(pingSelector.children).forEach((option) => option.hidden = false);
+      pingSelector.children[0].selected = true;
+    } else {
+      let first = true;
+      Array.from(pingSelector.children).forEach((option) => {
+        if (first && option.dataset.type == type) {
+          option.selected = true;
+          first = false;
+        }
+        option.hidden = option.dataset.type != type;
+      });
+    }
+    this._updateArchivedPingData();
+  },
+
+  _renderPingTypes(pingTypes) {
+    let pingTypeSelector = document.getElementById("choose-ping-type");
+    removeAllChildNodes(pingTypeSelector);
+    pingTypes.forEach((type) => {
+      let option = document.createElement("option");
+      option.appendChild(document.createTextNode(type));
+      option.setAttribute("value", type);
+      pingTypeSelector.appendChild(option);
+    });
   },
 
   _getSelectedPingName() {
@@ -476,6 +539,12 @@ var PingPicker = {
     return selected.textContent;
   },
 
+  _getSelectedPingType() {
+    let pingSelector = document.getElementById("choose-ping-id");
+    let selected = pingSelector.selectedOptions.item(0);
+    return selected.dataset.type;
+  },
+
   _getSelectedPingId() {
     let pingSelector = document.getElementById("choose-ping-id");
     let selected = pingSelector.selectedOptions.item(0);
@@ -483,6 +552,9 @@ var PingPicker = {
   },
 
   _movePingIndex(offset) {
+    if (this.viewCurrentPingData) {
+      return;
+    }
     const id = this._getSelectedPingId();
     const index = this._archivedPings.findIndex((p) => p.id == id);
     const newIndex = Math.min(Math.max(index + offset, 0), this._archivedPings.length - 1);
