@@ -300,7 +300,9 @@ services/sync/services-sync.js
 # testing/ exclusions
 testing/marionette/**
 testing/mochitest/**
-testing/modules/**
+# third party modules
+testing/modules/ajv-4.1.1.js
+testing/modules/sinon-2.3.2.js
 # octothorpe used for pref file comment causes parsing error
 testing/mozbase/mozprofile/tests/files/prefs_with_comments.js
 testing/talos/**

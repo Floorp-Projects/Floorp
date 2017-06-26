@@ -1610,7 +1610,6 @@ gfxTextRun::SetSpaceGlyph(gfxFont* aFont, DrawTarget* aDrawTarget,
     static const uint8_t space = ' ';
     gfx::ShapedTextFlags
         flags = gfx::ShapedTextFlags::TEXT_IS_8BIT |
-                gfx::ShapedTextFlags::TEXT_IS_PERSISTENT |
                 aOrientation;
     bool vertical =
         !!(GetFlags() & gfx::ShapedTextFlags::TEXT_ORIENT_VERTICAL_UPRIGHT);
@@ -2181,7 +2180,7 @@ gfxFontGroup::MakeEmptyTextRun(const Parameters *aParams,
                                gfx::ShapedTextFlags aFlags,
                                nsTextFrameUtils::Flags aFlags2)
 {
-    aFlags |= ShapedTextFlags::TEXT_IS_8BIT | ShapedTextFlags::TEXT_IS_PERSISTENT;
+    aFlags |= ShapedTextFlags::TEXT_IS_8BIT;
     return gfxTextRun::Create(aParams, 0, this, aFlags, aFlags2);
 }
 
@@ -2190,7 +2189,7 @@ gfxFontGroup::MakeSpaceTextRun(const Parameters *aParams,
                                gfx::ShapedTextFlags aFlags,
                                nsTextFrameUtils::Flags aFlags2)
 {
-    aFlags |= ShapedTextFlags::TEXT_IS_8BIT | ShapedTextFlags::TEXT_IS_PERSISTENT;
+    aFlags |= ShapedTextFlags::TEXT_IS_8BIT;
 
     RefPtr<gfxTextRun> textRun =
         gfxTextRun::Create(aParams, 1, this, aFlags, aFlags2);
@@ -2269,13 +2268,13 @@ gfxFontGroup::MakeHyphenTextRun(DrawTarget* aDrawTarget,
     gfxFont *font = GetFirstValidFont(uint32_t(hyphen));
     if (font->HasCharacter(hyphen)) {
         return MakeTextRun(&hyphen, 1, aDrawTarget, aAppUnitsPerDevUnit,
-                           ShapedTextFlags::TEXT_IS_PERSISTENT,
+                           ShapedTextFlags(),
                            nsTextFrameUtils::Flags(), nullptr);
     }
 
     static const uint8_t dash = '-';
     return MakeTextRun(&dash, 1, aDrawTarget, aAppUnitsPerDevUnit,
-                       ShapedTextFlags::TEXT_IS_PERSISTENT,
+                       ShapedTextFlags(),
                        nsTextFrameUtils::Flags(), nullptr);
 }
 
@@ -2795,8 +2794,7 @@ gfxFontGroup::GetEllipsisTextRun(int32_t aAppUnitsPerDevPixel,
     };
     mCachedEllipsisTextRun =
         MakeTextRun(ellipsis.get(), ellipsis.Length(), &params,
-                    aFlags | ShapedTextFlags::TEXT_IS_PERSISTENT,
-                    nsTextFrameUtils::Flags(), nullptr);
+                    aFlags, nsTextFrameUtils::Flags(), nullptr);
     if (!mCachedEllipsisTextRun) {
         return nullptr;
     }

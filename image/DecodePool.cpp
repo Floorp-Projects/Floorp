@@ -315,10 +315,13 @@ DecodePool::AsyncRun(IDecodingTask* aTask)
 }
 
 bool
-DecodePool::SyncRunIfPreferred(IDecodingTask* aTask)
+DecodePool::SyncRunIfPreferred(IDecodingTask* aTask, const nsCString& aURI)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aTask);
+
+  AUTO_PROFILER_LABEL_DYNAMIC("DecodePool::SyncRunIfPreferred", GRAPHICS,
+                              aURI.get());
 
   if (aTask->ShouldPreferSyncRun()) {
     aTask->Run();
@@ -330,10 +333,14 @@ DecodePool::SyncRunIfPreferred(IDecodingTask* aTask)
 }
 
 void
-DecodePool::SyncRunIfPossible(IDecodingTask* aTask)
+DecodePool::SyncRunIfPossible(IDecodingTask* aTask, const nsCString& aURI)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aTask);
+
+  AUTO_PROFILER_LABEL_DYNAMIC("DecodePool::SyncRunIfPossible", GRAPHICS,
+                              aURI.get());
+
   aTask->Run();
 }
 

@@ -299,8 +299,7 @@ CreateSamplingRestrictedDrawable(gfxDrawable* aDrawable,
                                  const ImageRegion& aRegion,
                                  const SurfaceFormat aFormat)
 {
-    PROFILER_LABEL("gfxUtils", "CreateSamplingRestricedDrawable",
-      js::ProfileEntry::Category::GRAPHICS);
+    AUTO_PROFILER_LABEL("CreateSamplingRestrictedDrawable", GRAPHICS);
 
     DrawTarget* destDrawTarget = aContext->GetDrawTarget();
     if (destDrawTarget->GetBackendType() == BackendType::DIRECT2D1_1) {
@@ -522,8 +521,7 @@ gfxUtils::DrawPixelSnapped(gfxContext*         aContext,
                            uint32_t            aImageFlags,
                            gfxFloat            aOpacity)
 {
-    PROFILER_LABEL("gfxUtils", "DrawPixelSnapped",
-      js::ProfileEntry::Category::GRAPHICS);
+    AUTO_PROFILER_LABEL("gfxUtils::DrawPixelSnapped", GRAPHICS);
 
     gfxRect imageRect(gfxPoint(0, 0), aImageSize);
     gfxRect region(aRegion.Rect());

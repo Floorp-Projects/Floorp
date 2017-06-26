@@ -409,7 +409,8 @@ Convert(ScanfState *state, const char *fmt)
                 ch = GET(state);
                 if (ch == EOF) {
                     return NULL;
-                } else if (state->assign) {
+                }
+                if (state->assign) {
                     *cArg++ = ch;
                 }
             }
@@ -602,10 +603,9 @@ StringGetChar(void *stream)
 
     if (*cPtr == '\0') {
         return EOF;
-    } else {
-        *((char **) stream) = cPtr + 1;
-        return (unsigned char) *cPtr;
     }
+    *((char **) stream) = cPtr + 1;
+    return (unsigned char) *cPtr;
 }
 
 static void

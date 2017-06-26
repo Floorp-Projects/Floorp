@@ -29,6 +29,7 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 
+import org.mozilla.gecko.ActivityHandlerHelper;
 import org.mozilla.gecko.EventDispatcher;
 import org.mozilla.gecko.GeckoView;
 import org.mozilla.gecko.GeckoViewSettings;
@@ -39,6 +40,7 @@ import org.mozilla.gecko.TelemetryContract;
 import org.mozilla.gecko.menu.GeckoMenu;
 import org.mozilla.gecko.menu.GeckoMenuInflater;
 import org.mozilla.gecko.mozglue.SafeIntent;
+import org.mozilla.gecko.prompts.PromptService;
 import org.mozilla.gecko.util.Clipboard;
 import org.mozilla.gecko.util.ColorUtil;
 import org.mozilla.gecko.util.GeckoBundle;
@@ -65,6 +67,7 @@ public class CustomTabsActivity extends AppCompatActivity
     private MenuItem menuItemControl;
 
     private GeckoView mGeckoView;
+    private PromptService mPromptService;
 
     private boolean mCanGoBack = false;
     private boolean mCanGoForward = false;
@@ -99,6 +102,8 @@ public class CustomTabsActivity extends AppCompatActivity
         mGeckoView.setProgressListener(this);
         mGeckoView.setContentListener(this);
 
+        mPromptService = new PromptService(this, mGeckoView.getEventDispatcher());
+
         final GeckoViewSettings settings = mGeckoView.getSettings();
         settings.setBoolean(GeckoViewSettings.USE_MULTIPROCESS, false);
 
@@ -107,6 +112,20 @@ public class CustomTabsActivity extends AppCompatActivity
         } else {
             Log.w(LOGTAG, "No intend found for custom tab");
             finish();
+        }
+    }
+
+    @Override
+    public void onDestroy() {
+        mPromptService.destroy();
+
+        super.onDestroy();
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (!ActivityHandlerHelper.handleActivityResult(requestCode, resultCode, data)) {
+            super.onActivityResult(requestCode, resultCode, data);
         }
     }
 

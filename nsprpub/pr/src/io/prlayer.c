@@ -47,7 +47,8 @@ static PRStatus PR_CALLBACK pl_TopClose (PRFileDesc *fd)
 		rv = fd->lower->methods->close(fd->lower);
 		_PR_DestroyIOLayer(fd);
 		return rv;
-	} else if ((fd->higher) && (PR_IO_LAYER_HEAD == fd->higher->identity)) {
+	}
+	if ((fd->higher) && (PR_IO_LAYER_HEAD == fd->higher->identity)) {
 		/*
 		 * lower layers of new style stack
 		 */
@@ -201,16 +202,16 @@ static PRFileDesc* PR_CALLBACK pl_TopAccept (
         return NULL;
     }
 
-    if (newstyle_stack) {
-		newstack->lower = newfd;
-		newfd->higher = newstack;
-		return newstack;
-	} else {
-		/* this PR_PushIOLayer call cannot fail */
-		rv = PR_PushIOLayer(newfd, PR_TOP_IO_LAYER, newstack);
-		PR_ASSERT(PR_SUCCESS == rv);
-    	return newfd;  /* that's it */
-	}
+    if (newstyle_stack)
+    {
+        newstack->lower = newfd;
+        newfd->higher = newstack;
+        return newstack;
+    }
+    /* this PR_PushIOLayer call cannot fail */
+    rv = PR_PushIOLayer(newfd, PR_TOP_IO_LAYER, newstack);
+    PR_ASSERT(PR_SUCCESS == rv);
+    return newfd;  /* that's it */
 }
 
 static PRStatus PR_CALLBACK pl_DefBind (PRFileDesc *fd, const PRNetAddr *addr)
@@ -326,12 +327,11 @@ static PRInt32 PR_CALLBACK pl_DefAcceptread (
 		(*nd)->higher = newstack;
 		*nd = newstack;
 		return nbytes;
-	} else {
-		/* this PR_PushIOLayer call cannot fail */
-		rv = PR_PushIOLayer(*nd, PR_TOP_IO_LAYER, newstack);
-		PR_ASSERT(PR_SUCCESS == rv);
-		return nbytes;
 	}
+    /* this PR_PushIOLayer call cannot fail */
+    rv = PR_PushIOLayer(*nd, PR_TOP_IO_LAYER, newstack);
+    PR_ASSERT(PR_SUCCESS == rv);
+    return nbytes;
 }
 
 static PRInt32 PR_CALLBACK pl_DefTransmitfile (
@@ -494,10 +494,9 @@ static PRStatus _PR_DestroyIOLayer(PRFileDesc *stack)
 {
     if (NULL == stack)
         return PR_FAILURE;
-    else {
-        PR_DELETE(stack);
-    	return PR_SUCCESS;
-    }
+
+    PR_DELETE(stack);
+    return PR_SUCCESS;
 }  /* _PR_DestroyIOLayer */
 
 PR_IMPLEMENT(PRStatus) PR_PushIOLayer(
@@ -704,8 +703,8 @@ PR_IMPLEMENT(PRDescIdentity) PR_GetLayersIdentity(PRFileDesc* fd)
     if (PR_IO_LAYER_HEAD == fd->identity) {
     	PR_ASSERT(NULL != fd->lower);
     	return fd->lower->identity;
-	} else
-    	return fd->identity;
+	}
+    return fd->identity;
 }  /* PR_GetLayersIdentity */
 
 PR_IMPLEMENT(PRFileDesc*) PR_GetIdentitiesLayer(PRFileDesc* fd, PRDescIdentity id)
@@ -713,10 +712,10 @@ PR_IMPLEMENT(PRFileDesc*) PR_GetIdentitiesLayer(PRFileDesc* fd, PRDescIdentity i
     PRFileDesc *layer = fd;
 
     if (PR_TOP_IO_LAYER == id) {
-    	if (PR_IO_LAYER_HEAD == fd->identity)
-			return fd->lower;
-		else 
-			return fd;
+      if (PR_IO_LAYER_HEAD == fd->identity) {
+          return fd->lower;
+      }
+      return fd;
 	}
 
     for (layer = fd; layer != NULL; layer = layer->lower)

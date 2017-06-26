@@ -56,9 +56,9 @@ const kTruncateLength = 128;
 function truncate(text, newLength = kTruncateLength) {
   if (typeof text == "string") {
     return text.length < newLength ? text : text.slice(0, newLength);
-  } else {
-    return text;
   }
+    return text;
+
 }
 
 function getMessage(error, prefix = "") {
@@ -109,7 +109,7 @@ Assert.AssertionError = function(options) {
   let stack = Components.stack;
   do {
     stack = stack.asyncCaller || stack.caller;
-  } while(stack && stack.filename && stack.filename.includes("Assert.jsm"))
+  } while (stack && stack.filename && stack.filename.includes("Assert.jsm"))
   this.stack = stack;
 };
 
@@ -181,10 +181,10 @@ proto.setReporter = function(reporterFunc) {
  */
 proto.report = function(failed, actual, expected, message, operator) {
   let err = new Assert.AssertionError({
-    message: message,
-    actual: actual,
-    expected: expected,
-    operator: operator
+    message,
+    actual,
+    expected,
+    operator
   });
   if (!this._reporter) {
     // If no custom reporter is set, throw the error.

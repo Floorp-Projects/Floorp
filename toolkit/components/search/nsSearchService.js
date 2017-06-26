@@ -9,7 +9,7 @@ const Cu = Components.utils;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/Promise.jsm");
+Cu.import("resource://gre/modules/PromiseUtils.jsm");
 Cu.import("resource://gre/modules/debug.js");
 Cu.import("resource://gre/modules/AppConstants.jsm");
 
@@ -2644,7 +2644,7 @@ function SearchService() {
   if (getBoolPref(BROWSER_SEARCH_PREF + "log", false))
     LOG = DO_LOG;
 
-  this._initObservers = Promise.defer();
+  this._initObservers = PromiseUtils.defer();
 }
 
 SearchService.prototype = {
@@ -3585,26 +3585,26 @@ SearchService.prototype = {
     let uris = [];
 
     // Read list.json to find the engines we need to load.
-    let deferred = Promise.defer();
     let request = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].
                     createInstance(Ci.nsIXMLHttpRequest);
     request.overrideMimeType("text/plain");
-    request.onload = function(aEvent) {
-      deferred.resolve(aEvent.target.responseText);
-    };
-    request.onerror = function(aEvent) {
-      LOG("_asyncFindJAREngines: failed to read " + listURL);
-      // Couldn't find list.json, try list.txt
+    let list = await new Promise(resolve => {
+      request.onload = function(aEvent) {
+        resolve(aEvent.target.responseText);
+      };
       request.onerror = function(aEvent) {
-        LOG("_asyncFindJAREngines: failed to read " + APP_SEARCH_PREFIX + "list.txt");
-        deferred.resolve("");
-      }
-      request.open("GET", Services.io.newURI(APP_SEARCH_PREFIX + "list.txt").spec, true);
+        LOG("_asyncFindJAREngines: failed to read " + listURL);
+        // Couldn't find list.json, try list.txt
+        request.onerror = function(aEvent) {
+          LOG("_asyncFindJAREngines: failed to read " + APP_SEARCH_PREFIX + "list.txt");
+          resolve("");
+        }
+        request.open("GET", Services.io.newURI(APP_SEARCH_PREFIX + "list.txt").spec, true);
+        request.send();
+      };
+      request.open("GET", Services.io.newURI(listURL).spec, true);
       request.send();
-    };
-    request.open("GET", Services.io.newURI(listURL).spec, true);
-    request.send();
-    let list = await deferred.promise;
+    });
 
     if (request.responseURL.endsWith(".txt")) {
       this._parseListTxt(list, uris);

@@ -244,5 +244,64 @@ class TestLineRemapping(unittest.TestCase):
         self.assertEqual(original_covered_function_count,
                          sum(r.covered_function_count for r in lcov_file.records))
 
+class TestUrlFinder(unittest.TestCase):
+    def setUp(self):
+        chrome_map_file = os.path.join(buildconfig.topobjdir, 'chrome-map.json')
+        self._old_chrome_info_file = None
+        if os.path.isfile(chrome_map_file):
+            backup_file = os.path.join(buildconfig.topobjdir, 'chrome-map-backup.json')
+            self._old_chrome_info_file = backup_file
+            self._chrome_map_file = chrome_map_file
+            shutil.move(chrome_map_file, backup_file)
+
+        empty_chrome_info = [
+            {},
+            {},
+            {
+                'dist/bin/components/MainProcessSingleton.js': [
+                    'path1',
+                    False
+                ],
+                'dist/bin/browser/components/nsSessionStartup.js': [
+                    'path2',
+                    False
+                ],
+                'dist/bin/browser/features/e10srollout@mozilla.org/bootstrap.js': [
+                    'path3',
+                    False
+                ],
+                'dist/bin/browser/features/firefox@getpocket.com/bootstrap.js': [
+                    'path4',
+                    False
+                ],
+                'dist/xpi-stage/workerbootstrap/bootstrap.js': [
+                    'path5',
+                    False
+                ]
+            },
+        ]
+        with open(chrome_map_file, 'w') as fh:
+            json.dump(empty_chrome_info, fh)
+
+    def tearDown(self):
+        if self._old_chrome_info_file:
+            shutil.move(self._old_chrome_info_file, self._chrome_map_file)
+
+    def test_jar_paths(self):
+        app_name = buildconfig.substs.get('MOZ_APP_NAME')
+        omnijar_name = buildconfig.substs.get('OMNIJAR_NAME')
+
+        paths = [
+            ('jar:file:///home/worker/workspace/build/application/' + app_name + '/' + omnijar_name + '!/components/MainProcessSingleton.js', 'path1'),
+            ('jar:file:///home/worker/workspace/build/application/' + app_name + '/browser/' + omnijar_name + '!/components/nsSessionStartup.js', 'path2'),
+            ('jar:file:///home/worker/workspace/build/application/' + app_name + '/browser/features/e10srollout@mozilla.org.xpi!/bootstrap.js', 'path3'),
+            ('jar:file:///home/worker/workspace/build/application/' + app_name + '/browser/features/firefox@getpocket.com.xpi!/bootstrap.js', 'path4'),
+            ('jar:file:///tmp/tmpMdo5gV.mozrunner/extensions/workerbootstrap-test@mozilla.org.xpi!/bootstrap.js', 'path5'),
+        ]
+
+        url_finder = lcov_rewriter.UrlFinder('', '', [])
+        for path, expected in paths:
+            self.assertEqual(url_finder.rewrite_url(path)[0], expected)
+
 if __name__ == '__main__':
     mozunit.main()

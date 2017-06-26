@@ -408,8 +408,7 @@ nsInputStreamPump::OnInputStreamReady(nsIAsyncInputStream *stream)
 {
     LOG(("nsInputStreamPump::OnInputStreamReady [this=%p]\n", this));
 
-    PROFILER_LABEL("nsInputStreamPump", "OnInputStreamReady",
-        js::ProfileEntry::Category::NETWORK);
+    AUTO_PROFILER_LABEL("nsInputStreamPump::OnInputStreamReady", NETWORK);
 
     // this function has been called from a PLEvent, so we can safely call
     // any listener or progress sink methods directly from here.
@@ -514,8 +513,7 @@ nsInputStreamPump::OnStateStart()
 {
     mMonitor.AssertCurrentThreadIn();
 
-    PROFILER_LABEL("nsInputStreamPump", "OnStateStart",
-        js::ProfileEntry::Category::NETWORK);
+    AUTO_PROFILER_LABEL("nsInputStreamPump::OnStateStart", NETWORK);
 
     LOG(("  OnStateStart [this=%p]\n", this));
 
@@ -553,8 +551,7 @@ nsInputStreamPump::OnStateTransfer()
 {
     mMonitor.AssertCurrentThreadIn();
 
-    PROFILER_LABEL("nsInputStreamPump", "OnStateTransfer",
-        js::ProfileEntry::Category::NETWORK);
+    AUTO_PROFILER_LABEL("nsInputStreamPump::OnStateTransfer", NETWORK);
 
     LOG(("  OnStateTransfer [this=%p]\n", this));
 
@@ -702,8 +699,7 @@ nsInputStreamPump::OnStateStop()
         return STATE_IDLE;
     }
 
-    PROFILER_LABEL("nsInputStreamPump", "OnStateStop",
-        js::ProfileEntry::Category::NETWORK);
+    AUTO_PROFILER_LABEL("nsInputStreamPump::OnStateStop", NETWORK);
 
     LOG(("  OnStateStop [this=%p status=%" PRIx32 "]\n", this, static_cast<uint32_t>(mStatus)));
 

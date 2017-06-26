@@ -5722,6 +5722,14 @@ pref("dom.payments.request.enabled", false);
 pref("fuzzing.enabled", false);
 #endif
 
+#if defined(XP_WIN)
+pref("layers.mlgpu.dev-enabled", false);
+
+// Both this and the master "enabled" pref must be on to use Advanced LAyers
+// on Windows 7.
+pref("layers.mlgpu.enable-on-windows7", false);
+#endif
+
 // Set advanced layers preferences here to have them show up in about:config or
 // to be overridable in reftest.list files. They should pretty much all be set
 // to a value of 2, and the conditional-pref code in gfxPrefs.h will convert

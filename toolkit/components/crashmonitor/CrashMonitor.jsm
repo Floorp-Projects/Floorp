@@ -38,7 +38,7 @@ const Cr = Components.results;
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/osfile.jsm");
-Cu.import("resource://gre/modules/Promise.jsm");
+Cu.import("resource://gre/modules/PromiseUtils.jsm");
 Cu.import("resource://gre/modules/AsyncShutdown.jsm");
 
 const NOTIFICATIONS = [
@@ -77,7 +77,7 @@ var CrashMonitorInternal = {
   previousCheckpoints: null,
 
   /* Deferred for AsyncShutdown blocker */
-  profileBeforeChangeDeferred: Promise.defer(),
+  profileBeforeChangeDeferred: PromiseUtils.defer(),
 
   /**
    * Path to checkpoint file.

@@ -2488,7 +2488,7 @@ test -n "$target_alias" &&
   program_prefix=${target_alias}-
 
 MOD_MAJOR_VERSION=4
-MOD_MINOR_VERSION=15
+MOD_MINOR_VERSION=16
 MOD_PATCH_VERSION=0
 NSPR_MODNAME=nspr20
 _HAVE_PTHREADS=
@@ -6714,6 +6714,8 @@ tools are selected during the Xcode/Developer Tools installation." "$LINENO" 5
 
     $as_echo "#define HAVE_SOCKLEN_T 1" >>confdefs.h
 
+    $as_echo "#define HAVE_POINTER_LOCALTIME_R 1" >>confdefs.h
+
     CFLAGS="$CFLAGS $(DSO_CFLAGS) -ansi -Wall"
     MOZ_OBJFORMAT=`test -x /usr/bin/objformat && /usr/bin/objformat || echo elf`
     if test "$MOZ_OBJFORMAT" = "elf"; then
@@ -7324,6 +7326,8 @@ $as_echo "$as_me: WARNING: Unknown version of the Microsoft (R) Manifest Tool." 
 
     $as_echo "#define HAVE_SOCKLEN_T 1" >>confdefs.h
 
+    $as_echo "#define HAVE_POINTER_LOCALTIME_R 1" >>confdefs.h
+
     if test -z "$USE_NSPR_THREADS"; then
         USE_PTHREADS=1
     fi
@@ -7379,6 +7383,8 @@ $as_echo "$as_me: WARNING: Unknown version of the Microsoft (R) Manifest Tool." 
     $as_echo "#define HAVE_BSD_FLOCK 1" >>confdefs.h
 
     $as_echo "#define HAVE_SOCKLEN_T 1" >>confdefs.h
+
+    $as_echo "#define HAVE_POINTER_LOCALTIME_R 1" >>confdefs.h
 
     CFLAGS="$CFLAGS -ansi -Wall"
     CXXFLAGS="$CXXFLAGS -ansi -Wall"

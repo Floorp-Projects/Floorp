@@ -3,7 +3,6 @@
 
 const {Cc: Cc, Ci: Ci, Cr: Cr, Cu: Cu} = SpecialPowers;
 
-var Promise = Cu.import("resource://gre/modules/Promise.jsm").Promise;
 
 var _pendingEmulatorCmdCount = 0;
 

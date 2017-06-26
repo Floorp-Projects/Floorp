@@ -3,7 +3,6 @@
  */
 
 Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/Promise.jsm");
 
 const ADDON_ID = "test-plugin-from-xpi@tests.mozilla.org";
 const XRE_EXTENSIONS_DIR_LIST = "XREExtDL";

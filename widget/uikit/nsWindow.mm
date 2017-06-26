@@ -270,8 +270,7 @@ private:
 - (void)drawUsingOpenGL
 {
     ALOG("drawUsingOpenGL");
-  PROFILER_LABEL("ChildView", "drawUsingOpenGL",
-    js::ProfileEntry::Category::GRAPHICS);
+  AUTO_PROFILER_LABEL("ChildView::drawUsingOpenGL", GRAPHICS);
 
   if (!mGeckoChild->IsVisible())
     return;
@@ -326,8 +325,7 @@ private:
     [self drawUsingOpenGL];
     return;
   }
-  PROFILER_LABEL("ChildView", "drawRect",
-    js::ProfileEntry::Category::GRAPHICS);
+  AUTO_PROFILER_LABEL("ChildView::drawRect", GRAPHICS);
 
   // The CGContext that drawRect supplies us with comes with a transform that
   // scales one user space unit to one Cocoa point, which can consist of

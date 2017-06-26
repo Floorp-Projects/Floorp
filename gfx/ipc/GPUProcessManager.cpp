@@ -203,7 +203,11 @@ GPUProcessManager::EnsureGPUReady()
 void
 GPUProcessManager::EnsureCompositorManagerChild()
 {
-  if (CompositorManagerChild::IsInitialized()) {
+  base::ProcessId gpuPid = EnsureGPUReady()
+                           ? mGPUChild->OtherPid()
+                           : base::GetCurrentProcId();
+
+  if (CompositorManagerChild::IsInitialized(gpuPid)) {
     return;
   }
 

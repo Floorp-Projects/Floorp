@@ -483,6 +483,7 @@ inline uint32_t GetMaxTextureSizeForFeatureLevel(D3D_FEATURE_LEVEL aFeatureLevel
 }
 
 uint32_t GetMaxTextureSizeFromDevice(ID3D11Device* aDevice);
+void ReportTextureMemoryUsage(ID3D11Texture2D* aTexture, size_t aBytes);
 
 class AutoLockD3D11Texture
 {

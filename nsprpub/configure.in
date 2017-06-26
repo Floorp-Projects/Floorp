@@ -15,7 +15,7 @@ dnl ========================================================
 dnl = Defaults
 dnl ========================================================
 MOD_MAJOR_VERSION=4
-MOD_MINOR_VERSION=15
+MOD_MINOR_VERSION=16
 MOD_PATCH_VERSION=0
 NSPR_MODNAME=nspr20
 _HAVE_PTHREADS=
@@ -1389,6 +1389,7 @@ case "$target" in
     changequote([,])
     if test "$HOST_DARWIN_MAJOR" -ge 15 ; then
         AC_DEFINE(HAS_CONNECTX)
+    fi
     AS='$(CC) -x assembler-with-cpp'
     CFLAGS="$CFLAGS -Wall -fno-common"
     case "${target_cpu}" in
@@ -1559,6 +1560,7 @@ tools are selected during the Xcode/Developer Tools installation.])
     AC_DEFINE(FREEBSD)
     AC_DEFINE(HAVE_BSD_FLOCK)
     AC_DEFINE(HAVE_SOCKLEN_T)
+    AC_DEFINE(HAVE_POINTER_LOCALTIME_R)
     CFLAGS="$CFLAGS $(DSO_CFLAGS) -ansi -Wall"
     MOZ_OBJFORMAT=`test -x /usr/bin/objformat && /usr/bin/objformat || echo elf`
     if test "$MOZ_OBJFORMAT" = "elf"; then
@@ -2119,6 +2121,7 @@ tools are selected during the Xcode/Developer Tools installation.])
     AC_DEFINE(NETBSD)
     AC_DEFINE(HAVE_BSD_FLOCK)
     AC_DEFINE(HAVE_SOCKLEN_T)
+    AC_DEFINE(HAVE_POINTER_LOCALTIME_R)
     if test -z "$USE_NSPR_THREADS"; then
         USE_PTHREADS=1
     fi
@@ -2167,6 +2170,7 @@ tools are selected during the Xcode/Developer Tools installation.])
     AC_DEFINE(OPENBSD)
     AC_DEFINE(HAVE_BSD_FLOCK)
     AC_DEFINE(HAVE_SOCKLEN_T)
+    AC_DEFINE(HAVE_POINTER_LOCALTIME_R)
     CFLAGS="$CFLAGS -ansi -Wall"
     CXXFLAGS="$CXXFLAGS -ansi -Wall"
     DLL_SUFFIX=so.1.0

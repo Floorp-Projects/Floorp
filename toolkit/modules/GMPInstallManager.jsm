@@ -21,7 +21,7 @@ var GMPInstallFailureReason = {
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/FileUtils.jsm");
-Cu.import("resource://gre/modules/Promise.jsm");
+Cu.import("resource://gre/modules/PromiseUtils.jsm");
 Cu.import("resource://gre/modules/Preferences.jsm");
 Cu.import("resource://gre/modules/Log.jsm");
 Cu.import("resource://gre/modules/osfile.jsm");
@@ -94,7 +94,7 @@ GMPInstallManager.prototype = {
         log.error("checkForAddons already called");
         return Promise.reject({type: "alreadycalled"});
     }
-    this._deferred = Promise.defer();
+    this._deferred = PromiseUtils.defer();
     let url = this._getURL();
 
     let allowNonBuiltIn = true;
@@ -382,7 +382,7 @@ GMPExtractor.prototype = {
    *         See GMPInstallManager.installAddon for resolve/rejected info
    */
   install() {
-    this._deferred = Promise.defer();
+    this._deferred = PromiseUtils.defer();
     let deferredPromise = this._deferred;
     let {zipPath, relativeInstallPath} = this;
     let worker =

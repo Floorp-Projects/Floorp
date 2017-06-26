@@ -269,7 +269,7 @@ GetBufferFromZipArchive(nsZipArchive *zip, bool doCRC, const char* id,
 nsresult
 StartupCache::GetBuffer(const char* id, UniquePtr<char[]>* outbuf, uint32_t* length) 
 {
-  PROFILER_LABEL_FUNC(js::ProfileEntry::Category::OTHER);
+  AUTO_PROFILER_LABEL("StartupCache::GetBuffer", OTHER);
 
   NS_ASSERTION(NS_IsMainThread(), "Startup cache only available on main thread");
 
@@ -501,7 +501,7 @@ StartupCache::WaitOnWriteThread()
 void
 StartupCache::ThreadedWrite(void *aClosure)
 {
-  AutoProfilerRegister registerThread("StartupCache");
+  AutoProfilerRegisterThread registerThread("StartupCache");
   NS_SetCurrentThreadName("StartupCache");
   mozilla::IOInterposer::RegisterCurrentThread();
   /*

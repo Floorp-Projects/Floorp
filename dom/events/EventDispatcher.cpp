@@ -590,8 +590,7 @@ EventDispatcher::Dispatch(nsISupports* aTarget,
                           EventDispatchingCallback* aCallback,
                           nsTArray<EventTarget*>* aTargets)
 {
-  PROFILER_LABEL("EventDispatcher", "Dispatch",
-    js::ProfileEntry::Category::EVENTS);
+  AUTO_PROFILER_LABEL("EventDispatcher::Dispatch", EVENTS);
 
   NS_ASSERTION(aEvent, "Trying to dispatch without WidgetEvent!");
   NS_ENSURE_TRUE(!aEvent->mFlags.mIsBeingDispatched,

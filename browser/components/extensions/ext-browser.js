@@ -65,7 +65,9 @@ global.openOptionsPage = (extension) => {
   }
 
   if (extension.manifest.options_ui.open_in_tab) {
-    window.switchToTabHavingURI(extension.manifest.options_ui.page, true);
+    window.switchToTabHavingURI(extension.manifest.options_ui.page, true, {
+      triggeringPrincipal: extension.principal,
+    });
     return Promise.resolve();
   }
 

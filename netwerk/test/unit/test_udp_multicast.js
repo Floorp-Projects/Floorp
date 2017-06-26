@@ -5,7 +5,6 @@ var { Constructor: CC } = Components;
 const UDPSocket = CC("@mozilla.org/network/udp-socket;1",
                      "nsIUDPSocket",
                      "init");
-const { Promise: promise } = Cu.import("resource://gre/modules/Promise.jsm", {});
 Cu.import("resource://gre/modules/Services.jsm");
 
 const ADDRESS_TEST1 = "224.0.0.200";
@@ -43,30 +42,28 @@ function sendPing(socket, addr) {
   let ping = "ping";
   let rawPing = gConverter.convertToByteArray(ping);
 
-  let deferred = promise.defer();
+  return new Promise((resolve, reject) => {
+    socket.asyncListen({
+      onPacketReceived: function(s, message) {
+        do_print("Received on port " + socket.port);
+        do_check_eq(message.data, ping);
+        socket.close();
+        resolve(message.data);
+      },
+      onStopListening: function(socket, status) {}
+    });
 
-  socket.asyncListen({
-    onPacketReceived: function(s, message) {
-      do_print("Received on port " + socket.port);
-      do_check_eq(message.data, ping);
+    do_print("Multicast send to port " + socket.port);
+    socket.send(addr, socket.port, rawPing, rawPing.length);
+
+    // Timers are bad, but it seems like the only way to test *not* getting a
+    // packet.
+    let timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+    timer.initWithCallback(() => {
       socket.close();
-      deferred.resolve(message.data);
-    },
-    onStopListening: function(socket, status) {}
+      reject();
+    }, TIMEOUT, Ci.nsITimer.TYPE_ONE_SHOT);
   });
-
-  do_print("Multicast send to port " + socket.port);
-  socket.send(addr, socket.port, rawPing, rawPing.length);
-
-  // Timers are bad, but it seems like the only way to test *not* getting a
-  // packet.
-  let timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
-  timer.initWithCallback(() => {
-    socket.close();
-    deferred.reject();
-  }, TIMEOUT, Ci.nsITimer.TYPE_ONE_SHOT);
-
-  return deferred.promise;
 }
 
 add_test(() => {

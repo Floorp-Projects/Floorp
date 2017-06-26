@@ -185,6 +185,10 @@ DefaultJitOptions::DefaultJitOptions()
     // pc-relative jump and call instructions.
     SET_DEFAULT(jumpThreshold, UINT32_MAX);
 
+    // Whether the (ARM) simulators should always interrupt before executing any
+    // instruction.
+    SET_DEFAULT(simulatorAlwaysInterrupt, false);
+
     // Branch pruning heuristic is based on a scoring system, which is look at
     // different metrics and provide a score. The score is computed as a
     // projection where each factor defines the weight of each metric. Then this

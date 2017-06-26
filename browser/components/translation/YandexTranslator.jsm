@@ -10,7 +10,7 @@ this.EXPORTED_SYMBOLS = [ "YandexTranslator" ];
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/Log.jsm");
-Cu.import("resource://gre/modules/Promise.jsm");
+Cu.import("resource://gre/modules/PromiseUtils.jsm");
 Cu.import("resource://services-common/utils.js");
 Cu.import("resource://gre/modules/Http.jsm");
 
@@ -78,7 +78,7 @@ this.YandexTranslator.prototype = {
   translate() {
     return (async () => {
       let currentIndex = 0;
-      this._onFinishedDeferred = Promise.defer();
+      this._onFinishedDeferred = PromiseUtils.defer();
 
       // Let's split the document into various requests to be sent to
       // Yandex's Translation API.

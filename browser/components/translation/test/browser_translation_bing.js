@@ -11,7 +11,6 @@ const kClientSecretPref = "browser.translation.bing.apiKeyOverride";
 
 const {BingTranslator} = Cu.import("resource:///modules/translation/BingTranslator.jsm", {});
 const {TranslationDocument} = Cu.import("resource:///modules/translation/TranslationDocument.jsm", {});
-const {Promise} = Cu.import("resource://gre/modules/Promise.jsm", {});
 
 add_task(async function setup() {
   Services.prefs.setCharPref(kClientIdPref, "testClient");

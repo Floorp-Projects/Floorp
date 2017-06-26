@@ -38,7 +38,7 @@ class MockRegistry {
       QueryInterface: XPCOMUtils.generateQI([Ci.nsIWindowsRegKey]),
 
       // --- Overridden nsIWindowsRegKey interface functions ---
-      open: function(root, path, mode) {
+      open(root, path, mode) {
         let rootKey = registry.getRoot(root);
         if (!rootKey.has(path)) {
           rootKey.set(path, new Map());
@@ -46,7 +46,7 @@ class MockRegistry {
         this.values = rootKey.get(path);
       },
 
-      close: function() {
+      close() {
         this.values = null;
       },
 
@@ -56,25 +56,25 @@ class MockRegistry {
         return this.values.size;
       },
 
-      hasValue: function(name) {
+      hasValue(name) {
         if (!this.values) {
           return false;
         }
         return this.values.has(name);
       },
 
-      getValueType: function(name) {
+      getValueType(name) {
         return Ci.nsIWindowsRegKey.TYPE_STRING;
       },
 
-      getValueName: function(index) {
+      getValueName(index) {
         if (!this.values || index >= this.values.size)
           throw Components.results.NS_ERROR_FAILURE;
 	let names = Array.from(this.values.keys());
         return names[index];
       },
 
-      readStringValue: function(name) {
+      readStringValue(name) {
         if (!this.values) {
           throw new Error("invalid registry path");
         }
@@ -111,5 +111,5 @@ class MockRegistry {
       pathmap.set(name, value);
     }
   }
-};
+}
 

@@ -876,5 +876,11 @@ U2FSoftTokenManager::Sign(const nsTArray<WebAuthnScopedCredentialDescriptor>& aD
   return NS_OK;
 }
 
+void
+U2FSoftTokenManager::Cancel()
+{
+  // This implementation is sync, requests can't be aborted.
+}
+
 }
 }

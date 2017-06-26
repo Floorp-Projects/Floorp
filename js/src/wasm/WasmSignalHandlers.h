@@ -35,6 +35,8 @@ namespace js {
 extern void
 InterruptRunningJitCode(JSContext* cx);
 
+class WasmActivation;
+
 namespace wasm {
 
 // Ensure the given JSRuntime is set up to use signals. Failure to enable signal
@@ -47,6 +49,13 @@ EnsureSignalHandlers(JSContext* cx);
 // asm.js/wasm out-of-bounds.
 bool
 HaveSignalHandlers();
+
+class CodeSegment;
+
+// Returns true if wasm code is on top of the activation stack (and fills out
+// the code segment outparam in this case), or false otherwise.
+bool
+InInterruptibleCode(JSContext* cx, uint8_t* pc, const CodeSegment** cs);
 
 #if defined(XP_DARWIN)
 // On OSX we are forced to use the lower-level Mach exception mechanism instead

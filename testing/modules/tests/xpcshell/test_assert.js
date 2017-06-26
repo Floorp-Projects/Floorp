@@ -18,7 +18,7 @@ function run_test() {
 
   function protoCtrChain(o) {
     let result = [];
-    while (o = o.__proto__) {
+    while ((o = o.__proto__)) {
       result.push(o.constructor);
     }
     return result.join();
@@ -31,7 +31,7 @@ function run_test() {
     let clsChain = protoCtrChain(cls.prototype);
     let objChain = protoCtrChain(obj);
     return objChain.slice(-clsChain.length) === clsChain;
-  };
+  }
 
   assert.ok(indirectInstanceOf(ns.Assert.AssertionError.prototype, Error),
             "Assert.AssertionError instanceof Error");
@@ -118,7 +118,7 @@ function run_test() {
   assert.deepEqual(a1, a2);
 
   let nbRoot = {
-    toString: function() { return this.first + " " + this.last; }
+    toString() { return this.first + " " + this.last; }
   };
 
   function nameBuilder(first, last) {
@@ -151,8 +151,8 @@ function run_test() {
   function thrower(errorConstructor) {
     throw new errorConstructor("test");
   }
-  let aethrow = makeBlock(thrower, ns.Assert.AssertionError);
-  aethrow = makeBlock(thrower, ns.Assert.AssertionError);
+  makeBlock(thrower, ns.Assert.AssertionError);
+  makeBlock(thrower, ns.Assert.AssertionError);
 
   // the basic calls work
   assert.throws(makeBlock(thrower, ns.Assert.AssertionError),
@@ -207,12 +207,14 @@ function run_test() {
     if ((err instanceof TypeError) && /test/.test(err)) {
       return true;
     }
+    return false;
   });
   // do the same with an arrow function
   assert.throws(makeBlock(thrower, TypeError), err => {
     if ((err instanceof TypeError) && /test/.test(err)) {
       return true;
     }
+    return false;
   });
 
   function testAssertionMessage(actual, expected) {
@@ -246,7 +248,7 @@ function run_test() {
 
   // https://github.com/joyent/node/issues/2893
   try {
-    assert.throws(function () {
+    assert.throws(function() {
       ifError(null);
     });
   } catch (e) {
@@ -278,7 +280,7 @@ function run_test() {
   // Test robustness of reporting:
   equal(new ns.Assert.AssertionError({
     actual: {
-      toJSON: function() {
+      toJSON() {
         throw "bam!";
       }
     },
@@ -290,7 +292,7 @@ function run_test() {
   assert.greater(3, 2);
   try {
     assert.greater(2, 2);
-  } catch(e) {
+  } catch (e) {
     message = e.toString().split("\n")[0];
   }
   assert.equal(message, "AssertionError: 2 > 2");
@@ -298,7 +300,7 @@ function run_test() {
   assert.greaterOrEqual(2, 2);
   try {
     assert.greaterOrEqual(1, 2);
-  } catch(e) {
+  } catch (e) {
     message = e.toString().split("\n")[0];
   }
   assert.equal(message, "AssertionError: 1 >= 2");
@@ -306,7 +308,7 @@ function run_test() {
   assert.less(1, 2);
   try {
     assert.less(2, 2);
-  } catch(e) {
+  } catch (e) {
     message = e.toString().split("\n")[0];
   }
   assert.equal(message, "AssertionError: 2 < 2");
@@ -314,7 +316,7 @@ function run_test() {
   assert.lessOrEqual(2, 2);
   try {
     assert.lessOrEqual(2, 1);
-  } catch(e) {
+  } catch (e) {
     message = e.toString().split("\n")[0];
   }
   assert.equal(message, "AssertionError: 2 <= 1");
@@ -332,7 +334,7 @@ add_task(async function test_rejects() {
     try {
       await assert.rejects(Promise.reject(err), expected);
       ok(false, "should have thrown");
-    } catch(ex) {
+    } catch (ex) {
       deepEqual(ex, err, "Assert.rejects threw the original unexpected error");
     }
   }

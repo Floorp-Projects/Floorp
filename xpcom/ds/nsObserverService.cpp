@@ -284,8 +284,8 @@ NS_IMETHODIMP nsObserverService::NotifyObservers(nsISupports* aSubject,
 
   mozilla::TimeStamp start = TimeStamp::Now();
 
-  PROFILER_LABEL_DYNAMIC("nsObserverService", "NotifyObservers",
-                         js::ProfileEntry::Category::OTHER, aTopic);
+  AUTO_PROFILER_LABEL_DYNAMIC("nsObserverService::NotifyObservers", OTHER,
+                              aTopic);
 
   nsObserverList* observerList = mObserverTopicTable.GetEntry(aTopic);
   if (observerList) {

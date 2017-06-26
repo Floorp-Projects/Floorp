@@ -245,16 +245,24 @@ PR_BEGIN_EXTERN_C
 #if PR_BYTES_PER_BYTE == 1
 typedef unsigned char PRUint8;
 /*
+** There are two scenarios that require us to define PRInt8 as type 'char'.
+** (1)
 ** Some cfront-based C++ compilers do not like 'signed char' and
 ** issue the warning message:
 **     warning: "signed" not implemented (ignored)
 ** For these compilers, we have to define PRInt8 as plain 'char'.
 ** Make sure that plain 'char' is indeed signed under these compilers.
+** (2)
+** Mozilla C++ code expects the PRInt{N} and int{N}_t types to match (see bug
+** 634793). If a platform defines int8_t as 'char', but NSPR defines it as
+** 'signed char', it results in a type mismatch.
+** On such platforms we define PRInt8 as 'char' to avoid the mismatch. 
 */
-#if (defined(HPUX) && defined(__cplusplus) \
+#if (defined(HPUX) && defined(__cplusplus) /* reason 1*/ \
         && !defined(__GNUC__) && __cplusplus < 199707L) \
-    || (defined(SCO) && defined(__cplusplus) \
-        && !defined(__GNUC__) && __cplusplus == 1L)
+    || (defined(SCO) && defined(__cplusplus) /* reason 1 */ \
+        && !defined(__GNUC__) && __cplusplus == 1L) \
+    || (defined(__sun) && defined(__cplusplus)) /* reason 2 */
 typedef char PRInt8;
 #else
 typedef signed char PRInt8;

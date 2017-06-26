@@ -18,7 +18,7 @@ add_task(async function test_switchtab_override() {
   });
 
   info("Wait for autocomplete")
-  let deferred = Promise.defer();
+  let deferred = PromiseUtils.defer();
   let onSearchComplete = gURLBar.onSearchComplete;
   registerCleanupFunction(() => {
     gURLBar.onSearchComplete = onSearchComplete;
@@ -39,7 +39,7 @@ add_task(async function test_switchtab_override() {
   ok(/moz-action:switchtab/.test(gURLBar.value), "switch to tab entry found");
 
   info("Override switch-to-tab");
-  deferred = Promise.defer();
+  deferred = PromiseUtils.defer();
   // In case of failure this would switch tab.
   let onTabSelect = event => {
     deferred.reject(new Error("Should have overridden switch to tab"));

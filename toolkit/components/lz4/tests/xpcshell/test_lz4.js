@@ -1,7 +1,6 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-Components.utils.import("resource://gre/modules/Promise.jsm");
 
 var WORKER_SOURCE_URI = "chrome://test_lz4/content/worker_lz4.js";
 do_load_manifest("data/chrome.manifest");

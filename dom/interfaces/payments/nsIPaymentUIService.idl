@@ -13,4 +13,5 @@ interface nsIPaymentUIService : nsISupports
   nsIPaymentActionResponse showPayment(in AString requestId);
   nsIPaymentActionResponse abortPayment(in AString requestId);
   nsIPaymentActionResponse completePayment(in AString requestId);
+  nsIPaymentActionResponse updatePayment(in AString requestId);
 };

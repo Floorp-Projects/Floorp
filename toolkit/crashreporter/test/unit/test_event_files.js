@@ -5,7 +5,6 @@
 
 var {utils: Cu} = Components;
 
-Cu.import("resource://gre/modules/Promise.jsm", this);
 Cu.import("resource://gre/modules/Services.jsm", this);
 Cu.import("resource://testing-common/AppData.jsm", this);
 

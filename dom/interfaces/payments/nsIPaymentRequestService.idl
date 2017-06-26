@@ -8,6 +8,7 @@
 #include "nsIPaymentRequest.idl"
 #include "nsIPaymentActionRequest.idl"
 #include "nsIPaymentActionResponse.idl"
+#include "nsIPaymentAddress.idl"
 #include "nsISimpleEnumerator.idl"
 #include "nsIPaymentUIService.idl"
 
@@ -40,6 +41,13 @@ interface nsIPaymentRequestService : nsISupports
    *  respondPayment is used for payment UI to respond the asked action result.
    */
   void respondPayment(in nsIPaymentActionResponse aResponse);
+
+  /*
+   *  These methods are used for payment UI to inform merchant the shipping
+   *  address/option change.
+   */
+  void changeShippingAddress(in AString requestId, in nsIPaymentAddress aAddress);
+  void changeShippingOption(in AString requestId, in AString option);
 };
 
 %{C++

@@ -43,6 +43,38 @@ PaymentRequestChild::RecvRespondPayment(const IPCPaymentActionResponse& aRespons
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult
+PaymentRequestChild::RecvChangeShippingAddress(const nsString& aRequestId,
+                                               const IPCPaymentAddress& aAddress)
+{
+  if (!mActorAlive) {
+    return IPC_FAIL_NO_REASON(this);
+  }
+  RefPtr<PaymentRequestManager> manager = PaymentRequestManager::GetSingleton();
+  MOZ_ASSERT(manager);
+  nsresult rv = manager->ChangeShippingAddress(aRequestId, aAddress);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return IPC_FAIL_NO_REASON(this);
+  }
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult
+PaymentRequestChild::RecvChangeShippingOption(const nsString& aRequestId,
+                                              const nsString& aOption)
+{
+  if (!mActorAlive) {
+    return IPC_FAIL_NO_REASON(this);
+  }
+  RefPtr<PaymentRequestManager> manager = PaymentRequestManager::GetSingleton();
+  MOZ_ASSERT(manager);
+  nsresult rv = manager->ChangeShippingOption(aRequestId, aOption);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return IPC_FAIL_NO_REASON(this);
+  }
+  return IPC_OK();
+}
+
 void
 PaymentRequestChild::ActorDestroy(ActorDestroyReason aWhy)
 {

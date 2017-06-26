@@ -145,25 +145,28 @@ U2FTokenManager::Get()
 }
 
 void
+U2FTokenManager::AbortTransaction(const nsresult& aError)
+{
+  Unused << mTransactionParent->SendCancel(aError);
+  ClearTransaction();
+}
+
+void
 U2FTokenManager::MaybeClearTransaction(WebAuthnTransactionParent* aParent)
 {
   // Only clear if we've been requested to do so by our current transaction
   // parent.
-  if (mTransactionParent != aParent) {
-    return;
+  if (mTransactionParent == aParent) {
+    ClearTransaction();
   }
-  mTransactionParent = nullptr;
-  // Drop managers at the end of all transactions
-  mTokenManagerImpl = nullptr;
 }
 
 void
-U2FTokenManager::Cancel(const nsresult& aError)
+U2FTokenManager::ClearTransaction()
 {
-  if (mTransactionParent) {
-    Unused << mTransactionParent->SendCancel(aError);
-  }
-  MaybeClearTransaction(mTransactionParent);
+  mTransactionParent = nullptr;
+  // Drop managers at the end of all transactions
+  mTokenManagerImpl = nullptr;
 }
 
 void
@@ -180,7 +183,7 @@ U2FTokenManager::Register(WebAuthnTransactionParent* aTransactionParent,
   // TODO Check all transports and use WebAuthnRequest to aggregate
   // replies
   if (!U2FPrefManager::Get()->GetSoftTokenEnabled()) {
-    Cancel(NS_ERROR_DOM_NOT_ALLOWED_ERR);
+    AbortTransaction(NS_ERROR_DOM_NOT_ALLOWED_ERR);
     return;
   }
 
@@ -194,7 +197,7 @@ U2FTokenManager::Register(WebAuthnTransactionParent* aTransactionParent,
 
   if ((aTransactionInfo.RpIdHash().Length() != SHA256_LENGTH) ||
       (aTransactionInfo.ClientDataHash().Length() != SHA256_LENGTH)) {
-    Cancel(NS_ERROR_DOM_UNKNOWN_ERR);
+    AbortTransaction(NS_ERROR_DOM_UNKNOWN_ERR);
     return;
   }
 
@@ -206,12 +209,12 @@ U2FTokenManager::Register(WebAuthnTransactionParent* aTransactionParent,
                                             reg,
                                             sig);
   if (NS_FAILED(rv)) {
-    Cancel(rv);
+    AbortTransaction(rv);
     return;
   }
 
   Unused << mTransactionParent->SendConfirmRegister(reg, sig);
-  MaybeClearTransaction(mTransactionParent);
+  ClearTransaction();
 }
 
 void
@@ -228,7 +231,7 @@ U2FTokenManager::Sign(WebAuthnTransactionParent* aTransactionParent,
   // TODO Check all transports and use WebAuthnRequest to aggregate
   // replies
   if (!U2FPrefManager::Get()->GetSoftTokenEnabled()) {
-    Cancel(NS_ERROR_DOM_NOT_ALLOWED_ERR);
+    AbortTransaction(NS_ERROR_DOM_NOT_ALLOWED_ERR);
     return;
   }
 
@@ -238,7 +241,7 @@ U2FTokenManager::Sign(WebAuthnTransactionParent* aTransactionParent,
 
   if ((aTransactionInfo.RpIdHash().Length() != SHA256_LENGTH) ||
       (aTransactionInfo.ClientDataHash().Length() != SHA256_LENGTH)) {
-    Cancel(NS_ERROR_DOM_UNKNOWN_ERR);
+    AbortTransaction(NS_ERROR_DOM_UNKNOWN_ERR);
     return;
   }
 
@@ -250,12 +253,21 @@ U2FTokenManager::Sign(WebAuthnTransactionParent* aTransactionParent,
                                         id,
                                         sig);
   if (NS_FAILED(rv)) {
-    Cancel(rv);
+    AbortTransaction(rv);
     return;
   }
 
   Unused << mTransactionParent->SendConfirmSign(id, sig);
-  MaybeClearTransaction(mTransactionParent);
+  ClearTransaction();
+}
+
+void
+U2FTokenManager::Cancel(WebAuthnTransactionParent* aParent)
+{
+  if (mTransactionParent == aParent) {
+    mTokenManagerImpl->Cancel();
+    ClearTransaction();
+  }
 }
 
 }

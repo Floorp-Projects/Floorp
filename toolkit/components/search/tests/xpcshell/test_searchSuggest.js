@@ -10,6 +10,7 @@
 Cu.import("resource://gre/modules/FormHistory.jsm");
 Cu.import("resource://gre/modules/SearchSuggestionController.jsm");
 Cu.import("resource://gre/modules/Timer.jsm");
+Cu.import("resource://gre/modules/PromiseUtils.jsm");
 
 // We must make sure the FormHistoryStartup component is
 // initialized in order for it to respond to FormHistory
@@ -91,7 +92,7 @@ add_task(async function simple_no_result_callback() {
 
 add_task(async function simple_no_result_callback_and_promise() {
   // Make sure both the callback and promise get results
-  let deferred = Promise.defer();
+  let deferred = PromiseUtils.defer();
   let controller = new SearchSuggestionController((result) => {
     do_check_eq(result.term, "no results");
     do_check_eq(result.local.length, 0);
@@ -413,7 +414,7 @@ add_task(async function empty_searchTerm() {
 });
 
 add_task(async function slow_timeout() {
-  let d = Promise.defer();
+  let d = PromiseUtils.defer();
   function check_result(result) {
     do_check_eq(result.term, "slow ");
     do_check_eq(result.local.length, 1);
@@ -434,7 +435,7 @@ add_task(async function slow_timeout() {
 });
 
 add_task(async function slow_stop() {
-  let d = Promise.defer();
+  let d = PromiseUtils.defer();
   let controller = new SearchSuggestionController();
   let resultPromise = controller.fetch("slow ", false, getEngine);
   setTimeout(function check_timeout() {
@@ -541,7 +542,7 @@ add_task(async function test_userContextId() {
   let controller = new SearchSuggestionController();
   controller._fetchRemote = function(searchTerm, engine, privateMode, userContextId) {
     Assert.equal(userContextId, 1);
-    return Promise.defer();
+    return PromiseUtils.defer();
   };
 
   controller.fetch("test", false, getEngine, 1);

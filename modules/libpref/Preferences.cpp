@@ -1208,8 +1208,7 @@ Preferences::WritePrefFile(nsIFile* aFile, SaveMethod aSaveMethod)
     return NS_ERROR_NOT_INITIALIZED;
   }
 
-  PROFILER_LABEL("Preferences", "WritePrefFile",
-                 js::ProfileEntry::Category::OTHER);
+  AUTO_PROFILER_LABEL("Preferences::WritePrefFile", OTHER);
 
   if (AllowOffMainThreadSave()) {
 
