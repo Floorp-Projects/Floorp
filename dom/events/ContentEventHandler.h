@@ -86,8 +86,6 @@ private:
 
     nsresult SelectNodeContents(nsINode* aNodeToSelectContents);
 
-    already_AddRefed<nsRange> CreateRange() const;
-
   private:
     bool IsValidOffset(nsINode* aContainer, uint32_t aOffset) const;
     nsINode* IsValidBoundary(nsINode* aNode) const;
