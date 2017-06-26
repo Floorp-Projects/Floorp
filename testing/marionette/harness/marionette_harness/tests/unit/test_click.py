@@ -10,6 +10,7 @@ from marionette_harness import (
     MarionetteTestCase,
     run_if_e10s,
     skip_if_mobile,
+    WindowManagerMixin,
 )
 
 
@@ -361,3 +362,35 @@ class TestClickNavigation(MarionetteTestCase):
         self.marionette.find_element(By.ID, "history-back").click()
         with self.assertRaises(errors.NoSuchElementException):
             self.marionette.find_element(By.ID, "anchor")
+
+
+class TestClickCloseContext(WindowManagerMixin, MarionetteTestCase):
+
+    def setUp(self):
+        super(TestClickCloseContext, self).setUp()
+
+        self.test_page = self.marionette.absolute_url("clicks.html")
+
+    def tearDown(self):
+        self.close_all_tabs()
+
+        super(TestClickCloseContext, self).tearDown()
+
+    def test_click_close_tab(self):
+        self.marionette.navigate(self.marionette.absolute_url("windowHandles.html"))
+        tab = self.open_tab(
+            lambda: self.marionette.find_element(By.ID, "new-tab").click())
+        self.marionette.switch_to_window(tab)
+
+        self.marionette.navigate(self.test_page)
+        self.marionette.find_element(By.ID, "close-window").click()
+
+    @skip_if_mobile("Fennec doesn't support other chrome windows")
+    def test_click_close_window(self):
+        self.marionette.navigate(self.marionette.absolute_url("windowHandles.html"))
+        win = self.open_window(
+            lambda: self.marionette.find_element(By.ID, "new-window").click())
+        self.marionette.switch_to_window(win)
+
+        self.marionette.navigate(self.test_page)
+        self.marionette.find_element(By.ID, "close-window").click()

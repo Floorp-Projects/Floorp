@@ -6,6 +6,9 @@
 
 const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
+Cu.import("resource://gre/modules/Log.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
+
 Cu.import("chrome://marionette/content/error.js");
 Cu.import("chrome://marionette/content/modal.js");
 
@@ -13,6 +16,8 @@ this.EXPORTED_SYMBOLS = ["proxy"];
 
 const uuidgen = Cc["@mozilla.org/uuid-generator;1"]
     .getService(Ci.nsIUUIDGenerator);
+
+const logger = Log.repository.getLogger("Marionette");
 
 // Proxy handler that traps requests to get a property.  Will prioritise
 // properties that exist on the object's own prototype.
@@ -44,8 +49,8 @@ this.proxy = {};
  * @param {function(string, Object, number)} sendAsyncFn
  *     Callback for sending async messages.
  */
-proxy.toListener = function (mmFn, sendAsyncFn) {
-  let sender = new proxy.AsyncMessageChannel(mmFn, sendAsyncFn);
+proxy.toListener = function (mmFn, sendAsyncFn, browserFn) {
+  let sender = new proxy.AsyncMessageChannel(mmFn, sendAsyncFn, browserFn);
   return new Proxy(sender, ownPriorityGetterTrap);
 };
 
@@ -58,14 +63,21 @@ proxy.toListener = function (mmFn, sendAsyncFn) {
  * that gets resolved when the message handler calls {@code .reply(...)}.
  */
 proxy.AsyncMessageChannel = class {
-  constructor(mmFn, sendAsyncFn) {
+  constructor(mmFn, sendAsyncFn, browserFn) {
+    this.mmFn_ = mmFn;
     this.sendAsync = sendAsyncFn;
+    this.browserFn_ = browserFn;
+
     // TODO(ato): Bug 1242595
     this.activeMessageId = null;
 
-    this.mmFn_ = mmFn;
     this.listeners_ = new Map();
     this.dialogueObserver_ = null;
+    this.closeHandler = null;
+  }
+
+  get browser() {
+    return this.browserFn_();
   }
 
   get mm() {
@@ -124,19 +136,79 @@ proxy.AsyncMessageChannel = class {
         }
       };
 
+      // The currently selected tab or window has been closed. No clean-up
+      // is necessary to do because all loaded listeners are gone.
+      this.closeHandler = event => {
+        logger.debug(`Received DOM event "${event.type}" for "${event.target}"`);
+
+        switch (event.type) {
+          case "TabClose":
+          case "unload":
+            this.removeHandlers();
+            resolve();
+            break;
+        }
+      }
+
+      // A modal or tab modal dialog has been opened. To be able to handle it,
+      // the active command has to be aborted. Therefore remove all handlers,
+      // and cancel any ongoing requests in the listener.
       this.dialogueObserver_ = (subject, topic) => {
-        this.cancelAll();
+        logger.debug(`Received observer notification "${topic}"`);
+
+        this.removeAllListeners_();
+        // TODO(ato): It's not ideal to have listener specific behaviour here:
+        this.sendAsync("cancelRequest");
+
+        this.removeHandlers();
         resolve();
       };
 
-      // start content message listener
-      // and install observers for global- and tab modal dialogues
+      // start content message listener, and install handlers for
+      // modal dialogues, and window/tab state changes.
       this.addListener_(path, cb);
-      modal.addHandler(this.dialogueObserver_);
+      this.addHandlers();
 
       // sendAsync is GeckoDriver#sendAsync
       this.sendAsync(name, marshal(args), uuid);
     });
+  }
+
+  /**
+   * Add all necessary handlers for events and observer notifications.
+   */
+  addHandlers() {
+    modal.addHandler(this.dialogueObserver_);
+
+    // Register event handlers in case the command closes the current tab or window,
+    // and the promise has to be escaped.
+    if (this.browser) {
+      this.browser.window.addEventListener("unload", this.closeHandler, false);
+
+      if (this.browser.tab) {
+        let node = this.browser.tab.addEventListener ?
+            this.browser.tab : this.browser.contentBrowser;
+        node.addEventListener("TabClose", this.closeHandler, false);
+      }
+    }
+  }
+
+  /**
+   * Remove all registered handlers for events and observer notifications.
+   */
+  removeHandlers() {
+    modal.removeHandler(this.dialogueObserver_);
+
+    if (this.browser) {
+      this.browser.window.removeEventListener("unload", this.closeHandler, false);
+
+      if (this.browser.tab) {
+        let node = this.browser.tab.addEventListener ?
+            this.browser.tab : this.browser.contentBrowser;
+
+        node.removeEventListener("TabClose", this.closeHandler, false);
+      }
+    }
   }
 
   /**
@@ -209,21 +281,10 @@ proxy.AsyncMessageChannel = class {
     return "Marionette:asyncReply:" + uuid;
   }
 
-  /**
-   * Abort listening for responses, remove all modal dialogue handlers,
-   * and cancel any ongoing requests in the listener.
-   */
-  cancelAll() {
-    this.removeAllListeners_();
-    modal.removeHandler(this.dialogueObserver_);
-    // TODO(ato): It's not ideal to have listener specific behaviour here:
-    this.sendAsync("cancelRequest");
-  }
-
   addListener_(path, callback) {
     let autoRemover = msg => {
       this.removeListener_(path);
-      modal.removeHandler(this.dialogueObserver_);
+      this.removeHandlers();
       callback(msg);
     };
 
