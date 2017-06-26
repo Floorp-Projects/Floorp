@@ -113,6 +113,9 @@ public:
 
   virtual nsresult Init(nsIDOMRange* aRange) override;
 
+  virtual nsresult Init(nsINode* aStartContainer, uint32_t aStartOffset,
+                        nsINode* aEndContainer, uint32_t aEndOffset) override;
+
   virtual void First() override;
 
   virtual void Last() override;
@@ -129,6 +132,15 @@ public:
 
 protected:
   virtual ~nsContentIterator();
+
+  /**
+   * Callers must guarantee that:
+   * - Neither aStartContainer nor aEndContainer is nullptr.
+   * - aStartOffset and aEndOffset are valid for its container.
+   * - The start point and the end point are in document order.
+   */
+  nsresult InitInternal(nsINode* aStartContainer, uint32_t aStartOffset,
+                        nsINode* aEndContainer, uint32_t aEndOffset);
 
   // Recursively get the deepest first/last child of aRoot.  This will return
   // aRoot itself if it has no children.
@@ -300,32 +312,45 @@ nsContentIterator::Init(nsINode* aRoot)
 nsresult
 nsContentIterator::Init(nsIDOMRange* aDOMRange)
 {
+  mIsDone = false;
+
   if (NS_WARN_IF(!aDOMRange)) {
     return NS_ERROR_INVALID_ARG;
   }
-  nsRange* range = static_cast<nsRange*>(aDOMRange);
 
+  nsRange* range = static_cast<nsRange*>(aDOMRange);
+  if (NS_WARN_IF(!range->IsPositioned())) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  return InitInternal(range->GetStartContainer(), range->StartOffset(),
+                      range->GetEndContainer(), range->EndOffset());
+}
+
+nsresult
+nsContentIterator::Init(nsINode* aStartContainer, uint32_t aStartOffset,
+                        nsINode* aEndContainer, uint32_t aEndOffset)
+{
   mIsDone = false;
 
+  if (NS_WARN_IF(!nsRange::IsValidPoints(aStartContainer, aStartOffset,
+                                         aEndContainer, aEndOffset))) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  return InitInternal(aStartContainer, aStartOffset,
+                      aEndContainer, aEndOffset);
+}
+
+// XXX Argument names will be replaced in the following patch.
+nsresult
+nsContentIterator::InitInternal(nsINode* startNode, uint32_t startIndx,
+                                nsINode* endNode, uint32_t endIndx)
+{
   // get common content parent
-  mCommonParent = range->GetCommonAncestor();
+  mCommonParent =
+    nsContentUtils::GetCommonAncestor(startNode, endNode);
   if (NS_WARN_IF(!mCommonParent)) {
-    return NS_ERROR_FAILURE;
-  }
-
-  // get the start node and offset
-  int32_t startIndx = range->StartOffset();
-  NS_WARNING_ASSERTION(startIndx >= 0, "bad startIndx");
-  nsINode* startNode = range->GetStartContainer();
-  if (NS_WARN_IF(!startNode)) {
-    return NS_ERROR_FAILURE;
-  }
-
-  // get the end node and offset
-  int32_t endIndx = range->EndOffset();
-  NS_WARNING_ASSERTION(endIndx >= 0, "bad endIndx");
-  nsINode* endNode = range->GetEndContainer();
-  if (NS_WARN_IF(!endNode)) {
     return NS_ERROR_FAILURE;
   }
 
@@ -1218,6 +1243,9 @@ public:
 
   virtual nsresult Init(nsIDOMRange* aRange) override;
 
+  virtual nsresult Init(nsINode* aStartContainer, uint32_t aStartOffset,
+                        nsINode* aEndContainer, uint32_t aEndOffset) override;
+
   virtual void Next() override;
 
   virtual void Prev() override;
@@ -1232,6 +1260,11 @@ public:
 
 protected:
   virtual ~nsContentSubtreeIterator() {}
+
+  /**
+   * Callers must guarantee that mRange isn't nullptr and is positioned.
+   */
+  nsresult InitWithRange();
 
   // Returns the highest inclusive ancestor of aNode that's in the range
   // (possibly aNode itself).  Returns null if aNode is null, or is not itself
@@ -1301,7 +1334,48 @@ nsContentSubtreeIterator::Init(nsIDOMRange* aRange)
 
   mIsDone = false;
 
-  mRange = static_cast<nsRange*>(aRange);
+  nsRange* range = static_cast<nsRange*>(aRange);
+  if (NS_WARN_IF(!range->IsPositioned())) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  mRange = range;
+
+  return InitWithRange();
+}
+
+nsresult
+nsContentSubtreeIterator::Init(nsINode* aStartContainer, uint32_t aStartOffset,
+                               nsINode* aEndContainer, uint32_t aEndOffset)
+{
+  mIsDone = false;
+
+  RefPtr<nsRange> range;
+  nsresult rv = nsRange::CreateRange(aStartContainer, aStartOffset,
+                                     aEndContainer, aEndOffset,
+                                     getter_AddRefs(range));
+  if (NS_WARN_IF(NS_FAILED(rv)) || NS_WARN_IF(!range) ||
+      NS_WARN_IF(!range->IsPositioned())) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  if (NS_WARN_IF(range->GetStartContainer() != aStartContainer) ||
+      NS_WARN_IF(range->GetEndContainer() != aEndContainer) ||
+      NS_WARN_IF(range->StartOffset() != aStartOffset) ||
+      NS_WARN_IF(range->EndOffset() != aEndOffset)) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  mRange = Move(range);
+
+  return InitWithRange();
+}
+
+nsresult
+nsContentSubtreeIterator::InitWithRange()
+{
+  MOZ_ASSERT(mRange);
+  MOZ_ASSERT(mRange->IsPositioned());
 
   // get the start node and offset, convert to nsINode
   mCommonParent = mRange->GetCommonAncestor();

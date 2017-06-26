@@ -31,6 +31,14 @@ public:
    */
   virtual nsresult Init(nsIDOMRange* aRange) = 0;
 
+  /* Initializes an iterator for the subtree between
+     aStartContainer/aStartOffset and aEndContainer/aEndOffset
+     Callers should guarantee that the start point and end point are in
+     document order.
+   */
+  virtual nsresult Init(nsINode* aStartContainer, uint32_t aStartOffset,
+                        nsINode* aEndContainer, uint32_t aEndOffset) = 0;
+
   /** First will reset the list.
    */
   virtual void First() = 0;

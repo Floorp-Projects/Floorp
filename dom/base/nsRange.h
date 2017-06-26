@@ -328,6 +328,13 @@ public:
     return ComputeRootNode(aNode, false);
   }
 
+  /**
+   * Return true if aStartContainer/aStartOffset and aEndContainer/aEndOffset
+   * are valid start and end points for a range.  Otherwise, return false.
+   */
+  static bool IsValidPoints(nsINode* aStartContainer, uint32_t aStartOffset,
+                            nsINode* aEndContainer, uint32_t aEndOffset);
+
 /******************************************************************************
  *  Utility routine to detect if a content node starts before a range and/or
  *  ends after a range.  If neither it is contained inside the range.

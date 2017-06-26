@@ -1263,6 +1263,41 @@ nsRange::ComputeRootNode(nsINode* aNode, bool aMaySpanAnonymousSubtrees)
   return root;
 }
 
+/* static */
+bool
+nsRange::IsValidPoints(nsINode* aStartContainer, uint32_t aStartOffset,
+                       nsINode* aEndContainer, uint32_t aEndOffset)
+{
+  // Use NS_WARN_IF() only for the cases where the arguments are unexpected.
+  if (NS_WARN_IF(!aStartContainer) || NS_WARN_IF(!aEndContainer) ||
+      NS_WARN_IF(!IsValidOffset(aStartContainer, aStartOffset)) ||
+      NS_WARN_IF(!IsValidOffset(aEndContainer, aEndOffset))) {
+    return false;
+  }
+
+  // Otherwise, don't use NS_WARN_IF() for preventing to make console messy.
+  // Instead, check one by one since it is easier to catch the error reason
+  // with debugger.
+
+  if (ComputeRootNode(aStartContainer) != ComputeRootNode(aEndContainer)) {
+    return false;
+  }
+
+  bool disconnected = false;
+  int32_t order =
+    nsContentUtils::ComparePoints(aStartContainer,
+                                    static_cast<int32_t>(aStartOffset),
+                                    aEndContainer,
+                                    static_cast<int32_t>(aEndOffset),
+                                    &disconnected);
+  // FYI: disconnected should be false unless |order| is 1.
+  if (order == 1 || NS_WARN_IF(disconnected)) {
+    return false;
+  }
+
+  return true;
+}
+
 void
 nsRange::SetStartJS(nsINode& aNode, uint32_t aOffset, ErrorResult& aErr)
 {
