@@ -977,6 +977,9 @@ struct RoleDescrComparator
   if (mRole == roles::DOCUMENT)
     return utils::LocalizedString(NS_LITERAL_STRING("htmlContent"));
 
+  if (mRole == roles::HEADING)
+    return utils::LocalizedString(NS_LITERAL_STRING("heading"));
+
   NSString* subrole = [self subrole];
 
   if (subrole) {
