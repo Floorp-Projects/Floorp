@@ -82,6 +82,14 @@ public:
    */
   bool shouldNotify();
 
+  /**
+   * Used by notifyComplete(), notifyError() and notifyResults() to notify on
+   * the calling thread.
+   */
+  nsresult notifyCompleteOnCallingThread();
+  nsresult notifyErrorOnCallingThread(mozIStorageError *aError);
+  nsresult notifyResultsOnCallingThread(ResultSet *aResultSet);
+
 private:
   AsyncExecuteStatements(StatementDataArray &aStatements,
                          Connection *aConnection,
@@ -189,7 +197,7 @@ private:
   // Note, this may not be a threadsafe object - never addref/release off
   // the calling thread.  We take a reference when this is created, and
   // release it in the CompletionNotifier::Run() call back to this thread.
-  RefPtr<mozIStorageStatementCallback> mCallback;
+  nsCOMPtr<mozIStorageStatementCallback> mCallback;
   nsCOMPtr<nsIThread> mCallingThread;
   RefPtr<ResultSet> mResultSet;
 

@@ -61,7 +61,7 @@ add_task(async function init() {
 add_task(async function test_upgrade_backup() {
   let test = await prepareTest();
   info("Let's check if we create an upgrade backup");
-  await OS.File.writeAtomic(Paths.clean, test.contents);
+  await OS.File.writeAtomic(Paths.clean, test.contents, {encoding: "utf-8", compression: "lz4"});
   await SessionFile.read(); // First call to read() initializes the SessionWorker
   await SessionFile.write(""); // First call to write() triggers the backup
 
@@ -69,15 +69,15 @@ add_task(async function test_upgrade_backup() {
 
   is((await OS.File.exists(Paths.upgradeBackup)), true, "upgrade backup file has been created");
 
-  let data = await OS.File.read(Paths.upgradeBackup);
+  let data = await OS.File.read(Paths.upgradeBackup, {compression: "lz4"});
   is(test.contents, (new TextDecoder()).decode(data), "upgrade backup contains the expected contents");
 
   info("Let's check that we don't overwrite this upgrade backup");
   let newContents = JSON.stringify({"something else entirely": Math.random()});
-  await OS.File.writeAtomic(Paths.clean, newContents);
+  await OS.File.writeAtomic(Paths.clean, newContents, {encoding: "utf-8", compression: "lz4"});
   await SessionFile.read(); // Reinitialize the SessionWorker
   await SessionFile.write(""); // Next call to write() shouldn't trigger the backup
-  data = await OS.File.read(Paths.upgradeBackup);
+  data = await OS.File.read(Paths.upgradeBackup, {compression: "lz4"});
   is(test.contents, (new TextDecoder()).decode(data), "upgrade backup hasn't changed");
 });
 
@@ -85,7 +85,7 @@ add_task(async function test_upgrade_backup_removal() {
   let test = await prepareTest();
   let maxUpgradeBackups = Preferences.get(PREF_MAX_UPGRADE_BACKUPS, 3);
   info("Let's see if we remove backups if there are too many");
-  await OS.File.writeAtomic(Paths.clean, test.contents);
+  await OS.File.writeAtomic(Paths.clean, test.contents, {encoding: "utf-8", compression: "lz4"});
 
   // if the nextUpgradeBackup already exists (from another test), remove it
   if (OS.File.exists(Paths.nextUpgradeBackup)) {
@@ -93,12 +93,12 @@ add_task(async function test_upgrade_backup_removal() {
   }
 
   // create dummy backups
-  await OS.File.writeAtomic(Paths.upgradeBackupPrefix + "20080101010101", "");
-  await OS.File.writeAtomic(Paths.upgradeBackupPrefix + "20090101010101", "");
-  await OS.File.writeAtomic(Paths.upgradeBackupPrefix + "20100101010101", "");
-  await OS.File.writeAtomic(Paths.upgradeBackupPrefix + "20110101010101", "");
-  await OS.File.writeAtomic(Paths.upgradeBackupPrefix + "20120101010101", "");
-  await OS.File.writeAtomic(Paths.upgradeBackupPrefix + "20130101010101", "");
+  await OS.File.writeAtomic(Paths.upgradeBackupPrefix + "20080101010101", "", {encoding: "utf-8", compression: "lz4"});
+  await OS.File.writeAtomic(Paths.upgradeBackupPrefix + "20090101010101", "", {encoding: "utf-8", compression: "lz4"});
+  await OS.File.writeAtomic(Paths.upgradeBackupPrefix + "20100101010101", "", {encoding: "utf-8", compression: "lz4"});
+  await OS.File.writeAtomic(Paths.upgradeBackupPrefix + "20110101010101", "", {encoding: "utf-8", compression: "lz4"});
+  await OS.File.writeAtomic(Paths.upgradeBackupPrefix + "20120101010101", "", {encoding: "utf-8", compression: "lz4"});
+  await OS.File.writeAtomic(Paths.upgradeBackupPrefix + "20130101010101", "", {encoding: "utf-8", compression: "lz4"});
 
   // get currently existing backups
   let backups = await getUpgradeBackups();

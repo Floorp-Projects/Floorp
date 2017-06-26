@@ -17,6 +17,7 @@
 #include <vector>
 #include <utility>
 
+#include "webrtc/common_types.h"
 #include "webrtc/base/checks.h"
 #include "webrtc/base/logging.h"
 #include "webrtc/base/trace_event.h"
@@ -324,8 +325,11 @@ bool RTPSenderVideo::SendVideo(RtpVideoCodecTypes video_type,
         rtp_header->SetExtension<VideoOrientation>(current_rotation);
       last_rotation_ = current_rotation;
     }
-    if (rid) {
-      rtp_header->SetExtensionWithLength<StreamId>(strlen(rid)-1, rid);
+    if (rid && rid[0]) {
+      const size_t len = strlen(rid);
+      if (len) {
+        rtp_header->SetExtensionWithLength<StreamId>(len - 1, rid);
+      }
     }
 
     // FEC settings.

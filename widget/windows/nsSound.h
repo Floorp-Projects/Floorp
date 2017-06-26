@@ -8,30 +8,38 @@
 #define __nsSound_h__
 
 #include "nsISound.h"
+#include "nsIObserver.h"
 #include "nsIStreamLoader.h"
 #include "nsCOMPtr.h"
+#include "mozilla/StaticPtr.h"
 
 class nsIThread;
 
-class nsSound : public nsISound,
-                public nsIStreamLoaderObserver
+class nsSound : public nsISound
+              , public nsIStreamLoaderObserver
+              , public nsIObserver
 
 {
-public: 
+public:
   nsSound();
-  void ShutdownOldPlayerThread();
+  static already_AddRefed<nsISound> GetInstance();
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSISOUND
   NS_DECL_NSISTREAMLOADEROBSERVER
+  NS_DECL_NSIOBSERVER
 
 private:
   virtual ~nsSound();
   void PurgeLastSound();
 
 private:
-  uint8_t* mLastSound;
+  nsresult CreatePlayerThread();
+
   nsCOMPtr<nsIThread> mPlayerThread;
+  bool mInited;
+
+  static mozilla::StaticRefPtr<nsISound> sInstance;
 };
 
 #endif /* __nsSound_h__ */

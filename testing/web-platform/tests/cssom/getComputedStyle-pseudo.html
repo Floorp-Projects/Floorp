@@ -40,4 +40,13 @@ test(function() {
     assert_equals(getComputedStyle(contents, pseudo).width, "50px");
   });
 }, "Resolution of width is correct for ::before and ::after pseudo-elements of display: contents elements");
+test(function() {
+  var has_no_pseudos = document.body;
+  has_no_pseudos.style.position = "relative";
+  [":before", ":after"].forEach(function(pseudo) {
+    assert_equals(getComputedStyle(has_no_pseudos, pseudo).position, "static",
+                  "Nonexistent " + pseudo + " pseudo-element shouldn't claim to have " +
+                  "the same style as the originating element");
+  });
+}, "Resolution of nonexistent pseudo-element styles");
 </script>

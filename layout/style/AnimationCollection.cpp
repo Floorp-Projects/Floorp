@@ -61,25 +61,6 @@ AnimationCollection<AnimationType>::GetAnimationCollection(
 template <class AnimationType>
 /* static */ AnimationCollection<AnimationType>*
 AnimationCollection<AnimationType>::GetAnimationCollection(
-  const dom::Element *aElement,
-  nsIAtom* aPseudoTagOrNull)
-{
-  MOZ_ASSERT(!aPseudoTagOrNull ||
-             aPseudoTagOrNull == nsCSSPseudoElements::before ||
-             aPseudoTagOrNull == nsCSSPseudoElements::after);
-
-  CSSPseudoElementType pseudoType = CSSPseudoElementType::NotPseudo;
-  if (aPseudoTagOrNull) {
-    pseudoType = aPseudoTagOrNull == nsCSSPseudoElements::before
-                 ? CSSPseudoElementType::before
-                 : CSSPseudoElementType::after;
-  }
-  return GetAnimationCollection(aElement, pseudoType);
-}
-
-template <class AnimationType>
-/* static */ AnimationCollection<AnimationType>*
-AnimationCollection<AnimationType>::GetAnimationCollection(
   const nsIFrame* aFrame)
 {
   Maybe<NonOwningAnimationTarget> pseudoElement =

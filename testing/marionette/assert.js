@@ -303,7 +303,7 @@ assert.object = function (obj, msg = "") {
     // different globals
     let s = Object.prototype.toString.call(o);
     return s == "[object Object]" || s == "[object nsJSIID]";
-  })(obj);
+  }, msg)(obj);
 };
 
 /**

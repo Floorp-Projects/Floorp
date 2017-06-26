@@ -70,12 +70,6 @@ public:
     GetAnimationCollection(const dom::Element* aElement,
                            CSSPseudoElementType aPseudoType);
 
-  // Get the collection of animations for the given |aElement| and
-  // |aPseudoTagOrNull|.
-  static AnimationCollection<AnimationType>*
-    GetAnimationCollection(const dom::Element* aElement,
-                           nsIAtom* aPseudoTagOrNull);
-
   // Given the frame |aFrame| with possibly animated content, finds its
   // associated collection of animations. If |aFrame| is a generated content
   // frame, this function may examine the parent frame to search for such

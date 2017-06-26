@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<resources>
+
+    <!-- This is chosen to be close to Android's listPreferredItemHeightSmall.
+         TODO: We should inherit these from the system.
+         http://androidxref.com/4.2.2_r1/xref/frameworks/base/core/res/res/values/themes.xml#1287 -->
+    <dimen name="menu_item_row_height">48dp</dimen>
+
+</resources>

@@ -97,7 +97,7 @@ RTPSender::RTPSender(
       payload_type_(-1),
       payload_type_map_(),
       rtp_header_extension_map_(),
-      rid_(NULL),
+      rid_{0},
       packet_history_(clock),
       flexfec_packet_history_(clock),
       // Statistics
@@ -166,10 +166,6 @@ RTPSender::~RTPSender() {
     delete it->second;
     payload_type_map_.erase(it);
   }
-
-  if (rid_) {
-    delete[] rid_;
-  }
 }
 
 uint16_t RTPSender::ActualSendBitrateKbit() const {
@@ -200,13 +196,12 @@ uint32_t RTPSender::NackOverheadRate() const {
 
 int32_t RTPSender::SetRID(const char* rid) {
   rtc::CritScope lock(&send_critsect_);
-  // TODO(jesup) avoid allocations
-  if (!rid_ || strlen(rid_) < strlen(rid)) {
-    // rid rarely changes length....
-    delete [] rid_;
-    rid_ = new char[strlen(rid)+1];
+  const size_t len = rid ? strlen(rid) : 0;
+  if (!len || len >= sizeof(rid_)) {
+    rid_[0] = '\0';
+  } else {
+    memmove(&rid_[0], rid, len + 1);
   }
-  strcpy(rid_, rid);
   return 0;
 }
 
@@ -455,7 +450,7 @@ bool RTPSender::SendOutgoingData(FrameType frame_type,
     result = video_->SendVideo(video_type, frame_type, payload_type,
                                rtp_timestamp, capture_time_ms, payload_data,
                                payload_size, fragmentation, rtp_header,
-                               rid_);
+                               &rid_[0]);
   }
 
   rtc::CritScope cs(&statistics_crit_);

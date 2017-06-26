@@ -129,7 +129,7 @@
 }
 
 #onboarding-tour-list > li:dir(rtl) {
-  background-position: right 27px center;
+  background-position-x: right 10px;
 }
 
 #onboarding-tour-list > li.onboarding-complete::before {

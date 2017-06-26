@@ -1,0 +1,242 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<resources>
+
+    <dimen name="standard_corner_radius">4dp</dimen>
+
+    <dimen name="autocomplete_min_width">200dp</dimen>
+    <dimen name="autocomplete_row_height">32dp</dimen>
+
+    <dimen name="browser_toolbar_height">48dp</dimen>
+    <!-- This value is the height of the Tabs Panel header view
+         (browser_toolbar_height) minus the height of the indicator
+         (6dp). This value should change when the height of the view changes. -->
+    <dimen name="tabs_panel_indicator_selected_padding_top">42dp</dimen>
+
+    <!-- We use two different values for browser_toolbar_height on tablet
+         which is inconsistent. Temporary value until bug 1150730 is fixed. -->
+    <dimen name="browser_toolbar_height_flipper">48dp</dimen>
+    <dimen name="browser_toolbar_button_padding">12dp</dimen>
+    <dimen name="browser_toolbar_icon_width">48dp</dimen>
+    <dimen name="browser_toolbar_menu_icon_height">16dp</dimen>
+
+    <!-- favicon_size includes 4dp of right padding. We can't use margin (which would allow us to
+         specify the actual size) because that would decrease the size of our hit target. -->
+    <dimen name="browser_toolbar_favicon_size">21.33dip</dimen>
+    <dimen name="browser_toolbar_shadow_size">2dp</dimen>
+
+    <!-- If you update one of these values, update the others. -->
+    <dimen name="tablet_nav_button_width">42dp</dimen>
+    <dimen name="tablet_nav_button_width_half">21dp</dimen>
+    <dimen name="tablet_nav_button_width_plus_half">63dp</dimen>
+
+    <dimen name="tablet_fwd_button_padding_start">18dp</dimen>
+    <dimen name="tablet_fwd_button_padding_end">0dp</dimen>
+
+    <!-- This is the system default for the vertical padding for the divider of the TabWidget.
+         Used to mimic the divider padding on the tablet tabs panel back button. -->
+    <dimen name="tab_panel_divider_vertical_padding">12dp</dimen>
+
+    <dimen name="tablet_tab_strip_height">48dp</dimen>
+    <dimen name="tablet_tab_strip_item_width">208dp</dimen>
+    <dimen name="tablet_tab_strip_fading_edge_size">15dp</dimen>
+    <dimen name="tablet_tab_strip_item_margin">-14dp</dimen>
+    <dimen name="tablet_tab_strip_divider_width">1dp</dimen>
+    <dimen name="tablet_tab_strip_divider_height">30dp</dimen>
+    <dimen name="tablet_tab_strip_divider_padding_bottom">6dp</dimen>
+    <dimen name="tablet_browser_toolbar_menu_item_width">56dp</dimen>
+    <!-- Padding combines with an 18dp image to form the menu item width and height. -->
+    <dimen name="tablet_browser_toolbar_menu_item_padding_horizontal">19dp</dimen>
+    <dimen name="tablet_browser_toolbar_menu_item_inset_vertical">5dp</dimen>
+    <dimen name="tablet_browser_toolbar_menu_item_inset_horizontal">3dp</dimen>
+    <dimen name="tablet_tab_strip_button_inset">5dp</dimen>
+
+    <!-- Dimensions used by Favicons and FaviconView -->
+    <dimen name="favicon_bg">32dp</dimen>
+    <dimen name="favicon_corner_radius">2dp</dimen>
+    <!-- Set the upper limit on the size of favicon that will be processed. Favicons larger than
+         this will be downscaled to this value. If you need to use larger Favicons (Due to a UI
+         redesign sometime after this is written) you should increase this value to the largest
+         commonly-used size of favicon and, performance permitting, fetch the remainder from the
+         database. The largest available size is always stored in the database, regardless of this
+         value.-->
+    <dimen name="favicon_largest_interesting_size">32dp</dimen>
+    <!-- Small favicon used in about:home(TopsitesPanel, BookmarksPanel and CombinedHistoryPanel) -->
+    <dimen name="favicon_small_size">25dp</dimen>
+
+    <dimen name="firstrun_content_width">300dp</dimen>
+    <dimen name="firstrun_min_height">120dp</dimen>
+    <dimen name="firstrun_background_height">120dp</dimen>
+
+    <dimen name="overlay_prompt_content_width">260dp</dimen>
+    <dimen name="overlay_prompt_button_width">148dp</dimen>
+    <dimen name="overlay_prompt_container_width">@dimen/match_parent</dimen>
+
+    <!-- Site security icon -->
+    <dimen name="browser_toolbar_site_security_height">32dp</dimen>
+    <dimen name="browser_toolbar_site_security_width">32dp</dimen>
+    <dimen name="browser_toolbar_site_security_margin_end">0dp</dimen>
+    <dimen name="browser_toolbar_site_security_padding_vertical">7dp</dimen>
+    <dimen name="browser_toolbar_site_security_padding_horizontal">7dp</dimen>
+
+    <!-- If one of these values changes, they all should. -->
+    <dimen name="browser_toolbar_site_security_margin_bottom">.5dp</dimen>
+    <dimen name="site_security_unknown_inset_top">1dp</dimen>
+    <dimen name="site_security_unknown_inset_bottom">-1dp</dimen>
+
+    <dimen name="home_folder_title_oneline_textsize">16sp</dimen>
+    <dimen name="home_folder_title_twoline_textsize">14sp</dimen>
+    <dimen name="home_twolinepagerow_title_textsize">16sp</dimen>
+
+    <dimen name="page_row_edge_padding">16dp</dimen>
+
+    <!-- Regular page row on about:home -->
+    <dimen name="page_row_height">56dp</dimen>
+
+    <!-- Group/heading page row on about:home -->
+    <dimen name="page_group_height">56dp</dimen>
+    <dimen name="home_header_item_height">56dp</dimen>
+    <dimen name="page_row_divider_height">1dp</dimen>
+
+    <!-- Remote Tabs static view top padding. Less in landscape on phones. -->
+    <dimen name="home_remote_tabs_top_padding">48dp</dimen>
+
+    <!-- Remote Tabs Hidden devices row height -->
+    <dimen name="home_remote_tabs_hidden_footer_height">40dp</dimen>
+
+    <!-- Search Engine Row height -->
+    <dimen name="search_row_height">48dp</dimen>
+
+    <dimen name="doorhanger_width">300dp</dimen>
+    <dimen name="doorhanger_input_width">250dp</dimen>
+    <dimen name="doorhanger_offsetX">12dp</dimen>
+    <dimen name="doorhanger_offsetY">67dp</dimen>
+    <dimen name="doorhanger_drawable_padding">5dp</dimen>
+    <dimen name="doorhanger_subsection_padding">8dp</dimen>
+    <dimen name="doorhanger_section_padding_small">10dp</dimen>
+    <dimen name="doorhanger_section_padding_medium">20dp</dimen>
+    <dimen name="doorhanger_section_padding_large">30dp</dimen>
+    <dimen name="doorhanger_icon_size">60dp</dimen>
+    <dimen name="doorhanger_rounded_corner_radius">4dp</dimen>
+
+    <dimen name="context_menu_item_horizontal_padding">10dp</dimen>
+
+    <dimen name="flow_layout_spacing">6dp</dimen>
+    <dimen name="menu_item_icon">21dp</dimen>
+    <dimen name="menu_item_textsize">16sp</dimen>
+    <dimen name="menu_item_state_icon">18dp</dimen>
+    <!-- This is chosen to match Android's listPreferredItemHeight.
+         TODO: We should inherit these from the system.
+         http://androidxref.com/4.2.2_r1/xref/frameworks/base/core/res/res/values/themes.xml#123 -->
+    <dimen name="menu_item_row_height">64dip</dimen>
+    <dimen name="menu_item_row_width">240dp</dimen>
+    <dimen name="menu_popup_width">256dp</dimen>
+    <dimen name="nav_button_border_width">1dp</dimen>
+    <dimen name="prompt_service_group_padding_size">32dp</dimen>
+    <dimen name="prompt_service_icon_size">36dp</dimen>
+    <dimen name="prompt_service_icon_text_padding">10dp</dimen>
+    <dimen name="prompt_service_inputs_padding">16dp</dimen>
+    <dimen name="prompt_service_left_right_text_with_icon_padding">10dp</dimen>
+    <dimen name="prompt_service_top_bottom_text_with_icon_padding">8dp</dimen>
+    <dimen name="tabs_panel_indicator_width">60dp</dimen>
+    <dimen name="tabs_panel_button_width">48dp</dimen>
+    <dimen name="tabs_strip_height">48dp</dimen>
+    <dimen name="tabs_strip_button_width">100dp</dimen>
+    <dimen name="tabs_strip_button_padding">18dp</dimen>
+    <dimen name="tabs_strip_shadow_size">1dp</dimen>
+    <dimen name="validation_message_height">50dp</dimen>
+    <dimen name="validation_message_margin_top">6dp</dimen>
+
+    <dimen name="tab_thumbnail_width">121dp</dimen>
+    <dimen name="tab_thumbnail_height">90dp</dimen>
+    <dimen name="tab_panel_item_width">129dp</dimen>
+    <dimen name="tab_panel_grid_hpadding">20dp</dimen>
+    <!-- Top and bottom tab panel grid padding is split between tab_panel_grid_vpadding (the
+         RecyclerView padding) and tab_panel_grid_item_vpadding (individual item padding). -->
+    <dimen name="tab_panel_grid_vpadding">9dp</dimen>
+    <dimen name="tab_panel_grid_ideal_item_hspacing">20dp</dimen>
+    <dimen name="tab_panel_grid_min_item_hspacing">2dp</dimen>
+    <dimen name="tab_panel_grid_item_vpadding">10dp</dimen>
+
+    <dimen name="tab_highlight_stroke_width">4dp</dimen>
+
+    <!-- PageActionButtons dimensions -->
+    <dimen name="page_action_button_width">32dp</dimen>
+
+    <!-- Banner -->
+    <dimen name="home_banner_height">72dp</dimen>
+    <dimen name="home_banner_close_width">42dp</dimen>
+    <dimen name="home_banner_icon_height">48dip</dimen>
+    <dimen name="home_banner_icon_width">48dip</dimen>
+
+    <!-- Icon Grid -->
+    <dimen name="icongrid_columnwidth">128dp</dimen>
+    <dimen name="icongrid_padding">16dp</dimen>
+
+    <!-- PanelRecyclerView dimensions -->
+    <dimen name="panel_grid_view_column_width">150dp</dimen>
+    <dimen name="panel_grid_view_horizontal_spacing">3dp</dimen>
+    <dimen name="panel_grid_view_vertical_spacing">3dp</dimen>
+    <dimen name="panel_grid_view_outer_spacing">3dp</dimen>
+
+    <!-- PanelItemView dimensions -->
+    <dimen name="panel_article_item_height">95dp</dimen>
+
+    <!-- Button toast dimenstions. -->
+    <dimen name="toast_button_corner_radius">2dp</dimen>
+
+    <!-- TabHistoryItemRow dimensions. -->
+    <dimen name="tab_history_timeline_width">3dp</dimen>
+    <dimen name="tab_history_timeline_height">14dp</dimen>
+    <dimen name="tab_history_favicon_bg">32dp</dimen>
+    <dimen name="tab_history_favicon_padding">5dp</dimen>
+    <dimen name="tab_history_favicon_border_enabled">3dp</dimen>
+    <dimen name="tab_history_favicon_border_disabled">1dp</dimen>
+    <dimen name="tab_history_combo_margin_start">15dp</dimen>
+    <dimen name="tab_history_combo_margin_end">15dp</dimen>
+    <dimen name="tab_history_title_fading_width">50dp</dimen>
+    <dimen name="tab_history_title_margin_end">15dp</dimen>
+    <dimen name="tab_history_title_text_size">14sp</dimen>
+    <dimen name="tab_history_bg_width">2dp</dimen>
+    <dimen name="tab_history_border_padding">2dp</dimen>
+
+    <!-- Find-In-Page dialog dimensions. -->
+    <dimen name="find_in_page_text_margin_start">5dip</dimen>
+    <dimen name="find_in_page_text_margin_end">12dip</dimen>
+    <dimen name="find_in_page_text_padding_start">10dip</dimen>
+    <dimen name="find_in_page_text_padding_end">10dip</dimen>
+    <dimen name="find_in_page_status_margin_end">10dip</dimen>
+    <dimen name="find_in_page_control_margin_top">2dip</dimen>
+
+    <!-- Matches the built-in divider height. fwiw, in the framework
+         I suspect this is a drawable rather than a dimen.  -->
+    <dimen name="action_bar_divider_height">2dp</dimen>
+
+    <!-- http://blog.danlew.net/2015/01/06/handling-android-resources-with-non-standard-formats/ -->
+    <item name="match_parent" type="dimen">-1</item>
+    <item name="wrap_content" type="dimen">-2</item>
+
+    <item name="tab_strip_content_start" type="dimen">12dp</item>
+    <item name="firstrun_tab_strip_content_start" type="dimen">15dp</item>
+
+    <item name="notification_media_cover" type="dimen">128dp</item>
+
+    <item name="activity_stream_base_margin" type="dimen">10dp</item>
+    <item name="activity_stream_desired_tile_width" type="dimen">90dp</item>
+    <item name="activity_stream_desired_tile_height" type="dimen">70dp</item>
+    <item name="activity_stream_top_sites_text_height" type="dimen">30dp</item>
+
+    <!-- Default touch target size for buttons/imageviews that might be of small size -->
+    <item name="touch_target_size" type="dimen">48dp</item>
+
+    <!-- Custom tabs -->
+    <dimen name="custom_tab_action_button_size">56dp</dimen>
+    <dimen name="custom_tab_action_button_padding">16dp</dimen>
+
+    <!-- Full bookmark management -->
+    <dimen name="bookmark_folder_first_child_padding">40dp</dimen>
+    <dimen name="bookmark_folder_child_padding">16dp</dimen>
+</resources>

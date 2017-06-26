@@ -32,7 +32,7 @@ add_task(async function test_legacy_indexedDB_storagePersistent_unlimitedStorage
     },
 
     background: async function() {
-      const PROMISE_RACE_TIMEOUT = 2000;
+      const PROMISE_RACE_TIMEOUT = 8000;
 
       browser.test.sendMessage("extension-uuid", window.location.host);
 

@@ -97,17 +97,6 @@ class TestTimeouts(MarionetteTestCase):
              setTimeout(function() { callback(true); }, 500);
              """))
 
-    def test_compat_input_types(self):
-        # When using the spec-incompatible input format which we have
-        # for backwards compatibility, it should be possible to send ms
-        # as a string type and have the server parseInt it to an integer.
-        body = {"type": "script", "ms": "30000"}
-        self.marionette._send_message("setTimeouts", body)
-
-    def test_deprecated_set_timeouts_command(self):
-        body = {"implicit": 3000}
-        self.marionette._send_message("timeouts", body)
-
     def test_deprecated_set_search_timeout(self):
         self.marionette.set_search_timeout(1000)
         self.assertEqual(1, self.marionette.timeout.implicit)

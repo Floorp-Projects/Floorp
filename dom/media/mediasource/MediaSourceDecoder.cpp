@@ -44,10 +44,12 @@ MediaSourceDecoder::CreateStateMachine()
 }
 
 nsresult
-MediaSourceDecoder::Load(nsIStreamListener**)
+MediaSourceDecoder::Load(nsIPrincipal* aPrincipal)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(!GetStateMachine());
+
+  mResource = new MediaSourceResource(aPrincipal);
 
   nsresult rv = MediaShutdownManager::Instance().Register(this);
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -166,13 +168,6 @@ MediaSourceDecoder::Shutdown()
   mDemuxer = nullptr;
 
   MediaDecoder::Shutdown();
-}
-
-/*static*/
-already_AddRefed<MediaResource>
-MediaSourceDecoder::CreateResource(nsIPrincipal* aPrincipal)
-{
-  return RefPtr<MediaResource>(new MediaSourceResource(aPrincipal)).forget();
 }
 
 void

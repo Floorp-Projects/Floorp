@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<resources>
+    <dimen name="tab_panel_item_width">143dip</dimen>
+    <dimen name="tab_thumbnail_height">100dip</dimen>
+    <dimen name="tab_thumbnail_width">135dip</dimen>
+</resources>

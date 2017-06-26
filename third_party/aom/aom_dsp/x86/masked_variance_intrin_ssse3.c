@@ -212,15 +212,15 @@ static void bilinear_filter(const uint8_t *src, int src_stride, int xoffset,
   }
 }
 
-static INLINE __m128i filter_block_2rows(const __m128i a0, const __m128i b0,
-                                         const __m128i a1, const __m128i b1,
-                                         const __m128i filter) {
-  __m128i v0 = _mm_unpacklo_epi8(a0, b0);
-  v0 = _mm_maddubs_epi16(v0, filter);
+static INLINE __m128i filter_block_2rows(const __m128i *a0, const __m128i *b0,
+                                         const __m128i *a1, const __m128i *b1,
+                                         const __m128i *filter) {
+  __m128i v0 = _mm_unpacklo_epi8(*a0, *b0);
+  v0 = _mm_maddubs_epi16(v0, *filter);
   v0 = xx_roundn_epu16(v0, FILTER_BITS);
 
-  __m128i v1 = _mm_unpacklo_epi8(a1, b1);
-  v1 = _mm_maddubs_epi16(v1, filter);
+  __m128i v1 = _mm_unpacklo_epi8(*a1, *b1);
+  v1 = _mm_maddubs_epi16(v1, *filter);
   v1 = xx_roundn_epu16(v1, FILTER_BITS);
 
   return _mm_packus_epi16(v0, v1);
@@ -256,7 +256,7 @@ static void bilinear_filter8xh(const uint8_t *src, int src_stride, int xoffset,
       const __m128i z0 = _mm_srli_si128(x0, 1);
       const __m128i x1 = _mm_loadu_si128((__m128i *)&src[src_stride]);
       const __m128i z1 = _mm_srli_si128(x1, 1);
-      const __m128i res = filter_block_2rows(x0, z0, x1, z1, hfilter_vec);
+      const __m128i res = filter_block_2rows(&x0, &z0, &x1, &z1, &hfilter_vec);
       _mm_storeu_si128((__m128i *)b, res);
 
       src += src_stride * 2;
@@ -290,7 +290,7 @@ static void bilinear_filter8xh(const uint8_t *src, int src_stride, int xoffset,
       const __m128i x = _mm_loadl_epi64((__m128i *)dst);
       const __m128i y = _mm_loadl_epi64((__m128i *)&dst[8]);
       const __m128i z = _mm_loadl_epi64((__m128i *)&dst[16]);
-      const __m128i res = filter_block_2rows(x, y, y, z, vfilter_vec);
+      const __m128i res = filter_block_2rows(&x, &y, &y, &z, &vfilter_vec);
       _mm_storeu_si128((__m128i *)dst, res);
 
       dst += 16;
@@ -337,7 +337,7 @@ static void bilinear_filter4xh(const uint8_t *src, int src_stride, int xoffset,
       const __m128i b0 = _mm_unpacklo_epi32(z0, z1);
       const __m128i a1 = _mm_unpacklo_epi32(x2, x3);
       const __m128i b1 = _mm_unpacklo_epi32(z2, z3);
-      const __m128i res = filter_block_2rows(a0, b0, a1, b1, hfilter_vec);
+      const __m128i res = filter_block_2rows(&a0, &b0, &a1, &b1, &hfilter_vec);
       _mm_storeu_si128((__m128i *)b, res);
 
       src += src_stride * 4;
@@ -378,7 +378,7 @@ static void bilinear_filter4xh(const uint8_t *src, int src_stride, int xoffset,
       const __m128i b0 = _mm_unpacklo_epi32(b, c);
       const __m128i a1 = _mm_unpacklo_epi32(c, d);
       const __m128i b1 = _mm_unpacklo_epi32(d, e);
-      const __m128i res = filter_block_2rows(a0, b0, a1, b1, vfilter_vec);
+      const __m128i res = filter_block_2rows(&a0, &b0, &a1, &b1, &vfilter_vec);
       _mm_storeu_si128((__m128i *)dst, res);
 
       dst += 16;
@@ -386,29 +386,29 @@ static void bilinear_filter4xh(const uint8_t *src, int src_stride, int xoffset,
   }
 }
 
-static INLINE void accumulate_block(const __m128i src, const __m128i a,
-                                    const __m128i b, const __m128i m,
+static INLINE void accumulate_block(const __m128i *src, const __m128i *a,
+                                    const __m128i *b, const __m128i *m,
                                     __m128i *sum, __m128i *sum_sq) {
   const __m128i zero = _mm_setzero_si128();
   const __m128i one = _mm_set1_epi16(1);
   const __m128i mask_max = _mm_set1_epi8((1 << AOM_BLEND_A64_ROUND_BITS));
-  const __m128i m_inv = _mm_sub_epi8(mask_max, m);
+  const __m128i m_inv = _mm_sub_epi8(mask_max, *m);
 
   // Calculate 16 predicted pixels.
   // Note that the maximum value of any entry of 'pred_l' or 'pred_r'
   // is 64 * 255, so we have plenty of space to add rounding constants.
-  const __m128i data_l = _mm_unpacklo_epi8(a, b);
-  const __m128i mask_l = _mm_unpacklo_epi8(m, m_inv);
+  const __m128i data_l = _mm_unpacklo_epi8(*a, *b);
+  const __m128i mask_l = _mm_unpacklo_epi8(*m, m_inv);
   __m128i pred_l = _mm_maddubs_epi16(data_l, mask_l);
   pred_l = xx_roundn_epu16(pred_l, AOM_BLEND_A64_ROUND_BITS);
 
-  const __m128i data_r = _mm_unpackhi_epi8(a, b);
-  const __m128i mask_r = _mm_unpackhi_epi8(m, m_inv);
+  const __m128i data_r = _mm_unpackhi_epi8(*a, *b);
+  const __m128i mask_r = _mm_unpackhi_epi8(*m, m_inv);
   __m128i pred_r = _mm_maddubs_epi16(data_r, mask_r);
   pred_r = xx_roundn_epu16(pred_r, AOM_BLEND_A64_ROUND_BITS);
 
-  const __m128i src_l = _mm_unpacklo_epi8(src, zero);
-  const __m128i src_r = _mm_unpackhi_epi8(src, zero);
+  const __m128i src_l = _mm_unpacklo_epi8(*src, zero);
+  const __m128i src_r = _mm_unpackhi_epi8(*src, zero);
   const __m128i diff_l = _mm_sub_epi16(pred_l, src_l);
   const __m128i diff_r = _mm_sub_epi16(pred_r, src_r);
 
@@ -434,7 +434,7 @@ static void masked_variance(const uint8_t *src_ptr, int src_stride,
       const __m128i a = _mm_loadu_si128((const __m128i *)&a_ptr[x]);
       const __m128i b = _mm_loadu_si128((const __m128i *)&b_ptr[x]);
       const __m128i m = _mm_loadu_si128((const __m128i *)&m_ptr[x]);
-      accumulate_block(src, a, b, m, &sum, &sum_sq);
+      accumulate_block(&src, &a, &b, &m, &sum, &sum_sq);
     }
 
     src_ptr += src_stride;
@@ -465,7 +465,7 @@ static void masked_variance8xh(const uint8_t *src_ptr, int src_stride,
     const __m128i m =
         _mm_unpacklo_epi64(_mm_loadl_epi64((const __m128i *)m_ptr),
                            _mm_loadl_epi64((const __m128i *)&m_ptr[m_stride]));
-    accumulate_block(src, a, b, m, &sum, &sum_sq);
+    accumulate_block(&src, &a, &b, &m, &sum, &sum_sq);
 
     src_ptr += src_stride * 2;
     a_ptr += 16;
@@ -497,7 +497,7 @@ static void masked_variance4xh(const uint8_t *src_ptr, int src_stride,
     const __m128i m = _mm_setr_epi32(
         *(uint32_t *)m_ptr, *(uint32_t *)&m_ptr[m_stride],
         *(uint32_t *)&m_ptr[m_stride * 2], *(uint32_t *)&m_ptr[m_stride * 3]);
-    accumulate_block(src, a, b, m, &sum, &sum_sq);
+    accumulate_block(&src, &a, &b, &m, &sum, &sum_sq);
 
     src_ptr += src_stride * 4;
     a_ptr += 16;
@@ -780,17 +780,17 @@ static void highbd_bilinear_filter(const uint16_t *src, int src_stride,
   }
 }
 
-static INLINE __m128i highbd_filter_block_2rows(const __m128i a0,
-                                                const __m128i b0,
-                                                const __m128i a1,
-                                                const __m128i b1,
-                                                const __m128i filter) {
-  __m128i v0 = _mm_unpacklo_epi16(a0, b0);
-  v0 = _mm_madd_epi16(v0, filter);
+static INLINE __m128i highbd_filter_block_2rows(const __m128i *a0,
+                                                const __m128i *b0,
+                                                const __m128i *a1,
+                                                const __m128i *b1,
+                                                const __m128i *filter) {
+  __m128i v0 = _mm_unpacklo_epi16(*a0, *b0);
+  v0 = _mm_madd_epi16(v0, *filter);
   v0 = xx_roundn_epu32(v0, FILTER_BITS);
 
-  __m128i v1 = _mm_unpacklo_epi16(a1, b1);
-  v1 = _mm_madd_epi16(v1, filter);
+  __m128i v1 = _mm_unpacklo_epi16(*a1, *b1);
+  v1 = _mm_madd_epi16(v1, *filter);
   v1 = xx_roundn_epu32(v1, FILTER_BITS);
 
   return _mm_packs_epi32(v0, v1);
@@ -828,7 +828,7 @@ static void highbd_bilinear_filter4xh(const uint16_t *src, int src_stride,
       const __m128i x1 = _mm_loadu_si128((__m128i *)&src[src_stride]);
       const __m128i z1 = _mm_srli_si128(x1, 2);
       const __m128i res =
-          highbd_filter_block_2rows(x0, z0, x1, z1, hfilter_vec);
+          highbd_filter_block_2rows(&x0, &z0, &x1, &z1, &hfilter_vec);
       _mm_storeu_si128((__m128i *)b, res);
 
       src += src_stride * 2;
@@ -862,7 +862,8 @@ static void highbd_bilinear_filter4xh(const uint16_t *src, int src_stride,
       const __m128i x = _mm_loadl_epi64((__m128i *)dst);
       const __m128i y = _mm_loadl_epi64((__m128i *)&dst[4]);
       const __m128i z = _mm_loadl_epi64((__m128i *)&dst[8]);
-      const __m128i res = highbd_filter_block_2rows(x, y, y, z, vfilter_vec);
+      const __m128i res =
+          highbd_filter_block_2rows(&x, &y, &y, &z, &vfilter_vec);
       _mm_storeu_si128((__m128i *)dst, res);
 
       dst += 8;

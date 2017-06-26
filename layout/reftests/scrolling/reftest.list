@@ -10,17 +10,17 @@ random-if(Android) fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu),1,12) == 
 random-if(Android) HTTP == image-1.html image-1.html?ref
 random-if(Android) HTTP == opacity-mixed-scrolling-1.html opacity-mixed-scrolling-1.html?ref # bug 760269
 random-if(cocoaWidget) HTTP == opacity-mixed-scrolling-2.html opacity-mixed-scrolling-2.html?ref # see bug 625357
-skip-if(Android) pref(layout.css.scroll-behavior.enabled,true) pref(layout.css.scroll-behavior.property-enabled,true) == scroll-behavior-1.html scroll-behavior-1.html?ref # see bug 1041833
-skip-if(Android) pref(layout.css.scroll-behavior.enabled,true) pref(layout.css.scroll-behavior.property-enabled,true) == scroll-behavior-2.html scroll-behavior-2.html?ref # see bug 1041833
-skip-if(Android) pref(layout.css.scroll-behavior.enabled,true) pref(layout.css.scroll-behavior.property-enabled,true) == scroll-behavior-3.html scroll-behavior-3.html?ref # see bug 1041833
-skip-if(Android) pref(layout.css.scroll-behavior.enabled,true) pref(layout.css.scroll-behavior.property-enabled,true) == scroll-behavior-4.html scroll-behavior-4.html?ref # see bug 1041833
-skip-if(Android) pref(layout.css.scroll-behavior.enabled,true) pref(layout.css.scroll-behavior.property-enabled,true) == scroll-behavior-5.html scroll-behavior-5.html?ref # see bug 1041833
-skip-if(Android) pref(layout.css.scroll-behavior.enabled,true) pref(layout.css.scroll-behavior.property-enabled,true) == scroll-behavior-6.html scroll-behavior-6.html?ref # see bug 1041833
-skip-if(Android) pref(layout.css.scroll-behavior.enabled,true) pref(layout.css.scroll-behavior.property-enabled,true) == scroll-behavior-7.html scroll-behavior-7.html?ref # see bug 1041833
-skip-if(Android) pref(layout.css.scroll-behavior.enabled,true) pref(layout.css.scroll-behavior.property-enabled,true) == scroll-behavior-8.html scroll-behavior-8.html?ref # see bug 1041833
-skip-if(Android) pref(layout.css.scroll-behavior.enabled,true) pref(layout.css.scroll-behavior.property-enabled,true) == scroll-behavior-9.html scroll-behavior-9.html?ref # see bug 1041833
-skip-if(Android) pref(layout.css.scroll-behavior.enabled,true) pref(layout.css.scroll-behavior.property-enabled,true) == scroll-behavior-10.html scroll-behavior-10.html?ref # see bug 1041833
-skip-if(Android) pref(layout.css.scroll-behavior.enabled,true) pref(layout.css.scroll-behavior.property-enabled,true) == scroll-behavior-textarea.html scroll-behavior-textarea.html?ref # see bug 1320200
+pref(layout.css.scroll-behavior.enabled,true) pref(layout.css.scroll-behavior.property-enabled,true) == scroll-behavior-1.html scroll-behavior-1.html?ref
+pref(layout.css.scroll-behavior.enabled,true) pref(layout.css.scroll-behavior.property-enabled,true) == scroll-behavior-2.html scroll-behavior-2.html?ref
+pref(layout.css.scroll-behavior.enabled,true) pref(layout.css.scroll-behavior.property-enabled,true) == scroll-behavior-3.html scroll-behavior-3.html?ref
+pref(layout.css.scroll-behavior.enabled,true) pref(layout.css.scroll-behavior.property-enabled,true) == scroll-behavior-4.html scroll-behavior-4.html?ref
+pref(layout.css.scroll-behavior.enabled,true) pref(layout.css.scroll-behavior.property-enabled,true) == scroll-behavior-5.html scroll-behavior-5.html?ref
+pref(layout.css.scroll-behavior.enabled,true) pref(layout.css.scroll-behavior.property-enabled,true) == scroll-behavior-6.html scroll-behavior-6.html?ref
+pref(layout.css.scroll-behavior.enabled,true) pref(layout.css.scroll-behavior.property-enabled,true) == scroll-behavior-7.html scroll-behavior-7.html?ref
+pref(layout.css.scroll-behavior.enabled,true) pref(layout.css.scroll-behavior.property-enabled,true) == scroll-behavior-8.html scroll-behavior-8.html?ref
+pref(layout.css.scroll-behavior.enabled,true) pref(layout.css.scroll-behavior.property-enabled,true) == scroll-behavior-9.html scroll-behavior-9.html?ref
+pref(layout.css.scroll-behavior.enabled,true) pref(layout.css.scroll-behavior.property-enabled,true) == scroll-behavior-10.html scroll-behavior-10.html?ref
+pref(layout.css.scroll-behavior.enabled,true) pref(layout.css.scroll-behavior.property-enabled,true) == scroll-behavior-textarea.html scroll-behavior-textarea.html?ref
 HTTP == simple-1.html simple-1.html?ref
 skip-if(styloVsGecko) HTTP == subpixel-1.html#d subpixel-1-ref.html#d # bug 1354406
 fuzzy-if(Android,4,120) HTTP == text-1.html text-1.html?ref

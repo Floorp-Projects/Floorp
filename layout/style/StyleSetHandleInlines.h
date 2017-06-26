@@ -263,17 +263,14 @@ already_AddRefed<nsStyleContext>
 StyleSetHandle::Ptr::ProbePseudoElementStyle(dom::Element* aParentElement,
                                              CSSPseudoElementType aType,
                                              nsStyleContext* aParentContext,
-                                             TreeMatchContext* aTreeMatchContext,
-                                             dom::Element* aPseudoElement)
+                                             TreeMatchContext* aTreeMatchContext)
 {
   if (IsGecko()) {
     MOZ_ASSERT(aTreeMatchContext);
     return AsGecko()->ProbePseudoElementStyle(aParentElement, aType, aParentContext,
-                                              *aTreeMatchContext, aPseudoElement);
-  } else {
-    return AsServo()->ProbePseudoElementStyle(aParentElement, aType, aParentContext,
-                                              aPseudoElement);
+                                              *aTreeMatchContext);
   }
+  return AsServo()->ProbePseudoElementStyle(aParentElement, aType, aParentContext);
 }
 
 nsRestyleHint

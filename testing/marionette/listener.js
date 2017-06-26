@@ -16,7 +16,6 @@ Cu.import("chrome://marionette/content/accessibility.js");
 Cu.import("chrome://marionette/content/action.js");
 Cu.import("chrome://marionette/content/atom.js");
 Cu.import("chrome://marionette/content/capture.js");
-Cu.import("chrome://marionette/content/cookies.js");
 Cu.import("chrome://marionette/content/element.js");
 Cu.import("chrome://marionette/content/error.js");
 Cu.import("chrome://marionette/content/evaluate.js");
@@ -79,7 +78,6 @@ var asyncChrome = proxy.toChromeAsync({
   sendAsyncMessage: sendAsyncMessage.bind(this),
 });
 var syncChrome = proxy.toChrome(sendSyncMessage.bind(this));
-var cookies = new Cookies(() => curContainer.frame.document, syncChrome);
 
 Cu.import("resource://gre/modules/Log.jsm");
 var logger = Log.repository.getLogger("Marionette");
@@ -472,19 +470,16 @@ var clearElementFn = dispatch(clearElement);
 var isElementDisplayedFn = dispatch(isElementDisplayed);
 var getElementValueOfCssPropertyFn = dispatch(getElementValueOfCssProperty);
 var switchToShadowRootFn = dispatch(switchToShadowRoot);
-var getCookiesFn = dispatch(getCookies);
 var singleTapFn = dispatch(singleTap);
 var takeScreenshotFn = dispatch(takeScreenshot);
 var performActionsFn = dispatch(performActions);
 var releaseActionsFn = dispatch(releaseActions);
 var actionChainFn = dispatch(actionChain);
 var multiActionFn = dispatch(multiAction);
-var addCookieFn = dispatch(addCookie);
-var deleteCookieFn = dispatch(deleteCookie);
-var deleteAllCookiesFn = dispatch(deleteAllCookies);
 var executeFn = dispatch(execute);
 var executeInSandboxFn = dispatch(executeInSandbox);
 var sendKeysToElementFn = dispatch(sendKeysToElement);
+var reftestWaitFn = dispatch(reftestWait);
 
 /**
  * Start all message listeners
@@ -528,10 +523,7 @@ function startListeners() {
   addMessageListenerId("Marionette:sleepSession", sleepSession);
   addMessageListenerId("Marionette:getAppCacheStatus", getAppCacheStatus);
   addMessageListenerId("Marionette:takeScreenshot", takeScreenshotFn);
-  addMessageListenerId("Marionette:addCookie", addCookieFn);
-  addMessageListenerId("Marionette:getCookies", getCookiesFn);
-  addMessageListenerId("Marionette:deleteAllCookies", deleteAllCookiesFn);
-  addMessageListenerId("Marionette:deleteCookie", deleteCookieFn);
+  addMessageListenerId("Marionette:reftestWait", reftestWaitFn);
 }
 
 /**
@@ -602,10 +594,6 @@ function deleteSession(msg) {
   removeMessageListenerId("Marionette:sleepSession", sleepSession);
   removeMessageListenerId("Marionette:getAppCacheStatus", getAppCacheStatus);
   removeMessageListenerId("Marionette:takeScreenshot", takeScreenshotFn);
-  removeMessageListenerId("Marionette:addCookie", addCookieFn);
-  removeMessageListenerId("Marionette:getCookies", getCookiesFn);
-  removeMessageListenerId("Marionette:deleteAllCookies", deleteAllCookiesFn);
-  removeMessageListenerId("Marionette:deleteCookie", deleteCookieFn);
 
   seenEls.clear();
   // reset container frame to the top-most frame
@@ -1055,14 +1043,15 @@ function waitForPageLoaded(msg) {
  * driver (in chrome space).
  */
 function get(msg) {
-  let {command_id, pageTimeout, url} = msg.json;
-  let loadEventExpected = true;
+  let {command_id, pageTimeout, url, loadEventExpected=null} = msg.json;
 
   try {
     if (typeof url == "string") {
       try {
         let requestedURL = new URL(url).toString();
-        loadEventExpected = navigate.isLoadEventExpected(requestedURL);
+        if (loadEventExpected === null) {
+          loadEventExpected = navigate.isLoadEventExpected(requestedURL);
+        }
       } catch (e) {
         sendError(new InvalidArgumentError("Malformed URL: " + e.message), command_id);
         return;
@@ -1589,55 +1578,6 @@ function switchToFrame(msg) {
   }
 }
 
-function addCookie(cookie) {
-  cookies.add(cookie.name, cookie.value, cookie);
-}
-
-/**
- * Get all cookies for the current domain.
- */
-function getCookies() {
-  let rv = [];
-
-  for (let cookie of cookies) {
-    let expires = cookie.expires;
-    // session cookie, don't return an expiry
-    if (expires == 0) {
-      expires = null;
-    // date before epoch time, cap to epoch
-    } else if (expires == 1) {
-      expires = 0;
-    }
-    rv.push({
-      'name': cookie.name,
-      'value': cookie.value,
-      'path': cookie.path,
-      'domain': cookie.host,
-      'secure': cookie.isSecure,
-      'httpOnly': cookie.httpOnly,
-      'expiry': expires
-    });
-  }
-
-  return rv;
-}
-
-/**
- * Delete a cookie by name.
- */
-function deleteCookie(name) {
-  cookies.delete(name);
-}
-
-/**
- * Delete all the visibile cookies on a page.
- */
-function deleteAllCookies() {
-  for (let cookie of cookies) {
-    cookies.delete(cookie);
-  }
-}
-
 function getAppCacheStatus(msg) {
   sendResponse(
       curContainer.frame.applicationCache.status, msg.json.command_id);
@@ -1707,6 +1647,117 @@ function takeScreenshot(format, opts = {}) {
 
     default:
       throw new TypeError("Unknown screenshot format: " + format);
+  }
+}
+
+function flushRendering() {
+  let content = curContainer.frame;
+  let anyPendingPaintsGeneratedInDescendants = false;
+
+  let windowUtils = content.QueryInterface(Ci.nsIInterfaceRequestor)
+    .getInterface(Ci.nsIDOMWindowUtils);
+
+  function flushWindow(win) {
+    let utils = win.QueryInterface(Ci.nsIInterfaceRequestor)
+      .getInterface(Ci.nsIDOMWindowUtils);
+    let afterPaintWasPending = utils.isMozAfterPaintPending;
+
+    let root = win.document.documentElement;
+    if (root) {
+      try {
+        // Flush pending restyles and reflows for this window
+        root.getBoundingClientRect();
+      } catch (e) {
+        logger.warning(`flushWindow failed: ${e}`);
+      }
+    }
+
+    if (!afterPaintWasPending && utils.isMozAfterPaintPending) {
+      anyPendingPaintsGeneratedInDescendants = true;
+    }
+
+    for (let i = 0; i < win.frames.length; ++i) {
+      flushWindow(win.frames[i]);
+    }
+  }
+  flushWindow(content);
+
+  if (anyPendingPaintsGeneratedInDescendants &&
+      !windowUtils.isMozAfterPaintPending) {
+    logger.error("Internal error: descendant frame generated a MozAfterPaint event, but the root document doesn't have one!");
+  }
+
+  logger.debug(`flushRendering ${windowUtils.isMozAfterPaintPending}`);
+  return windowUtils.isMozAfterPaintPending;
+}
+
+function* reftestWait(url, remote) {
+  let win = curContainer.frame;
+  let document = curContainer.frame.document;
+
+  let windowUtils = content.QueryInterface(Ci.nsIInterfaceRequestor)
+      .getInterface(Ci.nsIDOMWindowUtils);
+
+
+  let reftestWait = false;
+
+  if (document.location.href !== url || document.readyState != "complete") {
+    logger.debug(`Waiting for page load of ${url}`);
+    yield new Promise(resolve => {
+      let maybeResolve = (event) => {
+        if (event.target === curContainer.frame.document &&
+            event.target.location.href === url) {
+          win = curContainer.frame;
+          document = curContainer.frame.document;
+          reftestWait = document.documentElement.classList.contains("reftest-wait");
+          removeEventListener("load", maybeResolve, {once: true});
+          win.setTimeout(resolve, 0);
+        }
+      };
+      addEventListener("load", maybeResolve, true);
+    });
+  } else {
+    // Ensure that the event loop has spun at least once since load,
+    // so that setTimeout(fn, 0) in the load event has run
+    reftestWait = document.documentElement.classList.contains("reftest-wait");
+    yield new Promise(resolve => win.setTimeout(resolve, 0));
+  };
+
+  let root = document.documentElement;
+  if (reftestWait) {
+    // Check again in case reftest-wait was removed since the load event
+    if (root.classList.contains("reftest-wait")) {
+      logger.debug("Waiting for reftest-wait removal");
+      yield new Promise(resolve => {
+        let observer = new win.MutationObserver(() => {
+          if (!root.classList.contains("reftest-wait")) {
+            observer.disconnect();
+            logger.debug("reftest-wait removed");
+            win.setTimeout(resolve, 0);
+          }
+        });
+        observer.observe(root, {attributes: true});
+      });
+    }
+
+    logger.debug("Waiting for rendering");
+
+    yield new Promise(resolve => {
+      let maybeResolve = () => {
+        if (flushRendering()) {
+          win.addEventListener("MozAfterPaint", maybeResolve, {once: true});
+        } else {
+          win.setTimeout(resolve, 0);
+        }
+      };
+      maybeResolve();
+    });
+  } else {
+    flushRendering();
+  }
+
+  if (remote) {
+    windowUtils.updateLayerTree();
   }
 }
 

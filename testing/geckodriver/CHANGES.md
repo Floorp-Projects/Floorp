@@ -2,6 +2,11 @@
 
 All notable changes to this program is documented in this file.
 
+## Unreleased
+
+### Changed
+- Log geckodriver version on startup
+
 ## 0.17.0 (2017-06-09)
 
 ### Added

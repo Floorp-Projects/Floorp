@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<resources>
+
+    <!--
+        Only overriden styles for Honeycomb/Ice cream sandwich XLARGE tablets are specified here.
+        Please refer to values/styles.xml for default styles.
+    -->
+
+    <style name="Widget.TopSitesListView" parent="Widget.BookmarksListView">
+        <item name="android:paddingTop">30dp</item>
+        <item name="android:paddingLeft">32dp</item>
+        <item name="android:paddingRight">32dp</item>
+        <item name="android:clipToPadding">false</item>
+        <item name="topDivider">false</item>
+    </style>
+
+</resources>

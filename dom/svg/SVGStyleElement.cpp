@@ -104,7 +104,8 @@ SVGStyleElement::SetAttr(int32_t aNameSpaceID, nsIAtom* aName,
         aName == nsGkAtoms::media ||
         aName == nsGkAtoms::type) {
       UpdateStyleSheetInternal(nullptr, nullptr, true);
-    } else if (aName == nsGkAtoms::scoped) {
+    } else if (aName == nsGkAtoms::scoped &&
+               OwnerDoc()->IsScopedStyleEnabled()) {
       UpdateStyleSheetScopedness(true);
     }
   }
@@ -123,7 +124,8 @@ SVGStyleElement::UnsetAttr(int32_t aNameSpaceID, nsIAtom* aAttribute,
         aAttribute == nsGkAtoms::media ||
         aAttribute == nsGkAtoms::type) {
       UpdateStyleSheetInternal(nullptr, nullptr, true);
-    } else if (aAttribute == nsGkAtoms::scoped) {
+    } else if (aAttribute == nsGkAtoms::scoped &&
+               OwnerDoc()->IsScopedStyleEnabled()) {
       UpdateStyleSheetScopedness(false);
     }
   }
@@ -290,7 +292,8 @@ SVGStyleElement::GetStyleSheetInfo(nsAString& aTitle,
     aType.AssignLiteral("text/css");
   }
 
-  *aIsScoped = HasAttr(kNameSpaceID_None, nsGkAtoms::scoped);
+  *aIsScoped = HasAttr(kNameSpaceID_None, nsGkAtoms::scoped) &&
+               OwnerDoc()->IsScopedStyleEnabled();
 
   return;
 }

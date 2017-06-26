@@ -72,7 +72,7 @@ var SessionMigrationInternal = {
    */
   readState(aPath) {
     return (async function() {
-      let bytes = await OS.File.read(aPath);
+      let bytes = await OS.File.read(aPath, {compression: "lz4"});
       let text = gDecoder.decode(bytes);
       let state = JSON.parse(text);
       return state;
@@ -83,7 +83,7 @@ var SessionMigrationInternal = {
    */
   writeState(aPath, aState) {
     let bytes = gEncoder.encode(JSON.stringify(aState));
-    return OS.File.writeAtomic(aPath, bytes, {tmpPath: aPath + ".tmp"});
+    return OS.File.writeAtomic(aPath, bytes, {tmpPath: aPath + ".tmp", compression: "lz4"});
   }
 }
 

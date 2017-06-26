@@ -3,7 +3,6 @@
 
 "use strict";
 
-var {OS} = Cu.import("resource://gre/modules/osfile.jsm", {});
 var {XPCOMUtils} = Cu.import("resource://gre/modules/XPCOMUtils.jsm", {});
 var {SessionWorker} = Cu.import("resource:///modules/sessionstore/SessionWorker.jsm", {});
 
@@ -30,9 +29,9 @@ add_task(async function init() {
   SessionFile = Cu.import("resource:///modules/sessionstore/SessionFile.jsm", {}).SessionFile;
   Paths = SessionFile.Paths;
 
-
   let source = do_get_file("data/sessionstore_valid.js");
   source.copyTo(profd, "sessionstore.js");
+  await writeCompressedFile(Paths.clean.replace("jsonlz4", "js"), Paths.clean);
 
   // Finish initialization of SessionFile
   await SessionFile.read();
@@ -54,7 +53,7 @@ function promise_check_exist(path, shouldExist) {
 function promise_check_contents(path, expect) {
   return (async function() {
     do_print("Checking whether " + path + " has the right contents");
-    let actual = await OS.File.read(path, { encoding: "utf-8"});
+    let actual = await OS.File.read(path, { encoding: "utf-8", compression: "lz4" });
     Assert.deepEqual(JSON.parse(actual), expect, `File ${path} contains the expected data.`);
   })();
 }
@@ -75,7 +74,7 @@ add_task(async function test_first_write_backup() {
   await promise_check_exist(Paths.backups, false);
 
   await File.makeDir(Paths.backups);
-  await File.writeAtomic(Paths.clean, JSON.stringify(initial_content), { encoding: "utf-8" });
+  await File.writeAtomic(Paths.clean, JSON.stringify(initial_content), { encoding: "utf-8", compression: "lz4" });
   await SessionFile.write(new_content);
 
   do_print("After first write, a few files should have been created");
@@ -96,7 +95,7 @@ add_task(async function test_first_write_backup() {
 // - $Path.recoveryBackup contains the previous data
 add_task(async function test_second_write_no_backup() {
   let new_content = generateFileContents("test_2");
-  let previous_backup_content = await File.read(Paths.recovery, { encoding: "utf-8" });
+  let previous_backup_content = await File.read(Paths.recovery, { encoding: "utf-8", compression: "lz4" });
   previous_backup_content = JSON.parse(previous_backup_content);
 
   await OS.File.remove(Paths.cleanBackup);

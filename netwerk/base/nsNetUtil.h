@@ -650,8 +650,8 @@ bool NS_HasBeenCrossOrigin(nsIChannel* aChannel, bool aReport = false);
 #define NECKO_UNKNOWN_APP_ID UINT32_MAX
 
 // Unique first-party domain for separating the safebrowsing cookie.
-// Note if this value is changed, code in test_cookiejars_safebrowsing.js
-// should also be changed.
+// Note if this value is changed, code in test_cookiejars_safebrowsing.js and
+// nsUrlClassifierHashCompleter.js should also be changed.
 #define NECKO_SAFEBROWSING_FIRST_PARTY_DOMAIN \
   "safebrowsing.86868755-6b82-4842-b301-72671a0db32e.mozilla"
 
