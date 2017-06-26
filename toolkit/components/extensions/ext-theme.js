@@ -281,6 +281,19 @@ this.theme = class extends ExtensionAPI {
 
           this.theme.load(details);
         },
+        reset: () => {
+          if (!gThemesEnabled) {
+            // Return early if themes are disabled.
+            return;
+          }
+
+          if (!this.theme) {
+            // If no theme has been initialized, nothing to do.
+            return;
+          }
+
+          this.theme.unload();
+        }
       },
     };
   }
