@@ -190,8 +190,7 @@ TableWidget.prototype = {
    * Returns the index of the selected row disregarding hidden rows.
    */
   get visibleSelectedIndex() {
-    let column = this.firstVisibleColumn;
-    let cells = column.visibleCellNodes;
+    let cells = this.columns.get(this.uniqueId).visibleCellNodes;
 
     for (let i = 0; i < cells.length; i++) {
       if (cells[i].classList.contains("theme-selected")) {
@@ -200,23 +199,6 @@ TableWidget.prototype = {
     }
 
     return -1;
-  },
-
-  /**
-   * Returns the first visible column.
-   */
-  get firstVisibleColumn() {
-    for (let column of this.columns.values()) {
-      if (column._private) {
-        continue;
-      }
-
-      if (column.column.clientHeight > 0) {
-        return column;
-      }
-    }
-
-    return null;
   },
 
   /**
