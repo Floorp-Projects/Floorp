@@ -984,7 +984,7 @@ impl MarionetteCommand {
             DeleteSession => {
                 let mut body = BTreeMap::new();
                 body.insert("flags".to_owned(), vec!["eForceQuit".to_json()].to_json());
-                (Some("quitApplication"), Some(Ok(body)))
+                (Some("quit"), Some(Ok(body)))
             },
             Status => panic!("Got status command that should already have been handled"),
             Get(ref x) => (Some("get"), Some(x.to_marionette())),
@@ -998,7 +998,7 @@ impl MarionetteCommand {
             GetWindowHandles => (Some("getWindowHandles"), None),
             CloseWindow => (Some("close"), None),
             GetTimeouts => (Some("getTimeouts"), None),
-            SetTimeouts(ref x) => (Some("timeouts"), Some(x.to_marionette())),
+            SetTimeouts(ref x) => (Some("setTimeouts"), Some(x.to_marionette())),
             SetWindowRect(ref x) => (Some("setWindowRect"), Some(x.to_marionette())),
             GetWindowRect => (Some("getWindowRect"), None),
             MaximizeWindow => (Some("maximizeWindow"), None),

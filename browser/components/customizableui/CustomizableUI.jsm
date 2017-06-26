@@ -4144,7 +4144,9 @@ OverflowableToolbar.prototype = {
         this._disable();
         break;
       case "dragover":
-        this._showWithTimeout();
+        if (this._enabled) {
+          this._showWithTimeout();
+        }
         break;
       case "dragend":
         this._panel.hidePopup();
@@ -4181,10 +4183,9 @@ OverflowableToolbar.prototype = {
       this._panel.openPopup(anchor || this._chevron);
       this._chevron.open = true;
 
-      let overflowableToolbarInstance = this;
-      this._panel.addEventListener("popupshown", function(aEvent) {
-        this.addEventListener("dragover", overflowableToolbarInstance);
-        this.addEventListener("dragend", overflowableToolbarInstance);
+      this._panel.addEventListener("popupshown", aEvent => {
+        this._panel.addEventListener("dragover", this);
+        this._panel.addEventListener("dragend", this);
         resolve();
       }, {once: true});
     });

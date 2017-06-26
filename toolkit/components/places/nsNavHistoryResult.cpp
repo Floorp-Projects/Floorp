@@ -1708,43 +1708,6 @@ nsNavHistoryContainerResultNode::GetChildIndex(nsINavHistoryResultNode* aNode,
   return NS_OK;
 }
 
-
-NS_IMETHODIMP
-nsNavHistoryContainerResultNode::FindNodeByDetails(const nsACString& aURIString,
-                                                   PRTime aTime,
-                                                   int64_t aItemId,
-                                                   bool aRecursive,
-                                                   nsINavHistoryResultNode** _retval) {
-  if (!mExpanded)
-    return NS_ERROR_NOT_AVAILABLE;
-
-  *_retval = nullptr;
-  for (int32_t i = 0; i < mChildren.Count(); ++i) {
-    if (mChildren[i]->mURI.Equals(aURIString) &&
-        mChildren[i]->mTime == aTime &&
-        mChildren[i]->mItemId == aItemId) {
-      *_retval = mChildren[i];
-      break;
-    }
-
-    if (aRecursive && mChildren[i]->IsContainer()) {
-      nsNavHistoryContainerResultNode* asContainer =
-        mChildren[i]->GetAsContainer();
-      if (asContainer->mExpanded) {
-        nsresult rv = asContainer->FindNodeByDetails(aURIString, aTime,
-                                                     aItemId,
-                                                     aRecursive,
-                                                     _retval);
-
-        if (NS_SUCCEEDED(rv) && _retval)
-          break;
-      }
-    }
-  }
-  NS_IF_ADDREF(*_retval);
-  return NS_OK;
-}
-
 /**
  * HOW QUERY UPDATING WORKS
  *

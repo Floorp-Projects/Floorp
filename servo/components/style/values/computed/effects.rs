@@ -4,49 +4,28 @@
 
 //! Computed types for CSS values related to effects.
 
+#[cfg(not(feature = "gecko"))]
+use values::Impossible;
 use values::computed::{Angle, Number};
-#[cfg(feature = "gecko")]
 use values::computed::color::Color;
 use values::computed::length::Length;
 use values::generics::effects::Filter as GenericFilter;
 use values::generics::effects::FilterList as GenericFilterList;
+use values::generics::effects::SimpleShadow as GenericSimpleShadow;
 
 /// A computed value for the `filter` property.
 pub type FilterList = GenericFilterList<Filter>;
 
 /// A computed value for a single `filter`.
-pub type Filter = GenericFilter<
-    Angle,
-    // FIXME: Should be `NumberOrPercentage`.
-    Number,
-    Length,
-    DropShadow,
->;
-
-/// A computed value for the `drop-shadow()` filter.
-///
-/// Currently unsupported outside of Gecko.
-#[cfg(not(feature = "gecko"))]
-#[cfg_attr(feature = "servo", derive(Deserialize, HeapSizeOf, Serialize))]
-#[derive(Clone, Debug, PartialEq, ToCss)]
-pub enum DropShadow {}
-
-/// A computed value for the `drop-shadow()` filter.
-///
-/// Contrary to the canonical order from the spec, the color is serialised
-/// first, like in Gecko and Webkit.
 #[cfg(feature = "gecko")]
-#[derive(Clone, Debug, PartialEq, ToCss)]
-pub struct DropShadow {
-    /// Color.
-    pub color: Color,
-    /// Horizontal radius.
-    pub horizontal: Length,
-    /// Vertical radius.
-    pub vertical: Length,
-    /// Blur radius.
-    pub blur: Length,
-}
+pub type Filter = GenericFilter<Angle, Number, Length, SimpleShadow>;
+
+/// A computed value for a single `filter`.
+#[cfg(not(feature = "gecko"))]
+pub type Filter = GenericFilter<Angle, Number, Length, Impossible>;
+
+/// A computed value for the `drop-shadow()` filter.
+pub type SimpleShadow = GenericSimpleShadow<Color, Length, Length>;
 
 impl FilterList {
     /// Returns the resulting opacity of this filter pipeline.

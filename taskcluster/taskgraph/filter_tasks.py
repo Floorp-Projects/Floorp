@@ -42,6 +42,7 @@ def filter_servo(graph, parameters):
     platforms (to  reduce test load)."""
 
     SERVO_PLATFORMS = {
+        'linux64',
         'linux64-stylo',
     }
 

@@ -259,8 +259,7 @@ class nsStyleSet final
   ProbePseudoElementStyle(mozilla::dom::Element* aParentElement,
                           mozilla::CSSPseudoElementType aType,
                           nsStyleContext* aParentContext,
-                          TreeMatchContext& aTreeMatchContext,
-                          mozilla::dom::Element* aPseudoElement = nullptr);
+                          TreeMatchContext& aTreeMatchContext);
 
   /**
    * Bit-flags that can be passed to GetContext in its parameter 'aFlags'.

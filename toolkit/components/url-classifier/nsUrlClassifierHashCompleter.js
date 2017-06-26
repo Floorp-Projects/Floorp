@@ -432,6 +432,11 @@ HashCompleterRequest.prototype = {
       loadUsingSystemPrincipal: true
     });
     channel.loadFlags = loadFlags;
+    channel.loadInfo.originAttributes = {
+      // The firstPartyDomain value should sync with NECKO_SAFEBROWSING_FIRST_PARTY_DOMAIN
+      // defined in nsNetUtil.h.
+      firstPartyDomain: "safebrowsing.86868755-6b82-4842-b301-72671a0db32e.mozilla"
+    };
 
     // Disable keepalive.
     let httpChannel = channel.QueryInterface(Ci.nsIHttpChannel);

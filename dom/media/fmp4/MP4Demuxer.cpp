@@ -520,10 +520,14 @@ MP4TrackDemuxer::GetSamples(int32_t aNumSamples)
   }
   for (const auto& sample : samples->mSamples) {
     // Collect telemetry from h264 Annex B SPS.
-    if (mNeedSPSForTelemetry && mp4_demuxer::AnnexB::HasSPS(sample)) {
+    if (mNeedSPSForTelemetry) {
       RefPtr<MediaByteBuffer> extradata =
-        mp4_demuxer::AnnexB::ExtractExtraData(sample);
-      mNeedSPSForTelemetry = AccumulateSPSTelemetry(extradata);
+        mp4_demuxer::H264::ExtractExtraData(sample);
+      if (mp4_demuxer::H264::HasSPS(extradata)) {
+        RefPtr<MediaByteBuffer> extradata =
+          mp4_demuxer::H264::ExtractExtraData(sample);
+        mNeedSPSForTelemetry = AccumulateSPSTelemetry(extradata);
+      }
     }
   }
 
