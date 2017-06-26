@@ -35,9 +35,31 @@ body {
 }
 
 .heading {
-  padding-inline-start: 15px;
-  padding-inline-end: 21px;
+  display: flex;
+  flex-direction: column;
+  font-size: 18px;
   color: var(--in-content-category-text);
+  pointer-events: none;
+  padding: 12px 21px 15px 21px;
+  border-bottom: 1px solid var(--in-content-header-border-color);
+}
+
+.heading > h3 {
+  margin: 0;
+  padding-bottom: 12px;
+}
+
+#ping-type {
+  align-self: center;
+}
+
+.older-ping, .newer-ping {
+  cursor: pointer;
+}
+
+.controls {
+  display: flex;
+  justify-content: space-between;
 }
 
 .category:not(.has-data) {
@@ -132,9 +154,14 @@ body {
 }
 
 #ping-picker {
-  margin-top: 10px;
-  border: 1px solid lightgrey;
-  padding: 5px;
+  display: flex;
+  flex-direction: column;
+  border-top: 1px solid var(--in-content-header-border-color);
+  padding: 12px 0px;
+}
+
+#ping-picker .title {
+  margin: 4px 0px;
 }
 
 #ping-source-picker {

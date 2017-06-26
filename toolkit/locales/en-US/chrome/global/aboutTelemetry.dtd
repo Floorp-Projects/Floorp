@@ -29,15 +29,19 @@ Choose ping:
 ">
 
 <!ENTITY aboutTelemetry.showNewerPing "
-&lt;&lt; Newer ping
+Newer ping &gt;&gt;
 ">
 
 <!ENTITY aboutTelemetry.showOlderPing "
-Older ping &gt;&gt;
+&lt;&lt; Older ping
 ">
 
 <!ENTITY aboutTelemetry.archiveWeekHeader "
 Week
+">
+
+<!ENTITY aboutTelemetry.archivePingType "
+Ping Type
 ">
 
 <!ENTITY aboutTelemetry.archivePingHeader "
