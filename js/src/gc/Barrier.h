@@ -587,9 +587,10 @@ class ReadBarriered : public ReadBarrieredBase<T>,
         this->post(JS::GCPolicy<T>::initial(), v);
     }
 
-    // Copy is creating a new edge, so we must read barrier the source edge.
+    // The copy constructor creates a new weak edge but the wrapped pointer does
+    // not escape, so no read barrier is necessary.
     explicit ReadBarriered(const ReadBarriered& v) : ReadBarrieredBase<T>(v) {
-        this->post(JS::GCPolicy<T>::initial(), v.get());
+        this->post(JS::GCPolicy<T>::initial(), v.unbarrieredGet());
     }
 
     // Move retains the lifetime status of the source edge, so does not fire
