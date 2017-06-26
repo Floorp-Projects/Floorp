@@ -23,8 +23,6 @@ XPCOMUtils.defineLazyModuleGetter(
 XPCOMUtils.defineLazyModuleGetter(
   this, "OS", "resource://gre/modules/osfile.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(
-  this, "Promise", "resource://gre/modules/Promise.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(
   this, "UpdateUtils", "resource://gre/modules/UpdateUtils.jsm");

@@ -5,7 +5,6 @@
 // timeline tests.
 
 var { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
-var { Promise } = Cu.import('resource://gre/modules/Promise.jsm', {});
 
 Cu.import("resource://gre/modules/Timer.jsm");
 

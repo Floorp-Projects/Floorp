@@ -333,7 +333,7 @@ add_task(async function formHistory() {
   let state = await msg("key", { key: "x", waitForSuggestions: true });
   checkState(state, "x", ["xfoo", "xbar"], -1);
   // Wait for Satchel to say it's been added to form history.
-  let deferred = Promise.defer();
+  let deferred = PromiseUtils.defer();
   Services.obs.addObserver(function onAdd(subj, topic, data) {
     if (data == "formhistory-add") {
       Services.obs.removeObserver(onAdd, "satchel-storage-changed");
@@ -357,7 +357,7 @@ add_task(async function formHistory() {
              0);
 
   // Wait for Satchel.
-  deferred = Promise.defer();
+  deferred = PromiseUtils.defer();
   Services.obs.addObserver(function onRemove(subj, topic, data) {
     if (data == "formhistory-remove") {
       Services.obs.removeObserver(onRemove, "satchel-storage-changed");
@@ -598,7 +598,7 @@ add_task(async function search() {
 
   // Remove form history entries.
   // Wait for Satchel.
-  let deferred = Promise.defer();
+  let deferred = PromiseUtils.defer();
   let historyCount = 2;
   Services.obs.addObserver(function onRemove(subj, topic, data) {
     if (data == "formhistory-remove") {
@@ -715,7 +715,7 @@ function checkState(actualState, expectedInputVal, expectedSuggestions,
 var gMsgMan;
 
 async function promiseTab() {
-  let deferred = Promise.defer();
+  let deferred = PromiseUtils.defer();
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser);
   registerCleanupFunction(() => BrowserTestUtils.removeTab(tab));
   let pageURL = getRootDirectory(gTestPath) + TEST_PAGE_BASENAME;

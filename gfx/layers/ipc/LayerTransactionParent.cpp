@@ -150,8 +150,7 @@ mozilla::ipc::IPCResult
 LayerTransactionParent::RecvUpdate(const TransactionInfo& aInfo)
 {
   AutoProfilerTracing tracing("Paint", "LayerTransaction");
-  PROFILER_LABEL("LayerTransactionParent", "RecvUpdate",
-    js::ProfileEntry::Category::GRAPHICS);
+  AUTO_PROFILER_LABEL("LayerTransactionParent::RecvUpdate", GRAPHICS);
 
   TimeStamp updateStart = TimeStamp::Now();
 

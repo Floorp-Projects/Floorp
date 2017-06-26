@@ -252,6 +252,9 @@ const SNAPSHOT_SCHEMA = {
         windowLayerManagerRemote: {
           type: "boolean",
         },
+        windowUsingAdvancedLayers: {
+          type: "boolean",
+        },
         currentAudioBackend: {
           type: "string",
         },

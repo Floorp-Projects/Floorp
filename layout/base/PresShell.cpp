@@ -4076,8 +4076,8 @@ PresShell::DoFlushPendingNotifications(mozilla::ChangesToFlush aFlush)
     "Display"
   };
 
-  PROFILER_LABEL_DYNAMIC("PresShell", "Flush",
-    js::ProfileEntry::Category::GRAPHICS, flushTypeNames[flushType]);
+  AUTO_PROFILER_LABEL_DYNAMIC("PresShell::DoFlushPendingNotifications",
+                              GRAPHICS, flushTypeNames[flushType]);
 
 #ifdef ACCESSIBILITY
 #ifdef DEBUG
@@ -6294,8 +6294,7 @@ PresShell::Paint(nsView*         aViewToPaint,
     uri = contentRoot->GetDocumentURI();
   }
   nsCString uriString = uri ? uri->GetSpecOrDefault() : NS_LITERAL_CSTRING("N/A");
-  PROFILER_LABEL_DYNAMIC("PresShell", "Paint",
-    js::ProfileEntry::Category::GRAPHICS, uriString.get());
+  AUTO_PROFILER_LABEL_DYNAMIC("PresShell::Paint", GRAPHICS, uriString.get());
 
   Maybe<js::AutoAssertNoContentJS> nojs;
 
@@ -9202,8 +9201,7 @@ PresShell::DoReflow(nsIFrame* target, bool aInterruptible)
 
   nsIURI* uri = mDocument->GetDocumentURI();
   nsCString uriString = uri ? uri->GetSpecOrDefault() : NS_LITERAL_CSTRING("N/A");
-  PROFILER_LABEL_DYNAMIC("PresShell", "DoReflow",
-    js::ProfileEntry::Category::GRAPHICS, uriString.get());
+  AUTO_PROFILER_LABEL_DYNAMIC("PresShell::DoReflow", GRAPHICS, uriString.get());
 
   nsDocShell* docShell = static_cast<nsDocShell*>(GetPresContext()->GetDocShell());
   RefPtr<TimelineConsumers> timelines = TimelineConsumers::Get();

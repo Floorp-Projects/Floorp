@@ -33,8 +33,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "DownloadSummary",
                                   "resource://gre/modules/DownloadList.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "DownloadUIHelper",
                                   "resource://gre/modules/DownloadUIHelper.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "Promise",
-                                  "resource://gre/modules/Promise.jsm");
 
 /* global DownloadIntegration */
 Integration.downloads.defineModuleGetter(this, "DownloadIntegration",

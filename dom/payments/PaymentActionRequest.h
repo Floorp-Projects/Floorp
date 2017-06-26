@@ -66,6 +66,21 @@ private:
   nsString mCompleteStatus;
 };
 
+class PaymentUpdateActionRequest final : public nsIPaymentUpdateActionRequest
+                                       , public PaymentActionRequest
+{
+public:
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_FORWARD_NSIPAYMENTACTIONREQUEST(PaymentActionRequest::)
+  NS_DECL_NSIPAYMENTUPDATEACTIONREQUEST
+
+  PaymentUpdateActionRequest() = default;
+private:
+  ~PaymentUpdateActionRequest() = default;
+
+  nsCOMPtr<nsIPaymentDetails> mDetails;
+};
+
 } // end of namespace dom
 } // end of namespace mozilla
 

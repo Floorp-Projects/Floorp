@@ -1950,8 +1950,7 @@ XMLHttpRequestMainThread::OnDataAvailable(nsIRequest *request,
 NS_IMETHODIMP
 XMLHttpRequestMainThread::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
 {
-  PROFILER_LABEL("XMLHttpRequestMainThread", "OnStartRequest",
-    js::ProfileEntry::Category::NETWORK);
+  AUTO_PROFILER_LABEL("XMLHttpRequestMainThread::OnStartRequest", NETWORK);
 
   nsresult rv = NS_OK;
   if (!mFirstStartRequestSeen && mRequestObserver) {
@@ -2226,8 +2225,7 @@ XMLHttpRequestMainThread::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
 NS_IMETHODIMP
 XMLHttpRequestMainThread::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult status)
 {
-  PROFILER_LABEL("XMLHttpRequestMainThread", "OnStopRequest",
-    js::ProfileEntry::Category::NETWORK);
+  AUTO_PROFILER_LABEL("XMLHttpRequestMainThread::OnStopRequest", NETWORK);
 
   if (request != mChannel) {
     // Can this still happen?

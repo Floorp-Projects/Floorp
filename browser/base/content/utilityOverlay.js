@@ -776,7 +776,11 @@ function openPreferences(paneID, extraArgs) {
                                  "_blank", "chrome,dialog=no,all", windowArguments);
   } else {
     let shouldReplaceFragment = friendlyCategoryName ? "whenComparingAndReplace" : "whenComparing";
-    newLoad = !win.switchToTabHavingURI(preferencesURL, true, { ignoreFragment: shouldReplaceFragment, replaceQueryString: true });
+    newLoad = !win.switchToTabHavingURI(preferencesURL, true, {
+      ignoreFragment: shouldReplaceFragment,
+      replaceQueryString: true,
+      triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
+    });
     browser = win.gBrowser.selectedBrowser;
   }
 

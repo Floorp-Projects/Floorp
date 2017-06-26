@@ -155,8 +155,7 @@ MediaEncoder::CreateEncoder(const nsAString& aMIMEType, uint32_t aAudioBitrate,
                             uint8_t aTrackTypes,
                             TrackRate aTrackRate)
 {
-  PROFILER_LABEL("MediaEncoder", "CreateEncoder",
-    js::ProfileEntry::Category::OTHER);
+  AUTO_PROFILER_LABEL("MediaEncoder::CreateEncoder", OTHER);
 
   nsAutoPtr<ContainerWriter> writer;
   nsAutoPtr<AudioTrackEncoder> audioEncoder;
@@ -242,8 +241,7 @@ MediaEncoder::GetEncodedData(nsTArray<nsTArray<uint8_t> >* aOutputBufs,
   MOZ_ASSERT(!NS_IsMainThread());
 
   aMIMEType = mMIMEType;
-  PROFILER_LABEL("MediaEncoder", "GetEncodedData",
-    js::ProfileEntry::Category::OTHER);
+  AUTO_PROFILER_LABEL("MediaEncoder::GetEncodedData", OTHER);
 
   bool reloop = true;
   while (reloop) {
@@ -337,8 +335,7 @@ MediaEncoder::WriteEncodedDataToMuxer(TrackEncoder *aTrackEncoder)
     return NS_OK;
   }
 
-  PROFILER_LABEL("MediaEncoder", "WriteEncodedDataToMuxer",
-    js::ProfileEntry::Category::OTHER);
+  AUTO_PROFILER_LABEL("MediaEncoder::WriteEncodedDataToMuxer", OTHER);
 
   EncodedFrameContainer encodedVideoData;
   nsresult rv = aTrackEncoder->GetEncodedTrack(encodedVideoData);
@@ -388,8 +385,7 @@ MediaEncoder::CopyMetadataToMuxer(TrackEncoder *aTrackEncoder)
     return NS_OK;
   }
 
-  PROFILER_LABEL("MediaEncoder", "CopyMetadataToMuxer",
-    js::ProfileEntry::Category::OTHER);
+  AUTO_PROFILER_LABEL("MediaEncoder::CopyMetadataToMuxer", OTHER);
 
   RefPtr<TrackMetadataBase> meta = aTrackEncoder->GetMetadata();
   if (meta == nullptr) {

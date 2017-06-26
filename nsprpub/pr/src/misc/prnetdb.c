@@ -1483,18 +1483,20 @@ PR_IsNetAddrType(const PRNetAddr *addr, PRNetAddrValue val)
         if (val == PR_IpAddrAny) {
 			if (_PR_IN6_IS_ADDR_UNSPECIFIED((PRIPv6Addr *)&addr->ipv6.ip)) {
             	return PR_TRUE;
-			} else if (_PR_IN6_IS_ADDR_V4MAPPED((PRIPv6Addr *)&addr->ipv6.ip)
-					&& _PR_IN6_V4MAPPED_TO_IPADDR((PRIPv6Addr *)&addr->ipv6.ip)
-							== htonl(INADDR_ANY)) {
-            	return PR_TRUE;
+			}
+            if (_PR_IN6_IS_ADDR_V4MAPPED((PRIPv6Addr *)&addr->ipv6.ip)
+                && _PR_IN6_V4MAPPED_TO_IPADDR((PRIPv6Addr *)&addr->ipv6.ip)
+                == htonl(INADDR_ANY)) {
+                return PR_TRUE;
 			}
         } else if (val == PR_IpAddrLoopback) {
             if (_PR_IN6_IS_ADDR_LOOPBACK((PRIPv6Addr *)&addr->ipv6.ip)) {
             	return PR_TRUE;
-			} else if (_PR_IN6_IS_ADDR_V4MAPPED((PRIPv6Addr *)&addr->ipv6.ip)
-					&& _PR_IN6_V4MAPPED_TO_IPADDR((PRIPv6Addr *)&addr->ipv6.ip)
-							== htonl(INADDR_LOOPBACK)) {
-            	return PR_TRUE;
+			}
+            if (_PR_IN6_IS_ADDR_V4MAPPED((PRIPv6Addr *)&addr->ipv6.ip)
+                && _PR_IN6_V4MAPPED_TO_IPADDR((PRIPv6Addr *)&addr->ipv6.ip)
+                == htonl(INADDR_LOOPBACK)) {
+                return PR_TRUE;
 			}
         } else if (val == PR_IpAddrV4Mapped
                 && _PR_IN6_IS_ADDR_V4MAPPED((PRIPv6Addr *)&addr->ipv6.ip)) {
@@ -1504,8 +1506,9 @@ PR_IsNetAddrType(const PRNetAddr *addr, PRNetAddrValue val)
         if (addr->raw.family == AF_INET) {
             if (val == PR_IpAddrAny && addr->inet.ip == htonl(INADDR_ANY)) {
                 return PR_TRUE;
-            } else if (val == PR_IpAddrLoopback
-                    && addr->inet.ip == htonl(INADDR_LOOPBACK)) {
+            }
+            if (val == PR_IpAddrLoopback
+                && addr->inet.ip == htonl(INADDR_LOOPBACK)) {
                 return PR_TRUE;
             }
         }

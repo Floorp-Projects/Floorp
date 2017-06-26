@@ -108,7 +108,7 @@ public:
   {
     MOZ_ASSERT(NS_IsMainThread());
 
-    PROFILER_LABEL("HTMLCanvasElement", "FrameCapture", js::ProfileEntry::Category::OTHER);
+    AUTO_PROFILER_LABEL("RequestedFrameRefreshObserver::WillRefresh", OTHER);
 
     if (!mOwningElement) {
       return;
@@ -130,7 +130,8 @@ public:
 
     RefPtr<SourceSurface> snapshot;
     {
-      PROFILER_LABEL("HTMLCanvasElement", "GetSnapshot", js::ProfileEntry::Category::OTHER);
+      AUTO_PROFILER_LABEL(
+        "RequestedFrameRefreshObserver::WillRefresh:GetSnapshot", OTHER);
       snapshot = mOwningElement->GetSurfaceSnapshot(nullptr);
       if (!snapshot) {
         return;
@@ -139,7 +140,8 @@ public:
 
     RefPtr<DataSourceSurface> copy;
     {
-      PROFILER_LABEL("HTMLCanvasElement", "CopySnapshot", js::ProfileEntry::Category::OTHER);
+      AUTO_PROFILER_LABEL(
+        "RequestedFrameRefreshObserver::WillRefresh:CopySurface", OTHER);
       copy = CopySurface(snapshot);
       if (!copy) {
         return;
@@ -147,7 +149,8 @@ public:
     }
 
     {
-      PROFILER_LABEL("HTMLCanvasElement", "SetFrame", js::ProfileEntry::Category::OTHER);
+      AUTO_PROFILER_LABEL(
+        "RequestedFrameRefreshObserver::WillRefresh:SetFrame", OTHER);
       mOwningElement->SetFrameCapture(copy.forget(), aTime);
       mOwningElement->MarkContextCleanForFrameCapture();
     }

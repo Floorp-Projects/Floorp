@@ -1,7 +1,6 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-Cu.import("resource://gre/modules/Promise.jsm");
 
 /**
  * Recursively compare two objects and check that every property of expectedObj has the same value
