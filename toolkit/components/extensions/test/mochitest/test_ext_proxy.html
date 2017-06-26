@@ -26,7 +26,17 @@ async function testProxyScript(script, expected) {
         }
       });
 
-      browser.proxy.registerProxyScript("proxy_script.js");
+      browser.proxy.register("proxy_script.js").then(() => {
+        browser.test.sendMessage("ready");
+      });
+
+      browser.test.onMessage.addListener(msg => {
+        if (msg === "unregister-proxy-script") {
+          browser.proxy.unregister().then(() => {
+            browser.test.notifyPass("proxy");
+          });
+        }
+      });
     },
     manifest: {
       "permissions": ["proxy"],
@@ -37,6 +47,7 @@ async function testProxyScript(script, expected) {
   });
 
   await extension.startup();
+  await extension.awaitMessage("ready");
 
   let win = window.open("http://example.com/");
   let error = await extension.awaitMessage("proxy-error-received");
@@ -47,6 +58,9 @@ async function testProxyScript(script, expected) {
     is(error.lineNumber, 3, "Error should include line number");
     ok(error.stack.includes("proxy_script.js:3:9"), "Error should include stack trace");
   }
+
+  extension.sendMessage("unregister-proxy-script");
+  await extension.awaitFinish("proxy");
 
   win.close();
   await extension.unload();
