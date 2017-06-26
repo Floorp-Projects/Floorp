@@ -1357,7 +1357,8 @@ struct InitialShapeEntry
         {}
 
         explicit Lookup(const InitialShapeEntry& entry)
-          : proto(entry.proto)
+          : proto(entry.proto.key(),
+                  entry.proto.proto().unbarrieredGet())
         {
             const Shape* shape = entry.shape.unbarrieredGet();
             clasp = shape->getObjectClass();
