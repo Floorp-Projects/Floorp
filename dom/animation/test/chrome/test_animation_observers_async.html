@@ -1059,8 +1059,9 @@ addAsyncAnimTest("tree_ordering", { observe: div, subtree: true }, function*() {
   var extraStyle = document.createElement('style');
   document.head.appendChild(extraStyle);
   var sheet = extraStyle.sheet;
-  var rules = { ".before::before": "animation: anim 100s;",
-                ".after::after"  : "animation: anim 100s, anim 100s;" };
+  var rules = { ".before::before": "animation: anim 100s; content: '';",
+                ".after::after"  : "animation: anim 100s, anim 100s; " +
+                                   "content: '';"};
   for (var selector in rules) {
     sheet.insertRule(selector + '{' + rules[selector] + '}',
                      sheet.cssRules.length);
