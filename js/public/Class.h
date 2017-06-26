@@ -475,7 +475,7 @@ typedef void
 
 /** Finalizes external strings created by JS_NewExternalString. */
 struct JSStringFinalizer {
-    void (*finalize)(JS::Zone* zone, const JSStringFinalizer* fin, char16_t* chars);
+    void (*finalize)(const JSStringFinalizer* fin, char16_t* chars);
 };
 
 /**
