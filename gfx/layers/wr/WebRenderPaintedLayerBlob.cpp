@@ -89,8 +89,9 @@ WebRenderPaintedLayerBlob::RenderLayer(wr::DisplayListBuilder& aBuilder,
   LayerRect rect = Bounds();
   DumpLayerInfo("PaintedLayer", rect);
 
-  WrRect r = sc.ToRelativeWrRect(rect);
-  aBuilder.PushImage(r, r, wr::ImageRendering::Auto, mImageKey.value());
+  WrClipRegionToken clip = aBuilder.PushClipRegion(sc.ToRelativeWrRect(rect));
+
+  aBuilder.PushImage(sc.ToRelativeWrRect(rect), clip, wr::ImageRendering::Auto, mImageKey.value());
 }
 
 } // namespace layers

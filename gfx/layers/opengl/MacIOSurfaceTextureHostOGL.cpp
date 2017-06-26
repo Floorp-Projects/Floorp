@@ -225,7 +225,7 @@ MacIOSurfaceTextureHostOGL::AddWRImage(wr::WebRenderAPI* aAPI,
 void
 MacIOSurfaceTextureHostOGL::PushExternalImage(wr::DisplayListBuilder& aBuilder,
                                               const WrRect& aBounds,
-                                              const WrRect& aClip,
+                                              const WrClipRegionToken aClip,
                                               wr::ImageRendering aFilter,
                                               Range<const wr::ImageKey>& aImageKeys)
 {
