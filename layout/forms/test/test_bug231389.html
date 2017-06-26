@@ -42,11 +42,11 @@ addLoadEvent(function() {
   is(area.scrollTop, 0, "The textarea should not be scrolled initially");
   area.selectionStart = pos;
   area.selectionEnd = pos;
-  setTimeout(function() {
+  requestAnimationFrame(function() {
     isnot(area.scrollTop, 0, "The textarea's insertion point should be scrolled into view");
 
     SimpleTest.finish();
-  }, 0);
+  });
 });
 
 </script>

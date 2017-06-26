@@ -1,7 +1,6 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-let Promise = SpecialPowers.Cu.import("resource://gre/modules/Promise.jsm").Promise;
 
 const ETHERNET_MANAGER_CONTRACT_ID = "@mozilla.org/ethernetManager;1";
 

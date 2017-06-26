@@ -636,8 +636,7 @@ nsCSSRendering::PaintBorder(nsPresContext* aPresContext,
                             PaintBorderFlags aFlags,
                             Sides aSkipSides)
 {
-  PROFILER_LABEL("nsCSSRendering", "PaintBorder",
-    js::ProfileEntry::Category::GRAPHICS);
+  AUTO_PROFILER_LABEL("nsCSSRendering::PaintBorder", GRAPHICS);
 
   nsStyleContext *styleIfVisited = aStyleContext->GetStyleIfVisited();
   const nsStyleBorder *styleBorder = aStyleContext->StyleBorder();
@@ -1911,11 +1910,10 @@ DrawResult
 nsCSSRendering::PaintStyleImageLayer(const PaintBGParams& aParams,
                                      gfxContext& aRenderingCtx)
 {
-  PROFILER_LABEL("nsCSSRendering", "PaintBackground",
-    js::ProfileEntry::Category::GRAPHICS);
+  AUTO_PROFILER_LABEL("nsCSSRendering::PaintStyleImageLayer", GRAPHICS);
 
   NS_PRECONDITION(aParams.frame,
-                  "Frame is expected to be provided to PaintBackground");
+                  "Frame is expected to be provided to PaintStyleImageLayer");
 
   nsStyleContext *sc;
   if (!FindBackground(aParams.frame, &sc)) {
@@ -2507,7 +2505,7 @@ nsCSSRendering::PaintStyleImageLayerWithSC(const PaintBGParams& aParams,
                                            const nsStyleBorder& aBorder)
 {
   NS_PRECONDITION(aParams.frame,
-                  "Frame is expected to be provided to PaintBackground");
+                  "Frame is expected to be provided to PaintStyleImageLayerWithSC");
 
   // If we're drawing all layers, aCompositonOp is ignored, so make sure that
   // it was left at its default value.

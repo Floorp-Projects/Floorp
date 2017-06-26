@@ -8,7 +8,6 @@ this.EXPORTED_SYMBOLS = ["TabStateFlusher"];
 
 const Cu = Components.utils;
 
-Cu.import("resource://gre/modules/Promise.jsm", this);
 
 /**
  * A module that enables async flushes. Updates from frame scripts are

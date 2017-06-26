@@ -428,8 +428,7 @@ nsPluginStreamListenerPeer::OnStartRequest(nsIRequest *request,
                                            nsISupports* aContext)
 {
   nsresult rv = NS_OK;
-  PROFILER_LABEL("nsPluginStreamListenerPeer", "OnStartRequest",
-    js::ProfileEntry::Category::OTHER);
+  AUTO_PROFILER_LABEL("nsPluginStreamListenerPeer::OnStartRequest", OTHER);
 
   nsCOMPtr<nsIRequest> baseRequest = GetBaseRequest(request);
   if (mRequests.IndexOfObject(baseRequest) == -1) {

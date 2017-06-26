@@ -1,6 +1,5 @@
 "use strict";
 
-Cu.import("resource://gre/modules/Promise.jsm");
 
 function AutoCompleteInput(aSearches, aUserContextId) {
   this.searches = aSearches;

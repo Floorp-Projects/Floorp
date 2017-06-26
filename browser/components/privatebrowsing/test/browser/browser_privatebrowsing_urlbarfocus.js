@@ -5,7 +5,6 @@
 // This test makes sure that the URL bar is focused when entering the private window.
 
 "use strict";
-Components.utils.import("resource://gre/modules/Promise.jsm", this);
 let aboutNewTabService = Components.classes["@mozilla.org/browser/aboutnewtab-service;1"]
                                    .getService(Components.interfaces.nsIAboutNewTabService);
 

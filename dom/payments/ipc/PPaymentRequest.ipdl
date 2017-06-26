@@ -96,6 +96,12 @@ struct IPCPaymentCompleteActionRequest
   nsString completeStatus;
 };
 
+struct IPCPaymentUpdateActionRequest
+{
+  nsString requestId;
+  IPCPaymentDetails details;
+};
+
 union IPCPaymentActionRequest
 {
   IPCPaymentCreateActionRequest;
@@ -103,6 +109,7 @@ union IPCPaymentActionRequest
   IPCPaymentShowActionRequest;
   IPCPaymentAbortActionRequest;
   IPCPaymentCompleteActionRequest;
+  IPCPaymentUpdateActionRequest;
 };
 
 struct IPCPaymentCanMakeActionResponse
@@ -142,6 +149,21 @@ union IPCPaymentActionResponse
   IPCPaymentCompleteActionResponse;
 };
 
+struct IPCPaymentAddress
+{
+  nsString country;
+  nsString[] addressLine;
+  nsString region;
+  nsString city;
+  nsString dependentLocality;
+  nsString postalCode;
+  nsString sortingCode;
+  nsString languageCode;
+  nsString organization;
+  nsString recipient;
+  nsString phone;
+};
+
 sync protocol PPaymentRequest
 {
   manager PBrowser;
@@ -153,6 +175,10 @@ parent:
 
 child:
   async RespondPayment(IPCPaymentActionResponse aResponse);
+  async ChangeShippingAddress(nsString aRequestId,
+                              IPCPaymentAddress aAddress);
+  async ChangeShippingOption(nsString aRequestId,
+                             nsString aOption);
 };
 
 } // end of namespace dom

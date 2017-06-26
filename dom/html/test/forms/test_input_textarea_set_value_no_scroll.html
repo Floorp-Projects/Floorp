@@ -39,23 +39,25 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=829606
     setTimeout(function() {
       synthesizeKey('f', {});
 
-      var selectionAtTheEndSnapshot = snapshotWindow(window);
-      results = compareSnapshots(baseSnapshot, selectionAtTheEndSnapshot, false);
-      ok(results[0], "after appending a character, string should have changed");
+      requestAnimationFrame(function() {
+        var selectionAtTheEndSnapshot = snapshotWindow(window);
+        results = compareSnapshots(baseSnapshot, selectionAtTheEndSnapshot, false);
+        ok(results[0], "after appending a character, string should have changed");
 
-      element.value = element.value;
-      var tmpSnapshot = snapshotWindow(window);
+        element.value = element.value;
+        var tmpSnapshot = snapshotWindow(window);
 
-      results = compareSnapshots(baseSnapshot, tmpSnapshot, false);
-      ok(results[0], "re-settig the value should change nothing");
+        results = compareSnapshots(baseSnapshot, tmpSnapshot, false);
+        ok(results[0], "re-settig the value should change nothing");
 
-      results = compareSnapshots(selectionAtTheEndSnapshot, tmpSnapshot, true);
-      ok(results[0], "re-settig the value should change nothing");
+        results = compareSnapshots(selectionAtTheEndSnapshot, tmpSnapshot, true);
+        ok(results[0], "re-settig the value should change nothing");
 
-      element.selectionStart = element.selectionEnd = 0;
-      element.blur();
+        element.selectionStart = element.selectionEnd = 0;
+        element.blur();
 
-      gTestRunner.next();
+        gTestRunner.next();
+      });
     }, 0);
   }
 

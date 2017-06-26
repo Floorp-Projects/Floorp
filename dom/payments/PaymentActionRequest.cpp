@@ -163,5 +163,36 @@ PaymentCompleteActionRequest::InitRequest(const nsAString& aRequestId,
   return NS_OK;
 }
 
+/* PaymentUpdateActionRequest */
+
+NS_IMPL_ISUPPORTS_INHERITED(PaymentUpdateActionRequest,
+                            PaymentActionRequest,
+                            nsIPaymentUpdateActionRequest)
+
+NS_IMETHODIMP
+PaymentUpdateActionRequest::GetDetails(nsIPaymentDetails** aDetails)
+{
+  NS_ENSURE_ARG_POINTER(aDetails);
+  MOZ_ASSERT(mDetails);
+  nsCOMPtr<nsIPaymentDetails> details = mDetails;
+  details.forget(aDetails);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+PaymentUpdateActionRequest::InitRequest(const nsAString& aRequestId,
+                                        nsIPaymentActionCallback* aCallback,
+                                        nsIPaymentDetails* aDetails)
+{
+  NS_ENSURE_ARG_POINTER(aCallback);
+  NS_ENSURE_ARG_POINTER(aDetails);
+  nsresult rv = Init(aRequestId, nsIPaymentActionRequest::UPDATE_ACTION, aCallback);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  mDetails = aDetails;
+  return NS_OK;
+}
+
 } // end of namespace dom
 } // end of namespace mozilla

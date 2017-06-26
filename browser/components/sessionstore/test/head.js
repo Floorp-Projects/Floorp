@@ -28,7 +28,6 @@ registerCleanupFunction(() => {
   }
 });
 
-const {Promise} = Cu.import("resource://gre/modules/Promise.jsm", {});
 const {SessionStore} = Cu.import("resource:///modules/sessionstore/SessionStore.jsm", {});
 const {SessionSaver} = Cu.import("resource:///modules/sessionstore/SessionSaver.jsm", {});
 const {SessionFile} = Cu.import("resource:///modules/sessionstore/SessionFile.jsm", {});

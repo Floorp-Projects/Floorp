@@ -17,10 +17,6 @@ userInfo.prototype = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIUserInfo]),
 };
 
-function run_test () {
-  run_next_test();
-}
-
 add_test(function test_register() {
   let localUserInfo = {
     fullname: "fullname",
@@ -30,22 +26,22 @@ add_test(function test_register() {
     QueryInterface: XPCOMUtils.generateQI([Ci.nsIUserInfo]),
   };
 
-  let userInfoCID = MockRegistrar.register("@mozilla.org/userinfo;1", localUserInfo);
+  MockRegistrar.register("@mozilla.org/userinfo;1", localUserInfo);
   Assert.equal(Cc["@mozilla.org/userinfo;1"].createInstance(Ci.nsIUserInfo).username, "localusername");
   run_next_test();
 });
 
 add_test(function test_register_with_arguments() {
-  let userInfoCID = MockRegistrar.register("@mozilla.org/userinfo;1", userInfo, ["username"]);
+  MockRegistrar.register("@mozilla.org/userinfo;1", userInfo, ["username"]);
   Assert.equal(Cc["@mozilla.org/userinfo;1"].createInstance(Ci.nsIUserInfo).username, "username");
   run_next_test();
 });
 
 add_test(function test_register_twice() {
-  let userInfoCID = MockRegistrar.register("@mozilla.org/userinfo;1", userInfo, ["originalname"]);
+  MockRegistrar.register("@mozilla.org/userinfo;1", userInfo, ["originalname"]);
   Assert.equal(Cc["@mozilla.org/userinfo;1"].createInstance(Ci.nsIUserInfo).username, "originalname");
 
-  let newUserInfoCID = MockRegistrar.register("@mozilla.org/userinfo;1", userInfo, ["newname"]);
+  MockRegistrar.register("@mozilla.org/userinfo;1", userInfo, ["newname"]);
   Assert.equal(Cc["@mozilla.org/userinfo;1"].createInstance(Ci.nsIUserInfo).username, "newname");
   run_next_test();
 });

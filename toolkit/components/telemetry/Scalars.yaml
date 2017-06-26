@@ -654,6 +654,24 @@ telemetry.discarded:
     record_in_processes:
       - 'all_childs'
 
+# The following section contains graphics-related scalars.
+gfx.advanced.layers:
+  failure_id:
+    bug_numbers:
+      - 1365879
+    description: >
+      Each key is a failure for initializing Advanced Layers, and each value
+      is the number of times that failure was recorded. The failure codes
+      are unique strings present in MLGDeviceD3D11::Initialize, such that
+      a failure can be traced back to a specific Direct3D API call.
+    keyed: true
+    kind: uint
+    expires: "61"
+    notification_emails:
+      - gfx-telemetry-alerts@mozilla.com
+    record_in_processes:
+      - 'main'
+
 # The following section is for probes testing the Telemetry system. They will not be
 # submitted in pings and are only used for testing.
 telemetry.test:

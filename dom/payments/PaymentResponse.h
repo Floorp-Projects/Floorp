@@ -74,6 +74,7 @@ private:
   nsString mInternalId;
   nsString mRequestId;
   nsString mMethodName;
+  nsString mDetails;
   nsString mShippingOption;
   nsString mPayerName;
   nsString mPayerEmail;

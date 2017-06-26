@@ -424,7 +424,7 @@ nsFilePicker::ShowFolderPicker(const nsString& aInitialDir)
 bool
 nsFilePicker::ShowFilePicker(const nsString& aInitialDir)
 {
-  PROFILER_LABEL_FUNC(js::ProfileEntry::Category::OTHER);
+  AUTO_PROFILER_LABEL("nsFilePicker::ShowFilePicker", OTHER);
 
   if (!IsWin8OrLater()) {
     // Some Windows 7 users are experiencing a race condition when some dlls

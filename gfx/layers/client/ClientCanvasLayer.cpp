@@ -4,7 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "ClientCanvasLayer.h"
-#include "GeckoProfiler.h"              // for PROFILER_LABEL
+#include "GeckoProfiler.h"              // for AUTO_PROFILER_LABEL
 #include "ClientLayerManager.h"         // for ClientLayerManager, etc
 #include "nsCOMPtr.h"                   // for already_AddRefed
 
@@ -19,8 +19,7 @@ ClientCanvasLayer::~ClientCanvasLayer()
 void
 ClientCanvasLayer::RenderLayer()
 {
-  PROFILER_LABEL("ClientCanvasLayer", "RenderLayer",
-    js::ProfileEntry::Category::GRAPHICS);
+  AUTO_PROFILER_LABEL("ClientCanvasLayer::RenderLayer", GRAPHICS);
 
   RenderMaskLayers(this);
 

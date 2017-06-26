@@ -491,8 +491,7 @@ nsTimerImpl::Fire(int32_t aGeneration)
     kungFuDeathGrip = mITimer;
   }
 
-  PROFILER_LABEL("Timer", "Fire",
-                 js::ProfileEntry::Category::OTHER);
+  AUTO_PROFILER_LABEL("nsTimerImpl::Fire", OTHER);
 
   TimeStamp now = TimeStamp::Now();
   if (MOZ_LOG_TEST(GetTimerLog(), LogLevel::Debug)) {

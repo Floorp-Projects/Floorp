@@ -40,7 +40,6 @@ const startupPhases = {
       // Bugs to fix: Probably loaded too early, needs investigation.
       "resource://gre/modules/AsyncPrefs.jsm", // bug 1369460
       "resource://gre/modules/RemotePageManager.jsm", // bug 1369466
-      "resource://gre/modules/Promise.jsm" // bug 1368456
     ])
   }},
 
@@ -77,6 +76,7 @@ const startupPhases = {
       "resource://gre/modules/NewTabUtils.jsm",
       "resource://gre/modules/PageThumbs.jsm",
       "resource://gre/modules/PlacesSyncUtils.jsm",
+      "resource://gre/modules/Promise.jsm",
       "resource://gre/modules/Sqlite.jsm",
     ]),
     services: new Set([

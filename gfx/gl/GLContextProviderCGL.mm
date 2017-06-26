@@ -157,8 +157,7 @@ GLContextCGL::IsDoubleBuffered() const
 bool
 GLContextCGL::SwapBuffers()
 {
-  PROFILER_LABEL("GLContextCGL", "SwapBuffers",
-    js::ProfileEntry::Category::GRAPHICS);
+  AUTO_PROFILER_LABEL("GLContextCGL::SwapBuffers", GRAPHICS);
 
   [mContext flushBuffer];
   return true;

@@ -18,14 +18,24 @@ class PaymentRequestChild final : public PPaymentRequestChild
 public:
   PaymentRequestChild();
 
-  virtual mozilla::ipc::IPCResult
-  RecvRespondPayment(const IPCPaymentActionResponse& aResponse) override;
-
-  void ActorDestroy(ActorDestroyReason aWhy) override;
-
   void MaybeDelete();
 
   nsresult RequestPayment(const IPCPaymentActionRequest& aAction);
+
+protected:
+  mozilla::ipc::IPCResult
+  RecvRespondPayment(const IPCPaymentActionResponse& aResponse) override;
+
+  mozilla::ipc::IPCResult
+  RecvChangeShippingAddress(const nsString& aRequestId,
+                            const IPCPaymentAddress& aAddress) override;
+
+  mozilla::ipc::IPCResult
+  RecvChangeShippingOption(const nsString& aRequestId,
+                           const nsString& aOption) override;
+
+  void ActorDestroy(ActorDestroyReason aWhy) override;
+
 private:
   ~PaymentRequestChild() = default;
 

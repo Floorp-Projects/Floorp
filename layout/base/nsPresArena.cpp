@@ -115,9 +115,17 @@ nsPresArena::Allocate(uint32_t aCode, size_t aSize)
 
   void* result;
   if (len > 0) {
-    // LIFO behavior for best cache utilization
+    // Remove from the end of the mEntries array to avoid memmoving entries,
+    // and use SetLengthAndRetainStorage to avoid a lot of malloc/free
+    // from ShrinkCapacity on smaller sizes.  500 pointers means the malloc size
+    // for the array is 4096 bytes or more on a 64-bit system.  The next smaller
+    // size is 2048 (with jemalloc), which we consider not worth compacting.
     result = list->mEntries.ElementAt(len - 1);
-    list->mEntries.RemoveElementAt(len - 1);
+    if (list->mEntries.Capacity() > 500) {
+      list->mEntries.RemoveElementAt(len - 1);
+    } else {
+      list->mEntries.SetLengthAndRetainStorage(len - 1);
+    }
 #if defined(DEBUG)
     {
       MOZ_MAKE_MEM_DEFINED(result, list->mEntrySize);

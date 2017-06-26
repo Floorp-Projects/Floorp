@@ -1082,12 +1082,9 @@ struct ParameterStorage
 {};
 
 template<class T>
-using SetDeadline_t = decltype(
-  mozilla::DeclVal<T>().SetDeadline(mozilla::DeclVal<mozilla::TimeStamp>()));
-
-template<class T>
 static auto
-HasSetDeadlineTest(int) -> SFINAE1True<SetDeadline_t<T>>;
+HasSetDeadlineTest(int) -> SFINAE1True<decltype(
+  mozilla::DeclVal<T>().SetDeadline(mozilla::DeclVal<mozilla::TimeStamp>()))>;
 
 template<class T>
 static auto

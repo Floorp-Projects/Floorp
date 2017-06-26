@@ -153,7 +153,7 @@ void Thread::StopSoon() {
 }
 
 void Thread::ThreadMain() {
-  mozilla::AutoProfilerRegister registerThread(name_.c_str());
+  mozilla::AutoProfilerRegisterThread registerThread(name_.c_str());
   mozilla::IOInterposer::RegisterCurrentThread();
 
   // The message loop for this thread.

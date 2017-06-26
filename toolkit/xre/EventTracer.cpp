@@ -122,7 +122,7 @@ class EventLoopLagDispatcher : public Runnable
  */
 void TracerThread(void *arg)
 {
-  AutoProfilerRegister registerThread("Event Tracer");
+  AutoProfilerRegisterThread registerThread("Event Tracer");
   NS_SetCurrentThreadName("Event Tracer");
 
   TracerStartClosure* threadArgs = static_cast<TracerStartClosure*>(arg);

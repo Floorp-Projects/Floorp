@@ -660,8 +660,7 @@ nsCSSGradientRenderer::Paint(gfxContext& aContext,
                              const nsRect& aDirtyRect,
                              float aOpacity)
 {
-  PROFILER_LABEL("nsCSSRendering", "PaintGradient",
-    js::ProfileEntry::Category::GRAPHICS);
+  AUTO_PROFILER_LABEL("nsCSSGradientRenderer::Paint", GRAPHICS);
   Telemetry::AutoTimer<Telemetry::GRADIENT_DURATION, Telemetry::Microsecond> gradientTimer;
 
   if (aDest.IsEmpty() || aFillArea.IsEmpty()) {

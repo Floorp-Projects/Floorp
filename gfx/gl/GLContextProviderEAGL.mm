@@ -147,8 +147,7 @@ GLContextEAGL::IsDoubleBuffered() const
 bool
 GLContextEAGL::SwapBuffers()
 {
-  PROFILER_LABEL("GLContextEAGL", "SwapBuffers",
-    js::ProfileEntry::Category::GRAPHICS);
+  AUTO_PROFILER_LABEL("GLContextEAGL::SwapBuffers", GRAPHICS);
 
   [mContext presentRenderbuffer:LOCAL_GL_RENDERBUFFER];
   return true;

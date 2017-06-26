@@ -739,9 +739,6 @@ WebAuthnManager::FinishGetAssertion(nsTArray<uint8_t>& aCredentialId,
 void
 WebAuthnManager::Cancel(const nsresult& aError)
 {
-  if (mChild) {
-    mChild->SendRequestCancel();
-  }
   if (mTransactionPromise) {
     mTransactionPromise->MaybeReject(aError);
   }

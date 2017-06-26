@@ -655,6 +655,116 @@ PaymentRequest::UpdatePaymentDetails(nsIPaymentDetails* aPaymentDetails)
   return mPaymentDetails->Update(aPaymentDetails);
 }
 
+/* PaymentAddress */
+
+NS_IMPL_ISUPPORTS(PaymentAddress, nsIPaymentAddress)
+
+nsresult
+PaymentAddress::Init(const nsAString& aCountry,
+                     nsIArray* aAddressLine,
+                     const nsAString& aRegion,
+                     const nsAString& aCity,
+                     const nsAString& aDependentLocality,
+                     const nsAString& aPostalCode,
+                     const nsAString& aSortingCode,
+                     const nsAString& aLanguageCode,
+                     const nsAString& aOrganization,
+                     const nsAString& aRecipient,
+                     const nsAString& aPhone)
+{
+  mCountry = aCountry;
+  mAddressLine = aAddressLine;
+  mRegion = aRegion;
+  mCity = aCity;
+  mDependentLocality = aDependentLocality;
+  mPostalCode = aPostalCode;
+  mSortingCode = aSortingCode;
+  mLanguageCode = aLanguageCode;
+  mOrganization = aOrganization;
+  mRecipient = aRecipient;
+  mPhone = aPhone;
+  return NS_OK;
+}
+
+nsresult
+PaymentAddress::GetCountry(nsAString& aCountry)
+{
+  aCountry = mCountry;
+  return NS_OK;
+}
+
+nsresult
+PaymentAddress::GetAddressLine(nsIArray** aAddressLine)
+{
+  NS_ENSURE_ARG_POINTER(aAddressLine);
+  nsCOMPtr<nsIArray> addressLine = mAddressLine;
+  addressLine.forget(aAddressLine);
+  return NS_OK;
+}
+
+nsresult
+PaymentAddress::GetRegion(nsAString& aRegion)
+{
+  aRegion = mRegion;
+  return NS_OK;
+}
+
+nsresult
+PaymentAddress::GetCity(nsAString& aCity)
+{
+  aCity = mCity;
+  return NS_OK;
+}
+
+nsresult
+PaymentAddress::GetDependentLocality(nsAString& aDependentLocality)
+{
+  aDependentLocality = mDependentLocality;
+  return NS_OK;
+}
+
+nsresult
+PaymentAddress::GetPostalCode(nsAString& aPostalCode)
+{
+  aPostalCode = mPostalCode;
+  return NS_OK;
+}
+
+nsresult
+PaymentAddress::GetSortingCode(nsAString& aSortingCode)
+{
+  aSortingCode = mSortingCode;
+  return NS_OK;
+}
+
+nsresult
+PaymentAddress::GetLanguageCode(nsAString& aLanguageCode)
+{
+  aLanguageCode = mLanguageCode;
+  return NS_OK;
+}
+
+nsresult
+PaymentAddress::GetOrganization(nsAString& aOrganization)
+{
+  aOrganization = mOrganization;
+  return NS_OK;
+}
+
+nsresult
+PaymentAddress::GetRecipient(nsAString& aRecipient)
+{
+  aRecipient = mRecipient;
+  return NS_OK;
+}
+
+nsresult
+PaymentAddress::GetPhone(nsAString& aPhone)
+{
+  aPhone = mPhone;
+  return NS_OK;
+}
+
 } // end of namespace payment
 } // end of namespace dom
 } // end of namespace mozilla

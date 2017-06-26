@@ -26,6 +26,7 @@ var outer = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`(m
     )
 )`)), {imports:{tbl}});
 
+setJitCompilerOption('simulator.always-interrupt', 1);
 timeout(1, () => { tbl.set(0, null); gc() });
 outer.exports.run();
 assertEq(true, false);

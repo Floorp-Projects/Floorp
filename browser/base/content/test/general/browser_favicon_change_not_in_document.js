@@ -7,7 +7,7 @@ add_task(async function() {
   let tabLoaded = promiseTabLoaded(extraTab);
   extraTab.linkedBrowser.loadURI(TEST_URL);
   let expectedFavicon = "http://example.org/one-icon";
-  let haveChanged = new Promise.defer();
+  let haveChanged = PromiseUtils.defer();
   let observer = new MutationObserver(function(mutations) {
     for (let mut of mutations) {
       if (mut.attributeName != "image") {
@@ -25,7 +25,7 @@ add_task(async function() {
   observer.observe(extraTab, {attributes: true});
   await tabLoaded;
   expectedFavicon = "http://example.org/yet-another-icon";
-  haveChanged = new Promise.defer();
+  haveChanged = PromiseUtils.defer();
   await haveChanged.promise;
   observer.disconnect();
   gBrowser.removeTab(extraTab);
