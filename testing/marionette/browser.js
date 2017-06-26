@@ -16,7 +16,6 @@ this.browser = {};
 
 const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
-
 /**
  * Get the <xul:browser> for the specified tab.
  *
@@ -127,6 +126,8 @@ browser.Context = class {
   get contentBrowser() {
     if (this.tab) {
       return browser.getBrowserForTab(this.tab);
+    } else if (this.tabBrowser && this.driver.isReftestBrowser(this.tabBrowser)) {
+      return this.tabBrowser;
     }
 
     return null;
@@ -139,24 +140,29 @@ browser.Context = class {
    */
   get curFrameId() {
     let rv = null;
-    if (this.tab) {
+     if (this.tab || this.driver.isReftestBrowser(this.contentBrowser) ) {
       rv = this.getIdForBrowser(this.contentBrowser);
     }
     return rv;
   }
 
   /**
-   * Returns the current URL of the content browser.
-   * If no browser is available, null will be returned.
+   * Returns the current URI of the content browser.
+   *
+   * @return {nsIURI}
+   *     Read-only property containing the currently loaded URL.
+   *
+   * @throws {NoSuchWindowError}
+   *     If the current ChromeWindow does not have a content browser.
    */
-  get currentURL() {
+  get currentURI() {
     // Bug 1363368 - contentBrowser could be null until we wait for its
     // initialization been finished
     if (this.contentBrowser) {
-      return this.contentBrowser.currentURI.spec;
-
+      return this.contentBrowser.currentURI;
     } else {
-      throw new NoSuchWindowError("Current window does not have a content browser");
+      throw new NoSuchWindowError(
+          "Current window does not have a content browser");
     }
   }
 
@@ -224,7 +230,7 @@ browser.Context = class {
   closeTab() {
     // If the current window is not a browser then close it directly. Do the
     // same if only one remaining tab is open, or no tab selected at all.
-    if (!this.tabBrowser || this.tabBrowser.tabs.length === 1 || !this.tab) {
+    if (!this.tabBrowser || !this.tabBrowser.tabs || this.tabBrowser.tabs.length === 1 || !this.tab) {
       return this.closeWindow();
     }
 

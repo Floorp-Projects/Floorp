@@ -2616,6 +2616,7 @@ nsDOMWindowUtils::FlushApzRepaints(bool* aOutResult)
       return NS_ERROR_UNEXPECTED;
     }
     wrbc->SendFlushApzRepaints();
+    *aOutResult = true;
     return NS_OK;
   }
   ShadowLayerForwarder* forwarder = manager->AsShadowForwarder();

@@ -111,7 +111,7 @@
   "jsdebugger.jsm": ["addDebuggerToGlobal"],
   "json2.js": ["JSON"],
   "keys.js": ["BulkKeyBundle", "SyncKeyBundle"],
-  "KeyValueParser.jsm": ["parseKeyValuePairsFromLines", "parseKeyValuePairs", "parseKeyValuePairsFromFile"],
+  "KeyValueParser.jsm": ["parseKeyValuePairsFromLines", "parseKeyValuePairs", "parseKeyValuePairsFromFile", "parseKeyValuePairsFromFileAsync"],
   "kinto-http-client.js": ["KintoHttpClient"],
   "kinto-offline-client.js": ["Kinto"],
   "kinto-storage-adapter.js": ["FirefoxAdapter"],

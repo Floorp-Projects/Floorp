@@ -4,26 +4,6 @@
 
 <!ENTITY aboutTelemetry.pageTitle "Telemetry Data">
 
-<!ENTITY aboutTelemetry.changeDataChoices "
-  Change
-">
-
-<!ENTITY aboutTelemetry.uploadEnabled "
-  FHR data upload is <span>enabled</span>.
-">
-
-<!ENTITY aboutTelemetry.uploadDisabled "
-  FHR data upload is <span>disabled</span>.
-">
-
-<!ENTITY aboutTelemetry.extendedRecordingEnabled "
-  Extended Telemetry recording is <span>enabled</span>.
-">
-
-<!ENTITY aboutTelemetry.extendedRecordingDisabled "
-  Extended Telemetry recording is <span>disabled</span>.
-">
-
 <!ENTITY aboutTelemetry.pingDataSource "
 Ping data source:
 ">
@@ -34,14 +14,6 @@ Current ping data
 
 <!ENTITY aboutTelemetry.showArchivedPingData "
 Archived ping data
-">
-
-<!ENTITY aboutTelemetry.pingDataDisplay "
-Ping data display:
-">
-
-<!ENTITY aboutTelemetry.structured "
-Structured
 ">
 
 <!ENTITY aboutTelemetry.raw "
@@ -62,10 +34,6 @@ Choose ping:
 
 <!ENTITY aboutTelemetry.showOlderPing "
 Older ping &gt;&gt;
-">
-
-<!ENTITY aboutTelemetry.rawPingData "
-Raw ping data…
 ">
 
 <!ENTITY aboutTelemetry.archiveWeekHeader "
@@ -144,14 +112,6 @@ Ping
   Histograms Collected by Add-ons
 ">
 
-<!ENTITY aboutTelemetry.toggle "
-  Click to toggle section
-">
-
-<!ENTITY aboutTelemetry.emptySection "
-  (No data collected)
-">
-
 <!ENTITY aboutTelemetry.fullSqlWarning "
   NOTE: Slow SQL debugging is enabled. Full SQL strings may be displayed below but they will not be submitted to Telemetry.
 ">
@@ -170,8 +130,4 @@ Ping
 
 <!ENTITY aboutTelemetry.payloadChoiceHeader "
   Payload
-">
-
-<!ENTITY aboutTelemetry.rawPayload "
-  Raw Payload
 ">

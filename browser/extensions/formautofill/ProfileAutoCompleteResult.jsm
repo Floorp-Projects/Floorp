@@ -93,18 +93,20 @@ ProfileAutoCompleteResult.prototype = {
    * @returns {string} The secondary label
    */
   _getSecondaryLabel(focusedFieldName, allFieldNames, profile) {
-    /* TODO: Since "name" is a special case here, so the secondary "name" label
-       will be refined when the handling rule for "name" is ready.
-    */
-    const possibleNameFields = [
-      "name",
-      "given-name",
-      "additional-name",
-      "family-name",
-    ];
-
-    focusedFieldName = possibleNameFields.includes(focusedFieldName) ?
-                       "name" : focusedFieldName;
+    // We group similar fields into the same field name so we won't pick another
+    // field in the same group as the secondary label.
+    const GROUP_FIELDS = {
+      "name": [
+        "name",
+        "given-name",
+        "additional-name",
+        "family-name",
+      ],
+      "country-name": [
+        "country",
+        "country-name",
+      ],
+    };
 
     const secondaryLabelOrder = [
       "street-address",  // Street address
@@ -112,24 +114,27 @@ ProfileAutoCompleteResult.prototype = {
       "address-level2",  // City/Town
       "organization",    // Company or organization name
       "address-level1",  // Province/State (Standardized code if possible)
-      "country",         // Country
+      "country-name",    // Country name
       "postal-code",     // Postal code
       "tel",             // Phone number
       "email",           // Email address
     ];
 
+    for (let field in GROUP_FIELDS) {
+      if (GROUP_FIELDS[field].includes(focusedFieldName)) {
+        focusedFieldName = field;
+        break;
+      }
+    }
+
     for (const currentFieldName of secondaryLabelOrder) {
-      if (focusedFieldName == currentFieldName ||
-          !profile[currentFieldName]) {
+      if (focusedFieldName == currentFieldName || !profile[currentFieldName]) {
         continue;
       }
 
-      let matching;
-      if (currentFieldName == "name") {
-        matching = allFieldNames.some(fieldName => possibleNameFields.includes(fieldName));
-      } else {
-        matching = allFieldNames.includes(currentFieldName);
-      }
+      let matching = GROUP_FIELDS[currentFieldName] ?
+        allFieldNames.some(fieldName => GROUP_FIELDS[currentFieldName].includes(fieldName)) :
+        allFieldNames.includes(currentFieldName);
 
       if (matching) {
         return profile[currentFieldName];

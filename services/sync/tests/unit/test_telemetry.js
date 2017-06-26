@@ -90,7 +90,14 @@ add_task(async function test_basic() {
   let server = httpd_setup(handlers);
   await configureIdentity({ username: "johndoe" }, server);
 
-  await sync_and_validate_telem(true);
+  let ping = await sync_and_validate_telem(true, true);
+
+  // Check the "os" block - we can't really check specific values, but can
+  // check it smells sane.
+  ok(ping.os, "there is an OS block");
+  ok("name" in ping.os, "there is an OS name");
+  ok("version" in ping.os, "there is an OS version");
+  ok("locale" in ping.os, "there is an OS locale");
 
   Svc.Prefs.resetBranch("");
   await promiseStopServer(server);

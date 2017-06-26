@@ -66,6 +66,8 @@ class WebPlatformTestsRunnerSetup(MozbuildObject):
         if kwargs["webdriver_binary"] is None:
             kwargs["webdriver_binary"] = self.get_binary_path("geckodriver", validate_exists=False)
 
+        self.setup_fonts_firefox()
+
         kwargs = wptcommandline.check_args(kwargs)
 
     def kwargs_wptrun(self, kwargs):
@@ -110,6 +112,19 @@ class WebPlatformTestsRunnerSetup(MozbuildObject):
                 dest.write(src.read())
 
         kwargs = wptcommandline.check_args(kwargs)
+
+    def setup_fonts_firefox(self):
+        # Ensure the Ahem font is available
+        if not sys.platform.startswith("darwin"):
+            font_path = os.path.join(os.path.dirname(self.get_binary_path()), "fonts")
+        else:
+            font_path = os.path.join(os.path.dirname(self.get_binary_path()), os.pardir, "Resources", "res", "fonts")
+        ahem_src = os.path.join(self.topsrcdir, "testing", "web-platform", "tests", "fonts", "Ahem.ttf")
+        ahem_dest = os.path.join(font_path, "Ahem.ttf")
+        if not os.path.exists(ahem_dest) and os.path.exists(ahem_src):
+            with open(ahem_src) as src, open(ahem_dest, "w") as dest:
+                dest.write(src.read())
+
 
 
 class WebPlatformTestsUpdater(MozbuildObject):

@@ -40,8 +40,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "PermissionsUtils",
                                   "resource://gre/modules/PermissionsUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "OS",
                                   "resource://gre/modules/osfile.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "BrowserToolboxProcess",
-                                  "resource://devtools/client/framework/ToolboxProcess.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "ConsoleAPI",
                                   "resource://gre/modules/Console.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "ProductAddonChecker",
@@ -195,7 +193,7 @@ XPCOMUtils.defineConstant(this, "DB_SCHEMA", 21);
 
 XPCOMUtils.defineLazyPreferenceGetter(this, "ALLOW_NON_MPC", PREF_ALLOW_NON_MPC);
 
-const NOTIFICATION_TOOLBOXPROCESS_LOADED      = "ToolboxProcessLoaded";
+const NOTIFICATION_TOOLBOX_CONNECTION_CHANGE      = "toolbox-connection-change";
 
 // Properties that exist in the install manifest
 const PROP_LOCALE_SINGLE = ["name", "description", "creator", "homepageURL"];
@@ -1878,8 +1876,6 @@ this.XPIProvider = {
   _telemetryDetails: {},
   // A Map from an add-on install to its ID
   _addonFileMap: new Map(),
-  // Flag to know if ToolboxProcess.jsm has already been loaded by someone or not
-  _toolboxProcessLoaded: false,
   // Have we started shutting down bootstrap add-ons?
   _closing: false,
 
@@ -2221,21 +2217,7 @@ this.XPIProvider = {
       Services.prefs.addObserver(PREF_ALLOW_LEGACY, this);
       Services.prefs.addObserver(PREF_ALLOW_NON_MPC, this);
       Services.obs.addObserver(this, NOTIFICATION_FLUSH_PERMISSIONS);
-
-      // Cu.isModuleLoaded can fail here for external XUL apps where there is
-      // no chrome.manifest that defines resource://devtools.
-      if (ResProtocolHandler.hasSubstitution("devtools")) {
-        if (Cu.isModuleLoaded("resource://devtools/client/framework/ToolboxProcess.jsm")) {
-          // If BrowserToolboxProcess is already loaded, set the boolean to true
-          // and do whatever is needed
-          this._toolboxProcessLoaded = true;
-          BrowserToolboxProcess.on("connectionchange",
-                                   this.onDebugConnectionChange.bind(this));
-        } else {
-          // Else, wait for it to load
-          Services.obs.addObserver(this, NOTIFICATION_TOOLBOXPROCESS_LOADED);
-        }
-      }
+      Services.obs.addObserver(this, NOTIFICATION_TOOLBOX_CONNECTION_CHANGE);
 
 
       let flushCaches = this.checkForChanges(aAppChanged, aOldAppVersion,
@@ -3916,12 +3898,12 @@ this.XPIProvider = {
     }
   },
 
-  onDebugConnectionChange(aEvent, aWhat, aConnection) {
-    if (aWhat != "opened")
+  onDebugConnectionChange({what, connection}) {
+    if (what != "opened")
       return;
 
     for (let [id, val] of this.activeAddons) {
-      aConnection.setAddonOptions(
+      connection.setAddonOptions(
         id, { global: val.bootstrapScope });
     }
   },
@@ -3937,11 +3919,9 @@ this.XPIProvider = {
         this.importPermissions();
       }
       return;
-    } else if (aTopic == NOTIFICATION_TOOLBOXPROCESS_LOADED) {
-      Services.obs.removeObserver(this, NOTIFICATION_TOOLBOXPROCESS_LOADED);
-      this._toolboxProcessLoaded = true;
-      BrowserToolboxProcess.on("connectionchange",
-                               this.onDebugConnectionChange.bind(this));
+    } else if (aTopic == NOTIFICATION_TOOLBOX_CONNECTION_CHANGE) {
+      this.onDebugConnectionChange(aSubject.wrappedJSObject);
+      return;
     }
 
     if (aTopic == "nsPref:changed") {
@@ -4308,13 +4288,9 @@ this.XPIProvider = {
       logger.warn("Error loading bootstrap.js for " + aId, e);
     }
 
-    // Only access BrowserToolboxProcess if ToolboxProcess.jsm has been
-    // initialized as otherwise, when it will be initialized, all addons'
-    // globals will be added anyways
-    if (this._toolboxProcessLoaded) {
-      BrowserToolboxProcess.setAddonOptions(aId,
-        { global: activeAddon.bootstrapScope });
-    }
+    // Notify the BrowserToolboxProcess that a new addon has been loaded.
+    let wrappedJSObject = { id: aId, options: { global: activeAddon.bootstrapScope }};
+    Services.obs.notifyObservers({ wrappedJSObject }, "toolbox-update-addon-options");
   },
 
   /**
@@ -4333,11 +4309,9 @@ this.XPIProvider = {
     this.activeAddons.delete(aId);
     this.addAddonsToCrashReporter();
 
-    // Only access BrowserToolboxProcess if ToolboxProcess.jsm has been
-    // initialized as otherwise, there won't be any addon globals added to it
-    if (this._toolboxProcessLoaded) {
-      BrowserToolboxProcess.setAddonOptions(aId, { global: null });
-    }
+    // Notify the BrowserToolboxProcess that an addon has been unloaded.
+    let wrappedJSObject = { id: aId, options: { global: null }};
+    Services.obs.notifyObservers({ wrappedJSObject }, "toolbox-update-addon-options");
   },
 
   /**

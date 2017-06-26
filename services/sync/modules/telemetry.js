@@ -26,6 +26,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "TelemetryController",
                               "resource://gre/modules/TelemetryController.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "TelemetryUtils",
                                   "resource://gre/modules/TelemetryUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "TelemetryEnvironment",
+                                  "resource://gre/modules/TelemetryEnvironment.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "OS",
                                   "resource://gre/modules/osfile.jsm");
 
@@ -442,6 +444,7 @@ class SyncTelemetryImpl {
 
   getPingJSON(reason) {
     return {
+      os: TelemetryEnvironment.currentEnvironment["system"]["os"],
       why: reason,
       discarded: this.discarded || undefined,
       version: PING_FORMAT_VERSION,

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<resources>
+
+    <!-- Remote Tabs static view top padding. Less in landscape on phones. -->
+    <dimen name="home_remote_tabs_top_padding">48dp</dimen>
+    <dimen name="home_header_item_height">64dp</dimen>
+
+</resources>

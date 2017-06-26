@@ -18,6 +18,7 @@ Structure:
       ... common ping data
       payload: {
         version: 1,
+        os : { ... }, // os data from the current telemetry environment. OS specific, but typically includes name, version and locale.
         discarded: <integer count> // Number of syncs discarded -- left out if zero.
         why: <string>, // Why did we submit the ping? Either "shutdown", "schedule", or "idchanged".
         uid: <string>, // Hashed FxA unique ID, or string of 32 zeros. If this changes between syncs, the payload is submitted.

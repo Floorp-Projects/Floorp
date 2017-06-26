@@ -1,0 +1,196 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<resources>
+
+    <style name="UrlBar.ImageButton" parent="UrlBar.ImageButtonBase">
+        <item name="android:layout_width">@dimen/tablet_browser_toolbar_menu_item_width</item>
+    </style>
+
+    <!-- If this style wasn't actually shared outside the
+         url bar, this name could be improved (bug 1197424). -->
+    <style name="UrlBar.ImageButton.BrowserToolbarColors">
+        <item name="drawableTintList">@color/action_bar_menu_item_colors</item>
+    </style>
+
+    <style name="UrlBar.Button.Container">
+        <item name="android:layout_marginTop">6dp</item>
+        <item name="android:layout_marginBottom">6dp</item>
+        <!-- Start with forward hidden -->
+        <item name="android:orientation">horizontal</item>
+    </style>
+
+    <style name="TabsItem">
+        <item name="android:nextFocusDown">@+id/close</item>
+    </style>
+
+    <style name="TabsItemClose">
+        <item name="android:nextFocusUp">@+id/info</item>
+    </style>
+
+    <style name="Toast" parent="ToastBase">
+        <item name="android:layout_width">400dp</item>
+
+        <!-- Same as pre-19 Toast style, but with no left and right margins.
+             They're removed since large tablets are never going to be only 400dp wide. -->
+    </style>
+
+    <style name="Widget.MenuItemActionBar">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:background">@drawable/browser_toolbar_action_bar_button</item>
+        <item name="drawableTintList">@color/action_bar_menu_item_colors</item>
+        <item name="android:scaleType">center</item>
+
+        <!-- layout_width/height doesn't work here, likely because it's only
+             added programmatically, so we use padding for the width instead.
+             layout_height is set to MATCH_PARENT programmatically in
+             org.mozilla.gecko.toolbar.BrowserToolbarTabletBase.addActionItem(View) -->
+
+        <item name="android:paddingLeft">
+            @dimen/tablet_browser_toolbar_menu_item_padding_horizontal
+        </item>
+        <item name="android:paddingRight">
+            @dimen/tablet_browser_toolbar_menu_item_padding_horizontal
+        </item>
+    </style>
+
+    <style name="Widget.BookmarksListView" parent="Widget.HomeListView">
+        <item name="android:scrollbarStyle">outsideOverlay</item>
+    </style>
+
+    <style name="Widget.TopSitesGridView" parent="Widget.GridView">
+        <item name="android:paddingLeft">5dp</item>
+        <item name="android:paddingRight">5dp</item>
+        <item name="android:paddingBottom">30dp</item>
+        <item name="android:horizontalSpacing">10dp</item>
+        <item name="android:verticalSpacing">10dp</item>
+    </style>
+
+    <style name="Widget.TopSitesListView" parent="Widget.BookmarksListView">
+        <item name="android:paddingTop">30dp</item>
+        <item name="android:paddingLeft">32dp</item>
+        <item name="android:paddingRight">32dp</item>
+        <item name="android:clipToPadding">false</item>
+        <item name="topDivider">false</item>
+    </style>
+
+    <style name="Widget.HomeBanner">
+        <item name="android:paddingLeft">32dp</item>
+        <item name="android:paddingRight">32dp</item>
+    </style>
+
+    <style name="TextAppearance.UrlBar.Title" parent="TextAppearance.Medium">
+        <item name="android:textSize">16sp</item>
+    </style>
+
+    <style name="UrlBar.Base" />
+
+    <style name="UrlBar.MenuMargin" parent="UrlBar.V15.MenuMargin" />
+
+    <style name="UrlBar.Base.MenuMargin" />
+
+    <style name="UrlBar.V15.MenuMargin" parent="UrlBar.Base.MenuMargin">
+        <item name="android:layout_alignParentRight">true</item>
+    </style>
+
+    <style name="UrlBar.Menu" parent="UrlBar.V15.Menu" />
+
+    <style name="UrlBar.Base.Menu" parent="UrlBar.ImageButton" />
+
+    <style name="UrlBar.V15.Menu" parent="UrlBar.Base.Menu">
+        <item name="android:layout_toLeftOf">@id/menu_margin</item>
+    </style>
+
+    <style name="UrlBar.MenuItem" parent="UrlBar.V15.MenuItem" />
+
+    <style name="UrlBar.Base.MenuItem" />
+
+    <style name="UrlBar.V15.MenuItem" parent="UrlBar.Base.MenuItem">
+        <item name="android:layout_marginLeft">6dp</item>
+        <item name="android:layout_toLeftOf">@id/tabs</item>
+    </style>
+
+    <style name="UrlBar.Tabs" parent="UrlBar.V15.Tabs" />
+
+    <style name="UrlBar.Base.Tabs" parent="UrlBar.ImageButton" />
+
+    <style name="UrlBar.V15.Tabs" parent="UrlBar.Base.Tabs">
+        <item name="android:layout_toLeftOf">@id/menu</item>
+    </style>
+
+    <style name="UrlBar.TabCounter" parent="UrlBar.V15.TabCounter" />
+
+    <style name="UrlBar.Base.TabCounter" parent="UrlBar.ImageButton" />
+
+    <style name="UrlBar.V15.TabCounter" parent="UrlBar.Base.TabCounter">
+        <item name="android:layout_alignLeft">@id/tabs</item>
+        <item name="android:layout_alignRight">@id/tabs</item>
+        <item name="android:layout_marginLeft">16dp</item>
+        <item name="android:layout_marginRight">16dp</item>
+        <item name="android:layout_toLeftOf">@id/menu</item>
+    </style>
+
+    <style name="UrlBar.Entry" parent="UrlBar.V15.Entry" />
+
+    <style name="UrlBar.Base.Entry" />
+
+    <style name="UrlBar.V15.Entry" parent="UrlBar.Base.Entry">
+        <item name="android:layout_alignLeft">@id/back</item>
+        <item name="android:layout_toLeftOf">@id/menu_items</item>
+        <item name="android:layout_marginLeft">@dimen/tablet_nav_button_width_half</item>
+    </style>
+
+    <style name="UrlBar.ForwardButton" parent="UrlBar.V15.ForwardButton" />
+
+    <style name="UrlBar.Base.ForwardButton" parent="UrlBar.ImageButton.BrowserToolbarColors" />
+
+    <style name="UrlBar.V15.ForwardButton" parent="UrlBar.Base.ForwardButton">
+        <item name="android:layout_alignLeft">@id/back</item>
+        <item name="android:layout_marginLeft">@dimen/tablet_nav_button_width_half</item>
+        <item name="android:paddingLeft">@dimen/tablet_fwd_button_padding_start</item>
+        <item name="android:paddingRight">@dimen/tablet_fwd_button_padding_end</item>
+    </style>
+
+    <style name="UrlBar.BackButton" parent="UrlBar.V15.BackButton" />
+
+    <style name="UrlBar.Base.BackButton" parent="UrlBar.ImageButton.BrowserToolbarColors" />
+
+    <style name="UrlBar.V15.BackButton" parent="UrlBar.Base.BackButton">
+        <item name="android:layout_marginLeft">12dp</item>
+        <item name="android:layout_alignParentLeft">true</item>
+    </style>
+
+    <style name="UrlBar.EditLayout" parent="UrlBar.V15.EditLayout" />
+
+    <style name="UrlBar.Base.EditLayout" parent="UrlBar.Button" />
+
+    <style name="UrlBar.V15.EditLayout" parent="UrlBar.Base.EditLayout">
+        <item name="android:paddingRight">12dp</item>
+        <item name="android:layout_toLeftOf">@id/menu_items</item>
+        <item name="android:layout_toRightOf">@id/back</item>
+    </style>
+
+    <style name="UrlBar.DisplayLayout" parent="UrlBar.V15.DisplayLayout" />
+
+    <style name="UrlBar.Base.DisplayLayout" parent="UrlBar.Button.Container" />
+
+    <style name="UrlBar.V15.DisplayLayout" parent="UrlBar.Base.DisplayLayout">
+        <item name="android:layout_toLeftOf">@id/menu_items</item>
+        <item name="android:layout_toRightOf">@id/back</item>
+        <item name="android:paddingLeft">0dip</item>
+        <item name="android:paddingRight">4dip</item>
+    </style>
+
+    <style name="UrlBar.EditCancel" parent="UrlBar.V15.EditCancel" />
+
+    <style name="UrlBar.Base.EditCancel" parent="UrlBar.ImageButton" />
+
+    <style name="UrlBar.V15.EditCancel" parent="UrlBar.Base.EditCancel">
+        <item name="android:layout_alignParentRight">true</item>
+    </style>
+
+</resources>

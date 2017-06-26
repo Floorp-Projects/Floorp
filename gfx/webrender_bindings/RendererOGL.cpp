@@ -121,14 +121,11 @@ RendererOGL::Render()
     return false;
   }
   // XXX set clear color if MOZ_WIDGET_ANDROID is defined.
-  // XXX pass the actual render bounds instead of an empty rect.
-  mWidget->DrawWindowUnderlay(&widgetContext, LayoutDeviceIntRect());
 
   auto size = mWidget->GetClientSize();
   wr_renderer_render(mWrRenderer, size.width, size.height);
 
   mGL->SwapBuffers();
-  mWidget->DrawWindowOverlay(&widgetContext, LayoutDeviceIntRect());
   mWidget->PostRender(&widgetContext);
 
   // TODO: Flush pending actions such as texture deletions/unlocks and
