@@ -16,7 +16,7 @@
  *  synthesizeNativeKey
  *  synthesizeMouseExpectEvent
  *  synthesizeKeyExpectEvent
- *  synthesizeNativeClick
+ *  synthesizeNativeOSXClick
  *
  *  When adding methods to this file, please add a performance test for it.
  */

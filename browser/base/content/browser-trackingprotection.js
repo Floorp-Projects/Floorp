@@ -210,6 +210,7 @@ var TrackingProtection = {
         // (e.g. if the user manually visited the tour or clicked the link from
         // about:privatebrowsing) so we can avoid a reload.
         ignoreFragment: "whenComparingAndReplace",
+        triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
       });
     };
 

@@ -385,7 +385,8 @@ var gSyncPane = {
       fxAccounts.promiseAccountsChangeProfileURI(this._getEntryPoint(), "avatar")
           .then(url => {
         this.openContentInBrowser(url, {
-          replaceQueryString: true
+          replaceQueryString: true,
+          triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
         });
       });
       // Prevent page from scrolling on the space key.
@@ -405,7 +406,8 @@ var gSyncPane = {
     fxAccounts.promiseAccountsManageURI(this._getEntryPoint())
       .then(url => {
         this.openContentInBrowser(url, {
-          replaceQueryString: true
+          replaceQueryString: true,
+          triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
         });
       });
   },

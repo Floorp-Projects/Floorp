@@ -683,8 +683,7 @@ nsDOMWindowUtils::SendMouseEventToWindow(const nsAString& aType,
                                          uint32_t aIdentifier,
                                          uint8_t aOptionalArgCount)
 {
-  PROFILER_LABEL("nsDOMWindowUtils", "SendMouseEventToWindow",
-    js::ProfileEntry::Category::EVENTS);
+  AUTO_PROFILER_LABEL("nsDOMWindowUtils::SendMouseEventToWindow", EVENTS);
 
   return SendMouseEventCommon(aType, aX, aY, aButton, aClickCount, aModifiers,
                               aIgnoreRootScrollFrame, aPressure,
@@ -835,8 +834,7 @@ nsDOMWindowUtils::SendPointerEvent(const nsAString& aType,
                                    uint8_t aOptionalArgCount,
                                    bool* aPreventDefault)
 {
-  PROFILER_LABEL("nsDOMWindowUtils", "SendPointerEvent",
-                 js::ProfileEntry::Category::EVENTS);
+  AUTO_PROFILER_LABEL("nsDOMWindowUtils::SendPointerEvent", EVENTS);
 
   return SendPointerEventCommon(aType, aX, aY, aButton, aClickCount,
                                 aModifiers, aIgnoreRootScrollFrame,
@@ -865,8 +863,7 @@ nsDOMWindowUtils::SendPointerEventToWindow(const nsAString& aType,
                                            bool aIsSynthesized,
                                            uint8_t aOptionalArgCount)
 {
-  PROFILER_LABEL("nsDOMWindowUtils", "SendPointerEventToWindow",
-                 js::ProfileEntry::Category::EVENTS);
+  AUTO_PROFILER_LABEL("nsDOMWindowUtils::SendPointerEventToWindow", EVENTS);
 
   return SendPointerEventCommon(aType, aX, aY, aButton, aClickCount,
                                 aModifiers, aIgnoreRootScrollFrame,
@@ -1329,8 +1326,7 @@ NS_IMETHODIMP
 nsDOMWindowUtils::GarbageCollect(nsICycleCollectorListener *aListener,
                                  int32_t aExtraForgetSkippableCalls)
 {
-  PROFILER_LABEL("nsDOMWindowUtils", "GarbageCollect",
-    js::ProfileEntry::Category::GC);
+  AUTO_PROFILER_LABEL("nsDOMWindowUtils::GarbageCollect", GC);
 
   nsJSContext::GarbageCollectNow(JS::gcreason::DOM_UTILS);
   nsJSContext::CycleCollectNow(aListener, aExtraForgetSkippableCalls);
@@ -2327,6 +2323,26 @@ nsDOMWindowUtils::GetLayerManagerRemote(bool* retval)
     return NS_ERROR_FAILURE;
 
   *retval = !!mgr->AsKnowsCompositor();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDOMWindowUtils::GetUsingAdvancedLayers(bool* retval)
+{
+  nsCOMPtr<nsIWidget> widget = GetWidget();
+  if (!widget) {
+    return NS_ERROR_FAILURE;
+  }
+
+  LayerManager *mgr = widget->GetLayerManager();
+  if (!mgr) {
+    return NS_ERROR_FAILURE;
+  }
+
+  *retval = false;
+  if (KnowsCompositor* fwd = mgr->AsKnowsCompositor()) {
+    *retval = fwd->GetTextureFactoryIdentifier().mUsingAdvancedLayers;
+  }
   return NS_OK;
 }
 

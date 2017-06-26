@@ -18,8 +18,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "setTimeout",
   "resource://gre/modules/Timer.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "clearTimeout",
   "resource://gre/modules/Timer.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "Promise",
-  "resource://gre/modules/Promise.jsm");
 
 const COLLECT_RESULTS_AFTER_MS = 10000;
 

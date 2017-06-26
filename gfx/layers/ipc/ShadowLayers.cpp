@@ -9,7 +9,7 @@
 #include "ShadowLayers.h"
 #include <set>                          // for _Rb_tree_const_iterator, etc
 #include <vector>                       // for vector
-#include "GeckoProfiler.h"              // for PROFILER_LABEL
+#include "GeckoProfiler.h"              // for AUTO_PROFILER_LABEL
 #include "ISurfaceAllocator.h"          // for IsSurfaceDescriptorValid
 #include "Layers.h"                     // for Layer
 #include "RenderTrace.h"                // for RenderTraceScope
@@ -614,8 +614,7 @@ ShadowLayerForwarder::EndTransaction(const nsIntRegion& aRegionToClear,
 
   MOZ_ASSERT(aId);
 
-  PROFILER_LABEL("ShadowLayerForwarder", "EndTransaction",
-    js::ProfileEntry::Category::GRAPHICS);
+  AUTO_PROFILER_LABEL("ShadowLayerForwarder::EndTransaction", GRAPHICS);
 
   RenderTraceScope rendertrace("Foward Transaction", "000091");
   MOZ_ASSERT(!mTxn->Finished(), "forgot BeginTransaction?");

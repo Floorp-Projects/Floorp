@@ -51,6 +51,7 @@
 #include "mozilla/layers/FrameUniformityData.h"
 #include "mozilla/layers/ImageBridgeParent.h"
 #include "mozilla/layers/LayerManagerComposite.h"
+#include "mozilla/layers/LayerManagerMLGPU.h"
 #include "mozilla/layers/LayerTreeOwnerTracker.h"
 #include "mozilla/layers/LayersTypes.h"
 #include "mozilla/layers/PLayerTransactionParent.h"
@@ -92,6 +93,9 @@
 #include "mozilla/widget/CompositorWidget.h"
 #ifdef MOZ_WIDGET_SUPPORTS_OOP_COMPOSITING
 # include "mozilla/widget/CompositorWidgetParent.h"
+#endif
+#ifdef XP_WIN
+# include "mozilla/gfx/DeviceManagerDx.h"
 #endif
 
 #include "LayerScope.h"
@@ -914,8 +918,7 @@ void
 CompositorBridgeParent::CompositeToTarget(DrawTarget* aTarget, const gfx::IntRect* aRect)
 {
   AutoProfilerTracing tracing("Paint", "Composite");
-  PROFILER_LABEL("CompositorBridgeParent", "Composite",
-    js::ProfileEntry::Category::GRAPHICS);
+  AUTO_PROFILER_LABEL("CompositorBridgeParent::CompositeToTarget", GRAPHICS);
 
   MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread(),
              "Composite can only be called on the compositor thread");
@@ -1084,8 +1087,7 @@ CompositorBridgeParent::RecvRemotePluginsReady()
 void
 CompositorBridgeParent::ForceComposeToTarget(DrawTarget* aTarget, const gfx::IntRect* aRect)
 {
-  PROFILER_LABEL("CompositorBridgeParent", "ForceComposeToTarget",
-    js::ProfileEntry::Category::GRAPHICS);
+  AUTO_PROFILER_LABEL("CompositorBridgeParent::ForceComposeToTarget", GRAPHICS);
 
   AutoRestore<bool> override(mOverrideComposeReadiness);
   mOverrideComposeReadiness = true;
@@ -1371,16 +1373,41 @@ CompositorBridgeParent::InitializeLayerManager(const nsTArray<LayersBackend>& aB
   NS_ASSERTION(!mLayerManager, "Already initialised mLayerManager");
   NS_ASSERTION(!mCompositor,   "Already initialised mCompositor");
 
-  mCompositor = NewCompositor(aBackendHints);
-  if (!mCompositor) {
-    return;
+  if (!InitializeAdvancedLayers(aBackendHints, nullptr)) {
+    mCompositor = NewCompositor(aBackendHints);
+    if (!mCompositor) {
+      return;
+    }
+    mLayerManager = new LayerManagerComposite(mCompositor);
   }
-
-  mLayerManager = new LayerManagerComposite(mCompositor);
   mLayerManager->SetCompositorBridgeID(mCompositorBridgeID);
 
   MonitorAutoLock lock(*sIndirectLayerTreesLock);
   sIndirectLayerTrees[mRootLayerTreeID].mLayerManager = mLayerManager;
+}
+
+bool
+CompositorBridgeParent::InitializeAdvancedLayers(const nsTArray<LayersBackend>& aBackendHints,
+                                                 TextureFactoryIdentifier* aOutIdentifier)
+{
+#ifdef XP_WIN
+  if (!mOptions.UseAdvancedLayers()) {
+    return false;
+  }
+
+  RefPtr<LayerManagerMLGPU> manager = new LayerManagerMLGPU(mWidget);
+  if (!manager->Initialize()) {
+    return false;
+  }
+
+  if (aOutIdentifier) {
+    *aOutIdentifier = manager->GetTextureFactoryIdentifier();
+  }
+  mLayerManager = manager;
+  return true;
+#else
+  return false;
+#endif
 }
 
 RefPtr<Compositor>

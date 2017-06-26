@@ -439,29 +439,24 @@ namespace gfx {
 // by textrun clients like nsTextFrame.)
 enum class ShapedTextFlags : uint16_t {
     /**
-     * When set, the text string pointer used to create the text run
-     * is guaranteed to be available during the lifetime of the text run.
-     */
-    TEXT_IS_PERSISTENT           = 0x0001,
-    /**
      * When set, the text is RTL.
      */
-    TEXT_IS_RTL                  = 0x0002,
+    TEXT_IS_RTL                  = 0x0001,
     /**
      * When set, spacing is enabled and the textrun needs to call GetSpacing
      * on the spacing provider.
      */
-    TEXT_ENABLE_SPACING          = 0x0004,
+    TEXT_ENABLE_SPACING          = 0x0002,
     /**
      * When set, the text has no characters above 255 and it is stored
      * in the textrun in 8-bit format.
      */
-    TEXT_IS_8BIT                 = 0x0008,
+    TEXT_IS_8BIT                 = 0x0004,
     /**
      * When set, GetHyphenationBreaks may return true for some character
      * positions, otherwise it will always return false for all characters.
      */
-    TEXT_ENABLE_HYPHEN_BREAKS    = 0x0010,
+    TEXT_ENABLE_HYPHEN_BREAKS    = 0x0008,
     /**
      * When set, the RunMetrics::mBoundingBox field will be initialized
      * properly based on glyph extents, in particular, glyph extents that
@@ -469,41 +464,45 @@ enum class ShapedTextFlags : uint16_t {
      * and advance width of the glyph). When not set, it may just be the
      * standard font-box even if glyphs overflow.
      */
-    TEXT_NEED_BOUNDING_BOX       = 0x0020,
+    TEXT_NEED_BOUNDING_BOX       = 0x0010,
     /**
      * When set, optional ligatures are disabled. Ligatures that are
      * required for legible text should still be enabled.
      */
-    TEXT_DISABLE_OPTIONAL_LIGATURES = 0x0040,
+    TEXT_DISABLE_OPTIONAL_LIGATURES = 0x0020,
     /**
      * When set, the textrun should favour speed of construction over
      * quality. This may involve disabling ligatures and/or kerning or
      * other effects.
      */
-    TEXT_OPTIMIZE_SPEED          = 0x0080,
+    TEXT_OPTIMIZE_SPEED          = 0x0040,
     /**
      * When set, the textrun should discard control characters instead of
      * turning them into hexboxes.
      */
-    TEXT_HIDE_CONTROL_CHARACTERS = 0x0100,
+    TEXT_HIDE_CONTROL_CHARACTERS = 0x0080,
 
     /**
      * nsTextFrameThebes sets these, but they're defined here rather than
      * in nsTextFrameUtils.h because ShapedWord creation/caching also needs
      * to check the _INCOMING flag
      */
-    TEXT_TRAILING_ARABICCHAR     = 0x0200,
+    TEXT_TRAILING_ARABICCHAR     = 0x0100,
     /**
      * When set, the previous character for this textrun was an Arabic
      * character.  This is used for the context detection necessary for
      * bidi.numeral implementation.
      */
-    TEXT_INCOMING_ARABICCHAR     = 0x0400,
+    TEXT_INCOMING_ARABICCHAR     = 0x0200,
 
     /**
      * Set if the textrun should use the OpenType 'math' script.
      */
-    TEXT_USE_MATH_SCRIPT         = 0x0800,
+    TEXT_USE_MATH_SCRIPT         = 0x0400,
+
+    /*
+     * Bit 0x0800 is currently unused.
+     */
 
     /**
      * Field for orientation of the textrun and glyphs within it.

@@ -2,7 +2,6 @@
 
 requestLongerTimeout(3);
 
-var {Promise: promise} = Cu.import("resource://gre/modules/Promise.jsm", {});
 
 const BASE_URI = "http://mochi.test:8888/browser/dom/file/ipc/tests/empty.html";
 

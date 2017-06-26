@@ -197,6 +197,9 @@ Structure:
               gpuProcess: { // Out-of-process compositing ("GPU process") feature
                 status: <string>, // "Available" means currently in use
               },
+              advancedLayers: { // Advanced Layers compositing. Only present if D3D11 enabled.
+                status: <string>,    // See the status codes above.
+              },
             },
           },
       },

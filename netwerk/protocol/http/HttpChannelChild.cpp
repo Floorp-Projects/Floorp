@@ -652,7 +652,7 @@ HttpChannelChild::DoOnStartRequest(nsIRequest* aRequest, nsISupports* aContext)
   }
 }
 
-class TransportAndDataEvent : public NeckoTargetChannelEvent<HttpChannelChild>
+class TransportAndDataEvent : public ChannelEvent
 {
  public:
   TransportAndDataEvent(HttpChannelChild* child,
@@ -661,7 +661,7 @@ class TransportAndDataEvent : public NeckoTargetChannelEvent<HttpChannelChild>
                         const nsCString& data,
                         const uint64_t& offset,
                         const uint32_t& count)
-  : NeckoTargetChannelEvent<HttpChannelChild>(child)
+  : mChild(child)
   , mChannelStatus(channelStatus)
   , mTransportStatus(transportStatus)
   , mData(data)
@@ -674,7 +674,14 @@ class TransportAndDataEvent : public NeckoTargetChannelEvent<HttpChannelChild>
                                mOffset, mCount, mData);
   }
 
+  already_AddRefed<nsIEventTarget> GetEventTarget()
+  {
+    MOZ_ASSERT(mChild);
+    nsCOMPtr<nsIEventTarget> target = mChild->GetODATarget();
+    return target.forget();
+  }
  private:
+  HttpChannelChild* mChild;
   nsresult mChannelStatus;
   nsresult mTransportStatus;
   nsCString mData;

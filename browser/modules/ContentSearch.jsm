@@ -10,7 +10,6 @@ this.EXPORTED_SYMBOLS = [
 const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 
 Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/Promise.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "FormHistory",
@@ -547,9 +546,8 @@ this.ContentSearch = {
 
   _initService() {
     if (!this._initServicePromise) {
-      let deferred = Promise.defer();
-      this._initServicePromise = deferred.promise;
-      Services.search.init(() => deferred.resolve());
+      this._initServicePromise =
+        new Promise(resolve => Services.search.init(resolve));
     }
     return this._initServicePromise;
   },

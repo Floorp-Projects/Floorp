@@ -525,6 +525,8 @@ protected:
   void FinishPendingComposite() override;
   void CompositeToTarget(gfx::DrawTarget* aTarget, const gfx::IntRect* aRect = nullptr) override;
 
+  bool InitializeAdvancedLayers(const nsTArray<LayersBackend>& aBackendHints,
+                                TextureFactoryIdentifier* aOutIdentifier);
   RefPtr<Compositor> NewCompositor(const nsTArray<LayersBackend>& aBackendHints);
 
   /**

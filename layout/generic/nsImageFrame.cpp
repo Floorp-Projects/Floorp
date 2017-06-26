@@ -1629,11 +1629,8 @@ nsDisplayImage::GetLayerState(nsDisplayListBuilder* aBuilder,
     }
   }
 
-  uint32_t flags = aBuilder->ShouldSyncDecodeImages()
-                 ? imgIContainer::FLAG_SYNC_DECODE
-                 : imgIContainer::FLAG_NONE;
 
-  if (!mImage->IsImageContainerAvailable(aManager, flags)) {
+  if (!CanOptimizeToImageLayer(aManager, aBuilder)) {
     return LAYER_NONE;
   }
 

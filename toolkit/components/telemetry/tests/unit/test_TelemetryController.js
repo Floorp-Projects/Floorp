@@ -17,7 +17,6 @@ Cu.import("resource://gre/modules/TelemetryStorage.jsm", this);
 Cu.import("resource://gre/modules/TelemetrySend.jsm", this);
 Cu.import("resource://gre/modules/TelemetryArchive.jsm", this);
 Cu.import("resource://gre/modules/TelemetryUtils.jsm", this);
-Cu.import("resource://gre/modules/Promise.jsm", this);
 Cu.import("resource://gre/modules/Preferences.jsm");
 
 const PING_FORMAT_VERSION = 4;
