@@ -315,11 +315,6 @@ public:
    */
   virtual nsresult GetCachedRanges(MediaByteRangeSet& aRanges) = 0;
 
-  // Returns the container content type of the resource. This is copied from the
-  // nsIChannel when the MediaResource is created. Safe to call from
-  // any thread.
-  virtual const MediaContainerType& GetContentType() const = 0;
-
   // Returns true if the resource is a live stream.
   virtual bool IsLiveStream()
   {
@@ -353,8 +348,6 @@ public:
     // Not owned:
     // - mCallback
     size_t size = MediaResource::SizeOfExcludingThis(aMallocSizeOf);
-    size += mContainerType.SizeOfExcludingThis(aMallocSizeOf);
-
     return size;
   }
 
@@ -366,22 +359,15 @@ public:
 protected:
   BaseMediaResource(MediaResourceCallback* aCallback,
                     nsIChannel* aChannel,
-                    nsIURI* aURI,
-                    const MediaContainerType& aContainerType) :
-    mCallback(aCallback),
-    mChannel(aChannel),
-    mURI(aURI),
-    mContainerType(aContainerType),
-    mLoadInBackground(false)
+                    nsIURI* aURI)
+    : mCallback(aCallback)
+    , mChannel(aChannel)
+    , mURI(aURI)
+    , mLoadInBackground(false)
   {
   }
   virtual ~BaseMediaResource()
   {
-  }
-
-  const MediaContainerType& GetContentType() const override
-  {
-    return mContainerType;
   }
 
   // Set the request's load flags to aFlags.  If the request is part of a
@@ -402,11 +388,6 @@ protected:
   // URI in case the stream needs to be re-opened. Access from
   // main thread only.
   nsCOMPtr<nsIURI> mURI;
-
-  // Content-Type of the channel. This is copied from the nsIChannel when the
-  // MediaResource is created. This is constant, so accessing from any thread
-  // is safe.
-  const MediaContainerType mContainerType;
 
   // True if SetLoadInBackground() has been called with
   // aLoadInBackground = true, i.e. when the document load event is not
@@ -470,12 +451,10 @@ public:
   ChannelMediaResource(MediaResourceCallback* aDecoder,
                        nsIChannel* aChannel,
                        nsIURI* aURI,
-                       const MediaContainerType& aContainerType,
                        bool aIsPrivateBrowsing);
   ChannelMediaResource(MediaResourceCallback* aDecoder,
                        nsIChannel* aChannel,
                        nsIURI* aURI,
-                       const MediaContainerType& aContainerType,
                        const MediaChannelStatistics& aStatistics);
   ~ChannelMediaResource();
 

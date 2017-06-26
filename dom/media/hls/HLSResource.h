@@ -44,8 +44,7 @@ class HLSResource final : public MediaResource
 public:
   HLSResource(MediaResourceCallback* aCallback,
               nsIChannel* aChannel,
-              nsIURI* aURI,
-              const MediaContainerType& aContainerType);
+              nsIURI* aURI);
   ~HLSResource();
   nsresult Close() override { return NS_OK; }
   void Suspend(bool aCloseImmediately) override { UNIMPLEMENTED(); }
@@ -87,8 +86,6 @@ public:
 
   bool IsTransportSeekable() override { return true; }
 
-  const MediaContainerType& GetContentType() const override { return mContainerType; }
-
   bool IsLiveStream() override
   {
     return false;
@@ -112,8 +109,6 @@ private:
   size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const override
   {
     size_t size = MediaResource::SizeOfExcludingThis(aMallocSizeOf);
-    size += mContainerType.SizeOfExcludingThis(aMallocSizeOf);
-
     return size;
   }
 
@@ -125,7 +120,6 @@ private:
   RefPtr<MediaResourceCallback> mCallback;
   nsCOMPtr<nsIChannel> mChannel;
   nsCOMPtr<nsIURI> mURI;
-  const MediaContainerType mContainerType;
   java::GeckoHLSResourceWrapper::GlobalRef mHLSResourceWrapper;
   java::GeckoHLSResourceWrapper::Callbacks::GlobalRef mJavaCallbacks;
   RefPtr<HLSResourceCallbacksSupport> mCallbackSupport;
