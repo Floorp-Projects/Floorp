@@ -22,7 +22,7 @@ public:
 	/** Returns true if any driver has an HMD attached. Can be called outside of Init/Cleanup */
 	virtual bool BIsHmdPresent() = 0;
 
-	/** Returns an english error string from inside vrclient.dll which might be newer than the API DLL */
+	/** Returns an English error string from inside vrclient.dll which might be newer than the API DLL */
 	virtual const char *GetEnglishStringForHmdError( vr::EVRInitError eError ) = 0;
 
 	/** Returns an error symbol from inside vrclient.dll which might be newer than the API DLL */

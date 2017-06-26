@@ -628,6 +628,7 @@ groupbox {
   padding: 0 10px;
   bottom: 100%;
   background-color: #ffe900;
+  border: 1px solid #d7b600;
 }
 
 .search-tooltip:hover,
@@ -636,6 +637,15 @@ groupbox {
 }
 
 .search-tooltip::before {
+  position: absolute;
+  content: "";
+  border: 7px solid transparent;
+  border-top-color: #d7b600;
+  top: 100%;
+  offset-inline-start: calc(50% - 7px);
+}
+
+.search-tooltip::after {
   position: absolute;
   content: "";
   border: 6px solid transparent;

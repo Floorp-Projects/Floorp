@@ -68,6 +68,8 @@
 #include "mozilla/layers/CompositorBridgeParent.h"
 #include "mozilla/layers/BasicCompositor.h"
 #include "mozilla/layers/InputAPZContext.h"
+#include "mozilla/layers/WebRenderBridgeChild.h"
+#include "mozilla/webrender/WebRenderAPI.h"
 #include "mozilla/widget/CompositorWidget.h"
 #include "gfxUtils.h"
 #include "gfxPrefs.h"
@@ -2072,6 +2074,52 @@ nsChildView::CleanupWindowEffects()
   mResizerImage = nullptr;
   mCornerMaskImage = nullptr;
   mTitlebarImage = nullptr;
+}
+
+void
+nsChildView::AddWindowOverlayWebRenderCommands(layers::WebRenderBridgeChild* aWrBridge,
+                                               wr::DisplayListBuilder& aBuilder)
+{
+  PrepareWindowEffects();
+
+  LayoutDeviceIntRegion updatedTitlebarRegion;
+  updatedTitlebarRegion.And(mUpdatedTitlebarRegion, mTitlebarRect);
+  mUpdatedTitlebarRegion.SetEmpty();
+
+  if (mTitlebarCGContext) {
+    gfx::IntSize size(CGBitmapContextGetWidth(mTitlebarCGContext),
+                      CGBitmapContextGetHeight(mTitlebarCGContext));
+    size_t stride = CGBitmapContextGetBytesPerRow(mTitlebarCGContext);
+    size_t titlebarCGContextDataLength = stride * size.height;
+    gfx::SurfaceFormat format = gfx::SurfaceFormat::B8G8R8A8;
+    wr::ByteBuffer buffer(
+      titlebarCGContextDataLength,
+      static_cast<uint8_t *>(CGBitmapContextGetData(mTitlebarCGContext)));
+
+    if (!mTitlebarImageKey) {
+      mTitlebarImageKey = Some(aWrBridge->GetNextImageKey());
+      aWrBridge->SendAddImage(*mTitlebarImageKey, size, stride, format, buffer);
+      updatedTitlebarRegion.SetEmpty();
+    }
+
+    if (!updatedTitlebarRegion.IsEmpty()) {
+      aWrBridge->SendUpdateImage(*mTitlebarImageKey, size, format, buffer);
+    }
+
+    WrRect rect = wr::ToWrRect(mTitlebarRect);
+    WrClipRegionToken clip = aBuilder.PushClipRegion(rect, nullptr);
+    aBuilder.PushImage(WrRect{ 0, 0, float(size.width), float(size.height) },
+                       clip, wr::ImageRendering::Auto, *mTitlebarImageKey);
+  }
+}
+
+void
+nsChildView::CleanupWebRenderWindowOverlay(layers::WebRenderBridgeChild* aWrBridge)
+{
+  if (mTitlebarImageKey) {
+    aWrBridge->SendDeleteImage(*mTitlebarImageKey);
+    mTitlebarImageKey = Nothing();
+  }
 }
 
 bool

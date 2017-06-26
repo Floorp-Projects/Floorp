@@ -206,15 +206,11 @@ var Settings = {
     {
       pref: PREF_FHR_UPLOAD_ENABLED,
       defaultPrefValue: false,
-      descriptionEnabledId: "description-upload-enabled",
-      descriptionDisabledId: "description-upload-disabled",
     },
     // extended "Telemetry" recording
     {
       pref: PREF_TELEMETRY_ENABLED,
       defaultPrefValue: false,
-      descriptionEnabledId: "description-extended-recording-enabled",
-      descriptionDisabledId: "description-extended-recording-disabled",
     },
   ],
 
@@ -254,28 +250,33 @@ var Settings = {
     }
   },
 
+  getStatusStringForSetting(setting) {
+    let enabled = Preferences.get(setting.pref, setting.defaultPrefValue);
+    let status = bundle.GetStringFromName(enabled ? "telemetryEnabled" : "telemetryDisabled");
+    return status;
+  },
+
   /**
    * Updates the button & text at the top of the page to reflect Telemetry state.
    */
   render() {
-    for (let setting of this.SETTINGS) {
-      let enabledElement = document.getElementById(setting.descriptionEnabledId);
-      let disabledElement = document.getElementById(setting.descriptionDisabledId);
+    let homeExplanation = document.getElementById("home-explanation");
+    let fhrEnabled = this.getStatusStringForSetting(this.SETTINGS[0]);
+    let extendedEnabled = this.getStatusStringForSetting(this.SETTINGS[1]);
+    let parameters = [fhrEnabled, extendedEnabled].map(this.convertStringToLink);
 
-      if (Preferences.get(setting.pref, setting.defaultPrefValue)) {
-        enabledElement.classList.remove("hidden");
-        disabledElement.classList.add("hidden");
-      } else {
-        enabledElement.classList.add("hidden");
-        disabledElement.classList.remove("hidden");
-      }
-    }
-  }
+    let explanation = bundle.formatStringFromName("homeExplanation", parameters, 2);
+    homeExplanation.innerHTML = explanation;
+    this.attachObservers()
+  },
+
+  convertStringToLink(string) {
+    return "<a href=\"\" class=\"change-data-choices-link\">" + string + "</a>";
+  },
 };
 
 var PingPicker = {
   viewCurrentPingData: null,
-  viewStructuredPingData: null,
   _archivedPings: null,
 
   attachObservers() {
@@ -327,13 +328,21 @@ var PingPicker = {
     this.update();
   },
 
+  render() {
+    let pings = bundle.GetStringFromName("pingExplanationLink");
+    let pingLink = "<a href=\"http://gecko.readthedocs.io/en/latest/toolkit/components/telemetry/telemetry/concepts/pings.html\">&quot;" + pings + "&quot;</a>";
+    let pingName = "<span class=\"change-ping\">" + this._getSelectedPingName() + "</span>";
+
+    let explanation = bundle.formatStringFromName("pingExplanation", [pingLink, pingName], 2);
+    let pingExplanation = document.getElementById("ping-explanation");
+    pingExplanation.innerHTML = explanation;
+    GenericSubsection.deleteAllSubSections();
+  },
+
   async update() {
     let viewCurrent = document.getElementById("ping-source-current").checked;
-    let viewStructured = document.getElementById("ping-source-structured").checked;
     let currentChanged = viewCurrent !== this.viewCurrentPingData;
-    let structuredChanged = viewStructured !== this.viewStructuredPingData;
     this.viewCurrentPingData = viewCurrent;
-    this.viewStructuredPingData = viewStructured;
 
     // If we have no archived pings, disable the ping archive selection.
     // This can happen on new profiles or if the ping archive is disabled.
@@ -343,21 +352,13 @@ var PingPicker = {
 
     if (currentChanged) {
       if (this.viewCurrentPingData) {
-        document.getElementById("current-ping-picker").classList.remove("hidden");
-        document.getElementById("archived-ping-picker").classList.add("hidden");
+        document.getElementById("current-ping-picker").hidden = false;
+        document.getElementById("archived-ping-picker").hidden = true;
         this._updateCurrentPingData();
       } else {
-        document.getElementById("current-ping-picker").classList.add("hidden");
+        document.getElementById("current-ping-picker").hidden = true;
         await this._updateArchivedPingList(archivedPingList);
-        document.getElementById("archived-ping-picker").classList.remove("hidden");
-      }
-    }
-
-    if (structuredChanged) {
-      if (this.viewStructuredPingData) {
-        this._showStructuredPingData();
-      } else {
-        this._showRawPingData();
+        document.getElementById("archived-ping-picker").hidden = false;
       }
     }
   },
@@ -463,6 +464,14 @@ var PingPicker = {
     }
   },
 
+  _getSelectedPingName() {
+    if (this.viewCurrentPingData) return "current";
+
+    let pingSelector = document.getElementById("choose-ping-id");
+    let selected = pingSelector.selectedOptions.item(0);
+    return selected.textContent;
+  },
+
   _getSelectedPingId() {
     let pingSelector = document.getElementById("choose-ping-id");
     let selected = pingSelector.selectedOptions.item(0);
@@ -486,13 +495,11 @@ var PingPicker = {
   },
 
   _showRawPingData() {
-    document.getElementById("raw-ping-data-section").classList.remove("hidden");
-    document.getElementById("structured-ping-data-section").classList.add("hidden");
+    show(document.getElementById("category-raw"));
   },
 
   _showStructuredPingData() {
-    document.getElementById("raw-ping-data-section").classList.add("hidden");
-    document.getElementById("structured-ping-data-section").classList.remove("hidden");
+    show(document.getElementById("category-home"));
   },
 };
 
@@ -535,7 +542,7 @@ var EnvironmentData = {
     let ignore = ["addons"];
     let env = filterObject(ping.environment, ignore);
     let sections = sectionalizeObject(env);
-    GenericSubsection.render(sections, dataDiv);
+    GenericSubsection.render(sections, dataDiv, "environment-data-section");
 
     // We use specialized rendering here to make the addon and plugin listings
     // more readable.
@@ -624,7 +631,7 @@ var EnvironmentData = {
     this.renderPersona(addons, addonSection, "persona");
 
     let hasAddonData = Object.keys(ping.environment.addons).length > 0;
-    let s = GenericSubsection.renderSubsectionHeader("addons", hasAddonData);
+    let s = GenericSubsection.renderSubsectionHeader("addons", hasAddonData, "environment-data-section");
     s.appendChild(addonSection);
     dataDiv.appendChild(s);
   },
@@ -743,7 +750,7 @@ var SlowSQL = {
 
     setHasData("slow-sql-section", true);
     if (debugSlowSql) {
-      document.getElementById("sql-warning").classList.remove("hidden");
+      document.getElementById("sql-warning").hidden = false;
     }
 
     let slowSqlDiv = document.getElementById("slow-sql-tables");
@@ -869,11 +876,11 @@ var StackRenderer = {
 
     let fetchE = document.getElementById(aPrefix + "-fetch-symbols");
     if (fetchE) {
-      fetchE.classList.remove("hidden");
+      fetchE.hidden = false;
     }
     let hideE = document.getElementById(aPrefix + "-hide-symbols");
     if (hideE) {
-      hideE.classList.add("hidden");
+      hideE.hidden = true;
     }
 
     if (aStacks.length == 0) {
@@ -917,8 +924,8 @@ var RawPayload = {
    * Renders the raw payload
    */
   render(aPing) {
-    setHasData("raw-payload-section", true);
-    let pre = document.getElementById("raw-payload-data-pre");
+    setHasData("raw-ping-data-section", true);
+    let pre = document.getElementById("raw-ping-data");
     pre.textContent = JSON.stringify(aPing.payload, null, 2);
   }
 };
@@ -941,9 +948,9 @@ function SymbolicationRequest_handleSymbolResponse() {
     return;
 
   let fetchElement = document.getElementById(this.prefix + "-fetch-symbols");
-  fetchElement.classList.add("hidden");
+  fetchElement.hidden = true;
   let hideElement = document.getElementById(this.prefix + "-hide-symbols");
-  hideElement.classList.remove("hidden");
+  hideElement.hidden = false;
   let div = document.getElementById(this.prefix + "-data");
   removeAllChildNodes(div);
   let errorMessage = bundle.GetStringFromName("errorFetchingSymbols");
@@ -1379,58 +1386,59 @@ function RenderObject(aObject) {
 
 var GenericSubsection = {
 
-  render(data, dataDiv) {
+  addSubSectionToSidebar(id, title) {
+    let category = document.querySelector("#categories > [value=" + id + "]");
+    category.classList.add("has-subsection");
+    let subCategory = document.createElement("div");
+    subCategory.classList.add("category-subsection");
+    subCategory.setAttribute("value", id + "-" + title);
+    subCategory.addEventListener("click", (ev) => {
+      let section = ev.target;
+      showSubSection(section);
+    });
+    subCategory.appendChild(document.createTextNode(title))
+    category.appendChild(subCategory);
+  },
+
+  render(data, dataDiv, sectionID) {
     for (let [title, sectionData] of data) {
       let hasData = sectionData.size > 0;
-      let s = this.renderSubsectionHeader(title, hasData);
-      s.appendChild(this.renderSubsectionData(sectionData));
+      let s = this.renderSubsectionHeader(title, hasData, sectionID);
+      s.appendChild(this.renderSubsectionData(title, sectionData));
       dataDiv.appendChild(s);
     }
   },
 
-  renderSubsectionHeader(title, hasData) {
+  renderSubsectionHeader(title, hasData, sectionID) {
+    this.addSubSectionToSidebar(sectionID, title);
     let section = document.createElement("section");
-    section.classList.add("data-subsection");
+    section.setAttribute("id", sectionID + "-" + title);
+    section.classList.add("data-subsection", "expanded");
     if (hasData) {
       section.classList.add("has-subdata");
     }
-
-    // Create section heading
-    let sectionName = document.createElement("h2");
-    sectionName.setAttribute("class", "section-name");
-    sectionName.appendChild(document.createTextNode(title));
-    sectionName.addEventListener("click", toggleSection);
-
-    // Create caption for toggling the subsection visibility.
-    let toggleCaption = document.createElement("span");
-    toggleCaption.setAttribute("class", "toggle-caption");
-    let toggleText = bundle.GetStringFromName("environmentDataSubsectionToggle");
-    toggleCaption.appendChild(document.createTextNode(" " + toggleText));
-    toggleCaption.addEventListener("click", toggleSection);
-
-    // Create caption for empty subsections.
-    let emptyCaption = document.createElement("span");
-    emptyCaption.setAttribute("class", "empty-caption");
-    let emptyText = bundle.GetStringFromName("environmentDataSubsectionEmpty");
-    emptyCaption.appendChild(document.createTextNode(" " + emptyText));
-
-    // Append elements
-    section.appendChild(sectionName);
-    section.appendChild(toggleCaption);
-    section.appendChild(emptyCaption);
-
     return section;
   },
 
-  renderSubsectionData(data) {
+  renderSubsectionData(title, data) {
     // Create data container
     let dataDiv = document.createElement("div");
     dataDiv.setAttribute("class", "subsection-data subdata");
     // Instanciate the data
     let table = GenericTable.render(data);
+    let caption = document.createElement("caption");
+    caption.textContent = title;
+    table.appendChild(caption);
     dataDiv.appendChild(table);
 
     return dataDiv;
+  },
+
+  deleteAllSubSections() {
+    let subsections = document.querySelectorAll(".category-subsection");
+    subsections.forEach((el) => {
+      el.parentElement.removeChild(el);
+    })
   },
 
 }
@@ -1686,6 +1694,10 @@ var Events = {
 function setHasData(aSectionID, aHasData) {
   let sectionElement = document.getElementById(aSectionID);
   sectionElement.classList[aHasData ? "add" : "remove"]("has-data");
+
+  // Display or Hide the section in the sidebar
+  let sectionCategory = document.querySelector(".category[value=" + aSectionID + "]");
+  sectionCategory.classList[aHasData ? "add" : "remove"]("has-data");
 }
 
 /**
@@ -1722,11 +1734,58 @@ function setupPageHeader() {
 }
 
 /**
+ * Change the section displayed
+ */
+function show(selected) {
+  let current_button = document.querySelector(".category.selected");
+  current_button.classList.remove("selected");
+  selected.classList.add("selected");
+  // Hack because subsection text appear selected. See Bug 1375114.
+  document.getSelection().empty();
+
+  let current_section = document.querySelector(".active");
+  let selected_section = document.getElementById(selected.getAttribute("value"));
+  if (current_section == selected_section)
+    return;
+  current_section.classList.remove("active");
+  current_section.hidden = true;
+  selected_section.classList.add("active");
+  selected_section.hidden = false;
+
+  let title = selected.querySelector(".category-name").textContent;
+  document.getElementById("sectionTitle").textContent = title;
+}
+
+function showSubSection(selected) {
+  let current_selection = document.querySelector(".category-subsection.selected");
+  if (current_selection)
+    current_selection.classList.remove("selected");
+  selected.classList.add("selected");
+
+  let section = document.getElementById(selected.getAttribute("value"));
+  section.parentElement.childNodes.forEach((element) => {
+    element.classList.remove("expanded");
+  }, this);
+  section.classList.add("expanded");
+
+  let title = selected.parentElement.querySelector(".category-name").textContent;
+  document.getElementById("sectionTitle").textContent = title + " - " + selected.textContent;
+  document.getSelection().empty(); // prevent subsection text selection
+}
+
+/**
  * Initializes load/unload, pref change and mouse-click listeners
  */
 function setupListeners() {
   Settings.attachObservers();
   PingPicker.attachObservers();
+
+  let menu = document.getElementById("categories");
+  menu.addEventListener("click", (e) => {
+    if (e.target && e.target.parentNode == menu) {
+      show(e.target)
+    }
+  });
 
   // Clean up observers when page is closed
   window.addEventListener("unload",
@@ -2085,28 +2144,20 @@ function renderPayloadList(ping) {
   }
 }
 
-function toggleElementHidden(element, isHidden) {
-  if (isHidden) {
-    element.classList.add("hidden");
-  } else {
-    element.classList.remove("hidden");
-  }
-}
-
 function togglePingSections(isMainPing) {
   // We always show the sections that are "common" to all pings.
-  // The raw payload section is only used for pings other than "main" and "saved-session".
-  let commonSections = new Set(["general-data-section", "environment-data-section"]);
-  let otherPingSections = new Set(["raw-payload-section"]);
+  let commonSections = new Set(["heading",
+                                "home",
+                                "general-data-section",
+                                "environment-data-section",
+                                "raw-ping-data-section"]);
 
-  let elements = document.getElementById("structured-ping-data-section").children;
+  let elements = document.querySelectorAll(".category");
   for (let section of elements) {
-    if (commonSections.has(section.id)) {
+    if (commonSections.has(section.getAttribute("value"))) {
       continue;
     }
-
-    let showElement = isMainPing != otherPingSections.has(section.id);
-    toggleElementHidden(section, !showElement);
+    section.classList.toggle("has-data", isMainPing);
   }
 }
 
@@ -2114,12 +2165,13 @@ function displayPingData(ping, updatePayloadList = false) {
   gPingData = ping;
 
   // Render raw ping data.
-  let pre = document.getElementById("raw-ping-data");
-  pre.textContent = JSON.stringify(gPingData, null, 2);
+  RawPayload.render(ping);
 
   try {
+    PingPicker.render();
     displayRichPingData(ping, updatePayloadList);
   } catch (err) {
+    console.log(err);
     PingPicker._showRawPingData();
   }
 }
@@ -2147,7 +2199,6 @@ function displayRichPingData(ping, updatePayloadList) {
   togglePingSections(isMainPing);
 
   if (!isMainPing) {
-    RawPayload.render(ping);
     return;
   }
 

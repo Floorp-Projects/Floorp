@@ -20,22 +20,24 @@ Cu.import("resource:///modules/sessionstore/SessionFile.jsm", this);
 
 /**
  * A utility function for resetting the histogram and the contents
- * of the backup directory.
+ * of the backup directory. This will also compress the file using lz4 compression.
  */
-function reset_session(backups = {}) {
+function promise_reset_session(backups = {}) {
+  return (async function() {
+    // Reset the histogram.
+    Telemetry.getHistogramById(HistogramId).clear();
 
-  // Reset the histogram.
-  Telemetry.getHistogramById(HistogramId).clear();
-
-  // Reset the contents of the backups directory
-  OS.File.makeDir(SessionFile.Paths.backups);
-  for (let key of SessionFile.Paths.loadOrder) {
-    if (backups.hasOwnProperty(key)) {
-      OS.File.copy(backups[key], SessionFile.Paths[key]);
-    } else {
-      OS.File.remove(SessionFile.Paths[key]);
+    // Reset the contents of the backups directory
+    OS.File.makeDir(SessionFile.Paths.backups);
+    for (let key of SessionFile.Paths.loadOrder) {
+      if (backups.hasOwnProperty(key)) {
+        let s = await OS.File.read(backups[key]);
+        await OS.File.writeAtomic(SessionFile.Paths[key], s, {compression: "lz4"});
+      } else {
+        await OS.File.remove(SessionFile.Paths[key]);
+      }
     }
-  }
+  })();
 }
 
 /**
@@ -54,7 +56,7 @@ add_task(async function test_ensure_histogram_exists_and_empty() {
  */
 add_task(async function test_no_files_exist() {
   // No session files are available to SessionFile.
-  reset_session();
+  await promise_reset_session();
 
   await SessionFile.read();
   // Checking if the histogram is updated negatively
@@ -72,7 +74,7 @@ add_task(async function test_one_file_valid() {
   // Corrupting some backup files.
   let invalidSession = "data/sessionstore_invalid.js";
   let validSession = "data/sessionstore_valid.js";
-  reset_session({
+  await promise_reset_session({
     clean: invalidSession,
     cleanBackup: validSession,
     recovery: invalidSession,
@@ -94,7 +96,7 @@ add_task(async function test_one_file_valid() {
 add_task(async function test_all_files_corrupt() {
   // Corrupting all backup files.
   let invalidSession = "data/sessionstore_invalid.js";
-  reset_session({
+  await promise_reset_session({
     clean: invalidSession,
     cleanBackup: invalidSession,
     recovery: invalidSession,

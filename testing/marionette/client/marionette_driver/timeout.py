@@ -29,11 +29,7 @@ class Timeouts(object):
 
     def _set(self, name, sec):
         ms = sec * 1000
-        try:
-            self._marionette._send_message("setTimeouts", {name: ms})
-        except errors.UnknownCommandException:
-            # remove when 55 is stable
-            self._marionette._send_message("timeouts", {"type": name, "ms": ms})
+        self._marionette._send_message("setTimeouts", {name: ms})
 
     def _get(self, name):
         ts = self._marionette._send_message("getTimeouts")

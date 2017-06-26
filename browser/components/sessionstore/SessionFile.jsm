@@ -98,11 +98,11 @@ var SessionFileInternal = {
   Paths: Object.freeze({
     // The path to the latest version of sessionstore written during a clean
     // shutdown. After startup, it is renamed `cleanBackup`.
-    clean: Path.join(profileDir, "sessionstore.js"),
+    clean: Path.join(profileDir, "sessionstore.jsonlz4"),
 
     // The path at which we store the previous version of `clean`. Updated
     // whenever we successfully load from `clean`.
-    cleanBackup: Path.join(profileDir, "sessionstore-backups", "previous.js"),
+    cleanBackup: Path.join(profileDir, "sessionstore-backups", "previous.jsonlz4"),
 
     // The directory containing all sessionstore backups.
     backups: Path.join(profileDir, "sessionstore-backups"),
@@ -112,7 +112,7 @@ var SessionFileInternal = {
     // privacy-sensitive information than |clean|, and this file is
     // therefore removed during clean shutdown. This file is designed to protect
     // against crashes / sudden shutdown.
-    recovery: Path.join(profileDir, "sessionstore-backups", "recovery.js"),
+    recovery: Path.join(profileDir, "sessionstore-backups", "recovery.jsonlz4"),
 
     // The path to the previous version of the sessionstore written
     // during runtime (e.g. 15 seconds before recovery). In case of a
@@ -121,13 +121,13 @@ var SessionFileInternal = {
     // this file is therefore removed during clean shutdown.  This
     // file is designed to protect against crashes that are nasty
     // enough to corrupt |recovery|.
-    recoveryBackup: Path.join(profileDir, "sessionstore-backups", "recovery.bak"),
+    recoveryBackup: Path.join(profileDir, "sessionstore-backups", "recovery.baklz4"),
 
     // The path to a backup created during an upgrade of Firefox.
     // Having this backup protects the user essentially from bugs in
     // Firefox or add-ons, especially for users of Nightly. This file
     // does not contain any information more sensitive than |clean|.
-    upgradeBackupPrefix: Path.join(profileDir, "sessionstore-backups", "upgrade.js-"),
+    upgradeBackupPrefix: Path.join(profileDir, "sessionstore-backups", "upgrade.jsonlz4-"),
 
     // The path to the backup of the version of the session store used
     // during the latest upgrade of Firefox. During load/recovery,
@@ -207,21 +207,28 @@ var SessionFileInternal = {
     }
   },
 
-  // Find the correct session file, read it and setup the worker.
-  async read() {
-    this._initializationStarted = true;
-
+  async _readInternal(useOldExtension) {
     let result;
     let noFilesFound = true;
+
     // Attempt to load by order of priority from the various backups
     for (let key of this.Paths.loadOrder) {
       let corrupted = false;
       let exists = true;
       try {
-        let path = this.Paths[key];
+        let path;
         let startMs = Date.now();
 
-        let source = await OS.File.read(path, { encoding: "utf-8" });
+        let options = {encoding: "utf-8"};
+        if (useOldExtension) {
+          path = this.Paths[key]
+                     .replace("jsonlz4", "js")
+                     .replace("baklz4", "bak");
+        } else {
+          path = this.Paths[key];
+          options.compression = "lz4";
+        }
+        let source = await OS.File.read(path, options);
         let parsed = JSON.parse(source);
 
         if (!SessionStore.isFormatVersionCompatible(parsed.version || ["sessionrestore", 0] /* fallback for old versions*/)) {
@@ -232,7 +239,8 @@ var SessionFileInternal = {
         result = {
           origin: key,
           source,
-          parsed
+          parsed,
+          useOldExtension
         };
         Telemetry.getHistogramById("FX_SESSION_RESTORE_CORRUPT_FILE").
           add(false);
@@ -260,6 +268,21 @@ var SessionFileInternal = {
         }
       }
     }
+    return {result, noFilesFound};
+  },
+
+  // Find the correct session file, read it and setup the worker.
+  async read() {
+    this._initializationStarted = true;
+
+    // Load session files with lz4 compression.
+    let {result, noFilesFound} = await this._readInternal(false);
+    if (!result) {
+      // No result? Probably because of migration, let's
+      // load uncompressed session files.
+      let r = await this._readInternal(true);
+      result = r.result;
+    }
 
     // All files are corrupted if files found but none could deliver a result.
     let allCorrupt = !noFilesFound && !result;
@@ -271,7 +294,8 @@ var SessionFileInternal = {
       result = {
         origin: "empty",
         source: "",
-        parsed: null
+        parsed: null,
+        useOldExtension: false
       };
     }
 
@@ -279,7 +303,7 @@ var SessionFileInternal = {
 
     // Initialize the worker (in the background) to let it handle backups and also
     // as a workaround for bug 964531.
-    let promiseInitialized = SessionWorker.post("init", [result.origin, this.Paths, {
+    let promiseInitialized = SessionWorker.post("init", [result.origin, result.useOldExtension, this.Paths, {
       maxUpgradeBackups: Preferences.get(PREF_MAX_UPGRADE_BACKUPS, 3),
       maxSerializeBack: Preferences.get(PREF_MAX_SERIALIZE_BACK, 10),
       maxSerializeForward: Preferences.get(PREF_MAX_SERIALIZE_FWD, -1)

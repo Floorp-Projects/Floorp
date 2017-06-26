@@ -2512,9 +2512,14 @@ nsresult HTMLMediaElement::LoadResource()
       return NS_ERROR_FAILURE;
     }
     ChangeDelayLoadStatus(false);
-    RefPtr<MediaResource> resource =
-      MediaSourceDecoder::CreateResource(mMediaSource->GetPrincipal());
-    return FinishDecoderSetup(decoder, resource, nullptr);
+    nsresult rv = decoder->Load(mMediaSource->GetPrincipal());
+    if (NS_FAILED(rv)) {
+      decoder->Shutdown();
+      LOG(LogLevel::Debug,
+          ("%p Failed to load for decoder %p", this, decoder.get()));
+      return rv;
+    }
+    return FinishDecoderSetup(decoder);
   }
 
   RefPtr<ChannelLoader> loader = new ChannelLoader;
@@ -4650,16 +4655,15 @@ HTMLMediaElement::InitializeDecoderAsClone(ChannelMediaDecoder* aOriginal)
 
   LOG(LogLevel::Debug, ("%p Cloned decoder %p from %p", this, decoder.get(), aOriginal));
 
-  RefPtr<MediaResource> resource =
-    originalResource->CloneData(decoder->GetResourceCallback());
-
-  if (!resource) {
+  nsresult rv = decoder->Load(originalResource);
+  if (NS_FAILED(rv)) {
     decoder->Shutdown();
-    LOG(LogLevel::Debug, ("%p Failed to cloned stream for decoder %p", this, decoder.get()));
-    return NS_ERROR_FAILURE;
+    LOG(LogLevel::Debug,
+        ("%p Failed to load for decoder %p", this, decoder.get()));
+    return rv;
   }
 
-  return FinishDecoderSetup(decoder, resource, nullptr);
+  return FinishDecoderSetup(decoder);
 }
 
 nsresult HTMLMediaElement::InitializeDecoderForChannel(nsIChannel* aChannel,
@@ -4700,32 +4704,32 @@ nsresult HTMLMediaElement::InitializeDecoderForChannel(nsIChannel* aChannel,
 
   LOG(LogLevel::Debug, ("%p Created decoder %p for type %s", this, decoder.get(), mimeType.get()));
 
-  bool isPrivateBrowsing = NodePrincipal()->GetPrivateBrowsingId() > 0;
-  RefPtr<MediaResource> resource = MediaResource::Create(
-    decoder->GetResourceCallback(), aChannel, isPrivateBrowsing);
-
-  if (!resource) {
-    decoder->Shutdown();
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
   if (mChannelLoader) {
     mChannelLoader->Done();
     mChannelLoader = nullptr;
   }
 
-  nsresult rv = FinishDecoderSetup(decoder, resource, aListener);
+  bool isPrivateBrowsing = NodePrincipal()->GetPrivateBrowsingId() > 0;
+  nsresult rv = decoder->Load(aChannel, isPrivateBrowsing, aListener);
+  if (NS_FAILED(rv)) {
+    decoder->Shutdown();
+    LOG(LogLevel::Debug,
+        ("%p Failed to load for decoder %p", this, decoder.get()));
+    return rv;
+  }
+
+  rv = FinishDecoderSetup(decoder);
   if (NS_SUCCEEDED(rv)) {
     AddMediaElementToURITable();
     NS_ASSERTION(MediaElementTableCount(this, mLoadingSrc) == 1,
       "Media element should have single table entry if decode initialized");
   }
+
   return rv;
 }
 
-nsresult HTMLMediaElement::FinishDecoderSetup(MediaDecoder* aDecoder,
-                                              MediaResource* aStream,
-                                              nsIStreamListener** aListener)
+nsresult
+HTMLMediaElement::FinishDecoderSetup(MediaDecoder* aDecoder)
 {
   ChangeNetworkState(nsIDOMHTMLMediaElement::NETWORK_LOADING);
 
@@ -4736,22 +4740,12 @@ nsresult HTMLMediaElement::FinishDecoderSetup(MediaDecoder* aDecoder,
   // here and Load(), they work.
   SetDecoder(aDecoder);
 
-  // Tell the decoder about its MediaResource now so things like principals are
-  // available immediately.
-  mDecoder->SetResource(aStream);
   // Notify the decoder of the initial activity status.
   NotifyDecoderActivityChanges();
 
   // Update decoder principal before we start decoding, since it
   // can affect how we feed data to MediaStreams
   NotifyDecoderPrincipalChanged();
-
-  nsresult rv = aDecoder->Load(aListener);
-  if (NS_FAILED(rv)) {
-    ShutdownDecoder();
-    LOG(LogLevel::Debug, ("%p Failed to load for decoder %p", this, aDecoder));
-    return rv;
-  }
 
   for (OutputMediaStream& ms : mOutputStreams) {
     if (ms.mCapturingMediaStream) {
@@ -4790,6 +4784,7 @@ nsresult HTMLMediaElement::FinishDecoderSetup(MediaDecoder* aDecoder,
   // This will also do an AddRemoveSelfReference.
   NotifyOwnerDocumentActivityChanged();
 
+  nsresult rv = NS_OK;
   if (!mPaused) {
     SetPlayedOrSeeked(true);
     if (!mPausedForInactiveDocumentOrChannel) {

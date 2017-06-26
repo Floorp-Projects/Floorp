@@ -6,6 +6,7 @@
   "required": ["version", "syncs", "why", "uid"],
   "properties": {
     "version": { "type": "integer", "minimum": 0 },
+    "os": { "type": "object" },
     "discarded": { "type": "integer", "minimum": 1 },
     "why": { "enum": ["shutdown", "schedule", "idchange"] },
     "uid": {

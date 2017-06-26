@@ -640,6 +640,12 @@ const PanelUI = {
     }
   },
 
+  onAreaReset(aArea, aContainer) {
+    if (gPhotonStructure && aContainer == this.overflowFixedList) {
+      this.updateOverflowStatus();
+    }
+  },
+
   /**
    * Signal that we're about to make a lot of changes to the contents of the
    * panels all at once. For performance, we ignore the mutations.

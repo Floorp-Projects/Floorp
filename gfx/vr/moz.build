@@ -36,7 +36,7 @@ UNIFIED_SOURCES += [
 ]
 
 # Build OpenVR on Windows, Linux, and macOS desktop targets
-if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('cocoa', 'uikit', 'windows', 'gtk2', 'gtk3'):
+if CONFIG['OS_TARGET'] in ('WINNT', 'Linux', 'Darwin'):
     DIRS += [
         'openvr',
     ]
@@ -44,7 +44,7 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('cocoa', 'uikit', 'windows', 'gtk2', 'gtk3')
         'gfxVROpenVR.cpp',
     ]
 
-if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
+if CONFIG['OS_TARGET'] == 'WINNT':
     SOURCES += [
         'gfxVROculus.cpp',
     ]

@@ -31,7 +31,6 @@
 #include "nsISupports.h"
 #include "nsITimer.h"
 
-class nsIStreamListener;
 class nsIPrincipal;
 
 namespace mozilla {
@@ -122,14 +121,6 @@ public:
   // to prevent further calls into the decoder.
   void NotifyXPCOMShutdown();
 
-  // Start downloading the media. Decode the downloaded data up to the
-  // point of the first frame of data.
-  // This is called at most once per decoder, after Init().
-  virtual nsresult Load(nsIStreamListener** aListener);
-
-  // Called in |Load| to open mResource.
-  nsresult OpenResource(nsIStreamListener** aStreamListener);
-
   // Called if the media file encounters a network error.
   void NetworkError();
 
@@ -144,11 +135,6 @@ public:
   MediaResource* GetResource() const final override
   {
     return mResource;
-  }
-  void SetResource(MediaResource* aResource)
-  {
-    MOZ_ASSERT(NS_IsMainThread());
-    mResource = aResource;
   }
 
   // Return the principal of the current URI being played or downloaded.

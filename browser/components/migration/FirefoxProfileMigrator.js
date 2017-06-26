@@ -139,7 +139,7 @@ FirefoxProfileMigrator.prototype._getResourcesInternal = function(sourceProfileD
   let dictionary = getFileResource(types.OTHERDATA, ["persdict.dat"]);
 
   let sessionCheckpoints = this._getFileObject(sourceProfileDir, "sessionCheckpoints.json");
-  let sessionFile = this._getFileObject(sourceProfileDir, "sessionstore.js");
+  let sessionFile = this._getFileObject(sourceProfileDir, "sessionstore.jsonlz4");
   let session;
   if (sessionFile) {
     session = {
@@ -147,7 +147,7 @@ FirefoxProfileMigrator.prototype._getResourcesInternal = function(sourceProfileD
       migrate(aCallback) {
         sessionCheckpoints.copyTo(currentProfileDir, "sessionCheckpoints.json");
         let newSessionFile = currentProfileDir.clone();
-        newSessionFile.append("sessionstore.js");
+        newSessionFile.append("sessionstore.jsonlz4");
         let migrationPromise = SessionMigration.migrate(sessionFile.path, newSessionFile.path);
         migrationPromise.then(function() {
           let buildID = Services.appinfo.platformBuildID;

@@ -22,7 +22,7 @@ marionette.jar:
   content/modal.js (modal.js)
   content/proxy.js (proxy.js)
   content/capture.js (capture.js)
-  content/cookies.js (cookies.js)
+  content/cookie.js (cookie.js)
   content/atom.js (atom.js)
   content/evaluate.js (evaluate.js)
   content/navigate.js (navigate.js)
@@ -33,6 +33,8 @@ marionette.jar:
   content/transport.js (transport.js)
   content/packets.js (packets.js)
   content/stream-utils.js (stream-utils.js)
+  content/reftest.js (reftest.js)
+  content/reftest.xul (reftest.xul)
 #ifdef ENABLE_TESTS
   content/test.xul (chrome/test.xul)
   content/test2.xul (chrome/test2.xul)

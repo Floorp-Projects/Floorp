@@ -14,7 +14,6 @@ const profd = do_get_profile();
 const {SessionFile} = Cu.import("resource:///modules/sessionstore/SessionFile.jsm", {});
 const {Paths} = SessionFile;
 
-const {OS} = Cu.import("resource://gre/modules/osfile.jsm", {});
 const {File} = OS;
 
 const MAX_ENTRIES = 9;
@@ -32,6 +31,7 @@ updateAppInfo({
 add_task(async function setup() {
   let source = do_get_file("data/sessionstore_valid.js");
   source.copyTo(profd, "sessionstore.js");
+  await writeCompressedFile(Paths.clean.replace("jsonlz4", "js"), Paths.clean);
 
   // Finish SessionFile initialization.
   await SessionFile.read();
@@ -62,7 +62,7 @@ async function setMaxBackForward(back, fwd) {
 
 async function writeAndParse(state, path, options = {}) {
   await SessionWorker.post("write", [state, options]);
-  return JSON.parse(await File.read(path, {encoding: "utf-8"}));
+  return JSON.parse(await File.read(path, {encoding: "utf-8", compression: "lz4"}));
 }
 
 add_task(async function test_shistory_cap_none() {

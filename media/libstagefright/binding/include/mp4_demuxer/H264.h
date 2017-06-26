@@ -38,6 +38,11 @@ class BitReader;
 
 struct SPSData
 {
+  bool operator==(const SPSData& aOther) const;
+  bool operator!=(const SPSData& aOther) const;
+
+  bool valid;
+
   /* Decoded Members */
   /*
     pic_width is the decoded width according to:
@@ -391,10 +396,6 @@ struct SPSData
   */
   uint8_t chroma_sample_loc_type_top_field;
   uint8_t chroma_sample_loc_type_bottom_field;
-  bool timing_info_present_flag;
-  uint32_t num_units_in_tick;
-  uint32_t time_scale;
-  bool fixed_frame_rate_flag;
 
   bool scaling_matrix_present;
   uint8_t scaling_matrix4x4[6][16];
@@ -406,12 +407,15 @@ struct SPSData
 class H264
 {
 public:
-  /* Extract RAW BYTE SEQUENCE PAYLOAD from NAL content.
-     Returns nullptr if invalid content.
-     This is compliant to ITU H.264 7.3.1 Syntax in tabular form NAL unit syntax
-   */
-  static already_AddRefed<mozilla::MediaByteBuffer> DecodeNALUnit(
-    const mozilla::MediaByteBuffer* aNAL);
+  /* Check if out of band extradata contains a SPS NAL */
+  static bool HasSPS(const mozilla::MediaByteBuffer* aExtraData);
+  // Extract SPS and PPS NALs from aSample by looking into each NALs.
+  // aSample must be in AVCC format.
+  static already_AddRefed<mozilla::MediaByteBuffer> ExtractExtraData(
+    const mozilla::MediaRawData* aSample);
+  // Return true if both extradata are equal.
+  static bool CompareExtraData(const mozilla::MediaByteBuffer* aExtraData1,
+                               const mozilla::MediaByteBuffer* aExtraData2);
 
   // Ensure that SPS data makes sense, Return true if SPS data was, and false
   // otherwise. If false, then content will be adjusted accordingly.
@@ -437,11 +441,19 @@ public:
   static FrameType GetFrameType(const mozilla::MediaRawData* aSample);
 
 private:
+  friend class SPSNAL;
+  /* Extract RAW BYTE SEQUENCE PAYLOAD from NAL content.
+     Returns nullptr if invalid content.
+     This is compliant to ITU H.264 7.3.1 Syntax in tabular form NAL unit syntax
+   */
+  static already_AddRefed<mozilla::MediaByteBuffer> DecodeNALUnit(
+    const uint8_t* aNAL, size_t aLength);
   /* Decode SPS NAL RBSP and fill SPSData structure */
   static bool DecodeSPS(const mozilla::MediaByteBuffer* aSPS, SPSData& aDest);
   static bool vui_parameters(BitReader& aBr, SPSData& aDest);
   // Read HRD parameters, all data is ignored.
   static void hrd_parameters(BitReader& aBr);
+  static uint8_t NumSPS(const mozilla::MediaByteBuffer* aExtraData);
 };
 
 } // namespace mp4_demuxer

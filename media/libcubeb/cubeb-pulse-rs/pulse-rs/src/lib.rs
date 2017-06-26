@@ -411,10 +411,10 @@ bitflags! {
 impl SinkFlags {
     pub fn try_from(x: ffi::pa_sink_flags_t) -> Option<SinkFlags> {
         if (x &
-            !(ffi::PA_SOURCE_NOFLAGS | ffi::PA_SOURCE_HW_VOLUME_CTRL | ffi::PA_SOURCE_LATENCY |
-              ffi::PA_SOURCE_HARDWARE | ffi::PA_SOURCE_NETWORK | ffi::PA_SOURCE_HW_MUTE_CTRL |
-              ffi::PA_SOURCE_DECIBEL_VOLUME |
-              ffi::PA_SOURCE_DYNAMIC_LATENCY | ffi::PA_SOURCE_FLAT_VOLUME)) == 0 {
+            !(ffi::PA_SINK_NOFLAGS | ffi::PA_SINK_HW_VOLUME_CTRL | ffi::PA_SINK_LATENCY |
+              ffi::PA_SINK_HARDWARE | ffi::PA_SINK_NETWORK | ffi::PA_SINK_HW_MUTE_CTRL |
+              ffi::PA_SINK_DECIBEL_VOLUME | ffi::PA_SINK_DYNAMIC_LATENCY |
+              ffi::PA_SINK_FLAT_VOLUME | ffi::PA_SINK_SET_FORMATS)) == 0 {
             Some(unsafe { ::std::mem::transmute(x) })
         } else {
             None
