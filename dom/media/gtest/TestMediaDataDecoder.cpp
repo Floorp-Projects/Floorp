@@ -50,8 +50,7 @@ TEST(MediaDataDecoder, H264)
          /* DecoderDoctorDiagnostics* */ nullptr)) {
     EXPECT_TRUE(true);
   } else {
-    RefPtr<MediaResource> resource =
-      new MockMediaResource("gizmo.mp4", MediaContainerType(MEDIAMIMETYPE("video/mp4")));
+    RefPtr<MediaResource> resource = new MockMediaResource("gizmo.mp4");
     nsresult rv = resource->Open(nullptr);
     EXPECT_TRUE(NS_SUCCEEDED(rv));
 
@@ -65,8 +64,7 @@ TEST(MediaDataDecoder, VP9)
   if (!WebMDecoder::IsSupportedType(MediaContainerType(MEDIAMIMETYPE("video/webm")))) {
     EXPECT_TRUE(true);
   } else {
-    RefPtr<MediaResource> resource =
-      new MockMediaResource("vp9cake.webm", MediaContainerType(MEDIAMIMETYPE("video/webm")));
+    RefPtr<MediaResource> resource = new MockMediaResource("vp9cake.webm");
     nsresult rv = resource->Open(nullptr);
     EXPECT_TRUE(NS_SUCCEEDED(rv));
 

@@ -38,7 +38,7 @@ class SourceBuffer;
 class SourceBufferResource final : public MediaResource
 {
 public:
-  explicit SourceBufferResource(const MediaContainerType& aType);
+  SourceBufferResource();
   nsresult Close() override;
   void Suspend(bool aCloseImmediately) override { UNIMPLEMENTED(); }
   void Resume() override { UNIMPLEMENTED(); }
@@ -125,14 +125,11 @@ public:
     return NS_OK;
   }
 
-  const MediaContainerType& GetContentType() const override { return mType; }
-
   size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const override
   {
     MOZ_ASSERT(OnTaskQueue());
 
     size_t size = MediaResource::SizeOfExcludingThis(aMallocSizeOf);
-    size += mType.SizeOfExcludingThis(aMallocSizeOf);
     size += mInputBuffer.SizeOfExcludingThis(aMallocSizeOf);
 
     return size;
@@ -187,7 +184,6 @@ private:
                           char* aBuffer,
                           uint32_t aCount,
                           uint32_t* aBytes);
-  const MediaContainerType mType;
 
 #if defined(DEBUG)
   const RefPtr<TaskQueue> mTaskQueue;
