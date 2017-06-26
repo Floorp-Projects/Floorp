@@ -14,6 +14,10 @@ We would apply some rules:
 * All styles and ids should be formated as `onboarding-*` to avoid conflict with the origin page.
 * All strings in `locales` should be formated as `onboarding.*` for consistency.
 
+## How to change the order of tours
+
+Edit `browser/app/profile/firefox.js` and modify `browser.onboarding.newtour` for the new user tour or `browser.onboarding.updatetour` for the update user tour. You can change the tour list and the order by concate `tourIds` with `,` sign. You can find available `tourId` from `onboardingTourset` in `onboarding.js`.
+
 ## How to pump tour set version after update tours
 
 The tourset version is used to track the last major tourset change version. The `tourset-version` pref store the major tourset version (ex: `1`) but not the current browser version. When browser update to the next version (ex: 58, 59) the tourset pref is still `1` if we didn't do any major tourset update.
