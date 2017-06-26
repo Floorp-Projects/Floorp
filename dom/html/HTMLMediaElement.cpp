@@ -2507,7 +2507,8 @@ nsresult HTMLMediaElement::LoadResource()
       mPlaybackRate,
       mPreloadAction == HTMLMediaElement::PRELOAD_METADATA,
       mHasSuspendTaint,
-      HasAttr(kNameSpaceID_None, nsGkAtoms::loop));
+      HasAttr(kNameSpaceID_None, nsGkAtoms::loop),
+      MediaContainerType(MEDIAMIMETYPE("application/x.mediasource")));
 
     RefPtr<MediaSourceDecoder> decoder = new MediaSourceDecoder(decoderInit);
     if (!mMediaSource->Attach(decoder)) {
@@ -4650,15 +4651,16 @@ HTMLMediaElement::InitializeDecoderAsClone(ChannelMediaDecoder* aOriginal)
   if (!originalResource)
     return NS_ERROR_FAILURE;
 
-  MediaDecoderInit decoderInit(
-    this,
-    mAudioChannel,
-    mMuted ? 0.0 : mVolume,
-    mPreservesPitch,
-    mPlaybackRate,
-    mPreloadAction == HTMLMediaElement::PRELOAD_METADATA,
-    mHasSuspendTaint,
-    HasAttr(kNameSpaceID_None, nsGkAtoms::loop));
+  MediaDecoderInit decoderInit(this,
+                               mAudioChannel,
+                               mMuted ? 0.0 : mVolume,
+                               mPreservesPitch,
+                               mPlaybackRate,
+                               mPreloadAction ==
+                                 HTMLMediaElement::PRELOAD_METADATA,
+                               mHasSuspendTaint,
+                               HasAttr(kNameSpaceID_None, nsGkAtoms::loop),
+                               aOriginal->ContainerType());
 
   RefPtr<ChannelMediaDecoder> decoder = aOriginal->Clone(decoderInit);
   if (!decoder)
@@ -4683,23 +4685,33 @@ nsresult HTMLMediaElement::InitializeDecoderForChannel(nsIChannel* aChannel,
   NS_ASSERTION(mLoadingSrc, "mLoadingSrc must already be set");
 
   nsAutoCString mimeType;
+  DecoderDoctorDiagnostics diagnostics;
 
   aChannel->GetContentType(mimeType);
   NS_ASSERTION(!mimeType.IsEmpty(), "We should have the Content-Type.");
 
-  DecoderDoctorDiagnostics diagnostics;
-  MediaDecoderInit decoderInit(
-    this,
-    mAudioChannel,
-    mMuted ? 0.0 : mVolume,
-    mPreservesPitch,
-    mPlaybackRate,
-    mPreloadAction == HTMLMediaElement::PRELOAD_METADATA,
-    mHasSuspendTaint,
-    HasAttr(kNameSpaceID_None, nsGkAtoms::loop));
+  Maybe<MediaContainerType> containerType = MakeMediaContainerType(mimeType);
+  if (!containerType) {
+    diagnostics.StoreFormatDiagnostics(OwnerDoc(),
+                                       NS_ConvertASCIItoUTF16(mimeType),
+                                       /* aCanPlay = */ false,
+                                       __func__);
+    return NS_ERROR_FAILURE;
+  }
+
+  MediaDecoderInit decoderInit(this,
+                               mAudioChannel,
+                               mMuted ? 0.0 : mVolume,
+                               mPreservesPitch,
+                               mPlaybackRate,
+                               mPreloadAction ==
+                                 HTMLMediaElement::PRELOAD_METADATA,
+                               mHasSuspendTaint,
+                               HasAttr(kNameSpaceID_None, nsGkAtoms::loop),
+                               *containerType);
 
   RefPtr<ChannelMediaDecoder> decoder =
-    DecoderTraits::CreateDecoder(mimeType, decoderInit, &diagnostics);
+    DecoderTraits::CreateDecoder(decoderInit, &diagnostics);
   diagnostics.StoreFormatDiagnostics(OwnerDoc(),
                                      NS_ConvertASCIItoUTF16(mimeType),
                                      decoder != nullptr,
