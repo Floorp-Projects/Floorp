@@ -31,17 +31,25 @@ this.proxy = class extends ExtensionAPI {
     let {extension} = context;
     return {
       proxy: {
-        registerProxyScript: (url) => {
-          // Unload the current proxy script if one is loaded.
-          if (proxyScriptContextMap.has(extension)) {
-            proxyScriptContextMap.get(extension).unload();
-            proxyScriptContextMap.delete(extension);
-          }
+        register(url) {
+          this.unregister();
 
           let proxyScriptContext = new ProxyScriptContext(extension, url);
           if (proxyScriptContext.load()) {
             proxyScriptContextMap.set(extension, proxyScriptContext);
           }
+        },
+
+        unregister() {
+          // Unload the current proxy script if one is loaded.
+          if (proxyScriptContextMap.has(extension)) {
+            proxyScriptContextMap.get(extension).unload();
+            proxyScriptContextMap.delete(extension);
+          }
+        },
+
+        registerProxyScript(url) {
+          this.register(url);
         },
 
         onProxyError: new SingletonEventManager(context, "proxy.onProxyError", fire => {
