@@ -173,7 +173,7 @@ body {
   text-decoration: underline;
 }
 
-#histograms, #addon-histograms, #thread-hang-stats>div {
+#histograms, #thread-hang-stats>div {
   overflow: hidden;
 }
 
