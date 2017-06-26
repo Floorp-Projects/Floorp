@@ -639,8 +639,8 @@ MediaDecoder::EnsureTelemetryReported()
     codecs.AppendElement(mInfo->mVideo.GetAsVideoInfo()->mMimeType);
   }
   if (codecs.IsEmpty()) {
-    codecs.AppendElement(nsPrintfCString(
-      "resource; %s", mResource->GetContentType().OriginalString().Data()));
+    codecs.AppendElement(
+      nsPrintfCString("resource; %s", ContainerType().OriginalString().Data()));
   }
   for (const nsCString& codec : codecs) {
     LOG("Telemetry MEDIA_CODEC_USED= '%s'", codec.get());
