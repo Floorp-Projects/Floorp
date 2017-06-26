@@ -2854,15 +2854,8 @@ nsTextEditorState::UpdateOverlayTextVisibility(bool aNotify)
   mPreviewVisibility = valueIsEmpty && !previewValue.IsEmpty();
   mPlaceholderVisibility = valueIsEmpty && previewValue.IsEmpty();
 
-  static bool sPrefCached = false;
-  static bool sPrefShowOnFocus = true;
-  if (!sPrefCached) {
-    sPrefCached = true;
-    Preferences::AddBoolVarCache(&sPrefShowOnFocus,
-                                 "dom.placeholder.show_on_focus", true);
-  }
-
-  if (mPlaceholderVisibility && !sPrefShowOnFocus) {
+  if (mPlaceholderVisibility &&
+      !nsContentUtils::ShowInputPlaceholderOnFocus()) {
     nsCOMPtr<nsIContent> content = do_QueryInterface(mTextCtrlElement);
     mPlaceholderVisibility = !nsContentUtils::IsFocusedContent(content);
   }
