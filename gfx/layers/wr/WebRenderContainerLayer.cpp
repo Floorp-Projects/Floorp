@@ -150,8 +150,8 @@ WebRenderRefLayer::RenderLayer(wr::DisplayListBuilder& aBuilder,
       PixelCastJustification::MovingDownToChildren);
   DumpLayerInfo("RefLayer", rect);
 
-  WrRect r = aSc.ToRelativeWrRect(rect);
-  aBuilder.PushIFrame(r, r, wr::AsPipelineId(mId));
+  WrClipRegionToken clipRegion = aBuilder.PushClipRegion(aSc.ToRelativeWrRect(rect));
+  aBuilder.PushIFrame(aSc.ToRelativeWrRect(rect), clipRegion, wr::AsPipelineId(mId));
 }
 
 } // namespace layers

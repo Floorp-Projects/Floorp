@@ -652,7 +652,7 @@ nsImageRenderer::BuildWebRenderDisplayItems(nsPresContext*       aPresContext,
 
       LayoutDeviceSize gapSize = LayoutDeviceSize::FromAppUnits(
           aRepeatSize - aDest.Size(), appUnitsPerDevPixel);
-      aBuilder.PushImage(fill, clip,
+      aBuilder.PushImage(fill, aBuilder.PushClipRegion(clip),
                          wr::ToWrSize(destRect.Size()), wr::ToWrSize(gapSize),
                          wr::ImageRendering::Auto, key.value());
       break;

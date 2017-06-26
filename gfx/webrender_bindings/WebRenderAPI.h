@@ -174,11 +174,11 @@ public:
   void PopClipAndScrollInfo();
 
   void PushRect(const WrRect& aBounds,
-                const WrRect& aClip,
+                const WrClipRegionToken aClip,
                 const WrColor& aColor);
 
   void PushLinearGradient(const WrRect& aBounds,
-                          const WrRect& aClip,
+                          const WrClipRegionToken aClip,
                           const WrPoint& aStartPoint,
                           const WrPoint& aEndPoint,
                           const nsTArray<WrGradientStop>& aStops,
@@ -187,7 +187,7 @@ public:
                           const WrSize aTileSpacing);
 
   void PushRadialGradient(const WrRect& aBounds,
-                          const WrRect& aClip,
+                          const WrClipRegionToken aClip,
                           const WrPoint& aCenter,
                           const WrSize& aRadius,
                           const nsTArray<WrGradientStop>& aStops,
@@ -196,19 +196,19 @@ public:
                           const WrSize aTileSpacing);
 
   void PushImage(const WrRect& aBounds,
-                 const WrRect& aClip,
+                 const WrClipRegionToken aClip,
                  wr::ImageRendering aFilter,
                  wr::ImageKey aImage);
 
   void PushImage(const WrRect& aBounds,
-                 const WrRect& aClip,
+                 const WrClipRegionToken aClip,
                  const WrSize& aStretchSize,
                  const WrSize& aTileSpacing,
                  wr::ImageRendering aFilter,
                  wr::ImageKey aImage);
 
   void PushYCbCrPlanarImage(const WrRect& aBounds,
-                            const WrRect& aClip,
+                            const WrClipRegionToken aClip,
                             wr::ImageKey aImageChannel0,
                             wr::ImageKey aImageChannel1,
                             wr::ImageKey aImageChannel2,
@@ -216,24 +216,24 @@ public:
                             wr::ImageRendering aFilter);
 
   void PushNV12Image(const WrRect& aBounds,
-                     const WrRect& aClip,
+                     const WrClipRegionToken aClip,
                      wr::ImageKey aImageChannel0,
                      wr::ImageKey aImageChannel1,
                      WrYuvColorSpace aColorSpace,
                      wr::ImageRendering aFilter);
 
   void PushYCbCrInterleavedImage(const WrRect& aBounds,
-                                 const WrRect& aClip,
+                                 const WrClipRegionToken aClip,
                                  wr::ImageKey aImageChannel0,
                                  WrYuvColorSpace aColorSpace,
                                  wr::ImageRendering aFilter);
 
   void PushIFrame(const WrRect& aBounds,
-                  const WrRect& aClip,
+                  const WrClipRegionToken aClip,
                   wr::PipelineId aPipeline);
 
   void PushBorder(const WrRect& aBounds,
-                  const WrRect& aClip,
+                  const WrClipRegionToken aClip,
                   const WrBorderWidths& aWidths,
                   const WrBorderSide& aTop,
                   const WrBorderSide& aRight,
@@ -242,7 +242,7 @@ public:
                   const WrBorderRadius& aRadius);
 
   void PushBorderImage(const WrRect& aBounds,
-                       const WrRect& aClip,
+                       const WrClipRegionToken aClip,
                        const WrBorderWidths& aWidths,
                        wr::ImageKey aImage,
                        const WrNinePatchDescriptor& aPatch,
@@ -251,7 +251,7 @@ public:
                        const WrRepeatMode& aRepeatVertical);
 
   void PushBorderGradient(const WrRect& aBounds,
-                          const WrRect& aClip,
+                          const WrClipRegionToken aClip,
                           const WrBorderWidths& aWidths,
                           const WrPoint& aStartPoint,
                           const WrPoint& aEndPoint,
@@ -260,7 +260,7 @@ public:
                           const WrSideOffsets2Df32& aOutset);
 
   void PushBorderRadialGradient(const WrRect& aBounds,
-                                const WrRect& aClip,
+                                const WrClipRegionToken aClip,
                                 const WrBorderWidths& aWidths,
                                 const WrPoint& aCenter,
                                 const WrSize& aRadius,
@@ -269,14 +269,14 @@ public:
                                 const WrSideOffsets2Df32& aOutset);
 
   void PushText(const WrRect& aBounds,
-                const WrRect& aClip,
+                const WrClipRegionToken aClip,
                 const gfx::Color& aColor,
                 wr::FontKey aFontKey,
                 Range<const WrGlyphInstance> aGlyphBuffer,
                 float aGlyphSize);
 
   void PushBoxShadow(const WrRect& aRect,
-                     const WrRect& aClip,
+                     const WrClipRegionToken aClip,
                      const WrRect& aBoxBounds,
                      const WrPoint& aOffset,
                      const WrColor& aColor,
@@ -284,6 +284,12 @@ public:
                      const float& aSpreadRadius,
                      const float& aBorderRadius,
                      const WrBoxShadowClipMode& aClipMode);
+
+  WrClipRegionToken PushClipRegion(const WrRect& aMain,
+                                   const WrImageMask* aMask = nullptr);
+  WrClipRegionToken PushClipRegion(const WrRect& aMain,
+                                   const nsTArray<WrComplexClipRegion>& aComplex,
+                                   const WrImageMask* aMask = nullptr);
 
   // Returns the clip id that was most recently pushed with PushClip and that
   // has not yet been popped with PopClip. Return Nothing() if the clip stack
