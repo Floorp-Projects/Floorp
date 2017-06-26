@@ -22,7 +22,7 @@ const BRAND_SHORT_NAME = Services.strings
 
 /**
  * Add any number of tours, following the format
- * {
+ * "tourId": { // The short tour id which could be saved in pref
  *   // The unique tour id
  *   id: "onboarding-tour-addons",
  *   // The string id of tour name which would be displayed on the navigation bar
@@ -40,8 +40,8 @@ const BRAND_SHORT_NAME = Services.strings
  *   getPage() {},
  * },
  **/
-var onboardingTours = [
-  {
+var onboardingTourset = {
+  "private": {
     id: "onboarding-tour-private-browsing",
     tourNameId: "onboarding.tour-private-browsing",
     getNotificationStrings(bundle) {
@@ -68,7 +68,7 @@ var onboardingTours = [
       return div;
     },
   },
-  {
+  "addons": {
     id: "onboarding-tour-addons",
     tourNameId: "onboarding.tour-addons",
     getNotificationStrings(bundle) {
@@ -95,7 +95,7 @@ var onboardingTours = [
       return div;
     },
   },
-  {
+  "customize": {
     id: "onboarding-tour-customize",
     tourNameId: "onboarding.tour-customize",
     getNotificationStrings(bundle) {
@@ -122,7 +122,7 @@ var onboardingTours = [
       return div;
     },
   },
-  {
+  "search": {
     id: "onboarding-tour-search",
     tourNameId: "onboarding.tour-search2",
     getNotificationStrings(bundle) {
@@ -149,7 +149,7 @@ var onboardingTours = [
       return div;
     },
   },
-  {
+  "default": {
     id: "onboarding-tour-default-browser",
     tourNameId: "onboarding.tour-default-browser",
     getNotificationStrings(bundle) {
@@ -179,7 +179,7 @@ var onboardingTours = [
       return div;
     },
   },
-  {
+  "sync": {
     id: "onboarding-tour-sync",
     tourNameId: "onboarding.tour-sync2",
     getNotificationStrings(bundle) {
@@ -212,7 +212,7 @@ var onboardingTours = [
       return div;
     },
   },
-];
+};
 
 /**
  * The script won't be initialized if we turned off onboarding by
@@ -227,9 +227,16 @@ class Onboarding {
     this._window = contentWindow;
     this._tourItems = [];
     this._tourPages = [];
+    this._tours = [];
 
-    // we only support the new user tour at this moment
-    if (Services.prefs.getStringPref("browser.onboarding.tour-type", "update") !== "new") {
+    let tourIds = this._getTourIDList(Services.prefs.getStringPref("browser.onboarding.tour-type", "update"));
+    tourIds.forEach(tourId => {
+      if (onboardingTourset[tourId]) {
+        this._tours.push(onboardingTourset[tourId]);
+      }
+    });
+
+    if (this._tours.length === 0) {
       return;
     }
 
@@ -254,6 +261,11 @@ class Onboarding {
 
     this._initPrefObserver();
     this._initNotification();
+  }
+
+  _getTourIDList(tourType) {
+    let tours = Services.prefs.getStringPref(`browser.onboarding.${tourType}tour`, "");
+    return tours.split(",").filter(tourId => tourId !== "").map(tourId => tourId.trim());
   }
 
   _initNotification() {
@@ -285,7 +297,7 @@ class Onboarding {
         this.destroy();
       }
     });
-    onboardingTours.forEach(tour => {
+    this._tours.forEach(tour => {
       let tourId = tour.id;
       this._prefsObserved.set(`browser.onboarding.tour.${tourId}.completed`, () => {
         this.markTourCompletionState(tourId);
@@ -355,7 +367,7 @@ class Onboarding {
   toggleOverlay() {
     if (this._tourItems.length == 0) {
       // Lazy loading until first toggle.
-      this._loadTours(onboardingTours);
+      this._loadTours(this._tours);
     }
 
     this.hideNotification();
@@ -418,16 +430,16 @@ class Onboarding {
 
     // Take the last tour as the default last prompted
     // so below would start from the 1st one if found no the last prompted from the pref.
-    let lastPromptedId = onboardingTours[onboardingTours.length - 1].id;
+    let lastPromptedId = this._tours[this._tours.length - 1].id;
     lastPromptedId = Preferences.get("browser.onboarding.notification.lastPrompted", lastPromptedId);
 
-    let lastTourIndex = onboardingTours.findIndex(tour => tour.id == lastPromptedId);
+    let lastTourIndex = this._tours.findIndex(tour => tour.id == lastPromptedId);
     if (lastTourIndex < 0) {
       // Couldn't find the tour.
       // This could be because the pref was manually modified into unknown value
       // or the tour version has been updated so have an new tours set.
       // Take the last tour as the last prompted so would start from the 1st one below.
-      lastTourIndex = onboardingTours.length - 1;
+      lastTourIndex = this._tours.length - 1;
     }
 
     // Form tours to notify into the order we want.
@@ -435,7 +447,7 @@ class Onboarding {
     // This would form [#4, #5, #0, #1, #2, #3].
     // So the 1st met incomplete tour in #4 ~ #2 would be the one to show.
     // Or #3 would be the one to show if #4 ~ #2 are all completed.
-    let toursToNotify = [ ...onboardingTours.slice(lastTourIndex + 1), ...onboardingTours.slice(0, lastTourIndex + 1) ];
+    let toursToNotify = [ ...this._tours.slice(lastTourIndex + 1), ...this._tours.slice(0, lastTourIndex + 1) ];
     targetTour = toursToNotify.find(tour => !this.isTourCompleted(tour.id));
 
 
@@ -497,7 +509,7 @@ class Onboarding {
   }
 
   hide() {
-    this.setToursCompleted(onboardingTours.map(tour => tour.id));
+    this.setToursCompleted(this._tours.map(tour => tour.id));
     this.sendMessageToChrome("set-prefs", [
       {
         name: "browser.onboarding.hidden",
