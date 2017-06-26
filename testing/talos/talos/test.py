@@ -420,6 +420,7 @@ class glterrain(PageloaderTest):
     tppagecycles = 25
     tploadnocache = True
     tpmozafterpaint = False
+    tpchrome = False
     gecko_profile_interval = 10
     gecko_profile_entries = 2000000
     win_counters = w7_counters = linux_counters = mac_counters = None
@@ -443,6 +444,7 @@ class glvideo(PageloaderTest):
     tppagecycles = 5
     tploadnocache = True
     tpmozafterpaint = False
+    tpchrome = False
     gecko_profile_interval = 2
     gecko_profile_entries = 2000000
     win_counters = w7_counters = linux_counters = mac_counters = None
@@ -597,6 +599,7 @@ class basic_compositor_video(PageloaderTest):
     tpmanifest = '${talos}/tests/video/video.manifest'
     tpcycles = 1
     tppagecycles = 12
+    tpchrome = False
     timeout = 10000
     gecko_profile_interval = 1
     gecko_profile_entries = 2000000
@@ -636,6 +639,7 @@ class dromaeo(PageloaderTest):
     filters = filter.dromaeo.prepare()
     lower_is_better = False
     alert_threshold = 5.0
+    tpchrome = False
 
 
 @register_test()
@@ -737,6 +741,7 @@ class tsvgr_opacity(PageloaderTest):
     tpcycles = 1
     tppagecycles = 25
     tpmozafterpaint = True
+    tpchrome = False
     gecko_profile_interval = 1
     gecko_profile_entries = 10000000
     filters = filter.ignore_first.prepare(5) + filter.median.prepare()
@@ -752,6 +757,7 @@ class tscrollx(PageloaderTest):
     tpcycles = 1
     tppagecycles = 25
     tpmozafterpaint = False
+    tpchrome = False
     gecko_profile_interval = 1
     gecko_profile_entries = 1000000
     """ ASAP mode """
@@ -774,6 +780,7 @@ class a11yr(PageloaderTest):
     tpcycles = 1
     tppagecycles = 25
     tpmozafterpaint = True
+    tpchrome = False
     preferences = {'dom.send_after_paint_to_content': False}
     unit = 'ms'
     alert_threshold = 5.0

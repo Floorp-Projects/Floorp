@@ -179,7 +179,8 @@ HTMLStyleElement::AfterSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
         aName == nsGkAtoms::media ||
         aName == nsGkAtoms::type) {
       UpdateStyleSheetInternal(nullptr, nullptr, true);
-    } else if (aName == nsGkAtoms::scoped) {
+    } else if (aName == nsGkAtoms::scoped &&
+               OwnerDoc()->IsScopedStyleEnabled()) {
       bool isScoped = aValue;
       UpdateStyleSheetScopedness(isScoped);
     }
@@ -242,7 +243,8 @@ HTMLStyleElement::GetStyleSheetInfo(nsAString& aTitle,
 
   GetAttr(kNameSpaceID_None, nsGkAtoms::type, aType);
 
-  *aIsScoped = HasAttr(kNameSpaceID_None, nsGkAtoms::scoped);
+  *aIsScoped = HasAttr(kNameSpaceID_None, nsGkAtoms::scoped) &&
+               OwnerDoc()->IsScopedStyleEnabled();
 
   nsAutoString mimeType;
   nsAutoString notUsed;

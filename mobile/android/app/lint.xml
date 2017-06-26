@@ -60,7 +60,8 @@
         <ignore path="**/mobile/android/base/java/org/mozilla/gecko/IntentHelper.java"/>
         <ignore path="**/media/webrtc/trunk/webrtc/modules/audio_device/android/java/src/org/webrtc/voiceengine/WebRtcAudioEffects.java"/>
         <ignore path="**/media/webrtc/trunk/webrtc/modules/audio_device/android/java/src/org/webrtc/voiceengine/WebRtcAudioRecord.java"/>
-        <ignore path="src/main/res/values/styles.xml"/>
+        <ignore path="src/australis/res/values/styles.xml"/>
+        <ignore path="src/photon/res/values/styles.xml"/>
     </issue>
 
     <!-- We fixed all "Registered" lint errors. However the current gradle plugin has a bug where
@@ -220,6 +221,8 @@
              preprocessed_resources res/raw folder. Lint reports it as unused. We should get
              rid of the file eventually. See bug 1268948. -->
         <ignore path="**/raw/.mkdir.done" />
+        <!-- bug 1375351 - To clean unused color codes -->
+        <ignore path="src/photon/res/values/colors.xml"/>
         <ignore path="src/australis/res/values/skin_strings.xml"/>
         <ignore path="src/photon/res/values/skin_strings.xml"/>
     </issue>

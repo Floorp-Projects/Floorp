@@ -2009,8 +2009,7 @@ already_AddRefed<nsStyleContext>
 nsStyleSet::ProbePseudoElementStyle(Element* aParentElement,
                                     CSSPseudoElementType aType,
                                     nsStyleContext* aParentContext,
-                                    TreeMatchContext& aTreeMatchContext,
-                                    Element* aPseudoElement)
+                                    TreeMatchContext& aTreeMatchContext)
 {
   NS_ENSURE_FALSE(mInShutdown, nullptr);
 
@@ -2023,7 +2022,7 @@ nsStyleSet::ProbePseudoElementStyle(Element* aParentElement,
   aTreeMatchContext.ResetForUnvisitedMatching();
   PseudoElementRuleProcessorData data(PresContext(), aParentElement,
                                       &ruleWalker, aType, aTreeMatchContext,
-                                      aPseudoElement);
+                                      /* aPseudoElement = */ nullptr);
   WalkRestrictionRule(aType, &ruleWalker);
   // not the root if there was a restriction rule
   nsRuleNode *adjustedRoot = ruleWalker.CurrentNode();

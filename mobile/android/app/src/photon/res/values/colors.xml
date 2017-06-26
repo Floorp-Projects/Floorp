@@ -1,0 +1,233 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<resources>
+    <!-- color palette for Photon -->
+    <color name="photon_text_main">#272727</color>
+    <color name="photon_text_main_private">#FFFFFF</color>
+    <color name="photon_text_secondary">#B2B2B2</color>
+    <color name="photon_text_secondary_private">#737373</color>
+    <color name="photon_text_placeholder">#B2B2B2</color>
+    <color name="photon_text_placeholder_private">#737373</color>
+    <color name="photon_text_selected_highlight">#E4E4E4</color>
+    <color name="photon_text_selected_highlight_private">#737373</color>
+
+    <color name="photon_search_suggestion_box">#E4E4E4</color>
+
+    <!-- opacity: 20% -->
+    <color name="photon_search_suggestion_box_pressed">#33E4E4E4</color>
+
+    <color name="photon_search_suggestion_box_private">#2A2A2A</color>
+
+    <!-- opacity: 20% -->
+    <color name="photon_search_suggestion_box_private_pressed">#332A2A2A</color>
+
+    <color name="photon_browser_toolbar_bg">#F9F9FA</color>
+    <color name="photon_browser_toolbar_bg_private">#38383D</color>
+
+    <color name="photon_content_bg">#FFFFFF</color>
+
+    <!-- opacity: 10% -->
+    <color name="photon_content_bg_pressed">#19272727</color>
+
+    <color name="photon_content_bg_private">#414146</color>
+
+    <!-- opacity: 10% -->
+    <color name="photon_content_bg_private_pressed">#19272727</color>
+
+    <color name="photon_tabs_tray_bg">#272727</color>
+    <color name="photon_highlight">#00A2FE</color>
+    <color name="photon_highlight_private">#AC39FF</color>
+    <color name="photon_loading_indicator_light">#00DCFC</color>
+    <color name="photon_loading_indicator_light_private">#FF1AD9</color>
+    <color name="photon_loading_indicator_dark">#00A2FE</color>
+    <color name="photon_loading_indicator_dark_private">#9400FF</color>
+    <color name="photon_menu_bg">#F9F9FA</color>
+    <color name="photon_menu_bg_private">#38383D</color>
+    <color name="photon_icon">#272727</color>
+    <color name="photon_icon_private">#FFFFFF</color>
+    <color name="photon_icon_lock">#16DA00</color>
+
+    <color name="photon_notification_bg">#0096DD</color>
+
+    <!-- opacity: 10% -->
+    <color name="photon_notification_bg_pressed">#19000000</color>
+
+    <color name="photon_toolbar_text_color">#3B3B3B</color>
+    <color name="photon_toolbar_text_color_private">#FFFFFF</color>
+    <color name="photon_toolbar_image_tint">@color/photon_toolbar_text_color</color>
+    <color name="photon_toolbar_image_tint_private">@color/photon_toolbar_text_color_private</color>
+    <color name="photon_toolbar_bg">#F7FAFC</color>
+    <color name="photon_toolbar_bg_private">#38383D</color>
+
+    <color name="photon_tabs_counter_fg">#272727</color>
+    <color name="photon_tabs_counter_fg_private">#FFFFFF</color>
+
+    <color name="photon_two_line_page_row_bg">#FFFFFF</color>
+    <color name="photon_two_line_page_row_bg_private">#414146</color>
+
+    <color name="photon_search_item_text">@color/photon_text_main</color>
+    <color name="photon_search_item_text_private">@color/photon_text_main_private</color>
+
+    <color name="photon_home_list_divider">@color/photon_two_line_page_row_bg</color>
+    <color name="photon_home_list_divider_private">@color/photon_two_line_page_row_bg_private
+    </color>
+
+    <color name="progress_start">#00DCFC</color>
+    <color name="progress_end">#00A2FE</color>
+
+    <color name="photon_url_bar_blocked">#D70022</color>
+    <color name="photon_url_bar_blocked_private">#D70022</color>
+    <color name="photon_url_bar_certificate_owner">#05A700</color>
+    <color name="photon_url_bar_certificate_owner_private">#16DA00</color>
+    <color name="photon_url_bar_domain">@color/photon_text_main</color>
+    <color name="photon_url_bar_domain_private">@color/photon_text_main_private</color>
+
+    <!-- Fennec color palette (bug 1127517) -->
+    <color name="fennec_ui_orange">#FF9500</color>
+    <color name="affirmative_green">#6FBE4A</color>
+    <color name="rejection_red">#D23228</color>
+    <color name="action_orange">#E66000</color>
+    <color name="action_orange_pressed">#DC5600</color>
+    <color name="link_blue">#0096DD</color>
+    <color name="link_blue_pressed">#0082C6</color>
+    <color name="private_browsing_purple">#CF68FF</color>
+
+    <color name="placeholder_active_grey">#222222</color>
+    <color name="placeholder_grey">#777777</color>
+    <color name="private_toolbar_grey">#292C29</color>
+    <color name="text_and_tabs_tray_grey">#363B40</color>
+    <color name="tabs_tray_grey_pressed">#45494E</color>
+    <color name="toolbar_icon_grey">#5F6368</color>
+
+    <color name="tabs_tray_icon_grey">#AFB1B3</color>
+    <color name="disabled_grey">#BFBFBF</color>
+    <color name="toolbar_grey_pressed">#D7D7DC</color>
+    <color name="toolbar_menu_dark_grey">#E1E1E6</color>
+    <color name="toolbar_grey">#EBEBF0</color>
+    <color name="about_page_header_grey">#F5F5F5</color>
+
+    <color name="url_bar_shadow_private">#7878A5</color>
+
+    <!-- Restricted profiles palette -->
+
+    <color name="restricted_profile_background_gold">#ffffcb51</color>
+    <color name="restricted_profile_background_green">#1aaa86</color>
+
+    <!-- Non-palette colors -->
+
+    <!-- Synced w/ toolbar_grey -->
+    <color name="background_normal_lwt">#DDEBEBF0</color>
+
+    <color name="highlight">#33000000</color>
+    <color name="highlight_focused">#1A000000</color>
+    <color name="highlight_dark">#33FFFFFF</color>
+    <color name="highlight_dark_focused">#1AFFFFFF</color>
+
+    <!-- Synced w/ toolbar_grey_pressed -->
+    <color name="tablet_highlight_lwt">#AAD7D7DC</color>
+
+    <!-- Synced w/ tabs_tray_grey_pressed -->
+    <color name="tablet_highlight_dark_lwt">#AA45494E</color>
+
+    <!-- (bug 1077195) Focused state values are temporary. -->
+    <color name="tablet_highlight_focused">#C0C9D0</color>
+
+    <!-- highlight on shaped button: 20% white over text_and_tabs_tray_grey -->
+    <color name="highlight_shaped">#FF696D71</color>
+
+    <!-- highlight-focused on shaped button: 10% white over text_and_tabs_tray_grey -->
+    <color name="highlight_shaped_focused">#FF565B60</color>
+
+    <!-- highlight on private nav button: 20% white over private_toolbar_grey -->
+    <color name="highlight_nav_pb">#FF545654</color>
+
+    <color name="dark_transparent_overlay">#99000000</color>
+
+    <!-- Firstrun tour -->
+    <color name="firstrun_pager_header">#E8E8E8</color>
+
+    <!-- Tab Queue -->
+    <color name="tab_queue_dismiss_button_foreground">#16A3DF</color>
+    <color name="tab_queue_dismiss_button_foreground_pressed">#1193CB</color>
+
+    <!--
+        Application theme colors
+    -->
+    <!-- Default colors -->
+    <color name="text_color_tertiary">#9198A1</color>
+
+    <!-- Default inverse colors -->
+    <color name="text_color_secondary_inverse">#DDDDDD</color>
+
+    <!-- Disabled colors -->
+    <color name="text_color_primary_disable_only">#999999</color>
+
+    <!-- Hint colors -->
+    <color name="text_color_hint">#666666</color>
+    <color name="text_color_hint_inverse">#7F828A</color>
+
+    <!-- Highlight colors -->
+    <color name="text_color_highlight_inverse">#D06BFF</color>
+
+    <!-- Link colors -->
+    <color name="text_color_link">#22629E</color>
+
+    <!-- Divider colors -->
+    <color name="toolbar_divider_grey">#D7D9DB</color>
+
+    <color name="doorhanger_link">#FF2AA1FE</color>
+
+    <color name="validation_message_text">#ffffff</color>
+    <color name="url_bar_text_highlight_pb">#FFD06BFF</color>
+    <color name="tab_row_pressed">#4D000000</color>
+
+    <color name="url_bar_urltext">#AFB1B3</color>
+    <color name="url_bar_urltext_private">#777777</color>
+    <color name="url_bar_domaintext">#363B40</color>
+    <color name="url_bar_domaintext_private">#FFFFFF</color>
+    <color name="url_bar_blockedtext">#b14646</color>
+    <color name="url_bar_shadow">#12000000</color>
+
+    <color name="panel_image_item_background">#D1D9E1</color>
+    <color name="panel_icon_item_title_background">#32000000</color>
+    <color name="panel_tab_text_normal">#FFBFBFBF</color>
+
+    <!-- Remote tabs setup -->
+    <color name="remote_tabs_setup_button_background_hit">#D95300</color>
+
+    <!-- Button toast colors. -->
+    <color name="toast_background">#DD222222</color>
+    <color name="toast_button_background">#00000000</color>
+    <color name="toast_button_pressed">#DD2C3136</color>
+    <color name="toast_button_text">#FFFFFFFF</color>
+
+    <!-- Tab History colors. -->
+    <color name="tab_history_timeline_separator">#D7D9DB</color>
+    <color name="tab_history_favicon_border">#D7D9DB</color>
+    <color name="tab_history_favicon_background">#FFFFFF</color>
+    <color name="tab_history_border_color">#DADADF</color>
+
+    <!-- Canvas delegate paint color -->
+    <color name="canvas_delegate_paint">#FFFF0000</color>
+
+    <!-- Top sites thumbnail colors -->
+    <color name="top_site_default">#FFECF0F3</color>
+    <color name="top_site_border">#FFCFD9E1</color>
+
+    <color name="private_active_text">#FFFFFF</color>
+
+    <color name="action_bar_bg_color">@color/toolbar_grey</color>
+
+    <color name="activity_stream_divider">#FFD2D2D2</color>
+    <color name="activity_stream_subtitle">#FF919191</color>
+    <color name="activity_stream_timestamp">#FFD3D3D3</color>
+    <color name="activity_stream_icon">#FF919191</color>
+
+    <color name="tablet_tab_strip_divider_color">#555555</color>
+
+    <color name="bookmark_folder_bg_color">#FCFCFC</color>
+</resources>

@@ -27,6 +27,7 @@ this.FormAutofillUtils = {
     "address-level2": "address",
     "postal-code": "address",
     "country": "address",
+    "country-name": "address",
     "tel": "tel",
     "email": "email",
     "cc-name": "creditCard",

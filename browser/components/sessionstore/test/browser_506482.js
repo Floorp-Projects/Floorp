@@ -14,7 +14,7 @@ function test() {
                     get("ProfD", Ci.nsIFile);
   function getSessionstoreFile() {
     let sessionStoreJS = profilePath.clone();
-    sessionStoreJS.append("sessionstore.js");
+    sessionStoreJS.append("sessionstore.jsonlz4");
     return sessionStoreJS;
   }
   function getSessionstorejsModificationTime() {

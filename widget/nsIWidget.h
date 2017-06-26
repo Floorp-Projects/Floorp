@@ -61,6 +61,7 @@ class CompositorBridgeChild;
 class LayerManager;
 class LayerManagerComposite;
 class PLayerTransactionChild;
+class WebRenderBridgeChild;
 struct ScrollableLayerGuid;
 } // namespace layers
 namespace gfx {
@@ -73,6 +74,9 @@ class TextEventDispatcherListener;
 class CompositorWidget;
 class CompositorWidgetInitData;
 } // namespace widget
+namespace wr {
+class DisplayListBuilder;
+} // namespace wr
 } // namespace mozilla
 
 /**
@@ -1278,6 +1282,18 @@ class nsIWidget : public nsISupports
      * Always called on the main thread.
      */
     virtual void PrepareWindowEffects() = 0;
+
+    /**
+     * Called on the main thread at the end of WebRender display list building.
+     */
+    virtual void AddWindowOverlayWebRenderCommands(mozilla::layers::WebRenderBridgeChild* aWrBridge,
+                                                   mozilla::wr::DisplayListBuilder& aBuilder) {}
+
+    /**
+     * Called on the main thread when WebRender resources used for
+     * AddWindowOverlayWebRenderCommands need to be destroyed.
+     */
+    virtual void CleanupWebRenderWindowOverlay(mozilla::layers::WebRenderBridgeChild* aWrBridge) {}
 
     /**
      * Called when Gecko knows which themed widgets exist in this window.

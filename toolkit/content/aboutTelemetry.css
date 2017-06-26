@@ -2,29 +2,107 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-.hidden {
-  display: none;
-}
+@import url("chrome://global/skin/in-content/common.css");
 
 html {
-  background-color: -moz-Dialog;
-  color: -moz-DialogText;
-  font: message-box;
+  height: 100%;
 }
 
 body {
-  padding: 0px;
-  margin: 0px;
+  display: flex;
+  align-items: stretch;
+  height: 100%;
 }
 
-h2 {
-  font-size: medium;
+#categories {
+  padding-top: 0px;
+  min-width: 300px;
+  overflow-y: auto;
+}
+
+#category-raw {
+  border-top: 1px solid var(--in-content-header-border-color);
+  box-sizing: border-box;
+  background-color: inherit;
+  min-width: inherit;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+}
+
+#category-raw.selected {
+   background-color: var(--in-content-category-background-active);
+}
+
+.heading {
+  padding-inline-start: 15px;
+  padding-inline-end: 21px;
+  color: var(--in-content-category-text);
+}
+
+.category:not(.has-data) {
+  display: none;
+}
+
+.category {
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  min-height: 42px;
+}
+
+.category-name {
+  padding: 9px 0px;
+  vertical-align: middle;
+}
+
+.category.has-subsection {
+  padding-inline-start: 0px;
+}
+
+.category.has-subsection > span {
+  padding-inline-start: 11px;
+}
+
+.category.has-subsection.selected {
+  border-inline-start: none;
+}
+
+.category-subsection {
+  padding: 9px 0px;
+  padding-inline-start: 30px;
+  display: none;
+  -moz-user-select: none;
+}
+
+.category-subsection::first-letter {
+  text-transform: uppercase;
+}
+
+.category.selected > .category-subsection {
+  display: block;
+}
+
+.category-subsection.selected {
+  padding-inline-start: 26px;
+  border-inline-start: solid 4px var(--in-content-border-highlight);
+}
+
+.category-name {
+  pointer-events: none;
+}
+
+.main-content {
+  width: 100%;
+  font-size: 18px;
+  line-height:1.6;
 }
 
 #page-description {
   border: 1px solid threedshadow;
   margin: 0px;
   padding: 10px;
+  line-height: 1.2;
 }
 
 #settings {
@@ -32,17 +110,25 @@ h2 {
   padding: 5px;
 }
 
-.description-enabled,
-.description-disabled {
-  margin: 0px;
+.change-data-choices-link {
+  border-bottom-width: 2px;
+  border-bottom-style: solid;
 }
 
-.description-enabled > span {
-  color: green;
+.change-data-choices-link:hover {
+  text-decoration: none;
 }
 
-.description-disabled > span {
-  color: red;
+#ping-explanation > span {
+  cursor: pointer;
+  border-bottom-width: 2px;
+  border-bottom-style: solid;
+}
+
+#ping-explanation > span:hover {
+  color: var(--in-content-page-color);
+  border-bottom-width: 2px;
+  border-bottom-style: solid;
 }
 
 #ping-picker {
@@ -56,21 +142,10 @@ h2 {
   margin-bottom: 10px;
 }
 
-.data-section,
-.data-subsection {
-  background-color: -moz-Field;
-  color: -moz-FieldText;
-  border-top: 1px solid threedshadow;
-  border-bottom: 1px solid threedshadow;
-  margin: 0px;
-  padding: 10px;
-}
-
 .data-section:not(.has-data),
 .data-subsection:not(.has-subdata) {
   color: gray;
 }
-
 
 .section-name {
   font-size: x-large;
@@ -79,27 +154,6 @@ h2 {
 
 .has-data .section-name {
   cursor: pointer;
-}
-
-
-.toggle-caption {
-  font-style: italic;
-  cursor: pointer;
-}
-
-.data-section:not(.has-data) .toggle-caption,
-.data-subsection:not(.has-subdata) .toggle-caption {
-  display: none;
-}
-
-
-.empty-caption {
-  font-style: italic;
-}
-
-.has-data .empty-caption,
-.has-subdata .empty-caption {
-  display: none; /* invisible when has-data */
 }
 
 .data,
@@ -112,7 +166,6 @@ h2 {
 .has-subdata.expanded .subdata {
   display: block;
 }
-
 
 .stack-title {
   font-size: medium;
@@ -159,7 +212,6 @@ body[dir="rtl"] .histogram {
   font-size: 120%;
   white-space: nowrap;
 }
-
 
 .bar {
   width: 2em;
@@ -214,11 +266,9 @@ body[dir="rtl"] .copy-node {
   visibility: visible;
 }
 
-
 .statebox {
   display: none;
 }
-
 
 .filter-ui {
   padding-inline-start: 10em;
@@ -244,11 +294,9 @@ body[dir="rtl"] .copy-node {
 #raw-ping-data-section {
   width: 100%;
   height: 100%;
-  background-color:-moz-Dialog;
 }
 
 #raw-ping-data {
-  background-color:white;
   margin: 0px;
 }
 
@@ -260,8 +308,7 @@ body[dir="rtl"] .copy-node {
   padding: 5px 10px;
 }
 
-/* addon subsection style */
-.addon-caption {
+caption {
   font-size: larger;
   margin: 5px 0;
 }
