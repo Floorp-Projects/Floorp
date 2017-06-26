@@ -15,7 +15,7 @@
 add_task(async function removed_bookmark() {
   do_print("After removing bookmark, frecency of bookmark's URI should be " +
            "zero if URI is unvisited and no longer bookmarked.");
-  const TEST_URI = NetUtil.newURI("http://example.com/1");
+  const TEST_URI = Services.io.newURI("http://example.com/1");
   let bm = await PlacesUtils.bookmarks.insert({
     parentGuid: PlacesUtils.bookmarks.unfiledGuid,
     title: "bookmark title",
@@ -39,7 +39,7 @@ add_task(async function removed_bookmark() {
 add_task(async function removed_but_visited_bookmark() {
   do_print("After removing bookmark, frecency of bookmark's URI should " +
            "not be zero if URI is visited.");
-  const TEST_URI = NetUtil.newURI("http://example.com/1");
+  const TEST_URI = Services.io.newURI("http://example.com/1");
   let bm = await PlacesUtils.bookmarks.insert({
     parentGuid: PlacesUtils.bookmarks.unfiledGuid,
     title: "bookmark title",
@@ -64,7 +64,7 @@ add_task(async function removed_but_visited_bookmark() {
 add_task(async function remove_bookmark_still_bookmarked() {
   do_print("After removing bookmark, frecency of bookmark's URI should " +
            "not be zero if URI is still bookmarked.");
-  const TEST_URI = NetUtil.newURI("http://example.com/1");
+  const TEST_URI = Services.io.newURI("http://example.com/1");
   let bm1 = await PlacesUtils.bookmarks.insert({
     parentGuid: PlacesUtils.bookmarks.unfiledGuid,
     title: "bookmark 1 title",
@@ -93,7 +93,7 @@ add_task(async function remove_bookmark_still_bookmarked() {
 add_task(async function cleared_parent_of_visited_bookmark() {
   do_print("After removing all children from bookmark's parent, frecency " +
            "of bookmark's URI should not be zero if URI is visited.");
-  const TEST_URI = NetUtil.newURI("http://example.com/1");
+  const TEST_URI = Services.io.newURI("http://example.com/1");
   await PlacesUtils.bookmarks.insert({
     parentGuid: PlacesUtils.bookmarks.unfiledGuid,
     title: "bookmark title",
@@ -119,7 +119,7 @@ add_task(async function cleared_parent_of_bookmark_still_bookmarked() {
   do_print("After removing all children from bookmark's parent, frecency " +
            "of bookmark's URI should not be zero if URI is still " +
            "bookmarked.");
-  const TEST_URI = NetUtil.newURI("http://example.com/1");
+  const TEST_URI = Services.io.newURI("http://example.com/1");
   await PlacesUtils.bookmarks.insert({
     parentGuid: PlacesUtils.bookmarks.toolbarGuid,
     title: "bookmark 1 title",
