@@ -236,6 +236,8 @@ SERVO_BINDING_FUNC(Servo_ComputedValues_ExtractAnimationValue,
                    RawServoAnimationValueStrong,
                    ServoComputedValuesBorrowed computed_values,
                    nsCSSPropertyID property)
+SERVO_BINDING_FUNC(Servo_ComputedValues_SpecifiesAnimationsOrTransitions, bool,
+                   ServoComputedValuesBorrowed computed_values)
 SERVO_BINDING_FUNC(Servo_Property_IsAnimatable, bool,
                    nsCSSPropertyID property)
 SERVO_BINDING_FUNC(Servo_Property_IsTransitionable, bool,
@@ -497,6 +499,9 @@ SERVO_BINDING_FUNC(Servo_ResolvePseudoStyle, ServoComputedValuesStrong,
                    bool is_probe,
                    ServoComputedValuesBorrowedOrNull inherited_style,
                    RawServoStyleSetBorrowed set)
+SERVO_BINDING_FUNC(Servo_SetExplicitStyle, void,
+                   RawGeckoElementBorrowed element,
+                   ServoComputedValuesBorrowed primary_style)
 SERVO_BINDING_FUNC(Servo_HasAuthorSpecifiedRules, bool,
                    RawGeckoElementBorrowed element,
                    uint32_t rule_type_mask,
