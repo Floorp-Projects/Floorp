@@ -1084,7 +1084,7 @@ nsCSSGradientRenderer::BuildWebRenderDisplayItems(wr::DisplayListBuilder& aBuild
 
     aBuilder.PushLinearGradient(
       wrGradientBounds,
-      aBuilder.PushClipRegion(wrClipBounds),
+      wrClipBounds,
       mozilla::wr::ToWrPoint(lineStart),
       mozilla::wr::ToWrPoint(lineEnd),
       stops,
@@ -1097,7 +1097,7 @@ nsCSSGradientRenderer::BuildWebRenderDisplayItems(wr::DisplayListBuilder& aBuild
 
     aBuilder.PushRadialGradient(
       wrGradientBounds,
-      aBuilder.PushClipRegion(wrClipBounds),
+      wrClipBounds,
       mozilla::wr::ToWrPoint(lineStart),
       mozilla::wr::ToWrSize(gradientRadius),
       stops,

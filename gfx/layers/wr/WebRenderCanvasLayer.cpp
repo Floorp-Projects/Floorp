@@ -69,8 +69,6 @@ WebRenderCanvasLayer::RenderLayer(wr::DisplayListBuilder& aBuilder,
   LayerRect rect(0, 0, mBounds.width, mBounds.height);
   DumpLayerInfo("CanvasLayer", rect);
 
-  WrClipRegionToken clip = aBuilder.PushClipRegion(sc.ToRelativeWrRect(rect));
-
   wr::ImageRendering filter = wr::ToImageRendering(mSamplingFilter);
 
   if (gfxPrefs::LayersDump()) {
@@ -83,7 +81,8 @@ WebRenderCanvasLayer::RenderLayer(wr::DisplayListBuilder& aBuilder,
   WrBridge()->AddWebRenderParentCommand(OpAddExternalImage(mExternalImageId.value(), key));
   WrManager()->AddImageKeyForDiscard(key);
 
-  aBuilder.PushImage(sc.ToRelativeWrRect(rect), clip, filter, key);
+  WrRect r = sc.ToRelativeWrRect(rect);
+  aBuilder.PushImage(r, r, filter, key);
 }
 
 void
