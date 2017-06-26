@@ -9,7 +9,6 @@
 add_task(function* () {
   yield openTabAndSetupStorage(MAIN_DOMAIN + "storage-cookies.html");
   showAllColumns(true);
-  showColumn("uniqueKey", false);
 
   let id = getCookieId("test4", "test1.example.org", "/browser");
   yield startCellEdit(id, "name");
