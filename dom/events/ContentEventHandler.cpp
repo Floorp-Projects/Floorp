@@ -200,15 +200,6 @@ ContentEventHandler::RawRange::SelectNodeContents(
   return NS_OK;
 }
 
-already_AddRefed<nsRange>
-ContentEventHandler::RawRange::CreateRange() const
-{
-  RefPtr<nsRange> range = new nsRange(mRoot);
-  range->SetStartAndEnd(mStartContainer, mStartOffset,
-                        mEndContainer, mEndOffset);
-  return range.forget();
-}
-
 /******************************************************************/
 /* ContentEventHandler                                            */
 /******************************************************************/
@@ -868,8 +859,9 @@ ContentEventHandler::GenerateFlatTextContent(const RawRange& aRawRange,
   }
 
   nsCOMPtr<nsIContentIterator> iter = NS_NewPreContentIterator();
-  RefPtr<nsRange> range = aRawRange.CreateRange();
-  nsresult rv = iter->Init(range);
+  nsresult rv =
+    iter->Init(aRawRange.GetStartContainer(), aRawRange.StartOffset(),
+               aRawRange.GetEndContainer(), aRawRange.EndOffset());
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -1040,8 +1032,9 @@ ContentEventHandler::GenerateFlatFontRanges(const RawRange& aRawRange,
   // baseOffset is the flattened offset of each content node.
   int32_t baseOffset = 0;
   nsCOMPtr<nsIContentIterator> iter = NS_NewPreContentIterator();
-  RefPtr<nsRange> range = aRawRange.CreateRange();
-  nsresult rv = iter->Init(range);
+  nsresult rv =
+    iter->Init(aRawRange.GetStartContainer(), aRawRange.StartOffset(),
+               aRawRange.GetEndContainer(), aRawRange.EndOffset());
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -1664,8 +1657,13 @@ ContentEventHandler::GetFirstFrameInRangeForTextRect(const RawRange& aRawRange)
 {
   NodePosition nodePosition;
   nsCOMPtr<nsIContentIterator> iter = NS_NewPreContentIterator();
-  RefPtr<nsRange> range = aRawRange.CreateRange();
-  for (iter->Init(range); !iter->IsDone(); iter->Next()) {
+  nsresult rv =
+    iter->Init(aRawRange.GetStartContainer(), aRawRange.StartOffset(),
+               aRawRange.GetEndContainer(), aRawRange.EndOffset());
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return FrameAndNodeOffset();
+  }
+  for (; !iter->IsDone(); iter->Next()) {
     nsINode* node = iter->GetCurrentNode();
     if (NS_WARN_IF(!node)) {
       break;
@@ -1712,8 +1710,12 @@ ContentEventHandler::GetLastFrameInRangeForTextRect(const RawRange& aRawRange)
 {
   NodePosition nodePosition;
   nsCOMPtr<nsIContentIterator> iter = NS_NewPreContentIterator();
-  RefPtr<nsRange> range = aRawRange.CreateRange();
-  iter->Init(range);
+  nsresult rv =
+    iter->Init(aRawRange.GetStartContainer(), aRawRange.StartOffset(),
+               aRawRange.GetEndContainer(), aRawRange.EndOffset());
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return FrameAndNodeOffset();
+  }
 
   nsINode* endNode = aRawRange.GetEndContainer();
   uint32_t endOffset = aRawRange.EndOffset();
@@ -2321,8 +2323,11 @@ ContentEventHandler::OnQueryTextRect(WidgetQueryContentEvent* aEvent)
 
   // used to iterate over all contents and their frames
   nsCOMPtr<nsIContentIterator> iter = NS_NewContentIterator();
-  RefPtr<nsRange> range = rawRange.CreateRange();
-  iter->Init(range);
+  rv = iter->Init(rawRange.GetStartContainer(), rawRange.StartOffset(),
+                  rawRange.GetEndContainer(), rawRange.EndOffset());
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return NS_ERROR_FAILURE;
+  }
 
   // Get the first frame which causes some text after the offset.
   FrameAndNodeOffset firstFrame = GetFirstFrameInRangeForTextRect(rawRange);
@@ -2946,8 +2951,9 @@ ContentEventHandler::GetFlatTextLengthInRange(
         return rv;
       }
       iter = NS_NewPreContentIterator();
-      RefPtr<nsRange> prevRange = prevRawRange.CreateRange();
-      rv = iter->Init(prevRange);
+      rv =
+        iter->Init(prevRawRange.GetStartContainer(), prevRawRange.StartOffset(),
+                   prevRawRange.GetEndContainer(), prevRawRange.EndOffset());
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
@@ -2958,8 +2964,9 @@ ContentEventHandler::GetFlatTextLengthInRange(
         return rv;
       }
       iter = NS_NewPreContentIterator();
-      RefPtr<nsRange> prevRange = prevRawRange.CreateRange();
-      rv = iter->Init(prevRange);
+      rv =
+        iter->Init(prevRawRange.GetStartContainer(), prevRawRange.StartOffset(),
+                   prevRawRange.GetEndContainer(), prevRawRange.EndOffset());
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
