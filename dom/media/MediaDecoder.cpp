@@ -267,6 +267,7 @@ MediaDecoder::MediaDecoder(MediaDecoderInit& aInit)
   , mTelemetryReported(false)
   , mIsMediaElement(!!mOwner->GetMediaElement())
   , mElement(mOwner->GetMediaElement())
+  , mContainerType(aInit.mContainerType)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(mAbstractMainThread);
