@@ -466,8 +466,10 @@ BulletRenderer::CreateWebRenderCommandsForImage(nsDisplayItem* aItem,
   LayoutDeviceRect destRect = LayoutDeviceRect::FromAppUnits(mDest, appUnitsPerDevPixel);
   WrRect dest = aSc.ToRelativeWrRectRounded(destRect);
 
+  WrClipRegionToken clipRegion = aBuilder.PushClipRegion(dest);
+
   aBuilder.PushImage(dest,
-                     dest,
+                     clipRegion,
                      WrImageRendering::Auto,
                      key.value());
 }
