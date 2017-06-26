@@ -622,9 +622,12 @@ class RTCPeerConnection {
     let nicerNewURI = uriStr => {
       try {
         return ios.newURI(uriStr);
-      } catch (e if (e.result == Cr.NS_ERROR_MALFORMED_URI)) {
-        throw new this._win.DOMException(msg + " - malformed URI: " + uriStr,
-                                         "SyntaxError");
+      } catch (e) {
+        if (e.result == Cr.NS_ERROR_MALFORMED_URI) {
+          throw new this._win.DOMException(msg + " - malformed URI: " + uriStr,
+                                           "SyntaxError");
+        }
+        throw e;
       }
     };
 
