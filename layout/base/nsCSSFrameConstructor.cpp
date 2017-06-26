@@ -21,6 +21,7 @@
 #include "mozilla/Likely.h"
 #include "mozilla/LinkedList.h"
 #include "mozilla/PresShell.h"
+#include "mozilla/ServoBindings.h"
 #include "nsAbsoluteContainingBlock.h"
 #include "nsCSSPseudoElements.h"
 #include "nsIAtom.h"
@@ -1919,6 +1920,21 @@ nsCSSFrameConstructor::CreateGeneratedContentItem(nsFrameConstructorState& aStat
     return;
   }
 
+  // Servo has already eagerly computed the style for the container, so we can
+  // just stick the style on the element and avoid an additional traversal.
+  //
+  // We don't do this for pseudos that may trigger animations or transitions,
+  // since those need to be kicked off by the traversal machinery.
+  bool isServo = pseudoStyleContext->IsServo();
+  bool hasServoAnimations = false;
+  if (isServo) {
+    ServoComputedValues* servoStyle = pseudoStyleContext->ComputedValues();
+    hasServoAnimations = Servo_ComputedValues_SpecifiesAnimationsOrTransitions(servoStyle);
+    if (!hasServoAnimations) {
+      Servo_SetExplicitStyle(container, servoStyle);
+    }
+  }
+
   // stylo: ServoRestyleManager does not handle transitions yet, and when it
   // does it probably won't need to track reframed style contexts to start
   // transitions correctly.
@@ -1941,17 +1957,30 @@ nsCSSFrameConstructor::CreateGeneratedContentItem(nsFrameConstructorState& aStat
   }
 
   uint32_t contentCount = pseudoStyleContext->StyleContent()->ContentCount();
+  bool createdChildElement = false;
   for (uint32_t contentIndex = 0; contentIndex < contentCount; contentIndex++) {
     nsCOMPtr<nsIContent> content =
       CreateGeneratedContent(aState, aParentContent, pseudoStyleContext,
                              contentIndex);
     if (content) {
       container->AppendChildTo(content, false);
+      if (content->IsElement()) {
+        createdChildElement = true;
+      }
     }
   }
 
-  if (aParentContent->IsStyledByServo()) {
-    mPresShell->StyleSet()->AsServo()->StyleNewSubtree(container);
+  // We may need to do a synchronous servo traversal in various uncommon cases.
+  if (isServo) {
+    if (hasServoAnimations) {
+      // If animations are involved, we avoid the SetExplicitStyle optimization
+      // above.
+      mPresShell->StyleSet()->AsServo()->StyleNewSubtree(container);
+    } else if (createdChildElement) {
+      // If we created any children elements, Servo needs to traverse them, but
+      // the root is already set up.
+      mPresShell->StyleSet()->AsServo()->StyleNewChildren(container);
+    }
   }
 
   AddFrameConstructionItemsInternal(aState, container, aParentFrame, elemName,
