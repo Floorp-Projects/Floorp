@@ -212,8 +212,7 @@ public:
       mParser = WebMBufferedParser(0);
       mOverlappedMapping.Clear();
       mInitData = new MediaByteBuffer();
-      mResource = new SourceBufferResource(
-                        MediaContainerType(MEDIAMIMETYPE("video/webm")));
+      mResource = new SourceBufferResource();
       mCompleteInitSegmentRange = MediaByteRange();
       mCompleteMediaHeaderRange = MediaByteRange();
       mCompleteMediaSegmentRange = MediaByteRange();
@@ -496,8 +495,7 @@ public:
   {
     bool initSegment = NS_SUCCEEDED(IsInitSegmentPresent(aData));
     if (initSegment) {
-      mResource = new SourceBufferResource(
-                        MediaContainerType(MEDIAMIMETYPE("video/mp4")));
+      mResource = new SourceBufferResource();
       mStream = new MP4Stream(mResource);
       // We use a timestampOffset of 0 for ContainerParser, and require
       // consumers of ParseStartAndEndTimestamps to add their timestamp offset

@@ -44,12 +44,10 @@ HLSResourceCallbacksSupport::OnError(int aErrorCode)
 
 HLSResource::HLSResource(MediaResourceCallback* aCallback,
                          nsIChannel* aChannel,
-                         nsIURI* aURI,
-                         const MediaContainerType& aContainerType)
+                         nsIURI* aURI)
   : mCallback(aCallback)
   , mChannel(aChannel)
   , mURI(aURI)
-  , mContainerType(aContainerType)
 {
   nsCString spec;
   nsresult rv = aURI->GetSpec(spec);
