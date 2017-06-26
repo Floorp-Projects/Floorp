@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<resources xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!--
+        Only overriden styles for Honeycomb/Ice cream sandwich are specified here.
+        Please refer to values/styles.xml for default styles.
+    -->
+
+    <!--
+        Base application styles. This could be overridden in other res/values-XXX/themes.xml.
+    -->
+    <style name="Widget.BaseButton" parent="android:style/Widget.Holo.Light.Button" />
+
+    <style name="Widget.BaseDropDownItem" parent="android:style/Widget.Holo.Light.DropDownItem" />
+
+    <style name="Widget.BaseEditText" parent="android:style/Widget.Holo.Light.EditText" />
+
+    <style name="Widget.BaseListView" parent="android:style/Widget.Holo.ListView" />
+
+    <style name="Widget.BaseGridView" parent="android:style/Widget.Holo.GridView" />
+
+    <style name="Widget.BaseTextView" parent="android:style/Widget.Holo.Light.TextView" />
+
+    <style name="Widget.ProgressBar.Horizontal" parent="android:style/Widget.Holo.ProgressBar.Horizontal" />
+
+
+    <!--
+        Application styles. All customizations that are not specific
+        to a particular API level can go here.
+    -->
+    <style name="Widget.ListItem">
+        <item name="android:textColor">@color/select_item_multichoice</item>
+        <item name="android:minHeight">?android:attr/listPreferredItemHeight</item>
+        <item name="android:textAppearance">?android:attr/textAppearanceLarge</item>
+        <item name="android:gravity">center_vertical</item>
+        <item name="android:paddingLeft">12dip</item>
+        <item name="android:paddingRight">7dip</item>
+        <item name="android:checkMark">?android:attr/listChoiceIndicatorMultiple</item>
+        <item name="android:ellipsize">marquee</item>
+    </style>
+
+    <!-- ActionBar -->
+    <style name="ActionBar" parent="android:style/Widget.Holo.ActionBar" />
+
+    <!-- TabsLayout ActionBar -->
+    <style name="ActionBar.TabsLayout">
+        <item name="android:visibility">gone</item>
+    </style>
+
+    <!-- DropDown List View -->
+    <style name="DropDownListView" parent="@android:style/Widget.Holo.ListView.DropDown">
+        <item name="android:listSelector">@drawable/action_bar_button</item>
+        <item name="android:divider">@color/toolbar_divider_grey</item>
+        <item name="android:dividerHeight">@dimen/page_row_divider_height</item>
+    </style>
+
+    <!-- Spinner DropDown Item -->
+    <style name="Widget.DropDownItem.Spinner" parent="@android:style/Widget.Holo.Light.DropDownItem.Spinner">
+        <item name="android:textColor">#FF000000</item>
+    </style>
+
+    <style name="Widget.Spinner" parent="android:style/Widget.Holo.Light.Spinner">
+        <item name="android:minWidth">@dimen/doorhanger_input_width</item>
+    </style>
+
+    <style name="Widget.TextView.SpinnerItem" parent="android:style/Widget.Holo.Light.TextView.SpinnerItem">
+        <item name="android:textColor">#FF000000</item>
+    </style>
+
+    <style name="TextAppearance.Widget.ActionBar.Title" parent="@android:style/TextAppearance.Medium" />
+
+    <style name="GeckoActionBar.Title" parent="TextAppearance.Widget.ActionBar.Title">
+        <item name="android:drawableLeft">@drawable/ab_done</item>
+        <item name="android:background">@android:color/transparent</item>
+        <item name="android:paddingLeft">15dp</item>
+        <item name="android:paddingRight">15dp</item>
+        <!-- gravity and minWidth are added here to more resemble our values/styles.xml
+             counterpart. This is solely to correct bug 1233709 -->
+        <item name="android:gravity">center_vertical</item>
+        <item name="android:minWidth">0dp</item>
+    </style>
+
+    <style name="GeckoActionBar.Button" parent="android:style/Widget.Holo.Light.ActionButton">
+        <item name="android:padding">8dip</item>
+        <!-- The default implementation doesn't do any image scaling. Our custom menus mean we can't just use the same image
+             in both menus and the actionbar without doing some scaling though. Users may also want to set
+             layout_height="match_parent" to make sure buttons are scaled to full action bar height - setting it here
+             doesn't work. -->
+        <item name="android:scaleType">centerInside</item>
+    </style>
+
+    <style name="GeckoActionBar.Button.MenuButton" parent="android:style/Widget.Holo.Light.ActionButton.Overflow">
+        <item name="android:scaleType">centerInside</item>
+        <item name="android:background">@android:color/transparent</item>
+        <item name="android:src">@drawable/menu</item>
+        <item name="android:tint">@color/toolbar_icon_grey</item>
+        <item name="android:layout_marginTop">16dp</item>
+        <item name="android:layout_marginBottom">16dp</item>
+    </style>
+
+    <style name="TabInput"></style>
+
+    <style name="TabInput.TabWidget" parent="android:style/Widget.Holo.Light.TabWidget" />
+
+    <style name="TabInput.Tab" parent="android:style/Widget.Holo.Light.Tab">
+        <item name="android:minHeight">@dimen/menu_item_row_height</item>
+        <item name="android:textAllCaps">true</item>
+    </style>
+
+</resources>

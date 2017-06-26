@@ -38,8 +38,9 @@ class VCSHelper(object):
         try:
             files = subprocess.check_output(cmd, stderr=subprocess.STDOUT).split()
         except subprocess.CalledProcessError as e:
-            print(' '.join(cmd))
-            print(e.output)
+            if e.output:
+                print(' '.join(cmd))
+                print(e.output)
             return []
         return [os.path.join(self.root, f) for f in files if f]
 

@@ -192,8 +192,7 @@ impl ClipScrollNode {
 
     pub fn finalize(&mut self, new_scrolling: &ScrollingState) {
         match self.node_type {
-            NodeType::ReferenceFrame(_) | NodeType::Clip(_) =>
-                warn!("Tried to scroll a non-scroll node."),
+            NodeType::ReferenceFrame(_) | NodeType::Clip(_) => (),
             NodeType::ScrollFrame(ref mut scrolling) => *scrolling = *new_scrolling,
         }
     }

@@ -401,7 +401,7 @@ option('--enable-av1',
 def av1(value, target, milestone):
     enabled = bool(value)
     if value.origin == 'default' and milestone.is_nightly:
-        enabled = target.os not in ('Android', 'WINNT')
+        enabled = target.os != 'Android'
     if enabled:
         return True
 

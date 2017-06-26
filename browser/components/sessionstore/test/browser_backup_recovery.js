@@ -13,13 +13,13 @@ const Paths = SessionFile.Paths;
 
 // A text decoder.
 var gDecoder = new TextDecoder();
-// Global variables that contain sessionstore.js and sessionstore.bak data for
+// Global variables that contain sessionstore.jsonlz4 and sessionstore.baklz4 data for
 // comparison between tests.
 var gSSData;
 var gSSBakData;
 
 function promiseRead(path) {
-  return File.read(path, {encoding: "utf-8"});
+  return File.read(path, {encoding: "utf-8", compression: "lz4"});
 }
 
 add_task(async function init() {
@@ -31,8 +31,8 @@ add_task(async function init() {
 
 add_task(async function test_creation() {
   // Create dummy sessionstore backups
-  let OLD_BACKUP = Path.join(Constants.Path.profileDir, "sessionstore.bak");
-  let OLD_UPGRADE_BACKUP = Path.join(Constants.Path.profileDir, "sessionstore.bak-0000000");
+  let OLD_BACKUP = Path.join(Constants.Path.profileDir, "sessionstore.baklz4");
+  let OLD_UPGRADE_BACKUP = Path.join(Constants.Path.profileDir, "sessionstore.baklz4-0000000");
 
   await File.writeAtomic(OLD_BACKUP, "sessionstore.bak");
   await File.writeAtomic(OLD_UPGRADE_BACKUP, "sessionstore upgrade backup");
@@ -111,15 +111,15 @@ add_task(async function test_recovery() {
   // Create Paths.recovery, ensure that we can recover from it.
   let SOURCE = await promiseSource("Paths.recovery");
   await File.makeDir(Paths.backups);
-  await File.writeAtomic(Paths.recovery, SOURCE);
+  await File.writeAtomic(Paths.recovery, SOURCE, {encoding: "utf-8", compression: "lz4"});
   is((await SessionFile.read()).source, SOURCE, "Recovered the correct source from the recovery file");
   await SessionFile.wipe();
 
   info("Corrupting recovery file, attempting to recover from recovery backup");
   SOURCE = await promiseSource("Paths.recoveryBackup");
   await File.makeDir(Paths.backups);
-  await File.writeAtomic(Paths.recoveryBackup, SOURCE);
-  await File.writeAtomic(Paths.recovery, "<Invalid JSON>");
+  await File.writeAtomic(Paths.recoveryBackup, SOURCE, {encoding: "utf-8", compression: "lz4"});
+  await File.writeAtomic(Paths.recovery, "<Invalid JSON>", {encoding: "utf-8", compression: "lz4"});
   is((await SessionFile.read()).source, SOURCE, "Recovered the correct source from the recovery file");
   await SessionFile.wipe();
 });
@@ -134,10 +134,10 @@ add_task(async function test_recovery_inaccessible() {
   let SOURCE_RECOVERY = await promiseSource("Paths.recovery");
   let SOURCE = await promiseSource("Paths.recoveryBackup");
   await File.makeDir(Paths.backups);
-  await File.writeAtomic(Paths.recoveryBackup, SOURCE);
+  await File.writeAtomic(Paths.recoveryBackup, SOURCE, {encoding: "utf-8", compression: "lz4"});
 
   // Write a valid recovery file but make it inaccessible.
-  await File.writeAtomic(Paths.recovery, SOURCE_RECOVERY);
+  await File.writeAtomic(Paths.recovery, SOURCE_RECOVERY, {encoding: "utf-8", compression: "lz4"});
   await File.setPermissions(Paths.recovery, { unixMode: 0 });
 
   is((await SessionFile.read()).source, SOURCE, "Recovered the correct source from the recovery file");
@@ -147,7 +147,7 @@ add_task(async function test_recovery_inaccessible() {
 add_task(async function test_clean() {
   await SessionFile.wipe();
   let SOURCE = await promiseSource("Paths.clean");
-  await File.writeAtomic(Paths.clean, SOURCE);
+  await File.writeAtomic(Paths.clean, SOURCE, {encoding: "utf-8", compression: "lz4"});
   await SessionFile.read();
   await SessionSaver.run();
   is((await promiseRead(Paths.cleanBackup)), SOURCE, "After first read/write, clean shutdown file has been moved to cleanBackup");
@@ -166,7 +166,7 @@ add_task(async function test_version() {
 
   // Create Paths.clean file
   await File.makeDir(Paths.backups);
-  await File.writeAtomic(Paths.clean, SOURCE);
+  await File.writeAtomic(Paths.clean, SOURCE, {encoding: "utf-8", compression: "lz4"});
 
   info("Attempting to recover from the clean file");
   // Ensure that we can recover from Paths.recovery
@@ -189,15 +189,15 @@ add_task(async function test_version_fallback() {
   info("Modifying format version number to something incorrect, to make sure that we disregard the file.");
   let parsedSource = JSON.parse(SOURCE);
   parsedSource.version[0] = "bookmarks";
-  await File.writeAtomic(Paths.clean, JSON.stringify(parsedSource));
-  await File.writeAtomic(Paths.cleanBackup, BACKUP_SOURCE);
+  await File.writeAtomic(Paths.clean, JSON.stringify(parsedSource), {encoding: "utf-8", compression: "lz4"});
+  await File.writeAtomic(Paths.cleanBackup, BACKUP_SOURCE, {encoding: "utf-8", compression: "lz4"});
   is((await SessionFile.read()).source, BACKUP_SOURCE, "Recovered the correct source from the backup recovery file");
 
   info("Modifying format version number to a future version, to make sure that we disregard the file.");
   parsedSource = JSON.parse(SOURCE);
   parsedSource.version[1] = Number.MAX_SAFE_INTEGER;
-  await File.writeAtomic(Paths.clean, JSON.stringify(parsedSource));
-  await File.writeAtomic(Paths.cleanBackup, BACKUP_SOURCE);
+  await File.writeAtomic(Paths.clean, JSON.stringify(parsedSource), {encoding: "utf-8", compression: "lz4"});
+  await File.writeAtomic(Paths.cleanBackup, BACKUP_SOURCE, {encoding: "utf-8", compression: "lz4"});
   is((await SessionFile.read()).source, BACKUP_SOURCE, "Recovered the correct source from the backup recovery file");
 });
 

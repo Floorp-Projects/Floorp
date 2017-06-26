@@ -1,0 +1,863 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<resources xmlns:android="http://schemas.android.com/apk/res/android" xmlns:tools="http://schemas.android.com/tools">
+
+    <!--
+        Base application styles. This could be overridden in other res/values-XXX/themes.xml.
+    -->
+    <style name="Widget"/>
+
+    <style name="Widget.BaseButton" parent="android:style/Widget.Button"/>
+
+    <style name="Widget.BaseDropDownItem" parent="android:style/Widget.DropDownItem"/>
+
+    <style name="Widget.BaseEditText" parent="android:style/Widget.EditText"/>
+
+    <style name="Widget.BaseListView" parent="android:style/Widget.ListView"/>
+
+    <style name="Widget.BaseGridView" parent="android:style/Widget.GridView"/>
+
+    <style name="Widget.BaseTextView" parent="android:style/Widget.TextView"/>
+
+    <style name="Widget.ProgressBar.Horizontal" parent="android:style/Widget.ProgressBar.Horizontal"/>
+
+    <!--
+        Application styles. All customizations that are not specific
+        to a particular API level can go here.
+    -->
+    <style name="Widget.Button" parent="Widget.BaseButton">
+        <item name="android:textAppearance">@style/TextAppearance.Widget.Button</item>
+    </style>
+
+    <style name="Widget.DropDownItem" parent="Widget.BaseDropDownItem">
+        <item name="android:textAppearance">@style/TextAppearance.Widget.DropDownItem</item>
+    </style>
+
+    <style name="Widget.EditText" parent="Widget.BaseEditText">
+        <item name="android:textAppearance">@style/TextAppearance.Widget.EditText</item>
+    </style>
+
+    <style name="Widget.TextView" parent="Widget.BaseTextView">
+        <item name="android:textAppearance">@style/TextAppearance.Widget.TextView</item>
+    </style>
+
+    <style name="Widget.ListView" parent="Widget.BaseListView">
+        <item name="android:divider">@color/toolbar_divider_grey</item>
+        <item name="android:dividerHeight">@dimen/page_row_divider_height</item>
+        <item name="android:cacheColorHint">@android:color/transparent</item>
+        <item name="android:listSelector">@drawable/action_bar_button</item>
+    </style>
+
+    <style name="Widget.ExpandableListView" parent="Widget.ListView">
+        <item name="android:groupIndicator">@android:color/transparent</item>
+    </style>
+
+    <style name="Widget.GridView" parent="Widget.BaseGridView">
+        <item name="android:verticalSpacing">0dip</item>
+        <item name="android:horizontalSpacing">0dip</item>
+        <item name="android:cacheColorHint">@android:color/transparent</item>
+        <item name="android:listSelector">@drawable/action_bar_button</item>
+    </style>
+
+    <style name="Widget.Home.HomeList">
+        <item name="android:scrollbarStyle">outsideOverlay</item>
+    </style>
+
+    <style name="Widget.ListItem">
+        <item name="android:minHeight">?android:attr/listPreferredItemHeight</item>
+        <item name="android:textAppearance">?android:attr/textAppearanceLargeInverse</item>
+        <item name="android:gravity">center_vertical</item>
+        <item name="android:paddingLeft">12dip</item>
+        <item name="android:paddingStart">12dip</item>
+        <item name="android:paddingRight">7dip</item>
+        <item name="android:paddingEnd">7dip</item>
+        <item name="android:checkMark">?android:attr/listChoiceIndicatorMultiple</item>
+        <item name="android:ellipsize">marquee</item>
+    </style>
+
+    <style name="Widget.Spinner" parent="android:style/Widget.Spinner">
+        <item name="android:minWidth">@dimen/doorhanger_input_width</item>
+    </style>
+
+    <style name="Widget.GeckoMenuListView" parent="Widget.ListView">
+        <item name="android:listSelector">@drawable/menu_item_action_bar_bg</item>
+        <item name="android:divider">@null</item>
+        <item name="android:dividerHeight">0dp</item>
+    </style>
+
+    <style name="Widget.MenuItemActionBar">
+        <item name="android:padding">10dip</item>
+        <item name="android:background">@drawable/menu_item_action_bar_bg</item>
+        <item name="android:scaleType">fitCenter</item>
+        <item name="drawableTintList">@color/action_bar_menu_item_colors</item>"
+    </style>
+
+    <style name="Widget.MenuItemSecondaryActionBar">
+        <item name="android:padding">8dip</item>
+        <item name="android:background">@drawable/menu_item_action_bar_bg</item>
+        <item name="android:scaleType">centerInside</item>
+        <item name="drawableTintList">@color/action_bar_secondary_menu_item_colors</item>
+    </style>
+
+    <style name="Widget.MenuItemSwitcherLayout">
+        <item name="android:gravity">left|start</item>
+    </style>
+
+    <style name="Widget.MenuItemDefault">
+        <item name="android:paddingLeft">15dip</item>
+        <item name="android:paddingStart">15dip</item>
+        <item name="android:paddingRight">10dip</item>
+        <item name="android:paddingEnd">10dip</item>
+        <item name="android:drawablePadding">6dip</item>
+        <item name="android:gravity">center_vertical</item>
+        <item name="android:textAppearance">@style/TextAppearance</item>
+        <item name="android:singleLine">true</item>
+        <item name="android:ellipsize">middle</item>
+        <item name="android:textSize">@dimen/menu_item_textsize</item>
+    </style>
+
+    <style name="Widget.MenuItemCustomTabs" parent="Widget.MenuItemDefault">
+        <!-- In current design, there is only one style for Popup-menu, regardless of Dark/Light theme -->
+        <item name="android:textColor">@android:color/black</item>
+        <item name="android:textColorHighlight">?android:textColorHighlight</item>
+        <item name="android:textColorHint">?android:attr/textColorHint</item>
+        <item name="android:textColorLink">?android:attr/textColorLink</item>
+    </style>
+
+    <style name="Widget.FolderTitle">
+        <item name="android:textAppearance">@style/TextAppearance.Widget.Home.ItemTitle</item>
+    </style>
+
+    <style name="Widget.FolderTitle.OneLine">
+        <item name="android:textSize">@dimen/home_folder_title_oneline_textsize</item>
+    </style>
+
+    <style name="Widget.FolderTitle.TwoLine">
+        <item name="android:textSize">@dimen/home_folder_title_twoline_textsize</item>
+    </style>
+
+    <style name="Widget.TwoLinePageRow" >
+        <item name="android:background">@color/pressed_about_page_header_grey</item>
+    </style>
+
+    <style name="Widget.TwoLinePageRow.Title">
+        <item name="android:textAppearance">@style/TextAppearance.Widget.Home.ItemTitle</item>
+        <item name="android:textSize">@dimen/home_twolinepagerow_title_textsize</item>
+    </style>
+
+    <style name="Widget.TwoLinePageRow.Url">
+        <item name="android:textAppearance">@style/TextAppearance.Widget.Home.ItemDescription</item>
+        <item name="android:includeFontPadding">false</item>
+        <item name="android:singleLine">true</item>
+    </style>
+
+    <style name="Widget.FolderView" parent="Widget.FolderTitle.OneLine">
+        <item name="android:layout_height">@dimen/page_group_height</item>
+        <item name="android:minHeight">@dimen/page_group_height</item>
+        <item name="android:singleLine">true</item>
+        <item name="android:ellipsize">none</item>
+        <item name="android:background">@color/about_page_header_grey</item>
+        <item name="android:paddingLeft">20dp</item>
+        <item name="android:paddingStart">20dp</item>
+        <item name="android:paddingRight">0dp</item>
+        <item name="android:paddingEnd">0dp</item>
+        <item name="android:drawablePadding">20dp</item>
+    </style>
+
+    <style name="Widget.PanelItemView" />
+
+    <style name="Widget.PanelItemView.Title">
+        <item name="android:textAppearance">@style/TextAppearance.Widget.Home.ItemTitle</item>
+        <item name="android:maxLines">2</item>
+        <item name="android:ellipsize">end</item>
+    </style>
+
+    <style name="Widget.PanelItemView.Description">
+        <item name="android:textAppearance">@style/TextAppearance.Widget.Home.ItemDescription</item>
+        <item name="android:includeFontPadding">false</item>
+        <item name="android:maxLines">2</item>
+        <item name="android:ellipsize">end</item>
+    </style>
+
+    <style name="Widget.TopSitesGridView" parent="Widget.GridView">
+        <item name="android:padding">7dp</item>
+        <item name="android:horizontalSpacing">0dp</item>
+        <item name="android:verticalSpacing">7dp</item>
+    </style>
+
+    <style name="Widget.TopSitesGridItemView">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">match_parent</item>
+        <item name="android:padding">5dip</item>
+        <item name="android:orientation">vertical</item>
+    </style>
+
+    <style name="Widget.BookmarkItemView" parent="Widget.TwoLinePageRow"/>
+
+    <style name="Widget.BookmarksListView" parent="Widget.HomeListView"/>
+
+    <style name="Widget.TopSitesThumbnailView">
+      <item name="android:padding">0dip</item>
+      <item name="android:scaleType">centerCrop</item>
+    </style>
+
+    <style name="Widget.TopSitesGridItemPin">
+      <item name="android:minWidth">30dip</item>
+      <item name="android:minHeight">30dip</item>
+      <item name="android:padding">0dip</item>
+    </style>
+
+    <style name="Widget.TopSitesGridItemTitle">
+      <item name="android:textColor">@color/top_sites_grid_item_title</item>
+      <item name="android:textSize">12sp</item>
+      <item name="android:paddingTop">5dip</item>
+      <item name="android:gravity">left|start</item>
+    </style>
+
+    <style name="Widget.HomeListView" parent="Widget.ListView">
+        <item name="android:divider">@color/toolbar_divider_grey</item>
+    </style>
+
+    <style name="Widget.TopSitesListView" parent="Widget.BookmarksListView"/>
+
+    <style name="Widget.HomeBanner"/>
+
+    <style name="Widget.Home" />
+
+    <style name="Widget.Home.HeaderItem">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">36dp</item>
+        <item name="android:textAppearance">@style/TextAppearance.Widget.Home.Header</item>
+        <item name="android:background">@android:color/white</item>
+        <item name="android:focusable">false</item>
+        <item name="android:gravity">center|left|start</item>
+        <item name="android:paddingLeft">16dp</item>
+        <item name="android:paddingStart">16dp</item>
+        <item name="android:paddingRight">16dp</item>
+        <item name="android:paddingEnd">16dp</item>
+        <item name="android:paddingTop">11dp</item>
+        <item name="android:paddingBottom">11dp</item>
+        <item name="android:includeFontPadding">false</item>
+    </style>
+
+    <style name="Widget.Home.ActionButton">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">48dp</item>
+        <item name="android:textColor">@color/text_and_tabs_tray_grey</item>
+        <item name="android:textSize">14sp</item>
+        <item name="android:background">@drawable/home_history_clear_button_bg</item>
+        <item name="android:focusable">true</item>
+        <item name="android:gravity">center</item>
+        <item name="android:paddingLeft">10dip</item>
+        <item name="android:paddingStart">10dip</item>
+        <item name="android:paddingRight">10dip</item>
+        <item name="android:paddingEnd">10dip</item>
+    </style>
+
+    <style name="Widget.Home.ActionItem">
+        <item name="android:layout_width">fill_parent</item>
+        <item name="android:layout_height">40dip</item>
+        <item name="android:textColor">#000000</item>
+        <item name="android:gravity">center</item>
+    </style>
+
+    <style name="Widget.Firstrun.Button" parent="Widget.BaseButton">
+        <item name="android:layout_width">@dimen/firstrun_content_width</item>
+        <item name="android:layout_height">60dp</item>
+        <item name="android:textColor">@color/android:white</item>
+        <item name="android:background">@color/action_orange</item>
+        <item name="android:textSize">18sp</item>
+    </style>
+
+    <style name="Widget.Doorhanger.Button" parent="Widget.BaseButton">
+        <item name="android:layout_width">0dp</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_weight">1</item>
+        <item name="android:minHeight">48dp</item>
+        <item name="android:textSize">14sp</item>
+    </style>
+
+    <!--
+        We are overriding the snackbar message style to guarantee a consistent style across Android versions (bug 1217416).
+    -->
+    <style name="TextAppearance.Design.Snackbar.Message" parent="android:TextAppearance" tools:override="true">
+        <item name="android:textSize">@dimen/design_snackbar_text_size</item>
+        <item name="android:textColor">@android:color/white</item>
+    </style>
+
+    <!--
+        TextAppearance
+        Note: Gecko uses light theme as default, while Android uses dark.
+        If Android convention has to be followd, the list of colors specified 
+        in themes.xml would be inverse, and things would get confusing.
+        Hence, Gecko's TextAppearance is based on text over light theme and
+        TextAppearance.Inverse is based on text over dark theme.
+    -->
+    <style name="TextAppearance">
+        <item name="android:textColor">?android:attr/textColorPrimary</item>
+        <item name="android:textColorHighlight">@color/fennec_ui_orange</item>
+        <item name="android:textColorHint">?android:attr/textColorHint</item>
+        <item name="android:textColorLink">?android:attr/textColorLink</item>
+        <item name="android:textSize">@dimen/menu_item_textsize</item>
+        <item name="android:textStyle">normal</item>
+    </style>
+
+    <style name="TextAppearance.Inverse">
+        <item name="android:textColor">?android:attr/textColorPrimaryInverse</item>
+        <item name="android:textColorHint">?android:attr/textColorHintInverse</item>
+        <item name="android:textColorHighlight">@color/text_color_highlight_inverse</item>
+        <item name="android:textColorLink">?android:attr/textColorLink</item>
+    </style>
+
+    <style name="TextAppearance.Large">
+        <item name="android:textSize">22sp</item>
+    </style>
+
+    <style name="TextAppearance.Large.Inverse">
+        <item name="android:textColor">?android:attr/textColorPrimaryInverse</item>
+        <item name="android:textColorHint">?android:attr/textColorHintInverse</item>
+        <item name="android:textColorHighlight">@color/text_color_highlight_inverse</item>
+        <item name="android:textColorLink">?android:attr/textColorLink</item>
+    </style>
+
+    <style name="TextAppearance.Medium">
+        <item name="android:textSize">18sp</item>
+    </style>
+
+    <style name="TextAppearance.Medium.Inverse">
+        <item name="android:textColor">?android:attr/textColorPrimaryInverse</item>
+        <item name="android:textColorHint">?android:attr/textColorHintInverse</item>
+        <item name="android:textColorHighlight">@color/text_color_highlight_inverse</item>
+        <item name="android:textColorLink">?android:attr/textColorLink</item>
+    </style>
+
+    <style name="TextAppearance.Small">
+        <item name="android:textSize">14sp</item>
+        <item name="android:textColor">?android:attr/textColorSecondary</item>
+    </style>
+
+    <style name="TextAppearance.Small.Inverse">
+        <item name="android:textColor">?android:attr/textColorSecondaryInverse</item>
+        <item name="android:textColorHint">?android:attr/textColorHintInverse</item>
+        <item name="android:textColorHighlight">@color/text_color_highlight_inverse</item>
+        <item name="android:textColorLink">?android:attr/textColorLink</item>
+    </style>
+
+    <style name="TextAppearance.EmptyMessage" parent="TextAppearance.Large"/>
+
+    <style name="TextAppearance.EmptyHint" parent="TextAppearance.Medium">
+        <item name="android:textColor">#FFA62F</item>
+        <item name="android:textStyle">italic</item>
+    </style>
+
+    <style name="TextAppearance.Micro">
+        <item name="android:textSize">12sp</item>
+        <item name="android:textColor">?android:attr/textColorTertiary</item>
+    </style>
+
+    <style name="TextAppearance.Micro.Inverse">
+        <item name="android:textColor">?android:attr/textColorTertiaryInverse</item>
+        <item name="android:textColorHint">?android:attr/textColorHintInverse</item>
+        <item name="android:textColorHighlight">@color/text_color_highlight_inverse</item>
+        <item name="android:textColorLink">?android:attr/textColorLink</item>
+    </style>
+
+    <style name="TextAppearance.Widget" />
+
+    <style name="TextAppearance.Widget.Button" parent="TextAppearance.Small">
+        <item name="android:textColor">@color/primary_text</item>
+    </style>
+
+    <style name="TextAppearance.Widget.DropDownItem">
+        <item name="android:textColor">@color/primary_text</item>
+    </style>
+
+    <style name="TextAppearance.Widget.EditText">
+        <item name="android:textColor">@color/primary_text</item>
+    </style>
+
+    <style name="TextAppearance.Widget.TextView">
+        <item name="android:textColor">@color/primary_text</item>
+    </style>
+
+    <style name="TextAppearance.Widget.HomePagerTabMenuStrip" parent="TextAppearance.Small">
+        <item name="android:textColor">?android:attr/textColorHint</item>
+        <item name="android:textSize">14sp</item>
+    </style>
+
+    <style name="TextAppearance.Widget.Home" />
+
+    <style name="TextAppearance.Widget.Home.Header" parent="TextAppearance.Small">
+        <item name="android:textColor">@color/disabled_grey</item>
+        <item name="android:textSize">12sp</item>
+    </style>
+
+    <style name="TextAppearance.Widget.Home.ItemTitle" parent="TextAppearance">
+        <item name="android:textSize">16sp</item>
+    </style>
+
+    <style name="TextAppearance.Widget.Home.ItemDescription" parent="TextAppearance.Micro">
+        <item name="android:textColor">@color/tabs_tray_icon_grey</item>
+    </style>
+
+    <style name="TextAppearance.Widget.HomeBanner" parent="TextAppearance.Small">
+        <item name="android:textColor">?android:attr/textColorHint</item>
+    </style>
+
+    <style name="TextAppearance.DoorHanger">
+        <item name="android:textColor">@color/placeholder_active_grey</item>
+        <item name="android:textColorLink">@color/doorhanger_link</item>
+    </style>
+
+    <style name="TextAppearance.DoorHanger.Medium">
+        <item name="android:textSize">16dp</item>
+    </style>
+
+    <style name="TextAppearance.DoorHanger.Medium.Bold">
+        <item name="android:fontFamily">sans-serif-medium</item>
+    </style>
+
+    <style name="TextAppearance.DoorHanger.Medium.Light">
+        <item name="android:fontFamily">sans-serif-light</item>
+    </style>
+
+    <style name="TextAppearance.DoorHanger.Small">
+        <item name="android:textSize">14sp</item>
+    </style>
+
+    <style name="TextAppearance.UrlBar.Title" parent="TextAppearance.Small">
+        <item name="android:textSize">15sp</item>
+    </style>
+
+    <!-- BrowserToolbar -->
+    <style name="BrowserToolbar">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">@dimen/browser_toolbar_height</item>
+        <item name="android:orientation">horizontal</item>
+    </style>
+
+    <!-- URL bar -->
+    <style name="UrlBar">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">match_parent</item>
+        <item name="android:orientation">horizontal</item>
+    </style>
+
+    <!-- URL bar - Button -->
+    <style name="UrlBar.Button">
+        <item name="android:layout_height">match_parent</item>
+        <item name="android:background">@android:color/transparent</item>
+    </style>
+
+    <!-- URL bar - Button -->
+    <style name="UrlBar.Title" parent="UrlBar.Button">
+        <item name="android:textAppearance">@style/TextAppearance.UrlBar.Title</item>
+        <item name="android:textColor">@color/url_bar_title</item>
+        <item name="android:textColorHint">@color/url_bar_title_hint</item>
+        <item name="android:textColorHighlight">@color/fennec_ui_orange</item>
+        <item name="android:textSelectHandle">@drawable/handle_middle</item>
+        <item name="android:textSelectHandleLeft">@drawable/handle_start</item>
+        <item name="android:textSelectHandleRight">@drawable/handle_end</item>
+        <item name="android:textCursorDrawable">@null</item>
+        <item name="android:singleLine">true</item>
+        <item name="android:gravity">center_vertical|left|start</item>
+        <item name="android:hint">@string/url_bar_default_text</item>
+    </style>
+
+    <!-- URL bar - Image Button -->
+    <style name="UrlBar.ImageButtonBase" parent="UrlBar.Button">
+        <item name="android:scaleType">center</item>
+        <item name="android:layout_gravity">center_vertical</item>
+        <item name="android:background">@android:color/transparent</item>
+    </style>
+
+    <style name="UrlBar.ImageButton" parent="UrlBar.ImageButtonBase">
+        <item name="android:layout_width">@dimen/browser_toolbar_height</item>
+    </style>
+
+    <!-- TabsLayout -->
+    <style name="TabsLayout">
+         <item name="android:background">@android:color/transparent</item>
+         <item name="android:scrollbars">vertical</item>
+    </style>
+
+    <style name="TabsItem">
+         <item name="android:nextFocusRight">@+id/close</item>
+    </style>
+
+    <style name="TabsItemClose">
+         <item name="android:nextFocusLeft">@+id/info</item>
+    </style>
+
+    <style name="Widget.RemoteTabsItemView" parent="Widget.TwoLinePageRow"/>
+
+    <style name="Widget.RemoteTabsClientView" parent="Widget.TwoLinePageRow">
+        <item name="android:background">@color/about_page_header_grey</item>
+    </style>
+
+    <style name="Widget.RemoteTabsListView" parent="Widget.HomeListView">
+        <item name="android:childDivider">@color/toolbar_divider_grey</item>
+    </style>
+
+    <style name="Widget.HistoryListView" parent="Widget.HomeListView">
+        <item name="android:childDivider">@color/toolbar_divider_grey</item>
+        <item name="android:drawSelectorOnTop">true</item>
+    </style>
+
+    <!-- TabsLayout Row -->
+    <style name="TabLayoutItemTextAppearance">
+        <item name="android:textColor">#FFFFFFFF</item>
+        <item name="android:singleLine">true</item>
+        <item name="android:ellipsize">middle</item>
+    </style>
+
+    <!-- TabsLayout RemoteTabs Row Url -->
+    <style name="TabLayoutItemTextAppearance.Url">
+        <item name="android:textColor">#FFA4A7A9</item>
+    </style>
+
+    <!-- Find bar -->
+    <style name="FindBar">
+        <item name="android:background">@color/text_and_tabs_tray_grey</item>
+        <item name="android:paddingLeft">3dip</item>
+        <item name="android:paddingStart">3dip</item>
+        <item name="android:paddingRight">3dip</item>
+        <item name="android:paddingEnd">3dip</item>
+        <item name="android:paddingTop">6dip</item>
+        <item name="android:paddingBottom">6dip</item>
+    </style>
+
+    <!-- Find bar - Image Button -->
+    <style name="FindBar.ImageButton">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_marginLeft">5dip</item>
+        <item name="android:layout_marginStart">5dip</item>
+        <item name="android:layout_marginRight">5dip</item>
+        <item name="android:layout_marginEnd">5dip</item>
+        <item name="android:scaleType">fitCenter</item>
+        <item name="android:layout_centerVertical">true</item>
+        <item name="android:background">@drawable/action_bar_button_inverse</item>
+    </style>
+
+    <style name="PopupAnimation">
+        <item name="@android:windowEnterAnimation">@anim/popup_show</item>
+        <item name="@android:windowExitAnimation">@anim/popup_hide</item>
+    </style>
+
+    <style name="ToastBase">
+        <item name="android:background">@drawable/toast_background</item>
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_alignParentBottom">true</item>
+        <item name="android:layout_centerHorizontal">true</item>
+        <item name="android:layout_gravity">bottom|center_horizontal</item>
+        <item name="android:layout_marginBottom">64dp</item>
+        <item name="android:layout_marginTop">0dp</item>
+        <item name="android:orientation">horizontal</item>
+        <item name="android:clickable">true</item>
+    </style>
+
+    <style name="Toast" parent="ToastBase">
+        <item name="android:layout_marginLeft">16dp</item>
+        <item name="android:layout_marginStart">16dp</item>
+        <item name="android:layout_marginRight">16dp</item>
+        <item name="android:layout_marginEnd">16dp</item>
+    </style>
+
+    <style name="ToastElementBase">
+        <item name="android:background">@null</item>
+        <item name="android:paddingLeft">12dp</item>
+        <item name="android:paddingStart">12dp</item>
+        <item name="android:paddingRight">12dp</item>
+        <item name="android:paddingEnd">12dp</item>
+        <item name="android:paddingTop">11dp</item>
+        <item name="android:paddingBottom">11dp</item>
+    </style>
+
+    <style name="ToastDividerBase">
+        <item name="android:background">@color/toolbar_divider_grey</item>
+        <item name="android:layout_width">1dp</item>
+        <item name="android:layout_height">match_parent</item>
+    </style>
+
+    <style name="ToastMessageBase" parent="ToastElementBase">
+        <item name="android:textColor">@color/toast_button_text</item>
+        <item name="android:layout_width">0dp</item>
+        <item name="android:layout_weight">1</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_gravity">center_vertical</item>
+        <item name="android:ellipsize">end</item>
+        <item name="android:maxLines">1</item>
+        <item name="android:clickable">false</item>
+        <item name="android:focusable">false</item>
+    </style>
+
+    <style name="ToastButtonBase" parent="ToastElementBase">
+        <item name="android:background">@drawable/toast_button_background</item>
+        <item name="android:textColor">@color/toast_button_text</item>
+        <item name="android:minHeight">0dp</item>
+        <item name="android:minWidth">0dp</item>
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_gravity">center_vertical</item>
+        <item name="android:drawablePadding">12dp</item>
+        <item name="android:maxWidth">160dp</item>
+    </style>
+
+    <style name="ToastDivider" parent="ToastDividerBase">
+        <item name="android:layout_marginTop">14dp</item>
+        <item name="android:layout_marginBottom">14dp</item>
+    </style>
+
+    <style name="ToastMessage" parent="ToastMessageBase">
+        <item name="android:textAppearance">?android:textAppearanceSmall</item>
+    </style>
+
+    <style name="ToastButton" parent="ToastButtonBase">
+        <item name="android:textAppearance">?android:textAppearanceSmall</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <!-- Ideally, we use the same style for the action bar & action mode, but unfortunately
+         some attrs that share a purpose have different names so instead we inherit. -->
+    <style name="GeckoActionBar" parent="ThemeOverlay.AppCompat.ActionBar">
+        <item name="android:colorBackground">@color/action_bar_bg_color</item>
+        <item name="colorAccent">@color/fennec_ui_orange</item>
+        <item name="colorControlNormal">@color/toolbar_icon_grey</item>
+    </style>
+    <style name="GeckoActionBar.ActionMode">
+        <item name="android:background">@color/action_bar_bg_color</item>
+        <!-- Note: the bottom divider is drawn in code. -->
+    </style>
+
+    <style name="PreferencesActionBar" parent="Widget.AppCompat.ActionBar.Solid">
+        <item name="displayOptions">showHome|homeAsUp|showTitle</item>
+    </style>
+
+    <style name="GeckoActionBar.Title">
+        <item name="android:gravity">center_vertical</item>
+        <item name="android:minWidth">0dp</item>
+        <item name="android:background">@android:color/transparent</item>
+        <item name="android:textAppearance">@style/TextAppearance.Medium</item>
+        <item name="android:drawableLeft">@drawable/ab_done</item>
+        <item name="android:drawableStart">@drawable/ab_done</item>
+        <item name="android:paddingLeft">15dp</item>
+        <item name="android:paddingStart">15dp</item>
+        <item name="android:paddingRight">15dp</item>
+        <item name="android:paddingEnd">15dp</item>
+        <item name="android:contentDescription">@string/actionbar_done</item>
+    </style>
+
+    <style name="GeckoActionBar.Button" parent="Widget.MenuItemActionBar">
+        <item name="android:padding">8dp</item>
+    </style>
+
+    <style name="GeckoActionBar.Button.MenuButton">
+        <item name="android:scaleType">center</item>
+        <item name="android:src">@drawable/menu</item>
+        <item name="android:tint">@color/toolbar_icon_grey</item>
+        <item name="android:contentDescription">@string/actionbar_menu</item>
+        <item name="android:background">@android:color/transparent</item>
+    </style>
+
+    <style name="GeckoActionBar.Buttons">
+        <item name="android:background">@android:color/transparent</item>
+        <item name="android:textColor">@color/placeholder_active_grey</item>
+        <item name="android:gravity">right|end</item>
+    </style>
+
+    <style name="ShareOverlayTitle">
+        <item name="android:gravity">center_horizontal</item>
+        <item name="android:paddingLeft">15dp</item>
+        <item name="android:paddingStart">15dp</item>
+        <item name="android:paddingRight">15dp</item>
+        <item name="android:paddingEnd">15dp</item>
+    </style>
+
+    <style name="TextAppearance.ShareOverlay">
+        <item name="android:fontFamily">sans-serif</item>
+    </style>
+
+    <style name="TextAppearance.ShareOverlay.Header">
+        <item name="android:textColor">@android:color/white</item>
+        <item name="android:fontFamily">sans-serif-light</item>
+        <item name="android:textStyle">normal</item>
+    </style>
+
+    <style name="ShareOverlayRow">
+        <item name="android:minHeight">60dp</item>
+        <item name="android:gravity">center_vertical</item>
+        <item name="android:background">@drawable/overlay_share_button_background</item>
+        <item name="android:focusableInTouchMode">false</item>
+    </style>
+
+    <style name="TabInput"></style>
+
+    <style name="TabInput.TabWidget">
+        <item name="android:divider">@drawable/divider_vertical</item>
+        <item name="android:background">@drawable/tab_indicator_background</item>
+    </style>
+
+    <style name="TabInput.Tab">
+        <item name="android:background">@drawable/tabs_strip_indicator</item>
+        <item name="android:gravity">center</item>
+        <item name="android:minHeight">@dimen/menu_item_row_height</item>
+    </style>
+
+    <style name="TextAppearance.FirstrunLight"/>
+    <style name="TextAppearance.FirstrunRegular"/>
+
+    <style name="TextAppearance.FirstrunLight.Main">
+        <item name="android:textSize">20sp</item>
+        <item name="android:textColor">@color/text_and_tabs_tray_grey</item>
+    </style>
+
+    <style name="TextAppearance.FirstrunRegular.Body">
+        <item name="android:textSize">16sp</item>
+        <item name="android:textColor">@color/placeholder_grey</item>
+        <item name="android:lineSpacingMultiplier">1.25</item>
+    </style>
+
+    <style name="TextAppearance.FirstrunRegular.Link">
+        <item name="android:textSize">16sp</item>
+        <item name="android:textColor">@color/link_blue</item>
+    </style>
+
+    <!-- Remote Tabs home panel -->
+    <style name="RemoteTabsPanelFrame">
+        <item name="android:paddingLeft">32dp</item>
+        <item name="android:paddingStart">32dp</item>
+        <item name="android:paddingRight">32dp</item>
+        <item name="android:paddingEnd">32dp</item>
+        <item name="android:paddingTop">@dimen/home_remote_tabs_top_padding</item>
+        <item name="android:orientation">vertical</item>
+        <item name="android:layout_gravity">center_horizontal</item>
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+    </style>
+
+    <style name="RemoteTabsPanelItem">
+        <item name="android:layout_gravity">center</item>
+        <item name="android:gravity">center</item>
+        <item name="android:layout_marginBottom">16dp</item>
+        <item name="android:maxWidth">320dp</item>
+    </style>
+
+    <style name="RemoteTabsPanelItem.TextAppearance">
+        <item name="android:textColor">@color/placeholder_grey</item>
+        <item name="android:textSize">16sp</item>
+        <item name="android:lineSpacingMultiplier">1.25</item>
+        <item name="android:layout_marginLeft">8dp</item>
+        <item name="android:layout_marginStart">8dp</item>
+        <item name="android:layout_marginRight">8dp</item>
+        <item name="android:layout_marginEnd">8dp</item>
+    </style>
+
+    <style name="RemoteTabsPanelItem.TextAppearance.Header">
+        <item name="android:textColor">@color/placeholder_active_grey</item>
+        <item name="android:textSize">20sp</item>
+        <item name="android:layout_marginBottom">8dp</item>
+    </style>
+
+    <style name="RemoteTabsPanelItem.TextAppearance.Linkified">
+        <item name="android:clickable">true</item>
+        <item name="android:focusable">true</item>
+        <item name="android:textColor">#0092DB</item>
+    </style>
+
+    <style name="RemoteTabsPanelItem.Button">
+        <item name="android:background">@drawable/remote_tabs_setup_button_background</item>
+        <item name="android:textColor">#FFFFFF</item>
+        <item name="android:textSize">20sp</item>
+        <item name="android:gravity">center</item>
+        <item name="android:paddingTop">16dp</item>
+        <item name="android:paddingBottom">16dp</item>
+        <item name="android:paddingLeft">8dp</item>
+        <item name="android:paddingStart">8dp</item>
+        <item name="android:paddingRight">8dp</item>
+        <item name="android:paddingEnd">8dp</item>
+
+        <!-- AppCompat sets Button text to all caps so we override that here. -->
+        <item name="textAllCaps">false</item>
+    </style>
+
+    <style name="TabQueueActivity" parent="android:style/Theme.NoDisplay" />
+
+    <style name="ActivityStreamContextMenuText">
+        <item name="android:textSize">16sp</item>
+    </style>
+
+    <!-- We use this style to provide our own divider that has an inset on the left side -->
+    <style name="ActivityStreamContextMenuStyle">
+        <item name="android:listDivider">@drawable/as_contextmenu_divider</item>
+    </style>
+
+    <style name="ActivityStreamButton" parent="Widget.AppCompat.Button.Colored">
+        <item name="colorButtonNormal">@color/link_blue</item>
+        <item name="android:textColor">@android:color/white</item>
+    </style>
+
+    <style name="UrlBar.Entry" parent="UrlBar.V15.Entry"/>
+    <style name="UrlBar.Base.Entry" parent="UrlBar.Button"/>
+    <style name="UrlBar.V15.Entry" parent="UrlBar.Base.Entry">
+        <item name="android:layout_marginLeft">8dp</item>
+        <item name="android:layout_marginRight">-6dp</item>
+        <item name="android:layout_toLeftOf">@+id/tabs</item>
+    </style>
+
+    <style name="UrlBar.Edge" parent="UrlBar.V15.Edge"/>
+    <style name="UrlBar.Base.Edge" parent="UrlBar.Button"/>
+    <style name="UrlBar.V15.Edge" parent="UrlBar.Base.Edge">
+        <item name="android:layout_alignLeft">@id/url_bar_entry</item>
+        <item name="android:layout_alignRight">@+id/url_bar_entry</item>
+    </style>
+
+    <style name="UrlBar.Menu" parent="UrlBar.V15.Menu"/>
+    <style name="UrlBar.Base.Menu" parent="UrlBar.ImageButton"/>
+    <style name="UrlBar.V15.Menu" parent="UrlBar.Base.Menu">
+        <item name="android:layout_alignParentRight">true</item>
+    </style>
+
+    <style name="UrlBar.Tabs" parent="UrlBar.V15.Tabs"/>
+    <style name="UrlBar.Base.Tabs" parent="UrlBar.ImageButton"/>
+    <style name="UrlBar.V15.Tabs" parent="UrlBar.Base.Tabs">
+        <item name="android:layout_toLeftOf">@id/menu</item>
+    </style>
+
+    <style name="UrlBar.TabCounter" parent="UrlBar.V15.TabCounter"/>
+    <style name="UrlBar.Base.TabCounter" parent="UrlBar.ImageButton"/>
+    <style name="UrlBar.V15.TabCounter" parent="UrlBar.Base.TabCounter">
+        <item name="android:layout_marginRight">8dip</item>
+        <item name="android:layout_alignRight">@id/tabs</item>
+    </style>
+
+    <style name="UrlBar.EditCancel" parent="UrlBar.V15.EditCancel"/>
+    <style name="UrlBar.Base.EditCancel" parent="UrlBar.ImageButton"/>
+    <style name="UrlBar.V15.EditCancel" parent="UrlBar.Base.EditCancel">
+        <item name="android:layout_alignParentRight">true</item>
+    </style>
+
+    <style name="UrlBar.EditLayout" parent="UrlBar.V15.EditLayout"/>
+    <style name="UrlBar.Base.EditLayout" parent="UrlBar.Button"/>
+    <style name="UrlBar.V15.EditLayout" parent="UrlBar.Base.EditLayout">
+        <item name="android:layout_alignLeft">@id/url_bar_entry</item>
+        <item name="android:layout_toLeftOf">@id/edit_cancel</item>
+        <item name="android:paddingLeft">8dp</item>
+        <item name="android:paddingRight">8dp</item>
+    </style>
+
+    <style name="UrlBar.DisplayLayout" parent="UrlBar.V15.DisplayLayout"/>
+    <style name="UrlBar.Base.DisplayLayout" parent="UrlBar.Button"/>
+
+    <style name="UrlBar.V15.DisplayLayout" parent="UrlBar.Base.DisplayLayout">
+        <item name="android:layout_alignLeft">@id/url_bar_entry</item>
+        <item name="android:layout_alignRight">@id/url_bar_entry</item>
+        <item name="android:paddingLeft">1dip</item>
+        <item name="android:paddingRight">4dip</item>
+    </style>
+
+</resources>

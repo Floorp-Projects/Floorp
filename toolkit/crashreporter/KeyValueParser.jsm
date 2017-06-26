@@ -3,11 +3,16 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 Components.utils.import("resource://gre/modules/Services.jsm");
+Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
+
+XPCOMUtils.defineLazyModuleGetter(this, "OS",
+                                  "resource://gre/modules/osfile.jsm");
 
 this.EXPORTED_SYMBOLS = [
   "parseKeyValuePairsFromLines",
   "parseKeyValuePairs",
-  "parseKeyValuePairsFromFile"
+  "parseKeyValuePairsFromFile",
+  "parseKeyValuePairsFromFileAsync"
 ];
 
 const Cc = Components.classes;
@@ -36,6 +41,7 @@ this.parseKeyValuePairs = function parseKeyValuePairs(text) {
   return parseKeyValuePairsFromLines(lines);
 };
 
+// some test setup still uses this sync version
 this.parseKeyValuePairsFromFile = function parseKeyValuePairsFromFile(file) {
   let fstream = Cc["@mozilla.org/network/file-input-stream;1"].
                 createInstance(Ci.nsIFileInputStream);
@@ -51,4 +57,9 @@ this.parseKeyValuePairsFromFile = function parseKeyValuePairsFromFile(file) {
   is.close();
   fstream.close();
   return parseKeyValuePairs(contents);
-}
+};
+
+this.parseKeyValuePairsFromFileAsync = async function parseKeyValuePairsFromFileAsync(file) {
+  let contents = await OS.File.read(file, { encoding: "utf-8" });
+  return parseKeyValuePairs(contents);
+};

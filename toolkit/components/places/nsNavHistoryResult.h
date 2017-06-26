@@ -419,11 +419,6 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsNavHistoryResultNode, NS_NAVHISTORYRESULTNODE_II
     { return nsNavHistoryContainerResultNode::GetChild(index, _retval); } \
   NS_IMETHOD GetChildIndex(nsINavHistoryResultNode* aNode, uint32_t* _retval) override \
     { return nsNavHistoryContainerResultNode::GetChildIndex(aNode, _retval); } \
-  NS_IMETHOD FindNodeByDetails(const nsACString& aURIString, PRTime aTime, \
-                               int64_t aItemId, bool aRecursive, \
-                               nsINavHistoryResultNode** _retval) override \
-    { return nsNavHistoryContainerResultNode::FindNodeByDetails(aURIString, aTime, aItemId, \
-                                                                aRecursive, _retval); }
 
 #define NS_NAVHISTORYCONTAINERRESULTNODE_IID \
   { 0x6e3bf8d3, 0x22aa, 0x4065, { 0x86, 0xbc, 0x37, 0x46, 0xb5, 0xb3, 0x2c, 0xe8 } }

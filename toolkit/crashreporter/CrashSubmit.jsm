@@ -5,12 +5,11 @@
 const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
 Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/KeyValueParser.jsm");
+Cu.import("resource://gre/modules/FileUtils.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/KeyValueParser.jsm");
 Cu.importGlobalProperties(["File"]);
 
-XPCOMUtils.defineLazyModuleGetter(this, "PromiseUtils",
-                                  "resource://gre/modules/PromiseUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "OS",
                                   "resource://gre/modules/osfile.jsm");
 
@@ -27,36 +26,39 @@ const SUBMITTING = "submitting";
 
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-function parseINIStrings(file) {
-  var factory = Cc["@mozilla.org/xpcom/ini-parser-factory;1"].
+// TODO: this is still synchronous; need an async INI parser to make it async
+function parseINIStrings(path) {
+  let file = new FileUtils.File(path);
+  let factory = Cc["@mozilla.org/xpcom/ini-parser-factory;1"].
                 getService(Ci.nsIINIParserFactory);
-  var parser = factory.createINIParser(file);
-  var obj = {};
-  var en = parser.getKeys("Strings");
+  let parser = factory.createINIParser(file);
+  let obj = {};
+  let en = parser.getKeys("Strings");
   while (en.hasMore()) {
-    var key = en.getNext();
+    let key = en.getNext();
     obj[key] = parser.getString("Strings", key);
   }
   return obj;
 }
 
-// Since we're basically re-implementing part of the crashreporter
+// Since we're basically re-implementing (with async) part of the crashreporter
 // client here, we'll just steal the strings we need from crashreporter.ini
-function getL10nStrings() {
+async function getL10nStrings() {
   let dirSvc = Cc["@mozilla.org/file/directory_service;1"].
                getService(Ci.nsIProperties);
-  let path = dirSvc.get("GreD", Ci.nsIFile);
-  path.append("crashreporter.ini");
-  if (!path.exists()) {
-    // see if we're on a mac
-    path = path.parent;
-    path = path.parent;
-    path.append("MacOS");
-    path.append("crashreporter.app");
-    path.append("Contents");
-    path.append("Resources");
-    path.append("crashreporter.ini");
-    if (!path.exists()) {
+  let path = OS.Path.join(dirSvc.get("GreD", Ci.nsIFile).path,
+                          "crashreporter.ini");
+  let pathExists = await OS.File.exists(path);
+
+  if (!pathExists) {
+    // we if we're on a mac
+    let parentDir = OS.Path.dirname(path);
+    path = OS.Path.join(parentDir, "MacOS", "crashreporter.app", "Contents",
+                        "Resources", "crashreporter.ini");
+
+    let pathExists = await OS.File.exists(path);
+
+    if (!pathExists) {
       // This happens on Android where everything is in an APK.
       // Android users can't see the contents of the submitted files
       // anyway, so just hardcode some fallback strings.
@@ -66,146 +68,86 @@ function getL10nStrings() {
       };
     }
   }
+
   let crstrings = parseINIStrings(path);
   let strings = {
     "crashid": crstrings.CrashID,
     "reporturl": crstrings.CrashDetailsURL
   };
 
-  path = dirSvc.get("XCurProcD", Ci.nsIFile);
-  path.append("crashreporter-override.ini");
-  if (path.exists()) {
+  path = OS.Path.join(dirSvc.get("XCurProcD", Ci.nsIFile).path,
+                      "crashreporter-override.ini");
+  pathExists = await OS.File.exists(path);
+
+  if (pathExists) {
     crstrings = parseINIStrings(path);
-    if ("CrashID" in crstrings)
+
+    if ("CrashID" in crstrings) {
       strings["crashid"] = crstrings.CrashID;
-    if ("CrashDetailsURL" in crstrings)
+    }
+
+    if ("CrashDetailsURL" in crstrings) {
       strings["reporturl"] = crstrings.CrashDetailsURL;
+    }
   }
+
   return strings;
 }
 
-XPCOMUtils.defineLazyGetter(this, "strings", getL10nStrings);
-
 function getDir(name) {
-  let directoryService = Cc["@mozilla.org/file/directory_service;1"].
-                         getService(Ci.nsIProperties);
-  let dir = directoryService.get("UAppData", Ci.nsIFile);
-  dir.append("Crash Reports");
-  dir.append(name);
-  return dir;
+  let dirSvc = Cc["@mozilla.org/file/directory_service;1"].
+               getService(Ci.nsIProperties);
+  let uAppDataPath = dirSvc.get("UAppData", Ci.nsIFile).path;
+  return OS.Path.join(uAppDataPath, "Crash Reports", name);
 }
 
-function writeFile(dirName, fileName, data) {
-  let path = getDir(dirName);
-  if (!path.exists())
-    path.create(Ci.nsIFile.DIRECTORY_TYPE, parseInt("0700", 8));
-  path.append(fileName);
-  var fs = Cc["@mozilla.org/network/file-output-stream;1"].
-           createInstance(Ci.nsIFileOutputStream);
-  // open, write, truncate
-  fs.init(path, -1, -1, 0);
-  var os = Cc["@mozilla.org/intl/converter-output-stream;1"].
-           createInstance(Ci.nsIConverterOutputStream);
-  os.init(fs, "UTF-8");
-  os.writeString(data);
-  os.close();
-  fs.close();
+async function isDirAsync(path) {
+  try {
+    let dirInfo = await OS.File.stat(path);
+
+    if (!dirInfo.isDir) {
+      return false;
+    }
+  } catch (ex) {
+    return false;
+  }
+
+  return true;
+}
+
+async function writeFileAsync(dirName, fileName, data) {
+  let dirPath = getDir(dirName);
+  let filePath = OS.Path.join(dirPath, fileName);
+  // succeeds even with existing path, permissions 700
+  await OS.File.makeDir(dirPath, { unixFlags: OS.Constants.libc.S_IRWXU });
+  await OS.File.writeAtomic(filePath, data, { encoding: "utf-8" });
 }
 
 function getPendingMinidump(id) {
   let pendingDir = getDir("pending");
-  let dump = pendingDir.clone();
-  let extra = pendingDir.clone();
-  let memory = pendingDir.clone();
-  dump.append(id + ".dmp");
-  extra.append(id + ".extra");
-  memory.append(id + ".memory.json.gz");
-  return [dump, extra, memory];
-}
 
-function getAllPendingMinidumpsIDs() {
-  let minidumps = [];
-  let pendingDir = getDir("pending");
-
-  if (!(pendingDir.exists() && pendingDir.isDirectory()))
-    return [];
-  let entries = pendingDir.directoryEntries;
-
-  while (entries.hasMoreElements()) {
-    let entry = entries.getNext().QueryInterface(Ci.nsIFile);
-    if (entry.isFile()) {
-      let matches = entry.leafName.match(/(.+)\.extra$/);
-      if (matches)
-        minidumps.push(matches[1]);
-    }
-  }
-
-  return minidumps;
-}
-
-function pruneSavedDumps() {
-  const KEEP = 10;
-
-  let pendingDir = getDir("pending");
-  if (!(pendingDir.exists() && pendingDir.isDirectory()))
-    return;
-  let entries = pendingDir.directoryEntries;
-  let entriesArray = [];
-
-  while (entries.hasMoreElements()) {
-    let entry = entries.getNext().QueryInterface(Ci.nsIFile);
-    if (entry.isFile()) {
-      let matches = entry.leafName.match(/(.+)\.extra$/);
-      if (matches)
-        entriesArray.push(entry);
-    }
-  }
-
-  entriesArray.sort(function(a, b) {
-    let dateA = a.lastModifiedTime;
-    let dateB = b.lastModifiedTime;
-    if (dateA < dateB)
-      return -1;
-    if (dateB < dateA)
-      return 1;
-    return 0;
+  return [".dmp", ".extra", ".memory.json.gz"].map(suffix => {
+    return OS.Path.join(pendingDir, `${id}${suffix}`);
   });
-
-  if (entriesArray.length > KEEP) {
-    for (let i = 0; i < entriesArray.length - KEEP; ++i) {
-      let extra = entriesArray[i];
-      let matches = extra.leafName.match(/(.+)\.extra$/);
-      if (matches) {
-        let dump = extra.clone();
-        dump.leafName = matches[1] + ".dmp";
-        dump.remove(false);
-
-        let memory = extra.clone();
-        memory.leafName = matches[1] + ".memory.json.gz";
-        if (memory.exists()) {
-          memory.remove(false);
-        }
-
-        extra.remove(false);
-      }
-    }
-  }
 }
 
 function addFormEntry(doc, form, name, value) {
-  var input = doc.createElement("input");
+  let input = doc.createElement("input");
   input.type = "hidden";
   input.name = name;
   input.value = value;
   form.appendChild(input);
 }
 
-function writeSubmittedReport(crashID, viewURL) {
-  var data = strings.crashid.replace("%s", crashID);
-  if (viewURL)
-     data += "\n" + strings.reporturl.replace("%s", viewURL);
+async function writeSubmittedReportAsync(crashID, viewURL) {
+  let strings = await getL10nStrings();
+  let data = strings.crashid.replace("%s", crashID);
 
-  writeFile("submitted", crashID + ".txt", data);
+  if (viewURL) {
+    data += "\n" + strings.reporturl.replace("%s", viewURL);
+  }
+
+  await writeFileAsync("submitted", `${crashID}.txt`, data);
 }
 
 // the Submitter class represents an individual submission.
@@ -215,28 +157,34 @@ function Submitter(id, recordSubmission, noThrottle, extraExtraKeyVals) {
   this.noThrottle = noThrottle;
   this.additionalDumps = [];
   this.extraKeyVals = extraExtraKeyVals || {};
-  this.deferredSubmit = PromiseUtils.defer();
+  // mimic deferred Promise behavior
+  this.submitStatusPromise = new Promise((resolve, reject) => {
+    this.resolveSubmitStatusPromise = resolve;
+    this.rejectSubmitStatusPromise = reject;
+  });
 }
 
 Submitter.prototype = {
-  submitSuccess: function Submitter_submitSuccess(ret) {
-    // Write out the details file to submitted/
-    writeSubmittedReport(ret.CrashID, ret.ViewURL);
+  submitSuccess: async function Submitter_submitSuccess(ret) {
+    // Write out the details file to submitted
+    await writeSubmittedReportAsync(ret.CrashID, ret.ViewURL);
 
-    // Delete from pending dir
     try {
-      this.dump.remove(false);
-      this.extra.remove(false);
+      let toDelete = [this.dump, this.extra];
 
       if (this.memory) {
-        this.memory.remove(false);
+        toDelete.push(this.memory);
       }
 
-      for (let i of this.additionalDumps) {
-        i.dump.remove(false);
+      for (let dump of this.additionalDumps) {
+        toDelete.push(dump);
       }
+
+      await Promise.all(toDelete.map(path => {
+        return OS.File.remove(path, { ignoreAbsent: true });
+      }));
     } catch (ex) {
-      // report an error? not much the user can do here.
+      Cu.reportError(ex);
     }
 
     this.notifyStatus(SUCCESS, ret);
@@ -252,8 +200,9 @@ Submitter.prototype = {
     this.additionalDumps = null;
     // remove this object from the list of active submissions
     let idx = CrashSubmit._activeSubmissions.indexOf(this);
-    if (idx != -1)
+    if (idx != -1) {
       CrashSubmit._activeSubmissions.splice(idx, 1);
+    }
   },
 
   submitForm: function Submitter_submitForm() {
@@ -264,7 +213,7 @@ Submitter.prototype = {
 
     // Override the submission URL from the environment
 
-    var envOverride = Cc["@mozilla.org/process/environment;1"].
+    let envOverride = Cc["@mozilla.org/process/environment;1"].
       getService(Ci.nsIEnvironment).get("MOZ_CRASHREPORTER_URL");
     if (envOverride != "") {
       serverURL = envOverride;
@@ -288,13 +237,13 @@ Submitter.prototype = {
     }
     // add the minidumps
     let promises = [
-      File.createFromFileName(this.dump.path).then(file => {
+      File.createFromFileName(this.dump).then(file => {
         formData.append("upload_file_minidump", file);
       })
-    ]
+    ];
 
     if (this.memory) {
-      promises.push(File.createFromFileName(this.memory.path).then(file => {
+      promises.push(File.createFromFileName(this.memory).then(file => {
         formData.append("memory_report", file);
       }));
     }
@@ -303,7 +252,7 @@ Submitter.prototype = {
       let names = [];
       for (let i of this.additionalDumps) {
         names.push(i.name);
-        promises.push(File.createFromFileName(i.dump.path).then(file => {
+        promises.push(File.createFromFileName(i.dump).then(file => {
           formData.append("upload_file_minidump_" + i.name, file);
         }));
       }
@@ -315,7 +264,7 @@ Submitter.prototype = {
     xhr.addEventListener("readystatechange", (evt) => {
       if (xhr.readyState == 4) {
         let ret =
-          xhr.status == 200 ? parseKeyValuePairs(xhr.responseText) : {};
+          xhr.status === 200 ? parseKeyValuePairs(xhr.responseText) : {};
         let submitted = !!ret.CrashID;
         let p = Promise.resolve();
 
@@ -372,33 +321,36 @@ Submitter.prototype = {
 
     switch (status) {
       case SUCCESS:
-        this.deferredSubmit.resolve(ret.CrashID);
+        this.resolveSubmitStatusPromise(ret.CrashID);
         break;
       case FAILED:
-        this.deferredSubmit.reject();
+        this.rejectSubmitStatusPromise(FAILED);
         break;
       default:
         // no callbacks invoked.
     }
   },
 
-  submit: function Submitter_submit() {
+  submit: async function Submitter_submit() {
     let [dump, extra, memory] = getPendingMinidump(this.id);
+    let [dumpExists, extraExists, memoryExists] = await Promise.all([
+      OS.File.exists(dump),
+      OS.File.exists(extra),
+      OS.File.exists(memory)
+    ]);
 
-    if (!dump.exists() || !extra.exists()) {
+    if (!dumpExists || !extraExists) {
       this.notifyStatus(FAILED);
       this.cleanup();
-      return this.deferredSubmit.promise;
+      return this.submitStatusPromise;
     }
+
     this.dump = dump;
     this.extra = extra;
+    this.memory = memoryExists ? memory : null;
 
-    // The memory file may or may not exist
-    if (memory.exists()) {
-      this.memory = memory;
-    }
+    let extraKeyVals = await parseKeyValuePairsFromFileAsync(extra);
 
-    let extraKeyVals = parseKeyValuePairsFromFile(extra);
     for (let key in extraKeyVals) {
       if (!(key in this.extraKeyVals)) {
         this.extraKeyVals[key] = extraKeyVals[key];
@@ -406,28 +358,37 @@ Submitter.prototype = {
     }
 
     let additionalDumps = [];
+
     if ("additional_minidumps" in this.extraKeyVals) {
+      let dumpsExistsPromises = [];
       let names = this.extraKeyVals.additional_minidumps.split(",");
+
       for (let name of names) {
         let [dump /* , extra, memory */] = getPendingMinidump(this.id + "-" + name);
-        if (!dump.exists()) {
-          this.notifyStatus(FAILED);
-          this.cleanup();
-          return this.deferredSubmit.promise;
-        }
-        additionalDumps.push({"name": name, "dump": dump});
+
+        dumpsExistsPromises.push(OS.File.exists(dump));
+        additionalDumps.push({name, dump});
+      }
+
+      let dumpsExist = await Promise.all(dumpsExistsPromises);
+      let allDumpsExist = dumpsExist.every(exists => exists);
+
+      if (!allDumpsExist) {
+        this.notifyStatus(FAILED);
+        this.cleanup();
+        return this.submitStatusPromise;
       }
     }
 
     this.notifyStatus(SUBMITTING);
-
     this.additionalDumps = additionalDumps;
 
-    if (!this.submitForm()) {
+    if (!(await this.submitForm())) {
        this.notifyStatus(FAILED);
        this.cleanup();
     }
-    return this.deferredSubmit.promise;
+
+    return this.submitStatusPromise;
   }
 };
 
@@ -464,12 +425,17 @@ this.CrashSubmit = {
     let noThrottle = false;
     let extraExtraKeyVals = null;
 
-    if ("recordSubmission" in params)
+    if ("recordSubmission" in params) {
       recordSubmission = params.recordSubmission;
-    if ("noThrottle" in params)
+    }
+
+    if ("noThrottle" in params) {
       noThrottle = params.noThrottle;
-    if ("extraExtraKeyVals" in params)
+    }
+
+    if ("extraExtraKeyVals" in params) {
       extraExtraKeyVals = params.extraExtraKeyVals;
+    }
 
     let submitter = new Submitter(id, recordSubmission,
                                   noThrottle, extraExtraKeyVals);
@@ -482,14 +448,14 @@ this.CrashSubmit = {
    *
    * @param id
    *        Filename (minus .dmp extension) of the minidump to delete.
+   *
+   * @return a Promise that is fulfilled when the minidump is deleted and
+   *         rejected otherwise
    */
-  delete: function CrashSubmit_delete(id) {
-    let [dump, extra, memory] = getPendingMinidump(id);
-    dump.remove(false);
-    extra.remove(false);
-    if (memory.exists()) {
-      memory.remove(false);
-    }
+  delete: async function CrashSubmit_delete(id) {
+    await Promise.all(getPendingMinidump(id).map(path => {
+      return OS.File.remove(path, { ignoreAbsent: true });
+    }));
   },
 
   /**
@@ -498,83 +464,169 @@ this.CrashSubmit = {
    *
    * @param id
    *        Filename (minus .dmp extension) of the report to ignore
-   */
-
-  ignore: function CrashSubmit_ignore(id) {
-    let [dump /* , extra, memory */] = getPendingMinidump(id);
-    return OS.File.open(dump.path + ".ignore", {create: true},
-                        {unixFlags: OS.Constants.libc.O_CREAT})
-      .then((file) => { file.close(); });
-  },
-
-  /**
-   * Get the list of pending crash IDs.
    *
-   * @return an array of string, each being an ID as
-   *         expected to be passed to submit()
+   * @return a Promise that is fulfilled when (if) the .dmg.ignore is created
+   *         and rejected otherwise.
    */
-  pendingIDs: function CrashSubmit_pendingIDs() {
-    return getAllPendingMinidumpsIDs();
+  ignore: async function CrashSubmit_ignore(id) {
+    let [dump /* , extra, memory */] = getPendingMinidump(id);
+    let file = await OS.File.open(`${dump}.ignore`, { create: true },
+                                  { unixFlags: OS.Constants.libc.O_CREAT });
+    await file.close();
   },
 
   /**
    * Get the list of pending crash IDs, excluding those marked to be ignored
-   * @param maxFileDate
+   * @param minFileDate
    *     A Date object. Any files last modified before that date will be ignored
    *
    * @return a Promise that is fulfilled with an array of string, each
-   * being an ID as expected to be passed to submit() or ignore()
+   *         being an ID as expected to be passed to submit() or ignore()
    */
-  pendingIDsAsync: async function CrashSubmit_pendingIDsAsync(maxFileDate) {
+  pendingIDs: async function CrashSubmit_pendingIDs(minFileDate) {
     let ids = [];
-    let info = null;
+    let dirIter = null;
+    let pendingDir = getDir("pending");
+
     try {
-      info = await OS.File.stat(getDir("pending").path)
+      dirIter = new OS.File.DirectoryIterator(pendingDir);
     } catch (ex) {
-      /* pending dir doesn't exist, ignore */
-      return ids;
+      if (ex.becauseNoSuchFile) {
+        return ids;
+      }
+
+      Cu.reportError(ex);
+      throw ex;
     }
 
-    if (info.isDir) {
-      let iterator = new OS.File.DirectoryIterator(getDir("pending").path);
-      try {
-        await iterator.forEach(
-          function onEntry(file) {
-            if (file.name.endsWith(".dmp")) {
-              return OS.File.exists(file.path + ".ignore")
-                .then(ignoreExists => {
-                  if (!ignoreExists) {
-                    let id = file.name.slice(0, -4);
-                    if (UUID_REGEX.test(id)) {
-                      return OS.File.stat(file.path)
-                        .then(info => {
-                          if (info.lastAccessDate.valueOf() >
-                              maxFileDate.valueOf()) {
-                            ids.push(id);
-                          }
-                        });
-                    }
-                  }
-                  return null;
-                });
+    try {
+      let entries = Object.create(null);
+      let ignored = Object.create(null);
+
+      // `await` in order to ensure all callbacks are called
+      await dirIter.forEach(entry => {
+        if (!entry.isDir /* is file */) {
+          let matches = entry.name.match(/(.+)\.dmp$/);
+
+          if (matches) {
+            let id = matches[1];
+
+            if (UUID_REGEX.test(id)) {
+              entries[id] = OS.File.stat(entry.path);
             }
-            return null;
+          } else {
+            // maybe it's a .ignore file
+            let matchesIgnore = entry.name.match(/(.+)\.dmp.ignore$/);
+
+            if (matchesIgnore) {
+              let id = matches[1];
+
+              if (UUID_REGEX.test(id)) {
+                ignored[id] = true;
+              }
+            }
           }
-        );
-      } catch (ex) {
-        Cu.reportError(ex);
-      } finally {
-        iterator.close();
+        }
+      });
+
+      for (let entry in entries) {
+        let entryInfo = await entries[entry];
+
+        if (!(`${entry}.dmp.ignore` in ignored) &&
+            entryInfo.lastAccessDate > minFileDate) {
+          ids.push(entry);
+        }
       }
+    } catch (ex) {
+      Cu.reportError(ex);
+      throw ex;
+    } finally {
+      dirIter.close();
     }
+
     return ids;
   },
 
   /**
    * Prune the saved dumps.
+   *
+   * @return a Promise that is fulfilled when the daved dumps are deleted and
+   *         rejected otherwise
    */
-  pruneSavedDumps: function CrashSubmit_pruneSavedDumps() {
-    pruneSavedDumps();
+  pruneSavedDumps: async function CrashSubmit_pruneSavedDumps() {
+    const KEEP = 10;
+
+    let dirIter = null;
+    let dirEntries = [];
+    let pendingDir = getDir("pending");
+
+    try {
+      dirIter = new OS.File.DirectoryIterator(pendingDir);
+    } catch (ex) {
+      if (ex instanceof OS.File.Error && ex.becauseNoSuchFile) {
+        return [];
+      }
+
+      throw ex;
+    }
+
+    try {
+      await dirIter.forEach(entry => {
+        if (!entry.isDir /* is file */) {
+          let matches = entry.name.match(/(.+)\.extra$/);
+
+          if (matches) {
+            dirEntries.push({
+              name: entry.name,
+              path: entry.path,
+              // dispatch promise instead of blocking iteration on `await`
+              infoPromise: OS.File.stat(entry.path)
+            });
+          }
+        }
+      });
+    } catch (ex) {
+      Cu.reportError(ex);
+      throw ex;
+    } finally {
+      dirIter.close();
+    }
+
+    dirEntries.sort(async (a, b) => {
+      let dateA = (await a.infoPromise).lastModificationDate;
+      let dateB = (await b.infoPromise).lastModificationDate;
+
+      if (dateA < dateB) {
+        return -1;
+      }
+
+      if (dateB < dateA) {
+        return 1;
+      }
+
+      return 0;
+    });
+
+    if (dirEntries.length > KEEP) {
+      let toDelete = [];
+
+      for (let i = 0; i < dirEntries.length - KEEP; ++i) {
+        let extra = dirEntries[i];
+        let matches = extra.leafName.match(/(.+)\.extra$/);
+
+        if (matches) {
+          let pathComponents = OS.Path.split(extra.path);
+          pathComponents[pathComponents.length - 1] = matches[1];
+          let path = OS.Path.join(...pathComponents);
+
+          toDelete.push(extra.path, `${path}.dmp`, `${path}.memory.json.gz`);
+        }
+      }
+
+      await Promise.all(toDelete.map(path => {
+        return OS.File.remove(path, { ignoreAbsent: true });
+      }));
+    }
   },
 
   // List of currently active submit objects

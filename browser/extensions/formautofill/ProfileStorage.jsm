@@ -35,6 +35,7 @@
  *       address-line1,
  *       address-line2,
  *       address-line3,
+ *       country-name,
  *
  *       // metadata
  *       timeCreated,          // in ms
@@ -94,6 +95,16 @@ XPCOMUtils.defineLazyModuleGetter(this, "FormAutofillNameUtils",
 XPCOMUtils.defineLazyServiceGetter(this, "gUUIDGenerator",
                                    "@mozilla.org/uuid-generator;1",
                                    "nsIUUIDGenerator");
+
+XPCOMUtils.defineLazyGetter(this, "REGION_NAMES", function() {
+  let regionNames = {};
+  let countries = Services.strings.createBundle("chrome://global/locale/regionNames.properties").getSimpleEnumeration();
+  while (countries.hasMoreElements()) {
+    let country = countries.getNext().QueryInterface(Components.interfaces.nsIPropertyElement);
+    regionNames[country.key.toUpperCase()] = country.value;
+  }
+  return regionNames;
+});
 
 const PROFILE_JSON_FILE_NAME = "autofill-profiles.json";
 
@@ -418,6 +429,20 @@ class Addresses extends AutofillRecords {
         }
       }
     }
+
+    // Compute country name
+    if (profile.country) {
+      if (profile.country == "US") {
+        let countryName = REGION_NAMES[profile.country];
+        if (countryName) {
+          profile["country-name"] = countryName;
+        }
+      } else {
+        // TODO: We only support US in MVP so hide the field if it's not. We
+        //       are going to support more countries in bug 1370193.
+        delete profile.country;
+      }
+    }
   }
 
   _recordWriteProcessor(profile) {
@@ -459,6 +484,25 @@ class Addresses extends AutofillRecords {
         profile["street-address"] = addressLines.join("\n");
       }
     }
+
+    // Normalize country
+    if (profile.country) {
+      let country = profile.country.toUpperCase();
+      // Only values included in the region list will be saved.
+      if (REGION_NAMES[country]) {
+        profile.country = country;
+      } else {
+        delete profile.country;
+      }
+    } else if (profile["country-name"]) {
+      for (let region in REGION_NAMES) {
+        if (REGION_NAMES[region].toLowerCase() == profile["country-name"].toLowerCase()) {
+          profile.country = region;
+          break;
+        }
+      }
+    }
+    delete profile["country-name"];
   }
 
   /**

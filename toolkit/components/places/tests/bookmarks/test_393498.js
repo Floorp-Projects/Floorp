@@ -25,78 +25,107 @@ do_register_cleanup(function() {
   PlacesUtils.bookmarks.removeObserver(observer);
 });
 
-function run_test() {
+// Returns do_check_eq with .getTime() added onto parameters
+function do_check_date_eq( t1, t2) {
+  return do_check_eq(t1.getTime(), t2.getTime()) ;
+}
+
+add_task(async function test_bookmark_update_notifications() {
   // We set times in the past to workaround a timing bug due to virtual
   // machines and the skew between PR_Now() and Date.now(), see bug 427142 and
   // bug 858377 for details.
-  const PAST_PRTIME = (Date.now() - 86400000) * 1000;
+  const PAST_DATE = new Date(Date.now() - 86400000);
 
   // Insert a new bookmark.
-  let testFolder = PlacesUtils.bookmarks.createFolder(
-    PlacesUtils.placesRootId, "test Folder",
-    PlacesUtils.bookmarks.DEFAULT_INDEX);
-  let bookmarkId = PlacesUtils.bookmarks.insertBookmark(
-    testFolder, uri("http://google.com/"),
-    PlacesUtils.bookmarks.DEFAULT_INDEX, "");
+  let testFolder = await PlacesUtils.bookmarks.insert({
+    type: PlacesUtils.bookmarks.TYPE_FOLDER,
+    title: "test Folder",
+    parentGuid: PlacesUtils.bookmarks.menuGuid
+  });
+
+  let bookmark = await PlacesUtils.bookmarks.insert({
+    parentGuid: testFolder.guid,
+    type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
+    url: "http://google.com/",
+    title: "a bookmark"
+  });
 
   // Sanity check.
   do_check_true(observer.itemChangedProperty === undefined);
 
-  // Set dateAdded in the past and verify the bookmarks cache.
-  PlacesUtils.bookmarks.setItemDateAdded(bookmarkId, PAST_PRTIME);
+  // Set dateAdded in the past and verify the changes.
+  await PlacesUtils.bookmarks.update({
+    guid: bookmark.guid,
+    dateAdded: PAST_DATE
+  });
+
   do_check_eq(observer._itemChangedProperty, "dateAdded");
-  do_check_eq(observer._itemChangedValue, PAST_PRTIME);
-  let dateAdded = PlacesUtils.bookmarks.getItemDateAdded(bookmarkId);
-  do_check_eq(dateAdded, PAST_PRTIME);
+  do_check_eq(observer._itemChangedValue, PlacesUtils.toPRTime(PAST_DATE));
 
   // After just inserting, modified should be the same as dateAdded.
-  do_check_eq(PlacesUtils.bookmarks.getItemLastModified(bookmarkId), dateAdded);
+  do_check_date_eq(bookmark.lastModified, bookmark.dateAdded);
 
-  // Set lastModified in the past and verify the bookmarks cache.
-  PlacesUtils.bookmarks.setItemLastModified(bookmarkId, PAST_PRTIME);
+  let updatedBookmark = await PlacesUtils.bookmarks.fetch({
+    guid: bookmark.guid
+  });
+
+  do_check_date_eq(updatedBookmark.dateAdded, PAST_DATE);
+
+  // Set lastModified in the past and verify the changes.
+  updatedBookmark = await PlacesUtils.bookmarks.update({
+    guid: bookmark.guid,
+    lastModified: PAST_DATE
+  });
+
   do_check_eq(observer._itemChangedProperty, "lastModified");
-  do_check_eq(observer._itemChangedValue, PAST_PRTIME);
-  do_check_eq(PlacesUtils.bookmarks.getItemLastModified(bookmarkId),
-              PAST_PRTIME);
+  do_check_eq(observer._itemChangedValue, PlacesUtils.toPRTime(PAST_DATE));
+  do_check_date_eq(updatedBookmark.lastModified, PAST_DATE);
 
   // Set bookmark title
-  PlacesUtils.bookmarks.setItemTitle(bookmarkId, "Google");
+  updatedBookmark = await PlacesUtils.bookmarks.update({
+    guid: bookmark.guid,
+    title: "Google"
+  });
 
   // Test notifications.
-  do_check_eq(observer._itemChangedId, bookmarkId);
+  do_check_eq(observer._itemChangedId, await PlacesUtils.promiseItemId(bookmark.guid));
   do_check_eq(observer._itemChangedProperty, "title");
   do_check_eq(observer._itemChangedValue, "Google");
 
   // Check lastModified has been updated.
-  is_time_ordered(PAST_PRTIME,
-                  PlacesUtils.bookmarks.getItemLastModified(bookmarkId));
+  do_check_true(is_time_ordered(PAST_DATE,
+    updatedBookmark.lastModified.getTime()));
 
   // Check that node properties are updated.
-  let root = PlacesUtils.getFolderContents(testFolder).root;
+  let testFolderId = await PlacesUtils.promiseItemId(testFolder.guid);
+  let root = PlacesUtils.getFolderContents(testFolderId).root;
   do_check_eq(root.childCount, 1);
   let childNode = root.getChild(0);
 
   // confirm current dates match node properties
-  do_check_eq(PlacesUtils.bookmarks.getItemDateAdded(bookmarkId),
-              childNode.dateAdded);
-  do_check_eq(PlacesUtils.bookmarks.getItemLastModified(bookmarkId),
-              childNode.lastModified);
+  do_check_eq(PlacesUtils.toPRTime(updatedBookmark.dateAdded),
+   childNode.dateAdded);
+  do_check_eq(PlacesUtils.toPRTime(updatedBookmark.lastModified),
+   childNode.lastModified);
 
   // Test live update of lastModified when setting title.
-  PlacesUtils.bookmarks.setItemLastModified(bookmarkId, PAST_PRTIME);
-  PlacesUtils.bookmarks.setItemTitle(bookmarkId, "Google");
+  updatedBookmark = await PlacesUtils.bookmarks.update({
+    guid: bookmark.guid,
+    lastModified: PAST_DATE,
+    title: "Google"
+  });
 
   // Check lastModified has been updated.
-  is_time_ordered(PAST_PRTIME, childNode.lastModified);
+  do_check_true(is_time_ordered(PAST_DATE, childNode.lastModified));
   // Test that node value matches db value.
-  do_check_eq(PlacesUtils.bookmarks.getItemLastModified(bookmarkId),
-              childNode.lastModified);
+  do_check_eq(PlacesUtils.toPRTime(updatedBookmark.lastModified),
+   childNode.lastModified);
 
   // Test live update of the exposed date apis.
-  PlacesUtils.bookmarks.setItemDateAdded(bookmarkId, PAST_PRTIME);
-  do_check_eq(childNode.dateAdded, PAST_PRTIME);
-  PlacesUtils.bookmarks.setItemLastModified(bookmarkId, PAST_PRTIME);
-  do_check_eq(childNode.lastModified, PAST_PRTIME);
+  await PlacesUtils.bookmarks.update({guid: bookmark.guid, dateAdded: PAST_DATE});
+  do_check_eq(childNode.dateAdded, PlacesUtils.toPRTime(PAST_DATE));
+  await PlacesUtils.bookmarks.update({guid: bookmark.guid, lastModified: PAST_DATE})
+  do_check_eq(childNode.lastModified, PlacesUtils.toPRTime(PAST_DATE));
 
   root.containerOpen = false;
-}
+});

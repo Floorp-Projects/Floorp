@@ -3,9 +3,9 @@ OpenVR applications to the SteamVR runtime, taking into account the version
 of the OpenVR interface they were compiled against.
 
 The client binding library - openvr_api.dll on Windows, openvr_api.so on
-Linux, and openvr_api.dylib on macOS - knows how to find and read the
-SteamVR runtime installation information which allows it to find and
-dynamically connect to the installed runtime. In combination with the
+Linux, and openvr_api.dylib or OpenVR.framework on macOS - knows how to find
+and read the SteamVR runtime installation information which allows it to
+find and dynamically connect to the installed runtime. In combination with the
 interface version identifiers from /include/openvr.h which are baked
 into applications at the time they are built, the OpenVR API client
 binding library captures and conveys to the SteamVR runtime the version
@@ -32,4 +32,8 @@ for your platform. For example, to build on a POSIX system simply perform
 
   cd src; mkdir _build; cd _build; cmake ..; make
 
-and you will end up with the static library /src/_build/libopenvr_api.a
+and you will end up with the static library /src/bin/<arch>/libopenvr_api.a
+
+To build a shared library, pass -DBUILD_SHARED=1 to cmake.
+To build as a framework on apple platforms, pass -DBUILD_FRAMEWORK=1 to cmake.
+To see a complete list of configurable build options, use `cmake -LAH`

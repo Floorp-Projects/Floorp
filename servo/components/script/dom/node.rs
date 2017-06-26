@@ -33,7 +33,7 @@ use dom::cssstylesheet::CSSStyleSheet;
 use dom::document::{Document, DocumentSource, HasBrowsingContext, IsHTMLDocument};
 use dom::documentfragment::DocumentFragment;
 use dom::documenttype::DocumentType;
-use dom::element::{Element, ElementCreator};
+use dom::element::{CustomElementCreationMode, Element, ElementCreator};
 use dom::eventtarget::EventTarget;
 use dom::globalscope::GlobalScope;
 use dom::htmlbodyelement::HTMLBodyElement;
@@ -428,6 +428,11 @@ impl Node {
         self.preceding_siblings().count() as u32
     }
 
+    /// Returns true if this node has a parent.
+    pub fn has_parent(&self) -> bool {
+        self.parent_node.get().is_some()
+    }
+
     pub fn children_count(&self) -> u32 {
         self.children_count.get()
     }
@@ -499,15 +504,17 @@ impl Node {
         TreeIterator::new(self)
     }
 
-    pub fn inclusively_following_siblings(&self) -> NodeSiblingIterator {
-        NodeSiblingIterator {
+    pub fn inclusively_following_siblings(&self) -> impl Iterator<Item=Root<Node>> {
+        SimpleNodeIterator {
             current: Some(Root::from_ref(self)),
+            next_node: |n| n.GetNextSibling(),
         }
     }
 
-    pub fn inclusively_preceding_siblings(&self) -> ReverseSiblingIterator {
-        ReverseSiblingIterator {
+    pub fn inclusively_preceding_siblings(&self) -> impl Iterator<Item=Root<Node>> {
+        SimpleNodeIterator {
             current: Some(Root::from_ref(self)),
+            next_node: |n| n.GetPreviousSibling(),
         }
     }
 
@@ -519,15 +526,17 @@ impl Node {
         parent.ancestors().any(|ancestor| &*ancestor == self)
     }
 
-    pub fn following_siblings(&self) -> NodeSiblingIterator {
-        NodeSiblingIterator {
+    pub fn following_siblings(&self) -> impl Iterator<Item=Root<Node>> {
+        SimpleNodeIterator {
             current: self.GetNextSibling(),
+            next_node: |n| n.GetNextSibling(),
         }
     }
 
-    pub fn preceding_siblings(&self) -> ReverseSiblingIterator {
-        ReverseSiblingIterator {
+    pub fn preceding_siblings(&self) -> impl Iterator<Item=Root<Node>> {
+        SimpleNodeIterator {
             current: self.GetPreviousSibling(),
+            next_node: |n| n.GetPreviousSibling(),
         }
     }
 
@@ -545,9 +554,10 @@ impl Node {
         }
     }
 
-    pub fn descending_last_children(&self) -> LastChildIterator {
-        LastChildIterator {
+    pub fn descending_last_children(&self) -> impl Iterator<Item=Root<Node>> {
+        SimpleNodeIterator {
             current: self.GetLastChild(),
+            next_node: |n| n.GetLastChild(),
         }
     }
 
@@ -755,15 +765,17 @@ impl Node {
         Ok(NodeList::new_simple_list(&window, iter))
     }
 
-    pub fn ancestors(&self) -> AncestorIterator {
-        AncestorIterator {
-            current: self.GetParentNode()
+    pub fn ancestors(&self) -> impl Iterator<Item=Root<Node>> {
+        SimpleNodeIterator {
+            current: self.GetParentNode(),
+            next_node: |n| n.GetParentNode(),
         }
     }
 
-    pub fn inclusive_ancestors(&self) -> AncestorIterator {
-        AncestorIterator {
-            current: Some(Root::from_ref(self))
+    pub fn inclusive_ancestors(&self) -> impl Iterator<Item=Root<Node>> {
+        SimpleNodeIterator {
+            current: Some(Root::from_ref(self)),
+            next_node: |n| n.GetParentNode(),
         }
     }
 
@@ -783,15 +795,17 @@ impl Node {
         self.is_in_doc() && self.owner_doc().browsing_context().is_some()
     }
 
-    pub fn children(&self) -> NodeSiblingIterator {
-        NodeSiblingIterator {
+    pub fn children(&self) -> impl Iterator<Item=Root<Node>> {
+        SimpleNodeIterator {
             current: self.GetFirstChild(),
+            next_node: |n| n.GetNextSibling(),
         }
     }
 
-    pub fn rev_children(&self) -> ReverseSiblingIterator {
-        ReverseSiblingIterator {
+    pub fn rev_children(&self) -> impl Iterator<Item=Root<Node>> {
+        SimpleNodeIterator {
             current: self.GetLastChild(),
+            next_node: |n| n.GetPreviousSibling(),
         }
     }
 
@@ -1157,40 +1171,6 @@ impl LayoutNodeHelpers for LayoutJS<Node> {
 // Iteration and traversal
 //
 
-pub struct NodeSiblingIterator {
-    current: Option<Root<Node>>,
-}
-
-impl Iterator for NodeSiblingIterator {
-    type Item = Root<Node>;
-
-    fn next(&mut self) -> Option<Root<Node>> {
-        let current = match self.current.take() {
-            None => return None,
-            Some(current) => current,
-        };
-        self.current = current.GetNextSibling();
-        Some(current)
-    }
-}
-
-pub struct ReverseSiblingIterator {
-    current: Option<Root<Node>>,
-}
-
-impl Iterator for ReverseSiblingIterator {
-    type Item = Root<Node>;
-
-    fn next(&mut self) -> Option<Root<Node>> {
-        let current = match self.current.take() {
-            None => return None,
-            Some(current) => current,
-        };
-        self.current = current.GetPreviousSibling();
-        Some(current)
-    }
-}
-
 pub struct FollowingNodeIterator {
     current: Option<Root<Node>>,
     root: Root<Node>,
@@ -1283,37 +1263,22 @@ impl Iterator for PrecedingNodeIterator {
     }
 }
 
-pub struct LastChildIterator {
+struct SimpleNodeIterator<I>
+    where I: Fn(&Node) -> Option<Root<Node>>
+{
     current: Option<Root<Node>>,
+    next_node: I,
 }
 
-impl Iterator for LastChildIterator {
+impl<I> Iterator for SimpleNodeIterator<I>
+    where I: Fn(&Node) -> Option<Root<Node>>
+{
     type Item = Root<Node>;
 
-    fn next(&mut self) -> Option<Root<Node>> {
-        let current = match self.current.take() {
-            None => return None,
-            Some(current) => current,
-        };
-        self.current = current.GetLastChild();
-        Some(current)
-    }
-}
-
-pub struct AncestorIterator {
-    current: Option<Root<Node>>,
-}
-
-impl Iterator for AncestorIterator {
-    type Item = Root<Node>;
-
-    fn next(&mut self) -> Option<Root<Node>> {
-        let current = match self.current.take() {
-            None => return None,
-            Some(current) => current,
-        };
-        self.current = current.GetParentNode();
-        Some(current)
+    fn next(&mut self) -> Option<Self::Item> {
+        let current = self.current.take();
+        self.current = current.as_ref().and_then(|c| (self.next_node)(c));
+        current
     }
 }
 
@@ -1818,12 +1783,15 @@ impl Node {
             NodeTypeId::Element(..) => {
                 let element = node.downcast::<Element>().unwrap();
                 let name = QualName {
-                    prefix: element.prefix().map(|p| Prefix::from(&**p)),
+                    prefix: element.prefix().as_ref().map(|p| Prefix::from(&**p)),
                     ns: element.namespace().clone(),
                     local: element.local_name().clone()
                 };
                 let element = Element::create(name,
-                    &document, ElementCreator::ScriptCreated);
+                                              element.get_is(),
+                                              &document,
+                                              ElementCreator::ScriptCreated,
+                                              CustomElementCreationMode::Asynchronous);
                 Root::upcast::<Node>(element)
             },
         };
@@ -2284,7 +2252,7 @@ impl NodeMethods for Node {
             let element = node.downcast::<Element>().unwrap();
             let other_element = other.downcast::<Element>().unwrap();
             (*element.namespace() == *other_element.namespace()) &&
-            (element.prefix() == other_element.prefix()) &&
+            (*element.prefix() == *other_element.prefix()) &&
             (*element.local_name() == *other_element.local_name()) &&
             (element.attrs().len() == other_element.attrs().len())
         }

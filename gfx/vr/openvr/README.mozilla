@@ -1,4 +1,4 @@
-This directory contains files from the OpenVR SDK, version 1.0.6.
+This directory contains files from the OpenVR SDK, version 1.0.8.
 
 This SDK contains the OpenVR API interface headers and functions to load the
 OpenVR runtime libraries which actually implement the functionality. The

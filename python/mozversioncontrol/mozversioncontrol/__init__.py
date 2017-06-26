@@ -26,8 +26,8 @@ def get_tool_path(tool):
         except which.WhichError as e:
             print(e)
 
-    raise Exception('Unable to obtain %s path. Try running ' +
-                    '|mach bootstrap| to ensure your environment is up to ' +
+    raise Exception('Unable to obtain %s path. Try running '
+                    '|mach bootstrap| to ensure your environment is up to '
                     'date.' % tool)
 
 class Repository(object):

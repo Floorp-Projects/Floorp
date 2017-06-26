@@ -27,17 +27,7 @@ struct ID3D12CommandQueue;
 
 namespace vr
 {
-
-#if defined(__linux__) || defined(__APPLE__) 
-	// The 32-bit version of gcc has the alignment requirement for uint64 and double set to
-	// 4 meaning that even with #pragma pack(8) these types will only be four-byte aligned.
-	// The 64-bit version of gcc has the alignment requirement for these types set to
-	// 8 meaning that unless we use #pragma pack(4) our structures will get bigger.
-	// The 64-bit structure packing has to match the 32-bit structure packing for each platform.
-	#pragma pack( push, 4 )
-#else
-	#pragma pack( push, 8 )
-#endif
+#pragma pack( push, 8 )
 
 typedef void* glSharedTextureHandle_t;
 typedef int32_t glInt_t;
@@ -120,7 +110,7 @@ enum ETextureType
 	TextureType_DirectX = 0, // Handle is an ID3D11Texture
 	TextureType_OpenGL = 1,  // Handle is an OpenGL texture name or an OpenGL render buffer name, depending on submit flags
 	TextureType_Vulkan = 2, // Handle is a pointer to a VRVulkanTextureData_t structure
-	TextureType_IOSurface = 3, // Handle is a macOS cross-process-sharable IOSurface
+	TextureType_IOSurface = 3, // Handle is a macOS cross-process-sharable IOSurfaceRef
 	TextureType_DirectX12 = 4, // Handle is a pointer to a D3D12TextureData_t structure
 };
 
@@ -153,6 +143,9 @@ enum ETrackingResult
 	TrackingResult_Running_OutOfRange		= 201,
 };
 
+typedef uint32_t DriverId_t;
+static const uint32_t k_nDriverNone = 0xFFFFFFFF;
+
 static const uint32_t k_unMaxDriverDebugResponseSize = 32768;
 
 /** Used to pass device IDs to API calls */
@@ -170,6 +163,7 @@ enum ETrackedDeviceClass
 	TrackedDeviceClass_Controller = 2,			// Tracked controllers
 	TrackedDeviceClass_GenericTracker = 3,		// Generic trackers, similar to controllers
 	TrackedDeviceClass_TrackingReference = 4,	// Camera and base stations that serve as tracking reference points
+	TrackedDeviceClass_DisplayRedirect = 5,		// Accessories that aren't necessarily tracked themselves, but may redirect video output from other tracked devices
 };
 
 
@@ -272,7 +266,7 @@ enum ETrackedDeviceProperty
 	Prop_Firmware_ForceUpdateRequired_Bool      = 1032,
 	Prop_ViveSystemButtonFixRequired_Bool		= 1033,
 	Prop_ParentDriver_Uint64					= 1034,
-
+	Prop_ResourceRoot_String					= 1035,
 
 	// Properties that are unique to TrackedDeviceClass_HMD
 	Prop_ReportsTimeSinceVSync_Bool				= 2000,
@@ -317,7 +311,10 @@ enum ETrackedDeviceProperty
 	Prop_DisplayMCImageHeight_Int32				= 2039,
 	Prop_DisplayMCImageNumChannels_Int32		= 2040,
 	Prop_DisplayMCImageData_Binary				= 2041,
-	Prop_UsesDriverDirectMode_Bool				= 2042,
+	Prop_SecondsFromPhotonsToVblank_Float		= 2042,
+	Prop_DriverDirectModeSendsVsyncEvents_Bool	= 2043,
+	Prop_DisplayDebugMode_Bool					= 2044,
+	Prop_GraphicsAdapterLuid_Uint64				= 2045,
 
 	// Properties that are unique to TrackedDeviceClass_Controller
 	Prop_AttachedDeviceId_String				= 3000,
@@ -339,15 +336,15 @@ enum ETrackedDeviceProperty
 	Prop_ModeLabel_String						= 4006,
 
 	// Properties that are used for user interface like icons names
-	Prop_IconPathName_String						= 5000, // usually a directory named "icons"
-	Prop_NamedIconPathDeviceOff_String				= 5001, // PNG for static icon, or GIF for animation, 50x32 for headsets and 32x32 for others
-	Prop_NamedIconPathDeviceSearching_String		= 5002, // PNG for static icon, or GIF for animation, 50x32 for headsets and 32x32 for others
-	Prop_NamedIconPathDeviceSearchingAlert_String	= 5003, // PNG for static icon, or GIF for animation, 50x32 for headsets and 32x32 for others
-	Prop_NamedIconPathDeviceReady_String			= 5004, // PNG for static icon, or GIF for animation, 50x32 for headsets and 32x32 for others
-	Prop_NamedIconPathDeviceReadyAlert_String		= 5005, // PNG for static icon, or GIF for animation, 50x32 for headsets and 32x32 for others
-	Prop_NamedIconPathDeviceNotReady_String			= 5006, // PNG for static icon, or GIF for animation, 50x32 for headsets and 32x32 for others
-	Prop_NamedIconPathDeviceStandby_String			= 5007, // PNG for static icon, or GIF for animation, 50x32 for headsets and 32x32 for others
-	Prop_NamedIconPathDeviceAlertLow_String			= 5008, // PNG for static icon, or GIF for animation, 50x32 for headsets and 32x32 for others
+	Prop_IconPathName_String						= 5000, // DEPRECATED. Value not referenced. Now expected to be part of icon path properties.
+	Prop_NamedIconPathDeviceOff_String				= 5001, // {driver}/icons/icon_filename - PNG for static icon, or GIF for animation, 50x32 for headsets and 32x32 for others
+	Prop_NamedIconPathDeviceSearching_String		= 5002, // {driver}/icons/icon_filename - PNG for static icon, or GIF for animation, 50x32 for headsets and 32x32 for others
+	Prop_NamedIconPathDeviceSearchingAlert_String	= 5003, // {driver}/icons/icon_filename - PNG for static icon, or GIF for animation, 50x32 for headsets and 32x32 for others
+	Prop_NamedIconPathDeviceReady_String			= 5004, // {driver}/icons/icon_filename - PNG for static icon, or GIF for animation, 50x32 for headsets and 32x32 for others
+	Prop_NamedIconPathDeviceReadyAlert_String		= 5005, // {driver}/icons/icon_filename - PNG for static icon, or GIF for animation, 50x32 for headsets and 32x32 for others
+	Prop_NamedIconPathDeviceNotReady_String			= 5006, // {driver}/icons/icon_filename - PNG for static icon, or GIF for animation, 50x32 for headsets and 32x32 for others
+	Prop_NamedIconPathDeviceStandby_String			= 5007, // {driver}/icons/icon_filename - PNG for static icon, or GIF for animation, 50x32 for headsets and 32x32 for others
+	Prop_NamedIconPathDeviceAlertLow_String			= 5008, // {driver}/icons/icon_filename - PNG for static icon, or GIF for animation, 50x32 for headsets and 32x32 for others
 
 	// Properties that are used by helpers, but are opaque to applications
 	Prop_DisplayHiddenArea_Binary_Start				= 5100,
@@ -356,6 +353,11 @@ enum ETrackedDeviceProperty
 	// Properties that are unique to drivers
 	Prop_UserConfigPath_String					= 6000,
 	Prop_InstallPath_String						= 6001,
+	Prop_HasDisplayComponent_Bool				= 6002,
+	Prop_HasControllerComponent_Bool			= 6003,
+	Prop_HasCameraComponent_Bool				= 6004,
+	Prop_HasDriverDirectModeComponent_Bool		= 6005,
+	Prop_HasVirtualDisplayComponent_Bool		= 6006,
 
 	// Vendors are free to expose private debug data in this reserved region
 	Prop_VendorSpecific_Reserved_Start			= 10000,
@@ -543,6 +545,7 @@ enum EVREventType
 	VREvent_ModelSkinSettingsHaveChanged	= 853,
 	VREvent_EnvironmentSettingsHaveChanged	= 854,
 	VREvent_PowerSettingsHaveChanged		= 855,
+	VREvent_EnableHomeAppSettingsHaveChanged = 856,
 
 	VREvent_StatusUpdate					= 900,
 
@@ -561,6 +564,8 @@ enum EVREventType
 	VREvent_ApplicationListUpdated				= 1303,
 	VREvent_ApplicationMimeTypeLoad				= 1304,
 	VREvent_ApplicationTransitionNewAppLaunchComplete = 1305,
+	VREvent_ProcessConnected					= 1306,
+	VREvent_ProcessDisconnected					= 1307,
 
 	VREvent_Compositor_MirrorWindowShown		= 1400,
 	VREvent_Compositor_MirrorWindowHidden		= 1401,
@@ -586,13 +591,17 @@ enum EVREventType
 
 
 /** Level of Hmd activity */
+// UserInteraction_Timeout means the device is in the process of timing out.
+// InUse = ( k_EDeviceActivityLevel_UserInteraction || k_EDeviceActivityLevel_UserInteraction_Timeout )
+// VREvent_TrackedDeviceUserInteractionStarted fires when the devices transitions from Standby -> UserInteraction or Idle -> UserInteraction.
+// VREvent_TrackedDeviceUserInteractionEnded fires when the devices transitions from UserInteraction_Timeout -> Idle
 enum EDeviceActivityLevel
-{
-	k_EDeviceActivityLevel_Unknown = -1,
-	k_EDeviceActivityLevel_Idle = 0,
-	k_EDeviceActivityLevel_UserInteraction = 1,
-	k_EDeviceActivityLevel_UserInteraction_Timeout = 2,
-	k_EDeviceActivityLevel_Standby = 3,
+{	
+	k_EDeviceActivityLevel_Unknown = -1,									
+	k_EDeviceActivityLevel_Idle = 0,						// No activity for the last 10 seconds
+	k_EDeviceActivityLevel_UserInteraction = 1,				// Activity (movement or prox sensor) is happening now	
+	k_EDeviceActivityLevel_UserInteraction_Timeout = 2,		// No activity for the last 0.5 seconds
+	k_EDeviceActivityLevel_Standby = 3,						// Idle for at least 5 seconds (configurable in Settings -> Power Management)
 };
 
 
@@ -800,6 +809,13 @@ typedef union
 	VREvent_Property_t property;
 } VREvent_Data_t;
 
+
+#if defined(__linux__) || defined(__APPLE__) 
+// This structure was originally defined mis-packed on Linux, preserved for 
+// compatibility. 
+#pragma pack( push, 4 )
+#endif
+
 /** An event posted by the server to all running applications */
 struct VREvent_t
 {
@@ -810,6 +826,9 @@ struct VREvent_t
 	VREvent_Data_t data;
 };
 
+#if defined(__linux__) || defined(__APPLE__) 
+#pragma pack( pop )
+#endif
 
 /** The mesh to draw into the stencil (or depth) buffer to perform 
 * early stencil (or depth) kills of pixels that will never appear on the HMD.
@@ -858,6 +877,12 @@ struct VRControllerAxis_t
 static const uint32_t k_unControllerStateAxisCount = 5;
 
 
+#if defined(__linux__) || defined(__APPLE__) 
+// This structure was originally defined mis-packed on Linux, preserved for 
+// compatibility. 
+#pragma pack( push, 4 )
+#endif
+
 /** Holds all the state of a controller at one moment in time. */
 struct VRControllerState001_t
 {
@@ -872,6 +897,9 @@ struct VRControllerState001_t
 	// Axis data for the controller's analog inputs
 	VRControllerAxis_t rAxis[ k_unControllerStateAxisCount ];
 };
+#if defined(__linux__) || defined(__APPLE__) 
+#pragma pack( pop )
+#endif
 
 
 typedef VRControllerState001_t VRControllerState_t;
@@ -954,6 +982,7 @@ enum EVRApplicationType
 									// interfaces (like IVRSettings and IVRApplications) but not hardware.
 	VRApplication_VRMonitor = 5,	// Reserved for vrmonitor
 	VRApplication_SteamWatchdog = 6,// Reserved for Steam
+	VRApplication_Bootstrapper = 7, // Start up SteamVR
 
 	VRApplication_Max
 };
@@ -1022,6 +1051,8 @@ enum EVRInitError
 	VRInitError_Init_WatchdogDisabledInSettings = 132,
 	VRInitError_Init_VRDashboardNotFound		= 133,
 	VRInitError_Init_VRDashboardStartupFailed	= 134,
+	VRInitError_Init_VRHomeNotFound				= 135,
+	VRInitError_Init_VRHomeStartupFailed		= 136,
 
 	VRInitError_Driver_Failed				= 200,
 	VRInitError_Driver_Unknown				= 201,
@@ -1052,6 +1083,7 @@ enum EVRInitError
 	VRInitError_Compositor_FirmwareRequiresUpdate	= 402,
 	VRInitError_Compositor_OverlayInitFailed		= 403,
 	VRInitError_Compositor_ScreenshotsInitFailed	= 404,
+	VRInitError_Compositor_UnableToCreateDevice		= 405,
 
 	VRInitError_VendorSpecific_UnableToConnectToOculusRuntime = 1000,
 
@@ -1249,6 +1281,22 @@ public:
 	* and swap chain in DX10 and DX11. If an error occurs the index will be set to -1.
 	*/
 	virtual void GetDXGIOutputInfo( int32_t *pnAdapterIndex ) = 0;
+	
+	/**
+	 * Returns platform- and texture-type specific adapter identification so that applications and the
+	 * compositor are creating textures and swap chains on the same GPU. If an error occurs the device
+	 * will be set to 0.
+	 * [D3D10/11/12 Only (D3D9 Not Supported)]
+	 *  Returns the adapter LUID that identifies the GPU attached to the HMD. The user should
+	 *  enumerate all adapters using IDXGIFactory::EnumAdapters and IDXGIAdapter::GetDesc to find
+	 *  the adapter with the matching LUID, or use IDXGIFactory4::EnumAdapterByLuid.
+	 *  The discovered IDXGIAdapter should be used to create the device and swap chain.
+	 * [Vulkan Only]
+	 *  Returns the vk::PhysicalDevice that should be used by the application.
+	 * [macOS Only]
+	 *  Returns an id<MTLDevice> that should be used by the application.
+	 */
+	virtual void GetOutputDevice( uint64_t *pnDevice, ETextureType textureType ) = 0;
 
 	// ------------------------------------
 	// Display Mode methods
@@ -1466,7 +1514,7 @@ public:
 
 };
 
-static const char * const IVRSystem_Version = "IVRSystem_015";
+static const char * const IVRSystem_Version = "IVRSystem_016";
 
 }
 
@@ -1734,7 +1782,6 @@ namespace vr
 	static const char * const k_pch_SteamVR_ForcedHmdKey_String = "forcedHmd";
 	static const char * const k_pch_SteamVR_DisplayDebug_Bool = "displayDebug";
 	static const char * const k_pch_SteamVR_DebugProcessPipe_String = "debugProcessPipe";
-	static const char * const k_pch_SteamVR_EnableDistortion_Bool = "enableDistortion";
 	static const char * const k_pch_SteamVR_DisplayDebugX_Int32 = "displayDebugX";
 	static const char * const k_pch_SteamVR_DisplayDebugY_Int32 = "displayDebugY";
 	static const char * const k_pch_SteamVR_SendSystemButtonToAllApps_Bool= "sendSystemButtonToAllApps";
@@ -1755,7 +1802,7 @@ namespace vr
 	static const char * const k_pch_SteamVR_SpeakersForwardYawOffsetDegrees_Float = "speakersForwardYawOffsetDegrees";
 	static const char * const k_pch_SteamVR_BaseStationPowerManagement_Bool = "basestationPowerManagement";
 	static const char * const k_pch_SteamVR_NeverKillProcesses_Bool = "neverKillProcesses";
-	static const char * const k_pch_SteamVR_RenderTargetMultiplier_Float = "renderTargetMultiplier";
+	static const char * const k_pch_SteamVR_SupersampleScale_Float = "supersampleScale";
 	static const char * const k_pch_SteamVR_AllowAsyncReprojection_Bool = "allowAsyncReprojection";
 	static const char * const k_pch_SteamVR_AllowReprojection_Bool = "allowInterleavedReprojection";
 	static const char * const k_pch_SteamVR_ForceReprojection_Bool = "forceReprojection";
@@ -1768,10 +1815,10 @@ namespace vr
 	static const char * const k_pch_SteamVR_StartDashboardFromAppLaunch_Bool = "startDashboardFromAppLaunch";
 	static const char * const k_pch_SteamVR_StartOverlayAppsFromDashboard_Bool = "startOverlayAppsFromDashboard";
 	static const char * const k_pch_SteamVR_EnableHomeApp = "enableHomeApp";
-	static const char * const k_pch_SteamVR_SetInitialDefaultHomeApp = "setInitialDefaultHomeApp";
 	static const char * const k_pch_SteamVR_CycleBackgroundImageTimeSec_Int32 = "CycleBackgroundImageTimeSec";
 	static const char * const k_pch_SteamVR_RetailDemo_Bool = "retailDemo";
 	static const char * const k_pch_SteamVR_IpdOffset_Float = "ipdOffset";
+	static const char * const k_pch_SteamVR_AllowSupersampleFiltering_Bool = "allowSupersampleFiltering";
 
 	//-----------------------------------------------------------------------------
 	// lighthouse keys
@@ -1829,6 +1876,7 @@ namespace vr
 	static const char * const k_pch_Perf_AllowTimingStore_Bool = "allowTimingStore";
 	static const char * const k_pch_Perf_SaveTimingsOnExit_Bool = "saveTimingsOnExit";
 	static const char * const k_pch_Perf_TestData_Float = "perfTestData";
+	static const char * const k_pch_Perf_LinuxGPUProfiling_Bool = "linuxGPUProfiling";
 
 	//-----------------------------------------------------------------------------
 	// collision bounds keys
@@ -1895,16 +1943,7 @@ namespace vr
 namespace vr
 {
 
-#if defined(__linux__) || defined(__APPLE__) 
-	// The 32-bit version of gcc has the alignment requirement for uint64 and double set to
-	// 4 meaning that even with #pragma pack(8) these types will only be four-byte aligned.
-	// The 64-bit version of gcc has the alignment requirement for these types set to
-	// 8 meaning that unless we use #pragma pack(4) our structures will get bigger.
-	// The 64-bit structure packing has to match the 32-bit structure packing for each platform.
-	#pragma pack( push, 4 )
-#else
-	#pragma pack( push, 8 )
-#endif
+#pragma pack( push, 8 )
 
 enum ChaperoneCalibrationState
 {
@@ -2065,16 +2104,7 @@ static const char * const IVRChaperoneSetup_Version = "IVRChaperoneSetup_005";
 namespace vr
 {
 
-#if defined(__linux__) || defined(__APPLE__) 
-	// The 32-bit version of gcc has the alignment requirement for uint64 and double set to
-	// 4 meaning that even with #pragma pack(8) these types will only be four-byte aligned.
-	// The 64-bit version of gcc has the alignment requirement for these types set to
-	// 8 meaning that unless we use #pragma pack(4) our structures will get bigger.
-	// The 64-bit structure packing has to match the 32-bit structure packing for each platform.
-	#pragma pack( push, 4 )
-#else
-	#pragma pack( push, 8 )
-#endif
+#pragma pack( push, 8 )
 
 /** Errors that can occur with the VR compositor */
 enum EVRCompositorError
@@ -2090,6 +2120,7 @@ enum EVRCompositorError
 	VRCompositorError_SharedTexturesNotSupported = 106,
 	VRCompositorError_IndexOutOfRange			= 107,
 	VRCompositorError_AlreadySubmitted			= 108,
+	VRCompositorError_InvalidBounds				= 109,
 };
 
 const uint32_t VRCompositor_ReprojectionReason_Cpu = 0x01;
@@ -2350,16 +2381,7 @@ static const char * const IVRCompositor_Version = "IVRCompositor_020";
 namespace vr
 {
 
-#if defined(__linux__) || defined(__APPLE__) 
-	// The 32-bit version of gcc has the alignment requirement for uint64 and double set to
-	// 4 meaning that even with #pragma pack(8) these types will only be four-byte aligned.
-	// The 64-bit version of gcc has the alignment requirement for these types set to
-	// 8 meaning that unless we use #pragma pack(4) our structures will get bigger.
-	// The 64-bit structure packing has to match the 32-bit structure packing for each platform.
-	#pragma pack( push, 4 )
-#else
-	#pragma pack( push, 8 )
-#endif
+#pragma pack( push, 8 )
 
 // Used for passing graphic data
 struct NotificationBitmap_t
@@ -2619,7 +2641,7 @@ namespace vr
 		virtual EVROverlayError FindOverlay( const char *pchOverlayKey, VROverlayHandle_t * pOverlayHandle ) = 0;
 
 		/** Creates a new named overlay. All overlays start hidden and with default settings. */
-		virtual EVROverlayError CreateOverlay( const char *pchOverlayKey, const char *pchOverlayFriendlyName, VROverlayHandle_t * pOverlayHandle ) = 0;
+		virtual EVROverlayError CreateOverlay( const char *pchOverlayKey, const char *pchOverlayName, VROverlayHandle_t * pOverlayHandle ) = 0;
 
 		/** Destroys the specified overlay. When an application calls VR_Shutdown all overlays created by that app are
 		* automatically destroyed. */
@@ -2644,6 +2666,9 @@ namespace vr
 		* the terminating null character. k_unVROverlayMaxNameLength will be enough bytes to fit the string. */
 		virtual uint32_t GetOverlayName( VROverlayHandle_t ulOverlayHandle, VR_OUT_STRING() char *pchValue, uint32_t unBufferSize, EVROverlayError *pError = 0L ) = 0;
 
+		/** set the name to use for this overlay */
+		virtual EVROverlayError SetOverlayName( VROverlayHandle_t ulOverlayHandle, const char *pchName ) = 0;
+
 		/** Gets the raw image data from an overlay. Overlay image data is always returned as RGBA data, 4 bytes per pixel. If the buffer is not large enough, width and height 
 		* will be set and VROverlayError_ArrayTooSmall is returned. */
 		virtual EVROverlayError GetOverlayImageData( VROverlayHandle_t ulOverlayHandle, void *pvBuffer, uint32_t unBufferSize, uint32_t *punWidth, uint32_t *punHeight ) = 0;
@@ -2651,7 +2676,6 @@ namespace vr
 		/** returns a string that corresponds with the specified overlay error. The string will be the name 
 		* of the error enum value for all valid error codes */
 		virtual const char *GetOverlayErrorNameFromEnum( EVROverlayError error ) = 0;
-
 
 		// ---------------------------------------------
 		// Overlay rendering methods
@@ -2729,6 +2753,13 @@ namespace vr
 		/** Gets the part of the texture to use for the overlay. UV Min is the upper left corner and UV Max is the lower right corner. */
 		virtual EVROverlayError GetOverlayTextureBounds( VROverlayHandle_t ulOverlayHandle, VRTextureBounds_t *pOverlayTextureBounds ) = 0;
 
+		/** Gets render model to draw behind this overlay */
+		virtual uint32_t GetOverlayRenderModel( vr::VROverlayHandle_t ulOverlayHandle, char *pchValue, uint32_t unBufferSize, HmdColor_t *pColor, vr::EVROverlayError *pError ) = 0;
+
+		/** Sets render model to draw behind this overlay and the vertex color to use, pass null for pColor to match the overlays vertex color. 
+			The model is scaled by the same amount as the overlay, with a default of 1m. */
+		virtual vr::EVROverlayError SetOverlayRenderModel( vr::VROverlayHandle_t ulOverlayHandle, const char *pchRenderModel, const HmdColor_t *pColor ) = 0;
+
 		/** Returns the transform type of this overlay. */
 		virtual EVROverlayError GetOverlayTransformType( VROverlayHandle_t ulOverlayHandle, VROverlayTransformType *peTransformType ) = 0;
 
@@ -2750,6 +2781,12 @@ namespace vr
 
 		/** Gets the transform information when the overlay is rendering on a component. */
 		virtual EVROverlayError GetOverlayTransformTrackedDeviceComponent( VROverlayHandle_t ulOverlayHandle, TrackedDeviceIndex_t *punDeviceIndex, char *pchComponentName, uint32_t unComponentNameSize ) = 0;
+
+		/** Gets the transform if it is relative to another overlay. Returns an error if the transform is some other type. */
+		virtual vr::EVROverlayError GetOverlayTransformOverlayRelative( VROverlayHandle_t ulOverlayHandle, VROverlayHandle_t *ulOverlayHandleParent, HmdMatrix34_t *pmatParentOverlayToOverlayTransform ) = 0;
+		
+		/** Sets the transform to relative to the transform of the specified overlay. This overlays visibility will also track the parents visibility */
+		virtual vr::EVROverlayError SetOverlayTransformOverlayRelative( VROverlayHandle_t ulOverlayHandle, VROverlayHandle_t ulOverlayHandleParent, const HmdMatrix34_t *pmatParentOverlayToOverlayTransform ) = 0;
 
 		/** Shows the VR overlay.  For dashboard overlays, only the Dashboard Manager is allowed to call this. */
 		virtual EVROverlayError ShowOverlay( VROverlayHandle_t ulOverlayHandle ) = 0;
@@ -2921,7 +2958,7 @@ namespace vr
 		virtual VRMessageOverlayResponse ShowMessageOverlay( const char* pchText, const char* pchCaption, const char* pchButton0Text, const char* pchButton1Text = nullptr, const char* pchButton2Text = nullptr, const char* pchButton3Text = nullptr ) = 0;
 	};
 
-	static const char * const IVROverlay_Version = "IVROverlay_014";
+	static const char * const IVROverlay_Version = "IVROverlay_016";
 
 } // namespace vr
 
@@ -2935,16 +2972,7 @@ static const char * const k_pch_Controller_Component_Tip = "tip";           // F
 static const char * const k_pch_Controller_Component_HandGrip = "handgrip"; // Neutral, ambidextrous hand-pose when holding controller. On plane between neutrally posed index finger and thumb
 static const char * const k_pch_Controller_Component_Status = "status";		// 1:1 aspect ratio status area, with canonical [0,1] uv mapping
 
-#if defined(__linux__) || defined(__APPLE__) 
-// The 32-bit version of gcc has the alignment requirement for uint64 and double set to
-// 4 meaning that even with #pragma pack(8) these types will only be four-byte aligned.
-// The 64-bit version of gcc has the alignment requirement for these types set to
-// 8 meaning that unless we use #pragma pack(4) our structures will get bigger.
-// The 64-bit structure packing has to match the 32-bit structure packing for each platform.
-#pragma pack( push, 4 )
-#else
 #pragma pack( push, 8 )
-#endif
 
 /** Errors that can occur with the VR compositor */
 enum EVRRenderModelError
@@ -2993,11 +3021,20 @@ struct RenderModel_Vertex_t
 };
 
 /** A texture map for use on a render model */
+#if defined(__linux__) || defined(__APPLE__) 
+// This structure was originally defined mis-packed on Linux, preserved for 
+// compatibility. 
+#pragma pack( push, 4 )
+#endif
+
 struct RenderModel_TextureMap_t
 {
 	uint16_t unWidth, unHeight; // width and height of the texture map in pixels
 	const uint8_t *rubTextureMapData;	// Map texture data. All textures are RGBA with 8 bits per channel per pixel. Data size is width * height * 4ub
 };
+#if defined(__linux__) || defined(__APPLE__) 
+#pragma pack( pop )
+#endif
 
 /**  Session unique texture identifier. Rendermodels which share the same texture will have the same id.
 IDs <0 denote the texture is not present */
@@ -3005,6 +3042,12 @@ IDs <0 denote the texture is not present */
 typedef int32_t TextureID_t;
 
 const TextureID_t INVALID_TEXTURE_ID = -1;
+
+#if defined(__linux__) || defined(__APPLE__) 
+// This structure was originally defined mis-packed on Linux, preserved for 
+// compatibility. 
+#pragma pack( push, 4 )
+#endif
 
 struct RenderModel_t
 {
@@ -3014,6 +3057,10 @@ struct RenderModel_t
 	uint32_t unTriangleCount;					// Number of triangles in the mesh. Index count is 3 * TriangleCount
 	TextureID_t diffuseTextureId;				// Session unique texture identifier. Rendermodels which share the same texture will have the same id. <0 == texture not present
 };
+#if defined(__linux__) || defined(__APPLE__) 
+#pragma pack( pop )
+#endif
+
 
 struct RenderModel_ControllerMode_State_t
 {
@@ -3250,7 +3297,7 @@ public:
 	 *  once SubmitScreenshot() is called.
 	 *  If Steam is not running, the paths will be in the user's
 	 *  documents folder under Documents\SteamVR\Screenshots.
-	 *  Other VR applications can call this to initate a
+	 *  Other VR applications can call this to initiate a
 	 *  screenshot outside of user control.
 	 *  The destination file names do not need an extension,
 	 *  will be replaced with the correct one for the format
@@ -3288,7 +3335,7 @@ public:
 	 *  submitted scene textures of the running application and
 	 *  write them into the preview image and a side-by-side file
 	 *  for the VR image.
-	 *  This is similiar to request screenshot, but doesn't ever
+	 *  This is similar to request screenshot, but doesn't ever
 	 *  talk to the application, just takes the shot and submits. */
 	virtual vr::EVRScreenshotError TakeStereoScreenshot( vr::ScreenshotHandle_t *pOutScreenshotHandle, const char *pchPreviewFilename, const char *pchVRFilename ) = 0;
 
@@ -3299,8 +3346,7 @@ public:
 	 *  function will display a notification to the user that the
 	 *  screenshot was taken. The paths should be full paths with
 	 *  extensions.
-	 *  File paths should be absolute including
-	 *  exntensions.
+	 *  File paths should be absolute including extensions.
 	 *  screenshotHandle can be k_unScreenshotHandleInvalid if this
 	 *  was a new shot taking by the app to be saved and not
 	 *  initiated by a user (achievement earned or something) */
@@ -3338,9 +3384,29 @@ public:
 static const char * const IVRResources_Version = "IVRResources_001";
 
 
-}// End
+}
+// ivrdrivermanager.h
+namespace vr
+{
+
+class IVRDriverManager
+{
+public:
+	virtual uint32_t GetDriverCount() const = 0;
+
+	/** Returns the length of the number of bytes necessary to hold this string including the trailing null. */
+	virtual uint32_t GetDriverName( vr::DriverId_t nDriver, VR_OUT_STRING() char *pchValue, uint32_t unBufferSize ) = 0;
+};
+
+static const char * const IVRDriverManager_Version = "IVRDriverManager_001";
+
+} // namespace vr
+
+
+// End
 
 #endif // _OPENVR_API
+
 
 namespace vr
 {
@@ -3372,7 +3438,7 @@ namespace vr
 	/** Returns the name of the enum value for an EVRInitError. This function may be called outside of VR_Init()/VR_Shutdown(). */
 	VR_INTERFACE const char *VR_CALLTYPE VR_GetVRInitErrorAsSymbol( EVRInitError error );
 
-	/** Returns an english string for an EVRInitError. Applications should call VR_GetVRInitErrorAsSymbol instead and
+	/** Returns an English string for an EVRInitError. Applications should call VR_GetVRInitErrorAsSymbol instead and
 	* use that as a key to look up their own localized error message. This function may be called outside of VR_Init()/VR_Shutdown(). */
 	VR_INTERFACE const char *VR_CALLTYPE VR_GetVRInitErrorAsEnglishDescription( EVRInitError error );
 
@@ -3558,6 +3624,17 @@ namespace vr
 			return m_pVRTrackedCamera;
 		}
 
+		IVRDriverManager *VRDriverManager()
+		{
+			CheckClear();
+			if ( !m_pVRDriverManager )
+			{
+				EVRInitError eError;
+				m_pVRDriverManager = ( IVRDriverManager * )VR_GetGenericInterface( IVRDriverManager_Version, &eError );
+			}
+			return m_pVRDriverManager;
+		}
+
 	private:
 		IVRSystem			*m_pVRSystem;
 		IVRChaperone		*m_pVRChaperone;
@@ -3571,6 +3648,7 @@ namespace vr
 		IVRApplications		*m_pVRApplications;
 		IVRTrackedCamera	*m_pVRTrackedCamera;
 		IVRScreenshots		*m_pVRScreenshots;
+		IVRDriverManager	*m_pVRDriverManager;
 	};
 
 	inline COpenVRContext &OpenVRInternal_ModuleContext()
@@ -3591,6 +3669,7 @@ namespace vr
 	inline IVRResources *VR_CALLTYPE VRResources() { return OpenVRInternal_ModuleContext().VRResources(); }
 	inline IVRExtendedDisplay *VR_CALLTYPE VRExtendedDisplay() { return OpenVRInternal_ModuleContext().VRExtendedDisplay(); }
 	inline IVRTrackedCamera *VR_CALLTYPE VRTrackedCamera() { return OpenVRInternal_ModuleContext().VRTrackedCamera(); }
+	inline IVRDriverManager *VR_CALLTYPE VRDriverManager() { return OpenVRInternal_ModuleContext().VRDriverManager(); }
 
 	inline void COpenVRContext::Clear()
 	{
@@ -3606,6 +3685,7 @@ namespace vr
 		m_pVRTrackedCamera = nullptr;
 		m_pVRResources = nullptr;
 		m_pVRScreenshots = nullptr;
+		m_pVRDriverManager = nullptr;
 	}
 
 	VR_INTERFACE uint32_t VR_CALLTYPE VR_InitInternal( EVRInitError *peError, EVRApplicationType eApplicationType );

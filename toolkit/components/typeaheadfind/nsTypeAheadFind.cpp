@@ -111,6 +111,7 @@ nsTypeAheadFind::Init(nsIDocShell* aDocShell)
     mDidAddObservers = true;
     // ----------- Listen to prefs ------------------
     nsresult rv = prefInternal->AddObserver("accessibility.browsewithcaret", this, true);
+    rv = prefInternal->AddObserver("accessibility.typeaheadfind", this, true);
     NS_ENSURE_SUCCESS(rv, rv);
 
     // ----------- Get initial preferences ----------
@@ -121,6 +122,18 @@ nsTypeAheadFind::Init(nsIDocShell* aDocShell)
       os->AddObserver(this, DOM_WINDOW_DESTROYED_TOPIC, true);
     }
   }
+
+  if (!mIsSoundInitialized && !mNotFoundSoundURL.IsEmpty()) {
+    // This makes sure system sound library is loaded so that
+    // there's no lag before the first sound is played
+    // by waiting for the first keystroke, we still get the startup time benefits.
+    mIsSoundInitialized = true;
+    mSoundInterface = do_CreateInstance("@mozilla.org/sound;1");
+    if (mSoundInterface && !mNotFoundSoundURL.EqualsLiteral("beep")) {
+      mSoundInterface->Init();
+    }
+  }
+
   return NS_OK;
 }
 
@@ -141,6 +154,18 @@ nsTypeAheadFind::PrefsReset()
     prefBranch->GetCharPref("accessibility.typeaheadfind.soundURL", getter_Copies(soundStr));
 
   mNotFoundSoundURL = soundStr;
+
+  if (!mNotFoundSoundURL.IsEmpty() && !mNotFoundSoundURL.EqualsLiteral("beep")) {
+    if (!mSoundInterface) {
+      mSoundInterface = do_CreateInstance("@mozilla.org/sound;1");
+    }
+
+    // Init to load the system sound library if the lib is not ready
+    if (mSoundInterface) {
+      mIsSoundInitialized = true;
+      mSoundInterface->Init();
+    }
+  }
 
   prefBranch->GetBoolPref("accessibility.browsewithcaret",
                           &mCaretBrowsingOn);
@@ -1024,24 +1049,6 @@ nsTypeAheadFind::Find(const nsAString& aSearchString, bool aLinksOnly,
     if (!atEnd)
       mStartFindRange = nullptr;
   }
-
-  if (!mIsSoundInitialized && !mNotFoundSoundURL.IsEmpty()) {
-    // This makes sure system sound library is loaded so that
-    // there's no lag before the first sound is played
-    // by waiting for the first keystroke, we still get the startup time benefits.
-    mIsSoundInitialized = true;
-    mSoundInterface = do_CreateInstance("@mozilla.org/sound;1");
-    if (mSoundInterface && !mNotFoundSoundURL.EqualsLiteral("beep")) {
-      mSoundInterface->Init();
-    }
-  }
-
-#ifdef XP_WIN
-  // After each keystroke, ensure sound object is destroyed, to free up memory 
-  // allocated for error sound, otherwise Windows' nsISound impl 
-  // holds onto the last played sound, using up memory.
-  mSoundInterface = nullptr;
-#endif
 
   int32_t bufferLength = mTypeAheadBuffer.Length();
 
