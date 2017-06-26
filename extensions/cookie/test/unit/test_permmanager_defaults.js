@@ -7,7 +7,6 @@ const TEST_ORIGIN_HTTPS = NetUtil.newURI("https://example.org");
 const TEST_ORIGIN_2 = NetUtil.newURI("http://example.com");
 const TEST_ORIGIN_3 = NetUtil.newURI("https://example2.com:8080");
 const TEST_PERMISSION = "test-permission";
-Components.utils.import("resource://gre/modules/Promise.jsm");
 
 function promiseTimeout(delay) {
   return new Promise(resolve => {

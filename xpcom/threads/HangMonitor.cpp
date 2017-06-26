@@ -197,7 +197,7 @@ GetChromeHangReport(Telemetry::ProcessedStack& aStack,
 void
 ThreadMain(void*)
 {
-  AutoProfilerRegister registerThread("Hang Monitor");
+  AutoProfilerRegisterThread registerThread("Hang Monitor");
   NS_SetCurrentThreadName("Hang Monitor");
 
   MonitorAutoLock lock(*gMonitor);

@@ -348,8 +348,7 @@ class nsHtml5FlushLoopGuard
 void
 nsHtml5TreeOpExecutor::RunFlushLoop()
 {
-  PROFILER_LABEL("nsHtml5TreeOpExecutor", "RunFlushLoop",
-    js::ProfileEntry::Category::OTHER);
+  AUTO_PROFILER_LABEL("nsHtml5TreeOpExecutor::RunFlushLoop", OTHER);
 
   if (mRunFlushLoopOnStack) {
     // There's already a RunFlushLoop() on the call stack.

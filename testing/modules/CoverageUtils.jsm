@@ -12,6 +12,7 @@ const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cu = Components.utils;
 
+/* globals Debugger */
 const {addDebuggerToGlobal} = Cu.import("resource://gre/modules/jsdebugger.jsm",
                                         {});
 addDebuggerToGlobal(this);
@@ -19,7 +20,7 @@ addDebuggerToGlobal(this);
 /**
  * Records coverage for each test by way of the js debugger.
  */
-this.CoverageCollector = function (prefix) {
+this.CoverageCollector = function(prefix) {
   this._prefix = prefix;
   this._dbg = new Debugger();
   this._dbg.collectCoverageInfo = true;
@@ -37,7 +38,7 @@ this.CoverageCollector = function (prefix) {
   this._testIndex = 0;
 }
 
-CoverageCollector.prototype._getLinesCovered = function () {
+CoverageCollector.prototype._getLinesCovered = function() {
   let coveredLines = {};
   let currentCoverage = {};
   this._scripts.forEach(s => {
@@ -60,7 +61,7 @@ CoverageCollector.prototype._getLinesCovered = function () {
         this._allCoverage[scriptName] = {};
       }
 
-      let key = [lineNumber, columnNumber, offset].join('#');
+      let key = [lineNumber, columnNumber, offset].join("#");
       if (!currentCoverage[scriptName][key]) {
         currentCoverage[scriptName][key] = count;
       } else {
@@ -80,7 +81,8 @@ CoverageCollector.prototype._getLinesCovered = function () {
           !this._allCoverage[scriptName][key] ||
           (this._allCoverage[scriptName][key] <
            currentCoverage[scriptName][key])) {
-        let [lineNumber, colNumber, offset] = key.split('#');
+        // eslint-disable-next-line no-unused-vars
+        let [lineNumber, colNumber, offset] = key.split("#");
         if (!coveredLines[scriptName]) {
           coveredLines[scriptName] = new Set();
         }
@@ -115,7 +117,8 @@ CoverageCollector.prototype._getUncoveredLines = function() {
   // For all covered lines, delete their entry
   for (let scriptName in this._allCoverage) {
     for (let key in this._allCoverage[scriptName]) {
-      let [lineNumber, columnNumber, offset] = key.split('#');
+      // eslint-disable-next-line no-unused-vars
+      let [lineNumber, columnNumber, offset] = key.split("#");
       uncoveredLines[scriptName].delete(parseInt(lineNumber, 10));
     }
   }
@@ -145,7 +148,7 @@ CoverageCollector.prototype._getMethodNames = function() {
     * push a record of the form:
     * <method name> : <lines covered>
     */
-    scriptOffsets.forEach( function (element, index) {
+    scriptOffsets.forEach( function(element, index) {
       if (!element) {
         return;
       }
@@ -174,7 +177,7 @@ Object.prototype[Symbol.iterator] = function * () {
  * associating them with the given test name. The result is written
  * to a json file in a specified directory.
  */
-CoverageCollector.prototype.recordTestCoverage = function (testName) {
+CoverageCollector.prototype.recordTestCoverage = function(testName) {
   let ccov_scope = {};
   const {OS} = Cu.import("resource://gre/modules/osfile.jsm", ccov_scope);
 
@@ -195,7 +198,7 @@ CoverageCollector.prototype.recordTestCoverage = function (testName) {
       uncovered: []
     };
 
-    if (typeof(methods[scriptName]) != 'undefined' && methods[scriptName] != null) {
+    if (typeof(methods[scriptName]) != "undefined" && methods[scriptName] != null) {
       for (let [methodName, methodLines] of methods[scriptName]) {
         rec.methods[methodName] = methodLines;
       }
@@ -212,15 +215,15 @@ CoverageCollector.prototype.recordTestCoverage = function (testName) {
     result.push(rec);
   }
   let arr = this._encoder.encode(JSON.stringify(result, null, 2));
-  let path = this._prefix + '/' + 'jscov_' + Date.now() + '.json';
+  let path = this._prefix + "/jscov_" + Date.now() + ".json";
   dump("Writing coverage to: " + path + "\n");
-  return OS.File.writeAtomic(path, arr, {tmpPath: path + '.tmp'});
+  return OS.File.writeAtomic(path, arr, {tmpPath: path + ".tmp"});
 }
 
 /**
  * Tear down the debugger after all tests are complete.
  */
-CoverageCollector.prototype.finalize = function () {
+CoverageCollector.prototype.finalize = function() {
   this._dbg.removeAllDebuggees();
   this._dbg.enabled = false;
 }

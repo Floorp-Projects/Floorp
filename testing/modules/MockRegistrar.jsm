@@ -62,7 +62,7 @@ this.MockRegistrar = Object.freeze({
         try {
           let genuine = originalFactory.createInstance(outer, iid);
           wrappedMock._genuine = genuine;
-        } catch(ex) {
+        } catch (ex) {
           logger.info("Creating original instance failed", ex);
         }
 
@@ -81,9 +81,9 @@ this.MockRegistrar = Object.freeze({
                                    factory);
 
     this._registeredComponents.set(originalCID, {
-      contractID: contractID,
-      factory: factory,
-      originalFactory: originalFactory
+      contractID,
+      factory,
+      originalFactory
     });
 
     return originalCID;

@@ -23,49 +23,44 @@ const Test = routine => () => {
 // the given topic. If `receive("foo")` is called `n` times
 // nth promise is resolved on an `nth` "foo" notification.
 const receive = (topic, p, syncCallback) => {
-  const { promise, resolve, reject } = Promise.defer();
-  const { queue } = receive;
-  const timeout = () => {
-    queue.splice(queue.indexOf(resolve) - 1, 2);
-    reject(new Error("Timeout"));
-  };
+  return new Promise((resolve, reject) => {
+    const { queue } = receive;
+    const timeout = () => {
+      queue.splice(queue.indexOf(resolve) - 1, 2);
+      reject(new Error("Timeout"));
+    };
 
-  const observer = {
-    observe: subject => {
-      // Browser loads bunch of other documents that we don't care
-      // about so we let allow filtering notifications via `p` function.
-      if (p && !p(subject)) return;
-      // If observer is a first one with a given `topic`
-      // in a queue resolve promise and take it off the queue
-      // otherwise keep waiting.
-      const index = queue.indexOf(topic);
-      if (queue.indexOf(resolve) === index + 1) {
-        removeObserver(observer, topic);
-        clearTimeout(id, reject);
-        queue.splice(index, 2);
-        // Some tests need to be executed synchronously when the event is fired.
-        if (syncCallback) {
-          syncCallback(subject);
+    const observer = {
+      observe: subject => {
+        // Browser loads bunch of other documents that we don't care
+        // about so we let allow filtering notifications via `p` function.
+        if (p && !p(subject)) return;
+        // If observer is a first one with a given `topic`
+        // in a queue resolve promise and take it off the queue
+        // otherwise keep waiting.
+        const index = queue.indexOf(topic);
+        if (queue.indexOf(resolve) === index + 1) {
+          removeObserver(observer, topic);
+          clearTimeout(id, reject);
+          queue.splice(index, 2);
+          // Some tests need to be executed synchronously when the event is fired.
+          if (syncCallback) {
+            syncCallback(subject);
+          }
+          resolve(subject);
         }
-        resolve(subject);
       }
-    }
-  };
-  const id = setTimeout(timeout, 90000);
-  addObserver(observer, topic, false);
-  queue.push(topic, resolve);
-
-  return promise;
+    };
+    const id = setTimeout(timeout, 90000);
+    addObserver(observer, topic, false);
+    queue.push(topic, resolve);
+  });
 };
 receive.queue = [];
 
 const openTab = uri => gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, uri);
 
-const sleep = ms => {
-  const { promise, resolve } = Promise.defer();
-  setTimeout(resolve, ms);
-  return promise;
-};
+const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 
 const isData = document => document.URL.startsWith("data:");
 

@@ -1,0 +1,203 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1345361
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1345361</title>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript">
+
+  "use strict";
+  SimpleTest.waitForExplicitFinish();
+
+  var gUrl = SimpleTest.getTestFileURL('ConstructorChromeScript.js');
+  var gScript = SpecialPowers.loadChromeScript(gUrl);
+
+  function testFailHandler(message) {
+    ok(false, message);
+  }
+  gScript.addMessageListener("test-fail", testFailHandler);
+
+  const simplestMethods = [{
+    supportedMethods: [ "basic-card" ],
+  }];
+  const simplestDetails = {
+    total: {
+      label: "Total",
+      amount: {
+        currency: "USD",
+        value: "1.00"
+      }
+    }
+  };
+
+  const complexMethods = [{
+    supportedMethods: [ "basic-card" ],
+    data: {
+      supportedNetworks: ['unionpay', 'visa', 'mastercard', 'amex', 'discover',
+                          'diners', 'jcb', 'mir',
+      ],
+      supportedTypes: ['prepaid', 'debit', 'credit'],
+    },
+  }];
+
+  const complexDetails = {
+    id: "payment details",
+    total: {
+      label: "Total",
+      amount: {
+        currency: "USD",
+        value: "100.00"
+      }
+    },
+    displayItems: [
+      {
+        label: "First item",
+        amount: {
+          currency: "USD",
+          value: "60.00"
+        }
+      },
+      {
+        label: "Second item",
+        amount: {
+          currency: "USD",
+          value: "40.00"
+        }
+      }
+    ],
+    modifiers: [
+      {
+        supportedMethods: ["basic-card"],
+        total: {
+          label: "Discounted Total",
+          amount: {
+            currency: "USD",
+            value: "90.00"
+          }
+        },
+        additionalDisplayItems: [
+          {
+            label: "basic-card discount",
+            amount: {
+              currency: "USD",
+              value: "-10.00"
+            }
+          }
+        ],
+        data: { discountProgramParticipantId: "86328764873265", }
+      },
+    ],
+    shippingOptions: [
+      {
+        id: "NormalShipping",
+        label: "NormalShipping",
+        amount: {
+          currency: "USD",
+          value: "10.00"
+        },
+        selected: true,
+      },
+      {
+        id: "FastShipping",
+        label: "FastShipping",
+        amount: {
+          currency: "USD",
+          value: "30.00"
+        },
+        selected: false,
+      },
+    ],
+  };
+
+  const complexOptions = {
+    requestPayerName: true,
+    requestPayerEmail: true,
+    requestPayerPhone: true,
+    requestShipping: true,
+    shippingType: "shipping"
+  };
+
+
+  function testWithSimplestParameters() {
+    return new Promise((resolve, reject) => {
+      const payRequest = new PaymentRequest(simplestMethods, simplestDetails);
+      ok(payRequest, "PaymentRequest should be created");
+      gScript.addMessageListener("check-complete", function checkCompleteHandler() {
+        gScript.removeMessageListener("check-complete", checkCompleteHandler);
+        resolve();
+      });
+      gScript.sendAsyncMessage("check-simplest-request");
+    });
+  }
+
+  function testWithComplexParameters() {
+    return new Promise((resolve, reject) => {
+      const payRequest = new PaymentRequest(complexMethods, complexDetails, complexOptions);
+      ok(payRequest, "PaymentRequest should be created");
+      gScript.addMessageListener("check-complete", function checkCompleteHandler() {
+        gScript.removeMessageListener("check-complete", checkCompleteHandler);
+        resolve();
+      });
+      gScript.sendAsyncMessage("check-complex-request");
+    });
+  }
+
+  function testMultipleRequests() {
+    return new Promise((resolve, reject) => {
+      const payRequest1 = new PaymentRequest(complexMethods, complexDetails, complexOptions);
+      const payRequest2 = new PaymentRequest(simplestMethods, simplestDetails);
+      ok(payRequest1, "PaymentRequest with complex parameters should be created");
+      ok(payRequest2, "PaymentRequest with simplest parameters should be created");
+      gScript.addMessageListener("check-complete", function checkCompleteHandler() {
+        gScript.removeMessageListener("check-complete", checkCompleteHandler);
+        resolve();
+      });
+      gScript.sendAsyncMessage("check-multiple-requests");
+    });
+  }
+
+  function teardown() {
+    gScript.addMessageListener("teardown-complete", function teardownCompleteHandler() {
+      gScript.removeMessageListener("teardown-complete", teardownCompleteHandler);
+      gScript.removeMessageListener("test-fail", testFailHandler)
+      gScript.destroy();
+      SimpleTest.finish();
+    });
+    gScript.sendAsyncMessage("teardown");
+  }
+
+  function runTests() {
+    testWithSimplestParameters()
+    .then(testWithComplexParameters)
+    .then(testMultipleRequests)
+    .then(teardown)
+    .catch( e => {
+      ok(false, "Unexpected error: " + e.name);
+      SimpleTest.finish();
+    });
+  }
+
+  window.addEventListener('load', function() {
+    SpecialPowers.pushPrefEnv({
+      'set': [
+        ['dom.payments.request.enabled', true],
+      ]
+    }, runTests);
+  });
+
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1345361">Mozilla Bug 1345361</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>

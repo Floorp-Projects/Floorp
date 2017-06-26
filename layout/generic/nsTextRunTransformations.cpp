@@ -127,8 +127,7 @@ nsTransformingTextRunFactory::MakeTextRun(const uint8_t* aString, uint32_t aLeng
   // for these rarely used features
   NS_ConvertASCIItoUTF16 unicodeString(reinterpret_cast<const char*>(aString), aLength);
   return MakeTextRun(unicodeString.get(), aLength, aParams, aFontGroup,
-                     aFlags & ~(gfx::ShapedTextFlags::TEXT_IS_PERSISTENT |
-                                 gfx::ShapedTextFlags::TEXT_IS_8BIT),
+                     aFlags & ~gfx::ShapedTextFlags::TEXT_IS_8BIT,
                      aFlags2,
                      Move(aStyles), aOwnsFactory);
 }
@@ -228,7 +227,7 @@ GetParametersForInner(nsTransformedTextRun* aTextRun,
     { aRefDrawTarget, nullptr, nullptr,
       nullptr, 0, aTextRun->GetAppUnitsPerDevUnit()
     };
-  *aFlags = aTextRun->GetFlags() & ~gfx::ShapedTextFlags::TEXT_IS_PERSISTENT;
+  *aFlags = aTextRun->GetFlags();
   return params;
 }
 

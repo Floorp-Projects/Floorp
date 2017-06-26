@@ -49,7 +49,7 @@ add_task(async function() {
 
     // We're expecting an error, so resolve when the promise is rejected.
     let update = await promiseFindAddonUpdates(addon, AddonManager.UPDATE_WHEN_USER_REQUESTED)
-      .catch(Promise.resolve);
+      .catch(e => e);
 
     ok(!update.compatibilityUpdate, "not expecting a compatibility update");
     ok(!update.updateAvailable, "not expecting a compatibility update");

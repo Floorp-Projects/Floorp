@@ -24,8 +24,8 @@ const Ci = Components.interfaces;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm", this);
 
-XPCOMUtils.defineLazyModuleGetter(this, "Promise",
-  "resource://gre/modules/Promise.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "PromiseUtils",
+  "resource://gre/modules/PromiseUtils.jsm");
 
 /**
  * An implementation of queues (FIFO).
@@ -298,7 +298,7 @@ this.BasePromiseWorker.prototype = {
         throw ex;
       }
 
-      let deferred = Promise.defer();
+      let deferred = PromiseUtils.defer();
       this._queue.push({deferred, closure, id});
       this.log("Message posted");
 

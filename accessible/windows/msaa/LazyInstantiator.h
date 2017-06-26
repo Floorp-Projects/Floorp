@@ -8,6 +8,7 @@
 #define mozilla_a11y_LazyInstantiator_h
 
 #include "IUnknownImpl.h"
+#include "mozilla/mscom/Ptr.h"
 #include "mozilla/RefPtr.h"
 #include "nsString.h"
 #if defined(MOZ_TELEMETRY_REPORTING)
@@ -86,8 +87,37 @@ private:
 
   bool GetClientExecutableName(const DWORD aClientTid, nsIFile** aOutClientExe);
 #if defined(MOZ_TELEMETRY_REPORTING)
+  class AccumulateRunnable final : public Runnable
+  {
+  public:
+    explicit AccumulateRunnable(LazyInstantiator* aObj)
+      : Runnable("mozilla::a11y::LazyInstantiator::AccumulateRunnable")
+      , mObj(aObj)
+    {
+      MOZ_ASSERT(NS_IsMainThread());
+      aObj->AddRef();
+    }
+
+    void SetData(const nsAString& aData)
+    {
+      mData = aData;
+    }
+
+    NS_IMETHOD Run() override
+    {
+      mObj->AccumulateTelemetry(mData);
+      return NS_OK;
+    }
+
+  private:
+    mscom::STAUniquePtr<LazyInstantiator> mObj;
+    nsString                              mData;
+  };
+
+  friend class AccumulateRunnable;
+
   void AppendVersionInfo(nsIFile* aClientExe, nsAString& aStrToAppend);
-  void GatherTelemetry(nsIFile* aClientExe);
+  void GatherTelemetry(nsIFile* aClientExe, AccumulateRunnable* aRunnable);
   void AccumulateTelemetry(const nsString& aValue);
 #endif // defined(MOZ_TELEMETRY_REPORTING)
 

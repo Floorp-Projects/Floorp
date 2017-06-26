@@ -7,6 +7,7 @@
 XPIDL_SOURCES += [
     'nsIPaymentActionRequest.idl',
     'nsIPaymentActionResponse.idl',
+    'nsIPaymentAddress.idl',
     'nsIPaymentRequest.idl',
     'nsIPaymentRequestService.idl',
     'nsIPaymentUIService.idl',
