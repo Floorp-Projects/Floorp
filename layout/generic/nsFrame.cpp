@@ -10245,9 +10245,11 @@ nsIFrame::UpdateStyleOfChildAnonBox(nsIFrame* aChildFrame,
 }
 
 nsChangeHint
-nsIFrame::UpdateStyleOfOwnedChildFrame(nsIFrame* aChildFrame,
-                                       nsStyleContext* aNewStyleContext,
-                                       ServoRestyleState& aRestyleState)
+nsIFrame::UpdateStyleOfOwnedChildFrame(
+  nsIFrame* aChildFrame,
+  nsStyleContext* aNewStyleContext,
+  ServoRestyleState& aRestyleState,
+  const Maybe<nsStyleContext*>& aContinuationStyleContext)
 {
   // Figure out whether we have an actual change.  It's important that we do
   // this, for several reasons:
@@ -10276,8 +10278,13 @@ nsIFrame::UpdateStyleOfOwnedChildFrame(nsIFrame* aChildFrame,
       aChildFrame, aChildFrame->GetContent(), childHint);
   }
 
-  for (nsIFrame* kid = aChildFrame; kid; kid = kid->GetNextContinuation()) {
-    kid->SetStyleContext(aNewStyleContext);
+  aChildFrame->SetStyleContext(aNewStyleContext);
+  nsStyleContext* continuationStyle =
+    aContinuationStyleContext ? *aContinuationStyleContext : aNewStyleContext;
+  for (nsIFrame* kid = aChildFrame->GetNextContinuation();
+       kid;
+       kid = kid->GetNextContinuation()) {
+    kid->SetStyleContext(continuationStyle);
   }
 
   return childHint;
