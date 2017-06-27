@@ -86,7 +86,7 @@ protected:
     return mClient->Readlink(aPath, aBuff, aSize);
   }
 
-  virtual void SetUp() {
+  void SetUp() override {
     ipc::FileDescriptor fd;
 
     mServer = SandboxBroker::Create(GetPolicy(), getpid(), fd);
