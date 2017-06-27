@@ -2872,7 +2872,9 @@ var gLegacyView = {
     gViewController.notifyViewChanged();
   },
 
-  hide() {},
+  hide() {
+    doPendingUninstalls(this._listBox);
+  },
 
   getSelectedAddon() {
     var item = this._listBox.selectedItem;
