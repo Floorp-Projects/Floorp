@@ -14,10 +14,32 @@ namespace gfx {
 StaticAutoPtr<gfxVars> gfxVars::sInstance;
 StaticAutoPtr<nsTArray<gfxVars::VarBase*>> gfxVars::sVarList;
 
+StaticAutoPtr<nsTArray<GfxVarUpdate>> gGfxVarInitUpdates;
+
+void
+gfxVars::SetValuesForInitialize(const nsTArray<GfxVarUpdate>& aInitUpdates)
+{
+  // This should only be called once
+  MOZ_RELEASE_ASSERT(!gGfxVarInitUpdates);
+
+  // We expect aInitUpdates to be provided before any other gfxVars operation,
+  // and for sInstance to be null here, but handle the alternative.
+  if (sInstance) {
+    // Apply the updates, the object has been created already
+    for (const auto& varUpdate : aInitUpdates) {
+      ApplyUpdate(varUpdate);
+    }
+  } else {
+      // Save the values for Initialize call
+      gGfxVarInitUpdates = new nsTArray<GfxVarUpdate>(aInitUpdates);
+  }
+}
+
 void
 gfxVars::Initialize()
 {
   if (sInstance) {
+    MOZ_RELEASE_ASSERT(!gGfxVarInitUpdates, "Initial updates should not be present after any gfxVars operation");
     return;
   }
 
@@ -26,15 +48,20 @@ gfxVars::Initialize()
   sVarList = new nsTArray<gfxVars::VarBase*>();
   sInstance = new gfxVars;
 
-  // Like Preferences, we want content to synchronously get initial data on
-  // init. Note the GPU process is not handled here - it cannot send sync
+  // Note the GPU process is not handled here - it cannot send sync
   // messages, so instead the initial data is pushed down.
   if (XRE_IsContentProcess()) {
-    InfallibleTArray<GfxVarUpdate> vars;
-    dom::ContentChild::GetSingleton()->SendGetGfxVars(&vars);
-    for (const auto& var : vars) {
-      ApplyUpdate(var);
+    MOZ_ASSERT(gGfxVarInitUpdates, "Initial updates should be provided in content process");
+    if (!gGfxVarInitUpdates) {
+      // No provided initial updates, sync-request them from parent.
+      InfallibleTArray<GfxVarUpdate> initUpdates;
+      dom::ContentChild::GetSingleton()->SendGetGfxVars(&initUpdates);
+      gGfxVarInitUpdates = new nsTArray<GfxVarUpdate>(Move(initUpdates));
     }
+    for (const auto& varUpdate : *gGfxVarInitUpdates) {
+      ApplyUpdate(varUpdate);
+    }
+    gGfxVarInitUpdates = nullptr;
   }
 }
 
@@ -47,6 +74,7 @@ gfxVars::Shutdown()
 {
   sInstance = nullptr;
   sVarList = nullptr;
+  gGfxVarInitUpdates = nullptr;
 }
 
 /* static */ void
@@ -54,7 +82,14 @@ gfxVars::ApplyUpdate(const GfxVarUpdate& aUpdate)
 {
   // Only subprocesses receive updates and apply them locally.
   MOZ_ASSERT(!XRE_IsParentProcess());
-  sVarList->ElementAt(aUpdate.index())->SetValue(aUpdate.value());
+  MOZ_DIAGNOSTIC_ASSERT(sVarList || gGfxVarInitUpdates);
+  if (sVarList) {
+    sVarList->ElementAt(aUpdate.index())->SetValue(aUpdate.value());
+  } else if (gGfxVarInitUpdates) {
+    // Too early, we haven't been initialized, so just add to
+    // the array waiting for the initialization...
+    gGfxVarInitUpdates->AppendElement(aUpdate);
+  }
 }
 
 /* static */ void
