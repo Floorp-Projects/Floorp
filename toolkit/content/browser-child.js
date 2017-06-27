@@ -54,7 +54,20 @@ var WebProgressListener = {
     return aRequest.QueryInterface(Ci.nsIChannel)[aPropertyName].spec;
   },
 
-  _setupJSON: function setupJSON(aWebProgress, aRequest) {
+  _setupJSON: function setupJSON(aWebProgress, aRequest, aStateFlags) {
+    // Avoid accessing content.document when being called from onStateChange
+    // unless if we are in STATE_STOP, because otherwise the getter will
+    // instantiate an about:blank document for us.
+    let contentDocument = null;
+    if (aStateFlags) {
+      // We're being called from onStateChange
+      if (aStateFlags & Ci.nsIWebProgressListener.STATE_STOP) {
+        contentDocument = content.document;
+      }
+    } else {
+      contentDocument = content.document;
+    }
+
     let innerWindowID = null;
     if (aWebProgress) {
       let domWindowID = null;
@@ -82,7 +95,7 @@ var WebProgressListener = {
       webProgress: aWebProgress || null,
       requestURI: this._requestSpec(aRequest, "URI"),
       originalRequestURI: this._requestSpec(aRequest, "originalURI"),
-      documentContentType: content.document && content.document.contentType,
+      documentContentType: contentDocument ? contentDocument.contentType : null,
       innerWindowID,
     };
   },
@@ -116,7 +129,7 @@ var WebProgressListener = {
   },
 
   onStateChange: function onStateChange(aWebProgress, aRequest, aStateFlags, aStatus) {
-    let json = this._setupJSON(aWebProgress, aRequest);
+    let json = this._setupJSON(aWebProgress, aRequest, aStateFlags);
     let objects = this._setupObjects(aWebProgress, aRequest);
 
     json.stateFlags = aStateFlags;
