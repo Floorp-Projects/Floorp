@@ -55,6 +55,7 @@ typedef struct {
    int   mem_fill;                      /* number of usable samples in the buffer */
    float prev_band_tonality[NB_TBANDS];
    float prev_tonality;
+   int prev_bandwidth;
    float E[NB_FRAMES][NB_TBANDS];
    float logE[NB_FRAMES][NB_TBANDS];
    float lowE[NB_TBANDS];
