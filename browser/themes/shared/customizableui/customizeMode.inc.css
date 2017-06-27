@@ -39,6 +39,7 @@
   pointer-events: none;
 }
 
+%ifndef MOZ_PHOTON_THEME
 #main-window[customize-entered] .customization-target:not(:-moz-any(#PanelUI-contents, #TabsToolbar, #toolbar-menubar))::before,
 #PanelUI-contents > .panel-customization-placeholder {
   -moz-outline-radius: 2.5px;
@@ -95,8 +96,9 @@
   cursor: auto;
   outline-offset: -5px;
 }
+%endif
 
-#main-window[customizing] .customization-target:not(#PanelUI-contents) {
+#main-window[customizing] .customization-target:not(#PanelUI-contents):not(#widget-overflow-fixed-list) {
   min-width: 100px;
   padding-left: 10px;
   padding-right: 10px;
