@@ -91,11 +91,15 @@ def make_job_description(config, jobs):
         treeherder.setdefault('platform', "{}/opt".format(dep_th_platform))
         treeherder.setdefault('tier', 1)
         treeherder.setdefault('kind', 'build')
+        build_task = None
         signing_task = None
         for dependency in dependencies.keys():
             if 'signing' in dependency:
                 signing_task = dependency
+            else:
+                build_task = dependency
         signing_task_ref = "<{}>".format(signing_task)
+        build_task_ref = "<{}>".format(build_task)
 
         attributes = {
             'nightly': dep_job.attributes.get('nightly', False),
@@ -109,6 +113,8 @@ def make_job_description(config, jobs):
 
         task_env = {}
         locale_output_path = ""
+        mar_prefix = 'https://queue.taskcluster.net/v1/task/' + \
+            '{}/artifacts/public/build/host/bin/'.format(build_task_ref)
         if attributes['build_platform'].startswith('macosx'):
             if job.get('locale'):
                 input_string = 'https://queue.taskcluster.net/v1/task/' + \
@@ -120,12 +126,17 @@ def make_job_description(config, jobs):
                     '{}/artifacts/public/build/target.tar.gz'.format(signing_task_ref)
             task_env.update(
                 SIGNED_INPUT={'task-reference': input_string},
+                UNSIGNED_MAR={'task-reference': "{}mar".format(mar_prefix)},
             )
             mozharness_config = ['repackage/osx_signed.py']
             output_files = [{
                 'type': 'file',
                 'path': '/home/worker/workspace/build/artifacts/target.dmg',
                 'name': 'public/build/{}target.dmg'.format(locale_output_path),
+            }, {
+                'type': 'file',
+                'path': '/home/worker/workspace/build/artifacts/target.complete.mar',
+                'name': 'public/build/{}target.complete.mar'.format(locale_output_path),
             }]
         else:
             raise Exception("Unexpected build platform for repackage")
