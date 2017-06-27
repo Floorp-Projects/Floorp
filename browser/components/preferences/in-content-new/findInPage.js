@@ -31,10 +31,6 @@ var gSearchResultsPane = {
           });
         }
       });
-
-      window.addEventListener("load", () => {
-        this.searchInput.focus();
-      });
     }
   },
 
