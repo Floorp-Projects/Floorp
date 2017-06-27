@@ -48,26 +48,26 @@ public:
 
   wr::WindowId GetId() const { return mId; }
 
-  void UpdateScrollPosition(const WrPipelineId& aPipelineId,
+  void UpdateScrollPosition(const wr::WrPipelineId& aPipelineId,
                             const layers::FrameMetrics::ViewID& aScrollId,
-                            const WrPoint& aScrollPosition);
+                            const wr::WrPoint& aScrollPosition);
 
   void GenerateFrame();
-  void GenerateFrame(const nsTArray<WrOpacityProperty>& aOpacityArray,
-                     const nsTArray<WrTransformProperty>& aTransformArray);
+  void GenerateFrame(const nsTArray<wr::WrOpacityProperty>& aOpacityArray,
+                     const nsTArray<wr::WrTransformProperty>& aTransformArray);
 
   void SetWindowParameters(LayoutDeviceIntSize size);
   void SetRootDisplayList(gfx::Color aBgColor,
                           Epoch aEpoch,
                           LayerSize aViewportSize,
-                          WrPipelineId pipeline_id,
-                          const WrSize& content_size,
-                          WrBuiltDisplayListDescriptor dl_descriptor,
+                          wr::WrPipelineId pipeline_id,
+                          const wr::WrSize& content_size,
+                          wr::WrBuiltDisplayListDescriptor dl_descriptor,
                           uint8_t *dl_data,
                           size_t dl_size);
 
   void ClearRootDisplayList(Epoch aEpoch,
-                            WrPipelineId pipeline_id);
+                            wr::WrPipelineId pipeline_id);
 
   void SetRootPipeline(wr::PipelineId aPipeline);
 
@@ -107,12 +107,12 @@ public:
   void Pause();
   bool Resume();
 
-  WrIdNamespace GetNamespace();
+  wr::WrIdNamespace GetNamespace();
   GLint GetMaxTextureSize() const { return mMaxTextureSize; }
   bool GetUseANGLE() const { return mUseANGLE; }
 
 protected:
-  WebRenderAPI(WrAPI* aRawApi, wr::WindowId aId, GLint aMaxTextureSize, bool aUseANGLE)
+  WebRenderAPI(wr::WrAPI* aRawApi, wr::WindowId aId, GLint aMaxTextureSize, bool aUseANGLE)
     : mWrApi(aRawApi)
     , mId(aId)
     , mMaxTextureSize(aMaxTextureSize)
@@ -123,7 +123,7 @@ protected:
   // Should be used only for shutdown handling
   void WaitFlushed();
 
-  WrAPI* mWrApi;
+  wr::WrAPI* mWrApi;
   wr::WindowId mId;
   GLint mMaxTextureSize;
   bool mUseANGLE;
@@ -138,7 +138,7 @@ protected:
 class DisplayListBuilder {
 public:
   explicit DisplayListBuilder(wr::PipelineId aId,
-                              const WrSize& aContentSize);
+                              const wr::WrSize& aContentSize);
   DisplayListBuilder(DisplayListBuilder&&) = default;
 
   ~DisplayListBuilder();
@@ -146,162 +146,162 @@ public:
   void Begin(const LayerIntSize& aSize);
 
   void End();
-  void Finalize(WrSize& aOutContentSize,
+  void Finalize(wr::WrSize& aOutContentSize,
                 wr::BuiltDisplayList& aOutDisplayList);
 
-  void PushStackingContext(const WrRect& aBounds, // TODO: We should work with strongly typed rects
+  void PushStackingContext(const wr::WrRect& aBounds, // TODO: We should work with strongly typed rects
                            const uint64_t& aAnimationId,
                            const float* aOpacity,
                            const gfx::Matrix4x4* aTransform,
-                           WrTransformStyle aTransformStyle,
-                           const WrMixBlendMode& aMixBlendMode,
-                           const nsTArray<WrFilterOp>& aFilters);
+                           wr::WrTransformStyle aTransformStyle,
+                           const wr::WrMixBlendMode& aMixBlendMode,
+                           const nsTArray<wr::WrFilterOp>& aFilters);
   void PopStackingContext();
 
-  void PushClip(const WrRect& aClipRect,
-                const WrImageMask* aMask);
+  void PushClip(const wr::WrRect& aClipRect,
+                const wr::WrImageMask* aMask);
   void PopClip();
 
   void PushBuiltDisplayList(wr::BuiltDisplayList &dl);
 
   void PushScrollLayer(const layers::FrameMetrics::ViewID& aScrollId,
-                       const WrRect& aContentRect, // TODO: We should work with strongly typed rects
-                       const WrRect& aClipRect);
+                       const wr::WrRect& aContentRect, // TODO: We should work with strongly typed rects
+                       const wr::WrRect& aClipRect);
   void PopScrollLayer();
 
   void PushClipAndScrollInfo(const layers::FrameMetrics::ViewID& aScrollId,
-                             const WrClipId* aClipId);
+                             const wr::WrClipId* aClipId);
   void PopClipAndScrollInfo();
 
-  void PushRect(const WrRect& aBounds,
-                const WrRect& aClip,
-                const WrColor& aColor);
+  void PushRect(const wr::WrRect& aBounds,
+                const wr::WrRect& aClip,
+                const wr::WrColor& aColor);
 
-  void PushLinearGradient(const WrRect& aBounds,
-                          const WrRect& aClip,
-                          const WrPoint& aStartPoint,
-                          const WrPoint& aEndPoint,
-                          const nsTArray<WrGradientStop>& aStops,
+  void PushLinearGradient(const wr::WrRect& aBounds,
+                          const wr::WrRect& aClip,
+                          const wr::WrPoint& aStartPoint,
+                          const wr::WrPoint& aEndPoint,
+                          const nsTArray<wr::WrGradientStop>& aStops,
                           wr::GradientExtendMode aExtendMode,
-                          const WrSize aTileSize,
-                          const WrSize aTileSpacing);
+                          const wr::WrSize aTileSize,
+                          const wr::WrSize aTileSpacing);
 
-  void PushRadialGradient(const WrRect& aBounds,
-                          const WrRect& aClip,
-                          const WrPoint& aCenter,
-                          const WrSize& aRadius,
-                          const nsTArray<WrGradientStop>& aStops,
+  void PushRadialGradient(const wr::WrRect& aBounds,
+                          const wr::WrRect& aClip,
+                          const wr::WrPoint& aCenter,
+                          const wr::WrSize& aRadius,
+                          const nsTArray<wr::WrGradientStop>& aStops,
                           wr::GradientExtendMode aExtendMode,
-                          const WrSize aTileSize,
-                          const WrSize aTileSpacing);
+                          const wr::WrSize aTileSize,
+                          const wr::WrSize aTileSpacing);
 
-  void PushImage(const WrRect& aBounds,
-                 const WrRect& aClip,
+  void PushImage(const wr::WrRect& aBounds,
+                 const wr::WrRect& aClip,
                  wr::ImageRendering aFilter,
                  wr::ImageKey aImage);
 
-  void PushImage(const WrRect& aBounds,
-                 const WrRect& aClip,
-                 const WrSize& aStretchSize,
-                 const WrSize& aTileSpacing,
+  void PushImage(const wr::WrRect& aBounds,
+                 const wr::WrRect& aClip,
+                 const wr::WrSize& aStretchSize,
+                 const wr::WrSize& aTileSpacing,
                  wr::ImageRendering aFilter,
                  wr::ImageKey aImage);
 
-  void PushYCbCrPlanarImage(const WrRect& aBounds,
-                            const WrRect& aClip,
+  void PushYCbCrPlanarImage(const wr::WrRect& aBounds,
+                            const wr::WrRect& aClip,
                             wr::ImageKey aImageChannel0,
                             wr::ImageKey aImageChannel1,
                             wr::ImageKey aImageChannel2,
-                            WrYuvColorSpace aColorSpace,
+                            wr::WrYuvColorSpace aColorSpace,
                             wr::ImageRendering aFilter);
 
-  void PushNV12Image(const WrRect& aBounds,
-                     const WrRect& aClip,
+  void PushNV12Image(const wr::WrRect& aBounds,
+                     const wr::WrRect& aClip,
                      wr::ImageKey aImageChannel0,
                      wr::ImageKey aImageChannel1,
-                     WrYuvColorSpace aColorSpace,
+                     wr::WrYuvColorSpace aColorSpace,
                      wr::ImageRendering aFilter);
 
-  void PushYCbCrInterleavedImage(const WrRect& aBounds,
-                                 const WrRect& aClip,
+  void PushYCbCrInterleavedImage(const wr::WrRect& aBounds,
+                                 const wr::WrRect& aClip,
                                  wr::ImageKey aImageChannel0,
-                                 WrYuvColorSpace aColorSpace,
+                                 wr::WrYuvColorSpace aColorSpace,
                                  wr::ImageRendering aFilter);
 
-  void PushIFrame(const WrRect& aBounds,
+  void PushIFrame(const wr::WrRect& aBounds,
                   wr::PipelineId aPipeline);
 
   // XXX WrBorderSides are passed with Range.
   // It is just to bypass compiler bug. See Bug 1357734.
-  void PushBorder(const WrRect& aBounds,
-                  const WrRect& aClip,
-                  const WrBorderWidths& aWidths,
-                  const Range<const WrBorderSide>& aSides,
-                  const WrBorderRadius& aRadius);
+  void PushBorder(const wr::WrRect& aBounds,
+                  const wr::WrRect& aClip,
+                  const wr::WrBorderWidths& aWidths,
+                  const Range<const wr::WrBorderSide>& aSides,
+                  const wr::WrBorderRadius& aRadius);
 
-  void PushBorderImage(const WrRect& aBounds,
-                       const WrRect& aClip,
-                       const WrBorderWidths& aWidths,
+  void PushBorderImage(const wr::WrRect& aBounds,
+                       const wr::WrRect& aClip,
+                       const wr::WrBorderWidths& aWidths,
                        wr::ImageKey aImage,
-                       const WrNinePatchDescriptor& aPatch,
-                       const WrSideOffsets2Df32& aOutset,
-                       const WrRepeatMode& aRepeatHorizontal,
-                       const WrRepeatMode& aRepeatVertical);
+                       const wr::WrNinePatchDescriptor& aPatch,
+                       const wr::WrSideOffsets2Df32& aOutset,
+                       const wr::WrRepeatMode& aRepeatHorizontal,
+                       const wr::WrRepeatMode& aRepeatVertical);
 
-  void PushBorderGradient(const WrRect& aBounds,
-                          const WrRect& aClip,
-                          const WrBorderWidths& aWidths,
-                          const WrPoint& aStartPoint,
-                          const WrPoint& aEndPoint,
-                          const nsTArray<WrGradientStop>& aStops,
+  void PushBorderGradient(const wr::WrRect& aBounds,
+                          const wr::WrRect& aClip,
+                          const wr::WrBorderWidths& aWidths,
+                          const wr::WrPoint& aStartPoint,
+                          const wr::WrPoint& aEndPoint,
+                          const nsTArray<wr::WrGradientStop>& aStops,
                           wr::GradientExtendMode aExtendMode,
-                          const WrSideOffsets2Df32& aOutset);
+                          const wr::WrSideOffsets2Df32& aOutset);
 
-  void PushBorderRadialGradient(const WrRect& aBounds,
-                                const WrRect& aClip,
-                                const WrBorderWidths& aWidths,
-                                const WrPoint& aCenter,
-                                const WrSize& aRadius,
-                                const nsTArray<WrGradientStop>& aStops,
+  void PushBorderRadialGradient(const wr::WrRect& aBounds,
+                                const wr::WrRect& aClip,
+                                const wr::WrBorderWidths& aWidths,
+                                const wr::WrPoint& aCenter,
+                                const wr::WrSize& aRadius,
+                                const nsTArray<wr::WrGradientStop>& aStops,
                                 wr::GradientExtendMode aExtendMode,
-                                const WrSideOffsets2Df32& aOutset);
+                                const wr::WrSideOffsets2Df32& aOutset);
 
-  void PushText(const WrRect& aBounds,
-                const WrRect& aClip,
+  void PushText(const wr::WrRect& aBounds,
+                const wr::WrRect& aClip,
                 const gfx::Color& aColor,
                 wr::FontKey aFontKey,
-                Range<const WrGlyphInstance> aGlyphBuffer,
+                Range<const wr::WrGlyphInstance> aGlyphBuffer,
                 float aGlyphSize);
 
-  void PushBoxShadow(const WrRect& aRect,
-                     const WrRect& aClip,
-                     const WrRect& aBoxBounds,
-                     const WrPoint& aOffset,
-                     const WrColor& aColor,
+  void PushBoxShadow(const wr::WrRect& aRect,
+                     const wr::WrRect& aClip,
+                     const wr::WrRect& aBoxBounds,
+                     const wr::WrPoint& aOffset,
+                     const wr::WrColor& aColor,
                      const float& aBlurRadius,
                      const float& aSpreadRadius,
                      const float& aBorderRadius,
-                     const WrBoxShadowClipMode& aClipMode);
+                     const wr::WrBoxShadowClipMode& aClipMode);
 
   // Returns the clip id that was most recently pushed with PushClip and that
   // has not yet been popped with PopClip. Return Nothing() if the clip stack
   // is empty.
-  Maybe<WrClipId> TopmostClipId();
+  Maybe<wr::WrClipId> TopmostClipId();
   // Returns the scroll id that was pushed just before the given scroll id. This
   // function returns Nothing() if the given scrollid has not been encountered,
   // or if it is the rootmost scroll id (and therefore has no ancestor).
   Maybe<layers::FrameMetrics::ViewID> ParentScrollIdFor(layers::FrameMetrics::ViewID aScrollId);
 
   // Try to avoid using this when possible.
-  WrState* Raw() { return mWrState; }
+  wr::WrState* Raw() { return mWrState; }
 protected:
-  WrState* mWrState;
+  wr::WrState* mWrState;
 
   // Track the stack of clip ids and scroll layer ids that have been pushed
   // (by PushClip and PushScrollLayer, respectively) and are still active.
   // This is helpful for knowing e.g. what the ancestor scroll id of a particular
   // scroll id is, and doing other "queries" of current state.
-  std::vector<WrClipId> mClipIdStack;
+  std::vector<wr::WrClipId> mClipIdStack;
   std::vector<layers::FrameMetrics::ViewID> mScrollIdStack;
 
   // Track the parent scroll id of each scroll id that we encountered.
@@ -310,7 +310,7 @@ protected:
   friend class WebRenderAPI;
 };
 
-Maybe<WrImageFormat>
+Maybe<wr::WrImageFormat>
 SurfaceFormatToWrImageFormat(gfx::SurfaceFormat aFormat);
 
 } // namespace wr

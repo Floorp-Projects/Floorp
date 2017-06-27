@@ -400,9 +400,9 @@ WebRenderBridgeParent::HandleDPEnd(const gfx::IntSize& aSize,
                                  InfallibleTArray<OpDestroy>&& aToDestroy,
                                  const uint64_t& aFwdTransactionId,
                                  const uint64_t& aTransactionId,
-                                 const WrSize& aContentSize,
-                                 const ByteBuffer& dl,
-                                 const WrBuiltDisplayListDescriptor& dlDesc,
+                                 const wr::WrSize& aContentSize,
+                                 const wr::ByteBuffer& dl,
+                                 const wr::WrBuiltDisplayListDescriptor& dlDesc,
                                  const WebRenderScrollData& aScrollData,
                                  const uint32_t& aIdNameSpace)
 {
@@ -480,7 +480,7 @@ WebRenderBridgeParent::UpdateAPZ()
 }
 
 bool
-WebRenderBridgeParent::PushAPZStateToWR(nsTArray<WrTransformProperty>& aTransformArray)
+WebRenderBridgeParent::PushAPZStateToWR(nsTArray<wr::WrTransformProperty>& aTransformArray)
 {
   CompositorBridgeParent* cbp = GetRootCompositorBridgeParent();
   if (!cbp) {
@@ -513,9 +513,9 @@ WebRenderBridgeParent::RecvDPEnd(const gfx::IntSize& aSize,
                                  InfallibleTArray<OpDestroy>&& aToDestroy,
                                  const uint64_t& aFwdTransactionId,
                                  const uint64_t& aTransactionId,
-                                 const WrSize& aContentSize,
-                                 const ByteBuffer& dl,
-                                 const WrBuiltDisplayListDescriptor& dlDesc,
+                                 const wr::WrSize& aContentSize,
+                                 const wr::ByteBuffer& dl,
+                                 const wr::WrBuiltDisplayListDescriptor& dlDesc,
                                  const WebRenderScrollData& aScrollData,
                                  const uint32_t& aIdNameSpace)
 {
@@ -533,9 +533,9 @@ WebRenderBridgeParent::RecvDPSyncEnd(const gfx::IntSize &aSize,
                                      InfallibleTArray<OpDestroy>&& aToDestroy,
                                      const uint64_t& aFwdTransactionId,
                                      const uint64_t& aTransactionId,
-                                     const WrSize& aContentSize,
-                                     const ByteBuffer& dl,
-                                     const WrBuiltDisplayListDescriptor& dlDesc,
+                                     const wr::WrSize& aContentSize,
+                                     const wr::ByteBuffer& dl,
+                                     const wr::WrBuiltDisplayListDescriptor& dlDesc,
                                      const WebRenderScrollData& aScrollData,
                                      const uint32_t& aIdNameSpace)
 {
@@ -656,8 +656,8 @@ WebRenderBridgeParent::ProcessWebRenderParentCommands(InfallibleTArray<WebRender
 void
 WebRenderBridgeParent::ProcessWebRenderCommands(const gfx::IntSize &aSize,
                                                 InfallibleTArray<WebRenderParentCommand>& aCommands, const wr::Epoch& aEpoch,
-                                                const WrSize& aContentSize, const ByteBuffer& dl,
-                                                const WrBuiltDisplayListDescriptor& dlDesc,
+                                                const wr::WrSize& aContentSize, const wr::ByteBuffer& dl,
+                                                const wr::WrBuiltDisplayListDescriptor& dlDesc,
                                                 const uint32_t& aIdNameSpace)
 {
   mCompositableHolder->SetCompositionTime(TimeStamp::Now());
@@ -1057,8 +1057,8 @@ WebRenderBridgeParent::AdvanceAnimations()
 }
 
 void
-WebRenderBridgeParent::SampleAnimations(nsTArray<WrOpacityProperty>& aOpacityArray,
-                                        nsTArray<WrTransformProperty>& aTransformArray)
+WebRenderBridgeParent::SampleAnimations(nsTArray<wr::WrOpacityProperty>& aOpacityArray,
+                                        nsTArray<wr::WrTransformProperty>& aTransformArray)
 {
   AdvanceAnimations();
 
@@ -1096,8 +1096,8 @@ WebRenderBridgeParent::CompositeToTarget(gfx::DrawTarget* aTarget, const gfx::In
   }
 
   bool scheduleComposite = false;
-  nsTArray<WrOpacityProperty> opacityArray;
-  nsTArray<WrTransformProperty> transformArray;
+  nsTArray<wr::WrOpacityProperty> opacityArray;
+  nsTArray<wr::WrTransformProperty> transformArray;
 
   mCompositableHolder->SetCompositionTime(TimeStamp::Now());
   mCompositableHolder->ApplyAsyncImages(mApi);

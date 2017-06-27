@@ -438,7 +438,7 @@ WebRenderLayerManager::PushItemAsImage(nsDisplayItem* aItem,
 
   MOZ_ASSERT(fallbackData->GetKey());
 
-  WrRect dest = aSc.ToRelativeWrRect(imageRect + offset);
+  wr::WrRect dest = aSc.ToRelativeWrRect(imageRect + offset);
   aBuilder.PushImage(dest,
                      dest,
                      wr::ImageRendering::Auto,
@@ -482,7 +482,7 @@ WebRenderLayerManager::EndTransactionInternal(DrawPaintedLayerCallback aCallback
   }
   DiscardCompositorAnimations();
 
-  WrSize contentSize { (float)size.width, (float)size.height };
+  wr::WrSize contentSize { (float)size.width, (float)size.height };
   wr::DisplayListBuilder builder(WrBridge()->GetPipeline(), contentSize);
 
   if (mEndTransactionWithoutLayers) {

@@ -16,7 +16,7 @@
 namespace mozilla {
 namespace wr {
 
-WrExternalImage LockExternalImage(void* aObj, WrExternalImageId aId, uint8_t aChannelIndex)
+wr::WrExternalImage LockExternalImage(void* aObj, wr::WrExternalImageId aId, uint8_t aChannelIndex)
 {
   RendererOGL* renderer = reinterpret_cast<RendererOGL*>(aObj);
   RenderTextureHost* texture = renderer->GetRenderTexture(aId);
@@ -44,7 +44,7 @@ WrExternalImage LockExternalImage(void* aObj, WrExternalImageId aId, uint8_t aCh
   }
 }
 
-void UnlockExternalImage(void* aObj, WrExternalImageId aId, uint8_t aChannelIndex)
+void UnlockExternalImage(void* aObj, wr::WrExternalImageId aId, uint8_t aChannelIndex)
 {
   RendererOGL* renderer = reinterpret_cast<RendererOGL*>(aObj);
   RenderTextureHost* texture = renderer->GetRenderTexture(aId);
@@ -56,7 +56,7 @@ RendererOGL::RendererOGL(RefPtr<RenderThread>&& aThread,
                          RefPtr<gl::GLContext>&& aGL,
                          RefPtr<widget::CompositorWidget>&& aWidget,
                          wr::WindowId aWindowId,
-                         WrRenderer* aWrRenderer,
+                         wr::WrRenderer* aWrRenderer,
                          layers::CompositorBridgeParentBase* aBridge)
   : mThread(aThread)
   , mGL(aGL)
@@ -84,10 +84,10 @@ RendererOGL::~RendererOGL()
   wr_renderer_delete(mWrRenderer);
 }
 
-WrExternalImageHandler
+wr::WrExternalImageHandler
 RendererOGL::GetExternalImageHandler()
 {
-  return WrExternalImageHandler {
+  return wr::WrExternalImageHandler {
     this,
     LockExternalImage,
     UnlockExternalImage,
@@ -170,14 +170,14 @@ RendererOGL::SetProfilerEnabled(bool aEnabled)
   wr_renderer_set_profiler_enabled(mWrRenderer, aEnabled);
 }
 
-WrRenderedEpochs*
+wr::WrRenderedEpochs*
 RendererOGL::FlushRenderedEpochs()
 {
   return wr_renderer_flush_rendered_epochs(mWrRenderer);
 }
 
 RenderTextureHost*
-RendererOGL::GetRenderTexture(WrExternalImageId aExternalImageId)
+RendererOGL::GetRenderTexture(wr::WrExternalImageId aExternalImageId)
 {
   return mThread->GetRenderTexture(aExternalImageId);
 }

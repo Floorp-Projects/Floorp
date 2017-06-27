@@ -19,8 +19,8 @@ WebRenderCompositableHolder::AsyncImagePipelineHolder::AsyncImagePipelineHolder(
  : mInitialised(false)
  , mIsChanged(false)
  , mUseExternalImage(false)
- , mFilter(WrImageRendering::Auto)
- , mMixBlendMode(WrMixBlendMode::Normal)
+ , mFilter(wr::WrImageRendering::Auto)
+ , mMixBlendMode(wr::WrMixBlendMode::Normal)
 {}
 
 WebRenderCompositableHolder::WebRenderCompositableHolder(uint32_t aIdNamespace)
@@ -135,8 +135,8 @@ WebRenderCompositableHolder::UpdateAsyncImagePipeline(const wr::PipelineId& aPip
                                                       const LayerRect& aScBounds,
                                                       const gfx::Matrix4x4& aScTransform,
                                                       const gfx::MaybeIntSize& aScaleToSize,
-                                                      const WrImageRendering& aFilter,
-                                                      const WrMixBlendMode& aMixBlendMode)
+                                                      const wr::WrImageRendering& aFilter,
+                                                      const wr::WrMixBlendMode& aMixBlendMode)
 {
   if (mDestroyed) {
     return;
@@ -264,7 +264,7 @@ WebRenderCompositableHolder::ApplyAsyncImages(wr::WebRenderAPI* aApi)
       continue;
     }
 
-    WrSize contentSize { holder->mScBounds.width, holder->mScBounds.height };
+    wr::WrSize contentSize { holder->mScBounds.width, holder->mScBounds.height };
     wr::DisplayListBuilder builder(pipelineId, contentSize);
 
     if (!keys.IsEmpty()) {
@@ -275,9 +275,9 @@ WebRenderCompositableHolder::ApplyAsyncImages(wr::WebRenderAPI* aApi)
                                   0,
                                   &opacity,
                                   holder->mScTransform.IsIdentity() ? nullptr : &holder->mScTransform,
-                                  WrTransformStyle::Flat,
+                                  wr::WrTransformStyle::Flat,
                                   holder->mMixBlendMode,
-                                  nsTArray<WrFilterOp>());
+                                  nsTArray<wr::WrFilterOp>());
 
       LayerRect rect(0, 0, holder->mCurrentTexture->GetSize().width, holder->mCurrentTexture->GetSize().height);
       if (holder->mScaleToSize.isSome()) {
@@ -304,7 +304,7 @@ WebRenderCompositableHolder::ApplyAsyncImages(wr::WebRenderAPI* aApi)
     }
 
     wr::BuiltDisplayList dl;
-    WrSize builderContentSize;
+    wr::WrSize builderContentSize;
     builder.Finalize(builderContentSize, dl);
     aApi->SetRootDisplayList(gfx::Color(0.f, 0.f, 0.f, 0.f), epoch, LayerSize(holder->mScBounds.width, holder->mScBounds.height),
                              pipelineId, builderContentSize,

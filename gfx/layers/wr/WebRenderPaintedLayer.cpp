@@ -99,11 +99,11 @@ WebRenderPaintedLayer::CreateWebRenderDisplayList(wr::DisplayListBuilder& aBuild
   LayerRect rect = Bounds();
   DumpLayerInfo("PaintedLayer", rect);
 
-  WrImageKey key = GetImageKey();
+  wr::WrImageKey key = GetImageKey();
   WrBridge()->AddWebRenderParentCommand(OpAddExternalImage(mExternalImageId.value(), key));
   WrManager()->AddImageKeyForDiscard(key);
 
-  WrRect r = sc.ToRelativeWrRect(rect);
+  wr::WrRect r = sc.ToRelativeWrRect(rect);
   aBuilder.PushImage(r, r, wr::ImageRendering::Auto, key);
 }
 

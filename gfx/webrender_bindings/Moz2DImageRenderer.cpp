@@ -90,10 +90,10 @@ static bool Moz2DRenderCallback(const Range<const uint8_t> aBlob,
 
 extern "C" {
 
-bool wr_moz2d_render_cb(const WrByteSlice blob,
+bool wr_moz2d_render_cb(const mozilla::wr::WrByteSlice blob,
                         uint32_t width, uint32_t height,
                         mozilla::wr::ImageFormat aFormat,
-                        MutByteSlice output)
+                        mozilla::wr::MutByteSlice output)
 {
   return mozilla::wr::Moz2DRenderCallback(mozilla::wr::ByteSliceToRange(blob),
                                           mozilla::gfx::IntSize(width, height),

@@ -32,7 +32,7 @@ public:
                         wr::DisplayListBuilder& aBuilder,
                         WebRenderLayer* aLayer,
                         const Maybe<gfx::Matrix4x4>& aTransform = Nothing(),
-                        const nsTArray<WrFilterOp>& aFilters = nsTArray<WrFilterOp>());
+                        const nsTArray<wr::WrFilterOp>& aFilters = nsTArray<wr::WrFilterOp>());
   // Alternate constructor which invokes the version of PushStackingContext
   // for animations.
   StackingContextHelper(const StackingContextHelper& aParentSC,
@@ -41,7 +41,7 @@ public:
                         uint64_t aAnimationsId,
                         float* aOpacityPtr,
                         gfx::Matrix4x4* aTransformPtr,
-                        const nsTArray<WrFilterOp>& aFilters = nsTArray<WrFilterOp>());
+                        const nsTArray<wr::WrFilterOp>& aFilters = nsTArray<wr::WrFilterOp>());
   // The constructor for layers-free mode.
   StackingContextHelper(const StackingContextHelper& aParentSC,
                         wr::DisplayListBuilder& aBuilder,
@@ -50,7 +50,7 @@ public:
                         uint64_t aAnimationsId,
                         float* aOpacityPtr,
                         gfx::Matrix4x4* aTransformPtr,
-                        const nsTArray<WrFilterOp>& aFilters = nsTArray<WrFilterOp>());
+                        const nsTArray<wr::WrFilterOp>& aFilters = nsTArray<wr::WrFilterOp>());
   // This version of the constructor should only be used at the root level
   // of the tree, so that we have a StackingContextHelper to pass down into
   // the RenderLayer traversal, but don't actually want it to push a stacking
@@ -68,12 +68,12 @@ public:
   // We allow passing in a LayoutDeviceRect for convenience because in a lot of
   // cases with WebRender display item generate the layout device space is the
   // same as the layer space. (TODO: try to make this more explicit somehow).
-  WrRect ToRelativeWrRect(const LayerRect& aRect) const;
-  WrRect ToRelativeWrRect(const LayoutDeviceRect& aRect) const;
+  wr::WrRect ToRelativeWrRect(const LayerRect& aRect) const;
+  wr::WrRect ToRelativeWrRect(const LayoutDeviceRect& aRect) const;
   // Same but for points
-  WrPoint ToRelativeWrPoint(const LayerPoint& aPoint) const;
+  wr::WrPoint ToRelativeWrPoint(const LayerPoint& aPoint) const;
   // Same but rounds the rectangle to ints after transforming.
-  WrRect ToRelativeWrRectRounded(const LayoutDeviceRect& aRect) const;
+  wr::WrRect ToRelativeWrRectRounded(const LayoutDeviceRect& aRect) const;
 
 private:
   wr::DisplayListBuilder* mBuilder;

@@ -73,8 +73,8 @@ public:
                           const wr::ExternalImageId& aExtID) override;
 
   virtual void PushExternalImage(wr::DisplayListBuilder& aBuilder,
-                                 const WrRect& aBounds,
-                                 const WrRect& aClip,
+                                 const wr::WrRect& aBounds,
+                                 const wr::WrRect& aClip,
                                  wr::ImageRendering aFilter,
                                  Range<const wr::ImageKey>& aImageKeys) override;
 

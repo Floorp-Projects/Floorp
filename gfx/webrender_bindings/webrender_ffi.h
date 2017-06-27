@@ -48,12 +48,15 @@ void* get_proc_address_from_glcontext(void* glcontext_ptr, const char* procname)
 #undef WR_FUNC
 #undef WR_DESTRUCTOR_SAFE_FUNC
 
+namespace mozilla {
+namespace wr {
+
 struct WrGlyphArray
 {
   mozilla::gfx::Color color;
-  nsTArray<WrGlyphInstance> glyphs;
+  nsTArray<wr::WrGlyphInstance> glyphs;
 
-  bool operator==(const WrGlyphArray& other) const
+  bool operator==(const wr::WrGlyphArray& other) const
   {
     if (!(color == other.color) ||
        (glyphs.Length() != other.glyphs.Length())) {
@@ -69,5 +72,8 @@ struct WrGlyphArray
     return true;
   }
 };
+
+} // namespace wr
+} // namespace mozilla
 
 #endif // WR_h

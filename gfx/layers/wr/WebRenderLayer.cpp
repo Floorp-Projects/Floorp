@@ -31,16 +31,16 @@ WebRenderLayer::WrBridge()
   return WrManager()->WrBridge();
 }
 
-WrImageKey
+wr::WrImageKey
 WebRenderLayer::GetImageKey()
 {
-  WrImageKey key;
+  wr::WrImageKey key;
   key.mNamespace = WrBridge()->GetNamespace();
   key.mHandle = WrBridge()->GetNextResourceId();
   return key;
 }
 
-Maybe<WrImageMask>
+Maybe<wr::WrImageMask>
 WebRenderLayer::BuildWrMaskLayer(const StackingContextHelper& aRelativeTo)
 {
   if (GetLayer()->GetMaskLayer()) {
@@ -111,7 +111,7 @@ WebRenderLayer::UpdateImageKey(ImageClientSingle* aImageClient,
     WrManager()->AddImageKeyForDiscard(aOldKey.value());
   }
 
-  WrImageKey key = GetImageKey();
+  wr::WrImageKey key = GetImageKey();
   WrBridge()->AddWebRenderParentCommand(OpAddExternalImage(aExternalImageId, key));
   return Some(key);
 }
@@ -126,7 +126,7 @@ WebRenderLayer::DumpLayerInfo(const char* aLayerType, const LayerRect& aRect)
   Layer* layer = GetLayer();
   Matrix4x4 transform = layer->GetTransform();
   LayerRect bounds = Bounds();
-  WrMixBlendMode mixBlendMode = wr::ToWrMixBlendMode(GetLayer()->GetMixBlendMode());
+  wr::WrMixBlendMode mixBlendMode = wr::ToWrMixBlendMode(GetLayer()->GetMixBlendMode());
 
   printf_stderr("%s %p using bounds=%s, transform=%s, rect=%s, clip=%s, mix-blend-mode=%s\n",
                 aLayerType,

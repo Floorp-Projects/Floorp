@@ -1001,13 +1001,13 @@ nsCSSGradientRenderer::Paint(gfxContext& aContext,
 
 void
 nsCSSGradientRenderer::BuildWebRenderParameters(float aOpacity,
-                                                WrGradientExtendMode& aMode,
-                                                nsTArray<WrGradientStop>& aStops,
+                                                wr::WrGradientExtendMode& aMode,
+                                                nsTArray<wr::WrGradientStop>& aStops,
                                                 LayoutDevicePoint& aLineStart,
                                                 LayoutDevicePoint& aLineEnd,
                                                 LayoutDeviceSize& aGradientRadius)
 {
-  aMode = mGradient->mRepeating ? WrGradientExtendMode::Repeat : WrGradientExtendMode::Clamp;
+  aMode = mGradient->mRepeating ? wr::WrGradientExtendMode::Repeat : wr::WrGradientExtendMode::Clamp;
 
   aStops.SetLength(mStops.Length());
   for(uint32_t i = 0; i < mStops.Length(); i++) {
@@ -1037,8 +1037,8 @@ nsCSSGradientRenderer::BuildWebRenderDisplayItems(wr::DisplayListBuilder& aBuild
     return;
   }
 
-  WrGradientExtendMode extendMode;
-  nsTArray<WrGradientStop> stops;
+  wr::WrGradientExtendMode extendMode;
+  nsTArray<wr::WrGradientStop> stops;
   LayoutDevicePoint lineStart;
   LayoutDevicePoint lineEnd;
   LayoutDeviceSize gradientRadius;
@@ -1064,10 +1064,10 @@ nsCSSGradientRenderer::BuildWebRenderDisplayItems(wr::DisplayListBuilder& aBuild
   LayoutDeviceSize tileSpacing = tileRepeat - firstTileBounds.Size();
 
   // Make the rects relative to the parent stacking context
-  WrRect wrClipBounds = aSc.ToRelativeWrRect(clipBounds);
+  wr::WrRect wrClipBounds = aSc.ToRelativeWrRect(clipBounds);
   LayerSize layerFirstTileSize = ViewAs<LayerPixel>(firstTileBounds.Size(),
       PixelCastJustification::WebRenderHasUnitResolution);
-  WrRect wrGradientBounds = aSc.ToRelativeWrRect(gradientBounds);
+  wr::WrRect wrGradientBounds = aSc.ToRelativeWrRect(gradientBounds);
 
   // srcTransform is used for scaling the gradient to match aSrc
   LayoutDeviceRect srcTransform = LayoutDeviceRect(mPresContext->CSSPixelsToAppUnits(aSrc.x),

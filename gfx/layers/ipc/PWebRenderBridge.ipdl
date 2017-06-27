@@ -23,7 +23,7 @@ using mozilla::wr::ExternalImageId from "mozilla/webrender/WebRenderTypes.h";
 using mozilla::wr::ImageKey from "mozilla/webrender/WebRenderTypes.h";
 using mozilla::wr::FontKey from "mozilla/webrender/WebRenderTypes.h";
 using mozilla::wr::PipelineId from "mozilla/webrender/WebRenderTypes.h";
-using WrBuiltDisplayListDescriptor from "mozilla/webrender/webrender_ffi.h";
+using mozilla::wr::WrBuiltDisplayListDescriptor from "mozilla/webrender/webrender_ffi.h";
 using mozilla::layers::WebRenderScrollData from "mozilla/layers/WebRenderScrollData.h";
 
 namespace mozilla {

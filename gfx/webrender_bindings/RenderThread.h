@@ -34,10 +34,10 @@ public:
 
   ~WebRenderThreadPool();
 
-  WrThreadPool* Raw() { return mThreadPool; }
+  wr::WrThreadPool* Raw() { return mThreadPool; }
 
 protected:
-  WrThreadPool* mThreadPool;
+  wr::WrThreadPool* mThreadPool;
 };
 
 

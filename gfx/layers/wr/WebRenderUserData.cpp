@@ -71,7 +71,7 @@ WebRenderImageData::UpdateImageKey(ImageContainer* aContainer, bool aForceUpdate
     mWRManager->AddImageKeyForDiscard(mKey.value());
   }
 
-  WrImageKey key = WrBridge()->GetNextImageKey();
+  wr::WrImageKey key = WrBridge()->GetNextImageKey();
   mWRManager->WrBridge()->AddWebRenderParentCommand(OpAddExternalImage(mExternalImageId.value(), key));
   mKey = Some(key);
 
@@ -93,8 +93,8 @@ WebRenderImageData::CreateAsyncImageWebRenderCommands(mozilla::wr::DisplayListBu
                                                       const LayerRect& aSCBounds,
                                                       const Matrix4x4& aSCTransform,
                                                       const MaybeIntSize& aScaleToSize,
-                                                      const WrImageRendering& aFilter,
-                                                      const WrMixBlendMode& aMixBlendMode)
+                                                      const wr::WrImageRendering& aFilter,
+                                                      const wr::WrMixBlendMode& aMixBlendMode)
 {
   MOZ_ASSERT(aContainer->IsAsync());
   if (!mPipelineId) {
@@ -114,7 +114,7 @@ WebRenderImageData::CreateAsyncImageWebRenderCommands(mozilla::wr::DisplayListBu
   // context need to be done manually and pushed over to the parent side,
   // where it will be done when we build the display list for the iframe.
   // That happens in WebRenderCompositableHolder.
-  WrRect r = aSc.ToRelativeWrRect(aBounds);
+  wr::WrRect r = aSc.ToRelativeWrRect(aBounds);
   aBuilder.PushIFrame(r, mPipelineId.ref());
 
   WrBridge()->AddWebRenderParentCommand(OpUpdateAsyncImagePipeline(mPipelineId.value(),
