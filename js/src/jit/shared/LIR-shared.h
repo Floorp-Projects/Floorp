@@ -9273,6 +9273,39 @@ class LDebugCheckSelfHosted : public LCallInstructionHelper<BOX_PIECES, BOX_PIEC
     }
 };
 
+class LFinishBoundFunctionInit : public LInstructionHelper<0, 3, 2>
+{
+  public:
+    LIR_HEADER(FinishBoundFunctionInit)
+
+    LFinishBoundFunctionInit(const LAllocation& bound, const LAllocation& target,
+                             const LAllocation& argCount, const LDefinition& temp1,
+                             const LDefinition& temp2)
+    {
+        setOperand(0, bound);
+        setOperand(1, target);
+        setOperand(2, argCount);
+        setTemp(0, temp1);
+        setTemp(1, temp2);
+    }
+
+    const LAllocation* bound() {
+        return getOperand(0);
+    }
+    const LAllocation* target() {
+        return getOperand(1);
+    }
+    const LAllocation* argCount() {
+        return getOperand(2);
+    }
+    const LDefinition* temp1() {
+        return getTemp(0);
+    }
+    const LDefinition* temp2() {
+        return getTemp(1);
+    }
+};
+
 } // namespace jit
 } // namespace js
 
