@@ -105,11 +105,6 @@ protected:
 
   void MarkPrepared();
 
-  // We don't want derivative layers overriding this directly - we provide a
-  // callback instead.
-  void SetLayerManager(HostLayerManager* aManager) override;
-  virtual void OnLayerManagerChange(LayerManagerMLGPU* aManager) {}
-
 private:
   // This is a monotonic counter used to check whether a layer appears twice
   // when 3d sorting.

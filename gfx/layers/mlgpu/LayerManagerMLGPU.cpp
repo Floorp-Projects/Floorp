@@ -193,12 +193,6 @@ LayerManagerMLGPU::GetBackendType()
   return mDevice ? mDevice->GetLayersBackend() : LayersBackend::LAYERS_NONE;
 }
 
-void
-LayerManagerMLGPU::SetRoot(Layer* aLayer)
-{
-  mRoot = aLayer;
-}
-
 bool
 LayerManagerMLGPU::BeginTransaction()
 {

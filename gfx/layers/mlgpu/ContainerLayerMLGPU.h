@@ -53,7 +53,6 @@ public:
 
 protected:
   bool OnPrepareToRender(FrameBuilder* aBuilder) override;
-  void OnLayerManagerChange(LayerManagerMLGPU* aManager) override;
 
 private:
   RefPtr<MLGRenderTarget> mRenderTarget;
