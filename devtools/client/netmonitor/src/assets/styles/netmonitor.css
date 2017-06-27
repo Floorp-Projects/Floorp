@@ -335,6 +335,8 @@ body,
 
 .requests-list-status {
   width: 8%;
+   /* Don't ellipsize status codes */
+  text-overflow: initial;
 }
 
 .theme-firebug .requests-list-status {
