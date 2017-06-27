@@ -425,9 +425,9 @@ DoLink(const char* aPath, const char* aPath2,
 size_t
 SandboxBroker::ConvertToRealPath(char* aPath, size_t aBufSize, size_t aPathLen)
 {
-  if (strstr(aPath, "..") != NULL) {
-    char* result = realpath(aPath, NULL);
-    if (result != NULL) {
+  if (strstr(aPath, "..") != nullptr) {
+    char* result = realpath(aPath, nullptr);
+    if (result != nullptr) {
       strncpy(aPath, result, aBufSize);
       aPath[aBufSize - 1] = '\0';
       free(result);
