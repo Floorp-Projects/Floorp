@@ -99,8 +99,8 @@ function* testCompletion([key, modifiers, completion, open, selected, change],
 
   EventUtils.synthesizeKey(key, modifiers, view.styleWindow);
 
-  // Flush the throttle for the preview text.
-  view.throttle.flush();
+  // Flush the debounce for the preview text.
+  view.debounce.flush();
 
   yield onDone;
   yield onPopupEvent;
