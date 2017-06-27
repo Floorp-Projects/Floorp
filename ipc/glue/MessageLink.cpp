@@ -102,8 +102,11 @@ ProcessLink::Open(mozilla::ipc::Transport* aTransport, MessageLoop *aIOLoop, Sid
 
     // If we were never able to open the transport, immediately post an error message.
     if (mTransport->Unsound_IsClosed()) {
-        mIOLoop->PostTask(NewNonOwningRunnableMethod(this, &ProcessLink::OnChannelConnectError));
-        return;
+      mIOLoop->PostTask(
+        NewNonOwningRunnableMethod("ipc::ProcessLink::OnChannelConnectError",
+                                   this,
+                                   &ProcessLink::OnChannelConnectError));
+      return;
     }
 
     {
@@ -113,12 +116,18 @@ ProcessLink::Open(mozilla::ipc::Transport* aTransport, MessageLoop *aIOLoop, Sid
             // Transport::Connect() has not been called.  Call it so
             // we start polling our pipe and processing outgoing
             // messages.
-            mIOLoop->PostTask(NewNonOwningRunnableMethod(this, &ProcessLink::OnChannelOpened));
+            mIOLoop->PostTask(
+              NewNonOwningRunnableMethod("ipc::ProcessLink::OnChannelOpened",
+                                         this,
+                                         &ProcessLink::OnChannelOpened));
         } else {
             // Transport::Connect() has already been called.  Take
             // over the channel from the previous listener and process
             // any queued messages.
-            mIOLoop->PostTask(NewNonOwningRunnableMethod(this, &ProcessLink::OnTakeConnectedChannel));
+            mIOLoop->PostTask(NewNonOwningRunnableMethod(
+              "ipc::ProcessLink::OnTakeConnectedChannel",
+              this,
+              &ProcessLink::OnTakeConnectedChannel));
         }
 
         // Should not wait here if something goes wrong with the channel.
@@ -134,7 +143,11 @@ ProcessLink::EchoMessage(Message *msg)
     mChan->AssertWorkerThread();
     mChan->mMonitor->AssertCurrentThreadOwns();
 
-    mIOLoop->PostTask(NewNonOwningRunnableMethod<Message*>(this, &ProcessLink::OnEchoMessage, msg));
+    mIOLoop->PostTask(
+      NewNonOwningRunnableMethod<Message*>("ipc::ProcessLink::OnEchoMessage",
+                                           this,
+                                           &ProcessLink::OnEchoMessage,
+                                           msg));
     // OnEchoMessage takes ownership of |msg|
 }
 
@@ -154,7 +167,8 @@ ProcessLink::SendMessage(Message *msg)
     }
     mChan->mMonitor->AssertCurrentThreadOwns();
 
-    mIOLoop->PostTask(NewNonOwningRunnableMethod<Message*>(mTransport, &Transport::Send, msg));
+    mIOLoop->PostTask(NewNonOwningRunnableMethod<Message*>(
+      "IPC::Channel::Send", mTransport, &Transport::Send, msg));
 }
 
 void
@@ -163,7 +177,8 @@ ProcessLink::SendClose()
     mChan->AssertWorkerThread();
     mChan->mMonitor->AssertCurrentThreadOwns();
 
-    mIOLoop->PostTask(NewNonOwningRunnableMethod(this, &ProcessLink::OnCloseChannel));
+    mIOLoop->PostTask(NewNonOwningRunnableMethod(
+      "ipc::ProcessLink::OnCloseChannel", this, &ProcessLink::OnCloseChannel));
 }
 
 ThreadLink::ThreadLink(MessageChannel *aChan, MessageChannel *aTargetChan)

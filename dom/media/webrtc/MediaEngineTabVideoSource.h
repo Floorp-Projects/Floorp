@@ -62,28 +62,40 @@ class MediaEngineTabVideoSource : public MediaEngineVideoSource, nsIDOMEventList
 
     class StartRunnable : public Runnable {
     public:
-      explicit StartRunnable(MediaEngineTabVideoSource *videoSource) : mVideoSource(videoSource) {}
+      explicit StartRunnable(MediaEngineTabVideoSource *videoSource)
+        : Runnable("MediaEngineTabVideoSource::StartRunnable")
+        , mVideoSource(videoSource)
+      {}
       NS_IMETHOD Run();
       RefPtr<MediaEngineTabVideoSource> mVideoSource;
     };
 
     class StopRunnable : public Runnable {
     public:
-      explicit StopRunnable(MediaEngineTabVideoSource *videoSource) : mVideoSource(videoSource) {}
+      explicit StopRunnable(MediaEngineTabVideoSource *videoSource)
+        : Runnable("MediaEngineTabVideoSource::StopRunnable")
+        , mVideoSource(videoSource)
+      {}
       NS_IMETHOD Run();
       RefPtr<MediaEngineTabVideoSource> mVideoSource;
     };
 
     class InitRunnable : public Runnable {
     public:
-      explicit InitRunnable(MediaEngineTabVideoSource *videoSource) : mVideoSource(videoSource) {}
+      explicit InitRunnable(MediaEngineTabVideoSource *videoSource)
+        : Runnable("MediaEngineTabVideoSource::InitRunnable")
+        , mVideoSource(videoSource)
+      {}
       NS_IMETHOD Run();
       RefPtr<MediaEngineTabVideoSource> mVideoSource;
     };
 
     class DestroyRunnable : public Runnable {
     public:
-      explicit DestroyRunnable(MediaEngineTabVideoSource* videoSource) : mVideoSource(videoSource) {}
+      explicit DestroyRunnable(MediaEngineTabVideoSource* videoSource)
+        : Runnable("MediaEngineTabVideoSource::DestroyRunnable")
+        , mVideoSource(videoSource)
+      {}
       NS_IMETHOD Run();
       RefPtr<MediaEngineTabVideoSource> mVideoSource;
     };

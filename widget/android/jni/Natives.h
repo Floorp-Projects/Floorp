@@ -529,7 +529,7 @@ struct Dispatcher
         // For a static method, do not forward the "this arg" (i.e. the class
         // local ref) if the implementation does not request it. This saves us
         // a pair of calls to add/delete global ref.
-        NS_DispatchToMainThread(NS_NewRunnableFunction(ProxyNativeCall<
+        NS_DispatchToMainThread(NS_NewRunnableFunction("ProxyNativeCall", ProxyNativeCall<
                 Impl, typename Traits::Owner, IsStatic, HasThisArg,
                 Args...>(HasThisArg || !IsStatic ? thisArg : nullptr,
                           Forward<ProxyArgs>(args)...)));

@@ -272,7 +272,8 @@ public:
                           const nsAString& aScope,
                           PushManager::SubscriptionAction aAction,
                           nsTArray<uint8_t>&& aAppServerKey)
-    : mProxy(aProxy)
+    : Runnable("dom::GetSubscriptionRunnable")
+    , mProxy(aProxy)
     , mScope(aScope)
     , mAction(aAction)
     , mAppServerKey(Move(aAppServerKey))
@@ -400,7 +401,8 @@ class PermissionStateRunnable final : public Runnable
 {
 public:
   explicit PermissionStateRunnable(PromiseWorkerProxy* aProxy)
-    : mProxy(aProxy)
+    : Runnable("dom::PermissionStateRunnable")
+    , mProxy(aProxy)
   {}
 
   NS_IMETHOD

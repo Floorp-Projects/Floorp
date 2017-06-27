@@ -69,7 +69,8 @@ public:
       if (IsAsync()) {
         decltype(mCallback) callback = Move(mCallback);
         mTargetThread->
-          Dispatch(NS_NewRunnableFunction([callback, aResult](){
+          Dispatch(NS_NewRunnableFunction("ipc::CrashReporterHost::CallbackWrapper::Invoke",
+                                          [callback, aResult](){
                      callback(aResult);
                    }), NS_DISPATCH_NORMAL);
       } else {

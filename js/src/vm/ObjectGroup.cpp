@@ -1432,12 +1432,13 @@ struct ObjectGroupCompartment::AllocationSiteKey : public DefaultHasher<Allocati
     }
 
     static inline uint32_t hash(AllocationSiteKey key) {
-        return uint32_t(size_t(key.script->offsetToPC(key.offset)) ^ key.kind ^
-               MovableCellHasher<JSObject*>::hash(key.proto));
+        return uint32_t(size_t(key.script.unbarrieredGet()->offsetToPC(key.offset)) ^ key.kind ^
+                        MovableCellHasher<JSObject*>::hash(key.proto.unbarrieredGet()));
     }
 
     static inline bool match(const AllocationSiteKey& a, const AllocationSiteKey& b) {
-        return DefaultHasher<JSScript*>::match(a.script, b.script) &&
+        return DefaultHasher<JSScript*>::match(a.script.unbarrieredGet(),
+                                               b.script.unbarrieredGet()) &&
                a.offset == b.offset &&
                a.kind == b.kind &&
                MovableCellHasher<JSObject*>::match(a.proto, b.proto);

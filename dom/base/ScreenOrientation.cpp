@@ -553,8 +553,10 @@ ScreenOrientation::Notify(const hal::ScreenConfiguration& aConfiguration)
       doc->SetOrientationPendingPromise(nullptr);
     }
 
-    nsCOMPtr<nsIRunnable> runnable = NewRunnableMethod(this,
-      &ScreenOrientation::DispatchChangeEvent);
+    nsCOMPtr<nsIRunnable> runnable =
+      NewRunnableMethod("dom::ScreenOrientation::DispatchChangeEvent",
+                        this,
+                        &ScreenOrientation::DispatchChangeEvent);
     rv = NS_DispatchToMainThread(runnable);
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "NS_DispatchToMainThread failed");
   }
@@ -640,8 +642,10 @@ ScreenOrientation::VisibleEventListener::HandleEvent(nsIDOMEvent* aEvent)
       doc->SetOrientationPendingPromise(nullptr);
     }
 
-    nsCOMPtr<nsIRunnable> runnable = NewRunnableMethod(orientation,
-      &ScreenOrientation::DispatchChangeEvent);
+    nsCOMPtr<nsIRunnable> runnable =
+      NewRunnableMethod("dom::ScreenOrientation::DispatchChangeEvent",
+                        orientation,
+                        &ScreenOrientation::DispatchChangeEvent);
     rv = NS_DispatchToMainThread(runnable);
     if (NS_WARN_IF(rv.Failed())) {
       return rv.StealNSResult();

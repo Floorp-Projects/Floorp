@@ -70,11 +70,16 @@ void InputObserver::OnDeviceChange() {
 
 class DeliverFrameRunnable : public ::mozilla::Runnable {
 public:
-  DeliverFrameRunnable(CamerasParent *aParent, CaptureEngine aEngine,
-      uint32_t aStreamId, const webrtc::VideoFrame& aFrame,
-      const VideoFrameProperties& aProperties)
-      : mParent(aParent), mCapEngine(aEngine), mStreamId(aStreamId),
-      mProperties(aProperties)
+  DeliverFrameRunnable(CamerasParent* aParent,
+                       CaptureEngine aEngine,
+                       uint32_t aStreamId,
+                       const webrtc::VideoFrame& aFrame,
+                       const VideoFrameProperties& aProperties)
+    : Runnable("camera::DeliverFrameRunnable")
+    , mParent(aParent)
+    , mCapEngine(aEngine)
+    , mStreamId(aStreamId)
+    , mProperties(aProperties)
   {
     // No ShmemBuffer (of the right size) was available, so make an
     // extra buffer here.  We have no idea when we are going to run and
@@ -87,11 +92,17 @@ public:
                                            aProperties.bufferSize(), aFrame);
   }
 
-  DeliverFrameRunnable(CamerasParent* aParent, CaptureEngine aEngine,
-      uint32_t aStreamId, ShmemBuffer aBuffer, VideoFrameProperties& aProperties)
-      : mParent(aParent), mCapEngine(aEngine), mStreamId(aStreamId),
-      mBuffer(Move(aBuffer)), mProperties(aProperties)
-  {};
+  DeliverFrameRunnable(CamerasParent* aParent,
+                       CaptureEngine aEngine,
+                       uint32_t aStreamId,
+                       ShmemBuffer aBuffer,
+                       VideoFrameProperties& aProperties)
+    : Runnable("camera::DeliverFrameRunnable")
+    , mParent(aParent)
+    , mCapEngine(aEngine)
+    , mStreamId(aStreamId)
+    , mBuffer(Move(aBuffer))
+    , mProperties(aProperties){};
 
   NS_IMETHOD Run() override {
     if (mParent->IsShuttingDown()) {

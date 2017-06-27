@@ -242,15 +242,17 @@ public:
           timer->SetTarget(aTarget);
         }
 
-        timer->InitWithFuncCallback(&UnusedCallbackFunc,
-                                    nullptr,
-                                    kTimerOffset + kTimerInterval * i,
-                                    aType);
+        timer->InitWithNamedFuncCallback(&UnusedCallbackFunc,
+                                         nullptr,
+                                         kTimerOffset + kTimerInterval * i,
+                                         aType,
+                                         "FindExpirationTimeState::InitTimers");
       } else {
-        timer->InitWithFuncCallback(&UnusedCallbackFunc,
-                                    nullptr,
-                                    kTimerOffset + kTimerInterval * i,
-                                    nsITimer::TYPE_ONE_SHOT);
+        timer->InitWithNamedFuncCallback(&UnusedCallbackFunc,
+                                         nullptr,
+                                         kTimerOffset + kTimerInterval * i,
+                                         nsITimer::TYPE_ONE_SHOT,
+                                         "FindExpirationTimeState::InitTimers");
       }
       mTimers.push_front(timer.get());
     }
@@ -426,8 +428,9 @@ class FuzzTestThreadState final : public nsITimerCallback {
 
     class StartRunnable final : public mozilla::Runnable {
       public:
-        explicit StartRunnable(FuzzTestThreadState* threadState) :
-          mThreadState(threadState)
+        explicit StartRunnable(FuzzTestThreadState* threadState)
+          : mozilla::Runnable("FuzzTestThreadState::StartRunnable")
+          , mThreadState(threadState)
         {}
 
         NS_IMETHOD Run() override

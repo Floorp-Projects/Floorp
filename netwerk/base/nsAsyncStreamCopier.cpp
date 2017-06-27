@@ -33,9 +33,11 @@ public:
      *        The nsAsyncStreamCopier requesting the information.
      */
     explicit AsyncApplyBufferingPolicyEvent(nsAsyncStreamCopier* aCopier)
-        : mCopier(aCopier)
+      : mozilla::Runnable("AsyncApplyBufferingPolicyEvent")
+      , mCopier(aCopier)
       , mTarget(GetCurrentThreadEventTarget())
-      { }
+    {}
+
     NS_IMETHOD Run() override
     {
       nsresult rv = mCopier->ApplyBufferingPolicy();
@@ -44,7 +46,8 @@ public:
           return NS_OK;
       }
 
-      rv = mTarget->Dispatch(NewRunnableMethod(mCopier,
+      rv = mTarget->Dispatch(NewRunnableMethod("nsAsyncStreamCopier::AsyncCopyInternal",
+                                               mCopier,
 					       &nsAsyncStreamCopier::AsyncCopyInternal),
 			     NS_DISPATCH_NORMAL);
       MOZ_ASSERT(NS_SUCCEEDED(rv));
@@ -54,6 +57,7 @@ public:
       }
       return NS_OK;
     }
+
 private:
       RefPtr<nsAsyncStreamCopier> mCopier;
       nsCOMPtr<nsIEventTarget> mTarget;

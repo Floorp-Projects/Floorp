@@ -21,7 +21,8 @@ class CompletionRunnable final : public Runnable
 {
 public:
   explicit CompletionRunnable()
-    : mDone(false)
+    : Runnable("CompletionRunnable")
+    , mDone(false)
   {
   }
 

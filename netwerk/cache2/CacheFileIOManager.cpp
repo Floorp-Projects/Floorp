@@ -69,10 +69,10 @@ CacheFileHandle::DispatchRelease()
     return false;
   }
 
-  nsresult rv =
-    ioTarget->Dispatch(NewNonOwningRunnableMethod(this,
-						  &CacheFileHandle::Release),
-		       nsIEventTarget::DISPATCH_NORMAL);
+  nsresult rv = ioTarget->Dispatch(
+    NewNonOwningRunnableMethod(
+      "net::CacheFileHandle::Release", this, &CacheFileHandle::Release),
+    nsIEventTarget::DISPATCH_NORMAL);
   if (NS_FAILED(rv)) {
     return false;
   }
@@ -545,7 +545,8 @@ CacheFileHandles::SizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const
 class ShutdownEvent : public Runnable {
 public:
   ShutdownEvent()
-    : mMonitor("ShutdownEvent.mMonitor")
+    : Runnable("net::ShutdownEvent")
+    , mMonitor("ShutdownEvent.mMonitor")
     , mNotified(false)
   {
   }
@@ -639,7 +640,8 @@ class OpenFileEvent : public Runnable
 public:
   OpenFileEvent(const nsACString &aKey, uint32_t aFlags,
                 CacheFileIOListener *aCallback)
-    : IOPerfReportEvent(CacheFileUtils::CachePerfStats::IO_OPEN)
+    : Runnable("net::OpenFileEvent")
+    , IOPerfReportEvent(CacheFileUtils::CachePerfStats::IO_OPEN)
     , mFlags(aFlags)
     , mCallback(aCallback)
     , mKey(aKey)
@@ -705,7 +707,8 @@ class ReadEvent : public Runnable
 public:
   ReadEvent(CacheFileHandle *aHandle, int64_t aOffset, char *aBuf,
             int32_t aCount, CacheFileIOListener *aCallback)
-    : IOPerfReportEvent(CacheFileUtils::CachePerfStats::IO_READ)
+    : Runnable("net::ReadEvent")
+    , IOPerfReportEvent(CacheFileUtils::CachePerfStats::IO_READ)
     , mHandle(aHandle)
     , mOffset(aOffset)
     , mBuf(aBuf)
@@ -755,7 +758,8 @@ public:
   WriteEvent(CacheFileHandle *aHandle, int64_t aOffset, const char *aBuf,
              int32_t aCount, bool aValidate, bool aTruncate,
              CacheFileIOListener *aCallback)
-    : IOPerfReportEvent(CacheFileUtils::CachePerfStats::IO_WRITE)
+    : Runnable("net::WriteEvent")
+    , IOPerfReportEvent(CacheFileUtils::CachePerfStats::IO_WRITE)
     , mHandle(aHandle)
     , mOffset(aOffset)
     , mBuf(aBuf)
@@ -823,9 +827,9 @@ protected:
 
 class DoomFileEvent : public Runnable {
 public:
-  DoomFileEvent(CacheFileHandle *aHandle,
-                CacheFileIOListener *aCallback)
-    : mCallback(aCallback)
+  DoomFileEvent(CacheFileHandle* aHandle, CacheFileIOListener* aCallback)
+    : Runnable("net::DoomFileEvent")
+    , mCallback(aCallback)
     , mHandle(aHandle)
   {
   }
@@ -861,9 +865,9 @@ protected:
 
 class DoomFileByKeyEvent : public Runnable {
 public:
-  DoomFileByKeyEvent(const nsACString &aKey,
-                     CacheFileIOListener *aCallback)
-    : mCallback(aCallback)
+  DoomFileByKeyEvent(const nsACString& aKey, CacheFileIOListener* aCallback)
+    : Runnable("net::DoomFileByKeyEvent")
+    , mCallback(aCallback)
   {
     SHA1Sum sum;
     sum.update(aKey.BeginReading(), aKey.Length());
@@ -904,8 +908,9 @@ protected:
 
 class ReleaseNSPRHandleEvent : public Runnable {
 public:
-  explicit ReleaseNSPRHandleEvent(CacheFileHandle *aHandle)
-    : mHandle(aHandle)
+  explicit ReleaseNSPRHandleEvent(CacheFileHandle* aHandle)
+    : Runnable("net::ReleaseNSPRHandleEvent")
+    , mHandle(aHandle)
   {
   }
 
@@ -930,9 +935,12 @@ protected:
 
 class TruncateSeekSetEOFEvent : public Runnable {
 public:
-  TruncateSeekSetEOFEvent(CacheFileHandle *aHandle, int64_t aTruncatePos,
-                          int64_t aEOFPos, CacheFileIOListener *aCallback)
-    : mHandle(aHandle)
+  TruncateSeekSetEOFEvent(CacheFileHandle* aHandle,
+                          int64_t aTruncatePos,
+                          int64_t aEOFPos,
+                          CacheFileIOListener* aCallback)
+    : Runnable("net::TruncateSeekSetEOFEvent")
+    , mHandle(aHandle)
     , mTruncatePos(aTruncatePos)
     , mEOFPos(aEOFPos)
     , mCallback(aCallback)
@@ -972,9 +980,11 @@ protected:
 
 class RenameFileEvent : public Runnable {
 public:
-  RenameFileEvent(CacheFileHandle *aHandle, const nsACString &aNewName,
-                  CacheFileIOListener *aCallback)
-    : mHandle(aHandle)
+  RenameFileEvent(CacheFileHandle* aHandle,
+                  const nsACString& aNewName,
+                  CacheFileIOListener* aCallback)
+    : Runnable("net::RenameFileEvent")
+    , mHandle(aHandle)
     , mNewName(aNewName)
     , mCallback(aCallback)
   {
@@ -1012,10 +1022,12 @@ protected:
 
 class InitIndexEntryEvent : public Runnable {
 public:
-  InitIndexEntryEvent(CacheFileHandle *aHandle,
-                      OriginAttrsHash aOriginAttrsHash, bool aAnonymous,
+  InitIndexEntryEvent(CacheFileHandle* aHandle,
+                      OriginAttrsHash aOriginAttrsHash,
+                      bool aAnonymous,
                       bool aPinning)
-    : mHandle(aHandle)
+    : Runnable("net::InitIndexEntryEvent")
+    , mHandle(aHandle)
     , mOriginAttrsHash(aOriginAttrsHash)
     , mAnonymous(aAnonymous)
     , mPinning(aPinning)
@@ -1057,13 +1069,14 @@ protected:
 
 class UpdateIndexEntryEvent : public Runnable {
 public:
-  UpdateIndexEntryEvent(CacheFileHandle *aHandle,
-                        const uint32_t  *aFrecency,
-                        const uint32_t  *aExpirationTime,
-                        const bool      *aHasAltData,
-                        const uint16_t  *aOnStartTime,
-                        const uint16_t  *aOnStopTime)
-    : mHandle(aHandle)
+  UpdateIndexEntryEvent(CacheFileHandle* aHandle,
+                        const uint32_t* aFrecency,
+                        const uint32_t* aExpirationTime,
+                        const bool* aHasAltData,
+                        const uint16_t* aOnStartTime,
+                        const uint16_t* aOnStopTime)
+    : Runnable("net::UpdateIndexEntryEvent")
+    , mHandle(aHandle)
     , mHasFrecency(false)
     , mHasExpirationTime(false)
     , mHasHasAltData(false)
@@ -1142,10 +1155,11 @@ public:
   RefPtr<CacheFile> mFile;
   RefPtr<CacheFileIOManager> mIOMan;
 
-  MetadataWriteScheduleEvent(CacheFileIOManager * aManager,
-                             CacheFile * aFile,
+  MetadataWriteScheduleEvent(CacheFileIOManager* aManager,
+                             CacheFile* aFile,
                              EMode aMode)
-    : mMode(aMode)
+    : Runnable("net::MetadataWriteScheduleEvent")
+    , mMode(aMode)
     , mFile(aFile)
     , mIOMan(aManager)
   { }
@@ -2785,8 +2799,9 @@ CacheFileIOManager::EvictIfOverLimit()
   }
 
   nsCOMPtr<nsIRunnable> ev;
-  ev = NewRunnableMethod(ioMan,
-			 &CacheFileIOManager::EvictIfOverLimitInternal);
+  ev = NewRunnableMethod("net::CacheFileIOManager::EvictIfOverLimitInternal",
+                         ioMan,
+                         &CacheFileIOManager::EvictIfOverLimitInternal);
 
   rv = ioMan->mIOThread->Dispatch(ev, CacheIOThread::EVICT);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -2849,8 +2864,9 @@ CacheFileIOManager::EvictIfOverLimitInternal()
        cacheUsage, cacheLimit));
 
   nsCOMPtr<nsIRunnable> ev;
-  ev = NewRunnableMethod(this,
-			 &CacheFileIOManager::OverLimitEvictionInternal);
+  ev = NewRunnableMethod("net::CacheFileIOManager::OverLimitEvictionInternal",
+                         this,
+                         &CacheFileIOManager::OverLimitEvictionInternal);
 
   rv = mIOThread->Dispatch(ev, CacheIOThread::EVICT);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -3009,7 +3025,9 @@ CacheFileIOManager::EvictAll()
   }
 
   nsCOMPtr<nsIRunnable> ev;
-  ev = NewRunnableMethod(ioMan, &CacheFileIOManager::EvictAllInternal);
+  ev = NewRunnableMethod("net::CacheFileIOManager::EvictAllInternal",
+                         ioMan,
+                         &CacheFileIOManager::EvictAllInternal);
 
   rv = ioMan->mIOThread->DispatchAfterPendingOpens(ev);
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -3024,6 +3042,7 @@ namespace {
 class EvictionNotifierRunnable : public Runnable
 {
 public:
+  EvictionNotifierRunnable() : Runnable("EvictionNotifierRunnable") {}
   NS_DECL_NSIRUNNABLE
 };
 
@@ -3127,8 +3146,12 @@ CacheFileIOManager::EvictByContext(nsILoadContextInfo *aLoadContextInfo, bool aP
   }
 
   nsCOMPtr<nsIRunnable> ev;
-  ev = NewRunnableMethod<nsCOMPtr<nsILoadContextInfo>, bool>
-         (ioMan, &CacheFileIOManager::EvictByContextInternal, aLoadContextInfo, aPinned);
+  ev = NewRunnableMethod<nsCOMPtr<nsILoadContextInfo>, bool>(
+    "net::CacheFileIOManager::EvictByContextInternal",
+    ioMan,
+    &CacheFileIOManager::EvictByContextInternal,
+    aLoadContextInfo,
+    aPinned);
 
   rv = ioMan->mIOThread->DispatchAfterPendingOpens(ev);
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -3246,8 +3269,10 @@ CacheFileIOManager::CacheIndexStateChanged()
   // We have to re-distatch even if we are on IO thread to prevent reentering
   // the lock in CacheIndex
   nsCOMPtr<nsIRunnable> ev;
-  ev = NewRunnableMethod(
-    gInstance.get(), &CacheFileIOManager::CacheIndexStateChangedInternal);
+  ev =
+    NewRunnableMethod("net::CacheFileIOManager::CacheIndexStateChangedInternal",
+                      gInstance.get(),
+                      &CacheFileIOManager::CacheIndexStateChangedInternal);
 
   nsCOMPtr<nsIEventTarget> ioTarget = IOTarget();
   MOZ_ASSERT(ioTarget);
@@ -3411,9 +3436,12 @@ CacheFileIOManager::StartRemovingTrash()
     rv = timer->SetTarget(ioTarget);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = timer->InitWithFuncCallback(CacheFileIOManager::OnTrashTimer, nullptr,
-                                     kRemoveTrashStartDelay - elapsed,
-                                     nsITimer::TYPE_ONE_SHOT);
+    rv = timer->InitWithNamedFuncCallback(
+      CacheFileIOManager::OnTrashTimer,
+      nullptr,
+      kRemoveTrashStartDelay - elapsed,
+      nsITimer::TYPE_ONE_SHOT,
+      "net::CacheFileIOManager::StartRemovingTrash");
     NS_ENSURE_SUCCESS(rv, rv);
 
     mTrashTimer.swap(timer);
@@ -3421,8 +3449,9 @@ CacheFileIOManager::StartRemovingTrash()
   }
 
   nsCOMPtr<nsIRunnable> ev;
-  ev = NewRunnableMethod(this,
-			 &CacheFileIOManager::RemoveTrashInternal);
+  ev = NewRunnableMethod("net::CacheFileIOManager::RemoveTrashInternal",
+                         this,
+                         &CacheFileIOManager::RemoveTrashInternal);
 
   rv = mIOThread->Dispatch(ev, CacheIOThread::EVICT);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -4283,9 +4312,10 @@ class SizeOfHandlesRunnable : public Runnable
 {
 public:
   SizeOfHandlesRunnable(mozilla::MallocSizeOf mallocSizeOf,
-                        CacheFileHandles const &handles,
-                        nsTArray<CacheFileHandle *> const &specialHandles)
-    : mMonitor("SizeOfHandlesRunnable.mMonitor")
+                        CacheFileHandles const& handles,
+                        nsTArray<CacheFileHandle*> const& specialHandles)
+    : Runnable("net::SizeOfHandlesRunnable")
+    , mMonitor("SizeOfHandlesRunnable.mMonitor")
     , mMallocSizeOf(mallocSizeOf)
     , mHandles(handles)
     , mSpecialHandles(specialHandles)

@@ -176,9 +176,10 @@ APZCTreeManager::APZCTreeManager()
       mApzcTreeLog("apzctree")
 {
   RefPtr<APZCTreeManager> self(this);
-  NS_DispatchToMainThread(NS_NewRunnableFunction([self] {
-    self->mFlushObserver = new CheckerboardFlushObserver(self);
-  }));
+  NS_DispatchToMainThread(
+    NS_NewRunnableFunction("layers::APZCTreeManager::APZCTreeManager", [self] {
+      self->mFlushObserver = new CheckerboardFlushObserver(self);
+    }));
   AsyncPanZoomController::InitializeGlobalState();
   mApzcTreeLog.ConditionOnPrefFunction(gfxPrefs::APZPrintTree);
 #if defined(MOZ_WIDGET_ANDROID)
@@ -854,8 +855,10 @@ APZCTreeManager::FlushApzRepaints(uint64_t aLayersId)
   const LayerTreeState* state =
     CompositorBridgeParent::GetIndirectShadowTree(aLayersId);
   MOZ_ASSERT(state && state->mController);
-  state->mController->DispatchToRepaintThread(NewRunnableMethod(
-     state->mController, &GeckoContentController::NotifyFlushComplete));
+  state->mController->DispatchToRepaintThread(
+    NewRunnableMethod("layers::GeckoContentController::NotifyFlushComplete",
+                      state->mController,
+                      &GeckoContentController::NotifyFlushComplete));
 }
 
 nsEventStatus
@@ -1580,7 +1583,8 @@ APZCTreeManager::ClearTree()
   // Ensure that no references to APZCs are alive in any lingering input
   // blocks. This breaks cycles from InputBlockState::mTargetApzc back to
   // the InputQueue.
-  APZThreadUtils::RunOnControllerThread(NewRunnableMethod(mInputQueue, &InputQueue::Clear));
+  APZThreadUtils::RunOnControllerThread(NewRunnableMethod(
+    "layers::InputQueue::Clear", mInputQueue, &InputQueue::Clear));
 
   MutexAutoLock lock(mTreeLock);
 
@@ -1601,10 +1605,11 @@ APZCTreeManager::ClearTree()
   mRootNode = nullptr;
 
   RefPtr<APZCTreeManager> self(this);
-  NS_DispatchToMainThread(NS_NewRunnableFunction([self] {
-    self->mFlushObserver->Unregister();
-    self->mFlushObserver = nullptr;
-  }));
+  NS_DispatchToMainThread(
+    NS_NewRunnableFunction("layers::APZCTreeManager::ClearTree", [self] {
+      self->mFlushObserver->Unregister();
+      self->mFlushObserver = nullptr;
+    }));
 }
 
 RefPtr<HitTestingTreeNode>

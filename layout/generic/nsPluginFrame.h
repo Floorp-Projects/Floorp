@@ -292,9 +292,12 @@ private:
 
   class PluginEventNotifier : public mozilla::Runnable {
   public:
-    explicit PluginEventNotifier(const nsString &aEventType) : 
-      mEventType(aEventType) {}
-    
+    explicit PluginEventNotifier(const nsString& aEventType)
+      : mozilla::Runnable("nsPluginFrame::PluginEventNotifier")
+      , mEventType(aEventType)
+    {
+    }
+
     NS_IMETHOD Run() override;
   private:
     nsString mEventType;

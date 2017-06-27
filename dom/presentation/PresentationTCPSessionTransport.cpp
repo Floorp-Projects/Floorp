@@ -112,17 +112,19 @@ PresentationTCPSessionTransport::BuildTCPSenderTransport(nsISocketTransport* aTr
 
   nsCOMPtr<nsIPresentationSessionTransport> sessionTransport = do_QueryObject(this);
   nsCOMPtr<nsIRunnable> onSessionTransportRunnable =
-    NewRunnableMethod
-      <nsIPresentationSessionTransport*>(mListener,
-                                         &nsIPresentationSessionTransportBuilderListener::OnSessionTransport,
-                                         sessionTransport);
+    NewRunnableMethod<nsIPresentationSessionTransport*>(
+      "nsIPresentationSessionTransportBuilderListener::OnSessionTransport",
+      mListener,
+      &nsIPresentationSessionTransportBuilderListener::OnSessionTransport,
+      sessionTransport);
 
   NS_DispatchToCurrentThread(onSessionTransportRunnable.forget());
 
-  nsCOMPtr<nsIRunnable> setReadyStateRunnable =
-    NewRunnableMethod<ReadyState>(this,
-                                  &PresentationTCPSessionTransport::SetReadyState,
-                                  ReadyState::OPEN);
+  nsCOMPtr<nsIRunnable> setReadyStateRunnable = NewRunnableMethod<ReadyState>(
+    "dom::PresentationTCPSessionTransport::SetReadyState",
+    this,
+    &PresentationTCPSessionTransport::SetReadyState,
+    ReadyState::OPEN);
   return NS_DispatchToCurrentThread(setReadyStateRunnable.forget());
 }
 
@@ -192,10 +194,11 @@ PresentationTCPSessionTransport::BuildTCPReceiverTransport(nsIPresentationChanne
 
   nsCOMPtr<nsIPresentationSessionTransport> sessionTransport = do_QueryObject(this);
   nsCOMPtr<nsIRunnable> runnable =
-    NewRunnableMethod
-      <nsIPresentationSessionTransport*>(mListener,
-                                         &nsIPresentationSessionTransportBuilderListener::OnSessionTransport,
-                                         sessionTransport);
+    NewRunnableMethod<nsIPresentationSessionTransport*>(
+      "nsIPresentationSessionTransportBuilderListener::OnSessionTransport",
+      mListener,
+      &nsIPresentationSessionTransportBuilderListener::OnSessionTransport,
+      sessionTransport);
   return NS_DispatchToCurrentThread(runnable.forget());
 }
 

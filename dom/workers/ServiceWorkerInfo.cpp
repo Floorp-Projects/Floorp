@@ -144,7 +144,8 @@ class ChangeStateUpdater final : public Runnable
 public:
   ChangeStateUpdater(const nsTArray<ServiceWorker*>& aInstances,
                      ServiceWorkerState aState)
-    : mState(aState)
+    : Runnable("dom::workers::ChangeStateUpdater")
+    , mState(aState)
   {
     for (size_t i = 0; i < aInstances.Length(); ++i) {
       mInstances.AppendElement(aInstances[i]);
