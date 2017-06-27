@@ -547,7 +547,7 @@ public:
   nsresult Call() override;
 
 private:
-  ~IdleRequestExecutorTimeoutHandler() {}
+  ~IdleRequestExecutorTimeoutHandler() override {}
   RefPtr<IdleRequestExecutor> mExecutor;
 };
 
@@ -612,7 +612,7 @@ private:
 
   void DelayedDispatch(uint32_t aDelay);
 
-  ~IdleRequestExecutor() {}
+  ~IdleRequestExecutor() override {}
 
   bool mDispatched;
   TimeStamp mDeadline;
@@ -897,7 +897,7 @@ public:
   }
 
 private:
-  ~IdleRequestTimeoutHandler() {}
+  ~IdleRequestTimeoutHandler() override {}
 
   RefPtr<IdleRequest> mIdleRequest;
   nsCOMPtr<nsPIDOMWindowInner> mWindow;

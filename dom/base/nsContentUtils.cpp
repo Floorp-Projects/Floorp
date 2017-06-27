@@ -586,7 +586,7 @@ public:
 
   void Init();
   void Shutdown();
-  virtual void AnnotateHang(HangMonitor::HangAnnotations& aAnnotations) override;
+  void AnnotateHang(HangMonitor::HangAnnotations& aAnnotations) override;
 
   static Atomic<bool> sUserActive;
 
