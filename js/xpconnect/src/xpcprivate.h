@@ -1018,7 +1018,7 @@ public:
 
     bool IsAddonScope() { return mIsAddonScope; }
 
-    bool HasInterposition() { return mInterposition; }
+    inline bool HasInterposition() { return mInterposition; }
     nsCOMPtr<nsIAddonInterposition> GetInterposition();
 
     static bool SetAddonInterposition(JSContext* cx,
@@ -3069,6 +3069,11 @@ public:
     // This compartment corresponds to a WebExtension content script, and
     // receives various bits of special compatibility behavior.
     bool isWebExtensionContentScript;
+
+    // True if wrappers in this compartment will interpose on some property
+    // accesses on objects from other compartments, for add-on compatibility
+    // reasons.
+    bool hasInterposition;
 
     // Even if an add-on needs interposition, it does not necessary need it
     // for every compartment. If this flag is set we waive interposition for

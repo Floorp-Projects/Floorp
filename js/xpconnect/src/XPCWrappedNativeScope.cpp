@@ -136,11 +136,11 @@ XPCWrappedNativeScope::XPCWrappedNativeScope(JSContext* cx,
     // Determine whether to use an XBL scope.
     mUseContentXBLScope = mAllowContentXBLScope;
     if (mUseContentXBLScope) {
-      const js::Class* clasp = js::GetObjectClass(mGlobalJSObject);
-      mUseContentXBLScope = !strcmp(clasp->name, "Window");
+        const js::Class* clasp = js::GetObjectClass(mGlobalJSObject);
+        mUseContentXBLScope = !strcmp(clasp->name, "Window");
     }
     if (mUseContentXBLScope) {
-      mUseContentXBLScope = principal && !nsContentUtils::IsSystemPrincipal(principal);
+        mUseContentXBLScope = principal && !nsContentUtils::IsSystemPrincipal(principal);
     }
 
     JSAddonId* addonId = JS::AddonIdOfObject(aGlobal);
@@ -151,17 +151,20 @@ XPCWrappedNativeScope::XPCWrappedNativeScope(JSContext* cx,
         if (!waiveInterposition && interposition) {
             MOZ_RELEASE_ASSERT(isSystem);
             mInterposition = interposition->value();
+            priv->hasInterposition = HasInterposition();
         }
         // We also want multiprocessCompatible add-ons to have a default interposition.
         if (!mInterposition && addonId && isSystem) {
-          bool interpositionEnabled = mozilla::Preferences::GetBool(
-            "extensions.interposition.enabled", false);
-          if (interpositionEnabled) {
-            mInterposition = do_GetService("@mozilla.org/addons/default-addon-shims;1");
-            MOZ_ASSERT(mInterposition);
-            UpdateInterpositionWhitelist(cx, mInterposition);
-          }
+            bool interpositionEnabled = mozilla::Preferences::GetBool(
+                "extensions.interposition.enabled", false);
+            if (interpositionEnabled) {
+                mInterposition = do_GetService("@mozilla.org/addons/default-addon-shims;1");
+                MOZ_ASSERT(mInterposition);
+                priv->hasInterposition = true;
+                UpdateInterpositionWhitelist(cx, mInterposition);
+            }
         }
+        MOZ_ASSERT(HasInterposition() == priv->hasInterposition);
     }
 
     if (addonId) {
