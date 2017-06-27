@@ -104,6 +104,7 @@ class GlobalPCList {
         }
       }
     }
+    return null;
   }
 
   removeNullRefs(winID) {
@@ -440,8 +441,6 @@ class RTCPeerConnection {
     this.__DOM_IMPL__._innerObject = this;
     this._observer = new this._win.PeerConnectionObserver(this.__DOM_IMPL__);
 
-    var location = "" + this._win.location;
-
     // Warn just once per PeerConnection about deprecated getStats usage.
     this._warnDeprecatedStatsAccessNullable = { warn: () =>
       this.logWarning("non-maplike pc.getStats access is deprecated, and will be removed in the near future! " +
@@ -527,7 +526,7 @@ class RTCPeerConnection {
       // closed, hanging the chain. However, c++ may already have queued tasks
       // on us, so if we're one of those then sit back.
       if (this._closed) {
-        return;
+        return null;
       }
       return await func();
     })();
@@ -1131,7 +1130,7 @@ class RTCPeerConnection {
 
   _getParameters({ track }) {
     if (!Services.prefs.getBoolPref("media.peerconnection.simulcast")) {
-      return;
+      return null;
     }
     return this._impl.getParameters(track);
   }
@@ -1291,7 +1290,6 @@ setupPrototype(RTCPeerConnection, {
     answer: Ci.IPeerConnection.kActionAnswer,
     pranswer: Ci.IPeerConnection.kActionPRAnswer,
     rollback: Ci.IPeerConnection.kActionRollback,
-    answer: Ci.IPeerConnection.kActionAnswer,
   },
 });
 
