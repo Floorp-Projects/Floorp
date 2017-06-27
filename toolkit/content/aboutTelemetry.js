@@ -1989,26 +1989,6 @@ var KeyedHistogramSection = {
   },
 }
 
-var AddonHistogramSection = {
-  render(aPayload) {
-    let addonDiv = document.getElementById("addon-histograms");
-    removeAllChildNodes(addonDiv);
-
-    let addonHistogramsRendered = false;
-    let addonData = aPayload.addonHistograms;
-    if (addonData) {
-      for (let [addon, histograms] of Object.entries(addonData)) {
-        for (let [name, hgram] of Object.entries(histograms)) {
-          addonHistogramsRendered = true;
-          Histogram.render(addonDiv, addon + ": " + name, hgram, {unpacked: true});
-        }
-      }
-    }
-
-    setHasData("addon-histograms-section", addonHistogramsRendered);
-  },
-}
-
 var SessionInformation = {
   render(aPayload) {
     let infoSection = document.getElementById("session-info");
@@ -2250,9 +2230,6 @@ function displayRichPingData(ping, updatePayloadList) {
 
   // Show event data.
   Events.render(payload);
-
-  // Show addon histogram data
-  AddonHistogramSection.render(payload);
 }
 
 window.addEventListener("load", onLoad);

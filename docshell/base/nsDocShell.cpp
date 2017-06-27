@@ -374,14 +374,15 @@ ForEachPing(nsIContent* aContent, ForEachPingCallback aCallback, void* aClosure)
   }
 
   nsIDocument* doc = aContent->OwnerDoc();
+  nsAutoCString charset;
+  doc->GetDocumentCharacterSet()->Name(charset);
 
   nsWhitespaceTokenizer tokenizer(value);
 
   while (tokenizer.hasMoreTokens()) {
     nsCOMPtr<nsIURI> uri, baseURI = aContent->GetBaseURI();
     ios->NewURI(NS_ConvertUTF16toUTF8(tokenizer.nextToken()),
-                doc->GetDocumentCharacterSet().get(),
-                baseURI, getter_AddRefs(uri));
+                charset.get(), baseURI, getter_AddRefs(uri));
     // if we can't generate a valid URI, then there is nothing to do
     if (!uri) {
       continue;
@@ -835,6 +836,8 @@ nsDocShell::nsDocShell()
   , mDefaultLoadFlags(nsIRequest::LOAD_NORMAL)
   , mFrameType(FRAME_TYPE_REGULAR)
   , mPrivateBrowsingId(0)
+  , mForcedCharset(nullptr)
+  , mParentCharset(nullptr)
   , mParentCharsetSource(0)
   , mJSRunToCompletionDepth(0)
   , mTouchEventsOverride(nsIDocShell::TOUCHEVENTS_OVERRIDE_NONE)
@@ -2035,7 +2038,7 @@ nsDocShell::GetCharset(nsACString& aCharset)
   NS_ENSURE_TRUE(presShell, NS_ERROR_FAILURE);
   nsIDocument* doc = presShell->GetDocument();
   NS_ENSURE_TRUE(doc, NS_ERROR_FAILURE);
-  aCharset = doc->GetDocumentCharacterSet();
+  doc->GetDocumentCharacterSet()->Name(aCharset);
   return NS_OK;
 }
 
@@ -2121,7 +2124,7 @@ NS_IMETHODIMP
 nsDocShell::SetForcedCharset(const nsACString& aCharset)
 {
   if (aCharset.IsEmpty()) {
-    mForcedCharset.Truncate();
+    mForcedCharset = nullptr;
     return NS_OK;
   }
   const Encoding* encoding = Encoding::ForLabel(aCharset);
@@ -2133,19 +2136,19 @@ nsDocShell::SetForcedCharset(const nsACString& aCharset)
     // Reject XSS hazards
     return NS_ERROR_INVALID_ARG;
   }
-  encoding->Name(mForcedCharset);
+  mForcedCharset = encoding;
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsDocShell::GetForcedCharset(nsACString& aResult)
 {
-  aResult = mForcedCharset;
+  mForcedCharset->Name(aResult);
   return NS_OK;
 }
 
 void
-nsDocShell::SetParentCharset(const nsACString& aCharset,
+nsDocShell::SetParentCharset(const Encoding*& aCharset,
                              int32_t aCharsetSource,
                              nsIPrincipal* aPrincipal)
 {
@@ -2155,7 +2158,7 @@ nsDocShell::SetParentCharset(const nsACString& aCharset,
 }
 
 void
-nsDocShell::GetParentCharset(nsACString& aCharset,
+nsDocShell::GetParentCharset(const Encoding*& aCharset,
                              int32_t* aCharsetSource,
                              nsIPrincipal** aPrincipal)
 {
@@ -4197,7 +4200,7 @@ nsDocShell::AddChild(nsIDocShellTreeItem* aChild)
     // the actual source charset, which is what we're trying to
     // expose here.
 
-    const nsACString& parentCS = doc->GetDocumentCharacterSet();
+    const Encoding* parentCS = doc->GetDocumentCharacterSet();
     int32_t charsetSource = doc->GetDocumentCharacterSetSource();
     // set the child's parentCharset
     childAsDocShell->SetParentCharset(parentCS,
@@ -11633,7 +11636,8 @@ nsDocShell::ScrollToAnchor(bool aCurHasRef, bool aNewHasRef,
       NS_ENSURE_TRUE(mContentViewer, NS_ERROR_FAILURE);
       nsIDocument* doc = mContentViewer->GetDocument();
       NS_ENSURE_TRUE(doc, NS_ERROR_FAILURE);
-      const nsACString& charset = doc->GetDocumentCharacterSet();
+      nsAutoCString charset;
+      doc->GetDocumentCharacterSet()->Name(charset);
 
       nsCOMPtr<nsITextToSubURI> textToSubURI =
         do_GetService(NS_ITEXTTOSUBURI_CONTRACTID, &rv);

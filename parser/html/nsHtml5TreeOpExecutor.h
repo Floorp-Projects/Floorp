@@ -36,6 +36,8 @@ class nsHtml5TreeOpExecutor final : public nsHtml5DocumentBuilder,
 {
   friend class nsHtml5FlushLoopGuard;
   typedef mozilla::net::ReferrerPolicy ReferrerPolicy;
+  using Encoding = mozilla::Encoding;
+  template <typename T> using NotNull = mozilla::NotNull<T>;
 
   public:
     NS_DECL_ISUPPORTS_INHERITED
@@ -140,9 +142,9 @@ class nsHtml5TreeOpExecutor final : public nsHtml5DocumentBuilder,
     /**
      * Don't call. For interface compat only.
      */
-    NS_IMETHOD SetDocumentCharset(nsACString& aCharset) override {
-    	NS_NOTREACHED("No one should call this.");
-    	return NS_ERROR_NOT_IMPLEMENTED;
+    virtual void SetDocumentCharset(NotNull<const Encoding*> aEncoding) override
+    {
+        NS_NOTREACHED("No one should call this.");
     }
 
     /**
@@ -184,7 +186,7 @@ class nsHtml5TreeOpExecutor final : public nsHtml5DocumentBuilder,
 
     void Start();
 
-    void NeedsCharsetSwitchTo(const char* aEncoding,
+    void NeedsCharsetSwitchTo(NotNull<const Encoding*> aEncoding,
                               int32_t aSource,
                               uint32_t aLineNumber);
 

@@ -24,7 +24,7 @@ class WebBrowserPersistLocalDocument final
 public:
     explicit WebBrowserPersistLocalDocument(nsIDocument* aDocument);
 
-    const nsCString& GetCharacterSet() const;
+    NotNull<const Encoding*> GetCharacterSet() const;
     uint32_t GetPersistFlags() const;
     already_AddRefed<nsIURI> GetBaseURI() const;
 

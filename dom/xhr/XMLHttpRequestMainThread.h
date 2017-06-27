@@ -708,7 +708,7 @@ protected:
   // part of the surrogate.
   mozilla::UniquePtr<mozilla::Decoder> mDecoder;
 
-  nsCString mResponseCharset;
+  const Encoding* mResponseCharset;
 
   void MatchCharsetAndDecoderToResponseDocument();
 
