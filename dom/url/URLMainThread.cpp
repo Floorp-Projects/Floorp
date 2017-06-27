@@ -125,8 +125,8 @@ URLMainThread::CreateObjectURL(const GlobalObject& aGlobal,
     return;
   }
 
-  nsCOMPtr<nsIRunnable> revocation = NS_NewRunnableFunction(
-    [url] {
+  nsCOMPtr<nsIRunnable> revocation =
+    NS_NewRunnableFunction("dom::URLMainThread::CreateObjectURL", [url] {
       nsHostObjectProtocolHandler::RemoveDataEntry(url);
     });
 

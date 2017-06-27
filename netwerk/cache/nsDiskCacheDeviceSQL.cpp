@@ -299,10 +299,11 @@ nsOfflineCacheEvictionFunction::Apply()
 class nsOfflineCacheDiscardCache : public Runnable
 {
 public:
-  nsOfflineCacheDiscardCache(nsOfflineCacheDevice *device,
-			     nsCString &group,
-			     nsCString &clientID)
-    : mDevice(device)
+  nsOfflineCacheDiscardCache(nsOfflineCacheDevice* device,
+                             nsCString& group,
+                             nsCString& clientID)
+    : mozilla::Runnable("nsOfflineCacheDiscardCache")
+    , mDevice(device)
     , mGroup(group)
     , mClientID(clientID)
   {
@@ -920,7 +921,8 @@ nsApplicationCache::GetUsage(uint32_t *usage)
 
 class nsCloseDBEvent : public Runnable {
 public:
-  explicit nsCloseDBEvent(mozIStorageConnection *aDB)
+  explicit nsCloseDBEvent(mozIStorageConnection* aDB)
+    : mozilla::Runnable("nsCloseDBEvent")
   {
     mDB = aDB;
   }

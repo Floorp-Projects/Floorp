@@ -242,11 +242,12 @@ class FileDescriptorHolder : public Runnable
 {
 public:
   FileDescriptorHolder()
-  : mQuotaObject(nullptr),
-    mFileSize(INT64_MIN),
-    mFileDesc(nullptr),
-    mFileMap(nullptr),
-    mMappedMemory(nullptr)
+    : Runnable("dom::asmjscache::FileDescriptorHolder")
+    , mQuotaObject(nullptr)
+    , mFileSize(INT64_MIN)
+    , mFileDesc(nullptr)
+    , mFileMap(nullptr)
+    , mMappedMemory(nullptr)
   { }
 
   ~FileDescriptorHolder() override

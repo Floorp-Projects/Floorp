@@ -165,11 +165,12 @@ APZCTreeManagerParent::RecvContentReceivedInputBlock(
     const uint64_t& aInputBlockId,
     const bool& aPreventDefault)
 {
-  APZThreadUtils::RunOnControllerThread(
-    NewRunnableMethod<uint64_t, bool>(mTreeManager,
-      &IAPZCTreeManager::ContentReceivedInputBlock,
-      aInputBlockId,
-      aPreventDefault));
+  APZThreadUtils::RunOnControllerThread(NewRunnableMethod<uint64_t, bool>(
+    "layers::IAPZCTreeManager::ContentReceivedInputBlock",
+    mTreeManager,
+    &IAPZCTreeManager::ContentReceivedInputBlock,
+    aInputBlockId,
+    aPreventDefault));
 
   return IPC_OK();
 }
@@ -186,10 +187,14 @@ APZCTreeManagerParent::RecvSetTargetAPZC(
       return IPC_FAIL_NO_REASON(this);
     }
   }
-  APZThreadUtils::RunOnControllerThread(NewRunnableMethod
-                                        <uint64_t,
-                                         StoreCopyPassByRRef<nsTArray<ScrollableLayerGuid>>>
-                                        (mTreeManager, &IAPZCTreeManager::SetTargetAPZC, aInputBlockId, aTargets));
+  APZThreadUtils::RunOnControllerThread(
+    NewRunnableMethod<uint64_t,
+                      StoreCopyPassByRRef<nsTArray<ScrollableLayerGuid>>>(
+      "layers::IAPZCTreeManager::SetTargetAPZC",
+      mTreeManager,
+      &IAPZCTreeManager::SetTargetAPZC,
+      aInputBlockId,
+      aTargets));
 
   return IPC_OK();
 }
@@ -234,12 +239,14 @@ APZCTreeManagerParent::RecvSetAllowedTouchBehavior(
     const uint64_t& aInputBlockId,
     nsTArray<TouchBehaviorFlags>&& aValues)
 {
-  APZThreadUtils::RunOnControllerThread(NewRunnableMethod
-                                        <uint64_t,
-                                         StoreCopyPassByRRef<nsTArray<TouchBehaviorFlags>>>
-                                        (mTreeManager,
-                                         &IAPZCTreeManager::SetAllowedTouchBehavior,
-                                         aInputBlockId, Move(aValues)));
+  APZThreadUtils::RunOnControllerThread(
+    NewRunnableMethod<uint64_t,
+                      StoreCopyPassByRRef<nsTArray<TouchBehaviorFlags>>>(
+      "layers::IAPZCTreeManager::SetAllowedTouchBehavior",
+      mTreeManager,
+      &IAPZCTreeManager::SetAllowedTouchBehavior,
+      aInputBlockId,
+      Move(aValues)));
 
   return IPC_OK();
 }
@@ -255,11 +262,13 @@ APZCTreeManagerParent::RecvStartScrollbarDrag(
     return IPC_FAIL_NO_REASON(this);
   }
 
-    APZThreadUtils::RunOnControllerThread(
-        NewRunnableMethod<ScrollableLayerGuid, AsyncDragMetrics>(
-          mTreeManager,
-          &IAPZCTreeManager::StartScrollbarDrag,
-          aGuid, aDragMetrics));
+  APZThreadUtils::RunOnControllerThread(
+    NewRunnableMethod<ScrollableLayerGuid, AsyncDragMetrics>(
+      "layers::IAPZCTreeManager::StartScrollbarDrag",
+      mTreeManager,
+      &IAPZCTreeManager::StartScrollbarDrag,
+      aGuid,
+      aDragMetrics));
 
   return IPC_OK();
 }

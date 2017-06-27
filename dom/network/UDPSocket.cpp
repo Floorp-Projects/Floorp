@@ -551,7 +551,9 @@ UDPSocket::Init(const nsString& aLocalAddress,
   class OpenSocketRunnable final : public Runnable
   {
   public:
-    explicit OpenSocketRunnable(UDPSocket* aSocket) : mSocket(aSocket)
+    explicit OpenSocketRunnable(UDPSocket* aSocket)
+      : mozilla::Runnable("OpenSocketRunnable")
+      , mSocket(aSocket)
     { }
 
     NS_IMETHOD Run() override

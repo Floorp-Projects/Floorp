@@ -232,7 +232,9 @@ TestEndpointBridgeMainSubChild::RecvHi()
   // Need to close the channel without message-processing frames on
   // the C++ stack
   MessageLoop::current()->PostTask(
-    NewNonOwningRunnableMethod(this, &TestEndpointBridgeMainSubChild::Close));
+    NewNonOwningRunnableMethod("ipc::IToplevelProtocol::Close",
+                               this,
+                               &TestEndpointBridgeMainSubChild::Close));
   return IPC_OK();
 }
 

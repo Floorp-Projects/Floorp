@@ -405,7 +405,7 @@ JSExternalString::finalize(js::FreeOp* fop)
     }
 
     const JSStringFinalizer* fin = externalFinalizer();
-    fin->finalize(zone(), fin, const_cast<char16_t*>(rawTwoByteChars()));
+    fin->finalize(fin, const_cast<char16_t*>(rawTwoByteChars()));
 }
 
 #endif /* vm_String_inl_h */

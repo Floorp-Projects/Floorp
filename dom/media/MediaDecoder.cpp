@@ -142,8 +142,6 @@ NS_IMPL_ISUPPORTS(MediaMemoryTracker, nsIMemoryReporter)
 
 NS_IMPL_ISUPPORTS0(MediaDecoder)
 
-
-
 void
 MediaDecoder::NotifyOwnerActivityChanged(bool aIsDocumentVisible,
                                          Visibility aElementVisibility,
@@ -338,10 +336,11 @@ MediaDecoder::Shutdown()
     // Ensure we always unregister asynchronously in order not to disrupt
     // the hashtable iterating in MediaShutdownManager::Shutdown().
     RefPtr<MediaDecoder> self = this;
-    nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction([self] () {
-      self->mVideoFrameContainer = nullptr;
-      MediaShutdownManager::Instance().Unregister(self);
-    });
+    nsCOMPtr<nsIRunnable> r =
+      NS_NewRunnableFunction("MediaDecoder::Shutdown", [self]() {
+        self->mVideoFrameContainer = nullptr;
+        MediaShutdownManager::Instance().Unregister(self);
+      });
     mAbstractMainThread->Dispatch(r.forget());
   }
 

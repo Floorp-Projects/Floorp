@@ -129,6 +129,20 @@ public:
     mBackgroundActor = nullptr;
   }
 
+  // Increase/Decrease the number of active transactions for the decision
+  // making of preemption and throttling.
+  // Note: If the state of its actor is not committed or aborted, it could block
+  // IDB operations in other window.
+  void
+  UpdateActiveTransactionCount(int32_t aDelta);
+
+  // Increase/Decrease the number of active databases and IDBOpenRequests for
+  // the decision making of preemption and throttling.
+  // Note: A non-closed database or a pending IDBOpenRequest could block
+  // IDB operations in other window.
+  void
+  UpdateActiveDatabaseCount(int32_t aDelta);
+
   void
   IncrementParentLoggingRequestSerialNumber();
 

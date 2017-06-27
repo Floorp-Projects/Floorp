@@ -219,7 +219,7 @@ class ExecutableAllocator
 
     static void poisonCode(JSRuntime* rt, JitPoisonRangeVector& ranges);
 
-#if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64) || defined(JS_SIMULATOR_ARM64)
+#if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64) || defined(JS_SIMULATOR_ARM64) || defined(JS_CODEGEN_NONE)
     static void cacheFlush(void*, size_t)
     {
     }

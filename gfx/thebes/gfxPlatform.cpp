@@ -312,7 +312,11 @@ class LogForwarderEvent : public Runnable
 
   NS_DECL_ISUPPORTS_INHERITED
 
-  explicit LogForwarderEvent(const nsCString& aMessage) : mMessage(aMessage) {}
+  explicit LogForwarderEvent(const nsCString& aMessage)
+    : mozilla::Runnable("LogForwarderEvent")
+    , mMessage(aMessage)
+  {
+  }
 
   NS_IMETHOD Run() override {
     MOZ_ASSERT(NS_IsMainThread() && (XRE_IsContentProcess() || XRE_IsGPUProcess()));
@@ -366,7 +370,11 @@ class CrashTelemetryEvent : public Runnable
 
   NS_DECL_ISUPPORTS_INHERITED
 
-  explicit CrashTelemetryEvent(uint32_t aReason) : mReason(aReason) {}
+  explicit CrashTelemetryEvent(uint32_t aReason)
+    : mozilla::Runnable("CrashTelemetryEvent")
+    , mReason(aReason)
+  {
+  }
 
   NS_IMETHOD Run() override {
     MOZ_ASSERT(NS_IsMainThread());
@@ -2715,11 +2723,12 @@ gfxPlatform::NotifyCompositorCreated(LayersBackend aBackend)
   mCompositorBackend = aBackend;
 
   // Notify that we created a compositor, so telemetry can update.
-  NS_DispatchToMainThread(NS_NewRunnableFunction([] {
-    if (nsCOMPtr<nsIObserverService> obsvc = services::GetObserverService()) {
-      obsvc->NotifyObservers(nullptr, "compositor:created", nullptr);
-    }
-  }));
+  NS_DispatchToMainThread(
+    NS_NewRunnableFunction("gfxPlatform::NotifyCompositorCreated", [] {
+      if (nsCOMPtr<nsIObserverService> obsvc = services::GetObserverService()) {
+        obsvc->NotifyObservers(nullptr, "compositor:created", nullptr);
+      }
+    }));
 }
 
 /* static */ void

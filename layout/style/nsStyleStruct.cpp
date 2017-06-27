@@ -1937,7 +1937,8 @@ public:
                                already_AddRefed<imgRequestProxy> aRequestProxy,
                                already_AddRefed<css::ImageValue> aImageValue,
                                already_AddRefed<ImageTracker> aImageTracker)
-    : mModeFlags(aModeFlags)
+    : mozilla::Runnable("StyleImageRequestCleanupTask")
+    , mModeFlags(aModeFlags)
     , mRequestProxy(aRequestProxy)
     , mImageValue(aImageValue)
     , mImageTracker(aImageTracker)
@@ -2127,6 +2128,7 @@ CachedBorderImageData::GetCachedSVGViewportSize()
 
 struct PurgeCachedImagesTask : mozilla::Runnable
 {
+  PurgeCachedImagesTask() : mozilla::Runnable("PurgeCachedImagesTask") {}
   NS_IMETHOD Run() final
   {
     mSubImages.Clear();

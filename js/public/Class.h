@@ -473,9 +473,12 @@ typedef bool
 typedef void
 (* JSFinalizeOp)(JSFreeOp* fop, JSObject* obj);
 
-/** Finalizes external strings created by JS_NewExternalString. */
+/**
+ * Finalizes external strings created by JS_NewExternalString. The finalizer
+ * can be called off the main thread.
+ */
 struct JSStringFinalizer {
-    void (*finalize)(JS::Zone* zone, const JSStringFinalizer* fin, char16_t* chars);
+    void (*finalize)(const JSStringFinalizer* fin, char16_t* chars);
 };
 
 /**

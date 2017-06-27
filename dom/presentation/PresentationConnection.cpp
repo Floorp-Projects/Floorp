@@ -641,7 +641,9 @@ NS_IMETHODIMP
 PresentationConnection::Cancel(nsresult aStatus)
 {
   nsCOMPtr<nsIRunnable> event =
-    NewRunnableMethod(this, &PresentationConnection::ProcessConnectionWentAway);
+    NewRunnableMethod("dom::PresentationConnection::ProcessConnectionWentAway",
+                      this,
+                      &PresentationConnection::ProcessConnectionWentAway);
   return NS_DispatchToCurrentThread(event);
 }
 NS_IMETHODIMP
@@ -736,8 +738,9 @@ PresentationConnection::AsyncCloseConnectionWithErrorMsg(const nsAString& aMessa
 
   nsString message = nsString(aMessage);
   RefPtr<PresentationConnection> self = this;
-  nsCOMPtr<nsIRunnable> r =
-    NS_NewRunnableFunction([self, message]() -> void {
+  nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction(
+    "dom::PresentationConnection::AsyncCloseConnectionWithErrorMsg",
+    [self, message]() -> void {
       // Set |mState| to |PresentationConnectionState::Closed| here to avoid
       // calling |ProcessStateChanged|.
       self->mState = PresentationConnectionState::Closed;

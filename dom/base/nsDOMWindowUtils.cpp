@@ -1106,10 +1106,21 @@ nsDOMWindowUtils::SendNativeKeyEvent(int32_t aNativeKeyboardLayout,
   if (!widget)
     return NS_ERROR_FAILURE;
 
-  NS_DispatchToMainThread(NewRunnableMethod
-    <int32_t, int32_t, uint32_t, nsString, nsString, nsIObserver*>
-    (widget, &nsIWidget::SynthesizeNativeKeyEvent, aNativeKeyboardLayout,
-    aNativeKeyCode, aModifiers, aCharacters, aUnmodifiedCharacters, aObserver));
+  NS_DispatchToMainThread(
+    NewRunnableMethod<int32_t,
+                      int32_t,
+                      uint32_t,
+                      nsString,
+                      nsString,
+                      nsIObserver*>("nsIWidget::SynthesizeNativeKeyEvent",
+                                    widget,
+                                    &nsIWidget::SynthesizeNativeKeyEvent,
+                                    aNativeKeyboardLayout,
+                                    aNativeKeyCode,
+                                    aModifiers,
+                                    aCharacters,
+                                    aUnmodifiedCharacters,
+                                    aObserver));
   return NS_OK;
 }
 
@@ -1126,11 +1137,15 @@ nsDOMWindowUtils::SendNativeMouseEvent(int32_t aScreenX,
   if (!widget)
     return NS_ERROR_FAILURE;
 
-  NS_DispatchToMainThread(NewRunnableMethod
-    <LayoutDeviceIntPoint, int32_t, int32_t, nsIObserver*>
-    (widget, &nsIWidget::SynthesizeNativeMouseEvent,
-    LayoutDeviceIntPoint(aScreenX, aScreenY), aNativeMessage, aModifierFlags,
-    aObserver));
+  NS_DispatchToMainThread(
+    NewRunnableMethod<LayoutDeviceIntPoint, int32_t, int32_t, nsIObserver*>(
+      "nsIWidget::SynthesizeNativeMouseEvent",
+      widget,
+      &nsIWidget::SynthesizeNativeMouseEvent,
+      LayoutDeviceIntPoint(aScreenX, aScreenY),
+      aNativeMessage,
+      aModifierFlags,
+      aObserver));
   return NS_OK;
 }
 
@@ -1145,10 +1160,12 @@ nsDOMWindowUtils::SendNativeMouseMove(int32_t aScreenX,
   if (!widget)
     return NS_ERROR_FAILURE;
 
-  NS_DispatchToMainThread(NewRunnableMethod
-    <LayoutDeviceIntPoint, nsIObserver*>
-    (widget, &nsIWidget::SynthesizeNativeMouseMove,
-    LayoutDeviceIntPoint(aScreenX, aScreenY), aObserver));
+  NS_DispatchToMainThread(NewRunnableMethod<LayoutDeviceIntPoint, nsIObserver*>(
+    "nsIWidget::SynthesizeNativeMouseMove",
+    widget,
+    &nsIWidget::SynthesizeNativeMouseMove,
+    LayoutDeviceIntPoint(aScreenX, aScreenY),
+    aObserver));
   return NS_OK;
 }
 
@@ -1170,11 +1187,25 @@ nsDOMWindowUtils::SendNativeMouseScrollEvent(int32_t aScreenX,
     return NS_ERROR_FAILURE;
   }
 
-  NS_DispatchToMainThread(NewRunnableMethod
-    <mozilla::LayoutDeviceIntPoint, uint32_t, double, double, double, uint32_t, uint32_t, nsIObserver*>
-    (widget, &nsIWidget::SynthesizeNativeMouseScrollEvent,
-    LayoutDeviceIntPoint(aScreenX, aScreenY), aNativeMessage, aDeltaX, aDeltaY,
-    aDeltaZ, aModifierFlags, aAdditionalFlags, aObserver));
+  NS_DispatchToMainThread(NewRunnableMethod<mozilla::LayoutDeviceIntPoint,
+                                            uint32_t,
+                                            double,
+                                            double,
+                                            double,
+                                            uint32_t,
+                                            uint32_t,
+                                            nsIObserver*>(
+    "nsIWidget::SynthesizeNativeMouseScrollEvent",
+    widget,
+    &nsIWidget::SynthesizeNativeMouseScrollEvent,
+    LayoutDeviceIntPoint(aScreenX, aScreenY),
+    aNativeMessage,
+    aDeltaX,
+    aDeltaY,
+    aDeltaZ,
+    aModifierFlags,
+    aAdditionalFlags,
+    aObserver));
   return NS_OK;
 }
 
@@ -1196,12 +1227,21 @@ nsDOMWindowUtils::SendNativeTouchPoint(uint32_t aPointerId,
     return NS_ERROR_INVALID_ARG;
   }
 
-  NS_DispatchToMainThread(NewRunnableMethod
-    <uint32_t, nsIWidget::TouchPointerState, LayoutDeviceIntPoint, double, uint32_t, nsIObserver*>
-    (widget, &nsIWidget::SynthesizeNativeTouchPoint, aPointerId,
-    (nsIWidget::TouchPointerState)aTouchState,
-    LayoutDeviceIntPoint(aScreenX, aScreenY),
-    aPressure, aOrientation, aObserver));
+  NS_DispatchToMainThread(
+    NewRunnableMethod<uint32_t,
+                      nsIWidget::TouchPointerState,
+                      LayoutDeviceIntPoint,
+                      double,
+                      uint32_t,
+                      nsIObserver*>("nsIWidget::SynthesizeNativeTouchPoint",
+                                    widget,
+                                    &nsIWidget::SynthesizeNativeTouchPoint,
+                                    aPointerId,
+                                    (nsIWidget::TouchPointerState)aTouchState,
+                                    LayoutDeviceIntPoint(aScreenX, aScreenY),
+                                    aPressure,
+                                    aOrientation,
+                                    aObserver));
   return NS_OK;
 }
 
@@ -1216,10 +1256,14 @@ nsDOMWindowUtils::SendNativeTouchTap(int32_t aScreenX,
     return NS_ERROR_FAILURE;
   }
 
-  NS_DispatchToMainThread(NewRunnableMethod
-    <LayoutDeviceIntPoint, bool, nsIObserver*>
-    (widget, &nsIWidget::SynthesizeNativeTouchTap,
-    LayoutDeviceIntPoint(aScreenX, aScreenY), aLongTap, aObserver));
+  NS_DispatchToMainThread(
+    NewRunnableMethod<LayoutDeviceIntPoint, bool, nsIObserver*>(
+      "nsIWidget::SynthesizeNativeTouchTap",
+      widget,
+      &nsIWidget::SynthesizeNativeTouchTap,
+      LayoutDeviceIntPoint(aScreenX, aScreenY),
+      aLongTap,
+      aObserver));
   return NS_OK;
 }
 
@@ -1231,8 +1275,11 @@ nsDOMWindowUtils::ClearNativeTouchSequence(nsIObserver* aObserver)
     return NS_ERROR_FAILURE;
   }
 
-  NS_DispatchToMainThread(NewRunnableMethod<nsIObserver*>
-    (widget, &nsIWidget::ClearNativeTouchSequence, aObserver));
+  NS_DispatchToMainThread(
+    NewRunnableMethod<nsIObserver*>("nsIWidget::ClearNativeTouchSequence",
+                                    widget,
+                                    &nsIWidget::ClearNativeTouchSequence,
+                                    aObserver));
   return NS_OK;
 }
 

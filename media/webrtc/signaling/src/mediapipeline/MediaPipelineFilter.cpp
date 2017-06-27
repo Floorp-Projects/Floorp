@@ -91,6 +91,11 @@ void MediaPipelineFilter::Update(const MediaPipelineFilter& filter_update) {
 bool
 MediaPipelineFilter::FilterSenderReport(const unsigned char* data,
                                         size_t len) const {
+
+  if (!data) {
+    return false;
+  }
+
   if (len < FIRST_SSRC_OFFSET + 4) {
     return false;
   }

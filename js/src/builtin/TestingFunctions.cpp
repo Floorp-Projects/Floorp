@@ -1262,13 +1262,13 @@ DisableTrackAllocations(JSContext* cx, unsigned argc, Value* vp)
 }
 
 static void
-FinalizeExternalString(Zone* zone, const JSStringFinalizer* fin, char16_t* chars);
+FinalizeExternalString(const JSStringFinalizer* fin, char16_t* chars);
 
 static const JSStringFinalizer ExternalStringFinalizer =
     { FinalizeExternalString };
 
 static void
-FinalizeExternalString(Zone* zone, const JSStringFinalizer* fin, char16_t* chars)
+FinalizeExternalString(const JSStringFinalizer* fin, char16_t* chars)
 {
     MOZ_ASSERT(fin == &ExternalStringFinalizer);
     js_free(chars);

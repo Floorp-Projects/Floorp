@@ -44,7 +44,8 @@ PaintThread::Init()
   }
 
   nsCOMPtr<nsIRunnable> paintInitTask =
-    NewRunnableMethod(this, &PaintThread::InitOnPaintThread);
+    NewRunnableMethod("PaintThread::InitOnPaintThread",
+                      this, &PaintThread::InitOnPaintThread);
 
   SyncRunnable::DispatchToThread(PaintThread::sSingleton->mThread, paintInitTask);
   return true;
@@ -100,7 +101,8 @@ PaintThread::PaintContents(DrawTargetCapture* aCapture,
   if (!IsOnPaintThread()) {
     MOZ_ASSERT(NS_IsMainThread());
     nsCOMPtr<nsIRunnable> paintTask =
-      NewRunnableMethod<DrawTargetCapture*, DrawTarget*>(this,
+      NewRunnableMethod<DrawTargetCapture*, DrawTarget*>("PaintThread::PaintContents",
+                                                         this,
                                                          &PaintThread::PaintContents,
                                                          aCapture, aTarget);
 

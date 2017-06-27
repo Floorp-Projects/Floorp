@@ -34,9 +34,12 @@ public:
    * the event is dispatched to it, otherwise the dispatch path starts
    * at the first chrome ancestor of that target.
    */
-  AsyncEventDispatcher(nsINode* aTarget, const nsAString& aEventType,
-                       bool aBubbles, bool aOnlyChromeDispatch)
-    : mTarget(aTarget)
+  AsyncEventDispatcher(nsINode* aTarget,
+                       const nsAString& aEventType,
+                       bool aBubbles,
+                       bool aOnlyChromeDispatch)
+    : CancelableRunnable("AsyncEventDispatcher")
+    , mTarget(aTarget)
     , mEventType(aEventType)
     , mEventMessage(eUnidentifiedEvent)
     , mBubbles(aBubbles)
@@ -53,7 +56,8 @@ public:
   AsyncEventDispatcher(nsINode* aTarget,
                        mozilla::EventMessage aEventMessage,
                        bool aBubbles, bool aOnlyChromeDispatch)
-    : mTarget(aTarget)
+    : CancelableRunnable("AsyncEventDispatcher")
+    , mTarget(aTarget)
     , mEventMessage(aEventMessage)
     , mBubbles(aBubbles)
     , mOnlyChromeDispatch(aOnlyChromeDispatch)
@@ -64,7 +68,8 @@ public:
 
   AsyncEventDispatcher(dom::EventTarget* aTarget, const nsAString& aEventType,
                        bool aBubbles)
-    : mTarget(aTarget)
+    : CancelableRunnable("AsyncEventDispatcher")
+    , mTarget(aTarget)
     , mEventType(aEventType)
     , mEventMessage(eUnidentifiedEvent)
     , mBubbles(aBubbles)
@@ -74,7 +79,8 @@ public:
   AsyncEventDispatcher(dom::EventTarget* aTarget,
                        mozilla::EventMessage aEventMessage,
                        bool aBubbles)
-    : mTarget(aTarget)
+    : CancelableRunnable("AsyncEventDispatcher")
+    , mTarget(aTarget)
     , mEventMessage(aEventMessage)
     , mBubbles(aBubbles)
   {
@@ -83,7 +89,8 @@ public:
   }
 
   AsyncEventDispatcher(dom::EventTarget* aTarget, nsIDOMEvent* aEvent)
-    : mTarget(aTarget)
+    : CancelableRunnable("AsyncEventDispatcher")
+    , mTarget(aTarget)
     , mEvent(aEvent)
     , mEventMessage(eUnidentifiedEvent)
   {

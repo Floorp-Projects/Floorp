@@ -1205,8 +1205,11 @@ private:
     }
 
   private:
-    explicit DiskConsumptionObserver(nsWeakPtr const &aWeakObserver)
-      : mObserver(aWeakObserver) { }
+    explicit DiskConsumptionObserver(nsWeakPtr const& aWeakObserver)
+      : Runnable("net::CacheIndex::DiskConsumptionObserver")
+      , mObserver(aWeakObserver)
+    {
+    }
     virtual ~DiskConsumptionObserver() {
       if (mObserver && !NS_IsMainThread()) {
         NS_ReleaseOnMainThread(

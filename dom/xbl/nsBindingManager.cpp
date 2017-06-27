@@ -390,8 +390,12 @@ nsBindingManager::DoProcessAttachedQueue()
     nsresult rv = NS_ERROR_FAILURE;
     nsCOMPtr<nsITimer> timer = do_CreateInstance(NS_TIMER_CONTRACTID);
     if (timer) {
-      rv = timer->InitWithFuncCallback(PostPAQEventCallback, this,
-                                       100, nsITimer::TYPE_ONE_SHOT);
+      rv = timer->InitWithNamedFuncCallback(
+        PostPAQEventCallback,
+        this,
+        100,
+        nsITimer::TYPE_ONE_SHOT,
+        "nsBindingManager::DoProcessAttachedQueue");
     }
     if (NS_SUCCEEDED(rv)) {
       NS_ADDREF_THIS();

@@ -154,7 +154,7 @@ IsBackgroundFinalized(AllocKind kind)
         true,      /* AllocKind::OBJECT_GROUP */
         true,      /* AllocKind::FAT_INLINE_STRING */
         true,      /* AllocKind::STRING */
-        false,     /* AllocKind::EXTERNAL_STRING */
+        true,      /* AllocKind::EXTERNAL_STRING */
         true,      /* AllocKind::FAT_INLINE_ATOM */
         true,      /* AllocKind::ATOM */
         true,      /* AllocKind::SYMBOL */

@@ -184,10 +184,16 @@ TEST(GeckoProfiler, DifferentThreads)
     uint32_t features = ProfilerFeature::JS | ProfilerFeature::Threads;
     const char* filters[] = { "GeckoMain", "Compositor" };
 
-    thread->Dispatch(NS_NewRunnableFunction([&]() {
-      profiler_start(PROFILER_DEFAULT_ENTRIES, PROFILER_DEFAULT_INTERVAL,
-                    features, filters, MOZ_ARRAY_LENGTH(filters));
-    }), NS_DISPATCH_SYNC);
+    thread->Dispatch(
+      NS_NewRunnableFunction("GeckoProfiler_DifferentThreads_Test::TestBody",
+                             [&]() {
+                               profiler_start(PROFILER_DEFAULT_ENTRIES,
+                                              PROFILER_DEFAULT_INTERVAL,
+                                              features,
+                                              filters,
+                                              MOZ_ARRAY_LENGTH(filters));
+                             }),
+      NS_DISPATCH_SYNC);
 
     ASSERT_TRUE(profiler_is_active());
     ASSERT_TRUE(!profiler_feature_active(ProfilerFeature::GPU));
@@ -197,9 +203,10 @@ TEST(GeckoProfiler, DifferentThreads)
     ActiveParamsCheck(PROFILER_DEFAULT_ENTRIES, PROFILER_DEFAULT_INTERVAL,
                       features, filters, MOZ_ARRAY_LENGTH(filters));
 
-    thread->Dispatch(NS_NewRunnableFunction([&]() {
-      profiler_stop();
-    }), NS_DISPATCH_SYNC);
+    thread->Dispatch(
+      NS_NewRunnableFunction("GeckoProfiler_DifferentThreads_Test::TestBody",
+                             [&]() { profiler_stop(); }),
+      NS_DISPATCH_SYNC);
 
     InactiveFeaturesAndParamsCheck();
   }
@@ -213,21 +220,29 @@ TEST(GeckoProfiler, DifferentThreads)
     profiler_start(PROFILER_DEFAULT_ENTRIES, PROFILER_DEFAULT_INTERVAL,
                   features, filters, MOZ_ARRAY_LENGTH(filters));
 
-    thread->Dispatch(NS_NewRunnableFunction([&]() {
-      ASSERT_TRUE(profiler_is_active());
-      ASSERT_TRUE(!profiler_feature_active(ProfilerFeature::GPU));
-      ASSERT_TRUE(!profiler_feature_active(ProfilerFeature::Privacy));
-      ASSERT_TRUE(!profiler_feature_active(ProfilerFeature::Restyle));
+    thread->Dispatch(
+      NS_NewRunnableFunction(
+        "GeckoProfiler_DifferentThreads_Test::TestBody",
+        [&]() {
+          ASSERT_TRUE(profiler_is_active());
+          ASSERT_TRUE(!profiler_feature_active(ProfilerFeature::GPU));
+          ASSERT_TRUE(!profiler_feature_active(ProfilerFeature::Privacy));
+          ASSERT_TRUE(!profiler_feature_active(ProfilerFeature::Restyle));
 
-      ActiveParamsCheck(PROFILER_DEFAULT_ENTRIES, PROFILER_DEFAULT_INTERVAL,
-                        features, filters, MOZ_ARRAY_LENGTH(filters));
-    }), NS_DISPATCH_SYNC);
+          ActiveParamsCheck(PROFILER_DEFAULT_ENTRIES,
+                            PROFILER_DEFAULT_INTERVAL,
+                            features,
+                            filters,
+                            MOZ_ARRAY_LENGTH(filters));
+        }),
+      NS_DISPATCH_SYNC);
 
     profiler_stop();
 
-    thread->Dispatch(NS_NewRunnableFunction([&]() {
-      InactiveFeaturesAndParamsCheck();
-    }), NS_DISPATCH_SYNC);
+    thread->Dispatch(
+      NS_NewRunnableFunction("GeckoProfiler_DifferentThreads_Test::TestBody",
+                             [&]() { InactiveFeaturesAndParamsCheck(); }),
+      NS_DISPATCH_SYNC);
   }
 
   thread->Shutdown();
@@ -540,11 +555,15 @@ TEST(GeckoProfiler, StreamJSONForThisProcessThreaded)
                 features, filters, MOZ_ARRAY_LENGTH(filters));
 
   // Call profiler_stream_json_for_this_process on a background thread.
-  thread->Dispatch(NS_NewRunnableFunction([&]() {
-    w.Start(SpliceableJSONWriter::SingleLineStyle);
-    ASSERT_TRUE(profiler_stream_json_for_this_process(w));
-    w.End();
-  }), NS_DISPATCH_SYNC);
+  thread->Dispatch(
+    NS_NewRunnableFunction(
+      "GeckoProfiler_StreamJSONForThisProcessThreaded_Test::TestBody",
+      [&]() {
+        w.Start(SpliceableJSONWriter::SingleLineStyle);
+        ASSERT_TRUE(profiler_stream_json_for_this_process(w));
+        w.End();
+      }),
+    NS_DISPATCH_SYNC);
 
   UniquePtr<char[]> profile = w.WriteFunc()->CopyData();
 
@@ -552,10 +571,14 @@ TEST(GeckoProfiler, StreamJSONForThisProcessThreaded)
 
   // Stop the profiler and call profiler_stream_json_for_this_process on a
   // background thread.
-  thread->Dispatch(NS_NewRunnableFunction([&]() {
-    profiler_stop();
-    ASSERT_TRUE(!profiler_stream_json_for_this_process(w));
-  }), NS_DISPATCH_SYNC);
+  thread->Dispatch(
+    NS_NewRunnableFunction(
+      "GeckoProfiler_StreamJSONForThisProcessThreaded_Test::TestBody",
+      [&]() {
+        profiler_stop();
+        ASSERT_TRUE(!profiler_stream_json_for_this_process(w));
+      }),
+    NS_DISPATCH_SYNC);
   thread->Shutdown();
 
   // Call profiler_stream_json_for_this_process on the main thread.

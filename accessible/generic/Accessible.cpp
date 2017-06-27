@@ -1803,8 +1803,13 @@ Accessible::DoCommand(nsIContent *aContent, uint32_t aActionIndex)
   class Runnable final : public mozilla::Runnable
   {
   public:
-    Runnable(Accessible* aAcc, nsIContent* aContent, uint32_t aIdx) :
-      mAcc(aAcc), mContent(aContent), mIdx(aIdx) { }
+    Runnable(Accessible* aAcc, nsIContent* aContent, uint32_t aIdx)
+      : mozilla::Runnable("Runnable")
+      , mAcc(aAcc)
+      , mContent(aContent)
+      , mIdx(aIdx)
+    {
+    }
 
     NS_IMETHOD Run() override
     {

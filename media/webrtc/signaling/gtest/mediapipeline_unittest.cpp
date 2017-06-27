@@ -6,44 +6,30 @@
 
 #include <iostream>
 
-#include "sigslot.h"
-
 #include "logging.h"
-#include "nsThreadUtils.h"
-#include "nsXPCOM.h"
 #include "nss.h"
 #include "ssl.h"
 #include "sslproto.h"
 
-#include "dtlsidentity.h"
+#include "AudioSegment.h"
+#include "AudioStreamTrack.h"
+#include "DOMMediaStream.h"
+#include "mozilla/Mutex.h"
 #include "mozilla/RefPtr.h"
-#include "FakeMediaStreams.h"
-#include "FakeMediaStreamsImpl.h"
-#include "FakeLogging.h"
-#include "MediaConduitErrors.h"
-#include "MediaConduitInterface.h"
 #include "MediaPipeline.h"
 #include "MediaPipelineFilter.h"
-#include "runnable_utils.h"
+#include "MediaStreamGraph.h"
+#include "MediaStreamListener.h"
+#include "MediaStreamTrack.h"
 #include "transportflow.h"
 #include "transportlayerloopback.h"
 #include "transportlayerdtls.h"
 #include "mozilla/SyncRunnable.h"
-
-
 #include "mtransport_test_utils.h"
-#include "runnable_utils.h"
-
-#include "webrtc/modules/include/module_common_types.h"
-
-#include "FakeIPC.h"
-#include "FakeIPC.cpp"
+#include "SharedBuffer.h"
 
 #define GTEST_HAS_RTTI 0
 #include "gtest/gtest.h"
-#include "gtest_utils.h"
-
-#include "TestHarness.h"
 
 using namespace mozilla;
 MOZ_MTLOG_MODULE("mediapipeline")
@@ -51,6 +37,123 @@ MOZ_MTLOG_MODULE("mediapipeline")
 MtransportTestUtils *test_utils;
 
 namespace {
+
+class FakeSourceMediaStream : public mozilla::SourceMediaStream {
+
+public:
+
+  FakeSourceMediaStream()
+    : SourceMediaStream(nullptr)
+  {
+  }
+
+  virtual ~FakeSourceMediaStream() override
+  {
+    mMainThreadDestroyed = true;
+  }
+
+  virtual bool AppendToTrack(TrackID aID, MediaSegment* aSegment, MediaSegment *aRawSegment = nullptr) override
+  {
+    return true;
+  }
+};
+
+class FakeMediaStreamTrackSource : public mozilla::dom::MediaStreamTrackSource {
+
+public:
+
+  FakeMediaStreamTrackSource()
+    : MediaStreamTrackSource(nullptr, nsString())
+  {
+  }
+
+  virtual mozilla::dom::MediaSourceEnum GetMediaSource() const override
+  {
+    return mozilla::dom::MediaSourceEnum::Microphone;
+  }
+
+  virtual void Stop() override
+  {
+  }
+
+};
+
+class FakeAudioStreamTrack : public mozilla::dom::AudioStreamTrack {
+
+public:
+
+  FakeAudioStreamTrack()
+    : AudioStreamTrack(new DOMMediaStream(nullptr, nullptr), 0, 1,
+                       new FakeMediaStreamTrackSource())
+    , mMutex("Fake AudioStreamTrack")
+    , mStop(false)
+    , mCount(0)
+  {
+    mTimer = do_CreateInstance(NS_TIMER_CONTRACTID);
+    mTimer->SetTarget(test_utils->sts_target());
+    mTimer->InitWithFuncCallback(FakeAudioStreamTrackGenerateData, this, 20,
+                                 nsITimer::TYPE_REPEATING_SLACK);
+
+  }
+
+  void Stop()
+  {
+    mozilla::MutexAutoLock lock(mMutex);
+    mStop = true;
+    mTimer->Cancel();
+  }
+
+  virtual void AddListener(MediaStreamTrackListener* aListener) override
+  {
+    mozilla::MutexAutoLock lock(mMutex);
+    mListeners.push_back(aListener);
+  }
+
+  virtual already_AddRefed<mozilla::dom::MediaStreamTrack> CloneInternal(DOMMediaStream* aOwningStream, TrackID aTrackID) override
+  {
+    return RefPtr<MediaStreamTrack>(new FakeAudioStreamTrack).forget();
+  }
+
+  private:
+    std::vector<MediaStreamTrackListener*> mListeners;
+    mozilla::Mutex mMutex;
+    bool mStop;
+    nsCOMPtr<nsITimer> mTimer;
+    int mCount;
+
+    static void FakeAudioStreamTrackGenerateData(nsITimer* timer, void* closure)
+    {
+      auto mst = static_cast<FakeAudioStreamTrack*>(closure);
+      const int AUDIO_BUFFER_SIZE = 1600;
+      const int NUM_CHANNELS      = 2;
+
+      mozilla::MutexAutoLock lock(mst->mMutex);
+      if (mst->mStop) {
+        return;
+      }
+
+      RefPtr<mozilla::SharedBuffer> samples =
+        mozilla::SharedBuffer::Create(AUDIO_BUFFER_SIZE * NUM_CHANNELS * sizeof(int16_t));
+      int16_t* data = reinterpret_cast<int16_t *>(samples->Data());
+      for(int i=0; i<(AUDIO_BUFFER_SIZE * NUM_CHANNELS); i++) {
+        //saw tooth audio sample
+        data[i] = ((mst->mCount % 8) * 4000) - (7*4000)/2;
+        mst->mCount++;
+      }
+
+      mozilla::AudioSegment segment;
+      AutoTArray<const int16_t *,1> channels;
+      channels.AppendElement(data);
+      segment.AppendFrames(samples.forget(),
+                           channels,
+                           AUDIO_BUFFER_SIZE,
+                           PRINCIPAL_HANDLE_NONE);
+
+      for (auto& listener: mst->mListeners) {
+        listener->NotifyQueuedChanges(nullptr, 0, segment);
+      }
+    }
+};
 
 class TransportInfo {
  public:
@@ -139,7 +242,6 @@ class TestAgent {
   TestAgent() :
       audio_config_(109, "opus", 48000, 960, 2, 64000, false),
       audio_conduit_(mozilla::AudioSessionConduit::Create()),
-      audio_(),
       audio_pipeline_() {
   }
 
@@ -161,19 +263,11 @@ class TestAgent {
   virtual void CreatePipelines_s(bool aIsRtcpMux) = 0;
 
   void Start() {
-    nsresult ret;
-
     MOZ_MTLOG(ML_DEBUG, "Starting");
-
-    mozilla::SyncRunnable::DispatchToThread(
-      test_utils->sts_target(),
-      WrapRunnableRet(&ret, audio_->GetStream(), &Fake_MediaStream::Start));
-
-    ASSERT_TRUE(NS_SUCCEEDED(ret));
+    audio_pipeline_->Init();
   }
 
   void StopInt() {
-    audio_->GetStream()->Stop();
   }
 
   void Stop() {
@@ -198,6 +292,8 @@ class TestAgent {
   void Shutdown() {
     if (audio_pipeline_)
       audio_pipeline_->ShutdownMedia_m();
+    if (audio_stream_track_)
+      audio_stream_track_->Stop();
 
     mozilla::SyncRunnable::DispatchToThread(
       test_utils->sts_target(),
@@ -211,9 +307,9 @@ class TestAgent {
   }
 
   uint32_t GetLocalSSRC() {
-    uint32_t res = 0;
-    audio_conduit_->GetLocalSSRC(&res);
-    return res;
+    std::vector<uint32_t> res;
+    res = audio_conduit_->GetLocalSSRCs();
+    return res.size() > 0 ? res[0] : 0;
   }
 
   int GetAudioRtpCountSent() {
@@ -235,7 +331,7 @@ class TestAgent {
  protected:
   mozilla::AudioCodecConfig audio_config_;
   RefPtr<mozilla::MediaSessionConduit> audio_conduit_;
-  RefPtr<DOMMediaStream> audio_;
+  RefPtr<FakeAudioStreamTrack> audio_stream_track_;
   // TODO(bcampen@mozilla.com): Right now this does not let us test RTCP in
   // both directions; only the sender's RTCP is sent, but the receiver should
   // be sending it too.
@@ -247,20 +343,16 @@ class TestAgent {
 
 class TestAgentSend : public TestAgent {
  public:
-  TestAgentSend() : use_bundle_(false) {}
-
-  virtual void CreatePipelines_s(bool aIsRtcpMux) {
-    audio_ = new Fake_DOMMediaStream(new Fake_AudioStreamSource());
-    audio_->SetHintContents(Fake_DOMMediaStream::HINT_CONTENTS_AUDIO);
-
-    nsTArray<RefPtr<Fake_MediaStreamTrack>> tracks;
-    audio_->GetAudioTracks(tracks);
-    ASSERT_EQ(1U, tracks.Length());
-
+  TestAgentSend() : use_bundle_(false) {
     mozilla::MediaConduitErrorCode err =
         static_cast<mozilla::AudioSessionConduit *>(audio_conduit_.get())->
         ConfigureSendMediaCodec(&audio_config_);
     EXPECT_EQ(mozilla::kMediaConduitNoError, err);
+
+    audio_stream_track_ = new FakeAudioStreamTrack();
+  }
+
+  virtual void CreatePipelines_s(bool aIsRtcpMux) {
 
     std::string test_pc("PC");
 
@@ -280,15 +372,13 @@ class TestAgentSend : public TestAgent {
         test_pc,
         nullptr,
         test_utils->sts_target(),
-        tracks[0],
+        audio_stream_track_.get(),
         "audio_track_fake_uuid",
         1,
         audio_conduit_,
         rtp,
         rtcp,
         nsAutoPtr<MediaPipelineFilter>());
-
-    audio_pipeline_->Init();
   }
 
   void SetUsingBundle(bool use_bundle) {
@@ -302,16 +392,8 @@ class TestAgentSend : public TestAgent {
 
 class TestAgentReceive : public TestAgent {
  public:
-  virtual void CreatePipelines_s(bool aIsRtcpMux) {
-    mozilla::SourceMediaStream *audio = new Fake_SourceMediaStream();
-    audio->SetPullEnabled(true);
 
-    mozilla::AudioSegment* segment= new mozilla::AudioSegment();
-    audio->AddAudioTrack(0, 100, 0, segment);
-    audio->AdvanceKnownTracksTime(mozilla::STREAM_TIME_MAX);
-
-    audio_ = new Fake_DOMMediaStream(audio);
-
+  TestAgentReceive() {
     std::vector<mozilla::AudioCodecConfig *> codecs;
     codecs.push_back(&audio_config_);
 
@@ -319,8 +401,10 @@ class TestAgentReceive : public TestAgent {
         static_cast<mozilla::AudioSessionConduit *>(audio_conduit_.get())->
         ConfigureRecvMediaCodecs(codecs);
     EXPECT_EQ(mozilla::kMediaConduitNoError, err);
+  }
 
-    std::string test_pc("PC");
+  virtual void CreatePipelines_s(bool aIsRtcpMux) {
+      std::string test_pc("PC");
 
     if (aIsRtcpMux) {
       ASSERT_FALSE(audio_rtcp_transport_.flow_);
@@ -330,13 +414,11 @@ class TestAgentReceive : public TestAgent {
         test_pc,
         nullptr,
         test_utils->sts_target(),
-        audio_->GetStream()->AsSourceStream(), "audio_track_fake_uuid", 1, 1,
+        new FakeSourceMediaStream(), "audio_track_fake_uuid", 1, 1,
         static_cast<mozilla::AudioSessionConduit *>(audio_conduit_.get()),
         audio_rtp_transport_.flow_,
         audio_rtcp_transport_.flow_,
         bundle_filter_);
-
-    audio_pipeline_->Init();
   }
 
   void SetBundleFilter(nsAutoPtr<MediaPipelineFilter> filter) {
@@ -363,6 +445,12 @@ class MediaPipelineTest : public ::testing::Test {
     p2_.Stop();
     p1_.Shutdown();
     p2_.Shutdown();
+  }
+
+  static void SetUpTestCase() {
+    test_utils = new MtransportTestUtils();
+    NSS_NoDB_Init(nullptr);
+    NSS_SetDomesticPolicy();
   }
 
   // Setup transport.
@@ -405,13 +493,13 @@ class MediaPipelineTest : public ::testing::Test {
     // Setup transport flows
     InitTransports(aIsRtcpMux);
 
-    NS_DispatchToMainThread(
-      WrapRunnable(&p1_, &TestAgent::CreatePipelines_s, aIsRtcpMux),
-      NS_DISPATCH_SYNC);
+    mozilla::SyncRunnable::DispatchToThread(
+      test_utils->sts_target(),
+      WrapRunnable(&p1_, &TestAgent::CreatePipelines_s, aIsRtcpMux), NS_DISPATCH_SYNC);
 
     mozilla::SyncRunnable::DispatchToThread(
       test_utils->sts_target(),
-      WrapRunnable(&p2_, &TestAgent::CreatePipelines_s, aIsRtcpMux));
+      WrapRunnable(&p2_, &TestAgent::CreatePipelines_s, aIsRtcpMux), NS_DISPATCH_SYNC);
 
     p2_.Start();
     p1_.Start();
@@ -562,7 +650,7 @@ TEST_F(MediaPipelineFilterTest, TestFilterReport0PTTruncated) {
 TEST_F(MediaPipelineFilterTest, TestFilterReport0CountTruncated) {
   MediaPipelineFilter filter;
   filter.AddRemoteSSRC(16);
-  const unsigned char data[] = {};
+  const unsigned char* data = {};
   ASSERT_FALSE(filter.FilterSenderReport(data, sizeof(data)));
 }
 
@@ -701,20 +789,3 @@ TEST_F(MediaPipelineTest, TestAudioSendEmptyBundleFilter) {
 }
 
 }  // end namespace
-
-
-int main(int argc, char **argv) {
-  ScopedXPCOM xpcom("mediapipeline_unittest");
-  test_utils = new MtransportTestUtils();
-  // Start the tests
-  NSS_NoDB_Init(nullptr);
-  NSS_SetDomesticPolicy();
-  ::testing::InitGoogleTest(&argc, argv);
-
-  int rv = RUN_ALL_TESTS();
-  delete test_utils;
-  return rv;
-}
-
-
-

@@ -1267,7 +1267,8 @@ PluginModuleChromeParent::RetainPluginRef()
         // deadlocks when we are called from
         // PluginHangUIParent::RecvUserResponse().
         Unused << NS_DispatchToMainThread(
-            NewNonOwningRunnableMethod(mPlugin, &nsNPAPIPlugin::AddRef));
+            NewNonOwningRunnableMethod("nsNPAPIPlugin::AddRef",
+                                       mPlugin, &nsNPAPIPlugin::AddRef));
     }
 }
 
@@ -1283,7 +1284,8 @@ PluginModuleChromeParent::ReleasePluginRef()
     } else {
         // Async release the reference to mPlugin.
         Unused << NS_DispatchToMainThread(
-            NewNonOwningRunnableMethod(mPlugin, &nsNPAPIPlugin::Release));
+            NewNonOwningRunnableMethod("nsNPAPIPlugin::Release",
+                                       mPlugin, &nsNPAPIPlugin::Release));
     }
 }
 

@@ -66,9 +66,10 @@ static LazyLogModule prlog("BackgroundFileSaver");
 class NotifyTargetChangeRunnable final : public Runnable
 {
 public:
-  NotifyTargetChangeRunnable(BackgroundFileSaver *aSaver, nsIFile *aTarget)
-  : mSaver(aSaver)
-  , mTarget(aTarget)
+  NotifyTargetChangeRunnable(BackgroundFileSaver* aSaver, nsIFile* aTarget)
+    : Runnable("net::NotifyTargetChangeRunnable")
+    , mSaver(aSaver)
+    , mTarget(aTarget)
   {
   }
 
@@ -325,9 +326,11 @@ BackgroundFileSaver::GetWorkerThreadAttention(bool aShouldInterruptCopy)
 
   if (!mAsyncCopyContext) {
     // Copy is not in progress, post an event to handle the change manually.
-    rv = mWorkerThread->Dispatch(NewRunnableMethod(this,
-                                                   &BackgroundFileSaver::ProcessAttention),
-                                 NS_DISPATCH_NORMAL);
+    rv = mWorkerThread->Dispatch(
+      NewRunnableMethod("net::BackgroundFileSaver::ProcessAttention",
+                        this,
+                        &BackgroundFileSaver::ProcessAttention),
+      NS_DISPATCH_NORMAL);
     NS_ENSURE_SUCCESS(rv, rv);
   } else if (aShouldInterruptCopy) {
     // Interrupt the copy.  The copy will be resumed, if needed, by the
@@ -747,7 +750,8 @@ BackgroundFileSaver::CheckCompletion()
   }
 
   // Post an event to notify that the operation completed.
-  if (NS_FAILED(mControlEventTarget->Dispatch(NewRunnableMethod(this,
+  if (NS_FAILED(mControlEventTarget->Dispatch(NewRunnableMethod("BackgroundFileSaver::NotifySaveComplete",
+                                                                this,
                                                                 &BackgroundFileSaver::NotifySaveComplete),
                                               NS_DISPATCH_NORMAL))) {
     NS_WARNING("Unable to post completion event to the control thread.");
@@ -1153,7 +1157,8 @@ BackgroundFileSaverStreamListener::AsyncCopyProgressCallback(void *aClosure,
       self->mReceivedTooMuchData = false;
 
       // Post an event to verify if the request should be resumed.
-      if (NS_FAILED(self->mControlEventTarget->Dispatch(NewRunnableMethod(self,
+      if (NS_FAILED(self->mControlEventTarget->Dispatch(NewRunnableMethod("BackgroundFileSaverStreamListener::NotifySuspendOrResume",
+                                                                          self,
                                                                           &BackgroundFileSaverStreamListener::NotifySuspendOrResume),
                                                         NS_DISPATCH_NORMAL))) {
         NS_WARNING("Unable to post resume event to the control thread.");

@@ -323,7 +323,7 @@ static nsIThread* sInjectorThread;
 class ReportInjectedCrash : public Runnable
 {
 public:
-  explicit ReportInjectedCrash(uint32_t pid) : mPID(pid) { }
+  explicit ReportInjectedCrash(uint32_t pid) : Runnable("ReportInjectedCrash"), mPID(pid) { }
 
   NS_IMETHOD Run();
 
@@ -3446,6 +3446,7 @@ OOPInit()
   class ProxyToMainThread : public Runnable
   {
   public:
+    ProxyToMainThread() : Runnable("nsExceptionHandler::ProxyToMainThread") {}
     NS_IMETHOD Run() override {
       OOPInit();
       return NS_OK;
@@ -4056,7 +4057,8 @@ InvokeCallback(bool aAsync,
 {
   if (aAsync) {
     MOZ_ASSERT(!!aCallbackThread);
-    Unused << aCallbackThread->Dispatch(NS_NewRunnableFunction(Move(aCallback)),
+    Unused << aCallbackThread->Dispatch(NS_NewRunnableFunction("CrashReporter::InvokeCallback",
+                                                               Move(aCallback)),
                                         NS_DISPATCH_SYNC);
   } else {
     aCallback();
@@ -4194,7 +4196,8 @@ CreateMinidumpsAndPair(ProcessHandle aTargetPid,
   };
 
   if (aAsync) {
-    sMinidumpWriterThread->Dispatch(NS_NewRunnableFunction(Move(doDump)),
+    sMinidumpWriterThread->Dispatch(NS_NewRunnableFunction("CrashReporter::CreateMinidumpsAndPair",
+                                                           Move(doDump)),
                                     nsIEventTarget::DISPATCH_NORMAL);
   } else {
     doDump();

@@ -84,7 +84,11 @@ NS_QUERYFRAME_TAIL_INHERITING(nsAtomicContainerFrame)
 class AsyncFrameInit : public Runnable
 {
 public:
-  explicit AsyncFrameInit(nsIFrame* aFrame) : mFrame(aFrame) {}
+  explicit AsyncFrameInit(nsIFrame* aFrame)
+    : mozilla::Runnable("AsyncFrameInit")
+    , mFrame(aFrame)
+  {
+  }
   NS_IMETHOD Run() override
   {
     AUTO_PROFILER_LABEL("AsyncFrameInit::Run", OTHER);
@@ -908,10 +912,11 @@ public:
                nsFrameLoader* aFrameLoader,
                nsIPresShell* aPresShell,
                bool aHideViewerIfFrameless)
-    : mFrameElement(aFrameElement),
-      mFrameLoader(aFrameLoader),
-      mPresShell(aPresShell),
-      mHideViewerIfFrameless(aHideViewerIfFrameless)
+    : mozilla::Runnable("nsHideViewer")
+    , mFrameElement(aFrameElement)
+    , mFrameLoader(aFrameLoader)
+    , mPresShell(aPresShell)
+    , mHideViewerIfFrameless(aHideViewerIfFrameless)
   {
     NS_ASSERTION(mFrameElement, "Must have a frame element");
     NS_ASSERTION(mFrameLoader, "Must have a frame loader");
