@@ -5,6 +5,10 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from __future__ import absolute_import, print_function, unicode_literals
+
+import os
+import json
+
 from taskgraph import try_option_syntax
 from taskgraph.util.attributes import match_run_on_projects
 
@@ -48,8 +52,24 @@ def standard_filter(task, parameters):
     )
 
 
-@_target_task('try_option_syntax')
-def target_tasks_try_option_syntax(full_task_graph, parameters):
+def _try_task_config(full_task_graph, parameters):
+    task_config_file = os.path.join(os.getcwd(), 'try_task_config.json')
+
+    if not os.path.isfile(task_config_file):
+        return []
+
+    with open(task_config_file, 'r') as fh:
+        task_config = json.load(fh)
+
+    target_task_labels = []
+    for task in full_task_graph.tasks.itervalues():
+        if task.label in task_config:
+            target_task_labels.append(task.label)
+
+    return target_task_labels
+
+
+def _try_option_syntax(full_task_graph, parameters):
     """Generate a list of target tasks based on try syntax in
     parameters['message'] and, for context, the full task graph."""
     options = try_option_syntax.TryOptionSyntax(parameters['message'], full_task_graph)
@@ -95,6 +115,16 @@ def target_tasks_try_option_syntax(full_task_graph, parameters):
                 routes.append("notify.email.{}.on-exception".format(owner))
 
     return target_tasks_labels
+
+
+@_target_task('try_tasks')
+def target_tasks_try(full_task_graph, parameters):
+    labels = _try_task_config(full_task_graph, parameters)
+
+    if 'try:' in parameters['message'] or not labels:
+        labels.extend(_try_option_syntax(full_task_graph, parameters))
+
+    return labels
 
 
 @_target_task('default')
