@@ -34,11 +34,11 @@ HTTP(..) == font-features-hlig-3.html font-features-noliga.html
 
 # compare font-language-override rendering to lang-tagged rendering
 HTTP(..) == font-features-turkish-override-1.html font-features-turkish.html
-fails-if(styloVsGecko||stylo) HTTP(..) == font-features-turkish-override-2.html font-features-turkish.html
+HTTP(..) == font-features-turkish-override-2.html font-features-turkish.html
 
 # check use of font-language-override to override explicit lang tag
 HTTP(..) == font-features-turkish-override-3.html font-features-ref.html
-fails-if(styloVsGecko||stylo) HTTP(..) == font-features-turkish-override-4.html font-features-ref.html
+HTTP(..) == font-features-turkish-override-4.html font-features-ref.html
 HTTP(..) == font-features-turkish-override-5.html font-features-turkish.html
 
 # check that last value wins if a feature is repeated
