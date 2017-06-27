@@ -85,6 +85,10 @@ extern const int kSurrogateRangeCount;
 extern const int kLineTerminatorRanges[];
 extern const int kLineTerminatorRangeCount;
 
+// Line terminators and surrogate characters.
+extern const int kLineTerminatorAndSurrogateRanges[];
+extern const int kLineTerminatorAndSurrogateRangeCount;
+
 } } // namespace js::irregexp
 
 #endif // V8_JSREGEXPCHARACTERS_H_
