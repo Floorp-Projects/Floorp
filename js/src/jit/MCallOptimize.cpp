@@ -309,6 +309,8 @@ IonBuilder::inlineNativeCall(CallInfo& callInfo, JSFunction* target)
         return inlineHasClass(callInfo, &StringIteratorObject::class_);
       case InlinableNative::IntrinsicObjectHasPrototype:
         return inlineObjectHasPrototype(callInfo);
+      case InlinableNative::IntrinsicFinishBoundFunctionInit:
+        return inlineFinishBoundFunctionInit(callInfo);
 
       // Map intrinsics.
       case InlinableNative::IntrinsicGetNextMapEntryForIterator:
@@ -1704,6 +1706,35 @@ IonBuilder::inlineObjectHasPrototype(CallInfo& callInfo)
     JSObject* proto = &protoKey->singleton()->as<NativeObject>();
     pushConstant(BooleanValue(proto == actualProto));
     callInfo.setImplicitlyUsedUnchecked();
+    return InliningStatus_Inlined;
+}
+
+IonBuilder::InliningResult
+IonBuilder::inlineFinishBoundFunctionInit(CallInfo& callInfo)
+{
+    MOZ_ASSERT(!callInfo.constructing());
+    MOZ_ASSERT(callInfo.argc() == 3);
+    MOZ_ASSERT(BytecodeIsPopped(pc));
+
+    MDefinition* boundFunction = callInfo.getArg(0);
+    MDefinition* targetFunction = callInfo.getArg(1);
+    MDefinition* argCount = callInfo.getArg(2);
+
+    if (boundFunction->type() != MIRType::Object)
+        return InliningStatus_NotInlined;
+    if (targetFunction->type() != MIRType::Object)
+        return InliningStatus_NotInlined;
+    if (argCount->type() != MIRType::Int32)
+        return InliningStatus_NotInlined;
+
+    callInfo.setImplicitlyUsedUnchecked();
+
+    auto* ins = MFinishBoundFunctionInit::New(alloc(), boundFunction, targetFunction, argCount);
+    current->add(ins);
+
+    pushConstant(UndefinedValue());
+
+    MOZ_TRY(resumeAfter(ins));
     return InliningStatus_Inlined;
 }
 
