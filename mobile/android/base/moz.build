@@ -710,7 +710,6 @@ gbjar.sources += ['java/org/mozilla/gecko/' + x for x in [
     'home/SearchEngine.java',
     'home/SearchEngineAdapter.java',
     'home/SearchEngineBar.java',
-    'home/SearchEngineRow.java',
     'home/SearchLoader.java',
     'home/SimpleCursorLoader.java',
     'home/SpacingDecoration.java',
@@ -1012,11 +1011,13 @@ gbjar.sources += ['java/org/mozilla/gecko/' + x for x in [
 ]]
 if CONFIG['MOZ_ANDROID_PHOTON']:
     gbjar.sources += ['../app/src/photon/java/org/mozilla/gecko/' + x for x in [
+        'home/SearchEngineRow.java',
         'skin/SkinConfig.java',
         'toolbar/TabCounter.java',
     ]]
 else:
     gbjar.sources += ['../app/src/australis/java/org/mozilla/gecko/' + x for x in [
+        'home/SearchEngineRow.java',
         'skin/SkinConfig.java',
         'toolbar/TabCounter.java',
     ]]
