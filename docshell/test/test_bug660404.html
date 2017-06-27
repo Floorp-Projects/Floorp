@@ -40,7 +40,7 @@ function finishTest() {
 }
 
 // Have to open a new window, since there's no bfcache in subframes
-w = window.open("data:text/html,<script>window.onload = function() { opener.continueTest(); }</"+"script>");
+w = window.open("file_bug660404-1.html");
 
 </script>
 </pre>
