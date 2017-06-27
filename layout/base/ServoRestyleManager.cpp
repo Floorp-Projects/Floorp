@@ -250,6 +250,30 @@ private:
   nsChangeHint mComputedHint;
 };
 
+// Find the first-letter frame for the given element, if any.  Returns null to
+// indicate there isn't one.
+static nsIFrame*
+FindFirstLetterFrameForElement(const Element* aElement)
+{
+  nsIFrame* frame = aElement->GetPrimaryFrame();
+  if (!frame) {
+    return nullptr;
+  }
+  // The first-letter frame will always be inside the content insertion frame,
+  // which will always be a block if we have a first-letter frame at all.
+  frame = frame->GetContentInsertionFrame();
+  if (!frame) {
+    // We're a leaf; certainly no first-letter frame.
+    return nullptr;
+  }
+
+  if (!frame->IsFrameOfType(nsIFrame::eBlockFrame)) {
+    return nullptr;
+  }
+
+  return static_cast<nsBlockFrame*>(frame)->GetFirstLetter();
+}
+
 static void
 UpdateBackdropIfNeeded(nsIFrame* aFrame, ServoRestyleState& aRestyleState)
 {
@@ -567,8 +591,11 @@ ServoRestyleManager::FrameForPseudoElement(const Element* aElement,
     return pseudoElement ? nsLayoutUtils::GetStyleFrame(pseudoElement) : nullptr;
   }
 
-  if (aPseudoTagOrNull == nsCSSPseudoElements::firstLine ||
-      aPseudoTagOrNull == nsCSSPseudoElements::firstLetter) {
+  if (aPseudoTagOrNull == nsCSSPseudoElements::firstLetter) {
+    return FindFirstLetterFrameForElement(aElement);
+  }
+
+  if (aPseudoTagOrNull == nsCSSPseudoElements::firstLine) {
     // TODO(emilio, bz): Figure out the best way to diff these styles.
     return nullptr;
   }
