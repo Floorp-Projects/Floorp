@@ -110,17 +110,19 @@ nsPreloadedStream::CloseWithStatus(nsresult aStatus)
 class RunOnThread : public Runnable
 {
 public:
-    RunOnThread(nsIAsyncInputStream *aStream,
-                nsIInputStreamCallback *aCallback)
-      : mStream(aStream),
-        mCallback(aCallback) {}
+  RunOnThread(nsIAsyncInputStream* aStream, nsIInputStreamCallback* aCallback)
+    : Runnable("net::RunOnThread")
+    , mStream(aStream)
+    , mCallback(aCallback)
+  {
+  }
 
-    virtual ~RunOnThread() {}
+  virtual ~RunOnThread() {}
 
-    NS_IMETHOD Run() override
-    {
-        mCallback->OnInputStreamReady(mStream);
-        return NS_OK;
+  NS_IMETHOD Run() override
+  {
+    mCallback->OnInputStreamReady(mStream);
+    return NS_OK;
     }
 
 private:

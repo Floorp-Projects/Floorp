@@ -651,7 +651,8 @@ class ReportFetchListenerWarningRunnable final : public Runnable
 
 public:
   explicit ReportFetchListenerWarningRunnable(const nsString& aScope)
-    : mScope(NS_ConvertUTF16toUTF8(aScope))
+    : mozilla::Runnable("ReportFetchListenerWarningRunnable")
+    , mScope(NS_ConvertUTF16toUTF8(aScope))
   {
     WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();
     MOZ_ASSERT(workerPrivate);
@@ -759,7 +760,8 @@ class WorkerScopeSkipWaitingRunnable final : public Runnable
 public:
   WorkerScopeSkipWaitingRunnable(PromiseWorkerProxy* aPromiseProxy,
                                  const nsCString& aScope)
-    : mPromiseProxy(aPromiseProxy)
+    : mozilla::Runnable("WorkerScopeSkipWaitingRunnable")
+    , mPromiseProxy(aPromiseProxy)
     , mScope(aScope)
   {
     MOZ_ASSERT(aPromiseProxy);

@@ -762,9 +762,11 @@ class NotifyPrecompilationCompleteRunnable : public Runnable
 public:
     NS_DECL_NSIRUNNABLE
 
-    explicit NotifyPrecompilationCompleteRunnable(ScriptPrecompiler* aPrecompiler)
-        : mPrecompiler(aPrecompiler)
-        , mToken(nullptr)
+    explicit NotifyPrecompilationCompleteRunnable(
+      ScriptPrecompiler* aPrecompiler)
+      : mozilla::Runnable("NotifyPrecompilationCompleteRunnable")
+      , mPrecompiler(aPrecompiler)
+      , mToken(nullptr)
     {}
 
     void SetToken(void* aToken) {

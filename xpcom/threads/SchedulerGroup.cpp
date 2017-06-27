@@ -331,25 +331,24 @@ SchedulerGroup::SetValidatingAccess(ValidationType aType)
 
 SchedulerGroup::Runnable::Runnable(already_AddRefed<nsIRunnable>&& aRunnable,
                                    SchedulerGroup* aGroup)
- : mRunnable(Move(aRunnable)),
-   mGroup(aGroup)
+  : mozilla::Runnable("SchedulerGroup::Runnable")
+  , mRunnable(Move(aRunnable))
+  , mGroup(aGroup)
 {
 }
 
 NS_IMETHODIMP
 SchedulerGroup::Runnable::GetName(nsACString& aName)
 {
-  mozilla::Runnable::GetName(aName);
-  if (aName.IsEmpty()) {
-    // Try to get a name from the underlying runnable.
-    nsCOMPtr<nsINamed> named = do_QueryInterface(mRunnable);
-    if (named) {
-      named->GetName(aName);
-    }
-    if (aName.IsEmpty()) {
-      aName.AssignLiteral("anonymous");
-    }
+  // Try to get a name from the underlying runnable.
+  nsCOMPtr<nsINamed> named = do_QueryInterface(mRunnable);
+  if (named) {
+    named->GetName(aName);
   }
+  if (aName.IsEmpty()) {
+    aName.AssignLiteral("anonymous");
+  }
+
   aName.AppendASCII("(labeled)");
   return NS_OK;
 }

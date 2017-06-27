@@ -146,8 +146,11 @@ public:
     aWorkerPrivate->AssertIsOnWorkerThread();
 
     bool fetchHandlerWasAdded = aWorkerPrivate->FetchHandlerWasAdded();
-    nsCOMPtr<nsIRunnable> runnable = NewRunnableMethod<bool>(this,
-      &CheckScriptEvaluationWithCallback::ReportFetchFlag, fetchHandlerWasAdded);
+    nsCOMPtr<nsIRunnable> runnable = NewRunnableMethod<bool>(
+      "dom::workers::CheckScriptEvaluationWithCallback::ReportFetchFlag",
+      this,
+      &CheckScriptEvaluationWithCallback::ReportFetchFlag,
+      fetchHandlerWasAdded);
     aWorkerPrivate->DispatchToMainThread(runnable.forget());
 
     ReportScriptEvaluationResult(aWorkerPrivate->WorkerScriptExecutedSuccessfully());
@@ -376,7 +379,10 @@ private:
     CycleCollectedJSContext* cx = CycleCollectedJSContext::Get();
     MOZ_ASSERT(cx);
 
-    RefPtr<nsIRunnable> r = NewRunnableMethod(this, &KeepAliveHandler::MaybeDone);
+    RefPtr<nsIRunnable> r =
+      NewRunnableMethod("dom::workers::KeepAliveHandler::MaybeDone",
+                        this,
+                        &KeepAliveHandler::MaybeDone);
     cx->DispatchToMicroTask(r.forget());
   }
 };
@@ -389,9 +395,11 @@ class RegistrationUpdateRunnable : public Runnable
   const bool mNeedTimeCheck;
 
 public:
-  RegistrationUpdateRunnable(nsMainThreadPtrHandle<ServiceWorkerRegistrationInfo>& aRegistration,
-                             bool aNeedTimeCheck)
-    : mRegistration(aRegistration)
+  RegistrationUpdateRunnable(
+    nsMainThreadPtrHandle<ServiceWorkerRegistrationInfo>& aRegistration,
+    bool aNeedTimeCheck)
+    : Runnable("dom::workers::RegistrationUpdateRunnable")
+    , mRegistration(aRegistration)
     , mNeedTimeCheck(aNeedTimeCheck)
   {
     MOZ_DIAGNOSTIC_ASSERT(mRegistration);
@@ -864,9 +872,11 @@ public:
         mMessageId.IsEmpty()) {
       return;
     }
-    nsCOMPtr<nsIRunnable> runnable =
-      NewRunnableMethod<uint16_t>(this,
-        &PushErrorReporter::ReportOnMainThread, aReason);
+    nsCOMPtr<nsIRunnable> runnable = NewRunnableMethod<uint16_t>(
+      "dom::workers::PushErrorReporter::ReportOnMainThread",
+      this,
+      &PushErrorReporter::ReportOnMainThread,
+      aReason);
     MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
       workerPrivate->DispatchToMainThread(runnable.forget())));
   }
@@ -1512,8 +1522,10 @@ private:
   class ResumeRequest final : public Runnable {
     nsMainThreadPtrHandle<nsIInterceptedChannel> mChannel;
   public:
-    explicit ResumeRequest(nsMainThreadPtrHandle<nsIInterceptedChannel>& aChannel)
-      : mChannel(aChannel)
+    explicit ResumeRequest(
+      nsMainThreadPtrHandle<nsIInterceptedChannel>& aChannel)
+      : Runnable("dom::workers::FetchEventRunnable::ResumeRequest")
+      , mChannel(aChannel)
     {
       mChannel->SetFinishResponseStart(TimeStamp::Now());
     }
@@ -1672,7 +1684,9 @@ ServiceWorkerPrivate::SendFetchEvent(nsIInterceptedChannel* aChannel,
   // if the ServiceWorker script fails to load for some reason, just resume
   // the original channel.
   nsCOMPtr<nsIRunnable> failRunnable =
-    NewRunnableMethod(aChannel, &nsIInterceptedChannel::ResetInterception);
+    NewRunnableMethod("nsIInterceptedChannel::ResetInterception",
+                      aChannel,
+                      &nsIInterceptedChannel::ResetInterception);
 
   aChannel->SetLaunchServiceWorkerStart(TimeStamp::Now());
   aChannel->SetDispatchFetchEventStart(TimeStamp::Now());

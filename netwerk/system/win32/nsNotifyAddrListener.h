@@ -38,8 +38,10 @@ protected:
     public:
         NS_DECL_NSIRUNNABLE
         ChangeEvent(nsINetworkLinkService *aService, const char *aEventID)
-            : mService(aService), mEventID(aEventID) {
-        }
+            : Runnable("nsNotifyAddrListener::ChangeEvent")
+            , mService(aService)
+            , mEventID(aEventID)
+        {}
     private:
         nsCOMPtr<nsINetworkLinkService> mService;
         const char *mEventID;

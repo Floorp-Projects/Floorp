@@ -353,7 +353,8 @@ AsyncExecuteStatements::notifyComplete()
   // This will take ownership of mCallback and make sure its destruction will
   // happen on the owner thread.
   Unused << mCallingThread->Dispatch(
-    NewRunnableMethod(this, &AsyncExecuteStatements::notifyCompleteOnCallingThread),
+    NewRunnableMethod("AsyncExecuteStatements::notifyCompleteOnCallingThread",
+                      this, &AsyncExecuteStatements::notifyCompleteOnCallingThread),
     NS_DISPATCH_NORMAL);
 
   return NS_OK;
@@ -399,7 +400,8 @@ AsyncExecuteStatements::notifyError(mozIStorageError *aError)
     return NS_OK;
 
   Unused << mCallingThread->Dispatch(
-    NewRunnableMethod<nsCOMPtr<mozIStorageError>>(this, &AsyncExecuteStatements::notifyErrorOnCallingThread, aError),
+    NewRunnableMethod<nsCOMPtr<mozIStorageError>>("AsyncExecuteStatements::notifyErrorOnCallingThread",
+                                                  this, &AsyncExecuteStatements::notifyErrorOnCallingThread, aError),
     NS_DISPATCH_NORMAL);
 
   return NS_OK;
@@ -428,7 +430,8 @@ AsyncExecuteStatements::notifyResults()
   // This takes ownership of mResultSet, a new one will be generated in
   // buildAndNotifyResults() when further results will arrive.
   Unused << mCallingThread->Dispatch(
-    NewRunnableMethod<RefPtr<ResultSet>>(this, &AsyncExecuteStatements::notifyResultsOnCallingThread, mResultSet.forget()),
+    NewRunnableMethod<RefPtr<ResultSet>>("AsyncExecuteStatements::notifyResultsOnCallingThread",
+                                         this, &AsyncExecuteStatements::notifyResultsOnCallingThread, mResultSet.forget()),
     NS_DISPATCH_NORMAL);
 
   return NS_OK;

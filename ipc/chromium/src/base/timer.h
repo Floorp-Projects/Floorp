@@ -87,8 +87,11 @@ class BaseTimer_Helper {
   // We have access to the timer_ member so we can orphan this task.
   class TimerTask : public mozilla::Runnable {
    public:
-    explicit TimerTask(TimeDelta delay) : delay_(delay) {
-      // timer_ is set in InitiateDelayedTask.
+     explicit TimerTask(TimeDelta delay)
+       : mozilla::Runnable("base::BaseTimer_Helper::TimerTask")
+       , delay_(delay)
+     {
+       // timer_ is set in InitiateDelayedTask.
     }
     virtual ~TimerTask() {}
     BaseTimer_Helper* timer_;

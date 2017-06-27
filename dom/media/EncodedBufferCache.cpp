@@ -50,7 +50,9 @@ EncodedBufferCache::AppendBuffer(nsTArray<uint8_t> & aBuf)
         Monitor monitor("EncodeBufferCache::AppendBuffer");
         RefPtr<dom::ContentChild> cc = dom::ContentChild::GetSingleton();
         nsCOMPtr<nsIRunnable> runnable =
-          NewRunnableMethod<AnonymousTemporaryFileCallback>(cc,
+          NewRunnableMethod<AnonymousTemporaryFileCallback>(
+            "dom::ContentChild::AsyncOpenAnonymousTemporaryFile",
+            cc,
             &dom::ContentChild::AsyncOpenAnonymousTemporaryFile,
             [&](PRFileDesc* aFile) {
               rv = aFile ? NS_OK : NS_ERROR_FAILURE;

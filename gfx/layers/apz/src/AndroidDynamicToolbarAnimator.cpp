@@ -536,7 +536,8 @@ AndroidDynamicToolbarAnimator::GetToolbarEffect(CompositorOGL* gl)
     // Send notification that texture is ready after the current composition has completed.
     if (mCompositorToolbarTexture && mCompositorSendResponseForSnapshotUpdate) {
       mCompositorSendResponseForSnapshotUpdate = false;
-      CompositorThreadHolder::Loop()->PostTask(NewRunnableMethod(this, &AndroidDynamicToolbarAnimator::PostToolbarReady));
+      CompositorThreadHolder::Loop()->PostTask(NewRunnableMethod("AndroidDynamicToolbarAnimator::PostToolbarReady",
+                                                                 this, &AndroidDynamicToolbarAnimator::PostToolbarReady));
     }
   }
 
@@ -746,7 +747,8 @@ void
 AndroidDynamicToolbarAnimator::UpdateCompositorToolbarHeight(ScreenIntCoord aHeight)
 {
   if (!CompositorThreadHolder::IsInCompositorThread()) {
-    CompositorThreadHolder::Loop()->PostTask(NewRunnableMethod<ScreenIntCoord>(this, &AndroidDynamicToolbarAnimator::UpdateCompositorToolbarHeight, aHeight));
+    CompositorThreadHolder::Loop()->PostTask(NewRunnableMethod<ScreenIntCoord>("AndroidDynamicToolbarAnimator::UpdateCompositorToolbarHeight",
+                                                                               this, &AndroidDynamicToolbarAnimator::UpdateCompositorToolbarHeight, aHeight));
     return;
   }
 
@@ -758,7 +760,8 @@ void
 AndroidDynamicToolbarAnimator::UpdateControllerToolbarHeight(ScreenIntCoord aHeight, ScreenIntCoord aMaxHeight)
 {
   if (!APZThreadUtils::IsControllerThread()) {
-    APZThreadUtils::RunOnControllerThread(NewRunnableMethod<ScreenIntCoord, ScreenIntCoord>(this, &AndroidDynamicToolbarAnimator::UpdateControllerToolbarHeight, aHeight, aMaxHeight));
+    APZThreadUtils::RunOnControllerThread(NewRunnableMethod<ScreenIntCoord, ScreenIntCoord>("AndroidDynamicToolbarAnimator::UpdateControllerToolbarHeight",
+                                                                                            this, &AndroidDynamicToolbarAnimator::UpdateControllerToolbarHeight, aHeight, aMaxHeight));
     return;
   }
 
@@ -772,7 +775,8 @@ void
 AndroidDynamicToolbarAnimator::UpdateControllerSurfaceHeight(ScreenIntCoord aHeight)
 {
   if (!APZThreadUtils::IsControllerThread()) {
-    APZThreadUtils::RunOnControllerThread(NewRunnableMethod<ScreenIntCoord>(this, &AndroidDynamicToolbarAnimator::UpdateControllerSurfaceHeight, aHeight));
+    APZThreadUtils::RunOnControllerThread(NewRunnableMethod<ScreenIntCoord>("AndroidDynamicToolbarAnimator::UpdateControllerSurfaceHeight",
+                                                                            this, &AndroidDynamicToolbarAnimator::UpdateControllerSurfaceHeight, aHeight));
     return;
   }
 
@@ -783,7 +787,8 @@ void
 AndroidDynamicToolbarAnimator::UpdateControllerCompositionHeight(ScreenIntCoord aHeight)
 {
   if (!APZThreadUtils::IsControllerThread()) {
-    APZThreadUtils::RunOnControllerThread(NewRunnableMethod<ScreenIntCoord>(this, &AndroidDynamicToolbarAnimator::UpdateControllerCompositionHeight, aHeight));
+    APZThreadUtils::RunOnControllerThread(NewRunnableMethod<ScreenIntCoord>("AndroidDynamicToolbarAnimator::UpdateControllerCompositionHeight",
+                                                                            this, &AndroidDynamicToolbarAnimator::UpdateControllerCompositionHeight, aHeight));
     return;
   }
 
@@ -820,7 +825,8 @@ void
 AndroidDynamicToolbarAnimator::NotifyControllerPendingAnimation(int32_t aDirection, AnimationStyle aAnimationStyle)
 {
   if (!APZThreadUtils::IsControllerThread()) {
-    APZThreadUtils::RunOnControllerThread(NewRunnableMethod<int32_t, AnimationStyle>(this, &AndroidDynamicToolbarAnimator::NotifyControllerPendingAnimation, aDirection, aAnimationStyle));
+    APZThreadUtils::RunOnControllerThread(NewRunnableMethod<int32_t, AnimationStyle>("AndroidDynamicToolbarAnimator::NotifyControllerPendingAnimation",
+                                                                                     this, &AndroidDynamicToolbarAnimator::NotifyControllerPendingAnimation, aDirection, aAnimationStyle));
     return;
   }
 
@@ -847,6 +853,7 @@ AndroidDynamicToolbarAnimator::StartCompositorAnimation(int32_t aDirection, Anim
   if (!CompositorThreadHolder::IsInCompositorThread()) {
     mControllerState = eAnimationStartPending;
     CompositorThreadHolder::Loop()->PostTask(NewRunnableMethod<int32_t, AnimationStyle, ScreenIntCoord, bool>(
+      "AndroidDynamicToolbarAnimator::StartCompositorAnimation",
       this, &AndroidDynamicToolbarAnimator::StartCompositorAnimation, aDirection, aAnimationStyle, aHeight, aWaitForPageResize));
     return;
   }
@@ -889,7 +896,8 @@ void
 AndroidDynamicToolbarAnimator::NotifyControllerAnimationStarted()
 {
   if (!APZThreadUtils::IsControllerThread()) {
-    APZThreadUtils::RunOnControllerThread(NewRunnableMethod(this, &AndroidDynamicToolbarAnimator::NotifyControllerAnimationStarted));
+    APZThreadUtils::RunOnControllerThread(NewRunnableMethod("AndroidDynamicToolbarAnimator::NotifyControllerAnimationStarted",
+                                                            this, &AndroidDynamicToolbarAnimator::NotifyControllerAnimationStarted));
     return;
   }
 
@@ -905,7 +913,8 @@ AndroidDynamicToolbarAnimator::StopCompositorAnimation()
 {
   if (!CompositorThreadHolder::IsInCompositorThread()) {
     mControllerState = eAnimationStopPending;
-    CompositorThreadHolder::Loop()->PostTask(NewRunnableMethod(this, &AndroidDynamicToolbarAnimator::StopCompositorAnimation));
+    CompositorThreadHolder::Loop()->PostTask(NewRunnableMethod("AndroidDynamicToolbarAnimator::StopCompositorAnimation",
+                                                               this, &AndroidDynamicToolbarAnimator::StopCompositorAnimation));
     return;
   }
 
@@ -931,7 +940,8 @@ void
 AndroidDynamicToolbarAnimator::NotifyControllerAnimationStopped(ScreenIntCoord aHeight)
 {
   if (!APZThreadUtils::IsControllerThread()) {
-    APZThreadUtils::RunOnControllerThread(NewRunnableMethod<ScreenIntCoord>(this, &AndroidDynamicToolbarAnimator::NotifyControllerAnimationStopped, aHeight));
+    APZThreadUtils::RunOnControllerThread(NewRunnableMethod<ScreenIntCoord>("AndroidDynamicToolbarAnimator::NotifyControllerAnimationStopped",
+                                                                            this, &AndroidDynamicToolbarAnimator::NotifyControllerAnimationStopped, aHeight));
     return;
   }
 
@@ -946,7 +956,8 @@ void
 AndroidDynamicToolbarAnimator::RequestComposite()
 {
   if (!CompositorThreadHolder::IsInCompositorThread()) {
-    CompositorThreadHolder::Loop()->PostTask(NewRunnableMethod(this, &AndroidDynamicToolbarAnimator::RequestComposite));
+    CompositorThreadHolder::Loop()->PostTask(NewRunnableMethod("AndroidDynamicToolbarAnimator::RequestComposite",
+                                                               this, &AndroidDynamicToolbarAnimator::RequestComposite));
     return;
   }
 
@@ -993,7 +1004,8 @@ AndroidDynamicToolbarAnimator::UpdateFrameMetrics(ScreenPoint aScrollOffset,
                                                   CSSRect aCssPageRect)
 {
   if (!APZThreadUtils::IsControllerThread()) {
-    APZThreadUtils::RunOnControllerThread(NewRunnableMethod<ScreenPoint, CSSToScreenScale, CSSRect>(this, &AndroidDynamicToolbarAnimator::UpdateFrameMetrics, aScrollOffset, aScale, aCssPageRect));
+    APZThreadUtils::RunOnControllerThread(NewRunnableMethod<ScreenPoint, CSSToScreenScale, CSSRect>("AndroidDynamicToolbarAnimator::UpdateFrameMetrics",
+                                                                                                    this, &AndroidDynamicToolbarAnimator::UpdateFrameMetrics, aScrollOffset, aScale, aCssPageRect));
     return;
   }
 
@@ -1011,6 +1023,7 @@ AndroidDynamicToolbarAnimator::UpdateFrameMetrics(ScreenPoint aScrollOffset,
     RefPtr<UiCompositorControllerParent> uiController = UiCompositorControllerParent::GetFromRootLayerTreeId(mRootLayerTreeId);
     MOZ_ASSERT(uiController);
     CompositorThreadHolder::Loop()->PostTask(NewRunnableMethod<ScreenPoint, CSSToScreenScale, CSSRect>(
+                                               "UiCompositorControllerParent::SendRootFrameMetrics",
                                                uiController, &UiCompositorControllerParent::SendRootFrameMetrics,
                                                aScrollOffset, aScale, aCssPageRect));
   }
@@ -1086,7 +1099,8 @@ void
 AndroidDynamicToolbarAnimator::NotifyControllerSnapshotFailed()
 {
   if (!APZThreadUtils::IsControllerThread()) {
-    APZThreadUtils::RunOnControllerThread(NewRunnableMethod(this, &AndroidDynamicToolbarAnimator::NotifyControllerSnapshotFailed));
+    APZThreadUtils::RunOnControllerThread(NewRunnableMethod("AndroidDynamicToolbarAnimator::NotifyControllerSnapshotFailed",
+                                                            this, &AndroidDynamicToolbarAnimator::NotifyControllerSnapshotFailed));
     return;
   }
 
@@ -1133,7 +1147,8 @@ void
 AndroidDynamicToolbarAnimator::QueueMessage(int32_t aMessage)
 {
   if (!CompositorThreadHolder::IsInCompositorThread()) {
-    CompositorThreadHolder::Loop()->PostTask(NewRunnableMethod<int32_t>(this, &AndroidDynamicToolbarAnimator::QueueMessage, aMessage));
+    CompositorThreadHolder::Loop()->PostTask(NewRunnableMethod<int32_t>("AndroidDynamicToolbarAnimator::QueueMessage",
+                                                                        this, &AndroidDynamicToolbarAnimator::QueueMessage, aMessage));
     return;
   }
 

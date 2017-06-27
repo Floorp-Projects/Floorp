@@ -46,7 +46,7 @@ static char* GetResource(Decoder *aDecoder)
 class GetIntPrefEvent : public Runnable {
 public:
   GetIntPrefEvent(const char* aPref, int32_t* aResult)
-    : mPref(aPref), mResult(aResult) {}
+    : Runnable("GetIntPrefEvent"), mPref(aPref), mResult(aResult) {}
   NS_IMETHOD Run() override {
     return Preferences::GetInt(mPref, mResult);
   }
