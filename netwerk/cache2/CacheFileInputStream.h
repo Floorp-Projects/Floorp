@@ -40,6 +40,7 @@ public:
 
   uint32_t GetPosition() const { return mPos; };
   bool IsAlternativeData() const { return mAlternativeData; };
+  int64_t GetChunkIdx() const { return mChunk ? mChunk->Index() : -1; };
 
 private:
   virtual ~CacheFileInputStream();
