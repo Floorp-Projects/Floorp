@@ -38,7 +38,7 @@ public:
   // LayerManager methods
   bool BeginTransaction() override;
   void BeginTransactionWithDrawTarget(gfx::DrawTarget* aTarget, const gfx::IntRect& aRect) override;
-  void SetRoot(Layer* aLayer) override { mRoot = aLayer; }
+  void SetRoot(Layer* aLayer) override;
   already_AddRefed<PaintedLayer> CreatePaintedLayer() override;
   already_AddRefed<ContainerLayer> CreateContainerLayer() override;
   already_AddRefed<ImageLayer> CreateImageLayer() override;

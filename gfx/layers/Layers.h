@@ -850,6 +850,11 @@ public:
    */
   LayerManager* Manager() { return mManager; }
 
+  /**
+   * This should only be called when changing layer managers from HostLayers.
+   */
+  void SetManager(LayerManager* aManager, HostLayer* aSelf);
+
   enum {
     /**
      * If this is set, the caller is promising that by the end of this
