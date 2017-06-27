@@ -7270,7 +7270,7 @@ nsContentUtils::IsRequestFullScreenAllowed(CallerType aCallerType)
 
   if (EventStateManager::IsHandlingUserInput()) {
     TimeDuration timeout = HandlingUserInputTimeout();
-    return timeout <= TimeDuration(0) ||
+    return timeout <= TimeDuration(nullptr) ||
       (TimeStamp::Now() -
        EventStateManager::GetHandlingInputStart()) <= timeout;
   }
