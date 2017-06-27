@@ -2502,6 +2502,8 @@ js::array_unshift(JSContext* cx, unsigned argc, Value* vp)
             if (MaybeInIteration(obj, cx))
                 break;
             NativeObject* nobj = &obj->as<NativeObject>();
+            if (nobj->denseElementsAreFrozen())
+                break;
             if (nobj->is<ArrayObject>() && !nobj->as<ArrayObject>().lengthIsWritable())
                 break;
             if (!nobj->tryUnshiftDenseElements(args.length())) {
