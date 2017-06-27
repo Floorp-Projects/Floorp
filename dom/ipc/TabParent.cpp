@@ -2084,12 +2084,6 @@ TabParent::SendPasteTransferable(const IPCDataTransfer& aDataTransfer,
                                                aRequestingPrincipal);
 }
 
-void
-TabParent::OnDestroyTextComposition()
-{
-  mContentCache.OnDestroyTextComposition();
-}
-
 /*static*/ TabParent*
 TabParent::GetFrom(nsFrameLoader* aFrameLoader)
 {
