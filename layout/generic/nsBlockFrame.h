@@ -923,10 +923,6 @@ protected:
     mozilla::CSSPseudoElementType aType,
     mozilla::StyleSetHandle aStyleSet);
 
-  // Update our first-letter styles during stylo post-traversal.
-  void UpdateFirstLetterStyle(nsIFrame* aLetterFrame,
-                              mozilla::ServoRestyleState& aRestyleState);
-
 #ifdef DEBUG
   void VerifyLines(bool aFinalCheckOK);
   void VerifyOverflowSituation();
