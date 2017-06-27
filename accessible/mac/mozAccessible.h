@@ -114,6 +114,9 @@ static const uintptr_t IS_PROXY = 1;
 // the accessible description (help text) of this particular instance.
 - (NSString*)help;
 
+// returns the orientation (vertical, horizontal, or undefined)
+- (NSString*)orientation;
+
 - (BOOL)isEnabled;
 
 // information about focus.
