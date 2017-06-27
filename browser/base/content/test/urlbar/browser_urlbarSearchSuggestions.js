@@ -40,6 +40,41 @@ add_task(async function clickSuggestion() {
   await BrowserTestUtils.removeTab(tab);
 });
 
+async function testPressEnterOnSuggestion(expectedUrl = null, keyModifiers = {}) {
+  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser);
+  gURLBar.focus();
+  await promiseAutocompleteResultPopup("foo");
+  let [idx, suggestion, engineName] = await promiseFirstSuggestion();
+  Assert.equal(engineName,
+               "browser_searchSuggestionEngine%20searchSuggestionEngine.xml",
+               "Expected suggestion engine");
+
+  if (!expectedUrl) {
+    expectedUrl = Services.search.currentEngine.getSubmission(suggestion).uri.spec;
+  }
+
+  let promiseLoad = waitForDocLoadAndStopIt(expectedUrl);
+
+  for (let i = 0; i < idx; ++i) {
+    EventUtils.synthesizeKey("VK_DOWN", {});
+  }
+  EventUtils.synthesizeKey("VK_RETURN", keyModifiers);
+
+  await promiseLoad;
+  await BrowserTestUtils.removeTab(tab);
+}
+
+add_task(async function plainEnterOnSuggestion() {
+  await testPressEnterOnSuggestion();
+});
+
+add_task(async function ctrlEnterOnSuggestion() {
+  await testPressEnterOnSuggestion("http://www.foofoo.com/",
+                                   AppConstants.platform === "macosx" ?
+                                     { metaKey: true } :
+                                     { ctrlKey: true });
+});
+
 function getFirstSuggestion() {
   let controller = gURLBar.popup.input.controller;
   let matchCount = controller.matchCount;
