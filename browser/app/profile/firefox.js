@@ -1074,7 +1074,7 @@ pref("security.sandbox.gpu.level", 0);
 // process is killed when all windows are closed, so a change will take effect
 // when the 1st window is opened.
 #if defined(NIGHTLY_BUILD)
-pref("security.sandbox.content.level", 2);
+pref("security.sandbox.content.level", 3);
 #else
 pref("security.sandbox.content.level", 1);
 #endif
