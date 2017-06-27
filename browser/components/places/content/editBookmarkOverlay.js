@@ -619,7 +619,7 @@ var gEditItemOverlay = {
         PlacesUtils.transactionManager.doTransaction(txn);
         return;
       }
-      (async function() {
+      (async () => {
         let guid = this._paneInfo.isTag
                     ? (await PlacesUtils.promiseItemGuid(this._paneInfo.itemId))
                     : this._paneInfo.itemGuid;
