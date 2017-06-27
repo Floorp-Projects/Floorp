@@ -1334,12 +1334,26 @@ toolbarpaletteitem[place="palette"] {
   display: inline-block;
 }
 
+#main-window[photon-structure] toolbarpaletteitem[place="palette"] {
+  -moz-binding: url("chrome://global/content/bindings/toolbar.xml#toolbarpaletteitem-palette-wrapping-label");
+  width: 7em;
+  /* icon (16) + margin (9 + 12) + 3 lines of text: */
+  height: calc(39px + 3em);
+  margin-inline-end: 24px;
+  overflow: visible;
+}
+
 toolbarpaletteitem[place="palette"][hidden] {
   display: none;
 }
 
 #customization-palette .toolbarpaletteitem-box {
   -moz-box-pack: center;
+  width: 7em;
+  max-width: 7em;
+}
+
+#main-window:not([photon-structure]) #customization-palette .toolbarpaletteitem-box {
   -moz-box-flex: 1;
   width: 10em;
   max-width: 10em;
