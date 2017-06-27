@@ -7539,17 +7539,6 @@ nsBlockFrame::ResolveBulletStyle(CSSPseudoElementType aType,
                                               parentStyle, nullptr);
 }
 
-nsIFrame*
-nsBlockFrame::GetFirstLetter() const
-{
-  if (!(GetStateBits() & NS_BLOCK_HAS_FIRST_LETTER_STYLE)) {
-    // Certainly no first-letter frame.
-    return nullptr;
-  }
-
-  return GetProperty(FirstLetterProperty());
-}
-
 #ifdef DEBUG
 void
 nsBlockFrame::VerifyLines(bool aFinalCheckOK)
