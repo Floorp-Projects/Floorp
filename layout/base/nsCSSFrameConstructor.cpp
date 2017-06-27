@@ -11630,7 +11630,7 @@ static bool IsFirstLetterContent(nsIContent* aContent)
 /**
  * Create a letter frame, only make it a floating frame.
  */
-void
+nsFirstLetterFrame*
 nsCSSFrameConstructor::CreateFloatingLetterFrame(
   nsFrameConstructorState& aState,
   nsIContent* aTextContent,
@@ -11695,6 +11695,8 @@ nsCSSFrameConstructor::CreateFloatingLetterFrame(
   if (nextTextFrame) {
     aResult.AddChild(nextTextFrame);
   }
+
+  return letterFrame;
 }
 
 /**
@@ -11751,15 +11753,16 @@ nsCSSFrameConstructor::CreateLetterFrame(nsContainerFrame* aBlockFrame,
 
     // Create the right type of first-letter frame
     const nsStyleDisplay* display = sc->StyleDisplay();
+    nsFirstLetterFrame* letterFrame;
     if (display->IsFloatingStyle() &&
         !nsSVGUtils::IsInSVGTextSubtree(aParentFrame)) {
       // Make a floating first-letter frame
-      CreateFloatingLetterFrame(state, aTextContent, textFrame,
-                                aParentFrame, sc, aResult);
+      letterFrame = CreateFloatingLetterFrame(state, aTextContent, textFrame,
+                                              aParentFrame, sc, aResult);
     }
     else {
       // Make an inflow first-letter frame
-      nsFirstLetterFrame* letterFrame = NS_NewFirstLetterFrame(mPresShell, sc);
+      letterFrame = NS_NewFirstLetterFrame(mPresShell, sc);
 
       // Initialize the first-letter-frame.  We don't want to use a text
       // content for a non-text frame (because we want its primary frame to
@@ -11776,6 +11779,10 @@ nsCSSFrameConstructor::CreateLetterFrame(nsContainerFrame* aBlockFrame,
                    "should have the first continuation here");
       aBlockFrame->AddStateBits(NS_BLOCK_HAS_FIRST_LETTER_CHILD);
     }
+    MOZ_ASSERT(!aBlockFrame->GetPrevContinuation(),
+               "Setting up a first-letter frame on a non-first block continuation?");
+    aBlockFrame->SetProperty(nsContainerFrame::FirstLetterProperty(),
+                             letterFrame);
     aTextContent->SetPrimaryFrame(textFrame);
   }
 }
@@ -12052,6 +12059,7 @@ nsCSSFrameConstructor::RemoveLetterFrames(nsIPresShell* aPresShell,
 {
   aBlockFrame =
     static_cast<nsContainerFrame*>(aBlockFrame->FirstContinuation());
+  aBlockFrame->RemoveProperty(nsContainerFrame::FirstLetterProperty());
   nsContainerFrame* continuation = aBlockFrame;
 
   bool stopLooking = false;
