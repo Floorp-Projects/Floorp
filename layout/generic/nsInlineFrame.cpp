@@ -1032,14 +1032,11 @@ nsInlineFrame::UpdateStyleOfOwnedAnonBoxesForIBSplit(
   nsIFrame* blockFrame = GetProperty(nsIFrame::IBSplitSibling());
   MOZ_ASSERT(blockFrame, "Why did we have an IB split?");
 
-  // The later inlines need to get our style.
-  nsStyleContext* ourStyle = StyleContext();
-
   // The anonymous block's style inherits from ours, and we already have our new
   // style context.
   RefPtr<nsStyleContext> newContext =
     aRestyleState.StyleSet().ResolveInheritingAnonymousBoxStyle(
-      nsCSSAnonBoxes::mozBlockInsideInlineWrapper, ourStyle);
+      nsCSSAnonBoxes::mozBlockInsideInlineWrapper, StyleContext());
 
   // We're guaranteed that newContext only differs from the old style context on
   // the block in things they might inherit from us.  And changehint processing
@@ -1055,19 +1052,16 @@ nsInlineFrame::UpdateStyleOfOwnedAnonBoxesForIBSplit(
                nsCSSAnonBoxes::mozBlockInsideInlineWrapper,
                "Unexpected kind of style context");
 
-    // We don't want to just walk through using GetNextContinuationWithSameStyle
-    // here, because we want to set updated style contexts on both our
-    // ib-sibling blocks and inlines.
+    // We _could_ just walk along using GetNextContinuationWithSameStyle here,
+    // but it would involve going back to the first continuation every so often,
+    // which is a bit silly when we can just keep track of our first
+    // continuations.
     for (nsIFrame* cont = blockFrame; cont; cont = cont->GetNextContinuation()) {
       cont->SetStyleContext(newContext);
     }
 
     nsIFrame* nextInline = blockFrame->GetProperty(nsIFrame::IBSplitSibling());
     MOZ_ASSERT(nextInline, "There is always a trailing inline in an IB split");
-
-    for (nsIFrame* cont = nextInline; cont; cont = cont->GetNextContinuation()) {
-      cont->SetStyleContext(ourStyle);
-    }
     blockFrame = nextInline->GetProperty(nsIFrame::IBSplitSibling());
   }
 }
