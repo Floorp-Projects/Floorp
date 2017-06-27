@@ -44,7 +44,7 @@ public class GlobalConstants {
   static {
     // Prioritize 128 over 256 as a tradeoff between device CPU/battery and the minor
     // increase in strength.
-    if (Versions.feature20Plus) {
+    if (Versions.feature26Plus) {
       DEFAULT_CIPHER_SUITES = new String[]
           {
            "TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256",   // 20+
@@ -56,7 +56,21 @@ public class GlobalConstants {
            "TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA",        // 11+
 
            // For Sync 1.1.
-           "TLS_DHE_RSA_WITH_AES_128_CBC_SHA",  // 9+
+           "TLS_RSA_WITH_AES_128_CBC_SHA",      // 9+
+          };
+    } else if (Versions.feature20Plus) {
+      DEFAULT_CIPHER_SUITES = new String[]
+          {
+           "TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256",   // 20+
+           "TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256",     // 20+
+           "TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256",     // 20+
+           "TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA",        // 11+
+           "TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384",     // 20+
+           "TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384",     // 20+
+           "TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA",        // 11+
+
+           // For Sync 1.1.
+           "TLS_DHE_RSA_WITH_AES_128_CBC_SHA",  // 9-25
            "TLS_RSA_WITH_AES_128_CBC_SHA",      // 9+
           };
     } else {
