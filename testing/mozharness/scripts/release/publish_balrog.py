@@ -18,6 +18,7 @@ from datetime import datetime, timedelta
 sys.path.insert(1, os.path.dirname(os.path.dirname(sys.path[0])))
 from mozharness.base.vcs.vcsbase import MercurialScript
 from mozharness.mozilla.buildbot import BuildbotMixin
+from mozharness.base.log import FATAL
 
 # PublishBalrog {{{1
 
@@ -119,7 +120,8 @@ class PublishBalrog(MercurialScript, BuildbotMixin):
         if self.config.get("background_rate"):
             cmd.extend(["--background-rate", str(self.config["background_rate"])])
 
-        self.retry(lambda: self.run_command(cmd, halt_on_failure=True))
+        self.retry(lambda: self.run_command(cmd, halt_on_failure=True),
+                   error_level=FATAL)
 
 
 # __main__ {{{1
