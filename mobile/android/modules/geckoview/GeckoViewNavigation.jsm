@@ -44,6 +44,7 @@ class GeckoViewNavigation extends GeckoViewModule {
       "GeckoView:GoForward",
       "GeckoView:LoadUri",
       "GeckoView:Reload",
+      "GeckoView:Stop"
     ]);
   }
 
@@ -69,6 +70,9 @@ class GeckoViewNavigation extends GeckoViewModule {
         break;
       case "GeckoView:Reload":
         this.browser.reload();
+        break;
+      case "GeckoView:Stop":
+        this.browser.stop();
         break;
     }
   }
