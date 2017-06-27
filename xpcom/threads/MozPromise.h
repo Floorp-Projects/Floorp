@@ -958,7 +958,7 @@ protected:
   private:
     const char* mCallSite;
     RefPtr<ThenValueType> mThenValue;
-    MozPromise* mReceiver;
+    RefPtr<MozPromise> mReceiver;
   };
 
 public:
