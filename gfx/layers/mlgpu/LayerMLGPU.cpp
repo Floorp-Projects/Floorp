@@ -125,6 +125,22 @@ LayerMLGPU::SetRegionToRender(LayerIntRegion&& aRegion)
   SetShadowVisibleRegion(Move(aRegion));
 }
 
+void
+LayerMLGPU::SetLayerManager(HostLayerManager* aManager)
+{
+  LayerManagerMLGPU* manager = aManager->AsLayerManagerMLGPU();
+  MOZ_RELEASE_ASSERT(manager);
+
+  HostLayer::SetLayerManager(aManager);
+  GetLayer()->SetManager(manager, this);
+
+  if (CompositableHost* host = GetCompositableHost()) {
+    host->SetTextureSourceProvider(manager->GetTextureSourceProvider());
+  }
+
+  OnLayerManagerChange(manager);
+}
+
 RefLayerMLGPU::RefLayerMLGPU(LayerManagerMLGPU* aManager)
   : RefLayer(aManager, static_cast<HostLayer*>(this))
   , LayerMLGPU(aManager)

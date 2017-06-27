@@ -64,7 +64,6 @@ public:
 protected:
   void PrintInfo(std::stringstream& aStream, const char* aPrefix) override;
   bool OnPrepareToRender(FrameBuilder* aBuilder) override;
-  void ComputeDrawRegion();
 
   void CleanupResources();
 
