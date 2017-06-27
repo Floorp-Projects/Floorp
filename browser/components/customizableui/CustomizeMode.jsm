@@ -1385,6 +1385,98 @@ CustomizeMode.prototype = {
     this.window.openUILinkIn(getMoreURL, "tab");
   },
 
+  updateUIDensity(mode) {
+    this.window.gUIDensity.update(mode);
+  },
+
+  setUIDensity(mode) {
+    let win = this.window;
+    let gUIDensity = win.gUIDensity;
+    let currentDensity = gUIDensity.getCurrentDensity();
+    let panel = win.document.getElementById("customization-uidensity-menu");
+
+    Services.prefs.setIntPref(gUIDensity.uiDensityPref, mode);
+
+    // If the user is choosing a different UI density mode while
+    // the mode is overriden to Touch, remove the override.
+    if (currentDensity.overridden) {
+      Services.prefs.setBoolPref(gUIDensity.autoTouchModePref, false);
+    }
+
+    this._onUIChange();
+    panel.hidePopup();
+  },
+
+  resetUIDensity() {
+    this.window.gUIDensity.update();
+  },
+
+  onUIDensityMenuShowing() {
+    let win = this.window;
+    let doc = win.document;
+    let gUIDensity = win.gUIDensity;
+    let currentDensity = gUIDensity.getCurrentDensity();
+
+    let normalButton = doc.getElementById("customization-uidensity-menu-button-normal");
+    normalButton.mode = gUIDensity.MODE_NORMAL;
+
+    let compactButton = doc.getElementById("customization-uidensity-menu-button-compact");
+    compactButton.mode = gUIDensity.MODE_COMPACT;
+
+    let buttons = [normalButton, compactButton];
+
+    let touchButton = doc.getElementById("customization-uidensity-menu-button-touch");
+    // Touch mode can not be enabled in OSX right now.
+    if (touchButton) {
+      touchButton.mode = gUIDensity.MODE_TOUCH;
+      buttons.push(touchButton);
+    }
+
+    // Mark the active mode button.
+    for (let button of buttons) {
+      if (button.mode == currentDensity.mode) {
+        button.setAttribute("aria-checked", "true");
+        button.setAttribute("active", "true");
+      } else {
+        button.removeAttribute("aria-checked");
+        button.removeAttribute("active");
+      }
+    }
+
+    // Add menu items for automatically switching to Touch mode in Windows Tablet Mode,
+    // which is only available in Windows 10.
+    if (AppConstants.isPlatformAndVersionAtLeast("win", "10")) {
+      let spacer = doc.getElementById("customization-uidensity-touch-spacer");
+      let checkbox = doc.getElementById("customization-uidensity-autotouchmode-checkbox");
+      spacer.removeAttribute("hidden");
+      checkbox.removeAttribute("hidden");
+
+      // Show a hint that the UI density was overridden automatically.
+      if (currentDensity.overridden) {
+        let sb = Services.strings.createBundle("chrome://browser/locale/uiDensity.properties");
+        touchButton.setAttribute("acceltext",
+                                 sb.GetStringFromName("uiDensity.menu-button-touch.acceltext"));
+      } else {
+        touchButton.removeAttribute("acceltext");
+      }
+
+      let autoTouchMode = Services.prefs.getBoolPref(win.gUIDensity.autoTouchModePref);
+      if (autoTouchMode) {
+        checkbox.setAttribute("checked", "true");
+      } else {
+        checkbox.removeAttribute("checked");
+      }
+    }
+  },
+
+  updateAutoTouchMode(checked) {
+    Services.prefs.setBoolPref("browser.touchmode.auto", checked);
+    // Re-render the menu items since the active mode might have
+    // change because of this.
+    this.onUIDensityMenuShowing();
+    this._onUIChange();
+  },
+
   onLWThemesMenuShowing(aEvent) {
     const DEFAULT_THEME_ID = "{972ce4c6-7e08-4474-a285-3208198ce6fd}";
     const RECENT_LWT_COUNT = 5;
