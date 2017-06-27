@@ -327,7 +327,7 @@ nsDisplayCanvasBackgroundColor::CreateWebRenderCommands(mozilla::wr::DisplayList
   LayoutDeviceRect rect = LayoutDeviceRect::FromAppUnits(
           bgClipRect, appUnitsPerDevPixel);
 
-  WrRect transformedRect = aSc.ToRelativeWrRect(rect);
+  wr::WrRect transformedRect = aSc.ToRelativeWrRect(rect);
   aBuilder.PushRect(transformedRect,
                     transformedRect,
                     wr::ToWrColor(ToDeviceColor(mColor)));

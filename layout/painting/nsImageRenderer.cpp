@@ -651,8 +651,8 @@ nsImageRenderer::BuildWebRenderDisplayItems(nsPresContext*       aPresContext,
           nsRect(firstTilePos.x, firstTilePos.y,
                  aFill.XMost() - firstTilePos.x, aFill.YMost() - firstTilePos.y),
           appUnitsPerDevPixel);
-      WrRect fill = aSc.ToRelativeWrRect(fillRect);
-      WrRect clip = aSc.ToRelativeWrRect(
+      wr::WrRect fill = aSc.ToRelativeWrRect(fillRect);
+      wr::WrRect clip = aSc.ToRelativeWrRect(
           LayoutDeviceRect::FromAppUnits(aFill, appUnitsPerDevPixel));
 
       LayoutDeviceSize gapSize = LayoutDeviceSize::FromAppUnits(

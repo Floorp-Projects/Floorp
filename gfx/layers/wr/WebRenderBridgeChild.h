@@ -96,9 +96,9 @@ public:
     mIdNamespace = aIdNamespace;
   }
 
-  WrImageKey GetNextImageKey()
+  wr::WrImageKey GetNextImageKey()
   {
-    return WrImageKey{ GetNamespace(), GetNextResourceId() };
+    return wr::WrImageKey{ GetNamespace(), GetNextResourceId() };
   }
 
   void PushGlyphs(wr::DisplayListBuilder& aBuilder, const nsTArray<GlyphArray>& aGlyphs,

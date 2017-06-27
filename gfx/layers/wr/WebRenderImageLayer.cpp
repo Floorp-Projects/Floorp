@@ -167,7 +167,7 @@ WebRenderImageLayer::RenderLayer(wr::DisplayListBuilder& aBuilder,
         PixelCastJustification::MovingDownToChildren);
     DumpLayerInfo("Image Layer async", rect);
 
-    WrRect r = aSc.ToRelativeWrRect(rect);
+    wr::WrRect r = aSc.ToRelativeWrRect(rect);
     aBuilder.PushIFrame(r, mPipelineId.ref());
 
     gfx::Matrix4x4 scTransform = GetTransform();
@@ -231,11 +231,11 @@ WebRenderImageLayer::RenderLayer(wr::DisplayListBuilder& aBuilder,
                   GetLayer(),
                   Stringify(filter).c_str());
   }
-  WrRect r = sc.ToRelativeWrRect(rect);
+  wr::WrRect r = sc.ToRelativeWrRect(rect);
   aBuilder.PushImage(r, r, filter, mKey.value());
 }
 
-Maybe<WrImageMask>
+Maybe<wr::WrImageMask>
 WebRenderImageLayer::RenderMaskLayer(const StackingContextHelper& aSc,
                                      const gfx::Matrix4x4& aTransform)
 {
@@ -283,7 +283,7 @@ WebRenderImageLayer::RenderMaskLayer(const StackingContextHelper& aSc,
   }
 
   gfx::IntSize size = image->GetSize();
-  WrImageMask imageMask;
+  wr::WrImageMask imageMask;
   imageMask.image = mKey.value();
   Rect maskRect = aTransform.TransformBounds(Rect(0, 0, size.width, size.height));
   imageMask.rect = aSc.ToRelativeWrRect(ViewAs<LayerPixel>(maskRect));

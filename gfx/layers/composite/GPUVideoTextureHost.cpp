@@ -133,8 +133,8 @@ GPUVideoTextureHost::AddWRImage(wr::WebRenderAPI* aAPI,
 
 void
 GPUVideoTextureHost::PushExternalImage(wr::DisplayListBuilder& aBuilder,
-                                       const WrRect& aBounds,
-                                       const WrRect& aClip,
+                                       const wr::WrRect& aBounds,
+                                       const wr::WrRect& aClip,
                                        wr::ImageRendering aFilter,
                                        Range<const wr::ImageKey>& aImageKeys)
 {

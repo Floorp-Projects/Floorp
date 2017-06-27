@@ -40,11 +40,11 @@ class RenderTextureHost;
 /// on the render thread instead of the compositor thread.
 class RendererOGL
 {
-  friend WrExternalImage LockExternalImage(void* aObj, WrExternalImageId aId, uint8_t aChannelIndex);
-  friend void UnlockExternalImage(void* aObj, WrExternalImageId aId, uint8_t aChannelIndex);
+  friend wr::WrExternalImage LockExternalImage(void* aObj, wr::WrExternalImageId aId, uint8_t aChannelIndex);
+  friend void UnlockExternalImage(void* aObj, wr::WrExternalImageId aId, uint8_t aChannelIndex);
 
 public:
-  WrExternalImageHandler GetExternalImageHandler();
+  wr::WrExternalImageHandler GetExternalImageHandler();
 
   /// This can be called on the render thread only.
   void Update();
@@ -66,7 +66,7 @@ public:
               RefPtr<gl::GLContext>&& aGL,
               RefPtr<widget::CompositorWidget>&&,
               wr::WindowId aWindowId,
-              WrRenderer* aWrRenderer,
+              wr::WrRenderer* aWrRenderer,
               layers::CompositorBridgeParentBase* aBridge);
 
   /// This can be called on the render thread only.
@@ -77,18 +77,18 @@ public:
 
   layers::CompositorBridgeParentBase* GetCompositorBridge() { return mBridge; }
 
-  WrRenderedEpochs* FlushRenderedEpochs();
+  wr::WrRenderedEpochs* FlushRenderedEpochs();
 
-  RenderTextureHost* GetRenderTexture(WrExternalImageId aExternalImageId);
+  RenderTextureHost* GetRenderTexture(wr::WrExternalImageId aExternalImageId);
 
-  WrRenderer* GetWrRenderer() { return mWrRenderer; }
+  wr::WrRenderer* GetWrRenderer() { return mWrRenderer; }
 
 protected:
 
   RefPtr<RenderThread> mThread;
   RefPtr<gl::GLContext> mGL;
   RefPtr<widget::CompositorWidget> mWidget;
-  WrRenderer* mWrRenderer;
+  wr::WrRenderer* mWrRenderer;
   layers::CompositorBridgeParentBase* mBridge;
   wr::WindowId mWindowId;
 };

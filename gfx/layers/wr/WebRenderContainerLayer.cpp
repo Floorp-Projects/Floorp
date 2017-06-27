@@ -114,7 +114,7 @@ WebRenderContainerLayer::RenderLayer(wr::DisplayListBuilder& aBuilder,
     transformForSC = nullptr;
   }
 
-  nsTArray<WrFilterOp> filters;
+  nsTArray<wr::WrFilterOp> filters;
   for (const CSSFilter& filter : this->GetFilterChain()) {
     filters.AppendElement(wr::ToWrFilterOp(filter));
   }
@@ -150,7 +150,7 @@ WebRenderRefLayer::RenderLayer(wr::DisplayListBuilder& aBuilder,
       PixelCastJustification::MovingDownToChildren);
   DumpLayerInfo("RefLayer", rect);
 
-  WrRect r = aSc.ToRelativeWrRect(rect);
+  wr::WrRect r = aSc.ToRelativeWrRect(rect);
   aBuilder.PushIFrame(r, wr::AsPipelineId(mId));
 }
 
