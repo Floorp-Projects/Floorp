@@ -34,7 +34,7 @@ static int HandleSigset(int (*aRealFunc)(int, const sigset_t*, sigset_t*),
   }
 
   // Avoid unnecessary work
-  if (aSet == NULL || aHow == SIG_UNBLOCK) {
+  if (aSet == nullptr || aHow == SIG_UNBLOCK) {
     return aRealFunc(aHow, aSet, aOldSet);
   }
 
