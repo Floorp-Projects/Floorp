@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Test for Bug 1371453</title>
+<script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+<link rel="stylesheet" href="data:text/css,{}">
+<body>
+<script>
+SimpleTest.waitForExplicitFinish();
+
+let DOMUtils = SpecialPowers.Cc["@mozilla.org/inspector/dom-utils;1"]
+               .getService(SpecialPowers.Ci.inIDOMUtils);
+const Cu = SpecialPowers.Components.utils;
+const { ContentTaskUtils } = Cu.import("resource://testing-common/ContentTaskUtils.jsm", {});
+document.styleSheetChangeEventsEnabled = true;
+
+runTest();
+
+async function runTest() {
+  document.getElementsByTagName("link")[1].sheet.insertRule('@import url("blahblah")', 0);
+
+  // Await and then process the event we expect to arrive.
+  let event = await ContentTaskUtils.waitForEvent(document, "StyleRuleAdded", true);
+  is(event.rule.type, CSSRule.IMPORT_RULE, "Got expected import rule.");
+
+  todo_isnot(event.rule.styleSheet, null, "Import rule contains a stylesheet.");
+
+  let stylo_todo_isnot = SpecialPowers.DOMWindowUtils.isStyledByServo ? todo_isnot : isnot;
+  stylo_todo_isnot(event.rule.media, null, "Import rule contains a media list.");
+
+  is(event.rule.href, "blahblah", "Import rule contains expected href.");
+
+  SimpleTest.finish();
+}
+
+</script>
+</body>
+</html>
