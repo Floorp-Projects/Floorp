@@ -494,9 +494,7 @@ SERVO_BINDING_FUNC(Servo_ResolveStyle, ServoComputedValuesStrong,
 SERVO_BINDING_FUNC(Servo_ResolvePseudoStyle, ServoComputedValuesStrong,
                    RawGeckoElementBorrowed element,
                    mozilla::CSSPseudoElementType pseudo_type,
-                   bool is_probe,
-                   ServoComputedValuesBorrowedOrNull inherited_style,
-                   RawServoStyleSetBorrowed set)
+                   bool is_probe, RawServoStyleSetBorrowed set)
 SERVO_BINDING_FUNC(Servo_HasAuthorSpecifiedRules, bool,
                    RawGeckoElementBorrowed element,
                    uint32_t rule_type_mask,
