@@ -47,23 +47,9 @@ _DESKTOP_UPSTREAM_ARTIFACTS_UNSIGNED_EN_US = [
 # need to be transfered to S3, please be aware you also need to follow-up
 # with a beetmover patch in https://github.com/mozilla-releng/beetmoverscript/.
 # See example in bug 1348286
-_DESKTOP_UPSTREAM_ARTIFACTS_SIGNED_EN_US = [
-    "update/target.complete.mar",
-]
-# Until bug 1331141 is fixed, if you are adding any new artifacts here that
-# need to be transfered to S3, please be aware you also need to follow-up
-# with a beetmover patch in https://github.com/mozilla-releng/beetmoverscript/.
-# See example in bug 1348286
 _DESKTOP_UPSTREAM_ARTIFACTS_UNSIGNED_L10N = [
     "target.langpack.xpi",
     "balrog_props.json",
-]
-# Until bug 1331141 is fixed, if you are adding any new artifacts here that
-# need to be transfered to S3, please be aware you also need to follow-up
-# with a beetmover patch in https://github.com/mozilla-releng/beetmoverscript/.
-# See example in bug 1348286
-_DESKTOP_UPSTREAM_ARTIFACTS_SIGNED_L10N = [
-    "target.complete.mar",
 ]
 
 # Until bug 1331141 is fixed, if you are adding any new artifacts here that
@@ -73,14 +59,6 @@ _DESKTOP_UPSTREAM_ARTIFACTS_SIGNED_L10N = [
 UPSTREAM_ARTIFACT_UNSIGNED_PATHS = {
     'macosx64-nightly': _DESKTOP_UPSTREAM_ARTIFACTS_UNSIGNED_EN_US,
     'macosx64-nightly-l10n': _DESKTOP_UPSTREAM_ARTIFACTS_UNSIGNED_L10N,
-}
-# Until bug 1331141 is fixed, if you are adding any new artifacts here that
-# need to be transfered to S3, please be aware you also need to follow-up
-# with a beetmover patch in https://github.com/mozilla-releng/beetmoverscript/.
-# See example in bug 1348286
-UPSTREAM_ARTIFACT_SIGNED_PATHS = {
-    'macosx64-nightly': _DESKTOP_UPSTREAM_ARTIFACTS_SIGNED_EN_US,
-    'macosx64-nightly-l10n': _DESKTOP_UPSTREAM_ARTIFACTS_SIGNED_L10N,
 }
 # Until bug 1331141 is fixed, if you are adding any new artifacts here that
 # need to be transfered to S3, please be aware you also need to follow-up
@@ -198,11 +176,9 @@ def make_task_description(config, jobs):
         yield task
 
 
-def generate_upstream_artifacts(signing_task_ref, build_task_ref,
-                                repackage_task_ref, platform,
-                                locale=None):
+def generate_upstream_artifacts(build_task_ref, repackage_task_ref,
+                                platform, locale=None):
 
-    signing_mapping = UPSTREAM_ARTIFACT_SIGNED_PATHS
     build_mapping = UPSTREAM_ARTIFACT_UNSIGNED_PATHS
     repackage_mapping = UPSTREAM_ARTIFACT_REPACKAGE_PATHS
 
@@ -216,12 +192,6 @@ def generate_upstream_artifacts(signing_task_ref, build_task_ref,
         "taskType": "build",
         "paths": ["{}/{}".format(artifact_prefix, p)
                   for p in build_mapping[platform]],
-        "locale": locale or "en-US",
-        }, {
-        "taskId": {"task-reference": signing_task_ref},
-        "taskType": "signing",
-        "paths": ["{}/{}".format(artifact_prefix, p)
-                  for p in signing_mapping[platform]],
         "locale": locale or "en-US",
         }, {
         "taskId": {"task-reference": repackage_task_ref},
@@ -246,20 +216,18 @@ def make_task_worker(config, jobs):
         platform = job["attributes"]["build_platform"]
         build_task = None
         repackage_task = None
-        signing_task = None
         for dependency in job["dependencies"].keys():
             if 'repackage' in dependency:
                 repackage_task = dependency
             elif 'signing' in dependency:
-                signing_task = dependency
+                pass
             else:
                 build_task = "build"
 
-        signing_task_ref = "<" + str(signing_task) + ">"
         build_task_ref = "<" + str(build_task) + ">"
         repackage_task_ref = "<" + str(repackage_task) + ">"
         upstream_artifacts = generate_upstream_artifacts(
-            signing_task_ref, build_task_ref, repackage_task_ref, platform, locale
+            build_task_ref, repackage_task_ref, platform, locale
         )
 
         worker = {'implementation': 'beetmover',
