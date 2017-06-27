@@ -12,28 +12,22 @@ const TEXT_COLOR_2 = "#0ef325";
 
 function hexToRGB(hex) {
   hex = parseInt((hex.indexOf("#") > -1 ? hex.substring(1) : hex), 16);
-  return "rgb(" + [hex >> 16, (hex & 0x00FF00) >> 8, (hex & 0x0000FF)].join(", ") + ")";
+  return [hex >> 16, (hex & 0x00FF00) >> 8, (hex & 0x0000FF)];
 }
 
-function validateTheme(backgroundImage, accentColor, textColor, isLWT) {
+function validateTheme(backgroundImage, accentColor, textColor) {
   let docEl = window.document.documentElement;
   let style = window.getComputedStyle(docEl);
 
-  if (isLWT) {
-    Assert.ok(docEl.hasAttribute("lwtheme"), "LWT attribute should be set");
-    Assert.equal(docEl.getAttribute("lwthemetextcolor"), "bright",
-      "LWT text color attribute should be set");
-  };
+  Assert.ok(docEl.hasAttribute("lwtheme"), "LWT attribute should be set");
+  Assert.equal(docEl.getAttribute("lwthemetextcolor"), "bright",
+    "LWT text color attribute should be set");
 
   Assert.ok(style.backgroundImage.includes(backgroundImage), "Expected correct background image");
-  if (accentColor.startsWith('#')) {
-    accentColor = hexToRGB(accentColor);
-  }
-  if (textColor.startsWith('#')) {
-    textColor = hexToRGB(textColor);
-  }
-  Assert.equal(style.backgroundColor, accentColor, "Expected correct accent color");
-  Assert.equal(style.color, textColor, "Expected correct text color");
+  Assert.equal(style.backgroundColor, "rgb(" + hexToRGB(accentColor).join(", ") + ")",
+    "Expected correct accent color");
+  Assert.equal(style.color, "rgb(" + hexToRGB(textColor).join(", ") + ")",
+    "Expected correct text color");
 }
 
 add_task(async function setup() {
@@ -53,20 +47,16 @@ add_task(async function test_dynamic_theme_updates() {
     },
     background() {
       browser.test.onMessage.addListener((msg, details) => {
-        if (msg === "update-theme") {
-          browser.theme.update(details).then(() => {
-            browser.test.sendMessage("theme-updated");
-          });
-        } else {
-          browser.theme.reset().then(() => {
-            browser.test.sendMessage("theme-reset");
-          });
+        if (msg != "update-theme") {
+          browser.test.fail("expected 'update-theme' message");
         }
+
+        browser.theme.update(details);
+        browser.test.sendMessage("theme-updated");
       });
     },
   });
 
-  let defaultStyle = window.getComputedStyle(window.document.documentElement);
   await extension.startup();
 
   extension.sendMessage("update-theme", {
@@ -81,7 +71,7 @@ add_task(async function test_dynamic_theme_updates() {
 
   await extension.awaitMessage("theme-updated");
 
-  validateTheme("image1.png", ACCENT_COLOR_1, TEXT_COLOR_1, true);
+  validateTheme("image1.png", ACCENT_COLOR_1, TEXT_COLOR_1);
 
   extension.sendMessage("update-theme", {
     "images": {
@@ -95,14 +85,7 @@ add_task(async function test_dynamic_theme_updates() {
 
   await extension.awaitMessage("theme-updated");
 
-  validateTheme("image2.png", ACCENT_COLOR_2, TEXT_COLOR_2, true);
-
-  extension.sendMessage("reset-theme");
-
-  await extension.awaitMessage("theme-reset");
-
-  let {backgroundImage, backgroundColor, color} = defaultStyle;
-  validateTheme(backgroundImage, backgroundColor, color, false);
+  validateTheme("image2.png", ACCENT_COLOR_2, TEXT_COLOR_2);
 
   await extension.unload();
 

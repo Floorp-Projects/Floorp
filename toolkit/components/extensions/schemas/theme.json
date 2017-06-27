@@ -458,13 +458,6 @@
             "description": "The properties of the theme to update."
           }
         ]
-      },
-      {
-        "name": "reset",
-        "type": "function",
-        "async": true,
-        "description": "Removes the updates made to the theme.",
-        "parameters": []
       }
     ]
   }
