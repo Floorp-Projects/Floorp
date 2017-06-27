@@ -12,12 +12,9 @@
 # Generated from ./tools/rewriting/ThirdPartyPaths.txt
 # awk '{print "^"$1".*"}' ./tools/rewriting/ThirdPartyPaths.txt
 ^browser/components/translation/cld2/.*
-^build/stlport/.*
 ^db/sqlite3/src/.*
 ^dom/media/platforms/ffmpeg/libav.*
 ^extensions/spellcheck/hunspell/src/.*
-^gfx/2d/convolver.*
-^gfx/2d/image_operations.*
 ^gfx/angle/.*
 ^gfx/cairo/.*
 ^gfx/graphite2/.*
