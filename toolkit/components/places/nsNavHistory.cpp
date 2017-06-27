@@ -1102,15 +1102,11 @@ nsNavHistory::MarkPageAsFollowedBookmark(nsIURI* aURI)
   nsresult rv = aURI->GetSpec(uriString);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // if URL is already in the bookmark queue, then we need to remove the old one
-  int64_t unusedEventTime;
-  if (mRecentBookmark.Get(uriString, &unusedEventTime))
-    mRecentBookmark.Remove(uriString);
+  mRecentBookmark.Put(uriString, GetNow());
 
   if (mRecentBookmark.Count() > RECENT_EVENT_QUEUE_MAX_LENGTH)
     ExpireNonrecentEvents(&mRecentBookmark);
 
-  mRecentBookmark.Put(uriString, GetNow());
   return NS_OK;
 }
 
@@ -2770,15 +2766,11 @@ nsNavHistory::MarkPageAsTyped(nsIURI *aURI)
   nsresult rv = aURI->GetSpec(uriString);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // if URL is already in the typed queue, then we need to remove the old one
-  int64_t unusedEventTime;
-  if (mRecentTyped.Get(uriString, &unusedEventTime))
-    mRecentTyped.Remove(uriString);
+  mRecentTyped.Put(uriString, GetNow());
 
   if (mRecentTyped.Count() > RECENT_EVENT_QUEUE_MAX_LENGTH)
     ExpireNonrecentEvents(&mRecentTyped);
 
-  mRecentTyped.Put(uriString, GetNow());
   return NS_OK;
 }
 
@@ -2802,15 +2794,11 @@ nsNavHistory::MarkPageAsFollowedLink(nsIURI *aURI)
   nsresult rv = aURI->GetSpec(uriString);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // if URL is already in the links queue, then we need to remove the old one
-  int64_t unusedEventTime;
-  if (mRecentLink.Get(uriString, &unusedEventTime))
-    mRecentLink.Remove(uriString);
+  mRecentLink.Put(uriString, GetNow());
 
   if (mRecentLink.Count() > RECENT_EVENT_QUEUE_MAX_LENGTH)
     ExpireNonrecentEvents(&mRecentLink);
 
-  mRecentLink.Put(uriString, GetNow());
   return NS_OK;
 }
 
