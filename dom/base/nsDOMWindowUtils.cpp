@@ -2716,7 +2716,8 @@ nsDOMWindowUtils::ZoomToFocusedInput()
   while (currentFrame) {
     if (currentFrame == rootFrame) {
       break;
-    } else if (currentFrame == scrolledFrame) {
+    }
+    if (currentFrame == scrolledFrame) {
       // we are in the rootScrollFrame so this element is not fixed
       isFixedPos = false;
       break;

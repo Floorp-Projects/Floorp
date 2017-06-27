@@ -10757,7 +10757,9 @@ void nsGlobalWindow::SetIsBackground(bool aIsBackground)
       inner->StopGamepadHaptics();
     }
     return;
-  } else if (inner) {
+  }
+
+  if (inner) {
     inner->SyncGamepadState();
   }
 }
