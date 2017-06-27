@@ -727,13 +727,6 @@ ResponsiveUI.prototype = {
       return;
     }
 
-    // Only show a notification about the new RDM UI on channels where there is an e10s
-    // switch in the preferences UI (Dev. Ed, Nightly).  On other channels, it is less
-    // clear how a user would proceed here, so don't show a message.
-    if (!system.constants.E10S_TESTING_ONLY) {
-      return;
-    }
-
     let buttons = [{
       label: this.strings.GetStringFromName("responsiveUI.newVersionEnableAndRestart"),
       callback: () => {
