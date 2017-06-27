@@ -1101,12 +1101,10 @@ struct ClearJSHolder : public TraceCallbacks
 void
 CycleCollectedJSRuntime::RemoveJSHolder(void* aHolder)
 {
-  nsScriptObjectTracer* tracer = mJSHolders.Get(aHolder);
-  if (!tracer) {
-    return;
+  if (auto entry = mJSHolders.Lookup(aHolder)) {
+    entry.Data()->Trace(aHolder, ClearJSHolder(), nullptr);
+    entry.Remove();
   }
-  tracer->Trace(aHolder, ClearJSHolder(), nullptr);
-  mJSHolders.Remove(aHolder);
 }
 
 #ifdef DEBUG
