@@ -78,7 +78,19 @@ const ADDRESS_COMPUTE_TESTCASES = [
       "street-address": "line1\nline2\nline3\nline4",
       "address-line1": "line1",
       "address-line2": "line2",
-      "address-line3": "line3",
+      "address-line3": "line3 line4",
+    },
+  },
+  {
+    description: "\"street-address\" with blank lines",
+    address: {
+      "street-address": "line1\n \nline3\n \nline5",
+    },
+    expectedResult: {
+      "street-address": "line1\n \nline3\n \nline5",
+      "address-line1": "line1",
+      "address-line2": null,
+      "address-line3": "line3 line5",
     },
   },
 
