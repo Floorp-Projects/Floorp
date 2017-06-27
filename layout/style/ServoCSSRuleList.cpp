@@ -50,9 +50,7 @@ ServoCSSRuleList::ServoCSSRuleList(already_AddRefed<ServoCssRules> aRawRules,
         break;
       }
       ConstructImportRule(i, [&stylesheets](const RawServoStyleSheet* raw) {
-        // Child sheets may not correctly cloned for stylo, which is
-        // bug 1367213. That makes it possible to fail to get a style
-        // sheet for the raw sheet here.
+        // Child sheet will not be constructed if the import rule has a bad URL.
         return stylesheets.GetAndRemove(raw).valueOr(nullptr);
       });
     }
@@ -147,10 +145,7 @@ ServoCSSRuleList::GetRule(uint32_t aIndex)
         break;
       }
       case nsIDOMCSSRule::IMPORT_RULE:
-        // Currently ConstructImportRule may fail to construct an import
-        // rule eagerly. See comment in that function. This should be
-        // converted into an assertion when those bugs get fixed.
-        NS_WARNING("stylo: this @import rule was not constructed");
+        MOZ_ASSERT_UNREACHABLE("import rules are eagerly constructed");
         return nullptr;
       case nsIDOMCSSRule::KEYFRAME_RULE:
         MOZ_ASSERT_UNREACHABLE("keyframe rule cannot be here");
@@ -228,20 +223,21 @@ ServoCSSRuleList::ConstructImportRule(uint32_t aIndex, ChildSheetGetter aGetter)
   const RawServoStyleSheet*
     rawChildSheet = Servo_ImportRule_GetSheet(rawRule);
   ServoStyleSheet* childSheet = aGetter(rawChildSheet);
-  if (!childSheet) {
-    // There are cases that we cannot get the child sheet currently.
-    // See comments in callsites of this function. This should become
-    // an assertion after bug 1367213 and bug 1368381 get fixed.
-    NS_WARNING("stylo: fail to get child sheet for @import rule");
-    return;
-  }
+  // There is one case where we don't construct a child sheet for an import
+  // rule: when the URL doesn't resolve. In that cases we still want to create
+  // an import rule object, though we note it as an exceptional condition
+  // in debug builds.
+  NS_WARNING_ASSERTION(childSheet,
+                       "stylo: failed to get child sheet for @import rule");
   RefPtr<ServoImportRule>
     ruleObj = new ServoImportRule(Move(rawRule), childSheet, line, column);
-  MOZ_ASSERT(!childSheet->GetOwnerRule(),
-             "Child sheet is already owned by another rule?");
-  MOZ_ASSERT(childSheet->GetParentSheet() == mStyleSheet,
-             "Not a child sheet of the owner of the rule?");
-  childSheet->SetOwnerRule(ruleObj);
+  if (childSheet) {
+    MOZ_ASSERT(!childSheet->GetOwnerRule(),
+               "Child sheet is already owned by another rule?");
+    MOZ_ASSERT(childSheet->GetParentSheet() == mStyleSheet,
+               "Not a child sheet of the owner of the rule?");
+    childSheet->SetOwnerRule(ruleObj);
+  }
   mRules[aIndex] = CastToUint(ruleObj.forget().take());
 }
 
