@@ -340,15 +340,15 @@ toolbarpaletteitem[place="toolbar"]:not([mousedown="true"]):-moz-focusring {
   outline-offset: -5px;
 }
 
-#wrapper-edit-controls[place="palette"] > #edit-controls > toolbarbutton,
-#wrapper-edit-controls[place="palette"] > #edit-controls > separator,
-#wrapper-zoom-controls[place="palette"] > #zoom-controls > toolbarbutton,
-#wrapper-zoom-controls[place="palette"] > #zoom-controls > separator {
+:root:not([photon-structure]) #wrapper-edit-controls[place="palette"] > #edit-controls > toolbarbutton,
+:root:not([photon-structure]) #wrapper-edit-controls[place="palette"] > #edit-controls > separator,
+:root:not([photon-structure]) #wrapper-zoom-controls[place="palette"] > #zoom-controls > toolbarbutton,
+:root:not([photon-structure]) #wrapper-zoom-controls[place="palette"] > #zoom-controls > separator {
   margin-top: 20px;
 }
 
-#wrapper-edit-controls[place="palette"] > #edit-controls > toolbarbutton,
-#wrapper-zoom-controls[place="palette"] > #zoom-controls > toolbarbutton {
+:root:not([photon-structure]) #wrapper-edit-controls[place="palette"] > #edit-controls > toolbarbutton,
+:root:not([photon-structure]) #wrapper-zoom-controls[place="palette"] > #zoom-controls > toolbarbutton {
   margin-left: 0;
   margin-right: 0;
   max-width: 24px;
@@ -358,8 +358,8 @@ toolbarpaletteitem[place="toolbar"]:not([mousedown="true"]):-moz-focusring {
   padding: 4px;
 }
 
-#wrapper-edit-controls[place="palette"] > #edit-controls > toolbarbutton > .toolbarbutton-icon,
-#wrapper-zoom-controls[place="palette"] > #zoom-controls > toolbarbutton > .toolbarbutton-icon {
+:root:not([photon-structure]) #wrapper-edit-controls[place="palette"] > #edit-controls > toolbarbutton > .toolbarbutton-icon,
+:root:not([photon-structure]) #wrapper-zoom-controls[place="palette"] > #zoom-controls > toolbarbutton > .toolbarbutton-icon {
   width: 16px;
 }
 
@@ -372,7 +372,7 @@ toolbarpaletteitem[place="toolbar"]:not([mousedown="true"]):-moz-focusring {
   display: none;
 }
 
-#wrapper-personal-bookmarks:not([place="toolbar"]) > #personal-bookmarks {
+:root:not([photon-structure]) #wrapper-personal-bookmarks:not([place="toolbar"]) > #personal-bookmarks {
   -moz-box-pack: center;
   min-height: 48px;
 }

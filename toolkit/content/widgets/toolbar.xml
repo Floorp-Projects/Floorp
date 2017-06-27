@@ -586,4 +586,13 @@
     </content>
   </binding>
 
+  <binding id="toolbarpaletteitem-palette-wrapping-label" extends="chrome://global/content/bindings/toolbar.xml#toolbarpaletteitem">
+    <content>
+      <xul:hbox class="toolbarpaletteitem-box" xbl:inherits="type,place">
+        <children/>
+      </xul:hbox>
+      <xul:label xbl:inherits="xbl:text=title"/>
+    </content>
+  </binding>
+
 </bindings>
