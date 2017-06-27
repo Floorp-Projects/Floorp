@@ -895,19 +895,14 @@ StyleEditorUI.prototype = {
                              this._jumpToLocation.bind(this, location));
 
         let cond = this._panelDoc.createElement("div");
-        cond.textContent = rule.conditionText;
         cond.className = "media-rule-condition";
         if (!rule.matches) {
           cond.classList.add("media-condition-unmatched");
         }
         if (this._target.tab.tagName == "tab") {
-          const minMaxPattern = /(min\-|max\-)(width|height):\s\d+(px)/ig;
-          const replacement =
-                "<a href='#' class='media-responsive-mode-toggle'>$&</a>";
-
-          cond.innerHTML = cond.textContent.replace(minMaxPattern, replacement);
-          cond.addEventListener("click",
-                                this._onMediaConditionClick.bind(this));
+          this._setConditionContents(cond, rule.conditionText);
+        } else {
+          cond.textContent = rule.conditionText;
         }
         div.appendChild(cond);
 
@@ -928,16 +923,50 @@ StyleEditorUI.prototype = {
   },
 
   /**
-    * Called when a media condition is clicked
-    * If a responsive mode link is clicked, it will launch it.
-    *
-    * @param {object} e
-    *        Event object
-    */
-  _onMediaConditionClick: function (e) {
-    if (!e.target.matches(".media-responsive-mode-toggle")) {
-      return;
+   * Used to safely inject media query links
+   *
+   * @param {HTMLElement} element
+   *        The element corresponding to the media sidebar condition
+   * @param {String} rawText
+   *        The raw condition text to parse
+   */
+  _setConditionContents(element, rawText) {
+    const minMaxPattern = /(min\-|max\-)(width|height):\s\d+(px)/ig;
+
+    let match = minMaxPattern.exec(rawText);
+    let lastParsed = 0;
+    while (match && match.index != minMaxPattern.lastIndex) {
+      let matchEnd = match.index + match[0].length;
+      let node = this._panelDoc.createTextNode(
+        rawText.substring(lastParsed, match.index)
+      );
+      element.appendChild(node);
+
+      let link = this._panelDoc.createElement("a");
+      link.href = "#";
+      link.className = "media-responsive-mode-toggle";
+      link.textContent = rawText.substring(match.index, matchEnd);
+      link.addEventListener("click", this._onMediaConditionClick.bind(this));
+      element.appendChild(link);
+
+      match = minMaxPattern.exec(rawText);
+      lastParsed = matchEnd;
     }
+
+    let node = this._panelDoc.createTextNode(
+      rawText.substring(lastParsed, rawText.length)
+    );
+    element.appendChild(node);
+  },
+
+  /**
+   * Called when a media condition is clicked
+   * If a responsive mode link is clicked, it will launch it.
+   *
+   * @param {object} e
+   *        Event object
+   */
+  _onMediaConditionClick: function (e) {
     let conditionText = e.target.textContent;
     let isWidthCond = conditionText.toLowerCase().indexOf("width") > -1;
     let mediaVal = parseInt(/\d+/.exec(conditionText), 10);
