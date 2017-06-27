@@ -239,3 +239,9 @@ and this task would package that up as an Apple Disk Image (.dmg)
 repackage-l10n
 --------------
 Repackage-L10n is a ```Repackage``` task split up to be suitable for use after l10n repacks.
+
+
+repackage-signing
+-----------------
+Repackage-signing take the repackaged installers (windows) and update packaging (with
+the signed internal bits) and signs them.
