@@ -136,7 +136,6 @@ if test -n "$gonkdir"; then
 else
     case "$target" in
     *-android*|*-linuxandroid*)
-        ZLIB_DIR=yes
         AC_DEFINE(ANDROID)
         ;;
     *-linux*)

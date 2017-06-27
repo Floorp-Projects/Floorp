@@ -10,7 +10,6 @@ ac_add_options --disable-tests
 ac_add_options --with-android-min-sdk=21
 ac_add_options --target=aarch64-linux-android
 
-ac_add_options --with-system-zlib
 ac_add_options --enable-updater
 ac_add_options --enable-update-channel=${MOZ_UPDATE_CHANNEL}
 
