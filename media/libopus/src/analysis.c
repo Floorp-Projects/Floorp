@@ -663,8 +663,10 @@ static void tonality_analysis(TonalityAnalysisState *tonal, const CELTMode *celt
     }
     /* Special case for the last two bands, for which we don't have spectrum but only
        the energy above 12 kHz. */
-    {
+    if (tonal->Fs == 48000) {
+       float ratio;
        float E = hp_ener*(1.f/(240*240));
+       ratio = tonal->prev_bandwidth==20 ? 0.03f : 0.07f;
 #ifdef FIXED_POINT
        /* silk_resampler_down2_hp() shifted right by an extra 8 bits. */
        E *= 256.f*(1.f/Q15ONE)*(1.f/Q15ONE);
@@ -674,7 +676,10 @@ static void tonality_analysis(TonalityAnalysisState *tonal, const CELTMode *celt
        E = MAX32(E, tonal->meanE[b]);
        /* Use a simple follower with 13 dB/Bark slope for spreading function */
        bandwidth_mask = MAX32(.05f*bandwidth_mask, E);
-       if (E>.1*bandwidth_mask && E*1e9f > maxE && E > noise_floor*160)
+       if (E>ratio*bandwidth_mask && E*1e9f > maxE && E > noise_floor*160)
+          bandwidth = 20;
+       /* This detector is unreliable, so if the bandwidth is close to SWB, assume it's FB. */
+       if (bandwidth >= 17)
           bandwidth = 20;
     }
     if (tonal->count<=2)
@@ -896,6 +901,7 @@ static void tonality_analysis(TonalityAnalysisState *tonal, const CELTMode *celt
 #endif
 
     info->bandwidth = bandwidth;
+    tonal->prev_bandwidth = bandwidth;
     /*printf("%d %d\n", info->bandwidth, info->opus_bandwidth);*/
     info->noisiness = frame_noisiness;
     info->valid = 1;
