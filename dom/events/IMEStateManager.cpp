@@ -277,9 +277,8 @@ IMEStateManager::OnDestroyPresContext(nsPresContext* aPresContext)
         ("  OnDestroyPresContext(), "
          "removing TextComposition instance from the array (index=%" PRIuSIZE ")", i));
       // there should be only one composition per presContext object.
-      RefPtr<TextComposition> composition = sTextCompositions->ElementAt(i);
+      sTextCompositions->ElementAt(i)->Destroy();
       sTextCompositions->RemoveElementAt(i);
-      composition->Destroy();
       if (sTextCompositions->IndexOf(aPresContext) !=
             TextCompositionArray::NoIndex) {
         MOZ_LOG(sISMLog, LogLevel::Error,
@@ -1294,11 +1293,10 @@ IMEStateManager::DispatchCompositionEvent(
     if (i != TextCompositionArray::NoIndex) {
       MOZ_LOG(sISMLog, LogLevel::Debug,
         ("  DispatchCompositionEvent(), "
-         "removing TextComposition from the array since eCompositionEnd "
+         "removing TextComposition from the array since NS_COMPOSTION_END "
          "was dispatched"));
-      RefPtr<TextComposition> composition = sTextCompositions->ElementAt(i);
+      sTextCompositions->ElementAt(i)->Destroy();
       sTextCompositions->RemoveElementAt(i);
-      composition->Destroy();
     }
   }
 }
