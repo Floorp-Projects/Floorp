@@ -819,7 +819,9 @@ Function createInstall
   ; Resize the Dialog to fill the entire window
   System::Call 'user32::MoveWindow(i$Dialog,i0,i0,i $8,i $9,i0)'
 
-  ${NSD_CreateLabelCenter} 25% ${NOW_INSTALLING_TOP_DU} 50% 47u "$(STUB_INSTALLING_LABEL)"
+  ; The header string may need more than half the width of the window, but it's
+  ; currently not close to needing multiple lines in any localization.
+  ${NSD_CreateLabelCenter} 0% ${NOW_INSTALLING_TOP_DU} 100% 47u "$(STUB_INSTALLING_LABEL)"
   Pop $0
   SendMessage $0 ${WM_SETFONT} $FontInstalling 0
   SetCtlColors $0 ${INSTALL_BLURB_TEXT_COLOR} transparent
