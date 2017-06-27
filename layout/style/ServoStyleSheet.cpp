@@ -68,7 +68,11 @@ size_t
 ServoStyleSheetInner::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
 {
   size_t n = aMallocSizeOf(this);
-  n += Servo_StyleSheet_SizeOfIncludingThis(ServoStyleSheetMallocSizeOf, mSheet);
+  // mSheet will be null if the parsing has not completed.
+  if (mSheet) {
+    n += Servo_StyleSheet_SizeOfIncludingThis(ServoStyleSheetMallocSizeOf,
+                                              mSheet);
+  }
   return n;
 }
 
