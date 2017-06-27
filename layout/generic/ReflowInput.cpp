@@ -371,7 +371,9 @@ ReflowInput::Init(nsPresContext*     aPresContext,
     for (nsIFrame::ChildListIterator childLists(mFrame);
          !childLists.IsDone(); childLists.Next()) {
       for (nsIFrame* childFrame : childLists.CurrentList()) {
-        childFrame->AddStateBits(NS_FRAME_IS_DIRTY);
+        if (!childFrame->IsTableColGroupFrame()) {
+          childFrame->AddStateBits(NS_FRAME_IS_DIRTY);
+        }
       }
     }
   }
