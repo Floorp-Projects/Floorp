@@ -2378,8 +2378,10 @@ class CloneBufferObject : public NativeObject {
         size_t nbytes = JS_GetStringLength(args[0].toString());
         MOZ_ASSERT(nbytes % sizeof(uint64_t) == 0);
         auto buf = js::MakeUnique<JSStructuredCloneData>(0, 0, nbytes);
-        if (!buf->Init(nbytes, nbytes))
+        if (!buf->Init(nbytes, nbytes)) {
+            JS_free(cx, str);
             return false;
+        }
         js_memcpy(buf->Start(), str, nbytes);
         JS_free(cx, str);
         obj->setData(buf.release());
