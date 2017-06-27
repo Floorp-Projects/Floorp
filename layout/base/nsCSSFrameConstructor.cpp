@@ -11715,8 +11715,7 @@ nsCSSFrameConstructor::CreateLetterFrame(nsContainerFrame* aBlockFrame,
   NS_ASSERTION(nsLayoutUtils::GetAsBlock(aBlockFrame),
                  "Not a block frame?");
 
-  // Get style context for the first-letter-frame.  Keep this in sync with
-  // nsBlockFrame::UpdatePseudoElementStyles.
+  // Get style context for the first-letter-frame
   nsStyleContext* parentStyleContext =
     nsFrame::CorrectStyleParentFrame(aParentFrame,
                                      nsCSSPseudoElements::firstLetter)->
