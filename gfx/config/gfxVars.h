@@ -58,6 +58,10 @@ class gfxVarReceiver;
 class gfxVars final
 {
 public:
+  // These values will be used during the Initialize() call if set.  Any
+  // updates that come before initialization will get added to this array.
+  static void SetValuesForInitialize(const nsTArray<GfxVarUpdate>& aInitUpdates);
+
   static void Initialize();
   static void Shutdown();
 
