@@ -3952,7 +3952,7 @@ nsGlobalWindow::PostHandleEvent(EventChainPostVisitor& aVisitor)
     // will receive a vrdisplayactive event to indicate that it should
     // immediately begin vr presentation. This should occur when navigating
     // forwards, navigating backwards, and on page reload.
-    for (auto display : mVRDisplays) {
+    for (const auto& display : mVRDisplays) {
       if (display->IsPresenting()) {
         // Save this VR display ID to trigger vrdisplayactivate event
         // after the next load event.
@@ -13773,7 +13773,7 @@ nsGlobalWindow::IsVRContentDetected() const
 bool
 nsGlobalWindow::IsVRContentPresenting() const
 {
-  for (auto display : mVRDisplays) {
+  for (const auto& display : mVRDisplays) {
     if (display->IsAnyPresenting(gfx::kVRGroupAll)) {
       return true;
     }
@@ -13972,7 +13972,7 @@ nsGlobalWindow::DispatchVRDisplayActivate(uint32_t aDisplayID,
 {
   // Search for the display identified with aDisplayID and fire the
   // event if found.
-  for (auto display : mVRDisplays) {
+  for (const auto& display : mVRDisplays) {
     if (display->DisplayId() == aDisplayID) {
       if (aReason != VRDisplayEventReason::Navigation &&
           display->IsAnyPresenting(gfx::kVRGroupContent)) {
@@ -14016,7 +14016,7 @@ nsGlobalWindow::DispatchVRDisplayDeactivate(uint32_t aDisplayID,
 {
   // Search for the display identified with aDisplayID and fire the
   // event if found.
-  for (auto display : mVRDisplays) {
+  for (const auto& display : mVRDisplays) {
     if (display->DisplayId() == aDisplayID && display->IsPresenting()) {
       // We only want to trigger this event to content that is presenting to
       // the display already.
@@ -14046,7 +14046,7 @@ nsGlobalWindow::DispatchVRDisplayConnect(uint32_t aDisplayID)
 {
   // Search for the display identified with aDisplayID and fire the
   // event if found.
-  for (auto display : mVRDisplays) {
+  for (const auto& display : mVRDisplays) {
     if (display->DisplayId() == aDisplayID) {
       // Fire event even if not presenting to the display.
       VRDisplayEventInit init;
@@ -14074,7 +14074,7 @@ nsGlobalWindow::DispatchVRDisplayDisconnect(uint32_t aDisplayID)
 {
   // Search for the display identified with aDisplayID and fire the
   // event if found.
-  for (auto display : mVRDisplays) {
+  for (const auto& display : mVRDisplays) {
     if (display->DisplayId() == aDisplayID) {
       // Fire event even if not presenting to the display.
       VRDisplayEventInit init;
@@ -14102,7 +14102,7 @@ nsGlobalWindow::DispatchVRDisplayPresentChange(uint32_t aDisplayID)
 {
   // Search for the display identified with aDisplayID and fire the
   // event if found.
-  for (auto display : mVRDisplays) {
+  for (const auto& display : mVRDisplays) {
     if (display->DisplayId() == aDisplayID) {
       // Fire event even if not presenting to the display.
       VRDisplayEventInit init;
@@ -14110,7 +14110,6 @@ nsGlobalWindow::DispatchVRDisplayPresentChange(uint32_t aDisplayID)
       init.mCancelable = false;
       init.mDisplay = display;
       // VRDisplayEvent.reason is not set for vrdisplaypresentchange
-
       RefPtr<VRDisplayEvent> event =
         VRDisplayEvent::Constructor(this,
                                     NS_LITERAL_STRING("vrdisplaypresentchange"),
