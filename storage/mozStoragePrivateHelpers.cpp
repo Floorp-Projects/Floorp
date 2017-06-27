@@ -251,8 +251,9 @@ namespace {
 class CallbackEvent : public Runnable
 {
 public:
-  explicit CallbackEvent(mozIStorageCompletionCallback *aCallback)
-  : mCallback(aCallback)
+  explicit CallbackEvent(mozIStorageCompletionCallback* aCallback)
+    : Runnable("storage::CallbackEvent")
+    , mCallback(aCallback)
   {
   }
 

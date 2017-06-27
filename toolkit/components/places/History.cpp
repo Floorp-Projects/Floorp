@@ -503,7 +503,10 @@ public:
       RefPtr<VisitedQuery> cb = new VisitedQuery(aURI, callback, true);
       NS_ENSURE_TRUE(cb, NS_ERROR_OUT_OF_MEMORY);
       // As per IHistory contract, we must notify asynchronously.
-      NS_DispatchToMainThread(NewRunnableMethod(cb, &VisitedQuery::NotifyVisitedStatus));
+      NS_DispatchToMainThread(
+        NewRunnableMethod("places::VisitedQuery::NotifyVisitedStatus",
+                          cb,
+                          &VisitedQuery::NotifyVisitedStatus));
 
       return NS_OK;
     }
@@ -623,8 +626,9 @@ class NotifyVisitObservers : public Runnable
 {
 public:
   explicit NotifyVisitObservers(VisitData& aPlace)
-  : mPlace(aPlace)
-  , mHistory(History::GetService())
+    : Runnable("places::NotifyVisitObservers")
+    , mPlace(aPlace)
+    , mHistory(History::GetService())
   {
   }
 
@@ -700,9 +704,10 @@ public:
   NotifyTitleObservers(const nsCString& aSpec,
                        const nsString& aTitle,
                        const nsCString& aGUID)
-  : mSpec(aSpec)
-  , mTitle(aTitle)
-  , mGUID(aGUID)
+    : Runnable("places::NotifyTitleObservers")
+    , mSpec(aSpec)
+    , mTitle(aTitle)
+    , mGUID(aGUID)
   {
   }
 
@@ -735,14 +740,16 @@ private:
 class NotifyPlaceInfoCallback : public Runnable
 {
 public:
-  NotifyPlaceInfoCallback(const nsMainThreadPtrHandle<mozIVisitInfoCallback>& aCallback,
-                          const VisitData& aPlace,
-                          bool aIsSingleVisit,
-                          nsresult aResult)
-  : mCallback(aCallback)
-  , mPlace(aPlace)
-  , mResult(aResult)
-  , mIsSingleVisit(aIsSingleVisit)
+  NotifyPlaceInfoCallback(
+    const nsMainThreadPtrHandle<mozIVisitInfoCallback>& aCallback,
+    const VisitData& aPlace,
+    bool aIsSingleVisit,
+    nsresult aResult)
+    : Runnable("places::NotifyPlaceInfoCallback")
+    , mCallback(aCallback)
+    , mPlace(aPlace)
+    , mResult(aResult)
+    , mIsSingleVisit(aIsSingleVisit)
   {
     MOZ_ASSERT(aCallback, "Must pass a non-null callback!");
   }
@@ -805,10 +812,12 @@ private:
 class NotifyCompletion : public Runnable
 {
 public:
-  explicit NotifyCompletion(const nsMainThreadPtrHandle<mozIVisitInfoCallback>& aCallback,
-                            uint32_t aUpdatedCount = 0)
-  : mCallback(aCallback)
-  , mUpdatedCount(aUpdatedCount)
+  explicit NotifyCompletion(
+    const nsMainThreadPtrHandle<mozIVisitInfoCallback>& aCallback,
+    uint32_t aUpdatedCount = 0)
+    : Runnable("places::NotifyCompletion")
+    , mCallback(aCallback)
+    , mUpdatedCount(aUpdatedCount)
   {
     MOZ_ASSERT(aCallback, "Must pass a non-null callback!");
   }
@@ -874,7 +883,10 @@ CanAddURI(nsIURI* aURI,
 class NotifyManyFrecenciesChanged final : public Runnable
 {
 public:
-  NotifyManyFrecenciesChanged() {}
+  NotifyManyFrecenciesChanged()
+    : Runnable("places::NotifyManyFrecenciesChanged")
+  {
+  }
 
   NS_IMETHOD Run() override
   {
@@ -1063,20 +1075,22 @@ public:
     return NS_OK;
   }
 private:
-  InsertVisitedURIs(mozIStorageConnection* aConnection,
-                    nsTArray<VisitData>& aPlaces,
-                    const nsMainThreadPtrHandle<mozIVisitInfoCallback>& aCallback,
-                    bool aGroupNotifications,
-                    bool aIgnoreErrors,
-                    bool aIgnoreResults,
-                    uint32_t aInitialUpdatedCount)
-  : mDBConn(aConnection)
-  , mCallback(aCallback)
-  , mGroupNotifications(aGroupNotifications)
-  , mIgnoreErrors(aIgnoreErrors)
-  , mIgnoreResults(aIgnoreResults)
-  , mSuccessfulUpdatedCount(aInitialUpdatedCount)
-  , mHistory(History::GetService())
+  InsertVisitedURIs(
+    mozIStorageConnection* aConnection,
+    nsTArray<VisitData>& aPlaces,
+    const nsMainThreadPtrHandle<mozIVisitInfoCallback>& aCallback,
+    bool aGroupNotifications,
+    bool aIgnoreErrors,
+    bool aIgnoreResults,
+    uint32_t aInitialUpdatedCount)
+    : Runnable("places::InsertVisitedURIs")
+    , mDBConn(aConnection)
+    , mCallback(aCallback)
+    , mGroupNotifications(aGroupNotifications)
+    , mIgnoreErrors(aIgnoreErrors)
+    , mIgnoreResults(aIgnoreResults)
+    , mSuccessfulUpdatedCount(aInitialUpdatedCount)
+    , mHistory(History::GetService())
   {
     MOZ_ASSERT(NS_IsMainThread(), "This should be called on the main thread");
 
@@ -1400,9 +1414,9 @@ public:
   }
 
 private:
-  SetPageTitle(const nsCString& aSpec,
-               const nsAString& aTitle)
-  : mHistory(History::GetService())
+  SetPageTitle(const nsCString& aSpec, const nsAString& aTitle)
+    : Runnable("places::SetPageTitle")
+    , mHistory(History::GetService())
   {
     mPlace.spec = aSpec;
     mPlace.title = aTitle;
@@ -1531,9 +1545,9 @@ NS_IMPL_ISUPPORTS(
 class NotifyRemoveVisits : public Runnable
 {
 public:
-
   explicit NotifyRemoveVisits(nsTHashtable<PlaceHashKey>& aPlaces)
-    : mPlaces(VISITS_REMOVAL_INITIAL_HASH_LENGTH)
+    : Runnable("places::NotifyRemoveVisits")
+    , mPlaces(VISITS_REMOVAL_INITIAL_HASH_LENGTH)
     , mHistory(History::GetService())
   {
     MOZ_ASSERT(!NS_IsMainThread(),
@@ -1680,11 +1694,11 @@ public:
   }
 
 private:
-  RemoveVisits(mozIStorageConnection* aConnection,
-               RemoveVisitsFilter& aFilter)
-  : mDBConn(aConnection)
-  , mHasTransitionType(false)
-  , mHistory(History::GetService())
+  RemoveVisits(mozIStorageConnection* aConnection, RemoveVisitsFilter& aFilter)
+    : Runnable("places::RemoveVisits")
+    , mDBConn(aConnection)
+    , mHasTransitionType(false)
+    , mHistory(History::GetService())
   {
     MOZ_ASSERT(NS_IsMainThread(), "This should be called on the main thread");
 

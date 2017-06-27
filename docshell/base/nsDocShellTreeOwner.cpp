@@ -1260,10 +1260,12 @@ ChromeTooltipListener::MouseMove(nsIDOMEvent* aMouseEvent)
         }
       }
       if (mPossibleTooltipNode) {
-        nsresult rv = mTooltipTimer->InitWithFuncCallback(
-          sTooltipCallback, this,
+        nsresult rv = mTooltipTimer->InitWithNamedFuncCallback(
+          sTooltipCallback,
+          this,
           LookAndFeel::GetInt(LookAndFeel::eIntID_TooltipDelay, 500),
-          nsITimer::TYPE_ONE_SHOT);
+          nsITimer::TYPE_ONE_SHOT,
+          "ChromeTooltipListener::MouseMove");
         if (NS_FAILED(rv)) {
           mPossibleTooltipNode = nullptr;
         }

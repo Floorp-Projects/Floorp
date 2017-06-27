@@ -12,15 +12,18 @@ namespace {
 class GamepadUpdateRunnable final : public Runnable
 {
  public:
-  explicit GamepadUpdateRunnable(const GamepadChangeEvent& aGamepadEvent)
-             : mEvent(aGamepadEvent) {}
-  NS_IMETHOD Run() override
-  {
-    RefPtr<GamepadManager> svc(GamepadManager::GetService());
-    if (svc) {
-      svc->Update(mEvent);
-    }
-    return NS_OK;
+   explicit GamepadUpdateRunnable(const GamepadChangeEvent& aGamepadEvent)
+     : Runnable("dom::GamepadUpdateRunnable")
+     , mEvent(aGamepadEvent)
+   {
+   }
+   NS_IMETHOD Run() override
+   {
+     RefPtr<GamepadManager> svc(GamepadManager::GetService());
+     if (svc) {
+       svc->Update(mEvent);
+     }
+     return NS_OK;
   }
  protected:
   GamepadChangeEvent mEvent;

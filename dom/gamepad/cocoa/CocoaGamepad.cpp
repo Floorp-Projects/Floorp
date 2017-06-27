@@ -235,7 +235,7 @@ class DarwinGamepadServiceStartupRunnable final : public Runnable
   DarwinGamepadService MOZ_NON_OWNING_REF *mService;
  public:
   explicit DarwinGamepadServiceStartupRunnable(DarwinGamepadService *service)
-             : mService(service) {}
+    : Runnable("DarwinGamepadServiceStartupRunnable"), mService(service) {}
   NS_IMETHOD Run() override
   {
     MOZ_ASSERT(mService);

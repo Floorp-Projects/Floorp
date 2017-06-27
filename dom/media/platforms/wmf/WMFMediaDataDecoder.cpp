@@ -62,6 +62,7 @@ SendTelemetry(unsigned long hr)
   }
 
   nsCOMPtr<nsIRunnable> runnable = NS_NewRunnableFunction(
+    "SendTelemetry",
     [sample] {
       Telemetry::Accumulate(Telemetry::MEDIA_WMF_DECODE_ERROR, sample);
     });
@@ -230,7 +231,8 @@ WMFMediaDataDecoder::SetSeekThreshold(const media::TimeUnit& aTime)
 
   RefPtr<WMFMediaDataDecoder> self = this;
   nsCOMPtr<nsIRunnable> runnable =
-    NS_NewRunnableFunction([self, aTime]() {
+    NS_NewRunnableFunction("WMFMediaDataDecoder::SetSeekThreshold",
+                           [self, aTime]() {
     media::TimeUnit threshold = aTime;
     self->mMFTManager->SetSeekThreshold(threshold);
   });

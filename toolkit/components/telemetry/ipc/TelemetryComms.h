@@ -75,8 +75,8 @@ struct ChildEventData {
 };
 
 struct DiscardedData {
-  uint32_t mDiscardedAccumulations;
-  uint32_t mDiscardedKeyedAccumulations;
+  uint32_t mDiscardedHistogramAccumulations;
+  uint32_t mDiscardedKeyedHistogramAccumulations;
   uint32_t mDiscardedScalarActions;
   uint32_t mDiscardedKeyedScalarActions;
   uint32_t mDiscardedChildEvents;

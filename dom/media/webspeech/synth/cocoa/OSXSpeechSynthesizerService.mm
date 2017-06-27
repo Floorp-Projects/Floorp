@@ -224,7 +224,8 @@ class RegisterVoicesRunnable final : public Runnable
 public:
   RegisterVoicesRunnable(OSXSpeechSynthesizerService* aSpeechService,
                          nsTArray<OSXVoice>& aList)
-    : mSpeechService(aSpeechService)
+    : Runnable("RegisterVoicesRunnable")
+    , mSpeechService(aSpeechService)
     , mVoices(aList)
   {
   }
@@ -269,7 +270,8 @@ class EnumVoicesRunnable final : public Runnable
 {
 public:
   explicit EnumVoicesRunnable(OSXSpeechSynthesizerService* aSpeechService)
-    : mSpeechService(aSpeechService)
+    : Runnable("EnumVoicesRunnable")
+    , mSpeechService(aSpeechService)
   {
   }
 

@@ -135,9 +135,13 @@ public:
   {
     if (CanTakeArgs()) {
       DispatchTask(NewRunnableMethod<typename Decay<Ts>::Type&&...>(
-        this, &Listener::ApplyWithArgs, Forward<Ts>(aEvents)...));
+        "detail::Listener::ApplyWithArgs",
+        this,
+        &Listener::ApplyWithArgs,
+        Forward<Ts>(aEvents)...));
     } else {
-      DispatchTask(NewRunnableMethod(this, &Listener::ApplyWithNoArgs));
+      DispatchTask(NewRunnableMethod(
+        "detail::Listener::ApplyWithNoArgs", this, &Listener::ApplyWithNoArgs));
     }
   }
 

@@ -95,10 +95,12 @@ AsyncLog(nsIInterceptedChannel* aInterceptedChannel,
 
 BEGIN_WORKERS_NAMESPACE
 
-CancelChannelRunnable::CancelChannelRunnable(nsMainThreadPtrHandle<nsIInterceptedChannel>& aChannel,
-                                             nsMainThreadPtrHandle<ServiceWorkerRegistrationInfo>& aRegistration,
-                                             nsresult aStatus)
-  : mChannel(aChannel)
+CancelChannelRunnable::CancelChannelRunnable(
+  nsMainThreadPtrHandle<nsIInterceptedChannel>& aChannel,
+  nsMainThreadPtrHandle<ServiceWorkerRegistrationInfo>& aRegistration,
+  nsresult aStatus)
+  : Runnable("dom::workers::CancelChannelRunnable")
+  , mChannel(aChannel)
   , mRegistration(aRegistration)
   , mStatus(aStatus)
 {
@@ -177,7 +179,8 @@ public:
                  const ChannelInfo& aWorkerChannelInfo,
                  const nsACString& aScriptSpec,
                  const nsACString& aResponseURLSpec)
-    : mChannel(aChannel)
+    : Runnable("dom::workers::FinishResponse")
+    , mChannel(aChannel)
     , mInternalResponse(aInternalResponse)
     , mWorkerChannelInfo(aWorkerChannelInfo)
     , mScriptSpec(aScriptSpec)
@@ -881,7 +884,8 @@ public:
     }
 
     MOZ_ALWAYS_SUCCEEDS(mWorkerPrivate->DispatchToMainThread(
-        NewRunnableMethod(this, &WaitUntilHandler::ReportOnMainThread)));
+                          NewRunnableMethod("WaitUntilHandler::ReportOnMainThread",
+                                            this, &WaitUntilHandler::ReportOnMainThread)));
   }
 
   void

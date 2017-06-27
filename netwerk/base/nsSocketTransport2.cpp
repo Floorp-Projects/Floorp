@@ -73,18 +73,22 @@ namespace net {
 class nsSocketEvent : public Runnable
 {
 public:
-    nsSocketEvent(nsSocketTransport *transport, uint32_t type,
-                  nsresult status = NS_OK, nsISupports *param = nullptr)
-        : mTransport(transport)
-        , mType(type)
-        , mStatus(status)
-        , mParam(param)
-    {}
+  nsSocketEvent(nsSocketTransport* transport,
+                uint32_t type,
+                nsresult status = NS_OK,
+                nsISupports* param = nullptr)
+    : Runnable("net::nsSocketEvent")
+    , mTransport(transport)
+    , mType(type)
+    , mStatus(status)
+    , mParam(param)
+  {
+  }
 
-    NS_IMETHOD Run() override
-    {
-        mTransport->OnSocketEvent(mType, mStatus, mParam);
-        return NS_OK;
+  NS_IMETHOD Run() override
+  {
+    mTransport->OnSocketEvent(mType, mStatus, mParam);
+    return NS_OK;
     }
 
 private:
@@ -1969,7 +1973,11 @@ nsSocketTransport::FastOpenInProgress()
 class ThunkPRClose : public Runnable
 {
 public:
-  explicit ThunkPRClose(PRFileDesc *fd) : mFD(fd) {}
+  explicit ThunkPRClose(PRFileDesc* fd)
+    : Runnable("net::ThunkPRClose")
+    , mFD(fd)
+  {
+  }
 
   NS_IMETHOD Run() override
   {

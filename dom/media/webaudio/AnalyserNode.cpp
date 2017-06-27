@@ -29,9 +29,9 @@ class AnalyserNodeEngine final : public AudioNodeEngine
   class TransferBuffer final : public Runnable
   {
   public:
-    TransferBuffer(AudioNodeStream* aStream,
-                   const AudioChunk& aChunk)
-      : mStream(aStream)
+    TransferBuffer(AudioNodeStream* aStream, const AudioChunk& aChunk)
+      : Runnable("dom::AnalyserNodeEngine::TransferBuffer")
+      , mStream(aStream)
       , mChunk(aChunk)
     {
     }

@@ -1206,14 +1206,18 @@ nsXULTemplateBuilder::AttributeChanged(nsIDocument* aDocument,
         // case we may need to nuke and rebuild the entire content model
         // beneath the element.
         if (aAttribute == nsGkAtoms::ref)
-            nsContentUtils::AddScriptRunner(
-                NewRunnableMethod(this, &nsXULTemplateBuilder::RunnableRebuild));
+          nsContentUtils::AddScriptRunner(
+            NewRunnableMethod("nsXULTemplateBuilder::RunnableRebuild",
+                              this,
+                              &nsXULTemplateBuilder::RunnableRebuild));
 
         // Check for a change to the 'datasources' attribute. If so, setup
         // mDB by parsing the new value and rebuild.
         else if (aAttribute == nsGkAtoms::datasources) {
-            nsContentUtils::AddScriptRunner(
-                NewRunnableMethod(this, &nsXULTemplateBuilder::RunnableLoadAndRebuild));
+          nsContentUtils::AddScriptRunner(
+            NewRunnableMethod("nsXULTemplateBuilder::RunnableLoadAndRebuild",
+                              this,
+                              &nsXULTemplateBuilder::RunnableLoadAndRebuild));
         }
     }
 }
@@ -1233,7 +1237,9 @@ nsXULTemplateBuilder::ContentRemoved(nsIDocument* aDocument,
 
         // Pass false to Uninit since content is going away anyway
         nsContentUtils::AddScriptRunner(
-            NewRunnableMethod(this, &nsXULTemplateBuilder::UninitFalse));
+          NewRunnableMethod("nsXULTemplateBuilder::UninitFalse",
+                            this,
+                            &nsXULTemplateBuilder::UninitFalse));
 
         MOZ_ASSERT(aDocument == mObservedDocument);
         StopObserving();
@@ -1272,7 +1278,9 @@ nsXULTemplateBuilder::NodeWillBeDestroyed(const nsINode* aNode)
     mCompDB = nullptr;
 
     nsContentUtils::AddScriptRunner(
-        NewRunnableMethod(this, &nsXULTemplateBuilder::UninitTrue));
+      NewRunnableMethod("nsXULTemplateBuilder::UninitTrue",
+                        this,
+                        &nsXULTemplateBuilder::UninitTrue));
 }
 
 

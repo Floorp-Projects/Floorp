@@ -270,7 +270,8 @@ AltSvcMapping::Sync()
 
   if (!NS_IsMainThread()) {
     nsCOMPtr<nsIRunnable> r;
-    r = NewRunnableMethod<nsCString>(this,
+    r = NewRunnableMethod<nsCString>("net::AltSvcMapping::SyncString",
+                                     this,
                                      &AltSvcMapping::SyncString,
                                      value);
     NS_DispatchToMainThread(r, NS_DISPATCH_NORMAL);
@@ -984,18 +985,21 @@ AltSvcCache::GetAltServiceMapping(const nsACString &scheme, const nsACString &ho
 
 class ProxyClearHostMapping : public Runnable {
 public:
-  explicit ProxyClearHostMapping(const nsACString &host, int32_t port,
-                                 const OriginAttributes &originAttributes)
-    : mHost(host)
+  explicit ProxyClearHostMapping(const nsACString& host,
+                                 int32_t port,
+                                 const OriginAttributes& originAttributes)
+    : Runnable("net::ProxyClearHostMapping")
+    , mHost(host)
     , mPort(port)
     , mOriginAttributes(originAttributes)
-    {}
+  {
+  }
 
-    NS_IMETHOD Run() override
-    {
-      MOZ_ASSERT(NS_IsMainThread());
-      gHttpHandler->ConnMgr()->ClearHostMapping(mHost, mPort, mOriginAttributes);
-      return NS_OK;
+  NS_IMETHOD Run() override
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+    gHttpHandler->ConnMgr()->ClearHostMapping(mHost, mPort, mOriginAttributes);
+    return NS_OK;
     }
 private:
     nsCString mHost;
