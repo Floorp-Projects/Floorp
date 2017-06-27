@@ -21,6 +21,7 @@
 #include "nsISerialEventTarget.h"
 #include "nsITimer.h"
 #include "nsICharsetDetector.h"
+#include "mozilla/dom/DocGroup.h"
 
 class nsHtml5Parser;
 
@@ -109,49 +110,50 @@ class nsHtml5StreamParser final : public nsICharsetDetectionObserver {
   friend class nsHtml5DataAvailable;
   friend class nsHtml5StreamParserContinuation;
   friend class nsHtml5TimerKungFu;
+  friend class nsHtml5StreamParserPtr;
 
-  public:
-    NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-    NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsHtml5StreamParser,
-                                             nsICharsetDetectionObserver)
+public:
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsHtml5StreamParser,
+                                           nsICharsetDetectionObserver)
 
-    static void InitializeStatics();
+  static void InitializeStatics();
 
-    nsHtml5StreamParser(nsHtml5TreeOpExecutor* aExecutor,
-                        nsHtml5Parser* aOwner,
-                        eParserMode aMode);
+  nsHtml5StreamParser(nsHtml5TreeOpExecutor* aExecutor,
+                      nsHtml5Parser* aOwner,
+                      eParserMode aMode);
 
-    // Methods that nsHtml5StreamListener calls
-    nsresult CheckListenerChain();
+  // Methods that nsHtml5StreamListener calls
+  nsresult CheckListenerChain();
 
-    nsresult OnStartRequest(nsIRequest* aRequest, nsISupports* aContext);
+  nsresult OnStartRequest(nsIRequest* aRequest, nsISupports* aContext);
 
-    nsresult OnDataAvailable(nsIRequest* aRequest,
-                             nsISupports* aContext,
-                             nsIInputStream* aInStream,
-                             uint64_t aSourceOffset,
-                             uint32_t aLength);
-
-    nsresult OnStopRequest(nsIRequest* aRequest,
+  nsresult OnDataAvailable(nsIRequest* aRequest,
                            nsISupports* aContext,
-                           nsresult status);
+                           nsIInputStream* aInStream,
+                           uint64_t aSourceOffset,
+                           uint32_t aLength);
 
-    // nsICharsetDetectionObserver
-    /**
+  nsresult OnStopRequest(nsIRequest* aRequest,
+                         nsISupports* aContext,
+                         nsresult status);
+
+  // nsICharsetDetectionObserver
+  /**
      * Chardet calls this to report the detection result
      */
-    NS_IMETHOD Notify(const char* aCharset, nsDetectionConfident aConf) override;
+  NS_IMETHOD Notify(const char* aCharset, nsDetectionConfident aConf) override;
 
-    // EncodingDeclarationHandler
-    // https://hg.mozilla.org/projects/htmlparser/file/tip/src/nu/validator/htmlparser/common/EncodingDeclarationHandler.java
-    /**
+  // EncodingDeclarationHandler
+  // https://hg.mozilla.org/projects/htmlparser/file/tip/src/nu/validator/htmlparser/common/EncodingDeclarationHandler.java
+  /**
      * Tree builder uses this to report a late <meta charset>
      */
-    bool internalEncodingDeclaration(nsHtml5String aEncoding);
+  bool internalEncodingDeclaration(nsHtml5String aEncoding);
 
-    // Not from an external interface
+  // Not from an external interface
 
-    /**
+  /**
      *  Call this method once you've created a parser, and want to instruct it
      *  about what charset to load
      *
@@ -384,6 +386,13 @@ class nsHtml5StreamParser final : public nsICharsetDetectionObserver {
         return mSpeculationFailureCount < 100;
     }
 
+    /**
+     * Dispatch an event to a Quantum DOM main thread-ish thread.
+     * (Not the parser thread.)
+     */
+    nsresult DispatchToMain(const char* aName,
+                            already_AddRefed<nsIRunnable>&& aRunnable);
+
     nsCOMPtr<nsIRequest>          mRequest;
     nsCOMPtr<nsIRequestObserver>  mObserver;
 
@@ -449,6 +458,11 @@ class nsHtml5StreamParser final : public nsICharsetDetectionObserver {
      * The tree operation executor
      */
     nsHtml5TreeOpExecutor*        mExecutor;
+
+    /**
+     * The same as mExecutor->mDocument->mDocGroup.
+     */
+    RefPtr<mozilla::dom::DocGroup> mDocGroup;
 
     /**
      * The HTML5 tree builder
