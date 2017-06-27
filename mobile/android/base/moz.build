@@ -937,7 +937,6 @@ gbjar.sources += ['java/org/mozilla/gecko/' + x for x in [
     'toolbar/ShapedButton.java',
     'toolbar/ShapedButtonFrameLayout.java',
     'toolbar/SiteIdentityPopup.java',
-    'toolbar/TabCounter.java',
     'toolbar/ToolbarDisplayLayout.java',
     'toolbar/ToolbarEditLayout.java',
     'toolbar/ToolbarEditText.java',
@@ -1014,10 +1013,12 @@ gbjar.sources += ['java/org/mozilla/gecko/' + x for x in [
 if CONFIG['MOZ_ANDROID_PHOTON']:
     gbjar.sources += ['../app/src/photon/java/org/mozilla/gecko/' + x for x in [
         'skin/SkinConfig.java',
+        'toolbar/TabCounter.java',
     ]]
 else:
     gbjar.sources += ['../app/src/australis/java/org/mozilla/gecko/' + x for x in [
         'skin/SkinConfig.java',
+        'toolbar/TabCounter.java',
     ]]
 
 android_package_dir = CONFIG['ANDROID_PACKAGE_NAME'].replace('.', '/')
