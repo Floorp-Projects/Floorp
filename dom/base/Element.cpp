@@ -3313,6 +3313,7 @@ static nsIAtom** sPropertiesToTraverseAndUnlink[] =
   {
     &nsGkAtoms::sandbox,
     &nsGkAtoms::sizes,
+    &nsGkAtoms::dirAutoSetBy,
     nullptr
   };
 
