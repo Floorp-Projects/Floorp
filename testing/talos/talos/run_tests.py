@@ -4,6 +4,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import copy
 import mozversion
 import os
 import sys
@@ -152,8 +153,8 @@ def run_tests(config, browser_config):
         browser_config['sourcestamp'] = version_info['application_changeset']
     except KeyError:
         if not browser_config['develop']:
-            print("unable to find changeset or repository: %s" % version_info)
-            sys.exit()
+            print("Abort: unable to find changeset or repository: %s" % version_info)
+            sys.exit(1)
         else:
             browser_config['repository'] = 'develop'
             browser_config['sourcestamp'] = 'develop'
@@ -201,8 +202,7 @@ def run_tests(config, browser_config):
         mitmdump_path = config.get('mitmdumpPath', False)
         if mitmdump_path is False:
             # cannot continue, need path for mitmdump playback tool
-            LOG.error('Aborting: mitmdumpPath was not provided on cmd line but is required')
-            sys.exit()
+            raise TalosError('Aborting: mitmdumpPath not provided on cmd line but is required')
 
         mitmproxy_recording_path = os.path.join(here, 'mitmproxy')
         mitmproxy_proc = mitmproxy.start_mitmproxy_playback(mitmdump_path,
@@ -232,7 +232,32 @@ def run_tests(config, browser_config):
             LOG.test_start(testname)
 
             mytest = TTest()
-            talos_results.add(mytest.runTest(browser_config, test))
+
+            # some tests like ts_paint return multiple results in a single iteration
+            if test.get('firstpaint', False) or test.get('userready', None):
+                # we need a 'testeventmap' to tell us which tests each event should map to
+                multi_value_result = None
+                separate_results_list = []
+
+                test_event_map = test.get('testeventmap', None)
+                if test_event_map is None:
+                    raise TalosError("Need 'testeventmap' in test.py for %s" % test.get('name'))
+
+                # run the test
+                multi_value_result = mytest.runTest(browser_config, test)
+                if multi_value_result is None:
+                    raise TalosError("Abort: no results returned for %s" % test.get('name'))
+
+                # parse out the multi-value results, and 'fake it' to appear like separate tests
+                separate_results_list = convert_to_separate_test_results(multi_value_result,
+                                                                         test_event_map)
+
+                # now we have three separate test results, store them
+                for test_result in separate_results_list:
+                    talos_results.add(test_result)
+            else:
+                # just expecting regular test - one result value per iteration
+                talos_results.add(mytest.runTest(browser_config, test))
 
             LOG.test_end(testname, status='OK')
 
@@ -271,6 +296,44 @@ def run_tests(config, browser_config):
     # we will stop running tests on a failed test, or we will return 0 for
     # green
     return 0
+
+
+def convert_to_separate_test_results(multi_value_result, test_event_map):
+    ''' Receive a test result that actually contains multiple values in a single iteration, and
+    parse it out in order to 'fake' three seprate test results.
+
+    Incoming result looks like this:
+
+    [{'index': 0, 'runs': {'event_1': [1338, ...], 'event_2': [1438, ...], 'event_3':
+    [1538, ...]}, 'page': 'NULL'}]
+
+    We want to parse it out such that we have 'faked' three separate tests, setting test names
+    and taking the run values for each. End goal is to have results reported as three separate
+    tests, like this:
+
+    PERFHERDER_DATA: {"framework": {"name": "talos"}, "suites": [{"subtests": [{"replicates":
+    [1338, ...], "name": "ts_paint", "value": 1338}], "extraOptions": ["e10s"], "name":
+    "ts_paint"}, {"subtests": [{"replicates": [1438, ...], "name": "ts_first_paint", "value":
+    1438}], "extraOptions": ["e10s"], "name": "ts_first_paint"}, {"subtests": [{"replicates":
+    [1538, ...], "name": "ts_user_ready", "value": 1538}], "extraOptions": ["e10s"], "name":
+    "ts_user_ready"}]}
+    '''
+    list_of_separate_tests = []
+
+    for next_test in test_event_map:
+        # copy the original test result that has multiple values per iteration
+        separate_test = copy.deepcopy(multi_value_result)
+        # set the name of the new 'faked' test
+        separate_test.test_config['name'] = next_test['name']
+        # set the run values for the new test
+        for x in separate_test.results:
+            for item in x.results:
+                all_runs = item['runs']
+                item['runs'] = all_runs[next_test['label']]
+        # add it to our list of results to return
+        list_of_separate_tests.append(separate_test)
+
+    return list_of_separate_tests
 
 
 def main(args=sys.argv[1:]):

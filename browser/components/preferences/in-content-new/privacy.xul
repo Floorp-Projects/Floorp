@@ -76,7 +76,10 @@
   <preference id="browser.privatebrowsing.autostart"
               name="browser.privatebrowsing.autostart"
               type="bool"/>
-
+  <!-- Do not track -->
+  <preference id="privacy.donottrackheader.enabled"
+              name="privacy.donottrackheader.enabled"
+              type="bool"/>
   <!-- DRM content -->
   <preference id="media.eme.enabled"
               name="media.eme.enabled"
@@ -401,22 +404,48 @@
 <!-- Tracking -->
 <groupbox id="trackingGroup" data-category="panePrivacy" hidden="true">
   <caption><label>&trackingProtectionHeader2.label;</label></caption>
-  <vbox id="trackingprotectionbox" hidden="true">
+  <vbox>
     <hbox align="start">
       <vbox flex="1">
         <description>
           &trackingProtection.description;
-          <label id="trackingProtectionLearnMore" class="learnMore text-link">&trackingProtectionLearnMore.label;</label>
-        </description>
-        <description id="trackingProtectionDesc"
-                     control="trackingProtectionRadioGroup">
-          &trackingProtection.radioGroupLabel;
         </description>
       </vbox>
       <spacer flex="1"/>
+    </hbox>
+    <hbox>
+      <vbox id="trackingProtectionBox" flex="1" hidden="true">
+        <description id="trackingProtectionDesc"
+                     control="trackingProtectionRadioGroup">
+          &trackingProtection.radioGroupLabel;
+           <label id="trackingProtectionLearnMore" class="learnMore text-link">&trackingProtectionLearnMore.label;</label>
+        </description>
+        <radiogroup id="trackingProtectionRadioGroup" aria-labelledby="trackingProtectionDesc">
+          <radio value="always"
+                 label="&trackingProtectionAlways.label;"
+                 accesskey="&trackingProtectionAlways.accesskey;"/>
+          <radio value="private"
+                 label="&trackingProtectionPrivate.label;"
+                 accesskey="&trackingProtectionPrivate.accesskey;"/>
+          <radio value="never"
+                 label="&trackingProtectionNever.label;"
+                 accesskey="&trackingProtectionNever.accesskey;"/>
+        </radiogroup>
+      </vbox>
+      <vbox id="trackingProtectionPBMBox" flex="1">
+        <hbox align="center">
+          <checkbox id="trackingProtectionPBM"
+                    preference="privacy.trackingprotection.pbmode.enabled"
+                    accesskey="&trackingProtectionPBM6.accesskey;"/>
+          <label flex="1">&trackingProtectionPBM6.label;<label id="trackingProtectionPBMLearnMore"
+                 class="learnMore text-link">&trackingProtectionPBMLearnMore.label;</label>
+          </label>
+        </hbox>
+      </vbox>
       <vbox id="trackingProtectionAdvancedSettings">
         <button id="trackingProtectionExceptions"
                 class="accessory-button"
+                hidden="true"
                 label="&trackingProtectionExceptions.label;"
                 accesskey="&trackingProtectionExceptions.accesskey;"
                 preference="pref.privacy.disable_button.tracking_protection_exceptions"
@@ -432,37 +461,15 @@
                 searchkeywords="&button.cancel.label; &button.ok.label;"/>
       </vbox>
     </hbox>
-    <radiogroup id="trackingProtectionRadioGroup" aria-labelledby="trackingProtectionDesc">
-      <radio value="always"
-             label="&trackingProtectionAlways.label;"
-             accesskey="&trackingProtectionAlways.accesskey;"/>
-      <radio value="private"
-             label="&trackingProtectionPrivate.label;"
-             accesskey="&trackingProtectionPrivate.accesskey;"/>
-      <radio value="never"
-             label="&trackingProtectionNever.label;"
-             accesskey="&trackingProtectionNever.accesskey;"/>
-    </radiogroup>
-  </vbox>
-  <vbox id="trackingprotectionpbmbox">
-    <caption><label>&tracking.label;</label></caption>
-    <hbox align="center">
-      <checkbox id="trackingProtectionPBM"
-                preference="privacy.trackingprotection.pbmode.enabled"
-                accesskey="&trackingProtectionPBM5.accesskey;"
-                label="&trackingProtectionPBM5.label;" />
-      <label id="trackingProtectionPBMLearnMore"
-             class="learnMore text-link">&trackingProtectionPBMLearnMore.label;</label>
-      <spacer flex="1" />
-      <button id="changeBlockListPBM"
-              label="&changeBlockList.label;" accesskey="&changeBlockList.accesskey;"
-              preference="pref.privacy.disable_button.change_blocklist"/>
-    </hbox>
-  </vbox>
-  <vbox>
-    <description>&doNotTrack.pre.label;<label
-    class="text-link" id="doNotTrackSettings"
-    >&doNotTrack.settings.label;</label>&doNotTrack.post.label;</description>
+    <vbox id="doNotTrackLearnMoreBox">
+      <label>&doNotTrack.description;<label
+      class="learnMore text-link" href="https://www.mozilla.org/dnt"
+      >&doNotTrack.learnMore.label;</label></label>
+      <radiogroup id="doNotTrackRadioGroup" aria-labelledby="doNotTrackDesc" preference="privacy.donottrackheader.enabled">
+        <radio value="false" label="&doNotTrack.default.label;"/>
+        <radio value="true" label="&doNotTrack.always.label;"/>
+      </radiogroup>
+    </vbox>
   </vbox>
 </groupbox>
 

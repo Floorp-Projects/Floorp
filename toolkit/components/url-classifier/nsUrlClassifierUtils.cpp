@@ -292,11 +292,14 @@ nsUrlClassifierUtils::GetTelemetryProvider(const nsACString& aTableName,
                                   nsACString& aProvider)
 {
   GetProvider(aTableName, aProvider);
-  // Filter out build-in providers: mozilla, google, google4
-  // Empty provider is filtered as "other"
+  // Whitelist known providers to avoid reporting on private ones.
+  // An empty provider is treated as "other"
   if (!NS_LITERAL_CSTRING("mozilla").Equals(aProvider) &&
       !NS_LITERAL_CSTRING("google").Equals(aProvider) &&
       !NS_LITERAL_CSTRING("google4").Equals(aProvider) &&
+      !NS_LITERAL_CSTRING("baidu").Equals(aProvider) &&
+      !NS_LITERAL_CSTRING("mozcn").Equals(aProvider) &&
+      !NS_LITERAL_CSTRING("yandex").Equals(aProvider) &&
       !NS_LITERAL_CSTRING(TESTING_TABLE_PROVIDER_NAME).Equals(aProvider)) {
     aProvider.Assign(NS_LITERAL_CSTRING("other"));
   }

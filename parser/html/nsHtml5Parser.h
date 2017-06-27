@@ -67,18 +67,11 @@ class nsHtml5Parser final : public nsIParser,
      *  Call this method once you've created a parser, and want to instruct it
      *  about what charset to load
      *
-     *  @param   aCharset the charset of a document
+     *  @param   aEncoding the charset of a document
      *  @param   aCharsetSource the source of the charset
      */
-    NS_IMETHOD_(void) SetDocumentCharset(const nsACString& aCharset, int32_t aSource) override;
-
-    /**
-     * Don't call. For interface compat only.
-     */
-    NS_IMETHOD_(void) GetDocumentCharset(nsACString& aCharset, int32_t& aSource) override
-    {
-      NS_NOTREACHED("No one should call this.");
-    }
+    virtual void SetDocumentCharset(NotNull<const Encoding*> aEncoding,
+                                    int32_t aSource) override;
 
     /**
      * Get the channel associated with this parser

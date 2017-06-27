@@ -18,6 +18,19 @@ var gSearchResultsPane = {
     if (!this.searchInput.hidden) {
       this.searchInput.addEventListener("command", this);
       this.searchInput.addEventListener("focus", this);
+
+      // Throttling the resize event to reduce the callback frequency
+      let callbackId;
+      window.addEventListener("resize", () => {
+        if (!callbackId) {
+          callbackId = window.requestAnimationFrame(() => {
+            this.listSearchTooltips.forEach((anchorNode) => {
+              this.calculateTooltipPosition(anchorNode);
+            });
+            callbackId = null;
+          });
+        }
+      });
     }
   },
 
@@ -275,7 +288,10 @@ var gSearchResultsPane = {
    */
   searchWithinNode(nodeObject, searchPhrase) {
     let matchesFound = false;
-    if (nodeObject.childElementCount == 0 || nodeObject.tagName == "menulist") {
+    if (nodeObject.childElementCount == 0 ||
+        nodeObject.tagName == "label" ||
+        nodeObject.tagName == "description" ||
+        nodeObject.tagName == "menulist") {
       let simpleTextNodes = this.textNodeDescendants(nodeObject);
 
       for (let node of simpleTextNodes) {
@@ -283,11 +299,15 @@ var gSearchResultsPane = {
         matchesFound = matchesFound || result;
       }
 
-      // Collecting data from boxObject
+      // Collecting data from boxObject / label / description
       let nodeSizes = [];
       let allNodeText = "";
       let runningSize = 0;
       let accessKeyTextNodes = this.textNodeDescendants(nodeObject.boxObject);
+
+      if (nodeObject.tagName == "label" || nodeObject.tagName == "description") {
+        accessKeyTextNodes.push(...this.textNodeDescendants(nodeObject));
+      }
 
       for (let node of accessKeyTextNodes) {
         runningSize += node.textContent.length;
@@ -390,6 +410,12 @@ var gSearchResultsPane = {
     anchorNode.setAttribute("data-has-tooltip", "true");
     anchorNode.parentElement.classList.add("search-tooltip-parent");
     anchorNode.parentElement.appendChild(searchTooltip);
+
+    this.calculateTooltipPosition(anchorNode);
+  },
+
+  calculateTooltipPosition(anchorNode) {
+    let searchTooltip = anchorNode.parentElement.querySelector(":scope > .search-tooltip");
 
     // In order to get the up-to-date position of each of the nodes that we're
     // putting tooltips on, we have to flush layout intentionally, and that
