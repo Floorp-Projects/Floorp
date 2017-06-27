@@ -1126,6 +1126,12 @@ ContentCacheInParent::OnCompositionEvent(const WidgetCompositionEvent& aEvent)
     MOZ_ASSERT(aEvent.mMessage == eCompositionChange ||
                aEvent.mMessage == eCompositionCommit);
     *mCommitStringByRequest = aEvent.mData;
+    // We need to wait eCompositionCommitRequestHandled from the remote process
+    // in this case.  Therefore, mPendingEventsNeedingAck needs to be
+    // incremented here.
+    if (!mWidgetHasComposition) {
+      mPendingEventsNeedingAck++;
+    }
     return false;
   }
 
@@ -1165,7 +1171,8 @@ ContentCacheInParent::OnEventNeedingAckHandled(nsIWidget* aWidget,
      "aMessage=%s), mPendingEventsNeedingAck=%u, mPendingCompositionCount=%" PRIu8,
      this, aWidget, ToChar(aMessage), mPendingEventsNeedingAck, mPendingCompositionCount));
 
-  if (WidgetCompositionEvent::IsFollowedByCompositionEnd(aMessage)) {
+  if (WidgetCompositionEvent::IsFollowedByCompositionEnd(aMessage) ||
+      aMessage == eCompositionCommitRequestHandled) {
     MOZ_RELEASE_ASSERT(mPendingCompositionCount > 0);
     mPendingCompositionCount--;
   }
