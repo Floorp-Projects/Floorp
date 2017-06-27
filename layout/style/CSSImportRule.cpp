@@ -31,7 +31,7 @@ NS_IMETHODIMP
 CSSImportRule::GetMedia(nsIDOMMediaList** aMedia)
 {
   NS_ENSURE_ARG_POINTER(aMedia);
-  NS_ADDREF(*aMedia = Media());
+  NS_IF_ADDREF(*aMedia = GetMedia());
   return NS_OK;
 }
 
