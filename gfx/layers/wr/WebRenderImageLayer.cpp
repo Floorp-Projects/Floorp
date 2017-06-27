@@ -159,8 +159,8 @@ WebRenderImageLayer::RenderLayer(wr::DisplayListBuilder& aBuilder,
         PixelCastJustification::MovingDownToChildren);
     DumpLayerInfo("Image Layer async", rect);
 
-    WrClipRegionToken clipRegion = aBuilder.PushClipRegion(aSc.ToRelativeWrRect(rect));
-    aBuilder.PushIFrame(aSc.ToRelativeWrRect(rect), clipRegion, mPipelineId.ref());
+    WrRect r = aSc.ToRelativeWrRect(rect);
+    aBuilder.PushIFrame(r, r, mPipelineId.ref());
 
     gfx::Matrix4x4 scTransform = GetTransform();
     // Translate is applied as part of PushIFrame()
@@ -215,8 +215,6 @@ WebRenderImageLayer::RenderLayer(wr::DisplayListBuilder& aBuilder,
     rect = LayerRect(0, 0, mScaleToSize.width, mScaleToSize.height);
   }
 
-  WrClipRegionToken clip = aBuilder.PushClipRegion(
-      sc.ToRelativeWrRect(rect));
   wr::ImageRendering filter = wr::ToImageRendering(mSamplingFilter);
 
   DumpLayerInfo("Image Layer", rect);
@@ -225,7 +223,8 @@ WebRenderImageLayer::RenderLayer(wr::DisplayListBuilder& aBuilder,
                   GetLayer(),
                   Stringify(filter).c_str());
   }
-  aBuilder.PushImage(sc.ToRelativeWrRect(rect), clip, filter, mKey.value());
+  WrRect r = sc.ToRelativeWrRect(rect);
+  aBuilder.PushImage(r, r, filter, mKey.value());
 }
 
 Maybe<WrImageMask>

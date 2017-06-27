@@ -256,15 +256,13 @@ XULContentSinkImpl::SetParser(nsParserBase* aParser)
     return NS_OK;
 }
 
-NS_IMETHODIMP
-XULContentSinkImpl::SetDocumentCharset(nsACString& aCharset)
+void
+XULContentSinkImpl::SetDocumentCharset(NotNull<const Encoding*> aEncoding)
 {
     nsCOMPtr<nsIDocument> doc = do_QueryReferent(mDocument);
     if (doc) {
-        doc->SetDocumentCharacterSet(aCharset);
+        doc->SetDocumentCharacterSet(aEncoding);
     }
-
-    return NS_OK;
 }
 
 nsISupports *

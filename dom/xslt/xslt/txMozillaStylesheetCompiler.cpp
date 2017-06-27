@@ -84,7 +84,8 @@ public:
     NS_IMETHOD WillResume(void) override { return NS_OK; }
     NS_IMETHOD SetParser(nsParserBase* aParser) override { return NS_OK; }
     virtual void FlushPendingNotifications(mozilla::FlushType aType) override { }
-    NS_IMETHOD SetDocumentCharset(nsACString& aCharset) override { return NS_OK; }
+    virtual void SetDocumentCharset(NotNull<const Encoding*> aEncoding)
+      override { }
     virtual nsISupports *GetTarget() override { return nullptr; }
 
 private:
@@ -269,9 +270,7 @@ txStylesheetSink::OnStartRequest(nsIRequest *aRequest, nsISupports *aContext)
         encoding = UTF_8_ENCODING;
     }
 
-    nsAutoCString charset;
-    encoding->Name(charset);
-    mParser->SetDocumentCharset(charset, charsetSource);
+    mParser->SetDocumentCharset(WrapNotNull(encoding), charsetSource);
 
     nsAutoCString contentType;
     channel->GetContentType(contentType);

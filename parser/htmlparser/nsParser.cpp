@@ -127,6 +127,7 @@ public:
  *  default constructor
  */
 nsParser::nsParser()
+  : mCharset(WINDOWS_1252_ENCODING)
 {
   Initialize(true);
 }
@@ -151,7 +152,7 @@ nsParser::Initialize(bool aConstructor)
 
   mContinueEvent = nullptr;
   mCharsetSource = kCharsetUninitialized;
-  mCharset.AssignLiteral("windows-1252");
+  mCharset = WINDOWS_1252_ENCODING;
   mInternalState = NS_OK;
   mStreamStatus = NS_OK;
   mCommand = eViewNormal;
@@ -284,8 +285,9 @@ nsParser::SetCommand(eParserCommands aParserCommand)
  *  @param   aCharset- the charset of a document
  *  @param   aCharsetSource- the source of the charset
  */
-NS_IMETHODIMP_(void)
-nsParser::SetDocumentCharset(const nsACString& aCharset, int32_t aCharsetSource)
+void
+nsParser::SetDocumentCharset(NotNull<const Encoding*> aCharset,
+                             int32_t aCharsetSource)
 {
   mCharset = aCharset;
   mCharsetSource = aCharsetSource;
@@ -295,7 +297,7 @@ nsParser::SetDocumentCharset(const nsACString& aCharset, int32_t aCharsetSource)
 }
 
 void
-nsParser::SetSinkCharset(nsACString& aCharset)
+nsParser::SetSinkCharset(NotNull<const Encoding*> aCharset)
 {
   if (mSink) {
     mSink->SetDocumentCharset(aCharset);
@@ -1332,8 +1334,7 @@ ParserWriteFunc(nsIInputStream* in,
   if (pws->mNeedCharsetCheck) {
     pws->mNeedCharsetCheck = false;
     int32_t source;
-    nsAutoCString preferred;
-    pws->mParser->GetDocumentCharset(preferred, source);
+    auto preferred = pws->mParser->GetDocumentCharset(source);
 
     // This code was bogus when I found it. It expects the BOM or the XML
     // declaration to be entirely in the first network buffer. -- hsivonen
@@ -1345,7 +1346,7 @@ ParserWriteFunc(nsIInputStream* in,
       // The decoder will swallow the BOM. The UTF-16 will re-sniff for
       // endianness. The value of preferred is now "UTF-8", "UTF-16LE"
       // or "UTF-16BE".
-      encoding->Name(preferred);
+      preferred = WrapNotNull(encoding);
       source = kCharsetFromByteOrderMark;
     } else if (source < kCharsetFromChannel) {
       nsAutoCString declCharset;
@@ -1353,7 +1354,7 @@ ParserWriteFunc(nsIInputStream* in,
       if (ExtractCharsetFromXmlDeclaration(buf, count, declCharset)) {
         encoding = Encoding::ForLabel(declCharset);
         if (encoding) {
-          encoding->Name(preferred);
+          preferred = WrapNotNull(encoding);
           source = kCharsetFromMetaTag;
         }
       }
