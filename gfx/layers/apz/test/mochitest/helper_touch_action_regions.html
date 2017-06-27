@@ -71,7 +71,7 @@ function chromeTouchEventCounter(operation) {
   }
 
   if (typeof chromeTouchEventCounter.chromeHelper == 'undefined') {
-    // This is the first time getSnapshot is being called; do initialization
+    // This is the first time chromeTouchEventCounter is being called; do initialization
     chromeTouchEventCounter.chromeHelper = SpecialPowers.loadChromeScript(chromeProcessCounter);
     SimpleTest.registerCleanupFunction(function() { chromeTouchEventCounter.chromeHelper.destroy() });
   }
