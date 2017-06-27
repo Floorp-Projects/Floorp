@@ -36,7 +36,7 @@ asserts(2) skip-if(!cocoaWidget) HTTP(..) == 10209-3.html 10209-3-ref.html # Ass
 == 18217-zorder-4.html 18217-zorder-ref-inline-table.html
 == 18217-zorder-5.html 18217-zorder-ref-inline-table.html
 fails-if(styloVsGecko) == 23604-1.html 23604-1-ref.html
-== 23604-2.html 23604-2-ref.html
+fails-if(styloVsGecko) == 23604-2.html 23604-2-ref.html
 != 24998-1.html 24998-1-ref.html
 == 25888-1l.html 25888-1l-ref.html
 != 25888-1l.html 25888-1l-notref.html
