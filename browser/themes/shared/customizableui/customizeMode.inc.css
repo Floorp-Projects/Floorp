@@ -117,17 +117,22 @@
 
 #customization-palette,
 #customization-empty {
-  padding: 5px 25px 25px;
+  padding: 5px 20px 20px;
 }
 
 #customization-header {
+%ifdef MOZ_PHOTON_THEME;
+  border-bottom: 1px solid ThreeDLightShadow;
   font-size: 1.75em;
   line-height: 1.75em;
   color: GrayText;
   font-weight: 200;
-  margin: 25px 25px 12px;
   padding-bottom: 12px;
-  border-bottom: 1px solid ThreeDLightShadow;
+%else
+  font-weight: 600;
+  font-size: 1.2em;
+%endif
+  margin: 20px 20px 15px;
 }
 
 #customization-panel-container {
@@ -135,7 +140,7 @@
   padding: 15px 25px 25px;
   background-image: linear-gradient(to bottom, #3e86ce, #3878ba);
 %else
-  padding: 0 25px 25px;
+  padding: 0 20px 25px;
 %endif
 }
 
@@ -333,7 +338,7 @@ toolbarpaletteitem[place="toolbar"] {
 }
 
 #customization-palette:not([hidden]) {
-  margin-bottom: 25px;
+  margin-bottom: 20px;
 }
 
 toolbarpaletteitem[place="palette"]:-moz-focusring,
