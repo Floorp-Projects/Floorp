@@ -3265,6 +3265,7 @@ GeckoDriver.prototype.commands = {
   "acceptConnections": GeckoDriver.prototype.acceptConnections,  // deprecated, remove in Firefox 60
   "Marionette:Quit": GeckoDriver.prototype.quit,
   "quit": GeckoDriver.prototype.quit,  // deprecated, remove in Firefox 60
+  "quitApplication": GeckoDriver.prototype.quit,  // deprecated, remove in Firefox 60
 
   // Addon service
   "Addon:Install": GeckoDriver.prototype.installAddon,
