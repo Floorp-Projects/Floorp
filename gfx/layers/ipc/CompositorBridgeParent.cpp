@@ -1647,6 +1647,9 @@ CompositorBridgeParent::RecvAdoptChild(const uint64_t& child)
     NotifyChildCreated(child);
     if (sIndirectLayerTrees[child].mLayerTree) {
       sIndirectLayerTrees[child].mLayerTree->SetLayerManager(mLayerManager);
+      // Trigger composition to handle a case that mLayerTree was not composited yet
+      // by previous CompositorBridgeParent, since nsRefreshDriver might wait composition complete.
+      ScheduleComposition();
     }
     parent = sIndirectLayerTrees[child].mApzcTreeManagerParent;
   }
