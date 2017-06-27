@@ -174,7 +174,8 @@ private:
   {
   public:
     explicit SyncDisabledStateEvent(nsNumberControlFrame* aFrame)
-    : mFrame(aFrame)
+      : mozilla::Runnable("nsNumberControlFrame::SyncDisabledStateEvent")
+      , mFrame(aFrame)
     {}
 
     NS_IMETHOD Run() override

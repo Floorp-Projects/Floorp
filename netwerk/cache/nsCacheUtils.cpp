@@ -12,8 +12,9 @@ using namespace mozilla;
 
 class nsDestroyThreadEvent : public Runnable {
 public:
-  explicit nsDestroyThreadEvent(nsIThread *thread)
-    : mThread(thread)
+  explicit nsDestroyThreadEvent(nsIThread* thread)
+    : mozilla::Runnable("nsDestroyThreadEvent")
+    , mThread(thread)
   {}
   NS_IMETHOD Run() override
   {
@@ -24,8 +25,9 @@ private:
   nsCOMPtr<nsIThread> mThread;
 };
 
-nsShutdownThread::nsShutdownThread(nsIThread *aThread)
-  : mMonitor("nsShutdownThread.mMonitor")
+nsShutdownThread::nsShutdownThread(nsIThread* aThread)
+  : mozilla::Runnable("nsShutdownThread")
+  , mMonitor("nsShutdownThread.mMonitor")
   , mShuttingDown(false)
   , mThread(aThread)
 {

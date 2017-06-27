@@ -53,7 +53,8 @@ class PostMessageRunnable final : public CancelableRunnable
 
 public:
   PostMessageRunnable(MessagePort* aPort, SharedMessagePortMessage* aData)
-    : mPort(aPort)
+    : CancelableRunnable("dom::PostMessageRunnable")
+    , mPort(aPort)
     , mData(aData)
   {
     MOZ_ASSERT(aPort);

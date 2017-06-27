@@ -391,7 +391,9 @@ EventSourceImpl::Close()
   // Asynchronously call CloseInternal to prevent EventSourceImpl from being
   // synchronously destoryed while dispatching DOM event.
   DebugOnly<nsresult> rv =
-    Dispatch(NewRunnableMethod(this, &EventSourceImpl::CloseInternal),
+    Dispatch(NewRunnableMethod("dom::EventSourceImpl::CloseInternal",
+                               this,
+                               &EventSourceImpl::CloseInternal),
              NS_DISPATCH_NORMAL);
   MOZ_ASSERT(NS_SUCCEEDED(rv));
 }
@@ -683,7 +685,9 @@ EventSourceImpl::OnStartRequest(nsIRequest* aRequest, nsISupports* aCtxt)
       }
     }
   }
-  rv = Dispatch(NewRunnableMethod(this, &EventSourceImpl::AnnounceConnection),
+  rv = Dispatch(NewRunnableMethod("dom::EventSourceImpl::AnnounceConnection",
+                                  this,
+                                  &EventSourceImpl::AnnounceConnection),
                 NS_DISPATCH_NORMAL);
   NS_ENSURE_SUCCESS(rv, rv);
   mStatus = PARSE_STATE_BEGIN_OF_STREAM;
@@ -752,7 +756,8 @@ class DataAvailableRunnable final : public Runnable
     DataAvailableRunnable(EventSourceImpl* aEventSourceImpl,
                           UniquePtr<char[]> aData,
                           uint32_t aLength)
-      : mEventSourceImpl(aEventSourceImpl)
+      : Runnable("dom::DataAvailableRunnable")
+      , mEventSourceImpl(aEventSourceImpl)
       , mData(Move(aData))
       , mLength(aLength)
     {
@@ -840,9 +845,10 @@ EventSourceImpl::OnStopRequest(nsIRequest* aRequest,
   nsresult rv = CheckHealthOfRequestCallback(aRequest);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = Dispatch(
-         NewRunnableMethod(this, &EventSourceImpl::ReestablishConnection),
-         NS_DISPATCH_NORMAL);
+  rv = Dispatch(NewRunnableMethod("dom::EventSourceImpl::ReestablishConnection",
+                                  this,
+                                  &EventSourceImpl::ReestablishConnection),
+                NS_DISPATCH_NORMAL);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
@@ -1245,9 +1251,12 @@ EventSourceImpl::SetReconnectionTimeout()
     NS_ENSURE_STATE(mTimer);
   }
 
-  nsresult rv = mTimer->InitWithFuncCallback(TimerCallback, this,
-                                             mReconnectionTime,
-                                             nsITimer::TYPE_ONE_SHOT);
+  nsresult rv = mTimer->InitWithNamedFuncCallback(
+    TimerCallback,
+    this,
+    mReconnectionTime,
+    nsITimer::TYPE_ONE_SHOT,
+    "dom::EventSourceImpl::SetReconnectionTimeout");
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
@@ -1341,7 +1350,9 @@ EventSourceImpl::DispatchFailConnection()
   if (NS_FAILED(rv)) {
     NS_WARNING("Failed to print to the console error");
   }
-  rv = Dispatch(NewRunnableMethod(this, &EventSourceImpl::FailConnection),
+  rv = Dispatch(NewRunnableMethod("dom::EventSourceImpl::FailConnection",
+                                  this,
+                                  &EventSourceImpl::FailConnection),
                 NS_DISPATCH_NORMAL);
   MOZ_ASSERT(NS_SUCCEEDED(rv));
 }
@@ -1407,7 +1418,9 @@ EventSourceImpl::Thaw()
   nsresult rv;
   if (!mGoingToDispatchAllMessages && mMessagesToDispatch.GetSize() > 0) {
     nsCOMPtr<nsIRunnable> event =
-      NewRunnableMethod(this, &EventSourceImpl::DispatchAllMessageEvents);
+      NewRunnableMethod("dom::EventSourceImpl::DispatchAllMessageEvents",
+                        this,
+                        &EventSourceImpl::DispatchAllMessageEvents);
     NS_ENSURE_STATE(event);
 
     mGoingToDispatchAllMessages = true;
@@ -1468,7 +1481,9 @@ EventSourceImpl::DispatchCurrentMessageEvent()
 
   if (!mGoingToDispatchAllMessages) {
     nsCOMPtr<nsIRunnable> event =
-      NewRunnableMethod(this, &EventSourceImpl::DispatchAllMessageEvents);
+      NewRunnableMethod("dom::EventSourceImpl::DispatchAllMessageEvents",
+                        this,
+                        &EventSourceImpl::DispatchAllMessageEvents);
     NS_ENSURE_STATE(event);
 
     mGoingToDispatchAllMessages = true;

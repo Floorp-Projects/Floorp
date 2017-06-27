@@ -15,7 +15,8 @@ using namespace mozilla::safebrowsing;
 
 template<typename Function>
 void RunTestInNewThread(Function&& aFunction) {
-  nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction(mozilla::Forward<Function>(aFunction));
+  nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction(
+    "RunTestInNewThread", mozilla::Forward<Function>(aFunction));
   nsCOMPtr<nsIThread> testingThread;
   nsresult rv =
     NS_NewNamedThread("Testing Thread", getter_AddRefs(testingThread), r);
@@ -35,14 +36,15 @@ nsresult SyncApplyUpdates(Classifier* aClassifier,
   auto onUpdateComplete = [&done, &ret](nsresult rv) {
     // We are on the "ApplyUpdate" thread. Post an event to main thread
     // so that we can avoid busy waiting on the main thread.
-    nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction([&done, &ret, rv] {
-      ret = rv;
-      done = true;
-    });
+    nsCOMPtr<nsIRunnable> r =
+      NS_NewRunnableFunction("SyncApplyUpdates", [&done, &ret, rv] {
+        ret = rv;
+        done = true;
+      });
     NS_DispatchToMainThread(r);
   };
 
-  nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction([&]() {
+  nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction("SyncApplyUpdates", [&]() {
     nsresult rv = aClassifier->AsyncApplyUpdates(aUpdates, onUpdateComplete);
     if (NS_FAILED(rv)) {
       onUpdateComplete(rv);

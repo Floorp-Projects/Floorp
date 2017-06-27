@@ -8955,7 +8955,9 @@ NS_IMETHODIMP
 HTMLEditRules::DocumentModified()
 {
   nsContentUtils::AddScriptRunner(
-    NewRunnableMethod(this, &HTMLEditRules::DocumentModifiedWorker));
+    NewRunnableMethod("HTMLEditRules::DocumentModifiedWorker",
+                      this,
+                      &HTMLEditRules::DocumentModifiedWorker));
   return NS_OK;
 }
 

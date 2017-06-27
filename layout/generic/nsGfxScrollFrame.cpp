@@ -2548,9 +2548,12 @@ void ScrollFrameHelper::MarkRecentlyScrolled()
 void ScrollFrameHelper::ResetDisplayPortExpiryTimer()
 {
   if (mDisplayPortExpiryTimer) {
-    mDisplayPortExpiryTimer->InitWithFuncCallback(
-      RemoveDisplayPortCallback, this,
-      gfxPrefs::APZDisplayPortExpiryTime(), nsITimer::TYPE_ONE_SHOT);
+    mDisplayPortExpiryTimer->InitWithNamedFuncCallback(
+      RemoveDisplayPortCallback,
+      this,
+      gfxPrefs::APZDisplayPortExpiryTime(),
+      nsITimer::TYPE_ONE_SHOT,
+      "ScrollFrameHelper::ResetDisplayPortExpiryTimer");
   }
 }
 
@@ -2710,8 +2713,12 @@ ScrollFrameHelper::ScheduleSyntheticMouseMove()
     }
   }
 
-  mScrollActivityTimer->InitWithFuncCallback(
-    ScrollActivityCallback, this, 100, nsITimer::TYPE_ONE_SHOT);
+  mScrollActivityTimer->InitWithNamedFuncCallback(
+    ScrollActivityCallback,
+    this,
+    100,
+    nsITimer::TYPE_ONE_SHOT,
+    "ScrollFrameHelper::ScheduleSyntheticMouseMove");
 }
 
 void

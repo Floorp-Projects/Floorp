@@ -177,9 +177,12 @@ public:
     eCloseDestination,
   };
 
-  HelperRunnable(IPCStreamDestination::DelayedStartInputStream* aDelayedStartInputStream,
-                 Op aOp)
-    : mDelayedStartInputStream(aDelayedStartInputStream)
+  HelperRunnable(
+    IPCStreamDestination::DelayedStartInputStream* aDelayedStartInputStream,
+    Op aOp)
+    : Runnable(
+        "ipc::IPCStreamDestination::DelayedStartInputStream::HelperRunnable")
+    , mDelayedStartInputStream(aDelayedStartInputStream)
     , mOp(aOp)
   {
     MOZ_ASSERT(aDelayedStartInputStream);

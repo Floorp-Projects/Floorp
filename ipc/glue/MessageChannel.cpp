@@ -547,8 +547,10 @@ MessageChannel::MessageChannel(const char* aName,
     mIsSyncWaitingOnNonMainThread = false;
 #endif
 
-    mOnChannelConnectedTask =
-        NewNonOwningCancelableRunnableMethod(this, &MessageChannel::DispatchOnChannelConnected);
+    mOnChannelConnectedTask = NewNonOwningCancelableRunnableMethod(
+      "ipc::MessageChannel::DispatchOnChannelConnected",
+      this,
+      &MessageChannel::DispatchOnChannelConnected);
 
 #ifdef OS_WIN
     mEvent = CreateEventW(nullptr, TRUE, FALSE, nullptr);
@@ -800,10 +802,12 @@ MessageChannel::Open(MessageChannel *aTargetChan, MessageLoop *aTargetLoop, Side
 
     MonitorAutoLock lock(*mMonitor);
     mChannelState = ChannelOpening;
-    aTargetLoop->PostTask(NewNonOwningRunnableMethod
-                          <MessageChannel*, Side>(aTargetChan,
-                                                  &MessageChannel::OnOpenAsSlave,
-                                                  this, oppSide));
+    aTargetLoop->PostTask(NewNonOwningRunnableMethod<MessageChannel*, Side>(
+      "ipc::MessageChannel::OnOpenAsSlave",
+      aTargetChan,
+      &MessageChannel::OnOpenAsSlave,
+      this,
+      oppSide));
 
     while (ChannelOpening == mChannelState)
         mMonitor->Wait();
@@ -2570,12 +2574,14 @@ MessageChannel::OnNotifyMaybeChannelError()
     }
 
     if (IsOnCxxStack()) {
-        mChannelErrorTask =
-            NewNonOwningCancelableRunnableMethod(this, &MessageChannel::OnNotifyMaybeChannelError);
-        RefPtr<Runnable> task = mChannelErrorTask;
-        // 10 ms delay is completely arbitrary
-        mWorkerLoop->PostDelayedTask(task.forget(), 10);
-        return;
+      mChannelErrorTask = NewNonOwningCancelableRunnableMethod(
+        "ipc::MessageChannel::OnNotifyMaybeChannelError",
+        this,
+        &MessageChannel::OnNotifyMaybeChannelError);
+      RefPtr<Runnable> task = mChannelErrorTask;
+      // 10 ms delay is completely arbitrary
+      mWorkerLoop->PostDelayedTask(task.forget(), 10);
+      return;
     }
 
     NotifyMaybeChannelError();
@@ -2590,8 +2596,10 @@ MessageChannel::PostErrorNotifyTask()
         return;
 
     // This must be the last code that runs on this thread!
-    mChannelErrorTask =
-        NewNonOwningCancelableRunnableMethod(this, &MessageChannel::OnNotifyMaybeChannelError);
+    mChannelErrorTask = NewNonOwningCancelableRunnableMethod(
+      "ipc::MessageChannel::OnNotifyMaybeChannelError",
+      this,
+      &MessageChannel::OnNotifyMaybeChannelError);
     RefPtr<Runnable> task = mChannelErrorTask;
     mWorkerLoop->PostTask(task.forget());
 }

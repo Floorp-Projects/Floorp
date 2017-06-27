@@ -176,7 +176,10 @@ CaptureTask::PostTrackEndEvent()
   {
   public:
     explicit TrackEndRunnable(CaptureTask* aTask)
-      : mTask(aTask) {}
+      : mozilla::Runnable("TrackEndRunnable")
+      , mTask(aTask)
+    {
+    }
 
     NS_IMETHOD Run() override
     {

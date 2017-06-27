@@ -172,10 +172,11 @@ PresentationAvailability::NotifyAvailableChange(const nsTArray<nsString>& aAvail
     available |= mAvailabilityOfUrl[i];
   }
 
-  return NS_DispatchToCurrentThread(NewRunnableMethod
-                                    <bool>(this,
-                                           &PresentationAvailability::UpdateAvailabilityAndDispatchEvent,
-                                           available));
+  return NS_DispatchToCurrentThread(NewRunnableMethod<bool>(
+    "dom::PresentationAvailability::UpdateAvailabilityAndDispatchEvent",
+    this,
+    &PresentationAvailability::UpdateAvailabilityAndDispatchEvent,
+    available));
 }
 
 void

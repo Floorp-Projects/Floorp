@@ -163,10 +163,12 @@ U2FStatus::GetResponse()
   return mResponse;
 }
 
-U2FTask::U2FTask(const nsAString& aOrigin, const nsAString& aAppId,
+U2FTask::U2FTask(const nsAString& aOrigin,
+                 const nsAString& aAppId,
                  const Authenticator& aAuthenticator,
                  nsISerialEventTarget* aEventTarget)
-  : mOrigin(aOrigin)
+  : Runnable("dom::U2FTask")
+  , mOrigin(aOrigin)
   , mAppId(aAppId)
   , mAuthenticator(aAuthenticator)
   , mEventTarget(aEventTarget)
@@ -190,7 +192,8 @@ U2FTask::Execute()
 
 U2FPrepTask::U2FPrepTask(const Authenticator& aAuthenticator,
                          nsISerialEventTarget* aEventTarget)
-  : mAuthenticator(aAuthenticator)
+  : Runnable("dom::U2FPrepTask")
+  , mAuthenticator(aAuthenticator)
   , mEventTarget(aEventTarget)
 {}
 
@@ -444,7 +447,8 @@ U2FSignTask::Run()
 
 U2FRunnable::U2FRunnable(const nsAString& aOrigin, const nsAString& aAppId,
                          nsISerialEventTarget* aEventTarget)
-  : mOrigin(aOrigin)
+  : Runnable("dom::U2FRunnable")
+  , mOrigin(aOrigin)
   , mAppId(aAppId)
   , mEventTarget(aEventTarget)
 {}
@@ -677,14 +681,14 @@ U2FRegisterRunnable::Run()
   if (status->IsStopped()) {
     status->WaitGroupAdd();
     mEventTarget->Dispatch(NS_NewRunnableFunction(
+      "dom::U2FRegisterRunnable::Run",
       [&status, this] () {
         RegisterResponse response;
         response.mErrorCode.Construct(
             static_cast<uint32_t>(status->GetErrorCode()));
         SendResponse(response);
         status->WaitGroupDone();
-      }
-    ));
+      }));
 
     // Don't exit until the main thread runnable completes
     status->WaitGroupWait();
@@ -740,6 +744,7 @@ U2FRegisterRunnable::Run()
   // Transmit back to the JS engine from the Main Thread
   status->WaitGroupAdd();
   mEventTarget->Dispatch(NS_NewRunnableFunction(
+    "dom::U2FRegisterRunnable::Run",
     [&status, this] () {
       RegisterResponse response;
       if (status->GetErrorCode() == ErrorCode::OK) {
@@ -750,8 +755,7 @@ U2FRegisterRunnable::Run()
       }
       SendResponse(response);
       status->WaitGroupDone();
-    }
-  ));
+    }));
 
   // TODO: Add timeouts, Bug 1301793
   status->WaitGroupWait();
@@ -923,6 +927,7 @@ U2FSignRunnable::Run()
   // Transmit back to the JS engine from the Main Thread
   status->WaitGroupAdd();
   mEventTarget->Dispatch(NS_NewRunnableFunction(
+    "dom::U2FSignRunnable::Run",
     [&status, this] () {
       SignResponse response;
       if (status->GetErrorCode() == ErrorCode::OK) {
@@ -933,8 +938,7 @@ U2FSignRunnable::Run()
       }
       SendResponse(response);
       status->WaitGroupDone();
-    }
-  ));
+    }));
 
   // TODO: Add timeouts, Bug 1301793
   status->WaitGroupWait();

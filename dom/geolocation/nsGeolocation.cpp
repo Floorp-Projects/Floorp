@@ -147,7 +147,8 @@ class RequestPromptEvent : public Runnable
 {
 public:
   RequestPromptEvent(nsGeolocationRequest* aRequest, nsWeakPtr aWindow)
-    : mRequest(aRequest)
+    : mozilla::Runnable("RequestPromptEvent")
+    , mRequest(aRequest)
     , mWindow(aWindow)
   {
   }
@@ -168,8 +169,9 @@ class RequestAllowEvent : public Runnable
 {
 public:
   RequestAllowEvent(int allow, nsGeolocationRequest* request)
-    : mAllow(allow),
-      mRequest(request)
+    : mozilla::Runnable("RequestAllowEvent")
+    , mAllow(allow)
+    , mRequest(request)
   {
   }
 
@@ -192,8 +194,9 @@ class RequestSendLocationEvent : public Runnable
 public:
   RequestSendLocationEvent(nsIDOMGeoPosition* aPosition,
                            nsGeolocationRequest* aRequest)
-    : mPosition(aPosition),
-      mRequest(aRequest)
+    : mozilla::Runnable("RequestSendLocationEvent")
+    , mPosition(aPosition)
+    , mRequest(aRequest)
   {
   }
 

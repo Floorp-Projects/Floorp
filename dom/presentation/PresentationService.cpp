@@ -1119,13 +1119,14 @@ PresentationService::UntrackSessionInfo(const nsAString& aSessionId,
     uint64_t windowId;
     nsresult rv = GetWindowIdBySessionIdInternal(aSessionId, aRole, &windowId);
     if (NS_SUCCEEDED(rv)) {
-      NS_DispatchToMainThread(NS_NewRunnableFunction([windowId]() -> void {
-        PRES_DEBUG("Attempt to close window[%" PRIu64 "]\n", windowId);
+      NS_DispatchToMainThread(NS_NewRunnableFunction(
+        "dom::PresentationService::UntrackSessionInfo", [windowId]() -> void {
+          PRES_DEBUG("Attempt to close window[%" PRIu64 "]\n", windowId);
 
-        if (auto* window = nsGlobalWindow::GetInnerWindowWithId(windowId)) {
-          window->Close();
-        }
-      }));
+          if (auto* window = nsGlobalWindow::GetInnerWindowWithId(windowId)) {
+            window->Close();
+          }
+        }));
     }
 
     mSessionInfoAtReceiver.Remove(aSessionId);

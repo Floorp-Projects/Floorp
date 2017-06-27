@@ -1576,8 +1576,9 @@ CanvasRenderingContext2D::ScheduleStableStateCallback()
   mHasPendingStableStateCallback = true;
 
   nsContentUtils::RunInStableState(
-    NewRunnableMethod(this, &CanvasRenderingContext2D::OnStableState)
-  );
+    NewRunnableMethod("dom::CanvasRenderingContext2D::OnStableState",
+                      this,
+                      &CanvasRenderingContext2D::OnStableState));
 }
 
 void

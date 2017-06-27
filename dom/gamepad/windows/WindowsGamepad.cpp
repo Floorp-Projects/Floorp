@@ -1002,7 +1002,9 @@ GamepadWindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 class StartWindowsGamepadServiceRunnable final : public Runnable
 {
 public:
-  StartWindowsGamepadServiceRunnable() {}
+  StartWindowsGamepadServiceRunnable()
+    : Runnable("StartWindowsGamepadServiceRunnable")
+  {}
 
   NS_IMETHOD Run() override
   {
@@ -1040,7 +1042,9 @@ private:
 class StopWindowsGamepadServiceRunnable final : public Runnable
 {
  public:
-  StopWindowsGamepadServiceRunnable() {}
+  StopWindowsGamepadServiceRunnable()
+    : Runnable("StopWindowsGamepadServiceRunnable")
+  {}
 
   NS_IMETHOD Run() override
   {

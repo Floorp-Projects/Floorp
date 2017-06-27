@@ -1076,7 +1076,8 @@ class FulfillImageBitmapPromiseTask final : public Runnable,
 {
 public:
   FulfillImageBitmapPromiseTask(Promise* aPromise, ImageBitmap* aImageBitmap)
-  : FulfillImageBitmapPromise(aPromise, aImageBitmap)
+    : Runnable("dom::FulfillImageBitmapPromiseTask")
+    , FulfillImageBitmapPromise(aPromise, aImageBitmap)
   {
   }
 
@@ -1278,7 +1279,8 @@ public:
                                 nsIGlobalObject* aGlobal,
                                 Blob& aBlob,
                                 const Maybe<IntRect>& aCropRect)
-  :CreateImageBitmapFromBlob(aPromise, aGlobal, aBlob, aCropRect)
+    : Runnable("dom::CreateImageBitmapFromBlobTask")
+    , CreateImageBitmapFromBlob(aPromise, aGlobal, aBlob, aCropRect)
   {
   }
 
@@ -1732,12 +1734,18 @@ class MapDataIntoBufferSourceTask final : public Runnable,
 {
 public:
   MapDataIntoBufferSourceTask(JSContext* aCx,
-                              Promise *aPromise,
-                              ImageBitmap *aImageBitmap,
+                              Promise* aPromise,
+                              ImageBitmap* aImageBitmap,
                               const T& aBuffer,
                               int32_t aOffset,
                               ImageBitmapFormat aFormat)
-  : MapDataIntoBufferSource<T>(aCx, aPromise, aImageBitmap, aBuffer, aOffset, aFormat)
+    : Runnable("dom::MapDataIntoBufferSourceTask")
+    , MapDataIntoBufferSource<T>(aCx,
+                                 aPromise,
+                                 aImageBitmap,
+                                 aBuffer,
+                                 aOffset,
+                                 aFormat)
   {
   }
 

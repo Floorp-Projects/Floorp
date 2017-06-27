@@ -127,7 +127,9 @@ nsConsoleService::~nsConsoleService()
 class AddConsolePrefWatchers : public Runnable
 {
 public:
-  explicit AddConsolePrefWatchers(nsConsoleService* aConsole) : mConsole(aConsole)
+  explicit AddConsolePrefWatchers(nsConsoleService* aConsole)
+    : mozilla::Runnable("AddConsolePrefWatchers")
+    , mConsole(aConsole)
   {
   }
 
@@ -168,7 +170,8 @@ class LogMessageRunnable : public Runnable
 {
 public:
   LogMessageRunnable(nsIConsoleMessage* aMessage, nsConsoleService* aService)
-    : mMessage(aMessage)
+    : mozilla::Runnable("LogMessageRunnable")
+    , mMessage(aMessage)
     , mService(aService)
   { }
 

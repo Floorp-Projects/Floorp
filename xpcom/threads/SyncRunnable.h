@@ -34,14 +34,16 @@ class SyncRunnable : public Runnable
 {
 public:
   explicit SyncRunnable(nsIRunnable* aRunnable)
-    : mRunnable(aRunnable)
+    : Runnable("SyncRunnable")
+    , mRunnable(aRunnable)
     , mMonitor("SyncRunnable")
     , mDone(false)
   {
   }
 
   explicit SyncRunnable(already_AddRefed<nsIRunnable> aRunnable)
-    : mRunnable(Move(aRunnable))
+    : Runnable("SyncRunnable")
+    , mRunnable(Move(aRunnable))
     , mMonitor("SyncRunnable")
     , mDone(false)
   {

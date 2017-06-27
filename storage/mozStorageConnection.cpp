@@ -378,7 +378,8 @@ public:
   AsyncCloseConnection(Connection *aConnection,
                        sqlite3 *aNativeConnection,
                        nsIRunnable *aCallbackEvent)
-  : mConnection(aConnection)
+  : Runnable("storage::AsyncCloseConnection")
+  , mConnection(aConnection)
   , mNativeConnection(aNativeConnection)
   , mCallbackEvent(aCallbackEvent)
   {
@@ -390,7 +391,8 @@ public:
     MOZ_ASSERT(NS_GetCurrentThread() != mConnection->threadOpenedOn);
 
     nsCOMPtr<nsIRunnable> event =
-      NewRunnableMethod(mConnection, &Connection::shutdownAsyncThread);
+      NewRunnableMethod("storage::Connection::shutdownAsyncThread",
+                        mConnection, &Connection::shutdownAsyncThread);
     MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(event));
 
     // Internal close.
@@ -828,7 +830,8 @@ Connection::initializeOnAsyncThread(nsIFile* aStorageFile) {
     MutexAutoLock lockedScope(sharedAsyncExecutionMutex);
     mAsyncExecutionThreadShuttingDown = true;
     nsCOMPtr<nsIRunnable> event =
-      NewRunnableMethod(this, &Connection::shutdownAsyncThread);
+      NewRunnableMethod("Connection::shutdownAsyncThread",
+                        this, &Connection::shutdownAsyncThread);
     Unused << NS_DispatchToMainThread(event);
   }
   return rv;

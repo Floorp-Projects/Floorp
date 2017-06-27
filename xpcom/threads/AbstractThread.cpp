@@ -104,7 +104,10 @@ public:
     if (!mTailDispatcher.isSome()) {
       mTailDispatcher.emplace(/* aIsTailDispatcher = */ true);
 
-      nsCOMPtr<nsIRunnable> event = NewRunnableMethod(this, &EventTargetWrapper::FireTailDispatcher);
+      nsCOMPtr<nsIRunnable> event =
+        NewRunnableMethod("EventTargetWrapper::FireTailDispatcher",
+                          this,
+                          &EventTargetWrapper::FireTailDispatcher);
       nsContentUtils::RunInStableState(event.forget());
     }
 
@@ -154,7 +157,8 @@ private:
     explicit Runner(EventTargetWrapper* aThread,
                     already_AddRefed<nsIRunnable> aRunnable,
                     bool aDrainDirectTasks)
-      : mThread(aThread)
+      : CancelableRunnable("EventTargetWrapper::Runner")
+      , mThread(aThread)
       , mRunnable(aRunnable)
       , mDrainDirectTasks(aDrainDirectTasks)
     {
@@ -344,7 +348,8 @@ AbstractThread::CreateXPCOMThreadWrapper(nsIThread* aThread, bool aRequireTailDi
   // target thread. This ensures that sCurrentThreadTLS is as expected by
   // AbstractThread::GetCurrent() on the target thread.
   nsCOMPtr<nsIRunnable> r =
-    NS_NewRunnableFunction([wrapper]() { sCurrentThreadTLS.set(wrapper); });
+    NS_NewRunnableFunction("AbstractThread::CreateXPCOMThreadWrapper",
+                           [wrapper]() { sCurrentThreadTLS.set(wrapper); });
   aThread->Dispatch(r.forget(), NS_DISPATCH_NORMAL);
   return wrapper.forget();
 }

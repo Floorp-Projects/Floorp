@@ -651,10 +651,16 @@ struct StackBaseShape : public DefaultHasher<ReadBarriered<UnownedBaseShape*>>
         {
             MOZ_ASSERT(!base->isOwned());
         }
+
+        explicit Lookup(const ReadBarriered<UnownedBaseShape*>& base)
+          : flags(base.unbarrieredGet()->getObjectFlags()), clasp(base.unbarrieredGet()->clasp())
+        {
+            MOZ_ASSERT(!base.unbarrieredGet()->isOwned());
+        }
     };
 
     static inline HashNumber hash(const Lookup& lookup);
-    static inline bool match(ReadBarriered<UnownedBaseShape*> key, const Lookup& lookup);
+    static inline bool match(const ReadBarriered<UnownedBaseShape*>& key, const Lookup& lookup);
 };
 
 static MOZ_ALWAYS_INLINE js::HashNumber
@@ -1349,6 +1355,16 @@ struct InitialShapeEntry
         Lookup(const Class* clasp, ShapeProto proto, uint32_t nfixed, uint32_t baseFlags)
           : clasp(clasp), proto(proto), nfixed(nfixed), baseFlags(baseFlags)
         {}
+
+        explicit Lookup(const InitialShapeEntry& entry)
+          : proto(entry.proto.key(),
+                  entry.proto.proto().unbarrieredGet())
+        {
+            const Shape* shape = entry.shape.unbarrieredGet();
+            clasp = shape->getObjectClass();
+            nfixed = shape->numFixedSlots();
+            baseFlags = shape->getObjectFlags();
+        }
     };
 
     inline InitialShapeEntry();

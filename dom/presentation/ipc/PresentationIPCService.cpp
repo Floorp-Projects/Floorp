@@ -485,13 +485,15 @@ PresentationIPCService::UntrackSessionInfo(const nsAString& aSessionId,
     if (NS_SUCCEEDED(GetWindowIdBySessionIdInternal(aSessionId,
                                                     aRole,
                                                     &windowId))) {
-      NS_DispatchToMainThread(NS_NewRunnableFunction([windowId]() -> void {
-        PRES_DEBUG("Attempt to close window[%" PRIu64 "]\n", windowId);
+      NS_DispatchToMainThread(NS_NewRunnableFunction(
+        "dom::PresentationIPCService::UntrackSessionInfo",
+        [windowId]() -> void {
+          PRES_DEBUG("Attempt to close window[%" PRIu64 "]\n", windowId);
 
-        if (auto* window = nsGlobalWindow::GetInnerWindowWithId(windowId)) {
-          window->Close();
-        }
-      }));
+          if (auto* window = nsGlobalWindow::GetInnerWindowWithId(windowId)) {
+            window->Close();
+          }
+        }));
     }
   }
 

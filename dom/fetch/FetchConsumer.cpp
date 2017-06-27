@@ -58,7 +58,8 @@ class BeginConsumeBodyRunnable final : public Runnable
 
 public:
   explicit BeginConsumeBodyRunnable(FetchBodyConsumer<Derived>* aConsumer)
-    : mFetchBodyConsumer(aConsumer)
+    : Runnable("BeginConsumeBodyRunnable")
+    , mFetchBodyConsumer(aConsumer)
   { }
 
   NS_IMETHOD

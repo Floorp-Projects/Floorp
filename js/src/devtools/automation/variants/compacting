@@ -3,7 +3,7 @@
     "optimize": true,
     "debug": true,
     "env": {
-        "JS_GC_ZEAL": "Compact",
+        "JS_GC_ZEAL": "IncrementalMultipleSlices",
         "JITTEST_EXTRA_ARGS": "--jitflags=debug --ignore-timeouts={DIR}/cgc-jittest-timeouts.txt",
         "JSTESTS_EXTRA_ARGS": "--exclude-file={DIR}/cgc-jstests-slow.txt"
     },

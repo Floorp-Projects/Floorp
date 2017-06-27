@@ -106,11 +106,11 @@ Constructor(nsISupports* aOuter, REFNSIID aIID, void** aResult)
     }
 
     // Forward to the main thread synchronously.
-    mozilla::SyncRunnable::DispatchToThread(mainThread,
-      new SyncRunnable(NS_NewRunnableFunction([&]() {
+    mozilla::SyncRunnable::DispatchToThread(
+      mainThread,
+      new SyncRunnable(NS_NewRunnableFunction("psm::Constructor", [&]() {
         rv = Instantiate<InstanceClass, InitMethod>(aIID, aResult);
-      }))
-    );
+      })));
 
     return rv;
   }

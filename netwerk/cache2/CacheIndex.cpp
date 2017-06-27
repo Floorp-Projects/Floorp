@@ -367,7 +367,9 @@ CacheIndex::PreShutdown()
   }
 
   nsCOMPtr<nsIRunnable> event;
-  event = NewRunnableMethod(index, &CacheIndex::PreShutdownInternal);
+  event = NewRunnableMethod("net::CacheIndex::PreShutdownInternal",
+                            index,
+                            &CacheIndex::PreShutdownInternal);
 
   nsCOMPtr<nsIEventTarget> ioTarget = CacheFileIOManager::IOTarget();
   MOZ_ASSERT(ioTarget);
@@ -1436,15 +1438,18 @@ CacheIndex::AsyncGetDiskConsumption(nsICacheStorageConsumptionObserver* aObserve
   // Move forward with index re/building if it is pending
   RefPtr<CacheIOThread> ioThread = CacheFileIOManager::IOThread();
   if (ioThread) {
-    ioThread->Dispatch(NS_NewRunnableFunction([]() -> void {
-      StaticMutexAutoLock lock(sLock);
+    ioThread->Dispatch(
+      NS_NewRunnableFunction("net::CacheIndex::AsyncGetDiskConsumption",
+                             []() -> void {
+                               StaticMutexAutoLock lock(sLock);
 
-      RefPtr<CacheIndex> index = gInstance;
-      if (index && index->mUpdateTimer) {
-        index->mUpdateTimer->Cancel();
-        index->DelayedUpdateLocked();
-      }
-    }), CacheIOThread::INDEX);
+                               RefPtr<CacheIndex> index = gInstance;
+                               if (index && index->mUpdateTimer) {
+                                 index->mUpdateTimer->Cancel();
+                                 index->DelayedUpdateLocked();
+                               }
+                             }),
+      CacheIOThread::INDEX);
   }
 
   return NS_OK;
@@ -2656,8 +2661,11 @@ CacheIndex::ScheduleUpdateTimer(uint32_t aDelay)
   rv = timer->SetTarget(ioTarget);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = timer->InitWithFuncCallback(CacheIndex::DelayedUpdate, nullptr,
-                                   aDelay, nsITimer::TYPE_ONE_SHOT);
+  rv = timer->InitWithNamedFuncCallback(CacheIndex::DelayedUpdate,
+                                        nullptr,
+                                        aDelay,
+                                        nsITimer::TYPE_ONE_SHOT,
+                                        "net::CacheIndex::ScheduleUpdateTimer");
   NS_ENSURE_SUCCESS(rv, rv);
 
   mUpdateTimer.swap(timer);

@@ -559,10 +559,12 @@ WorkerControlRunnable::DispatchInternal()
 
 NS_IMPL_ISUPPORTS_INHERITED0(WorkerControlRunnable, WorkerRunnable)
 
-WorkerMainThreadRunnable::WorkerMainThreadRunnable(WorkerPrivate* aWorkerPrivate,
-                                                   const nsACString& aTelemetryKey)
-: mWorkerPrivate(aWorkerPrivate)
-, mTelemetryKey(aTelemetryKey)
+WorkerMainThreadRunnable::WorkerMainThreadRunnable(
+  WorkerPrivate* aWorkerPrivate,
+  const nsACString& aTelemetryKey)
+  : mozilla::Runnable("dom::workers::WorkerMainThreadRunnable")
+  , mWorkerPrivate(aWorkerPrivate)
+  , mTelemetryKey(aTelemetryKey)
 {
   mWorkerPrivate->AssertIsOnWorkerThread();
 }
@@ -661,8 +663,10 @@ WorkerSameThreadRunnable::PostDispatch(WorkerPrivate* aWorkerPrivate,
   }
 }
 
-WorkerProxyToMainThreadRunnable::WorkerProxyToMainThreadRunnable(WorkerPrivate* aWorkerPrivate)
-  : mWorkerPrivate(aWorkerPrivate)
+WorkerProxyToMainThreadRunnable::WorkerProxyToMainThreadRunnable(
+  WorkerPrivate* aWorkerPrivate)
+  : mozilla::Runnable("dom::workers::WorkerProxyToMainThreadRunnable")
+  , mWorkerPrivate(aWorkerPrivate)
 {
   MOZ_ASSERT(mWorkerPrivate);
   mWorkerPrivate->AssertIsOnWorkerThread();

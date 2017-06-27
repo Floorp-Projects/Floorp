@@ -1039,10 +1039,14 @@ XULDocument::AttributeChanged(nsIDocument* aDocument,
     if (ShouldPersistAttribute(aElement, aAttribute) && !persist.IsEmpty() &&
         // XXXldb This should check that it's a token, not just a substring.
         persist.Find(nsDependentAtomString(aAttribute)) >= 0) {
-        nsContentUtils::AddScriptRunner(NewRunnableMethod
-            <nsIContent*, int32_t, nsIAtom*>
-            (this, &XULDocument::DoPersist, aElement, kNameSpaceID_None,
-            aAttribute));
+      nsContentUtils::AddScriptRunner(
+        NewRunnableMethod<nsIContent*, int32_t, nsIAtom*>(
+          "dom::XULDocument::DoPersist",
+          this,
+          &XULDocument::DoPersist,
+          aElement,
+          kNameSpaceID_None,
+          aAttribute));
     }
 }
 
@@ -3144,8 +3148,10 @@ XULDocument::MaybeBroadcast()
          mDelayedBroadcasters.Length())) {
         if (!nsContentUtils::IsSafeToRunScript()) {
             if (!mInDestructor) {
-                nsContentUtils::AddScriptRunner(
-                    NewRunnableMethod(this, &XULDocument::MaybeBroadcast));
+              nsContentUtils::AddScriptRunner(
+                NewRunnableMethod("dom::XULDocument::MaybeBroadcast",
+                                  this,
+                                  &XULDocument::MaybeBroadcast));
             }
             return;
         }

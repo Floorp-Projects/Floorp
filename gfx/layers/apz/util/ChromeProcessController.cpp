@@ -36,7 +36,10 @@ ChromeProcessController::ChromeProcessController(nsIWidget* aWidget,
   MOZ_ASSERT(aAPZEventState);
   MOZ_ASSERT(aAPZCTreeManager);
 
-  mUILoop->PostTask(NewRunnableMethod(this, &ChromeProcessController::InitializeRoot));
+  mUILoop->PostTask(
+    NewRunnableMethod("layers::ChromeProcessController::InitializeRoot",
+                      this,
+                      &ChromeProcessController::InitializeRoot));
 }
 
 ChromeProcessController::~ChromeProcessController() {}
@@ -82,7 +85,10 @@ void
 ChromeProcessController::Destroy()
 {
   if (MessageLoop::current() != mUILoop) {
-    mUILoop->PostTask(NewRunnableMethod(this, &ChromeProcessController::Destroy));
+    mUILoop->PostTask(
+      NewRunnableMethod("layers::ChromeProcessController::Destroy",
+                        this,
+                        &ChromeProcessController::Destroy));
     return;
   }
 
@@ -164,10 +170,19 @@ ChromeProcessController::HandleTap(TapType aType,
                                    uint64_t aInputBlockId)
 {
   if (MessageLoop::current() != mUILoop) {
-    mUILoop->PostTask(NewRunnableMethod<TapType, mozilla::LayoutDevicePoint, Modifiers,
-                                        ScrollableLayerGuid, uint64_t>(this,
-                        &ChromeProcessController::HandleTap,
-                        aType, aPoint, aModifiers, aGuid, aInputBlockId));
+    mUILoop->PostTask(
+      NewRunnableMethod<TapType,
+                        mozilla::LayoutDevicePoint,
+                        Modifiers,
+                        ScrollableLayerGuid,
+                        uint64_t>("layers::ChromeProcessController::HandleTap",
+                                  this,
+                                  &ChromeProcessController::HandleTap,
+                                  aType,
+                                  aPoint,
+                                  aModifiers,
+                                  aGuid,
+                                  aInputBlockId));
     return;
   }
 
@@ -217,13 +232,17 @@ ChromeProcessController::NotifyPinchGesture(PinchGestureInput::PinchGestureType 
                                             Modifiers aModifiers)
 {
   if (MessageLoop::current() != mUILoop) {
-    mUILoop->PostTask(NewRunnableMethod
-                      <PinchGestureInput::PinchGestureType,
-                       ScrollableLayerGuid,
-                       LayoutDeviceCoord,
-                       Modifiers>(this,
-                          &ChromeProcessController::NotifyPinchGesture,
-                          aType, aGuid, aSpanChange, aModifiers));
+    mUILoop->PostTask(NewRunnableMethod<PinchGestureInput::PinchGestureType,
+                                        ScrollableLayerGuid,
+                                        LayoutDeviceCoord,
+                                        Modifiers>(
+      "layers::ChromeProcessController::NotifyPinchGesture",
+      this,
+      &ChromeProcessController::NotifyPinchGesture,
+      aType,
+      aGuid,
+      aSpanChange,
+      aModifiers));
     return;
   }
 
@@ -238,11 +257,14 @@ ChromeProcessController::NotifyAPZStateChange(const ScrollableLayerGuid& aGuid,
                                               int aArg)
 {
   if (MessageLoop::current() != mUILoop) {
-    mUILoop->PostTask(NewRunnableMethod
-                      <ScrollableLayerGuid,
-                       APZStateChange,
-                       int>(this, &ChromeProcessController::NotifyAPZStateChange,
-                            aGuid, aChange, aArg));
+    mUILoop->PostTask(
+      NewRunnableMethod<ScrollableLayerGuid, APZStateChange, int>(
+        "layers::ChromeProcessController::NotifyAPZStateChange",
+        this,
+        &ChromeProcessController::NotifyAPZStateChange,
+        aGuid,
+        aChange,
+        aArg));
     return;
   }
 
@@ -257,10 +279,12 @@ void
 ChromeProcessController::NotifyMozMouseScrollEvent(const FrameMetrics::ViewID& aScrollId, const nsString& aEvent)
 {
   if (MessageLoop::current() != mUILoop) {
-    mUILoop->PostTask(NewRunnableMethod
-                      <FrameMetrics::ViewID,
-                       nsString>(this, &ChromeProcessController::NotifyMozMouseScrollEvent,
-                                 aScrollId, aEvent));
+    mUILoop->PostTask(NewRunnableMethod<FrameMetrics::ViewID, nsString>(
+      "layers::ChromeProcessController::NotifyMozMouseScrollEvent",
+      this,
+      &ChromeProcessController::NotifyMozMouseScrollEvent,
+      aScrollId,
+      aEvent));
     return;
   }
 
@@ -279,9 +303,11 @@ void
 ChromeProcessController::NotifyAsyncScrollbarDragRejected(const FrameMetrics::ViewID& aScrollId)
 {
   if (MessageLoop::current() != mUILoop) {
-    mUILoop->PostTask(NewRunnableMethod<FrameMetrics::ViewID>(this,
-                        &ChromeProcessController::NotifyAsyncScrollbarDragRejected,
-                        aScrollId));
+    mUILoop->PostTask(NewRunnableMethod<FrameMetrics::ViewID>(
+      "layers::ChromeProcessController::NotifyAsyncScrollbarDragRejected",
+      this,
+      &ChromeProcessController::NotifyAsyncScrollbarDragRejected,
+      aScrollId));
     return;
   }
 

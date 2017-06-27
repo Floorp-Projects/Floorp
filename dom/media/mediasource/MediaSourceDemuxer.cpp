@@ -56,8 +56,8 @@ MediaSourceDemuxer::AddSizeOfResources(
   // NB: The track buffers must only be accessed on the TaskQueue.
   RefPtr<MediaSourceDemuxer> self = this;
   RefPtr<MediaSourceDecoder::ResourceSizes> sizes = aSizes;
-  nsCOMPtr<nsIRunnable> task =
-    NS_NewRunnableFunction([self, sizes] () {
+  nsCOMPtr<nsIRunnable> task = NS_NewRunnableFunction(
+    "MediaSourceDemuxer::AddSizeOfResources", [self, sizes]() {
       for (TrackBuffersManager* manager : self->mSourceBuffers) {
         manager->AddSizeOfResources(sizes);
       }
@@ -69,14 +69,15 @@ MediaSourceDemuxer::AddSizeOfResources(
 void MediaSourceDemuxer::NotifyInitDataArrived()
 {
   RefPtr<MediaSourceDemuxer> self = this;
-  nsCOMPtr<nsIRunnable> task = NS_NewRunnableFunction([self]() {
-    if (self->mInitPromise.IsEmpty()) {
-      return;
-    }
-    if (self->ScanSourceBuffersForContent()) {
-      self->mInitPromise.ResolveIfExists(NS_OK, __func__);
-    }
-  });
+  nsCOMPtr<nsIRunnable> task = NS_NewRunnableFunction(
+    "MediaSourceDemuxer::NotifyInitDataArrived", [self]() {
+      if (self->mInitPromise.IsEmpty()) {
+        return;
+      }
+      if (self->ScanSourceBuffersForContent()) {
+        self->mInitPromise.ResolveIfExists(NS_OK, __func__);
+      }
+    });
   GetTaskQueue()->Dispatch(task.forget());
 }
 
@@ -168,10 +169,11 @@ MediaSourceDemuxer::GetCrypto()
 void
 MediaSourceDemuxer::AttachSourceBuffer(TrackBuffersManager* aSourceBuffer)
 {
-  nsCOMPtr<nsIRunnable> task =
-    NewRunnableMethod<TrackBuffersManager*>(
-      this, &MediaSourceDemuxer::DoAttachSourceBuffer,
-      aSourceBuffer);
+  nsCOMPtr<nsIRunnable> task = NewRunnableMethod<TrackBuffersManager*>(
+    "MediaSourceDemuxer::DoAttachSourceBuffer",
+    this,
+    &MediaSourceDemuxer::DoAttachSourceBuffer,
+    aSourceBuffer);
   GetTaskQueue()->Dispatch(task.forget());
 }
 
@@ -186,10 +188,11 @@ MediaSourceDemuxer::DoAttachSourceBuffer(mozilla::TrackBuffersManager* aSourceBu
 void
 MediaSourceDemuxer::DetachSourceBuffer(TrackBuffersManager* aSourceBuffer)
 {
-  nsCOMPtr<nsIRunnable> task =
-    NewRunnableMethod<TrackBuffersManager*>(
-      this, &MediaSourceDemuxer::DoDetachSourceBuffer,
-      aSourceBuffer);
+  nsCOMPtr<nsIRunnable> task = NewRunnableMethod<TrackBuffersManager*>(
+    "MediaSourceDemuxer::DoDetachSourceBuffer",
+    this,
+    &MediaSourceDemuxer::DoDetachSourceBuffer,
+    aSourceBuffer);
   GetTaskQueue()->Dispatch(task.forget());
 }
 
@@ -342,7 +345,7 @@ MediaSourceTrackDemuxer::Reset()
   MOZ_ASSERT(mParent, "Called after BreackCycle()");
   RefPtr<MediaSourceTrackDemuxer> self = this;
   nsCOMPtr<nsIRunnable> task =
-    NS_NewRunnableFunction([self] () {
+    NS_NewRunnableFunction("MediaSourceTrackDemuxer::Reset", [self]() {
       self->mNextSample.reset();
       self->mReset = true;
       self->mManager->Seek(self->mType, TimeUnit::Zero(), TimeUnit::Zero());
@@ -384,10 +387,10 @@ MediaSourceTrackDemuxer::BreakCycles()
 {
   RefPtr<MediaSourceTrackDemuxer> self = this;
   nsCOMPtr<nsIRunnable> task =
-    NS_NewRunnableFunction([self]() {
+    NS_NewRunnableFunction("MediaSourceTrackDemuxer::BreakCycles", [self]() {
       self->mParent = nullptr;
       self->mManager = nullptr;
-    } );
+    });
   mParent->GetTaskQueue()->Dispatch(task.forget());
 }
 

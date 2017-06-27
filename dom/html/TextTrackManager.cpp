@@ -170,8 +170,10 @@ TextTrackManager::AddTextTrack(TextTrackKind aKind, const nsAString& aLabel,
   ReportTelemetryForTrack(track);
 
   if (aTextTrackSource == TextTrackSource::Track) {
-    RefPtr<nsIRunnable> task =
-      NewRunnableMethod(this, &TextTrackManager::HonorUserPreferencesForTrackSelection);
+    RefPtr<nsIRunnable> task = NewRunnableMethod(
+      "dom::TextTrackManager::HonorUserPreferencesForTrackSelection",
+      this,
+      &TextTrackManager::HonorUserPreferencesForTrackSelection);
     nsContentUtils::RunInStableState(task.forget());
   }
 
@@ -190,8 +192,10 @@ TextTrackManager::AddTextTrack(TextTrack* aTextTrack)
   ReportTelemetryForTrack(aTextTrack);
 
   if (aTextTrack->GetTextTrackSource() == TextTrackSource::Track) {
-    RefPtr<nsIRunnable> task =
-      NewRunnableMethod(this, &TextTrackManager::HonorUserPreferencesForTrackSelection);
+    RefPtr<nsIRunnable> task = NewRunnableMethod(
+      "dom::TextTrackManager::HonorUserPreferencesForTrackSelection",
+      this,
+      &TextTrackManager::HonorUserPreferencesForTrackSelection);
     nsContentUtils::RunInStableState(task.forget());
   }
 }
@@ -483,12 +487,15 @@ class SimpleTextTrackEvent : public Runnable
 {
 public:
   friend class CompareSimpleTextTrackEvents;
-  SimpleTextTrackEvent(const nsAString& aEventName, double aTime,
-                       TextTrack* aTrack, TextTrackCue* aCue)
-  : mName(aEventName),
-    mTime(aTime),
-    mTrack(aTrack),
-    mCue(aCue)
+  SimpleTextTrackEvent(const nsAString& aEventName,
+                       double aTime,
+                       TextTrack* aTrack,
+                       TextTrackCue* aCue)
+    : Runnable("dom::SimpleTextTrackEvent")
+    , mName(aEventName)
+    , mTime(aTime)
+    , mTrack(aTrack)
+    , mCue(aCue)
   {}
 
   NS_IMETHOD Run() {
@@ -624,8 +631,11 @@ TextTrackManager::DispatchUpdateCueDisplay()
     nsPIDOMWindowInner* win = mMediaElement->OwnerDoc()->GetInnerWindow();
     if (win) {
       nsGlobalWindow::Cast(win)->Dispatch(
-        "TextTrackManager::UpdateCueDisplay", TaskCategory::Other,
-        NewRunnableMethod(this, &TextTrackManager::UpdateCueDisplay));
+        "TextTrackManager::UpdateCueDisplay",
+        TaskCategory::Other,
+        NewRunnableMethod("dom::TextTrackManager::UpdateCueDisplay",
+                          this,
+                          &TextTrackManager::UpdateCueDisplay));
       mUpdateCueDisplayDispatched = true;
     }
   }
@@ -644,8 +654,11 @@ TextTrackManager::DispatchTimeMarchesOn()
     nsPIDOMWindowInner* win = mMediaElement->OwnerDoc()->GetInnerWindow();
     if (win) {
       nsGlobalWindow::Cast(win)->Dispatch(
-        "TextTrackManager::TimeMarchesOn", TaskCategory::Other,
-        NewRunnableMethod(this, &TextTrackManager::TimeMarchesOn));
+        "TextTrackManager::TimeMarchesOn",
+        TaskCategory::Other,
+        NewRunnableMethod("dom::TextTrackManager::TimeMarchesOn",
+                          this,
+                          &TextTrackManager::TimeMarchesOn));
       mTimeMarchesOnDispatched = true;
     }
   }

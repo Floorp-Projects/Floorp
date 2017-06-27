@@ -303,8 +303,9 @@ class FocusTextField : public Runnable
 {
 public:
   FocusTextField(nsIContent* aNumber, nsIContent* aTextField)
-    : mNumber(aNumber),
-      mTextField(aTextField)
+    : mozilla::Runnable("FocusTextField")
+    , mNumber(aNumber)
+    , mTextField(aTextField)
   {}
 
   NS_IMETHOD Run() override

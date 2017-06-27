@@ -20,21 +20,22 @@ typedef nsTArray<ObserverHandle> ObserverArray;
 class nsHttpActivityEvent : public Runnable
 {
 public:
-    nsHttpActivityEvent(nsISupports *aHttpChannel,
-                        uint32_t aActivityType,
-                        uint32_t aActivitySubtype,
-                        PRTime aTimestamp,
-                        uint64_t aExtraSizeData,
-                        const nsACString & aExtraStringData,
-                        ObserverArray *aObservers)
-        : mHttpChannel(aHttpChannel)
-        , mActivityType(aActivityType)
-        , mActivitySubtype(aActivitySubtype)
-        , mTimestamp(aTimestamp)
-        , mExtraSizeData(aExtraSizeData)
-        , mExtraStringData(aExtraStringData)
-        , mObservers(*aObservers)
-    {
+  nsHttpActivityEvent(nsISupports* aHttpChannel,
+                      uint32_t aActivityType,
+                      uint32_t aActivitySubtype,
+                      PRTime aTimestamp,
+                      uint64_t aExtraSizeData,
+                      const nsACString& aExtraStringData,
+                      ObserverArray* aObservers)
+    : Runnable("net::nsHttpActivityEvent")
+    , mHttpChannel(aHttpChannel)
+    , mActivityType(aActivityType)
+    , mActivitySubtype(aActivitySubtype)
+    , mTimestamp(aTimestamp)
+    , mExtraSizeData(aExtraSizeData)
+    , mExtraStringData(aExtraStringData)
+    , mObservers(*aObservers)
+  {
     }
 
     NS_IMETHOD Run() override

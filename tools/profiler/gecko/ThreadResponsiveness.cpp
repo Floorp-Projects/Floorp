@@ -18,7 +18,8 @@ class CheckResponsivenessTask : public mozilla::Runnable,
                                 public nsITimerCallback {
 public:
   CheckResponsivenessTask()
-    : mLastTracerTime(TimeStamp::Now())
+    : mozilla::Runnable("CheckResponsivenessTask")
+    , mLastTracerTime(TimeStamp::Now())
     , mMutex("CheckResponsivenessTask")
     , mTimer(nullptr)
     , mHasEverBeenSuccessfullyDispatched(false)

@@ -378,7 +378,8 @@ class QuotaObject::StoragePressureRunnable final
 
 public:
   explicit StoragePressureRunnable(uint64_t aUsage)
-    : mUsage(aUsage)
+    : Runnable("dom::quota::QuotaObject::StoragePressureRunnable")
+    , mUsage(aUsage)
   { }
 
 private:
@@ -410,7 +411,8 @@ class QuotaManager::CreateRunnable final
 
 public:
   CreateRunnable()
-    : mResultCode(NS_OK)
+    : Runnable("dom::quota::QuotaManager::CreateRunnable")
+    , mResultCode(NS_OK)
     , mState(State::Initial)
   {
     AssertIsOnBackgroundThread();
@@ -455,7 +457,8 @@ class QuotaManager::ShutdownRunnable final
 
 public:
   explicit ShutdownRunnable(bool& aDone)
-    : mDone(aDone)
+    : Runnable("dom::quota::QuotaManager::ShutdownRunnable")
+    , mDone(aDone)
   {
     MOZ_ASSERT(NS_IsMainThread());
   }
@@ -789,8 +792,9 @@ public:
 
 protected:
   explicit OriginOperationBase(
-                          nsIEventTarget* aOwningThread = GetCurrentThreadEventTarget())
+        nsIEventTarget* aOwningThread = GetCurrentThreadEventTarget())
     : BackgroundThreadObject(aOwningThread)
+    , Runnable("dom::quota::OriginOperationBase")
     , mResultCode(NS_OK)
     , mState(State_Initial)
     , mActorDestroyed(false)
@@ -1562,9 +1566,9 @@ protected:
   const bool mPersistent;
 
 public:
-  StorageDirectoryHelper(nsIFile* aDirectory,
-                         bool aPersistent)
-    : mMutex("StorageDirectoryHelper::mMutex")
+  StorageDirectoryHelper(nsIFile* aDirectory, bool aPersistent)
+    : Runnable("dom::quota::StorageDirectoryHelper")
+    , mMutex("StorageDirectoryHelper::mMutex")
     , mCondVar(mMutex, "StorageDirectoryHelper::mCondVar")
     , mMainThreadResultCode(NS_OK)
     , mWaiting(true)
@@ -3651,7 +3655,9 @@ QuotaManager::Shutdown()
   // QuotaManager on the IO thread. This should probably use
   // NewNonOwningRunnableMethod ...
   RefPtr<Runnable> runnable =
-    NewRunnableMethod(this, &QuotaManager::ReleaseIOThreadObjects);
+    NewRunnableMethod("dom::quota::QuotaManager::ReleaseIOThreadObjects",
+                      this,
+                      &QuotaManager::ReleaseIOThreadObjects);
   MOZ_ASSERT(runnable);
 
   // Give clients a chance to cleanup IO thread only objects.
@@ -5887,11 +5893,12 @@ GroupInfoPair::GetGroupInfoForPersistenceType(PersistenceType aPersistenceType)
 
 CollectOriginsHelper::CollectOriginsHelper(mozilla::Mutex& aMutex,
                                            uint64_t aMinSizeToBeFreed)
-: mMinSizeToBeFreed(aMinSizeToBeFreed),
-  mMutex(aMutex),
-  mCondVar(aMutex, "CollectOriginsHelper::mCondVar"),
-  mSizeToBeFreed(0),
-  mWaiting(true)
+  : Runnable("dom::quota::CollectOriginsHelper")
+  , mMinSizeToBeFreed(aMinSizeToBeFreed)
+  , mMutex(aMutex)
+  , mCondVar(aMutex, "CollectOriginsHelper::mCondVar")
+  , mSizeToBeFreed(0)
+  , mWaiting(true)
 {
   MOZ_ASSERT(!NS_IsMainThread(), "Wrong thread!");
   mMutex.AssertCurrentThreadOwns();
@@ -6508,7 +6515,9 @@ Quota::RecvStartIdleMaintenance()
   QuotaManager* quotaManager = QuotaManager::Get();
   if (!quotaManager) {
     nsCOMPtr<nsIRunnable> callback =
-      NewRunnableMethod(this, &Quota::StartIdleMaintenance);
+      NewRunnableMethod("dom::quota::Quota::StartIdleMaintenance",
+                        this,
+                        &Quota::StartIdleMaintenance);
 
     QuotaManager::GetOrCreate(callback);
     return IPC_OK();

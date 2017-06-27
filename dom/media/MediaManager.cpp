@@ -651,12 +651,12 @@ template<class SuccessCallbackType>
 class ErrorCallbackRunnable : public Runnable
 {
 public:
-  ErrorCallbackRunnable(
-    nsCOMPtr<SuccessCallbackType>&& aOnSuccess,
-    nsCOMPtr<nsIDOMGetUserMediaErrorCallback>&& aOnFailure,
-    MediaMgrError& aError,
-    uint64_t aWindowID)
-    : mError(&aError)
+  ErrorCallbackRunnable(nsCOMPtr<SuccessCallbackType>&& aOnSuccess,
+                        nsCOMPtr<nsIDOMGetUserMediaErrorCallback>&& aOnFailure,
+                        MediaMgrError& aError,
+                        uint64_t aWindowID)
+    : Runnable("ErrorCallbackRunnable")
+    , mError(&aError)
     , mWindowID(aWindowID)
     , mManager(MediaManager::GetInstance())
   {
@@ -991,7 +991,8 @@ public:
     AudioDevice* aAudioDevice,
     VideoDevice* aVideoDevice,
     PeerIdentity* aPeerIdentity)
-    : mConstraints(aConstraints)
+    : Runnable("GetUserMediaStreamRunnable")
+    , mConstraints(aConstraints)
     , mAudioDevice(aAudioDevice)
     , mVideoDevice(aVideoDevice)
     , mWindowID(aWindowID)
@@ -1290,7 +1291,8 @@ public:
           callback.forget(),
           self->mWindowID,
           self->mOnFailure.forget())));
-      NS_DispatchToMainThread(NS_NewRunnableFunction([]() -> void {
+      NS_DispatchToMainThread(NS_NewRunnableFunction("MediaManager::SendPendingGUMRequest",
+                                                     []() -> void {
         RefPtr<MediaManager> manager = MediaManager::GetInstance();
         manager->SendPendingGUMRequest();
       }));
@@ -1447,12 +1449,15 @@ public:
     const MediaStreamConstraints& aConstraints,
     already_AddRefed<nsIDOMGetUserMediaSuccessCallback> aOnSuccess,
     already_AddRefed<nsIDOMGetUserMediaErrorCallback> aOnFailure,
-    uint64_t aWindowID, GetUserMediaWindowListener *aWindowListener,
-    SourceListener *aSourceListener, MediaEnginePrefs &aPrefs,
+    uint64_t aWindowID,
+    GetUserMediaWindowListener* aWindowListener,
+    SourceListener* aSourceListener,
+    MediaEnginePrefs& aPrefs,
     const ipc::PrincipalInfo& aPrincipalInfo,
     bool aIsChrome,
     MediaManager::SourceSet* aSourceSet)
-    : mConstraints(aConstraints)
+    : Runnable("GetUserMediaTask")
+    , mConstraints(aConstraints)
     , mOnSuccess(aOnSuccess)
     , mOnFailure(aOnFailure)
     , mWindowID(aWindowID)
@@ -1483,7 +1488,10 @@ public:
     NS_DispatchToMainThread(errorRunnable.forget());
     // Do after ErrorCallbackRunnable Run()s, as it checks active window list
     NS_DispatchToMainThread(NewRunnableMethod<RefPtr<SourceListener>>(
-      mWindowListener, &GetUserMediaWindowListener::Remove, mSourceListener));
+      "GetUserMediaWindowListener::Remove",
+      mWindowListener,
+      &GetUserMediaWindowListener::Remove,
+      mSourceListener));
   }
 
   NS_IMETHOD
@@ -1542,7 +1550,8 @@ public:
         Fail(NS_LITERAL_STRING("NotReadableError"),
              NS_ConvertUTF8toUTF16(errorMsg));
       }
-      NS_DispatchToMainThread(NS_NewRunnableFunction([]() -> void {
+      NS_DispatchToMainThread(NS_NewRunnableFunction("MediaManager::SendPendingGUMRequest",
+                                                     []() -> void {
         RefPtr<MediaManager> manager = MediaManager::GetInstance();
         manager->SendPendingGUMRequest();
       }));
@@ -1659,8 +1668,9 @@ class GetUserMediaRunnableWrapper : public Runnable
 {
 public:
   // This object must take ownership of task
-  GetUserMediaRunnableWrapper(GetUserMediaTask* task) :
-    mTask(task) {
+  GetUserMediaRunnableWrapper(GetUserMediaTask* task)
+    : Runnable("GetUserMediaRunnableWrapper")
+    , mTask(task) {
   }
 
   ~GetUserMediaRunnableWrapper() {
@@ -2974,10 +2984,13 @@ MediaManager::Shutdown()
   class ShutdownTask : public Runnable
   {
   public:
-    ShutdownTask(MediaManager* aManager,
-                 already_AddRefed<Runnable> aReply)
-      : mManager(aManager)
-      , mReply(aReply) {}
+    ShutdownTask(MediaManager* aManager, already_AddRefed<Runnable> aReply)
+      : mozilla::Runnable("ShutdownTask")
+      , mManager(aManager)
+      , mReply(aReply)
+    {
+    }
+
   private:
     NS_IMETHOD
     Run() override
@@ -3711,7 +3724,9 @@ SourceListener::NotifyEvent(MediaStreamGraph* aGraph,
         NotifyFinished();
         return;
       }
-      target->Dispatch(NewRunnableMethod(this, &SourceListener::NotifyFinished),
+      target->Dispatch(NewRunnableMethod("SourceListener::NotifyFinished",
+                                         this,
+                                         &SourceListener::NotifyFinished),
                        NS_DISPATCH_NORMAL);
       break;
     case MediaStreamGraphEvent::EVENT_REMOVED:
@@ -3723,7 +3738,9 @@ SourceListener::NotifyEvent(MediaStreamGraph* aGraph,
         NotifyRemoved();
         return;
       }
-      target->Dispatch(NewRunnableMethod(this, &SourceListener::NotifyRemoved),
+      target->Dispatch(NewRunnableMethod("SourceListener::NotifyRemoved",
+                                         this,
+                                         &SourceListener::NotifyRemoved),
                        NS_DISPATCH_NORMAL);
       break;
     case MediaStreamGraphEvent::EVENT_HAS_DIRECT_LISTENERS:
@@ -3972,7 +3989,9 @@ GetUserMediaWindowListener::NotifySourceTrackStopped()
   }
 
   nsCOMPtr<nsIRunnable> runnable =
-    NewRunnableMethod(this, &GetUserMediaWindowListener::NotifyChromeOfTrackStops);
+    NewRunnableMethod("GetUserMediaWindowListener::NotifyChromeOfTrackStops",
+                      this,
+                      &GetUserMediaWindowListener::NotifyChromeOfTrackStops);
   nsContentUtils::RunInStableState(runnable.forget());
   mChromeNotificationTaskPosted = true;
 }
@@ -3988,21 +4007,29 @@ GetUserMediaWindowListener::NotifyChromeOfTrackStops()
 }
 
 GetUserMediaNotificationEvent::GetUserMediaNotificationEvent(
-    GetUserMediaStatus aStatus,
-    uint64_t aWindowID)
-: mStatus(aStatus), mWindowID(aWindowID) {}
+  GetUserMediaStatus aStatus,
+  uint64_t aWindowID)
+  : Runnable("GetUserMediaNotificationEvent")
+  , mStatus(aStatus)
+  , mWindowID(aWindowID)
+{
+}
 
 GetUserMediaNotificationEvent::GetUserMediaNotificationEvent(
-    GetUserMediaStatus aStatus,
-    already_AddRefed<DOMMediaStream> aStream,
-    already_AddRefed<Refcountable<UniquePtr<OnTracksAvailableCallback>>> aOnTracksAvailableCallback,
-    uint64_t aWindowID,
-    already_AddRefed<nsIDOMGetUserMediaErrorCallback> aError)
-: mStream(aStream),
-  mOnTracksAvailableCallback(aOnTracksAvailableCallback),
-  mStatus(aStatus),
-  mWindowID(aWindowID),
-  mOnFailure(aError) {}
+  GetUserMediaStatus aStatus,
+  already_AddRefed<DOMMediaStream> aStream,
+  already_AddRefed<Refcountable<UniquePtr<OnTracksAvailableCallback>>>
+    aOnTracksAvailableCallback,
+  uint64_t aWindowID,
+  already_AddRefed<nsIDOMGetUserMediaErrorCallback> aError)
+  : Runnable("GetUserMediaNotificationEvent")
+  , mStream(aStream)
+  , mOnTracksAvailableCallback(aOnTracksAvailableCallback)
+  , mStatus(aStatus)
+  , mWindowID(aWindowID)
+  , mOnFailure(aError)
+{
+}
 GetUserMediaNotificationEvent::~GetUserMediaNotificationEvent()
 {
 }

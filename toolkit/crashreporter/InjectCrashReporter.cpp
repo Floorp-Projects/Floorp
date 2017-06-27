@@ -17,7 +17,8 @@ using CrashReporter::GetChildNotificationPipe;
 namespace mozilla {
 
 InjectCrashRunnable::InjectCrashRunnable(DWORD pid)
-  : mPID(pid)
+  : Runnable("InjectCrashRunnable")
+  , mPID(pid)
 {
   nsCOMPtr<nsIFile> dll;
   nsresult rv = NS_GetSpecialDirectory(NS_GRE_DIR, getter_AddRefs(dll));

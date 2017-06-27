@@ -104,7 +104,7 @@ LazyIdleThread::EnableIdleTimeout()
   }
 
   if (mThread) {
-    nsCOMPtr<nsIRunnable> runnable(new Runnable());
+    nsCOMPtr<nsIRunnable> runnable(new Runnable("LazyIdleThreadDummyRunnable"));
     if (NS_FAILED(Dispatch(runnable.forget(), NS_DISPATCH_NORMAL))) {
       NS_WARNING("Failed to dispatch!");
     }
@@ -158,8 +158,8 @@ LazyIdleThread::EnsureThread()
     return NS_ERROR_UNEXPECTED;
   }
 
-  nsCOMPtr<nsIRunnable> runnable =
-    NewRunnableMethod(this, &LazyIdleThread::InitThread);
+  nsCOMPtr<nsIRunnable> runnable = NewRunnableMethod(
+    "LazyIdleThread::InitThread", this, &LazyIdleThread::InitThread);
   if (NS_WARN_IF(!runnable)) {
     return NS_ERROR_UNEXPECTED;
   }
@@ -279,8 +279,8 @@ LazyIdleThread::ShutdownThread()
     }
 #endif
 
-    nsCOMPtr<nsIRunnable> runnable =
-      NewRunnableMethod(this, &LazyIdleThread::CleanupThread);
+    nsCOMPtr<nsIRunnable> runnable = NewRunnableMethod(
+      "LazyIdleThread::CleanupThread", this, &LazyIdleThread::CleanupThread);
     if (NS_WARN_IF(!runnable)) {
       return NS_ERROR_UNEXPECTED;
     }
@@ -356,8 +356,8 @@ LazyIdleThread::Release()
     // Stabilize refcount.
     mRefCnt = 1;
 
-    nsCOMPtr<nsIRunnable> runnable =
-      NewNonOwningRunnableMethod(this, &LazyIdleThread::SelfDestruct);
+    nsCOMPtr<nsIRunnable> runnable = NewNonOwningRunnableMethod(
+      "LazyIdleThread::SelfDestruct", this, &LazyIdleThread::SelfDestruct);
     NS_WARNING_ASSERTION(runnable, "Couldn't make runnable!");
 
     if (NS_FAILED(NS_DispatchToCurrentThread(runnable))) {
@@ -591,8 +591,8 @@ LazyIdleThread::AfterProcessNextEvent(nsIThreadInternal* /* aThread */,
   }
 
   if (shouldNotifyIdle) {
-    nsCOMPtr<nsIRunnable> runnable =
-      NewRunnableMethod(this, &LazyIdleThread::ScheduleTimer);
+    nsCOMPtr<nsIRunnable> runnable = NewRunnableMethod(
+      "LazyIdleThread::ScheduleTimer", this, &LazyIdleThread::ScheduleTimer);
     if (NS_WARN_IF(!runnable)) {
       return NS_ERROR_UNEXPECTED;
     }

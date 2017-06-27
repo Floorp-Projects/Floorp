@@ -44,7 +44,8 @@ class SpinRunnable final : public Runnable
 {
 public:
   explicit SpinRunnable(nsINestedEventLoopCondition* aCondition)
-    : mCondition(aCondition)
+    : Runnable("SpinRunnable")
+    , mCondition(aCondition)
     , mResult(NS_OK)
   {
   }
@@ -73,7 +74,8 @@ class CountRunnable final : public Runnable
 {
 public:
   explicit CountRunnable(Atomic<uint32_t>& aCounter)
-    : mCounter(aCounter)
+    : Runnable("CountRunnable")
+    , mCounter(aCounter)
   {
   }
 

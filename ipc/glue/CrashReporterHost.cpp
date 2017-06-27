@@ -226,9 +226,11 @@ CrashReporterHost::NotifyCrashService(GeckoProcessType aProcessType,
                                       const AnnotationTable* aNotes)
 {
   if (!NS_IsMainThread()) {
-    RefPtr<Runnable> runnable = NS_NewRunnableFunction([=] () -> void {
-      CrashReporterHost::NotifyCrashService(aProcessType, aChildDumpID, aNotes);
-    });
+    RefPtr<Runnable> runnable = NS_NewRunnableFunction(
+      "ipc::CrashReporterHost::NotifyCrashService", [=]() -> void {
+        CrashReporterHost::NotifyCrashService(
+          aProcessType, aChildDumpID, aNotes);
+      });
     RefPtr<nsIThread> mainThread = do_GetMainThread();
     SyncRunnable::DispatchToThread(mainThread, runnable);
     return;

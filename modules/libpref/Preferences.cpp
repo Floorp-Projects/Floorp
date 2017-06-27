@@ -314,7 +314,7 @@ public:
       nsCOMPtr<nsIEventTarget> target =
         do_GetService(NS_STREAMTRANSPORTSERVICE_CONTRACTID, &rv);
       if (NS_SUCCEEDED(rv)) {
-        target->Dispatch(NS_NewRunnableFunction([] {}),
+        target->Dispatch(NS_NewRunnableFunction("Preferences_dummy", [] {}),
                          nsIEventTarget::DISPATCH_SYNC);
       }
     }
@@ -330,7 +330,10 @@ Atomic<PrefSaveData*> PreferencesWriter::sPendingWriteData(nullptr);
 class PWRunnable : public Runnable
 {
 public:
-  explicit PWRunnable(nsIFile* aFile) : mFile(aFile) {}
+  explicit PWRunnable(nsIFile* aFile)
+    : Runnable("PWRunnable")
+    , mFile(aFile)
+  {}
 
   NS_IMETHOD Run() override
   {
@@ -349,7 +352,7 @@ public:
       nsCOMPtr<nsIFile> fileCopy(mFile);
       SystemGroup::Dispatch("Preferences::WriterRunnable",
                             TaskCategory::Other,
-                            NS_NewRunnableFunction([fileCopy, rvCopy] {
+                            NS_NewRunnableFunction("Preferences::WriterRunnable", [fileCopy, rvCopy] {
         MOZ_RELEASE_ASSERT(NS_IsMainThread());
         if (NS_FAILED(rvCopy)) {
           Preferences::DirtyCallback();
@@ -558,6 +561,8 @@ PreferenceServiceReporter::CollectReports(
 namespace {
 class AddPreferencesMemoryReporterRunnable : public Runnable
 {
+public:
+  AddPreferencesMemoryReporterRunnable() : Runnable("AddPreferencesMemoryReporterRunnable") {}
   NS_IMETHOD Run() override
   {
     return RegisterStrongMemoryReporter(new PreferenceServiceReporter());
