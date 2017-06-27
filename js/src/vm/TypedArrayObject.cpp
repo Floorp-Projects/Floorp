@@ -578,11 +578,6 @@ class TypedArrayObjectTemplate : public TypedArrayObject
         RootedObject tmp(cx, NewBuiltinClassInstance(cx, clasp, allocKind, newKind));
         if (!tmp)
             return nullptr;
-        if (script && !ObjectGroup::setAllocationSiteObjectGroup(cx, script, pc, tmp,
-                                                                 newKind == SingletonObject))
-        {
-            return nullptr;
-        }
 
         TypedArrayObject* tarray = &tmp->as<TypedArrayObject>();
         initTypedArraySlots(cx, tarray, len);
@@ -591,6 +586,12 @@ class TypedArrayObjectTemplate : public TypedArrayObject
         // won't be any elements to store. Therefore, we set the pointer to
         // nullptr and avoid allocating memory that will never be used.
         tarray->initPrivate(nullptr);
+
+        if (script && !ObjectGroup::setAllocationSiteObjectGroup(cx, script, pc, tmp,
+                                                                 newKind == SingletonObject))
+        {
+            return nullptr;
+        }
 
         return tarray;
     }
