@@ -34,7 +34,7 @@ WebRenderDisplayItemLayer::RenderLayer(wr::DisplayListBuilder& aBuilder,
   ScrollingLayersHelper scroller(this, aBuilder, aSc);
 
   if (mItem) {
-    WrSize contentSize; // this won't actually be used by anything
+    wr::WrSize contentSize; // this won't actually be used by anything
     wr::DisplayListBuilder builder(WrBridge()->GetPipeline(), contentSize);
     // We might have recycled this layer. Throw away the old commands.
     mParentCommands.Clear();

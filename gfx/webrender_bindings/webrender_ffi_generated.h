@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* Generated with cbindgen:0.1.13 */
+/* Generated with cbindgen:0.1.14 */
 
 /* DO NOT MODIFY THIS MANUALLY! This file was generated using cbindgen.
  * To generate this file:
@@ -15,6 +15,9 @@
 #include <cstdlib>
 
 extern "C" {
+
+namespace mozilla {
+namespace wr {
 
 enum class WrBorderStyle : uint32_t {
   None = 0,
@@ -954,6 +957,9 @@ bool wr_window_new(WrWindowId aWindowId,
                    WrAPI **aOutApi,
                    WrRenderer **aOutRenderer)
 WR_FUNC;
+
+} // namespace wr
+} // namespace mozilla
 
 } // extern "C"
 

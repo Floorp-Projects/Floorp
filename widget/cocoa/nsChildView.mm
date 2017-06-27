@@ -2114,8 +2114,8 @@ nsChildView::AddWindowOverlayWebRenderCommands(layers::WebRenderBridgeChild* aWr
       aWrBridge->SendUpdateImage(*mTitlebarImageKey, size, format, buffer);
     }
 
-    WrRect rect = wr::ToWrRect(mTitlebarRect);
-    aBuilder.PushImage(WrRect{ 0, 0, float(size.width), float(size.height) },
+    wr::WrRect rect = wr::ToWrRect(mTitlebarRect);
+    aBuilder.PushImage(wr::WrRect{ 0, 0, float(size.width), float(size.height) },
                        rect, wr::ImageRendering::Auto, *mTitlebarImageKey);
   }
 }

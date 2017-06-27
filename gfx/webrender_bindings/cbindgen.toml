@@ -12,6 +12,7 @@ braces = "SameLine"
 line_length = 100
 tab_width = 2
 language = "C++"
+namespaces = ["mozilla", "wr"]
 
 [parse]
 parse_deps = true

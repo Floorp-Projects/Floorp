@@ -607,25 +607,25 @@ BufferTextureHost::AddWRImage(wr::WebRenderAPI* aAPI,
     aAPI->AddExternalImage(aImageKeys[0],
                            yDescriptor,
                            aExtID,
-                           WrExternalImageBufferType::ExternalBuffer,
+                           wr::WrExternalImageBufferType::ExternalBuffer,
                            0);
     aAPI->AddExternalImage(aImageKeys[1],
                            cbcrDescriptor,
                            aExtID,
-                           WrExternalImageBufferType::ExternalBuffer,
+                           wr::WrExternalImageBufferType::ExternalBuffer,
                            1);
     aAPI->AddExternalImage(aImageKeys[2],
                            cbcrDescriptor,
                            aExtID,
-                           WrExternalImageBufferType::ExternalBuffer,
+                           wr::WrExternalImageBufferType::ExternalBuffer,
                            2);
   }
 }
 
 void
 BufferTextureHost::PushExternalImage(wr::DisplayListBuilder& aBuilder,
-                                     const WrRect& aBounds,
-                                     const WrRect& aClip,
+                                     const wr::WrRect& aBounds,
+                                     const wr::WrRect& aClip,
                                      wr::ImageRendering aFilter,
                                      Range<const wr::ImageKey>& aImageKeys)
 {
@@ -639,7 +639,7 @@ BufferTextureHost::PushExternalImage(wr::DisplayListBuilder& aBuilder,
                                   aImageKeys[0],
                                   aImageKeys[1],
                                   aImageKeys[2],
-                                  WrYuvColorSpace::Rec601,
+                                  wr::WrYuvColorSpace::Rec601,
                                   aFilter);
   }
 }

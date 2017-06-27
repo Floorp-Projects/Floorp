@@ -70,7 +70,7 @@ AppendToString(std::stringstream& aStream, const nsRect& r,
 }
 
 void
-AppendToString(std::stringstream& aStream, const WrColor& c,
+AppendToString(std::stringstream& aStream, const wr::WrColor& c,
                const char* pfx, const char* sfx)
 {
   aStream << pfx;
@@ -81,7 +81,7 @@ AppendToString(std::stringstream& aStream, const WrColor& c,
 }
 
 void
-AppendToString(std::stringstream& aStream, const WrRect& r,
+AppendToString(std::stringstream& aStream, const wr::WrRect& r,
                const char* pfx, const char* sfx)
 {
   aStream << pfx;
@@ -92,7 +92,7 @@ AppendToString(std::stringstream& aStream, const WrRect& r,
 }
 
 void
-AppendToString(std::stringstream& aStream, const WrSize& s,
+AppendToString(std::stringstream& aStream, const wr::WrSize& s,
                const char* pfx, const char* sfx)
 {
   aStream << pfx;

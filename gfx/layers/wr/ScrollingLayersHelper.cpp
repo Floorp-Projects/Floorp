@@ -120,7 +120,7 @@ ScrollingLayersHelper::PushLayerLocalClip(const StackingContextHelper& aStacking
     clip = Some(layer->GetLocalTransformTyped().TransformBounds(mLayer->Bounds()));
   }
   if (clip) {
-    Maybe<WrImageMask> mask = mLayer->BuildWrMaskLayer(aStackingContext);
+    Maybe<wr::WrImageMask> mask = mLayer->BuildWrMaskLayer(aStackingContext);
     LayerRect clipRect = ViewAs<LayerPixel>(clip.ref(),
         PixelCastJustification::MovingDownToChildren);
     mBuilder->PushClip(aStackingContext.ToRelativeWrRect(clipRect), mask.ptrOr(nullptr));
@@ -134,7 +134,7 @@ ScrollingLayersHelper::PushLayerClip(const LayerClip& aClip,
 {
   LayerRect clipRect = IntRectToRect(ViewAs<LayerPixel>(aClip.GetClipRect(),
         PixelCastJustification::MovingDownToChildren));
-  Maybe<WrImageMask> mask;
+  Maybe<wr::WrImageMask> mask;
   if (Maybe<size_t> maskLayerIndex = aClip.GetMaskLayerIndex()) {
     Layer* maskLayer = mLayer->GetLayer()->GetAncestorMaskLayerAt(maskLayerIndex.value());
     WebRenderLayer* maskWrLayer = WebRenderLayer::ToWebRenderLayer(maskLayer);

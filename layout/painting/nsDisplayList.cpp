@@ -4176,7 +4176,7 @@ nsDisplayBackgroundColor::CreateWebRenderCommands(mozilla::wr::DisplayListBuilde
 
   LayoutDeviceRect bounds = LayoutDeviceRect::FromAppUnits(
         mBackgroundRect, mFrame->PresContext()->AppUnitsPerDevPixel());
-  WrRect transformedRect = aSc.ToRelativeWrRect(bounds);
+  wr::WrRect transformedRect = aSc.ToRelativeWrRect(bounds);
 
   aBuilder.PushRect(transformedRect,
                     transformedRect,
@@ -4690,8 +4690,8 @@ nsDisplayCaret::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilde
   LayoutDeviceRect devHookRect = LayoutDeviceRect::FromAppUnits(
     hookRect + ToReferenceFrame(), appUnitsPerDevPixel);
 
-  WrRect caret = aSc.ToRelativeWrRectRounded(devCaretRect);
-  WrRect hook = aSc.ToRelativeWrRectRounded(devHookRect);
+  wr::WrRect caret = aSc.ToRelativeWrRectRounded(devCaretRect);
+  wr::WrRect hook = aSc.ToRelativeWrRectRounded(devHookRect);
 
   // Note, WR will pixel snap anything that is layout aligned.
   aBuilder.PushRect(caret,
@@ -4969,9 +4969,9 @@ nsDisplayBorder::CreateBorderImageWebRenderCommands(mozilla::wr::DisplayListBuil
 
   LayoutDeviceRect destRect = LayoutDeviceRect::FromAppUnits(
     mBorderImageRenderer->mArea, appUnitsPerDevPixel);
-  WrRect dest = aSc.ToRelativeWrRectRounded(destRect);
+  wr::WrRect dest = aSc.ToRelativeWrRectRounded(destRect);
 
-  WrRect clip = dest;
+  wr::WrRect clip = dest;
   if (!mBorderImageRenderer->mClip.IsEmpty()) {
     LayoutDeviceRect clipRect = LayoutDeviceRect::FromAppUnits(
       mBorderImageRenderer->mClip, appUnitsPerDevPixel);
@@ -5017,8 +5017,8 @@ nsDisplayBorder::CreateBorderImageWebRenderCommands(mozilla::wr::DisplayListBuil
         nsCSSGradientRenderer::Create(mFrame->PresContext(), gradientData,
                                       mBorderImageRenderer->mImageSize);
 
-      WrGradientExtendMode extendMode;
-      nsTArray<WrGradientStop> stops;
+      wr::WrGradientExtendMode extendMode;
+      nsTArray<wr::WrGradientStop> stops;
       LayoutDevicePoint lineStart;
       LayoutDevicePoint lineEnd;
       LayoutDeviceSize gradientRadius;
@@ -5350,8 +5350,8 @@ nsDisplayBoxShadowOuter::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder
 
       LayoutDeviceRect deviceBox = LayoutDeviceRect::FromAppUnits(
           shadowRect, appUnitsPerDevPixel);
-      WrRect deviceBoxRect = aSc.ToRelativeWrRectRounded(deviceBox);
-      WrRect deviceClipRect = aSc.ToRelativeWrRect(clipRect);
+      wr::WrRect deviceBoxRect = aSc.ToRelativeWrRectRounded(deviceBox);
+      wr::WrRect deviceClipRect = aSc.ToRelativeWrRect(clipRect);
 
       // TODO: support non-uniform border radius.
       float borderRadius = hasBorderRadius ? borderRadii.TopLeft().width
@@ -5366,7 +5366,7 @@ nsDisplayBoxShadowOuter::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder
                              blurRadius,
                              spreadRadius,
                              borderRadius,
-                             WrBoxShadowClipMode::Outset);
+                             wr::WrBoxShadowClipMode::Outset);
     }
   }
 
@@ -5503,7 +5503,7 @@ nsDisplayBoxShadowInner::CreateInsetBoxShadowWebRenderCommands(mozilla::wr::Disp
       // Now translate everything to device pixels.
       Rect deviceBoxRect = LayoutDeviceRect::FromAppUnits(
           shadowRect, appUnitsPerDevPixel).ToUnknownRect();
-      WrRect deviceClipRect = aSc.ToRelativeWrRect(clipRect);
+      wr::WrRect deviceClipRect = aSc.ToRelativeWrRect(clipRect);
       Color shadowColor = nsCSSRendering::GetShadowColor(shadowItem, aFrame, 1.0);
 
       Point shadowOffset;
@@ -5524,7 +5524,7 @@ nsDisplayBoxShadowInner::CreateInsetBoxShadowWebRenderCommands(mozilla::wr::Disp
                              blurRadius,
                              spreadRadius,
                              borderRadius,
-                             WrBoxShadowClipMode::Inset
+                             wr::WrBoxShadowClipMode::Inset
                              );
     }
   }
@@ -7583,7 +7583,7 @@ nsDisplayTransform::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBu
 
   // TODO: generate animationsId for OMTA.
   uint64_t animationsId = 0;
-  nsTArray<WrFilterOp> filters;
+  nsTArray<wr::WrFilterOp> filters;
   StackingContextHelper sc(aSc,
                            aBuilder,
                            bounds,

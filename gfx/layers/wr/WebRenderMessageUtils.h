@@ -106,26 +106,26 @@ struct ParamTraits<mozilla::wr::PipelineId>
 };
 
 template<>
-struct ParamTraits<WrImageFormat>
+struct ParamTraits<mozilla::wr::WrImageFormat>
   : public ContiguousEnumSerializer<
-        WrImageFormat,
-        WrImageFormat::Invalid,
-        WrImageFormat::Sentinel>
+        mozilla::wr::WrImageFormat,
+        mozilla::wr::WrImageFormat::Invalid,
+        mozilla::wr::WrImageFormat::Sentinel>
 {
 };
 
 template<>
-struct ParamTraits<WrSize>
+struct ParamTraits<mozilla::wr::WrSize>
 {
   static void
-  Write(Message* aMsg, const WrSize& aParam)
+  Write(Message* aMsg, const mozilla::wr::WrSize& aParam)
   {
     WriteParam(aMsg, aParam.width);
     WriteParam(aMsg, aParam.height);
   }
 
   static bool
-  Read(const Message* aMsg, PickleIterator* aIter, WrSize* aResult)
+  Read(const Message* aMsg, PickleIterator* aIter, mozilla::wr::WrSize* aResult)
   {
     return ReadParam(aMsg, aIter, &aResult->width)
         && ReadParam(aMsg, aIter, &aResult->height);
@@ -133,10 +133,10 @@ struct ParamTraits<WrSize>
 };
 
 template<>
-struct ParamTraits<WrRect>
+struct ParamTraits<mozilla::wr::WrRect>
 {
   static void
-  Write(Message* aMsg, const WrRect& aParam)
+  Write(Message* aMsg, const mozilla::wr::WrRect& aParam)
   {
     WriteParam(aMsg, aParam.x);
     WriteParam(aMsg, aParam.y);
@@ -145,7 +145,7 @@ struct ParamTraits<WrRect>
   }
 
   static bool
-  Read(const Message* aMsg, PickleIterator* aIter, WrRect* aResult)
+  Read(const Message* aMsg, PickleIterator* aIter, mozilla::wr::WrRect* aResult)
   {
     return ReadParam(aMsg, aIter, &aResult->x)
         && ReadParam(aMsg, aIter, &aResult->y)
@@ -155,17 +155,17 @@ struct ParamTraits<WrRect>
 };
 
 template<>
-struct ParamTraits<WrPoint>
+struct ParamTraits<mozilla::wr::WrPoint>
 {
   static void
-  Write(Message* aMsg, const WrPoint& aParam)
+  Write(Message* aMsg, const mozilla::wr::WrPoint& aParam)
   {
     WriteParam(aMsg, aParam.x);
     WriteParam(aMsg, aParam.y);
   }
 
   static bool
-  Read(const Message* aMsg, PickleIterator* aIter, WrPoint* aResult)
+  Read(const Message* aMsg, PickleIterator* aIter, mozilla::wr::WrPoint* aResult)
   {
     return ReadParam(aMsg, aIter, &aResult->x) &&
            ReadParam(aMsg, aIter, &aResult->y);
@@ -173,10 +173,10 @@ struct ParamTraits<WrPoint>
 };
 
 template<>
-struct ParamTraits<WrImageMask>
+struct ParamTraits<mozilla::wr::WrImageMask>
 {
   static void
-  Write(Message* aMsg, const WrImageMask& aParam)
+  Write(Message* aMsg, const mozilla::wr::WrImageMask& aParam)
   {
     WriteParam(aMsg, aParam.image);
     WriteParam(aMsg, aParam.rect);
@@ -184,7 +184,7 @@ struct ParamTraits<WrImageMask>
   }
 
   static bool
-  Read(const Message* aMsg, PickleIterator* aIter, WrImageMask* aResult)
+  Read(const Message* aMsg, PickleIterator* aIter, mozilla::wr::WrImageMask* aResult)
   {
     return ReadParam(aMsg, aIter, &aResult->image)
         && ReadParam(aMsg, aIter, &aResult->rect)
@@ -193,35 +193,35 @@ struct ParamTraits<WrImageMask>
 };
 
 template<>
-struct ParamTraits<WrImageRendering>
+struct ParamTraits<mozilla::wr::WrImageRendering>
   : public ContiguousEnumSerializer<
-        WrImageRendering,
-        WrImageRendering::Auto,
-        WrImageRendering::Sentinel>
+        mozilla::wr::WrImageRendering,
+        mozilla::wr::WrImageRendering::Auto,
+        mozilla::wr::WrImageRendering::Sentinel>
 {
 };
 
 template<>
-struct ParamTraits<WrMixBlendMode>
+struct ParamTraits<mozilla::wr::WrMixBlendMode>
   : public ContiguousEnumSerializer<
-        WrMixBlendMode,
-        WrMixBlendMode::Normal,
-        WrMixBlendMode::Sentinel>
+        mozilla::wr::WrMixBlendMode,
+        mozilla::wr::WrMixBlendMode::Normal,
+        mozilla::wr::WrMixBlendMode::Sentinel>
 {
 };
 
 template<>
-struct ParamTraits<WrBuiltDisplayListDescriptor>
+struct ParamTraits<mozilla::wr::WrBuiltDisplayListDescriptor>
 {
   static void
-  Write(Message* aMsg, const WrBuiltDisplayListDescriptor& aParam)
+  Write(Message* aMsg, const mozilla::wr::WrBuiltDisplayListDescriptor& aParam)
   {
     WriteParam(aMsg, aParam.builder_start_time);
     WriteParam(aMsg, aParam.builder_finish_time);
   }
 
   static bool
-  Read(const Message* aMsg, PickleIterator* aIter, WrBuiltDisplayListDescriptor* aResult)
+  Read(const Message* aMsg, PickleIterator* aIter, mozilla::wr::WrBuiltDisplayListDescriptor* aResult)
   {
     return ReadParam(aMsg, aIter, &aResult->builder_start_time)
         && ReadParam(aMsg, aIter, &aResult->builder_finish_time);
