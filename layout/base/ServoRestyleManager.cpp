@@ -407,6 +407,7 @@ ServoRestyleManager::ProcessPostTraversal(Element* aElement,
 
     if (styleFrame) {
       styleFrame->UpdateStyleOfOwnedAnonBoxes(childrenRestyleState);
+      UpdateFramePseudoElementStyles(styleFrame, childrenRestyleState);
     }
 
     if (!aElement->GetParent()) {
@@ -455,14 +456,6 @@ ServoRestyleManager::ProcessPostTraversal(Element* aElement,
         recreatedAnyContext |= ProcessPostTraversalForText(n, textState);
       }
     }
-  }
-
-  // We want to update frame pseudo-element styles after we've traversed our
-  // kids, because some of those updates (::first-line/::first-letter) need to
-  // modify the styles of the kids, and the child traversal above would just
-  // clobber those modifications.
-  if (recreateContext && styleFrame) {
-    UpdateFramePseudoElementStyles(styleFrame, childrenRestyleState);
   }
 
   aElement->UnsetHasDirtyDescendantsForServo();
