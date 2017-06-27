@@ -5090,11 +5090,7 @@ ContentParent::RecvGetFilesRequest(const nsID& aUUID,
 mozilla::ipc::IPCResult
 ContentParent::RecvDeleteGetFilesRequest(const nsID& aUUID)
 {
-  GetFilesHelper* helper = mGetFilesPendingRequests.GetWeak(aUUID);
-  if (helper) {
-    mGetFilesPendingRequests.Remove(aUUID);
-  }
-
+  mGetFilesPendingRequests.Remove(aUUID);
   return IPC_OK();
 }
 
@@ -5102,9 +5098,8 @@ void
 ContentParent::SendGetFilesResponseAndForget(const nsID& aUUID,
                                              const GetFilesResponseResult& aResult)
 {
-  GetFilesHelper* helper = mGetFilesPendingRequests.GetWeak(aUUID);
-  if (helper) {
-    mGetFilesPendingRequests.Remove(aUUID);
+  if (auto entry = mGetFilesPendingRequests.Lookup(aUUID)) {
+    entry.Remove();
     Unused << SendGetFilesResponse(aUUID, aResult);
   }
 }
