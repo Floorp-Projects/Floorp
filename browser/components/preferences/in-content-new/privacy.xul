@@ -408,7 +408,7 @@
     <hbox align="start">
       <vbox flex="1">
         <description>
-          &trackingProtection.description;
+          &trackingProtection2.description;
         </description>
       </vbox>
       <spacer flex="1"/>
@@ -417,7 +417,7 @@
       <vbox id="trackingProtectionBox" flex="1" hidden="true">
         <description id="trackingProtectionDesc"
                      control="trackingProtectionRadioGroup">
-          &trackingProtection.radioGroupLabel;
+          &trackingProtection2.radioGroupLabel;
            <label id="trackingProtectionLearnMore" class="learnMore text-link">&trackingProtectionLearnMore.label;</label>
         </description>
         <radiogroup id="trackingProtectionRadioGroup" aria-labelledby="trackingProtectionDesc">
