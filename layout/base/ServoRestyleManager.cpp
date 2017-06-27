@@ -341,8 +341,9 @@ ServoRestyleManager::ProcessPostTraversal(Element* aElement,
   // ServoComputedValues case, which uses atomic refcounting.
   //
   // Hold the old style context alive, because it could become a dangling
-  // pointer during the replacement. In practice it's not a huge deal, but
-  // better not playing with dangling pointers if not needed.
+  // pointer during the replacement. In practice it's not a huge deal (on
+  // GetNextContinuationWithSameStyle the pointer is not dereferenced, only
+  // compared), but better not playing with dangling pointers if not needed.
   RefPtr<nsStyleContext> oldStyleContext =
     styleFrame ? styleFrame->StyleContext() : nullptr;
 
@@ -388,17 +389,14 @@ ServoRestyleManager::ProcessPostTraversal(Element* aElement,
 
     newContext->EnsureSameStructsCached(oldStyleContext);
 
-    // We want to walk all the continuations here, even the ones with different
-    // styles.  In practice, the only reason we get continuations with different
-    // styles here is ::first-line (::first-letter never affects element
-    // styles).  But in that case, newContext is the right context for the
-    // _later_ continuations anyway (the ones not affected by ::first-line), not
-    // the earlier ones, so there is no point stopping right at the point when
-    // we'd actually be setting the right style context.
-    //
-    // This does mean that we may be setting the wrong style context on our
-    // initial continuations; ::first-line fixes that up after the fact.
-    for (nsIFrame* f = styleFrame; f; f = f->GetNextContinuation()) {
+    // XXX This could not always work as expected: there are kinds of content
+    // with the first split and the last sharing style, but others not. We
+    // should handle those properly.
+    // XXXbz I think the UpdateStyleOfOwnedAnonBoxes call below handles _that_
+    // right, but not other cases where we happen to have different styles on
+    // different continuations... (e.g. first-line).
+    for (nsIFrame* f = styleFrame; f;
+         f = GetNextContinuationWithSameStyle(f, oldStyleContext)) {
       f->SetStyleContext(newContext);
     }
 
@@ -495,18 +493,8 @@ ServoRestyleManager::ProcessPostTraversalForText(
   nsStyleContext& newContext = aPostTraversalState.ComputeStyle(aTextNode);
   aPostTraversalState.ComputeHintIfNeeded(aTextNode, primaryFrame, newContext);
 
-  // We want to walk all the continuations here, even the ones with different
-  // styles.  In practice, the only reasons we get continuations with different
-  // styles are ::first-line and ::first-letter.  But in those cases,
-  // newContext is the right context for the _later_ continuations anyway (the
-  // ones not affected by ::first-line/::first-letter), not the earlier ones,
-  // so there is no point stopping right at the point when we'd actually be
-  // setting the right style context.
-  //
-  // This does mean that we may be setting the wrong style context on our
-  // initial continuations; ::first-line/::first-letter fix that up after the
-  // fact.
-  for (nsIFrame* f = primaryFrame; f; f = f->GetNextContinuation()) {
+  for (nsIFrame* f = primaryFrame; f;
+       f = GetNextContinuationWithSameStyle(f, oldStyleContext)) {
     f->SetStyleContext(&newContext);
   }
 
