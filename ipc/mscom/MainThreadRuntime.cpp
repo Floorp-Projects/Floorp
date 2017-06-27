@@ -10,7 +10,7 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/UniquePtr.h"
-#include "nsDebug.h"
+#include "mozilla/WindowsVersion.h"
 #include "nsWindowsHelpers.h"
 #include "nsXULAppAPI.h"
 
@@ -34,6 +34,29 @@ struct LocalFreeDeleter
 // This API from oleaut32.dll is not declared in Windows SDK headers
 extern "C" void __cdecl SetOaNoCache(void);
 
+#if defined(ACCESSIBILITY)
+static WORD
+GetActCtxResourceId()
+{
+  // The manifest for 32-bit Windows is embedded with resource ID 32.
+  // The manifest for 64-bit Windows is embedded with resource ID 64.
+  // Beginning with Windows 10 Creators Update, 32-bit builds use the 64-bit
+  // manifest.
+  WORD actCtxResourceId;
+#if defined(HAVE_64BIT_BUILD)
+  actCtxResourceId = 64;
+#else
+  if (mozilla::IsWin10CreatorsUpdateOrLater()) {
+    actCtxResourceId = 64;
+  } else {
+    actCtxResourceId = 32;
+  }
+#endif // defined(HAVE_64BIT_BUILD)
+
+  return actCtxResourceId;
+}
+#endif // defined(ACCESSIBILITY)
+
 namespace mozilla {
 namespace mscom {
 
@@ -41,6 +64,9 @@ MainThreadRuntime* MainThreadRuntime::sInstance = nullptr;
 
 MainThreadRuntime::MainThreadRuntime()
   : mInitResult(E_UNEXPECTED)
+#if defined(ACCESSIBILITY)
+  , mActCtxRgn(::GetActCtxResourceId())
+#endif // defined(ACCESSIBILITY)
 {
   // We must be the outermost COM initialization on this thread. The COM runtime
   // cannot be configured once we start manipulating objects
