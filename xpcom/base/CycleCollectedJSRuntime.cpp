@@ -1246,12 +1246,11 @@ CycleCollectedJSRuntime::DeferredFinalize(DeferredFinalizeAppendFunction aAppend
                                           DeferredFinalizeFunction aFunc,
                                           void* aThing)
 {
-  void* thingArray = nullptr;
-  bool hadThingArray = mDeferredFinalizerTable.Get(aFunc, &thingArray);
-
-  thingArray = aAppendFunc(thingArray, aThing);
-  if (!hadThingArray) {
-    mDeferredFinalizerTable.Put(aFunc, thingArray);
+  if (auto entry = mDeferredFinalizerTable.LookupForAdd(aFunc)) {
+    aAppendFunc(entry.Data(), aThing);
+  } else {
+    entry.OrInsert(
+      [aAppendFunc, aThing] () { return aAppendFunc(nullptr, aThing); });
   }
 }
 
