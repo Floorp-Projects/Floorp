@@ -142,6 +142,7 @@ public:
                            nsIAtom* aAttribute,
                            int32_t aModType,
                            const nsAttrValue* aNewValue);
+  void ClassAttributeWillBeChangedBySMIL(dom::Element* aElement);
 
   void AttributeChanged(dom::Element* aElement, int32_t aNameSpaceID,
                         nsIAtom* aAttribute, int32_t aModType,
@@ -217,6 +218,9 @@ private:
   const SnapshotTable& Snapshots() const { return mSnapshots; }
   void ClearSnapshots();
   ServoElementSnapshot& SnapshotFor(mozilla::dom::Element* aElement);
+  void TakeSnapshotForAttributeChange(mozilla::dom::Element* aElement,
+                                      int32_t aNameSpaceID,
+                                      nsIAtom* aAttribute);
 
   void DoProcessPendingRestyles(TraversalRestyleBehavior aRestyleBehavior);
 
