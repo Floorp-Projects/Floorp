@@ -25,10 +25,9 @@ derivedInstance.testCPN(derivedInstance);
 let obj = { test: derivedInstance.test };
 obj.test(obj);
 
+// Classes are strict, so primitives are not boxed/turned into globals
 let testSolo = derivedInstance.test;
-// Hah! The engine is not prepared for non-object receivers, since this couldn't
-// happen before. Hope Waldo fixes this soon as he claims he will :)
-assertThrowsInstanceOf(() =>testSolo(undefined), TypeError);
+testSolo(undefined);
 
 let anotherObject = { };
 derivedInstance.test.call(anotherObject, anotherObject);
