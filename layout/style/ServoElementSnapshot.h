@@ -13,6 +13,7 @@
 #include "nsAttrName.h"
 #include "nsAttrValue.h"
 #include "nsChangeHint.h"
+#include "nsGkAtoms.h"
 #include "nsIAtom.h"
 
 namespace mozilla {
@@ -150,6 +151,12 @@ public:
     return nullptr;
   }
 
+  const nsAttrValue* GetClasses() const
+  {
+    MOZ_ASSERT(HasAttrs());
+    return &mClass;
+  }
+
   bool IsInChromeDocument() const { return mIsInChromeDocument; }
   bool SupportsLangAttr() const { return mSupportsLangAttr; }
 
@@ -173,6 +180,7 @@ private:
   // though it can be wasted space if we deal with a lot of state-only
   // snapshots.
   nsTArray<ServoAttrSnapshot> mAttrs;
+  nsAttrValue mClass;
   ServoStateType mState;
   Flags mContains;
   bool mIsHTMLElementInHTMLDocument : 1;
