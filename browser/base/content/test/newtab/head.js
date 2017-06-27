@@ -328,7 +328,7 @@ async function addNewTabPageTab() {
  * Compares the current grid arrangement with the given pattern.
  * @param the pattern (see below)
  *
- * Example: checkGrid("3p,2,,1p")
+ * Example: checkGrid("3p,2,,4p")
  * Result: We expect the first cell to contain the pinned site 'http://example3.com/'.
  *         The second cell contains 'http://example2.com/'. The third cell is empty.
  *         The fourth cell contains the pinned site 'http://example4.com/'.
