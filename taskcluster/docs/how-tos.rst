@@ -252,3 +252,54 @@ Something Else?
 
 If you make another change not described here that turns out to be simple or
 common, please include an update to this file in your patch.
+
+
+Schedule a Task on Try
+----------------------
+
+There are two methods for scheduling a task on try.
+
+The first method is a command line string called ``try syntax`` which is passed
+into the decision task via the commit message. An example try syntax might look
+like:
+
+.. parsed-literal::
+
+    try: -b o -p linux64 -u mochitest-1 -t none
+
+This gets parsed by ``taskgraph.try_option_syntax:TryOptionSyntax`` and returns
+a list of matching task labels. For more information see the
+`TryServer wiki page <https://wiki.mozilla.org/Try>`_.
+
+The second method uses a checked-in file called ``try_task_config.json`` which
+lives at the root of the source dir. The format of this file is either a list
+of task labels, or a JSON object where task labels make up the keys. For
+example, the ``try_task_config.json`` file might look like:
+
+.. parsed-literal::
+
+    [
+      "test-windows10-64/opt-web-platform-tests-12",
+      "test-windows7-32/opt-reftest-1",
+      "test-windows7-32/opt-reftest-2",
+      "test-windows7-32/opt-reftest-3",
+      "build-linux64/debug",
+      "source-test-mozlint-eslint"
+    ]
+
+Very simply, this will run any task label that gets passed in as well as their
+dependencies. While it is possible to manually commit this file and push to
+try, it is mainly meant to be a generation target for various trychooser tools.
+
+A list of all possible task labels can be obtained by running:
+
+.. parsed-literal::
+
+    $ ./mach taskgraph tasks
+
+A list of task labels relevant to a tree (defaults to mozilla-central) can be
+obtained with:
+
+.. parsed-literal::
+
+    $ ./mach taskgraph target
