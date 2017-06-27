@@ -4936,7 +4936,11 @@ nsTreeBodyFrame::FireInvalidateEvent(int32_t aStartRowIdx, int32_t aEndRowIdx,
 class nsOverflowChecker : public Runnable
 {
 public:
-  explicit nsOverflowChecker(nsTreeBodyFrame* aFrame) : mFrame(aFrame) {}
+  explicit nsOverflowChecker(nsTreeBodyFrame* aFrame)
+    : mozilla::Runnable("nsOverflowChecker")
+    , mFrame(aFrame)
+  {
+  }
   NS_IMETHOD Run() override
   {
     if (mFrame.IsAlive()) {

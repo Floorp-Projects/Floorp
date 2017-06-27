@@ -254,7 +254,10 @@ nsNativeAppSupportUnix::InteractCB(SmcConn smc_conn, SmPointer client_data)
   // means we won't process any more. libsm hates us if we do the InteractDone
   // with a pending ShutdownCancelled, and we would certainly like to handle Die
   // whilst a dialog is displayed
-  NS_DispatchToCurrentThread(NewRunnableMethod(self, &nsNativeAppSupportUnix::DoInteract));
+  NS_DispatchToCurrentThread(
+    NewRunnableMethod("nsNativeAppSupportUnix::DoInteract",
+                      self,
+                      &nsNativeAppSupportUnix::DoInteract));
 }
 
 void

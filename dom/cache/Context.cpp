@@ -736,8 +736,10 @@ Context::ThreadsafeHandle::AllowToClose()
 
   // Dispatch is guaranteed to succeed here because we block shutdown until
   // all Contexts have been destroyed.
-  nsCOMPtr<nsIRunnable> runnable =
-    NewRunnableMethod(this, &ThreadsafeHandle::AllowToCloseOnOwningThread);
+  nsCOMPtr<nsIRunnable> runnable = NewRunnableMethod(
+    "dom::cache::Context::ThreadsafeHandle::AllowToCloseOnOwningThread",
+    this,
+    &ThreadsafeHandle::AllowToCloseOnOwningThread);
   MOZ_ALWAYS_SUCCEEDS(
     mOwningEventTarget->Dispatch(runnable.forget(), nsIThread::DISPATCH_NORMAL));
 }
@@ -752,8 +754,11 @@ Context::ThreadsafeHandle::InvalidateAndAllowToClose()
 
   // Dispatch is guaranteed to succeed here because we block shutdown until
   // all Contexts have been destroyed.
-  nsCOMPtr<nsIRunnable> runnable =
-    NewRunnableMethod(this, &ThreadsafeHandle::InvalidateAndAllowToCloseOnOwningThread);
+  nsCOMPtr<nsIRunnable> runnable = NewRunnableMethod(
+    "dom::cache::Context::ThreadsafeHandle::"
+    "InvalidateAndAllowToCloseOnOwningThread",
+    this,
+    &ThreadsafeHandle::InvalidateAndAllowToCloseOnOwningThread);
   MOZ_ALWAYS_SUCCEEDS(
     mOwningEventTarget->Dispatch(runnable.forget(), nsIThread::DISPATCH_NORMAL));
 }

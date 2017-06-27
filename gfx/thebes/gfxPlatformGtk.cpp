@@ -652,7 +652,10 @@ public:
       if (!mVsyncThread.Start())
         return false;
 
-      RefPtr<Runnable> vsyncSetup = NewRunnableMethod(this, &GLXDisplay::SetupGLContext);
+      RefPtr<Runnable> vsyncSetup =
+        NewRunnableMethod("GLXVsyncSource::GLXDisplay::SetupGLContext",
+                          this,
+                          &GLXDisplay::SetupGLContext);
       mVsyncThread.message_loop()->PostTask(vsyncSetup.forget());
       // Wait until the setup has completed.
       lock.Wait();
@@ -724,7 +727,8 @@ public:
       // If the task has not nulled itself out, it hasn't yet realized
       // that vsync was disabled earlier, so continue its execution.
       if (!mVsyncTask) {
-        mVsyncTask = NewRunnableMethod(this, &GLXDisplay::RunVsync);
+        mVsyncTask = NewRunnableMethod(
+          "GLXVsyncSource::GLXDisplay::RunVsync", this, &GLXDisplay::RunVsync);
         RefPtr<Runnable> addrefedTask = mVsyncTask;
         mVsyncThread.message_loop()->PostTask(addrefedTask.forget());
       }
@@ -748,7 +752,8 @@ public:
       DisableVsync();
 
       // Cleanup thread-specific resources before shutting down.
-      RefPtr<Runnable> shutdownTask = NewRunnableMethod(this, &GLXDisplay::Cleanup);
+      RefPtr<Runnable> shutdownTask = NewRunnableMethod(
+        "GLXVsyncSource::GLXDisplay::Cleanup", this, &GLXDisplay::Cleanup);
       mVsyncThread.message_loop()->PostTask(shutdownTask.forget());
 
       // Stop, waiting for the cleanup task to finish execution.

@@ -6,12 +6,27 @@
 
 # TODO: bug 1172551 - get these tests working on iOS
 if CONFIG['MOZ_WIDGET_TOOLKIT'] != 'uikit':
+    if CONFIG['OS_TARGET'] == 'Linux':
+        DEFINES['WEBRTC_LINUX'] = True
+        DEFINES['WEBRTC_POSIX'] = True
+    elif CONFIG['OS_TARGET'] == 'Darwin':
+        DEFINES['WEBRTC_MAC'] = True
+        DEFINES['WEBRTC_POSIX'] = True
+    elif CONFIG['OS_TARGET'] == 'WINNT':
+        DEFINES['WEBRTC_WIN'] = True
+
     LOCAL_INCLUDES += [
+      '/dom/media',
       '/ipc/chromium/src',
       '/media/mtransport',
+      '/media/mtransport/test',
+      '/media/mtransport/third_party/nrappkit/src/registry',
       '/media/webrtc/',
       '/media/webrtc/signaling/src/common/time_profiling',
+      '/media/webrtc/signaling/src/media-conduit',
+      '/media/webrtc/signaling/src/mediapipeline',
       '/media/webrtc/signaling/src/peerconnection',
+      '/media/webrtc/trunk',
     ]
 
     SOURCES += [
@@ -19,6 +34,12 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] != 'uikit':
         'jsep_track_unittest.cpp',
         'sdp_unittests.cpp',
     ]
+
+    # See Bug 1372950, mediapipeline tests seem to cause crashes on Windows
+    if CONFIG['OS_TARGET'] == 'Linux' or CONFIG['OS_TARGET'] == 'Darwin':
+        SOURCES += [
+            'mediapipeline_unittest.cpp',
+        ]
 
     FINAL_LIBRARY = 'xul-gtest'
 

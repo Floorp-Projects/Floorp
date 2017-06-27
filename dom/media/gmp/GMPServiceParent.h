@@ -145,9 +145,12 @@ private:
       REMOVE_AND_DELETE_FROM_DISK,
     };
 
-    PathRunnable(GeckoMediaPluginServiceParent* aService, const nsAString& aPath,
-                 EOperation aOperation, bool aDefer = false)
-      : mService(aService)
+    PathRunnable(GeckoMediaPluginServiceParent* aService,
+                 const nsAString& aPath,
+                 EOperation aOperation,
+                 bool aDefer = false)
+      : Runnable("gmp::GeckoMediaPluginServiceParent::PathRunnable")
+      , mService(aService)
       , mPath(aPath)
       , mOperation(aOperation)
       , mDefer(aDefer)

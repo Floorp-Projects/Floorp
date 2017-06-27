@@ -33,6 +33,7 @@
 using namespace mozilla;
 using namespace mozilla::a11y;
 
+#define NSAccessibilityDOMIdentifierAttribute @"AXDOMIdentifier"
 #define NSAccessibilityMathRootRadicandAttribute @"AXMathRootRadicand"
 #define NSAccessibilityMathRootIndexAttribute @"AXMathRootIndex"
 #define NSAccessibilityMathFractionNumeratorAttribute @"AXMathFractionNumerator"
@@ -159,6 +160,7 @@ ConvertToNSArray(nsTArray<ProxyAccessible*>& aArray)
 - (NSArray*)additionalAccessibilityAttributeNames
 {
   NSMutableArray* additional = [NSMutableArray array];
+  [additional addObject:NSAccessibilityDOMIdentifierAttribute];
   switch (mRole) {
     case roles::MATHML_ROOT:
       [additional addObject:NSAccessibilityMathRootIndexAttribute];
@@ -321,6 +323,14 @@ ConvertToNSArray(nsTArray<ProxyAccessible*>& aArray)
   }
   if ([attribute isEqualToString:NSAccessibilityHelpAttribute])
     return [self help];
+  if ([attribute isEqualToString:NSAccessibilityDOMIdentifierAttribute]) {
+    nsAutoString id;
+    if (accWrap)
+      nsCoreUtils::GetID(accWrap->GetContent(), id);
+    else
+      proxy->DOMNodeID(id);
+    return nsCocoaUtils::ToNSString(id);
+  }
 
   switch (mRole) {
   case roles::MATHML_ROOT:
@@ -886,9 +896,6 @@ ConvertToNSArray(nsTArray<ProxyAccessible*>& aArray)
     case roles::ALERT:
       return @"AXApplicationAlert";
 
-    case roles::SEPARATOR:
-      return @"AXContentSeparator";
-
     case roles::PROPERTYPAGE:
       return @"AXTabPanel";
 
@@ -910,6 +917,7 @@ ConvertToNSArray(nsTArray<ProxyAccessible*>& aArray)
     // macOS added an AXSubrole value to distinguish generic AXGroup objects
     // from those which are AXGroups as a result of an explicit ARIA role,
     // such as the non-landmark, non-listitem text containers in DPub ARIA.
+    case roles::FOOTNOTE:
     case roles::SECTION:
       if (roleAtom)
         return @"AXApplicationGroup";
@@ -948,6 +956,7 @@ static const RoleDescrMap sRoleDescrMap[] = {
   { @"AXLandmarkContentInfo", NS_LITERAL_STRING("content") },
   { @"AXLandmarkMain", NS_LITERAL_STRING("main") },
   { @"AXLandmarkNavigation", NS_LITERAL_STRING("navigation") },
+  { @"AXLandmarkRegion", NS_LITERAL_STRING("region") },
   { @"AXLandmarkSearch", NS_LITERAL_STRING("search") },
   { @"AXSearchField", NS_LITERAL_STRING("searchTextField") },
   { @"AXTabPanel", NS_LITERAL_STRING("tabPanel") },
@@ -968,6 +977,9 @@ struct RoleDescrComparator
 {
   if (mRole == roles::DOCUMENT)
     return utils::LocalizedString(NS_LITERAL_STRING("htmlContent"));
+
+  if (mRole == roles::HEADING)
+    return utils::LocalizedString(NS_LITERAL_STRING("heading"));
 
   NSString* subrole = [self subrole];
 

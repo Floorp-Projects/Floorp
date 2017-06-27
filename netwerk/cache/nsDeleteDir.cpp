@@ -21,7 +21,10 @@ using namespace mozilla;
 
 class nsBlockOnBackgroundThreadEvent : public Runnable {
 public:
-  nsBlockOnBackgroundThreadEvent() {}
+  nsBlockOnBackgroundThreadEvent()
+    : mozilla::Runnable("nsBlockOnBackgroundThreadEvent")
+  {
+  }
   NS_IMETHOD Run() override
   {
     MutexAutoLock lock(nsDeleteDir::gInstance->mLock);
@@ -390,8 +393,11 @@ nsDeleteDir::PostTimer(void *arg, uint32_t delay)
   if (NS_FAILED(rv))
     return rv;
 
-  rv = timer->InitWithFuncCallback(TimerCallback, arg, delay,
-                                   nsITimer::TYPE_ONE_SHOT);
+  rv = timer->InitWithNamedFuncCallback(TimerCallback,
+                                        arg,
+                                        delay,
+                                        nsITimer::TYPE_ONE_SHOT,
+                                        "nsDeleteDir::PostTimer");
   if (NS_FAILED(rv))
     return rv;
 

@@ -1254,7 +1254,10 @@ public:
   WorkerThreadPrimaryRunnable(WorkerPrivate* aWorkerPrivate,
                               WorkerThread* aThread,
                               JSRuntime* aParentRuntime)
-  : mWorkerPrivate(aWorkerPrivate), mThread(aThread), mParentRuntime(aParentRuntime)
+    : mozilla::Runnable("WorkerThreadPrimaryRunnable")
+    , mWorkerPrivate(aWorkerPrivate)
+    , mThread(aThread)
+    , mParentRuntime(aParentRuntime)
   {
     MOZ_ASSERT(aWorkerPrivate);
     MOZ_ASSERT(aThread);

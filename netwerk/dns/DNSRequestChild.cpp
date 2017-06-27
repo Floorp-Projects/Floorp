@@ -165,7 +165,8 @@ class CancelDNSRequestEvent : public Runnable
 {
 public:
   CancelDNSRequestEvent(DNSRequestChild* aDnsReq, nsresult aReason)
-    : mDnsRequest(aDnsReq)
+    : Runnable("net::CancelDNSRequestEvent")
+    , mDnsRequest(aDnsReq)
     , mReasonForCancel(aReason)
   {}
 
@@ -215,7 +216,9 @@ DNSRequestChild::StartRequest()
     SystemGroup::Dispatch(
       "StartDNSRequestChild",
       TaskCategory::Other,
-      NewRunnableMethod(this, &DNSRequestChild::StartRequest));
+      NewRunnableMethod("net::DNSRequestChild::StartRequest",
+                        this,
+                        &DNSRequestChild::StartRequest));
     return;
   }
 
@@ -279,7 +282,9 @@ DNSRequestChild::RecvLookupCompleted(const DNSRequestResponse& reply)
     CallOnLookupComplete();
   } else {
     nsCOMPtr<nsIRunnable> event =
-      NewRunnableMethod(this, &DNSRequestChild::CallOnLookupComplete);
+      NewRunnableMethod("net::DNSRequestChild::CallOnLookupComplete",
+                        this,
+                        &DNSRequestChild::CallOnLookupComplete);
     mTarget->Dispatch(event, NS_DISPATCH_NORMAL);
   }
 

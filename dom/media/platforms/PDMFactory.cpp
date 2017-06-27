@@ -191,7 +191,7 @@ PDMFactory::EnsureInit() const
   // Not on the main thread -> Sync-dispatch creation to main thread.
   nsCOMPtr<nsIEventTarget> mainTarget = GetMainThreadEventTarget();
   nsCOMPtr<nsIRunnable> runnable =
-    NS_NewRunnableFunction([]() {
+    NS_NewRunnableFunction("PDMFactory::EnsureInit", []() {
       StaticMutexAutoLock mon(sMonitor);
       if (!sInstance) {
         sInstance = new PDMFactoryImpl();

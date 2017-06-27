@@ -44,8 +44,11 @@ private:
     class ChangeEvent : public mozilla::Runnable {
     public:
         NS_DECL_NSIRUNNABLE
-        ChangeEvent(nsINetworkLinkService *aService, const char *aEventID)
-            : mService(aService), mEventID(aEventID) {
+        ChangeEvent(nsINetworkLinkService* aService, const char* aEventID)
+          : mozilla::Runnable("nsNotifyAddrListener::ChangeEvent")
+          , mService(aService)
+          , mEventID(aEventID)
+        {
         }
     private:
         nsCOMPtr<nsINetworkLinkService> mService;

@@ -83,9 +83,10 @@ private:
 
 class RestoreSelectionState : public Runnable {
 public:
-  RestoreSelectionState(nsTextEditorState *aState, nsTextControlFrame *aFrame)
-    : mFrame(aFrame),
-      mTextEditorState(aState)
+  RestoreSelectionState(nsTextEditorState* aState, nsTextControlFrame* aFrame)
+    : mozilla::Runnable("RestoreSelectionState")
+    , mFrame(aFrame)
+    , mTextEditorState(aState)
   {
   }
 
@@ -1238,10 +1239,11 @@ nsTextEditorState::GetSelectionController() const
 // Helper class, used below in BindToFrame().
 class PrepareEditorEvent : public Runnable {
 public:
-  PrepareEditorEvent(nsTextEditorState &aState,
-                     nsIContent *aOwnerContent,
-                     const nsAString &aCurrentValue)
-    : mState(&aState)
+  PrepareEditorEvent(nsTextEditorState& aState,
+                     nsIContent* aOwnerContent,
+                     const nsAString& aCurrentValue)
+    : mozilla::Runnable("PrepareEditorEvent")
+    , mState(&aState)
     , mOwnerContent(aOwnerContent)
     , mCurrentValue(aCurrentValue)
   {
@@ -2854,15 +2856,8 @@ nsTextEditorState::UpdateOverlayTextVisibility(bool aNotify)
   mPreviewVisibility = valueIsEmpty && !previewValue.IsEmpty();
   mPlaceholderVisibility = valueIsEmpty && previewValue.IsEmpty();
 
-  static bool sPrefCached = false;
-  static bool sPrefShowOnFocus = true;
-  if (!sPrefCached) {
-    sPrefCached = true;
-    Preferences::AddBoolVarCache(&sPrefShowOnFocus,
-                                 "dom.placeholder.show_on_focus", true);
-  }
-
-  if (mPlaceholderVisibility && !sPrefShowOnFocus) {
+  if (mPlaceholderVisibility &&
+      !nsContentUtils::ShowInputPlaceholderOnFocus()) {
     nsCOMPtr<nsIContent> content = do_QueryInterface(mTextCtrlElement);
     mPlaceholderVisibility = !nsContentUtils::IsFocusedContent(content);
   }

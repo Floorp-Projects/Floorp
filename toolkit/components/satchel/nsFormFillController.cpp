@@ -149,8 +149,11 @@ nsFormFillController::AttributeChanged(nsIDocument* aDocument,
     // to avoid ending up in an endless loop due to re-registering our
     // mutation observer (which would notify us again for *this* event).
     nsCOMPtr<nsIRunnable> event =
-      mozilla::NewRunnableMethod<nsCOMPtr<nsIDOMHTMLInputElement>>
-      (this, &nsFormFillController::MaybeStartControllingInput, focusedInput);
+      mozilla::NewRunnableMethod<nsCOMPtr<nsIDOMHTMLInputElement>>(
+        "nsFormFillController::MaybeStartControllingInput",
+        this,
+        &nsFormFillController::MaybeStartControllingInput,
+        focusedInput);
     NS_DispatchToCurrentThread(event);
   }
 

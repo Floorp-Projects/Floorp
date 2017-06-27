@@ -18,7 +18,8 @@ class PlayingRefChangeHandler final : public Runnable
 public:
   enum ChangeType { ADDREF, RELEASE };
   PlayingRefChangeHandler(AudioNodeStream* aStream, ChangeType aChange)
-    : mStream(aStream)
+    : Runnable("dom::PlayingRefChangeHandler")
+    , mStream(aStream)
     , mChange(aChange)
   {
   }

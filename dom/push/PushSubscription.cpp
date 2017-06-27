@@ -141,9 +141,9 @@ NS_IMPL_ISUPPORTS(WorkerUnsubscribeResultCallback, nsIUnsubscribeResultCallback)
 class UnsubscribeRunnable final : public Runnable
 {
 public:
-  UnsubscribeRunnable(PromiseWorkerProxy* aProxy,
-                      const nsAString& aScope)
-    : mProxy(aProxy)
+  UnsubscribeRunnable(PromiseWorkerProxy* aProxy, const nsAString& aScope)
+    : Runnable("dom::UnsubscribeRunnable")
+    , mProxy(aProxy)
     , mScope(aScope)
   {
     MOZ_ASSERT(aProxy);

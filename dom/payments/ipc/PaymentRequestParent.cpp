@@ -167,7 +167,8 @@ PaymentRequestParent::RespondPayment(nsIPaymentActionResponse* aResponse)
     nsCOMPtr<nsIPaymentActionCallback> self = do_QueryInterface(this);
     MOZ_ASSERT(self);
     nsCOMPtr<nsIPaymentActionResponse> response = aResponse;
-    nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction([self, response] ()
+    nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction("PaymentRequestParent::RespondPayment",
+                                                     [self, response] ()
     {
       self->RespondPayment(response);
     });
@@ -265,7 +266,8 @@ PaymentRequestParent::ChangeShippingAddress(const nsAString& aRequestId,
     nsCOMPtr<nsIPaymentActionCallback> self = this;
     nsCOMPtr<nsIPaymentAddress> address = aAddress;
     nsAutoString requestId(aRequestId);
-    nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction([self, requestId, address] ()
+    nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction("dom::PaymentRequestParent::ChangeShippingAddress",
+                                                     [self, requestId, address] ()
     {
       self->ChangeShippingAddress(requestId, address);
     });
@@ -350,7 +352,8 @@ PaymentRequestParent::ChangeShippingOption(const nsAString& aRequestId,
     nsCOMPtr<nsIPaymentActionCallback> self = this;
     nsAutoString requestId(aRequestId);
     nsAutoString option(aOption);
-    nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction([self, requestId, option] ()
+    nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction("dom::PaymentRequestParent::ChangeShippingOption",
+                                                     [self, requestId, option] ()
     {
       self->ChangeShippingOption(requestId, option);
     });

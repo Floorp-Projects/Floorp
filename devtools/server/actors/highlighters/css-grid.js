@@ -1161,7 +1161,11 @@ CssGridHighlighter.prototype = extend(AutoRefreshHighlighter.prototype, {
       let fragment = this.gridData[i];
 
       for (let area of fragment.areas) {
-        let { rowStart, rowEnd, columnStart, columnEnd } = area;
+        let { rowStart, rowEnd, columnStart, columnEnd, type } = area;
+
+        if (type === "implicit") {
+          continue;
+        }
 
         // Draw the line edges for the grid area
         const areaColStart = fragment.cols.lines[columnStart - 1];

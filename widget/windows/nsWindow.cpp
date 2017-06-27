@@ -5326,7 +5326,8 @@ nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
       if (wParam == TRUE &&
           !gfxEnv::DisableForcePresent() &&
           gfxWindowsPlatform::GetPlatform()->DwmCompositionEnabled()) {
-        NS_DispatchToMainThread(NewRunnableMethod(this, &nsWindow::ForcePresent));
+        NS_DispatchToMainThread(NewRunnableMethod("nsWindow::ForcePresent",
+                                                  this, &nsWindow::ForcePresent));
       }
 
       // let the dwm handle nc painting on glass

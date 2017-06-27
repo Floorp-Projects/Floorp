@@ -3271,7 +3271,7 @@ class WidgetsReleaserRunnable final : public mozilla::Runnable
 {
 public:
   explicit WidgetsReleaserRunnable(nsTArray<nsCOMPtr<nsIWidget>>&& aWidgetArray)
-    : mWidgetArray(aWidgetArray)
+    : mozilla::Runnable("WidgetsReleaserRunnable"), mWidgetArray(aWidgetArray)
   {
   }
 

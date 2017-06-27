@@ -463,6 +463,7 @@ static void
 ScheduleSendAllPluginsCaptured(CompositorBridgeChild* aThis, MessageLoop* aLoop)
 {
   aLoop->PostTask(NewNonOwningRunnableMethod(
+    "CompositorBridgeChild::SendAllPluginsCaptured",
     aThis, &CompositorBridgeChild::SendAllPluginsCaptured));
 }
 #endif

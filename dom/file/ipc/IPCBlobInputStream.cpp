@@ -46,7 +46,8 @@ public:
 private:
   CallbackRunnable(nsIInputStreamCallback* aCallback,
                    IPCBlobInputStream* aStream)
-    : mCallback(aCallback)
+    : CancelableRunnable("dom::CallbackRunnable")
+    , mCallback(aCallback)
     , mStream(aStream)
   {
     MOZ_ASSERT(mCallback);

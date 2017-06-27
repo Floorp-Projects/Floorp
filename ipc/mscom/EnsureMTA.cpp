@@ -17,6 +17,7 @@ namespace {
 class EnterMTARunnable : public mozilla::Runnable
 {
 public:
+  EnterMTARunnable() : mozilla::Runnable("EnterMTARunnable") {}
   NS_IMETHOD Run() override
   {
     mozilla::DebugOnly<HRESULT> hr = ::CoInitializeEx(nullptr,
@@ -41,7 +42,7 @@ public:
   ~BackgroundMTAData()
   {
     if (mThread) {
-      mThread->Dispatch(NS_NewRunnableFunction(&::CoUninitialize),
+      mThread->Dispatch(NS_NewRunnableFunction("BackgroundMTAData::~BackgroundMTAData", &::CoUninitialize),
                         NS_DISPATCH_NORMAL);
       mThread->Shutdown();
     }

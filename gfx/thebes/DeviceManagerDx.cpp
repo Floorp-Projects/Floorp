@@ -634,7 +634,8 @@ static void
 DisableAdvancedLayers(FeatureStatus aStatus, const nsCString aMessage, const nsCString& aFailureId)
 {
   if (!NS_IsMainThread()) {
-    NS_DispatchToMainThread(NS_NewRunnableFunction([aStatus, aMessage, aFailureId] () -> void {
+    NS_DispatchToMainThread(NS_NewRunnableFunction("DisableAdvancedLayers",
+                                                   [aStatus, aMessage, aFailureId] () -> void {
       DisableAdvancedLayers(aStatus, aMessage, aFailureId);
     }));
     return;
@@ -1071,7 +1072,8 @@ DeviceManagerDx::PreloadAttachmentsOnCompositorThread()
 
   bool enableAL = gfxConfig::IsEnabled(Feature::ADVANCED_LAYERS);
 
-  RefPtr<Runnable> task = NS_NewRunnableFunction([enableAL]() -> void {
+  RefPtr<Runnable> task = NS_NewRunnableFunction("DeviceManagerDx::PreloadAttachmentsOnCompositorThread",
+                                                 [enableAL]() -> void {
     if (DeviceManagerDx* dm = DeviceManagerDx::Get()) {
       if (enableAL) {
         dm->GetMLGDevice();

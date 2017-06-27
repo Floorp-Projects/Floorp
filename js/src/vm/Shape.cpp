@@ -1129,7 +1129,7 @@ StackBaseShape::hash(const Lookup& lookup)
 }
 
 /* static */ inline bool
-StackBaseShape::match(ReadBarriered<UnownedBaseShape*> key, const Lookup& lookup)
+StackBaseShape::match(const ReadBarriered<UnownedBaseShape*>& key, const Lookup& lookup)
 {
     return key.unbarrieredGet()->flags == lookup.flags &&
            key.unbarrieredGet()->clasp_ == lookup.clasp;

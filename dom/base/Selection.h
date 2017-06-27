@@ -323,11 +323,13 @@ private:
                                  nsIPresShell::ScrollAxis aVertical,
                                  nsIPresShell::ScrollAxis aHorizontal,
                                  int32_t aFlags)
-      : mSelection(aSelection),
-        mRegion(aRegion),
-        mVerticalScroll(aVertical),
-        mHorizontalScroll(aHorizontal),
-        mFlags(aFlags) {
+      : Runnable("dom::Selection::ScrollSelectionIntoViewEvent")
+      , mSelection(aSelection)
+      , mRegion(aRegion)
+      , mVerticalScroll(aVertical)
+      , mHorizontalScroll(aHorizontal)
+      , mFlags(aFlags)
+    {
       NS_ASSERTION(aSelection, "null parameter");
     }
     void Revoke() { mSelection = nullptr; }

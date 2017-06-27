@@ -301,6 +301,7 @@ bool nsContentUtils::sGetBoxQuadsEnabled = false;
 bool nsContentUtils::sSkipCursorMoveForSameValueSet = false;
 bool nsContentUtils::sRequestIdleCallbackEnabled = false;
 bool nsContentUtils::sLowerNetworkPriority = false;
+bool nsContentUtils::sShowInputPlaceholderOnFocus = true;
 #ifndef RELEASE_OR_BETA
 bool nsContentUtils::sBypassCSSOMOriginCheck = false;
 #endif
@@ -712,6 +713,9 @@ nsContentUtils::Init()
 
   Preferences::AddBoolVarCache(&sLowerNetworkPriority,
                                "privacy.trackingprotection.lower_network_priority", false);
+
+  Preferences::AddBoolVarCache(&sShowInputPlaceholderOnFocus,
+                               "dom.placeholder.show_on_focus", true);
 
   Preferences::AddBoolVarCache(&sIsBytecodeCacheEnabled,
                                "dom.script_loader.bytecode_cache.enabled", false);
@@ -5309,12 +5313,16 @@ nsContentUtils::IsInSameAnonymousTree(const nsINode* aNode,
 
 class AnonymousContentDestroyer : public Runnable {
 public:
-  explicit AnonymousContentDestroyer(nsCOMPtr<nsIContent>* aContent) {
+  explicit AnonymousContentDestroyer(nsCOMPtr<nsIContent>* aContent)
+    : mozilla::Runnable("AnonymousContentDestroyer")
+  {
     mContent.swap(*aContent);
     mParent = mContent->GetParent();
     mDoc = mContent->OwnerDoc();
   }
-  explicit AnonymousContentDestroyer(nsCOMPtr<Element>* aElement) {
+  explicit AnonymousContentDestroyer(nsCOMPtr<Element>* aElement)
+    : mozilla::Runnable("AnonymousContentDestroyer")
+  {
     mContent = aElement->forget();
     mParent = mContent->GetParent();
     mDoc = mContent->OwnerDoc();
@@ -10547,9 +10555,9 @@ nsContentUtils::UserInteractionObserver::Init()
   // started yet. It will have started by the time we have the chance to spin
   // the event loop.
   RefPtr<UserInteractionObserver> self = this;
-  NS_DispatchToMainThread(NS_NewRunnableFunction([=] () {
-        HangMonitor::RegisterAnnotator(*self);
-      }));
+  NS_DispatchToMainThread(
+    NS_NewRunnableFunction("nsContentUtils::UserInteractionObserver::Init",
+                           [=]() { HangMonitor::RegisterAnnotator(*self); }));
 }
 
 void

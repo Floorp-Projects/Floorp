@@ -482,7 +482,11 @@ protected:
   class ScrollEvent : public mozilla::Runnable {
   public:
     NS_DECL_NSIRUNNABLE
-    explicit ScrollEvent(nsTreeBodyFrame *aInner) : mInner(aInner) {}
+    explicit ScrollEvent(nsTreeBodyFrame* aInner)
+      : mozilla::Runnable("nsTreeBodyFrame::ScrollEvent")
+      , mInner(aInner)
+    {
+    }
     void Revoke() { mInner = nullptr; }
   private:
     nsTreeBodyFrame* mInner;
