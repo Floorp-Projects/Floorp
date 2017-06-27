@@ -872,12 +872,6 @@ public:
   template<class F>
   GFX2D_API RectTyped<TargetUnits, F> TransformBounds(const RectTyped<SourceUnits, F>& aRect) const
   {
-    Point4DTyped<TargetUnits, F> verts[4];
-    verts[0] = TransformPoint(Point4DTyped<SourceUnits, F>(aRect.x, aRect.y, 0.0, 1.0));
-    verts[1] = TransformPoint(Point4DTyped<SourceUnits, F>(aRect.XMost(), aRect.y, 0.0, 1.0));
-    verts[2] = TransformPoint(Point4DTyped<SourceUnits, F>(aRect.XMost(), aRect.YMost(), 0.0, 1.0));
-    verts[3] = TransformPoint(Point4DTyped<SourceUnits, F>(aRect.x, aRect.YMost(), 0.0, 1.0));
-
     PointTyped<TargetUnits, F> quad[4];
     F min_x, max_x;
     F min_y, max_y;
