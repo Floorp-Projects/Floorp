@@ -1539,17 +1539,16 @@ ContentParent::RemoveFromList()
       }
     }
   } else if (sBrowserContentParents) {
-    nsTArray<ContentParent*>* contentParents =
-      sBrowserContentParents->Get(mRemoteType);
-    if (contentParents) {
+    if (auto entry = sBrowserContentParents->Lookup(mRemoteType)) {
+      nsTArray<ContentParent*>* contentParents = entry.Data();
       contentParents->RemoveElement(this);
       if (contentParents->IsEmpty()) {
-        sBrowserContentParents->Remove(mRemoteType);
-        if (sBrowserContentParents->IsEmpty()) {
-          delete sBrowserContentParents;
-          sBrowserContentParents = nullptr;
-        }
+        entry.Remove();
       }
+    }
+    if (sBrowserContentParents->IsEmpty()) {
+      delete sBrowserContentParents;
+      sBrowserContentParents = nullptr;
     }
   }
 
