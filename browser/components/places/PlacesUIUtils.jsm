@@ -603,7 +603,7 @@ this.PlacesUIUtils = {
 
     let title = aData.type != PlacesUtils.TYPE_UNICODE ? aData.title
                                                        : aData.uri;
-    return PlacesTransactions.NewBookmark({ uri: NetUtil.newURI(aData.uri),
+    return PlacesTransactions.NewBookmark({ url: Services.io.newURI(aData.uri),
                                             title,
                                             parentGuid: aNewParentGuid,
                                             index: aIndex });
