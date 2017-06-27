@@ -3,15 +3,44 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
-<org.mozilla.gecko.widget.themed.ThemedTextView xmlns:android="http://schemas.android.com/apk/res/android"
-                                         android:layout_width="24dip"
-                                         android:layout_height="24dip"
-                                         android:layout_margin="12dip"
-                                         android:paddingTop="2dip"
-                                         android:paddingLeft="4dip"
-                                         android:background="@drawable/tabs_count_foreground"
-                                         android:textAppearance="@style/TextAppearance.Micro"
-                                         android:textColor="@color/text_and_tabs_tray_grey"
-                                         android:textStyle="bold"
-                                         android:duplicateParentState="true"
-                                         android:gravity="center"/>
+<merge
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:background="@android:color/black"
+    tools:layout_height="24dp"
+    tools:layout_width="24dp"
+    tools:orientation="vertical"
+    tools:parentTag="LinearLayout">
+
+    <org.mozilla.gecko.widget.themed.ThemedFrameLayout
+        android:id="@+id/counter_box"
+        android:layout_width="20dp"
+        android:layout_height="20dp"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginLeft="2dp"
+        android:layout_marginRight="2dp"
+        android:layout_marginTop="0.5dp"
+        android:background="@drawable/tabs_counter_box">
+
+        <org.mozilla.gecko.widget.themed.ThemedTextView
+            android:id="@+id/counter_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:textColor="@color/tabs_counter_text"
+            android:textSize="12sp"
+            android:textStyle="bold"
+            tools:text="18"/>
+    </org.mozilla.gecko.widget.themed.ThemedFrameLayout>
+
+    <org.mozilla.gecko.widget.themed.ThemedFrameLayout
+        android:id="@+id/counter_bar"
+        android:layout_width="20dp"
+        android:layout_height="2dp"
+        android:layout_below="@id/counter_box"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginLeft="2dp"
+        android:layout_marginRight="2dp"
+        android:layout_marginTop="1dp"
+        android:background="@drawable/tabs_counter_bar"/>
+</merge>
