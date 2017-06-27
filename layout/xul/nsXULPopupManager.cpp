@@ -771,7 +771,7 @@ nsXULPopupManager::ShowMenu(nsIContent *aMenu,
   }
   else {
     nsCOMPtr<nsIContent> popupContent = popupFrame->GetContent();
-    FirePopupShowingEvent(popupContent, parentIsContextMenu, aSelectFirstItem, nullptr);
+    FirePopupShowingEvent(popupContent, parentIsContextMenu, aSelectFirstItem);
   }
 }
 
@@ -795,7 +795,7 @@ nsXULPopupManager::ShowPopup(nsIContent* aPopup,
   popupFrame->InitializePopup(aAnchorContent, triggerContent, aPosition,
                               aXPos, aYPos, MenuPopupAnchorType_Node, aAttributesOverride);
 
-  FirePopupShowingEvent(aPopup, aIsContextMenu, aSelectFirstItem, aTriggerEvent);
+  FirePopupShowingEvent(aPopup, aIsContextMenu, aSelectFirstItem);
 }
 
 void
@@ -812,7 +812,7 @@ nsXULPopupManager::ShowPopupAtScreen(nsIContent* aPopup,
   InitTriggerEvent(aTriggerEvent, aPopup, getter_AddRefs(triggerContent));
 
   popupFrame->InitializePopupAtScreen(triggerContent, aXPos, aYPos, aIsContextMenu);
-  FirePopupShowingEvent(aPopup, aIsContextMenu, false, aTriggerEvent);
+  FirePopupShowingEvent(aPopup, aIsContextMenu, false);
 }
 
 void
@@ -833,7 +833,7 @@ nsXULPopupManager::ShowPopupAtScreenRect(nsIContent* aPopup,
   popupFrame->InitializePopupAtRect(triggerContent, aPosition,
                                     aRect, aAttributesOverride);
 
-  FirePopupShowingEvent(aPopup, aIsContextMenu, false, aTriggerEvent);
+  FirePopupShowingEvent(aPopup, aIsContextMenu, false);
 }
 
 void
@@ -862,7 +862,7 @@ nsXULPopupManager::ShowTooltipAtScreen(nsIContent* aPopup,
 
   popupFrame->InitializePopupAtScreen(aTriggerContent, aXPos, aYPos, false);
 
-  FirePopupShowingEvent(aPopup, false, false, nullptr);
+  FirePopupShowingEvent(aPopup, false, false);
 }
 
 void
@@ -881,7 +881,7 @@ nsXULPopupManager::ShowPopupWithAnchorAlign(nsIContent* aPopup,
 
   popupFrame->InitializePopupWithAnchorAlign(aAnchorContent, aAnchor,
                                              aAlign, aXPos, aYPos);
-  FirePopupShowingEvent(aPopup, aIsContextMenu, false, nullptr);
+  FirePopupShowingEvent(aPopup, aIsContextMenu, false);
 }
 
 static void
@@ -1429,8 +1429,7 @@ nsXULPopupManager::ExecuteMenu(nsIContent* aMenu, nsXULMenuCommandEvent* aEvent)
 void
 nsXULPopupManager::FirePopupShowingEvent(nsIContent* aPopup,
                                          bool aIsContextMenu,
-                                         bool aSelectFirstItem,
-                                         nsIDOMEvent* aTriggerEvent)
+                                         bool aSelectFirstItem)
 {
   nsCOMPtr<nsIContent> popup = aPopup; // keep a strong reference to the popup
 
@@ -1474,14 +1473,6 @@ nsXULPopupManager::FirePopupShowingEvent(nsIContent* aPopup,
   }
   else {
     event.mWidget = nullptr;
-  }
-
-  if (aTriggerEvent) {
-    WidgetMouseEventBase* mouseEvent =
-      aTriggerEvent->WidgetEventPtr()->AsMouseEventBase();
-    if (mouseEvent) {
-      event.inputSource = mouseEvent->inputSource;
-    }
   }
 
   event.mRefPoint = mCachedMousePoint;
@@ -2749,7 +2740,7 @@ nsXULPopupShowingEvent::Run()
 {
   nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
   if (pm) {
-    pm->FirePopupShowingEvent(mPopup, mIsContextMenu, mSelectFirstItem, nullptr);
+    pm->FirePopupShowingEvent(mPopup, mIsContextMenu, mSelectFirstItem);
   }
 
   return NS_OK;
