@@ -106,7 +106,7 @@ class PublishBalrog(MercurialScript, BuildbotMixin):
             "--verbose",
         ])
         for r in channel_config["publish_rules"]:
-            cmd.extend(["--rules", r])
+            cmd.extend(["--rules", str(r)])
         if channel_config.get("schedule_asap"):
             # RC releases going to the beta channel have no ETA set for the
             # RC-to-beta push. The corresponding task is scheduled after we
