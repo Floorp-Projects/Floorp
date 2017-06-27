@@ -43,6 +43,9 @@ with Files("test/newtab/**"):
 with Files("test/pageinfo/**"):
     BUG_COMPONENT = ("Firefox", "Page Info Window")
 
+with Files("test/performance/browser_appmenu_reflows.js"):
+    BUG_COMPONENT = ("Firefox", "Menus")
+
 with Files("test/permissions/**"):
     BUG_COMPONENT = ("Firefox", "Preferences")
 
