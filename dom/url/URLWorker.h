@@ -11,11 +11,6 @@
 #include "URLMainThread.h"
 
 namespace mozilla {
-
-namespace net {
-class nsStandardURL;
-}
-
 namespace dom {
 
 namespace workers {
@@ -48,11 +43,7 @@ public:
   IsValidURL(const GlobalObject& aGlobal, const nsAString& aUrl,
              ErrorResult& aRv);
 
-  explicit URLWorker(workers::WorkerPrivate* aWorkerPrivate);
-
-  void
-  Init(const nsAString& aURL, const Optional<nsAString>& aBase,
-       ErrorResult& aRv);
+  URLWorker(workers::WorkerPrivate* aWorkerPrivate, URLProxy* aURLProxy);
 
   virtual void
   GetHref(nsAString& aHref, ErrorResult& aRv) const override;
@@ -119,12 +110,14 @@ public:
   virtual void
   SetSearchInternal(const nsAString& aSearch, ErrorResult& aRv) override;
 
+  URLProxy*
+  GetURLProxy() const;
+
 private:
   ~URLWorker();
 
   workers::WorkerPrivate* mWorkerPrivate;
   RefPtr<URLProxy> mURLProxy;
-  RefPtr<net::nsStandardURL> mStdURL;
 };
 
 } // namespace dom
