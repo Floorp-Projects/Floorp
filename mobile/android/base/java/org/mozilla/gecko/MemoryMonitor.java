@@ -117,10 +117,10 @@ class MemoryMonitor extends BroadcastReceiver implements ComponentCallbacks2 {
                 // TRIM_MEMORY_MODERATE is the highest level we'll respond to while backgrounded
                 increaseMemoryPressure(MEMORY_PRESSURE_HIGH);
                 break;
-            case ComponentCallbacks2.TRIM_MEMORY_RUNNING_MODERATE:
+            case ComponentCallbacks2.TRIM_MEMORY_RUNNING_LOW:
                 increaseMemoryPressure(MEMORY_PRESSURE_MEDIUM);
                 break;
-            case ComponentCallbacks2.TRIM_MEMORY_RUNNING_LOW:
+            case ComponentCallbacks2.TRIM_MEMORY_RUNNING_MODERATE:
                 increaseMemoryPressure(MEMORY_PRESSURE_LOW);
                 break;
             case ComponentCallbacks2.TRIM_MEMORY_UI_HIDDEN:
