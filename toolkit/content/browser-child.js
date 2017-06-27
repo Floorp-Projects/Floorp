@@ -72,15 +72,12 @@ var WebProgressListener = {
     if (aWebProgress) {
       let domWindowID = null;
       try {
-        let utils = aWebProgress.DOMWindow.QueryInterface(Ci.nsIInterfaceRequestor)
-                                .getInterface(Ci.nsIDOMWindowUtils);
-        domWindowID = utils.outerWindowID;
-        innerWindowID = utils.currentInnerWindowID;
+        domWindowID = aWebProgress.DOMWindowID;
+        innerWindowID = aWebProgress.innerDOMWindowID;
       } catch (e) {
-        // If nsDocShell::Destroy has already been called, then we'll
-        // get NS_NOINTERFACE when trying to get the DOM window.
-        // If there is no current inner window, we'll get
-        // NS_ERROR_NOT_AVAILABLE.
+        // The DOM Window ID getters above may throw if the inner or outer
+        // windows aren't created yet or are destroyed at the time we're making
+        // this call but that isn't fatal so ignore the exceptions here.
       }
 
       aWebProgress = {
