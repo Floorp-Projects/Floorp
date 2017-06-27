@@ -12661,8 +12661,8 @@
   "SANDBOX_HAS_SECCOMP_TSYNC": {
     "record_in_processes": ["main", "content"],
     "alert_emails": ["gcp@mozilla.com"],
-    "bug_numbers": [1098428],
-    "expires_in_version": "55",
+    "bug_numbers": [1098428, 1370578],
+    "expires_in_version": "61",
     "kind": "boolean",
     "cpp_guard": "XP_LINUX",
     "description": "Whether the system has seccomp-bpf thread-sync capability"
@@ -12670,8 +12670,8 @@
   "SANDBOX_HAS_USER_NAMESPACES": {
     "record_in_processes": ["main", "content"],
     "alert_emails": ["gcp@mozilla.com"],
-    "bug_numbers": [1098428],
-    "expires_in_version": "55",
+    "bug_numbers": [1098428, 1370578],
+    "expires_in_version": "61",
     "kind": "boolean",
     "cpp_guard": "XP_LINUX",
     "description": "Whether our process succedeed in creating a user namespace"
@@ -12679,8 +12679,8 @@
   "SANDBOX_HAS_USER_NAMESPACES_PRIVILEGED": {
     "record_in_processes": ["main", "content"],
     "alert_emails": ["gcp@mozilla.com"],
-    "bug_numbers": [1098428],
-    "expires_in_version": "55",
+    "bug_numbers": [1098428, 1370578],
+    "expires_in_version": "61",
     "kind": "boolean",
     "cpp_guard": "XP_LINUX",
     "description": "Whether the system has the capability to create privileged user namespaces"
