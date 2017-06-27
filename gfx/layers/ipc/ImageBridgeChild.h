@@ -21,6 +21,7 @@
 #include "nsDebug.h"                    // for NS_RUNTIMEABORT
 #include "nsIObserver.h"
 #include "nsRegion.h"                   // for nsIntRegion
+#include "nsRefPtrHashtable.h"
 #include "mozilla/gfx/Rect.h"
 #include "mozilla/ReentrantMonitor.h"   // for ReentrantMonitor, etc
 
@@ -392,7 +393,7 @@ private:
    * Hold TextureClients refs until end of their usages on host side.
    * It defer calling of TextureClient recycle callback.
    */
-  nsDataHashtable<nsUint64HashKey, RefPtr<TextureClient> > mTexturesWaitingRecycled;
+  nsRefPtrHashtable<nsUint64HashKey, TextureClient> mTexturesWaitingRecycled;
 
   /**
    * Mapping from async compositable IDs to image containers.
