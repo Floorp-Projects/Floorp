@@ -1317,7 +1317,19 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
           if (!this._deferredKeyEventQueue.length &&
               (this.popup.selectedIndex != 0 || this.gotResultForCurrentQuery)) {
-            this.maybeCanonizeURL(event, this.value);
+            let canonizeValue = this.value;
+            if (event.shiftKey || (AppConstants.platform === "macosx" ?
+                                   event.metaKey :
+                                   event.ctrlKey)) {
+              let action = this._parseActionUrl(canonizeValue);
+              if (action && "searchSuggestion" in action.params) {
+                canonizeValue = action.params.searchSuggestion;
+              } else if (this.popup.selectedIndex === 0 &&
+                         this.mController.getStyleAt(0).includes("autofill")) {
+                canonizeValue = this.handleEnterSearchString;
+              }
+            }
+            this.maybeCanonizeURL(event, canonizeValue);
             let handled = this.mController.handleEnter(false, event);
             this.handleEnterSearchString = null;
             this.popup.overrideValue = null;
