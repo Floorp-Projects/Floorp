@@ -289,7 +289,7 @@ var addProperty = Task.async(function* (view, ruleIndex, name, value,
   // triggers a ruleview-changed event (see bug 1209295).
   let onPreview = view.once("ruleview-changed");
   editor.input.value = value;
-  view.throttle.flush();
+  view.debounce.flush();
   yield onPreview;
 
   let onValueAdded = view.once("ruleview-changed");
@@ -328,7 +328,7 @@ var setProperty = Task.async(function* (view, textProp, value,
   } else {
     EventUtils.sendString(value, view.styleWindow);
   }
-  view.throttle.flush();
+  view.debounce.flush();
   yield onPreview;
 
   let onValueDone = view.once("ruleview-changed");
