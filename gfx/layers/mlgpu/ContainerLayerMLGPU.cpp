@@ -49,6 +49,12 @@ ContainerLayerMLGPU::OnPrepareToRender(FrameBuilder* aBuilder)
   return true;
 }
 
+void
+ContainerLayerMLGPU::OnLayerManagerChange(LayerManagerMLGPU* aManager)
+{
+  ClearCachedResources();
+}
+
 RefPtr<MLGRenderTarget>
 ContainerLayerMLGPU::UpdateRenderTarget(MLGDevice* aDevice, MLGRenderTargetFlags aFlags)
 {
