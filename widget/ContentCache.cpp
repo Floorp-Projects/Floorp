@@ -1162,8 +1162,13 @@ ContentCacheInParent::OnEventNeedingAckHandled(nsIWidget* aWidget,
 
   MOZ_LOG(sContentCacheLog, LogLevel::Info,
     ("0x%p OnEventNeedingAckHandled(aWidget=0x%p, "
-     "aMessage=%s), mPendingEventsNeedingAck=%u",
-     this, aWidget, ToChar(aMessage), mPendingEventsNeedingAck));
+     "aMessage=%s), mPendingEventsNeedingAck=%u, mPendingCompositionCount=%" PRIu8,
+     this, aWidget, ToChar(aMessage), mPendingEventsNeedingAck, mPendingCompositionCount));
+
+  if (WidgetCompositionEvent::IsFollowedByCompositionEnd(aMessage)) {
+    MOZ_RELEASE_ASSERT(mPendingCompositionCount > 0);
+    mPendingCompositionCount--;
+  }
 
   MOZ_RELEASE_ASSERT(mPendingEventsNeedingAck > 0);
   if (--mPendingEventsNeedingAck) {
@@ -1171,17 +1176,6 @@ ContentCacheInParent::OnEventNeedingAckHandled(nsIWidget* aWidget,
   }
 
   FlushPendingNotifications(aWidget);
-}
-
-void
-ContentCacheInParent::OnDestroyTextComposition()
-{
-  MOZ_LOG(sContentCacheLog, LogLevel::Info,
-    ("0x%p OnDestroyTextComposition(), "
-     "mPendingEventsNeedingAck=%u, mPendingCompositionCount=%" PRIu8,
-     this, mPendingEventsNeedingAck, mPendingCompositionCount));
-  MOZ_RELEASE_ASSERT(mPendingCompositionCount > 0);
-  mPendingCompositionCount--;
 }
 
 bool
