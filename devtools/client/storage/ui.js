@@ -299,7 +299,7 @@ StorageUI.prototype = {
    *  @param {Array} editableFields
    *         An array of keys of columns to be made editable
    */
-  makeFieldsEditable: function (editableFields) {
+  makeFieldsEditable: function* (editableFields) {
     if (editableFields && editableFields.length > 0) {
       this.table.makeFieldsEditable(editableFields);
     } else if (this.table._editableFieldsEngine) {
@@ -318,7 +318,7 @@ StorageUI.prototype = {
    * the table and repopulates the sidebar with that item's data if the item
    * being removed was selected.
    */
-  removeItemFromTable: Task.async(function* (name) {
+  removeItemFromTable: function (name) {
     if (this.table.isSelected(name) && this.table.items.size > 1) {
       if (this.table.selectedIndex == 0) {
         this.table.selectNextRow();
@@ -328,8 +328,8 @@ StorageUI.prototype = {
     }
 
     this.table.remove(name);
-    yield this.updateObjectSidebar();
-  }),
+    this.updateObjectSidebar();
+  },
 
   /**
    * Event handler for "stores-cleared" event coming from the storage actor.
@@ -401,36 +401,30 @@ StorageUI.prototype = {
    *        of the changed store objects. This array is empty for deleted object
    *        if the host was completely removed.
    */
-  onUpdate: Task.async(function* ({ changed, added, deleted }) {
+  onUpdate: function ({ changed, added, deleted }) {
+    if (deleted) {
+      this.handleDeletedItems(deleted);
+    }
+
     if (added) {
-      yield this.handleAddedItems(added);
+      this.handleAddedItems(added);
     }
 
     if (changed) {
-      yield this.handleChangedItems(changed);
-    }
-
-    // We are dealing with batches of changes here. Deleted **MUST** come last in case it
-    // is in the same batch as added and changed events e.g.
-    //   - An item is changed then deleted in the same batch: deleted then changed will
-    //     display an item that has been deleted.
-    //   - An item is added then deleted in the same batch: deleted then added will
-    //     display an item that has been deleted.
-    if (deleted) {
-      this.handleDeletedItems(deleted);
+      this.handleChangedItems(changed);
     }
 
     if (added || deleted || changed) {
       this.emit("store-objects-updated");
     }
-  }),
+  },
 
   /**
    * Handle added items received by onUpdate
    *
    * @param {object} See onUpdate docs
    */
-  handleAddedItems: Task.async(function* (added) {
+  handleAddedItems: function (added) {
     for (let type in added) {
       for (let host in added[type]) {
         this.tree.add([type, {id: host, type: "url"}]);
@@ -443,8 +437,8 @@ StorageUI.prototype = {
             this.tree.add([type, host, ...name]);
             if (!this.tree.selectedItem) {
               this.tree.selectedItem = [type, host, name[0], name[1]];
-              yield this.fetchStorageObjects(type, host, [JSON.stringify(name)],
-                                             REASON.NEW_ROW);
+              this.fetchStorageObjects(type, host, [JSON.stringify(name)],
+                                       REASON.NEW_ROW);
             }
           } catch (ex) {
             // Do nothing
@@ -452,19 +446,19 @@ StorageUI.prototype = {
         }
 
         if (this.tree.isSelected([type, host])) {
-          yield this.fetchStorageObjects(type, host, added[type][host],
-                                         REASON.NEW_ROW);
+          this.fetchStorageObjects(type, host, added[type][host],
+                                   REASON.NEW_ROW);
         }
       }
     }
-  }),
+  },
 
   /**
    * Handle deleted items received by onUpdate
    *
    * @param {object} See onUpdate docs
    */
-  handleDeletedItems: Task.async(function* (deleted) {
+  handleDeletedItems: function (deleted) {
     for (let type in deleted) {
       for (let host in deleted[type]) {
         if (!deleted[type][host].length) {
@@ -497,26 +491,26 @@ StorageUI.prototype = {
               if (names.length > 0) {
                 let tableItemName = names.pop();
                 if (this.tree.isSelected([type, host, ...names])) {
-                  yield this.removeItemFromTable(tableItemName);
+                  this.removeItemFromTable(tableItemName);
                 }
               }
             } catch (ex) {
               if (this.tree.isSelected([type, host])) {
-                yield this.removeItemFromTable(name);
+                this.removeItemFromTable(name);
               }
             }
           }
         }
       }
     }
-  }),
+  },
 
   /**
    * Handle changed items received by onUpdate
    *
    * @param {object} See onUpdate docs
    */
-  handleChangedItems: Task.async(function* (changed) {
+  handleChangedItems: function (changed) {
     let [type, host, db, objectStore] = this.tree.selectedItem;
     if (!changed[type] || !changed[type][host] ||
         changed[type][host].length == 0) {
@@ -530,11 +524,11 @@ StorageUI.prototype = {
           toUpdate.push(name);
         }
       }
-      yield this.fetchStorageObjects(type, host, toUpdate, REASON.UPDATE);
+      this.fetchStorageObjects(type, host, toUpdate, REASON.UPDATE);
     } catch (ex) {
-      yield this.fetchStorageObjects(type, host, changed[type][host], REASON.UPDATE);
+      this.fetchStorageObjects(type, host, changed[type][host], REASON.UPDATE);
     }
-  }),
+  },
 
   /**
    * Fetches the storage objects from the storage actor and populates the
@@ -590,9 +584,9 @@ StorageUI.prototype = {
 
       let {data} = yield storageType.getStoreObjects(host, names, fetchOpts);
       if (data.length) {
-        yield this.populateTable(data, reason);
+        this.populateTable(data, reason);
       }
-      this.updateToolbar();
+      yield this.updateToolbar();
       this.emit("store-objects-updated");
     } catch (ex) {
       console.error(ex);
@@ -602,7 +596,7 @@ StorageUI.prototype = {
   /**
    * Updates the toolbar hiding and showing buttons as appropriate.
    */
-  updateToolbar: function () {
+  updateToolbar: Task.async(function* () {
     let item = this.tree.selectedItem;
     let howManyNodesIn = item ? item.length : 0;
 
@@ -618,7 +612,7 @@ StorageUI.prototype = {
       this._addButton.hidden = true;
       this._addButton.removeAttribute("tooltiptext");
     }
-  },
+  }),
 
   /**
    * Populates the storage tree which displays the list of storages present for
@@ -863,7 +857,7 @@ StorageUI.prototype = {
    *        An array of ids which represent the location of the selected item in
    *        the storage tree
    */
-  onHostSelect: Task.async(function* (event, item) {
+  onHostSelect: function (event, item) {
     this.table.clear();
     this.hideSidebar();
     this.searchBox.value = "";
@@ -881,9 +875,9 @@ StorageUI.prototype = {
     if (item.length > 2) {
       names = [JSON.stringify(item.slice(2))];
     }
-    yield this.fetchStorageObjects(type, host, names, REASON.POPULATE);
+    this.fetchStorageObjects(type, host, names, REASON.POPULATE);
     this.itemOffset = 0;
-  }),
+  },
 
   /**
    * Resets the column headers in the storage table with the pased object `data`
@@ -897,7 +891,7 @@ StorageUI.prototype = {
    * @param {string} [subType]
    *        The sub type under the given type.
    */
-  resetColumns: Task.async(function* (type, host, subtype) {
+  resetColumns: function* (type, host, subtype) {
     this.table.host = host;
     this.table.datatype = type;
 
@@ -946,8 +940,8 @@ StorageUI.prototype = {
     this.table.setColumns(columns, null, hiddenFields, privateFields);
     this.hideSidebar();
 
-    this.makeFieldsEditable(editableFields);
-  }),
+    yield this.makeFieldsEditable(editableFields);
+  },
 
   /**
    * Populates or updates the rows in the storage table.
@@ -957,7 +951,7 @@ StorageUI.prototype = {
    * @param {Constant} reason
    *        See REASON constant at top of file.
    */
-  populateTable: Task.async(function* (data, reason) {
+  populateTable: function (data, reason) {
     for (let item of data) {
       if (item.value) {
         item.valueActor = item.value;
@@ -988,14 +982,14 @@ StorageUI.prototype = {
         case REASON.UPDATE:
           this.table.update(item);
           if (item == this.table.selectedRow && !this.sidebar.hidden) {
-            yield this.updateObjectSidebar();
+            this.updateObjectSidebar();
           }
           break;
       }
 
       this.shouldLoadMoreItems = true;
     }
-  }),
+  },
 
   /**
    * Handles keypress event on the body table to close the sidebar when open
@@ -1025,7 +1019,7 @@ StorageUI.prototype = {
   /**
    * Handles endless scrolling for the table
    */
-  handleScrollEnd: Task.async(function* () {
+  handleScrollEnd: function () {
     if (!this.shouldLoadMoreItems) {
       return;
     }
@@ -1038,8 +1032,8 @@ StorageUI.prototype = {
     if (item.length > 2) {
       names = [JSON.stringify(item.slice(2))];
     }
-    yield this.fetchStorageObjects(type, host, names, REASON.NEXT_50_ITEMS);
-  }),
+    this.fetchStorageObjects(type, host, names, REASON.NEXT_50_ITEMS);
+  },
 
   /**
    * Fires before a cell context menu with the "Add" or "Delete" action is
