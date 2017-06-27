@@ -33,7 +33,6 @@ import org.mozilla.gecko.util.EventCallback;
 import org.mozilla.gecko.util.GeckoBundle;
 import org.mozilla.gecko.util.JavaUtil;
 import org.mozilla.gecko.util.ThreadUtils;
-import org.mozilla.gecko.webapps.WebAppActivity;
 
 import android.accounts.Account;
 import android.accounts.AccountManager;
@@ -52,7 +51,6 @@ import android.support.v4.content.ContextCompat;
 import android.text.TextUtils;
 import android.util.Log;
 
-import static org.mozilla.gecko.Tab.TabType;
 
 public class Tabs implements BundleEventListener {
     private static final String LOGTAG = "GeckoTabs";
@@ -89,8 +87,6 @@ public class Tabs implements BundleEventListener {
     public static final int LOADURL_EXTERNAL     = 1 << 7;
     /** Indicates the tab is the first shown after Firefox is hidden and restored. */
     public static final int LOADURL_FIRST_AFTER_ACTIVITY_UNHIDDEN = 1 << 8;
-    public static final int LOADURL_CUSTOMTAB    = 1 << 9;
-    public static final int LOADURL_WEBAPP = 1 << 10;
 
     private static final long PERSIST_TABS_AFTER_MILLISECONDS = 1000 * 2;
 
@@ -198,8 +194,7 @@ public class Tabs implements BundleEventListener {
     }
 
     /**
-     * Gets the tab count corresponding to the category and private state of the
-     * selected tab.
+     * Gets the tab count corresponding to the private state of the selected tab.
      *
      * If the selected tab is a non-private tab, this will return the number of
      * non-private tabs; likewise, if this is a private tab, this will return
@@ -211,10 +206,9 @@ public class Tabs implements BundleEventListener {
         // Once mSelectedTab is non-null, it cannot be null for the remainder
         // of the object's lifetime.
         boolean getPrivate = mSelectedTab != null && mSelectedTab.isPrivate();
-        TabType type = mSelectedTab != null ? mSelectedTab.getType() : TabType.BROWSING;
         int count = 0;
         for (Tab tab : mOrder) {
-            if (tab.isPrivate() == getPrivate && tab.getType() == type) {
+            if (tab.isPrivate() == getPrivate) {
                 count++;
             }
         }
@@ -248,9 +242,9 @@ public class Tabs implements BundleEventListener {
         }
     }
 
-    private Tab addTab(int id, String url, boolean external, int parentId, String title, boolean isPrivate, int tabIndex, TabType type) {
-        final Tab tab = isPrivate ? new PrivateTab(mAppContext, id, url, external, parentId, title, type) :
-                                    new Tab(mAppContext, id, url, external, parentId, title, type);
+    private Tab addTab(int id, String url, boolean external, int parentId, String title, boolean isPrivate, int tabIndex) {
+        final Tab tab = isPrivate ? new PrivateTab(mAppContext, id, url, external, parentId, title) :
+                                    new Tab(mAppContext, id, url, external, parentId, title);
         synchronized (this) {
             lazyRegisterBookmarkObserver();
             mTabs.put(id, tab);
@@ -268,19 +262,20 @@ public class Tabs implements BundleEventListener {
         // Suppress the ADDED event to prevent animation of tabs created via session restore.
         if (mInitialTabsAdded) {
             notifyListeners(tab, TabEvents.ADDED,
-                    Integer.toString(getPrivacySpecificTabIndex(tabIndex, isPrivate, type)));
+                    Integer.toString(getPrivacySpecificTabIndex(tabIndex, isPrivate)));
         }
 
         return tab;
     }
 
     /**
-     * Return the index, among those tabs of the chosen {@code type} whose privacy setting matches
-     * {@code isPrivate}, of the tab at position {@code index} in {@code mOrder}.  Returns
-     * {@code NEW_LAST_INDEX} when {@code index} is {@code NEW_LAST_INDEX} or no matches were
+     * Return the index, among those tabs whose privacy setting matches {@code isPrivate},
+     * of the tab at position {@code index} in {@code mOrder}.
+     *
+     * @return {@code NEW_LAST_INDEX} when {@code index} is {@code NEW_LAST_INDEX} or no matches were
      * found.
      */
-    private int getPrivacySpecificTabIndex(int index, boolean isPrivate, TabType type) {
+    private int getPrivacySpecificTabIndex(int index, boolean isPrivate) {
         if (index == NEW_LAST_INDEX) {
             return NEW_LAST_INDEX;
         }
@@ -288,7 +283,7 @@ public class Tabs implements BundleEventListener {
         int privacySpecificIndex = -1;
         for (int i = 0; i <= index; i++) {
             final Tab tab = mOrder.get(i);
-            if (tab.isPrivate() == isPrivate && tab.getType() == type) {
+            if (tab.isPrivate() == isPrivate) {
                 privacySpecificIndex++;
             }
         }
@@ -345,44 +340,27 @@ public class Tabs implements BundleEventListener {
         return true;
     }
 
-    public synchronized boolean selectLastTab(Tab.TabType targetType) {
-        if (mOrder.isEmpty()) {
-            return false;
-        }
-
-        Tab tabToSelect = mOrder.get(mOrder.size() - 1);
-        if (tabToSelect.getType() != targetType) {
-            tabToSelect = getPreviousTabFrom(tabToSelect, false, targetType);
-            if (tabToSelect == null) {
-                return false;
-            }
-        }
-
-        selectTab(tabToSelect.getId());
-        return true;
-    }
-
     private int getIndexOf(Tab tab) {
         return mOrder.lastIndexOf(tab);
     }
 
-    private Tab getNextTabFrom(Tab tab, boolean getPrivate, TabType type) {
+    private Tab getNextTabFrom(Tab tab, boolean getPrivate) {
         int numTabs = mOrder.size();
         int index = getIndexOf(tab);
         for (int i = index + 1; i < numTabs; i++) {
             Tab next = mOrder.get(i);
-            if (next.isPrivate() == getPrivate && next.getType() == type) {
+            if (next.isPrivate() == getPrivate) {
                 return next;
             }
         }
         return null;
     }
 
-    private Tab getPreviousTabFrom(Tab tab, boolean getPrivate, TabType type) {
+    private Tab getPreviousTabFrom(Tab tab, boolean getPrivate) {
         int index = getIndexOf(tab);
         for (int i = index - 1; i >= 0; i--) {
             Tab prev = mOrder.get(i);
-            if (prev.isPrivate() == getPrivate && prev.getType() == type) {
+            if (prev.isPrivate() == getPrivate) {
                 return prev;
             }
         }
@@ -483,47 +461,26 @@ public class Tabs implements BundleEventListener {
             return selectedTab;
 
         boolean getPrivate = tab.isPrivate();
-        TabType type = tab.getType();
-        Tab nextTab = getNextTabFrom(tab, getPrivate, type);
+        Tab nextTab = getNextTabFrom(tab, getPrivate);
         if (nextTab == null)
-            nextTab = getPreviousTabFrom(tab, getPrivate, type);
+            nextTab = getPreviousTabFrom(tab, getPrivate);
         if (nextTab == null && getPrivate) {
             // If there are no private tabs remaining, get the last normal tab.
-            nextTab = getFallbackNextTab(type);
-        }
-        if (nextTab == null && type != TabType.BROWSING) {
-            // If there are no non-private tabs of the same type remaining,
-            // fall back to TabType.BROWSING.
-            nextTab = getFallbackNextTab(TabType.BROWSING);
+            Tab lastTab = mOrder.get(mOrder.size() - 1);
+            if (!lastTab.isPrivate()) {
+                nextTab = lastTab;
+            } else {
+                nextTab = getPreviousTabFrom(lastTab, false);
+            }
         }
 
         Tab parent = getTab(tab.getParentId());
-        if (parent != null && parent.getType() == type) {
+        if (parent != null) {
             // If the next tab is a sibling, switch to it. Otherwise go back to the parent.
             if (nextTab != null && nextTab.getParentId() == tab.getParentId())
                 return nextTab;
             else
                 return parent;
-        }
-        return nextTab;
-    }
-
-    /**
-     * Normally, {@link #getNextTab(Tab)} will attempt to find a tab of the same privacy mode and
-     * {@link TabType} as the currently selected tab. If no such tab exists, we will first fall back
-     * to non-private tabs if the current tab is a private tab. If we can't find any non-private
-     * tabs of the same type, we then start looking for any non-private {@link TabType#BROWSING} tabs.
-     *
-     * @param type The {@link TabType} of tab to be searched.
-     * @return A non-private tab of the type specified or null if none could be found.
-     */
-    private Tab getFallbackNextTab(TabType type) {
-        Tab nextTab;
-        Tab lastTab = mOrder.get(mOrder.size() - 1);
-        if (!lastTab.isPrivate() && lastTab.getType() == type) {
-            nextTab = lastTab;
-        } else {
-            nextTab = getPreviousTabFrom(lastTab, false, type);
         }
         return nextTab;
     }
@@ -600,8 +557,7 @@ public class Tabs implements BundleEventListener {
                                       message.getInt("parentId"),
                                       message.getString("title"),
                                       message.getBoolean("isPrivate"),
-                                      message.getInt("tabIndex"),
-                                      TabType.valueOf(message.getString("tabType")));
+                                      message.getInt("tabIndex"));
                 // If we added the tab as a stub, we should have already
                 // selected it, so ignore this flag for stubbed tabs.
                 if (message.getBoolean("selected"))
@@ -868,7 +824,7 @@ public class Tabs implements BundleEventListener {
      */
     @RobocopTarget
     public Tab getFirstTabForUrl(String url) {
-        return getFirstTabForUrlHelper(url, null, TabType.BROWSING);
+        return getFirstTabForUrlHelper(url, null);
     }
 
     /**
@@ -876,21 +832,20 @@ public class Tabs implements BundleEventListener {
      * @param url       the URL of the tab we're looking for
      * @param isPrivate if true, only look for tabs that are private. if false,
      *                  only look for tabs that are non-private.
-     * @param type      the type of the tab we're looking for
      *
      * @return first Tab with the given URL, or null if there is no such tab.
      */
-    public Tab getFirstTabForUrl(String url, boolean isPrivate, TabType type) {
-        return getFirstTabForUrlHelper(url, isPrivate, type);
+    public Tab getFirstTabForUrl(String url, boolean isPrivate) {
+        return getFirstTabForUrlHelper(url, isPrivate);
     }
 
-    private Tab getFirstTabForUrlHelper(String url, Boolean isPrivate, TabType type) {
+    private Tab getFirstTabForUrlHelper(String url, Boolean isPrivate) {
         if (url == null) {
             return null;
         }
 
         for (Tab tab : mOrder) {
-            if (isPrivate != null && isPrivate != tab.isPrivate() || type != tab.getType()) {
+            if (isPrivate != null && isPrivate != tab.isPrivate()) {
                 continue;
             }
             if (url.equals(tab.getURL())) {
@@ -911,13 +866,11 @@ public class Tabs implements BundleEventListener {
      * @param isPrivate
      *            If true, only look for tabs that are private. If false, only
      *            look for tabs that are not private.
-     * @param type
-     *            The type of the tab we're looking for.
      *
      * @return The first Tab with the given URL, or null if there is no such
      *         tab.
      */
-    public Tab getFirstReaderTabForUrl(String url, boolean isPrivate, TabType type) {
+    public Tab getFirstReaderTabForUrl(String url, boolean isPrivate) {
         if (url == null) {
             return null;
         }
@@ -925,7 +878,7 @@ public class Tabs implements BundleEventListener {
         url = ReaderModeUtils.stripAboutReaderUrl(url);
 
         for (Tab tab : mOrder) {
-            if (isPrivate != tab.isPrivate() || type != tab.getType()) {
+            if (isPrivate != tab.isPrivate()) {
                 continue;
             }
             String tabUrl = tab.getURL();
@@ -1006,10 +959,6 @@ public class Tabs implements BundleEventListener {
         boolean desktopMode = (flags & LOADURL_DESKTOP) != 0;
         boolean external = (flags & LOADURL_EXTERNAL) != 0;
         final boolean isFirstShownAfterActivityUnhidden = (flags & LOADURL_FIRST_AFTER_ACTIVITY_UNHIDDEN) != 0;
-        final boolean customTab = (flags & LOADURL_CUSTOMTAB) != 0;
-        final boolean webappTab = (flags & LOADURL_WEBAPP) != 0;
-        final TabType type = customTab ? TabType.CUSTOMTAB :
-            webappTab ? TabType.WEBAPP : TabType.BROWSING;
 
         data.putString("url", url);
         data.putString("engine", searchEngine);
@@ -1018,7 +967,6 @@ public class Tabs implements BundleEventListener {
         data.putBoolean("isPrivate", isPrivate);
         data.putBoolean("pinned", (flags & LOADURL_PINNED) != 0);
         data.putBoolean("desktopMode", desktopMode);
-        data.putString("tabType", type.name());
 
         final boolean needsNewTab;
         final String applicationId = (intent == null) ? null :
@@ -1067,19 +1015,10 @@ public class Tabs implements BundleEventListener {
             // Add the new tab to the end of the tab order.
             final int tabIndex = NEW_LAST_INDEX;
 
-            tabToSelect = addTab(tabId, tabUrl, external, parentId, url, isPrivate, tabIndex, type);
+            tabToSelect = addTab(tabId, tabUrl, external, parentId, url, isPrivate, tabIndex);
             tabToSelect.setDesktopMode(desktopMode);
             tabToSelect.setApplicationId(applicationId);
-            if (intent != null) {
-                if (customTab) {
-                    // The intent can contain all sorts of customisations, so we save it in case
-                    // we need to launch a new custom tab activity for this tab.
-                    tabToSelect.setCustomTabIntent(intent);
-                }
-                if (intent.hasExtra(WebAppActivity.MANIFEST_PATH)) {
-                    tabToSelect.setManifestPath(intent.getStringExtra(WebAppActivity.MANIFEST_PATH));
-                }
-            }
+
             if (isFirstShownAfterActivityUnhidden) {
                 // We just opened Firefox so we want to show
                 // the toolbar but not animate it to avoid jank.
