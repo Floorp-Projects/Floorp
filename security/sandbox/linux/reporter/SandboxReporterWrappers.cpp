@@ -29,7 +29,7 @@ public:
   { }
 
 private:
-  ~SandboxReportWrapper() { }
+  ~SandboxReportWrapper() = default;
   SandboxReport mReport;
 };
 
@@ -132,7 +132,7 @@ public:
   { }
 
 private:
-  ~SandboxReportArray() { }
+  ~SandboxReportArray() = default;
   uint64_t mOffset;
   nsTArray<SandboxReport> mArray;
 };
@@ -173,10 +173,10 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_MOZISANDBOXREPORTER
 
-  SandboxReporterWrapper() { }
+  SandboxReporterWrapper() = default;
 
 private:
-  ~SandboxReporterWrapper() { }
+  ~SandboxReporterWrapper() = default;
 };
 
 NS_IMPL_ISUPPORTS(SandboxReporterWrapper, mozISandboxReporter)
