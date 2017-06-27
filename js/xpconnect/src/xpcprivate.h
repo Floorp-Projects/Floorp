@@ -1022,9 +1022,6 @@ public:
     static bool UpdateInterpositionWhitelist(JSContext* cx,
                                              nsIAddonInterposition* interposition);
 
-    void SetAddonCallInterposition() { mHasCallInterpositions = true; }
-    bool HasCallInterposition() { return mHasCallInterpositions; };
-
     static bool AllowCPOWsInAddon(JSContext* cx, JSAddonId* addonId, bool allow);
 
 protected:
@@ -1071,10 +1068,6 @@ private:
     // This is a service that will be use to interpose on some property accesses on
     // objects from other scope, for add-on compatibility reasons.
     nsCOMPtr<nsIAddonInterposition>  mInterposition;
-
-    // If this flag is set, we intercept function calls on vanilla JS function objects
-    // from this scope if the caller scope has mInterposition set.
-    bool mHasCallInterpositions;
 
     JS::WeakMapPtr<JSObject*, JSObject*> mXrayExpandos;
 
@@ -3018,6 +3011,9 @@ bool ReportWrapperDenial(JSContext* cx, JS::HandleId id, WrapperDenialType type,
 
 class CompartmentPrivate
 {
+    CompartmentPrivate() = delete;
+    CompartmentPrivate(const CompartmentPrivate&) = delete;
+
 public:
     enum LocationHint {
         LocationHintRegular,
@@ -3063,14 +3059,19 @@ public:
     // classes, for example).
     bool skipWriteToGlobalPrototype;
 
-    // This scope corresponds to a WebExtension content script, and receives
-    // various bits of special compatibility behavior.
+    // This compartment corresponds to a WebExtension content script, and
+    // receives various bits of special compatibility behavior.
     bool isWebExtensionContentScript;
 
     // Even if an add-on needs interposition, it does not necessary need it
-    // for every scope. If this flag is set we waive interposition for this
-    // scope.
+    // for every compartment. If this flag is set we waive interposition for
+    // this compartment.
     bool waiveInterposition;
+
+    // If this flag is set, we intercept function calls on vanilla JS function
+    // objects from this compartment if the caller compartment has the
+    // hasInterposition flag set.
+    bool addonCallInterposition;
 
     // If CPOWs are disabled for browser code via the
     // dom.ipc.cpows.forbid-unsafe-from-browser preferences, then only
@@ -3151,6 +3152,8 @@ public:
             return;
         locationURI = aLocationURI;
     }
+
+    void SetAddonCallInterposition() { addonCallInterposition = true; }
 
     JSObject2WrappedJSMap* GetWrappedJSMap() const { return mWrappedJSMap; }
     void UpdateWeakPointersAfterGC();
