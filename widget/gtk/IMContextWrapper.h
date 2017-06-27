@@ -231,6 +231,13 @@ protected:
             mOffset = UINT32_MAX;
             mWritingMode = WritingMode();
         }
+        void CollapseTo(uint32_t aOffset,
+                        const WritingMode& aWritingMode)
+        {
+            mWritingMode = aWritingMode;
+            mOffset = aOffset;
+            mString.Truncate();
+        }
 
         void Assign(const IMENotification& aIMENotification);
         void Assign(const WidgetQueryContentEvent& aSelectedTextEvent);
