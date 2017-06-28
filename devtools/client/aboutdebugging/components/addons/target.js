@@ -8,7 +8,8 @@
 
 const { createClass, DOM: dom, PropTypes } =
   require("devtools/client/shared/vendor/react");
-const { debugAddon, uninstallAddon, isTemporaryID } = require("../../modules/addon");
+const { debugAddon, isTemporaryID, parseFileUri, uninstallAddon } =
+  require("../../modules/addon");
 const Services = require("Services");
 
 loader.lazyImporter(this, "BrowserToolboxProcess",
@@ -28,7 +29,7 @@ function filePathForTarget(target) {
   if (!target.temporarilyInstalled || !target.url || !target.url.startsWith("file://")) {
     return [];
   }
-  let path = target.url.slice("file://".length);
+  let path = parseFileUri(target.url);
   return [
     dom.dt(
       { className: "addon-target-info-label" },
