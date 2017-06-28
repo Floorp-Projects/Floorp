@@ -11,7 +11,8 @@
        noautofocus="true">
   <panelmultiview id="PanelUI-multiView" mainViewId="PanelUI-mainView"
                   viewCacheId="appMenu-viewCache">
-    <panelview id="PanelUI-mainView" context="customizationPanelContextMenu">
+    <panelview id="PanelUI-mainView" context="customizationPanelContextMenu"
+               descriptionheightworkaround="true">
       <vbox id="PanelUI-contents-scroller">
         <vbox id="PanelUI-contents" class="panelUI-grid"/>
       </vbox>
@@ -109,7 +110,8 @@
                      oncommand="PlacesCommandHook.showPlacesOrganizer('History'); CustomizableUI.hidePanelForNode(this);"/>
     </panelview>
 
-    <panelview id="PanelUI-remotetabs" flex="1" class="PanelUI-subView">
+    <panelview id="PanelUI-remotetabs" flex="1" class="PanelUI-subView"
+               descriptionheightworkaround="true">
       <label value="&appMenuRemoteTabs.label;" class="panel-subview-header"/>
       <vbox class="panel-subview-body">
         <!-- this widget has 3 boxes in the body, but only 1 is ever visible -->
@@ -321,7 +323,8 @@
       </vbox>
     </panelview>
 
-    <panelview id="PanelUI-panicView" flex="1">
+    <panelview id="PanelUI-panicView" flex="1"
+               descriptionheightworkaround="true">
       <vbox class="panel-subview-body">
         <hbox id="PanelUI-panic-timeframe">
           <image id="PanelUI-panic-timeframe-icon" alt=""/>
@@ -536,9 +539,9 @@
        position="bottomcenter topright"
        noautofocus="true">
   <photonpanelmultiview id="appMenu-multiView" mainViewId="appMenu-mainView"
-                        descriptionheightworkaround="true"
                         viewCacheId="appMenu-viewCache">
-    <panelview id="appMenu-mainView" class="PanelUI-subView">
+    <panelview id="appMenu-mainView" class="PanelUI-subView"
+               descriptionheightworkaround="true">
       <vbox class="panel-subview-body">
         <vbox id="appMenu-addon-banners"/>
         <toolbarbutton class="panel-banner-item"
