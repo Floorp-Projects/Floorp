@@ -20,7 +20,6 @@ function test() {
     tab.linkedBrowser.removeEventListener("load", arguments.callee, true);
 
     let iframes = tab.linkedBrowser.contentWindow.frames;
-    // eslint-disable-next-line no-unsanitized/property
     iframes[1].document.body.innerHTML = uniqueValue;
 
     frameCount = 0;

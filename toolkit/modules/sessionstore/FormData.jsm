@@ -204,7 +204,6 @@ var FormDataInternal = {
 
     // designMode is undefined e.g. for XUL documents (as about:config)
     if ((doc.designMode || "") == "on" && doc.body) {
-      // eslint-disable-next-line no-unsanitized/property
       ret.innerHTML = doc.body.innerHTML;
     }
 
@@ -262,7 +261,6 @@ var FormDataInternal = {
 
     if ("innerHTML" in data) {
       if (doc.body && doc.designMode == "on") {
-      // eslint-disable-next-line no-unsanitized/property
         doc.body.innerHTML = data.innerHTML;
         this.fireEvent(doc.body, "input");
       }
