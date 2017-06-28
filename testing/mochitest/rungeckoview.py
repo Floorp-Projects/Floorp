@@ -161,11 +161,15 @@ class GeckoviewTestRunner:
 
             self.log.test_end(self.test_name, status, expected, message)
 
-        self.log.info("Passed: %d" % pass_count)
-        self.log.info("Failed: %d" % fail_count)
+        crashed = self.check_for_crashes()
+        if crashed:
+            fail_count = 1
+        else:
+            self.log.info("Passed: %d" % pass_count)
+            self.log.info("Failed: %d" % fail_count)
         self.log.suite_end()
 
-        return 0 if passed else 1
+        return 1 if fail_count else 0
 
     def check_for_crashes(self):
         if self.logcat:
@@ -199,10 +203,8 @@ class GeckoviewTestRunner:
         """
         self.log.debug("Cleaning up...")
         self.dm.stopApplication(self.appname)
-        crashed = self.check_for_crashes()
         self.dm.removeDir(self.remote_profile)
         self.log.debug("Cleanup complete.")
-        return crashed
 
 
 def run_test_harness(log, parser, options):
@@ -230,9 +232,7 @@ def run_test_harness(log, parser, options):
         result = 1
     finally:
         try:
-            crashed = runner.cleanup()
-            if not result:
-                result = crashed
+            runner.cleanup()
         except mozdevice.DMError:
             # ignore device error while cleaning up
             pass
