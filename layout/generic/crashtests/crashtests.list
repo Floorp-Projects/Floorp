@@ -649,7 +649,6 @@ load 1278461-2.html
 load 1281102.html
 load 1297427-non-equal-centers.html
 load 1304441.html
-load 1308876-1.html
 load 1316649.html
 load 1349650.html
 asserts-if(browserIsRemote,0-5) load 1349816-1.html # bug 1350352
