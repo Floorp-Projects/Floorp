@@ -662,7 +662,7 @@ nsDeviceContext::FindScreen(nsIScreen** outScreen)
 bool
 nsDeviceContext::CalcPrintingSize()
 {
-    gfxSize size = mPrintTarget->GetSize();
+    gfxSize size(mPrintTarget->GetSize());
     // For printing, CSS inches and physical inches are identical
     // so it doesn't matter which we use here
     mWidth = NSToCoordRound(size.width * AppUnitsPerPhysicalInch()
