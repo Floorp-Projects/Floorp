@@ -3383,7 +3383,6 @@ GeckoDriver.prototype.commands = {
   "getAppCacheStatus": GeckoDriver.prototype.getAppCacheStatus,
   "getChromeWindowHandle": GeckoDriver.prototype.getChromeWindowHandle,
   "getChromeWindowHandles": GeckoDriver.prototype.getChromeWindowHandles,
-  "getContext": GeckoDriver.prototype.getContext,
   "getCookies": GeckoDriver.prototype.getCookies,
   "getCurrentChromeWindowHandle": GeckoDriver.prototype.getChromeWindowHandle,
   "getCurrentUrl": GeckoDriver.prototype.getCurrentUrl,
@@ -3419,7 +3418,6 @@ GeckoDriver.prototype.commands = {
   "releaseActions": GeckoDriver.prototype.releaseActions,
   "sendKeysToDialog": GeckoDriver.prototype.sendKeysToDialog,
   "sendKeysToElement": GeckoDriver.prototype.sendKeysToElement,
-  "setContext": GeckoDriver.prototype.setContext,
   "setScreenOrientation": GeckoDriver.prototype.setScreenOrientation,
   "setTimeouts": GeckoDriver.prototype.setTimeouts,
   "setWindowPosition": GeckoDriver.prototype.setWindowRect, // redirect for compatibility
