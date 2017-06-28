@@ -203,31 +203,7 @@ class FormatProvider(MachCommandBase):
             print("HTTP error {0}: {1}".format(e.code, e.reason))
             return 1
 
-        from subprocess import Popen, PIPE
-
-        if os.path.exists(".hg"):
-            diff_process = Popen(["hg", "diff", "-U0", "-r", ".^",
-                                  "--include", "glob:**.c", "--include", "glob:**.cpp",
-                                  "--include", "glob:**.h",
-                                  "--exclude", "listfile:.clang-format-ignore"], stdout=PIPE)
-        else:
-            git_process = Popen(["git", "diff", "--no-color", "-U0", "HEAD^"], stdout=PIPE)
-            try:
-                diff_process = Popen(["filterdiff", "--include=*.h", "--include=*.cpp",
-                                      "--exclude-from-file=.clang-format-ignore"],
-                                     stdin=git_process.stdout, stdout=PIPE)
-            except OSError as e:
-                if e.errno == errno.ENOENT:
-                    print("Can't find filterdiff. Please install patchutils.")
-                else:
-                    print("OSError {0}: {1}".format(e.code, e.reason))
-                return 1
-
-        args = [sys.executable, clang_format_diff, "-p1"]
-        if not show:
-            args.append("-i")
-        cf_process = Popen(args, stdin=diff_process.stdout)
-        return cf_process.communicate()[0]
+        return self.run_clang_format_diff(clang_format_diff, show)
 
     def locate_or_fetch(self, root, python_script=False):
         import urllib2
@@ -269,6 +245,33 @@ class FormatProvider(MachCommandBase):
             os.chmod(temp, os.stat(temp).st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
             os.rename(temp, target)
         return target
+
+    def run_clang_format_diff(self, clang_format_diff, show):
+        from subprocess import Popen, PIPE
+
+        if os.path.exists(".hg"):
+            diff_process = Popen(["hg", "diff", "-U0", "-r", ".^",
+                                  "--include", "glob:**.c", "--include", "glob:**.cpp",
+                                  "--include", "glob:**.h",
+                                  "--exclude", "listfile:.clang-format-ignore"], stdout=PIPE)
+        else:
+            git_process = Popen(["git", "diff", "--no-color", "-U0", "HEAD^"], stdout=PIPE)
+            try:
+                diff_process = Popen(["filterdiff", "--include=*.h", "--include=*.cpp",
+                                      "--exclude-from-file=.clang-format-ignore"],
+                                     stdin=git_process.stdout, stdout=PIPE)
+            except OSError as e:
+                if e.errno == errno.ENOENT:
+                    print("Can't find filterdiff. Please install patchutils.")
+                else:
+                    print("OSError {0}: {1}".format(e.code, e.reason))
+                return 1
+
+        args = [sys.executable, clang_format_diff, "-p1"]
+        if not show:
+            args.append("-i")
+        cf_process = Popen(args, stdin=diff_process.stdout)
+        return cf_process.communicate()[0]
 
 
 def mozregression_import():
