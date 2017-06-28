@@ -83,27 +83,27 @@ describe("ActivityStream", () => {
   });
   describe("feeds", () => {
     it("should create a Localization feed", () => {
-      const feed = as.feeds["feeds.localization"]();
+      const feed = as.feeds.get("feeds.localization")();
       assert.instanceOf(feed, Fake);
     });
     it("should create a NewTabInit feed", () => {
-      const feed = as.feeds["feeds.newtabinit"]();
+      const feed = as.feeds.get("feeds.newtabinit")();
       assert.instanceOf(feed, Fake);
     });
     it("should create a Places feed", () => {
-      const feed = as.feeds["feeds.places"]();
+      const feed = as.feeds.get("feeds.places")();
       assert.instanceOf(feed, Fake);
     });
     it("should create a TopSites feed", () => {
-      const feed = as.feeds["feeds.topsites"]();
+      const feed = as.feeds.get("feeds.topsites")();
       assert.instanceOf(feed, Fake);
     });
     it("should create a Telemetry feed", () => {
-      const feed = as.feeds["feeds.telemetry"]();
+      const feed = as.feeds.get("feeds.telemetry")();
       assert.instanceOf(feed, Fake);
     });
     it("should create a Prefs feed", () => {
-      const feed = as.feeds["feeds.prefs"]();
+      const feed = as.feeds.get("feeds.prefs")();
       assert.instanceOf(feed, Fake);
     });
   });

@@ -4,31 +4,26 @@
 "use strict";
 
 const {utils: Cu} = Components;
-const {actionTypes: at, actionCreators: ac} = Cu.import("resource://activity-stream/common/Actions.jsm", {});
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "Prefs",
-  "resource://activity-stream/lib/ActivityStreamPrefs.jsm");
+const {actionCreators: ac, actionTypes: at} = Cu.import("resource://activity-stream/common/Actions.jsm", {});
+const {Prefs} = Cu.import("resource://activity-stream/lib/ActivityStreamPrefs.jsm", {});
 
 this.PrefsFeed = class PrefsFeed {
-  constructor(prefNames) {
-    this._prefNames = prefNames;
+  constructor(prefMap) {
+    this._prefMap = prefMap;
     this._prefs = new Prefs();
-    this._observers = new Map();
   }
   onPrefChanged(name, value) {
-    this.store.dispatch(ac.BroadcastToContent({type: at.PREF_CHANGED, data: {name, value}}));
+    if (this._prefMap.has(name)) {
+      this.store.dispatch(ac.BroadcastToContent({type: at.PREF_CHANGED, data: {name, value}}));
+    }
   }
   init() {
-    const values = {};
+    this._prefs.observeBranch(this);
 
-    // Set up listeners for each activity stream pref
-    for (const name of this._prefNames) {
-      const handler = value => {
-        this.onPrefChanged(name, value);
-      };
-      this._observers.set(name, handler, this);
-      this._prefs.observe(name, handler);
+    // Get the initial value of each activity stream pref
+    const values = {};
+    for (const name of this._prefMap.keys()) {
       values[name] = this._prefs.get(name);
     }
 
@@ -36,10 +31,7 @@ this.PrefsFeed = class PrefsFeed {
     this.store.dispatch(ac.BroadcastToContent({type: at.PREFS_INITIAL_VALUES, data: values}));
   }
   removeListeners() {
-    for (const name of this._prefNames) {
-      this._prefs.ignore(name, this._observers.get(name));
-    }
-    this._observers.clear();
+    this._prefs.ignoreBranch(this);
   }
   onAction(action) {
     switch (action.type) {

@@ -47,20 +47,16 @@ describe("TelemetryFeed", () => {
     globals.restore();
   });
   describe("#init", () => {
-    it("should add .telemetrySender, a TelemetrySender instance", async () => {
-      assert.isNull(instance.telemetrySender);
-      await instance.init();
+    it("should add .telemetrySender, a TelemetrySender instance", () => {
       assert.instanceOf(instance.telemetrySender, TelemetrySender);
     });
     it("should add .telemetryClientId from the ClientID module", async () => {
-      assert.isNull(instance.telemetryClientId);
-      await instance.init();
-      assert.equal(instance.telemetryClientId, FAKE_TELEMETRY_ID);
+      assert.equal(await instance.telemetryClientId, FAKE_TELEMETRY_ID);
     });
-    it("should make this.browserOpenNewtabStart() observe browser-open-newtab-start", async () => {
+    it("should make this.browserOpenNewtabStart() observe browser-open-newtab-start", () => {
       sandbox.spy(Services.obs, "addObserver");
 
-      await instance.init();
+      instance.init();
 
       assert.calledOnce(Services.obs.addObserver);
       assert.calledWithExactly(Services.obs.addObserver,
@@ -130,19 +126,19 @@ describe("TelemetryFeed", () => {
   describe("ping creators", () => {
     beforeEach(async () => await instance.init());
     describe("#createPing", () => {
-      it("should create a valid base ping without a session if no portID is supplied", () => {
-        const ping = instance.createPing();
+      it("should create a valid base ping without a session if no portID is supplied", async () => {
+        const ping = await instance.createPing();
         assert.validate(ping, BasePing);
         assert.notProperty(ping, "session_id");
       });
-      it("should create a valid base ping with session info if a portID is supplied", () => {
+      it("should create a valid base ping with session info if a portID is supplied", async () => {
         // Add a session
         const portID = "foo";
         instance.addSession(portID);
         const sessionID = instance.sessions.get(portID).session_id;
 
         // Create a ping referencing the session
-        const ping = instance.createPing(portID);
+        const ping = await instance.createPing(portID);
         assert.validate(ping, BasePing);
 
         // Make sure we added the right session-related stuff to the ping
@@ -151,12 +147,12 @@ describe("TelemetryFeed", () => {
       });
     });
     describe("#createUserEvent", () => {
-      it("should create a valid event", () => {
+      it("should create a valid event", async () => {
         const portID = "foo";
         const data = {source: "TOP_SITES", event: "CLICK"};
         const action = ac.SendToMain(ac.UserEvent(data), portID);
         const session = addSession(portID);
-        const ping = instance.createUserEvent(action);
+        const ping = await instance.createUserEvent(action);
 
         // Is it valid?
         assert.validate(ping, UserEventPing);
@@ -165,21 +161,21 @@ describe("TelemetryFeed", () => {
       });
     });
     describe("#createUndesiredEvent", () => {
-      it("should create a valid event without a session", () => {
+      it("should create a valid event without a session", async () => {
         const action = ac.UndesiredEvent({source: "TOP_SITES", event: "MISSING_IMAGE", value: 10});
-        const ping = instance.createUndesiredEvent(action);
+        const ping = await instance.createUndesiredEvent(action);
 
         // Is it valid?
         assert.validate(ping, UndesiredPing);
         // Does it have the right value?
         assert.propertyVal(ping, "value", 10);
       });
-      it("should create a valid event with a session", () => {
+      it("should create a valid event with a session", async () => {
         const portID = "foo";
         const data = {source: "TOP_SITES", event: "MISSING_IMAGE", value: 10};
         const action = ac.SendToMain(ac.UndesiredEvent(data), portID);
         const session = addSession(portID);
-        const ping = instance.createUndesiredEvent(action);
+        const ping = await instance.createUndesiredEvent(action);
 
         // Is it valid?
         assert.validate(ping, UndesiredPing);
@@ -190,21 +186,21 @@ describe("TelemetryFeed", () => {
       });
     });
     describe("#createPerformanceEvent", () => {
-      it("should create a valid event without a session", () => {
+      it("should create a valid event without a session", async () => {
         const action = ac.PerfEvent({event: "SCREENSHOT_FINISHED", value: 100});
-        const ping = instance.createPerformanceEvent(action);
+        const ping = await instance.createPerformanceEvent(action);
 
         // Is it valid?
         assert.validate(ping, PerfPing);
         // Does it have the right value?
         assert.propertyVal(ping, "value", 100);
       });
-      it("should create a valid event with a session", () => {
+      it("should create a valid event with a session", async () => {
         const portID = "foo";
         const data = {event: "PAGE_LOADED", value: 100};
         const action = ac.SendToMain(ac.PerfEvent(data), portID);
         const session = addSession(portID);
-        const ping = instance.createPerformanceEvent(action);
+        const ping = await instance.createPerformanceEvent(action);
 
         // Is it valid?
         assert.validate(ping, PerfPing);
@@ -215,8 +211,8 @@ describe("TelemetryFeed", () => {
       });
     });
     describe("#createSessionEndEvent", () => {
-      it("should create a valid event", () => {
-        const ping = instance.createSessionEndEvent({
+      it("should create a valid event", async () => {
+        const ping = await instance.createSessionEndEvent({
           session_id: FAKE_UUID,
           page: "about:newtab",
           session_duration: 12345,
@@ -236,20 +232,17 @@ describe("TelemetryFeed", () => {
   });
   describe("#sendEvent", () => {
     it("should call telemetrySender", async () => {
-      await instance.init();
       sandbox.stub(instance.telemetrySender, "sendPing");
       const event = {};
-      instance.sendEvent(event);
+      await instance.sendEvent(Promise.resolve(event));
       assert.calledWith(instance.telemetrySender.sendPing, event);
     });
   });
   describe("#uninit", () => {
-    it("should call .telemetrySender.uninit and remove it", async () => {
-      await instance.init();
+    it("should call .telemetrySender.uninit", () => {
       const stub = sandbox.stub(instance.telemetrySender, "uninit");
       instance.uninit();
       assert.calledOnce(stub);
-      assert.isNull(instance.telemetrySender);
     });
     it("should make this.browserOpenNewtabStart() stop observing browser-open-newtab-start", async () => {
       await instance.init();

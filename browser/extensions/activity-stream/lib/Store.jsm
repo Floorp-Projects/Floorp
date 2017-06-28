@@ -5,13 +5,10 @@
 
 const {utils: Cu} = Components;
 
-const {redux} = Cu.import("resource://activity-stream/vendor/Redux.jsm", {});
-const {reducers} = Cu.import("resource://activity-stream/common/Reducers.jsm", {});
 const {ActivityStreamMessageChannel} = Cu.import("resource://activity-stream/lib/ActivityStreamMessageChannel.jsm", {});
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-
-XPCOMUtils.defineLazyModuleGetter(this, "Prefs",
-  "resource://activity-stream/lib/ActivityStreamPrefs.jsm");
+const {Prefs} = Cu.import("resource://activity-stream/lib/ActivityStreamPrefs.jsm", {});
+const {reducers} = Cu.import("resource://activity-stream/common/Reducers.jsm", {});
+const {redux} = Cu.import("resource://activity-stream/vendor/Redux.jsm", {});
 
 /**
  * Store - This has a similar structure to a redux store, but includes some extra
@@ -30,15 +27,11 @@ this.Store = class Store {
     this._middleware = this._middleware.bind(this);
     // Bind each redux method so we can call it directly from the Store. E.g.,
     // store.dispatch() will call store._store.dispatch();
-    ["dispatch", "getState", "subscribe"].forEach(method => {
-      this[method] = (...args) => {
-        return this._store[method](...args);
-      };
-    });
+    for (const method of ["dispatch", "getState", "subscribe"]) {
+      this[method] = (...args) => this._store[method](...args);
+    }
     this.feeds = new Map();
-    this._feedFactories = null;
     this._prefs = new Prefs();
-    this._prefHandlers = new Map();
     this._messageChannel = new ActivityStreamMessageChannel({dispatch: this.dispatch});
     this._store = redux.createStore(
       redux.combineReducers(reducers),
@@ -51,10 +44,14 @@ this.Store = class Store {
    *               it calls each feed's .onAction method, if one
    *               is defined.
    */
-  _middleware(store) {
+  _middleware() {
     return next => action => {
       next(action);
-      this.feeds.forEach(s => s.onAction && s.onAction(action));
+      for (const store of this.feeds.values()) {
+        if (store.onAction) {
+          store.onAction(action);
+        }
+      }
     };
   }
 
@@ -65,7 +62,7 @@ this.Store = class Store {
    *                           passed to Store.init
    */
   initFeed(feedName) {
-    const feed = this._feedFactories[feedName]();
+    const feed = this._feedFactories.get(feedName)();
     feed.store = this;
     this.feeds.set(feedName, feed);
   }
@@ -88,41 +85,34 @@ this.Store = class Store {
   }
 
   /**
-   * maybeStartFeedAndListenForPrefChanges - Listen for pref changes that turn a
-   *     feed off/on, and as long as that pref was not explicitly set to
-   *     false, initialize the feed immediately.
-   *
-   * @param  {string} name The name of a feed, as defined in the object passed
-   *                       to Store.init
+   * onPrefChanged - Listener for handling feed changes.
    */
-  maybeStartFeedAndListenForPrefChanges(prefName) {
-    // Create a listener that turns the feed off/on based on changes
-    // to the pref, and cache it so we can unlisten on shut-down.
-    const onPrefChanged = isEnabled => (isEnabled ? this.initFeed(prefName) : this.uninitFeed(prefName));
-    this._prefHandlers.set(prefName, onPrefChanged);
-    this._prefs.observe(prefName, onPrefChanged);
-
-    // TODO: This should propbably be done in a generic pref manager for Activity Stream.
-    // If the pref is true, start the feed immediately.
-    if (this._prefs.get(prefName)) {
-      this.initFeed(prefName);
+  onPrefChanged(name, value) {
+    if (this._feedFactories.has(name)) {
+      if (value) {
+        this.initFeed(name);
+      } else {
+        this.uninitFeed(name);
+      }
     }
   }
 
   /**
    * init - Initializes the ActivityStreamMessageChannel channel, and adds feeds.
    *
-   * @param  {array} feedConstructors An array of configuration objects for feeds
-   *                 each with .name (the name of the pref for the feed) and .init,
-   *                 a function that returns an instance of the feed
+   * @param  {Map} feedFactories A Map of feeds with the name of the pref for
+   *                                the feed as the key and a function that
+   *                                constructs an instance of the feed.
    */
-  init(feedConstructors) {
-    if (feedConstructors) {
-      this._feedFactories = feedConstructors;
-      for (const pref of Object.keys(feedConstructors)) {
-        this.maybeStartFeedAndListenForPrefChanges(pref);
+  init(feedFactories) {
+    this._feedFactories = feedFactories;
+    for (const pref of feedFactories.keys()) {
+      if (this._prefs.get(pref)) {
+        this.initFeed(pref);
       }
     }
+
+    this._prefs.observeBranch(this);
     this._messageChannel.createChannel();
   }
 
@@ -133,11 +123,10 @@ this.Store = class Store {
    * @return {type}  description
    */
   uninit() {
+    this._prefs.ignoreBranch(this);
     this.feeds.forEach(feed => this.uninitFeed(feed));
-    this._prefHandlers.forEach((handler, pref) => this._prefs.ignore(pref, handler));
-    this._prefHandlers.clear();
-    this._feedFactories = null;
     this.feeds.clear();
+    this._feedFactories = null;
     this._messageChannel.destroyChannel();
   }
 };

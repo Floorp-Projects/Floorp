@@ -97,16 +97,15 @@ const globalImportContext = typeof Window === "undefined" ? BACKGROUND_PROCESS :
 // Export for tests
 
 
-const actionTypes = ["BLOCK_URL", "BOOKMARK_URL", "DELETE_BOOKMARK_BY_ID", "DELETE_HISTORY_URL", "INIT", "LOCALE_UPDATED", "NEW_TAB_INITIAL_STATE", "NEW_TAB_LOAD", "NEW_TAB_UNLOAD", "NEW_TAB_VISIBLE", "OPEN_NEW_WINDOW", "OPEN_PRIVATE_WINDOW", "PLACES_BOOKMARK_ADDED", "PLACES_BOOKMARK_CHANGED", "PLACES_BOOKMARK_REMOVED", "PLACES_HISTORY_CLEARED", "PLACES_LINK_BLOCKED", "PLACES_LINK_DELETED", "PREFS_INITIAL_VALUES", "PREF_CHANGED", "SCREENSHOT_UPDATED", "SET_PREF", "TELEMETRY_PERFORMANCE_EVENT", "TELEMETRY_UNDESIRED_EVENT", "TELEMETRY_USER_EVENT", "TOP_SITES_UPDATED", "UNINIT"
-// The line below creates an object like this:
+// Create an object that avoids accidental differing key/value pairs:
 // {
 //   INIT: "INIT",
 //   UNINIT: "UNINIT"
 // }
-// It prevents accidentally adding a different key/value name.
-].reduce((obj, type) => {
-  obj[type] = type;return obj;
-}, {});
+const actionTypes = {};
+for (const type of ["BLOCK_URL", "BOOKMARK_URL", "DELETE_BOOKMARK_BY_ID", "DELETE_HISTORY_URL", "DELETE_HISTORY_URL_CONFIRM", "DIALOG_CANCEL", "DIALOG_OPEN", "INIT", "LOCALE_UPDATED", "NEW_TAB_INITIAL_STATE", "NEW_TAB_LOAD", "NEW_TAB_UNLOAD", "NEW_TAB_VISIBLE", "OPEN_NEW_WINDOW", "OPEN_PRIVATE_WINDOW", "PLACES_BOOKMARK_ADDED", "PLACES_BOOKMARK_CHANGED", "PLACES_BOOKMARK_REMOVED", "PLACES_HISTORY_CLEARED", "PLACES_LINK_BLOCKED", "PLACES_LINK_DELETED", "PREFS_INITIAL_VALUES", "PREF_CHANGED", "SCREENSHOT_UPDATED", "SET_PREF", "TELEMETRY_PERFORMANCE_EVENT", "TELEMETRY_UNDESIRED_EVENT", "TELEMETRY_USER_EVENT", "TOP_SITES_UPDATED", "UNINIT"]) {
+  actionTypes[type] = type;
+}
 
 // Helper function for creating routed actions between content and main
 // Not intended to be used by consumers
@@ -312,9 +311,10 @@ var _require2 = __webpack_require__(3);
 const addLocaleData = _require2.addLocaleData,
       IntlProvider = _require2.IntlProvider;
 
-const TopSites = __webpack_require__(13);
-const Search = __webpack_require__(12);
-const PreferencesPane = __webpack_require__(11);
+const TopSites = __webpack_require__(14);
+const Search = __webpack_require__(13);
+const ConfirmDialog = __webpack_require__(9);
+const PreferencesPane = __webpack_require__(12);
 
 // Locales that should be displayed RTL
 const RTL_LIST = ["ar", "he", "fa", "ur"];
@@ -373,7 +373,8 @@ class Base extends React.Component {
           "main",
           null,
           prefs.showSearch && React.createElement(Search, null),
-          prefs.showTopSites && React.createElement(TopSites, null)
+          prefs.showTopSites && React.createElement(TopSites, null),
+          React.createElement(ConfirmDialog, null)
         ),
         React.createElement(PreferencesPane, null)
       )
@@ -394,7 +395,7 @@ var _require = __webpack_require__(1);
 
 const at = _require.actionTypes;
 
-var _require2 = __webpack_require__(15);
+var _require2 = __webpack_require__(16);
 
 const perfSvc = _require2.perfService;
 
@@ -573,6 +574,10 @@ const INITIAL_STATE = {
   Prefs: {
     initialized: false,
     values: {}
+  },
+  Dialog: {
+    visible: false,
+    data: {}
   }
 };
 
@@ -657,6 +662,22 @@ function TopSites() {
   }
 }
 
+function Dialog() {
+  let prevState = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : INITIAL_STATE.Dialog;
+  let action = arguments[1];
+
+  switch (action.type) {
+    case at.DIALOG_OPEN:
+      return Object.assign({}, prevState, { visible: true, data: action.data });
+    case at.DIALOG_CANCEL:
+      return Object.assign({}, prevState, { visible: false });
+    case at.DELETE_HISTORY_URL:
+      return Object.assign({}, INITIAL_STATE.Dialog);
+    default:
+      return prevState;
+  }
+}
+
 function Prefs() {
   let prevState = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : INITIAL_STATE.Prefs;
   let action = arguments[1];
@@ -674,7 +695,7 @@ function Prefs() {
   }
 }
 
-var reducers = { TopSites, App, Prefs };
+var reducers = { TopSites, App, Prefs, Dialog };
 module.exports = {
   reducers,
   INITIAL_STATE
@@ -688,6 +709,125 @@ module.exports = ReactDOM;
 
 /***/ }),
 /* 9 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+const React = __webpack_require__(0);
+
+var _require = __webpack_require__(2);
+
+const connect = _require.connect;
+
+var _require2 = __webpack_require__(3);
+
+const FormattedMessage = _require2.FormattedMessage;
+
+var _require3 = __webpack_require__(1);
+
+const actionTypes = _require3.actionTypes,
+      ac = _require3.actionCreators;
+
+/**
+ * ConfirmDialog component.
+ * One primary action button, one cancel button.
+ *
+ * Content displayed is controlled by `data` prop the component receives.
+ * Example:
+ * data: {
+ *   // Any sort of data needed to be passed around by actions.
+ *   payload: site.url,
+ *   // Primary button SendToMain action.
+ *   action: "DELETE_HISTORY_URL",
+ *   // Primary button USerEvent action.
+ *   userEvent: "DELETE",
+ *   // Array of locale ids to display.
+ *   message_body: ["confirm_history_delete_p1", "confirm_history_delete_notice_p2"],
+ *   // Text for primary button.
+ *   confirm_button_string_id: "menu_action_delete"
+ * },
+ */
+
+const ConfirmDialog = React.createClass({
+  displayName: "ConfirmDialog",
+
+  getDefaultProps() {
+    return {
+      visible: false,
+      data: {}
+    };
+  },
+
+  _handleCancelBtn() {
+    this.props.dispatch({ type: actionTypes.DIALOG_CANCEL });
+    this.props.dispatch(ac.UserEvent({ event: actionTypes.DIALOG_CANCEL }));
+  },
+
+  _handleConfirmBtn() {
+    this.props.data.onConfirm.forEach(this.props.dispatch);
+  },
+
+  _renderModalMessage() {
+    const message_body = this.props.data.body_string_id;
+
+    if (!message_body) {
+      return null;
+    }
+
+    return React.createElement(
+      "span",
+      null,
+      message_body.map(msg => React.createElement(
+        "p",
+        { key: msg },
+        React.createElement(FormattedMessage, { id: msg })
+      ))
+    );
+  },
+
+  render() {
+    if (!this.props.visible) {
+      return null;
+    }
+
+    return React.createElement(
+      "div",
+      { className: "confirmation-dialog" },
+      React.createElement("div", { className: "modal-overlay", onClick: this._handleCancelBtn }),
+      React.createElement(
+        "div",
+        { className: "modal", ref: "modal" },
+        React.createElement(
+          "section",
+          { className: "modal-message" },
+          this._renderModalMessage()
+        ),
+        React.createElement(
+          "section",
+          { className: "actions" },
+          React.createElement(
+            "button",
+            { ref: "cancelButton", onClick: this._handleCancelBtn },
+            React.createElement(FormattedMessage, { id: "topsites_form_cancel_button" })
+          ),
+          React.createElement(
+            "button",
+            { ref: "confirmButton", className: "done", onClick: this._handleConfirmBtn },
+            React.createElement(FormattedMessage, { id: this.props.data.confirm_button_string_id })
+          )
+        )
+      )
+    );
+  }
+});
+
+module.exports = connect(state => state.Dialog)(ConfirmDialog);
+module.exports._unconnected = ConfirmDialog;
+module.exports.Dialog = ConfirmDialog;
+
+/***/ }),
+/* 10 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -770,7 +910,7 @@ class ContextMenu extends React.Component {
 module.exports = ContextMenu;
 
 /***/ }),
-/* 10 */
+/* 11 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -782,95 +922,120 @@ var _require = __webpack_require__(3);
 
 const injectIntl = _require.injectIntl;
 
-const ContextMenu = __webpack_require__(9);
+const ContextMenu = __webpack_require__(10);
 
 var _require2 = __webpack_require__(1);
 
-const actionTypes = _require2.actionTypes,
+const at = _require2.actionTypes,
       ac = _require2.actionCreators;
 
 
-class LinkMenu extends React.Component {
-  getBookmarkStatus(site) {
-    return site.bookmarkGuid ? {
-      id: "menu_action_remove_bookmark",
-      icon: "bookmark-remove",
-      action: "DELETE_BOOKMARK_BY_ID",
-      data: site.bookmarkGuid,
-      userEvent: "BOOKMARK_DELETE"
-    } : {
-      id: "menu_action_bookmark",
-      icon: "bookmark",
-      action: "BOOKMARK_URL",
-      data: site.url,
-      userEvent: "BOOKMARK_ADD"
-    };
-  }
-  getDefaultContextMenu(site) {
-    return [{
-      id: "menu_action_open_new_window",
-      icon: "new-window",
-      action: "OPEN_NEW_WINDOW",
-      data: { url: site.url },
-      userEvent: "OPEN_NEW_WINDOW"
-    }, {
-      id: "menu_action_open_private_window",
-      icon: "new-window-private",
-      action: "OPEN_PRIVATE_WINDOW",
-      data: { url: site.url },
-      userEvent: "OPEN_PRIVATE_WINDOW"
-    }];
-  }
-  getOptions() {
-    var _props = this.props;
-    const dispatch = _props.dispatch,
-          site = _props.site,
-          index = _props.index,
-          source = _props.source;
+const RemoveBookmark = site => ({
+  id: "menu_action_remove_bookmark",
+  icon: "bookmark-remove",
+  action: ac.SendToMain({
+    type: at.DELETE_BOOKMARK_BY_ID,
+    data: site.bookmarkGuid
+  }),
+  userEvent: "BOOKMARK_DELETE"
+});
 
-    // default top sites have a limited set of context menu options
+const AddBookmark = site => ({
+  id: "menu_action_bookmark",
+  icon: "bookmark",
+  action: ac.SendToMain({
+    type: at.BOOKMARK_URL,
+    data: site.url
+  }),
+  userEvent: "BOOKMARK_ADD"
+});
 
-    let options = this.getDefaultContextMenu(site);
+const OpenInNewWindow = site => ({
+  id: "menu_action_open_new_window",
+  icon: "new-window",
+  action: ac.SendToMain({
+    type: at.OPEN_NEW_WINDOW,
+    data: { url: site.url }
+  }),
+  userEvent: "OPEN_NEW_WINDOW"
+});
 
-    // all other top sites have all the following context menu options
-    if (!site.isDefault) {
-      options = [this.getBookmarkStatus(site), { type: "separator" }, ...options, { type: "separator" }, {
-        id: "menu_action_dismiss",
-        icon: "dismiss",
-        action: "BLOCK_URL",
-        data: site.url,
-        userEvent: "BLOCK"
-      }, {
-        id: "menu_action_delete",
-        icon: "delete",
-        action: "DELETE_HISTORY_URL",
-        data: site.url,
-        userEvent: "DELETE"
-      }];
+const OpenInPrivateWindow = site => ({
+  id: "menu_action_open_private_window",
+  icon: "new-window-private",
+  action: ac.SendToMain({
+    type: at.OPEN_PRIVATE_WINDOW,
+    data: { url: site.url }
+  }),
+  userEvent: "OPEN_PRIVATE_WINDOW"
+});
+
+const BlockUrl = site => ({
+  id: "menu_action_dismiss",
+  icon: "dismiss",
+  action: ac.SendToMain({
+    type: at.BLOCK_URL,
+    data: site.url
+  }),
+  userEvent: "BLOCK"
+});
+
+const DeleteUrl = site => ({
+  id: "menu_action_delete",
+  icon: "delete",
+  action: {
+    type: at.DIALOG_OPEN,
+    data: {
+      onConfirm: [ac.SendToMain({ type: at.DELETE_HISTORY_URL, data: site.url }), ac.UserEvent({ event: "DELETE" })],
+      body_string_id: ["confirm_history_delete_p1", "confirm_history_delete_notice_p2"],
+      confirm_button_string_id: "menu_action_delete"
     }
-    options.forEach(option => {
+  },
+  userEvent: "DIALOG_OPEN"
+});
+
+class LinkMenu extends React.Component {
+  getOptions() {
+    const props = this.props;
+    const site = props.site;
+
+    const isBookmark = site.bookmarkGuid;
+    const isDefault = site.isDefault;
+
+    const options = [
+
+    // Bookmarks
+    !isDefault && (isBookmark ? RemoveBookmark(site) : AddBookmark(site)), !isDefault && { type: "separator" },
+
+    // Menu items for all sites
+    OpenInNewWindow(site), OpenInPrivateWindow(site),
+
+    // Blocking and deleting
+    !isDefault && { type: "separator" }, !isDefault && BlockUrl(site), !isDefault && DeleteUrl(site)].filter(o => o).map(option => {
       const action = option.action,
-            data = option.data,
             id = option.id,
             type = option.type,
             userEvent = option.userEvent;
-      // Convert message ids to localized labels and add onClick function
 
       if (!type && id) {
-        option.label = this.props.intl.formatMessage(option);
+        option.label = props.intl.formatMessage(option);
         option.onClick = () => {
-          dispatch(ac.SendToMain({ type: actionTypes[action], data }));
-          dispatch(ac.UserEvent({
-            event: userEvent,
-            source,
-            action_position: index
-          }));
+          props.dispatch(action);
+          if (userEvent) {
+            props.dispatch(ac.UserEvent({
+              event: userEvent,
+              source: props.source,
+              action_position: props.index
+            }));
+          }
         };
       }
+      return option;
     });
 
-    // this is for a11y - we want to know which item is the first and which item
-    // is the last, so we can close the context menu accordingly
+    // This is for accessibility to support making each item tabbable.
+    // We want to know which item is the first and which item
+    // is the last, so we can close the context menu accordingly.
     options[0].first = true;
     options[options.length - 1].last = true;
     return options;
@@ -887,7 +1052,7 @@ module.exports = injectIntl(LinkMenu);
 module.exports._unconnected = LinkMenu;
 
 /***/ }),
-/* 11 */
+/* 12 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -903,8 +1068,6 @@ var _require2 = __webpack_require__(3);
 
 const injectIntl = _require2.injectIntl,
       FormattedMessage = _require2.FormattedMessage;
-
-const classNames = __webpack_require__(16);
 
 var _require3 = __webpack_require__(1);
 
@@ -967,7 +1130,7 @@ class PreferencesPane extends React.Component {
         "div",
         { className: "prefs-pane-button" },
         React.createElement("button", {
-          className: classNames("prefs-button icon", isVisible ? "icon-dismiss" : "icon-settings"),
+          className: `prefs-button icon ${isVisible ? "icon-dismiss" : "icon-settings"}`,
           title: props.intl.formatMessage({ id: isVisible ? "settings_pane_done_button" : "settings_pane_button_label" }),
           onClick: this.togglePane })
       ),
@@ -976,7 +1139,7 @@ class PreferencesPane extends React.Component {
         { className: "prefs-pane" },
         React.createElement(
           "div",
-          { className: classNames("sidebar", { hidden: !isVisible }) },
+          { className: `sidebar ${isVisible ? "" : "hidden"}` },
           React.createElement(
             "div",
             { className: "prefs-modal-inner-wrapper" },
@@ -1015,7 +1178,7 @@ module.exports.PreferencesPane = PreferencesPane;
 module.exports.PreferencesInput = PreferencesInput;
 
 /***/ }),
-/* 12 */
+/* 13 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1114,7 +1277,7 @@ module.exports = connect()(injectIntl(Search));
 module.exports._unconnected = Search;
 
 /***/ }),
-/* 13 */
+/* 14 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1130,8 +1293,8 @@ var _require2 = __webpack_require__(3);
 
 const FormattedMessage = _require2.FormattedMessage;
 
-const shortURL = __webpack_require__(14);
-const LinkMenu = __webpack_require__(10);
+const shortURL = __webpack_require__(15);
+const LinkMenu = __webpack_require__(11);
 
 var _require3 = __webpack_require__(1);
 
@@ -1161,7 +1324,7 @@ class TopSite extends React.Component {
           dispatch = _props.dispatch;
 
     const isContextMenuOpen = this.state.showContextMenu && this.state.activeTile === index;
-    const title = shortURL(link);
+    const title = link.pinTitle || shortURL(link);
     const screenshotClassName = `screenshot${link.screenshot ? " active" : ""}`;
     const topSiteOuterClassName = `top-site-outer${isContextMenuOpen ? " active" : ""}`;
     const style = { backgroundImage: link.screenshot ? `url(${link.screenshot})` : "none" };
@@ -1183,8 +1346,13 @@ class TopSite extends React.Component {
         ),
         React.createElement(
           "div",
-          { className: "title" },
-          title
+          { className: `title ${link.isPinned ? "pinned" : ""}` },
+          link.isPinned && React.createElement("div", { className: "icon icon-pin-small" }),
+          React.createElement(
+            "span",
+            null,
+            title
+          )
         )
       ),
       React.createElement(
@@ -1235,7 +1403,7 @@ module.exports._unconnected = TopSites;
 module.exports.TopSite = TopSite;
 
 /***/ }),
-/* 14 */
+/* 15 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1270,7 +1438,7 @@ module.exports = function shortURL(link) {
 };
 
 /***/ }),
-/* 15 */
+/* 16 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1373,61 +1541,6 @@ module.exports = {
   _PerfService,
   perfService
 };
-
-/***/ }),
-/* 16 */
-/***/ (function(module, exports, __webpack_require__) {
-
-var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;/*!
-  Copyright (c) 2016 Jed Watson.
-  Licensed under the MIT License (MIT), see
-  http://jedwatson.github.io/classnames
-*/
-/* global define */
-
-(function () {
-	'use strict';
-
-	var hasOwn = {}.hasOwnProperty;
-
-	function classNames () {
-		var classes = [];
-
-		for (var i = 0; i < arguments.length; i++) {
-			var arg = arguments[i];
-			if (!arg) continue;
-
-			var argType = typeof arg;
-
-			if (argType === 'string' || argType === 'number') {
-				classes.push(arg);
-			} else if (Array.isArray(arg)) {
-				classes.push(classNames.apply(null, arg));
-			} else if (argType === 'object') {
-				for (var key in arg) {
-					if (hasOwn.call(arg, key) && arg[key]) {
-						classes.push(key);
-					}
-				}
-			}
-		}
-
-		return classes.join(' ');
-	}
-
-	if (typeof module !== 'undefined' && module.exports) {
-		module.exports = classNames;
-	} else if (true) {
-		// register as 'classnames', consistent with npm package name
-		!(__WEBPACK_AMD_DEFINE_ARRAY__ = [], __WEBPACK_AMD_DEFINE_RESULT__ = function () {
-			return classNames;
-		}.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__),
-				__WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
-	} else {
-		window.classNames = classNames;
-	}
-}());
-
 
 /***/ }),
 /* 17 */
