@@ -215,6 +215,7 @@ dom/locales/**
 dom/manifest/**
 dom/mathml/**
 dom/media/**
+!dom/media/*.js*
 dom/messagechannel/**
 dom/network/**
 dom/notification/**
@@ -250,6 +251,9 @@ dom/xhr/**
 dom/xml/**
 dom/xslt/**
 dom/xul/**
+
+# Third-party
+dom/media/webvtt/**
 
 # Exclude everything but self-hosted JS
 js/ductwork/**
