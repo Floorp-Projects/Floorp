@@ -17,6 +17,8 @@
 #include "nsDataHashtable.h"
 #include "nsDeque.h"
 #include "nsHashKeys.h"
+#include "nsHttpRequestHead.h"
+#include "nsICacheEntryOpenCallback.h"
 
 #include "Http2Compression.h"
 
@@ -528,6 +530,22 @@ private:
   nsDataHashtable<nsCStringHashKey, bool> mOriginFrame;
 
   nsDataHashtable<nsCStringHashKey, bool> mJoinConnectionCache;
+
+  class CachePushCheckCallback final : public nsICacheEntryOpenCallback
+  {
+  public:
+    CachePushCheckCallback(Http2Session *session, uint32_t promisedID, const nsACString &requestString);
+
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSICACHEENTRYOPENCALLBACK
+
+  private:
+    ~CachePushCheckCallback() { }
+
+    RefPtr<Http2Session> mSession;
+    uint32_t mPromisedID;
+    nsHttpRequestHead mRequestHead;
+  };
 
 private:
 /// connect tunnels
