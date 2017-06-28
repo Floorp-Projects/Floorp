@@ -469,8 +469,8 @@ ServoRestyleManager::ProcessPostTraversal(Element* aElement,
   // Hold the old style context alive, because it could become a dangling
   // pointer during the replacement. In practice it's not a huge deal, but
   // better not playing with dangling pointers if not needed.
-  RefPtr<nsStyleContext> oldStyleContext =
-    styleFrame ? styleFrame->StyleContext() : nullptr;
+  RefPtr<ServoStyleContext> oldStyleContext =
+    styleFrame ? styleFrame->StyleContext()->AsServo() : nullptr;
 
   UndisplayedNode* displayContentsNode = nullptr;
   // FIXME(emilio, bug 1303605): This can be simpler for Servo.
@@ -479,7 +479,7 @@ ServoRestyleManager::ProcessPostTraversal(Element* aElement,
     displayContentsNode =
       PresContext()->FrameConstructor()->GetDisplayContentsNodeFor(aElement);
     if (displayContentsNode) {
-      oldStyleContext = displayContentsNode->mStyle;
+      oldStyleContext = displayContentsNode->mStyle->AsServo();
     }
   }
 
@@ -513,7 +513,7 @@ ServoRestyleManager::ProcessPostTraversal(Element* aElement,
   ServoRestyleState& childrenRestyleState =
     thisFrameRestyleState ? *thisFrameRestyleState : aRestyleState;
 
-  RefPtr<nsStyleContext> newContext = nullptr;
+  RefPtr<ServoStyleContext> newContext = nullptr;
   if (recreateContext) {
     MOZ_ASSERT(styleFrame || displayContentsNode);
 
