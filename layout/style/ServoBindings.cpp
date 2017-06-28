@@ -24,7 +24,6 @@
 #include "nsDeviceContext.h"
 #include "nsIContentInlines.h"
 #include "nsIDOMNode.h"
-#include "nsIDocument.h"
 #include "nsIDocumentInlines.h"
 #include "nsIFrame.h"
 #include "nsINode.h"
@@ -817,6 +816,12 @@ Gecko_GetXMLLangValue(RawGeckoElementBorrowed aElement)
 
   nsCOMPtr<nsIAtom> atom = attr->GetAtomValue();
   return atom.forget().take();
+}
+
+nsIDocument::DocumentTheme
+Gecko_GetDocumentLWTheme(const nsIDocument *aDocument)
+{
+  return aDocument->ThreadSafeGetDocumentLWTheme();
 }
 
 template <typename Implementor>
