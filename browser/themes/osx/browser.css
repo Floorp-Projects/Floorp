@@ -2143,6 +2143,7 @@ html|*.addon-webext-perm-list {
 
 %include ../shared/customizableui/customizeMode.inc.css
 
+%ifndef MOZ_PHOTON_THEME
 #main-window[customizing] {
   background-color: rgb(178,178,178);
 }
@@ -2206,6 +2207,7 @@ html|*.addon-webext-perm-list {
   border-right: 3px solid transparent;
   border-left: 3px solid transparent;
 }
+%endif
 
 %ifndef MOZ_PHOTON_THEME
 @media (min-resolution: 2dppx) {

@@ -6063,11 +6063,11 @@
       </method>
 
       <property name="_isCustomizing" readonly="true">
-        <getter>
+        <getter><![CDATA[
           let root = document.documentElement;
           return root.getAttribute("customizing") == "true" ||
-                 root.getAttribute("customize-exiting") == "true";
-        </getter>
+                 (!AppConstants.MOZ_PHOTON_THEME && root.getAttribute("customize-exiting") == "true");
+        ]]></getter>
       </property>
 
       <method name="_setPositionalAttributes">

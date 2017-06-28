@@ -18,7 +18,11 @@
   color: var(--lwt-text-color) !important;
 }
 
+%ifndef MOZ_PHOTON_THEME
 :root:-moz-lwtheme:not([customization-lwtheme]) {
+%else
+:root:-moz-lwtheme {
+%endif
   background-color: var(--lwt-accent-color) !important;
   background-image: var(--lwt-header-image), var(--lwt-additional-images) !important;
   background-position: var(--lwt-background-alignment) !important;
@@ -1184,6 +1188,7 @@ toolbarpaletteitem[place="palette"] > #downloads-button[indicator] > #downloads-
 %endif
 
 /* Customize mode */
+%ifndef MOZ_PHOTON_THEME
 #navigator-toolbox,
 #browser-bottombox,
 #content-deck {
@@ -1197,6 +1202,7 @@ toolbarpaletteitem[place="palette"] > #downloads-button[indicator] > #downloads-
   transition-duration: 1ms;
   transition-timing-function: linear;
 }
+%endif
 
 #PanelUI-contents > .panel-customization-placeholder > .panel-customization-placeholder-child {
   list-style-image: none;
