@@ -31,6 +31,11 @@ public:
   void* GetUniqueStyleData(const nsStyleStructID& aSID);
   void* CreateEmptyStyleData(const nsStyleStructID& aSID);
 
+  /**
+   * Ensures the same structs are cached on this style context as would be
+   * done if we called aOther->CalcDifference(this).
+   */
+  void EnsureSameStructsCached(nsStyleContext* aOldContext);
 
   /**
    * Sets the NS_STYLE_INELIGIBLE_FOR_SHARING bit on this style context
