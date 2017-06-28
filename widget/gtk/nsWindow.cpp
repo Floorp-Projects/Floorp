@@ -6625,10 +6625,7 @@ nsWindow::SynthesizeNativeMouseEvent(LayoutDeviceIntPoint aPoint,
   // explicitly *before* requesting a button-press/release. You will also need to wait
   // for the motion event to be dispatched before requesting a button-press/release
   // event to maintain the desired event order.
-  if (aNativeMessage == GDK_BUTTON_PRESS ||
-      aNativeMessage == GDK_BUTTON_RELEASE ||
-      aNativeMessage == GDK_2BUTTON_PRESS ||
-      aNativeMessage == GDK_3BUTTON_PRESS) {
+  if (aNativeMessage == GDK_BUTTON_PRESS || aNativeMessage == GDK_BUTTON_RELEASE) {
     GdkEvent event;
     memset(&event, 0, sizeof(GdkEvent));
     event.type = (GdkEventType)aNativeMessage;
