@@ -524,7 +524,7 @@ ServoRestyleManager::ProcessPostTraversal(Element* aElement,
     newContext = aRestyleState.StyleSet().GetContext(
       computedValues.forget(), aParentContext, pseudoTag, pseudo, aElement);
 
-    newContext->EnsureSameStructsCached(oldStyleContext);
+    newContext->ResolveSameStructsAs(PresContext(), oldStyleContext);
 
     // We want to walk all the continuations here, even the ones with different
     // styles.  In practice, the only reason we get continuations with different
