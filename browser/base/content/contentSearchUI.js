@@ -620,6 +620,7 @@ ContentSearchUIController.prototype = {
     }
     let searchWithHeader = document.getElementById("contentSearchSearchWithHeader");
     if (this.input.value) {
+      // eslint-disable-next-line no-unsanitized/property
       searchWithHeader.innerHTML = this._strings.searchForSomethingWith;
       searchWithHeader.querySelector(".contentSearchSearchWithHeaderSearchText").textContent = this.input.value;
     } else {
