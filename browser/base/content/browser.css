@@ -1231,6 +1231,11 @@ toolbarpaletteitem[place="palette"] > #downloads-button[indicator] > #downloads-
   flex-grow: 1;
 }
 
+#customization-container[photon] #customization-panelHolder {
+  padding-top: 10px;
+  padding-bottom: 10px;
+}
+
 #customization-panelHolder > #widget-overflow-fixed-list {
   padding-bottom: 50px; /* Make sure there's always space to drop stuff. */
   flex: 0 1 auto; /* Size to content, but allow ourselves to shrink */

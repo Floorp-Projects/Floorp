@@ -105,8 +105,13 @@
 }
 
 #customization-container {
+%ifdef MOZ_PHOTON_THEME
+  background-color: var(--toolbar-background-color);
+  color: var(--toolbar-foreground-color);
+%else
   background-color: -moz-field;
   color: -moz-fieldText;
+%endif
   text-shadow: none;
 }
 
@@ -126,17 +131,23 @@
 }
 
 #customization-panel-container {
+%ifndef MOZ_PHOTON_THEME
   padding: 15px 25px 25px;
   background-image: linear-gradient(to bottom, #3e86ce, #3878ba);
+%else
+  padding: 0 25px 25px;
+%endif
 }
 
+%ifndef MOZ_PHOTON_THEME
 #main-window:-moz-any([customize-entering],[customize-entered]) #browser-bottombox,
 #customization-footer {
   background-color: -moz-dialog;
 }
+%endif
 
 #customization-footer {
-  border-top: 1px solid ThreeDLightShadow;
+  border-top: 2px solid ThreeDLightShadow;
   padding: 10px;
 }
 
@@ -242,6 +253,7 @@
   background-size: contain;
 }
 
+%ifndef MOZ_PHOTON_THEME
 #main-window[customize-entered] #customization-panel-container {
   background-image: url("chrome://browser/skin/customizableui/customizeMode-separatorHorizontal.png"),
                     url("chrome://browser/skin/customizableui/customizeMode-separatorVertical.png"),
@@ -253,6 +265,7 @@
   background-size: auto 12px, 12px 100%, auto, auto, auto;
   background-attachment: scroll, scroll, fixed, fixed, scroll;
 }
+%endif
 
 #widget-overflow-fixed-list > toolbarpaletteitem[place="panel"],
 toolbarpaletteitem[place="toolbar"] {
@@ -487,12 +500,10 @@ toolbarpaletteitem[place="toolbar"]:not([mousedown="true"]):-moz-focusring {
   background: var(--arrowpanel-background);
   background-clip: padding-box;
   border: 1px solid var(--arrowpanel-border-color);
+  box-shadow: 0 0 10px hsla(0,0%,0%,.2);
 %ifdef XP_MACOSX
-  box-shadow: 0 0 0 1px var(--arrowpanel-border-color);
   -moz-appearance: none;
   border-radius: var(--arrowpanel-border-radius);
-%else
-  box-shadow: 0 0 4px hsla(0,0%,0%,.2);
 %endif
 }
 
