@@ -8001,6 +8001,40 @@ class LIsConstructor : public LInstructionHelper<1, 1, 0>
     }
 };
 
+class LIsArrayO : public LInstructionHelper<1, 1, 0>
+{
+  public:
+    LIR_HEADER(IsArrayO);
+
+    explicit LIsArrayO(const LAllocation& object) {
+        setOperand(0, object);
+    }
+    const LAllocation* object() {
+        return getOperand(0);
+    }
+    MIsArray* mir() const {
+        return mir_->toIsArray();
+    }
+};
+
+class LIsArrayV : public LInstructionHelper<1, BOX_PIECES, 1>
+{
+  public:
+    LIR_HEADER(IsArrayV);
+    static const size_t Value = 0;
+
+    explicit LIsArrayV(const LBoxAllocation& value, const LDefinition& temp) {
+        setBoxOperand(0, value);
+        setTemp(0, temp);
+    }
+    const LDefinition* temp() {
+        return getTemp(0);
+    }
+    MIsArray* mir() const {
+        return mir_->toIsArray();
+    }
+};
+
 class LIsObject : public LInstructionHelper<1, BOX_PIECES, 0>
 {
   public:

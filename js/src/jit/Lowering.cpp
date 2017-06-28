@@ -4252,6 +4252,23 @@ LIRGenerator::visitCallInstanceOf(MCallInstanceOf* ins)
 }
 
 void
+LIRGenerator::visitIsArray(MIsArray* ins)
+{
+    MOZ_ASSERT(ins->type() == MIRType::Boolean);
+
+    if (ins->value()->type() == MIRType::Object) {
+        LIsArrayO* lir = new(alloc()) LIsArrayO(useRegister(ins->value()));
+        define(lir, ins);
+        assignSafepoint(lir, ins);
+    } else {
+        MOZ_ASSERT(ins->value()->type() == MIRType::Value);
+        LIsArrayV* lir = new(alloc()) LIsArrayV(useBox(ins->value()), temp());
+        define(lir, ins);
+        assignSafepoint(lir, ins);
+    }
+}
+
+void
 LIRGenerator::visitIsCallable(MIsCallable* ins)
 {
     MOZ_ASSERT(ins->object()->type() == MIRType::Object);

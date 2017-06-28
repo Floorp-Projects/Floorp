@@ -574,6 +574,12 @@ IonBuilder::inlineArray(CallInfo& callInfo)
     return InliningStatus_Inlined;
 }
 
+static bool
+IsArrayClass(const Class* clasp)
+{
+    return clasp == &ArrayObject::class_ || clasp == &UnboxedArrayObject::class_;
+}
+
 IonBuilder::InliningResult
 IonBuilder::inlineArrayIsArray(CallInfo& callInfo)
 {
@@ -587,22 +593,59 @@ IonBuilder::inlineArrayIsArray(CallInfo& callInfo)
 
     MDefinition* arg = callInfo.getArg(0);
 
-    bool isArray;
     if (!arg->mightBeType(MIRType::Object)) {
-        isArray = false;
-    } else {
-        if (arg->type() != MIRType::Object)
-            return InliningStatus_NotInlined;
-
-        TemporaryTypeSet* types = arg->resultTypeSet();
-        const Class* clasp = types ? types->getKnownClass(constraints()) : nullptr;
-        if (!clasp || clasp->isProxy())
-            return InliningStatus_NotInlined;
-
-        isArray = (clasp == &ArrayObject::class_ || clasp == &UnboxedArrayObject::class_);
+        pushConstant(BooleanValue(false));
+        callInfo.setImplicitlyUsedUnchecked();
+        return InliningStatus_Inlined;
     }
 
-    pushConstant(BooleanValue(isArray));
+    using ForAllResult = TemporaryTypeSet::ForAllResult;
+
+    TemporaryTypeSet* types = arg->resultTypeSet();
+
+    // Fast path for non-proxy objects.
+    if (arg->type() == MIRType::Object &&
+        types &&
+        types->forAllClasses(constraints(), IsProxyClass) == ForAllResult::ALL_FALSE)
+    {
+        // Definitely not a proxy. Now check for the array classes.
+        ForAllResult result = types->forAllClasses(constraints(), IsArrayClass);
+
+        if (result == ForAllResult::ALL_FALSE || result == ForAllResult::ALL_TRUE) {
+            // Definitely an array or definitely not an array, so we can
+            // constant fold.
+            pushConstant(BooleanValue(result == ForAllResult::ALL_TRUE));
+            callInfo.setImplicitlyUsedUnchecked();
+            return InliningStatus_Inlined;
+        }
+
+        // We have some array classes and some non-array classes, so we have to
+        // check at runtime.
+        MOZ_ASSERT(result == ForAllResult::MIXED);
+
+        MHasClass* hasClass1 = MHasClass::New(alloc(), arg, &ArrayObject::class_);
+        current->add(hasClass1);
+
+        MHasClass* hasClass2 = MHasClass::New(alloc(), arg, &UnboxedArrayObject::class_);
+        current->add(hasClass2);
+
+        MBitOr* either = MBitOr::New(alloc(), hasClass1, hasClass2);
+        either->infer(inspector, pc);
+        current->add(either);
+
+        MDefinition* def = convertToBoolean(either);
+        current->push(def);
+
+        callInfo.setImplicitlyUsedUnchecked();
+        return InliningStatus_Inlined;
+    }
+
+    // The value might be a primitive or a proxy. MIsArray handles these cases.
+    MIsArray* isArray = MIsArray::New(alloc(), arg);
+    current->add(isArray);
+    current->push(isArray);
+
+    MOZ_TRY(resumeAfter(isArray));
 
     callInfo.setImplicitlyUsedUnchecked();
     return InliningStatus_Inlined;
