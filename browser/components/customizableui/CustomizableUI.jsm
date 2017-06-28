@@ -243,16 +243,17 @@ var CustomizableUIInternal = {
     this._updateAreasForPhoton();
 
     let navbarPlacements = [
+      "back-button",
+      "forward-button",
+      "stop-reload-button",
+      "home-button",
       "urlbar-container",
       "search-container",
       "bookmarks-menu-button",
       "downloads-button",
-      "home-button",
+      "sidebar-button",
     ];
 
-    if (AppConstants.MOZ_PHOTON_THEME) {
-      navbarPlacements.push("sidebar-button");
-    }
     if (AppConstants.MOZ_DEV_EDITION) {
       navbarPlacements.splice(2, 0, "developer-button");
     }
