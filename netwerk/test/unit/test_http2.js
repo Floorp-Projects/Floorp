@@ -969,6 +969,45 @@ function test_complete() {
   do_timeout(0,run_next_test);
 }
 
+var Http2DoublepushListener = function () {};
+Http2DoublepushListener.prototype = new Http2CheckListener();
+Http2DoublepushListener.prototype.onStopRequest = function (request, ctx, status) {
+  do_check_true(this.onStartRequestFired);
+  do_check_true(Components.isSuccessCode(status));
+  do_check_true(this.onDataAvailableFired);
+  do_check_true(this.isHttp2Connection == this.shouldBeHttp2);
+
+  var chan = makeChan("https://localhost:" + serverPort + "/doublypushed");
+  var listener = new Http2DoublypushedListener();
+  chan.loadGroup = loadGroup;
+  chan.asyncOpen2(listener);
+};
+
+var Http2DoublypushedListener = function () {};
+Http2DoublypushedListener.prototype = new Http2CheckListener();
+Http2DoublypushedListener.prototype.readData = "";
+Http2DoublypushedListener.prototype.onDataAvailable = function (request, ctx, stream, off, cnt) {
+  this.onDataAvailableFired = true;
+  this.accum += cnt;
+  this.readData += read_stream(stream, cnt);
+};
+Http2DoublypushedListener.prototype.onStopRequest = function (request, ctx, status) {
+  do_check_true(this.onStartRequestFired);
+  do_check_true(Components.isSuccessCode(status));
+  do_check_true(this.onDataAvailableFired);
+  do_check_eq(this.readData, "pushed");
+
+  run_next_test();
+  do_test_finished();
+};
+
+function test_http2_doublepush() {
+  var chan = makeChan("https://localhost:" + serverPort + "/doublepush");
+  var listener = new Http2DoublepushListener();
+  chan.loadGroup = loadGroup;
+  chan.asyncOpen2(listener);
+}
+
 // hack - the header test resets the multiplex object on the server,
 // so make sure header is always run before the multiplex test.
 //
@@ -1004,6 +1043,7 @@ var tests = [ test_http2_post_big
             , test_http2_folded_header
             , test_http2_empty_data
             , test_http2_status_phrase
+            , test_http2_doublepush
             // Add new tests above here - best to add new tests before h1
             // streams get too involved
             // These next two must always come in this order
