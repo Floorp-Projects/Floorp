@@ -78,9 +78,6 @@ to mochitest command.
 * Unsupported pseudo-elements or anon boxes
   * :-moz-tree bits bug 1348488
     * test_selectors.html `:-moz-tree` [10]
-* Unsupported pseudo-classes
-  * :-moz-window-inactive bug 1348489
-    * test_selectors.html `:-moz-window-inactive` [2]
 * Unit should be preserved after parsing servo/servo#15346
   * test_units_time.html [1]
 * getComputedStyle style doesn't contain custom properties bug 1336891
