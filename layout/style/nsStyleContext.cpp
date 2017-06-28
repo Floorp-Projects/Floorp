@@ -634,19 +634,22 @@ NS_NewStyleContext(nsStyleContext* aParentContext,
   return context.forget();
 }
 
-already_AddRefed<nsStyleContext>
-NS_NewStyleContext(nsStyleContext* aParentContext,
-                   nsPresContext* aPresContext,
-                   nsIAtom* aPseudoTag,
-                   CSSPseudoElementType aPseudoType,
-                   already_AddRefed<ServoComputedValues> aComputedValues)
+namespace mozilla {
+
+already_AddRefed<ServoStyleContext>
+ServoStyleContext::Create(nsStyleContext* aParentContext,
+                          nsPresContext* aPresContext,
+                          nsIAtom* aPseudoTag,
+                          CSSPseudoElementType aPseudoType,
+                          already_AddRefed<ServoComputedValues> aComputedValues)
 {
-  RefPtr<nsStyleContext> context =
-    new
-    ServoStyleContext(aParentContext, aPresContext, aPseudoTag, aPseudoType,
-                   Move(aComputedValues));
+  RefPtr<ServoStyleContext> context =
+    new ServoStyleContext(aParentContext, aPresContext, aPseudoTag, aPseudoType,
+                          Move(aComputedValues));
   return context.forget();
 }
+
+} // namespace mozilla
 
 nsIPresShell*
 nsStyleContext::Arena()

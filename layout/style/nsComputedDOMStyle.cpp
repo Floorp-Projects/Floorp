@@ -641,8 +641,8 @@ nsComputedDOMStyle::DoGetStyleContextNoFlush(Element* aElement,
             RefPtr<ServoComputedValues> baseComputedValues =
               presContext->StyleSet()->AsServo()->
                 GetBaseComputedValuesForElement(aElement, pseudoType);
-            return NS_NewStyleContext(nullptr, presContext, aPseudo,
-                                      pseudoType, baseComputedValues.forget());
+            return ServoStyleContext::Create(nullptr, presContext, aPseudo,
+                                             pseudoType, baseComputedValues.forget());
           }
         }
 
@@ -676,8 +676,8 @@ nsComputedDOMStyle::DoGetStyleContextNoFlush(Element* aElement,
 
     RefPtr<ServoComputedValues> baseComputedValues =
       servoSet->GetBaseComputedValuesForElement(aElement, pseudoType);
-    return NS_NewStyleContext(nullptr, presContext, aPseudo,
-                              pseudoType, baseComputedValues.forget());
+    return ServoStyleContext::Create(nullptr, presContext, aPseudo,
+                                     pseudoType, baseComputedValues.forget());
   }
 
   RefPtr<nsStyleContext> parentContext;
