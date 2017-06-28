@@ -151,14 +151,21 @@ nsImageLoadingContent::Notify(imgIRequest* aRequest,
   }
 
   {
-    nsAutoScriptBlocker scriptBlocker;
-
+    // Calling Notify on observers can modify the list of observers so make
+    // a local copy.
+    AutoTArray<nsCOMPtr<imgINotificationObserver>, 2> observers;
     for (ImageObserver* observer = &mObserverList, *next; observer;
          observer = next) {
       next = observer->mNext;
       if (observer->mObserver) {
-        observer->mObserver->Notify(aRequest, aType, aData);
+        observers.AppendElement(observer->mObserver);
       }
+    }
+
+    nsAutoScriptBlocker scriptBlocker;
+
+    for (auto& observer : observers) {
+        observer->Notify(aRequest, aType, aData);
     }
   }
 
