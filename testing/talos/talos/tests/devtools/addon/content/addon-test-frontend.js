@@ -1,6 +1,8 @@
 // This file is the common bits for the test runner frontend, originally
 // extracted out of the tart.html frontend when creating the damp test.
 
+/* globals updateConfig, defaultConfig, config */ /* from damp.html */
+
 function $(id) {
   return document.getElementById(id);
 }

@@ -1,6 +1,8 @@
 
 // -*- Mode: js; tab-width: 2; indent-tabs-mode: nil; js2-basic-offset: 2; js2-skip-preprocessor-directives: t; -*-
 
+/* globals APP_SHUTDOWN */
+
 var { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/Promise.jsm");
@@ -41,9 +43,8 @@ var windowListener = {
 function promiseOneEvent(target, eventName, capture) {
   let deferred = Promise.defer();
   target.addEventListener(eventName, function handler(event) {
-    target.removeEventListener(eventName, handler, capture);
     deferred.resolve();
-  }, capture);
+  }, {capture, once: true});
   return deferred.promise;
 }
 
@@ -269,9 +270,8 @@ function waitForTabSwitchDone(browser) {
   return new Promise((resolve) => {
     let gBrowser = browser.ownerGlobal.gBrowser;
     gBrowser.addEventListener("TabSwitchDone", function onTabSwitchDone() {
-      gBrowser.removeEventListener("TabSwitchDone", onTabSwitchDone);
       resolve();
-    });
+    }, {once: true});
   });
 }
 

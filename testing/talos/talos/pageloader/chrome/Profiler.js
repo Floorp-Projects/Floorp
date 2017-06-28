@@ -106,7 +106,7 @@ var Profiler;
     },
     finishTestAsync: function Profiler__finishTest() {
       if (!(_profiler && enabled)) {
-        return;
+        return undefined;
       }
       return new Promise((resolve, reject) => {
         Services.profiler.getProfileDataAsync().then((profile) => {

@@ -4,6 +4,8 @@
 
 // This file is loaded as a framescript
 
+/* globals docShell */
+
 var { interfaces: Ci, utils: Cu } = Components;
 
 /**

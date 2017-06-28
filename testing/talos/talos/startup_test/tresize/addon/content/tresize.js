@@ -6,7 +6,7 @@
  * and average to stdout or logfile.
  */
 
-var dataSet = new Array();
+var dataSet = [];
 var windowSize = 425;
 var resizeIncrement = 2;
 var count = 0;
