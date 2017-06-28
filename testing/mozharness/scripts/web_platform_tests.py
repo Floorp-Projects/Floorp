@@ -164,6 +164,9 @@ class WebPlatformTest(TestingMixin, MercurialScript, BlobUploadMixin, CodeCovera
                 "--stackfix-dir=%s" % os.path.join(dirs["abs_test_install_dir"], "bin"),
                 "--run-by-dir=3"]
 
+        if not sys.platform.startswith("linux"):
+            cmd += ["--exclude=css"]
+
         # Let wptrunner determine the test type when --try-test-paths is used
         wpt_test_paths = self.try_test_paths.get("web-platform-tests")
         if not wpt_test_paths:
