@@ -38,4 +38,3 @@ fuzzy-if(browserIsRemote&&winWidget,140,276) == fieldset-columns-001.html fields
 == dynamic-change-with-overflow-1.html dynamic-change-with-overflow-1-ref.html
 == dynamic-text-indent-1.html dynamic-text-indent-1-ref.html
 == dynamic-text-indent-2.html dynamic-text-indent-2-ref.html
-== break-avoid-line-position-1.html break-avoid-line-position-1-ref.html
