@@ -15,7 +15,6 @@
 
 <!ENTITY  paneSearchResults.title       "Search Results">
 <!ENTITY  paneGeneral.title             "General">
-<!ENTITY  paneSearch.title              "Search">
 <!ENTITY  paneFilesApplications.title   "Files &amp; Applications">
 <!ENTITY  panePrivacySecurity.title     "Privacy &amp; Security">
 <!ENTITY  paneContainers.title          "Container Tabs">
@@ -25,3 +24,5 @@
 <!ENTITY  paneSync1.title          "Firefox Account">
 
 <!ENTITY  helpButton2.label        "&brandShortName; Support">
+
+<!ENTITY  searchInput.label        "Search">

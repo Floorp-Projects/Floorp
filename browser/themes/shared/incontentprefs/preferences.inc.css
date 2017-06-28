@@ -81,10 +81,6 @@ treecol {
   list-style-image: url("chrome://browser/skin/preferences/in-content-new/icons.svg#general");
 }
 
-#category-search > .category-icon {
-  list-style-image: url("chrome://browser/skin/preferences/in-content-new/icons.svg#searchResults");
-}
-
 #category-application > .category-icon {
   list-style-image: url("chrome://browser/skin/preferences/in-content-new/icons.svg#content");
 }
@@ -246,6 +242,10 @@ treecol {
 
 #trackingProtectionAdvancedSettings {
   margin-inline-start: 15px;
+}
+
+#crashReporterGroup {
+  margin-top: 0;
 }
 
 /* Collapse the non-active vboxes in decks to use only the height the
