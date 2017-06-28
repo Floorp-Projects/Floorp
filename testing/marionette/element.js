@@ -173,7 +173,7 @@ element.Store = class {
       el = el.get();
     } catch (e) {
       el = null;
-      delete this.els[id];
+      delete this.els[uuid];
     }
 
     // use XPCNativeWrapper to compare elements (see bug 834266)
