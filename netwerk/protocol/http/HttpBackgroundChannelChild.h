@@ -95,13 +95,16 @@ private:
   RefPtr<HttpChannelChild> mChannelChild;
 
   // True if OnStartRequest is received by HttpChannelChild.
+  // Should only access on STS thread.
   bool mStartReceived = false;
 
   // True if OnStartRequest is sent by HttpChannelParent.
+  // Should only access on STS thread.
   bool mStartSent = false;
 
   // Store pending messages that require to be handled after OnStartRequest.
   // Should be flushed after OnStartRequest is received and handled.
+  // Should only access on STS thread.
   nsTArray<nsCOMPtr<nsIRunnable>> mQueuedRunnables;
 };
 

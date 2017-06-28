@@ -4412,7 +4412,7 @@ nsHttpChannel::OnCacheEntryAvailableInternal(nsICacheEntry *entry,
 
     if (mCanceled) {
         LOG(("channel was canceled [this=%p status=%" PRIx32 "]\n",
-             this, static_cast<uint32_t>(mStatus)));
+             this, static_cast<uint32_t>(static_cast<nsresult>(mStatus))));
         return mStatus;
     }
 
@@ -5047,7 +5047,7 @@ nsHttpChannel::CloseCacheEntry(bool doomOnFailure)
         return;
 
     LOG(("nsHttpChannel::CloseCacheEntry [this=%p] mStatus=%" PRIx32 " mCacheEntryIsWriteOnly=%x",
-         this, static_cast<uint32_t>(mStatus), mCacheEntryIsWriteOnly));
+         this, static_cast<uint32_t>(static_cast<nsresult>(mStatus)), mCacheEntryIsWriteOnly));
 
     // If we have begun to create or replace a cache entry, and that cache
     // entry is not complete and not resumable, then it needs to be doomed.
@@ -6743,7 +6743,8 @@ nsHttpChannel::OnProxyAvailable(nsICancelable *request, nsIChannel *channel,
 {
     LOG(("nsHttpChannel::OnProxyAvailable [this=%p pi=%p status=%" PRIx32
          " mStatus=%" PRIx32 "]\n",
-         this, pi, static_cast<uint32_t>(status), static_cast<uint32_t>(mStatus)));
+         this, pi, static_cast<uint32_t>(status),
+         static_cast<uint32_t>(static_cast<nsresult>(mStatus))));
     mProxyRequest = nullptr;
 
     nsresult rv;
@@ -6967,11 +6968,13 @@ nsHttpChannel::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
     if (!(mCanceled || NS_FAILED(mStatus)) && !WRONG_RACING_RESPONSE_SOURCE(request)) {
         // capture the request's status, so our consumers will know ASAP of any
         // connection failures, etc - bug 93581
-        request->GetStatus(&mStatus);
+        nsresult status;
+        request->GetStatus(&status);
+        mStatus = status;
     }
 
     LOG(("nsHttpChannel::OnStartRequest [this=%p request=%p status=%" PRIx32 "]\n",
-         this, request, static_cast<uint32_t>(mStatus)));
+         this, request, static_cast<uint32_t>(static_cast<nsresult>(mStatus))));
 
     if (mRaceCacheWithNetwork) {
         LOG(("  racingNetAndCache - mFirstResponseSource:%d fromCache:%d fromNet:%d\n",
