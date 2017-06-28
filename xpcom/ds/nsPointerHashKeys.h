@@ -35,10 +35,7 @@ public:
   static KeyTypePointer KeyToPointer(KeyType aKey) { return aKey; }
   static PLDHashNumber HashKey(KeyTypePointer aKey)
   {
-    // Be careful!  We don't want to do the cast to PLDHashNumber which is a
-    // trimming cast on 64-bit platforms before the shift, otherwise we will
-    // lose valuable bits from our hash key!
-    return PLDHashNumber(uintptr_t(aKey) >> 2);
+    return uintptr_t(aKey) >> 2;
   }
   enum { ALLOW_MEMMOVE = true };
 
