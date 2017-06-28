@@ -652,14 +652,6 @@ function emulateToInactivateModifiers_(TIP, modifiers, win = window)
   }
 }
 
-function getNavigator_(win = window)
-{
-  if (typeof navigator != "undefined") {
-    return navigator;
-  }
-  return win.navigator;
-}
-
 function isMac_(win = window) {
   if (win) {
     try {
