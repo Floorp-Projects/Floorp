@@ -27,6 +27,7 @@ class TouchBlockState;
 class WheelBlockState;
 class DragBlockState;
 class PanGestureBlockState;
+class KeyboardBlockState;
 
 /**
  * A base class that stores state common to various input blocks.
@@ -66,6 +67,9 @@ public:
     return nullptr;
   }
   virtual PanGestureBlockState* AsPanGestureBlock() {
+    return nullptr;
+  }
+  virtual KeyboardBlockState* AsKeyboardBlock() {
     return nullptr;
   }
 
@@ -484,6 +488,23 @@ private:
   ScreenIntPoint mSlopOrigin;
   // A reference to the InputQueue's touch counter
   TouchCounter& mTouchCounter;
+};
+
+/**
+ * This class represents a set of keyboard inputs targeted at the same Apzc.
+ */
+class KeyboardBlockState : public InputBlockState
+{
+public:
+  explicit KeyboardBlockState(const RefPtr<AsyncPanZoomController>& aTargetApzc);
+
+  KeyboardBlockState* AsKeyboardBlock() override {
+    return this;
+  }
+
+  bool MustStayActive() override {
+    return false;
+  }
 };
 
 } // namespace layers

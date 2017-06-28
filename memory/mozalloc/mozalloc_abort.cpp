@@ -68,7 +68,7 @@ void fillAbortMessage(char (&msg)[N], uintptr_t retAddress) {
 //
 // That segmentation fault will be interpreted as another bug by ASan and as a
 // result, ASan will just exit(1) instead of aborting.
-void abort(void)
+extern "C" void abort(void)
 {
 #ifdef MOZ_WIDGET_ANDROID
     char msg[64] = {};

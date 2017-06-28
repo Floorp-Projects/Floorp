@@ -73,13 +73,33 @@ class nsHtml5AttributeName
     static nsIAtom** COLONIFIED_LOCAL(nsIAtom* name, nsIAtom* suffix);
   public:
     static nsIAtom** SAME_LOCAL(nsIAtom* name);
+    inline static int32_t levelOrderBinarySearch(jArray<int32_t, int32_t> data,
+                                                 int32_t key)
+    {
+      int32_t n = data.length;
+      int32_t i = 0;
+      while (i < n) {
+        int32_t val = data[i];
+        if (val < key) {
+          i = 2 * i + 2;
+        } else if (val > key) {
+          i = 2 * i + 1;
+        } else {
+          return i;
+        }
+      }
+      return -1;
+    }
+
     inline static nsHtml5AttributeName* nameByBuffer(char16_t* buf,
                                                      int32_t offset,
                                                      int32_t length,
                                                      nsHtml5AtomTable* interner)
     {
       uint32_t hash = nsHtml5AttributeName::bufToHash(buf, length);
-      int32_t index = nsHtml5AttributeName::ATTRIBUTE_HASHES.binarySearch(hash);
+      jArray<int32_t, int32_t> hashes;
+      hashes = nsHtml5AttributeName::ATTRIBUTE_HASHES;
+      int32_t index = levelOrderBinarySearch(hashes, hash);
       if (index < 0) {
         return nullptr;
       }

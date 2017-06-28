@@ -414,8 +414,7 @@ public class CustomTabsActivity extends AppCompatActivity
      */
     private void onLoadingControlClicked() {
         if (mCanStop) {
-            // TODO: enable this after implementing GeckoView.stop()
-            //mGeckoView.stop();
+            mGeckoView.stop();
         } else {
             mGeckoView.reload();
         }

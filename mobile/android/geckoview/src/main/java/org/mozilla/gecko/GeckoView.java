@@ -500,6 +500,13 @@ public class GeckoView extends LayerView {
         mEventDispatcher.dispatch("GeckoView:Reload", null);
     }
 
+    /**
+    * Stop loading.
+    */
+    public void stop() {
+        mEventDispatcher.dispatch("GeckoView:Stop", null);
+    }
+
     /* package */ void setInputConnectionListener(final InputConnectionListener icl) {
         mInputConnectionListener = icl;
     }

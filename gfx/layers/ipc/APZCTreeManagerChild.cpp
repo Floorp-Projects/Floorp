@@ -119,11 +119,31 @@ APZCTreeManagerChild::ReceiveInputEvent(
     event = processedEvent;
     return res;
   }
+  case KEYBOARD_INPUT: {
+    KeyboardInput& event = aEvent.AsKeyboardInput();
+    KeyboardInput processedEvent;
+
+    nsEventStatus res;
+    SendReceiveKeyboardInputEvent(event,
+                                  &res,
+                                  &processedEvent,
+                                  aOutTargetGuid,
+                                  aOutInputBlockId);
+
+    event = processedEvent;
+    return res;
+  }
   default: {
     MOZ_ASSERT_UNREACHABLE("Invalid InputData type.");
     return nsEventStatus_eConsumeNoDefault;
   }
   }
+}
+
+void
+APZCTreeManagerChild::SetKeyboardMap(const KeyboardMap& aKeyboardMap)
+{
+  SendSetKeyboardMap(aKeyboardMap);
 }
 
 void
@@ -207,11 +227,15 @@ APZCTreeManagerChild::UpdateWheelTransaction(
   SendUpdateWheelTransaction(aRefPoint, aEventMessage);
 }
 
-void APZCTreeManagerChild::TransformEventRefPoint(
+void APZCTreeManagerChild::ProcessUnhandledEvent(
     LayoutDeviceIntPoint* aRefPoint,
-    ScrollableLayerGuid* aOutTargetGuid)
+    ScrollableLayerGuid*  aOutTargetGuid,
+    uint64_t*             aOutFocusSequenceNumber)
 {
-  SendTransformEventRefPoint(*aRefPoint, aRefPoint, aOutTargetGuid);
+  SendProcessUnhandledEvent(*aRefPoint,
+                            aRefPoint,
+                            aOutTargetGuid,
+                            aOutFocusSequenceNumber);
 }
 
 mozilla::ipc::IPCResult

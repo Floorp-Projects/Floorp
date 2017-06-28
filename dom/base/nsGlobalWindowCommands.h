@@ -9,6 +9,12 @@
 
 #include "nscore.h"
 
+namespace mozilla {
+namespace layers {
+struct KeyboardScrollAction;
+} // namespace layers
+} // namespace mozilla
+
 class nsIControllerCommandTable;
 
 class nsWindowCommandRegistration
@@ -17,6 +23,22 @@ public:
   static nsresult  RegisterWindowCommands(nsIControllerCommandTable *ccm);
 };
 
+class nsGlobalWindowCommands
+{
+public:
+  typedef mozilla::layers::KeyboardScrollAction KeyboardScrollAction;
+
+  /**
+   * Search through nsGlobalWindowCommands to find the keyboard scrolling action
+   * that would be done in response to a command.
+   *
+   * @param aCommandName the name of the command
+   * @param aOutAction the result of searching for this command, must not be null
+   * @returns whether a keyboard action was found or not
+   */
+  static bool FindScrollCommand(const char* aCommandName,
+                                KeyboardScrollAction* aOutAction);
+};
 
 // XXX find a better home for these
 #define NS_WINDOWCONTROLLER_CID        \

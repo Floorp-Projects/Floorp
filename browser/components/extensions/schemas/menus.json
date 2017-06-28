@@ -72,6 +72,11 @@
             "optional": true,
             "description": "One of 'image', 'video', or 'audio' if the context menu was activated on one of these types of elements."
           },
+          "linkText": {
+            "type": "string",
+            "optional": true,
+            "description": "If the element is a link, the text of that link."
+          },
           "linkUrl": {
             "type": "string",
             "optional": true,

@@ -317,7 +317,8 @@ void nsNotifyAddrListener::OnNetlinkMessage(int aNetlinkSocket)
             struct ifaddrmsg* ifam;
             nsCString addrStr;
             addrStr.Assign(addr);
-            if (mAddressInfo.Get(addrStr, &ifam)) {
+            if (auto entry = mAddressInfo.LookupForAdd(addrStr)) {
+                ifam = entry.Data();
                 LOG(("nsNotifyAddrListener::OnNetlinkMessage: the address "
                      "already known."));
                 if (memcmp(ifam, newifam, sizeof(struct ifaddrmsg))) {
@@ -330,7 +331,7 @@ void nsNotifyAddrListener::OnNetlinkMessage(int aNetlinkSocket)
                 networkChange = true;
                 ifam = (struct ifaddrmsg*)malloc(sizeof(struct ifaddrmsg));
                 memcpy(ifam, newifam, sizeof(struct ifaddrmsg));
-                mAddressInfo.Put(addrStr,ifam);
+                entry.OrInsert([ifam] () { return ifam; });
             }
         } else {
             LOG(("nsNotifyAddrListener::OnNetlinkMessage: an address "

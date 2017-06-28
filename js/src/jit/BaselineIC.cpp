@@ -809,7 +809,7 @@ DoGetElemFallback(JSContext* cx, BaselineFrame* frame, ICGetElem_Fallback* stub_
     if (stub->state().canAttachStub()) {
         ICStubEngine engine = ICStubEngine::Baseline;
         GetPropIRGenerator gen(cx, script, pc, CacheKind::GetElem, stub->state().mode(),
-                               &isTemporarilyUnoptimizable, lhs, rhs, CanAttachGetter::Yes);
+                               &isTemporarilyUnoptimizable, lhs, rhs, lhs, CanAttachGetter::Yes);
         if (gen.tryAttachStub()) {
             ICStub* newStub = AttachBaselineCacheIRStub(cx, gen.writerRef(), gen.cacheKind(),
                                                         engine, script, stub, &attached);
@@ -854,11 +854,90 @@ DoGetElemFallback(JSContext* cx, BaselineFrame* frame, ICGetElem_Fallback* stub_
     return true;
 }
 
+static bool
+DoGetElemSuperFallback(JSContext* cx, BaselineFrame* frame, ICGetElem_Fallback* stub_,
+                       HandleValue receiver, HandleValue lhs, HandleValue rhs,
+                       MutableHandleValue res)
+{
+    // This fallback stub may trigger debug mode toggling.
+    DebugModeOSRVolatileStub<ICGetElem_Fallback*> stub(frame, stub_);
+
+    RootedScript script(cx, frame->script());
+    jsbytecode* pc = stub->icEntry()->pc(frame->script());
+    StackTypeSet* types = TypeScript::BytecodeTypes(script, pc);
+
+    JSOp op = JSOp(*pc);
+    FallbackICSpew(cx, stub, "GetElemSuper(%s)", CodeName[op]);
+
+    MOZ_ASSERT(op == JSOP_GETELEM_SUPER);
+
+    bool attached = false;
+    bool isTemporarilyUnoptimizable = false;
+
+    if (stub->state().maybeTransition())
+        stub->discardStubs(cx);
+
+    if (stub->state().canAttachStub()) {
+        ICStubEngine engine = ICStubEngine::Baseline;
+        GetPropIRGenerator gen(cx, script, pc, CacheKind::GetElemSuper, stub->state().mode(),
+                               &isTemporarilyUnoptimizable, lhs, rhs, receiver,
+                               CanAttachGetter::Yes);
+        if (gen.tryAttachStub()) {
+            ICStub* newStub = AttachBaselineCacheIRStub(cx, gen.writerRef(), gen.cacheKind(),
+                                                        engine, script, stub, &attached);
+            if (newStub) {
+                JitSpew(JitSpew_BaselineIC, "  Attached CacheIR stub");
+                if (gen.shouldNotePreliminaryObjectStub())
+                    newStub->toCacheIR_Monitored()->notePreliminaryObject();
+                else if (gen.shouldUnlinkPreliminaryObjectStubs())
+                    StripPreliminaryObjectStubs(cx, stub);
+            }
+        }
+        if (!attached && !isTemporarilyUnoptimizable)
+            stub->state().trackNotAttached();
+    }
+
+    // |lhs| is [[HomeObject]].[[Prototype]] which must be Object
+    RootedObject lhsObj(cx, &lhs.toObject());
+    if (!GetObjectElementOperation(cx, op, lhsObj, receiver, rhs, res))
+        return false;
+    TypeScript::Monitor(cx, script, pc, types, res);
+
+    // Check if debug mode toggling made the stub invalid.
+    if (stub.invalid())
+        return true;
+
+    // Add a type monitor stub for the resulting value.
+    if (!stub->addMonitorStubForValue(cx, frame, types, res))
+        return false;
+
+    if (attached)
+        return true;
+
+    // GetElem operations which could access negative indexes generally can't
+    // be optimized without the potential for bailouts, as we can't statically
+    // determine that an object has no properties on such indexes.
+    if (rhs.isNumber() && rhs.toNumber() < 0)
+        stub->noteNegativeIndex();
+
+    if (!attached && !isTemporarilyUnoptimizable)
+        stub->noteUnoptimizableAccess();
+
+    return true;
+}
+
 typedef bool (*DoGetElemFallbackFn)(JSContext*, BaselineFrame*, ICGetElem_Fallback*,
                                     HandleValue, HandleValue, MutableHandleValue);
 static const VMFunction DoGetElemFallbackInfo =
     FunctionInfo<DoGetElemFallbackFn>(DoGetElemFallback, "DoGetElemFallback", TailCall,
                                       PopValues(2));
+
+typedef bool (*DoGetElemSuperFallbackFn)(JSContext*, BaselineFrame*, ICGetElem_Fallback*,
+                                         HandleValue, HandleValue, HandleValue,
+                                         MutableHandleValue);
+static const VMFunction DoGetElemSuperFallbackInfo =
+    FunctionInfo<DoGetElemSuperFallbackFn>(DoGetElemSuperFallback, "DoGetElemSuperFallback",
+                                           TailCall, PopValues(1));
 
 bool
 ICGetElem_Fallback::Compiler::generateStubCode(MacroAssembler& masm)
@@ -868,6 +947,21 @@ ICGetElem_Fallback::Compiler::generateStubCode(MacroAssembler& masm)
 
     // Restore the tail call register.
     EmitRestoreTailCallReg(masm);
+
+    // Super property getters use a |this| that differs from base object
+    if (hasReceiver_) {
+        // Ensure stack is fully synced for the expression decompiler.
+        masm.pushValue(R1);
+
+        masm.pushValue(R1); // Index
+        masm.pushValue(R0); // Object
+        masm.loadValue(Address(masm.getStackPointer(), 3 * sizeof(Value)), R0);
+        masm.pushValue(R0); // Receiver
+        masm.push(ICStubReg);
+        pushStubPayload(masm, R0.scratchReg());
+
+        return tailCallVM(DoGetElemSuperFallbackInfo, masm);
+    }
 
     // Ensure stack is fully synced for the expression decompiler.
     masm.pushValue(R0);

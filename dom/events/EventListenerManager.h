@@ -470,6 +470,8 @@ public:
 
   dom::EventTarget* GetTarget() { return mTarget; }
 
+  bool HasUntrustedOrNonSystemGroupKeyEventListeners();
+
   bool HasApzAwareListeners();
   bool IsApzAwareListener(Listener* aListener);
   bool IsApzAwareEvent(nsIAtom* aEvent);

@@ -18,6 +18,7 @@ namespace mozilla {
 namespace layers {
 
 class WheelScrollAnimation;
+class KeyboardScrollAnimation;
 class SmoothScrollAnimation;
 
 class AsyncPanZoomAnimation {
@@ -50,6 +51,9 @@ public:
     return Move(mDeferredTasks);
   }
 
+  virtual KeyboardScrollAnimation* AsKeyboardScrollAnimation() {
+    return nullptr;
+  }
   virtual WheelScrollAnimation* AsWheelScrollAnimation() {
     return nullptr;
   }

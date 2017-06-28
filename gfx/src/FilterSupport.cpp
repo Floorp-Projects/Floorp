@@ -2132,7 +2132,6 @@ AttributeMap::GetType(FilterAttribute* aAttribute)
   }                                                                  \
   void                                                               \
   AttributeMap::Set(AttributeName aName, type aValue) {              \
-    mMap.Remove(aName);                                              \
     mMap.Put(aName, new Attribute(aValue));                          \
   }
 
@@ -2144,7 +2143,6 @@ AttributeMap::GetType(FilterAttribute* aAttribute)
   }                                                                  \
   void                                                               \
   AttributeMap::Set(AttributeName aName, const className& aValue) {  \
-    mMap.Remove(aName);                                              \
     mMap.Put(aName, new Attribute(aValue));                          \
   }
 
@@ -2166,18 +2164,14 @@ MAKE_ATTRIBUTE_HANDLERS_CLASS(AttributeMap)
 const nsTArray<float>&
 AttributeMap::GetFloats(AttributeName aName) const
 {
-  Attribute* value = mMap.Get(aName);
-  if (!value) {
-    value = new Attribute(nullptr, 0);
-    mMap.Put(aName, value);
-  }
+  Attribute* value = mMap.LookupForAdd(aName).OrInsert(
+    [] () { return new Attribute(nullptr, 0); });
   return value->AsFloats();
 }
 
 void
 AttributeMap::Set(AttributeName aName, const float* aValues, int32_t aLength)
 {
-  mMap.Remove(aName);
   mMap.Put(aName, new Attribute(aValues, aLength));
 }
 

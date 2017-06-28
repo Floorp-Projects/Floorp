@@ -51,6 +51,16 @@ enum class ScrollInputMethod {
   // Autoscrolling
   MainThreadAutoscrolling,    // autoscrolling
 
+  // Async Keyboard
+  ApzScrollLine,       // line scrolling
+                       // (generally triggered by up/down arrow keys)
+  ApzScrollCharacter,  // character scrolling
+                       // (generally triggered by left/right arrow keys)
+  ApzScrollPage,       // page scrolling
+                       // (generally triggered by PageUp/PageDown keys)
+  ApzCompleteScroll,   // scrolling to the end of the scroll range
+                       // (generally triggered by Home/End keys)
+
   // New input methods can be added at the end, up to a maximum of 64.
   // They should only be added at the end, to preserve the numerical values
   // of the existing enumerators.

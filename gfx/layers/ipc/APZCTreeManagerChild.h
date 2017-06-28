@@ -31,6 +31,9 @@ public:
           uint64_t* aOutInputBlockId) override;
 
   void
+  SetKeyboardMap(const KeyboardMap& aKeyboardMap) override;
+
+  void
   ZoomToRect(
           const ScrollableLayerGuid& aGuid,
           const CSSRect& aRect,
@@ -74,9 +77,10 @@ public:
   ProcessTouchVelocity(uint32_t aTimestampMs, float aSpeedY) override;
 
   void
-  TransformEventRefPoint(
+  ProcessUnhandledEvent(
           LayoutDeviceIntPoint* aRefPoint,
-          ScrollableLayerGuid* aOutTargetGuid) override;
+          ScrollableLayerGuid*  aOutTargetGuid,
+          uint64_t*             aOutFocusSequenceNumber) override;
 
   void
   UpdateWheelTransaction(

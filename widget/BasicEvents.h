@@ -354,6 +354,7 @@ protected:
     , mMessage(aMessage)
     , mRefPoint(0, 0)
     , mLastRefPoint(0, 0)
+    , mFocusSequenceNumber(0)
     , mSpecifiedEventType(nullptr)
   {
     MOZ_COUNT_CTOR(WidgetEvent);
@@ -405,6 +406,10 @@ public:
   LayoutDeviceIntPoint mRefPoint;
   // The previous mRefPoint, if known, used to calculate mouse movement deltas.
   LayoutDeviceIntPoint mLastRefPoint;
+  // The sequence number of the last potentially focus changing event handled
+  // by APZ. This is used to track when that event has been processed by content,
+  // and focus can be reconfirmed for async keyboard scrolling.
+  uint64_t mFocusSequenceNumber;
   // See BaseEventFlags definition for the detail.
   BaseEventFlags mFlags;
 
@@ -435,6 +440,7 @@ public:
     // mMessage should be initialized with the constructor.
     mRefPoint = aEvent.mRefPoint;
     // mLastRefPoint doesn't need to be copied.
+    mFocusSequenceNumber = aEvent.mFocusSequenceNumber;
     AssignEventTime(aEvent);
     // mFlags should be copied manually if it's necessary.
     mSpecifiedEventType = aEvent.mSpecifiedEventType;

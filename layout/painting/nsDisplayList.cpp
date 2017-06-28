@@ -2206,7 +2206,6 @@ already_AddRefed<LayerManager> nsDisplayList::PaintRoot(nsDisplayListBuilder* aB
       content = document->GetDocumentElement();
     }
 
-
     if (ensureMetricsForRootId && content) {
       ViewID scrollId = nsLayoutUtils::FindOrCreateIDFor(content);
       if (nsLayoutUtils::ContainsMetricsWithId(root, scrollId)) {
@@ -2226,6 +2225,9 @@ already_AddRefed<LayerManager> nsDisplayList::PaintRoot(nsDisplayListBuilder* aB
                            root, FrameMetrics::NULL_SCROLL_ID, viewport, Nothing(),
                            isRootContent, containerParameters));
     }
+
+    // Send an updated focus target with this transaction
+    layerManager->SetFocusTarget(presShell->GetAPZFocusTarget());
 
     // NS_WARNING is debug-only, so don't even bother checking the conditions in
     // a release build.

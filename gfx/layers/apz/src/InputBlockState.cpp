@@ -870,5 +870,10 @@ TouchBlockState::GetActiveTouchCount() const
   return mTouchCounter.GetActiveTouchCount();
 }
 
+KeyboardBlockState::KeyboardBlockState(const RefPtr<AsyncPanZoomController>& aTargetApzc)
+  : InputBlockState(aTargetApzc, true)
+{
+}
+
 } // namespace layers
 } // namespace mozilla

@@ -8,6 +8,7 @@
 
 #include "mozilla/EnumeratedArray.h"
 #include "mozilla/gfx/2D.h"
+#include "mozilla/UniquePtr.h"
 #include "nsISupportsImpl.h"
 #include <string>
 
