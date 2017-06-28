@@ -98,6 +98,14 @@ def make_job_description(config, jobs):
                 signing_task = dependency
             else:
                 build_task = dependency
+        if job.get('locale'):
+            # XXXCallek: todo: rewrite dependency finding
+            # Use string splice to strip out 'nightly-l10n-' .. '-<chunk>/opt'
+            # We need this additional dependency to support finding the mar binary
+            # Which is needed in order to generate a new complete.mar
+            dependencies['build'] = "build-{}/opt".format(
+                dependencies[build_task][13:dependencies[build_task].rfind('-')])
+            build_task = 'build'
         signing_task_ref = "<{}>".format(signing_task)
         build_task_ref = "<{}>".format(build_task)
 
