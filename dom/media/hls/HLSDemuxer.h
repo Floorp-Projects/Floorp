@@ -50,6 +50,7 @@ public:
 
   AutoTaskQueue* GetTaskQueue() const { return mTaskQueue; }
   void OnInitialized(bool aHasAudio, bool aHasVideo);
+  void OnError(int aErrorCode);
 
 private:
   media::TimeUnit GetNextKeyFrameTime();
