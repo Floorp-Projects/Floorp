@@ -180,7 +180,7 @@ cookie.iter = function*(host, currentPath = "/") {
           "domain": cookie.host,
           "secure": cookie.isSecure,
           "httpOnly": cookie.isHttpOnly,
-          "expiry": cookie.expires,
+          "expiry": cookie.expiry,
         };
       }
       hostname = hostname.replace(/^.*?\./, "");
