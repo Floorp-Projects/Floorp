@@ -831,6 +831,22 @@ function handleRequest(req, res) {
     content = 'not pushed';
   }
 
+  else if (u.pathname === "/diskcache") {
+    content = "this was pulled via h2";
+  }
+
+  else if (u.pathname === "/pushindisk") {
+    var pushedContent = "this was pushed via h2";
+    push = res.push('/diskcache');
+    push.writeHead(200, {
+      'content-type': 'text/html',
+      'pushed' : 'yes',
+      'content-length' : pushedContent.length,
+      'X-Connection-Http2': 'yes'
+    });
+    push.end(pushedContent);
+  }
+
   res.setHeader('Content-Type', 'text/html');
   if (req.httpVersionMajor != 2) {
     res.setHeader('Connection', 'close');

@@ -1557,5 +1557,15 @@ Http2Stream::Finish0RTT(bool aRestart, bool aAlpnChanged)
   return rv;
 }
 
+nsresult
+Http2Stream::GetOriginAttributes(mozilla::OriginAttributes *oa)
+{
+  if (!mSocketTransport) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  return mSocketTransport->GetOriginAttributes(oa);
+}
+
 } // namespace net
 } // namespace mozilla

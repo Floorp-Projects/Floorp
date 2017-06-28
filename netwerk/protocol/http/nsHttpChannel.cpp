@@ -3955,27 +3955,9 @@ bypassCacheEntryOpen:
 nsresult
 nsHttpChannel::CheckPartial(nsICacheEntry* aEntry, int64_t *aSize, int64_t *aContentLength)
 {
-    nsresult rv;
-
-    rv = aEntry->GetDataSize(aSize);
-
-    if (NS_ERROR_IN_PROGRESS == rv) {
-        *aSize = -1;
-        rv = NS_OK;
-    }
-
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    nsHttpResponseHead* responseHead = mCachedResponseHead
-        ? mCachedResponseHead
-        : mResponseHead;
-
-    if (!responseHead)
-        return NS_ERROR_UNEXPECTED;
-
-    *aContentLength = responseHead->ContentLength();
-
-    return NS_OK;
+    return nsHttp::CheckPartial(aEntry, aSize, aContentLength,
+                                mCachedResponseHead ? mCachedResponseHead
+                                                    : mResponseHead);
 }
 
 void
@@ -4057,31 +4039,8 @@ nsHttpChannel::OnCacheEntryCheck(nsICacheEntry* entry, nsIApplicationCache* appC
     // Get the cached HTTP response headers
     mCachedResponseHead = new nsHttpResponseHead();
 
-    // A "original-response-headers" metadata element holds network original headers,
-    // i.e. the headers in the form as they arrieved from the network.
-    // We need to get the network original headers first, because we need to keep them
-    // in order.
-    rv = entry->GetMetaDataElement("original-response-headers", getter_Copies(buf));
-    if (NS_SUCCEEDED(rv)) {
-        rv = mCachedResponseHead->ParseCachedOriginalHeaders((char *) buf.get());
-        if (NS_FAILED(rv)) {
-            LOG(("  failed to parse original-response-headers\n"));
-        }
-    }
-
-    buf.Adopt(0);
-    // A "response-head" metadata element holds response head, e.g. response status
-    // line and headers in the form Firefox uses them internally (no dupicate
-    // headers, etc.).
-    rv = entry->GetMetaDataElement("response-head", getter_Copies(buf));
+    rv = nsHttp::GetHttpResponseHeadFromCacheEntry(entry, mCachedResponseHead);
     NS_ENSURE_SUCCESS(rv, rv);
-
-    // Parse string stored in a "response-head" metadata element.
-    // These response headers will be merged with the orignal headers (i.e. the
-    // headers stored in a "original-response-headers" metadata element).
-    rv = mCachedResponseHead->ParseCachedHead(buf.get());
-    NS_ENSURE_SUCCESS(rv, rv);
-    buf.Adopt(0);
 
     bool isCachedRedirect = WillRedirect(mCachedResponseHead);
 
@@ -4188,126 +4147,20 @@ nsHttpChannel::OnCacheEntryCheck(nsICacheEntry* entry, nsIApplicationCache* appC
     bool isForcedValid = false;
     entry->GetIsForcedValid(&isForcedValid);
 
-    nsXPIDLCString framedBuf;
-    rv = entry->GetMetaDataElement("strongly-framed", getter_Copies(framedBuf));
-    // describe this in terms of explicitly weakly framed so as to be backwards
-    // compatible with old cache contents which dont have strongly-framed makers
-    bool weaklyFramed = NS_SUCCEEDED(rv) && framedBuf.EqualsLiteral("0");
-    bool isImmutable = !weaklyFramed && isHttps && mCachedResponseHead->Immutable();
+    bool weaklyFramed, isImmutable;
+    nsHttp::DetermineFramingAndImmutability(entry, mCachedResponseHead, isHttps,
+                                            &weaklyFramed, &isImmutable);
 
     // Cached entry is not the entity we request (see bug #633743)
     if (ResponseWouldVary(entry)) {
         LOG(("Validating based on Vary headers returning TRUE\n"));
         canAddImsHeader = false;
         doValidation = true;
-    }
-    // Check isForcedValid to see if it is possible to skip validation.
-    // Don't skip validation if we have serious reason to believe that this
-    // content is invalid (it's expired).
-    // See netwerk/cache2/nsICacheEntry.idl for details
-    else if (isForcedValid &&
-             (!mCachedResponseHead->ExpiresInPast() ||
-              !mCachedResponseHead->MustValidateIfExpired())) {
-        LOG(("NOT validating based on isForcedValid being true.\n"));
-        Telemetry::AutoCounter<Telemetry::PREDICTOR_TOTAL_PREFETCHES_USED> used;
-        ++used;
-        doValidation = false;
-    }
-    // If the LOAD_FROM_CACHE flag is set, any cached data can simply be used
-    else if (mLoadFlags & nsIRequest::LOAD_FROM_CACHE || mAllowStaleCacheContent) {
-        LOG(("NOT validating based on LOAD_FROM_CACHE load flag\n"));
-        doValidation = false;
-    }
-    // If the VALIDATE_ALWAYS flag is set, any cached data won't be used until
-    // it's revalidated with the server.
-    else if ((mLoadFlags & nsIRequest::VALIDATE_ALWAYS) && !isImmutable) {
-        LOG(("Validating based on VALIDATE_ALWAYS load flag\n"));
-        doValidation = true;
-    }
-    // Even if the VALIDATE_NEVER flag is set, there are still some cases in
-    // which we must validate the cached response with the server.
-    else if (mLoadFlags & nsIRequest::VALIDATE_NEVER) {
-        LOG(("VALIDATE_NEVER set\n"));
-        // if no-store validate cached response (see bug 112564)
-        if (mCachedResponseHead->NoStore()) {
-            LOG(("Validating based on no-store logic\n"));
-            doValidation = true;
-        }
-        else {
-            LOG(("NOT validating based on VALIDATE_NEVER load flag\n"));
-            doValidation = false;
-        }
-    }
-    // check if validation is strictly required...
-    else if (mCachedResponseHead->MustValidate()) {
-        LOG(("Validating based on MustValidate() returning TRUE\n"));
-        doValidation = true;
-    // possibly serve from cache for a custom If-Match/If-Unmodified-Since
-    // conditional request
-    } else if (mCustomConditionalRequest &&
-               !mRequestHead.HasHeader(nsHttp::If_Match) &&
-               !mRequestHead.HasHeader(nsHttp::If_Unmodified_Since)) {
-        LOG(("Validating based on a custom conditional request\n"));
-        doValidation = true;
     } else {
-        // previously we also checked for a query-url w/out expiration
-        // and didn't do heuristic on it. but defacto that is allowed now.
-        //
-        // Check if the cache entry has expired...
-
-        uint32_t now = NowInSeconds();
-
-        uint32_t age = 0;
-        rv = mCachedResponseHead->ComputeCurrentAge(now, now, &age);
-        NS_ENSURE_SUCCESS(rv, rv);
-
-        uint32_t freshness = 0;
-        rv = mCachedResponseHead->ComputeFreshnessLifetime(&freshness);
-        NS_ENSURE_SUCCESS(rv, rv);
-
-        uint32_t expiration = 0;
-        rv = entry->GetExpirationTime(&expiration);
-        NS_ENSURE_SUCCESS(rv, rv);
-
-        uint32_t maxAgeRequest, maxStaleRequest, minFreshRequest;
-
-        LOG(("  NowInSeconds()=%u, expiration time=%u, freshness lifetime=%u, age=%u",
-             now, expiration, freshness, age));
-
-        if (cacheControlRequest.NoCache()) {
-            LOG(("  validating, no-cache request"));
-            doValidation = true;
-        } else if (cacheControlRequest.MaxStale(&maxStaleRequest)) {
-            uint32_t staleTime = age > freshness ? age - freshness : 0;
-            doValidation = staleTime > maxStaleRequest;
-            LOG(("  validating=%d, max-stale=%u requested", doValidation, maxStaleRequest));
-        } else if (cacheControlRequest.MaxAge(&maxAgeRequest)) {
-            doValidation = age > maxAgeRequest;
-            LOG(("  validating=%d, max-age=%u requested", doValidation, maxAgeRequest));
-        } else if (cacheControlRequest.MinFresh(&minFreshRequest)) {
-            uint32_t freshTime = freshness > age ? freshness - age : 0;
-            doValidation = freshTime < minFreshRequest;
-            LOG(("  validating=%d, min-fresh=%u requested", doValidation, minFreshRequest));
-        } else if (now <= expiration) {
-            doValidation = false;
-            LOG(("  not validating, expire time not in the past"));
-        } else if (mCachedResponseHead->MustValidateIfExpired()) {
-            doValidation = true;
-        } else if (mLoadFlags & nsIRequest::VALIDATE_ONCE_PER_SESSION) {
-            // If the cached response does not include expiration infor-
-            // mation, then we must validate the response, despite whether
-            // or not this is the first access this session.  This behavior
-            // is consistent with existing browsers and is generally expected
-            // by web authors.
-            if (freshness == 0)
-                doValidation = true;
-            else
-                doValidation = fromPreviousSession;
-        }
-        else
-            doValidation = true;
-
-        LOG(("%salidating based on expiration time\n", doValidation ? "V" : "Not v"));
+        doValidation = nsHttp::ValidationRequired(
+            isForcedValid, mCachedResponseHead, mLoadFlags,
+            mAllowStaleCacheContent, isImmutable, mCustomConditionalRequest,
+            mRequestHead, entry, cacheControlRequest, fromPreviousSession);
     }
 
 

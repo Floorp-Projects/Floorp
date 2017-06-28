@@ -168,6 +168,8 @@ public:
   bool Do0RTT();
   nsresult Finish0RTT(bool aRestart, bool aAlpnIgnored);
 
+  nsresult GetOriginAttributes(mozilla::OriginAttributes *oa);
+
 protected:
   static void CreatePushHashKey(const nsCString &scheme,
                                 const nsCString &hostHeader,
