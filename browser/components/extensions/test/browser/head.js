@@ -13,6 +13,7 @@
  *          openExtensionContextMenu closeExtensionContextMenu
  *          openActionContextMenu openSubmenu closeActionContextMenu
  *          openTabContextMenu closeTabContextMenu
+ *          openToolsMenu closeToolsMenu
  *          imageBuffer imageBufferFromDataURI
  *          getListStyleImage getPanelForNode
  *          awaitExtensionPanel awaitPopupResize
@@ -334,6 +335,35 @@ async function closeExtensionContextMenu(itemToSelect, modifiers = {}) {
 
   // Bug 1351638: parent menu fails to close intermittently, make sure it does.
   contentAreaContextMenu.hidePopup();
+}
+
+async function openToolsMenu(win = window) {
+  const node = win.document.getElementById("tools-menu");
+  const menu = win.document.getElementById("menu_ToolsPopup");
+  const shown = BrowserTestUtils.waitForEvent(menu, "popupshown");
+  if (AppConstants.platform === "macosx") {
+    // We can't open menubar items on OSX, so mocking instead.
+    menu.dispatchEvent(new MouseEvent("popupshowing"));
+    menu.dispatchEvent(new MouseEvent("popupshown"));
+  } else {
+    node.open = true;
+  }
+  await shown;
+  return menu;
+}
+
+function closeToolsMenu(itemToSelect, win = window) {
+  const menu = win.document.getElementById("menu_ToolsPopup");
+  const hidden = BrowserTestUtils.waitForEvent(menu, "popuphidden");
+  if (AppConstants.platform === "macosx") {
+    // Mocking on OSX, see above.
+    itemToSelect.doCommand();
+    menu.dispatchEvent(new MouseEvent("popuphiding"));
+    menu.dispatchEvent(new MouseEvent("popuphidden"));
+  } else {
+    EventUtils.synthesizeMouseAtCenter(itemToSelect, {}, win);
+  }
+  return hidden;
 }
 
 async function openChromeContextMenu(menuId, target, win = window) {
