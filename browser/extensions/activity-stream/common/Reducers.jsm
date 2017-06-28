@@ -25,6 +25,10 @@ const INITIAL_STATE = {
   Prefs: {
     initialized: false,
     values: {}
+  },
+  Dialog: {
+    visible: false,
+    data: {}
   }
 };
 
@@ -95,6 +99,19 @@ function TopSites(prevState = INITIAL_STATE.TopSites, action) {
   }
 }
 
+function Dialog(prevState = INITIAL_STATE.Dialog, action) {
+  switch (action.type) {
+    case at.DIALOG_OPEN:
+      return Object.assign({}, prevState, {visible: true, data: action.data});
+    case at.DIALOG_CANCEL:
+      return Object.assign({}, prevState, {visible: false});
+    case at.DELETE_HISTORY_URL:
+      return Object.assign({}, INITIAL_STATE.Dialog);
+    default:
+      return prevState;
+  }
+}
+
 function Prefs(prevState = INITIAL_STATE.Prefs, action) {
   let newValues;
   switch (action.type) {
@@ -110,6 +127,6 @@ function Prefs(prevState = INITIAL_STATE.Prefs, action) {
 }
 
 this.INITIAL_STATE = INITIAL_STATE;
-this.reducers = {TopSites, App, Prefs};
+this.reducers = {TopSites, App, Prefs, Dialog};
 
 this.EXPORTED_SYMBOLS = ["reducers", "INITIAL_STATE"];

@@ -165,7 +165,7 @@ describe("TelemetrySender", () => {
 
       assert.calledOnce(fetchStub);
       assert.calledWithExactly(fetchStub, fakeEndpointUrl,
-        {method: "POST", body: fakePingJSON});
+        {method: "POST", body: JSON.stringify(fakePingJSON)});
     });
 
     it("should log HTTP failures using Cu.reportError", async () => {

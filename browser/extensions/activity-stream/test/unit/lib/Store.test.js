@@ -43,8 +43,8 @@ describe("Store", () => {
   describe("#initFeed", () => {
     it("should add an instance of the feed to .feeds", () => {
       class Foo {}
-      store._prefs.set("foo", false);
-      store.init({foo: () => new Foo()});
+      store._prefs.set("foo", true);
+      store.init(new Map([["foo", () => new Foo()]]));
       store.initFeed("foo");
 
       assert.isTrue(store.feeds.has("foo"), "foo is set");
@@ -52,7 +52,7 @@ describe("Store", () => {
     });
     it("should add a .store property to the feed", () => {
       class Foo {}
-      store._feedFactories = {foo: () => new Foo()};
+      store._feedFactories = new Map([["foo", () => new Foo()]]);
       store.initFeed("foo");
 
       assert.propertyVal(store.feeds.get("foo"), "store", store);
@@ -70,7 +70,7 @@ describe("Store", () => {
         feed = {uninit: sinon.spy()};
         return feed;
       }
-      store._feedFactories = {foo: createFeed};
+      store._feedFactories = new Map([["foo", createFeed]]);
 
       store.initFeed("foo");
       store.uninitFeed("foo");
@@ -79,7 +79,7 @@ describe("Store", () => {
     });
     it("should remove the feed from .feeds", () => {
       class Foo {}
-      store._feedFactories = {foo: () => new Foo()};
+      store._feedFactories = new Map([["foo", () => new Foo()]]);
 
       store.initFeed("foo");
       store.uninitFeed("foo");
@@ -87,69 +87,70 @@ describe("Store", () => {
       assert.isFalse(store.feeds.has("foo"), "foo is not in .feeds");
     });
   });
-  describe("maybeStartFeedAndListenForPrefChanges", () => {
+  describe("onPrefChanged", () => {
     beforeEach(() => {
       sinon.stub(store, "initFeed");
       sinon.stub(store, "uninitFeed");
-    });
-    it("should initialize the feed if the Pref is set to true", () => {
-      store._prefs.set("foo", true);
-      store.maybeStartFeedAndListenForPrefChanges("foo");
-      assert.calledWith(store.initFeed, "foo");
-    });
-    it("should not initialize the feed if the Pref is set to false", () => {
       store._prefs.set("foo", false);
-      store.maybeStartFeedAndListenForPrefChanges("foo");
+      store.init(new Map([["foo", () => ({})]]));
+    });
+    it("should initialize the feed if called with true", () => {
+      store.onPrefChanged("foo", true);
+
+      assert.calledWith(store.initFeed, "foo");
+      assert.notCalled(store.uninitFeed);
+    });
+    it("should uninitialize the feed if called with false", () => {
+      store.onPrefChanged("foo", false);
+
+      assert.calledWith(store.uninitFeed, "foo");
       assert.notCalled(store.initFeed);
     });
-    it("should observe the pref", () => {
-      sinon.stub(store._prefs, "observe");
-      store.maybeStartFeedAndListenForPrefChanges("foo");
-      assert.calledWith(store._prefs.observe, "foo", store._prefHandlers.get("foo"));
-    });
-    describe("handler", () => {
-      let handler;
-      beforeEach(() => {
-        store.maybeStartFeedAndListenForPrefChanges("foo");
-        handler = store._prefHandlers.get("foo");
-      });
-      it("should initialize the feed if called with true", () => {
-        handler(true);
-        assert.calledWith(store.initFeed, "foo");
-      });
-      it("should uninitialize the feed if called with false", () => {
-        handler(false);
-        assert.calledWith(store.uninitFeed, "foo");
-      });
+    it("should do nothing if not an expected feed", () => {
+      store.onPrefChanged("bar", false);
+
+      assert.notCalled(store.initFeed);
+      assert.notCalled(store.uninitFeed);
     });
   });
   describe("#init", () => {
-    it("should call .maybeStartFeedAndListenForPrefChanges with each key", () => {
-      sinon.stub(store, "maybeStartFeedAndListenForPrefChanges");
-      store.init({foo: () => {}, bar: () => {}});
-      assert.calledWith(store.maybeStartFeedAndListenForPrefChanges, "foo");
-      assert.calledWith(store.maybeStartFeedAndListenForPrefChanges, "bar");
+    it("should call .initFeed with each key", () => {
+      sinon.stub(store, "initFeed");
+      store._prefs.set("foo", true);
+      store._prefs.set("bar", true);
+      store.init(new Map([["foo", () => {}], ["bar", () => {}]]));
+      assert.calledWith(store.initFeed, "foo");
+      assert.calledWith(store.initFeed, "bar");
+    });
+    it("should not initialize the feed if the Pref is set to false", () => {
+      sinon.stub(store, "initFeed");
+      store._prefs.set("foo", false);
+      store.init(new Map([["foo", () => {}]]));
+      assert.notCalled(store.initFeed);
+    });
+    it("should observe the pref branch", () => {
+      sinon.stub(store._prefs, "observeBranch");
+      store.init(new Map());
+      assert.calledOnce(store._prefs.observeBranch);
+      assert.calledWith(store._prefs.observeBranch, store);
     });
     it("should initialize the ActivityStreamMessageChannel channel", () => {
-      store.init();
+      store.init(new Map());
       assert.calledOnce(store._messageChannel.createChannel);
     });
   });
   describe("#uninit", () => {
-    it("should clear .feeds, ._prefHandlers, and ._feedFactories", () => {
+    it("should clear .feeds and ._feedFactories", () => {
       store._prefs.set("a", true);
-      store._prefs.set("b", true);
-      store._prefs.set("c", true);
-      store.init({
-        a: () => ({}),
-        b: () => ({}),
-        c: () => ({})
-      });
+      store.init(new Map([
+        ["a", () => ({})],
+        ["b", () => ({})],
+        ["c", () => ({})]
+      ]));
 
       store.uninit();
 
       assert.equal(store.feeds.size, 0);
-      assert.equal(store._prefHandlers.size, 0);
       assert.isNull(store._feedFactories);
     });
     it("should destroy the ActivityStreamMessageChannel channel", () => {
@@ -171,7 +172,7 @@ describe("Store", () => {
       const action = {type: "FOO"};
 
       store._prefs.set("sub", true);
-      store.init({sub: () => sub});
+      store.init(new Map([["sub", () => sub]]));
 
       dispatch(action);
 
