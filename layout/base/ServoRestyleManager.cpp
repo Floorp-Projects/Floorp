@@ -936,7 +936,7 @@ ServoRestyleManager::ContentStateChanged(nsIContent* aContent,
   // track those bits in the same way, and we know that :dir() rules are always
   // present in UA style sheets.
   if (!aChangedBits.HasAtLeastOneOfStates(DIRECTION_STATES) &&
-      !StyleSet()->HasStateDependency(aChangedBits)) {
+      !StyleSet()->HasStateDependency(*aElement, aChangedBits)) {
     return;
   }
 
@@ -981,7 +981,7 @@ ServoRestyleManager::AttributeWillChange(Element* aElement,
          (aAttribute == nsGkAtoms::id ||
           aAttribute == nsGkAtoms::_class)) ||
         aAttribute == nsGkAtoms::lang ||
-        StyleSet()->MightHaveAttributeDependency(aAttribute))) {
+        StyleSet()->MightHaveAttributeDependency(*aElement, aAttribute))) {
     return;
   }
 
