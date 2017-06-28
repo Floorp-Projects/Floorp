@@ -12,11 +12,7 @@
 SimpleTest.requestCompleteLog();
 SimpleTest.waitForExplicitFinish();
 
-var sub = encodeURI("data:text/html,<!DOCTYPE html>\n"+
-                    "<html><script>"+
-                    "var context = new AudioContext();"+
-                    "setTimeout(function(){window.close();},1000);\x3C/script></html>");
-var a = window.open(sub);
+var a = window.open("file_nodeCreationDocumentGone.html");
 a.onbeforeunload = function() {
   setTimeout(function(){
     try {
