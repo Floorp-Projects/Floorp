@@ -2361,17 +2361,27 @@ MediaManager::GetUserMedia(nsPIDOMWindowInner* aWindow,
 
     uint32_t audioPerm = nsIPermissionManager::UNKNOWN_ACTION;
     if (IsOn(c.mAudio)) {
-      rv = permManager->TestExactPermissionFromPrincipal(
-        principal, "microphone", &audioPerm);
-      NS_ENSURE_SUCCESS(rv, rv);
+      if (audioType == MediaSourceEnum::Microphone &&
+          Preferences::GetBool("media.getusermedia.microphone.deny", false)) {
+        audioPerm = nsIPermissionManager::DENY_ACTION;
+      } else {
+        rv = permManager->TestExactPermissionFromPrincipal(
+          principal, "microphone", &audioPerm);
+        NS_ENSURE_SUCCESS(rv, rv);
+      }
     }
 
     uint32_t videoPerm = nsIPermissionManager::UNKNOWN_ACTION;
     if (IsOn(c.mVideo)) {
-      rv = permManager->TestExactPermissionFromPrincipal(
-        principal, videoType == MediaSourceEnum::Camera ? "camera" : "screen",
-        &videoPerm);
-      NS_ENSURE_SUCCESS(rv, rv);
+      if (videoType == MediaSourceEnum::Camera &&
+          Preferences::GetBool("media.getusermedia.camera.deny", false)) {
+        videoPerm = nsIPermissionManager::DENY_ACTION;
+      } else {
+        rv = permManager->TestExactPermissionFromPrincipal(
+          principal, videoType == MediaSourceEnum::Camera ? "camera" : "screen",
+          &videoPerm);
+        NS_ENSURE_SUCCESS(rv, rv);
+      }
     }
 
     if ((!IsOn(c.mAudio) && !IsOn(c.mVideo)) ||
