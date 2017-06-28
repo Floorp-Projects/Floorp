@@ -54,10 +54,12 @@ browser.jar:
   skin/classic/browser/urlbar-history-dropmarker-win7@2x.png
   skin/classic/browser/webRTC-indicator.css  (../shared/webRTC-indicator.css)
 * skin/classic/browser/controlcenter/panel.css                 (controlcenter/panel.css)
-  skin/classic/browser/customizableui/background-noise-toolbar.png  (customizableui/background-noise-toolbar.png)
   skin/classic/browser/customizableui/customizeMode-gridTexture.png  (customizableui/customizeMode-gridTexture.png)
+#ifndef MOZ_PHOTON_THEME
+  skin/classic/browser/customizableui/background-noise-toolbar.png  (customizableui/background-noise-toolbar.png)
   skin/classic/browser/customizableui/customizeMode-separatorHorizontal.png  (customizableui/customizeMode-separatorHorizontal.png)
   skin/classic/browser/customizableui/customizeMode-separatorVertical.png  (customizableui/customizeMode-separatorVertical.png)
+#endif
   skin/classic/browser/customizableui/menu-arrow.svg           (customizableui/menu-arrow.svg)
 * skin/classic/browser/customizableui/panelUI.css       (customizableui/panelUI.css)
 * skin/classic/browser/downloads/allDownloadsViewOverlay.css   (downloads/allDownloadsViewOverlay.css)
