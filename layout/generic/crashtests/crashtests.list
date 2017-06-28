@@ -500,7 +500,7 @@ load 784600.html
 load 785555.html
 load 786740-1.html
 load 790260-1.html
-test-pref(font.size.inflation.emPerLine,15) load 791601.xhtml
+asserts(1) test-pref(font.size.inflation.emPerLine,15) load 791601.xhtml # Bug 871327
 test-pref(font.size.inflation.minTwips,120) load 794693.html
 asserts-if(!Android,4) load 798020-1.html
 load 798235-1.html
