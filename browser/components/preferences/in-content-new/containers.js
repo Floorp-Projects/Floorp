@@ -18,7 +18,7 @@ let gContainersPane = {
     this._list = document.getElementById("containersView");
 
     document.getElementById("backContainersLink").addEventListener("click", function() {
-      gotoPref("general");
+      gotoPref("privacy");
     });
 
     this._rebuildView();
