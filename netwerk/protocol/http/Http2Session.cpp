@@ -1832,8 +1832,9 @@ Http2Session::RecvPushPromise(Http2Session *self)
   } else {
     LOG3(("Http2Session::RecvPushPromise %p place stream into session cache\n", self));
     if (!cache->RegisterPushedStreamHttp2(key, pushedStream)) {
+      // This only happens if they've already pushed us this item.
       LOG3(("Http2Session::RecvPushPromise registerPushedStream Failed\n"));
-      self->CleanupStream(pushedStream, NS_ERROR_FAILURE, INTERNAL_ERROR);
+      self->CleanupStream(pushedStream, NS_ERROR_FAILURE, REFUSED_STREAM_ERROR);
       self->ResetDownstreamState();
       return NS_OK;
     }
