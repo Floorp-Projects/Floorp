@@ -6,6 +6,9 @@
 
 #include "MediaSource.h"
 
+#if MOZ_AV1
+#include "AOMDecoder.h"
+#endif
 #include "AsyncEventRunner.h"
 #include "DecoderTraits.h"
 #include "Benchmark.h"
@@ -118,6 +121,9 @@ MediaSource::IsTypeSupported(const nsAString& aType, DecoderDoctorDiagnostics* a
     if (!(Preferences::GetBool("media.mediasource.webm.enabled", false) ||
           containerType->ExtendedType().Codecs().Contains(
             NS_LITERAL_STRING("vp8")) ||
+          // FIXME: Temporary comparison with the full codecs attribute.
+          // See bug 1377015.
+          AOMDecoder::IsSupportedCodec(containerType->ExtendedType().Codecs().AsString()) ||
           IsWebMForced(aDiagnostics))) {
       return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
     }
