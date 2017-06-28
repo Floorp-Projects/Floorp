@@ -137,12 +137,11 @@ void Gecko_DestroyAnonymousContentList(nsTArray<nsIContent*>* anon_content);
 // By default, Servo walks the DOM by traversing the siblings of the DOM-view
 // first child. This generally works, but misses anonymous children, which we
 // want to traverse during styling. To support these cases, we create an
-// optional heap-allocated iterator for nodes that need it. If the creation
-// method returns null, Servo falls back to the aforementioned simpler (and
-// faster) sibling traversal.
-StyleChildrenIteratorOwnedOrNull Gecko_MaybeCreateStyleChildrenIterator(RawGeckoNodeBorrowed node);
-void Gecko_DropStyleChildrenIterator(StyleChildrenIteratorOwned it);
-RawGeckoNodeBorrowedOrNull Gecko_GetNextStyleChild(StyleChildrenIteratorBorrowedMut it);
+// optional stack-allocated iterator in aIterator for nodes that need it.
+void Gecko_ConstructStyleChildrenIterator(RawGeckoElementBorrowed aElement,
+                                          RawGeckoStyleChildrenIteratorBorrowedMut aIterator);
+void Gecko_DestroyStyleChildrenIterator(RawGeckoStyleChildrenIteratorBorrowedMut aIterator);
+RawGeckoNodeBorrowedOrNull Gecko_GetNextStyleChild(RawGeckoStyleChildrenIteratorBorrowedMut it);
 
 void Gecko_LoadStyleSheet(mozilla::css::Loader* loader,
                           mozilla::ServoStyleSheet* parent,
