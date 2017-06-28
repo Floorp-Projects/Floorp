@@ -428,6 +428,17 @@ GPUProcessManager::OnRemoteProcessDeviceReset(GPUProcessHost* aHost)
     DestroyProcess();
     DisableGPUProcess("GPU processed experienced too many device resets");
 
+    // Reaches the limited TDR attempts, fallback to software solution.
+    gfxConfig::SetFailed(Feature::HW_COMPOSITING,
+      FeatureStatus::Blocked,
+      "Too many attemps of D3D11 creation, fallback to software solution.");
+    gfxConfig::SetFailed(Feature::D3D11_COMPOSITING,
+      FeatureStatus::Blocked,
+      "Too many attemps of D3D11 creation, fallback to software solution.");
+    gfxConfig::SetFailed(Feature::DIRECT2D,
+      FeatureStatus::Blocked,
+      "Too many attemps of D3D11 creation, fallback to software solution.");
+
     HandleProcessLost();
     return;
   }
