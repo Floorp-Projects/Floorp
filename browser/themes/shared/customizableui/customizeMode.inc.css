@@ -570,4 +570,31 @@ toolbarpaletteitem[place="toolbar"]:not([mousedown="true"]):-moz-focusring {
   margin-inline-start: 22.35em;
 }
 
+%ifdef MOZ_PHOTON_THEME
+#customization-panelHolder > #widget-overflow-fixed-list:not(:empty) {
+  padding-bottom: 50px; /* Make sure there's always space to drop stuff. */
+}
+
+#customization-panelHolder > #widget-overflow-fixed-list:empty {
+  background-image: url("chrome://browser/skin/customizableui/empty-overflow-panel.png");
+  background-position: center top 10px;
+  background-size: 218px 134px;
+  background-repeat: no-repeat;
+}
+
+#customization-panelHolder > #widget-overflow-fixed-list:empty::after {
+  content: attr(emptylabel);
+  padding: 154px 10px 10px; /* 154 = 134 for the image, 10px space on either side. */
+  text-align: center;
+  display: block;
+}
+
+@media (min-resolution: 1.1dppx) {
+  #customization-panelHolder > #widget-overflow-fixed-list:empty {
+    background-image: url("chrome://browser/skin/customizableui/empty-overflow-panel@2x.png");
+  }
+}
+
+%else
 %include customizeTip.inc.css
+%endif
