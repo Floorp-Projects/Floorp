@@ -3,21 +3,11 @@
 <head>
   <meta charset="utf-8">
   <script type="application/javascript">
-    var frameUnloaded = function() {
-      var u = new SpeechSynthesisUtterance('hi');
-      u.addEventListener('end', function () {
-        parent.ok(true, 'Successfully spoke utterance from new frame.');
-        parent.onDone();
-      });
-      speechSynthesis.speak(u);
-    }
     addEventListener('pageshow', function onshow(evt) {
       var u = new SpeechSynthesisUtterance('hello');
       u.lang = 'it-IT-noend';
       u.addEventListener('start', function() {
-        location =
-          'data:text/html,<html><body onpageshow="' +
-          frameUnloaded.toSource() + '()"></body></html>';
+        location = "file_bfcache_frame2.html";
       });
       speechSynthesis.speak(u);
     });
