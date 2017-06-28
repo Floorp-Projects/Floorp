@@ -3,8 +3,8 @@ MOZ_AUTOMATION_L10N_CHECK=0
 . "$topsrcdir/build/mozconfig.common"
 
 # Use Clang as specified in manifest
-export CC="$topsrcdir/clang/bin/clang -fgnu89-inline -fsanitize-coverage=edge"
-export CXX="$topsrcdir/clang/bin/clang++ -fsanitize-coverage=edge"
+export CC="$topsrcdir/clang/bin/clang -fgnu89-inline"
+export CXX="$topsrcdir/clang/bin/clang++"
 export LLVM_SYMBOLIZER="$topsrcdir/clang/bin/llvm-symbolizer"
 
 # Use a newer binutils, from the tooltool gcc package, if it's there
