@@ -2907,7 +2907,8 @@ protected:
   void CreateBorderImageWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder,
                                           const StackingContextHelper& aSc,
                                           nsTArray<WebRenderParentCommand>& aParentCommands,
-                                          WebRenderDisplayItemLayer* aLayer);
+                                          mozilla::layers::WebRenderLayerManager* aManager,
+                                          nsDisplayListBuilder* aDisplayListBuilder);
   nsRegion CalculateBounds(const nsStyleBorder& aStyleBorder);
 
   mozilla::Array<mozilla::gfx::Color, 4> mColors;

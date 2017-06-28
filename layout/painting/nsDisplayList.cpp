@@ -4962,8 +4962,8 @@ nsDisplayBorder::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuild
   }
 
   if (mBorderImageRenderer) {
-    // TODO: support image type display items.
-    //CreateBorderImageWebRenderCommands(aBuilder, aSc, aParentCommands, aLayer);
+    CreateBorderImageWebRenderCommands(aBuilder, aSc, aParentCommands,
+                                       aManager, aDisplayListBuilder);
   } else if (mBorderRenderer) {
     mBorderRenderer->CreateWebRenderCommands(aBuilder, aSc);
   }
@@ -4975,7 +4975,8 @@ void
 nsDisplayBorder::CreateBorderImageWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder,
                                                     const StackingContextHelper& aSc,
                                                     nsTArray<WebRenderParentCommand>& aParentCommands,
-                                                    WebRenderDisplayItemLayer* aLayer)
+                                                    mozilla::layers::WebRenderLayerManager* aManager,
+                                                    nsDisplayListBuilder* aDisplayListBuilder)
 {
   MOZ_ASSERT(mBorderImageRenderer);
   if (!mBorderImageRenderer->mImageRenderer.IsReady()) {
@@ -5006,18 +5007,18 @@ nsDisplayBorder::CreateBorderImageWebRenderCommands(mozilla::wr::DisplayListBuil
   switch (mBorderImageRenderer->mImageRenderer.GetType()) {
     case eStyleImageType_Image:
     {
-      nsDisplayListBuilder* builder = aLayer->GetDisplayListBuilder();
-      uint32_t flags = builder->ShouldSyncDecodeImages() ?
+      uint32_t flags = aDisplayListBuilder->ShouldSyncDecodeImages() ?
                        imgIContainer::FLAG_SYNC_DECODE :
                        imgIContainer::FLAG_NONE;
 
       RefPtr<imgIContainer> img = mBorderImageRenderer->mImageRenderer.GetImage();
-      RefPtr<layers::ImageContainer> container = img->GetImageContainer(aLayer->WrManager(), flags);
+      RefPtr<layers::ImageContainer> container = img->GetImageContainer(aManager, flags);
       if (!container) {
         return;
       }
 
-      Maybe<wr::ImageKey> key = aLayer->SendImageContainer(container, aParentCommands);
+      gfx::IntSize size;
+      Maybe<wr::ImageKey> key = aManager->CreateImageKey(this, container, aBuilder, aSc, size);
       if (key.isNothing()) {
         return;
       }
