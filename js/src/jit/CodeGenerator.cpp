@@ -4567,6 +4567,10 @@ CodeGenerator::emitApplyGeneric(T* apply)
     // Guard that calleereg is an interpreted function with a JSScript.
     masm.branchIfFunctionHasNoScript(calleereg, &invoke);
 
+    // Guard that calleereg is not a class constrcuctor
+    masm.branchFunctionKind(Assembler::Equal, JSFunction::ClassConstructor,
+                            calleereg, objreg, &invoke);
+
     // Knowing that calleereg is a non-native function, load the JSScript.
     masm.loadPtr(Address(calleereg, JSFunction::offsetOfNativeOrScript()), objreg);
 
