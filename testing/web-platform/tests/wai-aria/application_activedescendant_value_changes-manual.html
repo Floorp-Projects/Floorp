@@ -14,15 +14,15 @@
     {
    "steps" : [
       {
-         "type" : "event",
          "element" : "test",
          "event" : "focus",
-         "title": "Put focus on test element"
+         "title" : "step 1",
+         "type" : "event"
       },
       {
          "attribute" : "aria-activedescendant",
          "element" : "test",
-         "title" : "step 1",
+         "title" : "step 2",
          "type" : "attribute",
          "value" : "\"bob\""
       },
@@ -146,23 +146,9 @@
                   "is",
                   "false"
                ]
-            ],
-            "WAIFAKE" : [
-               [
-                  "property",
-                  "role",
-                  "is",
-                  "ROLE_TABLE_CELL"
-               ],
-               [
-                  "property",
-                  "interfaces",
-                  "contains",
-                  "TableCell"
-               ]
             ]
          },
-         "title" : "step 2",
+         "title" : "step 3",
          "type" : "test"
       },
       {
@@ -253,23 +239,9 @@
                   "is",
                   "UIA_AutomationFocusChangedEventId"
                ]
-            ],
-            "WAIFAKE" : [
-               [
-                  "property",
-                  "role",
-                  "is",
-                  "ROLE_TABLE_CELL"
-               ],
-               [
-                  "property",
-                  "interfaces",
-                  "contains",
-                  "TableCell"
-               ]
             ]
          },
-         "title" : "step 3",
+         "title" : "step 4",
          "type" : "test"
       }
    ],

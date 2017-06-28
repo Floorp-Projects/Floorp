@@ -31,13 +31,13 @@
         return receiver.connectionList.then(list => {
           connections = list.connections;
           if (action === 'close') {
-            assert_true(connections.length === number && connections.includes(connection),
-              'A closed presentation connection remains in the set of presentation controllers.');
+            assert_true(connections.length === number - 1 && connections.includes(connection),
+              'A closed presentation connection is removed from the set of presentation controllers.');
           } else if (action === 'connect') {
             assert_true(connections.length === number + 1 && connections.includes(connection),
               'A new presentation connection is added to the set of presentation controllers.');
-            number = connections.length;
           }
+          number = connections.length;
         });
       };
 
@@ -51,6 +51,16 @@
         assert_true(evt.connection instanceof PresentationConnection, 'event.connection is a presentation connection.');
 
         return checkConnectionList(evt.connection, 'connect');
+      };
+
+      const watchEvent = (obj, watcher, type) => {
+        const watchHandler = new Promise(resolve => {
+          obj['on' + type] = evt => { resolve(evt); };
+        });
+        return Promise.all([ watchHandler, watcher.wait_for(type) ]).then(results => {
+          assert_equals(results[0], results[1], 'Both on' + type + ' and addEventListener pass the same event object.');
+          return results[0];
+        });
       };
 
       // Step 1: check the first connection in "connected" state
@@ -70,12 +80,12 @@
       .then(() => {
         stash.send(JSON.stringify({ type: 'ok' }));
         eventWatcher = new EventWatcher(t, list, 'connectionavailable');
-        return eventWatcher.wait_for('connectionavailable')
+        return watchEvent(list, eventWatcher, 'connectionavailable')
       }).then(checkEvent)
       // Step 4: check the second connection (with <iframe>) in "connected" state
       .then(() => {
         stash.send(JSON.stringify({ type: 'ok' }));
-        return eventWatcher.wait_for('connectionavailable');
+        return watchEvent(list, eventWatcher, 'connectionavailable')
       }).then(checkEvent);
     });
   });
