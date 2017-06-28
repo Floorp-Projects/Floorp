@@ -1491,7 +1491,12 @@
             if (aTab.label == title)
               return false;
 
+            let dwu = window.QueryInterface(Ci.nsIInterfaceRequestor)
+                            .getInterface(Ci.nsIDOMWindowUtils);
+            let isRTL = dwu.getDirectionFromText(title) == Ci.nsIDOMWindowUtils.DIRECTION_RTL;
+
             aTab.label = title;
+            aTab.setAttribute("dir", isRTL ? "rtl" : "ltr");
             this._tabAttrModified(aTab, ["label"]);
 
             if (aTab.selected)
@@ -6994,7 +6999,7 @@
                      class="tab-icon-overlay"
                      role="presentation"/>
           <xul:hbox class="tab-label-container"
-                    xbl:inherits="pinned,selected=visuallyselected"
+                    xbl:inherits="pinned,selected=visuallyselected,dir"
                     onoverflow="this.setAttribute('textoverflow', 'true');"
                     onunderflow="this.removeAttribute('textoverflow');"
                     flex="1">
