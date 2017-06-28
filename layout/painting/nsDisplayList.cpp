@@ -3533,6 +3533,34 @@ nsDisplayBackgroundImage::CanBuildWebRenderDisplayItems(LayerManager* aManager)
                                                                          mLayer);
 }
 
+bool
+nsDisplayBackgroundImage::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder,
+                                                  const StackingContextHelper& aSc,
+                                                  nsTArray<WebRenderParentCommand>& aParentCommands,
+                                                  WebRenderLayerManager* aManager,
+                                                  nsDisplayListBuilder* aDisplayListBuilder)
+{
+  if (!CanBuildWebRenderDisplayItems(aManager)) {
+    return false;
+  }
+
+  if (aDisplayListBuilder) {
+    mImageFlags = aDisplayListBuilder->GetBackgroundPaintFlags();
+  }
+  CheckForBorderItem(this, mImageFlags);
+  nsCSSRendering::PaintBGParams params =
+    nsCSSRendering::PaintBGParams::ForSingleLayer(*StyleFrame()->PresContext(),
+                                                  mVisibleRect, mBackgroundRect,
+                                                  StyleFrame(), mImageFlags, mLayer,
+                                                  CompositionOp::OP_OVER);
+  params.bgClipRect = &mBounds;
+  DrawResult result =
+    nsCSSRendering::BuildWebRenderDisplayItemsForStyleImageLayer(params, aBuilder, aSc, aParentCommands, nullptr, aManager, this);
+  nsDisplayBackgroundGeometry::UpdateDrawResult(this, result);
+
+  return true;
+}
+
 void
 nsDisplayBackgroundImage::CreateWebRenderCommand(wr::DisplayListBuilder& aBuilder,
                                                  const StackingContextHelper& aSc,
@@ -3547,7 +3575,13 @@ nsDisplayBackgroundImage::CreateWebRenderCommand(wr::DisplayListBuilder& aBuilde
   params.bgClipRect = &mBounds;
 
   DrawResult result =
-    nsCSSRendering::BuildWebRenderDisplayItemsForStyleImageLayer(params, aBuilder, aSc, aParentCommands, aLayer);
+    nsCSSRendering::BuildWebRenderDisplayItemsForStyleImageLayer(params,
+                                                                 aBuilder,
+                                                                 aSc,
+                                                                 aParentCommands,
+                                                                 aLayer,
+                                                                 aLayer->WrManager(),
+                                                                 this);
 
   nsDisplayBackgroundGeometry::UpdateDrawResult(this, result);
 }
