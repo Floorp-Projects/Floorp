@@ -98,15 +98,6 @@ pub enum ChildCascadeRequirement {
     MustCascadeDescendants,
 }
 
-impl From<StyleChange> for ChildCascadeRequirement {
-    fn from(change: StyleChange) -> ChildCascadeRequirement {
-        match change {
-            StyleChange::Unchanged => ChildCascadeRequirement::CanSkipCascade,
-            StyleChange::Changed => ChildCascadeRequirement::MustCascadeChildren,
-        }
-    }
-}
-
 bitflags! {
     /// Flags that represent the result of replace_rules.
     pub flags RulesChanged: u8 {
@@ -653,9 +644,14 @@ trait PrivateMatchMethods: TElement {
             let old_display_style = old_box_style.clone_display();
             let new_display_style = new_box_style.clone_display();
 
-            // If the traverse is triggered by CSS rule changes,
-            // we need to try to update all CSS animations.
-            context.shared.traversal_flags.for_css_rule_changes() ||
+            // If the traverse is triggered by CSS rule changes, we need to
+            // try to update all CSS animations on the element if the element
+            // has CSS animation style regardless of whether the animation is
+            // running or not.
+            // TODO: We should check which @keyframes changed/added/deleted
+            // and update only animations corresponding to those @keyframes.
+            (context.shared.traversal_flags.for_css_rule_changes() &&
+             has_new_animation_style) ||
             !old_box_style.animations_equals(&new_box_style) ||
              (old_display_style == display::T::none &&
               new_display_style != display::T::none &&
@@ -778,6 +774,8 @@ trait PrivateMatchMethods: TElement {
                              new_values: &Arc<ComputedValues>,
                              pseudo: Option<&PseudoElement>)
                              -> ChildCascadeRequirement {
+        use properties::computed_value_flags::*;
+
         // Don't accumulate damage if we're in a restyle for reconstruction.
         if shared_context.traversal_flags.for_reconstruct() {
             return ChildCascadeRequirement::MustCascadeChildren;
@@ -793,13 +791,26 @@ trait PrivateMatchMethods: TElement {
         let skip_applying_damage =
             restyle.reconstructed_self_or_ancestor();
 
-        let difference = self.compute_style_difference(&old_values,
-                                                       &new_values,
-                                                       pseudo);
+        let difference =
+            self.compute_style_difference(&old_values, &new_values, pseudo);
+
         if !skip_applying_damage {
             restyle.damage |= difference.damage;
         }
-        difference.change.into()
+
+        match difference.change {
+            StyleChange::Unchanged => {
+                // We need to cascade the children in order to ensure the
+                // correct propagation of text-decoration-line, which is a reset
+                // property.
+                if old_values.flags.contains(HAS_TEXT_DECORATION_LINE) !=
+                    new_values.flags.contains(HAS_TEXT_DECORATION_LINE) {
+                    return ChildCascadeRequirement::MustCascadeChildren;
+                }
+                ChildCascadeRequirement::CanSkipCascade
+            },
+            StyleChange::Changed => ChildCascadeRequirement::MustCascadeChildren,
+        }
     }
 
     /// Computes and applies restyle damage unless we've already maxed it out.
@@ -813,7 +824,10 @@ trait PrivateMatchMethods: TElement {
                              -> ChildCascadeRequirement {
         let difference = self.compute_style_difference(&old_values, &new_values, pseudo);
         restyle.damage |= difference.damage;
-        difference.change.into()
+        match difference.change {
+            StyleChange::Changed => ChildCascadeRequirement::MustCascadeChildren,
+            StyleChange::Unchanged => ChildCascadeRequirement::CanSkipCascade,
+        }
     }
 
     #[cfg(feature = "servo")]
@@ -1197,14 +1211,6 @@ pub trait MatchMethods : TElement {
         // Compute rule nodes for eagerly-cascaded pseudo-elements.
         let mut matches_different_pseudos = false;
         SelectorImpl::each_eagerly_cascaded_pseudo_element(|pseudo| {
-            let bloom_filter = context.thread_local.bloom_filter.filter();
-
-            let mut matching_context =
-                MatchingContext::new_for_visited(MatchingMode::ForStatelessPseudoElement,
-                                                 Some(bloom_filter),
-                                                 visited_handling,
-                                                 context.shared.quirks_mode);
-
             // For pseudo-elements, we only try to match visited rules if there
             // are also unvisited rules.  (This matches Gecko's behavior.)
             if visited_handling == VisitedHandlingMode::RelevantLinkVisited &&
@@ -1212,11 +1218,15 @@ pub trait MatchMethods : TElement {
                 return
             }
 
-            if !self.may_generate_pseudo(&pseudo, data.styles.primary()) {
-                return;
-            }
+            if self.may_generate_pseudo(&pseudo, data.styles.primary()) {
+                let bloom_filter = context.thread_local.bloom_filter.filter();
 
-            {
+                let mut matching_context =
+                    MatchingContext::new_for_visited(MatchingMode::ForStatelessPseudoElement,
+                                                     Some(bloom_filter),
+                                                     visited_handling,
+                                                     context.shared.quirks_mode);
+
                 let map = &mut context.thread_local.selector_flags;
                 let mut set_selector_flags = |element: &Self, flags: ElementSelectorFlags| {
                     self.apply_selector_flags(map, element, flags);
@@ -1477,6 +1487,7 @@ pub trait MatchMethods : TElement {
                                 pseudo: Option<&PseudoElement>)
                                 -> StyleDifference
     {
+        debug_assert!(pseudo.map_or(true, |p| p.is_eager()));
         if let Some(source) = self.existing_style_for_restyle_damage(old_values, pseudo) {
             return RestyleDamage::compute_style_difference(source, new_values)
         }
@@ -1505,7 +1516,23 @@ pub trait MatchMethods : TElement {
                 // triggering any change.
                 return StyleDifference::new(RestyleDamage::empty(), StyleChange::Unchanged)
             }
+            // FIXME(bz): This will keep reframing replaced elements.  Do we
+            // need this at all?  Seems like if we add/remove ::before or
+            // ::after styles we would get reframed over in match_pseudos and if
+            // that part didn't change and we had no frame for the
+            // ::before/::after then we don't care.  Need to double-check that
+            // we handle the "content" and "display" properties changing
+            // correctly, though.
+            // https://bugzilla.mozilla.org/show_bug.cgi?id=1376352
             return StyleDifference::new(RestyleDamage::reconstruct(), StyleChange::Changed)
+        }
+
+        if pseudo.map_or(false, |p| p.is_first_letter()) {
+            // No one cares about this pseudo, and we've checked above that
+            // we're not switching from a "cares" to a "doesn't care" state
+            // or vice versa.
+            return StyleDifference::new(RestyleDamage::empty(),
+                                        StyleChange::Unchanged)
         }
 
         // Something else. Be conservative for now.

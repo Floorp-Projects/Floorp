@@ -65,15 +65,20 @@ function getExpirablePRTime(daysAgo = 7) {
 
 add_task(async function test_execute() {
   // Put some trash in the database.
-  let uri = NetUtil.newURI("http://moz.org/");
+  let uri = Services.io.newURI("http://moz.org/");
 
-  let folderId = PlacesUtils.bookmarks.createFolder(PlacesUtils.unfiledBookmarksFolderId,
-                                                    "moz test",
-                                                    PlacesUtils.bookmarks.DEFAULT_INDEX);
-  let itemId = PlacesUtils.bookmarks.insertBookmark(folderId,
-                                                    uri,
-                                                    PlacesUtils.bookmarks.DEFAULT_INDEX,
-                                                    "moz test");
+  let bookmarks = await PlacesUtils.bookmarks.insertTree({
+    guid: PlacesUtils.bookmarks.unfiledGuid,
+    children: [{
+      title: "moz test",
+      type: PlacesUtils.bookmarks.TYPE_FOLDER,
+      children: [{
+        title: "moz test",
+        url: uri,
+      }]
+    }],
+  });
+
   PlacesUtils.tagging.tagURI(uri, ["tag"]);
   await PlacesUtils.keywords.insert({ url: uri.spec, keyword: "keyword"});
 
@@ -82,6 +87,9 @@ add_task(async function test_execute() {
   while (content.length < 1024) {
     content += "0";
   }
+
+  let itemId = await PlacesUtils.promiseItemId(bookmarks[1].guid);
+
   PlacesUtils.annotations.setItemAnnotation(itemId, "test-anno", content, 0,
                                             PlacesUtils.annotations.EXPIRE_NEVER);
   PlacesUtils.annotations.setPageAnnotation(uri, "test-anno", content, 0,

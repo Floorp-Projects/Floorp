@@ -17,10 +17,12 @@ use error_reporting::ContextualParseError;
 #[cfg(feature = "gecko")] use gecko_bindings::structs::CSSFontFaceDescriptors;
 #[cfg(feature = "gecko")] use cssparser::UnicodeRange;
 use parser::{ParserContext, log_css_error, Parse};
+#[cfg(feature = "gecko")]
+use properties::longhands::font_language_override;
 use selectors::parser::SelectorParseError;
 use shared_lock::{SharedRwLockReadGuard, ToCssWithGuard};
 use std::fmt;
-use style_traits::{ToCss, OneOrMoreSeparated, CommaSeparator, ParseError, StyleParseError};
+use style_traits::{Comma, OneOrMoreSeparated, ParseError, StyleParseError, ToCss};
 use values::specified::url::SpecifiedUrl;
 
 /// A source for a font-face rule.
@@ -35,7 +37,7 @@ pub enum Source {
 }
 
 impl OneOrMoreSeparated for Source {
-    type S = CommaSeparator;
+    type S = Comma;
 }
 
 /// A `UrlSource` represents a font-face source that has been specified with a
@@ -407,7 +409,10 @@ font_face_descriptors! {
             font_feature_settings::T::Normal
         },
 
-        // FIXME: add font-language-override.
+        /// The language override of this font face.
+        "font-language-override" language_override / mFontLanguageOverride: font_language_override::SpecifiedValue = {
+            font_language_override::SpecifiedValue::Normal
+        },
     ]
 }
 

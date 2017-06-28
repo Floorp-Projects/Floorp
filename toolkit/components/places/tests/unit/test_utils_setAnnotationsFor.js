@@ -8,16 +8,20 @@
   * Check for correct functionality of PlacesUtils.setAnnotationsForItem/URI
   */
 
-var bs = PlacesUtils.bookmarks;
 var as = PlacesUtils.annotations;
 
 const TEST_URL = "http://test.mozilla.org/";
 
-function run_test() {
-  var testURI = uri(TEST_URL);
+add_task(async function test_setAnnotationsFor() {
+  let testURI = uri(TEST_URL);
   // add a bookmark
-  var itemId = bs.insertBookmark(bs.unfiledBookmarksFolder, testURI,
-                                 bs.DEFAULT_INDEX, "test");
+  let bookmark = await PlacesUtils.bookmarks.insert({
+    parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+    title: "test",
+    url: testURI,
+  });
+
+  let itemId = await PlacesUtils.promiseItemId(bookmark.guid);
 
   // create annotations array
   var testAnnos = [{ name: "testAnno/test0",
@@ -75,4 +79,4 @@ function run_test() {
   testAnnos.forEach(function(anno) {
     do_check_false(as.pageHasAnnotation(testURI, anno.name));
   });
-}
+});

@@ -73,10 +73,6 @@ var gBookmarksFileOld;
 // Places bookmarks.html file pointer.
 var gBookmarksFileNew;
 
-function run_test() {
-  run_next_test();
-}
-
 add_task(async function setup() {
   // Avoid creating smart bookmarks during the test.
   Services.prefs.setIntPref("browser.places.smartBookmarksVersion", -1);

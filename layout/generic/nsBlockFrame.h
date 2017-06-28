@@ -272,6 +272,11 @@ public:
     return outside ? outside : GetInsideBullet();
   }
 
+  /**
+   * @return the first-letter frame or nullptr if we don't have one.
+   */
+  nsIFrame* GetFirstLetter() const;
+
   void MarkIntrinsicISizesDirty() override;
 private:
   void CheckIntrinsicCacheAgainstShrinkWrapState();
@@ -917,6 +922,10 @@ protected:
   already_AddRefed<nsStyleContext> ResolveBulletStyle(
     mozilla::CSSPseudoElementType aType,
     mozilla::StyleSetHandle aStyleSet);
+
+  // Update our first-letter styles during stylo post-traversal.
+  void UpdateFirstLetterStyle(nsIFrame* aLetterFrame,
+                              mozilla::ServoRestyleState& aRestyleState);
 
 #ifdef DEBUG
   void VerifyLines(bool aFinalCheckOK);

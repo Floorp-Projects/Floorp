@@ -80,20 +80,44 @@ function GlobalsForNode(filePath) {
 }
 
 GlobalsForNode.prototype = {
-  BlockComment(node, parents) {
-    let value = node.value.trim();
-    let match = /^import-globals-from\s+(.+)$/.exec(value);
-    if (!match) {
-      return [];
+  Program(node) {
+    let globals = [];
+    for (let comment of node.comments) {
+      if (comment.type !== "Block") {
+        continue;
+      }
+      let value = comment.value.trim();
+      value = value.replace(/\n/g, "");
+
+      // We have to discover any globals that ESLint would have defined through
+      // comment directives.
+      let match = /^globals?\s+(.+)/.exec(value);
+      if (match) {
+        let values = parseBooleanConfig(match[1].trim(), node);
+        for (let name of Object.keys(values)) {
+          globals.push({
+            name,
+            writable: values[name].value
+          });
+        }
+        // We matched globals, so we won't match import-globals-from.
+        continue;
+      }
+
+      match = /^import-globals-from\s+(.+)$/.exec(value);
+      if (!match) {
+        continue;
+      }
+
+      let filePath = match[1].trim();
+
+      if (!path.isAbsolute(filePath)) {
+        filePath = path.resolve(this.dirname, filePath);
+      }
+      globals = globals.concat(module.exports.getGlobalsForFile(filePath));
     }
 
-    let filePath = match[1].trim();
-
-    if (!path.isAbsolute(filePath)) {
-      filePath = path.resolve(this.dirname, filePath);
-    }
-
-    return module.exports.getGlobalsForFile(filePath);
+    return globals;
   },
 
   ExpressionStatement(node, parents, globalScope) {
@@ -163,23 +187,6 @@ module.exports = {
     let handler = new GlobalsForNode(filePath);
 
     helpers.walkAST(ast, (type, node, parents) => {
-      // We have to discover any globals that ESLint would have defined through
-      // comment directives
-      if (type == "BlockComment") {
-        let value = node.value.trim();
-        value = value.replace(/\n/g, "");
-        let match = /^globals?\s+(.+)/.exec(value);
-        if (match) {
-          let values = parseBooleanConfig(match[1].trim(), node);
-          for (let name of Object.keys(values)) {
-            globals.push({
-              name,
-              writable: values[name].value
-            });
-          }
-        }
-      }
-
       if (type in handler) {
         let newGlobals = handler[type](node, parents, globalScope);
         globals.push.apply(globals, newGlobals);

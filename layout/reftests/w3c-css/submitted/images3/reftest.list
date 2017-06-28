@@ -176,7 +176,7 @@ fails-if(!styloVsGecko&&!webrender) == object-position-png-001c.html object-posi
 == object-position-png-001i.html object-position-png-001-ref.html
 == object-position-png-001o.html object-position-png-001-ref.html
 == object-position-png-001p.html object-position-png-001-ref.html
-fails-if(!styloVsGecko&&!webrender) == object-position-png-002c.html object-position-png-002-ref.html # bug 1105150
+fails-if(!styloVsGecko&&!webrender) fuzzy-if(styloVsGecko,11,388) == object-position-png-002c.html object-position-png-002-ref.html # bug 1105150
 == object-position-png-002e.html object-position-png-002-ref.html
 == object-position-png-002i.html object-position-png-002-ref.html
 == object-position-png-002o.html object-position-png-002-ref.html

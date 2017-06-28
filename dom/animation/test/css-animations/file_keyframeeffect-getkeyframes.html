@@ -568,6 +568,10 @@ test(function(t) {
 // are correctly represented.
 
 test(function(t) {
+  if (!isServoEnabled()) {
+    // FIXME : Bug 1374564 : the serialization of text-shadow is wrong on gecko
+    return;
+  }
   var div = addDiv(t);
 
   div.style.textShadow = '1px 1px 2px rgb(0, 0, 0), ' +
@@ -580,9 +584,9 @@ test(function(t) {
 
   var expected = [
     { offset: 0, computedOffset: 0, easing: "ease",
-      textShadow: "1px 1px 2px 0px rgb(0, 0, 0),"
-                  + " 0px 0px 16px 0px rgb(0, 0, 255),"
-                  + " 0px 0px 3.2px 0px rgb(0, 0, 255)" },
+      textShadow: "1px 1px 2px rgb(0, 0, 0),"
+                  + " 0px 0px 16px rgb(0, 0, 255),"
+                  + " 0px 0px 3.2px rgb(0, 0, 255)" },
     { offset: 1, computedOffset: 1, easing: "ease", textShadow: "none" },
   ];
 
