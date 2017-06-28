@@ -2635,6 +2635,10 @@ gfxPlatform::GetApzSupportInfo(mozilla::widget::InfoObject& aObj)
   if (SupportsApzDragInput()) {
     aObj.DefineProperty("ApzDragInput", 1);
   }
+
+  if (SupportsApzKeyboardInput() && !gfxPrefs::AccessibilityBrowseWithCaret()) {
+    aObj.DefineProperty("ApzKeyboardInput", 1);
+  }
 }
 
 void
@@ -2802,6 +2806,12 @@ bool
 gfxPlatform::SupportsApzDragInput() const
 {
   return gfxPrefs::APZDragEnabled();
+}
+
+bool
+gfxPlatform::SupportsApzKeyboardInput() const
+{
+  return gfxPrefs::APZKeyboardEnabled();
 }
 
 void

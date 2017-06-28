@@ -1128,7 +1128,8 @@ MessageHandler.prototype = {
         let startCapability = createPromiseCapability();
         this.streamControllers[streamId] = {
           controller,
-          startCall: startCapability
+          startCall: startCapability,
+          isClosed: false
         };
         this.postMessage({
           sourceName,
@@ -1155,6 +1156,7 @@ MessageHandler.prototype = {
       cancel: reason => {
         let cancelCapability = createPromiseCapability();
         this.streamControllers[streamId].cancelCall = cancelCapability;
+        this.streamControllers[streamId].isClosed = true;
         this.postMessage({
           sourceName,
           targetName,
@@ -1284,9 +1286,15 @@ MessageHandler.prototype = {
         });
         break;
       case 'enqueue':
-        this.streamControllers[data.streamId].controller.enqueue(data.chunk);
+        if (!this.streamControllers[data.streamId].isClosed) {
+          this.streamControllers[data.streamId].controller.enqueue(data.chunk);
+        }
         break;
       case 'close':
+        if (this.streamControllers[data.streamId].isClosed) {
+          break;
+        }
+        this.streamControllers[data.streamId].isClosed = true;
         this.streamControllers[data.streamId].controller.close();
         deleteStreamController();
         break;
@@ -1299,6 +1307,9 @@ MessageHandler.prototype = {
         deleteStreamController();
         break;
       case 'cancel':
+        if (!this.streamSinks[data.streamId]) {
+          break;
+        }
         resolveCall(this.streamSinks[data.streamId].onCancel, [data.reason]).then(() => {
           sendStreamResponse({
             stream: 'cancel_complete',
@@ -2371,6 +2382,7 @@ function getDocument(src, pdfDataRangeTransport, passwordCallback, progressCallb
   var params = {};
   var rangeTransport = null;
   var worker = null;
+  var CMapReaderFactory = _dom_utils.DOMCMapReaderFactory;
   for (var key in source) {
     if (key === 'url' && typeof window !== 'undefined') {
       params[key] = new URL(source[key], window.location).href;
@@ -2393,12 +2405,14 @@ function getDocument(src, pdfDataRangeTransport, passwordCallback, progressCallb
         (0, _util.error)('Invalid PDF binary data: either typed array, string or ' + 'array-like object is expected in the data property.');
       }
       continue;
+    } else if (key === 'CMapReaderFactory') {
+      CMapReaderFactory = source[key];
+      continue;
     }
     params[key] = source[key];
   }
   params.rangeChunkSize = params.rangeChunkSize || DEFAULT_RANGE_CHUNK_SIZE;
   params.ignoreErrors = params.stopAtErrors !== true;
-  var CMapReaderFactory = params.CMapReaderFactory || _dom_utils.DOMCMapReaderFactory;
   if (params.disableNativeImageDecoder !== undefined) {
     (0, _util.deprecated)('parameter disableNativeImageDecoder, ' + 'use nativeImageDecoderSupport instead');
   }
@@ -2743,12 +2757,40 @@ var PDFPageProxy = function PDFPageProxyClosure() {
       }
       return intentState.opListReadCapability.promise;
     },
-    getTextContent: function PDFPageProxy_getTextContent(params) {
-      params = params || {};
-      return this.transport.messageHandler.sendWithPromise('GetTextContent', {
+    streamTextContent(params = {}) {
+      const TEXT_CONTENT_CHUNK_SIZE = 100;
+      return this.transport.messageHandler.sendWithStream('GetTextContent', {
         pageIndex: this.pageNumber - 1,
         normalizeWhitespace: params.normalizeWhitespace === true,
         combineTextItems: params.disableCombineTextItems !== true
+      }, {
+        highWaterMark: TEXT_CONTENT_CHUNK_SIZE,
+        size(textContent) {
+          return textContent.items.length;
+        }
+      });
+    },
+    getTextContent: function PDFPageProxy_getTextContent(params) {
+      params = params || {};
+      let readableStream = this.streamTextContent(params);
+      return new Promise(function (resolve, reject) {
+        function pump() {
+          reader.read().then(function ({ value, done }) {
+            if (done) {
+              resolve(textContent);
+              return;
+            }
+            _util.Util.extendObj(textContent.styles, value.styles);
+            _util.Util.appendToArray(textContent.items, value.items);
+            pump();
+          }, reject);
+        }
+        let reader = readableStream.getReader();
+        let textContent = {
+          items: [],
+          styles: Object.create(null)
+        };
+        pump();
       });
     },
     _destroy: function PDFPageProxy_destroy() {
@@ -3656,8 +3698,8 @@ var _UnsupportedManager = function UnsupportedManagerClosure() {
 }();
 var version, build;
 {
-  exports.version = version = '1.8.480';
-  exports.build = build = '2f2e539b';
+  exports.version = version = '1.8.497';
+  exports.build = build = 'f2fcf2a5';
 }
 exports.getDocument = getDocument;
 exports.LoopbackPort = LoopbackPort;
@@ -3775,6 +3817,9 @@ var renderTextLayer = function renderTextLayerClosure() {
       }
     }
     task._textDivProperties.set(textDiv, textDivProperties);
+    if (task._textContentStream) {
+      task._layoutText(textDiv);
+    }
     if (task._enhanceTextSelection) {
       var angleCos = 1,
           angleSin = 0;
@@ -3806,7 +3851,6 @@ var renderTextLayer = function renderTextLayerClosure() {
     if (task._canceled) {
       return;
     }
-    var textLayerFrag = task._container;
     var textDivs = task._textDivs;
     var capability = task._capability;
     var textDivsLength = textDivs.length;
@@ -3815,39 +3859,10 @@ var renderTextLayer = function renderTextLayerClosure() {
       capability.resolve();
       return;
     }
-    var canvas = document.createElement('canvas');
-    canvas.mozOpaque = true;
-    var ctx = canvas.getContext('2d', { alpha: false });
-    var lastFontSize;
-    var lastFontFamily;
-    for (var i = 0; i < textDivsLength; i++) {
-      var textDiv = textDivs[i];
-      var textDivProperties = task._textDivProperties.get(textDiv);
-      if (textDivProperties.isWhitespace) {
-        continue;
+    if (!task._textContentStream) {
+      for (var i = 0; i < textDivsLength; i++) {
+        task._layoutText(textDivs[i]);
       }
-      var fontSize = textDiv.style.fontSize;
-      var fontFamily = textDiv.style.fontFamily;
-      if (fontSize !== lastFontSize || fontFamily !== lastFontFamily) {
-        ctx.font = fontSize + ' ' + fontFamily;
-        lastFontSize = fontSize;
-        lastFontFamily = fontFamily;
-      }
-      var width = ctx.measureText(textDiv.textContent).width;
-      textLayerFrag.appendChild(textDiv);
-      var transform = '';
-      if (textDivProperties.canvasWidth !== 0 && width > 0) {
-        textDivProperties.scale = textDivProperties.canvasWidth / width;
-        transform = 'scaleX(' + textDivProperties.scale + ')';
-      }
-      if (textDivProperties.angle !== 0) {
-        transform = 'rotate(' + textDivProperties.angle + 'deg) ' + transform;
-      }
-      if (transform !== '') {
-        textDivProperties.originalTransform = transform;
-        _dom_utils.CustomStyle.setProp('transform', textDiv, transform);
-      }
-      task._textDivProperties.set(textDiv, textDivProperties);
     }
     task._renderingDone = true;
     capability.resolve();
@@ -4077,24 +4092,34 @@ var renderTextLayer = function renderTextLayerClosure() {
       }
     });
   }
-  function TextLayerRenderTask(textContent, container, viewport, textDivs, enhanceTextSelection) {
+  function TextLayerRenderTask({ textContent, textContentStream, container, viewport, textDivs, textContentItemsStr, enhanceTextSelection }) {
     this._textContent = textContent;
+    this._textContentStream = textContentStream;
     this._container = container;
     this._viewport = viewport;
     this._textDivs = textDivs || [];
+    this._textContentItemsStr = textContentItemsStr || [];
+    this._enhanceTextSelection = !!enhanceTextSelection;
+    this._reader = null;
+    this._layoutTextLastFontSize = null;
+    this._layoutTextLastFontFamily = null;
+    this._layoutTextCtx = null;
     this._textDivProperties = new WeakMap();
     this._renderingDone = false;
     this._canceled = false;
     this._capability = (0, _util.createPromiseCapability)();
     this._renderTimer = null;
     this._bounds = [];
-    this._enhanceTextSelection = !!enhanceTextSelection;
   }
   TextLayerRenderTask.prototype = {
     get promise() {
       return this._capability.promise;
     },
     cancel: function TextLayer_cancel() {
+      if (this._reader) {
+        this._reader.cancel();
+        this._reader = null;
+      }
       this._canceled = true;
       if (this._renderTimer !== null) {
         clearTimeout(this._renderTimer);
@@ -4102,20 +4127,80 @@ var renderTextLayer = function renderTextLayerClosure() {
       }
       this._capability.reject('canceled');
     },
+    _processItems(items, styleCache) {
+      for (let i = 0, len = items.length; i < len; i++) {
+        this._textContentItemsStr.push(items[i].str);
+        appendText(this, items[i], styleCache);
+      }
+    },
+    _layoutText(textDiv) {
+      let textLayerFrag = this._container;
+      let textDivProperties = this._textDivProperties.get(textDiv);
+      if (textDivProperties.isWhitespace) {
+        return;
+      }
+      let fontSize = textDiv.style.fontSize;
+      let fontFamily = textDiv.style.fontFamily;
+      if (fontSize !== this._layoutTextLastFontSize || fontFamily !== this._layoutTextLastFontFamily) {
+        this._layoutTextCtx.font = fontSize + ' ' + fontFamily;
+        this._lastFontSize = fontSize;
+        this._lastFontFamily = fontFamily;
+      }
+      let width = this._layoutTextCtx.measureText(textDiv.textContent).width;
+      let transform = '';
+      if (textDivProperties.canvasWidth !== 0 && width > 0) {
+        textDivProperties.scale = textDivProperties.canvasWidth / width;
+        transform = 'scaleX(' + textDivProperties.scale + ')';
+      }
+      if (textDivProperties.angle !== 0) {
+        transform = 'rotate(' + textDivProperties.angle + 'deg) ' + transform;
+      }
+      if (transform !== '') {
+        textDivProperties.originalTransform = transform;
+        _dom_utils.CustomStyle.setProp('transform', textDiv, transform);
+      }
+      this._textDivProperties.set(textDiv, textDivProperties);
+      textLayerFrag.appendChild(textDiv);
+    },
     _render: function TextLayer_render(timeout) {
-      var textItems = this._textContent.items;
-      var textStyles = this._textContent.styles;
-      for (var i = 0, len = textItems.length; i < len; i++) {
-        appendText(this, textItems[i], textStyles);
-      }
-      if (!timeout) {
-        render(this);
+      let capability = (0, _util.createPromiseCapability)();
+      let styleCache = Object.create(null);
+      let canvas = document.createElement('canvas');
+      canvas.mozOpaque = true;
+      this._layoutTextCtx = canvas.getContext('2d', { alpha: false });
+      if (this._textContent) {
+        let textItems = this._textContent.items;
+        let textStyles = this._textContent.styles;
+        this._processItems(textItems, textStyles);
+        capability.resolve();
+      } else if (this._textContentStream) {
+        let pump = () => {
+          this._reader.read().then(({ value, done }) => {
+            if (done) {
+              capability.resolve();
+              return;
+            }
+            _util.Util.extendObj(styleCache, value.styles);
+            this._processItems(value.items, styleCache);
+            pump();
+          }, capability.reject);
+        };
+        this._reader = this._textContentStream.getReader();
+        pump();
       } else {
-        this._renderTimer = setTimeout(() => {
-          render(this);
-          this._renderTimer = null;
-        }, timeout);
+        throw new Error('Neither "textContent" nor "textContentStream"' + ' parameters specified.');
       }
+      capability.promise.then(() => {
+        styleCache = null;
+        if (!timeout) {
+          render(this);
+        } else {
+          this._renderTimer = setTimeout(() => {
+            render(this);
+            this._renderTimer = null;
+          }, timeout);
+        }
+      }, this._capability.reject);
     },
     expandTextDivs: function TextLayer_expandTextDivs(expandDivs) {
       if (!this._enhanceTextSelection || !this._renderingDone) {
@@ -4168,7 +4253,15 @@ var renderTextLayer = function renderTextLayerClosure() {
     }
   };
   function renderTextLayer(renderParameters) {
-    var task = new TextLayerRenderTask(renderParameters.textContent, renderParameters.container, renderParameters.viewport, renderParameters.textDivs, renderParameters.enhanceTextSelection);
+    var task = new TextLayerRenderTask({
+      textContent: renderParameters.textContent,
+      textContentStream: renderParameters.textContentStream,
+      container: renderParameters.container,
+      viewport: renderParameters.viewport,
+      textDivs: renderParameters.textDivs,
+      textContentItemsStr: renderParameters.textContentItemsStr,
+      enhanceTextSelection: renderParameters.enhanceTextSelection
+    });
     task._render(renderParameters.timeout);
     return task;
   }
@@ -4659,8 +4752,8 @@ if (!_util.globalScope.PDFJS) {
 }
 var PDFJS = _util.globalScope.PDFJS;
 {
-  PDFJS.version = '1.8.480';
-  PDFJS.build = '2f2e539b';
+  PDFJS.version = '1.8.497';
+  PDFJS.build = 'f2fcf2a5';
 }
 PDFJS.pdfBug = false;
 if (PDFJS.verbosity !== undefined) {
@@ -10007,8 +10100,8 @@ exports.TilingPattern = TilingPattern;
 "use strict";
 
 
-var pdfjsVersion = '1.8.480';
-var pdfjsBuild = '2f2e539b';
+var pdfjsVersion = '1.8.497';
+var pdfjsBuild = 'f2fcf2a5';
 var pdfjsSharedUtil = __w_pdfjs_require__(0);
 var pdfjsDisplayGlobal = __w_pdfjs_require__(8);
 var pdfjsDisplayAPI = __w_pdfjs_require__(3);

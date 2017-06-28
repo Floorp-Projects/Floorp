@@ -11,6 +11,7 @@
 #include "mozilla/EventStateManager.h"      // for WheelPrefs
 #include "mozilla/layers/APZThreadUtils.h"  // for AssertOnCompositorThread, etc
 #include "mozilla/MouseEvents.h"            // for WidgetMouseEvent
+#include "mozilla/TextEvents.h"             // for WidgetKeyboardEvent
 #include "mozilla/TouchEvents.h"            // for WidgetTouchEvent
 
 namespace mozilla {
@@ -69,11 +70,12 @@ IAPZCTreeManager::ReceiveInputEvent(
         mouseEvent.mRefPoint.x = input.mOrigin.x;
         mouseEvent.mRefPoint.y = input.mOrigin.y;
         mouseEvent.mFlags.mHandledByAPZ = input.mHandledByAPZ;
+        mouseEvent.mFocusSequenceNumber = input.mFocusSequenceNumber;
         return status;
 
       }
 
-      TransformEventRefPoint(&mouseEvent.mRefPoint, aOutTargetGuid);
+      ProcessUnhandledEvent(&mouseEvent.mRefPoint, aOutTargetGuid, &aEvent.mFocusSequenceNumber);
       return nsEventStatus_eIgnore;
     }
     case eTouchEventClass: {
@@ -92,6 +94,7 @@ IAPZCTreeManager::ReceiveInputEvent(
           touchInput.mTouches[i].ToNewDOMTouch();
       }
       touchEvent.mFlags.mHandledByAPZ = touchInput.mHandledByAPZ;
+      touchEvent.mFocusSequenceNumber = touchInput.mFocusSequenceNumber;
       return result;
 
     }
@@ -133,18 +136,30 @@ IAPZCTreeManager::ReceiveInputEvent(
         wheelEvent.mRefPoint.x = input.mOrigin.x;
         wheelEvent.mRefPoint.y = input.mOrigin.y;
         wheelEvent.mFlags.mHandledByAPZ = input.mHandledByAPZ;
+        wheelEvent.mFocusSequenceNumber = input.mFocusSequenceNumber;
         return status;
       }
 
       UpdateWheelTransaction(aEvent.mRefPoint, aEvent.mMessage);
-      TransformEventRefPoint(&aEvent.mRefPoint, aOutTargetGuid);
+      ProcessUnhandledEvent(&aEvent.mRefPoint, aOutTargetGuid, &aEvent.mFocusSequenceNumber);
       return nsEventStatus_eIgnore;
 
+    }
+    case eKeyboardEventClass: {
+      WidgetKeyboardEvent& keyboardEvent = *aEvent.AsKeyboardEvent();
+
+      KeyboardInput input(keyboardEvent);
+
+      nsEventStatus status = ReceiveInputEvent(input, aOutTargetGuid, aOutInputBlockId);
+
+      keyboardEvent.mFlags.mHandledByAPZ = input.mHandledByAPZ;
+      keyboardEvent.mFocusSequenceNumber = input.mFocusSequenceNumber;
+      return status;
     }
     default: {
 
       UpdateWheelTransaction(aEvent.mRefPoint, aEvent.mMessage);
-      TransformEventRefPoint(&aEvent.mRefPoint, aOutTargetGuid);
+      ProcessUnhandledEvent(&aEvent.mRefPoint, aOutTargetGuid, &aEvent.mFocusSequenceNumber);
       return nsEventStatus_eIgnore;
 
     }

@@ -323,6 +323,9 @@ ConvertToNSArray(nsTArray<ProxyAccessible*>& aArray)
   }
   if ([attribute isEqualToString:NSAccessibilityHelpAttribute])
     return [self help];
+  if ([attribute isEqualToString:NSAccessibilityOrientationAttribute])
+    return [self orientation];
+
   if ([attribute isEqualToString:NSAccessibilityDOMIdentifierAttribute]) {
     nsAutoString id;
     if (accWrap)
@@ -1063,6 +1066,28 @@ struct RoleDescrComparator
     proxy->Description(helpText);
 
   return nsCocoaUtils::ToNSString(helpText);
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
+}
+
+- (NSString*)orientation
+{
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
+
+  uint64_t state;
+  if (AccessibleWrap* accWrap = [self getGeckoAccessible])
+    state = accWrap->InteractiveState();
+  else if (ProxyAccessible* proxy = [self getProxyAccessible])
+    state = proxy->State();
+  else
+    state = 0;
+
+  if (state & states::HORIZONTAL)
+    return NSAccessibilityHorizontalOrientationValue;
+  if (state & states::VERTICAL)
+    return NSAccessibilityVerticalOrientationValue;
+
+  return NSAccessibilityUnknownOrientationValue;
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }

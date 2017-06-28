@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include <stack>
+#include <unordered_set>
 #include "APZCTreeManager.h"
 #include "AsyncPanZoomController.h"
 #include "Compositor.h"                 // for Compositor
@@ -21,6 +22,7 @@
 #include "mozilla/layers/AsyncCompositionManager.h" // for ViewTransform
 #include "mozilla/layers/AsyncDragMetrics.h" // for AsyncDragMetrics
 #include "mozilla/layers/CompositorBridgeParent.h" // for CompositorBridgeParent, etc
+#include "mozilla/layers/FocusState.h"  // for FocusState
 #include "mozilla/layers/LayerMetricsWrapper.h"
 #include "mozilla/layers/WebRenderScrollDataWrapper.h"
 #include "mozilla/MouseEvents.h"
@@ -82,6 +84,11 @@ struct APZCTreeManager::TreeBuildingState {
   // This is initialized with all nodes in the old tree, and nodes are removed
   // from it as we reuse them in the new tree.
   nsTArray<RefPtr<HitTestingTreeNode>> mNodesToDestroy;
+  // A set of layer trees that are no longer in the hit testing tree. This is
+  // used to destroy unneeded focus targets at the end of tree building. This
+  // is needed in addition to mNodesToDestroy because a hit testing node for a
+  // layer tree can be removed without the whole layer tree being removed.
+  std::unordered_set<uint64_t> mLayersIdsToDestroy;
 
   // This map is populated as we place APZCs into the new tree. Its purpose is
   // to facilitate re-using the same APZC for different layers that scroll
@@ -158,6 +165,35 @@ APZCTreeManager::CheckerboardFlushObserver::Observe(nsISupports* aSubject,
   return NS_OK;
 }
 
+/**
+ * A RAII class used for setting the focus sequence number on input events
+ * as they are being processed. Any input event is assumed to be potentially
+ * focus changing unless explicitly marked otherwise.
+ */
+class MOZ_RAII AutoFocusSequenceNumberSetter
+{
+public:
+  AutoFocusSequenceNumberSetter(FocusState& aFocusState, InputData& aEvent)
+    : mFocusState(aFocusState)
+    , mEvent(aEvent)
+    , mMayChangeFocus(true)
+  { }
+
+  void MarkAsNonFocusChanging() { mMayChangeFocus = false; }
+
+  ~AutoFocusSequenceNumberSetter()
+  {
+    if (mMayChangeFocus) {
+      mFocusState.ReceiveFocusChangingEvent();
+    }
+    mEvent.mFocusSequenceNumber = mFocusState.LastAPZProcessedEvent();
+  }
+
+private:
+  FocusState& mFocusState;
+  InputData& mEvent;
+  bool mMayChangeFocus;
+};
 
 /*static*/ const ScreenMargin
 APZCTreeManager::CalculatePendingDisplayPort(
@@ -263,6 +299,7 @@ APZCTreeManager::UpdateHitTestingTreeImpl(uint64_t aRootLayerTreeId,
       {
         state.mNodesToDestroy.AppendElement(aNode);
       });
+  state.mLayersIdsToDestroy = mFocusState.GetFocusTargetLayerIds();
   mRootNode = nullptr;
 
   if (aRoot) {
@@ -272,6 +309,8 @@ APZCTreeManager::UpdateHitTestingTreeImpl(uint64_t aRootLayerTreeId,
     HitTestingTreeNode* next = nullptr;
     uint64_t layersId = aRootLayerTreeId;
     ancestorTransforms.push(Matrix4x4());
+
+    state.mLayersIdsToDestroy.erase(aRootLayerTreeId);
 
     mApzcTreeLog << "[start]\n";
     mTreeLock.AssertCurrentThreadOwns();
@@ -310,7 +349,15 @@ APZCTreeManager::UpdateHitTestingTreeImpl(uint64_t aRootLayerTreeId,
           MOZ_ASSERT(!node->GetFirstChild());
           parent = node;
           next = nullptr;
-          layersId = aLayerMetrics.GetReferentId().valueOr(layersId);
+
+          // Update the layersId if we have a new one
+          if (Maybe<uint64_t> newLayersId = aLayerMetrics.GetReferentId()) {
+            layersId = *newLayersId;
+
+            // Mark that this layer tree is being used
+            state.mLayersIdsToDestroy.erase(layersId);
+          }
+
           indents.push(gfx::TreeAutoIndent(mApzcTreeLog));
         },
         [&](ScrollNode aLayerMetrics)
@@ -335,11 +382,30 @@ APZCTreeManager::UpdateHitTestingTreeImpl(uint64_t aRootLayerTreeId,
     state.mNodesToDestroy[i]->Destroy();
   }
 
+  // Clear out any focus targets that are no longer needed
+  for (auto layersId : state.mLayersIdsToDestroy) {
+    mFocusState.RemoveFocusTarget(layersId);
+  }
+
 #if ENABLE_APZCTM_LOGGING
   // Make the hit-test tree line up with the layer dump
   printf_stderr("APZCTreeManager (%p)\n", this);
   mRootNode->Dump("  ");
 #endif
+}
+
+void
+APZCTreeManager::UpdateFocusState(uint64_t aRootLayerTreeId,
+                                  uint64_t aOriginatingLayersId,
+                                  const FocusTarget& aFocusTarget)
+{
+  if (!gfxPrefs::APZKeyboardEnabled()) {
+    return;
+  }
+
+  mFocusState.Update(aRootLayerTreeId,
+                     aOriginatingLayersId,
+                     aFocusTarget);
 }
 
 void
@@ -868,6 +934,9 @@ APZCTreeManager::ReceiveInputEvent(InputData& aEvent,
 {
   APZThreadUtils::AssertOnControllerThread();
 
+  // Use a RAII class for updating the focus sequence number of this event
+  AutoFocusSequenceNumberSetter focusSetter(mFocusState, aEvent);
+
 #if defined(MOZ_WIDGET_ANDROID)
   MOZ_ASSERT(mToolbarAnimator);
   ScreenPoint scrollOffset;
@@ -1035,7 +1104,6 @@ APZCTreeManager::ReceiveInputEvent(InputData& aEvent,
       FlushRepaintsToClearScreenToGeckoTransform();
 
       ScrollWheelInput& wheelInput = aEvent.AsScrollWheelInput();
-
       wheelInput.mHandledByAPZ = WillHandleInput(wheelInput);
       if (!wheelInput.mHandledByAPZ) {
         return result;
@@ -1176,6 +1244,91 @@ APZCTreeManager::ReceiveInputEvent(InputData& aEvent,
         apzc->GetGuid(aOutTargetGuid);
         tapInput.mPoint = *untransformedPoint;
       }
+      break;
+    } case KEYBOARD_INPUT: {
+      // Disable async keyboard scrolling when accessibility.browsewithcaret is enabled
+      if (!gfxPrefs::APZKeyboardEnabled() ||
+          gfxPrefs::AccessibilityBrowseWithCaret()) {
+        return result;
+      }
+
+      KeyboardInput& keyInput = aEvent.AsKeyboardInput();
+
+      // Try and find a matching shortcut for this keyboard input
+      Maybe<KeyboardShortcut> shortcut = mKeyboardMap.FindMatch(keyInput);
+
+      if (!shortcut) {
+        // If we don't have a shortcut for this key event, then we can keep our focus
+        // only if we know there are no key event listeners for this target
+        if (mFocusState.CanIgnoreKeyboardShortcutMisses()) {
+          focusSetter.MarkAsNonFocusChanging();
+        }
+        return result;
+      }
+
+      // Check if this shortcut needs to be dispatched to content. Anything matching
+      // this is assumed to be able to change focus.
+      if (shortcut->mDispatchToContent) {
+        return result;
+      }
+
+      // We know we have an action to execute on whatever is the current focus target
+      const KeyboardScrollAction& action = shortcut->mAction;
+
+      // The current focus target depends on which direction the scroll is to happen
+      Maybe<ScrollableLayerGuid> targetGuid;
+      switch (action.mType)
+      {
+        case KeyboardScrollAction::eScrollCharacter: {
+          targetGuid = mFocusState.GetHorizontalTarget();
+          break;
+        }
+        case KeyboardScrollAction::eScrollLine:
+        case KeyboardScrollAction::eScrollPage:
+        case KeyboardScrollAction::eScrollComplete: {
+          targetGuid = mFocusState.GetVerticalTarget();
+          break;
+        }
+
+        case KeyboardScrollAction::eSentinel: {
+          MOZ_ASSERT_UNREACHABLE("Invalid KeyboardScrollActionType");
+        }
+      }
+
+      // If we don't have a scroll target then either we have a stale focus target,
+      // the focused element has event listeners, or the focused element doesn't have a
+      // layerized scroll frame. In any case we need to dispatch to content.
+      if (!targetGuid) {
+        return result;
+      }
+
+      RefPtr<AsyncPanZoomController> targetApzc = GetTargetAPZC(targetGuid->mLayersId,
+                                                                targetGuid->mScrollId);
+
+      // Scroll snapping behavior with keyboard input is more complicated, so
+      // ignore any input events that are targeted at an Apzc with scroll snap
+      // points.
+      if (!targetApzc || targetApzc->HasScrollSnapping()) {
+        return result;
+      }
+
+      // Attach the keyboard scroll action to the input event for processing
+      // by the input queue.
+      keyInput.mAction = action;
+
+      // Dispatch the event to the input queue.
+      result = mInputQueue->ReceiveInputEvent(
+          targetApzc,
+          /* aTargetConfirmed = */ true,
+          keyInput, aOutInputBlockId);
+
+      // Any keyboard event that is dispatched to the input queue at this point
+      // should have been consumed
+      MOZ_ASSERT(result == nsEventStatus_eConsumeNoDefault);
+
+      keyInput.mHandledByAPZ = true;
+      focusSetter.MarkAsNonFocusChanging();
+
       break;
     } case SENTINEL_INPUT: {
       MOZ_ASSERT_UNREACHABLE("Invalid InputType.");
@@ -1404,8 +1557,9 @@ APZCTreeManager::UpdateWheelTransaction(LayoutDeviceIntPoint aRefPoint,
 }
 
 void
-APZCTreeManager::TransformEventRefPoint(LayoutDeviceIntPoint* aRefPoint,
-                              ScrollableLayerGuid* aOutTargetGuid)
+APZCTreeManager::ProcessUnhandledEvent(LayoutDeviceIntPoint* aRefPoint,
+                                        ScrollableLayerGuid*  aOutTargetGuid,
+                                        uint64_t*             aOutFocusSequenceNumber)
 {
   // Transform the aRefPoint.
   // If the event hits an overscrolled APZC, instruct the caller to ignore it.
@@ -1427,6 +1581,10 @@ APZCTreeManager::TransformEventRefPoint(LayoutDeviceIntPoint* aRefPoint,
         ViewAs<LayoutDevicePixel>(*untransformedRefPoint, LDIsScreen);
     }
   }
+
+  // Update the focus sequence number and attach it to the event
+  mFocusState.ReceiveFocusChangingEvent();
+  *aOutFocusSequenceNumber = mFocusState.LastAPZProcessedEvent();
 }
 
 void
@@ -1435,6 +1593,12 @@ APZCTreeManager::ProcessTouchVelocity(uint32_t aTimestampMs, float aSpeedY)
   if (mApzcForInputBlock) {
     mApzcForInputBlock->HandleTouchVelocity(aTimestampMs, aSpeedY);
   }
+}
+
+void
+APZCTreeManager::SetKeyboardMap(const KeyboardMap& aKeyboardMap)
+{
+  mKeyboardMap = aKeyboardMap;
 }
 
 void

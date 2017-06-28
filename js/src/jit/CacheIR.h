@@ -137,6 +137,8 @@ class TypedOperandId : public OperandId
     _(GetProp)              \
     _(GetElem)              \
     _(GetName)              \
+    _(GetPropSuper)         \
+    _(GetElemSuper)         \
     _(SetProp)              \
     _(SetElem)              \
     _(BindName)             \
@@ -1085,6 +1087,7 @@ class MOZ_RAII GetPropIRGenerator : public IRGenerator
 {
     HandleValue val_;
     HandleValue idVal_;
+    HandleValue receiver_;
     bool* isTemporarilyUnoptimizable_;
     CanAttachGetter canAttachGetter_;
 
@@ -1131,8 +1134,21 @@ class MOZ_RAII GetPropIRGenerator : public IRGenerator
     void attachMegamorphicNativeSlot(ObjOperandId objId, jsid id, bool handleMissing);
 
     ValOperandId getElemKeyValueId() const {
-        MOZ_ASSERT(cacheKind_ == CacheKind::GetElem);
+        MOZ_ASSERT(cacheKind_ == CacheKind::GetElem || cacheKind_ == CacheKind::GetElemSuper);
         return ValOperandId(1);
+    }
+
+    ValOperandId getSuperReceiverValueId() const {
+        if (cacheKind_ == CacheKind::GetPropSuper)
+            return ValOperandId(1);
+
+        MOZ_ASSERT(cacheKind_ == CacheKind::GetElemSuper);
+        return ValOperandId(2);
+    }
+
+    bool isSuper() const {
+        return (cacheKind_ == CacheKind::GetPropSuper ||
+                cacheKind_ == CacheKind::GetElemSuper);
     }
 
     // No pc if idempotent, as there can be multiple bytecode locations
@@ -1149,7 +1165,7 @@ class MOZ_RAII GetPropIRGenerator : public IRGenerator
   public:
     GetPropIRGenerator(JSContext* cx, HandleScript script, jsbytecode* pc, CacheKind cacheKind,
                        ICState::Mode mode, bool* isTemporarilyUnoptimizable, HandleValue val,
-                       HandleValue idVal, CanAttachGetter canAttachGetter);
+                       HandleValue idVal, HandleValue receiver, CanAttachGetter canAttachGetter);
 
     bool tryAttachStub();
     bool tryAttachIdempotentStub();

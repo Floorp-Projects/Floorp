@@ -17,10 +17,6 @@ if CONFIG['WRAP_STL_INCLUDES']:
     elif CONFIG['_MSC_VER']:
         DEFINES['_HAS_EXCEPTIONS'] = 0
         if CONFIG['MOZ_MSVC_STL_WRAP_RAISE']:
-            EXPORTS.mozilla += [
-                'msvc_raise_wrappers.h',
-                'throw_msvc.h',
-            ]
             SOURCES += [
                 'msvc_raise_wrappers.cpp',
             ]

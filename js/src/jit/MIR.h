@@ -10782,6 +10782,7 @@ class InlinePropertyTable : public TempObject
         MOZ_ASSERT(priorResumePoint_ == nullptr);
         priorResumePoint_ = resumePoint;
     }
+    bool hasPriorResumePoint() { return bool(priorResumePoint_); }
     MResumePoint* takePriorResumePoint() {
         MResumePoint* rp = priorResumePoint_;
         priorResumePoint_ = nullptr;

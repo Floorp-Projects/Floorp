@@ -97,6 +97,7 @@ class ReadbackLayer;
 class ReadbackProcessor;
 class RefLayer;
 class HostLayer;
+class FocusTarget;
 class KnowsCompositor;
 class ShadowableLayer;
 class ShadowLayerForwarder;
@@ -600,6 +601,11 @@ public:
   virtual void SetIsFirstPaint() {}
 
   /**
+   * Set the current focus target to be sent with the next paint.
+   */
+  virtual void SetFocusTarget(const FocusTarget& aFocusTarget) {}
+
+  /**
    * Make sure that the previous transaction has been entirely
    * completed.
    *
@@ -843,6 +849,11 @@ public:
    * valid to set/get user data from it.
    */
   LayerManager* Manager() { return mManager; }
+
+  /**
+   * This should only be called when changing layer managers from HostLayers.
+   */
+  void SetManager(LayerManager* aManager, HostLayer* aSelf);
 
   enum {
     /**

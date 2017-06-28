@@ -17,9 +17,7 @@ class nsIDOMKeyEvent;
 class nsXBLPrototypeHandler;
 
 namespace mozilla {
-namespace dom {
 struct IgnoreModifierState;
-} // namespace dom
 } // namespace mozilla
 
 class nsXBLEventHandler : public nsIDOMEventListener
@@ -55,7 +53,7 @@ private:
 
 class nsXBLKeyEventHandler : public nsIDOMEventListener
 {
-  typedef mozilla::dom::IgnoreModifierState IgnoreModifierState;
+  typedef mozilla::IgnoreModifierState IgnoreModifierState;
 
 public:
   nsXBLKeyEventHandler(nsIAtom* aEventType, uint8_t aPhase, uint8_t aType);

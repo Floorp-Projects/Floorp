@@ -189,6 +189,11 @@ public:
   static nsIScrollableFrame* FindScrollableFrameFor(ViewID aId);
 
   /**
+   * Find the ID for a given scrollable frame.
+   */
+  static ViewID FindIDForScrollableFrame(nsIScrollableFrame* aScrollable);
+
+  /**
    * Get display port for the given element, relative to the specified entity,
    * defaulting to the scrollport.
    */

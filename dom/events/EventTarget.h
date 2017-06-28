@@ -99,6 +99,10 @@ public:
   // Called from AsyncEventDispatcher to notify it is running.
   virtual void AsyncEventRunning(AsyncEventDispatcher* aEvent) {}
 
+  // Used by FocusTarget to determine whether this event target has listeners
+  // for untrusted or non system group key events.
+  bool HasUntrustedOrNonSystemGroupKeyEventListeners() const;
+
   virtual bool IsApzAware() const;
 
 protected:

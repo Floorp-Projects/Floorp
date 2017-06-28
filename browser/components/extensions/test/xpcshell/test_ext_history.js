@@ -473,7 +473,7 @@ add_task(async function test_on_visited() {
     equal(onVisited.url, expected.url, "onVisited received the expected url");
     // Title will be blank until bug 1287928 lands
     // https://bugzilla.mozilla.org/show_bug.cgi?id=1287928
-    equal(onVisited.title, "", "onVisited received a blank title");
+    equal(onVisited.title, expected.title, "onVisited received the expected title");
     equal(onVisited.lastVisitTime, expected.time, "onVisited received the expected time");
     equal(onVisited.visitCount, expected.visitCount, "onVisited received the expected visitCount");
   }

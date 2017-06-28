@@ -640,6 +640,7 @@ public:
     }
     bool SupportsApzTouchInput() const;
     bool SupportsApzDragInput() const;
+    bool SupportsApzKeyboardInput() const;
 
     virtual void FlushContentDrawing() {}
 

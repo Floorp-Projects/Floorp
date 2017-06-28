@@ -488,11 +488,11 @@ ToIdOperation(JSContext* cx, HandleScript script, jsbytecode* pc, HandleValue id
 }
 
 static MOZ_ALWAYS_INLINE bool
-GetObjectElementOperation(JSContext* cx, JSOp op, JS::HandleObject obj, JS::HandleObject receiver,
+GetObjectElementOperation(JSContext* cx, JSOp op, JS::HandleObject obj, JS::HandleValue receiver,
                           HandleValue key, MutableHandleValue res)
 {
     MOZ_ASSERT(op == JSOP_GETELEM || op == JSOP_CALLELEM || op == JSOP_GETELEM_SUPER);
-    MOZ_ASSERT_IF(op == JSOP_GETELEM || op == JSOP_CALLELEM, obj == receiver);
+    MOZ_ASSERT_IF(op == JSOP_GETELEM || op == JSOP_CALLELEM, obj == &receiver.toObject());
 
     do {
         uint32_t index;
@@ -626,8 +626,9 @@ GetElementOperation(JSContext* cx, JSOp op, HandleValue lref, HandleValue rref,
         return GetPrimitiveElementOperation(cx, op, thisv, rref, res);
     }
 
-    RootedObject thisv(cx, &lref.toObject());
-    return GetObjectElementOperation(cx, op, thisv, thisv, rref, res);
+    RootedObject obj(cx, &lref.toObject());
+    RootedValue thisv(cx, lref);
+    return GetObjectElementOperation(cx, op, obj, thisv, rref, res);
 }
 
 static MOZ_ALWAYS_INLINE JSString*

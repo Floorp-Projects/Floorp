@@ -17,6 +17,7 @@
 #include "mozilla/dom/ScreenOrientation.h"  // for ScreenOrientation
 #include "mozilla/ipc/SharedMemory.h"   // for SharedMemory, etc
 #include "mozilla/layers/CompositableForwarder.h"
+#include "mozilla/layers/FocusTarget.h"
 #include "mozilla/layers/LayersTypes.h"
 #include "mozilla/layers/TextureForwarder.h"
 #include "mozilla/layers/CompositorTypes.h"  // for OpenMode, etc
@@ -371,6 +372,11 @@ public:
    */
   void SetIsFirstPaint() { mIsFirstPaint = true; }
 
+  /**
+   * Set the current focus target to be sent with the next paint.
+   */
+  void SetFocusTarget(const FocusTarget& aFocusTarget) { mFocusTarget = aFocusTarget; }
+
   void SetLayerObserverEpoch(uint64_t aLayerObserverEpoch);
 
   static void PlatformSyncBeforeUpdate();
@@ -448,6 +454,7 @@ private:
   MessageLoop* mMessageLoop;
   DiagnosticTypes mDiagnosticTypes;
   bool mIsFirstPaint;
+  FocusTarget mFocusTarget;
   bool mWindowOverlayChanged;
   InfallibleTArray<PluginWindowData> mPluginWindowData;
   UniquePtr<ActiveResourceTracker> mActiveResourceTracker;
