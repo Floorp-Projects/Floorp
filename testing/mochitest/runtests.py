@@ -1575,18 +1575,12 @@ toolbar#nav-bar {
         else:
             lsanPath = None
 
-        if mozinfo.info["ubsan"]:
-            ubsanPath = SCRIPT_DIR
-        else:
-            ubsanPath = None
-
         browserEnv = self.environment(
             xrePath=options.xrePath,
             env=env,
             debugger=debugger,
             dmdPath=options.dmdPath,
-            lsanPath=lsanPath,
-            ubsanPath=ubsanPath)
+            lsanPath=lsanPath)
 
         if hasattr(options, "topsrcdir"):
             browserEnv["MOZ_DEVELOPER_REPO_DIR"] = options.topsrcdir
