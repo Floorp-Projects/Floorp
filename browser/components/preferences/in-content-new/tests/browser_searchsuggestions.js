@@ -8,7 +8,7 @@ registerCleanupFunction(() => {
 add_task(async function() {
   Services.prefs.setBoolPref("browser.search.suggest.enabled", true);
 
-  await openPreferencesViaOpenPreferencesAPI("search", { leaveOpen: true });
+  await openPreferencesViaOpenPreferencesAPI("general", { leaveOpen: true });
 
   let doc = gBrowser.selectedBrowser.contentDocument;
   let urlbarBox = doc.getElementById("urlBarSuggestion");
@@ -25,7 +25,7 @@ add_task(async function() {
 add_task(async function() {
   Services.prefs.setBoolPref("browser.search.suggest.enabled", false);
 
-  await openPreferencesViaOpenPreferencesAPI("search", { leaveOpen: true });
+  await openPreferencesViaOpenPreferencesAPI("general", { leaveOpen: true });
 
   let doc = gBrowser.selectedBrowser.contentDocument;
   let urlbarBox = doc.getElementById("urlBarSuggestion");
