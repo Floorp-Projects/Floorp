@@ -153,5 +153,6 @@ module.exports = {
   messageObjectPropertiesLoad,
   // for test purpose only.
   messageTableDataReceive,
+  messageObjectPropertiesReceive,
 };
 
