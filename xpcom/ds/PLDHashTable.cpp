@@ -72,7 +72,10 @@ PLDHashTable::HashStringKey(const void* aKey)
 /* static */ PLDHashNumber
 PLDHashTable::HashVoidPtrKeyStub(const void* aKey)
 {
-  return (PLDHashNumber)(ptrdiff_t)aKey >> 2;
+  // Be careful!  We don't want to do the cast to PLDHashNumber which is a
+  // trimming cast on 64-bit platforms before the shift, otherwise we will lose
+  // valuable bits from our hash key!
+  return PLDHashNumber(uintptr_t(aKey) >> 2);
 }
 
 /* static */ bool

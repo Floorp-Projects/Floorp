@@ -97,10 +97,12 @@ FormatForPackingInfo(const PackingInfo& pi)
 
         case LOCAL_GL_RGB:
         case LOCAL_GL_RGB_INTEGER:
+        case LOCAL_GL_SRGB:
             return WebGLTexelFormat::RGB8;
 
         case LOCAL_GL_RGBA:
         case LOCAL_GL_RGBA_INTEGER:
+        case LOCAL_GL_SRGB_ALPHA:
             return WebGLTexelFormat::RGBA8;
 
         case LOCAL_GL_RG:
@@ -434,11 +436,11 @@ bool
 TexUnpackBytes::TexOrSubImage(bool isSubImage, bool needsRespec, const char* funcName,
                               WebGLTexture* tex, TexImageTarget target, GLint level,
                               const webgl::DriverUnpackInfo* dui, GLint xOffset,
-                              GLint yOffset, GLint zOffset, GLenum* const out_error) const
+                              GLint yOffset, GLint zOffset, const webgl::PackingInfo& pi,
+                              GLenum* const out_error) const
 {
     WebGLContext* webgl = tex->mContext;
 
-    const auto pi = dui->ToPacking();
     const auto format = FormatForPackingInfo(pi);
     const auto bytesPerPixel = webgl::BytesPerPixel(pi);
 
@@ -613,7 +615,8 @@ bool
 TexUnpackImage::TexOrSubImage(bool isSubImage, bool needsRespec, const char* funcName,
                               WebGLTexture* tex, TexImageTarget target, GLint level,
                               const webgl::DriverUnpackInfo* dui, GLint xOffset,
-                              GLint yOffset, GLint zOffset, GLenum* const out_error) const
+                              GLint yOffset, GLint zOffset, const webgl::PackingInfo& pi,
+                              GLenum* const out_error) const
 {
     MOZ_ASSERT_IF(needsRespec, !isSubImage);
 
@@ -739,7 +742,7 @@ TexUnpackImage::TexOrSubImage(bool isSubImage, bool needsRespec, const char* fun
                                     mSrcAlphaType);
 
     return surfBlob.TexOrSubImage(isSubImage, needsRespec, funcName, tex, target, level,
-                                  dui, xOffset, yOffset, zOffset, out_error);
+                                  dui, xOffset, yOffset, zOffset, pi, out_error);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -821,8 +824,8 @@ TexUnpackSurface::Validate(WebGLContext* webgl, const char* funcName,
 bool
 TexUnpackSurface::TexOrSubImage(bool isSubImage, bool needsRespec, const char* funcName,
                                 WebGLTexture* tex, TexImageTarget target, GLint level,
-                                const webgl::DriverUnpackInfo* dstDUI, GLint xOffset,
-                                GLint yOffset, GLint zOffset,
+                                const webgl::DriverUnpackInfo* dui, GLint xOffset,
+                                GLint yOffset, GLint zOffset, const webgl::PackingInfo& dstPI,
                                 GLenum* const out_error) const
 {
     const auto& webgl = tex->mContext;
@@ -832,7 +835,6 @@ TexUnpackSurface::TexOrSubImage(bool isSubImage, bool needsRespec, const char* f
     const auto rowLength = mSurf->GetSize().width;
     const auto rowCount = mSurf->GetSize().height;
 
-    const auto& dstPI = dstDUI->ToPacking();
     const auto& dstBPP = webgl::BytesPerPixel(dstPI);
     const auto dstFormat = FormatForPackingInfo(dstPI);
 
@@ -892,7 +894,7 @@ TexUnpackSurface::TexOrSubImage(bool isSubImage, bool needsRespec, const char* f
         gl->fPixelStorei(LOCAL_GL_UNPACK_ROW_LENGTH, rowLength);
     }
 
-    *out_error = DoTexOrSubImage(isSubImage, gl, target.get(), level, dstDUI, xOffset,
+    *out_error = DoTexOrSubImage(isSubImage, gl, target.get(), level, dui, xOffset,
                                  yOffset, zOffset, mWidth, mHeight, mDepth, dstBegin);
 
     gl->fPixelStorei(LOCAL_GL_UNPACK_ALIGNMENT, webgl->mPixelStore_UnpackAlignment);

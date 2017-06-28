@@ -1096,7 +1096,11 @@ PeerConnectionImpl::EnsureDataConnection(uint16_t aLocalPort,
     // and we increase the number of streams dynamically as needed.
     return NS_OK;
   }
-  mDataConnection = new DataChannelConnection(this);
+
+  nsCOMPtr<nsIEventTarget> target = mWindow
+      ? mWindow->EventTargetFor(TaskCategory::Other)
+      : nullptr;
+  mDataConnection = new DataChannelConnection(this, target);
   if (!mDataConnection->Init(aLocalPort, aNumstreams, true)) {
     CSFLogError(logTag,"%s DataConnection Init Failed",__FUNCTION__);
     return NS_ERROR_FAILURE;

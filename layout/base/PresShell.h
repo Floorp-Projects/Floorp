@@ -210,6 +210,8 @@ public:
 
   virtual already_AddRefed<nsPIDOMWindowOuter> GetRootWindow() override;
 
+  virtual already_AddRefed<nsPIDOMWindowOuter> GetFocusedDOMWindowInOurWindow() override;
+
   virtual LayerManager* GetLayerManager() override;
 
   virtual bool AsyncPanZoomEnabled() override;
@@ -688,9 +690,6 @@ protected:
   nsresult HandlePositionedEvent(nsIFrame* aTargetFrame,
                                  mozilla::WidgetGUIEvent* aEvent,
                                  nsEventStatus* aEventStatus);
-  // This returns the focused DOM window under our top level window.
-  //  I.e., when we are deactive, this returns the *last* focused DOM window.
-  already_AddRefed<nsPIDOMWindowOuter> GetFocusedDOMWindowInOurWindow();
 
   /*
    * This and the next two helper methods are used to target and position the

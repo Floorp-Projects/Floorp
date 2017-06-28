@@ -23,6 +23,7 @@
 #include "mozilla/ArenaObjectID.h"
 #include "mozilla/EventForwards.h"
 #include "mozilla/FlushType.h"
+#include "mozilla/layers/FocusTarget.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/StyleSetHandle.h"
@@ -180,6 +181,7 @@ public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IPRESSHELL_IID)
 
 protected:
+  typedef mozilla::layers::FocusTarget FocusTarget;
   typedef mozilla::layers::LayerManager LayerManager;
   typedef mozilla::gfx::SourceSurface SourceSurface;
 
@@ -428,15 +430,31 @@ public:
    */
   virtual nsIScrollableFrame* GetRootScrollFrameAsScrollableExternal() const;
 
-  /*
+  /**
+   * Get the current focused content or DOM selection that should be the
+   * target for scrolling.
+   */
+  already_AddRefed<nsIContent> GetContentForScrolling() const;
+
+  /**
+   * Gets nearest scrollable frame from the specified content node. The frame
+   * is scrollable with overflow:scroll or overflow:auto in some direction when
+   * aDirection is eEither.  Otherwise, this returns a nearest frame that is
+   * scrollable in the specified direction.
+   */
+  enum ScrollDirection { eHorizontal, eVertical, eEither };
+  nsIScrollableFrame* GetScrollableFrameToScrollForContent(
+                         nsIContent* aContent,
+                         ScrollDirection aDirection);
+
+  /**
    * Gets nearest scrollable frame from current focused content or DOM
    * selection if there is no focused content. The frame is scrollable with
    * overflow:scroll or overflow:auto in some direction when aDirection is
    * eEither.  Otherwise, this returns a nearest frame that is scrollable in
    * the specified direction.
    */
-  enum ScrollDirection { eHorizontal, eVertical, eEither };
-  nsIScrollableFrame* GetFrameToScrollAsScrollable(ScrollDirection aDirection);
+  nsIScrollableFrame* GetScrollableFrameToScroll(ScrollDirection aDirection);
 
   /**
    * Returns the page sequence frame associated with the frame hierarchy.
@@ -1421,6 +1439,12 @@ public:
   virtual already_AddRefed<nsPIDOMWindowOuter> GetRootWindow() = 0;
 
   /**
+   * This returns the focused DOM window under our top level window.
+   * I.e., when we are deactive, this returns the *last* focused DOM window.
+   */
+  virtual already_AddRefed<nsPIDOMWindowOuter> GetFocusedDOMWindowInOurWindow() = 0;
+
+  /**
    * Get the layer manager for the widget of the root view, if it has
    * one.
    */
@@ -1503,6 +1527,11 @@ public:
   bool GetIsFirstPaint() const { return mIsFirstPaint; }
 
   uint32_t GetPresShellId() { return mPresShellId; }
+
+  /**
+   * Get the APZ FocusTarget used for async keyboard scrolling.
+   */
+  const FocusTarget& GetAPZFocusTarget() const { return mAPZFocusTarget; }
 
   /**
    * Dispatch a mouse move event based on the most recent mouse position if
@@ -1814,7 +1843,6 @@ protected:
   nsTHashtable<nsPtrHashKey<void>> mAllocatedPointers;
 #endif
 
-
   // Count of the number of times this presshell has been painted to a window.
   uint64_t                  mPaintCount;
 
@@ -1876,6 +1904,11 @@ protected:
   bool mNeedThrottledAnimationFlush : 1;
 
   uint32_t                  mPresShellId;
+
+  // The focus sequence number of the last processed input event
+  uint64_t                  mAPZFocusSequenceNumber;
+  // The focus information needed for async keyboard scrolling
+  FocusTarget               mAPZFocusTarget;
 
   static nsIContent*        gKeyDownTarget;
 

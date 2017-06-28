@@ -393,6 +393,10 @@ AllowOpen(int aReqFlags, int aPerms)
   if (aReqFlags & O_CREAT) {
     needed |= SandboxBroker::MAY_CREATE;
   }
+  // Linux allows O_TRUNC even with O_RDONLY
+  if (aReqFlags & O_TRUNC) {
+    needed |= SandboxBroker::MAY_WRITE;
+  }
   return (aPerms & needed) == needed;
 }
 

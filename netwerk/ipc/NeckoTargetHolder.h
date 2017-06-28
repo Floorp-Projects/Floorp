@@ -27,6 +27,10 @@ protected:
   virtual ~NeckoTargetHolder() = default;
   // Get event target for processing network events.
   virtual already_AddRefed<nsIEventTarget> GetNeckoTarget();
+  // When |mNeckoTarget| is not null, use it to dispatch the runnable.
+  // Otherwise, dispatch the runnable to the main thread.
+  nsresult Dispatch(already_AddRefed<nsIRunnable>&& aRunnable,
+                    uint32_t aDispatchFlags = NS_DISPATCH_NORMAL);
 
   // EventTarget for labeling networking events.
   nsCOMPtr<nsIEventTarget> mNeckoTarget;

@@ -859,6 +859,7 @@ CompositorBridgeParent::UpdatePaintTime(LayerTransactionParent* aLayerTree,
 
 void
 CompositorBridgeParent::NotifyShadowTreeTransaction(uint64_t aId, bool aIsFirstPaint,
+    const FocusTarget& aFocusTarget,
     bool aScheduleComposite, uint32_t aPaintSequenceNumber,
     bool aIsRepeatTransaction, bool aHitTestUpdate)
 {
@@ -879,9 +880,13 @@ CompositorBridgeParent::NotifyShadowTreeTransaction(uint64_t aId, bool aIsFirstP
     }
 #endif
 
-    if (mApzcTreeManager && aHitTestUpdate) {
-      mApzcTreeManager->UpdateHitTestingTree(mRootLayerTreeID,
-          mLayerManager->GetRoot(), aIsFirstPaint, aId, aPaintSequenceNumber);
+    if (mApzcTreeManager) {
+      mApzcTreeManager->UpdateFocusState(mRootLayerTreeID, aId,
+                                         aFocusTarget);
+      if (aHitTestUpdate) {
+        mApzcTreeManager->UpdateHitTestingTree(mRootLayerTreeID,
+            mLayerManager->GetRoot(), aIsFirstPaint, aId, aPaintSequenceNumber);
+      }
     }
 
     mLayerManager->NotifyShadowTreeTransaction();
@@ -1232,12 +1237,18 @@ CompositorBridgeParent::ShadowLayersUpdated(LayerTransactionParent* aLayerTree,
   Layer* root = aLayerTree->GetRoot();
   mLayerManager->SetRoot(root);
 
-  if (mApzcTreeManager && !aInfo.isRepeatTransaction() && aHitTestUpdate) {
-    AutoResolveRefLayers resolve(mCompositionManager);
+  if (mApzcTreeManager && !aInfo.isRepeatTransaction()) {
+    mApzcTreeManager->UpdateFocusState(mRootLayerTreeID,
+                                       mRootLayerTreeID,
+                                       aInfo.focusTarget());
 
-    mApzcTreeManager->UpdateHitTestingTree(
-      mRootLayerTreeID, root, aInfo.isFirstPaint(),
-      mRootLayerTreeID, aInfo.paintSequenceNumber());
+    if (aHitTestUpdate) {
+      AutoResolveRefLayers resolve(mCompositionManager);
+
+      mApzcTreeManager->UpdateHitTestingTree(
+        mRootLayerTreeID, root, aInfo.isFirstPaint(),
+        mRootLayerTreeID, aInfo.paintSequenceNumber());
+    }
   }
 
   // The transaction ID might get reset to 1 if the page gets reloaded, see
@@ -1636,6 +1647,9 @@ CompositorBridgeParent::RecvAdoptChild(const uint64_t& child)
     NotifyChildCreated(child);
     if (sIndirectLayerTrees[child].mLayerTree) {
       sIndirectLayerTrees[child].mLayerTree->SetLayerManager(mLayerManager);
+      // Trigger composition to handle a case that mLayerTree was not composited yet
+      // by previous CompositorBridgeParent, since nsRefreshDriver might wait composition complete.
+      ScheduleComposition();
     }
     parent = sIndirectLayerTrees[child].mApzcTreeManagerParent;
   }
