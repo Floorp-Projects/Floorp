@@ -100,6 +100,8 @@ function doneTest(dispResult) {
 
       dispStats += "<hr/><b>Individual animations</b>:<br/>";
     }
+
+    // eslint-disable-next-line no-unsanitized/property
     $("run-results").innerHTML = "<hr/><br/>Results <button onclick='toClipboard(lastResults)'>[ Copy to clipboard as JSON ]</button>:<br/>" + dispStats + dispResult.join("<br/>");
   }
 }

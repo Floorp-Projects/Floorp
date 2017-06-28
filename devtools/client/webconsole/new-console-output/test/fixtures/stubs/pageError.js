@@ -44,7 +44,7 @@ stubPreparedMessages.set("ReferenceError: asdf is not defined", new ConsoleMessa
     },
     {
       "filename": "resource://testing-common/content-task.js line 52 > eval",
-      "lineNumber": 6,
+      "lineNumber": 7,
       "columnNumber": 9,
       "functionName": null
     },
@@ -80,7 +80,7 @@ stubPreparedMessages.set("SyntaxError: redeclaration of let a", new ConsoleMessa
   "stacktrace": [
     {
       "filename": "resource://testing-common/content-task.js line 52 > eval",
-      "lineNumber": 6,
+      "lineNumber": 7,
       "columnNumber": 9,
       "functionName": null
     },
@@ -135,7 +135,7 @@ stubPreparedMessages.set("TypeError longString message", new ConsoleMessage({
     },
     {
       "filename": "resource://testing-common/content-task.js line 52 > eval",
-      "lineNumber": 6,
+      "lineNumber": 7,
       "columnNumber": 9,
       "functionName": null
     },
@@ -197,7 +197,7 @@ stubPackets.set("ReferenceError: asdf is not defined", {
       },
       {
         "filename": "resource://testing-common/content-task.js line 52 > eval",
-        "lineNumber": 6,
+        "lineNumber": 7,
         "columnNumber": 9,
         "functionName": null
       },
@@ -233,7 +233,7 @@ stubPackets.set("SyntaxError: redeclaration of let a", {
     "stacktrace": [
       {
         "filename": "resource://testing-common/content-task.js line 52 > eval",
-        "lineNumber": 6,
+        "lineNumber": 7,
         "columnNumber": 9,
         "functionName": null
       },
@@ -289,7 +289,7 @@ stubPackets.set("TypeError longString message", {
       },
       {
         "filename": "resource://testing-common/content-task.js line 52 > eval",
-        "lineNumber": 6,
+        "lineNumber": 7,
         "columnNumber": 9,
         "functionName": null
       },

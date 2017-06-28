@@ -1388,6 +1388,7 @@ MarkupView.prototype = {
 
     let injectedNodes = [];
     container.undo.do(() => {
+      // eslint-disable-next-line no-unsanitized/method
       this.walker.insertAdjacentHTML(node, position, value).then(nodeArray => {
         injectedNodes = nodeArray.nodes;
         return nodeArray;
