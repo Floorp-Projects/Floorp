@@ -200,12 +200,6 @@ DOMEventMarkerPayload::StreamPayload(SpliceableJSONWriter& aWriter,
   aWriter.IntProperty("phase", mPhase);
 }
 
-void
-ProfilerJSEventMarker(const char *event)
-{
-  profiler_add_marker(event);
-}
-
 LayerTranslationMarkerPayload::LayerTranslationMarkerPayload(layers::Layer* aLayer,
                                                              gfx::Point aPoint)
   : ProfilerMarkerPayload(TimeStamp::Now(), TimeStamp::Now(), nullptr)
