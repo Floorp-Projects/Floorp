@@ -11,14 +11,13 @@
 #include "RestyleTracker.h"
 
 #include "GeckoProfiler.h"
-#include "nsDocShell.h"
 #include "nsFrameManager.h"
 #include "nsIDocument.h"
 #include "nsStyleChangeList.h"
 #include "mozilla/GeckoRestyleManager.h"
 #include "RestyleTrackerInlines.h"
 #include "nsTransitionManager.h"
-#include "mozilla/RestyleTimelineMarker.h"
+#include "mozilla/AutoRestyleTimelineMarker.h"
 
 namespace mozilla {
 
@@ -116,10 +115,6 @@ RestyleTracker::DoProcessRestyles()
   }
   AUTO_PROFILER_LABEL_DYNAMIC("RestyleTracker::DoProcessRestyles", CSS,
                               docURL.get());
-
-  nsDocShell* docShell = static_cast<nsDocShell*>(mRestyleManager->PresContext()->GetDocShell());
-  RefPtr<TimelineConsumers> timelines = TimelineConsumers::Get();
-  bool isTimelineRecording = timelines && timelines->HasConsumer(docShell);
 
   // Create a AnimationsWithDestroyedFrame during restyling process to
   // stop animations and transitions on elements that have no frame at the end
@@ -249,24 +244,17 @@ RestyleTracker::DoProcessRestyles()
           continue;
         }
 
-        if (isTimelineRecording) {
-          timelines->AddMarkerForDocShell(docShell, Move(
-            MakeUnique<RestyleTimelineMarker>(
-              data->mRestyleHint, MarkerTracingType::START)));
-        }
-
-        Maybe<AutoProfilerTracing> tracing;
-        if (profiler_feature_active(ProfilerFeature::Restyle)) {
-          tracing.emplace("Paint", "Styles", Move(data->mBacktrace));
-        }
-        ProcessOneRestyle(element, data->mRestyleHint, data->mChangeHint,
-                          data->mRestyleHintData);
-        AddRestyleRootsIfAwaitingRestyle(data->mDescendants);
-
-        if (isTimelineRecording) {
-          timelines->AddMarkerForDocShell(docShell, Move(
-            MakeUnique<RestyleTimelineMarker>(
-              data->mRestyleHint, MarkerTracingType::END)));
+        {
+          AutoRestyleTimelineMarker marker(
+            mRestyleManager->PresContext()->GetDocShell(),
+            data->mRestyleHint & eRestyle_AllHintsWithAnimations);
+          Maybe<AutoProfilerTracing> tracing;
+          if (profiler_feature_active(ProfilerFeature::Restyle)) {
+            tracing.emplace("Paint", "Styles", Move(data->mBacktrace));
+          }
+          ProcessOneRestyle(element, data->mRestyleHint, data->mChangeHint,
+                            data->mRestyleHintData);
+          AddRestyleRootsIfAwaitingRestyle(data->mDescendants);
         }
       }
 
@@ -363,21 +351,15 @@ RestyleTracker::DoProcessRestyles()
           if (profiler_feature_active(ProfilerFeature::Restyle)) {
             tracing.emplace("Paint", "Styles", Move(currentRestyle->mBacktrace));
           }
-          if (isTimelineRecording) {
-            timelines->AddMarkerForDocShell(docShell, Move(
-              MakeUnique<RestyleTimelineMarker>(
-                currentRestyle->mRestyleHint, MarkerTracingType::START)));
-          }
 
-          ProcessOneRestyle(currentRestyle->mElement,
-                            currentRestyle->mRestyleHint,
-                            currentRestyle->mChangeHint,
-                            currentRestyle->mRestyleHintData);
-
-          if (isTimelineRecording) {
-            timelines->AddMarkerForDocShell(docShell, Move(
-              MakeUnique<RestyleTimelineMarker>(
-                currentRestyle->mRestyleHint, MarkerTracingType::END)));
+          {
+            AutoRestyleTimelineMarker marker(
+              mRestyleManager->PresContext()->GetDocShell(),
+              currentRestyle->mRestyleHint & eRestyle_AllHintsWithAnimations);
+            ProcessOneRestyle(currentRestyle->mElement,
+                              currentRestyle->mRestyleHint,
+                              currentRestyle->mChangeHint,
+                              currentRestyle->mRestyleHintData);
           }
         }
       }

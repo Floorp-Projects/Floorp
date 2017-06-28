@@ -15,13 +15,11 @@ namespace mozilla {
 class RestyleTimelineMarker : public TimelineMarker
 {
 public:
-  RestyleTimelineMarker(nsRestyleHint aRestyleHint,
+  RestyleTimelineMarker(bool aIsAnimationOnly,
                         MarkerTracingType aTracingType)
     : TimelineMarker("Styles", aTracingType)
   {
-    if (aRestyleHint) {
-      mRestyleHint.AssignWithConversion(GeckoRestyleManager::RestyleHintToString(aRestyleHint));
-    }
+    mIsAnimationOnly = aIsAnimationOnly;
   }
 
   virtual void AddDetails(JSContext* aCx, dom::ProfileTimelineMarker& aMarker) override
@@ -29,12 +27,12 @@ public:
     TimelineMarker::AddDetails(aCx, aMarker);
 
     if (GetTracingType() == MarkerTracingType::START) {
-      aMarker.mRestyleHint.Construct(mRestyleHint);
+      aMarker.mIsAnimationOnly.Construct(mIsAnimationOnly);
     }
   }
 
 private:
-  nsString mRestyleHint;
+  bool mIsAnimationOnly;
 };
 
 } // namespace mozilla
