@@ -151,6 +151,9 @@ jit::IsCacheableGetPropCallNative(JSObject* obj, JSObject* holder, Shape* shape)
     if (!getter.isNative())
         return false;
 
+    if (getter.isClassConstructor())
+        return false;
+
     // Check for a getter that has jitinfo and whose jitinfo says it's
     // OK with both inner and outer objects.
     if (getter.jitInfo() && !getter.jitInfo()->needsOuterizedThisObject())
@@ -188,6 +191,9 @@ jit::IsCacheableGetPropCallScripted(JSObject* obj, JSObject* holder, Shape* shap
             *isTemporarilyUnoptimizable = true;
         return false;
     }
+
+    if (getter.isClassConstructor())
+        return false;
 
     return true;
 }
@@ -235,6 +241,9 @@ jit::IsCacheableSetPropCallNative(JSObject* obj, JSObject* holder, Shape* shape)
     if (!setter.isNative())
         return false;
 
+    if (setter.isClassConstructor())
+        return false;
+
     if (setter.jitInfo() && !setter.jitInfo()->needsOuterizedThisObject())
         return true;
 
@@ -266,6 +275,9 @@ jit::IsCacheableSetPropCallScripted(JSObject* obj, JSObject* holder, Shape* shap
             *isTemporarilyUnoptimizable = true;
         return false;
     }
+
+    if (setter.isClassConstructor())
+        return false;
 
     return true;
 }
