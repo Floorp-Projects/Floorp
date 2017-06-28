@@ -457,6 +457,7 @@ public:
                                                       uint32_t* aIdNamespace) override;
   bool DeallocPWebRenderBridgeParent(PWebRenderBridgeParent* aActor) override;
   RefPtr<WebRenderBridgeParent> GetWebRenderBridgeParent() const;
+  Maybe<TimeStamp> GetTestingTimeStamp() const;
 
   static void SetWebRenderProfilerEnabled(bool aEnabled);
 

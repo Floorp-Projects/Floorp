@@ -1711,6 +1711,12 @@ CompositorBridgeParent::GetWebRenderBridgeParent() const
   return mWrBridge;
 }
 
+Maybe<TimeStamp>
+CompositorBridgeParent::GetTestingTimeStamp() const
+{
+  return mIsTesting ? Some(mTestTime) : Nothing();
+}
+
 void
 CompositorBridgeParent::SetWebRenderProfilerEnabled(bool aEnabled)
 {
