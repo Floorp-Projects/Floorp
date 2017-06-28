@@ -326,7 +326,6 @@ nsHtml5StringParser* nsContentUtils::sHTMLFragmentParser = nullptr;
 nsIParser* nsContentUtils::sXMLFragmentParser = nullptr;
 nsIFragmentContentSink* nsContentUtils::sXMLFragmentSink = nullptr;
 bool nsContentUtils::sFragmentParsingActive = false;
-nsISerialEventTarget* nsContentUtils::sStableStateEventTarget = nullptr;
 
 #if !(defined(DEBUG) || defined(MOZ_ENABLE_JS_DUMP))
 bool nsContentUtils::sDOMWindowDumpEnabled;
@@ -519,52 +518,6 @@ class SameOriginCheckerImpl final : public nsIChannelEventSink,
   NS_DECL_NSICHANNELEVENTSINK
   NS_DECL_NSIINTERFACEREQUESTOR
 };
-
-class StableStateEventTarget final : public nsISerialEventTarget
-{
-public:
-  NS_DECL_THREADSAFE_ISUPPORTS
-  NS_DECL_NSIEVENTTARGET_FULL
-private:
-  ~StableStateEventTarget() {}
-};
-
-NS_IMPL_ISUPPORTS(StableStateEventTarget, nsISerialEventTarget);
-
-bool
-StableStateEventTarget::IsOnCurrentThreadInfallible()
-{
-  return true;
-}
-
-NS_IMETHODIMP
-StableStateEventTarget::IsOnCurrentThread(bool* aResult)
-{
-  *aResult = true;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-StableStateEventTarget::Dispatch(already_AddRefed<nsIRunnable> aEvent, uint32_t aFlags)
-{
-  if (NS_WARN_IF(!CycleCollectedJSContext::Get())) {
-    return NS_ERROR_UNEXPECTED;
-  }
-  nsContentUtils::RunInStableState(Move(aEvent));
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-StableStateEventTarget::DispatchFromScript(nsIRunnable* aEvent, uint32_t aFlags)
-{
-  return Dispatch(nsCOMPtr<nsIRunnable>(aEvent).forget(), aFlags);
-}
-
-NS_IMETHODIMP
-StableStateEventTarget::DelayedDispatch(already_AddRefed<nsIRunnable> aEvent, uint32_t aDelay)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
 
 } // namespace
 
@@ -776,9 +729,6 @@ nsContentUtils::Init()
   Element::InitCCCallbacks();
 
   Unused << nsRFPService::GetOrCreate();
-
-  RefPtr<StableStateEventTarget> stableStateEventTarget = new StableStateEventTarget();
-  stableStateEventTarget.forget(&sStableStateEventTarget);
 
   nsCOMPtr<nsIUUIDGenerator> uuidGenerator =
     do_GetService("@mozilla.org/uuid-generator;1", &rv);
@@ -2205,8 +2155,6 @@ nsContentUtils::Shutdown()
   sJSBytecodeMimeType = nullptr;
 
   NS_IF_RELEASE(sSameOriginChecker);
-
-  NS_IF_RELEASE(sStableStateEventTarget);
 
   if (sUserInteractionObserver) {
     sUserInteractionObserver->Shutdown();
@@ -5711,13 +5659,6 @@ nsContentUtils::RunInMetastableState(already_AddRefed<nsIRunnable> aRunnable)
 {
   MOZ_ASSERT(CycleCollectedJSContext::Get(), "Must be on a script thread!");
   CycleCollectedJSContext::Get()->RunInMetastableState(Move(aRunnable));
-}
-
-/* static */
-nsISerialEventTarget*
-nsContentUtils::GetStableStateEventTarget()
-{
-  return sStableStateEventTarget;
 }
 
 void
