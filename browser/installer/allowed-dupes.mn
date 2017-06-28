@@ -21,6 +21,8 @@ browser/chrome/browser/content/browser/preferences/in-content/privacy.js
 browser/chrome/browser/content/browser/preferences/in-content/search.js
 browser/chrome/browser/content/browser/preferences/in-content/security.js
 browser/chrome/browser/content/browser/preferences/in-content/sync.js
+browser/chrome/browser/content/browser/preferences/in-content-new/advanced.js
+browser/chrome/browser/content/browser/preferences/in-content-new/applications.js
 browser/chrome/browser/content/browser/preferences/in-content-new/containers.js
 browser/chrome/browser/content/browser/preferences/in-content-new/content.js
 browser/chrome/browser/content/browser/preferences/in-content-new/main.js

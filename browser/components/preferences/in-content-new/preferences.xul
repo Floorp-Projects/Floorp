@@ -144,14 +144,14 @@
         <label class="category-name" flex="1">&paneGeneral.title;</label>
       </richlistitem>
 
-      <richlistitem id="category-search"
+      <richlistitem id="category-application"
                     class="category"
-                    value="paneSearch"
-                    helpTopic="prefs-search"
-                    tooltiptext="&paneSearch.title;"
+                    value="paneApplications"
+                    helpTopic="prefs-applications"
+                    tooltiptext="&paneFilesApplications.title;"
                     align="center">
         <image class="category-icon"/>
-        <label class="category-name" flex="1">&paneSearch.title;</label>
+        <label class="category-name" flex="1">&paneFilesApplications.title;</label>
       </richlistitem>
 
       <richlistitem id="category-containers"
@@ -159,6 +159,16 @@
                     value="paneContainers"
                     helpTopic="prefs-containers"
                     hidden="true"/>
+
+      <richlistitem id="category-sync"
+                    class="category"
+                    value="paneSync"
+                    helpTopic="prefs-weave"
+                    tooltiptext="&paneSync1.title;"
+                    align="center">
+        <image class="category-icon"/>
+        <label class="category-name" flex="1">&paneSync1.title;</label>
+      </richlistitem>
 
       <richlistitem id="category-privacy"
                     class="category"
@@ -170,14 +180,14 @@
         <label class="category-name" flex="1">&panePrivacySecurity.title;</label>
       </richlistitem>
 
-      <richlistitem id="category-sync"
+      <richlistitem id="category-advanced"
                     class="category"
-                    value="paneSync"
-                    helpTopic="prefs-weave"
-                    tooltiptext="&paneSync1.title;"
+                    value="paneAdvanced"
+                    helpTopic="prefs-advanced-general"
+                    tooltiptext="&paneUpdates.title;"
                     align="center">
         <image class="category-icon"/>
-        <label class="category-name" flex="1">&paneSync1.title;</label>
+        <label class="category-name" flex="1">&paneUpdates.title;</label>
       </richlistitem>
     </richlistbox>
 
@@ -192,14 +202,16 @@
 
     <vbox class="main-content" flex="1">
       <hbox pack="end">
-        <textbox type="search" id="searchInput" hidden="true" clickSelectsAll="true"/>
+        <textbox type="search" id="searchInput" placeholder="&searchInput.label;" hidden="true"
+                 clickSelectsAll="true"/>
       </hbox>
       <prefpane id="mainPrefPane">
 #include searchResults.xul
 #include main.xul
-#include search.xul
 #include privacy.xul
 #include containers.xul
+#include advanced.xul
+#include applications.xul
 #include sync.xul
       </prefpane>
     </vbox>
