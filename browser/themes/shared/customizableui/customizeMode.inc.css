@@ -8,6 +8,7 @@
   --drag-drop-transition-duration: .3s;
 }
 
+%ifndef MOZ_PHOTON_THEME
 #main-window[customization-lwtheme] #tab-view-deck:-moz-lwtheme {
   background-repeat: no-repeat;
   background-position: right top;
@@ -39,7 +40,6 @@
   pointer-events: none;
 }
 
-%ifndef MOZ_PHOTON_THEME
 #main-window[customize-entered] .customization-target:not(:-moz-any(#PanelUI-contents, #TabsToolbar, #toolbar-menubar))::before,
 #PanelUI-contents > .panel-customization-placeholder {
   -moz-outline-radius: 2.5px;
