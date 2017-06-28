@@ -8,7 +8,14 @@ const {utils: Cu} = Components;
 
 Cu.import("chrome://marionette/content/accessibility.js");
 Cu.import("chrome://marionette/content/atom.js");
-Cu.import("chrome://marionette/content/error.js");
+const {
+  error,
+  InvalidArgument,
+  ElementNotInteractableError,
+  ElementClickInterceptedError,
+  InvalidElementStateError,
+  InvalidArgumentError,
+} = Cu.import("chrome://marionette/content/error.js", {});
 Cu.import("chrome://marionette/content/element.js");
 Cu.import("chrome://marionette/content/event.js");
 

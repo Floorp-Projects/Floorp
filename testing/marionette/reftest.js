@@ -12,6 +12,8 @@ Cu.import("resource://gre/modules/Task.jsm");
 
 Cu.import("chrome://marionette/content/assert.js");
 Cu.import("chrome://marionette/content/capture.js");
+const {InvalidArgumentError} =
+    Cu.import("chrome//marionette/content/error.js", {});
 
 this.EXPORTED_SYMBOLS = ["reftest"];
 

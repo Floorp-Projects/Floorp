@@ -12,7 +12,8 @@ Cu.import("resource://gre/modules/Log.jsm");
 const logger = Log.repository.getLogger("Marionette");
 
 Cu.import("chrome://marionette/content/element.js");
-Cu.import("chrome://marionette/content/error.js");
+const {ElementNotInteractableError} =
+    Cu.import("chrome://marionette/content/error.js", {});
 
 this.EXPORTED_SYMBOLS = ["event"];
 

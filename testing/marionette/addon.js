@@ -9,7 +9,7 @@ const {interfaces: Ci, utils: Cu} = Components;
 Cu.import("resource://gre/modules/AddonManager.jsm");
 Cu.import("resource://gre/modules/FileUtils.jsm");
 
-Cu.import("chrome://marionette/content/error.js");
+const {UnknownError} = Cu.import("chrome://marionette/content/error.js", {});
 
 this.EXPORTED_SYMBOLS = ["addon"];
 

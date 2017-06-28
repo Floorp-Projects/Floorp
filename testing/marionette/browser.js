@@ -7,7 +7,10 @@
 const {utils: Cu} = Components;
 
 Cu.import("chrome://marionette/content/element.js");
-Cu.import("chrome://marionette/content/error.js");
+const {
+  NoSuchWindowError,
+  UnsupportedOperationError,
+} = Cu.import("chrome://marionette/content/error.js", {});
 Cu.import("chrome://marionette/content/frame.js");
 
 this.EXPORTED_SYMBOLS = ["browser"];
