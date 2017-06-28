@@ -8,6 +8,7 @@
 #include "gfxPrefs.h"
 #include "GeckoProfiler.h"
 #include "LayersLogging.h"
+#include "mozilla/gfx/DrawEventRecorder.h"
 #include "mozilla/layers/CompositorBridgeChild.h"
 #include "mozilla/layers/StackingContextHelper.h"
 #include "mozilla/layers/TextureClient.h"
@@ -300,6 +301,52 @@ WebRenderLayerManager::PushImage(nsDisplayItem* aItem,
   auto r = aSc.ToRelativeWrRect(aRect);
   aBuilder.PushImage(r, r, filter, key.value());
 
+  return true;
+}
+
+bool
+WebRenderLayerManager::PushItemAsBlobImage(nsDisplayItem* aItem,
+                                           wr::DisplayListBuilder& aBuilder,
+                                           const StackingContextHelper& aSc,
+                                           nsDisplayListBuilder* aDisplayListBuilder)
+{
+  const int32_t appUnitsPerDevPixel = aItem->Frame()->PresContext()->AppUnitsPerDevPixel();
+
+  bool snap;
+  LayerRect bounds = ViewAs<LayerPixel>(
+      LayoutDeviceRect::FromAppUnits(aItem->GetBounds(aDisplayListBuilder, &snap), appUnitsPerDevPixel),
+      PixelCastJustification::WebRenderHasUnitResolution);
+  LayerIntSize imageSize = RoundedToInt(bounds.Size());
+  LayerRect imageRect;
+  imageRect.SizeTo(LayerSize(imageSize));
+
+  RefPtr<gfx::DrawEventRecorderMemory> recorder = MakeAndAddRef<gfx::DrawEventRecorderMemory>();
+  RefPtr<gfx::DrawTarget> dummyDt =
+    gfx::Factory::CreateDrawTarget(gfx::BackendType::SKIA, gfx::IntSize(1, 1), gfx::SurfaceFormat::B8G8R8X8);
+  RefPtr<gfx::DrawTarget> dt = gfx::Factory::CreateRecordingDrawTarget(recorder, dummyDt, imageSize.ToUnknownSize());
+  LayerPoint offset = ViewAs<LayerPixel>(
+      LayoutDevicePoint::FromAppUnits(aItem->ToReferenceFrame(), appUnitsPerDevPixel),
+      PixelCastJustification::WebRenderHasUnitResolution);
+
+  {
+    dt->ClearRect(imageRect.ToUnknownRect());
+    RefPtr<gfxContext> context = gfxContext::CreateOrNull(dt, offset.ToUnknownPoint());
+    MOZ_ASSERT(context);
+
+    aItem->Paint(aDisplayListBuilder, context);
+  }
+
+  wr::ByteBuffer bytes(recorder->mOutputStream.mLength, (uint8_t*)recorder->mOutputStream.mData);
+
+  WrRect dest = aSc.ToRelativeWrRect(imageRect + offset);
+  WrImageKey key = WrBridge()->GetNextImageKey();
+  WrBridge()->SendAddBlobImage(key, imageSize.ToUnknownSize(), imageSize.width * 4, dt->GetFormat(), bytes);
+  AddImageKeyForDiscard(key);
+
+  aBuilder.PushImage(dest,
+                     dest,
+                     wr::ImageRendering::Auto,
+                     key);
   return true;
 }
 
