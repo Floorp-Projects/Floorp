@@ -22,7 +22,8 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 XPCOMUtils.defineLazyServiceGetter(
     this, "domParser", "@mozilla.org/xmlextras/domparser;1", "nsIDOMParser");
 
-Cu.import("chrome://marionette/content/error.js");
+const {NoSuchElementError} =
+    Cu.import("chrome://marionette/content/error.js", {});
 
 this.EXPORTED_SYMBOLS = ["l10n"];
 

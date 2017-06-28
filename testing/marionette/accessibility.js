@@ -12,7 +12,8 @@ Cu.import("resource://gre/modules/Log.jsm");
 
 const logger = Log.repository.getLogger("Marionette");
 
-Cu.import("chrome://marionette/content/error.js");
+const {ElementNotAccessibleError} =
+    Cu.import("chrome://marionette/content/error.js", {});
 
 XPCOMUtils.defineLazyModuleGetter(
     this, "setInterval", "resource://gre/modules/Timer.jsm");

@@ -21,7 +21,10 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 Cu.import("chrome://marionette/content/assert.js");
 Cu.import("chrome://marionette/content/driver.js");
-Cu.import("chrome://marionette/content/error.js");
+const {
+  error,
+  UnknownCommandError,
+} = Cu.import("chrome://marionette/content/error.js", {});
 Cu.import("chrome://marionette/content/message.js");
 Cu.import("chrome://marionette/content/transport.js");
 

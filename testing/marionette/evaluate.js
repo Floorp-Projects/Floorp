@@ -12,7 +12,12 @@ Cu.import("resource://gre/modules/Timer.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 Cu.import("chrome://marionette/content/element.js");
-Cu.import("chrome://marionette/content/error.js");
+const {
+  error,
+  JavaScriptError,
+  ScriptTimeoutError,
+  WebDriverError,
+} = Cu.import("chrome://marionette/content/error.js", {});
 
 const logger = Log.repository.getLogger("Marionette");
 
