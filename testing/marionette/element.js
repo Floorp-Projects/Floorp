@@ -10,7 +10,13 @@ Cu.import("resource://gre/modules/Log.jsm");
 
 Cu.import("chrome://marionette/content/assert.js");
 Cu.import("chrome://marionette/content/atom.js");
-Cu.import("chrome://marionette/content/error.js");
+const {
+  error,
+  InvalidSelectorError,
+  JavaScriptError,
+  NoSuchElementError,
+  StaleElementReferenceError,
+} = Cu.import("chrome://marionette/content/error.js", {});
 Cu.import("chrome://marionette/content/wait.js");
 
 const logger = Log.repository.getLogger("Marionette");

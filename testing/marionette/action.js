@@ -10,7 +10,12 @@ Cu.import("resource://gre/modules/Task.jsm");
 
 Cu.import("chrome://marionette/content/assert.js");
 Cu.import("chrome://marionette/content/element.js");
-Cu.import("chrome://marionette/content/error.js");
+const {
+  error,
+  InvalidArgumentError,
+  MoveTargetOutOfBoundsError,
+  UnsupportedOperationError,
+} = Cu.import("chrome://marionette/content/error.js", {});
 Cu.import("chrome://marionette/content/event.js");
 Cu.import("chrome://marionette/content/interaction.js");
 

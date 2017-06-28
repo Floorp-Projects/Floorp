@@ -23,7 +23,21 @@ Cu.import("chrome://marionette/content/capture.js");
 Cu.import("chrome://marionette/content/cert.js");
 Cu.import("chrome://marionette/content/cookie.js");
 Cu.import("chrome://marionette/content/element.js");
-Cu.import("chrome://marionette/content/error.js");
+const {
+  ElementNotInteractableError,
+  error,
+  InsecureCertificateError,
+  InvalidArgumentError,
+  InvalidCookieDomainError,
+  InvalidSelectorError,
+  NoAlertOpenError,
+  NoSuchFrameError,
+  NoSuchWindowError,
+  SessionNotCreatedError,
+  UnknownError,
+  UnsupportedOperationError,
+  WebDriverError,
+} = Cu.import("chrome://marionette/content/error.js", {});
 Cu.import("chrome://marionette/content/evaluate.js");
 Cu.import("chrome://marionette/content/event.js");
 Cu.import("chrome://marionette/content/interaction.js");
