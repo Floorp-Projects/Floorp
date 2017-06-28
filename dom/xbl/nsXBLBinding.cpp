@@ -280,7 +280,7 @@ nsXBLBinding::SetBoundElement(nsIContent* aElement)
   // is not given in the handler declaration.
   nsCOMPtr<nsIGlobalObject> go = mBoundElement->OwnerDoc()->GetScopeObject();
   NS_ENSURE_TRUE_VOID(go && go->GetGlobalJSObject());
-  mUsingContentXBLScope = xpc::UseContentXBLScope(js::GetObjectCompartment(go->GetGlobalJSObject()));
+  mUsingContentXBLScope = xpc::UseContentXBLScope(JS::GetObjectRealmOrNull(go->GetGlobalJSObject()));
 }
 
 bool
