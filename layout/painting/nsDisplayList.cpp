@@ -2226,9 +2226,6 @@ already_AddRefed<LayerManager> nsDisplayList::PaintRoot(nsDisplayListBuilder* aB
                            isRootContent, containerParameters));
     }
 
-    // Send an updated focus target with this transaction
-    layerManager->SetFocusTarget(presShell->GetAPZFocusTarget());
-
     // NS_WARNING is debug-only, so don't even bother checking the conditions in
     // a release build.
 #ifdef DEBUG
