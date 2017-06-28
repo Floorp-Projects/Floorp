@@ -5,8 +5,8 @@ var container;
 SimpleTest.requestCompleteLog();
 
 add_task(async function setup() {
-  await openPreferencesViaOpenPreferencesAPI("paneGeneral", {leaveOpen: true});
-  info("Preferences page opened on the paneGeneral pane.");
+  await openPreferencesViaOpenPreferencesAPI("applications", {leaveOpen: true});
+  info("Preferences page opened on the applications pane.");
 
   registerCleanupFunction(() => {
     gBrowser.removeCurrentTab();
