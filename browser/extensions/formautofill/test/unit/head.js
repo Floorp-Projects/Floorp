@@ -53,7 +53,7 @@ extensionDir.append(EXTENSION_ID);
 // If the unpacked extension doesn't exist, use the packed version.
 if (!extensionDir.exists()) {
   extensionDir = extensionDir.parent;
-  extensionDir.leafName += ".xpi";
+  extensionDir.append(EXTENSION_ID + ".xpi");
 }
 Components.manager.addBootstrappedManifestLocation(extensionDir);
 
