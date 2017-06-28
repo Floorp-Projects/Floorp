@@ -12,6 +12,7 @@
 #include "mozilla/layers/CompositorThread.h" // for CompositorThreadHolder
 #include "mozilla/layers/LayerAnimationUtils.h" // for TimingFunctionToComputedTimingFunction
 #include "mozilla/StyleAnimationValue.h" // for StyleAnimationValue, etc
+#include "nsDeviceContext.h"            // for AppUnitsPerCSSPixel
 #include "nsDisplayList.h"              // for nsDisplayTransform, etc
 
 namespace mozilla {
@@ -45,6 +46,46 @@ CompositorAnimationStorage::GetAnimatedValue(const uint64_t& aId) const
 {
   MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
   return mAnimatedValues.Get(aId);
+}
+
+Maybe<float>
+CompositorAnimationStorage::GetAnimationOpacity(const uint64_t& aId) const
+{
+  auto value = GetAnimatedValue(aId);
+  if (!value || value->mType != AnimatedValue::OPACITY) {
+    return Nothing();
+  }
+
+  return Some(value->mOpacity);
+}
+
+Maybe<gfx::Matrix4x4>
+CompositorAnimationStorage::GetAnimationTransform(const uint64_t& aId) const
+{
+  auto value = GetAnimatedValue(aId);
+  if (!value || value->mType != AnimatedValue::TRANSFORM) {
+    return Nothing();
+  }
+
+  gfx::Matrix4x4 transform = value->mTransform.mFrameTransform;
+  const TransformData& data = value->mTransform.mData;
+  float scale = data.appUnitsPerDevPixel();
+  gfx::Point3D transformOrigin = data.transformOrigin();
+
+  // Undo the rebasing applied by
+  // nsDisplayTransform::GetResultingTransformMatrixInternal
+  transform.ChangeBasis(-transformOrigin);
+
+  // Convert to CSS pixels (this undoes the operations performed by
+  // nsStyleTransformMatrix::ProcessTranslatePart which is called from
+  // nsDisplayTransform::GetResultingTransformMatrix)
+  double devPerCss =
+    double(scale) / double(nsDeviceContext::AppUnitsPerCSSPixel());
+  transform._41 *= devPerCss;
+  transform._42 *= devPerCss;
+  transform._43 *= devPerCss;
+
+  return Some(transform);
 }
 
 void
