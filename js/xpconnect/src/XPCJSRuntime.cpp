@@ -2216,7 +2216,6 @@ class XPCJSRuntimeStats : public JS::RuntimeStats
         for (size_t i = 0; i != compartmentStatsVector.length(); ++i)
             delete static_cast<xpc::CompartmentStatsExtras*>(compartmentStatsVector[i].extra);
 
-
         for (size_t i = 0; i != zoneStatsVector.length(); ++i)
             delete static_cast<xpc::ZoneStatsExtras*>(zoneStatsVector[i].extra);
     }

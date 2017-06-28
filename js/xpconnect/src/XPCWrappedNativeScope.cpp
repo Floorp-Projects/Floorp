@@ -369,17 +369,19 @@ GetScopeForXBLExecution(JSContext* cx, HandleObject contentScope, JSAddonId* add
 }
 
 bool
-AllowContentXBLScope(JSCompartment* c)
+AllowContentXBLScope(JS::Realm* realm)
 {
-  XPCWrappedNativeScope* scope = CompartmentPrivate::Get(c)->scope;
-  return scope && scope->AllowContentXBLScope();
+    XPCWrappedNativeScope* scope =
+        CompartmentPrivate::Get(JS::GetCompartmentForRealm(realm))->scope;
+    return scope && scope->AllowContentXBLScope();
 }
 
 bool
-UseContentXBLScope(JSCompartment* c)
+UseContentXBLScope(JS::Realm* realm)
 {
-  XPCWrappedNativeScope* scope = CompartmentPrivate::Get(c)->scope;
-  return scope && scope->UseContentXBLScope();
+    XPCWrappedNativeScope* scope =
+        CompartmentPrivate::Get(JS::GetCompartmentForRealm(realm))->scope;
+    return scope && scope->UseContentXBLScope();
 }
 
 void

@@ -34,6 +34,18 @@ gc::RealmNeedsSweep(JS::Realm* realm)
     return JS::GetCompartmentForRealm(realm)->globalIsAboutToBeFinalized();
 }
 
+JS_PUBLIC_API(JS::Realm*)
+JS::GetCurrentRealmOrNull(JSContext* cx)
+{
+    return JS::GetRealmForCompartment(cx->compartment());
+}
+
+JS_PUBLIC_API(JS::Realm*)
+JS::GetObjectRealmOrNull(JSObject* obj)
+{
+    return IsCrossCompartmentWrapper(obj) ? nullptr : GetRealmForCompartment(obj->compartment());
+}
+
 JS_PUBLIC_API(void*)
 JS::GetRealmPrivate(JS::Realm* realm)
 {
@@ -56,6 +68,12 @@ JS_PUBLIC_API(void)
 JS::SetRealmNameCallback(JSContext* cx, JS::RealmNameCallback callback)
 {
     cx->runtime()->realmNameCallback = callback;
+}
+
+JS_PUBLIC_API(JSObject*)
+JS::GetRealmGlobalOrNull(Handle<JS::Realm*> realm)
+{
+    return GetCompartmentForRealm(realm)->maybeGlobal();
 }
 
 JS_PUBLIC_API(JSObject*)
