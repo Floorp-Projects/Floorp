@@ -10,18 +10,13 @@
 #include "mozilla/gfx/BaseSize.h"
 #include "mozilla/gfx/BasePoint.h"
 #include "mozilla/gfx/Matrix.h"
+#include "mozilla/gfx/Point.h"
 #include "nsSize.h"
 #include "nsPoint.h"
 
 #include "gfxTypes.h"
 
-struct gfxSize : public mozilla::gfx::BaseSize<gfxFloat, gfxSize> {
-    typedef mozilla::gfx::BaseSize<gfxFloat, gfxSize> Super;
-
-    gfxSize() : Super() {}
-    gfxSize(gfxFloat aWidth, gfxFloat aHeight) : Super(aWidth, aHeight) {}
-    MOZ_IMPLICIT gfxSize(const mozilla::gfx::IntSize& aSize) : Super(aSize.width, aSize.height) {}
-};
+typedef mozilla::gfx::SizeDouble gfxSize;
 
 struct gfxPoint : public mozilla::gfx::BasePoint<gfxFloat, gfxPoint> {
     typedef mozilla::gfx::BasePoint<gfxFloat, gfxPoint> Super;
@@ -59,12 +54,6 @@ inline gfxPoint
 operator/(const gfxPoint& aPoint, const gfxSize& aSize)
 {
   return gfxPoint(aPoint.x / aSize.width, aPoint.y / aSize.height);
-}
-
-inline gfxSize
-operator/(gfxFloat aValue, const gfxSize& aSize)
-{
-  return gfxSize(aValue / aSize.width, aValue / aSize.height);
 }
 
 #endif /* GFX_POINT_H */

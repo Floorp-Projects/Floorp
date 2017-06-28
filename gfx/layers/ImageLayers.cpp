@@ -33,7 +33,7 @@ void ImageLayer::ComputeEffectiveTransforms(const gfx::Matrix4x4& aTransformToSu
   // Snap image edges to pixel boundaries
   gfxRect sourceRect(0, 0, 0, 0);
   if (mContainer) {
-    sourceRect.SizeTo(mContainer->GetCurrentSize());
+    sourceRect.SizeTo(SizeDouble(mContainer->GetCurrentSize()));
   }
   // Snap our local transform first, and snap the inherited transform as well.
   // This makes our snapping equivalent to what would happen if our content
