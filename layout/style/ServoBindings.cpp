@@ -247,6 +247,12 @@ Gecko_ElementState(RawGeckoElementBorrowed aElement)
   return aElement->StyleState().ServoValue();
 }
 
+EventStates::ServoType
+Gecko_DocumentState(const nsIDocument* aDocument)
+{
+  return aDocument->ThreadSafeGetDocumentState().ServoValue();
+}
+
 bool
 Gecko_IsTextNode(RawGeckoNodeBorrowed aNode)
 {
@@ -819,7 +825,7 @@ Gecko_GetXMLLangValue(RawGeckoElementBorrowed aElement)
 }
 
 nsIDocument::DocumentTheme
-Gecko_GetDocumentLWTheme(const nsIDocument *aDocument)
+Gecko_GetDocumentLWTheme(const nsIDocument* aDocument)
 {
   return aDocument->ThreadSafeGetDocumentLWTheme();
 }
