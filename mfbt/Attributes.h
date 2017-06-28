@@ -223,30 +223,6 @@
 #  define MOZ_TSAN_BLACKLIST /* nothing */
 #endif
 
-/*
- * The MOZ_NO_SANITIZE_* family of macros is an annotation based on a more recently
- * introduced Clang feature that allows disabling various sanitizer features for
- * the particular function, including those from UndefinedBehaviorSanitizer.
- */
-
-#if defined(__has_attribute)
-#  if __has_attribute(no_sanitize)
-#    define MOZ_HAVE_NO_SANITIZE_ATTR
-#  endif
-#endif
-
-#if defined(MOZ_HAVE_NO_SANITIZE_ATTR)
-#  define MOZ_NO_SANITIZE_UINT_OVERFLOW __attribute__((no_sanitize("unsigned-integer-overflow")))
-#  define MOZ_NO_SANITIZE_INT_OVERFLOW __attribute__((no_sanitize("signed-integer-overflow")))
-#else
-#  define MOZ_NO_SANITIZE_UINT_OVERFLOW /* nothing */
-#  define MOZ_NO_SANITIZE_INT_OVERFLOW /* nothing */
-#endif
-
-
-#undef MOZ_HAVE_NO_SANITIZE_ATTR
-
-
 /**
  * MOZ_ALLOCATOR tells the compiler that the function it marks returns either a
  * "fresh", "pointer-free" block of memory, or nullptr. "Fresh" means that the
