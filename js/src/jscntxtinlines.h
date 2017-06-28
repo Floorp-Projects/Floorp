@@ -200,7 +200,7 @@ class CompartmentChecker
  * depends on other objects not having been swept yet.
  */
 #define START_ASSERT_SAME_COMPARTMENT()                                 \
-    if (JS::CurrentThreadIsHeapBusy())                                  \
+    if (cx->heapState != JS::HeapState::Idle)                           \
         return;                                                         \
     CompartmentChecker c(cx)
 
