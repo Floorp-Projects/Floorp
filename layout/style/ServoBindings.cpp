@@ -819,9 +819,15 @@ Gecko_GetXMLLangValue(RawGeckoElementBorrowed aElement)
 }
 
 nsIDocument::DocumentTheme
-Gecko_GetDocumentLWTheme(const nsIDocument *aDocument)
+Gecko_GetDocumentLWTheme(const nsIDocument* aDocument)
 {
   return aDocument->ThreadSafeGetDocumentLWTheme();
+}
+
+mozilla::EventStates
+Gecko_GetDocumentState(const nsIDocument* aDocument)
+{
+  return aDocument->ThreadSafeGetDocumentState();
 }
 
 template <typename Implementor>

@@ -16,6 +16,7 @@
 #include "mozilla/css/URLMatchingFunction.h"
 #include "mozilla/EffectCompositor.h"
 #include "mozilla/ComputedTimingFunction.h"
+#include "mozilla/EventStates.h"
 #include "nsChangeHint.h"
 #include "nsCSSPseudoClasses.h"
 #include "nsIDocument.h"
@@ -164,7 +165,8 @@ bool Gecko_MatchLang(RawGeckoElementBorrowed element,
                      nsIAtom* override_lang, bool has_override_lang,
                      const char16_t* value);
 nsIAtom* Gecko_GetXMLLangValue(RawGeckoElementBorrowed element);
-nsIDocument::DocumentTheme Gecko_GetDocumentLWTheme(const nsIDocument *aDocument);
+nsIDocument::DocumentTheme Gecko_GetDocumentLWTheme(const nsIDocument* aDocument);
+mozilla::EventStates Gecko_GetDocumentState(const nsIDocument* aDocument);
 
 // Attributes.
 #define SERVO_DECLARE_ELEMENT_ATTR_MATCHING_FUNCTIONS(prefix_, implementor_)  \
