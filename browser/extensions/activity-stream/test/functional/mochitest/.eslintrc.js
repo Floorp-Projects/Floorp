@@ -31,7 +31,6 @@ module.exports = {
     "SimpleTest": false,
     "SpecialPowers": false,
     "TestUtils": false,
-    "thisTestLeaksUncaughtRejectionsAndShouldBeFixed": false,
     "todo": false,
     "todo_is": false,
     "todo_isnot": false,
