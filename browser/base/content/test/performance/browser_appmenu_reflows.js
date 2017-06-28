@@ -76,7 +76,32 @@ const EXPECTED_APPMENU_OPEN_REFLOWS = [
 
 const EXPECTED_APPMENU_SUBVIEW_REFLOWS = [
   /**
-   * Nothing here! Please don't add anything new!
+   * The synced tabs view has labels that are multiline. Because of bugs in
+   * XUL layout relating to multiline text in scrollable containers, we need
+   * to manually read their height in order to ensure container heights are
+   * correct. Unfortunately this requires 2 sync reflows.
+   *
+   * If we add more views where this is necessary, we may need to duplicate
+   * these expected reflows further.
+   *
+   * Because the test dirties the frame tree by manipulating margins,
+   * getBoundingClientRect() in the descriptionHeightWorkaround code
+   * seems to sometimes fire multiple times. Bug 1363361 will change how the
+   * test dirties the frametree, after which this (2 hits in that method)
+   * should become deterministic and we can re-enable the subview testing
+   * for the remotetabs subview (this is bug 1376822). In the meantime,
+   * that subview only is excluded from this test.
+  [
+    "descriptionHeightWorkaround@resource:///modules/PanelMultiView.jsm",
+    "onTransitionEnd@resource:///modules/PanelMultiView.jsm",
+  ],
+  [
+    "descriptionHeightWorkaround@resource:///modules/PanelMultiView.jsm",
+    "onTransitionEnd@resource:///modules/PanelMultiView.jsm",
+  ],
+   */
+  /**
+   * Please don't add anything new!
    */
 ];
 
@@ -110,8 +135,17 @@ add_task(async function() {
       }
 
       for (let button of navButtons) {
+        // We skip the remote tabs subview, see the comments above
+        // in EXPECTED_APPMENU_SUBVIEW_REFLOWS. bug 1376822 tracks
+        // re-enabling this.
+        if (button.id == "appMenu-library-remotetabs-button") {
+          info("Skipping " + button.id);
+          continue;
+        }
+        info("Click " + button.id);
         button.click();
         await BrowserTestUtils.waitForEvent(PanelUI.panel, "ViewShown");
+        info("Shown " + PanelUI.multiView.instance._currentSubView.id);
         // Unfortunately, I can't find a better accessor to the current
         // subview, so I have to reach the PanelMultiView instance
         // here.
