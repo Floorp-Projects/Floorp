@@ -451,27 +451,33 @@ function filterLinks(node, predicate) {
 function findElement(using, value, rootNode, startNode) {
   switch (using) {
     case element.Strategy.ID:
-      if (startNode.getElementById) {
-        return startNode.getElementById(value);
+      {
+        if (startNode.getElementById) {
+          return startNode.getElementById(value);
+        }
+        let expr = `.//*[@id="${value}"]`;
+        return element.findByXPath( rootNode, startNode, expr);
       }
-      return element.findByXPath(rootNode, startNode, `.//*[@id="${value}"]`);
 
     case element.Strategy.Name:
-      if (startNode.getElementsByName) {
-        return startNode.getElementsByName(value)[0];
+      {
+        if (startNode.getElementsByName) {
+          return startNode.getElementsByName(value)[0];
+        }
+        let expr = `.//*[@name="${value}"]`;
+        return element.findByXPath(rootNode, startNode, expr);
       }
-      return element.findByXPath(rootNode, startNode, `.//*[@name="${value}"]`);
 
     case element.Strategy.ClassName:
       // works for >= Firefox 3
-      return  startNode.getElementsByClassName(value)[0];
+      return startNode.getElementsByClassName(value)[0];
 
     case element.Strategy.TagName:
       // works for all elements
       return startNode.getElementsByTagName(value)[0];
 
     case element.Strategy.XPath:
-      return  element.findByXPath(rootNode, startNode, value);
+      return element.findByXPath(rootNode, startNode, value);
 
     case element.Strategy.LinkText:
       for (let link of startNode.getElementsByTagName("a")) {
@@ -479,7 +485,7 @@ function findElement(using, value, rootNode, startNode) {
           return link;
         }
       }
-      break;
+      return undefined;
 
     case element.Strategy.PartialLinkText:
       for (let link of startNode.getElementsByTagName("a")) {
@@ -487,7 +493,7 @@ function findElement(using, value, rootNode, startNode) {
           return link;
         }
       }
-      break;
+      return undefined;
 
     case element.Strategy.Selector:
       try {
@@ -495,18 +501,17 @@ function findElement(using, value, rootNode, startNode) {
       } catch (e) {
         throw new InvalidSelectorError(`${e.message}: "${value}"`);
       }
-      break;
 
     case element.Strategy.Anon:
       return rootNode.getAnonymousNodes(startNode);
 
     case element.Strategy.AnonAttribute:
       let attr = Object.keys(value)[0];
-      return rootNode.getAnonymousElementByAttribute(startNode, attr, value[attr]);
-
-    default:
-      throw new InvalidSelectorError(`No such strategy: ${using}`);
+      return rootNode.getAnonymousElementByAttribute(
+          startNode, attr, value[attr]);
   }
+
+  throw new InvalidSelectorError(`No such strategy: ${using}`);
 }
 
 /**
