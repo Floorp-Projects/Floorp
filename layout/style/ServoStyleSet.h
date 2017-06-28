@@ -456,7 +456,8 @@ public:
    * the modified attribute doesn't appear in an attribute selector in
    * a style sheet.
    */
-  bool MightHaveAttributeDependency(nsIAtom* aAttribute);
+  bool MightHaveAttributeDependency(const dom::Element& aElement,
+                                    nsIAtom* aAttribute);
 
   /**
    * Returns true if a change in event state on an element might require
@@ -466,7 +467,7 @@ public:
    * the changed state isn't depended upon by any pseudo-class selectors
    * in a style sheet.
    */
-  bool HasStateDependency(EventStates aState);
+  bool HasStateDependency(const dom::Element& aElement, EventStates aState);
 
 private:
   // On construction, sets sInServoTraversal to the given ServoStyleSet.
