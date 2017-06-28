@@ -19,15 +19,11 @@ add_task(function* () {
   yield front.connect();
   let rec = yield front.startRecording({ withMarkers: true });
 
-  let markers = yield waitForMarkerType(front, MARKER_NAME, function (marker) {
-    return marker.some(({restyleHint}) => restyleHint != void 0);
-  });
+  let markers = yield waitForMarkerType(front, MARKER_NAME);
 
   yield front.stopRecording(rec);
 
   ok(markers.some(m => m.name === MARKER_NAME), `got some ${MARKER_NAME} markers`);
-  ok(markers.some(({restyleHint}) => restyleHint != void 0),
-    "Some markers have a restyleHint.");
 
   yield client.close();
   gBrowser.removeCurrentTab();
