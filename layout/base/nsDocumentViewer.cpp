@@ -714,15 +714,6 @@ nsDocumentViewer::Init(nsIWidget* aParentWidget,
 nsresult
 nsDocumentViewer::InitPresentationStuff(bool aDoInitialReflow)
 {
-  // We assert this because initializing the pres shell could otherwise cause
-  // re-entrancy into nsDocumentViewer methods, which might cause a different
-  // pres shell to be created.  Callers of InitPresentationStuff should ensure
-  // the call is appropriately bounded by an nsAutoScriptBlocker to decide
-  // when it is safe for these re-entrant calls to be made.
-  MOZ_ASSERT(!nsContentUtils::IsSafeToRunScript(),
-             "InitPresentationStuff must only be called when scripts are "
-             "blocked");
-
   if (GetIsPrintPreview())
     return NS_OK;
 
@@ -1782,10 +1773,6 @@ nsDocumentViewer::Destroy()
 
   // The document was not put in the bfcache
 
-  // Protect against pres shell destruction running scripts and re-entrantly
-  // creating a new presentation.
-  nsAutoScriptBlocker scriptBlocker;
-
   if (mPresShell) {
     DestroyPresShell();
   }
@@ -1952,10 +1939,6 @@ nsDocumentViewer::SetDocumentInternal(nsIDocument* aDocument,
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Replace the current pres shell with a new shell for the new document
-
-  // Protect against pres shell destruction running scripts and re-entrantly
-  // creating a new presentation.
-  nsAutoScriptBlocker scriptBlocker;
 
   if (mPresShell) {
     DestroyPresShell();
@@ -2162,17 +2145,7 @@ nsDocumentViewer::Show(void)
     }
   }
 
-  // Hold on to the document so we can use it after the script blocker below
-  // has been released (which might re-entrantly call into other
-  // nsDocumentViewer methods).
-  nsCOMPtr<nsIDocument> document = mDocument;
-
   if (mDocument && !mPresShell) {
-    // The InitPresentationStuff call below requires a script blocker, because
-    // its PresShell::Initialize call can cause scripts to run and therefore
-    // re-entrant calls to nsDocumentViewer methods to be made.
-    nsAutoScriptBlocker scriptBlocker;
-
     NS_ASSERTION(!mWindow, "Window already created but no presshell?");
 
     nsCOMPtr<nsIBaseWindow> base_win(mContainer);
@@ -2235,8 +2208,8 @@ nsDocumentViewer::Show(void)
   // Notify observers that a new page has been shown. This will get run
   // from the event loop after we actually draw the page.
   RefPtr<nsDocumentShownDispatcher> event =
-    new nsDocumentShownDispatcher(document);
-  document->Dispatch("nsDocumentShownDispatcher",
+    new nsDocumentShownDispatcher(mDocument);
+  mDocument->Dispatch("nsDocumentShownDispatcher",
                       TaskCategory::Other,
                       event.forget());
 
@@ -2280,23 +2253,24 @@ nsDocumentViewer::Hide(void)
     mPresShell->CaptureHistoryState(getter_AddRefs(layoutState));
   }
 
-  // Do not run ScriptRunners queued by DestroyPresShell() in the intermediate
-  // state before we're done destroying PresShell, PresContext, ViewManager, etc.
-  nsAutoScriptBlocker scriptBlocker;
+  {
+    // Do not run ScriptRunners queued by DestroyPresShell() in the intermediate
+    // state before we're done destroying PresShell, PresContext, ViewManager, etc.
+    nsAutoScriptBlocker scriptBlocker;
+    DestroyPresShell();
 
-  DestroyPresShell();
+    DestroyPresContext();
 
-  DestroyPresContext();
+    mViewManager   = nullptr;
+    mWindow        = nullptr;
+    mDeviceContext = nullptr;
+    mParentWidget  = nullptr;
 
-  mViewManager   = nullptr;
-  mWindow        = nullptr;
-  mDeviceContext = nullptr;
-  mParentWidget  = nullptr;
+    nsCOMPtr<nsIBaseWindow> base_win(mContainer);
 
-  nsCOMPtr<nsIBaseWindow> base_win(mContainer);
-
-  if (base_win && !mAttachedToParent) {
-    base_win->SetParentWidget(nullptr);
+    if (base_win && !mAttachedToParent) {
+      base_win->SetParentWidget(nullptr);
+    }
   }
 
   return NS_OK;
@@ -4536,10 +4510,6 @@ nsDocumentViewer::SetIsPrintPreview(bool aIsPrintPreview)
     mAutoBeforeAndAfterPrint = nullptr;
   }
 #endif
-
-  // Protect against pres shell destruction running scripts.
-  nsAutoScriptBlocker scriptBlocker;
-
   if (!aIsPrintPreview) {
     if (mPresShell) {
       DestroyPresShell();
@@ -4676,11 +4646,6 @@ NS_IMETHODIMP nsDocumentViewer::SetPageMode(bool aPageMode, nsIPrintSettings* aP
   // reftests that require a paginated context
   mIsPageMode = aPageMode;
 
-  // The DestroyPresShell call requires a script blocker, since the
-  // PresShell::Destroy call it does can cause scripts to run, which could
-  // re-entrantly call methods on the nsDocumentViewer.
-  nsAutoScriptBlocker scriptBlocker;
-
   if (mPresShell) {
     DestroyPresShell();
   }
@@ -4741,13 +4706,6 @@ nsDocumentViewer::SetIsHidden(bool aHidden)
 void
 nsDocumentViewer::DestroyPresShell()
 {
-  // We assert this because destroying the pres shell could otherwise cause
-  // re-entrancy into nsDocumentViewer methods, and all callers of
-  // DestroyPresShell need to do other cleanup work afterwards before it
-  // is safe for those re-entrant method calls to be made.
-  MOZ_ASSERT(!nsContentUtils::IsSafeToRunScript(),
-             "DestroyPresShell must only be called when scripts are blocked");
-
   nsIFrame* vmRootFrame =
     mViewManager && mViewManager->GetRootView()
       ? mViewManager->GetRootView()->GetFrame()
@@ -4762,6 +4720,7 @@ nsDocumentViewer::DestroyPresShell()
   if (selection && mSelectionListener)
     selection->RemoveSelectionListener(mSelectionListener);
 
+  nsAutoScriptBlocker scriptBlocker;
   bool hadRootFrame = !!mPresShell->GetRootFrame();
   mPresShell->Destroy();
   mPresShellDestroyed = true;
@@ -4802,10 +4761,6 @@ nsDocumentViewer::SetPrintPreviewPresentation(nsViewManager* aViewManager,
                                               nsPresContext* aPresContext,
                                               nsIPresShell* aPresShell)
 {
-  // Protect against pres shell destruction running scripts and re-entrantly
-  // creating a new presentation.
-  nsAutoScriptBlocker scriptBlocker;
-
   if (mPresShell) {
     DestroyPresShell();
   }
