@@ -317,6 +317,7 @@ testing/modules/sinon-2.3.2.js
 testing/mozbase/mozprofile/tests/files/prefs_with_comments.js
 testing/talos/talos/scripts/jszip.min.js
 testing/talos/talos/startup_test/sessionrestore/profile/sessionstore.js
+testing/talos/talos/startup_test/sessionrestore/profile-manywindows/sessionstore.js
 testing/talos/talos/tests/canvasmark/**
 testing/talos/talos/tests/dromaeo/**
 testing/talos/talos/tests/v8_7/**
