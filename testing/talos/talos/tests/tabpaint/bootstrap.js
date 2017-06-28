@@ -152,7 +152,6 @@ var TabPaint = {
    *         with the time (in ms) it took to open the tab from the parent.
    */
   openTabFromParent(gBrowser) {
-    let win = gBrowser.ownerGlobal;
     return new Promise((resolve) => {
       this.Profiler.resume("tabpaint parent start");
 
@@ -181,7 +180,6 @@ var TabPaint = {
    *         with the time (in ms) it took to open the tab from content.
    */
   openTabFromContent(gBrowser) {
-    let win = gBrowser.ownerGlobal;
     return new Promise((resolve) => {
       this.Profiler.resume("tabpaint content start");
 
@@ -227,7 +225,7 @@ var TabPaint = {
         }
       }, true);
 
-      tab.ownerDocument.defaultView.gBrowser.removeTab(tab);
+      tab.ownerGlobal.gBrowser.removeTab(tab);
     });
   },
 

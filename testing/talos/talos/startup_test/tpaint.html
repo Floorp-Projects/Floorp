@@ -68,7 +68,7 @@ async function reportTimes() {
   avg = (avg / count).toFixed(2);
   min = min.toFixed(2);
   max = max.toFixed(2);
-  med = calcMedian(openTimes);
+  var med = calcMedian(openTimes);
 
   if (auto) {
     dumpLog("__start_report" + openTimes.join("|") + "__end_report");
@@ -97,6 +97,7 @@ async function childIsOpen() {
   scheduleNextWindow();
 }
 
+/* eslint-disable no-useless-concat */
 var kidHTML = "<html><meta charset='utf-8'><script>" +
               "var e = 'MozAfterPaint';" +
               "function done() {" +
@@ -106,6 +107,7 @@ var kidHTML = "<html><meta charset='utf-8'><script>" +
               "}" +
               "window.addEventListener(e, done, true);" +
               "</" + "script>TPAINT</html>";
+/* eslint-enable no-useless-concat */
 var kidURI = "data:text/html," + encodeURI(kidHTML);
 
 async function openWindow() {

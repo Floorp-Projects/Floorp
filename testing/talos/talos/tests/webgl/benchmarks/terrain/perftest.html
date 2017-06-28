@@ -58,7 +58,7 @@
   var aspectRatio;
 
   function startTest(alpha, antialias, doneCallback) {
-    gl = document.getElementById("c").getContext("webgl", {alpha: alpha, antialias: antialias});
+    gl = document.getElementById("c").getContext("webgl", {alpha, antialias});
 
     var grassImage = document.getElementById("grass");
     var grassTexture = gl.createTexture();
@@ -108,7 +108,7 @@
         vertices[3 * (i + terrainSize * j) + 1] = height;
         vertices[3 * (i + terrainSize * j) + 2] = j;
 
-        var d_y_d_x = (2 * Math.PI / terrainSize) * (- 4 * Math.sin(a) - 4 * Math.sin(4 * a));
+        var d_y_d_x = (2 * Math.PI / terrainSize) * (-4 * Math.sin(a) - 4 * Math.sin(4 * a));
         var d_y_d_z = (2 * Math.PI / terrainSize) * (6 * Math.cos(b) + 5 * Math.cos(5 * b));
         var normal_x = d_y_d_x;
         var normal_y = -1;
@@ -142,15 +142,15 @@
     var indexBuffer = gl.createBuffer();
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
     var indices = [];
-    for (var i = 0; i < terrainSize - 1; i++) {
-      for (var j = 0; j < terrainSize - 1; j++) {
-        indices.push(i   + terrainSize * j);
-        indices.push(i+1 + terrainSize * j);
-        indices.push(i+1 + terrainSize * (j+1));
+    for (var k = 0; k < terrainSize - k; k++) {
+      for (var l = 0; l < terrainSize - 1; l++) {
+        indices.push(k + terrainSize * l);
+        indices.push(k + 1 + terrainSize * l);
+        indices.push(k + 1 + terrainSize * (l + 1));
 
-        indices.push(i   + terrainSize * j);
-        indices.push(i+1 + terrainSize * (j+1));
-        indices.push(i   + terrainSize * (j+1));
+        indices.push(k + terrainSize * l);
+        indices.push(k + 1 + terrainSize * (l + 1));
+        indices.push(k + terrainSize * (l + 1));
       }
     }
     gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indices), gl.STATIC_DRAW);
@@ -202,7 +202,7 @@
   }
 
   function draw(timestamp) {
-    // It's possible that under some implementations (even if not our current one), 
+    // It's possible that under some implementations (even if not our current one),
     // the rAF callback arg will be in some way "optimized", e.g. always point to the
     // estimated next vsync timestamp, in order to allow the callee to have less
     // jitter in its time-dependent positioning/processing.
@@ -253,9 +253,9 @@
     modelviewMatrix[10] = c;
     modelviewMatrix[11] = 0;
 
-    modelviewMatrix[12] = - terrainSize / 2;
+    modelviewMatrix[12] = -terrainSize / 2;
     modelviewMatrix[13] = 0;
-    modelviewMatrix[14] = - terrainSize;
+    modelviewMatrix[14] = -terrainSize;
     modelviewMatrix[15] = 1;
 
     gl.uniformMatrix4fv(modelviewUniformLoc, false, modelviewMatrix);
@@ -317,7 +317,7 @@
     // Remove the old canvas if exists, and create a new one for the new run
     var c = document.getElementById("c");
     if (c)
-        c.parentNode.removeChild(c);
+        c.remove();
     c = document.createElement("canvas");
     c.id = "c";
     document.body.insertBefore(c, document.body.firstChild)
@@ -356,10 +356,10 @@
     if (window.tpRecordTime) {
       // within talos - report the results
       return tpRecordTime(results.values.join(","), 0, results.names.join(","));
-    } else {
-      // Local run in a plain browser, display the formatted report
-      alert(msg);
     }
+    // Local run in a plain browser, display the formatted report
+    alert(msg);
+    return undefined;
   }
 
   // The full test starts here
@@ -387,9 +387,9 @@
     // (Not using promises chaining for better compatibility, ending up with nesting instead)
     // talos unfortunately trims common prefixes, so we prefix with a running number to keep the full name
     setupAndRun(false, false, "0.WebGL-terrain-alpha-no-AA-no", function() {
-      setupAndRun(false, true,  "1.WebGL-terrain-alpha-no-AA-yes", function() {
-        setupAndRun(true,  false, "2.WebGL-terrain-alpha-yes-AA-no", function() {
-          setupAndRun(true,  true,  "3.WebGL-terrain-alpha-yes-AA-yes", function() {
+      setupAndRun(false, true, "1.WebGL-terrain-alpha-no-AA-yes", function() {
+        setupAndRun(true, false, "2.WebGL-terrain-alpha-yes-AA-no", function() {
+          setupAndRun(true, true, "3.WebGL-terrain-alpha-yes-AA-yes", function() {
             reportResults(gResults);
           })
         })

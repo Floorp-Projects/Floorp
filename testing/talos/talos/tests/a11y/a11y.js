@@ -1,3 +1,4 @@
+/* globals acc:true, gAccService:true, nsIAccessible:true, nsIDOMNode:true */
 gAccService = 0;
 
 // Make sure not to touch Components before potentially invoking enablePrivilege,

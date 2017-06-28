@@ -24,6 +24,8 @@ var viewModeIndex = 0;
 var viewMode = [1, 1.1, 2];
 var testResult = {names: [], values: []};
 
+/* globals readyToStart:true */
+
 function init() {
   TalosPowersContent.focus(content_focused)
 }
@@ -136,6 +138,7 @@ function reportResult() {
     // Local run in a plain browser, display the formatted report
     alert(msg);
 
+  return undefined;
 }
 </script>
 

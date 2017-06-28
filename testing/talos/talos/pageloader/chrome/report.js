@@ -48,7 +48,7 @@ function Report() {
 }
 
 Report.prototype.pageNames = function() {
-  var retval = new Array();
+  var retval = [];
   for (var page in this.timeVals) {
     retval.push(page);
   }
@@ -153,7 +153,7 @@ Report.prototype.getReportSummary = function() {
 
 Report.prototype.recordTime = function(pageName, ms) {
   if (this.timeVals[pageName] == undefined) {
-    this.timeVals[pageName] = new Array();
+    this.timeVals[pageName] = [];
   }
   this.timeVals[pageName].push(ms);
 }

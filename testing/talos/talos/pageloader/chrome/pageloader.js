@@ -2,6 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+/* import-globals-from memory.js */
+/* import-globals-from report.js */
+
 try {
   if (Cc === undefined) {
     var Cc = Components.classes;
@@ -106,6 +109,7 @@ SingleTimeout.prototype.clear = function() {
 };
 
 var failTimeout = new SingleTimeout();
+var renderReport;
 
 function plInit() {
   if (running) {
@@ -214,8 +218,7 @@ function plInit() {
       toolbars = "titlebar,resizable";
     }
 
-    browserWindow = wwatch.openWindow
-      (null, "chrome://browser/content/", "_blank",
+    browserWindow = wwatch.openWindow(null, "chrome://browser/content/", "_blank",
        `chrome,${toolbars},dialog=no,width=${winWidth},height=${winHeight}`, blank);
 
     gPaintWindow = browserWindow;
@@ -314,6 +317,7 @@ var ContentListener = {
       case "PageLoader:LoadEvent": return plLoadHandlerMessage(message);
       case "PageLoader:RecordTime": return plRecordTimeMessage(message);
     }
+    return undefined;
   },
 };
 
@@ -525,7 +529,7 @@ function plRecordTime(time) {
     report.recordTime(recordedName, time);
   }
   if (noisy) {
-    dumpLine("Cycle " + (cycle + 1) + "(" + pageCycle + ")" + ": loaded " + pageName + " (next: " + nextName + ")");
+    dumpLine("Cycle " + (cycle + 1) + "(" + pageCycle + "): loaded " + pageName + " (next: " + nextName + ")");
   }
 }
 

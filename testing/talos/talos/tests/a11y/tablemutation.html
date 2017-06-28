@@ -76,8 +76,11 @@
 
 </body>
 <script>
+/* import-globals-from a11y.js */
 window.onload = function() {
-  setTimeout("mutateTable()", 100);
+  setTimeout(function() {
+    mutateTable();
+  }, 100);
 };
 function mutateTable() {
   var htmTable = document.getElementById("datatable");

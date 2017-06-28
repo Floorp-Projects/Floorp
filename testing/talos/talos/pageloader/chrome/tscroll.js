@@ -215,7 +215,6 @@ function testScroll(target, stepSize, opt_reportFunc, opt_numSteps) {
 
     return new Promise(function(resolve, reject) {
       setSmooth();
-      var startts = Date.now();
 
       var handle = -1;
       startFrameTimeRecording(function(rv) {
@@ -224,7 +223,6 @@ function testScroll(target, stepSize, opt_reportFunc, opt_numSteps) {
 
       // Get the measurements after APZ_MEASURE_MS of scrolling
       setTimeout(function() {
-        var endts = Date.now();
 
         stopFrameTimeRecording(handle, function(intervals) {
           function average(arr) {
