@@ -73,6 +73,7 @@ public final class TelemetryWrapper {
         private static final String MENU = "menu";
         private static final String BACK_BUTTON = "back_button";
         private static final String NOTIFICATION = "notification";
+        private static final String NOTIFICATION_ACTION = "notification_action";
         private static final String SHORTCUT = "shortcut";
         private static final String BLOCKING_SWITCH = "blocking_switch";
         private static final String BROWSER = "browser";
@@ -92,6 +93,7 @@ public final class TelemetryWrapper {
         private static final String CUSTOM_TAB = "custom_tab";
         private static final String SKIP = "skip";
         private static final String FINISH = "finish";
+        private static final String OPEN = "open";
     }
 
     private static class Extra {
@@ -283,6 +285,14 @@ public final class TelemetryWrapper {
 
     public static void eraseNotificationEvent() {
         TelemetryEvent.create(Category.ACTION, Method.CLICK, Object.NOTIFICATION, Value.ERASE).queue();
+    }
+
+    public static void eraseNotificationActionEvent() {
+        TelemetryEvent.create(Category.ACTION, Method.CLICK, Object.NOTIFICATION_ACTION, Value.ERASE).queue();
+    }
+
+    public static void openNotificationActionEvent() {
+        TelemetryEvent.create(Category.ACTION, Method.CLICK, Object.NOTIFICATION_ACTION, Value.OPEN).queue();
     }
 
     public static void eraseShortcutEvent() {

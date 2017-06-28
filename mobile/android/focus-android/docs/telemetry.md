@@ -52,6 +52,8 @@ The event ping contains a list of events ([see event format on readthedocs.io](h
 * (Erase) Notification clicked - ("action", "click", "notification", "erase")
 * (Erase) Home screen shortcut clicked - ("action", "click", "shortcut", "erase")
 * Enable/Disable content blocking for session - ("action", "click", "blocking_switch", "true/false")
+* Notification: "Erase" action clicked: ("action", "click", "notification_action", "erase")
+* Notification: "Open" action clicked: ("action", "click", "notification_action", "open")
 * Setting changed: - ("action", "change", "settings", <key>, { "to": <value> })
 * Share URL with third-party app - ("action", "share", "menu")
 * Open default app for URL - ("action", "open", "menu", "default")

@@ -55,6 +55,12 @@
          button in the application. -->
     <string name="notification_erase_text">Erase browsing history</string>
 
+    <!-- Notification action to erase the browsing history. -->
+    <string name="notification_action_erase">Erase</string>
+
+    <!-- Notification action to open Focus and resume the current browsing session. -->
+    <string name="notification_action_open">Open</string>
+
     <!-- On Android 7+ users can add a shortcut for erasing the browsing history to the home screen.
          This is the label for this shortcut. Android recommends a maximum length of 10 characters. -->
     <string name="shortcut_erase_short_label">Erase</string>

@@ -36,6 +36,8 @@ public class BrowsingNotificationService extends Service {
     private static final String ACTION_FOREGROUND = "foreground";
     private static final String ACTION_BACKGROUND = "background";
 
+    private static final String EXTRA_NOTIFICATION_ACTION = "notification_action";
+
     private boolean foreground;
 
     public static void start(Context context) {
@@ -110,7 +112,11 @@ public class BrowsingNotificationService extends Service {
 
                 startActivity(activityIntent);
 
-                TelemetryWrapper.eraseNotificationEvent();
+                if (intent.hasExtra(EXTRA_NOTIFICATION_ACTION)) {
+                    TelemetryWrapper.eraseNotificationActionEvent();
+                } else {
+                    TelemetryWrapper.eraseNotificationEvent();
+                }
                 break;
 
             default:
@@ -143,21 +149,50 @@ public class BrowsingNotificationService extends Service {
     }
 
     private Notification buildNotification() {
-        final Intent intent = new Intent(this, BrowsingNotificationService.class);
-        intent.setAction(ACTION_ERASE);
-
-        final PendingIntent pendingIntent = PendingIntent.getService(this, 0, intent, PendingIntent.FLAG_ONE_SHOT);
+        final PendingIntent notificationPendingIntent = createNotificationIntent();
+        final PendingIntent openPendingIntent = createOpenActionIntent();
+        final PendingIntent erasePendingIntent = createEraseActionIntent();
 
         return new NotificationCompat.Builder(this)
                 .setOngoing(true)
                 .setSmallIcon(R.drawable.ic_notification)
                 .setContentTitle(getString(R.string.app_name))
                 .setContentText(getString(R.string.notification_erase_text))
-                .setContentIntent(pendingIntent)
+                .setContentIntent(notificationPendingIntent)
                 .setVisibility(Notification.VISIBILITY_SECRET)
                 .setShowWhen(false)
                 .setLocalOnly(true)
+                .addAction(new NotificationCompat.Action(
+                        R.drawable.ic_notification,
+                        getString(R.string.notification_action_open),
+                        openPendingIntent))
+                .addAction(new NotificationCompat.Action(
+                        R.drawable.ic_shortcut_erase,
+                        getString(R.string.notification_action_erase),
+                        erasePendingIntent))
                 .build();
+    }
+
+    private PendingIntent createNotificationIntent() {
+        final Intent intent = new Intent(this, BrowsingNotificationService.class);
+        intent.setAction(ACTION_ERASE);
+
+        return PendingIntent.getService(this, 0, intent, PendingIntent.FLAG_ONE_SHOT);
+    }
+
+    private PendingIntent createOpenActionIntent() {
+        final Intent intent = new Intent(this, MainActivity.class);
+        intent.setAction(MainActivity.ACTION_OPEN);
+
+        return PendingIntent.getActivity(this, 1, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+    }
+
+    private PendingIntent createEraseActionIntent() {
+        final Intent intent = new Intent(this, BrowsingNotificationService.class);
+        intent.setAction(ACTION_ERASE);
+        intent.putExtra(EXTRA_NOTIFICATION_ACTION, true);
+
+        return PendingIntent.getService(this, 2, intent, PendingIntent.FLAG_ONE_SHOT);
     }
 
     @Nullable
