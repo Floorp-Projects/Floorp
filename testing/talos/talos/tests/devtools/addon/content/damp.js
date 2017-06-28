@@ -27,7 +27,7 @@ function Damp() {
 
 Damp.prototype = {
 
-  addTab: function(url) {
+  addTab(url) {
     return new Promise((resolve, reject) => {
       let tab = this._win.gBrowser.selectedTab = this._win.gBrowser.addTab(url);
       let browser = tab.linkedBrowser;
@@ -38,12 +38,12 @@ Damp.prototype = {
     });
   },
 
-  closeCurrentTab: function() {
+  closeCurrentTab() {
     this._win.BrowserCloseTabOrWindow();
     return this._win.gBrowser.selectedTab;
   },
 
-  reloadPage: function() {
+  reloadPage() {
     let startReloadTimestamp = performance.now();
     return new Promise((resolve, reject) => {
       let browser = gBrowser.selectedBrowser;
@@ -59,7 +59,7 @@ Damp.prototype = {
     });
   },
 
-  openToolbox: function (tool = "webconsole") {
+  openToolbox(tool = "webconsole") {
     let tab = getActiveTab(getMostRecentBrowserWindow());
     let target = devtools.TargetFactory.forTab(tab);
     let startRecordTimestamp = performance.now();
@@ -86,7 +86,7 @@ Damp.prototype = {
     };
   }),
 
-  saveHeapSnapshot: function(label) {
+  saveHeapSnapshot(label) {
     let tab = getActiveTab(getMostRecentBrowserWindow());
     let target = devtools.TargetFactory.forTab(tab);
     let toolbox = gDevTools.getToolbox(target);
@@ -104,7 +104,7 @@ Damp.prototype = {
     });
   },
 
-  readHeapSnapshot: function(label) {
+  readHeapSnapshot(label) {
     let start = performance.now();
     this._snapshot = ThreadSafeChromeUtils.readHeapSnapshot(this._heapSnapshotFilePath);
     let end = performance.now();
@@ -224,7 +224,7 @@ Damp.prototype = {
     yield this.testTeardown();
   }),
 
-  takeCensus: function(label) {
+  takeCensus(label) {
     let start = performance.now();
 
     this._snapshot.takeCensus({
@@ -260,7 +260,7 @@ Damp.prototype = {
     return Promise.resolve();
   },
 
-  _getToolLoadingTests: function(url, label) {
+  _getToolLoadingTests(url, label) {
 
     let openToolboxAndLog = Task.async(function*(name, tool) {
       let {time, toolbox} = yield this.openToolbox(tool);
@@ -380,7 +380,7 @@ Damp.prototype = {
   _nextCommandIx: 0,
   _commands: [],
   _onSequenceComplete: 0,
-  _nextCommand: function() {
+  _nextCommand() {
     if (this._nextCommandIx >= this._commands.length) {
       this._onSequenceComplete();
       return;
@@ -388,7 +388,7 @@ Damp.prototype = {
     this._commands[this._nextCommandIx++].call(this);
   },
   // Each command at the array a function which must call nextCommand once it's done
-  _doSequence: function(commands, onComplete) {
+  _doSequence(commands, onComplete) {
     this._commands = commands;
     this._onSequenceComplete = onComplete;
     this._results = [];
@@ -397,25 +397,25 @@ Damp.prototype = {
     this._nextCommand();
   },
 
-  _log: function(str) {
+  _log(str) {
     if (window.MozillaFileLogger && window.MozillaFileLogger.log)
       window.MozillaFileLogger.log(str);
 
     window.dump(str);
   },
 
-  _logLine: function(str) {
+  _logLine(str) {
     return this._log(str + "\n");
   },
 
-  _reportAllResults: function() {
+  _reportAllResults() {
     var testNames = [];
     var testResults = [];
 
     var out = "";
     for (var i in this._results) {
       res = this._results[i];
-      var disp = [].concat(res.value).map(function(a){return (isNaN(a) ? -1 : a.toFixed(1));}).join(" ");
+      var disp = [].concat(res.value).map(function(a) { return (isNaN(a) ? -1 : a.toFixed(1)); }).join(" ");
       out += res.name + ": " + disp + "\n";
 
       if (!Array.isArray(res.value)) { // Waw intervals array is not reported to talos
@@ -426,15 +426,15 @@ Damp.prototype = {
     this._log("\n" + out);
 
     if (content && content.tpRecordTime) {
-      content.tpRecordTime(testResults.join(','), 0, testNames.join(','));
+      content.tpRecordTime(testResults.join(","), 0, testNames.join(","));
     } else {
-      //alert(out);
+      // alert(out);
     }
   },
 
   _onTestComplete: null,
 
-  _doneInternal: function() {
+  _doneInternal() {
     this._logLine("DAMP_RESULTS_JSON=" + JSON.stringify(this._results));
     this._reportAllResults();
     this._win.gBrowser.selectedTab = this._dampTab;
@@ -496,8 +496,8 @@ Damp.prototype = {
     });
   },
 
-  startTest: function(doneCallback, config) {
-    this._onTestComplete = function (results) {
+  startTest(doneCallback, config) {
+    this._onTestComplete = function(results) {
       Profiler.mark("DAMP - end", true);
       doneCallback(results);
     };
