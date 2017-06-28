@@ -120,7 +120,7 @@ public:
   // Callback while background channel is ready.
   void OnBackgroundChildReady(HttpBackgroundChannelChild* aBgChild);
   // Callback while background channel is destroyed.
-  void OnBackgroundChildDestroyed();
+  void OnBackgroundChildDestroyed(HttpBackgroundChannelChild* aBgChild);
 
 protected:
   mozilla::ipc::IPCResult RecvOnStartRequest(const nsresult& channelStatus,
@@ -294,13 +294,13 @@ private:
   // this queue keeps OnDataAvailable data until OnStartRequest is finally
   // called.
   nsTArray<UniquePtr<ChannelEvent>> mUnknownDecoderEventQ;
-  bool mUnknownDecoderInvolved;
+  Atomic<bool, ReleaseAcquire> mUnknownDecoderInvolved;
 
   // Once set, OnData and possibly OnStop will be diverted to the parent.
-  bool mDivertingToParent;
+  Atomic<bool, ReleaseAcquire> mDivertingToParent;
   // Once set, no OnStart/OnData/OnStop callbacks should be received from the
   // parent channel, nor dequeued from the ChannelEventQueue.
-  bool mFlushedForDiversion;
+  Atomic<bool, ReleaseAcquire> mFlushedForDiversion;
   // Set if SendSuspend is called. Determines if SendResume is needed when
   // diverting callbacks to parent.
   bool mSuspendSent;
@@ -332,7 +332,14 @@ private:
   // is synthesized.
   bool mSuspendParentAfterSynthesizeResponse;
 
+  // Used to ensure atomicity of mBgChild and mBgInitFailCallback
+  Mutex mBgChildMutex;
+
+  // Associated HTTP background channel
   RefPtr<HttpBackgroundChannelChild> mBgChild;
+
+  // Error handling procedure if failed to establish PBackground IPC
+  nsCOMPtr<nsIRunnable> mBgInitFailCallback;
 
   // Remove the association with background channel after OnStopRequest
   // or AsyncAbort.
