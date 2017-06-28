@@ -344,12 +344,6 @@ private:
 
 public:
   /**
-   * Ensures the same structs are cached on this style context as would be
-   * done if we called aOther->CalcDifference(this).
-   */
-  void EnsureSameStructsCached(nsStyleContext* aOldContext);
-
-  /**
    * Get a color that depends on link-visitedness using this and
    * this->GetStyleIfVisited().
    *
