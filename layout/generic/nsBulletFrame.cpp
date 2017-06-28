@@ -227,7 +227,8 @@ public:
                           wr::DisplayListBuilder& aBuilder,
                           const layers::StackingContextHelper& aSc,
                           nsTArray<layers::WebRenderParentCommand>& aParentCommands,
-                          layers::WebRenderDisplayItemLayer* aLayer);
+                          mozilla::layers::WebRenderLayerManager* aManager,
+                          nsDisplayListBuilder* aDisplayListBuilder);
 
   DrawResult
   Paint(gfxContext& aRenderingContext, nsPoint aPt,
@@ -275,20 +276,23 @@ private:
                                   wr::DisplayListBuilder& aBuilder,
                                   const layers::StackingContextHelper& aSc,
                                   nsTArray<layers::WebRenderParentCommand>& aParentCommands,
-                                  layers::WebRenderDisplayItemLayer* aLayer);
+                                  mozilla::layers::WebRenderLayerManager* aManager,
+                                  nsDisplayListBuilder* aDisplayListBuilder);
 
   void
   CreateWebRenderCommandsForPath(nsDisplayItem* aItem,
                                  wr::DisplayListBuilder& aBuilder,
                                  const layers::StackingContextHelper& aSc,
                                  nsTArray<layers::WebRenderParentCommand>& aParentCommands,
-                                 layers::WebRenderDisplayItemLayer* aLayer);
+                                 mozilla::layers::WebRenderLayerManager* aManager,
+                                 nsDisplayListBuilder* aDisplayListBuilder);
 
   void
   CreateWebRenderCommandsForText(nsDisplayItem* aItem,
                                  wr::DisplayListBuilder& aBuilder,
                                  const layers::StackingContextHelper& aSc,
-                                 layers::WebRenderDisplayItemLayer* aLayer);
+                                 mozilla::layers::WebRenderLayerManager* aManager,
+                                 nsDisplayListBuilder* aDisplayListBuilder);
 
 private:
   // mImage and mDest are the properties for list-style-image.
@@ -320,15 +324,19 @@ BulletRenderer::CreateWebRenderCommands(nsDisplayItem* aItem,
                                         wr::DisplayListBuilder& aBuilder,
                                         const layers::StackingContextHelper& aSc,
                                         nsTArray<layers::WebRenderParentCommand>& aParentCommands,
-                                        layers::WebRenderDisplayItemLayer* aLayer)
+                                        mozilla::layers::WebRenderLayerManager* aManager,
+                                        nsDisplayListBuilder* aDisplayListBuilder)
 {
   if (IsImageType()) {
-    CreateWebRenderCommandsForImage(aItem, aBuilder, aSc, aParentCommands, aLayer);
+    CreateWebRenderCommandsForImage(aItem, aBuilder, aSc, aParentCommands,
+                                    aManager, aDisplayListBuilder);
   } else if (IsPathType()) {
-    CreateWebRenderCommandsForPath(aItem, aBuilder, aSc, aParentCommands, aLayer);
+    CreateWebRenderCommandsForPath(aItem, aBuilder, aSc, aParentCommands,
+                                   aManager, aDisplayListBuilder);
   } else {
     MOZ_ASSERT(IsTextType());
-    CreateWebRenderCommandsForText(aItem, aBuilder, aSc, aLayer);
+    CreateWebRenderCommandsForText(aItem, aBuilder, aSc,
+                                   aManager, aDisplayListBuilder);
   }
 }
 
@@ -437,7 +445,8 @@ BulletRenderer::CreateWebRenderCommandsForImage(nsDisplayItem* aItem,
                                                 wr::DisplayListBuilder& aBuilder,
                                                 const layers::StackingContextHelper& aSc,
                                                 nsTArray<layers::WebRenderParentCommand>& aParentCommands,
-                                                layers::WebRenderDisplayItemLayer* aLayer)
+                                                mozilla::layers::WebRenderLayerManager* aManager,
+                                                nsDisplayListBuilder* aDisplayListBuilder)
 {
   MOZ_ASSERT(IsImageType());
 
@@ -445,19 +454,18 @@ BulletRenderer::CreateWebRenderCommandsForImage(nsDisplayItem* aItem,
      return;
   }
 
-  layers::WebRenderDisplayItemLayer* layer = static_cast<layers::WebRenderDisplayItemLayer*>(aLayer);
-  nsDisplayListBuilder* builder = layer->GetDisplayListBuilder();
-  uint32_t flags = builder->ShouldSyncDecodeImages() ?
+  uint32_t flags = aDisplayListBuilder->ShouldSyncDecodeImages() ?
                    imgIContainer::FLAG_SYNC_DECODE :
                    imgIContainer::FLAG_NONE;
 
   RefPtr<layers::ImageContainer> container =
-    mImage->GetImageContainer(aLayer->WrManager(), flags);
+    mImage->GetImageContainer(aManager, flags);
   if (!container) {
     return;
   }
 
-  Maybe<wr::ImageKey> key = layer->SendImageContainer(container, aParentCommands);
+  gfx::IntSize size;
+  Maybe<wr::ImageKey> key = aManager->CreateImageKey(aItem, container, aBuilder, aSc, size);
   if (key.isNothing()) {
     return;
   }
@@ -477,12 +485,12 @@ BulletRenderer::CreateWebRenderCommandsForPath(nsDisplayItem* aItem,
                                                wr::DisplayListBuilder& aBuilder,
                                                const layers::StackingContextHelper& aSc,
                                                nsTArray<layers::WebRenderParentCommand>& aParentCommands,
-                                               layers::WebRenderDisplayItemLayer* aLayer)
+                                               mozilla::layers::WebRenderLayerManager* aManager,
+                                               nsDisplayListBuilder* aDisplayListBuilder)
 {
   MOZ_ASSERT(IsPathType());
-  MOZ_ASSERT(aLayer->GetDisplayItem() == aItem);
 
-  if (!aLayer->PushItemAsBlobImage(aBuilder, aSc)) {
+  if (!aManager->PushItemAsBlobImage(aItem, aBuilder, aSc, aDisplayListBuilder)) {
     NS_WARNING("Fail to create WebRender commands for Bullet path.");
   }
 }
@@ -491,22 +499,21 @@ void
 BulletRenderer::CreateWebRenderCommandsForText(nsDisplayItem* aItem,
                                                wr::DisplayListBuilder& aBuilder,
                                                const layers::StackingContextHelper& aSc,
-                                               layers::WebRenderDisplayItemLayer* aLayer)
+                                               mozilla::layers::WebRenderLayerManager* aManager,
+                                               nsDisplayListBuilder* aDisplayListBuilder)
 {
   MOZ_ASSERT(IsTextType());
   MOZ_ASSERT(mFont);
   MOZ_ASSERT(!mGlyphs.IsEmpty());
 
-  layers::WebRenderDisplayItemLayer* layer = static_cast<layers::WebRenderDisplayItemLayer*>(aLayer);
-  nsDisplayListBuilder* builder = layer->GetDisplayListBuilder();
   const int32_t appUnitsPerDevPixel = aItem->Frame()->PresContext()->AppUnitsPerDevPixel();
   bool dummy;
   LayerRect destRect = ViewAs<LayerPixel>(
       LayoutDeviceRect::FromAppUnits(
-          aItem->GetBounds(builder, &dummy), appUnitsPerDevPixel),
+          aItem->GetBounds(aDisplayListBuilder, &dummy), appUnitsPerDevPixel),
       PixelCastJustification::WebRenderHasUnitResolution);
 
-  layer->WrBridge()->PushGlyphs(aBuilder, mGlyphs, mFont, aSc, destRect, destRect);
+  aManager->WrBridge()->PushGlyphs(aBuilder, mGlyphs, mFont, aSc, destRect, destRect);
 }
 
 class nsDisplayBullet final : public nsDisplayItem {
@@ -538,10 +545,11 @@ public:
                                              LayerManager* aManager,
                                              const ContainerLayerParameters& aParameters) override;
 
-  virtual void CreateWebRenderCommand(mozilla::wr::DisplayListBuilder& aBuilder,
-                                      const StackingContextHelper& aSc,
-                                      nsTArray<layers::WebRenderParentCommand>& aParentCommands,
-                                      layers::WebRenderDisplayItemLayer* aLayer) override;
+  virtual bool CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder,
+                                       const StackingContextHelper& aSc,
+                                       nsTArray<WebRenderParentCommand>& aParentCommands,
+                                       mozilla::layers::WebRenderLayerManager* aManager,
+                                       nsDisplayListBuilder* aDisplayListBuilder) override;
 
   virtual void HitTest(nsDisplayListBuilder* aBuilder, const nsRect& aRect,
                        HitTestState* aState,
@@ -646,16 +654,26 @@ nsDisplayBullet::BuildLayer(nsDisplayListBuilder* aBuilder,
   return BuildDisplayItemLayer(aBuilder, aManager, aContainerParameters);
 }
 
-void
-nsDisplayBullet::CreateWebRenderCommand(wr::DisplayListBuilder& aBuilder,
-                                        const StackingContextHelper& aSc,
-                                        nsTArray<layers::WebRenderParentCommand>& aParentCommands,
-                                        layers::WebRenderDisplayItemLayer* aLayer)
+bool
+nsDisplayBullet::CreateWebRenderCommands(wr::DisplayListBuilder& aBuilder,
+                                         const StackingContextHelper& aSc,
+                                         nsTArray<layers::WebRenderParentCommand>& aParentCommands,
+                                         mozilla::layers::WebRenderLayerManager* aManager,
+                                         nsDisplayListBuilder* aDisplayListBuilder)
 {
-  if (!mBulletRenderer)
-    return;
+  if (aManager->IsLayersFreeTransaction()) {
+    ContainerLayerParameters parameter;
+    if (GetLayerState(aDisplayListBuilder, aManager, parameter) != LAYER_ACTIVE) {
+      return false;
+    }
+  }
 
-  mBulletRenderer->CreateWebRenderCommands(this, aBuilder, aSc, aParentCommands, aLayer);
+  if (!mBulletRenderer)
+    return false;
+
+  mBulletRenderer->CreateWebRenderCommands(this, aBuilder, aSc, aParentCommands,
+                                           aManager, aDisplayListBuilder);
+  return true;
 }
 
 void nsDisplayBullet::Paint(nsDisplayListBuilder* aBuilder,
