@@ -31,8 +31,6 @@
     }
     for (i = 0; i < 2000; i++) {
       div = document.createElement("div");
-
-      // eslint-disable-next-line no-unsanitized/property
       div.innerHTML = "<div role='progressbar'>progressbar</div>" +
                       "<span id='span" + i + "'>cb</span>";
       container.appendChild(div);

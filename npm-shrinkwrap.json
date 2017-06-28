@@ -215,19 +215,7 @@
       "integrity": "sha1-fImIOrDIX6XSi2ZqFKTpBqqQuJc="
     },
     "eslint-plugin-mozilla": {
-      "version": "file:tools/lint/eslint/eslint-plugin-mozilla",
-      "dependencies": {
-        "eslint-plugin-no-unsanitized": {
-          "version": "2.0.1",
-          "bundled": true
-        }
-      }
-    },
-    "eslint-plugin-no-unsanitized": {
-      "version": "2.0.1",
-      "resolved": "https://registry.npmjs.org/eslint-plugin-no-unsanitized/-/eslint-plugin-no-unsanitized-2.0.1.tgz",
-      "integrity": "sha1-yt7dDQrRfI3FIm23/4hATlmo1n8=",
-      "dev": true
+      "version": "file:tools\\lint\\eslint\\eslint-plugin-mozilla"
     },
     "eslint-plugin-react": {
       "version": "https://registry.npmjs.org/eslint-plugin-react/-/eslint-plugin-react-6.10.3.tgz",
@@ -240,7 +228,7 @@
       }
     },
     "eslint-plugin-spidermonkey-js": {
-      "version": "file:tools/lint/eslint/eslint-plugin-spidermonkey-js"
+      "version": "file:tools\\lint\\eslint\\eslint-plugin-spidermonkey-js"
     },
     "espree": {
       "version": "https://registry.npmjs.org/espree/-/espree-3.4.3.tgz",

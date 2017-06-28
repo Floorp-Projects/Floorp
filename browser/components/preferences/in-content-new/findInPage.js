@@ -262,7 +262,6 @@ var gSearchResultsPane = {
           strings.getFormattedString("searchResults.sorryMessageUnix", [this.query]);
         let helpUrl = Services.urlFormatter.formatURLPref("app.support.baseURL") + "preferences";
         let brandName = document.getElementById("bundleBrand").getString("brandShortName");
-        // eslint-disable-next-line no-unsanitized/property
         document.getElementById("need-help").innerHTML =
           strings.getFormattedString("searchResults.needHelp2", [helpUrl, brandName]);
       } else {

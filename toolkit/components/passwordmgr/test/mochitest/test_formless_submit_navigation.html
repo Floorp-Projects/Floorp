@@ -148,7 +148,6 @@ add_task(async function test() {
       await loadedPromise;
 
       let frameDoc = SpecialPowers.wrap(loginFrame.contentWindow).document;
-      // eslint-disable-next-line no-unsanitized/property
       frameDoc.documentElement.innerHTML = tc.document;
       // Wait for the form to be processed before trying to submit.
       await promiseFormsProcessed();
