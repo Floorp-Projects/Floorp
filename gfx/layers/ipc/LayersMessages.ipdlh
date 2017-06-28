@@ -40,6 +40,7 @@ using mozilla::layers::ScaleMode from "mozilla/layers/LayersTypes.h";
 using mozilla::layers::EventRegions from "mozilla/layers/LayersTypes.h";
 using mozilla::layers::EventRegionsOverride from "mozilla/layers/LayersTypes.h";
 using mozilla::layers::DiagnosticTypes from "mozilla/layers/CompositorTypes.h";
+using mozilla::layers::FocusTarget from "mozilla/layers/FocusTarget.h";
 using struct mozilla::layers::ScrollMetadata from "FrameMetrics.h";
 using mozilla::layers::FrameMetrics::ViewID from "FrameMetrics.h";
 using mozilla::layers::LayersBackend from "mozilla/layers/LayersTypes.h";
@@ -570,6 +571,7 @@ struct TransactionInfo
   TargetConfig targetConfig;
   PluginWindowData[] plugins;
   bool isFirstPaint;
+  FocusTarget focusTarget;
   bool scheduleComposite;
   uint32_t paintSequenceNumber;
   bool isRepeatTransaction;

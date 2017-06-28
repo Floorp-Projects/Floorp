@@ -12,6 +12,7 @@
 #include "base/thread.h"                // for Thread
 #include "base/message_loop.h"
 #include "nsISupportsImpl.h"
+#include "nsRefPtrHashtable.h"
 #include "ThreadSafeRefcountingWithMainThreadDestruction.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/webrender/webrender_ffi.h"
@@ -155,7 +156,7 @@ private:
   nsDataHashtable<nsUint64HashKey, uint32_t> mPendingFrameCounts;
 
   Mutex mRenderTextureMapLock;
-  nsDataHashtable<nsUint64HashKey, RefPtr<RenderTextureHost> > mRenderTextures;
+  nsRefPtrHashtable<nsUint64HashKey, RenderTextureHost> mRenderTextures;
 };
 
 } // namespace wr

@@ -21,6 +21,8 @@ class InputData;
 
 namespace layers {
 
+class KeyboardMap;
+
 enum AllowedTouchBehavior {
   NONE =               0,
   VERTICAL_PAN =       1 << 0,
@@ -103,6 +105,11 @@ public:
       WidgetInputEvent& aEvent,
       ScrollableLayerGuid* aOutTargetGuid,
       uint64_t* aOutInputBlockId);
+
+  /**
+   * Set the keyboard shortcuts to use for translating keyboard events.
+   */
+  virtual void SetKeyboardMap(const KeyboardMap& aKeyboardMap) = 0;
 
   /**
    * Kicks an animation to zoom to a rect. This may be either a zoom out or zoom
@@ -204,9 +211,10 @@ protected:
 
   // Methods to help process WidgetInputEvents (or manage conversion to/from InputData)
 
-  virtual void TransformEventRefPoint(
+  virtual void ProcessUnhandledEvent(
       LayoutDeviceIntPoint* aRefPoint,
-      ScrollableLayerGuid* aOutTargetGuid) = 0;
+      ScrollableLayerGuid* aOutTargetGuid,
+      uint64_t* aOutFocusSequenceNumber) = 0;
 
   virtual void UpdateWheelTransaction(
       LayoutDeviceIntPoint aRefPoint,

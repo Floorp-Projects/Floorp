@@ -271,12 +271,11 @@ nsDirectoryService::Undefine(const char* aProp)
   }
 
   nsDependentCString key(aProp);
-  if (!mHashtable.Get(key, nullptr)) {
-    return NS_ERROR_FAILURE;
+  if (auto entry = mHashtable.Lookup(key)) {
+    entry.Remove();
+    return NS_OK;
   }
-
-  mHashtable.Remove(key);
-  return NS_OK;
+  return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
@@ -393,21 +392,23 @@ nsDirectoryService::Set(const char* aProp, nsISupports* aValue)
   if (NS_WARN_IF(!aProp)) {
     return NS_ERROR_INVALID_ARG;
   }
-
-  nsDependentCString key(aProp);
-  if (mHashtable.Get(key, nullptr) || !aValue) {
+  if (!aValue) {
     return NS_ERROR_FAILURE;
   }
 
-  nsCOMPtr<nsIFile> ourFile = do_QueryInterface(aValue);
-  if (ourFile) {
-    nsCOMPtr<nsIFile> cloneFile;
-    ourFile->Clone(getter_AddRefs(cloneFile));
-    mHashtable.Put(key, cloneFile);
-
-    return NS_OK;
+  nsDependentCString key(aProp);
+  if (auto entry = mHashtable.LookupForAdd(key)) {
+    return NS_ERROR_FAILURE;
+  } else {
+    nsCOMPtr<nsIFile> ourFile = do_QueryInterface(aValue);
+    if (ourFile) {
+      nsCOMPtr<nsIFile> cloneFile;
+      ourFile->Clone(getter_AddRefs(cloneFile));
+      entry.OrInsert([&cloneFile] () { return cloneFile.forget(); });
+      return NS_OK;
+    }
+    mHashtable.Remove(key); // another hashtable lookup, but should be rare
   }
-
   return NS_ERROR_FAILURE;
 }
 

@@ -9,6 +9,7 @@
 #include "Layers.h"
 #include "mozilla/MozPromise.h"
 #include "mozilla/layers/APZTestData.h"
+#include "mozilla/layers/FocusTarget.h"
 #include "mozilla/layers/TransactionIdAllocator.h"
 #include "mozilla/webrender/WebRenderTypes.h"
 
@@ -98,6 +99,7 @@ public:
   }
   virtual bool NeedsComposite() const override { return mNeedsComposite; }
   virtual void SetIsFirstPaint() override { mIsFirstPaint = true; }
+  virtual void SetFocusTarget(const FocusTarget& aFocusTarget) override;
 
   bool AsyncPanZoomEnabled() const override;
 
@@ -180,6 +182,7 @@ private:
 
   bool mNeedsComposite;
   bool mIsFirstPaint;
+  FocusTarget mFocusTarget;
 
  // When we're doing a transaction in order to draw to a non-default
  // target, the layers transaction is only performed in order to send

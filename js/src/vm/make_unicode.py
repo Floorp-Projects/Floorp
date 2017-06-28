@@ -1425,6 +1425,7 @@ def make_irregexp_tables(version,
         character_range('Surrogate', surrogate_chars)
 
         character_range('LineTerminator', line_terminator)
+        character_range('LineTerminatorAndSurrogate', line_terminator + surrogate_chars)
 
 def update_unicode(args):
     import urllib2

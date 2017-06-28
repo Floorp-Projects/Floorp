@@ -6,7 +6,9 @@
 #include "ContainerLayerMLGPU.h"
 #include "gfxPrefs.h"
 #include "LayersLogging.h"
+#include "LayerManagerMLGPU.h"
 #include "MLGDevice.h"
+#include "mozilla/gfx/Types.h"
 
 namespace mozilla {
 namespace layers {
@@ -38,7 +40,7 @@ ContainerLayerMLGPU::OnPrepareToRender(FrameBuilder* aBuilder)
     mRenderTarget = nullptr;
   }
 
-  IntRect viewport(IntPoint(0, 0), mTargetSize);
+  gfx::IntRect viewport(gfx::IntPoint(0, 0), mTargetSize);
   if (!mRenderTarget || !gfxPrefs::AdvancedLayersUseInvalidation()) {
     // Fine-grained invalidation is disabled, invalidate everything.
     mInvalidRect = viewport;
@@ -47,6 +49,12 @@ ContainerLayerMLGPU::OnPrepareToRender(FrameBuilder* aBuilder)
     mInvalidRect = mInvalidRect.Intersect(viewport);
   }
   return true;
+}
+
+void
+ContainerLayerMLGPU::OnLayerManagerChange(LayerManagerMLGPU* aManager)
+{
+  ClearCachedResources();
 }
 
 RefPtr<MLGRenderTarget>
@@ -70,15 +78,15 @@ ContainerLayerMLGPU::SetInvalidCompositeRect(const gfx::IntRect& aRect)
 {
   // For simplicity we only track the bounds of the invalid area, since regions
   // are expensive. We can adjust this in the future if needed.
-  IntRect bounds = aRect;
+  gfx::IntRect bounds = aRect;
   bounds.MoveBy(-GetTargetOffset());
 
   // Note we add the bounds to the invalid rect from the last frame, since we
   // only clear the area that we actually paint.
-  if (Maybe<IntRect> result = mInvalidRect.SafeUnion(bounds)) {
+  if (Maybe<gfx::IntRect> result = mInvalidRect.SafeUnion(bounds)) {
     mInvalidRect = result.value();
   } else {
-    mInvalidRect = IntRect(IntPoint(0, 0), GetTargetSize());
+    mInvalidRect = gfx::IntRect(gfx::IntPoint(0, 0), GetTargetSize());
   }
 }
 
@@ -91,7 +99,7 @@ ContainerLayerMLGPU::ClearCachedResources()
 bool
 ContainerLayerMLGPU::IsContentOpaque()
 {
-  if (GetMixBlendMode() != CompositionOp::OP_OVER) {
+  if (GetMixBlendMode() != gfx::CompositionOp::OP_OVER) {
     // We need to read from what's underneath us, so we consider our content to
     // be not opaque.
     return false;

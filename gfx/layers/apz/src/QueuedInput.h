@@ -17,6 +17,7 @@ class MultiTouchInput;
 class ScrollWheelInput;
 class MouseInput;
 class PanGestureInput;
+class KeyboardInput;
 
 namespace layers {
 
@@ -25,6 +26,7 @@ class TouchBlockState;
 class WheelBlockState;
 class DragBlockState;
 class PanGestureBlockState;
+class KeyboardBlockState;
 
 /**
  * This lightweight class holds a pointer to an input event that has not yet
@@ -38,6 +40,7 @@ public:
   QueuedInput(const ScrollWheelInput& aInput, WheelBlockState& aBlock);
   QueuedInput(const MouseInput& aInput, DragBlockState& aBlock);
   QueuedInput(const PanGestureInput& aInput, PanGestureBlockState& aBlock);
+  QueuedInput(const KeyboardInput& aInput, KeyboardBlockState& aBlock);
 
   InputData* Input();
   InputBlockState* Block();

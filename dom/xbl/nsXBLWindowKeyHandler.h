@@ -8,28 +8,29 @@
 #define nsXBLWindowKeyHandler_h__
 
 #include "mozilla/EventForwards.h"
+#include "mozilla/layers/KeyboardMap.h"
 #include "nsWeakPtr.h"
 #include "nsIDOMEventListener.h"
 
 class nsIAtom;
 class nsIDOMElement;
 class nsIDOMKeyEvent;
-class nsXBLSpecialDocInfo;
 class nsXBLPrototypeHandler;
 
 namespace mozilla {
 class EventListenerManager;
+struct IgnoreModifierState;
 namespace dom {
 class Element;
 class EventTarget;
-struct IgnoreModifierState;
 } // namespace dom
 } // namespace mozilla
 
 class nsXBLWindowKeyHandler : public nsIDOMEventListener
 {
-  typedef mozilla::dom::IgnoreModifierState IgnoreModifierState;
   typedef mozilla::EventListenerManager EventListenerManager;
+  typedef mozilla::IgnoreModifierState IgnoreModifierState;
+  typedef mozilla::layers::KeyboardMap KeyboardMap;
 
 public:
   nsXBLWindowKeyHandler(nsIDOMElement* aElement, mozilla::dom::EventTarget* aTarget);
@@ -38,6 +39,8 @@ public:
          EventListenerManager* aEventListenerManager);
   void RemoveKeyboardEventListenersFrom(
          EventListenerManager* aEventListenerManager);
+
+  static KeyboardMap CollectKeyboardShortcuts();
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIDOMEVENTLISTENER
@@ -80,6 +83,9 @@ protected:
   nsIAtom* ConvertEventToDOMEventType(
              const mozilla::WidgetKeyboardEvent& aWidgetKeyboardEvent) const;
 
+  // lazily load the special doc info for loading handlers
+  static void EnsureSpecialDocInfo();
+
   // lazily load the handlers. Overridden to handle being attached
   // to a particular element rather than the document
   nsresult EnsureHandlers();
@@ -120,8 +126,7 @@ protected:
   nsXBLPrototypeHandler* mHandler;     // platform bindings
   nsXBLPrototypeHandler* mUserHandler; // user-specific bindings
 
-  // holds document info about bindings
-  static nsXBLSpecialDocInfo* sXBLSpecialDocInfo;
+  // holds reference count to document info about bindings
   static uint32_t sRefCnt;
 };
 

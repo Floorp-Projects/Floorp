@@ -4886,7 +4886,6 @@ var _dom_events = __webpack_require__(2);
 
 var _pdf_rendering_queue = __webpack_require__(3);
 
-const TEXT_LAYER_RENDER_DELAY = 200;
 class PDFPageView {
   constructor(options) {
     let container = options.container;
@@ -5190,10 +5189,9 @@ class PDFPageView {
     let resultPromise = paintTask.promise.then(function () {
       return finishPaintTask(null).then(function () {
         if (textLayer) {
-          pdfPage.getTextContent({ normalizeWhitespace: true }).then(function textContentResolved(textContent) {
-            textLayer.setTextContent(textContent);
-            textLayer.render(TEXT_LAYER_RENDER_DELAY);
-          });
+          let readableStream = pdfPage.streamTextContent({ normalizeWhitespace: true });
+          textLayer.setTextContentStream(readableStream);
+          textLayer.render();
         }
       });
     }, function (reason) {
@@ -7392,6 +7390,8 @@ var TextLayerBuilder = function TextLayerBuilderClosure() {
     this.textLayerDiv = options.textLayerDiv;
     this.eventBus = options.eventBus || (0, _dom_events.getGlobalEventBus)();
     this.textContent = null;
+    this.textContentItemsStr = [];
+    this.textContentStream = null;
     this.renderingDone = false;
     this.pageIdx = options.pageIndex;
     this.pageNumber = this.pageIdx + 1;
@@ -7418,7 +7418,7 @@ var TextLayerBuilder = function TextLayerBuilderClosure() {
       });
     },
     render: function TextLayerBuilder_render(timeout) {
-      if (!this.textContent || this.renderingDone) {
+      if (!(this.textContent || this.textContentStream) || this.renderingDone) {
         return;
       }
       this.cancel();
@@ -7426,9 +7426,11 @@ var TextLayerBuilder = function TextLayerBuilderClosure() {
       var textLayerFrag = document.createDocumentFragment();
       this.textLayerRenderTask = (0, _pdfjsLib.renderTextLayer)({
         textContent: this.textContent,
+        textContentStream: this.textContentStream,
         container: textLayerFrag,
         viewport: this.viewport,
         textDivs: this.textDivs,
+        textContentItemsStr: this.textContentItemsStr,
         timeout,
         enhanceTextSelection: this.enhanceTextSelection
       });
@@ -7444,6 +7446,10 @@ var TextLayerBuilder = function TextLayerBuilderClosure() {
         this.textLayerRenderTask = null;
       }
     },
+    setTextContentStream(readableStream) {
+      this.cancel();
+      this.textContentStream = readableStream;
+    },
     setTextContent: function TextLayerBuilder_setTextContent(textContent) {
       this.cancel();
       this.textContent = textContent;
@@ -7451,8 +7457,8 @@ var TextLayerBuilder = function TextLayerBuilderClosure() {
     convertMatches: function TextLayerBuilder_convertMatches(matches, matchesLength) {
       var i = 0;
       var iIndex = 0;
-      var bidiTexts = this.textContent.items;
-      var end = bidiTexts.length - 1;
+      let textContentItemsStr = this.textContentItemsStr;
+      var end = textContentItemsStr.length - 1;
       var queryLen = this.findController === null ? 0 : this.findController.state.query.length;
       var ret = [];
       if (!matches) {
@@ -7460,11 +7466,11 @@ var TextLayerBuilder = function TextLayerBuilderClosure() {
       }
       for (var m = 0, len = matches.length; m < len; m++) {
         var matchIdx = matches[m];
-        while (i !== end && matchIdx >= iIndex + bidiTexts[i].str.length) {
-          iIndex += bidiTexts[i].str.length;
+        while (i !== end && matchIdx >= iIndex + textContentItemsStr[i].length) {
+          iIndex += textContentItemsStr[i].length;
           i++;
         }
-        if (i === bidiTexts.length) {
+        if (i === textContentItemsStr.length) {
           console.error('Could not find a matching mapping');
         }
         var match = {
@@ -7478,8 +7484,8 @@ var TextLayerBuilder = function TextLayerBuilderClosure() {
         } else {
           matchIdx += queryLen;
         }
-        while (i !== end && matchIdx > iIndex + bidiTexts[i].str.length) {
-          iIndex += bidiTexts[i].str.length;
+        while (i !== end && matchIdx > iIndex + textContentItemsStr[i].length) {
+          iIndex += textContentItemsStr[i].length;
           i++;
         }
         match.end = {
@@ -7494,7 +7500,7 @@ var TextLayerBuilder = function TextLayerBuilderClosure() {
       if (matches.length === 0) {
         return;
       }
-      var bidiTexts = this.textContent.items;
+      let textContentItemsStr = this.textContentItemsStr;
       var textDivs = this.textDivs;
       var prevEnd = null;
       var pageIdx = this.pageIdx;
@@ -7512,7 +7518,7 @@ var TextLayerBuilder = function TextLayerBuilderClosure() {
       }
       function appendTextToDiv(divIdx, fromOffset, toOffset, className) {
         var div = textDivs[divIdx];
-        var content = bidiTexts[divIdx].str.substring(fromOffset, toOffset);
+        var content = textContentItemsStr[divIdx].substring(fromOffset, toOffset);
         var node = document.createTextNode(content);
         if (className) {
           var span = document.createElement('span');
@@ -7569,14 +7575,14 @@ var TextLayerBuilder = function TextLayerBuilderClosure() {
       }
       var matches = this.matches;
       var textDivs = this.textDivs;
-      var bidiTexts = this.textContent.items;
+      let textContentItemsStr = this.textContentItemsStr;
       var clearedUntilDivIdx = -1;
       for (var i = 0, len = matches.length; i < len; i++) {
         var match = matches[i];
         var begin = Math.max(clearedUntilDivIdx, match.begin.divIdx);
         for (var n = begin, end = match.end.divIdx; n <= end; n++) {
           var div = textDivs[n];
-          div.textContent = bidiTexts[n].str;
+          div.textContent = textContentItemsStr[n];
           div.className = '';
         }
         clearedUntilDivIdx = match.end.divIdx + 1;
@@ -7689,9 +7695,8 @@ class Toolbar {
     this._updateUIState(true);
   }
   _bindListeners() {
-    let eventBus = this.eventBus;
+    let { eventBus, items } = this;
     let self = this;
-    let items = this.items;
     items.previous.addEventListener('click', function () {
       eventBus.dispatch('previouspage');
     });
@@ -7748,31 +7753,9 @@ class Toolbar {
     if (!this._wasLocalized) {
       return;
     }
-    let selectScaleOption = (value, scale) => {
-      let customScale = Math.round(scale * 10000) / 100;
-      this.l10n.get('page_scale_percent', { scale: customScale }, '{{scale}}%').then(msg => {
-        let options = items.scaleSelect.options;
-        let predefinedValueFound = false;
-        for (let i = 0, ii = options.length; i < ii; i++) {
-          let option = options[i];
-          if (option.value !== value) {
-            option.selected = false;
-            continue;
-          }
-          option.selected = true;
-          predefinedValueFound = true;
-        }
-        if (!predefinedValueFound) {
-          items.customScaleOption.textContent = msg;
-          items.customScaleOption.selected = true;
-        }
-      });
-    };
-    let pageNumber = this.pageNumber;
+    let { pageNumber, pagesCount, items } = this;
     let scaleValue = (this.pageScaleValue || this.pageScale).toString();
     let scale = this.pageScale;
-    let items = this.items;
-    let pagesCount = this.pagesCount;
     if (resetNumPages) {
       if (this.hasPageLabels) {
         items.pageNumber.type = 'text';
@@ -7799,7 +7782,24 @@ class Toolbar {
     items.next.disabled = pageNumber >= pagesCount;
     items.zoomOut.disabled = scale <= _ui_utils.MIN_SCALE;
     items.zoomIn.disabled = scale >= _ui_utils.MAX_SCALE;
-    selectScaleOption(scaleValue, scale);
+    let customScale = Math.round(scale * 10000) / 100;
+    this.l10n.get('page_scale_percent', { scale: customScale }, '{{scale}}%').then(msg => {
+      let options = items.scaleSelect.options;
+      let predefinedValueFound = false;
+      for (let i = 0, ii = options.length; i < ii; i++) {
+        let option = options[i];
+        if (option.value !== scaleValue) {
+          option.selected = false;
+          continue;
+        }
+        option.selected = true;
+        predefinedValueFound = true;
+      }
+      if (!predefinedValueFound) {
+        items.customScaleOption.textContent = msg;
+        items.customScaleOption.selected = true;
+      }
+    });
   }
   updateLoadingIndicatorState(loading = false) {
     let pageNumberInput = this.items.pageNumber;
