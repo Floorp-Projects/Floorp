@@ -202,24 +202,6 @@ class sessionrestore_many_windows(sessionrestore):
 
 
 @register_test()
-class tpaint(TsBase):
-    """
-    Tests the amount of time it takes the open a new window. This test does
-    not include startup time. Multiple test windows are opened in succession,
-    results reported are the average amount of time required to create and
-    display a window in the running instance of the browser.
-    (Measures ctrl-n performance.)
-    """
-    url = 'file://${talos}/startup_test/tpaint.html?auto=1'
-    timeout = 300
-    gecko_profile_interval = 1
-    gecko_profile_entries = 2000000
-    tpmozafterpaint = True
-    filters = filter.ignore_first.prepare(5) + filter.median.prepare()
-    unit = 'ms'
-
-
-@register_test()
 class tresize(TsBase):
     """
     This test does some resize thing.
@@ -272,6 +254,25 @@ class QuantumPageloadTest(PageloaderTest):
     filters = filter.ignore_first.prepare(5) + filter.median.prepare()
     unit = 'ms'
     lower_is_better = True
+
+
+@register_test()
+class tpaint(PageloaderTest):
+    """
+    Tests the amount of time it takes the open a new window. This test does
+    not include startup time. Multiple test windows are opened in succession,
+    results reported are the average amount of time required to create and
+    display a window in the running instance of the browser.
+    (Measures ctrl-n performance.)
+    """
+    tpmanifest = '${talos}/tests/tpaint/tpaint.manifest'
+    tppagecycles = 20
+    timeout = 300
+    gecko_profile_interval = 1
+    gecko_profile_entries = 2000000
+    tpmozafterpaint = True
+    filters = filter.ignore_first.prepare(5) + filter.median.prepare()
+    unit = 'ms'
 
 
 @register_test()
