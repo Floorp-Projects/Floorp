@@ -271,7 +271,8 @@ browser.Context = class {
   }
 
   /**
-   * Set the current tab and update remoteness tracking if a tabbrowser is available.
+   * Set the current tab and update remoteness tracking if a tabbrowser
+   * is available.
    *
    * @param {number=} index
    *     Tab index to switch to. If the parameter is undefined,
@@ -449,14 +450,17 @@ browser.Windows = class extends Map {
    *     Outer window ID.
    *
    * @return {Window}
-   *     Saved window object, or |undefined| if no window is stored by
-   *     provided |id|.
+   *     Saved window object.
+   *
+   * @throws {RangeError}
+   *     If |id| is not in the store.
    */
   get(id) {
     let wref = super.get(id);
-    if (wref) {
-      return wref.get();
+    if (!wref) {
+      throw new RangeError();
     }
+    return wref.get();
   }
 
 };
