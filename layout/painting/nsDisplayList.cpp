@@ -3562,31 +3562,6 @@ nsDisplayBackgroundImage::CreateWebRenderCommands(mozilla::wr::DisplayListBuilde
 }
 
 void
-nsDisplayBackgroundImage::CreateWebRenderCommand(wr::DisplayListBuilder& aBuilder,
-                                                 const StackingContextHelper& aSc,
-                                                 nsTArray<WebRenderParentCommand>& aParentCommands,
-                                                 WebRenderDisplayItemLayer* aLayer)
-{
-  nsCSSRendering::PaintBGParams params =
-    nsCSSRendering::PaintBGParams::ForSingleLayer(*StyleFrame()->PresContext(),
-                                                  mVisibleRect, mBackgroundRect,
-                                                  StyleFrame(), mImageFlags, mLayer,
-                                                  CompositionOp::OP_OVER);
-  params.bgClipRect = &mBounds;
-
-  DrawResult result =
-    nsCSSRendering::BuildWebRenderDisplayItemsForStyleImageLayer(params,
-                                                                 aBuilder,
-                                                                 aSc,
-                                                                 aParentCommands,
-                                                                 aLayer,
-                                                                 aLayer->WrManager(),
-                                                                 this);
-
-  nsDisplayBackgroundGeometry::UpdateDrawResult(this, result);
-}
-
-void
 nsDisplayBackgroundImage::HitTest(nsDisplayListBuilder* aBuilder,
                                   const nsRect& aRect,
                                   HitTestState* aState,
