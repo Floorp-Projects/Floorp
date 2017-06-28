@@ -266,6 +266,8 @@ var Settings = {
     let parameters = [fhrEnabled, extendedEnabled].map(this.convertStringToLink);
 
     let explanation = bundle.formatStringFromName("homeExplanation", parameters, 2);
+
+    // eslint-disable-next-line no-unsanitized/property
     homeExplanation.innerHTML = explanation;
     this.attachObservers()
   },
@@ -335,6 +337,8 @@ var PingPicker = {
 
     let explanation = bundle.formatStringFromName("pingExplanation", [pingLink, pingName], 2);
     let pingExplanation = document.getElementById("ping-explanation");
+
+    // eslint-disable-next-line no-unsanitized/property
     pingExplanation.innerHTML = explanation;
     GenericSubsection.deleteAllSubSections();
   },

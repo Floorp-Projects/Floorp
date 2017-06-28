@@ -306,6 +306,7 @@ function* generateConsoleApiStubs() {
       [key, code],
       function ([subKey, subCode]) {
         let script = content.document.createElement("script");
+        // eslint-disable-next-line no-unsanitized/property
         script.innerHTML = `function triggerPacket() {${subCode}}`;
         content.document.body.appendChild(script);
         content.wrappedJSObject.triggerPacket();
@@ -349,6 +350,7 @@ function* generateCssMessageStubs() {
       [key, code],
       function ([subKey, subCode]) {
         let style = content.document.createElement("style");
+        // eslint-disable-next-line no-unsanitized/property
         style.innerHTML = subCode;
         content.document.body.appendChild(style);
       }
@@ -438,6 +440,7 @@ function* generateNetworkEventStubs() {
       [key, code],
       function ([subKey, subCode]) {
         let script = content.document.createElement("script");
+        // eslint-disable-next-line no-unsanitized/property
         script.innerHTML = `function triggerPacket() {${subCode}}`;
         content.document.body.appendChild(script);
         content.wrappedJSObject.triggerPacket();
@@ -484,6 +487,7 @@ function* generatePageErrorStubs() {
       [key, code],
       function ([subKey, subCode]) {
         let script = content.document.createElement("script");
+        // eslint-disable-next-line no-unsanitized/property
         script.innerHTML = subCode;
         content.document.body.appendChild(script);
         script.remove();

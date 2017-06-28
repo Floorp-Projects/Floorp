@@ -75,6 +75,7 @@ SyncedTabsDeckView.prototype = {
     });
     // Put it all together...
     let contents = bundle.getFormattedString("appMenuRemoteTabs.mobilePromo.text2", formatArgs);
+    // eslint-disable-next-line no-unsanitized/property
     this.container.querySelector(".device-promo").innerHTML = contents;
   },
 

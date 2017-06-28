@@ -119,6 +119,7 @@
                 SpecialPowers.Ci.nsIDocShell).editor;
           };
           setValue = function(val) {
+            // eslint-disable-next-line no-unsanitized/property
             contentEditable.innerHTML = val;
           };
           setSelection = function(pos) {
@@ -136,6 +137,7 @@
                 SpecialPowers.Ci.nsIDocShell).editor;
           };
           setValue = function(val) {
+          // eslint-disable-next-line no-unsanitized/property
             designMode.contentDocument.body.innerHTML = val;
           };
           setSelection = function(pos) {
