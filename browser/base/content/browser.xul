@@ -736,55 +736,56 @@
              context="toolbar-context-menu">
 
       <hbox id="nav-bar-customization-target" flex="1">
+        <toolbarbutton id="back-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
+                       label="&backCmd.label;"
+                       removable="false" overflows="false"
+                       command="Browser:BackOrBackDuplicate"
+                       onclick="checkForMiddleClick(this, event);"
+                       tooltip="back-button-tooltip"
+                       context="backForwardMenu"/>
+        <toolbarbutton id="forward-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
+                       label="&forwardCmd.label;"
+                       removable="false" overflows="false"
+                       command="Browser:ForwardOrForwardDuplicate"
+                       onclick="checkForMiddleClick(this, event);"
+                       tooltip="forward-button-tooltip"
+                       context="backForwardMenu"/>
+        <toolbaritem id="stop-reload-button" class="chromeclass-toolbar-additional"
+                     title="&reloadCmd.label;"
+                     removable="true" overflows="false">
+          <toolbarbutton id="reload-button" class="toolbarbutton-1"
+                         label="&reloadCmd.label;"
+                         command="Browser:ReloadOrDuplicate"
+                         onclick="checkForMiddleClick(this, event);"
+                         tooltip="dynamic-shortcut-tooltip">
+            <box class="toolbarbutton-animatable-box">
+              <image class="toolbarbutton-animatable-image"/>
+            </box>
+          </toolbarbutton>
+          <toolbarbutton id="stop-button" class="toolbarbutton-1"
+                         label="&stopCmd.label;"
+                         command="Browser:Stop"
+                         tooltip="dynamic-shortcut-tooltip">
+            <box class="toolbarbutton-animatable-box">
+              <image class="toolbarbutton-animatable-image"/>
+            </box>
+          </toolbarbutton>
+        </toolbaritem>
+        <toolbarbutton id="home-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
+                       removable="true"
+                       label="&homeButton.label;"
+                       ondragover="homeButtonObserver.onDragOver(event)"
+                       ondragenter="homeButtonObserver.onDragOver(event)"
+                       ondrop="homeButtonObserver.onDrop(event)"
+                       ondragexit="homeButtonObserver.onDragExit(event)"
+                       key="goHome"
+                       onclick="BrowserGoHome(event);"
+                       cui-areatype="toolbar"
+                       aboutHomeOverrideTooltip="&abouthome.pageTitle;"/>
         <toolbaritem id="urlbar-container" flex="400" persist="width"
                      removable="false"
                      class="chromeclass-location" overflows="false">
-          <toolbarbutton id="back-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
-                         removable="false" overflows="false"
-                         label="&backCmd.label;"
-                         command="Browser:BackOrBackDuplicate"
-                         onclick="checkForMiddleClick(this, event);"
-                         tooltip="back-button-tooltip"
-                         context="backForwardMenu"/>
-#ifdef MOZ_PHOTON_THEME
-          <toolbarbutton id="forward-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
-                         removable="false" overflows="false"
-                         label="&forwardCmd.label;"
-                         command="Browser:ForwardOrForwardDuplicate"
-                         onclick="checkForMiddleClick(this, event);"
-                         tooltip="forward-button-tooltip"
-                         context="backForwardMenu"/>
-          <toolbaritem id="stop-reload-button"
-                       removable="false" overflows="false"
-                       class="chromeclass-toolbar-additional">
-            <toolbarbutton id="reload-button"
-                           class="toolbarbutton-1"
-                           command="Browser:ReloadOrDuplicate"
-                           onclick="checkForMiddleClick(this, event);"
-                           tooltip="dynamic-shortcut-tooltip">
-              <box class="toolbarbutton-animatable-box">
-                <image class="toolbarbutton-animatable-image"/>
-              </box>
-            </toolbarbutton>
-            <toolbarbutton id="stop-button"
-                           class="toolbarbutton-1"
-                           command="Browser:Stop"
-                           tooltip="dynamic-shortcut-tooltip">
-              <box class="toolbarbutton-animatable-box">
-                <image class="toolbarbutton-animatable-image"/>
-              </box>
-            </toolbarbutton>
-          </toolbaritem>
-#endif
           <hbox id="urlbar-wrapper" flex="1">
-#ifndef MOZ_PHOTON_THEME
-            <toolbarbutton id="forward-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
-                           label="&forwardCmd.label;"
-                           command="Browser:ForwardOrForwardDuplicate"
-                           onclick="checkForMiddleClick(this, event);"
-                           tooltip="forward-button-tooltip"
-                           context="backForwardMenu"/>
-#endif
             <textbox id="urlbar" flex="1"
                      placeholder="&urlbar.placeholder2;"
                      type="autocomplete"
@@ -1062,18 +1063,6 @@
                        removable="true"
                        cui-areatype="toolbar"
                        tooltip="dynamic-shortcut-tooltip"/>
-
-        <toolbarbutton id="home-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
-                       removable="true"
-                       label="&homeButton.label;"
-                       ondragover="homeButtonObserver.onDragOver(event)"
-                       ondragenter="homeButtonObserver.onDragOver(event)"
-                       ondrop="homeButtonObserver.onDrop(event)"
-                       ondragexit="homeButtonObserver.onDragExit(event)"
-                       key="goHome"
-                       onclick="BrowserGoHome(event);"
-                       cui-areatype="toolbar"
-                       aboutHomeOverrideTooltip="&abouthome.pageTitle;"/>
       </hbox>
 
       <toolbarbutton id="nav-bar-overflow-button"
