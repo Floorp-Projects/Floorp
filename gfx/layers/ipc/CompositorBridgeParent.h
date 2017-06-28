@@ -106,9 +106,9 @@ public:
   virtual void NotifyClearCachedResources(LayerTransactionParent* aLayerTree) { }
 
   virtual void ForceComposite(LayerTransactionParent* aLayerTree) { }
-  virtual bool SetTestSampleTime(LayerTransactionParent* aLayerTree,
+  virtual bool SetTestSampleTime(const uint64_t& aId,
                                  const TimeStamp& aTime) { return true; }
-  virtual void LeaveTestMode(LayerTransactionParent* aLayerTree) { }
+  virtual void LeaveTestMode(const uint64_t& aId) { }
   virtual void ApplyAsyncProperties(LayerTransactionParent* aLayerTree) = 0;
   virtual CompositorAnimationStorage* GetAnimationStorage(const uint64_t& aId) { return nullptr; }
   virtual void FlushApzRepaints(const uint64_t& aLayersId) = 0;
@@ -230,9 +230,9 @@ public:
                                    const TransactionInfo& aInfo,
                                    bool aHitTestUpdate) override;
   virtual void ForceComposite(LayerTransactionParent* aLayerTree) override;
-  virtual bool SetTestSampleTime(LayerTransactionParent* aLayerTree,
+  virtual bool SetTestSampleTime(const uint64_t& aId,
                                  const TimeStamp& aTime) override;
-  virtual void LeaveTestMode(LayerTransactionParent* aLayerTree) override;
+  virtual void LeaveTestMode(const uint64_t& aId) override;
   virtual void ApplyAsyncProperties(LayerTransactionParent* aLayerTree)
                override;
   virtual CompositorAnimationStorage* GetAnimationStorage(const uint64_t& aId) override;
