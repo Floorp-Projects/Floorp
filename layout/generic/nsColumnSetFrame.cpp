@@ -584,7 +584,8 @@ nsColumnSetFrame::ReflowChildren(ReflowOutput&     aDesiredSize,
   bool allFit = true;
   WritingMode wm = GetWritingMode();
   bool isRTL = !wm.IsBidiLTR();
-  bool shrinkingBSize = mLastBalanceBSize > aConfig.mColMaxBSize;
+  bool shrinkingBSizeOnly = !NS_SUBTREE_DIRTY(this) &&
+    mLastBalanceBSize > aConfig.mColMaxBSize;
 
 #ifdef DEBUG_roc
   printf("*** Doing column reflow pass: mLastBalanceBSize=%d, mColMaxBSize=%d, RTL=%d\n"
@@ -673,22 +674,22 @@ nsColumnSetFrame::ReflowChildren(ReflowOutput&     aDesiredSize,
     // boundary, but if so, too bad, this optimization is defeated.)
     // We want scrollable overflow here since this is a calculation that
     // affects layout.
-    if (skipIncremental && shrinkingBSize) {
+    bool skipResizeBSizeShrink = false;
+    if (shrinkingBSizeOnly) {
       switch (wm.GetBlockDir()) {
       case WritingMode::eBlockTB:
-        if (child->GetScrollableOverflowRect().YMost() > aConfig.mColMaxBSize) {
-          skipIncremental = false;
+        if (child->GetScrollableOverflowRect().YMost() <= aConfig.mColMaxBSize) {
+          skipResizeBSizeShrink = true;
         }
         break;
       case WritingMode::eBlockLR:
-        if (child->GetScrollableOverflowRect().XMost() > aConfig.mColMaxBSize) {
-          skipIncremental = false;
+        if (child->GetScrollableOverflowRect().XMost() <= aConfig.mColMaxBSize) {
+          skipResizeBSizeShrink = true;
         }
         break;
       case WritingMode::eBlockRL:
         // XXX not sure how to handle this, so for now just don't attempt
         // the optimization
-        skipIncremental = false;
         break;
       default:
         NS_NOTREACHED("unknown block direction");
@@ -697,7 +698,7 @@ nsColumnSetFrame::ReflowChildren(ReflowOutput&     aDesiredSize,
     }
 
     nscoord childContentBEnd = 0;
-    if (!reflowNext && skipIncremental) {
+    if (!reflowNext && (skipIncremental || skipResizeBSizeShrink)) {
       // This child does not need to be reflowed, but we may need to move it
       MoveChildTo(child, childOrigin, wm, containerSize);
 
@@ -715,8 +716,8 @@ nsColumnSetFrame::ReflowChildren(ReflowOutput&     aDesiredSize,
       }
       childContentBEnd = nsLayoutUtils::CalculateContentBEnd(wm, child);
 #ifdef DEBUG_roc
-      printf("*** Skipping child #%d %p (incremental %d): status = %d\n",
-             columnCount, (void*)child, skipIncremental, aStatus);
+      printf("*** Skipping child #%d %p (incremental %d, resize block-size shrink %d): status = %d\n",
+             columnCount, (void*)child, skipIncremental, skipResizeBSizeShrink, aStatus);
 #endif
     } else {
       LogicalSize availSize(wm, aConfig.mColISize, aConfig.mColMaxBSize);
