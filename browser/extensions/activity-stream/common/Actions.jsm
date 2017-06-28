@@ -17,11 +17,20 @@ const globalImportContext = typeof Window === "undefined" ? BACKGROUND_PROCESS :
 // Export for tests
 this.globalImportContext = globalImportContext;
 
-const actionTypes = [
+// Create an object that avoids accidental differing key/value pairs:
+// {
+//   INIT: "INIT",
+//   UNINIT: "UNINIT"
+// }
+const actionTypes = {};
+for (const type of [
   "BLOCK_URL",
   "BOOKMARK_URL",
   "DELETE_BOOKMARK_BY_ID",
   "DELETE_HISTORY_URL",
+  "DELETE_HISTORY_URL_CONFIRM",
+  "DIALOG_CANCEL",
+  "DIALOG_OPEN",
   "INIT",
   "LOCALE_UPDATED",
   "NEW_TAB_INITIAL_STATE",
@@ -45,13 +54,9 @@ const actionTypes = [
   "TELEMETRY_USER_EVENT",
   "TOP_SITES_UPDATED",
   "UNINIT"
-// The line below creates an object like this:
-// {
-//   INIT: "INIT",
-//   UNINIT: "UNINIT"
-// }
-// It prevents accidentally adding a different key/value name.
-].reduce((obj, type) => { obj[type] = type; return obj; }, {});
+]) {
+  actionTypes[type] = type;
+}
 
 // Helper function for creating routed actions between content and main
 // Not intended to be used by consumers

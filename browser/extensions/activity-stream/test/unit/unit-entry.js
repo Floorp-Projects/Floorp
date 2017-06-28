@@ -13,6 +13,7 @@ let overrider = new GlobalOverrider();
 
 overrider.set({
   Components: {
+    classes: {},
     interfaces: {},
     utils: {
       import() {},
@@ -38,6 +39,7 @@ overrider.set({
       removeObserver() {}
     },
     prefs: {
+      getStringPref() {},
       getDefaultBranch() {
         return {
           setBoolPref() {},

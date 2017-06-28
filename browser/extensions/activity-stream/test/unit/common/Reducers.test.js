@@ -1,5 +1,5 @@
 const {reducers, INITIAL_STATE} = require("common/Reducers.jsm");
-const {TopSites, App, Prefs} = reducers;
+const {TopSites, App, Prefs, Dialog} = reducers;
 const {actionTypes: at} = require("common/Actions.jsm");
 
 describe("Reducers", () => {
@@ -145,6 +145,32 @@ describe("Reducers", () => {
         const state = Prefs(oldState, {type: at.PREF_CHANGED, data: {name: "foo", value: 2}});
         assert.notEqual(oldState.values, state.values);
       });
+    });
+  });
+  describe("Dialog", () => {
+    it("should return INITIAL_STATE by default", () => {
+      assert.equal(INITIAL_STATE.Dialog, Dialog(undefined, {type: "non_existent"}));
+    });
+    it("should toggle visible to true on DIALOG_OPEN", () => {
+      const action = {type: at.DIALOG_OPEN};
+      const nextState = Dialog(INITIAL_STATE.Dialog, action);
+      assert.isTrue(nextState.visible);
+    });
+    it("should pass url data on DIALOG_OPEN", () => {
+      const action = {type: at.DIALOG_OPEN, data: "some url"};
+      const nextState = Dialog(INITIAL_STATE.Dialog, action);
+      assert.equal(nextState.data, action.data);
+    });
+    it("should toggle visible to false on DIALOG_CANCEL", () => {
+      const action = {type: at.DIALOG_CANCEL, data: "some url"};
+      const nextState = Dialog(INITIAL_STATE.Dialog, action);
+      assert.isFalse(nextState.visible);
+    });
+    it("should return inital state on DELETE_HISTORY_URL", () => {
+      const action = {type: at.DELETE_HISTORY_URL};
+      const nextState = Dialog(INITIAL_STATE.Dialog, action);
+
+      assert.deepEqual(INITIAL_STATE.Dialog, nextState);
     });
   });
 });
