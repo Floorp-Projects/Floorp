@@ -3329,11 +3329,16 @@ public:
   // `aChildFrame`, and takes care of updating it, calling CalcStyleDifference,
   // and adding to the change list as appropriate.
   //
+  // If aContinuationStyleContext is not Nothing, it should be used for
+  // continuations instead of aNewStyleContext.  In either case, changehints are
+  // only computed based on aNewStyleContext.
+  //
   // Returns the generated change hint for the frame.
   nsChangeHint UpdateStyleOfOwnedChildFrame(
     nsIFrame* aChildFrame,
     nsStyleContext* aNewStyleContext,
-    mozilla::ServoRestyleState& aRestyleState);
+    mozilla::ServoRestyleState& aRestyleState,
+    const Maybe<nsStyleContext*>& aContinuationStyleContext = Nothing());
 
   struct OwnedAnonBox
   {

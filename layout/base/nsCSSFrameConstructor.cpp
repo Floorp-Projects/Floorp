@@ -21,6 +21,7 @@
 #include "mozilla/Likely.h"
 #include "mozilla/LinkedList.h"
 #include "mozilla/PresShell.h"
+#include "mozilla/ServoBindings.h"
 #include "nsAbsoluteContainingBlock.h"
 #include "nsCSSPseudoElements.h"
 #include "nsIAtom.h"
@@ -1919,6 +1920,21 @@ nsCSSFrameConstructor::CreateGeneratedContentItem(nsFrameConstructorState& aStat
     return;
   }
 
+  // Servo has already eagerly computed the style for the container, so we can
+  // just stick the style on the element and avoid an additional traversal.
+  //
+  // We don't do this for pseudos that may trigger animations or transitions,
+  // since those need to be kicked off by the traversal machinery.
+  bool isServo = pseudoStyleContext->IsServo();
+  bool hasServoAnimations = false;
+  if (isServo) {
+    ServoComputedValues* servoStyle = pseudoStyleContext->ComputedValues();
+    hasServoAnimations = Servo_ComputedValues_SpecifiesAnimationsOrTransitions(servoStyle);
+    if (!hasServoAnimations) {
+      Servo_SetExplicitStyle(container, servoStyle);
+    }
+  }
+
   // stylo: ServoRestyleManager does not handle transitions yet, and when it
   // does it probably won't need to track reframed style contexts to start
   // transitions correctly.
@@ -1941,17 +1957,30 @@ nsCSSFrameConstructor::CreateGeneratedContentItem(nsFrameConstructorState& aStat
   }
 
   uint32_t contentCount = pseudoStyleContext->StyleContent()->ContentCount();
+  bool createdChildElement = false;
   for (uint32_t contentIndex = 0; contentIndex < contentCount; contentIndex++) {
     nsCOMPtr<nsIContent> content =
       CreateGeneratedContent(aState, aParentContent, pseudoStyleContext,
                              contentIndex);
     if (content) {
       container->AppendChildTo(content, false);
+      if (content->IsElement()) {
+        createdChildElement = true;
+      }
     }
   }
 
-  if (aParentContent->IsStyledByServo()) {
-    mPresShell->StyleSet()->AsServo()->StyleNewSubtree(container);
+  // We may need to do a synchronous servo traversal in various uncommon cases.
+  if (isServo) {
+    if (hasServoAnimations) {
+      // If animations are involved, we avoid the SetExplicitStyle optimization
+      // above.
+      mPresShell->StyleSet()->AsServo()->StyleNewSubtree(container);
+    } else if (createdChildElement) {
+      // If we created any children elements, Servo needs to traverse them, but
+      // the root is already set up.
+      mPresShell->StyleSet()->AsServo()->StyleNewChildren(container);
+    }
   }
 
   AddFrameConstructionItemsInternal(aState, container, aParentFrame, elemName,
@@ -11630,7 +11659,7 @@ static bool IsFirstLetterContent(nsIContent* aContent)
 /**
  * Create a letter frame, only make it a floating frame.
  */
-void
+nsFirstLetterFrame*
 nsCSSFrameConstructor::CreateFloatingLetterFrame(
   nsFrameConstructorState& aState,
   nsIContent* aTextContent,
@@ -11695,6 +11724,8 @@ nsCSSFrameConstructor::CreateFloatingLetterFrame(
   if (nextTextFrame) {
     aResult.AddChild(nextTextFrame);
   }
+
+  return letterFrame;
 }
 
 /**
@@ -11713,7 +11744,8 @@ nsCSSFrameConstructor::CreateLetterFrame(nsContainerFrame* aBlockFrame,
   NS_ASSERTION(nsLayoutUtils::GetAsBlock(aBlockFrame),
                  "Not a block frame?");
 
-  // Get style context for the first-letter-frame
+  // Get style context for the first-letter-frame.  Keep this in sync with
+  // nsBlockFrame::UpdatePseudoElementStyles.
   nsStyleContext* parentStyleContext =
     nsFrame::CorrectStyleParentFrame(aParentFrame,
                                      nsCSSPseudoElements::firstLetter)->
@@ -11751,15 +11783,16 @@ nsCSSFrameConstructor::CreateLetterFrame(nsContainerFrame* aBlockFrame,
 
     // Create the right type of first-letter frame
     const nsStyleDisplay* display = sc->StyleDisplay();
+    nsFirstLetterFrame* letterFrame;
     if (display->IsFloatingStyle() &&
         !nsSVGUtils::IsInSVGTextSubtree(aParentFrame)) {
       // Make a floating first-letter frame
-      CreateFloatingLetterFrame(state, aTextContent, textFrame,
-                                aParentFrame, sc, aResult);
+      letterFrame = CreateFloatingLetterFrame(state, aTextContent, textFrame,
+                                              aParentFrame, sc, aResult);
     }
     else {
       // Make an inflow first-letter frame
-      nsFirstLetterFrame* letterFrame = NS_NewFirstLetterFrame(mPresShell, sc);
+      letterFrame = NS_NewFirstLetterFrame(mPresShell, sc);
 
       // Initialize the first-letter-frame.  We don't want to use a text
       // content for a non-text frame (because we want its primary frame to
@@ -11776,6 +11809,10 @@ nsCSSFrameConstructor::CreateLetterFrame(nsContainerFrame* aBlockFrame,
                    "should have the first continuation here");
       aBlockFrame->AddStateBits(NS_BLOCK_HAS_FIRST_LETTER_CHILD);
     }
+    MOZ_ASSERT(!aBlockFrame->GetPrevContinuation(),
+               "Setting up a first-letter frame on a non-first block continuation?");
+    aBlockFrame->SetProperty(nsContainerFrame::FirstLetterProperty(),
+                             letterFrame);
     aTextContent->SetPrimaryFrame(textFrame);
   }
 }
@@ -12052,6 +12089,7 @@ nsCSSFrameConstructor::RemoveLetterFrames(nsIPresShell* aPresShell,
 {
   aBlockFrame =
     static_cast<nsContainerFrame*>(aBlockFrame->FirstContinuation());
+  aBlockFrame->RemoveProperty(nsContainerFrame::FirstLetterProperty());
   nsContainerFrame* continuation = aBlockFrame;
 
   bool stopLooking = false;

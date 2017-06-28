@@ -20,10 +20,16 @@
   list-style-image: var(--stop-icon) !important;
 }
 
+%ifdef MOZ_PHOTON_THEME
+:root[lwthemeicons~="--bookmark_star-icon"] #star-button:-moz-lwtheme,
+%endif
 :root[lwthemeicons~="--bookmark_star-icon"] #bookmarks-menu-button:-moz-lwtheme {
   list-style-image: var(--bookmark_star-icon) !important;
 }
 
+%ifdef MOZ_PHOTON_THEME
+:root[lwthemeicons~="--bookmark_menu-icon"] #bookmarks-menu-button:-moz-lwtheme,
+%endif
 :root[lwthemeicons~="--bookmark_menu-icon"] #bookmarks-menu-button[cui-areatype='toolbar'] > .toolbarbutton-menubutton-dropmarker > .dropmarker-icon:-moz-lwtheme {
   list-style-image: var(--bookmark_menu-icon) !important;
 }
@@ -128,6 +134,10 @@
   list-style-image: var(--pocket-icon) !important;
 }
 
+%ifdef MOZ_PHOTON_THEME
+:root[lwthemeicons~="--bookmark_star-icon"] #star-button:-moz-lwtheme,
+:root[lwthemeicons~="--bookmark_menu-icon"] #bookmarks-menu-button:-moz-lwtheme,
+%endif
 :root[lwthemeicons~="--back-icon"] #back-button:-moz-lwtheme,
 :root[lwthemeicons~="--forward-icon"] #forward-button:-moz-lwtheme,
 :root[lwthemeicons~="--reload-icon"] #reload-button:-moz-lwtheme,

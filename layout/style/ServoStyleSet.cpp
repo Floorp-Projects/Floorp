@@ -568,9 +568,6 @@ ServoStyleSet::ResolvePseudoElementStyle(Element* aOriginatingElement,
 {
   UpdateStylistIfNeeded();
 
-  // NB: We ignore aParentContext, on the assumption that pseudo element styles
-  // should just inherit from aOriginatingElement's primary style, which Servo
-  // already knows.
   MOZ_ASSERT(aType < CSSPseudoElementType::Count);
 
   RefPtr<ServoComputedValues> computedValues;
@@ -579,10 +576,13 @@ ServoStyleSet::ResolvePseudoElementStyle(Element* aOriginatingElement,
     computedValues = Servo_ResolveStyle(aPseudoElement, mRawSet.get(),
                                         mAllowResolveStaleStyles).Consume();
   } else {
+    const ServoComputedValues* parentStyle =
+      aParentContext ? aParentContext->ComputedValues() : nullptr;
     computedValues =
       Servo_ResolvePseudoStyle(aOriginatingElement,
                                aType,
                                /* is_probe = */ false,
+                               parentStyle,
                                mRawSet.get()).Consume();
   }
 
@@ -918,14 +918,17 @@ ServoStyleSet::ProbePseudoElementStyle(Element* aOriginatingElement,
 {
   UpdateStylistIfNeeded();
 
-  // NB: We ignore aParentContext, on the assumption that pseudo element styles
-  // should just inherit from aOriginatingElement's primary style, which Servo
-  // already knows.
+  // NB: We ignore aParentContext, because in some cases
+  // (first-line/first-letter on anonymous box blocks) Gecko passes something
+  // nonsensical there.  In all other cases we want to inherit directly from
+  // aOriginatingElement's styles anyway.
   MOZ_ASSERT(aType < CSSPseudoElementType::Count);
 
   RefPtr<ServoComputedValues> computedValues =
     Servo_ResolvePseudoStyle(aOriginatingElement, aType,
-                             /* is_probe = */ true, mRawSet.get()).Consume();
+                             /* is_probe = */ true,
+                             nullptr,
+                             mRawSet.get()).Consume();
   if (!computedValues) {
     return nullptr;
   }

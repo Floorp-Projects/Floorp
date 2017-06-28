@@ -10229,7 +10229,8 @@ nsIFrame::UpdateStyleOfChildAnonBox(nsIFrame* aChildFrame,
 
   // Now that we've updated the style on aChildFrame, check whether it itself
   // has anon boxes to deal with.
-  ServoRestyleState childrenState(aRestyleState, childHint);
+  ServoRestyleState childrenState(
+      *aChildFrame, aRestyleState, childHint, ServoRestyleState::Type::InFlow);
   aChildFrame->UpdateStyleOfOwnedAnonBoxes(childrenState);
 
   // Assuming anon boxes don't have ::backdrop associated with them... if that
@@ -10245,16 +10246,18 @@ nsIFrame::UpdateStyleOfChildAnonBox(nsIFrame* aChildFrame,
 }
 
 nsChangeHint
-nsIFrame::UpdateStyleOfOwnedChildFrame(nsIFrame* aChildFrame,
-                                       nsStyleContext* aNewStyleContext,
-                                       ServoRestyleState& aRestyleState)
+nsIFrame::UpdateStyleOfOwnedChildFrame(
+  nsIFrame* aChildFrame,
+  nsStyleContext* aNewStyleContext,
+  ServoRestyleState& aRestyleState,
+  const Maybe<nsStyleContext*>& aContinuationStyleContext)
 {
   // Figure out whether we have an actual change.  It's important that we do
   // this, for several reasons:
   //
   // 1) Even if all the child's changes are due to properties it inherits from
   //    us, it's possible that no one ever asked us for those style structs and
-  //    hence changes to them aren't reflected in aHintForThisFrame at all.
+  //    hence changes to them aren't reflected in the changes handled at all.
   //
   // 2) Content can change stylesheets that change the styles of pseudos, and
   //    extensions can add/remove stylesheets that change the styles of
@@ -10264,7 +10267,8 @@ nsIFrame::UpdateStyleOfOwnedChildFrame(nsIFrame* aChildFrame,
     aNewStyleContext,
     &equalStructs,
     &samePointerStructs);
-  childHint = NS_RemoveSubsumedHints(childHint, aRestyleState.ChangesHandled());
+  childHint = NS_RemoveSubsumedHints(
+    childHint, aRestyleState.ChangesHandledFor(*aChildFrame));
   if (childHint) {
     if (childHint & nsChangeHint_ReconstructFrame) {
       // If we generate a reconstruct here, remove any non-reconstruct hints we
@@ -10276,8 +10280,13 @@ nsIFrame::UpdateStyleOfOwnedChildFrame(nsIFrame* aChildFrame,
       aChildFrame, aChildFrame->GetContent(), childHint);
   }
 
-  for (nsIFrame* kid = aChildFrame; kid; kid = kid->GetNextContinuation()) {
-    kid->SetStyleContext(aNewStyleContext);
+  aChildFrame->SetStyleContext(aNewStyleContext);
+  nsStyleContext* continuationStyle =
+    aContinuationStyleContext ? *aContinuationStyleContext : aNewStyleContext;
+  for (nsIFrame* kid = aChildFrame->GetNextContinuation();
+       kid;
+       kid = kid->GetNextContinuation()) {
+    kid->SetStyleContext(continuationStyle);
   }
 
   return childHint;

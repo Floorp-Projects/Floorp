@@ -1268,8 +1268,8 @@ PlacesController.prototype = {
     let itemsToSelect = [];
     if (PlacesUIUtils.useAsyncTransactions) {
       if (ip.isTag) {
-        let uris = items.filter(item => "uri" in item).map(item => NetUtil.newURI(item.uri));
-        await PlacesTransactions.Tag({ uris, tag: ip.tagName }).transact();
+        let urls = items.filter(item => "uri" in item).map(item => Services.io.newURI(item.uri));
+        await PlacesTransactions.Tag({ urls, tag: ip.tagName }).transact();
       } else {
         await PlacesTransactions.batch(async function() {
           let insertionIndex = ip.index;

@@ -11,7 +11,6 @@
 <%namespace name="helpers" file="/helpers.mako.rs" />
 
 use app_units::Au;
-use custom_properties::ComputedValuesMap;
 use gecko_bindings::bindings;
 % for style_struct in data.style_structs:
 use gecko_bindings::structs::${style_struct.gecko_ffi_name};
@@ -54,18 +53,14 @@ use gecko::values::round_border_to_device_pixels;
 use logical_geometry::WritingMode;
 use media_queries::Device;
 use properties::animated_properties::TransitionProperty;
-use properties::longhands;
-use properties:: FontComputationData;
-use properties::{Importance, LonghandId};
-use properties::{PropertyDeclaration, PropertyDeclarationBlock, PropertyDeclarationId};
-use rule_tree::StrongRuleNode;
+use properties::{longhands, ComputedValues, LonghandId, PropertyDeclarationId};
 use std::fmt::{self, Debug};
 use std::mem::{forget, transmute, zeroed};
 use std::ptr;
 use stylearc::Arc;
 use std::cmp;
 use values::{Auto, CustomIdent, Either, KeyframesName};
-use values::computed::{Shadow, ToComputedValue};
+use values::computed::{Filter, Shadow};
 use values::specified::length::Percentage;
 use computed_values::border_style;
 
@@ -73,155 +68,6 @@ pub mod style_structs {
     % for style_struct in data.style_structs:
     pub use super::${style_struct.gecko_struct_name} as ${style_struct.name};
     % endfor
-}
-
-
-#[derive(Clone)]
-pub struct ComputedValues {
-    % for style_struct in data.style_structs:
-    ${style_struct.ident}: Arc<style_structs::${style_struct.name}>,
-    % endfor
-
-    custom_properties: Option<Arc<ComputedValuesMap>>,
-    pub writing_mode: WritingMode,
-    pub font_computation_data: FontComputationData,
-
-    /// The rule node representing the ordered list of rules matched for this
-    /// node.  Can be None for default values and text nodes.  This is
-    /// essentially an optimization to avoid referencing the root rule node.
-    pub rules: Option<StrongRuleNode>,
-    /// The element's computed values if visited, only computed if there's a
-    /// relevant link for this element. A element's "relevant link" is the
-    /// element being matched if it is a link or the nearest ancestor link.
-    visited_style: Option<Arc<ComputedValues>>,
-}
-
-impl ComputedValues {
-    pub fn new(custom_properties: Option<Arc<ComputedValuesMap>>,
-               writing_mode: WritingMode,
-               font_size_keyword: Option<(longhands::font_size::KeywordSize, f32)>,
-               rules: Option<StrongRuleNode>,
-               visited_style: Option<Arc<ComputedValues>>,
-               % for style_struct in data.style_structs:
-               ${style_struct.ident}: Arc<style_structs::${style_struct.name}>,
-               % endfor
-    ) -> Self {
-        ComputedValues {
-            custom_properties: custom_properties,
-            writing_mode: writing_mode,
-            font_computation_data: FontComputationData::new(font_size_keyword),
-            rules: rules,
-            visited_style: visited_style,
-            % for style_struct in data.style_structs:
-            ${style_struct.ident}: ${style_struct.ident},
-            % endfor
-        }
-    }
-
-    pub fn default_values(pres_context: RawGeckoPresContextBorrowed) -> Arc<Self> {
-        Arc::new(ComputedValues {
-            custom_properties: None,
-            writing_mode: WritingMode::empty(), // FIXME(bz): This seems dubious
-            font_computation_data: FontComputationData::default_values(),
-            rules: None,
-            visited_style: None,
-            % for style_struct in data.style_structs:
-                ${style_struct.ident}: style_structs::${style_struct.name}::default(pres_context),
-            % endfor
-        })
-    }
-
-    #[inline]
-    pub fn is_display_contents(&self) -> bool {
-        self.get_box().clone_display() == longhands::display::computed_value::T::contents
-    }
-
-    /// Returns true if the value of the `content` property would make a
-    /// pseudo-element not rendered.
-    #[inline]
-    pub fn ineffective_content_property(&self) -> bool {
-        self.get_counters().ineffective_content_property()
-    }
-
-    % for style_struct in data.style_structs:
-    #[inline]
-    pub fn clone_${style_struct.name_lower}(&self) -> Arc<style_structs::${style_struct.name}> {
-        self.${style_struct.ident}.clone()
-    }
-    #[inline]
-    pub fn get_${style_struct.name_lower}(&self) -> &style_structs::${style_struct.name} {
-        &self.${style_struct.ident}
-    }
-
-    pub fn ${style_struct.name_lower}_arc(&self) -> &Arc<style_structs::${style_struct.name}> {
-        &self.${style_struct.ident}
-    }
-
-    #[inline]
-    pub fn mutate_${style_struct.name_lower}(&mut self) -> &mut style_structs::${style_struct.name} {
-        Arc::make_mut(&mut self.${style_struct.ident})
-    }
-    % endfor
-
-    /// Gets a reference to the rule node. Panic if no rule node exists.
-    pub fn rules(&self) -> &StrongRuleNode {
-        self.rules.as_ref().unwrap()
-    }
-
-    /// Gets a reference to the visited style, if any.
-    pub fn get_visited_style(&self) -> Option<<&Arc<ComputedValues>> {
-        self.visited_style.as_ref()
-    }
-
-    /// Gets a reference to the visited style. Panic if no visited style exists.
-    pub fn visited_style(&self) -> &Arc<ComputedValues> {
-        self.get_visited_style().unwrap()
-    }
-
-    /// Clone the visited style.  Used for inheriting parent styles in
-    /// StyleBuilder::for_inheritance.
-    pub fn clone_visited_style(&self) -> Option<Arc<ComputedValues>> {
-        self.visited_style.clone()
-    }
-
-    pub fn custom_properties(&self) -> Option<Arc<ComputedValuesMap>> {
-        self.custom_properties.clone()
-    }
-
-    #[allow(non_snake_case)]
-    pub fn has_moz_binding(&self) -> bool {
-        !self.get_box().gecko.mBinding.mPtr.mRawPtr.is_null()
-    }
-
-    // FIXME(bholley): Implement this properly.
-    #[inline]
-    pub fn is_multicol(&self) -> bool { false }
-
-    pub fn to_declaration_block(&self, property: PropertyDeclarationId) -> PropertyDeclarationBlock {
-        match property {
-            % for prop in data.longhands:
-                % if prop.animatable:
-                    PropertyDeclarationId::Longhand(LonghandId::${prop.camel_case}) => {
-                         PropertyDeclarationBlock::with_one(
-                            PropertyDeclaration::${prop.camel_case}(
-                                % if prop.boxed:
-                                    Box::new(
-                                % endif
-                                longhands::${prop.ident}::SpecifiedValue::from_computed_value(
-                                  &self.get_${prop.style_struct.ident.strip("_")}().clone_${prop.ident}())
-                                % if prop.boxed:
-                                    )
-                                % endif
-                            ),
-                            Importance::Normal
-                        )
-                    },
-                % endif
-            % endfor
-            PropertyDeclarationId::Custom(_name) => unimplemented!(),
-            _ => unimplemented!()
-        }
-    }
 }
 
 <%def name="declare_style_struct(style_struct)">
@@ -3454,7 +3300,11 @@ fn static_assert() {
                          'Opacity', 'Saturate', 'Sepia' ]
      %>
 
-    pub fn set_filter(&mut self, v: longhands::filter::computed_value::T) {
+    pub fn set_filter<I>(&mut self, v: I)
+    where
+        I: IntoIterator<Item = Filter>,
+        I::IntoIter: ExactSizeIterator,
+    {
         use values::generics::effects::Filter::*;
         use gecko_bindings::structs::nsCSSShadowArray;
         use gecko_bindings::structs::nsStyleFilter;
@@ -3474,12 +3324,13 @@ fn static_assert() {
             gecko_filter.mFilterParameter.set_value(value);
         }
 
+        let v = v.into_iter();
         unsafe {
-            Gecko_ResetFilters(&mut self.gecko, v.0.len());
+            Gecko_ResetFilters(&mut self.gecko, v.len());
         }
-        debug_assert!(v.0.len() == self.gecko.mFilters.len());
+        debug_assert_eq!(v.len(), self.gecko.mFilters.len());
 
-        for (servo, gecko_filter) in v.0.into_vec().into_iter().zip(self.gecko.mFilters.iter_mut()) {
+        for (servo, gecko_filter) in v.zip(self.gecko.mFilters.iter_mut()) {
             match servo {
                 % for func in FILTER_FUNCTIONS:
                 ${func}(factor) => fill_filter(NS_STYLE_FILTER_${func.upper()},
@@ -3526,7 +3377,7 @@ fn static_assert() {
     }
 
     pub fn clone_filter(&self) -> longhands::filter::computed_value::T {
-        use values::generics::effects::{Filter, FilterList};
+        use values::generics::effects::Filter;
         use values::specified::url::SpecifiedUrl;
         use gecko_bindings::structs::NS_STYLE_FILTER_BLUR;
         use gecko_bindings::structs::NS_STYLE_FILTER_BRIGHTNESS;
@@ -3576,7 +3427,7 @@ fn static_assert() {
                 _ => {},
             }
         }
-        FilterList(filters.into_boxed_slice())
+        longhands::filter::computed_value::T(filters)
     }
 
 </%self:impl_trait>
@@ -4096,10 +3947,9 @@ clip-path
     }
 
     pub fn clone_stroke_dasharray(&self) -> longhands::stroke_dasharray::computed_value::T {
-        use smallvec::SmallVec;
         use values::computed::LengthOrPercentage;
 
-        let mut vec = SmallVec::new();
+        let mut vec = vec![];
         for gecko in self.gecko.mStrokeDasharray.iter() {
             match gecko.as_value() {
                 CoordDataValue::Factor(number) => vec.push(Either::First(number)),

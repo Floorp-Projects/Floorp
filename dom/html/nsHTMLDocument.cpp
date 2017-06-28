@@ -151,20 +151,6 @@ static bool ConvertToMidasInternalCommand(const nsAString & inCommandID,
 // ==================================================================
 
 static bool
-IsAsciiCompatible(const nsACString& aPreferredName)
-{
-  // HZ and UTF-7 are no longer in mozilla-central, but keeping them here
-  // just in case for the benefit of comm-central.
-  return !(aPreferredName.LowerCaseEqualsLiteral("utf-16") ||
-           aPreferredName.LowerCaseEqualsLiteral("utf-16be") ||
-           aPreferredName.LowerCaseEqualsLiteral("utf-16le") ||
-           aPreferredName.LowerCaseEqualsLiteral("replacement") ||
-           aPreferredName.LowerCaseEqualsLiteral("hz-gb-2312") ||
-           aPreferredName.LowerCaseEqualsLiteral("utf-7") ||
-           aPreferredName.LowerCaseEqualsLiteral("x-imap4-modified-utf7"));
-}
-
-static bool
 IsAsciiCompatible(const Encoding* aEncoding)
 {
   return aEncoding->IsAsciiCompatible() || aEncoding == ISO_2022_JP_ENCODING;
@@ -300,21 +286,17 @@ nsHTMLDocument::TryHintCharset(nsIContentViewer* aCv,
     nsresult rv = aCv->GetHintCharacterSetSource(&requestCharsetSource);
 
     if(NS_SUCCEEDED(rv) && kCharsetUninitialized != requestCharsetSource) {
-      nsAutoCString requestCharset;
-      rv = aCv->GetHintCharacterSet(requestCharset);
+      auto requestCharset = aCv->GetHintCharset();
       aCv->SetHintCharacterSetSource((int32_t)(kCharsetUninitialized));
 
       if (requestCharsetSource <= aCharsetSource)
         return;
 
-      if (NS_SUCCEEDED(rv) && !requestCharset.IsEmpty()) {
-        auto encoding = Encoding::ForName(requestCharset);
-        if (IsAsciiCompatible(encoding)) {
-          aCharsetSource = requestCharsetSource;
-          aEncoding = encoding;
-        }
-        return;
+      if (requestCharset && IsAsciiCompatible(requestCharset)) {
+        aCharsetSource = requestCharsetSource;
+        aEncoding = WrapNotNull(requestCharset);
       }
+      return;
     }
   }
   return;
@@ -327,8 +309,6 @@ nsHTMLDocument::TryUserForcedCharset(nsIContentViewer* aCv,
                                      int32_t& aCharsetSource,
                                      NotNull<const Encoding*>& aEncoding)
 {
-  nsresult rv = NS_OK;
-
   if(kCharsetFromUserForced <= aCharsetSource)
     return;
 
@@ -337,16 +317,15 @@ nsHTMLDocument::TryUserForcedCharset(nsIContentViewer* aCv,
     return;
   }
 
-  nsAutoCString forceCharsetFromDocShell;
+  const Encoding* forceCharsetFromDocShell = nullptr;
   if (aCv) {
     // XXX mailnews-only
-    rv = aCv->GetForceCharacterSet(forceCharsetFromDocShell);
+    forceCharsetFromDocShell = aCv->GetForceCharset();
   }
 
-  if(NS_SUCCEEDED(rv) &&
-     !forceCharsetFromDocShell.IsEmpty() &&
+  if(forceCharsetFromDocShell &&
      IsAsciiCompatible(forceCharsetFromDocShell)) {
-    aEncoding = Encoding::ForName(forceCharsetFromDocShell);
+    aEncoding = WrapNotNull(forceCharsetFromDocShell);
     aCharsetSource = kCharsetFromUserForced;
     return;
   }

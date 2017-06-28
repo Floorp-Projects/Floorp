@@ -907,6 +907,14 @@
                        class="urlbar-icon"
                        hidden="true"
                        onclick="ReaderParent.buttonClick(event);"/>
+#ifdef MOZ_PHOTON_THEME
+                <image id="star-button"
+                       class="urlbar-icon"
+                       onclick="BookmarkingUI.onStarCommand(event);">
+                  <observes element="bookmarkThisPageBroadcaster" attribute="starred"/>
+                  <observes element="bookmarkThisPageBroadcaster" attribute="tooltiptext"/>
+                </image>
+#endif
                 <toolbarbutton id="urlbar-zoom-button"
                        onclick="FullZoom.reset();"
                        tooltip="dynamic-shortcut-tooltip"
@@ -950,7 +958,11 @@
         <toolbarbutton id="bookmarks-menu-button"
                        class="toolbarbutton-1 chromeclass-toolbar-additional"
                        removable="true"
+#ifdef MOZ_PHOTON_THEME
+                       type="menu"
+#else
                        type="menu-button"
+#endif
                        label="&bookmarksMenuButton.label;"
                        tooltip="dynamic-shortcut-tooltip"
                        anchor="dropmarker"

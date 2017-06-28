@@ -42,8 +42,9 @@ CaptureStreamTestHelper.prototype = {
   startDrawing: function (f) {
     var stop = false;
     var draw = () => {
+      if (stop) { return; }
       f();
-      if (!stop) { window.requestAnimationFrame(draw); }
+      window.requestAnimationFrame(draw);
     };
     draw();
     return { stop: () => stop = true };

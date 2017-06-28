@@ -31,6 +31,7 @@ struct nsGenConInitializer;
 
 class nsContainerFrame;
 class nsFirstLineFrame;
+class nsFirstLetterFrame;
 class nsICSSAnonBoxPseudo;
 class nsIDocument;
 class nsPageContentFrame;
@@ -1943,12 +1944,13 @@ private:
 
   // Methods support :first-letter style
 
-  void CreateFloatingLetterFrame(nsFrameConstructorState& aState,
-                                 nsIContent*              aTextContent,
-                                 nsIFrame*                aTextFrame,
-                                 nsContainerFrame*        aParentFrame,
-                                 nsStyleContext*          aStyleContext,
-                                 nsFrameItems&            aResult);
+  nsFirstLetterFrame*
+  CreateFloatingLetterFrame(nsFrameConstructorState& aState,
+                            nsIContent*              aTextContent,
+                            nsIFrame*                aTextFrame,
+                            nsContainerFrame*        aParentFrame,
+                            nsStyleContext*          aStyleContext,
+                            nsFrameItems&            aResult);
 
   void CreateLetterFrame(nsContainerFrame*        aBlockFrame,
                          nsContainerFrame*        aBlockContinuation,

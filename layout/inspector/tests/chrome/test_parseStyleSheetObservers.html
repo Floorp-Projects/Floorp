@@ -1,0 +1,94 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<title>Test for Bug 1367996</title>
+<script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+<style>
+body { color: red; }
+</style>
+</head>
+<body>
+<script type="application/javascript">
+SimpleTest.waitForExplicitFinish();
+
+let DOMUtils = SpecialPowers.Cc["@mozilla.org/inspector/dom-utils;1"]
+               .getService(SpecialPowers.Ci.inIDOMUtils);
+const Cu = SpecialPowers.Components.utils;
+const { ContentTaskUtils } = Cu.import("resource://testing-common/ContentTaskUtils.jsm", {});
+
+let sheet = document.styleSheets[1];
+document.styleSheetChangeEventsEnabled = true;
+let listenerOptions = {
+  "capture": false,
+};
+
+// Kickoff the first test (which will chain into the remaining tests).
+SimpleTest.executeSoon(test1Setup);
+
+// Test 1: Listen to the document and ensure we get notified when rules
+// are added and dropped from sheet.
+let addCount = 0;
+let removeCount = 0;
+let countingAddListener = function() {
+  addCount++;
+}
+let countingRemoveListener = function() {
+  removeCount++;
+}
+
+function test1Setup() {
+  document.addEventListener("StyleRuleAdded", countingAddListener, listenerOptions);
+  document.addEventListener("StyleRuleRemoved", countingRemoveListener, listenerOptions);
+
+  DOMUtils.parseStyleSheet(sheet, "body { color: blue; } p { color: green; }");
+  is(sheet.cssRules.length, 2, "Test 1: Stylesheet now has 2 rules.");
+
+  SimpleTest.executeSoon(test1Result);
+}
+
+function test1Result() {
+  is(removeCount, 1, "Test 1: Removed expected number of rules.");
+  is(addCount, 2, "Test 1: Added expected number of rules.");
+
+  document.removeEventListener("StyleRuleAdded", countingAddListener, listenerOptions);
+  document.removeEventListener("StyleRuleRemoved", countingRemoveListener, listenerOptions);
+
+  SimpleTest.executeSoon(test2Setup);
+}
+
+// Test 2: Import rules should be deferred until sheet is actually loaded.
+// We'll test this by parsing an import rule followed by style rule, then
+// ensuring that the event for the style rule lands first.
+// This test is constructed with async functions so we can await an event that
+// might take awhile to arrive (but is guaranteed to arrive, per spec).
+let foundImport = false;
+let foundStyle = false;
+let styleFirstAddProcessor = function(event) {
+  info("styleFirstAddProcessor: called");
+  if (event.rule.type == CSSRule.IMPORT_RULE) {
+    foundImport = true;
+  } else if (event.rule.type == CSSRule.STYLE_RULE) {
+    foundStyle = true;
+    is(foundImport, false, "Test 2: The style rule arrived before the import rule.");
+  }
+}
+
+async function test2Setup() {
+  info("test2Setup: called");
+
+  DOMUtils.parseStyleSheet(sheet, "@import url('imported_no_op.css'); p { color: purple; }");
+  is(sheet.cssRules.length, 2, "Test 2: Stylesheet now has 2 rules.");
+
+  // Await and then process the 2 events we expect to arrive.
+  styleFirstAddProcessor(await ContentTaskUtils.waitForEvent(document, "StyleRuleAdded", true));
+  styleFirstAddProcessor(await ContentTaskUtils.waitForEvent(document, "StyleRuleAdded", true));
+
+  is(foundStyle, true, "Test 2: Got the style rule.");
+  is(foundImport, true, "Test 2: Got the import rule.");
+
+  SimpleTest.finish();
+}
+</script>
+</body>
+</html>

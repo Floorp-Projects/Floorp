@@ -107,15 +107,19 @@ add_task(async function test_remove_places() {
 add_task(async function test_bookmark_changes() {
   let testUri = NetUtil.newURI("http://test.mozilla.org");
 
-  let itemId = PlacesUtils.bookmarks.insertBookmark(PlacesUtils.unfiledBookmarksFolderId,
-                                                     testUri,
-                                                     PlacesUtils.bookmarks.DEFAULT_INDEX,
-                                                     "bookmark title");
+  let bookmark = await PlacesUtils.bookmarks.insert({
+    parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+    url: testUri,
+    title: "bookmark title",
+  });
 
   do_check_true(isHostInMozPlaces(testUri));
 
   // Change the hostname
-  PlacesUtils.bookmarks.changeBookmarkURI(itemId, NetUtil.newURI(NEW_URL));
+  await PlacesUtils.bookmarks.update({
+    guid: bookmark.guid,
+    url: NEW_URL,
+  });
 
   await PlacesTestUtils.clearHistory();
 
@@ -126,13 +130,16 @@ add_task(async function test_bookmark_changes() {
 });
 
 add_task(async function test_bookmark_removal() {
-  let itemId = PlacesUtils.bookmarks.getIdForItemAt(PlacesUtils.unfiledBookmarksFolderId,
-                                                    PlacesUtils.bookmarks.DEFAULT_INDEX);
-  let newUri = NetUtil.newURI(NEW_URL);
-  PlacesUtils.bookmarks.removeItem(itemId);
+  // Get the last bookmark.
+  let unfiledBookmarksRoot =
+    await PlacesUtils.getFolderContents(PlacesUtils.unfiledBookmarksFolderId).root;
+  let itemGuid =
+    unfiledBookmarksRoot.getChild(unfiledBookmarksRoot.childCount - 1).bookmarkGuid;
+
+  await PlacesUtils.bookmarks.remove(itemGuid);
   await PlacesTestUtils.clearHistory();
 
-  checkHostNotInMozHosts(newUri, false, null);
+  checkHostNotInMozHosts(Services.io.newURI(NEW_URL), false, null);
 });
 
 add_task(async function test_moz_hosts_typed_update() {

@@ -115,8 +115,8 @@ module.exports = {
   },
 
   /**
-   * This walks an AST in a manner similar to ESLint passing node and comment
-   * events to the listener. The listener is expected to be a simple function
+   * This walks an AST in a manner similar to ESLint passing node events to the
+   * listener. The listener is expected to be a simple function
    * which accepts node type, node and parents arguments.
    *
    * @param  {Object} ast
@@ -128,41 +128,14 @@ module.exports = {
   walkAST(ast, listener) {
     let parents = [];
 
-    let seenComments = new Set();
-    function sendCommentEvents(comments) {
-      if (!comments) {
-        return;
-      }
-
-      for (let comment of comments) {
-        if (seenComments.has(comment)) {
-          return;
-        }
-        seenComments.add(comment);
-
-        listener(comment.type + "Comment", comment, parents);
-      }
-    }
-
     estraverse.traverse(ast, {
       enter(node, parent) {
-        // Comments are held in node.comments for empty programs
-        let leadingComments = node.leadingComments;
-        if (node.type === "Program" && node.body.length == 0) {
-          leadingComments = node.comments;
-        }
-
-        sendCommentEvents(leadingComments);
         listener(node.type, node, parents);
-        sendCommentEvents(node.trailingComments);
 
         parents.push(node);
       },
 
       leave(node, parent) {
-        // TODO send comment exit events
-        listener(node.type + ":exit", node, parents);
-
         if (parents.length == 0) {
           throw new Error("Left more nodes than entered.");
         }
