@@ -70,7 +70,6 @@ public:
   virtual bool CreateDXVA2Decoder(const VideoInfo& aVideoInfo,
                                   nsACString& aFailureReason) = 0;
 
-  virtual uint32_t GetVendorId() const = 0;
 protected:
   Mutex mLock;
   DXVA2Manager();
