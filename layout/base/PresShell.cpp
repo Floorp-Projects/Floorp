@@ -802,7 +802,6 @@ nsIPresShell::nsIPresShell()
     , mObservingLayoutFlushes(false)
     , mNeedThrottledAnimationFlush(true)
     , mPresShellId(0)
-    , mAPZFocusSequenceNumber(0)
     , mFontSizeInflationEmPerLine(0)
     , mFontSizeInflationMinTwips(0)
     , mFontSizeInflationLineThreshold(0)
@@ -831,6 +830,7 @@ PresShell::PresShell()
   , mLastCallbackEventRequest(nullptr)
   , mLastReflowStart(0.0)
   , mLastAnchorScrollPositionY(0)
+  , mAPZFocusSequenceNumber(0)
   , mChangeNestCount(0)
   , mDocumentLoading(false)
   , mIgnoreFrameDestruction(false)
@@ -6370,6 +6370,10 @@ PresShell::Paint(nsView*         aViewToPaint,
     return;
   }
 
+  // Send an updated focus target with this transaction. Be sure to do this
+  // before we paint in the case this is an empty transaction.
+  layerManager->SetFocusTarget(mAPZFocusTarget);
+
   if (frame) {
     // Try to do an empty transaction, if the frame tree does not
     // need to be updated. Do not try to do an empty transaction on
@@ -7159,8 +7163,10 @@ PresShell::HandleEvent(nsIFrame* aFrame,
 
   // Update the latest focus sequence number with this new sequence number
   if (mAPZFocusSequenceNumber < aEvent->mFocusSequenceNumber) {
-    // XXX should we push a new FocusTarget to APZ here
     mAPZFocusSequenceNumber = aEvent->mFocusSequenceNumber;
+
+    // Schedule an empty transaction to transmit this focus update
+    aFrame->SchedulePaint(nsIFrame::PAINT_COMPOSITE_ONLY);
   }
 
   if (sPointerEventEnabled) {
