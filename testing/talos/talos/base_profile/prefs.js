@@ -1,6 +1,6 @@
-// This file is needed to work around a Firefox bug where capability.principal 
+// This file is needed to work around a Firefox bug where capability.principal
 // prefs in user.js don't get recognized until the second browser launch
-// which is too late for our purposes of using quit.js. Loading the principals 
+// which is too late for our purposes of using quit.js. Loading the principals
 // from prefs.js avoids this issue.
 user_pref("capability.principal.codebase.p0.granted", "UniversalPreferencesWrite UniversalXPConnect UniversalPreferencesRead");
 user_pref("capability.principal.codebase.p0.id", "file://");

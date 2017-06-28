@@ -6,7 +6,7 @@
           sendAsyncMessage("tabswitch-do-test");
           addMessageListener("tabswitch-test-results", function onMessage(msg) {
             let data = msg.data;
-            content.tpRecordTime(data.times.join(','), 0, data.urls.join(','));
+            content.tpRecordTime(data.times.join(","), 0, data.urls.join(","));
           });
         }
       }
