@@ -2510,20 +2510,23 @@ nsContentUtils::ThreadsafeIsCallerChrome()
 bool
 nsContentUtils::IsCallerContentXBL()
 {
-    JSContext *cx = GetCurrentJSContext();
-    if (!cx)
-        return false;
+  JSContext *cx = GetCurrentJSContext();
+  if (!cx)
+    return false;
 
-    JSCompartment *c = js::GetContextCompartment(cx);
+  JS::Realm* realm = JS::GetCurrentRealmOrNull(cx);
+  if (!realm)
+    return false;
 
-    // For remote XUL, we run XBL in the XUL scope. Given that we care about
-    // compat and not security for remote XUL, just always claim to be XBL.
-    if (!xpc::AllowContentXBLScope(c)) {
-      MOZ_ASSERT(nsContentUtils::AllowXULXBLForPrincipal(xpc::GetCompartmentPrincipal(c)));
-      return true;
-    }
+  // For remote XUL, we run XBL in the XUL scope. Given that we care about
+  // compat and not security for remote XUL, just always claim to be XBL.
+  if (!xpc::AllowContentXBLScope(realm)) {
+    DebugOnly<JSCompartment*> c = JS::GetCompartmentForRealm(realm);
+    MOZ_ASSERT(nsContentUtils::AllowXULXBLForPrincipal(xpc::GetCompartmentPrincipal(c)));
+    return true;
+  }
 
-    return xpc::IsContentXBLCompartment(c);
+  return xpc::IsContentXBLScope(realm);
 }
 
 bool

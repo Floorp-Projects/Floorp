@@ -1369,7 +1369,9 @@ bool
 IsChromeOrXBL(JSContext* cx, JSObject* /* unused */)
 {
     MOZ_ASSERT(NS_IsMainThread());
-    JSCompartment* c = js::GetContextCompartment(cx);
+    JS::Realm* realm = JS::GetCurrentRealmOrNull(cx);
+    MOZ_ASSERT(realm);
+    JSCompartment* c = JS::GetCompartmentForRealm(realm);
 
     // For remote XUL, we run XBL in the XUL scope. Given that we care about
     // compat and not security for remote XUL, we just always claim to be XBL.
@@ -1377,7 +1379,7 @@ IsChromeOrXBL(JSContext* cx, JSObject* /* unused */)
     // Note that, for performance, we don't check AllowXULXBLForPrincipal here,
     // and instead rely on the fact that AllowContentXBLScope() only returns false in
     // remote XUL situations.
-    return AccessCheck::isChrome(c) || IsContentXBLCompartment(c) || !AllowContentXBLScope(c);
+    return AccessCheck::isChrome(c) || IsContentXBLCompartment(c) || !AllowContentXBLScope(realm);
 }
 
 namespace workers {
