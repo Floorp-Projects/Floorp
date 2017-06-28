@@ -1105,7 +1105,9 @@ Http2Session::CleanupStream(Http2Stream *aStream, nsresult aResult,
         SpdyPushCache *cache = nullptr;
         requestContext->GetSpdyPushCache(&cache);
         if (cache) {
-          Http2PushedStream *trash = cache->RemovePushedStreamHttp2(hashKey);
+          // Make sure the id of the stream in the push cache is the same
+          // as the id of the stream we're cleaning up! See bug 1368080.
+          Http2PushedStream *trash = cache->RemovePushedStreamHttp2ByID(hashKey, aStream->StreamID());
           LOG3(("Http2Session::CleanupStream %p aStream=%p pushStream=%p trash=%p",
                 this, aStream, pushStream, trash));
         }

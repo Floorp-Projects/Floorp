@@ -123,6 +123,21 @@ SpdyPushCache::RemovePushedStreamHttp2(const nsCString& key)
   return rv;
 }
 
+Http2PushedStream *
+SpdyPushCache::RemovePushedStreamHttp2ByID(const nsCString& key, const uint32_t& streamID)
+{
+  Http2PushedStream *rv = mHashHttp2.Get(key);
+  LOG3(("SpdyPushCache::RemovePushedStreamHttp2ByID %s 0x%X 0x%X",
+        key.get(), rv ? rv->StreamID() : 0, streamID));
+  if (rv && streamID == rv->StreamID()) {
+    mHashHttp2.Remove(key);
+  } else {
+    // Ensure we overwrite our rv with null in case the stream IDs don't match
+    rv = nullptr;
+  }
+  return rv;
+}
+
 } // namespace net
 } // namespace mozilla
 
