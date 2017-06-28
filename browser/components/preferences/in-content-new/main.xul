@@ -267,8 +267,8 @@
               type="bool"/>
 </preferences>
 
-<hbox id="generalCategory"
-      class="subcategory"
+<hbox id="header-general"
+      class="header"
       hidden="true"
       data-category="paneGeneral">
   <label class="header-name" flex="1">&paneGeneral.title;</label>
@@ -439,13 +439,6 @@
                               &removeButton.label;"/>
     </hbox>
 </groupbox>
-
-<hbox id="languageAndAppearanceCategory"
-      class="subcategory"
-      hidden="true"
-      data-category="paneGeneral">
-  <label class="header-name" flex="1">&languageAndAppearance.label;</label>
-</hbox>
 
 <!-- Fonts and Colors -->
 <groupbox id="fontsGroup" data-category="paneGeneral" hidden="true">
@@ -628,13 +621,6 @@
   <key key="&focusSearch2.key;" modifiers="accel" id="focusSearch2" oncommand=";"/>
 </keyset>
 
-<hbox id="filesAndApplicationsCategory"
-      class="subcategory"
-      hidden="true"
-      data-category="paneGeneral">
-  <label class="header-name" flex="1">&filesAndApplications.label;</label>
-</hbox>
-
 <!--Downloads-->
 <groupbox id="downloadsGroup" data-category="paneGeneral" hidden="true">
   <caption><label>&downloads.label;</label></caption>
@@ -721,15 +707,9 @@
   <stringbundle id="bundleBrand" src="chrome://branding/locale/brand.properties"/>
 #endif
 
-<hbox id="updatesCategory"
-      class="subcategory"
-      hidden="true"
-      data-category="paneGeneral">
-  <label class="header-name" flex="1">&updateApplication.label;</label>
-</hbox>
-
 <!-- Update -->
 <groupbox id="updateApp" data-category="paneGeneral" hidden="true">
+  <caption><label>&updateApplication.label;</label></caption>
   <hbox align="start">
     <vbox flex="1">
       <description>
@@ -868,15 +848,10 @@
             preference="browser.search.update"/>
 </groupbox>
 
-<hbox id="performanceCategory"
-      class="subcategory"
-      hidden="true"
-      data-category="paneGeneral">
-  <label class="header-name" flex="1">&performance.label;</label>
-</hbox>
-
 <!-- Performance -->
 <groupbox id="performanceGroup" data-category="paneGeneral" hidden="true">
+  <caption><label>&performance.label;</label></caption>
+
   <hbox align="center">
     <checkbox id="useRecommendedPerformanceSettings"
               label="&useRecommendedPerformanceSettings2.label;"
@@ -910,15 +885,10 @@
   </vbox>
 </groupbox>
 
-<hbox id="browsingCategory"
-      class="subcategory"
-      hidden="true"
-      data-category="paneGeneral">
-  <label class="header-name" flex="1">&browsing.label;</label>
-</hbox>
-
 <!-- Browsing -->
 <groupbox id="browsingGroup" data-category="paneGeneral" hidden="true">
+  <caption><label>&browsing.label;</label></caption>
+
   <checkbox id="useAutoScroll"
             label="&useAutoScroll.label;"
             accesskey="&useAutoScroll.accesskey;"
@@ -945,15 +915,10 @@
             preference="accessibility.typeaheadfind"/>
 </groupbox>
 
-<hbox id="networkProxyCategory"
-      class="subcategory"
-      hidden="true"
-      data-category="paneGeneral">
-  <label class="header-name" flex="1">&networkProxy.label;</label>
-</hbox>
-
 <!-- Network Proxy-->
 <groupbox id="connectionGroup" data-category="paneGeneral" hidden="true">
+  <caption><label>&networkProxy.label;</label></caption>
+
   <hbox align="center">
     <description flex="1" control="connectionSettings">&connectionDesc.label;</description>
     <button id="connectionSettings"

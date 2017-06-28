@@ -19,8 +19,8 @@
 
     <stringbundle id="engineManagerBundle" src="chrome://browser/locale/engineManager.properties"/>
 
-    <hbox id="searchCategory"
-          class="subcategory"
+    <hbox id="header-search"
+          class="header"
           hidden="true"
           data-category="paneSearch">
       <label class="header-name" flex="1">&paneSearch.title;</label>
