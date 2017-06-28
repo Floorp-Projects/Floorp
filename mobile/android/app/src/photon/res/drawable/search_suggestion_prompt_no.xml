@@ -4,17 +4,8 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
-    <item android:state_pressed="true">
-        <shape>
-            <solid android:color="@color/toolbar_grey_pressed"/>
-            <corners android:radius="@dimen/doorhanger_rounded_corner_radius"/>
-        </shape>
-    </item>
+    <item android:state_pressed="true"
+          android:drawable="@color/photon_notification_bg_pressed"/>
 
-    <item>
-        <shape>
-            <solid android:color="@color/toolbar_menu_dark_grey"/>
-            <corners android:radius="@dimen/doorhanger_rounded_corner_radius"/>
-        </shape>
-    </item>
+    <item android:drawable="@color/photon_notification_bg"/>
 </selector>

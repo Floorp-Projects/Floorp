@@ -1012,6 +1012,7 @@ gbjar.sources += ['java/org/mozilla/gecko/' + x for x in [
 if CONFIG['MOZ_ANDROID_PHOTON']:
     gbjar.sources += ['../app/src/photon/java/org/mozilla/gecko/' + x for x in [
         'home/SearchEngineRow.java',
+        'home/SuggestionItem.java',
         'skin/SkinConfig.java',
         'toolbar/TabCounter.java',
     ]]
