@@ -573,11 +573,6 @@ WMFVideoMFTManager::InitInternal()
     Telemetry::Accumulate(Telemetry::MEDIA_DECODER_BACKEND_USED,
                           uint32_t(media::MediaDecoderBackend::WMFSoftware));
   }
-  // We only allow intel VP9 decoder at this stage.
-  if ((mStreamType == VP9 || mStreamType == VP8) &&
-      (mDXVA2Manager->GetVendorId() != 0x8086 && !gfxPrefs::PDMWMFForceVP9())) {
-    return false;
-  }
 
   mDecoder = decoder;
   hr = SetDecoderMediaTypes();
