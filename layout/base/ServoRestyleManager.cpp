@@ -6,6 +6,8 @@
 
 #include "mozilla/ServoRestyleManager.h"
 
+#include "mozilla/AutoRestyleTimelineMarker.h"
+#include "mozilla/AutoTimelineMarker.h"
 #include "mozilla/DocumentStyleRootIterator.h"
 #include "mozilla/ServoBindings.h"
 #include "mozilla/ServoStyleSet.h"
@@ -782,14 +784,19 @@ ServoRestyleManager::DoProcessPendingRestyles(TraversalRestyleBehavior
       ClearSnapshots();
     }
 
+    nsStyleChangeList currentChanges(StyleBackendType::Servo);
+    bool anyStyleChanged = false;
+
     // Recreate style contexts, and queue up change hints (which also handle
     // lazy frame construction).
-    nsStyleChangeList currentChanges(StyleBackendType::Servo);
-    DocumentStyleRootIterator iter(doc);
-    bool anyStyleChanged = false;
-    while (Element* root = iter.GetNextStyleRoot()) {
-      ServoRestyleState state(*styleSet, currentChanges);
-      anyStyleChanged |= ProcessPostTraversal(root, nullptr, state);
+    {
+      AutoRestyleTimelineMarker marker(
+        mPresContext->GetDocShell(), animationOnly);
+      DocumentStyleRootIterator iter(doc);
+      while (Element* root = iter.GetNextStyleRoot()) {
+        ServoRestyleState state(*styleSet, currentChanges);
+        anyStyleChanged |= ProcessPostTraversal(root, nullptr, state);
+      }
     }
 
     // Process the change hints.
@@ -797,27 +804,30 @@ ServoRestyleManager::DoProcessPendingRestyles(TraversalRestyleBehavior
     // Unfortunately, the frame constructor can generate new change hints while
     // processing existing ones. We redirect those into a secondary queue and
     // iterate until there's nothing left.
-    ReentrantChangeList newChanges;
-    mReentrantChanges = &newChanges;
-    while (!currentChanges.IsEmpty()) {
-      ProcessRestyledFrames(currentChanges);
-      MOZ_ASSERT(currentChanges.IsEmpty());
-      for (ReentrantChange& change: newChanges)  {
-        if (!(change.mHint & nsChangeHint_ReconstructFrame) &&
-            !change.mContent->GetPrimaryFrame()) {
-          // SVG Elements post change hints without ensuring that the primary
-          // frame will be there after that (see bug 1366142).
-          //
-          // Just ignore those, since we can't really process them.
-          continue;
+    {
+      AutoTimelineMarker marker(
+        mPresContext->GetDocShell(), "StylesApplyChanges");
+      ReentrantChangeList newChanges;
+      mReentrantChanges = &newChanges;
+      while (!currentChanges.IsEmpty()) {
+        ProcessRestyledFrames(currentChanges);
+        MOZ_ASSERT(currentChanges.IsEmpty());
+        for (ReentrantChange& change: newChanges)  {
+          if (!(change.mHint & nsChangeHint_ReconstructFrame) &&
+              !change.mContent->GetPrimaryFrame()) {
+            // SVG Elements post change hints without ensuring that the primary
+            // frame will be there after that (see bug 1366142).
+            //
+            // Just ignore those, since we can't really process them.
+            continue;
+          }
+          currentChanges.AppendChange(change.mContent->GetPrimaryFrame(),
+                                      change.mContent, change.mHint);
         }
-        currentChanges.AppendChange(change.mContent->GetPrimaryFrame(),
-                                    change.mContent, change.mHint);
+        newChanges.Clear();
       }
-      newChanges.Clear();
+      mReentrantChanges = nullptr;
     }
-    mReentrantChanges = nullptr;
-
 
     if (anyStyleChanged) {
       // Maybe no styles changed when:
