@@ -282,13 +282,15 @@ evaluate.toJSON = function (obj, seenEls) {
   }
 
   // arbitrary objects + files
-  else {
-    let rv = {};
-    for (let prop in obj) {
-      try {
-        rv[prop] = evaluate.toJSON(obj[prop], seenEls);
-      } catch (e if (e.result == Cr.NS_ERROR_NOT_IMPLEMENTED)) {
+  let rv = {};
+  for (let prop in obj) {
+    try {
+      rv[prop] = evaluate.toJSON(obj[prop], seenEls);
+    } catch (e) {
+      if (e.result == Cr.NS_ERROR_NOT_IMPLEMENTED) {
         logger.debug(`Skipping ${prop}: ${e.message}`);
+      } else {
+        throw e;
       }
     }
     return rv;
