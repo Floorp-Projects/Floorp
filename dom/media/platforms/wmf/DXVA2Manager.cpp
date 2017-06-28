@@ -111,7 +111,6 @@ public:
   bool CreateDXVA2Decoder(const VideoInfo& aVideoInfo,
                           nsACString& aFailureReason) override;
 
-  uint32_t GetVendorId() const override { return mVendorId; }
 private:
   bool CanCreateDecoder(const DXVA2_VideoDesc& aDesc,
                         const float aFramerate) const;
@@ -129,7 +128,6 @@ private:
   GUID mDecoderGUID;
   UINT32 mResetToken = 0;
   bool mFirstFrame = true;
-  uint32_t mVendorId = 0;
 };
 
 void GetDXVA2ExtendedFormatFromMFMediaType(IMFMediaType *pType,
@@ -396,8 +394,7 @@ D3D9DXVA2Manager::Init(layers::KnowsCompositor* aKnowsCompositor,
     return hr;
   }
 
-  mVendorId = adapter.VendorId;
-  if (mVendorId == 0x1022 && !gfxPrefs::PDMWMFSkipBlacklist()) {
+  if (adapter.VendorId == 0x1022 && !gfxPrefs::PDMWMFSkipBlacklist()) {
     for (const auto& model : sAMDPreUVD4) {
       if (adapter.DeviceId == model) {
         mIsAMDPreUVD4 = true;
@@ -628,7 +625,6 @@ public:
   bool CreateDXVA2Decoder(const VideoInfo& aVideoInfo,
                           nsACString& aFailureReason) override;
 
-  uint32_t GetVendorId() const override { return mVendorId; }
 private:
   HRESULT CreateFormatConverter();
 
@@ -652,7 +648,6 @@ private:
   uint32_t mWidth = 0;
   uint32_t mHeight = 0;
   UINT mDeviceManagerToken = 0;
-  uint32_t mVendorId = 0;
 };
 
 bool
@@ -862,8 +857,7 @@ D3D11DXVA2Manager::InitInternal(layers::KnowsCompositor* aKnowsCompositor,
     return hr;
   }
 
-  mVendorId = adapterDesc.VendorId;
-  if (mVendorId == 0x1022 && !gfxPrefs::PDMWMFSkipBlacklist()) {
+  if (adapterDesc.VendorId == 0x1022 && !gfxPrefs::PDMWMFSkipBlacklist()) {
     for (const auto& model : sAMDPreUVD4) {
       if (adapterDesc.DeviceId == model) {
         mIsAMDPreUVD4 = true;
