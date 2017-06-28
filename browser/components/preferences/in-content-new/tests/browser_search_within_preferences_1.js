@@ -45,7 +45,10 @@ add_task(async function() {
 
   // Performs search
   let searchInput = gBrowser.contentDocument.getElementById("searchInput");
-  searchInput.focus();
+
+  is(searchInput, gBrowser.contentDocument.activeElement.closest("#searchInput"),
+    "Search input should be focused when visiting preferences");
+
   searchInput.value = "password";
   searchInput.doCommand();
 
@@ -84,7 +87,10 @@ add_task(async function() {
 
   // Performs search
   let searchInput = gBrowser.contentDocument.getElementById("searchInput");
-  searchInput.focus();
+
+  is(searchInput, gBrowser.contentDocument.activeElement.closest("#searchInput"),
+    "Search input should be focused when visiting preferences");
+
   searchInput.value = "password";
   searchInput.doCommand();
 
@@ -141,7 +147,10 @@ add_task(async function() {
 
   // Performs search
   let searchInput = gBrowser.contentDocument.getElementById("searchInput");
-  searchInput.focus();
+
+  is(searchInput, gBrowser.contentDocument.activeElement.closest("#searchInput"),
+    "Search input should be focused when visiting preferences");
+
   searchInput.value = "coach";
   searchInput.doCommand();
 
@@ -167,7 +176,10 @@ add_task(async function() {
 
   // Performs search
   let searchInput = gBrowser.contentDocument.getElementById("searchInput");
-  searchInput.focus();
+
+  is(searchInput, gBrowser.contentDocument.activeElement.closest("#searchInput"),
+    "Search input should be focused when visiting preferences");
+
   searchInput.value = "password";
   searchInput.doCommand();
 
@@ -194,7 +206,10 @@ add_task(async function() {
 
   // Performs search
   let searchInput = gBrowser.contentDocument.getElementById("searchInput");
-  searchInput.focus();
+
+  is(searchInput, gBrowser.contentDocument.activeElement.closest("#searchInput"),
+    "Search input should be focused when visiting preferences");
+
   searchInput.value = "site data";
   searchInput.doCommand();
 
@@ -220,7 +235,10 @@ add_task(async function() {
   await openPreferencesViaOpenPreferencesAPI("paneGeneral", {leaveOpen: true});
   let searchInput = gBrowser.contentDocument.getElementById("searchInput");
   let searchResultsCategory = gBrowser.contentDocument.getElementById("category-search-results");
-  searchInput.focus();
+
+  is(searchInput, gBrowser.contentDocument.activeElement.closest("#searchInput"),
+    "Search input should be focused when visiting preferences");
+
   searchInput.value = "password";
   searchInput.doCommand();
   is(searchResultsCategory.hidden, false, "search results category should be shown");
