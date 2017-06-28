@@ -455,9 +455,6 @@ IonCacheIRCompiler::init()
                                                             AnyRegister(ic->object())));
         break;
       }
-      case CacheKind::TypeOf:
-      case CacheKind::Call:
-        MOZ_CRASH("Invalid cache");
       case CacheKind::HasOwn: {
         IonHasOwnIC* ic = ic_->asHasOwnIC();
         Register output = ic->output();
@@ -472,6 +469,11 @@ IonCacheIRCompiler::init()
         allocator.initInputLocation(1, ic->value());
         break;
       }
+      case CacheKind::Call:
+      case CacheKind::TypeOf:
+      case CacheKind::GetPropSuper:
+      case CacheKind::GetElemSuper:
+        MOZ_CRASH("Unsupported IC");
     }
 
     if (liveRegs_)

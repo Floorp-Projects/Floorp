@@ -33,8 +33,7 @@ DocAccessibleParent::RecvShowEvent(const ShowEventData& aData,
   MOZ_ASSERT(CheckDocTree());
 
   if (aData.NewTree().IsEmpty()) {
-    NS_ERROR("no children being added");
-    return IPC_FAIL_NO_REASON(this);
+    return IPC_FAIL(this, "No children being added");
   }
 
   ProxyAccessible* parent = GetAccessible(aData.ID());
@@ -158,8 +157,7 @@ DocAccessibleParent::RecvHideEvent(const uint64_t& aRootID,
   // We shouldn't actually need this because mAccessibles shouldn't have an
   // entry for the document itself, but it doesn't hurt to be explicit.
   if (!aRootID) {
-    NS_ERROR("trying to hide entire document?");
-    return IPC_FAIL_NO_REASON(this);
+    return IPC_FAIL(this, "Trying to hide entire document?");
   }
 
   ProxyEntry* rootEntry = mAccessibles.GetEntry(aRootID);
@@ -398,8 +396,7 @@ DocAccessibleParent::RecvRoleChangedEvent(const uint32_t& aRole)
   }
 
  if (aRole > roles::LAST_ROLE) {
-   NS_ERROR("child sent bad role in RoleChangedEvent");
-   return IPC_FAIL_NO_REASON(this);
+   return IPC_FAIL(this, "Child sent bad role in RoleChangedEvent");
  }
 
  mRole = static_cast<a11y::role>(aRole);

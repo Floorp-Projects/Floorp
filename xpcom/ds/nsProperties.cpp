@@ -44,13 +44,11 @@ nsProperties::Undefine(const char* prop)
     return NS_ERROR_INVALID_ARG;
   }
 
-  nsCOMPtr<nsISupports> value;
-  if (!nsProperties_HashBase::Get(prop, getter_AddRefs(value))) {
-    return NS_ERROR_FAILURE;
+  if (auto entry = nsProperties_HashBase::Lookup(prop)) {
+    entry.Remove();
+    return NS_OK;
   }
-
-  Remove(prop);
-  return NS_OK;
+  return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
@@ -60,8 +58,7 @@ nsProperties::Has(const char* prop, bool* result)
     return NS_ERROR_INVALID_ARG;
   }
 
-  nsCOMPtr<nsISupports> value;
-  *result = nsProperties_HashBase::Get(prop, getter_AddRefs(value));
+  *result = nsProperties_HashBase::Contains(prop);
   return NS_OK;
 }
 

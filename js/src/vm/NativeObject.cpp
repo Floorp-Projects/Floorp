@@ -531,11 +531,13 @@ NativeObject::sparsifyDenseElements(JSContext* cx, HandleNativeObject obj)
     if (initialized)
         obj->setDenseInitializedLengthUnchecked(0);
 
-    /*
-     * Reduce storage for dense elements which are now holes. Explicitly mark
-     * the elements capacity as zero, so that any attempts to add dense
-     * elements will be caught in ensureDenseElements.
-     */
+    // Reduce storage for dense elements which are now holes. Explicitly mark
+    // the elements capacity as zero, so that any attempts to add dense
+    // elements will be caught in ensureDenseElements.
+
+    if (obj->getElementsHeader()->numShiftedElements() > 0)
+        obj->moveShiftedElements();
+
     if (obj->getDenseCapacity()) {
         obj->shrinkElements(cx, 0);
         obj->getElementsHeader()->capacity = 0;

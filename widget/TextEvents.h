@@ -88,6 +88,11 @@ struct AlternativeCharCode
 
 struct ShortcutKeyCandidate
 {
+  ShortcutKeyCandidate()
+    : mCharCode(0)
+    , mIgnoreShift(0)
+  {
+  }
   ShortcutKeyCandidate(uint32_t aCharCode, bool aIgnoreShift)
     : mCharCode(aCharCode)
     , mIgnoreShift(aIgnoreShift)
@@ -98,6 +103,27 @@ struct ShortcutKeyCandidate
   // true if Shift state can be ignored.  Otherwise, Shift key state must
   // match keyboard shortcut definition.
   bool mIgnoreShift;
+};
+
+/******************************************************************************
+ * mozilla::IgnoreModifierState
+ *
+ * This stores flags for modifiers that should be ignored when matching
+ * XBL handlers.
+ ******************************************************************************/
+
+struct IgnoreModifierState
+{
+  // When mShift is true, Shift key state will be ignored.
+  bool mShift;
+  // When mOS is true, OS key state will be ignored.
+  bool mOS;
+
+  IgnoreModifierState()
+    : mShift(false)
+    , mOS(false)
+  {
+  }
 };
 
 /******************************************************************************
@@ -409,7 +435,7 @@ public:
    * @param aCandidates [out] the candidate shortcut key combination list.
    *                          the first item is most preferred.
    */
-  void GetShortcutKeyCandidates(ShortcutKeyCandidateArray& aCandidates);
+  void GetShortcutKeyCandidates(ShortcutKeyCandidateArray& aCandidates) const;
 
   /**
    * Get the candidates for access key.
@@ -417,7 +443,7 @@ public:
    * @param aCandidates [out] the candidate access key list.
    *                          the first item is most preferred.
    */
-  void GetAccessKeyCandidates(nsTArray<uint32_t>& aCandidates);
+  void GetAccessKeyCandidates(nsTArray<uint32_t>& aCandidates) const;
 
   static void Shutdown();
 

@@ -120,7 +120,7 @@ protected:
   uint32_t GetPaintFlags();
   void UpdateContentClient(PaintState& aState);
   bool UpdatePaintRegion(PaintState& aState);
-  void PaintOffMainThread(DrawTargetCapture* aCapture);
+  void PaintOffMainThread(gfx::DrawTargetCapture* aCapture);
   already_AddRefed<gfx::DrawTargetCapture> CapturePaintedContent();
 
   virtual void PrintInfo(std::stringstream& aStream, const char* aPrefix) override;

@@ -2,45 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-// ES6 draft rev36 2015-03-17 19.1.2.1
-function ObjectStaticAssign(target, firstSource) {
-    // Steps 1-2.
-    var to = ToObject(target);
-
-    // Step 3.
-    if (arguments.length < 2)
-        return to;
-
-    // Steps 4-5.
-    for (var i = 1; i < arguments.length; i++) {
-        // Step 5.a.
-        var nextSource = arguments[i];
-        if (nextSource === null || nextSource === undefined)
-            continue;
-
-        // Steps 5.b.i-ii.
-        var from = ToObject(nextSource);
-
-        // Steps 5.b.iii-iv.
-        var keys = OwnPropertyKeys(from, JSITER_OWNONLY | JSITER_HIDDEN | JSITER_SYMBOLS);
-
-        // Step 5.c.
-        for (var nextIndex = 0, len = keys.length; nextIndex < len; nextIndex++) {
-            var nextKey = keys[nextIndex];
-
-            // Steps 5.c.i-iii. We abbreviate this by calling propertyIsEnumerable
-            // which is faster and returns false for not defined properties.
-            if (callFunction(std_Object_propertyIsEnumerable, from, nextKey)) {
-                // Steps 5.c.iii.1-4.
-                to[nextKey] = from[nextKey];
-            }
-        }
-    }
-
-    // Step 6.
-    return to;
-}
-
 // ES stage 4 proposal
 function ObjectGetOwnPropertyDescriptors(O) {
     // Step 1.

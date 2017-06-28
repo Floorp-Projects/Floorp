@@ -56,6 +56,14 @@ InputQueue::ReceiveInputEvent(const RefPtr<AsyncPanZoomController>& aTarget,
       return ReceiveMouseInput(aTarget, aTargetConfirmed, event, aOutInputBlockId);
     }
 
+    case KEYBOARD_INPUT: {
+      // Every keyboard input must have a confirmed target
+      MOZ_ASSERT(aTarget && aTargetConfirmed);
+
+      const KeyboardInput& event = aEvent.AsKeyboardInput();
+      return ReceiveKeyboardInput(aTarget, event, aOutInputBlockId);
+    }
+
     default:
       // The return value for non-touch input is only used by tests, so just pass
       // through the return value for now. This can be changed later if needed.
@@ -268,6 +276,39 @@ InputQueue::ReceiveScrollWheelInput(const RefPtr<AsyncPanZoomController>& aTarge
   return nsEventStatus_eConsumeDoDefault;
 }
 
+nsEventStatus
+InputQueue::ReceiveKeyboardInput(const RefPtr<AsyncPanZoomController>& aTarget,
+                                 const KeyboardInput& aEvent,
+                                 uint64_t* aOutInputBlockId) {
+  KeyboardBlockState* block = mActiveKeyboardBlock.get();
+
+  // If the block is targeting a different Apzc than this keyboard event then
+  // we'll create a new input block
+  if (block && block->GetTargetApzc() != aTarget) {
+    block = nullptr;
+  }
+
+  if (!block) {
+    block = new KeyboardBlockState(aTarget);
+    INPQ_LOG("started new keyboard block %p id %" PRIu64 " for target %p\n",
+        block, block->GetBlockId(), aTarget.get());
+
+    mActiveKeyboardBlock = block;
+  } else {
+    INPQ_LOG("received new event in block %p\n", block);
+  }
+
+  if (aOutInputBlockId) {
+    *aOutInputBlockId = block->GetBlockId();
+  }
+
+  mQueuedInputs.AppendElement(MakeUnique<QueuedInput>(aEvent, *block));
+
+  ProcessQueue();
+
+  return nsEventStatus_eConsumeNoDefault;
+}
+
 static bool
 CanScrollTargetHorizontally(const PanGestureInput& aInitialEvent,
                             PanGestureBlockState* aBlock)
@@ -459,6 +500,13 @@ InputQueue::GetCurrentPanGestureBlock() const
 {
   InputBlockState* block = GetCurrentBlock();
   return block ? block->AsPanGestureBlock() : mActivePanGestureBlock.get();
+}
+
+KeyboardBlockState*
+InputQueue::GetCurrentKeyboardBlock() const
+{
+  InputBlockState* block = GetCurrentBlock();
+  return block ? block->AsKeyboardBlock() : mActiveKeyboardBlock.get();
 }
 
 WheelBlockState*

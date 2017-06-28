@@ -1886,9 +1886,32 @@ ExpressionDecompiler::decompilePC(jsbytecode* pc, uint8_t defIndex)
                write("(...)");
       case JSOP_NEWARRAY:
         return write("[]");
-      case JSOP_REGEXP:
-      case JSOP_OBJECT:
+      case JSOP_REGEXP: {
+        RootedObject obj(cx, script->getObject(GET_UINT32_INDEX(pc)));
+        JSString* str = obj->as<RegExpObject>().toString(cx);
+        if (!str)
+            return false;
+        return write(str);
+      }
       case JSOP_NEWARRAY_COPYONWRITE: {
+        RootedObject obj(cx, script->getObject(GET_UINT32_INDEX(pc)));
+        Handle<ArrayObject*> aobj = obj.as<ArrayObject>();
+        if (!write("["))
+            return false;
+        for (size_t i = 0; i < aobj->getDenseInitializedLength(); i++) {
+            if (i > 0 && !write(", "))
+                return false;
+
+            RootedValue v(cx, aobj->getDenseElement(i));
+            MOZ_RELEASE_ASSERT(v.isPrimitive() && !v.isMagic());
+
+            JSString* str = ValueToSource(cx, v);
+            if (!str || !write(str))
+                return false;
+        }
+        return write("]");
+      }
+      case JSOP_OBJECT: {
         JSObject* obj = script->getObject(GET_UINT32_INDEX(pc));
         RootedValue objv(cx, ObjectValue(*obj));
         JSString* str = ValueToSource(cx, objv);

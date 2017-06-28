@@ -23,6 +23,7 @@ InputData::~InputData()
 InputData::InputData(InputType aInputType)
   : mInputType(aInputType)
   , mTime(0)
+  , mFocusSequenceNumber(0)
   , modifiers(0)
 {
 }
@@ -32,6 +33,7 @@ InputData::InputData(InputType aInputType, uint32_t aTime, TimeStamp aTimeStamp,
   : mInputType(aInputType)
   , mTime(aTime)
   , mTimeStamp(aTimeStamp)
+  , mFocusSequenceNumber(0)
   , modifiers(aModifiers)
 {
 }
@@ -226,6 +228,7 @@ MultiTouchInput::ToWidgetTouchEvent(nsIWidget* aWidget) const
   event.mTime = this->mTime;
   event.mTimeStamp = this->mTimeStamp;
   event.mFlags.mHandledByAPZ = mHandledByAPZ;
+  event.mFocusSequenceNumber = mFocusSequenceNumber;
 
   for (size_t i = 0; i < mTouches.Length(); i++) {
     *event.mTouches.AppendElement() = mTouches[i].ToNewDOMTouch();
@@ -269,6 +272,7 @@ MultiTouchInput::ToWidgetMouseEvent(nsIWidget* aWidget) const
   event.inputSource = nsIDOMMouseEvent::MOZ_SOURCE_TOUCH;
   event.mModifiers = modifiers;
   event.mFlags.mHandledByAPZ = mHandledByAPZ;
+  event.mFocusSequenceNumber = mFocusSequenceNumber;
 
   if (mouseEventMessage != eMouseMove) {
     event.mClickCount = 1;
@@ -470,6 +474,7 @@ MouseInput::ToWidgetMouseEvent(nsIWidget* aWidget) const
   event.mClickCount = clickCount;
   event.inputSource = mInputSource;
   event.mIgnoreRootScrollFrame = true;
+  event.mFocusSequenceNumber = mFocusSequenceNumber;
 
   return event;
 }
@@ -537,6 +542,7 @@ PanGestureInput::ToWidgetWheelEvent(nsIWidget* aWidget) const
   wheelEvent.mDeltaX = mPanDisplacement.x;
   wheelEvent.mDeltaY = mPanDisplacement.y;
   wheelEvent.mFlags.mHandledByAPZ = mHandledByAPZ;
+  wheelEvent.mFocusSequenceNumber = mFocusSequenceNumber;
   return wheelEvent;
 }
 
@@ -764,6 +770,7 @@ ScrollWheelInput::ToWidgetWheelEvent(nsIWidget* aWidget) const
   wheelEvent.mAllowToOverrideSystemScrollSpeed =
     mAllowToOverrideSystemScrollSpeed;
   wheelEvent.mFlags.mHandledByAPZ = mHandledByAPZ;
+  wheelEvent.mFocusSequenceNumber = mFocusSequenceNumber;
   return wheelEvent;
 }
 
@@ -783,6 +790,44 @@ ScrollWheelInput::IsCustomizedByUserPrefs() const
 {
   return mUserDeltaMultiplierX != 1.0 ||
          mUserDeltaMultiplierY != 1.0;
+}
+
+KeyboardInput::KeyboardInput(const WidgetKeyboardEvent& aEvent)
+  : InputData(KEYBOARD_INPUT,
+              aEvent.mTime,
+              aEvent.mTimeStamp,
+              aEvent.mModifiers)
+  , mKeyCode(aEvent.mKeyCode)
+  , mCharCode(aEvent.mCharCode)
+  , mHandledByAPZ(false)
+{
+  switch (aEvent.mMessage) {
+    case eKeyPress: {
+      mType = KeyboardInput::KEY_PRESS;
+      break;
+    }
+    case eKeyUp: {
+      mType = KeyboardInput::KEY_UP;
+      break;
+    }
+    case eKeyDown: {
+      mType = KeyboardInput::KEY_DOWN;
+      break;
+    }
+    default:
+      mType = KeyboardInput::KEY_OTHER;
+      break;
+  }
+
+  aEvent.GetShortcutKeyCandidates(mShortcutCandidates);
+}
+
+KeyboardInput::KeyboardInput()
+  : InputData(KEYBOARD_INPUT)
+  , mKeyCode(0)
+  , mCharCode(0)
+  , mHandledByAPZ(false)
+{
 }
 
 } // namespace mozilla

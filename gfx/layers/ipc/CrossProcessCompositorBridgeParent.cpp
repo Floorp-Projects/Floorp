@@ -299,6 +299,7 @@ CrossProcessCompositorBridgeParent::ShadowLayersUpdated(
   state->mParent->NotifyShadowTreeTransaction(
     id,
     aInfo.isFirstPaint(),
+    aInfo.focusTarget(),
     aInfo.scheduleComposite(),
     aInfo.paintSequenceNumber(),
     aInfo.isRepeatTransaction(),

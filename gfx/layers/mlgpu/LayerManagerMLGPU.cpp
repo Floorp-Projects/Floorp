@@ -193,6 +193,12 @@ LayerManagerMLGPU::GetBackendType()
   return mDevice ? mDevice->GetLayersBackend() : LayersBackend::LAYERS_NONE;
 }
 
+void
+LayerManagerMLGPU::SetRoot(Layer* aLayer)
+{
+  mRoot = aLayer;
+}
+
 bool
 LayerManagerMLGPU::BeginTransaction()
 {
@@ -269,6 +275,8 @@ LayerManagerMLGPU::EndTransaction(const TimeStamp& aTimeStamp, EndTransactionFla
     Composite();
     PostRender();
   }
+
+  mTextureSourceProvider->FlushPendingNotifyNotUsed();
 
   // Finish composition.
   mLastCompositionEndTime = TimeStamp::Now();

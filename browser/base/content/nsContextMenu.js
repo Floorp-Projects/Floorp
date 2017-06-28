@@ -114,6 +114,7 @@ nsContextMenu.prototype = {
         srcUrl: this.mediaURL,
         frameUrl: gContextMenuContentData ? gContextMenuContentData.docLocation : undefined,
         pageUrl: this.browser ? this.browser.currentURI.spec : undefined,
+        linkText: this.linkTextStr,
         linkUrl: this.linkURL,
         selectionText: this.isTextSelected ? this.selectionInfo.text : undefined,
         frameId: this.frameOuterWindowID,

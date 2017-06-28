@@ -15,6 +15,7 @@
 #include "mozilla/EventForwards.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/gfx/MatrixFwd.h"
+#include "mozilla/layers/KeyboardScrollAction.h"
 
 template<class E> struct already_AddRefed;
 class nsIWidget;
@@ -40,6 +41,7 @@ enum InputType
   PINCHGESTURE_INPUT,
   TAPGESTURE_INPUT,
   SCROLLWHEEL_INPUT,
+  KEYBOARD_INPUT,
 
   // Used as an upper bound for ContiguousEnumSerializer
   SENTINEL_INPUT,
@@ -51,6 +53,7 @@ class PanGestureInput;
 class PinchGestureInput;
 class TapGestureInput;
 class ScrollWheelInput;
+class KeyboardInput;
 
 // This looks unnecessary now, but as we add more and more classes that derive
 // from InputType (eventually probably almost as many as *Events.h has), it
@@ -84,6 +87,10 @@ public:
   // Set in parallel to mTime until we determine it is safe to drop
   // platform-specific event times (see bug 77992).
   TimeStamp mTimeStamp;
+  // The sequence number of the last potentially focus changing event handled
+  // by APZ. This is used to track when that event has been processed by content,
+  // and focus can be reconfirmed for async keyboard scrolling.
+  uint64_t mFocusSequenceNumber;
 
   Modifiers modifiers;
 
@@ -93,6 +100,7 @@ public:
   INPUTDATA_AS_CHILD_TYPE(PinchGestureInput, PINCHGESTURE_INPUT)
   INPUTDATA_AS_CHILD_TYPE(TapGestureInput, TAPGESTURE_INPUT)
   INPUTDATA_AS_CHILD_TYPE(ScrollWheelInput, SCROLLWHEEL_INPUT)
+  INPUTDATA_AS_CHILD_TYPE(KeyboardInput, KEYBOARD_INPUT)
 
   virtual ~InputData();
   explicit InputData(InputType aInputType);
@@ -611,6 +619,46 @@ public:
   bool mMayHaveMomentum;
   bool mIsMomentum;
   bool mAllowToOverrideSystemScrollSpeed;
+};
+
+class KeyboardInput : public InputData
+{
+public:
+  typedef mozilla::layers::KeyboardScrollAction KeyboardScrollAction;
+
+  enum KeyboardEventType
+  {
+    KEY_DOWN,
+    KEY_PRESS,
+    KEY_UP,
+    // Any other key event such as eKeyDownOnPlugin
+    KEY_OTHER,
+
+    // Used as an upper bound for ContiguousEnumSerializer
+    KEY_SENTINEL,
+  };
+
+  explicit KeyboardInput(const WidgetKeyboardEvent& aEvent);
+
+  // Warning, this class is serialized and sent over IPC. Any change to its
+  // fields must be reflected in its ParamTraits<>, in nsGUIEventIPC.h
+
+  KeyboardEventType mType;
+  uint32_t mKeyCode;
+  uint32_t mCharCode;
+  nsTArray<ShortcutKeyCandidate> mShortcutCandidates;
+
+  bool mHandledByAPZ;
+
+  // The scroll action to perform on a layer for this keyboard input. This is
+  // only used in APZ and is NOT serialized over IPC.
+  KeyboardScrollAction mAction;
+
+protected:
+  friend mozilla::layers::PAPZCTreeManagerParent;
+  friend mozilla::layers::APZCTreeManagerChild;
+
+  KeyboardInput();
 };
 
 } // namespace mozilla
