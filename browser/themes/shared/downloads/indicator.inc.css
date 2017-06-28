@@ -6,7 +6,7 @@
 
 #downloads-button {
 %ifdef MOZ_PHOTON_THEME
-  --downloads-indicator-image: url("chrome://browser/skin/download-arrow-with-bar.svg");
+  --downloads-indicator-image: url("chrome://browser/skin/downloads/download-icons.svg#arrow-with-bar");
 %else
   --downloads-indicator-image: url("chrome://browser/skin/download.svg");
 %endif
@@ -17,34 +17,63 @@
   min-height: 16px;
 }
 
-#downloads-indicator-icon {
-  background: var(--downloads-indicator-image) center no-repeat;
-  -moz-context-properties: fill;
-  fill: var(--toolbarbutton-icon-fill);
+#downloads-indicator-progress-outer {
   width: 16px;
   height: 16px;
   background-size: 16px;
+  fill: var(--toolbarbutton-icon-fill);
+  -moz-context-properties: fill;
+%ifdef MOZ_PHOTON_ANIMATIONS
+  background: url("chrome://browser/skin/downloads/download-icons.svg#default-bar") center no-repeat;
+%else
+  background: var(--downloads-indicator-image) center no-repeat;
+%endif
 }
 
-toolbar[brighttext] #downloads-button:not([attention="success"]) > #downloads-indicator-anchor > #downloads-indicator-icon {
+%ifdef MOZ_PHOTON_ANIMATIONS
+toolbar[brighttext] #downloads-button:not([attention="success"]) > #downloads-indicator-anchor > #downloads-indicator-icon,
+%endif
+toolbar[brighttext] #downloads-button:not([attention="success"]) > #downloads-indicator-anchor > #downloads-indicator-progress-outer {
   fill: var(--toolbarbutton-icon-fill-inverted);
 }
 
-#downloads-button[attention="success"] > #downloads-indicator-anchor > #downloads-indicator-icon {
+%ifdef MOZ_PHOTON_ANIMATIONS
+#downloads-button[attention="success"] > #downloads-indicator-anchor > #downloads-indicator-icon,
+%endif
+#downloads-button[attention="success"] > #downloads-indicator-anchor > #downloads-indicator-progress-outer {
   fill: var(--toolbarbutton-icon-fill-attention);
 }
+%ifdef MOZ_PHOTON_ANIMATIONS
+#downloads-button[progress] > #downloads-indicator-anchor > #downloads-indicator-progress-outer {
+  background: url("chrome://browser/skin/downloads/download-icons.svg#progress-bar-bg") center no-repeat;
+}
+%endif
 
 #downloads-button[attention="success"] {
   list-style-image: url("chrome://browser/skin/downloads/download-glow-menuPanel.png");
   -moz-image-region: auto;
 }
 
-#downloads-indicator-progress-icon {
+%ifdef MOZ_PHOTON_ANIMATIONS
+#downloads-indicator-icon {
+  -moz-context-properties: fill;
+  background-image: url("chrome://browser/skin/downloads/download-icons.svg#arrow");
+  width: 16px;
+  height: 16px;
+}
+%endif
+
+#downloads-indicator-progress-inner {
+%ifdef MOZ_PHOTON_ANIMATIONS
+  background: url("chrome://browser/skin/downloads/download-icons.svg#progress-bar-fg") left no-repeat;
+  margin-right: 16px;
+%else
   background: var(--downloads-indicator-image) bottom no-repeat;
+  margin-top: 16px;
+%endif
   -moz-context-properties: fill;
   fill: var(--toolbarbutton-icon-fill-attention);
   background-size: 16px;
-  margin-top: 16px;
   /* From javascript side we use animation delay from 0s to -100s to show
    * corresponding frames needed for progress.
    * animation-delay is set to a positive value to make nothing shown.
@@ -56,21 +85,32 @@ toolbar[brighttext] #downloads-button:not([attention="success"]) > #downloads-in
   animation-name: indicatorArrowProgress;
 }
 
-toolbar[brighttext] #downloads-indicator-progress-icon {
+%ifndef MOZ_PHOTON_ANIMATIONS
+toolbar[brighttext] #downloads-indicator-progress-inner {
   animation-name: indicatorArrowProgressDark;
 }
+%endif
 
 @keyframes indicatorArrowProgress {
   0% {
+%ifdef MOZ_PHOTON_ANIMATIONS
+    margin-right: 14px;
+%else
     margin-top: 12px;
     filter: brightness(1.2);
+%endif
   }
   100% {
+%ifdef MOZ_PHOTON_ANIMATIONS
+    margin-right: 2px;
+%else
     margin-top: 2px;
     filter: brightness(1);
+%endif
   }
 }
 
+%ifndef MOZ_PHOTON_ANIMATIONS
 @keyframes indicatorArrowProgressDark {
   0% {
     margin-top: 12px;
@@ -81,6 +121,7 @@ toolbar[brighttext] #downloads-indicator-progress-icon {
     filter: brightness(1);
   }
 }
+%endif
 
 /*** Status badges ***/
 
@@ -114,10 +155,14 @@ toolbar[brighttext] #downloads-indicator-progress-icon {
   filter: none;
 }
 
-
 /*** Download notifications ***/
 
-#downloads-button[notification="start"] > #downloads-indicator-anchor > #downloads-indicator-icon {
+%ifdef MOZ_PHOTON_ANIMATIONS
+#downloads-button[notification="start"] > #downloads-indicator-anchor > #downloads-indicator-icon
+%else
+#downloads-button[notification="start"] > #downloads-indicator-anchor > #downloads-indicator-progress-outer
+%endif
+{
   animation-name: downloadsIndicatorStartJump;
   /* Upon changing the overall duration below, please keep the delay time of
      setTimeout() identical in indicator.js for this animation. */
