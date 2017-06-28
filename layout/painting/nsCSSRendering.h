@@ -503,13 +503,17 @@ struct nsCSSRendering {
                                                                  mozilla::wr::DisplayListBuilder& aBuilder,
                                                                  const mozilla::layers::StackingContextHelper& aSc,
                                                                  nsTArray<mozilla::layers::WebRenderParentCommand>& aParentCommands,
-                                                                 mozilla::layers::WebRenderDisplayItemLayer* aLayer);
+                                                                 mozilla::layers::WebRenderDisplayItemLayer* aLayer,
+                                                                 mozilla::layers::WebRenderLayerManager* aManager,
+                                                                 nsDisplayItem* aItem);
 
   static DrawResult BuildWebRenderDisplayItemsForStyleImageLayerWithSC(const PaintBGParams& aParams,
                                                                        mozilla::wr::DisplayListBuilder& aBuilder,
                                                                        const mozilla::layers::StackingContextHelper& aSc,
                                                                        nsTArray<mozilla::layers::WebRenderParentCommand>& aParentCommands,
                                                                        mozilla::layers::WebRenderDisplayItemLayer* aLayer,
+                                                                       mozilla::layers::WebRenderLayerManager* aManager,
+                                                                       nsDisplayItem* aItem,
                                                                        nsStyleContext *mBackgroundSC,
                                                                        const nsStyleBorder& aBorder);
 
