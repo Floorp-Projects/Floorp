@@ -23,7 +23,7 @@
   position: relative;
 }
 
-.sidebar-splitter[overlapend] {
+#sidebar-box[positionend] + .sidebar-splitter {
   border-inline-end-width: 0;
   border-inline-start-width: 1px;
   margin-inline-start: 0;

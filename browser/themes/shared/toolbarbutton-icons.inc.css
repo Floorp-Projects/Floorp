@@ -197,6 +197,11 @@ toolbar:not([brighttext]) #bookmarks-menu-button[cui-areatype="toolbar"][starred
   list-style-image: url("chrome://browser/skin/sidebars.svg");
 }
 
+#sidebar-button[cui-areatype="toolbar"]:-moz-locale-dir(ltr):not([positionend]),
+#sidebar-button[cui-areatype="toolbar"]:-moz-locale-dir(rtl)[positionend] {
+  transform: scaleX(-1);
+}
+
 #panic-button[cui-areatype="toolbar"] {
   list-style-image: url("chrome://browser/skin/forget.svg");
 }
