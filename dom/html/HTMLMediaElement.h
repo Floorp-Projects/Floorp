@@ -1266,6 +1266,9 @@ protected:
   // Anything we need to check after played success and not related with spec.
   void UpdateCustomPolicyAfterPlayed();
 
+  // True if this element can be captured, false otherwise.
+  bool CanBeCaptured(bool aCaptureAudio);
+
   class nsAsyncEventRunner;
   class nsNotifyAboutPlayingRunner;
   class nsResolveOrRejectPendingPlayPromisesRunner;
