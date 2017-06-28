@@ -56,5 +56,37 @@
       i.src = url;
       document.body.appendChild(i);
     }, "Upgraded iframe is reported");
+
+    async_test(t => {
+      // Load an HTTPS iframe, then navigate it to an HTTP URL and check that the HTTP URL is both upgraded and reported.
+      var url = generateURL(Host.SAME_ORIGIN, Protocol.SECURE, ResourceType.FRAME).url;
+      var navigate_to = generateURL(Host.CROSS_ORIGIN, Protocol.INSECURE, ResourceType.FRAME).url;
+      var upgraded = new URL(navigate_to);
+      upgraded.protocol = "https";
+
+      var i = document.createElement('iframe');
+      var loaded = false;
+      var reported = false;
+
+      window.addEventListener("message", t.step_func(e => {
+        if (e.source == i.contentWindow) {
+          if (e.data == (new URL(url)).origin) {
+            waitForViolation(window, "frame-src")
+              .then(t.step_func(e => {
+                reported = true;
+                if (loaded)
+                  t.done();
+            }));
+            i.contentWindow.location.href = navigate_to;
+          } else if (e.data == (new URL(upgraded)).origin) {
+            loaded = true;
+            if (reported)
+              t.done();
+          }
+        }
+      }));
+      i.src = url;
+      document.body.appendChild(i);
+    }, "Navigated iframe is upgraded and reported");
 </script>
 </html>
