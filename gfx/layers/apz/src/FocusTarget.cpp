@@ -84,6 +84,11 @@ FocusTarget::FocusTarget(nsIPresShell* aRootPresShell,
   // Key events can be retargeted to a child PresShell when there is an iframe
   nsCOMPtr<nsIPresShell> presShell = GetRetargetEventPresShell(aRootPresShell);
 
+  if (!presShell) {
+    mType = FocusTarget::eNone;
+    return;
+  }
+
   // Get the content that should be scrolled for this PresShell, which is
   // the current focused element or the current DOM selection
   nsCOMPtr<nsIContent> scrollTarget = presShell->GetContentForScrolling();
