@@ -75,6 +75,11 @@ parent:
   // see those for documentation.
   async SetConfirmedTargetAPZC(uint64_t aInputBlockId, ScrollableLayerGuid[] aTargets);
   // More copied from PLayerTransaction, but these are only used for testing.
+  sync SetTestSampleTime(TimeStamp sampleTime);
+  sync LeaveTestMode();
+  sync GetAnimationOpacity(uint64_t aCompositorAnimationsId) returns (float opacity,
+                                                  bool hasAnimationOpacity);
+  sync GetAnimationTransform(uint64_t aCompositorAnimationId) returns (MaybeTransform transform);
   sync SetAsyncScrollOffset(ViewID scrollId, float x, float y);
   sync SetAsyncZoom(ViewID scrollId, float zoom);
   async FlushApzRepaints();
