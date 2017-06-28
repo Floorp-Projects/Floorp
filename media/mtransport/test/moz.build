@@ -16,6 +16,7 @@ if CONFIG['OS_TARGET'] != 'WINNT':
         'simpletokenbucket_unittest.cpp',
         'sockettransportservice_unittest.cpp',
         'stunserver.cpp',
+        'test_nr_socket_ice_unittest.cpp',
         'test_nr_socket_unittest.cpp',
         'TestSyncRunnable.cpp',
         'transport_unittests.cpp',

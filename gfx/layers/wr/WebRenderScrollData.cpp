@@ -145,6 +145,12 @@ WebRenderScrollData::GetScrollMetadata(size_t aIndex) const
 }
 
 void
+WebRenderScrollData::SetFocusTarget(const FocusTarget& aFocusTarget)
+{
+  mFocusTarget = aFocusTarget;
+}
+
+void
 WebRenderScrollData::SetIsFirstPaint()
 {
   mIsFirstPaint = true;

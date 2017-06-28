@@ -86,7 +86,7 @@ public:
                                WebGLTexture* tex, TexImageTarget target, GLint level,
                                const webgl::DriverUnpackInfo* dui, GLint xOffset,
                                GLint yOffset, GLint zOffset,
-                               GLenum* const out_error) const = 0;
+                               const webgl::PackingInfo& pi, GLenum* const out_error) const = 0;
 };
 
 class TexUnpackBytes final : public TexUnpackBlob
@@ -108,7 +108,7 @@ public:
                                WebGLTexture* tex, TexImageTarget target, GLint level,
                                const webgl::DriverUnpackInfo* dui, GLint xOffset,
                                GLint yOffset, GLint zOffset,
-                               GLenum* const out_error) const override;
+                               const webgl::PackingInfo& pi, GLenum* const out_error) const override;
 };
 
 class TexUnpackImage final : public TexUnpackBlob
@@ -128,7 +128,7 @@ public:
                                WebGLTexture* tex, TexImageTarget target, GLint level,
                                const webgl::DriverUnpackInfo* dui, GLint xOffset,
                                GLint yOffset, GLint zOffset,
-                               GLenum* const out_error) const override;
+                               const webgl::PackingInfo& dstPI, GLenum* const out_error)  const override;
 };
 
 class TexUnpackSurface final : public TexUnpackBlob
@@ -146,7 +146,7 @@ public:
                                WebGLTexture* tex, TexImageTarget target, GLint level,
                                const webgl::DriverUnpackInfo* dui, GLint xOffset,
                                GLint yOffset, GLint zOffset,
-                               GLenum* const out_error) const override;
+                               const webgl::PackingInfo& dstPI, GLenum* const out_error) const override;
 };
 
 } // namespace webgl

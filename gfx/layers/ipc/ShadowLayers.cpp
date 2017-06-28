@@ -733,6 +733,7 @@ ShadowLayerForwarder::EndTransaction(const nsIntRegion& aRegionToClear,
   info.id() = aId;
   info.plugins() = mPluginWindowData;
   info.isFirstPaint() = mIsFirstPaint;
+  info.focusTarget() = mFocusTarget;
   info.scheduleComposite() = aScheduleComposite;
   info.paintSequenceNumber() = aPaintSequenceNumber;
   info.isRepeatTransaction() = aIsRepeatTransaction;
@@ -777,6 +778,7 @@ ShadowLayerForwarder::EndTransaction(const nsIntRegion& aRegionToClear,
 
   *aSent = true;
   mIsFirstPaint = false;
+  mFocusTarget = FocusTarget();
   MOZ_LAYERS_LOG(("[LayersForwarder] ... done"));
   return true;
 }

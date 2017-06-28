@@ -65,6 +65,7 @@ struct ParamTraits<mozilla::WidgetEvent>
       static_cast<mozilla::EventClassIDType>(aParam.mClass));
     WriteParam(aMsg, aParam.mMessage);
     WriteParam(aMsg, aParam.mRefPoint);
+    WriteParam(aMsg, aParam.mFocusSequenceNumber);
     WriteParam(aMsg, aParam.mTime);
     WriteParam(aMsg, aParam.mTimeStamp);
     WriteParam(aMsg, aParam.mFlags);
@@ -76,6 +77,7 @@ struct ParamTraits<mozilla::WidgetEvent>
     bool ret = ReadParam(aMsg, aIter, &eventClassID) &&
                ReadParam(aMsg, aIter, &aResult->mMessage) &&
                ReadParam(aMsg, aIter, &aResult->mRefPoint) &&
+               ReadParam(aMsg, aIter, &aResult->mFocusSequenceNumber) &&
                ReadParam(aMsg, aIter, &aResult->mTime) &&
                ReadParam(aMsg, aIter, &aResult->mTimeStamp) &&
                ReadParam(aMsg, aIter, &aResult->mFlags);
@@ -402,6 +404,23 @@ struct ParamTraits<mozilla::AlternativeCharCode>
   }
 };
 
+template<>
+struct ParamTraits<mozilla::ShortcutKeyCandidate>
+{
+  typedef mozilla::ShortcutKeyCandidate paramType;
+
+  static void Write(Message* aMsg, const paramType& aParam)
+  {
+    WriteParam(aMsg, aParam.mCharCode);
+    WriteParam(aMsg, aParam.mIgnoreShift);
+  }
+
+  static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
+  {
+    return ReadParam(aMsg, aIter, &aResult->mCharCode) &&
+           ReadParam(aMsg, aIter, &aResult->mIgnoreShift);
+  }
+};
 
 template<>
 struct ParamTraits<mozilla::WidgetKeyboardEvent>
@@ -1063,6 +1082,7 @@ struct ParamTraits<mozilla::InputData>
     WriteParam(aMsg, aParam.mTime);
     WriteParam(aMsg, aParam.mTimeStamp);
     WriteParam(aMsg, aParam.modifiers);
+    WriteParam(aMsg, aParam.mFocusSequenceNumber);
   }
 
   static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
@@ -1070,7 +1090,8 @@ struct ParamTraits<mozilla::InputData>
     return ReadParam(aMsg, aIter, &aResult->mInputType) &&
            ReadParam(aMsg, aIter, &aResult->mTime) &&
            ReadParam(aMsg, aIter, &aResult->mTimeStamp) &&
-           ReadParam(aMsg, aIter, &aResult->modifiers);
+           ReadParam(aMsg, aIter, &aResult->modifiers) &&
+           ReadParam(aMsg, aIter, &aResult->mFocusSequenceNumber);
   }
 };
 
@@ -1347,6 +1368,40 @@ struct ParamTraits<mozilla::ScrollWheelInput>
            ReadParam(aMsg, aIter, &aResult->mMayHaveMomentum) &&
            ReadParam(aMsg, aIter, &aResult->mIsMomentum) &&
            ReadParam(aMsg, aIter, &aResult->mAllowToOverrideSystemScrollSpeed);
+  }
+};
+
+template <>
+struct ParamTraits<mozilla::KeyboardInput::KeyboardEventType>
+  : public ContiguousEnumSerializer<
+             mozilla::KeyboardInput::KeyboardEventType,
+             mozilla::KeyboardInput::KeyboardEventType::KEY_DOWN,
+             mozilla::KeyboardInput::KeyboardEventType::KEY_SENTINEL>
+{};
+
+template<>
+struct ParamTraits<mozilla::KeyboardInput>
+{
+  typedef mozilla::KeyboardInput paramType;
+
+  static void Write(Message* aMsg, const paramType& aParam)
+  {
+    WriteParam(aMsg, static_cast<mozilla::InputData>(aParam));
+    WriteParam(aMsg, aParam.mType);
+    WriteParam(aMsg, aParam.mKeyCode);
+    WriteParam(aMsg, aParam.mCharCode);
+    WriteParam(aMsg, aParam.mShortcutCandidates);
+    WriteParam(aMsg, aParam.mHandledByAPZ);
+  }
+
+  static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
+  {
+    return ReadParam(aMsg, aIter, static_cast<mozilla::InputData*>(aResult)) &&
+           ReadParam(aMsg, aIter, &aResult->mType) &&
+           ReadParam(aMsg, aIter, &aResult->mKeyCode) &&
+           ReadParam(aMsg, aIter, &aResult->mCharCode) &&
+           ReadParam(aMsg, aIter, &aResult->mShortcutCandidates) &&
+           ReadParam(aMsg, aIter, &aResult->mHandledByAPZ);
   }
 };
 

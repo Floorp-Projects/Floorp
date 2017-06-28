@@ -64,7 +64,6 @@ public:
 protected:
   void PrintInfo(std::stringstream& aStream, const char* aPrefix) override;
   bool OnPrepareToRender(FrameBuilder* aBuilder) override;
-  void ComputeDrawRegion();
 
   void CleanupResources();
 
@@ -74,7 +73,6 @@ private:
   RefPtr<TextureSource> mTextureOnWhite;
   gfx::IntRegion mLocalDrawRegion;
   gfx::IntRegion mTextureRegion;
-  bool mComputedDrawRegion;
 };
 
 } // namespace layers

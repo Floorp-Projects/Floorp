@@ -593,6 +593,187 @@ obj_setPrototypeOf(JSContext* cx, unsigned argc, Value* vp)
     return true;
 }
 
+static bool
+PropertyIsEnumerable(JSContext* cx, HandleObject obj, HandleId id, bool* enumerable)
+{
+    PropertyResult prop;
+    if (obj->isNative() &&
+        NativeLookupOwnProperty<NoGC>(cx, &obj->as<NativeObject>(), id, &prop))
+    {
+        if (!prop) {
+            *enumerable = false;
+            return true;
+        }
+
+        unsigned attrs = GetPropertyAttributes(obj, prop);
+        *enumerable = (attrs & JSPROP_ENUMERATE) != 0;
+        return true;
+    }
+
+    Rooted<PropertyDescriptor> desc(cx);
+    if (!GetOwnPropertyDescriptor(cx, obj, id, &desc))
+        return false;
+
+    *enumerable = desc.object() && desc.enumerable();
+    return true;
+}
+
+static bool
+TryAssignNative(JSContext* cx, HandleObject to, HandleObject from, bool* optimized)
+{
+    *optimized = false;
+
+    if (!from->isNative() || !to->isNative())
+        return true;
+
+    // Don't use the fast path if |from| may have extra indexed or lazy
+    // properties.
+    NativeObject* fromNative = &from->as<NativeObject>();
+    if (fromNative->getDenseInitializedLength() > 0 ||
+        fromNative->isIndexed() ||
+        fromNative->is<TypedArrayObject>() ||
+        fromNative->getClass()->getNewEnumerate() ||
+        fromNative->getClass()->getEnumerate())
+    {
+        return true;
+    }
+
+    // Get a list of |from| shapes. As long as from->lastProperty() == fromShape
+    // we can use this to speed up both the enumerability check and the GetProp.
+
+    using ShapeVector = GCVector<Shape*, 8>;
+    Rooted<ShapeVector> shapes(cx, ShapeVector(cx));
+
+    RootedShape fromShape(cx, fromNative->lastProperty());
+    for (Shape::Range<NoGC> r(fromShape); !r.empty(); r.popFront()) {
+        // Symbol properties need to be assigned last. For now fall back to the
+        // slow path if we see a symbol property.
+        if (MOZ_UNLIKELY(JSID_IS_SYMBOL(r.front().propidRaw())))
+            return true;
+        if (MOZ_UNLIKELY(!shapes.append(&r.front())))
+            return false;
+    }
+
+    *optimized = true;
+
+    RootedShape shape(cx);
+    RootedValue propValue(cx);
+    RootedId nextKey(cx);
+    RootedValue toReceiver(cx, ObjectValue(*to));
+
+    for (size_t i = shapes.length(); i > 0; i--) {
+        shape = shapes[i - 1];
+        nextKey = shape->propid();
+
+        // Ensure |from| is still native: a getter/setter might have turned
+        // |from| or |to| into an unboxed object or it could have been swapped
+        // with a non-native object.
+        if (MOZ_LIKELY(from->isNative() &&
+                       from->as<NativeObject>().lastProperty() == fromShape &&
+                       shape->hasDefaultGetter() &&
+                       shape->hasSlot()))
+        {
+            if (!shape->enumerable())
+                continue;
+            propValue = from->as<NativeObject>().getSlot(shape->slot());
+        } else {
+            // |from| changed shape or the property is not a data property, so
+            // we have to do the slower enumerability check and GetProp.
+            bool enumerable;
+            if (!PropertyIsEnumerable(cx, from, nextKey, &enumerable))
+                return false;
+            if (!enumerable)
+                continue;
+            if (!GetProperty(cx, from, from, nextKey, &propValue))
+                return false;
+        }
+
+        ObjectOpResult result;
+        if (MOZ_UNLIKELY(!SetProperty(cx, to, nextKey, propValue, toReceiver, result)))
+            return false;
+        if (MOZ_UNLIKELY(!result.checkStrict(cx, to, nextKey)))
+            return false;
+    }
+
+    return true;
+}
+
+static bool
+AssignSlow(JSContext* cx, HandleObject to, HandleObject from)
+{
+    // Step 4.b.ii.
+    AutoIdVector keys(cx);
+    if (!GetPropertyKeys(cx, from, JSITER_OWNONLY | JSITER_HIDDEN | JSITER_SYMBOLS, &keys))
+        return false;
+
+    // Step 4.c.
+    RootedId nextKey(cx);
+    RootedValue propValue(cx);
+    for (size_t i = 0, len = keys.length(); i < len; i++) {
+        nextKey = keys[i];
+
+        // Step 4.c.i.
+        bool enumerable;
+        if (MOZ_UNLIKELY(!PropertyIsEnumerable(cx, from, nextKey, &enumerable)))
+            return false;
+        if (!enumerable)
+            continue;
+
+        // Step 4.c.ii.1.
+        if (MOZ_UNLIKELY(!GetProperty(cx, from, from, nextKey, &propValue)))
+            return false;
+
+        // Step 4.c.ii.2.
+        if (MOZ_UNLIKELY(!SetProperty(cx, to, nextKey, propValue)))
+            return false;
+    }
+
+    return true;
+}
+
+// ES2018 draft rev 48ad2688d8f964da3ea8c11163ef20eb126fb8a4
+// 19.1.2.1 Object.assign(target, ...sources)
+static bool
+obj_assign(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+
+    // Step 1.
+    RootedObject to(cx, ToObject(cx, args.get(0)));
+    if (!to)
+        return false;
+
+    // Note: step 2 is implicit. If there are 0 arguments, ToObject throws. If
+    // there's 1 argument, the loop below is a no-op.
+
+    // Step 4.
+    RootedObject from(cx);
+    for (size_t i = 1; i < args.length(); i++) {
+        // Step 4.a.
+        if (args[i].isNullOrUndefined())
+            continue;
+
+        // Step 4.b.i.
+        from = ToObject(cx, args[i]);
+        if (!from)
+            return false;
+
+        // Steps 4.b.ii, 4.c.
+        bool optimized;
+        if (!TryAssignNative(cx, to, from, &optimized))
+            return false;
+        if (optimized)
+            continue;
+
+        if (!AssignSlow(cx, to, from))
+            return false;
+    }
+
+    // Step 5.
+    args.rval().setObject(*to);
+    return true;
+}
+
 #if JS_HAS_OBJ_WATCHPOINT
 
 bool
@@ -1295,7 +1476,7 @@ static const JSPropertySpec object_properties[] = {
 };
 
 static const JSFunctionSpec object_static_methods[] = {
-    JS_SELF_HOSTED_FN("assign",        "ObjectStaticAssign",        2, 0),
+    JS_FN("assign",                    obj_assign,                  2, 0),
     JS_SELF_HOSTED_FN("getPrototypeOf", "ObjectGetPrototypeOf",     1, 0),
     JS_FN("setPrototypeOf",            obj_setPrototypeOf,          2, 0),
     JS_FN("getOwnPropertyDescriptor",  obj_getOwnPropertyDescriptor,2, 0),

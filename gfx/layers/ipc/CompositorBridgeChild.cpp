@@ -568,12 +568,13 @@ CompositorBridgeChild::RecvReleaseSharedCompositorFrameMetrics(
     const ViewID& aId,
     const uint32_t& aAPZCId)
 {
-  SharedFrameMetricsData* data = mFrameMetricsTable.Get(aId);
-  // The SharedFrameMetricsData may have been removed previously if
-  // a SharedFrameMetricsData with the same ViewID but later APZCId had
-  // been store and over wrote it.
-  if (data && (data->GetAPZCId() == aAPZCId)) {
-    mFrameMetricsTable.Remove(aId);
+  if (auto entry = mFrameMetricsTable.Lookup(aId)) {
+    // The SharedFrameMetricsData may have been removed previously if
+    // a SharedFrameMetricsData with the same ViewID but later APZCId had
+    // been store and over wrote it.
+    if (entry.Data()->GetAPZCId() == aAPZCId) {
+      entry.Remove();
+    }
   }
   return IPC_OK();
 }
@@ -885,24 +886,18 @@ CompositorBridgeChild::HoldUntilCompositableRefReleasedIfNecessary(TextureClient
 void
 CompositorBridgeChild::NotifyNotUsed(uint64_t aTextureId, uint64_t aFwdTransactionId)
 {
-  RefPtr<TextureClient> client = mTexturesWaitingRecycled.Get(aTextureId);
-  if (!client) {
-    return;
+  if (auto entry = mTexturesWaitingRecycled.Lookup(aTextureId)) {
+    if (aFwdTransactionId < entry.Data()->GetLastFwdTransactionId()) {
+      // Released on host side, but client already requested newer use texture.
+      return;
+    }
+    entry.Remove();
   }
-  if (aFwdTransactionId < client->GetLastFwdTransactionId()) {
-    // Released on host side, but client already requested newer use texture.
-    return;
-  }
-  mTexturesWaitingRecycled.Remove(aTextureId);
 }
 
 void
 CompositorBridgeChild::CancelWaitForRecycle(uint64_t aTextureId)
 {
-  RefPtr<TextureClient> client = mTexturesWaitingRecycled.Get(aTextureId);
-  if (!client) {
-    return;
-  }
   mTexturesWaitingRecycled.Remove(aTextureId);
 }
 

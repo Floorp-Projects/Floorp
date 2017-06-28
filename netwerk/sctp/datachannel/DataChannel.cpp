@@ -208,8 +208,10 @@ debug_printf(const char *format, ...)
   }
 }
 
-DataChannelConnection::DataChannelConnection(DataConnectionListener *listener) :
-   mLock("netwerk::sctp::DataChannelConnection")
+DataChannelConnection::DataChannelConnection(DataConnectionListener *listener,
+                                             nsIEventTarget *aTarget)
+  : NeckoTargetHolder(aTarget)
+  , mLock("netwerk::sctp::DataChannelConnection")
 {
   mState = CLOSED;
   mSocket = nullptr;
@@ -242,9 +244,9 @@ DataChannelConnection::~DataChannelConnection()
     if (mInternalIOThread) {
       // Avoid spinning the event thread from here (which if we're mainthread
       // is in the event loop already)
-      NS_DispatchToMainThread(WrapRunnable(nsCOMPtr<nsIThread>(mInternalIOThread),
-                                           &nsIThread::Shutdown),
-                              NS_DISPATCH_NORMAL);
+      nsCOMPtr<nsIRunnable> r = WrapRunnable(nsCOMPtr<nsIThread>(mInternalIOThread),
+                                             &nsIThread::Shutdown);
+      Dispatch(r.forget());
     }
   } else {
     // on STS, safe to call shutdown
@@ -600,9 +602,9 @@ DataChannelConnection::CompleteConnect(TransportFlow *flow, TransportLayer::Stat
     }
   }
   // Note: currently this doesn't actually notify the application
-  NS_DispatchToMainThread(do_AddRef(new DataChannelOnMessageAvailable(
-                                      DataChannelOnMessageAvailable::ON_CONNECTION,
-                                      this)));
+  Dispatch(do_AddRef(new DataChannelOnMessageAvailable(
+             DataChannelOnMessageAvailable::ON_CONNECTION,
+             this)));
   return;
 }
 
@@ -760,9 +762,9 @@ DataChannelConnection::Listen(unsigned short port)
   // Notify Connection open
   // XXX We need to make sure connection sticks around until the message is delivered
   LOG(("%s: sending ON_CONNECTION for %p", __FUNCTION__, this));
-  NS_DispatchToMainThread(do_AddRef(new DataChannelOnMessageAvailable(
-                            DataChannelOnMessageAvailable::ON_CONNECTION,
-                            this, (DataChannel *) nullptr)));
+  Dispatch(do_AddRef(new DataChannelOnMessageAvailable(
+             DataChannelOnMessageAvailable::ON_CONNECTION,
+             this, (DataChannel *) nullptr)));
   return true;
 }
 
@@ -839,9 +841,9 @@ DataChannelConnection::Connect(const char *addr, unsigned short port)
   // Notify Connection open
   // XXX We need to make sure connection sticks around until the message is delivered
   LOG(("%s: sending ON_CONNECTION for %p", __FUNCTION__, this));
-  NS_DispatchToMainThread(do_AddRef(new DataChannelOnMessageAvailable(
-                            DataChannelOnMessageAvailable::ON_CONNECTION,
-                            this, (DataChannel *) nullptr)));
+  Dispatch(do_AddRef(new DataChannelOnMessageAvailable(
+             DataChannelOnMessageAvailable::ON_CONNECTION,
+             this, (DataChannel *) nullptr)));
   return true;
 }
 #endif
@@ -1039,9 +1041,9 @@ DataChannelConnection::SendDeferredMessages()
         channel->mState = OPEN;
         channel->mReady = true;
         LOG(("%s: sending ON_CHANNEL_OPEN for %p", __FUNCTION__, channel.get()));
-        NS_DispatchToMainThread(do_AddRef(new DataChannelOnMessageAvailable(
-                                  DataChannelOnMessageAvailable::ON_CHANNEL_OPEN, this,
-                                  channel)));
+        Dispatch(do_AddRef(new DataChannelOnMessageAvailable(
+                   DataChannelOnMessageAvailable::ON_CHANNEL_OPEN, this,
+                   channel)));
       } else {
         if (errno == EAGAIN || errno == EWOULDBLOCK) {
           still_blocked = true;
@@ -1050,9 +1052,9 @@ DataChannelConnection::SendDeferredMessages()
           mStreams[channel->mStream] = nullptr;
           channel->mState = CLOSED;
           // Don't need to reset; we didn't open it
-          NS_DispatchToMainThread(do_AddRef(new DataChannelOnMessageAvailable(
-                                    DataChannelOnMessageAvailable::ON_CHANNEL_CLOSED, this,
-                                    channel)));
+          Dispatch(do_AddRef(new DataChannelOnMessageAvailable(
+                     DataChannelOnMessageAvailable::ON_CHANNEL_CLOSED, this,
+                     channel)));
         }
       }
     }
@@ -1118,9 +1120,9 @@ DataChannelConnection::SendDeferredMessages()
           if (was_over_threshold && buffered_amount < threshold) {
             LOG(("%s: sending BUFFER_LOW_THRESHOLD for %s/%s: %u", __FUNCTION__,
                  channel->mLabel.get(), channel->mProtocol.get(), channel->mStream));
-            NS_DispatchToMainThread(do_AddRef(new DataChannelOnMessageAvailable(
-                                                DataChannelOnMessageAvailable::BUFFER_LOW_THRESHOLD,
-                                                this, channel)));
+            Dispatch(do_AddRef(new DataChannelOnMessageAvailable(
+                       DataChannelOnMessageAvailable::BUFFER_LOW_THRESHOLD,
+                       this, channel)));
             was_over_threshold = false;
           }
           if (buffered_amount == 0) {
@@ -1128,9 +1130,9 @@ DataChannelConnection::SendDeferredMessages()
             // available for GC
             LOG(("%s: sending NO_LONGER_BUFFERED for %s/%s: %u", __FUNCTION__,
                  channel->mLabel.get(), channel->mProtocol.get(), channel->mStream));
-            NS_DispatchToMainThread(do_AddRef(new DataChannelOnMessageAvailable(
-                                                DataChannelOnMessageAvailable::NO_LONGER_BUFFERED,
-                                                this, channel)));
+            Dispatch(do_AddRef(new DataChannelOnMessageAvailable(
+                       DataChannelOnMessageAvailable::NO_LONGER_BUFFERED,
+                       this, channel)));
           }
         }
       }
@@ -1231,9 +1233,9 @@ DataChannelConnection::HandleOpenRequestMessage(const struct rtcweb_datachannel_
 
   LOG(("%s: sending ON_CHANNEL_CREATED for %s/%s: %u (state %u)", __FUNCTION__,
        channel->mLabel.get(), channel->mProtocol.get(), stream, channel->mState));
-  NS_DispatchToMainThread(do_AddRef(new DataChannelOnMessageAvailable(
-                            DataChannelOnMessageAvailable::ON_CHANNEL_CREATED,
-                            this, channel)));
+  Dispatch(do_AddRef(new DataChannelOnMessageAvailable(
+             DataChannelOnMessageAvailable::ON_CHANNEL_CREATED,
+             this, channel)));
 
   LOG(("%s: deferring sending ON_CHANNEL_OPEN for %p", __FUNCTION__, channel.get()));
 
@@ -1462,9 +1464,9 @@ DataChannelConnection::HandleAssociationChangeEvent(const struct sctp_assoc_chan
 
       SetEvenOdd();
 
-      NS_DispatchToMainThread(do_AddRef(new DataChannelOnMessageAvailable(
-                                DataChannelOnMessageAvailable::ON_CONNECTION,
-                                this)));
+      Dispatch(do_AddRef(new DataChannelOnMessageAvailable(
+                 DataChannelOnMessageAvailable::ON_CONNECTION,
+                 this)));
       LOG(("DTLS connect() succeeded!  Entering connected mode"));
 
       // Open any streams pending...
@@ -1479,18 +1481,18 @@ DataChannelConnection::HandleAssociationChangeEvent(const struct sctp_assoc_chan
   case SCTP_COMM_LOST:
     LOG(("Association change: SCTP_COMM_LOST"));
     // This association is toast, so also close all the channels -- from mainthread!
-    NS_DispatchToMainThread(do_AddRef(new DataChannelOnMessageAvailable(
-                              DataChannelOnMessageAvailable::ON_DISCONNECTED,
-                              this)));
+    Dispatch(do_AddRef(new DataChannelOnMessageAvailable(
+               DataChannelOnMessageAvailable::ON_DISCONNECTED,
+               this)));
     break;
   case SCTP_RESTART:
     LOG(("Association change: SCTP_RESTART"));
     break;
   case SCTP_SHUTDOWN_COMP:
     LOG(("Association change: SCTP_SHUTDOWN_COMP"));
-    NS_DispatchToMainThread(do_AddRef(new DataChannelOnMessageAvailable(
-                              DataChannelOnMessageAvailable::ON_DISCONNECTED,
-                              this)));
+    Dispatch(do_AddRef(new DataChannelOnMessageAvailable(
+               DataChannelOnMessageAvailable::ON_DISCONNECTED,
+               this)));
     break;
   case SCTP_CANT_STR_ASSOC:
     LOG(("Association change: SCTP_CANT_STR_ASSOC"));
@@ -1841,9 +1843,9 @@ DataChannelConnection::HandleStreamChangeEvent(const struct sctp_stream_change_e
           (strchg->strchange_flags & SCTP_STREAM_CHANGE_FAILED)) {
         /* XXX: Signal to the other end. */
         channel->mState = CLOSED;
-        NS_DispatchToMainThread(do_AddRef(new DataChannelOnMessageAvailable(
-                                  DataChannelOnMessageAvailable::ON_CHANNEL_CLOSED, this,
-                                  channel)));
+        Dispatch(do_AddRef(new DataChannelOnMessageAvailable(
+                   DataChannelOnMessageAvailable::ON_CHANNEL_CLOSED, this,
+                   channel)));
         // maybe fire onError (bug 843625)
       } else {
         stream = FindFreeStream();
@@ -2127,9 +2129,9 @@ DataChannelConnection::OpenFinish(already_AddRefed<DataChannel>&& aChannel)
       if (channel->mFlags & DATA_CHANNEL_FLAGS_FINISH_OPEN) {
         // We already returned the channel to the app.
         NS_ERROR("Failed to send open request");
-        NS_DispatchToMainThread(do_AddRef(new DataChannelOnMessageAvailable(
-                                            DataChannelOnMessageAvailable::ON_CHANNEL_CLOSED, this,
-                                            channel)));
+        Dispatch(do_AddRef(new DataChannelOnMessageAvailable(
+                   DataChannelOnMessageAvailable::ON_CHANNEL_CLOSED, this,
+                   channel)));
       }
       // If we haven't returned the channel yet, it will get destroyed when we exit
       // this function.
@@ -2146,9 +2148,9 @@ DataChannelConnection::OpenFinish(already_AddRefed<DataChannel>&& aChannel)
   channel->mReady = true;
   // FIX?  Move into DOMDataChannel?  I don't think we can send it yet here
   LOG(("%s: sending ON_CHANNEL_OPEN for %p", __FUNCTION__, channel.get()));
-  NS_DispatchToMainThread(do_AddRef(new DataChannelOnMessageAvailable(
-                            DataChannelOnMessageAvailable::ON_CHANNEL_OPEN, this,
-                            channel)));
+  Dispatch(do_AddRef(new DataChannelOnMessageAvailable(
+             DataChannelOnMessageAvailable::ON_CHANNEL_OPEN, this,
+             channel)));
 
   return channel.forget();
 
@@ -2157,9 +2159,9 @@ request_error_cleanup:
   if (channel->mFlags & DATA_CHANNEL_FLAGS_FINISH_OPEN) {
     // We already returned the channel to the app.
     NS_ERROR("Failed to request more streams");
-    NS_DispatchToMainThread(do_AddRef(new DataChannelOnMessageAvailable(
-                              DataChannelOnMessageAvailable::ON_CHANNEL_CLOSED, this,
-                              channel)));
+    Dispatch(do_AddRef(new DataChannelOnMessageAvailable(
+               DataChannelOnMessageAvailable::ON_CHANNEL_CLOSED, this,
+               channel)));
     return channel.forget();
   }
   // we'll be destroying the channel, but it never really got set up
@@ -2422,7 +2424,7 @@ DataChannelConnection::ReadBlob(already_AddRefed<DataChannelConnection> aThis,
     return;
   }
   aBlob->Close();
-  NS_DispatchToMainThread(runnable, NS_DISPATCH_NORMAL);
+  Dispatch(runnable.forget());
 }
 
 void
@@ -2575,9 +2577,10 @@ DataChannel::StreamClosedLocked()
                 !mConnection->FindChannelByStream(mStream));
   mStream = INVALID_STREAM;
   mState = CLOSED;
-  NS_DispatchToMainThread(do_AddRef(new DataChannelOnMessageAvailable(
-                                      DataChannelOnMessageAvailable::ON_CHANNEL_CLOSED,
-                                      mConnection, this)));
+  mMainThreadEventTarget->Dispatch(
+    do_AddRef(new DataChannelOnMessageAvailable(
+                DataChannelOnMessageAvailable::ON_CHANNEL_CLOSED,
+                mConnection, this)));
   // We leave mConnection live until the DOM releases us, to avoid races
 }
 
@@ -2607,13 +2610,14 @@ DataChannel::AppReady()
   mReady = true;
   if (mState == WAITING_TO_OPEN) {
     mState = OPEN;
-    NS_DispatchToMainThread(do_AddRef(new DataChannelOnMessageAvailable(
-                              DataChannelOnMessageAvailable::ON_CHANNEL_OPEN, mConnection,
-                              this)));
+    mMainThreadEventTarget->Dispatch(
+      do_AddRef(new DataChannelOnMessageAvailable(
+                  DataChannelOnMessageAvailable::ON_CHANNEL_OPEN, mConnection,
+                  this)));
     for (uint32_t i = 0; i < mQueuedMessages.Length(); ++i) {
       nsCOMPtr<nsIRunnable> runnable = mQueuedMessages[i];
       MOZ_ASSERT(runnable);
-      NS_DispatchToMainThread(runnable);
+      mMainThreadEventTarget->Dispatch(runnable.forget());
     }
   } else {
     NS_ASSERTION(mQueuedMessages.IsEmpty(), "Shouldn't have queued messages if not WAITING_TO_OPEN");
@@ -2666,7 +2670,8 @@ DataChannel::SendOrQueue(DataChannelOnMessageAvailable *aMessage)
       (mState == CONNECTING || mState == WAITING_TO_OPEN)) {
     mQueuedMessages.AppendElement(aMessage);
   } else {
-    NS_DispatchToMainThread(aMessage);
+    nsCOMPtr<nsIRunnable> runnable = aMessage;
+    mMainThreadEventTarget->Dispatch(runnable.forget());
   }
 }
 
