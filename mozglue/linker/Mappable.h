@@ -6,7 +6,6 @@
 #define Mappable_h
 
 #include "Zip.h"
-#include "SeekableZStream.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/UniquePtr.h"
 #include "zlib.h"
@@ -46,26 +45,9 @@ private:
 
 public:
   /**
-   * Ensures the availability of the memory pages for the page(s) containing
-   * the given address. Returns whether the pages were successfully made
-   * available.
-   */
-  virtual bool ensure(const void *addr) { return true; }
-
-  /**
    * Indicate to a Mappable instance that no further mmap is going to happen.
    */
   virtual void finalize() = 0;
-
-  /**
-   * Shows some stats about the Mappable instance.
-   * Meant for MappableSeekableZStream only.
-   * As Mappables don't keep track of what they are instanciated for, the name
-   * argument is used to make the stats logging useful to the reader. The when
-   * argument is to be used by the caller to give an identifier of the when
-   * the stats call is made.
-   */
-  virtual void stats(const char *when, const char *name) const { }
 
   /**
    * Returns the maximum length that can be mapped from this Mappable for
@@ -176,92 +158,6 @@ private:
 
   /* Zlib data */
   zxx_stream zStream;
-};
-
-/**
- * Mappable implementation for seekable zStreams.
- * Inflates the mapped bits in a temporary buffer, on demand.
- */
-class MappableSeekableZStream: public Mappable
-{
-public:
-  ~MappableSeekableZStream();
-
-  /**
-   * Create a MappableSeekableZStream instance for the given Zip stream. The
-   * name argument is used for an appropriately named temporary file, and the
-   * Zip instance is given for the MappableSeekableZStream to keep a reference
-   * of it.
-   */
-  static Mappable *Create(const char *name, Zip *zip,
-                                         Zip::Stream *stream);
-
-  /* Inherited from Mappable */
-  virtual MemoryRange mmap(const void *addr, size_t length, int prot, int flags, off_t offset);
-  virtual void munmap(void *addr, size_t length);
-  virtual void finalize();
-  virtual bool ensure(const void *addr);
-  virtual void stats(const char *when, const char *name) const;
-  virtual size_t GetLength() const;
-
-  virtual Kind GetKind() const { return MAPPABLE_SEEKABLE_ZSTREAM; };
-private:
-  MappableSeekableZStream(Zip *zip);
-
-  /* Zip reference */
-  RefPtr<Zip> zip;
-
-  /* Decompression buffer */
-  mozilla::UniquePtr<_MappableBuffer> buffer;
-
-  /* Seekable ZStream */
-  SeekableZStream zStream;
-
-  /* Keep track of mappings performed with MappableSeekableZStream::mmap so
-   * that they can be realized by MappableSeekableZStream::ensure.
-   * Values stored in the struct are those passed to mmap */
-  struct LazyMap
-  {
-    const void *addr;
-    size_t length;
-    int prot;
-    off_t offset;
-
-    /* Returns addr + length, as a pointer */
-    const void *end() const {
-      return reinterpret_cast<const void *>
-             (reinterpret_cast<const unsigned char *>(addr) + length);
-    }
-
-    /* Returns offset + length */
-    off_t endOffset() const {
-      return offset + length;
-    }
-
-    /* Returns the offset corresponding to the given address */
-    off_t offsetOf(const void *ptr) const {
-      return reinterpret_cast<uintptr_t>(ptr)
-             - reinterpret_cast<uintptr_t>(addr) + offset;
-    }
-
-    /* Returns whether the given address is in the LazyMap range */
-    bool Contains(const void *ptr) const {
-      return (ptr >= addr) && (ptr < end());
-    }
-  };
-
-  /* List of all mappings */
-  std::vector<LazyMap> lazyMaps;
-
-  /* Array keeping track of which chunks have already been decompressed.
-   * Each value is the number of pages decompressed for the given chunk. */
-  mozilla::UniquePtr<unsigned char[]> chunkAvail;
-
-  /* Number of chunks that have already been decompressed. */
-  mozilla::Atomic<size_t> chunkAvailNum;
-
-  /* Mutex protecting decompression */
-  pthread_mutex_t mutex;
 };
 
 #endif /* Mappable_h */
