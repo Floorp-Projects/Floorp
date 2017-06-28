@@ -1326,6 +1326,7 @@ ContentChild::RecvReinitRendering(Endpoint<PCompositorManagerChild>&& aComposito
   if (!gfx::VRManagerChild::ReinitForContent(Move(aVRBridge))) {
     return IPC_FAIL_NO_REASON(this);
   }
+  gfxPlatform::GetPlatform()->CompositorUpdated();
 
   // Establish new PLayerTransactions.
   for (const auto& tabChild : tabs) {
