@@ -377,20 +377,16 @@ class JavaScriptError extends WebDriverError {
    * @param {string=} script
    *     Script being executed, in text form.
    */
-  constructor (
-      x,
-      fnName = undefined,
-      file = undefined,
-      line = undefined,
-      script = undefined) {
+  constructor(x,
+      {fnName = null, file = null, line = null, script = null} = {}) {
     let msg = String(x);
     let trace = "";
 
-    if (fnName) {
+    if (fnName !== null) {
       trace += fnName;
-      if (file) {
+      if (file !== null) {
         trace += ` @${file}`;
-        if (line) {
+        if (line !== null) {
           trace += `, line ${line}`;
         }
       }
@@ -400,7 +396,7 @@ class JavaScriptError extends WebDriverError {
       let jsStack = x.stack.split("\n");
       let match = jsStack[0].match(/:(\d+):\d+$/);
       let jsLine = match ? parseInt(match[1]) : 0;
-      if (script) {
+      if (script !== null) {
         let src = script.split("\n")[jsLine];
         trace += "\n" +
           `inline javascript, line ${jsLine}\n` +
