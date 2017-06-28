@@ -53,12 +53,6 @@ to mochitest command.
   * test_initial_computation.html `grid` [4]
   * test_property_syntax_errors.html `grid`: actually there are issues with this [8]
   * test_value_storage.html `'grid` [195]
-* Unimplemented CSS properties:
-  * font-variant-alternates property bug 1355721
-    * test_property_syntax_errors.html `font-variant-alternates` [2]
-    * test_value_storage.html `'font-variant'` [14]
-    * ... `font-variant-alternates` [22]
-    * test_specified_value_serialization.html `bug-721136` [1]
 * Unsupported prefixed values
   * moz-prefixed gradient functions bug 1337655
     * test_value_storage.html `-moz-linear-gradient` [322]
@@ -78,7 +72,7 @@ to mochitest command.
   * system font serialization with subprop specified bug 1364286
     * test_system_font_serialization.html [3]
   * serialize subprops to -moz-use-system-font when using system font bug 1364289
-    * test_value_storage.html `'font'` [224]
+    * test_value_storage.html `'font'` [240]
   * different serialization for gradient functions in computed value bug 1367274
     * test_computed_style.html `gradient` [13]
 * Unsupported pseudo-elements or anon boxes
