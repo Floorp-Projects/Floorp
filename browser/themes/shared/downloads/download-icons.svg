@@ -1,0 +1,24 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">
+  <style>
+    :root > use:not(:target),
+    :root > g:not(:target) {
+      display: none;
+    }
+  </style>
+  <defs>
+    <path id="arrow-icon" d="M7.293 12.725a1 1 0 0 0 1.414 0l5-5a1 1 0 0 0-1.414-1.413L9 9.605V1.019a1 1 0 0 0-2 0v8.586L3.707 6.312a1 1 0 0 0-1.414 1.413l5 5z"/>
+    <path id="short-bar-icon" d="m 13,14 a 1,1 0 1 1 0,2 h -10 a 1,1 0 1 1 0,-2 z"/>
+    <path id="long-bar-icon" d="m 14,14 a 1,1 0 1 1 0,2 h -12 a 1,1 0 1 1 0,-2"/>
+  </defs>
+  <use id="arrow" fill="context-fill" href="#arrow-icon"/>
+  <g id="arrow-with-bar" fill="context-fill">
+    <use href="#arrow-icon"/>
+    <use href="#short-bar-icon"/>
+  </g>
+  <use id="default-bar" fill="context-fill" href="#short-bar-icon"/>
+  <use id="progress-bar-bg" fill="context-fill" fill-opacity="0.2" href="#long-bar-icon"/>
+  <use id="progress-bar-fg" fill="context-fill" href="#long-bar-icon"/>
+</svg>

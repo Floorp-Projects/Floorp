@@ -524,7 +524,7 @@ const DownloadsIndicatorView = {
 
   get _progressIcon() {
     return this.__progressIcon ||
-      (this.__progressIcon = document.getElementById("downloads-indicator-progress-icon"));
+      (this.__progressIcon = document.getElementById("downloads-indicator-progress-inner"));
   },
 
   get notifier() {
