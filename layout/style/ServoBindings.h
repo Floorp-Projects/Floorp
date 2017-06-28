@@ -154,6 +154,7 @@ void Gecko_LoadStyleSheet(mozilla::css::Loader* loader,
 
 // Selector Matching.
 uint64_t Gecko_ElementState(RawGeckoElementBorrowed element);
+uint64_t Gecko_DocumentState(const nsIDocument* aDocument);
 bool Gecko_IsTextNode(RawGeckoNodeBorrowed node);
 bool Gecko_IsRootElement(RawGeckoElementBorrowed element);
 bool Gecko_MatchesElement(mozilla::CSSPseudoClassType type, RawGeckoElementBorrowed element);
@@ -164,7 +165,7 @@ bool Gecko_MatchLang(RawGeckoElementBorrowed element,
                      nsIAtom* override_lang, bool has_override_lang,
                      const char16_t* value);
 nsIAtom* Gecko_GetXMLLangValue(RawGeckoElementBorrowed element);
-nsIDocument::DocumentTheme Gecko_GetDocumentLWTheme(const nsIDocument *aDocument);
+nsIDocument::DocumentTheme Gecko_GetDocumentLWTheme(const nsIDocument* aDocument);
 
 // Attributes.
 #define SERVO_DECLARE_ELEMENT_ATTR_MATCHING_FUNCTIONS(prefix_, implementor_)  \
