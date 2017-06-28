@@ -4,8 +4,5 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <item android:state_pressed="true"
-          android:drawable="@color/photon_search_suggestion_box_pressed"/>
-
-    <item android:drawable="@color/photon_search_suggestion_box"/>
+    <item android:drawable="@color/photon_content_bg"/>
 </selector>

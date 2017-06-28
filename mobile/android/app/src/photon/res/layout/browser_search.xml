@@ -4,32 +4,40 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-              android:orientation="vertical"
+              xmlns:tools="http://schemas.android.com/tools"
               android:layout_width="match_parent"
-              android:layout_height="match_parent">
+              android:layout_height="match_parent"
+              android:orientation="vertical">
 
-    <ViewStub android:id="@+id/suggestions_opt_in_prompt"
-              android:layout_width="match_parent"
-              android:layout_height="wrap_content"
-              android:layout="@layout/home_suggestion_prompt" />
+    <ViewStub
+        android:id="@+id/suggestions_opt_in_prompt"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout="@layout/home_suggestion_prompt"/>
 
-    <view class="org.mozilla.gecko.home.BrowserSearch$HomeSearchListView"
-            android:id="@+id/home_list_view"
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1" />
+    <view
+        android:id="@+id/home_list_view"
+        class="org.mozilla.gecko.home.BrowserSearch$HomeSearchListView"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:background="@drawable/search_list_bg"
+        android:divider="@null"
+        android:dividerHeight="0dp"
+        android:listSelector="@drawable/search_list_selector"
+        tools:listitem="@layout/home_search_item_row"/>
 
     <!-- listSelector is too slow for showing pressed state
          so we set the pressed colors on the child. -->
     <org.mozilla.gecko.home.SearchEngineBar
-          android:id="@+id/search_engine_bar"
-          android:layout_width="match_parent"
-          android:layout_height="48dp"
-          android:paddingTop="1dp"
-          android:orientation="horizontal"
-          android:layout_gravity="center_horizontal"
-          android:choiceMode="singleChoice"
-          android:listSelector="@android:color/transparent"
-          android:cacheColorHint="@android:color/transparent" />
+        android:id="@+id/search_engine_bar"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:layout_gravity="center_horizontal"
+        android:cacheColorHint="@android:color/transparent"
+        android:choiceMode="singleChoice"
+        android:listSelector="@android:color/transparent"
+        android:orientation="horizontal"
+        android:paddingTop="1dp"/>
 
 </LinearLayout>

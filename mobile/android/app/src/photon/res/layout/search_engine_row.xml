@@ -3,31 +3,41 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
-<merge xmlns:android="http://schemas.android.com/apk/res/android">
+<merge xmlns:android="http://schemas.android.com/apk/res/android"
+       xmlns:gecko="http://schemas.android.com/apk/res-auto"
+       xmlns:tools="http://schemas.android.com/tools"
+       tools:layout_height="wrap_content"
+       tools:layout_width="match_parent"
+       tools:parentTag="RelativeLayout">
 
-    <org.mozilla.gecko.widget.FaviconView android:id="@+id/suggestion_icon"
-                                          android:layout_width="@dimen/favicon_bg"
-                                          android:layout_height="@dimen/favicon_bg"
-                                          android:layout_marginLeft="16dip"
-                                          android:layout_marginStart="16dip"
-                                          android:layout_marginRight="16dip"
-                                          android:layout_marginEnd="16dip"
-                                          android:layout_centerVertical="true"
-                                          android:minWidth="@dimen/favicon_bg"
-                                          android:minHeight="@dimen/favicon_bg"/>
+    <org.mozilla.gecko.widget.FaviconView
+        android:id="@+id/suggestion_icon"
+        android:layout_width="@dimen/favicon_small_size"
+        android:layout_height="@dimen/favicon_small_size"
+        android:layout_centerVertical="true"
+        android:layout_marginEnd="20dp"
+        android:layout_marginLeft="20dp"
+        android:layout_marginRight="20dp"
+        android:layout_marginStart="20dp"
+        android:minHeight="@dimen/favicon_small_size"
+        android:minWidth="@dimen/favicon_small_size"
+        gecko:backgroundCornerRadius="1dp"
+        tools:background="@android:color/holo_green_light"/>
 
-    <org.mozilla.gecko.widget.FlowLayout android:id="@+id/suggestion_layout"
-                                         android:layout_toRightOf="@id/suggestion_icon"
-                                         android:layout_toEndOf="@id/suggestion_icon"
-                                         android:layout_centerVertical="true"
-                                         android:layout_width="wrap_content"
-                                         android:layout_height="wrap_content"
-                                         android:layout_marginRight="15dp"
-                                         android:layout_marginEnd="15dp"
-                                         android:duplicateParentState="true">
+    <org.mozilla.gecko.widget.FlowLayout
+        android:id="@+id/suggestion_layout"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerVertical="true"
+        android:layout_marginEnd="15dp"
+        android:layout_marginRight="15dp"
+        android:layout_toEndOf="@id/suggestion_icon"
+        android:layout_toRightOf="@id/suggestion_icon"
+        android:duplicateParentState="true">
 
-        <include layout="@layout/suggestion_item"
-                 android:id="@+id/suggestion_user_entered"/>
+        <include
+            android:id="@+id/suggestion_user_entered"
+            layout="@layout/suggestion_item"/>
 
     </org.mozilla.gecko.widget.FlowLayout>
 

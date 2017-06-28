@@ -3,54 +3,54 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-             android:layout_width="match_parent"
-             android:layout_height="wrap_content"
-             android:background="@color/about_page_header_grey">
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              xmlns:tools="http://schemas.android.com/tools"
+              android:id="@+id/prompt"
+              android:layout_width="match_parent"
+              android:layout_height="wrap_content"
+              android:background="@color/photon_notification_bg"
+              android:focusable="true"
+              android:gravity="center_vertical"
+              android:minHeight="48dp"
+              android:orientation="horizontal">
 
-    <LinearLayout android:id="@+id/prompt"
-                  android:focusable="true"
-                  android:layout_width="match_parent"
-                  android:minHeight="48dp"
-                  android:layout_height="wrap_content"
-                  android:orientation="horizontal"
-                  android:gravity="center_vertical"
-                  android:paddingLeft="15dp"
-                  android:paddingRight="15dp"
-                  android:textSize="12sp">
+    <TextView
+        android:id="@+id/suggestions_prompt_title"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_margin="16dp"
+        android:layout_weight="1"
+        android:fontFamily="sans-serif"
+        android:lineSpacingMultiplier="1.1"
+        android:textColor="@android:color/white"
+        android:textSize="14sp"
+        tools:text="Would you like to turn on search suggestion?"/>
 
-        <TextView android:id="@+id/suggestions_prompt_title"
-                  android:layout_height="wrap_content"
-                  android:layout_width="0dp"
-                  android:layout_weight="1"
-                  android:fontFamily="sans-serif"
-                  android:textColor="@color/text_and_tabs_tray_grey"
-                  android:layout_marginRight="10dp"/>
+    <TextView
+        android:id="@+id/suggestions_prompt_no"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:alpha="0.5"
+        android:background="@drawable/search_suggestion_prompt_no"
+        android:focusable="true"
+        android:gravity="center"
+        android:minWidth="64dp"
+        android:nextFocusRight="@+id/suggestions_prompt_yes"
+        android:text="@string/button_no"
+        android:textColor="@android:color/white"
+        android:textSize="14sp"
+        android:textStyle="bold"/>
 
-        <TextView android:id="@+id/suggestions_prompt_no"
-                  android:layout_height="32dp"
-                  android:minWidth="72dp"
-                  android:layout_width="wrap_content"
-                  android:layout_marginRight="10dp"
-                  android:textColor="@color/text_and_tabs_tray_grey"
-                  android:gravity="center"
-                  android:background="@drawable/search_suggestion_prompt_no"
-                  android:nextFocusRight="@+id/suggestions_prompt_yes"
-                  android:focusable="true"
-                  android:text="@string/button_no"/>
-
-        <TextView android:id="@+id/suggestions_prompt_yes"
-                  android:layout_height="32dp"
-                  android:minWidth="72dp"
-                  android:layout_width="wrap_content"
-                  android:gravity="center"
-                  android:textColor="@android:color/white"
-                  android:background="@drawable/search_suggestion_prompt_yes"
-                  android:focusable="true"
-                  android:text="@string/button_yes"/>
-
-
-
-    </LinearLayout>
-
-</FrameLayout>
+    <TextView
+        android:id="@+id/suggestions_prompt_yes"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:background="@drawable/search_suggestion_prompt_yes"
+        android:focusable="true"
+        android:gravity="center"
+        android:minWidth="64dp"
+        android:text="@string/button_yes"
+        android:textColor="@android:color/white"
+        android:textSize="14sp"
+        android:textStyle="bold"/>
+</LinearLayout>

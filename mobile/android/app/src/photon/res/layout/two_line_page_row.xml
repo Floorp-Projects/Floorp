@@ -4,51 +4,71 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
 <merge xmlns:android="http://schemas.android.com/apk/res/android"
-       xmlns:tools="http://schemas.android.com/tools"
        xmlns:gecko="http://schemas.android.com/apk/res-auto"
-       tools:context=".BrowserApp">
+       xmlns:tools="http://schemas.android.com/tools"
+       tools:context=".BrowserApp"
+       tools:layout_height="wrap_content"
+       tools:layout_width="match_parent"
+       tools:minHeight="@dimen/page_row_height"
+       tools:parentTag="LinearLayout">
 
-    <org.mozilla.gecko.widget.FaviconView android:id="@+id/icon"
-                                          android:layout_width="@dimen/favicon_small_size"
-                                          android:layout_height="@dimen/favicon_small_size"
-                                          android:layout_margin="16dp"
-                                          tools:background="@drawable/favicon_globe"/>
+    <org.mozilla.gecko.widget.FaviconView
+        android:id="@+id/icon"
+        android:layout_width="@dimen/favicon_small_size"
+        android:layout_height="@dimen/favicon_small_size"
+        android:layout_gravity="center_vertical"
+        android:layout_marginLeft="20dp"
+        android:layout_marginRight="20dp"
+        gecko:backgroundCornerRadius="1dp"
+        tools:background="@android:color/holo_green_light"/>
 
-    <LinearLayout android:layout_width="0dp"
-                  android:layout_height="wrap_content"
-                  android:layout_weight="1"
-                  android:layout_gravity="center_vertical"
-                  android:paddingRight="10dp"
-                  android:paddingEnd="10dp"
-                  android:orientation="vertical">
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_vertical"
+        android:layout_weight="1"
+        android:orientation="vertical"
+        android:paddingEnd="10dp"
+        android:paddingRight="10dp">
 
         <org.mozilla.gecko.widget.FadedSingleColorTextView
-                android:id="@+id/title"
-                style="@style/Widget.TwoLinePageRow.Title"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                gecko:fadeWidth="90dp"
-                tools:text="This is a long test title"/>
+            android:id="@+id/title"
+            style="@style/Widget.TwoLinePageRow.Title"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="2dp"
+            android:background="@null"
+            android:lineSpacingMultiplier="1.1"
+            android:textColor="@color/two_line_page_row_title"
+            android:textSize="14sp"
+            gecko:fadeWidth="90dp"
+            tools:text="This is a long test title"/>
 
-        <org.mozilla.gecko.widget.FadedSingleColorTextView android:id="@+id/url"
-                  style="@style/Widget.TwoLinePageRow.Url"
-                  android:layout_width="match_parent"
-                  android:layout_height="wrap_content"
-                  android:drawablePadding="5dp"
-                  android:maxLength="1024"
-                  gecko:fadeWidth="90dp"
-                  tools:text="http://test.com/test"
-                  tools:drawableLeft="@drawable/ic_url_bar_tab"
-                  tools:drawableStart="@drawable/ic_url_bar_tab"
-            />
+        <org.mozilla.gecko.widget.FadedSingleColorTextView
+            android:id="@+id/url"
+            style="@style/Widget.TwoLinePageRow.Url"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@null"
+            android:drawablePadding="5dp"
+            android:lineSpacingMultiplier="1.2"
+            android:maxLength="1024"
+            android:textColor="@color/two_line_page_row_url"
+            android:textSize="12sp"
+            gecko:fadeWidth="90dp"
+            tools:drawableLeft="@drawable/ic_url_bar_tab"
+            tools:drawableStart="@drawable/ic_url_bar_tab"
+            tools:text="http://test.com/test"/>
 
     </LinearLayout>
 
-    <ImageView android:id="@+id/status_icon_bookmark"
-               android:layout_width="20dp"
-               android:layout_height="20dp"
-               android:layout_gravity="center"
-               android:visibility="gone"
-               android:src="@drawable/star_blue"/>
+    <ImageView
+        android:id="@+id/status_icon_bookmark"
+        android:layout_width="20dp"
+        android:layout_height="20dp"
+        android:layout_gravity="center"
+        android:src="@drawable/star_blue"
+        android:visibility="gone"
+        tools:visibility="visible"/>
 
 </merge>

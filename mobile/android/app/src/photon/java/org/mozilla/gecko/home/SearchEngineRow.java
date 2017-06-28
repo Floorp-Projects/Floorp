@@ -273,7 +273,7 @@ class SearchEngineRow extends RelativeLayout {
             suggestionItem = mSuggestionView.getChildAt(previousSuggestionChildIndex + 1);
             suggestionItem.setVisibility(View.VISIBLE);
         } else {
-            suggestionItem = mInflater.inflate(R.layout.suggestion_item, null);
+            suggestionItem = View.inflate(getContext(), R.layout.suggestion_item, null);
 
             suggestionItem.setOnClickListener(mClickListener);
             suggestionItem.setOnLongClickListener(mLongClickListener);
