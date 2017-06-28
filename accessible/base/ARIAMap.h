@@ -34,7 +34,15 @@ enum EValueRule
    * Value interface is implemented, supports value, min and max from
    * aria-valuenow, aria-valuemin and aria-valuemax.
    */
-  eHasValueMinMax
+  eHasValueMinMax,
+
+  /**
+   * Value interface is implemented, but only if the element is focusable.
+   * For instance, in ARIA 1.1 the ability for authors to create adjustable
+   * splitters was provided by supporting the value interface on separators
+   * that are focusable. Non-focusable separators expose no value information.
+   */
+  eHasValueMinMaxIfFocusable
 };
 
 
