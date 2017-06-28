@@ -165,13 +165,16 @@ public:
   virtual mozilla::ipc::IPCResult
   RecvSetHasBeforeUnload(const bool& aHasBeforeUnload) override;
 
-  virtual mozilla::ipc::IPCResult
-  RecvBrowserFrameOpenWindow(PBrowserParent* aOpener,
-                             PRenderFrameParent* aRenderFrame,
-                             const nsString& aURL,
-                             const nsString& aName,
-                             const nsString& aFeatures,
-                             BrowserFrameOpenWindowResolver&& aResolve) override;
+  virtual mozilla::ipc::IPCResult RecvBrowserFrameOpenWindow(PBrowserParent* aOpener,
+                                                             PRenderFrameParent* aRenderFrame,
+                                                             const nsString& aURL,
+                                                             const nsString& aName,
+                                                             const nsString& aFeatures,
+                                                             bool* aOutWindowOpened,
+                                                             TextureFactoryIdentifier* aTextureFactoryIdentifier,
+                                                             uint64_t* aLayersId,
+                                                             CompositorOptions* aCompositorOptions,
+                                                             uint32_t* aMaxTouchPoints) override;
 
   virtual mozilla::ipc::IPCResult
   RecvSyncMessage(const nsString& aMessage,
