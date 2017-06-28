@@ -689,7 +689,7 @@ LayerTransactionParent::ShouldParentObserveEpoch()
 mozilla::ipc::IPCResult
 LayerTransactionParent::RecvSetTestSampleTime(const TimeStamp& aTime)
 {
-  if (!mCompositorBridge->SetTestSampleTime(this, aTime)) {
+  if (!mCompositorBridge->SetTestSampleTime(GetId(), aTime)) {
     return IPC_FAIL_NO_REASON(this);
   }
   return IPC_OK();
@@ -698,7 +698,7 @@ LayerTransactionParent::RecvSetTestSampleTime(const TimeStamp& aTime)
 mozilla::ipc::IPCResult
 LayerTransactionParent::RecvLeaveTestMode()
 {
-  mCompositorBridge->LeaveTestMode(this);
+  mCompositorBridge->LeaveTestMode(GetId());
   return IPC_OK();
 }
 
