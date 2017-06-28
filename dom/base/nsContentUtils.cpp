@@ -10255,23 +10255,25 @@ nsContentUtils::AppendNativeAnonymousChildren(
     nsTArray<nsIContent*>& aKids,
     uint32_t aFlags)
 {
-  if (nsIFrame* primaryFrame = aContent->GetPrimaryFrame()) {
-    // NAC created by the element's primary frame.
-    AppendNativeAnonymousChildrenFromFrame(primaryFrame, aKids, aFlags);
+  if (aContent->MayHaveAnonymousChildren()) {
+    if (nsIFrame* primaryFrame = aContent->GetPrimaryFrame()) {
+      // NAC created by the element's primary frame.
+      AppendNativeAnonymousChildrenFromFrame(primaryFrame, aKids, aFlags);
 
-    // NAC created by any other non-primary frames for the element.
-    AutoTArray<nsIFrame::OwnedAnonBox, 8> ownedAnonBoxes;
-    primaryFrame->AppendOwnedAnonBoxes(ownedAnonBoxes);
-    for (nsIFrame::OwnedAnonBox& box : ownedAnonBoxes) {
-      MOZ_ASSERT(box.mAnonBoxFrame->GetContent() == aContent);
-      AppendNativeAnonymousChildrenFromFrame(box.mAnonBoxFrame, aKids, aFlags);
+      // NAC created by any other non-primary frames for the element.
+      AutoTArray<nsIFrame::OwnedAnonBox, 8> ownedAnonBoxes;
+      primaryFrame->AppendOwnedAnonBoxes(ownedAnonBoxes);
+      for (nsIFrame::OwnedAnonBox& box : ownedAnonBoxes) {
+        MOZ_ASSERT(box.mAnonBoxFrame->GetContent() == aContent);
+        AppendNativeAnonymousChildrenFromFrame(box.mAnonBoxFrame, aKids, aFlags);
+      }
     }
-  }
 
-  // Get manually created NAC (editor resize handles, etc.).
-  if (auto nac = static_cast<ManualNAC*>(
-        aContent->GetProperty(nsGkAtoms::manualNACProperty))) {
-    aKids.AppendElements(*nac);
+    // Get manually created NAC (editor resize handles, etc.).
+    if (auto nac = static_cast<ManualNAC*>(
+          aContent->GetProperty(nsGkAtoms::manualNACProperty))) {
+      aKids.AppendElements(*nac);
+    }
   }
 
   // The root scroll frame is not the primary frame of the root element.
