@@ -133,6 +133,10 @@ List of current Events related data that is sent:
 {
   "event" : "E_Screenshot"
 }
+* Open a new tab
+{
+  "event" : "E_Opened_New_Tab"
+}
 
 Deep Links:
 Deep links are actions that can point Fennec to open certain pages or load features such as `show bookmark list` or
@@ -146,10 +150,12 @@ trigger the following deep links
 * Take user directly to a Sign up for a newsletter (http://link_to_newsletter_page)
 * Link to bookmark list (firefox://bookmark_list)
 * Link to history list (firefox://history_list)
-* Link to general preferences (firefox://preferences)
+* Link to main preferences (firefox://preferences)
 * Link to privacy preferences (firefox://preferences_privacy)
 * Link to notifications preferences (firefox://preferences_notifications)
 * Link to accessibility preferences (firefox://preferences_accessibility)
+* Link to general setting (firefox://preferences_general)
+* Link to home page setting (firefox://preferences_home)
 
 Messages :
 Messages are in-app prompts to the user from Leanplum. The interaction of that prompt will be kept and sent to Leanplum backend (such
