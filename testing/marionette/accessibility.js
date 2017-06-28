@@ -21,14 +21,12 @@ XPCOMUtils.defineLazyModuleGetter(
     this, "clearInterval", "resource://gre/modules/Timer.jsm");
 
 XPCOMUtils.defineLazyGetter(this, "service", () => {
-  let service;
   try {
-    service = Cc["@mozilla.org/accessibilityService;1"].getService(
-      Ci.nsIAccessibilityService);
+    return Cc["@mozilla.org/accessibilityService;1"]
+        .getService(Ci.nsIAccessibilityService);
   } catch (e) {
     logger.warn("Accessibility module is not present");
-  } finally {
-    return service;
+    return undefined;
   }
 });
 
