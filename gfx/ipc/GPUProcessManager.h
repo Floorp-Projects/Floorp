@@ -221,6 +221,7 @@ private:
   void EnsureVsyncIOThread();
   void ShutdownVsyncIOThread();
 
+  void EnsureProtocolsReady();
   void EnsureCompositorManagerChild();
   void EnsureImageBridgeChild();
   void EnsureVRManager();
