@@ -57,26 +57,6 @@ treecol {
   min-width: 145px;
 }
 
-/* Subcategory title */
-
-/**
- * The first subcategory title for each category should not have margin-top.
- */
-#generalCategory,
-#searchCategory,
-#browserPrivacyCategory,
-#firefoxAccountCategory {
-  margin-top: 0;
-}
-
-.header-name {
-  font-size: 2rem;
-}
-
-.subcategory {
-  margin-top: 48px;
-}
-
 /* Category List */
 
 #categories {
