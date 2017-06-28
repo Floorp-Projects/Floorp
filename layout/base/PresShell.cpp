@@ -1708,24 +1708,6 @@ PresShell::EndObservingDocument()
 char* nsPresShell_ReflowStackPointerTop;
 #endif
 
-class XBLConstructorRunner : public Runnable
-{
-public:
-  explicit XBLConstructorRunner(nsIDocument* aDocument)
-    : mDocument(aDocument)
-  {
-  }
-
-  NS_IMETHOD Run() override
-  {
-    mDocument->BindingManager()->ProcessAttachedQueue();
-    return NS_OK;
-  }
-
-private:
-  nsCOMPtr<nsIDocument> mDocument;
-};
-
 nsresult
 PresShell::Initialize(nscoord aWidth, nscoord aHeight)
 {
@@ -1821,14 +1803,24 @@ PresShell::Initialize(nscoord aWidth, nscoord aHeight)
       mFrameConstructor->EndUpdate();
     }
 
-    // nsAutoCauseReflowNotifier (which sets up a script blocker) going out of
-    // scope may have killed us too
+    // nsAutoScriptBlocker going out of scope may have killed us too
     NS_ENSURE_STATE(!mHaveShutDown);
 
-    // Run the XBL binding constructors for any new frames we've constructed.
-    // (Do this in a script runner, since our caller might have a script
-    // blocker on the stack.)
-    nsContentUtils::AddScriptRunner(new XBLConstructorRunner(mDocument));
+    // Run the XBL binding constructors for any new frames we've constructed
+    mDocument->BindingManager()->ProcessAttachedQueue();
+
+    // Constructors may have killed us too
+    NS_ENSURE_STATE(!mHaveShutDown);
+
+    // Now flush out pending restyles before we actually reflow, in
+    // case XBL constructors changed styles somewhere.
+    {
+      nsAutoScriptBlocker scriptBlocker;
+      mPresContext->RestyleManager()->ProcessPendingRestyles();
+    }
+
+    // And that might have run _more_ XBL constructors
+    NS_ENSURE_STATE(!mHaveShutDown);
   }
 
   NS_ASSERTION(rootFrame, "How did that happen?");
