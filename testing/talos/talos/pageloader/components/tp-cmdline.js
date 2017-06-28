@@ -180,7 +180,7 @@ var PageLoaderCmdLineModule =
     compMgr = compMgr.QueryInterface(nsIComponentRegistrar);
 
     compMgr.unregisterFactoryLocation(TP_CMDLINE_CLSID, fileSpec);
-    catman = Components.classes[CATMAN_CONTRACTID].getService(nsICategoryManager);
+    var catman = Components.classes[CATMAN_CONTRACTID].getService(nsICategoryManager);
     catman.deleteCategoryEntry("command-line-handler",
                                "m-tp", true);
   },

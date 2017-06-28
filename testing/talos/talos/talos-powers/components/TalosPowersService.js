@@ -188,7 +188,6 @@ TalosPowersService.prototype = {
 
       case "Profiler:Finish": {
         // The test is done. Dump the profile.
-        let profileFile = data.profileFile;
         this.profilerFinish(data.profileFile).then(() => {
           mm.sendAsyncMessage(ACK_NAME, { name });
         });

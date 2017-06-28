@@ -2,6 +2,7 @@
 // prefs in user.js don't get recognized until the second browser launch
 // which is too late for our purposes of using quit.js. Loading the principals
 // from prefs.js avoids this issue.
+/* globals user_pref */
 user_pref("capability.principal.codebase.p0.granted", "UniversalPreferencesWrite UniversalXPConnect UniversalPreferencesRead");
 user_pref("capability.principal.codebase.p0.id", "file://");
 user_pref("capability.principal.codebase.p0.subjectName", "");

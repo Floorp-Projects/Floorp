@@ -2,6 +2,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+/* globals JSZip */
+
+/* eslint-disable no-nested-ternary */
+
 // base: relative or absolute path (http[s] or file, untested with ftp)
 // files: array of file names relative to base to include at the zip
 // callbacks: object with optional functions:
@@ -11,13 +15,6 @@ function createXpiDataUri(base, files, callbacks) {
   // Synchronous XHR for http[s]/file (untested ftp), throws on any error
   // Note that on firefox, file:// XHR can't access files outside base dir
   function readBinFile(url) {
-    // The DOM will qualify the URI for us if it's relative (not IE6)
-    function isFileUri(uri) {
-      var a = document.createElement("a");
-      a.href = uri;
-      return a.href.toLowerCase().indexOf("file://") == 0;
-    }
-
     var r =  new XMLHttpRequest();
     r.open("GET", url, false);
     r.requestType = "arraybuffer";

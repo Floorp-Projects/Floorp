@@ -30,6 +30,8 @@
 let aboutNewTabService = Components.classes["@mozilla.org/browser/aboutnewtab-service;1"]
                                    .getService(Components.interfaces.nsIAboutNewTabService);
 
+/* globals res:true, sequenceArray:true */
+
 function Tart() {
 }
 
@@ -272,7 +274,6 @@ Tart.prototype = {
       var sumLastHalf = 0;
       var countLastHalf = 0;
       var sumMost = 0;
-      var countMost = 0;
       var sum = 0;
       for (var i = intervals.length - 1; i >= 0; i--) {
         sum += intervals[i];
@@ -282,13 +283,11 @@ Tart.prototype = {
         }
         if (sumMost < referenceDuration * .85) {
           sumMost += intervals[i];
-          countMost++;
         }
       }
       dump("overall: " + sum + "\n");
 
       var averageLastHalf = countLastHalf ? sumLastHalf / countLastHalf : 0;
-      var averageMost    = countMost ? sumMost / countMost : 0;
       var averageOverall = intervals.length ? sum / intervals.length : 0;
       var durationDiff = Math.abs(recordingAbsoluteDuration - referenceDuration);
 
@@ -351,6 +350,7 @@ Tart.prototype = {
 
       tickleLoop();
 
+      return false;
     }
 
     setTimeout(function() {

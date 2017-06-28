@@ -33,6 +33,7 @@ window.talosDebug = {
 
   median(values) {
     var clone = values.slice(0);
+    // eslint-disable-next-line no-nested-ternary
     var sorted = clone.sort(function(a, b) { return (a > b) ? 1 : ((a < b) ? -1 : 0); });
     var len = values.length;
     if (!len)
@@ -76,14 +77,14 @@ window.talosDebug = {
 
     var stableFrom = -1;
     var overallAverage = d.median(values);
-    var overallStd = d.stddev(values, overallAverage);
+    // var overallStd = d.stddev(values, overallAverage);
     for (var winWidth = MIN_WIDTH; winWidth < (MAX_WIDTH + 1); winWidth++) {
       var prevStd = windowStd(0, winWidth);
       for (var i = 1; i < values.length - winWidth - 3; i++) {
         var w0 = windowStd(i + 0, winWidth);
         var w1 = windowStd(i + 1, winWidth);
         var w2 = windowStd(i + 2, winWidth);
-        var currWindow = values.slice(i, i + winWidth);
+        // var currWindow = values.slice(i, i + winWidth);
         if (w0 >= prevStd && !(w1 < w0 && w2 < w1)) {
           if (i > stableFrom)
             stableFrom = i;
@@ -135,7 +136,7 @@ window.talosDebug = {
     var warmup = (d.ignore >= 0) ? d.ignore : d.detectWarmup(collection);
     if (warmup >= 0) {
       res += "\n\nWarmup " + ((d.ignore >= 0) ? "requested: " : "auto-detected: ") + warmup;
-      warmedUp = collection.slice(warmup);
+      var warmedUp = collection.slice(warmup);
       if (warmup) {
         res += "\nAfter ignoring first " + (warmup > 1 ? (warmup + " items") : "item") + ":\n";
         res += d.statsDisplay(warmedUp);

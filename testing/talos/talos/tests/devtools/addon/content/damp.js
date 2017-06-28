@@ -14,6 +14,8 @@ const webserver = Services.prefs.getCharPref("addon.test.damp.webserver");
 const SIMPLE_URL = webserver + "/tests/devtools/addon/content/pages/simple.html";
 const COMPLICATED_URL = webserver + "/tests/tp5n/bild.de/www.bild.de/index.html";
 
+/* globals res:true */
+
 function Damp() {
   // Path to the temp file where the heap snapshot file is saved. Set by
   // saveHeapSnapshot and read by readHeapSnapshot.
@@ -32,9 +34,8 @@ Damp.prototype = {
       let tab = this._win.gBrowser.selectedTab = this._win.gBrowser.addTab(url);
       let browser = tab.linkedBrowser;
       browser.addEventListener("load", function onload() {
-        browser.removeEventListener("load", onload, true);
         resolve(tab);
-      }, true);
+      }, {capture: true, once: true});
     });
   },
 
@@ -47,14 +48,12 @@ Damp.prototype = {
     let startReloadTimestamp = performance.now();
     return new Promise((resolve, reject) => {
       let browser = gBrowser.selectedBrowser;
-      let self = this;
       browser.addEventListener("load", function onload() {
-        browser.removeEventListener("load", onload, true);
         let stopReloadTimestamp = performance.now();
         resolve({
           time: stopReloadTimestamp - startReloadTimestamp
         });
-      }, true);
+      }, {capture: true, once: true});
       browser.reload();
     });
   },
@@ -181,8 +180,7 @@ Damp.prototype = {
     let TOTAL_MESSAGES = 100;
     let tab = yield this.testSetup(SIMPLE_URL);
     let messageManager = tab.linkedBrowser.messageManager;
-    let {toolbox} = yield this.openToolbox("webconsole");
-    let webconsole = toolbox.getPanel("webconsole");
+    yield this.openToolbox("webconsole");
 
     // Load a frame script using a data URI so we can do logs
     // from the page.  So this is running in content.

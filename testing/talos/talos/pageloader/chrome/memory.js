@@ -1,3 +1,4 @@
+/* import-globals-from pageloader.js */
 
 var gChildProcess = true;
 var gMemCallback = null;

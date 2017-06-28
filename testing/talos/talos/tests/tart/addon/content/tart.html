@@ -191,7 +191,8 @@ function updateConfig() {
   config.repeat = isNaN(repeat) ? 1 : repeat;
 
   var rest = $("rest").value;
-  config.rest = isNaN(rest) ? 500 : (rest ? rest : 1); // 500ms default, use 1ms as minimum
+  config.rest = isNaN(rest) ? 500 : rest; // 500ms default, use 1ms as minimum
+  config.rest = config.rest ? config.rest : 1;
 
   config.tickle = $("tickle").checked;
 
