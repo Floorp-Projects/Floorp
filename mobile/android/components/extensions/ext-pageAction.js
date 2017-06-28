@@ -19,7 +19,7 @@ var {
 } = ExtensionParent;
 
 // WeakMap[Extension -> PageAction]
-var pageActionMap = new WeakMap();
+let pageActionMap = new WeakMap();
 
 class PageAction {
   constructor(manifest, extension) {
