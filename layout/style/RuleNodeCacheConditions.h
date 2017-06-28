@@ -95,11 +95,6 @@ public:
     mBits |= eUncacheable;
   }
 
-  void Clear()
-  {
-    *this = RuleNodeCacheConditions();
-  }
-
   bool Cacheable() const
   {
     return !(mBits & eUncacheable);
