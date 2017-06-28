@@ -1,0 +1,61 @@
+<!doctype html>
+<title>Test for getting the computed style on the root node of a display:none subtree in a document in the bfcache</title>
+<script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1377010">Mozilla Bug 1377010</a>
+<p id="display"></p>
+<script>
+SimpleTest.waitForExplicitFinish();
+
+let testDiv;
+let loadedPromiseResolve;
+
+// Open a new window.
+const w = window.open('data:text/html,'
+                      + '<div id=div style="display:none">Page 1</div>'
+                      + '<script>window.onload = function() { '
+                      + 'opener.postMessage("loaded", "*"); }</' + 'script>');
+waitForLoadMessage().then(() => {
+  // Take a reference to a node in the new window.
+  testDiv = w.document.getElementById('div');
+
+  // Open a new document so that the test div now refers to a node in a
+  // document in the bfcache.
+  w.location = 'data:text/html,<div>Page 2</div>'
+               + '<script>window.onload = function() { '
+               + 'opener.postMessage("loaded", "*"); }</' + 'script>';
+  return waitForLoadMessage();
+}).then(() => {
+  // Compute styles for the node in the bfcache document.
+  is(w.getComputedStyle(testDiv).opacity, '1');
+
+  // Restore the bfcache document.
+  return goBack(w);
+}).then(() => {
+  // Fetch the style once again.
+  is(w.getComputedStyle(testDiv).opacity, '1');
+
+  w.close();
+  SimpleTest.finish();
+});
+
+window.addEventListener('message', e => {
+  if (e.data === 'loaded' && loadedPromiseResolve) {
+    loadedPromiseResolve();
+    loadedPromiseResolve = undefined;
+  }
+});
+
+function waitForLoadMessage() {
+  return new Promise(resolve => {
+    loadedPromiseResolve = resolve;
+  });
+}
+
+function goBack(win) {
+  return new Promise(resolve => {
+    win.onpagehide = e => resolve(win);
+    win.history.back();
+  });
+}
+</script>
