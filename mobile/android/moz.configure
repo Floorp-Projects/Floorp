@@ -68,6 +68,10 @@ project_flag('MOZ_ANDROID_CUSTOM_TABS',
              help='Enable support for Android custom tabs',
              default=milestone.is_nightly)
 
+project_flag('MOZ_ANDROID_PWA',
+             help='Enable support for Progressive Web Apps',
+             default=milestone.is_nightly)
+
 # Enable the Switchboard A/B framework code.
 # Note: The framework is always included in the app. This flag controls
 # usage of the framework.

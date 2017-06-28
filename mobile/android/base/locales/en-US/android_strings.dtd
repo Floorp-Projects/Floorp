@@ -295,6 +295,9 @@
 <!-- Long-click title of CustomTabsActivity will copy URL to clipboard and display this hint -->
 <!ENTITY custom_tabs_hint_url_copy "URL copied">
 
+<!ENTITY pref_pwa "Progressive Web Apps">
+<!ENTITY pref_pwa_summary "Allow web apps to be added to home screen">
+
 <!-- Localization note (pref_activity_stream): Experimental feature, see https://testpilot.firefox.com/experiments/activity-stream  -->
 <!ENTITY pref_activity_stream "Activity Stream">
 <!ENTITY pref_activity_stream_summary "A rich visual history feed and a reimagined home page make it easier than ever to find exactly what you\'re looking for in &brandShortName;.">
