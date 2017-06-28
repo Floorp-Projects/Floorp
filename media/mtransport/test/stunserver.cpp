@@ -121,7 +121,7 @@ static int nr_socket_wrapped_destroy(void **objp) {
     return 0;
 
   nr_socket_wrapped *wrapped = static_cast<nr_socket_wrapped *>(*objp);
-  *objp = 0;
+  *objp = nullptr;
 
   delete wrapped;
 
@@ -171,12 +171,12 @@ static nr_socket_vtbl nr_socket_wrapped_vtbl = {
   nr_socket_wrapped_recvfrom,
   nr_socket_wrapped_getfd,
   nr_socket_wrapped_getaddr,
-  0,
-  0,
-  0,
+  nullptr,
+  nullptr,
+  nullptr,
   nr_socket_wrapped_close,
-  0,
-  0
+  nullptr,
+  nullptr
 };
 
 int nr_socket_wrapped_create(nr_socket *inner, nr_socket **outp) {
