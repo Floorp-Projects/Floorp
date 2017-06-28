@@ -2673,23 +2673,6 @@ nsRuleNode::WalkRuleTree(const nsStyleStructID aSID,
   if (!highestNode)
     highestNode = rootNode;
 
-  if (detail == eRuleNone && isReset) {
-    // We specified absolutely no rule information for a reset struct, and we
-    // may or may not have found a parent rule in the tree that specified all
-    // the rule information.  Regardless, we don't need to use any cache
-    // conditions when we (inevitably) cache this struct in the rule tree.
-    //
-    // Normally ruleData.mConditions would already indicate that the struct
-    // is cacheable without conditions if detail is eRuleNone, but because
-    // of the UnsetPropertiesWithoutFlags call above, we may have encountered
-    // some rules with dependencies, which we then cleared out of ruleData.
-    NS_ASSERTION(ruleData.mConditions.CacheableWithoutDependencies() ||
-                 pseudoRestriction,
-                 "we should already be cacheable without dependencies if we "
-                 "didn't have a pseudo restriction");
-    ruleData.mConditions.Clear();
-  }
-
   MOZ_ASSERT(!(aSID == eStyleStruct_Variables && startStruct),
              "if we start caching Variables structs in the rule tree, then "
              "not forcing detail to eRulePartialMixed just below is no "
