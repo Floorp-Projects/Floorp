@@ -391,6 +391,8 @@
     _(CallDOMNative)                \
     _(IsCallable)                   \
     _(IsConstructor)                \
+    _(IsArrayO)                     \
+    _(IsArrayV)                     \
     _(IsObject)                     \
     _(IsObjectAndBranch)            \
     _(HasClass)                     \
