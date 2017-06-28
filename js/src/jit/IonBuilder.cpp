@@ -4584,9 +4584,9 @@ IonBuilder::inlineCalls(CallInfo& callInfo, const InliningTargets& targets, Bool
         InlinePropertyTable* propTable = maybeCache->propTable();
         propTable->trimTo(targets, choiceSet);
 
-        if (propTable->numEntries() == 0) {
-            // If all paths were vetoed, output only a generic fallback path.
-            MOZ_ASSERT(dispatch->numCases() == 0);
+        if (propTable->numEntries() == 0 || !propTable->hasPriorResumePoint()) {
+            // Output a generic fallback path.
+            MOZ_ASSERT_IF(propTable->numEntries() == 0, dispatch->numCases() == 0);
             maybeCache = nullptr;
             useFallback = true;
         } else {
