@@ -187,6 +187,71 @@ toolbar:not([brighttext]) #bookmarks-menu-button[cui-areatype="toolbar"][starred
   list-style-image: url("chrome://browser/skin/chevron.svg");
 }
 
+%ifdef MOZ_PHOTON_ANIMATIONS
+#nav-bar-overflow-button[animate] > .toolbarbutton-icon {
+  fill: transparent;
+}
+
+@keyframes overflow-animation {
+  from {
+    transform: translateX(0);
+  }
+  50% {
+    fill: #30A3FF;
+  }
+  to {
+    transform: translateX(-1260px);
+    fill: #30A3FF;
+  }
+}
+
+@keyframes overflow-animation-rtl {
+  from {
+    transform: scaleX(-1) translateX(0);
+  }
+  50% {
+    fill: #30A3FF;
+  }
+  to {
+    transform: scaleX(-1) translateX(-1260px);
+    fill: #30A3FF;
+  }
+}
+
+#nav-bar-overflow-button > .toolbarbutton-animatable-box {
+  position: fixed;
+  overflow: hidden;
+  /* The height of the sprite is 24px, which is 8px taller than
+     the height of the icon. We need to move the sprite up 8px
+     higher to counter for this. */
+  margin-top: -8px;
+  /* Since .toolbarbutton-icon uses a different width than the animatable box,
+     we need to set a padding relative to the difference in widths. */
+  margin-inline-start: calc((16px + 2 * var(--toolbarbutton-inner-padding) - 18px) / 2);
+  width: 18px; /* Width of each frame within the SVG sprite */
+  height: 24px; /* Height of each frame within the SVG sprite */
+}
+
+#nav-bar-overflow-button > .toolbarbutton-animatable-box > .toolbarbutton-animatable-image {
+  height: 24px; /* Height of each frame within the SVG sprite */
+  animation-fill-mode: forwards;
+  animation-iteration-count: 1;
+  list-style-image: none;
+}
+
+#nav-bar-overflow-button[animate] > .toolbarbutton-animatable-box > .toolbarbutton-animatable-image {
+  animation-name: overflow-animation;
+  animation-timing-function: steps(70);
+  animation-duration: 1.1s;
+  background-image: url("chrome://browser/skin/chevron-animation.svg");
+  width: 1278px;
+}
+
+#nav-bar-overflow-button[animate]:-moz-locale-dir(rtl) > .toolbarbutton-animatable-box > .toolbarbutton-animatable-image {
+  animation-name: overflow-animation-rtl;
+}
+%endif
+
 #email-link-button[cui-areatype="toolbar"] {
   list-style-image: url("chrome://browser/skin/mail.svg");
 }

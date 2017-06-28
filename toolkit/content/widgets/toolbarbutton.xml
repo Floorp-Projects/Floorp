@@ -22,6 +22,7 @@
                  xbl:inherits="value=label,accesskey,crop,wrap"/>
       <xul:label class="toolbarbutton-multiline-text" flex="1"
                  xbl:inherits="xbl:text=label,accesskey,wrap"/>
+      <children includes="box"/>
     </content>
   </binding>
 

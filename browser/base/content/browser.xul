@@ -1088,7 +1088,11 @@
       <toolbarbutton id="nav-bar-overflow-button"
                      class="toolbarbutton-1 chromeclass-toolbar-additional overflow-button"
                      skipintoolbarset="true"
-                     tooltiptext="&navbarOverflow.label;"/>
+                     tooltiptext="&navbarOverflow.label;">
+        <box class="toolbarbutton-animatable-box">
+          <image class="toolbarbutton-animatable-image"/>
+        </box>
+      </toolbarbutton>
 
       <toolbaritem id="PanelUI-button"
                    class="chromeclass-toolbar-additional"

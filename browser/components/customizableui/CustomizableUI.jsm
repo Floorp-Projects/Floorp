@@ -4221,6 +4221,7 @@ OverflowableToolbar.prototype = {
       this._chevron.open = false;
     } else if (this._panel.state != "hiding") {
       this.show();
+      this._chevron.removeAttribute("animate");
     }
   },
 
