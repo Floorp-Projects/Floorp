@@ -5,6 +5,7 @@
 // Provides functionality for creating and sending DOM events.
 
 "use strict";
+/* global content, is */
 
 const {interfaces: Ci, utils: Cu, classes: Cc} = Components;
 
