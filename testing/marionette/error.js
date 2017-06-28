@@ -162,8 +162,12 @@ error.pprint = function (ss, ...values) {
     let s = "";
     try {
       s = JSON.stringify(obj);
-    } catch (e if e instanceof TypeError) {
-      s = `<${e.message}>`;
+    } catch (e) {
+      if (e instanceof TypeError) {
+        s = `<${e.message}>`;
+      } else {
+        throw e;
+      }
     }
     return proto + " " + s;
   }
