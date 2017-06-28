@@ -3807,7 +3807,7 @@ TEST_F(WebRtcIcePacketFilterTest, TestRecvNonStunPacket) {
 
 TEST_F(WebRtcIcePacketFilterTest, TestSendStunPacket) {
   nr_stun_message *msg;
-  ASSERT_EQ(0, nr_stun_build_req_no_auth(NULL, &msg));
+  ASSERT_EQ(0, nr_stun_build_req_no_auth(nullptr, &msg));
   msg->header.type = NR_STUN_MSG_BINDING_REQUEST;
   ASSERT_EQ(0, nr_stun_encode_message(msg));
   TestOutgoing(msg->buffer, msg->length, 123, 45, true);
@@ -3818,7 +3818,7 @@ TEST_F(WebRtcIcePacketFilterTest, TestSendStunPacket) {
 
 TEST_F(WebRtcIcePacketFilterTest, TestRecvStunPacketWithoutAPendingId) {
   nr_stun_message *msg;
-  ASSERT_EQ(0, nr_stun_build_req_no_auth(NULL, &msg));
+  ASSERT_EQ(0, nr_stun_build_req_no_auth(nullptr, &msg));
 
   msg->header.id.octet[0] = 1;
   msg->header.type = NR_STUN_MSG_BINDING_REQUEST;
@@ -3837,7 +3837,7 @@ TEST_F(WebRtcIcePacketFilterTest, TestRecvStunPacketWithoutAPendingId) {
 
 TEST_F(WebRtcIcePacketFilterTest, TestRecvStunPacketWithoutAPendingIdTcpFramed) {
   nr_stun_message *msg;
-  ASSERT_EQ(0, nr_stun_build_req_no_auth(NULL, &msg));
+  ASSERT_EQ(0, nr_stun_build_req_no_auth(nullptr, &msg));
 
   msg->header.id.octet[0] = 1;
   msg->header.type = NR_STUN_MSG_BINDING_REQUEST;
@@ -3854,7 +3854,7 @@ TEST_F(WebRtcIcePacketFilterTest, TestRecvStunPacketWithoutAPendingIdTcpFramed) 
 
 TEST_F(WebRtcIcePacketFilterTest, TestRecvStunPacketWithoutAPendingAddress) {
   nr_stun_message *msg;
-  ASSERT_EQ(0, nr_stun_build_req_no_auth(NULL, &msg));
+  ASSERT_EQ(0, nr_stun_build_req_no_auth(nullptr, &msg));
 
   msg->header.type = NR_STUN_MSG_BINDING_REQUEST;
   ASSERT_EQ(0, nr_stun_encode_message(msg));
@@ -3871,7 +3871,7 @@ TEST_F(WebRtcIcePacketFilterTest, TestRecvStunPacketWithoutAPendingAddress) {
 
 TEST_F(WebRtcIcePacketFilterTest, TestRecvStunPacketWithPendingIdAndAddress) {
   nr_stun_message *msg;
-  ASSERT_EQ(0, nr_stun_build_req_no_auth(NULL, &msg));
+  ASSERT_EQ(0, nr_stun_build_req_no_auth(nullptr, &msg));
 
   msg->header.type = NR_STUN_MSG_BINDING_REQUEST;
   ASSERT_EQ(0, nr_stun_encode_message(msg));
@@ -3912,7 +3912,7 @@ TEST_F(WebRtcIcePacketFilterTest, TestRecvStunPacketWithPendingIdAndAddress) {
 
 TEST_F(WebRtcIcePacketFilterTest, TestRecvStunPacketWithPendingIdTcpFramed) {
   nr_stun_message *msg;
-  ASSERT_EQ(0, nr_stun_build_req_no_auth(NULL, &msg));
+  ASSERT_EQ(0, nr_stun_build_req_no_auth(nullptr, &msg));
 
   msg->header.type = NR_STUN_MSG_BINDING_REQUEST;
   ASSERT_EQ(0, nr_stun_encode_message(msg));
@@ -3933,7 +3933,7 @@ TEST_F(WebRtcIcePacketFilterTest, TestRecvStunPacketWithPendingIdTcpFramed) {
 
 TEST_F(WebRtcIcePacketFilterTest, TestSendNonRequestStunPacket) {
   nr_stun_message *msg;
-  ASSERT_EQ(0, nr_stun_build_req_no_auth(NULL, &msg));
+  ASSERT_EQ(0, nr_stun_build_req_no_auth(nullptr, &msg));
 
   msg->header.type = NR_STUN_MSG_BINDING_RESPONSE;
   ASSERT_EQ(0, nr_stun_encode_message(msg));
@@ -3962,7 +3962,7 @@ TEST_F(WebRtcIcePacketFilterTest, TestSendNonRequestStunPacket) {
 
 TEST_F(WebRtcIcePacketFilterTest, TestRecvDataPacketWithAPendingAddress) {
   nr_stun_message *msg;
-  ASSERT_EQ(0, nr_stun_build_req_no_auth(NULL, &msg));
+  ASSERT_EQ(0, nr_stun_build_req_no_auth(nullptr, &msg));
 
   msg->header.type = NR_STUN_MSG_BINDING_REQUEST;
   ASSERT_EQ(0, nr_stun_encode_message(msg));

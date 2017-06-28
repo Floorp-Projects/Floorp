@@ -54,7 +54,7 @@
 #define PUBLIC_FUNC
 #endif
 
-GMPPlatformAPI* g_platform_api = NULL;
+GMPPlatformAPI* g_platform_api = nullptr;
 
 extern "C" {
 
@@ -83,7 +83,7 @@ extern "C" {
 
   PUBLIC_FUNC void
   GMPShutdown (void) {
-    g_platform_api = NULL;
+    g_platform_api = nullptr;
   }
 
 } // extern "C"
