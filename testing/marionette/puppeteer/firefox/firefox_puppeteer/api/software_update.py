@@ -366,7 +366,8 @@ class SoftwareUpdate(BaseLib):
             return response.read()
         except urllib2.URLError:
             exc, val, tb = sys.exc_info()
-            raise Exception, "Failed to retrieve update snippet: {}".format(val), tb
+            raise Exception, "Failed to retrieve update snippet '{}': {}".format(
+                update_url, val), tb
 
     def get_formatted_update_url(self, force=False):
         """Retrieve the formatted AUS update URL the update snippet is retrieved from.

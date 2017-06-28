@@ -13,7 +13,6 @@ const kTestBtn3 = "test-createWidget-overflow";
 const kHomeBtn = "home-button";
 const kDownloadsBtn = "downloads-button";
 const kSearchBox = "search-container";
-const kStarBtn = "bookmarks-menu-button";
 
 var originalWindowWidth;
 

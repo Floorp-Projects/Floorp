@@ -7,6 +7,7 @@
 #include "mozilla/Hal.h"
 #include "mozilla/HalSensor.h"
 
+#include "nsContentUtils.h"
 #include "nsDeviceSensors.h"
 
 #include "nsIDOMEvent.h"
@@ -128,7 +129,7 @@ nsDeviceSensors::~nsDeviceSensors()
 
 NS_IMETHODIMP nsDeviceSensors::HasWindowListener(uint32_t aType, nsIDOMWindow *aWindow, bool *aRetVal)
 {
-  if (!mEnabled)
+  if (AreSensorEventsDisabled(aWindow))
     *aRetVal = false;
   else
     *aRetVal = mWindowListeners[aType]->IndexOf(aWindow) != NoIndex;
@@ -169,7 +170,7 @@ static bool sTestSensorEvents = false;
 
 NS_IMETHODIMP nsDeviceSensors::AddWindowListener(uint32_t aType, nsIDOMWindow *aWindow)
 {
-  if (!mEnabled)
+  if (AreSensorEventsDisabled(aWindow))
     return NS_OK;
 
   if (mWindowListeners[aType]->IndexOf(aWindow) != NoIndex)
@@ -566,4 +567,20 @@ nsDeviceSensors::FireDOMMotionEvent(nsIDOMDocument *domdoc,
   mLastAccelerationIncludingGravity.reset();
   mLastAcceleration.reset();
   mLastDOMMotionEventTime = TimeStamp::Now();
+}
+
+bool
+nsDeviceSensors::AreSensorEventsDisabled(nsIDOMWindow* aWindow)
+{
+  if (!mEnabled) {
+    return true;
+  }
+
+  nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(aWindow);
+
+  if (!window) {
+    return false;
+  }
+
+  return nsContentUtils::ShouldResistFingerprinting(window->GetDocShell());
 }

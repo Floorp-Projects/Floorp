@@ -234,7 +234,7 @@ class _RunnerManagerState(object):
     before_init = namedtuple("before_init", [])
     initializing = namedtuple("initializing_browser",
                               ["test", "test_group", "group_metadata", "failure_count"])
-    running = namedtuple("running", ["test", "test_group"])
+    running = namedtuple("running", ["test", "test_group", "group_metadata"])
     restarting = namedtuple("restarting", ["test", "test_group", "group_metadata"])
     error = namedtuple("error", [])
     stop = namedtuple("stop", [])
@@ -478,7 +478,8 @@ class TestRunnerManager(threading.Thread):
         assert isinstance(self.state, RunnerManagerState.initializing)
         self.browser.after_init()
         return RunnerManagerState.running(self.state.test,
-                                          self.state.test_group)
+                                          self.state.test_group,
+                                          self.state.group_metadata)
 
     def init_failed(self):
         assert isinstance(self.state, RunnerManagerState.initializing)
@@ -591,7 +592,7 @@ class TestRunnerManager(threading.Thread):
         if restart:
             return RunnerManagerState.restarting(test, test_group, group_metadata)
         else:
-            return RunnerManagerState.running(test, test_group)
+            return RunnerManagerState.running(test, test_group, group_metadata)
 
     def restart_runner(self):
         """Stop and restart the TestRunner"""

@@ -140,7 +140,10 @@ class Theme {
 
     for (let icon of Object.getOwnPropertyNames(icons)) {
       let val = icons[icon];
-      if (!val || !ICONS.includes(icon)) {
+      // We also have to compare against the baseURI spec because
+      // `val` might have been resolved already. Resolving "" against
+      // the baseURI just produces that URI, so check for equality.
+      if (!val || val == this.baseURI.spec || !ICONS.includes(icon)) {
         continue;
       }
       let variableName = `--${icon}-icon`;
@@ -280,6 +283,19 @@ this.theme = class extends ExtensionAPI {
           }
 
           this.theme.load(details);
+        },
+        reset: () => {
+          if (!gThemesEnabled) {
+            // Return early if themes are disabled.
+            return;
+          }
+
+          if (!this.theme) {
+            // If no theme has been initialized, nothing to do.
+            return;
+          }
+
+          this.theme.unload();
         },
       },
     };

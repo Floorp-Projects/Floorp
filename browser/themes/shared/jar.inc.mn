@@ -109,7 +109,11 @@
   skin/classic/browser/back-12.svg                    (../shared/icons/back-12.svg)
   skin/classic/browser/bookmark.svg                   (../shared/icons/bookmark.svg)
   skin/classic/browser/bookmark-hollow.svg            (../shared/icons/bookmark-hollow.svg)
+#ifndef MOZ_PHOTON_THEME
   skin/classic/browser/bookmarksMenu.svg              (../shared/icons/bookmarksMenu.svg)
+#else
+  skin/classic/browser/bookmark-star-on-tray.svg      (../shared/icons/bookmark-star-on-tray.svg)
+#endif
   skin/classic/browser/characterEncoding.svg          (../shared/icons/characterEncoding.svg)
   skin/classic/browser/chevron.svg                    (../shared/icons/chevron.svg)
   skin/classic/browser/check.svg                      (../shared/icons/check.svg)

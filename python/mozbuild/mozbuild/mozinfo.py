@@ -90,6 +90,7 @@ def build_dict(config, env=os.environ):
     d['bin_suffix'] = substs.get('BIN_SUFFIX', '')
     d['addon_signing'] = substs.get('MOZ_ADDON_SIGNING') == '1'
     d['require_signing'] = substs.get('MOZ_REQUIRE_SIGNING') == '1'
+    d['no_legacy_extensions'] = substs.get('MOZ_ALLOW_LEGACY_EXTENSIONS') == '0'
     d['official'] = bool(substs.get('MOZILLA_OFFICIAL'))
     d['updater'] = substs.get('MOZ_UPDATER') == '1'
     d['artifact'] = substs.get('MOZ_ARTIFACT_BUILDS') == '1'

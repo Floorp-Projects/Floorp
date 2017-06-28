@@ -1471,5 +1471,8 @@ this.Sqlite = {
    */
   get shutdown() {
     return Barriers.shutdown.client;
-  }
+  },
+  failTestsOnAutoClose(enabled) {
+    Debugging.failTestsOnAutoClose = enabled;
+  },
 };

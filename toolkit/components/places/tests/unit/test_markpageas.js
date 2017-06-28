@@ -11,10 +11,6 @@ var gVisits = [{url: "http://www.mozilla.com/",
                {url: "http://www.espn.com/",
                 transition: TRANSITION_LINK}];
 
-function run_test() {
-  run_next_test();
-}
-
 add_task(async function test_execute() {
   let observer;
   let completionPromise = new Promise(resolveCompletionPromise => {
@@ -55,4 +51,3 @@ add_task(async function test_execute() {
 
   PlacesUtils.history.removeObserver(observer);
 });
-

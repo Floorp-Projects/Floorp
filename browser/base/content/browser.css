@@ -104,6 +104,12 @@ panelview {
   -moz-box-orient: vertical;
 }
 
+panel[hidden] panelmultiview,
+panel[hidden] photonpanelmultiview,
+panel[hidden] panelview {
+  -moz-binding: none;
+}
+
 .panel-mainview {
   transition: transform var(--panelui-subview-transition-duration);
 }

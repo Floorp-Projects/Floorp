@@ -6,7 +6,12 @@ import urllib
 
 from marionette_driver import By, errors
 
-from marionette_harness import MarionetteTestCase, run_if_e10s, skip_if_mobile
+from marionette_harness import (
+    MarionetteTestCase,
+    run_if_e10s,
+    skip_if_mobile,
+    WindowManagerMixin,
+)
 
 
 def inline(doc):
@@ -95,8 +100,8 @@ class TestLegacyClick(MarionetteTestCase):
         test_html = self.marionette.absolute_url("clicks.html")
         self.marionette.navigate(test_html)
         self.marionette.find_element(By.LINK_TEXT, "333333").click()
-        self.marionette.find_element(By.ID, "username")
-        self.assertEqual(self.marionette.title, "XHTML Test Page")
+        self.marionette.find_element(By.ID, "testDiv")
+        self.assertEqual(self.marionette.title, "Marionette Test")
 
     def test_clicking_an_element_that_is_not_displayed_raises(self):
         test_html = self.marionette.absolute_url("hidden.html")
@@ -109,8 +114,8 @@ class TestLegacyClick(MarionetteTestCase):
         test_html = self.marionette.absolute_url("clicks.html")
         self.marionette.navigate(test_html)
         self.marionette.find_element(By.ID, "overflowLink").click()
-        self.marionette.find_element(By.ID, "username")
-        self.assertEqual(self.marionette.title, "XHTML Test Page")
+        self.marionette.find_element(By.ID, "testDiv")
+        self.assertEqual(self.marionette.title, "Marionette Test")
 
     def test_scroll_into_view_near_end(self):
         self.marionette.navigate(fixed_overlay)
@@ -308,7 +313,7 @@ class TestClickNavigation(MarionetteTestCase):
     def test_click_link_page_load(self):
         self.marionette.find_element(By.LINK_TEXT, "333333").click()
         self.assertNotEqual(self.marionette.get_url(), self.test_page)
-        self.assertEqual(self.marionette.title, "XHTML Test Page")
+        self.assertEqual(self.marionette.title, "Marionette Test")
 
     @skip_if_mobile("Bug 1325738 - Modal dialogs block execution of code for Fennec")
     def test_click_link_page_load_aborted_by_beforeunload(self):
@@ -334,7 +339,7 @@ class TestClickNavigation(MarionetteTestCase):
             self.close_notification()
 
     def test_click_no_link(self):
-        self.marionette.find_element(By.ID, "showbutton").click()
+        self.marionette.find_element(By.ID, "links").click()
         self.assertEqual(self.marionette.get_url(), self.test_page)
 
     def test_click_option_navigate(self):
@@ -357,3 +362,35 @@ class TestClickNavigation(MarionetteTestCase):
         self.marionette.find_element(By.ID, "history-back").click()
         with self.assertRaises(errors.NoSuchElementException):
             self.marionette.find_element(By.ID, "anchor")
+
+
+class TestClickCloseContext(WindowManagerMixin, MarionetteTestCase):
+
+    def setUp(self):
+        super(TestClickCloseContext, self).setUp()
+
+        self.test_page = self.marionette.absolute_url("clicks.html")
+
+    def tearDown(self):
+        self.close_all_tabs()
+
+        super(TestClickCloseContext, self).tearDown()
+
+    def test_click_close_tab(self):
+        self.marionette.navigate(self.marionette.absolute_url("windowHandles.html"))
+        tab = self.open_tab(
+            lambda: self.marionette.find_element(By.ID, "new-tab").click())
+        self.marionette.switch_to_window(tab)
+
+        self.marionette.navigate(self.test_page)
+        self.marionette.find_element(By.ID, "close-window").click()
+
+    @skip_if_mobile("Fennec doesn't support other chrome windows")
+    def test_click_close_window(self):
+        self.marionette.navigate(self.marionette.absolute_url("windowHandles.html"))
+        win = self.open_window(
+            lambda: self.marionette.find_element(By.ID, "new-window").click())
+        self.marionette.switch_to_window(win)
+
+        self.marionette.navigate(self.test_page)
+        self.marionette.find_element(By.ID, "close-window").click()
