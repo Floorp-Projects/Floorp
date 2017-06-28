@@ -179,7 +179,15 @@ class GeckoviewTestRunner:
         try:
             dump_dir = tempfile.mkdtemp()
             remote_dir = posixpath.join(self.remote_profile, 'minidumps')
-            if not self.dm.dirExists(remote_dir):
+            crash_dir_found = False
+            # wait up to 60 seconds for gecko startup to progress through
+            # crashreporter initialization, in case all tests finished quickly
+            for wait_time in xrange(60):
+                time.sleep(1)
+                if self.dm.dirExists(remote_dir):
+                    crash_dir_found = True
+                    break
+            if not crash_dir_found:
                 # If crash reporting is enabled (MOZ_CRASHREPORTER=1), the
                 # minidumps directory is automatically created when the app
                 # (first) starts, so its lack of presence is a hint that
