@@ -22,11 +22,17 @@
 #define NS_HTTP_VERSION_1_1     11
 #define NS_HTTP_VERSION_2_0     20
 
+class nsICacheEntry;
+
 namespace mozilla {
 
 class Mutex;
 
 namespace net {
+    class nsHttpResponseHead;
+    class nsHttpRequestHead;
+    class CacheControlParser;
+
     enum {
         // SPDY_VERSION_2 = 2, REMOVED
         // SPDY_VERSION_3 = 3, REMOVED
@@ -125,46 +131,46 @@ struct nsHttpAtom
     const char *_val;
 };
 
-struct nsHttp
+namespace nsHttp
 {
-    static MOZ_MUST_USE nsresult CreateAtomTable();
-    static void DestroyAtomTable();
+    MOZ_MUST_USE nsresult CreateAtomTable();
+    void DestroyAtomTable();
 
     // The mutex is valid any time the Atom Table is valid
     // This mutex is used in the unusual case that the network thread and
     // main thread might access the same data
-    static Mutex *GetLock();
+    Mutex *GetLock();
 
     // will dynamically add atoms to the table if they don't already exist
-    static nsHttpAtom ResolveAtom(const char *);
-    static nsHttpAtom ResolveAtom(const nsACString &s)
+    nsHttpAtom ResolveAtom(const char *);
+    inline nsHttpAtom ResolveAtom(const nsACString &s)
     {
         return ResolveAtom(PromiseFlatCString(s).get());
     }
 
     // returns true if the specified token [start,end) is valid per RFC 2616
     // section 2.2
-    static bool IsValidToken(const char *start, const char *end);
+    bool IsValidToken(const char *start, const char *end);
 
-    static inline bool IsValidToken(const nsACString &s) {
+    inline bool IsValidToken(const nsACString &s) {
         return IsValidToken(s.BeginReading(), s.EndReading());
     }
 
     // Strip the leading or trailing HTTP whitespace per fetch spec section 2.2.
-    static void TrimHTTPWhitespace(const nsACString& aSource,
+    void TrimHTTPWhitespace(const nsACString& aSource,
                                    nsACString& aDest);
 
     // Returns true if the specified value is reasonable given the defintion
     // in RFC 2616 section 4.2.  Full strict validation is not performed
     // currently as it would require full parsing of the value.
-    static bool IsReasonableHeaderValue(const nsACString &s);
+    bool IsReasonableHeaderValue(const nsACString &s);
 
     // find the first instance (case-insensitive comparison) of the given
     // |token| in the |input| string.  the |token| is bounded by elements of
     // |separators| and may appear at the beginning or end of the |input|
     // string.  null is returned if the |token| is not found.  |input| may be
     // null, in which case null is returned.
-    static const char *FindToken(const char *input, const char *token,
+    const char *FindToken(const char *input, const char *token,
                                  const char *separators);
 
     // This function parses a string containing a decimal-valued, non-negative
@@ -175,22 +181,40 @@ struct nsHttp
     //
     // TODO(darin): Replace this with something generic.
     //
-    static MOZ_MUST_USE bool ParseInt64(const char *input, const char **next,
+    MOZ_MUST_USE bool ParseInt64(const char *input, const char **next,
                                         int64_t *result);
 
     // Variant on ParseInt64 that expects the input string to contain nothing
     // more than the value being parsed.
-    static inline MOZ_MUST_USE bool ParseInt64(const char *input,
+    inline MOZ_MUST_USE bool ParseInt64(const char *input,
                                                int64_t *result) {
         const char *next;
         return ParseInt64(input, &next, result) && *next == '\0';
     }
 
     // Return whether the HTTP status code represents a permanent redirect
-    static bool IsPermanentRedirect(uint32_t httpStatus);
+    bool IsPermanentRedirect(uint32_t httpStatus);
 
     // Returns the APLN token which represents the used protocol version.
-    static const char* GetProtocolVersion(uint32_t pv);
+    const char* GetProtocolVersion(uint32_t pv);
+
+    bool ValidationRequired(bool isForcedValid, nsHttpResponseHead *cachedResponseHead,
+                   uint32_t loadFlags, bool allowStaleCacheContent,
+                   bool isImmutable, bool customConditionalRequest,
+                   nsHttpRequestHead &requestHead,
+                   nsICacheEntry *entry, CacheControlParser &cacheControlRequest,
+                   bool fromPreviousSession);
+
+    nsresult GetHttpResponseHeadFromCacheEntry(nsICacheEntry *entry,
+                                               nsHttpResponseHead *cachedResponseHead);
+
+    nsresult CheckPartial(nsICacheEntry* aEntry, int64_t *aSize,
+                          int64_t *aContentLength,
+                          nsHttpResponseHead *responseHead);
+
+    void DetermineFramingAndImmutability(nsICacheEntry *entry, nsHttpResponseHead *cachedResponseHead,
+                                         bool isHttps, bool *weaklyFramed,
+                                         bool *isImmutable);
 
     // Declare all atoms
     //
@@ -198,10 +222,10 @@ struct nsHttp
     // to you by the magic of C preprocessing.  Add new atoms to nsHttpAtomList
     // and all support logic will be auto-generated.
     //
-#define HTTP_ATOM(_name, _value) static nsHttpAtom _name;
+#define HTTP_ATOM(_name, _value) extern nsHttpAtom _name;
 #include "nsHttpAtomList.h"
 #undef HTTP_ATOM
-};
+}
 
 //-----------------------------------------------------------------------------
 // utilities...
