@@ -9,4 +9,3 @@
   # /browser/components/uitour to avoid "unreferenced files" error when
   # Onboarding extension is not built.
   content/lib/UITour-lib.js (/browser/components/uitour/UITour-lib.js)
-  content/modules/ (*.jsm)
