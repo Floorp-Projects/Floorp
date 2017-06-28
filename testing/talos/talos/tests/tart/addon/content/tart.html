@@ -113,8 +113,6 @@ function doneTest(dispResult) {
 
       dispStats += "<hr/><b>Individual animations</b>:<br/>";
     }
-
-    // eslint-disable-next-line no-unsanitized/property
     $("run-results").innerHTML = "<hr/><br/>Results <button onclick='toClipboard(lastResults)'>[ Copy to clipboard as JSON ]</button>:<br/>" + dispStats + dispResult.join("<br/>");
   }
 }
@@ -266,8 +264,6 @@ Utilities:
 <b>Configure TART</b> (CTRL-F5 to reset to talos defaults) <button type="button" onclick="deselectAll()">Deselect all tests</button><br/>
 <script>
   for (var test in defaultConfig.subtests) {
-
-    // eslint-disable-next-line no-unsanitized/method
     document.write('<input type="checkbox" id="subtest-' + test + '" ' + (defaultConfig.subtests[test] ? "" : "un") + "checked>"
                   + test + "</input>"
                   + '<span style="color:grey">&nbsp;&nbsp;&nbsp;' + testsInfo[test] + "</span>"

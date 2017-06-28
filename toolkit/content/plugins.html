@@ -15,7 +15,6 @@
   var strBundleService = Components.classes["@mozilla.org/intl/stringbundle;1"].getService(Ci.nsIStringBundleService);
   var pluginsbundle = strBundleService.createBundle("chrome://global/locale/plugins.properties");
 
-  // eslint-disable-next-line no-unsanitized/method
   document.writeln("<title>" + pluginsbundle.GetStringFromName("title_label") + "<\/title>");
 </script>
 <link rel="stylesheet" type="text/css" href="chrome://global/content/plugins.css">

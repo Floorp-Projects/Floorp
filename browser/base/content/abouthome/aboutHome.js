@@ -334,7 +334,6 @@ function showSnippets() {
   if (snippets) {
     // Injecting snippets can throw if they're invalid XML.
     try {
-      // eslint-disable-next-line no-unsanitized/property
       snippetsElt.innerHTML = snippets;
       // Scripts injected by innerHTML are inactive, so we have to relocate them
       // through DOM manipulation to activate their contents.

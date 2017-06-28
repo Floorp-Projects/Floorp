@@ -106,7 +106,6 @@ function setImageTooltip(tooltip, doc, imageUrl, options) {
         <span class="theme-comment devtools-tooltip-caption">${label}</span>
       </div>`;
   }
-  // eslint-disable-next-line no-unsanitized/property
   div.innerHTML = html;
 
   // Calculate tooltip dimensions

@@ -140,7 +140,6 @@ add_task(async function test() {
 
   for (let tc of TESTCASES) {
     info("Starting testcase: " + JSON.stringify(tc));
-    // eslint-disable-next-line no-unsanitized/property
     frameDoc.documentElement.innerHTML = tc.document;
     let inputForFormLike = frameDoc.querySelectorAll("input")[tc.inputIndexForFormLike];
 

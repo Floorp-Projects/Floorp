@@ -33,7 +33,6 @@ for (var y = 0; y < 2000; y += 100) {
         g = g & 0xFC;
         var b = (Math.floor(y / 3) % 256);
         b = b & 0xF8;
-        // eslint-disable-next-line no-unsanitized/method
         document.write("<div style='float: left; width: 100px; height: 100px; margin: 0; padding: 0; border: none; background-color: rgb(" + r + "," + g + "," + b + ")'> </div>\n");
     }
     document.write("</div>\n");

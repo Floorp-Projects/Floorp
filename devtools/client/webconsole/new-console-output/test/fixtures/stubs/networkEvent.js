@@ -177,7 +177,7 @@ stubPackets.set("GET request", {
       },
       {
         "filename": "resource://testing-common/content-task.js line 52 > eval",
-        "lineNumber": 8,
+        "lineNumber": 7,
         "columnNumber": 9,
         "functionName": null,
         "asyncCause": null
@@ -250,7 +250,7 @@ stubPackets.set("XHR GET request", {
       },
       {
         "filename": "resource://testing-common/content-task.js line 52 > eval",
-        "lineNumber": 8,
+        "lineNumber": 7,
         "columnNumber": 9,
         "functionName": null,
         "asyncCause": null
@@ -323,7 +323,7 @@ stubPackets.set("XHR POST request", {
       },
       {
         "filename": "resource://testing-common/content-task.js line 52 > eval",
-        "lineNumber": 8,
+        "lineNumber": 7,
         "columnNumber": 9,
         "functionName": null,
         "asyncCause": null
