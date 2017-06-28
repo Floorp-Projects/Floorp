@@ -1634,10 +1634,6 @@ var gBrowserInit = {
     FullScreen.init();
     PointerLock.init();
 
-    if (AppConstants.isPlatformAndVersionAtLeast("win", "10")) {
-      ContextMenuTouchModeObserver.init();
-    }
-
     // initialize the sync UI
     gSync.init();
 
@@ -1847,9 +1843,6 @@ var gBrowserInit = {
         this.gmpInstallManager.uninit();
       }
 
-      if (AppConstants.isPlatformAndVersionAtLeast("win", "10")) {
-        ContextMenuTouchModeObserver.uninit();
-      }
       BrowserOffline.uninit();
       IndexedDBPromptHelper.uninit();
       PanelUI.uninit();
@@ -8225,77 +8218,6 @@ var RestoreLastSessionObserver = {
 function restoreLastSession() {
   SessionStore.restoreLastSession();
 }
-
-/* Observes context menus and adjusts their size for better
- * usability when opened via a touch screen. */
-var ContextMenuTouchModeObserver = {
-  get _searchBarContextMenu() {
-    let searchbar = document.getElementById("searchbar");
-    let textBox = document.getAnonymousElementByAttribute(searchbar,
-                                        "anonid", "searchbar-textbox");
-    let inputBox = document.getAnonymousElementByAttribute(textBox,
-                                        "anonid", "textbox-input-box");
-    let menu = document.getAnonymousElementByAttribute(inputBox,
-                                        "anonid", "input-box-contextmenu");
-    return menu;
-  },
-
-  get _urlBarContextMenu() {
-    let urlbar = document.getElementById("urlbar");
-    let textBox = document.getAnonymousElementByAttribute(urlbar,
-                                        "anonid", "textbox-input-box");
-    let menu = document.getAnonymousElementByAttribute(textBox,
-                                        "anonid", "input-box-contextmenu");
-    return menu;
-  },
-
-  _addListener(el) {
-    el.addEventListener("popupshowing", this);
-  },
-
-  _removeListener(el) {
-    el.removeEventListener("popupshowing", this);
-  },
-
-  init() {
-    // Start observing different context menus for popupshowing.
-
-    // The main popup set, which contains several context menus,
-    // e.g. the page content area context menu.
-    this._addListener(document.getElementById("mainPopupSet"));
-
-    // The navigation context menu of the back and forward button.
-    this._addListener(document.getElementById("back-button"));
-    this._addListener(document.getElementById("forward-button"));
-
-    // The search bar context menu.
-    this._addListener(this._searchBarContextMenu);
-
-    // The url bar context menu.
-    this._addListener(this._urlBarContextMenu);
-  },
-
-  handleEvent(event) {
-    let target = event.target;
-    if (target.localName != "menupopup") {
-      return;
-    }
-
-    if (event.mozInputSource == MouseEvent.MOZ_SOURCE_TOUCH) {
-      target.setAttribute("touchmode", "true");
-    } else {
-      target.removeAttribute("touchmode");
-    }
-  },
-
-  uninit() {
-    this._removeListener(document.getElementById("mainPopupSet"));
-    this._removeListener(document.getElementById("back-button"));
-    this._removeListener(document.getElementById("forward-button"));
-    this._removeListener(this._searchBarContextMenu);
-    this._removeListener(this._urlBarContextMenu);
-  },
-};
 
 var TabContextMenu = {
   contextTab: null,
