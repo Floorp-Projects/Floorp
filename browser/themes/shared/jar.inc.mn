@@ -129,6 +129,7 @@
 #endif
   skin/classic/browser/characterEncoding.svg          (../shared/icons/characterEncoding.svg)
   skin/classic/browser/chevron.svg                    (../shared/icons/chevron.svg)
+  skin/classic/browser/chevron-animation.svg          (../shared/icons/chevron-animation.svg)
   skin/classic/browser/check.svg                      (../shared/icons/check.svg)
   skin/classic/browser/containers.svg                 (../shared/icons/containers.svg)
   skin/classic/browser/customize.svg                  (../shared/icons/customize.svg)

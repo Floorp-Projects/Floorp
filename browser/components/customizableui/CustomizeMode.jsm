@@ -804,6 +804,12 @@ CustomizeMode.prototype = {
     if (!this._customizing) {
       CustomizableUI.dispatchToolboxEvent("customizationchange");
     }
+
+    if (AppConstants.MOZ_PHOTON_ANIMATIONS &&
+        Services.prefs.getBoolPref("toolkit.cosmeticAnimations.enabled")) {
+      let overflowButton = this.document.getElementById("nav-bar-overflow-button");
+      overflowButton.setAttribute("animate", "true");
+    }
   },
 
   removeFromArea(aNode) {
