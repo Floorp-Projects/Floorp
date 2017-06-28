@@ -406,7 +406,8 @@ WebRenderBridgeParent::PushAPZStateToWR(nsTArray<WrTransformProperty>& aTransfor
     return false;
   }
   if (RefPtr<APZCTreeManager> apzc = cbp->GetAPZCTreeManager()) {
-    TimeStamp animationTime = mCompositorScheduler->GetLastComposeTime();
+    TimeStamp animationTime = cbp->GetTestingTimeStamp().valueOr(
+        mCompositorScheduler->GetLastComposeTime());
     TimeDuration frameInterval = cbp->GetVsyncInterval();
     // As with the non-webrender codepath in AsyncCompositionManager, we want to
     // use the timestamp for the next vsync when advancing animations.
@@ -839,12 +840,20 @@ WebRenderBridgeParent::ActorDestroy(ActorDestroyReason aWhy)
 }
 
 void
+WebRenderBridgeParent::AdvanceAnimations()
+{
+  TimeStamp animTime = mCompositorScheduler->GetLastComposeTime();
+  if (CompositorBridgeParent* cbp = GetRootCompositorBridgeParent()) {
+    animTime = cbp->GetTestingTimeStamp().valueOr(animTime);
+  }
+  AnimationHelper::SampleAnimations(mAnimStorage, animTime);
+}
+
+void
 WebRenderBridgeParent::SampleAnimations(nsTArray<WrOpacityProperty>& aOpacityArray,
                                         nsTArray<WrTransformProperty>& aTransformArray)
 {
-  AnimationHelper::SampleAnimations(mAnimStorage,
-                                    mCompositorScheduler->
-                                      GetLastComposeTime());
+  AdvanceAnimations();
 
   // return the animated data if has
   if (mAnimStorage->AnimatedValueCount()) {

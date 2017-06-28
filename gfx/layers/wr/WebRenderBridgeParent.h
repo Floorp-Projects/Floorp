@@ -214,6 +214,7 @@ private:
                    const WrBuiltDisplayListDescriptor& dlDesc,
                    const WebRenderScrollData& aScrollData);
 
+  void AdvanceAnimations();
   void SampleAnimations(nsTArray<WrOpacityProperty>& aOpacityArray,
                         nsTArray<WrTransformProperty>& aTransformArray);
 
