@@ -22,8 +22,7 @@ function createXpiDataUri(base, files, callbacks) {
     r.open("GET", url, false);
     r.requestType = "arraybuffer";
     r.overrideMimeType("text/plain; charset=x-user-defined");
-    try { r.send(); }
-    catch (e) { throw "FileNotRetrieved: " + url + " - " + e; }
+    try { r.send(); } catch (e) { throw "FileNotRetrieved: " + url + " - " + e; }
     // For 'file://' Firefox sets status=0 on success or throws otherwise
     // In Firefox 34-ish onwards, success status is 200.
     if (!(r.readyState == 4 && (r.status == 0 || r.status == 200)))
@@ -53,14 +52,14 @@ function createXpiDataUri(base, files, callbacks) {
       }
     }
 
-    return sB64Enc.substr(0, sB64Enc.length - 2 + nMod3) + (nMod3 === 2 ? '' : nMod3 === 1 ? '=' : '==');
+    return sB64Enc.substr(0, sB64Enc.length - 2 + nMod3) + (nMod3 === 2 ? "" : nMod3 === 1 ? "=" : "==");
   }
 
   // Create the zip/xpi
   try {
     function dummy() {}
-    var onsuccess  = callbacks.onsuccess  || dummy;
-    var onerror    = callbacks.onerror    || dummy;
+    var onsuccess  = callbacks.onsuccess || dummy;
+    var onerror    = callbacks.onerror || dummy;
     var onprogress = callbacks.onprogress || dummy;
 
     var zip = new JSZip();

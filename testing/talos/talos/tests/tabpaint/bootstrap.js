@@ -90,7 +90,7 @@ var TabPaint = {
 
     let gBrowser = browser.ownerGlobal.gBrowser;
 
-    switch(msg.name) {
+    switch (msg.name) {
       case "TabPaint:Go": {
         // Our document has loaded, and we're off to the races!
         this.go(gBrowser).then((results) => {

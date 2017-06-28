@@ -11,7 +11,7 @@ function contentDispatchEvent(type, data, sync) {
 
   var element = new CustomEvent("contentEvent", {
     bubbles: true,
-    detail: { sync: sync, type: type, data: JSON.stringify(data) }
+    detail: { sync, type, data: JSON.stringify(data) }
   });
   document.dispatchEvent(element);
 }
@@ -24,8 +24,8 @@ function contentAsyncEvent(type, data) {
   contentDispatchEvent(type, data, 0);
 }
 
-//double logging to account for normal mode and ipc mode (mobile_profile only)
-//Ideally we would remove the dump() and just do ipc logging
+// double logging to account for normal mode and ipc mode (mobile_profile only)
+// Ideally we would remove the dump() and just do ipc logging
 function dumpLog(msg) {
   dump(msg);
   MozFileLogger.log(msg);
@@ -82,10 +82,10 @@ MozFileLogger.init = function(path) {
 }
 
 MozFileLogger.getLogCallback = function() {
-  return function (msg) {
+  return function(msg) {
     netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
 
-    var data = msg.num + " " + msg.level + " " + msg.info.join(' ') + "\n";
+    var data = msg.num + " " + msg.level + " " + msg.info.join(" ") + "\n";
     if (MozFileLogger._foStream)
       MozFileLogger._foStream.write(data, data.length);
 
@@ -102,7 +102,7 @@ MozFileLogger.log = function(msg) {
   try {
     if (MozFileLogger._foStream)
       MozFileLogger._foStream.write(msg, msg.length);
-  } catch(ex) {}
+  } catch (ex) {}
 }
 
 MozFileLogger.close = function() {
@@ -113,17 +113,17 @@ MozFileLogger.close = function() {
 
   netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
 
-  if(MozFileLogger._foStream)
+  if (MozFileLogger._foStream)
     MozFileLogger._foStream.close();
-  
+
   MozFileLogger._foStream = null;
   MozFileLogger._file = null;
 }
 
 try {
-  var prefs = Components.classes['@mozilla.org/preferences-service;1']
+  var prefs = Components.classes["@mozilla.org/preferences-service;1"]
     .getService(Components.interfaces.nsIPrefBranch2);
-  var filename = prefs.getCharPref('talos.logfile');
+  var filename = prefs.getCharPref("talos.logfile");
   MozFileLogger.init(filename);
-} catch (ex) {} //pref does not exist, return empty string
+} catch (ex) {} // pref does not exist, return empty string
 

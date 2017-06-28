@@ -74,7 +74,7 @@ var TalosParentProfiler;
      *     gecko_profile_threads (string, comma separated list of threads to filter with)
      *     gecko_profile_dir (string)
      */
-    initFromObject(obj={}) {
+    initFromObject(obj = {}) {
       if (!initted) {
         if (("gecko_profile_dir" in obj) && typeof obj.gecko_profile_dir == "string" &&
             ("gecko_profile_interval" in obj) && Number.isFinite(obj.gecko_profile_interval * 1) &&
@@ -133,12 +133,12 @@ var TalosParentProfiler;
       if (initted) {
         let profileFile = profileDir + "/" + currentTest + ".profile";
         return TalosPowers.profilerFinish(profileFile);
-      } else {
+      }
         let msg = "You should not call finishTest without having first " +
                   "initted the Profiler";
         console.error(msg);
         return Promise.reject(msg);
-      }
+
     },
 
     /**
@@ -164,7 +164,7 @@ var TalosParentProfiler;
      * @returns Promise
      *          Resolves once the Gecko Profiler has resumed.
      */
-    resume(marker="") {
+    resume(marker = "") {
       if (initted) {
         TalosPowers.profilerResume(marker);
       }
@@ -176,7 +176,7 @@ var TalosParentProfiler;
      * @returns Promise
      *          Resolves once the Gecko Profiler has paused.
      */
-    pause(marker="") {
+    pause(marker = "") {
       if (initted) {
         TalosPowers.profilerPause(marker);
       }
