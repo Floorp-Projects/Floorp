@@ -23,6 +23,10 @@
 
 #include <fstream>
 
+#ifdef LIBFUZZER
+#include "LibFuzzerRegistry.h"
+#endif
+
 namespace mozilla {
 
 typedef int(*FuzzingTestFuncRaw)(const uint8_t*, size_t);
