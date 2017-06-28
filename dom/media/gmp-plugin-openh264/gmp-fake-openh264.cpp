@@ -91,7 +91,7 @@ static int g_log_level = GL_CRIT;
     } while(0)
 
 
-GMPPlatformAPI* g_platform_api = NULL;
+GMPPlatformAPI* g_platform_api = nullptr;
 
 class FakeVideoEncoder;
 class FakeVideoDecoder;
@@ -151,7 +151,7 @@ class FakeVideoEncoder : public GMPVideoEncoder {
  public:
   explicit FakeVideoEncoder (GMPVideoHost* hostAPI) :
     host_ (hostAPI),
-    callback_ (NULL),
+    callback_ (nullptr),
     frames_encoded_(0) {}
 
   void InitEncode (const GMPVideoCodec& codecSettings,
@@ -337,7 +337,7 @@ class FakeVideoDecoder : public GMPVideoDecoder {
  public:
   explicit FakeVideoDecoder (GMPVideoHost* hostAPI) :
     host_ (hostAPI),
-    callback_ (NULL) {}
+    callback_ (nullptr) {}
 
   ~FakeVideoDecoder() override = default;
 
@@ -415,7 +415,7 @@ class FakeVideoDecoder : public GMPVideoDecoder {
             << " timestamp="
             << inputFrame->TimeStamp());
 
-    GMPVideoFrame* ftmp = NULL;
+    GMPVideoFrame* ftmp = nullptr;
 
     // Translate the image.
     GMPErr err = host_->CreateFrame (kGMPI420VideoFrame, &ftmp);
@@ -488,7 +488,7 @@ extern "C" {
 
   PUBLIC_FUNC void
   GMPShutdown (void) {
-    g_platform_api = NULL;
+    g_platform_api = nullptr;
   }
 
 } // extern "C"
