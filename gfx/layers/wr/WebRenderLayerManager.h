@@ -12,11 +12,12 @@
 #include "mozilla/layers/FocusTarget.h"
 #include "mozilla/layers/StackingContextHelper.h"
 #include "mozilla/layers/TransactionIdAllocator.h"
+#include "mozilla/layers/WebRenderUserData.h"
 #include "mozilla/webrender/WebRenderAPI.h"
 #include "mozilla/webrender/WebRenderTypes.h"
+#include "nsDisplayList.h"
 
 class nsIWidget;
-class nsDisplayList;
 
 namespace mozilla {
 namespace layers {
@@ -52,6 +53,16 @@ public:
   virtual bool BeginTransactionWithTarget(gfxContext* aTarget) override;
   virtual bool BeginTransaction() override;
   virtual bool EndEmptyTransaction(EndTransactionFlags aFlags = END_DEFAULT) override;
+  Maybe<wr::ImageKey> CreateImageKey(nsDisplayItem* aItem,
+                                     ImageContainer* aContainer,
+                                     mozilla::wr::DisplayListBuilder& aBuilder,
+                                     const StackingContextHelper& aSc,
+                                     gfx::IntSize& aSize);
+  bool PushImage(nsDisplayItem* aItem,
+                 ImageContainer* aContainer,
+                 mozilla::wr::DisplayListBuilder& aBuilder,
+                 const StackingContextHelper& aSc,
+                 const LayerRect& aRect);
   void CreateWebRenderCommandsFromDisplayList(nsDisplayList* aDisplayList,
                                               nsDisplayListBuilder* aDisplayListBuilder,
                                               StackingContextHelper& aSc,
@@ -151,6 +162,34 @@ public:
   // See equivalent function in ClientLayerManager
   const APZTestData& GetAPZTestData() const
   { return mApzTestData; }
+
+  // Those are data that we kept between transactions. We used to cache some
+  // data in the layer. But in layers free mode, we don't have layer which
+  // means we need some other place to cached the data between transaction.
+  // We store the data in frame's property.
+  template<class T> already_AddRefed<T>
+  CreateOrRecycleWebRenderUserData(nsDisplayItem* aItem)
+  {
+    MOZ_ASSERT(aItem);
+    nsIFrame* frame = aItem->Frame();
+
+    if (!frame->HasProperty(nsIFrame::WebRenderUserDataProperty())) {
+      frame->AddProperty(nsIFrame::WebRenderUserDataProperty(),
+                         new nsIFrame::WebRenderUserDataTable());
+    }
+
+    nsIFrame::WebRenderUserDataTable* userDataTable =
+      frame->GetProperty(nsIFrame::WebRenderUserDataProperty());
+    RefPtr<WebRenderUserData>& data = userDataTable->GetOrInsert(aItem->GetPerFrameKey());
+    if (!data || (data->GetType() != T::Type())) {
+      data = new T(this);
+    }
+
+    MOZ_ASSERT(data);
+    MOZ_ASSERT(data->GetType() == T::Type());
+    RefPtr<T> res = static_cast<T*>(data.get());
+    return res.forget();
+  }
 
 private:
   /**
