@@ -636,6 +636,7 @@ function prompt(aBrowser, aRequest) {
               string = bundle.getFormattedString("getUserMedia.shareFirefoxWarning.message",
                                                  [brand, learnMore]);
             }
+            // eslint-disable-next-line no-unsanitized/property
             warning.innerHTML = string;
           }
 
