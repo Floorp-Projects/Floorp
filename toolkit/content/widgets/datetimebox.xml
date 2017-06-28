@@ -502,6 +502,30 @@
         </body>
       </method>
 
+      <method name="hasSecondField">
+        <body>
+        <![CDATA[
+          return !!this.mSecondField;
+        ]]>
+        </body>
+      </method>
+
+      <method name="hasMillisecField">
+        <body>
+        <![CDATA[
+          return !!this.mMillisecField;
+        ]]>
+        </body>
+      </method>
+
+      <method name="hasDayPeriodField">
+        <body>
+        <![CDATA[
+          return !!this.mDayPeriodField;
+        ]]>
+        </body>
+      </method>
+
       <method name="reBuildEditFields">
         <body>
           <![CDATA[
@@ -652,10 +676,8 @@
 
           // Second and millsecond part is optional, rebuild edit fields if
           // needed.
-          if ((!this.isEmpty(second) && !this.mSecondField) ||
-              (this.isEmpty(second) && this.mSecondField) ||
-              (!this.isEmpty(millisecond) && !this.mMillisecField) ||
-              (this.isEmpty(millisecond) && this.mMillisecField)) {
+          if ((this.isEmpty(second) == this.hasSecondField()) ||
+              (this.isEmpty(millisecond) == this.hasMillisecField())) {
             this.log("Edit fields need to be rebuilt.")
             this.reBuildEditFields();
           }
@@ -715,12 +737,12 @@
           minute = (minute < 10) ? ("0" + minute) : minute;
 
           let time = hour + ":" + minute;
-          if (this.mSecondField) {
+          if (second != undefined) {
             second = (second < 10) ? ("0" + second) : second;
             time += ":" + second;
           }
 
-          if (this.mMillisecField) {
+          if (millisecond != undefined) {
             // Convert milliseconds to fraction of second.
             millisecond = millisecond.toString().padStart(
               this.mMillisecMaxLength, "0");
@@ -784,17 +806,17 @@
             this.clearFieldValue(this.mMinuteField);
           }
 
-          if (this.mSecondField && !this.mSecondField.disabled &&
+          if (this.hasSecondField() && !this.mSecondField.disabled &&
               !this.mSecondField.readOnly) {
             this.clearFieldValue(this.mSecondField);
           }
 
-          if (this.mMillisecField && !this.mMillisecField.disabled &&
+          if (this.hasMillisecField() && !this.mMillisecField.disabled &&
               !this.mMillisecField.readOnly) {
             this.clearFieldValue(this.mMillisecField);
           }
 
-          if (this.mDayPeriodField && !this.mDayPeriodField.disabled &&
+          if (this.hasDayPeriodField() && !this.mDayPeriodField.disabled &&
               !this.mDayPeriodField.readOnly) {
             this.clearFieldValue(this.mDayPeriodField);
           }
@@ -864,7 +886,7 @@
           let targetField = aEvent.originalTarget;
           let key = aEvent.key;
 
-          if (this.mDayPeriodField &&
+          if (this.hasDayPeriodField() &&
               targetField == this.mDayPeriodField) {
             // Home/End key does nothing on AM/PM field.
             if (key == "Home" || key == "End") {
@@ -920,7 +942,7 @@
           let targetField = aEvent.originalTarget;
           let key = aEvent.key;
 
-          if (this.mDayPeriodField &&
+          if (this.hasDayPeriodField() &&
               targetField == this.mDayPeriodField) {
             if (key == "a" || key == "A") {
               this.setDayPeriodValue(this.mAMIndicator);
@@ -997,7 +1019,7 @@
         <parameter name="aValue"/>
         <body>
         <![CDATA[
-          if (!this.mDayPeriodField) {
+          if (!this.hasDayPeriodField()) {
             return "";
           }
 
@@ -1013,7 +1035,7 @@
         <parameter name="aValue"/>
         <body>
         <![CDATA[
-          if (!this.mDayPeriodField) {
+          if (!this.hasDayPeriodField()) {
             return;
           }
 
@@ -1040,9 +1062,9 @@
             return false;
           }
 
-          return (this.mDayPeriodField && !this.isEmpty(dayPeriod)) ||
-                 (this.mSecondField && !this.isEmpty(second)) ||
-                 (this.mMillisecField && !this.isEmpty(millisecond));
+          return (this.hasDayPeriodField() && !this.isEmpty(dayPeriod)) ||
+                 (this.hasSecondField() && !this.isEmpty(second)) ||
+                 (this.hasMillisecField() && !this.isEmpty(millisecond));
         ]]>
         </body>
       </method>
@@ -1054,9 +1076,9 @@
           let dayPeriod = this.getDayPeriodValue();
 
           return (this.isEmpty(hour) || this.isEmpty(minute) ||
-                  (this.mDayPeriodField && this.isEmpty(dayPeriod)) ||
-                  (this.mSecondField && this.isEmpty(second)) ||
-                  (this.mMillisecField && this.isEmpty(millisecond)));
+                  (this.hasDayPeriodField() && this.isEmpty(dayPeriod)) ||
+                  (this.hasSecondField() && this.isEmpty(second)) ||
+                  (this.hasMillisecField() && this.isEmpty(millisecond)));
         ]]>
         </body>
       </method>
