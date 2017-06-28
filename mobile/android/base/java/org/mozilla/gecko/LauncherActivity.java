@@ -237,7 +237,7 @@ public class LauncherActivity extends Activity {
         final String accountsToken = intentUri.getQueryParameter(DeepLinkContract.ACCOUNTS_TOKEN_PARAM);
         final String entryPoint = intentUri.getQueryParameter(DeepLinkContract.ACCOUNTS_ENTRYPOINT_PARAM);
 
-        String dispatchUri = AboutPages.ACCOUNTS + "?";
+        String dispatchUri = AboutPages.ACCOUNTS + "?action=signin&";
 
         // If token is missing from the deep-link, we'll still open the accounts page.
         if (accountsToken != null) {
