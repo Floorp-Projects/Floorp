@@ -418,7 +418,10 @@ nsXBLWindowKeyHandler::CollectKeyboardShortcuts()
 
   // Convert the handlers into keyboard shortcuts, using an AutoTArray with
   // the maximum amount of shortcuts used on any platform to minimize allocations
-  AutoTArray<KeyboardShortcut, 46> shortcuts;
+  AutoTArray<KeyboardShortcut, 48> shortcuts;
+
+  // Append keyboard shortcuts for hardcoded actions like tab
+  KeyboardShortcut::AppendHardcodedShortcuts(shortcuts);
 
   for (nsXBLPrototypeHandler* handler = handlers;
        handler;
