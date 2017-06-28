@@ -21,7 +21,6 @@
   "main": "lib/index.js",
   "dependencies": {
     "escope": "^3.6.0",
-    "eslint-plugin-no-unsanitized": "^2.0.1",
     "espree": "^3.4.0",
     "estraverse": "^4.2.0",
     "globals": "^9.14.0",
