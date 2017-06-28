@@ -16,6 +16,7 @@
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/Helpers.h"
 #include "mozilla/gfx/PathHelpers.h"
+#include "mozilla/layers/WebRenderLayerManager.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/Unused.h"
 
@@ -1683,6 +1684,36 @@ nsDisplayImage::BuildLayer(nsDisplayListBuilder* aBuilder,
   layer->SetContainer(container);
   ConfigureLayer(layer, aParameters);
   return layer.forget();
+}
+
+bool
+nsDisplayImage::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder,
+                                        const StackingContextHelper& aSc,
+                                        nsTArray<WebRenderParentCommand>& aParentCommands,
+                                        WebRenderLayerManager* aManager,
+                                        nsDisplayListBuilder* aDisplayListBuilder)
+{
+  if (!CanOptimizeToImageLayer(aManager, aDisplayListBuilder)) {
+    return false;
+  }
+
+  uint32_t flags = imgIContainer::FLAG_ASYNC_NOTIFY;
+  if (aDisplayListBuilder->ShouldSyncDecodeImages()) {
+    flags |= imgIContainer::FLAG_SYNC_DECODE;
+  }
+
+  RefPtr<ImageContainer> container =
+    mImage->GetImageContainer(aManager, flags);
+  if (!container) {
+    return false;
+  }
+
+
+  const int32_t factor = mFrame->PresContext()->AppUnitsPerDevPixel();
+  const LayoutDeviceRect destRect(
+    LayoutDeviceIntRect::FromAppUnits(GetDestRect(), factor));
+  const LayerRect dest = ViewAs<LayerPixel>(destRect, PixelCastJustification::WebRenderHasUnitResolution);
+  return aManager->PushImage(this, container, aBuilder, aSc, dest);
 }
 
 DrawResult
