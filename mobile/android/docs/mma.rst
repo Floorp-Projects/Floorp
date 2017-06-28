@@ -60,8 +60,11 @@ following parameters::
   // Sent when the app starts
   "action" -> "start"                   // start: Leanplum SDK starts. heartbeat
   "userAttributes" -> "{                // A set of key-value pairs used to describe the user.
-    "focus" -> true                     // If Focus for Android is installed.
-  }"
+    "Focus Installed" -> true           // If Focus for Android is installed.
+    "Klar Installed" -> true            // If Klar for Android is installed.
+    "Signed In Sync" -> true            // If the user has signed in to Mozilla account.
+    "Default Browser" -> true           // If the user has set Fennec as default browser.
+  }
   "appId" -> "app_6Ao...."              // Leanplum App ID.
   "clientKey" -> "dev_srwDUNZR...."     // Leanplum client access key.
   "systemName" -> "Android OS"          // Fixed String in SDK.
