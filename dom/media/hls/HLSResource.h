@@ -23,16 +23,19 @@ class HLSResource;
 class HLSResourceCallbacksSupport
   : public GeckoHLSResourceWrapper::Callbacks::Natives<HLSResourceCallbacksSupport>
 {
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(HLSResourceCallbacksSupport)
 public:
   typedef GeckoHLSResourceWrapper::Callbacks::Natives<HLSResourceCallbacksSupport> NativeCallbacks;
   using NativeCallbacks::DisposeNative;
   using NativeCallbacks::AttachNative;
 
   HLSResourceCallbacksSupport(HLSResource* aResource);
+  void Detach();
   void OnDataArrived();
   void OnError(int aErrorCode);
 
 private:
+  ~HLSResourceCallbacksSupport() {}
   HLSResource* mResource;
 };
 
@@ -104,6 +107,7 @@ private:
   friend class HLSResourceCallbacksSupport;
 
   void onDataAvailable();
+  void onError(int aErrorCode);
 
   size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const override
   {
@@ -124,6 +128,7 @@ private:
   const MediaContainerType mContainerType;
   java::GeckoHLSResourceWrapper::GlobalRef mHLSResourceWrapper;
   java::GeckoHLSResourceWrapper::Callbacks::GlobalRef mJavaCallbacks;
+  RefPtr<HLSResourceCallbacksSupport> mCallbackSupport;
 };
 
 } // namespace mozilla
