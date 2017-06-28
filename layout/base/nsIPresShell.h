@@ -1529,11 +1529,6 @@ public:
   uint32_t GetPresShellId() { return mPresShellId; }
 
   /**
-   * Get the APZ FocusTarget used for async keyboard scrolling.
-   */
-  const FocusTarget& GetAPZFocusTarget() const { return mAPZFocusTarget; }
-
-  /**
    * Dispatch a mouse move event based on the most recent mouse position if
    * this PresShell is visible. This is used when the contents of the page
    * moved (aFromScroll is false) or scrolled (aFromScroll is true).
@@ -1904,11 +1899,6 @@ protected:
   bool mNeedThrottledAnimationFlush : 1;
 
   uint32_t                  mPresShellId;
-
-  // The focus sequence number of the last processed input event
-  uint64_t                  mAPZFocusSequenceNumber;
-  // The focus information needed for async keyboard scrolling
-  FocusTarget               mAPZFocusTarget;
 
   static nsIContent*        gKeyDownTarget;
 

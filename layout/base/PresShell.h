@@ -862,6 +862,11 @@ protected:
   // when target of pointer event was deleted during executing user handlers.
   nsCOMPtr<nsIContent>      mPointerEventTarget;
 
+  // The focus sequence number of the last processed input event
+  uint64_t                  mAPZFocusSequenceNumber;
+  // The focus information needed for async keyboard scrolling
+  FocusTarget               mAPZFocusTarget;
+
   // This is used to protect ourselves from triggering reflow while in the
   // middle of frame construction and the like... it really shouldn't be
   // needed, one hopes, but it is for now.
