@@ -131,6 +131,10 @@ struct PointTyped :
   constexpr PointTyped(Coord aX, Coord aY) : Super(aX.value, aY.value) {}
   constexpr MOZ_IMPLICIT PointTyped(const IntPointTyped<units>& point) : Super(F(point.x), F(point.y)) {}
 
+  bool WithinEpsilonOf(const PointTyped<units, F>& aPoint, F aEpsilon) {
+    return fabs(aPoint.x - this->x) < aEpsilon && fabs(aPoint.y - this->y) < aEpsilon;
+  }
+
   // XXX When all of the code is ported, the following functions to convert to and from
   // unknown types should be removed.
 
