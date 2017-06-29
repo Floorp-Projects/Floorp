@@ -186,14 +186,13 @@
         ]]></getter>
       </property>
       <field name="scrollboxPaddingStart"><![CDATA[
-        parseFloat(window.getComputedStyle(this._scrollbox)[
-          this._isRTLScrollbox ? "paddingRight" : "paddingLeft"
-        ]);
+        this._isRTLScrollbox ? this.scrollboxPaddingRight : this.scrollboxPaddingLeft;
       ]]></field>
-      <field name="scrollboxPaddingEnd"><![CDATA[
-        parseFloat(window.getComputedStyle(this._scrollbox)[
-          this._isRTLScrollbox ? "paddingLeft" : "paddingRight"
-        ]);
+      <field name="scrollboxPaddingLeft"><![CDATA[
+        parseFloat(window.getComputedStyle(this._scrollbox).paddingLeft);
+      ]]></field>
+      <field name="scrollboxPaddingRight"><![CDATA[
+        parseFloat(window.getComputedStyle(this._scrollbox).paddingRight);
       ]]></field>
       <property name="scrollPosition">
         <getter><![CDATA[
@@ -666,27 +665,27 @@
                 scrolledToStart = true;
                 scrolledToEnd = true;
               } else {
-                let scrollboxPaddingStart = Math.round(this.scrollboxPaddingStart);
-                let scrollboxPaddingEnd = Math.round(this.scrollboxPaddingEnd);
-                let [start, end] = this._startEndProps;
+                let scrollboxPaddingLeft = Math.round(this.scrollboxPaddingLeft);
+                let scrollboxPaddingRight = Math.round(this.scrollboxPaddingRight);
+
+                let [leftOrTop, rightOrBottom] = this._startEndProps;
+                let leftOrTopEdge = ele => Math.round(this._boundsWithoutFlushing(ele)[leftOrTop]);
+                let rightOrBottomEdge = ele => Math.round(this._boundsWithoutFlushing(ele)[rightOrBottom]);
+
+                let elements = this._getScrollableElements();
+                let [leftOrTopElement, rightOrBottomElement] = [elements[0], elements[elements.length - 1]];
                 if (this._isRTLScrollbox) {
-                  [start, end] = [end, start];
-                  scrollboxPaddingStart = -scrollboxPaddingStart;
-                  scrollboxPaddingEnd = -scrollboxPaddingEnd;
+                  [leftOrTopElement, rightOrBottomElement] = [rightOrBottomElement, leftOrTopElement];
                 }
 
-                let scrollboxRect = this._boundsWithoutFlushing(this._scrollbox);
-                let elements = this._getScrollableElements();
-                let [firstElement, lastElement] = [elements[0], elements[elements.length - 1]];
-
-                if (firstElement &&
-                    Math.round(this._boundsWithoutFlushing(firstElement)[start]) - scrollboxPaddingStart ==
-                      Math.round(scrollboxRect[start])) {
-                  scrolledToStart = true;
-                } else if (lastElement &&
-                           Math.round(this._boundsWithoutFlushing(lastElement)[end]) + scrollboxPaddingEnd ==
-                             Math.round(scrollboxRect[end])) {
-                  scrolledToEnd = true;
+                if (leftOrTopElement &&
+                    leftOrTopEdge(leftOrTopElement) >= leftOrTopEdge(this._scrollbox) + scrollboxPaddingLeft) {
+                  scrolledToStart = !this._isRTLScrollbox;
+                  scrolledToEnd = this._isRTLScrollbox;
+                } else if (rightOrBottomElement &&
+                           rightOrBottomEdge(rightOrBottomElement) <= rightOrBottomEdge(this._scrollbox) - scrollboxPaddingRight) {
+                  scrolledToStart = this._isRTLScrollbox;
+                  scrolledToEnd = !this._isRTLScrollbox;
                 }
               }
 
