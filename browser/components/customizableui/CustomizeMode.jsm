@@ -412,9 +412,7 @@ CustomizeMode.prototype = {
       this._updateEmptyPaletteNotice();
 
       this._updateLWThemeButtonIcon();
-      if (!AppConstants.MOZ_PHOTON_THEME) {
-        this.maybeShowTip(panelHolder);
-      }
+      this.maybeShowTip(panelHolder);
 
       this._handler.isEnteringCustomizeMode = false;
       if (!gPhotonStructure) {
