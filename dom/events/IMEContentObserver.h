@@ -154,6 +154,8 @@ public:
   /**
    * TryToFlushPendingNotifications() should be called when pending events
    * should be flushed.  This tries to run the queued IMENotificationSender.
+   * Doesn't do anything in child processes where flushing happens
+   * asynchronously.
    */
   void TryToFlushPendingNotifications();
 
@@ -331,12 +333,21 @@ private:
     explicit AChangeEvent(const char* aName,
                           IMEContentObserver* aIMEContentObserver)
       : Runnable(aName)
-      , mIMEContentObserver(aIMEContentObserver)
+      , mIMEContentObserver(
+          do_GetWeakReference(
+            static_cast<nsISelectionListener*>(aIMEContentObserver)))
     {
-      MOZ_ASSERT(mIMEContentObserver);
+      MOZ_ASSERT(aIMEContentObserver);
     }
 
-    RefPtr<IMEContentObserver> mIMEContentObserver;
+    already_AddRefed<IMEContentObserver> GetObserver() const
+    {
+      nsCOMPtr<nsISelectionListener> observer =
+        do_QueryReferent(mIMEContentObserver);
+      return observer.forget().downcast<IMEContentObserver>();
+    }
+
+    nsWeakPtr mIMEContentObserver;
 
     /**
      * CanNotifyIME() checks if mIMEContentObserver can and should notify IME.
@@ -359,6 +370,7 @@ private:
     }
     NS_IMETHOD Run() override;
 
+    void Dispatch(nsIDocShell* aDocShell);
   private:
     void SendFocusSet();
     void SendSelectionChange();
