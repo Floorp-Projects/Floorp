@@ -414,6 +414,7 @@ this.BrowserUtils = {
 
     let selection = focusedWindow.getSelection();
     let selectionStr = selection.toString();
+    let fullText;
 
     let collapsed = selection.isCollapsed;
 
@@ -482,6 +483,10 @@ this.BrowserUtils = {
     }
 
     if (selectionStr) {
+      // Pass up to 16K through unmolested.  If an add-on needs more, they will
+      // have to use a content script.
+      fullText = selectionStr.substr(0, 16384);
+
       if (selectionStr.length > charLen) {
         // only use the first charLen important chars. see bug 221361
         var pattern = new RegExp("^(?:\\s*.){0," + charLen + "}");
@@ -500,7 +505,7 @@ this.BrowserUtils = {
       url = null;
     }
 
-    return { text: selectionStr, docSelectionIsCollapsed: collapsed,
+    return { text: selectionStr, docSelectionIsCollapsed: collapsed, fullText,
              linkURL: url ? url.spec : null, linkText: url ? linkText : "" };
   },
 

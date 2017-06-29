@@ -116,7 +116,7 @@ nsContextMenu.prototype = {
         pageUrl: this.browser ? this.browser.currentURI.spec : undefined,
         linkText: this.linkTextStr,
         linkUrl: this.linkURL,
-        selectionText: this.isTextSelected ? this.selectionInfo.text : undefined,
+        selectionText: this.isTextSelected ? this.selectionInfo.fullText : undefined,
         frameId: this.frameOuterWindowID,
       };
       subject.wrappedJSObject = subject;
