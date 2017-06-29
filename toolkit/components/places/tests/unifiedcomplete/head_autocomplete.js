@@ -324,29 +324,6 @@ function removeOpenPages(aUri, aCount = 1, aUserContextId = 0) {
   }
 }
 
-function changeRestrict(aType, aChar) {
-  let branch = "browser.urlbar.";
-  // "title" and "url" are different from everything else, so special case them.
-  if (aType == "title" || aType == "url")
-    branch += "match.";
-  else
-    branch += "restrict.";
-
-  do_print("changing restrict for " + aType + " to '" + aChar + "'");
-  Services.prefs.setCharPref(branch + aType, aChar);
-}
-
-function resetRestrict(aType) {
-  let branch = "browser.urlbar.";
-  // "title" and "url" are different from everything else, so special case them.
-  if (aType == "title" || aType == "url")
-    branch += "match.";
-  else
-    branch += "restrict.";
-
-  Services.prefs.clearUserPref(branch + aType);
-}
-
 /**
  * Strip prefixes from the URI that we don't care about for searching.
  *
