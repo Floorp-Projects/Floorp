@@ -399,31 +399,9 @@ UpdateBackdropIfNeeded(nsIFrame* aFrame,
 }
 
 static void
-UpdateFirstLetterIfNeeded(nsIFrame* aFrame, ServoRestyleState& aRestyleState)
-{
-  if (!aFrame->HasFirstLetterChild()) {
-    return;
-  }
-
-  // We need to find the block the first-letter is associated with so we can
-  // find the right element for the first-letter's style resolution.  Might as
-  // well just delegate the whole thing to that block.
-  nsIFrame* block = aFrame;
-  while (!block->IsFrameOfType(nsIFrame::eBlockFrame)) {
-    block = block->GetParent();
-  }
-  static_cast<nsBlockFrame*>(block->FirstContinuation())->
-    UpdateFirstLetterStyle(aRestyleState);
-}
-
-static void
 UpdateFramePseudoElementStyles(nsIFrame* aFrame,
                                ServoRestyleState& aRestyleState)
 {
-  // first-letter needs to be updated before first-line, because first-line can
-  // change the style of the first-letter.
-  UpdateFirstLetterIfNeeded(aFrame, aRestyleState);
-
   if (aFrame->IsFrameOfType(nsIFrame::eBlockFrame)) {
     static_cast<nsBlockFrame*>(aFrame)->UpdatePseudoElementStyles(aRestyleState);
   }

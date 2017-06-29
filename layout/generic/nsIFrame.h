@@ -618,7 +618,6 @@ public:
     , mClass(aID)
     , mMayHaveRoundedCorners(false)
     , mHasImageRequest(false)
-    , mHasFirstLetterChild(false)
   {
     mozilla::PodZero(&mOverflow);
   }
@@ -3981,15 +3980,6 @@ public:
   void SetHasImageRequest(bool aHasRequest) { mHasImageRequest = aHasRequest; }
 
   /**
-   * Whether this frame has a first-letter child.  If it does, the frame is
-   * actually an nsContainerFrame and the first-letter frame can be gotten by
-   * walking up to the nearest ancestor blockframe and getting its first
-   * continuation's nsContainerFrame::FirstLetterProperty() property.  This will
-   * only return true for the first continuation of the first-letter's parent.
-   */
-  bool HasFirstLetterChild() const { return mHasFirstLetterChild; }
-
-  /**
    * If this returns true, the frame it's called on should get the
    * NS_FRAME_HAS_DIRTY_CHILDREN bit set on it by the caller; either directly
    * if it's already in reflow, or via calling FrameNeedsReflow() to schedule a
@@ -4127,15 +4117,7 @@ protected:
    */
   bool mHasImageRequest : 1;
 
-  /**
-   * True if this frame has a continuation that has a first-letter frame, or its
-   * placeholder, as a child.  In that case this frame has a blockframe ancestor
-   * that has the first-letter frame hanging off it in the
-   * nsContainerFrame::FirstLetterProperty() property.
-   */
-  bool mHasFirstLetterChild : 1;
-
-  // There is a 13-bit gap left here.
+  // There is a 14-bit gap left here.
 
   // Helpers
   /**

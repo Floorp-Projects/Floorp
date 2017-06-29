@@ -5626,16 +5626,12 @@ nsBlockInFlowLineIterator::nsBlockInFlowLineIterator(nsBlockFrame* aFrame,
 }
 
 void
-nsBlockFrame::UpdateFirstLetterStyle(ServoRestyleState& aRestyleState)
+nsBlockFrame::UpdateFirstLetterStyle(nsIFrame* aLetterFrame,
+                                     ServoRestyleState& aRestyleState)
 {
-  nsIFrame* letterFrame = GetFirstLetter();
-  if (!letterFrame) {
-    return;
-  }
-
   // Figure out what the right style parent is.  This needs to match
   // nsCSSFrameConstructor::CreateLetterFrame.
-  nsIFrame* inFlowFrame = letterFrame;
+  nsIFrame* inFlowFrame = aLetterFrame;
   if (inFlowFrame->GetStateBits() & NS_FRAME_OUT_OF_FLOW) {
     inFlowFrame = inFlowFrame->GetPlaceholderFrame();
   }
@@ -5653,13 +5649,13 @@ nsBlockFrame::UpdateFirstLetterStyle(ServoRestyleState& aRestyleState)
   // styles: those will be handled by the styleParent already.
   RefPtr<nsStyleContext> continuationStyle =
     aRestyleState.StyleSet().ResolveStyleForFirstLetterContinuation(parentStyle);
-  UpdateStyleOfOwnedChildFrame(letterFrame, firstLetterStyle, aRestyleState,
+  UpdateStyleOfOwnedChildFrame(aLetterFrame, firstLetterStyle, aRestyleState,
                                Some(continuationStyle.get()));
 
   // We also want to update the style on the textframe inside the first-letter.
   // We don't need to compute a changehint for this, though, since any changes
   // to it are handled by the first-letter anyway.
-  nsIFrame* textFrame = letterFrame->PrincipalChildList().FirstChild();
+  nsIFrame* textFrame = aLetterFrame->PrincipalChildList().FirstChild();
   RefPtr<nsStyleContext> firstTextStyle =
     aRestyleState.StyleSet().ResolveStyleForText(textFrame->GetContent(),
                                                  firstLetterStyle);
@@ -7567,6 +7563,10 @@ nsBlockFrame::UpdatePseudoElementStyles(ServoRestyleState& aRestyleState)
     RefPtr<nsStyleContext> newBulletStyle =
       ResolveBulletStyle(type, &aRestyleState.StyleSet());
     UpdateStyleOfOwnedChildFrame(bullet, newBulletStyle, aRestyleState);
+  }
+
+  if (nsIFrame* firstLetter = GetFirstLetter()) {
+    UpdateFirstLetterStyle(firstLetter, aRestyleState);
   }
 }
 
