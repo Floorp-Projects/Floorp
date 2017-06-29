@@ -6,7 +6,7 @@
 
 const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
-Cu.import('resource://gre/modules/Services.jsm');
+Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Log.jsm");
 
@@ -35,15 +35,16 @@ this.EXPORTED_SYMBOLS = ["accessibility"];
 this.accessibility = {
   get service() {
     return service;
-  }
+  },
 };
 
 /**
  * Accessible states used to check element"s state from the accessiblity API
  * perspective.
- * Note: if gecko is built with --disable-accessibility, the interfaces are not
- * defined. This is why we use getters instead to be able to use these
- * statically.
+ *
+ * Note: if gecko is built with --disable-accessibility, the interfaces
+ * are not defined. This is why we use getters instead to be able to use
+ * these statically.
  */
 accessibility.State = {
   get Unavailable() {
@@ -57,7 +58,7 @@ accessibility.State = {
   },
   get Selected() {
     return Ci.nsIAccessibleStates.STATE_SELECTED;
-  }
+  },
 };
 
 /**
@@ -92,7 +93,7 @@ accessibility.ActionableRoles = new Set([
  * Factory function that constructs a new {@code accessibility.Checks}
  * object with enforced strictness or not.
  */
-accessibility.get = function (strict = false) {
+accessibility.get = function(strict = false) {
   return new accessibility.Checks(!!strict);
 };
 
@@ -138,7 +139,8 @@ accessibility.Checks = class {
       }
 
       // First, check if accessibility is ready.
-      let docAcc = accessibility.service.getAccessibleFor(element.ownerDocument);
+      let docAcc = accessibility.service
+          .getAccessibleFor(element.ownerDocument);
       let state = {};
       docAcc.getState(state, {});
       if ((state.value & Ci.nsIAccessibleStates.STATE_BUSY) == 0) {
@@ -158,12 +160,14 @@ accessibility.Checks = class {
             return;
           }
 
-          let event = subject.QueryInterface(Ci.nsIAccessibleEvent);
           // If event type does not match expected type, skip the event.
+          let event = subject.QueryInterface(Ci.nsIAccessibleEvent);
           if (event.eventType !== Ci.nsIAccessibleEvent.EVENT_STATE_CHANGE) {
             return;
           }
-          // If event's accessible does not match expected accessible, skip the event.
+
+          // If event's accessible does not match expected accessible,
+          // skip the event.
           if (event.accessible !== docAcc) {
             return;
           }
@@ -175,12 +179,12 @@ accessibility.Checks = class {
           } else {
             resolve(acc);
           }
-        }
+        },
       };
       Services.obs.addObserver(eventObserver, "accessible-event");
     }).catch(() => this.error(
         "Element does not have an accessible object", element));
-  };
+  }
 
   /**
    * Test if the accessible has a role that supports some arbitrary
@@ -409,7 +413,8 @@ accessibility.Checks = class {
       return;
     }
 
-    let selectedAccessibility = this.matchState(accessible, accessibility.State.Selected);
+    let selectedAccessibility =
+        this.matchState(accessible, accessibility.State.Selected);
 
     let message;
     if (selected && !selectedAccessibility) {
