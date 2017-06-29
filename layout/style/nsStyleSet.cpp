@@ -745,19 +745,10 @@ nsStyleSet::AddDocStyleSheet(CSSStyleSheet* aSheet, nsIDocument* aDocument)
 }
 
 void
-nsStyleSet::AppendAllXBLStyleSheets(nsTArray<mozilla::CSSStyleSheet*>& aArray) const
+nsStyleSet::AppendAllXBLStyleSheets(nsTArray<StyleSheet*>& aArray) const
 {
   if (mBindingManager) {
-    // XXXheycam stylo: AppendAllSheets will need to be able to return either
-    // CSSStyleSheets or ServoStyleSheets, on request (and then here requesting
-    // CSSStyleSheets).
-    AutoTArray<StyleSheet*, 32> sheets;
-    mBindingManager->AppendAllSheets(sheets);
-    for (StyleSheet* handle : sheets) {
-      MOZ_ASSERT(handle->IsGecko(), "stylo: AppendAllSheets shouldn't give us "
-                                    "ServoStyleSheets yet");
-      aArray.AppendElement(handle->AsGecko());
-    }
+    mBindingManager->AppendAllSheets(aArray);
   }
 }
 

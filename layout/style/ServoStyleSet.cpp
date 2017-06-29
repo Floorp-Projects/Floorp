@@ -863,6 +863,14 @@ ServoStyleSet::StyleSheetAt(SheetType aType,
   return mSheets[aType][aIndex];
 }
 
+void
+ServoStyleSet::AppendAllXBLStyleSheets(nsTArray<StyleSheet*>& aArray) const
+{
+  if (mBindingManager) {
+    mBindingManager->AppendAllSheets(aArray);
+  }
+}
+
 nsresult
 ServoStyleSet::RemoveDocStyleSheet(ServoStyleSheet* aSheet)
 {

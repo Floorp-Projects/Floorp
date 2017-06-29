@@ -97,20 +97,17 @@ inDOMUtils::GetAllStyleSheets(nsIDOMDocument *aDocument, uint32_t *aLength,
     for (int32_t i = 0; i < styleSet->SheetCount(sheetType); i++) {
       sheets.AppendElement(styleSet->StyleSheetAt(sheetType, i));
     }
-    if (styleSet->IsGecko()) {
-      AutoTArray<CSSStyleSheet*, 32> xblSheetArray;
-      styleSet->AsGecko()->AppendAllXBLStyleSheets(xblSheetArray);
 
-      // The XBL stylesheet array will quite often be full of duplicates. Cope:
-      nsTHashtable<nsPtrHashKey<CSSStyleSheet>> sheetSet;
-      for (CSSStyleSheet* sheet : xblSheetArray) {
-        if (!sheetSet.Contains(sheet)) {
-          sheetSet.PutEntry(sheet);
-          sheets.AppendElement(sheet);
-        }
+    AutoTArray<StyleSheet*, 32> xblSheetArray;
+    styleSet->AsGecko()->AppendAllXBLStyleSheets(xblSheetArray);
+
+    // The XBL stylesheet array will quite often be full of duplicates. Cope:
+    nsTHashtable<nsPtrHashKey<StyleSheet>> sheetSet;
+    for (StyleSheet* sheet : xblSheetArray) {
+      if (!sheetSet.Contains(sheet)) {
+        sheetSet.PutEntry(sheet);
+        sheets.AppendElement(sheet);
       }
-    } else {
-      NS_WARNING("stylo: XBL style sheets not supported yet");
     }
   }
 

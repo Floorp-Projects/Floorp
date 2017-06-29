@@ -412,7 +412,7 @@ class nsStyleSet final
     return mSheets[aType][aIndex];
   }
 
-  void AppendAllXBLStyleSheets(nsTArray<mozilla::CSSStyleSheet*>& aArray) const;
+  void AppendAllXBLStyleSheets(nsTArray<mozilla::StyleSheet*>& aArray) const;
 
   nsresult RemoveDocStyleSheet(mozilla::CSSStyleSheet* aSheet);
   nsresult AddDocStyleSheet(mozilla::CSSStyleSheet* aSheet,
