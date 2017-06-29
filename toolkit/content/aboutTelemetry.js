@@ -308,10 +308,17 @@ var PingPicker = {
       this.filterDisplayedPings();
     });
 
+
     document.getElementById("newer-ping")
             .addEventListener("click", () => this._movePingIndex(-1));
     document.getElementById("older-ping")
             .addEventListener("click", () => this._movePingIndex(1));
+
+    document.addEventListener("click", (ev) => {
+      if (ev.target.querySelector("#ping-picker")) {
+        document.getElementById("ping-picker").classList.add("hidden");
+      }
+    });
     document.getElementById("choose-payload")
             .addEventListener("change", () => displayPingData(gPingData));
     document.getElementById("scalars-processes")
@@ -324,6 +331,10 @@ var PingPicker = {
             .addEventListener("change", () => displayPingData(gPingData));
     document.getElementById("events-processes")
             .addEventListener("change", () => displayPingData(gPingData));
+    Array.from(document.querySelectorAll(".change-ping")).forEach(el =>
+      el.addEventListener("click", () =>
+        document.getElementById("ping-picker").classList.remove("hidden"))
+    );
   },
 
   onPingSourceChanged() {
@@ -367,6 +378,9 @@ var PingPicker = {
 
     // eslint-disable-next-line no-unsanitized/property
     pingExplanation.innerHTML = explanation;
+    pingExplanation.querySelector(".change-ping").addEventListener("click", () =>
+      document.getElementById("ping-picker").classList.remove("hidden")
+    );
 
     GenericSubsection.deleteAllSubSections();
   },
