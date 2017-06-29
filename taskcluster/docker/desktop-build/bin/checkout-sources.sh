@@ -25,7 +25,7 @@ set -x -e
 : TOOLS_HEAD_REF                ${TOOLS_HEAD_REF:=${TOOLS_HEAD_REV}}
 : TOOLS_DISABLE                 ${TOOLS_DISABLE:=false}
 
-: WORKSPACE                     ${WORKSPACE:=/home/worker/workspace}
+: WORKSPACE                     ${WORKSPACE:=/builds/worker/workspace}
 
 set -v
 

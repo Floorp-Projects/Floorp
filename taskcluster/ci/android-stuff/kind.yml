@@ -30,7 +30,7 @@ jobs:
             os: linux
             docker-image: {in-tree: android-gradle-build}
             env:
-                GRADLE_USER_HOME: "/home/worker/workspace/build/src/dotgradle-online"
+                GRADLE_USER_HOME: "/builds/worker/workspace/build/src/dotgradle-online"
                 MH_BUILD_POOL: "taskcluster"
                 MH_CUSTOM_BUILD_VARIANT_CFG: "api-15-gradle-dependencies"
                 MOZHARNESS_ACTIONS: "get-secrets build multi-l10n update"
@@ -39,21 +39,21 @@ jobs:
                     disable_signing.py
                     platform_supports_post_upload_to_latest.py
                 MOZHARNESS_SCRIPT: "mozharness/scripts/fx_desktop_build.py"
-                TOOLTOOL_CACHE: "/home/worker/tooltool-cache"
+                TOOLTOOL_CACHE: "/builds/worker/tooltool-cache"
                 TOOLTOOL_MANIFEST: "mobile/android/config/tooltool-manifests/android-gradle-dependencies/releng.manifest"
             artifacts:
               - name: public/build
-                path: /home/worker/artifacts/
+                path: /builds/worker/artifacts/
                 type: directory
             caches:
               - name: tooltool-cache
-                mount-point: /home/worker/tooltool-cache
+                mount-point: /builds/worker/tooltool-cache
                 type: persistent
             relengapi-proxy: true
             command:
               - "/bin/bash"
               - "-c"
-              - "/home/worker/bin/before.sh && /home/worker/bin/build.sh && /home/worker/bin/after.sh && true\n"
+              - "/builds/worker/bin/before.sh && /builds/worker/bin/build.sh && /builds/worker/bin/after.sh && true\n"
             max-run-time: 36000
         scopes:
           - docker-worker:relengapi-proxy:tooltool.download.internal
@@ -77,7 +77,7 @@ jobs:
             os: linux
             docker-image: {in-tree: desktop-build}
             env:
-                GRADLE_USER_HOME: "/home/worker/workspace/build/src/dotgradle"
+                GRADLE_USER_HOME: "/builds/worker/workspace/build/src/dotgradle"
                 MH_BUILD_POOL: "taskcluster"
                 MH_CUSTOM_BUILD_VARIANT_CFG: "android-test"
                 MOZHARNESS_ACTIONS: "get-secrets build multi-l10n update"
@@ -89,14 +89,14 @@ jobs:
                 TOOLTOOL_MANIFEST: "mobile/android/config/tooltool-manifests/android-frontend/releng.manifest"
             artifacts:
               - name: public/android/unittest
-                path: /home/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/app/reports/tests
+                path: /builds/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/app/reports/tests
                 type: directory
               - name: public/build
-                path: /home/worker/artifacts/
+                path: /builds/worker/artifacts/
                 type: directory
             caches:
               - name: tooltool-cache
-                mount-point: /home/worker/tooltool-cache
+                mount-point: /builds/worker/tooltool-cache
                 type: persistent
             relengapi-proxy: true
             command:
@@ -125,7 +125,7 @@ jobs:
             os: linux
             docker-image: {in-tree: desktop-build}
             env:
-                GRADLE_USER_HOME: "/home/worker/workspace/build/src/dotgradle"
+                GRADLE_USER_HOME: "/builds/worker/workspace/build/src/dotgradle"
                 MH_BUILD_POOL: "taskcluster"
                 MH_CUSTOM_BUILD_VARIANT_CFG: "android-lint"
                 MOZHARNESS_ACTIONS: "get-secrets build multi-l10n update"
@@ -137,29 +137,29 @@ jobs:
                 TOOLTOOL_MANIFEST: "mobile/android/config/tooltool-manifests/android-frontend/releng.manifest"
             artifacts:
               - name: public/android/lint/lint-results-officialAustralisDebug.html
-                path: /home/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/app/outputs/lint-results-officialAustralisDebug.html
+                path: /builds/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/app/outputs/lint-results-officialAustralisDebug.html
                 type: file
               - name: public/android/lint/lint-results-officialAustralisDebug.xml
-                path: /home/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/app/outputs/lint-results-officialAustralisDebug.xml
+                path: /builds/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/app/outputs/lint-results-officialAustralisDebug.xml
                 type: file
               - name: public/android/lint/lint-results-officialAustralisDebug_files
-                path: /home/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/app/outputs/lint-results-officialAustralisDebug_files
+                path: /builds/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/app/outputs/lint-results-officialAustralisDebug_files
                 type: directory
               - name: public/android/lint/lint-results-officialPhotonDebug.html
-                path: /home/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/app/outputs/lint-results-officialPhotonDebug.html
+                path: /builds/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/app/outputs/lint-results-officialPhotonDebug.html
                 type: file
               - name: public/android/lint/lint-results-officialPhotonDebug.xml
-                path: /home/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/app/outputs/lint-results-officialPhotonDebug.xml
+                path: /builds/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/app/outputs/lint-results-officialPhotonDebug.xml
                 type: file
               - name: public/android/lint/lint-results-officialPhotonDebug_files
-                path: /home/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/app/outputs/lint-results-officialPhotonDebug_files
+                path: /builds/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/app/outputs/lint-results-officialPhotonDebug_files
                 type: directory
               - name: public/build
-                path: /home/worker/artifacts/
+                path: /builds/worker/artifacts/
                 type: directory
             caches:
               - name: tooltool-cache
-                mount-point: /home/worker/tooltool-cache
+                mount-point: /builds/worker/tooltool-cache
                 type: persistent
             relengapi-proxy: true
             command:
@@ -195,7 +195,7 @@ jobs:
             os: linux
             docker-image: {in-tree: desktop-build}
             env:
-                GRADLE_USER_HOME: "/home/worker/workspace/build/src/dotgradle"
+                GRADLE_USER_HOME: "/builds/worker/workspace/build/src/dotgradle"
                 MH_BUILD_POOL: "taskcluster"
                 MH_CUSTOM_BUILD_VARIANT_CFG: "android-checkstyle"
                 MOZHARNESS_ACTIONS: "get-secrets build multi-l10n update"
@@ -207,14 +207,14 @@ jobs:
                 TOOLTOOL_MANIFEST: "mobile/android/config/tooltool-manifests/android-frontend/releng.manifest"
             artifacts:
               - name: public/android/checkstyle/checkstyle.xml
-                path: /home/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/app/reports/checkstyle/checkstyle.xml
+                path: /builds/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/app/reports/checkstyle/checkstyle.xml
                 type: file
               - name: public/build
-                path: /home/worker/artifacts/
+                path: /builds/worker/artifacts/
                 type: directory
             caches:
               - name: tooltool-cache
-                mount-point: /home/worker/tooltool-cache
+                mount-point: /builds/worker/tooltool-cache
                 type: persistent
             relengapi-proxy: true
             command:
@@ -246,7 +246,7 @@ jobs:
             os: linux
             docker-image: {in-tree: desktop-build}
             env:
-                GRADLE_USER_HOME: "/home/worker/workspace/build/src/dotgradle"
+                GRADLE_USER_HOME: "/builds/worker/workspace/build/src/dotgradle"
                 MH_BUILD_POOL: "taskcluster"
                 MH_CUSTOM_BUILD_VARIANT_CFG: "android-findbugs"
                 MOZHARNESS_ACTIONS: "get-secrets build multi-l10n update"
@@ -258,17 +258,17 @@ jobs:
                 TOOLTOOL_MANIFEST: "mobile/android/config/tooltool-manifests/android-frontend/releng.manifest"
             artifacts:
               - name: public/android/findbugs/findbugs-officialAustralisDebug-output.html
-                path: /home/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/app/outputs/findbugs/findbugs-officialAustralisDebug-output.html
+                path: /builds/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/app/outputs/findbugs/findbugs-officialAustralisDebug-output.html
                 type: file
               - name: public/android/findbugs/findbugs-officialPhotonDebug-output.html
-                path: /home/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/app/outputs/findbugs/findbugs-officialPhotonDebug-output.html
+                path: /builds/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/app/outputs/findbugs/findbugs-officialPhotonDebug-output.html
                 type: file
               - name: public/build
-                path: /home/worker/artifacts/
+                path: /builds/worker/artifacts/
                 type: directory
             caches:
               - name: tooltool-cache
-                mount-point: /home/worker/tooltool-cache
+                mount-point: /builds/worker/tooltool-cache
                 type: persistent
             relengapi-proxy: true
             command:

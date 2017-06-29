@@ -37,7 +37,7 @@ config = {
     "blob_uploader_auth_file" : os.path.join(os.getcwd(), "oauth.txt"),
     "download_symbols": "ondemand",
     "download_minidump_stackwalk": True,
-    "tooltool_cache": "/home/worker/tooltool-cache",
+    "tooltool_cache": "/builds/worker/tooltool-cache",
     "suite_definitions": {
         "marionette_desktop": {
             "options": [
