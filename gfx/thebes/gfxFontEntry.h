@@ -249,10 +249,15 @@ public:
         AutoTable& operator=(const AutoTable&) = delete;
     };
 
-    already_AddRefed<gfxFont>
-    FindOrMakeFont(const gfxFontStyle *aStyle,
-                   bool aNeedsBold,
-                   gfxCharacterMap* aUnicodeRangeMap = nullptr);
+    // Return a font instance for a particular style. This may be a newly-
+    // created instance, or a font already in the global cache.
+    // We can't return a UniquePtr here, because we may be returning a shared
+    // cached instance; but we also don't return already_AddRefed, because
+    // the caller may only need to use the font temporarily and doesn't need
+    // a strong reference.
+    gfxFont* FindOrMakeFont(const gfxFontStyle *aStyle,
+                            bool aNeedsBold,
+                            gfxCharacterMap* aUnicodeRangeMap = nullptr);
 
     // Get an existing font table cache entry in aBlob if it has been
     // registered, or return false if not.  Callers must call
