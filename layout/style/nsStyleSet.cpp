@@ -282,7 +282,7 @@ nsStyleSet::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
 }
 
 void
-nsStyleSet::Init(nsPresContext *aPresContext)
+nsStyleSet::Init(nsPresContext* aPresContext, nsBindingManager* aBindingManager)
 {
   mFirstLineRule = new nsEmptyStyleRule;
   mFirstLetterRule = new nsEmptyStyleRule;
@@ -290,6 +290,7 @@ nsStyleSet::Init(nsPresContext *aPresContext)
   mDisableTextZoomStyleRule = new nsDisableTextZoomStyleRule;
 
   mRuleTree = nsRuleNode::CreateRootNode(aPresContext);
+  mBindingManager = aBindingManager;
 
   // Make an explicit GatherRuleProcessors call for the levels that
   // don't have style sheets.  The other levels will have their calls
