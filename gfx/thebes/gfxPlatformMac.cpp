@@ -457,7 +457,8 @@ public:
         // because on a late 2013 15" retina, it takes about that
         // long to come back up from sleep.
         uint32_t delay = 100;
-        mTimer->InitWithFuncCallback(RetryEnableVsync, this, delay, nsITimer::TYPE_ONE_SHOT);
+        mTimer->InitWithNamedFuncCallback(RetryEnableVsync, this, delay, nsITimer::TYPE_ONE_SHOT,
+                                          "RetryEnableVsync");
         return;
       }
 
