@@ -220,10 +220,19 @@ uz{
                 timeSeparator{":"}
             }
         }
+        minimalPairs{
+            ordinal{
+                other{"{0}chi chorraxada oʼngga buriling."}
+            }
+            plural{
+                one{"Savatingizda {0}X bor. Uni sotib olasizmi?"}
+                other{"Savatingizda {0}X bor. Ularni sotib olasizmi?"}
+            }
+        }
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"2.1.29.44"}
+    Version{"2.1.32.60"}
     calendar{
         generic{
             DateTimePatterns{

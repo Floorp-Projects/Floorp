@@ -616,7 +616,7 @@ ro{
         }
         PEN{
             "PEN",
-            "sol nou peruvian",
+            "sol peruvian",
         }
         PES{
             "PES",
@@ -1788,14 +1788,14 @@ ro{
             other{"balboa panameze"}
         }
         PEN{
-            few{"soli noi peruvieni"}
-            one{"sol nou peruvian"}
-            other{"soli noi peruvieni"}
+            few{"soli peruvieni"}
+            one{"sol peruvian"}
+            other{"soli peruvieni"}
         }
         PES{
-            few{"soli Peru (1863–1965)"}
+            few{"soli peruvieni (1863–1965)"}
             one{"sol peruvian (1863–1965)"}
-            other{"soli Peru (1863–1965)"}
+            other{"soli peruvieni (1863–1965)"}
         }
         PGK{
             few{"kina din Papua-Noua Guinee"}
@@ -2188,5 +2188,5 @@ ro{
         one{"{0} {1}"}
         other{"{0} de {1}"}
     }
-    Version{"2.1.28.79"}
+    Version{"2.1.32.60"}
 }

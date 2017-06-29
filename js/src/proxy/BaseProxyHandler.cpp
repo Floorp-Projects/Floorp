@@ -283,8 +283,8 @@ BaseProxyHandler::getOwnEnumerablePropertyKeys(JSContext* cx, HandleObject proxy
     return true;
 }
 
-bool
-BaseProxyHandler::enumerate(JSContext* cx, HandleObject proxy, MutableHandleObject objp) const
+JSObject*
+BaseProxyHandler::enumerate(JSContext* cx, HandleObject proxy) const
 {
     assertEnteredPolicy(cx, proxy, JSID_VOID, ENUMERATE);
 
@@ -292,9 +292,9 @@ BaseProxyHandler::enumerate(JSContext* cx, HandleObject proxy, MutableHandleObje
     // chain for us.
     AutoIdVector props(cx);
     if (!GetPropertyKeys(cx, proxy, 0, &props))
-        return false;
+        return nullptr;
 
-    return EnumeratedIdVectorToIterator(cx, proxy, 0, props, objp);
+    return EnumeratedIdVectorToIterator(cx, proxy, 0, props);
 }
 
 bool

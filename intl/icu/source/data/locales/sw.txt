@@ -29,154 +29,154 @@ sw{
             patternsLong{
                 decimalFormat{
                     1000{
-                        one{"Elfu 0"}
-                        other{"Elfu 0"}
+                        one{"Elfu 0;Elfu -0"}
+                        other{"Elfu 0;Elfu -0"}
                     }
                     10000{
-                        one{"Elfu 00"}
-                        other{"Elfu 00"}
+                        one{"Elfu 00;Elfu -00"}
+                        other{"Elfu 00;Elfu -00"}
                     }
                     100000{
-                        one{"Elfu 000"}
-                        other{"Elfu 000"}
+                        one{"Elfu 000;Elfu -000"}
+                        other{"Elfu 000;Elfu -000"}
                     }
                     1000000{
-                        one{"Milioni 0"}
-                        other{"Milioni 0"}
+                        one{"Milioni 0;Milioni -0"}
+                        other{"Milioni 0;Milioni -0"}
                     }
                     10000000{
-                        one{"Milioni 00"}
-                        other{"Milioni 00"}
+                        one{"Milioni 00;Milioni -00"}
+                        other{"Milioni 00;Milioni -00"}
                     }
                     100000000{
-                        one{"Milioni 000"}
-                        other{"Milioni 000"}
+                        one{"Milioni 000;Milioni -000"}
+                        other{"Milioni 000;Milioni -000"}
                     }
                     1000000000{
-                        one{"Bilioni 0"}
-                        other{"Bilioni 0"}
+                        one{"Bilioni 0;Bilioni -0"}
+                        other{"Bilioni 0;Bilioni -0"}
                     }
                     10000000000{
-                        one{"Bilioni 00"}
-                        other{"Bilioni 00"}
+                        one{"Bilioni 00;Bilioni -00"}
+                        other{"Bilioni 00;Bilioni -00"}
                     }
                     100000000000{
-                        one{"Bilioni 000"}
-                        other{"Bilioni 000"}
+                        one{"Bilioni 000;Bilioni -000"}
+                        other{"Bilioni 000;Bilioni -000"}
                     }
                     1000000000000{
-                        one{"Trilioni 0"}
-                        other{"Trilioni 0"}
+                        one{"Trilioni 0;Trilioni -0"}
+                        other{"Trilioni 0;Trilioni -0"}
                     }
                     10000000000000{
-                        one{"Trilioni 00"}
-                        other{"Trilioni 00"}
+                        one{"Trilioni 00;Trilioni -00"}
+                        other{"Trilioni 00;Trilioni -00"}
                     }
                     100000000000000{
-                        one{"Trilioni 000"}
-                        other{"Trilioni 000"}
+                        one{"Trilioni 000;Trilioni -000"}
+                        other{"Trilioni 000;Trilioni -000"}
                     }
                 }
             }
             patternsShort{
                 currencyFormat{
                     1000{
-                        one{"¤elfu 0"}
-                        other{"¤elfu 0"}
+                        one{"¤elfu 0;¤elfu -0"}
+                        other{"¤elfu 0;¤elfu -0"}
                     }
                     10000{
-                        one{"¤elfu 00"}
-                        other{"¤elfu 00"}
+                        one{"¤elfu 00;¤elfu -00"}
+                        other{"¤elfu 00;¤elfu -00"}
                     }
                     100000{
-                        one{"¤laki 000"}
-                        other{"¤laki 000"}
+                        one{"¤laki 000;¤laki -000"}
+                        other{"¤laki 000;¤laki -000"}
                     }
                     1000000{
-                        one{"¤M0"}
-                        other{"¤M0"}
+                        one{"¤M0;¤M-0"}
+                        other{"¤M0;¤M-0"}
                     }
                     10000000{
-                        one{"¤M00"}
-                        other{"¤M00"}
+                        one{"¤M00;¤M-00"}
+                        other{"¤M00;¤M-00"}
                     }
                     100000000{
-                        one{"¤M000"}
-                        other{"¤M000"}
+                        one{"¤M000;¤M-000"}
+                        other{"¤M000;¤M-000"}
                     }
                     1000000000{
-                        one{"¤B0"}
-                        other{"¤B0"}
+                        one{"¤B0;¤B-0"}
+                        other{"¤B0;¤B-0"}
                     }
                     10000000000{
-                        one{"¤B00"}
-                        other{"¤B00"}
+                        one{"¤B00;¤B-00"}
+                        other{"¤B00;¤B-00"}
                     }
                     100000000000{
-                        one{"¤B000"}
-                        other{"¤B000"}
+                        one{"¤B000;¤B-000"}
+                        other{"¤B000;¤B-000"}
                     }
                     1000000000000{
-                        one{"¤T0"}
-                        other{"¤T0"}
+                        one{"¤T0;¤T-0"}
+                        other{"¤T0;¤T-0"}
                     }
                     10000000000000{
-                        one{"¤T00"}
-                        other{"¤T00"}
+                        one{"¤T00;¤T-00"}
+                        other{"¤T00;¤T-00"}
                     }
                     100000000000000{
-                        one{"¤T000"}
-                        other{"¤T000"}
+                        one{"¤T000;¤T-000"}
+                        other{"¤T000;¤T-000"}
                     }
                 }
                 decimalFormat{
                     1000{
-                        one{"elfu 0"}
-                        other{"elfu 0"}
+                        one{"elfu 0;elfu -0"}
+                        other{"elfu 0;elfu -0"}
                     }
                     10000{
-                        one{"elfu 00"}
-                        other{"elfu 00"}
+                        one{"elfu 00;elfu -00"}
+                        other{"elfu 00;elfu -00"}
                     }
                     100000{
-                        one{"elfu 000"}
-                        other{"elfu 000"}
+                        one{"elfu 000;elfu -000"}
+                        other{"elfu 000;elfu -000"}
                     }
                     1000000{
-                        one{"M0"}
-                        other{"M0"}
+                        one{"M0;M-0"}
+                        other{"M0;M-0"}
                     }
                     10000000{
-                        one{"M00"}
-                        other{"M00"}
+                        one{"M00;M-00"}
+                        other{"M00;M-00"}
                     }
                     100000000{
-                        one{"M000"}
-                        other{"M000"}
+                        one{"M000;M-000"}
+                        other{"M000;M-000"}
                     }
                     1000000000{
-                        one{"B0"}
-                        other{"B0"}
+                        one{"B0;B-0"}
+                        other{"B0;B-0"}
                     }
                     10000000000{
-                        one{"B00"}
-                        other{"B00"}
+                        one{"B00;B-00"}
+                        other{"B00;B-00"}
                     }
                     100000000000{
-                        one{"B000"}
-                        other{"B000"}
+                        one{"B000;B-000"}
+                        other{"B000;B-000"}
                     }
                     1000000000000{
-                        one{"T0"}
-                        other{"T0"}
+                        one{"T0;T-0"}
+                        other{"T0;T-0"}
                     }
                     10000000000000{
-                        one{"T00"}
-                        other{"T00"}
+                        one{"T00;T-00"}
+                        other{"T00;T-00"}
                     }
                     100000000000000{
-                        one{"T000"}
-                        other{"T000"}
+                        one{"T000;T-000"}
+                        other{"T000;T-000"}
                     }
                 }
             }
@@ -195,10 +195,19 @@ sw{
                 timeSeparator{":"}
             }
         }
+        minimalPairs{
+            ordinal{
+                other{"Chukua mpinduko wa {0} kulia."}
+            }
+            plural{
+                one{"siku {0} iliyopita"}
+                other{"siku {0} zilizopita"}
+            }
+        }
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"2.1.28.79"}
+    Version{"2.1.33.73"}
     calendar{
         generic{
             DateTimePatterns{

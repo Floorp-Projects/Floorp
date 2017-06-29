@@ -704,11 +704,11 @@ nn{
         }
         PEN{
             "PEN",
-            "peruansk nuevo sol",
+            "peruansk sol",
         }
         PES{
             "PES",
-            "peruansk sol",
+            "peruansk sol (1863–1965)",
         }
         PGK{
             "PGK",
@@ -1577,12 +1577,12 @@ nn{
             other{"peruanske inti"}
         }
         PEN{
-            one{"peruansk nuevo sol"}
-            other{"peruanske nuevo sol"}
-        }
-        PES{
             one{"peruansk sol"}
             other{"peruanske sol"}
+        }
+        PES{
+            one{"peruansk sol (1863–1965)"}
+            other{"peruanske sol (1863–1965)"}
         }
         PGK{
             one{"papuansk kina"}
@@ -1921,5 +1921,5 @@ nn{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.1.28.76"}
+    Version{"2.1.31.86"}
 }

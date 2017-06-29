@@ -31,7 +31,7 @@ it{
             patternsLong{
                 decimalFormat{
                     1000{
-                        one{"0 mila"}
+                        one{"0 mille"}
                         other{"0 mila"}
                     }
                     10000{
@@ -67,7 +67,7 @@ it{
                         other{"000 miliardi"}
                     }
                     1000000000000{
-                        one{"0 mila miliardi"}
+                        one{"0 mille miliardi"}
                         other{"0 mila miliardi"}
                     }
                     10000000000000{
@@ -197,10 +197,20 @@ it{
                 timeSeparator{":"}
             }
         }
+        minimalPairs{
+            ordinal{
+                many{"Prendi l’{0}° a destra."}
+                other{"Prendi la {0}° a destra."}
+            }
+            plural{
+                one{"{0} giorno"}
+                other{"{0} giorni"}
+            }
+        }
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"2.1.28.79"}
+    Version{"2.1.32.60"}
     calendar{
         buddhist{
             eras{

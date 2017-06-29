@@ -59,7 +59,7 @@ distclean-local: clean-local
 	$(RMV) Makefile
 
 invoke check-local: all-local
-	ICU_DATA=$${ICU_DATA:-$(top_builddir)/data/} TZ=PST8PDT $(INVOKE) ./$(TARGET) ./howexpensive.xml
+	ICU_DATA=$${ICU_DATA:-$(top_builddir)/data/} TZ=PST8PDT $(INVOKE) ./$(TARGET) -f ./howexpensive.xml
 
 Makefile: $(srcdir)/Makefile.in  $(top_builddir)/config.status
 	cd $(top_builddir) \

@@ -8001,6 +8001,40 @@ class LIsConstructor : public LInstructionHelper<1, 1, 0>
     }
 };
 
+class LIsArrayO : public LInstructionHelper<1, 1, 0>
+{
+  public:
+    LIR_HEADER(IsArrayO);
+
+    explicit LIsArrayO(const LAllocation& object) {
+        setOperand(0, object);
+    }
+    const LAllocation* object() {
+        return getOperand(0);
+    }
+    MIsArray* mir() const {
+        return mir_->toIsArray();
+    }
+};
+
+class LIsArrayV : public LInstructionHelper<1, BOX_PIECES, 1>
+{
+  public:
+    LIR_HEADER(IsArrayV);
+    static const size_t Value = 0;
+
+    explicit LIsArrayV(const LBoxAllocation& value, const LDefinition& temp) {
+        setBoxOperand(0, value);
+        setTemp(0, temp);
+    }
+    const LDefinition* temp() {
+        return getTemp(0);
+    }
+    MIsArray* mir() const {
+        return mir_->toIsArray();
+    }
+};
+
 class LIsObject : public LInstructionHelper<1, BOX_PIECES, 0>
 {
   public:
@@ -9236,6 +9270,39 @@ class LDebugCheckSelfHosted : public LCallInstructionHelper<BOX_PIECES, BOX_PIEC
 
     explicit LDebugCheckSelfHosted(const LBoxAllocation& value) {
         setBoxOperand(CheckValue, value);
+    }
+};
+
+class LFinishBoundFunctionInit : public LInstructionHelper<0, 3, 2>
+{
+  public:
+    LIR_HEADER(FinishBoundFunctionInit)
+
+    LFinishBoundFunctionInit(const LAllocation& bound, const LAllocation& target,
+                             const LAllocation& argCount, const LDefinition& temp1,
+                             const LDefinition& temp2)
+    {
+        setOperand(0, bound);
+        setOperand(1, target);
+        setOperand(2, argCount);
+        setTemp(0, temp1);
+        setTemp(1, temp2);
+    }
+
+    const LAllocation* bound() {
+        return getOperand(0);
+    }
+    const LAllocation* target() {
+        return getOperand(1);
+    }
+    const LAllocation* argCount() {
+        return getOperand(2);
+    }
+    const LDefinition* temp1() {
+        return getTemp(0);
+    }
+    const LDefinition* temp2() {
+        return getTemp(1);
     }
 };
 

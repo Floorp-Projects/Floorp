@@ -205,10 +205,21 @@ sq{
                 timeSeparator{":"}
             }
         }
+        minimalPairs{
+            ordinal{
+                many{"Merrni kthesën e {0}-t në të djathtë."}
+                one{"Merrni kthesën e {0}-rë në të djathtë."}
+                other{"Merrni kthesën e {0}-të në të djathtë."}
+            }
+            plural{
+                one{"{0} libër"}
+                other{"{0} libra"}
+            }
+        }
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"2.1.28.79"}
+    Version{"2.1.32.59"}
     calendar{
         generic{
             DateTimePatterns{

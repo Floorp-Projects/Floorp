@@ -15,7 +15,7 @@ uk{
     }
     ExemplarCharacters{"[а б в г ґ д е є ж з и і ї й к л м н о п р с т у ф х ц ч ш щ ь ю я ʼ]"}
     ExemplarCharactersIndex{"[А Б В Г Ґ Д Е Є Ж З И І Ї Й К Л М Н О П Р С Т У Ф Х Ц Ч Ш Щ Ю Я]"}
-    ExemplarCharactersPunctuation{"[\\- – , ; \\: ! ? . ' \u0022 “ „ « » ( ) \\[ \\] \\{ \\} § @ * / \\\\ №]"}
+    ExemplarCharactersPunctuation{"[\\- – , ; \\: ! ? . ' ’ \u0022 “ „ « » ( ) \\[ \\] \\{ \\} § @ * / \\\\ №]"}
     MoreInformation{"?"}
     NumberElements{
         default{"latn"}
@@ -272,10 +272,22 @@ uk{
                 timeSeparator{":"}
             }
         }
+        minimalPairs{
+            ordinal{
+                few{"{0}-я дивізія, {0}-є коло"}
+                other{"{0}-а дивізія, {0}-е коло"}
+            }
+            plural{
+                few{"{0} дні"}
+                many{"{0} днів"}
+                one{"{0} день"}
+                other{"{0} дня"}
+            }
+        }
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"2.1.29.38"}
+    Version{"2.1.32.60"}
     calendar{
         coptic{
             monthNames{

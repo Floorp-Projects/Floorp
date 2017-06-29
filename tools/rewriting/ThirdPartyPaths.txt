@@ -65,7 +65,10 @@ security/nss/
 security/sandbox/chromium/
 testing/gtest/gmock/
 testing/gtest/gtest/
+testing/talos/talos/tests/canvasmark/
 testing/talos/talos/tests/dromaeo/
+testing/talos/talos/tests/kraken/
+testing/talos/talos/tests/v8_7/
 third_party/aom/
 third_party/python/blessings/
 third_party/python/configobj/

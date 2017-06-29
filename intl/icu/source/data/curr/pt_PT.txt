@@ -542,8 +542,12 @@ pt_PT{
             other{"Balboas do Panamá"}
         }
         PEN{
-            one{"Novo sol peruano"}
-            other{"Novos soles peruanos"}
+            one{"Sol peruano"}
+            other{"Soles peruanos"}
+        }
+        PES{
+            one{"Sol peruano (1863–1965)"}
+            other{"Soles peruanos (1863–1965)"}
         }
         PGK{
             one{"Kina da Papua-Nova Guiné"}
@@ -642,5 +646,5 @@ pt_PT{
             other{"Kwachas zambianos (1968–2012)"}
         }
     }
-    Version{"2.1.29.54"}
+    Version{"2.1.31.86"}
 }

@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 km{
-    Version{"2.1.28.79"}
+    Version{"2.1.31.74"}
     zoneStrings{
         "meta:Afghanistan"{
             ls{"ម៉ោង​នៅ​អាហ្វហ្គានីស្ថាន"}

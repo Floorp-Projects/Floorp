@@ -752,11 +752,11 @@ ko{
         }
         PEN{
             "PEN",
-            "페루 누에보 솔",
+            "페루 솔",
         }
         PES{
             "PES",
-            "페루 솔",
+            "페루 솔 (1863–1965)",
         }
         PGK{
             "PGK",
@@ -1578,7 +1578,7 @@ ko{
             other{"파나마 발보아"}
         }
         PEN{
-            other{"페루 누에보 솔"}
+            other{"페루 솔"}
         }
         PGK{
             other{"파푸아뉴기니 키나"}
@@ -1734,5 +1734,5 @@ ko{
     CurrencyUnitPatterns{
         other{"{0} {1}"}
     }
-    Version{"2.1.29.22"}
+    Version{"2.1.32.59"}
 }

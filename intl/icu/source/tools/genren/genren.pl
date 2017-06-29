@@ -8,7 +8,7 @@
 #*******************************************************************************
 #*
 #*   file name:  genren.pl
-#*   encoding:   US-ASCII
+#*   encoding:   UTF-8
 #*   tab size:   8 (not used)
 #*   indentation:4
 #*
@@ -80,7 +80,7 @@ print HEADER <<"EndOfHeaderComment";
 *******************************************************************************
 *
 *   file name:  $headername
-*   encoding:   US-ASCII
+*   encoding:   UTF-8
 *   tab size:   8 (not used)
 *   indentation:4
 *

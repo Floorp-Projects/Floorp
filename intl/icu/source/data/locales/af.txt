@@ -200,10 +200,19 @@ af{
                 timeSeparator{":"}
             }
         }
+        minimalPairs{
+            ordinal{
+                other{"Neem die {0}e afdraai na regs."}
+            }
+            plural{
+                one{"{0} dag"}
+                other{"{0} dae"}
+            }
+        }
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"2.1.29.44"}
+    Version{"2.1.32.59"}
     calendar{
         generic{
             DateTimePatterns{

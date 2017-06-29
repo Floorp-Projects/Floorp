@@ -10,6 +10,7 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.SystemClock;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.WindowManager;
 
@@ -31,10 +32,23 @@ public class GeckoViewActivity extends Activity {
         Log.i(LOGTAG, "zerdatime " + SystemClock.elapsedRealtime() +
               " - application start");
 
+        String geckoArgs = null;
+        final String intentArgs = getIntent().getStringExtra("args");
+
         if (BuildConfig.DEBUG) {
             // In debug builds, we want to load JavaScript resources fresh with each build.
-            GeckoView.preload(this, "-purgecaches");
+            geckoArgs = "-purgecaches";
         }
+
+        if (!TextUtils.isEmpty(intentArgs)) {
+            if (geckoArgs == null) {
+                geckoArgs = intentArgs;
+            } else {
+                geckoArgs += " " + intentArgs;
+            }
+        }
+
+        GeckoView.preload(this, geckoArgs);
 
         setContentView(R.layout.geckoview_activity);
 

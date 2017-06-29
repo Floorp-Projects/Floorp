@@ -302,10 +302,23 @@ ga{
                 timeSeparator{":"}
             }
         }
+        minimalPairs{
+            ordinal{
+                one{"Glac an {0}ú chasadh ar dheis."}
+                other{"Glac an {0}ú casadh ar dheis."}
+            }
+            plural{
+                few{"{0} chi, {0} cath"}
+                many{"{0} chi, {0} chath"}
+                one{"{0} ci, {0} gath"}
+                other{"{0} ci, {0} cath"}
+                two{"{0} gi, {0} gath"}
+            }
+        }
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"2.1.28.79"}
+    Version{"2.1.31.86"}
     calendar{
         buddhist{
             DateTimePatterns{

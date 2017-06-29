@@ -207,10 +207,20 @@ hu{
                 timeSeparator{":"}
             }
         }
+        minimalPairs{
+            ordinal{
+                one{"Az {0}. lehetőségnél forduljon jobbra."}
+                other{"A {0}. lehetőségnél forduljon jobbra."}
+            }
+            plural{
+                one{"A kosár tartalma: {0} X. Megveszi?"}
+                other{"A kosár tartalma: {0} X. Megveszi őket?"}
+            }
+        }
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"2.1.28.79"}
+    Version{"2.1.32.59"}
     calendar{
         buddhist{
             eras{

@@ -9,7 +9,7 @@ hr{
                 "[import hr-u-co-standard]"
                 "[reorder others]"
             }
-            Version{"30.0.3"}
+            Version{"31.0.1"}
         }
         standard{
             Sequence{
@@ -21,7 +21,7 @@ hr{
                 "&S<š<<<Š"
                 "&Z<ž<<<Ž"
             }
-            Version{"30.0.3"}
+            Version{"31.0.1"}
         }
     }
 }

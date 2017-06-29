@@ -2,7 +2,7 @@
 // License & terms of use: http://www.unicode.org/copyright.html#License
 es_HN{
     %%Parent{"es_419"}
-    Version{"2.1.27.99"}
+    Version{"2.1.31.33"}
     calendar{
         generic{
             DateTimePatterns{

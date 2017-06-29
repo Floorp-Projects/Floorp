@@ -3,8 +3,9 @@
   <head>
     <script src="util.js"></script>
     <script>
+/* import-globals-from util.js */
 window.onload = function() {
-  document.head.appendChild(build_rule("span div", 10000, '{ color: blue; } '));
+  document.head.appendChild(build_rule("span div", 10000, "{ color: blue; } "));
   let dom = build_dom(5000, "div");
 
   let start = performance.now();

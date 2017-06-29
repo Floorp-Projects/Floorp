@@ -236,10 +236,21 @@ hr{
                 timeSeparator{":"}
             }
         }
+        minimalPairs{
+            ordinal{
+                other{"Skrenite na {0}. križanju desno."}
+            }
+            plural{
+                few{"za {0} mjeseca"}
+                many{"za {0} mjeseci"}
+                one{"za {0} mjesec"}
+                other{"za {0} mjeseci"}
+            }
+        }
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"2.1.28.79"}
+    Version{"2.1.32.59"}
     calendar{
         buddhist{
             eras{

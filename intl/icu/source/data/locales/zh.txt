@@ -1,7 +1,13 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 zh{
-    AuxExemplarCharacters{"[仂 侣 傈 傣 僳 卑 卞 厘 吕 坝 堤 奎 屿 巽 撤 楔 楠 滕 瑚 甫 盲 碑 禄 粟 脚 艮 谬 钯 铂 锑 镑 魁]"}
+    AuxExemplarCharacters{
+        "[仂 侣 傈 傣 僳 卑 卞 厘 吕 坝 堤 奎 屿 巽 撤 楔 楠 滕 瑚 甫 盲 碑 禄 粟 脚 艮 谬 钯 铂 锑 镑 魁 乒 乓 仓 伞 冥 凉"
+        " 刨 匕 厦 厨 呣 唇 啤 啮 喱 嗅 噘 噢 墟 妆 婴 媚 宅 寺 尬 尴 屑 巾 弓 彗 惊 戟 扔 扰 扳 抛 挂 捂 摇 撅 杆 杖 柜 柱"
+        " 栗 栽 桶 棍 棕 棺 榈 槟 橙 洒 浆 涌 淇 滚 滩 灾 烛 烟 焰 煎 犬 猫 瓢 皱 盆 盔 眨 眯 瞌 矿 祈 祭 祷 稻 竿 笼 筒 篷"
+        " 粮 纠 纬 缆 缎 耸 舔 舵 艇 芽 苜 苞 菇 菱 葫 葵 蒸 蓿 蔽 薯 蘑 蚂 蛛 蜗 蜘 蜡 蝎 蝴 螃 裹 谍 豚 账 跤 踪 躬 轴 辐"
+        " 迹 郁 鄙 酢 钉 钥 钮 铅 铛 锄 锚 锤 闺 阱 隧 雕 霾 靴 靶 鞠 颠 馏 驼 骆 髦 鲤 鲸 鳄 鸽]"
+    }
     Ellipsis{
         final{"{0}…"}
         initial{"…{0}"}
@@ -146,7 +152,7 @@ zh{
             patternsLong{
                 decimalFormat{
                     1000{
-                        other{"0千"}
+                        other{"0"}
                     }
                     10000{
                         other{"0万"}
@@ -186,7 +192,7 @@ zh{
             patternsShort{
                 currencyFormat{
                     1000{
-                        other{"¤0千"}
+                        other{"0"}
                     }
                     10000{
                         other{"¤0万"}
@@ -224,7 +230,7 @@ zh{
                 }
                 decimalFormat{
                     1000{
-                        other{"0千"}
+                        other{"0"}
                     }
                     10000{
                         other{"0万"}
@@ -276,11 +282,19 @@ zh{
                 timeSeparator{":"}
             }
         }
+        minimalPairs{
+            ordinal{
+                other{"在第 {0} 个路口右转。"}
+            }
+            plural{
+                other{"{0} 天"}
+            }
+        }
         minimumGroupingDigits{"1"}
         native{"hanidec"}
         traditional{"hans"}
     }
-    Version{"2.1.29.84"}
+    Version{"2.1.33.94"}
     calendar{
         buddhist{
             DateTimePatterns{

@@ -18,7 +18,7 @@ fa_AF{
             }
         }
     }
-    Version{"2.1.29.44"}
+    Version{"2.1.31.33"}
     calendar{
         gregorian{
             appendItems{

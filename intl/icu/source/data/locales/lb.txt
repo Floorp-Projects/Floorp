@@ -155,7 +155,7 @@ lb{
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"2.1.28.76"}
+    Version{"2.1.31.86"}
     calendar{
         buddhist{
             eras{

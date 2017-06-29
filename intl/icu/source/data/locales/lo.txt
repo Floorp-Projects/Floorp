@@ -249,10 +249,19 @@ lo{
                 timeSeparator{":"}
             }
         }
+        minimalPairs{
+            ordinal{
+                one{"ລ້ຽວຂວາທຳອິດ."}
+                other{"ລ້ຽວຂວາທີ {0}."}
+            }
+            plural{
+                other{"{0} ມື້"}
+            }
+        }
         minimumGroupingDigits{"1"}
         native{"laoo"}
     }
-    Version{"2.1.28.79"}
+    Version{"2.1.31.86"}
     calendar{
         chinese{
             DateTimePatterns{
@@ -705,7 +714,7 @@ lo{
                 yyyyMEd{"E, G d/M/y"}
                 yyyyMMM{"G MMM y"}
                 yyyyMMMEd{"E, G d MMM y"}
-                yyyyMMMM{"G y MMMM"}
+                yyyyMMMM{"G MMMM y"}
                 yyyyMMMd{"G d MMM y"}
                 yyyyMd{"G d/M/y"}
                 yyyyQQQ{"G QQQ y"}
@@ -876,7 +885,7 @@ lo{
                 yMEd{"E, d/M/y"}
                 yMMM{"MMM y"}
                 yMMMEd{"E, d MMM y"}
-                yMMMM{"y MMMM"}
+                yMMMM{"MMMM y"}
                 yMMMd{"d MMM y"}
                 yMd{"d/M/y"}
                 yQQQ{"QQQ y"}

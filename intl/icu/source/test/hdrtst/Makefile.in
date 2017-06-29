@@ -114,11 +114,11 @@ drafttest:
 	@FAIL=0;for file in `ls $(prefix)/include/unicode/*.h | fgrep -v -f $(srcdir)/pfiles.txt`; do \
 	  incfile=`basename $$file .h` ; \
 	  echo "$@ unicode/$$incfile.h" ; \
-	  echo '#define U_HIDE_DRAFT_API' > hd_$$incfile.c; \
-	  echo '#include "'unicode/$$incfile'.h"' >> hd_$$incfile.c ; \
-	  echo 'void junk(void);' >> hd_$$incfile.c ; \
-	  echo 'void junk(){}' >> hd_$$incfile.c ; \
-          $(COMPILE.cc) -c $(cppflags) hd_$$incfile.c ||FAIL=1 ; \
+	  echo '#define U_HIDE_DRAFT_API' > hd_$$incfile.cpp ; \
+	  echo '#include "'unicode/$$incfile'.h"' >> hd_$$incfile.cpp ; \
+	  echo 'void junk(void);' >> hd_$$incfile.cpp ; \
+	  echo 'void junk(){}' >> hd_$$incfile.cpp ; \
+          $(COMPILE.cc) -c $(cppflags) hd_$$incfile.cpp ||FAIL=1 ; \
 	done ;\
 	exit $$FAIL
 
@@ -126,11 +126,11 @@ deprtest:
 	@FAIL=0; for file in `ls $(prefix)/include/unicode/*.h | fgrep -v -f $(srcdir)/pfiles.txt`; do \
 	  incfile=`basename $$file .h` ; \
 	  echo "$@ unicode/$$incfile.h" ; \
-	  echo '#define U_HIDE_DEPRECATED_API' > hdp_$$incfile.c; \
-	  echo '#include "'unicode/$$incfile'.h"' >> hdp_$$incfile.c ; \
-	  echo 'void junk(void);' >> hdp_$$incfile.c ; \
-	  echo 'void junk(){}' >> hdp_$$incfile.c ; \
-          $(COMPILE.cc) -c $(cppflags) hdp_$$incfile.c || FAIL=1; \
+	  echo '#define U_HIDE_DEPRECATED_API' > hdp_$$incfile.cpp ; \
+	  echo '#include "'unicode/$$incfile'.h"' >> hdp_$$incfile.cpp ; \
+	  echo 'void junk(void);' >> hdp_$$incfile.cpp ; \
+	  echo 'void junk(){}' >> hdp_$$incfile.cpp ; \
+          $(COMPILE.cc) -c $(cppflags) hdp_$$incfile.cpp || FAIL=1; \
 	done ; \
 	exit $$FAIL
 
@@ -139,11 +139,11 @@ internaltest:
 	 for file in `ls $(prefix)/include/unicode/*.h | fgrep -v -f $(srcdir)/pfiles.txt`; do \
 	  incfile=`basename $$file .h` ; \
 	  echo "$@ unicode/$$incfile.h" ; \
-	  echo '#define U_HIDE_INTERNAL_API' > hin_$$incfile.c; \
-	  echo '#include "'unicode/$$incfile'.h"' >> hin_$$incfile.c ; \
-	  echo 'void junk(void);' >> hin_$$incfile.c ; \
-	  echo 'void junk(){}' >> hin_$$incfile.c ; \
-          $(COMPILE.cc) -c $(cppflags) hin_$$incfile.c || FAIL=1 ; \
+	  echo '#define U_HIDE_INTERNAL_API' > hin_$$incfile.cpp ; \
+	  echo '#include "'unicode/$$incfile'.h"' >> hin_$$incfile.cpp ; \
+	  echo 'void junk(void);' >> hin_$$incfile.cpp ; \
+	  echo 'void junk(){}' >> hin_$$incfile.cpp ; \
+          $(COMPILE.cc) -c $(cppflags) hin_$$incfile.cpp || FAIL=1 ; \
 	done ; \
 	exit $$FAIL
 
@@ -151,11 +151,11 @@ obsoletetest:
 	@FAIL=0;for file in `ls $(prefix)/include/unicode/*.h | fgrep -v -f $(srcdir)/pfiles.txt`; do \
 	  incfile=`basename $$file .h` ; \
 	  echo "$@ unicode/$$incfile.h" ; \
-	  echo '#define U_HIDE_OBSOLETE_API' > hob_$$incfile.c; \
-	  echo '#include "'unicode/$$incfile'.h"' >> hob_$$incfile.c ; \
-	  echo 'void junk(void);' >> hob_$$incfile.c ; \
-	  echo 'void junk(){}' >> hob_$$incfile.c ; \
-          $(COMPILE.cc) -c $(cppflags) hob_$$incfile.c || FAIL=1 ; \
+	  echo '#define U_HIDE_OBSOLETE_API' > hob_$$incfile.cpp ; \
+	  echo '#include "'unicode/$$incfile'.h"' >> hob_$$incfile.cpp ; \
+	  echo 'void junk(void);' >> hob_$$incfile.cpp ; \
+	  echo 'void junk(){}' >> hob_$$incfile.cpp ; \
+          $(COMPILE.cc) -c $(cppflags) hob_$$incfile.cpp || FAIL=1 ; \
 	done ; \
 	exit $$FAIL
 

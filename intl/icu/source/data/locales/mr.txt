@@ -11,9 +11,9 @@ mr{
         word-medial{"{0} … {1}"}
     }
     ExemplarCharacters{
-        "[\u093C ॐ \u0902 \u0901 ः अ आ इ ई उ ऊ ऋ ऌ ऍ ए ऐ ऑ ओ औ क ख ग घ ङ च छ ज झ ञ ट "
-        "ठ ड ढ ण त थ द ध न प फ ब भ म य र ल व श ष स ह ळ ऽ ा ि ी \u0941 \u0942 \u0943 "
-        "\u0944 \u0945 \u0947 \u0948 ॉ ो ौ \u094D]"
+        "[{\u0931} \u093C ॐ \u0902 \u0901 ः अ आ इ ई उ ऊ ऋ ऌ ऍ ए ऐ ऑ ओ औ क ख ग घ ङ च छ"
+        " ज झ ञ ट ठ ड ढ ण त थ द ध न प फ ब भ म य र ल व श ष स ह ळ ऽ ा ि ी \u0941 \u0942"
+        " \u0943 \u0944 \u0945 \u0947 \u0948 ॉ ो ौ \u094D]"
     }
     ExemplarCharactersIndex{
         "[\u200D ॐ \u0902 ः अ आ इ ई उ ऊ ऋ ऌ ए ऐ ऑ ओ औ क ख ग घ ङ च छ ज झ ञ ट ठ ड ढ ण त"
@@ -225,10 +225,22 @@ mr{
                 timeSeparator{":"}
             }
         }
+        minimalPairs{
+            ordinal{
+                few{"{0}थे उजवे वळण घ्या."}
+                one{"{0}ले उजवे वळण घ्या."}
+                other{"{0}वे उजवे वळण घ्या."}
+                two{"{0}रे उजवे वळण घ्या."}
+            }
+            plural{
+                one{"{0} घर"}
+                other{"{0} घरे"}
+            }
+        }
         minimumGroupingDigits{"1"}
         native{"deva"}
     }
-    Version{"2.1.28.79"}
+    Version{"2.1.31.86"}
     calendar{
         generic{
             DateTimePatterns{

@@ -924,6 +924,29 @@ nsDocLoader::GetDOMWindowID(uint64_t *aResult)
 }
 
 NS_IMETHODIMP
+nsDocLoader::GetInnerDOMWindowID(uint64_t *aResult)
+{
+  *aResult = 0;
+
+  nsCOMPtr<mozIDOMWindowProxy> window;
+  nsresult rv = GetDOMWindow(getter_AddRefs(window));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsPIDOMWindowOuter> outer = nsPIDOMWindowOuter::From(window);
+  NS_ENSURE_STATE(outer);
+
+  nsPIDOMWindowInner* inner = outer->GetCurrentInnerWindow();
+  if (!inner) {
+    // If we don't have an inner window, return 0.
+    return NS_OK;
+  }
+
+  MOZ_ASSERT(inner->IsInnerWindow());
+  *aResult = inner->WindowID();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsDocLoader::GetIsTopLevel(bool *aResult)
 {
   *aResult = false;

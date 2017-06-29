@@ -57,6 +57,7 @@ public:
 protected:
   bool OnPrepareToRender(FrameBuilder* aBuilder) override;
   void OnLayerManagerChange(LayerManagerMLGPU* aManager) override;
+  Maybe<gfx::IntRect> ComputeIntermediateSurfaceBounds();
 
 private:
   RefPtr<MLGRenderTarget> mRenderTarget;

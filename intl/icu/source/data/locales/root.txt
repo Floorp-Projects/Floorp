@@ -160,10 +160,18 @@ root{
                 timeSeparator{":"}
             }
         }
+        minimalPairs{
+            ordinal{
+                other{"{0}?"}
+            }
+            plural{
+                other{"{0}?"}
+            }
+        }
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"2.1.30.58"}
+    Version{"2.1.32.59"}
     calendar{
         buddhist{
             AmPmMarkers:alias{"/LOCALE/calendar/gregorian/AmPmMarkers"}
@@ -2126,12 +2134,21 @@ root{
         }
         day-narrow:alias{"/LOCALE/fields/day-short"}
         day-short:alias{"/LOCALE/fields/day"}
+        dayOfYear{
+            dn{"Day Of Year"}
+        }
+        dayOfYear-narrow:alias{"/LOCALE/fields/dayOfYear-short"}
+        dayOfYear-short:alias{"/LOCALE/fields/dayOfYear"}
         dayperiod{
             dn{"Dayperiod"}
         }
+        dayperiod-narrow:alias{"/LOCALE/fields/dayperiod-short"}
+        dayperiod-short:alias{"/LOCALE/fields/dayperiod"}
         era{
             dn{"Era"}
         }
+        era-narrow:alias{"/LOCALE/fields/era-short"}
+        era-short:alias{"/LOCALE/fields/era"}
         fri{
             relative{
                 "-1"{"last Friday"}
@@ -2354,9 +2371,21 @@ root{
         }
         week-narrow:alias{"/LOCALE/fields/week-short"}
         week-short:alias{"/LOCALE/fields/week"}
+        weekOfMonth{
+            dn{"Week Of Month"}
+        }
+        weekOfMonth-narrow:alias{"/LOCALE/fields/weekOfMonth-short"}
+        weekOfMonth-short:alias{"/LOCALE/fields/weekOfMonth"}
         weekday{
             dn{"Day of the Week"}
         }
+        weekday-narrow:alias{"/LOCALE/fields/weekday-short"}
+        weekday-short:alias{"/LOCALE/fields/weekday"}
+        weekdayOfMonth{
+            dn{"Weekday Of Month"}
+        }
+        weekdayOfMonth-narrow:alias{"/LOCALE/fields/weekdayOfMonth-short"}
+        weekdayOfMonth-short:alias{"/LOCALE/fields/weekdayOfMonth"}
         year{
             dn{"Year"}
             relative{
@@ -2378,6 +2407,8 @@ root{
         zone{
             dn{"Zone"}
         }
+        zone-narrow:alias{"/LOCALE/fields/zone-short"}
+        zone-short:alias{"/LOCALE/fields/zone"}
     }
     layout{
         characters{"left-to-right"}
@@ -2419,5 +2450,32 @@ root{
         UK{"UK"}
         US{"US"}
         metric{"Metric"}
+    }
+    parse{
+        date{
+            lenient{
+                "[\\-./]",
+                "[\\:∶]",
+            }
+        }
+        general{
+            lenient{
+                "[.．․﹒ 。︒｡]",
+                "[$﹩＄$]",
+                "[£₤]",
+                "[₨₹{Rs}{Rp}]",
+            }
+        }
+        number{
+            lenient{
+                "[\\-－﹣ −⁻₋ ➖‒]",
+                "[,，﹐︐ ، ٫ 、﹑︑､]",
+                "[+＋﬩﹢⁺₊ ➕]",
+            }
+            stricter{
+                "[,，﹐︐ ٫]",
+                "[.．․﹒ ｡]",
+            }
+        }
     }
 }

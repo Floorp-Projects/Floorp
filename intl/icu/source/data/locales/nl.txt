@@ -236,10 +236,19 @@ nl{
                 timeSeparator{":"}
             }
         }
+        minimalPairs{
+            ordinal{
+                other{"Neem de {0}e afslag rechts."}
+            }
+            plural{
+                one{"{0} dag"}
+                other{"{0} dagen"}
+            }
+        }
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"2.1.28.79"}
+    Version{"2.1.32.59"}
     calendar{
         buddhist{
             DateTimePatterns{

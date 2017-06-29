@@ -1,4 +1,4 @@
-// Copyright (C) 2016 and later: Unicode, Inc. and others.
+// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html
 /*************************************************************************
 * Copyright (c) 1997-2016, International Business Machines Corporation
@@ -866,7 +866,7 @@ private:
      * @param id zone id string
      * @return the pointer of the ID resource, or NULL.
      */
-    static const UChar* findID(const UnicodeString& id);
+    static const char16_t* findID(const UnicodeString& id);
 
     /**
      * Resolve a link in Olson tzdata.  When the given id is known and it's not a link,
@@ -876,7 +876,7 @@ private:
      * @param id zone id string
      * @return the dereferenced zone or NULL
      */
-    static const UChar* dereferOlsonLink(const UnicodeString& id);
+    static const char16_t* dereferOlsonLink(const UnicodeString& id);
 
     /**
      * Returns the region code associated with the given zone,
@@ -884,7 +884,7 @@ private:
      * @param id zone id string
      * @return the region associated with the given zone
      */
-    static const UChar* getRegion(const UnicodeString& id);
+    static const char16_t* getRegion(const UnicodeString& id);
 
   public:
 #ifndef U_HIDE_INTERNAL_API
@@ -896,7 +896,7 @@ private:
      * @return the region associated with the given zone
      * @internal
      */
-    static const UChar* getRegion(const UnicodeString& id, UErrorCode& status);
+    static const char16_t* getRegion(const UnicodeString& id, UErrorCode& status);
 #endif  /* U_HIDE_INTERNAL_API */
 
   private:

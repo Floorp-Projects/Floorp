@@ -32,8 +32,10 @@ template <> struct AlignUp<0>
 
 #ifdef ENABLE_AL_LOGGING
 #  define AL_LOG(...) printf_stderr("AL: " __VA_ARGS__)
+#  define AL_LOG_IF(cond, ...) do { if (cond) { printf_stderr("AL: " __VA_ARGS__); } } while(0)
 #else
 #  define AL_LOG(...)
+#  define AL_LOG_IF(...)
 #endif
 
 #endif // mozilla_gfx_layers_mlgpu_UtilityMLGPU_h

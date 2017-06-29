@@ -740,7 +740,7 @@ ga{
         }
         PEN{
             "PEN",
-            "Nuevo Sol Pheiriú",
+            "Sol Pheiriú",
         }
         PES{
             "PES",
@@ -2192,11 +2192,11 @@ ga{
             two{"bhalboa Phanama"}
         }
         PEN{
-            few{"nuevo sol Pheiriú"}
-            many{"nuevo sol Pheiriú"}
-            one{"nuevo sol Pheiriú"}
-            other{"nuevo sol Pheiriú"}
-            two{"nuevo sol Pheiriú"}
+            few{"sol Pheiriú"}
+            many{"sol Pheiriú"}
+            one{"sol Pheiriú"}
+            other{"sol Pheiriú"}
+            two{"sol Pheiriú"}
         }
         PES{
             few{"shol Pheiriú (1863–1965)"}
@@ -2675,5 +2675,5 @@ ga{
         other{"{0} {1}"}
         two{"{0} {1}"}
     }
-    Version{"2.1.28.79"}
+    Version{"2.1.31.86"}
 }

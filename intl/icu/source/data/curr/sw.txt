@@ -448,7 +448,7 @@ sw{
         }
         PEN{
             "PEN",
-            "Nuevo Sol ya Peru",
+            "Sol ya Peru",
         }
         PGK{
             "PGK",
@@ -1196,8 +1196,8 @@ sw{
             other{"Balboa za Panama"}
         }
         PEN{
-            one{"Nuevo Sol ya Peru"}
-            other{"Nuevo Sol za Peru"}
+            one{"Sol ya Peru"}
+            other{"Sol za Peru"}
         }
         PGK{
             one{"Kina ya Papua New Guinea"}
@@ -1408,5 +1408,5 @@ sw{
         one{"{1} {0}"}
         other{"{1} {0}"}
     }
-    Version{"2.1.28.79"}
+    Version{"2.1.33.73"}
 }

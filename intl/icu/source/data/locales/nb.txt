@@ -233,10 +233,19 @@ nb{
                 timeSeparator{":"}
             }
         }
+        minimalPairs{
+            ordinal{
+                other{"Ta {0}. svingen til høyre."}
+            }
+            plural{
+                one{"{0} dag"}
+                other{"{0} dager"}
+            }
+        }
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"2.1.30.7"}
+    Version{"2.1.32.59"}
     calendar{
         buddhist{
             availableFormats{

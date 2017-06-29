@@ -227,10 +227,19 @@ ur{
                 timeSeparator{":"}
             }
         }
+        minimalPairs{
+            ordinal{
+                other{"دایاں موڑ نمبر {0} مڑیں۔"}
+            }
+            plural{
+                one{"{0} گھنٹہ"}
+                other{"{0} گھنٹے"}
+            }
+        }
         minimumGroupingDigits{"1"}
         native{"arabext"}
     }
-    Version{"2.1.28.79"}
+    Version{"2.1.32.59"}
     calendar{
         generic{
             DateTimePatterns{
@@ -276,7 +285,7 @@ ur{
                 yyyyMEd{"E، d/M/y G"}
                 yyyyMMM{"MMM y G"}
                 yyyyMMMEd{"E، d MMM، y G"}
-                yyyyMMMM{"G y MMMM"}
+                yyyyMMMM{"MMMM y G"}
                 yyyyMMMd{"d MMM، y G"}
                 yyyyMd{"d/M/y G"}
                 yyyyQQQ{"QQQ y G"}
@@ -448,7 +457,7 @@ ur{
                 yMEd{"E، d/M/y"}
                 yMMM{"MMM y"}
                 yMMMEd{"E، d MMM، y"}
-                yMMMM{"y MMMM"}
+                yMMMM{"MMMM y"}
                 yMMMd{"d MMM، y"}
                 yMd{"d/M/y"}
                 yQQQ{"QQQ y"}

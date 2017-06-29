@@ -8,8 +8,17 @@ gv{
                 currencyFormat{"¤#,##0.00"}
             }
         }
+        minimalPairs{
+            plural{
+                few{"{0} thunnag/muc/ooyl"}
+                many{"{0} dy hunnagyn/dy vucyn/dy ooylyn"}
+                one{"{0} thunnag/vuc/ooyl"}
+                other{"{0} thunnagyn/mucyn/ooylyn"}
+                two{"{0} hunnag/vuc/ooyl"}
+            }
+        }
     }
-    Version{"2.1.27.40"}
+    Version{"2.1.31.34"}
     calendar{
         gregorian{
             AmPmMarkers{

@@ -206,10 +206,19 @@ si{
                 timeSeparator{"."}
             }
         }
+        minimalPairs{
+            ordinal{
+                other{"{0} වන හැරවුම දකුණට"}
+            }
+            plural{
+                one{"{0} පොතක් ඇත. එය කියවීමි."}
+                other{"පොත් {0}ක් ඇත. ඒවා කියවීමි."}
+            }
+        }
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"2.1.28.79"}
+    Version{"2.1.33.28"}
     calendar{
         generic{
             DateTimePatterns{

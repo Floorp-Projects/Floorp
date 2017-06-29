@@ -84,6 +84,11 @@ dz{
                 plusSign{"+"}
             }
         }
+        minimalPairs{
+            plural{
+                other{"ཉིནམ་ {0} "}
+            }
+        }
         native{"tibt"}
         tibt{
             symbols{
@@ -100,7 +105,7 @@ dz{
             }
         }
     }
-    Version{"2.1.29.61"}
+    Version{"2.1.31.34"}
     calendar{
         generic{
             DateTimePatterns{

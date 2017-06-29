@@ -760,7 +760,7 @@ vi{
         }
         PEN{
             "PEN",
-            "Nuevo Sol Peru",
+            "Sol Peru",
         }
         PES{
             "PES",
@@ -1589,7 +1589,7 @@ vi{
             other{"Balboa Panama"}
         }
         PEN{
-            other{"Nuevo Sol Peru"}
+            other{"Sol Peru"}
         }
         PGK{
             other{"Kina Papua New Guinean"}
@@ -1748,5 +1748,5 @@ vi{
     CurrencyUnitPatterns{
         other{"{0} {1}"}
     }
-    Version{"2.1.28.79"}
+    Version{"2.1.32.59"}
 }

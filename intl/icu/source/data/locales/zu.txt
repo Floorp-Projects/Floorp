@@ -203,10 +203,19 @@ zu{
                 timeSeparator{":"}
             }
         }
+        minimalPairs{
+            ordinal{
+                other{"Thatha indlela ejikela kwesokudla engu-{0}"}
+            }
+            plural{
+                one{"{0} usuku"}
+                other{"{0} izinsuku"}
+            }
+        }
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"2.1.29.22"}
+    Version{"2.1.31.74"}
     calendar{
         generic{
             DateTimePatterns{

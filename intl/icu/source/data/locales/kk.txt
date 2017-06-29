@@ -205,10 +205,20 @@ kk{
                 timeSeparator{":"}
             }
         }
+        minimalPairs{
+            ordinal{
+                many{"{0}-ші бұрылыстан оңға бұрылыңыз."}
+                other{"{0}-шы бұрылыстан оңға бұрылыңыз."}
+            }
+            plural{
+                one{"Cебетте {0} Х бар. Ол сіздікі ме?"}
+                other{"Себетте {0} Х бар. Олар сіздікі ме?"}
+            }
+        }
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"2.1.28.79"}
+    Version{"2.1.32.59"}
     calendar{
         generic{
             DateTimePatterns{

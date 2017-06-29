@@ -188,10 +188,19 @@ is{
                 timeSeparator{":"}
             }
         }
+        minimalPairs{
+            ordinal{
+                other{"Taktu {0}. beygju til hægri."}
+            }
+            plural{
+                one{"{0} dagur"}
+                other{"{0} dagar"}
+            }
+        }
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"2.1.29.65"}
+    Version{"2.1.32.59"}
     calendar{
         generic{
             DateTimePatterns{

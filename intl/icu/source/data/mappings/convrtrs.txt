@@ -938,6 +938,8 @@ ibm-1129_P100-1997 { UTR22* }   ibm-1129 { IBM* }                               
 ibm-1131_P100-1997 { UTR22* }   ibm-1131 { IBM* } cp1131                                # Cyrillic Belarus PC
 ibm-1133_P100-1997 { UTR22* }   ibm-1133 { IBM* }                                       # ISO Lao
 
+# GSM 03.38
+gsm-03.38-2009 { UTR22* }   GSM0338 # GSM0338 alias is from Perl
 
 # Partially algorithmic converters
 
@@ -1150,7 +1152,6 @@ ebcdic-xml-us
 # These are not installed by default. They are rarely used.
 # Many of them can be added through the online ICU Data Library Customization tool
 
-gsm-03.38-2000 { UTR22* }   GSM0338 # GSM0338 alias is from Perl
 ibm-1004_P100-1995 { UTR22* }   ibm-1004 { IBM* }
 ibm-1008_P100-1995 { UTR22* }   ibm-1008 { IBM* } # cp1008, 8-bit Arabic (w/o euro update)
 ibm-1009_P100-1995 { UTR22* }   ibm-1009 { IBM* }

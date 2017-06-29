@@ -776,7 +776,7 @@ pt{
         }
         PEN{
             "PEN",
-            "Novo sol peruano",
+            "Sol peruano",
         }
         PES{
             "PES",
@@ -2057,12 +2057,12 @@ pt{
             other{"Intis peruanos"}
         }
         PEN{
-            one{"Novo sol peruano"}
-            other{"Novos sóis peruanos"}
+            one{"Sol peruano"}
+            other{"Sóis peruanos"}
         }
         PES{
-            one{"Sol peruano"}
-            other{"Soles peruanos"}
+            one{"Sol peruano (1863–1965)"}
+            other{"Sóis peruanos (1863–1965)"}
         }
         PGK{
             one{"Kina papuásia"}
@@ -2469,5 +2469,5 @@ pt{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.1.28.79"}
+    Version{"2.1.32.59"}
 }

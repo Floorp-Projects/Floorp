@@ -1,7 +1,5 @@
 ﻿# confusables.txt
-# Date: 2016-04-05, 11:47:12 GMT
-# Copyright (C) 2016 and later: Unicode, Inc. and others.
-# License & terms of use: http://www.unicode.org/copyright.html
+# Date: 2016-06-16, 13:41:30 GMT
 # © 2016 Unicode®, Inc.
 # Unicode and the Unicode Logo are registered trademarks of Unicode, Inc. in the U.S. and other countries.
 # For terms of use, see http://www.unicode.org/terms_of_use.html

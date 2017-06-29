@@ -432,7 +432,7 @@ uz{
         }
         PEN{
             "PEN",
-            "Peru yangi soli",
+            "Peru soli",
         }
         PGK{
             "PGK",
@@ -1164,8 +1164,8 @@ uz{
             other{"Panama balboasi"}
         }
         PEN{
-            one{"Peru yangi soli"}
-            other{"Peru yangi soli"}
+            one{"Peru soli"}
+            other{"Peru soli"}
         }
         PGK{
             one{"Papua – Yangi Gvineya kinasi"}
@@ -1372,5 +1372,5 @@ uz{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.1.29.44"}
+    Version{"2.1.32.60"}
 }

@@ -272,10 +272,21 @@ sk{
                 timeSeparator{":"}
             }
         }
+        minimalPairs{
+            ordinal{
+                other{"Na {0}. križovatke odbočte doprava."}
+            }
+            plural{
+                few{"{0} dni"}
+                many{"{0} dňa"}
+                one{"{0} deň"}
+                other{"{0} dní"}
+            }
+        }
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"2.1.28.79"}
+    Version{"2.1.32.59"}
     calendar{
         generic{
             DateTimePatterns{

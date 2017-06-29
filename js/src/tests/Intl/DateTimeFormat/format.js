@@ -35,7 +35,7 @@ assertEq(format.format(date), "28 محرم، 1434 03:00:00");
 
 // Locale en-IE: timeZoneName for crash test
 format = new Intl.DateTimeFormat("en-IE", {timeZone: "UTC", timeZoneName: "short"});
-assertEq(format.format(date), "12/12/2012, GMT");
+assertEq(format.format(date), "12/12/2012, UTC");
 
 // Test the .name property of the "format" getter.
 var desc = Object.getOwnPropertyDescriptor(Intl.DateTimeFormat.prototype, "format");

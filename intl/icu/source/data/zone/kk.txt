@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 kk{
-    Version{"2.1.28.79"}
+    Version{"2.1.32.59"}
     zoneStrings{
         "meta:Afghanistan"{
             ls{"Ауғанстан уақыты"}

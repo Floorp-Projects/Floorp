@@ -448,7 +448,7 @@ fil{
         }
         PEN{
             "PEN",
-            "Peruvian Nuevo Sol",
+            "Peruvian Sol",
         }
         PGK{
             "PGK",
@@ -1196,8 +1196,8 @@ fil{
             other{"Balboas ng Panama"}
         }
         PEN{
-            one{"Peruvian nuevo sol"}
-            other{"Peruvian nuevos soles"}
+            one{"Peruvian sol"}
+            other{"Peruvian soles"}
         }
         PGK{
             one{"Papua New Guinean kina"}
@@ -1404,5 +1404,5 @@ fil{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.1.28.79"}
+    Version{"2.1.31.86"}
 }

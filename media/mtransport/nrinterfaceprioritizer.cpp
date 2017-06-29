@@ -238,7 +238,7 @@ static int destroy(void **objp) {
   }
 
   InterfacePrioritizer *ip = static_cast<InterfacePrioritizer*>(*objp);
-  *objp = 0;
+  *objp = nullptr;
   delete ip;
 
   return 0;

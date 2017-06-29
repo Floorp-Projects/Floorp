@@ -49,6 +49,7 @@
 		<include locales="ar_TD"/>
 		<include locales="ar_TN"/>
 		<include locales="ar_YE"/>
+		<include locales="ars"/>
 		<include locales="as"/>
 		<include locales="as_IN"/>
 		<include locales="asa"/>
@@ -252,6 +253,7 @@
 		<include locales="es_AR"/>
 		<include locales="es_BO"/>
 		<include locales="es_BR"/>
+		<include locales="es_BZ"/>
 		<include locales="es_CL"/>
 		<include locales="es_CO"/>
 		<include locales="es_CR"/>
@@ -396,6 +398,7 @@
 		<include locales="it_CH"/>
 		<include locales="it_IT"/>
 		<include locales="it_SM"/>
+		<include locales="it_VA"/>
 		<include locales="iw"/>
 		<include locales="iw_IL"/>
 		<include locales="ja"/>

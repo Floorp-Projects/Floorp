@@ -262,7 +262,7 @@ sl{
                 group{"."}
                 infinity{"∞"}
                 list{";"}
-                minusSign{"–"}
+                minusSign{"−"}
                 nan{"NaN"}
                 perMille{"‰"}
                 percentSign{"%"}
@@ -271,10 +271,21 @@ sl{
                 timeSeparator{":"}
             }
         }
+        minimalPairs{
+            ordinal{
+                other{"V {0}. križišču zavijte desno."}
+            }
+            plural{
+                few{"{0} ure"}
+                one{"{0} ura"}
+                other{"{0} ur"}
+                two{"{0} uri"}
+            }
+        }
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"2.1.28.79"}
+    Version{"2.1.32.59"}
     calendar{
         generic{
             DateTimePatterns{

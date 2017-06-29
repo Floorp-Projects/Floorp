@@ -780,7 +780,7 @@ yue{
         }
         PEN{
             "PEN",
-            "秘魯新太陽幣",
+            "秘魯太陽幣",
         }
         PES{
             "PES",
@@ -1878,7 +1878,7 @@ yue{
             other{"祕魯因蒂"}
         }
         PEN{
-            other{"秘魯新太陽幣"}
+            other{"秘魯太陽幣"}
         }
         PES{
             other{"秘魯索爾 (1863–1965)"}
@@ -2193,5 +2193,5 @@ yue{
     CurrencyUnitPatterns{
         other{"{0} {1}"}
     }
-    Version{"2.1.28.76"}
+    Version{"2.1.31.86"}
 }

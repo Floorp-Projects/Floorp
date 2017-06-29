@@ -64,7 +64,7 @@ ja{
         "鑑 長 門 閉 開 閏 閑 間 関 閣 閥 閲 闘 阪 防 阻 附 降 限 陛 院-陥 陪 陰 陳 陵 陶 陸 険 陽 隅 隆 隊 階 随 隔 際 障 "
         "隠 隣 隷 隻 雄-雇 雉 雌 雑 離 難 雨 雪 雰 雲 零 雷 電 需 震 霊 霜 霧 露 青 静 非 面 革 靴 韓 音 韻 響 頂 頃 項 順 "
         "預-頒 領 頭 頻 頼 題 額 顔 顕 願 類 顧 風 飛 食 飢 飯 飲 飼-飾 養 餓 館 首 香 馬 駄-駆 駐 騎 騒 験 騰 驚 骨 髄 高 "
-        "髪 鬼 魂 魅 魔 魚 鮮 鯨 鳥 鳴 鶏 鹿 麗 麦 麻 黄 黒 黙 鼓 鼠 鼻 齢]"
+        "髪 鬼 魂 魅 魔 魚 鮮 鯨 鳥 鳴 鶏 鹿 麗 麦 麻 黄 黒 黙 鼓 鼠 鼻 齢 叱 剥 填 頬]"
     }
     ExemplarCharactersIndex{"[あ か さ た な は ま や ら わ]"}
     ExemplarCharactersPunctuation{
@@ -221,11 +221,19 @@ ja{
                 timeSeparator{":"}
             }
         }
+        minimalPairs{
+            ordinal{
+                other{"{0} 番目の角を右折します。"}
+            }
+            plural{
+                other{"{0}日"}
+            }
+        }
         minimumGroupingDigits{"1"}
         native{"latn"}
         traditional{"jpan"}
     }
-    Version{"2.1.28.79"}
+    Version{"2.1.32.59"}
     calendar{
         buddhist{
             DateTimePatterns{

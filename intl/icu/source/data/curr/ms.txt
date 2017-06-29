@@ -436,7 +436,7 @@ ms{
         }
         PEN{
             "PEN",
-            "Nuevo Sol Peru",
+            "Sol Peru",
         }
         PGK{
             "PGK",
@@ -1065,7 +1065,7 @@ ms{
             other{"Balboa Panama"}
         }
         PEN{
-            other{"Nuevo Sol Peru"}
+            other{"Sol Peru"}
         }
         PGK{
             other{"Kina Papua New Guinea"}
@@ -1221,5 +1221,5 @@ ms{
     CurrencyUnitPatterns{
         other{"{0} {1}"}
     }
-    Version{"2.1.28.79"}
+    Version{"2.1.32.59"}
 }

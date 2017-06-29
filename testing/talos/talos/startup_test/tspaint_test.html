@@ -21,18 +21,18 @@ async function painted() {
 
   let startupInfo = await TalosPowersContent.getStartupInfo();
 
-  let startupTime = startupInfo['firstPaint'] - startupInfo['process'];
+  let startupTime = startupInfo["firstPaint"] - startupInfo["process"];
 
-  document.body.textContent = 'Startup time = ' + startupTime + ' ms';
+  document.body.textContent = "Startup time = " + startupTime + " ms";
   if (window.dump) {
-    dumpLog('__start_report' + startupTime + '__end_report\n\n');
+    dumpLog("__start_report" + startupTime + "__end_report\n\n");
   }
   dumpConsoleAndQuit();
 }
 
 function failed() {
   if (window.dump) {
-    dumpLog('BROWSER FAILED TO GENERATE MOZAFTERPAINT IN 5 SECONDS');
+    dumpLog("BROWSER FAILED TO GENERATE MOZAFTERPAINT IN 5 SECONDS");
   }
   dumpConsoleAndQuit();
 }
@@ -41,20 +41,20 @@ function dumpConsoleAndQuit() {
   var messages = {}
 
   try {
-    netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-    var consoleService = Components.classes['@mozilla.org/consoleservice;1'].getService(Components.interfaces.nsIConsoleService);
+    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+    var consoleService = Components.classes["@mozilla.org/consoleservice;1"].getService(Components.interfaces.nsIConsoleService);
     consoleService.getMessageArray(messages, {});
-  } catch(ex) {
-    dumpLog(ex + '\n');
+  } catch (ex) {
+    dumpLog(ex + "\n");
   }
 
   for (var i = 0; i < messages.value.length; i++)
-    dumpLog(messages.value[i].message + '\n');
+    dumpLog(messages.value[i].message + "\n");
 
   // Close window asynchronously, there might still be startup operations that still need to run
   window.setTimeout(function() {
     if (window.dump) {
-      dumpLog('__startTimestamp' + Date.now() + '__endTimestamp\n');
+      dumpLog("__startTimestamp" + Date.now() + "__endTimestamp\n");
     }
     goQuitApplication();
     window.close();
