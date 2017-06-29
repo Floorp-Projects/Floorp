@@ -39,8 +39,9 @@ public:
   NS_DECL_NSIOBSERVER
 
   // See comments on PreallocatedProcessManager for these methods.
-  void AddBlocker(ContentParent* aParent);
-  void RemoveBlocker(ContentParent* aParent);
+  void AllocateAfterDelay();
+  void AllocateOnIdle();
+  void AllocateNow();
   already_AddRefed<ContentParent> Take();
   bool Provide(ContentParent* aParent);
 
@@ -53,11 +54,6 @@ private:
 
   void Init();
 
-  bool CanAllocate();
-  void AllocateAfterDelay();
-  void AllocateOnIdle();
-  void AllocateNow();
-
   void RereadPrefs();
   void Enable();
   void Disable();
@@ -68,7 +64,6 @@ private:
   bool mEnabled;
   bool mShutdown;
   RefPtr<ContentParent> mPreallocatedProcess;
-  nsTHashtable<nsUint64HashKey> mBlockers;
 };
 
 /* static */ StaticRefPtr<PreallocatedProcessManagerImpl>
@@ -83,6 +78,15 @@ PreallocatedProcessManagerImpl::Singleton()
     sSingleton->Init();
     ClearOnShutdown(&sSingleton);
   }
+
+  // First time when we init sSingleton, the pref database might not be in a
+  // reliable state (we are too early), so despite dom.ipc.processPrelaunch.enabled
+  // is set to true Preferences::GetBool will return false (it cannot find the pref).
+  // Since Init() above will be called only once, and the pref will not be changed,
+  // the manger will stay disabled. To prevent that let's re-read the pref each time
+  // someone accessing the manager singleton. This is a hack but this is not a hot code
+  // so it should be fine.
+  sSingleton->RereadPrefs();
 
   return sSingleton;
 }
@@ -164,11 +168,6 @@ PreallocatedProcessManagerImpl::Take()
     return nullptr;
   }
 
-  if (mPreallocatedProcess) {
-    // The preallocated process is taken. Let's try to start up a new one soon.
-    AllocateOnIdle();
-  }
-
   return mPreallocatedProcess.forget();
 }
 
@@ -197,45 +196,19 @@ PreallocatedProcessManagerImpl::Enable()
 }
 
 void
-PreallocatedProcessManagerImpl::AddBlocker(ContentParent* aParent)
-{
-  uint64_t childID = aParent->ChildID();
-  MOZ_ASSERT(!mBlockers.Contains(childID));
-  mBlockers.PutEntry(childID);
-}
-
-void
-PreallocatedProcessManagerImpl::RemoveBlocker(ContentParent* aParent)
-{
-  uint64_t childID = aParent->ChildID();
-  MOZ_ASSERT(mBlockers.Contains(childID));
-  mBlockers.RemoveEntry(childID);
-  if (!mPreallocatedProcess && mBlockers.IsEmpty()) {
-    AllocateAfterDelay();
-  }
-}
-
-bool
-PreallocatedProcessManagerImpl::CanAllocate()
-{
-  return mEnabled &&
-         mBlockers.IsEmpty() &&
-         !mPreallocatedProcess &&
-         !mShutdown &&
-         !ContentParent::IsMaxProcessCountReached(NS_LITERAL_STRING(DEFAULT_REMOTE_TYPE));
-}
-
-void
 PreallocatedProcessManagerImpl::AllocateAfterDelay()
 {
-  if (!mEnabled) {
+  if (!mEnabled || mPreallocatedProcess || mShutdown) {
     return;
   }
 
+  // Originally AllocateOnIdle() was post here, but since the gecko parent
+  // message loop in practice never goes idle, that didn't work out well.
+  // Let's just launch the process after the delay.
   NS_DelayedDispatchToCurrentThread(
-    NewRunnableMethod("PreallocatedProcessManagerImpl::AllocateOnIdle",
+    NewRunnableMethod("PreallocatedProcessManagerImpl::AllocateNow",
                       this,
-                      &PreallocatedProcessManagerImpl::AllocateOnIdle),
+                      &PreallocatedProcessManagerImpl::AllocateNow),
     Preferences::GetUint("dom.ipc.processPrelaunch.delayMs",
                          DEFAULT_ALLOCATE_DELAY));
 }
@@ -243,7 +216,7 @@ PreallocatedProcessManagerImpl::AllocateAfterDelay()
 void
 PreallocatedProcessManagerImpl::AllocateOnIdle()
 {
-  if (!mEnabled) {
+  if (!mEnabled || mPreallocatedProcess || mShutdown) {
     return;
   }
 
@@ -256,11 +229,8 @@ PreallocatedProcessManagerImpl::AllocateOnIdle()
 void
 PreallocatedProcessManagerImpl::AllocateNow()
 {
-  if (!CanAllocate()) {
-    if (mEnabled && !mPreallocatedProcess && !mBlockers.IsEmpty()) {
-      // If it's too early to allocate a process let's retry later.
-      AllocateAfterDelay();
-    }
+  if (!mEnabled || mPreallocatedProcess || mShutdown ||
+      ContentParent::IsMaxProcessCountReached(NS_LITERAL_STRING(DEFAULT_REMOTE_TYPE))) {
     return;
   }
 
@@ -290,6 +260,10 @@ PreallocatedProcessManagerImpl::CloseProcess()
 void
 PreallocatedProcessManagerImpl::ObserveProcessShutdown(nsISupports* aSubject)
 {
+  if (!mPreallocatedProcess) {
+    return;
+  }
+
   nsCOMPtr<nsIPropertyBag2> props = do_QueryInterface(aSubject);
   NS_ENSURE_TRUE_VOID(props);
 
@@ -297,11 +271,9 @@ PreallocatedProcessManagerImpl::ObserveProcessShutdown(nsISupports* aSubject)
   props->GetPropertyAsUint64(NS_LITERAL_STRING("childID"), &childID);
   NS_ENSURE_TRUE_VOID(childID != CONTENT_PROCESS_ID_UNKNOWN);
 
-  if (mPreallocatedProcess && childID == mPreallocatedProcess->ChildID()) {
+  if (childID == mPreallocatedProcess->ChildID()) {
     mPreallocatedProcess = nullptr;
   }
-
-  mBlockers.RemoveEntry(childID);
 }
 
 inline PreallocatedProcessManagerImpl* GetPPMImpl()
@@ -310,15 +282,21 @@ inline PreallocatedProcessManagerImpl* GetPPMImpl()
 }
 
 /* static */ void
-PreallocatedProcessManager::AddBlocker(ContentParent* aParent)
+PreallocatedProcessManager::AllocateAfterDelay()
 {
-  GetPPMImpl()->AddBlocker(aParent);
+  GetPPMImpl()->AllocateAfterDelay();
 }
 
 /* static */ void
-PreallocatedProcessManager::RemoveBlocker(ContentParent* aParent)
+PreallocatedProcessManager::AllocateOnIdle()
 {
-  GetPPMImpl()->RemoveBlocker(aParent);
+  GetPPMImpl()->AllocateOnIdle();
+}
+
+/* static */ void
+PreallocatedProcessManager::AllocateNow()
+{
+  GetPPMImpl()->AllocateNow();
 }
 
 /* static */ already_AddRefed<ContentParent>
