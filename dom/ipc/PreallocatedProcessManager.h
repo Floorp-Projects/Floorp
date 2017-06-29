@@ -33,14 +33,31 @@ class PreallocatedProcessManager final
   typedef mozilla::dom::ContentParent ContentParent;
 
 public:
+  /**
+   * Create a process after a delay.  We wait for a period of time (specified
+   * by the dom.ipc.processPrelaunch.delayMs pref), then wait for this process
+   * to go idle, then allocate the new process.
+   *
+   * If the dom.ipc.processPrelaunch.enabled pref is false, or if we already
+   * have a preallocated process, this function does nothing.
+   */
+  static void AllocateAfterDelay();
 
   /**
-   * Before first paint we don't want to allocate any processes in the background.
-   * To avoid that, the PreallocatedProcessManager won't start up any processes while
-   * there is a blocker active.
+   * Create a process once this process goes idle.
+   *
+   * If the dom.ipc.processPrelaunch.enabled pref is false, or if we already
+   * have a preallocated process, this function does nothing.
    */
-  static void AddBlocker(ContentParent* aParent);
-  static void RemoveBlocker(ContentParent* aParent);
+  static void AllocateOnIdle();
+
+  /**
+   * Create a process right now.
+   *
+   * If the dom.ipc.processPrelaunch.enabled pref is false, or if we already
+   * have a preallocated process, this function does nothing.
+   */
+  static void AllocateNow();
 
   /**
    * Take the preallocated process, if we have one.  If we don't have one, this

@@ -603,8 +603,6 @@ ContentParent::PreallocateProcess()
     new ContentParent(/* aOpener = */ nullptr,
                       NS_LITERAL_STRING(DEFAULT_REMOTE_TYPE));
 
-  PreallocatedProcessManager::AddBlocker(process);
-
   if (!process->LaunchSubprocess(PROCESS_PRIORITY_PREALLOC)) {
     return nullptr;
   }
@@ -881,9 +879,6 @@ ContentParent::GetNewOrUsedBrowserProcess(const nsAString& aRemoteType,
 
   // Create a new process from scratch.
   RefPtr<ContentParent> p = new ContentParent(aOpener, aRemoteType);
-
-  // Until the new process is ready let's not allow to start up any preallocated processes.
-  PreallocatedProcessManager::AddBlocker(p);
 
   if (!p->LaunchSubprocess(aPriority)) {
     return nullptr;
@@ -2732,9 +2727,10 @@ mozilla::ipc::IPCResult
 ContentParent::RecvFirstIdle()
 {
   // When the ContentChild goes idle, it sends us a FirstIdle message
-  // which we use as a good time to signal the PreallocatedProcessManager
-  // that it can start allocating processes from now on.
-  PreallocatedProcessManager::RemoveBlocker(this);
+  // which we use as a good time to prelaunch another process. If we
+  // prelaunch any sooner than this, then we'll be competing with the
+  // child process and slowing it down.
+  PreallocatedProcessManager::AllocateAfterDelay();
   return IPC_OK();
 }
 
