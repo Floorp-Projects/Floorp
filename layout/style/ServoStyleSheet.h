@@ -29,7 +29,7 @@ class LoaderReusableStyleSheets;
 // Servo Style Sheet Inner Data Container
 //
 
-struct ServoStyleSheetInner : public StyleSheetInfo
+struct ServoStyleSheetInner final : public StyleSheetInfo
 {
   ServoStyleSheetInner(CORSMode aCORSMode,
                        ReferrerPolicy aReferrerPolicy,
@@ -42,7 +42,8 @@ struct ServoStyleSheetInner : public StyleSheetInfo
 
   size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const;
 
-  RefPtr<const RawServoStyleSheet> mSheet;
+  RefPtr<const RawServoStyleSheetContents> mContents;
+
   // XXX StyleSheetInfo already has mSheetURI, mBaseURI, and mPrincipal.
   // Can we somehow replace them with URLExtraData directly? The issue
   // is currently URLExtraData is immutable, but URIs in StyleSheetInfo
@@ -97,12 +98,13 @@ public:
 
   nsresult ReparseSheet(const nsAString& aInput);
 
-  const RawServoStyleSheet* RawSheet() const {
-    return Inner()->mSheet;
+  const RawServoStyleSheetContents* RawContents() const {
+    return Inner()->mContents;
   }
-  void SetSheetForImport(const RawServoStyleSheet* aSheet) {
-    MOZ_ASSERT(!Inner()->mSheet);
-    Inner()->mSheet = aSheet;
+
+  void SetContentsForImport(const RawServoStyleSheetContents* aContents) {
+    MOZ_ASSERT(!Inner()->mContents);
+    Inner()->mContents = aContents;
   }
 
   URLExtraData* URLData() const { return Inner()->mURLData; }

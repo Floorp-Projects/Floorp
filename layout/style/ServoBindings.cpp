@@ -2341,7 +2341,6 @@ void
 Gecko_LoadStyleSheet(css::Loader* aLoader,
                      ServoStyleSheet* aParent,
                      css::LoaderReusableStyleSheets* aReusableSheets,
-                     RawServoStyleSheetBorrowed aChildSheet,
                      RawGeckoURLExtraData* aBaseURLData,
                      const uint8_t* aURLString,
                      uint32_t aURLStringLength,
@@ -2368,7 +2367,7 @@ Gecko_LoadStyleSheet(css::Loader* aLoader,
     return;
   }
 
-  aLoader->LoadChildSheet(aParent, uri, media, nullptr, aChildSheet, aReusableSheets);
+  aLoader->LoadChildSheet(aParent, uri, media, nullptr, aReusableSheets);
 }
 
 const nsMediaFeature*
