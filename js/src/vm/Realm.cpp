@@ -7,11 +7,33 @@
 #include "js/Realm.h"
 
 #include "jscntxt.h"
-#include "jscompartment.h" // For JSContext::global
+#include "jscompartment.h"
 
 #include "vm/GlobalObject.h"
 
+#include "jscompartmentinlines.h"
+
 using namespace js;
+
+JS_PUBLIC_API(void)
+gc::TraceRealm(JSTracer* trc, JS::Realm* realm, const char* name)
+{
+    // The way GC works with compartments is basically incomprehensible.
+    // For Realms, what we want is very simple: each Realm has a strong
+    // reference to its GlobalObject, and vice versa.
+    //
+    // Here we simply trace our side of that edge. During GC,
+    // GCRuntime::traceRuntimeCommon() marks all other compartment roots, for
+    // all compartments.
+    JS::GetCompartmentForRealm(realm)->traceGlobal(trc);
+}
+
+JS_PUBLIC_API(bool)
+gc::RealmNeedsSweep(JS::Realm* realm)
+{
+    return JS::GetCompartmentForRealm(realm)->globalIsAboutToBeFinalized();
+}
+
 
 JS_PUBLIC_API(JSObject*)
 JS::GetRealmObjectPrototype(JSContext* cx)

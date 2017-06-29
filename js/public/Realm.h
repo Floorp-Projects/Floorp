@@ -13,12 +13,51 @@
 #ifndef js_Realm_h
 #define js_Realm_h
 
-#include "jstypes.h"
+#include "jspubtd.h"
+#include "js/GCPolicyAPI.h"
+#include "js/TypeDecls.h"  // forward-declaration of JS::Realm
 
-struct JSContext;
-class JSObject;
+namespace js {
+namespace gc {
+JS_PUBLIC_API(void) TraceRealm(JSTracer* trc, JS::Realm* realm, const char* name);
+JS_PUBLIC_API(bool) RealmNeedsSweep(JS::Realm* realm);
+}
+}
 
 namespace JS {
+
+// Each Realm holds a strong reference to its GlobalObject, and vice versa.
+template <>
+struct GCPolicy<Realm*>
+{
+    static Realm* initial() { return nullptr; }
+    static void trace(JSTracer* trc, Realm** vp, const char* name) {
+        if (*vp)
+            ::js::gc::TraceRealm(trc, *vp, name);
+    }
+    static bool needsSweep(Realm** vp) {
+        return *vp && ::js::gc::RealmNeedsSweep(*vp);
+    }
+};
+
+// Get the current realm, if any. The ECMAScript spec calls this "the current
+// Realm Record".
+extern JS_PUBLIC_API(Realm*)
+GetCurrentRealmOrNull(JSContext* cx);
+
+// Return the compartment that contains a given realm.
+inline JSCompartment*
+GetCompartmentForRealm(Realm* realm) {
+    // Implementation note: For now, realms are a fiction; we treat realms and
+    // compartments as being one-to-one, but they are actually identical.
+    return reinterpret_cast<JSCompartment*>(realm);
+}
+
+// Return the realm in a given compartment.
+inline Realm*
+GetRealmForCompartment(JSCompartment* compartment) {
+    return reinterpret_cast<Realm*>(compartment);
+}
 
 extern JS_PUBLIC_API(JSObject*)
 GetRealmObjectPrototype(JSContext* cx);
