@@ -1319,15 +1319,10 @@ nsRefreshDriver::AddImageRequest(imgIRequest* aRequest)
 {
   uint32_t delay = GetFirstFrameDelay(aRequest);
   if (delay == 0) {
-    if (!mRequests.PutEntry(aRequest)) {
-      return false;
-    }
+    mRequests.PutEntry(aRequest);
   } else {
-    ImageStartData* start = mStartTable.Get(delay);
-    if (!start) {
-      start = new ImageStartData();
-      mStartTable.Put(delay, start);
-    }
+    ImageStartData* start = mStartTable.LookupForAdd(delay).OrInsert(
+      [] () { return new ImageStartData(); });
     start->mEntries.PutEntry(aRequest);
   }
 
