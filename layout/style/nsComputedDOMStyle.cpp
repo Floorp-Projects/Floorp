@@ -1072,11 +1072,26 @@ nsComputedDOMStyle::IndexedGetter(uint32_t   aIndex,
     return;
   }
 
-  const nsStyleVariables* variables = StyleVariables();
-  if (aIndex - length < variables->mVariables.Count()) {
+  bool isServo = mStyleContext->IsServo();
+
+  const nsStyleVariables* variables = isServo
+    ? nullptr
+    : StyleVariables();
+
+  const uint32_t count = isServo
+    ? Servo_GetCustomPropertiesCount(mStyleContext->ComputedValues())
+    : variables->mVariables.Count();
+
+  const uint32_t index = aIndex - length;
+  if (index < count) {
     aFound = true;
     nsString varName;
-    variables->mVariables.GetVariableAt(aIndex - length, varName);
+    if (isServo) {
+      Servo_GetCustomPropertyNameAt(mStyleContext->ComputedValues(),
+                                    index, &varName);
+    } else {
+      variables->mVariables.GetVariableAt(index, varName);
+    }
     aPropName.AssignLiteral("--");
     aPropName.Append(varName);
   } else {

@@ -562,6 +562,10 @@ SERVO_BINDING_FUNC(Servo_GetCustomPropertyValue, bool,
 SERVO_BINDING_FUNC(Servo_GetCustomPropertiesCount, uint32_t,
                    ServoComputedValuesBorrowed computed_values)
 
+SERVO_BINDING_FUNC(Servo_GetCustomPropertyNameAt, bool,
+                   ServoComputedValuesBorrowed, uint32_t index,
+                   nsAString* name)
+
 // Style-struct management.
 #define STYLE_STRUCT(name, checkdata_cb)                            \
   struct nsStyle##name;                                             \
