@@ -211,7 +211,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1265818
 
     utils.getResolution(zoom);
     utils.getScrollXY(false, scrollX, scrollY);
-    is(fuzzyEquals(zoom.value, ZOOM), "zoom restored correctly");
+    todo(fuzzyEquals(zoom.value, ZOOM), "zoom restored correctly"); // Bug 1312605
     is(scrollX.value, SCROLL_X, "scrollX restored correctly");
     is(scrollY.value, SCROLL_Y, "scrollY restored correctly");
 
