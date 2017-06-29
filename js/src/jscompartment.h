@@ -668,12 +668,12 @@ struct JSCompartment
         return runtime_;
     }
 
-    /*
-     * Nb: global_ might be nullptr, if (a) it's the atoms compartment, or
-     * (b) the compartment's global has been collected.  The latter can happen
-     * if e.g. a string in a compartment is rooted but no object is, and thus
-     * the global isn't rooted, and thus the global can be finalized while the
-     * compartment lives on.
+    /* The global object for this compartment.
+     *
+     * This returns nullptr if this is the atoms compartment.  (The global_
+     * field is also null briefly during GC, after the global object is
+     * collected; but when that happens the JSCompartment is destroyed during
+     * the same GC.)
      *
      * In contrast, JSObject::global() is infallible because marking a JSObject
      * always marks its global as well.
@@ -683,6 +683,9 @@ struct JSCompartment
 
     /* An unbarriered getter for use while tracing. */
     inline js::GlobalObject* unsafeUnbarrieredMaybeGlobal() const;
+
+    /* True if a global object exists, but it's being collected. */
+    inline bool globalIsAboutToBeFinalized();
 
     inline void initGlobal(js::GlobalObject& global);
 
