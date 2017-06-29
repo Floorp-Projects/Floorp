@@ -1651,6 +1651,18 @@ CompositorBridgeParent::RecvAdoptChild(const uint64_t& child)
       // by previous CompositorBridgeParent, since nsRefreshDriver might wait composition complete.
       ScheduleComposition();
     }
+    if (mWrBridge && sIndirectLayerTrees[child].mWrBridge) {
+      sIndirectLayerTrees[child].mWrBridge->UpdateWebRender(mWrBridge->CompositorScheduler(),
+                                                            mWrBridge->GetWebRenderAPI(),
+                                                            mWrBridge->CompositableHolder(),
+                                                            GetAnimationStorage(0));
+      // Pretend we composited, since parent CompositorBridgeParent was replaced.
+      CrossProcessCompositorBridgeParent* cpcp = sIndirectLayerTrees[child].mCrossProcessParent;
+      if (cpcp) {
+        TimeStamp now = TimeStamp::Now();
+        cpcp->DidComposite(child, now, now);
+      }
+    }
     parent = sIndirectLayerTrees[child].mApzcTreeManagerParent;
   }
 
