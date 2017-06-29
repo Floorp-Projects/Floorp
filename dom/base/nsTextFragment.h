@@ -200,7 +200,7 @@ public:
    */
   char16_t CharAt(int32_t aIndex) const
   {
-    NS_ASSERTION(uint32_t(aIndex) < mState.mLength, "bad index");
+    MOZ_ASSERT(uint32_t(aIndex) < mState.mLength, "bad index");
     return mState.mIs2b ? m2b[aIndex] : static_cast<unsigned char>(m1b[aIndex]);
   }
 
