@@ -40,6 +40,20 @@ function callFork(args) {
   return (rv);
 }
 
+// Calls the native sysctl syscall.
+function callSysctl(args) {
+  Components.utils.import("resource://gre/modules/ctypes.jsm");
+  let {lib, name} = args;
+  let libc = ctypes.open(lib);
+  let sysctlbyname = libc.declare("sysctlbyname", ctypes.default_abi,
+                                  ctypes.int, ctypes.char.ptr,
+                                  ctypes.voidptr_t, ctypes.size_t.ptr,
+                                  ctypes.voidptr_t, ctypes.size_t.ptr);
+  let rv = sysctlbyname(name, null, null, null, null);
+  libc.close();
+  return rv;
+}
+
 // Calls the native open/close syscalls.
 function callOpen(args) {
   Components.utils.import("resource://gre/modules/ctypes.jsm");
@@ -195,5 +209,22 @@ add_task(async function() {
   if (isLinux() || isMac()) {
     let rv = await ContentTask.spawn(browser, {lib}, callFork);
     ok(rv == -1, "calling fork is not permitted");
+  }
+
+  // On macOS before 10.10 the |sysctl-name| predicate didn't exist for
+  // filtering |sysctl| access. Check the Darwin version before running the
+  // tests (Darwin 14.0.0 is macOS 10.10). This branch can be removed when we
+  // remove support for macOS 10.9.
+  if (isMac() && Services.sysinfo.getProperty("version") >= "14.0.0") {
+    let rv = await ContentTask.spawn(browser, {lib, name: "kern.boottime"},
+                                     callSysctl);
+    ok(rv == -1, "calling sysctl('kern.boottime') is not permitted");
+
+    rv = await ContentTask.spawn(browser, {lib, name: "net.inet.ip.ttl"},
+                                 callSysctl);
+    ok(rv == -1, "calling sysctl('net.inet.ip.ttl') is not permitted");
+
+    rv = await ContentTask.spawn(browser, {lib, name: "hw.ncpu"}, callSysctl);
+    ok(rv == 0, "calling sysctl('hw.ncpu') is permitted");
   }
 });
