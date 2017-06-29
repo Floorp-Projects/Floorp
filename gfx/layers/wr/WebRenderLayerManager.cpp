@@ -70,6 +70,12 @@ WebRenderLayerManager::Initialize(PCompositorBridgeChild* aCBChild,
 void
 WebRenderLayerManager::Destroy()
 {
+  DoDestroy(/* aIsSync */ false);
+}
+
+void
+WebRenderLayerManager::DoDestroy(bool aIsSync)
+{
   if (IsDestroyed()) {
     return;
   }
@@ -79,7 +85,7 @@ WebRenderLayerManager::Destroy()
   LayerManager::Destroy();
   DiscardImages();
   DiscardCompositorAnimations();
-  WrBridge()->Destroy();
+  WrBridge()->Destroy(aIsSync);
 
   if (mTransactionIdAllocator) {
     // Make sure to notify the refresh driver just in case it's waiting on a

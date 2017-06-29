@@ -540,7 +540,7 @@ mozilla::ipc::IPCResult
 CompositorBridgeParent::RecvFlushRendering()
 {
   if (gfxVars::UseWebRender()) {
-    mWrBridge->FlushRendering(/* aSync */ true);
+    mWrBridge->FlushRendering(/* aIsSync */ true);
     return IPC_OK();
   }
 
@@ -555,7 +555,7 @@ mozilla::ipc::IPCResult
 CompositorBridgeParent::RecvFlushRenderingAsync()
 {
   if (gfxVars::UseWebRender()) {
-    mWrBridge->FlushRendering(/* aSync */ false);
+    mWrBridge->FlushRendering(/* aIsSync */ false);
     return IPC_OK();
   }
 

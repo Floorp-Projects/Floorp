@@ -69,6 +69,7 @@ public:
 
   mozilla::ipc::IPCResult RecvCreate(const gfx::IntSize& aSize) override;
   mozilla::ipc::IPCResult RecvShutdown() override;
+  mozilla::ipc::IPCResult RecvShutdownSync() override;
   mozilla::ipc::IPCResult RecvAddImage(const wr::ImageKey& aImageKey,
                                        const gfx::IntSize& aSize,
                                        const uint32_t& aStride,
@@ -221,6 +222,7 @@ private:
                    const ByteBuffer& dl,
                    const WrBuiltDisplayListDescriptor& dlDesc,
                    const WebRenderScrollData& aScrollData);
+  mozilla::ipc::IPCResult HandleShutdown();
 
   void AdvanceAnimations();
   void SampleAnimations(nsTArray<WrOpacityProperty>& aOpacityArray,
