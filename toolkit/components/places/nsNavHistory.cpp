@@ -3789,13 +3789,8 @@ nsNavHistory::RowToResult(mozIStorageValueArray* aRow,
 
   // title
   nsAutoCString title;
-  bool isNull;
-  rv = aRow->GetIsNull(kGetInfoIndex_Title, &isNull);
+  rv = aRow->GetUTF8String(kGetInfoIndex_Title, title);
   NS_ENSURE_SUCCESS(rv, rv);
-  if (!isNull) {
-    rv = aRow->GetUTF8String(kGetInfoIndex_Title, title);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
 
   uint32_t accessCount = aRow->AsInt32(kGetInfoIndex_VisitCount);
   PRTime time = aRow->AsInt64(kGetInfoIndex_VisitDate);
@@ -3970,9 +3965,9 @@ nsNavHistory::QueryRowToResult(int64_t itemId,
         resultNode->mBookmarkGuid = aBookmarkGuid;
         resultNode->GetAsFolder()->mTargetFolderGuid = targetFolderGuid;
 
-        // Use the query item title, unless it's empty (in that case use the
+        // Use the query item title, unless it's void (in that case use the
         // concrete folder title).
-        if (!aTitle.IsEmpty()) {
+        if (!aTitle.IsVoid()) {
           resultNode->mTitle = aTitle;
         }
       }
