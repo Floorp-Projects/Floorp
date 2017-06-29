@@ -123,6 +123,8 @@ namespace jit {
     _(JSOP_DELELEM)            \
     _(JSOP_STRICTDELELEM)      \
     _(JSOP_GETELEM_SUPER)      \
+    _(JSOP_SETELEM_SUPER)      \
+    _(JSOP_STRICTSETELEM_SUPER) \
     _(JSOP_IN)                 \
     _(JSOP_HASOWN)             \
     _(JSOP_GETGNAME)           \
