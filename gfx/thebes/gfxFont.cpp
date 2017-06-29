@@ -232,7 +232,7 @@ gfxFontCache::HashEntry::KeyEquals(const KeyTypePointer aKey) const
              aKey->mUnicodeRangeMap->Equals(fontUnicodeRangeMap)));
 }
 
-already_AddRefed<gfxFont>
+gfxFont*
 gfxFontCache::Lookup(const gfxFontEntry* aFontEntry,
                      const gfxFontStyle* aStyle,
                      const gfxCharacterMap* aUnicodeRangeMap)
@@ -244,8 +244,7 @@ gfxFontCache::Lookup(const gfxFontEntry* aFontEntry,
     if (!entry)
         return nullptr;
 
-    RefPtr<gfxFont> font = entry->mFont;
-    return font.forget();
+    return entry->mFont;
 }
 
 void
@@ -3327,7 +3326,7 @@ gfxFont::InitFakeSmallCapsRun(DrawTarget     *aDrawTarget,
                                 aScript, aSyntheticLower, aSyntheticUpper);
 }
 
-already_AddRefed<gfxFont>
+gfxFont*
 gfxFont::GetSmallCapsFont()
 {
     gfxFontStyle style(*GetStyle());
@@ -3338,7 +3337,7 @@ gfxFont::GetSmallCapsFont()
     return fe->FindOrMakeFont(&style, needsBold, mUnicodeRangeMap);
 }
 
-already_AddRefed<gfxFont>
+gfxFont*
 gfxFont::GetSubSuperscriptFont(int32_t aAppUnitsPerDevPixel)
 {
     gfxFontStyle style(*GetStyle());
