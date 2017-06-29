@@ -181,6 +181,7 @@
   skin/classic/browser/tabbrowser/connecting.png               (../shared/tabbrowser/connecting.png)
   skin/classic/browser/tabbrowser/connecting@2x.png            (../shared/tabbrowser/connecting@2x.png)
   skin/classic/browser/tabbrowser/crashed.svg                  (../shared/tabbrowser/crashed.svg)
+  skin/classic/browser/tabbrowser/indicator-tab-attention.svg  (../shared/tabbrowser/indicator-tab-attention.svg)
   skin/classic/browser/tabbrowser/pendingpaint.png             (../shared/tabbrowser/pendingpaint.png)
   skin/classic/browser/tabbrowser/tab-audio-playing.svg        (../shared/tabbrowser/tab-audio-playing.svg)
   skin/classic/browser/tabbrowser/tab-audio-muted.svg          (../shared/tabbrowser/tab-audio-muted.svg)
