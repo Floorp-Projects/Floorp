@@ -16,6 +16,10 @@ const subMenuMap = HEADERS
   .filter((header) => header.hasOwnProperty("subMenu"))
   .reduce((acc, { name, subMenu }) => Object.assign(acc, { [name]: subMenu }), {});
 
+const nonLocalizedHeaders = HEADERS
+  .filter((header) => header.hasOwnProperty("noLocalization"))
+  .map((header) => header.name);
+
 class RequestListHeaderContextMenu {
   constructor({ toggleColumn, resetColumns }) {
     this.toggleColumn = toggleColumn;
@@ -37,13 +41,16 @@ class RequestListHeaderContextMenu {
    */
   open(event = {}) {
     let menu = [];
-    let subMenu = { timings: [] };
+    let subMenu = { timings: [], responseHeaders: [] };
     let onlyOneColumn = this.visibleColumns.length === 1;
 
     for (let [column, shown] of this.columns) {
+      let label = nonLocalizedHeaders.includes(column)
+          ? stringMap[column] || column
+          : L10N.getStr(`netmonitor.toolbar.${stringMap[column] || column}`);
       let entry = {
         id: `request-list-header-${column}-toggle`,
-        label: L10N.getStr(`netmonitor.toolbar.${stringMap[column] || column}`),
+        label,
         type: "checkbox",
         checked: shown,
         click: () => this.toggleColumn(column),
@@ -59,6 +66,10 @@ class RequestListHeaderContextMenu {
     menu.push({
       label: L10N.getStr("netmonitor.toolbar.timings"),
       submenu: subMenu.timings,
+    });
+    menu.push({
+      label: L10N.getStr("netmonitor.toolbar.responseHeaders"),
+      submenu: subMenu.responseHeaders,
     });
 
     menu.push({ type: "separator" });

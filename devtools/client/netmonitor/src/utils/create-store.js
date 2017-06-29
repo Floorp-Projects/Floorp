@@ -32,11 +32,11 @@ function configureStore() {
   });
 
   let columns = new Columns();
-  let hiddenColumns = getPref("devtools.netmonitor.hiddenColumns");
+  let visibleColumns = getPref("devtools.netmonitor.visibleColumns");
 
   for (let [col] of columns) {
     columns = columns.withMutations((state) => {
-      state.set(col, !hiddenColumns.includes(col));
+      state.set(col, visibleColumns.includes(col));
     });
   }
 
