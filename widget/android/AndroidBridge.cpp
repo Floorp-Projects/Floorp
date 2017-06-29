@@ -153,6 +153,7 @@ AndroidBridge::~AndroidBridge()
 }
 
 AndroidBridge::AndroidBridge()
+  : mUiTaskQueueLock("UiTaskQueue")
 {
     ALOG_BRIDGE("AndroidBridge::Init");
 
@@ -944,6 +945,109 @@ AndroidBridge::IsContentDocumentDisplayed(mozIDOMWindowProxy* aWindow)
         return false;
     }
     return layerClient->IsContentDocumentDisplayed();
+}
+
+class AndroidBridge::DelayedTask
+{
+    using TimeStamp = mozilla::TimeStamp;
+    using TimeDuration = mozilla::TimeDuration;
+
+public:
+    DelayedTask(already_AddRefed<nsIRunnable> aTask)
+        : mTask(aTask)
+        , mRunTime() // Null timestamp representing no delay.
+    {}
+
+    DelayedTask(already_AddRefed<nsIRunnable> aTask, int aDelayMs)
+        : mTask(aTask)
+        , mRunTime(TimeStamp::Now() + TimeDuration::FromMilliseconds(aDelayMs))
+    {}
+
+    bool IsEarlierThan(const DelayedTask& aOther) const
+    {
+        if (mRunTime) {
+            return aOther.mRunTime ? mRunTime < aOther.mRunTime : false;
+        }
+        // In the case of no delay, we're earlier if aOther has a delay.
+        // Otherwise, we're not earlier, to maintain task order.
+        return !!aOther.mRunTime;
+    }
+
+    int64_t MillisecondsToRunTime() const
+    {
+        if (mRunTime) {
+            return int64_t((mRunTime - TimeStamp::Now()).ToMilliseconds());
+        }
+        return 0;
+    }
+
+    already_AddRefed<nsIRunnable> TakeTask()
+    {
+        return mTask.forget();
+    }
+
+private:
+    nsCOMPtr<nsIRunnable> mTask;
+    const TimeStamp mRunTime;
+};
+
+
+void
+AndroidBridge::PostTaskToUiThread(already_AddRefed<nsIRunnable> aTask, int aDelayMs)
+{
+    // add the new task into the mUiTaskQueue, sorted with
+    // the earliest task first in the queue
+    size_t i;
+    DelayedTask newTask(aDelayMs ? DelayedTask(mozilla::Move(aTask), aDelayMs)
+                                 : DelayedTask(mozilla::Move(aTask)));
+
+    {
+        MutexAutoLock lock(mUiTaskQueueLock);
+
+        for (i = 0; i < mUiTaskQueue.Length(); i++) {
+            if (newTask.IsEarlierThan(mUiTaskQueue[i])) {
+                mUiTaskQueue.InsertElementAt(i, mozilla::Move(newTask));
+                break;
+            }
+        }
+
+        if (i == mUiTaskQueue.Length()) {
+            // We didn't insert the task, which means we should append it.
+            mUiTaskQueue.AppendElement(mozilla::Move(newTask));
+        }
+    }
+
+    if (i == 0) {
+        // if we're inserting it at the head of the queue, notify Java because
+        // we need to get a callback at an earlier time than the last scheduled
+        // callback
+        GeckoThread::RequestUiThreadCallback(int64_t(aDelayMs));
+    }
+}
+
+int64_t
+AndroidBridge::RunDelayedUiThreadTasks()
+{
+    MutexAutoLock lock(mUiTaskQueueLock);
+
+    while (!mUiTaskQueue.IsEmpty()) {
+        const int64_t timeLeft = mUiTaskQueue[0].MillisecondsToRunTime();
+        if (timeLeft > 0) {
+            // this task (and therefore all remaining tasks)
+            // have not yet reached their runtime. return the
+            // time left until we should be called again
+            return timeLeft;
+        }
+
+        // Retrieve task before unlocking/running.
+        nsCOMPtr<nsIRunnable> nextTask(mUiTaskQueue[0].TakeTask());
+        mUiTaskQueue.RemoveElementAt(0);
+
+        // Unlock to allow posting new tasks reentrantly.
+        MutexAutoUnlock unlock(mUiTaskQueueLock);
+        nextTask->Run();
+    }
+    return -1;
 }
 
 Object::LocalRef AndroidBridge::ChannelCreate(Object::Param stream) {
