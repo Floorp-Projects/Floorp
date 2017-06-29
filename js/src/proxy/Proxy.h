@@ -30,7 +30,7 @@ class Proxy
                                Handle<JS::PropertyDescriptor> desc, ObjectOpResult& result);
     static bool ownPropertyKeys(JSContext* cx, HandleObject proxy, AutoIdVector& props);
     static bool delete_(JSContext* cx, HandleObject proxy, HandleId id, ObjectOpResult& result);
-    static bool enumerate(JSContext* cx, HandleObject proxy, MutableHandleObject objp);
+    static JSObject* enumerate(JSContext* cx, HandleObject proxy);
     static bool isExtensible(JSContext* cx, HandleObject proxy, bool* extensible);
     static bool preventExtensions(JSContext* cx, HandleObject proxy, ObjectOpResult& result);
     static bool getPrototype(JSContext* cx, HandleObject proxy, MutableHandleObject protop);
