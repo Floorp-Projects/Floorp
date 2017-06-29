@@ -49,9 +49,6 @@ def make_signing_description(config, jobs):
                 {
                    'artifacts': ['public/build/target.dmg'],
                    'format': 'macapp',
-                }, {
-                   'artifacts': ['public/build/update/target.complete.mar'],
-                   'format': 'mar',
                 },
             ]
         else:
