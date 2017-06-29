@@ -1223,7 +1223,6 @@ PT.Move.prototype = Object.seal({
       else
         PlacesUtils.bookmarks.moveItem(itemId, oldParentId, oldIndex);
     };
-    return aGuid;
   }
 });
 
