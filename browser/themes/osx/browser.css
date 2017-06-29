@@ -1374,6 +1374,7 @@ html|span.ac-emphasize-text-url {
   /* system font size is a bit smaller in mac, so need more ems. */
   font-size: 1.4545em;
   border-bottom: 1px solid hsla(240, 5%, 5%, .1);
+  background-color: transparent;
 }
 
 .sidebar-splitter {
