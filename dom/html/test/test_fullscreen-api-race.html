@@ -53,7 +53,7 @@ const ACTION_FUNCS = [
   function navigate(win) {
     info("About to navigate to another page");
     var deferred = new Deferred();
-    win.location = "dummy_page.html";
+    win.location = "data:text/html,<html>";
     setTimeout(() => {
       SimpleTest.waitForFocus(() => {
         checkIsChromeFullscreen(win, false).then(() => {
