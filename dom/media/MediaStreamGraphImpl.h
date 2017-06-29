@@ -812,6 +812,7 @@ public:
    */
   RefPtr<AsyncLatencyLogger> mLatencyLog;
   AudioMixer mMixer;
+  const RefPtr<AbstractThread> mAbstractMainThread;
 #ifdef MOZ_WEBRTC
   RefPtr<AudioOutputObserver> mFarendObserverRef;
 #endif
@@ -853,7 +854,6 @@ private:
 #endif
 
   dom::AudioChannel mAudioChannel;
-  const RefPtr<AbstractThread> mAbstractMainThread;
 };
 
 } // namespace mozilla

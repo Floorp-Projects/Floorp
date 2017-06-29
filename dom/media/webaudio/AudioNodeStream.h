@@ -76,8 +76,7 @@ protected:
    */
   AudioNodeStream(AudioNodeEngine* aEngine,
                   Flags aFlags,
-                  TrackRate aSampleRate,
-                  AbstractThread* aMainThread);
+                  TrackRate aSampleRate);
 
   ~AudioNodeStream();
 

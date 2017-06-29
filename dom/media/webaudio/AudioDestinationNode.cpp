@@ -168,8 +168,7 @@ public:
 
     aNode->ResolvePromise(renderedBuffer);
 
-    mAbstractMainThread->Dispatch(do_AddRef(new OnCompleteTask(context,
-                                                               renderedBuffer)));
+    context->Dispatch(do_AddRef(new OnCompleteTask(context, renderedBuffer)));
 
     context->OnStateChanged(nullptr, AudioContextState::Closed);
   }
@@ -261,9 +260,8 @@ public:
 
       RefPtr<InputMutedRunnable> runnable =
         new InputMutedRunnable(aStream, newInputMuted);
-      aStream->Graph()->
-        DispatchToMainThreadAfterStreamStateUpdate(mAbstractMainThread,
-                                                   runnable.forget());
+      aStream->Graph()->DispatchToMainThreadAfterStreamStateUpdate(
+        runnable.forget());
     }
   }
 
@@ -336,9 +334,11 @@ AudioDestinationNode::AudioDestinationNode(AudioContext* aContext,
   , mAudible(AudioChannelService::AudibleState::eAudible)
 {
   nsPIDOMWindowInner* window = aContext->GetParentObject();
-  MediaStreamGraph* graph = aIsOffline ?
-                            MediaStreamGraph::CreateNonRealtimeInstance(aSampleRate, window) :
-                            MediaStreamGraph::GetInstance(MediaStreamGraph::AUDIO_THREAD_DRIVER, aChannel, window);
+  MediaStreamGraph* graph =
+    aIsOffline
+      ? MediaStreamGraph::CreateNonRealtimeInstance(aSampleRate, window)
+      : MediaStreamGraph::GetInstance(
+          MediaStreamGraph::AUDIO_THREAD_DRIVER, aChannel, window);
   AudioNodeEngine* engine = aIsOffline ?
                             new OfflineDestinationNodeEngine(this, aNumberOfChannels,
                                                              aLength, aSampleRate) :
