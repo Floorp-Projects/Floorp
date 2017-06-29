@@ -185,9 +185,8 @@ def mozharness_on_generic_worker(config, job, taskdesc):
 
     # fail if invalid run options are included
     invalid = []
-    for prop in ['actions',
-                 'tooltool-downloads', 'secrets', 'taskcluster-proxy',
-                 'need-xvfb']:
+    for prop in ['tooltool-downloads',
+                 'secrets', 'taskcluster-proxy', 'need-xvfb']:
         if prop in run and run[prop]:
             invalid.append(prop)
     if not run.get('keep-artifacts', True):
@@ -224,6 +223,9 @@ def mozharness_on_generic_worker(config, job, taskdesc):
         mh_command.append('--config ' + cfg.replace('/', '\\'))
     mh_command.append('--branch ' + config.params['project'])
     mh_command.append(r'--skip-buildbot-actions --work-dir %cd:Z:=z:%\build')
+    for action in run.get('actions', []):
+        mh_command.append('--' + action)
+
     for option in run.get('options', []):
         mh_command.append('--' + option)
     if run.get('custom-build-variant-cfg'):
