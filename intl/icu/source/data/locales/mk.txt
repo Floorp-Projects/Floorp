@@ -197,10 +197,22 @@ mk{
                 timeSeparator{":"}
             }
         }
+        minimalPairs{
+            ordinal{
+                many{"Сврти на {0}-мата улица десно."}
+                one{"Сврти на {0}-вата улица десно."}
+                other{"Сврти на {0}-тата улица десно."}
+                two{"Сврти на {0}-рата улица десно."}
+            }
+            plural{
+                one{"{0} ден"}
+                other{"{0} дена"}
+            }
+        }
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"2.1.28.79"}
+    Version{"2.1.32.59"}
     calendar{
         generic{
             DateTimePatterns{

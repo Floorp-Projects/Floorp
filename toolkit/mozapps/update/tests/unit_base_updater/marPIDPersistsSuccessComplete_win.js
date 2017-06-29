@@ -42,6 +42,13 @@ function runUpdateFinished() {
  * Called after the call to waitForHelperExit finishes.
  */
 function waitForHelperExitFinished() {
+  checkPostUpdateAppLog();
+}
+
+/**
+ * Called after the call to checkPostUpdateAppLog finishes.
+ */
+function checkPostUpdateAppLogFinished() {
   standardInit();
   Assert.equal(readStatusState(), STATE_NONE,
                "the status file state" + MSG_SHOULD_EQUAL);
@@ -54,7 +61,5 @@ function waitForHelperExitFinished() {
   checkPostUpdateRunningFile(true);
   checkFilesAfterUpdateSuccess(getApplyDirFile);
   checkUpdateLogContains(ERR_PARENT_PID_PERSISTS);
-  // The callback application is not launched by the updater when the parent pid
-  // doesn't exit.
-  waitForFilesInUse();
+  checkCallbackLog();
 }

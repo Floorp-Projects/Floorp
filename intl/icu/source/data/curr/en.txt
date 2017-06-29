@@ -308,7 +308,7 @@ en{
         }
         CZK{
             "CZK",
-            "Czech Republic Koruna",
+            "Czech Koruna",
         }
         DDM{
             "DDM",
@@ -1501,8 +1501,8 @@ en{
             other{"Cypriot pounds"}
         }
         CZK{
-            one{"Czech Republic koruna"}
-            other{"Czech Republic korunas"}
+            one{"Czech koruna"}
+            other{"Czech korunas"}
         }
         DDM{
             one{"East German mark"}
@@ -2393,5 +2393,5 @@ en{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.1.30.50"}
+    Version{"2.1.32.59"}
 }

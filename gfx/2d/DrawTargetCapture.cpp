@@ -204,6 +204,11 @@ void
 DrawTargetCaptureImpl::SetTransform(const Matrix& aTransform)
 {
   AppendCommand(SetTransformCommand)(aTransform);
+
+  // Have to update the transform for this DT
+  // because some code paths query the current transform
+  // to render specific things.
+  DrawTarget::SetTransform(aTransform);
 }
 
 void

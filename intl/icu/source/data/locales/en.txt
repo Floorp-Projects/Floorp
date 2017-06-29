@@ -191,8 +191,20 @@ en{
                 superscriptingExponent{"×"}
             }
         }
+        minimalPairs{
+            ordinal{
+                few{"Take the {0}rd right."}
+                one{"Take the {0}st right."}
+                other{"Take the {0}th right."}
+                two{"Take the {0}nd right."}
+            }
+            plural{
+                one{"{0} day"}
+                other{"{0} days"}
+            }
+        }
     }
-    Version{"2.1.30.50"}
+    Version{"2.1.32.59"}
     calendar{
         buddhist{
             eras{
@@ -1232,11 +1244,24 @@ en{
                 }
             }
         }
+        dayOfYear{
+            dn{"day of year"}
+        }
+        dayOfYear-short{
+            dn{"day of yr."}
+        }
         dayperiod{
             dn{"AM/PM"}
             dn%variant{"am/pm"}
         }
+        dayperiod-short{
+            dn{"AM/PM"}
+            dn%variant{"am/pm"}
+        }
         era{
+            dn{"era"}
+        }
+        era-short{
             dn{"era"}
         }
         fri{
@@ -1795,8 +1820,23 @@ en{
                 }
             }
         }
+        weekOfMonth{
+            dn{"week of month"}
+        }
+        weekOfMonth-short{
+            dn{"wk. of mo."}
+        }
         weekday{
             dn{"day of the week"}
+        }
+        weekday-short{
+            dn{"day of wk."}
+        }
+        weekdayOfMonth{
+            dn{"weekday of the month"}
+        }
+        weekdayOfMonth-short{
+            dn{"wkday. of mo."}
         }
         year{
             dn{"year"}
@@ -1836,6 +1876,9 @@ en{
         }
         zone{
             dn{"time zone"}
+        }
+        zone-short{
+            dn{"zone"}
         }
     }
     listPattern{

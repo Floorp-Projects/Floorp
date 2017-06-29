@@ -1,0 +1,182 @@
+<!-- Any copyright is dedicated to the Public Domain.
+   - http://creativecommons.org/publicdomain/zero/1.0/ -->
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test Cache update its usage to QuotaManager</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="large_url_list.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<script class="testbody" type="text/javascript">
+function setupTestIframe() {
+  return new Promise(function(resolve) {
+    var iframe = document.createElement("iframe");
+    iframe.src = "empty.html";
+    iframe.onload = function() {
+      window.caches = iframe.contentWindow.caches;
+      resolve();
+    };
+    document.body.appendChild(iframe);
+  });
+}
+
+function clearStorage() {
+  return new Promise(function(resolve, reject) {
+    var qms = SpecialPowers.Services.qms;
+    var principal = SpecialPowers.wrap(document).nodePrincipal;
+    var request = qms.clearStoragesForPrincipal(principal);
+    var cb = SpecialPowers.wrapCallback(resolve);
+    request.callback = cb;
+  });
+}
+
+function resetStorage() {
+  return new Promise(function(resolve, reject) {
+    var qms = SpecialPowers.Services.qms;
+    var request = qms.reset();
+    var cb = SpecialPowers.wrapCallback(resolve);
+    request.callback = cb;
+  });
+}
+
+function getStorageUsage(fromMemory) {
+  return new Promise(function(resolve, reject) {
+    var qms = SpecialPowers.Services.qms;
+    var principal = SpecialPowers.wrap(document).nodePrincipal;
+    var cb = SpecialPowers.wrapCallback(function(request) {
+      var result = request.result;
+      resolve(result.usage);
+    });
+
+    // Actually, the flag is used to distingulish getting group usage and origin
+    // usage, but we utilize this to get usage from in-memory and the disk.
+    // Default value for "fromMemory" is false.
+    qms.getUsageForPrincipal(principal, cb, !!fromMemory);
+  });
+}
+
+async function verifyUsage() {
+  // Although it returns group usage when passing true, it calculate the usage
+  // from tracking usage object (in-memory object) in QuotaManager.
+  let memoryUsage = await getStorageUsage(/* fromMemory */ true);
+  // This will returns the origin usage by re-calculating usage from directory.
+  let diskUsage = await getStorageUsage(/* fromMemory */ false);
+
+  is(memoryUsage, diskUsage,
+     "In-memory usage and disk usage should be the same.");
+  return memoryUsage;
+}
+
+async function waitForIOToComplete(cache, request) {
+  info("Wait for IO complete.");
+  // The following lines ensure we've deleted orphaned body.
+  // First, wait for cache operation delete the orphaned body.
+  await cache.match(request);
+
+  // Finally, wait for -wal file finish its job.
+  return await resetStorage();
+}
+
+SimpleTest.waitForExplicitFinish();
+SpecialPowers.pushPrefEnv({
+  "set": [["dom.caches.enabled", true],
+          ["dom.caches.testing.enabled", true],
+          ["dom.quotaManager.testing", true]]
+}, async function() {
+  const name = 'cacheUpdateUsage';
+  const url = 'test_cache_add.js';
+  const other_url = 'test_cache_put.js';
+
+  // This test mainly ensure DOM Cache updates its usage to QuotaManager when
+  // executing an operation which creates/deletes files. To do this, we verify
+  // usage by calling getUsageFromPrincipal twice with different flag(aGroup).
+  // The reason is we get group usage by collecting in-memory data, and getting
+  // origin usage by collecting storage usage from files.
+
+  await setupTestIframe();
+
+  info("Stage 1: Clean storage.");
+  await clearStorage();
+  await verifyUsage();
+
+  info("Stage 2: Verify CacheStorage.");
+  info("Stage 2.1: Verify caches.open.");
+  await caches.open(name);
+  await verifyUsage();
+
+  info("Stage 2.2: Verify caches.delete.");
+  var deleted = await caches.delete(name);
+  ok(deleted, 'Cache storage should be deleted');
+  // Reference from test_cache_orphanced_body.html. It ensures that all
+  // the runnables have been flushed through the threads.
+  await caches.has(name);
+  await resetStorage();
+  await verifyUsage();
+
+  info("Stage 3: Verify Cache.");
+  let cache = await caches.open(name);
+  info("Stage 3.1: Verify cache.addAll.");
+  await cache.addAll([url, other_url]);
+  await verifyUsage();
+  info("Stage 3.1.1: Delete all cached requests.");
+  await cache.delete(url);
+  await cache.delete(other_url);
+  await waitForIOToComplete(cache, other_url);
+  let emptyUsage1 = await verifyUsage();
+
+  info("Stage 3.2: Verify cache.add.");
+  cache = await caches.open(name);
+  await cache.add(url);
+  await verifyUsage();
+  info("Stage 3.2.1: Delete cache.");
+  await cache.delete(url);
+  await waitForIOToComplete(cache, url);
+  let emptyUsage2 = await verifyUsage();
+
+  info("Stage 3.3: Verify cache.put.");
+  cache = await caches.open(name);
+  response = await fetch(other_url);
+  await cache.put(other_url, response);
+  await verifyUsage();
+  info("Stage 3.3.1: Delete cache.");
+  await cache.delete(other_url);
+  await waitForIOToComplete(cache, other_url);
+  let emptyUsage3 = await verifyUsage();
+
+  // Adding same requests twice will make Cache create morgue file twice, and
+  // then delete the previous one.
+  info("Stage 4: Add same request twice to make removing a morgue file.");
+  cache = await caches.open(name);
+  info("Stage 4.1: First cache.add.");
+  await cache.add(url);
+  await verifyUsage();
+
+  info("Stage 4.2: Second cache.add.");
+  await cache.add(url);
+
+  // Since we trigger the action to delete orphaned body, we need to wait for
+  // the action is done.
+  await waitForIOToComplete(cache, url);
+  await verifyUsage();
+  cache = await caches.open(name);
+  info("Stage 4.2.1: cache.delete.");
+  await cache.delete(url);
+  await waitForIOToComplete(cache, url);
+  let emptyUsage4 = await verifyUsage();
+
+  info("Stage 5: Clean caches.");
+  await caches.delete(name);
+
+  info("Stage 6: Final Check.");
+  ok(emptyUsage1 == emptyUsage2 &&
+     emptyUsage1 == emptyUsage3 &&
+     emptyUsage1 == emptyUsage4,
+     "Empty usages should be the same");
+
+  await SimpleTest.finish();
+});
+</script>
+</body>
+</html>

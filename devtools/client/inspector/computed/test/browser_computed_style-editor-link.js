@@ -4,10 +4,6 @@
 
 "use strict";
 
-// Whitelisting this test.
-// As part of bug 1077403, the leaking uncaught rejection should be fixed.
-thisTestLeaksUncaughtRejectionsAndShouldBeFixed("Error: Unknown sheet source");
-
 // Tests the links from the computed view to the style editor.
 
 const STYLESHEET_URL = "data:text/css," + encodeURIComponent(

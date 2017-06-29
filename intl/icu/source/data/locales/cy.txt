@@ -355,10 +355,28 @@ cy{
                 timeSeparator{":"}
             }
         }
+        minimalPairs{
+            ordinal{
+                few{"{0}ydd ci"}
+                many{"{0}ed ci"}
+                one{"ci {0}af"}
+                other{"ci rhif {0}"}
+                two{"{0}il gi"}
+                zero{"{0}fed ci"}
+            }
+            plural{
+                few{"{0} chi, {0} cath"}
+                many{"{0} chi, {0} chath"}
+                one{"{0} ci, {0} gath"}
+                other{"{0} ci, {0} cath"}
+                two{"{0} gi, {0} gath"}
+                zero{"{0} cŵn, {0} cathod"}
+            }
+        }
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"2.1.30.6"}
+    Version{"2.1.31.86"}
     calendar{
         generic{
             DateTimePatterns{

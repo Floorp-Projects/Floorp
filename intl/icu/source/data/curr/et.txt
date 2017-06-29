@@ -705,7 +705,7 @@ et{
         }
         PEN{
             "PEN",
-            "Peruu uus soll",
+            "Peruu soll",
         }
         PES{
             "PES",
@@ -1814,8 +1814,8 @@ et{
             other{"Panama balboad"}
         }
         PEN{
-            one{"Peruu uus soll"}
-            other{"Peruu uut solli"}
+            one{"Peruu soll"}
+            other{"Peruu solli"}
         }
         PES{
             one{"Peruu soll (1863–1965)"}
@@ -2150,5 +2150,5 @@ et{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.1.28.79"}
+    Version{"2.1.32.59"}
 }

@@ -432,7 +432,7 @@ sq{
         }
         PEN{
             "PEN",
-            "Sola nuevo-peruane",
+            "Sola peruane",
         }
         PGK{
             "PGK",
@@ -1069,8 +1069,8 @@ sq{
             other{"balboa panameze"}
         }
         PEN{
-            one{"solë nuevo-peruane"}
-            other{"sola nuevo-peruane"}
+            one{"solë peruane"}
+            other{"sola peruane"}
         }
         PGK{
             one{"kinë e Papua-Guineas së Re"}
@@ -1277,5 +1277,5 @@ sq{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.1.28.79"}
+    Version{"2.1.32.59"}
 }

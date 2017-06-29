@@ -26,7 +26,7 @@ BodyCreateDir(nsIFile* aBaseDir);
 // database.  We're unlikely to be able to delete the DB successfully past
 // that point due to the file being in use.
 nsresult
-BodyDeleteDir(nsIFile* aBaseDir);
+BodyDeleteDir(const QuotaInfo& aQuotaInfo, nsIFile* aBaseDir);
 
 nsresult
 BodyGetCacheDir(nsIFile* aBaseDir, const nsID& aId, nsIFile** aCacheDirOut);
@@ -48,10 +48,12 @@ BodyOpen(const QuotaInfo& aQuotaInfo, nsIFile* aBaseDir, const nsID& aId,
          nsIInputStream** aStreamOut);
 
 nsresult
-BodyDeleteFiles(nsIFile* aBaseDir, const nsTArray<nsID>& aIdList);
+BodyDeleteFiles(const QuotaInfo& aQuotaInfo, nsIFile* aBaseDir,
+                const nsTArray<nsID>& aIdList);
 
 nsresult
-BodyDeleteOrphanedFiles(nsIFile* aBaseDir, nsTArray<nsID>& aKnownBodyIdList);
+BodyDeleteOrphanedFiles(const QuotaInfo& aQuotaInfo, nsIFile* aBaseDir,
+                        nsTArray<nsID>& aKnownBodyIdList);
 
 nsresult
 CreateMarkerFile(const QuotaInfo& aQuotaInfo);
@@ -61,6 +63,12 @@ DeleteMarkerFile(const QuotaInfo& aQuotaInfo);
 
 bool
 MarkerFileExists(const QuotaInfo& aQuotaInfo);
+
+nsresult
+RemoveNsIFileRecursively(const QuotaInfo& aQuotaInfo, nsIFile* aFile);
+
+nsresult
+RemoveNsIFile(const QuotaInfo& aQuotaInfo, nsIFile* aFile);
 
 } // namespace cache
 } // namespace dom

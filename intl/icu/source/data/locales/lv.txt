@@ -236,10 +236,20 @@ lv{
                 timeSeparator{":"}
             }
         }
+        minimalPairs{
+            ordinal{
+                other{"Dodieties {0}. pagriezienā pa labi."}
+            }
+            plural{
+                one{"{0} diennakts"}
+                other{"{0} diennaktis"}
+                zero{"{0} diennakšu"}
+            }
+        }
         minimumGroupingDigits{"2"}
         native{"latn"}
     }
-    Version{"2.1.28.79"}
+    Version{"2.1.32.59"}
     calendar{
         generic{
             DateTimePatterns{

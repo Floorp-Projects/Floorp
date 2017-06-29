@@ -42,11 +42,10 @@ OpaqueCrossCompartmentWrapper::delete_(JSContext* cx, HandleObject wrapper, Hand
     return result.succeed();
 }
 
-bool
-OpaqueCrossCompartmentWrapper::enumerate(JSContext* cx, HandleObject wrapper,
-                                         MutableHandleObject objp) const
+JSObject*
+OpaqueCrossCompartmentWrapper::enumerate(JSContext* cx, HandleObject wrapper) const
 {
-    return BaseProxyHandler::enumerate(cx, wrapper, objp);
+    return BaseProxyHandler::enumerate(cx, wrapper);
 }
 
 bool

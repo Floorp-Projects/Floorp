@@ -55,12 +55,15 @@ WaiveXrayWrapper::get(JSContext* cx, HandleObject wrapper, HandleValue receiver,
            WrapperFactory::WaiveXrayAndWrap(cx, vp);
 }
 
-bool
-WaiveXrayWrapper::enumerate(JSContext* cx, HandleObject proxy,
-                            MutableHandleObject objp) const
+JSObject*
+WaiveXrayWrapper::enumerate(JSContext* cx, HandleObject proxy) const
 {
-    return CrossCompartmentWrapper::enumerate(cx, proxy, objp) &&
-           WrapperFactory::WaiveXrayAndWrap(cx, objp);
+    RootedObject obj(cx, CrossCompartmentWrapper::enumerate(cx, proxy));
+    if (!obj)
+        return nullptr;
+    if (!WrapperFactory::WaiveXrayAndWrap(cx, &obj))
+        return nullptr;
+    return obj;
 }
 
 bool

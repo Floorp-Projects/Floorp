@@ -317,6 +317,45 @@ security:
     record_in_processes:
       - main
 
+preferences:
+  created_new_user_prefs_file:
+    bug_numbers:
+      - 1367813
+    description: >-
+      A boolean indicating that profile/prefs.js was not found and it is being
+      created for the first time in this session.
+    expires: "62"
+    kind: boolean
+    notification_emails:
+      - bsmedberg@mozilla.com
+    release_channel_collection: opt-out
+    record_in_processes:
+      - main
+  prefs_file_was_invalid:
+    bug_numbers:
+      - 1367813
+    description: >-
+      Set to true if a failure occurred reading profile/prefs.js.
+    expires: "62"
+    kind: boolean
+    notification_emails:
+      - bsmedberg@mozilla.com
+    release_channel_collection: opt-out
+    record_in_processes:
+      - main
+  read_user_js:
+    bug_numbers:
+      - 1367813
+    description: >-
+      Set to true if user.js exists and was read.
+    expires: "62"
+    kind: boolean
+    notification_emails:
+      - bsmedberg@mozilla.com
+    release_channel_collection: opt-out
+    record_in_processes:
+      - main
+
 # The following section contains WebRTC nICEr scalars
 # For more info on ICE, see https://tools.ietf.org/html/rfc5245
 # For more info on STUN, see https://tools.ietf.org/html/rfc5389
