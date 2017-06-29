@@ -160,6 +160,7 @@ CodeGenerator* CompileBackEnd(MIRGenerator* mir);
 void AttachFinishedCompilations(ZoneGroup* group, JSContext* maybecx);
 void FinishOffThreadBuilder(JSRuntime* runtime, IonBuilder* builder,
                             const AutoLockHelperThreadState& lock);
+void FreeIonBuilder(IonBuilder* builder);
 
 void LinkIonScript(JSContext* cx, HandleScript calleescript);
 uint8_t* LazyLinkTopActivation();
