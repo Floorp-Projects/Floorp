@@ -10,7 +10,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=697636
 </head>
 <body>
 
-<iframe id="f" srcdoc="<body text=green>1" allowfullscreen></iframe>
+<iframe id="f" src="data:text/html,<body text=green>1" allowfullscreen></iframe>
 
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=697636">Mozilla Bug 697636</a>
 <p id="display"></p>
@@ -27,10 +27,9 @@ var e1;
 
 function begin()
 {
-  var f = document.getElementById("f");
-  frameWin = f.contentWindow;
+  frameWin = document.getElementById("f").contentWindow;
   e1 = frameWin.document.documentElement;
-  f.srcdoc = "<body text=blue onload='parent.b2()'>2";
+  frameWin.location = "data:text/html,<body text=blue onload='parent.b2()'>2";
 }
 
 function b2()
