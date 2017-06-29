@@ -11,8 +11,8 @@ registerCleanupFunction(function() {
 add_task(async function() {
   originalWindowHeight = window.outerHeight;
   window.resizeTo(window.outerWidth, 300);
-  let prefs = await openPreferencesViaOpenPreferencesAPI("paneSearch", {leaveOpen: true});
-  is(prefs.selectedPane, "paneSearch", "Search pane was selected");
+  let prefs = await openPreferencesViaOpenPreferencesAPI("paneApplications", {leaveOpen: true});
+  is(prefs.selectedPane, "paneApplications", "Applications pane was selected");
   let mainContent = gBrowser.contentDocument.querySelector(".main-content");
   mainContent.scrollTop = 50;
   is(mainContent.scrollTop, 50, "main-content should be scrolled 50 pixels");
@@ -21,3 +21,4 @@ add_task(async function() {
   is(mainContent.scrollTop, 0,
      "Switching to a different category should reset the scroll position");
 });
+
