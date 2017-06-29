@@ -34,6 +34,7 @@
 #include "SVGImageContext.h"
 #include <limits>
 #include <algorithm>
+#include "gfxPoint.h"
 
 class gfxContext;
 class nsPresContext;
@@ -58,7 +59,6 @@ class nsStyleCorners;
 class nsPIDOMWindowOuter;
 class imgIRequest;
 class nsIDocument;
-struct gfxPoint;
 struct nsStyleFont;
 struct nsStyleImageOrientation;
 struct nsOverflowAreas;

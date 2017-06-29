@@ -259,7 +259,7 @@ ServoStyleSet::ResolveStyleFor(Element* aElement,
                     CSSPseudoElementType::NotPseudo, aMayCompute);
 }
 
-already_AddRefed<nsStyleContext>
+already_AddRefed<ServoStyleContext>
 ServoStyleSet::GetContext(nsIContent* aContent,
                           nsStyleContext* aParentContext,
                           nsIAtom* aPseudoTag,
@@ -283,7 +283,7 @@ ServoStyleSet::GetContext(nsIContent* aContent,
                     element);
 }
 
-already_AddRefed<nsStyleContext>
+already_AddRefed<ServoStyleContext>
 ServoStyleSet::GetContext(already_AddRefed<ServoComputedValues> aComputedValues,
                           nsStyleContext* aParentContext,
                           nsIAtom* aPseudoTag,
@@ -323,14 +323,14 @@ ServoStyleSet::GetContext(already_AddRefed<ServoComputedValues> aComputedValues,
   bool relevantLinkVisited = isLink ? isVisitedLink :
     (aParentContext && aParentContext->RelevantLinkVisited());
 
-  RefPtr<nsStyleContext> result =
-    NS_NewStyleContext(aParentContext, mPresContext, aPseudoTag, aPseudoType,
-                       computedValues.forget());
+  RefPtr<ServoStyleContext> result =
+    ServoStyleContext::Create(aParentContext, mPresContext, aPseudoTag, aPseudoType,
+                              computedValues.forget());
 
   if (visitedComputedValues) {
-    RefPtr<nsStyleContext> resultIfVisited =
-      NS_NewStyleContext(parentIfVisited, mPresContext, aPseudoTag, aPseudoType,
-                         visitedComputedValues.forget());
+    RefPtr<ServoStyleContext> resultIfVisited =
+      ServoStyleContext::Create(parentIfVisited, mPresContext, aPseudoTag, aPseudoType,
+                                visitedComputedValues.forget());
     resultIfVisited->SetIsStyleIfVisited();
     result->SetStyleIfVisited(resultIfVisited.forget());
 
@@ -621,7 +621,7 @@ ServoStyleSet::ResolveTransientServoStyle(
   return ResolveStyleLazily(aElement, aPseudoType, aRuleInclusion);
 }
 
-already_AddRefed<nsStyleContext>
+already_AddRefed<ServoStyleContext>
 ServoStyleSet::ResolveInheritingAnonymousBoxStyle(nsIAtom* aPseudoTag,
                                                   nsStyleContext* aParentContext)
 {
@@ -1447,15 +1447,18 @@ ServoStyleSet::StyleRuleMap()
 }
 
 bool
-ServoStyleSet::MightHaveAttributeDependency(nsIAtom* aAttribute)
+ServoStyleSet::MightHaveAttributeDependency(const Element& aElement,
+                                            nsIAtom* aAttribute)
 {
-  return Servo_StyleSet_MightHaveAttributeDependency(mRawSet.get(), aAttribute);
+  return Servo_StyleSet_MightHaveAttributeDependency(
+      mRawSet.get(), &aElement, aAttribute);
 }
 
 bool
-ServoStyleSet::HasStateDependency(EventStates aState)
+ServoStyleSet::HasStateDependency(const Element& aElement, EventStates aState)
 {
-  return Servo_StyleSet_HasStateDependency(mRawSet.get(), aState.ServoValue());
+  return Servo_StyleSet_HasStateDependency(
+      mRawSet.get(), &aElement, aState.ServoValue());
 }
 
 ServoStyleSet* ServoStyleSet::sInServoTraversal = nullptr;

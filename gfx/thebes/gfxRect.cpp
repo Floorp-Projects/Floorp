@@ -16,15 +16,10 @@ gfxRect::TransformToQuad(const mozilla::gfx::Matrix4x4 &aMatrix) const
 {
   gfxPoint points[4];
 
-  points[0] = TopLeft();
-  points[1] = TopRight();
-  points[2] = BottomRight();
-  points[3] = BottomLeft();
-
-  points[0].Transform(aMatrix);
-  points[1].Transform(aMatrix);
-  points[2].Transform(aMatrix);
-  points[3].Transform(aMatrix);
+  points[0] = aMatrix.TransformPoint(TopLeft());
+  points[1] = aMatrix.TransformPoint(TopRight());
+  points[2] = aMatrix.TransformPoint(BottomRight());
+  points[3] = aMatrix.TransformPoint(BottomLeft());
 
   // Could this ever result in lines that intersect? I don't think so.
   return gfxQuad(points[0], points[1], points[2], points[3]);

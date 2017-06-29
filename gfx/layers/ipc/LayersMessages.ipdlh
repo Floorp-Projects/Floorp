@@ -54,6 +54,7 @@ using mozilla::layers::CompositableHandle from "mozilla/layers/LayersTypes.h";
 using mozilla::layers::ReadLockHandle from "mozilla/layers/LayersTypes.h";
 using mozilla::layers::SimpleLayerAttributes from "mozilla/layers/LayerAttributes.h";
 using mozilla::CrossProcessSemaphoreHandle from "mozilla/ipc/CrossProcessSemaphore.h";
+using struct mozilla::void_t from "ipc/IPCMessageUtils.h";
 
 namespace mozilla {
 namespace layers {
@@ -575,6 +576,11 @@ struct TransactionInfo
   uint32_t paintSequenceNumber;
   bool isRepeatTransaction;
   TimeStamp transactionStart;
+};
+
+union MaybeTransform {
+  Matrix4x4;
+  void_t;
 };
 
 } // namespace

@@ -99,7 +99,7 @@ add_task(function* () {
   let node = editor.popup._list.childNodes[editor.popup.selectedIndex];
   EventUtils.synthesizeMouseAtCenter(node, {}, editor.popup._window);
 
-  view.throttle.flush();
+  view.debounce.flush();
   yield onSuggest;
   yield onRuleviewChanged;
 

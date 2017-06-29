@@ -215,6 +215,7 @@ nsXBLBinding::InstallAnonymousContent(nsIContent* aAnonParent, nsIContent* aElem
       child->SetFlags(NODE_CHROME_ONLY_ACCESS |
                       NODE_IS_ROOT_OF_CHROME_ONLY_ACCESS);
     }
+    child->SetFlags(NODE_IS_ANONYMOUS_ROOT);
     nsresult rv =
       child->BindToTree(doc, aElement, mBoundElement, allowScripts);
     if (NS_FAILED(rv)) {
@@ -223,8 +224,6 @@ nsXBLBinding::InstallAnonymousContent(nsIContent* aAnonParent, nsIContent* aElem
       child->UnbindFromTree();
       return;
     }
-
-    child->SetFlags(NODE_IS_ANONYMOUS_ROOT);
 
 #ifdef MOZ_XUL
     // To make XUL templates work (and other goodies that happen when

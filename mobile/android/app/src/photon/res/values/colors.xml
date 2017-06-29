@@ -53,8 +53,8 @@
 
     <color name="photon_notification_bg">#0096DD</color>
 
-    <!-- opacity: 10% -->
-    <color name="photon_notification_bg_pressed">#19000000</color>
+    <!-- opacity: 20% -->
+    <color name="photon_notification_bg_pressed">#33000000</color>
 
     <color name="photon_toolbar_text_color">#3B3B3B</color>
     <color name="photon_toolbar_text_color_private">#FFFFFF</color>

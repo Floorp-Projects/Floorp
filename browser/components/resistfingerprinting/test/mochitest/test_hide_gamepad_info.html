@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<meta charset="utf8">
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script>
+/* global SimpleTest SpecialPowers */
+
+SimpleTest.waitForExplicitFinish();
+document.addEventListener("DOMContentLoaded", function() {
+  SpecialPowers.pushPrefEnv({
+    set: [
+      ["dom.gamepad.test.enabled", true],
+      ["privacy.resistFingerprinting", true]
+    ]
+  }, function() {
+    // This test loads in an iframe, to ensure that the navigator instance is
+    // loaded with the correct value of the preference.
+    var iframe = document.createElement("iframe");
+    iframe.src = "test_hide_gamepad_info_iframe.html";
+    document.body.appendChild(iframe);
+  });
+});
+</script>

@@ -4,9 +4,14 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
-Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/Preferences.jsm");
+const {utils: Cu} = Components;
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "OnboardingTourType",
+  "resource://onboarding/modules/OnboardingTourType.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "Preferences",
+  "resource://gre/modules/Preferences.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "Services",
+  "resource://gre/modules/Services.jsm");
 
 const PREF_WHITELIST = [
   "browser.onboarding.enabled",
@@ -14,6 +19,15 @@ const PREF_WHITELIST = [
   "browser.onboarding.notification.finished",
   "browser.onboarding.notification.lastPrompted"
 ];
+
+[
+  "onboarding-tour-private-browsing",
+  "onboarding-tour-addons",
+  "onboarding-tour-customize",
+  "onboarding-tour-search",
+  "onboarding-tour-default-browser",
+  "onboarding-tour-sync",
+].forEach(tourId => PREF_WHITELIST.push(`browser.onboarding.tour.${tourId}.completed`));
 
 /**
  * Set pref. Why no `getPrefs` function is due to the priviledge level.
@@ -48,6 +62,7 @@ function install(aData, aReason) {}
 function uninstall(aData, aReason) {}
 
 function startup(aData, reason) {
+  OnboardingTourType.check();
   Services.mm.loadFrameScript("resource://onboarding/onboarding.js", true);
   initContentMessageListener();
 }

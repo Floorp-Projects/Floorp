@@ -217,6 +217,25 @@
         "additionalProperties": { "$ref": "UnrecognizedProperty" }
       },
       {
+        "id": "ThemeIcons",
+        "type": "object",
+        "properties": {
+          "light": {
+            "$ref": "ExtensionURL",
+            "description": "A light icon to use for dark themes"
+          },
+          "dark": {
+            "$ref": "ExtensionURL",
+            "description": "The dark icon to use for light themes"
+          },
+          "size": {
+            "type": "integer",
+            "description": "The size of the icons"
+          }
+        },
+        "additionalProperties": { "$ref": "UnrecognizedProperty" }
+      },
+      {
         "id": "OptionalPermission",
         "choices": [
           {

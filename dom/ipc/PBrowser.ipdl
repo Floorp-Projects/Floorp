@@ -34,7 +34,6 @@ include "mozilla/layers/LayersMessageUtils.h";
 
 using class IPC::Principal from "mozilla/dom/PermissionMessageUtils.h";
 using class mozilla::gfx::Matrix from "mozilla/gfx/Matrix.h";
-using struct gfxSize from "gfxPoint.h";
 using mozilla::LayoutDeviceIntPoint from "Units.h";
 using mozilla::LayoutDevicePoint from "Units.h";
 using mozilla::ScreenIntPoint from "Units.h";

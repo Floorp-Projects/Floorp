@@ -23,6 +23,12 @@
  *     values.
  * - title: (string)
  *     The title associated with the page, if any.
+ * - description: (string)
+ *     The description of the page, if any.
+ * - previewImageURL: (URL)
+ *     or (nsIURI)
+ *     or (string)
+ *     The preview image URL of the page, if any.
  * - frecency: (number)
  *     The frecency of the page, if any.
  *     See https://developer.mozilla.org/en-US/docs/Mozilla/Tech/Places/Frecency_algorithm
@@ -89,7 +95,6 @@ const ONRESULT_CHUNK_SIZE = 300;
 // This constant determines the maximum number of remove pages before we cycle.
 const REMOVE_PAGES_CHUNKLEN = 300;
 
-
 /**
  * Sends a bookmarks notification through the given observers.
  *
@@ -119,6 +124,8 @@ this.History = Object.freeze({
    *        - `includeVisits` (boolean) set this to true if `visits` in the
    *           PageInfo needs to contain VisitInfo in a reverse chronological order.
    *           By default, `visits` is undefined inside the returned `PageInfo`.
+   *        - `includeMeta` (boolean) set this to true to fetch page meta fields,
+   *           i.e. `description` and `preview_image_url`.
    *
    * @return (Promise)
    *      A promise resolved once the operation is complete.
@@ -145,6 +152,11 @@ this.History = Object.freeze({
     let hasIncludeVisits = "includeVisits" in options;
     if (hasIncludeVisits && typeof options.includeVisits !== "boolean") {
       throw new TypeError("includeVisits should be a boolean if exists");
+    }
+
+    let hasIncludeMeta = "includeMeta" in options;
+    if (hasIncludeMeta && typeof options.includeMeta !== "boolean") {
+      throw new TypeError("includeMeta should be a boolean if exists");
     }
 
     return PlacesUtils.promiseDBConnection()
@@ -191,10 +203,6 @@ this.History = Object.freeze({
    *      If an element of `visits` has an invalid `transition`.
    */
   insert(pageInfo) {
-    if (typeof pageInfo != "object" || !pageInfo) {
-      throw new TypeError("pageInfo must be an object");
-    }
-
     let info = PlacesUtils.validatePageInfo(pageInfo);
 
     return PlacesUtils.withConnectionWrapper("History.jsm: insert",
@@ -563,6 +571,61 @@ this.History = Object.freeze({
     }
   },
 
+   /**
+   * Update information for a page.
+   *
+   * Currently, it supports updating the description and the preview image URL
+   * for a page, any other fields will be ignored.
+   *
+   * Note that this function will ignore the update if the target page has not
+   * yet been stored in the database. `History.fetch` could be used to check
+   * whether the page and its meta information exist or not. Beware that
+   * fetch&update might fail as they are not executed in a single transaction.
+   *
+   * @param pageInfo: (PageInfo)
+   *      pageInfo must contain a URL of the target page. It will be ignored
+   *      if a valid page `guid` is also provided.
+   *
+   *      If a property `description` is provided, the description of the
+   *      page is updated. Note that:
+   *      1). An empty string or null `description` will clear the existing
+   *          value in the database.
+   *      2). Descriptions longer than DB_DESCRIPTION_LENGTH_MAX will be
+   *          truncated.
+   *
+   *      If a property `previewImageURL` is provided, the preview image
+   *      URL of the page is updated. Note that:
+   *      1). A null `previewImageURL` will clear the existing value in the
+   *          database.
+   *      2). It throws if its length is greater than DB_URL_LENGTH_MAX
+   *          defined in PlacesUtils.jsm.
+   *
+   * @return (Promise)
+   *      A promise resolved once the update is complete.
+   * @rejects (Error)
+   *      Rejects if the update was unsuccessful.
+   *
+   * @throws (Error)
+   *      If `pageInfo` has an unexpected type.
+   * @throws (Error)
+   *      If `pageInfo` has an invalid `url` or an invalid `guid`.
+   * @throws (Error)
+   *      If `pageInfo` has neither `description` nor `previewImageURL`.
+   * @throws (Error)
+   *      If the length of `pageInfo.previewImageURL` is greater than
+   *      DB_URL_LENGTH_MAX defined in PlacesUtils.jsm.
+   */
+  update(pageInfo) {
+    let info = PlacesUtils.validatePageInfo(pageInfo, false);
+
+    if (info.description === undefined && info.previewImageURL === undefined) {
+      throw new TypeError("pageInfo object must at least have either a description or a previewImageURL property");
+    }
+
+    return PlacesUtils.withConnectionWrapper("History.jsm: update", db => update(db, info));
+  },
+
+
   /**
    * Possible values for the `transition` property of `VisitInfo`
    * objects.
@@ -861,7 +924,13 @@ var fetch = async function(db, guidOrURL, options) {
     visitOrderFragment = "ORDER BY v.visit_date DESC";
   }
 
-  let query = `SELECT h.id, guid, url, title, frecency ${visitSelectionFragment}
+  let pageMetaSelectionFragment = "";
+  if (options.includeMeta) {
+    pageMetaSelectionFragment = ", description, preview_image_url";
+  }
+
+  let query = `SELECT h.id, guid, url, title, frecency
+               ${pageMetaSelectionFragment} ${visitSelectionFragment}
                FROM moz_places h ${joinFragment}
                ${whereClauseFragment}
                ${visitOrderFragment}`;
@@ -878,6 +947,11 @@ var fetch = async function(db, guidOrURL, options) {
           frecency: row.getResultByName("frecency"),
           title: row.getResultByName("title") || ""
         };
+      }
+      if (options.includeMeta) {
+        pageInfo.description = row.getResultByName("description") || ""
+        let previewImageURL = row.getResultByName("preview_image_url");
+        pageInfo.previewImageURL = previewImageURL ? new URL(previewImageURL) : null;
       }
       if (options.includeVisits) {
         // On every row (not just the first), we need to collect visit data.
@@ -1254,3 +1328,32 @@ var insertMany = async function(db, pageInfos, onResult, onError) {
     }, true);
   });
 };
+
+// Inner implementation of History.update.
+var update = async function(db, pageInfo) {
+  let updateFragments = [];
+  let whereClauseFragment = "";
+  let info = {};
+
+  // Prefer GUID over url if it's present
+  if (typeof pageInfo.guid === "string") {
+    whereClauseFragment = "WHERE guid = :guid";
+    info.guid = pageInfo.guid;
+  } else {
+    whereClauseFragment = "WHERE url_hash = hash(:url) AND url = :url";
+    info.url = pageInfo.url.href;
+  }
+
+  if (pageInfo.description || pageInfo.description === null) {
+    updateFragments.push("description = :description");
+    info.description = pageInfo.description;
+  }
+  if (pageInfo.previewImageURL || pageInfo.previewImageURL === null) {
+    updateFragments.push("preview_image_url = :previewImageURL");
+    info.previewImageURL = pageInfo.previewImageURL ? pageInfo.previewImageURL.href : null;
+  }
+  let query = `UPDATE moz_places
+               SET ${updateFragments.join(", ")}
+               ${whereClauseFragment}`;
+  await db.execute(query, info);
+}

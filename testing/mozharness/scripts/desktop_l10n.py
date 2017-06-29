@@ -1044,7 +1044,7 @@ class DesktopSingleLocale(LocalesMixin, ReleaseMixin, MockMixin, BuildbotMixin,
         if not manifest_src:
             manifest_src = config.get('tooltool_manifest_src')
         if not manifest_src:
-            return self.warning(ERROR_MSGS['tooltool_manifest_undetermined'])
+            return
         tooltool_manifest_path = os.path.join(dirs['abs_mozilla_dir'],
                                               manifest_src)
         python = sys.executable

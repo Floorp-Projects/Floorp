@@ -345,7 +345,7 @@ UpdateNeededBounds(const nsIntRegion& aRegion, nsIntRect& aBounds)
 
   bool overflow;
   IntSize surfaceSize =
-   nsSVGUtils::ConvertToSurfaceSize(aBounds.Size(), &overflow);
+   nsSVGUtils::ConvertToSurfaceSize(SizeDouble(aBounds.Size()), &overflow);
   if (overflow) {
     aBounds.SizeTo(surfaceSize);
   }

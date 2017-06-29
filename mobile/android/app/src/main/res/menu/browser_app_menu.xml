@@ -53,6 +53,10 @@
           android:title="@string/desktop_mode"
           android:checkable="true" />
 
+    <item android:id="@+id/addons_top_level"
+          android:title="@string/addons"
+          android:visible="false" />
+
     <item android:id="@+id/page"
           android:title="@string/page">
 

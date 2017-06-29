@@ -402,7 +402,7 @@ TrackBuffersManager::CompleteResetParserState()
     mCurrentInputBuffer->EvictAll();
     // The demuxer will be recreated during the next run of SegmentParserLoop.
     // As such we don't need to notify it that data has been removed.
-    mCurrentInputBuffer = new SourceBufferResource(mType);
+    mCurrentInputBuffer = new SourceBufferResource();
   }
 
   // We could be left with a demuxer in an unusable state. It needs to be
@@ -849,7 +849,7 @@ TrackBuffersManager::ResetDemuxingState()
 {
   MOZ_ASSERT(mParser && mParser->HasInitData());
   RecreateParser(true);
-  mCurrentInputBuffer = new SourceBufferResource(mType);
+  mCurrentInputBuffer = new SourceBufferResource();
   // The demuxer isn't initialized yet ; we don't want to notify it
   // that data has been appended yet ; so we simply append the init segment
   // to the resource.
@@ -943,7 +943,7 @@ TrackBuffersManager::InitializationSegmentReceived()
     return;
   }
 
-  mCurrentInputBuffer = new SourceBufferResource(mType);
+  mCurrentInputBuffer = new SourceBufferResource();
   // The demuxer isn't initialized yet ; we don't want to notify it
   // that data has been appended yet ; so we simply append the init segment
   // to the resource.

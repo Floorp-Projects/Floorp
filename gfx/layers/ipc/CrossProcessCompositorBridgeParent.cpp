@@ -366,34 +366,32 @@ CrossProcessCompositorBridgeParent::NotifyClearCachedResources(LayerTransactionP
 }
 
 bool
-CrossProcessCompositorBridgeParent::SetTestSampleTime(
-  LayerTransactionParent* aLayerTree, const TimeStamp& aTime)
+CrossProcessCompositorBridgeParent::SetTestSampleTime(const uint64_t& aId,
+                                                      const TimeStamp& aTime)
 {
-  uint64_t id = aLayerTree->GetId();
-  MOZ_ASSERT(id != 0);
+  MOZ_ASSERT(aId != 0);
   const CompositorBridgeParent::LayerTreeState* state =
-    CompositorBridgeParent::GetIndirectShadowTree(id);
+    CompositorBridgeParent::GetIndirectShadowTree(aId);
   if (!state) {
     return false;
   }
 
   MOZ_ASSERT(state->mParent);
-  return state->mParent->SetTestSampleTime(aLayerTree, aTime);
+  return state->mParent->SetTestSampleTime(aId, aTime);
 }
 
 void
-CrossProcessCompositorBridgeParent::LeaveTestMode(LayerTransactionParent* aLayerTree)
+CrossProcessCompositorBridgeParent::LeaveTestMode(const uint64_t& aId)
 {
-  uint64_t id = aLayerTree->GetId();
-  MOZ_ASSERT(id != 0);
+  MOZ_ASSERT(aId != 0);
   const CompositorBridgeParent::LayerTreeState* state =
-    CompositorBridgeParent::GetIndirectShadowTree(id);
+    CompositorBridgeParent::GetIndirectShadowTree(aId);
   if (!state) {
     return;
   }
 
   MOZ_ASSERT(state->mParent);
-  state->mParent->LeaveTestMode(aLayerTree);
+  state->mParent->LeaveTestMode(aId);
 }
 
 void

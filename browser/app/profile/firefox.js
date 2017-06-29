@@ -1702,6 +1702,8 @@ pref("browser.suppress_first_window_animation", true);
 
 // Preferences for Photon onboarding system extension
 pref("browser.onboarding.enabled", true);
+// Mark this as an upgraded profile so we don't offer the initial new user onboarding tour.
+pref("browser.onboarding.tourset-version", 1);
 pref("browser.onboarding.hidden", false);
 // On the Activity-Stream page, the snippet's position overlaps with our notification.
 // So use `browser.onboarding.notification.finished` to let the AS page know

@@ -350,9 +350,27 @@ toolbarpaletteitem > toolbaritem[sdkstylewidget="true"][cui-areatype="toolbar"] 
     list-style-image: var(--webextension-toolbar-image, inherit);
   }
 
+  .webextension-browser-action:-moz-lwtheme-brighttext {
+    list-style-image: var(--webextension-toolbar-image-light, inherit);
+  }
+
+  .webextension-browser-action:-moz-lwtheme-darktext {
+    list-style-image: var(--webextension-toolbar-image-dark, inherit);
+  }
+
   .webextension-browser-action[cui-areatype="menu-panel"],
   toolbarpaletteitem[place="palette"] > .webextension-browser-action {
     list-style-image: var(--webextension-menupanel-image, inherit);
+  }
+
+  .webextension-browser-action[cui-areatype="menu-panel"],
+  toolbarpaletteitem[place="palette"] > .webextension-browser-action:-moz-lwtheme-brighttext {
+    list-style-image: var(--webextension-menupanel-image-light, inherit);
+  }
+
+  .webextension-browser-action[cui-areatype="menu-panel"],
+  toolbarpaletteitem[place="palette"] > .webextension-browser-action:-moz-lwtheme-darktext {
+    list-style-image: var(--webextension-menupanel-image-dark, inherit);
   }
 
   .webextension-page-action {
@@ -369,9 +387,27 @@ toolbarpaletteitem > toolbaritem[sdkstylewidget="true"][cui-areatype="toolbar"] 
     list-style-image: var(--webextension-toolbar-image-2x, inherit);
   }
 
+  .webextension-browser-action:-moz-lwtheme-brighttext {
+    list-style-image: var(--webextension-toolbar-image-2x-light, inherit);
+  }
+
+  .webextension-browser-action:-moz-lwtheme-darktext {
+    list-style-image: var(--webextension-toolbar-image-2x-dark, inherit);
+  }
+
   .webextension-browser-action[cui-areatype="menu-panel"],
   toolbarpaletteitem[place="palette"] > .webextension-browser-action {
     list-style-image: var(--webextension-menupanel-image-2x, inherit);
+  }
+
+  .webextension-browser-action[cui-areatype="menu-panel"],
+  toolbarpaletteitem[place="palette"] > .webextension-browser-action:-moz-lwtheme-brighttext {
+    list-style-image: var(--webextension-menupanel-image-2x-light, inherit);
+  }
+
+  .webextension-browser-action[cui-areatype="menu-panel"],
+  toolbarpaletteitem[place="palette"] > .webextension-browser-action:-moz-lwtheme-darktext {
+    list-style-image: var(--webextension-menupanel-image-2x-dark, inherit);
   }
 
   .webextension-page-action {
@@ -1195,12 +1231,41 @@ toolbarpaletteitem[place="palette"] > #downloads-button[indicator] > #downloads-
   flex-grow: 1;
 }
 
-#customization-panelHolder > #widget-overflow-fixed-list {
-  padding-bottom: 50px; /* Make sure there's always space to drop stuff. */
+#customization-container[photon] #customization-panelHolder {
+  padding-top: 10px;
+  padding-bottom: 10px;
 }
 
-#customization-panelHolder {
+#customization-panelHolder > #widget-overflow-fixed-list {
+  padding-bottom: 50px; /* Make sure there's always space to drop stuff. */
+  flex: 0 1 auto; /* Size to content, but allow ourselves to shrink */
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+
+#customization-container:not([photon]) #customization-panelHolder {
   overflow-y: hidden;
+}
+
+#customization-container[photon] #customization-panel-container {
+  display: flex;
+  flex-direction: column;
+  flex: none;
+}
+
+#customization-container[photon] #customization-panelWrapper,
+#customization-container[photon] #customization-panelWrapper > .panel-arrowcontent,
+#customization-container[photon] #customization-panelHolder {
+  flex-direction: column;
+  display: flex;
+  min-height: 0;
+}
+
+#customization-container[photon] #customization-panelWrapper {
+  flex: 1 1 auto;
+  height: 0; /* Don't let my contents affect ancestors' content-based sizing */
+  align-items: end; /* align to the end on the cross-axis (affects arrow) */
 }
 
 #customization-panelWrapper,
@@ -1208,8 +1273,7 @@ toolbarpaletteitem[place="palette"] > #downloads-button[indicator] > #downloads-
   -moz-box-flex: 1;
 }
 
-#customization-panelWrapper > .panel-arrowcontent {
-  padding: 0 !important;
+#customization-container:not([photon]) #customization-panelWrapper > .panel-arrowcontent {
   overflow: hidden;
 }
 
@@ -1275,12 +1339,26 @@ toolbarpaletteitem[place="palette"] {
   display: inline-block;
 }
 
+#main-window[photon-structure] toolbarpaletteitem[place="palette"] {
+  -moz-binding: url("chrome://global/content/bindings/toolbar.xml#toolbarpaletteitem-palette-wrapping-label");
+  width: 7em;
+  /* icon (16) + margin (9 + 12) + 3 lines of text: */
+  height: calc(39px + 3em);
+  margin-inline-end: 24px;
+  overflow: visible;
+}
+
 toolbarpaletteitem[place="palette"][hidden] {
   display: none;
 }
 
 #customization-palette .toolbarpaletteitem-box {
   -moz-box-pack: center;
+  width: 7em;
+  max-width: 7em;
+}
+
+#main-window:not([photon-structure]) #customization-palette .toolbarpaletteitem-box {
   -moz-box-flex: 1;
   width: 10em;
   max-width: 10em;

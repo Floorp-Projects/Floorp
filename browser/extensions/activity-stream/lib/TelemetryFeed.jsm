@@ -6,38 +6,49 @@
 "use strict";
 
 const {interfaces: Ci, utils: Cu} = Components;
-const {actionTypes: at, actionUtils: au} = Cu.import("resource://activity-stream/common/Actions.jsm", {});
-const {perfService} = Cu.import("resource://activity-stream/common/PerfService.jsm", {});
-
-Cu.import("resource://gre/modules/ClientID.jsm");
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+
+const {actionTypes: at, actionUtils: au} = Cu.import("resource://activity-stream/common/Actions.jsm", {});
+
+XPCOMUtils.defineLazyModuleGetter(this, "ClientID",
+  "resource://gre/modules/ClientID.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "perfService",
+  "resource://activity-stream/common/PerfService.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "TelemetrySender",
+  "resource://activity-stream/lib/TelemetrySender.jsm");
 
 XPCOMUtils.defineLazyServiceGetter(this, "gUUIDGenerator",
   "@mozilla.org/uuid-generator;1",
   "nsIUUIDGenerator");
-XPCOMUtils.defineLazyModuleGetter(this, "TelemetrySender",
-  "resource://activity-stream/lib/TelemetrySender.jsm");
 
 this.TelemetryFeed = class TelemetryFeed {
   constructor(options) {
     this.sessions = new Map();
-    this.telemetryClientId = null;
-    this.telemetrySender = null;
   }
 
-  async init() {
+  init() {
     Services.obs.addObserver(this.browserOpenNewtabStart, "browser-open-newtab-start");
-
-    // TelemetrySender adds pref observers, so we initialize it after INIT
-    this.telemetrySender = new TelemetrySender();
-
-    const id = await ClientID.getClientID();
-    this.telemetryClientId = id;
   }
 
   browserOpenNewtabStart() {
     perfService.mark("browser-open-newtab-start");
+  }
+
+  /**
+   * Lazily get the Telemetry id promise
+   */
+  get telemetryClientId() {
+    Object.defineProperty(this, "telemetryClientId", {value: ClientID.getClientID()});
+    return this.telemetryClientId;
+  }
+
+  /**
+   * Lazily initialize TelemetrySender to send pings
+   */
+  get telemetrySender() {
+    Object.defineProperty(this, "telemetrySender", {value: new TelemetrySender()});
+    return this.telemetrySender;
   }
 
   /**
@@ -112,10 +123,10 @@ this.TelemetryFeed = class TelemetryFeed {
    * @param  {string} id The portID of the session, if a session is relevant (optional)
    * @return {obj}    A telemetry ping
    */
-  createPing(portID) {
+  async createPing(portID) {
     const appInfo = this.store.getState().App;
     const ping = {
-      client_id: this.telemetryClientId,
+      client_id: await this.telemetryClientId,
       addon_version: appInfo.version,
       locale: appInfo.locale
     };
@@ -131,34 +142,34 @@ this.TelemetryFeed = class TelemetryFeed {
     return ping;
   }
 
-  createUserEvent(action) {
+  async createUserEvent(action) {
     return Object.assign(
-      this.createPing(au.getPortIdOfSender(action)),
+      await this.createPing(au.getPortIdOfSender(action)),
       action.data,
       {action: "activity_stream_user_event"}
     );
   }
 
-  createUndesiredEvent(action) {
+  async createUndesiredEvent(action) {
     return Object.assign(
-      this.createPing(au.getPortIdOfSender(action)),
+      await this.createPing(au.getPortIdOfSender(action)),
       {value: 0}, // Default value
       action.data,
       {action: "activity_stream_undesired_event"}
     );
   }
 
-  createPerformanceEvent(action) {
+  async createPerformanceEvent(action) {
     return Object.assign(
-      this.createPing(au.getPortIdOfSender(action)),
+      await this.createPing(au.getPortIdOfSender(action)),
       action.data,
       {action: "activity_stream_performance_event"}
     );
   }
 
-  createSessionEndEvent(session) {
+  async createSessionEndEvent(session) {
     return Object.assign(
-      this.createPing(),
+      await this.createPing(),
       {
         session_id: session.session_id,
         page: session.page,
@@ -169,8 +180,8 @@ this.TelemetryFeed = class TelemetryFeed {
     );
   }
 
-  sendEvent(event) {
-    this.telemetrySender.sendPing(event);
+  async sendEvent(eventPromise) {
+    this.telemetrySender.sendPing(await eventPromise);
   }
 
   onAction(action) {
@@ -201,8 +212,10 @@ this.TelemetryFeed = class TelemetryFeed {
     Services.obs.removeObserver(this.browserOpenNewtabStart,
       "browser-open-newtab-start");
 
-    this.telemetrySender.uninit();
-    this.telemetrySender = null;
+    // Only uninit if the getter has initialized it
+    if (Object.prototype.hasOwnProperty.call(this, "telemetrySender")) {
+      this.telemetrySender.uninit();
+    }
     // TODO: Send any unfinished sessions
   }
 };

@@ -408,7 +408,8 @@ WebRenderBridgeParent::PushAPZStateToWR(nsTArray<WrTransformProperty>& aTransfor
     return false;
   }
   if (RefPtr<APZCTreeManager> apzc = cbp->GetAPZCTreeManager()) {
-    TimeStamp animationTime = mCompositorScheduler->GetLastComposeTime();
+    TimeStamp animationTime = cbp->GetTestingTimeStamp().valueOr(
+        mCompositorScheduler->GetLastComposeTime());
     TimeDuration frameInterval = cbp->GetVsyncInterval();
     // As with the non-webrender codepath in AsyncCompositionManager, we want to
     // use the timestamp for the next vsync when advancing animations.
@@ -787,6 +788,64 @@ WebRenderBridgeParent::RecvSetConfirmedTargetAPZC(const uint64_t& aBlockId,
 }
 
 mozilla::ipc::IPCResult
+WebRenderBridgeParent::RecvSetTestSampleTime(const TimeStamp& aTime)
+{
+  if (!mCompositorBridge->SetTestSampleTime(GetLayersId(), aTime)) {
+    return IPC_FAIL_NO_REASON(this);
+  }
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult
+WebRenderBridgeParent::RecvLeaveTestMode()
+{
+  mCompositorBridge->LeaveTestMode(GetLayersId());
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult
+WebRenderBridgeParent::RecvGetAnimationOpacity(const uint64_t& aCompositorAnimationsId,
+                                               float* aOpacity,
+                                               bool* aHasAnimationOpacity)
+{
+  if (mDestroyed) {
+    return IPC_FAIL_NO_REASON(this);
+  }
+
+  MOZ_ASSERT(mAnimStorage);
+  AdvanceAnimations();
+
+  Maybe<float> opacity = mAnimStorage->GetAnimationOpacity(aCompositorAnimationsId);
+  if (opacity) {
+    *aOpacity = *opacity;
+    *aHasAnimationOpacity = true;
+  } else {
+    *aHasAnimationOpacity = false;
+  }
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult
+WebRenderBridgeParent::RecvGetAnimationTransform(const uint64_t& aCompositorAnimationsId,
+                                                 MaybeTransform* aTransform)
+{
+  if (mDestroyed) {
+    return IPC_FAIL_NO_REASON(this);
+  }
+
+  MOZ_ASSERT(mAnimStorage);
+  AdvanceAnimations();
+
+  Maybe<Matrix4x4> transform = mAnimStorage->GetAnimationTransform(aCompositorAnimationsId);
+  if (transform) {
+    *aTransform = *transform;
+  } else {
+    *aTransform = mozilla::void_t();
+  }
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult
 WebRenderBridgeParent::RecvSetAsyncScrollOffset(const FrameMetrics::ViewID& aScrollId,
                                                 const float& aX,
                                                 const float& aY)
@@ -841,12 +900,20 @@ WebRenderBridgeParent::ActorDestroy(ActorDestroyReason aWhy)
 }
 
 void
+WebRenderBridgeParent::AdvanceAnimations()
+{
+  TimeStamp animTime = mCompositorScheduler->GetLastComposeTime();
+  if (CompositorBridgeParent* cbp = GetRootCompositorBridgeParent()) {
+    animTime = cbp->GetTestingTimeStamp().valueOr(animTime);
+  }
+  AnimationHelper::SampleAnimations(mAnimStorage, animTime);
+}
+
+void
 WebRenderBridgeParent::SampleAnimations(nsTArray<WrOpacityProperty>& aOpacityArray,
                                         nsTArray<WrTransformProperty>& aTransformArray)
 {
-  AnimationHelper::SampleAnimations(mAnimStorage,
-                                    mCompositorScheduler->
-                                      GetLastComposeTime());
+  AdvanceAnimations();
 
   // return the animated data if has
   if (mAnimStorage->AnimatedValueCount()) {

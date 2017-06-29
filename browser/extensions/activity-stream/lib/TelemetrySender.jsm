@@ -3,11 +3,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 const {interfaces: Ci, utils: Cu} = Components;
-
 Cu.import("resource://gre/modules/Preferences.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.importGlobalProperties(["fetch"]);
-Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/Console.jsm"); // eslint-disable-line no-console
+
+XPCOMUtils.defineLazyModuleGetter(this, "console",
+  "resource://gre/modules/Console.jsm");
 
 // This is intentionally a different pref-branch than the SDK-based add-on
 // used, to avoid extra weirdness for people who happen to have the SDK-based
@@ -71,7 +72,7 @@ TelemetrySender.prototype = {
     this._fhrEnabled = prefVal;
   },
 
-  async sendPing(data) {
+  sendPing(data) {
     if (this.logging) {
       // performance related pings cause a lot of logging, so we mute them
       if (data.action !== "activity_stream_performance") {
@@ -81,7 +82,7 @@ TelemetrySender.prototype = {
     if (!this.enabled) {
       return Promise.resolve();
     }
-    return fetch(this._pingEndpoint, {method: "POST", body: data}).then(response => {
+    return fetch(this._pingEndpoint, {method: "POST", body: JSON.stringify(data)}).then(response => {
       if (!response.ok) {
         Cu.reportError(`Ping failure with HTTP response code: ${response.status}`);
       }

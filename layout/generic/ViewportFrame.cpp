@@ -418,16 +418,16 @@ ViewportFrame::ComputeCustomOverflow(nsOverflowAreas& aOverflowAreas)
 void
 ViewportFrame::UpdateStyle(ServoRestyleState& aRestyleState)
 {
-  nsStyleContext* oldContext = StyleContext();
+  ServoStyleContext* oldContext = StyleContext()->AsServo();
   nsIAtom* pseudo = oldContext->GetPseudo();
-  RefPtr<nsStyleContext> newContext =
+  RefPtr<ServoStyleContext> newContext =
     aRestyleState.StyleSet().ResolveInheritingAnonymousBoxStyle(pseudo, nullptr);
 
   // We're special because we have a null GetContent(), so don't call things
   // like UpdateStyleOfOwnedChildFrame that try to append changes for the
   // content to the change list.  Nor do we computed a changehint, since we have
   // no way to apply it anyway.
-  newContext->EnsureSameStructsCached(oldContext);
+  newContext->ResolveSameStructsAs(PresContext(), oldContext);
 
   MOZ_ASSERT(!GetNextContinuation(), "Viewport has continuations?");
   SetStyleContext(newContext);

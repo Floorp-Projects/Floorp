@@ -7984,15 +7984,18 @@ IsAcceptableCaretPosition(const gfxSkipCharsIterator& aIter,
 
 nsIFrame::FrameSearchResult
 nsTextFrame::PeekOffsetCharacter(bool aForward, int32_t* aOffset,
-                                 bool aRespectClusters)
+                                 PeekOffsetCharacterOptions aOptions)
 {
   int32_t contentLength = GetContentLength();
   NS_ASSERTION(aOffset && *aOffset <= contentLength, "aOffset out of range");
 
-  StyleUserSelect selectStyle;
-  IsSelectable(&selectStyle);
-  if (selectStyle == StyleUserSelect::All)
-    return CONTINUE_UNSELECTABLE;
+  if (!aOptions.mIgnoreUserStyleAll) {
+    StyleUserSelect selectStyle;
+    IsSelectable(&selectStyle);
+    if (selectStyle == StyleUserSelect::All) {
+      return CONTINUE_UNSELECTABLE;
+    }
+  }
 
   gfxSkipCharsIterator iter = EnsureTextRun(nsTextFrame::eInflated);
   if (!mTextRun)
@@ -8008,7 +8011,8 @@ nsTextFrame::PeekOffsetCharacter(bool aForward, int32_t* aOffset,
     for (int32_t i = std::min(trimmed.GetEnd(), startOffset) - 1;
          i >= trimmed.mStart; --i) {
       iter.SetOriginalOffset(i);
-      if (IsAcceptableCaretPosition(iter, aRespectClusters, mTextRun, this)) {
+      if (IsAcceptableCaretPosition(iter, aOptions.mRespectClusters, mTextRun,
+                                    this)) {
         *aOffset = i - mContentOffset;
         return FOUND;
       }
@@ -8025,7 +8029,8 @@ nsTextFrame::PeekOffsetCharacter(bool aForward, int32_t* aOffset,
       for (int32_t i = startOffset + 1; i <= trimmed.GetEnd(); ++i) {
         iter.SetOriginalOffset(i);
         if (i == trimmed.GetEnd() ||
-            IsAcceptableCaretPosition(iter, aRespectClusters, mTextRun, this)) {
+            IsAcceptableCaretPosition(iter, aOptions.mRespectClusters, mTextRun,
+                                      this)) {
           *aOffset = i - mContentOffset;
           return FOUND;
         }

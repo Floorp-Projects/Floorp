@@ -3707,8 +3707,17 @@ public class BrowserApp extends GeckoApp
             MenuUtils.safeSetVisible(aMenu, R.id.new_guest_session, false);
         }
 
+        if (SwitchBoard.isInExperiment(this, Experiments.TOP_ADDONS_MENU)) {
+            MenuUtils.safeSetVisible(aMenu, R.id.addons_top_level, true);
+            MenuUtils.safeSetVisible(aMenu, R.id.addons, false);
+        } else {
+            MenuUtils.safeSetVisible(aMenu, R.id.addons_top_level, false);
+            MenuUtils.safeSetVisible(aMenu, R.id.addons, true);
+        }
+
         if (!Restrictions.isAllowed(this, Restrictable.INSTALL_EXTENSION)) {
             MenuUtils.safeSetVisible(aMenu, R.id.addons, false);
+            MenuUtils.safeSetVisible(aMenu, R.id.addons_top_level, false);
         }
 
         // Hide panel menu items if the panels themselves are hidden.
@@ -3854,7 +3863,7 @@ public class BrowserApp extends GeckoApp
             return true;
         }
 
-        if (itemId == R.id.addons) {
+        if (itemId == R.id.addons || itemId == R.id.addons_top_level) {
             Tabs.getInstance().loadUrlInTab(AboutPages.ADDONS);
             return true;
         }

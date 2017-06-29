@@ -40,24 +40,20 @@ function test_install_http() {
   var pm = Services.perms;
   pm.add(makeURI("http://example.org/"), "install", pm.ALLOW_ACTION);
 
-  gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, "http://example.org/browser/browser/base/content/test/general/bug592338.html");
-  gBrowser.selectedBrowser.addEventListener("pageshow", function() {
-    if (gBrowser.contentDocument.location.href == "about:blank")
-      return;
+  // NB: Not https so no installs allowed.
+  const URL = "http://example.org/browser/browser/base/content/test/general/bug592338.html";
+  BrowserTestUtils.openNewForegroundTab({ gBrowser, url: URL }).then(async function() {
+    let prompted = promisePopupNotificationShown("addon-webext-permissions");
+    BrowserTestUtils.synthesizeMouse("#theme-install", 2, 2, {}, gBrowser.selectedBrowser);
+    await prompted;
 
-    gBrowser.selectedBrowser.removeEventListener("pageshow", arguments.callee);
+    is(LightweightThemeManager.currentTheme, null, "Should not have installed the test theme");
 
-    executeSoon(function() {
-      BrowserTestUtils.synthesizeMouse("#theme-install", 2, 2, {}, gBrowser.selectedBrowser);
+    gBrowser.removeTab(gBrowser.selectedTab);
 
-      is(LightweightThemeManager.currentTheme, null, "Should not have installed the test theme");
+    pm.remove(makeURI("http://example.org/"), "install");
 
-      gBrowser.removeTab(gBrowser.selectedTab);
-
-      pm.remove(makeURI("http://example.org/"), "install");
-
-      runNextTest();
-    });
+    runNextTest();
   });
 },
 
@@ -67,13 +63,8 @@ function test_install_lwtheme() {
   var pm = Services.perms;
   pm.add(makeURI("https://example.com/"), "install", pm.ALLOW_ACTION);
 
-  gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, "https://example.com/browser/browser/base/content/test/general/bug592338.html");
-  gBrowser.selectedBrowser.addEventListener("pageshow", function() {
-    if (gBrowser.contentDocument.location.href == "about:blank")
-      return;
-
-    gBrowser.selectedBrowser.removeEventListener("pageshow", arguments.callee);
-
+  const URL = "https://example.com/browser/browser/base/content/test/general/bug592338.html";
+  BrowserTestUtils.openNewForegroundTab({ gBrowser, url: URL }).then(() => {
     let promise = promisePopupNotificationShown("addon-installed");
     BrowserTestUtils.synthesizeMouse("#theme-install", 2, 2, {}, gBrowser.selectedBrowser);
     promise.then(() => {

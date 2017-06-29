@@ -28,10 +28,12 @@ public:
   {
     return nsFrame::PeekOffsetNoAmount(aForward, aOffset);
   }
-  FrameSearchResult PeekOffsetCharacter(bool aForward, int32_t* aOffset,
-                                        bool aRespectClusters = true) override
+  FrameSearchResult
+  PeekOffsetCharacter(bool aForward, int32_t* aOffset,
+                      PeekOffsetCharacterOptions aOptions =
+                        PeekOffsetCharacterOptions()) override
   {
-    return nsFrame::PeekOffsetCharacter(aForward, aOffset, aRespectClusters);
+    return nsFrame::PeekOffsetCharacter(aForward, aOffset, aOptions);
   }
   nsSplittableType GetSplittableType() const override
   {

@@ -68,6 +68,7 @@ typedef mozilla::ComputedTiming RawGeckoComputedTiming;
 typedef nsTArray<const RawServoStyleRule*> RawGeckoServoStyleRuleList;
 typedef nsTArray<nsCSSPropertyID> RawGeckoCSSPropertyIDList;
 typedef mozilla::gfx::Float RawGeckoGfxMatrix4x4[16];
+typedef mozilla::dom::StyleChildrenIterator RawGeckoStyleChildrenIterator;
 
 // We have these helper types so that we can directly generate
 // things like &T or Borrowed<T> on the Rust side in the function, providing
@@ -156,6 +157,7 @@ DECL_BORROWED_MUT_REF_TYPE_FOR(RawGeckoServoStyleRuleList)
 DECL_BORROWED_MUT_REF_TYPE_FOR(nsCSSPropertyIDSet)
 DECL_BORROWED_REF_TYPE_FOR(RawGeckoCSSPropertyIDList)
 DECL_BORROWED_REF_TYPE_FOR(nsXBLBinding)
+DECL_BORROWED_MUT_REF_TYPE_FOR(RawGeckoStyleChildrenIterator)
 
 #undef DECL_ARC_REF_TYPE_FOR
 #undef DECL_OWNED_REF_TYPE_FOR

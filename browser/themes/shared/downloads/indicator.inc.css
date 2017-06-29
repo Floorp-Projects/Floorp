@@ -2,6 +2,43 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+/*** Status and progress indicator ***/
+
+#downloads-button {
+%ifdef MOZ_PHOTON_THEME
+  --downloads-indicator-image: url("chrome://browser/skin/download-arrow-with-bar.svg");
+%else
+  --downloads-indicator-image: url("chrome://browser/skin/download.svg");
+%endif
+}
+
+#downloads-indicator-anchor {
+  min-width: 16px;
+  min-height: 16px;
+}
+
+#downloads-indicator-icon {
+  background: var(--downloads-indicator-image) center no-repeat;
+  -moz-context-properties: fill;
+  fill: var(--toolbarbutton-icon-fill);
+  width: 16px;
+  height: 16px;
+  background-size: 16px;
+}
+
+toolbar[brighttext] #downloads-button:not([attention="success"]) > #downloads-indicator-anchor > #downloads-indicator-icon {
+  fill: var(--toolbarbutton-icon-fill-inverted);
+}
+
+#downloads-button[attention="success"] > #downloads-indicator-anchor > #downloads-indicator-icon {
+  fill: var(--toolbarbutton-icon-fill-attention);
+}
+
+#downloads-button[attention="success"] {
+  list-style-image: url("chrome://browser/skin/downloads/download-glow-menuPanel.png");
+  -moz-image-region: auto;
+}
+
 #downloads-indicator-progress-icon {
   background: var(--downloads-indicator-image) bottom no-repeat;
   -moz-context-properties: fill;
@@ -45,6 +82,41 @@ toolbar[brighttext] #downloads-indicator-progress-icon {
   }
 }
 
+/*** Status badges ***/
+
+#downloads-button[attention="warning"] > .toolbarbutton-badge-stack > .toolbarbutton-badge,
+#downloads-button[attention="severe"] > .toolbarbutton-badge-stack > .toolbarbutton-badge {
+  display: -moz-box;
+  height: 8px;
+  width: 8px;
+  min-width: 0;
+  border-radius: 50%;
+  /* "!important" is necessary to override the rule in toolbarbutton.css */
+  margin-top: -1px !important;
+  margin-right: -2px !important;
+}
+
+#downloads-button[cui-areatype="toolbar"] > .toolbarbutton-badge-stack > .toolbarbutton-badge {
+  height: 7px;
+  width: 7px;
+}
+
+#downloads-button[attention="severe"] > .toolbarbutton-badge-stack > .toolbarbutton-badge {
+  background: #D90000;
+}
+
+#downloads-button[attention="warning"] > .toolbarbutton-badge-stack > .toolbarbutton-badge {
+  background: #FFBF00;
+}
+
+#downloads-button[attention="severe"] > .toolbarbutton-badge-stack > .toolbarbutton-badge:-moz-window-inactive,
+#downloads-button[attention="warning"] > .toolbarbutton-badge-stack > .toolbarbutton-badge:-moz-window-inactive {
+  filter: none;
+}
+
+
+/*** Download notifications ***/
+
 #downloads-button[notification="start"] > #downloads-indicator-anchor > #downloads-indicator-icon {
   animation-name: downloadsIndicatorStartJump;
   /* Upon changing the overall duration below, please keep the delay time of
@@ -66,4 +138,60 @@ toolbar[brighttext] #downloads-indicator-progress-icon {
   100% {
     transform: translateY(0);
   }
+}
+
+#downloads-animation-container {
+  min-height: 1px;
+  min-width: 1px;
+  height: 1px;
+  margin-bottom: -1px;
+  /* Makes the outermost animation container element positioned, so that its
+     contents are rendered over the main browser window in the Z order.
+     This is required by the animated event notification. */
+  position: relative;
+  /* The selected tab may overlap #downloads-indicator-notification */
+  z-index: 5;
+}
+
+#downloads-indicator-notification {
+  opacity: 0;
+  background-size: 16px;
+  background-position: center;
+  background-repeat: no-repeat;
+  width: 16px;
+  height: 16px;
+}
+
+@keyframes downloadsIndicatorNotificationStartRight {
+  from { opacity: 0; transform: translate(-128px, 128px) scale(8); }
+  20%  { opacity: .85; animation-timing-function: ease-out; }
+  to   { opacity: 0; transform: translate(0) scale(1); }
+}
+
+@keyframes downloadsIndicatorNotificationStartLeft {
+  from { opacity: 0; transform: translate(128px, 128px) scale(8); }
+  20%  { opacity: .85; animation-timing-function: ease-out; }
+  to   { opacity: 0; transform: translate(0) scale(1); }
+}
+
+@keyframes downloadsIndicatorNotificationFinish {
+  from { opacity: 0; transform: scale(1); }
+  20%  { opacity: .65; animation-timing-function: ease-in; }
+  to   { opacity: 0; transform: scale(8); }
+}
+
+#downloads-notification-anchor[notification="start"] > #downloads-indicator-notification {
+  background-image: url("chrome://browser/skin/downloads/download-notification-start.png");
+  animation-name: downloadsIndicatorNotificationStartRight;
+  animation-duration: 1s;
+}
+
+#downloads-notification-anchor[notification="start"]:-moz-locale-dir(rtl) > #downloads-indicator-notification {
+  animation-name: downloadsIndicatorNotificationStartLeft;
+}
+
+#downloads-notification-anchor[notification="finish"] > #downloads-indicator-notification {
+  background-image: url("chrome://browser/skin/downloads/download-notification-finish.png");
+  animation-name: downloadsIndicatorNotificationFinish;
+  animation-duration: 1s;
 }

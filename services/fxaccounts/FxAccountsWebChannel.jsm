@@ -38,6 +38,11 @@ const COMMAND_FXA_STATUS           = "fxaccounts:fxa_status";
 
 const PREF_LAST_FXA_USER           = "identity.fxaccounts.lastSignedInUserHash";
 
+// These engines were added years after Sync had been introduced, they need
+// special handling since they are system add-ons and are un-available on
+// older versions of Firefox.
+const EXTRA_ENGINES = ["addresses", "creditcards"];
+
 /**
  * A helper function that extracts the message and stack from an error object.
  * Returns a `{ message, stack }` tuple. `stack` will be null if the error
@@ -280,6 +285,17 @@ this.FxAccountsWebChannelHelpers.prototype = {
     // the browser to selecte the engines to sync but we do it on the web now.
     delete accountData.customizeSync;
 
+    if (accountData.offeredSyncEngines) {
+      EXTRA_ENGINES.forEach(engine => {
+        if (accountData.offeredSyncEngines.includes(engine) &&
+            !accountData.declinedSyncEngines.includes(engine)) {
+          // These extra engines are disabled by default.
+          Services.prefs.setBoolPref(`services.sync.engine.${engine}`, true);
+        }
+      });
+      delete accountData.offeredSyncEngines;
+    }
+
     if (accountData.declinedSyncEngines) {
       let declinedSyncEngines = accountData.declinedSyncEngines;
       log.debug("Received declined engines", declinedSyncEngines);
@@ -384,8 +400,21 @@ this.FxAccountsWebChannelHelpers.prototype = {
     }
 
     return {
-      signedInUser
+      signedInUser,
+      capabilities: {
+        engines: this._getAvailableExtraEngines()
+      }
     };
+  },
+
+  _getAvailableExtraEngines() {
+    return EXTRA_ENGINES.filter(engineName => {
+      try {
+        return Services.prefs.getBoolPref(`services.sync.engine.${engineName}.available`);
+      } catch (e) {
+        return false;
+      }
+    });
   },
 
   changePassword(credentials) {

@@ -24,6 +24,10 @@ document.getElementById("onboarding-overlay")
     case "onboarding-tour-search-button":
       Mozilla.UITour.openSearchPanel(() => {});
       break;
+    case "onboarding-tour-sync-button":
+      let emailInput = document.getElementById("onboarding-tour-sync-email-input");
+      Mozilla.UITour.showFirefoxAccounts(null, emailInput.value);
+      break;
     case "onboarding-overlay":
     case "onboarding-overlay-close-btn":
       // Dismiss any highlights if a user tries to close the dialog.

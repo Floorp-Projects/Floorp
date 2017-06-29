@@ -33,6 +33,7 @@ class ServoRestyleManager;
 class ServoStyleSheet;
 struct Keyframe;
 class ServoElementSnapshotTable;
+class ServoStyleContext;
 class ServoStyleRuleMap;
 } // namespace mozilla
 class nsCSSCounterStyleRule;
@@ -226,7 +227,7 @@ public:
   // Get a style context for an anonymous box.  aPseudoTag is the pseudo-tag to
   // use and must be non-null.  It must be an anon box, and must be one that
   // inherits style from the given aParentContext.
-  already_AddRefed<nsStyleContext>
+  already_AddRefed<ServoStyleContext>
   ResolveInheritingAnonymousBoxStyle(nsIAtom* aPseudoTag,
                                      nsStyleContext* aParentContext);
 
@@ -455,7 +456,8 @@ public:
    * the modified attribute doesn't appear in an attribute selector in
    * a style sheet.
    */
-  bool MightHaveAttributeDependency(nsIAtom* aAttribute);
+  bool MightHaveAttributeDependency(const dom::Element& aElement,
+                                    nsIAtom* aAttribute);
 
   /**
    * Returns true if a change in event state on an element might require
@@ -465,7 +467,7 @@ public:
    * the changed state isn't depended upon by any pseudo-class selectors
    * in a style sheet.
    */
-  bool HasStateDependency(EventStates aState);
+  bool HasStateDependency(const dom::Element& aElement, EventStates aState);
 
 private:
   // On construction, sets sInServoTraversal to the given ServoStyleSet.
@@ -492,17 +494,17 @@ private:
     ServoStyleSet* mSet;
   };
 
-  already_AddRefed<nsStyleContext> GetContext(already_AddRefed<ServoComputedValues>,
-                                              nsStyleContext* aParentContext,
-                                              nsIAtom* aPseudoTag,
-                                              CSSPseudoElementType aPseudoType,
-                                              dom::Element* aElementForAnimation);
+  already_AddRefed<ServoStyleContext> GetContext(already_AddRefed<ServoComputedValues>,
+                                                 nsStyleContext* aParentContext,
+                                                 nsIAtom* aPseudoTag,
+                                                 CSSPseudoElementType aPseudoType,
+                                                 dom::Element* aElementForAnimation);
 
-  already_AddRefed<nsStyleContext> GetContext(nsIContent* aContent,
-                                              nsStyleContext* aParentContext,
-                                              nsIAtom* aPseudoTag,
-                                              CSSPseudoElementType aPseudoType,
-                                              LazyComputeBehavior aMayCompute);
+  already_AddRefed<ServoStyleContext> GetContext(nsIContent* aContent,
+                                                 nsStyleContext* aParentContext,
+                                                 nsIAtom* aPseudoTag,
+                                                 CSSPseudoElementType aPseudoType,
+                                                 LazyComputeBehavior aMayCompute);
 
   /**
    * Rebuild the style data. This will force a stylesheet flush, and also

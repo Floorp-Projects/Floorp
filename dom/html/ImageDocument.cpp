@@ -46,12 +46,17 @@
 
 #define AUTOMATIC_IMAGE_RESIZING_PREF "browser.enable_automatic_image_resizing"
 #define CLICK_IMAGE_RESIZING_PREF "browser.enable_click_image_resizing"
+
 //XXX A hack needed for Firefox's site specific zoom.
-#define SITE_SPECIFIC_ZOOM "browser.zoom.siteSpecific"
+static bool IsSiteSpecific()
+{
+  return !mozilla::Preferences::GetBool("privacy.resistFingerprinting", false) &&
+         mozilla::Preferences::GetBool("browser.zoom.siteSpecific", false);
+}
 
 namespace mozilla {
 namespace dom {
- 
+
 class ImageListener : public MediaDocumentStreamListener
 {
 public:
@@ -206,8 +211,7 @@ ImageDocument::StartDocumentLoad(const char*         aCommand,
     return rv;
   }
 
-  mOriginalZoomLevel =
-    Preferences::GetBool(SITE_SPECIFIC_ZOOM, false) ? 1.0 : GetZoomLevel();
+  mOriginalZoomLevel = IsSiteSpecific() ? 1.0 : GetZoomLevel();
 
   NS_ASSERTION(aDocListener, "null aDocListener");
   *aDocListener = new ImageListener(this);
@@ -291,8 +295,7 @@ ImageDocument::OnPageShow(bool aPersisted,
                           EventTarget* aDispatchStartTarget)
 {
   if (aPersisted) {
-    mOriginalZoomLevel =
-      Preferences::GetBool(SITE_SPECIFIC_ZOOM, false) ? 1.0 : GetZoomLevel();
+    mOriginalZoomLevel = IsSiteSpecific() ? 1.0 : GetZoomLevel();
   }
   RefPtr<ImageDocument> kungFuDeathGrip(this);
   UpdateSizeFromLayout();

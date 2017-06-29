@@ -4,13 +4,10 @@
 "use strict";
 
 const {utils: Cu} = Components;
-const {actionTypes: at, actionCreators: ac} = Cu.import("resource://activity-stream/common/Actions.jsm", {});
-
+Cu.import("resource://gre/modules/Services.jsm");
 Cu.importGlobalProperties(["fetch"]);
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "Services",
-  "resource://gre/modules/Services.jsm");
+const {actionCreators: ac, actionTypes: at} = Cu.import("resource://activity-stream/common/Actions.jsm", {});
 
 // What is our default locale for the app?
 const DEFAULT_LOCALE = "en-US";

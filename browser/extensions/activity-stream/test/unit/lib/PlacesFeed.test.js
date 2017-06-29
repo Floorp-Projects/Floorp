@@ -28,6 +28,16 @@ describe("PlacesFeed", () => {
       history: {addObserver: sandbox.spy(), removeObserver: sandbox.spy()},
       bookmarks: {TYPE_BOOKMARK, addObserver: sandbox.spy(), removeObserver: sandbox.spy()}
     });
+    global.Components.classes["@mozilla.org/browser/nav-history-service;1"] = {
+      getService() {
+        return global.PlacesUtils.history;
+      }
+    };
+    global.Components.classes["@mozilla.org/browser/nav-bookmarks-service;1"] = {
+      getService() {
+        return global.PlacesUtils.bookmarks;
+      }
+    };
     sandbox.spy(global.Services.obs, "addObserver");
     sandbox.spy(global.Services.obs, "removeObserver");
     sandbox.spy(global.Components.utils, "reportError");

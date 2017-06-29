@@ -29,7 +29,7 @@ using namespace mozilla;
 
 NS_IMPL_ISUPPORTS(WakeLockListener, nsIDOMMozWakeLockListener)
 
-WakeLockListener* WakeLockListener::sSingleton = nullptr;
+StaticRefPtr<WakeLockListener> WakeLockListener::sSingleton;
 
 
 enum DesktopEnvironment {
@@ -325,7 +325,6 @@ WakeLockListener::GetSingleton(bool aCreate)
 {
   if (!sSingleton && aCreate) {
     sSingleton = new WakeLockListener();
-    sSingleton->AddRef();
   }
 
   return sSingleton;
@@ -334,7 +333,6 @@ WakeLockListener::GetSingleton(bool aCreate)
 /* static */ void
 WakeLockListener::Shutdown()
 {
-  sSingleton->Release();
   sSingleton = nullptr;
 }
 

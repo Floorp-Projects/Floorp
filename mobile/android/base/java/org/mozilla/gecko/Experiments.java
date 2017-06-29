@@ -65,6 +65,9 @@ public class Experiments {
     // Enable Activity stream by default for users in the "opt out" group.
     public static final String ACTIVITY_STREAM_OPT_OUT = "activity-stream-opt-out";
 
+    // Show AddOns menu-item in top level menu
+    public static final String TOP_ADDONS_MENU = "top-addons-menu";
+
     // Tabs tray: Arrange tabs in two columns in portrait mode
     public static final String COMPACT_TABS = "compact-tabs";
 

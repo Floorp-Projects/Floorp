@@ -35,11 +35,6 @@ using mozilla::layers::CompositableHandle from "mozilla/layers/LayersTypes.h";
 namespace mozilla {
 namespace layers {
 
-union MaybeTransform {
-  Matrix4x4;
-  void_t;
-};
-
 /**
  * The PLayerTransaction protocol manages the layer tree for a single "browser".
  * The "browser" can be a top-level browser window, in which case the PLayer-

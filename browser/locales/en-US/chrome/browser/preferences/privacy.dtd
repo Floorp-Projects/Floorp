@@ -3,8 +3,8 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
 <!ENTITY  trackingProtectionHeader2.label      "Tracking Protection">
-<!ENTITY  trackingProtection.description       "Tracking is the collection of your browsing data across multiple websites. Tracking can be used to build a profile and display content based on your browsing and personal information.">
-<!ENTITY  trackingProtection.radioGroupLabel   "Use Tracking Protection to block known trackers">
+<!ENTITY  trackingProtection2.description      "Tracking is the collection of your browsing data across multiple websites. Tracking can be used to build a profile and display content based on your browsing and personal information.">
+<!ENTITY  trackingProtection2.radioGroupLabel  "Use Tracking Protection to block known trackers">
 <!ENTITY  trackingProtectionAlways.label       "Always">
 <!ENTITY  trackingProtectionAlways.accesskey   "y">
 <!ENTITY  trackingProtectionPrivate.label      "Only in private windows">
@@ -15,8 +15,10 @@
 <!ENTITY  trackingProtectionExceptions.label   "Exceptions…">
 <!ENTITY  trackingProtectionExceptions.accesskey "x">
 
+<!-- LOCALIZATION NOTE (trackingProtectionPBM5.label): This string is displayed if privacy.trackingprotection.ui.enabled is set to true. This currently happens on the release and beta channel. -->
 <!ENTITY trackingProtectionPBM5.label         "Use Tracking Protection in Private Windows">
 <!ENTITY trackingProtectionPBM5.accesskey     "v">
+<!-- LOCALIZATION NOTE (trackingProtectionPBM6.label): This string is displayed if privacy.trackingprotection.ui.enabled is set to false. This currently happens on the nightly channel. -->
 <!ENTITY trackingProtectionPBM6.label         "Use Tracking Protection in Private Browsing to block known trackers">
 <!ENTITY trackingProtectionPBM6.accesskey     "v">
 <!ENTITY trackingProtectionPBMLearnMore.label "Learn more">

@@ -120,11 +120,7 @@ toolbar:-moz-lwtheme {
 }
 
 #main-window:not(:-moz-lwtheme) > #titlebar {
-%ifdef MOZ_PHOTON_THEME
-  background-color: #232323;
-%else
   -moz-appearance: -moz-window-titlebar;
-%endif
 }
 
 #main-window:not([tabsintitlebar]) > #titlebar {
@@ -1558,8 +1554,12 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
   margin-bottom: calc(-1 * var(--tab-toolbar-navbar-overlap));
 }
 
+%ifndef MOZ_PHOTON_THEME
 #main-window:not([customizing]) #navigator-toolbox[inFullscreen] > #TabsToolbar:not(:-moz-lwtheme),
 #main-window:not(:-moz-any([customizing],[tabsintitlebar])) #navigator-toolbox > #TabsToolbar:not(:-moz-lwtheme) {
+%else
+:root:not([customizing]):not([tabsintitlebar]):not([inFullscreen]) #TabsToolbar:not(:-moz-lwtheme) {
+%endif
   -moz-appearance: toolbar;
 }
 
@@ -1569,7 +1569,9 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 }
 
 %ifdef MOZ_PHOTON_THEME
-:root[tabsintitlebar] #TabsToolbar:not(:-moz-lwtheme) {
+:root:-moz-any([inFullscreen], [tabsintitlebar]):not([customizing]) #TabsToolbar:not(:-moz-lwtheme) {
+  -moz-appearance: none;
+  background-color: #232323;
   color: hsl(240, 9%, 98%);
   text-shadow: none;
 }

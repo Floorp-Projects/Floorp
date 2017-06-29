@@ -57,6 +57,7 @@ headers = [
     "mozilla/ServoElementSnapshot.h",
     "mozilla/ServoElementSnapshotTable.h",
     "mozilla/dom/Element.h",
+    "mozilla/dom/ChildIterator.h",
     "mozilla/dom/NameSpaceConstants.h",
     "mozilla/LookAndFeel.h",
     "mozilla/ServoBindings.h",
@@ -123,6 +124,7 @@ whitelist-types = [
     "mozilla::css::SheetParsingMode",
     "mozilla::css::URLMatchingFunction",
     "mozilla::dom::IterationCompositeOperation",
+    "mozilla::dom::StyleChildrenIterator",
     "mozilla::HalfCorner",
     "mozilla::PropertyStyleAnimationValuePair",
     "mozilla::TraversalRestyleBehavior",
@@ -330,6 +332,8 @@ structs-types = [
     "mozilla::MallocSizeOf",
     "mozilla::Side",
     "nsIContent",
+    "nsIDocument",
+    "nsIDocument_DocumentTheme",
     "RawGeckoAnimationPropertySegment",
     "RawGeckoComputedTiming",
     "RawGeckoCSSPropertyIDList",
@@ -346,6 +350,7 @@ structs-types = [
     "RawGeckoPresContext",
     "RawGeckoPresContextOwned",
     "RawGeckoStyleAnimationList",
+    "RawGeckoStyleChildrenIteratorBorrowedMut",
     "RawGeckoServoStyleRuleList",
     "RawGeckoURLExtraData",
     "RawGeckoXBLBinding",
@@ -451,7 +456,6 @@ array-types = [
 ]
 servo-owned-types = [
     { name = "RawServoStyleSet", opaque = true },
-    { name = "StyleChildrenIterator", opaque = true },
     { name = "ServoElementSnapshot", opaque = false },
     { name = "RawServoAnimationValueMap", opaque = true },
 ]

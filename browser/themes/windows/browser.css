@@ -1970,8 +1970,8 @@ notification.pluginVulnerable > .notification-inner > .messageCloseButton {
 %include ../shared/contextmenu.inc.css
 
 /* Make context menu items larger when opened through touch. */
-#contentAreaContextMenu[touchmode] menu,
-#contentAreaContextMenu[touchmode] menuitem {
+menupopup[touchmode] menu,
+menupopup[touchmode] menuitem {
   padding-top: 12px;
   padding-bottom: 12px;
 }

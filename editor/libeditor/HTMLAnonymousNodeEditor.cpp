@@ -226,6 +226,16 @@ HTMLEditor::CreateAnonymousElement(nsIAtom* aTag,
     }
   }
 
+  // Record the NAC on the element, so that AllChildrenIterator can find it.
+  auto nac = static_cast<ManualNAC*>(
+      parentContent->GetProperty(nsGkAtoms::manualNACProperty));
+  if (!nac) {
+    nac = new ManualNAC();
+    parentContent->SetProperty(nsGkAtoms::manualNACProperty, nac,
+                               nsINode::DeleteProperty<ManualNAC>);
+  }
+  nac->AppendElement(newContent);
+
   ElementDeletionObserver* observer =
     new ElementDeletionObserver(newContent, parentContent);
   NS_ADDREF(observer); // NodeWillBeDestroyed releases.
@@ -303,6 +313,16 @@ HTMLEditor::DeleteRefToAnonymousNode(nsIContent* aContent,
       }
     }
   }
+
+  // Remove reference from the parent element.
+  auto nac = static_cast<mozilla::ManualNAC*>(
+      aParentContent->GetProperty(nsGkAtoms::manualNACProperty));
+  MOZ_ASSERT(nac);
+  nac->RemoveElement(aContent);
+  if (nac->IsEmpty()) {
+    aParentContent->DeleteProperty(nsGkAtoms::manualNACProperty);
+  }
+
   aContent->UnbindFromTree();
 }
 

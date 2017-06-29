@@ -10,7 +10,7 @@ add_task(async function() {
   const url = "data:text/html;charset=UTF-8,Test For Non-Hyperlinked url selection";
   await BrowserTestUtils.openNewForegroundTab(gBrowser, url);
 
-  await SimpleTest.promiseFocus(gBrowser.selectedBrowser.contentWindowAsCPOW);
+  await SimpleTest.promiseFocus(gBrowser.selectedBrowser);
 
   // Initial setup of the content area.
   await ContentTask.spawn(gBrowser.selectedBrowser, { }, async function(arg) {
