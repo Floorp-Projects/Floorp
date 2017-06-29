@@ -102,6 +102,17 @@ DateTimeInputTypeBase::HasBadInput() const
   return frame->HasBadInput();;
 }
 
+nsresult
+DateTimeInputTypeBase::MinMaxStepAttrChanged()
+{
+  nsDateTimeControlFrame* frame = do_QueryFrame(GetPrimaryFrame());
+  if (frame) {
+    frame->OnMinMaxStepAttrChanged();
+  }
+
+  return NS_OK;
+}
+
 bool
 DateTimeInputTypeBase::GetTimeFromMs(double aValue, uint16_t* aHours,
                                      uint16_t* aMinutes, uint16_t* aSeconds,

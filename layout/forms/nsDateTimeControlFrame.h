@@ -73,7 +73,8 @@ public:
   nsresult AttributeChanged(int32_t aNameSpaceID, nsIAtom* aAttribute,
                             int32_t aModType) override;
 
-  void UpdateInputBoxValue();
+  void OnValueChanged();
+  void OnMinMaxStepAttrChanged();
   void SetValueFromPicker(const DateTimeValue& aValue);
   void HandleFocusEvent();
   void HandleBlurEvent();
