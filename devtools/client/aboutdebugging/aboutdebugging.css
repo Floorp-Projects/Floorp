@@ -330,6 +330,25 @@ button {
   margin-inline-start: -4px;
 }
 
+.addon-target-messages {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.2);
+  margin-bottom: 16px;
+  padding: 0 0 12px 0;
+}
+
+.addon-target-message {
+  list-style-type: none;
+  padding: 4px 0;
+}
+
+.addon-target-message:first-of-type {
+  padding-top: 0;
+}
+
+.addon-target-warning-message {
+  color: #a47f00;
+}
+
 /* We want the ellipsis on the left-hand-side, so make the parent RTL
  * with an ellipsis and the child can be LTR. */
 .file-path {
