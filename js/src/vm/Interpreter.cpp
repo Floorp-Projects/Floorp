@@ -2868,18 +2868,14 @@ CASE(JSOP_STRICTSETPROP_SUPER)
     static_assert(JSOP_SETPROP_SUPER_LENGTH == JSOP_STRICTSETPROP_SUPER_LENGTH,
                   "setprop-super and strictsetprop-super must be the same size");
 
-
     ReservedRooted<Value> receiver(&rootValue0, REGS.sp[-3]);
     ReservedRooted<JSObject*> obj(&rootObject0, &REGS.sp[-2].toObject());
     ReservedRooted<Value> rval(&rootValue1, REGS.sp[-1]);
-    ReservedRooted<jsid> id(&rootId0, NameToId(script->getName(REGS.pc)));
-
-    ObjectOpResult result;
-    if (!SetProperty(cx, obj, id, rval, receiver, result))
-        goto error;
+    ReservedRooted<PropertyName*> name(&rootName0, script->getName(REGS.pc));
 
     bool strict = JSOp(*REGS.pc) == JSOP_STRICTSETPROP_SUPER;
-    if (!result.checkStrictErrorOrWarning(cx, obj, id, strict))
+
+    if (!SetPropertySuper(cx, obj, receiver, name, rval, strict))
         goto error;
 
     REGS.sp[-3] = REGS.sp[-1];
@@ -5256,4 +5252,16 @@ js::ThrowInitializedThis(JSContext* cx, AbstractFramePtr frame)
 {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_REINIT_THIS);
     return false;
+}
+
+bool
+js::SetPropertySuper(JSContext* cx, HandleObject obj, HandleValue receiver,
+                     HandlePropertyName name, HandleValue rval, bool strict)
+{
+    RootedId id(cx, NameToId(name));
+    ObjectOpResult result;
+    if (!SetProperty(cx, obj, id, rval, receiver, result))
+        return false;
+
+    return result.checkStrictErrorOrWarning(cx, obj, id, strict);
 }
