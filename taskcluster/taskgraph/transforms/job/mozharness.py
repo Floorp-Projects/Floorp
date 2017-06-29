@@ -81,6 +81,8 @@ mozharness_run_schema = Schema({
 
     # If specified, use the in-tree job script specified.
     Optional('job-script'): basestring,
+
+    Required('requires-signed-builds', default=False): bool,
 })
 
 
