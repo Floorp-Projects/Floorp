@@ -8,9 +8,11 @@ const {
   getAbbreviatedMimeType,
   getEndTime,
   getResponseTime,
+  getResponseHeader,
   getStartTime,
   ipToLong,
 } = require("./request-utils");
+const { RESPONSE_HEADERS } = require("../constants");
 
 /**
  * Predicates used when sorting items.
@@ -92,6 +94,16 @@ function latency(first, second) {
   return result || waterfall(first, second);
 }
 
+function compareHeader(header, first, second) {
+  const result = compareValues(getResponseHeader(first, header) || "",
+                               getResponseHeader(second, header) || "");
+  return result || waterfall(first, second);
+}
+
+const responseHeaders = RESPONSE_HEADERS
+  .reduce((acc, header) => Object.assign(
+    acc, {[header]: (first, second) => compareHeader(header, first, second)}), {});
+
 function domain(first, second) {
   const firstDomain = first.urlDetails.host.toLowerCase();
   const secondDomain = second.urlDetails.host.toLowerCase();
@@ -150,7 +162,7 @@ function contentSize(first, second) {
   return result || waterfall(first, second);
 }
 
-exports.Sorters = {
+const sorters = {
   status,
   method,
   file,
@@ -171,3 +183,4 @@ exports.Sorters = {
   latency,
   waterfall,
 };
+exports.Sorters = Object.assign(sorters, responseHeaders);
