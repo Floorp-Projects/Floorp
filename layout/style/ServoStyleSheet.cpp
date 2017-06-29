@@ -32,23 +32,74 @@ namespace mozilla {
 
 ServoStyleSheetInner::ServoStyleSheetInner(CORSMode aCORSMode,
                                            ReferrerPolicy aReferrerPolicy,
-                                           const SRIMetadata& aIntegrity)
+                                           const SRIMetadata& aIntegrity,
+                                           css::SheetParsingMode aParsingMode)
   : StyleSheetInfo(aCORSMode, aReferrerPolicy, aIntegrity)
 {
+  mContents = Servo_StyleSheet_Empty(aParsingMode).Consume();
+  mURLData = URLExtraData::Dummy();
   MOZ_COUNT_CTOR(ServoStyleSheetInner);
 }
 
 ServoStyleSheetInner::ServoStyleSheetInner(ServoStyleSheetInner& aCopy,
                                            ServoStyleSheet* aPrimarySheet)
   : StyleSheetInfo(aCopy, aPrimarySheet)
+  , mURLData(aCopy.mURLData)
 {
   MOZ_COUNT_CTOR(ServoStyleSheetInner);
 
   // Actually clone aCopy's mContents and use that as ours.
-  mContents = Servo_StyleSheet_Clone(aCopy.mContents).Consume();
+  mContents = Servo_StyleSheet_Clone(
+    aCopy.mContents.get(), aPrimarySheet).Consume();
 
-  mURLData = aCopy.mURLData;
+  // Our child list is fixed up by our parent.
 }
+
+void
+ServoStyleSheet::BuildChildListAfterInnerClone()
+{
+  MOZ_ASSERT(Inner()->mSheets.Length() == 1, "Should've just cloned");
+  MOZ_ASSERT(Inner()->mSheets[0] == this);
+  MOZ_ASSERT(!Inner()->mFirstChild);
+
+  auto* contents = Inner()->mContents.get();
+  RefPtr<ServoCssRules> rules =
+    Servo_StyleSheet_GetRules(contents).Consume();
+
+  uint32_t index = 0;
+  while (true) {
+    uint32_t line, column; // Actually unused.
+    RefPtr<RawServoImportRule> import =
+      Servo_CssRules_GetImportRuleAt(rules, index, &line, &column).Consume();
+    if (!import) {
+      // Note that only @charset rules come before @import rules, and @charset
+      // rules are parsed but skipped, so we can stop iterating as soon as we
+      // find something that isn't an @import rule.
+      break;
+    }
+    auto* sheet =
+      const_cast<ServoStyleSheet*>(Servo_ImportRule_GetSheet(import));
+    MOZ_ASSERT(sheet);
+    PrependStyleSheetSilently(sheet);
+    index++;
+  }
+}
+
+already_AddRefed<ServoStyleSheet>
+ServoStyleSheet::CreateEmptyChildSheet(
+    already_AddRefed<dom::MediaList> aMediaList) const
+{
+  RefPtr<ServoStyleSheet> child =
+    new ServoStyleSheet(
+        ParsingMode(),
+        CORSMode::CORS_NONE,
+        GetReferrerPolicy(),
+        SRIMetadata());
+
+  child->mMedia = aMediaList;
+  return child.forget();
+}
+
 
 ServoStyleSheetInner::~ServoStyleSheetInner()
 {
@@ -68,11 +119,8 @@ size_t
 ServoStyleSheetInner::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
 {
   size_t n = aMallocSizeOf(this);
-  // mContents will be null if the parsing has not completed.
-  if (mContents) {
-    n += Servo_StyleSheet_SizeOfIncludingThis(
-        ServoStyleSheetMallocSizeOf, mContents);
-  }
+  n += Servo_StyleSheet_SizeOfIncludingThis(
+      ServoStyleSheetMallocSizeOf, mContents);
   return n;
 }
 
@@ -82,7 +130,8 @@ ServoStyleSheet::ServoStyleSheet(css::SheetParsingMode aParsingMode,
                                  const dom::SRIMetadata& aIntegrity)
   : StyleSheet(StyleBackendType::Servo, aParsingMode)
 {
-  mInner = new ServoStyleSheetInner(aCORSMode, aReferrerPolicy, aIntegrity);
+  mInner = new ServoStyleSheetInner(
+    aCORSMode, aReferrerPolicy, aIntegrity, aParsingMode);
   mInner->AddSheet(this);
 }
 
@@ -141,7 +190,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 bool
 ServoStyleSheet::HasRules() const
 {
-  return Inner()->mContents && Servo_StyleSheet_HasRules(Inner()->mContents);
+  return Servo_StyleSheet_HasRules(Inner()->mContents);
 }
 
 nsresult
@@ -167,18 +216,6 @@ ServoStyleSheet::ParseSheet(css::Loader* aLoader,
 
   Inner()->mURLData = extraData.forget();
   return NS_OK;
-}
-
-void
-ServoStyleSheet::LoadFailed()
-{
-  if (!Inner()->mContents) {
-    // Only create empty stylesheet if this is a top level stylesheet.
-    // The raw sheet for stylesheet of @import rule is already set in
-    // loader, and we should not touch it.
-    Inner()->mContents = Servo_StyleSheet_Empty(mParsingMode).Consume();
-  }
-  Inner()->mURLData = URLExtraData::Dummy();
 }
 
 nsresult
