@@ -153,6 +153,8 @@ public:
   /**
    * TryToFlushPendingNotificationsToIME() suggests flushing pending
    * notifications to IME to IMEContentObserver.
+   * Doesn't do anything in child processes where flushing happens
+   * asynchronously.
    */
   void TryToFlushPendingNotificationsToIME();
 
