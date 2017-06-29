@@ -450,8 +450,8 @@ ln -s /usr/local/bin/ninja /usr/local/bin/ninja-build
 
 # note that TC will replace workspace with a cache mount; there's no sense
 # creating anything inside there
-mkdir -p /home/worker/workspace
-chown worker:worker /home/worker/workspace
+mkdir -p /builds/worker/workspace
+chown worker:worker /builds/worker/workspace
 
 # /builds is *not* replaced with a mount in the docker container. The worker
 # user writes to lots of subdirectories, though, so it's owned by that user

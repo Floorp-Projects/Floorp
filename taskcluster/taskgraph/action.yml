@@ -28,10 +28,10 @@ payload:
     GECKO_HEAD_REPOSITORY: '{{{head_repository}}}'
     GECKO_HEAD_REF: '{{head_ref}}'
     GECKO_HEAD_REV: '{{head_rev}}'
-    HG_STORE_PATH: /home/worker/checkouts/hg-store
+    HG_STORE_PATH: /builds/worker/checkouts/hg-store
 
   cache:
-    level-{{level}}-checkouts: /home/worker/checkouts
+    level-{{level}}-checkouts: /builds/worker/checkouts
 
   features:
     taskclusterProxy: true
@@ -47,20 +47,20 @@ payload:
   maxRunTime: 1800
 
   command:
-    - /home/worker/bin/run-task
-    - '--vcs-checkout=/home/worker/checkouts/gecko'
+    - /builds/worker/bin/run-task
+    - '--vcs-checkout=/builds/worker/checkouts/gecko'
     - '--'
     - bash
     - -cx
     - >
-        cd /home/worker/checkouts/gecko &&
-        ln -s /home/worker/artifacts artifacts &&
+        cd /builds/worker/checkouts/gecko &&
+        ln -s /builds/worker/artifacts artifacts &&
         ./mach --log-no-times taskgraph {{action}} {{action_args}}
 
   artifacts:
     'public':
       type: 'directory'
-      path: '/home/worker/artifacts'
+      path: '/builds/worker/artifacts'
       expires: '{{#from_now}}7 days{{/from_now}}'
 
 extra:
