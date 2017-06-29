@@ -114,6 +114,7 @@ const char* mozilla::dom::ContentPrefs::gInitPrefs[] = {
   "javascript.options.throw_on_debuggee_would_run",
   "javascript.options.wasm",
   "javascript.options.wasm_baselinejit",
+  "javascript.options.wasm_ionjit",
   "javascript.options.werror",
   "javascript.use_us_english_locale",
   "layout.idle_period.required_quiescent_frames",
