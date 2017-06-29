@@ -12,7 +12,7 @@
 
 interface Attr : Node {
   readonly attribute DOMString localName;
-           [SetterThrows]
+           [CEReactions, SetterThrows]
            attribute DOMString value;
 
   [Constant]
