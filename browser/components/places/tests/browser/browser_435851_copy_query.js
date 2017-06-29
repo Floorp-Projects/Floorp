@@ -21,7 +21,7 @@ add_task(async function copy_toolbar_shortcut() {
                          PlacesUtils.TYPE_X_MOZ_PLACE);
 
   library.PlacesOrganizer.selectLeftPaneQuery("UnfiledBookmarks");
-  await library.ContentTree.view.controller.paste();
+  library.ContentTree.view.controller.paste();
 
   let toolbarCopyNode = library.ContentTree.view.view.nodeForTreeIndex(0);
   is(toolbarCopyNode.type,
@@ -44,7 +44,7 @@ add_task(async function copy_history_query() {
                          PlacesUtils.TYPE_X_MOZ_PLACE);
 
   library.PlacesOrganizer.selectLeftPaneQuery("UnfiledBookmarks");
-  await library.ContentTree.view.controller.paste();
+  library.ContentTree.view.controller.paste();
 
   let historyCopyNode = library.ContentTree.view.view.nodeForTreeIndex(0);
   is(historyCopyNode.type,

@@ -57,13 +57,8 @@ add_task(async function test_create_and_batch_remove_bookmarks() {
   Assert.equal(PO._places.selectedNode.title, "deleteme", "Folder node selected");
   Assert.ok(PO._places.controller.isCommandEnabled("cmd_delete"),
      "Delete command is enabled");
-  let promiseItemRemovedNotification = promiseBookmarksNotification(
-    "onItemRemoved", (itemId, parentId, index, type, uri, guid) => guid == folderNode.bookmarkGuid);
   // Execute the delete command and check bookmark has been removed.
   PO._places.controller.doCommand("cmd_delete");
-
-  await promiseItemRemovedNotification;
-
   Assert.ok(!PlacesUtils.bookmarks.isBookmarked(testURI),
     "Bookmark has been correctly removed");
   // Test live update.
