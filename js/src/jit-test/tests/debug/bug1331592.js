@@ -1,6 +1,6 @@
-// |jit-test| test-also-wasm-baseline; error: TestComplete
+// |jit-test| test-also-no-wasm-baseline; error: TestComplete
 
-if (!wasmIsSupported())
+if (!wasmDebuggingIsSupported())
      throw "TestComplete";
 
 var module = new WebAssembly.Module(wasmTextToBinary(`
