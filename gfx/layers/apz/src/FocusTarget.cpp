@@ -12,6 +12,17 @@
 #include "nsIPresShell.h"  // for nsIPresShell
 #include "nsLayoutUtils.h" // for nsLayoutUtils
 
+#define ENABLE_FT_LOGGING 0
+// #define ENABLE_FT_LOGGING 1
+
+#if ENABLE_FT_LOGGING
+#  define FT_LOG(FMT, ...) printf_stderr("FT (%s): " FMT, \
+                                         XRE_IsParentProcess() ? "chrome" : "content", \
+                                         __VA_ARGS__)
+#else
+#  define FT_LOG(...)
+#endif
+
 using namespace mozilla::dom;
 using namespace mozilla::layout;
 
@@ -85,6 +96,9 @@ FocusTarget::FocusTarget(nsIPresShell* aRootPresShell,
   nsCOMPtr<nsIPresShell> presShell = GetRetargetEventPresShell(aRootPresShell);
 
   if (!presShell) {
+    FT_LOG("Creating nil target with seq=%" PRIu64 " (can't find retargeted presshell)\n",
+           aFocusSequenceNumber);
+
     mType = FocusTarget::eNone;
     return;
   }
@@ -103,10 +117,17 @@ FocusTarget::FocusTarget(nsIPresShell* aRootPresShell,
 
     // The globally focused element for scrolling is in a remote layer tree
     if (rfp) {
+      FT_LOG("Creating reflayer target with seq=%" PRIu64 ", lt=%" PRIu64 "\n",
+             aFocusSequenceNumber,
+             rfp->GetLayersId());
+
       mType = FocusTarget::eRefLayer;
       mData.mRefLayerId = rfp->GetLayersId();
       return;
     }
+
+    FT_LOG("Creating nil target with seq=%" PRIu64 " (remote browser missing layers id)\n",
+           aFocusSequenceNumber);
 
     mType = FocusTarget::eNone;
     return;
@@ -115,6 +136,9 @@ FocusTarget::FocusTarget(nsIPresShell* aRootPresShell,
   // If the focus isn't on a remote browser then check for scrollable targets
   if (IsEditableNode(scrollTarget) ||
       IsEditableNode(presShell->GetDocument())) {
+    FT_LOG("Creating nil target with seq=%" PRIu64 " (disabling for editable node)\n",
+           aFocusSequenceNumber);
+
     mType = FocusTarget::eNone;
     return;
   }
@@ -135,6 +159,11 @@ FocusTarget::FocusTarget(nsIPresShell* aRootPresShell,
     nsLayoutUtils::FindIDForScrollableFrame(horizontal);
   mData.mScrollTargets.mVertical =
     nsLayoutUtils::FindIDForScrollableFrame(vertical);
+
+  FT_LOG("Creating scroll target with seq=%" PRIu64 ", h=%" PRIu64 ", v=%" PRIu64 "\n",
+         aFocusSequenceNumber,
+         mData.mScrollTargets.mHorizontal,
+         mData.mScrollTargets.mVertical);
 }
 
 bool
