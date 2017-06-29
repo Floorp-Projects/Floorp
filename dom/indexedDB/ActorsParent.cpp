@@ -12463,10 +12463,11 @@ ConnectionPool::AdjustIdleTimer()
     }
 
     MOZ_ALWAYS_SUCCEEDS(
-      mIdleTimer->InitWithFuncCallback(IdleTimerCallback,
-                                       this,
-                                       delay,
-                                       nsITimer::TYPE_ONE_SHOT));
+      mIdleTimer->InitWithNamedFuncCallback(IdleTimerCallback,
+                                            this,
+                                            delay,
+                                            nsITimer::TYPE_ONE_SHOT,
+                                            "ConnectionPool::IdleTimerCallback"));
 
     mTargetIdleTime = newTargetIdleTime;
   }

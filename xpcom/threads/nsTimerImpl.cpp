@@ -253,16 +253,6 @@ nsTimerImpl::InitWithFuncCallbackCommon(nsTimerCallbackFunc aFunc,
 }
 
 nsresult
-nsTimerImpl::InitWithFuncCallback(nsTimerCallbackFunc aFunc,
-                                  void* aClosure,
-                                  uint32_t aDelay,
-                                  uint32_t aType)
-{
-  Callback::Name name(Callback::Nothing);
-  return InitWithFuncCallbackCommon(aFunc, aClosure, aDelay, aType, name);
-}
-
-nsresult
 nsTimerImpl::InitWithNamedFuncCallback(nsTimerCallbackFunc aFunc,
                                        void* aClosure,
                                        uint32_t aDelay,

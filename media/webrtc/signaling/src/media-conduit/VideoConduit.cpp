@@ -282,8 +282,9 @@ WebrtcVideoConduit::WebrtcVideoConduit(RefPtr<WebRtcCallWrapper> aCall)
       self->mRecvPacketCounts = stats.rtcp_packet_type_counts;
     }
   };
-  mVideoStatsTimer->InitWithFuncCallback(
-    callback, this, 1000, nsITimer::TYPE_REPEATING_PRECISE_CAN_SKIP);
+  mVideoStatsTimer->InitWithNamedFuncCallback(
+    callback, this, 1000, nsITimer::TYPE_REPEATING_PRECISE_CAN_SKIP,
+    "WebrtcVideoConduit::WebrtcVideoConduit");
 }
 
 WebrtcVideoConduit::~WebrtcVideoConduit()

@@ -2954,8 +2954,9 @@ IMEInputHandler::ResetTimer()
     mTimer = do_CreateInstance(NS_TIMER_CONTRACTID);
     NS_ENSURE_TRUE(mTimer, );
   }
-  mTimer->InitWithFuncCallback(FlushPendingMethods, this, 0,
-                               nsITimer::TYPE_ONE_SHOT);
+  mTimer->InitWithNamedFuncCallback(FlushPendingMethods, this, 0,
+                                    nsITimer::TYPE_ONE_SHOT,
+                                    "IMEInputHandler::FlushPendingMethods");
 }
 
 void
