@@ -335,14 +335,16 @@ NS_IMPL_ISUPPORTS(VectorImage,
 //------------------------------------------------------------------------------
 // Constructor / Destructor
 
-VectorImage::VectorImage(ImageURL* aURI /* = nullptr */) :
+VectorImage::VectorImage(ImageURL* aURI /* = nullptr */,
+                         StyleBackendType aStyleBackendType /* = StyleBackendType::None */) :
   ImageResource(aURI), // invoke superclass's constructor
   mLockCount(0),
   mIsInitialized(false),
   mIsFullyLoaded(false),
   mIsDrawing(false),
   mHaveAnimations(false),
-  mHasPendingInvalidation(false)
+  mHasPendingInvalidation(false),
+  mStyleBackendType(aStyleBackendType)
 { }
 
 VectorImage::~VectorImage()
@@ -1182,7 +1184,7 @@ VectorImage::OnStartRequest(nsIRequest* aRequest, nsISupports* aCtxt)
   MOZ_ASSERT(!mSVGDocumentWrapper,
              "Repeated call to OnStartRequest -- can this happen?");
 
-  mSVGDocumentWrapper = new SVGDocumentWrapper();
+  mSVGDocumentWrapper = new SVGDocumentWrapper(mStyleBackendType);
   nsresult rv = mSVGDocumentWrapper->OnStartRequest(aRequest, aCtxt);
   if (NS_FAILED(rv)) {
     mSVGDocumentWrapper = nullptr;
