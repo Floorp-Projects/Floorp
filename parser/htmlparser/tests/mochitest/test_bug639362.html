@@ -18,8 +18,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=639362
 SimpleTest.waitForExplicitFinish();
 
 function loaded(iframe) {
-  is(iframe.contentWindow.location.href, iframe.src, "should load correct URL");
-  is(iframe.contentDocument.body.textContent, 'CACHE MANIFEST', "text/cache-manifest should be treated as text");
+  is(SpecialPowers.wrap(iframe).contentWindow.location.href, iframe.src, "should load correct URL");
+  is(SpecialPowers.wrap(iframe).contentDocument.body.textContent, 'CACHE MANIFEST', "text/cache-manifest should be treated as text");
   SimpleTest.finish();
 }
 </script>
