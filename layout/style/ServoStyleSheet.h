@@ -33,7 +33,8 @@ struct ServoStyleSheetInner final : public StyleSheetInfo
 {
   ServoStyleSheetInner(CORSMode aCORSMode,
                        ReferrerPolicy aReferrerPolicy,
-                       const dom::SRIMetadata& aIntegrity);
+                       const dom::SRIMetadata& aIntegrity,
+                       css::SheetParsingMode aParsingMode);
   ServoStyleSheetInner(ServoStyleSheetInner& aCopy,
                        ServoStyleSheet* aPrimarySheet);
   ~ServoStyleSheetInner();
@@ -73,6 +74,9 @@ public:
                   net::ReferrerPolicy aReferrerPolicy,
                   const dom::SRIMetadata& aIntegrity);
 
+  already_AddRefed<ServoStyleSheet> CreateEmptyChildSheet(
+      already_AddRefed<dom::MediaList> aMediaList) const;
+
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(ServoStyleSheet, StyleSheet)
 
@@ -88,13 +92,6 @@ public:
                                    uint32_t aLineNumber,
                                    nsCompatibility aCompatMode,
                                    css::LoaderReusableStyleSheets* aReusableSheets = nullptr);
-
-  /**
-   * Called instead of ParseSheet to initialize the Servo stylesheet object
-   * for a failed load. Either ParseSheet or LoadFailed must be called before
-   * adding a ServoStyleSheet to a ServoStyleSet.
-   */
-  void LoadFailed();
 
   nsresult ReparseSheet(const nsAString& aInput);
 
@@ -154,6 +151,10 @@ private:
                   nsINode* aOwningNodeToUse);
 
   void DropRuleList();
+
+  // Take the recently cloned sheets from the `@import` rules, and reparent them
+  // correctly to `aPrimarySheet`.
+  void BuildChildListAfterInnerClone();
 
   RefPtr<ServoCSSRuleList> mRuleList;
 

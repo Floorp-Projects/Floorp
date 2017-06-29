@@ -32,21 +32,13 @@ SERVO_BINDING_FUNC(Servo_StyleSheet_FromUTF8Bytes, RawServoStyleSheetContentsStr
                    nsCompatibility quirks_mode)
 SERVO_BINDING_FUNC(Servo_StyleSheet_Empty, RawServoStyleSheetContentsStrong,
                    mozilla::css::SheetParsingMode parsing_mode)
-SERVO_BINDING_FUNC(Servo_StyleSheet_ClearAndUpdate,
-                   void,
-                   RawServoStyleSheetContentsBorrowed stylesheet,
-                   mozilla::css::Loader* loader,
-                   mozilla::ServoStyleSheet* gecko_stylesheet,
-                   const nsACString* data,
-                   RawGeckoURLExtraData* extra_data,
-                   uint32_t line_number_offset,
-                   mozilla::css::LoaderReusableStyleSheets* reusable_sheets)
 SERVO_BINDING_FUNC(Servo_StyleSheet_HasRules, bool,
                    RawServoStyleSheetContentsBorrowed sheet)
 SERVO_BINDING_FUNC(Servo_StyleSheet_GetRules, ServoCssRulesStrong,
                    RawServoStyleSheetContentsBorrowed sheet)
 SERVO_BINDING_FUNC(Servo_StyleSheet_Clone, RawServoStyleSheetContentsStrong,
-                   RawServoStyleSheetContentsBorrowed sheet)
+                   RawServoStyleSheetContentsBorrowed sheet,
+                   const mozilla::ServoStyleSheet* reference_sheet);
 SERVO_BINDING_FUNC(Servo_StyleSheet_SizeOfIncludingThis, size_t,
                    mozilla::MallocSizeOf malloc_size_of,
                    RawServoStyleSheetContentsBorrowed sheet)
