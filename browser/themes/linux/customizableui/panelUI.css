@@ -82,7 +82,7 @@ menu.subviewbutton > .menu-right:-moz-locale-dir(rtl) {
 }
 
 .subviewbutton > .toolbarbutton-icon {
-  margin-inline-end: 5px !important;
+  margin-inline-end: 5px;
 }
 
 .subviewbutton > .menu-right,
