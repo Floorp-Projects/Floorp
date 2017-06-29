@@ -728,7 +728,7 @@ cy{
         }
         PEN{
             "PEN",
-            "Nuevo Sol Periw",
+            "Sol Periw",
         }
         PES{
             "PES",
@@ -2424,12 +2424,12 @@ cy{
             zero{"inti Periw"}
         }
         PEN{
-            few{"nuevo sol Periw"}
-            many{"nuevo sol Periw"}
-            one{"nuevo sol Periw"}
-            other{"nuevo sol Periw"}
-            two{"nuevo sol Periw"}
-            zero{"nuevo sol Periw"}
+            few{"sol Periw"}
+            many{"sol Periw"}
+            one{"sol Periw"}
+            other{"sol Periw"}
+            two{"sol Periw"}
+            zero{"sol Periw"}
         }
         PES{
             few{"sol Periw (1863–1965)"}
@@ -3032,5 +3032,5 @@ cy{
         two{"{0} {1}"}
         zero{"{0} {1}"}
     }
-    Version{"2.1.30.6"}
+    Version{"2.1.31.86"}
 }

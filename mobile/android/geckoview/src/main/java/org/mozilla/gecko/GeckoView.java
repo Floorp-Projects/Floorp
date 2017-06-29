@@ -95,6 +95,7 @@ public class GeckoView extends LayerView {
     /* package */ ContentListener mContentListener;
     /* package */ NavigationListener mNavigationListener;
     /* package */ ProgressListener mProgressListener;
+    /* package */ ScrollListener mScrollListener;
     private PromptDelegate mPromptDelegate;
     private InputConnectionListener mInputConnectionListener;
 
@@ -207,6 +208,7 @@ public class GeckoView extends LayerView {
                 "GeckoView:PageStop",
                 "GeckoView:Prompt",
                 "GeckoView:SecurityChanged",
+                "GeckoView:ScrollChanged",
                 null);
         }
 
@@ -253,6 +255,12 @@ public class GeckoView extends LayerView {
                     int state = message.getInt("status") & ProgressListener.STATE_ALL;
                     mProgressListener.onSecurityChange(GeckoView.this, state);
                 }
+            } else if ("GeckoView:ScrollChanged".equals(event)) {
+                if (mScrollListener != null) {
+                    mScrollListener.onScrollChanged(GeckoView.this,
+                                                    message.getInt("scrollX"),
+                                                    message.getInt("scrollY"));
+                }
             }
         }
     }
@@ -298,7 +306,7 @@ public class GeckoView extends LayerView {
 
     /**
      * Preload GeckoView by starting Gecko with the specified arguments in the background,
-     * if Geckois not already running.
+     * if Gecko is not already running.
      *
      * @param context Activity or Application Context for starting GeckoView.
      * @param geckoArgs Arguments to be passed to Gecko, if Gecko is not already running
@@ -309,7 +317,7 @@ public class GeckoView extends LayerView {
             GeckoAppShell.setApplicationContext(appContext);
         }
 
-        if (GeckoThread.initMainProcess(GeckoProfile.get(appContext),
+        if (GeckoThread.initMainProcess(GeckoProfile.initFromArgs(appContext, geckoArgs),
                                         geckoArgs,
                                         /* debugging */ false)) {
             GeckoThread.launch();
@@ -682,6 +690,18 @@ public class GeckoView extends LayerView {
      */
     public static void setDefaultPromptDelegate(PromptDelegate delegate) {
         sDefaultPromptDelegate = delegate;
+    }
+
+    /**
+    * Set the content scroll callback handler.
+    * This will replace the current handler.
+    * @param listener An implementation of ScrollListener.
+    */
+    public void setScrollListener(ScrollListener listener) {
+        if (mScrollListener == listener) {
+            return;
+        }
+        mScrollListener = listener;
     }
 
     /**
@@ -1491,5 +1511,20 @@ public class GeckoView extends LayerView {
          */
         void promptForFile(GeckoView view, String title, int type,
                            String[] mimeTypes, FileCallback callback);
+    }
+
+    /**
+     * GeckoView applications implement this interface to handle content scroll
+     * events.
+     **/
+    public interface ScrollListener {
+        /**
+         * The scroll position of the content has changed.
+         *
+        * @param view The GeckoView that initiated the callback.
+        * @param scrollX The new horizontal scroll position in pixels.
+        * @param scrollY The new vertical scroll position in pixels.
+        */
+        public void onScrollChanged(GeckoView view, int scrollX, int scrollY);
     }
 }

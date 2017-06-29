@@ -204,6 +204,15 @@ te{
                 timeSeparator{":"}
             }
         }
+        minimalPairs{
+            ordinal{
+                other{"{0}వ కుడి మలుపు తీసుకోండి."}
+            }
+            plural{
+                one{"{0} రోజు"}
+                other{"{0} రోజులు"}
+            }
+        }
         minimumGroupingDigits{"1"}
         native{"telu"}
         telu{
@@ -228,7 +237,7 @@ te{
             }
         }
     }
-    Version{"2.1.28.79"}
+    Version{"2.1.31.86"}
     calendar{
         generic{
             DateTimePatterns{

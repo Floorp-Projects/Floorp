@@ -8,8 +8,6 @@
 
 "use strict";
 
-thisTestLeaksUncaughtRejectionsAndShouldBeFixed("null");
-
 // Test the webconsole output for DOM events.
 
 const TEST_URI = "http://example.com/browser/devtools/client/webconsole/" +

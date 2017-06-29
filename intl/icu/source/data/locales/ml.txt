@@ -204,6 +204,15 @@ ml{
                 timeSeparator{":"}
             }
         }
+        minimalPairs{
+            ordinal{
+                other{"{0}-ാമത്തെ വലത്തേക്ക് തിരിയുക."}
+            }
+            plural{
+                one{"{0} വ്യക്തി"}
+                other{"{0} വ്യക്തികൾ"}
+            }
+        }
         minimumGroupingDigits{"1"}
         mlym{
             patterns{
@@ -229,7 +238,7 @@ ml{
         }
         native{"mlym"}
     }
-    Version{"2.1.28.79"}
+    Version{"2.1.32.59"}
     calendar{
         generic{
             DateTimePatterns{

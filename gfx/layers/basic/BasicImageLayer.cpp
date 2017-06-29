@@ -72,7 +72,7 @@ BasicImageLayer::Paint(DrawTarget* aDT,
   mContainer->SetImageFactory(mManager->IsCompositingCheap() ? nullptr : BasicManager()->GetImageFactory());
 
   AutoLockImage autoLock(mContainer);
-  Image *image = autoLock.GetImage();
+  Image *image = autoLock.GetImage(BasicManager()->GetCompositionTime());
   if (!image) {
     mContainer->SetImageFactory(originalIF);
     return;

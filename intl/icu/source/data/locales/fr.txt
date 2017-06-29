@@ -200,10 +200,20 @@ fr{
                 timeSeparator{":"}
             }
         }
+        minimalPairs{
+            ordinal{
+                one{"Prenez la {0}re à droite."}
+                other{"Prenez la {0}e à droite."}
+            }
+            plural{
+                one{"{0} jour"}
+                other{"{0} jours"}
+            }
+        }
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"2.1.28.79"}
+    Version{"2.1.32.59"}
     calendar{
         buddhist{
             DateTimePatterns{

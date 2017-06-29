@@ -104,6 +104,7 @@
       <WarningLevel>Level3</WarningLevel>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <CompileAs>Default</CompileAs>
+      <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -111,7 +112,7 @@
       <AdditionalIncludeDirectories>..\common;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
-      <OutputFile>..\..\bin\icuio58.dll</OutputFile>
+      <OutputFile>..\..\bin\icuio59.dll</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <ProgramDatabaseFile>.\..\..\lib\icuio.pdb</ProgramDatabaseFile>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
@@ -148,6 +149,7 @@
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <CompileAs>Default</CompileAs>
+      <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -155,7 +157,7 @@
       <AdditionalIncludeDirectories>..\common;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
-      <OutputFile>..\..\bin\icuio58d.dll</OutputFile>
+      <OutputFile>..\..\bin\icuio59d.dll</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <ProgramDatabaseFile>.\..\..\lib\icuiod.pdb</ProgramDatabaseFile>
@@ -189,6 +191,7 @@
       <WarningLevel>Level3</WarningLevel>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <CompileAs>Default</CompileAs>
+      <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -196,7 +199,7 @@
       <AdditionalIncludeDirectories>..\common;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
-      <OutputFile>..\..\bin64\icuio58.dll</OutputFile>
+      <OutputFile>..\..\bin64\icuio59.dll</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <ProgramDatabaseFile>.\..\..\lib64\icuio.pdb</ProgramDatabaseFile>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
@@ -231,6 +234,7 @@
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <CompileAs>Default</CompileAs>
+      <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -238,7 +242,7 @@
       <AdditionalIncludeDirectories>..\common;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
-      <OutputFile>..\..\bin64\icuio58d.dll</OutputFile>
+      <OutputFile>..\..\bin64\icuio59d.dll</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <ProgramDatabaseFile>.\..\..\lib64\icuiod.pdb</ProgramDatabaseFile>
@@ -249,18 +253,18 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="locbund.cpp" />
-    <ClCompile Include="sprintf.c" />
-    <ClCompile Include="sscanf.c" />
+    <ClCompile Include="sprintf.cpp" />
+    <ClCompile Include="sscanf.cpp" />
     <ClCompile Include="ucln_io.cpp">
       <DisableLanguageExtensions>false</DisableLanguageExtensions>
     </ClCompile>
-    <ClCompile Include="ufile.c" />
-    <ClCompile Include="ufmt_cmn.c" />
+    <ClCompile Include="ufile.cpp" />
+    <ClCompile Include="ufmt_cmn.cpp" />
     <ClCompile Include="uprintf.cpp" />
-    <ClCompile Include="uprntf_p.c" />
-    <ClCompile Include="uscanf.c" />
-    <ClCompile Include="uscanf_p.c" />
-    <ClCompile Include="ustdio.c" />
+    <ClCompile Include="uprntf_p.cpp" />
+    <ClCompile Include="uscanf.cpp" />
+    <ClCompile Include="uscanf_p.cpp" />
+    <ClCompile Include="ustdio.cpp" />
     <ClCompile Include="ustream.cpp">
       <DisableLanguageExtensions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</DisableLanguageExtensions>
       <DisableLanguageExtensions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</DisableLanguageExtensions>

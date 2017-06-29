@@ -232,10 +232,23 @@ gu{
                 timeSeparator{":"}
             }
         }
+        minimalPairs{
+            ordinal{
+                few{"જમણી બાજુએ {0}થો વળાંક લો."}
+                many{"જમણી બાજુએ {0}ઠો વળાંક લો."}
+                one{"જમણી બાજુએ {0}લો વળાંક લો."}
+                other{"જમણી બાજુએ {0}મો વળાંક લો."}
+                two{"જમણી બાજુએ {0}જો વળાંક લો."}
+            }
+            plural{
+                one{"{0} કિલોગ્રામ"}
+                other{"{0} કિલોગ્રામ્સ"}
+            }
+        }
         minimumGroupingDigits{"1"}
         native{"gujr"}
     }
-    Version{"2.1.28.79"}
+    Version{"2.1.32.59"}
     calendar{
         generic{
             DateTimePatterns{

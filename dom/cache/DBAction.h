@@ -49,7 +49,8 @@ private:
   nsresult OpenConnection(const QuotaInfo& aQuotaInfo, nsIFile* aQuotaDir,
                           mozIStorageConnection** aConnOut);
 
-  nsresult WipeDatabase(nsIFile* aDBFile, nsIFile* aDBDir);
+  nsresult WipeDatabase(const QuotaInfo& aQuotaInfo, nsIFile* aDBFile,
+                        nsIFile* aDBDir);
 
   const Mode mMode;
 };

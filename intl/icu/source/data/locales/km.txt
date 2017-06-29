@@ -164,10 +164,18 @@ km{
                 timeSeparator{":"}
             }
         }
+        minimalPairs{
+            ordinal{
+                other{"បត់​ស្តាំ​លើក​ទី​ {0}"}
+            }
+            plural{
+                other{"{0} ថ្ងៃ"}
+            }
+        }
         minimumGroupingDigits{"1"}
         native{"khmr"}
     }
-    Version{"2.1.28.79"}
+    Version{"2.1.31.74"}
     calendar{
         generic{
             DateTimePatterns{

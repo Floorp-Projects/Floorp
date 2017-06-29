@@ -47,10 +47,19 @@ br{
                 timeSeparator{":"}
             }
         }
+        minimalPairs{
+            plural{
+                few{"{0} deiz"}
+                many{"{0} a zeizioù"}
+                one{"{0} deiz"}
+                other{"{0} deiz"}
+                two{"{0} zeiz"}
+            }
+        }
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"2.1.28.76"}
+    Version{"2.1.31.86"}
     calendar{
         generic{
             DateTimePatterns{

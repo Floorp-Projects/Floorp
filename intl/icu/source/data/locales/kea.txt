@@ -128,7 +128,7 @@ kea{
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"2.1.27.46"}
+    Version{"2.1.31.74"}
     calendar{
         generic{
             DateTimePatterns{

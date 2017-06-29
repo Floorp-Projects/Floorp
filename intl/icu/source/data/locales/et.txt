@@ -196,10 +196,19 @@ et{
                 timeSeparator{":"}
             }
         }
+        minimalPairs{
+            ordinal{
+                other{"Tehke {0}. parempööre."}
+            }
+            plural{
+                one{"{0} ööpäev"}
+                other{"{0} ööpäeva"}
+            }
+        }
         minimumGroupingDigits{"2"}
         native{"latn"}
     }
-    Version{"2.1.28.79"}
+    Version{"2.1.32.59"}
     calendar{
         chinese{
             cyclicNameSets{

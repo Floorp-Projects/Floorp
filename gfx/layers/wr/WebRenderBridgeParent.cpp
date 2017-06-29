@@ -393,7 +393,7 @@ WebRenderBridgeParent::UpdateAPZ()
   }
   if (RefPtr<APZCTreeManager> apzc = cbp->GetAPZCTreeManager()) {
     apzc->UpdateFocusState(rootLayersId, GetLayersId(),
-                           rootWrbp->GetScrollData().GetFocusTarget());
+                           mScrollData.GetFocusTarget());
     apzc->UpdateHitTestingTree(rootLayersId, rootWrbp->GetScrollData(),
         mScrollData.IsFirstPaint(), GetLayersId(),
         mScrollData.GetPaintSequenceNumber());

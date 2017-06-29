@@ -672,11 +672,11 @@ sk{
         }
         PEN{
             "PEN",
-            "peruánsky nový sol",
+            "peruánsky sol",
         }
         PES{
             "PES",
-            "Peruvský sol",
+            "peruánsky sol (1863–1965)",
         }
         PGK{
             "PGK",
@@ -1816,10 +1816,16 @@ sk{
             other{"panamských balboí"}
         }
         PEN{
-            few{"peruánske nové soly"}
-            many{"peruánskeho nového sola"}
-            one{"peruánsky nový sol"}
-            other{"peruánskych nových solov"}
+            few{"peruánske soly"}
+            many{"peruánskeho sola"}
+            one{"peruánsky sol"}
+            other{"peruánskych solov"}
+        }
+        PES{
+            few{"peruánske soly (1863–1965)"}
+            many{"peruánskeho sola (1863–1965)"}
+            one{"peruánsky sol (1863–1965)"}
+            other{"peruánskych solov (1863–1965)"}
         }
         PGK{
             few{"papuánske kiny"}
@@ -2188,5 +2194,5 @@ sk{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.1.28.79"}
+    Version{"2.1.32.59"}
 }

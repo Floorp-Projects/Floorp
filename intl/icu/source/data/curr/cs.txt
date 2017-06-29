@@ -776,7 +776,7 @@ cs{
         }
         PEN{
             "PEN",
-            "peruánský nový sol",
+            "peruánský sol",
         }
         PES{
             "PES",
@@ -2441,10 +2441,10 @@ cs{
             other{"peruánských inti"}
         }
         PEN{
-            few{"peruánské nové soly"}
-            many{"peruánského nového solu"}
-            one{"peruánský nový sol"}
-            other{"peruánských nových solů"}
+            few{"peruánské soly"}
+            many{"peruánského solu"}
+            one{"peruánský sol"}
+            other{"peruánských solů"}
         }
         PES{
             few{"peruánské soly (1863–1965)"}
@@ -3053,5 +3053,5 @@ cs{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.1.28.79"}
+    Version{"2.1.32.59"}
 }

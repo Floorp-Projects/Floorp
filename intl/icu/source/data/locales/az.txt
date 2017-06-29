@@ -200,10 +200,22 @@ az{
                 timeSeparator{":"}
             }
         }
+        minimalPairs{
+            ordinal{
+                few{"{0}-cü sağ döngəni seçin."}
+                many{"{0}-cı sağ döngəni seçin."}
+                one{"{0}-ci sağ döngəni seçin."}
+                other{"{0}-cu sağ döngəni seçin."}
+            }
+            plural{
+                one{"Alış-veriş katınızda {0} X var. Almaq istəyirsiniz?"}
+                other{"Alış-veriş kartınızda {0} X var. Almaq istəyirsiniz?"}
+            }
+        }
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"2.1.28.79"}
+    Version{"2.1.32.59"}
     calendar{
         generic{
             DateTimePatterns{
@@ -242,7 +254,7 @@ az{
                 yyyyMEd{"GGGGG dd.MM.y, E"}
                 yyyyMMM{"G MMM y"}
                 yyyyMMMEd{"G d MMM y, E"}
-                yyyyMMMM{"G y MMMM"}
+                yyyyMMMM{"G MMMM y"}
                 yyyyMMMd{"G d MMM y"}
                 yyyyMd{"GGGGG dd.MM.y"}
                 yyyyQQQ{"G y QQQ"}
@@ -382,7 +394,7 @@ az{
                 yMEd{"dd.MM.y, E"}
                 yMMM{"MMM y"}
                 yMMMEd{"d MMM y, E"}
-                yMMMM{"y MMMM"}
+                yMMMM{"MMMM y"}
                 yMMMd{"d MMM y"}
                 yMd{"dd.MM.y"}
                 yQQQ{"y QQQ"}

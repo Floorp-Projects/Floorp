@@ -35,5 +35,5 @@ so{
             "Lacag aan la qoon ama aan saxnayn",
         }
     }
-    Version{"2.1.27.78"}
+    Version{"2.1.33.76"}
 }

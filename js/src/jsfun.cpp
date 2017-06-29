@@ -1467,6 +1467,92 @@ JSFunction::getBoundFunctionArgumentCount() const
 }
 
 /* static */ bool
+JSFunction::finishBoundFunctionInit(JSContext* cx, HandleFunction bound, HandleObject targetObj,
+                                    int32_t argCount)
+{
+    bound->setIsBoundFunction();
+    MOZ_ASSERT(bound->getBoundFunctionTarget() == targetObj);
+
+    // 9.4.1.3 BoundFunctionCreate, steps 1, 3-5, 8-12 (Already performed).
+
+    // 9.4.1.3 BoundFunctionCreate, step 6.
+    if (targetObj->isConstructor())
+        bound->setIsConstructor();
+
+    // 9.4.1.3 BoundFunctionCreate, step 2.
+    RootedObject proto(cx);
+    if (!GetPrototype(cx, targetObj, &proto))
+        return false;
+
+    // 9.4.1.3 BoundFunctionCreate, step 7.
+    if (bound->staticPrototype() != proto) {
+        if (!SetPrototype(cx, bound, proto))
+            return false;
+    }
+
+    double length = 0.0;
+
+    // Try to avoid invoking the resolve hook.
+    if (targetObj->is<JSFunction>() && !targetObj->as<JSFunction>().hasResolvedLength()) {
+        RootedValue targetLength(cx);
+        if (!JSFunction::getUnresolvedLength(cx, targetObj.as<JSFunction>(), &targetLength))
+            return false;
+
+        length = Max(0.0, targetLength.toNumber() - argCount);
+    } else {
+        // 19.2.3.2 Function.prototype.bind, step 5.
+        bool hasLength;
+        RootedId idRoot(cx, NameToId(cx->names().length));
+        if (!HasOwnProperty(cx, targetObj, idRoot, &hasLength))
+            return false;
+
+        // 19.2.3.2 Function.prototype.bind, step 6.
+        if (hasLength) {
+            RootedValue targetLength(cx);
+            if (!GetProperty(cx, targetObj, targetObj, idRoot, &targetLength))
+                return false;
+
+            if (targetLength.isNumber())
+                length = Max(0.0, JS::ToInteger(targetLength.toNumber()) - argCount);
+        }
+
+        // 19.2.3.2 Function.prototype.bind, step 7 (implicit).
+    }
+
+    // 19.2.3.2 Function.prototype.bind, step 8.
+    bound->setExtendedSlot(BOUND_FUN_LENGTH_SLOT, NumberValue(length));
+
+    // Try to avoid invoking the resolve hook.
+    RootedAtom name(cx);
+    if (targetObj->is<JSFunction>() && !targetObj->as<JSFunction>().hasResolvedName()) {
+        if (!JSFunction::getUnresolvedName(cx, targetObj.as<JSFunction>(), &name))
+            return false;
+    }
+
+    // 19.2.3.2 Function.prototype.bind, steps 9-11.
+    if (!name) {
+        // 19.2.3.2 Function.prototype.bind, step 9.
+        RootedValue targetName(cx);
+        if (!GetProperty(cx, targetObj, targetObj, cx->names().name, &targetName))
+            return false;
+
+        // 19.2.3.2 Function.prototype.bind, step 10.
+        if (targetName.isString() && !targetName.toString()->empty()) {
+            name = AtomizeString(cx, targetName.toString());
+            if (!name)
+                return false;
+        } else {
+            name = cx->names().empty;
+        }
+    }
+
+    MOZ_ASSERT(!bound->hasGuessedAtom());
+    bound->setAtom(name);
+
+    return true;
+}
+
+/* static */ bool
 JSFunction::createScriptForLazilyInterpretedFunction(JSContext* cx, HandleFunction fun)
 {
     MOZ_ASSERT(fun->isInterpretedLazy());

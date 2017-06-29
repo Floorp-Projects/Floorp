@@ -22,8 +22,8 @@ bg{
                 range{"{0} – {1}"}
             }
             patterns{
-                accountingFormat{"#0.00 ¤;(#0.00 ¤)"}
-                currencyFormat{"#0.00 ¤"}
+                accountingFormat{"0.00 ¤;(0.00 ¤)"}
+                currencyFormat{"0.00 ¤"}
                 decimalFormat{"#,##0.###"}
                 percentFormat{"#,##0%"}
                 scientificFormat{"#E0"}
@@ -197,10 +197,19 @@ bg{
                 timeSeparator{":"}
             }
         }
+        minimalPairs{
+            ordinal{
+                other{"Завийте надясно по {0}-ата пресечка."}
+            }
+            plural{
+                one{"{0} ден"}
+                other{"{0} дена"}
+            }
+        }
         minimumGroupingDigits{"2"}
         native{"latn"}
     }
-    Version{"2.1.30.6"}
+    Version{"2.1.33.75"}
     calendar{
         generic{
             DateTimePatterns{

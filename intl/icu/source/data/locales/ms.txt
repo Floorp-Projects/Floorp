@@ -167,10 +167,19 @@ ms{
                 timeSeparator{":"}
             }
         }
+        minimalPairs{
+            ordinal{
+                one{"Ambil belokan kanan yang pertama."}
+                other{"Ambil belokan kanan yang ke-{0}."}
+            }
+            plural{
+                other{"{0} hari"}
+            }
+        }
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"2.1.28.79"}
+    Version{"2.1.32.59"}
     calendar{
         buddhist{
             eras{

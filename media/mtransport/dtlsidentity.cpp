@@ -116,7 +116,7 @@ RefPtr<DtlsIdentity> DtlsIdentity::Generate() {
   PLArenaPool *arena = certificate->arena;
 
   rv = SECOID_SetAlgorithmID(arena, &certificate->signature,
-                             SEC_OID_ANSIX962_ECDSA_SHA256_SIGNATURE, 0);
+                             SEC_OID_ANSIX962_ECDSA_SHA256_SIGNATURE, nullptr);
   if (rv != SECSuccess)
     return nullptr;
 

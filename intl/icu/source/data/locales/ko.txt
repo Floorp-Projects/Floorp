@@ -187,10 +187,18 @@ ko{
                 timeSeparator{":"}
             }
         }
+        minimalPairs{
+            ordinal{
+                other{"{0}번째 길목에서 우회전하세요."}
+            }
+            plural{
+                other{"{0}일"}
+            }
+        }
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"2.1.29.22"}
+    Version{"2.1.32.59"}
     calendar{
         buddhist{
             eras{

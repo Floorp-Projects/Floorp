@@ -282,10 +282,21 @@ cs{
                 timeSeparator{":"}
             }
         }
+        minimalPairs{
+            ordinal{
+                other{"Na {0}. křižovatce odbočte vpravo."}
+            }
+            plural{
+                few{"{0} dny"}
+                many{"{0} dne"}
+                one{"{0} den"}
+                other{"{0} dní"}
+            }
+        }
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"2.1.28.79"}
+    Version{"2.1.32.59"}
     calendar{
         buddhist{
             availableFormats{

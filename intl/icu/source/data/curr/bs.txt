@@ -740,7 +740,7 @@ bs{
         }
         PEN{
             "PEN",
-            "Peruanski novi sol",
+            "Peruanski sol",
         }
         PES{
             "PES",
@@ -2163,9 +2163,9 @@ bs{
             other{"peruanska inta"}
         }
         PEN{
-            few{"peruanska nova sola"}
-            one{"peruanski novi sol"}
-            other{"peruanskih novih sola"}
+            few{"peruanska sola"}
+            one{"peruanski sol"}
+            other{"peruanskih sola"}
         }
         PES{
             few{"peruanska sola (1863–1965)"}
@@ -2673,5 +2673,5 @@ bs{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.1.28.79"}
+    Version{"2.1.31.86"}
 }

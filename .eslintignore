@@ -305,7 +305,13 @@ testing/modules/ajv-4.1.1.js
 testing/modules/sinon-2.3.2.js
 # octothorpe used for pref file comment causes parsing error
 testing/mozbase/mozprofile/tests/files/prefs_with_comments.js
-testing/talos/**
+testing/talos/talos/scripts/jszip.min.js
+testing/talos/talos/startup_test/sessionrestore/profile/sessionstore.js
+testing/talos/talos/tests/canvasmark/**
+testing/talos/talos/tests/dromaeo/**
+testing/talos/talos/tests/v8_7/**
+testing/talos/talos/tests/kraken/**
+
 testing/web-platform/**
 testing/xpcshell/moz-http2/**
 testing/xpcshell/node-http2/**

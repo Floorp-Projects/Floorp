@@ -73,13 +73,13 @@ Wrapper::delete_(JSContext* cx, HandleObject proxy, HandleId id, ObjectOpResult&
     return DeleteProperty(cx, target, id, result);
 }
 
-bool
-Wrapper::enumerate(JSContext* cx, HandleObject proxy, MutableHandleObject objp) const
+JSObject*
+Wrapper::enumerate(JSContext* cx, HandleObject proxy) const
 {
     assertEnteredPolicy(cx, proxy, JSID_VOID, ENUMERATE);
     MOZ_ASSERT(!hasPrototype()); // Should never be called if there's a prototype.
     RootedObject target(cx, proxy->as<ProxyObject>().target());
-    return GetIterator(cx, target, 0, objp);
+    return GetIterator(cx, target, 0);
 }
 
 bool

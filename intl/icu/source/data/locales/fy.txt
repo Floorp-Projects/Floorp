@@ -154,7 +154,7 @@ fy{
         }
         minimumGroupingDigits{"1"}
     }
-    Version{"2.1.29.44"}
+    Version{"2.1.31.86"}
     calendar{
         buddhist{
             DateTimePatterns{

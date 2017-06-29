@@ -80,6 +80,7 @@ WebRenderPaintedLayerBlob::RenderLayer(wr::DisplayListBuilder& aBuilder,
     }
     mImageKey = Some(GetImageKey());
     WrBridge()->SendAddBlobImage(mImageKey.value(), imageSize, size.width * 4, dt->GetFormat(), bytes);
+    mImageBounds = visibleRegion.GetBounds();
   } else {
     MOZ_ASSERT(GetInvalidRegion().IsEmpty());
   }
@@ -89,8 +90,9 @@ WebRenderPaintedLayerBlob::RenderLayer(wr::DisplayListBuilder& aBuilder,
   LayerRect rect = Bounds();
   DumpLayerInfo("PaintedLayer", rect);
 
-  WrRect r = sc.ToRelativeWrRect(rect);
-  aBuilder.PushImage(r, r, wr::ImageRendering::Auto, mImageKey.value());
+  aBuilder.PushImage(sc.ToRelativeWrRect(LayerRect(mImageBounds)),
+                     sc.ToRelativeWrRect(rect),
+                     wr::ImageRendering::Auto, mImageKey.value());
 }
 
 } // namespace layers

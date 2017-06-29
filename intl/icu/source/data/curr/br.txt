@@ -780,7 +780,7 @@ br{
         }
         PEN{
             "PEN",
-            "nuevo sol Perou",
+            "sol Perou",
         }
         PES{
             "PES",
@@ -2475,11 +2475,11 @@ br{
             two{"valboa Panamá"}
         }
         PEN{
-            few{"nuevo sol Perou"}
-            many{"nuevo sol Perou"}
-            one{"nuevo sol Perou"}
-            other{"nuevo sol Perou"}
-            two{"nuevo sol Perou"}
+            few{"sol Perou"}
+            many{"sol Perou"}
+            one{"sol Perou"}
+            other{"sol Perou"}
+            two{"sol Perou"}
         }
         PES{
             few{"sol Perou (1863–1965)"}
@@ -3105,5 +3105,5 @@ br{
         other{"{0} {1}"}
         two{"{0} {1}"}
     }
-    Version{"2.1.28.76"}
+    Version{"2.1.31.86"}
 }

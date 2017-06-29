@@ -776,7 +776,7 @@ zh{
         }
         PEN{
             "PEN",
-            "秘鲁新索尔",
+            "秘鲁索尔",
         }
         PES{
             "PES",
@@ -1854,7 +1854,7 @@ zh{
             other{"秘鲁印第"}
         }
         PEN{
-            other{"秘鲁新索尔"}
+            other{"秘鲁索尔"}
         }
         PES{
             other{"秘鲁索尔 (1863–1965)"}
@@ -2118,5 +2118,5 @@ zh{
     CurrencyUnitPatterns{
         other{"{0}{1}"}
     }
-    Version{"2.1.29.84"}
+    Version{"2.1.33.94"}
 }

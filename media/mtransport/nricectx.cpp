@@ -131,11 +131,11 @@ static int nr_crypto_nss_random_bytes(UCHAR *buf, int len) {
 static int nr_crypto_nss_hmac(UCHAR *key, int keyl, UCHAR *buf, int bufl,
                               UCHAR *result) {
   CK_MECHANISM_TYPE mech = CKM_SHA_1_HMAC;
-  PK11SlotInfo *slot = 0;
+  PK11SlotInfo *slot = nullptr;
   MOZ_ASSERT(keyl > 0);
   SECItem keyi = { siBuffer, key, static_cast<unsigned int>(keyl)};
-  PK11SymKey *skey = 0;
-  PK11Context *hmac_ctx = 0;
+  PK11SymKey *skey = nullptr;
+  PK11Context *hmac_ctx = nullptr;
   SECStatus status;
   unsigned int hmac_len;
   SECItem param = { siBuffer, nullptr, 0 };
@@ -782,8 +782,8 @@ NrIceStats NrIceCtx::Destroy() {
   delete ice_handler_vtbl_;
   delete ice_handler_;
 
-  ice_handler_vtbl_ = 0;
-  ice_handler_ = 0;
+  ice_handler_vtbl_ = nullptr;
+  ice_handler_ = nullptr;
   streams_.clear();
 
   return stats;
@@ -987,7 +987,7 @@ RefPtr<NrIceMediaStream> NrIceCtx::FindStream(
 }
 
 std::vector<std::string> NrIceCtx::GetGlobalAttributes() {
-  char **attrs = 0;
+  char **attrs = nullptr;
   int attrct;
   int r;
   std::vector<std::string> ret;

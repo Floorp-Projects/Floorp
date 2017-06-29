@@ -1,8 +1,7 @@
 diff --git a/intl/icu/source/Makefile.in b/intl/icu/source/Makefile.in
-index 9db6c52..1b9a964 100644
 --- a/intl/icu/source/Makefile.in
 +++ b/intl/icu/source/Makefile.in
-@@ -134,28 +134,32 @@ endif
+@@ -134,32 +134,36 @@ endif
  
  LOCAL_SUBDIRS = $(SUBDIRS)
  CLEAN_FIRST_SUBDIRS = $(TOOLS)
@@ -16,6 +15,11 @@ index 9db6c52..1b9a964 100644
 +## favor of RECURSIVE=YES when the submake in the subdirectory restarts itself
 +## after dependency files have been created.
  all-recursive install-recursive clean-recursive distclean-recursive dist-recursive check-recursive check-exhaustive-recursive: $(LIBDIR) $(BINDIR)
+ ifneq ($(NEED_ESCAPING),)
+ 	@echo "building tools/escapesrc (Needed for this platform with NEED_ESCAPING)"
+-	@(cd tools/escapesrc && $(MAKE) RECURSIVE=YES $$local_target) || exit
++	@(cd tools/escapesrc && $(MAKE) $(MAKEOVERRIDES) RECURSIVE=YES $$local_target) || exit
+ endif
  	@dot_seen=no; \
  	target=`echo $@ | sed s/-recursive//`; \
  	list='$(LOCAL_SUBDIRS)'; for subdir in $$list; do \

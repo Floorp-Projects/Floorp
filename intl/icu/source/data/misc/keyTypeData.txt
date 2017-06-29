@@ -14,6 +14,7 @@ keyTypeData:table(nofallback){
         }
         valueType{
             ca{"incremental"}
+            h0{"single"}
             kr{"multiple"}
             vt{"multiple"}
             x0{"any"}
@@ -36,6 +37,7 @@ keyTypeData:table(nofallback){
         d0{""}
         em{""}
         fw{""}
+        h0{""}
         hours{"hc"}
         i0{""}
         k0{""}
@@ -216,6 +218,7 @@ keyTypeData:table(nofallback){
             buk{""}
             bwp{""}
             byb{""}
+            byn{""}
             byr{""}
             bzd{""}
             cad{""}
@@ -496,6 +499,9 @@ keyTypeData:table(nofallback){
             thu{""}
             tue{""}
             wed{""}
+        }
+        h0{
+            hybrid{""}
         }
         hours{
             h11{""}

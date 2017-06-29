@@ -34,8 +34,8 @@ BUILDDIR := $(BUILDDIR:test\\intltest/../../=)
 # Simplify the path for Windows 98
 BUILDDIR := $(BUILDDIR:TEST\\INTLTEST/../../=)
 
-CPPFLAGS += -I$(top_srcdir)/common -I$(top_srcdir)/i18n -I$(top_srcdir)/tools/toolutil -I$(top_srcdir)/tools/ctestfw
-CPPFLAGS += -DUNISTR_FROM_CHAR_EXPLICIT= -DUNISTR_FROM_STRING_EXPLICIT=
+CPPFLAGS += -I$(srcdir) -I$(top_srcdir)/common -I$(top_srcdir)/i18n -I$(top_srcdir)/tools/toolutil -I$(top_srcdir)/tools/ctestfw
+CPPFLAGS += -DUNISTR_FROM_CHAR_EXPLICIT= -DUNISTR_FROM_STRING_EXPLICIT= -DUCHAR_TYPE=char16_t
 DEFS += -D'U_TOPSRCDIR="$(top_srcdir)/"' -D'U_TOPBUILDDIR="$(BUILDDIR)"'
 LIBS = $(LIBCTESTFW) $(LIBICUI18N) $(LIBICUUC) $(LIBICUTOOLUTIL) $(DEFAULT_LIBS) $(LIB_M) $(LIB_THREAD)
 

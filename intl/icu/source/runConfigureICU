@@ -315,7 +315,6 @@ case $platform in
         THE_COMP="the GNU C++"
         RELEASE_CFLAGS='-O3'
         RELEASE_CXXFLAGS='-O3'
-        CXXFLAGS="--std=c++03"
         export CXXFLAGS
         ;;
     MSYS/MSVC)

@@ -708,11 +708,11 @@ sl{
         }
         PEN{
             "PEN",
-            "perujski novi sol",
+            "perujski sol",
         }
         PES{
             "PES",
-            "perujski sol",
+            "perujski sol (1863–1965)",
         }
         PGK{
             "PGK",
@@ -1838,10 +1838,16 @@ sl{
             two{"panamski balboi"}
         }
         PEN{
-            few{"perujski novi soli"}
-            one{"perujski novi sol"}
-            other{"perujskih novih solov"}
-            two{"perujska nova sola"}
+            few{"perujski soli"}
+            one{"perujski sol"}
+            other{"perujskih solov"}
+            two{"perujska sola"}
+        }
+        PES{
+            few{"perujski soli (1863–1965)"}
+            one{"perujski sol (1863–1965)"}
+            other{"perujskih solov (1863–1965)"}
+            two{"perujska sola (1863–1965)"}
         }
         PGK{
             few{"kine Papue Nove Gvineje"}
@@ -2150,5 +2156,5 @@ sl{
         other{"{0} {1}"}
         two{"{0} {1}"}
     }
-    Version{"2.1.28.79"}
+    Version{"2.1.32.59"}
 }

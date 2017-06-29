@@ -780,11 +780,11 @@ tr{
         }
         PEN{
             "PEN",
-            "Peru Nuevo Solü",
+            "Peru Solü",
         }
         PES{
             "PES",
-            "Peru Solu",
+            "Peru Solü (1863–1965)",
         }
         PGK{
             "PGK",
@@ -2024,12 +2024,12 @@ tr{
             other{"Peru İnti"}
         }
         PEN{
-            one{"Peru nuevo solü"}
-            other{"Peru nuevo solü"}
+            one{"Peru solü"}
+            other{"Peru solü"}
         }
         PES{
-            one{"Peru Solu"}
-            other{"Peru Solu"}
+            one{"Peru Solü (1863–1965)"}
+            other{"Peru Solü (1863–1965)"}
         }
         PGK{
             one{"Papua Yeni Gine kinası"}
@@ -2368,5 +2368,5 @@ tr{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.1.28.79"}
+    Version{"2.1.32.59"}
 }

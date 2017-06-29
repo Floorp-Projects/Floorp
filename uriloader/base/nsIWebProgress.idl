@@ -133,6 +133,7 @@ interface nsIWebProgress : nsISupports
    */
   readonly attribute mozIDOMWindowProxy DOMWindow;
   readonly attribute uint64_t DOMWindowID;
+  readonly attribute uint64_t innerDOMWindowID;
 
   /**
    * Indicates whether DOMWindow.top == DOMWindow.

@@ -11,9 +11,9 @@ my{
         word-medial{"{0} … {1}"}
     }
     ExemplarCharacters{
-        "[က ခ ဂ ဃ င စ ဆ ဇ ဈ ဉ ည ဋ ဌ ဍ ဎ ဏ တ ထ ဒ ဓ န ပ ဖ ဗ ဘ မ ယ ရ လ ဝ သ ဟ ဠ အ ဣ ဤ ဥ ဦ"
-        " ဧ ဩ ဪ ာ ါ \u102D \u102E \u102F \u1030 ေ \u1032 \u1036 ဿ ျ ြ \u103D \u103E "
-        "\u1039 \u103A \u1037 း]"
+        "[{\u104F} က ခ ဂ ဃ င စ ဆ ဇ ဈ ဉ ည ဋ ဌ ဍ ဎ ဏ တ ထ ဒ ဓ န ပ ဖ ဗ ဘ မ ယ ရ လ ဝ သ ဟ ဠ "
+        "အ ဣ ဤ ဥ ဦ ဧ ဩ ဪ ာ ါ \u102D \u102E \u102F \u1030 ေ \u1032 \u1036 ဿ ျ ြ \u103D"
+        " \u103E \u1039 \u103A \u1037 း]"
     }
     ExemplarCharactersIndex{"[က ခ ဂ ဃ င စ ဆ ဇ ဈ ဉ ည ဋ ဌ ဍ ဎ ဏ တ ထ ဒ ဓ န ပ ဖ ဗ ဘ မ ယ ရ လ ဝ သ ဟ ဠ အ]"}
     ExemplarCharactersPunctuation{"[၊ ။ ‘ ’ “ ”]"}
@@ -165,6 +165,14 @@ my{
                 timeSeparator{":"}
             }
         }
+        minimalPairs{
+            ordinal{
+                other{"{0} အုပ်မြောက်"}
+            }
+            plural{
+                other{"{0}ရက်"}
+            }
+        }
         minimumGroupingDigits{"1"}
         mymr{
             patterns{
@@ -184,7 +192,7 @@ my{
         }
         native{"mymr"}
     }
-    Version{"2.1.30.50"}
+    Version{"2.1.33.28"}
     calendar{
         generic{
             DateTimePatterns{

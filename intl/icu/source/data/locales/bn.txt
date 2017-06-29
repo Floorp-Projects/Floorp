@@ -219,10 +219,23 @@ bn{
                 timeSeparator{":"}
             }
         }
+        minimalPairs{
+            ordinal{
+                few{"ডান দিকে {0}র্থ বাঁকটি নিন।"}
+                many{"ডান দিকে {0}ষ্ঠ বাঁকটি নিন।"}
+                one{"ডান দিকে {0}ম বাঁকটি নিন।"}
+                other{"ডান দিকে {0}তম বাঁকটি নিন।"}
+                two{"ডান দিকে {0}য় বাঁকটি নিন।"}
+            }
+            plural{
+                one{"সসে {0}টি আপেল খেল, সেটা ভাল"}
+                other{"সসে {0}টি আপেল খেল, সেগুলি ভাল"}
+            }
+        }
         minimumGroupingDigits{"1"}
         native{"beng"}
     }
-    Version{"2.1.29.44"}
+    Version{"2.1.32.59"}
     calendar{
         generic{
             DateTimePatterns{

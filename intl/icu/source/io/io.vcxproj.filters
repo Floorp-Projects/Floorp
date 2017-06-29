@@ -18,34 +18,34 @@
     <ClCompile Include="locbund.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="sprintf.c">
+    <ClCompile Include="sprintf.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="sscanf.c">
+    <ClCompile Include="sscanf.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="ucln_io.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="ufile.c">
+    <ClCompile Include="ufile.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="ufmt_cmn.c">
+    <ClCompile Include="ufmt_cmn.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="uprintf.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="uprntf_p.c">
+    <ClCompile Include="uprntf_p.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="uscanf.c">
+    <ClCompile Include="uscanf.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="uscanf_p.c">
+    <ClCompile Include="uscanf_p.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="ustdio.c">
+    <ClCompile Include="ustdio.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="ustream.cpp">

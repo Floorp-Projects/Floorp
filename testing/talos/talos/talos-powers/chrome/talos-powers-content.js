@@ -4,6 +4,8 @@
 
 // This file is loaded as a framescript
 
+/* globals docShell */
+
 var { interfaces: Ci, utils: Cu } = Components;
 
 /**
@@ -38,8 +40,8 @@ addMessageListener("TalosContentProfiler:Response", (msg) => {
   let event = Cu.cloneInto({
     bubbles: true,
     detail: {
-      name: name,
-      data: data,
+      name,
+      data,
     },
   }, content);
   content.dispatchEvent(
@@ -91,7 +93,7 @@ addEventListener("TalosPowersContentGetStartupInfo", (e) => {
  * The consumer API for this mechanism is at content/TalosPowersContent.js
  * and the callees are at ParentExecServices at components/TalosPowersService.js
  */
-addEventListener("TalosPowers:ParentExec:QueryEvent", function (e) {
+addEventListener("TalosPowers:ParentExec:QueryEvent", function(e) {
   if (content.location.protocol != "file:" &&
       content.location.hostname != "localhost" &&
       content.location.hostname != "127.0.0.1") {

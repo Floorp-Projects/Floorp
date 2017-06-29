@@ -10,4 +10,4 @@
 
 Library('icustubdata')
 
-SOURCES += ['/intl/icu/source/stubdata/stubdata.c']
+SOURCES += ['/intl/icu/source/stubdata/stubdata.cpp']

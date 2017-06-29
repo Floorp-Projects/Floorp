@@ -17,8 +17,14 @@ kl{
                 group{"."}
             }
         }
+        minimalPairs{
+            plural{
+                one{"{0} Ulloq"}
+                other{"{0} Ullut"}
+            }
+        }
     }
-    Version{"2.1.27.40"}
+    Version{"2.1.31.34"}
     calendar{
         gregorian{
             dayNames{

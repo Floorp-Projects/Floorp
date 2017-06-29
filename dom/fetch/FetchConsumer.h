@@ -106,9 +106,7 @@ private:
   FetchConsumeType mConsumeType;
   RefPtr<Promise> mConsumePromise;
 
-#ifdef DEBUG
-  bool mReadDone;
-#endif
+  bool mBodyConsumed;
 };
 
 } // namespace dom

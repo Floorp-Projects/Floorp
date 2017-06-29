@@ -293,6 +293,7 @@ class LIRGenerator : public LIRGeneratorSpecific
     void visitCallInstanceOf(MCallInstanceOf* ins);
     void visitIsCallable(MIsCallable* ins);
     void visitIsConstructor(MIsConstructor* ins);
+    void visitIsArray(MIsArray* ins);
     void visitIsObject(MIsObject* ins);
     void visitHasClass(MHasClass* ins);
     void visitWasmAddOffset(MWasmAddOffset* ins);
@@ -339,6 +340,7 @@ class LIRGenerator : public LIRGeneratorSpecific
     void visitCheckIsCallable(MCheckIsCallable* ins);
     void visitCheckObjCoercible(MCheckObjCoercible* ins);
     void visitDebugCheckSelfHosted(MDebugCheckSelfHosted* ins);
+    void visitFinishBoundFunctionInit(MFinishBoundFunctionInit* ins);
 };
 
 } // namespace jit

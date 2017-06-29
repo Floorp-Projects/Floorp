@@ -780,7 +780,7 @@ ja{
         }
         PEN{
             "PEN",
-            "ペルー 新ソル",
+            "ペルー ソル",
         }
         PES{
             "PES",
@@ -1879,7 +1879,7 @@ ja{
             other{"ペルー インティ"}
         }
         PEN{
-            other{"ペルー 新ソル"}
+            other{"ペルー ソル"}
         }
         PES{
             other{"ペルー ソル (1863–1965)"}
@@ -2194,5 +2194,5 @@ ja{
     CurrencyUnitPatterns{
         other{"{0}{1}"}
     }
-    Version{"2.1.28.79"}
+    Version{"2.1.32.59"}
 }

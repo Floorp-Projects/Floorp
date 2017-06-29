@@ -42,7 +42,7 @@ es_419{
         }
         minimumGroupingDigits{"1"}
     }
-    Version{"2.1.27.99"}
+    Version{"2.1.31.33"}
     calendar{
         generic{
             DateTimePatterns{

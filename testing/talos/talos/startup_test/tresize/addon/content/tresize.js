@@ -6,7 +6,7 @@
  * and average to stdout or logfile.
  */
 
-var dataSet = new Array();
+var dataSet = [];
 var windowSize = 425;
 var resizeIncrement = 2;
 var count = 0;
@@ -28,9 +28,9 @@ function resizeTest() {
     windowSize += resizeIncrement;
     window.addEventListener("MozAfterPaint", painted, true);
     Profiler.resume("resize " + count);
-    dataSet[count] = {'start': window.performance.now()};
-    window.resizeTo(windowSize,windowSize);
-  } catch(ex) { finish([ex + '\n']); }
+    dataSet[count] = {"start": window.performance.now()};
+    window.resizeTo(windowSize, windowSize);
+  } catch (ex) { finish([ex + "\n"]); }
 }
 
 function testCompleted() {
@@ -43,16 +43,16 @@ function testCompleted() {
       total += diff;
       diffs.push(diff);
     }
-    var average = (total/count);
+    var average = (total / count);
     var retVal = [];
     if (dumpDataSet) {
-      retVal.push('__start_reporttresize-test.html,' + diffs + '__end_report\n');
+      retVal.push("__start_reporttresize-test.html," + diffs + "__end_report\n");
     } else {
-      retVal.push('__start_report' + average + '__end_report\n');
+      retVal.push("__start_report" + average + "__end_report\n");
     }
-    retVal.push('__startTimestamp' + Date.now() + '__endTimestamp\n');
+    retVal.push("__startTimestamp" + Date.now() + "__endTimestamp\n");
     finish(retVal);
-  } catch(ex) { finish([ex + '\n']); }
+  } catch (ex) { finish([ex + "\n"]); }
 }
 
 function resizeCompleted() {
@@ -66,8 +66,8 @@ function resizeCompleted() {
 
 function runTest(callback, locationSearch) {
   doneCallback = callback;
-  window.moveTo(10,10);
-  window.resizeTo(windowSize,windowSize);
+  window.moveTo(10, 10);
+  window.resizeTo(windowSize, windowSize);
   Profiler.initFromURLQueryParams(locationSearch);
   Profiler.beginTest("tresize");
   resizeTest();

@@ -407,6 +407,11 @@ TabChild::TabChild(nsIContentChild* aManager,
 #if defined(ACCESSIBILITY)
   , mTopLevelDocAccessibleChild(nullptr)
 #endif
+  , mPendingDocShellIsActive(false)
+  , mPendingDocShellPreserveLayers(false)
+  , mPendingDocShellReceivedMessage(false)
+  , mPendingDocShellBlockers(0)
+  , mWidgetNativeData(0)
 {
   nsWeakPtr weakPtrThis(do_GetWeakReference(static_cast<nsITabChild*>(this)));  // for capture by the lambda
   mSetAllowedTouchBehaviorCallback = [weakPtrThis](uint64_t aInputBlockId,
@@ -2362,20 +2367,26 @@ TabChild::RecvDestroy()
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult
-TabChild::RecvSetDocShellIsActive(const bool& aIsActive,
-                                  const bool& aPreserveLayers,
-                                  const uint64_t& aLayerObserverEpoch)
+void
+TabChild::AddPendingDocShellBlocker()
 {
-  // Since SetDocShellIsActive requests come in from both the hang monitor
-  // channel and the PContent channel, we have an ordering problem. This code
-  // ensures that we respect the order in which the requests were made and
-  // ignore stale requests.
-  if (mLayerObserverEpoch >= aLayerObserverEpoch) {
-    return IPC_OK();
-  }
-  mLayerObserverEpoch = aLayerObserverEpoch;
+  mPendingDocShellBlockers++;
+}
 
+void
+TabChild::RemovePendingDocShellBlocker()
+{
+  mPendingDocShellBlockers--;
+  if (!mPendingDocShellBlockers && mPendingDocShellReceivedMessage) {
+    mPendingDocShellReceivedMessage = false;
+    InternalSetDocShellIsActive(mPendingDocShellIsActive,
+                                mPendingDocShellPreserveLayers);
+  }
+}
+
+void
+TabChild::InternalSetDocShellIsActive(bool aIsActive, bool aPreserveLayers)
+{
   auto clearForcePaint = MakeScopeExit([&] {
     // We might force a paint, or we might already have painted and this is a
     // no-op. In either case, once we exit this scope, we need to alert the
@@ -2401,7 +2412,7 @@ TabChild::RecvSetDocShellIsActive(const bool& aIsActive,
     // We send the current layer observer epoch to the compositor so that
     // TabParent knows whether a layer update notification corresponds to the
     // latest SetDocShellIsActive request that was made.
-    mPuppetWidget->GetLayerManager()->SetLayerObserverEpoch(aLayerObserverEpoch);
+    mPuppetWidget->GetLayerManager()->SetLayerObserverEpoch(mLayerObserverEpoch);
   }
 
   // docshell is consider prerendered only if not active yet
@@ -2415,8 +2426,8 @@ TabChild::RecvSetDocShellIsActive(const bool& aIsActive,
       // notification to fire in the parent (so that it knows that the child has
       // updated its epoch). ForcePaintNoOp does that.
       if (IPCOpen()) {
-        Unused << SendForcePaintNoOp(aLayerObserverEpoch);
-        return IPC_OK();
+        Unused << SendForcePaintNoOp(mLayerObserverEpoch);
+        return;
       }
     }
 
@@ -2457,7 +2468,33 @@ TabChild::RecvSetDocShellIsActive(const bool& aIsActive,
   } else if (!aPreserveLayers) {
     MakeHidden();
   }
+}
 
+mozilla::ipc::IPCResult
+TabChild::RecvSetDocShellIsActive(const bool& aIsActive,
+                                  const bool& aPreserveLayers,
+                                  const uint64_t& aLayerObserverEpoch)
+{
+  // Since requests to change the active docshell come in from both the hang
+  // monitor channel and the PContent channel, we have an ordering problem. This
+  // code ensures that we respect the order in which the requests were made and
+  // ignore stale requests.
+  if (mLayerObserverEpoch >= aLayerObserverEpoch) {
+    return IPC_OK();
+  }
+  mLayerObserverEpoch = aLayerObserverEpoch;
+
+  // If we're currently waiting for window opening to complete, we need to hold
+  // off on setting the docshell active. We queue up the values we're receiving
+  // in the mWindowOpenDocShellActiveStatus.
+  if (mPendingDocShellBlockers > 0) {
+    mPendingDocShellReceivedMessage = true;
+    mPendingDocShellIsActive = aIsActive;
+    mPendingDocShellPreserveLayers = aPreserveLayers;
+    return IPC_OK();
+  }
+
+  InternalSetDocShellIsActive(aIsActive, aPreserveLayers);
   return IPC_OK();
 }
 
@@ -3172,6 +3209,13 @@ TabChild::RecvSetOriginAttributes(const OriginAttributes& aOriginAttributes)
   nsCOMPtr<nsIDocShell> docShell = do_GetInterface(WebNavigation());
   nsDocShell::Cast(docShell)->SetOriginAttributes(aOriginAttributes);
 
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult
+TabChild::RecvSetWidgetNativeData(const WindowsHandle& aWidgetNativeData)
+{
+  mWidgetNativeData = aWidgetNativeData;
   return IPC_OK();
 }
 

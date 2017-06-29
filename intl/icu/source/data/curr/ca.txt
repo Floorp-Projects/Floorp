@@ -777,11 +777,11 @@ ca{
         }
         PEN{
             "PEN",
-            "nou sol peruà",
+            "sol peruà",
         }
         PES{
             "PES",
-            "sol peruà",
+            "sol peruà (1863–1965)",
         }
         PGK{
             "PGK",
@@ -2057,12 +2057,12 @@ ca{
             other{"intis peruans"}
         }
         PEN{
-            one{"nou sol peruà"}
-            other{"nous sols peruans"}
-        }
-        PES{
             one{"sol peruà"}
             other{"sols peruans"}
+        }
+        PES{
+            one{"sol peruà (1863–1965)"}
+            other{"sols peruans (1863–1965)"}
         }
         PGK{
             one{"kina de Papua Nova Guinea"}
@@ -2469,5 +2469,5 @@ ca{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.1.28.79"}
+    Version{"2.1.32.59"}
 }

@@ -445,7 +445,7 @@ eu{
         }
         PEN{
             "PEN",
-            "Peruko sol berria",
+            "Peruko sol",
         }
         PGK{
             "PGK",
@@ -1180,8 +1180,8 @@ eu{
             other{"Panamako balboa"}
         }
         PEN{
-            one{"Peruko sol berri"}
-            other{"Peruko sol berri"}
+            one{"Peruko sol"}
+            other{"Peruko sol"}
         }
         PGK{
             one{"Papua Ginea Berriko kina"}
@@ -1388,5 +1388,5 @@ eu{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.1.29.20"}
+    Version{"2.1.32.59"}
 }

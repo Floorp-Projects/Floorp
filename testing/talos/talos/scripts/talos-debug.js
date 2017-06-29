@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/******************************************************************
+/** ****************************************************************
  * window.talosDebug provides some statistical functions
  * (sum, average, median, stddev) and a tpRecordTime method which
  * reports some statistics about the data set, including detected
@@ -16,24 +16,25 @@
  *****************************************************************/
 window.talosDebug = {
   // Optional config properties
-  disabled : false,
+  disabled: false,
   ignore: -1, // Number of items to ignore at the begining of the set. -1 for auto-detect.
   displayData: false, // If true, will also display all the data points.
   fixed: 2, // default floating point digits for display.
   // End of config
 
-  sum: function (values) {
-    return values.reduce(function(a, b){return a + b;});
+  sum(values) {
+    return values.reduce(function(a, b) { return a + b; });
   },
 
-  average: function (values) {
+  average(values) {
     var d = window.talosDebug;
     return values.length ? d.sum(values) / values.length : 999999;
   },
 
-  median: function (values) {
+  median(values) {
     var clone = values.slice(0);
-    var sorted = clone.sort(function(a, b){ return (a > b) ? 1 : ((a < b) ? -1 : 0); });
+    // eslint-disable-next-line no-nested-ternary
+    var sorted = clone.sort(function(a, b) { return (a > b) ? 1 : ((a < b) ? -1 : 0); });
     var len = values.length;
     if (!len)
       return 999999;
@@ -42,14 +43,14 @@ window.talosDebug = {
     return (sorted[len / 2] + sorted[len / 2 - 1]) / 2; // Average value of the two middle items.
   },
 
-  stddev: function (values, avg) {
+  stddev(values, avg) {
     if (values.length <= 1) {
       return 0;
     }
 
     return Math.sqrt(
-      values.map(function (v) { return Math.pow(v - avg, 2); })
-            .reduce(function (a, b) { return a + b; }) / (values.length - 1));
+      values.map(function(v) { return Math.pow(v - avg, 2); })
+            .reduce(function(a, b) { return a + b; }) / (values.length - 1));
   },
 
   // Estimate the number of warmup iterations of this data set (in a completely unscrientific way).
@@ -64,7 +65,7 @@ window.talosDebug = {
   //         Now we should have an index which is at least the 2nd value within the stable part.
   //         We get stddev for that index..end (baseStd), and then go backwards as long as stddev is
   //         decreasing or within ~1% of baseStd, and return the earliest index for which it is.
-  detectWarmup: function (values) {
+  detectWarmup(values) {
     var MIN_WIDTH = 3;
     var MAX_WIDTH = 7;
     var d = window.talosDebug;
@@ -76,14 +77,14 @@ window.talosDebug = {
 
     var stableFrom = -1;
     var overallAverage = d.median(values);
-    var overallStd = d.stddev(values, overallAverage);
+    // var overallStd = d.stddev(values, overallAverage);
     for (var winWidth = MIN_WIDTH; winWidth < (MAX_WIDTH + 1); winWidth++) {
       var prevStd = windowStd(0, winWidth);
       for (var i = 1; i < values.length - winWidth - 3; i++) {
         var w0 = windowStd(i + 0, winWidth);
         var w1 = windowStd(i + 1, winWidth);
         var w2 = windowStd(i + 2, winWidth);
-        var currWindow = values.slice(i, i + winWidth);
+        // var currWindow = values.slice(i, i + winWidth);
         if (w0 >= prevStd && !(w1 < w0 && w2 < w1)) {
           if (i > stableFrom)
             stableFrom = i;
@@ -113,7 +114,7 @@ window.talosDebug = {
     return stableFrom;
   },
 
-  statsDisplay: function (collection) {
+  statsDisplay(collection) {
     var d = window.talosDebug;
     var std = d.stddev(collection, d.average(collection));
     var avg = d.average(collection);
@@ -124,18 +125,18 @@ window.talosDebug = {
            "\nStdDev: " + std.toFixed(d.fixed) + " (" + (100 * std / (avg ? avg : 1)).toFixed(d.fixed) + "% of average)";
   },
 
-  tpRecordTime: function (dataCSV) {
+  tpRecordTime(dataCSV) {
     var d = window.talosDebug;
     if (d.disabled)
       return;
 
-    var collection = ("" + dataCSV).split(",").map(function(item){ return parseFloat(item); });
+    var collection = ("" + dataCSV).split(",").map(function(item) { return parseFloat(item); });
     var res = d.statsDisplay(collection);
 
     var warmup = (d.ignore >= 0) ? d.ignore : d.detectWarmup(collection);
     if (warmup >= 0) {
       res += "\n\nWarmup " + ((d.ignore >= 0) ? "requested: " : "auto-detected: ") + warmup;
-      warmedUp = collection.slice(warmup);
+      var warmedUp = collection.slice(warmup);
       if (warmup) {
         res += "\nAfter ignoring first " + (warmup > 1 ? (warmup + " items") : "item") + ":\n";
         res += d.statsDisplay(warmedUp);
@@ -145,7 +146,7 @@ window.talosDebug = {
     }
 
     if (d.displayData) {
-      var disp = collection.map(function(item){
+      var disp = collection.map(function(item) {
                    return item.toFixed(d.fixed);
                  });
       if (warmup >= 0)
@@ -168,6 +169,6 @@ window.talosDebug = {
 }
 
 // Enable testing outside of talos by providing an alternative report function.
-if (typeof (tpRecordTime) === 'undefined') {
+if (typeof (tpRecordTime) === "undefined") {
   tpRecordTime = window.talosDebug.tpRecordTime;
 }

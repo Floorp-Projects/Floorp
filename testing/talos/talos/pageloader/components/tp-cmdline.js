@@ -41,10 +41,10 @@
 // to handle multiple arguments.
 
 const TP_CMDLINE_CONTRACTID     = "@mozilla.org/commandlinehandler/general-startup;1?type=tp";
-const TP_CMDLINE_CLSID          = Components.ID('{8AF052F5-8EFE-4359-8266-E16498A82E8B}');
+const TP_CMDLINE_CLSID          = Components.ID("{8AF052F5-8EFE-4359-8266-E16498A82E8B}");
 const CATMAN_CONTRACTID         = "@mozilla.org/categorymanager;1";
 const nsISupports               = Components.interfaces.nsISupports;
-  
+
 const nsICategoryManager        = Components.interfaces.nsICategoryManager;
 const nsICommandLine            = Components.interfaces.nsICommandLine;
 const nsICommandLineHandler     = Components.interfaces.nsICommandLineHandler;
@@ -58,7 +58,7 @@ function PageLoaderCmdLineHandler() {}
 PageLoaderCmdLineHandler.prototype =
 {
   /* nsISupports */
-  QueryInterface : function handler_QI(iid) {
+  QueryInterface: function handler_QI(iid) {
     if (iid.equals(nsISupports))
       return this;
 
@@ -69,7 +69,7 @@ PageLoaderCmdLineHandler.prototype =
   },
 
   /* nsICommandLineHandler */
-  handle : function handler_handle(cmdLine) {
+  handle: function handler_handle(cmdLine) {
     var args = {};
     try {
       var uristr = cmdLine.handleFlagWithParam("tp", false);
@@ -101,8 +101,7 @@ PageLoaderCmdLineHandler.prototype =
       args.scrolltest = cmdLine.handleFlag("tpscrolltest", false);
       args.disableE10s = cmdLine.handleFlag("tpdisable_e10s", false);
       args.rss = cmdLine.handleFlag("rss", false);
-    }
-    catch (e) {
+    } catch (e) {
       return;
     }
 
@@ -116,7 +115,7 @@ PageLoaderCmdLineHandler.prototype =
     cmdLine.preventDefault = true;
   },
 
-  helpInfo :
+  helpInfo:
   "  -tp <file>         Run pageload perf tests on given manifest\n" +
   "  -tpfilter str      Only include pages from manifest that contain str (regexp)\n" +
   "  -tpcycles n        Loop through pages n times\n" +
@@ -129,7 +128,7 @@ PageLoaderCmdLineHandler.prototype =
   "  -tpheight height   Height of window\n" +
   "  -tbprofilinginfo   A JSON object describing profiler settings\n" +
   "  -tpoffline         Force offline mode\n" +
-  "  -tpnoisy           Dump the name of the last loaded page to console\n" + 
+  "  -tpnoisy           Dump the name of the last loaded page to console\n" +
   "  -tptimeout         Max amount of time given for a page to load, quit if exceeded\n" +
   "  -tpdelay           Amount of time to wait between each pageload\n" +
   "  -tpnoforcecc       Don't force cycle collection between each pageload\n" +
@@ -143,8 +142,7 @@ PageLoaderCmdLineHandler.prototype =
 
 var PageLoaderCmdLineFactory =
 {
-  createInstance : function(outer, iid)
-  {
+  createInstance(outer, iid) {
     if (outer != null) {
       throw Components.results.NS_ERROR_NO_AGGREGATION;
     }
@@ -162,8 +160,7 @@ function NSGetFactory(cid) {
 
 var PageLoaderCmdLineModule =
 {
-  registerSelf : function(compMgr, fileSpec, location, type)
-  {
+  registerSelf(compMgr, fileSpec, location, type) {
     compMgr = compMgr.QueryInterface(nsIComponentRegistrar);
 
     compMgr.registerFactoryLocation(TP_CMDLINE_CLSID,
@@ -179,23 +176,20 @@ var PageLoaderCmdLineModule =
                             TP_CMDLINE_CONTRACTID, true, true);
   },
 
-  unregisterSelf : function(compMgr, fileSpec, location)
-  {
+  unregisterSelf(compMgr, fileSpec, location) {
     compMgr = compMgr.QueryInterface(nsIComponentRegistrar);
 
     compMgr.unregisterFactoryLocation(TP_CMDLINE_CLSID, fileSpec);
-    catman = Components.classes[CATMAN_CONTRACTID].getService(nsICategoryManager);
+    var catman = Components.classes[CATMAN_CONTRACTID].getService(nsICategoryManager);
     catman.deleteCategoryEntry("command-line-handler",
                                "m-tp", true);
   },
 
-  getClassObject : function(compMgr, cid, iid)
-  {
+  getClassObject(compMgr, cid, iid) {
     return NSGetFactory(cid);
   },
 
-  canUnload : function(compMgr)
-  {
+  canUnload(compMgr) {
     return true;
   }
 };

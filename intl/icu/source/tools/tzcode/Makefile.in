@@ -121,7 +121,7 @@ $(ZICTARG):		$(OBJECTS) $(TDATA) yearistype $(srcdir)/tz2icu.h
 		$(CC) $(CFLAGS) $(TZORIG_EXTRA_CFLAGS) $(LFLAGS) -I$(srcdir) $(OBJECTS) $(LDLIBS) -o $@
 
 $(TZ2ICUTARG):	$(srcdir)/tz2icu.cpp $(srcdir)/tz2icu.h
-		$(CXX) -W -Wall  -I$(srcdir) -I$(top_srcdir)/common -pedantic $(srcdir)/tz2icu.cpp -o $@
+		$(CXX) $(CXXFLAGS) -I$(srcdir) -I$(top_srcdir)/common $(srcdir)/tz2icu.cpp -o $@
 
 $(ICUZDUMPTARG):	$(srcdir)/icuzdump.cpp
 		$(LINK.cc)  -I$(srcdir) -I$(top_srcdir)/common -I$(top_srcdir)/i18n -I$(top_srcdir)/tools/toolutil -I$(top_srcdir)/io  -pedantic $(srcdir)/icuzdump.cpp $(LIBICUUC) $(LIBICUDT) $(LIBICUI18N) $(LIBICUIO) $(LIBICUTOOLUTIL) -o $@

@@ -2,6 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+/* import-globals-from memory.js */
+/* import-globals-from report.js */
+
 try {
   if (Cc === undefined) {
     var Cc = Components.classes;
@@ -47,7 +50,7 @@ var gDisableE10S = false;
 var gUseE10S = false;
 var profilingInfo = false;
 
-//when TEST_DOES_OWN_TIMING, we need to store the time from the page as MozAfterPaint can be slower than pageload
+// when TEST_DOES_OWN_TIMING, we need to store the time from the page as MozAfterPaint can be slower than pageload
 var gTime = -1;
 var gStartTime = -1;
 var gReference = -1;
@@ -106,6 +109,7 @@ SingleTimeout.prototype.clear = function() {
 };
 
 var failTimeout = new SingleTimeout();
+var renderReport;
 
 function plInit() {
   if (running) {
@@ -118,7 +122,7 @@ function plInit() {
 
   try {
     var args;
-    
+
     /*
      * Desktop firefox:
      * non-chrome talos runs - tp-cmdline will create and load pageloader
@@ -172,25 +176,25 @@ function plInit() {
     pages = plLoadURLsFromURI(fileURI);
 
     if (!pages) {
-      dumpLine('tp: could not load URLs, quitting');
+      dumpLine("tp: could not load URLs, quitting");
       plStop(true);
     }
 
     if (pages.length == 0) {
-      dumpLine('tp: no pages to test, quitting');
+      dumpLine("tp: no pages to test, quitting");
       plStop(true);
     }
 
     if (startIndex < 0)
       startIndex = 0;
     if (endIndex == -1 || endIndex >= pages.length)
-      endIndex = pages.length-1;
+      endIndex = pages.length - 1;
     if (startIndex > endIndex) {
       dumpLine("tp: error: startIndex >= endIndex");
       plStop(true);
     }
 
-    pages = pages.slice(startIndex,endIndex+1);
+    pages = pages.slice(startIndex, endIndex + 1);
     pageUrls = pages.map(function(p) { return p.url.spec.toString(); });
     report = new Report();
 
@@ -214,21 +218,20 @@ function plInit() {
       toolbars = "titlebar,resizable";
     }
 
-    browserWindow = wwatch.openWindow
-      (null, "chrome://browser/content/", "_blank",
+    browserWindow = wwatch.openWindow(null, "chrome://browser/content/", "_blank",
        `chrome,${toolbars},dialog=no,width=${winWidth},height=${winHeight}`, blank);
 
     gPaintWindow = browserWindow;
     // get our window out of the way
-    window.resizeTo(10,10);
+    window.resizeTo(10, 10);
 
-    var browserLoadFunc = function (ev) {
-      browserWindow.removeEventListener('load', browserLoadFunc, true);
+    var browserLoadFunc = function(ev) {
+      browserWindow.removeEventListener("load", browserLoadFunc, true);
 
       // do this half a second after load, because we need to be
       // able to resize the window and not have it get clobbered
       // by the persisted values
-      setTimeout(function () {
+      setTimeout(function() {
         // For e10s windows, since bug 1261842, the initial browser is remote unless
         // it attempts to browse to a URI that should be non-remote (landed at bug 1047603).
         //
@@ -297,8 +300,8 @@ function plInit() {
       }, 500);
     };
 
-    browserWindow.addEventListener('load', browserLoadFunc, true);
-  } catch(e) {
+    browserWindow.addEventListener("load", browserLoadFunc, true);
+  } catch (e) {
     dumpLine("pageloader exception: " + e);
     plStop(true);
   }
@@ -309,11 +312,12 @@ function plPageFlags() {
 }
 
 var ContentListener = {
-  receiveMessage: function(message) {
+  receiveMessage(message) {
     switch (message.name) {
-      case 'PageLoader:LoadEvent': return plLoadHandlerMessage(message);
-      case 'PageLoader:RecordTime': return plRecordTimeMessage(message);
+      case "PageLoader:LoadEvent": return plLoadHandlerMessage(message);
+      case "PageLoader:RecordTime": return plRecordTimeMessage(message);
     }
+    return undefined;
   },
 };
 
@@ -337,9 +341,9 @@ function plLoadPage() {
     // if the page does its own timing, use a capturing handler
     // to make sure that we can set up the function for content to call
 
-    content.addEventListener('load', plLoadHandlerCapturing, true);
+    content.addEventListener("load", plLoadHandlerCapturing, true);
     removeLastAddedListener = function() {
-      content.removeEventListener('load', plLoadHandlerCapturing, true);
+      content.removeEventListener("load", plLoadHandlerCapturing, true);
       if (useMozAfterPaint) {
         content.removeEventListener("MozAfterPaint", plPaintedCapturing, true);
         gPaintListener = false;
@@ -351,9 +355,9 @@ function plLoadPage() {
 
     // XXX we use a capturing event here too -- load events don't bubble up
     // to the <browser> element.  See bug 390263.
-    content.addEventListener('load', plLoadHandler, true);
+    content.addEventListener("load", plLoadHandler, true);
     removeLastAddedListener = function() {
-      content.removeEventListener('load', plLoadHandler, true);
+      content.removeEventListener("load", plLoadHandler, true);
       if (useMozAfterPaint) {
         gPaintWindow.removeEventListener("MozAfterPaint", plPainted, true);
         gPaintListener = false;
@@ -364,11 +368,11 @@ function plLoadPage() {
   // If the test browser is remote (e10s / IPC) we need to use messages to watch for page load
   if (gUseE10S) {
     let mm = content.selectedBrowser.messageManager;
-    mm.addMessageListener('PageLoader:LoadEvent', ContentListener);
-    mm.addMessageListener('PageLoader:RecordTime', ContentListener);
+    mm.addMessageListener("PageLoader:LoadEvent", ContentListener);
+    mm.addMessageListener("PageLoader:RecordTime", ContentListener);
     removeLastAddedMsgListener = function() {
-      mm.removeMessageListener('PageLoader:LoadEvent', ContentListener);
-      mm.removeMessageListener('PageLoader:RecordTime', ContentListener);
+      mm.removeMessageListener("PageLoader:LoadEvent", ContentListener);
+      mm.removeMessageListener("PageLoader:RecordTime", ContentListener);
     };
   }
 
@@ -401,7 +405,7 @@ function startAndLoadURI(pageName) {
 
 function getTestName() { // returns tp5n
   var pageName = pages[pageIndex].url.spec;
-  let parts = pageName.split('/');
+  let parts = pageName.split("/");
   if (parts.length > 4) {
     return parts[4];
   }
@@ -410,7 +414,7 @@ function getTestName() { // returns tp5n
 
 function getCurrentPageShortName() {
   var pageName = pages[pageIndex].url.spec;
-  let parts = pageName.split('/');
+  let parts = pageName.split("/");
   if (parts.length > 5) {
     return parts[5];
   }
@@ -422,16 +426,16 @@ function loadFail() {
   numRetries++;
 
   if (numRetries >= maxRetries) {
-    dumpLine('__FAILTimeout in ' + getTestName() + '__FAIL');
-    dumpLine('__FAILTimeout (' + numRetries + '/' + maxRetries + ') exceeded on ' + pageName + '__FAIL');
+    dumpLine("__FAILTimeout in " + getTestName() + "__FAIL");
+    dumpLine("__FAILTimeout (" + numRetries + "/" + maxRetries + ") exceeded on " + pageName + "__FAIL");
     Profiler.finishTest();
     plStop(true);
   } else {
-    dumpLine('__WARNTimeout (' + numRetries + '/' + maxRetries + ') exceeded on ' + pageName + '__WARN');
+    dumpLine("__WARNTimeout (" + numRetries + "/" + maxRetries + ") exceeded on " + pageName + "__WARN");
     // TODO: make this a cleaner cleanup
     pageCycle--;
-    content.removeEventListener('load', plLoadHandler, true);
-    content.removeEventListener('load', plLoadHandlerCapturing, true);
+    content.removeEventListener("load", plLoadHandler, true);
+    content.removeEventListener("load", plLoadHandlerCapturing, true);
     content.removeEventListener("MozAfterPaint", plPaintedCapturing, true);
     content.removeEventListener("MozAfterPaint", plPainted, true);
     gPaintWindow.removeEventListener("MozAfterPaint", plPaintedCapturing, true);
@@ -440,7 +444,7 @@ function loadFail() {
     removeLastAddedMsgListener = null;
     gPaintListener = false;
 
-    //TODO: consider adding a tab and removing the old tab?!?
+    // TODO: consider adding a tab and removing the old tab?!?
     setTimeout(plLoadPage, delay);
   }
 }
@@ -455,7 +459,7 @@ var plNextPage = async function() {
       await Profiler.finishTestAsync();
     }
 
-    if (pageIndex < pages.length-1) {
+    if (pageIndex < pages.length - 1) {
       pageIndex++;
       if (profilingInfo) {
         Profiler.beginTest(getCurrentPageShortName());
@@ -502,7 +506,7 @@ function forceContentGC() {
 function plRecordTime(time) {
   var pageName = pages[pageIndex].url.spec;
   var i = pageIndex
-  if (i < pages.length-1) {
+  if (i < pages.length - 1) {
     i++;
   } else {
     i = 0;
@@ -512,8 +516,8 @@ function plRecordTime(time) {
     recordedName = pageUrls[pageIndex];
   }
   if (typeof(time) == "string") {
-    var times = time.split(',');
-    var names = recordedName.split(',');
+    var times = time.split(",");
+    var names = recordedName.split(",");
     for (var t = 0; t < times.length; t++) {
       if (names.length == 1) {
         report.recordTime(names, times[t]);
@@ -525,31 +529,31 @@ function plRecordTime(time) {
     report.recordTime(recordedName, time);
   }
   if (noisy) {
-    dumpLine("Cycle " + (cycle+1) + "(" + pageCycle + ")" + ": loaded " + pageName + " (next: " + nextName + ")");
+    dumpLine("Cycle " + (cycle + 1) + "(" + pageCycle + "): loaded " + pageName + " (next: " + nextName + ")");
   }
 }
 
 function plLoadHandlerCapturing(evt) {
   // make sure we pick up the right load event
-  if (evt.type != 'load' ||
+  if (evt.type != "load" ||
        evt.originalTarget.defaultView.frameElement)
       return;
 
-  //set the tpRecordTime function (called from test pages we load) to store a global time.
-  content.contentWindow.wrappedJSObject.tpRecordTime = function (time, startTime, testName) {
+  // set the tpRecordTime function (called from test pages we load) to store a global time.
+  content.contentWindow.wrappedJSObject.tpRecordTime = function(time, startTime, testName) {
     gTime = time;
     gStartTime = startTime;
     recordedName = testName;
     setTimeout(plWaitForPaintingCapturing, 0);
   }
 
-  content.contentWindow.wrappedJSObject.plGarbageCollect = function () {
+  content.contentWindow.wrappedJSObject.plGarbageCollect = function() {
     window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
           .getInterface(Components.interfaces.nsIDOMWindowUtils)
           .garbageCollect();
   }
 
-  content.removeEventListener('load', plLoadHandlerCapturing, true);
+  content.removeEventListener("load", plLoadHandlerCapturing, true);
   removeLastAddedListener = null;
 
   setTimeout(plWaitForPaintingCapturing, 0);
@@ -561,9 +565,9 @@ function sendScroll() {
   const SCROLL_TEST_NUM_STEPS = 100;
   // The page doesn't really use tpRecordTime. Instead, we trigger the scroll test,
   // and the scroll test will call tpRecordTime which will take us to the next page
-  let details = {target: 'content', stepSize: SCROLL_TEST_STEP_PX, opt_numSteps: SCROLL_TEST_NUM_STEPS};
+  let details = {target: "content", stepSize: SCROLL_TEST_STEP_PX, opt_numSteps: SCROLL_TEST_NUM_STEPS};
   let mm = content.selectedBrowser.messageManager;
-  mm.sendAsyncMessage("PageLoader:ScrollTest", { details: details });
+  mm.sendAsyncMessage("PageLoader:ScrollTest", { details });
 }
 
 function plWaitForPaintingCapturing() {
@@ -616,11 +620,11 @@ function _loadHandlerCapturing() {
 // the onload handler
 function plLoadHandler(evt) {
   // make sure we pick up the right load event
-  if (evt.type != 'load' ||
+  if (evt.type != "load" ||
        evt.originalTarget.defaultView.frameElement)
       return;
 
-  content.removeEventListener('load', plLoadHandler, true);
+  content.removeEventListener("load", plLoadHandler, true);
   setTimeout(waitForPainted, 0);
 }
 
@@ -749,7 +753,7 @@ function plStopAll(force) {
     if (force == false) {
       pageIndex = 0;
       pageCycle = 1;
-      if (cycle < NUM_CYCLES-1) {
+      if (cycle < NUM_CYCLES - 1) {
         cycle++;
         recordedName = null;
         setTimeout(plLoadPage, delay);
@@ -769,16 +773,16 @@ function plStopAll(force) {
   }
 
   if (content) {
-    content.removeEventListener('load', plLoadHandlerCapturing, true);
-    content.removeEventListener('load', plLoadHandler, true);
+    content.removeEventListener("load", plLoadHandlerCapturing, true);
+    content.removeEventListener("load", plLoadHandler, true);
     if (useMozAfterPaint)
       content.removeEventListener("MozAfterPaint", plPaintedCapturing, true);
       content.removeEventListener("MozAfterPaint", plPainted, true);
 
     if (gUseE10S) {
       let mm = content.selectedBrowser.messageManager;
-      mm.removeMessageListener('PageLoader:LoadEvent', ContentListener);
-      mm.removeMessageListener('PageLoader:RecordTime', ContentListener);
+      mm.removeMessageListener("PageLoader:LoadEvent", ContentListener);
+      mm.removeMessageListener("PageLoader:RecordTime", ContentListener);
 
       mm.loadFrameScript("data:,removeEventListener('load', _contentLoadHandler, true);", false, true);
     }
@@ -804,7 +808,7 @@ function plLoadURLsFromURI(manifestUri) {
 
   try {
     fstream.init(uriFile.file, -1, 0, 0);
-  } catch(ex) {
+  } catch (ex) {
       dumpLine("tp: the file %s doesn't exist" % uriFile.file);
       return null;
   }
@@ -814,7 +818,7 @@ function plLoadURLsFromURI(manifestUri) {
   var d = [];
 
   var lineNo = 0;
-  var line = {value:null};
+  var line = {value: null};
   var more;
   do {
     lineNo++;
@@ -822,10 +826,10 @@ function plLoadURLsFromURI(manifestUri) {
     var s = line.value;
 
     // strip comments (only leading ones)
-    s = s.replace(/^#.*/, '');
+    s = s.replace(/^#.*/, "");
 
     // strip leading and trailing whitespace
-    s = s.replace(/^\s*/, '').replace(/\s*$/, '');
+    s = s.replace(/^\s*/, "").replace(/\s*$/, "");
 
     if (!s)
       continue;
@@ -880,8 +884,8 @@ function plLoadURLsFromURI(manifestUri) {
       if (pageFilterRegexp && !pageFilterRegexp.test(url.spec))
         continue;
 
-      d.push({   url: url,
-               flags: flags });
+      d.push({   url,
+               flags });
     }
   } while (more);
 

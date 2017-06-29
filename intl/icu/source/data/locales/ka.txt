@@ -203,11 +203,22 @@ ka{
                 timeSeparator{":"}
             }
         }
+        minimalPairs{
+            ordinal{
+                many{"მე-{0}"}
+                one{"{0}-ლი"}
+                other{"{0}-ე"}
+            }
+            plural{
+                one{"კალათში {0} X-ია. შეიძენთ მას?"}
+                other{"კალათში {0} X-ია. შეიძენთ მათ?"}
+            }
+        }
         minimumGroupingDigits{"2"}
         native{"latn"}
         traditional{"geor"}
     }
-    Version{"2.1.29.20"}
+    Version{"2.1.32.59"}
     calendar{
         generic{
             DateTimePatterns{

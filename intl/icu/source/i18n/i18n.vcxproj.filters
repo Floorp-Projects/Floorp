@@ -138,7 +138,7 @@
     <ClCompile Include="dcfmtsym.cpp">
       <Filter>formatting</Filter>
     </ClCompile>
-    <ClCompile Include="decContext.c">
+    <ClCompile Include="decContext.cpp">
       <Filter>formatting</Filter>
     </ClCompile>
     <ClCompile Include="decfmtst.cpp">
@@ -150,7 +150,7 @@
     <ClCompile Include="decimfmt.cpp">
       <Filter>formatting</Filter>
     </ClCompile>
-    <ClCompile Include="decNumber.c">
+    <ClCompile Include="decNumber.cpp">
       <Filter>formatting</Filter>
     </ClCompile>
     <ClCompile Include="digitlst.cpp">
@@ -321,7 +321,7 @@
     <ClCompile Include="ufieldpositer.cpp">
       <Filter>formatting</Filter>
     </ClCompile>
-    <ClCompile Include="ulocdata.c">
+    <ClCompile Include="ulocdata.cpp">
       <Filter>formatting</Filter>
     </ClCompile>
     <ClCompile Include="umsg.cpp">
@@ -336,7 +336,7 @@
     <ClCompile Include="upluralrules.cpp">
       <Filter>formatting</Filter>
     </ClCompile>
-    <ClCompile Include="utmscale.c">
+    <ClCompile Include="utmscale.cpp">
       <Filter>formatting</Filter>
     </ClCompile>
     <ClCompile Include="vtzone.cpp">
