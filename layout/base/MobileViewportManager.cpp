@@ -88,10 +88,16 @@ void
 MobileViewportManager::SetRestoreResolution(float aResolution,
                                             LayoutDeviceIntSize aDisplaySize)
 {
-  mRestoreResolution = Some(aResolution);
+  SetRestoreResolution(aResolution);
   ScreenIntSize restoreDisplaySize = ViewAs<ScreenPixel>(aDisplaySize,
     PixelCastJustification::LayoutDeviceIsScreenForBounds);
   mRestoreDisplaySize = Some(restoreDisplaySize);
+}
+
+void
+MobileViewportManager::SetRestoreResolution(float aResolution)
+{
+  mRestoreResolution = Some(aResolution);
 }
 
 void
@@ -105,6 +111,11 @@ void
 MobileViewportManager::ResolutionUpdated()
 {
   MVM_LOG("%p: resolution updated\n", this);
+  if (!mPainted) {
+    // Save the value, so our default zoom calculation
+    // can take it into account later on.
+    SetRestoreResolution(mPresShell->GetResolution());
+  }
   RefreshSPCSPS();
 }
 
