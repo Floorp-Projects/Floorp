@@ -166,6 +166,18 @@ WebRenderBridgeParent::RecvCreate(const gfx::IntSize& aSize)
 mozilla::ipc::IPCResult
 WebRenderBridgeParent::RecvShutdown()
 {
+  return HandleShutdown();
+}
+
+mozilla::ipc::IPCResult
+WebRenderBridgeParent::RecvShutdownSync()
+{
+  return HandleShutdown();
+}
+
+mozilla::ipc::IPCResult
+WebRenderBridgeParent::HandleShutdown()
+{
   Destroy();
   IProtocol* mgr = Manager();
   if (!Send__delete__(this)) {
