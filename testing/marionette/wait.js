@@ -59,7 +59,7 @@ this.wait = {};
  * @throws {?}
  *     If |func| throws, its error is propagated.
  */
-wait.until = function (func, timeout = 2000, interval = 10) {
+wait.until = function(func, timeout = 2000, interval = 10) {
   const timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
 
   return new Promise((resolve, reject) => {
@@ -72,7 +72,8 @@ wait.until = function (func, timeout = 2000, interval = 10) {
           throw rejected;
         }
 
-        // return if timeout is 0, allowing |func| to be evaluated at least once
+        // return if timeout is 0, allowing |func| to be evaluated at
+        // least once
         if (start == end || new Date().getTime() >= end) {
           resolve(rejected);
         }
