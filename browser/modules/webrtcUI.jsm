@@ -479,19 +479,22 @@ function prompt(aBrowser, aRequest) {
         let activeCamera;
         let activeMic;
 
-        for (let device of videoDevices) {
-          let set = webrtcUI.activePerms.get(aBrowser.outerWindowID);
-          if (set && set.has(aRequest.windowID + device.mediaSource + device.id)) {
-            activeCamera = device;
-            break;
+        // Always prompt for screen sharing
+        if (!sharingScreen) {
+          for (let device of videoDevices) {
+            let set = webrtcUI.activePerms.get(aBrowser.outerWindowID);
+            if (set && set.has(aRequest.windowID + device.mediaSource + device.id)) {
+              activeCamera = device;
+              break;
+            }
           }
-        }
 
-        for (let device of audioDevices) {
-          let set = webrtcUI.activePerms.get(aBrowser.outerWindowID);
-          if (set && set.has(aRequest.windowID + device.mediaSource + device.id)) {
-            activeMic = device;
-            break;
+          for (let device of audioDevices) {
+            let set = webrtcUI.activePerms.get(aBrowser.outerWindowID);
+            if (set && set.has(aRequest.windowID + device.mediaSource + device.id)) {
+              activeMic = device;
+              break;
+            }
           }
         }
 
