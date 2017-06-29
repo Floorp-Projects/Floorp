@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 my{
-    Version{"2.1.30.50"}
+    Version{"2.1.33.28"}
     zoneStrings{
         "meta:Afghanistan"{
             ls{"အာဖဂန်နစ္စတန် အချိန်"}

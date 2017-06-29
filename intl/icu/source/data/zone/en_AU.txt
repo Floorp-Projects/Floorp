@@ -2,7 +2,7 @@
 // License & terms of use: http://www.unicode.org/copyright.html#License
 en_AU{
     %%Parent{"en_001"}
-    Version{"2.1.30.50"}
+    Version{"2.1.32.62"}
     zoneStrings{
         "meta:Africa_Eastern"{
             ls{"Eastern Africa Time"}

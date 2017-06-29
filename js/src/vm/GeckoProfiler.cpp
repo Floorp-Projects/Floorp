@@ -99,9 +99,12 @@ GeckoProfiler::enable(bool enabled)
 
     /*
      * Ensure all future generated code will be instrumented, or that all
-     * currently instrumented code is discarded
+     * currently instrumented code is discarded.
+     *
+     * We don't add markers, because that makes us call back into the profiler,
+     * which leads to deadlock on the profiler's main mutex.
      */
-    ReleaseAllJITCode(rt->defaultFreeOp());
+    ReleaseAllJITCode(rt->defaultFreeOp(), /* addMarkers = */ false);
 
     // This function is called when the Gecko profiler makes a new Sampler
     // (and thus, a new circular buffer). Set all current entries in the

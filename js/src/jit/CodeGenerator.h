@@ -380,6 +380,8 @@ class CodeGenerator final : public CodeGeneratorSpecific
     void visitOutOfLineIsCallable(OutOfLineIsCallable* ool);
     void visitIsConstructor(LIsConstructor* lir);
     void visitOutOfLineIsConstructor(OutOfLineIsConstructor* ool);
+    void visitIsArrayO(LIsArrayO* lir);
+    void visitIsArrayV(LIsArrayV* lir);
     void visitIsObject(LIsObject* lir);
     void visitIsObjectAndBranch(LIsObjectAndBranch* lir);
     void visitHasClass(LHasClass* lir);
@@ -401,6 +403,7 @@ class CodeGenerator final : public CodeGeneratorSpecific
     void visitDebugCheckSelfHosted(LDebugCheckSelfHosted* ins);
     void visitNaNToZero(LNaNToZero* ins);
     void visitOutOfLineNaNToZero(OutOfLineNaNToZero* ool);
+    void visitFinishBoundFunctionInit(LFinishBoundFunctionInit* lir);
 
     void visitCheckOverRecursed(LCheckOverRecursed* lir);
     void visitCheckOverRecursedFailure(CheckOverRecursedFailure* ool);

@@ -200,11 +200,20 @@ el{
                 timeSeparator{":"}
             }
         }
+        minimalPairs{
+            ordinal{
+                other{"Στρίψτε στην {0}η γωνία δεξιά."}
+            }
+            plural{
+                one{"{0} ημέρα"}
+                other{"{0} ημέρες"}
+            }
+        }
         minimumGroupingDigits{"1"}
         native{"latn"}
         traditional{"grek"}
     }
-    Version{"2.1.28.79"}
+    Version{"2.1.32.59"}
     calendar{
         buddhist{
             eras{

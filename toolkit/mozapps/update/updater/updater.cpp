@@ -2096,8 +2096,7 @@ static void
 LaunchCallbackApp(const NS_tchar *workingDir,
                   int argc,
                   NS_tchar **argv,
-                  bool usingService,
-                  NS_tpid pid)
+                  bool usingService)
 {
   putenv(const_cast<char*>("NO_EM_RESTART="));
   putenv(const_cast<char*>("MOZ_LAUNCHED_CHILD=1"));
@@ -2115,15 +2114,6 @@ LaunchCallbackApp(const NS_tchar *workingDir,
   // Do not allow the callback to run when running an update through the
   // service as session 0.  The unelevated updater.exe will do the launching.
   if (!usingService) {
-    // If there was a pid specified don't run the callback application if the
-    // pid is still present.
-    if (pid > 0) {
-      HANDLE parent = OpenProcess(SYNCHRONIZE, false, (DWORD) pid);
-      if (parent) {
-        CloseHandle(parent);
-        return;
-      }
-    }
     WinLaunchChild(argv[0], argc, argv, nullptr);
   }
 #else
@@ -2657,7 +2647,7 @@ int LaunchCallbackAndPostProcessApps(int argc, NS_tchar** argv,
 #elif XP_MACOSX
                                      , bool isElevated
 #endif
-                                     , NS_tpid pid)
+                                     )
 {
   if (argc > callbackIndex) {
 #if defined(XP_WIN)
@@ -2688,7 +2678,7 @@ int LaunchCallbackAndPostProcessApps(int argc, NS_tchar** argv,
     LaunchCallbackApp(argv[5],
                       argc - callbackIndex,
                       argv + callbackIndex,
-                      sUsingService, pid);
+                      sUsingService);
 #ifdef XP_MACOSX
     } // if (!isElevated)
 #endif /* XP_MACOSX */
@@ -2945,7 +2935,7 @@ int NS_main(int argc, NS_tchar **argv)
     }
     t1.Join();
 
-    LaunchCallbackAndPostProcessApps(argc, argv, callbackIndex, false, pid);
+    LaunchCallbackAndPostProcessApps(argc, argv, callbackIndex, false);
     return gSucceeded ? 0 : 1;
   }
 #endif
@@ -3316,7 +3306,7 @@ int NS_main(int argc, NS_tchar **argv)
 
       if (argc > callbackIndex) {
         LaunchCallbackApp(argv[5], argc - callbackIndex,
-                          argv + callbackIndex, sUsingService, pid);
+                          argv + callbackIndex, sUsingService);
       }
 
       CloseHandle(elevatedFileHandle);
@@ -3401,7 +3391,7 @@ int NS_main(int argc, NS_tchar **argv)
     EXIT_WHEN_ELEVATED(elevatedLockFilePath, updateLockFileHandle, 1);
     if (argc > callbackIndex) {
       LaunchCallbackApp(argv[5], argc - callbackIndex,
-                        argv + callbackIndex, sUsingService, pid);
+                        argv + callbackIndex, sUsingService);
     }
     return 1;
   }
@@ -3456,7 +3446,7 @@ int NS_main(int argc, NS_tchar **argv)
         LaunchCallbackApp(argv[5],
                           argc - callbackIndex,
                           argv + callbackIndex,
-                          sUsingService, pid);
+                          sUsingService);
       }
       return 1;
     }
@@ -3520,7 +3510,7 @@ int NS_main(int argc, NS_tchar **argv)
         LaunchCallbackApp(argv[callbackIndex],
                           argc - callbackIndex,
                           argv + callbackIndex,
-                          sUsingService, pid);
+                          sUsingService);
         return 1;
       }
 
@@ -3569,7 +3559,7 @@ int NS_main(int argc, NS_tchar **argv)
           LaunchCallbackApp(argv[5],
                             argc - callbackIndex,
                             argv + callbackIndex,
-                            sUsingService, pid);
+                            sUsingService);
           return 1;
         }
         LOG(("NS_main: callback app file in use, continuing without " \
@@ -3708,7 +3698,7 @@ int NS_main(int argc, NS_tchar **argv)
 #elif XP_MACOSX
                                                 , isElevated
 #endif
-                                                , pid);
+                                                );
 
   return retVal ? retVal : (gSucceeded ? 0 : 1);
 }

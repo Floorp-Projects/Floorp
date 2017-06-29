@@ -220,10 +220,20 @@ ne{
                 timeSeparator{":"}
             }
         }
+        minimalPairs{
+            ordinal{
+                one{"{0} ओ दायाँ घुम्ति लिनुहोस्"}
+                other{"{0} औं दायाँ घुम्ति लिनुहोस्"}
+            }
+            plural{
+                one{"तपाईँसँग {0} निम्तो छ"}
+                other{"तपाईँसँग {0} निम्ता छन््"}
+            }
+        }
         minimumGroupingDigits{"1"}
         native{"deva"}
     }
-    Version{"2.1.29.20"}
+    Version{"2.1.32.59"}
     calendar{
         generic{
             DateTimePatterns{

@@ -47,6 +47,12 @@ assertEq(pr.select(1.1), "one");
 pr = new Intl.PluralRules("pl", {type: "cardinal", maximumFractionDigits: 1});
 assertEq(pr.select(1.1), "other");
 
+pr = new Intl.PluralRules("en", {type: "cardinal", minimumFractionDigits: 0});
+assertEq(pr.select(1), "one");
+
+pr = new Intl.PluralRules("en", {type: "cardinal", minimumFractionDigits: 2});
+assertEq(pr.select(1), "other");
+
 var weirdCases = [
   NaN,
   Infinity,

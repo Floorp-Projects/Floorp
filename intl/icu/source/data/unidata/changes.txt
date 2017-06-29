@@ -40,6 +40,137 @@ For new script codes see http://www.unicode.org/iso15924/codechanges.html
 
 ---------------------------------------------------------------------------- ***
 
+TODO:
+- ICU ticket #13061 undo hacks from emoji 5.0 update
+- define & use ICU4C_SRC_DIR
+
+---------------------------------------------------------------------------- ***
+
+Emoji 5.0 update for ICU 59
+- ICU 59 mostly remains on Unicode 9.0
+- except updates bidi and segmentation data to Unicode 10 beta
+
+First run of tools on combined icu4c/icu4j/tools trunk after svn repository reorg.
+
+* Command-line environment setup
+
+ICU_ROOT=~/svn.icu/trunk
+ICU_SRC_DIR=$ICU_ROOT/src
+ICU4C_SRC_DIR=$ICU_SRC_DIR/icu4c
+ICUDT=icudt59b
+export LD_LIBRARY_PATH=$ICU_ROOT/dbg/lib
+SRC_DATA_IN=$ICU4C_SRC_DIR/source/data/in
+UNIDATA=$ICU4C_SRC_DIR/source/data/unidata
+
+*** ICU Trac
+
+- ticket:12900: take Emoji 5.0 properties data into ICU 59 once it's released
+- changes directly on trunk
+
+*** data files & enums & parser code
+
+* download files
+
+- download Unicode 9.0 files into a uni90e50 folder: ucd, idna, security (skip uca)
+- download emoji 5.0 beta files into the same uni90e50 folder
+- download Unicode 10.0 beta files: ucd
+  + copy Unicode 10 bidi files to the uni90e50/ucd folder:
+    BidiBrackets.txt
+    BidiCharacterTest.txt
+    BidiMirroring.txt
+    BidiTest.txt
+    extracted/DerivedBidiClass.txt
+  + copy Unicode 10 segmentation files to the uni90e50/ucd folder:
+    LineBreak.txt
+    auxiliary/*
+
+* preparseucd.py changes
+- adjust for combined trunks
+- write new copyright lines
+- ignore new Emoji_Component property for now
+
+* process and/or copy files
+- ~/svn.icu/trunk/src/tools/unicode$ py/preparseucd.py ~/unidata/uni90e50/20170322 $ICU_SRC_DIR
+  + This writes files (especially ppucd.txt) to the ICU4C unidata and testdata subfolders.
+
+- cp ~/unidata/uni90e50/20170322/security/confusables.txt $UNIDATA
+
+* build ICU (make install)
+  so that the tools build can pick up the new definitions from the installed header files.
+
+  $ICU_ROOT/dbg/icu4c$ echo;echo; make -j7 install > out.txt 2>&1 ; tail -n 30 out.txt ; date
+
+* build Unicode tools using CMake+make
+
+~/svn.icu/trunk/src/tools/unicode/c/icudefs.txt:
+
+# Location (--prefix) of where ICU was installed.
+set(ICU_INST_DIR /usr/local/google/home/mscherer/svn.icu/trunk/inst/icu4c)
+# Location of the ICU4C source tree.
+set(ICU4C_SRC_DIR /usr/local/google/home/mscherer/svn.icu/trunk/src/icu4c)
+
+  ~/svn.icu/trunk/dbg/tools/unicode/c$
+    cmake ../../../../src/tools/unicode/c
+    make
+
+* generate core properties data files
+  ~/svn.icu/trunk/dbg/tools/unicode/c$
+    genprops/genprops $ICU4C_SRC_DIR
+- rebuild ICU (make install) & tools
+
+* run & fix ICU4C tests
+- Andy handles RBBI & spoof check test failures
+
+* update Java data files
+- refresh just the UCD/UCA-related/derived files, just to be safe
+- see (ICU4C)/source/data/icu4j-readme.txt
+- mkdir /tmp/icu4j
+- ~/svn.icu/trunk/dbg/icu4c$ make ICU4J_ROOT=/tmp/icu4j icu4j-data-install
+  output:
+    ...
+    Unicode .icu files built to ./out/build/icudt59l
+    echo timestamp > uni-core-data
+    mkdir -p ./out/icu4j/com/ibm/icu/impl/data/icudt59b
+    mkdir -p ./out/icu4j/tzdata/com/ibm/icu/impl/data/icudt59b
+    echo pnames.icu uprops.icu ucase.icu ubidi.icu nfc.nrm > ./out/icu4j/add.txt
+    LD_LIBRARY_PATH=../lib:../stubdata:../tools/ctestfw:$LD_LIBRARY_PATH  ../bin/icupkg ./out/tmp/icudt59l.dat ./out/icu4j/icudt59b.dat -a ./out/icu4j/add.txt -s ./out/build/icudt59l -x '*' -tb -d ./out/icu4j/com/ibm/icu/impl/data/icudt59b
+    mv ./out/icu4j/"com/ibm/icu/impl/data/icudt59b/zoneinfo64.res" ./out/icu4j/"com/ibm/icu/impl/data/icudt59b/metaZones.res" ./out/icu4j/"com/ibm/icu/impl/data/icudt59b/timezoneTypes.res" ./out/icu4j/"com/ibm/icu/impl/data/icudt59b/windowsZones.res" "./out/icu4j/tzdata/com/ibm/icu/impl/data/icudt59b"
+    jar cf ./out/icu4j/icudata.jar -C ./out/icu4j com/ibm/icu/impl/data/icudt59b/
+    mkdir -p /tmp/icu4j/main/shared/data
+    cp ./out/icu4j/icudata.jar /tmp/icu4j/main/shared/data
+    jar cf ./out/icu4j/icutzdata.jar -C ./out/icu4j/tzdata com/ibm/icu/impl/data/icudt59b/
+    mkdir -p /tmp/icu4j/main/shared/data
+    cp ./out/icu4j/icutzdata.jar /tmp/icu4j/main/shared/data
+    make[1]: Leaving directory `/usr/local/google/home/mscherer/svn.icu/trunk/dbg/icu4c/data'
+- copy the big-endian Unicode data files to another location,
+  separate from the other data files,
+  and then refresh ICU4J
+    cd ~/svn.icu/trunk/dbg/icu4c/data/out/icu4j
+    mkdir -p /tmp/icu4j/com/ibm/icu/impl/data/$ICUDT/brkitr
+    cp com/ibm/icu/impl/data/$ICUDT/confusables.cfu /tmp/icu4j/com/ibm/icu/impl/data/$ICUDT
+    cp com/ibm/icu/impl/data/$ICUDT/*.icu /tmp/icu4j/com/ibm/icu/impl/data/$ICUDT
+    rm /tmp/icu4j/com/ibm/icu/impl/data/$ICUDT/cnvalias.icu
+    cp com/ibm/icu/impl/data/$ICUDT/brkitr/* /tmp/icu4j/com/ibm/icu/impl/data/$ICUDT/brkitr
+    jar uvf ~/svn.icu/trunk/src/icu4j/main/shared/data/icudata.jar -C /tmp/icu4j com/ibm/icu/impl/data/$ICUDT
+
+* When refreshing all of ICU4J data from ICU4C
+- ~/svn.icu/trunk/dbg/icu4c$ make ICU4J_ROOT=/tmp/icu4j icu4j-data-install
+- cp /tmp/icu4j/main/shared/data/icudata.jar ~/svn.icu/trunk/src/icu4j/main/shared/data
+or
+- ~/svn.icu/trunk/dbg/icu4c$ make ICU4J_ROOT=~/svn.icu/trunk/src/icu4j icu4j-data-install
+
+* refresh Java test .txt files
+- copy new .txt files into ICU4J's main/tests/core/src/com/ibm/icu/dev/data/unicode
+    cd $ICU4C_SRC_DIR/source/data/unidata
+    cp confusables.txt confusablesWholeScript.txt NormalizationCorrections.txt NormalizationTest.txt SpecialCasing.txt UnicodeData.txt ~/svn.icu/trunk/src/icu4j/main/tests/core/src/com/ibm/icu/dev/data/unicode
+    cd ../../test/testdata
+    cp BidiCharacterTest.txt BidiTest.txt ~/svn.icu/trunk/src/icu4j/main/tests/core/src/com/ibm/icu/dev/data/unicode
+    cp ~/unidata/uni90e50/20170322/ucd/CompositionExclusions.txt ~/svn.icu/trunk/src/icu4j/main/tests/core/src/com/ibm/icu/dev/data/unicode
+
+* run & fix ICU4J tests
+
+---------------------------------------------------------------------------- ***
+
 Unicode 9.0 update for ICU 58
 
 * Command-line environment setup

@@ -16,7 +16,7 @@ fi{
     }
     ExemplarCharacters{"[a b c d e f g h i j k l m n o p q r s š t u v w x y z ž å ä ö]"}
     ExemplarCharactersIndex{"[A B C D E F G H I J K L M N O P Q R S T U V W X Y Z Å Ä Ö]"}
-    ExemplarCharactersPunctuation{"[‐ – , ; \\: ! ? . … ’ ” » ( ) \\[ \\] § @ * / \\\\ \\& #]"}
+    ExemplarCharactersPunctuation{"[\\- ‐ – , ; \\: ! ? . … ’ ” » ( ) \\[ \\] § @ * / \\\\ \\& #]"}
     MoreInformation{"?"}
     NumberElements{
         default{"latn"}
@@ -201,10 +201,19 @@ fi{
                 timeSeparator{"."}
             }
         }
+        minimalPairs{
+            ordinal{
+                other{"Käänny {0}. risteyksestä oikealle."}
+            }
+            plural{
+                one{"{0} päivä"}
+                other{"{0} päivää"}
+            }
+        }
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"2.1.29.88"}
+    Version{"2.1.32.59"}
     calendar{
         buddhist{
             DateTimePatterns{

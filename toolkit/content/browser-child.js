@@ -54,20 +54,30 @@ var WebProgressListener = {
     return aRequest.QueryInterface(Ci.nsIChannel)[aPropertyName].spec;
   },
 
-  _setupJSON: function setupJSON(aWebProgress, aRequest) {
+  _setupJSON: function setupJSON(aWebProgress, aRequest, aStateFlags) {
+    // Avoid accessing content.document when being called from onStateChange
+    // unless if we are in STATE_STOP, because otherwise the getter will
+    // instantiate an about:blank document for us.
+    let contentDocument = null;
+    if (aStateFlags) {
+      // We're being called from onStateChange
+      if (aStateFlags & Ci.nsIWebProgressListener.STATE_STOP) {
+        contentDocument = content.document;
+      }
+    } else {
+      contentDocument = content.document;
+    }
+
     let innerWindowID = null;
     if (aWebProgress) {
       let domWindowID = null;
       try {
-        let utils = aWebProgress.DOMWindow.QueryInterface(Ci.nsIInterfaceRequestor)
-                                .getInterface(Ci.nsIDOMWindowUtils);
-        domWindowID = utils.outerWindowID;
-        innerWindowID = utils.currentInnerWindowID;
+        domWindowID = aWebProgress.DOMWindowID;
+        innerWindowID = aWebProgress.innerDOMWindowID;
       } catch (e) {
-        // If nsDocShell::Destroy has already been called, then we'll
-        // get NS_NOINTERFACE when trying to get the DOM window.
-        // If there is no current inner window, we'll get
-        // NS_ERROR_NOT_AVAILABLE.
+        // The DOM Window ID getters above may throw if the inner or outer
+        // windows aren't created yet or are destroyed at the time we're making
+        // this call but that isn't fatal so ignore the exceptions here.
       }
 
       aWebProgress = {
@@ -82,7 +92,7 @@ var WebProgressListener = {
       webProgress: aWebProgress || null,
       requestURI: this._requestSpec(aRequest, "URI"),
       originalRequestURI: this._requestSpec(aRequest, "originalURI"),
-      documentContentType: content.document && content.document.contentType,
+      documentContentType: contentDocument ? contentDocument.contentType : null,
       innerWindowID,
     };
   },
@@ -116,7 +126,7 @@ var WebProgressListener = {
   },
 
   onStateChange: function onStateChange(aWebProgress, aRequest, aStateFlags, aStatus) {
-    let json = this._setupJSON(aWebProgress, aRequest);
+    let json = this._setupJSON(aWebProgress, aRequest, aStateFlags);
     let objects = this._setupObjects(aWebProgress, aRequest);
 
     json.stateFlags = aStateFlags;

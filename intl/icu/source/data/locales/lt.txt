@@ -275,10 +275,21 @@ lt{
                 timeSeparator{":"}
             }
         }
+        minimalPairs{
+            ordinal{
+                other{"{0}-ame posūkyje sukite į dešinę."}
+            }
+            plural{
+                few{"{0} obuoliai"}
+                many{"{0} obuolio"}
+                one{"{0} obuolys"}
+                other{"{0} obuolių"}
+            }
+        }
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"2.1.28.79"}
+    Version{"2.1.32.59"}
     calendar{
         buddhist{
             eras{

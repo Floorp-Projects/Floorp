@@ -617,7 +617,7 @@ public:
   // register the RenderTextureHost into render thread.
   virtual void CreateRenderTexture(const wr::ExternalImageId& aExternalImageId)
   {
-    MOZ_ASSERT_UNREACHABLE("No CreateRenderTexture() implementation for this TextureHost type.");
+    MOZ_RELEASE_ASSERT(false, "No CreateRenderTexture() implementation for this TextureHost type.");
   }
 
   // Create all necessary image keys for this textureHost rendering.

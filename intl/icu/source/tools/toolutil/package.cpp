@@ -1,4 +1,4 @@
-// Copyright (C) 2016 and later: Unicode, Inc. and others.
+// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html
 /*
 *******************************************************************************
@@ -8,7 +8,7 @@
 *
 *******************************************************************************
 *   file name:  package.cpp
-*   encoding:   US-ASCII
+*   encoding:   UTF-8
 *   tab size:   8 (not used)
 *   indentation:4
 *
@@ -381,7 +381,7 @@ U_CDECL_END
 
 U_NAMESPACE_BEGIN
 
-Package::Package() 
+Package::Package()
         : doAutoPrefix(FALSE), prefixEndsWithType(FALSE) {
     inPkgName[0]=0;
     pkgPrefix[0]=0;
@@ -1281,7 +1281,7 @@ Package::sortItems() {
     }
 }
 
-void Package::setItemCapacity(int32_t max) 
+void Package::setItemCapacity(int32_t max)
 {
   if(max<=itemMax) {
     return;
@@ -1289,8 +1289,8 @@ void Package::setItemCapacity(int32_t max)
   Item *newItems = (Item*)uprv_malloc(max * sizeof(items[0]));
   Item *oldItems = items;
   if(newItems == NULL) {
-    fprintf(stderr, "icupkg: Out of memory trying to allocate %lu bytes for %d items\n", 
-        (unsigned long)max*sizeof(items[0]), max);
+    fprintf(stderr, "icupkg: Out of memory trying to allocate %lu bytes for %d items\n",
+        (unsigned long)(max*sizeof(items[0])), max);
     exit(U_MEMORY_ALLOCATION_ERROR);
   }
   if(items && itemCount>0) {

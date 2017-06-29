@@ -199,11 +199,21 @@ hy{
                 timeSeparator{":"}
             }
         }
+        minimalPairs{
+            ordinal{
+                one{"Թեքվեք աջ {0}-ին խաչմերուկից:"}
+                other{"Թեքվեք աջ {0}-րդ խաչմերուկից:"}
+            }
+            plural{
+                one{"այդ {0} ժամը"}
+                other{"այդ {0} ժամերը"}
+            }
+        }
         minimumGroupingDigits{"1"}
         native{"latn"}
         traditional{"armn"}
     }
-    Version{"2.1.28.79"}
+    Version{"2.1.32.59"}
     calendar{
         generic{
             DateTimePatterns{

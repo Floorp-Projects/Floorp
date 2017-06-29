@@ -133,9 +133,15 @@ ug{
                 superscriptingExponent{"×"}
             }
         }
+        minimalPairs{
+            plural{
+                one{"{0}  كىتاب"}
+                other{"{0} بېلىق كۆردۈم ۋە ئۇنى يەۋەتتىم."}
+            }
+        }
         native{"arabext"}
     }
-    Version{"2.1.28.76"}
+    Version{"2.1.31.86"}
     calendar{
         buddhist{
             eras{

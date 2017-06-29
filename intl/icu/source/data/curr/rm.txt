@@ -772,11 +772,11 @@ rm{
         }
         PEN{
             "PEN",
-            "nov sol peruan",
+            "sol peruan",
         }
         PES{
             "PES",
-            "sol peruan",
+            "sol peruan (1863–1965)",
         }
         PGK{
             "PGK",
@@ -1265,5 +1265,5 @@ rm{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.1.28.76"}
+    Version{"2.1.31.86"}
 }

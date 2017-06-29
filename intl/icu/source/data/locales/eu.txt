@@ -150,10 +150,19 @@ eu{
                 timeSeparator{":"}
             }
         }
+        minimalPairs{
+            ordinal{
+                other{"{0}. bira eskuinetara"}
+            }
+            plural{
+                one{"Nire {0} lagunarekin nago"}
+                other{"Nire {0} lagunekin nago"}
+            }
+        }
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"2.1.29.20"}
+    Version{"2.1.32.59"}
     calendar{
         buddhist{
             eras{
@@ -326,10 +335,6 @@ eu{
                 "AM",
                 "PM",
             }
-            AmPmMarkersNarrow{
-                "g",
-                "a",
-            }
             DateTimePatterns{
                 "HH:mm:ss (zzzz)",
                 "HH:mm:ss (z)",
@@ -480,53 +485,34 @@ eu{
             dayPeriod{
                 format{
                     abbreviated{
-                        afternoon1{"arratsaldeko"}
-                        afternoon2{"arratsaldea"}
-                        evening1{"arratsaldeko"}
+                        afternoon1{"eguerd."}
+                        afternoon2{"arrats."}
+                        evening1{"iluntz."}
                         midnight{"gauerdia"}
-                        morning1{"goizeko"}
-                        morning2{"goiza"}
-                        night1{"gaueko"}
-                    }
-                    narrow{
-                        afternoon1{"arratsaldeko"}
-                        afternoon2{"arratsaldea"}
-                        evening1{"arratsaldeko"}
-                        midnight{"gauerdia"}
-                        morning1{"goizeko"}
-                        morning2{"goiza"}
-                        night1{"gauean"}
+                        morning1{"goiz."}
+                        morning2{"goizeko"}
+                        night1{"gau."}
                     }
                     wide{
-                        afternoon1{"arratsaldeko"}
-                        afternoon2{"arratsaldea"}
-                        evening1{"arratsaldeko"}
+                        afternoon1{"eguerdiko"}
+                        afternoon2{"arratsaldeko"}
+                        evening1{"iluntzeko"}
                         midnight{"gauerdia"}
-                        morning1{"goizeko"}
-                        morning2{"goiza"}
+                        morning1{"goizaldeko"}
+                        morning2{"goizeko"}
                         night1{"gaueko"}
                     }
                 }
                 stand-alone{
                     abbreviated{
-                        afternoon1{"eguerdia"}
-                        afternoon2{"arratsaldea"}
+                        afternoon1{"eguerd."}
+                        afternoon2{"arrats."}
                         am{"AM"}
                         evening1{"iluntz."}
                         midnight{"gauerdia"}
-                        morning1{"goizaldea"}
+                        morning1{"goiz."}
                         morning2{"goiza"}
-                        night1{"gau."}
-                        pm{"PM"}
-                    }
-                    narrow{
-                        afternoon1{"eguerdia"}
-                        afternoon2{"arratsaldea"}
-                        am{"AM"}
-                        evening1{"iluntz."}
-                        morning1{"goizaldea"}
-                        morning2{"goiza"}
-                        night1{"gau."}
+                        night1{"gaua"}
                         pm{"PM"}
                     }
                     wide{

@@ -2,8 +2,7 @@
 //       unprivileged code.
 // - Please make sure that any changes apply cleanly to all use cases.
 
-function testScroll(target, stepSize, opt_reportFunc, opt_numSteps)
-{
+function testScroll(target, stepSize, opt_reportFunc, opt_numSteps) {
   var win;
   if (target == "content") {
     target = content.wrappedJSObject;
@@ -32,7 +31,7 @@ function testScroll(target, stepSize, opt_reportFunc, opt_numSteps)
     replyId: 1,
 
     // dispatch an event to the framescript and register the result/callback event
-    exec: function(commandName, arg, callback, opt_custom_window) {
+    exec(commandName, arg, callback, opt_custom_window) {
       let win = opt_custom_window || window;
       let replyEvent = "TalosPowers:ParentExec:ReplyEvent:" + this.replyId++;
       if (callback) {
@@ -69,10 +68,10 @@ function testScroll(target, stepSize, opt_reportFunc, opt_numSteps)
   function P_setupReportFn() {
     return new Promise(function(resolve) {
       report = opt_reportFunc || win.tpRecordTime;
-      if (report == 'PageLoader:RecordTime') {
+      if (report == "PageLoader:RecordTime") {
         report = function(duration, start, name) {
           var msg = { time: duration, startTime: start, testName: name };
-          sendAsyncMessage('PageLoader:RecordTime', msg);
+          sendAsyncMessage("PageLoader:RecordTime", msg);
         }
         resolve();
         return;
@@ -81,13 +80,13 @@ function testScroll(target, stepSize, opt_reportFunc, opt_numSteps)
       // Not part of the test and does nothing if we're within talos.
       // Provides an alternative tpRecordTime (with some stats display) if running in a browser.
       if (!report && document.head) {
-        var imported = document.createElement('script');
+        var imported = document.createElement("script");
         imported.addEventListener("load", function() {
           report = tpRecordTime;
           resolve();
         });
 
-        imported.src = '../../scripts/talos-debug.js?dummy=' + Date.now(); // For some browsers to re-read
+        imported.src = "../../scripts/talos-debug.js?dummy=" + Date.now(); // For some browsers to re-read
         document.head.appendChild(imported);
         return;
       }
@@ -118,14 +117,14 @@ function testScroll(target, stepSize, opt_reportFunc, opt_numSteps)
     return (win.performance && win.performance.now) ?
             win.performance.now() :
             Date.now();
-  };
+  }
 
   var isWindow = target.self === target;
 
   var getPos =       isWindow ? function() { return target.pageYOffset; }
                               : function() { return target.scrollTop; };
 
-  var gotoTop =      isWindow ? function() { target.scroll(0, 0);  ensureScroll(); }
+  var gotoTop =      isWindow ? function() { target.scroll(0, 0); ensureScroll(); }
                               : function() { target.scrollTop = 0; ensureScroll(); };
 
   var doScrollTick = isWindow ? function() { target.scrollBy(0, stepSize); ensureScroll(); }
@@ -216,7 +215,6 @@ function testScroll(target, stepSize, opt_reportFunc, opt_numSteps)
 
     return new Promise(function(resolve, reject) {
       setSmooth();
-      var startts = Date.now();
 
       var handle = -1;
       startFrameTimeRecording(function(rv) {
@@ -225,12 +223,11 @@ function testScroll(target, stepSize, opt_reportFunc, opt_numSteps)
 
       // Get the measurements after APZ_MEASURE_MS of scrolling
       setTimeout(function() {
-        var endts = Date.now();
 
         stopFrameTimeRecording(handle, function(intervals) {
           function average(arr) {
               var sum = 0;
-              for(var i = 0; i < arr.length; i++)
+              for (var i = 0; i < arr.length; i++)
                 sum += arr[i];
               return arr.length ? sum / arr.length : 0;
           }
@@ -264,7 +261,7 @@ function testScroll(target, stepSize, opt_reportFunc, opt_numSteps)
 try {
   function handleMessageFromChrome(message) {
     var payload = message.data.details;
-    testScroll(payload.target, payload.stepSize, 'PageLoader:RecordTime', payload.opt_numSteps);
+    testScroll(payload.target, payload.stepSize, "PageLoader:RecordTime", payload.opt_numSteps);
   }
 
   addMessageListener("PageLoader:ScrollTest", handleMessageFromChrome);

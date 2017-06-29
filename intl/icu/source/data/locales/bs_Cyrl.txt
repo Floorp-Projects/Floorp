@@ -159,7 +159,7 @@ bs_Cyrl{
             }
         }
     }
-    Version{"2.1.28.76"}
+    Version{"2.1.32.72"}
     calendar{
         buddhist{
             eras{

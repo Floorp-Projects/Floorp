@@ -220,10 +220,19 @@ kn{
                 timeSeparator{":"}
             }
         }
+        minimalPairs{
+            ordinal{
+                other{"{0}ನೇ ಬಲತಿರುವನ್ನು ತೆಗೆದುಕೊಳ್ಳಿ."}
+            }
+            plural{
+                one{"{0} ದಿನ"}
+                other{"{0} ದಿನಗಳು"}
+            }
+        }
         minimumGroupingDigits{"1"}
         native{"knda"}
     }
-    Version{"2.1.28.79"}
+    Version{"2.1.31.86"}
     calendar{
         generic{
             DateTimePatterns{

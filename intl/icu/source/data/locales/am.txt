@@ -205,11 +205,20 @@ am{
                 timeSeparator{":"}
             }
         }
+        minimalPairs{
+            ordinal{
+                other{"በቀኝ በኩል ባለው በ{0}ኛው መታጠፊያ ግባ።"}
+            }
+            plural{
+                one{"{0} ቀን"}
+                other{"{0} ቀናት"}
+            }
+        }
         minimumGroupingDigits{"1"}
         native{"latn"}
         traditional{"ethi"}
     }
-    Version{"2.1.28.79"}
+    Version{"2.1.32.59"}
     calendar{
         buddhist{
             DateTimePatterns{

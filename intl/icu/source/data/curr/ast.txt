@@ -780,7 +780,7 @@ ast{
         }
         PEN{
             "PEN",
-            "sol nuevu peruanu",
+            "Sol peruanu",
         }
         PES{
             "PES",
@@ -2076,8 +2076,8 @@ ast{
             other{"intis peruanos"}
         }
         PEN{
-            one{"sol nuevu peruanu"}
-            other{"soles nuevos peruanos"}
+            one{"sol peruanu"}
+            other{"soles peruanos"}
         }
         PES{
             one{"sol peruanu (1863–1965)"}
@@ -2496,5 +2496,5 @@ ast{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.1.28.76"}
+    Version{"2.1.31.86"}
 }

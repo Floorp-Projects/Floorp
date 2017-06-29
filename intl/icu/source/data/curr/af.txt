@@ -452,7 +452,7 @@ af{
         }
         PEN{
             "PEN",
-            "Peruaanse nuwe sol",
+            "Peruaanse sol",
         }
         PGK{
             "PGK",
@@ -1197,8 +1197,8 @@ af{
             other{"Panamese balboa"}
         }
         PEN{
-            one{"Peruaanse nuwe sol"}
-            other{"Peruaanse nuwe sol"}
+            one{"Peruaanse sol"}
+            other{"Peruaanse sol"}
         }
         PGK{
             one{"Papoea-Nieu-Guinese kina"}
@@ -1405,5 +1405,5 @@ af{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.1.29.44"}
+    Version{"2.1.32.59"}
 }

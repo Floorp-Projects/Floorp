@@ -60,6 +60,7 @@
 #include "mozilla/StaticPtr.h"
 #include "mozilla/dom/DOMException.h"
 #include "mozilla/dom/DOMExceptionBinding.h"
+#include "mozilla/dom/Element.h"
 #include "mozilla/dom/ErrorEvent.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "nsAXPCNativeCallContext.h"
@@ -125,12 +126,12 @@ const size_t gStackSize = 8192;
 static const int64_t kForgetSkippableSliceDuration = 2;
 
 // Maximum amount of time that should elapse between incremental CC slices
-static const int64_t kICCIntersliceDelay = 32; // ms
+static const int64_t kICCIntersliceDelay = 64; // ms
 
 // Time budget for an incremental CC slice when using timer to run it.
-static const int64_t kICCSliceBudget = 5; // ms
+static const int64_t kICCSliceBudget = 3; // ms
 // Minimum budget for an incremental CC slice when using idle time to run it.
-static const int64_t kIdleICCSliceBudget = 3; // ms
+static const int64_t kIdleICCSliceBudget = 2; // ms
 
 // Maximum total duration for an ICC
 static const uint32_t kMaxICCDuration = 2000; // ms
@@ -1741,7 +1742,10 @@ nsJSContext::RunCycleCollectorSlice(TimeStamp aDeadline)
     }
   }
 
-  nsCycleCollector_collectSlice(budget);
+  nsCycleCollector_collectSlice(budget,
+                                aDeadline.IsNull() ||
+                                (aDeadline - TimeStamp::Now()).ToMilliseconds() <
+                                  kICCSliceBudget);
 
   gCCStats.FinishCycleCollectionSlice();
 }
@@ -2103,6 +2107,11 @@ CCRunnerFired(TimeStamp aDeadline, void* aData)
       if (ShouldTriggerCC(nsCycleCollector_suspectedCount())) {
         // Our efforts to avoid a CC have failed, so we return to let the
         // timer fire once more to trigger a CC.
+
+        // Clear content unbinder before the first CC slice.
+        Element::ClearContentUnbinder();
+        // And trigger deferred deletion too.
+        nsCycleCollector_doDeferredDeletion();
         return didDoWork;
       }
     } else {

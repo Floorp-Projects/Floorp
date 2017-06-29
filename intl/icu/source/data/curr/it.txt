@@ -697,11 +697,11 @@ it{
         }
         PEN{
             "PEN",
-            "nuovo sol peruviano",
+            "sol peruviano",
         }
         PES{
             "PES",
-            "sol peruviano",
+            "sol peruviano (1863–1965)",
         }
         PGK{
             "PGK",
@@ -1622,8 +1622,8 @@ it{
             other{"balboa panamensi"}
         }
         PEN{
-            one{"nuovo sol peruviano"}
-            other{"nuovi sol peruviani"}
+            one{"sol peruviano"}
+            other{"sol peruviani"}
         }
         PGK{
             one{"kina papuana"}
@@ -1846,5 +1846,5 @@ it{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.1.28.79"}
+    Version{"2.1.32.60"}
 }

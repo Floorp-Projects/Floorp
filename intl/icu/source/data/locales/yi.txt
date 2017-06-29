@@ -28,7 +28,7 @@ yi{
         native{"latn"}
         traditional{"hebr"}
     }
-    Version{"2.1.27.97"}
+    Version{"2.1.31.33"}
     calendar{
         generic{
             DateTimePatterns{

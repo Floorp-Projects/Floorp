@@ -139,16 +139,15 @@ FilteringWrapper<Base, Policy>::getOwnEnumerablePropertyKeys(JSContext* cx,
 }
 
 template <typename Base, typename Policy>
-bool
-FilteringWrapper<Base, Policy>::enumerate(JSContext* cx, HandleObject wrapper,
-                                          MutableHandleObject objp) const
+JSObject*
+FilteringWrapper<Base, Policy>::enumerate(JSContext* cx, HandleObject wrapper) const
 {
     assertEnteredPolicy(cx, wrapper, JSID_VOID, BaseProxyHandler::ENUMERATE);
     // We refuse to trigger the enumerate hook across chrome wrappers because
     // we don't know how to censor custom iterator objects. Instead we trigger
     // the default proxy enumerate trap, which will use js::GetPropertyKeys
     // for the list of (censored) ids.
-    return js::BaseProxyHandler::enumerate(cx, wrapper, objp);
+    return js::BaseProxyHandler::enumerate(cx, wrapper);
 }
 
 template <typename Base, typename Policy>

@@ -684,11 +684,11 @@ pl{
         }
         PEN{
             "PEN",
-            "nowy sol peruwiański",
+            "sol peruwiański",
         }
         PES{
             "PES",
-            "sol peruwiański",
+            "sol peruwiański (1863–1965)",
         }
         PGK{
             "PGK",
@@ -1900,10 +1900,16 @@ pl{
             other{"balboa panamskiego"}
         }
         PEN{
-            few{"nowe sole peruwiańskie"}
-            many{"nowych soli peruwiańskich"}
-            one{"nowy sol peruwiański"}
-            other{"nowego sola peruwiańskiego"}
+            few{"sole peruwiańskie"}
+            many{"soli peruwiańskich"}
+            one{"sol peruwiański"}
+            other{"sola peruwiańskiego"}
+        }
+        PES{
+            few{"sole peruwiańskie (1863–1965)"}
+            many{"soli peruwiańskich (1863–1965)"}
+            one{"sol peruwiański (1863–1965)"}
+            other{"sola peruwiańskiego (1863–1965)"}
         }
         PGK{
             few{"kina papuaskie"}
@@ -2284,5 +2290,5 @@ pl{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.1.28.79"}
+    Version{"2.1.32.59"}
 }

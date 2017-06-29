@@ -4,7 +4,9 @@ zh_Hant{
     %%Parent{"root"}
     AuxExemplarCharacters{
         "[乍 仂 伏 佐 侶 僳 兆 兌 兹 别 券 勳 卑 卞 占 叶 堤 墎 壤 奥 孜 峇 嶼 巽 栗 楔 涅 渾 澎 燦 狄 琳 瑚 甫 碑 礁 芒 苗"
-        " 茨 蓬 蚩 蜀 裘 謬 酋 隴]"
+        " 茨 蓬 蚩 蜀 裘 謬 酋 隴 乳 划 匕 匙 匣 叉 吻 嘟 噘 妖 巾 帆 廁 廚 弋 弓 懸 戟 扳 捂 摔 暈 框 桶 桿 櫃 煎 燭 牡 皺"
+        " 盒 眨 眩 筒 簍 糰 紋 紗 纏 纜 羯 聳 肖 艇 虹 蛛 蜘 蝴 蝸 蠟 裙 豚 躬 釘 鈔 鈕 鉛 鎚 鎬 鐺 鑰 鑽 霄 鞠 骰 骷 髏 鯉"
+        " 鳶]"
     }
     Ellipsis{
         final{"{0}…"}
@@ -119,7 +121,7 @@ zh_Hant{
             patternsLong{
                 decimalFormat{
                     1000{
-                        other{"0千"}
+                        other{"0"}
                     }
                     10000{
                         other{"0萬"}
@@ -159,7 +161,7 @@ zh_Hant{
             patternsShort{
                 currencyFormat{
                     1000{
-                        other{"¤0千"}
+                        other{"0"}
                     }
                     10000{
                         other{"¤0萬"}
@@ -197,7 +199,7 @@ zh_Hant{
                 }
                 decimalFormat{
                     1000{
-                        other{"0千"}
+                        other{"0"}
                     }
                     10000{
                         other{"0萬"}
@@ -249,10 +251,18 @@ zh_Hant{
                 timeSeparator{":"}
             }
         }
+        minimalPairs{
+            ordinal{
+                other{"在第 {0} 個路口右轉。"}
+            }
+            plural{
+                other{"{0} 日"}
+            }
+        }
         native{"hanidec"}
         traditional{"hant"}
     }
-    Version{"2.1.28.79"}
+    Version{"2.1.33.94"}
     calendar{
         buddhist{
             DateTimePatterns{

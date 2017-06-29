@@ -94,6 +94,7 @@ stringtriebuilder.o bytestriebuilder.o \
 bytestrie.o bytestrieiterator.o \
 ucharstrie.o ucharstriebuilder.o ucharstrieiterator.o \
 dictionarydata.o \
+edits.o \
 appendable.o ustr_cnv.o unistr_cnv.o unistr.o unistr_case.o unistr_props.o \
 utf_impl.o ustring.o ustrcase.o ucasemap.o ucasemap_titlecase_brkiter.o cstring.o ustrfmt.o ustrtrns.o ustr_wcs.o utext.o \
 unistr_case_locale.o ustrcase_locale.o unistr_titlecase_brkiter.o ustr_titlecase_brkiter.o \

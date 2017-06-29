@@ -275,10 +275,21 @@ ru{
                 timeSeparator{":"}
             }
         }
+        minimalPairs{
+            ordinal{
+                other{"Сверните направо на {0}-м перекрестке."}
+            }
+            plural{
+                few{"из {0} книг за {0} дня"}
+                many{"из {0} книг за {0} дней"}
+                one{"из {0} книги за {0} день"}
+                other{"из {0} книги за {0} дня"}
+            }
+        }
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"2.1.29.20"}
+    Version{"2.1.32.59"}
     calendar{
         buddhist{
             eras{

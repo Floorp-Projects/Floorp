@@ -210,17 +210,20 @@ namespace jit {
 #endif
         }
 
-        MOZ_ALWAYS_INLINE void spew(const char* fmt, ...) MOZ_FORMAT_PRINTF(2, 3)
-        {
 #ifdef JS_JITSPEW
+        inline void spew(const char* fmt, ...) MOZ_FORMAT_PRINTF(2, 3)
+        {
             if (MOZ_UNLIKELY(printer || JitSpewEnabled(JitSpew_Codegen))) {
                 va_list va;
                 va_start(va, fmt);
                 spew(fmt, va);
                 va_end(va);
             }
-#endif
         }
+#else
+        MOZ_ALWAYS_INLINE void spew(const char* fmt, ...) MOZ_FORMAT_PRINTF(2, 3)
+        { }
+#endif
 
 #ifdef JS_JITSPEW
         MOZ_COLD void spew(const char* fmt, va_list va) MOZ_FORMAT_PRINTF(2, 0);

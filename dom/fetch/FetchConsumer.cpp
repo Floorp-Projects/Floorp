@@ -395,9 +395,7 @@ FetchBodyConsumer<Derived>::FetchBodyConsumer(nsIEventTarget* aMainThreadEventTa
   , mWorkerPrivate(aWorkerPrivate)
   , mConsumeType(aType)
   , mConsumePromise(aPromise)
-#ifdef DEBUG
-  , mReadDone(false)
-#endif
+  , mBodyConsumed(false)
 {
   MOZ_ASSERT(aMainThreadEventTarget);
   MOZ_ASSERT(aBody);
@@ -533,10 +531,11 @@ FetchBodyConsumer<Derived>::ContinueConsumeBody(nsresult aStatus,
   // Just a precaution to ensure ContinueConsumeBody is not called out of
   // sync with a body read.
   MOZ_ASSERT(mBody->BodyUsed());
-  MOZ_ASSERT(!mReadDone);
-#ifdef DEBUG
-  mReadDone = true;
-#endif
+
+  if (mBodyConsumed) {
+    return;
+  }
+  mBodyConsumed = true;
 
   auto autoFree = mozilla::MakeScopeExit([&] {
     free(aResult);
@@ -672,11 +671,12 @@ FetchBodyConsumer<Derived>::ContinueConsumeBlobBody(BlobImpl* aBlobImpl)
   // Just a precaution to ensure ContinueConsumeBody is not called out of
   // sync with a body read.
   MOZ_ASSERT(mBody->BodyUsed());
-  MOZ_ASSERT(!mReadDone);
   MOZ_ASSERT(mConsumeType == CONSUME_BLOB);
-#ifdef DEBUG
-  mReadDone = true;
-#endif
+
+  if (mBodyConsumed) {
+    return;
+  }
+  mBodyConsumed = true;
 
   MOZ_ASSERT(mConsumePromise);
   RefPtr<Promise> localPromise = mConsumePromise.forget();

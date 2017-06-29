@@ -17,11 +17,6 @@
 #include "js/Class.h"
 #include "js/GCAPI.h"
 #include "js/GCHashTable.h"
-
-#if ENABLE_INTL_API
-#include "unicode/utypes.h"
-#endif
-
 #include "vm/NativeObject.h"
 
 class JSLinearString;
@@ -698,35 +693,6 @@ intl_toLocaleLowerCase(JSContext* cx, unsigned argc, Value* vp);
 extern MOZ_MUST_USE bool
 intl_toLocaleUpperCase(JSContext* cx, unsigned argc, Value* vp);
 
-#if ENABLE_INTL_API
-/**
- * Cast char16_t* strings to UChar* strings used by ICU.
- */
-inline const UChar*
-Char16ToUChar(const char16_t* chars)
-{
-  return reinterpret_cast<const UChar*>(chars);
-}
-
-inline UChar*
-Char16ToUChar(char16_t* chars)
-{
-  return reinterpret_cast<UChar*>(chars);
-}
-
-inline char16_t*
-UCharToChar16(UChar* chars)
-{
-  return reinterpret_cast<char16_t*>(chars);
-}
-
-inline const char16_t*
-UCharToChar16(const UChar* chars)
-{
-  return reinterpret_cast<const char16_t*>(chars);
-}
-
-#endif // ENABLE_INTL_API
 
 } // namespace js
 

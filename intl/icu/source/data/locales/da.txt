@@ -197,10 +197,19 @@ da{
                 timeSeparator{"."}
             }
         }
+        minimalPairs{
+            ordinal{
+                other{"Tag den {0}. vej til højre."}
+            }
+            plural{
+                one{"{0} dag"}
+                other{"{0} dage"}
+            }
+        }
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"2.1.28.79"}
+    Version{"2.1.32.59"}
     calendar{
         buddhist{
             eras{

@@ -9,6 +9,7 @@
 */
 -->
 <deprecates>
+   <alias from="ars" to="ar" />
    <alias from="es_DO" to="es_419" />
    <alias from="es_GT" to="es_419" />
    <alias from="es_HN" to="es_419" />

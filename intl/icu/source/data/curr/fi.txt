@@ -780,7 +780,7 @@ fi{
         }
         PEN{
             "PEN",
-            "Perun uusi sol",
+            "Perun sol",
         }
         PES{
             "PES",
@@ -2073,8 +2073,8 @@ fi{
             other{"Perun intiä"}
         }
         PEN{
-            one{"Perun uusi sol"}
-            other{"Perun uutta solia"}
+            one{"Perun sol"}
+            other{"Perun solia"}
         }
         PES{
             one{"Perun sol (1863–1965)"}
@@ -2493,5 +2493,5 @@ fi{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.1.29.88"}
+    Version{"2.1.32.59"}
 }

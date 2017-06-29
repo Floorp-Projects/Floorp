@@ -263,7 +263,7 @@ int TestNrSocket::getaddr(nr_transport_addr *addrp) {
 void TestNrSocket::close() {
   if (timer_handle_) {
     NR_async_timer_cancel(timer_handle_);
-    timer_handle_ = 0;
+    timer_handle_ = nullptr;
   }
   internal_socket_->close();
   for (RefPtr<PortMapping>& port_mapping : port_mappings_) {

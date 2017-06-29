@@ -1,0 +1,1020 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|ARM">
+      <Configuration>Debug</Configuration>
+      <Platform>ARM</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|ARM">
+      <Configuration>Release</Configuration>
+      <Platform>ARM</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{6786C051-383B-47E0-9E82-B8B994E06A25}</ProjectGuid>
+    <Keyword>DynamicLibrary</Keyword>
+    <DefaultLanguage>en-US</DefaultLanguage>
+    <MinimumVisualStudioVersion>14.0</MinimumVisualStudioVersion>
+    <AppContainerApplication>true</AppContainerApplication>
+    <ApplicationType>Windows Store</ApplicationType>
+    <WindowsTargetPlatformVersion>10.0.10586.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformMinVersion>10.0.10240.0</WindowsTargetPlatformMinVersion>
+    <ApplicationTypeRevision>10.0</ApplicationTypeRevision>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseOfMfc>false</UseOfMfc>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v140</PlatformToolset>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="$(VCTargetsPath)Microsoft.CPP.UpgradeFromVC71.props" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup>
+    <_ProjectFileVersion>10.0.30319.1</_ProjectFileVersion>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">.\x86\ReleaseUWP\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">.\x86\ReleaseUWP\</IntDir>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">.\x86\DebugUWP\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">.\x86\DebugUWP\</IntDir>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">.\x64\ReleaseUWP\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">.\x64\ReleaseUWP\</IntDir>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">.\x64\DebugUWP\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">.\x64\DebugUWP\</IntDir>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">.\arm\ReleaseUWP\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">.\arm\ReleaseUWP\</IntDir>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">.\arm\DebugUWP\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">.\arm\DebugUWP\</IntDir>
+    <LinkIncremental Condition="'$(Configuration)'=='Release'">false</LinkIncremental>
+    <LinkIncremental Condition="'$(Configuration)'=='Debug'">true</LinkIncremental>
+  </PropertyGroup>
+  <ItemDefinitionGroup>
+    <Midl>
+      <PreprocessorDefinitions>U_DISABLE_RENAMING=1;U_PLATFORM_HAS_WINUWP_API=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <MkTypLibCompatible>true</MkTypLibCompatible>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+    </Midl>
+    <ClCompile>
+      <AdditionalIncludeDirectories>..\..\include;..\common;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <!-- U_HIDE_DRAFT_API & U_HIDE_DEPRECATED_API -->
+      <PreprocessorDefinitions>U_DISABLE_RENAMING=1;U_PLATFORM_HAS_WINUWP_API=1;U_ATTRIBUTE_DEPRECATED=;_CRT_SECURE_NO_DEPRECATE;U_I18N_IMPLEMENTATION;U_PLATFORM_USES_ONLY_WIN32_API=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <StringPooling>true</StringPooling>
+      <ExceptionHandling>
+      </ExceptionHandling>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <DisableLanguageExtensions>false</DisableLanguageExtensions>
+      <TreatWChar_tAsBuiltInType>true</TreatWChar_tAsBuiltInType>
+      <WarningLevel>Level3</WarningLevel>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <CompileAs>Default</CompileAs>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <CompileAsWinRT>false</CompileAsWinRT>
+      <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>U_DISABLE_RENAMING=1;U_PLATFORM_HAS_WINUWP_API=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <Culture>0x0409</Culture>
+      <AdditionalIncludeDirectories>../common;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+    <Link>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <GenerateWindowsMetadata>false</GenerateWindowsMetadata>
+      <RandomizedBaseAddress>true</RandomizedBaseAddress>
+      <DataExecutionPrevention>
+      </DataExecutionPrevention>
+      <TurnOffAssemblyGeneration>true</TurnOffAssemblyGeneration>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)'=='Release'">
+    <Midl>
+      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </Midl>
+    <ClCompile>
+      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ResourceCompile>
+    <Link>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)'=='Debug'">
+    <Midl>
+      <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </Midl>
+    <ClCompile>
+      <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <Optimization>Disabled</Optimization>
+      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+      <BufferSecurityCheck>true</BufferSecurityCheck>
+      <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ResourceCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Platform)'=='Win32'">
+    <Midl>
+      <TargetEnvironment>Win32</TargetEnvironment>
+    </Midl>
+    <ClCompile>
+      <PreprocessorDefinitions>WIN32;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Platform)'=='x64'">
+    <Midl>
+      <TargetEnvironment>X64</TargetEnvironment>
+    </Midl>
+    <ClCompile>
+      <PreprocessorDefinitions>WIN64;WIN32;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <Link>
+      <TargetMachine>MachineX64</TargetMachine>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Platform)'=='ARM'">
+    <Midl>
+      <TargetEnvironment>ARM</TargetEnvironment>
+    </Midl>
+    <ClCompile>
+      <PreprocessorDefinitions>ARM;WIN32;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <Link>
+      <TargetMachine>MachineARM</TargetMachine>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Midl>
+      <TypeLibraryName>.\..\..\lib32uwp\icuin.tlb</TypeLibraryName>
+    </Midl>
+    <ClCompile>
+      <PrecompiledHeaderOutputFile>.\x86\ReleaseUWP/i18n.pch</PrecompiledHeaderOutputFile>
+      <AssemblerListingLocation>.\x86\ReleaseUWP/</AssemblerListingLocation>
+      <ObjectFileName>.\x86\ReleaseUWP/</ObjectFileName>
+      <ProgramDataBaseFileName>.\x86\ReleaseUWP/</ProgramDataBaseFileName>
+    </ClCompile>
+    <Link>
+      <OutputFile>..\..\bin32uwp\icuin.dll</OutputFile>
+      <ProgramDatabaseFile>.\..\..\lib32uwp\icuin.pdb</ProgramDatabaseFile>
+      <ImportLibrary>..\..\lib32uwp\icuin.lib</ImportLibrary>
+      <AdditionalDependencies>..\..\lib32uwp\icuuc.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Midl>
+      <TypeLibraryName>.\..\..\lib32uwp\icuind.tlb</TypeLibraryName>
+    </Midl>
+    <ClCompile>
+      <PrecompiledHeaderOutputFile>.\x86\DebugUWP/i18n.pch</PrecompiledHeaderOutputFile>
+      <AssemblerListingLocation>.\x86\DebugUWP/</AssemblerListingLocation>
+      <ObjectFileName>.\x86\DebugUWP/</ObjectFileName>
+      <ProgramDataBaseFileName>.\x86\DebugUWP/</ProgramDataBaseFileName>
+    </ClCompile>
+    <Link>
+      <OutputFile>..\..\bin32uwp\icuind.dll</OutputFile>
+      <ProgramDatabaseFile>.\..\..\lib32uwp\icuind.pdb</ProgramDatabaseFile>
+      <ImportLibrary>..\..\lib32uwp\icuind.lib</ImportLibrary>
+      <AdditionalDependencies>..\..\lib32uwp\icuucd.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Midl>
+      <TypeLibraryName>.\..\..\lib64uwp\icuin.tlb</TypeLibraryName>
+    </Midl>
+    <ClCompile>
+      <PrecompiledHeaderOutputFile>.\x64\ReleaseUWP/i18n.pch</PrecompiledHeaderOutputFile>
+      <AssemblerListingLocation>.\x64\ReleaseUWP/</AssemblerListingLocation>
+      <ObjectFileName>.\x64\ReleaseUWP/</ObjectFileName>
+      <ProgramDataBaseFileName>.\x64\ReleaseUWP/</ProgramDataBaseFileName>
+    </ClCompile>
+    <Link>
+      <OutputFile>..\..\bin64uwp\icuin.dll</OutputFile>
+      <ProgramDatabaseFile>.\..\..\lib64uwp\icuin.pdb</ProgramDatabaseFile>
+      <ImportLibrary>..\..\lib64uwp\icuin.lib</ImportLibrary>
+      <AdditionalDependencies>..\..\lib64uwp\icuuc.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Midl>
+      <TypeLibraryName>.\..\..\lib64uwp\icuind.tlb</TypeLibraryName>
+    </Midl>
+    <ClCompile>
+      <PrecompiledHeaderOutputFile>.\x64\DebugUWP/i18n.pch</PrecompiledHeaderOutputFile>
+      <AssemblerListingLocation>.\x64\DebugUWP/</AssemblerListingLocation>
+      <ObjectFileName>.\x64\DebugUWP/</ObjectFileName>
+      <ProgramDataBaseFileName>.\x64\DebugUWP/</ProgramDataBaseFileName>
+    </ClCompile>
+    <Link>
+      <OutputFile>..\..\bin64uwp\icuind.dll</OutputFile>
+      <ProgramDatabaseFile>.\..\..\lib64uwp\icuind.pdb</ProgramDatabaseFile>
+      <ImportLibrary>..\..\lib64uwp\icuind.lib</ImportLibrary>
+      <AdditionalDependencies>..\..\lib64uwp\icuucd.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
+    <Midl>
+      <TypeLibraryName>.\..\..\libARMuwp\icuin.tlb</TypeLibraryName>
+    </Midl>
+    <ClCompile>
+      <PrecompiledHeaderOutputFile>.\ARM\ReleaseUWP/i18n.pch</PrecompiledHeaderOutputFile>
+      <AssemblerListingLocation>.\ARM\ReleaseUWP/</AssemblerListingLocation>
+      <ObjectFileName>.\ARM\ReleaseUWP/</ObjectFileName>
+      <ProgramDataBaseFileName>.\ARM\ReleaseUWP/</ProgramDataBaseFileName>
+    </ClCompile>
+    <Link>
+      <OutputFile>..\..\binARMuwp\icuin.dll</OutputFile>
+      <ProgramDatabaseFile>.\..\..\libARMuwp\icuin.pdb</ProgramDatabaseFile>
+      <ImportLibrary>..\..\libARMuwp\icuin.lib</ImportLibrary>
+      <AdditionalDependencies>..\..\libARMuwp\icuuc.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
+    <Midl>
+      <TypeLibraryName>.\..\..\libARMuwp\icuind.tlb</TypeLibraryName>
+    </Midl>
+    <ClCompile>
+      <PrecompiledHeaderOutputFile>.\ARM\DebugUWP/i18n.pch</PrecompiledHeaderOutputFile>
+      <AssemblerListingLocation>.\ARM\DebugUWP/</AssemblerListingLocation>
+      <ObjectFileName>.\ARM\DebugUWP/</ObjectFileName>
+      <ProgramDataBaseFileName>.\ARM\DebugUWP/</ProgramDataBaseFileName>
+    </ClCompile>
+    <Link>
+      <OutputFile>..\..\binARMuwp\icuind.dll</OutputFile>
+      <ProgramDatabaseFile>.\..\..\libARMuwp\icuind.pdb</ProgramDatabaseFile>
+      <ImportLibrary>..\..\libARMuwp\icuind.lib</ImportLibrary>
+      <AdditionalDependencies>..\..\libARMuwp\icuucd.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="region.cpp" />
+    <ClCompile Include="uregion.cpp" />
+    <ClCompile Include="alphaindex.cpp" />
+    <ClCompile Include="bocsu.cpp" />
+    <ClCompile Include="coleitr.cpp" />
+    <ClCompile Include="coll.cpp" />
+    <ClCompile Include="collation.cpp" />
+    <ClCompile Include="collationbuilder.cpp" />
+    <ClCompile Include="collationcompare.cpp" />
+    <ClCompile Include="collationdata.cpp" />
+    <ClCompile Include="collationdatabuilder.cpp" />
+    <ClCompile Include="collationdatareader.cpp" />
+    <ClCompile Include="collationdatawriter.cpp" />
+    <ClCompile Include="collationfastlatin.cpp" />
+    <ClCompile Include="collationfastlatinbuilder.cpp" />
+    <ClCompile Include="collationfcd.cpp" />
+    <ClCompile Include="collationiterator.cpp" />
+    <ClCompile Include="collationkeys.cpp" />
+    <ClCompile Include="collationroot.cpp" />
+    <ClCompile Include="collationrootelements.cpp" />
+    <ClCompile Include="collationruleparser.cpp" />
+    <ClCompile Include="collationsets.cpp" />
+    <ClCompile Include="collationsettings.cpp" />
+    <ClCompile Include="collationtailoring.cpp" />
+    <ClCompile Include="collationweights.cpp" />
+    <ClCompile Include="rulebasedcollator.cpp" />
+    <ClCompile Include="search.cpp" />
+    <ClCompile Include="sortkey.cpp" />
+    <ClCompile Include="stsearch.cpp" />
+    <ClCompile Include="tzfmt.cpp" />
+    <ClCompile Include="tzgnames.cpp" />
+    <ClCompile Include="tznames.cpp" />
+    <ClCompile Include="tznames_impl.cpp" />
+    <ClCompile Include="ucol.cpp" />
+    <ClCompile Include="ucol_res.cpp" />
+    <ClCompile Include="ucol_sit.cpp" />
+    <ClCompile Include="ucoleitr.cpp" />
+    <ClCompile Include="affixpatternparser.cpp" />
+    <ClCompile Include="decimfmtimpl.cpp" />
+    <ClCompile Include="digitaffix.cpp" />
+    <ClCompile Include="digitaffixesandpadding.cpp" />
+    <ClCompile Include="digitformatter.cpp" />
+    <ClCompile Include="digitgrouping.cpp" />
+    <ClCompile Include="digitinterval.cpp" />
+    <ClCompile Include="pluralaffix.cpp" />
+    <ClCompile Include="precision.cpp" />
+    <ClCompile Include="smallintformatter.cpp" />
+    <ClCompile Include="valueformatter.cpp" />
+    <ClCompile Include="visibledigits.cpp" />
+    <ClCompile Include="uitercollationiterator.cpp" />
+    <ClCompile Include="usearch.cpp" />
+    <ClCompile Include="astro.cpp" />
+    <ClCompile Include="basictz.cpp" />
+    <ClCompile Include="buddhcal.cpp" />
+    <ClCompile Include="calendar.cpp" />
+    <ClCompile Include="cecal.cpp" />
+    <ClCompile Include="chnsecal.cpp" />
+    <ClCompile Include="choicfmt.cpp" />
+    <ClCompile Include="compactdecimalformat.cpp" />
+    <ClCompile Include="coptccal.cpp" />
+    <ClCompile Include="curramt.cpp" />
+    <ClCompile Include="currfmt.cpp" />
+    <ClCompile Include="currpinf.cpp" />
+    <ClCompile Include="currunit.cpp" />
+    <ClCompile Include="dangical.cpp" />
+    <ClCompile Include="datefmt.cpp" />
+    <ClCompile Include="dayperiodrules.cpp" />
+    <ClCompile Include="dcfmtsym.cpp" />
+    <ClCompile Include="decContext.cpp" />
+    <ClCompile Include="decfmtst.cpp" />
+    <ClCompile Include="decimalformatpattern.cpp" />
+    <ClCompile Include="decimfmt.cpp" />
+    <ClCompile Include="decNumber.cpp" />
+    <ClCompile Include="digitlst.cpp" />
+    <ClCompile Include="dtfmtsym.cpp" />
+    <ClCompile Include="dtitvfmt.cpp" />
+    <ClCompile Include="dtitvinf.cpp" />
+    <ClCompile Include="dtptngen.cpp" />
+    <ClCompile Include="dtrule.cpp" />
+    <ClCompile Include="ethpccal.cpp" />
+    <ClCompile Include="fmtable.cpp" />
+    <ClCompile Include="fmtable_cnv.cpp" />
+    <ClCompile Include="format.cpp" />
+    <ClCompile Include="fphdlimp.cpp" />
+    <ClCompile Include="fpositer.cpp" />
+    <ClCompile Include="gender.cpp" />
+    <ClCompile Include="gregocal.cpp" />
+    <ClCompile Include="gregoimp.cpp" />
+    <ClCompile Include="hebrwcal.cpp" />
+    <ClCompile Include="indiancal.cpp" />
+    <ClCompile Include="islamcal.cpp" />
+    <ClCompile Include="japancal.cpp" />
+    <ClCompile Include="measfmt.cpp" />
+    <ClCompile Include="measunit.cpp" />
+    <ClCompile Include="measure.cpp" />
+    <ClCompile Include="msgfmt.cpp" />
+    <ClCompile Include="nfrs.cpp" />
+    <ClCompile Include="nfrule.cpp" />
+    <ClCompile Include="nfsubs.cpp" />
+    <ClCompile Include="numfmt.cpp" />
+    <ClCompile Include="numsys.cpp" />
+    <ClCompile Include="olsontz.cpp" />
+    <ClCompile Include="persncal.cpp" />
+    <ClCompile Include="plurfmt.cpp" />
+    <ClCompile Include="plurrule.cpp" />
+    <ClCompile Include="quantityformatter.cpp" />
+    <ClCompile Include="rbnf.cpp" />
+    <ClCompile Include="rbtz.cpp" />
+    <ClCompile Include="reldatefmt.cpp">
+      <DisableLanguageExtensions>false</DisableLanguageExtensions>
+    </ClCompile>
+    <ClCompile Include="reldtfmt.cpp" />
+    <ClCompile Include="scientificnumberformatter.cpp" />
+    <ClCompile Include="sharedbreakiterator.cpp" />
+    <ClCompile Include="selfmt.cpp" />
+    <ClCompile Include="simpletz.cpp" />
+    <ClCompile Include="scriptset.cpp" />
+    <ClCompile Include="smpdtfmt.cpp" />
+    <ClCompile Include="smpdtfst.cpp" />
+    <ClCompile Include="standardplural.cpp" />
+    <ClCompile Include="taiwncal.cpp" />
+    <ClCompile Include="timezone.cpp" />
+    <ClCompile Include="tmunit.cpp" />
+    <ClCompile Include="tmutamt.cpp" />
+    <ClCompile Include="tmutfmt.cpp" />
+    <ClCompile Include="tzrule.cpp" />
+    <ClCompile Include="tztrans.cpp" />
+    <ClCompile Include="ucal.cpp" />
+    <ClCompile Include="udat.cpp" />
+    <ClCompile Include="udateintervalformat.cpp" />
+    <ClCompile Include="udatpg.cpp" />
+    <ClCompile Include="ufieldpositer.cpp" />
+    <ClCompile Include="ulocdata.cpp" />
+    <ClCompile Include="umsg.cpp" />
+    <ClCompile Include="unum.cpp" />
+    <ClCompile Include="unumsys.cpp" />
+    <ClCompile Include="upluralrules.cpp" />
+    <ClCompile Include="utf16collationiterator.cpp" />
+    <ClCompile Include="utf8collationiterator.cpp" />
+    <ClCompile Include="utmscale.cpp" />
+    <ClCompile Include="vtzone.cpp" />
+    <ClCompile Include="vzone.cpp" />
+    <ClCompile Include="windtfmt.cpp">
+      <DisableLanguageExtensions>false</DisableLanguageExtensions>
+    </ClCompile>
+    <ClCompile Include="winnmfmt.cpp">
+      <DisableLanguageExtensions>false</DisableLanguageExtensions>
+    </ClCompile>
+    <ClCompile Include="wintzimpl.cpp">
+      <DisableLanguageExtensions>false</DisableLanguageExtensions>
+    </ClCompile>
+    <ClCompile Include="zonemeta.cpp" />
+    <ClCompile Include="zrule.cpp" />
+    <ClCompile Include="ztrans.cpp" />
+    <ClCompile Include="ucln_in.cpp">
+      <DisableLanguageExtensions>false</DisableLanguageExtensions>
+    </ClCompile>
+    <ClCompile Include="regexcmp.cpp" />
+    <ClCompile Include="regeximp.cpp" />
+    <ClCompile Include="regexst.cpp" />
+    <ClCompile Include="regextxt.cpp" />
+    <ClCompile Include="rematch.cpp" />
+    <ClCompile Include="repattrn.cpp" />
+    <ClCompile Include="uregex.cpp" />
+    <ClCompile Include="uregexc.cpp" />
+    <ClCompile Include="anytrans.cpp" />
+    <ClCompile Include="brktrans.cpp" />
+    <ClCompile Include="casetrn.cpp" />
+    <ClCompile Include="cpdtrans.cpp" />
+    <ClCompile Include="esctrn.cpp" />
+    <ClCompile Include="funcrepl.cpp" />
+    <ClCompile Include="name2uni.cpp" />
+    <ClCompile Include="nortrans.cpp" />
+    <ClCompile Include="nultrans.cpp" />
+    <ClCompile Include="quant.cpp" />
+    <ClCompile Include="rbt.cpp" />
+    <ClCompile Include="rbt_data.cpp" />
+    <ClCompile Include="rbt_pars.cpp" />
+    <ClCompile Include="rbt_rule.cpp" />
+    <ClCompile Include="rbt_set.cpp" />
+    <ClCompile Include="remtrans.cpp" />
+    <ClCompile Include="strmatch.cpp" />
+    <ClCompile Include="strrepl.cpp" />
+    <ClCompile Include="titletrn.cpp" />
+    <ClCompile Include="tolowtrn.cpp" />
+    <ClCompile Include="toupptrn.cpp" />
+    <ClCompile Include="translit.cpp" />
+    <ClCompile Include="transreg.cpp" />
+    <ClCompile Include="tridpars.cpp" />
+    <ClCompile Include="unesctrn.cpp" />
+    <ClCompile Include="uni2name.cpp" />
+    <ClCompile Include="utrans.cpp" />
+    <ClCompile Include="csdetect.cpp" />
+    <ClCompile Include="csmatch.cpp" />
+    <ClCompile Include="csr2022.cpp" />
+    <ClCompile Include="csrecog.cpp" />
+    <ClCompile Include="csrmbcs.cpp" />
+    <ClCompile Include="csrsbcs.cpp" />
+    <ClCompile Include="csrucode.cpp" />
+    <ClCompile Include="csrutf8.cpp" />
+    <ClCompile Include="inputext.cpp" />
+    <ClCompile Include="ucsdet.cpp" />
+    <ClCompile Include="uspoof.cpp" />
+    <ClCompile Include="uspoof_build.cpp" />
+    <ClCompile Include="uspoof_conf.cpp" />
+    <ClCompile Include="uspoof_impl.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="unicode\alphaindex.h">
+      <Command>copy "%(FullPath)" ..\..\include\unicode
+</Command>
+      <Outputs>..\..\include\unicode\%(Filename)%(Extension);%(Outputs)</Outputs>
+    </CustomBuild>
+    <ClInclude Include="bocsu.h" />
+    <CustomBuild Include="unicode\coleitr.h">
+      <Command>copy "%(FullPath)" ..\..\include\unicode
+</Command>
+      <Outputs>..\..\include\unicode\%(Filename)%(Extension);%(Outputs)</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="unicode\coll.h">
+      <Command>copy "%(FullPath)" ..\..\include\unicode
+</Command>
+      <Outputs>..\..\include\unicode\%(Filename)%(Extension);%(Outputs)</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="unicode\search.h">
+      <Command>copy "%(FullPath)" ..\..\include\unicode
+</Command>
+      <Outputs>..\..\include\unicode\%(Filename)%(Extension);%(Outputs)</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="unicode\sortkey.h">
+      <Command>copy "%(FullPath)" ..\..\include\unicode
+</Command>
+      <Outputs>..\..\include\unicode\%(Filename)%(Extension);%(Outputs)</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="unicode\stsearch.h">
+      <Command>copy "%(FullPath)" ..\..\include\unicode
+</Command>
+      <Outputs>..\..\include\unicode\%(Filename)%(Extension);%(Outputs)</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="unicode\tblcoll.h">
+      <Command>copy "%(FullPath)" ..\..\include\unicode
+</Command>
+      <Outputs>..\..\include\unicode\%(Filename)%(Extension);%(Outputs)</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="unicode\ucol.h">
+      <Command>copy "%(FullPath)" ..\..\include\unicode
+</Command>
+      <Outputs>..\..\include\unicode\%(Filename)%(Extension);%(Outputs)</Outputs>
+    </CustomBuild>
+    <ClInclude Include="affixpatternparser.h" />
+    <ClInclude Include="decimalformatpatternimpl.h" />
+    <ClInclude Include="decimfmtimpl.h" />
+    <ClInclude Include="digitaffix.h" />
+    <ClInclude Include="digitaffixesandpadding.h" />
+    <ClInclude Include="digitformatter.h" />
+    <ClInclude Include="digitgrouping.h" />
+    <ClInclude Include="digitinterval.h" />
+    <ClInclude Include="pluralaffix.h" />
+    <ClInclude Include="precision.h" />
+    <ClInclude Include="significantdigitinterval.h" />
+    <ClInclude Include="smallintformatter.h" />
+    <ClInclude Include="valueformatter.h" />
+    <ClInclude Include="visibledigits.h" />
+    <ClInclude Include="collation.h" />
+    <ClInclude Include="collationbuilder.h" />
+    <ClInclude Include="collationcompare.h" />
+    <ClInclude Include="collationdata.h" />
+    <ClInclude Include="collationdatabuilder.h" />
+    <ClInclude Include="collationdatareader.h" />
+    <ClInclude Include="collationdatawriter.h" />
+    <ClInclude Include="collationfastlatin.h" />
+    <ClInclude Include="collationfastlatinbuilder.h" />
+    <ClInclude Include="collationfcd.h" />
+    <ClInclude Include="collationiterator.h" />
+    <ClInclude Include="collationkeys.h" />
+    <ClInclude Include="collationroot.h" />
+    <ClInclude Include="collationrootelements.h" />
+    <ClInclude Include="collationruleparser.h" />
+    <ClInclude Include="collationsets.h" />
+    <ClInclude Include="collationsettings.h" />
+    <ClInclude Include="collationtailoring.h" />
+    <ClInclude Include="collationweights.h" />
+    <ClInclude Include="dayperiodrules.h" />
+    <ClInclude Include="dcfmtimp.h" />
+    <ClInclude Include="numsys_impl.h" />
+    <ClInclude Include="region_impl.h" />
+    <ClInclude Include="selfmtimpl.h" />
+    <ClInclude Include="tzgnames.h" />
+    <ClInclude Include="tznames_impl.h" />
+    <ClInclude Include="ucol_imp.h" />
+    <CustomBuild Include="unicode\ucoleitr.h">
+      <Command>copy "%(FullPath)" ..\..\include\unicode
+</Command>
+      <Outputs>..\..\include\unicode\%(Filename)%(Extension);%(Outputs)</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="unicode\usearch.h">
+      <Command>copy "%(FullPath)" ..\..\include\unicode
+</Command>
+      <Outputs>..\..\include\unicode\%(Filename)%(Extension);%(Outputs)</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="unicode\tzfmt.h">
+      <Command>copy "%(FullPath)" ..\..\include\unicode</Command>
+      <Outputs>..\..\include\unicode\%(Filename)%(Extension);%(Outputs)</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="unicode\tznames.h">
+      <Command>copy "%(FullPath)" ..\..\include\unicode</Command>
+      <Outputs>..\..\include\unicode\%(Filename)%(Extension);%(Outputs)</Outputs>
+    </CustomBuild>
+    <ClInclude Include="uitercollationiterator.h" />
+    <CustomBuild Include="unicode\region.h">
+      <Command>copy "%(FullPath)" ..\..\include\unicode
+</Command>
+      <Outputs>..\..\include\unicode\%(Filename)%(Extension);%(Outputs)</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="unicode\uregion.h">
+      <Command>copy "%(FullPath)" ..\..\include\unicode
+</Command>
+      <Outputs>..\..\include\unicode\%(Filename)%(Extension);%(Outputs)</Outputs>
+    </CustomBuild>
+    <ClInclude Include="usrchimp.h" />
+    <ClInclude Include="astro.h" />
+    <CustomBuild Include="unicode\basictz.h">
+      <Command>copy "%(FullPath)" ..\..\include\unicode
+</Command>
+      <Outputs>..\..\include\unicode\%(Filename)%(Extension);%(Outputs)</Outputs>
+    </CustomBuild>
+    <ClInclude Include="buddhcal.h" />
+    <CustomBuild Include="unicode\calendar.h">
+      <Command>copy "%(FullPath)" ..\..\include\unicode
+</Command>
+      <Outputs>..\..\include\unicode\%(Filename)%(Extension);%(Outputs)</Outputs>
+    </CustomBuild>
+    <ClInclude Include="cecal.h" />
+    <ClInclude Include="chnsecal.h" />
+    <CustomBuild Include="unicode\choicfmt.h">
+      <Command>copy "%(FullPath)" ..\..\include\unicode
+</Command>
+      <Outputs>..\..\include\unicode\%(Filename)%(Extension);%(Outputs)</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="unicode\compactdecimalformat.h">
+      <Command>copy "%(FullPath)" ..\..\include\unicode
+</Command>
+      <Outputs>..\..\include\unicode\%(Filename)%(Extension);%(Outputs)</Outputs>
+    </CustomBuild>
+    <ClInclude Include="coptccal.h" />
+    <CustomBuild Include="unicode\curramt.h">
+      <Command>copy "%(FullPath)" ..\..\include\unicode
+</Command>
+      <Outputs>..\..\include\unicode\%(Filename)%(Extension);%(Outputs)</Outputs>
+    </CustomBuild>
+    <ClInclude Include="currfmt.h" />
+    <CustomBuild Include="unicode\currpinf.h">
+      <Command>copy "%(FullPath)" ..\..\include\unicode
+</Command>
+      <Outputs>..\..\include\unicode\%(Filename)%(Extension);%(Outputs)</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="unicode\currunit.h">
+      <Command>copy "%(FullPath)" ..\..\include\unicode
+</Command>
+      <Outputs>..\..\include\unicode\%(Filename)%(Extension);%(Outputs)</Outputs>
+    </CustomBuild>
+    <ClInclude Include="dangical.h" />
+    <CustomBuild Include="unicode\datefmt.h">
+      <Command>copy "%(FullPath)" ..\..\include\unicode
+</Command>
+      <Outputs>..\..\include\unicode\%(Filename)%(Extension);%(Outputs)</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="unicode\dcfmtsym.h">
+      <Command>copy "%(FullPath)" ..\..\include\unicode
+</Command>
+      <Outputs>..\..\include\unicode\%(Filename)%(Extension);%(Outputs)</Outputs>
+    </CustomBuild>
+    <ClInclude Include="decContext.h" />
+    <ClInclude Include="decfmtst.h" />
+    <ClInclude Include="decimalformatpattern.h" />
+    <CustomBuild Include="unicode\decimfmt.h">
+      <Command>copy "%(FullPath)" ..\..\include\unicode
+</Command>
+      <Outputs>..\..\include\unicode\%(Filename)%(Extension);%(Outputs)</Outputs>
+    </CustomBuild>
+    <ClInclude Include="decNumber.h" />
+    <ClInclude Include="decNumberLocal.h" />
+    <ClInclude Include="digitlst.h" />
+    <ClInclude Include="dt_impl.h" />
+    <CustomBuild Include="unicode\dtfmtsym.h">
+      <Command>copy "%(FullPath)" ..\..\include\unicode
+</Command>
+      <Outputs>..\..\include\unicode\%(Filename)%(Extension);%(Outputs)</Outputs>
+    </CustomBuild>
+    <ClInclude Include="dtitv_impl.h" />
+    <CustomBuild Include="unicode\dtitvfmt.h">
+      <Command>copy "%(FullPath)" ..\..\include\unicode
+</Command>
+      <Outputs>..\..\include\unicode\%(Filename)%(Extension);%(Outputs)</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="unicode\dtitvinf.h">
+      <Command>copy "%(FullPath)" ..\..\include\unicode
+</Command>
+      <Outputs>..\..\include\unicode\%(Filename)%(Extension);%(Outputs)</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="unicode\dtptngen.h">
+      <Command>copy "%(FullPath)" ..\..\include\unicode
+</Command>
+      <Outputs>..\..\include\unicode\%(Filename)%(Extension);%(Outputs)</Outputs>
+    </CustomBuild>
+    <ClInclude Include="dtptngen_impl.h" />
+    <CustomBuild Include="unicode\dtrule.h">
+      <Command>copy "%(FullPath)" ..\..\include\unicode
+</Command>
+      <Outputs>..\..\include\unicode\%(Filename)%(Extension);%(Outputs)</Outputs>
+    </CustomBuild>
+    <ClInclude Include="ethpccal.h" />
+    <CustomBuild Include="unicode\fieldpos.h">
+      <Command>copy "%(FullPath)" ..\..\include\unicode
+</Command>
+      <Outputs>..\..\include\unicode\%(Filename)%(Extension);%(Outputs)</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="unicode\fmtable.h">
+      <Command>copy "%(FullPath)" ..\..\include\unicode
+</Command>
+      <Outputs>..\..\include\unicode\%(Filename)%(Extension);%(Outputs)</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="unicode\uformattable.h">
+      <Command>copy "%(FullPath)" ..\..\include\unicode
+</Command>
+      <Outputs>..\..\include\unicode\%(Filename)%(Extension);%(Outputs)</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="unicode\format.h">
+      <Command>copy "%(FullPath)" ..\..\include\unicode
+</Command>
+      <Outputs>..\..\include\unicode\%(Filename)%(Extension);%(Outputs)</Outputs>
+    </CustomBuild>
+    <ClInclude Include="fphdlimp.h" />
+    <CustomBuild Include="unicode\fpositer.h">
+      <Command>copy "%(FullPath)" ..\..\include\unicode
+</Command>
+      <Outputs>..\..\include\unicode\%(Filename)%(Extension);%(Outputs)</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="unicode\gender.h">
+      <Command>copy "%(FullPath)" ..\..\include\unicode
+</Command>
+      <Outputs>..\..\include\unicode\%(Filename)%(Extension);%(Outputs)</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="unicode\ugender.h">
+      <Command>copy "%(FullPath)" ..\..\include\unicode
+</Command>
+      <Outputs>..\..\include\unicode\%(Filename)%(Extension);%(Outputs)</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="unicode\gregocal.h">
+      <Command>copy "%(FullPath)" ..\..\include\unicode
+</Command>
+      <Outputs>..\..\include\unicode\%(Filename)%(Extension);%(Outputs)</Outputs>
+    </CustomBuild>
+    <ClInclude Include="gregoimp.h" />
+    <ClInclude Include="hebrwcal.h" />
+    <ClInclude Include="indiancal.h" />
+    <ClInclude Include="islamcal.h" />
+    <ClInclude Include="japancal.h" />
+    <CustomBuild Include="unicode\measfmt.h">
+      <Command>copy "%(FullPath)" ..\..\include\unicode
+</Command>
+      <Outputs>..\..\include\unicode\%(Filename)%(Extension);%(Outputs)</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="unicode\measunit.h">
+      <Command>copy "%(FullPath)" ..\..\include\unicode
+</Command>
+      <Outputs>..\..\include\unicode\%(Filename)%(Extension);%(Outputs)</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="unicode\measure.h">
+      <Command>copy "%(FullPath)" ..\..\include\unicode
+</Command>
+      <Outputs>..\..\include\unicode\%(Filename)%(Extension);%(Outputs)</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="unicode\msgfmt.h">
+      <Command>copy "%(FullPath)" ..\..\include\unicode
+</Command>
+      <Outputs>..\..\include\unicode\%(Filename)%(Extension);%(Outputs)</Outputs>
+    </CustomBuild>
+    <ClInclude Include="msgfmt_impl.h" />
+    <ClInclude Include="nfrlist.h" />
+    <ClInclude Include="nfrs.h" />
+    <ClInclude Include="nfrule.h" />
+    <ClInclude Include="nfsubs.h" />
+    <CustomBuild Include="unicode\numfmt.h">
+      <Command>copy "%(FullPath)" ..\..\include\unicode
+</Command>
+      <Outputs>..\..\include\unicode\%(Filename)%(Extension);%(Outputs)</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="unicode\numsys.h">
+      <Command>copy "%(FullPath)" ..\..\include\unicode
+</Command>
+      <Outputs>..\..\include\unicode\%(Filename)%(Extension);%(Outputs)</Outputs>
+    </CustomBuild>
+    <ClInclude Include="olsontz.h" />
+    <ClInclude Include="persncal.h" />
+    <CustomBuild Include="unicode\plurfmt.h">
+      <Command>copy "%(FullPath)" ..\..\include\unicode
+</Command>
+      <Outputs>..\..\include\unicode\%(Filename)%(Extension);%(Outputs)</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="unicode\plurrule.h">
+      <Command>copy "%(FullPath)" ..\..\include\unicode
+</Command>
+      <Outputs>..\..\include\unicode\%(Filename)%(Extension);%(Outputs)</Outputs>
+    </CustomBuild>
+    <ClInclude Include="plurrule_impl.h" />
+    <ClInclude Include="quantityformatter.h" />
+    <ClInclude Include="sharedbreakiterator.h" />
+    <ClInclude Include="sharedcalendar.h" />
+    <ClInclude Include="shareddateformatsymbols.h" />
+    <ClInclude Include="sharednumberformat.h" />
+    <ClInclude Include="sharedpluralrules.h" />
+    <CustomBuild Include="unicode\rbnf.h">
+      <Command>copy "%(FullPath)" ..\..\include\unicode
+</Command>
+      <Outputs>..\..\include\unicode\%(Filename)%(Extension);%(Outputs)</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="unicode\rbtz.h">
+      <Command>copy "%(FullPath)" ..\..\include\unicode
+</Command>
+      <Outputs>..\..\include\unicode\%(Filename)%(Extension);%(Outputs)</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="unicode\reldatefmt.h">
+      <Command>copy "%(FullPath)" ..\..\include\unicode
+</Command>
+      <Outputs>..\..\include\unicode\%(Filename)%(Extension);%(Outputs)</Outputs>
+    </CustomBuild>
+    <ClInclude Include="reldtfmt.h" />
+    <CustomBuild Include="unicode\scientificnumberformatter.h">
+      <Command>copy "%(FullPath)" ..\..\include\unicode
+</Command>
+      <Outputs>..\..\include\unicode\%(Filename)%(Extension);%(Outputs)</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="unicode\selfmt.h">
+      <Command>copy "%(FullPath)" ..\..\include\unicode
+</Command>
+      <Outputs>..\..\include\unicode\%(Filename)%(Extension);%(Outputs)</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="unicode\simpletz.h">
+      <Command>copy "%(FullPath)" ..\..\include\unicode
+</Command>
+      <Outputs>..\..\include\unicode\%(Filename)%(Extension);%(Outputs)</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="unicode\smpdtfmt.h">
+      <Command>copy "%(FullPath)" ..\..\include\unicode
+</Command>
+      <Outputs>..\..\include\unicode\%(Filename)%(Extension);%(Outputs)</Outputs>
+    </CustomBuild>
+    <ClInclude Include="smpdtfst.h" />
+    <ClInclude Include="standardplural.h" />
+    <ClInclude Include="taiwncal.h" />
+    <CustomBuild Include="unicode\timezone.h">
+      <Command>copy "%(FullPath)" ..\..\include\unicode
+</Command>
+      <Outputs>..\..\include\unicode\%(Filename)%(Extension);%(Outputs)</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="unicode\tmunit.h">
+      <Command>copy "%(FullPath)" ..\..\include\unicode
+</Command>
+      <Outputs>..\..\include\unicode\%(Filename)%(Extension);%(Outputs)</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="unicode\tmutamt.h">
+      <Command>copy "%(FullPath)" ..\..\include\unicode
+</Command>
+      <Outputs>..\..\include\unicode\%(Filename)%(Extension);%(Outputs)</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="unicode\tmutfmt.h">
+      <Command>copy "%(FullPath)" ..\..\include\unicode
+</Command>
+      <Outputs>..\..\include\unicode\%(Filename)%(Extension);%(Outputs)</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="unicode\tzrule.h">
+      <Command>copy "%(FullPath)" ..\..\include\unicode
+</Command>
+      <Outputs>..\..\include\unicode\%(Filename)%(Extension);%(Outputs)</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="unicode\tztrans.h">
+      <Command>copy "%(FullPath)" ..\..\include\unicode
+</Command>
+      <Outputs>..\..\include\unicode\%(Filename)%(Extension);%(Outputs)</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="unicode\ucal.h">
+      <Command>copy "%(FullPath)" ..\..\include\unicode
+</Command>
+      <Outputs>..\..\include\unicode\%(Filename)%(Extension);%(Outputs)</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="unicode\udat.h">
+      <Command>copy "%(FullPath)" ..\..\include\unicode
+</Command>
+      <Outputs>..\..\include\unicode\%(Filename)%(Extension);%(Outputs)</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="unicode\udateintervalformat.h">
+      <Command>copy "%(FullPath)" ..\..\include\unicode
+</Command>
+      <Outputs>..\..\include\unicode\%(Filename)%(Extension);%(Outputs)</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="unicode\udatpg.h">
+      <Command>copy "%(FullPath)" ..\..\include\unicode
+</Command>
+      <Outputs>..\..\include\unicode\%(Filename)%(Extension);%(Outputs)</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="unicode\ufieldpositer.h">
+      <Command>copy "%(FullPath)" ..\..\include\unicode
+</Command>
+      <Outputs>..\..\include\unicode\%(Filename)%(Extension);%(Outputs)</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="unicode\ulocdata.h">
+      <Command>copy "%(FullPath)" ..\..\include\unicode
+</Command>
+      <Outputs>..\..\include\unicode\%(Filename)%(Extension);%(Outputs)</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="unicode\umsg.h">
+      <Command>copy "%(FullPath)" ..\..\include\unicode
+</Command>
+      <Outputs>..\..\include\unicode\%(Filename)%(Extension);%(Outputs)</Outputs>
+    </CustomBuild>
+    <ClInclude Include="umsg_imp.h" />
+    <CustomBuild Include="unicode\unum.h">
+      <Command>copy "%(FullPath)" ..\..\include\unicode
+</Command>
+      <Outputs>..\..\include\unicode\%(Filename)%(Extension);%(Outputs)</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="unicode\unumsys.h">
+      <Command>copy "%(FullPath)" ..\..\include\unicode
+</Command>
+      <Outputs>..\..\include\unicode\%(Filename)%(Extension);%(Outputs)</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="unicode\upluralrules.h">
+      <Command>copy "%(FullPath)" ..\..\include\unicode
+</Command>
+      <Outputs>..\..\include\unicode\%(Filename)%(Extension);%(Outputs)</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="unicode\ureldatefmt.h">
+      <Command>copy "%(FullPath)" ..\..\include\unicode
+</Command>
+      <Outputs>..\..\include\unicode\%(Filename)%(Extension);%(Outputs)</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="unicode\utmscale.h">
+      <Command>copy "%(FullPath)" ..\..\include\unicode
+</Command>
+      <Outputs>..\..\include\unicode\%(Filename)%(Extension);%(Outputs)</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="unicode\vtzone.h">
+      <Command>copy "%(FullPath)" ..\..\include\unicode
+</Command>
+      <Outputs>..\..\include\unicode\%(Filename)%(Extension);%(Outputs)</Outputs>
+    </CustomBuild>
+    <ClInclude Include="utf16collationiterator.h" />
+    <ClInclude Include="utf8collationiterator.h" />
+    <ClInclude Include="vzone.h" />
+    <ClInclude Include="windtfmt.h" />
+    <ClInclude Include="winnmfmt.h" />
+    <ClInclude Include="wintzimpl.h" />
+    <ClInclude Include="zonemeta.h" />
+    <ClInclude Include="zrule.h" />
+    <ClInclude Include="ztrans.h" />
+    <ClInclude Include="ucln_in.h" />
+    <CustomBuild Include="unicode\regex.h">
+      <Command>copy "%(FullPath)" ..\..\include\unicode
+</Command>
+      <Outputs>..\..\include\unicode\%(Filename)%(Extension);%(Outputs)</Outputs>
+    </CustomBuild>
+    <ClInclude Include="regexcmp.h" />
+    <ClInclude Include="regexcst.h" />
+    <ClInclude Include="regeximp.h" />
+    <ClInclude Include="regexst.h" />
+    <ClInclude Include="regextxt.h" />
+    <CustomBuild Include="unicode\uregex.h">
+      <Command>copy "%(FullPath)" ..\..\include\unicode
+</Command>
+      <Outputs>..\..\include\unicode\%(Filename)%(Extension);%(Outputs)</Outputs>
+    </CustomBuild>
+    <ClInclude Include="anytrans.h" />
+    <ClInclude Include="brktrans.h" />
+    <ClInclude Include="casetrn.h" />
+    <ClInclude Include="cpdtrans.h" />
+    <ClInclude Include="esctrn.h" />
+    <ClInclude Include="funcrepl.h" />
+    <ClInclude Include="name2uni.h" />
+    <ClInclude Include="nortrans.h" />
+    <ClInclude Include="nultrans.h" />
+    <ClInclude Include="quant.h" />
+    <ClInclude Include="rbt.h" />
+    <ClInclude Include="rbt_data.h" />
+    <ClInclude Include="rbt_pars.h" />
+    <ClInclude Include="rbt_rule.h" />
+    <ClInclude Include="rbt_set.h" />
+    <ClInclude Include="remtrans.h" />
+    <ClInclude Include="strmatch.h" />
+    <ClInclude Include="strrepl.h" />
+    <ClInclude Include="titletrn.h" />
+    <ClInclude Include="tolowtrn.h" />
+    <ClInclude Include="toupptrn.h" />
+    <CustomBuild Include="unicode\translit.h">
+      <Command>copy "%(FullPath)" ..\..\include\unicode
+</Command>
+      <Outputs>..\..\include\unicode\%(Filename)%(Extension);%(Outputs)</Outputs>
+    </CustomBuild>
+    <ClInclude Include="transreg.h" />
+    <ClInclude Include="tridpars.h" />
+    <ClInclude Include="unesctrn.h" />
+    <ClInclude Include="uni2name.h" />
+    <CustomBuild Include="unicode\unirepl.h">
+      <Command>copy "%(FullPath)" ..\..\include\unicode
+</Command>
+      <Outputs>..\..\include\unicode\%(Filename)%(Extension);%(Outputs)</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="unicode\utrans.h">
+      <Command>copy "%(FullPath)" ..\..\include\unicode
+</Command>
+      <Outputs>..\..\include\unicode\%(Filename)%(Extension);%(Outputs)</Outputs>
+    </CustomBuild>
+    <ClInclude Include="csdetect.h" />
+    <ClInclude Include="csmatch.h" />
+    <ClInclude Include="csr2022.h" />
+    <ClInclude Include="csrecog.h" />
+    <ClInclude Include="csrmbcs.h" />
+    <ClInclude Include="csrsbcs.h" />
+    <ClInclude Include="csrucode.h" />
+    <ClInclude Include="csrutf8.h" />
+    <ClInclude Include="inputext.h" />
+    <CustomBuild Include="unicode\ucsdet.h">
+      <Command>copy "%(FullPath)" ..\..\include\unicode
+</Command>
+      <Outputs>..\..\include\unicode\%(Filename)%(Extension);%(Outputs)</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="unicode\uspoof.h">
+      <Command>copy "%(FullPath)" ..\..\include\unicode
+</Command>
+      <Outputs>..\..\include\unicode\%(Filename)%(Extension);%(Outputs)</Outputs>
+    </CustomBuild>
+    <ClInclude Include="scriptset.h" />
+    <ClInclude Include="uspoof_conf.h" />
+    <ClInclude Include="uspoof_impl.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="i18n.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\common\common_uwp.vcxproj">
+      <Project>{C10CF34B-3F79-430E-AD38-5A32DC0589C2}</Project>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

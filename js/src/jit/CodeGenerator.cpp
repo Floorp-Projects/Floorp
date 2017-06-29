@@ -24,6 +24,7 @@
 
 #include "builtin/Eval.h"
 #include "builtin/RegExp.h"
+#include "builtin/SelfHostingDefines.h"
 #include "builtin/TypedObject.h"
 #include "gc/Nursery.h"
 #include "irregexp/NativeRegExpMacroAssembler.h"
@@ -9241,16 +9242,16 @@ CodeGenerator::visitCallIteratorStartV(LCallIteratorStartV* lir)
     callVM(ValueToIteratorInfo, lir);
 }
 
-typedef JSObject* (*GetIteratorObjectFn)(JSContext*, HandleObject, uint32_t);
-static const VMFunction GetIteratorObjectInfo =
-    FunctionInfo<GetIteratorObjectFn>(GetIteratorObject, "GetIteratorObject");
+typedef JSObject* (*GetIteratorFn)(JSContext*, HandleObject, uint32_t);
+static const VMFunction GetIteratorInfo =
+    FunctionInfo<GetIteratorFn>(GetIterator, "GetIterator");
 
 void
 CodeGenerator::visitCallIteratorStartO(LCallIteratorStartO* lir)
 {
     pushArg(Imm32(lir->mir()->flags()));
     pushArg(ToRegister(lir->object()));
-    callVM(GetIteratorObjectInfo, lir);
+    callVM(GetIteratorInfo, lir);
 }
 
 void
@@ -9276,7 +9277,7 @@ CodeGenerator::visitIteratorStartO(LIteratorStartO* lir)
 
     uint32_t flags = lir->mir()->flags();
 
-    OutOfLineCode* ool = oolCallVM(GetIteratorObjectInfo, lir,
+    OutOfLineCode* ool = oolCallVM(GetIteratorInfo, lir,
                                    ArgList(obj, Imm32(flags)), StoreRegisterTo(output));
 
     const Register temp1 = ToRegister(lir->temp1());
@@ -11853,6 +11854,60 @@ CodeGenerator::visitOutOfLineIsConstructor(OutOfLineIsConstructor* ool)
     masm.jump(ool->rejoin());
 }
 
+typedef bool (*IsArrayFn)(JSContext*, HandleObject, bool*);
+static const VMFunction IsArrayInfo = FunctionInfo<IsArrayFn>(JS::IsArray, "IsArray");
+
+static void
+EmitObjectIsArray(MacroAssembler& masm, OutOfLineCode* ool, Register obj, Register output,
+                  Label* notArray = nullptr)
+{
+    masm.loadObjClass(obj, output);
+
+    Label isArray;
+    masm.branchPtr(Assembler::Equal, output, ImmPtr(&ArrayObject::class_), &isArray);
+    masm.branchPtr(Assembler::Equal, output, ImmPtr(&UnboxedArrayObject::class_), &isArray);
+
+    // Branch to OOL path if it's a proxy.
+    masm.branchTestClassIsProxy(true, output, ool->entry());
+
+    if (notArray)
+        masm.bind(notArray);
+    masm.move32(Imm32(0), output);
+    masm.jump(ool->rejoin());
+
+    masm.bind(&isArray);
+    masm.move32(Imm32(1), output);
+
+    masm.bind(ool->rejoin());
+}
+
+void
+CodeGenerator::visitIsArrayO(LIsArrayO* lir)
+{
+    Register object = ToRegister(lir->object());
+    Register output = ToRegister(lir->output());
+
+    OutOfLineCode* ool = oolCallVM(IsArrayInfo, lir, ArgList(object),
+                                   StoreRegisterTo(output));
+    EmitObjectIsArray(masm, ool, object, output);
+}
+
+void
+CodeGenerator::visitIsArrayV(LIsArrayV* lir)
+{
+    ValueOperand val = ToValue(lir, LIsArrayV::Value);
+    Register output = ToRegister(lir->output());
+    Register temp = ToRegister(lir->temp());
+
+    Label notArray;
+    masm.branchTestObject(Assembler::NotEqual, val, &notArray);
+    masm.unboxObject(val, temp);
+
+    OutOfLineCode* ool = oolCallVM(IsArrayInfo, lir, ArgList(temp),
+                                   StoreRegisterTo(output));
+    EmitObjectIsArray(masm, ool, temp, output, &notArray);
+}
+
 void
 CodeGenerator::visitIsObject(LIsObject* ins)
 {
@@ -12531,6 +12586,140 @@ CodeGenerator::visitNaNToZero(LNaNToZero* lir)
         masm.loadConstantDouble(0.0, scratch);
         masm.branchDouble(Assembler::DoubleEqualOrUnordered, input, scratch, ool->entry());
     }
+    masm.bind(ool->rejoin());
+}
+
+typedef bool (*FinishBoundFunctionInitFn)(JSContext* cx, HandleFunction bound,
+                                          HandleObject target, int32_t argCount);
+static const VMFunction FinishBoundFunctionInitInfo =
+    FunctionInfo<FinishBoundFunctionInitFn>(JSFunction::finishBoundFunctionInit,
+                                            "JSFunction::finishBoundFunctionInit");
+
+void
+CodeGenerator::visitFinishBoundFunctionInit(LFinishBoundFunctionInit* lir)
+{
+    Register bound = ToRegister(lir->bound());
+    Register target = ToRegister(lir->target());
+    Register argCount = ToRegister(lir->argCount());
+    Register temp1 = ToRegister(lir->temp1());
+    Register temp2 = ToRegister(lir->temp2());
+
+    OutOfLineCode* ool = oolCallVM(FinishBoundFunctionInitInfo, lir,
+                                   ArgList(bound, target, argCount), StoreNothing());
+    Label* slowPath = ool->entry();
+
+    const size_t boundLengthOffset = FunctionExtended::offsetOfExtendedSlot(BOUND_FUN_LENGTH_SLOT);
+
+    // Take the slow path if the target is not a JSFunction.
+    masm.branchTestObjClass(Assembler::NotEqual, target, temp1, &JSFunction::class_, slowPath);
+
+    // Take the slow path if we'd need to adjust the [[Prototype]].
+    masm.loadObjProto(bound, temp1);
+    masm.loadObjProto(target, temp2);
+    masm.branchPtr(Assembler::NotEqual, temp1, temp2, slowPath);
+
+    // Get the function flags.
+    masm.load16ZeroExtend(Address(target, JSFunction::offsetOfFlags()), temp1);
+
+    // Functions with lazy scripts don't store their length.
+    // If the length or name property is resolved, it might be shadowed.
+    masm.branchTest32(Assembler::NonZero,
+                      temp1,
+                      Imm32(JSFunction::INTERPRETED_LAZY |
+                            JSFunction::RESOLVED_NAME |
+                            JSFunction::RESOLVED_LENGTH),
+                      slowPath);
+
+    Label notBoundTarget, loadName;
+    masm.branchTest32(Assembler::Zero, temp1, Imm32(JSFunction::BOUND_FUN), &notBoundTarget);
+    {
+        // Target's name atom doesn't contain the bound function prefix, so we
+        // need to call into the VM.
+        masm.branchTest32(Assembler::Zero, temp1,
+                          Imm32(JSFunction::HAS_BOUND_FUNCTION_NAME_PREFIX), slowPath);
+
+        // We also take the slow path when target's length isn't an int32.
+        masm.branchTestInt32(Assembler::NotEqual, Address(target, boundLengthOffset), slowPath);
+
+        // Bound functions reuse HAS_GUESSED_ATOM for HAS_BOUND_FUNCTION_NAME_PREFIX,
+        // so skip the guessed atom check below.
+        static_assert(JSFunction::HAS_BOUND_FUNCTION_NAME_PREFIX == JSFunction::HAS_GUESSED_ATOM,
+                      "HAS_BOUND_FUNCTION_NAME_PREFIX is shared with HAS_GUESSED_ATOM");
+        masm.jump(&loadName);
+    }
+    masm.bind(&notBoundTarget);
+
+    Label guessed, hasName;
+    masm.branchTest32(Assembler::NonZero, temp1, Imm32(JSFunction::HAS_GUESSED_ATOM), &guessed);
+    masm.bind(&loadName);
+    masm.loadPtr(Address(target, JSFunction::offsetOfAtom()), temp2);
+    masm.branchTestPtr(Assembler::NonZero, temp2, temp2, &hasName);
+    {
+        masm.bind(&guessed);
+
+        // Unnamed class expression don't have a name property. To avoid
+        // looking it up from the prototype chain, we take the slow path here.
+        masm.branchFunctionKind(Assembler::Equal, JSFunction::ClassConstructor, target, temp2,
+                                slowPath);
+
+        // An absent name property defaults to the empty string.
+        const JSAtomState& names = GetJitContext()->runtime->names();
+        masm.movePtr(ImmGCPtr(names.empty), temp2);
+    }
+    masm.bind(&hasName);
+
+    // Store the target's name atom in the bound function as is.
+    masm.storePtr(temp2, Address(bound, JSFunction::offsetOfAtom()));
+
+    // Set the BOUND_FN flag and, if the target is a constructor, the
+    // CONSTRUCTOR flag.
+    Label isConstructor, boundFlagsComputed;
+    masm.load16ZeroExtend(Address(bound, JSFunction::offsetOfFlags()), temp2);
+    masm.branchTest32(Assembler::NonZero, temp1, Imm32(JSFunction::CONSTRUCTOR), &isConstructor);
+    {
+        masm.or32(Imm32(JSFunction::BOUND_FUN), temp2);
+        masm.jump(&boundFlagsComputed);
+    }
+    masm.bind(&isConstructor);
+    {
+        masm.or32(Imm32(JSFunction::BOUND_FUN | JSFunction::CONSTRUCTOR), temp2);
+    }
+    masm.bind(&boundFlagsComputed);
+    masm.store16(temp2, Address(bound, JSFunction::offsetOfFlags()));
+
+    // Load the target function's length.
+    Label isInterpreted, isBound, lengthLoaded;
+    masm.branchTest32(Assembler::NonZero, temp1, Imm32(JSFunction::BOUND_FUN), &isBound);
+    masm.branchTest32(Assembler::NonZero, temp1, Imm32(JSFunction::INTERPRETED), &isInterpreted);
+    {
+        // Load the length property of a native function.
+        masm.load16ZeroExtend(Address(target, JSFunction::offsetOfNargs()), temp1);
+        masm.jump(&lengthLoaded);
+    }
+    masm.bind(&isBound);
+    {
+        // Load the length property of a bound function.
+        masm.unboxInt32(Address(target, boundLengthOffset), temp1);
+        masm.jump(&lengthLoaded);
+    }
+    masm.bind(&isInterpreted);
+    {
+        // Load the length property of an interpreted function.
+        masm.loadPtr(Address(target, JSFunction::offsetOfNativeOrScript()), temp1);
+        masm.load16ZeroExtend(Address(temp1, JSScript::offsetOfFunLength()), temp1);
+    }
+    masm.bind(&lengthLoaded);
+
+    // Compute the bound function length: Max(0, target.length - argCount).
+    Label nonNegative;
+    masm.sub32(argCount, temp1);
+    masm.branch32(Assembler::GreaterThanOrEqual, temp1, Imm32(0), &nonNegative);
+    masm.move32(Imm32(0), temp1);
+    masm.bind(&nonNegative);
+
+    // Store the bound function's length into the extended slot.
+    masm.storeValue(JSVAL_TYPE_INT32, temp1, Address(bound, boundLengthOffset));
+
     masm.bind(ool->rejoin());
 }
 

@@ -704,11 +704,11 @@ gsw{
         }
         PEN{
             "PEN",
-            "Nöie Sol",
+            "Sol",
         }
         PES{
             "PES",
-            "Sol",
+            "Sol (1863–1965)",
         }
         PGK{
             "PGK",
@@ -1757,12 +1757,12 @@ gsw{
             other{"Peruanischi Inti"}
         }
         PEN{
-            one{"Nöie Sol"}
-            other{"Nöii Sol"}
-        }
-        PES{
             one{"Sol"}
             other{"Sol"}
+        }
+        PES{
+            one{"Sol (1863–1965)"}
+            other{"Sol (1863–1965)"}
         }
         PGK{
             one{"Kina"}
@@ -2137,5 +2137,5 @@ gsw{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.1.28.76"}
+    Version{"2.1.32.59"}
 }

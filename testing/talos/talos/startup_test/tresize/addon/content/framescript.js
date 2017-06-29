@@ -1,7 +1,7 @@
 (function() {
   const TRESIZE_PREFIX = "tresize@mozilla.org:";
 
-  addEventListener(TRESIZE_PREFIX + "chrome-run-event", function (e) {
+  addEventListener(TRESIZE_PREFIX + "chrome-run-event", function(e) {
     var uniqueMessageId = TRESIZE_PREFIX + content.document.documentURI + Date.now() + Math.random();
 
     addMessageListener(TRESIZE_PREFIX + "chrome-run-reply", function done(reply) {

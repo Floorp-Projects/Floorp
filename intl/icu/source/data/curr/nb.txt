@@ -776,15 +776,15 @@ nb{
         }
         PEI{
             "PEI",
-            "peruvianske inti",
+            "peruanske inti",
         }
         PEN{
             "PEN",
-            "peruanske nuevo sol",
+            "peruanske sol",
         }
         PES{
             "PES",
-            "peruvianske sol (1863–1965)",
+            "peruanske sol (1863–1965)",
         }
         PGK{
             "PGK",
@@ -2063,16 +2063,16 @@ nb{
             other{"panamanske balboa"}
         }
         PEI{
-            one{"peruviansk inti"}
-            other{"peruvianske inti"}
+            one{"peruansk inti"}
+            other{"peruanske inti"}
         }
         PEN{
-            one{"peruansk nuevo sol"}
-            other{"peruanske nuevo sol"}
+            one{"peruansk sol"}
+            other{"peruanske sol"}
         }
         PES{
-            one{"peruviansk sol (1863–1965)"}
-            other{"peruvianske sol (1863–1965)"}
+            one{"peruansk sol (1863–1965)"}
+            other{"peruanske sol (1863–1965)"}
         }
         PGK{
             one{"papuansk kina"}
@@ -2483,5 +2483,5 @@ nb{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.1.30.7"}
+    Version{"2.1.32.59"}
 }

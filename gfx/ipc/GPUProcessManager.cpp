@@ -179,6 +179,13 @@ GPUProcessManager::DisableGPUProcess(const char* aMessage)
 
   DestroyProcess();
   ShutdownVsyncIOThread();
+
+  // We may have been in the middle of guaranteeing our various services are
+  // available when one failed. Some callers may fallback to using the same
+  // process equivalent, and we need to make sure those services are setup
+  // correctly. We cannot re-enter DisableGPUProcess from this call because we
+  // know that it is disabled in the config above.
+  EnsureProtocolsReady();
 }
 
 bool
@@ -198,6 +205,14 @@ GPUProcessManager::EnsureGPUReady()
   }
 
   return false;
+}
+
+void
+GPUProcessManager::EnsureProtocolsReady()
+{
+  EnsureCompositorManagerChild();
+  EnsureImageBridgeChild();
+  EnsureVRManager();
 }
 
 void
@@ -641,9 +656,7 @@ GPUProcessManager::CreateTopLevelCompositor(nsBaseWidget* aWidget,
 {
   uint64_t layerTreeId = AllocateLayerTreeId();
 
-  EnsureCompositorManagerChild();
-  EnsureImageBridgeChild();
-  EnsureVRManager();
+  EnsureProtocolsReady();
 
   RefPtr<CompositorSession> session;
 

@@ -199,10 +199,19 @@ ky{
                 timeSeparator{":"}
             }
         }
+        minimalPairs{
+            ordinal{
+                other{"{0}-бурулуштан оңго бурулуңуз."}
+            }
+            plural{
+                one{"Себетте {0} Х бар. Аны аласызбы?"}
+                other{"Себетте {0} Х бар. Аларды аласызбы?"}
+            }
+        }
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"2.1.28.79"}
+    Version{"2.1.31.86"}
     calendar{
         generic{
             DateTimePatterns{

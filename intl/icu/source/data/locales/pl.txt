@@ -272,10 +272,21 @@ pl{
                 timeSeparator{":"}
             }
         }
+        minimalPairs{
+            ordinal{
+                other{"Skręć w {0} w prawo."}
+            }
+            plural{
+                few{"{0} miesiące"}
+                many{"{0} miesięcy"}
+                one{"{0} miesiąc"}
+                other{"{0} miesiąca"}
+            }
+        }
         minimumGroupingDigits{"2"}
         native{"latn"}
     }
-    Version{"2.1.28.79"}
+    Version{"2.1.32.59"}
     calendar{
         buddhist{
             eras{

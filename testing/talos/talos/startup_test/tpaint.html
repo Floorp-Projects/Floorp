@@ -8,7 +8,7 @@
 var OPENER_DELAY = 1000; // ms delay between tests
 var REPEAT_COUNT = 20;
 var kid, kidStartTime, kidEndTime, windowIndex, openTimes;
-var auto = document.location.search.split('=')[1]; // ?auto=1
+var auto = document.location.search.split("=")[1]; // ?auto=1
 
 /*
  * tpaint -- measures the amount of time between opening a new window
@@ -44,12 +44,12 @@ function scheduleNextWindow() {
 function calcMedian( numbers ) {
   // Avoid changing the original array.
   var sortedNumbers = Array.from(numbers);
-  sortedNumbers.sort( function (a,b){ return a-b; } );
+  sortedNumbers.sort( function(a, b) { return a - b; } );
   var n = Math.floor( sortedNumbers.length / 2 );
   if (sortedNumbers.length % 2) {
     return sortedNumbers[n];
   }
-  return ( sortedNumbers[n-1] + sortedNumbers[n] ) / 2;
+  return ( sortedNumbers[n - 1] + sortedNumbers[n] ) / 2;
 }
 
 async function reportTimes() {
@@ -68,13 +68,13 @@ async function reportTimes() {
   avg = (avg / count).toFixed(2);
   min = min.toFixed(2);
   max = max.toFixed(2);
-  med = calcMedian(openTimes);
+  var med = calcMedian(openTimes);
 
   if (auto) {
-    dumpLog("__start_report" + openTimes.join('|') + "__end_report");
+    dumpLog("__start_report" + openTimes.join("|") + "__end_report");
     var now = (new Date()).getTime();
     dumpLog("__startTimestamp" + now + "__endTimestamp\n");
-    dumpLog("openingTimes="+openTimes.slice(1)+"\n");
+    dumpLog("openingTimes=" + openTimes.slice(1) + "\n");
     dumpLog("avgOpenTime:" + avg + "\n" );
     dumpLog("minOpenTime:" + min + "\n" );
     dumpLog("maxOpenTime:" + max + "\n" );
@@ -86,17 +86,18 @@ async function reportTimes() {
   } else {
     alert("Average over " + count + " runs: " + avg + "\n" +
           "(min=" + min + ", max=" + max + ")\n" +
-          "runs=" + openTimes.join(','));
+          "runs=" + openTimes.join(","));
   }
 }
 
 async function childIsOpen() {
   kidEndTime = window.performance.now();
-  await TalosContentProfiler.pause('tpaint ' + windowIndex);
+  await TalosContentProfiler.pause("tpaint " + windowIndex);
   openTimes[windowIndex] = kidEndTime - kidStartTime;
   scheduleNextWindow();
 }
 
+/* eslint-disable no-useless-concat */
 var kidHTML = "<html><meta charset='utf-8'><script>" +
               "var e = 'MozAfterPaint';" +
               "function done() {" +
@@ -106,10 +107,11 @@ var kidHTML = "<html><meta charset='utf-8'><script>" +
               "}" +
               "window.addEventListener(e, done, true);" +
               "</" + "script>TPAINT</html>";
+/* eslint-enable no-useless-concat */
 var kidURI = "data:text/html," + encodeURI(kidHTML);
 
 async function openWindow() {
-  await TalosContentProfiler.resume('tpaint ' + windowIndex);
+  await TalosContentProfiler.resume("tpaint " + windowIndex);
   kidStartTime = window.performance.now();
   kid = window.open(kidURI);
 }

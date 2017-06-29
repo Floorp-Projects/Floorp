@@ -37,16 +37,16 @@ var testsInfo = {
 function updateConfig() {
   config = {subtests: []};
   for (var test in defaultConfig.subtests) {
-    if ($("subtest-" + test).checked) {
+    if ($("subtest-" + test).checked) { // eslint-disable-line no-undef
       config.subtests.push(test);
     }
   }
 
-  var repeat = $("repeat").value;
+  var repeat = $("repeat").value; // eslint-disable-line no-undef
   config.repeat = isNaN(repeat) ? 1 : repeat;
 
   // use 1ms rest as a minimum.
-  var rest = $("rest").value;
+  var rest = $("rest").value; // eslint-disable-line no-undef
   config.rest = Math.max(1, isNaN(rest) ? defaultConfig.rest : rest);
 }
 </script>
@@ -67,10 +67,10 @@ Utilities:
 <b>Configure DAMP</b> (CTRL-F5 to reset to talos defaults) <button type="button" onclick="deselectAll()">Deselect all tests</button><br/>
 <script>
   for (var test in defaultConfig.subtests) {
-    document.write('<input type="checkbox" id="subtest-' + test + '" ' + (defaultConfig.subtests[test] ? "" : "un") + 'checked>'
-                  + test + '</input>'
-                  + '<span style="color:grey">&nbsp;&nbsp;&nbsp;' + testsInfo[test] + '</span>'
-                  + '<br/>');
+    document.write('<input type="checkbox" id="subtest-' + test + '" ' + (defaultConfig.subtests[test] ? "" : "un") + "checked>"
+                  + test + "</input>"
+                  + '<span style="color:grey">&nbsp;&nbsp;&nbsp;' + testsInfo[test] + "</span>"
+                  + "<br/>");
   }
 </script>
   <br/>

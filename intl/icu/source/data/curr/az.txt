@@ -704,11 +704,11 @@ az{
         }
         PEN{
             "PEN",
-            "Peru Nuevo Solu",
+            "Peru Solu",
         }
         PES{
             "PES",
-            "Peru Solu",
+            "Peru Solu (1863–1965)",
         }
         PGK{
             "PGK",
@@ -1865,12 +1865,12 @@ az{
             other{"Peru inti"}
         }
         PEN{
-            one{"Peru Nuevo solu"}
-            other{"Peru Nuevo solu"}
-        }
-        PES{
             one{"Peru solu"}
             other{"Peru solu"}
+        }
+        PES{
+            one{"Peru solu (1863–1965)"}
+            other{"Peru solu (1863–1965)"}
         }
         PGK{
             one{"Papua Yeni Qvineya kinası"}
@@ -2229,5 +2229,5 @@ az{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.1.28.79"}
+    Version{"2.1.32.59"}
 }

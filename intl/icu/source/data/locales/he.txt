@@ -272,11 +272,22 @@ he{
                 timeSeparator{":"}
             }
         }
+        minimalPairs{
+            ordinal{
+                other{"פנה ימינה בפנייה ה-{0}"}
+            }
+            plural{
+                many{"{0} שנה"}
+                one{"שנה"}
+                other{"{0} שנים"}
+                two{"שנתיים"}
+            }
+        }
         minimumGroupingDigits{"1"}
         native{"latn"}
         traditional{"hebr"}
     }
-    Version{"2.1.29.27"}
+    Version{"2.1.32.59"}
     calendar{
         generic{
             DateTimePatterns{

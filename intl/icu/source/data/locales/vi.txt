@@ -168,10 +168,20 @@ vi{
                 timeSeparator{":"}
             }
         }
+        minimalPairs{
+            ordinal{
+                one{"Rẽ vào lối rẽ thứ nhất bên phải."}
+                other{"Rẽ vào lối rẽ thứ {0} bên phải."}
+            }
+            plural{
+                one{"Rẽ vào lối rẽ thứ nhất bên phải."}
+                other{"Rẽ vào lối rẽ thứ {0} bên phải."}
+            }
+        }
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"2.1.28.79"}
+    Version{"2.1.32.59"}
     calendar{
         buddhist{
             DateTimePatterns{

@@ -2,7 +2,7 @@
 // License & terms of use: http://www.unicode.org/copyright.html#License
 sr_Latn{
     %%Parent{"root"}
-    Version{"2.1.29.33"}
+    Version{"2.1.32.73"}
     zoneStrings{
         "meta:Acre"{
             ld{"Akre letnje računanje vremena"}

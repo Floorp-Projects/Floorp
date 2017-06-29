@@ -200,10 +200,22 @@ ca{
                 timeSeparator{":"}
             }
         }
+        minimalPairs{
+            ordinal{
+                few{"Agafa el {0}t a la dreta."}
+                one{"Agafa el {0}r a la dreta."}
+                other{"Agafa el {0}è a la dreta."}
+                two{"Agafa el {0}n a la dreta."}
+            }
+            plural{
+                one{"{0} dia"}
+                other{"{0} dies"}
+            }
+        }
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"2.1.28.79"}
+    Version{"2.1.32.59"}
     calendar{
         buddhist{
             DateTimePatterns{

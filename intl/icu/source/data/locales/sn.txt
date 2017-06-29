@@ -32,7 +32,7 @@ sn{
         }
         minimumGroupingDigits{"1"}
     }
-    Version{"2.1.27.98"}
+    Version{"2.1.31.33"}
     calendar{
         generic{
             DateTimePatterns{

@@ -717,11 +717,11 @@ sr_Latn{
         }
         PEN{
             "PEN",
-            "Peruanski novi sol",
+            "Peruanski sol",
         }
         PES{
             "PES",
-            "Peruanski sol",
+            "Peruanski sol (1863–1965)",
         }
         PGK{
             "PGK",
@@ -2111,14 +2111,14 @@ sr_Latn{
             other{"peruvijskih intija"}
         }
         PEN{
-            few{"peruanska nova sola"}
-            one{"peruanski novi sol"}
-            other{"peruanskih novih sola"}
-        }
-        PES{
             few{"peruanska sola"}
             one{"peruanski sol"}
             other{"peruanskih sola"}
+        }
+        PES{
+            few{"peruanska sola (1863–1965)"}
+            one{"peruanski sol (1863–1965)"}
+            other{"peruanskih sola (1863–1965)"}
         }
         PGK{
             few{"papuanske kine"}
@@ -2621,5 +2621,5 @@ sr_Latn{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.1.29.33"}
+    Version{"2.1.32.73"}
 }

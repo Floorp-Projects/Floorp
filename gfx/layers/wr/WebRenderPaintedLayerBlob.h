@@ -56,6 +56,7 @@ private:
   RefPtr<ImageContainer> mImageContainer;
   RefPtr<ImageClient> mImageClient;
   Maybe<WrImageKey> mImageKey;
+  LayerIntRect mImageBounds;
 };
 
 } // namespace layers

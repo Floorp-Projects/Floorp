@@ -2,7 +2,7 @@
 // License & terms of use: http://www.unicode.org/copyright.html#License
 zh_Hant{
     %%Parent{"root"}
-    Version{"2.1.28.79"}
+    Version{"2.1.33.94"}
     zoneStrings{
         "meta:Acre"{
             ld{"艾克夏令時間"}

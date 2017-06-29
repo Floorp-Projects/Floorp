@@ -32,8 +32,7 @@ class WaiveXrayWrapper : public js::CrossCompartmentWrapper {
     virtual bool construct(JSContext* cx, JS::Handle<JSObject*> wrapper,
                            const JS::CallArgs& args) const override;
 
-    virtual bool enumerate(JSContext* cx, JS::Handle<JSObject*> proxy,
-                           JS::MutableHandle<JSObject*> objp) const override;
+    virtual JSObject* enumerate(JSContext* cx, JS::Handle<JSObject*> proxy) const override;
     virtual bool nativeCall(JSContext* cx, JS::IsAcceptableThis test,
                             JS::NativeImpl impl, const JS::CallArgs& args) const override;
     virtual bool getPropertyDescriptor(JSContext* cx, JS::Handle<JSObject*> wrapper,

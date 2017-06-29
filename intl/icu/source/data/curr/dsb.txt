@@ -532,7 +532,7 @@ dsb{
         }
         PEN{
             "PEN",
-            "peruski nowy sol",
+            "peruski sol",
         }
         PGK{
             "PGK",
@@ -1536,10 +1536,10 @@ dsb{
             two{"panamaskej balboa"}
         }
         PEN{
-            few{"peruske nowe sole"}
-            one{"peruski nowy sol"}
-            other{"peruskich nowych solow"}
-            two{"peruskej nowej sola"}
+            few{"peruske sole"}
+            one{"peruski sol"}
+            other{"peruskich solow"}
+            two{"peruskej sola"}
         }
         PGK{
             few{"papua-neuguinejske kiny"}
@@ -1854,5 +1854,5 @@ dsb{
         other{"{0} {1}"}
         two{"{0} {1}"}
     }
-    Version{"2.1.28.76"}
+    Version{"2.1.31.86"}
 }

@@ -708,11 +708,11 @@ lb{
         }
         PEN{
             "PEN",
-            "Peruaneschen Neie Sol",
+            "Peruaneschen Sol",
         }
         PES{
             "PES",
-            "Peruanesche Sol (1863–1965)",
+            "Peruaneschen Sol (1863–1965)",
         }
         PGK{
             "PGK",
@@ -1825,11 +1825,11 @@ lb{
             other{"Peruanesch Inti"}
         }
         PEN{
-            one{"Peruaneschen Neie Sol"}
-            other{"Peruanesch Nei Soles"}
+            one{"Peruaneschen Sol"}
+            other{"Peruanesch Soles"}
         }
         PES{
-            one{"Peruanesche Sol (1863–1965)"}
+            one{"Peruaneschen Sol (1863–1965)"}
             other{"Peruanesch Soles (1863–1965)"}
         }
         PGK{
@@ -2225,5 +2225,5 @@ lb{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.1.28.76"}
+    Version{"2.1.31.86"}
 }

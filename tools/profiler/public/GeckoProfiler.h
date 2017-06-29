@@ -364,7 +364,9 @@ PROFILER_FUNC(PseudoStack* profiler_get_pseudo_stack(), nullptr)
 // important happening such as the first paint. Unlike labels, which are only
 // recorded in the profile buffer if a sample is collected while the label is
 // on the pseudostack, markers will always be recorded in the profile buffer.
-// A no-op if the profiler is inactive or in privacy mode.
+// aMarkerName is copied, so the caller does not need to ensure it lives for a
+// certain length of time. A no-op if the profiler is inactive or in privacy
+// mode.
 PROFILER_FUNC_VOID(profiler_add_marker(const char* aMarkerName))
 PROFILER_FUNC_VOID(
   profiler_add_marker(const char* aMarkerName,

@@ -748,11 +748,11 @@ ee{
         }
         PEN{
             "PEN",
-            "peruga nuevo sol",
+            "peruga sol",
         }
         PES{
             "PES",
-            "peruga nuevo sol (1863–1965)",
+            "peruga sol (1863–1965)",
         }
         PGK{
             "PGK",
@@ -1923,12 +1923,12 @@ ee{
             other{"peruga inti"}
         }
         PEN{
-            one{"peruga nuevo sol"}
-            other{"peruga nuevo sol"}
+            one{"peruga sol"}
+            other{"peruga sol"}
         }
         PES{
-            one{"peruga nuevo sol (1863–1965)"}
-            other{"peruga nuevo sol (1863–1965)"}
+            one{"peruga sol (1863–1965)"}
+            other{"peruga sol (1863–1965)"}
         }
         PGK{
             one{"papua new giniga kina"}
@@ -2331,5 +2331,5 @@ ee{
         one{"{1} {0}"}
         other{"{1} {0}"}
     }
-    Version{"2.1.28.76"}
+    Version{"2.1.31.86"}
 }
