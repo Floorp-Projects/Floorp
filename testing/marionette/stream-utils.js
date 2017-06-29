@@ -4,7 +4,8 @@
 
 "use strict";
 
-const {Constructor: CC, classes: Cc, interfaces: Ci, utils: Cu} = Components;
+const {Constructor: CC, classes: Cc, interfaces: Ci, utils: Cu, results: Cr} =
+    Components;
 
 Cu.import("resource://gre/modules/EventEmitter.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
@@ -19,37 +20,39 @@ this.EXPORTED_SYMBOLS = ["StreamUtils"];
 const BUFFER_SIZE = 0x8000;
 
 /**
- * This helper function (and its companion object) are used by bulk senders and
- * receivers to read and write data in and out of other streams.  Functions that
- * make use of this tool are passed to callers when it is time to read or write
- * bulk data.  It is highly recommended to use these copier functions instead of
- * the stream directly because the copier enforces the agreed upon length.
- * Since bulk mode reuses an existing stream, the sender and receiver must write
- * and read exactly the agreed upon amount of data, or else the entire transport
- * will be left in a invalid state.  Additionally, other methods of stream
- * copying (such as NetUtil.asyncCopy) close the streams involved, which would
- * terminate the debugging transport, and so it is avoided here.
+ * This helper function (and its companion object) are used by bulk
+ * senders and receivers to read and write data in and out of other streams.
+ * Functions that make use of this tool are passed to callers when it is
+ * time to read or write bulk data.  It is highly recommended to use these
+ * copier functions instead of the stream directly because the copier
+ * enforces the agreed upon length. Since bulk mode reuses an existing
+ * stream, the sender and receiver must write and read exactly the agreed
+ * upon amount of data, or else the entire transport will be left in a
+ * invalid state.  Additionally, other methods of stream copying (such as
+ * NetUtil.asyncCopy) close the streams involved, which would terminate
+ * the debugging transport, and so it is avoided here.
  *
- * Overall, this *works*, but clearly the optimal solution would be able to just
- * use the streams directly.  If it were possible to fully implement
- * nsIInputStream / nsIOutputStream in JS, wrapper streams could be created to
- * enforce the length and avoid closing, and consumers could use familiar stream
- * utilities like NetUtil.asyncCopy.
+ * Overall, this *works*, but clearly the optimal solution would be
+ * able to just use the streams directly.  If it were possible to fully
+ * implement nsIInputStream/nsIOutputStream in JS, wrapper streams could
+ * be created to enforce the length and avoid closing, and consumers could
+ * use familiar stream utilities like NetUtil.asyncCopy.
  *
- * The function takes two async streams and copies a precise number of bytes
- * from one to the other.  Copying begins immediately, but may complete at some
- * future time depending on data size.  Use the returned promise to know when
- * it's complete.
+ * The function takes two async streams and copies a precise number
+ * of bytes from one to the other.  Copying begins immediately, but may
+ * complete at some future time depending on data size.  Use the returned
+ * promise to know when it's complete.
  *
- * @param input nsIAsyncInputStream
- *        The stream to copy from.
- * @param output nsIAsyncOutputStream
- *        The stream to copy to.
- * @param length Integer
- *        The amount of data that needs to be copied.
- * @return Promise
- *         The promise is resolved when copying completes or rejected if any
- *         (unexpected) errors occur.
+ * @param {nsIAsyncInputStream} input
+ *     Stream to copy from.
+ * @param {nsIAsyncOutputStream} output
+ *        Stream to copy to.
+ * @param {number} length
+ *        Amount of data that needs to be copied.
+ *
+ * @return {Promise}
+ *     Promise is resolved when copying completes or rejected if any
+ *     (unexpected) errors occur.
  */
 function copyStream(input, output, length) {
   let copier = new StreamCopier(input, output, length);
@@ -60,7 +63,8 @@ function StreamCopier(input, output, length) {
   EventEmitter.decorate(this);
   this._id = StreamCopier._nextId++;
   this.input = input;
-  // Save off the base output stream, since we know it's async as we've required
+  // Save off the base output stream, since we know it's async as we've
+  // required
   this.baseAsyncOutput = output;
   if (IOUtil.outputStreamIsBuffered(output)) {
     this.output = output;
@@ -75,7 +79,7 @@ function StreamCopier(input, output, length) {
     promise: new Promise((resolve, reject) => {
       this._deferred.resolve = resolve;
       this._deferred.reject = reject;
-    })
+    }),
   };
 
   this._copy = this._copy.bind(this);
@@ -83,21 +87,22 @@ function StreamCopier(input, output, length) {
   this._destroy = this._destroy.bind(this);
 
   // Copy promise's then method up to this object.
-  // Allows the copier to offer a promise interface for the simple succeed or
-  // fail scenarios, but also emit events (due to the EventEmitter) for other
-  // states, like progress.
+  //
+  // Allows the copier to offer a promise interface for the simple succeed
+  // or fail scenarios, but also emit events (due to the EventEmitter)
+  // for other states, like progress.
   this.then = this._deferred.promise.then.bind(this._deferred.promise);
   this.then(this._destroy, this._destroy);
 
-  // Stream ready callback starts as |_copy|, but may switch to |_flush| at end
-  // if flushing would block the output stream.
+  // Stream ready callback starts as |_copy|, but may switch to |_flush|
+  // at end if flushing would block the output stream.
   this._streamReadyCallback = this._copy;
 }
 StreamCopier._nextId = 0;
 
 StreamCopier.prototype = {
 
-  copy: function () {
+  copy() {
     // Dispatch to the next tick so that it's possible to attach a progress
     // event listener, even for extremely fast copies (like when testing).
     Services.tm.currentThread.dispatch(() => {
@@ -110,7 +115,7 @@ StreamCopier.prototype = {
     return this;
   },
 
-  _copy: function () {
+  _copy() {
     let bytesAvailable = this.input.available();
     let amountToCopy = Math.min(bytesAvailable, this._amountLeft);
     this._debug("Trying to copy: " + amountToCopy);
@@ -143,14 +148,14 @@ StreamCopier.prototype = {
     this.input.asyncWait(this, 0, 0, Services.tm.currentThread);
   },
 
-  _emitProgress: function () {
+  _emitProgress() {
     this.emit("progress", {
       bytesSent: this._length - this._amountLeft,
-      totalBytes: this._length
+      totalBytes: this._length,
     });
   },
 
-  _flush: function () {
+  _flush() {
     try {
       this.output.flush();
     } catch (e) {
@@ -167,7 +172,7 @@ StreamCopier.prototype = {
     this._deferred.resolve();
   },
 
-  _destroy: function () {
+  _destroy() {
     this._destroy = null;
     this._copy = null;
     this._flush = null;
@@ -176,37 +181,40 @@ StreamCopier.prototype = {
   },
 
   // nsIInputStreamCallback
-  onInputStreamReady: function () {
+  onInputStreamReady() {
     this._streamReadyCallback();
   },
 
   // nsIOutputStreamCallback
-  onOutputStreamReady: function () {
+  onOutputStreamReady() {
     this._streamReadyCallback();
   },
 
-  _debug: function (msg) {
-  }
+  _debug(msg) {
+  },
 
 };
 
 /**
  * Read from a stream, one byte at a time, up to the next |delimiter|
- * character, but stopping if we've read |count| without finding it.  Reading
- * also terminates early if there are less than |count| bytes available on the
- * stream.  In that case, we only read as many bytes as the stream currently has
- * to offer.
- * TODO: This implementation could be removed if bug 984651 is fixed, which
- *       provides a native version of the same idea.
- * @param stream nsIInputStream
- *        The input stream to read from.
- * @param delimiter string
- *        The character we're trying to find.
- * @param count integer
- *        The max number of characters to read while searching.
- * @return string
- *         The data collected.  If the delimiter was found, this string will
- *         end with it.
+ * character, but stopping if we've read |count| without finding it.
+ * Reading also terminates early if there are less than |count| bytes
+ * available on the stream.  In that case, we only read as many bytes as
+ * the stream currently has to offer.
+ *
+ * TODO: This implementation could be removed if bug 984651 is fixed,
+ * which provides a native version of the same idea.
+ *
+ * @param {nsIInputStream} stream
+ *     Input stream to read from.
+ * @param {string} delimiter
+ *     Character we're trying to find.
+ * @param {number} count
+ *     Max number of characters to read while searching.
+ *
+ * @return {string}
+ *     Collected data.  If the delimiter was found, this string will
+ *     end with it.
  */
 function delimitedRead(stream, delimiter, count) {
   let scriptableStream;
@@ -235,8 +243,7 @@ function delimitedRead(stream, delimiter, count) {
   return data;
 }
 
-const StreamUtils = {
+this.StreamUtils = {
   copyStream,
-  delimitedRead
+  delimitedRead,
 };
-

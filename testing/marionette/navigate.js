@@ -25,7 +25,7 @@ this.navigate = {};
  * @throws TypeError
  *     If |url| is an invalid URL.
  */
-navigate.isLoadEventExpected = function (url) {
+navigate.isLoadEventExpected = function(url) {
   // assume we will go somewhere exciting
   if (typeof url == "undefined") {
     throw TypeError("Expected destination URL");

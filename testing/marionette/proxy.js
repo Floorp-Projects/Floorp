@@ -30,7 +30,7 @@ var ownPriorityGetterTrap = {
       return obj[prop];
     }
     return (...args) => obj.send(prop, args);
-  }
+  },
 };
 
 this.proxy = {};
@@ -52,8 +52,9 @@ this.proxy = {};
  * @param {function(string, Object, number)} sendAsyncFn
  *     Callback for sending async messages.
  */
-proxy.toListener = function (mmFn, sendAsyncFn, browserFn) {
-  let sender = new proxy.AsyncMessageChannel(mmFn, sendAsyncFn, browserFn);
+proxy.toListener = function(mmFn, sendAsyncFn, browserFn) {
+  let sender = new proxy.AsyncMessageChannel(
+      mmFn, sendAsyncFn, browserFn);
   return new Proxy(sender, ownPriorityGetterTrap);
 };
 
@@ -100,8 +101,8 @@ proxy.AsyncMessageChannel = class {
    * @param {string} name
    *     Function to call in the listener, e.g. for the message listener
    *     "Marionette:foo8", use "foo".
-   * @param {Array.<?>=} args
-   *     Argument list to pass the function.  If args has a single entry
+   * @param {Array.<?>=} args
+   *     Argument list to pass the function. If args has a single entry
    *     that is an object, we assume it's an old style dispatch, and
    *     the object will passed literally.
    *
@@ -142,7 +143,7 @@ proxy.AsyncMessageChannel = class {
       // The currently selected tab or window has been closed. No clean-up
       // is necessary to do because all loaded listeners are gone.
       this.closeHandler = event => {
-        logger.debug(`Received DOM event "${event.type}" for "${event.target}"`);
+        logger.debug(`Received DOM event ${event.type} for ${event.target}`);
 
         switch (event.type) {
           case "TabClose":
@@ -183,15 +184,15 @@ proxy.AsyncMessageChannel = class {
   addHandlers() {
     modal.addHandler(this.dialogueObserver_);
 
-    // Register event handlers in case the command closes the current tab or window,
-    // and the promise has to be escaped.
+    // Register event handlers in case the command closes the current
+    // tab or window, and the promise has to be escaped.
     if (this.browser) {
-      this.browser.window.addEventListener("unload", this.closeHandler, false);
+      this.browser.window.addEventListener("unload", this.closeHandler);
 
       if (this.browser.tab) {
         let node = this.browser.tab.addEventListener ?
             this.browser.tab : this.browser.contentBrowser;
-        node.addEventListener("TabClose", this.closeHandler, false);
+        node.addEventListener("TabClose", this.closeHandler);
       }
     }
   }
@@ -203,13 +204,12 @@ proxy.AsyncMessageChannel = class {
     modal.removeHandler(this.dialogueObserver_);
 
     if (this.browser) {
-      this.browser.window.removeEventListener("unload", this.closeHandler, false);
+      this.browser.window.removeEventListener("unload", this.closeHandler);
 
       if (this.browser.tab) {
         let node = this.browser.tab.addEventListener ?
             this.browser.tab : this.browser.contentBrowser;
-
-        node.removeEventListener("TabClose", this.closeHandler, false);
+        node.removeEventListener("TabClose", this.closeHandler);
       }
     }
   }
@@ -263,7 +263,7 @@ proxy.AsyncMessageChannel = class {
       payload = data;
     }
 
-    const msg = {type: type, data: payload};
+    const msg = {type, data: payload};
 
     // here sendAsync is actually the content frame's
     // sendAsyncMessage(path, message) global
@@ -307,7 +307,7 @@ proxy.AsyncMessageChannel = class {
 
   removeAllListeners_() {
     let ok = true;
-    for (let [p, cb] of this.listeners_) {
+    for (let [p] of this.listeners_) {
       ok |= this.removeListener_(p);
     }
     return ok;
@@ -327,7 +327,7 @@ proxy.AsyncMessageChannel.ReplyType = {
  *     The content frame's message manager, which itself is usually an
  *     implementor of.
  */
-proxy.toChromeAsync = function (frameMessageManager) {
+proxy.toChromeAsync = function(frameMessageManager) {
   let sender = new AsyncChromeSender(frameMessageManager);
   return new Proxy(sender, ownPriorityGetterTrap);
 };
@@ -342,7 +342,7 @@ proxy.toChromeAsync = function (frameMessageManager) {
  *     let promise = sender.send("runEmulatorCmd", "my command");
  *     let rv = yield promise;
  */
-this.AsyncChromeSender = class {
+class AsyncChromeSender {
   constructor(frameMessageManager) {
     this.mm = frameMessageManager;
   }
@@ -353,7 +353,7 @@ this.AsyncChromeSender = class {
    * @param {string} name
    *     Function to call in the chrome, e.g. for "Marionette:foo", use
    *     "foo".
-   * @param {?} args
+   * @param {?} args
    *     Argument list to pass the function.  Must be JSON serialisable.
    *
    * @return {Promise}
@@ -389,7 +389,7 @@ this.AsyncChromeSender = class {
 
     return proxy;
   }
-};
+}
 
 /**
  * Creates a transparent interface from the content- to the chrome context.
@@ -406,7 +406,7 @@ this.AsyncChromeSender = class {
  * @param {nsISyncMessageSender} sendSyncMessageFn
  *     The frame message manager's sendSyncMessage function.
  */
-proxy.toChrome = function (sendSyncMessageFn) {
+proxy.toChrome = function(sendSyncMessageFn) {
   let sender = new proxy.SyncChromeSender(sendSyncMessageFn);
   return new Proxy(sender, ownPriorityGetterTrap);
 };
@@ -432,7 +432,7 @@ proxy.SyncChromeSender = class {
   }
 };
 
-var marshal = function (args) {
+var marshal = function(args) {
   if (args.length == 1 && typeof args[0] == "object") {
     return args[0];
   }
