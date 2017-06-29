@@ -14,7 +14,6 @@ const MenuItem = require("devtools/client/framework/menu-item");
 
 const { MESSAGE_SOURCE } = require("devtools/client/webconsole/new-console-output/constants");
 
-const {openVariablesView} = require("devtools/client/webconsole/new-console-output/utils/variables-view");
 const clipboardHelper = require("devtools/shared/platform/clipboard");
 const { l10n } = require("devtools/client/webconsole/new-console-output/utils/messages");
 
@@ -68,17 +67,6 @@ function createContextMenu(jsterm, parentNode, { actor, clipboardText, message }
       }
       let mainWindow = Services.wm.getMostRecentWindow(gDevTools.chromeWindowType);
       mainWindow.openUILinkIn(request.url, "tab");
-    },
-  }));
-
-  // Open in variables view.
-  menu.append(new MenuItem({
-    id: "console-menu-open",
-    label: l10n.getStr("webconsole.menu.openInVarView.label"),
-    accesskey: l10n.getStr("webconsole.menu.openInVarView.accesskey"),
-    disabled: !actor,
-    click: () => {
-      openVariablesView(actor);
     },
   }));
 
