@@ -1053,7 +1053,16 @@ WebRenderBridgeParent::AdvanceAnimations()
   if (CompositorBridgeParent* cbp = GetRootCompositorBridgeParent()) {
     animTime = cbp->GetTestingTimeStamp().valueOr(animTime);
   }
-  AnimationHelper::SampleAnimations(mAnimStorage, animTime);
+
+  AnimationHelper::SampleAnimations(mAnimStorage,
+                                    !mPreviousFrameTimeStamp.IsNull() ?
+                                    mPreviousFrameTimeStamp : animTime);
+
+  // Reset the previous time stamp if we don't already have any running
+  // animations to avoid using the time which is far behind for newly
+  // started animations.
+  mPreviousFrameTimeStamp =
+    mAnimStorage->AnimatedValueCount() ? animTime : TimeStamp();
 }
 
 void
