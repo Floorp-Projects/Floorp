@@ -18,19 +18,20 @@ interface HTMLTableRowElement : HTMLElement {
   readonly attribute HTMLCollection cells;
   [Throws]
   HTMLElement insertCell(optional long index = -1);
-  [Throws]
+  [CEReactions, Throws]
   void deleteCell(long index);
 };
 
 partial interface HTMLTableRowElement {
-           [SetterThrows]
+           [CEReactions, SetterThrows]
            attribute DOMString align;
-           [SetterThrows]
+           [CEReactions, SetterThrows]
            attribute DOMString ch;
-           [SetterThrows]
+           [CEReactions, SetterThrows]
            attribute DOMString chOff;
-           [SetterThrows]
+           [CEReactions, SetterThrows]
            attribute DOMString vAlign;
 
-  [TreatNullAs=EmptyString, SetterThrows] attribute DOMString bgColor;
+  [CEReactions, TreatNullAs=EmptyString, SetterThrows]
+           attribute DOMString bgColor;
 };

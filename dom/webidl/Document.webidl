@@ -111,9 +111,9 @@ partial interface Document {
 
   // DOM tree accessors
   //(Not proxy yet)getter object (DOMString name);
-  [SetterThrows, Pure]
+  [CEReactions, SetterThrows, Pure]
            attribute DOMString title;
-  [Pure]
+  [CEReactions, Pure]
            attribute DOMString dir;
   //(HTML only)         attribute HTMLElement? body;
   //(HTML only)readonly attribute HTMLHeadElement? head;

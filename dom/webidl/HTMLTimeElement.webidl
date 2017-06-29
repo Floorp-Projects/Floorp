@@ -9,6 +9,6 @@
 
 [HTMLConstructor]
 interface HTMLTimeElement : HTMLElement {
-           [SetterThrows]
+           [CEReactions, SetterThrows]
            attribute DOMString dateTime;
 };
