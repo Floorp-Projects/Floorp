@@ -261,6 +261,14 @@ partial interface HTMLInputElement {
 
   [Pref="dom.forms.datetime", Func="IsChromeOrXBL"]
   void updateValidityState();
+
+  [Pref="dom.forms.datetime", Func="IsChromeOrXBL",
+   BinaryName="getStepAsDouble"]
+  double getStep();
+
+  [Pref="dom.forms.datetime", Func="IsChromeOrXBL",
+   BinaryName="getStepBaseAsDouble"]
+  double getStepBase();
 };
 
 partial interface HTMLInputElement {

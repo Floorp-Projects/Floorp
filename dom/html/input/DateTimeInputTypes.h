@@ -20,6 +20,8 @@ public:
   bool HasStepMismatch(bool aUseZeroIfValueNaN) const override;
   bool HasBadInput() const override;
 
+  nsresult MinMaxStepAttrChanged() override;
+
 protected:
   explicit DateTimeInputTypeBase(mozilla::dom::HTMLInputElement* aInputElement)
     : InputType(aInputElement)
