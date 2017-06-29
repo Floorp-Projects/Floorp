@@ -8,6 +8,7 @@ Transform the beetmover task into an actual task description.
 from __future__ import absolute_import, print_function, unicode_literals
 
 from taskgraph.transforms.base import TransformSequence
+from taskgraph.util.attributes import copy_attributes_from_dependent_job
 from taskgraph.util.schema import validate_schema, Schema
 from taskgraph.util.scriptworker import (get_balrog_server_scope,
                                          get_balrog_channel_scopes)
@@ -63,11 +64,7 @@ def make_task_description(config, jobs):
         treeherder.setdefault('tier', 1)
         treeherder.setdefault('kind', 'build')
 
-        attributes = {
-            'nightly': dep_job.attributes.get('nightly', False),
-            'build_platform': dep_job.attributes.get('build_platform'),
-            'build_type': dep_job.attributes.get('build_type'),
-        }
+        attributes = copy_attributes_from_dependent_job(dep_job)
 
         if dep_job.attributes.get('locale'):
             treeherder['symbol'] = 'tc-Up({})'.format(dep_job.attributes.get('locale'))

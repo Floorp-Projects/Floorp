@@ -19,6 +19,8 @@ RELEASE_PROJECTS = {
     'mozilla-release',
 }
 
+_OPTIONAL_ATTRIBUTES = ('nightly', 'signed')
+
 
 def attrmatch(attributes, **kwargs):
     """Determine whether the given set of task attributes matches.  The
@@ -81,3 +83,17 @@ def match_run_on_projects(project, run_on_projects):
             return True
 
     return project in run_on_projects
+
+
+def copy_attributes_from_dependent_job(dep_job):
+    attributes = {
+        'build_platform': dep_job.attributes.get('build_platform'),
+        'build_type': dep_job.attributes.get('build_type'),
+    }
+
+    attributes.update({
+        attr: dep_job.attributes[attr]
+        for attr in _OPTIONAL_ATTRIBUTES if attr in dep_job.attributes
+    })
+
+    return attributes
