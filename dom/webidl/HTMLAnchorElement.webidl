@@ -14,24 +14,24 @@
 // http://www.whatwg.org/specs/web-apps/current-work/#the-a-element
 [HTMLConstructor]
 interface HTMLAnchorElement : HTMLElement {
-           [SetterThrows]
+           [CEReactions, SetterThrows]
            attribute DOMString target;
-           [SetterThrows]
+           [CEReactions, SetterThrows]
            attribute DOMString download;
-           [SetterThrows]
+           [CEReactions, SetterThrows]
            attribute DOMString ping;
-           [SetterThrows]
+           [CEReactions, SetterThrows]
            attribute DOMString rel;
-           [SetterThrows]
+           [CEReactions, SetterThrows]
            attribute DOMString referrerPolicy;
            [PutForwards=value]
   readonly attribute DOMTokenList relList;
-           [SetterThrows]
+           [CEReactions, SetterThrows]
            attribute DOMString hreflang;
-           [SetterThrows]
+           [CEReactions, SetterThrows]
            attribute DOMString type;
 
-           [SetterThrows]
+           [CEReactions, SetterThrows]
            attribute DOMString text;
 };
 
@@ -39,14 +39,14 @@ HTMLAnchorElement implements HTMLHyperlinkElementUtils;
 
 // http://www.whatwg.org/specs/web-apps/current-work/#other-elements,-attributes-and-apis
 partial interface HTMLAnchorElement {
-           [SetterThrows]
+           [CEReactions, SetterThrows]
            attribute DOMString coords;
-           [SetterThrows]
+           [CEReactions, SetterThrows]
            attribute DOMString charset;
-           [SetterThrows]
+           [CEReactions, SetterThrows]
            attribute DOMString name;
-           [SetterThrows]
+           [CEReactions, SetterThrows]
            attribute DOMString rev;
-           [SetterThrows]
+           [CEReactions, SetterThrows]
            attribute DOMString shape;
 };

@@ -23,78 +23,79 @@ interface XULControllers;
 
 [HTMLConstructor]
 interface HTMLInputElement : HTMLElement {
-  [Pure, SetterThrows]
+  [CEReactions, Pure, SetterThrows]
            attribute DOMString accept;
-  [Pure, SetterThrows]
+  [CEReactions, Pure, SetterThrows]
            attribute DOMString alt;
-  [Pure, SetterThrows]
+  [CEReactions, Pure, SetterThrows]
            attribute DOMString autocomplete;
-  [Pure, SetterThrows]
+  [CEReactions, Pure, SetterThrows]
            attribute boolean autofocus;
-  [Pure, SetterThrows]
+  [CEReactions, Pure, SetterThrows]
            attribute boolean defaultChecked;
   [Pure]
            attribute boolean checked;
            // Bug 850337 - attribute DOMString dirName;
-  [Pure, SetterThrows]
+  [CEReactions, Pure, SetterThrows]
            attribute boolean disabled;
   readonly attribute HTMLFormElement? form;
   [Pure]
   readonly attribute FileList? files;
-  [Pure, SetterThrows]
+  [CEReactions, Pure, SetterThrows]
            attribute DOMString formAction;
-  [Pure, SetterThrows]
+  [CEReactions, Pure, SetterThrows]
            attribute DOMString formEnctype;
-  [Pure, SetterThrows]
+  [CEReactions, Pure, SetterThrows]
            attribute DOMString formMethod;
-  [Pure, SetterThrows]
+  [CEReactions, Pure, SetterThrows]
            attribute boolean formNoValidate;
-  [Pure, SetterThrows]
+  [CEReactions, Pure, SetterThrows]
            attribute DOMString formTarget;
-  [Pure, SetterThrows]
+  [CEReactions, Pure, SetterThrows]
            attribute unsigned long height;
   [Pure]
            attribute boolean indeterminate;
-  [Pure, SetterThrows, Pref="dom.forms.inputmode"]
+  [CEReactions, Pure, SetterThrows, Pref="dom.forms.inputmode"]
            attribute DOMString inputMode;
   [Pure]
   readonly attribute HTMLElement? list;
-  [Pure, SetterThrows]
+  [CEReactions, Pure, SetterThrows]
            attribute DOMString max;
-  [Pure, SetterThrows]
+  [CEReactions, Pure, SetterThrows]
            attribute long maxLength;
-  [Pure, SetterThrows]
+  [CEReactions, Pure, SetterThrows]
            attribute DOMString min;
-  [Pure, SetterThrows]
+  [CEReactions, Pure, SetterThrows]
            attribute long minLength;
-  [Pure, SetterThrows]
+  [CEReactions, Pure, SetterThrows]
            attribute boolean multiple;
-  [Pure, SetterThrows]
+  [CEReactions, Pure, SetterThrows]
            attribute DOMString name;
-  [Pure, SetterThrows]
+  [CEReactions, Pure, SetterThrows]
            attribute DOMString pattern;
-  [Pure, SetterThrows]
+  [CEReactions, Pure, SetterThrows]
            attribute DOMString placeholder;
-  [Pure, SetterThrows]
+  [CEReactions, Pure, SetterThrows]
            attribute boolean readOnly;
-  [Pure, SetterThrows]
+  [CEReactions, Pure, SetterThrows]
            attribute boolean required;
-  [Pure, SetterThrows]
+  [CEReactions, Pure, SetterThrows]
            attribute unsigned long size;
-  [Pure, SetterThrows]
+  [CEReactions, Pure, SetterThrows]
            attribute DOMString src;
-  [Pure, SetterThrows]
+  [CEReactions, Pure, SetterThrows]
            attribute DOMString step;
-  [Pure, SetterThrows]
+  [CEReactions, Pure, SetterThrows]
            attribute DOMString type;
-  [Pure, SetterThrows]
+  [CEReactions, Pure, SetterThrows]
            attribute DOMString defaultValue;
-  [Pure, TreatNullAs=EmptyString, SetterThrows, NeedsCallerType]
+  [CEReactions, Pure, TreatNullAs=EmptyString, SetterThrows, NeedsCallerType]
            attribute DOMString value;
   [Throws, Func="HTMLInputElement::ValueAsDateEnabled"]
            attribute Date? valueAsDate;
   [Pure, SetterThrows]
            attribute unrestricted double valueAsNumber;
+  [CEReactions]
            attribute unsigned long width;
 
   [Throws]
@@ -134,9 +135,9 @@ interface HTMLInputElement : HTMLElement {
 };
 
 partial interface HTMLInputElement {
-  [Pure, SetterThrows]
+  [CEReactions, Pure, SetterThrows]
            attribute DOMString align;
-  [Pure, SetterThrows]
+  [CEReactions, Pure, SetterThrows]
            attribute DOMString useMap;
 };
 

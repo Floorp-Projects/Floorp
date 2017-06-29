@@ -17,38 +17,38 @@ interface XULControllers;
 [HTMLConstructor]
 interface HTMLTextAreaElement : HTMLElement {
            // attribute DOMString autocomplete;
-  [SetterThrows, Pure]
+  [CEReactions, SetterThrows, Pure]
            attribute boolean autofocus;
-  [SetterThrows, Pure]
+  [CEReactions, SetterThrows, Pure]
            attribute unsigned long cols;
            // attribute DOMString dirName;
-  [SetterThrows, Pure]
+  [CEReactions, SetterThrows, Pure]
            attribute boolean disabled;
   [Pure]
   readonly attribute HTMLFormElement? form;
            // attribute DOMString inputMode;
-  [SetterThrows, Pure]
+  [CEReactions, SetterThrows, Pure]
            attribute long maxLength;
-  [SetterThrows, Pure]
+  [CEReactions, SetterThrows, Pure]
            attribute long minLength;
-  [SetterThrows, Pure]
+  [CEReactions, SetterThrows, Pure]
            attribute DOMString name;
-  [SetterThrows, Pure]
+  [CEReactions, SetterThrows, Pure]
            attribute DOMString placeholder;
-  [SetterThrows, Pure]
+  [CEReactions, SetterThrows, Pure]
            attribute boolean readOnly;
-  [SetterThrows, Pure]
+  [CEReactions, SetterThrows, Pure]
            attribute boolean required;
-  [SetterThrows, Pure]
+  [CEReactions, SetterThrows, Pure]
            attribute unsigned long rows;
-  [SetterThrows, Pure]
+  [CEReactions, SetterThrows, Pure]
            attribute DOMString wrap;
 
   [Constant]
   readonly attribute DOMString type;
-  [SetterThrows, Pure]
+  [CEReactions, SetterThrows, Pure]
            attribute DOMString defaultValue;
-  [TreatNullAs=EmptyString] attribute DOMString value;
+  [CEReactions, TreatNullAs=EmptyString] attribute DOMString value;
   readonly attribute unsigned long textLength;
 
   readonly attribute boolean willValidate;
