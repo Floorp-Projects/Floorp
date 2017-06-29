@@ -22,4 +22,4 @@
 # changes to stick? As of bug 928195, this shouldn't be necessary! Please
 # don't change CLOBBER for WebIDL changes any more.
 
-Bug 1353650 - Update to ICU 59 requires clobber
+Bug 1338651 - Update OSX Taskcluster docker image

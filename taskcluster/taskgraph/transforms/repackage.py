@@ -139,11 +139,11 @@ def make_job_description(config, jobs):
             mozharness_config = ['repackage/osx_signed.py']
             output_files = [{
                 'type': 'file',
-                'path': '/home/worker/workspace/build/artifacts/target.dmg',
+                'path': '/builds/worker/workspace/build/artifacts/target.dmg',
                 'name': 'public/build/{}target.dmg'.format(locale_output_path),
             }, {
                 'type': 'file',
-                'path': '/home/worker/workspace/build/artifacts/target.complete.mar',
+                'path': '/builds/worker/workspace/build/artifacts/target.complete.mar',
                 'name': 'public/build/{}target.complete.mar'.format(locale_output_path),
             }]
         else:

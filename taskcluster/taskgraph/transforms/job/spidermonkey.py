@@ -40,7 +40,7 @@ def docker_worker_spidermonkey(config, job, taskdesc):
             'type': 'persistent',
             'name': 'level-{}-{}-build-spidermonkey-workspace'.format(
                 config.params['level'], config.params['project']),
-            'mount-point': "/home/worker/workspace",
+            'mount-point': "/builds/worker/workspace",
         })
 
     docker_worker_add_public_artifacts(config, job, taskdesc)
@@ -58,9 +58,9 @@ def docker_worker_spidermonkey(config, job, taskdesc):
     worker['caches'].append({
         'type': 'persistent',
         'name': 'tooltool-cache',
-        'mount-point': '/home/worker/tooltool-cache',
+        'mount-point': '/builds/worker/tooltool-cache',
     })
-    env['TOOLTOOL_CACHE'] = '/home/worker/tooltool-cache'
+    env['TOOLTOOL_CACHE'] = '/builds/worker/tooltool-cache'
 
     support_vcs_checkout(config, job, taskdesc)
 
@@ -71,12 +71,12 @@ def docker_worker_spidermonkey(config, job, taskdesc):
         script = "build-sm-mozjs-crate.sh"
 
     worker['command'] = [
-        '/home/worker/bin/run-task',
-        '--chown-recursive', '/home/worker/workspace',
-        '--chown-recursive', '/home/worker/tooltool-cache',
-        '--vcs-checkout', '/home/worker/workspace/build/src',
+        '/builds/worker/bin/run-task',
+        '--chown-recursive', '/builds/worker/workspace',
+        '--chown-recursive', '/builds/worker/tooltool-cache',
+        '--vcs-checkout', '/builds/worker/workspace/build/src',
         '--',
         '/bin/bash',
         '-c',
-        'cd /home/worker && workspace/build/src/taskcluster/scripts/builder/%s' % script
+        'cd /builds/worker && workspace/build/src/taskcluster/scripts/builder/%s' % script
     ]
