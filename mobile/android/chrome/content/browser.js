@@ -4197,7 +4197,7 @@ Tab.prototype = {
           this.sendOpenSearchMessage(target);
         } else if (list.indexOf("[manifest]") != -1 &&
                    aEvent.type == "DOMLinkAdded" &&
-                   Services.prefs.getBoolPref("manifest.install.enabled", false)) {
+                   SharedPreferences.forApp().getBoolPref("android.not_a_preference.pwa")){
           jsonMessage = this.makeManifestMessage(target);
         }
         if (!jsonMessage)
