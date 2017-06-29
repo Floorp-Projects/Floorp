@@ -9242,16 +9242,16 @@ CodeGenerator::visitCallIteratorStartV(LCallIteratorStartV* lir)
     callVM(ValueToIteratorInfo, lir);
 }
 
-typedef JSObject* (*GetIteratorObjectFn)(JSContext*, HandleObject, uint32_t);
-static const VMFunction GetIteratorObjectInfo =
-    FunctionInfo<GetIteratorObjectFn>(GetIteratorObject, "GetIteratorObject");
+typedef JSObject* (*GetIteratorFn)(JSContext*, HandleObject, uint32_t);
+static const VMFunction GetIteratorInfo =
+    FunctionInfo<GetIteratorFn>(GetIterator, "GetIterator");
 
 void
 CodeGenerator::visitCallIteratorStartO(LCallIteratorStartO* lir)
 {
     pushArg(Imm32(lir->mir()->flags()));
     pushArg(ToRegister(lir->object()));
-    callVM(GetIteratorObjectInfo, lir);
+    callVM(GetIteratorInfo, lir);
 }
 
 void
@@ -9277,7 +9277,7 @@ CodeGenerator::visitIteratorStartO(LIteratorStartO* lir)
 
     uint32_t flags = lir->mir()->flags();
 
-    OutOfLineCode* ool = oolCallVM(GetIteratorObjectInfo, lir,
+    OutOfLineCode* ool = oolCallVM(GetIteratorInfo, lir,
                                    ArgList(obj, Imm32(flags)), StoreRegisterTo(output));
 
     const Register temp1 = ToRegister(lir->temp1());
