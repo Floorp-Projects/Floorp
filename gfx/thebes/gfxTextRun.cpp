@@ -2858,6 +2858,8 @@ gfxFontGroup::GetUnderlineOffset()
     return mUnderlineOffset;
 }
 
+#define NARROW_NO_BREAK_SPACE 0x202fu
+
 gfxFont*
 gfxFontGroup::FindFontForChar(uint32_t aCh, uint32_t aPrevCh, uint32_t aNextCh,
                               Script aRunScript, gfxFont *aPrevMatchedFont,
@@ -2872,7 +2874,6 @@ gfxFontGroup::FindFontForChar(uint32_t aCh, uint32_t aPrevCh, uint32_t aNextCh,
     }
 
     // Special cases for NNBSP (as used in Mongolian):
-    const uint32_t NARROW_NO_BREAK_SPACE = 0x202f;
     if (aCh == NARROW_NO_BREAK_SPACE) {
         // If there is no preceding character, try the font that we'd use
         // for the next char (unless it's just another NNBSP; we don't try
@@ -3150,10 +3151,26 @@ void gfxFontGroup::ComputeRanges(nsTArray<gfxTextRange>& aRanges,
             ch = ' ';
         }
 
-        // find the font for this char
-        gfxFont* font =
-            FindFontForChar(ch, prevCh, nextCh, aRunScript, prevFont,
-                            &matchType);
+        gfxFont* font;
+
+        // Find the font for this char; but try to avoid calling the expensive
+        // FindFontForChar method for the most common case, where the first
+        // font in the list supports the current char, and it is not one of
+        // the special cases where FindFontForChar will attempt to propagate
+        // the font selected for an adjacent character.
+        if ((font = GetFontAt(0, ch)) != nullptr
+            && font->HasCharacter(ch)
+            && (sizeof(T) == sizeof(uint8_t)
+                || (!IsClusterExtender(ch)
+                    && ch != NARROW_NO_BREAK_SPACE
+                    && !gfxFontUtils::IsJoinControl(ch)
+                    && !gfxFontUtils::IsJoinCauser(prevCh)
+                    && !gfxFontUtils::IsVarSelector(ch)))) {
+            matchType = gfxTextRange::kFontGroup;
+        } else {
+            font = FindFontForChar(ch, prevCh, nextCh, aRunScript, prevFont,
+                                   &matchType);
+        }
 
 #ifndef RELEASE_OR_BETA
         if (MOZ_UNLIKELY(mTextPerf)) {
