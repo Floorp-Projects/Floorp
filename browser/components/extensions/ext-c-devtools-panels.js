@@ -102,7 +102,7 @@ class ChildDevToolsPanel extends EventEmitter {
 
   api() {
     return {
-      onShown: new EventManager(
+      onShown: new SingletonEventManager(
         this.context, "devtoolsPanel.onShown", fire => {
           const listener = (eventName, panelContentWindow) => {
             fire.asyncWithoutClone(panelContentWindow);
@@ -113,7 +113,7 @@ class ChildDevToolsPanel extends EventEmitter {
           };
         }).api(),
 
-      onHidden: new EventManager(
+      onHidden: new SingletonEventManager(
         this.context, "devtoolsPanel.onHidden", fire => {
           const listener = () => {
             fire.async();
@@ -160,7 +160,7 @@ this.devtools_panels = class extends ExtensionAPI {
           get themeName() {
             return themeChangeObserver.themeName;
           },
-          onThemeChanged: new EventManager(
+          onThemeChanged: new SingletonEventManager(
             context, "devtools.panels.onThemeChanged", fire => {
               const listener = (eventName, themeName) => {
                 fire.async(themeName);
