@@ -2348,6 +2348,47 @@ BaselineCompiler::emit_JSOP_STRICTSETELEM()
     return emit_JSOP_SETELEM();
 }
 
+typedef bool (*SetObjectElementFn)(JSContext*, HandleObject, HandleValue,
+                                  HandleValue, HandleValue, bool);
+static const VMFunction SetObjectElementInfo =
+    FunctionInfo<SetObjectElementFn>(js::SetObjectElement, "SetObjectElement");
+
+bool
+BaselineCompiler::emit_JSOP_SETELEM_SUPER()
+{
+    bool strict = IsCheckStrictOp(JSOp(*pc));
+
+    // Incoming stack is |propval, receiver, obj, rval|. We need to shuffle
+    // stack to leave rval when operation is complete.
+
+    // Pop rval into R0, then load propval into R1 and replace with rval.
+    frame.popRegsAndSync(1);
+    masm.loadValue(frame.addressOfStackValue(frame.peek(-3)), R1);
+    masm.storeValue(R0, frame.addressOfStackValue(frame.peek(-3)));
+
+    prepareVMCall();
+
+    pushArg(Imm32(strict));
+    masm.loadValue(frame.addressOfStackValue(frame.peek(-2)), R2);
+    pushArg(R2); // receiver
+    pushArg(R0); // rval
+    pushArg(R1); // propval
+    masm.unboxObject(frame.addressOfStackValue(frame.peek(-1)), R0.scratchReg());
+    pushArg(R0.scratchReg()); // obj
+
+    if (!callVM(SetObjectElementInfo))
+        return false;
+
+    frame.popn(2);
+    return true;
+}
+
+bool
+BaselineCompiler::emit_JSOP_STRICTSETELEM_SUPER()
+{
+    return emit_JSOP_SETELEM_SUPER();
+}
+
 typedef bool (*DeleteElementFn)(JSContext*, HandleValue, HandleValue, bool*);
 static const VMFunction DeleteElementStrictInfo
     = FunctionInfo<DeleteElementFn>(DeleteElementJit<true>, "DeleteElementStrict");
