@@ -163,7 +163,7 @@ sah{
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"2.1.27.87"}
+    Version{"2.1.31.33"}
     calendar{
         generic{
             DateTimePatterns{

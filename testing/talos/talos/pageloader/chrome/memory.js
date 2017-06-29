@@ -1,3 +1,4 @@
+/* import-globals-from pageloader.js */
 
 var gChildProcess = true;
 var gMemCallback = null;
@@ -12,7 +13,7 @@ function initializeMemoryCollector(callback, args) {
     var os = Components.classes["@mozilla.org/observer-service;1"].
         getService(Components.interfaces.nsIObserverService);
 
-    os.addObserver(function () {
+    os.addObserver(function() {
         var os = Components.classes["@mozilla.org/observer-service;1"].
             getService(Components.interfaces.nsIObserverService);
 
@@ -29,13 +30,13 @@ function initializeMemoryCollector(callback, args) {
     * we will assume there is no child process.
     */
     var event = {
-      notify: function(timer) {
+      notify(timer) {
         memTimer = null;
         gChildProcess = false;
         gMemCallback();
       }
     }
- 
+
     var memTimer = Components.classes["@mozilla.org/timer;1"].createInstance(Components.interfaces.nsITimer);
     memTimer.initWithCallback(event, 10000, Components.interfaces.nsITimer.TYPE_ONE_SHOT);
 

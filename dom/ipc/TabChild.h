@@ -694,6 +694,15 @@ public:
   }
 #endif
 
+  void AddPendingDocShellBlocker();
+  void RemovePendingDocShellBlocker();
+
+  // The HANDLE object for the widget this TabChild in.
+  WindowsHandle WidgetNativeData()
+  {
+    return mWidgetNativeData;
+  }
+
 protected:
   virtual ~TabChild();
 
@@ -734,6 +743,8 @@ protected:
   virtual mozilla::ipc::IPCResult RecvSetWindowName(const nsString& aName) override;
 
   virtual mozilla::ipc::IPCResult RecvSetOriginAttributes(const OriginAttributes& aOriginAttributes) override;
+
+  virtual mozilla::ipc::IPCResult RecvSetWidgetNativeData(const WindowsHandle& aWidgetNativeData) override;
 
 private:
   void HandleDoubleTap(const CSSPoint& aPoint, const Modifiers& aModifiers,
@@ -789,6 +800,9 @@ private:
   void DispatchWheelEvent(const WidgetWheelEvent& aEvent,
                           const ScrollableLayerGuid& aGuid,
                           const uint64_t& aInputBlockId);
+
+  void InternalSetDocShellIsActive(bool aIsActive,
+                                   bool aPreserveLayers);
 
   class DelayedDeleteRunnable;
 
@@ -869,6 +883,13 @@ private:
 #if defined(ACCESSIBILITY)
   PDocAccessibleChild* mTopLevelDocAccessibleChild;
 #endif
+
+  bool mPendingDocShellIsActive;
+  bool mPendingDocShellPreserveLayers;
+  bool mPendingDocShellReceivedMessage;
+  uint32_t mPendingDocShellBlockers;
+
+  WindowsHandle mWidgetNativeData;
 
   DISALLOW_EVIL_CONSTRUCTORS(TabChild);
 };

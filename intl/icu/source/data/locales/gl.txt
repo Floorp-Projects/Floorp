@@ -200,10 +200,19 @@ gl{
                 timeSeparator{":"}
             }
         }
+        minimalPairs{
+            ordinal{
+                other{"Colle a {0}.ª curva á dereita."}
+            }
+            plural{
+                one{"{0} día"}
+                other{"{0} días"}
+            }
+        }
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"2.1.28.79"}
+    Version{"2.1.32.59"}
     calendar{
         generic{
             DateTimePatterns{

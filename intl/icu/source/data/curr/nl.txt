@@ -780,11 +780,11 @@ nl{
         }
         PEN{
             "PEN",
-            "Peruaanse nieuwe sol",
+            "Peruaanse sol",
         }
         PES{
             "PES",
-            "Peruaanse sol",
+            "Peruaanse sol (1863–1965)",
         }
         PGK{
             "PGK",
@@ -2074,12 +2074,12 @@ nl{
             other{"Peruaanse inti"}
         }
         PEN{
-            one{"Peruaanse nieuwe sol"}
-            other{"Peruaanse nieuwe sol"}
-        }
-        PES{
             one{"Peruaanse sol"}
             other{"Peruaanse sol"}
+        }
+        PES{
+            one{"Peruaanse sol (1863–1965)"}
+            other{"Peruaanse sol (1863–1965)"}
         }
         PGK{
             one{"Papoea-Nieuw-Guinese kina"}
@@ -2494,5 +2494,5 @@ nl{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.1.28.79"}
+    Version{"2.1.32.59"}
 }

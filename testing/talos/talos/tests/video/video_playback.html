@@ -15,24 +15,26 @@ var start2 = 0;
 var paintedFramesStart2 = 0;
 var testIndex = 0;
 var test = [
-  'testsrc.240p.120fps.mp4',
-  'testsrc.480p.60fps.webm',
-  'testsrc.1080p.60fps.mp4',
+  "testsrc.240p.120fps.mp4",
+  "testsrc.480p.60fps.webm",
+  "testsrc.1080p.60fps.mp4",
 ];
 var viewModeIndex = 0;
 // Remove fullscreen mode since it causes intermittent failures on try server. See bug 1192317.
 var viewMode = [1, 1.1, 2];
 var testResult = {names: [], values: []};
 
+/* globals readyToStart:true */
+
 function init() {
   TalosPowersContent.focus(content_focused)
 }
 
 function content_focused() {
-  vdo = document.getElementById('vdo');
-  vdo.addEventListener('loadeddata', prepare, false);
-  document.addEventListener('fullscreenchange', fullscreen);
-  document.addEventListener('mozfullscreenchange', fullscreen);
+  vdo = document.getElementById("vdo");
+  vdo.addEventListener("loadeddata", prepare);
+  document.addEventListener("fullscreenchange", fullscreen);
+  document.addEventListener("mozfullscreenchange", fullscreen);
   runTest();
 }
 
@@ -47,18 +49,18 @@ function fullscreen(event) {
 
 function runTest() {
   // Windows XP cannot play mp4 clip due to the lack of gmp-eme-plugin, so skip it.
-  if (window.navigator.oscpu == 'Windows NT 5.1' && test[testIndex].indexOf('mp4') >= 0) {
+  if (window.navigator.oscpu == "Windows NT 5.1" && test[testIndex].indexOf("mp4") >= 0) {
     nextTest();
   }
-  vdo.setAttribute('src', 'clips/' + test[testIndex]);
+  vdo.setAttribute("src", "clips/" + test[testIndex]);
   vdo.load();
 }
 
 function prepare() {
-  if (viewMode[viewModeIndex] == 'fullscreen') {
+  if (viewMode[viewModeIndex] == "fullscreen") {
     // Fullscreen mode
-    vdo.setAttribute('width', '100%');
-    vdo.setAttribute('height', '100%');
+    vdo.setAttribute("width", "100%");
+    vdo.setAttribute("height", "100%");
     if (document.body.requestFullscreen) {
       document.body.requestFullscreen();
     } else if (document.body.mozRequestFullScreen) {
@@ -66,8 +68,8 @@ function prepare() {
     }
   } else {
     readyToStart = true;
-    vdo.setAttribute('width', vdo.videoWidth * viewMode[viewModeIndex]);
-    vdo.setAttribute('height', vdo.videoHeight * viewMode[viewModeIndex]);
+    vdo.setAttribute("width", vdo.videoWidth * viewMode[viewModeIndex]);
+    vdo.setAttribute("height", vdo.videoHeight * viewMode[viewModeIndex]);
     startTest();
   }
 }
@@ -90,12 +92,12 @@ function measurementEnded() {
   var paintedFramesEnd = vdo.mozPaintedFrames;
   var timePerFrame1 = (start2 - start1) / (paintedFramesStart2 - paintedFramesStart1);
   var timePerFrame2 = (end - start2) / (paintedFramesEnd - paintedFramesStart2);
-  testResult.names.push(test[testIndex] + '_scale_' + viewMode[viewModeIndex] + '_startup');
+  testResult.names.push(test[testIndex] + "_scale_" + viewMode[viewModeIndex] + "_startup");
   testResult.values.push(timePerFrame1);
-  testResult.names.push(test[testIndex] + '_scale_' + viewMode[viewModeIndex] + '_inclip');
+  testResult.names.push(test[testIndex] + "_scale_" + viewMode[viewModeIndex] + "_inclip");
   testResult.values.push(timePerFrame2);
 
-  if (viewMode[viewModeIndex] == 'fullscreen') {
+  if (viewMode[viewModeIndex] == "fullscreen") {
     // Exit fullscreen mode
     if (document.exitFullscreen) {
       document.exitFullscreen();
@@ -122,20 +124,21 @@ function nextTest() {
 }
 
 function reportResult() {
-  var msg = '';
+  var msg = "";
   for (var i = 0; i < testResult.names.length; i++) {
-    msg += testResult.names[i] + ' = ' + testResult.values[i] + ' ms/frame\n\n';
+    msg += testResult.names[i] + " = " + testResult.values[i] + " ms/frame\n\n";
   }
 
   dump(msg); // Put the readable report at talos run-log
 
   if (window.tpRecordTime) {
     // Within talos - report the results
-    return tpRecordTime(testResult.values.join(','), 0, testResult.names.join(','));
-  } else {
+    return tpRecordTime(testResult.values.join(","), 0, testResult.names.join(","));
+  }
     // Local run in a plain browser, display the formatted report
     alert(msg);
-  }
+
+  return undefined;
 }
 </script>
 

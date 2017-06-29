@@ -875,11 +875,10 @@ xpc::SandboxProxyHandler::getOwnEnumerablePropertyKeys(JSContext* cx,
     return BaseProxyHandler::getOwnEnumerablePropertyKeys(cx, proxy, props);
 }
 
-bool
-xpc::SandboxProxyHandler::enumerate(JSContext* cx, JS::Handle<JSObject*> proxy,
-                                    JS::MutableHandle<JSObject*> objp) const
+JSObject*
+xpc::SandboxProxyHandler::enumerate(JSContext* cx, JS::Handle<JSObject*> proxy) const
 {
-    return BaseProxyHandler::enumerate(cx, proxy, objp);
+    return BaseProxyHandler::enumerate(cx, proxy);
 }
 
 bool

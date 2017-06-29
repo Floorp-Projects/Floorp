@@ -4,15 +4,14 @@ fr_CH{
     NumberElements{
         latn{
             patterns{
-                currencyFormat{"¤ #,##0.00;¤-#,##0.00"}
                 percentFormat{"#,##0%"}
             }
             symbols{
-                decimal{"."}
+                currencyDecimal{"."}
             }
         }
     }
-    Version{"2.1.27.96"}
+    Version{"2.1.32.48"}
     calendar{
         generic{
             DateTimePatterns{

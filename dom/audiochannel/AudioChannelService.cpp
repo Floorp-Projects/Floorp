@@ -634,7 +634,12 @@ AudioChannelService::IsWindowActive(nsPIDOMWindowOuter* aWindow)
   if (!window) {
     return false;
   }
-  AudioChannelWindow* winData = GetOrCreateWindowData(window);
+
+  AudioChannelWindow* winData = GetWindowData(window->WindowID());
+  if (!winData) {
+    return false;
+  }
+
   return !winData->mAudibleAgents.IsEmpty();
 }
 

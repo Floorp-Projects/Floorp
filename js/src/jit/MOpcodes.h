@@ -276,6 +276,7 @@ namespace jit {
     _(SetDOMProperty)                                                       \
     _(IsConstructor)                                                        \
     _(IsCallable)                                                           \
+    _(IsArray)                                                              \
     _(IsObject)                                                             \
     _(HasClass)                                                             \
     _(CopySign)                                                             \
@@ -294,6 +295,7 @@ namespace jit {
     _(CheckIsCallable)                                                      \
     _(CheckObjCoercible)                                                    \
     _(DebugCheckSelfHosted)                                                 \
+    _(FinishBoundFunctionInit)                                              \
     _(AsmJSLoadHeap)                                                        \
     _(AsmJSStoreHeap)                                                       \
     _(AsmJSCompareExchangeHeap)                                             \

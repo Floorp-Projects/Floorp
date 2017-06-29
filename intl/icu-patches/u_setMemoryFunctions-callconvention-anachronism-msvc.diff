@@ -1,0 +1,33 @@
+Don't annotate function parameters with call-convention modifier to work around a MSVC compiler warning.
+
+https://ssl.icu-project.org/trac/ticket/13030
+
+diff --git a/intl/icu/source/common/unicode/uclean.h b/intl/icu/source/common/unicode/uclean.h
+--- a/intl/icu/source/common/unicode/uclean.h
++++ b/intl/icu/source/common/unicode/uclean.h
+@@ -143,19 +143,25 @@ typedef void  U_CALLCONV UMemFreeFn (con
+  *                 are called.
+  *  @param a       Pointer to a user-supplied malloc function.
+  *  @param r       Pointer to a user-supplied realloc function.
+  *  @param f       Pointer to a user-supplied free function.
+  *  @param status  Receives error values.
+  *  @stable ICU 2.8
+  *  @system
+  */  
++#ifndef _MSC_VER
+ U_STABLE void U_EXPORT2 
+ u_setMemoryFunctions(const void *context, UMemAllocFn * U_CALLCONV a, UMemReallocFn * U_CALLCONV r, UMemFreeFn * U_CALLCONV f, 
+                     UErrorCode *status);
++#else
++U_STABLE void U_EXPORT2 
++u_setMemoryFunctions(const void *context, UMemAllocFn * a, UMemReallocFn * r, UMemFreeFn * f, 
++                    UErrorCode *status);
++#endif
+ 
+ U_CDECL_END
+ 
+ #ifndef U_HIDE_DEPRECATED_API
+ /*********************************************************************************
+  *
+  * Deprecated Functions
+  *

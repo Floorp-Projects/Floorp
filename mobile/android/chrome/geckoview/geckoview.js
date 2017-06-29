@@ -59,4 +59,6 @@ function startup() {
                     "GeckoViewContent");
   ModuleManager.add("resource://gre/modules/GeckoViewProgress.jsm",
                     "GeckoViewProgress");
+  ModuleManager.add("resource://gre/modules/GeckoViewScroll.jsm",
+                    "GeckoViewScroll");
 }

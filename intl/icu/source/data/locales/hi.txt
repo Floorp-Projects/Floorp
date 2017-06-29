@@ -219,10 +219,23 @@ hi{
                 timeSeparator{":"}
             }
         }
+        minimalPairs{
+            ordinal{
+                few{"{0}था दाहिना मोड़ लें."}
+                many{"{0}ठा दाहिना मोड़ लें."}
+                one{"{0}ला दाहिना मोड़ लें."}
+                other{"{0}वां दाहिना मोड़ लें."}
+                two{"{0}रा दाहिना मोड़ लें."}
+            }
+            plural{
+                one{"{0} घंटा"}
+                other{"{0} घंटे"}
+            }
+        }
         minimumGroupingDigits{"1"}
         native{"deva"}
     }
-    Version{"2.1.28.79"}
+    Version{"2.1.32.59"}
     calendar{
         ethiopic{
             monthNames{

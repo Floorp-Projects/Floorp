@@ -5,7 +5,7 @@ yo_BJ{
         "[a á à b d e é è ɛ {ɛ\u0301} {ɛ\u0300} f g {gb} h i í ì j k l m n o ó ò ɔ {ɔ"
         "\u0301} {ɔ\u0300} p r s {sh} t u ú ù w y]"
     }
-    Version{"2.1.29.54"}
+    Version{"2.1.31.33"}
     calendar{
         gregorian{
             AmPmMarkers{

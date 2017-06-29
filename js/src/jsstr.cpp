@@ -31,7 +31,6 @@
 #include "jstypes.h"
 #include "jsutil.h"
 
-#include "builtin/Intl.h"
 #include "builtin/RegExp.h"
 #include "jit/InlinableNatives.h"
 #include "js/Conversions.h"
@@ -1476,8 +1475,8 @@ js::str_normalize(JSContext* cx, unsigned argc, Value* vp)
     }
 
     int32_t spanLength = unorm2_spanQuickCheckYes(normalizer,
-                                                  Char16ToUChar(srcChars.begin().get()),
-                                                  srcChars.length(), &status);
+                                                  srcChars.begin().get(), srcChars.length(),
+                                                  &status);
     if (U_FAILURE(status)) {
         JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_INTERNAL_INTL_ERROR);
         return false;
@@ -1504,10 +1503,9 @@ js::str_normalize(JSContext* cx, unsigned argc, Value* vp)
     mozilla::RangedPtr<const char16_t> remainingStart = srcChars.begin() + spanLength;
     size_t remainingLength = srcChars.length() - size_t(spanLength);
 
-    int32_t size = unorm2_normalizeSecondAndAppend(normalizer, Char16ToUChar(chars.begin()),
-                                                   spanLength, chars.length(),
-                                                   Char16ToUChar(remainingStart.get()),
-                                                   remainingLength, &status);
+    int32_t size = unorm2_normalizeSecondAndAppend(normalizer,
+                                                   chars.begin(), spanLength, chars.length(),
+                                                   remainingStart.get(), remainingLength, &status);
     if (status == U_BUFFER_OVERFLOW_ERROR) {
         MOZ_ASSERT(size >= 0);
         if (!chars.resize(size))
@@ -1516,9 +1514,9 @@ js::str_normalize(JSContext* cx, unsigned argc, Value* vp)
 #ifdef DEBUG
         int32_t finalSize =
 #endif
-        unorm2_normalizeSecondAndAppend(normalizer, Char16ToUChar(chars.begin()), spanLength,
-                                        chars.length(), Char16ToUChar(remainingStart.get()),
-                                        remainingLength, &status);
+        unorm2_normalizeSecondAndAppend(normalizer,
+                                        chars.begin(), spanLength, chars.length(),
+                                        remainingStart.get(), remainingLength, &status);
         MOZ_ASSERT_IF(!U_FAILURE(status), size == finalSize);
     }
     if (U_FAILURE(status)) {

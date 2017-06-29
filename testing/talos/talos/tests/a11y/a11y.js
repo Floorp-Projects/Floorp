@@ -1,3 +1,4 @@
+/* globals acc:true, gAccService:true, nsIAccessible:true, nsIDOMNode:true */
 gAccService = 0;
 
 // Make sure not to touch Components before potentially invoking enablePrivilege,
@@ -6,8 +7,7 @@ netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
 nsIAccessible = Components.interfaces.nsIAccessible;
 nsIDOMNode = Components.interfaces.nsIDOMNode;
 
-function initAccessibility()
-{
+function initAccessibility() {
   netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
   if (!gAccService) {
     var service = Components.classes["@mozilla.org/accessibilityService;1"];
@@ -20,8 +20,7 @@ function initAccessibility()
   return gAccService;
 }
 
-function getAccessible(aAccOrElmOrID, aInterfaces)
-{
+function getAccessible(aAccOrElmOrID, aInterfaces) {
   if (!aAccOrElmOrID) {
     return null;
   }
@@ -59,18 +58,17 @@ function getAccessible(aAccOrElmOrID, aInterfaces)
     }
     return acc;
   }
-  
+
   try {
     acc.QueryInterface(aInterfaces);
   } catch (e) {
   }
-  
+
   return acc;
 }
 
 // Walk accessible tree of the given identifier to ensure tree creation
-function ensureAccessibleTree(aAccOrElmOrID)
-{
+function ensureAccessibleTree(aAccOrElmOrID) {
   acc = getAccessible(aAccOrElmOrID);
 
   var child = acc.firstChild;

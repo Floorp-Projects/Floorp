@@ -780,7 +780,7 @@ lt{
         }
         PEN{
             "PEN",
-            "Peru naujasis solis",
+            "Peru solis",
         }
         PES{
             "PES",
@@ -2462,10 +2462,10 @@ lt{
             other{"Peru intis"}
         }
         PEN{
-            few{"Peru naujieji soliai"}
-            many{"Peru naujojo solio"}
-            one{"Peru naujasis solis"}
-            other{"Peru naujųjų solių"}
+            few{"Peru soliai"}
+            many{"Peru solio"}
+            one{"Peru solis"}
+            other{"Peru solių"}
         }
         PES{
             few{"Peru soliai (1863–1965)"}
@@ -3086,5 +3086,5 @@ lt{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.1.28.79"}
+    Version{"2.1.32.59"}
 }
