@@ -64,7 +64,7 @@ public class MmaDelegate {
                     if (value) {
                         mmaHelper.init(activity);
                         if (!isDefaultBrowser(activity)) {
-                            mmaHelper.track(MmaDelegate.LAUNCH_BUT_NOT_DEFAULT_BROWSER);
+                            mmaHelper.event(MmaDelegate.LAUNCH_BUT_NOT_DEFAULT_BROWSER);
                         }
                         isGeckoPrefOn = true;
                     } else {
@@ -79,13 +79,13 @@ public class MmaDelegate {
 
     public static void track(String event) {
         if (isMmaEnabled()) {
-            mmaHelper.track(event);
+            mmaHelper.event(event);
         }
     }
 
     public static void track(String event, long value) {
         if (isMmaEnabled()) {
-            mmaHelper.track(event, value);
+            mmaHelper.event(event, value);
         }
     }
 
