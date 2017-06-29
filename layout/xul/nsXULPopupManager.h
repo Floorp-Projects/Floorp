@@ -731,10 +731,14 @@ protected:
    * aPopup - the popup to open
    * aIsContextMenu - true for context menus
    * aSelectFirstItem - true to select the first item in the menu
+   * aTriggerEvent - the event that triggered the showing event.
+   *                 This is currently used to propagate the
+   *                 inputSource attribute. May be null.
    */
   void FirePopupShowingEvent(nsIContent* aPopup,
                              bool aIsContextMenu,
-                             bool aSelectFirstItem);
+                             bool aSelectFirstItem,
+                             nsIDOMEvent* aTriggerEvent);
 
   /**
    * Fire a popuphiding event and then hide the popup. This will be called

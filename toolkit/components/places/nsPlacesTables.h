@@ -22,6 +22,8 @@
     ", guid TEXT" \
     ", foreign_count INTEGER DEFAULT 0 NOT NULL" \
     ", url_hash INTEGER DEFAULT 0 NOT NULL " \
+    ", description TEXT" \
+    ", preview_image_url TEXT" \
   ")" \
 )
 

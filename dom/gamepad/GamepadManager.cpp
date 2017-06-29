@@ -20,6 +20,7 @@
 #include "mozilla/StaticPtr.h"
 
 #include "nsAutoPtr.h"
+#include "nsContentUtils.h"
 #include "nsGlobalWindow.h"
 #include "nsIDOMEvent.h"
 #include "nsIDOMDocument.h"
@@ -138,7 +139,18 @@ GamepadManager::AddListener(nsGlobalWindow* aWindow)
   MOZ_ASSERT(aWindow->IsInnerWindow());
   MOZ_ASSERT(NS_IsMainThread());
 
-  if (!mEnabled || mShuttingDown) {
+  // IPDL child has not been created
+  if (mChannelChildren.IsEmpty()) {
+    PBackgroundChild *actor = BackgroundChild::GetForCurrentThread();
+    //Try to get the PBackground Child actor
+    if (actor) {
+      ActorCreated(actor);
+    } else {
+      Unused << BackgroundChild::GetOrCreateForCurrentThread(this);
+    }
+  }
+
+  if (!mEnabled || mShuttingDown || nsContentUtils::ShouldResistFingerprinting()) {
     return;
   }
 
@@ -147,19 +159,6 @@ GamepadManager::AddListener(nsGlobalWindow* aWindow)
   }
 
   mListeners.AppendElement(aWindow);
-
-  // IPDL child has been created
-  if (!mChannelChildren.IsEmpty()) {
-    return;
-  }
-
-  PBackgroundChild *actor = BackgroundChild::GetForCurrentThread();
-  //Try to get the PBackground Child actor
-  if (actor) {
-    ActorCreated(actor);
-  } else {
-    Unused << BackgroundChild::GetOrCreateForCurrentThread(this);
-  }
 }
 
 void
@@ -315,6 +314,12 @@ GamepadManager::FireAxisMoveEvent(EventTarget* aTarget,
 void
 GamepadManager::NewConnectionEvent(uint32_t aIndex, bool aConnected)
 {
+  // Do not fire gamepadconnected and gamepaddisconnected events when
+  // privacy.resistFingerprinting is true.
+  if (nsContentUtils::ShouldResistFingerprinting()) {
+    return;
+  }
+
   if (mShuttingDown) {
     return;
   }
@@ -398,7 +403,7 @@ GamepadManager::FireConnectionEvent(EventTarget* aTarget,
 void
 GamepadManager::SyncGamepadState(uint32_t aIndex, Gamepad* aGamepad)
 {
-  if (mShuttingDown || !mEnabled) {
+  if (mShuttingDown || !mEnabled || nsContentUtils::ShouldResistFingerprinting()) {
     return;
   }
 
@@ -494,7 +499,7 @@ GamepadManager::SetWindowHasSeenGamepad(nsGlobalWindow* aWindow,
 void
 GamepadManager::Update(const GamepadChangeEvent& aEvent)
 {
-  if (mShuttingDown) {
+  if (!mEnabled || mShuttingDown || nsContentUtils::ShouldResistFingerprinting()) {
     return;
   }
 

@@ -19,9 +19,30 @@
     "permissions": ["proxy"],
     "functions": [
       {
+        "name": "register",
+        "type": "function",
+        "description": "Registers the proxy script for the extension.",
+        "async": true,
+        "parameters": [
+          {
+            "name": "url",
+            "type": "string",
+            "format": "strictRelativeUrl"
+          }
+        ]
+      },
+      {
+        "name": "unregister",
+        "type": "function",
+        "description": "Unregisters the proxy script for the extension.",
+        "async": true,
+        "parameters": []
+      },
+      {
         "name": "registerProxyScript",
         "type": "function",
         "description": "Registers the proxy script for the extension.",
+        "deprecated": "Please use $(ref:proxy.register)",
         "async": true,
         "parameters": [
           {

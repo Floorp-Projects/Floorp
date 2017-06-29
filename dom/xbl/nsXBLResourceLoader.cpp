@@ -268,6 +268,13 @@ nsXBLResourceLoader::NotifyBoundElements()
             }
 
             if (!sc) {
+              if (shell->StyleSet()->IsServo()) {
+                // Ensure the element has servo data so that
+                // nsChangeHint_ReconstructFrame posted by
+                // PostRecreateFramesFor() is recognized.
+                shell->StyleSet()->GetAsServo()->StyleNewlyBoundElement(
+                  content->AsElement());
+              }
               shell->PostRecreateFramesFor(content->AsElement());
             }
           }

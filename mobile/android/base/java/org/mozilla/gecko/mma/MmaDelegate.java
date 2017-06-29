@@ -26,16 +26,16 @@ import java.lang.ref.WeakReference;
 
 public class MmaDelegate {
 
-    public static final String LOADS_ARTICLES = "Loads articles";
-    public static final String DOWNLOAD_VIDEOS_OR_ANY_OTHER_MEDIA = "Download videos or any other media";
-    public static final String CLEAR_PRIVATE_DATA = "Clear Private Data";
-    public static final String SAVE_BOOKMARK = "SaveBookmark";
-    public static final String LOAD_BOOKMARK = "LoadBookmark";
-    public static final String INTERACT_WITH_SEARCH_URL_AREA = "Interact with search url area";
-    public static final String WHEN_USER_TAKE_A_SCREENSHOT = "When user take a screenshot";
-    public static final String SAVE_PASSWORD = "SavePassword";
-    public static final String VISITING_A_WEBSITE_WITH_MATCH_TO_PAST_HISTORY = "Visiting a website with match to past history";
-    public static final String LAUNCH_BUT_NOT_DEFAULT_BROWSER = "Launch but not default browser";
+    public static final String READER_AVAILABLE = "E_Reader_Available";
+    public static final String DOWNLOAD_MEDIA_SAVED_IMAGE = "E_Download_Media_Saved_Image";
+    public static final String CLEARED_PRIVATE_DATA = "E_Cleared_Private_Data";
+    public static final String SAVED_BOOKMARK = "E_Saved_Bookmark";
+    public static final String OPENED_BOOKMARK = "E_Opened_Bookmark";
+    public static final String INTERACT_WITH_SEARCH_URL_AREA = "E_Interact_With_Search_URL_Area";
+    public static final String SCREENSHOT = "E_Screenshot";
+    public static final String SAVED_LOGIN_AND_PASSWORD = "E_Saved_Login_And_Password";
+    public static final String REVISIT_WEBSITE = "E_Revisit_Website";
+    public static final String LAUNCH_BUT_NOT_DEFAULT_BROWSER = "E_Launch_But_Not_Default_Browser";
 
 
     private static final String TAG = "MmaDelegate";

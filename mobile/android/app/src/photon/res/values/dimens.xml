@@ -64,8 +64,8 @@
          database. The largest available size is always stored in the database, regardless of this
          value.-->
     <dimen name="favicon_largest_interesting_size">32dp</dimen>
-    <!-- Small favicon used in about:home(TopsitesPanel, BookmarksPanel and CombinedHistoryPanel) -->
-    <dimen name="favicon_small_size">25dp</dimen>
+    <!-- Small favicon used in about:home(TopsitesPanel, BookmarksPanel, CombinedHistoryPanel and BrowserSearch) -->
+    <dimen name="favicon_small_size">24dp</dimen>
 
     <dimen name="firstrun_content_width">300dp</dimen>
     <dimen name="firstrun_min_height">120dp</dimen>
@@ -108,7 +108,13 @@
     <dimen name="home_remote_tabs_hidden_footer_height">40dp</dimen>
 
     <!-- Search Engine Row height -->
-    <dimen name="search_row_height">48dp</dimen>
+    <dimen name="search_engine_row_min_height">42dp</dimen>
+    <dimen name="search_suggestion_item_min_height">30dp</dimen>
+    <dimen name="search_suggestion_item_padding_horizontal">8dp</dimen>
+    <dimen name="search_suggestion_item_padding_vertical">7dp</dimen>
+
+    <!-- Search Home Item Row height -->
+    <dimen name="search_item_min_height">64dp</dimen>
 
     <dimen name="doorhanger_width">300dp</dimen>
     <dimen name="doorhanger_input_width">250dp</dimen>

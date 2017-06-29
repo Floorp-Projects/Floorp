@@ -53,6 +53,7 @@ public class AppConstants {
         public static final boolean feature20Plus = MIN_SDK_VERSION >= 20 || (MAX_SDK_VERSION >= 20 && Build.VERSION.SDK_INT >= 20);
         public static final boolean feature21Plus = MIN_SDK_VERSION >= 21 || (MAX_SDK_VERSION >= 21 && Build.VERSION.SDK_INT >= 21);
         public static final boolean feature24Plus = MIN_SDK_VERSION >= 24 || (MAX_SDK_VERSION >= 24 && Build.VERSION.SDK_INT >= 24);
+        public static final boolean feature26Plus = MIN_SDK_VERSION >= 26 || (MAX_SDK_VERSION >= 26 && Build.VERSION.SDK_INT >= 26);
 
         /*
          * If our MIN_SDK_VERSION is 14 or higher, we must be an ICS device.

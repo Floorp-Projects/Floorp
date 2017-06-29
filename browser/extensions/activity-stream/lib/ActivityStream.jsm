@@ -4,108 +4,92 @@
 "use strict";
 
 const {utils: Cu} = Components;
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-const {Store} = Cu.import("resource://activity-stream/lib/Store.jsm", {});
+
+// NB: Eagerly load modules that will be loaded/constructed/initialized in the
+// common case to avoid the overhead of wrapping and detecting lazy loading.
 const {actionTypes: at} = Cu.import("resource://activity-stream/common/Actions.jsm", {});
+const {DefaultPrefs} = Cu.import("resource://activity-stream/lib/ActivityStreamPrefs.jsm", {});
+const {LocalizationFeed} = Cu.import("resource://activity-stream/lib/LocalizationFeed.jsm", {});
+const {NewTabInit} = Cu.import("resource://activity-stream/lib/NewTabInit.jsm", {});
+const {PlacesFeed} = Cu.import("resource://activity-stream/lib/PlacesFeed.jsm", {});
+const {PrefsFeed} = Cu.import("resource://activity-stream/lib/PrefsFeed.jsm", {});
+const {Store} = Cu.import("resource://activity-stream/lib/Store.jsm", {});
+const {TelemetryFeed} = Cu.import("resource://activity-stream/lib/TelemetryFeed.jsm", {});
+const {TopSitesFeed} = Cu.import("resource://activity-stream/lib/TopSitesFeed.jsm", {});
 
 const REASON_ADDON_UNINSTALL = 6;
 
-XPCOMUtils.defineLazyModuleGetter(this, "DefaultPrefs",
-  "resource://activity-stream/lib/ActivityStreamPrefs.jsm");
-
-// Feeds
-XPCOMUtils.defineLazyModuleGetter(this, "LocalizationFeed",
-  "resource://activity-stream/lib/LocalizationFeed.jsm");
-
-XPCOMUtils.defineLazyModuleGetter(this, "NewTabInit",
-  "resource://activity-stream/lib/NewTabInit.jsm");
-
-XPCOMUtils.defineLazyModuleGetter(this, "PlacesFeed",
-  "resource://activity-stream/lib/PlacesFeed.jsm");
-
-XPCOMUtils.defineLazyModuleGetter(this, "PrefsFeed",
-  "resource://activity-stream/lib/PrefsFeed.jsm");
-
-XPCOMUtils.defineLazyModuleGetter(this, "TelemetryFeed",
-  "resource://activity-stream/lib/TelemetryFeed.jsm");
-
-XPCOMUtils.defineLazyModuleGetter(this, "TopSitesFeed",
-  "resource://activity-stream/lib/TopSitesFeed.jsm");
-
-const PREFS_CONFIG = [
-  // When you add a feed pref here:
-  // 1. The pref should be prefixed with "feeds."
-  // 2. The init property should be a function that instantiates your Feed
-  // 3. You should use XPCOMUtils.defineLazyModuleGetter to import the Feed,
-  //    so it isn't loaded until the feed is enabled.
-  {
-    name: "feeds.localization",
-    title: "Initialize strings and detect locale for Activity Stream",
-    value: true,
-    init: () => new LocalizationFeed()
-  },
-  {
-    name: "feeds.newtabinit",
-    title: "Sends a copy of the state to each new tab that is opened",
-    value: true,
-    init: () => new NewTabInit()
-  },
-  {
-    name: "feeds.places",
-    title: "Listens for and relays various Places-related events",
-    value: true,
-    init: () => new PlacesFeed()
-  },
-  {
-    name: "feeds.prefs",
-    title: "Preferences",
-    value: true,
-    init: () => new PrefsFeed(PREFS_CONFIG.map(pref => pref.name))
-  },
-  {
-    name: "feeds.telemetry",
-    title: "Relays telemetry-related actions to TelemetrySender",
-    value: true,
-    init: () => new TelemetryFeed()
-  },
-  {
-    name: "feeds.topsites",
-    title: "Queries places and gets metadata for Top Sites section",
-    value: true,
-    init: () => new TopSitesFeed()
-  },
-  {
-    name: "showSearch",
+const PREFS_CONFIG = new Map([
+  ["default.sites", {
+    title: "Comma-separated list of default top sites to fill in behind visited sites",
+    value: "https://www.facebook.com/,https://www.youtube.com/,https://www.amazon.com/,https://www.yahoo.com/,https://www.ebay.com/,https://twitter.com/"
+  }],
+  ["showSearch", {
     title: "Show the Search bar on the New Tab page",
+    value: true
+  }],
+  ["showTopSites", {
+    title: "Show the Top Sites section on the New Tab page",
+    value: true
+  }],
+  ["telemetry", {
+    title: "Enable system error and usage data collection",
+    value: true,
+    value_local_dev: false
+  }],
+  ["telemetry.log", {
+    title: "Log telemetry events in the console",
+    value: false,
+    value_local_dev: true
+  }],
+  ["telemetry.ping.endpoint", {
+    title: "Telemetry server endpoint",
+    value: "https://onyx_tiles.stage.mozaws.net/v4/links/activity-stream"
+  }]
+]);
+
+const FEEDS_CONFIG = new Map();
+for (const {name, factory, title, value} of [
+  {
+    name: "localization",
+    factory: () => new LocalizationFeed(),
+    title: "Initialize strings and detect locale for Activity Stream",
     value: true
   },
   {
-    name: "showTopSites",
-    title: "Show the Top Sites section on the New Tab page",
+    name: "newtabinit",
+    factory: () => new NewTabInit(),
+    title: "Sends a copy of the state to each new tab that is opened",
+    value: true
+  },
+  {
+    name: "places",
+    factory: () => new PlacesFeed(),
+    title: "Listens for and relays various Places-related events",
+    value: true
+  },
+  {
+    name: "prefs",
+    factory: () => new PrefsFeed(PREFS_CONFIG),
+    title: "Preferences",
     value: true
   },
   {
     name: "telemetry",
-    title: "Enable system error and usage data collection",
-    value: false
+    factory: () => new TelemetryFeed(),
+    title: "Relays telemetry-related actions to TelemetrySender",
+    value: true
   },
   {
-    name: "telemetry.log",
-    title: "Log telemetry events in the console",
-    value: false
-  },
-  {
-    name: "telemetry.ping.endpoint",
-    title: "Telemetry server endpoint",
-    value: "https://tiles.services.mozilla.com/v3/links/activity-stream"
+    name: "topsites",
+    factory: () => new TopSitesFeed(),
+    title: "Queries places and gets metadata for Top Sites section",
+    value: true
   }
-];
-
-const feeds = {};
-for (const pref of PREFS_CONFIG) {
-  if (pref.name.match(/^feeds\./)) {
-    feeds[pref.name] = pref.init;
-  }
+]) {
+  const pref = `feeds.${name}`;
+  FEEDS_CONFIG.set(pref, factory);
+  PREFS_CONFIG.set(pref, {title, value});
 }
 
 this.ActivityStream = class ActivityStream {
@@ -122,17 +106,17 @@ this.ActivityStream = class ActivityStream {
     this.initialized = false;
     this.options = options;
     this.store = new Store();
-    this.feeds = feeds;
+    this.feeds = FEEDS_CONFIG;
     this._defaultPrefs = new DefaultPrefs(PREFS_CONFIG);
   }
   init() {
-    this.initialized = true;
     this._defaultPrefs.init();
     this.store.init(this.feeds);
     this.store.dispatch({
       type: at.INIT,
       data: {version: this.options.version}
     });
+    this.initialized = true;
   }
   uninit() {
     this.store.dispatch({type: at.UNINIT});

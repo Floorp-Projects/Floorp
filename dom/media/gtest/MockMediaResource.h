@@ -15,19 +15,11 @@ namespace mozilla
 class MockMediaResource : public MediaResource
 {
 public:
-  explicit MockMediaResource(const char* aFileName,
-                             const MediaContainerType& aMimeType =
-                               MediaContainerType(MEDIAMIMETYPE("video/mp4")));
+  explicit MockMediaResource(const char* aFileName);
   nsresult Close() override { return NS_OK; }
   void Suspend(bool aCloseImmediately) override {}
   void Resume() override {}
   already_AddRefed<nsIPrincipal> GetCurrentPrincipal() override
-  {
-    return nullptr;
-  }
-  bool CanClone() override { return false; }
-  already_AddRefed<MediaResource> CloneData(MediaResourceCallback*)
-    override
   {
     return nullptr;
   }
@@ -62,10 +54,6 @@ public:
   bool IsTransportSeekable() override { return true; }
   nsresult Open(nsIStreamListener** aStreamListener) override;
   nsresult GetCachedRanges(MediaByteRangeSet& aRanges) override;
-  const MediaContainerType& GetContentType() const override
-  {
-    return mContainerType;
-  }
 
   void MockClearBufferedRanges();
   void MockAddBufferedRange(int64_t aStart, int64_t aEnd);
@@ -78,7 +66,6 @@ private:
   const char* mFileName;
   MediaByteRangeSet mRanges;
   Atomic<int> mEntry;
-  const MediaContainerType mContainerType;
 };
 
 } // namespace mozilla

@@ -1634,6 +1634,10 @@ var gBrowserInit = {
     FullScreen.init();
     PointerLock.init();
 
+    if (AppConstants.isPlatformAndVersionAtLeast("win", "10")) {
+      ContextMenuTouchModeObserver.init();
+    }
+
     // initialize the sync UI
     gSync.init();
 
@@ -1843,6 +1847,9 @@ var gBrowserInit = {
         this.gmpInstallManager.uninit();
       }
 
+      if (AppConstants.isPlatformAndVersionAtLeast("win", "10")) {
+        ContextMenuTouchModeObserver.uninit();
+      }
       BrowserOffline.uninit();
       IndexedDBPromptHelper.uninit();
       PanelUI.uninit();
@@ -8218,6 +8225,31 @@ var RestoreLastSessionObserver = {
 function restoreLastSession() {
   SessionStore.restoreLastSession();
 }
+
+/* Observes context menus and adjusts their size for better
+ * usability when opened via a touch screen. */
+var ContextMenuTouchModeObserver = {
+  init() {
+    window.addEventListener("popupshowing", this, true);
+  },
+
+  handleEvent(event) {
+    let target = event.originalTarget;
+    if (target.localName != "menupopup") {
+      return;
+    }
+
+    if (event.mozInputSource == MouseEvent.MOZ_SOURCE_TOUCH) {
+      target.setAttribute("touchmode", "true");
+    } else {
+      target.removeAttribute("touchmode");
+    }
+  },
+
+  uninit() {
+    window.removeEventListener("popupshowing", this, true);
+  },
+};
 
 var TabContextMenu = {
   contextTab: null,

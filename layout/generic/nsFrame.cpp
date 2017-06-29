@@ -8025,11 +8025,14 @@ nsIFrame::PeekOffset(nsPeekOffsetStruct* aPos)
         bool movingInFrameDirection =
           IsMovingInFrameDirection(current, aPos->mDirection, aPos->mVisual);
 
-        if (eatingNonRenderableWS)
+        if (eatingNonRenderableWS) {
           peekSearchState = current->PeekOffsetNoAmount(movingInFrameDirection, &offset); 
-        else
-          peekSearchState = current->PeekOffsetCharacter(movingInFrameDirection, &offset,
-                                              aPos->mAmount == eSelectCluster);
+        } else {
+          PeekOffsetCharacterOptions options;
+          options.mRespectClusters = aPos->mAmount == eSelectCluster;
+          peekSearchState = current->PeekOffsetCharacter(movingInFrameDirection,
+                                                         &offset, options);
+        }
 
         movedOverNonSelectableText |= (peekSearchState == CONTINUE_UNSELECTABLE);
 
@@ -8363,7 +8366,7 @@ nsFrame::PeekOffsetNoAmount(bool aForward, int32_t* aOffset)
 
 nsIFrame::FrameSearchResult
 nsFrame::PeekOffsetCharacter(bool aForward, int32_t* aOffset,
-                             bool aRespectClusters)
+                             PeekOffsetCharacterOptions aOptions)
 {
   NS_ASSERTION (aOffset && *aOffset <= 1, "aOffset out of range");
   int32_t startOffset = *aOffset;

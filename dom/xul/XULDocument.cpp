@@ -4554,30 +4554,40 @@ XULDocument::DirectionChanged(const char* aPrefName, void* aData)
   }
 }
 
-int
+nsIDocument::DocumentTheme
 XULDocument::GetDocumentLWTheme()
 {
     if (mDocLWTheme == Doc_Theme_Uninitialized) {
-        mDocLWTheme = Doc_Theme_None; // No lightweight theme by default
-
-        Element* element = GetRootElement();
-        nsAutoString hasLWTheme;
-        if (element &&
-            element->GetAttr(kNameSpaceID_None, nsGkAtoms::lwtheme, hasLWTheme) &&
-            !(hasLWTheme.IsEmpty()) &&
-            hasLWTheme.EqualsLiteral("true")) {
-            mDocLWTheme = Doc_Theme_Neutral;
-            nsAutoString lwTheme;
-            element->GetAttr(kNameSpaceID_None, nsGkAtoms::lwthemetextcolor, lwTheme);
-            if (!(lwTheme.IsEmpty())) {
-                if (lwTheme.EqualsLiteral("dark"))
-                    mDocLWTheme = Doc_Theme_Dark;
-                else if (lwTheme.EqualsLiteral("bright"))
-                    mDocLWTheme = Doc_Theme_Bright;
-            }
-        }
+        mDocLWTheme = ThreadSafeGetDocumentLWTheme();
     }
     return mDocLWTheme;
+}
+
+nsIDocument::DocumentTheme
+XULDocument::ThreadSafeGetDocumentLWTheme() const
+{
+    if (mDocLWTheme != Doc_Theme_Uninitialized) {
+        return mDocLWTheme;
+    }
+
+    DocumentTheme theme = Doc_Theme_None; // No lightweight theme by default
+    Element* element = GetRootElement();
+    nsAutoString hasLWTheme;
+    if (element &&
+        element->GetAttr(kNameSpaceID_None, nsGkAtoms::lwtheme, hasLWTheme) &&
+        !(hasLWTheme.IsEmpty()) &&
+        hasLWTheme.EqualsLiteral("true")) {
+        theme = Doc_Theme_Neutral;
+        nsAutoString lwTheme;
+        element->GetAttr(kNameSpaceID_None, nsGkAtoms::lwthemetextcolor, lwTheme);
+        if (!(lwTheme.IsEmpty())) {
+            if (lwTheme.EqualsLiteral("dark"))
+                theme = Doc_Theme_Dark;
+            else if (lwTheme.EqualsLiteral("bright"))
+                theme = Doc_Theme_Bright;
+        }
+    }
+    return theme;
 }
 
 NS_IMETHODIMP

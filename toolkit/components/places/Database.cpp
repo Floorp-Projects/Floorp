@@ -1101,6 +1101,12 @@ Database::InitSchema(bool* aDatabaseMigrated)
 
       // Firefox 55 uses schema version 37.
 
+      if (currentSchemaVersion < 38) {
+        rv = MigrateV38Up();
+        NS_ENSURE_SUCCESS(rv, rv);
+      }
+      // Firefox 56 uses schema version 38.
+
       // Schema Upgrades must add migration code here.
 
       rv = UpdateBookmarkRootTitles();
@@ -2289,6 +2295,30 @@ Database::MigrateV37Up() {
 
   // Start the async conversion
   nsFaviconService::ConvertUnsupportedPayloads(mMainConn);
+
+  return NS_OK;
+}
+
+nsresult
+Database::MigrateV38Up()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  nsCOMPtr<mozIStorageStatement> stmt;
+  nsresult rv = mMainConn->CreateStatement(NS_LITERAL_CSTRING(
+    "SELECT description, preview_image_url FROM moz_places"
+  ), getter_AddRefs(stmt));
+  if (NS_FAILED(rv)) {
+    rv = mMainConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+      "ALTER TABLE moz_places ADD COLUMN description TEXT"
+    ));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = mMainConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+      "ALTER TABLE moz_places ADD COLUMN preview_image_url TEXT"
+    ));
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
 
   return NS_OK;
 }

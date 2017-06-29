@@ -525,8 +525,10 @@ nsStyleContext::CalcStyleDifference(const ServoComputedValues* aNewComputedValue
                                      aSamePointerStructs);
 }
 
+namespace mozilla {
+
 void
-nsStyleContext::EnsureSameStructsCached(nsStyleContext* aOldContext)
+GeckoStyleContext::EnsureSameStructsCached(nsStyleContext* aOldContext)
 {
   // NOTE(emilio): We could do better here for stylo, where we only call
   // Style##name_() because we need to run FinishStyle, but otherwise this
@@ -541,17 +543,9 @@ nsStyleContext::EnsureSameStructsCached(nsStyleContext* aOldContext)
   }
 #include "nsStyleStructList.h"
 #undef STYLE_STRUCT
-
-#ifdef DEBUG
-  if (IsServo()) {
-    auto oldMask = aOldContext->mBits & NS_STYLE_INHERIT_MASK;
-    auto newMask = mBits & NS_STYLE_INHERIT_MASK;
-    MOZ_ASSERT((oldMask & newMask) == oldMask,
-               "Should have at least as many structs computed as the "
-               "old context!");
-  }
-#endif
 }
+
+} // namespace mozilla
 
 #ifdef DEBUG
 void nsStyleContext::List(FILE* out, int32_t aIndent, bool aListDescendants)
@@ -634,19 +628,22 @@ NS_NewStyleContext(nsStyleContext* aParentContext,
   return context.forget();
 }
 
-already_AddRefed<nsStyleContext>
-NS_NewStyleContext(nsStyleContext* aParentContext,
-                   nsPresContext* aPresContext,
-                   nsIAtom* aPseudoTag,
-                   CSSPseudoElementType aPseudoType,
-                   already_AddRefed<ServoComputedValues> aComputedValues)
+namespace mozilla {
+
+already_AddRefed<ServoStyleContext>
+ServoStyleContext::Create(nsStyleContext* aParentContext,
+                          nsPresContext* aPresContext,
+                          nsIAtom* aPseudoTag,
+                          CSSPseudoElementType aPseudoType,
+                          already_AddRefed<ServoComputedValues> aComputedValues)
 {
-  RefPtr<nsStyleContext> context =
-    new
-    ServoStyleContext(aParentContext, aPresContext, aPseudoTag, aPseudoType,
-                   Move(aComputedValues));
+  RefPtr<ServoStyleContext> context =
+    new ServoStyleContext(aParentContext, aPresContext, aPseudoTag, aPseudoType,
+                          Move(aComputedValues));
   return context.forget();
 }
+
+} // namespace mozilla
 
 nsIPresShell*
 nsStyleContext::Arena()

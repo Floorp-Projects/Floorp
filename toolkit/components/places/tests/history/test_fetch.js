@@ -77,6 +77,35 @@ add_task(async function test_fetch_existent() {
   }
 });
 
+add_task(async function test_fetch_page_meta_info() {
+  await PlacesTestUtils.clearHistory();
+
+  let TEST_URI = NetUtil.newURI("http://mozilla.com/test_fetch_page_meta_info");
+  await PlacesTestUtils.addVisits(TEST_URI);
+  Assert.ok(page_in_database(TEST_URI));
+
+  // Test fetching the null values
+  let includeMeta = true;
+  let pageInfo = await PlacesUtils.history.fetch(TEST_URI, {includeMeta});
+  Assert.strictEqual(null, pageInfo.previewImageURL, "fetch should return a null previewImageURL");
+  Assert.equal("", pageInfo.description, "fetch should return a empty string description");
+
+  // Now set the pageMetaInfo for this page
+  let description = "Test description";
+  let previewImageURL = "http://mozilla.com/test_preview_image.png";
+  await PlacesUtils.history.update({ url: TEST_URI, description, previewImageURL });
+
+  includeMeta = true;
+  pageInfo = await PlacesUtils.history.fetch(TEST_URI, {includeMeta});
+  Assert.equal(previewImageURL, pageInfo.previewImageURL.href, "fetch should return a previewImageURL");
+  Assert.equal(description, pageInfo.description, "fetch should return a description");
+
+  includeMeta = false;
+  pageInfo = await PlacesUtils.history.fetch(TEST_URI, {includeMeta});
+  Assert.ok(!("description" in pageInfo), "fetch should not return a description if includeMeta is false")
+  Assert.ok(!("previewImageURL" in pageInfo), "fetch should not return a previewImageURL if includeMeta is false")
+});
+
 add_task(async function test_fetch_nonexistent() {
   await PlacesTestUtils.clearHistory();
   await PlacesUtils.bookmarks.eraseEverything();
@@ -104,7 +133,11 @@ add_task(async function test_error_cases() {
       /TypeError: options should be/
   );
   Assert.throws(
-    () => PlacesUtils.history.fetch("http://valid.uri.come", { includeVisits: "not a boolean"}),
+    () => PlacesUtils.history.fetch("http://valid.uri.come", {includeVisits: "not a boolean"}),
       /TypeError: includeVisits should be a/
+  );
+  Assert.throws(
+    () => PlacesUtils.history.fetch("http://valid.uri.come", {includeMeta: "not a boolean"}),
+      /TypeError: includeMeta should be a/
   );
 });

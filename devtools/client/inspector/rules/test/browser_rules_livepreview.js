@@ -53,7 +53,7 @@ function* testLivePreviewData(data, ruleView, selector) {
   info("Entering value in the editor: " + data.value);
   let onPreviewDone = ruleView.once("ruleview-changed");
   EventUtils.sendString(data.value, ruleView.styleWindow);
-  ruleView.throttle.flush();
+  ruleView.debounce.flush();
   yield onPreviewDone;
 
   let onValueDone = ruleView.once("ruleview-changed");

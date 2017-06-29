@@ -156,6 +156,7 @@
         <attr name="dominantBorderEnabled" format="boolean" />
         <attr name="overrideScaleType" format="boolean" />
         <attr name="enableRoundCorners" format="boolean"/>
+        <attr name="backgroundCornerRadius" format="dimension"/>
     </declare-styleable>
 
     <declare-styleable name="OverlayDialogButton">

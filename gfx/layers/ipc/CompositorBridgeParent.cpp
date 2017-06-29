@@ -1277,7 +1277,7 @@ CompositorBridgeParent::ForceComposite(LayerTransactionParent* aLayerTree)
 }
 
 bool
-CompositorBridgeParent::SetTestSampleTime(LayerTransactionParent* aLayerTree,
+CompositorBridgeParent::SetTestSampleTime(const uint64_t& aId,
                                           const TimeStamp& aTime)
 {
   if (aTime.IsNull()) {
@@ -1306,7 +1306,7 @@ CompositorBridgeParent::SetTestSampleTime(LayerTransactionParent* aLayerTree,
 }
 
 void
-CompositorBridgeParent::LeaveTestMode(LayerTransactionParent* aLayerTree)
+CompositorBridgeParent::LeaveTestMode(const uint64_t& aId)
 {
   mIsTesting = false;
 }
@@ -1723,6 +1723,12 @@ RefPtr<WebRenderBridgeParent>
 CompositorBridgeParent::GetWebRenderBridgeParent() const
 {
   return mWrBridge;
+}
+
+Maybe<TimeStamp>
+CompositorBridgeParent::GetTestingTimeStamp() const
+{
+  return mIsTesting ? Some(mTestTime) : Nothing();
 }
 
 void

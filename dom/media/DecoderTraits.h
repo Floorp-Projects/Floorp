@@ -44,7 +44,6 @@ public:
   // Create a decoder for the given aType. Returns null if we
   // were unable to create the decoder.
   static already_AddRefed<ChannelMediaDecoder> CreateDecoder(
-    const nsACString& aType,
     MediaDecoderInit& aInit,
     DecoderDoctorDiagnostics* aDiagnostics);
 

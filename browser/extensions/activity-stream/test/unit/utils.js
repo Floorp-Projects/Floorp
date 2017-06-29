@@ -104,6 +104,9 @@ FakePrefs.prototype = {
       delete this.observers[prefName];
     }
   },
+  _prefBranch: {},
+  observeBranch(listener) {},
+  ignoreBranch(listener) {},
 
   prefs: {},
   get(prefName) { return this.prefs[prefName]; },

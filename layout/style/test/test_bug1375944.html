@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Test for bug 1375944</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css">
+</head>
+<body>
+<iframe id="subframe"></iframe>
+<pre id="log">
+<script>
+
+SimpleTest.waitForExplicitFinish();
+
+async function runTest() {
+  let f = new FontFace("Ahem", "url(Ahem.ttf)", {});
+  await f.load();
+  is(f.status, "loaded", "Loaded Ahem font");
+
+  let subframe = document.getElementById("subframe");
+  subframe.src = "file_bug1375944.html";
+  await new Promise(resolve => subframe.onload = resolve);
+  let elem = subframe.contentDocument.getElementById("test");
+  is(elem.getBoundingClientRect().width, 64,
+     "The font should be loaded properly");
+
+  SimpleTest.finish();
+}
+runTest();
+
+</script>
+</pre>
+</body>
+</html>

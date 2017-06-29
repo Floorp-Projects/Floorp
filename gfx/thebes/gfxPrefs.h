@@ -649,7 +649,6 @@ private:
   DECL_GFX_PREF(Once, "media.windows-media-foundation.use-sync-texture", PDMWMFUseSyncTexture, bool, true);
   DECL_GFX_PREF(Live, "media.wmf.low-latency.enabled", PDMWMFLowLatencyEnabled, bool, false);
   DECL_GFX_PREF(Live, "media.wmf.skip-blacklist", PDMWMFSkipBlacklist, bool, false);
-  DECL_GFX_PREF(Live, "media.wmf.vp9.force.enabled", PDMWMFForceVP9, bool, false);
 #endif
 
   // These affect how line scrolls from wheel events will be accelerated.

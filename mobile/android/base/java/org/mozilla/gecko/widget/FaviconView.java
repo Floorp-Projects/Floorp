@@ -87,6 +87,10 @@ public class FaviconView extends ImageView {
             isDominantBorderEnabled = a.getBoolean(R.styleable.FaviconView_dominantBorderEnabled, true);
             isOverrideScaleTypeEnabled = a.getBoolean(R.styleable.FaviconView_overrideScaleType, true);
             areRoundCornersEnabled = a.getBoolean(R.styleable.FaviconView_enableRoundCorners, true);
+
+            final DisplayMetrics metrics = getResources().getDisplayMetrics();
+            mBackgroundCornerRadius = a.getDimension(R.styleable.FaviconView_backgroundCornerRadius,
+                                                     TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, DEFAULT_CORNER_RADIUS_DP, metrics));
         } finally {
             a.recycle();
         }
@@ -95,11 +99,7 @@ public class FaviconView extends ImageView {
             setScaleType(ImageView.ScaleType.CENTER);
         }
 
-        final DisplayMetrics metrics = getResources().getDisplayMetrics();
-
         mBackgroundRect = new RectF(0, 0, 0, 0);
-        mBackgroundCornerRadius = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, DEFAULT_CORNER_RADIUS_DP, metrics);
-
         mResources = getResources();
     }
 

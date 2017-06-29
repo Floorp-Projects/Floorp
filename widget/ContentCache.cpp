@@ -1126,6 +1126,12 @@ ContentCacheInParent::OnCompositionEvent(const WidgetCompositionEvent& aEvent)
     MOZ_ASSERT(aEvent.mMessage == eCompositionChange ||
                aEvent.mMessage == eCompositionCommit);
     *mCommitStringByRequest = aEvent.mData;
+    // We need to wait eCompositionCommitRequestHandled from the remote process
+    // in this case.  Therefore, mPendingEventsNeedingAck needs to be
+    // incremented here.
+    if (!mWidgetHasComposition) {
+      mPendingEventsNeedingAck++;
+    }
     return false;
   }
 
@@ -1162,8 +1168,14 @@ ContentCacheInParent::OnEventNeedingAckHandled(nsIWidget* aWidget,
 
   MOZ_LOG(sContentCacheLog, LogLevel::Info,
     ("0x%p OnEventNeedingAckHandled(aWidget=0x%p, "
-     "aMessage=%s), mPendingEventsNeedingAck=%u",
-     this, aWidget, ToChar(aMessage), mPendingEventsNeedingAck));
+     "aMessage=%s), mPendingEventsNeedingAck=%u, mPendingCompositionCount=%" PRIu8,
+     this, aWidget, ToChar(aMessage), mPendingEventsNeedingAck, mPendingCompositionCount));
+
+  if (WidgetCompositionEvent::IsFollowedByCompositionEnd(aMessage) ||
+      aMessage == eCompositionCommitRequestHandled) {
+    MOZ_RELEASE_ASSERT(mPendingCompositionCount > 0);
+    mPendingCompositionCount--;
+  }
 
   MOZ_RELEASE_ASSERT(mPendingEventsNeedingAck > 0);
   if (--mPendingEventsNeedingAck) {
@@ -1171,17 +1183,6 @@ ContentCacheInParent::OnEventNeedingAckHandled(nsIWidget* aWidget,
   }
 
   FlushPendingNotifications(aWidget);
-}
-
-void
-ContentCacheInParent::OnDestroyTextComposition()
-{
-  MOZ_LOG(sContentCacheLog, LogLevel::Info,
-    ("0x%p OnDestroyTextComposition(), "
-     "mPendingEventsNeedingAck=%u, mPendingCompositionCount=%" PRIu8,
-     this, mPendingEventsNeedingAck, mPendingCompositionCount));
-  MOZ_RELEASE_ASSERT(mPendingCompositionCount > 0);
-  mPendingCompositionCount--;
 }
 
 bool

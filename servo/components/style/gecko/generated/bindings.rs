@@ -11,6 +11,8 @@ use gecko_bindings::structs::mozilla::css::URLValue;
 use gecko_bindings::structs::mozilla::MallocSizeOf;
 use gecko_bindings::structs::mozilla::Side;
 use gecko_bindings::structs::nsIContent;
+use gecko_bindings::structs::nsIDocument;
+use gecko_bindings::structs::nsIDocument_DocumentTheme;
 use gecko_bindings::structs::RawGeckoAnimationPropertySegment;
 use gecko_bindings::structs::RawGeckoComputedTiming;
 use gecko_bindings::structs::RawGeckoCSSPropertyIDList;
@@ -27,6 +29,7 @@ use gecko_bindings::structs::RawServoStyleRule;
 use gecko_bindings::structs::RawGeckoPresContext;
 use gecko_bindings::structs::RawGeckoPresContextOwned;
 use gecko_bindings::structs::RawGeckoStyleAnimationList;
+use gecko_bindings::structs::RawGeckoStyleChildrenIteratorBorrowedMut;
 use gecko_bindings::structs::RawGeckoServoStyleRuleList;
 use gecko_bindings::structs::RawGeckoURLExtraData;
 use gecko_bindings::structs::RawGeckoXBLBinding;
@@ -225,14 +228,6 @@ pub type RawServoStyleSetBorrowedMut<'a> = &'a mut RawServoStyleSet;
 pub type RawServoStyleSetBorrowedMutOrNull<'a> = Option<&'a mut RawServoStyleSet>;
 enum RawServoStyleSetVoid { }
 pub struct RawServoStyleSet(RawServoStyleSetVoid);
-pub type StyleChildrenIteratorOwned = ::gecko_bindings::sugar::ownership::Owned<StyleChildrenIterator>;
-pub type StyleChildrenIteratorOwnedOrNull = ::gecko_bindings::sugar::ownership::OwnedOrNull<StyleChildrenIterator>;
-pub type StyleChildrenIteratorBorrowed<'a> = &'a StyleChildrenIterator;
-pub type StyleChildrenIteratorBorrowedOrNull<'a> = Option<&'a StyleChildrenIterator>;
-pub type StyleChildrenIteratorBorrowedMut<'a> = &'a mut StyleChildrenIterator;
-pub type StyleChildrenIteratorBorrowedMutOrNull<'a> = Option<&'a mut StyleChildrenIterator>;
-enum StyleChildrenIteratorVoid { }
-pub struct StyleChildrenIterator(StyleChildrenIteratorVoid);
 pub type ServoElementSnapshotOwned = ::gecko_bindings::sugar::ownership::Owned<ServoElementSnapshot>;
 pub type ServoElementSnapshotOwnedOrNull = ::gecko_bindings::sugar::ownership::OwnedOrNull<ServoElementSnapshot>;
 pub type ServoElementSnapshotBorrowed<'a> = &'a ServoElementSnapshot;
@@ -530,14 +525,18 @@ extern "C" {
                                                  *mut nsTArray<*mut nsIContent>);
 }
 extern "C" {
-    pub fn Gecko_MaybeCreateStyleChildrenIterator(node: RawGeckoNodeBorrowed)
-     -> StyleChildrenIteratorOwnedOrNull;
+    pub fn Gecko_ConstructStyleChildrenIterator(aElement:
+                                                    RawGeckoElementBorrowed,
+                                                aIterator:
+                                                    RawGeckoStyleChildrenIteratorBorrowedMut);
 }
 extern "C" {
-    pub fn Gecko_DropStyleChildrenIterator(it: StyleChildrenIteratorOwned);
+    pub fn Gecko_DestroyStyleChildrenIterator(aIterator:
+                                                  RawGeckoStyleChildrenIteratorBorrowedMut);
 }
 extern "C" {
-    pub fn Gecko_GetNextStyleChild(it: StyleChildrenIteratorBorrowedMut)
+    pub fn Gecko_GetNextStyleChild(it:
+                                       RawGeckoStyleChildrenIteratorBorrowedMut)
      -> RawGeckoNodeBorrowedOrNull;
 }
 extern "C" {
@@ -582,6 +581,10 @@ extern "C" {
 extern "C" {
     pub fn Gecko_GetXMLLangValue(element: RawGeckoElementBorrowed)
      -> *mut nsIAtom;
+}
+extern "C" {
+    pub fn Gecko_GetDocumentLWTheme(aDocument: *const nsIDocument)
+     -> nsIDocument_DocumentTheme;
 }
 extern "C" {
     pub fn Gecko_AtomAttrValue(element: RawGeckoElementBorrowed,
@@ -1933,12 +1936,15 @@ extern "C" {
 extern "C" {
     pub fn Servo_StyleSet_MightHaveAttributeDependency(set:
                                                            RawServoStyleSetBorrowed,
+                                                       element:
+                                                           RawGeckoElementBorrowed,
                                                        local_name:
                                                            *mut nsIAtom)
      -> bool;
 }
 extern "C" {
     pub fn Servo_StyleSet_HasStateDependency(set: RawServoStyleSetBorrowed,
+                                             element: RawGeckoElementBorrowed,
                                              state: u64) -> bool;
 }
 extern "C" {
@@ -2702,6 +2708,22 @@ extern "C" {
     pub fn Servo_SerializeFontValueForCanvas(declarations:
                                                  RawServoDeclarationBlockBorrowed,
                                              buffer: *mut nsAString);
+}
+extern "C" {
+    pub fn Servo_GetCustomPropertyValue(computed_values:
+                                            ServoComputedValuesBorrowed,
+                                        name: *const nsAString,
+                                        value: *mut nsAString) -> bool;
+}
+extern "C" {
+    pub fn Servo_GetCustomPropertiesCount(computed_values:
+                                              ServoComputedValuesBorrowed)
+     -> u32;
+}
+extern "C" {
+    pub fn Servo_GetCustomPropertyNameAt(arg1: ServoComputedValuesBorrowed,
+                                         index: u32, name: *mut nsAString)
+     -> bool;
 }
 extern "C" {
     pub fn Servo_GetStyleFont(computed_values:

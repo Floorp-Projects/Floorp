@@ -1090,7 +1090,8 @@ button.button-link:not([disabled="true"]):active:hover {
   background-color: #fcf8ed;
 }
 
-#disabled-unsigned-addons-info {
+#disabled-unsigned-addons-info,
+#legacy-extensions-info {
   margin-bottom: 2em;
   margin-right: 48px;
   margin-left: 48px;

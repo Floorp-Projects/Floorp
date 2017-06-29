@@ -196,6 +196,27 @@ RequestListContextMenu.prototype = {
     });
 
     menu.push({
+      id: "request-list-context-open-in-debugger",
+      label: L10N.getStr("netmonitor.context.openInDebugger"),
+      accesskey: L10N.getStr("netmonitor.context.openInDebugger.accesskey"),
+      visible: !!(selectedRequest &&
+               selectedRequest.responseContent &&
+               selectedRequest.responseContent.content.mimeType.includes("javascript")),
+      click: () => this.openInDebugger()
+    });
+
+    menu.push({
+      id: "request-list-context-open-in-style-editor",
+      label: L10N.getStr("netmonitor.context.openInStyleEditor"),
+      accesskey: L10N.getStr("netmonitor.context.openInStyleEditor.accesskey"),
+      visible: !!(selectedRequest &&
+               selectedRequest.responseContent &&
+               Services.prefs.getBoolPref("devtools.styleeditor.enabled") &&
+               selectedRequest.responseContent.content.mimeType.includes("css")),
+      click: () => this.openInStyleEditor()
+    });
+
+    menu.push({
       id: "request-list-context-perf",
       label: L10N.getStr("netmonitor.context.perfTools"),
       accesskey: L10N.getStr("netmonitor.context.perfTools.accesskey"),
@@ -212,6 +233,22 @@ RequestListContextMenu.prototype = {
   openRequestInTab() {
     let win = Services.wm.getMostRecentWindow(gDevTools.chromeWindowType);
     win.openUILinkIn(this.selectedRequest.url, "tab", { relatedToCurrent: true });
+  },
+
+  /**
+   * Opens selected item in the debugger
+   */
+  openInDebugger() {
+    let toolbox = gDevTools.getToolbox(getTabTarget());
+    toolbox.viewSourceInDebugger(this.selectedRequest.url, 0);
+  },
+
+  /**
+   * Opens selected item in the style editor
+   */
+  openInStyleEditor() {
+    let toolbox = gDevTools.getToolbox(getTabTarget());
+    toolbox.viewSourceInStyleEditor(this.selectedRequest.url, 0);
   },
 
   /**

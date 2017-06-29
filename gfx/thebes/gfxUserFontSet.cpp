@@ -460,7 +460,24 @@ gfxUserFontEntry::ContinueLoad()
     MOZ_ASSERT(mUserFontLoadState == STATUS_LOAD_PENDING);
     MOZ_ASSERT(mSrcList[mSrcIndex].mSourceType == gfxFontFaceSrc::eSourceType_URL);
 
+    SetLoadState(STATUS_LOADING);
     DoLoadNextSrc(true);
+    if (LoadState() != STATUS_LOADING) {
+      MOZ_ASSERT(mUserFontLoadState != STATUS_LOAD_PENDING,
+                 "Not in parallel traversal, shouldn't get LOAD_PENDING again");
+      // Loading is synchronously finished (loaded from cache or failed). We
+      // need to increment the generation so that we flush the style data to
+      // use the new loaded font face.
+      // Without parallel traversal, we would simply get the right font data
+      // after the first call to DoLoadNextSrc() in this case, so we don't need
+      // to touch the generation to trigger another restyle.
+      // XXX We may want to return synchronously in parallel traversal in those
+      // cases as well if possible, so that we don't have an additional restyle.
+      // That doesn't work currently because nsIDocument::GetDocShell (called
+      // from FontFaceSet::CheckFontLoad) dereferences a weak pointer, which is
+      // not allowed in parallel traversal.
+      IncrementGeneration();
+    }
 }
 
 void

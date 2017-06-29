@@ -52,10 +52,8 @@ VP9Benchmark::IsVP9DecodeFast()
   if (!sHasRunTest && (!hasPref || hadRecentUpdate != sBenchmarkVersionID)) {
     sHasRunTest = true;
 
-    RefPtr<WebMDemuxer> demuxer =
-      new WebMDemuxer(
-        new BufferMediaResource(sWebMSample, sizeof(sWebMSample), nullptr,
-                                MediaContainerType(MEDIAMIMETYPE("video/webm"))));
+    RefPtr<WebMDemuxer> demuxer = new WebMDemuxer(
+      new BufferMediaResource(sWebMSample, sizeof(sWebMSample), nullptr));
     RefPtr<Benchmark> estimiser =
       new Benchmark(demuxer,
                     {

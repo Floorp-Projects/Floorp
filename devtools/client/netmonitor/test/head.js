@@ -249,7 +249,7 @@ function initNetMonitor(url, enableCache) {
       store.dispatch(Actions.clearRequests());
     }
 
-    return {tab, monitor};
+    return {tab, monitor, toolbox};
   });
 }
 

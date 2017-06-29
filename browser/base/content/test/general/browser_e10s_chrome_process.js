@@ -15,12 +15,12 @@ function makeTest(name, startURL, startProcessIsRemote, endURL, endProcessIsRemo
     // Load the initial URL and make sure we are in the right initial process
     info("Loading initial URL");
     browser.loadURI(startURL);
-    await waitForDocLoadComplete();
+    await BrowserTestUtils.browserLoaded(browser);
 
     is(browser.currentURI.spec, startURL, "Shouldn't have been redirected");
     is(browser.isRemoteBrowser, startProcessIsRemote, "Should be displayed in the right process");
 
-    let docLoadedPromise = waitForDocLoadComplete();
+    let docLoadedPromise = BrowserTestUtils.browserLoaded(browser);
     let expectSyncChange = await transitionTask(browser, endURL);
     if (expectSyncChange) {
       is(browser.isRemoteBrowser, endProcessIsRemote, "Should have switched to the right process synchronously");
@@ -130,12 +130,10 @@ async function loadURI(browser, uri) {
 function clickLink(browser, uri) {
   info("Clicking link");
 
-  function frame_script(frameUri) {
+  ContentTask.spawn(browser, uri, function frame_script(frameUri) {
     let link = content.document.querySelector("a[href='" + frameUri + "']");
     link.click();
-  }
-
-  browser.messageManager.loadFrameScript("data:,(" + frame_script.toString() + ")(" + JSON.stringify(uri) + ");", false);
+  });
 
   return false;
 },

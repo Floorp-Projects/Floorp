@@ -1,0 +1,43 @@
+<!doctype html>
+<meta charset=utf-8>
+<script src='/resources/testharness.js'></script>
+<script src='/resources/testharnessreport.js'></script>
+<script src='../testcommon.js'></script>
+<div id='log'></div>
+<script type='text/javascript'>
+'use strict';
+
+test(function(t) {
+  var target = addDiv(t);
+  target.style.transform = 'translateX(100px)';
+  target.style.transition = 'all 10s linear -5s';
+  getComputedStyle(target).transform;
+
+  target.style.transform = 'rotate(90deg)';
+  var interpolated_matrix = 'matrix(' + Math.cos(Math.PI / 4) + ',' +
+                                        Math.sin(Math.PI / 4) + ',' +
+                                       -Math.sin(Math.PI / 4) + ',' +
+                                        Math.cos(Math.PI / 4) + ',' +
+                                        '50, 0)';
+  assert_matrix_equals(getComputedStyle(target).transform,
+                       interpolated_matrix,
+                       'the equivalent matrix of ' + 'interpolatematrix(' +
+                       'translateX(100px), rotate(90deg), 0.5)');
+
+  // Trigger a new transition from
+  // interpolatematrix(translateX(100px), rotate(90deg), 0.5) to none
+  // with 'all 10s linear -5s'.
+  target.style.transform = 'none';
+  interpolated_matrix = 'matrix(' + Math.cos(Math.PI / 8) + ',' +
+                                    Math.sin(Math.PI / 8) + ',' +
+                                   -Math.sin(Math.PI / 8) + ',' +
+                                    Math.cos(Math.PI / 8) + ',' +
+                                    '25, 0)';
+  assert_matrix_equals(getComputedStyle(target).transform,
+                       interpolated_matrix,
+                       'the expected matrix from interpolatematrix(' +
+                       'translateX(100px), rotate(90deg), 0.5) to none at 50%');
+}, 'Test interpolation from interpolatmatrix to none at 50%');
+
+</script>
+</html>

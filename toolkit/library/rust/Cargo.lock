@@ -1200,7 +1200,7 @@ dependencies = [
  "dwrote 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "euclid 0.15.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "gleam 0.4.5 (registry+https://github.com/rust-lang/crates.io-index)",
- "heapsize 0.3.8 (registry+https://github.com/rust-lang/crates.io-index)",
+ "heapsize 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde 1.0.8 (registry+https://github.com/rust-lang/crates.io-index)",
  "time 0.1.36 (registry+https://github.com/rust-lang/crates.io-index)",
 ]

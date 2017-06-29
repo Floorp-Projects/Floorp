@@ -75,7 +75,7 @@ function TextPropertyEditor(ruleEditor, property) {
   this._onSwatchCommit = this._onSwatchCommit.bind(this);
   this._onSwatchPreview = this._onSwatchPreview.bind(this);
   this._onSwatchRevert = this._onSwatchRevert.bind(this);
-  this._onValidate = this.ruleView.throttle(this._previewValue, 10, this);
+  this._onValidate = this.ruleView.debounce(this._previewValue, 10, this);
   this.update = this.update.bind(this);
   this.updatePropertyState = this.updatePropertyState.bind(this);
 
@@ -899,7 +899,7 @@ TextPropertyEditor.prototype = {
    *        True if we're reverting the previously previewed value
    */
   _previewValue: function (value, reverting = false) {
-    // Since function call is throttled, we need to make sure we are still
+    // Since function call is debounced, we need to make sure we are still
     // editing, and any selector modifications have been completed
     if (!reverting && (!this.editing || this.ruleEditor.isEditing)) {
       return;

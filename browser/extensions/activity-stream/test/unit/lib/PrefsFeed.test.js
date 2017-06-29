@@ -1,18 +1,20 @@
 const {PrefsFeed} = require("lib/PrefsFeed.jsm");
 const {actionTypes: at, actionCreators: ac} = require("common/Actions.jsm");
 
-const FAKE_PREFS = [{name: "foo", value: 1}, {name: "bar", value: 2}];
+const FAKE_PREFS = new Map([["foo", {value: 1}], ["bar", {value: 2}]]);
 
 describe("PrefsFeed", () => {
   let feed;
   beforeEach(() => {
-    feed = new PrefsFeed(FAKE_PREFS.map(p => p.name));
+    feed = new PrefsFeed(FAKE_PREFS);
     feed.store = {dispatch: sinon.spy()};
     feed._prefs = {
-      get: sinon.spy(item => FAKE_PREFS.filter(p => p.name === item)[0].value),
+      get: sinon.spy(item => FAKE_PREFS.get(item).value),
       set: sinon.spy(),
       observe: sinon.spy(),
-      ignore: sinon.spy()
+      observeBranch: sinon.spy(),
+      ignore: sinon.spy(),
+      ignoreBranch: sinon.spy()
     };
   });
   it("should set a pref when a SET_PREF action is received", () => {
@@ -25,27 +27,15 @@ describe("PrefsFeed", () => {
     assert.equal(feed.store.dispatch.firstCall.args[0].type, at.PREFS_INITIAL_VALUES);
     assert.deepEqual(feed.store.dispatch.firstCall.args[0].data, {foo: 1, bar: 2});
   });
-  it("should add one observer per pref on init", () => {
+  it("should add one branch observer on init", () => {
     feed.onAction({type: at.INIT});
-    FAKE_PREFS.forEach(pref => {
-      assert.calledWith(feed._prefs.observe, pref.name);
-      assert.isTrue(feed._observers.has(pref.name));
-    });
+    assert.calledOnce(feed._prefs.observeBranch);
+    assert.calledWith(feed._prefs.observeBranch, feed);
   });
-  it("should call onPrefChanged when an observer is called", () => {
-    sinon.stub(feed, "onPrefChanged");
-    feed.onAction({type: at.INIT});
-    const handlerForFoo = feed._observers.get("foo");
-
-    handlerForFoo(true);
-
-    assert.calledWith(feed.onPrefChanged, "foo", true);
-  });
-  it("should remove all observers on uninit", () => {
+  it("should remove the branch observer on uninit", () => {
     feed.onAction({type: at.UNINIT});
-    FAKE_PREFS.forEach(pref => {
-      assert.calledWith(feed._prefs.ignore, pref.name);
-    });
+    assert.calledOnce(feed._prefs.ignoreBranch);
+    assert.calledWith(feed._prefs.ignoreBranch, feed);
   });
   it("should send a PREF_CHANGED action when onPrefChanged is called", () => {
     feed.onPrefChanged("foo", 2);

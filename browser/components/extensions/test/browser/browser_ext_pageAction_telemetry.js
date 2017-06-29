@@ -4,6 +4,10 @@
 
 const HISTOGRAM = "WEBEXT_PAGEACTION_POPUP_OPEN_MS";
 
+function histogramCountsSum(histogram) {
+  return histogram.snapshot().counts.reduce((a, b) => a + b, 0);
+}
+
 add_task(async function testPageActionTelemetry() {
   let extensionOptions = {
     manifest: {
@@ -31,43 +35,37 @@ add_task(async function testPageActionTelemetry() {
 
   let histogram = Services.telemetry.getHistogramById(HISTOGRAM);
   histogram.clear();
-  is(histogram.snapshot().sum, 0,
-        `No data recorded for histogram: ${HISTOGRAM}.`);
+  is(histogramCountsSum(histogram), 0,
+     `No data recorded for histogram: ${HISTOGRAM}.`);
 
   await extension1.startup();
   await extension1.awaitMessage("action-shown");
   await extension2.startup();
   await extension2.awaitMessage("action-shown");
-  is(histogram.snapshot().sum, 0,
-        `No data recorded for histogram after PageAction shown: ${HISTOGRAM}.`);
+  is(histogramCountsSum(histogram), 0,
+     `No data recorded for histogram after PageAction shown: ${HISTOGRAM}.`);
 
   clickPageAction(extension1, window);
   await awaitExtensionPanel(extension1);
-  let sumOld = histogram.snapshot().sum;
-  ok(sumOld > 0,
+  is(histogramCountsSum(histogram), 1,
      `Data recorded for first extension for histogram: ${HISTOGRAM}.`);
   await closePageAction(extension1, window);
 
   clickPageAction(extension2, window);
   await awaitExtensionPanel(extension2);
-  let sumNew = histogram.snapshot().sum;
-  ok(sumNew > sumOld,
+  is(histogramCountsSum(histogram), 2,
      `Data recorded for second extension for histogram: ${HISTOGRAM}.`);
-  sumOld = sumNew;
   await closePageAction(extension2, window);
 
   clickPageAction(extension2, window);
   await awaitExtensionPanel(extension2);
-  sumNew = histogram.snapshot().sum;
-  ok(sumNew > sumOld,
+  is(histogramCountsSum(histogram), 3,
      `Data recorded for second opening of popup for histogram: ${HISTOGRAM}.`);
-  sumOld = sumNew;
   await closePageAction(extension2, window);
 
   clickPageAction(extension1, window);
   await awaitExtensionPanel(extension1);
-  sumNew = histogram.snapshot().sum;
-  ok(sumNew > sumOld,
+  is(histogramCountsSum(histogram), 4,
      `Data recorded for second opening of popup for histogram: ${HISTOGRAM}.`);
 
   await extension1.unload();

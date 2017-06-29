@@ -148,13 +148,15 @@ nsAppShell::Init()
     g_type_init();
 
 #ifdef MOZ_ENABLE_DBUS
-    nsCOMPtr<nsIPowerManagerService> powerManagerService =
-      do_GetService(POWERMANAGERSERVICE_CONTRACTID);
+    if (XRE_IsParentProcess()) {
+        nsCOMPtr<nsIPowerManagerService> powerManagerService =
+            do_GetService(POWERMANAGERSERVICE_CONTRACTID);
 
-    if (powerManagerService) {
-        powerManagerService->AddWakeLockListener(WakeLockListener::GetSingleton());
-    } else {
-        NS_WARNING("Failed to retrieve PowerManagerService, wakelocks will be broken!");
+        if (powerManagerService) {
+            powerManagerService->AddWakeLockListener(WakeLockListener::GetSingleton());
+        } else {
+            NS_WARNING("Failed to retrieve PowerManagerService, wakelocks will be broken!");
+        }
     }
 #endif
 

@@ -102,9 +102,11 @@ SERVO_BINDING_FUNC(Servo_StyleSet_ResolveForDeclarations,
                    RawServoDeclarationBlockBorrowed declarations)
 SERVO_BINDING_FUNC(Servo_StyleSet_MightHaveAttributeDependency, bool,
                    RawServoStyleSetBorrowed set,
+                   RawGeckoElementBorrowed element,
                    nsIAtom* local_name)
 SERVO_BINDING_FUNC(Servo_StyleSet_HasStateDependency, bool,
                    RawServoStyleSetBorrowed set,
+                   RawGeckoElementBorrowed element,
                    uint64_t state)
 
 // CSSRuleList
@@ -553,9 +555,16 @@ SERVO_BINDING_FUNC(Servo_SerializeFontValueForCanvas, void,
                    nsAString* buffer)
 
 // Get custom property value.
-SERVO_BINDING_FUNC(Servo_GetCustomProperty, bool,
+SERVO_BINDING_FUNC(Servo_GetCustomPropertyValue, bool,
                    ServoComputedValuesBorrowed computed_values,
                    const nsAString* name, nsAString* value)
+
+SERVO_BINDING_FUNC(Servo_GetCustomPropertiesCount, uint32_t,
+                   ServoComputedValuesBorrowed computed_values)
+
+SERVO_BINDING_FUNC(Servo_GetCustomPropertyNameAt, bool,
+                   ServoComputedValuesBorrowed, uint32_t index,
+                   nsAString* name)
 
 // Style-struct management.
 #define STYLE_STRUCT(name, checkdata_cb)                            \

@@ -4,17 +4,18 @@
 "use strict";
 
 const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
-Cu.importGlobalProperties(["fetch"]);
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.importGlobalProperties(["fetch"]);
 
 XPCOMUtils.defineLazyModuleGetter(this, "Preferences",
   "resource://gre/modules/Preferences.jsm");
-
 XPCOMUtils.defineLazyModuleGetter(this, "Services",
   "resource://gre/modules/Services.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "setTimeout",
+  "resource://gre/modules/Timer.jsm");
 
 const ACTIVITY_STREAM_ENABLED_PREF = "browser.newtabpage.activity-stream.enabled";
-const BROWSER_READY_NOTIFICATION = "browser-delayed-startup-finished";
+const BROWSER_READY_NOTIFICATION = "sessionstore-windows-restored";
 const REASON_SHUTDOWN_ON_PREF_CHANGE = "PREF_OFF";
 const REASON_STARTUP_ON_PREF_CHANGE = "PREF_ON";
 const RESOURCE_BASE = "resource://activity-stream";
@@ -62,7 +63,11 @@ function init(reason) {
   }
   const options = Object.assign({}, startupData || {}, ACTIVITY_STREAM_OPTIONS);
   activityStream = new ActivityStream(options);
-  activityStream.init(reason);
+  try {
+    activityStream.init(reason);
+  } catch (e) {
+    Cu.reportError(e);
+  }
 }
 
 /**
@@ -113,7 +118,8 @@ function observe(subject, topic, data) {
   switch (topic) {
     case BROWSER_READY_NOTIFICATION:
       Services.obs.removeObserver(observe, BROWSER_READY_NOTIFICATION);
-      onBrowserReady();
+      // Avoid running synchronously during this event that's used for timing
+      setTimeout(() => onBrowserReady());
       break;
   }
 }

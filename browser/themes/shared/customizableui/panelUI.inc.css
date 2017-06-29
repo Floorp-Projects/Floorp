@@ -26,6 +26,11 @@
   --appmenu-yellow-warning-color: #FFEFBF;
   --appmenu-yellow-warning-hover-color: #FFE8A2;
   --appmenu-yellow-warning-active-color: #FFE38F;
+  --panel-palette-icon-size: 32px;
+}
+
+:root[photon-structure] {
+  --panel-palette-icon-size: 16px;
 }
 
 #PanelUI-popup #PanelUI-contents:empty {
@@ -390,7 +395,7 @@ photonpanelmultiview panelview[title] {
   margin: 0;
 }
 
-toolbaritem[cui-areatype="menu-panel"][sdkstylewidget="true"]:not(.panel-wide-item),
+:root:not([photon-structure]) toolbaritem[cui-areatype="menu-panel"][sdkstylewidget="true"]:not(.panel-wide-item),
 .panelUI-grid .toolbarbutton-1,
 .panel-customization-placeholder-child {
   -moz-appearance: none;
@@ -402,22 +407,19 @@ toolbaritem[cui-areatype="menu-panel"][sdkstylewidget="true"]:not(.panel-wide-it
 /* In order to have button labels constrained appropriately, items inside the toolbarpaletteitem
  * should have a min-width set so they abide by the width set above (which they do outside of
  * customize mode because they're in a flexed container) */
-toolbarpaletteitem[place="panel"]:not([haswideitem=true]) > .toolbarbutton-1 {
+:root:not([photon-structure]) toolbarpaletteitem[place="panel"]:not([haswideitem=true]) > .toolbarbutton-1 {
   min-width: 0.01px;
 }
 
 /* Help SDK buttons fit in. */
 toolbarpaletteitem[place="palette"] > toolbarbutton[constrain-size="true"] > .toolbarbutton-icon,
 toolbarpaletteitem[place="palette"] > toolbarbutton[constrain-size="true"] > .toolbarbutton-badge-stack > .toolbarbutton-icon,
+toolbarpaletteitem[place="palette"] > toolbaritem[sdkstylewidget="true"] > .toolbarbutton-1 > .toolbarbutton-icon,
+toolbarpaletteitem[place="panel"] > toolbaritem[sdkstylewidget="true"] > .toolbarbutton-1 > .toolbarbutton-icon,
 toolbarbutton[constrain-size="true"][cui-areatype="menu-panel"] > .toolbarbutton-icon,
 toolbarbutton[constrain-size="true"][cui-areatype="menu-panel"] > .toolbarbutton-badge-stack > .toolbarbutton-icon {
-  height: 32px;
-  width: 32px;
-}
-
-toolbarpaletteitem:-moz-any([place="palette"], [place="panel"]) > toolbaritem[sdkstylewidget="true"] > .toolbarbutton-1 > .toolbarbutton-icon {
-  width: 32px;
-  height: 32px;
+  height: @panelPaletteIconSize@;
+  width: @panelPaletteIconSize@;
 }
 
 .customization-palette .toolbarbutton-1 {
@@ -535,10 +537,21 @@ toolbaritem[cui-areatype="menu-panel"][sdkstylewidget="true"]:not(.panel-wide-it
 .panelUI-grid #bookmarks-toolbar-placeholder > .toolbarbutton-icon,
 .customization-palette #bookmarks-toolbar-placeholder > .toolbarbutton-icon,
 .panel-customization-placeholder-child > .toolbarbutton-icon {
-  width: 32px;
-  height: 32px;
-  min-width: 32px;
-  min-height: 32px;
+  width: @panelPaletteIconSize@;
+  height: @panelPaletteIconSize@;
+  min-width: @panelPaletteIconSize@;
+  min-height: @panelPaletteIconSize@;
+}
+
+.panelUI-grid .toolbarbutton-1 > .toolbarbutton-menubutton-button > .toolbarbutton-icon,
+.panelUI-grid .toolbarbutton-1 > .toolbarbutton-icon,
+.panelUI-grid .toolbarbutton-1 > .toolbarbutton-badge-stack,
+:root:not([photon-structure]) .customization-palette .toolbarbutton-1 > .toolbarbutton-menubutton-button > .toolbarbutton-icon,
+:root:not([photon-structure]) .customization-palette .toolbarbutton-1 > .toolbarbutton-icon,
+:root:not([photon-structure]) .customization-palette .toolbarbutton-1 > .toolbarbutton-badge-stack,
+.panelUI-grid #bookmarks-toolbar-placeholder > .toolbarbutton-icon,
+:root:not([photon-structure]) .customization-palette #bookmarks-toolbar-placeholder > .toolbarbutton-icon,
+.panel-customization-placeholder-child > .toolbarbutton-icon {
   /* Explanation for the below formula (A / B - C)
      A
        Each button is @menuPanelButtonWidth@ wide
@@ -557,17 +570,22 @@ toolbaritem[cui-areatype="menu-panel"][sdkstylewidget="true"]:not(.panel-wide-it
 /* above we treat the container as the icon for the margins, that is so the
 /* badge itself is positioned correctly. Here we make sure that the icon itself
 /* has the minimum size we want, but no padding/margin. */
-.panelUI-grid .toolbarbutton-1 > .toolbarbutton-badge-stack > .toolbarbutton-icon,
-.customization-palette .toolbarbutton-1 > .toolbarbutton-badge-stack > .toolbarbutton-icon {
-  width: 32px;
-  height: 32px;
-  min-width: 32px;
-  min-height: 32px;
+.customization-palette .toolbarbutton-1 > .toolbarbutton-badge-stack > .toolbarbutton-icon,
+.panelUI-grid .toolbarbutton-1 > .toolbarbutton-badge-stack > .toolbarbutton-icon {
+  width: @panelPaletteIconSize@;
+  height: @panelPaletteIconSize@;
+  min-width: @panelPaletteIconSize@;
+  min-height: @panelPaletteIconSize@;
   margin: 0;
   padding: 0;
 }
 
-toolbarpaletteitem[place="palette"] > toolbaritem > toolbarbutton {
+:root[photon-structure] .customization-palette .toolbarbutton-1 {
+  padding: 12px 0 9px;
+  margin: 0;
+}
+
+:root[photon-structure] toolbarpaletteitem[place="palette"] > toolbaritem > toolbarbutton {
   -moz-box-flex: 1;
 }
 
@@ -1151,7 +1169,7 @@ panelview .toolbarbutton-1,
 .widget-overflow-list .toolbarbutton-1,
 .panelUI-grid .toolbarbutton-1 > .toolbarbutton-menubutton-button,
 .share-provider-button,
-.toolbaritem-combined-buttons@inAnyPanel@ > toolbarbutton {
+:root:not([photon-structure]) .toolbaritem-combined-buttons@inAnyPanel@ > toolbarbutton {
   -moz-appearance: none;
   padding: 0 6px;
   background-color: transparent;
@@ -1164,7 +1182,7 @@ panelview .toolbarbutton-1,
 .subviewbutton,
 .widget-overflow-list .toolbarbutton-1,
 .share-provider-button,
-.toolbaritem-combined-buttons@inAnyPanel@ > toolbarbutton {
+:root:not([photon-structure]) .toolbaritem-combined-buttons@inAnyPanel@ > toolbarbutton {
   border-width: 1px;
 }
 
@@ -1597,7 +1615,7 @@ toolbarpaletteitem[haswideitem][place="panel"] + toolbarpaletteitem[haswideitem]
   margin-top: -1px;
 }
 
-.toolbaritem-combined-buttons@inAnyPanel@ > toolbarbutton {
+:root:not([photon-structure]) .toolbaritem-combined-buttons@inAnyPanel@ > toolbarbutton {
   border: 0;
   padding: .5em;
   margin: 0;
@@ -1611,8 +1629,8 @@ toolbarpaletteitem[haswideitem][place="panel"] + toolbarpaletteitem[haswideitem]
   -moz-box-orient: horizontal;
 }
 
-#edit-controls@inAnyPanel@ > #copy-button,
-#zoom-controls@inAnyPanel@ > #zoom-reset-button {
+:root:not([photon-structure]) #edit-controls@inAnyPanel@ > #copy-button,
+:root:not([photon-structure]) #zoom-controls@inAnyPanel@ > #zoom-reset-button {
   /* reduce the width with 2px for this button to compensate for two separators
      of 1px. */
   min-width: calc(@menuPanelButtonWidth@ - 2px);

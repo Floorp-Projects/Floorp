@@ -2,12 +2,11 @@ const SAVE_PER_SITE_PREF = "browser.download.lastDir.savePerSite";
 
 function test_deleted_iframe(perSitePref, windowOptions = {}) {
   return async function() {
-    Services.prefs.setBoolPref(SAVE_PER_SITE_PREF, perSitePref);
+    await SpecialPowers.pushPrefEnv({ set: [[ SAVE_PER_SITE_PREF, perSitePref ]] });
     let {DownloadLastDir} = Cu.import("resource://gre/modules/DownloadLastDir.jsm", {});
 
-    let win = await promiseOpenAndLoadWindow(windowOptions);
-    let tab = win.gBrowser.addTab();
-    await promiseTabLoadEvent(tab, "about:mozilla");
+    let win = await BrowserTestUtils.openNewBrowserWindow(windowOptions);
+    let tab = await BrowserTestUtils.openNewForegroundTab(win.gBrowser, "about:mozilla");
 
     let doc = tab.linkedBrowser.contentDocument;
     let iframe = doc.createElement("iframe");
@@ -50,8 +49,7 @@ function test_deleted_iframe(perSitePref, windowOptions = {}) {
       Cu.reportError(ex);
     }
 
-    await promiseWindowClosed(win);
-    Services.prefs.clearUserPref(SAVE_PER_SITE_PREF);
+    await BrowserTestUtils.closeWindow(win);
   };
 }
 

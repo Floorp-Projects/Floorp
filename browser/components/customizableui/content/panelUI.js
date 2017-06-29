@@ -121,9 +121,11 @@ const PanelUI = {
       this.overflowFixedList.previousSibling.hidden = false;
       CustomizableUI.registerMenuPanel(this.overflowFixedList, CustomizableUI.AREA_FIXED_OVERFLOW_PANEL);
       this.navbar.setAttribute("photon-structure", "true");
+      document.documentElement.setAttribute("photon-structure", "true");
       this.updateOverflowStatus();
     } else {
       this.navbar.removeAttribute("photon-structure");
+      document.documentElement.removeAttribute("photon-structure");
     }
   },
 
