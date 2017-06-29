@@ -182,7 +182,7 @@ private:
       : mWindowID(aWindowID)
       , mIsAudioCaptured(false)
       , mOwningAudioFocus(!AudioChannelService::IsEnableAudioCompeting())
-      , mShouldSendBlockStopEvent(false)
+      , mShouldSendActiveMediaBlockStopEvent(false)
     {}
 
     void AudioFocusChanged(AudioChannelAgent* aNewPlayingAgent);
@@ -207,9 +207,10 @@ private:
     // lose audio focus when other windows starts playing.
     bool mOwningAudioFocus;
 
-    // If we've dispatched "blockStart" event, we must dispatch another event
-    // "blockStop" when the window is resumed from suspend-block.
-    bool mShouldSendBlockStopEvent;
+    // If we've dispatched "activeMediaBlockStart" event, we must dispatch
+    // another event "activeMediablockStop" when the window is resumed from
+    // suspend-block.
+    bool mShouldSendActiveMediaBlockStopEvent;
   private:
     void AudioCapturedChanged(AudioChannelAgent* aAgent,
                               AudioCaptureState aCapture);
