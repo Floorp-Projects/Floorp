@@ -8199,10 +8199,11 @@ var RestoreLastSessionObserver = {
     if (SessionStore.canRestoreLastSession &&
         !PrivateBrowsingUtils.isWindowPrivate(window)) {
       if (Services.prefs.getBoolPref("browser.tabs.restorebutton")) {
-        let {restoreTabsButton} = gBrowser.tabContainer;
+        let {restoreTabsButton, restoreTabsButtonWrapperWidth} = gBrowser.tabContainer;
         let restoreTabsButtonWrapper = restoreTabsButton.parentNode;
         restoreTabsButtonWrapper.setAttribute("session-exists", "true");
         gBrowser.tabContainer.updateSessionRestoreVisibility();
+        restoreTabsButton.style.maxWidth = `${restoreTabsButtonWrapperWidth}px`;
         gBrowser.tabContainer.addEventListener("TabOpen", this);
       }
       Services.obs.addObserver(this, "sessionstore-last-session-cleared", true);
@@ -8219,17 +8220,16 @@ var RestoreLastSessionObserver = {
   },
 
   removeRestoreButton() {
-    let {restoreTabsButton, restoreTabsButtonWrapperWidth} = gBrowser.tabContainer;
+    let {restoreTabsButton} = gBrowser.tabContainer;
     let restoreTabsButtonWrapper = restoreTabsButton.parentNode;
-    restoreTabsButtonWrapper.removeAttribute("session-exists");
     gBrowser.tabContainer.addEventListener("transitionend", function maxWidthTransitionHandler(e) {
-      if (e.propertyName == "max-width") {
+      if (e.target == gBrowser.tabContainer && e.propertyName == "max-width") {
         gBrowser.tabContainer.updateSessionRestoreVisibility();
         gBrowser.tabContainer.removeEventListener("transitionend", maxWidthTransitionHandler);
       }
     });
-    restoreTabsButton.style.maxWidth = `${restoreTabsButtonWrapperWidth}px`;
-    requestAnimationFrame(() => restoreTabsButton.style.maxWidth = 0);
+    restoreTabsButtonWrapper.removeAttribute("session-exists");
+    restoreTabsButton.style.maxWidth = 0;
     gBrowser.tabContainer.removeEventListener("TabOpen", this);
   },
 
