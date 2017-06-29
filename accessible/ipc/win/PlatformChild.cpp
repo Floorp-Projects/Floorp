@@ -64,13 +64,9 @@ PlatformChild::PlatformChild()
   }
 #endif
 
-  mozilla::mscom::ActivationContext actCtx(actCtxResourceId);
-
-  mActCtxMain.reset(new mozilla::mscom::ActivationContextRegion(actCtx));
-
   mozilla::mscom::MTADeletePtr<mozilla::mscom::ActivationContextRegion> tmpActCtxMTA;
-  mozilla::mscom::EnsureMTA([&actCtx, &tmpActCtxMTA]() -> void {
-    tmpActCtxMTA.reset(new mozilla::mscom::ActivationContextRegion(Move(actCtx)));
+  mozilla::mscom::EnsureMTA([actCtxResourceId, &tmpActCtxMTA]() -> void {
+    tmpActCtxMTA.reset(new mozilla::mscom::ActivationContextRegion(actCtxResourceId));
   });
   mActCtxMTA = Move(tmpActCtxMTA);
 
