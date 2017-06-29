@@ -1571,8 +1571,7 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 
 %ifdef MOZ_PHOTON_THEME
 :root:-moz-any([inFullscreen], [tabsintitlebar]) #TabsToolbar:not(:-moz-lwtheme) {
-  -moz-appearance: none;
-  background-color: #232323;
+  -moz-appearance: -moz-mac-vibrancy-dark;
   color: hsl(240, 9%, 98%);
   text-shadow: none;
 }
