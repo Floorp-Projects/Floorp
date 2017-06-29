@@ -13,15 +13,12 @@ import org.mozilla.gecko.util.GeckoBundle;
 
 import org.mozilla.gecko.icons.storage.DiskStorage;
 
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.Set;
 
 import android.content.Context;
 import android.util.AttributeSet;
-import android.util.Log;
 
-import static org.mozilla.gecko.mma.MmaDelegate.CLEAR_PRIVATE_DATA;
+import static org.mozilla.gecko.mma.MmaDelegate.CLEARED_PRIVATE_DATA;
 
 
 class PrivateDataPreference extends MultiPrefMultiChoicePreference {
@@ -62,6 +59,6 @@ class PrivateDataPreference extends MultiPrefMultiChoicePreference {
 
         // clear private data in gecko
         EventDispatcher.getInstance().dispatch("Sanitize:ClearData", data);
-        MmaDelegate.track(CLEAR_PRIVATE_DATA);
+        MmaDelegate.track(CLEARED_PRIVATE_DATA);
     }
 }
