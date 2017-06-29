@@ -205,7 +205,7 @@ this.browserAction = class extends ExtensionAPI {
           // This isn't not a hack, but it seems to provide the correct behavior
           // with the fewest complications.
           event.preventDefault();
-          this.emit("click", tabbrowser.selectedBrowser);
+          this.emit("click");
         }
       },
     });
@@ -566,10 +566,9 @@ this.browserAction = class extends ExtensionAPI {
 
     return {
       browserAction: {
-        onClicked: new InputEventManager(context, "browserAction.onClicked", fire => {
-          let listener = (event, browser) => {
-            context.withPendingBrowser(browser, () =>
-              fire.sync(tabManager.convert(tabTracker.activeTab)));
+        onClicked: new EventManager(context, "browserAction.onClicked", fire => {
+          let listener = () => {
+            fire.async(tabManager.convert(tabTracker.activeTab));
           };
           browserAction.on("click", listener);
           return () => {
