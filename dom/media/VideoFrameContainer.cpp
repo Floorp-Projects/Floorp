@@ -50,7 +50,6 @@ VideoFrameContainer::VideoFrameContainer(
   , mMutex("nsVideoFrameContainer")
   , mBlackImage(nullptr)
   , mFrameID(0)
-  , mIntrinsicSizeChanged(false)
   , mPendingPrincipalHandle(PRINCIPAL_HANDLE_NONE)
   , mFrameIDForPendingPrincipalHandle(0)
   , mMainThread(aElement->AbstractMainThread())
@@ -243,7 +242,12 @@ void VideoFrameContainer::SetCurrentFramesLocked(const gfx::IntSize& aIntrinsicS
 
   if (aIntrinsicSize != mIntrinsicSize) {
     mIntrinsicSize = aIntrinsicSize;
-    mIntrinsicSizeChanged = true;
+    RefPtr<VideoFrameContainer> self = this;
+    mMainThread->Dispatch(NS_NewRunnableFunction(
+      "IntrinsicSizeChanged", [this, self, aIntrinsicSize]() {
+        mMainThreadState.mIntrinsicSize = aIntrinsicSize;
+        mMainThreadState.mIntrinsicSizeChanged = true;
+      }));
   }
 
   gfx::IntSize oldFrameSize = mImageContainer->GetCurrentSize();
@@ -361,26 +365,14 @@ void VideoFrameContainer::InvalidateWithFlags(uint32_t aFlags)
   bool invalidateFrame = mMainThreadState.mImageSizeChanged;
   mMainThreadState.mImageSizeChanged = false;
 
-  {
-    Maybe<AutoTimer<Telemetry::VFC_INVALIDATE_LOCK_WAIT_MS>> lockWait;
-    lockWait.emplace();
-
-    MutexAutoLock lock(mMutex);
-
-    lockWait.reset();
-    AutoTimer<Telemetry::VFC_INVALIDATE_LOCK_HOLD_MS> lockHold;
-
-    if (mIntrinsicSizeChanged) {
-      mElement->UpdateMediaSize(mIntrinsicSize);
-      mIntrinsicSizeChanged = false;
-
-      if (frame) {
-        nsPresContext* presContext = frame->PresContext();
-        nsIPresShell *presShell = presContext->PresShell();
-        presShell->FrameNeedsReflow(frame,
-                                    nsIPresShell::eStyleChange,
-                                    NS_FRAME_IS_DIRTY);
-      }
+  if (mMainThreadState.mIntrinsicSizeChanged) {
+    mElement->UpdateMediaSize(mMainThreadState.mIntrinsicSize);
+    mMainThreadState.mIntrinsicSizeChanged = false;
+    if (frame) {
+      nsPresContext* presContext = frame->PresContext();
+      nsIPresShell* presShell = presContext->PresShell();
+      presShell->FrameNeedsReflow(
+        frame, nsIPresShell::eStyleChange, NS_FRAME_IS_DIRTY);
     }
   }
 
