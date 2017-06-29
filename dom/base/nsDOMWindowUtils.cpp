@@ -4442,6 +4442,26 @@ nsDOMWindowUtils::GetDirectionFromText(const nsAString& aString, int32_t* aRetva
 }
 
 NS_IMETHODIMP
+nsDOMWindowUtils::EnsureDirtyRootFrame()
+{
+  nsIDocument* doc = GetDocument();
+  nsIPresShell* presShell = doc ? doc->GetShell() : nullptr;
+
+  if (!presShell) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsIFrame* frame = presShell->GetRootFrame();
+  if (!frame) {
+    return NS_ERROR_FAILURE;
+  }
+
+  presShell->FrameNeedsReflow(frame, nsIPresShell::eStyleChange,
+                              NS_FRAME_IS_DIRTY);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsDOMWindowUtils::GetIsStyledByServo(bool* aStyledByServo)
 {
   nsIDocument* doc = GetDocument();
