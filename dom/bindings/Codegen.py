@@ -2569,7 +2569,7 @@ class MethodDefiner(PropertyDefiner):
                         "flags": "0",
                         "condition": MemberCondition()
                     })
-            else:
+            elif not unforgeable:
                 for m in clearableCachedAttrs(descriptor):
                     attrName = MakeNativeName(m.identifier.name)
                     self.chrome.append({
