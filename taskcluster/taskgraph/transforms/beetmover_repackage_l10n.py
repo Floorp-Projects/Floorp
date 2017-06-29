@@ -20,7 +20,8 @@ def make_beetmover_description(config, jobs):
 
         locale = dep_job.attributes.get('locale')
         if not locale:
-            return
+            yield job
+            continue
 
         label = job.get('label',
                         "beetmover-{}-{}".format(locale, dep_job.label))
