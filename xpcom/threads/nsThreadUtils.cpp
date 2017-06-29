@@ -335,6 +335,21 @@ public:
                                         "IdleRunnableWrapper::SetTimer");
     }
   }
+
+  NS_IMETHOD GetName(nsACString& aName) override
+  {
+    aName.AssignLiteral("IdleRunnableWrapper");
+    if (nsCOMPtr<nsINamed> named = do_QueryInterface(mRunnable)) {
+      nsAutoCString name;
+      named->GetName(name);
+      if (!name.IsEmpty()) {
+        aName.AppendLiteral(" for ");
+        aName.Append(name);
+      }
+    }
+    return NS_OK;
+  }
+
 private:
   ~IdleRunnableWrapper()
   {
