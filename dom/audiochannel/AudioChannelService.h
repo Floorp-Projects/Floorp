@@ -146,8 +146,6 @@ public:
   static AudioChannel GetAudioChannel(const nsAString& aString);
   static AudioChannel GetDefaultAudioChannel();
 
-  void NotifyCreatedNewAgent(AudioChannelAgent* aAgent);
-
   void NotifyMediaResumedFromBlock(nsPIDOMWindowOuter* aWindow);
 
 private:
