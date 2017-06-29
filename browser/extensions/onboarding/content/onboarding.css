@@ -13,7 +13,7 @@
   bottom: 0;
   /* Ensuring we can put the overlay over elements using
      z-index on original page */
-  z-index: 999;
+  z-index: 20999;
   color: #4d4d4d;
   background: rgb(54, 57, 89, 0.8); /* #363959, 0.8 opacity */
   display: none;
@@ -338,7 +338,7 @@
 /* Tour Notifications */
 #onboarding-notification-bar {
   position: fixed;
-  z-index: 998; /* We want this always under #onboarding-overlay */
+  z-index: 20998; /* We want this always under #onboarding-overlay */
   left: 0;
   bottom: 0;
   width: 100%;
