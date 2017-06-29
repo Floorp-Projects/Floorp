@@ -9,7 +9,6 @@
 
 #include "mozilla/DOMEventTargetHelper.h"
 #include "mozilla/dom/NetworkInformationBinding.h"
-#include "nsContentUtils.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsINetworkProperties.h"
 
@@ -53,11 +52,7 @@ public:
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aGivenProto) override;
 
-  ConnectionType Type() const
-  {
-    return nsContentUtils::ShouldResistFingerprinting() ?
-             static_cast<ConnectionType>(ConnectionType::Unknown) : mType;
-  }
+  ConnectionType Type() const { return mType; }
 
   IMPL_EVENT_HANDLER(typechange)
 
