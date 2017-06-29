@@ -78,6 +78,68 @@ s! {
         __private: [u64; 12],
     }
 
+    pub struct user_fpregs_struct {
+        pub cwd: ::c_ushort,
+        pub swd: ::c_ushort,
+        pub ftw: ::c_ushort,
+        pub fop: ::c_ushort,
+        pub rip: ::c_ulonglong,
+        pub rdp: ::c_ulonglong,
+        pub mxcsr: ::c_uint,
+        pub mxcr_mask: ::c_uint,
+        pub st_space: [::c_uint; 32],
+        pub xmm_space: [::c_uint; 64],
+        padding: [::c_uint; 24],
+    }
+
+    pub struct user_regs_struct {
+        pub r15: ::c_ulonglong,
+        pub r14: ::c_ulonglong,
+        pub r13: ::c_ulonglong,
+        pub r12: ::c_ulonglong,
+        pub rbp: ::c_ulonglong,
+        pub rbx: ::c_ulonglong,
+        pub r11: ::c_ulonglong,
+        pub r10: ::c_ulonglong,
+        pub r9: ::c_ulonglong,
+        pub r8: ::c_ulonglong,
+        pub rax: ::c_ulonglong,
+        pub rcx: ::c_ulonglong,
+        pub rdx: ::c_ulonglong,
+        pub rsi: ::c_ulonglong,
+        pub rdi: ::c_ulonglong,
+        pub orig_rax: ::c_ulonglong,
+        pub rip: ::c_ulonglong,
+        pub cs: ::c_ulonglong,
+        pub eflags: ::c_ulonglong,
+        pub rsp: ::c_ulonglong,
+        pub ss: ::c_ulonglong,
+        pub fs_base: ::c_ulonglong,
+        pub gs_base: ::c_ulonglong,
+        pub ds: ::c_ulonglong,
+        pub es: ::c_ulonglong,
+        pub fs: ::c_ulonglong,
+        pub gs: ::c_ulonglong,
+    }
+
+    pub struct user {
+        pub regs: user_regs_struct,
+        pub u_fpvalid: ::c_int,
+        pub i387: user_fpregs_struct,
+        pub u_tsize: ::c_ulonglong,
+        pub u_dsize: ::c_ulonglong,
+        pub u_ssize: ::c_ulonglong,
+        pub start_code: ::c_ulonglong,
+        pub start_stack: ::c_ulonglong,
+        pub signal: ::c_longlong,
+        __reserved: ::c_int,
+        pub u_ar0: *mut user_regs_struct,
+        pub u_fpstate: *mut user_fpregs_struct,
+        pub magic: ::c_ulonglong,
+        pub u_comm: [::c_char; 32],
+        pub u_debugreg: [::c_ulonglong; 8],
+    }
+
     pub struct mcontext_t {
         pub gregs: [greg_t; 23],
         pub fpregs: *mut _libc_fpstate,
@@ -227,11 +289,54 @@ pub const SO_DONTROUTE: ::c_int = 5;
 pub const SO_BROADCAST: ::c_int = 6;
 pub const SO_SNDBUF: ::c_int = 7;
 pub const SO_RCVBUF: ::c_int = 8;
+pub const SO_SNDBUFFORCE: ::c_int = 32;
+pub const SO_RCVBUFFORCE: ::c_int = 33;
 pub const SO_KEEPALIVE: ::c_int = 9;
 pub const SO_OOBINLINE: ::c_int = 10;
+pub const SO_NO_CHECK: ::c_int = 11;
+pub const SO_PRIORITY: ::c_int = 12;
 pub const SO_LINGER: ::c_int = 13;
+pub const SO_BSDCOMPAT: ::c_int = 14;
 pub const SO_REUSEPORT: ::c_int = 15;
+pub const SO_PASSCRED: ::c_int = 16;
+pub const SO_PEERCRED: ::c_int = 17;
+pub const SO_RCVLOWAT: ::c_int = 18;
+pub const SO_SNDLOWAT: ::c_int = 19;
+pub const SO_RCVTIMEO: ::c_int = 20;
+pub const SO_SNDTIMEO: ::c_int = 21;
+pub const SO_SECURITY_AUTHENTICATION: ::c_int = 22;
+pub const SO_SECURITY_ENCRYPTION_TRANSPORT: ::c_int = 23;
+pub const SO_SECURITY_ENCRYPTION_NETWORK: ::c_int = 24;
+pub const SO_BINDTODEVICE: ::c_int = 25;
+pub const SO_ATTACH_FILTER: ::c_int = 26;
+pub const SO_DETACH_FILTER: ::c_int = 27;
+pub const SO_GET_FILTER: ::c_int = SO_ATTACH_FILTER;
+pub const SO_PEERNAME: ::c_int = 28;
+pub const SO_TIMESTAMP: ::c_int = 29;
+pub const SCM_TIMESTAMP: ::c_int = SO_TIMESTAMP;
 pub const SO_ACCEPTCONN: ::c_int = 30;
+pub const SO_PEERSEC: ::c_int = 31;
+pub const SO_PASSSEC: ::c_int = 34;
+pub const SO_TIMESTAMPNS: ::c_int = 35;
+pub const SCM_TIMESTAMPNS: ::c_int = SO_TIMESTAMPNS;
+pub const SO_MARK: ::c_int = 36;
+pub const SO_TIMESTAMPING: ::c_int = 37;
+pub const SCM_TIMESTAMPING: ::c_int = SO_TIMESTAMPING;
+pub const SO_PROTOCOL: ::c_int = 38;
+pub const SO_DOMAIN: ::c_int = 39;
+pub const SO_RXQ_OVFL: ::c_int = 40;
+pub const SO_WIFI_STATUS: ::c_int = 41;
+pub const SCM_WIFI_STATUS: ::c_int = SO_WIFI_STATUS;
+pub const SO_PEEK_OFF: ::c_int = 42;
+pub const SO_NOFCS: ::c_int = 43;
+pub const SO_LOCK_FILTER: ::c_int = 44;
+pub const SO_SELECT_ERR_QUEUE: ::c_int = 45;
+pub const SO_BUSY_POLL: ::c_int = 46;
+pub const SO_MAX_PACING_RATE: ::c_int = 47;
+pub const SO_BPF_EXTENSIONS: ::c_int = 48;
+pub const SO_INCOMING_CPU: ::c_int = 49;
+pub const SO_ATTACH_BPF: ::c_int = 50;
+pub const SO_DETACH_BPF: ::c_int = SO_DETACH_FILTER;
 
 pub const SA_ONSTACK: ::c_int = 0x08000000;
 pub const SA_SIGINFO: ::c_int = 0x00000004;
@@ -331,12 +436,6 @@ pub const MAP_32BIT: ::c_int = 0x0040;
 
 pub const EDEADLOCK: ::c_int = 35;
 
-pub const SO_PEERCRED: ::c_int = 17;
-pub const SO_RCVLOWAT: ::c_int = 18;
-pub const SO_SNDLOWAT: ::c_int = 19;
-pub const SO_RCVTIMEO: ::c_int = 20;
-pub const SO_SNDTIMEO: ::c_int = 21;
-
 pub const FIOCLEX: ::c_ulong = 0x5451;
 pub const FIONBIO: ::c_ulong = 0x5421;
 
@@ -365,6 +464,7 @@ pub const MCL_CURRENT: ::c_int = 0x0001;
 pub const MCL_FUTURE: ::c_int = 0x0002;
 
 pub const SIGSTKSZ: ::size_t = 8192;
+pub const MINSIGSTKSZ: ::size_t = 2048;
 pub const CBAUD: ::tcflag_t = 0o0010017;
 pub const TAB1: ::c_int = 0x00000800;
 pub const TAB2: ::c_int = 0x00001000;
@@ -406,6 +506,40 @@ pub const ICANON: ::tcflag_t = 0x00000002;
 pub const PENDIN: ::tcflag_t = 0x00004000;
 pub const NOFLSH: ::tcflag_t = 0x00000080;
 
+pub const B0: ::speed_t = 0o000000;
+pub const B50: ::speed_t = 0o000001;
+pub const B75: ::speed_t = 0o000002;
+pub const B110: ::speed_t = 0o000003;
+pub const B134: ::speed_t = 0o000004;
+pub const B150: ::speed_t = 0o000005;
+pub const B200: ::speed_t = 0o000006;
+pub const B300: ::speed_t = 0o000007;
+pub const B600: ::speed_t = 0o000010;
+pub const B1200: ::speed_t = 0o000011;
+pub const B1800: ::speed_t = 0o000012;
+pub const B2400: ::speed_t = 0o000013;
+pub const B4800: ::speed_t = 0o000014;
+pub const B9600: ::speed_t = 0o000015;
+pub const B19200: ::speed_t = 0o000016;
+pub const B38400: ::speed_t = 0o000017;
+pub const EXTA: ::speed_t = B19200;
+pub const EXTB: ::speed_t = B38400;
+pub const B57600: ::speed_t = 0o010001;
+pub const B115200: ::speed_t = 0o010002;
+pub const B230400: ::speed_t = 0o010003;
+pub const B460800: ::speed_t = 0o010004;
+pub const B500000: ::speed_t = 0o010005;
+pub const B576000: ::speed_t = 0o010006;
+pub const B921600: ::speed_t = 0o010007;
+pub const B1000000: ::speed_t = 0o010010;
+pub const B1152000: ::speed_t = 0o010011;
+pub const B1500000: ::speed_t = 0o010012;
+pub const B2000000: ::speed_t = 0o010013;
+pub const B2500000: ::speed_t = 0o010014;
+pub const B3000000: ::speed_t = 0o010015;
+pub const B3500000: ::speed_t = 0o010016;
+pub const B4000000: ::speed_t = 0o010017;
+
 pub const VEOL: usize = 11;
 pub const VEOL2: usize = 16;
 pub const VMIN: usize = 6;
@@ -440,4 +574,7 @@ extern {
                        argc: ::c_int, ...);
     pub fn swapcontext(uocp: *mut ucontext_t,
                        ucp: *const ucontext_t) -> ::c_int;
+    pub fn iopl(level: ::c_int) -> ::c_int;
+    pub fn ioperm(from: ::c_ulong, num: ::c_ulong,
+                  turn_on: ::c_int) -> ::c_int;
 }

@@ -1,4 +1,4 @@
-use dox::mem;
+use dox::{mem, Option};
 
 pub type c_char = i8;
 pub type wchar_t = i32;
@@ -242,6 +242,8 @@ pub const IXANY: ::tcflag_t = 0x00000800;
 pub const IMAXBEL: ::tcflag_t = 0x00002000;
 pub const OPOST: ::tcflag_t = 0x1;
 pub const ONLCR: ::tcflag_t = 0x2;
+pub const OXTABS: ::tcflag_t = 0x4;
+pub const ONOEOT: ::tcflag_t = 0x8;
 pub const CSIZE: ::tcflag_t = 0x00000300;
 pub const CS5: ::tcflag_t = 0x00000000;
 pub const CS6: ::tcflag_t = 0x00000100;
@@ -273,7 +275,9 @@ pub const WNOHANG: ::c_int = 0x00000001;
 pub const WUNTRACED: ::c_int = 0x00000002;
 
 pub const RTLD_NOW: ::c_int = 0x2;
+pub const RTLD_NEXT: *mut ::c_void = -1isize as *mut ::c_void;
 pub const RTLD_DEFAULT: *mut ::c_void = -2isize as *mut ::c_void;
+pub const RTLD_SELF: *mut ::c_void = -3isize as *mut ::c_void;
 
 pub const LOG_CRON: ::c_int = 9 << 3;
 pub const LOG_AUTHPRIV: ::c_int = 10 << 3;
@@ -359,6 +363,77 @@ extern {
     pub fn getpeereid(socket: ::c_int,
                       euid: *mut ::uid_t,
                       egid: *mut ::gid_t) -> ::c_int;
+
+    #[cfg_attr(target_os = "macos", link_name = "glob$INODE64")]
+    #[cfg_attr(target_os = "netbsd", link_name = "__glob30")]
+    pub fn glob(pattern: *const ::c_char,
+                flags: ::c_int,
+                errfunc: Option<extern fn(epath: *const ::c_char,
+                                          errno: ::c_int) -> ::c_int>,
+                pglob: *mut ::glob_t) -> ::c_int;
+    #[cfg_attr(target_os = "netbsd", link_name = "__globfree30")]
+    pub fn globfree(pglob: *mut ::glob_t);
+
+    pub fn posix_madvise(addr: *mut ::c_void, len: ::size_t, advice: ::c_int)
+                         -> ::c_int;
+
+    pub fn shm_unlink(name: *const ::c_char) -> ::c_int;
+
+    #[cfg_attr(all(target_os = "macos", target_arch = "x86_64"),
+               link_name = "seekdir$INODE64")]
+    #[cfg_attr(all(target_os = "macos", target_arch = "x86"),
+               link_name = "seekdir$INODE64$UNIX2003")]
+    pub fn seekdir(dirp: *mut ::DIR, loc: ::c_long);
+
+    #[cfg_attr(all(target_os = "macos", target_arch = "x86_64"),
+               link_name = "telldir$INODE64")]
+    #[cfg_attr(all(target_os = "macos", target_arch = "x86"),
+               link_name = "telldir$INODE64$UNIX2003")]
+    pub fn telldir(dirp: *mut ::DIR) -> ::c_long;
+    pub fn madvise(addr: *mut ::c_void, len: ::size_t, advice: ::c_int)
+                  -> ::c_int;
+
+    #[cfg_attr(all(target_os = "macos", target_arch = "x86"),
+               link_name = "msync$UNIX2003")]
+    #[cfg_attr(target_os = "netbsd", link_name = "__msync13")]
+    pub fn msync(addr: *mut ::c_void, len: ::size_t, flags: ::c_int) -> ::c_int;
+
+    #[cfg_attr(all(target_os = "macos", target_arch = "x86"),
+               link_name = "recvfrom$UNIX2003")]
+    pub fn recvfrom(socket: ::c_int, buf: *mut ::c_void, len: ::size_t,
+                    flags: ::c_int, addr: *mut ::sockaddr,
+                    addrlen: *mut ::socklen_t) -> ::ssize_t;
+    pub fn mkstemps(template: *mut ::c_char, suffixlen: ::c_int) -> ::c_int;
+    pub fn futimes(fd: ::c_int, times: *const ::timeval) -> ::c_int;
+    pub fn nl_langinfo(item: ::nl_item) -> *mut ::c_char;
+
+    #[cfg_attr(all(target_os = "macos", target_arch = "x86"),
+               link_name = "bind$UNIX2003")]
+    pub fn bind(socket: ::c_int, address: *const ::sockaddr,
+                address_len: ::socklen_t) -> ::c_int;
+
+    #[cfg_attr(all(target_os = "macos", target_arch = "x86"),
+               link_name = "writev$UNIX2003")]
+    pub fn writev(fd: ::c_int,
+                  iov: *const ::iovec,
+                  iovcnt: ::c_int) -> ::ssize_t;
+    #[cfg_attr(all(target_os = "macos", target_arch = "x86"),
+               link_name = "readv$UNIX2003")]
+    pub fn readv(fd: ::c_int,
+                 iov: *const ::iovec,
+                 iovcnt: ::c_int) -> ::ssize_t;
+
+    #[cfg_attr(all(target_os = "macos", target_arch = "x86"),
+               link_name = "sendmsg$UNIX2003")]
+    pub fn sendmsg(fd: ::c_int,
+                   msg: *const ::msghdr,
+                   flags: ::c_int) -> ::ssize_t;
+    #[cfg_attr(all(target_os = "macos", target_arch = "x86"),
+               link_name = "recvmsg$UNIX2003")]
+    pub fn recvmsg(fd: ::c_int, msg: *mut ::msghdr, flags: ::c_int)
+                   -> ::ssize_t;
+
+    pub fn sync();
 }
 
 cfg_if! {
