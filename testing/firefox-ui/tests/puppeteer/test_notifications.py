@@ -4,8 +4,8 @@
 
 from firefox_puppeteer import PuppeteerMixin
 from firefox_puppeteer.ui.browser.notifications import (
-    AddOnInstallFailedNotification,
     AddOnInstallConfirmationNotification,
+    AddOnInstallFailedNotification,
 )
 from marionette_driver import By
 from marionette_driver.errors import TimeoutException
@@ -39,7 +39,7 @@ class TestNotifications(PuppeteerMixin, MarionetteTestCase):
     def test_open_close_notification(self):
         """Trigger and dismiss a notification"""
         self.assertIsNone(self.browser.notification)
-        self.trigger_addon_notification('restartless_addon_signed.xpi')
+        self.trigger_addon_notification('webextension-signed.xpi')
         self.browser.notification.close()
         self.assertIsNone(self.browser.notification)
 
@@ -58,13 +58,13 @@ class TestNotifications(PuppeteerMixin, MarionetteTestCase):
     def test_wait_for_no_notification_timeout(self):
         """Wait for no notification when one is shown"""
         message = 'Unexpected notification shown'
-        self.trigger_addon_notification('restartless_addon_signed.xpi')
+        self.trigger_addon_notification('webextension-signed.xpi')
         with self.assertRaisesRegexp(TimeoutException, message):
             self.browser.wait_for_notification(None)
 
     def test_notification_with_origin(self):
         """Trigger a notification with an origin"""
-        self.trigger_addon_notification('restartless_addon_signed.xpi')
+        self.trigger_addon_notification('webextension-signed.xpi')
         self.assertIn(self.browser.notification.origin, self.marionette.baseurl)
         self.assertIsNotNone(self.browser.notification.label)
 
@@ -74,7 +74,7 @@ class TestNotifications(PuppeteerMixin, MarionetteTestCase):
         self.marionette.set_pref('xpinstall.signatures.required', True)
 
         self.trigger_addon_notification(
-            'restartless_addon_unsigned.xpi',
+            'webextension-unsigned.xpi',
             notification=AddOnInstallFailedNotification)
 
     def trigger_addon_notification(self, addon, notification=AddOnInstallConfirmationNotification):
