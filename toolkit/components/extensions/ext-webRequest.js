@@ -11,7 +11,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "WebRequest",
                                   "resource://gre/modules/WebRequest.jsm");
 
 // EventManager-like class specifically for WebRequest. Inherits from
-// EventManager. Takes care of converting |details| parameter
+// SingletonEventManager. Takes care of converting |details| parameter
 // when invoking listeners.
 function WebRequestEventManager(context, eventName) {
   let name = `webRequest.${eventName}`;
@@ -118,10 +118,10 @@ function WebRequestEventManager(context, eventName) {
     };
   };
 
-  return EventManager.call(this, context, name, register);
+  return SingletonEventManager.call(this, context, name, register);
 }
 
-WebRequestEventManager.prototype = Object.create(EventManager.prototype);
+WebRequestEventManager.prototype = Object.create(SingletonEventManager.prototype);
 
 this.webRequest = class extends ExtensionAPI {
   getAPI(context) {
