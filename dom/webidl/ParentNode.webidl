@@ -18,8 +18,8 @@ interface ParentNode {
   [Pure]
   readonly attribute unsigned long childElementCount;
 
-  [Throws, Unscopable]
+  [CEReactions, Throws, Unscopable]
   void prepend((Node or DOMString)... nodes);
-  [Throws, Unscopable]
+  [CEReactions, Throws, Unscopable]
   void append((Node or DOMString)... nodes);
 };
