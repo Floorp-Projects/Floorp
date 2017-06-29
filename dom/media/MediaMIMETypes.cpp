@@ -107,6 +107,19 @@ MediaCodecs::ContainsAll(const MediaCodecs& aCodecs) const
   return true;
 }
 
+bool
+MediaCodecs::ContainsPrefix(const nsAString& aCodecPrefix) const
+{
+  const size_t prefixLength = aCodecPrefix.Length();
+  for (const auto& myCodec : Range()) {
+    if (myCodec.Length() >= prefixLength &&
+        memcmp(myCodec.Data(), aCodecPrefix.Data(), prefixLength) == 0) {
+      return true;
+    }
+  }
+  return false;
+}
+
 size_t
 MediaCodecs::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
 {
