@@ -272,12 +272,12 @@ function MergeSort(array, len, comparefn) {
 
     // To save effort we will do all of our work on a dense list,
     // then create holes at the end.
-    var denseList = new List();
+    var denseList = [];
     var denseLen = 0;
 
     for (var i = 0; i < len; i++) {
         if (i in array)
-            denseList[denseLen++] = array[i];
+            _DefineDataProperty(denseList, denseLen++, array[i]);
     }
 
     if (denseLen < 1)
