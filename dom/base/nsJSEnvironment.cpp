@@ -301,8 +301,9 @@ public:
 
     if (mTimer) {
       mTimer->SetTarget(mTarget);
-      mTimer->InitWithFuncCallback(TimedOut, this, aDelay,
-                                   nsITimer::TYPE_ONE_SHOT);
+      mTimer->InitWithNamedFuncCallback(TimedOut, this, aDelay,
+                                        nsITimer::TYPE_ONE_SHOT,
+                                        "CollectorRunner");
       mTimerActive = true;
     }
   }
@@ -360,8 +361,9 @@ public:
 
         // We weren't allowed to do idle dispatch immediately, do it after a
         // short timeout.
-        mScheduleTimer->InitWithFuncCallback(ScheduleTimedOut, this, 16,
-                                             nsITimer::TYPE_ONE_SHOT_LOW_PRIORITY);
+        mScheduleTimer->InitWithNamedFuncCallback(ScheduleTimedOut, this, 16,
+                                                  nsITimer::TYPE_ONE_SHOT_LOW_PRIORITY,
+                                                  "CollectorRunner");
       }
     }
   }

@@ -3634,10 +3634,11 @@ QuotaManager::Shutdown()
 
   // Kick off the shutdown timer.
   MOZ_ALWAYS_SUCCEEDS(
-    mShutdownTimer->InitWithFuncCallback(&ShutdownTimerCallback,
-                                         this,
-                                         DEFAULT_SHUTDOWN_TIMER_MS,
-                                         nsITimer::TYPE_ONE_SHOT));
+    mShutdownTimer->InitWithNamedFuncCallback(&ShutdownTimerCallback,
+                                              this,
+                                              DEFAULT_SHUTDOWN_TIMER_MS,
+                                              nsITimer::TYPE_ONE_SHOT,
+                                              "QuotaManager::ShutdownTimerCallback"));
 
   // Each client will spin the event loop while we wait on all the threads
   // to close. Our timer may fire during that loop.
