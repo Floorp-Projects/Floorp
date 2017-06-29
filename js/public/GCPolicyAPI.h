@@ -177,6 +177,8 @@ struct GCPolicy<mozilla::Maybe<T>>
     }
 };
 
+template <> struct GCPolicy<JS::Realm*>;  // see Realm.h
+
 } // namespace JS
 
 #endif // GCPolicyAPI_h

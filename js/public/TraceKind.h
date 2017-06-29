@@ -133,7 +133,7 @@ JS_FOR_EACH_TRACEKIND(JS_EXPAND_DEF)
 #undef JS_EXPAND_DEF
 
 // Specify the RootKind for all types. Value and jsid map to special cases;
-// pointer types we can derive directly from the TraceKind; everything else
+// Cell pointer types we can derive directly from the TraceKind; everything else
 // should go in the Traceable list and use GCPolicy<T>::trace for tracing.
 template <typename T>
 struct MapTypeToRootKind {
@@ -143,6 +143,10 @@ template <typename T>
 struct MapTypeToRootKind<T*> {
     static const JS::RootKind kind =
         JS::MapTraceKindToRootKind<JS::MapTypeToTraceKind<T>::kind>::kind;
+};
+template <> struct MapTypeToRootKind<JS::Realm*> {
+    // Not a pointer to a GC cell. Use GCPolicy.
+    static const JS::RootKind kind = JS::RootKind::Traceable;
 };
 template <typename T>
 struct MapTypeToRootKind<mozilla::UniquePtr<T>> {
