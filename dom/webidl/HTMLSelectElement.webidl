@@ -9,21 +9,21 @@
 
 [HTMLConstructor]
 interface HTMLSelectElement : HTMLElement {
-  [SetterThrows, Pure]
+  [CEReactions, SetterThrows, Pure]
            attribute boolean autofocus;
-  [Pref="dom.forms.autocomplete.experimental", SetterThrows, Pure]
+  [CEReactions, Pref="dom.forms.autocomplete.experimental", SetterThrows, Pure]
            attribute DOMString autocomplete;
-  [SetterThrows, Pure]
+  [CEReactions, SetterThrows, Pure]
            attribute boolean disabled;
   [Pure]
   readonly attribute HTMLFormElement? form;
-  [SetterThrows, Pure]
+  [CEReactions, SetterThrows, Pure]
            attribute boolean multiple;
-  [SetterThrows, Pure]
+  [CEReactions, SetterThrows, Pure]
            attribute DOMString name;
-  [SetterThrows, Pure]
+  [CEReactions, SetterThrows, Pure]
            attribute boolean required;
-  [SetterThrows, Pure]
+  [CEReactions, SetterThrows, Pure]
            attribute unsigned long size;
 
   [Pure]
@@ -31,14 +31,15 @@ interface HTMLSelectElement : HTMLElement {
 
   [Constant]
   readonly attribute HTMLOptionsCollection options;
-  [SetterThrows, Pure]
+  [CEReactions, SetterThrows, Pure]
            attribute unsigned long length;
   getter Element? item(unsigned long index);
   HTMLOptionElement? namedItem(DOMString name);
-  [Throws]
+  [CEReactions, Throws]
   void add((HTMLOptionElement or HTMLOptGroupElement) element, optional (HTMLElement or long)? before = null);
+  [CEReactions]
   void remove(long index);
-  [Throws]
+  [CEReactions, Throws]
   setter creator void (unsigned long index, HTMLOptionElement? option);
 
   readonly attribute HTMLCollection selectedOptions;
@@ -57,6 +58,7 @@ interface HTMLSelectElement : HTMLElement {
   readonly attribute NodeList labels;
 
   // https://www.w3.org/Bugs/Public/show_bug.cgi?id=20720
+  [CEReactions]
   void remove();
 };
 
