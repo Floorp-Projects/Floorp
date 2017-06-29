@@ -118,7 +118,7 @@ add_task(async function() {
       BrowserTestUtils.waitForEvent(PanelUI.panel, "popuppositioned");
     await PanelUI.show();
     await popupPositioned;
-  }, EXPECTED_APPMENU_OPEN_REFLOWS, window, PanelUI.panel);
+  }, EXPECTED_APPMENU_OPEN_REFLOWS);
 
   // Now open a series of subviews, and then close the appmenu. We
   // should not reflow during any of this.
@@ -160,5 +160,5 @@ add_task(async function() {
     let hidden = BrowserTestUtils.waitForEvent(PanelUI.panel, "popuphidden");
     PanelUI.hide();
     await hidden;
-  }, EXPECTED_APPMENU_SUBVIEW_REFLOWS, window, PanelUI.panel);
+  }, EXPECTED_APPMENU_SUBVIEW_REFLOWS);
 });
