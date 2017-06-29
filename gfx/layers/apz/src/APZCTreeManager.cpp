@@ -1305,10 +1305,7 @@ APZCTreeManager::ReceiveInputEvent(InputData& aEvent,
       RefPtr<AsyncPanZoomController> targetApzc = GetTargetAPZC(targetGuid->mLayersId,
                                                                 targetGuid->mScrollId);
 
-      // Scroll snapping behavior with keyboard input is more complicated, so
-      // ignore any input events that are targeted at an Apzc with scroll snap
-      // points.
-      if (!targetApzc || targetApzc->HasScrollSnapping()) {
+      if (!targetApzc) {
         return result;
       }
 
