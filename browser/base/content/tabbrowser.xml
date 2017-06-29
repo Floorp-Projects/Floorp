@@ -5081,7 +5081,7 @@
                 "tabs.muteAudio.tooltip";
               label = stringWithShortcut(stringID, "key_toggleMute");
             } else {
-              if (tab.linkedBrowser.audioBlocked) {
+              if (tab.hasAttribute("activemedia-blocked")) {
                 stringID = "tabs.unblockAudio.tooltip";
               } else {
                 stringID = tab.linkedBrowser.audioMuted ?
@@ -7582,7 +7582,7 @@
           let modifiedAttrs = [];
           let hist = Services.telemetry.getHistogramById("TAB_AUDIO_INDICATOR_USED");
 
-          if (browser.audioBlocked) {
+          if (this.hasAttribute("activemedia-blocked")) {
             this.removeAttribute("activemedia-blocked");
             modifiedAttrs.push("activemedia-blocked");
 
