@@ -590,7 +590,7 @@ CachePerfStats::MMA::GetStdDev()
   }
 
   variance -= avgSq;
-  return sqrt(variance);
+  return sqrt(static_cast<double>(variance));
 }
 
 CachePerfStats::PerfData::PerfData()
