@@ -1451,11 +1451,9 @@ HTMLFormElement::RemoveElementFromTableInternal(
     return NS_OK;
   }
 
-  nsCOMPtr<nsIDOMNodeList> nodeList(do_QueryInterface(entry.Data().get()));
-  NS_ENSURE_TRUE(nodeList, NS_ERROR_FAILURE);
-
-  // Upcast, uggly, but it works!
-  nsBaseContentList *list = static_cast<nsBaseContentList*>(nodeList.get());
+  // If it's not a content node then it must be a RadioNodeList.
+  MOZ_ASSERT(nsCOMPtr<RadioNodeList>(do_QueryInterface(entry.Data())));
+  auto* list = static_cast<RadioNodeList*>(entry.Data().get());
 
   list->RemoveElement(aChild);
 
@@ -2402,10 +2400,10 @@ struct PositionComparator
   }
 };
 
-struct NodeListAdaptor
+struct RadioNodeListAdaptor
 {
-  nsINodeList* const mList;
-  explicit NodeListAdaptor(nsINodeList* aList) : mList(aList) {}
+  RadioNodeList* const mList;
+  explicit RadioNodeListAdaptor(RadioNodeList* aList) : mList(aList) {}
   nsIContent* operator[](size_t aIdx) const {
     return mList->Item(aIdx);
   }
@@ -2457,13 +2455,9 @@ HTMLFormElement::AddElementToTableInternal(
       // Replace the element with the list.
       entry.Data() = listSupports;
     } else {
-      // There's already a list in the hash, add the child to the list
-      nsCOMPtr<nsIDOMNodeList> nodeList = do_QueryInterface(entry.Data());
-      NS_ENSURE_TRUE(nodeList, NS_ERROR_FAILURE);
-
-      // Upcast, uggly, but it works!
-      RadioNodeList *list =
-        static_cast<RadioNodeList*>(nodeList.get());
+      // There's already a list in the hash, add the child to the list.
+      MOZ_ASSERT(nsCOMPtr<RadioNodeList>(do_QueryInterface(entry.Data())));
+      auto* list = static_cast<RadioNodeList*>(entry.Data().get());
 
       NS_ASSERTION(list->Length() > 1,
                    "List should have been converted back to a single element");
@@ -2484,7 +2478,7 @@ HTMLFormElement::AddElementToTableInternal(
       }
 
       size_t idx;
-      DebugOnly<bool> found = BinarySearchIf(NodeListAdaptor(list), 0, list->Length(),
+      DebugOnly<bool> found = BinarySearchIf(RadioNodeListAdaptor(list), 0, list->Length(),
                                              PositionComparator(aChild), &idx);
       MOZ_ASSERT(!found, "should not have found an element");
 
