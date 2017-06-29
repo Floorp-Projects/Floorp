@@ -18,6 +18,9 @@ add_task(function* () {
       .filter(([_, visible]) => visible);
 
     if (visibleColumns.length === 1) {
+      if (!shown) {
+        continue;
+      }
       yield testLastMenuItem(column);
       break;
     }
