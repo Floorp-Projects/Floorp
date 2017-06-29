@@ -91,6 +91,23 @@ var gTests = [
 
     await indicator;
     await checkSharingUI({screen: "Screen"});
+
+    // we always show prompt for screen sharing.
+    promise = promisePopupNotificationShown("webRTC-shareDevices");
+    await promiseRequestDevice(false, true, null, "screen");
+    await promise;
+    await expectObserverCalled("getUserMedia:request");
+
+    is(PopupNotifications.getNotification("webRTC-shareDevices").anchorID,
+       "webRTC-shareScreen-notification-icon", "anchored to device icon");
+    checkDeviceSelectors(false, false, true);
+
+    await promiseMessage(permissionError, () => {
+      PopupNotifications.panel.firstChild.button.click();
+    });
+
+    await expectObserverCalled("getUserMedia:response:deny");
+    SitePermissions.remove(null, "screen", gBrowser.selectedBrowser);
     await closeStream();
   }
 },
