@@ -130,8 +130,6 @@ public:
 
   virtual void ObserveLayerUpdate(uint64_t aLayersId, uint64_t aEpoch, bool aActive) = 0;
 
-  virtual void DidComposite(uint64_t aId, TimeStamp& aCompositeStart, TimeStamp& aCompositeEnd) {}
-
   virtual void NotifyDidCompositeToPipeline(const wr::PipelineId& aPipelineId, const wr::Epoch& aEpoch, TimeStamp& aCompositeStart, TimeStamp& aCompositeEnd) {}
 
   // HostIPCAllocator
@@ -564,7 +562,6 @@ protected:
    */
   bool CanComposite();
 
-  using CompositorBridgeParentBase::DidComposite;
   void DidComposite(TimeStamp& aCompositeStart, TimeStamp& aCompositeEnd);
 
   virtual void NotifyDidCompositeToPipeline(const wr::PipelineId& aPipelineId, const wr::Epoch& aEpoch, TimeStamp& aCompositeStart, TimeStamp& aCompositeEnd) override;
