@@ -71,21 +71,39 @@ function internalIDForTarget(target) {
   ];
 }
 
-function temporaryID(target) {
-  if (!isTemporaryID(target.addonID)) {
-    return [];
+function showMessages(target) {
+  const messages = [
+    ...warningMessages(target.warnings),
+    ...infoMessages(target),
+  ];
+  if (messages.length > 0) {
+    return dom.ul(
+      { className: "addon-target-messages" },
+      ...messages);
   }
+  return null;
+}
 
-  return [
-    dom.div({ className: "addons-tip" },
-      dom.span({ className: "addons-web-ext-tip" },
-        Strings.GetStringFromName("temporaryID")
-      ),
+function infoMessages(target) {
+  const messages = [];
+  if (isTemporaryID(target.addonID)) {
+    messages.push(dom.li(
+      { className: "addon-target-info-message addon-target-message" },
+      Strings.GetStringFromName("temporaryID"),
+      " ",
       dom.a({ href: TEMP_ID_URL, className: "temporary-id-url", target: "_blank" },
         Strings.GetStringFromName("temporaryID.learnMore")
-      )
-    )
-  ];
+      )));
+  }
+  return messages;
+}
+
+function warningMessages(warnings = []) {
+  return warnings.map((warning) => {
+    return dom.li(
+      { className: "addon-target-warning-message addon-target-message" },
+      warning);
+  });
 }
 
 module.exports = createClass({
@@ -101,6 +119,7 @@ module.exports = createClass({
       name: PropTypes.string.isRequired,
       temporarilyInstalled: PropTypes.bool,
       url: PropTypes.string,
+      warnings: PropTypes.array,
     }).isRequired
   },
 
@@ -140,7 +159,7 @@ module.exports = createClass({
         }),
         dom.span({ className: "target-name", title: target.name }, target.name)
       ),
-      ...temporaryID(target),
+      showMessages(target),
       dom.dl(
         { className: "addon-target-info" },
         ...filePathForTarget(target),
