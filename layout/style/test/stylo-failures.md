@@ -89,6 +89,8 @@ to mochitest command.
     * test_selectors.html `:-moz-window-inactive` [2]
 * Unit should be preserved after parsing servo/servo#15346
   * test_units_time.html [1]
+* getComputedStyle style doesn't contain custom properties bug 1336891
+  * test_variables.html `custom property name` [2]
 * test_css_supports.html: issues around @supports syntax servo/servo#15482 [2]
 * test_author_specified_style.html: support serializing color as author specified bug 1348165 [27]
 * browser_newtab_share_rule_processors.js: agent style sheet sharing [1]
