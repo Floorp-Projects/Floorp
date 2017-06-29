@@ -366,6 +366,10 @@
   transform: translateY(-50%);
 }
 
+#onboarding-notification-icon:dir(rtl) {
+  background-position: right 34px center;
+}
+
 #onboarding-notification-icon::after {
   --height: 22px;
   content: attr(data-tooltip);
