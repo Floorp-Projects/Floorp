@@ -81,3 +81,32 @@ add_task(function* testTemporaryWebExtension() {
 
   yield closeAboutDebugging(tab);
 });
+
+add_task(function* testUnknownManifestProperty() {
+  let addonId = "test-devtools-webextension-unknown-prop@mozilla.org";
+  let addonName = "test-devtools-webextension-unknown-prop";
+  let { tab, document } = yield openAboutDebugging("addons");
+
+  yield waitForInitialAddonList(document);
+  yield installAddon({
+    document,
+    path: "addons/test-devtools-webextension-unknown-prop/manifest.json",
+    name: addonName,
+    isWebExtension: true
+  });
+
+  let container = document.querySelector(`[data-addon-id="${addonId}"]`);
+
+  yield waitForInstallMessages(container);
+
+  let messages = container.querySelectorAll(".addon-target-message");
+  ok(messages.length === 1, "there is one message");
+  ok(messages[0].textContent.match(/Error processing browser_actions/),
+     "the message is helpful");
+  ok(messages[0].classList.contains("addon-target-warning-message"),
+     "the message is a warning");
+
+  yield uninstallAddon({document, id: addonId, name: addonName});
+
+  yield closeAboutDebugging(tab);
+});
