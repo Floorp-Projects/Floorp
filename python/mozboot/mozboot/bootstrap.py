@@ -485,10 +485,13 @@ def current_firefox_checkout(check_output, hg=None):
             except subprocess.CalledProcessError:
                 pass
 
-        # TODO check git remotes or `git rev-parse -q --verify $sha1^{commit}`
-        # for signs of Firefox.
+        # Just check for known-good files in the checkout, to prevent attempted
+        # foot-shootings.  Determining a canonical git checkout of mozilla-central
+        # is...complicated
         elif os.path.exists(git_dir):
-            return ('git', path)
+            moz_configure = os.path.join(path, 'moz.configure')
+            if os.path.exists(moz_configure):
+                return ('git', path)
 
         path, child = os.path.split(path)
         if child == '':
