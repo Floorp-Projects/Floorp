@@ -200,7 +200,7 @@ def register_callback_action(title, symbol, description, order=10000, context=[]
                         'GECKO_HEAD_REPOSITORY': parameters['head_repository'],
                         'GECKO_HEAD_REF': parameters['head_ref'],
                         'GECKO_HEAD_REV': parameters['head_rev'],
-                        'HG_STORE_PATH': '/home/worker/checkouts/hg-store',
+                        'HG_STORE_PATH': '/builds/worker/checkouts/hg-store',
                         'ACTION_TASK_GROUP_ID': {'$eval': 'taskGroupId'},
                         'ACTION_TASK_ID': {'$dumps': {'$eval': 'taskId'}},
                         'ACTION_TASK': {'$dumps': {'$eval': 'task'}},
@@ -210,7 +210,7 @@ def register_callback_action(title, symbol, description, order=10000, context=[]
                     },
                     'cache': {
                         'level-{}-checkouts'.format(parameters['level']):
-                            '/home/worker/checkouts',
+                            '/builds/worker/checkouts',
                     },
                     'features': {
                         'taskclusterProxy': True,
@@ -219,11 +219,12 @@ def register_callback_action(title, symbol, description, order=10000, context=[]
                     'image': docker_image('decision'),
                     'maxRunTime': 1800,
                     'command': [
-                        '/home/worker/bin/run-task', '--vcs-checkout=/home/worker/checkouts/gecko',
+                        '/builds/worker/bin/run-task',
+                        '--vcs-checkout=/builds/worker/checkouts/gecko',
                         '--', 'bash', '-cx',
                         """\
-cd /home/worker/checkouts/gecko &&
-ln -s /home/worker/artifacts artifacts &&
+cd /builds/worker/checkouts/gecko &&
+ln -s /builds/worker/artifacts artifacts &&
 ./mach --log-no-times taskgraph action-callback""",
                     ],
                 },

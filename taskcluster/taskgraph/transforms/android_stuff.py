@@ -32,7 +32,7 @@ def setup_task(config, tasks):
             'type': 'persistent',
             'name': 'level-{}-{}-tc-vcs'.format(
                 config.params['level'], config.params['project']),
-            'mount-point': "/home/worker/.tc-vcs",
+            'mount-point': "/builds/worker/.tc-vcs",
         })
 
         if int(config.params['level']) > 1:
@@ -40,7 +40,7 @@ def setup_task(config, tasks):
                 'type': 'persistent',
                 'name': 'level-{}-{}-build-{}-workspace'.format(
                     config.params['level'], config.params['project'], task['name']),
-                'mount-point': "/home/worker/workspace",
+                'mount-point': "/builds/worker/workspace",
             })
 
         # Need appropriate scopes for secrets, from the 'build' section
