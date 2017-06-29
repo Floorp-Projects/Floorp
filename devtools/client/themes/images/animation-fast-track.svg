@@ -1,8 +1,6 @@
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
-<svg xmlns="http://www.w3.org/2000/svg" width="0" height="0">
-  <clipPath id="thunderbolt" transform="scale(1.4)">
-    <path d="M5.75 0l-1 5.5 2 .5-3.5 6 1-5-2-.5z"/>
-  </clipPath>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 9 12" width="16" height="16">
+  <path d="M5.75 0l-1 5.5 2 .5-3.5 6 1-5-2-.5z" fill="context-fill"/>
 </svg>
