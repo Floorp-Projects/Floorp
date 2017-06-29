@@ -1,1 +1,1 @@
-marionette-harness==4.0
+marionette-harness >= 4.0.0

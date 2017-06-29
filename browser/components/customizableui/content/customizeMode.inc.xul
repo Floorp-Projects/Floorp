@@ -72,11 +72,7 @@
   <box id="customization-content-container"/>
   <vbox id="customization-panel-container">
     <vbox id="customization-panelWrapper">
-      <html:style html:type="text/html" scoped="scoped">
-        @import url(chrome://global/skin/popup.css);
-      </html:style>
       <box class="panel-arrowbox">
-        <box flex="1"/>
         <image class="panel-arrow" side="top"/>
       </box>
       <box class="panel-arrowcontent" side="top" flex="1">

@@ -198,6 +198,14 @@ NS_EVENT_MESSAGE(eCompositionCommitAsIs)
 // After that, eCompositionEnd will be dispatched automatically.
 // Its mRanges should be nullptr.
 NS_EVENT_MESSAGE(eCompositionCommit)
+// eCompositionCommitRequestHandled is NOT used with any Widget*Event.
+// This is used only by PBrowser.OnEventNeedingAckHandled().  If active IME
+// commits composition synchronously, TabParent returns the commit string
+// to the remote process synchronously.  Then, TabChild dispatches
+// eCompositionCommit in the remote process.  Finally, this message is sent
+// to TabParent.  (If IME commits composition asynchronously, this message is
+// not used.)
+NS_EVENT_MESSAGE(eCompositionCommitRequestHandled)
 
 // Following events are defined for deprecated DOM events which are using
 // InternalUIEvent class.

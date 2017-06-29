@@ -394,6 +394,20 @@ class Dumper:
         if repo_manifest:
             self.parse_repo_manifest(repo_manifest)
         self.file_mapping = file_mapping or {}
+        # Add a static mapping for Rust sources.
+        target_os = buildconfig.substs['OS_ARCH']
+        rust_srcdir = None
+        if target_os == 'WINNT':
+            rust_srcdir = 'C:/projects/rust/src/'
+        elif target_os == 'Darwin':
+            rust_srcdir = '/Users/travis/build/rust-lang/rust/src/'
+        elif target_os == 'Linux':
+            rust_srcdir = '/checkout/src/'
+        if rust_srcdir is not None:
+            self.srcdirs.append(rust_srcdir)
+            Dumper.srcdirRepoInfo[rust_srcdir] = GitRepoInfo(rust_srcdir,
+                                                             buildconfig.substs['RUSTC_COMMIT'],
+                                                             'https://github.com/rust-lang/rust/')
 
     def parse_repo_manifest(self, repo_manifest):
         """

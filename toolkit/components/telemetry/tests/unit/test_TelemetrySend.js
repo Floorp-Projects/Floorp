@@ -325,10 +325,6 @@ add_task(async function test_discardBigPings() {
   // Generate a 2MB string and create an oversized payload.
   const OVERSIZED_PAYLOAD = {"data": generateRandomString(2 * 1024 * 1024)};
 
-  // Reset the histograms.
-  Telemetry.getHistogramById("TELEMETRY_PING_SIZE_EXCEEDED_SEND").clear();
-  Telemetry.getHistogramById("TELEMETRY_DISCARDED_SEND_PINGS_SIZE_MB").clear();
-
   // Submit a ping of a normal size and check that we don't count it in the histogram.
   await TelemetryController.submitExternalPing(TEST_PING_TYPE, { test: "test" });
   await TelemetrySend.testWaitOnOutgoingPings();

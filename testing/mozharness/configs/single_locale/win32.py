@@ -29,8 +29,7 @@ config = {
     'tooltool_url': 'https://api.pub.build.mozilla.org/tooltool/',
     'tooltool_script': [sys.executable,
                         'C:/mozilla-build/tooltool.py'],
-    'tooltool_bootstrap': "setup.sh",
-    'tooltool_manifest_src': 'browser/config/tooltool-manifests/win32/releng.manifest',
+    'tooltool_manifest_src': 'browser/config/tooltool-manifests/win32/l10n.manifest',
     # balrog credential file:
     'balrog_credentials_file': 'oauth.txt',
 

@@ -6,65 +6,9 @@
 #ifndef GFX_POINT_H
 #define GFX_POINT_H
 
-#include "nsMathUtils.h"
-#include "mozilla/gfx/BaseSize.h"
-#include "mozilla/gfx/BasePoint.h"
-#include "mozilla/gfx/Matrix.h"
-#include "nsSize.h"
-#include "nsPoint.h"
+#include "mozilla/gfx/Point.h"
 
-#include "gfxTypes.h"
-
-struct gfxSize : public mozilla::gfx::BaseSize<gfxFloat, gfxSize> {
-    typedef mozilla::gfx::BaseSize<gfxFloat, gfxSize> Super;
-
-    gfxSize() : Super() {}
-    gfxSize(gfxFloat aWidth, gfxFloat aHeight) : Super(aWidth, aHeight) {}
-    MOZ_IMPLICIT gfxSize(const mozilla::gfx::IntSize& aSize) : Super(aSize.width, aSize.height) {}
-};
-
-struct gfxPoint : public mozilla::gfx::BasePoint<gfxFloat, gfxPoint> {
-    typedef mozilla::gfx::BasePoint<gfxFloat, gfxPoint> Super;
-
-    gfxPoint() : Super() {}
-    gfxPoint(gfxFloat aX, gfxFloat aY) : Super(aX, aY) {}
-    MOZ_IMPLICIT gfxPoint(const nsIntPoint& aPoint) : Super(aPoint.x, aPoint.y) {}
-
-    bool WithinEpsilonOf(const gfxPoint& aPoint, gfxFloat aEpsilon) {
-        return fabs(aPoint.x - x) < aEpsilon && fabs(aPoint.y - y) < aEpsilon;
-    }
-
-    void Transform(const mozilla::gfx::Matrix4x4 &aMatrix)
-    {
-      // Transform this point with aMatrix
-      double px = x;
-      double py = y;
-
-      x = px * aMatrix._11 + py * aMatrix._21 + aMatrix._41;
-      y = px * aMatrix._12 + py * aMatrix._22 + aMatrix._42;
-
-      double w = px * aMatrix._14 + py * aMatrix._24 + aMatrix._44;
-      x /= w;
-      y /= w;
-    }
-};
-
-inline gfxPoint
-operator*(const gfxPoint& aPoint, const gfxSize& aSize)
-{
-  return gfxPoint(aPoint.x * aSize.width, aPoint.y * aSize.height);
-}
-
-inline gfxPoint
-operator/(const gfxPoint& aPoint, const gfxSize& aSize)
-{
-  return gfxPoint(aPoint.x / aSize.width, aPoint.y / aSize.height);
-}
-
-inline gfxSize
-operator/(gfxFloat aValue, const gfxSize& aSize)
-{
-  return gfxSize(aValue / aSize.width, aValue / aSize.height);
-}
+typedef mozilla::gfx::SizeDouble gfxSize;
+typedef mozilla::gfx::PointDouble gfxPoint;
 
 #endif /* GFX_POINT_H */

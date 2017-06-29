@@ -219,6 +219,15 @@ class ConfigureTestSandbox(ConfigureSandbox):
     def vswhere(self, stdin, args):
         return 0, '[]', ''
 
+    def get_config(self, name):
+        # Like the loop in ConfigureSandbox.run, but only execute the code
+        # associated with the given config item.
+        for func, args in self._execution_queue:
+            if (func == self._resolve_and_set and args[0] is self._config
+                    and args[1] == name):
+                func(*args)
+                return self._config.get(name)
+
 
 class BaseConfigureTest(unittest.TestCase):
     HOST = 'x86_64-pc-linux-gnu'

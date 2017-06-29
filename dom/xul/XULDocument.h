@@ -173,7 +173,8 @@ public:
 
     virtual void ResetDocumentDirection() override;
 
-    virtual int GetDocumentLWTheme() override;
+    virtual nsIDocument::DocumentTheme GetDocumentLWTheme() override;
+    virtual nsIDocument::DocumentTheme ThreadSafeGetDocumentLWTheme() const override;
 
     virtual void ResetDocumentLWTheme() override { mDocLWTheme = Doc_Theme_Uninitialized; }
 

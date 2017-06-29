@@ -2,7 +2,7 @@ fuzzy-if(skiaContent,2,13) == dynamic-legend-scroll-1.html dynamic-legend-scroll
 == fieldset-hidden-1.html fieldset-hidden-1-ref.html
 == fieldset-intrinsic-width-1.html fieldset-intrinsic-width-1-ref.html
 == fieldset-percentage-padding-1.html fieldset-percentage-padding-1-ref.html
-fails-if(styloVsGecko||stylo) == fieldset-scroll-1.html fieldset-scroll-1-ref.html
+== fieldset-scroll-1.html fieldset-scroll-1-ref.html
 == fieldset-scrolled-1.html fieldset-scrolled-1-ref.html
 == fieldset-overflow-auto-1.html fieldset-overflow-auto-1-ref.html
 fuzzy-if(winWidget&&!layersGPUAccelerated,140,276) == positioned-container-1.html positioned-container-1-ref.html

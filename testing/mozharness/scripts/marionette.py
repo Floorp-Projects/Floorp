@@ -13,7 +13,7 @@ import sys
 # load modules from parent dir
 sys.path.insert(1, os.path.dirname(sys.path[0]))
 
-from mozharness.base.errors import TarErrorList
+from mozharness.base.errors import BaseErrorList, TarErrorList
 from mozharness.base.log import INFO, ERROR, WARNING
 from mozharness.base.script import PreScriptAction
 from mozharness.base.transfer import TransferMixin
@@ -26,6 +26,8 @@ from mozharness.mozilla.testing.codecoverage import (
     CodeCoverageMixin,
     code_coverage_config_options
 )
+from mozharness.mozilla.testing.errors import HarnessErrorList
+
 from mozharness.mozilla.structuredlog import StructuredOutputParser
 
 # TODO: we could remove emulator specific code after B2G ICS emulator buildbot
@@ -114,15 +116,6 @@ class MarionetteTest(TestingMixin, MercurialScript, BlobUploadMixin, TransferMix
      ]] + copy.deepcopy(testing_config_options) \
         + copy.deepcopy(blobupload_config_options) \
         + copy.deepcopy(code_coverage_config_options)
-
-    error_list = [
-        {'substr': 'FAILED (errors=', 'level': WARNING},
-        {'substr': r'''Could not successfully complete transport of message to Gecko, socket closed''', 'level': ERROR},
-        {'substr': r'''Connection to Marionette server is lost. Check gecko''', 'level': ERROR},
-        {'substr': 'Timeout waiting for marionette on port', 'level': ERROR},
-        {'regex': re.compile(r'''(TEST-UNEXPECTED|PROCESS-CRASH)'''), 'level': ERROR},
-        {'regex': re.compile(r'''(\b((?!Marionette|TestMarionette|NoSuchElement|XPathLookup|NoSuchWindow|StaleElement|ScriptTimeout|ElementNotVisible|NoSuchFrame|InvalidResponse|Javascript|Timeout|InvalidElementState|NoAlertPresent|InvalidCookieDomain|UnableToSetCookie|InvalidSelector|MoveTargetOutOfBounds)\w*)Exception)'''), 'level': ERROR},
-    ]
 
     repos = []
 
@@ -295,8 +288,7 @@ class MarionetteTest(TestingMixin, MercurialScript, BlobUploadMixin, TransferMix
         if self.config['headless']:
             cmd.append('--headless')
 
-        cmd.append('--gecko-log=%s' % os.path.join(dirs["abs_blob_upload_dir"],
-                                                   'gecko.log'))
+        cmd.append('--gecko-log=-')
 
         if self.config.get("structured_output"):
             cmd.append("--log-raw=-")
@@ -337,11 +329,12 @@ class MarionetteTest(TestingMixin, MercurialScript, BlobUploadMixin, TransferMix
 
         marionette_parser = self.parser_class(config=self.config,
                                               log_obj=self.log_obj,
-                                              error_list=self.error_list,
+                                              error_list=BaseErrorList + HarnessErrorList,
                                               strict=False)
-        return_code = self.run_command(cmd, env=env,
-                                output_timeout=1000,
-                                output_parser=marionette_parser)
+        return_code = self.run_command(cmd,
+                                       output_timeout=1000,
+                                       output_parser=marionette_parser,
+                                       env=env)
         level = INFO
         tbpl_status, log_level = marionette_parser.evaluate_parser(
             return_code=return_code)

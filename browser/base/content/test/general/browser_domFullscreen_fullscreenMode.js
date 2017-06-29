@@ -163,17 +163,15 @@ add_task(async function() {
     ["full-screen-api.transition-duration.enter", "0 0"],
     ["full-screen-api.transition-duration.leave", "0 0"]);
 
-  let tab = BrowserTestUtils.addTab(gBrowser, kPage);
-  let browser = tab.linkedBrowser;
-  gBrowser.selectedTab = tab;
-  await waitForDocLoadComplete();
-
-  registerCleanupFunction(() => {
-    if (browser.contentWindow.fullScreen) {
-      BrowserFullScreen();
+  registerCleanupFunction(async function() {
+    if (window.fullScreen) {
+      executeSoon(() => BrowserFullScreen());
+      await waitForFullscreenChanges(FS_CHANGE_SIZE);
     }
-    gBrowser.removeTab(tab);
   });
+
+  let tab = await BrowserTestUtils.openNewForegroundTab({ gBrowser, url: kPage });
+  let browser = tab.linkedBrowser;
 
   gMessageManager = browser.messageManager;
   gMessageManager.loadFrameScript(
@@ -237,4 +235,6 @@ add_task(async function() {
       await waitForFullscreenChanges(FS_CHANGE_SIZE);
     }
   }
+
+  await BrowserTestUtils.removeTab(tab);
 });

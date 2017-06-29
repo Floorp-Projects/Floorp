@@ -44,6 +44,11 @@ input {
     background-image: url("assets/glyph-newWindow-private-16.svg"); }
   .icon.icon-settings {
     background-image: url("assets/glyph-settings-16.svg"); }
+  .icon.icon-pin-small {
+    background-image: url("assets/glyph-pin-12.svg");
+    background-size: 12px;
+    height: 12px;
+    width: 12px; }
 
 html,
 body,
@@ -222,7 +227,7 @@ main {
       background-color: #FFF;
       border-radius: 6px;
       box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.1);
-      background-size: 250%;
+      background-size: cover;
       background-position: top left;
       transition: opacity 1s;
       opacity: 0; }
@@ -232,11 +237,20 @@ main {
       height: 30px;
       line-height: 30px;
       text-align: center;
-      white-space: nowrap;
       font-size: 11px;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      width: 96px; }
+      width: 96px;
+      position: relative; }
+      .top-sites-list .top-site-outer .title .icon {
+        offset-inline-start: 0;
+        position: absolute;
+        top: 10px; }
+      .top-sites-list .top-site-outer .title span {
+        display: block;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap; }
+      .top-sites-list .top-site-outer .title.pinned span {
+        padding: 0 13px; }
 
 .search-wrapper {
   cursor: default;
@@ -422,13 +436,16 @@ main {
     width: 21px; }
   .prefs-pane [type='checkbox']:not(:checked) + label::after,
   .prefs-pane [type='checkbox']:checked + label::after {
-    background: url("chrome://global/skin/in-content/check.svg#check") no-repeat center center;
+    background: url("chrome://global/skin/in-content/check.svg") no-repeat center center;
     content: '';
     height: 21px;
     offset-inline-start: 0;
     position: absolute;
     top: 0;
-    width: 21px; }
+    width: 21px;
+    -moz-context-properties: fill, stroke;
+    fill: #1691D2;
+    stroke: none; }
   .prefs-pane [type='checkbox']:not(:checked) + label::after {
     opacity: 0; }
   .prefs-pane [type='checkbox']:checked + label::after {
@@ -454,3 +471,42 @@ main {
   .prefs-pane-button button:dir(rtl) {
     left: 5px;
     right: auto; }
+
+.confirmation-dialog .modal {
+  position: fixed;
+  width: 400px;
+  top: 20%;
+  left: 50%;
+  margin-left: -200px;
+  box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.08); }
+
+.confirmation-dialog section {
+  margin: 0; }
+
+.confirmation-dialog .modal-message {
+  padding: 24px; }
+
+.confirmation-dialog .actions {
+  justify-content: flex-end; }
+  .confirmation-dialog .actions button {
+    margin-inline-end: 16px; }
+    .confirmation-dialog .actions button.done {
+      margin-inline-start: 0;
+      margin-inline-end: 0; }
+
+.modal-overlay {
+  background: #FBFBFB;
+  height: 100%;
+  left: 0;
+  opacity: 0.8;
+  position: fixed;
+  top: 0;
+  width: 100%;
+  z-index: 11001; }
+
+.modal {
+  background: #FFF;
+  border: solid 1px rgba(0, 0, 0, 0.1);
+  border-radius: 3px;
+  font-size: 14px;
+  z-index: 11002; }

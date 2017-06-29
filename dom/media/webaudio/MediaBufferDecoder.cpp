@@ -183,8 +183,7 @@ MediaDecodeTask::CreateReader()
   }
 
   RefPtr<BufferMediaResource> resource =
-    new BufferMediaResource(static_cast<uint8_t*> (mBuffer),
-                            mLength, principal, mContainerType);
+    new BufferMediaResource(static_cast<uint8_t*>(mBuffer), mLength, principal);
 
   MOZ_ASSERT(!mBufferDecoder);
   mMainThread =

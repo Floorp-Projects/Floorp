@@ -71,6 +71,9 @@ function focusInChild() {
   }
 
   function eventListener(event) {
+    // Stop the shim code from seeing this event process.
+    event.stopImmediatePropagation();
+
     var id;
     if (event.target instanceof Components.interfaces.nsIDOMWindow)
       id = getWindowDocId(event.originalTarget) + "-window";
@@ -136,7 +139,7 @@ add_task(async function() {
   await promiseTabLoadEvent(tab1, "data:text/html," + escape(testPage1));
   await promiseTabLoadEvent(tab2, "data:text/html," + escape(testPage2));
 
-  var childFocusScript = "data:,(" + focusInChild.toString() + ")();";
+  var childFocusScript = "data:,(" + escape(focusInChild.toString()) + ")();";
   browser1.messageManager.loadFrameScript(childFocusScript, true);
   browser2.messageManager.loadFrameScript(childFocusScript, true);
 
@@ -379,10 +382,6 @@ function _browser_tabfocus_test_eventOccured(event) {
   }
 
   var id;
-
-  // Some focus events from the child bubble up? Ignore them.
-  if (Cu.isCrossProcessWrapper(event.originalTarget))
-    return;
 
   if (event.target instanceof Window)
     id = getWindowDocId(event.originalTarget) + "-window";

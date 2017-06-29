@@ -129,6 +129,10 @@ GCC_PLATFORM_WIN = {
     'WINNT': 1,
 }
 
+GCC_PLATFORM_OPENBSD = {
+    '__OpenBSD__': 1,
+}
+
 GCC_PLATFORM_X86_LINUX = FakeCompiler(GCC_PLATFORM_X86, GCC_PLATFORM_LINUX)
 GCC_PLATFORM_X86_64_LINUX = FakeCompiler(GCC_PLATFORM_X86_64,
                                          GCC_PLATFORM_LINUX)
@@ -240,6 +244,59 @@ CLANG_CL_3_9 = (CLANG_BASE('3.9.0') + VS('18.00.00000') + DEFAULT_C11 +
 CLANG_CL_PLATFORM_X86 = FakeCompiler(VS_PLATFORM_X86, GCC_PLATFORM_X86[None])
 CLANG_CL_PLATFORM_X86_64 = FakeCompiler(VS_PLATFORM_X86_64, GCC_PLATFORM_X86_64[None])
 
+LIBRARY_NAME_INFOS = {
+    'linux-gnu': {
+        'DLL_PREFIX': 'lib',
+        'DLL_SUFFIX': '.so',
+        'LIB_PREFIX': 'lib',
+        'LIB_SUFFIX': 'a',
+        'IMPORT_LIB_SUFFIX': '',
+        'RUST_LIB_PREFIX': 'lib',
+        'RUST_LIB_SUFFIX': 'a',
+        'OBJ_SUFFIX': 'o',
+    },
+    'darwin11.2.0': {
+        'DLL_PREFIX': 'lib',
+        'DLL_SUFFIX': '.dylib',
+        'LIB_PREFIX': 'lib',
+        'LIB_SUFFIX': 'a',
+        'IMPORT_LIB_SUFFIX': '',
+        'RUST_LIB_PREFIX': 'lib',
+        'RUST_LIB_SUFFIX': 'a',
+        'OBJ_SUFFIX': 'o',
+    },
+    'mingw32': {
+        'DLL_PREFIX': '',
+        'DLL_SUFFIX': '.dll',
+        'LIB_PREFIX': 'lib',
+        'LIB_SUFFIX': 'a',
+        'IMPORT_LIB_SUFFIX': 'a',
+        'RUST_LIB_PREFIX': '',
+        'RUST_LIB_SUFFIX': 'lib',
+        'OBJ_SUFFIX': 'o',
+    },
+    'msvc': {
+        'DLL_PREFIX': '',
+        'DLL_SUFFIX': '.dll',
+        'LIB_PREFIX': '',
+        'LIB_SUFFIX': 'lib',
+        'IMPORT_LIB_SUFFIX': 'lib',
+        'RUST_LIB_PREFIX': '',
+        'RUST_LIB_SUFFIX': 'lib',
+        'OBJ_SUFFIX': 'obj',
+    },
+    'openbsd6.1': {
+        'DLL_PREFIX': 'lib',
+        'DLL_SUFFIX': '.so.1.0',
+        'LIB_PREFIX': 'lib',
+        'LIB_SUFFIX': 'a',
+        'IMPORT_LIB_SUFFIX': '',
+        'RUST_LIB_PREFIX': 'lib',
+        'RUST_LIB_SUFFIX': 'a',
+        'OBJ_SUFFIX': 'o',
+    },
+}
+
 
 class BaseToolchainTest(BaseConfigureTest):
     def setUp(self):
@@ -296,6 +353,44 @@ class BaseToolchainTest(BaseConfigureTest):
                 self.assertEquals((var, result),
                                   (var, self.out.getvalue().strip()))
                 return
+
+        # Normalize the target os to match what we have as keys in
+        # LIBRARY_NAME_INFOS.
+        target_os = getattr(self, 'TARGET', self.HOST).split('-', 2)[2]
+        if target_os == 'mingw32':
+            compiler_type = sandbox._value_for(sandbox['c_compiler']).type
+            if compiler_type in ('msvc', 'clang-cl'):
+                target_os = 'msvc'
+        elif target_os == 'linux-gnuabi64':
+            target_os = 'linux-gnu'
+
+        self.do_library_name_info_test(target_os, sandbox)
+
+        # Try again on artifact builds. In that case, we always get library
+        # name info for msvc on Windows
+        if target_os == 'mingw32':
+            target_os = 'msvc'
+
+        sandbox = self.get_sandbox(
+            paths, {}, args + ['--enable-artifact-builds'], environ,
+            logger=self.logger)
+
+        self.do_library_name_info_test(target_os, sandbox)
+
+    def do_library_name_info_test(self, target_os, sandbox):
+        library_name_info = LIBRARY_NAME_INFOS[target_os]
+        for k in (
+            'DLL_PREFIX',
+            'DLL_SUFFIX',
+            'LIB_PREFIX',
+            'LIB_SUFFIX',
+            'IMPORT_LIB_SUFFIX',
+            'RUST_LIB_PREFIX',
+            'RUST_LIB_SUFFIX',
+            'OBJ_SUFFIX',
+        ):
+            self.assertEquals('%s=%s' % (k, sandbox.get_config(k)),
+                              '%s=%s' % (k, library_name_info[k]))
 
 
 class LinuxToolchainTest(BaseToolchainTest):
@@ -1267,6 +1362,23 @@ class OSXCrossToolchainTest(BaseToolchainTest):
                           'match --target kernel (Darwin)',
         }, environ={
             'CC': 'gcc',
+        })
+
+
+class OpenBSDToolchainTest(BaseToolchainTest):
+    HOST = 'x86_64-unknown-openbsd6.1'
+    TARGET = 'x86_64-unknown-openbsd6.1'
+    PATHS = {
+        '/usr/bin/gcc': GCC_4_9 + GCC_PLATFORM_X86_64 + GCC_PLATFORM_OPENBSD,
+        '/usr/bin/g++': GXX_4_9 + GCC_PLATFORM_X86_64 + GCC_PLATFORM_OPENBSD,
+    }
+    GCC_4_9_RESULT = LinuxToolchainTest.GCC_4_9_RESULT
+    GXX_4_9_RESULT = LinuxToolchainTest.GXX_4_9_RESULT
+
+    def test_gcc(self):
+        self.do_toolchain_test(self.PATHS, {
+            'c_compiler': self.GCC_4_9_RESULT,
+            'cxx_compiler': self.GXX_4_9_RESULT,
         })
 
 

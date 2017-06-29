@@ -710,6 +710,12 @@ HTMLEditRules::DidDoAction(Selection* aSelection,
   }
 }
 
+NS_IMETHODIMP_(bool)
+HTMLEditRules::DocumentIsEmpty()
+{
+  return !!mBogusNode;
+}
+
 nsresult
 HTMLEditRules::GetListState(bool* aMixed,
                             bool* aOL,

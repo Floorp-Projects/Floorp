@@ -604,10 +604,15 @@ const CustomizableWidgets = [
     onCreated(aNode) {
       // Add an observer so the button is checked while the sidebar is open
       let doc = aNode.ownerDocument;
-      let obnode = doc.createElementNS(kNSXUL, "observes");
-      obnode.setAttribute("element", "sidebar-box");
-      obnode.setAttribute("attribute", "checked");
-      aNode.appendChild(obnode);
+      let obChecked = doc.createElementNS(kNSXUL, "observes");
+      obChecked.setAttribute("element", "sidebar-box");
+      obChecked.setAttribute("attribute", "checked");
+      let obPosition = doc.createElementNS(kNSXUL, "observes");
+      obPosition.setAttribute("element", "sidebar-box");
+      obPosition.setAttribute("attribute", "positionend");
+
+      aNode.appendChild(obChecked);
+      aNode.appendChild(obPosition);
     }
   }, {
     id: "social-share-button",

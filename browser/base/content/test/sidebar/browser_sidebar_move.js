@@ -33,10 +33,12 @@ add_task(async function() {
 
   let reversePositionButton = document.getElementById("sidebar-reverse-position");
   let originalLabel = reversePositionButton.getAttribute("label");
+  let box = document.getElementById("sidebar-box");
 
   // Default (position: left)
   Assert.deepEqual(getBrowserChildrenWithOrdinals(),
     EXPECTED_START_ORDINALS, "Correct ordinal (start)");
+  ok(!box.hasAttribute("positionend"), "Positioned start");
 
   // Moved to right
   SidebarUI.reversePosition();
@@ -44,11 +46,13 @@ add_task(async function() {
   Assert.deepEqual(getBrowserChildrenWithOrdinals(),
     EXPECTED_END_ORDINALS, "Correct ordinal (end)");
   isnot(reversePositionButton.getAttribute("label"), originalLabel, "Label changed");
+  ok(box.hasAttribute("positionend"), "Positioned end");
 
   // Moved to back to left
   SidebarUI.reversePosition();
   SidebarUI.showSwitcherPanel();
   Assert.deepEqual(getBrowserChildrenWithOrdinals(),
     EXPECTED_START_ORDINALS, "Correct ordinal (start)");
+  ok(!box.hasAttribute("positionend"), "Positioned start");
   is(reversePositionButton.getAttribute("label"), originalLabel, "Label is back to normal");
 });

@@ -9,8 +9,6 @@
   font-size: 1.333em;
   font-weight: lighter;
   padding: 8px;
-  color: -moz-dialogText;
-  text-shadow: none;
 }
 
 .sidebar-splitter {
@@ -18,18 +16,18 @@
   border: 0 solid;
   border-inline-end-width: 1px;
   min-width: 1px;
-  width: 3px;
+  width: 8px;
   background-image: none !important;
   background-color: transparent;
-  margin-inline-start: -3px;
+  margin-inline-start: -8px;
   position: relative;
 }
 
-.sidebar-splitter[overlapend] {
+#sidebar-box[positionend] + .sidebar-splitter {
   border-inline-end-width: 0;
   border-inline-start-width: 1px;
   margin-inline-start: 0;
-  margin-inline-end: -3px;
+  margin-inline-end: -8px;
 }
 
 #sidebar-throbber[loading="true"] {

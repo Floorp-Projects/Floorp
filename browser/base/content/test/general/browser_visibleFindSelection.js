@@ -5,8 +5,10 @@ add_task(async function() {
 
   let tab = gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
 
-  await promiseTabLoadEvent(tab, "data:text/html," + escape(childContent));
-  await SimpleTest.promiseFocus(gBrowser.selectedBrowser.contentWindowAsCPOW);
+  await promiseTabLoadEvent(tab, "data:text/html;charset=utf-8," + escape(childContent));
+  await SimpleTest.promiseFocus(gBrowser.selectedBrowser);
+
+  let remote = gBrowser.selectedBrowser.isRemoteBrowser;
 
   let findBarOpenPromise = promiseWaitForEvent(gBrowser, "findbaropen");
   EventUtils.synthesizeKey("f", { accelKey: true });
@@ -15,7 +17,9 @@ add_task(async function() {
   ok(gFindBarInitialized, "find bar is now initialized");
 
   // Finds the div in the green box.
-  let scrollPromise = promiseWaitForEvent(gBrowser, "scroll");
+  let scrollPromise = remote ?
+    BrowserTestUtils.waitForContentEvent(gBrowser.selectedBrowser, "scroll") :
+    BrowserTestUtils.waitForEvent(gBrowser, "scroll");
   EventUtils.synthesizeKey("d", {});
   EventUtils.synthesizeKey("i", {});
   EventUtils.synthesizeKey("v", {});
@@ -33,7 +37,9 @@ add_task(async function() {
   });
 
   // Finds the div in the red box.
-  scrollPromise = promiseWaitForEvent(gBrowser, "scroll");
+  scrollPromise = remote ?
+    BrowserTestUtils.waitForContentEvent(gBrowser.selectedBrowser, "scroll") :
+    BrowserTestUtils.waitForEvent(gBrowser, "scroll");
   EventUtils.synthesizeKey("g", { accelKey: true });
   await scrollPromise;
 

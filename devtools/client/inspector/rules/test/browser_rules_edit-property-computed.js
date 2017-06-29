@@ -41,10 +41,10 @@ function* editAndCheck(view) {
   info("Entering a new value");
   EventUtils.sendString(newPaddingValue, view.styleWindow);
 
-  info("Waiting for the throttled previewValue to apply the " +
+  info("Waiting for the debounced previewValue to apply the " +
     "changes to document");
 
-  view.throttle.flush();
+  view.debounce.flush();
   yield onPropertyChange;
 
   info("Waiting for ruleview-refreshed after previewValue was applied.");

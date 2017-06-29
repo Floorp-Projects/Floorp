@@ -90,3 +90,4 @@ third_party/python/which/
 toolkit/components/jsoncpp/
 toolkit/components/protobuf/
 toolkit/crashreporter/google-breakpad/
+tools/fuzzing/libfuzzer

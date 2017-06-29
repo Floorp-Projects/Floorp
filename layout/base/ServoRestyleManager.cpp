@@ -469,8 +469,8 @@ ServoRestyleManager::ProcessPostTraversal(Element* aElement,
   // Hold the old style context alive, because it could become a dangling
   // pointer during the replacement. In practice it's not a huge deal, but
   // better not playing with dangling pointers if not needed.
-  RefPtr<nsStyleContext> oldStyleContext =
-    styleFrame ? styleFrame->StyleContext() : nullptr;
+  RefPtr<ServoStyleContext> oldStyleContext =
+    styleFrame ? styleFrame->StyleContext()->AsServo() : nullptr;
 
   UndisplayedNode* displayContentsNode = nullptr;
   // FIXME(emilio, bug 1303605): This can be simpler for Servo.
@@ -479,7 +479,7 @@ ServoRestyleManager::ProcessPostTraversal(Element* aElement,
     displayContentsNode =
       PresContext()->FrameConstructor()->GetDisplayContentsNodeFor(aElement);
     if (displayContentsNode) {
-      oldStyleContext = displayContentsNode->mStyle;
+      oldStyleContext = displayContentsNode->mStyle->AsServo();
     }
   }
 
@@ -513,7 +513,7 @@ ServoRestyleManager::ProcessPostTraversal(Element* aElement,
   ServoRestyleState& childrenRestyleState =
     thisFrameRestyleState ? *thisFrameRestyleState : aRestyleState;
 
-  RefPtr<nsStyleContext> newContext = nullptr;
+  RefPtr<ServoStyleContext> newContext = nullptr;
   if (recreateContext) {
     MOZ_ASSERT(styleFrame || displayContentsNode);
 
@@ -524,7 +524,7 @@ ServoRestyleManager::ProcessPostTraversal(Element* aElement,
     newContext = aRestyleState.StyleSet().GetContext(
       computedValues.forget(), aParentContext, pseudoTag, pseudo, aElement);
 
-    newContext->EnsureSameStructsCached(oldStyleContext);
+    newContext->ResolveSameStructsAs(PresContext(), oldStyleContext);
 
     // We want to walk all the continuations here, even the ones with different
     // styles.  In practice, the only reason we get continuations with different
@@ -936,7 +936,7 @@ ServoRestyleManager::ContentStateChanged(nsIContent* aContent,
   // track those bits in the same way, and we know that :dir() rules are always
   // present in UA style sheets.
   if (!aChangedBits.HasAtLeastOneOfStates(DIRECTION_STATES) &&
-      !StyleSet()->HasStateDependency(aChangedBits)) {
+      !StyleSet()->HasStateDependency(*aElement, aChangedBits)) {
     return;
   }
 
@@ -981,7 +981,7 @@ ServoRestyleManager::AttributeWillChange(Element* aElement,
          (aAttribute == nsGkAtoms::id ||
           aAttribute == nsGkAtoms::_class)) ||
         aAttribute == nsGkAtoms::lang ||
-        StyleSet()->MightHaveAttributeDependency(aAttribute))) {
+        StyleSet()->MightHaveAttributeDependency(*aElement, aAttribute))) {
     return;
   }
 

@@ -136,6 +136,8 @@ statusbarpanel:not(.statusbar-resizerpanel):-moz-lwtheme {
 sidebarheader {
   min-height: 25px;
   background-color: -moz-Dialog;
+  color: -moz-dialogText;
+  text-shadow: none;
   -moz-appearance: toolbox;
   border-bottom: 1px solid ThreeDShadow;
   border-top: 1px solid ThreeDHighlight;
@@ -168,8 +170,7 @@ toolbar[mode="text"] .toolbarbutton-text {
   text-shadow: 1px 1px 1.5px black;
 }
 
-statusbar:-moz-lwtheme,
-sidebarheader:-moz-lwtheme {
+statusbar:-moz-lwtheme {
   -moz-appearance: none;
   background: none;
   border-style: none;

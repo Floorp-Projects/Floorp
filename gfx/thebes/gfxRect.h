@@ -13,19 +13,12 @@
 #include "mozilla/gfx/BaseMargin.h"
 #include "mozilla/gfx/BaseRect.h"
 #include "mozilla/gfx/MatrixFwd.h"
+#include "mozilla/gfx/Rect.h"
 #include "mozilla/Assertions.h"
 
 struct gfxQuad;
 
-struct gfxMargin : public mozilla::gfx::BaseMargin<gfxFloat, gfxMargin> {
-  typedef mozilla::gfx::BaseMargin<gfxFloat, gfxMargin> Super;
-
-  // Constructors
-  gfxMargin() : Super() {}
-  gfxMargin(const gfxMargin& aMargin) : Super(aMargin) {}
-  gfxMargin(gfxFloat aTop, gfxFloat aRight, gfxFloat aBottom, gfxFloat aLeft)
-    : Super(aTop, aRight, aBottom, aLeft) {}
-};
+typedef mozilla::gfx::MarginDouble gfxMargin;
 
 struct gfxRect :
     public mozilla::gfx::BaseRect<gfxFloat, gfxRect, gfxPoint, gfxSize, gfxMargin> {

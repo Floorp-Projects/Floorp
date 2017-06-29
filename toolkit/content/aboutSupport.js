@@ -72,6 +72,22 @@ var snapshotFormatters = {
     $("multiprocess-box").textContent = strings.formatStringFromName("multiProcessWindows",
       [data.numRemoteWindows, data.numTotalWindows, statusText], 3);
 
+    let styloReason;
+    if (!data.styloBuild) {
+      styloReason = strings.GetStringFromName("disabledByBuild");
+    } else if (data.styloResult != data.styloDefault) {
+      if (data.styloResult) {
+        styloReason = strings.GetStringFromName("enabledByUser");
+      } else {
+        styloReason = strings.GetStringFromName("disabledByUser");
+      }
+    } else if (data.styloDefault) {
+      styloReason = strings.GetStringFromName("enabledByDefault");
+    } else {
+      styloReason = strings.GetStringFromName("disabledByDefault");
+    }
+    $("stylo-box").textContent = `${data.styloResult} (${styloReason})`;
+
     let keyGoogleFound = data.keyGoogleFound ? "found" : "missing";
     $("key-google-box").textContent = strings.GetStringFromName(keyGoogleFound);
 

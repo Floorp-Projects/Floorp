@@ -28,9 +28,9 @@ function checkPlaybackRate(wallclock, media, expected, threshold) {
 }
 
 // Those value are expected to match those at the top of HTMLMediaElement.cpp.
-let VERY_SLOW_RATE = 0.1,
-    SLOW_RATE = 0.25,
-    FAST_RATE = 5,
+let VERY_SLOW_RATE = 1 / 32,
+    SLOW_RATE = 1 / 16,
+    FAST_RATE = 16,
     VERY_FAST_RATE = 20,
     NULL_RATE = 0.0;
 

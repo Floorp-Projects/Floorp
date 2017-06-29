@@ -264,8 +264,11 @@ private:
  *
  * Note: it assumes that no mutation of the DOM or frame tree takes place during
  * iteration, and will break horribly if that is not true.
+ *
+ * We require this to be memmovable since Rust code can create and move
+ * StyleChildrenIterators.
  */
-class StyleChildrenIterator : private AllChildrenIterator
+class MOZ_NEEDS_MEMMOVABLE_MEMBERS StyleChildrenIterator : private AllChildrenIterator
 {
 public:
   explicit StyleChildrenIterator(const nsIContent* aContent)
@@ -278,10 +281,6 @@ public:
   ~StyleChildrenIterator() { MOZ_COUNT_DTOR(StyleChildrenIterator); }
 
   nsIContent* GetNextChild();
-
-  // Returns true if we cannot find all the children we need to style by
-  // traversing the siblings of the first child.
-  static bool IsNeeded(const Element* aParent);
 };
 
 } // namespace dom

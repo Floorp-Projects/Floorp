@@ -9,7 +9,6 @@
 #include "gtest/gtest.h"
 
 #include "FuzzingInterface.h"
-#include "LibFuzzerRegistry.h"
 
 #include "signaling/src/sdp/SipccSdpParser.h"
 

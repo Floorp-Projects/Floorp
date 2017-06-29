@@ -92,7 +92,10 @@ this.browserAction = class extends ExtensionAPI {
       title: options.default_title || extension.name,
       badgeText: "",
       badgeBackgroundColor: null,
-      icon: IconDetails.normalize({path: options.default_icon}, extension),
+      icon: IconDetails.normalize({
+        path: options.default_icon,
+        themeIcons: options.theme_icons,
+      }, extension),
       popup: options.default_popup || "",
       area: browserAreas[options.default_area || "navbar"],
     };
@@ -465,7 +468,7 @@ this.browserAction = class extends ExtensionAPI {
 
     // If the best available icon size is not divisible by 16, check if we have
     // an 18px icon to fall back to, and trim off the padding instead.
-    if (size % 16 && !icon.endsWith(".svg")) {
+    if (size % 16 && typeof icon === "string" && !icon.endsWith(".svg")) {
       let result = IconDetails.getPreferredIcon(icons, this.extension, 18);
 
       if (result.size % 18 == 0) {
@@ -475,14 +478,27 @@ this.browserAction = class extends ExtensionAPI {
       }
     }
 
-    let getIcon = size => IconDetails.escapeUrl(
-      IconDetails.getPreferredIcon(icons, this.extension, size).icon);
+    let getIcon = (size, theme) => {
+      let {icon} = IconDetails.getPreferredIcon(icons, this.extension, size);
+      if (typeof icon === "object") {
+        return IconDetails.escapeUrl(icon[theme]);
+      }
+      return IconDetails.escapeUrl(icon);
+    };
+
+    let getStyle = (name, size) => {
+      return `
+        --webextension-${name}: url("${getIcon(size, "default")}");
+        --webextension-${name}-light: url("${getIcon(size, "light")}");
+        --webextension-${name}-dark: url("${getIcon(size, "dark")}");
+      `;
+    };
 
     let style = `
-      --webextension-menupanel-image: url("${getIcon(32)}");
-      --webextension-menupanel-image-2x: url("${getIcon(64)}");
-      --webextension-toolbar-image: url("${IconDetails.escapeUrl(icon)}");
-      --webextension-toolbar-image-2x: url("${getIcon(baseSize * 2)}");
+      ${getStyle("menupanel-image", 32)}
+      ${getStyle("menupanel-image-2x", 64)}
+      ${getStyle("toolbar-image", baseSize)}
+      ${getStyle("toolbar-image-2x", baseSize * 2)}
     `;
 
     return {style, legacy};

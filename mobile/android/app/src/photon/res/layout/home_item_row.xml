@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<org.mozilla.gecko.home.TwoLinePageRow xmlns:android="http://schemas.android.com/apk/res/android"
+                                       style="@style/Widget.TwoLinePageRow"
+                                       android:layout_width="match_parent"
+                                       android:layout_height="@dimen/wrap_content"
+                                       android:background="@android:color/transparent"
+                                       android:gravity="center_vertical"
+                                       android:minHeight="@dimen/search_item_min_height"/>

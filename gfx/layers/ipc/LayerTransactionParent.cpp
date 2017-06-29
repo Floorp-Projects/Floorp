@@ -32,7 +32,6 @@
 #include "mozilla/Unused.h"
 #include "nsCoord.h"                    // for NSAppUnitsToFloatPixels
 #include "nsDebug.h"                    // for NS_RUNTIMEABORT
-#include "nsDeviceContext.h"            // for AppUnitsPerCSSPixel
 #include "nsISupportsImpl.h"            // for Layer::Release, etc
 #include "nsLayoutUtils.h"              // for nsLayoutUtils
 #include "nsMathUtils.h"                // for NS_round
@@ -689,7 +688,7 @@ LayerTransactionParent::ShouldParentObserveEpoch()
 mozilla::ipc::IPCResult
 LayerTransactionParent::RecvSetTestSampleTime(const TimeStamp& aTime)
 {
-  if (!mCompositorBridge->SetTestSampleTime(this, aTime)) {
+  if (!mCompositorBridge->SetTestSampleTime(GetId(), aTime)) {
     return IPC_FAIL_NO_REASON(this);
   }
   return IPC_OK();
@@ -698,7 +697,7 @@ LayerTransactionParent::RecvSetTestSampleTime(const TimeStamp& aTime)
 mozilla::ipc::IPCResult
 LayerTransactionParent::RecvLeaveTestMode()
 {
-  mCompositorBridge->LeaveTestMode(this);
+  mCompositorBridge->LeaveTestMode(GetId());
   return IPC_OK();
 }
 
@@ -721,14 +720,11 @@ LayerTransactionParent::RecvGetAnimationOpacity(const uint64_t& aCompositorAnima
     return IPC_FAIL_NO_REASON(this);
   }
 
-  auto value = storage->GetAnimatedValue(aCompositorAnimationsId);
-
-  if (!value || value->mType != AnimatedValue::OPACITY) {
-    return IPC_OK();
+  Maybe<float> opacity = storage->GetAnimationOpacity(aCompositorAnimationsId);
+  if (opacity) {
+    *aOpacity = *opacity;
+    *aHasAnimationOpacity = true;
   }
-
-  *aOpacity = value->mOpacity;
-  *aHasAnimationOpacity = true;
   return IPC_OK();
 }
 
@@ -753,32 +749,12 @@ LayerTransactionParent::RecvGetAnimationTransform(const uint64_t& aCompositorAni
     return IPC_FAIL_NO_REASON(this);
   }
 
-  auto value = storage->GetAnimatedValue(aCompositorAnimationsId);
-
-  if (!value || value->mType != AnimatedValue::TRANSFORM) {
+  Maybe<Matrix4x4> transform = storage->GetAnimationTransform(aCompositorAnimationsId);
+  if (transform) {
+    *aTransform = *transform;
+  } else {
     *aTransform = mozilla::void_t();
-    return IPC_OK();
   }
-
-  Matrix4x4 transform = value->mTransform.mFrameTransform;
-  const TransformData& data = value->mTransform.mData;
-  float scale = data.appUnitsPerDevPixel();
-  Point3D transformOrigin = data.transformOrigin();
-
-  // Undo the rebasing applied by
-  // nsDisplayTransform::GetResultingTransformMatrixInternal
-  transform.ChangeBasis(-transformOrigin);
-
-  // Convert to CSS pixels (this undoes the operations performed by
-  // nsStyleTransformMatrix::ProcessTranslatePart which is called from
-  // nsDisplayTransform::GetResultingTransformMatrix)
-  double devPerCss =
-    double(scale) / double(nsDeviceContext::AppUnitsPerCSSPixel());
-  transform._41 *= devPerCss;
-  transform._42 *= devPerCss;
-  transform._43 *= devPerCss;
-
-  *aTransform = transform;
   return IPC_OK();
 }
 

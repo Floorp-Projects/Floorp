@@ -58,6 +58,13 @@ var GridActor = ActorClassWithSpec(gridSpec, {
       gridFragments: this.gridFragments
     };
 
+    // If the WalkerActor already knows the container element, then also return its
+    // ActorID so we avoid the client from doing another round trip to get it in many
+    // cases.
+    if (this.walker.hasNode(this.containerEl)) {
+      form.containerNodeActorID = this.walker.getNode(this.containerEl).actorID;
+    }
+
     return form;
   },
 });

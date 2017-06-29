@@ -95,7 +95,6 @@ add_task(async function() {
           { type: "contextmenu", button: 2 }, gBrowser.selectedBrowser);
     await popupShownPromise;
     info("onImage: " + gContextMenu.onImage);
-    info("target: " + gContextMenu.target.tagName);
 
     let loadedAfterCommandPromise = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
     document.getElementById(commandToRun).click();

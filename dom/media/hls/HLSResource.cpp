@@ -18,34 +18,44 @@ HLSResourceCallbacksSupport::HLSResourceCallbacksSupport(HLSResource* aResource)
 }
 
 void
+HLSResourceCallbacksSupport::Detach()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  mResource = nullptr;
+}
+
+void
 HLSResourceCallbacksSupport::OnDataArrived()
 {
-  MOZ_ASSERT(mResource);
-  mResource->onDataAvailable();
+  MOZ_ASSERT(NS_IsMainThread());
+  if (mResource) {
+    mResource->onDataAvailable();
+  }
 }
 
 void
 HLSResourceCallbacksSupport::OnError(int aErrorCode)
 {
-  MOZ_ASSERT(mResource);
+  MOZ_ASSERT(NS_IsMainThread());
+  if (mResource) {
+    mResource->onError(aErrorCode);
+  }
 }
 
 HLSResource::HLSResource(MediaResourceCallback* aCallback,
                          nsIChannel* aChannel,
-                         nsIURI* aURI,
-                         const MediaContainerType& aContainerType)
+                         nsIURI* aURI)
   : mCallback(aCallback)
   , mChannel(aChannel)
   , mURI(aURI)
-  , mContainerType(aContainerType)
 {
   nsCString spec;
   nsresult rv = aURI->GetSpec(spec);
   (void)rv;
   HLSResourceCallbacksSupport::Init();
   mJavaCallbacks = GeckoHLSResourceWrapper::Callbacks::New();
-  HLSResourceCallbacksSupport::AttachNative(mJavaCallbacks,
-                                            mozilla::MakeUnique<HLSResourceCallbacksSupport>(this));
+  mCallbackSupport = new HLSResourceCallbacksSupport(this);
+  HLSResourceCallbacksSupport::AttachNative(mJavaCallbacks, mCallbackSupport);
   mHLSResourceWrapper = java::GeckoHLSResourceWrapper::Create(NS_ConvertUTF8toUTF16(spec),
                                                               mJavaCallbacks);
   MOZ_ASSERT(mHLSResourceWrapper);
@@ -59,8 +69,23 @@ HLSResource::onDataAvailable()
   mCallback->NotifyDataArrived();
 }
 
+void
+HLSResource::onError(int aErrorCode)
+{
+  MOZ_ASSERT(mCallback);
+  HLS_DEBUG("HLSResource", "onError(%d)", aErrorCode);
+  // Since HLS source should be from the Internet, we treat all resource errors
+  // from GeckoHlsPlayer as network errors.
+  mCallback->NotifyNetworkError();
+}
+
 HLSResource::~HLSResource()
 {
+  HLS_DEBUG("HLSResource", "~HLSResource()");
+  if (mCallbackSupport) {
+    mCallbackSupport->Detach();
+    mCallbackSupport = nullptr;
+  }
   if (mJavaCallbacks) {
     HLSResourceCallbacksSupport::DisposeNative(mJavaCallbacks);
     mJavaCallbacks = nullptr;
@@ -69,7 +94,6 @@ HLSResource::~HLSResource()
     mHLSResourceWrapper->Destroy();
     mHLSResourceWrapper = nullptr;
   }
-  HLS_DEBUG("HLSResource", "Destroy");
 }
 
 } // namespace mozilla

@@ -22,13 +22,11 @@ class BufferMediaResource : public MediaResource
 public:
   BufferMediaResource(const uint8_t* aBuffer,
                       uint32_t aLength,
-                      nsIPrincipal* aPrincipal,
-                      const MediaContainerType& aContainerType) :
-    mBuffer(aBuffer),
-    mLength(aLength),
-    mOffset(0),
-    mPrincipal(aPrincipal),
-    mContainerType(aContainerType)
+                      nsIPrincipal* aPrincipal)
+    : mBuffer(aBuffer)
+    , mLength(aLength)
+    , mOffset(0)
+    , mPrincipal(aPrincipal)
   {
   }
 
@@ -47,12 +45,6 @@ private:
     nsCOMPtr<nsIPrincipal> principal = mPrincipal;
     return principal.forget();
   }
-  bool CanClone() override { return false; }
-  already_AddRefed<MediaResource> CloneData(MediaResourceCallback*) override
-  {
-    return nullptr;
-  }
-
   // These methods are called off the main thread.
   // The mode is initially MODE_PLAYBACK.
   void SetReadMode(MediaCacheStream::ReadMode aMode) override {}
@@ -111,19 +103,12 @@ private:
 
   bool IsTransportSeekable() override { return true; }
 
-  const MediaContainerType& GetContentType() const override
-  {
-    return mContainerType;
-  }
-
   size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const override
   {
     // Not owned:
     // - mBuffer
     // - mPrincipal
     size_t size = MediaResource::SizeOfExcludingThis(aMallocSizeOf);
-    size += mContainerType.SizeOfExcludingThis(aMallocSizeOf);
-
     return size;
   }
 
@@ -137,7 +122,6 @@ private:
   uint32_t mLength;
   uint32_t mOffset;
   nsCOMPtr<nsIPrincipal> mPrincipal;
-  const MediaContainerType mContainerType;
 };
 
 } // namespace mozilla

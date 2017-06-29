@@ -47,51 +47,45 @@ add_task(async function() {
   }, true, false, false, "about:robots");
 });
 
-var waitForPageLoad = async function(browser, linkLocation) {
-  await waitForDocLoadComplete();
-
-  is(browser.contentDocument.location.href, linkLocation, "Link should not open in a new tab");
-};
-
-var waitForTabOpen = async function() {
-  let event = await promiseWaitForEvent(gBrowser.tabContainer, "TabOpen", true);
-  ok(true, "Link should open a new tab");
-
-  await waitForDocLoadComplete(event.target.linkedBrowser);
-  await Promise.resolve();
-
-  gBrowser.removeCurrentTab();
-};
-
-var testLink = async function(aLinkIndexOrFunction, pinTab, expectNewTab, testSubFrame, aURL = TEST_URL) {
+async function testLink(aLinkIndexOrFunction, pinTab, expectNewTab, testSubFrame, aURL = TEST_URL) {
   let appTab = BrowserTestUtils.addTab(gBrowser, aURL, {skipAnimation: true});
   if (pinTab)
     gBrowser.pinTab(appTab);
   gBrowser.selectedTab = appTab;
 
-  await waitForDocLoadComplete();
-
   let browser = appTab.linkedBrowser;
-  if (testSubFrame)
-    browser = browser.contentDocument.querySelector("iframe");
-
-  let link;
-  if (typeof aLinkIndexOrFunction == "function") {
-    link = aLinkIndexOrFunction(browser.contentDocument);
-  } else {
-    link = browser.contentDocument.querySelectorAll("a")[aLinkIndexOrFunction];
-  }
+  await BrowserTestUtils.browserLoaded(browser);
 
   let promise;
-  if (expectNewTab)
-    promise = waitForTabOpen();
-  else
-    promise = waitForPageLoad(browser, link.href);
+  if (expectNewTab) {
+    promise = BrowserTestUtils.waitForNewTab(gBrowser).then(tab => {
+      let loaded = tab.linkedBrowser.documentURI.spec;
+      return BrowserTestUtils.removeTab(tab).then(() => loaded);
+    });
+  } else {
+    promise = BrowserTestUtils.browserLoaded(browser, testSubFrame);
+  }
 
-  info("Clicking " + link.textContent);
-  link.click();
+  let href;
+  if (typeof aLinkIndexOrFunction === "function") {
+    ok(!browser.isRemoteBrowser, "don't pass a function for a remote browser");
+    let link = aLinkIndexOrFunction(browser.contentDocument);
+    info("Clicking " + link.textContent);
+    link.click();
+    href = link.href;
+  } else {
+    href = await ContentTask.spawn(browser, [ testSubFrame, aLinkIndexOrFunction ], function([ subFrame, index ]) {
+      let doc = subFrame ? content.document.querySelector("iframe").contentDocument : content.document;
+      let link = doc.querySelectorAll("a")[index];
 
-  await promise;
+      info("Clicking " + link.textContent);
+      link.click();
+      return link.href;
+    });
+  }
 
-  gBrowser.removeTab(appTab);
-};
+  info(`Waiting on load of ${href}`);
+  let loaded = await promise;
+  is(loaded, href, "loaded the right document");
+  await BrowserTestUtils.removeTab(appTab);
+}

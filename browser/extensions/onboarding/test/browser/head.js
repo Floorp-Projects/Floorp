@@ -11,6 +11,7 @@ const TOUR_IDs = [
   "onboarding-tour-customize",
   "onboarding-tour-search",
   "onboarding-tour-default-browser",
+  "onboarding-tour-sync",
 ];
 
 function resetOnboardingDefaultState() {

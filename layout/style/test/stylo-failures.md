@@ -85,8 +85,6 @@ to mochitest command.
   * :-moz-tree bits bug 1348488
     * test_selectors.html `:-moz-tree` [10]
 * Unsupported pseudo-classes
-  * :-moz-lwtheme-* bug 1367312
-    * test_selectors.html `:-moz-lwtheme` [3]
   * :-moz-window-inactive bug 1348489
     * test_selectors.html `:-moz-window-inactive` [2]
 * Unit should be preserved after parsing servo/servo#15346

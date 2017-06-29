@@ -24,7 +24,6 @@
 #include "nsDeviceContext.h"
 #include "nsIContentInlines.h"
 #include "nsIDOMNode.h"
-#include "nsIDocument.h"
 #include "nsIDocumentInlines.h"
 #include "nsIFrame.h"
 #include "nsINode.h"
@@ -205,23 +204,23 @@ Gecko_DestroyAnonymousContentList(nsTArray<nsIContent*>* aAnonContent)
   delete aAnonContent;
 }
 
-StyleChildrenIteratorOwnedOrNull
-Gecko_MaybeCreateStyleChildrenIterator(RawGeckoNodeBorrowed aNode)
+void
+Gecko_ConstructStyleChildrenIterator(
+  RawGeckoElementBorrowed aElement,
+  RawGeckoStyleChildrenIteratorBorrowedMut aIterator)
 {
-  if (!aNode->IsElement()) {
-    return nullptr;
-  }
-
-  const Element* el = aNode->AsElement();
-  return StyleChildrenIterator::IsNeeded(el) ? new StyleChildrenIterator(el)
-                                             : nullptr;
+  MOZ_ASSERT(aElement);
+  MOZ_ASSERT(aIterator);
+  new (aIterator) StyleChildrenIterator(aElement);
 }
 
 void
-Gecko_DropStyleChildrenIterator(StyleChildrenIteratorOwned aIterator)
+Gecko_DestroyStyleChildrenIterator(
+  RawGeckoStyleChildrenIteratorBorrowedMut aIterator)
 {
   MOZ_ASSERT(aIterator);
-  delete aIterator;
+
+  aIterator->~StyleChildrenIterator();
 }
 
 nsIContent*
@@ -236,7 +235,7 @@ Gecko_ElementBindingAnonymousContent(RawGeckoElementBorrowed aElement)
 }
 
 RawGeckoNodeBorrowed
-Gecko_GetNextStyleChild(StyleChildrenIteratorBorrowedMut aIterator)
+Gecko_GetNextStyleChild(RawGeckoStyleChildrenIteratorBorrowedMut aIterator)
 {
   MOZ_ASSERT(aIterator);
   return aIterator->GetNextChild();
@@ -817,6 +816,12 @@ Gecko_GetXMLLangValue(RawGeckoElementBorrowed aElement)
 
   nsCOMPtr<nsIAtom> atom = attr->GetAtomValue();
   return atom.forget().take();
+}
+
+nsIDocument::DocumentTheme
+Gecko_GetDocumentLWTheme(const nsIDocument *aDocument)
+{
+  return aDocument->ThreadSafeGetDocumentLWTheme();
 }
 
 template <typename Implementor>

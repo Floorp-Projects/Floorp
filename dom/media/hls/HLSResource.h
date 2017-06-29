@@ -23,16 +23,19 @@ class HLSResource;
 class HLSResourceCallbacksSupport
   : public GeckoHLSResourceWrapper::Callbacks::Natives<HLSResourceCallbacksSupport>
 {
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(HLSResourceCallbacksSupport)
 public:
   typedef GeckoHLSResourceWrapper::Callbacks::Natives<HLSResourceCallbacksSupport> NativeCallbacks;
   using NativeCallbacks::DisposeNative;
   using NativeCallbacks::AttachNative;
 
   HLSResourceCallbacksSupport(HLSResource* aResource);
+  void Detach();
   void OnDataArrived();
   void OnError(int aErrorCode);
 
 private:
+  ~HLSResourceCallbacksSupport() {}
   HLSResource* mResource;
 };
 
@@ -41,14 +44,11 @@ class HLSResource final : public MediaResource
 public:
   HLSResource(MediaResourceCallback* aCallback,
               nsIChannel* aChannel,
-              nsIURI* aURI,
-              const MediaContainerType& aContainerType);
+              nsIURI* aURI);
   ~HLSResource();
   nsresult Close() override { return NS_OK; }
   void Suspend(bool aCloseImmediately) override { UNIMPLEMENTED(); }
   void Resume() override { UNIMPLEMENTED(); }
-  bool CanClone() override { UNIMPLEMENTED(); return false; }
-  already_AddRefed<MediaResource> CloneData(MediaResourceCallback*) override { UNIMPLEMENTED(); return nullptr; }
   void SetReadMode(MediaCacheStream::ReadMode aMode) override { UNIMPLEMENTED(); }
   void SetPlaybackRate(uint32_t aBytesPerSecond) override  { UNIMPLEMENTED(); }
   nsresult ReadAt(int64_t aOffset, char* aBuffer, uint32_t aCount, uint32_t* aBytes) override { UNIMPLEMENTED(); return NS_ERROR_FAILURE; }
@@ -86,8 +86,6 @@ public:
 
   bool IsTransportSeekable() override { return true; }
 
-  const MediaContainerType& GetContentType() const override { return mContainerType; }
-
   bool IsLiveStream() override
   {
     return false;
@@ -106,12 +104,11 @@ private:
   friend class HLSResourceCallbacksSupport;
 
   void onDataAvailable();
+  void onError(int aErrorCode);
 
   size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const override
   {
     size_t size = MediaResource::SizeOfExcludingThis(aMallocSizeOf);
-    size += mContainerType.SizeOfExcludingThis(aMallocSizeOf);
-
     return size;
   }
 
@@ -123,9 +120,9 @@ private:
   RefPtr<MediaResourceCallback> mCallback;
   nsCOMPtr<nsIChannel> mChannel;
   nsCOMPtr<nsIURI> mURI;
-  const MediaContainerType mContainerType;
   java::GeckoHLSResourceWrapper::GlobalRef mHLSResourceWrapper;
   java::GeckoHLSResourceWrapper::Callbacks::GlobalRef mJavaCallbacks;
+  RefPtr<HLSResourceCallbacksSupport> mCallbackSupport;
 };
 
 } // namespace mozilla

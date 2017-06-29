@@ -390,7 +390,9 @@ marionette-headless:
                 no-read-buildbot-config: true
                 config:
                     by-test-platform:
-                        macosx.*: 
+                        windows.*:
+                            - marionette/windows_taskcluster_config.py
+                        macosx.*:
                             - marionette/prod_config.py
                         default:
                             - marionette/prod_config.py

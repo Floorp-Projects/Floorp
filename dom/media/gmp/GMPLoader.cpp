@@ -160,6 +160,12 @@ class WinSandboxStarter : public mozilla::gmp::SandboxStarter
 public:
   bool Start(const char *aLibPath) override
   {
+    // Cause advapi32 to load before the sandbox is turned on, as
+    // Widevine version 970 and later require it and the sandbox
+    // blocks it on Win7.
+    unsigned int dummy_rand;
+    rand_s(&dummy_rand);
+
     mozilla::SandboxTarget::Instance()->StartSandbox();
     return true;
   }
