@@ -9,20 +9,15 @@ var gSearchResultsPane = {
   listSearchMenuitemIndicators: new Set(),
   searchResultsCategory: null,
   searchInput: null,
-  inited: false,
 
   init() {
-    if (this.inited) {
-      return;
-    }
-    this.inited = true;
     this.searchResultsCategory = document.getElementById("category-search-results");
+
     this.searchInput = document.getElementById("searchInput");
     this.searchInput.hidden = !Services.prefs.getBoolPref("browser.preferences.search");
     if (!this.searchInput.hidden) {
-      this.initializeCategories();
       this.searchInput.addEventListener("command", this);
-      this.searchInput.focus();
+      this.searchInput.addEventListener("focus", this);
 
       // Throttling the resize event to reduce the callback frequency
       let callbackId;
@@ -42,6 +37,8 @@ var gSearchResultsPane = {
   handleEvent(event) {
     if (event.type === "command") {
       this.searchFunction(event);
+    } else if (event.type === "focus") {
+      this.initializeCategories();
     }
   },
 
