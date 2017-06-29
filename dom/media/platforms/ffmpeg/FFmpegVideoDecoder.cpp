@@ -19,6 +19,8 @@
 #define AV_PIX_FMT_YUVJ420P PIX_FMT_YUVJ420P
 #define AV_PIX_FMT_YUV422P PIX_FMT_YUV422P
 #define AV_PIX_FMT_YUV444P PIX_FMT_YUV444P
+#define AV_PIX_FMT_YUV420P10LE PIX_FMT_YUV420P10LE
+#define AV_PIX_FMT_YUV444P10LE PIX_FMT_YUV444P10LE
 #define AV_PIX_FMT_NONE PIX_FMT_NONE
 #endif
 #include "mozilla/PodOperations.h"
@@ -58,6 +60,17 @@ ChoosePixelFormat(AVCodecContext* aCodecContext, const AVPixelFormat* aFormats)
       case AV_PIX_FMT_YUVJ420P:
         FFMPEG_LOG("Requesting pixel format YUVJ420P.");
         return AV_PIX_FMT_YUVJ420P;
+      case AV_PIX_FMT_YUV420P10LE:
+        FFMPEG_LOG("Requesting pixel format YUV420P10LE.");
+        return AV_PIX_FMT_YUV420P10LE;
+      case AV_PIX_FMT_YUV444P10LE:
+        FFMPEG_LOG("Requesting pixel format YUV444P10LE.");
+        return AV_PIX_FMT_YUV444P10LE;
+#if LIBAVCODEC_VERSION_MAJOR >= 57
+      case AV_PIX_FMT_YUV444P12LE:
+        FFMPEG_LOG("Requesting pixel format YUV444P12LE.");
+        return AV_PIX_FMT_YUV444P12LE;
+#endif
       default:
         break;
     }
@@ -321,15 +334,32 @@ FFmpegVideoDecoder<LIBAV_VER>::DoDecode(MediaRawData* aSample,
 
   b.mPlanes[0].mWidth = mFrame->width;
   b.mPlanes[0].mHeight = mFrame->height;
-  if (mCodecContext->pix_fmt == AV_PIX_FMT_YUV444P) {
+  if (mCodecContext->pix_fmt == AV_PIX_FMT_YUV444P ||
+      mCodecContext->pix_fmt == AV_PIX_FMT_YUV444P10LE
+#if LIBAVCODEC_VERSION_MAJOR >= 57
+      ||
+      mCodecContext->pix_fmt == AV_PIX_FMT_YUV444P12LE
+#endif
+      ) {
     b.mPlanes[1].mWidth = b.mPlanes[2].mWidth = mFrame->width;
     b.mPlanes[1].mHeight = b.mPlanes[2].mHeight = mFrame->height;
+    if (mCodecContext->pix_fmt == AV_PIX_FMT_YUV444P10LE) {
+      b.mBitDepth = 10;
+    }
+#if LIBAVCODEC_VERSION_MAJOR >= 57
+    else if (mCodecContext->pix_fmt == AV_PIX_FMT_YUV444P12LE) {
+      b.mBitDepth = 12;
+    }
+#endif
   } else if (mCodecContext->pix_fmt == AV_PIX_FMT_YUV422P) {
     b.mPlanes[1].mWidth = b.mPlanes[2].mWidth = (mFrame->width + 1) >> 1;
     b.mPlanes[1].mHeight = b.mPlanes[2].mHeight = mFrame->height;
   } else {
     b.mPlanes[1].mWidth = b.mPlanes[2].mWidth = (mFrame->width + 1) >> 1;
     b.mPlanes[1].mHeight = b.mPlanes[2].mHeight = (mFrame->height + 1) >> 1;
+    if (mCodecContext->pix_fmt == AV_PIX_FMT_YUV420P10LE) {
+      b.mBitDepth = 10;
+    }
   }
   if (mLib->av_frame_get_colorspace) {
     switch (mLib->av_frame_get_colorspace(mFrame)) {
