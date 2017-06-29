@@ -2162,7 +2162,7 @@
         "audioPlaybackStopped", "pauseMedia", "stopMedia",
         "blockMedia", "resumeMedia", "mute", "unmute", "blockedPopups", "lastURI",
         "purgeSessionHistory", "stopScroll", "startScroll",
-        "userTypedValue", "userTypedClear"
+        "userTypedValue", "userTypedClear", "mediaBlocked"
       ]</field>
 
       <method name="_createLazyBrowser">
@@ -2226,8 +2226,21 @@
                     };
                   };
                   break;
+                case "blockMedia":
+                case "resumeMedia":
+                  getter = () => {
+                    return () => {
+                      // No need to insert a browser, so we just call the browser's
+                      // method.
+                      aTab.addEventListener("SSTabRestoring", () => {
+                        browser[name]();
+                      }, { once: true });
+                    };
+                  };
+                  break;
                 case "userTypedValue":
                 case "userTypedClear":
+                case "mediaBlocked":
                   getter = () => {
                     return SessionStore.getLazyTabValue(aTab, name);
                   };
