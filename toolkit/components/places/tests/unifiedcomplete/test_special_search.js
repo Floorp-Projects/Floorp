@@ -122,19 +122,7 @@ add_task(async function test_special_searches() {
                { uri: uri11, title: "title", tags: [ "foo.bar" ], style: [ "tag" ] } ]
   });
 
-  do_print("foo | -> history (change pref)");
-  changeRestrict("history", "|");
-  await check_autocomplete({
-    search: "foo |",
-    matches: [ { uri: uri2, title: "foo.bar" },
-               { uri: uri3, title: "title" },
-               { uri: uri4, title: "foo.bar" },
-               { uri: uri6, title: "foo.bar" },
-               { uri: uri11, title: "title", tags: [ "foo.bar" ], style: [ "tag" ] } ]
-  });
-
   do_print("foo * -> is star");
-  resetRestrict("history");
   await check_autocomplete({
     search: "foo *",
     matches: [ { uri: uri6, title: "foo.bar", style: [ "bookmark" ] },
@@ -146,21 +134,7 @@ add_task(async function test_special_searches() {
                { uri: uri12, title: "foo.bar", tags: [ "foo.bar" ], style: [ "bookmark-tag" ] } ]
   });
 
-  do_print("foo | -> is star (change pref)");
-  changeRestrict("bookmark", "|");
-  await check_autocomplete({
-    search: "foo |",
-    matches: [ { uri: uri6, title: "foo.bar", style: [ "bookmark" ] },
-               { uri: uri7, title: "title", style: [ "bookmark" ] },
-               { uri: uri8, title: "foo.bar", style: [ "bookmark" ] },
-               { uri: uri9, title: "title", tags: [ "foo.bar" ], style: [ "bookmark-tag" ] },
-               { uri: uri10, title: "foo.bar", tags: [ "foo.bar" ], style: [ "bookmark-tag" ] },
-               { uri: uri11, title: "title", tags: [ "foo.bar" ], style: [ "bookmark-tag" ] },
-               { uri: uri12, title: "foo.bar", tags: [ "foo.bar" ], style: [ "bookmark-tag" ] } ]
-  });
-
   do_print("foo # -> in title");
-  resetRestrict("bookmark");
   await check_autocomplete({
     search: "foo #",
     matches: [ { uri: uri2, title: "foo.bar" },
@@ -173,22 +147,7 @@ add_task(async function test_special_searches() {
                { uri: uri12, title: "foo.bar", tags: [ "foo.bar" ], style: [ "tag" ] } ]
   });
 
-  do_print("foo | -> in title (change pref)");
-  changeRestrict("title", "|");
-  await check_autocomplete({
-    search: "foo |",
-    matches: [ { uri: uri2, title: "foo.bar" },
-               { uri: uri4, title: "foo.bar" },
-               { uri: uri6, title: "foo.bar", style: [ "bookmark" ] },
-               { uri: uri8, title: "foo.bar", style: [ "bookmark" ] },
-               { uri: uri9, title: "title", tags: [ "foo.bar" ], style: [ "tag" ] },
-               { uri: uri10, title: "foo.bar", tags: [ "foo.bar" ], style: [ "tag" ] },
-               { uri: uri11, title: "title", tags: [ "foo.bar" ], style: [ "tag" ] },
-               { uri: uri12, title: "foo.bar", tags: [ "foo.bar" ], style: [ "tag" ] } ]
-  });
-
   do_print("foo @ -> in url");
-  resetRestrict("title");
   await check_autocomplete({
     search: "foo @",
     matches: [ { uri: uri3, title: "title" },
@@ -199,20 +158,7 @@ add_task(async function test_special_searches() {
                { uri: uri12, title: "foo.bar", tags: [ "foo.bar" ], style: [ "tag" ] } ]
   });
 
-  do_print("foo | -> in url (change pref)");
-  changeRestrict("url", "|");
-  await check_autocomplete({
-    search: "foo |",
-    matches: [ { uri: uri3, title: "title" },
-               { uri: uri4, title: "foo.bar" },
-               { uri: uri7, title: "title", style: [ "bookmark" ] },
-               { uri: uri8, title: "foo.bar", style: [ "bookmark" ] },
-               { uri: uri11, title: "title", tags: [ "foo.bar" ], style: [ "tag" ] },
-               { uri: uri12, title: "foo.bar", tags: [ "foo.bar" ], style: [ "tag" ] } ]
-  });
-
   do_print("foo + -> is tag");
-  resetRestrict("url");
   await check_autocomplete({
     search: "foo +",
     matches: [ { uri: uri9, title: "title", tags: [ "foo.bar" ], style: [ "tag" ] },
@@ -221,35 +167,15 @@ add_task(async function test_special_searches() {
                { uri: uri12, title: "foo.bar", tags: [ "foo.bar" ], style: [ "tag" ] } ]
   });
 
-  do_print("foo | -> is tag (change pref)");
-  changeRestrict("tag", "|");
-  await check_autocomplete({
-    search: "foo |",
-    matches: [ { uri: uri9, title: "title", tags: [ "foo.bar" ], style: [ "tag" ] },
-               { uri: uri10, title: "foo.bar", tags: [ "foo.bar" ], style: [ "tag" ] },
-               { uri: uri11, title: "title", tags: [ "foo.bar" ], style: [ "tag" ] },
-               { uri: uri12, title: "foo.bar", tags: [ "foo.bar" ], style: [ "tag" ] } ]
-  });
-
   do_print("foo ~ -> is typed");
-  resetRestrict("tag");
   await check_autocomplete({
     search: "foo ~",
     matches: [ { uri: uri4, title: "foo.bar" },
                { uri: uri11, title: "title", tags: [ "foo.bar" ], style: [ "tag" ] } ]
   });
 
-  do_print("foo | -> is typed (change pref)");
-  changeRestrict("typed", "|");
-  await check_autocomplete({
-    search: "foo |",
-    matches: [ { uri: uri4, title: "foo.bar" },
-               { uri: uri11, title: "title", tags: [ "foo.bar" ], style: [ "tag" ] } ]
-  });
-
   // Test various pairs of special searches
   do_print("foo ^ * -> history, is star");
-  resetRestrict("typed");
   await check_autocomplete({
     search: "foo ^ *",
     matches: [ { uri: uri6, title: "foo.bar", style: [ "bookmark" ] },

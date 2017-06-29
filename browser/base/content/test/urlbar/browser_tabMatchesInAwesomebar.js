@@ -11,6 +11,8 @@ const TEST_URL_BASES = [
   "http://example.org/browser/browser/base/content/test/urlbar/moz.png#tabmatch"
 ];
 
+const RESTRICT_TOKEN_OPENPAGE = "%";
+
 var gController = Cc["@mozilla.org/autocomplete/controller;1"].
                   getService(Ci.nsIAutoCompleteController);
 
@@ -209,5 +211,5 @@ function checkAutocompleteResults(aExpected, aCallback) {
   };
 
   info("Searching open pages.");
-  gController.startSearch(Services.prefs.getCharPref("browser.urlbar.restrict.openpage"));
+  gController.startSearch(RESTRICT_TOKEN_OPENPAGE);
 }
