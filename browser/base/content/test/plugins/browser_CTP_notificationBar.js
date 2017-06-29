@@ -3,18 +3,20 @@ const gTestRoot = rootDir.replace("chrome://mochitests/content/", "http://127.0.
 var gTestBrowser = null;
 
 add_task(async function() {
+  await SpecialPowers.pushPrefEnv({ set: [
+    ["plugins.show_infobar", true],
+    ["plugins.click_to_play", true],
+    ["extensions.blocklist.supressUI", true],
+  ]});
+
   registerCleanupFunction(function() {
     clearAllPluginPermissions();
     setTestPluginEnabledState(Ci.nsIPluginTag.STATE_ENABLED, "Test Plug-in");
     setTestPluginEnabledState(Ci.nsIPluginTag.STATE_ENABLED, "Second Test Plug-in");
-    Services.prefs.clearUserPref("plugins.click_to_play");
-    Services.prefs.clearUserPref("extensions.blocklist.suppressUI");
     gBrowser.removeCurrentTab();
     window.focus();
     gTestBrowser = null;
   });
-
-  Services.prefs.setBoolPref("extensions.blocklist.suppressUI", true);
 
   let newTab = BrowserTestUtils.addTab(gBrowser);
   gBrowser.selectedTab = newTab;
@@ -22,7 +24,6 @@ add_task(async function() {
 });
 
 add_task(async function() {
-  Services.prefs.setBoolPref("plugins.click_to_play", true);
   setTestPluginEnabledState(Ci.nsIPluginTag.STATE_CLICKTOPLAY, "Test Plug-in");
 
   await promiseTabLoadEvent(gBrowser.selectedTab, gTestRoot + "plugin_small.html");
