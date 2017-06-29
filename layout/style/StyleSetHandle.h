@@ -153,6 +153,7 @@ public:
                                     StyleSheet* aReferenceSheet);
     inline int32_t SheetCount(SheetType aType) const;
     inline StyleSheet* StyleSheetAt(SheetType aType, int32_t aIndex) const;
+    inline void AppendAllXBLStyleSheets(nsTArray<StyleSheet*>& aArray) const;
     inline nsresult RemoveDocStyleSheet(StyleSheet* aSheet);
     inline nsresult AddDocStyleSheet(StyleSheet* aSheet, nsIDocument* aDocument);
     inline void RecordStyleSheetChange(StyleSheet* aSheet, StyleSheet::ChangeType);

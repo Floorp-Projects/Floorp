@@ -206,6 +206,12 @@ StyleSetHandle::Ptr::StyleSheetAt(SheetType aType, int32_t aIndex) const
   FORWARD(StyleSheetAt, (aType, aIndex));
 }
 
+void
+StyleSetHandle::Ptr::AppendAllXBLStyleSheets(nsTArray<StyleSheet*>& aArray) const
+{
+  FORWARD(AppendAllXBLStyleSheets, (aArray));
+}
+
 nsresult
 StyleSetHandle::Ptr::RemoveDocStyleSheet(StyleSheet* aSheet)
 {
