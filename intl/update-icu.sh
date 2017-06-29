@@ -71,6 +71,7 @@ for patch in \
  bug-1172609-timezone-recreateDefault.diff \
  bug-1198952-workaround-make-3.82-bug.diff \
  u_setMemoryFunctions-callconvention-anachronism-msvc.diff \
+ bug-1373763-convertToPosix-stack-value-out-of-scope.diff \
 ; do
   echo "Applying local patch $patch"
   patch -d ${icu_dir}/../../ -p1 --no-backup-if-mismatch < ${icu_dir}/../icu-patches/$patch
