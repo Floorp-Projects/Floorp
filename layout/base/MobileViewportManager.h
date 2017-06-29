@@ -37,6 +37,10 @@ public:
   void SetRestoreResolution(float aResolution,
                             mozilla::LayoutDeviceIntSize aDisplaySize);
 
+private:
+  void SetRestoreResolution(float aResolution);
+
+public:
   /* Notify the MobileViewportManager that a reflow was requested in the
    * presShell.*/
   void RequestReflow();
