@@ -98,6 +98,25 @@ We have two automated tests running on [Travis](https://travis-ci.org/rust-lang/
 2. Style checker
   - `rustc ci/style.rs && ./style src`
 
+### Releasing your change to crates.io
+
+Now that you've done the amazing job of landing your new API or your new
+platform in this crate, the next step is to get that sweet, sweet usage from
+crates.io! The only next step is to bump the version of libc and then publish
+it. If you'd like to get a release out ASAP you can follow these steps:
+
+1. Update the version number in `Cargo.toml`, you'll just be bumping the patch
+   version number.
+2. Run `cargo update` to regenerate the lockfile to encode your version bump in
+   the lock file. You may pull in some other updated dependencies, that's ok.
+3. Send a PR to this repository. It should [look like this][example], but it'd
+   also be nice to fill out the description with a small rationale for the
+   release (any rationale is ok though!)
+4. Once merged the release will be tagged and published by one of the libc crate
+   maintainers.
+
+[example]: https://github.com/rust-lang/libc/pull/583
+
 ## Platforms and Documentation
 
 The following platforms are currently tested and have documentation available:
@@ -111,7 +130,7 @@ Tested:
   * [`i686-apple-darwin`](https://doc.rust-lang.org/libc/i686-apple-darwin/libc/)
   * [`x86_64-apple-darwin`](https://doc.rust-lang.org/libc/x86_64-apple-darwin/libc/)
     (OSX)
-  * `i686-apple-ios`
+  * `i386-apple-ios`
   * `x86_64-apple-ios`
   * [`i686-unknown-linux-gnu`](https://doc.rust-lang.org/libc/i686-unknown-linux-gnu/libc/)
   * [`x86_64-unknown-linux-gnu`](https://doc.rust-lang.org/libc/x86_64-unknown-linux-gnu/libc/)
