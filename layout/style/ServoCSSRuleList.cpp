@@ -96,6 +96,7 @@ ServoCSSRuleList::GetRule(uint32_t aIndex)
           Servo_CssRules_Get##name_##RuleAt(                                \
               mRawRules, aIndex, &line, &column                             \
           ).Consume();                                                      \
+        MOZ_ASSERT(rule);                                                   \
         ruleObj = new Servo##name_##Rule(rule.forget(), line, column);      \
         break;                                                              \
       }
@@ -106,6 +107,7 @@ ServoCSSRuleList::GetRule(uint32_t aIndex)
       CASE_RULE(PAGE, Page)
       CASE_RULE(SUPPORTS, Supports)
       CASE_RULE(DOCUMENT, Document)
+      CASE_RULE(IMPORT, Import)
 #undef CASE_RULE
       // For @font-face and @counter-style rules, the function returns
       // a borrowed Gecko rule object directly, so we don't need to
@@ -119,9 +121,6 @@ ServoCSSRuleList::GetRule(uint32_t aIndex)
         ruleObj = Servo_CssRules_GetCounterStyleRuleAt(mRawRules, aIndex);
         break;
       }
-      case nsIDOMCSSRule::IMPORT_RULE:
-        MOZ_ASSERT_UNREACHABLE("import rules are eagerly constructed");
-        return nullptr;
       case nsIDOMCSSRule::KEYFRAME_RULE:
         MOZ_ASSERT_UNREACHABLE("keyframe rule cannot be here");
         return nullptr;
@@ -185,30 +184,6 @@ ServoCSSRuleList::DropReference()
   DropAllRules();
 }
 
-void
-ServoCSSRuleList::ConstructImportRule(uint32_t aIndex)
-{
-  MOZ_ASSERT(mRules[aIndex] == nsIDOMCSSRule::IMPORT_RULE);
-
-  uint32_t line, column;
-  RefPtr<RawServoImportRule> rawRule =
-    Servo_CssRules_GetImportRuleAt(mRawRules, aIndex,
-                                   &line, &column).Consume();
-  auto* childSheet =
-    const_cast<ServoStyleSheet*>(Servo_ImportRule_GetSheet(rawRule));
-  MOZ_ASSERT(childSheet);
-  RefPtr<ServoImportRule>
-    ruleObj = new ServoImportRule(Move(rawRule), childSheet, line, column);
-  if (childSheet) {
-    MOZ_ASSERT(!childSheet->GetOwnerRule(),
-               "Child sheet is already owned by another rule?");
-    MOZ_ASSERT(childSheet->GetParentSheet() == mStyleSheet,
-               "Not a child sheet of the owner of the rule?");
-    childSheet->SetOwnerRule(ruleObj);
-  }
-  mRules[aIndex] = CastToUint(ruleObj.forget().take());
-}
-
 nsresult
 ServoCSSRuleList::InsertRule(const nsAString& aRule, uint32_t aIndex)
 {
@@ -228,10 +203,6 @@ ServoCSSRuleList::InsertRule(const nsAString& aRule, uint32_t aIndex)
     return rv;
   }
   mRules.InsertElementAt(aIndex, type);
-  if (type == nsIDOMCSSRule::IMPORT_RULE) {
-    MOZ_ASSERT(!nested, "@import rule cannot be nested");
-    ConstructImportRule(aIndex);
-  }
   return rv;
 }
 
