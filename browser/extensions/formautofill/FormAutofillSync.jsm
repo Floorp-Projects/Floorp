@@ -16,6 +16,8 @@ Cu.import("resource://services-sync/util.js");
 Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://formautofill/FormAutofillUtils.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "Log",
+                                  "resource://gre/modules/Log.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "profileStorage",
                                   "resource://formautofill/ProfileStorage.jsm");
 
@@ -143,7 +145,7 @@ FormAutofillStore.prototype = {
     this._log.trace("Create record", id);
     let record = new AutofillRecord(collection, id);
     let entry = this.storage.get(id, {
-      noComputedFields: true,
+      rawData: true,
     });
     if (entry) {
       record.fromEntry(entry);
@@ -158,9 +160,16 @@ FormAutofillStore.prototype = {
   async _doUpdateRecord(record) {
     this._log.trace("Updating record", record);
 
-    // TODO (bug 1363995) - until we get reconcilliation logic, this is
-    // dangerous, it unconditionally updates, which may cause DATA LOSS.
-    this.storage.update(record.id, record.entry);
+    let entry = record.toEntry();
+    let {forkedGUID} = this.storage.reconcile(entry);
+    if (this._log.level <= Log.Level.Debug) {
+      let forkedRecord = forkedGUID ? this.storage.get(forkedGUID) : null;
+      let reconciledRecord = this.storage.get(record.id);
+      this._log.debug("Updated local record", {
+        forked: sanitizeStorageObject(forkedRecord),
+        updated: sanitizeStorageObject(reconciledRecord),
+      });
+    }
   },
 
   // NOTE: Because we re-implement the incoming/reconcilliation logic we leave

@@ -115,7 +115,7 @@ add_task(async function test_add_sourceSync() {
 
   // Hardcode a guid so that we don't need to generate a dynamic regex
   let guid = "aaaaaaaaaaaa";
-  let testAddr = Object.assign({guid}, TEST_ADDRESS_1);
+  let testAddr = Object.assign({guid, version: 1}, TEST_ADDRESS_1);
 
   await checkingSyncChange("add", () =>
     profileStorage.addresses.add(testAddr, {sourceSync: true}));
@@ -162,9 +162,9 @@ add_task(async function test_add_resurrects_tombstones() {
   profileStorage.addresses.add({guid, deleted: true});
 
   // You can't re-add an item with an explicit GUID.
-  let resurrected = Object.assign({}, TEST_ADDRESS_1, {guid});
+  let resurrected = Object.assign({}, TEST_ADDRESS_1, {guid, version: 1});
   Assert.throws(() => profileStorage.addresses.add(resurrected),
-                /"guid" is not a valid field/);
+                /"(guid|version)" is not a valid field/);
 
   // But Sync can!
   let guid3 = profileStorage.addresses.add(resurrected, {sourceSync: true});
@@ -210,7 +210,7 @@ add_task(async function test_remove_sourceSync_unchanged() {
   let profileStorage = await initProfileStorage(TEST_STORE_FILE_NAME, []);
 
   let guid = profileStorage.addresses._generateGUID();
-  let addr = Object.assign({guid}, TEST_ADDRESS_1);
+  let addr = Object.assign({guid, version: 1}, TEST_ADDRESS_1);
   // add a record with sourceSync to guarantee changeCounter == 0
   await checkingSyncChange("add", () =>
     profileStorage.addresses.add(addr, {sourceSync: true}));
@@ -241,7 +241,8 @@ add_task(async function test_pullSyncChanges() {
   profileStorage.addresses.pullSyncChanges(); // force sync metadata
 
   let addedDirectGUID = profileStorage.addresses._generateGUID();
-  let testAddr = Object.assign({guid: addedDirectGUID}, TEST_ADDRESS_3);
+  let testAddr = Object.assign({guid: addedDirectGUID, version: 1},
+                               TEST_ADDRESS_1, TEST_ADDRESS_3);
 
   await checkingSyncChange("add", () =>
     profileStorage.addresses.add(testAddr, {sourceSync: true}));
@@ -384,6 +385,7 @@ add_task(async function test_findDuplicateGUID() {
 
   strictEqual(profileStorage.addresses.findDuplicateGUID({
     guid: profileStorage.addresses._generateGUID(),
+    version: 1,
     timeCreated,
     timeLastModified,
   }), null, "Should ignore internal fields and malformed records");
