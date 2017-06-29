@@ -4,18 +4,18 @@
 
 <!ENTITY defaultSearchEngine.label             "Default Search Engine">
 
-<!ENTITY chooseYourDefaultSearchEngine2.label   "Choose the default search engine to use in the address bar and search bar.">
+<!ENTITY chooseYourDefaultSearchEngine.label   "Choose your default search engine. &brandShortName; uses it in the location bar, search bar, and start page.">
 
 <!ENTITY provideSearchSuggestions.label        "Provide search suggestions">
 <!ENTITY provideSearchSuggestions.accesskey    "s">
 
-<!ENTITY showURLBarSuggestions2.label           "Show search suggestions in address bar results">
-<!ENTITY showURLBarSuggestions2.accesskey       "l">
+<!ENTITY showURLBarSuggestions.label           "Show search suggestions in location bar results">
+<!ENTITY showURLBarSuggestions.accesskey       "l">
 <!ENTITY urlBarSuggestionsPermanentPB.label    "Search suggestions will not be shown in location bar results because you have configured &brandShortName; to never remember history.">
 
 <!ENTITY oneClickSearchEngines.label           "One-Click Search Engines">
 
-<!ENTITY chooseWhichOneToDisplay2.label         "Choose the alternative search engines that appear below the address bar and search bar when you start to enter a keyword.">
+<!ENTITY chooseWhichOneToDisplay.label         "The search bar lets you search alternate engines directly. Choose which ones to display.">
 
 <!ENTITY engineNameColumn.label                "Search Engine">
 <!ENTITY engineKeywordColumn.label             "Keyword">
@@ -26,4 +26,4 @@
 <!ENTITY removeEngine.label                    "Remove">
 <!ENTITY removeEngine.accesskey                "r">
 
-<!ENTITY findMoreSearchEngines.label           "Find more search engines">
+<!ENTITY addMoreSearchEngines2.label           "Add more search engines">
