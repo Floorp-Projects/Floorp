@@ -322,19 +322,7 @@ class ProxyContextParent extends BaseContext {
 
     this.listenerProxies = new Map();
 
-    this.pendingEventBrowser = null;
-
     apiManager.emit("proxy-context-load", this);
-  }
-
-  withPendingBrowser(browser, callable) {
-    let savedBrowser = this.pendingEventBrowser;
-    this.pendingEventBrowser = browser;
-    try {
-      return callable();
-    } finally {
-      this.pendingEventBrowser = savedBrowser;
-    }
   }
 
   get cloneScope() {
@@ -626,8 +614,8 @@ ParentAPIManager = {
     try {
       let args = Cu.cloneInto(data.args, context.sandbox);
       let fun = await context.apiCan.asyncFindAPIPath(data.path);
-      let result = context.withPendingBrowser(context.pendingEventBrowser,
-                                              () => fun(...args));
+      let result = fun(...args);
+
       if (data.callId) {
         result = result || Promise.resolve();
 
@@ -659,7 +647,6 @@ ParentAPIManager = {
     }
 
     let {childId} = data;
-    let handlingUserInput = false;
 
     function listener(...listenerArgs) {
       return context.sendMessage(
@@ -667,7 +654,6 @@ ParentAPIManager = {
         "API:RunListener",
         {
           childId,
-          handlingUserInput,
           listenerId: data.listenerId,
           path: data.path,
           args: new StructuredCloneHolder(listenerArgs),
@@ -692,9 +678,6 @@ ParentAPIManager = {
     }
 
     let handler = await promise;
-    if (handler.setUserInput) {
-      handlingUserInput = true;
-    }
     handler.addListener(listener, ...args);
   },
 
