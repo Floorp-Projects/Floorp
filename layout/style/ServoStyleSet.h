@@ -255,6 +255,8 @@ public:
   int32_t SheetCount(SheetType aType) const;
   ServoStyleSheet* StyleSheetAt(SheetType aType, int32_t aIndex) const;
 
+  void AppendAllXBLStyleSheets(nsTArray<StyleSheet*>& aArray) const;
+
   template<typename Func>
   void EnumerateStyleSheetArrays(Func aCallback) const {
     for (const auto& sheetArray : mSheets) {
