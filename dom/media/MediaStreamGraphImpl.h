@@ -116,7 +116,8 @@ public:
    */
   explicit MediaStreamGraphImpl(GraphDriverType aGraphDriverRequested,
                                 TrackRate aSampleRate,
-                                dom::AudioChannel aChannel);
+                                dom::AudioChannel aChannel,
+                                AbstractThread* aWindow);
 
   /**
    * Unregisters memory reporting and deletes this instance. This should be
@@ -148,6 +149,12 @@ public:
    * during RunInStableState; the messages will run on the graph thread.
    */
   void AppendMessage(UniquePtr<ControlMessage> aMessage);
+
+  /**
+   * Dispatches a runnable from any thread to the correct main thread for this
+   * MediaStreamGraph.
+   */
+  void Dispatch(already_AddRefed<nsIRunnable>&& aRunnable);
 
   // Shutdown helpers.
 
@@ -846,6 +853,7 @@ private:
 #endif
 
   dom::AudioChannel mAudioChannel;
+  const RefPtr<AbstractThread> mAbstractMainThread;
 };
 
 } // namespace mozilla

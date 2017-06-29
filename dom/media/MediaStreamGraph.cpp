@@ -1012,9 +1012,10 @@ MediaStreamGraphImpl::OpenAudioInput(int aID,
 {
   // So, so, so annoying.  Can't AppendMessage except on Mainthread
   if (!NS_IsMainThread()) {
-    NS_DispatchToMainThread(WrapRunnable(this,
-                                         &MediaStreamGraphImpl::OpenAudioInput,
-                                         aID, RefPtr<AudioDataListener>(aListener)));
+    RefPtr<nsIRunnable> runnable = WrapRunnable(this,
+                                  &MediaStreamGraphImpl::OpenAudioInput,
+                                  aID, RefPtr<AudioDataListener>(aListener));
+    mAbstractMainThread->Dispatch(runnable.forget());
     return NS_OK;
   }
   class Message : public ControlMessage {
@@ -1082,9 +1083,10 @@ MediaStreamGraphImpl::CloseAudioInput(AudioDataListener *aListener)
 {
   // So, so, so annoying.  Can't AppendMessage except on Mainthread
   if (!NS_IsMainThread()) {
-    NS_DispatchToMainThread(WrapRunnable(this,
-                                         &MediaStreamGraphImpl::CloseAudioInput,
-                                         RefPtr<AudioDataListener>(aListener)));
+    RefPtr<nsIRunnable> runnable = WrapRunnable(this,
+                                                &MediaStreamGraphImpl::CloseAudioInput,
+                                                RefPtr<AudioDataListener>(aListener));
+    mAbstractMainThread->Dispatch(runnable.forget());
     return;
   }
   class Message : public ControlMessage {
@@ -1703,7 +1705,7 @@ MediaStreamGraphImpl::RunInStableState(bool aSourceIsMSG)
         LOG(LogLevel::Debug,
             ("Sending MediaStreamGraphShutDownRunnable %p", this));
         nsCOMPtr<nsIRunnable> event = new MediaStreamGraphShutDownRunnable(this );
-        NS_DispatchToMainThread(event.forget());
+        mAbstractMainThread->Dispatch(event.forget());
 
         LOG(LogLevel::Debug, ("Disconnecting MediaStreamGraph %p", this));
 
@@ -1786,7 +1788,7 @@ MediaStreamGraphImpl::RunInStableState(bool aSourceIsMSG)
       // we have outstanding DOM objects that may need it.
       mLifecycleState = LIFECYCLE_WAITING_FOR_THREAD_SHUTDOWN;
       nsCOMPtr<nsIRunnable> event = new MediaStreamGraphShutDownRunnable(this);
-      NS_DispatchToMainThread(event.forget());
+      mAbstractMainThread->Dispatch(event.forget());
     }
 
     mDetectedNotRunning = mLifecycleState > LIFECYCLE_RUNNING;
@@ -1834,7 +1836,7 @@ MediaStreamGraphImpl::EnsureStableStateEventPosted()
     return;
   mPostedRunInStableStateEvent = true;
   nsCOMPtr<nsIRunnable> event = new MediaStreamGraphStableStateRunnable(this, true);
-  NS_DispatchToMainThread(event.forget());
+  mAbstractMainThread->Dispatch(event.forget());
 }
 
 void
@@ -1879,6 +1881,12 @@ MediaStreamGraphImpl::AppendMessage(UniquePtr<ControlMessage> aMessage)
 
   mCurrentTaskMessageQueue.AppendElement(Move(aMessage));
   EnsureRunInStableState();
+}
+
+void
+MediaStreamGraphImpl::Dispatch(already_AddRefed<nsIRunnable>&& aRunnable)
+{
+  mAbstractMainThread->Dispatch(Move(aRunnable));
 }
 
 MediaStream::MediaStream(AbstractThread* aMainThread)
@@ -2563,7 +2571,7 @@ MediaStream::RunAfterPendingUpdates(already_AddRefed<nsIRunnable> aRunnable)
       // Don't run mRunnable now as it may call AppendMessage() which would
       // assume that there are no remaining controlMessagesToRunDuringShutdown.
       MOZ_ASSERT(NS_IsMainThread());
-      NS_DispatchToCurrentThread(mRunnable);
+      mStream->GraphImpl()->Dispatch(mRunnable.forget());
     }
   private:
     nsCOMPtr<nsIRunnable> mRunnable;
@@ -2683,7 +2691,7 @@ MediaStream::AddMainThreadListener(MainThreadMediaStreamListener* aListener)
   };
 
   nsCOMPtr<nsIRunnable> runnable = new NotifyRunnable(this);
-  Unused << NS_WARN_IF(NS_FAILED(NS_DispatchToMainThread(runnable.forget())));
+  mAbstractMainThread->Dispatch(runnable.forget());
 }
 
 SourceMediaStream::SourceMediaStream(AbstractThread* aMainThread) :
@@ -3420,7 +3428,8 @@ ProcessedMediaStream::DestroyImpl()
 
 MediaStreamGraphImpl::MediaStreamGraphImpl(GraphDriverType aDriverRequested,
                                            TrackRate aSampleRate,
-                                           dom::AudioChannel aChannel)
+                                           dom::AudioChannel aChannel,
+                                           AbstractThread* aMainThread)
   : MediaStreamGraph(aSampleRate)
   , mPortCount(0)
   , mInputWanted(false)
@@ -3448,6 +3457,7 @@ MediaStreamGraphImpl::MediaStreamGraphImpl(GraphDriverType aDriverRequested,
   , mCanRunMessagesSynchronously(false)
 #endif
   , mAudioChannel(aChannel)
+  , mAbstractMainThread(aMainThread)
 {
   if (mRealtime) {
     if (aDriverRequested == AUDIO_THREAD_DRIVER) {
@@ -3540,9 +3550,18 @@ MediaStreamGraph::GetInstance(MediaStreamGraph::GraphDriverType aGraphDriverRequ
       MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv));
     }
 
+    AbstractThread* mainThread;
+    if (aWindow) {
+      nsCOMPtr<nsIGlobalObject> parentObject = do_QueryInterface(aWindow);
+      mainThread = parentObject->AbstractMainThreadFor(TaskCategory::Other);
+    } else {
+      // Uncommon case, only for some old configuration of webspeech.
+      mainThread = AbstractThread::MainThread();
+    }
     graph = new MediaStreamGraphImpl(aGraphDriverRequested,
                                      CubebUtils::PreferredSampleRate(),
-                                     aChannel);
+                                     aChannel,
+                                     mainThread);
 
     gGraphs.Put(hashkey, graph);
 
@@ -3555,14 +3574,17 @@ MediaStreamGraph::GetInstance(MediaStreamGraph::GraphDriverType aGraphDriverRequ
 }
 
 MediaStreamGraph*
-MediaStreamGraph::CreateNonRealtimeInstance(TrackRate aSampleRate)
+MediaStreamGraph::CreateNonRealtimeInstance(TrackRate aSampleRate,
+                                            nsPIDOMWindowInner* aWindow)
 {
   NS_ASSERTION(NS_IsMainThread(), "Main thread only");
 
+  nsCOMPtr<nsIGlobalObject> parentObject = do_QueryInterface(aWindow);
   MediaStreamGraphImpl* graph =
     new MediaStreamGraphImpl(OFFLINE_THREAD_DRIVER,
                              aSampleRate,
-                             AudioChannel::Normal);
+                             AudioChannel::Normal,
+                             parentObject->AbstractMainThreadFor(TaskCategory::Other));
 
   LOG(LogLevel::Debug, ("Starting up Offline MediaStreamGraph %p", graph));
 
@@ -3682,7 +3704,7 @@ MediaStreamGraphImpl::CollectSizesForMemoryReport(
     }
   }
 
-  NS_DispatchToMainThread(runnable.forget());
+  mAbstractMainThread->Dispatch(runnable.forget());
 }
 
 void
@@ -3806,11 +3828,11 @@ MediaStreamGraph::NotifyWhenGraphStarted(AudioNodeStream* aStream)
       if (graphImpl->CurrentDriver()->AsAudioCallbackDriver()) {
         nsCOMPtr<nsIRunnable> event = new dom::StateChangeTask(
             mStream->AsAudioNodeStream(), nullptr, AudioContextState::Running);
-        NS_DispatchToMainThread(event.forget());
+        graphImpl->Dispatch(event.forget());
       } else {
         nsCOMPtr<nsIRunnable> event = new GraphStartedRunnable(
             mStream->AsAudioNodeStream(), mStream->Graph());
-        NS_DispatchToMainThread(event.forget());
+        graphImpl->Dispatch(event.forget());
       }
     }
     void RunDuringShutdown() override
@@ -3909,7 +3931,7 @@ MediaStreamGraphImpl::AudioContextOperationCompleted(MediaStream* aStream,
 
   nsCOMPtr<nsIRunnable> event = new dom::StateChangeTask(
       aStream->AsAudioNodeStream(), aPromise, state);
-  NS_DispatchToMainThread(event.forget());
+  mAbstractMainThread->Dispatch(event.forget());
 }
 
 void
