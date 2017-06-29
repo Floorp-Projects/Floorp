@@ -661,10 +661,6 @@ AudioChannelService::NotifyMediaResumedFromBlock(nsPIDOMWindowOuter* aWindow)
     return;
   }
 
-  if (!winData->mShouldSendBlockStopEvent) {
-    return;
-  }
-
   winData->NotifyMediaBlockStop(aWindow);
 }
 
@@ -865,7 +861,6 @@ AudioChannelService::AudioChannelWindow::RemoveAgent(AudioChannelAgent* aAgent)
 void
 AudioChannelService::AudioChannelWindow::NotifyMediaBlockStop(nsPIDOMWindowOuter* aWindow)
 {
-  mShouldSendBlockStopEvent = false;
   // Can't use raw pointer for lamba variable capturing, use smart ptr.
   nsCOMPtr<nsPIDOMWindowOuter> window = aWindow;
   NS_DispatchToCurrentThread(NS_NewRunnableFunction(
@@ -879,8 +874,27 @@ AudioChannelService::AudioChannelWindow::NotifyMediaBlockStop(nsPIDOMWindowOuter
 
       observerService->NotifyObservers(ToSupports(window),
                                        "audio-playback",
-                                       u"blockStop");
-    }));
+                                       u"mediaBlockStop");
+    })
+  );
+
+  if (mShouldSendActiveMediaBlockStopEvent) {
+    mShouldSendActiveMediaBlockStopEvent = false;
+    NS_DispatchToCurrentThread(NS_NewRunnableFunction(
+      "dom::AudioChannelService::AudioChannelWindow::NotifyMediaBlockStop",
+      [window]() -> void {
+        nsCOMPtr<nsIObserverService> observerService =
+          services::GetObserverService();
+        if (NS_WARN_IF(!observerService)) {
+          return;
+        }
+
+        observerService->NotifyObservers(ToSupports(window),
+                                         "audio-playback",
+                                         u"activeMediaBlockStop");
+      })
+    );
+  }
 }
 
 void
@@ -1042,8 +1056,8 @@ AudioChannelService::AudioChannelWindow::MaybeNotifyMediaBlockStart(AudioChannel
     return;
   }
 
-  if (!mShouldSendBlockStopEvent) {
-      mShouldSendBlockStopEvent = true;
+  if (!mShouldSendActiveMediaBlockStopEvent) {
+      mShouldSendActiveMediaBlockStopEvent = true;
       NS_DispatchToCurrentThread(NS_NewRunnableFunction(
         "dom::AudioChannelService::AudioChannelWindow::"
         "MaybeNotifyMediaBlockStart",
@@ -1055,7 +1069,7 @@ AudioChannelService::AudioChannelWindow::MaybeNotifyMediaBlockStart(AudioChannel
           }
 
           observerService->NotifyObservers(
-            ToSupports(window), "audio-playback", u"blockStart");
+            ToSupports(window), "audio-playback", u"activeMediaBlockStart");
         }));
   }
 }
