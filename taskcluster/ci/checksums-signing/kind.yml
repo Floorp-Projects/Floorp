@@ -12,7 +12,6 @@ kind-dependencies:
   - beetmover
   - beetmover-l10n
   - beetmover-repackage
-  - beetmover-repackage-l10n
 
 only-for-attributes:
   - nightly
