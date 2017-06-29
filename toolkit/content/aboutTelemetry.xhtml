@@ -107,19 +107,20 @@
         </div>
         <div id="archived-ping-picker" class="hidden">
           <h4 class="title">&aboutTelemetry.choosePing;</h4>
-          <button class="older-ping" type="button">&aboutTelemetry.showOlderPing;</button>
-          <button class="newer-ping" type="button">&aboutTelemetry.showNewerPing;</button>
-          <div>
-            <h4 class="title">&aboutTelemetry.archiveWeekHeader;</h4>
-            <select id="choose-ping-week"></select>
-          </div>
           <div>
             <h4 class="title">&aboutTelemetry.archivePingType;</h4>
             <select id="choose-ping-type"></select>
           </div>
           <div>
             <h4 class="title">&aboutTelemetry.archivePingHeader;</h4>
-            <select id="choose-ping-id"></select>
+            <select id="choose-ping-id">
+              <optgroup label="&aboutTelemetry.optionGroupToday;">
+              </optgroup>
+              <optgroup label="&aboutTelemetry.optionGroupYesterday;">
+              </optgroup>
+              <optgroup label="&aboutTelemetry.optionGroupOlder;">
+              </optgroup>
+            </select>
           </div>
         </div>
         <div>

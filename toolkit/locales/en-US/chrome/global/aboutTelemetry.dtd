@@ -48,6 +48,18 @@ Ping Type
 Ping
 ">
 
+<!ENTITY aboutTelemetry.optionGroupToday "
+Today
+">
+
+<!ENTITY aboutTelemetry.optionGroupYesterday "
+Yesterday
+">
+
+<!ENTITY aboutTelemetry.optionGroupOlder "
+Older
+">
+
 <!ENTITY aboutTelemetry.generalDataSection "
   General Data
 ">
