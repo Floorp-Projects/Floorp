@@ -37,6 +37,10 @@ class Repackage(BaseScript):
             if not status:
                 self.fatal("Unable to fetch signed input from %s" % url)
 
+            if 'mar' in path:
+                # Ensure mar is executable
+                self.chmod(os.path.join(input_home, path), 0755)
+
     def setup(self):
         self._run_tooltool()
         self._get_mozconfig()
@@ -46,13 +50,14 @@ class Repackage(BaseScript):
         if self.abs_dirs:
             return self.abs_dirs
         abs_dirs = super(Repackage, self).query_abs_dirs()
+        config = self.config
         for directory in abs_dirs:
             value = abs_dirs[directory]
             abs_dirs[directory] = value
         dirs = {}
         dirs['abs_tools_dir'] = os.path.join(abs_dirs['abs_work_dir'], 'tools')
         dirs['abs_mozilla_dir'] = os.path.join(abs_dirs['abs_work_dir'], 'src')
-        dirs['output_home'] = os.path.join(abs_dirs['abs_work_dir'], 'artifacts')
+        dirs['output_home'] = config['output_home'].format(**abs_dirs)
         for key in dirs.keys():
             if key not in abs_dirs:
                 abs_dirs[key] = dirs[key]

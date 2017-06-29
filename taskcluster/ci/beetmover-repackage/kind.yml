@@ -5,11 +5,12 @@
 loader: taskgraph.loader.single_dep:loader
 
 transforms:
+   - taskgraph.transforms.beetmover_repackage_l10n:transforms
    - taskgraph.transforms.beetmover_repackage:transforms
    - taskgraph.transforms.task:transforms
 
 kind-dependencies:
-  - repackage
+  - repackage-signing
 
 only-for-build-platforms:
   - macosx64-nightly/opt
