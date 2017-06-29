@@ -2244,9 +2244,14 @@ imgLoader::LoadImage(nsIURI* aURI,
 
     nsCOMPtr<nsILoadGroup> channelLoadGroup;
     newChannel->GetLoadGroup(getter_AddRefs(channelLoadGroup));
+    // We look at the loading document's style backend type to decide which
+    // style backend type should be used for the images. So the images in Chrome
+    // documents would be loaded by Gecko.
     rv = request->Init(aURI, aURI, /* aHadInsecureRedirect = */ false,
                        channelLoadGroup, newChannel, entry, aLoadingDocument,
-                       aLoadingPrincipal, corsmode, aReferrerPolicy);
+                       aLoadingPrincipal, corsmode, aReferrerPolicy,
+                       aLoadingDocument ? aLoadingDocument->GetStyleBackendType()
+                                        : StyleBackendType::None);
     if (NS_FAILED(rv)) {
       return NS_ERROR_FAILURE;
     }
