@@ -541,7 +541,7 @@ add_task(async function test_normalizeAddressFields() {
   profileStorage = new ProfileStorage(path);
   await profileStorage.initialize();
 
-  let addresses = profileStorage.addresses.getAll({noComputedFields: true});
+  let addresses = profileStorage.addresses.getAll();
 
   for (let i in addresses) {
     do_print("Verify testcase: " + ADDRESS_NORMALIZE_TESTCASES[i].description);

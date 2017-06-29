@@ -281,6 +281,9 @@ add_task(async function test_notifyUsed() {
   let timeLastUsed = addresses[1].timeLastUsed;
   let timesUsed = addresses[1].timesUsed;
 
+  profileStorage.addresses.pullSyncChanges(); // force sync metadata, which we check below.
+  let changeCounter = getSyncChangeCounter(profileStorage.addresses, guid);
+
   let onChanged = TestUtils.topicObserved("formautofill-storage-changed",
                                           (subject, data) => data == "notifyUsed");
 
@@ -291,6 +294,10 @@ add_task(async function test_notifyUsed() {
 
   do_check_eq(address.timesUsed, timesUsed + 1);
   do_check_neq(address.timeLastUsed, timeLastUsed);
+
+  // Using a record should not bump its change counter.
+  do_check_eq(getSyncChangeCounter(profileStorage.addresses, guid),
+    changeCounter);
 
   Assert.throws(() => profileStorage.addresses.notifyUsed("INVALID_GUID"),
     /No matching record\./);
