@@ -37,7 +37,6 @@ public:
     : mSpeechTask(aSpeechTask)
     , mStream(aStream)
     , mStarted(false)
-    , mAbstractMainThread(aMainThread)
   {
   }
 
@@ -65,14 +64,12 @@ public:
           if (!mStarted) {
             mStarted = true;
             aGraph->DispatchToMainThreadAfterStreamStateUpdate(
-              mAbstractMainThread,
               NewRunnableMethod("dom::SynthStreamListener::DoNotifyStarted",
                                 this,
                                 &SynthStreamListener::DoNotifyStarted));
           }
 
           aGraph->DispatchToMainThreadAfterStreamStateUpdate(
-            mAbstractMainThread,
             NewRunnableMethod("dom::SynthStreamListener::DoNotifyFinished",
                               this,
                               &SynthStreamListener::DoNotifyFinished));
@@ -93,7 +90,6 @@ public:
     if (aBlocked == MediaStreamListener::UNBLOCKED && !mStarted) {
       mStarted = true;
       aGraph->DispatchToMainThreadAfterStreamStateUpdate(
-        mAbstractMainThread,
         NewRunnableMethod("dom::SynthStreamListener::DoNotifyStarted",
                           this,
                           &SynthStreamListener::DoNotifyStarted));
@@ -108,8 +104,6 @@ private:
   RefPtr<MediaStream> mStream;
 
   bool mStarted;
-
-  const RefPtr<AbstractThread> mAbstractMainThread;
 };
 
 // nsSpeechTask
@@ -176,7 +170,7 @@ nsSpeechTask::InitDirectAudio()
   // This is a global MSG.
   mStream = MediaStreamGraph::GetInstance(MediaStreamGraph::AUDIO_THREAD_DRIVER,
                                           AudioChannel::Normal, nullptr)->
-    CreateSourceStream(AbstractThread::MainThread() /* Non DocGroup-version for the task in parent. */);
+    CreateSourceStream();
   mIndirectAudio = false;
   mInited = true;
 }
