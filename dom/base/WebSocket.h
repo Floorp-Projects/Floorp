@@ -8,6 +8,7 @@
 #define WebSocket_h__
 
 #include "mozilla/Attributes.h"
+#include "mozilla/CheckedInt.h"
 #include "mozilla/dom/TypedArray.h"
 #include "mozilla/dom/WebSocketBinding.h" // for BinaryType
 #include "mozilla/DOMEventTargetHelper.h"
@@ -189,7 +190,7 @@ private:
   bool mKeepingAlive;
   bool mCheckMustKeepAlive;
 
-  uint32_t mOutgoingBufferedAmount;
+  CheckedUint32 mOutgoingBufferedAmount;
 
   // related to the WebSocket constructor steps
   nsString mURI;
