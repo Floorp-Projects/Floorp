@@ -63,10 +63,11 @@ ServoStyleSet::~ServoStyleSet()
 }
 
 void
-ServoStyleSet::Init(nsPresContext* aPresContext)
+ServoStyleSet::Init(nsPresContext* aPresContext, nsBindingManager* aBindingManager)
 {
   mPresContext = aPresContext;
   mRawSet.reset(Servo_StyleSet_Init(aPresContext));
+  mBindingManager = aBindingManager;
 
   mPresContext->DeviceContext()->InitFontCache();
 

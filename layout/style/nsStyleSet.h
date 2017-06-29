@@ -108,7 +108,7 @@ class nsStyleSet final
 
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
-  void Init(nsPresContext *aPresContext);
+  void Init(nsPresContext* aPresContext, nsBindingManager* aBindingManager);
 
   nsRuleNode* GetRuleTree() { return mRuleTree; }
 
@@ -384,13 +384,6 @@ class nsStyleSet final
    * may have changed as a result.
    */
   bool MediumFeaturesChanged();
-
-  // APIs for registering objects that can supply additional
-  // rules during processing.
-  void SetBindingManager(nsBindingManager* aBindingManager)
-  {
-    mBindingManager = aBindingManager;
-  }
 
   // APIs to manipulate the style sheet lists.  The sheets in each
   // list are stored with the most significant sheet last.
