@@ -10248,7 +10248,7 @@ nsIFrame::UpdateStyleOfChildAnonBox(nsIFrame* aChildFrame,
   }
 }
 
-nsChangeHint
+/* static */ nsChangeHint
 nsIFrame::UpdateStyleOfOwnedChildFrame(
   nsIFrame* aChildFrame,
   nsStyleContext* aNewStyleContext,
@@ -10270,8 +10270,13 @@ nsIFrame::UpdateStyleOfOwnedChildFrame(
     aNewStyleContext,
     &equalStructs,
     &samePointerStructs);
-  childHint = NS_RemoveSubsumedHints(
-    childHint, aRestyleState.ChangesHandledFor(*aChildFrame));
+  // If aChildFrame is out of flow, then aRestyleState's "changes handled by the
+  // parent" doesn't apply to it, because it may have some other parent in the
+  // frame tree.
+  if (!aChildFrame->HasAnyStateBits(NS_FRAME_OUT_OF_FLOW)) {
+    childHint = NS_RemoveSubsumedHints(
+      childHint, aRestyleState.ChangesHandledFor(*aChildFrame));
+  }
   if (childHint) {
     if (childHint & nsChangeHint_ReconstructFrame) {
       // If we generate a reconstruct here, remove any non-reconstruct hints we
