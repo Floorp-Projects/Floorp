@@ -20,7 +20,7 @@ config = {
     },
     "upload_env": {
         'UPLOAD_HOST': 'localhost',
-        'UPLOAD_PATH': '/home/worker/artifacts/',
+        'UPLOAD_PATH': '/builds/worker/artifacts/',
     },
 
     "tooltool_url": 'http://relengapi/tooltool/',

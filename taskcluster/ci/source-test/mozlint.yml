@@ -12,7 +12,7 @@ mozlint-eslint:
     run:
         using: run-task
         command: >
-            cd /home/worker/checkouts/gecko/ &&
+            cd /builds/worker/checkouts/gecko/ &&
             /build/tooltool.py fetch -m tools/lint/eslint/manifest.tt &&
             tar xvfz eslint.tar.gz &&
             rm eslint.tar.gz &&

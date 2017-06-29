@@ -63,9 +63,9 @@ mochitest-harness:
     run:
         using: run-task
         command: >
-            source /home/worker/scripts/xvfb.sh &&
+            source /builds/worker/scripts/xvfb.sh &&
             start_xvfb '1600x1200x24' 0 &&
-            cd /home/worker/checkouts/gecko &&
+            cd /builds/worker/checkouts/gecko &&
             ./mach python-test --subsuite mochitest
     when:
         files-changed:
@@ -117,7 +117,7 @@ mozharness:
         using: run-task
         cache-dotcache: true
         command: >
-            cd /home/worker/checkouts/gecko/testing/mozharness &&
+            cd /builds/worker/checkouts/gecko/testing/mozharness &&
             /usr/local/bin/tox -e py27-hg4.1
     when:
         files-changed:
