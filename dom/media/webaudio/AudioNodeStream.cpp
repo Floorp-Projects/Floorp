@@ -29,17 +29,16 @@ namespace mozilla {
 
 AudioNodeStream::AudioNodeStream(AudioNodeEngine* aEngine,
                                  Flags aFlags,
-                                 TrackRate aSampleRate,
-                                 AbstractThread* aMainThread)
-  : ProcessedMediaStream(aMainThread),
-    mEngine(aEngine),
-    mSampleRate(aSampleRate),
-    mFlags(aFlags),
-    mNumberOfInputChannels(2),
-    mIsActive(aEngine->IsActive()),
-    mMarkAsFinishedAfterThisBlock(false),
-    mAudioParamStream(false),
-    mPassThrough(false)
+                                 TrackRate aSampleRate)
+  : ProcessedMediaStream()
+  , mEngine(aEngine)
+  , mSampleRate(aSampleRate)
+  , mFlags(aFlags)
+  , mNumberOfInputChannels(2)
+  , mIsActive(aEngine->IsActive())
+  , mMarkAsFinishedAfterThisBlock(false)
+  , mAudioParamStream(false)
+  , mPassThrough(false)
 {
   MOZ_ASSERT(NS_IsMainThread());
   mSuspendedCount = !(mIsActive || mFlags & EXTERNAL_OUTPUT);
@@ -78,8 +77,7 @@ AudioNodeStream::Create(AudioContext* aCtx, AudioNodeEngine* aEngine,
   AudioNode* node = aEngine->NodeMainThread();
 
   RefPtr<AudioNodeStream> stream =
-    new AudioNodeStream(aEngine, aFlags, aGraph->GraphRate(),
-      aCtx->GetOwnerGlobal()->AbstractMainThreadFor(TaskCategory::Other));
+    new AudioNodeStream(aEngine, aFlags, aGraph->GraphRate());
   stream->mSuspendedCount += aCtx->ShouldSuspendNewStream();
   if (node) {
     stream->SetChannelMixingParametersImpl(node->ChannelCount(),

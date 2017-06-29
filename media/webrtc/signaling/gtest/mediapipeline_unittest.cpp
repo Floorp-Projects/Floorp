@@ -43,7 +43,7 @@ class FakeSourceMediaStream : public mozilla::SourceMediaStream {
 public:
 
   FakeSourceMediaStream()
-    : SourceMediaStream(nullptr)
+    : SourceMediaStream()
   {
   }
 
