@@ -112,6 +112,14 @@ protected:
     // frame is fully invalidated instead of just invalidating for the image change
     // in the ImageLayer.
     bool mImageSizeChanged = false;
+    // The main thread mirror of the member of the same name below.
+    gfx::IntSize mIntrinsicSize;
+    // True when the intrinsic size has been changed by SetCurrentFrame() since
+    // the last call to Invalidate().
+    // The next call to Invalidate() will recalculate
+    // and update the intrinsic size on the element, request a frame reflow and
+    // then reset this flag.
+    bool mIntrinsicSizeChanged = false;
   } mMainThreadState;
 
   // mMutex protects all the fields below.
@@ -131,12 +139,6 @@ protected:
   // We record the last played video frame to avoid playing the frame again
   // with a different frame id.
   VideoFrame mLastPlayedVideoFrame;
-  // True when the intrinsic size has been changed by SetCurrentFrame() since
-  // the last call to Invalidate().
-  // The next call to Invalidate() will recalculate
-  // and update the intrinsic size on the element, request a frame reflow and
-  // then reset this flag.
-  bool mIntrinsicSizeChanged;
   // The last PrincipalHandle we notified mElement about.
   PrincipalHandle mLastPrincipalHandle;
   // The PrincipalHandle the client has notified us is changing with FrameID
