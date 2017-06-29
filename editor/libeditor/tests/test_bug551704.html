@@ -32,23 +32,25 @@ function testLineBreak(div, type, expectedText, expectedHTML, callback)
   getSelection().collapse(div, 0);
   type();
   is(div.innerHTML, expectedHTML, "The expected HTML after editing should be correct");
-  SimpleTest.waitForClipboard(expectedText,
-    function() {
-      getSelection().selectAllChildren(div);
-      synthesizeKey("C", {accelKey: true});
-    },
-    function() {
-      var t = document.createElement("textarea");
-      document.body.appendChild(t);
-      t.focus();
-      synthesizeKey("V", {accelKey: true});
-      is(t.value, expectedText, "The expected text should be copied to the clipboard");
-      callback();
-    },
-    function() {
-      SimpleTest.finish();
-    }
-  );
+  requestAnimationFrame(function() {
+    SimpleTest.waitForClipboard(expectedText,
+      function() {
+        getSelection().selectAllChildren(div);
+        synthesizeKey("C", {accelKey: true});
+      },
+      function() {
+        var t = document.createElement("textarea");
+        document.body.appendChild(t);
+        t.focus();
+        synthesizeKey("V", {accelKey: true});
+        is(t.value, expectedText, "The expected text should be copied to the clipboard");
+        callback();
+      },
+      function() {
+        SimpleTest.finish();
+      }
+    );
+  });
 }
 
 function typeABCDEF() {
