@@ -44,8 +44,8 @@ ServoStyleSheetInner::ServoStyleSheetInner(ServoStyleSheetInner& aCopy,
 {
   MOZ_COUNT_CTOR(ServoStyleSheetInner);
 
-  // Actually clone aCopy's mSheet and use that as our mSheet.
-  mSheet = Servo_StyleSheet_Clone(aCopy.mSheet).Consume();
+  // Actually clone aCopy's mContents and use that as ours.
+  mContents = Servo_StyleSheet_Clone(aCopy.mContents).Consume();
 
   mURLData = aCopy.mURLData;
 }
@@ -68,10 +68,10 @@ size_t
 ServoStyleSheetInner::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
 {
   size_t n = aMallocSizeOf(this);
-  // mSheet will be null if the parsing has not completed.
-  if (mSheet) {
-    n += Servo_StyleSheet_SizeOfIncludingThis(ServoStyleSheetMallocSizeOf,
-                                              mSheet);
+  // mContents will be null if the parsing has not completed.
+  if (mContents) {
+    n += Servo_StyleSheet_SizeOfIncludingThis(
+        ServoStyleSheetMallocSizeOf, mContents);
   }
   return n;
 }
@@ -141,7 +141,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 bool
 ServoStyleSheet::HasRules() const
 {
-  return Inner()->mSheet && Servo_StyleSheet_HasRules(Inner()->mSheet);
+  return Inner()->mContents && Servo_StyleSheet_HasRules(Inner()->mContents);
 }
 
 nsresult
@@ -159,23 +159,11 @@ ServoStyleSheet::ParseSheet(css::Loader* aLoader,
     new URLExtraData(aBaseURI, aSheetURI, aSheetPrincipal);
 
   NS_ConvertUTF16toUTF8 input(aInput);
-  if (!Inner()->mSheet) {
-    auto* mediaList = static_cast<ServoMediaList*>(mMedia.get());
-    RawServoMediaList* media = mediaList ?  &mediaList->RawList() : nullptr;
-
-    Inner()->mSheet =
-      Servo_StyleSheet_FromUTF8Bytes(
-          aLoader, this, &input, mParsingMode, media, extraData,
-          aLineNumber, aCompatMode
-      ).Consume();
-  } else {
-    // TODO(emilio): Once we have proper inner cloning (which we don't right
-    // now) we should update the mediaList here too, though it's slightly
-    // tricky.
-    Servo_StyleSheet_ClearAndUpdate(Inner()->mSheet, aLoader,
-                                    this, &input, extraData, aLineNumber,
-                                    aReusableSheets);
-  }
+  Inner()->mContents =
+    Servo_StyleSheet_FromUTF8Bytes(
+        aLoader, this, &input, mParsingMode, extraData,
+        aLineNumber, aCompatMode
+    ).Consume();
 
   Inner()->mURLData = extraData.forget();
   return NS_OK;
@@ -184,11 +172,11 @@ ServoStyleSheet::ParseSheet(css::Loader* aLoader,
 void
 ServoStyleSheet::LoadFailed()
 {
-  if (!Inner()->mSheet) {
+  if (!Inner()->mContents) {
     // Only create empty stylesheet if this is a top level stylesheet.
     // The raw sheet for stylesheet of @import rule is already set in
     // loader, and we should not touch it.
-    Inner()->mSheet = Servo_StyleSheet_Empty(mParsingMode).Consume();
+    Inner()->mContents = Servo_StyleSheet_Empty(mParsingMode).Consume();
   }
   Inner()->mURLData = URLExtraData::Dummy();
 }
@@ -354,7 +342,7 @@ ServoStyleSheet::GetCssRulesInternal()
     EnsureUniqueInner();
 
     RefPtr<ServoCssRules> rawRules =
-      Servo_StyleSheet_GetRules(Inner()->mSheet).Consume();
+      Servo_StyleSheet_GetRules(Inner()->mContents).Consume();
     MOZ_ASSERT(rawRules);
     mRuleList = new ServoCSSRuleList(rawRules.forget(), this);
   }
