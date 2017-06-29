@@ -26,10 +26,10 @@
 
     <div id="categories">
       <div class="heading">
-        <span id="ping-type" hidden="true"></span>
+        <span id="ping-type" hidden="true" class="change-ping"></span>
         <div class="controls">
           <span id="older-ping" hidden="true">&lt;&lt;</span>
-          <span id="ping-date"></span>
+          <span id="ping-date" class="change-ping"></span>
           <span id="newer-ping" hidden="true">&gt;&gt;</span>
         </div>
       </div>
@@ -93,50 +93,51 @@
     </div>
 
     <div class="main-content">
+
+      <div id="ping-picker" class="hidden">
+        <div id="ping-source-picker">
+          <h4 class="title">&aboutTelemetry.pingDataSource;</h4>
+          <input type="radio" id="ping-source-current" name="choose-ping-source" value="current" checked="checked" />
+          &aboutTelemetry.showCurrentPingData;
+          <input type="radio" id="ping-source-archive" name="choose-ping-source" value="archive" />
+          &aboutTelemetry.showArchivedPingData;
+        </div>
+        <div id="current-ping-picker">
+          <input id="show-subsession-data" type="checkbox" checked="checked" />&aboutTelemetry.showSubsessionData;
+        </div>
+        <div id="archived-ping-picker" class="hidden">
+          <h4 class="title">&aboutTelemetry.choosePing;</h4>
+          <button class="older-ping" type="button">&aboutTelemetry.showOlderPing;</button>
+          <button class="newer-ping" type="button">&aboutTelemetry.showNewerPing;</button>
+          <div>
+            <h4 class="title">&aboutTelemetry.archiveWeekHeader;</h4>
+            <select id="choose-ping-week"></select>
+          </div>
+          <div>
+            <h4 class="title">&aboutTelemetry.archivePingType;</h4>
+            <select id="choose-ping-type"></select>
+          </div>
+          <div>
+            <h4 class="title">&aboutTelemetry.archivePingHeader;</h4>
+            <select id="choose-ping-id"></select>
+          </div>
+        </div>
+        <div>
+          <h4 class="title">&aboutTelemetry.payloadChoiceHeader;</h4>
+          <select id="choose-payload"></select>
+        </div>
+      </div>
+
       <div class="header">
           <div id="sectionTitle" class="header-name">
               &aboutTelemetry.pageTitle;
           </div>
       </div>
-      <div id="home" class="tab active">
 
+      <div id="home" class="tab active">
         <h3 id="page-subtitle"></h3>
         <p id="home-explanation"></p>
         <p id="ping-explanation"></p>
-
-        <div id="ping-picker">
-          <div id="ping-source-picker">
-            <h4 class="title">&aboutTelemetry.pingDataSource;</h4>
-            <input type="radio" id="ping-source-current" name="choose-ping-source" value="current" checked="checked" />
-            &aboutTelemetry.showCurrentPingData;
-            <input type="radio" id="ping-source-archive" name="choose-ping-source" value="archive" />
-            &aboutTelemetry.showArchivedPingData;
-          </div>
-          <div id="current-ping-picker">
-            <input id="show-subsession-data" type="checkbox" checked="checked" />&aboutTelemetry.showSubsessionData;
-          </div>
-          <div id="archived-ping-picker" class="hidden">
-            <h4 class="title">&aboutTelemetry.choosePing;</h4>
-            <button class="older-ping" type="button">&aboutTelemetry.showOlderPing;</button>
-            <button class="newer-ping" type="button">&aboutTelemetry.showNewerPing;</button>
-            <div>
-              <h4 class="title">&aboutTelemetry.archiveWeekHeader;</h4>
-              <select id="choose-ping-week"></select>
-            </div>
-            <div>
-              <h4 class="title">&aboutTelemetry.archivePingType;</h4>
-              <select id="choose-ping-type"></select>
-            </div>
-            <div>
-              <h4 class="title">&aboutTelemetry.archivePingHeader;</h4>
-              <select id="choose-ping-id"></select>
-            </div>
-          </div>
-          <div>
-            <h4 class="title">&aboutTelemetry.payloadChoiceHeader;</h4>
-            <select id="choose-payload"></select>
-          </div>
-        </div>
       </div>
 
       <div id="raw-ping-data-section" class="tab" hidden="true">
