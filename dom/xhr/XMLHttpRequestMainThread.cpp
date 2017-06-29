@@ -317,7 +317,6 @@ XMLHttpRequestMainThread::ResetResponse()
   mResultArrayBuffer = nullptr;
   mArrayBufferBuilder.reset();
   mResultJSON.setUndefined();
-  mDataAvailable = 0;
   mLoadTransferred = 0;
   mResponseBodyDecodedPos = 0;
 }
@@ -1723,8 +1722,13 @@ XMLHttpRequestMainThread::StreamReaderFunc(nsIInputStream* in,
     if (xmlHttpRequest->mArrayBufferBuilder.capacity() == 0)
       xmlHttpRequest->mArrayBufferBuilder.setCapacity(std::max(count, XML_HTTP_REQUEST_ARRAYBUFFER_MIN_SIZE));
 
-    xmlHttpRequest->mArrayBufferBuilder.append(reinterpret_cast<const uint8_t*>(fromRawSegment), count,
-                                               XML_HTTP_REQUEST_ARRAYBUFFER_MAX_GROWTH);
+    if (NS_WARN_IF(!xmlHttpRequest->mArrayBufferBuilder.append(
+                      reinterpret_cast<const uint8_t*>(fromRawSegment),
+                      count,
+                      XML_HTTP_REQUEST_ARRAYBUFFER_MAX_GROWTH))) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+
   } else if (xmlHttpRequest->mResponseType == XMLHttpRequestResponseType::_empty &&
              xmlHttpRequest->mResponseXML) {
     // Copy for our own use
@@ -1737,7 +1741,10 @@ XMLHttpRequestMainThread::StreamReaderFunc(nsIInputStream* in,
              xmlHttpRequest->mResponseType == XMLHttpRequestResponseType::Moz_chunked_text) {
     NS_ASSERTION(!xmlHttpRequest->mResponseXML,
                  "We shouldn't be parsing a doc here");
-    xmlHttpRequest->AppendToResponseText(fromRawSegment, count);
+    rv = xmlHttpRequest->AppendToResponseText(fromRawSegment, count);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
   }
 
   if (xmlHttpRequest->mFlagParseBody) {
@@ -1905,13 +1912,6 @@ XMLHttpRequestMainThread::OnDataAvailable(nsIRequest *request,
       mBlobSet = nullptr;
       NS_ASSERTION(mResponseBody.IsEmpty(), "mResponseBody should be empty");
 
-      // We don't have to read from the local file for the blob response
-      int64_t fileSize;
-      rv = localFile->GetFileSize(&fileSize);
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      mDataAvailable = fileSize;
-
       // The nsIStreamListener contract mandates us to read from the stream
       // before returning.
       uint32_t totalRead;
@@ -1932,8 +1932,6 @@ XMLHttpRequestMainThread::OnDataAvailable(nsIRequest *request,
   rv = inStr->ReadSegments(XMLHttpRequestMainThread::StreamReaderFunc,
                            (void*)this, count, &totalRead);
   NS_ENSURE_SUCCESS(rv, rv);
-
-  mDataAvailable += totalRead;
 
   // Fire the first progress event/loading state change
   if (mState != State::loading) {
