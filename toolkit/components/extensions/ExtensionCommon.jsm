@@ -1383,7 +1383,6 @@ function EventManager(context, name, register) {
   this.name = name;
   this.register = register;
   this.unregister = new Map();
-  this.inputHandling = false;
 }
 
 EventManager.prototype = {
@@ -1473,7 +1472,6 @@ EventManager.prototype = {
       addListener: (...args) => this.addListener(...args),
       removeListener: (...args) => this.removeListener(...args),
       hasListener: (...args) => this.hasListener(...args),
-      setUserInput: this.inputHandling,
       [Schemas.REVOKE]: () => this.revoke(),
     };
   },

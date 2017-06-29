@@ -43,7 +43,6 @@ const {
   defineLazyGetter,
   getMessageManager,
   getUniqueId,
-  withHandlingUserInput,
 } = ExtensionUtils;
 
 const {
@@ -760,9 +759,8 @@ class ChildAPIManager {
 
         if (listener) {
           let args = data.args.deserialize(this.context.cloneScope);
-          let fire = () => this.context.runSafeWithoutClone(listener, ...args);
-          return (data.handlingUserInput) ?
-                 withHandlingUserInput(this.context.contentWindow, fire) : fire();
+
+          return this.context.runSafeWithoutClone(listener, ...args);
         }
         if (!map.removedIds.has(data.listenerId)) {
           Services.console.logStringMessage(
