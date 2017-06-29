@@ -15,7 +15,7 @@ fa{
         "ش ص ض ط ظ ع غ ف ق ک گ ل م ن و ه ة ی]"
     }
     ExemplarCharactersIndex{"[آ ا ب پ ت ث ج چ ح خ د ذ ر ز ژ س ش ص ض ط ظ ع غ ف ق ک گ ل م ن و ه ی]"}
-    ExemplarCharactersPunctuation{"[\\- ‐ ، ٫ ٬ ؛ \\: ! ؟ . … ‹ › « » ( ) \\[ \\] * / \\\\]"}
+    ExemplarCharactersPunctuation{"[\u0640 \\- ‐ ، ٫ ٬ ؛ \\: ! ؟ . … ‹ › « » ( ) \\[ \\] * / \\\\]"}
     MoreInformation{"؟"}
     NumberElements{
         arab{
@@ -238,10 +238,19 @@ fa{
                 timeSeparator{":"}
             }
         }
+        minimalPairs{
+            ordinal{
+                other{"در پیچ {0}ام سمت راست بپیچید."}
+            }
+            plural{
+                one{"او {0} فیلم در هفته می‌بیند که کمدی است."}
+                other{"او {0} فیلم در هفته می‌بیند که کمدی هستند."}
+            }
+        }
         minimumGroupingDigits{"1"}
         native{"arabext"}
     }
-    Version{"2.1.29.44"}
+    Version{"2.1.32.59"}
     calendar{
         chinese{
             cyclicNameSets{
@@ -1158,12 +1167,77 @@ fa{
             }
         }
         persian{
+            DateTimePatterns{
+                "H:mm:ss (zzzz)",
+                "H:mm:ss (z)",
+                "H:mm:ss",
+                "H:mm",
+                "y MMMM d, EEEE",
+                "d MMMM y",
+                "d MMM y",
+                "y/M/d",
+                "{1}،‏ {0}",
+                "{1}، ساعت {0}",
+                "{1}، ساعت {0}",
+                "{1}،‏ {0}",
+                "{1}،‏ {0}",
+            }
+            availableFormats{
+                y{"y"}
+                yyyy{"y"}
+                yyyyM{"y/M"}
+                yyyyMEd{"E y/M/d"}
+                yyyyMMM{"MMM y"}
+                yyyyMMMEd{"E d MMM y"}
+                yyyyMMMM{"y MMMM"}
+                yyyyMMMd{"d MMM y"}
+                yyyyMd{"y/M/d"}
+                yyyyQQQ{"QQQQ y"}
+                yyyyQQQQ{"QQQQ y"}
+            }
             eras{
                 abbreviated{
                     "ه‍.ش.",
                 }
                 wide{
                     "هجری شمسی",
+                }
+            }
+            intervalFormats{
+                y{
+                    y{"y تا y"}
+                }
+                yM{
+                    M{"y/M تا y/M"}
+                    y{"y/M تا y/M"}
+                }
+                yMEd{
+                    M{"E y/M/d تا E y/M/d"}
+                    d{"E y/M/d تا E y/M/d"}
+                    y{"E y/M/d تا E y/M/d"}
+                }
+                yMMM{
+                    M{"LLL تا MMM y"}
+                    y{"MMM y تا MMM y"}
+                }
+                yMMMEd{
+                    M{"E d LLL تا E d MMM y"}
+                    d{"E d LLL تا E d MMM y"}
+                    y{"E d MMM y تا E d MMM y"}
+                }
+                yMMMM{
+                    M{"LLLL تا MMMM y"}
+                    y{"MMMM y تا MMMM y"}
+                }
+                yMMMd{
+                    M{"d LLL تا d MMM y"}
+                    d{"d تا d MMM y"}
+                    y{"d MMM y تا d MMM y"}
+                }
+                yMd{
+                    M{"y/M/d تا y/M/d"}
+                    d{"y/M/d تا y/M/d"}
+                    y{"y/M/d تا y/M/d"}
                 }
             }
             monthNames{

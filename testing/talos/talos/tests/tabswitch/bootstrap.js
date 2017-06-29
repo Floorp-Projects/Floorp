@@ -1,6 +1,8 @@
 
 // -*- Mode: js; tab-width: 2; indent-tabs-mode: nil; js2-basic-offset: 2; js2-skip-preprocessor-directives: t; -*-
 
+/* globals APP_SHUTDOWN */
+
 var { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/Promise.jsm");
@@ -17,33 +19,32 @@ let context = {};
 let TalosParentProfiler;
 
 var windowListener = {
-  onOpenWindow: function(aWindow) {
+  onOpenWindow(aWindow) {
     // Ensure we don't get tiles which contact the network
     aboutNewTabService.newTabURL = "about:blank";
 
     // Wait for the window to finish loading
     let window = aWindow.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowInternal || Ci.nsIDOMWindow);
     let cb = function() {
-      window.removeEventListener("load", cb, false);
+      window.removeEventListener("load", cb);
       loadIntoWindow(window);
     };
-    window.addEventListener("load", cb, false);
+    window.addEventListener("load", cb);
   },
 
-  onCloseWindow: function(aWindow) {
+  onCloseWindow(aWindow) {
     aboutNewTabService.resetNewTabURL();
   },
 
-  onWindowTitleChange: function(aWindow, aTitle) {
+  onWindowTitleChange(aWindow, aTitle) {
   }
 };
 
 function promiseOneEvent(target, eventName, capture) {
   let deferred = Promise.defer();
   target.addEventListener(eventName, function handler(event) {
-    target.removeEventListener(eventName, handler, capture);
     deferred.resolve();
-  }, capture);
+  }, {capture, once: true});
   return deferred.promise;
 }
 
@@ -67,7 +68,7 @@ function waitForDelayedStartup(win) {
         Services.obs.removeObserver(onStartup, topic);
         resolve();
       }
-    }, topic, false);
+    }, topic);
   });
 }
 
@@ -94,7 +95,7 @@ function loadTabs(gBrowser, urls) {
     let listener = {
       QueryInterface: XPCOMUtils.generateQI(["nsIWebProgressListener",
                                              "nsISupportsWeakReference"]),
-      onStateChange: function(aBrowser, aWebProgress, aRequest, aStateFlags, aStatus) {
+      onStateChange(aBrowser, aWebProgress, aRequest, aStateFlags, aStatus) {
         let loadedState = Ci.nsIWebProgressListener.STATE_STOP |
           Ci.nsIWebProgressListener.STATE_IS_NETWORK;
         if ((aStateFlags & loadedState) == loadedState &&
@@ -269,9 +270,8 @@ function waitForTabSwitchDone(browser) {
   return new Promise((resolve) => {
     let gBrowser = browser.ownerGlobal.gBrowser;
     gBrowser.addEventListener("TabSwitchDone", function onTabSwitchDone() {
-      gBrowser.removeEventListener("TabSwitchDone", onTabSwitchDone);
       resolve();
-    });
+    }, {once: true});
   });
 }
 
@@ -424,21 +424,21 @@ function test(window) {
       yield switchToTab(initialTab);
     }
 
-    let output = '<!DOCTYPE html>'+
-                 '<html lang="en">'+
-                 '<head><title>Tab Switch Results</title></head>'+
-                 '<body><h1>Tab switch times</h1>' +
-                 '<table>';
+    let output = "<!DOCTYPE html>" +
+                 '<html lang="en">' +
+                 "<head><title>Tab Switch Results</title></head>" +
+                 "<body><h1>Tab switch times</h1>" +
+                 "<table>";
     let time = 0;
-    for(let i in times) {
+    for (let i in times) {
       time += times[i];
-      output += '<tr><td>' + testURLs[i] + '</td><td>' + times[i] + 'ms</td></tr>';
+      output += "<tr><td>" + testURLs[i] + "</td><td>" + times[i] + "ms</td></tr>";
     }
-    output += '</table></body></html>';
+    output += "</table></body></html>";
     dump("total tab switch time:" + time + "\n");
 
     let resultsTab = win.gBrowser.loadOneTab(
-      'data:text/html;charset=utf-8,' + encodeURIComponent(output), {
+      "data:text/html;charset=utf-8," + encodeURIComponent(output), {
       triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
     });
     let pref = Services.prefs.getBoolPref("browser.tabs.warnOnCloseOtherTabs");
@@ -510,7 +510,7 @@ function handleFile(win, file) {
   localFile.initWithPath(file);
   let localURI = Services.io.newFileURI(localFile);
   let req = new win.XMLHttpRequest();
-  req.open('get', localURI.spec, false);
+  req.open("get", localURI.spec, false);
   req.send(null);
 
 
@@ -533,7 +533,7 @@ function handleFile(win, file) {
 }
 
 var observer = {
-  observe: function(aSubject, aTopic, aData) {
+  observe(aSubject, aTopic, aData) {
     if (aTopic == "tabswitch-urlfile") {
       handleFile(aSubject, aData);
     }
@@ -554,7 +554,7 @@ function startup(aData, aReason) {
   // Load into any new windows
   Services.wm.addListener(windowListener);
 
-  Services.obs.addObserver(observer, "tabswitch-urlfile", false);
+  Services.obs.addObserver(observer, "tabswitch-urlfile");
 
   Services.ppmm.loadProcessScript("chrome://tabswitch/content/tabswitch-content-process.js", true);
 

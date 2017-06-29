@@ -203,10 +203,19 @@ pt{
                 timeSeparator{":"}
             }
         }
+        minimalPairs{
+            ordinal{
+                other{"{0}º livro"}
+            }
+            plural{
+                one{"{0} ponto"}
+                other{"{0} pontos"}
+            }
+        }
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"2.1.28.79"}
+    Version{"2.1.32.59"}
     calendar{
         buddhist{
             eras{

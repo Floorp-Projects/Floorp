@@ -31,7 +31,7 @@ var TalosContentProfiler;
     // (It's not required nor allowed for addons since Firefox 17)
     // It's used inside talos from non-privileged pages (like during tscroll),
     // and it works because talos disables all/most security measures.
-    netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
   } catch (e) {}
 
   Components.utils.import("resource://gre/modules/Services.jsm");
@@ -50,13 +50,13 @@ var TalosContentProfiler;
    *        Resolves when a corresponding acknowledgement event is dispatched
    *        on this document.
    */
-  function sendEventAndWait(name, data={}) {
+  function sendEventAndWait(name, data = {}) {
     return new Promise((resolve) => {
       var event = new CustomEvent("TalosContentProfilerCommand", {
         bubbles: true,
         detail: {
-          name: name,
-          data: data,
+          name,
+          data,
         }
       });
       document.dispatchEvent(event);
@@ -107,7 +107,7 @@ var TalosContentProfiler;
      *     gecko_profile_threads (string, comma separated list of threads to filter with)
      *     gecko_profile_dir (string)
      */
-    initFromObject(obj={}) {
+    initFromObject(obj = {}) {
       if (!initted) {
         if (("gecko_profile_dir" in obj) && typeof obj.gecko_profile_dir == "string" &&
             ("gecko_profile_interval" in obj) && Number.isFinite(obj.gecko_profile_interval * 1) &&
@@ -201,7 +201,7 @@ var TalosContentProfiler;
      * @returns Promise
      *          Resolves once the Gecko Profiler has resumed.
      */
-    resume(marker="") {
+    resume(marker = "") {
       if (initted) {
         return sendEventAndWait("Profiler:Resume", { marker });
       }
@@ -214,7 +214,7 @@ var TalosContentProfiler;
      * @returns Promise
      *          Resolves once the Gecko Profiler has paused.
      */
-    pause(marker="") {
+    pause(marker = "") {
       if (initted) {
         return sendEventAndWait("Profiler:Pause", { marker });
       }

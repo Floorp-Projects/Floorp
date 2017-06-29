@@ -34,13 +34,13 @@ nsSessionRestoreTalosTest.prototype = {
 
   _xpcom_factory: XPCOMUtils.generateSingletonFactory(nsSessionRestoreTalosTest),
 
-  //////////////////////////////////////////////////////////////////////////////
-  //// nsISupports
+  // ////////////////////////////////////////////////////////////////////////////
+  // // nsISupports
 
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver]),
 
-  //////////////////////////////////////////////////////////////////////////////
-  //// nsIObserver
+  // ////////////////////////////////////////////////////////////////////////////
+  // // nsIObserver
 
   observe: function DS_observe(aSubject, aTopic, aData) {
     switch (aTopic) {
@@ -62,7 +62,7 @@ nsSessionRestoreTalosTest.prototype = {
   /**
    * Perform initialization on profile-after-change.
    */
-  init: function() {
+  init() {
     if (StartupPerformance.isRestored) {
       this.onReady(true);
     } else {
@@ -82,7 +82,7 @@ nsSessionRestoreTalosTest.prototype = {
   /**
    * Session Restore is complete, hurray.
    */
-  onReady: function(hasRestoredTabs) {
+  onReady(hasRestoredTabs) {
     if (hasRestoredTabs) {
       Services.obs.removeObserver(this, StartupPerformance.RESTORED_TOPIC);
     }
@@ -151,7 +151,7 @@ nsSessionRestoreTalosTest.prototype = {
   }
 };
 
-////////////////////////////////////////////////////////////////////////////////
-//// Module
+// //////////////////////////////////////////////////////////////////////////////
+// // Module
 
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory([nsSessionRestoreTalosTest]);

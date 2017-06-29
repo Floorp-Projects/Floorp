@@ -391,6 +391,8 @@
     _(CallDOMNative)                \
     _(IsCallable)                   \
     _(IsConstructor)                \
+    _(IsArrayO)                     \
+    _(IsArrayV)                     \
     _(IsObject)                     \
     _(IsObjectAndBranch)            \
     _(HasClass)                     \
@@ -413,6 +415,7 @@
     _(CheckIsCallable)              \
     _(CheckObjCoercible)            \
     _(DebugCheckSelfHosted)         \
+    _(FinishBoundFunctionInit)      \
     _(AsmJSLoadHeap)                \
     _(AsmJSStoreHeap)               \
     _(AsmJSCompareExchangeHeap)     \

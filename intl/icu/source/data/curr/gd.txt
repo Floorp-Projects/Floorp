@@ -780,7 +780,7 @@ gd{
         }
         PEN{
             "PEN",
-            "Sol ùr Pearùthach",
+            "Sol Pearùthach",
         }
         PES{
             "PES",
@@ -2462,10 +2462,10 @@ gd{
             two{"inti Pearùthach"}
         }
         PEN{
-            few{"sol ùra Pearùthach"}
-            one{"sol ùr Pearùthach"}
-            other{"sol ùr Pearùthach"}
-            two{"shol ùr Pearùthach"}
+            few{"sol Pearùthach"}
+            one{"sol Pearùthach"}
+            other{"sol Pearùthach"}
+            two{"shol Pearùthach"}
         }
         PES{
             few{"sol Pearùthach (1863–1965)"}
@@ -3092,5 +3092,5 @@ gd{
         other{"{0} {1}"}
         two{"{0} {1}"}
     }
-    Version{"2.1.28.76"}
+    Version{"2.1.31.86"}
 }

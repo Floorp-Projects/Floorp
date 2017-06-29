@@ -1170,10 +1170,10 @@ var TelemetrySendImpl = {
     let converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"]
                     .createInstance(Ci.nsIScriptableUnicodeConverter);
     converter.charset = "UTF-8";
-    let startTime = new Date();
+    let startTime = monotonicNow();
     let utf8Payload = converter.ConvertFromUnicode(JSON.stringify(networkPayload));
     utf8Payload += converter.Finish();
-    Telemetry.getHistogramById("TELEMETRY_STRINGIFY").add(new Date() - startTime);
+    Telemetry.getHistogramById("TELEMETRY_STRINGIFY").add(monotonicNow() - startTime);
 
     // Check the size and drop pings which are too big.
     const pingSizeBytes = utf8Payload.length;
@@ -1189,12 +1189,11 @@ var TelemetrySendImpl = {
 
     let payloadStream = Cc["@mozilla.org/io/string-input-stream;1"]
                         .createInstance(Ci.nsIStringInputStream);
-    startTime = new Date();
+    startTime = monotonicNow();
     payloadStream.data = gzipCompressString(utf8Payload);
 
     const compressedPingSizeKB = Math.floor(payloadStream.data.length / 1024);
-    Telemetry.getHistogramById("TELEMETRY_COMPRESS").add(new Date() - startTime);
-    startTime = new Date();
+    Telemetry.getHistogramById("TELEMETRY_COMPRESS").add(monotonicNow() - startTime);
     request.send(payloadStream);
 
     return deferred.promise;

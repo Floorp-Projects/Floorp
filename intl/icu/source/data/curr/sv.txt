@@ -780,7 +780,7 @@ sv{
         }
         PEN{
             "PEN",
-            "peruansk nuevo sol",
+            "peruansk sol",
         }
         PES{
             "PES",
@@ -2074,8 +2074,8 @@ sv{
             other{"peruanska intier"}
         }
         PEN{
-            one{"peruansk nuevo sol"}
-            other{"peruanska nuevo sol"}
+            one{"peruansk sol"}
+            other{"peruanska sol"}
         }
         PES{
             one{"peruansk sol (1863–1965)"}
@@ -2494,5 +2494,5 @@ sv{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.1.30.7"}
+    Version{"2.1.32.59"}
 }

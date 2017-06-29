@@ -7,12 +7,12 @@
 <script language="javascript" type="text/javascript">
 const kTotalTicks = 100;
 var start;
-var gl = document.createElement('canvas').getContext('webgl');
+var gl = document.createElement("canvas").getContext("webgl");
 gl.bindTexture(gl.TEXTURE_2D, gl.createTexture());
 var video;
-video = document.createElement('video');
+video = document.createElement("video");
 video.src = "../../../video/clips/testsrc.1080p.60fps.mp4";
-video.addEventListener('playing', playingListener, true); // loadstart?
+video.addEventListener("playing", playingListener, true); // loadstart?
 video.loop = true;
 
 function init() {
@@ -23,9 +23,8 @@ function content_focused() {
   video.play();
 }
 
-function playingListener()
-{
-  video.removeEventListener('playing', playingListener, true);
+function playingListener() {
+  video.removeEventListener("playing", playingListener, true);
   start = performance.now();
   tick();
 }
@@ -46,18 +45,19 @@ function tick() {
 
 function reportResult(totalTime, totalTicks) {
   var meanTickTime = totalTime / totalTicks;
-  var desc = 'Mean tick time across ' + totalTicks + ' ticks: ';
-  var text = desc + meanTickTime + ' ms\n';
+  var desc = "Mean tick time across " + totalTicks + " ticks: ";
+  var text = desc + meanTickTime + " ms\n";
 
-  dump('[talos glvideo result] ' + text);
+  dump("[talos glvideo result] " + text);
 
   if (window.tpRecordTime) {
     // Within talos - report the results
     return tpRecordTime(meanTickTime, 0, desc);
-  } else {
-    // Local run in a plain browser, display the formatted report
-    alert('[talos glvideo result] ' + text);
   }
+    // Local run in a plain browser, display the formatted report
+    alert("[talos glvideo result] " + text);
+
+  return undefined;
 }
 </script>
 

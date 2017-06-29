@@ -453,7 +453,7 @@ nsresult NrIceMediaStream::GetDefaultCandidate(
 }
 
 std::vector<std::string> NrIceMediaStream::GetCandidates() const {
-  char **attrs = 0;
+  char **attrs = nullptr;
   int attrct;
   int r;
   std::vector<std::string> ret;

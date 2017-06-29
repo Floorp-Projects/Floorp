@@ -247,11 +247,19 @@ yue{
                 timeSeparator{":"}
             }
         }
+        minimalPairs{
+            ordinal{
+                other{"第 {0} 本書"}
+            }
+            plural{
+                other{"{0} 本書"}
+            }
+        }
         minimumGroupingDigits{"1"}
         native{"hanidec"}
         traditional{"hant"}
     }
-    Version{"2.1.28.76"}
+    Version{"2.1.31.86"}
     calendar{
         buddhist{
             DateTimePatterns{

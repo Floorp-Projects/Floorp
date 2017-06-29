@@ -5,11 +5,11 @@
 <title>accessibility perf for dhtml</title>
 <script src="a11y.js"></script>
 <script>
+  /* import-globals-from a11y.js */
   // based on: http://hacks.mozilla.org/2010/05/better-performance-with-lazy-frame-construction/
   var ppDate = null;
 
-  function doInsertion()
-  {
+  function doInsertion() {
     if (!initAccessibility()) {
       dump("__FAILinit:AccessibilityUnvailable__FAIL");
       return;
@@ -18,7 +18,7 @@
     var container = document.getElementById("container");
     var lastchild = document.getElementById("lastchild");
     var start = new Date();
-    var i,div;
+    var i, div;
     for (i = 0; i < 2000; i++) {
       div = document.createElement("div");
       div.innerHTML = "<input type='text' value='a bc def g hijkl mn op qrs'/>";
@@ -39,9 +39,8 @@
     setTimeout(postProcessingRecord, 0, start);
   }
 
-  function postProcessingRecord(s)
-  {
-    //alert(new Date() - s);
+  function postProcessingRecord(s) {
+    // alert(new Date() - s);
     tpRecordTime(new Date() - s, s);
   }
 </script>

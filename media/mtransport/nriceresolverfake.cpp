@@ -95,7 +95,7 @@ int NrIceResolverFake::destroy(void **objp) {
     return 0;
 
   NrIceResolverFake *fake = static_cast<NrIceResolverFake *>(*objp);
-  *objp = 0;
+  *objp = nullptr;
 
   fake->DestroyResolver();
 

@@ -7,6 +7,7 @@ likelySubtags:table(nofallback){
     aau{"aau_Latn_ZZ"}
     ab{"ab_Cyrl_GE"}
     abi{"abi_Latn_ZZ"}
+    abq{"abq_Cyrl_ZZ"}
     abr{"abr_Latn_GH"}
     abt{"abt_Latn_ZZ"}
     aby{"aby_Latn_ZZ"}
@@ -154,6 +155,7 @@ likelySubtags:table(nofallback){
     bjn{"bjn_Latn_ID"}
     bjo{"bjo_Latn_ZZ"}
     bjr{"bjr_Latn_ZZ"}
+    bjt{"bjt_Latn_SN"}
     bjz{"bjz_Latn_ZZ"}
     bkc{"bkc_Latn_ZZ"}
     bkm{"bkm_Latn_CM"}
@@ -220,8 +222,7 @@ likelySubtags:table(nofallback){
     can{"can_Latn_ZZ"}
     cbj{"cbj_Latn_ZZ"}
     cch{"cch_Latn_NG"}
-    ccp{"ccp_Beng_IN"}
-    ccp_Cakm{"ccp_Cakm_BD"}
+    ccp{"ccp_Cakm_BD"}
     ce{"ce_Cyrl_RU"}
     ceb{"ceb_Latn_PH"}
     cfa{"cfa_Latn_ZZ"}
@@ -245,6 +246,7 @@ likelySubtags:table(nofallback){
     cop{"cop_Copt_EG"}
     cps{"cps_Latn_PH"}
     cr{"cr_Cans_CA"}
+    crh{"crh_Cyrl_UA"}
     crj{"crj_Cans_CA"}
     crk{"crk_Cans_CA"}
     crl{"crl_Cans_CA"}
@@ -309,6 +311,7 @@ likelySubtags:table(nofallback){
     efi{"efi_Latn_NG"}
     egl{"egl_Latn_IT"}
     egy{"egy_Egyp_EG"}
+    eka{"eka_Latn_ZZ"}
     eky{"eky_Kali_MM"}
     el{"el_Grek_GR"}
     ema{"ema_Latn_ZZ"}
@@ -416,6 +419,7 @@ likelySubtags:table(nofallback){
     gor{"gor_Latn_ID"}
     gos{"gos_Latn_NL"}
     got{"got_Goth_UA"}
+    grb{"grb_Latn_ZZ"}
     grc{"grc_Cprt_CY"}
     grc_Linb{"grc_Linb_GR"}
     grt{"grt_Beng_IN"}
@@ -488,6 +492,7 @@ likelySubtags:table(nofallback){
     idd{"idd_Latn_ZZ"}
     idi{"idi_Latn_ZZ"}
     idu{"idu_Latn_ZZ"}
+    ife{"ife_Latn_TG"}
     ig{"ig_Latn_NG"}
     igb{"igb_Latn_ZZ"}
     ige{"ige_Latn_ZZ"}
@@ -598,6 +603,7 @@ likelySubtags:table(nofallback){
     kmu{"kmu_Latn_ZZ"}
     kmw{"kmw_Latn_ZZ"}
     kn{"kn_Knda_IN"}
+    knf{"knf_Latn_SN"}
     knp{"knp_Latn_ZZ"}
     ko{"ko_Kore_KR"}
     koi{"koi_Cyrl_RU"}
@@ -1021,6 +1027,7 @@ likelySubtags:table(nofallback){
     saq{"saq_Latn_KE"}
     sas{"sas_Latn_ID"}
     sat{"sat_Latn_IN"}
+    sav{"sav_Latn_SN"}
     saz{"saz_Saur_IN"}
     sba{"sba_Latn_ZZ"}
     sbe{"sbe_Latn_ZZ"}
@@ -1344,7 +1351,6 @@ likelySubtags:table(nofallback){
     und_Cyrl_GE{"ab_Cyrl_GE"}
     und_Cyrl_GR{"mk_Cyrl_GR"}
     und_Cyrl_MD{"uk_Cyrl_MD"}
-    und_Cyrl_PL{"be_Cyrl_PL"}
     und_Cyrl_RO{"bg_Cyrl_RO"}
     und_Cyrl_SK{"uk_Cyrl_SK"}
     und_Cyrl_TR{"kbd_Cyrl_TR"}

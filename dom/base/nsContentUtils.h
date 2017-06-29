@@ -1885,6 +1885,16 @@ public:
    */
   static void RunInMetastableState(already_AddRefed<nsIRunnable> aRunnable);
 
+  /**
+   * Returns a nsISerialEventTarget which will run any event dispatched to it
+   * once the event loop has reached a "stable state". Runnables dispatched to
+   * this event target must not cause any queued events to be processed (i.e.
+   * must not spin the event loop).
+   *
+   * See RunInStableState for more information about stable states
+   */
+  static nsISerialEventTarget* GetStableStateEventTarget();
+
   // Call EnterMicroTask when you're entering JS execution.
   // Usually the best way to do this is to use nsAutoMicroTask.
   static void EnterMicroTask();
@@ -3232,6 +3242,8 @@ private:
    * True if there's a fragment parser activation on the stack.
    */
   static bool sFragmentParsingActive;
+
+  static nsISerialEventTarget* sStableStateEventTarget;
 
   static nsString* sShiftText;
   static nsString* sControlText;

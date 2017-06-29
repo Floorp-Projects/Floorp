@@ -157,22 +157,18 @@ class StringIteratorObject : public JSObject
 StringIteratorObject*
 NewStringIteratorObject(JSContext* cx, NewObjectKind newKind = GenericObject);
 
-bool
-GetIterator(JSContext* cx, HandleObject obj, unsigned flags, MutableHandleObject objp);
-
 JSObject*
-GetIteratorObject(JSContext* cx, HandleObject obj, unsigned flags);
+GetIterator(JSContext* cx, HandleObject obj, unsigned flags);
 
 /*
  * Creates either a key or value iterator, depending on flags. For a value
  * iterator, performs value-lookup to convert the given list of jsids.
  */
-bool
-EnumeratedIdVectorToIterator(JSContext* cx, HandleObject obj, unsigned flags, AutoIdVector& props,
-                             MutableHandleObject objp);
+JSObject*
+EnumeratedIdVectorToIterator(JSContext* cx, HandleObject obj, unsigned flags, AutoIdVector& props);
 
-bool
-NewEmptyPropertyIterator(JSContext* cx, unsigned flags, MutableHandleObject objp);
+JSObject*
+NewEmptyPropertyIterator(JSContext* cx, unsigned flags);
 
 /*
  * Convert the value stored in *vp to its iteration object. The flags should
