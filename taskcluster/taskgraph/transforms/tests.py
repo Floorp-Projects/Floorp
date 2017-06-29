@@ -249,6 +249,10 @@ test_description_schema = Schema({
             # chunking-args = test-suite-suffix; "<CHUNK>" in this string will
             # be replaced with the chunk number.
             Optional('chunk-suffix'): basestring,
+
+            Required('requires-signed-builds', default=False): optionally_keyed_by(
+                'test-platform',
+                bool),
         }
     ),
 
@@ -268,6 +272,10 @@ test_description_schema = Schema({
 
     # the label of the build task generating the materials to test
     'build-label': basestring,
+
+    # the label of the signing task generating the materials to test.
+    # Signed builds are used in xpcshell tests on Windows, for instance.
+    Optional('build-signing-label'): basestring,
 
     # the build's attributes
     'build-attributes': {basestring: object},
@@ -387,6 +395,7 @@ def set_target(config, tests):
         else:
             target = 'target.tar.bz2'
         test['mozharness']['build-artifact-name'] = 'public/build/' + target
+
         yield test
 
 
@@ -492,6 +501,7 @@ def handle_keyed_by(config, tests):
         'mozharness.chunked',
         'mozharness.config',
         'mozharness.extra-options',
+        'mozharness.requires-signed-builds',
     ]
     for test in tests:
         for field in fields:
@@ -775,6 +785,10 @@ def make_job_description(config, tests):
         jobdesc['when'] = test.get('when', {})
         jobdesc['attributes'] = attributes
         jobdesc['dependencies'] = {'build': build_label}
+
+        if test['mozharness']['requires-signed-builds'] is True:
+            jobdesc['dependencies']['build-signing'] = test['build-signing-label']
+
         jobdesc['expires-after'] = test['expires-after']
         jobdesc['routes'] = []
         jobdesc['run-on-projects'] = test['run-on-projects']
