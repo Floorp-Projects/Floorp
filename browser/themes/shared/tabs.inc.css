@@ -471,10 +471,15 @@
 
 .tabbrowser-tab:-moz-any([image], [pinned]) > .tab-stack > .tab-content[attention]:not([selected="true"]),
 .tabbrowser-tab > .tab-stack > .tab-content[pinned][titlechanged]:not([selected="true"]) {
+%ifdef MOZ_PHOTON_THEME
+  background-image: url(chrome://browser/skin/tabbrowser/indicator-tab-attention.svg);
+  background-position: center bottom -3px;
+%else
   background-image: radial-gradient(farthest-corner at center bottom, rgb(255,255,255) 3%, rgba(186,221,251,0.75) 20%, rgba(127,179,255,0.25) 40%, transparent 70%);
   background-position: center bottom var(--tab-toolbar-navbar-overlap);
-  background-repeat: no-repeat;
   background-size: 85% 100%;
+%endif
+  background-repeat: no-repeat;
 }
 
 .tabbrowser-tab[image] > .tab-stack > .tab-content[attention]:not([pinned]):not([selected="true"]) {
