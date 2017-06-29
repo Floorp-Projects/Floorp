@@ -25,7 +25,6 @@ public:
   PlatformChild& operator=(PlatformChild&&) = delete;
 
 private:
-  UniquePtr<mozilla::mscom::ActivationContextRegion> mActCtxMain;
   mscom::MTADeletePtr<mozilla::mscom::ActivationContextRegion> mActCtxMTA;
   UniquePtr<mozilla::mscom::RegisteredProxy> mCustomProxy;
   UniquePtr<mozilla::mscom::RegisteredProxy> mIA2Proxy;
