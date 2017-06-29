@@ -51,15 +51,15 @@ interface Range {
   const unsigned short END_TO_START = 3;
   [Throws]
   short compareBoundaryPoints(unsigned short how, Range sourceRange);
-  [Throws]
+  [CEReactions, Throws]
   void deleteContents();
-  [Throws]
+  [CEReactions, Throws]
   DocumentFragment extractContents();
-  [Throws]
+  [CEReactions, Throws]
   DocumentFragment cloneContents();
-  [Throws]
+  [CEReactions, Throws]
   void insertNode(Node node);
-  [Throws]
+  [CEReactions, Throws]
   void surroundContents(Node newParent);
 
   Range cloneRange();
