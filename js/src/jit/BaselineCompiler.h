@@ -138,6 +138,8 @@ namespace jit {
     _(JSOP_DELPROP)            \
     _(JSOP_STRICTDELPROP)      \
     _(JSOP_GETPROP_SUPER)      \
+    _(JSOP_SETPROP_SUPER)      \
+    _(JSOP_STRICTSETPROP_SUPER) \
     _(JSOP_LENGTH)             \
     _(JSOP_GETBOUNDNAME)       \
     _(JSOP_GETALIASEDVAR)      \
