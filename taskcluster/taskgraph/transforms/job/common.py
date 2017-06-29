@@ -28,7 +28,7 @@ def docker_worker_add_workspace_cache(config, job, taskdesc, extra=None):
             taskdesc['attributes']['build_platform'],
             taskdesc['attributes']['build_type'],
         ),
-        'mount-point': "/home/worker/workspace",
+        'mount-point': "/builds/worker/workspace",
     })
     if extra:
         taskdesc['worker']['caches'][-1]['name'] += '-{}'.format(
@@ -41,14 +41,14 @@ def docker_worker_add_tc_vcs_cache(config, job, taskdesc):
         'type': 'persistent',
         'name': 'level-{}-{}-tc-vcs'.format(
             config.params['level'], config.params['project']),
-        'mount-point': "/home/worker/.tc-vcs",
+        'mount-point': "/builds/worker/.tc-vcs",
     })
 
 
 def docker_worker_add_public_artifacts(config, job, taskdesc):
     taskdesc['worker'].setdefault('artifacts', []).append({
         'name': 'public/build',
-        'path': '/home/worker/artifacts/',
+        'path': '/builds/worker/artifacts/',
         'type': 'directory',
     })
 
@@ -86,7 +86,7 @@ def support_vcs_checkout(config, job, taskdesc):
             # ``v1`` was introduced to provide a clean break from the unversioned
             # cache.
             'name': 'level-%s-checkouts-v1' % level,
-            'mount-point': '/home/worker/checkouts',
+            'mount-point': '/builds/worker/checkouts',
         })
 
     taskdesc['worker'].setdefault('env', {}).update({
