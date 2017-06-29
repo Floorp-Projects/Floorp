@@ -199,7 +199,7 @@ MobileViewportManager::UpdateResolution(const nsViewportInfo& aViewportInfo,
   if (mIsFirstPaint) {
     CSSToScreenScale defaultZoom;
     if (mRestoreResolution) {
-      LayoutDeviceToLayerScale restoreResolution(mRestoreResolution.value());
+    LayoutDeviceToLayerScale restoreResolution(mRestoreResolution.value());
       if (mRestoreDisplaySize) {
         CSSSize prevViewport = mDocument->GetViewportInfo(mRestoreDisplaySize.value()).GetSize();
         float restoreDisplayWidthChangeRatio = (mRestoreDisplaySize.value().width > 0)
