@@ -30,7 +30,7 @@ interface XSLTProcessor {
      * @param output This document is used to generate the output
      * @return DocumentFragment The result of the transformation
      */
-    [Throws]
+    [CEReactions, Throws]
     DocumentFragment transformToFragment(Node source,
                                          Document output);
 
@@ -41,7 +41,7 @@ interface XSLTProcessor {
      * @param source The node to be transformed
      * @return Document The result of the transformation
      */
-    [Throws]
+    [CEReactions, Throws]
     Document transformToDocument(Node source);
 
     /**
