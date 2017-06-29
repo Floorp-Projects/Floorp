@@ -280,57 +280,63 @@ struct AutoCloseIterator
     Rooted<PropertyIteratorObject*> obj;
 };
 
-static bool
-Reify(JSContext* cx, JSCompartment* origin, MutableHandleObject objp)
+static JSObject*
+Reify(JSContext* cx, JSCompartment* origin, HandleObject objp)
 {
     Rooted<PropertyIteratorObject*> iterObj(cx, &objp->as<PropertyIteratorObject>());
     NativeIterator* ni = iterObj->getNativeIterator();
 
-    AutoCloseIterator close(cx, iterObj);
-
-    /* Wrap the iteratee. */
     RootedObject obj(cx, ni->obj);
-    if (!origin->wrap(cx, &obj))
-        return false;
+    {
+        AutoCloseIterator close(cx, iterObj);
 
-    /*
-     * Wrap the elements in the iterator's snapshot.
-     * N.B. the order of closing/creating iterators is important due to the
-     * implicit cx->enumerators state.
-     */
-    size_t length = ni->numKeys();
-    AutoIdVector keys(cx);
-    if (length > 0) {
-        if (!keys.reserve(length))
-            return false;
-        for (size_t i = 0; i < length; ++i) {
-            RootedId id(cx);
-            RootedValue v(cx, StringValue(ni->begin()[i]));
-            if (!ValueToId<CanGC>(cx, v, &id))
-                return false;
-            keys.infallibleAppend(id);
+        /* Wrap the iteratee. */
+        if (!origin->wrap(cx, &obj))
+            return nullptr;
+
+        /*
+         * Wrap the elements in the iterator's snapshot.
+         * N.B. the order of closing/creating iterators is important due to the
+         * implicit cx->enumerators state.
+         */
+        size_t length = ni->numKeys();
+        AutoIdVector keys(cx);
+        if (length > 0) {
+            if (!keys.reserve(length))
+                return nullptr;
+            for (size_t i = 0; i < length; ++i) {
+                RootedId id(cx);
+                RootedValue v(cx, StringValue(ni->begin()[i]));
+                if (!ValueToId<CanGC>(cx, v, &id))
+                    return nullptr;
+                keys.infallibleAppend(id);
+            }
         }
+
+        close.clear();
+        MOZ_ALWAYS_TRUE(CloseIterator(cx, iterObj));
+
+        obj = EnumeratedIdVectorToIterator(cx, obj, ni->flags, keys);
     }
-
-    close.clear();
-    MOZ_ALWAYS_TRUE(CloseIterator(cx, iterObj));
-
-    return EnumeratedIdVectorToIterator(cx, obj, ni->flags, keys, objp);
+    return obj;
 }
 
-bool
-CrossCompartmentWrapper::enumerate(JSContext* cx, HandleObject wrapper,
-                                   MutableHandleObject objp) const
+JSObject*
+CrossCompartmentWrapper::enumerate(JSContext* cx, HandleObject wrapper) const
 {
+    RootedObject res(cx);
     {
         AutoCompartment call(cx, wrappedObject(wrapper));
-        if (!Wrapper::enumerate(cx, wrapper, objp))
-            return false;
+        res = Wrapper::enumerate(cx, wrapper);
+        if (!res)
+            return nullptr;
     }
 
-    if (CanReify(objp))
-        return Reify(cx, cx->compartment(), objp);
-    return cx->compartment()->wrap(cx, objp);
+    if (CanReify(res))
+        return Reify(cx, cx->compartment(), res);
+    if (!cx->compartment()->wrap(cx, &res))
+        return nullptr;
+    return res;
 }
 
 bool
