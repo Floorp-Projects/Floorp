@@ -143,7 +143,7 @@ def mozharness_on_docker_worker_setup(config, job, taskdesc):
         worker['caches'].append({
             'type': 'persistent',
             'name': 'tooltool-cache',
-            'mount-point': '/home/worker/tooltool-cache',
+            'mount-point': '/builds/worker/tooltool-cache',
         })
         taskdesc['scopes'].extend([
             'docker-worker:relengapi-proxy:tooltool.download.public',
@@ -151,7 +151,7 @@ def mozharness_on_docker_worker_setup(config, job, taskdesc):
         if run['tooltool-downloads'] == 'internal':
             taskdesc['scopes'].append(
                 'docker-worker:relengapi-proxy:tooltool.download.internal')
-        env['TOOLTOOL_CACHE'] = '/home/worker/tooltool-cache'
+        env['TOOLTOOL_CACHE'] = '/builds/worker/tooltool-cache'
 
     # Retry if mozharness returns TBPL_RETRY
     worker['retry-exit-status'] = 4
@@ -159,15 +159,15 @@ def mozharness_on_docker_worker_setup(config, job, taskdesc):
     docker_worker_setup_secrets(config, job, taskdesc)
 
     command = [
-        '/home/worker/bin/run-task',
+        '/builds/worker/bin/run-task',
         # Various caches/volumes are default owned by root:root.
-        '--chown-recursive', '/home/worker/workspace',
-        '--chown-recursive', '/home/worker/tooltool-cache',
-        '--vcs-checkout', '/home/worker/workspace/build/src',
-        '--tools-checkout', '/home/worker/workspace/build/tools',
+        '--chown-recursive', '/builds/worker/workspace',
+        '--chown-recursive', '/builds/worker/tooltool-cache',
+        '--vcs-checkout', '/builds/worker/workspace/build/src',
+        '--tools-checkout', '/builds/worker/workspace/build/tools',
         '--',
     ]
-    command.append("/home/worker/workspace/build/src/{}".format(
+    command.append("/builds/worker/workspace/build/src/{}".format(
         run.get('job-script',
                 "taskcluster/scripts/builder/build-linux.sh"
                 )))
