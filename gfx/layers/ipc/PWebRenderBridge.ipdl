@@ -86,6 +86,7 @@ parent:
   sync GetAPZTestData() returns (APZTestData data);
 
   async Shutdown();
+  sync ShutdownSync();
 child:
   async __delete__();
 };
