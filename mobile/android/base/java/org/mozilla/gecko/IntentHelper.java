@@ -138,7 +138,7 @@ public final class IntentHelper implements BundleEventListener {
             }
         }
 
-        if (!showPromptInPrivateBrowsing || activityContext == null) {
+        if (!showPromptInPrivateBrowsing || !(activityContext instanceof FragmentActivity)) {
             if (activityContext == null) {
                 intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             }
