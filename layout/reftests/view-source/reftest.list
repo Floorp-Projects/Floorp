@@ -1,1 +1,1 @@
-fails-if(!styloVsGecko) == view-source-image.html view-source-image-ref.html # security checks prevent loading view-source:
+fails-if(!styloVsGecko) random-if(styloVsGecko) == view-source-image.html view-source-image-ref.html # security checks prevent loading view-source:
