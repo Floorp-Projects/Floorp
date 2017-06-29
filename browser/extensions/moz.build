@@ -9,6 +9,7 @@ DIRS += [
     'clicktoplay-rollout',
     'e10srollout',
     'followonsearch',
+    'onboarding',
     'pdfjs',
     'pocket',
     'screenshots',
@@ -40,5 +41,4 @@ if CONFIG['MOZ_MORTAR']:
 if CONFIG['NIGHTLY_BUILD']:
     DIRS += [
         'activity-stream',
-        'onboarding',
     ]
