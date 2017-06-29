@@ -86,7 +86,7 @@ class GlobalHelperThreadState
     // The lists below are all protected by |lock|.
 
     // Ion compilation worklist and finished jobs.
-    IonBuilderVector ionWorklist_, ionFinishedList_;
+    IonBuilderVector ionWorklist_, ionFinishedList_, ionFreeList_;
 
     // wasm worklist and finished jobs.
     wasm::CompileTaskPtrVector wasmWorklist_, wasmFinishedList_;
@@ -179,6 +179,9 @@ class GlobalHelperThreadState
     IonBuilderVector& ionFinishedList(const AutoLockHelperThreadState&) {
         return ionFinishedList_;
     }
+    IonBuilderVector& ionFreeList(const AutoLockHelperThreadState&) {
+        return ionFreeList_;
+    }
 
     wasm::CompileTaskPtrVector& wasmWorklist(const AutoLockHelperThreadState&) {
         return wasmWorklist_;
@@ -225,6 +228,7 @@ class GlobalHelperThreadState
                              bool assumeThreadAvailable = false);
     bool canStartPromiseTask(const AutoLockHelperThreadState& lock);
     bool canStartIonCompile(const AutoLockHelperThreadState& lock);
+    bool canStartIonFreeTask(const AutoLockHelperThreadState& lock);
     bool canStartParseTask(const AutoLockHelperThreadState& lock);
     bool canStartCompressionTask(const AutoLockHelperThreadState& lock);
     bool canStartGCHelperTask(const AutoLockHelperThreadState& lock);
@@ -428,6 +432,7 @@ struct HelperThread
     void handleWasmWorkload(AutoLockHelperThreadState& locked, bool assumeThreadAvailable = false);
     void handlePromiseTaskWorkload(AutoLockHelperThreadState& locked);
     void handleIonWorkload(AutoLockHelperThreadState& locked);
+    void handleIonFreeWorkload(AutoLockHelperThreadState& locked);
     void handleParseWorkload(AutoLockHelperThreadState& locked);
     void handleCompressionWorkload(AutoLockHelperThreadState& locked);
     void handleGCHelperWorkload(AutoLockHelperThreadState& locked);
@@ -488,6 +493,12 @@ StartPromiseTask(JSContext* cx, UniquePtr<PromiseTask> task);
  */
 bool
 StartOffThreadIonCompile(JSContext* cx, jit::IonBuilder* builder);
+
+/*
+ * Schedule deletion of Ion compilation data.
+ */
+bool
+StartOffThreadIonFree(jit::IonBuilder* builder, const AutoLockHelperThreadState& lock);
 
 struct AllCompilations {};
 struct ZonesInState { JSRuntime* runtime; JS::Zone::GCState state; };
