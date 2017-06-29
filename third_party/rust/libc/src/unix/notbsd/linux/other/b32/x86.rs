@@ -20,6 +20,71 @@ s! {
         pub status: ::c_ulong,
     }
 
+    pub struct user_fpregs_struct {
+        pub cwd: ::c_long,
+        pub swd: ::c_long,
+        pub twd: ::c_long,
+        pub fip: ::c_long,
+        pub fcs: ::c_long,
+        pub foo: ::c_long,
+        pub fos: ::c_long,
+        pub st_space: [::c_long; 20],
+    }
+
+    pub struct user_fpxregs_struct {
+        pub cwd: ::c_ushort,
+        pub swd: ::c_ushort,
+        pub twd: ::c_ushort,
+        pub fop: ::c_ushort,
+        pub fip: ::c_long,
+        pub fcs: ::c_long,
+        pub foo: ::c_long,
+        pub fos: ::c_long,
+        pub mxcsr: ::c_long,
+        __reserved: ::c_long,
+        pub st_space: [::c_long; 32],
+        pub xmm_space: [::c_long; 32],
+        padding: [::c_long; 56],
+    }
+
+    pub struct user_regs_struct {
+        pub ebx: ::c_long,
+        pub ecx: ::c_long,
+        pub edx: ::c_long,
+        pub esi: ::c_long,
+        pub edi: ::c_long,
+        pub ebp: ::c_long,
+        pub eax: ::c_long,
+        pub xds: ::c_long,
+        pub xes: ::c_long,
+        pub xfs: ::c_long,
+        pub xgs: ::c_long,
+        pub orig_eax: ::c_long,
+        pub eip: ::c_long,
+        pub xcs: ::c_long,
+        pub eflags: ::c_long,
+        pub esp: ::c_long,
+        pub xss: ::c_long,
+    }
+
+    pub struct user {
+        pub regs: user_regs_struct,
+        pub u_fpvalid: ::c_int,
+        pub i387: user_fpregs_struct,
+        pub u_tsize: ::c_ulong,
+        pub u_dsize: ::c_ulong,
+        pub u_ssize: ::c_ulong,
+        pub start_code: ::c_ulong,
+        pub start_stack: ::c_ulong,
+        pub signal: ::c_long,
+        __reserved: ::c_int,
+        pub u_ar0: *mut user_regs_struct,
+        pub u_fpstate: *mut user_fpregs_struct,
+        pub magic: ::c_ulong,
+        pub u_comm: [c_char; 32],
+        pub u_debugreg: [::c_int; 8],
+    }
+
     pub struct mcontext_t {
         pub gregs: [greg_t; 19],
         pub fpregs: *mut _libc_fpstate,
@@ -116,6 +181,12 @@ pub const MAP_32BIT: ::c_int = 0x0040;
 
 pub const EDEADLOCK: ::c_int = 35;
 
+pub const SO_SNDBUFFORCE: ::c_int = 32;
+pub const SO_RCVBUFFORCE: ::c_int = 33;
+pub const SO_NO_CHECK: ::c_int = 11;
+pub const SO_PRIORITY: ::c_int = 12;
+pub const SO_BSDCOMPAT: ::c_int = 14;
+pub const SO_PASSCRED: ::c_int = 16;
 pub const SO_PEERCRED: ::c_int = 17;
 pub const SO_RCVLOWAT: ::c_int = 18;
 pub const SO_SNDLOWAT: ::c_int = 19;
@@ -135,6 +206,7 @@ pub const MCL_CURRENT: ::c_int = 0x0001;
 pub const MCL_FUTURE: ::c_int = 0x0002;
 
 pub const SIGSTKSZ: ::size_t = 8192;
+pub const MINSIGSTKSZ: ::size_t = 2048;
 pub const CBAUD: ::tcflag_t = 0o0010017;
 pub const TAB1: ::c_int = 0x00000800;
 pub const TAB2: ::c_int = 0x00001000;
@@ -175,6 +247,40 @@ pub const ISIG: ::tcflag_t = 0x00000001;
 pub const ICANON: ::tcflag_t = 0x00000002;
 pub const PENDIN: ::tcflag_t = 0x00004000;
 pub const NOFLSH: ::tcflag_t = 0x00000080;
+
+pub const B0: ::speed_t = 0o000000;
+pub const B50: ::speed_t = 0o000001;
+pub const B75: ::speed_t = 0o000002;
+pub const B110: ::speed_t = 0o000003;
+pub const B134: ::speed_t = 0o000004;
+pub const B150: ::speed_t = 0o000005;
+pub const B200: ::speed_t = 0o000006;
+pub const B300: ::speed_t = 0o000007;
+pub const B600: ::speed_t = 0o000010;
+pub const B1200: ::speed_t = 0o000011;
+pub const B1800: ::speed_t = 0o000012;
+pub const B2400: ::speed_t = 0o000013;
+pub const B4800: ::speed_t = 0o000014;
+pub const B9600: ::speed_t = 0o000015;
+pub const B19200: ::speed_t = 0o000016;
+pub const B38400: ::speed_t = 0o000017;
+pub const EXTA: ::speed_t = B19200;
+pub const EXTB: ::speed_t = B38400;
+pub const B57600: ::speed_t = 0o010001;
+pub const B115200: ::speed_t = 0o010002;
+pub const B230400: ::speed_t = 0o010003;
+pub const B460800: ::speed_t = 0o010004;
+pub const B500000: ::speed_t = 0o010005;
+pub const B576000: ::speed_t = 0o010006;
+pub const B921600: ::speed_t = 0o010007;
+pub const B1000000: ::speed_t = 0o010010;
+pub const B1152000: ::speed_t = 0o010011;
+pub const B1500000: ::speed_t = 0o010012;
+pub const B2000000: ::speed_t = 0o010013;
+pub const B2500000: ::speed_t = 0o010014;
+pub const B3000000: ::speed_t = 0o010015;
+pub const B3500000: ::speed_t = 0o010016;
+pub const B4000000: ::speed_t = 0o010017;
 
 pub const VEOL: usize = 11;
 pub const VEOL2: usize = 16;

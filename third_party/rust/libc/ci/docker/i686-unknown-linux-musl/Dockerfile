@@ -1,8 +1,9 @@
 FROM ubuntu:16.10
 
+RUN dpkg --add-architecture i386
 RUN apt-get update
 RUN apt-get install -y --no-install-recommends \
-  gcc make libc6-dev git curl ca-certificates
+  gcc-multilib make libc6-dev git curl ca-certificates libc6:i386
 # Below we're cross-compiling musl for i686 using the system compiler on an
 # x86_64 system. This is an awkward thing to be doing and so we have to jump
 # through a couple hoops to get musl to be happy. In particular:
