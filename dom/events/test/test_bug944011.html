@@ -24,7 +24,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=944011
           ok(true, "Got onclick");
           SimpleTest.finish();
         }
-        $('ifr').setAttribute('srcdoc', '<html><body>Second frame</body></html>');
+        $('ifr').setAttribute('src', 'data:text/html,<html><body>Second frame</body></html>');
         break;
       case 2:
         ok(true, "Got second load");
@@ -43,7 +43,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=944011
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=944011">Mozilla Bug 944011</a>
 <p id="display"></p>
 <div id="content" style="display: none">
-  <iframe id="ifr" onload="loaded();" srcdoc="<html><body>foo</body></html>"></iframe>
+  <iframe id="ifr" onload="loaded();" src="data:text/html,<html><body>foo</body></html>"></iframe>
   <div name="testTarget"></div>
 </div>
 <pre id="test">

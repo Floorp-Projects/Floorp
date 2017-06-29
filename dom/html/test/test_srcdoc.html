@@ -84,7 +84,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=802895
     // Test srcdoc attribute removal
     iframe3.onload = function () {
       var innerDoc3 = iframe3.contentDocument;
-      is(innerDoc3.body.innerText, "Gone", "Bad srcdoc attribute removal");
+      is(innerDoc3.body.innerHTML, "Gone", "Bad srcdoc attribute removal");
       finish3 = true;
       if (finish && finish1 && finish3) {
         SimpleTest.finish();

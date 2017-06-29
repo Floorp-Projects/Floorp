@@ -10,7 +10,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=685402
 </head>
 <body style="background-color: gray;">
 
-<iframe id="f" srcdoc="<body text=green>1" allowfullscreen></iframe>
+<iframe id="f" src="data:text/html,<body text=green>1" allowfullscreen></iframe>
 
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=685402">Mozilla Bug 685402</a>
 <p id="display"></p>
@@ -29,12 +29,11 @@ var prevTrusted;
 
 function begin()
 {
-  var f = document.getElementById("f");
-  frameWin = f.contentWindow;
+  frameWin = document.getElementById("f").contentWindow;
   e1 = frameWin.document.body;
   document.addEventListener("fullscreenchange", function() {
     opener.ok(document.fullscreenElement, "[navigation] Request should be granted");
-    f.srcdoc = "<body text=blue onload='parent.b2()'>2";
+    frameWin.location = "data:text/html,<body text=blue onload='parent.b2()'>2";
   }, {once: true});
 
   e1.requestFullscreen();
