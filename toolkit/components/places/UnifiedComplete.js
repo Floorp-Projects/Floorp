@@ -32,14 +32,6 @@ const PREF_DELAY =                  [ "delay",                  50 ];
 const PREF_BEHAVIOR =               [ "matchBehavior", MATCH_BOUNDARY_ANYWHERE ];
 const PREF_FILTER_JS =              [ "filter.javascript",      true ];
 const PREF_MAXRESULTS =             [ "maxRichResults",         25 ];
-const PREF_RESTRICT_HISTORY =       [ "restrict.history",       "^" ];
-const PREF_RESTRICT_BOOKMARKS =     [ "restrict.bookmark",      "*" ];
-const PREF_RESTRICT_TYPED =         [ "restrict.typed",         "~" ];
-const PREF_RESTRICT_TAG =           [ "restrict.tag",           "+" ];
-const PREF_RESTRICT_SWITCHTAB =     [ "restrict.openpage",      "%" ];
-const PREF_RESTRICT_SEARCHES =      [ "restrict.searches",      "$" ];
-const PREF_MATCH_TITLE =            [ "match.title",            "#" ];
-const PREF_MATCH_URL =              [ "match.url",              "@" ];
 
 const PREF_SUGGEST_HISTORY =        [ "suggest.history",        true ];
 const PREF_SUGGEST_BOOKMARK =       [ "suggest.bookmark",       true ];
@@ -102,6 +94,20 @@ const QUERYINDEX_TYPED         = 7;
 const QUERYINDEX_PLACEID       = 8;
 const QUERYINDEX_SWITCHTAB     = 9;
 const QUERYINDEX_FRECENCY      = 10;
+
+// The special characters below can be typed into the urlbar to either restrict
+// the search to visited history, bookmarked, tagged pages; or force a match on
+// just the title text or url.
+const TOKEN_TO_BEHAVIOR_MAP = new Map([
+  ["^", "history"],
+  ["*", "bookmark"],
+  ["+", "tag"],
+  ["%", "openpage"],
+  ["~", "typed"],
+  ["$", "searches"],
+  ["#", "title"],
+  ["@", "url"],
+]);
 
 // If a URL starts with one of these prefixes, then we don't provide search
 // suggestions for it.
@@ -449,14 +455,6 @@ XPCOMUtils.defineLazyGetter(this, "Prefs", () => {
     store.matchBehavior = prefs.get(...PREF_BEHAVIOR);
     store.filterJavaScript = prefs.get(...PREF_FILTER_JS);
     store.maxRichResults = prefs.get(...PREF_MAXRESULTS);
-    store.restrictHistoryToken = prefs.get(...PREF_RESTRICT_HISTORY);
-    store.restrictBookmarkToken = prefs.get(...PREF_RESTRICT_BOOKMARKS);
-    store.restrictTypedToken = prefs.get(...PREF_RESTRICT_TYPED);
-    store.restrictTagToken = prefs.get(...PREF_RESTRICT_TAG);
-    store.restrictOpenPageToken = prefs.get(...PREF_RESTRICT_SWITCHTAB);
-    store.restrictSearchesToken = prefs.get(...PREF_RESTRICT_SEARCHES);
-    store.matchTitleToken = prefs.get(...PREF_MATCH_TITLE);
-    store.matchURLToken = prefs.get(...PREF_MATCH_URL);
     store.suggestHistory = prefs.get(...PREF_SUGGEST_HISTORY);
     store.suggestBookmark = prefs.get(...PREF_SUGGEST_BOOKMARK);
     store.suggestOpenpage = prefs.get(...PREF_SUGGEST_OPENPAGE);
@@ -498,16 +496,6 @@ XPCOMUtils.defineLazyGetter(this, "Prefs", () => {
       store.matchBehavior = MATCH_BOUNDARY_ANYWHERE;
     }
 
-    store.tokenToBehaviorMap = new Map([
-      [ store.restrictHistoryToken, "history" ],
-      [ store.restrictBookmarkToken, "bookmark" ],
-      [ store.restrictTagToken, "tag" ],
-      [ store.restrictOpenPageToken, "openpage" ],
-      [ store.matchTitleToken, "title" ],
-      [ store.matchURLToken, "url" ],
-      [ store.restrictTypedToken, "typed" ],
-      [ store.restrictSearchesToken, "searches" ],
-    ]);
   }
 
   let store = {
@@ -858,7 +846,7 @@ Search.prototype = {
     let foundToken = false;
     // Set the proper behavior while filtering tokens.
     for (let i = tokens.length - 1; i >= 0; i--) {
-      let behavior = Prefs.tokenToBehaviorMap.get(tokens[i]);
+      let behavior = TOKEN_TO_BEHAVIOR_MAP.get(tokens[i]);
       // Don't remove the token if it didn't match, or if it's an action but
       // actions are not enabled.
       if (behavior && (behavior != "openpage" || this._enableActions)) {
