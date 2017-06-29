@@ -24,7 +24,7 @@ class AudioCaptureStream : public ProcessedMediaStream,
                            public MixerCallbackReceiver
 {
 public:
-  AudioCaptureStream(TrackID aTrackId);
+  explicit AudioCaptureStream(TrackID aTrackId);
   virtual ~AudioCaptureStream();
 
   void Start();
