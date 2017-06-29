@@ -54,8 +54,7 @@ class Output(object):
                 vals = []
                 replicates = {}
 
-                # TODO: counters!!!! we don't have any, but they suffer the
-                # same
+                # TODO: counters!!!! we don't have any, but they suffer the same
                 for result in test.results:
                     # XXX this will not work for manifests which list
                     # the same page name twice. It also ignores cycles
@@ -88,6 +87,14 @@ class Output(object):
                             'value': val['filtered'],
                             'replicates': replicates[page],
                         }
+                        # if results are from a comparison test i.e. perf-reftest, it will also
+                        # contain replicates for 'base' and 'reference'; we wish to keep those
+                        # to reference; actual results were calculated as the difference of those
+                        base_runs = result.results[0].get('base_runs', None)
+                        ref_runs = result.results[0].get('ref_runs', None)
+                        if base_runs and ref_runs:
+                            subtest['base_replicates'] = base_runs
+                            subtest['ref_replicates'] = ref_runs
                         subtests.append(subtest)
                         if test.test_config.get('lower_is_better') is not None:
                             subtest['lowerIsBetter'] = \
