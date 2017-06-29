@@ -2546,6 +2546,46 @@ BaselineCompiler::emit_JSOP_STRICTSETGNAME()
     return emit_JSOP_SETPROP();
 }
 
+typedef bool (*SetPropertySuperFn)(JSContext*, HandleObject, HandleValue,
+                                   HandlePropertyName, HandleValue, bool);
+static const VMFunction SetPropertySuperInfo =
+    FunctionInfo<SetPropertySuperFn>(js::SetPropertySuper, "SetPropertySuper");
+
+bool
+BaselineCompiler::emit_JSOP_SETPROP_SUPER()
+{
+    bool strict = IsCheckStrictOp(JSOp(*pc));
+
+    // Incoming stack is |receiver, obj, rval|. We need to shuffle stack to
+    // leave rval when operation is complete.
+
+    // Pop rval into R0, then load receiver into R1 and replace with rval.
+    frame.popRegsAndSync(1);
+    masm.loadValue(frame.addressOfStackValue(frame.peek(-2)), R1);
+    masm.storeValue(R0, frame.addressOfStackValue(frame.peek(-2)));
+
+    prepareVMCall();
+
+    pushArg(Imm32(strict));
+    pushArg(R0); // rval
+    pushArg(ImmGCPtr(script->getName(pc)));
+    pushArg(R1); // receiver
+    masm.unboxObject(frame.addressOfStackValue(frame.peek(-1)), R0.scratchReg());
+    pushArg(R0.scratchReg()); // obj
+
+    if (!callVM(SetPropertySuperInfo))
+        return false;
+
+    frame.pop();
+    return true;
+}
+
+bool
+BaselineCompiler::emit_JSOP_STRICTSETPROP_SUPER()
+{
+    return emit_JSOP_SETPROP_SUPER();
+}
+
 bool
 BaselineCompiler::emit_JSOP_GETPROP()
 {
