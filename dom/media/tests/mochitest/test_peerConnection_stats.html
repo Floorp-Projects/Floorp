@@ -376,6 +376,7 @@ var pedanticChecks = report => {
           + stat.framesEncoded);
       }
     } else if (stat.type == "candidate-pair") {
+      info("candidate-pair is: " + JSON.stringify(stat));
       //
       // Required fields
       //
@@ -411,7 +412,10 @@ var pedanticChecks = report => {
         + stat.writable);
 
       // state
-      if (stat.state == "succeeded") {
+      if (stat.state == "succeeded" &&
+          stat.selected !== undefined &&
+          stat.selected) {
+        info("candidate-pair state is succeeded and selected is true");
         // nominated
         ok(stat.nominated,
           stat.type + ".nominated is true. value="
@@ -438,10 +442,23 @@ var pedanticChecks = report => {
           + stat.lastPacketReceivedTimestamp);
 
       } else {
+        info("candidate-pair is _not_ both state == succeeded and selected");
         // nominated
-        ok(!stat.nominated,
-          stat.type + ".nominated is false. value="
+        ok(stat.nominated !== undefined,
+          stat.type + ".nominated exists. value="
           + stat.nominated);
+        ok(stat.bytesSent !== undefined,
+          stat.type + ".bytesSent exists. value="
+          + stat.bytesSent);
+        ok(stat.bytesReceived !== undefined,
+          stat.type + ".bytesReceived exists. value="
+          + stat.bytesReceived);
+        ok(stat.lastPacketSentTimestamp !== undefined,
+          stat.type + ".lastPacketSentTimestamp exists. value="
+          + stat.lastPacketSentTimestamp);
+        ok(stat.lastPacketReceivedTimestamp !== undefined,
+          stat.type + ".lastPacketReceivedTimestamp exists. value="
+          + stat.lastPacketReceivedTimestamp);
       }
 
 
@@ -450,9 +467,10 @@ var pedanticChecks = report => {
       //
       // selected
       ok(stat.selected === undefined ||
-         ((stat.state == "succeeded" && stat.selected == true) ||
-          (stat.selected == false)),
-        stat.type + ".selected is undefined or true. value="
+         ((stat.state == "succeeded" && stat.selected) ||
+          !stat.selected),
+        stat.type + ".selected is undefined, true when state is succeeded, "
+        + "or false. value="
         + stat.selected);
 
     }
