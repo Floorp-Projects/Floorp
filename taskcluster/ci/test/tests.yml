@@ -1570,22 +1570,27 @@ xpcshell:
     treeherder-symbol: tc-X(X)
     run-on-projects:
         by-test-platform:
-            windows.*: []
             linux64-qr/.*: ['mozilla-central', 'try']
+            # TODO Windows: Turn on on the other branches once Bug 1374787 is fixed
+            windows.*: ['mozilla-central', 'try']
             default: built-projects
     docker-image: {"in-tree": "desktop1604-test"}
     chunks:
         by-test-platform:
             linux64/debug: 10
             android-4.2-x86/opt: 6
-            # windows.*: 1
             macosx.*: 1
+            windows.*: 1
             default: 8
     instance-size:
         by-test-platform:
             android.*: xlarge
             default: legacy # Bug 1281241: migrating to m3.large instances
     max-run-time: 5400
+    tier:
+        by-test-platform:
+            windows.*: 3
+            default: default
     e10s: false
     allow-software-gl-layers: false
     mozharness:
@@ -1619,3 +1624,8 @@ xpcshell:
                             - --xpcshell-suite=xpcshell-coverage
                         default:
                             - --xpcshell-suite=xpcshell
+                requires-signed-builds:
+                    by-test-platform:
+                        windows10-64-asan/opt: false    # No XPCShell on ASAN yet
+                        windows.*: true
+                        default: false
