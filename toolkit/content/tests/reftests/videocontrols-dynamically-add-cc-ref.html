@@ -22,19 +22,12 @@
     left: 0;
   }
 </style>
-<script>
-  function addCCToVid(videoElem) {
-    videoElem.addTextTrack("subtitles", "English", "en");
-  }
-</script>
 </head>
 <body>
-  <video id="vid" controls></video>
+  <video id="vid" controls>
+    <track kind="subtitles" src="foo.vtt" srclang="en">
+  </video>
   <div id="mask"></div>
-  <script>
-    var vid = document.getElementById("vid");
-    addCCToVid(vid);
-  </script>
 </body>
 </html>
 
