@@ -353,7 +353,9 @@ nsComputedDOMStyle::GetLength(uint32_t* aLength)
   // properties.
   UpdateCurrentStyleSources(false);
   if (mStyleContext) {
-    length += StyleVariables()->mVariables.Count();
+    length += mStyleContext->IsServo()
+      ? Servo_GetCustomPropertiesCount(mStyleContext->ComputedValues())
+      : StyleVariables()->mVariables.Count();
   }
 
   *aLength = length;
@@ -6917,8 +6919,8 @@ nsComputedDOMStyle::DoGetCustomProperty(const nsAString& aPropertyName)
   const nsAString& name = Substring(aPropertyName,
                                     CSS_CUSTOM_NAME_PREFIX_LENGTH);
   bool present = mStyleContext->IsServo()
-    ? Servo_GetCustomProperty(mStyleContext->ComputedValues(),
-                              &name, &variableValue)
+    ? Servo_GetCustomPropertyValue(mStyleContext->ComputedValues(),
+                                   &name, &variableValue)
     : StyleVariables()->mVariables.Get(name, variableValue);
   if (!present) {
     return nullptr;
