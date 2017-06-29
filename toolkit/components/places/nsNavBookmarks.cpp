@@ -471,7 +471,8 @@ nsNavBookmarks::InsertBookmarkInDB(int64_t aPlaceId,
   rv = stmt->BindInt32ByName(NS_LITERAL_CSTRING("item_index"), aIndex);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (aTitle.IsEmpty())
+  // Support NULL titles.
+  if (aTitle.IsVoid())
     rv = stmt->BindNullByName(NS_LITERAL_CSTRING("item_title"));
   else
     rv = stmt->BindUTF8StringByName(NS_LITERAL_CSTRING("item_title"), aTitle);
@@ -554,7 +555,10 @@ nsNavBookmarks::InsertBookmarkInDB(int64_t aPlaceId,
   BookmarkData bookmark;
   bookmark.id = *_itemId;
   bookmark.guid.Assign(_guid);
-  if (!aTitle.IsEmpty()) {
+  if (aTitle.IsVoid()) {
+    bookmark.title.SetIsVoid(true);
+  }
+  else {
     bookmark.title.Assign(aTitle);
   }
   bookmark.position = aIndex;
@@ -933,9 +937,10 @@ nsNavBookmarks::InsertSeparator(int64_t aParent,
   }
 
   *aNewItemId = -1;
+  // Set a NULL title rather than an empty string.
   nsAutoCString guid(aGUID);
   PRTime dateAdded = RoundedPRNow();
-  rv = InsertBookmarkInDB(-1, SEPARATOR, aParent, index, EmptyCString(), dateAdded,
+  rv = InsertBookmarkInDB(-1, SEPARATOR, aParent, index, NullCString(), dateAdded,
                           0, folderGuid, grandParentId, nullptr, aSource,
                           aNewItemId, guid);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -946,7 +951,7 @@ nsNavBookmarks::InsertSeparator(int64_t aParent,
   NOTIFY_BOOKMARKS_OBSERVERS(mCanNotify, mCacheObservers, mObservers,
                              DontSkip,
                              OnItemAdded(*aNewItemId, aParent, index, TYPE_SEPARATOR,
-                                         nullptr, EmptyCString(), dateAdded, guid,
+                                         nullptr, NullCString(), dateAdded, guid,
                                          folderGuid, aSource));
 
   return NS_OK;
@@ -1527,11 +1532,13 @@ nsNavBookmarks::FetchItemInfo(int64_t aItemId,
   _bookmark.id = aItemId;
   rv = stmt->GetUTF8String(1, _bookmark.url);
   NS_ENSURE_SUCCESS(rv, rv);
-
   bool isNull;
   rv = stmt->GetIsNull(2, &isNull);
   NS_ENSURE_SUCCESS(rv, rv);
-  if (!isNull) {
+  if (isNull) {
+    _bookmark.title.SetIsVoid(true);
+  }
+  else {
     rv = stmt->GetUTF8String(2, _bookmark.title);
     NS_ENSURE_SUCCESS(rv, rv);
   }
@@ -1974,7 +1981,7 @@ nsNavBookmarks::SetItemTitle(int64_t aItemId, const nsACString& aTitle,
     // transaction for non-tags.
     mozStorageTransaction transaction(mDB->MainConn(), false);
 
-    rv = SetItemTitleInternal(bookmark, title, syncChangeDelta);
+    rv = SetItemTitleInternal(bookmark, aTitle, syncChangeDelta);
     NS_ENSURE_SUCCESS(rv, rv);
 
     rv = AddSyncChangesForBookmarksInFolder(bookmark.id, syncChangeDelta);
@@ -2018,8 +2025,9 @@ nsNavBookmarks::SetItemTitleInternal(BookmarkData& aBookmark,
   NS_ENSURE_STATE(statement);
   mozStorageStatementScoper scoper(statement);
 
+  // Support setting a null title, we support this in insertBookmark.
   nsresult rv;
-  if (aTitle.IsEmpty()) {
+  if (aTitle.IsVoid()) {
     rv = statement->BindNullByName(NS_LITERAL_CSTRING("item_title"));
   }
   else {
