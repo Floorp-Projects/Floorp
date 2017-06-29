@@ -7,7 +7,6 @@
 package org.mozilla.gecko.mma;
 
 import android.app.Activity;
-import android.app.Application;
 import android.content.Context;
 
 
@@ -16,9 +15,9 @@ public interface MmaInterface {
 
     void start(Context context);
 
-    void track(String mmaEvent);
+    void event(String mmaEvent);
 
-    void track(String mmaEvent, double value);
+    void event(String mmaEvent, double value);
 
     void stop();
 }
