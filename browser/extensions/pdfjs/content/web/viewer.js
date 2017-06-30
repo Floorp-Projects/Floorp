@@ -95,16 +95,16 @@ exports.localized = exports.animationStarted = exports.normalizeWheelEventDelta 
 
 var _pdfjsLib = __webpack_require__(1);
 
-var CSS_UNITS = 96.0 / 72.0;
-var DEFAULT_SCALE_VALUE = 'auto';
-var DEFAULT_SCALE = 1.0;
-var MIN_SCALE = 0.25;
-var MAX_SCALE = 10.0;
-var UNKNOWN_SCALE = 0;
-var MAX_AUTO_SCALE = 1.25;
-var SCROLLBAR_PADDING = 40;
-var VERTICAL_PADDING = 5;
-var RendererType = {
+const CSS_UNITS = 96.0 / 72.0;
+const DEFAULT_SCALE_VALUE = 'auto';
+const DEFAULT_SCALE = 1.0;
+const MIN_SCALE = 0.25;
+const MAX_SCALE = 10.0;
+const UNKNOWN_SCALE = 0;
+const MAX_AUTO_SCALE = 1.25;
+const SCROLLBAR_PADDING = 40;
+const VERTICAL_PADDING = 5;
+const RendererType = {
   CANVAS: 'canvas',
   SVG: 'svg'
 };
@@ -116,7 +116,7 @@ function formatL10nValue(text, args) {
     return name in args ? args[name] : '{{' + name + '}}';
   });
 }
-var NullL10n = {
+let NullL10n = {
   get(property, args, fallback) {
     return Promise.resolve(formatL10nValue(fallback, args));
   },
@@ -132,25 +132,24 @@ _pdfjsLib.PDFJS.disableTextLayer = _pdfjsLib.PDFJS.disableTextLayer === undefine
 _pdfjsLib.PDFJS.ignoreCurrentPositionOnZoom = _pdfjsLib.PDFJS.ignoreCurrentPositionOnZoom === undefined ? false : _pdfjsLib.PDFJS.ignoreCurrentPositionOnZoom;
 ;
 function getOutputScale(ctx) {
-  var devicePixelRatio = window.devicePixelRatio || 1;
-  var backingStoreRatio = ctx.webkitBackingStorePixelRatio || ctx.mozBackingStorePixelRatio || ctx.msBackingStorePixelRatio || ctx.oBackingStorePixelRatio || ctx.backingStorePixelRatio || 1;
-  var pixelRatio = devicePixelRatio / backingStoreRatio;
+  let devicePixelRatio = window.devicePixelRatio || 1;
+  let backingStoreRatio = ctx.webkitBackingStorePixelRatio || ctx.mozBackingStorePixelRatio || ctx.msBackingStorePixelRatio || ctx.oBackingStorePixelRatio || ctx.backingStorePixelRatio || 1;
+  let pixelRatio = devicePixelRatio / backingStoreRatio;
   return {
     sx: pixelRatio,
     sy: pixelRatio,
     scaled: pixelRatio !== 1
   };
 }
-function scrollIntoView(element, spot, skipOverflowHiddenElements) {
-  var parent = element.offsetParent;
+function scrollIntoView(element, spot, skipOverflowHiddenElements = false) {
+  let parent = element.offsetParent;
   if (!parent) {
     console.error('offsetParent is not set -- cannot scroll');
     return;
   }
-  var checkOverflow = skipOverflowHiddenElements || false;
-  var offsetY = element.offsetTop + element.clientTop;
-  var offsetX = element.offsetLeft + element.clientLeft;
-  while (parent.clientHeight === parent.scrollHeight || checkOverflow && getComputedStyle(parent).overflow === 'hidden') {
+  let offsetY = element.offsetTop + element.clientTop;
+  let offsetX = element.offsetLeft + element.clientLeft;
+  while (parent.clientHeight === parent.scrollHeight || skipOverflowHiddenElements && getComputedStyle(parent).overflow === 'hidden') {
     if (parent.dataset._scaleY) {
       offsetY /= parent.dataset._scaleY;
       offsetX /= parent.dataset._scaleX;
@@ -174,14 +173,14 @@ function scrollIntoView(element, spot, skipOverflowHiddenElements) {
   parent.scrollTop = offsetY;
 }
 function watchScroll(viewAreaElement, callback) {
-  var debounceScroll = function debounceScroll(evt) {
+  let debounceScroll = function (evt) {
     if (rAF) {
       return;
     }
     rAF = window.requestAnimationFrame(function viewAreaElementScrolled() {
       rAF = null;
-      var currentY = viewAreaElement.scrollTop;
-      var lastY = state.lastY;
+      let currentY = viewAreaElement.scrollTop;
+      let lastY = state.lastY;
       if (currentY !== lastY) {
         state.down = currentY > lastY;
       }
@@ -189,29 +188,29 @@ function watchScroll(viewAreaElement, callback) {
       callback(state);
     });
   };
-  var state = {
+  let state = {
     down: true,
     lastY: viewAreaElement.scrollTop,
     _eventHandler: debounceScroll
   };
-  var rAF = null;
+  let rAF = null;
   viewAreaElement.addEventListener('scroll', debounceScroll, true);
   return state;
 }
 function parseQueryString(query) {
-  var parts = query.split('&');
-  var params = {};
-  for (var i = 0, ii = parts.length; i < ii; ++i) {
-    var param = parts[i].split('=');
-    var key = param[0].toLowerCase();
-    var value = param.length > 1 ? param[1] : null;
+  let parts = query.split('&');
+  let params = Object.create(null);
+  for (let i = 0, ii = parts.length; i < ii; ++i) {
+    let param = parts[i].split('=');
+    let key = param[0].toLowerCase();
+    let value = param.length > 1 ? param[1] : null;
     params[decodeURIComponent(key)] = decodeURIComponent(value);
   }
   return params;
 }
 function binarySearchFirstItem(items, condition) {
-  var minIndex = 0;
-  var maxIndex = items.length - 1;
+  let minIndex = 0;
+  let maxIndex = items.length - 1;
   if (items.length === 0 || !condition(items[maxIndex])) {
     return items.length;
   }
@@ -219,8 +218,8 @@ function binarySearchFirstItem(items, condition) {
     return minIndex;
   }
   while (minIndex < maxIndex) {
-    var currentIndex = minIndex + maxIndex >> 1;
-    var currentItem = items[currentIndex];
+    let currentIndex = minIndex + maxIndex >> 1;
+    let currentItem = items[currentIndex];
     if (condition(currentItem)) {
       maxIndex = currentIndex;
     } else {
@@ -233,20 +232,20 @@ function approximateFraction(x) {
   if (Math.floor(x) === x) {
     return [x, 1];
   }
-  var xinv = 1 / x;
-  var limit = 8;
+  let xinv = 1 / x;
+  let limit = 8;
   if (xinv > limit) {
     return [1, limit];
   } else if (Math.floor(xinv) === xinv) {
     return [1, xinv];
   }
-  var x_ = x > 1 ? xinv : x;
-  var a = 0,
+  let x_ = x > 1 ? xinv : x;
+  let a = 0,
       b = 1,
       c = 1,
       d = 1;
   while (true) {
-    var p = a + c,
+    let p = a + c,
         q = b + d;
     if (q > limit) {
       break;
@@ -259,7 +258,7 @@ function approximateFraction(x) {
       b = q;
     }
   }
-  var result;
+  let result;
   if (x_ - a / b < c / d - x_) {
     result = x_ === x ? [a, b] : [b, a];
   } else {
@@ -268,26 +267,26 @@ function approximateFraction(x) {
   return result;
 }
 function roundToDivide(x, div) {
-  var r = x % div;
+  let r = x % div;
   return r === 0 ? x : Math.round(x - r + div);
 }
-function getVisibleElements(scrollEl, views, sortByVisibility) {
-  var top = scrollEl.scrollTop,
+function getVisibleElements(scrollEl, views, sortByVisibility = false) {
+  let top = scrollEl.scrollTop,
       bottom = top + scrollEl.clientHeight;
-  var left = scrollEl.scrollLeft,
+  let left = scrollEl.scrollLeft,
       right = left + scrollEl.clientWidth;
   function isElementBottomBelowViewTop(view) {
-    var element = view.div;
-    var elementBottom = element.offsetTop + element.clientTop + element.clientHeight;
+    let element = view.div;
+    let elementBottom = element.offsetTop + element.clientTop + element.clientHeight;
     return elementBottom > top;
   }
-  var visible = [],
+  let visible = [],
       view,
       element;
-  var currentHeight, viewHeight, hiddenHeight, percentHeight;
-  var currentWidth, viewWidth;
-  var firstVisibleElementInd = views.length === 0 ? 0 : binarySearchFirstItem(views, isElementBottomBelowViewTop);
-  for (var i = firstVisibleElementInd, ii = views.length; i < ii; i++) {
+  let currentHeight, viewHeight, hiddenHeight, percentHeight;
+  let currentWidth, viewWidth;
+  let firstVisibleElementInd = views.length === 0 ? 0 : binarySearchFirstItem(views, isElementBottomBelowViewTop);
+  for (let i = firstVisibleElementInd, ii = views.length; i < ii; i++) {
     view = views[i];
     element = view.div;
     currentHeight = element.offsetTop + element.clientTop;
@@ -310,11 +309,11 @@ function getVisibleElements(scrollEl, views, sortByVisibility) {
       percent: percentHeight
     });
   }
-  var first = visible[0];
-  var last = visible[visible.length - 1];
+  let first = visible[0];
+  let last = visible[visible.length - 1];
   if (sortByVisibility) {
     visible.sort(function (a, b) {
-      var pc = a.percent - b.percent;
+      let pc = a.percent - b.percent;
       if (Math.abs(pc) > 0.001) {
         return -pc;
       }
@@ -327,11 +326,11 @@ function getVisibleElements(scrollEl, views, sortByVisibility) {
     views: visible
   };
 }
-function noContextMenuHandler(e) {
-  e.preventDefault();
+function noContextMenuHandler(evt) {
+  evt.preventDefault();
 }
 function isDataSchema(url) {
-  var i = 0,
+  let i = 0,
       ii = url.length;
   while (i < ii && url[i].trim() === '') {
     i++;
@@ -343,30 +342,30 @@ function getPDFFileNameFromURL(url, defaultFilename = 'document.pdf') {
     console.warn('getPDFFileNameFromURL: ' + 'ignoring "data:" URL for performance reasons.');
     return defaultFilename;
   }
-  var reURI = /^(?:(?:[^:]+:)?\/\/[^\/]+)?([^?#]*)(\?[^#]*)?(#.*)?$/;
-  var reFilename = /[^\/?#=]+\.pdf\b(?!.*\.pdf\b)/i;
-  var splitURI = reURI.exec(url);
-  var suggestedFilename = reFilename.exec(splitURI[1]) || reFilename.exec(splitURI[2]) || reFilename.exec(splitURI[3]);
+  const reURI = /^(?:(?:[^:]+:)?\/\/[^\/]+)?([^?#]*)(\?[^#]*)?(#.*)?$/;
+  const reFilename = /[^\/?#=]+\.pdf\b(?!.*\.pdf\b)/i;
+  let splitURI = reURI.exec(url);
+  let suggestedFilename = reFilename.exec(splitURI[1]) || reFilename.exec(splitURI[2]) || reFilename.exec(splitURI[3]);
   if (suggestedFilename) {
     suggestedFilename = suggestedFilename[0];
     if (suggestedFilename.indexOf('%') !== -1) {
       try {
         suggestedFilename = reFilename.exec(decodeURIComponent(suggestedFilename))[0];
-      } catch (e) {}
+      } catch (ex) {}
     }
   }
   return suggestedFilename || defaultFilename;
 }
 function normalizeWheelEventDelta(evt) {
-  var delta = Math.sqrt(evt.deltaX * evt.deltaX + evt.deltaY * evt.deltaY);
-  var angle = Math.atan2(evt.deltaY, evt.deltaX);
+  let delta = Math.sqrt(evt.deltaX * evt.deltaX + evt.deltaY * evt.deltaY);
+  let angle = Math.atan2(evt.deltaY, evt.deltaX);
   if (-0.25 * Math.PI < angle && angle < 0.75 * Math.PI) {
     delta = -delta;
   }
-  var MOUSE_DOM_DELTA_PIXEL_MODE = 0;
-  var MOUSE_DOM_DELTA_LINE_MODE = 1;
-  var MOUSE_PIXELS_PER_LINE = 30;
-  var MOUSE_LINES_PER_PAGE = 30;
+  const MOUSE_DOM_DELTA_PIXEL_MODE = 0;
+  const MOUSE_DOM_DELTA_LINE_MODE = 1;
+  const MOUSE_PIXELS_PER_LINE = 30;
+  const MOUSE_LINES_PER_PAGE = 30;
   if (evt.deltaMode === MOUSE_DOM_DELTA_PIXEL_MODE) {
     delta /= MOUSE_PIXELS_PER_LINE * MOUSE_LINES_PER_PAGE;
   } else if (evt.deltaMode === MOUSE_DOM_DELTA_LINE_MODE) {
@@ -375,114 +374,109 @@ function normalizeWheelEventDelta(evt) {
   return delta;
 }
 function cloneObj(obj) {
-  var result = {};
-  for (var i in obj) {
+  let result = Object.create(null);
+  for (let i in obj) {
     if (Object.prototype.hasOwnProperty.call(obj, i)) {
       result[i] = obj[i];
     }
   }
   return result;
 }
-var animationStarted = new Promise(function (resolve) {
+let animationStarted = new Promise(function (resolve) {
   window.requestAnimationFrame(resolve);
 });
-var mozL10n;
-var localized = Promise.resolve();
-var EventBus = function EventBusClosure() {
-  function EventBus() {
+let mozL10n;
+let localized = Promise.resolve();
+class EventBus {
+  constructor() {
     this._listeners = Object.create(null);
   }
-  EventBus.prototype = {
-    on: function EventBus_on(eventName, listener) {
-      var eventListeners = this._listeners[eventName];
-      if (!eventListeners) {
-        eventListeners = [];
-        this._listeners[eventName] = eventListeners;
-      }
-      eventListeners.push(listener);
-    },
-    off: function EventBus_on(eventName, listener) {
-      var eventListeners = this._listeners[eventName];
-      var i;
-      if (!eventListeners || (i = eventListeners.indexOf(listener)) < 0) {
-        return;
-      }
-      eventListeners.splice(i, 1);
-    },
-    dispatch: function EventBus_dispath(eventName) {
-      var eventListeners = this._listeners[eventName];
-      if (!eventListeners || eventListeners.length === 0) {
-        return;
-      }
-      var args = Array.prototype.slice.call(arguments, 1);
-      eventListeners.slice(0).forEach(function (listener) {
-        listener.apply(null, args);
-      });
+  on(eventName, listener) {
+    let eventListeners = this._listeners[eventName];
+    if (!eventListeners) {
+      eventListeners = [];
+      this._listeners[eventName] = eventListeners;
     }
-  };
-  return EventBus;
-}();
-var ProgressBar = function ProgressBarClosure() {
-  function clamp(v, min, max) {
-    return Math.min(Math.max(v, min), max);
+    eventListeners.push(listener);
   }
-  function ProgressBar(id, opts) {
+  off(eventName, listener) {
+    let eventListeners = this._listeners[eventName];
+    let i;
+    if (!eventListeners || (i = eventListeners.indexOf(listener)) < 0) {
+      return;
+    }
+    eventListeners.splice(i, 1);
+  }
+  dispatch(eventName) {
+    let eventListeners = this._listeners[eventName];
+    if (!eventListeners || eventListeners.length === 0) {
+      return;
+    }
+    let args = Array.prototype.slice.call(arguments, 1);
+    eventListeners.slice(0).forEach(function (listener) {
+      listener.apply(null, args);
+    });
+  }
+}
+function clamp(v, min, max) {
+  return Math.min(Math.max(v, min), max);
+}
+class ProgressBar {
+  constructor(id, { height, width, units } = {}) {
     this.visible = true;
     this.div = document.querySelector(id + ' .progress');
     this.bar = this.div.parentNode;
-    this.height = opts.height || 100;
-    this.width = opts.width || 100;
-    this.units = opts.units || '%';
+    this.height = height || 100;
+    this.width = width || 100;
+    this.units = units || '%';
     this.div.style.height = this.height + this.units;
     this.percent = 0;
   }
-  ProgressBar.prototype = {
-    updateBar: function ProgressBar_updateBar() {
-      if (this._indeterminate) {
-        this.div.classList.add('indeterminate');
-        this.div.style.width = this.width + this.units;
-        return;
-      }
-      this.div.classList.remove('indeterminate');
-      var progressSize = this.width * this._percent / 100;
-      this.div.style.width = progressSize + this.units;
-    },
-    get percent() {
-      return this._percent;
-    },
-    set percent(val) {
-      this._indeterminate = isNaN(val);
-      this._percent = clamp(val, 0, 100);
-      this.updateBar();
-    },
-    setWidth: function ProgressBar_setWidth(viewer) {
-      if (viewer) {
-        var container = viewer.parentNode;
-        var scrollbarWidth = container.offsetWidth - viewer.offsetWidth;
-        if (scrollbarWidth > 0) {
-          this.bar.setAttribute('style', 'width: calc(100% - ' + scrollbarWidth + 'px);');
-        }
-      }
-    },
-    hide: function ProgressBar_hide() {
-      if (!this.visible) {
-        return;
-      }
-      this.visible = false;
-      this.bar.classList.add('hidden');
-      document.body.classList.remove('loadingInProgress');
-    },
-    show: function ProgressBar_show() {
-      if (this.visible) {
-        return;
-      }
-      this.visible = true;
-      document.body.classList.add('loadingInProgress');
-      this.bar.classList.remove('hidden');
+  _updateBar() {
+    if (this._indeterminate) {
+      this.div.classList.add('indeterminate');
+      this.div.style.width = this.width + this.units;
+      return;
     }
-  };
-  return ProgressBar;
-}();
+    this.div.classList.remove('indeterminate');
+    let progressSize = this.width * this._percent / 100;
+    this.div.style.width = progressSize + this.units;
+  }
+  get percent() {
+    return this._percent;
+  }
+  set percent(val) {
+    this._indeterminate = isNaN(val);
+    this._percent = clamp(val, 0, 100);
+    this._updateBar();
+  }
+  setWidth(viewer) {
+    if (!viewer) {
+      return;
+    }
+    let container = viewer.parentNode;
+    let scrollbarWidth = container.offsetWidth - viewer.offsetWidth;
+    if (scrollbarWidth > 0) {
+      this.bar.setAttribute('style', 'width: calc(100% - ' + scrollbarWidth + 'px);');
+    }
+  }
+  hide() {
+    if (!this.visible) {
+      return;
+    }
+    this.visible = false;
+    this.bar.classList.add('hidden');
+    document.body.classList.remove('loadingInProgress');
+  }
+  show() {
+    if (this.visible) {
+      return;
+    }
+    this.visible = true;
+    document.body.classList.add('loadingInProgress');
+    this.bar.classList.remove('hidden');
+  }
+}
 exports.CSS_UNITS = CSS_UNITS;
 exports.DEFAULT_SCALE_VALUE = DEFAULT_SCALE_VALUE;
 exports.DEFAULT_SCALE = DEFAULT_SCALE;
@@ -816,15 +810,15 @@ var _toolbar = __webpack_require__(29);
 
 var _view_history = __webpack_require__(30);
 
-var DEFAULT_SCALE_DELTA = 1.1;
-var DISABLE_AUTO_FETCH_LOADING_BAR_TIMEOUT = 5000;
+const DEFAULT_SCALE_DELTA = 1.1;
+const DISABLE_AUTO_FETCH_LOADING_BAR_TIMEOUT = 5000;
 function configure(PDFJS) {
   PDFJS.imageResourcesPath = './images/';
   PDFJS.workerSrc = '../build/pdf.worker.js';
   PDFJS.cMapUrl = '../web/cmaps/';
   PDFJS.cMapPacked = true;
 }
-var DefaultExternalServices = {
+const DefaultExternalServices = {
   updateFindControlState(data) {},
   initPassiveLoading(callbacks) {},
   fallback(data, callback) {},
@@ -846,7 +840,7 @@ var DefaultExternalServices = {
     metaKey: true
   }
 };
-var PDFViewerApplication = {
+let PDFViewerApplication = {
   initialBookmark: document.location.hash.substring(1),
   initialDestination: null,
   initialized: false,
@@ -892,7 +886,7 @@ var PDFViewerApplication = {
   baseUrl: '',
   externalServices: DefaultExternalServices,
   _boundEvents: {},
-  initialize: function pdfViewInitialize(appConfig) {
+  initialize(appConfig) {
     this.preferences = this.externalServices.createPreferences();
     configure(_pdfjsLib.PDFJS);
     this.appConfig = appConfig;
@@ -903,7 +897,7 @@ var PDFViewerApplication = {
     }).then(() => {
       this.bindEvents();
       this.bindWindowEvents();
-      var appContainer = appConfig.appContainer || document.documentElement;
+      let appContainer = appConfig.appContainer || document.documentElement;
       this.l10n.translate(appContainer).then(() => {
         this.eventBus.dispatch('localized');
       });
@@ -914,7 +908,7 @@ var PDFViewerApplication = {
     });
   },
   _readPreferences() {
-    var { preferences, viewerPrefs } = this;
+    let { preferences, viewerPrefs } = this;
     return Promise.all([preferences.get('enableWebGL').then(function resolved(value) {
       _pdfjsLib.PDFJS.disableWebGL = !value;
     }), preferences.get('sidebarViewOnLoad').then(function resolved(value) {
@@ -1075,11 +1069,11 @@ var PDFViewerApplication = {
       resolve(undefined);
     });
   },
-  run: function pdfViewRun(config) {
+  run(config) {
     this.initialize(config).then(webViewerInitialized);
   },
-  zoomIn: function pdfViewZoomIn(ticks) {
-    var newScale = this.pdfViewer.currentScale;
+  zoomIn(ticks) {
+    let newScale = this.pdfViewer.currentScale;
     do {
       newScale = (newScale * DEFAULT_SCALE_DELTA).toFixed(2);
       newScale = Math.ceil(newScale * 10) / 10;
@@ -1087,8 +1081,8 @@ var PDFViewerApplication = {
     } while (--ticks > 0 && newScale < _ui_utils.MAX_SCALE);
     this.pdfViewer.currentScaleValue = newScale;
   },
-  zoomOut: function pdfViewZoomOut(ticks) {
-    var newScale = this.pdfViewer.currentScale;
+  zoomOut(ticks) {
+    let newScale = this.pdfViewer.currentScale;
     do {
       newScale = (newScale / DEFAULT_SCALE_DELTA).toFixed(2);
       newScale = Math.floor(newScale * 10) / 10;
@@ -1115,7 +1109,7 @@ var PDFViewerApplication = {
     return PDFPrintServiceFactory.instance.supportsPrinting;
   },
   get supportsFullscreen() {
-    var support;
+    let support;
     support = document.fullscreenEnabled === true || document.mozFullScreenEnabled === true;
     if (support && _pdfjsLib.PDFJS.disableFullscreen === true) {
       support = false;
@@ -1132,13 +1126,13 @@ var PDFViewerApplication = {
     return this.externalServices.supportsDocumentColors;
   },
   get loadingBar() {
-    var bar = new _ui_utils.ProgressBar('#loadingBar', {});
+    let bar = new _ui_utils.ProgressBar('#loadingBar');
     return (0, _pdfjsLib.shadow)(this, 'loadingBar', bar);
   },
   get supportedMouseWheelZoomModifierKeys() {
     return this.externalServices.supportedMouseWheelZoomModifierKeys;
   },
-  initPassiveLoading: function pdfViewInitPassiveLoading() {
+  initPassiveLoading() {
     this.externalServices.initPassiveLoading({
       onOpenWithTransport(url, length, transport) {
         PDFViewerApplication.open(url, { range: transport });
@@ -1150,7 +1144,7 @@ var PDFViewerApplication = {
         PDFViewerApplication.open(data);
       },
       onOpenWithURL(url, length, originalURL) {
-        var file = url,
+        let file = url,
             args = null;
         if (length !== undefined) {
           args = { length };
@@ -1173,32 +1167,32 @@ var PDFViewerApplication = {
       }
     });
   },
-  setTitleUsingUrl: function pdfViewSetTitleUsingUrl(url) {
+  setTitleUsingUrl(url) {
     this.url = url;
     this.baseUrl = url.split('#')[0];
-    var title = (0, _ui_utils.getPDFFileNameFromURL)(url, '');
+    let title = (0, _ui_utils.getPDFFileNameFromURL)(url, '');
     if (!title) {
       try {
         title = decodeURIComponent((0, _pdfjsLib.getFilenameFromUrl)(url)) || url;
-      } catch (e) {
+      } catch (ex) {
         title = url;
       }
     }
     this.setTitle(title);
   },
-  setTitle: function pdfViewSetTitle(title) {
+  setTitle(title) {
     if (this.isViewerEmbedded) {
       return;
     }
     document.title = title;
   },
-  close: function pdfViewClose() {
-    var errorWrapper = this.appConfig.errorWrapper.container;
+  close() {
+    let errorWrapper = this.appConfig.errorWrapper.container;
     errorWrapper.setAttribute('hidden', 'true');
     if (!this.pdfLoadingTask) {
       return Promise.resolve();
     }
-    var promise = this.pdfLoadingTask.destroy();
+    let promise = this.pdfLoadingTask.destroy();
     this.pdfLoadingTask = null;
     if (this.pdfDocument) {
       this.pdfDocument = null;
@@ -1282,30 +1276,26 @@ var PDFViewerApplication = {
       });
     });
   },
-  download: function pdfViewDownload() {
+  download() {
     function downloadByUrl() {
       downloadManager.downloadUrl(url, filename);
     }
-    var url = this.baseUrl;
-    var filename = (0, _ui_utils.getPDFFileNameFromURL)(this.url);
-    var downloadManager = this.downloadManager;
-    downloadManager.onerror = function (err) {
-      PDFViewerApplication.error('PDF failed to download.');
+    let url = this.baseUrl;
+    let filename = (0, _ui_utils.getPDFFileNameFromURL)(this.url);
+    let downloadManager = this.downloadManager;
+    downloadManager.onerror = err => {
+      this.error(`PDF failed to download: ${err}`);
     };
-    if (!this.pdfDocument) {
+    if (!this.pdfDocument || !this.downloadComplete) {
       downloadByUrl();
       return;
     }
-    if (!this.downloadComplete) {
-      downloadByUrl();
-      return;
-    }
-    this.pdfDocument.getData().then(function getDataSuccess(data) {
-      var blob = (0, _pdfjsLib.createBlob)(data, 'application/pdf');
+    this.pdfDocument.getData().then(function (data) {
+      let blob = (0, _pdfjsLib.createBlob)(data, 'application/pdf');
       downloadManager.download(blob, url, filename);
-    }, downloadByUrl).then(null, downloadByUrl);
+    }).catch(downloadByUrl);
   },
-  fallback: function pdfViewFallback(featureId) {
+  fallback(featureId) {
     if (this.fellback) {
       return;
     }
@@ -1320,7 +1310,7 @@ var PDFViewerApplication = {
       PDFViewerApplication.download();
     });
   },
-  error: function pdfViewError(message, moreInfo) {
+  error(message, moreInfo) {
     let moreInfoText = [this.l10n.get('error_version_info', {
       version: _pdfjsLib.version || '?',
       build: _pdfjsLib.build || '?'
@@ -1341,8 +1331,8 @@ var PDFViewerApplication = {
     console.error(message + '\n' + moreInfoText);
     this.fallback();
   },
-  progress: function pdfViewProgress(level) {
-    var percent = Math.round(level * 100);
+  progress(level) {
+    let percent = Math.round(level * 100);
     if (percent > this.loadingBar.percent || isNaN(percent)) {
       this.loadingBar.percent = percent;
       if (_pdfjsLib.PDFJS.disableAutoFetch && percent) {
@@ -1423,9 +1413,7 @@ var PDFViewerApplication = {
           storedHash = 'page=' + values.page + '&zoom=' + (this.viewerPrefs['defaultZoomValue'] || values.zoom) + ',' + values.scrollLeft + ',' + values.scrollTop;
           sidebarView = this.viewerPrefs['sidebarViewOnLoad'] || values.sidebarView | 0;
           resolve();
-        }).catch(function () {
-          resolve();
-        });
+        }).catch(resolve);
       }).then(() => {
         this.setInitialView(storedHash, {
           sidebarView,
@@ -1433,7 +1421,7 @@ var PDFViewerApplication = {
         });
         initialParams.hash = storedHash;
         if (!this.isViewerEmbedded) {
-          this.pdfViewer.focus();
+          pdfViewer.focus();
         }
         return pagesPromise;
       }).then(() => {
@@ -1445,7 +1433,7 @@ var PDFViewerApplication = {
         }
         this.initialDestination = initialParams.destination;
         this.initialBookmark = initialParams.bookmark;
-        this.pdfViewer.currentScaleValue = this.pdfViewer.currentScaleValue;
+        pdfViewer.currentScaleValue = pdfViewer.currentScaleValue;
         this.setInitialView(initialParams.hash);
       });
     });
@@ -1542,7 +1530,7 @@ var PDFViewerApplication = {
     });
   },
   setInitialView(storedHash, options = {}) {
-    var { scale = 0, sidebarView = _pdf_sidebar.SidebarView.NONE } = options;
+    let { scale = 0, sidebarView = _pdf_sidebar.SidebarView.NONE } = options;
     this.isInitialViewSet = true;
     this.pdfSidebar.setInitialView(sidebarView);
     if (this.initialDestination) {
@@ -1564,7 +1552,7 @@ var PDFViewerApplication = {
       this.pdfViewer.currentScaleValue = _ui_utils.DEFAULT_SCALE_VALUE;
     }
   },
-  cleanup: function pdfViewCleanup() {
+  cleanup() {
     if (!this.pdfDocument) {
       return;
     }
@@ -1574,12 +1562,12 @@ var PDFViewerApplication = {
       this.pdfDocument.cleanup();
     }
   },
-  forceRendering: function pdfViewForceRendering() {
+  forceRendering() {
     this.pdfRenderingQueue.printing = this.printing;
     this.pdfRenderingQueue.isThumbnailViewEnabled = this.pdfSidebar.isThumbnailViewVisible;
     this.pdfRenderingQueue.renderHighestPriority();
   },
-  beforePrint: function pdfViewSetupBeforePrint() {
+  beforePrint() {
     if (this.printService) {
       return;
     }
@@ -1595,18 +1583,18 @@ var PDFViewerApplication = {
       });
       return;
     }
-    var pagesOverview = this.pdfViewer.getPagesOverview();
-    var printContainer = this.appConfig.printContainer;
-    var printService = PDFPrintServiceFactory.instance.createPrintService(this.pdfDocument, pagesOverview, printContainer, this.l10n);
+    let pagesOverview = this.pdfViewer.getPagesOverview();
+    let printContainer = this.appConfig.printContainer;
+    let printService = PDFPrintServiceFactory.instance.createPrintService(this.pdfDocument, pagesOverview, printContainer, this.l10n);
     this.printService = printService;
     this.forceRendering();
     printService.layout();
     this.externalServices.reportTelemetry({ type: 'print' });
   },
   get hasEqualPageSizes() {
-    var firstPage = this.pdfViewer.getPageView(0);
-    for (var i = 1, ii = this.pagesCount; i < ii; ++i) {
-      var pageView = this.pdfViewer.getPageView(i);
+    let firstPage = this.pdfViewer.getPageView(0);
+    for (let i = 1, ii = this.pagesCount; i < ii; ++i) {
+      let pageView = this.pdfViewer.getPageView(i);
       if (pageView.width !== firstPage.width || pageView.height !== firstPage.height) {
         return false;
       }
@@ -1632,20 +1620,20 @@ var PDFViewerApplication = {
     this.forceRendering();
     pdfViewer.currentPageNumber = pageNumber;
   },
-  requestPresentationMode: function pdfViewRequestPresentationMode() {
+  requestPresentationMode() {
     if (!this.pdfPresentationMode) {
       return;
     }
     this.pdfPresentationMode.request();
   },
   bindEvents() {
-    let eventBus = this.eventBus;
-    this._boundEvents.beforePrint = this.beforePrint.bind(this);
-    this._boundEvents.afterPrint = this.afterPrint.bind(this);
+    let { eventBus, _boundEvents } = this;
+    _boundEvents.beforePrint = this.beforePrint.bind(this);
+    _boundEvents.afterPrint = this.afterPrint.bind(this);
     eventBus.on('resize', webViewerResize);
     eventBus.on('hashchange', webViewerHashchange);
-    eventBus.on('beforeprint', this._boundEvents.beforePrint);
-    eventBus.on('afterprint', this._boundEvents.afterPrint);
+    eventBus.on('beforeprint', _boundEvents.beforePrint);
+    eventBus.on('afterprint', _boundEvents.afterPrint);
     eventBus.on('pagerendered', webViewerPageRendered);
     eventBus.on('textlayerrendered', webViewerTextLayerRendered);
     eventBus.on('updateviewarea', webViewerUpdateViewarea);
@@ -1674,33 +1662,33 @@ var PDFViewerApplication = {
     eventBus.on('findfromurlhash', webViewerFindFromUrlHash);
   },
   bindWindowEvents() {
-    let eventBus = this.eventBus;
-    this._boundEvents.windowResize = () => {
+    let { eventBus, _boundEvents } = this;
+    _boundEvents.windowResize = () => {
       eventBus.dispatch('resize');
     };
-    this._boundEvents.windowHashChange = () => {
+    _boundEvents.windowHashChange = () => {
       eventBus.dispatch('hashchange', { hash: document.location.hash.substring(1) });
     };
-    this._boundEvents.windowBeforePrint = () => {
+    _boundEvents.windowBeforePrint = () => {
       eventBus.dispatch('beforeprint');
     };
-    this._boundEvents.windowAfterPrint = () => {
+    _boundEvents.windowAfterPrint = () => {
       eventBus.dispatch('afterprint');
     };
     window.addEventListener('wheel', webViewerWheel);
     window.addEventListener('click', webViewerClick);
     window.addEventListener('keydown', webViewerKeyDown);
-    window.addEventListener('resize', this._boundEvents.windowResize);
-    window.addEventListener('hashchange', this._boundEvents.windowHashChange);
-    window.addEventListener('beforeprint', this._boundEvents.windowBeforePrint);
-    window.addEventListener('afterprint', this._boundEvents.windowAfterPrint);
+    window.addEventListener('resize', _boundEvents.windowResize);
+    window.addEventListener('hashchange', _boundEvents.windowHashChange);
+    window.addEventListener('beforeprint', _boundEvents.windowBeforePrint);
+    window.addEventListener('afterprint', _boundEvents.windowAfterPrint);
   },
   unbindEvents() {
-    let eventBus = this.eventBus;
+    let { eventBus, _boundEvents } = this;
     eventBus.off('resize', webViewerResize);
     eventBus.off('hashchange', webViewerHashchange);
-    eventBus.off('beforeprint', this._boundEvents.beforePrint);
-    eventBus.off('afterprint', this._boundEvents.afterPrint);
+    eventBus.off('beforeprint', _boundEvents.beforePrint);
+    eventBus.off('afterprint', _boundEvents.afterPrint);
     eventBus.off('pagerendered', webViewerPageRendered);
     eventBus.off('textlayerrendered', webViewerTextLayerRendered);
     eventBus.off('updateviewarea', webViewerUpdateViewarea);
@@ -1727,29 +1715,30 @@ var PDFViewerApplication = {
     eventBus.off('documentproperties', webViewerDocumentProperties);
     eventBus.off('find', webViewerFind);
     eventBus.off('findfromurlhash', webViewerFindFromUrlHash);
-    this._boundEvents.beforePrint = null;
-    this._boundEvents.afterPrint = null;
+    _boundEvents.beforePrint = null;
+    _boundEvents.afterPrint = null;
   },
   unbindWindowEvents() {
+    let { _boundEvents } = this;
     window.removeEventListener('wheel', webViewerWheel);
     window.removeEventListener('click', webViewerClick);
     window.removeEventListener('keydown', webViewerKeyDown);
-    window.removeEventListener('resize', this._boundEvents.windowResize);
-    window.removeEventListener('hashchange', this._boundEvents.windowHashChange);
-    window.removeEventListener('beforeprint', this._boundEvents.windowBeforePrint);
-    window.removeEventListener('afterprint', this._boundEvents.windowAfterPrint);
-    this._boundEvents.windowResize = null;
-    this._boundEvents.windowHashChange = null;
-    this._boundEvents.windowBeforePrint = null;
-    this._boundEvents.windowAfterPrint = null;
+    window.removeEventListener('resize', _boundEvents.windowResize);
+    window.removeEventListener('hashchange', _boundEvents.windowHashChange);
+    window.removeEventListener('beforeprint', _boundEvents.windowBeforePrint);
+    window.removeEventListener('afterprint', _boundEvents.windowAfterPrint);
+    _boundEvents.windowResize = null;
+    _boundEvents.windowHashChange = null;
+    _boundEvents.windowBeforePrint = null;
+    _boundEvents.windowAfterPrint = null;
   }
 };
-var validateFileURL;
+let validateFileURL;
 ;
 function loadAndEnablePDFBug(enabledTabs) {
   return new Promise(function (resolve, reject) {
-    var appConfig = PDFViewerApplication.appConfig;
-    var script = document.createElement('script');
+    let appConfig = PDFViewerApplication.appConfig;
+    let script = document.createElement('script');
     script.src = appConfig.debuggerScriptPath;
     script.onload = function () {
       PDFBug.enable(enabledTabs);
@@ -1766,15 +1755,15 @@ function loadAndEnablePDFBug(enabledTabs) {
   });
 }
 function webViewerInitialized() {
-  var appConfig = PDFViewerApplication.appConfig;
-  var file;
+  let appConfig = PDFViewerApplication.appConfig;
+  let file;
   file = window.location.href.split('#')[0];
-  var waitForBeforeOpening = [];
+  let waitForBeforeOpening = [];
   appConfig.toolbar.openFile.setAttribute('hidden', 'true');
   appConfig.secondaryToolbar.openFileButton.setAttribute('hidden', 'true');
   if (PDFViewerApplication.viewerPrefs['pdfBugEnabled']) {
-    var hash = document.location.hash.substring(1);
-    var hashParams = (0, _ui_utils.parseQueryString)(hash);
+    let hash = document.location.hash.substring(1);
+    let hashParams = (0, _ui_utils.parseQueryString)(hash);
     if ('disableworker' in hashParams) {
       _pdfjsLib.PDFJS.disableWorker = hashParams['disableworker'] === 'true';
     }
@@ -1813,15 +1802,15 @@ function webViewerInitialized() {
         case 'visible':
         case 'shadow':
         case 'hover':
-          var viewer = appConfig.viewerContainer;
+          let viewer = appConfig.viewerContainer;
           viewer.classList.add('textLayer-' + hashParams['textlayer']);
           break;
       }
     }
     if ('pdfbug' in hashParams) {
       _pdfjsLib.PDFJS.pdfBug = true;
-      var pdfBug = hashParams['pdfbug'];
-      var enabled = pdfBug.split(',');
+      let pdfBug = hashParams['pdfbug'];
+      let enabled = pdfBug.split(',');
       waitForBeforeOpening.push(loadAndEnablePDFBug(enabled));
     }
   }
@@ -1842,8 +1831,8 @@ function webViewerInitialized() {
   if (PDFViewerApplication.supportsIntegratedFind) {
     appConfig.toolbar.viewFind.classList.add('hidden');
   }
-  appConfig.sidebar.mainContainer.addEventListener('transitionend', function (e) {
-    if (e.target === this) {
+  appConfig.sidebar.mainContainer.addEventListener('transitionend', function (evt) {
+    if (evt.target === this) {
       PDFViewerApplication.eventBus.dispatch('resize');
     }
   }, true);
@@ -1858,17 +1847,17 @@ function webViewerInitialized() {
     });
   });
 }
-var webViewerOpenFileViaURL;
+let webViewerOpenFileViaURL;
 {
   webViewerOpenFileViaURL = function webViewerOpenFileViaURL(file) {
     PDFViewerApplication.setTitleUsingUrl(file);
     PDFViewerApplication.initPassiveLoading();
   };
 }
-function webViewerPageRendered(e) {
-  var pageNumber = e.pageNumber;
-  var pageIndex = pageNumber - 1;
-  var pageView = PDFViewerApplication.pdfViewer.getPageView(pageIndex);
+function webViewerPageRendered(evt) {
+  let pageNumber = evt.pageNumber;
+  let pageIndex = pageNumber - 1;
+  let pageView = PDFViewerApplication.pdfViewer.getPageView(pageIndex);
   if (pageNumber === PDFViewerApplication.page) {
     PDFViewerApplication.toolbar.updateLoadingIndicatorState(false);
   }
@@ -1876,7 +1865,7 @@ function webViewerPageRendered(e) {
     return;
   }
   if (PDFViewerApplication.pdfSidebar.isThumbnailViewVisible) {
-    var thumbnailView = PDFViewerApplication.pdfThumbnailViewer.getThumbnail(pageIndex);
+    let thumbnailView = PDFViewerApplication.pdfThumbnailViewer.getThumbnail(pageIndex);
     thumbnailView.setImage(pageView);
   }
   if (_pdfjsLib.PDFJS.pdfBug && Stats.enabled && pageView.stats) {
@@ -1895,16 +1884,16 @@ function webViewerPageRendered(e) {
     });
   });
 }
-function webViewerTextLayerRendered(e) {
-  if (e.numTextDivs > 0 && !PDFViewerApplication.supportsDocumentColors) {
+function webViewerTextLayerRendered(evt) {
+  if (evt.numTextDivs > 0 && !PDFViewerApplication.supportsDocumentColors) {
     PDFViewerApplication.l10n.get('document_colors_not_allowed', null, 'PDF documents are not allowed to use their own colors: ' + '\'Allow pages to choose their own colors\' ' + 'is deactivated in the browser.').then(msg => {
       console.error(msg);
     });
     PDFViewerApplication.fallback();
   }
 }
-function webViewerPageMode(e) {
-  var mode = e.mode,
+function webViewerPageMode(evt) {
+  let mode = evt.mode,
       view;
   switch (mode) {
     case 'thumbs':
@@ -1926,8 +1915,8 @@ function webViewerPageMode(e) {
   }
   PDFViewerApplication.pdfSidebar.switchView(view, true);
 }
-function webViewerNamedAction(e) {
-  var action = e.action;
+function webViewerNamedAction(evt) {
+  let action = evt.action;
   switch (action) {
     case 'GoToPage':
       PDFViewerApplication.appConfig.toolbar.pageNumber.select();
@@ -1939,20 +1928,19 @@ function webViewerNamedAction(e) {
       break;
   }
 }
-function webViewerPresentationModeChanged(e) {
-  var active = e.active;
-  var switchInProgress = e.switchInProgress;
+function webViewerPresentationModeChanged(evt) {
+  let { active, switchInProgress } = evt;
   PDFViewerApplication.pdfViewer.presentationModeState = switchInProgress ? _pdf_viewer.PresentationModeState.CHANGING : active ? _pdf_viewer.PresentationModeState.FULLSCREEN : _pdf_viewer.PresentationModeState.NORMAL;
 }
 function webViewerSidebarViewChanged(evt) {
   PDFViewerApplication.pdfRenderingQueue.isThumbnailViewEnabled = PDFViewerApplication.pdfSidebar.isThumbnailViewVisible;
-  var store = PDFViewerApplication.store;
+  let store = PDFViewerApplication.store;
   if (store && PDFViewerApplication.isInitialViewSet) {
     store.set('sidebarView', evt.view).catch(function () {});
   }
 }
 function webViewerUpdateViewarea(evt) {
-  var location = evt.location,
+  let location = evt.location,
       store = PDFViewerApplication.store;
   if (store && PDFViewerApplication.isInitialViewSet) {
     store.setMultiple({
@@ -1963,16 +1951,16 @@ function webViewerUpdateViewarea(evt) {
       'scrollTop': location.top
     }).catch(function () {});
   }
-  var href = PDFViewerApplication.pdfLinkService.getAnchorUrl(location.pdfOpenParams);
+  let href = PDFViewerApplication.pdfLinkService.getAnchorUrl(location.pdfOpenParams);
   PDFViewerApplication.appConfig.toolbar.viewBookmark.href = href;
   PDFViewerApplication.appConfig.secondaryToolbar.viewBookmarkButton.href = href;
   PDFViewerApplication.pdfHistory.updateCurrentBookmark(location.pdfOpenParams, location.pageNumber);
-  var currentPage = PDFViewerApplication.pdfViewer.getPageView(PDFViewerApplication.page - 1);
-  var loading = currentPage.renderingState !== _pdf_rendering_queue.RenderingStates.FINISHED;
+  let currentPage = PDFViewerApplication.pdfViewer.getPageView(PDFViewerApplication.page - 1);
+  let loading = currentPage.renderingState !== _pdf_rendering_queue.RenderingStates.FINISHED;
   PDFViewerApplication.toolbar.updateLoadingIndicatorState(loading);
 }
 function webViewerResize() {
-  var currentScaleValue = PDFViewerApplication.pdfViewer.currentScaleValue;
+  let currentScaleValue = PDFViewerApplication.pdfViewer.currentScaleValue;
   if (currentScaleValue === 'auto' || currentScaleValue === 'page-fit' || currentScaleValue === 'page-width') {
     PDFViewerApplication.pdfViewer.currentScaleValue = currentScaleValue;
   } else if (!currentScaleValue) {
@@ -1980,9 +1968,9 @@ function webViewerResize() {
   }
   PDFViewerApplication.pdfViewer.update();
 }
-function webViewerHashchange(e) {
+function webViewerHashchange(evt) {
   if (PDFViewerApplication.pdfHistory.isHashChangeUnlocked) {
-    var hash = e.hash;
+    let hash = evt.hash;
     if (!hash) {
       return;
     }
@@ -1993,13 +1981,13 @@ function webViewerHashchange(e) {
     }
   }
 }
-var webViewerFileInputChange;
+let webViewerFileInputChange;
 ;
 function webViewerPresentationMode() {
   PDFViewerApplication.requestPresentationMode();
 }
 function webViewerOpenFile() {
-  var openFileInputName = PDFViewerApplication.appConfig.openFileInputName;
+  let openFileInputName = PDFViewerApplication.appConfig.openFileInputName;
   document.getElementById(openFileInputName).click();
 }
 function webViewerPrint() {
@@ -2030,15 +2018,15 @@ function webViewerZoomIn() {
 function webViewerZoomOut() {
   PDFViewerApplication.zoomOut();
 }
-function webViewerPageNumberChanged(e) {
-  var pdfViewer = PDFViewerApplication.pdfViewer;
-  pdfViewer.currentPageLabel = e.value;
-  if (e.value !== pdfViewer.currentPageNumber.toString() && e.value !== pdfViewer.currentPageLabel) {
+function webViewerPageNumberChanged(evt) {
+  let pdfViewer = PDFViewerApplication.pdfViewer;
+  pdfViewer.currentPageLabel = evt.value;
+  if (evt.value !== pdfViewer.currentPageNumber.toString() && evt.value !== pdfViewer.currentPageLabel) {
     PDFViewerApplication.toolbar.setPageNumber(pdfViewer.currentPageNumber, pdfViewer.currentPageLabel);
   }
 }
-function webViewerScaleChanged(e) {
-  PDFViewerApplication.pdfViewer.currentScaleValue = e.value;
+function webViewerScaleChanged(evt) {
+  PDFViewerApplication.pdfViewer.currentScaleValue = evt.value;
 }
 function webViewerRotateCw() {
   PDFViewerApplication.rotatePages(90);
@@ -2049,51 +2037,51 @@ function webViewerRotateCcw() {
 function webViewerDocumentProperties() {
   PDFViewerApplication.pdfDocumentProperties.open();
 }
-function webViewerFind(e) {
-  PDFViewerApplication.findController.executeCommand('find' + e.type, {
-    query: e.query,
-    phraseSearch: e.phraseSearch,
-    caseSensitive: e.caseSensitive,
-    highlightAll: e.highlightAll,
-    findPrevious: e.findPrevious
+function webViewerFind(evt) {
+  PDFViewerApplication.findController.executeCommand('find' + evt.type, {
+    query: evt.query,
+    phraseSearch: evt.phraseSearch,
+    caseSensitive: evt.caseSensitive,
+    highlightAll: evt.highlightAll,
+    findPrevious: evt.findPrevious
   });
 }
-function webViewerFindFromUrlHash(e) {
+function webViewerFindFromUrlHash(evt) {
   PDFViewerApplication.findController.executeCommand('find', {
-    query: e.query,
-    phraseSearch: e.phraseSearch,
+    query: evt.query,
+    phraseSearch: evt.phraseSearch,
     caseSensitive: false,
     highlightAll: true,
     findPrevious: false
   });
 }
-function webViewerScaleChanging(e) {
-  PDFViewerApplication.toolbar.setPageScale(e.presetValue, e.scale);
+function webViewerScaleChanging(evt) {
+  PDFViewerApplication.toolbar.setPageScale(evt.presetValue, evt.scale);
   PDFViewerApplication.pdfViewer.update();
 }
-function webViewerPageChanging(e) {
-  var page = e.pageNumber;
-  PDFViewerApplication.toolbar.setPageNumber(page, e.pageLabel || null);
+function webViewerPageChanging(evt) {
+  let page = evt.pageNumber;
+  PDFViewerApplication.toolbar.setPageNumber(page, evt.pageLabel || null);
   PDFViewerApplication.secondaryToolbar.setPageNumber(page);
   if (PDFViewerApplication.pdfSidebar.isThumbnailViewVisible) {
     PDFViewerApplication.pdfThumbnailViewer.scrollThumbnailIntoView(page);
   }
   if (_pdfjsLib.PDFJS.pdfBug && Stats.enabled) {
-    var pageView = PDFViewerApplication.pdfViewer.getPageView(page - 1);
+    let pageView = PDFViewerApplication.pdfViewer.getPageView(page - 1);
     if (pageView.stats) {
       Stats.add(page, pageView.stats);
     }
   }
 }
-var zoomDisabled = false,
+let zoomDisabled = false,
     zoomDisabledTimeout;
 function webViewerWheel(evt) {
-  var pdfViewer = PDFViewerApplication.pdfViewer;
+  let pdfViewer = PDFViewerApplication.pdfViewer;
   if (pdfViewer.isInPresentationMode) {
     return;
   }
   if (evt.ctrlKey || evt.metaKey) {
-    var support = PDFViewerApplication.supportedMouseWheelZoomModifierKeys;
+    let support = PDFViewerApplication.supportedMouseWheelZoomModifierKeys;
     if (evt.ctrlKey && !support.ctrlKey || evt.metaKey && !support.metaKey) {
       return;
     }
@@ -2101,21 +2089,21 @@ function webViewerWheel(evt) {
     if (zoomDisabled) {
       return;
     }
-    var previousScale = pdfViewer.currentScale;
-    var delta = (0, _ui_utils.normalizeWheelEventDelta)(evt);
-    var MOUSE_WHEEL_DELTA_PER_PAGE_SCALE = 3.0;
-    var ticks = delta * MOUSE_WHEEL_DELTA_PER_PAGE_SCALE;
+    let previousScale = pdfViewer.currentScale;
+    let delta = (0, _ui_utils.normalizeWheelEventDelta)(evt);
+    const MOUSE_WHEEL_DELTA_PER_PAGE_SCALE = 3.0;
+    let ticks = delta * MOUSE_WHEEL_DELTA_PER_PAGE_SCALE;
     if (ticks < 0) {
       PDFViewerApplication.zoomOut(-ticks);
     } else {
       PDFViewerApplication.zoomIn(ticks);
     }
-    var currentScale = pdfViewer.currentScale;
+    let currentScale = pdfViewer.currentScale;
     if (previousScale !== currentScale) {
-      var scaleCorrectionFactor = currentScale / previousScale - 1;
-      var rect = pdfViewer.container.getBoundingClientRect();
-      var dx = evt.clientX - rect.left;
-      var dy = evt.clientY - rect.top;
+      let scaleCorrectionFactor = currentScale / previousScale - 1;
+      let rect = pdfViewer.container.getBoundingClientRect();
+      let dx = evt.clientX - rect.left;
+      let dy = evt.clientY - rect.top;
       pdfViewer.container.scrollLeft += dx * scaleCorrectionFactor;
       pdfViewer.container.scrollTop += dy * scaleCorrectionFactor;
     }
@@ -2131,7 +2119,7 @@ function webViewerClick(evt) {
   if (!PDFViewerApplication.secondaryToolbar.isOpen) {
     return;
   }
-  var appConfig = PDFViewerApplication.appConfig;
+  let appConfig = PDFViewerApplication.appConfig;
   if (PDFViewerApplication.pdfViewer.containsElement(evt.target) || appConfig.toolbar.container.contains(evt.target) && evt.target !== appConfig.secondaryToolbar.toggleButton) {
     PDFViewerApplication.secondaryToolbar.close();
   }
@@ -2140,11 +2128,11 @@ function webViewerKeyDown(evt) {
   if (PDFViewerApplication.overlayManager.active) {
     return;
   }
-  var handled = false,
+  let handled = false,
       ensureViewerFocused = false;
-  var cmd = (evt.ctrlKey ? 1 : 0) | (evt.altKey ? 2 : 0) | (evt.shiftKey ? 4 : 0) | (evt.metaKey ? 8 : 0);
-  var pdfViewer = PDFViewerApplication.pdfViewer;
-  var isViewerInPresentationMode = pdfViewer && pdfViewer.isInPresentationMode;
+  let cmd = (evt.ctrlKey ? 1 : 0) | (evt.altKey ? 2 : 0) | (evt.shiftKey ? 4 : 0) | (evt.metaKey ? 8 : 0);
+  let pdfViewer = PDFViewerApplication.pdfViewer;
+  let isViewerInPresentationMode = pdfViewer && pdfViewer.isInPresentationMode;
   if (cmd === 1 || cmd === 8 || cmd === 5 || cmd === 12) {
     switch (evt.keyCode) {
       case 70:
@@ -2155,7 +2143,7 @@ function webViewerKeyDown(evt) {
         break;
       case 71:
         if (!PDFViewerApplication.supportsIntegratedFind) {
-          var findState = PDFViewerApplication.findController.state;
+          let findState = PDFViewerApplication.findController.state;
           if (findState) {
             PDFViewerApplication.findController.executeCommand('findagain', {
               query: findState.query,
@@ -2229,8 +2217,8 @@ function webViewerKeyDown(evt) {
     evt.preventDefault();
     return;
   }
-  var curElement = document.activeElement || document.querySelector(':focus');
-  var curElementTagName = curElement && curElement.tagName.toUpperCase();
+  let curElement = document.activeElement || document.querySelector(':focus');
+  let curElementTagName = curElement && curElement.tagName.toUpperCase();
   if (curElementTagName === 'INPUT' || curElementTagName === 'TEXTAREA' || curElementTagName === 'SELECT') {
     if (evt.keyCode !== 27) {
       return;
@@ -2351,7 +2339,7 @@ function webViewerKeyDown(evt) {
     evt.preventDefault();
   }
 }
-var PDFPrintServiceFactory = {
+let PDFPrintServiceFactory = {
   instance: {
     supportsPrinting: false,
     createPrintService() {
@@ -7384,252 +7372,247 @@ var _dom_events = __webpack_require__(2);
 
 var _pdfjsLib = __webpack_require__(1);
 
-var EXPAND_DIVS_TIMEOUT = 300;
-var TextLayerBuilder = function TextLayerBuilderClosure() {
-  function TextLayerBuilder(options) {
-    this.textLayerDiv = options.textLayerDiv;
-    this.eventBus = options.eventBus || (0, _dom_events.getGlobalEventBus)();
+const EXPAND_DIVS_TIMEOUT = 300;
+class TextLayerBuilder {
+  constructor({ textLayerDiv, eventBus, pageIndex, viewport, findController = null, enhanceTextSelection = false }) {
+    this.textLayerDiv = textLayerDiv;
+    this.eventBus = eventBus || (0, _dom_events.getGlobalEventBus)();
     this.textContent = null;
     this.textContentItemsStr = [];
     this.textContentStream = null;
     this.renderingDone = false;
-    this.pageIdx = options.pageIndex;
+    this.pageIdx = pageIndex;
     this.pageNumber = this.pageIdx + 1;
     this.matches = [];
-    this.viewport = options.viewport;
+    this.viewport = viewport;
     this.textDivs = [];
-    this.findController = options.findController || null;
+    this.findController = findController;
     this.textLayerRenderTask = null;
-    this.enhanceTextSelection = options.enhanceTextSelection;
+    this.enhanceTextSelection = enhanceTextSelection;
     this._bindMouse();
   }
-  TextLayerBuilder.prototype = {
-    _finishRendering: function TextLayerBuilder_finishRendering() {
-      this.renderingDone = true;
-      if (!this.enhanceTextSelection) {
-        var endOfContent = document.createElement('div');
-        endOfContent.className = 'endOfContent';
-        this.textLayerDiv.appendChild(endOfContent);
+  _finishRendering() {
+    this.renderingDone = true;
+    if (!this.enhanceTextSelection) {
+      let endOfContent = document.createElement('div');
+      endOfContent.className = 'endOfContent';
+      this.textLayerDiv.appendChild(endOfContent);
+    }
+    this.eventBus.dispatch('textlayerrendered', {
+      source: this,
+      pageNumber: this.pageNumber,
+      numTextDivs: this.textDivs.length
+    });
+  }
+  render(timeout = 0) {
+    if (!(this.textContent || this.textContentStream) || this.renderingDone) {
+      return;
+    }
+    this.cancel();
+    this.textDivs = [];
+    let textLayerFrag = document.createDocumentFragment();
+    this.textLayerRenderTask = (0, _pdfjsLib.renderTextLayer)({
+      textContent: this.textContent,
+      textContentStream: this.textContentStream,
+      container: textLayerFrag,
+      viewport: this.viewport,
+      textDivs: this.textDivs,
+      textContentItemsStr: this.textContentItemsStr,
+      timeout,
+      enhanceTextSelection: this.enhanceTextSelection
+    });
+    this.textLayerRenderTask.promise.then(() => {
+      this.textLayerDiv.appendChild(textLayerFrag);
+      this._finishRendering();
+      this.updateMatches();
+    }, function (reason) {});
+  }
+  cancel() {
+    if (this.textLayerRenderTask) {
+      this.textLayerRenderTask.cancel();
+      this.textLayerRenderTask = null;
+    }
+  }
+  setTextContentStream(readableStream) {
+    this.cancel();
+    this.textContentStream = readableStream;
+  }
+  setTextContent(textContent) {
+    this.cancel();
+    this.textContent = textContent;
+  }
+  convertMatches(matches, matchesLength) {
+    let i = 0;
+    let iIndex = 0;
+    let textContentItemsStr = this.textContentItemsStr;
+    let end = textContentItemsStr.length - 1;
+    let queryLen = this.findController === null ? 0 : this.findController.state.query.length;
+    let ret = [];
+    if (!matches) {
+      return ret;
+    }
+    for (let m = 0, len = matches.length; m < len; m++) {
+      let matchIdx = matches[m];
+      while (i !== end && matchIdx >= iIndex + textContentItemsStr[i].length) {
+        iIndex += textContentItemsStr[i].length;
+        i++;
       }
-      this.eventBus.dispatch('textlayerrendered', {
-        source: this,
-        pageNumber: this.pageNumber,
-        numTextDivs: this.textDivs.length
-      });
-    },
-    render: function TextLayerBuilder_render(timeout) {
-      if (!(this.textContent || this.textContentStream) || this.renderingDone) {
-        return;
+      if (i === textContentItemsStr.length) {
+        console.error('Could not find a matching mapping');
       }
-      this.cancel();
-      this.textDivs = [];
-      var textLayerFrag = document.createDocumentFragment();
-      this.textLayerRenderTask = (0, _pdfjsLib.renderTextLayer)({
-        textContent: this.textContent,
-        textContentStream: this.textContentStream,
-        container: textLayerFrag,
-        viewport: this.viewport,
-        textDivs: this.textDivs,
-        textContentItemsStr: this.textContentItemsStr,
-        timeout,
-        enhanceTextSelection: this.enhanceTextSelection
-      });
-      this.textLayerRenderTask.promise.then(() => {
-        this.textLayerDiv.appendChild(textLayerFrag);
-        this._finishRendering();
-        this.updateMatches();
-      }, function (reason) {});
-    },
-    cancel: function TextLayerBuilder_cancel() {
-      if (this.textLayerRenderTask) {
-        this.textLayerRenderTask.cancel();
-        this.textLayerRenderTask = null;
-      }
-    },
-    setTextContentStream(readableStream) {
-      this.cancel();
-      this.textContentStream = readableStream;
-    },
-    setTextContent: function TextLayerBuilder_setTextContent(textContent) {
-      this.cancel();
-      this.textContent = textContent;
-    },
-    convertMatches: function TextLayerBuilder_convertMatches(matches, matchesLength) {
-      var i = 0;
-      var iIndex = 0;
-      let textContentItemsStr = this.textContentItemsStr;
-      var end = textContentItemsStr.length - 1;
-      var queryLen = this.findController === null ? 0 : this.findController.state.query.length;
-      var ret = [];
-      if (!matches) {
-        return ret;
-      }
-      for (var m = 0, len = matches.length; m < len; m++) {
-        var matchIdx = matches[m];
-        while (i !== end && matchIdx >= iIndex + textContentItemsStr[i].length) {
-          iIndex += textContentItemsStr[i].length;
-          i++;
-        }
-        if (i === textContentItemsStr.length) {
-          console.error('Could not find a matching mapping');
-        }
-        var match = {
-          begin: {
-            divIdx: i,
-            offset: matchIdx - iIndex
-          }
-        };
-        if (matchesLength) {
-          matchIdx += matchesLength[m];
-        } else {
-          matchIdx += queryLen;
-        }
-        while (i !== end && matchIdx > iIndex + textContentItemsStr[i].length) {
-          iIndex += textContentItemsStr[i].length;
-          i++;
-        }
-        match.end = {
+      let match = {
+        begin: {
           divIdx: i,
           offset: matchIdx - iIndex
-        };
-        ret.push(match);
-      }
-      return ret;
-    },
-    renderMatches: function TextLayerBuilder_renderMatches(matches) {
-      if (matches.length === 0) {
-        return;
-      }
-      let textContentItemsStr = this.textContentItemsStr;
-      var textDivs = this.textDivs;
-      var prevEnd = null;
-      var pageIdx = this.pageIdx;
-      var isSelectedPage = this.findController === null ? false : pageIdx === this.findController.selected.pageIdx;
-      var selectedMatchIdx = this.findController === null ? -1 : this.findController.selected.matchIdx;
-      var highlightAll = this.findController === null ? false : this.findController.state.highlightAll;
-      var infinity = {
-        divIdx: -1,
-        offset: undefined
+        }
       };
-      function beginText(begin, className) {
-        var divIdx = begin.divIdx;
-        textDivs[divIdx].textContent = '';
-        appendTextToDiv(divIdx, 0, begin.offset, className);
+      if (matchesLength) {
+        matchIdx += matchesLength[m];
+      } else {
+        matchIdx += queryLen;
       }
-      function appendTextToDiv(divIdx, fromOffset, toOffset, className) {
-        var div = textDivs[divIdx];
-        var content = textContentItemsStr[divIdx].substring(fromOffset, toOffset);
-        var node = document.createTextNode(content);
-        if (className) {
-          var span = document.createElement('span');
-          span.className = className;
-          span.appendChild(node);
-          div.appendChild(span);
-          return;
-        }
-        div.appendChild(node);
+      while (i !== end && matchIdx > iIndex + textContentItemsStr[i].length) {
+        iIndex += textContentItemsStr[i].length;
+        i++;
       }
-      var i0 = selectedMatchIdx,
-          i1 = i0 + 1;
-      if (highlightAll) {
-        i0 = 0;
-        i1 = matches.length;
-      } else if (!isSelectedPage) {
-        return;
-      }
-      for (var i = i0; i < i1; i++) {
-        var match = matches[i];
-        var begin = match.begin;
-        var end = match.end;
-        var isSelected = isSelectedPage && i === selectedMatchIdx;
-        var highlightSuffix = isSelected ? ' selected' : '';
-        if (this.findController) {
-          this.findController.updateMatchPosition(pageIdx, i, textDivs, begin.divIdx);
-        }
-        if (!prevEnd || begin.divIdx !== prevEnd.divIdx) {
-          if (prevEnd !== null) {
-            appendTextToDiv(prevEnd.divIdx, prevEnd.offset, infinity.offset);
-          }
-          beginText(begin);
-        } else {
-          appendTextToDiv(prevEnd.divIdx, prevEnd.offset, begin.offset);
-        }
-        if (begin.divIdx === end.divIdx) {
-          appendTextToDiv(begin.divIdx, begin.offset, end.offset, 'highlight' + highlightSuffix);
-        } else {
-          appendTextToDiv(begin.divIdx, begin.offset, infinity.offset, 'highlight begin' + highlightSuffix);
-          for (var n0 = begin.divIdx + 1, n1 = end.divIdx; n0 < n1; n0++) {
-            textDivs[n0].className = 'highlight middle' + highlightSuffix;
-          }
-          beginText(end, 'highlight end' + highlightSuffix);
-        }
-        prevEnd = end;
-      }
-      if (prevEnd) {
-        appendTextToDiv(prevEnd.divIdx, prevEnd.offset, infinity.offset);
-      }
-    },
-    updateMatches: function TextLayerBuilder_updateMatches() {
-      if (!this.renderingDone) {
-        return;
-      }
-      var matches = this.matches;
-      var textDivs = this.textDivs;
-      let textContentItemsStr = this.textContentItemsStr;
-      var clearedUntilDivIdx = -1;
-      for (var i = 0, len = matches.length; i < len; i++) {
-        var match = matches[i];
-        var begin = Math.max(clearedUntilDivIdx, match.begin.divIdx);
-        for (var n = begin, end = match.end.divIdx; n <= end; n++) {
-          var div = textDivs[n];
-          div.textContent = textContentItemsStr[n];
-          div.className = '';
-        }
-        clearedUntilDivIdx = match.end.divIdx + 1;
-      }
-      if (this.findController === null || !this.findController.active) {
-        return;
-      }
-      var pageMatches, pageMatchesLength;
-      if (this.findController !== null) {
-        pageMatches = this.findController.pageMatches[this.pageIdx] || null;
-        pageMatchesLength = this.findController.pageMatchesLength ? this.findController.pageMatchesLength[this.pageIdx] || null : null;
-      }
-      this.matches = this.convertMatches(pageMatches, pageMatchesLength);
-      this.renderMatches(this.matches);
-    },
-    _bindMouse: function TextLayerBuilder_bindMouse() {
-      var div = this.textLayerDiv;
-      var self = this;
-      var expandDivsTimer = null;
-      div.addEventListener('mousedown', function (e) {
-        if (self.enhanceTextSelection && self.textLayerRenderTask) {
-          self.textLayerRenderTask.expandTextDivs(true);
-          return;
-        }
-        var end = div.querySelector('.endOfContent');
-        if (!end) {
-          return;
-        }
-        end.classList.add('active');
-      });
-      div.addEventListener('mouseup', function (e) {
-        if (self.enhanceTextSelection && self.textLayerRenderTask) {
-          self.textLayerRenderTask.expandTextDivs(false);
-          return;
-        }
-        var end = div.querySelector('.endOfContent');
-        if (!end) {
-          return;
-        }
-        end.classList.remove('active');
-      });
+      match.end = {
+        divIdx: i,
+        offset: matchIdx - iIndex
+      };
+      ret.push(match);
     }
-  };
-  return TextLayerBuilder;
-}();
-function DefaultTextLayerFactory() {}
-DefaultTextLayerFactory.prototype = {
+    return ret;
+  }
+  renderMatches(matches) {
+    if (matches.length === 0) {
+      return;
+    }
+    let textContentItemsStr = this.textContentItemsStr;
+    let textDivs = this.textDivs;
+    let prevEnd = null;
+    let pageIdx = this.pageIdx;
+    let isSelectedPage = this.findController === null ? false : pageIdx === this.findController.selected.pageIdx;
+    let selectedMatchIdx = this.findController === null ? -1 : this.findController.selected.matchIdx;
+    let highlightAll = this.findController === null ? false : this.findController.state.highlightAll;
+    let infinity = {
+      divIdx: -1,
+      offset: undefined
+    };
+    function beginText(begin, className) {
+      let divIdx = begin.divIdx;
+      textDivs[divIdx].textContent = '';
+      appendTextToDiv(divIdx, 0, begin.offset, className);
+    }
+    function appendTextToDiv(divIdx, fromOffset, toOffset, className) {
+      let div = textDivs[divIdx];
+      let content = textContentItemsStr[divIdx].substring(fromOffset, toOffset);
+      let node = document.createTextNode(content);
+      if (className) {
+        let span = document.createElement('span');
+        span.className = className;
+        span.appendChild(node);
+        div.appendChild(span);
+        return;
+      }
+      div.appendChild(node);
+    }
+    let i0 = selectedMatchIdx,
+        i1 = i0 + 1;
+    if (highlightAll) {
+      i0 = 0;
+      i1 = matches.length;
+    } else if (!isSelectedPage) {
+      return;
+    }
+    for (let i = i0; i < i1; i++) {
+      let match = matches[i];
+      let begin = match.begin;
+      let end = match.end;
+      let isSelected = isSelectedPage && i === selectedMatchIdx;
+      let highlightSuffix = isSelected ? ' selected' : '';
+      if (this.findController) {
+        this.findController.updateMatchPosition(pageIdx, i, textDivs, begin.divIdx);
+      }
+      if (!prevEnd || begin.divIdx !== prevEnd.divIdx) {
+        if (prevEnd !== null) {
+          appendTextToDiv(prevEnd.divIdx, prevEnd.offset, infinity.offset);
+        }
+        beginText(begin);
+      } else {
+        appendTextToDiv(prevEnd.divIdx, prevEnd.offset, begin.offset);
+      }
+      if (begin.divIdx === end.divIdx) {
+        appendTextToDiv(begin.divIdx, begin.offset, end.offset, 'highlight' + highlightSuffix);
+      } else {
+        appendTextToDiv(begin.divIdx, begin.offset, infinity.offset, 'highlight begin' + highlightSuffix);
+        for (let n0 = begin.divIdx + 1, n1 = end.divIdx; n0 < n1; n0++) {
+          textDivs[n0].className = 'highlight middle' + highlightSuffix;
+        }
+        beginText(end, 'highlight end' + highlightSuffix);
+      }
+      prevEnd = end;
+    }
+    if (prevEnd) {
+      appendTextToDiv(prevEnd.divIdx, prevEnd.offset, infinity.offset);
+    }
+  }
+  updateMatches() {
+    if (!this.renderingDone) {
+      return;
+    }
+    let matches = this.matches;
+    let textDivs = this.textDivs;
+    let textContentItemsStr = this.textContentItemsStr;
+    let clearedUntilDivIdx = -1;
+    for (let i = 0, len = matches.length; i < len; i++) {
+      let match = matches[i];
+      let begin = Math.max(clearedUntilDivIdx, match.begin.divIdx);
+      for (let n = begin, end = match.end.divIdx; n <= end; n++) {
+        let div = textDivs[n];
+        div.textContent = textContentItemsStr[n];
+        div.className = '';
+      }
+      clearedUntilDivIdx = match.end.divIdx + 1;
+    }
+    if (this.findController === null || !this.findController.active) {
+      return;
+    }
+    let pageMatches, pageMatchesLength;
+    if (this.findController !== null) {
+      pageMatches = this.findController.pageMatches[this.pageIdx] || null;
+      pageMatchesLength = this.findController.pageMatchesLength ? this.findController.pageMatchesLength[this.pageIdx] || null : null;
+    }
+    this.matches = this.convertMatches(pageMatches, pageMatchesLength);
+    this.renderMatches(this.matches);
+  }
+  _bindMouse() {
+    let div = this.textLayerDiv;
+    let expandDivsTimer = null;
+    div.addEventListener('mousedown', evt => {
+      if (this.enhanceTextSelection && this.textLayerRenderTask) {
+        this.textLayerRenderTask.expandTextDivs(true);
+        return;
+      }
+      let end = div.querySelector('.endOfContent');
+      if (!end) {
+        return;
+      }
+      end.classList.add('active');
+    });
+    div.addEventListener('mouseup', () => {
+      if (this.enhanceTextSelection && this.textLayerRenderTask) {
+        this.textLayerRenderTask.expandTextDivs(false);
+        return;
+      }
+      let end = div.querySelector('.endOfContent');
+      if (!end) {
+        return;
+      }
+      end.classList.remove('active');
+    });
+  }
+}
+class DefaultTextLayerFactory {
   createTextLayerBuilder(textLayerDiv, pageIndex, viewport, enhanceTextSelection = false) {
     return new TextLayerBuilder({
       textLayerDiv,
@@ -7638,7 +7621,7 @@ DefaultTextLayerFactory.prototype = {
       enhanceTextSelection
     });
   }
-};
+}
 exports.TextLayerBuilder = TextLayerBuilder;
 exports.DefaultTextLayerFactory = DefaultTextLayerFactory;
 
@@ -7917,9 +7900,9 @@ exports.ViewHistory = ViewHistory;
 "use strict";
 
 
-var DEFAULT_URL = 'compressed.tracemonkey-pldi-09.pdf';
+let DEFAULT_URL = 'compressed.tracemonkey-pldi-09.pdf';
 ;
-var pdfjsWebApp;
+let pdfjsWebApp;
 {
   pdfjsWebApp = __webpack_require__(4);
 }
@@ -8042,7 +8025,7 @@ function getViewerConfiguration() {
   };
 }
 function webViewerLoad() {
-  var config = getViewerConfiguration();
+  let config = getViewerConfiguration();
   window.PDFViewerApplication = pdfjsWebApp.PDFViewerApplication;
   pdfjsWebApp.PDFViewerApplication.run(config);
 }
