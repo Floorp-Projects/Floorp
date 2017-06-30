@@ -199,6 +199,8 @@ public:
   // List of runnables which can hold a reference to us which need to be
   // canceled before we can go away.
   LinkedList<RefPtr<ProcessHangRunnable>> mProcessHangRunnables;
+  // The name of the runnable which is hanging the current process
+  nsCString mRunnableName;
 
   BackgroundHangThread(const char* aName,
                        uint32_t aTimeoutMs,
@@ -360,12 +362,16 @@ BackgroundHangManager::RunMonitorThread()
             // for all hangs, not just permahangs.
             currentThread->mStats.mNativeStackCnt += 1;
             currentThread->mStackHelper.GetPseudoAndNativeStack(
-              currentThread->mHangStack, currentThread->mNativeHangStack);
+              currentThread->mHangStack,
+              currentThread->mNativeHangStack,
+              currentThread->mRunnableName);
           } else {
-            currentThread->mStackHelper.GetPseudoStack(currentThread->mHangStack);
+            currentThread->mStackHelper.GetPseudoStack(currentThread->mHangStack,
+                                                       currentThread->mRunnableName);
           }
 #else
-          currentThread->mStackHelper.GetPseudoStack(currentThread->mHangStack);
+          currentThread->mStackHelper.GetPseudoStack(currentThread->mHangStack,
+                                                     currentThread->mRunnableName);
 #endif
           currentThread->mHangStart = interval;
           currentThread->mHanging = true;
@@ -580,7 +586,7 @@ BackgroundHangThread::ReportHang(PRIntervalTime aHangTime)
     mHangStack.erase(mHangStack.begin() + 1, mHangStack.begin() + elementsToRemove);
   }
 
-  Telemetry::HangHistogram newHistogram(Move(mHangStack));
+  Telemetry::HangHistogram newHistogram(Move(mHangStack), mRunnableName);
   for (Telemetry::HangHistogram* oldHistogram = mStats.mHangs.begin();
        oldHistogram != mStats.mHangs.end(); oldHistogram++) {
     if (newHistogram == *oldHistogram) {

@@ -92,33 +92,40 @@ public:
    * Retrieve the current pseudostack of the thread associated
    * with this ThreadStackHelper.
    *
-   * @param aStack Stack instance to be filled.
+   * @param aStack         Stack instance to be filled.
+   * @param aRunnableName  The name of the current runnable on the target thread.
    */
-  void GetPseudoStack(Stack& aStack);
+  void GetPseudoStack(Stack& aStack, nsACString& aRunnableName);
 
   /**
    * Retrieve the current native stack of the thread associated
    * with this ThreadStackHelper.
    *
-   * @param aNativeStack NativeStack instance to be filled.
+   * @param aNativeStack   NativeStack instance to be filled.
+   * @param aRunnableName  The name of the current runnable on the target thread.
    */
-  void GetNativeStack(NativeStack& aNativeStack);
+  void GetNativeStack(NativeStack& aNativeStack, nsACString& aRunnableName);
 
   /**
    * Retrieve the current pseudostack and native stack of the thread associated
    * with this ThreadStackHelper. This method only pauses the target thread once
    * to get both stacks.
    *
-   * @param aStack        Stack instance to be filled with the pseudostack.
-   * @param aNativeStack  NativeStack instance to be filled with the native stack.
+   * @param aStack         Stack instance to be filled with the pseudostack.
+   * @param aNativeStack   NativeStack instance to be filled with the native stack.
+   * @param aRunnableName  The name of the current runnable on the target thread.
    */
-  void GetPseudoAndNativeStack(Stack& aStack, NativeStack& aNativeStack);
+  void GetPseudoAndNativeStack(Stack& aStack,
+                               NativeStack& aNativeStack,
+                               nsACString& aRunnableName);
 
 private:
   // Fill in the passed aStack and aNativeStack datastructures with backtraces.
   // If only aStack needs to be collected, nullptr may be passed for
   // aNativeStack, and vice versa.
-  void GetStacksInternal(Stack* aStack, NativeStack* aNativeStack);
+  void GetStacksInternal(Stack* aStack,
+                         NativeStack* aNativeStack,
+                         nsACString& aRunnableName);
 
   // The profiler's unique thread identifier for the target thread.
   int mThreadId;

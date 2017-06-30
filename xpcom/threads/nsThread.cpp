@@ -99,6 +99,8 @@ static LazyLogModule sThreadLog("nsThread");
 
 NS_DECL_CI_INTERFACE_GETTER(nsThread)
 
+const char* nsThread::sMainThreadRunnableName = nullptr;
+
 //-----------------------------------------------------------------------------
 // Because we do not have our own nsIFactory, we have to implement nsIClassInfo
 // somewhat manually.
@@ -1391,8 +1393,8 @@ nsThread::ProcessNextEvent(bool aMayWait, bool* aResult)
       Maybe<Telemetry::AutoTimer<Telemetry::MAIN_THREAD_RUNNABLE_MS>> timer;
       Maybe<Telemetry::AutoTimer<Telemetry::IDLE_RUNNABLE_BUDGET_OVERUSE_MS>> idleTimer;
 
+      nsAutoCString name;
       if ((MAIN_THREAD == mIsMainThread) || mNextIdleDeadline) {
-        nsCString name;
         bool labeled = GetLabeledRunnableName(event, name);
 
         if (MAIN_THREAD == mIsMainThread) {
@@ -1416,6 +1418,19 @@ nsThread::ProcessNextEvent(bool aMayWait, bool* aResult)
           // the 0 bucket of the histogram.
           idleTimer.emplace(name, mNextIdleDeadline);
         }
+      }
+
+      // If we're on the main thread, we want to record our current runnable's
+      // name in a static so that BHR can record it.
+      const char* restoreRunnableName = nullptr;
+      auto clear = MakeScopeExit([&] {
+        if (MAIN_THREAD == mIsMainThread) {
+          sMainThreadRunnableName = restoreRunnableName;
+        }
+      });
+      if (MAIN_THREAD == mIsMainThread) {
+        restoreRunnableName = sMainThreadRunnableName;
+        sMainThreadRunnableName = name.get();
       }
 #endif
 
