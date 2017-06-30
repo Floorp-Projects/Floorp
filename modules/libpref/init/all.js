@@ -436,8 +436,8 @@ pref("media.decoder-doctor.notifications-allowed", "MediaWMFNeeded,MediaWidevine
 #else
 pref("media.decoder-doctor.notifications-allowed", "MediaWMFNeeded,MediaWidevineNoWMF,MediaCannotInitializePulseAudio,MediaCannotPlayNoDecoders,MediaUnsupportedLibavcodec");
 #endif
-pref("media.decoder-doctor.decode-errors-allowed", "NS_ERROR_DOM_MEDIA_DEMUXER_ERR, NS_ERROR_DOM_MEDIA_METADATA_ERR");
-pref("media.decoder-doctor.decode-warnings-allowed", "NS_ERROR_DOM_MEDIA_DEMUXER_ERR, NS_ERROR_DOM_MEDIA_METADATA_ERR");
+pref("media.decoder-doctor.decode-errors-allowed", "");
+pref("media.decoder-doctor.decode-warnings-allowed", "");
 // Whether we report partial failures.
 pref("media.decoder-doctor.verbose", false);
 // Whether DD should consider WMF-disabled a WMF failure, useful for testing.
@@ -488,6 +488,7 @@ pref("media.peerconnection.video.h264_enabled", false);
 pref("media.peerconnection.video.vp9_enabled", true);
 pref("media.getusermedia.aec", 1);
 pref("media.getusermedia.browser.enabled", false);
+pref("media.getusermedia.channels", 0);
 // Desktop is typically VGA capture or more; and qm_select will not drop resolution
 // below 1/2 in each dimension (or so), so QVGA (320x200) is the lowest here usually.
 pref("media.peerconnection.video.min_bitrate", 0);

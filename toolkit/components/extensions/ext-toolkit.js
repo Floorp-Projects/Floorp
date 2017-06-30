@@ -5,19 +5,25 @@
 /* exported getCookieStoreIdForTab, getCookieStoreIdForContainer,
             getContainerForCookieStoreId,
             isValidCookieStoreId, isContainerCookieStoreId,
-            SingletonEventManager */
+            EventManager, InputEventManager */
 /* global getCookieStoreIdForTab:false, getCookieStoreIdForContainer:false,
           getContainerForCookieStoreId: false,
           isValidCookieStoreId:false, isContainerCookieStoreId:false,
           isDefaultCookieStoreId: false, isPrivateCookieStoreId:false,
-          SingletonEventManager: false */
+          EventManager: false, InputEventManager: false */
 
 XPCOMUtils.defineLazyModuleGetter(this, "ContextualIdentityService",
                                   "resource://gre/modules/ContextualIdentityService.jsm");
 
 Cu.import("resource://gre/modules/ExtensionCommon.jsm");
 
-global.SingletonEventManager = ExtensionCommon.SingletonEventManager;
+global.EventManager = ExtensionCommon.EventManager;
+global.InputEventManager = class extends EventManager {
+  constructor(...args) {
+    super(...args);
+    this.inputHandling = true;
+  }
+};
 
 /* globals DEFAULT_STORE, PRIVATE_STORE, CONTAINER_STORE */
 

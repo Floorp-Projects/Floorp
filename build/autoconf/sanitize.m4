@@ -80,6 +80,28 @@ if test -n "$MOZ_TSAN"; then
 fi
 AC_SUBST(MOZ_TSAN)
 
+dnl ========================================================
+dnl = Use UndefinedBehavior Sanitizer to find integer overflows
+dnl ========================================================
+MOZ_ARG_ENABLE_BOOL(ubsan-int-overflow,
+[  --enable-ubsan-int-overflow       Enable UndefinedBehavior Sanitizer (Integer Overflow Parts, default=no)],
+   MOZ_UBSAN_INT_OVERFLOW=1,
+   MOZ_UBSAN_INT_OVERFLOW= )
+if test -n "$MOZ_UBSAN_INT_OVERFLOW"; then
+    MOZ_LLVM_HACKS=1
+    MOZ_UBSAN=1
+    CFLAGS="-fsanitize=integer -fsanitize-blacklist=$_topsrcdir/build/sanitizers/ubsan_blacklist_int.txt $CFLAGS"
+    CXXFLAGS="-fsanitize=integer -fsanitize-blacklist=$_topsrcdir/build/sanitizers/ubsan_blacklist_int.txt $CXXFLAGS"
+    if test -z "$CLANG_CL"; then
+        LDFLAGS="-fsanitize=integer $LDFLAGS"
+    fi
+    AC_DEFINE(MOZ_UBSAN_INT_OVERFLOW)
+    AC_DEFINE(MOZ_UBSAN)
+    MOZ_PATH_PROG(LLVM_SYMBOLIZER, llvm-symbolizer)
+fi
+AC_SUBST(MOZ_UBSAN_INT_OVERFLOW)
+AC_SUBST(MOZ_UBSAN)
+
 # The LLVM symbolizer is used by all sanitizers
 AC_SUBST(LLVM_SYMBOLIZER)
 

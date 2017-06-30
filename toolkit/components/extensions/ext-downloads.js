@@ -235,7 +235,7 @@ const DownloadMap = {
 
 // Create a callable function that filters a DownloadItem based on a
 // query object of the type passed to search() or erase().
-function downloadQuery(query) {
+const downloadQuery = query => {
   let queryTerms = [];
   let queryNegativeTerms = [];
   if (query.query != null) {
@@ -337,9 +337,9 @@ function downloadQuery(query) {
 
     return true;
   };
-}
+};
 
-function queryHelper(query) {
+const queryHelper = query => {
   let matchFn;
   try {
     matchFn = downloadQuery(query);
@@ -390,7 +390,7 @@ function queryHelper(query) {
     }
     return results;
   });
-}
+};
 
 this.downloads = class extends ExtensionAPI {
   getAPI(context) {
@@ -738,7 +738,7 @@ this.downloads = class extends ExtensionAPI {
         //   ...
         // }
 
-        onChanged: new SingletonEventManager(context, "downloads.onChanged", fire => {
+        onChanged: new EventManager(context, "downloads.onChanged", fire => {
           const handler = (what, item) => {
             let changes = {};
             const noundef = val => (val === undefined) ? null : val;
@@ -766,7 +766,7 @@ this.downloads = class extends ExtensionAPI {
           };
         }).api(),
 
-        onCreated: new SingletonEventManager(context, "downloads.onCreated", fire => {
+        onCreated: new EventManager(context, "downloads.onCreated", fire => {
           const handler = (what, item) => {
             fire.async(item.serialize());
           };
@@ -780,7 +780,7 @@ this.downloads = class extends ExtensionAPI {
           };
         }).api(),
 
-        onErased: new SingletonEventManager(context, "downloads.onErased", fire => {
+        onErased: new EventManager(context, "downloads.onErased", fire => {
           const handler = (what, item) => {
             fire.async(item.id);
           };

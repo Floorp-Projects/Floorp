@@ -21,6 +21,10 @@
     top: 0;
     left: 0;
   }
+
+  #vid-preload-image {
+    visibility: hidden;
+  }
 </style>
 <script>
   function addCCToVid(videoElem) {
@@ -31,6 +35,12 @@
 <body>
   <video id="vid" controls></video>
   <div id="mask"></div>
+  <!-- Create a hidden video with CC button displayed upfront to decode image
+  earlier, so that the CC image will be ready to paint once the track added. -->
+  <video id="vid-preload-image" controls>
+    <track kind="subtitles" src="foo.vtt" srclang="en">
+  </video>
+
   <script>
     function doTest() {
       var vid = document.getElementById("vid");

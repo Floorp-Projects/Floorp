@@ -157,13 +157,63 @@ pub const ELAST : ::c_int = 91;
 
 pub const F_DUPFD_CLOEXEC : ::c_int = 10;
 
+pub const AT_FDCWD: ::c_int = -100;
+pub const AT_EACCESS: ::c_int = 0x01;
+pub const AT_SYMLINK_NOFOLLOW: ::c_int = 0x02;
+pub const AT_SYMLINK_FOLLOW: ::c_int = 0x04;
+pub const AT_REMOVEDIR: ::c_int = 0x08;
+
 pub const RLIM_NLIMITS: ::c_int = 9;
 
 pub const SO_SNDTIMEO: ::c_int = 0x1005;
 pub const SO_RCVTIMEO: ::c_int = 0x1006;
+pub const SO_BINDANY: ::c_int = 0x1000;
+pub const SO_NETPROC: ::c_int = 0x1020;
+pub const SO_RTABLE: ::c_int = 0x1021;
+pub const SO_PEERCRED: ::c_int = 0x1022;
+pub const SO_SPLICE: ::c_int = 0x1023;
+
+pub const AF_ECMA: ::c_int = 8;
+pub const AF_ROUTE: ::c_int = 17;
+pub const AF_ENCAP: ::c_int = 28;
+pub const AF_SIP: ::c_int = 29;
+pub const AF_KEY: ::c_int = 30;
+pub const pseudo_AF_HDRCMPLT: ::c_int = 31;
+pub const AF_BLUETOOTH: ::c_int = 32;
+pub const AF_MPLS: ::c_int = 33;
+pub const pseudo_AF_PFLOW: ::c_int = 34;
+pub const pseudo_AF_PIPEX: ::c_int = 35;
+#[doc(hidden)]
+pub const AF_MAX: ::c_int = 36;
+
+#[doc(hidden)]
+pub const NET_MAXID: ::c_int = AF_MAX;
+pub const NET_RT_DUMP: ::c_int = 1;
+pub const NET_RT_FLAGS: ::c_int = 2;
+pub const NET_RT_IFLIST: ::c_int = 3;
+pub const NET_RT_STATS: ::c_int = 4;
+pub const NET_RT_TABLE: ::c_int = 5;
+pub const NET_RT_IFNAMES: ::c_int = 6;
+#[doc(hidden)]
+pub const NET_RT_MAXID: ::c_int = 7;
 
 pub const IPV6_JOIN_GROUP: ::c_int = 12;
 pub const IPV6_LEAVE_GROUP: ::c_int = 13;
+
+pub const PF_ROUTE: ::c_int = AF_ROUTE;
+pub const PF_ECMA: ::c_int = AF_ECMA;
+pub const PF_ENCAP: ::c_int = AF_ENCAP;
+pub const PF_SIP: ::c_int = AF_SIP;
+pub const PF_KEY: ::c_int = AF_KEY;
+pub const PF_BPF: ::c_int = pseudo_AF_HDRCMPLT;
+pub const PF_BLUETOOTH: ::c_int = AF_BLUETOOTH;
+pub const PF_MPLS: ::c_int = AF_MPLS;
+pub const PF_PFLOW: ::c_int = pseudo_AF_PFLOW;
+pub const PF_PIPEX: ::c_int = pseudo_AF_PIPEX;
+#[doc(hidden)]
+pub const PF_MAX: ::c_int = AF_MAX;
+
+pub const SCM_TIMESTAMP: ::c_int = 0x04;
 
 pub const O_DSYNC : ::c_int = 128;
 
@@ -407,6 +457,7 @@ pub const KI_MAXLOGNAME: ::c_int = 32;
 pub const KI_EMULNAMELEN: ::c_int = 8;
 
 extern {
+    pub fn dirfd(dirp: *mut ::DIR) -> ::c_int;
     pub fn getnameinfo(sa: *const ::sockaddr,
                        salen: ::socklen_t,
                        host: *mut ::c_char,

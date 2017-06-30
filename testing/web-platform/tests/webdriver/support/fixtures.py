@@ -172,12 +172,9 @@ def new_session(configuration, request):
 
 
 def url(server_config):
-    def inner(path, query="", fragment=""):
-        rv = urlparse.urlunsplit(("http",
-                                  "%s:%s" % (server_config["host"],
-                                             server_config["ports"]["http"][0]),
-                                  path,
-                                  query,
-                                  fragment))
-        return rv
+    def inner(path, protocol="http", query="", fragment=""):
+        port = server_config["ports"][protocol][0]
+        host = "%s:%s" % (server_config["host"], port)
+        return urlparse.urlunsplit((protocol, host, path, query, fragment))
+
     return inner

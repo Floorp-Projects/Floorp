@@ -212,7 +212,8 @@ toolbarpaletteitem[place="palette"] > #zoom-controls > #zoom-in-button {
   list-style-image: url(chrome://browser/skin/customize.svg);
 }
 
-#appMenu-find-button {
+#appMenu-find-button,
+#panelMenu_searchBookmarks {
   list-style-image: url(chrome://browser/skin/find.svg);
 }
 
@@ -269,8 +270,18 @@ toolbarpaletteitem[place="palette"] > #zoom-controls > #zoom-in-button {
 }
 
 #appMenuViewHistorySidebar,
-#PanelUI-remotetabs-view-sidebar {
+#PanelUI-remotetabs-view-sidebar,
+#panelMenu_viewBookmarksSidebar {
   list-style-image: url("chrome://browser/skin/sidebars.svg");
+}
+
+#appMenu-library-bookmarks-button,
+#panelMenuBookmarkThisPage {
+  list-style-image: url("chrome://browser/skin/bookmark-hollow.svg");
+}
+
+#panelMenuBookmarkThisPage[starred] {
+  list-style-image: url("chrome://browser/skin/bookmark.svg");
 }
 
 %ifdef MOZ_PHOTON_THEME

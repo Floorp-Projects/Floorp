@@ -215,6 +215,7 @@ dom/locales/**
 dom/manifest/**
 dom/mathml/**
 dom/media/**
+!dom/media/*.js*
 dom/messagechannel/**
 dom/network/**
 dom/notification/**
@@ -250,6 +251,9 @@ dom/xhr/**
 dom/xml/**
 dom/xslt/**
 dom/xul/**
+
+# Third-party
+dom/media/webvtt/**
 
 # Exclude everything but self-hosted JS
 js/ductwork/**
@@ -297,8 +301,14 @@ security/nss/**
 services/sync/modules/constants.js
 services/sync/services-sync.js
 
-# testing/ exclusions
-testing/marionette/**
+# Remote protocol exclusions
+testing/marionette/test_*.js
+testing/marionette/atom.js
+testing/marionette/legacyaction.js
+testing/marionette/client/**
+testing/marionette/harness/**
+
+# other testing/ exclusions
 testing/mochitest/**
 # third party modules
 testing/modules/ajv-4.1.1.js

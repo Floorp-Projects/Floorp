@@ -27,8 +27,9 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(ServoImportRule, dom::CSSImportRule)
 
-  // unhide since nsIDOMCSSImportRule has its own GetStyleSheet
+  // unhide since nsIDOMCSSImportRule has its own GetStyleSheet and GetMedia
   using dom::CSSImportRule::GetStyleSheet;
+  using dom::CSSImportRule::GetMedia;
 
 #ifdef DEBUG
   void List(FILE* out = stdout, int32_t aIndent = 0) const final;
@@ -41,7 +42,7 @@ public:
 
   // WebIDL interface
   void GetCssTextImpl(nsAString& aCssText) const override;
-  dom::MediaList* Media() const final;
+  dom::MediaList* GetMedia() const final;
   StyleSheet* GetStyleSheet() const final;
 
 private:

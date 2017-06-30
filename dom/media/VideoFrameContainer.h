@@ -105,6 +105,23 @@ protected:
   dom::HTMLMediaElement* mElement;
   RefPtr<ImageContainer> mImageContainer;
 
+  struct
+  {
+    // True when the Image size has changed since the last time Invalidate() was
+    // called. When set, the next call to Invalidate() will ensure that the
+    // frame is fully invalidated instead of just invalidating for the image change
+    // in the ImageLayer.
+    bool mImageSizeChanged = false;
+    // The main thread mirror of the member of the same name below.
+    gfx::IntSize mIntrinsicSize;
+    // True when the intrinsic size has been changed by SetCurrentFrame() since
+    // the last call to Invalidate().
+    // The next call to Invalidate() will recalculate
+    // and update the intrinsic size on the element, request a frame reflow and
+    // then reset this flag.
+    bool mIntrinsicSizeChanged = false;
+  } mMainThreadState;
+
   // mMutex protects all the fields below.
   Mutex mMutex;
   // Once the frame is forced to black, we initialize mBlackImage for following
@@ -122,17 +139,6 @@ protected:
   // We record the last played video frame to avoid playing the frame again
   // with a different frame id.
   VideoFrame mLastPlayedVideoFrame;
-  // True when the intrinsic size has been changed by SetCurrentFrame() since
-  // the last call to Invalidate().
-  // The next call to Invalidate() will recalculate
-  // and update the intrinsic size on the element, request a frame reflow and
-  // then reset this flag.
-  bool mIntrinsicSizeChanged;
-  // True when the Image size has changed since the last time Invalidate() was
-  // called. When set, the next call to Invalidate() will ensure that the
-  // frame is fully invalidated instead of just invalidating for the image change
-  // in the ImageLayer.
-  bool mImageSizeChanged;
   // The last PrincipalHandle we notified mElement about.
   PrincipalHandle mLastPrincipalHandle;
   // The PrincipalHandle the client has notified us is changing with FrameID

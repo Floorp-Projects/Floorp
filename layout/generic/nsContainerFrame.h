@@ -527,6 +527,16 @@ public:
   // have arbitrary nsContainerFrames.
   NS_DECLARE_FRAME_PROPERTY_WITHOUT_DTOR(FirstLetterProperty, nsIFrame)
 
+  void SetHasFirstLetterChild()
+  {
+    mHasFirstLetterChild = true;
+  }
+
+  void ClearHasFirstLetterChild()
+  {
+    mHasFirstLetterChild = false;
+  }
+
 #ifdef DEBUG
   // Use this to suppress the CRAZY_SIZE assertions.
   NS_DECLARE_FRAME_PROPERTY_SMALL_VALUE(DebugReflowingWithInfiniteISize, bool)

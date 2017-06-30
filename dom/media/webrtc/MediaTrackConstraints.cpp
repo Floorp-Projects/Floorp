@@ -378,6 +378,9 @@ FlattenedConstraints::FlattenedConstraints(const NormalizedConstraints& aOther)
     if (mAutoGainControl.Intersects(set.mAutoGainControl)) {
         mAutoGainControl.Intersect(set.mAutoGainControl);
     }
+    if (mChannelCount.Intersects(set.mChannelCount)) {
+        mChannelCount.Intersect(set.mChannelCount);
+    }
   }
 }
 

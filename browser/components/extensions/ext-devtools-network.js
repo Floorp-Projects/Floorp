@@ -10,7 +10,7 @@ this.devtools_network = class extends ExtensionAPI {
     return {
       devtools: {
         network: {
-          onNavigated: new SingletonEventManager(context, "devtools.onNavigated", fire => {
+          onNavigated: new EventManager(context, "devtools.onNavigated", fire => {
             let listener = (event, data) => {
               fire.async(data.url);
             };

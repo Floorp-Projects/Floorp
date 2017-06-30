@@ -1,0 +1,15 @@
+# This list contains runtime suppression entries for any issues reported
+# by UndefinedBehaviorSanitizer (UBSan). Unlike the compile-time blacklists,
+# this list allows us to blacklist source code files and functions only for
+# specific checks performed by UBSan.
+#
+# Example:
+#
+# signed-integer-overflow:file-with-known-overflow.cpp
+# alignment:function_doing_unaligned_access
+# vptr:shared_object_with_vptr_failures.so
+#
+# Since runtime suppressions are much more expensive than compile-time
+# blacklisting, this list should not be used for frequent issues but rather
+# only for sporadic warnings that have already been checked and confirmed
+# to not be bugs.

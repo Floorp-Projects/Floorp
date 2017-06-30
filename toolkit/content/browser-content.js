@@ -1022,10 +1022,12 @@ var AudioPlaybackListener = {
     if (topic === "audio-playback") {
       if (subject && subject.top == global.content) {
         let name = "AudioPlayback:";
-        if (data === "blockStart") {
-          name += "BlockStart";
-        } else if (data === "blockStop") {
-          name += "BlockStop";
+        if (data === "activeMediaBlockStart") {
+          name += "ActiveMediaBlockStart";
+        } else if (data === "activeMediaBlockStop") {
+          name += "ActiveMediaBlockStop";
+        } else if (data == "mediaBlockStop") {
+          name += "MediaBlockStop";
         } else {
           name += (data === "active") ? "Start" : "Stop";
         }

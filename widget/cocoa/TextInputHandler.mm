@@ -2772,6 +2772,9 @@ IMEInputHandler::NotifyIME(TextEventDispatcher* aTextEventDispatcher,
     case NOTIFY_IME_OF_SELECTION_CHANGE:
       OnSelectionChange(aNotification);
       return NS_OK;
+    case NOTIFY_IME_OF_POSITION_CHANGE:
+      OnLayoutChange();
+      return NS_OK;
     default:
       return NS_ERROR_NOT_IMPLEMENTED;
   }
@@ -4268,6 +4271,20 @@ IMEInputHandler::OnSelectionChange(const IMENotification& aIMENotification)
   if (mIMEHasFocus) {
     mSelectedRange = mRangeForWritingMode;
   }
+}
+
+void
+IMEInputHandler::OnLayoutChange()
+{
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
+  if (!IsFocused()) {
+    return;
+  }
+  NSTextInputContext* inputContext = [mView inputContext];
+  [inputContext invalidateCharacterCoordinates];
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 bool
