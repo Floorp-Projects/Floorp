@@ -1,0 +1,11 @@
+[package]
+name = "rsdparsa_capi"
+version = "0.1.0"
+authors = ["Paul Ellenbogen <pe5@cs.princeton.edu>",
+	   "Nils Ohlmeier <github@ohlmeier.org>"]
+
+[dependencies]
+libc = "^0.2.0"
+log = "^0.3"
+rsdparsa = {version = "0.1.0", path = "../rsdparsa"}
+nserror = { path = "../../../../../../xpcom/rust/nserror" }
