@@ -39,6 +39,7 @@
 #include "nsFrameManager.h"
 #include "nsError.h"
 #include "nsCSSFrameConstructor.h"
+#include "mozilla/Range.h"
 #include "mozilla/ServoRestyleManager.h"
 #include "mozilla/ServoStyleSet.h"
 #include "mozilla/StyleSetHandle.h"
@@ -7436,10 +7437,11 @@ BCBlockDirSeg::CreateWebRenderCommands(BCPaintBorderIterator& aIter,
                                                      transformedRect.width,
                                                      transformedRect.width);
   transformedRect.width *= 2.0f;
+  Range<const WrBorderSide> wrsides(wrSide, 4);
   aBuilder.PushBorder(transformedRect,
                       transformedRect,
                       borderWidths,
-                      wrSide[0], wrSide[1], wrSide[2], wrSide[3],
+                      wrsides,
                       borderRadii);
 }
 
@@ -7694,10 +7696,11 @@ BCInlineDirSeg::CreateWebRenderCommands(BCPaintBorderIterator& aIter,
                                                      transformedRect.height,
                                                      transformedRect.height);
   transformedRect.height *= 2.0f;
+  Range<const WrBorderSide> wrsides(wrSide, 4);
   aBuilder.PushBorder(transformedRect,
                       transformedRect,
                       borderWidths,
-                      wrSide[0], wrSide[1], wrSide[2], wrSide[3],
+                      wrsides,
                       borderRadii);
 }
 

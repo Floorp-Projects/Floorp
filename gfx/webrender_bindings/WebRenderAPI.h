@@ -232,13 +232,12 @@ public:
                   const WrRect& aClip,
                   wr::PipelineId aPipeline);
 
+  // XXX WrBorderSides are passed with Range.
+  // It is just to bypass compiler bug. See Bug 1357734.
   void PushBorder(const WrRect& aBounds,
                   const WrRect& aClip,
                   const WrBorderWidths& aWidths,
-                  const WrBorderSide& aTop,
-                  const WrBorderSide& aRight,
-                  const WrBorderSide& aBbottom,
-                  const WrBorderSide& aLeft,
+                  const Range<const WrBorderSide>& aSides,
                   const WrBorderRadius& aRadius);
 
   void PushBorderImage(const WrRect& aBounds,
