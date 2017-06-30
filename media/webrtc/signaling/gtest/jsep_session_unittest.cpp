@@ -451,7 +451,7 @@ protected:
   }
 
   UniquePtr<Sdp> GetParsedLocalDescription(const JsepSessionImpl& side) const {
-    return Parse(side.GetLocalDescription());
+    return Parse(side.GetLocalDescription(kJsepDescriptionCurrent));
   }
 
   SdpMediaSection* GetMsection(Sdp& sdp,
@@ -2492,7 +2492,8 @@ TEST_P(JsepSessionTest, FullCallWithCandidates)
   SetLocalOffer(offer);
   mOffCandidates->Gather(*mSessionOff, types);
 
-  UniquePtr<Sdp> localOffer(Parse(mSessionOff->GetLocalDescription()));
+  UniquePtr<Sdp> localOffer(Parse(
+        mSessionOff->GetLocalDescription(kJsepDescriptionCurrent)));
   for (size_t i = 0; i < localOffer->GetMediaSectionCount(); ++i) {
     mOffCandidates->CheckRtpCandidates(
         true, localOffer->GetMediaSection(i), i,
@@ -2517,7 +2518,8 @@ TEST_P(JsepSessionTest, FullCallWithCandidates)
   SetRemoteOffer(offer);
   mOffCandidates->Trickle(*mSessionAns);
 
-  UniquePtr<Sdp> remoteOffer(Parse(mSessionAns->GetRemoteDescription()));
+  UniquePtr<Sdp> remoteOffer(Parse(
+        mSessionAns->GetRemoteDescription(kJsepDescriptionCurrent)));
   for (size_t i = 0; i < remoteOffer->GetMediaSectionCount(); ++i) {
     mOffCandidates->CheckRtpCandidates(
         true, remoteOffer->GetMediaSection(i), i,
@@ -2544,7 +2546,8 @@ TEST_P(JsepSessionTest, FullCallWithCandidates)
   // They should not be present in the SDP.
   mAnsCandidates->Gather(*mSessionAns, types);
 
-  UniquePtr<Sdp> localAnswer(Parse(mSessionAns->GetLocalDescription()));
+  UniquePtr<Sdp> localAnswer(Parse(
+        mSessionAns->GetLocalDescription(kJsepDescriptionCurrent)));
   for (size_t i = 0; i < localAnswer->GetMediaSectionCount(); ++i) {
     mAnsCandidates->CheckRtpCandidates(
         i == 0, localAnswer->GetMediaSection(i), i,
@@ -2569,7 +2572,8 @@ TEST_P(JsepSessionTest, FullCallWithCandidates)
   SetRemoteAnswer(answer);
   mAnsCandidates->Trickle(*mSessionOff);
 
-  UniquePtr<Sdp> remoteAnswer(Parse(mSessionOff->GetRemoteDescription()));
+  UniquePtr<Sdp> remoteAnswer(Parse(
+        mSessionOff->GetRemoteDescription(kJsepDescriptionCurrent)));
   for (size_t i = 0; i < remoteAnswer->GetMediaSectionCount(); ++i) {
     mAnsCandidates->CheckRtpCandidates(
         i == 0, remoteAnswer->GetMediaSection(i), i,
@@ -2678,7 +2682,8 @@ TEST_P(JsepSessionTest, RenegotiationWithCandidates)
 
   mOffCandidates->Trickle(*mSessionAns);
 
-  UniquePtr<Sdp> localOffer(Parse(mSessionOff->GetLocalDescription()));
+  UniquePtr<Sdp> localOffer(Parse(
+        mSessionOff->GetLocalDescription(kJsepDescriptionCurrent)));
   for (size_t i = 0; i < localOffer->GetMediaSectionCount(); ++i) {
     mOffCandidates->CheckRtpCandidates(
         true, localOffer->GetMediaSection(i), i,
@@ -2700,7 +2705,8 @@ TEST_P(JsepSessionTest, RenegotiationWithCandidates)
         "Local reoffer after gathering should have an end-of-candidates.");
   }
 
-  UniquePtr<Sdp> remoteOffer(Parse(mSessionAns->GetRemoteDescription()));
+  UniquePtr<Sdp> remoteOffer(Parse(
+        mSessionAns->GetRemoteDescription(kJsepDescriptionCurrent)));
   for (size_t i = 0; i < remoteOffer->GetMediaSectionCount(); ++i) {
     mOffCandidates->CheckRtpCandidates(
         true, remoteOffer->GetMediaSection(i), i,
@@ -2727,7 +2733,8 @@ TEST_P(JsepSessionTest, RenegotiationWithCandidates)
   // should be set.
   mAnsCandidates->FinishGathering(*mSessionAns);
 
-  UniquePtr<Sdp> localAnswer(Parse(mSessionAns->GetLocalDescription()));
+  UniquePtr<Sdp> localAnswer(Parse(
+        mSessionAns->GetLocalDescription(kJsepDescriptionCurrent)));
   for (size_t i = 0; i < localAnswer->GetMediaSectionCount(); ++i) {
     mAnsCandidates->CheckRtpCandidates(
         i == 0, localAnswer->GetMediaSection(i), i,
@@ -2750,7 +2757,8 @@ TEST_P(JsepSessionTest, RenegotiationWithCandidates)
         "for level 0.");
   }
 
-  UniquePtr<Sdp> remoteAnswer(Parse(mSessionOff->GetRemoteDescription()));
+  UniquePtr<Sdp> remoteAnswer(Parse(
+        mSessionOff->GetRemoteDescription(kJsepDescriptionCurrent)));
   for (size_t i = 0; i < localAnswer->GetMediaSectionCount(); ++i) {
     mAnsCandidates->CheckRtpCandidates(
         i == 0, remoteAnswer->GetMediaSection(i), i,
@@ -3006,7 +3014,8 @@ TEST_F(JsepSessionTest, OfferToReceiveAudioNotUsed)
 
   OfferAnswer(CHECK_SUCCESS, Some(options));
 
-  UniquePtr<Sdp> offer(Parse(mSessionOff->GetLocalDescription()));
+  UniquePtr<Sdp> offer(Parse(
+        mSessionOff->GetLocalDescription(kJsepDescriptionCurrent)));
   ASSERT_TRUE(offer.get());
   ASSERT_EQ(1U, offer->GetMediaSectionCount());
   ASSERT_EQ(SdpMediaSection::kAudio,
@@ -3014,7 +3023,8 @@ TEST_F(JsepSessionTest, OfferToReceiveAudioNotUsed)
   ASSERT_EQ(SdpDirectionAttribute::kRecvonly,
             offer->GetMediaSection(0).GetAttributeList().GetDirection());
 
-  UniquePtr<Sdp> answer(Parse(mSessionAns->GetLocalDescription()));
+  UniquePtr<Sdp> answer(Parse(
+        mSessionAns->GetLocalDescription(kJsepDescriptionCurrent)));
   ASSERT_TRUE(answer.get());
   ASSERT_EQ(1U, answer->GetMediaSectionCount());
   ASSERT_EQ(SdpMediaSection::kAudio,
@@ -3030,7 +3040,8 @@ TEST_F(JsepSessionTest, OfferToReceiveVideoNotUsed)
 
   OfferAnswer(CHECK_SUCCESS, Some(options));
 
-  UniquePtr<Sdp> offer(Parse(mSessionOff->GetLocalDescription()));
+  UniquePtr<Sdp> offer(Parse(
+        mSessionOff->GetLocalDescription(kJsepDescriptionCurrent)));
   ASSERT_TRUE(offer.get());
   ASSERT_EQ(1U, offer->GetMediaSectionCount());
   ASSERT_EQ(SdpMediaSection::kVideo,
@@ -3038,7 +3049,8 @@ TEST_F(JsepSessionTest, OfferToReceiveVideoNotUsed)
   ASSERT_EQ(SdpDirectionAttribute::kRecvonly,
             offer->GetMediaSection(0).GetAttributeList().GetDirection());
 
-  UniquePtr<Sdp> answer(Parse(mSessionAns->GetLocalDescription()));
+  UniquePtr<Sdp> answer(Parse(
+        mSessionAns->GetLocalDescription(kJsepDescriptionCurrent)));
   ASSERT_TRUE(answer.get());
   ASSERT_EQ(1U, answer->GetMediaSectionCount());
   ASSERT_EQ(SdpMediaSection::kVideo,
@@ -4408,7 +4420,7 @@ TEST_P(JsepSessionTest, TestMaxBundle)
   mSessionOff->SetBundlePolicy(kBundleMaxBundle);
   OfferAnswer();
 
-  std::string offer = mSessionOff->GetLocalDescription();
+  std::string offer = mSessionOff->GetLocalDescription(kJsepDescriptionCurrent);
   SipccSdpParser parser;
   UniquePtr<Sdp> parsedOffer = parser.Parse(offer);
   ASSERT_TRUE(parsedOffer.get());
@@ -4838,9 +4850,11 @@ TEST_F(JsepSessionTest, AudioOnlyG722Only)
 
   std::string answer = CreateAnswer();
   SetLocalAnswer(answer);
-  ASSERT_NE(mSessionAns->GetLocalDescription().find("UDP/TLS/RTP/SAVPF 9\r"),
+  ASSERT_NE(mSessionAns->GetLocalDescription(kJsepDescriptionCurrent)
+            .find("UDP/TLS/RTP/SAVPF 9\r"),
             std::string::npos);
-  ASSERT_NE(mSessionAns->GetLocalDescription().find("a=rtpmap:9 G722/8000"),
+  ASSERT_NE(mSessionAns->GetLocalDescription(kJsepDescriptionCurrent)
+            .find("a=rtpmap:9 G722/8000"),
             std::string::npos);
 }
 
@@ -4864,12 +4878,17 @@ TEST_F(JsepSessionTest, AudioOnlyG722Rejected)
   SetRemoteAnswer(answer);
 
   // TODO(bug 814227): Use commented out code instead.
-  ASSERT_NE(mSessionAns->GetLocalDescription().find("UDP/TLS/RTP/SAVPF 0\r"),
+  ASSERT_NE(mSessionAns->GetLocalDescription(kJsepDescriptionCurrent)
+            .find("UDP/TLS/RTP/SAVPF 0\r"),
             std::string::npos);
-  // ASSERT_NE(mSessionAns->GetLocalDescription().find("UDP/TLS/RTP/SAVPF 0 8\r"), std::string::npos);
-  ASSERT_NE(mSessionAns->GetLocalDescription().find("a=rtpmap:0 PCMU/8000"), std::string::npos);
-  ASSERT_EQ(mSessionAns->GetLocalDescription().find("a=rtpmap:109 opus/48000/2"), std::string::npos);
-  ASSERT_EQ(mSessionAns->GetLocalDescription().find("a=rtpmap:9 G722/8000"), std::string::npos);
+  // ASSERT_NE(mSessionAns->GetLocalDescription(kJsepDescriptionCurrent)
+  //           .find("UDP/TLS/RTP/SAVPF 0 8\r"), std::string::npos);
+  ASSERT_NE(mSessionAns->GetLocalDescription(kJsepDescriptionCurrent)
+            .find("a=rtpmap:0 PCMU/8000"), std::string::npos);
+  ASSERT_EQ(mSessionAns->GetLocalDescription(kJsepDescriptionCurrent)
+            .find("a=rtpmap:109 opus/48000/2"), std::string::npos);
+  ASSERT_EQ(mSessionAns->GetLocalDescription(kJsepDescriptionCurrent)
+            .find("a=rtpmap:9 G722/8000"), std::string::npos);
 }
 
 // This test doesn't make sense for bundle
@@ -4887,9 +4906,11 @@ TEST_F(JsepSessionTest, DISABLED_FullCallAudioNoMuxVideoMux)
   SetRemoteOffer(offer);
   std::string answer = CreateAnswer();
 
-  size_t match = mSessionAns->GetLocalDescription().find("\r\na=rtcp-mux");
+  size_t match = mSessionAns->GetLocalDescription(kJsepDescriptionCurrent)
+                                                  .find("\r\na=rtcp-mux");
   ASSERT_NE(match, std::string::npos);
-  match = mSessionAns->GetLocalDescription().find("\r\na=rtcp-mux", match + 1);
+  match = mSessionAns->GetLocalDescription(kJsepDescriptionCurrent)
+                                           .find("\r\na=rtcp-mux", match + 1);
   ASSERT_EQ(match, std::string::npos);
 }
 
