@@ -1183,9 +1183,45 @@ class RTCPeerConnection {
     return new this._win.RTCSessionDescription({ type: this._localType, sdp });
   }
 
+  get currentLocalDescription() {
+    this._checkClosed();
+    let sdp = this._impl.currentLocalDescription;
+    if (sdp.length == 0) {
+      return null;
+    }
+    return new this._win.RTCSessionDescription({ type: this._localType, sdp });
+  }
+
+  get pendingLocalDescription() {
+    this._checkClosed();
+    let sdp = this._impl.pendingLocalDescription;
+    if (sdp.length == 0) {
+      return null;
+    }
+    return new this._win.RTCSessionDescription({ type: this._localType, sdp });
+  }
+
   get remoteDescription() {
     this._checkClosed();
     let sdp = this._impl.remoteDescription;
+    if (sdp.length == 0) {
+      return null;
+    }
+    return new this._win.RTCSessionDescription({ type: this._remoteType, sdp });
+  }
+
+  get currentRemoteDescription() {
+    this._checkClosed();
+    let sdp = this._impl.currentRemoteDescription;
+    if (sdp.length == 0) {
+      return null;
+    }
+    return new this._win.RTCSessionDescription({ type: this._remoteType, sdp });
+  }
+
+  get pendingRemoteDescription() {
+    this._checkClosed();
+    let sdp = this._impl.pendingRemoteDescription;
     if (sdp.length == 0) {
       return null;
     }
