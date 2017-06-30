@@ -979,7 +979,7 @@
                      placespopup="true"
                      context="placesContext"
                      openInTabs="children"
-                     oncommand="BookmarksEventHandler.onCommand(event, this.parentNode._placesView);"
+                     oncommand="BookmarksEventHandler.onCommand(event);"
                      onclick="BookmarksEventHandler.onClick(event, this.parentNode._placesView);"
                      onpopupshowing="BookmarkingUI.onPopupShowing(event);
                                      BookmarkingUI.attachPlacesView(event, this);"
@@ -1143,7 +1143,7 @@
               id="PlacesToolbar"
               context="placesContext"
               onclick="BookmarksEventHandler.onClick(event, this._placesView);"
-              oncommand="BookmarksEventHandler.onCommand(event, this._placesView);"
+              oncommand="BookmarksEventHandler.onCommand(event);"
               tooltip="bhTooltip"
               popupsinherittooltip="true">
           <hbox flex="1">

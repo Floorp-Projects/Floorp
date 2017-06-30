@@ -170,24 +170,61 @@ struct Prefable {
   const T* const specs;
 };
 
-// Conceptually, NativeProperties has seven (Prefable<T>*, jsid*, T*) trios
+enum PropertyType {
+  eStaticMethod,
+  eStaticAttribute,
+  eMethod,
+  eAttribute,
+  eUnforgeableMethod,
+  eUnforgeableAttribute,
+  eConstant,
+  ePropertyTypeCount
+};
+
+#define NUM_BITS_PROPERTY_INFO_TYPE        3
+#define NUM_BITS_PROPERTY_INFO_PREF_INDEX 13
+#define NUM_BITS_PROPERTY_INFO_SPEC_INDEX 16
+
+struct PropertyInfo {
+  jsid id;
+  // One of PropertyType, will be used for accessing the corresponding Duo in
+  // NativePropertiesN.duos[].
+  uint32_t type: NUM_BITS_PROPERTY_INFO_TYPE;
+  // The index to the corresponding Preable in Duo.mPrefables[].
+  uint32_t prefIndex: NUM_BITS_PROPERTY_INFO_PREF_INDEX;
+  // The index to the corresponding spec in Duo.mPrefables[prefIndex].specs[].
+  uint32_t specIndex: NUM_BITS_PROPERTY_INFO_SPEC_INDEX;
+};
+
+static_assert(ePropertyTypeCount <= 1ull << NUM_BITS_PROPERTY_INFO_TYPE,
+    "We have property type count that is > (1 << NUM_BITS_PROPERTY_INFO_TYPE)");
+
+// Conceptually, NativeProperties has seven (Prefable<T>*, PropertyInfo*) duos
 // (where T is one of JSFunctionSpec, JSPropertySpec, or ConstantSpec), one for
 // each of: static methods and attributes, methods and attributes, unforgeable
 // methods and attributes, and constants.
 //
-// That's 21 pointers, but in most instances most of the trios are all null,
-// and there are many instances. To save space we use a variable-length type,
+// That's 14 pointers, but in most instances most of the duos are all null, and
+// there are many instances. To save space we use a variable-length type,
 // NativePropertiesN<N>, to hold the data and getters to access it. It has N
-// actual trios (stored in trios[]), plus four bits for each of the 7 possible
-// trios: 1 bit that states if that trio is present, and 3 that state that
-// trio's offset (if present) in trios[].
+// actual duos (stored in duos[]), plus four bits for each of the 7 possible
+// duos: 1 bit that states if that duo is present, and 3 that state that duo's
+// offset (if present) in duos[].
 //
-// All trio accesses should be done via the getters, which contain assertions
-// that check we don't overrun the end of the struct. (The trio data members are
+// All duo accesses should be done via the getters, which contain assertions
+// that check we don't overrun the end of the struct. (The duo data members are
 // public only so they can be statically initialized.) These assertions should
 // never fail so long as (a) accesses to the variable-length part are guarded by
 // appropriate Has*() calls, and (b) all instances are well-formed, i.e. the
 // value of N matches the number of mHas* members that are true.
+//
+// We store all the property ids a NativePropertiesN owns in a single array of
+// PropertyInfo structs. Each struct contains an id and the information needed
+// to find the corresponding Prefable for the enabled check, as well as the
+// information needed to find the correct property descriptor in the
+// Prefable. We also store an array of indices into the PropertyInfo array,
+// sorted by bits of the corresponding jsid. Given a jsid, this allows us to
+// binary search for the index of the corresponding PropertyInfo, if any.
 //
 // Finally, we define a typedef of NativePropertiesN<7>, NativeProperties, which
 // we use as a "base" type used to refer to all instances of NativePropertiesN.
@@ -198,31 +235,32 @@ struct Prefable {
 //
 template <int N>
 struct NativePropertiesN {
-  // Trio structs are stored in the trios[] array, and each element in the
-  // array could require a different T. Therefore, we can't use the correct
-  // type for mPrefables and mSpecs. Instead we use void* and cast to the
-  // correct type in the getters.
-  struct Trio {
+  // Duo structs are stored in the duos[] array, and each element in the array
+  // could require a different T. Therefore, we can't use the correct type for
+  // mPrefables. Instead we use void* and cast to the correct type in the
+  // getters.
+  struct Duo {
     const /*Prefable<const T>*/ void* const mPrefables;
-    const jsid* const mIds;
-    const /*T*/ void* const mSpecs;
+    PropertyInfo* const mPropertyInfos;
   };
-
-  const int32_t iteratorAliasMethodIndex;
 
   constexpr const NativePropertiesN<7>* Upcast() const {
     return reinterpret_cast<const NativePropertiesN<7>*>(this);
   }
 
+  const PropertyInfo* PropertyInfos() const {
+    return duos[0].mPropertyInfos;
+  }
+
 #define DO(SpecT, FieldName) \
 public: \
-  /* The bitfields indicating the trio's presence and (if present) offset. */ \
+  /* The bitfields indicating the duo's presence and (if present) offset. */ \
   const uint32_t mHas##FieldName##s:1; \
   const uint32_t m##FieldName##sOffset:3; \
 private: \
-  const Trio* FieldName##sTrio() const { \
+  const Duo* FieldName##sDuo() const { \
     MOZ_ASSERT(Has##FieldName##s()); \
-    return &trios[m##FieldName##sOffset]; \
+    return &duos[m##FieldName##sOffset]; \
   } \
 public: \
   bool Has##FieldName##s() const { \
@@ -230,13 +268,10 @@ public: \
   } \
   const Prefable<const SpecT>* FieldName##s() const { \
     return static_cast<const Prefable<const SpecT>*> \
-                      (FieldName##sTrio()->mPrefables); \
+                      (FieldName##sDuo()->mPrefables); \
   } \
-  const jsid* FieldName##Ids() const { \
-    return FieldName##sTrio()->mIds; \
-  } \
-  const SpecT* FieldName##Specs() const { \
-    return static_cast<const SpecT*>(FieldName##sTrio()->mSpecs); \
+  PropertyInfo* FieldName##PropertyInfos() const { \
+    return FieldName##sDuo()->mPropertyInfos; \
   }
 
   DO(JSFunctionSpec, StaticMethod)
@@ -249,18 +284,28 @@ public: \
 
 #undef DO
 
-  const Trio trios[N];
+  // The index to the iterator method in MethodPropertyInfos() array.
+  const int16_t iteratorAliasMethodIndex;
+  // The number of PropertyInfo structs that the duos manage. This is the total
+  // count across all duos.
+  const uint16_t propertyInfoCount;
+  // The sorted indices array from sorting property ids, which will be used when
+  // we binary search for a property.
+  uint16_t* sortedPropertyIndices;
+
+  const Duo duos[N];
 };
 
-// Ensure the struct has the expected size. The 8 is for the
-// iteratorAliasMethodIndex plus the bitfields; the rest is for trios[].
+// Ensure the struct has the expected size. The 8 is for the bitfields plus
+// iteratorAliasMethodIndex and idsLength; the rest is for the idsSortedIndex,
+// and duos[].
 static_assert(sizeof(NativePropertiesN<1>) == 8 +  3*sizeof(void*), "1 size");
-static_assert(sizeof(NativePropertiesN<2>) == 8 +  6*sizeof(void*), "2 size");
-static_assert(sizeof(NativePropertiesN<3>) == 8 +  9*sizeof(void*), "3 size");
-static_assert(sizeof(NativePropertiesN<4>) == 8 + 12*sizeof(void*), "4 size");
-static_assert(sizeof(NativePropertiesN<5>) == 8 + 15*sizeof(void*), "5 size");
-static_assert(sizeof(NativePropertiesN<6>) == 8 + 18*sizeof(void*), "6 size");
-static_assert(sizeof(NativePropertiesN<7>) == 8 + 21*sizeof(void*), "7 size");
+static_assert(sizeof(NativePropertiesN<2>) == 8 +  5*sizeof(void*), "2 size");
+static_assert(sizeof(NativePropertiesN<3>) == 8 +  7*sizeof(void*), "3 size");
+static_assert(sizeof(NativePropertiesN<4>) == 8 +  9*sizeof(void*), "4 size");
+static_assert(sizeof(NativePropertiesN<5>) == 8 + 11*sizeof(void*), "5 size");
+static_assert(sizeof(NativePropertiesN<6>) == 8 + 13*sizeof(void*), "6 size");
+static_assert(sizeof(NativePropertiesN<7>) == 8 + 15*sizeof(void*), "7 size");
 
 // The "base" type.
 typedef NativePropertiesN<7> NativeProperties;

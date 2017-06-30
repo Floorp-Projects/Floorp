@@ -156,7 +156,8 @@ async function suspended_block(url, browser) {
 
 add_task(async function setup_test_preference() {
   await SpecialPowers.pushPrefEnv({"set": [
-    ["media.useAudioChannelService.testing", true]
+    ["media.useAudioChannelService.testing", true],
+    ["media.block-autoplay-until-in-foreground", true]
   ]});
 });
 

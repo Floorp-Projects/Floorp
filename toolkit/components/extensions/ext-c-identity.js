@@ -19,14 +19,14 @@ var {
   promiseDocumentLoaded,
 } = ExtensionUtils;
 
-function computeHash(str) {
+const computeHash = str => {
   let byteArr = new TextEncoder().encode(str);
   let hash = new CryptoHash("sha1");
   hash.update(byteArr, byteArr.length);
   return CommonUtils.bytesAsHex(hash.finish(false));
-}
+};
 
-function checkRedirected(url, redirectURI) {
+const checkRedirected = (url, redirectURI) => {
   return new Promise((resolve, reject) => {
     let xhr = new XMLHttpRequest();
     xhr.open("HEAD", url);
@@ -57,9 +57,9 @@ function checkRedirected(url, redirectURI) {
     };
     xhr.send();
   });
-}
+};
 
-function openOAuthWindow(details, redirectURI) {
+const openOAuthWindow = (details, redirectURI) => {
   let args = Cc["@mozilla.org/array;1"].createInstance(Ci.nsIMutableArray);
   let supportsStringPrefURL = Cc["@mozilla.org/supports-string;1"]
                                 .createInstance(Ci.nsISupportsString);
@@ -101,7 +101,7 @@ function openOAuthWindow(details, redirectURI) {
       window.addEventListener("unload", unloadlistener);
     });
   });
-}
+};
 
 this.identity = class extends ExtensionAPI {
   getAPI(context) {

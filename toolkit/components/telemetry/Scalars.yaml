@@ -142,6 +142,19 @@ browser.engagement:
     record_in_processes:
       - 'main'
 
+  restored_pinned_tabs_count:
+    bug_numbers:
+      - 1373728
+    description: >
+      The count of the number of pinned tabs that were restored.
+    expires: '62'
+    kind: uint
+    notification_emails:
+      - chutten@mozilla.com
+    release_channel_collection: opt-out
+    record_in_processes:
+      - 'main'
+
 # The following section contains the browser engagement scalars.
 browser.engagement.navigation:
   urlbar:

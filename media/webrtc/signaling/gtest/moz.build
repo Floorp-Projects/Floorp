@@ -9,6 +9,9 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] != 'uikit':
     if CONFIG['OS_TARGET'] == 'Linux':
         DEFINES['WEBRTC_LINUX'] = True
         DEFINES['WEBRTC_POSIX'] = True
+    elif CONFIG['OS_TARGET'] in ('DragonFly', 'FreeBSD', 'NetBSD', 'OpenBSD'):
+        DEFINES['WEBRTC_BSD'] = True
+        DEFINES['WEBRTC_POSIX'] = True
     elif CONFIG['OS_TARGET'] == 'Darwin':
         DEFINES['WEBRTC_MAC'] = True
         DEFINES['WEBRTC_POSIX'] = True
@@ -36,7 +39,7 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] != 'uikit':
     ]
 
     # See Bug 1372950, mediapipeline tests seem to cause crashes on Windows
-    if CONFIG['OS_TARGET'] == 'Linux' or CONFIG['OS_TARGET'] == 'Darwin':
+    if CONFIG['OS_TARGET'] not in ('Android', 'WINNT'):
         SOURCES += [
             'mediapipeline_unittest.cpp',
         ]

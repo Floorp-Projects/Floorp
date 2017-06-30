@@ -10,7 +10,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
 
 let listenerCount = 0;
 
-function getTree(rootGuid, onlyChildren) {
+const getTree = (rootGuid, onlyChildren) => {
   function convert(node, parent) {
     let treenode = {
       id: node.guid,
@@ -57,9 +57,9 @@ function getTree(rootGuid, onlyChildren) {
     // It seems like the array always just contains the root node.
     return [treenode];
   }).catch(e => Promise.reject({message: e.message}));
-}
+};
 
-function convert(result) {
+const convertBookmarks = result => {
   let node = {
     id: result.guid,
     title: result.title || "",
@@ -78,7 +78,7 @@ function convert(result) {
   }
 
   return node;
-}
+};
 
 let observer = {
   skipTags: true,
@@ -163,19 +163,19 @@ let observer = {
 };
 EventEmitter.decorate(observer);
 
-function decrementListeners() {
+const decrementListeners = () => {
   listenerCount -= 1;
   if (!listenerCount) {
     PlacesUtils.bookmarks.removeObserver(observer);
   }
-}
+};
 
-function incrementListeners() {
+const incrementListeners = () => {
   listenerCount++;
   if (listenerCount == 1) {
     PlacesUtils.bookmarks.addObserver(observer);
   }
-}
+};
 
 this.bookmarks = class extends ExtensionAPI {
   getAPI(context) {
@@ -191,7 +191,7 @@ this.bookmarks = class extends ExtensionAPI {
               if (!bookmark) {
                 throw new Error("Bookmark not found");
               }
-              bookmarks.push(convert(bookmark));
+              bookmarks.push(convertBookmarks(bookmark));
             }
             return bookmarks;
           } catch (error) {
@@ -213,11 +213,11 @@ this.bookmarks = class extends ExtensionAPI {
         },
 
         search: function(query) {
-          return PlacesUtils.bookmarks.search(query).then(result => result.map(convert));
+          return PlacesUtils.bookmarks.search(query).then(result => result.map(convertBookmarks));
         },
 
         getRecent: function(numberOfItems) {
-          return PlacesUtils.bookmarks.getRecent(numberOfItems).then(result => result.map(convert));
+          return PlacesUtils.bookmarks.getRecent(numberOfItems).then(result => result.map(convertBookmarks));
         },
 
         create: function(bookmark) {
@@ -244,7 +244,7 @@ this.bookmarks = class extends ExtensionAPI {
           }
 
           try {
-            return PlacesUtils.bookmarks.insert(info).then(convert)
+            return PlacesUtils.bookmarks.insert(info).then(convertBookmarks)
               .catch(error => Promise.reject({message: error.message}));
           } catch (e) {
             return Promise.reject({message: `Invalid bookmark: ${JSON.stringify(info)}`});
@@ -263,7 +263,7 @@ this.bookmarks = class extends ExtensionAPI {
             PlacesUtils.bookmarks.DEFAULT_INDEX : destination.index;
 
           try {
-            return PlacesUtils.bookmarks.update(info).then(convert)
+            return PlacesUtils.bookmarks.update(info).then(convertBookmarks)
               .catch(error => Promise.reject({message: error.message}));
           } catch (e) {
             return Promise.reject({message: `Invalid bookmark: ${JSON.stringify(info)}`});
@@ -283,7 +283,7 @@ this.bookmarks = class extends ExtensionAPI {
           }
 
           try {
-            return PlacesUtils.bookmarks.update(info).then(convert)
+            return PlacesUtils.bookmarks.update(info).then(convertBookmarks)
               .catch(error => Promise.reject({message: error.message}));
           } catch (e) {
             return Promise.reject({message: `Invalid bookmark: ${JSON.stringify(info)}`});
@@ -317,7 +317,7 @@ this.bookmarks = class extends ExtensionAPI {
           }
         },
 
-        onCreated: new SingletonEventManager(context, "bookmarks.onCreated", fire => {
+        onCreated: new EventManager(context, "bookmarks.onCreated", fire => {
           let listener = (event, bookmark) => {
             fire.sync(bookmark.id, bookmark);
           };
@@ -330,7 +330,7 @@ this.bookmarks = class extends ExtensionAPI {
           };
         }).api(),
 
-        onRemoved: new SingletonEventManager(context, "bookmarks.onRemoved", fire => {
+        onRemoved: new EventManager(context, "bookmarks.onRemoved", fire => {
           let listener = (event, data) => {
             fire.sync(data.guid, data.info);
           };
@@ -343,7 +343,7 @@ this.bookmarks = class extends ExtensionAPI {
           };
         }).api(),
 
-        onChanged: new SingletonEventManager(context, "bookmarks.onChanged", fire => {
+        onChanged: new EventManager(context, "bookmarks.onChanged", fire => {
           let listener = (event, data) => {
             fire.sync(data.guid, data.info);
           };
@@ -356,7 +356,7 @@ this.bookmarks = class extends ExtensionAPI {
           };
         }).api(),
 
-        onMoved: new SingletonEventManager(context, "bookmarks.onMoved", fire => {
+        onMoved: new EventManager(context, "bookmarks.onMoved", fire => {
           let listener = (event, data) => {
             fire.sync(data.guid, data.info);
           };

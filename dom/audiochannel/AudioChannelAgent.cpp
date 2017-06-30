@@ -184,9 +184,6 @@ AudioChannelAgent::InitInternal(nsPIDOMWindowInner* aWindow,
     mCallback = aCallback;
   }
 
-  RefPtr<AudioChannelService> service = AudioChannelService::GetOrCreate();
-  service->NotifyCreatedNewAgent(this);
-
   MOZ_LOG(AudioChannelService::GetAudioChannelLog(), LogLevel::Debug,
          ("AudioChannelAgent, InitInternal, this = %p, type = %d, "
           "owner = %p, hasCallback = %d\n", this, mAudioChannelType,

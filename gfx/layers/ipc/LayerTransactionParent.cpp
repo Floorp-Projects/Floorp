@@ -533,6 +533,17 @@ LayerTransactionParent::SetLayerAttributes(const OpSetLayerAttributes& aOp)
     layer->SetMaskLayer(nullptr);
   }
   layer->SetCompositorAnimations(common.compositorAnimations());
+  // Clean up the Animations by id in the CompositorAnimationStorage
+  // if there are no active animations on the layer
+  if (layer->GetCompositorAnimationsId() &&
+      layer->GetAnimations().IsEmpty()) {
+    CompositorAnimationStorage* storage =
+      mCompositorBridge->GetAnimationStorage(GetId());
+
+    if (storage) {
+      storage->ClearById(layer->GetCompositorAnimationsId());
+    }
+  }
   if (common.scrollMetadata() != layer->GetAllScrollMetadata()) {
     UpdateHitTestingTree(layer, "scroll metadata changed");
     layer->SetScrollMetadata(common.scrollMetadata());

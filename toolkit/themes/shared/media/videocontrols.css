@@ -11,6 +11,24 @@ audio > xul|videocontrols {
   width: 100%;
   height: 100%;
   display: inline-block;
+  overflow: hidden;
+}
+
+.controlBar {
+  --clickToPlay-width: 48px;
+  --clickToPlay-height: var(--clickToPlay-width);
+  --playButton-width: 30px;
+  --playButton-height: var(--playButton-width);
+  --scrubberStack-width: 64px;
+  --muteButton-width: 30px;
+  --volumeStack-width: 48px;
+  --closedCaptionButton-width: 30px;
+  --fullscreenButton-width: 30px;
+
+  --positionDurationBox-width: 40px;
+  --durationSpan-width: 40px;
+  --positionDurationBox-width-long: 60px;
+  --durationSpan-width-long: 60px;
 }
 
 .controlsContainer [hidden="true"],
@@ -83,8 +101,8 @@ audio > xul|videocontrols {
 .closedCaptionButton,
 .fullscreenButton {
   height: 100%;
-  min-height: 30px;
-  min-width: 30px;
+  min-width: var(--playButton-width);
+  min-height: var(--playButton-height);
   padding: 6px;
   border: 0;
   margin: 0;
@@ -181,8 +199,9 @@ audio > xul|videocontrols {
 }
 
 .scrubberStack {
-  min-width: 48px;
-  flex-basis: 48px;
+  /* minus margin to get basis of required width */
+  min-width: calc(var(--scrubberStack-width) - 18px);
+  flex-basis: calc(var(--scrubberStack-width) - 18px);
   flex-grow: 2;
   flex-shrink: 0;
   margin: 0 9px;
@@ -190,7 +209,7 @@ audio > xul|videocontrols {
 
 .volumeStack {
   max-width: 60px;
-  min-width: 48px;
+  min-width: var(--volumeStack-width);
   flex-grow: 1;
   flex-shrink: 0;
   margin-right: 6px;
@@ -359,8 +378,8 @@ audio > xul|videocontrols {
 
 /* Overlay Play button */
 .clickToPlay {
-  min-width: 48px;
-  min-height: 48px;
+  min-width: var(--clickToPlay-width);
+  min-height: var(--clickToPlay-height);
   border-radius: 50%;
   background-image: url(chrome://global/skin/media/playButton.svg);
   background-repeat: no-repeat;

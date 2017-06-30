@@ -50,9 +50,7 @@ ServoCSSRuleList::ServoCSSRuleList(already_AddRefed<ServoCssRules> aRawRules,
         break;
       }
       ConstructImportRule(i, [&stylesheets](const RawServoStyleSheet* raw) {
-        // Child sheets may not correctly cloned for stylo, which is
-        // bug 1367213. That makes it possible to fail to get a style
-        // sheet for the raw sheet here.
+        // Child sheet will not be constructed if the import rule has a bad URL.
         return stylesheets.GetAndRemove(raw).valueOr(nullptr);
       });
     }
@@ -147,10 +145,7 @@ ServoCSSRuleList::GetRule(uint32_t aIndex)
         break;
       }
       case nsIDOMCSSRule::IMPORT_RULE:
-        // Currently ConstructImportRule may fail to construct an import
-        // rule eagerly. See comment in that function. This should be
-        // converted into an assertion when those bugs get fixed.
-        NS_WARNING("stylo: this @import rule was not constructed");
+        MOZ_ASSERT_UNREACHABLE("import rules are eagerly constructed");
         return nullptr;
       case nsIDOMCSSRule::KEYFRAME_RULE:
         MOZ_ASSERT_UNREACHABLE("keyframe rule cannot be here");
@@ -228,20 +223,21 @@ ServoCSSRuleList::ConstructImportRule(uint32_t aIndex, ChildSheetGetter aGetter)
   const RawServoStyleSheet*
     rawChildSheet = Servo_ImportRule_GetSheet(rawRule);
   ServoStyleSheet* childSheet = aGetter(rawChildSheet);
-  if (!childSheet) {
-    // There are cases that we cannot get the child sheet currently.
-    // See comments in callsites of this function. This should become
-    // an assertion after bug 1367213 and bug 1368381 get fixed.
-    NS_WARNING("stylo: fail to get child sheet for @import rule");
-    return;
-  }
+  // There is one case where we don't construct a child sheet for an import
+  // rule: when the URL doesn't resolve. In that cases we still want to create
+  // an import rule object, though we note it as an exceptional condition
+  // in debug builds.
+  NS_WARNING_ASSERTION(childSheet,
+                       "stylo: failed to get child sheet for @import rule");
   RefPtr<ServoImportRule>
     ruleObj = new ServoImportRule(Move(rawRule), childSheet, line, column);
-  MOZ_ASSERT(!childSheet->GetOwnerRule(),
-             "Child sheet is already owned by another rule?");
-  MOZ_ASSERT(childSheet->GetParentSheet() == mStyleSheet,
-             "Not a child sheet of the owner of the rule?");
-  childSheet->SetOwnerRule(ruleObj);
+  if (childSheet) {
+    MOZ_ASSERT(!childSheet->GetOwnerRule(),
+               "Child sheet is already owned by another rule?");
+    MOZ_ASSERT(childSheet->GetParentSheet() == mStyleSheet,
+               "Not a child sheet of the owner of the rule?");
+    childSheet->SetOwnerRule(ruleObj);
+  }
   mRules[aIndex] = CastToUint(ruleObj.forget().take());
 }
 
@@ -267,19 +263,38 @@ ServoCSSRuleList::InsertRule(const nsAString& aRule, uint32_t aIndex)
   if (type == nsIDOMCSSRule::IMPORT_RULE) {
     MOZ_ASSERT(!nested, "@import rule cannot be nested");
     ConstructImportRule(aIndex, [this](const RawServoStyleSheet* raw) {
+      // Our goal is to find a ServoStyleSheet that is a child of mStyleSheet
+      // that has a RawSheet equal to raw. This will be true when the call
+      // to Gecko_LoadStyleSheet finished successfully. But that function
+      // might have failed. A malformed URL will cause an early exit
+      // where no ServoStyleSheet is created and added as a child
+      // to mStyleSheet. In that case, we return a null ServoStyleSheet.
+
+      // See if there are any child sheets.
       StyleSheet* sheet = mStyleSheet->GetMostRecentlyAddedChildSheet();
-      MOZ_ASSERT(sheet, "Should have at least one "
-                 "child stylesheet after inserting @import rule");
-      ServoStyleSheet* servoSheet = sheet->AsServo();
-      // This should always be that case, but currently ServoStyleSheet
-      // may be reused and the reused stylesheet doesn't refer to the
-      // right raw sheet, which is bug 1368381. This should be converted
-      // to an assertion after that bug gets fixed.
-      if (servoSheet->RawSheet() != raw) {
-        NS_WARNING("New child sheet should always be prepended to the list");
-        return static_cast<ServoStyleSheet*>(nullptr);
+      if (sheet) {
+        ServoStyleSheet* firstChild = sheet->AsServo();
+
+        // See if this first child has a RawSheet of raw.
+        if (firstChild->RawSheet() == raw) {
+          // This is the one we expected to find, so return it.
+          return firstChild;
+        }
+#if DEBUG
+        // See if the child sheet was added in another position,
+        // which would be incorrect behavior.
+        mStyleSheet->EnumerateChildSheets([raw](StyleSheet* child) {
+          ServoStyleSheet* servoChild = child->AsServo();
+          MOZ_ASSERT(servoChild->RawSheet() != raw,
+            "New child sheet should either be first on the list or not present");
+        });
+#endif
       }
-      return servoSheet;
+
+      // The raw sheet wasn't found in mStyleSheets child sheet list at all.
+      // This is probably a result of a bad URL in the import rule.
+      NS_WARNING("Import rule didn't create a ServoStyleSheet... bad URL?");
+      return static_cast<ServoStyleSheet*>(nullptr);
     });
   }
   return rv;

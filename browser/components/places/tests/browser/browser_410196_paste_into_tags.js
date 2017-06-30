@@ -43,7 +43,7 @@ add_task(async function() {
   await promiseClipboard(populate, PlacesUtils.TYPE_X_MOZ_PLACE);
 
   focusTag(PlacesOrganizer);
-  PlacesOrganizer._places.controller.paste();
+  await PlacesOrganizer._places.controller.paste();
 
   // re-focus the history again
   PlacesOrganizer.selectLeftPaneQuery("History");

@@ -3171,6 +3171,22 @@ SourceMediaStream::HasPendingAudioTrack()
   return audioTrackPresent;
 }
 
+bool
+SourceMediaStream::OpenNewAudioCallbackDriver(AudioDataListener * aListener)
+{
+  MOZ_ASSERT(GraphImpl()->mLifecycleState ==
+      MediaStreamGraphImpl::LifecycleState::LIFECYCLE_RUNNING);
+  AudioCallbackDriver* nextDriver = new AudioCallbackDriver(GraphImpl());
+  nextDriver->SetInputListener(aListener);
+  {
+    MonitorAutoLock lock(GraphImpl()->GetMonitor());
+    GraphImpl()->CurrentDriver()->SwitchAtNextIteration(nextDriver);
+  }
+
+  return true;
+}
+
+
 void
 MediaInputPort::Init()
 {
