@@ -1,24 +1,24 @@
 # TODO remove VOLUME below when the base image is updated next.
-FROM          taskcluster/centos6-build-upd:0.1.7.201706291036
+FROM          taskcluster/centos6-build-upd:0.1.6.20160329195300
 MAINTAINER    Nick Alexander <nalexander@mozilla.com>
 
 # BEGIN ../desktop-build/Dockerfile
 
 # TODO remove when base image is updated
-VOLUME /builds/worker/workspace
-VOLUME /builds/worker/tooltool-cache
+VOLUME /home/worker/workspace
+VOLUME /home/worker/tooltool-cache
 
 # Add build scripts; these are the entry points from the taskcluster worker, and
 # operate on environment variables
-ADD             bin /builds/worker/bin
-RUN             chmod +x /builds/worker/bin/*
+ADD             bin /home/worker/bin
+RUN             chmod +x /home/worker/bin/*
 
 # Add wrapper scripts for xvfb allowing tasks to easily retry starting up xvfb
 # %include taskcluster/docker/recipes/xvfb.sh
-ADD topsrcdir/taskcluster/docker/recipes/xvfb.sh /builds/worker/scripts/xvfb.sh
+ADD topsrcdir/taskcluster/docker/recipes/xvfb.sh /home/worker/scripts/xvfb.sh
 
 # Add configuration
-COPY            dot-config                    /builds/worker/.config
+COPY            dot-config                    /home/worker/.config
 
 # Generate machine uuid file
 RUN dbus-uuidgen --ensure=/var/lib/dbus/machine-id
@@ -27,12 +27,12 @@ RUN dbus-uuidgen --ensure=/var/lib/dbus/machine-id
 # if it's not found, which causes the build to fail.  Note that this needs to
 # be in the parent of the workspace directory and in the directory where
 # mozharness is run (not its --work-dir).  See Bug 1169652.
-ADD           oauth.txt /builds/worker/
+ADD           oauth.txt /home/worker/
 
 # stubbed out buildprops, which keeps mozharness from choking
 # Note that this needs to be in the parent of the workspace directory and in
 # the directory where mozharness is run (not its --work-dir)
-ADD           buildprops.json /builds/worker/
+ADD           buildprops.json /home/worker/
 
 # install tooltool directly from github where tooltool_wrapper.sh et al. expect
 # to find it
@@ -86,11 +86,12 @@ RUN tar zxf nexus-${NEXUS_VERSION}-bundle.tar.gz \
   && rm -rf /tmp/nexus-${NEXUS_VERSION}-bundle.tar.gz
 
 # Install tooltool directly from github.
+RUN mkdir /build
 ADD https://raw.githubusercontent.com/mozilla/build-tooltool/master/tooltool.py /build/tooltool.py
 RUN chmod +rx /build/tooltool.py
 
 # Back to the centos6-build workdir, matching desktop-build.
-WORKDIR /builds/worker
+WORKDIR /home/worker
 
 # Set a default command useful for debugging
 CMD ["/bin/bash", "--login"]

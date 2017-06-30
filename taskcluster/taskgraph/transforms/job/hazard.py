@@ -63,23 +63,23 @@ def docker_worker_hazard(config, job, taskdesc):
     worker['caches'].append({
         'type': 'persistent',
         'name': 'tooltool-cache',
-        'mount-point': '/builds/worker/tooltool-cache',
+        'mount-point': '/home/worker/tooltool-cache',
     })
     worker['relengapi-proxy'] = True
     taskdesc['scopes'].extend([
         'docker-worker:relengapi-proxy:tooltool.download.public',
     ])
-    env['TOOLTOOL_CACHE'] = '/builds/worker/tooltool-cache'
+    env['TOOLTOOL_CACHE'] = '/home/worker/tooltool-cache'
 
     # build-haz-linux.sh needs this otherwise it assumes the checkout is in
     # the workspace.
-    env['GECKO_DIR'] = '/builds/worker/checkouts/gecko'
+    env['GECKO_DIR'] = '/home/worker/checkouts/gecko'
 
     worker['command'] = [
-        '/builds/worker/bin/run-task',
-        '--chown-recursive', '/builds/worker/tooltool-cache',
-        '--chown-recursive', '/builds/worker/workspace',
-        '--vcs-checkout', '/builds/worker/checkouts/gecko',
+        '/home/worker/bin/run-task',
+        '--chown-recursive', '/home/worker/tooltool-cache',
+        '--chown-recursive', '/home/worker/workspace',
+        '--vcs-checkout', '/home/worker/checkouts/gecko',
         '--',
         '/bin/bash', '-c', run['command']
     ]

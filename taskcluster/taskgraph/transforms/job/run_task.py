@@ -19,7 +19,7 @@ run_task_schema = Schema({
     # tend to hide their caches.  This cache is never added for level-1 jobs.
     Required('cache-dotcache', default=False): bool,
 
-    # if true (the default), perform a checkout in /builds/worker/checkouts/gecko
+    # if true (the default), perform a checkout in /home/worker/checkouts/gecko
     Required('checkout', default=True): bool,
 
     # The command arguments to pass to the `run-task` script, after the
@@ -45,13 +45,13 @@ def docker_worker_run_task(config, job, taskdesc):
         worker['caches'].append({
             'type': 'persistent',
             'name': 'level-{level}-{project}-dotcache'.format(**config.params),
-            'mount-point': '/builds/worker/.cache',
+            'mount-point': '/home/worker/.cache',
         })
 
     run_command = run['command']
     if isinstance(run_command, basestring):
         run_command = ['bash', '-cx', run_command]
-    command = ['/builds/worker/bin/run-task']
+    command = ['/home/worker/bin/run-task']
     if run['checkout']:
         command.append('--vcs-checkout=~/checkouts/gecko')
     command.append('--fetch-hgfingerprint')
