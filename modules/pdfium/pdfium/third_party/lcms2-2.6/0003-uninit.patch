@@ -1,0 +1,30 @@
+diff --git a/third_party/lcms2-2.6/src/cmstypes.c b/third_party/lcms2-2.6/src/cmstypes.c
+index 06742b5..44c5b87 100644
+--- a/third_party/lcms2-2.6/src/cmstypes.c
++++ b/third_party/lcms2-2.6/src/cmstypes.c
+@@ -2964,7 +2964,7 @@ void *Type_ColorantTable_Read(struct _cms_typehandler_struct* self, cmsIOHANDLER
+ {
+     cmsUInt32Number i, Count;
+     cmsNAMEDCOLORLIST* List;
+-    char Name[34];
++    char Name[33];
+     cmsUInt16Number PCS[3];
+ 
+ 
+@@ -2979,7 +2979,7 @@ void *Type_ColorantTable_Read(struct _cms_typehandler_struct* self, cmsIOHANDLER
+     for (i=0; i < Count; i++) {
+ 
+         if (io ->Read(io, Name, 32, 1) != 1) goto Error;
+-        Name[33] = 0;
++        Name[32] = 0;
+ 
+         if (!_cmsReadUInt16Array(io, 3, PCS)) goto Error;
+ 
+@@ -3106,6 +3106,7 @@ void *Type_NamedColor_Read(struct _cms_typehandler_struct* self, cmsIOHANDLER* i
+ 
+         memset(Colorant, 0, sizeof(Colorant));
+         if (io -> Read(io, Root, 32, 1) != 1) return NULL;
++        Root[32] = 0;
+         if (!_cmsReadUInt16Array(io, 3, PCS)) goto Error;
+         if (!_cmsReadUInt16Array(io, nDeviceCoords, Colorant)) goto Error;
+ 

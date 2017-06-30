@@ -1,0 +1,46 @@
+# Copyright 2015 PDFium Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+import("//build_overrides/pdfium.gni")
+
+# This file contains PDFium-related build flags.
+
+declare_args() {
+  # On Android there's no system FreeType. On Windows and Mac, only a few
+  # methods are used from it.
+  pdfium_bundle_freetype = !is_linux
+
+  # Build PDFium either with or without v8 support.
+  pdf_enable_v8 = pdf_enable_v8_override
+
+  # Build PDFium either with or without XFA Forms support.
+  pdf_enable_xfa = pdf_enable_xfa_override
+
+  # If XFA, also support bmp codec. Ignored if not XFA.
+  pdf_enable_xfa_bmp = true
+
+  # If XFA, also support gif codec. Ignored if not XFA.
+  pdf_enable_xfa_gif = true
+
+  # If XFA, also support png codec. Ignored if not XFA.
+  pdf_enable_xfa_png = true
+
+  # If XFA, also support png codec. Ignored if not XFA.
+  pdf_enable_xfa_tiff = true
+
+  # Build PDFium against skia (experimental) rather than agg. Use Skia to draw everything.
+  pdf_use_skia = pdf_use_skia_override
+
+  # Build PDFium against skia (experimental) rather than agg. Use Skia to draw paths.
+  pdf_use_skia_paths = pdf_use_skia_paths_override
+
+  # Build PDFium with or without experimental win32 GDI APIs.
+  pdf_use_win32_gdi = pdf_use_win32_gdi_override
+
+  # Build PDFium standalone
+  pdf_is_standalone = false
+
+  # Enable coverage information
+  use_coverage = false
+}
