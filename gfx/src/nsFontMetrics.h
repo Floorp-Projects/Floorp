@@ -250,7 +250,9 @@ private:
     nsFont mFont;
     RefPtr<gfxFontGroup> mFontGroup;
     nsCOMPtr<nsIAtom> mLanguage;
-    nsDeviceContext* mDeviceContext;
+    // Pointer to the device context for which this fontMetrics object was
+    // created.
+    nsDeviceContext* MOZ_NON_OWNING_REF mDeviceContext;
     int32_t mP2A;
 
     // The font orientation (horizontal or vertical) for which these metrics

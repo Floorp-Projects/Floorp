@@ -140,7 +140,9 @@ private:
     nsBaseHashtable<nsUint32HashKey, Element*, Element*> mGlyphIdMap;
 
     hb_blob_t *mSVGData;
-    gfxFontEntry *mFontEntry;
+
+    // pointer to the font entry that owns this gfxSVGGlyphs object
+    gfxFontEntry* MOZ_NON_OWNING_REF mFontEntry;
 
     const struct Header {
         mozilla::AutoSwap_PRUint16 mVersion;

@@ -367,7 +367,11 @@ protected:
         }
         enum { ALLOW_MEMMOVE = true };
 
-        gfxFont* mFont;
+        // The cache tracks gfxFont objects whose refcount has dropped to zero,
+        // so they are not immediately deleted but may be "resurrected" if they
+        // have not yet expired from the tracker when they are needed again.
+        // See the custom AddRef/Release methods in gfxFont.
+        gfxFont* MOZ_UNSAFE_REF("tracking for deferred deletion") mFont;
     };
 
     nsTHashtable<HashEntry> mFonts;
