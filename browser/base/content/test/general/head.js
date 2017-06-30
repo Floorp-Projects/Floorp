@@ -829,3 +829,7 @@ function getCertExceptionDialog(aLocation) {
   }
   return undefined;
 }
+
+function promiseDisableOnboardingTours() {
+  return SpecialPowers.pushPrefEnv({set: [["browser.onboarding.enabled", false]]});
+}

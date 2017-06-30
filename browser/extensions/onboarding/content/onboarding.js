@@ -460,16 +460,7 @@ class Onboarding {
     tourTitle.textContent = notificationStrings.title;
     let tourMessage = this._notificationBar.querySelector("#onboarding-notification-tour-message");
     tourMessage.textContent = notificationStrings.message;
-
-    this._notificationBar.addEventListener("transitionend", () => {
-      this._notificationBar.dataset.cssTransition = "end";
-    }, { once: true });
-    this._window.requestAnimationFrame(() => {
-      // Request the 2nd animation frame.
-      // This is to make sure the appending operation above and the css operation happen
-      // in the different layout tick so as to make sure the transition happens.
-      this._window.requestAnimationFrame(() => this._notificationBar.classList.add("onboarding-opened"));
-    });
+    this._notificationBar.classList.add("onboarding-opened");
 
     this.sendMessageToChrome("set-prefs", [{
       name: "browser.onboarding.notification.lastPrompted",
@@ -480,7 +471,6 @@ class Onboarding {
   hideNotification() {
     if (this._notificationBar) {
       this._notificationBar.classList.remove("onboarding-opened");
-      delete this._notificationBar.dataset.cssTransition;
     }
   }
 
