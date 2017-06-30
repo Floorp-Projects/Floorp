@@ -552,7 +552,7 @@ TexturedRenderPass::AddClippedItem(Txn& aTxn,
 
   Rect textureCoords = TextureRectToCoords(textureRect, aTextureSize);
   if (mTextureFlags & TextureFlags::ORIGIN_BOTTOM_LEFT) {
-    textureCoords.y = textureCoords.YMost();
+    textureCoords.y = 1.0 - textureCoords.y;
     textureCoords.height = -textureCoords.height;
   }
 
