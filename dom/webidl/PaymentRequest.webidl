@@ -8,7 +8,7 @@
  */
 
 dictionary PaymentMethodData {
-  required sequence<DOMString> supportedMethods;
+  required DOMString           supportedMethods;
            object              data;
 };
 
@@ -32,7 +32,7 @@ dictionary PaymentShippingOption {
 };
 
 dictionary PaymentDetailsModifier {
-  required sequence<DOMString>   supportedMethods;
+  required DOMString             supportedMethods;
            PaymentItem           total;
            sequence<PaymentItem> additionalDisplayItems;
            object                data;
