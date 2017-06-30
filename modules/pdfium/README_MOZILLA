@@ -1,0 +1,10 @@
+PDFium is a PDF library to view, search, print, and form fill PDF files.
+
+The source in this directory was copied from upstream by running the
+update.sh script from modules/pdfium. Any changes that we make to our
+copy of the upstream code should be made by that script (e.g. by applying
+patch files after the copy step).
+
+The upstream repository is https://pdfium.googlesource.com/pdfium
+
+The git commit ID last used to import was 0000000000000000000000000000000000000000 (0000-00-00 00:00:00 +0000)
