@@ -1,13 +1,13 @@
 == 290018-1.html 290018-ref.html
 == 436261-1.html 436261-ref.html
 == 436261-2.html 436261-ref.html
-fails-if(styloVsGecko||stylo) == 436261-3.html 436261-ref.html
+== 436261-3.html 436261-ref.html
 == 444723-1.html 444723-ref.html
 == 444723-2.html 444723-ref.html
-random-if(styloVsGecko||stylo) == 445415-1a.xhtml 445415-1-ref.xhtml
+== 445415-1a.xhtml 445415-1-ref.xhtml
 == 445415-1b.xhtml 445415-1-ref.xhtml
 == 445415-2a.xhtml 445415-2-ref.xhtml
-fails-if(styloVsGecko||stylo) == 445415-2b.xhtml 445415-2-ref.xhtml
+== 445415-2b.xhtml 445415-2-ref.xhtml
 == 1331291-1.html green.html
 == 1368782-1.html green.html
 == 1368782-2.html green.html
