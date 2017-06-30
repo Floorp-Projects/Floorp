@@ -26,12 +26,12 @@ public:
                          nsIPaymentMethodData** aMethodData);
 
 private:
-  PaymentMethodData(nsIArray* aSupportedMethods,
+  PaymentMethodData(const nsAString& aSupportedMethods,
                     const nsAString& aData);
 
   ~PaymentMethodData() = default;
 
-  nsCOMPtr<nsIArray> mSupportedMethods;
+  nsString mSupportedMethods;
   nsString mData;
 };
 
@@ -84,14 +84,14 @@ public:
                          nsIPaymentDetailsModifier** aModifier);
 
 private:
-  PaymentDetailsModifier(nsIArray* aSupportedMethods,
+  PaymentDetailsModifier(const nsAString& aSupportedMethods,
                          nsIPaymentItem* aTotal,
                          nsIArray* aAdditionalDisplayItems,
                          const nsAString& aData);
 
   ~PaymentDetailsModifier() = default;
 
-  nsCOMPtr<nsIArray> mSupportedMethods;
+  nsString mSupportedMethods;
   nsCOMPtr<nsIPaymentItem> mTotal;
   nsCOMPtr<nsIArray> mAdditionalDisplayItems;
   nsString mData;
