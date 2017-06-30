@@ -813,8 +813,12 @@ private:
     }
 
     void             *mUserData;
-    gfxFontGroup     *mFontGroup; // addrefed on creation, but our reference
-                                  // may be released by ReleaseFontGroup()
+
+    // mFontGroup is usually a strong reference, but refcounting is managed
+    // manually because it may be explicitly released by ReleaseFontGroup()
+    // in the case where the font group actually owns the textrun.
+    gfxFontGroup* MOZ_OWNING_REF mFontGroup;
+
     gfxSkipChars      mSkipChars;
 
     nsTextFrameUtils::Flags mFlags2; // additional flags (see also gfxShapedText::mFlags)
@@ -1129,8 +1133,10 @@ protected:
         RefPtr<gfxFontFamily> mFamily;
         // either a font or a font entry exists
         union {
-            gfxFont*            mFont;
-            gfxFontEntry*       mFontEntry;
+            // Whichever of these fields is actually present will be a strong
+            // reference, with refcounting handled manually.
+            gfxFont* MOZ_OWNING_REF      mFont;
+            gfxFontEntry* MOZ_OWNING_REF mFontEntry;
         };
         bool                    mNeedsBold   : 1;
         bool                    mFontCreated : 1;
