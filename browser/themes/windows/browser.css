@@ -825,23 +825,12 @@ html|*.urlbar-input:-moz-lwtheme::placeholder,
 .urlbar-textbox-container {
   -moz-box-align: stretch;
 }
-
 .urlbar-input-box {
   margin: 0;
 }
-
-.urlbar-input-box,
-#urlbar-display-box {
-  padding-inline-start: 4px;
-  border-inline-start: 1px solid var(--urlbar-separator-color);
-  border-image: linear-gradient(transparent 15%, var(--urlbar-separator-color) 15%, var(--urlbar-separator-color) 85%, transparent 85%);
-  border-image-slice: 1;
-}
-
 #urlbar-icons {
   -moz-box-align: center;
 }
-
 .urlbar-icon {
   padding: 0 3px;
   /* 16x16 icon with border-box sizing */
