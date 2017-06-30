@@ -46,7 +46,6 @@ enum PairedBracketType {
 enum IdentifierType {
   IDTYPE_RESTRICTED = 0,
   IDTYPE_ALLOWED = 1,
-  IDTYPE_ASPIRATIONAL = 2,
 };
 
 #if ENABLE_INTL_API // ICU is available, so simply forward to its API
