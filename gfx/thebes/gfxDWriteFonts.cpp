@@ -599,19 +599,6 @@ gfxDWriteFont::GetGlyphWidth(DrawTarget& aDrawTarget, uint16_t aGID)
     return width;
 }
 
-already_AddRefed<GlyphRenderingOptions>
-gfxDWriteFont::GetGlyphRenderingOptions(const TextRunDrawParams* aRunParams)
-{
-  if (mUseClearType) {
-    return Factory::CreateDWriteGlyphRenderingOptions(
-      gfxWindowsPlatform::GetPlatform()->GetRenderingParams(GetForceGDIClassic() ?
-        gfxWindowsPlatform::TEXT_RENDERING_GDI_CLASSIC : gfxWindowsPlatform::TEXT_RENDERING_NORMAL));
-  } else {
-    return Factory::CreateDWriteGlyphRenderingOptions(gfxWindowsPlatform::GetPlatform()->
-      GetRenderingParams(gfxWindowsPlatform::TEXT_RENDERING_NO_CLEARTYPE));
-  }
-}
-
 bool
 gfxDWriteFont::GetForceGDIClassic()
 {
@@ -707,10 +694,17 @@ gfxDWriteFont::GetScaledFont(mozilla::gfx::DrawTarget *aTarget)
                                                         GetUnscaledFont(),
                                                         GetAdjustedSize(),
                                                         GetCairoScaledFont());
-  } else if (aTarget->GetBackendType() == BackendType::SKIA) {
+  } else {
     gfxDWriteFontEntry *fe =
         static_cast<gfxDWriteFontEntry*>(mFontEntry.get());
     bool useEmbeddedBitmap = (fe->IsCJKFont() && HasBitmapStrikeForSize(NS_lround(mAdjustedSize)));
+    bool forceGDI = GetForceGDIClassic();
+
+    IDWriteRenderingParams* params = gfxWindowsPlatform::GetPlatform()->GetRenderingParams(
+      mUseClearType ?
+        (forceGDI ?
+          gfxWindowsPlatform::TEXT_RENDERING_GDI_CLASSIC : gfxWindowsPlatform::TEXT_RENDERING_NORMAL) :
+        gfxWindowsPlatform::TEXT_RENDERING_NO_CLEARTYPE);
 
     const gfxFontStyle* fontStyle = GetStyle();
     mAzureScaledFont =
@@ -718,11 +712,10 @@ gfxDWriteFont::GetScaledFont(mozilla::gfx::DrawTarget *aTarget)
                                                    GetUnscaledFont(),
                                                    GetAdjustedSize(),
                                                    useEmbeddedBitmap,
-                                                   GetForceGDIClassic());
-  } else {
-    mAzureScaledFont = Factory::CreateScaledFontForNativeFont(nativeFont,
-                                                            GetUnscaledFont(),
-                                                            GetAdjustedSize());
+                                                   forceGDI,
+                                                   params,
+                                                   params->GetGamma(),
+                                                   params->GetEnhancedContrast());
   }
 
   mAzureScaledFontIsCairo = wantCairo;
