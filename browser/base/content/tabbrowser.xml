@@ -2160,7 +2160,7 @@
         "characterSet", "fullZoom", "textZoom", "webProgress",
         "addProgressListener", "removeProgressListener", "audioPlaybackStarted",
         "audioPlaybackStopped", "pauseMedia", "stopMedia",
-        "blockMedia", "resumeMedia", "mute", "unmute", "blockedPopups", "lastURI",
+        "resumeMedia", "mute", "unmute", "blockedPopups", "lastURI",
         "purgeSessionHistory", "stopScroll", "startScroll",
         "userTypedValue", "userTypedClear", "mediaBlocked"
       ]</field>
@@ -2226,7 +2226,6 @@
                     };
                   };
                   break;
-                case "blockMedia":
                 case "resumeMedia":
                   getter = () => {
                     return () => {
