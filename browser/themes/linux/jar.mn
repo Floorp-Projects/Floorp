@@ -29,7 +29,6 @@ browser.jar:
   skin/classic/browser/searchbar.css
   skin/classic/browser/setDesktopBackground.css
   skin/classic/browser/slowStartup-16.png
-  skin/classic/browser/Toolbar-small.png
   skin/classic/browser/webRTC-indicator.css  (../shared/webRTC-indicator.css)
 * skin/classic/browser/controlcenter/panel.css        (controlcenter/panel.css)
 #ifndef MOZ_PHOTON_THEME
@@ -48,6 +47,7 @@ browser.jar:
   skin/classic/browser/feeds/feedIcon16.png           (feeds/feedIcon16.png)
   skin/classic/browser/feeds/subscribe.css            (feeds/subscribe.css)
 * skin/classic/browser/newtab/newTab.css              (newtab/newTab.css)
+  skin/classic/browser/places/allBookmarks.png        (places/allBookmarks.png)
   skin/classic/browser/places/bookmarksMenu.png       (places/bookmarksMenu.png)
   skin/classic/browser/places/bookmarksToolbar.png    (places/bookmarksToolbar.png)
   skin/classic/browser/places/bookmarksToolbar-menuPanel.png (places/bookmarksToolbar-menuPanel.png)
@@ -57,7 +57,7 @@ browser.jar:
   skin/classic/browser/places/livemark-item.png       (places/livemark-item.png)
   skin/classic/browser/places/starred48.png           (places/starred48.png)
   skin/classic/browser/places/unstarred48.png         (places/unstarred48.png)
-  skin/classic/browser/places/places.css              (places/places.css)
+* skin/classic/browser/places/places.css              (places/places.css)
   skin/classic/browser/places/organizer.css           (places/organizer.css)
   skin/classic/browser/places/organizer.xml           (places/organizer.xml)
   skin/classic/browser/places/query.png               (places/query.png)
