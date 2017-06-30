@@ -49,7 +49,7 @@ public:
     typedef gfxTextRun::Range Range;
     typedef mozilla::gfx::DrawTarget DrawTarget;
 
-    struct Params
+    struct MOZ_STACK_CLASS Params
     {
       nsIAtom* language = nullptr;
       bool explicitLanguage = false;
