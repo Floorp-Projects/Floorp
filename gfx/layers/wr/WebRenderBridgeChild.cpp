@@ -113,10 +113,10 @@ WebRenderBridgeChild::DPEnd(wr::DisplayListBuilder &aBuilder,
 
   if (aIsSync) {
     this->SendDPSyncEnd(aSize, mParentCommands, mDestroyedActors, GetFwdTransactionId(), aTransactionId,
-                        contentSize, dlData, dl.dl_desc, aScrollData);
+                        contentSize, dlData, dl.dl_desc, aScrollData, mIdNamespace);
   } else {
     this->SendDPEnd(aSize, mParentCommands, mDestroyedActors, GetFwdTransactionId(), aTransactionId,
-                    contentSize, dlData, dl.dl_desc, aScrollData);
+                    contentSize, dlData, dl.dl_desc, aScrollData, mIdNamespace);
   }
 
   mParentCommands.Clear();
@@ -443,6 +443,21 @@ bool
 WebRenderBridgeChild::InForwarderThread()
 {
   return NS_IsMainThread();
+}
+
+mozilla::ipc::IPCResult
+WebRenderBridgeChild::RecvWrUpdated(const uint32_t& aNewIdNameSpace)
+{
+  // Update mIdNamespace to identify obsolete keys and messages by WebRenderBridgeParent.
+  // Since usage of invalid keys could cause crash in webrender.
+  mIdNamespace = aNewIdNameSpace;
+  // Remove all FontKeys since they are removed by WebRenderBridgeParent
+  for (auto iter = mFontKeys.Iter(); !iter.Done(); iter.Next()) {
+    SendDeleteFont(iter.Data());
+  }
+  mFontKeys.Clear();
+  GetCompositorBridgeChild()->RecvInvalidateLayers(wr::AsUint64(mPipelineId));
+  return IPC_OK();
 }
 
 } // namespace layers
