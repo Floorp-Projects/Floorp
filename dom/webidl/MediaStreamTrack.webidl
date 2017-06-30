@@ -57,6 +57,7 @@ dictionary MediaTrackConstraintSet {
     ConstrainBoolean echoCancellation;
     ConstrainBoolean noiseSuppression;
     ConstrainBoolean autoGainControl;
+    ConstrainLong channelCount;
 
     // Deprecated with warnings:
     ConstrainBoolean mozNoiseSuppression;
