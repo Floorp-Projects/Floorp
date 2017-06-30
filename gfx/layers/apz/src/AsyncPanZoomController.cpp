@@ -3242,11 +3242,11 @@ bool AsyncPanZoomController::UpdateAnimation(const TimeStamp& aSampleTime,
 }
 
 AsyncTransformComponentMatrix
-AsyncPanZoomController::GetOverscrollTransform(AsyncMode aMode) const
+AsyncPanZoomController::GetOverscrollTransform(AsyncTransformConsumer aMode) const
 {
   ReentrantMonitorAutoEnter lock(mMonitor);
 
-  if (aMode == RESPECT_FORCE_DISABLE && mScrollMetadata.IsApzForceDisabled()) {
+  if (aMode == eForCompositing && mScrollMetadata.IsApzForceDisabled()) {
     return AsyncTransformComponentMatrix();
   }
 
@@ -3311,11 +3311,11 @@ bool AsyncPanZoomController::AdvanceAnimations(const TimeStamp& aSampleTime)
 }
 
 ParentLayerPoint
-AsyncPanZoomController::GetCurrentAsyncScrollOffset(AsyncMode aMode) const
+AsyncPanZoomController::GetCurrentAsyncScrollOffset(AsyncTransformConsumer aMode) const
 {
   ReentrantMonitorAutoEnter lock(mMonitor);
 
-  if (aMode == RESPECT_FORCE_DISABLE && mScrollMetadata.IsApzForceDisabled()) {
+  if (aMode == eForCompositing && mScrollMetadata.IsApzForceDisabled()) {
     return mLastContentPaintMetrics.GetScrollOffset() * mLastContentPaintMetrics.GetZoom();
   }
 
@@ -3324,10 +3324,10 @@ AsyncPanZoomController::GetCurrentAsyncScrollOffset(AsyncMode aMode) const
 }
 
 CSSPoint
-AsyncPanZoomController::GetCurrentAsyncScrollOffsetInCssPixels(AsyncMode aMode) const {
+AsyncPanZoomController::GetCurrentAsyncScrollOffsetInCssPixels(AsyncTransformConsumer aMode) const {
   ReentrantMonitorAutoEnter lock(mMonitor);
 
-  if (aMode == RESPECT_FORCE_DISABLE && mScrollMetadata.IsApzForceDisabled()) {
+  if (aMode == eForCompositing && mScrollMetadata.IsApzForceDisabled()) {
     return mLastContentPaintMetrics.GetScrollOffset();
   }
 
@@ -3335,11 +3335,11 @@ AsyncPanZoomController::GetCurrentAsyncScrollOffsetInCssPixels(AsyncMode aMode) 
 }
 
 AsyncTransform
-AsyncPanZoomController::GetCurrentAsyncTransform(AsyncMode aMode) const
+AsyncPanZoomController::GetCurrentAsyncTransform(AsyncTransformConsumer aMode) const
 {
   ReentrantMonitorAutoEnter lock(mMonitor);
 
-  if (aMode == RESPECT_FORCE_DISABLE && mScrollMetadata.IsApzForceDisabled()) {
+  if (aMode == eForCompositing && mScrollMetadata.IsApzForceDisabled()) {
     return AsyncTransform();
   }
 
@@ -3378,7 +3378,7 @@ AsyncPanZoomController::GetCurrentAsyncTransform(AsyncMode aMode) const
 }
 
 AsyncTransformComponentMatrix
-AsyncPanZoomController::GetCurrentAsyncTransformWithOverscroll(AsyncMode aMode) const
+AsyncPanZoomController::GetCurrentAsyncTransformWithOverscroll(AsyncTransformConsumer aMode) const
 {
   return AsyncTransformComponentMatrix(GetCurrentAsyncTransform(aMode))
        * GetOverscrollTransform(aMode);

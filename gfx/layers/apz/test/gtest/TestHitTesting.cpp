@@ -507,8 +507,8 @@ TEST_F(APZHitTestingTester, TestForceDisableApz) {
   EXPECT_EQ(10, point.y);
   EXPECT_EQ(0, viewTransform.mTranslation.x);
   EXPECT_EQ(-10, viewTransform.mTranslation.y);
-  viewTransform = apzcroot->GetCurrentAsyncTransform(AsyncPanZoomController::RESPECT_FORCE_DISABLE);
-  point = apzcroot->GetCurrentAsyncScrollOffset(AsyncPanZoomController::RESPECT_FORCE_DISABLE);
+  viewTransform = apzcroot->GetCurrentAsyncTransform(AsyncPanZoomController::eForCompositing);
+  point = apzcroot->GetCurrentAsyncScrollOffset(AsyncPanZoomController::eForCompositing);
   EXPECT_EQ(0, point.x);
   EXPECT_EQ(0, point.y);
   EXPECT_EQ(0, viewTransform.mTranslation.x);

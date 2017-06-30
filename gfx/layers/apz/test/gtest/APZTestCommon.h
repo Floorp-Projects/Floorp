@@ -287,9 +287,9 @@ public:
     mcc->AdvanceBy(aIncrement);
     bool ret = AdvanceAnimations(mcc->Time());
     if (aOutTransform) {
-      *aOutTransform = GetCurrentAsyncTransform(AsyncPanZoomController::NORMAL);
+      *aOutTransform = GetCurrentAsyncTransform(AsyncPanZoomController::eForHitTesting);
     }
-    aScrollOffset = GetCurrentAsyncScrollOffset(AsyncPanZoomController::NORMAL);
+    aScrollOffset = GetCurrentAsyncScrollOffset(AsyncPanZoomController::eForHitTesting);
     return ret;
   }
 
