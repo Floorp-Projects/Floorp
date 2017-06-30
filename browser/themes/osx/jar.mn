@@ -50,9 +50,9 @@ browser.jar:
   skin/classic/browser/webRTC-sharingScreen-menubar@2x.png
   skin/classic/browser/webRTC-indicator.css
 * skin/classic/browser/controlcenter/panel.css        (controlcenter/panel.css)
+  skin/classic/browser/customizableui/background-noise-toolbar.png  (customizableui/background-noise-toolbar.png)
   skin/classic/browser/customizableui/customizeMode-gridTexture.png  (customizableui/customizeMode-gridTexture.png)
 #ifndef MOZ_PHOTON_THEME
-  skin/classic/browser/customizableui/background-noise-toolbar.png  (customizableui/background-noise-toolbar.png)
   skin/classic/browser/customizableui/customizeMode-separatorHorizontal.png  (customizableui/customizeMode-separatorHorizontal.png)
   skin/classic/browser/customizableui/customizeMode-separatorVertical.png  (customizableui/customizeMode-separatorVertical.png)
 #endif
