@@ -14,6 +14,11 @@ xul|richlistitem[originaltype="autofill-footer"][selected="true"] > .autofill-it
   background-color: #DCDCDE;
 }
 
+xul|richlistitem[originaltype="autofill-insecureWarning"] {
+  border-bottom: 1px solid var(--panel-separator-color);
+  background-color: var(--arrowpanel-dimmed);
+}
+
 .autofill-item-box {
   --item-padding-vertical: 6px;
   --item-padding-horizontal: 10px;
@@ -108,4 +113,26 @@ xul|richlistitem[originaltype="autofill-footer"][selected="true"] > .autofill-it
 
 .autofill-footer[no-warning="true"] > .autofill-warning {
   display: none;
+}
+
+.autofill-insecure-item {
+  box-sizing: border-box;
+  padding: 4px 0;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  align-items: center;
+  color: GrayText;
+}
+
+.autofill-insecure-item::before {
+  display: block;
+  margin-inline-start: 4px;
+  margin-inline-end: 8px;
+  content: "";
+  width: 16px;
+  height: 16px;
+  background-image: url(chrome://browser/skin/connection-mixed-active-loaded.svg);
+  -moz-context-properties: fill;
+  fill: GrayText;
 }
