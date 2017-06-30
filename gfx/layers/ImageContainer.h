@@ -693,23 +693,6 @@ public:
     return mImages.IsEmpty() ? nullptr : mImages[0].mImage.get();
   }
 
-  Image* GetImage(TimeStamp aTimeStamp) const
-  {
-    if (mImages.IsEmpty()) {
-      return nullptr;
-    }
-
-    MOZ_ASSERT(!aTimeStamp.IsNull());
-    uint32_t chosenIndex = 0;
-
-    while (chosenIndex + 1 < mImages.Length() &&
-           mImages[chosenIndex + 1].mTimeStamp <= aTimeStamp) {
-      ++chosenIndex;
-    }
-
-    return mImages[chosenIndex].mImage.get();
-  }
-
 private:
   AutoTArray<ImageContainer::OwningImage,4> mImages;
 };
