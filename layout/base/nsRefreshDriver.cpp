@@ -1214,7 +1214,7 @@ nsRefreshDriver::nsRefreshDriver(nsPresContext* aPresContext)
 nsRefreshDriver::~nsRefreshDriver()
 {
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(ObserverCount() == mPendingSelectionScrolls.Length(),
+  MOZ_ASSERT(ObserverCount() == mEarlyRunners.Length(),
              "observers, except pending selection scrolls, "
              "should have been unregistered");
   MOZ_ASSERT(!mActiveTimer, "timer should be gone");
@@ -1319,15 +1319,10 @@ nsRefreshDriver::AddImageRequest(imgIRequest* aRequest)
 {
   uint32_t delay = GetFirstFrameDelay(aRequest);
   if (delay == 0) {
-    if (!mRequests.PutEntry(aRequest)) {
-      return false;
-    }
+    mRequests.PutEntry(aRequest);
   } else {
-    ImageStartData* start = mStartTable.Get(delay);
-    if (!start) {
-      start = new ImageStartData();
-      mStartTable.Put(delay, start);
-    }
+    ImageStartData* start = mStartTable.LookupForAdd(delay).OrInsert(
+      [] () { return new ImageStartData(); });
     start->mEntries.PutEntry(aRequest);
   }
 
@@ -1452,7 +1447,7 @@ nsRefreshDriver::ObserverCount() const
   sum += mFrameRequestCallbackDocs.Length();
   sum += mThrottledFrameRequestCallbackDocs.Length();
   sum += mViewManagerFlushIsPending;
-  sum += mPendingSelectionScrolls.Length();
+  sum += mEarlyRunners.Length();
   return sum;
 }
 
@@ -1840,10 +1835,10 @@ nsRefreshDriver::Tick(int64_t aNowEpoch, TimeStamp aNowTime)
     nsLayoutUtils::UpdateDisplayPortMarginsFromPendingMessages();
   }
 
-  AutoTArray<nsCOMPtr<nsIRunnable>, 16> pendingSelectionScrolls;
-  pendingSelectionScrolls.SwapElements(mPendingSelectionScrolls);
-  for (uint32_t i = 0; i < pendingSelectionScrolls.Length(); ++i) {
-    pendingSelectionScrolls[i]->Run();
+  AutoTArray<nsCOMPtr<nsIRunnable>, 16> earlyRunners;
+  earlyRunners.SwapElements(mEarlyRunners);
+  for (uint32_t i = 0; i < earlyRunners.Length(); ++i) {
+    earlyRunners[i]->Run();
   }
 
   /*

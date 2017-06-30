@@ -19,7 +19,7 @@
 namespace mozilla {
 namespace dom {
 
-class RadioNodeList : public nsSimpleContentList
+class RadioNodeList final : public nsSimpleContentList
 {
 public:
   explicit RadioNodeList(HTMLFormElement* aForm) : nsSimpleContentList(aForm) { }

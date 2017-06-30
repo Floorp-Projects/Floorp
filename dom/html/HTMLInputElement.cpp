@@ -3109,7 +3109,7 @@ HTMLInputElement::SetValueInternal(const nsAString& aValue,
                    !(aFlags & nsTextEditorState::eSetValue_BySetUserInput)) {
           nsDateTimeControlFrame* frame = do_QueryFrame(GetPrimaryFrame());
           if (frame) {
-            frame->UpdateInputBoxValue();
+            frame->OnValueChanged();
           }
         }
         if (mDoneCreating) {

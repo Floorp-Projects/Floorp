@@ -14,17 +14,17 @@
 // http://www.whatwg.org/specs/web-apps/current-work/#the-meter-element
 [HTMLConstructor]
 interface HTMLMeterElement : HTMLElement {
-           [SetterThrows]
+           [CEReactions, SetterThrows]
            attribute double value;
-           [SetterThrows]
+           [CEReactions, SetterThrows]
            attribute double min;
-           [SetterThrows]
+           [CEReactions, SetterThrows]
            attribute double max;
-           [SetterThrows]
+           [CEReactions, SetterThrows]
            attribute double low;
-           [SetterThrows]
+           [CEReactions, SetterThrows]
            attribute double high;
-           [SetterThrows]
+           [CEReactions, SetterThrows]
            attribute double optimum;
            readonly attribute NodeList labels;
 };

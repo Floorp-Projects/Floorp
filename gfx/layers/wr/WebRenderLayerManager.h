@@ -33,6 +33,8 @@ public:
 
   virtual void Destroy() override;
 
+  void DoDestroy(bool aIsSync);
+
 protected:
   virtual ~WebRenderLayerManager();
 

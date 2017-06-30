@@ -21,7 +21,6 @@ class GeckoViewScroll extends GeckoViewModule {
   init() {
     this.messageManager.loadFrameScript(
       "chrome://geckoview/content/GeckoViewScrollContent.js", true);
-    this.register();
   }
 
   register() {

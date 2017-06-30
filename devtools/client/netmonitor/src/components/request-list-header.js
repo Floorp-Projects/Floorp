@@ -89,7 +89,8 @@ const RequestListHeader = createClass({
         HEADERS.filter((header) => columns.get(header.name)).map((header) => {
           let name = header.name;
           let boxName = header.boxName || name;
-          let label = L10N.getStr(`netmonitor.toolbar.${header.label || name}`);
+          let label = header.noLocalization
+            ? name : L10N.getStr(`netmonitor.toolbar.${header.label || name}`);
           let sorted, sortedTitle;
           let active = sort.type == name ? true : undefined;
 

@@ -37,7 +37,9 @@
   --tab-selection-color: #f5f7fa;
   --tab-selection-background-color: #5675B9;
   --tab-selection-box-shadow: none;
+%ifndef MOZ_PHOTON_THEME
   --pinned-tab-glow: radial-gradient(22px at center calc(100% - 2px), rgba(76,158,217,0.9) 13%, rgba(0,0,0,0.4) 16%, transparent 70%);
+%endif
 
   /* Url and search bars */
   --url-and-searchbar-background-color: #171B1F;
@@ -84,7 +86,9 @@ toolbar:-moz-lwtheme-brighttext  {
   --tab-selection-color: #f5f7fa;
   --tab-selection-background-color: #4c9ed9;
   --tab-selection-box-shadow: none;
+%ifndef MOZ_PHOTON_THEME
   --pinned-tab-glow: radial-gradient(22px at center calc(100% - 2px), rgba(76,158,217,0.9) 13%, transparent 16%);
+%endif
 }
 
 %ifndef MOZ_PHOTON_THEME
@@ -324,9 +328,13 @@ window:not([chromehidden~="toolbar"]) #urlbar-wrapper > #urlbar:-moz-locale-dir(
 
 .tabbrowser-tab:-moz-any([image], [pinned]) > .tab-stack > .tab-content[attention]:not([selected="true"]),
 .tabbrowser-tab > .tab-stack > .tab-content[pinned][titlechanged]:not([selected="true"]) {
+%ifdef MOZ_PHOTON_THEME
+  background-position: center bottom -4px;
+%else
   background-image: var(--pinned-tab-glow);
   background-position: center;
   background-size: 100%;
+%endif
 }
 
 .tabbrowser-tab[image] > .tab-stack > .tab-content[attention]:not([pinned]):not([selected="true"]) {
