@@ -6,20 +6,38 @@
 #define WebrtcMediaDataDecoderCodec_h__
 
 #include "MediaConduitInterface.h"
-#include "mozilla/RefPtr.h"
-
+#include "MediaInfo.h"
+#include "MediaResult.h"
+#include "PlatformDecoderModule.h"
+#include "webrtc/common_video/include/video_frame_buffer.h"
 #include "webrtc/modules/video_coding/include/video_codec_interface.h"
 
+namespace webrtc {
+  class DecodedImageCallback;
+}
 namespace mozilla {
+namespace layers {
+  class Image;
+  class ImageContainer;
+}
 
-class MediaDataDecoder;
+class PDMFactory;
+class TaskQueue;
+
+class ImageBuffer : public webrtc::NativeHandleBuffer
+{
+public:
+  explicit ImageBuffer(RefPtr<layers::Image>&& aImage);
+  rtc::scoped_refptr<VideoFrameBuffer> NativeToI420Buffer() override;
+
+private:
+  RefPtr<layers::Image> mImage;
+};
 
 class WebrtcMediaDataDecoder : public WebrtcVideoDecoder
 {
 public:
   WebrtcMediaDataDecoder();
-
-  virtual ~WebrtcMediaDataDecoder();
 
   // Implement VideoDecoder interface.
   uint64_t PluginID() const override { return 0; }
@@ -37,6 +55,27 @@ public:
     webrtc::DecodedImageCallback* callback) override;
 
   int32_t Release() override;
+
+private:
+  ~WebrtcMediaDataDecoder();
+  void QueueFrame(MediaRawData* aFrame);
+  AbstractThread* OwnerThread() const { return mTaskQueue; }
+  bool OnTaskQueue() const;
+
+  const RefPtr<TaskQueue> mTaskQueue;
+  const RefPtr<layers::ImageContainer> mImageContainer;
+  const RefPtr<PDMFactory> mFactory;
+  RefPtr<MediaDataDecoder> mDecoder;
+  webrtc::DecodedImageCallback* mCallback = nullptr;
+  VideoInfo mInfo;
+  TrackInfo::TrackType mTrackType;
+  bool mNeedKeyframe = true;
+  MozPromiseRequestHolder<MediaDataDecoder::DecodePromise> mDecodeRequest;
+
+  Monitor mMonitor;
+  // Members below are accessed via mMonitor
+  MediaResult mError = NS_OK;
+  MediaDataDecoder::DecodedData mResults;
 };
 
 } // namespace mozilla

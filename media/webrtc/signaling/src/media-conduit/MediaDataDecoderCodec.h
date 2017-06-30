@@ -7,10 +7,11 @@
 
 #include "MediaConduitInterface.h"
 #include "webrtc/common_types.h"
-#include "webrtc/video_decoder.h"
 
 namespace mozilla {
 
+class WebrtcVideoDecoder;
+class WebrtcVideoEncoder;
 class MediaDataDecoderCodec
 {
  public:
