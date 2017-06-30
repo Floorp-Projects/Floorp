@@ -167,6 +167,10 @@ public class GeckoHlsVideoRenderer extends GeckoHlsRendererBase {
         // the first frame in the new format.
         assertTrue(mFormats.size() > 0);
         if (mRendererReconfigurationState == RECONFIGURATION_STATE.WRITE_PENDING) {
+            if (bufferForRead.data == null) {
+                if (DEBUG) { Log.d(LOGTAG, "[feedInput][WRITE_PENDING] bufferForRead.data is not initialized."); }
+                return;
+            }
             if (DEBUG) { Log.d(LOGTAG, "[feedInput][WRITE_PENDING] put initialization data"); }
             Format currentFormat = mFormats.get(mFormats.size() - 1);
             for (int i = 0; i < currentFormat.initializationData.size(); i++) {
