@@ -432,10 +432,11 @@ TabChild::TabChild(nsIContentChild* aManager,
 bool
 TabChild::AsyncPanZoomEnabled() const
 {
-  // By the time anybody calls this, we must have had InitRenderingState called
-  // already, and so mCompositorOptions should be populated.
-  MOZ_RELEASE_ASSERT(mCompositorOptions);
-  return mCompositorOptions->UseAPZ();
+  // This might get called by the TouchEvent::PrefEnabled code before we have
+  // mCompositorOptions populated (bug 1370089). In that case we just assume
+  // APZ is enabled because we're in a content process (because TabChild) and
+  // APZ is probably going to be enabled here since e10s is enabled.
+  return mCompositorOptions ? mCompositorOptions->UseAPZ() : true;
 }
 
 NS_IMETHODIMP
