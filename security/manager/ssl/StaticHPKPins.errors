@@ -8,7 +8,6 @@ Can't find hash in builtin certs for Chrome nickname Entrust_SSL, inserting GOOG
 Can't find hash in builtin certs for Chrome nickname UTNDATACorpSGC, inserting GOOGLE_PIN_UTNDATACorpSGC
 Can't find hash in builtin certs for Chrome nickname GTECyberTrustGlobalRoot, inserting GOOGLE_PIN_GTECyberTrustGlobalRoot
 Can't find hash in builtin certs for Chrome nickname GoDaddySecure, inserting GOOGLE_PIN_GoDaddySecure
-Can't find hash in builtin certs for Chrome nickname ThawtePremiumServer, inserting GOOGLE_PIN_ThawtePremiumServer
 Can't find hash in builtin certs for Chrome nickname SymantecClass3EVG3, inserting GOOGLE_PIN_SymantecClass3EVG3
 Can't find hash in builtin certs for Chrome nickname DigiCertECCSecureServerCA, inserting GOOGLE_PIN_DigiCertECCSecureServerCA
 Can't find hash in builtin certs for Chrome nickname COMODORSADomainValidationSecureServerCA, inserting GOOGLE_PIN_COMODORSADomainValidationSecureServerCA
