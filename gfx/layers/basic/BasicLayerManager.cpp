@@ -572,8 +572,6 @@ BasicLayerManager::EndTransactionInternal(DrawPaintedLayerCallback aCallback,
   NS_ASSERTION(InConstruction(), "Should be in construction phase");
   mPhase = PHASE_DRAWING;
 
-  SetCompositionTime(TimeStamp::Now());
-
   RenderTraceLayers(mRoot, "FF00");
 
   mTransactionIncomplete = false;
