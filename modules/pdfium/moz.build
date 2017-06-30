@@ -1,0 +1,521 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+with Files('**'):
+    BUG_COMPONENT = ('Core', 'Printing: Output')
+
+LOCAL_INCLUDES += [
+    'pdfium',
+]
+
+# pdfium_common_config
+DEFINES['OPJ_STATIC'] = True
+DEFINES['PNG_PREFIX'] = True
+DEFINES['PNG_USE_READ_MACROS'] = True
+if CONFIG['OS_TARGET'] == 'WINNT':
+    DEFINES['PDFIUM_PRINT_TEXT_WITH_GDI'] = True
+
+# pdfium_core_config
+DEFINES['V8_DEPRECATION_WARNINGS'] = True
+if CONFIG['OS_ARCH'] == 'Linux':
+    if CONFIG['CPU_ARCH'] == 'x86_64':
+        DEFINES['_FX_CPU_'] = '_FX_X64_'
+    elif CONFIG['CPU_ARCH'] == 'x86':
+        DEFINES['_FX_CPU_'] = '_FX_X86_'
+
+# pdfium
+SOURCES += [
+    'pdfium/fpdfsdk/cba_annotiterator.cpp',
+    'pdfium/fpdfsdk/cfx_systemhandler.cpp',
+    'pdfium/fpdfsdk/cpdfsdk_annot.cpp',
+    'pdfium/fpdfsdk/cpdfsdk_annothandlermgr.cpp',
+    'pdfium/fpdfsdk/cpdfsdk_annotiteration.cpp',
+    'pdfium/fpdfsdk/cpdfsdk_baannot.cpp',
+    'pdfium/fpdfsdk/cpdfsdk_baannothandler.cpp',
+    'pdfium/fpdfsdk/cpdfsdk_datetime.cpp',
+    'pdfium/fpdfsdk/cpdfsdk_formfillenvironment.cpp',
+    'pdfium/fpdfsdk/cpdfsdk_interform.cpp',
+    'pdfium/fpdfsdk/cpdfsdk_pageview.cpp',
+    'pdfium/fpdfsdk/cpdfsdk_widget.cpp',
+    'pdfium/fpdfsdk/cpdfsdk_widgethandler.cpp',
+    'pdfium/fpdfsdk/fpdf_dataavail.cpp',
+    'pdfium/fpdfsdk/fpdf_ext.cpp',
+    'pdfium/fpdfsdk/fpdf_flatten.cpp',
+    'pdfium/fpdfsdk/fpdf_progressive.cpp',
+    'pdfium/fpdfsdk/fpdf_searchex.cpp',
+    'pdfium/fpdfsdk/fpdf_structtree.cpp',
+    'pdfium/fpdfsdk/fpdf_sysfontinfo.cpp',
+    'pdfium/fpdfsdk/fpdf_transformpage.cpp',
+    'pdfium/fpdfsdk/fpdfdoc.cpp',
+    'pdfium/fpdfsdk/fpdfeditimg.cpp',
+    'pdfium/fpdfsdk/fpdfeditpage.cpp',
+    'pdfium/fpdfsdk/fpdfeditpath.cpp',
+    'pdfium/fpdfsdk/fpdfedittext.cpp',
+    'pdfium/fpdfsdk/fpdfformfill.cpp',
+    'pdfium/fpdfsdk/fpdfppo.cpp',
+    'pdfium/fpdfsdk/fpdfsave.cpp',
+    'pdfium/fpdfsdk/fpdftext.cpp',
+    'pdfium/fpdfsdk/fpdfview.cpp',
+    'pdfium/fpdfsdk/fsdk_actionhandler.cpp',
+    'pdfium/fpdfsdk/fsdk_pauseadapter.cpp',
+    'pdfium/fpdfsdk/pdfsdk_fieldaction.cpp',
+]
+if CONFIG['OS_TARGET'] == 'WINNT':
+    OS_LIBS += [
+        'advapi32',
+        'gdi32',
+        'user32',
+    ]
+
+# fdrm
+SOURCES += [
+    'pdfium/core/fdrm/crypto/fx_crypt.cpp',
+    'pdfium/core/fdrm/crypto/fx_crypt_aes.cpp',
+    'pdfium/core/fdrm/crypto/fx_crypt_sha.cpp',
+]
+
+# formfiller
+SOURCES += [
+    'pdfium/fpdfsdk/formfiller/cba_fontmap.cpp',
+    'pdfium/fpdfsdk/formfiller/cffl_checkbox.cpp',
+    'pdfium/fpdfsdk/formfiller/cffl_combobox.cpp',
+    'pdfium/fpdfsdk/formfiller/cffl_formfiller.cpp',
+    'pdfium/fpdfsdk/formfiller/cffl_interactiveformfiller.cpp',
+    'pdfium/fpdfsdk/formfiller/cffl_listbox.cpp',
+    'pdfium/fpdfsdk/formfiller/cffl_pushbutton.cpp',
+    'pdfium/fpdfsdk/formfiller/cffl_radiobutton.cpp',
+    'pdfium/fpdfsdk/formfiller/cffl_textfield.cpp',
+]
+
+# fpdfapi
+SOURCES += [
+    'pdfium/core/fpdfapi/cmaps/CNS1/Adobe-CNS1-UCS2_5.cpp',
+    'pdfium/core/fpdfapi/cmaps/CNS1/B5pc-H_0.cpp',
+    'pdfium/core/fpdfapi/cmaps/CNS1/B5pc-V_0.cpp',
+    'pdfium/core/fpdfapi/cmaps/CNS1/cmaps_cns1.cpp',
+    'pdfium/core/fpdfapi/cmaps/CNS1/CNS-EUC-H_0.cpp',
+    'pdfium/core/fpdfapi/cmaps/CNS1/CNS-EUC-V_0.cpp',
+    'pdfium/core/fpdfapi/cmaps/CNS1/ETen-B5-H_0.cpp',
+    'pdfium/core/fpdfapi/cmaps/CNS1/ETen-B5-V_0.cpp',
+    'pdfium/core/fpdfapi/cmaps/CNS1/ETenms-B5-H_0.cpp',
+    'pdfium/core/fpdfapi/cmaps/CNS1/ETenms-B5-V_0.cpp',
+    'pdfium/core/fpdfapi/cmaps/CNS1/HKscs-B5-H_5.cpp',
+    'pdfium/core/fpdfapi/cmaps/CNS1/HKscs-B5-V_5.cpp',
+    'pdfium/core/fpdfapi/cmaps/CNS1/UniCNS-UCS2-H_3.cpp',
+    'pdfium/core/fpdfapi/cmaps/CNS1/UniCNS-UCS2-V_3.cpp',
+    'pdfium/core/fpdfapi/cmaps/CNS1/UniCNS-UTF16-H_0.cpp',
+    'pdfium/core/fpdfapi/cmaps/fpdf_cmaps.cpp',
+    'pdfium/core/fpdfapi/cmaps/GB1/Adobe-GB1-UCS2_5.cpp',
+    'pdfium/core/fpdfapi/cmaps/GB1/cmaps_gb1.cpp',
+    'pdfium/core/fpdfapi/cmaps/GB1/GB-EUC-H_0.cpp',
+    'pdfium/core/fpdfapi/cmaps/GB1/GB-EUC-V_0.cpp',
+    'pdfium/core/fpdfapi/cmaps/GB1/GBK-EUC-H_2.cpp',
+    'pdfium/core/fpdfapi/cmaps/GB1/GBK-EUC-V_2.cpp',
+    'pdfium/core/fpdfapi/cmaps/GB1/GBK2K-H_5.cpp',
+    'pdfium/core/fpdfapi/cmaps/GB1/GBK2K-V_5.cpp',
+    'pdfium/core/fpdfapi/cmaps/GB1/GBKp-EUC-H_2.cpp',
+    'pdfium/core/fpdfapi/cmaps/GB1/GBKp-EUC-V_2.cpp',
+    'pdfium/core/fpdfapi/cmaps/GB1/GBpc-EUC-H_0.cpp',
+    'pdfium/core/fpdfapi/cmaps/GB1/GBpc-EUC-V_0.cpp',
+    'pdfium/core/fpdfapi/cmaps/GB1/UniGB-UCS2-H_4.cpp',
+    'pdfium/core/fpdfapi/cmaps/GB1/UniGB-UCS2-V_4.cpp',
+    'pdfium/core/fpdfapi/cmaps/Japan1/83pv-RKSJ-H_1.cpp',
+    'pdfium/core/fpdfapi/cmaps/Japan1/90ms-RKSJ-H_2.cpp',
+    'pdfium/core/fpdfapi/cmaps/Japan1/90ms-RKSJ-V_2.cpp',
+    'pdfium/core/fpdfapi/cmaps/Japan1/90msp-RKSJ-H_2.cpp',
+    'pdfium/core/fpdfapi/cmaps/Japan1/90msp-RKSJ-V_2.cpp',
+    'pdfium/core/fpdfapi/cmaps/Japan1/90pv-RKSJ-H_1.cpp',
+    'pdfium/core/fpdfapi/cmaps/Japan1/Add-RKSJ-H_1.cpp',
+    'pdfium/core/fpdfapi/cmaps/Japan1/Add-RKSJ-V_1.cpp',
+    'pdfium/core/fpdfapi/cmaps/Japan1/Adobe-Japan1-UCS2_4.cpp',
+    'pdfium/core/fpdfapi/cmaps/Japan1/cmaps_japan1.cpp',
+    'pdfium/core/fpdfapi/cmaps/Japan1/EUC-H_1.cpp',
+    'pdfium/core/fpdfapi/cmaps/Japan1/EUC-V_1.cpp',
+    'pdfium/core/fpdfapi/cmaps/Japan1/Ext-RKSJ-H_2.cpp',
+    'pdfium/core/fpdfapi/cmaps/Japan1/Ext-RKSJ-V_2.cpp',
+    'pdfium/core/fpdfapi/cmaps/Japan1/H_1.cpp',
+    'pdfium/core/fpdfapi/cmaps/Japan1/UniJIS-UCS2-H_4.cpp',
+    'pdfium/core/fpdfapi/cmaps/Japan1/UniJIS-UCS2-HW-H_4.cpp',
+    'pdfium/core/fpdfapi/cmaps/Japan1/UniJIS-UCS2-HW-V_4.cpp',
+    'pdfium/core/fpdfapi/cmaps/Japan1/UniJIS-UCS2-V_4.cpp',
+    'pdfium/core/fpdfapi/cmaps/Japan1/V_1.cpp',
+    'pdfium/core/fpdfapi/cmaps/Korea1/Adobe-Korea1-UCS2_2.cpp',
+    'pdfium/core/fpdfapi/cmaps/Korea1/cmaps_korea1.cpp',
+    'pdfium/core/fpdfapi/cmaps/Korea1/KSC-EUC-H_0.cpp',
+    'pdfium/core/fpdfapi/cmaps/Korea1/KSC-EUC-V_0.cpp',
+    'pdfium/core/fpdfapi/cmaps/Korea1/KSCms-UHC-H_1.cpp',
+    'pdfium/core/fpdfapi/cmaps/Korea1/KSCms-UHC-HW-H_1.cpp',
+    'pdfium/core/fpdfapi/cmaps/Korea1/KSCms-UHC-HW-V_1.cpp',
+    'pdfium/core/fpdfapi/cmaps/Korea1/KSCms-UHC-V_1.cpp',
+    'pdfium/core/fpdfapi/cmaps/Korea1/KSCpc-EUC-H_0.cpp',
+    'pdfium/core/fpdfapi/cmaps/Korea1/UniKS-UCS2-H_1.cpp',
+    'pdfium/core/fpdfapi/cmaps/Korea1/UniKS-UCS2-V_1.cpp',
+    'pdfium/core/fpdfapi/cmaps/Korea1/UniKS-UTF16-H_0.cpp',
+    'pdfium/core/fpdfapi/cpdf_modulemgr.cpp',
+    'pdfium/core/fpdfapi/cpdf_pagerendercontext.cpp',
+    'pdfium/core/fpdfapi/edit/cpdf_pagecontentgenerator.cpp',
+    'pdfium/core/fpdfapi/edit/fpdf_edit_create.cpp',
+    'pdfium/core/fpdfapi/font/cpdf_cidfont.cpp',
+    'pdfium/core/fpdfapi/font/cpdf_font.cpp',
+    'pdfium/core/fpdfapi/font/cpdf_fontencoding.cpp',
+    'pdfium/core/fpdfapi/font/cpdf_simplefont.cpp',
+    'pdfium/core/fpdfapi/font/cpdf_truetypefont.cpp',
+    'pdfium/core/fpdfapi/font/cpdf_type1font.cpp',
+    'pdfium/core/fpdfapi/font/cpdf_type3char.cpp',
+    'pdfium/core/fpdfapi/font/cpdf_type3font.cpp',
+    'pdfium/core/fpdfapi/font/fpdf_font.cpp',
+    'pdfium/core/fpdfapi/font/fpdf_font_cid.cpp',
+    'pdfium/core/fpdfapi/font/ttgsubtable.cpp',
+    'pdfium/core/fpdfapi/page/cpdf_allstates.cpp',
+    'pdfium/core/fpdfapi/page/cpdf_clippath.cpp',
+    'pdfium/core/fpdfapi/page/cpdf_color.cpp',
+    'pdfium/core/fpdfapi/page/cpdf_colorspace.cpp',
+    'pdfium/core/fpdfapi/page/cpdf_colorstate.cpp',
+    'pdfium/core/fpdfapi/page/cpdf_contentmark.cpp',
+    'pdfium/core/fpdfapi/page/cpdf_contentmarkitem.cpp',
+    'pdfium/core/fpdfapi/page/cpdf_contentparser.cpp',
+    'pdfium/core/fpdfapi/page/cpdf_docpagedata.cpp',
+    'pdfium/core/fpdfapi/page/cpdf_form.cpp',
+    'pdfium/core/fpdfapi/page/cpdf_formobject.cpp',
+    'pdfium/core/fpdfapi/page/cpdf_generalstate.cpp',
+    'pdfium/core/fpdfapi/page/cpdf_graphicstates.cpp',
+    'pdfium/core/fpdfapi/page/cpdf_image.cpp',
+    'pdfium/core/fpdfapi/page/cpdf_imageobject.cpp',
+    'pdfium/core/fpdfapi/page/cpdf_meshstream.cpp',
+    'pdfium/core/fpdfapi/page/cpdf_page.cpp',
+    'pdfium/core/fpdfapi/page/cpdf_pagemodule.cpp',
+    'pdfium/core/fpdfapi/page/cpdf_pageobject.cpp',
+    'pdfium/core/fpdfapi/page/cpdf_pageobjectholder.cpp',
+    'pdfium/core/fpdfapi/page/cpdf_pageobjectlist.cpp',
+    'pdfium/core/fpdfapi/page/cpdf_path.cpp',
+    'pdfium/core/fpdfapi/page/cpdf_pathobject.cpp',
+    'pdfium/core/fpdfapi/page/cpdf_pattern.cpp',
+    'pdfium/core/fpdfapi/page/cpdf_shadingobject.cpp',
+    'pdfium/core/fpdfapi/page/cpdf_shadingpattern.cpp',
+    'pdfium/core/fpdfapi/page/cpdf_streamcontentparser.cpp',
+    'pdfium/core/fpdfapi/page/cpdf_streamparser.cpp',
+    'pdfium/core/fpdfapi/page/cpdf_textobject.cpp',
+    'pdfium/core/fpdfapi/page/cpdf_textstate.cpp',
+    'pdfium/core/fpdfapi/page/cpdf_tilingpattern.cpp',
+    'pdfium/core/fpdfapi/page/fpdf_page_colors.cpp',
+    'pdfium/core/fpdfapi/page/fpdf_page_func.cpp',
+    'pdfium/core/fpdfapi/parser/cfdf_document.cpp',
+    'pdfium/core/fpdfapi/parser/cpdf_array.cpp',
+    'pdfium/core/fpdfapi/parser/cpdf_boolean.cpp',
+    'pdfium/core/fpdfapi/parser/cpdf_crypto_handler.cpp',
+    'pdfium/core/fpdfapi/parser/cpdf_data_avail.cpp',
+    'pdfium/core/fpdfapi/parser/cpdf_dictionary.cpp',
+    'pdfium/core/fpdfapi/parser/cpdf_document.cpp',
+    'pdfium/core/fpdfapi/parser/cpdf_hint_tables.cpp',
+    'pdfium/core/fpdfapi/parser/cpdf_indirect_object_holder.cpp',
+    'pdfium/core/fpdfapi/parser/cpdf_linearized_header.cpp',
+    'pdfium/core/fpdfapi/parser/cpdf_name.cpp',
+    'pdfium/core/fpdfapi/parser/cpdf_null.cpp',
+    'pdfium/core/fpdfapi/parser/cpdf_number.cpp',
+    'pdfium/core/fpdfapi/parser/cpdf_object.cpp',
+    'pdfium/core/fpdfapi/parser/cpdf_parser.cpp',
+    'pdfium/core/fpdfapi/parser/cpdf_reference.cpp',
+    'pdfium/core/fpdfapi/parser/cpdf_security_handler.cpp',
+    'pdfium/core/fpdfapi/parser/cpdf_simple_parser.cpp',
+    'pdfium/core/fpdfapi/parser/cpdf_stream.cpp',
+    'pdfium/core/fpdfapi/parser/cpdf_stream_acc.cpp',
+    'pdfium/core/fpdfapi/parser/cpdf_string.cpp',
+    'pdfium/core/fpdfapi/parser/cpdf_syntax_parser.cpp',
+    'pdfium/core/fpdfapi/parser/fpdf_parser_decode.cpp',
+    'pdfium/core/fpdfapi/parser/fpdf_parser_utility.cpp',
+    'pdfium/core/fpdfapi/render/cpdf_charposlist.cpp',
+    'pdfium/core/fpdfapi/render/cpdf_devicebuffer.cpp',
+    'pdfium/core/fpdfapi/render/cpdf_dibsource.cpp',
+    'pdfium/core/fpdfapi/render/cpdf_dibtransferfunc.cpp',
+    'pdfium/core/fpdfapi/render/cpdf_docrenderdata.cpp',
+    'pdfium/core/fpdfapi/render/cpdf_imagecacheentry.cpp',
+    'pdfium/core/fpdfapi/render/cpdf_imageloader.cpp',
+    'pdfium/core/fpdfapi/render/cpdf_imagerenderer.cpp',
+    'pdfium/core/fpdfapi/render/cpdf_pagerendercache.cpp',
+    'pdfium/core/fpdfapi/render/cpdf_progressiverenderer.cpp',
+    'pdfium/core/fpdfapi/render/cpdf_rendercontext.cpp',
+    'pdfium/core/fpdfapi/render/cpdf_renderoptions.cpp',
+    'pdfium/core/fpdfapi/render/cpdf_renderstatus.cpp',
+    'pdfium/core/fpdfapi/render/cpdf_scaledrenderbuffer.cpp',
+    'pdfium/core/fpdfapi/render/cpdf_textrenderer.cpp',
+    'pdfium/core/fpdfapi/render/cpdf_transferfunc.cpp',
+    'pdfium/core/fpdfapi/render/cpdf_type3cache.cpp',
+    'pdfium/core/fpdfapi/render/cpdf_type3glyphs.cpp',
+]
+
+# fpdfdoc
+SOURCES += [
+    'pdfium/core/fpdfdoc/cline.cpp',
+    'pdfium/core/fpdfdoc/clines.cpp',
+    'pdfium/core/fpdfdoc/cpdf_aaction.cpp',
+    'pdfium/core/fpdfdoc/cpdf_action.cpp',
+    'pdfium/core/fpdfdoc/cpdf_actionfields.cpp',
+    'pdfium/core/fpdfdoc/cpdf_annot.cpp',
+    'pdfium/core/fpdfdoc/cpdf_annotlist.cpp',
+    'pdfium/core/fpdfdoc/cpdf_apsettings.cpp',
+    'pdfium/core/fpdfdoc/cpdf_bookmark.cpp',
+    'pdfium/core/fpdfdoc/cpdf_bookmarktree.cpp',
+    'pdfium/core/fpdfdoc/cpdf_defaultappearance.cpp',
+    'pdfium/core/fpdfdoc/cpdf_dest.cpp',
+    'pdfium/core/fpdfdoc/cpdf_docjsactions.cpp',
+    'pdfium/core/fpdfdoc/cpdf_filespec.cpp',
+    'pdfium/core/fpdfdoc/cpdf_formcontrol.cpp',
+    'pdfium/core/fpdfdoc/cpdf_formfield.cpp',
+    'pdfium/core/fpdfdoc/cpdf_iconfit.cpp',
+    'pdfium/core/fpdfdoc/cpdf_interform.cpp',
+    'pdfium/core/fpdfdoc/cpdf_link.cpp',
+    'pdfium/core/fpdfdoc/cpdf_linklist.cpp',
+    'pdfium/core/fpdfdoc/cpdf_metadata.cpp',
+    'pdfium/core/fpdfdoc/cpdf_nametree.cpp',
+    'pdfium/core/fpdfdoc/cpdf_numbertree.cpp',
+    'pdfium/core/fpdfdoc/cpdf_occontext.cpp',
+    'pdfium/core/fpdfdoc/cpdf_pagelabel.cpp',
+    'pdfium/core/fpdfdoc/cpdf_variabletext.cpp',
+    'pdfium/core/fpdfdoc/cpdf_viewerpreferences.cpp',
+    'pdfium/core/fpdfdoc/cpvt_color.cpp',
+    'pdfium/core/fpdfdoc/cpvt_fontmap.cpp',
+    'pdfium/core/fpdfdoc/cpvt_generateap.cpp',
+    'pdfium/core/fpdfdoc/cpvt_sectioninfo.cpp',
+    'pdfium/core/fpdfdoc/cpvt_wordinfo.cpp',
+    'pdfium/core/fpdfdoc/csection.cpp',
+    'pdfium/core/fpdfdoc/ctypeset.cpp',
+    'pdfium/core/fpdfdoc/doc_tagged.cpp',
+]
+
+# fpdftext
+SOURCES += [
+    'pdfium/core/fpdftext/cpdf_linkextract.cpp',
+    'pdfium/core/fpdftext/cpdf_textpage.cpp',
+    'pdfium/core/fpdftext/cpdf_textpagefind.cpp',
+    'pdfium/core/fpdftext/unicodenormalizationdata.cpp',
+]
+
+# fxcodec
+SOURCES += [
+    'pdfium/core/fxcodec/codec/fx_codec.cpp',
+    'pdfium/core/fxcodec/codec/fx_codec_fax.cpp',
+    'pdfium/core/fxcodec/codec/fx_codec_flate.cpp',
+    'pdfium/core/fxcodec/codec/fx_codec_icc.cpp',
+    'pdfium/core/fxcodec/codec/fx_codec_jbig.cpp',
+    'pdfium/core/fxcodec/codec/fx_codec_jpeg.cpp',
+#    'pdfium/core/fxcodec/codec/fx_codec_jpx_opj.cpp',  # SkiaPDF doesn't use JPEG 2000 format
+    'pdfium/core/fxcodec/jbig2/JBig2_ArithDecoder.cpp',
+    'pdfium/core/fxcodec/jbig2/JBig2_ArithIntDecoder.cpp',
+    'pdfium/core/fxcodec/jbig2/JBig2_BitStream.cpp',
+    'pdfium/core/fxcodec/jbig2/JBig2_Context.cpp',
+    'pdfium/core/fxcodec/jbig2/JBig2_GrdProc.cpp',
+    'pdfium/core/fxcodec/jbig2/JBig2_GrrdProc.cpp',
+    'pdfium/core/fxcodec/jbig2/JBig2_GsidProc.cpp',
+    'pdfium/core/fxcodec/jbig2/JBig2_HtrdProc.cpp',
+    'pdfium/core/fxcodec/jbig2/JBig2_HuffmanDecoder.cpp',
+    'pdfium/core/fxcodec/jbig2/JBig2_HuffmanTable.cpp',
+    'pdfium/core/fxcodec/jbig2/JBig2_HuffmanTable_Standard.cpp',
+    'pdfium/core/fxcodec/jbig2/JBig2_Image.cpp',
+    'pdfium/core/fxcodec/jbig2/JBig2_PatternDict.cpp',
+    'pdfium/core/fxcodec/jbig2/JBig2_PddProc.cpp',
+    'pdfium/core/fxcodec/jbig2/JBig2_SddProc.cpp',
+    'pdfium/core/fxcodec/jbig2/JBig2_Segment.cpp',
+    'pdfium/core/fxcodec/jbig2/JBig2_SymbolDict.cpp',
+    'pdfium/core/fxcodec/jbig2/JBig2_TrdProc.cpp',
+]
+
+# fxcrt
+SOURCES += [
+    'pdfium/core/fxcrt/fx_basic_array.cpp',
+    'pdfium/core/fxcrt/fx_basic_bstring.cpp',
+    'pdfium/core/fxcrt/fx_basic_buffer.cpp',
+    'pdfium/core/fxcrt/fx_basic_coords.cpp',
+    'pdfium/core/fxcrt/fx_basic_gcc.cpp',
+    'pdfium/core/fxcrt/fx_basic_memmgr.cpp',
+    'pdfium/core/fxcrt/fx_basic_utf.cpp',
+    'pdfium/core/fxcrt/fx_basic_util.cpp',
+    'pdfium/core/fxcrt/fx_basic_wstring.cpp',
+    'pdfium/core/fxcrt/fx_bidi.cpp',
+    'pdfium/core/fxcrt/fx_extension.cpp',
+    'pdfium/core/fxcrt/fx_ucddata.cpp',
+    'pdfium/core/fxcrt/fx_unicode.cpp',
+    'pdfium/core/fxcrt/fx_xml_composer.cpp',
+    'pdfium/core/fxcrt/fx_xml_parser.cpp',
+    'pdfium/core/fxcrt/fxcrt_posix.cpp',
+    'pdfium/core/fxcrt/fxcrt_stream.cpp',
+    'pdfium/core/fxcrt/fxcrt_windows.cpp',
+]
+
+# fxedit
+SOURCES += [
+    'pdfium/fpdfsdk/fxedit/fxet_ap.cpp',
+    'pdfium/fpdfsdk/fxedit/fxet_edit.cpp',
+    'pdfium/fpdfsdk/fxedit/fxet_list.cpp',
+]
+
+# fxge
+SOURCES += [
+    'pdfium/core/fxge/agg/fx_agg_driver.cpp',
+    'pdfium/core/fxge/dib/fx_dib_composite.cpp',
+    'pdfium/core/fxge/dib/fx_dib_convert.cpp',
+    'pdfium/core/fxge/dib/fx_dib_engine.cpp',
+    'pdfium/core/fxge/dib/fx_dib_main.cpp',
+    'pdfium/core/fxge/dib/fx_dib_transform.cpp',
+    'pdfium/core/fxge/fontdata/chromefontdata/FoxitDingbats.cpp',
+    'pdfium/core/fxge/fontdata/chromefontdata/FoxitFixed.cpp',
+    'pdfium/core/fxge/fontdata/chromefontdata/FoxitFixedBold.cpp',
+    'pdfium/core/fxge/fontdata/chromefontdata/FoxitFixedBoldItalic.cpp',
+    'pdfium/core/fxge/fontdata/chromefontdata/FoxitFixedItalic.cpp',
+    'pdfium/core/fxge/fontdata/chromefontdata/FoxitSans.cpp',
+    'pdfium/core/fxge/fontdata/chromefontdata/FoxitSansBold.cpp',
+    'pdfium/core/fxge/fontdata/chromefontdata/FoxitSansBoldItalic.cpp',
+    'pdfium/core/fxge/fontdata/chromefontdata/FoxitSansItalic.cpp',
+    'pdfium/core/fxge/fontdata/chromefontdata/FoxitSansMM.cpp',
+    'pdfium/core/fxge/fontdata/chromefontdata/FoxitSerif.cpp',
+    'pdfium/core/fxge/fontdata/chromefontdata/FoxitSerifBold.cpp',
+    'pdfium/core/fxge/fontdata/chromefontdata/FoxitSerifBoldItalic.cpp',
+    'pdfium/core/fxge/fontdata/chromefontdata/FoxitSerifItalic.cpp',
+    'pdfium/core/fxge/fontdata/chromefontdata/FoxitSerifMM.cpp',
+    'pdfium/core/fxge/fontdata/chromefontdata/FoxitSymbol.cpp',
+    'pdfium/core/fxge/freetype/fx_freetype.cpp',
+    'pdfium/core/fxge/ge/cfx_cliprgn.cpp',
+    'pdfium/core/fxge/ge/cfx_facecache.cpp',
+    'pdfium/core/fxge/ge/cfx_folderfontinfo.cpp',
+    'pdfium/core/fxge/ge/cfx_font.cpp',
+    'pdfium/core/fxge/ge/cfx_fontcache.cpp',
+    'pdfium/core/fxge/ge/cfx_fontmapper.cpp',
+    'pdfium/core/fxge/ge/cfx_fontmgr.cpp',
+    'pdfium/core/fxge/ge/cfx_gemodule.cpp',
+    'pdfium/core/fxge/ge/cfx_graphstate.cpp',
+    'pdfium/core/fxge/ge/cfx_graphstatedata.cpp',
+    'pdfium/core/fxge/ge/cfx_pathdata.cpp',
+    'pdfium/core/fxge/ge/cfx_renderdevice.cpp',
+    'pdfium/core/fxge/ge/cfx_substfont.cpp',
+    'pdfium/core/fxge/ge/cfx_unicodeencoding.cpp',
+    'pdfium/core/fxge/ge/cttfontdesc.cpp',
+    'pdfium/core/fxge/ge/fx_ge_fontmap.cpp',
+    'pdfium/core/fxge/ge/fx_ge_linux.cpp',
+    'pdfium/core/fxge/ge/fx_ge_text.cpp',
+    'pdfium/core/fxge/ifx_renderdevicedriver.cpp',
+]
+if CONFIG['OS_TARGET'] == 'WINNT':
+    SOURCES += [
+        'pdfium/core/fxge/win32/cfx_psrenderer.cpp',
+        'pdfium/core/fxge/win32/cpsoutput.cpp',
+        'pdfium/core/fxge/win32/fx_win32_device.cpp',
+        'pdfium/core/fxge/win32/fx_win32_dib.cpp',
+        'pdfium/core/fxge/win32/fx_win32_dwrite.cpp',
+        'pdfium/core/fxge/win32/fx_win32_gdipext.cpp',
+        'pdfium/core/fxge/win32/fx_win32_print.cpp',
+    ]
+if CONFIG['OS_TARGET'] == 'Darwin':
+    SOURCES += [
+        'pdfium/core/fxge/apple/fx_apple_platform.cpp',
+        'pdfium/core/fxge/apple/fx_mac_imp.cpp',
+        'pdfium/core/fxge/apple/fx_quartz_device.cpp',
+    ]
+if CONFIG['OS_TARGET'] == 'Android':
+    SOURCES += [
+        'pdfium/core/fxge/android/cfpf_skiadevicemodule.cpp',
+        'pdfium/core/fxge/android/cfpf_skiafont.cpp',
+        'pdfium/core/fxge/android/cfpf_skiafontmgr.cpp',
+        'pdfium/core/fxge/android/cfx_androidfontinfo.cpp',
+        'pdfium/core/fxge/android/fx_android_imp.cpp',
+    ]
+
+# javascript
+SOURCES += [
+    'pdfium/fpdfsdk/javascript/JS_Runtime_Stub.cpp',
+]
+
+# pdfwindow
+SOURCES += [
+    'pdfium/fpdfsdk/pdfwindow/cpwl_color.cpp',
+    'pdfium/fpdfsdk/pdfwindow/PWL_Button.cpp',
+    'pdfium/fpdfsdk/pdfwindow/PWL_Caret.cpp',
+    'pdfium/fpdfsdk/pdfwindow/PWL_ComboBox.cpp',
+    'pdfium/fpdfsdk/pdfwindow/PWL_Edit.cpp',
+    'pdfium/fpdfsdk/pdfwindow/PWL_EditCtrl.cpp',
+    'pdfium/fpdfsdk/pdfwindow/PWL_FontMap.cpp',
+    'pdfium/fpdfsdk/pdfwindow/PWL_Icon.cpp',
+    'pdfium/fpdfsdk/pdfwindow/PWL_ListBox.cpp',
+    'pdfium/fpdfsdk/pdfwindow/PWL_ScrollBar.cpp',
+    'pdfium/fpdfsdk/pdfwindow/PWL_SpecialButton.cpp',
+    'pdfium/fpdfsdk/pdfwindow/PWL_Utils.cpp',
+    'pdfium/fpdfsdk/pdfwindow/PWL_Wnd.cpp',
+]
+
+# third_party:fx_agg
+SOURCES += [
+    'pdfium/third_party/agg23/agg_curves.cpp',
+    'pdfium/third_party/agg23/agg_path_storage.cpp',
+    'pdfium/third_party/agg23/agg_rasterizer_scanline_aa.cpp',
+    'pdfium/third_party/agg23/agg_vcgen_dash.cpp',
+    'pdfium/third_party/agg23/agg_vcgen_stroke.cpp',
+]
+
+# third_party:bigint
+SOURCES += [
+    'pdfium/third_party/bigint/BigInteger.cc',
+    'pdfium/third_party/bigint/BigIntegerUtils.cc',
+    'pdfium/third_party/bigint/BigUnsigned.cc',
+    'pdfium/third_party/bigint/BigUnsignedInABase.cc',
+]
+
+# third_party:fx_freetype
+LOCAL_INCLUDES += [
+    '/modules/freetype2/include',
+    '/modules/freetype2/src',
+]
+USE_LIBS += [
+    'freetype',
+]
+
+# third_party:fx_lcms2
+SOURCES += [
+    'pdfium/third_party/lcms2-2.6/src/cmscam02.c',
+    'pdfium/third_party/lcms2-2.6/src/cmscgats.c',
+    'pdfium/third_party/lcms2-2.6/src/cmscnvrt.c',
+    'pdfium/third_party/lcms2-2.6/src/cmserr.c',
+    'pdfium/third_party/lcms2-2.6/src/cmsgamma.c',
+    'pdfium/third_party/lcms2-2.6/src/cmsgmt.c',
+    'pdfium/third_party/lcms2-2.6/src/cmshalf.c',
+    'pdfium/third_party/lcms2-2.6/src/cmsintrp.c',
+    'pdfium/third_party/lcms2-2.6/src/cmsio0.c',
+    'pdfium/third_party/lcms2-2.6/src/cmsio1.c',
+    'pdfium/third_party/lcms2-2.6/src/cmslut.c',
+    'pdfium/third_party/lcms2-2.6/src/cmsmd5.c',
+    'pdfium/third_party/lcms2-2.6/src/cmsmtrx.c',
+    'pdfium/third_party/lcms2-2.6/src/cmsnamed.c',
+    'pdfium/third_party/lcms2-2.6/src/cmsopt.c',
+    'pdfium/third_party/lcms2-2.6/src/cmspack.c',
+    'pdfium/third_party/lcms2-2.6/src/cmspcs.c',
+    'pdfium/third_party/lcms2-2.6/src/cmsplugin.c',
+    'pdfium/third_party/lcms2-2.6/src/cmsps2.c',
+    'pdfium/third_party/lcms2-2.6/src/cmssamp.c',
+    'pdfium/third_party/lcms2-2.6/src/cmssm.c',
+    'pdfium/third_party/lcms2-2.6/src/cmstypes.c',
+    'pdfium/third_party/lcms2-2.6/src/cmsvirt.c',
+    'pdfium/third_party/lcms2-2.6/src/cmswtpnt.c',
+    'pdfium/third_party/lcms2-2.6/src/cmsxform.c',
+]
+
+# third_party:fx_zlib
+LOCAL_INCLUDES += [
+    '/modules/zlib/src',
+]
+USE_LIBS += [
+    'zlib',
+]
+
+# third_party:jpeg
+DEFINES['USE_LIBJPEG_TURBO'] = True
+LOCAL_INCLUDES += [
+    '/media/libjpeg',
+]
+USE_LIBS += [
+    'media_libjpeg',
+]
+
+# We allow warnings for third-party code that can be updated from upstream.
+ALLOW_COMPILER_WARNINGS = True
+
+FINAL_LIBRARY = 'xul'
