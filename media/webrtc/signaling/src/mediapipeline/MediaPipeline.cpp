@@ -2197,8 +2197,7 @@ public:
 
   void RenderVideoFrame(const webrtc::VideoFrameBuffer& buffer,
                         uint32_t time_stamp,
-                        int64_t render_time,
-                        const RefPtr<layers::Image>& video_image)
+                        int64_t render_time)
   {
     RenderVideoFrame(buffer.DataY(),
                      buffer.StrideY(),
@@ -2206,7 +2205,7 @@ public:
                      buffer.StrideU(),
                      buffer.DataV(),
                      buffer.StrideV(),
-                     time_stamp, render_time, video_image);
+                     time_stamp, render_time);
   }
 
   void RenderVideoFrame(const uint8_t* buffer_y,
@@ -2216,8 +2215,7 @@ public:
                         const uint8_t* buffer_v,
                         uint32_t v_stride,
                         uint32_t time_stamp,
-                        int64_t render_time,
-                        const RefPtr<layers::Image>& video_image)
+                        int64_t render_time)
   {
     ReentrantMonitorAutoEnter enter(monitor_);
 
@@ -2277,12 +2275,9 @@ public:
 
   void RenderVideoFrame(const webrtc::VideoFrameBuffer& buffer,
                         uint32_t time_stamp,
-                        int64_t render_time,
-                        const ImageHandle& handle) override
+                        int64_t render_time) override
   {
-    pipeline_->listener_->RenderVideoFrame(buffer,
-                                           time_stamp, render_time,
-                                           handle.GetImage());
+    pipeline_->listener_->RenderVideoFrame(buffer, time_stamp, render_time);
   }
 
   void RenderVideoFrame(const uint8_t* buffer_y,
@@ -2292,14 +2287,12 @@ public:
                         const uint8_t* buffer_v,
                         uint32_t v_stride,
                         uint32_t time_stamp,
-                        int64_t render_time,
-                        const ImageHandle& handle) override
+                        int64_t render_time) override
   {
     pipeline_->listener_->RenderVideoFrame(buffer_y, y_stride,
                                            buffer_u, u_stride,
                                            buffer_v, v_stride,
-                                           time_stamp, render_time,
-                                           handle.GetImage());
+                                           time_stamp, render_time);
   }
 
 private:
