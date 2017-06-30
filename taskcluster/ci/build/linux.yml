@@ -329,7 +329,7 @@ linux64-asan-fuzzing/opt:
     worker:
         env:
             PERFHERDER_EXTRA_OPTIONS: asan-fuzzing
-            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/linux64/asan.manifest"
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/linux64/fuzzing.manifest"
         max-run-time: 36000
     run:
         using: mozharness
