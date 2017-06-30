@@ -91,7 +91,6 @@ to mochitest command.
 * :visited support (bug 1328509)
   * test_visited_reftests.html `inherit-keyword-1.xhtml` [2]
   * ... `mathml-links.html` [2]
-  * ... `caret-color-on-visited-1.html` [2]
 
 ## Assertions
 
