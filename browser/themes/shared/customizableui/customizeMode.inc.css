@@ -256,8 +256,15 @@
   width: 16px;
   height: 16px;
   border-radius: 2px;
-  background-image: url("chrome://browser/content/default-theme-icon.svg");
   background-size: contain;
+}
+
+#customization-lwtheme-button > .box-inherit > .box-inherit > .button-icon {
+  background-image: url("chrome://browser/content/default-theme-icon.svg");
+}
+
+#customization-uidensity-button > .box-inherit > .box-inherit > .button-icon {
+  background-image: url("chrome://browser/skin/customizableui/density-normal.svg");
 }
 
 %ifndef MOZ_PHOTON_THEME
@@ -451,9 +458,20 @@ toolbarpaletteitem[place="toolbar"]:not([mousedown="true"]):-moz-focusring {
   padding-inline-start: 0;
 }
 
-.customization-uidensity-menu-button,
 .customization-lwtheme-menu-theme[defaulttheme] {
   list-style-image: url(chrome://browser/content/default-theme-icon.svg);
+}
+
+#customization-uidensity-menu-button-normal {
+  list-style-image: url("chrome://browser/skin/customizableui/density-normal.svg");
+}
+
+#customization-uidensity-menu-button-compact {
+  list-style-image: url("chrome://browser/skin/customizableui/density-compact.svg");
+}
+
+#customization-uidensity-menu-button-touch {
+  list-style-image: url("chrome://browser/skin/customizableui/density-touch.svg");
 }
 
 .customization-uidensity-menu-button[active="true"],
