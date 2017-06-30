@@ -39,10 +39,8 @@ HLSDecoder::CreateStateMachine()
 ChannelMediaDecoder*
 HLSDecoder::Clone(MediaDecoderInit& aInit)
 {
-  if (!IsEnabled()) {
-    return nullptr;
-  }
-  return new HLSDecoder(aInit);
+  MOZ_CRASH("Clone is not supported");
+  return nullptr;
 }
 
 bool
