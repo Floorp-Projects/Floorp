@@ -568,10 +568,6 @@ test(function(t) {
 // are correctly represented.
 
 test(function(t) {
-  if (!isServoEnabled()) {
-    // FIXME : Bug 1374564 : the serialization of text-shadow is wrong on gecko
-    return;
-  }
   var div = addDiv(t);
 
   div.style.textShadow = '1px 1px 2px rgb(0, 0, 0), ' +
