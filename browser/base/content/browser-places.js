@@ -698,6 +698,20 @@ var PlacesCommandHook = {
       organizer.PlacesOrganizer.selectLeftPaneContainerByHierarchy(aLeftPaneRoot);
       organizer.focus();
     }
+  },
+
+  searchBookmarks() {
+    if (!focusAndSelectUrlBar()) {
+      return;
+    }
+    for (let char of ["*", " "]) {
+      let code = char.charCodeAt(0);
+      gURLBar.inputField.dispatchEvent(new KeyboardEvent("keypress", {
+        keyCode: code,
+        charCode: code,
+        bubbles: true
+      }));
+    }
   }
 };
 
@@ -1354,7 +1368,7 @@ var BookmarkingUI = {
     // overflow panel, we want to show a subview instead.
     if (this.button.getAttribute("cui-areatype") == CustomizableUI.TYPE_MENU_PANEL ||
         (AppConstants.MOZ_PHOTON_THEME && this.button.hasAttribute("overflowedItem"))) {
-      this._showSubview();
+      this._showSubView();
       event.preventDefault();
       event.stopPropagation();
       return;
@@ -1838,11 +1852,14 @@ var BookmarkingUI = {
     }, 1000);
   },
 
-  _showSubview() {
+  showSubView(anchor) {
+    this._showSubView(anchor);
+  },
+
+  _showSubView(anchor = document.getElementById(this.BOOKMARK_BUTTON_ID)) {
     let view = document.getElementById("PanelUI-bookmarks");
     view.addEventListener("ViewShowing", this);
     view.addEventListener("ViewHiding", this);
-    let anchor = document.getElementById(this.BOOKMARK_BUTTON_ID);
     anchor.setAttribute("closemenu", "none");
     PanelUI.showSubView("PanelUI-bookmarks", anchor,
                         CustomizableUI.AREA_PANEL);
@@ -1855,7 +1872,7 @@ var BookmarkingUI = {
 
     // Handle special case when the button is in the panel.
     if (this.button.getAttribute("cui-areatype") == CustomizableUI.TYPE_MENU_PANEL) {
-      this._showSubview();
+      this._showSubView();
       return;
     }
     let widget = CustomizableUI.getWidget(this.BOOKMARK_BUTTON_ID)
@@ -1894,28 +1911,39 @@ var BookmarkingUI = {
   },
 
   onPanelMenuViewShowing: function BUI_onViewShowing(aEvent) {
+    let panelview = aEvent.target;
     this.updateBookmarkPageMenuItem();
     // Update checked status of the toolbar toggle.
     let viewToolbar = document.getElementById("panelMenu_viewBookmarksToolbar");
-    let personalToolbar = document.getElementById("PersonalToolbar");
-    if (personalToolbar.collapsed)
-      viewToolbar.removeAttribute("checked");
-    else
-      viewToolbar.setAttribute("checked", "true");
+    if (viewToolbar) {
+      let personalToolbar = document.getElementById("PersonalToolbar");
+      if (personalToolbar.collapsed)
+        viewToolbar.removeAttribute("checked");
+      else
+        viewToolbar.setAttribute("checked", "true");
+    }
     // Get all statically placed buttons to supply them with keyboard shortcuts.
-    let staticButtons = viewToolbar.parentNode.getElementsByTagName("toolbarbutton");
+    let staticButtons = panelview.getElementsByTagName("toolbarbutton");
     for (let i = 0, l = staticButtons.length; i < l; ++i)
       CustomizableUI.addShortcut(staticButtons[i]);
     // Setup the Places view.
-    this._panelMenuView = new PlacesPanelMenuView("place:folder=BOOKMARKS_MENU",
-                                                  "panelMenu_bookmarksMenu",
-                                                  "panelMenu_bookmarksMenu", {
-                                                    extraClasses: {
-                                                      entry: "subviewbutton",
-                                                      footer: "panel-subview-footer"
-                                                    }
-                                                  });
-    aEvent.target.removeEventListener("ViewShowing", this);
+    if (gPhotonStructure) {
+      // We restrict the amount of results to 42. Not 50, but 42. Why? Because 42.
+      let query = "place:queryType=" + Ci.nsINavHistoryQueryOptions.QUERY_TYPE_BOOKMARKS +
+        "&sort=" + Ci.nsINavHistoryQueryOptions.SORT_BY_DATEADDED_DESCENDING +
+        "&maxResults=42&excludeQueries=1";
+      this._panelMenuView = new PlacesPanelview(document.getElementById("panelMenu_bookmarksMenu"),
+        panelview, query);
+    } else {
+      this._panelMenuView = new PlacesPanelMenuView("place:folder=BOOKMARKS_MENU",
+        "panelMenu_bookmarksMenu", "panelMenu_bookmarksMenu", {
+          extraClasses: {
+            entry: "subviewbutton",
+            footer: "panel-subview-footer"
+          }
+        });
+    }
+    panelview.removeEventListener("ViewShowing", this);
   },
 
   onPanelMenuViewHiding: function BUI_onViewHiding(aEvent) {
