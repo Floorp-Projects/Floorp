@@ -795,15 +795,16 @@ void
 DisplayListBuilder::PushBorder(const WrRect& aBounds,
                                const WrRect& aClip,
                                const WrBorderWidths& aWidths,
-                               const WrBorderSide& aTop,
-                               const WrBorderSide& aRight,
-                               const WrBorderSide& aBottom,
-                               const WrBorderSide& aLeft,
+                               const Range<const WrBorderSide>& aSides,
                                const WrBorderRadius& aRadius)
 {
+  MOZ_ASSERT(aSides.length() == 4);
+  if (aSides.length() != 4) {
+    return;
+  }
   WrClipRegionToken tok = wr_dp_push_clip_region(mWrState, aClip, nullptr, 0, nullptr);
   wr_dp_push_border(mWrState, aBounds, tok,
-                    aWidths, aTop, aRight, aBottom, aLeft, aRadius);
+                    aWidths, aSides[0], aSides[1], aSides[2], aSides[3], aRadius);
 }
 
 void
