@@ -1,0 +1,53 @@
+diff --git a/third_party/lcms2-2.6/src/cmsintrp.c b/third_party/lcms2-2.6/src/cmsintrp.c
+index 5d5f35d..14c6856 100644
+--- a/third_party/lcms2-2.6/src/cmsintrp.c
++++ b/third_party/lcms2-2.6/src/cmsintrp.c
+@@ -215,7 +215,7 @@ void LinLerp1D(register const cmsUInt16Number Value[],
+ // To prevent out of bounds indexing
+ cmsINLINE cmsFloat32Number fclamp(cmsFloat32Number v) 
+ {
+-    return v < 0.0f ? 0.0f : (v > 1.0f ? 1.0f : v);
++    return ((v < 0.0f) || isnan(v)) ? 0.0f : (v > 1.0f ? 1.0f : v);
+ }
+ 
+ // Floating-point version of 1D interpolation
+diff --git a/third_party/lcms2-2.6/src/cmsio0.c b/third_party/lcms2-2.6/src/cmsio0.c
+index 5f9f08a..3ed730a 100644
+--- a/third_party/lcms2-2.6/src/cmsio0.c
++++ b/third_party/lcms2-2.6/src/cmsio0.c
+@@ -1475,6 +1475,17 @@ void* CMSEXPORT cmsReadTag(cmsHPROFILE hProfile, cmsTagSignature sig)
+     // If the element is already in memory, return the pointer
+     if (Icc -> TagPtrs[n]) {
+ 
++        if (Icc->TagTypeHandlers[n] == NULL) goto Error;
++
++        // Sanity check
++        BaseType = Icc->TagTypeHandlers[n]->Signature;
++        if (BaseType == 0) goto Error;
++
++        TagDescriptor = _cmsGetTagDescriptor(Icc->ContextID, sig);
++        if (TagDescriptor == NULL) goto Error;
++
++        if (!IsTypeSupported(TagDescriptor, BaseType)) goto Error;
++
+         if (Icc ->TagSaveAsRaw[n]) goto Error;  // We don't support read raw tags as cooked
+ 
+         _cmsUnlockMutex(Icc->ContextID, Icc ->UsrMutex);
+diff --git a/third_party/lcms2-2.6/src/cmstypes.c b/third_party/lcms2-2.6/src/cmstypes.c
+index 04dd0c4..386439b 100644
+--- a/third_party/lcms2-2.6/src/cmstypes.c
++++ b/third_party/lcms2-2.6/src/cmstypes.c
+@@ -4297,8 +4297,12 @@ void *Type_MPEclut_Read(struct _cms_typehandler_struct* self, cmsIOHANDLER* io,
+ 
+     // Copy MAX_INPUT_DIMENSIONS at most. Expand to cmsUInt32Number
+     nMaxGrids = InputChans > MAX_INPUT_DIMENSIONS ? MAX_INPUT_DIMENSIONS : InputChans;
+-    for (i=0; i < nMaxGrids; i++) GridPoints[i] = (cmsUInt32Number) Dimensions8[i];
+ 
++    for (i = 0; i < nMaxGrids; i++) {
++        if (Dimensions8[i] == 1) goto Error; // Impossible value, 0 for no CLUT and then 2 at least
++        GridPoints[i] = (cmsUInt32Number)Dimensions8[i];
++    }
++    
+     // Allocate the true CLUT
+     mpe = cmsStageAllocCLutFloatGranular(self ->ContextID, GridPoints, InputChans, OutputChans, NULL);
+     if (mpe == NULL) goto Error;

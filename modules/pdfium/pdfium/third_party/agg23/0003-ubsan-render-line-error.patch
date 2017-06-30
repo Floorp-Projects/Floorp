@@ -1,0 +1,73 @@
+diff --git a/third_party/agg23/agg_rasterizer_scanline_aa.cpp b/third_party/agg23/agg_rasterizer_scanline_aa.cpp
+index 46379f6..c6b3f01 100644
+--- a/third_party/agg23/agg_rasterizer_scanline_aa.cpp
++++ b/third_party/agg23/agg_rasterizer_scanline_aa.cpp
+@@ -48,6 +48,7 @@
+ //----------------------------------------------------------------------------
+ #include <limits.h>
+ #include "agg_rasterizer_scanline_aa.h"
++#include "third_party/base/numerics/safe_math.h"
+ namespace agg
+ {
+ AGG_INLINE void cell_aa::set_cover(int c, int a)
+@@ -237,7 +238,7 @@ void outline_aa::render_line(int x1, int y1, int x2, int y2)
+     int fy1 = y1 & poly_base_mask;
+     int fy2 = y2 & poly_base_mask;
+     int x_from, x_to;
+-    int p, rem, mod, lift, delta, first, incr;
++    int rem, mod, lift, delta, first, incr;
+     if(ey1 == ey2) {
+         render_hline(ey1, x1, fy1, x2, fy2);
+         return;
+@@ -268,16 +269,22 @@ void outline_aa::render_line(int x1, int y1, int x2, int y2)
+         m_cur_cell.add_cover(delta, two_fx * delta);
+         return;
+     }
+-    p     = (poly_base_size - fy1) * dx;
++    pdfium::base::CheckedNumeric<int> safeP = poly_base_size - fy1;
++    safeP *= dx;
++    if (!safeP.IsValid())
++      return;
+     first = poly_base_size;
+     if(dy < 0) {
+-        p     = fy1 * dx;
+-        first = 0;
+-        incr  = -1;
+-        dy    = -dy;
++      safeP = fy1;
++      safeP *= dx;
++      if (!safeP.IsValid())
++        return;
++      first = 0;
++      incr = -1;
++      dy = -dy;
+     }
+-    delta = p / dy;
+-    mod   = p % dy;
++    delta = safeP.ValueOrDie() / dy;
++    mod = safeP.ValueOrDie() % dy;
+     if(mod < 0) {
+         delta--;
+         mod += dy;
+@@ -287,12 +294,15 @@ void outline_aa::render_line(int x1, int y1, int x2, int y2)
+     ey1 += incr;
+     set_cur_cell(x_from >> poly_base_shift, ey1);
+     if(ey1 != ey2) {
+-        p     = poly_base_size * dx;
+-        lift  = p / dy;
+-        rem   = p % dy;
+-        if(rem < 0) {
+-            lift--;
+-            rem += dy;
++      safeP = static_cast<int>(poly_base_size);
++      safeP *= dx;
++      if (!safeP.IsValid())
++        return;
++      lift = safeP.ValueOrDie() / dy;
++      rem = safeP.ValueOrDie() % dy;
++      if (rem < 0) {
++        lift--;
++        rem += dy;
+         }
+         mod -= dy;
+         while(ey1 != ey2) {

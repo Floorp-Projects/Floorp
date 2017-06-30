@@ -1,0 +1,34 @@
+diff --git a/third_party/lcms2-2.6/src/cmsxform.c b/third_party/lcms2-2.6/src/cmsxform.c
+index eddb9bd..6466d27 100644
+--- a/third_party/lcms2-2.6/src/cmsxform.c
++++ b/third_party/lcms2-2.6/src/cmsxform.c
+@@ -593,7 +593,10 @@ _cmsTRANSFORM* AllocEmptyTransform(cmsContext ContextID, cmsPipeline* lut,
+ 
+     // Allocate needed memory
+     _cmsTRANSFORM* p = (_cmsTRANSFORM*) _cmsMallocZero(ContextID, sizeof(_cmsTRANSFORM));
+-    if (!p) return NULL;
++    if (!p) {
++      cmsPipelineFree(lut);
++      return NULL;
++    }
+ 
+     // Store the proposed pipeline
+     p ->Lut = lut;
+@@ -643,7 +646,7 @@ _cmsTRANSFORM* AllocEmptyTransform(cmsContext ContextID, cmsPipeline* lut,
+         if (p ->FromInputFloat == NULL || p ->ToOutputFloat == NULL) {
+ 
+             cmsSignalError(ContextID, cmsERROR_UNKNOWN_EXTENSION, "Unsupported raster format");
+-            _cmsFree(ContextID, p);
++            cmsDeleteTransform(p);
+             return NULL;
+         }
+ 
+@@ -673,7 +676,7 @@ _cmsTRANSFORM* AllocEmptyTransform(cmsContext ContextID, cmsPipeline* lut,
+             if (p ->FromInput == NULL || p ->ToOutput == NULL) {
+ 
+                 cmsSignalError(ContextID, cmsERROR_UNKNOWN_EXTENSION, "Unsupported raster format");
+-                _cmsFree(ContextID, p);
++                cmsDeleteTransform(p);
+                 return NULL;
+             }
+ 
