@@ -9,6 +9,6 @@
 
 [HTMLConstructor]
 interface HTMLDataElement : HTMLElement {
-           [SetterThrows]
+           [CEReactions, SetterThrows]
            attribute DOMString value;
 };

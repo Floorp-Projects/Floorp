@@ -1035,9 +1035,14 @@ AndroidDynamicToolbarAnimator::PageTooSmallEnsureToolbarVisible()
   MOZ_ASSERT(APZThreadUtils::IsControllerThread());
   // if the page is too small then the toolbar can not be hidden
   if ((float)mControllerSurfaceHeight >= (mControllerFrameMetrics.mPageRect.YMost() * SHRINK_FACTOR)) {
-    // If the toolbar is partial hidden, show it.
-    if ((mControllerToolbarHeight != mControllerMaxToolbarHeight) && !mPinnedFlags) {
-      StartCompositorAnimation(MOVE_TOOLBAR_DOWN, eImmediate, mControllerToolbarHeight, /* wait for page resize */ true);
+    if (!mPinnedFlags) {
+      // If the toolbar is partial hidden, show it.
+      if (mControllerToolbarHeight != mControllerMaxToolbarHeight) {
+        StartCompositorAnimation(MOVE_TOOLBAR_DOWN, eImmediate, mControllerToolbarHeight, /* wait for page resize */ true);
+      } else {
+        // If the static snapshot is visible, then make sure the real toolbar is visible
+        ShowToolbarIfNotVisible(mToolbarState);
+      }
     }
     return true;
   }

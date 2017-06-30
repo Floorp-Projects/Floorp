@@ -540,7 +540,7 @@ mozilla::ipc::IPCResult
 CompositorBridgeParent::RecvFlushRendering()
 {
   if (gfxVars::UseWebRender()) {
-    mWrBridge->FlushRendering(/* aSync */ true);
+    mWrBridge->FlushRendering(/* aIsSync */ true);
     return IPC_OK();
   }
 
@@ -555,7 +555,7 @@ mozilla::ipc::IPCResult
 CompositorBridgeParent::RecvFlushRenderingAsync()
 {
   if (gfxVars::UseWebRender()) {
-    mWrBridge->FlushRendering(/* aSync */ false);
+    mWrBridge->FlushRendering(/* aIsSync */ false);
     return IPC_OK();
   }
 
@@ -1650,6 +1650,18 @@ CompositorBridgeParent::RecvAdoptChild(const uint64_t& child)
       // Trigger composition to handle a case that mLayerTree was not composited yet
       // by previous CompositorBridgeParent, since nsRefreshDriver might wait composition complete.
       ScheduleComposition();
+    }
+    if (mWrBridge && sIndirectLayerTrees[child].mWrBridge) {
+      sIndirectLayerTrees[child].mWrBridge->UpdateWebRender(mWrBridge->CompositorScheduler(),
+                                                            mWrBridge->GetWebRenderAPI(),
+                                                            mWrBridge->CompositableHolder(),
+                                                            GetAnimationStorage(0));
+      // Pretend we composited, since parent CompositorBridgeParent was replaced.
+      CrossProcessCompositorBridgeParent* cpcp = sIndirectLayerTrees[child].mCrossProcessParent;
+      if (cpcp) {
+        TimeStamp now = TimeStamp::Now();
+        cpcp->DidComposite(child, now, now);
+      }
     }
     parent = sIndirectLayerTrees[child].mApzcTreeManagerParent;
   }

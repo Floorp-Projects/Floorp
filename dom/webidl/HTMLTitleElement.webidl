@@ -9,6 +9,6 @@
 
 [HTMLConstructor]
 interface HTMLTitleElement : HTMLElement {
-           [Throws]
+           [CEReactions, Throws]
            attribute DOMString text;
 };

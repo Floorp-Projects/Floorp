@@ -93,6 +93,18 @@ const EVENTS = {
   CONNECTED: "connected",
 };
 
+const RESPONSE_HEADERS = [
+  "Cache-Control",
+  "Connection",
+  "Content-Encoding",
+  "Content-Length",
+  "ETag",
+  "Keep-Alive",
+  "Last-Modified",
+  "Server",
+  "Vary"
+];
+
 const HEADERS = [
   {
     name: "status",
@@ -180,6 +192,13 @@ const HEADERS = [
     canFilter: false,
     subMenu: "timings",
   },
+  ...RESPONSE_HEADERS
+    .map(header => ({
+      name: header,
+      canFilter: false,
+      subMenu: "responseHeaders",
+      noLocalization: true
+    })),
   {
     name: "waterfall",
     canFilter: false,
@@ -225,6 +244,7 @@ const general = {
   EVENTS,
   FILTER_SEARCH_DELAY: 200,
   HEADERS,
+  RESPONSE_HEADERS,
   FILTER_FLAGS,
   SOURCE_EDITOR_SYNTAX_HIGHLIGHT_MAX_SIZE: 51200, // 50 KB in bytes
   REQUESTS_WATERFALL,

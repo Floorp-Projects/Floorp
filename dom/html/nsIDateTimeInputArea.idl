@@ -15,6 +15,12 @@ interface nsIDateTimeInputArea : nsISupports
   void notifyInputElementValueChanged();
 
   /**
+   * Called from DOM/Layout when input element min, max or step attribute has
+   * changed.
+   */
+  void notifyMinMaxStepAttrChanged();
+
+  /**
    * Called when date/time picker value has changed.
    */
   void setValueFromPicker(in jsval value);

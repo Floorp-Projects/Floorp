@@ -793,12 +793,8 @@ protected:
   bool mWaitingForOnStopRequest;
   bool mProgressTimerIsActive;
   bool mIsHtml;
-  bool mWarnAboutMultipartHtml;
   bool mWarnAboutSyncHtml;
   int64_t mLoadTotal; // -1 if not known.
-  // Amount of script-exposed (i.e. after undoing gzip compresion) data
-  // received.
-  uint64_t mDataAvailable;
   // Number of HTTP message body bytes received so far. This quantity is
   // in the same units as Content-Length and mLoadTotal, and hence counts
   // compressed bytes when the channel has gzip Content-Encoding. If the

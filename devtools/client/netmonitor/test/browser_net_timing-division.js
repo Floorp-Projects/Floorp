@@ -8,11 +8,10 @@
  */
 
 add_task(function* () {
-  // Hide file, protocol, remoteip columns to make sure timing division
-  // can render properly
+  // Make sure timing division can render properly
   Services.prefs.setCharPref(
-    "devtools.netmonitor.hiddenColumns",
-    "[\"file\",\"protocol\",\"remoteip\"]"
+    "devtools.netmonitor.visibleColumns",
+    "[\"waterfall\"]"
   );
 
   let { tab, monitor } = yield initNetMonitor(CUSTOM_GET_URL);

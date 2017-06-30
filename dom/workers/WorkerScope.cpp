@@ -72,10 +72,14 @@ using mozilla::dom::cache::CacheStorage;
 using mozilla::ipc::PrincipalInfo;
 
 WorkerGlobalScope::WorkerGlobalScope(WorkerPrivate* aWorkerPrivate)
-: mWindowInteractionsAllowed(0)
+: mSerialEventTarget(aWorkerPrivate->GetEventTarget())
+, mWindowInteractionsAllowed(0)
 , mWorkerPrivate(aWorkerPrivate)
 {
   mWorkerPrivate->AssertIsOnWorkerThread();
+
+  // We should always have an event target when the global is created.
+  MOZ_DIAGNOSTIC_ASSERT(mSerialEventTarget);
 }
 
 WorkerGlobalScope::~WorkerGlobalScope()
@@ -489,6 +493,26 @@ WorkerGlobalScope::CreateImageBitmap(JSContext* aCx,
   }
 }
 
+nsresult
+WorkerGlobalScope::Dispatch(const char* aName, TaskCategory aCategory,
+                            already_AddRefed<nsIRunnable>&& aRunnable)
+{
+  return EventTargetFor(aCategory)->Dispatch(Move(aRunnable),
+                                             NS_DISPATCH_NORMAL);
+}
+
+nsISerialEventTarget*
+WorkerGlobalScope::EventTargetFor(TaskCategory aCategory) const
+{
+  return mSerialEventTarget;
+}
+
+AbstractThread*
+WorkerGlobalScope::AbstractMainThreadFor(TaskCategory aCategory)
+{
+  MOZ_CRASH("AbstractMainThreadFor not supported for workers.");
+}
+
 DedicatedWorkerGlobalScope::DedicatedWorkerGlobalScope(WorkerPrivate* aWorkerPrivate,
                                                        const nsString& aName)
   : WorkerGlobalScope(aWorkerPrivate)
@@ -836,8 +860,12 @@ ServiceWorkerGlobalScope::OpenWindowEnabled(JSContext* aCx, JSObject* aObj)
 WorkerDebuggerGlobalScope::WorkerDebuggerGlobalScope(
                                                   WorkerPrivate* aWorkerPrivate)
 : mWorkerPrivate(aWorkerPrivate)
+, mSerialEventTarget(aWorkerPrivate->GetEventTarget())
 {
   mWorkerPrivate->AssertIsOnWorkerThread();
+
+  // We should always have an event target when the global is created.
+  MOZ_DIAGNOSTIC_ASSERT(mSerialEventTarget);
 }
 
 WorkerDebuggerGlobalScope::~WorkerDebuggerGlobalScope()
@@ -1049,6 +1077,26 @@ WorkerDebuggerGlobalScope::Dump(JSContext* aCx,
   if (scope) {
     scope->Dump(aString);
   }
+}
+
+nsresult
+WorkerDebuggerGlobalScope::Dispatch(const char* aName, TaskCategory aCategory,
+                                    already_AddRefed<nsIRunnable>&& aRunnable)
+{
+  return EventTargetFor(aCategory)->Dispatch(Move(aRunnable),
+                                             NS_DISPATCH_NORMAL);
+}
+
+nsISerialEventTarget*
+WorkerDebuggerGlobalScope::EventTargetFor(TaskCategory aCategory) const
+{
+  return mSerialEventTarget;
+}
+
+AbstractThread*
+WorkerDebuggerGlobalScope::AbstractMainThreadFor(TaskCategory aCategory)
+{
+  MOZ_CRASH("AbstractMainThreadFor not supported for workers.");
 }
 
 BEGIN_WORKERS_NAMESPACE

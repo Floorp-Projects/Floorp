@@ -15,16 +15,16 @@
 // http://www.whatwg.org/specs/web-apps/current-work/#the-param-element
 [HTMLConstructor]
 interface HTMLParamElement : HTMLElement {
-           [SetterThrows, Pure]
+           [CEReactions, SetterThrows, Pure]
            attribute DOMString name;
-           [SetterThrows, Pure]
+           [CEReactions, SetterThrows, Pure]
            attribute DOMString value;
 };
 
 // http://www.whatwg.org/specs/web-apps/current-work/#other-elements,-attributes-and-apis
 partial interface HTMLParamElement {
-           [SetterThrows, Pure]
+           [CEReactions, SetterThrows, Pure]
            attribute DOMString type;
-           [SetterThrows, Pure]
+           [CEReactions, SetterThrows, Pure]
            attribute DOMString valueType;
 };

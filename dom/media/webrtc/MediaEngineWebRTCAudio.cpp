@@ -51,9 +51,6 @@ LogModule* AudioLogModule() {
 NS_IMPL_ISUPPORTS0(MediaEngineWebRTCMicrophoneSource)
 NS_IMPL_ISUPPORTS0(MediaEngineWebRTCAudioCaptureSource)
 
-// XXX temp until MSG supports registration
-StaticRefPtr<AudioOutputObserver> gFarendObserver;
-
 int MediaEngineWebRTCMicrophoneSource::sChannelsOpen = 0;
 ScopedCustomReleasePtr<webrtc::VoEBase> MediaEngineWebRTCMicrophoneSource::mVoEBase;
 ScopedCustomReleasePtr<webrtc::VoEExternalMedia> MediaEngineWebRTCMicrophoneSource::mVoERender;
@@ -99,23 +96,10 @@ AudioOutputObserver::Size()
   return mPlayoutFifo->size();
 }
 
-void
-AudioOutputObserver::MixerCallback(AudioDataValue* aMixedBuffer,
-                                   AudioSampleFormat aFormat,
-                                   uint32_t aChannels,
-                                   uint32_t aFrames,
-                                   uint32_t aSampleRate)
-{
-  if (gFarendObserver) {
-    gFarendObserver->InsertFarEnd(aMixedBuffer, aFrames, false,
-                                  aSampleRate, aChannels, aFormat);
-  }
-}
-
 // static
 void
 AudioOutputObserver::InsertFarEnd(const AudioDataValue *aBuffer, uint32_t aFrames, bool aOverran,
-                                  int aFreq, int aChannels, AudioSampleFormat aFormat)
+                                  int aFreq, int aChannels)
 {
   if (mPlayoutChannels != 0) {
     if (mPlayoutChannels != static_cast<uint32_t>(aChannels)) {
@@ -414,6 +398,11 @@ MediaEngineWebRTCMicrophoneSource::UpdateSingleSource(
   mSkipProcessing = !(prefs.mAecOn || prefs.mAgcOn || prefs.mNoiseOn);
   if (mSkipProcessing) {
     mSampleFrequency = MediaEngine::USE_GRAPH_RATE;
+    mAudioOutputObserver = nullptr;
+  } else {
+    // make sure we route a copy of the mixed audio output of this MSG to the
+    // AEC
+    mAudioOutputObserver = new AudioOutputObserver();
   }
   SetLastPrefs(prefs);
   return NS_OK;
@@ -500,10 +489,8 @@ MediaEngineWebRTCMicrophoneSource::Start(SourceMediaStream *aStream,
   // Make sure logger starts before capture
   AsyncLatencyLogger::Get(true);
 
-  // Register output observer
-  // XXX
-  MOZ_ASSERT(gFarendObserver);
-  gFarendObserver->Clear();
+  MOZ_ASSERT(mAudioOutputObserver);
+  mAudioOutputObserver->Clear();
 
   if (mVoEBase->StartReceive(mChannel)) {
     return NS_ERROR_FAILURE;
@@ -590,6 +577,10 @@ MediaEngineWebRTCMicrophoneSource::NotifyOutputData(MediaStreamGraph* aGraph,
                                                     TrackRate aRate,
                                                     uint32_t aChannels)
 {
+  if (mAudioOutputObserver) {
+    mAudioOutputObserver->InsertFarEnd(aBuffer, aFrames, false,
+                                  aRate, aChannels);
+  }
 }
 
 void
@@ -924,18 +915,18 @@ MediaEngineWebRTCMicrophoneSource::Process(int channel,
   // input code with "old" audio.
   if (!mStarted) {
     mStarted  = true;
-    while (gFarendObserver->Size() > 1) {
-      free(gFarendObserver->Pop()); // only call if size() > 0
+    while (mAudioOutputObserver->Size() > 1) {
+      free(mAudioOutputObserver->Pop()); // only call if size() > 0
     }
   }
 
-  while (gFarendObserver->Size() > 0) {
-    FarEndAudioChunk *buffer = gFarendObserver->Pop(); // only call if size() > 0
+  while (mAudioOutputObserver->Size() > 0) {
+    FarEndAudioChunk *buffer = mAudioOutputObserver->Pop(); // only call if size() > 0
     if (buffer) {
       int length = buffer->mSamples;
       int res = mVoERender->ExternalPlayoutData(buffer->mData,
-                                                gFarendObserver->PlayoutFrequency(),
-                                                gFarendObserver->PlayoutChannels(),
+                                                mAudioOutputObserver->PlayoutFrequency(),
+                                                mAudioOutputObserver->PlayoutChannels(),
                                                 mPlayoutDelay,
                                                 length);
       free(buffer);

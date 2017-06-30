@@ -2202,56 +2202,6 @@ JS::IdentifyStandardConstructor(JSObject* obj)
 }
 
 bool
-JSObject::isCallable() const
-{
-    if (is<JSFunction>())
-        return true;
-    return callHook() != nullptr;
-}
-
-bool
-JSObject::isConstructor() const
-{
-    if (is<JSFunction>()) {
-        const JSFunction& fun = as<JSFunction>();
-        return fun.isConstructor();
-    }
-    return constructHook() != nullptr;
-}
-
-JSNative
-JSObject::callHook() const
-{
-    const js::Class* clasp = getClass();
-
-    if (JSNative call = clasp->getCall())
-        return call;
-
-    if (is<js::ProxyObject>()) {
-        const js::ProxyObject& p = as<js::ProxyObject>();
-        if (p.handler()->isCallable(const_cast<JSObject*>(this)))
-            return js::proxy_Call;
-    }
-    return nullptr;
-}
-
-JSNative
-JSObject::constructHook() const
-{
-    const js::Class* clasp = getClass();
-
-    if (JSNative construct = clasp->getConstruct())
-        return construct;
-
-    if (is<js::ProxyObject>()) {
-        const js::ProxyObject& p = as<js::ProxyObject>();
-        if (p.handler()->isConstructor(const_cast<JSObject*>(this)))
-            return js::proxy_Construct;
-    }
-    return nullptr;
-}
-
-bool
 js::LookupProperty(JSContext* cx, HandleObject obj, js::HandleId id,
                    MutableHandleObject objp, MutableHandle<PropertyResult> propp)
 {
@@ -3024,18 +2974,6 @@ js::UnwatchProperty(JSContext* cx, HandleObject obj, HandleId id)
 
     return UnwatchGuts(cx, obj, id);
 }
-
-const char*
-js::GetObjectClassName(JSContext* cx, HandleObject obj)
-{
-    assertSameCompartment(cx, obj);
-
-    if (obj->is<ProxyObject>())
-        return Proxy::className(cx, obj);
-
-    return obj->getClass()->name;
-}
-
 
 /* * */
 

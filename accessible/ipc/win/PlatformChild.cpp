@@ -7,6 +7,7 @@
 #include "mozilla/a11y/PlatformChild.h"
 #include "mozilla/mscom/EnsureMTA.h"
 #include "mozilla/mscom/InterceptorLog.h"
+#include "mozilla/WindowsVersion.h"
 
 #include "Accessible2.h"
 #include "Accessible2_2.h"
@@ -48,6 +49,27 @@ PlatformChild::PlatformChild()
   , mMiscTypelib(mozilla::mscom::RegisterTypelib(L"Accessible.tlb"))
   , mSdnTypelib(mozilla::mscom::RegisterTypelib(L"AccessibleMarshal.dll"))
 {
+  // The manifest for 32-bit Windows is embedded with resource ID 32.
+  // The manifest for 64-bit Windows is embedded with resource ID 64.
+  // Beginning with Windows 10 Creators Update, 32-bit builds use the 64-bit
+  // manifest.
+  WORD actCtxResourceId;
+#if defined(HAVE_64BIT_BUILD)
+  actCtxResourceId = 64;
+#else
+  if (IsWin10CreatorsUpdateOrLater()) {
+    actCtxResourceId = 64;
+  } else {
+    actCtxResourceId = 32;
+  }
+#endif
+
+  mozilla::mscom::MTADeletePtr<mozilla::mscom::ActivationContextRegion> tmpActCtxMTA;
+  mozilla::mscom::EnsureMTA([actCtxResourceId, &tmpActCtxMTA]() -> void {
+    tmpActCtxMTA.reset(new mozilla::mscom::ActivationContextRegion(actCtxResourceId));
+  });
+  mActCtxMTA = Move(tmpActCtxMTA);
+
   mozilla::mscom::InterceptorLog::Init();
   mozilla::mscom::RegisterArrayData(sPlatformChildArrayData);
 
