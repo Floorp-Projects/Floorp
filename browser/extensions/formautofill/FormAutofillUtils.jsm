@@ -346,3 +346,7 @@ this.FormAutofillUtils = {
 
 this.log = null;
 this.FormAutofillUtils.defineLazyLogGetter(this, this.EXPORTED_SYMBOLS[0]);
+
+XPCOMUtils.defineLazyGetter(FormAutofillUtils, "stringBundle", function() {
+  return Services.strings.createBundle("chrome://formautofill/locale/formautofill.properties");
+});
