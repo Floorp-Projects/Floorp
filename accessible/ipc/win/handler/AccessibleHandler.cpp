@@ -222,17 +222,12 @@ AccessibleHandler::ReadHandlerPayload(IStream* aStream, REFIID aIid)
     return S_OK;
   }
 
-  long pid = static_cast<long>(::GetCurrentProcessId());
-
-  RefPtr<IHandlerControl> ctl;
-  HRESULT hr = gControlFactory.CreateInstance(nullptr, IID_IHandlerControl,
-                                              getter_AddRefs(ctl));
-  if (SUCCEEDED(hr)) {
-    hr = mCachedData.mGeckoBackChannel->put_HandlerControl(pid, ctl);
-    MOZ_ASSERT(SUCCEEDED(hr));
+  RefPtr<AccessibleHandlerControl> ctl(gControlFactory.GetOrCreateSingleton());
+  if (!ctl) {
+    return E_OUTOFMEMORY;
   }
 
-  return hr;
+  return ctl->Register(WrapNotNull(mCachedData.mGeckoBackChannel));
 }
 
 REFIID
