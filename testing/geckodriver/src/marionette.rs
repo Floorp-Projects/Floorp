@@ -40,11 +40,10 @@ use webdriver::command::{
     SwitchToFrameParameters, LocatorParameters, JavascriptCommandParameters,
     GetNamedCookieParameters, AddCookieParameters, TimeoutsParameters,
     ActionsParameters, TakeScreenshotParameters};
-use webdriver::response::{CloseWindowResponse, Cookie, CookiesResponse,
-                          RectResponse, NewSessionResponse, TimeoutsResponse, ValueResponse,
+use webdriver::response::{CloseWindowResponse, Cookie, CookieResponse, CookiesResponse,
+                          NewSessionResponse, RectResponse, TimeoutsResponse, ValueResponse,
                           WebDriverResponse};
-use webdriver::common::{
-    Date, Nullable, WebElement, FrameId, ELEMENT_KEY};
+use webdriver::common::{Date, ELEMENT_KEY, FrameId, Nullable, WebElement};
 use webdriver::error::{ErrorStatus, WebDriverError, WebDriverResult};
 use webdriver::server::{WebDriverHandler, Session};
 use webdriver::httpapi::{WebDriverExtensionRoute};
@@ -770,12 +769,15 @@ impl MarionetteSession {
             },
             GetCookies => {
                 let cookies = try!(self.process_cookies(&resp.result));
-                WebDriverResponse::Cookies(CookiesResponse {value: cookies})
+                WebDriverResponse::Cookies(CookiesResponse { value: cookies })
             },
             GetNamedCookie(ref name) => {
                 let mut cookies = try!(self.process_cookies(&resp.result));
                 cookies.retain(|x| x.name == *name);
-                WebDriverResponse::Cookies(CookiesResponse { value : cookies })
+                let cookie = try_opt!(cookies.pop(),
+                                      ErrorStatus::NoSuchCookie,
+                                      format!("No cookie with name {}", name));
+                WebDriverResponse::Cookie(CookieResponse { value: cookie })
             }
             FindElement(_) | FindElementElement(_, _) => {
                 let element = try!(self.to_web_element(
@@ -869,28 +871,28 @@ impl MarionetteSession {
             let name = try_opt!(
                 try_opt!(x.find("name"),
                          ErrorStatus::UnknownError,
-                         "Failed to find name field").as_string(),
+                         "Cookie must have a name field").as_string(),
                 ErrorStatus::UnknownError,
-                "Failed to interpret name as string").to_string();
+                "Cookie must have string name").to_string();
             let value = try_opt!(
                 try_opt!(x.find("value"),
                          ErrorStatus::UnknownError,
-                         "Failed to find value field").as_string(),
+                         "Cookie must have a value field").as_string(),
                 ErrorStatus::UnknownError,
-                "Failed to interpret value as string").to_string();
+                "Cookie must have a string value").to_string();
             let path = try!(
                 Nullable::from_json(x.find("path").unwrap_or(&Json::Null),
                                     |x| {
                                         Ok((try_opt!(x.as_string(),
                                                      ErrorStatus::UnknownError,
-                                                     "Failed to interpret path as String")).to_string())
+                                                     "Cookie path must be string")).to_string())
                                     }));
             let domain = try!(
                 Nullable::from_json(x.find("domain").unwrap_or(&Json::Null),
                                     |x| {
                                         Ok((try_opt!(x.as_string(),
                                                      ErrorStatus::UnknownError,
-                                                     "Failed to interpret domain as String")).to_string())
+                                                     "Cookie domain must be string")).to_string())
                                     }));
             let expiry = try!(
                 Nullable::from_json(x.find("expiry").unwrap_or(&Json::Null),
@@ -898,18 +900,27 @@ impl MarionetteSession {
                                         Ok(Date::new((try_opt!(
                                             x.as_u64(),
                                             ErrorStatus::UnknownError,
-                                            "Failed to interpret expiry as u64"))))
+                                            "Cookie expiry must be a positive integer"))))
                                     }));
             let secure = try_opt!(
                 x.find("secure").map_or(Some(false), |x| x.as_boolean()),
                 ErrorStatus::UnknownError,
-                "Failed to interpret secure as boolean");
+                "Cookie secure flag must be boolean");
             let http_only = try_opt!(
                 x.find("httpOnly").map_or(Some(false), |x| x.as_boolean()),
                 ErrorStatus::UnknownError,
-                "Failed to interpret httpOnly as boolean");
-            Ok(Cookie {name: name , value: value, path: path, domain: domain,
-                      expiry: expiry, secure: secure , httpOnly: http_only})
+                "Cookie httpOnly flag must be boolean");
+
+            let new_cookie = Cookie {
+                name: name,
+                value: value,
+                path: path,
+                domain: domain,
+                expiry: expiry,
+                secure: secure,
+                httpOnly: http_only,
+            };
+            Ok(new_cookie)
         }).collect::<Result<Vec<_>, _>>()
     }
 

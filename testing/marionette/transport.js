@@ -6,31 +6,36 @@
 
 /* global Pipe, ScriptableInputStream, uneval */
 
-const {Constructor: CC, classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
+const {Constructor: CC, classes: Cc, interfaces: Ci, utils: Cu, results: Cr} =
+    Components;
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/EventEmitter.jsm");
-Cu.import("chrome://marionette/content/stream-utils.js");
-const { Packet, JSONPacket, BulkPacket } =
-  Cu.import("chrome://marionette/content/packets.js");
-const defer = function () {
+const {StreamUtils} =
+    Cu.import("chrome://marionette/content/stream-utils.js", {});
+const {Packet, JSONPacket, BulkPacket} =
+    Cu.import("chrome://marionette/content/packets.js", {});
+
+const defer = function() {
   let deferred = {
     promise: new Promise((resolve, reject) => {
       deferred.resolve = resolve;
       deferred.reject = reject;
-    })
+    }),
   };
   return deferred;
 };
-const executeSoon = function (func) {
+
+const executeSoon = function(func) {
   Services.tm.dispatchToMainThread(func);
 };
-const flags = { wantVerbose: false, wantLogging: false };
+
+const flags = {wantVerbose: false, wantLogging: false};
 
 const dumpv =
   flags.wantVerbose ?
-  function (msg) {dump(msg + "\n");} :
-  function () {};
+  function(msg) { dump(msg + "\n"); } :
+  function() {};
 
 const Pipe = CC("@mozilla.org/pipe;1", "nsIPipe", "init");
 
@@ -42,23 +47,24 @@ this.EXPORTED_SYMBOLS = ["DebuggerTransport"];
 const PACKET_HEADER_MAX = 200;
 
 /**
- * An adapter that handles data transfers between the debugger client and
- * server. It can work with both nsIPipe and nsIServerSocket transports so
- * long as the properly created input and output streams are specified.
- * (However, for intra-process connections, LocalDebuggerTransport, below,
- * is more efficient than using an nsIPipe pair with DebuggerTransport.)
+ * An adapter that handles data transfers between the debugger client
+ * and server. It can work with both nsIPipe and nsIServerSocket
+ * transports so long as the properly created input and output streams
+ * are specified.  (However, for intra-process connections,
+ * LocalDebuggerTransport, below, is more efficient than using an nsIPipe
+ * pair with DebuggerTransport.)
  *
- * @param input nsIAsyncInputStream
- *        The input stream.
- * @param output nsIAsyncOutputStream
- *        The output stream.
+ * @param {nsIAsyncInputStream} input
+ *     The input stream.
+ * @param {nsIAsyncOutputStream} output
+ *     The output stream.
  *
  * Given a DebuggerTransport instance dt:
  * 1) Set dt.hooks to a packet handler object (described below).
  * 2) Call dt.ready() to begin watching for input packets.
  * 3) Call dt.send() / dt.startBulkSend() to send packets.
- * 4) Call dt.close() to close the connection, and disengage from the event
- *    loop.
+ * 4) Call dt.close() to close the connection, and disengage from
+ *    the event loop.
  *
  * A packet handler is an object with the following methods:
  *
@@ -71,32 +77,34 @@ const PACKET_HEADER_MAX = 200;
  *   * actor:  Name of actor that will receive the packet
  *   * type:   Name of actor's method that should be called on receipt
  *   * length: Size of the data to be read
- *   * stream: This input stream should only be used directly if you can ensure
- *             that you will read exactly |length| bytes and will not close the
- *             stream when reading is complete
- *   * done:   If you use the stream directly (instead of |copyTo| below), you
- *             must signal completion by resolving / rejecting this deferred.
- *             If it's rejected, the transport will be closed.  If an Error is
- *             supplied as a rejection value, it will be logged via |dump|.
- *             If you do use |copyTo|, resolving is taken care of for you when
- *             copying completes.
- *   * copyTo: A helper function for getting your data out of the stream that
- *             meets the stream handling requirements above, and has the
- *             following signature:
- *     @param  output nsIAsyncOutputStream
- *             The stream to copy to.
- *     @return Promise
- *             The promise is resolved when copying completes or rejected if any
- *             (unexpected) errors occur.
- *             This object also emits "progress" events for each chunk that is
- *             copied.  See stream-utils.js.
+ *   * stream: This input stream should only be used directly if you
+ *             can ensure that you will read exactly |length| bytes and
+ *             will not close the stream when reading is complete
+ *   * done:   If you use the stream directly (instead of |copyTo|
+ *             below), you must signal completion by resolving/rejecting
+ *             this deferred.  If it's rejected, the transport will
+ *             be closed.  If an Error is supplied as a rejection value,
+ *             it will be logged via |dump|.  If you do use |copyTo|,
+ *             resolving is taken care of for you when copying completes.
+ *   * copyTo: A helper function for getting your data out of the
+ *             stream that meets the stream handling requirements above,
+ *             and has the following signature:
  *
- * - onClosed(reason) - called when the connection is closed. |reason| is
- *   an optional nsresult or object, typically passed when the transport is
- *   closed due to some error in a underlying stream.
+ *             @param nsIAsyncOutputStream {output}
+ *                 The stream to copy to.
  *
- * See ./packets.js and the Remote Debugging Protocol specification for more
- * details on the format of these packets.
+ *             @return {Promise}
+ *                 The promise is resolved when copying completes or
+ *                 rejected if any (unexpected) errors occur.  This object
+ *                 also emits "progress" events for each chunk that is
+ *                 copied.  See stream-utils.js.
+ *
+ * - onClosed(reason) - called when the connection is closed. |reason|
+ *   is an optional nsresult or object, typically passed when the
+ *   transport is closed due to some error in a underlying stream.
+ *
+ * See ./packets.js and the Remote Debugging Protocol specification for
+ * more details on the format of these packets.
  */
 function DebuggerTransport(input, output) {
   EventEmitter.decorate(this);
@@ -105,8 +113,8 @@ function DebuggerTransport(input, output) {
   this._scriptableInput = new ScriptableInputStream(input);
   this._output = output;
 
-  // The current incoming (possibly partial) header, which will determine which
-  // type of Packet |_incoming| below will become.
+  // The current incoming (possibly partial) header, which will determine
+  // which type of Packet |_incoming| below will become.
   this._incomingHeader = "";
   // The current incoming Packet object
   this._incoming = null;
@@ -128,10 +136,10 @@ DebuggerTransport.prototype = {
    *
    * This method returns immediately, without waiting for the entire
    * packet to be transmitted, registering event handlers as needed to
-   * transmit the entire packet. Packets are transmitted in the order
-   * they are passed to this method.
+   * transmit the entire packet. Packets are transmitted in the order they
+   * are passed to this method.
    */
-  send: function (object) {
+  send(object) {
     this.emit("send", object);
 
     let packet = new JSONPacket(this);
@@ -143,45 +151,52 @@ DebuggerTransport.prototype = {
   /**
    * Transmit streaming data via a bulk packet.
    *
-   * This method initiates the bulk send process by queuing up the header data.
-   * The caller receives eventual access to a stream for writing.
+   * This method initiates the bulk send process by queuing up the header
+   * data.  The caller receives eventual access to a stream for writing.
    *
-   * N.B.: Do *not* attempt to close the stream handed to you, as it will
-   * continue to be used by this transport afterwards.  Most users should
-   * instead use the provided |copyFrom| function instead.
+   * N.B.: Do *not* attempt to close the stream handed to you, as it
+   * will continue to be used by this transport afterwards.  Most users
+   * should instead use the provided |copyFrom| function instead.
    *
-   * @param header Object
-   *        This is modeled after the format of JSON packets above, but does not
-   *        actually contain the data, but is instead just a routing header:
-   *          * actor:  Name of actor that will receive the packet
-   *          * type:   Name of actor's method that should be called on receipt
-   *          * length: Size of the data to be sent
-   * @return Promise
-   *         The promise will be resolved when you are allowed to write to the
-   *         stream with an object containing:
-   *           * stream:   This output stream should only be used directly if
-   *                       you can ensure that you will write exactly |length|
-   *                       bytes and will not close the stream when writing is
-   *                       complete
-   *           * done:     If you use the stream directly (instead of |copyFrom|
-   *                       below), you must signal completion by resolving /
-   *                       rejecting this deferred.  If it's rejected, the
-   *                       transport will be closed.  If an Error is supplied as
-   *                       a rejection value, it will be logged via |dump|.  If
-   *                       you do use |copyFrom|, resolving is taken care of for
-   *                       you when copying completes.
-   *           * copyFrom: A helper function for getting your data onto the
-   *                       stream that meets the stream handling requirements
-   *                       above, and has the following signature:
-   *             @param  input nsIAsyncInputStream
-   *                     The stream to copy from.
-   *             @return Promise
-   *                     The promise is resolved when copying completes or
-   *                     rejected if any (unexpected) errors occur.
-   *                     This object also emits "progress" events for each chunk
-   *                     that is copied.  See stream-utils.js.
+   * @param {Object} header
+   *     This is modeled after the format of JSON packets above, but does
+   *     not actually contain the data, but is instead just a routing
+   *     header:
+   *
+   *       - actor:  Name of actor that will receive the packet
+   *       - type:   Name of actor's method that should be called on receipt
+   *       - length: Size of the data to be sent
+   *
+   * @return {Promise}
+   *     The promise will be resolved when you are allowed to write to
+   *     the stream with an object containing:
+   *
+   *       - stream:   This output stream should only be used directly
+   *                   if you can ensure that you will write exactly
+   *                   |length| bytes and will not close the stream when
+   *                    writing is complete.
+   *       - done:     If you use the stream directly (instead of
+   *                   |copyFrom| below), you must signal completion by
+   *                   resolving/rejecting this deferred.  If it's
+   *                   rejected, the transport will be closed.  If an
+   *                   Error is supplied as a rejection value, it will
+   *                   be logged via |dump|.  If you do use |copyFrom|,
+   *                   resolving is taken care of for you when copying
+   *                   completes.
+   *       - copyFrom: A helper function for getting your data onto the
+   *                   stream that meets the stream handling requirements
+   *                   above, and has the following signature:
+   *
+   *                   @param {nsIAsyncInputStream} input
+   *                       The stream to copy from.
+   *
+   *                   @return {Promise}
+   *                       The promise is resolved when copying completes
+   *                       or rejected if any (unexpected) errors occur.
+   *                       This object also emits "progress" events for
+   *                       each chunkthat is copied.  See stream-utils.js.
    */
-  startBulkSend: function (header) {
+  startBulkSend(header) {
     this.emit("startbulksend", header);
 
     let packet = new BulkPacket(this);
@@ -193,11 +208,13 @@ DebuggerTransport.prototype = {
 
   /**
    * Close the transport.
-   * @param reason nsresult / object (optional)
-   *        The status code or error message that corresponds to the reason for
-   *        closing the transport (likely because a stream closed or failed).
+   *
+   * @param {(nsresult|object)=} reason
+   *     The status code or error message that corresponds to the reason
+   *     for closing the transport (likely because a stream closed
+   *     or failed).
    */
-  close: function (reason) {
+  close(reason) {
     this.emit("close", reason);
 
     this.active = false;
@@ -225,10 +242,11 @@ DebuggerTransport.prototype = {
   },
 
   /**
-   * Flush data to the outgoing stream.  Waits until the output stream notifies
-   * us that it is ready to be written to (via onOutputStreamReady).
+   * Flush data to the outgoing stream.  Waits until the output
+   * stream notifies us that it is ready to be written to (via
+   * onOutputStreamReady).
    */
-  _flushOutgoing: function () {
+  _flushOutgoing() {
     if (!this._outgoingEnabled || this._outgoing.length === 0) {
       return;
     }
@@ -245,29 +263,29 @@ DebuggerTransport.prototype = {
   },
 
   /**
-   * Pause this transport's attempts to write to the output stream.  This is
-   * used when we've temporarily handed off our output stream for writing bulk
-   * data.
+   * Pause this transport's attempts to write to the output stream.
+   * This is used when we've temporarily handed off our output stream for
+   * writing bulk data.
    */
-  pauseOutgoing: function () {
+  pauseOutgoing() {
     this._outgoingEnabled = false;
   },
 
   /**
    * Resume this transport's attempts to write to the output stream.
    */
-  resumeOutgoing: function () {
+  resumeOutgoing() {
     this._outgoingEnabled = true;
     this._flushOutgoing();
   },
 
   // nsIOutputStreamCallback
   /**
-   * This is called when the output stream is ready for more data to be written.
-   * The current outgoing packet will attempt to write some amount of data, but
-   * may not complete.
+   * This is called when the output stream is ready for more data to
+   * be written.  The current outgoing packet will attempt to write some
+   * amount of data, but may not complete.
    */
-  onOutputStreamReady: function (stream) {
+  onOutputStreamReady(stream) {
     if (!this._outgoingEnabled || this._outgoing.length === 0) {
       return;
     }
@@ -288,7 +306,7 @@ DebuggerTransport.prototype = {
   /**
    * Remove the current outgoing packet from the queue upon completion.
    */
-  _finishCurrentOutgoing: function () {
+  _finishCurrentOutgoing() {
     if (this._currentOutgoing) {
       this._currentOutgoing.destroy();
       this._outgoing.shift();
@@ -298,7 +316,7 @@ DebuggerTransport.prototype = {
   /**
    * Clear the entire outgoing queue.
    */
-  _destroyAllOutgoing: function () {
+  _destroyAllOutgoing() {
     for (let packet of this._outgoing) {
       packet.destroy();
     }
@@ -306,11 +324,11 @@ DebuggerTransport.prototype = {
   },
 
   /**
-   * Initialize the input stream for reading. Once this method has been called,
-   * we watch for packets on the input stream, and pass them to the appropriate
-   * handlers via this.hooks.
+   * Initialize the input stream for reading. Once this method has been
+   * called, we watch for packets on the input stream, and pass them to
+   * the appropriate handlers via this.hooks.
    */
-  ready: function () {
+  ready() {
     this.active = true;
     this._waitForIncoming();
   },
@@ -319,7 +337,7 @@ DebuggerTransport.prototype = {
    * Asks the input stream to notify us (via onInputStreamReady) when it is
    * ready for reading.
    */
-  _waitForIncoming: function () {
+  _waitForIncoming() {
     if (this._incomingEnabled) {
       let threadManager = Cc["@mozilla.org/thread-manager;1"].getService();
       this._input.asyncWait(this, 0, 0, threadManager.currentThread);
@@ -327,18 +345,18 @@ DebuggerTransport.prototype = {
   },
 
   /**
-   * Pause this transport's attempts to read from the input stream.  This is
-   * used when we've temporarily handed off our input stream for reading bulk
-   * data.
+   * Pause this transport's attempts to read from the input stream.
+   * This is used when we've temporarily handed off our input stream for
+   * reading bulk data.
    */
-  pauseIncoming: function () {
+  pauseIncoming() {
     this._incomingEnabled = false;
   },
 
   /**
    * Resume this transport's attempts to read from the input stream.
    */
-  resumeIncoming: function () {
+  resumeIncoming() {
     this._incomingEnabled = true;
     this._flushIncoming();
     this._waitForIncoming();
@@ -348,7 +366,7 @@ DebuggerTransport.prototype = {
   /**
    * Called when the stream is either readable or closed.
    */
-  onInputStreamReady: function (stream) {
+  onInputStreamReady(stream) {
     try {
       while (stream.available() && this._incomingEnabled &&
              this._processIncoming(stream, stream.available())) {
@@ -365,16 +383,17 @@ DebuggerTransport.prototype = {
   },
 
   /**
-   * Process the incoming data.  Will create a new currently incoming Packet if
-   * needed.  Tells the incoming Packet to read as much data as it can, but
-   * reading may not complete.  The Packet signals that its data is ready for
-   * delivery by calling one of this transport's _on*Ready methods (see
-   * ./packets.js and the _on*Ready methods below).
-   * @return boolean
-   *         Whether incoming stream processing should continue for any
-   *         remaining data.
+   * Process the incoming data.  Will create a new currently incoming
+   * Packet if needed.  Tells the incoming Packet to read as much data
+   * as it can, but reading may not complete.  The Packet signals that
+   * its data is ready for delivery by calling one of this transport's
+   * _on*Ready methods (see ./packets.js and the _on*Ready methods below).
+   *
+   * @return {boolean}
+   *     Whether incoming stream processing should continue for any
+   *     remaining data.
    */
-  _processIncoming: function (stream, count) {
+  _processIncoming(stream, count) {
     dumpv("Data available: " + count);
 
     if (!count) {
@@ -406,8 +425,7 @@ DebuggerTransport.prototype = {
         this._incoming.read(stream, this._scriptableInput);
       }
     } catch (e) {
-      let msg = "Error reading incoming packet: (" + e + " - " + e.stack + ")";
-      dump(msg + "\n");
+      dump(`Error reading incoming packet: (${e} - ${e.stack})\n`);
 
       // Now in an invalid state, shut down the transport.
       this.close();
@@ -426,13 +444,14 @@ DebuggerTransport.prototype = {
   },
 
   /**
-   * Read as far as we can into the incoming data, attempting to build up a
-   * complete packet header (which terminates with ":").  We'll only read up to
-   * PACKET_HEADER_MAX characters.
-   * @return boolean
-   *         True if we now have a complete header.
+   * Read as far as we can into the incoming data, attempting to build
+   * up a complete packet header (which terminates with ":").  We'll only
+   * read up to PACKET_HEADER_MAX characters.
+   *
+   * @return {boolean}
+   *     True if we now have a complete header.
    */
-  _readHeader: function () {
+  _readHeader() {
     let amountToRead = PACKET_HEADER_MAX - this._incomingHeader.length;
     this._incomingHeader +=
     StreamUtils.delimitedRead(this._scriptableInput, ":", amountToRead);
@@ -458,7 +477,7 @@ DebuggerTransport.prototype = {
   /**
    * If the incoming packet is done, log it as needed and clear the buffer.
    */
-  _flushIncoming: function () {
+  _flushIncoming() {
     if (!this._incoming.done) {
       return;
     }
@@ -469,10 +488,10 @@ DebuggerTransport.prototype = {
   },
 
   /**
-   * Handler triggered by an incoming JSONPacket completing it's |read| method.
-   * Delivers the packet to this.hooks.onPacket.
+   * Handler triggered by an incoming JSONPacket completing it's |read|
+   * method.  Delivers the packet to this.hooks.onPacket.
    */
-  _onJSONObjectReady: function (object) {
+  _onJSONObjectReady(object) {
     executeSoon(() => {
     // Ensure the transport is still alive by the time this runs.
       if (this.active) {
@@ -483,12 +502,12 @@ DebuggerTransport.prototype = {
   },
 
   /**
-   * Handler triggered by an incoming BulkPacket entering the |read| phase for
-   * the stream portion of the packet.  Delivers info about the incoming
-   * streaming data to this.hooks.onBulkPacket.  See the main comment on the
-   * transport at the top of this file for more details.
+   * Handler triggered by an incoming BulkPacket entering the |read|
+   * phase for the stream portion of the packet.  Delivers info about the
+   * incoming streaming data to this.hooks.onBulkPacket.  See the main
+   * comment on the transport at the top of this file for more details.
    */
-  _onBulkReadReady: function (...args) {
+  _onBulkReadReady(...args) {
     executeSoon(() => {
     // Ensure the transport is still alive by the time this runs.
       if (this.active) {
@@ -499,29 +518,30 @@ DebuggerTransport.prototype = {
   },
 
   /**
-   * Remove all handlers and references related to the current incoming packet,
-   * either because it is now complete or because the transport is closing.
+   * Remove all handlers and references related to the current incoming
+   * packet, either because it is now complete or because the transport
+   * is closing.
    */
-  _destroyIncoming: function () {
+  _destroyIncoming() {
     if (this._incoming) {
       this._incoming.destroy();
     }
     this._incomingHeader = "";
     this._incoming = null;
-  }
-
+  },
 };
 
 /**
- * An adapter that handles data transfers between the debugger client and
- * server when they both run in the same process. It presents the same API as
- * DebuggerTransport, but instead of transmitting serialized messages across a
- * connection it merely calls the packet dispatcher of the other side.
+ * An adapter that handles data transfers between the debugger client
+ * and server when they both run in the same process. It presents the
+ * same API as DebuggerTransport, but instead of transmitting serialized
+ * messages across a connection it merely calls the packet dispatcher of
+ * the other side.
  *
- * @param other LocalDebuggerTransport
- *        The other endpoint for this debugger connection.
+ * @param {LocalDebuggerTransport} other
+ *     The other endpoint for this debugger connection.
  *
- * @see DebuggerTransport
+ * @see {DebuggerTransport}
  */
 function LocalDebuggerTransport(other) {
   EventEmitter.decorate(this);
@@ -529,9 +549,10 @@ function LocalDebuggerTransport(other) {
   this.other = other;
   this.hooks = null;
 
-  // A packet number, shared between this and this.other. This isn't used by the
-  // protocol at all, but it makes the packet traces a lot easier to follow.
-  this._serial = this.other ? this.other._serial : { count: 0 };
+  // A packet number, shared between this and this.other. This isn't
+  // used by the protocol at all, but it makes the packet traces a lot
+  // easier to follow.
+  this._serial = this.other ? this.other._serial : {count: 0};
   this.close = this.close.bind(this);
 }
 
@@ -540,7 +561,7 @@ LocalDebuggerTransport.prototype = {
    * Transmit a message by directly calling the onPacket handler of the other
    * endpoint.
    */
-  send: function (packet) {
+  send(packet) {
     this.emit("send", packet);
 
     let serial = this._serial.count++;
@@ -558,7 +579,8 @@ LocalDebuggerTransport.prototype = {
       executeSoon(() => {
         // Avoid the cost of JSON.stringify() when logging is disabled.
         if (flags.wantLogging) {
-          dumpv("Received packet " + serial + ": " + JSON.stringify(packet, null, 2));
+          dumpv(`Received packet ${serial}: ` +
+              JSON.stringify(packet, null, 2));
         }
         if (other.hooks) {
           other.emit("packet", packet);
@@ -569,15 +591,15 @@ LocalDebuggerTransport.prototype = {
   },
 
   /**
-   * Send a streaming bulk packet directly to the onBulkPacket handler of the
-   * other endpoint.
+   * Send a streaming bulk packet directly to the onBulkPacket handler
+   * of the other endpoint.
    *
-   * This case is much simpler than the full DebuggerTransport, since there is
-   * no primary stream we have to worry about managing while we hand it off to
-   * others temporarily.  Instead, we can just make a single use pipe and be
-   * done with it.
+   * This case is much simpler than the full DebuggerTransport, since
+   * there is no primary stream we have to worry about managing while
+   * we hand it off to others temporarily.  Instead, we can just make a
+   * single use pipe and be done with it.
    */
-  startBulkSend: function ({actor, type, length}) {
+  startBulkSend({actor, type, length}) {
     this.emit("startbulksend", {actor, type, length});
 
     let serial = this._serial.count++;
@@ -599,9 +621,9 @@ LocalDebuggerTransport.prototype = {
       // Receiver
       let deferred = defer();
       let packet = {
-        actor: actor,
-        type: type,
-        length: length,
+        actor,
+        type,
+        length,
         copyTo: (output) => {
           let copying =
           StreamUtils.copyStream(pipe.inputStream, output, length);
@@ -609,7 +631,7 @@ LocalDebuggerTransport.prototype = {
           return copying;
         },
         stream: pipe.inputStream,
-        done: deferred
+        done: deferred,
       };
 
       this.other.emit("bulkpacket", packet);
@@ -622,8 +644,8 @@ LocalDebuggerTransport.prototype = {
     // Sender
     let sendDeferred = defer();
 
-    // The remote transport is not capable of resolving immediately here, so we
-    // shouldn't be able to either.
+    // The remote transport is not capable of resolving immediately here,
+    // so we shouldn't be able to either.
     executeSoon(() => {
       let copyDeferred = defer();
 
@@ -635,7 +657,7 @@ LocalDebuggerTransport.prototype = {
           return copying;
         },
         stream: pipe.outputStream,
-        done: copyDeferred
+        done: copyDeferred,
       });
 
       // Await the result of writing to the stream
@@ -648,7 +670,7 @@ LocalDebuggerTransport.prototype = {
   /**
    * Close the transport.
    */
-  close: function () {
+  close() {
     this.emit("close");
 
     if (this.other) {
@@ -671,24 +693,24 @@ LocalDebuggerTransport.prototype = {
   /**
    * An empty method for emulating the DebuggerTransport API.
    */
-  ready: function () {},
+  ready() {},
 
   /**
    * Helper function that makes an object fully immutable.
    */
-  _deepFreeze: function (object) {
+  _deepFreeze(object) {
     Object.freeze(object);
     for (let prop in object) {
-      // Freeze the properties that are objects, not on the prototype, and not
-      // already frozen. Note that this might leave an unfrozen reference
-      // somewhere in the object if there is an already frozen object containing
-      // an unfrozen object.
+      // Freeze the properties that are objects, not on the prototype,
+      // and not already frozen.  Note that this might leave an unfrozen
+      // reference somewhere in the object if there is an already frozen
+      // object containing an unfrozen object.
       if (object.hasOwnProperty(prop) && typeof object === "object" &&
           !Object.isFrozen(object)) {
         this._deepFreeze(object[prop]);
       }
     }
-  }
+  },
 };
 
 /**
@@ -733,28 +755,29 @@ ChildDebuggerTransport.prototype = {
       if (e.result != Cr.NS_ERROR_NULL_POINTER) {
         throw e;
       }
-      // In some cases, especially when using messageManagers in non-e10s mode, we reach
-      // this point with a dead messageManager which only throws errors but does not
-      // seem to indicate in any other way that it is dead.
+      // In some cases, especially when using messageManagers in non-e10s
+      // mode, we reach this point with a dead messageManager which only
+      // throws errors but does not seem to indicate in any other way that
+      // it is dead.
     }
   },
 
-  ready: function () {
+  ready() {
     this._addListener();
   },
 
-  close: function () {
+  close() {
     this._removeListener();
     this.emit("close");
     this.hooks.onClosed();
   },
 
-  receiveMessage: function ({data}) {
+  receiveMessage({data}) {
     this.emit("packet", data);
     this.hooks.onPacket(data);
   },
 
-  send: function (packet) {
+  send(packet) {
     this.emit("send", packet);
     try {
       this._mm.sendAsyncMessage(this._messageName, packet);
@@ -762,13 +785,14 @@ ChildDebuggerTransport.prototype = {
       if (e.result != Cr.NS_ERROR_NULL_POINTER) {
         throw e;
       }
-      // In some cases, especially when using messageManagers in non-e10s mode, we reach
-      // this point with a dead messageManager which only throws errors but does not
-      // seem to indicate in any other way that it is dead.
+      // In some cases, especially when using messageManagers in non-e10s
+      // mode, we reach this point with a dead messageManager which only
+      // throws errors but does not seem to indicate in any other way that
+      // it is dead.
     }
   },
 
-  startBulkSend: function () {
+  startBulkSend() {
     throw new Error("Can't send bulk data to child processes.");
   },
 
@@ -791,7 +815,7 @@ ChildDebuggerTransport.prototype = {
 
 if (!this.isWorker) {
   // Main thread
-  (function () {
+  (function() {
     /**
      * A transport that uses a WorkerDebugger to send packets from the main
      * thread to a worker thread.
@@ -805,30 +829,30 @@ if (!this.isWorker) {
     WorkerDebuggerTransport.prototype = {
       constructor: WorkerDebuggerTransport,
 
-      ready: function () {
+      ready() {
         this._dbg.addListener(this);
       },
 
-      close: function () {
+      close() {
         this._dbg.removeListener(this);
         if (this.hooks) {
           this.hooks.onClosed();
         }
       },
 
-      send: function (packet) {
+      send(packet) {
         this._dbg.postMessage(JSON.stringify({
           type: "message",
           id: this._id,
-          message: packet
+          message: packet,
         }));
       },
 
-      startBulkSend: function () {
+      startBulkSend() {
         throw new Error("Can't send bulk data from worker threads!");
       },
 
-      _onMessage: function (message) {
+      _onMessage(message) {
         let packet = JSON.parse(message);
         if (packet.type !== "message" || packet.id !== this._id) {
           return;
@@ -837,16 +861,16 @@ if (!this.isWorker) {
         if (this.hooks) {
           this.hooks.onPacket(packet.message);
         }
-      }
+      },
     };
 
   }).call(this);
 } else {
   // Worker thread
-  (function () {
+  (function() {
     /**
-     * A transport that uses a WorkerDebuggerGlobalScope to send packets from a
-     * worker thread to the main thread.
+     * A transport that uses a WorkerDebuggerGlobalScope to send packets
+     * from a worker thread to the main thread.
      */
     function WorkerDebuggerTransport(scope, id) {
       this._scope = scope;
@@ -857,30 +881,30 @@ if (!this.isWorker) {
     WorkerDebuggerTransport.prototype = {
       constructor: WorkerDebuggerTransport,
 
-      ready: function () {
+      ready() {
         this._scope.addEventListener("message", this._onMessage);
       },
 
-      close: function () {
+      close() {
         this._scope.removeEventListener("message", this._onMessage);
         if (this.hooks) {
           this.hooks.onClosed();
         }
       },
 
-      send: function (packet) {
+      send(packet) {
         this._scope.postMessage(JSON.stringify({
           type: "message",
           id: this._id,
-          message: packet
+          message: packet,
         }));
       },
 
-      startBulkSend: function () {
+      startBulkSend() {
         throw new Error("Can't send bulk data from worker threads!");
       },
 
-      _onMessage: function (event) {
+      _onMessage(event) {
         let packet = JSON.parse(event.data);
         if (packet.type !== "message" || packet.id !== this._id) {
           return;
@@ -889,7 +913,7 @@ if (!this.isWorker) {
         if (this.hooks) {
           this.hooks.onPacket(packet.message);
         }
-      }
+      },
     };
 
   }).call(this);

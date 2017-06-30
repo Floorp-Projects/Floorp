@@ -287,7 +287,7 @@ def run_tests(config, browser_config):
         mitmproxy.stop_mitmproxy_playback(mitmproxy_proc)
 
     # output results
-    if results_urls:
+    if results_urls and not browser_config['no_upload_results']:
         talos_results.output(results_urls)
         if browser_config['develop'] or config['gecko_profile']:
             print("Thanks for running Talos locally. Results are in %s"

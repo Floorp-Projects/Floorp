@@ -246,6 +246,12 @@ s! {
     }
 }
 
+pub const AT_FDCWD: ::c_int = -100;
+pub const AT_EACCESS: ::c_int = 0x100;
+pub const AT_SYMLINK_NOFOLLOW: ::c_int = 0x200;
+pub const AT_SYMLINK_FOLLOW: ::c_int = 0x400;
+pub const AT_REMOVEDIR: ::c_int = 0x800;
+
 pub const LC_COLLATE_MASK: ::c_int = (1 << ::LC_COLLATE);
 pub const LC_CTYPE_MASK: ::c_int = (1 << ::LC_CTYPE);
 pub const LC_MONETARY_MASK: ::c_int = (1 << ::LC_MONETARY);
@@ -291,8 +297,50 @@ pub const F_MAXFD: ::c_int = 11;
 pub const IPV6_JOIN_GROUP: ::c_int = 12;
 pub const IPV6_LEAVE_GROUP: ::c_int = 13;
 
+pub const SOCK_CONN_DGRAM: ::c_int = 6;
+pub const SOCK_DCCP: ::c_int = SOCK_CONN_DGRAM;
+pub const SOCK_NOSIGPIPE: ::c_int = 0x40000000;
+pub const SOCK_FLAGS_MASK: ::c_int = 0xf0000000;
+
 pub const SO_SNDTIMEO: ::c_int = 0x100b;
 pub const SO_RCVTIMEO: ::c_int = 0x100c;
+pub const SO_ACCEPTFILTER: ::c_int = 0x1000;
+pub const SO_TIMESTAMP: ::c_int = 0x2000;
+pub const SO_OVERFLOWED: ::c_int = 0x1009;
+pub const SO_NOHEADER: ::c_int = 0x100a;
+
+pub const AF_OROUTE: ::c_int = 17;
+pub const AF_ARP: ::c_int = 28;
+pub const pseudo_AF_KEY: ::c_int = 29;
+pub const pseudo_AF_HDRCMPLT: ::c_int = 30;
+pub const AF_BLUETOOTH: ::c_int = 31;
+pub const AF_IEEE80211: ::c_int = 32;
+pub const AF_MPLS: ::c_int = 33;
+pub const AF_ROUTE: ::c_int = 34;
+pub const AF_MAX: ::c_int = 35;
+
+pub const NET_MAXID: ::c_int = AF_MAX;
+pub const NET_RT_DUMP: ::c_int = 1;
+pub const NET_RT_FLAGS: ::c_int = 2;
+pub const NET_RT_OOIFLIST: ::c_int = 3;
+pub const NET_RT_OIFLIST: ::c_int = 4;
+pub const NET_RT_IFLIST: ::c_int = 5;
+pub const NET_RT_MAXID: ::c_int = 6;
+
+pub const PF_OROUTE: ::c_int = AF_OROUTE;
+pub const PF_ARP: ::c_int = AF_ARP;
+pub const PF_KEY: ::c_int = pseudo_AF_KEY;
+pub const PF_BLUETOOTH: ::c_int = AF_BLUETOOTH;
+pub const PF_MPLS: ::c_int = AF_MPLS;
+pub const PF_ROUTE: ::c_int = AF_ROUTE;
+pub const PF_MAX: ::c_int = AF_MAX;
+
+pub const MSG_NBIO: ::c_int = 0x1000;
+pub const MSG_WAITFORONE: ::c_int = 0x2000;
+pub const MSG_NOTIFICATION: ::c_int = 0x4000;
+
+pub const SCM_TIMESTAMP: ::c_int = 0x08;
+pub const SCM_CREDS: ::c_int = 0x10;
 
 pub const O_DSYNC : ::c_int = 0x10000;
 
@@ -593,6 +641,18 @@ pub const P_ALL: idtype_t = 0;
 pub const P_PID: idtype_t = 1;
 pub const P_PGID: idtype_t = 4;
 
+pub const B460800: ::speed_t = 460800;
+pub const B921600: ::speed_t = 921600;
+
+// dirfd() is a macro on netbsd to access
+// the first field of the struct where dirp points to:
+// http://cvsweb.netbsd.org/bsdweb.cgi/src/include/dirent.h?rev=1.36
+f! {
+    pub fn dirfd(dirp: *mut ::DIR) -> ::c_int {
+        unsafe { *(dirp as *const ::c_int) }
+    }
+}
+
 extern {
     pub fn aio_read(aiocbp: *mut aiocb) -> ::c_int;
     pub fn aio_write(aiocbp: *mut aiocb) -> ::c_int;
@@ -668,6 +728,8 @@ extern {
     pub fn newlocale(mask: ::c_int,
                      locale: *const ::c_char,
                      base: ::locale_t) -> ::locale_t;
+    #[link_name = "__settimeofday50"]
+    pub fn settimeofday(tv: *const ::timeval, tz: *const ::c_void) -> ::c_int;
 }
 
 mod other;

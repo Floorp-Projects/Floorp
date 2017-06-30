@@ -42,16 +42,17 @@ private:
 };
 }
 
-VideoFrameContainer::VideoFrameContainer(dom::HTMLMediaElement* aElement,
-                                         already_AddRefed<ImageContainer> aContainer)
-  : mElement(aElement),
-    mImageContainer(aContainer), mMutex("nsVideoFrameContainer"),
-    mBlackImage(nullptr),
-    mFrameID(0),
-    mIntrinsicSizeChanged(false), mImageSizeChanged(false),
-    mPendingPrincipalHandle(PRINCIPAL_HANDLE_NONE),
-    mFrameIDForPendingPrincipalHandle(0),
-    mMainThread(aElement->AbstractMainThread())
+VideoFrameContainer::VideoFrameContainer(
+  dom::HTMLMediaElement* aElement,
+  already_AddRefed<ImageContainer> aContainer)
+  : mElement(aElement)
+  , mImageContainer(aContainer)
+  , mMutex("nsVideoFrameContainer")
+  , mBlackImage(nullptr)
+  , mFrameID(0)
+  , mPendingPrincipalHandle(PRINCIPAL_HANDLE_NONE)
+  , mFrameIDForPendingPrincipalHandle(0)
+  , mMainThread(aElement->AbstractMainThread())
 {
   NS_ASSERTION(aElement, "aElement must not be null");
   NS_ASSERTION(mImageContainer, "aContainer must not be null");
@@ -241,7 +242,12 @@ void VideoFrameContainer::SetCurrentFramesLocked(const gfx::IntSize& aIntrinsicS
 
   if (aIntrinsicSize != mIntrinsicSize) {
     mIntrinsicSize = aIntrinsicSize;
-    mIntrinsicSizeChanged = true;
+    RefPtr<VideoFrameContainer> self = this;
+    mMainThread->Dispatch(NS_NewRunnableFunction(
+      "IntrinsicSizeChanged", [this, self, aIntrinsicSize]() {
+        mMainThreadState.mIntrinsicSize = aIntrinsicSize;
+        mMainThreadState.mIntrinsicSizeChanged = true;
+      }));
   }
 
   gfx::IntSize oldFrameSize = mImageContainer->GetCurrentSize();
@@ -255,6 +261,7 @@ void VideoFrameContainer::SetCurrentFramesLocked(const gfx::IntSize& aIntrinsicS
   nsTArray<ImageContainer::OwningImage> oldImages;
   mImageContainer->GetCurrentImages(&oldImages);
 
+  PrincipalHandle principalHandle = PRINCIPAL_HANDLE_NONE;
   ImageContainer::FrameID lastFrameIDForOldPrincipalHandle =
     mFrameIDForPendingPrincipalHandle - 1;
   if (mPendingPrincipalHandle != PRINCIPAL_HANDLE_NONE &&
@@ -268,21 +275,10 @@ void VideoFrameContainer::SetCurrentFramesLocked(const gfx::IntSize& aIntrinsicS
     // set of images.
     // This means that the old principal handle has been flushed out and we can
     // notify our video element about this change.
-    RefPtr<VideoFrameContainer> self = this;
-    PrincipalHandle principalHandle = mPendingPrincipalHandle;
+    principalHandle = mPendingPrincipalHandle;
     mLastPrincipalHandle = mPendingPrincipalHandle;
     mPendingPrincipalHandle = PRINCIPAL_HANDLE_NONE;
     mFrameIDForPendingPrincipalHandle = 0;
-    mMainThread->Dispatch(
-      NS_NewRunnableFunction(
-        "PrincipalHandleChangedForVideoFrameContainer",
-        [self, principalHandle]() {
-          if (self->mElement) {
-            self->mElement->PrincipalHandleChangedForVideoFrameContainer(self, principalHandle);
-          }
-        }
-      )
-    );
   }
 
   if (aImages.IsEmpty()) {
@@ -291,8 +287,19 @@ void VideoFrameContainer::SetCurrentFramesLocked(const gfx::IntSize& aIntrinsicS
     mImageContainer->SetCurrentImages(aImages);
   }
   gfx::IntSize newFrameSize = mImageContainer->GetCurrentSize();
-  if (oldFrameSize != newFrameSize) {
-    mImageSizeChanged = true;
+  bool imageSizeChanged = (oldFrameSize != newFrameSize);
+
+  if (principalHandle != PRINCIPAL_HANDLE_NONE || imageSizeChanged) {
+    RefPtr<VideoFrameContainer> self = this;
+    mMainThread->Dispatch(NS_NewRunnableFunction(
+      "PrincipalHandleOrImageSizeChanged",
+      [this, self, principalHandle, imageSizeChanged]() {
+        mMainThreadState.mImageSizeChanged = imageSizeChanged;
+        if (mElement && principalHandle != PRINCIPAL_HANDLE_NONE) {
+          mElement->PrincipalHandleChangedForVideoFrameContainer(
+            this, principalHandle);
+        }
+      }));
   }
 }
 
@@ -355,32 +362,17 @@ void VideoFrameContainer::InvalidateWithFlags(uint32_t aFlags)
   }
 
   nsIFrame* frame = mElement->GetPrimaryFrame();
-  bool invalidateFrame = false;
+  bool invalidateFrame = mMainThreadState.mImageSizeChanged;
+  mMainThreadState.mImageSizeChanged = false;
 
-  {
-    Maybe<AutoTimer<Telemetry::VFC_INVALIDATE_LOCK_WAIT_MS>> lockWait;
-    lockWait.emplace();
-
-    MutexAutoLock lock(mMutex);
-
-    lockWait.reset();
-    AutoTimer<Telemetry::VFC_INVALIDATE_LOCK_HOLD_MS> lockHold;
-
-    // Get mImageContainerSizeChanged while holding the lock.
-    invalidateFrame = mImageSizeChanged;
-    mImageSizeChanged = false;
-
-    if (mIntrinsicSizeChanged) {
-      mElement->UpdateMediaSize(mIntrinsicSize);
-      mIntrinsicSizeChanged = false;
-
-      if (frame) {
-        nsPresContext* presContext = frame->PresContext();
-        nsIPresShell *presShell = presContext->PresShell();
-        presShell->FrameNeedsReflow(frame,
-                                    nsIPresShell::eStyleChange,
-                                    NS_FRAME_IS_DIRTY);
-      }
+  if (mMainThreadState.mIntrinsicSizeChanged) {
+    mElement->UpdateMediaSize(mMainThreadState.mIntrinsicSize);
+    mMainThreadState.mIntrinsicSizeChanged = false;
+    if (frame) {
+      nsPresContext* presContext = frame->PresContext();
+      nsIPresShell* presShell = presContext->PresShell();
+      presShell->FrameNeedsReflow(
+        frame, nsIPresShell::eStyleChange, NS_FRAME_IS_DIRTY);
     }
   }
 

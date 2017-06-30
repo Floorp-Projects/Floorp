@@ -348,7 +348,10 @@ ContentCacheInChild::CacheTextRects(nsIWidget* aWidget,
     // Note that TextComposition::String() may not be modified here because
     // it's modified after all edit action listeners are performed but this
     // is called while some of them are performed.
-    uint32_t length = textComposition->LastData().Length();
+    // FYI: For supporting IME which commits composition and restart new
+    //      composition immediately, we should cache next character of current
+    //      composition too.
+    uint32_t length = textComposition->LastData().Length() + 1;
     mTextRectArray.mStart = mCompositionStart;
     if (NS_WARN_IF(!QueryCharRectArray(aWidget, mTextRectArray.mStart, length,
                                        mTextRectArray.mRects))) {
@@ -545,15 +548,20 @@ ContentCacheInParent::AssignContent(const ContentCache& aOther,
   mCompositionStartInChild = aOther.mCompositionStart;
   if (mWidgetHasComposition) {
     if (aOther.mCompositionStart != UINT32_MAX) {
-      mCompositionStart = aOther.mCompositionStart;
-    } else {
+      if (mCompositionStart != aOther.mCompositionStart) {
+        mCompositionStart = aOther.mCompositionStart;
+        mPendingCommitLength = 0;
+      }
+    } else if (mCompositionStart != mSelection.StartOffset()) {
       mCompositionStart = mSelection.StartOffset();
+      mPendingCommitLength = 0;
       NS_WARNING_ASSERTION(mCompositionStart != UINT32_MAX,
                            "mCompositionStart shouldn't be invalid offset when "
                            "the widget has composition");
     }
-  } else {
+  } else if (mCompositionStart != UINT32_MAX) {
     mCompositionStart = UINT32_MAX;
+    mPendingCommitLength = 0;
   }
 
   MOZ_LOG(sContentCacheLog, LogLevel::Info,
@@ -564,7 +572,8 @@ ContentCacheInParent::AssignContent(const ContentCache& aOther,
      "mFocusCharRects[ePrevCharRect]=%s, mRect=%s }, "
      "mFirstCharRect=%s, mCaret={ mOffset=%u, mRect=%s }, mTextRectArray={ "
      "mStart=%u, mRects.Length()=%" PRIuSIZE " }, mWidgetHasComposition=%s, "
-     "mPendingCompositionCount=%u, mCompositionStart=%u, mEditorRect=%s",
+     "mPendingCompositionCount=%u, mCompositionStart=%u, "
+     "mPendingCommitLength=%u, mEditorRect=%s",
      this, GetNotificationName(aNotification),
      mText.Length(), mSelection.mAnchor, mSelection.mFocus,
      GetWritingModeName(mSelection.mWritingMode).get(),
@@ -575,7 +584,7 @@ ContentCacheInParent::AssignContent(const ContentCache& aOther,
      GetRectText(mSelection.mRect).get(), GetRectText(mFirstCharRect).get(),
      mCaret.mOffset, GetRectText(mCaret.mRect).get(), mTextRectArray.mStart,
      mTextRectArray.mRects.Length(), GetBoolName(mWidgetHasComposition),
-     mPendingCompositionCount, mCompositionStart,
+     mPendingCompositionCount, mCompositionStart, mPendingCommitLength,
      GetRectText(mEditorRect).get()));
 }
 
@@ -625,14 +634,19 @@ ContentCacheInParent::HandleQueryContentEvent(WidgetQueryContentEvent& aEvent,
         return false;
       }
     } else if (mWidgetHasComposition) {
-      if (NS_WARN_IF(!aEvent.mInput.MakeOffsetAbsolute(mCompositionStart))) {
+      if (NS_WARN_IF(!aEvent.mInput.MakeOffsetAbsolute(
+                                      mCompositionStart +
+                                        mPendingCommitLength))) {
         MOZ_LOG(sContentCacheLog, LogLevel::Error,
           ("0x%p HandleQueryContentEvent(), FAILED due to "
-           "aEvent.mInput.MakeOffsetAbsolute(mCompositionStart) failure, "
-           "mCompositionStart=%d, aEvent={ mMessage=%s, "
-           "mInput={ mOffset=%" PRId64 ", mLength=%" PRIu32 " } }",
-           this, mCompositionStart, ToChar(aEvent.mMessage),
-           aEvent.mInput.mOffset, aEvent.mInput.mLength));
+           "aEvent.mInput.MakeOffsetAbsolute(mCompositionStart + "
+           "mPendingCommitLength) failure, "
+           "mCompositionStart=%" PRIu32 ", mPendingCommitLength=%" PRIu32 ", "
+           "aEvent={ mMessage=%s, mInput={ mOffset=%" PRId64
+           ", mLength=%" PRIu32 " } }",
+           this, mCompositionStart, mPendingCommitLength,
+           ToChar(aEvent.mMessage), aEvent.mInput.mOffset,
+           aEvent.mInput.mLength));
         return false;
       }
     } else if (NS_WARN_IF(!mSelection.IsValid())) {
@@ -641,15 +655,18 @@ ContentCacheInParent::HandleQueryContentEvent(WidgetQueryContentEvent& aEvent,
          this));
       return false;
     } else if (NS_WARN_IF(!aEvent.mInput.MakeOffsetAbsolute(
-                                           mSelection.StartOffset()))) {
+                                           mSelection.StartOffset() +
+                                             mPendingCommitLength))) {
       MOZ_LOG(sContentCacheLog, LogLevel::Error,
         ("0x%p HandleQueryContentEvent(), FAILED due to "
-         "aEvent.mInput.MakeOffsetAbsolute(mSelection.StartOffset()) "
-         "failure, mSelection={ StartOffset()=%d, Length()=%d }, "
-         "aEvent={ mMessage=%s, mInput={ mOffset=%" PRId64 ", mLength=%" PRIu32 " } }",
+         "aEvent.mInput.MakeOffsetAbsolute(mSelection.StartOffset() + "
+         "mPendingCommitLength) failure, "
+         "mSelection={ StartOffset()=%d, Length()=%d }, "
+         "mPendingCommitLength=%" PRIu32 ", aEvent={ mMessage=%s, "
+         "mInput={ mOffset=%" PRId64 ", mLength=%" PRIu32 " } }",
          this, mSelection.StartOffset(), mSelection.Length(),
-         ToChar(aEvent.mMessage), aEvent.mInput.mOffset,
-         aEvent.mInput.mLength));
+         mPendingCommitLength, ToChar(aEvent.mMessage),
+         aEvent.mInput.mOffset, aEvent.mInput.mLength));
       return false;
     }
   }
@@ -1113,6 +1130,9 @@ ContentCacheInParent::OnCompositionEvent(const WidgetCompositionEvent& aEvent)
 
   if (!mWidgetHasComposition) {
     mCompositionStart = UINT32_MAX;
+    if (mPendingCompositionCount == 1) {
+      mPendingCommitLength = aEvent.mData.Length();
+    }
   }
 
   // During REQUEST_TO_COMMIT_COMPOSITION or REQUEST_TO_CANCEL_COMPOSITION,
@@ -1175,6 +1195,11 @@ ContentCacheInParent::OnEventNeedingAckHandled(nsIWidget* aWidget,
       aMessage == eCompositionCommitRequestHandled) {
     MOZ_RELEASE_ASSERT(mPendingCompositionCount > 0);
     mPendingCompositionCount--;
+    // Forget pending commit string length if it's handled in the remote
+    // process.  Note that this doesn't care too old composition's commit
+    // string because in such case, we cannot return proper information
+    // to IME synchornously.
+    mPendingCommitLength = 0;
   }
 
   MOZ_RELEASE_ASSERT(mPendingEventsNeedingAck > 0);

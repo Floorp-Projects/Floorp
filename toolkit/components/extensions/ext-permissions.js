@@ -36,10 +36,11 @@ this.permissions = class extends ExtensionAPI {
           }
 
           if (promptsEnabled) {
+            let browser = context.pendingEventBrowser || context.xulBrowser;
             let allow = await new Promise(resolve => {
               let subject = {
                 wrappedJSObject: {
-                  browser: context.xulBrowser,
+                  browser,
                   name: context.extension.name,
                   icon: context.extension.iconURL,
                   permissions: {permissions, origins},

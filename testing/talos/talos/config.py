@@ -431,6 +431,7 @@ def get_browser_config(config):
                 'test_timeout': 1200,
                 'xperf_path': None,
                 'error_filename': None,
+                'no_upload_results': False,
                 }
     browser_config = dict(title=config['title'])
     browser_config.update(dict([(i, config[i]) for i in required]))

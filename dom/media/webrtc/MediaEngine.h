@@ -105,6 +105,7 @@ public:
     , mExtendedFilter(false)
     , mDelayAgnostic(false)
     , mFakeDeviceChangeEventOn(false)
+    , mChannels(0)
   {}
 
   int32_t mWidth;
@@ -123,6 +124,7 @@ public:
   bool mExtendedFilter;
   bool mDelayAgnostic;
   bool mFakeDeviceChangeEventOn;
+  int32_t mChannels;
 
   // mWidth and/or mHeight may be zero (=adaptive default), so use functions.
 

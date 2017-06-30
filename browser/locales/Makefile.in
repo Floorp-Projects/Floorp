@@ -117,6 +117,25 @@ endif
 	@$(MAKE) libs AB_CD=$* XPI_NAME=locale-$* PREF_DIR=$(PREF_DIR)
 	@$(MAKE) -C $(DEPTH)/$(MOZ_BRANDING_DIRECTORY)/locales AB_CD=$* XPI_NAME=locale-$*
 
+chrome-%:
+	@$(MAKE) -C ../../toolkit/locales chrome-$*
+	@$(MAKE) -C ../../services/sync/locales chrome AB_CD=$*
+	@$(MAKE) -C ../../extensions/spellcheck/locales chrome AB_CD=$*
+ifndef RELEASE_OR_BETA
+	@$(MAKE) -C ../extensions/formautofill/locale chrome AB_CD=$*
+endif
+	@$(MAKE) -C ../extensions/pocket/locale chrome AB_CD=$*
+ifndef RELEASE_OR_BETA
+	@$(MAKE) -C ../extensions/presentation/locale chrome AB_CD=$*
+endif
+	@$(MAKE) -C ../../intl/locales chrome AB_CD=$*
+	@$(MAKE) -C ../../devtools/client/locales chrome AB_CD=$*
+	@$(MAKE) chrome AB_CD=$*
+	@$(MAKE) -C $(DEPTH)/$(MOZ_BRANDING_DIRECTORY)/locales chrome AB_CD=$*
+ifdef NIGHTLY_BUILD
+	@$(MAKE) -C ../extensions/webcompat-reporter/locales chrome AB_CD=$*
+endif
+
 repackage-win32-installer: WIN32_INSTALLER_OUT=$(ABS_DIST)/$(PKG_INST_PATH)$(PKG_INST_BASENAME).exe
 repackage-win32-installer: $(call ESCAPE_WILDCARD,$(WIN32_INSTALLER_IN)) $(SUBMAKEFILES) libs-$(AB_CD)
 	@echo 'Repackaging $(WIN32_INSTALLER_IN) into $(WIN32_INSTALLER_OUT).'

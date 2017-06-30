@@ -11,24 +11,22 @@ RUN dpkg --add-architecture i386 && \
   expect \
   openjdk-9-jre \
   libstdc++6:i386 \
+  libpulse0 \
   gcc \
   libc6-dev
 
 WORKDIR /android/
+COPY android* /android/
 
-COPY install-ndk.sh /android/
-RUN sh /android/install-ndk.sh
+ENV ANDROID_ARCH=arm
+ENV PATH=$PATH:/android/ndk-$ANDROID_ARCH/bin:/android/sdk/tools:/android/sdk/platform-tools
 
-ENV PATH=$PATH:/android/ndk-arm/bin:/android/sdk/tools:/android/sdk/platform-tools
-
-COPY install-sdk.sh accept-licenses.sh /android/
-RUN sh /android/install-sdk.sh
+RUN sh /android/android-install-ndk.sh $ANDROID_ARCH
+RUN sh /android/android-install-sdk.sh $ANDROID_ARCH
+RUN mv /root/.android /tmp
+RUN chmod 777 -R /tmp/.android
+RUN chmod 755 /android/sdk/tools/* /android/sdk/tools/qemu/linux-x86_64/*
 
 ENV PATH=$PATH:/rust/bin \
     CARGO_TARGET_ARM_LINUX_ANDROIDEABI_LINKER=arm-linux-androideabi-gcc \
-    ANDROID_EMULATOR_FORCE_32BIT=1 \
     HOME=/tmp
-RUN chmod 755 /android/sdk/tools/*
-
-RUN cp -r /root/.android /tmp
-RUN chmod 777 -R /tmp/.android

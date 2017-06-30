@@ -105,12 +105,34 @@ case "$TARGET" in
 esac
 
 case "$TARGET" in
-  arm-linux-androideabi)
-    emulator @arm-21 -no-window &
+  # Android emulator for x86_64 does not work on travis (missing hardware
+  # acceleration). Tests are run on case *). See ci/android-sysimage.sh for
+  # informations about how tests are run.
+  arm-linux-androideabi | aarch64-linux-android | i686-linux-android)
+    # set SHELL so android can detect a 64bits system, see
+    # http://stackoverflow.com/a/41789144
+    # https://issues.jenkins-ci.org/browse/JENKINS-26930?focusedCommentId=230791&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-230791
+    export SHELL=/bin/dash
+    arch=$(echo $TARGET | cut -d- -f1)
+    accel="-no-accel"
+    if emulator -accel-check; then
+      accel=""
+    fi
+    emulator @$arch -no-window $accel &
     adb wait-for-device
-    adb push $CARGO_TARGET_DIR/$TARGET/debug/libc-test /data/libc-test
-    adb shell /data/libc-test 2>&1 | tee /tmp/out
+    adb push $CARGO_TARGET_DIR/$TARGET/debug/libc-test /data/local/tmp/libc-test
+    adb shell /data/local/tmp/libc-test 2>&1 | tee /tmp/out
     grep "^PASSED .* tests" /tmp/out
+    ;;
+
+  i386-apple-ios)
+    rustc -O ./ci/ios/deploy_and_run_on_ios_simulator.rs
+    ./deploy_and_run_on_ios_simulator $CARGO_TARGET_DIR/$TARGET/debug/libc-test
+    ;;
+
+  x86_64-apple-ios)
+    rustc -O ./ci/ios/deploy_and_run_on_ios_simulator.rs
+    ./deploy_and_run_on_ios_simulator $CARGO_TARGET_DIR/$TARGET/debug/libc-test
     ;;
 
   arm-unknown-linux-gnueabihf)

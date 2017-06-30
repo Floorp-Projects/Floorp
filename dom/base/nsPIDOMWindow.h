@@ -761,10 +761,6 @@ protected:
 
   mozilla::dom::LargeAllocStatus mLargeAllocStatus; // Outer window only
 
-  // When there is any created alive media component, we can consider to resume
-  // the media content in the window.
-  bool mShouldResumeOnFirstActiveMediaComponent;
-
   // mTopInnerWindow is only used on inner windows for tab-wise check by timeout
   // throttling. It could be null.
   nsCOMPtr<nsPIDOMWindowInner> mTopInnerWindow;
@@ -1019,7 +1015,6 @@ public:
   float GetAudioVolume() const;
   nsresult SetAudioVolume(float aVolume);
 
-  void NotifyCreatedNewMediaComponent();
   void MaybeActiveMediaComponents();
 
   void SetServiceWorkersTestingEnabled(bool aEnabled);

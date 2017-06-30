@@ -16,6 +16,7 @@ dictionary MediaTrackSettings {
     boolean echoCancellation;
     boolean noiseSuppression;
     boolean autoGainControl;
+    long      channelCount;
 
     // Mozilla-specific extensions:
 

@@ -8,7 +8,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "ContextualIdentityService",
 XPCOMUtils.defineLazyPreferenceGetter(this, "containersEnabled",
                                       "privacy.userContext.enabled");
 
-function convert(identity) {
+const convertIdentity = identity => {
   let result = {
     name: ContextualIdentityService.getUserContextLabel(identity.userContextId),
     icon: identity.icon,
@@ -17,7 +17,7 @@ function convert(identity) {
   };
 
   return result;
-}
+};
 
 this.contextualIdentities = class extends ExtensionAPI {
   getAPI(context) {
@@ -34,7 +34,7 @@ this.contextualIdentities = class extends ExtensionAPI {
           }
 
           let identity = ContextualIdentityService.getPublicIdentityFromId(containerId);
-          return Promise.resolve(convert(identity));
+          return Promise.resolve(convertIdentity(identity));
         },
 
         query(details) {
@@ -49,7 +49,7 @@ this.contextualIdentities = class extends ExtensionAPI {
               return;
             }
 
-            identities.push(convert(identity));
+            identities.push(convertIdentity(identity));
           });
 
           return Promise.resolve(identities);
@@ -63,7 +63,7 @@ this.contextualIdentities = class extends ExtensionAPI {
           let identity = ContextualIdentityService.create(details.name,
                                                           details.icon,
                                                           details.color);
-          return Promise.resolve(convert(identity));
+          return Promise.resolve(convertIdentity(identity));
         },
 
         update(cookieStoreId, details) {
@@ -99,7 +99,7 @@ this.contextualIdentities = class extends ExtensionAPI {
             return Promise.resolve(null);
           }
 
-          return Promise.resolve(convert(identity));
+          return Promise.resolve(convertIdentity(identity));
         },
 
         remove(cookieStoreId) {
@@ -118,7 +118,7 @@ this.contextualIdentities = class extends ExtensionAPI {
           }
 
           // We have to create the identity object before removing it.
-          let convertedIdentity = convert(identity);
+          let convertedIdentity = convertIdentity(identity);
 
           if (!ContextualIdentityService.remove(identity.userContextId)) {
             return Promise.resolve(null);

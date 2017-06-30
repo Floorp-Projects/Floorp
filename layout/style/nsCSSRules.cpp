@@ -277,7 +277,7 @@ ImportRule::GetCssTextImpl(nsAString& aCssText) const
 }
 
 MediaList*
-ImportRule::Media() const
+ImportRule::GetMedia() const
 {
   return mMedia;
 }

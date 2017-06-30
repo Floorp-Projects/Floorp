@@ -720,10 +720,23 @@
         </body>
       </method>
 
-      <method name="audioPlaybackBlockStarted">
+      <!--
+        When the pref "media.block-autoplay-until-in-foreground" is on, all
+        windows would be blocked by default in gecko. The "block" means the
+        autoplay media can't be started in that tab unless the tab has been
+        visited or resumed by tab's play tab icon. Since the window is blocked
+        by default, there's no method to signal entering that state.
+        (1) If the window is resumed, no matter it has autoplay media or not
+            - will call mediaBlockStopped()
+        (2) If the window has blocked any autoplay media
+            - will call activeMediaBlockStarted()
+        (3) If the window has resumed any autoplay media
+            - will call activeMediaBlockStopped()
+       -->
+      <method name="activeMediaBlockStarted">
         <body>
           <![CDATA[
-            this._audioBlocked = true;
+            this._hasAnyPlayingMediaBeenBlocked = true;
             let event = document.createEvent("Events");
             event.initEvent("DOMAudioPlaybackBlockStarted", true, false);
             this.dispatchEvent(event);
@@ -731,16 +744,24 @@
         </body>
       </method>
 
-      <method name="audioPlaybackBlockStopped">
+      <method name="activeMediaBlockStopped">
         <body>
           <![CDATA[
-            if (!this._audioBlocked) {
+            if (!this._hasAnyPlayingMediaBeenBlocked) {
               return;
             }
-            this._audioBlocked = false;
+            this._hasAnyPlayingMediaBeenBlocked = false;
             let event = document.createEvent("Events");
             event.initEvent("DOMAudioPlaybackBlockStopped", true, false);
             this.dispatchEvent(event);
+          ]]>
+        </body>
+      </method>
+
+      <method name="mediaBlockStopped">
+        <body>
+          <![CDATA[
+            this._mediaBlocked = false;
           ]]>
         </body>
       </method>
@@ -750,11 +771,19 @@
                 onget="return this._audioMuted;"
                 readonly="true"/>
 
+      <field name="_mediaBlocked">true</field>
+      <property name="mediaBlocked" readonly="true">
+        <getter>
+          <![CDATA[
+            if (this.mPrefs.getBoolPref("media.block-autoplay-until-in-foreground", true)) {
+              return this._mediaBlocked;
+            }
+            return false;
+          ]]>
+        </getter>
+      </property>
 
-      <field name="_audioBlocked">false</field>
-      <property name="audioBlocked"
-                onget="return this._audioBlocked;"
-                readonly="true"/>
+      <field name="_hasAnyPlayingMediaBeenBlocked">false</field>
 
       <method name="mute">
         <parameter name="transientState"/>
@@ -808,7 +837,10 @@
       <method name="blockMedia">
         <body>
           <![CDATA[
-            this._audioBlocked = true;
+            if (!this.mPrefs.getBoolPref("media.block-autoplay-until-in-foreground", true)) {
+              return;
+            }
+            this._mediaBlocked = true;
             this.messageManager.sendAsyncMessage("AudioPlayback",
                                                  {type: "blockInactivePageMedia"});
           ]]>
@@ -818,12 +850,15 @@
       <method name="resumeMedia">
         <body>
           <![CDATA[
-            this._audioBlocked = false;
+            this._mediaBlocked = false;
             this.messageManager.sendAsyncMessage("AudioPlayback",
                                                  {type: "resumeMedia"});
-            let event = document.createEvent("Events");
-            event.initEvent("DOMAudioPlaybackBlockStopped", true, false);
-            this.dispatchEvent(event);
+            if (this._hasAnyPlayingMediaBeenBlocked) {
+              this._hasAnyPlayingMediaBeenBlocked = false;
+              let event = document.createEvent("Events");
+              event.initEvent("DOMAudioPlaybackBlockStopped", true, false);
+              this.dispatchEvent(event);
+            }
           ]]>
         </body>
       </method>
@@ -956,8 +991,9 @@
             this.messageManager.addMessageListener("Autoscroll:Cancel", this);
             this.messageManager.addMessageListener("AudioPlayback:Start", this);
             this.messageManager.addMessageListener("AudioPlayback:Stop", this);
-            this.messageManager.addMessageListener("AudioPlayback:BlockStart", this);
-            this.messageManager.addMessageListener("AudioPlayback:BlockStop", this);
+            this.messageManager.addMessageListener("AudioPlayback:ActiveMediaBlockStart", this);
+            this.messageManager.addMessageListener("AudioPlayback:ActiveMediaBlockStop", this);
+            this.messageManager.addMessageListener("AudioPlayback:MediaBlockStop", this);
 
             if (this.hasAttribute("selectmenulist")) {
               this.messageManager.addMessageListener("Forms:ShowDropDown", this);
@@ -1055,11 +1091,14 @@
             case "AudioPlayback:Stop":
               this.audioPlaybackStopped();
               break;
-            case "AudioPlayback:BlockStart":
-              this.audioPlaybackBlockStarted();
+            case "AudioPlayback:ActiveMediaBlockStart":
+              this.activeMediaBlockStarted();
               break;
-            case "AudioPlayback:BlockStop":
-              this.audioPlaybackBlockStopped();
+            case "AudioPlayback:ActiveMediaBlockStop":
+              this.activeMediaBlockStopped();
+              break;
+            case "AudioPlayback:MediaBlockStop":
+              this.mediaBlockStopped();
               break;
             case "Forms:ShowDropDown": {
               if (!this._selectParentHelper) {

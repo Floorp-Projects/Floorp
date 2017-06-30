@@ -158,6 +158,10 @@ public:
 
     // vista rebars
 
+    // accent color for title bar
+    eColorID__moz_win_accentcolor,
+    // color from drawing text over the accent color
+    eColorID__moz_win_accentcolortext,
     // media rebar text
     eColorID__moz_win_mediatext,
     // communications rebar text
@@ -237,6 +241,15 @@ public:
     eIntID_TabFocusModel,
     // Should menu items blink when they're chosen?
     eIntID_ChosenMenuItemsShouldBlink,
+
+    /*
+     * A Boolean value to determine whether the Windows accent color
+     * should be applied to the title bar.
+     *
+     * The value of this metric is not used on other platforms. These platforms
+     * should return NS_ERROR_NOT_IMPLEMENTED when queried for this metric.
+     */
+    eIntID_WindowsAccentColorApplies,
 
     /*
      * A Boolean value to determine whether the Windows default theme is

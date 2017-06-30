@@ -229,14 +229,21 @@ class BookmarkValidator {
     return !await PlacesSyncUtils.bookmarks.havePendingChanges();
   }
 
-  _followQueries(recordMap) {
+  async _followQueries(recordMap) {
     for (let [guid, entry] of recordMap) {
       if (entry.type !== "query" && (!entry.bmkUri || !entry.bmkUri.startsWith(QUERY_PROTOCOL))) {
         continue;
       }
       // Might be worth trying to parse the place: query instead so that this
       // works "automatically" with things like aboutsync.
-      let queryNodeParent = PlacesUtils.getFolderContents(entry, false, true);
+      let id;
+      try {
+        id = await PlacesUtils.promiseItemId(guid);
+      } catch (ex) {
+        // guid isn't found, so this doesn't exist locally.
+        continue;
+      }
+      let queryNodeParent = PlacesUtils.getFolderContents(id, false, true);
       if (!queryNodeParent || !queryNodeParent.root.hasChildren) {
         continue;
       }
@@ -357,7 +364,7 @@ class BookmarkValidator {
     }
     await traverse(clientTree, false);
     clientTree.id = "places";
-    this._followQueries(recordsByGuid);
+    await this._followQueries(recordsByGuid);
     return records;
   }
 

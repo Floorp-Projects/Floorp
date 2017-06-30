@@ -13,6 +13,46 @@ registerCleanupFunction(function() {
 });
 
 const kDefaultWait = 2000;
+const REMOVE_DIALOG_URL = "chrome://browser/content/preferences/siteDataRemoveSelected.xul";
+const { SiteDataManager } = Cu.import("resource:///modules/SiteDataManager.jsm", {});
+const mockSiteDataManager = {
+
+  _originalGetQuotaUsage: null,
+  _originalRemoveQuotaUsage: null,
+
+  _getQuotaUsage() {
+    let results = [];
+    this.fakeSites.forEach(site => {
+      results.push({
+        origin: site.principal.origin,
+        usage: site.usage,
+        persisted: site.persisted
+      });
+    });
+    SiteDataManager._getQuotaUsagePromise = Promise.resolve(results);
+    return SiteDataManager._getQuotaUsagePromise;
+  },
+
+  _removeQuotaUsage(site) {
+    var target = site.principals[0].URI.host;
+    this.fakeSites = this.fakeSites.filter(fakeSite => {
+      return fakeSite.principal.URI.host != target;
+    });
+  },
+
+  register() {
+    this._originalGetQuotaUsage = SiteDataManager._getQuotaUsage;
+    SiteDataManager._getQuotaUsage = this._getQuotaUsage.bind(this);
+    this._originalRemoveQuotaUsage = SiteDataManager._removeQuotaUsage;
+    SiteDataManager._removeQuotaUsage = this._removeQuotaUsage.bind(this);
+    this.fakeSites = null;
+  },
+
+  unregister() {
+    SiteDataManager._getQuotaUsage = this._originalGetQuotaUsage;
+    SiteDataManager._removeQuotaUsage = this._originalRemoveQuotaUsage;
+  }
+};
 
 function is_hidden(aElement) {
   var style = aElement.ownerGlobal.getComputedStyle(aElement);
@@ -189,4 +229,52 @@ function promiseWindowDialogOpen(buttonAction, url) {
 
 function promiseAlertDialogOpen(buttonAction) {
   return promiseWindowDialogOpen(buttonAction, "chrome://global/content/commonDialog.xul");
+}
+
+function openSettingsDialog() {
+  let win = gBrowser.selectedBrowser.contentWindow;
+  let doc = gBrowser.selectedBrowser.contentDocument;
+  let settingsBtn = doc.getElementById("siteDataSettings");
+  let dialogOverlay = win.gSubDialog._preloadDialog._overlay;
+  let dialogLoadPromise = promiseLoadSubDialog("chrome://browser/content/preferences/siteDataSettings.xul");
+  let dialogInitPromise = TestUtils.topicObserved("sitedata-settings-init", () => true);
+  let fullyLoadPromise = Promise.all([ dialogLoadPromise, dialogInitPromise ]).then(() => {
+    is(dialogOverlay.style.visibility, "visible", "The Settings dialog should be visible");
+  });
+  settingsBtn.doCommand();
+  return fullyLoadPromise;
+}
+
+function assertSitesListed(doc, hosts) {
+  let win = gBrowser.selectedBrowser.contentWindow;
+  let frameDoc = win.gSubDialog._topDialog._frame.contentDocument;
+  let removeBtn = frameDoc.getElementById("removeSelected");
+  let removeAllBtn = frameDoc.getElementById("removeAll");
+  let sitesList = frameDoc.getElementById("sitesList");
+  let totalSitesNumber = sitesList.getElementsByTagName("richlistitem").length;
+  is(totalSitesNumber, hosts.length, "Should list the right sites number");
+  hosts.forEach(host => {
+    let site = sitesList.querySelector(`richlistitem[host="${host}"]`);
+    ok(site, `Should list the site of ${host}`);
+  });
+  is(removeBtn.disabled, false, "Should enable the removeSelected button");
+  is(removeAllBtn.disabled, false, "Should enable the removeAllBtn button");
+}
+
+function promiseSitesUpdated() {
+  return TestUtils.topicObserved("sitedatamanager:sites-updated", () => true);
+}
+
+function promiseSettingsDialogClose() {
+  return new Promise(resolve => {
+    let win = gBrowser.selectedBrowser.contentWindow;
+    let dialogOverlay = win.gSubDialog._topDialog._overlay;
+    let dialogWin = win.gSubDialog._topDialog._frame.contentWindow;
+    dialogWin.addEventListener("unload", function unload() {
+      if (dialogWin.document.documentURI === "chrome://browser/content/preferences/siteDataSettings.xul") {
+        isnot(dialogOverlay.style.visibility, "visible", "The Settings dialog should be hidden");
+        resolve();
+      }
+    }, { once: true });
+  });
 }
