@@ -91,6 +91,9 @@ const I64TruncSF64Code = 0xb0;
 const I64TruncUF64Code = 0xb1;
 
 const FirstInvalidOpcode = 0xc0;
+const LastInvalidOpcode = 0xfd;
+const AtomicPrefix = 0xfe;
+const MozPrefix = 0xff;
 
 // DefinitionKind
 const FunctionCode     = 0x00;
