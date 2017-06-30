@@ -436,7 +436,10 @@ public:
     , mIsWorkerScript(aIsWorkerScript)
     , mFailed(false)
   {
+    MOZ_ASSERT(aWorkerPrivate);
     MOZ_ASSERT(aWorkerPrivate->IsServiceWorker());
+    mMainThreadEventTarget = aWorkerPrivate->MainThreadEventTarget();
+    MOZ_ASSERT(mMainThreadEventTarget);
     mBaseURI = GetBaseURI(mIsWorkerScript, aWorkerPrivate);
     AssertIsOnMainThread();
   }
@@ -471,6 +474,7 @@ private:
   nsCString mCSPHeaderValue;
   nsCString mCSPReportOnlyHeaderValue;
   nsCString mReferrerPolicyHeaderValue;
+  nsCOMPtr<nsIEventTarget> mMainThreadEventTarget;
 };
 
 NS_IMPL_ISUPPORTS(CacheScriptLoader, nsIStreamLoaderObserver)
@@ -1701,7 +1705,14 @@ CacheScriptLoader::ResolvedCallback(JSContext* aCx,
   }
 
   MOZ_ASSERT(!mPump);
-  rv = NS_NewInputStreamPump(getter_AddRefs(mPump), inputStream);
+  rv = NS_NewInputStreamPump(getter_AddRefs(mPump),
+                             inputStream,
+                             -1, /* default streamPos */
+                             -1, /* default streamLen */
+                             0, /* default segsize */
+                             0, /* default segcount */
+                             false, /* default closeWhenDone */
+                             mMainThreadEventTarget);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     Fail(rv);
     return;
