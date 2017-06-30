@@ -431,6 +431,9 @@
     </resources>
 
     <implementation>
+      <property name="kMsPerSecond" readonly="true" onget="return 1000;" />
+      <property name="kMsPerMinute" readonly="true" onget="return (60 * 1000);" />
+
       <constructor>
       <![CDATA[
         const kDefaultAMString = "AM";
@@ -502,22 +505,97 @@
         </body>
       </method>
 
-      <method name="reBuildEditFields">
+      <method name="hasSecondField">
         <body>
-          <![CDATA[
-            let root =
-              document.getAnonymousElementByAttribute(this, "anonid", "edit-wrapper");
-            while (root.firstChild) {
-              root.firstChild.remove();
-            }
+        <![CDATA[
+          return !!this.mSecondField;
+        ]]>
+        </body>
+      </method>
 
-            this.mHourField = null;
-            this.mMinuteField = null;
-            this.mSecondField = null;
-            this.mMillisecField = null;
+      <method name="hasMillisecField">
+        <body>
+        <![CDATA[
+          return !!this.mMillisecField;
+        ]]>
+        </body>
+      </method>
 
-            this.buildEditFields();
-          ]]>
+      <method name="hasDayPeriodField">
+        <body>
+        <![CDATA[
+          return !!this.mDayPeriodField;
+        ]]>
+        </body>
+      </method>
+
+      <method name="shouldShowSecondField">
+        <body>
+        <![CDATA[
+          let { second } = this.getInputElementValues();
+          if (second != undefined) {
+            return true;
+          }
+
+          let stepBase = this.mInputElement.getStepBase();
+          if ((stepBase % this.kMsPerMinute) != 0) {
+            return true;
+          }
+
+          let step = this.mInputElement.getStep();
+          if ((step % this.kMsPerMinute) != 0) {
+            return true;
+          }
+
+          return false;
+        ]]>
+        </body>
+      </method>
+
+      <method name="shouldShowMillisecField">
+        <body>
+        <![CDATA[
+          let { millisecond } = this.getInputElementValues();
+          if (millisecond != undefined) {
+            return true;
+          }
+
+          let stepBase = this.mInputElement.getStepBase();
+          if ((stepBase % this.kMsPerSecond) != 0) {
+            return true;
+          }
+
+          let step = this.mInputElement.getStep();
+          if ((step % this.kMsPerSecond) != 0) {
+            return true;
+          }
+
+          return false;
+        ]]>
+        </body>
+      </method>
+
+      <method name="rebuildEditFieldsIfNeeded">
+        <body>
+        <![CDATA[
+          if ((this.shouldShowSecondField() == this.hasSecondField()) &&
+              (this.shouldShowMillisecField() == this.hasMillisecField())) {
+            return;
+          }
+
+          let root =
+            document.getAnonymousElementByAttribute(this, "anonid", "edit-wrapper");
+          while (root.firstChild) {
+            root.firstChild.remove();
+          }
+
+          this.mHourField = null;
+          this.mMinuteField = null;
+          this.mSecondField = null;
+          this.mMillisecField = null;
+
+          this.buildEditFields();
+        ]]>
         </body>
       </method>
 
@@ -527,8 +605,6 @@
           const HTML_NS = "http://www.w3.org/1999/xhtml";
           let root =
             document.getAnonymousElementByAttribute(this, "anonid", "edit-wrapper");
-
-          let { second, millisecond } = this.getInputElementValues();
 
           let options = {
             hour: "numeric",
@@ -548,18 +624,18 @@
               this.mDayPeriodPlaceHolder, false);
           }
 
-          if (second != undefined) {
+          if (this.shouldShowSecondField()) {
             options["second"] = "numeric";
             this.mSecondField = this.createEditField(this.mSecondPlaceHolder,
-              true, this.mMaxLength, this.mMaxLength, this.mMinSecond, this.mMaxSecond,
-              this.mMinSecPageUpDownInterval);
-          }
+              true, this.mMaxLength, this.mMaxLength, this.mMinSecond,
+              this.mMaxSecond, this.mMinSecPageUpDownInterval);
 
-          if (millisecond != undefined) {
-            this.mMillisecField = this.createEditField(this.mMillisecPlaceHolder,
-              true, this.mMillisecMaxLength, this.mMillisecMaxLength,
-              this.mMinMillisecond, this.mMaxMillisecond,
-              this.mMinSecPageUpDownInterval);
+            if (this.shouldShowMillisecField()) {
+              this.mMillisecField = this.createEditField(
+                this.mMillisecPlaceHolder, true, this.mMillisecMaxLength,
+                this.mMillisecMaxLength, this.mMinMillisecond,
+                this.mMaxMillisecond, this.mMinSecPageUpDownInterval);
+            }
           }
 
           let fragment = document.createDocumentFragment();
@@ -574,7 +650,7 @@
                 break;
               case "second":
                 fragment.appendChild(this.mSecondField);
-                if (millisecond != undefined) {
+                if (this.shouldShowMillisecField()) {
                   // Intl.DateTimeFormat does not support millisecond, so we
                   // need to handle this on our own.
                   let span = document.createElementNS(HTML_NS, "span");
@@ -650,15 +726,9 @@
             return;
           }
 
-          // Second and millsecond part is optional, rebuild edit fields if
+          // Second and millisecond part are optional, rebuild edit fields if
           // needed.
-          if ((!this.isEmpty(second) && !this.mSecondField) ||
-              (this.isEmpty(second) && this.mSecondField) ||
-              (!this.isEmpty(millisecond) && !this.mMillisecField) ||
-              (this.isEmpty(millisecond) && this.mMillisecField)) {
-            this.log("Edit fields need to be rebuilt.")
-            this.reBuildEditFields();
-          }
+          this.rebuildEditFieldsIfNeeded();
 
           this.setFieldValue(this.mHourField, hour);
           this.setFieldValue(this.mMinuteField, minute);
@@ -667,11 +737,14 @@
                                                          : this.mAMIndicator);
           }
 
-          if (!this.isEmpty(second)) {
-            this.setFieldValue(this.mSecondField, second);
+          if (this.hasSecondField()) {
+            this.setFieldValue(this.mSecondField,
+              (second != undefined) ? second : 0);
           }
-          if (!this.isEmpty(millisecond)) {
-            this.setFieldValue(this.mMillisecField, millisecond);
+
+          if (this.hasMillisecField()) {
+            this.setFieldValue(this.mMillisecField,
+              (millisecond != undefined) ? millisecond : 0);
           }
 
           this.notifyPicker();
@@ -715,12 +788,12 @@
           minute = (minute < 10) ? ("0" + minute) : minute;
 
           let time = hour + ":" + minute;
-          if (this.mSecondField) {
+          if (second != undefined) {
             second = (second < 10) ? ("0" + second) : second;
             time += ":" + second;
           }
 
-          if (this.mMillisecField) {
+          if (millisecond != undefined) {
             // Convert milliseconds to fraction of second.
             millisecond = millisecond.toString().padStart(
               this.mMillisecMaxLength, "0");
@@ -784,17 +857,17 @@
             this.clearFieldValue(this.mMinuteField);
           }
 
-          if (this.mSecondField && !this.mSecondField.disabled &&
+          if (this.hasSecondField() && !this.mSecondField.disabled &&
               !this.mSecondField.readOnly) {
             this.clearFieldValue(this.mSecondField);
           }
 
-          if (this.mMillisecField && !this.mMillisecField.disabled &&
+          if (this.hasMillisecField() && !this.mMillisecField.disabled &&
               !this.mMillisecField.readOnly) {
             this.clearFieldValue(this.mMillisecField);
           }
 
-          if (this.mDayPeriodField && !this.mDayPeriodField.disabled &&
+          if (this.hasDayPeriodField() && !this.mDayPeriodField.disabled &&
               !this.mDayPeriodField.readOnly) {
             this.clearFieldValue(this.mDayPeriodField);
           }
@@ -806,6 +879,18 @@
               this.mInputElement.updateValidityState();
             }
           }
+        ]]>
+        </body>
+      </method>
+
+      <method name="notifyMinMaxStepAttrChanged">
+        <body>
+        <![CDATA[
+          // Second and millisecond part are optional, rebuild edit fields if
+          // needed.
+          this.rebuildEditFieldsIfNeeded();
+          // Fill in values again.
+          this.setFieldsFromInputValue();
         ]]>
         </body>
       </method>
@@ -864,7 +949,7 @@
           let targetField = aEvent.originalTarget;
           let key = aEvent.key;
 
-          if (this.mDayPeriodField &&
+          if (this.hasDayPeriodField() &&
               targetField == this.mDayPeriodField) {
             // Home/End key does nothing on AM/PM field.
             if (key == "Home" || key == "End") {
@@ -920,7 +1005,7 @@
           let targetField = aEvent.originalTarget;
           let key = aEvent.key;
 
-          if (this.mDayPeriodField &&
+          if (this.hasDayPeriodField() &&
               targetField == this.mDayPeriodField) {
             if (key == "a" || key == "A") {
               this.setDayPeriodValue(this.mAMIndicator);
@@ -997,7 +1082,7 @@
         <parameter name="aValue"/>
         <body>
         <![CDATA[
-          if (!this.mDayPeriodField) {
+          if (!this.hasDayPeriodField()) {
             return "";
           }
 
@@ -1013,7 +1098,7 @@
         <parameter name="aValue"/>
         <body>
         <![CDATA[
-          if (!this.mDayPeriodField) {
+          if (!this.hasDayPeriodField()) {
             return;
           }
 
@@ -1040,9 +1125,9 @@
             return false;
           }
 
-          return (this.mDayPeriodField && !this.isEmpty(dayPeriod)) ||
-                 (this.mSecondField && !this.isEmpty(second)) ||
-                 (this.mMillisecField && !this.isEmpty(millisecond));
+          return (this.hasDayPeriodField() && !this.isEmpty(dayPeriod)) ||
+                 (this.hasSecondField() && !this.isEmpty(second)) ||
+                 (this.hasMillisecField() && !this.isEmpty(millisecond));
         ]]>
         </body>
       </method>
@@ -1054,9 +1139,9 @@
           let dayPeriod = this.getDayPeriodValue();
 
           return (this.isEmpty(hour) || this.isEmpty(minute) ||
-                  (this.mDayPeriodField && this.isEmpty(dayPeriod)) ||
-                  (this.mSecondField && this.isEmpty(second)) ||
-                  (this.mMillisecField && this.isEmpty(millisecond)));
+                  (this.hasDayPeriodField() && this.isEmpty(dayPeriod)) ||
+                  (this.hasSecondField() && this.isEmpty(second)) ||
+                  (this.hasMillisecField() && this.isEmpty(millisecond)));
         ]]>
         </body>
       </method>
@@ -1310,6 +1395,12 @@
           this.log("inputElementValueChanged");
           this.setFieldsFromInputValue();
         ]]>
+        </body>
+      </method>
+
+      <method name="notifyMinMaxStepAttrChanged">
+        <body>
+        <!-- No operation by default -->
         </body>
       </method>
 

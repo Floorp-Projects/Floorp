@@ -161,8 +161,13 @@
       testValue("slider_vnvt", "plain", 0, 0, 5, 0);
       testValue("slider_vt", "hi", 0, 0, 3, 0);
       testValue("scrollbar", "5", 5, 0, 1000, 0);
+      testValue("splitter", "5", 5, 0, 1000, 0);
       testValue("progress", "22%", 22, 0, 100, 0);
       testValue("range", "6", 6, 0, 10, 1);
+
+      // Test that elements which should not expose values do not
+      var accSeparator = getAccessible("separator", [nsIAccessibleValue], null, DONOTFAIL_IF_NO_INTERFACE);
+      ok(!accSeparator, "value interface is not exposed for separator");
 
       // Test value change events
       gQueue = new eventQueue();
@@ -171,6 +176,7 @@
       gQueue.push(new changeARIAValue("slider_vt", undefined, "hey!"));
       gQueue.push(new changeARIAValue("slider_vnvt", "3", "sweet"));
       gQueue.push(new changeARIAValue("scrollbar", "6", undefined));
+      gQueue.push(new changeARIAValue("splitter", "6", undefined));
 
       gQueue.push(new changeValue("combobox", "hello"));
 
@@ -236,6 +242,14 @@
   <!-- ARIA scrollbar -->
   <div id="scrollbar" role="scrollbar" aria-valuenow="5"
        aria-valuemin="0" aria-valuemax="1000">slider</div>
+
+  <!-- ARIA separator which is focusable (i.e. a splitter) -->
+  <div id="splitter" role="separator" tabindex="0" aria-valuenow="5"
+       aria-valuemin="0" aria-valuemax="1000">splitter</div>
+
+  <!-- ARIA separator which is not focusable and should not expose values -->
+  <div id="separator" role="separator" aria-valuenow="5"
+       aria-valuemin="0" aria-valuemax="1000">splitter</div>
 
   <!-- ARIA combobox -->
   <input id="combobox" role="combobox" aria-autocomplete="inline">

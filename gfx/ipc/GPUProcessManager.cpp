@@ -786,12 +786,12 @@ GPUProcessManager::CreateContentCompositorManager(base::ProcessId aOtherProcess,
   ipc::Endpoint<PCompositorManagerParent> parentPipe;
   ipc::Endpoint<PCompositorManagerChild> childPipe;
 
-  base::ProcessId gpuPid = EnsureGPUReady()
-                           ? mGPUChild->OtherPid()
-                           : base::GetCurrentProcId();
+  base::ProcessId parentPid = EnsureGPUReady()
+                              ? mGPUChild->OtherPid()
+                              : base::GetCurrentProcId();
 
   nsresult rv = PCompositorManager::CreateEndpoints(
-    gpuPid,
+    parentPid,
     aOtherProcess,
     &parentPipe,
     &childPipe);
@@ -800,7 +800,7 @@ GPUProcessManager::CreateContentCompositorManager(base::ProcessId aOtherProcess,
     return false;
   }
 
-  if (EnsureGPUReady()) {
+  if (mGPUChild) {
     mGPUChild->SendNewContentCompositorManager(Move(parentPipe));
   } else {
     CompositorManagerParent::Create(Move(parentPipe));
@@ -816,14 +816,14 @@ GPUProcessManager::CreateContentImageBridge(base::ProcessId aOtherProcess,
 {
   EnsureImageBridgeChild();
 
-  base::ProcessId gpuPid = mGPUChild
-                           ? mGPUChild->OtherPid()
-                           : base::GetCurrentProcId();
+  base::ProcessId parentPid = EnsureGPUReady()
+                              ? mGPUChild->OtherPid()
+                              : base::GetCurrentProcId();
 
   ipc::Endpoint<PImageBridgeParent> parentPipe;
   ipc::Endpoint<PImageBridgeChild> childPipe;
   nsresult rv = PImageBridge::CreateEndpoints(
-    gpuPid,
+    parentPid,
     aOtherProcess,
     &parentPipe,
     &childPipe);
@@ -832,7 +832,7 @@ GPUProcessManager::CreateContentImageBridge(base::ProcessId aOtherProcess,
     return false;
   }
 
-  if (EnsureGPUReady()) {
+  if (mGPUChild) {
     mGPUChild->SendNewContentImageBridge(Move(parentPipe));
   } else {
     if (!ImageBridgeParent::CreateForContent(Move(parentPipe))) {
@@ -859,14 +859,14 @@ GPUProcessManager::CreateContentVRManager(base::ProcessId aOtherProcess,
 {
   EnsureVRManager();
 
-  base::ProcessId gpuPid = mGPUChild
-                           ? mGPUChild->OtherPid()
-                           : base::GetCurrentProcId();
+  base::ProcessId parentPid = EnsureGPUReady()
+                              ? mGPUChild->OtherPid()
+                              : base::GetCurrentProcId();
 
   ipc::Endpoint<PVRManagerParent> parentPipe;
   ipc::Endpoint<PVRManagerChild> childPipe;
   nsresult rv = PVRManager::CreateEndpoints(
-    gpuPid,
+    parentPid,
     aOtherProcess,
     &parentPipe,
     &childPipe);
@@ -875,7 +875,7 @@ GPUProcessManager::CreateContentVRManager(base::ProcessId aOtherProcess,
     return false;
   }
 
-  if (EnsureGPUReady()) {
+  if (mGPUChild) {
     mGPUChild->SendNewContentVRManager(Move(parentPipe));
   } else {
     if (!VRManagerParent::CreateForContent(Move(parentPipe))) {

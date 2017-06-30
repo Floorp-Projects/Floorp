@@ -467,18 +467,12 @@ body {
   z-index: 1;
 }
 
-.animation-timeline .all-properties .name::after {
-  background-color: var(--theme-content-color3);
-  clip-path: url(images/animation-fast-track.svg#thunderbolt);
-  background-repeat: no-repeat;
-  background-position: center;
-}
-
+.animation-timeline .all-properties .name::after,
 .animation-timeline .some-properties .name::after {
-  background-color: var(--theme-content-color3);
-  clip-path: url(images/animation-fast-track.svg#thunderbolt);
+  -moz-context-properties: fill;
+  fill: var(--theme-content-color3);
+  background-image: url("images/animation-fast-track.svg");
   background-repeat: no-repeat;
-  background-position: center;
 }
 
 .animation-timeline .animation .delay,
@@ -601,8 +595,9 @@ body {
   display: inline-block;
   width: 17px;
   height: 17px;
-  background-color: var(--background-color);
-  clip-path: url(images/animation-fast-track.svg#thunderbolt);
+  -moz-context-properties: fill;
+  fill: var(--background-color);
+  background-image: url("images/animation-fast-track.svg");
   vertical-align: middle;
 }
 

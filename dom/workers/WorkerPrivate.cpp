@@ -2067,7 +2067,7 @@ public:
     {
       MutexAutoLock lock(mMutex);
 
-      MOZ_ASSERT(mWorkerPrivate);
+      // Note, Disable() can be called more than once safely.
       mWorkerPrivate = nullptr;
       mNestedEventTarget.swap(nestedEventTarget);
     }
@@ -2981,22 +2981,34 @@ WorkerPrivateParent<Derived>::GetEventTarget()
 
   nsCOMPtr<nsISerialEventTarget> target;
 
+  bool needAutoDisable = false;
+
   {
     MutexAutoLock lock(mMutex);
 
-    if (!mEventTarget &&
-        ParentStatus() <= Running &&
-        self->mStatus <= Running) {
+    if (!mEventTarget) {
       mEventTarget = new EventTarget(self);
+
+      // If the worker is already shutting down then we want to
+      // immediately disable the event target.  This will cause
+      // the Dispatch() method to fail, but the event target
+      // will still exist.
+      if (self->mStatus > Running) {
+        needAutoDisable = true;
+      }
     }
 
     target = mEventTarget;
   }
 
-  NS_WARNING_ASSERTION(
-    target,
-    "Requested event target for a worker that is already shutting down!");
+  // Make sure to call Disable() outside of the mutex since it
+  // also internally locks a mutex.
+  if (needAutoDisable) {
+    mEventTarget->Disable();
+  }
 
+
+  MOZ_DIAGNOSTIC_ASSERT(target);
   return target.forget();
 }
 
@@ -6134,7 +6146,6 @@ WorkerPrivate::NotifyInternal(JSContext* aCx, Status aStatus)
     MutexAutoLock lock(mMutex);
 
     if (mStatus >= aStatus) {
-      MOZ_ASSERT(!mEventTarget);
       return true;
     }
 
@@ -6147,18 +6158,16 @@ WorkerPrivate::NotifyInternal(JSContext* aCx, Status aStatus)
       Close();
     }
 
-    mEventTarget.swap(eventTarget);
+    eventTarget = mEventTarget;
   }
 
-  // Now that mStatus > Running, no-one can create a new WorkerEventTarget or
-  // WorkerCrossThreadDispatcher if we don't already have one.
+  // Disable the event target, if it exists.
   if (eventTarget) {
     // Since we'll no longer process events, make sure we no longer allow anyone
     // to post them. We have to do this without mMutex held, since our mutex
     // must be acquired *after* the WorkerEventTarget's mutex when they're both
     // held.
     eventTarget->Disable();
-    eventTarget = nullptr;
   }
 
   if (mCrossThreadDispatcher) {

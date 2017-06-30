@@ -8,7 +8,7 @@
 
 #include "nsXPLookAndFeel.h"
 
-class nsLookAndFeel: public nsXPLookAndFeel
+class nsLookAndFeel final : public nsXPLookAndFeel
 {
 public:
     nsLookAndFeel();

@@ -4,37 +4,35 @@
 "use strict";
 
 /**
- * Tests if hidden columns are properly saved
+ * Tests if visible columns are properly saved
  */
 
 add_task(function* () {
-  Services.prefs.setCharPref("devtools.netmonitor.hiddenColumns",
-    '["status", "contentSize"]');
+  Services.prefs.setCharPref("devtools.netmonitor.visibleColumns",
+    '["status", "contentSize", "waterfall"]');
 
   let { monitor } = yield initNetMonitor(SIMPLE_URL);
   info("Starting test... ");
 
   let { document, parent } = monitor.panelWin;
 
-  ok(!document.querySelector("#requests-list-status-button"),
-     "Status column should be hidden");
-  ok(!document.querySelector("#requests-list-contentSize-button"),
-     "Content size column should be hidden");
-
-  yield showColumn("status");
-  yield showColumn("contentSize");
-
-  ok(!Services.prefs.getCharPref("devtools.netmonitor.hiddenColumns").includes("status"),
-    "Pref should be synced for status");
-  ok(!Services.prefs.getCharPref("devtools.netmonitor.hiddenColumns")
-    .includes("contentSize"), "Pref should be synced for contentSize");
+  ok(document.querySelector("#requests-list-status-button"),
+     "Status column should be shown");
+  ok(document.querySelector("#requests-list-contentSize-button"),
+     "Content size column should be shown");
 
   yield hideColumn("status");
+  yield hideColumn("contentSize");
 
-  ok(Services.prefs.getCharPref("devtools.netmonitor.hiddenColumns").includes("status"),
-  "Pref should be synced for status");
+  ok(!Services.prefs.getCharPref("devtools.netmonitor.visibleColumns").includes("status"),
+    "Pref should be synced for status");
+  ok(!Services.prefs.getCharPref("devtools.netmonitor.visibleColumns")
+    .includes("contentSize"), "Pref should be synced for contentSize");
 
   yield showColumn("status");
+
+  ok(Services.prefs.getCharPref("devtools.netmonitor.visibleColumns").includes("status"),
+  "Pref should be synced for status");
 
   function* hideColumn(column) {
     info(`Clicking context-menu item for ${column}`);

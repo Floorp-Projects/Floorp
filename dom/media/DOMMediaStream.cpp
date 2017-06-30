@@ -143,7 +143,6 @@ class DOMMediaStream::OwnedStreamListener : public MediaStreamListener {
 public:
   explicit OwnedStreamListener(DOMMediaStream* aStream)
     : mStream(aStream)
-    , mAbstractMainThread(aStream->mAbstractMainThread)
   {}
 
   void Forget() { mStream = nullptr; }
@@ -224,7 +223,6 @@ public:
   {
     if (aTrackEvents & TrackEventCommand::TRACK_EVENT_CREATED) {
       aGraph->DispatchToMainThreadAfterStreamStateUpdate(
-        mAbstractMainThread,
         NewRunnableMethod<TrackID,
                           MediaSegment::Type,
                           RefPtr<MediaStream>,
@@ -238,7 +236,6 @@ public:
           aInputTrackID));
     } else if (aTrackEvents & TrackEventCommand::TRACK_EVENT_ENDED) {
       aGraph->DispatchToMainThreadAfterStreamStateUpdate(
-        mAbstractMainThread,
         NewRunnableMethod<RefPtr<MediaStream>, TrackID, TrackID>(
           "DOMMediaStream::OwnedStreamListener::DoNotifyTrackEnded",
           this,
@@ -252,8 +249,6 @@ public:
 private:
   // These fields may only be accessed on the main thread
   DOMMediaStream* mStream;
-
-  const RefPtr<AbstractThread> mAbstractMainThread;
 };
 
 /**
@@ -265,7 +260,6 @@ class DOMMediaStream::PlaybackStreamListener : public MediaStreamListener {
 public:
   explicit PlaybackStreamListener(DOMMediaStream* aStream)
     : mStream(aStream)
-    , mAbstractMainThread(aStream->mAbstractMainThread)
   {}
 
   void Forget()
@@ -309,7 +303,6 @@ public:
   void NotifyFinishedTrackCreation(MediaStreamGraph* aGraph) override
   {
     aGraph->DispatchToMainThreadAfterStreamStateUpdate(
-      mAbstractMainThread,
       NewRunnableMethod(
         "DOMMediaStream::PlaybackStreamListener::DoNotifyFinishedTrackCreation",
         this,
@@ -322,7 +315,6 @@ public:
   {
     if (event == MediaStreamGraphEvent::EVENT_FINISHED) {
       aGraph->DispatchToMainThreadAfterStreamStateUpdate(
-        mAbstractMainThread,
         NewRunnableMethod(
           "DOMMediaStream::PlaybackStreamListener::DoNotifyFinished",
           this,
@@ -333,8 +325,6 @@ public:
 private:
   // These fields may only be accessed on the main thread
   DOMMediaStream* mStream;
-
-  const RefPtr<AbstractThread> mAbstractMainThread;
 };
 
 class DOMMediaStream::PlaybackTrackListener : public MediaStreamTrackConsumer
@@ -436,8 +426,7 @@ DOMMediaStream::DOMMediaStream(nsPIDOMWindowInner* aWindow,
     mTracksPendingRemoval(0), mTrackSourceGetter(aTrackSourceGetter),
     mPlaybackTrackListener(MakeAndAddRef<PlaybackTrackListener>(this)),
     mTracksCreated(false), mNotifiedOfMediaStreamGraphShutdown(false),
-    mActive(false), mSetInactiveOnFinish(false),
-    mAbstractMainThread(aWindow ? aWindow->GetDocGroup()->AbstractMainThreadFor(TaskCategory::Other) : nullptr)
+    mActive(false), mSetInactiveOnFinish(false)
 {
   nsresult rv;
   nsCOMPtr<nsIUUIDGenerator> uuidgen =
@@ -570,7 +559,7 @@ DOMMediaStream::Constructor(const GlobalObject& aGlobal,
     MOZ_ASSERT(aTracks.IsEmpty());
     MediaStreamGraph* graph =
       MediaStreamGraph::GetInstance(MediaStreamGraph::SYSTEM_THREAD_DRIVER,
-                                    AudioChannel::Normal);
+                                    AudioChannel::Normal, ownerWindow);
     newStream->InitPlaybackStreamCommon(graph);
   }
 
@@ -881,8 +870,7 @@ DOMMediaStream::SetInactiveOnFinish()
 void
 DOMMediaStream::InitSourceStream(MediaStreamGraph* aGraph)
 {
-  MOZ_ASSERT(mAbstractMainThread);
-  InitInputStreamCommon(aGraph->CreateSourceStream(mAbstractMainThread), aGraph);
+  InitInputStreamCommon(aGraph->CreateSourceStream(), aGraph);
   InitOwnedStreamCommon(aGraph);
   InitPlaybackStreamCommon(aGraph);
 }
@@ -890,8 +878,7 @@ DOMMediaStream::InitSourceStream(MediaStreamGraph* aGraph)
 void
 DOMMediaStream::InitTrackUnionStream(MediaStreamGraph* aGraph)
 {
-  MOZ_ASSERT(mAbstractMainThread);
-  InitInputStreamCommon(aGraph->CreateTrackUnionStream(mAbstractMainThread), aGraph);
+  InitInputStreamCommon(aGraph->CreateTrackUnionStream(), aGraph);
   InitOwnedStreamCommon(aGraph);
   InitPlaybackStreamCommon(aGraph);
 }
@@ -899,14 +886,13 @@ DOMMediaStream::InitTrackUnionStream(MediaStreamGraph* aGraph)
 void
 DOMMediaStream::InitAudioCaptureStream(nsIPrincipal* aPrincipal, MediaStreamGraph* aGraph)
 {
-  MOZ_ASSERT(mAbstractMainThread);
   const TrackID AUDIO_TRACK = 1;
 
   RefPtr<BasicTrackSource> audioCaptureSource =
     new BasicTrackSource(aPrincipal, MediaSourceEnum::AudioCapture);
 
   AudioCaptureStream* audioCaptureStream =
-    static_cast<AudioCaptureStream*>(aGraph->CreateAudioCaptureStream(AUDIO_TRACK, mAbstractMainThread));
+    static_cast<AudioCaptureStream*>(aGraph->CreateAudioCaptureStream(AUDIO_TRACK));
   InitInputStreamCommon(audioCaptureStream, aGraph);
   InitOwnedStreamCommon(aGraph);
   InitPlaybackStreamCommon(aGraph);
@@ -930,10 +916,9 @@ DOMMediaStream::InitInputStreamCommon(MediaStream* aStream,
 void
 DOMMediaStream::InitOwnedStreamCommon(MediaStreamGraph* aGraph)
 {
-  MOZ_ASSERT(mAbstractMainThread);
   MOZ_ASSERT(!mPlaybackStream, "Owned stream must be initialized before playback stream");
 
-  mOwnedStream = aGraph->CreateTrackUnionStream(mAbstractMainThread);
+  mOwnedStream = aGraph->CreateTrackUnionStream();
   mOwnedStream->SetAutofinish(true);
   mOwnedStream->RegisterUser();
   if (mInputStream) {
@@ -948,8 +933,7 @@ DOMMediaStream::InitOwnedStreamCommon(MediaStreamGraph* aGraph)
 void
 DOMMediaStream::InitPlaybackStreamCommon(MediaStreamGraph* aGraph)
 {
-  MOZ_ASSERT(mAbstractMainThread);
-  mPlaybackStream = aGraph->CreateTrackUnionStream(mAbstractMainThread);
+  mPlaybackStream = aGraph->CreateTrackUnionStream();
   mPlaybackStream->SetAutofinish(true);
   mPlaybackStream->RegisterUser();
   if (mOwnedStream) {
@@ -1576,7 +1560,7 @@ DOMHwMediaStream::CreateHwStream(nsPIDOMWindowInner* aWindow,
 
   MediaStreamGraph* graph =
     MediaStreamGraph::GetInstance(MediaStreamGraph::SYSTEM_THREAD_DRIVER,
-                                  AudioChannel::Normal);
+                                  AudioChannel::Normal, aWindow);
   stream->InitSourceStream(graph);
   stream->Init(stream->GetInputStream(), aImage);
 

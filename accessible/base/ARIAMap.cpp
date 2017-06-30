@@ -982,7 +982,7 @@ static const nsRoleMapEntry sWAIRoleMaps[] =
     &nsGkAtoms::separator_,
     roles::SEPARATOR,
     kUseMapRole,
-    eNoValue,
+    eHasValueMinMaxIfFocusable,
     eNoAction,
     eNoLiveAttr,
     kGenericAccType,

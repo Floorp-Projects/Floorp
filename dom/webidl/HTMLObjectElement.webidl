@@ -15,21 +15,21 @@
 // http://www.whatwg.org/specs/web-apps/current-work/#the-object-element
 [HTMLConstructor, NeedResolve, UnsafeInPrerendering]
 interface HTMLObjectElement : HTMLElement {
-  [Pure, SetterThrows]
+  [CEReactions, Pure, SetterThrows]
            attribute DOMString data;
-  [Pure, SetterThrows]
+  [CEReactions, Pure, SetterThrows]
            attribute DOMString type;
-  [Pure, SetterThrows]
+  [CEReactions, Pure, SetterThrows]
            attribute boolean typeMustMatch;
-  [Pure, SetterThrows]
+  [CEReactions, Pure, SetterThrows]
            attribute DOMString name;
-  [Pure, SetterThrows]
+  [CEReactions, Pure, SetterThrows]
            attribute DOMString useMap;
   [Pure]
   readonly attribute HTMLFormElement? form;
-  [Pure, SetterThrows]
+  [CEReactions, Pure, SetterThrows]
            attribute DOMString width;
-  [Pure, SetterThrows]
+  [CEReactions, Pure, SetterThrows]
            attribute DOMString height;
   // Not pure: can trigger about:blank instantiation
   [NeedsSubjectPrincipal]
@@ -48,26 +48,26 @@ interface HTMLObjectElement : HTMLElement {
 
 // http://www.whatwg.org/specs/web-apps/current-work/#HTMLObjectElement-partial
 partial interface HTMLObjectElement {
-  [Pure, SetterThrows]
+  [CEReactions, Pure, SetterThrows]
            attribute DOMString align;
-  [Pure, SetterThrows]
+  [CEReactions, Pure, SetterThrows]
            attribute DOMString archive;
-  [Pure, SetterThrows]
+  [CEReactions, Pure, SetterThrows]
            attribute DOMString code;
-  [Pure, SetterThrows]
+  [CEReactions, Pure, SetterThrows]
            attribute boolean declare;
-  [Pure, SetterThrows]
+  [CEReactions, Pure, SetterThrows]
            attribute unsigned long hspace;
-  [Pure, SetterThrows]
+  [CEReactions, Pure, SetterThrows]
            attribute DOMString standby;
-  [Pure, SetterThrows]
+  [CEReactions, Pure, SetterThrows]
            attribute unsigned long vspace;
-  [Pure, SetterThrows]
+  [CEReactions, Pure, SetterThrows]
            attribute DOMString codeBase;
-  [Pure, SetterThrows]
+  [CEReactions, Pure, SetterThrows]
            attribute DOMString codeType;
 
-  [TreatNullAs=EmptyString, Pure, SetterThrows]
+  [CEReactions, TreatNullAs=EmptyString, Pure, SetterThrows]
            attribute DOMString border;
 };
 

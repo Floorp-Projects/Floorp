@@ -17,7 +17,7 @@ namespace mozilla {
  */
 class TrackUnionStream : public ProcessedMediaStream {
 public:
-  explicit TrackUnionStream(AbstractThread* aMainThread);
+  explicit TrackUnionStream();
 
   virtual TrackUnionStream* AsTrackUnionStream() override { return this; }
   friend class DOMMediaStream;

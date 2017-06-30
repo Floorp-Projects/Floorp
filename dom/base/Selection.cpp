@@ -3499,7 +3499,7 @@ Selection::PostScrollSelectionIntoViewEvent(
     new ScrollSelectionIntoViewEvent(this, aRegion, aVertical, aHorizontal,
                                      aFlags);
   mScrollEvent = ev;
-  refreshDriver->AddPendingSelectionScroll(ev);
+  refreshDriver->AddEarlyRunner(ev);
   return NS_OK;
 }
 

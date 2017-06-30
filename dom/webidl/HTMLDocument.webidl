@@ -13,7 +13,7 @@ interface HTMLDocument : Document {
   // DOM tree accessors
   [Throws]
   getter object (DOMString name);
-  [Pure, SetterThrows]
+  [CEReactions, Pure, SetterThrows]
            attribute HTMLElement? body;
   [Pure]
   readonly attribute HTMLHeadElement? head;
@@ -32,20 +32,20 @@ interface HTMLDocument : Document {
   NodeList getElementsByName(DOMString elementName);
 
   // dynamic markup insertion
-  [Throws]
+  [CEReactions, Throws]
   Document open(optional DOMString type = "text/html", optional DOMString replace = "");
-  [Throws]
+  [CEReactions, Throws]
   WindowProxy? open(DOMString url, DOMString name, DOMString features, optional boolean replace = false);
-  [Throws]
+  [CEReactions, Throws]
   void close();
-  [Throws]
+  [CEReactions, Throws]
   void write(DOMString... text);
-  [Throws]
+  [CEReactions, Throws]
   void writeln(DOMString... text);
 
-  [SetterThrows, NeedsSubjectPrincipal]
+  [CEReactions, SetterThrows, NeedsSubjectPrincipal]
            attribute DOMString designMode;
-  [Throws, NeedsSubjectPrincipal]
+  [CEReactions, Throws, NeedsSubjectPrincipal]
   boolean execCommand(DOMString commandId, optional boolean showUI = false,
                       optional DOMString value = "");
   [Throws, NeedsSubjectPrincipal]
@@ -59,11 +59,11 @@ interface HTMLDocument : Document {
   [Throws]
   DOMString queryCommandValue(DOMString commandId);
 
-  [TreatNullAs=EmptyString] attribute DOMString fgColor;
-  [TreatNullAs=EmptyString] attribute DOMString linkColor;
-  [TreatNullAs=EmptyString] attribute DOMString vlinkColor;
-  [TreatNullAs=EmptyString] attribute DOMString alinkColor;
-  [TreatNullAs=EmptyString] attribute DOMString bgColor;
+  [CEReactions, TreatNullAs=EmptyString] attribute DOMString fgColor;
+  [CEReactions, TreatNullAs=EmptyString] attribute DOMString linkColor;
+  [CEReactions, TreatNullAs=EmptyString] attribute DOMString vlinkColor;
+  [CEReactions, TreatNullAs=EmptyString] attribute DOMString alinkColor;
+  [CEReactions, TreatNullAs=EmptyString] attribute DOMString bgColor;
 
   [Pure]
   readonly attribute HTMLCollection anchors;

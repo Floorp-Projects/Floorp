@@ -1704,12 +1704,22 @@ AsyncPanZoomController::OnKeyboard(const KeyboardInput& aEvent)
   ReportKeyboardScrollAction(aEvent.mAction);
 
   // Calculate the destination for this keyboard scroll action
-  nsPoint destination = CSSPoint::ToAppUnits(GetKeyboardDestination(aEvent.mAction));
+  CSSPoint destination = GetKeyboardDestination(aEvent.mAction);
+  nsIScrollableFrame::ScrollUnit scrollUnit = KeyboardScrollAction::GetScrollUnit(aEvent.mAction.mType);
 
   // The lock must be held across the entire update operation, so the
   // compositor doesn't end the animation before we get a chance to
   // update it.
   ReentrantMonitorAutoEnter lock(mMonitor);
+
+  if (Maybe<CSSPoint> snapPoint = FindSnapPointNear(destination, scrollUnit)) {
+    // If we're scroll snapping, use a smooth scroll animation to get
+    // the desired physics. Note that SmoothScrollTo() will re-use an
+    // existing smooth scroll animation if there is one.
+    APZC_LOG("%p keyboard scrolling to snap point %s\n", this, Stringify(*snapPoint).c_str());
+    SmoothScrollTo(*snapPoint);
+    return nsEventStatus_eConsumeNoDefault;
+  }
 
   // Use a keyboard scroll animation to scroll, reusing an existing one if it exists
   if (mState != KEYBOARD_SCROLL) {
@@ -1729,7 +1739,9 @@ AsyncPanZoomController::OnKeyboard(const KeyboardInput& aEvent)
   KeyboardScrollAnimation* animation = mAnimation->AsKeyboardScrollAnimation();
   MOZ_ASSERT(animation);
 
-  animation->UpdateDestination(aEvent.mTimeStamp, destination, nsSize(velocity.x, velocity.y));
+  animation->UpdateDestination(aEvent.mTimeStamp,
+                               CSSPixel::ToAppUnits(destination),
+                               nsSize(velocity.x, velocity.y));
 
   return nsEventStatus_eConsumeNoDefault;
 }

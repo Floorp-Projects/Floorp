@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<assembly xmlns="urn:schemas-microsoft-com:asm.v1" manifestVersion="1.0">
+  <assemblyIdentity type="win32" name="Mozilla.Firefox.xul" version="1.0.0.0" />
+  <file name="xul.dll" />
+  <comInterfaceExternalProxyStub
+      iid="{618736E0-3C3D-11CF-810C-00AA00389B71}"
+      proxyStubClsid32="{03022430-ABC4-11D0-BDE2-00AA001A1953}"
+      name="IAccessible"
+  />
+</assembly>
