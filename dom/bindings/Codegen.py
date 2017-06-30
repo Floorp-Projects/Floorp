@@ -453,6 +453,9 @@ class CGDOMJSClass(CGThing):
             traceHook = 'nullptr'
             reservedSlots = slotCount
         if self.descriptor.interface.hasProbablyShortLivingWrapper():
+            if not self.descriptor.wrapperCache:
+                raise TypeError("Need a wrapper cache to support nursery "
+                                "allocation of DOM objects")
             classFlags += " | JSCLASS_SKIP_NURSERY_FINALIZE"
 
         if self.descriptor.interface.getExtendedAttribute("NeedResolve"):
