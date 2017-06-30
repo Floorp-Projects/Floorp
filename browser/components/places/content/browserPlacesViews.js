@@ -2085,7 +2085,7 @@ class PlacesPanelview extends PlacesViewBase {
         throw "Unexpected node";
 
       element = document.createElement("toolbarbutton");
-      element.classList.add("subviewbutton", "subviewbutton-iconic", "subview-bookmark-item");
+      element.classList.add("subviewbutton", "subviewbutton-iconic", "bookmark-item");
       element.setAttribute("scheme", PlacesUIUtils.guessUrlSchemeForUI(placesNode.uri));
       element.setAttribute("label", PlacesUIUtils.getBestTitle(placesNode));
 
