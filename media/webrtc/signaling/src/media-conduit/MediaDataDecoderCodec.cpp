@@ -3,6 +3,8 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "MediaDataDecoderCodec.h"
+#include "MediaPrefs.h"
+#include "WebrtcMediaDataDecoderCodec.h"
 
 namespace mozilla {
 
@@ -15,9 +17,21 @@ MediaDataDecoderCodec::CreateEncoder(
 
 /* static */ WebrtcVideoDecoder*
 MediaDataDecoderCodec::CreateDecoder(
-  webrtc::VideoCodecType aCodecbType)
+  webrtc::VideoCodecType aCodecType)
 {
-  return nullptr;
+  if (!MediaPrefs::MediaDataDecoderEnabled()) {
+    return nullptr;
+  }
+
+  switch (aCodecType) {
+    case webrtc::VideoCodecType::kVideoCodecVP8:
+    case webrtc::VideoCodecType::kVideoCodecVP9:
+    case webrtc::VideoCodecType::kVideoCodecH264:
+      break;
+    default:
+      return nullptr;
+  }
+  return new WebrtcMediaDataDecoder();
 }
 
 } // namespace mozilla
