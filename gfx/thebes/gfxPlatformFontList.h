@@ -67,7 +67,9 @@ public:
     enum { ALLOW_MEMMOVE = true };
 
 protected:
-    gfxCharacterMap *mCharMap;
+    // charMaps are not owned by the shared cmap cache, but it will be notified
+    // by gfxCharacterMap::Release() when an entry is about to be deleted
+    gfxCharacterMap* MOZ_NON_OWNING_REF mCharMap;
 };
 
 // gfxPlatformFontList is an abstract class for the global font list on the system;
