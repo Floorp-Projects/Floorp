@@ -2279,21 +2279,6 @@ public:
     pipeline_->listener_->RenderVideoFrame(buffer, time_stamp, render_time);
   }
 
-  void RenderVideoFrame(const uint8_t* buffer_y,
-                        uint32_t y_stride,
-                        const uint8_t* buffer_u,
-                        uint32_t u_stride,
-                        const uint8_t* buffer_v,
-                        uint32_t v_stride,
-                        uint32_t time_stamp,
-                        int64_t render_time) override
-  {
-    pipeline_->listener_->RenderVideoFrame(buffer_y, y_stride,
-                                           buffer_u, u_stride,
-                                           buffer_v, v_stride,
-                                           time_stamp, render_time);
-  }
-
 private:
   MediaPipelineReceiveVideo *pipeline_;  // Raw pointer to avoid cycles
 };
