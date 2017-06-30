@@ -106,21 +106,6 @@ public:
 };
 
 /**
- * This class wraps image object for VideoRenderer::RenderVideoFrame()
- * callback implementation to use for rendering.
- */
-class ImageHandle
-{
-public:
-  explicit ImageHandle(layers::Image* image) : mImage(image) {}
-
-  const RefPtr<layers::Image>& GetImage() const { return mImage; }
-
-private:
-  RefPtr<layers::Image> mImage;
-};
-
-/**
  * 1. Abstract renderer for video data
  * 2. This class acts as abstract interface between the video-engine and
  *    video-engine agnostic renderer implementation.
@@ -151,20 +136,15 @@ public:
    * @param time_stamp: Decoder timestamp, typically 90KHz as per RTP
    * @render_time: Wall-clock time at the decoder for synchronization
    *                purposes in milliseconds
-   * @handle: opaque handle for image object of decoded video frame.
    * NOTE: If decoded video frame is passed through buffer , it is the
    * responsibility of the concrete implementations of this class to own copy
    * of the frame if needed for time longer than scope of this callback.
    * Such implementations should be quick in processing the frames and return
    * immediately.
-   * On the other hand, if decoded video frame is passed through handle, the
-   * implementations should keep a reference to the (ref-counted) image object
-   * inside until it's no longer needed.
    */
   virtual void RenderVideoFrame(const webrtc::VideoFrameBuffer& buffer,
                                 uint32_t time_stamp,
-                                int64_t render_time,
-                                const ImageHandle& handle) = 0;
+                                int64_t render_time) = 0;
   virtual void RenderVideoFrame(const uint8_t* buffer_y,
                                 uint32_t y_stride,
                                 const uint8_t* buffer_u,
@@ -172,8 +152,7 @@ public:
                                 const uint8_t* buffer_v,
                                 uint32_t v_stride,
                                 uint32_t time_stamp,
-                                int64_t render_time,
-                                const ImageHandle& handle) = 0;
+                                int64_t render_time) = 0;
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(VideoRenderer)
 };
