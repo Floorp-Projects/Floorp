@@ -213,6 +213,7 @@ let json = [
            name: "arg",
            type: "object",
            properties: {
+             hostname: {type: "string", "format": "hostname", "optional": true},
              url: {type: "string", "format": "url", "optional": true},
              relativeUrl: {type: "string", "format": "relativeUrl", "optional": true},
              strictRelativeUrl: {type: "string", "format": "strictRelativeUrl", "optional": true},
@@ -622,15 +623,30 @@ add_task(async function() {
                 /String "DEADcow" must match \/\^\[0-9a-f\]\+\$\/i/,
                 "should throw for non-match");
 
+  root.testing.format({hostname: "foo"});
+  verify("call", "testing", "format", [{hostname: "foo",
+                                        url: null,
+                                        relativeUrl: null,
+                                        strictRelativeUrl: null}]);
+  tallied = null;
+
+  for (let invalid of ["", " ", "http://foo", "foo/bar", "foo.com/", "foo?"]) {
+    Assert.throws(() => root.testing.format({hostname: invalid}),
+                  /Invalid hostname/,
+                  "should throw for invalid hostname");
+  }
+
   root.testing.format({url: "http://foo/bar",
                        relativeUrl: "http://foo/bar"});
-  verify("call", "testing", "format", [{url: "http://foo/bar",
+  verify("call", "testing", "format", [{hostname: null,
+                                        url: "http://foo/bar",
                                         relativeUrl: "http://foo/bar",
                                         strictRelativeUrl: null}]);
   tallied = null;
 
   root.testing.format({relativeUrl: "foo.html", strictRelativeUrl: "foo.html"});
-  verify("call", "testing", "format", [{url: null,
+  verify("call", "testing", "format", [{hostname: null,
+                                        url: null,
                                         relativeUrl: `${wrapper.url}foo.html`,
                                         strictRelativeUrl: `${wrapper.url}foo.html`}]);
   tallied = null;
