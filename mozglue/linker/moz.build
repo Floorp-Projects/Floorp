@@ -9,19 +9,11 @@ SOURCES += [
     'CustomElf.cpp',
     'ElfLoader.cpp',
     'Mappable.cpp',
-    'SeekableZStream.cpp',
     'XZStream.cpp',
     'Zip.cpp',
 ]
 
 Library('linker')
-
-HOST_SOURCES += [
-    'SeekableZStream.cpp',
-    'szip.cpp',
-]
-
-HostProgram('szip')
 
 FINAL_LIBRARY = 'mozglue'
 
@@ -30,19 +22,6 @@ DEFINES['IMPL_MFBT'] = True
 DISABLE_STL_WRAPPING = True
 
 TEST_DIRS += ['tests']
-
-HOST_OS_LIBS += [
-    'z',
-]
-
-if CONFIG['TARGET_CPU'] == 'arm':
-    if CONFIG['MOZ_THUMB2']:
-        HOST_DEFINES['TARGET_THUMB'] = True
-    else:
-        HOST_DEFINES['TARGET_ARM'] = True
-
-if CONFIG['CPU_ARCH'] == 'x86':
-    HOST_DEFINES['TARGET_X86'] = True
 
 if CONFIG['GNU_CXX']:
     CXXFLAGS += ['-Wno-error=shadow']

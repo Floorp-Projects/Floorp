@@ -1838,6 +1838,7 @@ notification.pluginVulnerable > .notification-inner > .messageCloseButton {
   transform: perspective(0.01px);
 }
 
+%ifndef MOZ_PHOTON_THEME
 #main-window[customize-entered] > #tab-view-deck {
   background-image: url("chrome://browser/skin/customizableui/customizeMode-gridTexture.png");
   background-attachment: fixed;
@@ -1860,6 +1861,7 @@ notification.pluginVulnerable > .notification-inner > .messageCloseButton {
 #main-window[customize-entered] #browser-bottombox {
   border-bottom: 1px solid @toolbarShadowColor@;
 }
+%endif
 
 #customization-tipPanel > .panel-arrowcontainer > .panel-arrowbox > .panel-arrow[side="left"] {
   margin-right: -2px;

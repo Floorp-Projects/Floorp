@@ -52,7 +52,7 @@ this.proxy = class extends ExtensionAPI {
           this.register(url);
         },
 
-        onProxyError: new SingletonEventManager(context, "proxy.onProxyError", fire => {
+        onProxyError: new EventManager(context, "proxy.onProxyError", fire => {
           let listener = (name, error) => {
             fire.async(error);
           };

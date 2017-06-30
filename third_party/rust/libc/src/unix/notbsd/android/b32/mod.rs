@@ -1,7 +1,13 @@
+// The following definitions are correct for arm and i686,
+// but may be wrong for mips
+
 pub type c_long = i32;
 pub type c_ulong = u32;
 pub type mode_t = u16;
 pub type off64_t = ::c_longlong;
+pub type sigset_t = ::c_ulong;
+pub type socklen_t = i32;
+pub type time64_t = i64;
 
 s! {
     pub struct sigaction {
@@ -9,6 +15,11 @@ s! {
         pub sa_mask: ::sigset_t,
         pub sa_flags: ::c_ulong,
         pub sa_restorer: ::dox::Option<extern fn()>,
+    }
+
+    pub struct rlimit64 {
+        pub rlim_cur: u64,
+        pub rlim_max: u64,
     }
 
     pub struct stat {
@@ -121,6 +132,15 @@ s! {
     }
 }
 
+pub const RTLD_GLOBAL: ::c_int = 2;
+pub const RTLD_NOW: ::c_int = 0;
+pub const RTLD_DEFAULT: *mut ::c_void = -1isize as *mut ::c_void;
+
+pub const PTRACE_GETFPREGS: ::c_int = 14;
+pub const PTRACE_SETFPREGS: ::c_int = 15;
+pub const PTRACE_GETREGS: ::c_int = 12;
+pub const PTRACE_SETREGS: ::c_int = 13;
+
 pub const SYS_gettid: ::c_long = 224;
 pub const PTHREAD_MUTEX_INITIALIZER: pthread_mutex_t = pthread_mutex_t {
     value: 0,
@@ -147,5 +167,33 @@ pub const UT_NAMESIZE: usize = 8;
 pub const UT_HOSTSIZE: usize = 16;
 
 extern {
+    pub fn bind(socket: ::c_int, address: *const ::sockaddr,
+                address_len: socklen_t) -> ::c_int;
+
+    pub fn writev(fd: ::c_int,
+                  iov: *const ::iovec,
+                  iovcnt: ::c_int) -> ::ssize_t;
+    pub fn readv(fd: ::c_int,
+                 iov: *const ::iovec,
+                 iovcnt: ::c_int) -> ::ssize_t;
+
+    pub fn sendmsg(fd: ::c_int,
+                   msg: *const ::msghdr,
+                   flags: ::c_int) -> ::ssize_t;
+    pub fn recvmsg(fd: ::c_int, msg: *mut ::msghdr, flags: ::c_int)
+                   -> ::ssize_t;
+
     pub fn timegm64(tm: *const ::tm) -> ::time64_t;
+}
+
+cfg_if! {
+    if #[cfg(target_arch = "x86")] {
+        mod x86;
+        pub use self::x86::*;
+    } else if #[cfg(target_arch = "arm")] {
+        mod arm;
+        pub use self::arm::*;
+    } else {
+        // Unknown target_arch
+    }
 }

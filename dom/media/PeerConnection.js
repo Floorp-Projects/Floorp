@@ -48,7 +48,7 @@ function logMsg(msg, file, line, flag, winID) {
   let console = Cc["@mozilla.org/consoleservice;1"].
   getService(Ci.nsIConsoleService);
   console.logMessage(scriptError);
-};
+}
 
 let setupPrototype = (_class, dict) => {
   _class.prototype.classDescription = _class.name;
@@ -104,6 +104,7 @@ class GlobalPCList {
         }
       }
     }
+    return null;
   }
 
   removeNullRefs(winID) {
@@ -111,7 +112,7 @@ class GlobalPCList {
       return;
     }
     this._list[winID] = this._list[winID].filter(
-      function (e,i,a) { return e.get() !== null; });
+      function(e, i, a) { return e.get() !== null; });
 
     if (this._list[winID].length === 0) {
       delete this._list[winID];
@@ -120,7 +121,7 @@ class GlobalPCList {
 
   hasActivePeerConnection(winID) {
     this.removeNullRefs(winID);
-    return this._list[winID] ? true : false;
+    return !!this._list[winID];
   }
 
   handleGMPCrash(data) {
@@ -217,7 +218,7 @@ setupPrototype(GlobalPCList, {
                                          Ci.IPeerConnectionManager]),
   classID: PC_MANAGER_CID,
   _xpcom_factory: {
-    createInstance: function(outer, iid) {
+    createInstance(outer, iid) {
       if (outer) {
         throw Cr.NS_ERROR_NO_AGGREGATION;
       }
@@ -338,11 +339,11 @@ setupPrototype(RTCStatsReport, {
   contractID: PC_STATS_CONTRACT,
   QueryInterface: XPCOMUtils.generateQI([Ci.nsISupports]),
   _specToLegacyFieldMapping: {
-        'inbound-rtp' : 'inboundrtp',
-        'outbound-rtp':'outboundrtp',
-        'candidate-pair':'candidatepair',
-        'local-candidate':'localcandidate',
-        'remote-candidate':'remotecandidate'
+        "inbound-rtp": "inboundrtp",
+        "outbound-rtp": "outboundrtp",
+        "candidate-pair": "candidatepair",
+        "local-candidate": "localcandidate",
+        "remote-candidate": "remotecandidate"
   }
 });
 
@@ -440,8 +441,6 @@ class RTCPeerConnection {
     this.__DOM_IMPL__._innerObject = this;
     this._observer = new this._win.PeerConnectionObserver(this.__DOM_IMPL__);
 
-    var location = "" + this._win.location;
-
     // Warn just once per PeerConnection about deprecated getStats usage.
     this._warnDeprecatedStatsAccessNullable = { warn: () =>
       this.logWarning("non-maplike pc.getStats access is deprecated, and will be removed in the near future! " +
@@ -527,7 +526,7 @@ class RTCPeerConnection {
       // closed, hanging the chain. However, c++ may already have queued tasks
       // on us, so if we're one of those then sit back.
       if (this._closed) {
-        return;
+        return null;
       }
       return await func();
     })();
@@ -617,14 +616,17 @@ class RTCPeerConnection {
       }
     });
 
-    let ios = Cc['@mozilla.org/network/io-service;1'].getService(Ci.nsIIOService);
+    let ios = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
 
     let nicerNewURI = uriStr => {
       try {
         return ios.newURI(uriStr);
-      } catch (e if (e.result == Cr.NS_ERROR_MALFORMED_URI)) {
-        throw new this._win.DOMException(msg + " - malformed URI: " + uriStr,
-                                         "SyntaxError");
+      } catch (e) {
+        if (e.result == Cr.NS_ERROR_MALFORMED_URI) {
+          throw new this._win.DOMException(msg + " - malformed URI: " + uriStr,
+                                           "SyntaxError");
+        }
+        throw e;
       }
     };
 
@@ -635,7 +637,7 @@ class RTCPeerConnection {
         throw new this._win.DOMException(msg + " - missing urls", "InvalidAccessError");
       }
       urls.map(url => nicerNewURI(url)).forEach(({ scheme, spec }) => {
-        if (scheme in { turn:1, turns:1 }) {
+        if (scheme in { turn: 1, turns: 1 }) {
           if (username == undefined) {
             throw new this._win.DOMException(msg + " - missing username: " + spec,
                                              "InvalidAccessError");
@@ -645,21 +647,21 @@ class RTCPeerConnection {
                                              "InvalidAccessError");
           }
           if (credentialType != "password") {
-            this.logWarning("RTCConfiguration TURN credentialType \""+
+            this.logWarning("RTCConfiguration TURN credentialType \"" +
                             credentialType +
-                            "\" is not yet implemented. Treating as password."+
+                            "\" is not yet implemented. Treating as password." +
                             " https://bugzil.la/1247616");
           }
           this._hasTurnServer = true;
           stunServers += 1;
-        } else if (scheme in { stun:1, stuns:1 }) {
+        } else if (scheme in { stun: 1, stuns: 1 }) {
           this._hasStunServer = true;
           stunServers += 1;
         } else {
           throw new this._win.DOMException(msg + " - improper scheme: " + scheme,
                                            "SyntaxError");
         }
-        if (scheme in { stuns:1, turns:1 }) {
+        if (scheme in { stuns: 1, turns: 1 }) {
           this.logWarning(scheme.toUpperCase() + " is not yet supported.");
         }
         if (stunServers >= 5) {
@@ -699,11 +701,11 @@ class RTCPeerConnection {
       if (typeof this._win.onerror === "function") {
         this._win.onerror(e.message, e.fileName, e.lineNumber);
       }
-    } catch(e) {
+    } catch (e) {
       // If onerror itself throws, service it.
       try {
         this.logMsg(e.message, e.fileName, e.lineNumber, Ci.nsIScriptError.errorFlag);
-      } catch(e) {}
+      } catch (e) {}
     }
   }
 
@@ -735,16 +737,16 @@ class RTCPeerConnection {
   makeGetterSetterEH(name) {
     Object.defineProperty(this, name,
                           {
-                            get:function()  { return this.getEH(name); },
-                            set:function(h) { return this.setEH(name, h); }
+                            get() { return this.getEH(name); },
+                            set(h) { return this.setEH(name, h); }
                           });
   }
 
   makeLegacyGetterSetterEH(name, msg) {
     Object.defineProperty(this, name,
                           {
-                            get:function()  { return this.getEH(name); },
-                            set:function(h) {
+                            get() { return this.getEH(name); },
+                            set(h) {
                               this.logWarning(name + " is deprecated! " + msg);
                               return this.setEH(name, h);
                             }
@@ -909,7 +911,7 @@ class RTCPeerConnection {
             name: msg.identity
           }, this._win));
         }
-      } catch(e) {
+      } catch (e) {
         this._rejectPeerIdentity(e);
         // If we don't expect a specific peer identity, failure to get a valid
         // peer identity is not a terminal state, so replace the promise to
@@ -1128,7 +1130,7 @@ class RTCPeerConnection {
 
   _getParameters({ track }) {
     if (!Services.prefs.getBoolPref("media.peerconnection.simulcast")) {
-      return;
+      return null;
     }
     return this._impl.getParameters(track);
   }
@@ -1194,7 +1196,7 @@ class RTCPeerConnection {
   get idpLoginUrl() { return this._localIdp.idpLoginUrl; }
   get id() { return this._impl.id; }
   set id(s) { this._impl.id = s; }
-  get iceGatheringState()  { return this._iceGatheringState; }
+  get iceGatheringState() { return this._iceGatheringState; }
   get iceConnectionState() { return this._iceConnectionState; }
 
   get signalingState() {
@@ -1288,7 +1290,6 @@ setupPrototype(RTCPeerConnection, {
     answer: Ci.IPeerConnection.kActionAnswer,
     pranswer: Ci.IPeerConnection.kActionPRAnswer,
     rollback: Ci.IPeerConnection.kActionRollback,
-    answer: Ci.IPeerConnection.kActionAnswer,
   },
 });
 
@@ -1416,34 +1417,31 @@ class PeerConnectionObserver {
     if (pc.iceConnectionState === iceConnectionState) {
       return;
     }
-    if (pc.iceConnectionState === 'new') {
+    if (pc.iceConnectionState === "new") {
       var checking_histogram = Services.telemetry.getHistogramById("WEBRTC_ICE_CHECKING_RATE");
-      if (iceConnectionState === 'checking') {
+      if (iceConnectionState === "checking") {
         checking_histogram.add(true);
-      } else if (iceConnectionState === 'failed') {
+      } else if (iceConnectionState === "failed") {
         checking_histogram.add(false);
       }
-    } else if (pc.iceConnectionState === 'checking') {
+    } else if (pc.iceConnectionState === "checking") {
       var success_histogram = Services.telemetry.getHistogramById("WEBRTC_ICE_SUCCESS_RATE");
-      if (iceConnectionState === 'completed' ||
-          iceConnectionState === 'connected') {
+      if (iceConnectionState === "completed" ||
+          iceConnectionState === "connected") {
         success_histogram.add(true);
-      } else if (iceConnectionState === 'failed') {
+      } else if (iceConnectionState === "failed") {
         success_histogram.add(false);
       }
     }
 
-    if (iceConnectionState === 'failed') {
+    if (iceConnectionState === "failed") {
       if (!pc._hasStunServer) {
         pc.logError("ICE failed, add a STUN server and see about:webrtc for more details");
-      }
-      else if (!pc._hasTurnServer) {
+      } else if (!pc._hasTurnServer) {
         pc.logError("ICE failed, add a TURN server and see about:webrtc for more details");
-      }
-      else if (pc._hasTurnServer && !pc._iceGatheredRelayCandidates) {
+      } else if (pc._hasTurnServer && !pc._iceGatheredRelayCandidates) {
         pc.logError("ICE failed, your TURN server appears to be broken, see about:webrtc for more details");
-      }
-      else {
+      } else {
         pc.logError("ICE failed, see about:webrtc for more details");
       }
     }

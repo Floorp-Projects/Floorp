@@ -10,14 +10,14 @@ var {
   ExtensionError,
 } = ExtensionUtils;
 
-function checkScope(scope) {
+const checkScope = scope => {
   if (scope && scope !== "regular") {
     throw new ExtensionError(
       `Firefox does not support the ${scope} settings scope.`);
   }
-}
+};
 
-function getAPI(extension, name, callback) {
+const getPrivacyAPI = (extension, name, callback) => {
   return {
     async get(details) {
       return {
@@ -39,7 +39,7 @@ function getAPI(extension, name, callback) {
         extension, name);
     },
   };
-}
+};
 
 // Add settings objects for supported APIs to the preferences manager.
 ExtensionPreferencesManager.addSetting("network.networkPredictionEnabled", {
@@ -144,7 +144,7 @@ this.privacy = class extends ExtensionAPI {
     return {
       privacy: {
         network: {
-          networkPredictionEnabled: getAPI(extension,
+          networkPredictionEnabled: getPrivacyAPI(extension,
             "network.networkPredictionEnabled",
             () => {
               return Preferences.get("network.predictor.enabled") &&
@@ -152,12 +152,12 @@ this.privacy = class extends ExtensionAPI {
                 Preferences.get("network.http.speculative-parallel-limit") > 0 &&
                 !Preferences.get("network.dns.disablePrefetch");
             }),
-          peerConnectionEnabled: getAPI(extension,
+          peerConnectionEnabled: getPrivacyAPI(extension,
             "network.peerConnectionEnabled",
             () => {
               return Preferences.get("media.peerconnection.enabled");
             }),
-          webRTCIPHandlingPolicy: getAPI(extension,
+          webRTCIPHandlingPolicy: getPrivacyAPI(extension,
             "network.webRTCIPHandlingPolicy",
             () => {
               if (Preferences.get("media.peerconnection.ice.proxy_only")) {
@@ -178,7 +178,7 @@ this.privacy = class extends ExtensionAPI {
         },
 
         services: {
-          passwordSavingEnabled: getAPI(extension,
+          passwordSavingEnabled: getPrivacyAPI(extension,
             "services.passwordSavingEnabled",
             () => {
               return Preferences.get("signon.rememberSignons");
@@ -186,12 +186,12 @@ this.privacy = class extends ExtensionAPI {
         },
 
         websites: {
-          hyperlinkAuditingEnabled: getAPI(extension,
+          hyperlinkAuditingEnabled: getPrivacyAPI(extension,
             "websites.hyperlinkAuditingEnabled",
             () => {
               return Preferences.get("browser.send_pings");
             }),
-          referrersEnabled: getAPI(extension,
+          referrersEnabled: getPrivacyAPI(extension,
             "websites.referrersEnabled",
             () => {
               return Preferences.get("network.http.sendRefererHeader") !== 0;

@@ -24,7 +24,7 @@
 .tab-icon-image:not([src]):not([pinned]):not([crashed]):not([sharing]),
 .tab-icon-image[busy],
 .tab-throbber:not([busy]),
-.tab-icon-sound:not([soundplaying]):not([muted]):not([blocked]),
+.tab-icon-sound:not([soundplaying]):not([muted]):not([activemedia-blocked]),
 .tab-icon-sound[pinned],
 .tab-sharing-icon-overlay,
 .tab-icon-overlay {
@@ -34,7 +34,7 @@
 .tab-sharing-icon-overlay[sharing]:not([selected]),
 .tab-icon-overlay[soundplaying][pinned],
 .tab-icon-overlay[muted][pinned],
-.tab-icon-overlay[blocked][pinned],
+.tab-icon-overlay[activemedia-blocked][pinned],
 .tab-icon-overlay[crashed] {
   display: -moz-box;
 }

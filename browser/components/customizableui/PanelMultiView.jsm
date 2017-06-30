@@ -205,6 +205,15 @@ this.PanelMultiView = class {
     return this.__screenManager = Cc["@mozilla.org/gfx/screenmanager;1"]
                                     .getService(Ci.nsIScreenManager);
   }
+  /**
+   * Getter that returns the currently visible subview OR the subview that is
+   * about to be shown whilst a 'ViewShowing' event is being dispatched.
+   *
+   * @return {panelview}
+   */
+  get current() {
+    return this._viewShowing || this._currentSubView
+  }
   get _currentSubView() {
     return this.panelViews ? this.panelViews.currentView : this.__currentSubView;
   }
@@ -295,6 +304,10 @@ this.PanelMultiView = class {
         value: (...args) => this[method](...args)
       });
     });
+    Object.defineProperty(this.node, "current", {
+      enumerable: true,
+      get: () => this.current
+    });
   }
 
   destructor() {
@@ -320,6 +333,7 @@ this.PanelMultiView = class {
     this._panel.removeEventListener("popupshowing", this);
     this._panel.removeEventListener("popupshown", this);
     this._panel.removeEventListener("popuphidden", this);
+    this.node.dispatchEvent(new this.window.CustomEvent("destructed"));
     this.node = this._clickCapturer = this._viewContainer = this._mainViewContainer =
       this._subViews = this._viewStack = this.__dwu = this._panelViewCache = null;
   }
@@ -341,6 +355,16 @@ this.PanelMultiView = class {
       // XBL lists the 'children' XBL element explicitly. :-(
       if (subview.nodeName != "children")
         this._panelViewCache.appendChild(subview);
+    }
+  }
+
+  _placeSubView(viewNode) {
+    if (this.panelViews) {
+      this._viewStack.appendChild(viewNode);
+      if (!this.panelViews.includes(viewNode))
+        this.panelViews.push(viewNode);
+    } else {
+      this._subViews.appendChild(viewNode);
     }
   }
 
@@ -409,15 +433,12 @@ this.PanelMultiView = class {
       if (!viewNode) {
         viewNode = document.getElementById(aViewId);
         if (viewNode) {
-          if (this.panelViews) {
-            this._viewStack.appendChild(viewNode);
-            this.panelViews.push(viewNode);
-          } else {
-            this._subViews.appendChild(viewNode);
-          }
+          this._placeSubView(viewNode);
         } else {
           throw new Error(`Subview ${aViewId} doesn't exist!`);
         }
+      } else if (viewNode.parentNode == this._panelViewCache) {
+        this._placeSubView(viewNode);
       }
 
       let reverse = !!aPreviousView;
@@ -472,6 +493,7 @@ this.PanelMultiView = class {
       if (this.panelViews && this._mainViewWidth)
         viewNode.style.maxWidth = viewNode.style.minWidth = this._mainViewWidth + "px";
 
+      this._viewShowing = viewNode;
       let evt = new window.CustomEvent("ViewShowing", { bubbles: true, cancelable: true, detail });
       viewNode.dispatchEvent(evt);
 
@@ -491,6 +513,7 @@ this.PanelMultiView = class {
         return;
       }
 
+      this._viewShowing = null;
       this._currentSubView = viewNode;
       viewNode.setAttribute("current", true);
       if (this.panelViews) {

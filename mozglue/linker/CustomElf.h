@@ -41,13 +41,6 @@ protected:
 
 public:
   /**
-   * Shows some stats about the Mappable instance. The when argument is to be
-   * used by the caller to give an identifier of the when the stats call is
-   * made.
-   */
-  virtual void stats(const char *when) const;
-
-  /**
    * Returns the instance, casted as BaseElf. (short of a better way to do
    * this without RTTI)
    */

@@ -417,6 +417,13 @@ private:
   // mCompositionStartInChild stores current composition start offset in the
   // remote process.
   uint32_t mCompositionStartInChild;
+  // mPendingCommitLength is commit string length of the first pending
+  // composition.  This is used by relative offset query events when querying
+  // new composition start offset.
+  // Note that when mPendingCompositionCount is not 0, i.e., there are 2 or
+  // more pending compositions, this cache won't be used because in such case,
+  // anyway ContentCacheInParent cannot return proper character rect.
+  uint32_t mPendingCommitLength;
   // mPendingCompositionCount is number of compositions which started in widget
   // but not yet handled in the child process.
   uint8_t mPendingCompositionCount;

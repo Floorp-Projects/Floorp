@@ -2,22 +2,17 @@
 
 use dox::mem;
 
-pub type c_char = u8;
 pub type clock_t = ::c_long;
 pub type time_t = ::c_long;
 pub type suseconds_t = ::c_long;
-pub type wchar_t = u32;
 pub type off_t = ::c_long;
 pub type blkcnt_t = ::c_ulong;
 pub type blksize_t = ::c_ulong;
 pub type nlink_t = u32;
 pub type useconds_t = u32;
-pub type socklen_t = i32;
 pub type pthread_t = ::c_long;
 pub type pthread_mutexattr_t = ::c_long;
 pub type pthread_condattr_t = ::c_long;
-pub type sigset_t = ::c_ulong;
-pub type time64_t = i64; // N/A on android
 pub type fsfilcnt_t = ::c_ulong;
 pub type fsblkcnt_t = ::c_ulong;
 pub type nfds_t = ::c_uint;
@@ -44,11 +39,6 @@ s! {
         pub d_name: [::c_char; 256],
     }
 
-    pub struct rlimit64 {
-        pub rlim_cur: u64,
-        pub rlim_max: u64,
-    }
-
     pub struct stack_t {
         pub ss_sp: *mut ::c_void,
         pub ss_flags: ::c_int,
@@ -60,6 +50,7 @@ s! {
         pub si_errno: ::c_int,
         pub si_code: ::c_int,
         pub _pad: [::c_int; 29],
+        _align: [usize; 0],
     }
 
     pub struct __fsid_t {
@@ -68,7 +59,7 @@ s! {
 
     pub struct msghdr {
         pub msg_name: *mut ::c_void,
-        pub msg_namelen: ::c_int,
+        pub msg_namelen: ::socklen_t,
         pub msg_iov: *mut ::iovec,
         pub msg_iovlen: ::size_t,
         pub msg_control: *mut ::c_void,
@@ -108,6 +99,8 @@ s! {
 
     pub struct sem_t {
         count: ::c_uint,
+        #[cfg(target_pointer_width = "64")]
+        __reserved: [::c_int; 3],
     }
 
     pub struct lastlog {
@@ -136,6 +129,22 @@ s! {
         pub ut_addr_v6: [::int32_t; 4],
         unused: [::c_char; 20],
     }
+
+    pub struct statvfs {
+        pub f_bsize: ::c_ulong,
+        pub f_frsize: ::c_ulong,
+        pub f_blocks: ::fsblkcnt_t,
+        pub f_bfree: ::fsblkcnt_t,
+        pub f_bavail: ::fsblkcnt_t,
+        pub f_files: ::fsfilcnt_t,
+        pub f_ffree: ::fsfilcnt_t,
+        pub f_favail: ::fsfilcnt_t,
+        pub f_fsid: ::c_ulong,
+        pub f_flag: ::c_ulong,
+        pub f_namemax: ::c_ulong,
+        #[cfg(target_pointer_width = "64")]
+        __f_reserved: [u32; 6],
+    }
 }
 
 pub const O_TRUNC: ::c_int = 512;
@@ -163,6 +172,7 @@ pub const SA_RESTART: ::c_int = 0x10000000;
 pub const SA_NOCLDSTOP: ::c_int = 0x00000001;
 
 pub const EPOLL_CLOEXEC: ::c_int = 0x80000;
+pub const EPOLLONESHOT: ::c_int = 0x40000000;
 
 pub const EFD_CLOEXEC: ::c_int = 0x80000;
 
@@ -408,6 +418,18 @@ pub const SOCK_DGRAM: ::c_int = 2;
 pub const SOCK_SEQPACKET: ::c_int = 5;
 
 pub const SOL_SOCKET: ::c_int = 1;
+pub const SOL_UDP: ::c_int = 17;
+pub const SOL_SCTP: ::c_int = 132;
+pub const SOL_IPX: ::c_int = 256;
+pub const SOL_AX25: ::c_int = 257;
+pub const SOL_ATALK: ::c_int = 258;
+pub const SOL_NETROM: ::c_int = 259;
+pub const SOL_ROSE: ::c_int = 260;
+
+#[doc(hidden)]
+pub const AF_MAX: ::c_int = 39;
+#[doc(hidden)]
+pub const PF_MAX: ::c_int = AF_MAX;
 
 pub const SO_REUSEADDR: ::c_int = 2;
 pub const SO_TYPE: ::c_int = 3;
@@ -433,9 +455,6 @@ pub const O_EXCL: ::c_int = 128;
 pub const O_NOCTTY: ::c_int = 256;
 pub const O_NONBLOCK: ::c_int = 2048;
 pub const O_SYNC: ::c_int = 0x101000;
-pub const O_DIRECT: ::c_int = 0x10000;
-pub const O_DIRECTORY: ::c_int = 0x4000;
-pub const O_NOFOLLOW: ::c_int = 0x8000;
 pub const O_ASYNC: ::c_int = 0x2000;
 pub const O_NDELAY: ::c_int = 0x800;
 
@@ -446,7 +465,6 @@ pub const TCSBRKP: ::c_int = 0x5425;
 pub const TCSANOW: ::c_int = 0;
 pub const TCSADRAIN: ::c_int = 0x1;
 pub const TCSAFLUSH: ::c_int = 0x2;
-pub const IUTF8: ::tcflag_t = 0x00004000;
 pub const VEOF: usize = 4;
 pub const VEOL: usize = 11;
 pub const VEOL2: usize = 16;
@@ -503,10 +521,6 @@ pub const PTRACE_SETOPTIONS: ::c_int = 0x4200;
 pub const PTRACE_GETEVENTMSG: ::c_int = 0x4201;
 pub const PTRACE_GETSIGINFO: ::c_int = 0x4202;
 pub const PTRACE_SETSIGINFO: ::c_int = 0x4203;
-pub const PTRACE_GETFPREGS: ::c_int = 14;
-pub const PTRACE_SETFPREGS: ::c_int = 15;
-pub const PTRACE_GETREGS: ::c_int = 12;
-pub const PTRACE_SETREGS: ::c_int = 13;
 
 pub const EFD_NONBLOCK: ::c_int = 0x800;
 
@@ -548,10 +562,7 @@ pub const TIOCMSET: ::c_int = 0x5418;
 pub const FIONREAD: ::c_int = 0x541B;
 pub const TIOCCONS: ::c_int = 0x541D;
 
-pub const RTLD_GLOBAL: ::c_int = 0x2;
 pub const RTLD_NOLOAD: ::c_int = 0x4;
-pub const RTLD_NOW: ::c_int = 0;
-pub const RTLD_DEFAULT: *mut ::c_void = -1isize as *mut ::c_void;
 
 pub const SEM_FAILED: *mut sem_t = 0 as *mut sem_t;
 
@@ -574,6 +585,7 @@ pub const MCL_CURRENT: ::c_int = 0x0001;
 pub const MCL_FUTURE: ::c_int = 0x0002;
 
 pub const SIGSTKSZ: ::size_t = 8192;
+pub const MINSIGSTKSZ: ::size_t = 2048;
 pub const CBAUD: ::tcflag_t = 0o0010017;
 pub const TAB1: ::c_int = 0x00000800;
 pub const TAB2: ::c_int = 0x00001000;
@@ -614,6 +626,40 @@ pub const ISIG: ::tcflag_t = 0x00000001;
 pub const ICANON: ::tcflag_t = 0x00000002;
 pub const PENDIN: ::tcflag_t = 0x00004000;
 pub const NOFLSH: ::tcflag_t = 0x00000080;
+
+pub const B0: ::speed_t = 0o000000;
+pub const B50: ::speed_t = 0o000001;
+pub const B75: ::speed_t = 0o000002;
+pub const B110: ::speed_t = 0o000003;
+pub const B134: ::speed_t = 0o000004;
+pub const B150: ::speed_t = 0o000005;
+pub const B200: ::speed_t = 0o000006;
+pub const B300: ::speed_t = 0o000007;
+pub const B600: ::speed_t = 0o000010;
+pub const B1200: ::speed_t = 0o000011;
+pub const B1800: ::speed_t = 0o000012;
+pub const B2400: ::speed_t = 0o000013;
+pub const B4800: ::speed_t = 0o000014;
+pub const B9600: ::speed_t = 0o000015;
+pub const B19200: ::speed_t = 0o000016;
+pub const B38400: ::speed_t = 0o000017;
+pub const EXTA: ::speed_t = B19200;
+pub const EXTB: ::speed_t = B38400;
+pub const B57600: ::speed_t = 0o010001;
+pub const B115200: ::speed_t = 0o010002;
+pub const B230400: ::speed_t = 0o010003;
+pub const B460800: ::speed_t = 0o010004;
+pub const B500000: ::speed_t = 0o010005;
+pub const B576000: ::speed_t = 0o010006;
+pub const B921600: ::speed_t = 0o010007;
+pub const B1000000: ::speed_t = 0o010010;
+pub const B1152000: ::speed_t = 0o010011;
+pub const B1500000: ::speed_t = 0o010012;
+pub const B2000000: ::speed_t = 0o010013;
+pub const B2500000: ::speed_t = 0o010014;
+pub const B3000000: ::speed_t = 0o010015;
+pub const B3500000: ::speed_t = 0o010016;
+pub const B4000000: ::speed_t = 0o010017;
 
 pub const EAI_SYSTEM: ::c_int = 11;
 
@@ -679,59 +725,6 @@ pub const NLA_TYPE_MASK: ::c_int = !(NLA_F_NESTED | NLA_F_NET_BYTEORDER);
 pub const SIGEV_THREAD_ID: ::c_int = 4;
 
 f! {
-    pub fn sigemptyset(set: *mut sigset_t) -> ::c_int {
-        *set = 0;
-        return 0
-    }
-    pub fn sigaddset(set: *mut sigset_t, signum: ::c_int) -> ::c_int {
-        *set |= signum as sigset_t;
-        return 0
-    }
-    pub fn sigfillset(set: *mut sigset_t) -> ::c_int {
-        *set = !0;
-        return 0
-    }
-    pub fn sigdelset(set: *mut sigset_t, signum: ::c_int) -> ::c_int {
-        *set &= !(signum as sigset_t);
-        return 0
-    }
-    pub fn sigismember(set: *const sigset_t, signum: ::c_int) -> ::c_int {
-        (*set & (signum as sigset_t)) as ::c_int
-    }
-    pub fn cfgetispeed(termios: *const ::termios) -> ::speed_t {
-        (*termios).c_cflag & ::CBAUD
-    }
-    pub fn cfgetospeed(termios: *const ::termios) -> ::speed_t {
-        (*termios).c_cflag & ::CBAUD
-    }
-    pub fn cfsetispeed(termios: *mut ::termios, speed: ::speed_t) -> ::c_int {
-        let cbaud = ::CBAUD;
-        (*termios).c_cflag = ((*termios).c_cflag & !cbaud) | (speed & cbaud);
-        return 0
-    }
-    pub fn cfsetospeed(termios: *mut ::termios, speed: ::speed_t) -> ::c_int {
-        let cbaud = ::CBAUD;
-        (*termios).c_cflag = ((*termios).c_cflag & !cbaud) | (speed & cbaud);
-        return 0
-    }
-    pub fn tcgetattr(fd: ::c_int, termios: *mut ::termios) -> ::c_int {
-        ioctl(fd, ::TCGETS, termios)
-    }
-    pub fn tcsetattr(fd: ::c_int,
-                     optional_actions: ::c_int,
-                     termios: *const ::termios) -> ::c_int {
-        ioctl(fd, optional_actions, termios)
-    }
-    pub fn tcflow(fd: ::c_int, action: ::c_int) -> ::c_int {
-        ioctl(fd, ::TCXONC, action as *mut ::c_void)
-    }
-    pub fn tcflush(fd: ::c_int, action: ::c_int) -> ::c_int {
-        ioctl(fd, ::TCFLSH, action as *mut ::c_void)
-    }
-    pub fn tcsendbreak(fd: ::c_int, duration: ::c_int) -> ::c_int {
-        ioctl(fd, TCSBRKP, duration as *mut ::c_void)
-    }
-
     pub fn CPU_ZERO(cpuset: &mut cpu_set_t) -> () {
         for slot in cpuset.__bits.iter_mut() {
             *slot = 0;
@@ -761,6 +754,17 @@ f! {
     pub fn CPU_EQUAL(set1: &cpu_set_t, set2: &cpu_set_t) -> bool {
         set1.__bits == set2.__bits
     }
+    pub fn major(dev: ::dev_t) -> ::c_int {
+        ((dev >> 8) & 0xfff) as ::c_int
+    }
+    pub fn minor(dev: ::dev_t) -> ::c_int {
+        ((dev & 0xff) | ((dev >> 12) & 0xfff00)) as ::c_int
+    }
+    pub fn makedev(ma: ::c_int, mi: ::c_int) -> ::dev_t {
+        let ma = ma as ::dev_t;
+        let mi = mi as ::dev_t;
+        ((ma & 0xfff) << 8) | (mi & 0xff) | ((mi & 0xfff00) << 12)
+    }
 }
 
 extern {
@@ -771,15 +775,10 @@ extern {
     pub fn madvise(addr: *const ::c_void, len: ::size_t, advice: ::c_int)
                    -> ::c_int;
     pub fn ioctl(fd: ::c_int, request: ::c_int, ...) -> ::c_int;
-    pub fn readlink(path: *const ::c_char,
-                    buf: *mut ::c_char,
-                    bufsz: ::size_t)
-                    -> ::c_int;
     pub fn msync(addr: *const ::c_void, len: ::size_t,
                  flags: ::c_int) -> ::c_int;
     pub fn mprotect(addr: *const ::c_void, len: ::size_t, prot: ::c_int)
                     -> ::c_int;
-    pub fn sysconf(name: ::c_int) -> ::c_long;
     pub fn recvfrom(socket: ::c_int, buf: *mut ::c_void, len: ::size_t,
                     flags: ::c_int, addr: *const ::sockaddr,
                     addrlen: *mut ::socklen_t) -> ::ssize_t;
@@ -801,6 +800,9 @@ extern {
     pub fn utmpname(name: *const ::c_char) -> ::c_int;
     pub fn setutent();
     pub fn getutent() -> *mut utmp;
+
+    pub fn posix_fallocate(fd: ::c_int, offset: ::off_t,
+                           len: ::off_t) -> ::c_int;
 }
 
 cfg_if! {

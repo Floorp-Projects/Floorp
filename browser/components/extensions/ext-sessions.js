@@ -15,7 +15,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "SessionStore",
 
 const SS_ON_CLOSED_OBJECTS_CHANGED = "sessionstore-closed-objects-changed";
 
-function getRecentlyClosed(maxResults, extension) {
+const getRecentlyClosed = (maxResults, extension) => {
   let recentlyClosed = [];
 
   // Get closed windows
@@ -39,9 +39,9 @@ function getRecentlyClosed(maxResults, extension) {
   // Sort windows and tabs
   recentlyClosed.sort((a, b) => b.lastModified - a.lastModified);
   return recentlyClosed.slice(0, maxResults);
-}
+};
 
-async function createSession(restored, extension, sessionId) {
+const createSession = async function createSession(restored, extension, sessionId) {
   if (!restored) {
     throw new ExtensionError(`Could not restore object using sessionId ${sessionId}.`);
   }
@@ -53,7 +53,7 @@ async function createSession(restored, extension, sessionId) {
   }
   sessionObj.tab = extension.tabManager.convert(restored);
   return sessionObj;
-}
+};
 
 this.sessions = class extends ExtensionAPI {
   getAPI(context) {
@@ -127,7 +127,7 @@ this.sessions = class extends ExtensionAPI {
           return createSession(session, extension, closedId);
         },
 
-        onChanged: new SingletonEventManager(context, "sessions.onChanged", fire => {
+        onChanged: new EventManager(context, "sessions.onChanged", fire => {
           let observer = () => {
             fire.async();
           };

@@ -4,10 +4,10 @@ Cu.import("resource://gre/modules/ExtensionCommon.jsm");
 
 // These are defined on "global" which is used for the same scopes as the other
 // ext-c-*.js files.
-/* exported SingletonEventManager */
-/* global SingletonEventManager: false */
+/* exported EventManager */
+/* global EventManager: false */
 
-global.SingletonEventManager = ExtensionCommon.SingletonEventManager;
+global.EventManager = ExtensionCommon.EventManager;
 
 global.initializeBackgroundPage = (contentWindow) => {
   // Override the `alert()` method inside background windows;

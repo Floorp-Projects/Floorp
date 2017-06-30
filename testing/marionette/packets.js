@@ -25,27 +25,28 @@
  */
 
 const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
-const { StreamUtils } = Cu.import("chrome://marionette/content/stream-utils.js");
+const {StreamUtils} =
+    Cu.import("chrome://marionette/content/stream-utils.js", {});
 
 const unicodeConverter = Cc["@mozilla.org/intl/scriptableunicodeconverter"]
-                           .createInstance(Ci.nsIScriptableUnicodeConverter);
+    .createInstance(Ci.nsIScriptableUnicodeConverter);
 unicodeConverter.charset = "UTF-8";
 
-const defer = function () {
+const defer = function() {
   let deferred = {
     promise: new Promise((resolve, reject) => {
       deferred.resolve = resolve;
       deferred.reject = reject;
-    })
+    }),
   };
   return deferred;
 };
 
 this.EXPORTED_SYMBOLS = ["RawPacket", "Packet", "JSONPacket", "BulkPacket"];
 
-// The transport's previous check ensured the header length did not exceed 20
-// characters.  Here, we opt for the somewhat smaller, but still large limit of
-// 1 TiB.
+// The transport's previous check ensured the header length did not
+// exceed 20 characters.  Here, we opt for the somewhat smaller, but still
+// large limit of 1 TiB.
 const PACKET_LENGTH_MAX = Math.pow(2, 40);
 
 /**
@@ -57,17 +58,19 @@ function Packet(transport) {
 }
 
 /**
- * Attempt to initialize a new Packet based on the incoming packet header we've
- * received so far.  We try each of the types in succession, trying JSON packets
- * first since they are much more common.
- * @param header string
- *        The packet header string to attempt parsing.
- * @param transport DebuggerTransport
- *        The transport instance that will own the packet.
- * @return Packet
- *         The parsed packet of the matching type, or null if no types matched.
+ * Attempt to initialize a new Packet based on the incoming packet header
+ * we've received so far.  We try each of the types in succession, trying
+ * JSON packets first since they are much more common.
+ *
+ * @param {string} header
+ *     Packet header string to attempt parsing.
+ * @param {DebuggerTransport} transport
+ *     Transport instance that will own the packet.
+ *
+ * @return {Packet}
+ *     Parsed packet of the matching type, or null if no types matched.
  */
-Packet.fromHeader = function (header, transport) {
+Packet.fromHeader = function(header, transport) {
   return JSONPacket.fromHeader(header, transport) ||
          BulkPacket.fromHeader(header, transport);
 };
@@ -86,20 +89,20 @@ Packet.prototype = {
     this._length = length;
   },
 
-  destroy: function () {
+  destroy() {
     this._transport = null;
-  }
-
+  },
 };
 
 /**
- * With a JSON packet (the typical packet type sent via the transport), data is
- * transferred as a JSON packet serialized into a string, with the string length
- * prepended to the packet, followed by a colon ([length]:[packet]). The
- * contents of the JSON packet are specified in the Remote Debugging Protocol
- * specification.
- * @param transport DebuggerTransport
- *        The transport instance that will own the packet.
+ * With a JSON packet (the typical packet type sent via the transport),
+ * data is transferred as a JSON packet serialized into a string,
+ * with the string length prepended to the packet, followed by a colon
+ * ([length]:[packet]). The contents of the JSON packet are specified in
+ * the Remote Debugging Protocol specification.
+ *
+ * @param {DebuggerTransport} transport
+ *     Transport instance that will own the packet.
  */
 function JSONPacket(transport) {
   Packet.call(this, transport);
@@ -108,16 +111,18 @@ function JSONPacket(transport) {
 }
 
 /**
- * Attempt to initialize a new JSONPacket based on the incoming packet header
- * we've received so far.
- * @param header string
- *        The packet header string to attempt parsing.
- * @param transport DebuggerTransport
- *        The transport instance that will own the packet.
- * @return JSONPacket
- *         The parsed packet, or null if it's not a match.
+ * Attempt to initialize a new JSONPacket based on the incoming packet
+ * header we've received so far.
+ *
+ * @param {string} header
+ *     Packet header string to attempt parsing.
+ * @param {DebuggerTransport} transport
+ *     Transport instance that will own the packet.
+ *
+ * @return {JSONPacket}
+ *     Parsed packet, or null if it's not a match.
  */
-JSONPacket.fromHeader = function (header, transport) {
+JSONPacket.fromHeader = function(header, transport) {
   let match = this.HEADER_PATTERN.exec(header);
 
   if (!match) {
@@ -137,22 +142,22 @@ Object.defineProperty(JSONPacket.prototype, "object", {
   /**
    * Gets the object (not the serialized string) being read or written.
    */
-  get: function () {
+  get() {
     return this._object;
   },
 
   /**
    * Sets the object to be sent when write() is called.
    */
-  set: function (object) {
+  set(object) {
     this._object = object;
     let data = JSON.stringify(object);
     this._data = unicodeConverter.ConvertFromUnicode(data);
     this.length = this._data.length;
-  }
+  },
 });
 
-JSONPacket.prototype.read = function (stream, scriptableStream) {
+JSONPacket.prototype.read = function(stream, scriptableStream) {
 
   // Read in more packet data.
   this._readData(stream, scriptableStream);
@@ -177,14 +182,15 @@ JSONPacket.prototype.read = function (stream, scriptableStream) {
   this._transport._onJSONObjectReady(this._object);
 };
 
-JSONPacket.prototype._readData = function (stream, scriptableStream) {
-  let bytesToRead = Math.min(this.length - this._data.length,
-                             stream.available());
+JSONPacket.prototype._readData = function(stream, scriptableStream) {
+  let bytesToRead = Math.min(
+      this.length - this._data.length,
+      stream.available());
   this._data += scriptableStream.readBytes(bytesToRead);
   this._done = this._data.length === this.length;
 };
 
-JSONPacket.prototype.write = function (stream) {
+JSONPacket.prototype.write = function(stream) {
 
   if (this._outgoing === undefined) {
     // Format the serialized packet to a buffer
@@ -197,29 +203,30 @@ JSONPacket.prototype.write = function (stream) {
 };
 
 Object.defineProperty(JSONPacket.prototype, "done", {
-  get: function () {
+  get() {
     return this._done;
-  }
+  },
 });
 
-JSONPacket.prototype.toString = function () {
+JSONPacket.prototype.toString = function() {
   return JSON.stringify(this._object, null, 2);
 };
 
 /**
- * With a bulk packet, data is transferred by temporarily handing over the
- * transport's input or output stream to the application layer for writing data
- * directly.  This can be much faster for large data sets, and avoids various
- * stages of copies and data duplication inherent in the JSON packet type.  The
- * bulk packet looks like:
+ * With a bulk packet, data is transferred by temporarily handing over
+ * the transport's input or output stream to the application layer for
+ * writing data directly.  This can be much faster for large data sets,
+ * and avoids various stages of copies and data duplication inherent in
+ * the JSON packet type.  The bulk packet looks like:
  *
- * bulk [actor] [type] [length]:[data]
+ *     bulk [actor] [type] [length]:[data]
  *
- * The interpretation of the data portion depends on the kind of actor and the
- * packet's type.  See the Remote Debugging Protocol Stream Transport spec for
- * more details.
- * @param transport DebuggerTransport
- *        The transport instance that will own the packet.
+ * The interpretation of the data portion depends on the kind of actor and
+ * the packet's type.  See the Remote Debugging Protocol Stream Transport
+ * spec for more details.
+ *
+ * @param {DebuggerTransport} transport
+ *     Transport instance that will own the packet.
  */
 function BulkPacket(transport) {
   Packet.call(this, transport);
@@ -228,16 +235,18 @@ function BulkPacket(transport) {
 }
 
 /**
- * Attempt to initialize a new BulkPacket based on the incoming packet header
- * we've received so far.
- * @param header string
- *        The packet header string to attempt parsing.
- * @param transport DebuggerTransport
- *        The transport instance that will own the packet.
- * @return BulkPacket
- *         The parsed packet, or null if it's not a match.
+ * Attempt to initialize a new BulkPacket based on the incoming packet
+ * header we've received so far.
+ *
+ * @param {string} header
+ *     Packet header string to attempt parsing.
+ * @param {DebuggerTransport} transport
+ *     Transport instance that will own the packet.
+ *
+ * @return {BulkPacket}
+ *     Parsed packet, or null if it's not a match.
  */
-BulkPacket.fromHeader = function (header, transport) {
+BulkPacket.fromHeader = function(header, transport) {
   let match = this.HEADER_PATTERN.exec(header);
 
   if (!match) {
@@ -248,7 +257,7 @@ BulkPacket.fromHeader = function (header, transport) {
   packet.header = {
     actor: match[1],
     type: match[2],
-    length: +match[3]
+    length: +match[3],
   };
   return packet;
 };
@@ -257,7 +266,7 @@ BulkPacket.HEADER_PATTERN = /^bulk ([^: ]+) ([^: ]+) (\d+):$/;
 
 BulkPacket.prototype = Object.create(Packet.prototype);
 
-BulkPacket.prototype.read = function (stream) {
+BulkPacket.prototype.read = function(stream) {
   // Temporarily pause monitoring of the input stream
   this._transport.pauseIncoming();
 
@@ -272,8 +281,8 @@ BulkPacket.prototype.read = function (stream) {
       deferred.resolve(copying);
       return copying;
     },
-    stream: stream,
-    done: deferred
+    stream,
+    done: deferred,
   });
 
   // Await the result of reading from the stream
@@ -288,7 +297,7 @@ BulkPacket.prototype.read = function (stream) {
   };
 };
 
-BulkPacket.prototype.write = function (stream) {
+BulkPacket.prototype.write = function(stream) {
   if (this._outgoingHeader === undefined) {
     // Format the serialized packet header to a buffer
     this._outgoingHeader = "bulk " + this.actor + " " + this.type + " " +
@@ -314,8 +323,8 @@ BulkPacket.prototype.write = function (stream) {
       deferred.resolve(copying);
       return copying;
     },
-    stream: stream,
-    done: deferred
+    stream,
+    done: deferred,
   });
 
   // Await the result of writing to the stream
@@ -331,21 +340,21 @@ BulkPacket.prototype.write = function (stream) {
 };
 
 Object.defineProperty(BulkPacket.prototype, "streamReadyForWriting", {
-  get: function () {
+  get() {
     return this._readyForWriting.promise;
-  }
+  },
 });
 
 Object.defineProperty(BulkPacket.prototype, "header", {
-  get: function () {
+  get() {
     return {
       actor: this.actor,
       type: this.type,
-      length: this.length
+      length: this.length,
     };
   },
 
-  set: function (header) {
+  set(header) {
     this.actor = header.actor;
     this.type = header.type;
     this.length = header.length;
@@ -353,12 +362,12 @@ Object.defineProperty(BulkPacket.prototype, "header", {
 });
 
 Object.defineProperty(BulkPacket.prototype, "done", {
-  get: function () {
+  get() {
     return this._done;
   },
 });
 
-BulkPacket.prototype.toString = function () {
+BulkPacket.prototype.toString = function() {
   return "Bulk: " + JSON.stringify(this.header, null, 2);
 };
 
@@ -379,19 +388,19 @@ function RawPacket(transport, data) {
 
 RawPacket.prototype = Object.create(Packet.prototype);
 
-RawPacket.prototype.read = function (stream) {
+RawPacket.prototype.read = function(stream) {
   // This hasn't yet been needed for testing.
   throw Error("Not implmented.");
 };
 
-RawPacket.prototype.write = function (stream) {
+RawPacket.prototype.write = function(stream) {
   let written = stream.write(this._data, this._data.length);
   this._data = this._data.slice(written);
   this._done = !this._data.length;
 };
 
 Object.defineProperty(RawPacket.prototype, "done", {
-  get: function () {
+  get() {
     return this._done;
-  }
+  },
 });

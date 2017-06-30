@@ -8,6 +8,7 @@ ac_add_options --disable-crashreporter
 ac_add_options --disable-elf-hack
 ac_add_options --enable-debug
 ac_add_options --disable-sandbox
+ac_add_options --disable-profiling
 
 MOZ_CODE_COVERAGE=1
 export CFLAGS="--coverage"

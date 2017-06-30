@@ -210,18 +210,29 @@
       <label value="&bookmarksMenu.label;" class="panel-subview-header"/>
       <vbox class="panel-subview-body">
         <toolbarbutton id="panelMenuBookmarkThisPage"
+#ifndef MOZ_PHOTON_THEME
                        class="subviewbutton"
+#else
+                       class="subviewbutton subviewbutton-iconic"
+#endif
                        observes="bookmarkThisPageBroadcaster"
                        command="Browser:AddBookmarkAs"
                        onclick="PanelUI.hide();"/>
+#ifndef MOZ_PHOTON_THEME
         <toolbarseparator/>
+#endif
         <toolbarbutton id="panelMenu_viewBookmarksSidebar"
                        label="&viewBookmarksSidebar2.label;"
+#ifndef MOZ_PHOTON_THEME
                        class="subviewbutton"
+#else
+                       class="subviewbutton subviewbutton-iconic"
+#endif
                        key="viewBookmarksSidebarKb"
                        oncommand="SidebarUI.toggle('viewBookmarksSidebar'); PanelUI.hide();">
           <observes element="viewBookmarksSidebar" attribute="checked"/>
         </toolbarbutton>
+#ifndef MOZ_PHOTON_THEME
         <toolbarbutton id="panelMenu_viewBookmarksToolbar"
                        label="&viewBookmarksToolbar.label;"
                        type="checkbox"
@@ -238,11 +249,23 @@
                        class="subviewbutton cui-withicon"
                        oncommand="PlacesCommandHook.showPlacesOrganizer('UnfiledBookmarks'); PanelUI.hide();"/>
         <toolbarseparator class="small-separator"/>
+#else
+        <toolbarbutton id="panelMenu_searchBookmarks"
+                       label="&searchBookmarks.label;"
+                       class="subviewbutton subviewbutton-iconic"
+                       oncommand="PlacesCommandHook.searchBookmarks(); PanelUI.hide();"/>
+        <toolbarseparator/>
+        <label id="panelMenu_recentBookmarks"
+               value="&recentBookmarks.label;"
+               class="subview-subheader"/>
+#endif
         <toolbaritem id="panelMenu_bookmarksMenu"
                      orient="vertical"
                      smoothscroll="false"
+#ifndef MOZ_PHOTON_THEME
                      onclick="if (event.button == 1) BookmarkingUI.onPanelMenuViewCommand(event, this._placesView);"
                      oncommand="BookmarkingUI.onPanelMenuViewCommand(event, this._placesView);"
+#endif
                      flatList="true"
                      tooltip="bhTooltip">
           <!-- bookmarks menu items will go here -->
@@ -353,7 +376,8 @@
         <vbox id="widget-overflow-list" class="widget-overflow-list"
               overflowfortoolbar="nav-bar"/>
         <toolbarseparator id="widget-overflow-fixed-separator" hidden="true"/>
-        <vbox id="widget-overflow-fixed-list" class="widget-overflow-list" hidden="true"/>
+        <vbox id="widget-overflow-fixed-list" class="widget-overflow-list" hidden="true"
+              emptylabel="&customizeMode.emptyOverflowList.description;"/>
       </vbox>
 #ifdef MOZ_PHOTON_THEME
     </panelview>
@@ -710,6 +734,11 @@
     </panelview>
     <panelview id="appMenu-libraryView" class="PanelUI-subView">
       <vbox class="panel-subview-body">
+        <toolbarbutton id="appMenu-library-bookmarks-button"
+                       class="subviewbutton subviewbutton-iconic subviewbutton-nav"
+                       label="&bookmarksMenuButton.label;"
+                       closemenu="none"
+                       oncommand="BookmarkingUI.showSubView(this);"/>
         <toolbarbutton id="appMenu-library-history-button"
                        class="subviewbutton subviewbutton-iconic subviewbutton-nav"
                        label="&historyMenu.label;"

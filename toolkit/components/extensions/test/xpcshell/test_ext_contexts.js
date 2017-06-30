@@ -8,7 +8,7 @@ Cu.import("resource://gre/modules/ExtensionCommon.jsm");
 
 var {
   BaseContext,
-  SingletonEventManager,
+  EventManager,
 } = ExtensionCommon;
 
 class StubContext extends BaseContext {
@@ -60,10 +60,10 @@ add_task(async function test_post_unload_promises() {
 add_task(async function test_post_unload_listeners() {
   let context = new StubContext();
 
-  let fireSingleton;
-  let onSingleton = new SingletonEventManager(context, "onSingleton", fire => {
-    fireSingleton = () => {
-      fire.async();
+  let fire;
+  let manager = new EventManager(context, "EventManager", _fire => {
+    fire = () => {
+      _fire.async();
     };
     return () => {};
   });
@@ -73,17 +73,17 @@ add_task(async function test_post_unload_listeners() {
   };
 
   // Check that event listeners isn't called after it has been removed.
-  onSingleton.addListener(fail);
+  manager.addListener(fail);
 
-  let promise = new Promise(resolve => onSingleton.addListener(resolve));
+  let promise = new Promise(resolve => manager.addListener(resolve));
 
-  fireSingleton("onSingleton");
+  fire();
 
   // The `fireSingleton` call ia dispatched asynchronously, so it won't
   // have fired by this point. The `fail` listener that we remove now
   // should not be called, even though the event has already been
   // enqueued.
-  onSingleton.removeListener(fail);
+  manager.removeListener(fail);
 
   // Wait for the remaining listener to be called, which should always
   // happen after the `fail` listener would normally be called.
@@ -91,15 +91,15 @@ add_task(async function test_post_unload_listeners() {
 
   // Check that the event listener isn't called after the context has
   // unloaded.
-  onSingleton.addListener(fail);
+  manager.addListener(fail);
 
   // The `fire` callback always dispatches events
   // asynchronously, so we need to test that any pending event callbacks
   // aren't fired after the context unloads. We also need to test that
   // any `fire` calls that happen *after* the context is unloaded also
   // do not trigger callbacks.
-  fireSingleton("onSingleton");
-  Promise.resolve("onSingleton").then(fireSingleton);
+  fire();
+  Promise.resolve().then(fire);
 
   context.unload();
 

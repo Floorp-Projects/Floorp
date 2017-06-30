@@ -5,6 +5,10 @@
 // The ext-* files are imported into the same scopes.
 /* import-globals-from ../../../toolkit/components/extensions/ext-c-toolkit.js */
 
+var {
+  withHandlingUserInput,
+} = ExtensionUtils;
+
 // If id is not specified for an item we use an integer.
 // This ID need only be unique within a single addon. Since all addon code that
 // can use this API runs in the same process, this local variable suffices.
@@ -158,9 +162,10 @@ this.menusInternal = class extends ExtensionAPI {
           return context.childManager.callParentAsyncFunction("menusInternal.removeAll", []);
         },
 
-        onClicked: new SingletonEventManager(context, "menus.onClicked", fire => {
+        onClicked: new EventManager(context, "menus.onClicked", fire => {
           let listener = (info, tab) => {
-            fire.async(info, tab);
+            withHandlingUserInput(context.contentWindow,
+                                  () => fire.sync(info, tab));
           };
 
           let event = context.childManager.getParentEvent("menusInternal.onClicked");

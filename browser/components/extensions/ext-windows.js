@@ -17,9 +17,9 @@ var {
   promiseObserved,
 } = ExtensionUtils;
 
-function onXULFrameLoaderCreated({target}) {
+const onXULFrameLoaderCreated = ({target}) => {
   target.messageManager.sendAsyncMessage("AllowScriptsToClose", {});
-}
+};
 
 this.windows = class extends ExtensionAPI {
   getAPI(context) {
@@ -39,7 +39,7 @@ this.windows = class extends ExtensionAPI {
           fire.async(windowTracker.getId(window));
         }).api(),
 
-        onFocusChanged: new SingletonEventManager(context, "windows.onFocusChanged", fire => {
+        onFocusChanged: new EventManager(context, "windows.onFocusChanged", fire => {
           // Keep track of the last windowId used to fire an onFocusChanged event
           let lastOnFocusChangedWindowId;
 

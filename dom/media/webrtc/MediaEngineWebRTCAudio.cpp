@@ -201,6 +201,7 @@ MediaEngineWebRTCMicrophoneSource::MediaEngineWebRTCMicrophoneSource(
   mSettings.mEchoCancellation.Construct(0);
   mSettings.mAutoGainControl.Construct(0);
   mSettings.mNoiseSuppression.Construct(0);
+  mSettings.mChannelCount.Construct(0);
   // We'll init lazily as needed
 }
 
@@ -272,12 +273,31 @@ MediaEngineWebRTCMicrophoneSource::UpdateSingleSource(
   prefs.mAecOn = c.mEchoCancellation.Get(prefs.mAecOn);
   prefs.mAgcOn = c.mAutoGainControl.Get(prefs.mAgcOn);
   prefs.mNoiseOn = c.mNoiseSuppression.Get(prefs.mNoiseOn);
+  uint32_t maxChannels = 1;
+  if (mAudioInput->GetMaxAvailableChannels(maxChannels) != 0) {
+    return NS_ERROR_FAILURE;
+  }
+  // Check channelCount violation
+  if (static_cast<int32_t>(maxChannels) < c.mChannelCount.mMin ||
+      static_cast<int32_t>(maxChannels) > c.mChannelCount.mMax) {
+    *aOutBadConstraint = "channelCount";
+    return NS_ERROR_FAILURE;
+  }
+  // Clamp channelCount to a valid value
+  if (prefs.mChannels <= 0) {
+    prefs.mChannels = static_cast<int32_t>(maxChannels);
+  }
+  prefs.mChannels = c.mChannelCount.Get(std::min(prefs.mChannels,
+                                        static_cast<int32_t>(maxChannels)));
+  // Clamp channelCount to a valid value
+  prefs.mChannels = std::max(1, std::min(prefs.mChannels, static_cast<int32_t>(maxChannels)));
 
-  LOG(("Audio config: aec: %d, agc: %d, noise: %d, delay: %d",
-       prefs.mAecOn ? prefs.mAec : -1,
-       prefs.mAgcOn ? prefs.mAgc : -1,
-       prefs.mNoiseOn ? prefs.mNoise : -1,
-       prefs.mPlayoutDelay));
+  LOG(("Audio config: aec: %d, agc: %d, noise: %d, delay: %d, channels: %d",
+      prefs.mAecOn ? prefs.mAec : -1,
+      prefs.mAgcOn ? prefs.mAgc : -1,
+      prefs.mNoiseOn ? prefs.mNoise : -1,
+      prefs.mPlayoutDelay,
+      prefs.mChannels));
 
   mPlayoutDelay = prefs.mPlayoutDelay;
 
@@ -294,21 +314,48 @@ MediaEngineWebRTCMicrophoneSource::UpdateSingleSource(
         // (Bug 1238038) fail allocation for a second device
         return NS_ERROR_FAILURE;
       }
+      if (mAudioInput->SetRecordingDevice(mCapIndex)) {
+         return NS_ERROR_FAILURE;
+      }
+      mAudioInput->SetUserChannelCount(prefs.mChannels);
       if (!AllocChannel()) {
+        FreeChannel();
         LOG(("Audio device is not initalized"));
         return NS_ERROR_FAILURE;
       }
-      if (mAudioInput->SetRecordingDevice(mCapIndex)) {
-        FreeChannel();
-        return NS_ERROR_FAILURE;
-      }
       LOG(("Audio device %d allocated", mCapIndex));
+      {
+        // Update with the actual applied channelCount in order
+        // to store it in settings.
+        uint32_t channelCount = 0;
+        mAudioInput->GetChannelCount(channelCount);
+        MOZ_ASSERT(channelCount > 0);
+        prefs.mChannels = channelCount;
+      }
       break;
 
     case kStarted:
       if (prefs == mLastPrefs) {
         return NS_OK;
       }
+
+      if (prefs.mChannels != mLastPrefs.mChannels) {
+        MOZ_ASSERT(mSources.Length() > 0);
+        auto& source = mSources.LastElement();
+        mAudioInput->SetUserChannelCount(prefs.mChannels);
+        // Get validated number of channel
+        uint32_t channelCount = 0;
+        mAudioInput->GetChannelCount(channelCount);
+        MOZ_ASSERT(channelCount > 0 && mLastPrefs.mChannels > 0);
+        // Check if new validated channels is the same as previous
+        if (static_cast<uint32_t>(mLastPrefs.mChannels) != channelCount
+            && !source->OpenNewAudioCallbackDriver(mListener)) {
+          return NS_ERROR_FAILURE;
+        }
+        // Update settings
+        prefs.mChannels = channelCount;
+      }
+
       if (MOZ_LOG_TEST(GetMediaManagerLog(), LogLevel::Debug)) {
         MonitorAutoLock lock(mMonitor);
         if (mSources.IsEmpty()) {
@@ -373,6 +420,7 @@ MediaEngineWebRTCMicrophoneSource::SetLastPrefs(
     that->mSettings.mEchoCancellation.Value() = aPrefs.mAecOn;
     that->mSettings.mAutoGainControl.Value() = aPrefs.mAgcOn;
     that->mSettings.mNoiseSuppression.Value() = aPrefs.mNoiseOn;
+    that->mSettings.mChannelCount.Value() = aPrefs.mChannels;
     return NS_OK;
   }));
 }
@@ -787,9 +835,9 @@ MediaEngineWebRTCMicrophoneSource::AllocChannel()
           webrtc::CodecInst codec;
           strcpy(codec.plname, ENCODING);
           codec.channels = CHANNELS;
-          uint32_t channels = 0;
-          if (mAudioInput->GetChannelCount(mCapIndex, channels) == 0) {
-            codec.channels = channels;
+          uint32_t maxChannels = 0;
+          if (mAudioInput->GetMaxAvailableChannels(maxChannels) == 0) {
+            codec.channels = maxChannels;
           }
           MOZ_ASSERT(mSampleFrequency == 16000 || mSampleFrequency == 32000);
           codec.rate = SAMPLE_RATE(mSampleFrequency);

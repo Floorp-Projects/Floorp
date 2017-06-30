@@ -70,7 +70,7 @@ s! {
         #[cfg(target_arch = "sparc64")]
         __reserved0: ::c_int,
         pub sa_flags: ::c_int,
-        _restorer: *mut ::c_void,
+        pub sa_restorer: ::dox::Option<extern fn()>,
     }
 
     pub struct stack_t {
@@ -192,6 +192,18 @@ pub const RLIMIT_NLIMITS: ::c_int = 16;
 
 pub const SOCK_NONBLOCK: ::c_int = O_NONBLOCK;
 
+pub const SOL_RXRPC: ::c_int = 272;
+pub const SOL_PPPOL2TP: ::c_int = 273;
+pub const SOL_BLUETOOTH: ::c_int = 274;
+pub const SOL_PNPIPE: ::c_int = 275;
+pub const SOL_RDS: ::c_int = 276;
+pub const SOL_IUCV: ::c_int = 277;
+pub const SOL_CAIF: ::c_int = 278;
+pub const SOL_ALG: ::c_int = 279;
+pub const SOL_NFC: ::c_int = 280;
+
+pub const MSG_TRYHARD: ::c_int = 4;
+
 pub const LC_PAPER: ::c_int = 7;
 pub const LC_NAME: ::c_int = 8;
 pub const LC_ADDRESS: ::c_int = 9;
@@ -302,7 +314,6 @@ pub const TMPFS_MAGIC: ::c_long = 0x01021994;
 pub const USBDEVICE_SUPER_MAGIC: ::c_long = 0x00009fa2;
 
 pub const VEOF: usize = 4;
-pub const IUTF8: ::tcflag_t = 0x00004000;
 
 pub const CPU_SETSIZE: ::c_int = 0x400;
 
