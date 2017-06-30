@@ -5,6 +5,7 @@
 #include "TexturePoolOGL.h"
 #include <stdlib.h>                     // for malloc
 #include "GLContext.h"                  // for GLContext
+#include "mozilla/Logging.h"
 #include "mozilla/Monitor.h"            // for Monitor, MonitorAutoLock
 #include "mozilla/mozalloc.h"           // for operator delete, etc
 #include "mozilla/layers/CompositorThread.h"
@@ -18,6 +19,9 @@
 
 static const unsigned int TEXTURE_POOL_SIZE = 10;
 static const unsigned int TEXTURE_REFILL_THRESHOLD = TEXTURE_POOL_SIZE / 2;
+
+static mozilla::LazyLogModule gTexturePoolLog("TexturePoolOGL");
+#define LOG(arg, ...) MOZ_LOG(gTexturePoolLog, mozilla::LogLevel::Debug, ("TexturePoolOGL::%s: " arg, __func__, ##__VA_ARGS__))
 
 namespace mozilla {
 namespace gl {
@@ -46,6 +50,7 @@ void TexturePoolOGL::MaybeFillTextures()
 {
   if (sTextures->GetSize() < TEXTURE_REFILL_THRESHOLD &&
       !sHasPendingFillTask) {
+    LOG("need to refill the texture pool.");
     sHasPendingFillTask = true;
     MessageLoop* loop = mozilla::layers::CompositorThreadHolder::Loop();
     MOZ_ASSERT(loop);
@@ -95,6 +100,7 @@ GLuint TexturePoolOGL::AcquireTexture()
     NS_ASSERTION(texture, "Failed to retrieve texture from pool");
 
     MaybeFillTextures();
+    LOG("remaining textures num = %zu", sTextures->GetSize());
   }
 
   return texture;
@@ -140,6 +146,7 @@ void TexturePoolOGL::Fill(GLContext* aContext)
     sTextures->Push((void*) texture);
   }
 
+  LOG("fill texture pool to %d", TEXTURE_POOL_SIZE);
   sMonitor->NotifyAll();
 }
 
