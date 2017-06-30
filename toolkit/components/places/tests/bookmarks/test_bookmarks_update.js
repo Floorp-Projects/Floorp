@@ -194,10 +194,10 @@ add_task(async function update_lastModified() {
 
   bm = await PlacesUtils.bookmarks.update({ guid: bm.guid,
                                             title: "" });
-  Assert.strictEqual(bm.title, "");
+  Assert.ok(!("title" in bm));
 
   bm = await PlacesUtils.bookmarks.fetch(bm.guid);
-  Assert.strictEqual(bm.title, "");
+  Assert.ok(!("title" in bm));
 });
 
 add_task(async function update_url() {

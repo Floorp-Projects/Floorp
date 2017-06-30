@@ -1133,15 +1133,15 @@ this.PlacesUIUtils = {
       "Tags": { title: this.getString("OrganizerQueryTags") },
       "AllBookmarks": { title: this.getString("OrganizerQueryAllBookmarks") },
       "BookmarksToolbar":
-        { title: "",
+        { title: null,
           concreteTitle: PlacesUtils.getString("BookmarksToolbarFolderTitle"),
           concreteId: PlacesUtils.toolbarFolderId },
       "BookmarksMenu":
-        { title: "",
+        { title: null,
           concreteTitle: PlacesUtils.getString("BookmarksMenuFolderTitle"),
           concreteId: PlacesUtils.bookmarksMenuFolderId },
       "UnfiledBookmarks":
-        { title: "",
+        { title: null,
           concreteTitle: PlacesUtils.getString("OtherBookmarksFolderTitle"),
           concreteId: PlacesUtils.unfiledBookmarksFolderId },
     };
