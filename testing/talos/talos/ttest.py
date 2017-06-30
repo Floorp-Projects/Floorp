@@ -61,11 +61,6 @@ class TTest(object):
 
         LOG.debug("operating with platform_type : %s" % self.platform_type)
 
-        # Bug 1262954: winxp + e10s, disable hwaccel
-        if self.platform_type == "win_" and browser_config['e10s']:
-            prefs = browser_config['preferences']
-            prefs['layers.acceleration.disabled'] = True
-
         with FFSetup(browser_config, test_config) as setup:
             return self._runTest(browser_config, test_config, setup)
 
