@@ -1,0 +1,105 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test playback of HLS with simple m3u8 that should play OK</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="manifest.js"></script>
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+var manager = new MediaTestManager;
+
+function startTest(test, token) {
+  var v = document.createElement('video');
+  v.preload = "metadata";
+  v.token = token;
+  v.prevTime = 0;
+  v.seenEnded = false;
+
+  var handler = {
+    "ontimeout": function() {
+      Log(token, "timed out: ended=" + v.seenEnded);
+    }
+  };
+  manager.started(token, handler);
+
+  v.src = test.name;
+  v.name = test.name;
+
+  var check = function(test, v) { return function() {
+    is(test.name, v.name, test.name + ": Name should match #1");
+    checkMetadata(test.name, v, test);
+  }}(test, v);
+
+  var noLoad = function(test, v) { return function() {
+    ok(false, test.name + " should not fire 'load' event");
+  }}(test, v);
+
+  var finish = function() {
+    v.finished = true;
+    v.removeEventListener("timeupdate", timeUpdate);
+    removeNodeAndSource(v);
+    manager.finished(v.token);
+  }
+
+  // We should get "ended" events to finish the test.
+  var mayFinish = function() {
+    if (v.seenEnded) {
+      finish();
+    }
+  }
+
+  var checkEnded = function(test, v) { return function() {
+    is(test.name, v.name, test.name + ": Name should match #2");
+    checkMetadata(test.name, v, test);
+    is(v.readyState, v.HAVE_CURRENT_DATA, test.name + " checking readyState");
+    ok(v.ended, test.name + " checking playback has ended");
+    ok(!v.finished, test.name + " shouldn't be finished");
+    ok(!v.seenEnded, test.name + " shouldn't be ended");
+
+    v.seenEnded = true;
+    mayFinish();
+  }}(test, v);
+
+  var timeUpdate = function(test, v) { return function() {
+    if (v.prevTime > v.currentTime) {
+      ok(false, test.name + " time should run forwards: p=" +
+                v.prevTime + " c=" + v.currentTime);
+    }
+    v.prevTime = v.currentTime;
+  }}(test, v);
+
+  v.addEventListener("load", noLoad);
+  v.addEventListener("loadedmetadata", check);
+  v.addEventListener("timeupdate", timeUpdate);
+
+  // We should get "ended" events for the hls resource
+  v.addEventListener("ended", checkEnded);
+
+  document.body.appendChild(v);
+  v.play();
+
+  // Log the event on android devices or emulator for debugging.
+  if (isSlowPlatform()) {
+    var events = ["suspend", "play", "canplay", "canplaythrough", "loadstart","loadedmetadata",
+                  "loadeddata", "playing", "ended", "error", "stalled", "emptied", "abort",
+                  "waiting", "pause"];
+    function logEvent(e) {
+      var v = e.target;
+      Log(e.target.token, "got " + e.type);
+    }
+    events.forEach(function(e) {
+      v.addEventListener(e, logEvent);
+    });
+  }
+}
+
+manager.runTests(gHLSTests, startTest);
+
+</script>
+</pre>
+</body>
+</html>
