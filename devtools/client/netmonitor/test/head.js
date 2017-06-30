@@ -92,8 +92,14 @@ Services.prefs.setBoolPref("devtools.debugger.log", false);
 // Always reset some prefs to their original values after the test finishes.
 const gDefaultFilters = Services.prefs.getCharPref("devtools.netmonitor.filters");
 
-// Reveal all hidden columns for test
-Services.prefs.setCharPref("devtools.netmonitor.hiddenColumns", "[]");
+// Reveal many columns for test
+Services.prefs.setCharPref(
+  "devtools.netmonitor.visibleColumns",
+  "[\"cause\",\"contentSize\",\"cookies\",\"domain\",\"duration\"," +
+  "\"endTime\",\"file\",\"latency\",\"method\",\"protocol\"," +
+  "\"remoteip\",\"responseTime\",\"scheme\",\"setCookies\"," +
+  "\"startTime\",\"status\",\"transferred\",\"type\",\"waterfall\"]"
+);
 
 registerCleanupFunction(() => {
   info("finish() was called, cleaning up...");

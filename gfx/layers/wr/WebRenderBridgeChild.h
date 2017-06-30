@@ -85,7 +85,7 @@ public:
    * Clean this up, finishing with SendShutDown() which will cause __delete__
    * to be sent from the parent side.
    */
-  void Destroy();
+  void Destroy(bool aIsSync);
   bool IPCOpen() const { return mIPCOpen && !mDestroyed; }
   bool IsDestroyed() const { return mDestroyed; }
 
@@ -140,6 +140,8 @@ private:
   bool InForwarderThread() override;
 
   void ActorDestroy(ActorDestroyReason why) override;
+
+  virtual mozilla::ipc::IPCResult RecvWrUpdated(const uint32_t& aNewIdNameSpace) override;
 
   void AddIPDLReference() {
     MOZ_ASSERT(mIPCOpen == false);

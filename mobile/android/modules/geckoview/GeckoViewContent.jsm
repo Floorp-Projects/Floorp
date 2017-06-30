@@ -19,17 +19,20 @@ function debug(aMsg) {
 
 class GeckoViewContent extends GeckoViewModule {
   init() {
-    this.messageManager.loadFrameScript("chrome://geckoview/content/GeckoViewContent.js", true);
+    this.messageManager.loadFrameScript(
+      "chrome://geckoview/content/GeckoViewContent.js", true);
+  }
+
+  register() {
+    this.window.addEventListener("MozDOMFullScreen:Entered", this,
+                                 /* capture */ true, /* untrusted */ false);
+    this.window.addEventListener("MozDOMFullScreen:Exited", this,
+                                 /* capture */ true, /* untrusted */ false);
+
+    this.eventDispatcher.registerListener(this, "GeckoViewContent:ExitFullScreen");
     this.messageManager.addMessageListener("GeckoView:DOMFullscreenExit", this);
     this.messageManager.addMessageListener("GeckoView:DOMFullscreenRequest", this);
     this.messageManager.addMessageListener("GeckoView:DOMTitleChanged", this);
-
-    this.window.addEventListener("MozDOMFullscreen:Entered", this,
-                                 /* capture */ true, /* untrusted */ false);
-    this.window.addEventListener("MozDOMFullscreen:Exited", this,
-                                 /* capture */ true, /* untrusted */ false);
-
-    this.eventDispatcher.registerListener(this, ["GeckoViewContent:ExitFullScreen"]);
   }
 
   // Bundle event handler.
@@ -40,6 +43,17 @@ class GeckoViewContent extends GeckoViewModule {
         this.messageManager.sendAsyncMessage("GeckoView:DOMFullscreenExited");
         break;
     }
+  }
+
+  unregister() {
+    this.window.removeEventListener("MozDOMFullScreen:Entered", this,
+                                    /* capture */ true);
+    this.window.removeEventListener("MozDOMFullScreen:Exited", this,
+                                    /* capture */ true);
+    this.eventDispatcher.unregisterListener(this, "GeckoViewContent:ExitFullScreen");
+    this.messageManager.removeMessageListener("GeckoView:DOMFullscreenExit", this);
+    this.messageManager.removeMessageListener("GeckoView:DOMFullscreenRequest", this);
+    this.messageManager.removeMessageListener("GeckoView:DOMTitleChanged", this);
   }
 
   // DOM event handler

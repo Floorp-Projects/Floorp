@@ -13,11 +13,13 @@
 
 [Pref="dom.dialog_element.enabled"]
 interface HTMLDialogElement : HTMLElement {
-  [SetterThrows] attribute boolean open;
+  [CEReactions, SetterThrows]
+  attribute boolean open;
   attribute DOMString returnValue;
-
+  [CEReactions]
   void show();
-  [Throws] void showModal();
-
+  [CEReactions, Throws]
+  void showModal();
+  [CEReactions]
   void close(optional DOMString returnValue);
 };

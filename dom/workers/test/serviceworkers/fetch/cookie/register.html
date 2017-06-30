@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<script src="../../utils.js"></script>
+<script>
+  function ok(v, msg) {
+    window.parent.postMessage({status: "ok", result: !!v, message: msg}, "*");
+  }
+
+  function done(reg) {
+    ok(reg.active, "The active worker should be available.");
+    window.parent.postMessage({status: "registrationdone"}, "*");
+  }
+
+  document.cookie = "foo=bar";
+
+  navigator.serviceWorker.register("cookie_test.js", {scope: "."})
+                         .then(reg => {
+                           return waitForState(reg.installing, "activated", reg);
+                         }).then(done);
+</script>

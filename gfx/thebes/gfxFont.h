@@ -277,12 +277,11 @@ public:
     // It's OK to call this even if Init() has not been called.
     static void Shutdown();
 
-    // Look up a font in the cache. Returns an addrefed pointer, or null
-    // if there's nothing matching in the cache
-    already_AddRefed<gfxFont>
-    Lookup(const gfxFontEntry* aFontEntry,
-           const gfxFontStyle* aStyle,
-           const gfxCharacterMap* aUnicodeRangeMap);
+    // Look up a font in the cache. Returns null if there's nothing matching
+    // in the cache
+    gfxFont* Lookup(const gfxFontEntry* aFontEntry,
+                    const gfxFontStyle* aStyle,
+                    const gfxCharacterMap* aUnicodeRangeMap);
 
     // We created a new font (presumably because Lookup returned null);
     // put it in the cache. The font's refcount should be nonzero. It is
@@ -1887,9 +1886,9 @@ public:
         return mMathTable.get();
     }
 
-    // return a cloned font resized and offset to simulate sub/superscript glyphs
-    already_AddRefed<gfxFont>
-    GetSubSuperscriptFont(int32_t aAppUnitsPerDevPixel);
+    // Return a cloned font resized and offset to simulate sub/superscript
+    // glyphs. This does not add a reference to the returned font.
+    gfxFont* GetSubSuperscriptFont(int32_t aAppUnitsPerDevPixel);
 
     /**
      * Return the reference cairo_t object from aDT.
@@ -1928,8 +1927,9 @@ protected:
                                         float& aBaselineOffset);
 
     // Return a font that is a "clone" of this one, but reduced to 80% size
-    // (and with variantCaps set to normal).
-    already_AddRefed<gfxFont> GetSmallCapsFont();
+    // (and with variantCaps set to normal). This does not add a reference to
+    // the returned font.
+    gfxFont* GetSmallCapsFont();
 
     // subclasses may provide (possibly hinted) glyph widths (in font units);
     // if they do not override this, harfbuzz will use unhinted widths
