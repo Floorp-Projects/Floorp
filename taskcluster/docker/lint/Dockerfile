@@ -1,10 +1,10 @@
 FROM          ubuntu:16.04
 MAINTAINER    Andrew Halberstadt <ahalberstadt@mozilla.com>
 
-RUN mkdir /builds
-RUN useradd -d /builds/worker -s /bin/bash -m worker
-WORKDIR /builds/worker
+RUN useradd -d /home/worker -s /bin/bash -m worker
+WORKDIR /home/worker
 
+RUN mkdir /build
 # %include python/mozbuild/mozbuild/action/tooltool.py
 ADD topsrcdir/python/mozbuild/mozbuild/action/tooltool.py /build/tooltool.py
 
@@ -24,12 +24,12 @@ ADD topsrcdir/tools/lint/tox/tox_requirements.txt /tmp/tox_requirements.txt
 RUN bash /tmp/system-setup.sh
 
 # %include taskcluster/docker/recipes/run-task
-ADD topsrcdir/taskcluster/docker/recipes/run-task /builds/worker/bin/run-task
-RUN chown -R worker:worker /builds/worker/bin && chmod 755 /builds/worker/bin/*
+ADD topsrcdir/taskcluster/docker/recipes/run-task /home/worker/bin/run-task
+RUN chown -R worker:worker /home/worker/bin && chmod 755 /home/worker/bin/*
 
 # Set variable normally configured at login, by the shells parent process, these
 # are taken from GNU su manual
-ENV           HOME          /builds/worker
+ENV           HOME          /home/worker
 ENV           SHELL         /bin/bash
 ENV           USER          worker
 ENV           LOGNAME       worker

@@ -12,12 +12,12 @@ task:
   payload:
 
     cache:
-      level-{{level}}-{{project}}-tc-vcs: '/builds/worker/.tc-vcs'
+      level-{{level}}-{{project}}-tc-vcs: '/home/worker/.tc-vcs'
 
     # All docker builds share a common artifact directory for ease of uploading.
     artifacts:
       'public/build':
         type: directory
-        path: '/builds/worker/artifacts/'
+        path: '/home/worker/artifacts/'
         expires:
           relative-datestamp: '1 year'
