@@ -91,7 +91,7 @@ this.TelemetryEnvironment = {
    * @param {Object} [options] Optional object with options.
    * @param {String} [options.type=false] The specific experiment type.
    */
-  setExperimentActive(id, branch, options={}) {
+  setExperimentActive(id, branch, options = {}) {
     return getGlobal().setExperimentActive(id, branch, options);
   },
 
