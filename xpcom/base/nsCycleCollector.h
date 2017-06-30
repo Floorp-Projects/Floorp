@@ -31,7 +31,8 @@ void nsCycleCollector_setBeforeUnlinkCallback(CC_BeforeUnlinkCallback aCB);
 typedef void (*CC_ForgetSkippableCallback)(void);
 void nsCycleCollector_setForgetSkippableCallback(CC_ForgetSkippableCallback aCB);
 
-void nsCycleCollector_forgetSkippable(bool aRemoveChildlessNodes = false,
+void nsCycleCollector_forgetSkippable(js::SliceBudget& aBudget,
+                                      bool aRemoveChildlessNodes = false,
                                       bool aAsyncSnowWhiteFreeing = false);
 
 void nsCycleCollector_prepareForGarbageCollection();
