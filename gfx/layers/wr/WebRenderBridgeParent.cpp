@@ -422,6 +422,13 @@ WebRenderBridgeParent::HandleDPEnd(const gfx::IntSize& aSize,
 
   mScrollData = aScrollData;
   UpdateAPZ();
+
+  if (mIdNameSpace != aIdNameSpace) {
+    // Pretend we composited since someone is wating for this event,
+    // though DisplayList was not pushed to webrender.
+    TimeStamp now = TimeStamp::Now();
+    mCompositorBridge->DidComposite(wr::AsUint64(mPipelineId), now, now);
+  }
 }
 
 CompositorBridgeParent*
