@@ -12,7 +12,7 @@ script_args="${@}"
 if [ $(id -u) = 0 ]; then
     # each of the caches we have mounted are owned by root, so update that ownership
     # to 'worker'
-    for cache in /builds/worker/.tc-vcs /builds/worker/workspace /builds/worker/tooltool-cache; do
+    for cache in /home/worker/.tc-vcs /home/worker/workspace /home/worker/tooltool-cache; do
         if [ -d $cache ]; then
             # -R probably isn't necessary forever, but it fixes some poisoned
             # caches for now
@@ -21,7 +21,7 @@ if [ $(id -u) = 0 ]; then
     done
 
     # ..then drop privileges by re-running this script
-    exec su worker -c "/builds/worker/bin/build.sh $script_args"
+    exec su worker -c "/home/worker/bin/build.sh $script_args"
 fi
 
 ####
