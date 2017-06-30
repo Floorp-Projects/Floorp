@@ -14,6 +14,8 @@
 #include "MediaDecoderStateMachine.h"
 #include "MediaFormatReader.h"
 #include "MediaPrefs.h"
+#include "MediaShutdownManager.h"
+#include "nsNetUtil.h"
 
 namespace mozilla {
 
@@ -54,6 +56,40 @@ HLSDecoder::IsSupportedType(const MediaContainerType& aContainerType)
 {
   return IsEnabled() &&
          DecoderTraits::IsHttpLiveStreamingType(aContainerType);
+}
+
+nsresult
+HLSDecoder::Load(nsIChannel* aChannel,
+                 bool aIsPrivateBrowsing,
+                 nsIStreamListener**)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(!mResource);
+
+  nsCOMPtr<nsIURI> uri;
+  nsresult rv = NS_GetFinalChannelURI(aChannel, getter_AddRefs(uri));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  mResource = new HLSResource(mResourceCallback, aChannel, uri);
+
+  rv = MediaShutdownManager::Instance().Register(this);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  SetStateMachine(CreateStateMachine());
+  NS_ENSURE_TRUE(GetStateMachine(), NS_ERROR_FAILURE);
+
+  return InitializeStateMachine();
+}
+
+nsresult
+HLSDecoder::Load(MediaResource*)
+{
+  MOZ_CRASH("Clone is not supported");
+  return NS_ERROR_FAILURE;
 }
 
 } // namespace mozilla
