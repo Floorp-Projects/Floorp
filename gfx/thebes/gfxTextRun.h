@@ -241,7 +241,7 @@ public:
         virtual uint32_t GetAppUnitsPerDevUnit() const = 0;
     };
 
-    struct DrawParams
+    struct MOZ_STACK_CLASS DrawParams
     {
         gfxContext* context;
         DrawMode drawMode = DrawMode::GLYPH_FILL;
@@ -464,7 +464,7 @@ public:
         uint8_t         mMatchType;
     };
 
-    class GlyphRunIterator {
+    class MOZ_STACK_CLASS GlyphRunIterator {
     public:
         GlyphRunIterator(const gfxTextRun *aTextRun, Range aRange)
           : mTextRun(aTextRun)
