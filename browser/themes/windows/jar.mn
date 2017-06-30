@@ -72,7 +72,7 @@ browser.jar:
   skin/classic/browser/feeds/feedIcon16.png                    (feeds/feedIcon16.png)
   skin/classic/browser/feeds/subscribe.css                     (feeds/subscribe.css)
 * skin/classic/browser/newtab/newTab.css                       (newtab/newTab.css)
-  skin/classic/browser/places/places.css                       (places/places.css)
+* skin/classic/browser/places/places.css                       (places/places.css)
 * skin/classic/browser/places/organizer.css                    (places/organizer.css)
   skin/classic/browser/places/query.png                        (places/query.png)
   skin/classic/browser/places/bookmarksMenu.png                (places/bookmarksMenu.png)
