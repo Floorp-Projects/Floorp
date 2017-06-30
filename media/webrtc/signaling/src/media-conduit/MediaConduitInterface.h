@@ -130,8 +130,8 @@ public:
                                unsigned int number_of_streams) = 0;
 
   /**
-   * Callback Function reporting decoded I420 frame for processing.
-   * @param buffer: pointer to decoded video frame
+   * Callback Function reporting decoded frame for processing.
+   * @param buffer: reference to decoded video frame
    * @param buffer_size: size of the decoded frame
    * @param time_stamp: Decoder timestamp, typically 90KHz as per RTP
    * @render_time: Wall-clock time at the decoder for synchronization
@@ -143,14 +143,6 @@ public:
    * immediately.
    */
   virtual void RenderVideoFrame(const webrtc::VideoFrameBuffer& buffer,
-                                uint32_t time_stamp,
-                                int64_t render_time) = 0;
-  virtual void RenderVideoFrame(const uint8_t* buffer_y,
-                                uint32_t y_stride,
-                                const uint8_t* buffer_u,
-                                uint32_t u_stride,
-                                const uint8_t* buffer_v,
-                                uint32_t v_stride,
                                 uint32_t time_stamp,
                                 int64_t render_time) = 0;
 
