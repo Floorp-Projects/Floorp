@@ -11,13 +11,6 @@ add_task(async function testPermissionUnknownInPrivateWindow() {
   info("Creating private window");
   let win = await BrowserTestUtils.openNewBrowserWindow({ private : true });
 
-  info("Creating private tab");
-  win.gBrowser.selectedTab = win.gBrowser.addTab();
-
-  info("Loading test page: " + testPageURL);
-  win.gBrowser.selectedBrowser.loadURI(testPageURL);
-  await BrowserTestUtils.browserLoaded(win.gBrowser.selectedBrowser);
-
   registerPopupEventHandler("popupshowing", function () {
     ok(false, "Shouldn't show a popup this time");
   }, win);
@@ -28,7 +21,12 @@ add_task(async function testPermissionUnknownInPrivateWindow() {
     ok(false, "Shouldn't show a popup this time");
   }, win);
 
-  await promiseMessage(false, win.gBrowser);
+  info("Creating private tab");
+  win.gBrowser.selectedTab = win.gBrowser.addTab();
+
+  info("Loading test page: " + testPageURL);
+  win.gBrowser.selectedBrowser.loadURI(testPageURL);
+  await waitForMessage(false, win.gBrowser);
 
   is(getPermission(testPageURL, "persistent-storage"),
      Components.interfaces.nsIPermissionManager.UNKNOWN_ACTION,
