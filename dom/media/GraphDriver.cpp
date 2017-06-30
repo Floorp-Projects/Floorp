@@ -675,10 +675,9 @@ AudioCallbackDriver::Init()
 #ifdef MOZ_WEBRTC
   if (mGraphImpl->mInputWanted) {
     StaticMutexAutoLock lock(AudioInputCubeb::Mutex());
-    uint32_t maxInputChannels = 0;
-    if (AudioInputCubeb::GetDeviceMaxChannels(mGraphImpl->mInputDeviceID, maxInputChannels) == 0) {
-      input.channels = mInputChannels = maxInputChannels;
-    }
+    uint32_t userChannels = 0;
+    AudioInputCubeb::GetUserChannelCount(mGraphImpl->mInputDeviceID, userChannels);
+    input.channels = mInputChannels = userChannels;
   }
 #endif
 
