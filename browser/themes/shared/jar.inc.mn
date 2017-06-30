@@ -68,9 +68,11 @@
   skin/classic/browser/connection-mixed-passive-loaded.svg     (../shared/identity-block/connection-mixed-passive-loaded.svg)
   skin/classic/browser/connection-mixed-active-loaded.svg      (../shared/identity-block/connection-mixed-active-loaded.svg)
   skin/classic/browser/identity-icon.svg                       (../shared/identity-block/identity-icon.svg)
-  skin/classic/browser/identity-icon-hover.svg                 (../shared/identity-block/identity-icon-hover.svg)
   skin/classic/browser/identity-icon-notice.svg                (../shared/identity-block/identity-icon-notice.svg)
+#ifndef MOZ_PHOTON_THEME
+  skin/classic/browser/identity-icon-hover.svg                 (../shared/identity-block/identity-icon-hover.svg)
   skin/classic/browser/identity-icon-notice-hover.svg          (../shared/identity-block/identity-icon-notice-hover.svg)
+#endif
   skin/classic/browser/info.svg                                (../shared/info.svg)
 * skin/classic/browser/menuPanel.svg                           (../shared/menuPanel.svg)
 * skin/classic/browser/menuPanel-small.svg                     (../shared/menuPanel-small.svg)

@@ -18,10 +18,21 @@
   overflow: hidden;
 }
 
-#urlbar[pageproxystate="valid"] > #identity-box.verifiedIdentity > #identity-icon-labels {
-  color: hsl(92,100%,30%);
+%ifdef MOZ_PHOTON_THEME
+#identity-box:hover:not(.no-hover),
+#identity-box[open=true],
+#identity-box.grantedPermissions[open=true] {
+  background-color: hsla(240, 5%, 5%, .05);
 }
+%endif
 
+#urlbar[pageproxystate="valid"] > #identity-box.verifiedIdentity > #identity-icon-labels {
+%ifdef MOZ_PHOTON_THEME
+  color: #058B00;
+%else
+  color: hsl(92,100%,30%);
+%endif
+}
 #urlbar[pageproxystate="valid"] > #identity-box.chromeUI > #identity-icon-labels {
 %ifdef MOZ_OFFICIAL_BRANDING
   color: rgb(229,115,0);
@@ -33,16 +44,48 @@
 #identity-icon-labels:-moz-locale-dir(ltr) {
   padding-left: 2px;
 }
-
 #identity-icon-labels:-moz-locale-dir(rtl) {
   padding-right: 2px;
+}
+%ifdef MOZ_PHOTON_THEME
+#identity-box:not(.chromeUI) {
+  --urlbar-separator-color: transparent;
+}
+#urlbar[pageproxystate=valid] > #identity-box.verifiedIdentity {
+  --urlbar-separator-color: rgba(18, 188, 0, .5);
+}
+%endif
+
+#identity-box {
+  padding-inline-end: 2px;
+  margin-inline-end: 2px;
+}
+
+#urlbar[pageproxystate=valid] > #identity-box.verifiedIdentity,
+#urlbar[pageproxystate=valid] > #identity-box.chromeUI,
+#urlbar-display-box {
+  margin-inline-end: 4px;
+  border-inline-end: 1px solid var(--urlbar-separator-color);
+  border-image: linear-gradient(transparent 15%, var(--urlbar-separator-color) 15%, var(--urlbar-separator-color) 85%, transparent 85%);
+  border-image-slice: 1;
+}
+
+#urlbar[pageproxystate=valid] > #identity-box.verifiedIdentity,
+#urlbar[pageproxystate=valid] > #identity-box.chromeUI {
+  padding-inline-end: 4px;
+}
+
+#urlbar-display-box {
+  padding-inline-start: 4px;
+  border-inline-start: 1px solid var(--urlbar-separator-color);
+  border-image: linear-gradient(transparent 15%, var(--urlbar-separator-color) 15%, var(--urlbar-separator-color) 85%, transparent 85%);
+  border-image-slice: 1;
 }
 
 %ifndef MOZ_PHOTON_THEME
 @conditionalForwardWithUrlbar@ > #forward-button[disabled] + #urlbar > #identity-box {
   padding-inline-start: calc(var(--backbutton-urlbar-overlap) + 5px);
 }
-
 @conditionalForwardWithUrlbar@:hover:not([switchingtabs]) > #forward-button[disabled] + #urlbar > #identity-box {
   /* Forward button hiding is delayed when hovered, so we should use the same
      delay for the identity box. We handle both horizontal paddings (for LTR and
@@ -77,32 +120,28 @@
 #extension-icon:-moz-lwtheme {
   fill: rgba(0,0,0,.6);
 }
-
 /* MAIN IDENTITY ICON */
-
 #identity-icon {
   margin-inline-start: 0;
   list-style-image: url(chrome://browser/skin/identity-icon.svg);
 }
-
-#identity-box:hover > #identity-icon:not(.no-hover),
+%ifndef MOZ_PHOTON_THEME
+#identity-box:not(.no-hover):hover > #identity-icon,
 #identity-box[open=true] > #identity-icon {
   list-style-image: url(chrome://browser/skin/identity-icon-hover.svg);
 }
+#identity-box.grantedPermissions:not(.no-hover):hover > #identity-icon,
+#identity-box.grantedPermissions[open=true] > #identity-icon {
+  list-style-image: url(chrome://browser/skin/identity-icon-notice-hover.svg);
+}
+%endif
 
 #identity-box.grantedPermissions > #identity-icon {
   list-style-image: url(chrome://browser/skin/identity-icon-notice.svg);
 }
-
-#identity-box.grantedPermissions:hover > #identity-icon:not(.no-hover),
-#identity-box.grantedPermissions[open=true] > #identity-icon {
-  list-style-image: url(chrome://browser/skin/identity-icon-notice-hover.svg);
-}
-
 #urlbar[pageproxystate="valid"] > #identity-box.chromeUI > #identity-icon {
   list-style-image: url(chrome://branding/content/identity-icons-brand.svg);
 }
-
 #urlbar[pageproxystate="invalid"] > #identity-box > #identity-icon {
   opacity: .3;
 }
@@ -193,14 +232,17 @@
 #extension-icon {
   visibility: collapse;
 }
-
 #urlbar[pageproxystate="valid"] > #identity-box.verifiedDomain > #connection-icon,
 #urlbar[pageproxystate="valid"] > #identity-box.verifiedIdentity > #connection-icon,
 #urlbar[pageproxystate="valid"] > #identity-box.mixedActiveBlocked > #connection-icon {
   list-style-image: url(chrome://browser/skin/connection-secure.svg);
   visibility: visible;
+%ifdef MOZ_PHOTON_THEME
+  fill: #12BC00;
+%else
+  fill: #4d9a26;
+%endif
 }
-
 #urlbar[pageproxystate="valid"] > #identity-box.weakCipher > #connection-icon,
 #urlbar[pageproxystate="valid"] > #identity-box.mixedDisplayContent > #connection-icon,
 #urlbar[pageproxystate="valid"] > #identity-box.mixedDisplayContentLoadedActiveBlocked > #connection-icon,
