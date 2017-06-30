@@ -3,24 +3,18 @@
 Cu.import("resource://services-common/blocklist-updater.js");
 Cu.import("resource://testing-common/httpd.js");
 
-const { Kinto } = Cu.import("resource://services-common/kinto-offline-client.js", {});
-const { FirefoxAdapter } = Cu.import("resource://services-common/kinto-storage-adapter.js", {});
 const { NetUtil } = Cu.import("resource://gre/modules/NetUtil.jsm", {});
 const { OneCRLBlocklistClient } = Cu.import("resource://services-common/blocklist-clients.js", {});
 const { UptakeTelemetry } = Cu.import("resource://services-common/uptake-telemetry.js", {});
 
 let server;
 
-const PREF_BLOCKLIST_BUCKET            = "services.blocklist.bucket";
 const PREF_BLOCKLIST_ENFORCE_SIGNING   = "services.blocklist.signing.enforced";
-const PREF_BLOCKLIST_ONECRL_COLLECTION = "services.blocklist.onecrl.collection";
 const PREF_SETTINGS_SERVER             = "services.settings.server";
 const PREF_SIGNATURE_ROOT              = "security.content.signature.root_hash";
 
 // Telemetry reports.
 const TELEMETRY_HISTOGRAM_KEY = OneCRLBlocklistClient.identifier;
-
-const kintoFilename = "kinto.sqlite";
 
 const CERT_DIR = "test_blocklist_signatures/";
 const CHAIN_FILES =
@@ -60,29 +54,11 @@ function getCertChain() {
 }
 
 async function checkRecordCount(count) {
-  // open the collection manually
-  const base = Services.prefs.getCharPref(PREF_SETTINGS_SERVER);
-  const bucket = Services.prefs.getCharPref(PREF_BLOCKLIST_BUCKET);
-  const collectionName =
-      Services.prefs.getCharPref(PREF_BLOCKLIST_ONECRL_COLLECTION);
-
-  const sqliteHandle = await FirefoxAdapter.openConnection({path: kintoFilename});
-  const config = {
-    remote: base,
-    bucket,
-    adapter: FirefoxAdapter,
-    adapterOptions: {sqliteHandle},
-  };
-
-  const db = new Kinto(config);
-  const collection = db.collection(collectionName);
-
-  // Check we have the expected number of records
-  let records = await collection.list();
-  do_check_eq(count, records.data.length);
-
-  // Close the collection so the test can exit cleanly
-  await sqliteHandle.close();
+  await OneCRLBlocklistClient.openCollection(async (collection) => {
+    // Check we have the expected number of records
+    const records = await collection.list();
+    do_check_eq(count, records.data.length);
+  });
 }
 
 // Check to ensure maybeSync is called with correct values when a changes
