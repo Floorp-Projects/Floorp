@@ -12,8 +12,8 @@
     "libcxx_repo": "https://llvm.org/svn/llvm-project/libcxx/trunk",
     "libcxxabi_repo": "https://llvm.org/svn/llvm-project/libcxxabi/trunk",
     "python_path": "/usr/bin/python2.7",
-    "gcc_dir": "/builds/worker/workspace/build/src/gcc",
-    "cc": "/builds/worker/workspace/build/src/gcc/bin/gcc",
-    "cxx": "/builds/worker/workspace/build/src/gcc/bin/g++",
-    "as": "/builds/worker/workspace/build/src/gcc/bin/gcc"
+    "gcc_dir": "/home/worker/workspace/build/src/gcc",
+    "cc": "/home/worker/workspace/build/src/gcc/bin/gcc",
+    "cxx": "/home/worker/workspace/build/src/gcc/bin/g++",
+    "as": "/home/worker/workspace/build/src/gcc/bin/gcc"
 }

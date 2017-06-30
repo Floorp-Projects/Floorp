@@ -79,7 +79,7 @@ def docker_worker_toolchain(config, job, taskdesc):
 
     worker['artifacts'].append({
         'name': 'public',
-        'path': '/builds/worker/workspace/artifacts/',
+        'path': '/home/worker/workspace/artifacts/',
         'type': 'directory',
     })
 
@@ -101,9 +101,9 @@ def docker_worker_toolchain(config, job, taskdesc):
     worker['caches'].append({
         'type': 'persistent',
         'name': 'tooltool-cache',
-        'mount-point': '/builds/worker/tooltool-cache',
+        'mount-point': '/home/worker/tooltool-cache',
     })
-    env['TOOLTOOL_CACHE'] = '/builds/worker/tooltool-cache'
+    env['TOOLTOOL_CACHE'] = '/home/worker/tooltool-cache'
 
     # tooltool downloads
     worker['relengapi-proxy'] = False  # but maybe enabled for tooltool below
@@ -117,15 +117,15 @@ def docker_worker_toolchain(config, job, taskdesc):
                 'docker-worker:relengapi-proxy:tooltool.download.internal')
 
     worker['command'] = [
-        '/builds/worker/bin/run-task',
+        '/home/worker/bin/run-task',
         # Various caches/volumes are default owned by root:root.
-        '--chown-recursive', '/builds/worker/workspace',
-        '--chown-recursive', '/builds/worker/tooltool-cache',
-        '--vcs-checkout=/builds/worker/workspace/build/src',
+        '--chown-recursive', '/home/worker/workspace',
+        '--chown-recursive', '/home/worker/tooltool-cache',
+        '--vcs-checkout=/home/worker/workspace/build/src',
         '--',
         'bash',
         '-c',
-        'cd /builds/worker && '
+        'cd /home/worker && '
         './workspace/build/src/taskcluster/scripts/misc/{}'.format(
             run['script'])
     ]
