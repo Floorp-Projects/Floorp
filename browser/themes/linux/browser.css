@@ -1181,6 +1181,7 @@ notification.pluginVulnerable > .notification-inner > .messageCloseButton:not(:h
 
 %include ../shared/customizableui/customizeMode.inc.css
 
+%ifndef MOZ_PHOTON_THEME
 #main-window[customize-entered] > #tab-view-deck {
   background-image: url("chrome://browser/skin/customizableui/customizeMode-gridTexture.png"),
                     linear-gradient(to bottom, #bcbcbc, #b5b5b5);
@@ -1220,6 +1221,7 @@ notification.pluginVulnerable > .notification-inner > .messageCloseButton:not(:h
   border-right: 3px solid transparent;
   border-left: 3px solid transparent;
 }
+%endif
 
 /* The :hover:active style from toolkit doesn't seem to work in this panel so just use :active. */
 .customization-tipPanel-closeBox > .close-icon:active {

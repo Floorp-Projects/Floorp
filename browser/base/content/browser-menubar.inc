@@ -385,7 +385,7 @@
 #endif
                context="placesContext"
                openInTabs="children"
-               oncommand="BookmarksEventHandler.onCommand(event, this.parentNode._placesView);"
+               oncommand="BookmarksEventHandler.onCommand(event);"
                onclick="BookmarksEventHandler.onClick(event, this.parentNode._placesView);"
                onpopupshowing="BookmarkingUI.onMainMenuPopupShowing(event);
                                if (!this.parentNode._placesView)

@@ -20,10 +20,14 @@ Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 Cu.import("chrome://marionette/content/assert.js");
-Cu.import("chrome://marionette/content/driver.js");
-Cu.import("chrome://marionette/content/error.js");
+const {GeckoDriver} = Cu.import("chrome://marionette/content/driver.js", {});
+const {
+  error,
+  UnknownCommandError,
+} = Cu.import("chrome://marionette/content/error.js", {});
 Cu.import("chrome://marionette/content/message.js");
-Cu.import("chrome://marionette/content/transport.js");
+const {DebuggerTransport} =
+    Cu.import("chrome://marionette/content/transport.js", {});
 
 XPCOMUtils.defineLazyServiceGetter(
     this, "env", "@mozilla.org/process/environment;1", "nsIEnvironment");
@@ -158,8 +162,14 @@ const RECOMMENDED_PREFS = new Map([
 
   // Do not show datareporting policy notifications which can
   // interfere with tests
-  ["datareporting.healthreport.about.reportUrl", "http://%(server)s/dummy/abouthealthreport/"],
-  ["datareporting.healthreport.documentServerURI", "http://%(server)s/dummy/healthreport/"],
+  [
+    "datareporting.healthreport.about.reportUrl",
+    "http://%(server)s/dummy/abouthealthreport/",
+  ],
+  [
+    "datareporting.healthreport.documentServerURI",
+    "http://%(server)s/dummy/healthreport/",
+  ],
   ["datareporting.healthreport.logging.consoleEnabled", false],
   ["datareporting.healthreport.service.enabled", false],
   ["datareporting.healthreport.service.firstRun", false],
@@ -201,7 +211,10 @@ const RECOMMENDED_PREFS = new Map([
   ["extensions.update.notifyUser", false],
 
   // Make sure opening about:addons will not hit the network
-  ["extensions.webservice.discoverURL", "http://%(server)s/dummy/discoveryURL"],
+  [
+    "extensions.webservice.discoverURL",
+    "http://%(server)s/dummy/discoveryURL",
+  ],
 
   // Allow the application to have focus even it runs in the background
   ["focusmanager.testmode", true],
@@ -274,7 +287,7 @@ server.TCPListener = class {
    * @param {number} port
    *     Port for server to listen to.
    */
-  constructor (port) {
+  constructor(port) {
     this.port = port;
     this.socket = null;
     this.conns = new Set();
@@ -292,12 +305,12 @@ server.TCPListener = class {
    * @return {GeckoDriver}
    *     A driver instance.
    */
-  driverFactory () {
+  driverFactory() {
     Preferences.set(PREF_CONTENT_LISTENER, false);
     return new GeckoDriver(Services.appinfo.name, this);
   }
 
-  set acceptConnections (value) {
+  set acceptConnections(value) {
     if (!value) {
       logger.info("New connections will no longer be accepted");
     } else {
@@ -314,7 +327,7 @@ server.TCPListener = class {
    * The marionette.port preference will be populated with the value
    * of |this.port|.
    */
-  start () {
+  start() {
     if (this.alive) {
       return;
     }
@@ -344,7 +357,7 @@ server.TCPListener = class {
     env.set(ENV_ENABLED, "1");
   }
 
-  stop () {
+  stop() {
     if (!this.alive) {
       return;
     }
@@ -360,12 +373,12 @@ server.TCPListener = class {
     }
     this.alteredPrefs.clear();
 
-    Services.obs.notifyObservers(this, NOTIFY_RUNNING, false);
+    Services.obs.notifyObservers(this, NOTIFY_RUNNING);
 
     this.alive = false;
   }
 
-  onSocketAccepted (serverSocket, clientSocket) {
+  onSocketAccepted(serverSocket, clientSocket) {
     if (!this._acceptConnections) {
       logger.warn("New connections are currently not accepted");
       return;
@@ -380,12 +393,13 @@ server.TCPListener = class {
     conn.onclose = this.onConnectionClosed.bind(this);
     this.conns.add(conn);
 
-    logger.debug(`Accepted connection ${conn.id} from ${clientSocket.host}:${clientSocket.port}`);
+    logger.debug(`Accepted connection ${conn.id} ` +
+        `from ${clientSocket.host}:${clientSocket.port}`);
     conn.sayHello();
     transport.ready();
   }
 
-  onConnectionClosed (conn) {
+  onConnectionClosed(conn) {
     logger.debug(`Closed connection ${conn.id}`);
     this.conns.delete(conn);
   }
@@ -405,7 +419,7 @@ server.TCPListener = class {
  *     Factory function that produces a |GeckoDriver|.
  */
 server.TCPConnection = class {
-  constructor (connID, transport, driverFactory) {
+  constructor(connID, transport, driverFactory) {
     this.id = connID;
     this.conn = transport;
 
@@ -429,7 +443,7 @@ server.TCPConnection = class {
    * Debugger transport callback that cleans up
    * after a connection is closed.
    */
-  onClosed (reason) {
+  onClosed(reason) {
     this.driver.deleteSession();
     if (this.onclose) {
       this.onclose(this);
@@ -448,7 +462,7 @@ server.TCPConnection = class {
    *     message type, message ID, method name or error, and parameters
    *     or result.
    */
-  onPacket (data) {
+  onPacket(data) {
     // unable to determine how to respond
     if (!Array.isArray(data)) {
       let e = new TypeError(
@@ -502,7 +516,7 @@ server.TCPConnection = class {
    * @param {Command} cmd
    *     The requested command to execute.
    */
-  execute (cmd) {
+  execute(cmd) {
     let resp = this.createResponse(cmd.id);
     let sendResponse = () => resp.sendConditionally(resp => !resp.sent);
     let sendError = resp.sendError.bind(resp);
@@ -540,14 +554,14 @@ server.TCPConnection = class {
    * @return {message.Response}
    *     Response to the message with |msgID|.
    */
-  createResponse (msgID) {
+  createResponse(msgID) {
     if (typeof msgID != "number") {
       msgID = -1;
     }
     return new Response(msgID, this.send.bind(this));
   }
 
-  sendError (err, cmdID) {
+  sendError(err, cmdID) {
     let resp = new Response(cmdID, this.send.bind(this));
     resp.sendError(err);
   }
@@ -559,13 +573,13 @@ server.TCPConnection = class {
    * This is the only message sent by Marionette that does not follow
    * the regular message format.
    */
-  sayHello () {
+  sayHello() {
     let whatHo = {
       applicationType: "gecko",
       marionetteProtocol: PROTOCOL_VERSION,
     };
     this.sendRaw(whatHo);
-  };
+  }
 
   /**
    * Delegates message to client based on the provided  {@code cmdID}.
@@ -580,7 +594,7 @@ server.TCPConnection = class {
    * @param {Command,Response} msg
    *     The command or response to send.
    */
-  send (msg) {
+  send(msg) {
     msg.origin = MessageOrigin.Server;
     if (msg instanceof Command) {
       this.commands_.set(msg.id, msg);
@@ -598,10 +612,10 @@ server.TCPConnection = class {
    * @param {Response} resp
    *     The response to send back to the client.
    */
-  sendToClient (resp) {
+  sendToClient(resp) {
     this.driver.responseCompleted();
     this.sendMessage(resp);
-  };
+  }
 
   /**
    * Marshal message to the Marionette message format and send it.
@@ -609,7 +623,7 @@ server.TCPConnection = class {
    * @param {Command,Response} msg
    *     The message to send.
    */
-  sendMessage (msg) {
+  sendMessage(msg) {
     this.log_(msg);
     let payload = msg.toMsg();
     this.sendRaw(payload);
@@ -622,17 +636,17 @@ server.TCPConnection = class {
    * @param {Object} payload
    *     The payload to ship.
    */
-  sendRaw (payload) {
+  sendRaw(payload) {
     this.conn.send(payload);
   }
 
-  log_ (msg) {
+  log_(msg) {
     let a = (msg.origin == MessageOrigin.Client ? " -> " : " <- ");
     let s = JSON.stringify(msg.toMsg());
     logger.trace(this.id + a + s);
   }
 
-  toString () {
+  toString() {
     return `[object server.TCPConnection ${this.id}]`;
   }
 };

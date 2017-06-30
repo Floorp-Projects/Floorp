@@ -10,6 +10,8 @@ Cu.import("resource://gre/modules/Services.jsm");
 
 this.EXPORTED_SYMBOLS = ["modal"];
 
+const COMMON_DIALOG = "chrome://global/content/commonDialog.xul";
+
 const isFirefox = () => Services.appinfo.name == "Firefox";
 
 this.modal = {};
@@ -18,8 +20,8 @@ modal = {
   TABMODAL_DIALOG_LOADED: "tabmodal-dialog-loaded",
   handlers: {
     "common-dialog-loaded": new Set(),
-    "tabmodal-dialog-loaded": new Set()
-  }
+    "tabmodal-dialog-loaded": new Set(),
+  },
 };
 
 /**
@@ -37,7 +39,7 @@ modal = {
  *     {@code modal.COMMON_DIALOG_LOADED} or
  *     {@code modal.TABMODAL_DIALOG_LOADED}.
  */
-modal.addHandler = function (handler) {
+modal.addHandler = function(handler) {
   if (!isFirefox()) {
     return;
   }
@@ -55,28 +57,32 @@ modal.addHandler = function (handler) {
  *     Reference to the browser context to check for existent dialogs.
  *
  * @return {modal.Dialog}
- *     Returns instance of the Dialog class, or `null` if no modal dialog is present.
+ *     Returns instance of the Dialog class, or `null` if no modal dialog
+ *     is present.
  */
-modal.findModalDialogs = function (context) {
-  // First check if there is a modal dialog already present for the current browser window.
+modal.findModalDialogs = function(context) {
+  // First check if there is a modal dialog already present for the
+  // current browser window.
   let winEn = Services.wm.getEnumerator(null);
   while (winEn.hasMoreElements()) {
     let win = winEn.getNext();
 
-    // Modal dialogs which do not have an opener set, we cannot detect as long
-    // as GetZOrderDOMWindowEnumerator doesn't work on Linux (Bug 156333).
-    if (win.document.documentURI === "chrome://global/content/commonDialog.xul" &&
+    // Modal dialogs which do not have an opener set, we cannot detect
+    // as long as GetZOrderDOMWindowEnumerator doesn't work on Linux
+    // (Bug 156333).
+    if (win.document.documentURI === COMMON_DIALOG &&
         win.opener && win.opener === context.window) {
       return new modal.Dialog(() => context, Cu.getWeakReference(win));
     }
   }
 
-  // If no modal dialog has been found, also check if there is an open tab modal
-  // dialog present for the current tab.
+  // If no modal dialog has been found, also check if there is an open
+  // tab modal dialog present for the current tab.
   // TODO: Find an adequate implementation for Fennec.
   if (context.tab && context.tabBrowser.getTabModalPromptBox) {
     let contentBrowser = context.contentBrowser;
-    let promptManager = context.tabBrowser.getTabModalPromptBox(contentBrowser);
+    let promptManager =
+        context.tabBrowser.getTabModalPromptBox(contentBrowser);
     let prompts = promptManager.listPrompts();
 
     if (prompts.length) {
@@ -96,7 +102,7 @@ modal.findModalDialogs = function (context) {
  *     The handler previously passed to modal.addHandler which will now
  *     be removed.
  */
-modal.removeHandler = function (toRemove) {
+modal.removeHandler = function(toRemove) {
   if (!isFirefox()) {
     return;
   }

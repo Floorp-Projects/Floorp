@@ -82,7 +82,7 @@ def _raw_log():
 
 
 def test_environment(xrePath, env=None, crashreporter=True, debugger=False,
-                     dmdPath=None, lsanPath=None, log=None):
+                     dmdPath=None, lsanPath=None, ubsanPath=None, log=None):
     """
     populate OS environment variables for mochitest and reftests.
 
@@ -226,6 +226,21 @@ def test_environment(xrePath, env=None, crashreporter=True, debugger=False,
         else:
             log.info("TEST-UNEXPECTED-FAIL | runtests.py | Failed to find TSan"
                      " symbolizer at %s" % llvmsym)
+
+    ubsan = bool(mozinfo.info.get("ubsan"))
+    if ubsan and (mozinfo.isLinux or mozinfo.isMac):
+        if ubsanPath:
+            log.info("UBSan enabled.")
+            ubsanOptions = []
+            suppressionsFile = os.path.join(
+                ubsanPath, 'ubsan_suppressions.txt')
+            if os.path.exists(suppressionsFile):
+                log.info("UBSan using suppression file " + suppressionsFile)
+                ubsanOptions.append("suppressions=" + suppressionsFile)
+            else:
+                log.info("WARNING | runtests.py | UBSan suppressions file"
+                         " does not exist! " + suppressionsFile)
+            env["UBSAN_OPTIONS"] = ':'.join(ubsanOptions)
 
     return env
 

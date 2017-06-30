@@ -43,14 +43,14 @@ const POPUP_RESULT_HISTOGRAM = "WEBEXT_BROWSERACTION_POPUP_PRELOAD_RESULT_COUNT"
 
 var XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
-function isAncestorOrSelf(target, node) {
+const isAncestorOrSelf = (target, node) => {
   for (; node; node = node.parentNode) {
     if (node === target) {
       return true;
     }
   }
   return false;
-}
+};
 
 // WeakMap[Extension -> BrowserAction]
 const browserActionMap = new WeakMap();
@@ -205,7 +205,7 @@ this.browserAction = class extends ExtensionAPI {
           // This isn't not a hack, but it seems to provide the correct behavior
           // with the fewest complications.
           event.preventDefault();
-          this.emit("click");
+          this.emit("click", tabbrowser.selectedBrowser);
         }
       },
     });
@@ -566,9 +566,10 @@ this.browserAction = class extends ExtensionAPI {
 
     return {
       browserAction: {
-        onClicked: new SingletonEventManager(context, "browserAction.onClicked", fire => {
-          let listener = () => {
-            fire.async(tabManager.convert(tabTracker.activeTab));
+        onClicked: new InputEventManager(context, "browserAction.onClicked", fire => {
+          let listener = (event, browser) => {
+            context.withPendingBrowser(browser, () =>
+              fire.sync(tabManager.convert(tabTracker.activeTab)));
           };
           browserAction.on("click", listener);
           return () => {

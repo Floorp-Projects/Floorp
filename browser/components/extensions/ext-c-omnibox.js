@@ -9,7 +9,7 @@ this.omnibox = class extends ExtensionAPI {
   getAPI(context) {
     return {
       omnibox: {
-        onInputChanged: new SingletonEventManager(context, "omnibox.onInputChanged", fire => {
+        onInputChanged: new EventManager(context, "omnibox.onInputChanged", fire => {
           let listener = (text, id) => {
             fire.asyncWithoutClone(text, suggestions => {
               context.childManager.callParentFunctionNoReturn("omnibox_internal.addSuggestions", [

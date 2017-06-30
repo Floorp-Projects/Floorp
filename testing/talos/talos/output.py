@@ -6,7 +6,7 @@
 """output formats for Talos"""
 
 import filter
-import json
+import simplejson as json
 import utils
 
 from mozlog import get_proxy_logger
@@ -194,10 +194,11 @@ class Output(object):
         # This is the output that treeherder expects to find when parsing the
         # log file
         if 'geckoProfile' not in self.results.extra_options:
-            LOG.info("PERFHERDER_DATA: %s" % json.dumps(results))
+            LOG.info("PERFHERDER_DATA: %s" % json.dumps(results,
+                                                        ignore_nan=True))
         if results_scheme in ('file'):
             json.dump(results, open(results_path, 'w'), indent=2,
-                      sort_keys=True)
+                      sort_keys=True, ignore_nan=True)
 
     def post(self, results, server, path, scheme, tbpl_output):
         raise NotImplementedError("Abstract base class")

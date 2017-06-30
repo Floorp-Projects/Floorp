@@ -149,6 +149,15 @@ function getInnerWindowID(window) {
   return getWinUtils(window).currentInnerWindowID;
 }
 
+function withHandlingUserInput(window, callable) {
+  let handle = getWinUtils(window).setHandlingUserInput(true);
+  try {
+    return callable();
+  } finally {
+    handle.destruct();
+  }
+}
+
 const LISTENERS = Symbol("listeners");
 const ONCE_MAP = Symbol("onceMap");
 
@@ -629,6 +638,7 @@ this.ExtensionUtils = {
   runSafeSync,
   runSafeSyncWithoutClone,
   runSafeWithoutClone,
+  withHandlingUserInput,
   DefaultMap,
   DefaultWeakMap,
   EventEmitter,

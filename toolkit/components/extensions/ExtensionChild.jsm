@@ -43,14 +43,15 @@ const {
   defineLazyGetter,
   getMessageManager,
   getUniqueId,
+  withHandlingUserInput,
 } = ExtensionUtils;
 
 const {
+  EventManager,
   LocalAPIImplementation,
   LocaleData,
   NoCloneSpreadArgs,
   SchemaAPIInterface,
-  SingletonEventManager,
 } = ExtensionCommon;
 
 const isContentProcess = Services.appinfo.processType == Services.appinfo.PROCESS_TYPE_CONTENT;
@@ -133,7 +134,7 @@ class Port {
         this.postMessage(json);
       },
 
-      onDisconnect: new SingletonEventManager(this.context, "Port.onDisconnect", fire => {
+      onDisconnect: new EventManager(this.context, "Port.onDisconnect", fire => {
         return this.registerOnDisconnect(holder => {
           let error = holder.deserialize(this.context.cloneScope);
           portError = error && this.context.normalizeError(error);
@@ -141,7 +142,7 @@ class Port {
         });
       }).api(),
 
-      onMessage: new SingletonEventManager(this.context, "Port.onMessage", fire => {
+      onMessage: new EventManager(this.context, "Port.onMessage", fire => {
         return this.registerOnMessage(holder => {
           let msg = holder.deserialize(this.context.cloneScope);
           fire.asyncWithoutClone(msg, portObj);
@@ -349,7 +350,7 @@ class Messenger {
   }
 
   _onMessage(name, filter) {
-    return new SingletonEventManager(this.context, name, fire => {
+    return new EventManager(this.context, name, fire => {
       let listener = {
         messageFilterPermissive: this.optionalFilter,
         messageFilterStrict: this.filter,
@@ -440,7 +441,7 @@ class Messenger {
   }
 
   _onConnect(name, filter) {
-    return new SingletonEventManager(this.context, name, fire => {
+    return new EventManager(this.context, name, fire => {
       let listener = {
         messageFilterPermissive: this.optionalFilter,
         messageFilterStrict: this.filter,
@@ -759,8 +760,9 @@ class ChildAPIManager {
 
         if (listener) {
           let args = data.args.deserialize(this.context.cloneScope);
-
-          return this.context.runSafeWithoutClone(listener, ...args);
+          let fire = () => this.context.runSafeWithoutClone(listener, ...args);
+          return (data.handlingUserInput) ?
+                 withHandlingUserInput(this.context.contentWindow, fire) : fire();
         }
         if (!map.removedIds.has(data.listenerId)) {
           Services.console.logStringMessage(

@@ -34,13 +34,13 @@ function pushPrefs(...aPrefs) {
  * Used to check whether the audio unblocking icon is in the tab.
  */
 async function waitForTabBlockEvent(tab, expectBlocked) {
-  if (tab.soundBlocked == expectBlocked) {
+  if (tab.activeMediaBlocked == expectBlocked) {
     ok(true, "The tab should " + (expectBlocked ? "" : "not ") + "be blocked");
   } else {
     info("Block state doens't match, wait for attributes changes.");
     await BrowserTestUtils.waitForEvent(tab, "TabAttrModified", false, (event) => {
-      if (event.detail.changed.indexOf("blocked") >= 0) {
-        is(tab.soundBlocked, expectBlocked, "The tab should " + (expectBlocked ? "" : "not ") + "be blocked");
+      if (event.detail.changed.indexOf("activemedia-blocked") >= 0) {
+        is(tab.activeMediaBlocked, expectBlocked, "The tab should " + (expectBlocked ? "" : "not ") + "be blocked");
         return true;
       }
       return false;

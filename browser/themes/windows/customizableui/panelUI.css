@@ -159,4 +159,14 @@ photonpanelmultiview .subviewbutton > .toolbarbutton-icon {
   padding: 0;
 }
 
+photonpanelmultiview .subviewbutton:-moz-any([image],[targetURI],.cui-withicon,
+  .restoreallitem, .bookmark-item) > .toolbarbutton-text {
+  padding-inline-start: 8px;
+}
+
+photonpanelmultiview .subviewbutton:-moz-any([image],[targetURI],.cui-withicon,
+  .restoreallitem, .bookmark-item)[checked="true"] > .toolbarbutton-icon {
+  visibility: visible;
+}
+
 /* END photon adjustments */

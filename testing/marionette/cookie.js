@@ -9,7 +9,10 @@ const {interfaces: Ci, utils: Cu} = Components;
 Cu.import("resource://gre/modules/Services.jsm");
 
 Cu.import("chrome://marionette/content/assert.js");
-Cu.import("chrome://marionette/content/error.js");
+const {
+  error,
+  InvalidCookieDomainError,
+} = Cu.import("chrome://marionette/content/error.js", {});
 
 this.EXPORTED_SYMBOLS = ["cookie"];
 
@@ -38,7 +41,7 @@ this.cookie = {
  * @throws {InvalidArgumentError}
  *     If any of the properties are invalid.
  */
-cookie.fromJSON = function (json) {
+cookie.fromJSON = function(json) {
   let newCookie = {};
 
   assert.object(json, error.pprint`Expected cookie object, got ${json}`);
@@ -82,7 +85,7 @@ cookie.fromJSON = function (json) {
  * @throws {InvalidCookieDomainError}
  *     If |restrictToHost| is set and |newCookie|'s domain does not match.
  */
-cookie.add = function (newCookie, opts = {}) {
+cookie.add = function(newCookie, opts = {}) {
   assert.string(newCookie.name, "Cookie name must be string");
   assert.string(newCookie.value, "Cookie value must be string");
   assert.string(newCookie.domain, "Cookie domain must be string");
@@ -105,7 +108,8 @@ cookie.add = function (newCookie, opts = {}) {
 
     if (newCookie.domain !== opts.restrictToHost) {
       throw new InvalidCookieDomainError(
-          `Cookies may only be set for the current domain (${opts.restrictToHost})`);
+          `Cookies may only be set ` +
+          ` for the current domain (${opts.restrictToHost})`);
     }
   }
 
@@ -132,7 +136,7 @@ cookie.add = function (newCookie, opts = {}) {
  * @param {Map.<string, (string|number|boolean)} toDelete
  *     Cookie to remove.
  */
-cookie.remove = function (toDelete) {
+cookie.remove = function(toDelete) {
   cookie.manager.remove(
       toDelete.domain,
       toDelete.name,
@@ -155,7 +159,7 @@ cookie.remove = function (toDelete) {
  * @return {[Symbol.Iterator]}
  *     Iterator.
  */
-cookie.iter = function* (host, currentPath = "/") {
+cookie.iter = function*(host, currentPath = "/") {
   assert.string(host, "host must be string");
   assert.string(currentPath, "currentPath must be string");
 
@@ -176,7 +180,7 @@ cookie.iter = function* (host, currentPath = "/") {
           "domain": cookie.host,
           "secure": cookie.isSecure,
           "httpOnly": cookie.isHttpOnly,
-          "expiry": cookie.expires,
+          "expiry": cookie.expiry,
         };
       }
       hostname = hostname.replace(/^.*?\./, "");

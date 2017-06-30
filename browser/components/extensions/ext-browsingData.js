@@ -32,18 +32,18 @@ XPCOMUtils.defineLazyGetter(this, "sanitizer", () => {
   return sanitizer;
 });
 
-function makeRange(options) {
+const makeRange = options => {
   return (options.since == null) ?
     null :
     [PlacesUtils.toPRTime(options.since), PlacesUtils.toPRTime(Date.now())];
-}
+};
 
-function clearCache() {
+const clearCache = () => {
   // Clearing the cache does not support timestamps.
   return sanitizer.items.cache.clear();
-}
+};
 
-let clearCookies = async function(options) {
+const clearCookies = async function(options) {
   let cookieMgr = Services.cookies;
   // This code has been borrowed from sanitize.js.
   let yieldCounter = 0;
@@ -70,19 +70,19 @@ let clearCookies = async function(options) {
   }
 };
 
-function clearDownloads(options) {
+const clearDownloads = options => {
   return sanitizer.items.downloads.clear(makeRange(options));
-}
+};
 
-function clearFormData(options) {
+const clearFormData = options => {
   return sanitizer.items.formdata.clear(makeRange(options));
-}
+};
 
-function clearHistory(options) {
+const clearHistory = options => {
   return sanitizer.items.history.clear(makeRange(options));
-}
+};
 
-let clearPasswords = async function(options) {
+const clearPasswords = async function(options) {
   let loginManager = Services.logins;
   let yieldCounter = 0;
 
@@ -104,11 +104,11 @@ let clearPasswords = async function(options) {
   }
 };
 
-function clearPluginData(options) {
+const clearPluginData = options => {
   return sanitizer.items.pluginData.clear(makeRange(options));
-}
+};
 
-let clearServiceWorkers = async function() {
+const clearServiceWorkers = async function() {
   // Clearing service workers does not support timestamps.
   let yieldCounter = 0;
 
@@ -124,7 +124,7 @@ let clearServiceWorkers = async function() {
   }
 };
 
-function doRemoval(options, dataToRemove, extension) {
+const doRemoval = (options, dataToRemove, extension) => {
   if (options.originTypes &&
       (options.originTypes.protectedWeb || options.originTypes.extension)) {
     return Promise.reject(
@@ -170,7 +170,7 @@ function doRemoval(options, dataToRemove, extension) {
       `Firefox does not support dataTypes: ${invalidDataTypes.toString()}.`);
   }
   return Promise.all(removalPromises);
-}
+};
 
 this.browsingData = class extends ExtensionAPI {
   getAPI(context) {

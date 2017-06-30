@@ -3,6 +3,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 "use strict";
+/* global XPCNativeWrapper */
 
 const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
@@ -10,7 +11,13 @@ Cu.import("resource://gre/modules/Log.jsm");
 
 Cu.import("chrome://marionette/content/assert.js");
 Cu.import("chrome://marionette/content/atom.js");
-Cu.import("chrome://marionette/content/error.js");
+const {
+  error,
+  InvalidSelectorError,
+  JavaScriptError,
+  NoSuchElementError,
+  StaleElementReferenceError,
+} = Cu.import("chrome://marionette/content/error.js", {});
 Cu.import("chrome://marionette/content/wait.js");
 
 const logger = Log.repository.getLogger("Marionette");
@@ -166,7 +173,7 @@ element.Store = class {
       el = el.get();
     } catch (e) {
       el = null;
-      delete this.els[id];
+      delete this.els[uuid];
     }
 
     // use XPCNativeWrapper to compare elements (see bug 834266)
@@ -240,7 +247,7 @@ element.Store = class {
  *     If a single element is requested, this error will throw if the
  *     element is not found.
  */
-element.find = function (container, strategy, selector, opts = {}) {
+element.find = function(container, strategy, selector, opts = {}) {
   opts.all = !!opts.all;
   opts.timeout = opts.timeout || 0;
 
@@ -268,7 +275,8 @@ element.find = function (container, strategy, selector, opts = {}) {
         let msg;
         switch (strategy) {
           case element.Strategy.AnonAttribute:
-            msg = "Unable to locate anonymous element: " + JSON.stringify(selector);
+            msg = "Unable to locate anonymous element: " +
+                JSON.stringify(selector);
             break;
 
           default:
@@ -294,8 +302,8 @@ function find_(container, strategy, selector, searchFn, opts) {
     startNode = opts.startNode;
   } else {
     switch (strategy) {
-      // For anonymous nodes the start node needs to be of type DOMElement, which
-      // will refer to :root in case of a DOMDocument.
+      // For anonymous nodes the start node needs to be of type
+      // DOMElement, which will refer to :root in case of a DOMDocument.
       case element.Strategy.Anon:
       case element.Strategy.AnonAttribute:
         if (rootNode instanceof Ci.nsIDOMDocument) {
@@ -338,7 +346,7 @@ function find_(container, strategy, selector, searchFn, opts) {
  * @return {DOMElement}
  *     First element matching expression.
  */
-element.findByXPath = function (root, startNode, expr) {
+element.findByXPath = function(root, startNode, expr) {
   let iter = root.evaluate(expr, startNode, null,
       Ci.nsIDOMXPathResult.FIRST_ORDERED_NODE_TYPE, null);
   return iter.singleNodeValue;
@@ -357,7 +365,7 @@ element.findByXPath = function (root, startNode, expr) {
  * @return {Array.<DOMElement>}
  *     Sequence of found elements matching expression.
  */
-element.findByXPathAll = function (root, startNode, expr) {
+element.findByXPathAll = function(root, startNode, expr) {
   let rv = [];
   let iter = root.evaluate(expr, startNode, null,
       Ci.nsIDOMXPathResult.ORDERED_NODE_ITERATOR_TYPE, null);
@@ -380,7 +388,7 @@ element.findByXPathAll = function (root, startNode, expr) {
  * @return {Array.<DOMAnchorElement>}
  *     Sequence of link elements which text is |s|.
  */
-element.findByLinkText = function (node, s) {
+element.findByLinkText = function(node, s) {
   return filterLinks(node, link => link.text.trim() === s);
 };
 
@@ -395,7 +403,7 @@ element.findByLinkText = function (node, s) {
  * @return {Array.<DOMAnchorElement>}
  *     Sequence of link elements which text containins |s|.
  */
-element.findByPartialLinkText = function (node, s) {
+element.findByPartialLinkText = function(node, s) {
   return filterLinks(node, link => link.text.indexOf(s) != -1);
 };
 
@@ -444,27 +452,33 @@ function filterLinks(node, predicate) {
 function findElement(using, value, rootNode, startNode) {
   switch (using) {
     case element.Strategy.ID:
-      if (startNode.getElementById) {
-        return startNode.getElementById(value);
+      {
+        if (startNode.getElementById) {
+          return startNode.getElementById(value);
+        }
+        let expr = `.//*[@id="${value}"]`;
+        return element.findByXPath( rootNode, startNode, expr);
       }
-      return element.findByXPath(rootNode, startNode, `.//*[@id="${value}"]`);
 
     case element.Strategy.Name:
-      if (startNode.getElementsByName) {
-        return startNode.getElementsByName(value)[0];
+      {
+        if (startNode.getElementsByName) {
+          return startNode.getElementsByName(value)[0];
+        }
+        let expr = `.//*[@name="${value}"]`;
+        return element.findByXPath(rootNode, startNode, expr);
       }
-      return element.findByXPath(rootNode, startNode, `.//*[@name="${value}"]`);
 
     case element.Strategy.ClassName:
       // works for >= Firefox 3
-      return  startNode.getElementsByClassName(value)[0];
+      return startNode.getElementsByClassName(value)[0];
 
     case element.Strategy.TagName:
       // works for all elements
       return startNode.getElementsByTagName(value)[0];
 
     case element.Strategy.XPath:
-      return  element.findByXPath(rootNode, startNode, value);
+      return element.findByXPath(rootNode, startNode, value);
 
     case element.Strategy.LinkText:
       for (let link of startNode.getElementsByTagName("a")) {
@@ -472,7 +486,7 @@ function findElement(using, value, rootNode, startNode) {
           return link;
         }
       }
-      break;
+      return undefined;
 
     case element.Strategy.PartialLinkText:
       for (let link of startNode.getElementsByTagName("a")) {
@@ -480,7 +494,7 @@ function findElement(using, value, rootNode, startNode) {
           return link;
         }
       }
-      break;
+      return undefined;
 
     case element.Strategy.Selector:
       try {
@@ -488,18 +502,17 @@ function findElement(using, value, rootNode, startNode) {
       } catch (e) {
         throw new InvalidSelectorError(`${e.message}: "${value}"`);
       }
-      break;
 
     case element.Strategy.Anon:
       return rootNode.getAnonymousNodes(startNode);
 
     case element.Strategy.AnonAttribute:
       let attr = Object.keys(value)[0];
-      return rootNode.getAnonymousElementByAttribute(startNode, attr, value[attr]);
-
-    default:
-      throw new InvalidSelectorError(`No such strategy: ${using}`);
+      return rootNode.getAnonymousElementByAttribute(
+          startNode, attr, value[attr]);
   }
+
+  throw new InvalidSelectorError(`No such strategy: ${using}`);
 }
 
 /**
@@ -535,7 +548,8 @@ function findElements(using, value, rootNode, startNode) {
       if (startNode.getElementsByName) {
         return startNode.getElementsByName(value);
       }
-      return element.findByXPathAll(rootNode, startNode, `.//*[@name="${value}"]`);
+      return element.findByXPathAll(
+          rootNode, startNode, `.//*[@name="${value}"]`);
 
     case element.Strategy.ClassName:
       return startNode.getElementsByClassName(value);
@@ -557,7 +571,8 @@ function findElements(using, value, rootNode, startNode) {
 
     case element.Strategy.AnonAttribute:
       let attr = Object.keys(value)[0];
-      let el = rootNode.getAnonymousElementByAttribute(startNode, attr, value[attr]);
+      let el = rootNode.getAnonymousElementByAttribute(
+          startNode, attr, value[attr]);
       if (el) {
         return [el];
       }
@@ -569,7 +584,7 @@ function findElements(using, value, rootNode, startNode) {
 }
 
 /** Determines if |obj| is an HTML or JS collection. */
-element.isCollection = function (seq) {
+element.isCollection = function(seq) {
   switch (Object.prototype.toString.call(seq)) {
     case "[object Arguments]":
     case "[object Array]":
@@ -586,7 +601,7 @@ element.isCollection = function (seq) {
   }
 };
 
-element.makeWebElement = function (uuid) {
+element.makeWebElement = function(uuid) {
   return {
     [element.Key]: uuid,
     [element.LegacyKey]: uuid,
@@ -594,16 +609,18 @@ element.makeWebElement = function (uuid) {
 };
 
 /**
- * Checks if |ref| has either |element.Key| or |element.LegacyKey| as properties.
+ * Checks if |ref| has either |element.Key| or |element.LegacyKey|
+ * as properties.
  *
  * @param {?} ref
  *     Object that represents a web element reference.
  * @return {boolean}
  *     True if |ref| has either expected property.
  */
-element.isWebElementReference = function (ref) {
+element.isWebElementReference = function(ref) {
   let properties = Object.getOwnPropertyNames(ref);
-  return properties.includes(element.Key) || properties.includes(element.LegacyKey);
+  return properties.includes(element.Key) ||
+      properties.includes(element.LegacyKey);
 };
 
 element.generateUUID = function() {
@@ -624,11 +641,11 @@ element.generateUUID = function() {
  * @return {boolean}
  *     Flag indicating that the element is disconnected.
  */
-element.isDisconnected = function (el, container = {}) {
+element.isDisconnected = function(el, container = {}) {
   const {frame, shadowRoot} = container;
   assert.defined(frame);
 
-  // shadow dom
+  // shadow DOM
   if (frame.ShadowRoot && shadowRoot) {
     if (el.compareDocumentPosition(shadowRoot) &
         DOCUMENT_POSITION_DISCONNECTED) {
@@ -642,14 +659,13 @@ element.isDisconnected = function (el, container = {}) {
     }
     return element.isDisconnected(
         shadowRoot.host,
-        {frame: frame, shadowRoot: parent});
-
-  // outside shadow dom
-  } else {
-    let docEl = frame.document.documentElement;
-    return el.compareDocumentPosition(docEl) &
-        DOCUMENT_POSITION_DISCONNECTED;
+        {frame, shadowRoot: parent});
   }
+
+  // outside shadow DOM
+  let docEl = frame.document.documentElement;
+  return el.compareDocumentPosition(docEl) &
+      DOCUMENT_POSITION_DISCONNECTED;
 };
 
 /**
@@ -672,7 +688,7 @@ element.isDisconnected = function (el, container = {}) {
  * @throws TypeError
  *     If |xOffset| or |yOffset| are not numbers.
  */
-element.coordinates = function (
+element.coordinates = function(
     node, xOffset = undefined, yOffset = undefined) {
 
   let box = node.getBoundingClientRect();
@@ -709,14 +725,14 @@ element.coordinates = function (
  * @return {boolean}
  *     True if if |el| is in viewport, false otherwise.
  */
-element.inViewport = function (el, x = undefined, y = undefined) {
+element.inViewport = function(el, x = undefined, y = undefined) {
   let win = el.ownerGlobal;
   let c = element.coordinates(el, x, y);
   let vp = {
     top: win.pageYOffset,
     left: win.pageXOffset,
     bottom: (win.pageYOffset + win.innerHeight),
-    right: (win.pageXOffset + win.innerWidth)
+    right: (win.pageXOffset + win.innerWidth),
   };
 
   return (vp.left <= c.x + win.pageXOffset &&
@@ -742,7 +758,7 @@ element.inViewport = function (el, x = undefined, y = undefined) {
  * @return {Element}
  *     Container element of |el|.
  */
-element.getContainer = function (el) {
+element.getContainer = function(el) {
   if (el.localName != "option") {
     return el;
   }
@@ -784,7 +800,7 @@ element.getContainer = function (el) {
  * @return {boolean}
  *     True if |el| is inside the viewport, or false otherwise.
  */
-element.isInView = function (el) {
+element.isInView = function(el) {
   let originalPointerEvents = el.style.pointerEvents;
   try {
     el.style.pointerEvents = "auto";
@@ -811,7 +827,7 @@ element.isInView = function (el) {
  * @return {boolean}
  *     True if visible, false otherwise.
  */
-element.isVisible = function (el, x = undefined, y = undefined) {
+element.isVisible = function(el, x = undefined, y = undefined) {
   let win = el.ownerGlobal;
 
   // Bug 1094246: webdriver's isShown doesn't work with content xul
@@ -848,7 +864,7 @@ element.isVisible = function (el, x = undefined, y = undefined) {
  * @return {boolean}
  *     True if element is obscured, false otherwise.
  */
-element.isObscured = function (el) {
+element.isObscured = function(el) {
   let tree = element.getPointerInteractablePaintTree(el);
   return !el.contains(tree[0]);
 };
@@ -866,7 +882,7 @@ element.isObscured = function (el) {
  * @return {Map.<string, number>}
  *     X and Y coordinates that denotes the in-view centre point of |rect|.
  */
-element.getInViewCentrePoint = function (rect, win) {
+element.getInViewCentrePoint = function(rect, win) {
   const {max, min} = Math;
 
   let x = {
@@ -897,7 +913,7 @@ element.getInViewCentrePoint = function (rect, win) {
  * @return {Array.<DOMElement>}
  *     Sequence of elements in paint order.
  */
-element.getPointerInteractablePaintTree = function (el) {
+element.getPointerInteractablePaintTree = function(el) {
   const doc = el.ownerDocument;
   const win = doc.defaultView;
   const container = {frame: win};
@@ -929,7 +945,7 @@ element.getPointerInteractablePaintTree = function (el) {
 
 // TODO(ato): Not implemented.
 // In fact, it's not defined in the spec.
-element.isKeyboardInteractable = function (el) {
+element.isKeyboardInteractable = function(el) {
   return true;
 };
 
@@ -939,13 +955,13 @@ element.isKeyboardInteractable = function (el) {
  * @param {DOMElement} el
  *     Element to scroll into view.
  */
-element.scrollIntoView = function (el) {
+element.scrollIntoView = function(el) {
   if (el.scrollIntoView) {
     el.scrollIntoView({block: "end", inline: "nearest", behavior: "instant"});
   }
 };
 
-element.isXULElement = function (el) {
+element.isXULElement = function(el) {
   let ns = atom.getElementAttribute(el, "namespaceURI");
   return ns.indexOf("there.is.only.xul") >= 0;
 };
@@ -959,7 +975,15 @@ const boolEls = {
   form: ["novalidate"],
   iframe: ["allowfullscreen"],
   img: ["ismap"],
-  input: ["autofocus", "checked", "disabled", "formnovalidate", "multiple", "readonly", "required"],
+  input: [
+    "autofocus",
+    "checked",
+    "disabled",
+    "formnovalidate",
+    "multiple",
+    "readonly",
+    "required",
+  ],
   keygen: ["autofocus", "disabled"],
   menuitem: ["checked", "default", "disabled"],
   object: ["typemustmatch"],
@@ -984,14 +1008,15 @@ const boolEls = {
  * @return {boolean}
  *     True if the attribute is boolean, false otherwise.
  */
-element.isBooleanAttribute = function (el, attr) {
+element.isBooleanAttribute = function(el, attr) {
   if (el.namespaceURI !== XMLNS) {
     return false;
   }
 
   // global boolean attributes that apply to all HTML elements,
   // except for custom elements
-  if ((attr == "hidden" || attr == "itemscope") && !el.localName.includes("-")) {
+  const customElement = !el.localName.includes("-");
+  if ((attr == "hidden" || attr == "itemscope") && customElement) {
     return true;
   }
 

@@ -34,16 +34,21 @@
   skin/classic/browser/controlcenter/warning-gray.svg          (../shared/controlcenter/warning-gray.svg)
   skin/classic/browser/controlcenter/warning-yellow.svg        (../shared/controlcenter/warning-yellow.svg)
   skin/classic/browser/customizableui/customizeFavicon.ico     (../shared/customizableui/customizeFavicon.ico)
+  skin/classic/browser/customizableui/menuPanel-customizeFinish.png  (../shared/customizableui/menuPanel-customizeFinish.png)
+  skin/classic/browser/customizableui/menuPanel-customizeFinish@2x.png  (../shared/customizableui/menuPanel-customizeFinish@2x.png)
+#ifdef MOZ_PHOTON_THEME
+  skin/classic/browser/customizableui/empty-overflow-panel.png     (../shared/customizableui/empty-overflow-panel.png)
+  skin/classic/browser/customizableui/empty-overflow-panel@2x.png  (../shared/customizableui/empty-overflow-panel@2x.png)
+#else
   skin/classic/browser/customizableui/customize-illustration.png  (../shared/customizableui/customize-illustration.png)
   skin/classic/browser/customizableui/customize-illustration@2x.png  (../shared/customizableui/customize-illustration@2x.png)
   skin/classic/browser/customizableui/customize-illustration-rtl.png  (../shared/customizableui/customize-illustration-rtl.png)
   skin/classic/browser/customizableui/customize-illustration-rtl@2x.png  (../shared/customizableui/customize-illustration-rtl@2x.png)
   skin/classic/browser/customizableui/info-icon-customizeTip.png  (../shared/customizableui/info-icon-customizeTip.png)
   skin/classic/browser/customizableui/info-icon-customizeTip@2x.png  (../shared/customizableui/info-icon-customizeTip@2x.png)
-  skin/classic/browser/customizableui/menuPanel-customizeFinish.png  (../shared/customizableui/menuPanel-customizeFinish.png)
-  skin/classic/browser/customizableui/menuPanel-customizeFinish@2x.png  (../shared/customizableui/menuPanel-customizeFinish@2x.png)
   skin/classic/browser/customizableui/panelarrow-customizeTip.png  (../shared/customizableui/panelarrow-customizeTip.png)
   skin/classic/browser/customizableui/panelarrow-customizeTip@2x.png  (../shared/customizableui/panelarrow-customizeTip@2x.png)
+#endif
   skin/classic/browser/customizableui/subView-arrow-back-inverted.png  (../shared/customizableui/subView-arrow-back-inverted.png)
   skin/classic/browser/customizableui/subView-arrow-back-inverted@2x.png  (../shared/customizableui/subView-arrow-back-inverted@2x.png)
   skin/classic/browser/customizableui/subView-arrow-back-inverted-rtl.png  (../shared/customizableui/subView-arrow-back-inverted-rtl.png)
@@ -53,6 +58,9 @@
   skin/classic/browser/downloads/contentAreaDownloadsView.css  (../shared/downloads/contentAreaDownloadsView.css)
   skin/classic/browser/downloads/download-blocked.svg          (../shared/downloads/download-blocked.svg)
   skin/classic/browser/downloads/download-summary.svg          (../shared/downloads/download-summary.svg)
+#ifdef MOZ_PHOTON_THEME
+  skin/classic/browser/downloads/download-icons.svg            (../shared/downloads/download-icons.svg)
+#endif
   skin/classic/browser/drm-icon.svg                            (../shared/drm-icon.svg)
   skin/classic/browser/fullscreen/insecure.svg                 (../shared/fullscreen/insecure.svg)
   skin/classic/browser/fullscreen/secure.svg                   (../shared/fullscreen/secure.svg)
@@ -122,9 +130,7 @@
   skin/classic/browser/developer.svg                  (../shared/icons/developer.svg)
   skin/classic/browser/device-mobile.svg              (../shared/icons/device-mobile.svg)
   skin/classic/browser/device-desktop.svg             (../shared/icons/device-desktop.svg)
-#ifdef MOZ_PHOTON_THEME
-  skin/classic/browser/download-arrow-with-bar.svg    (../shared/icons/download-arrow-with-bar.svg)
-#else
+#ifndef MOZ_PHOTON_THEME
   skin/classic/browser/download.svg                   (../shared/icons/download.svg)
 #endif
   skin/classic/browser/edit-copy.svg                  (../shared/icons/edit-copy.svg)

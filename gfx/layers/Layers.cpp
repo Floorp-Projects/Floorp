@@ -242,7 +242,6 @@ Layer::ClearAnimations()
 
   MOZ_LAYERS_LOG_IF_SHADOWABLE(this, ("Layer::Mutated(%p) ClearAnimations", this));
   mAnimations.Clear();
-  mCompositorAnimationsId = 0;
   mAnimationData.Clear();
   Mutated();
 }

@@ -452,6 +452,11 @@ pub const F_SETFD: ::c_int = 2;
 pub const F_GETFL: ::c_int = 3;
 pub const F_SETFL: ::c_int = 4;
 
+pub const AT_EACCESS: ::c_int = 0x100;
+pub const AT_SYMLINK_NOFOLLOW: ::c_int = 0x200;
+pub const AT_SYMLINK_FOLLOW: ::c_int = 0x400;
+pub const AT_REMOVEDIR: ::c_int = 0x800;
+
 pub const SIGTRAP: ::c_int = 5;
 
 pub const GLOB_APPEND  : ::c_int = 0x0001;
@@ -540,13 +545,100 @@ pub const MINCORE_REFERENCED_OTHER: ::c_int = 0x8;
 pub const MINCORE_MODIFIED_OTHER: ::c_int = 0x10;
 pub const MINCORE_SUPER: ::c_int = 0x20;
 
+pub const AF_UNSPEC: ::c_int = 0;
+pub const AF_LOCAL: ::c_int = 1;
+pub const AF_UNIX: ::c_int = AF_LOCAL;
 pub const AF_INET: ::c_int = 2;
+pub const AF_IMPLINK: ::c_int = 3;
+pub const AF_PUP: ::c_int = 4;
+pub const AF_CHAOS: ::c_int = 5;
+pub const AF_NETBIOS: ::c_int = 6;
+pub const AF_ISO: ::c_int = 7;
+pub const AF_OSI: ::c_int = AF_ISO;
+pub const AF_ECMA: ::c_int = 8;
+pub const AF_DATAKIT: ::c_int = 9;
+pub const AF_CCITT: ::c_int = 10;
+pub const AF_SNA: ::c_int = 11;
+pub const AF_DECnet: ::c_int = 12;
+pub const AF_DLI: ::c_int = 13;
+pub const AF_LAT: ::c_int = 14;
+pub const AF_HYLINK: ::c_int = 15;
+pub const AF_APPLETALK: ::c_int = 16;
+pub const AF_ROUTE: ::c_int = 17;
+pub const AF_LINK: ::c_int = 18;
+pub const pseudo_AF_XTP: ::c_int = 19;
+pub const AF_COIP: ::c_int = 20;
+pub const AF_CNT: ::c_int = 21;
+pub const pseudo_AF_RTIP: ::c_int = 22;
+pub const AF_IPX: ::c_int = 23;
+pub const AF_SIP: ::c_int = 24;
+pub const pseudo_AF_PIP: ::c_int = 25;
+pub const AF_ISDN: ::c_int = 26;
+pub const AF_E164: ::c_int = AF_ISDN;
+pub const pseudo_AF_KEY: ::c_int = 27;
 pub const AF_INET6: ::c_int = 28;
-pub const AF_UNIX: ::c_int = 1;
+pub const AF_NATM: ::c_int = 29;
+pub const AF_ATM: ::c_int = 30;
+pub const pseudo_AF_HDRCMPLT: ::c_int = 31;
+pub const AF_NETGRAPH: ::c_int = 32;
+
+pub const PF_UNSPEC: ::c_int = AF_UNSPEC;
+pub const PF_LOCAL: ::c_int = AF_LOCAL;
+pub const PF_UNIX: ::c_int = PF_LOCAL;
+pub const PF_INET: ::c_int = AF_INET;
+pub const PF_IMPLINK: ::c_int = AF_IMPLINK;
+pub const PF_PUP: ::c_int = AF_PUP;
+pub const PF_CHAOS: ::c_int = AF_CHAOS;
+pub const PF_NETBIOS: ::c_int = AF_NETBIOS;
+pub const PF_ISO: ::c_int = AF_ISO;
+pub const PF_OSI: ::c_int = AF_ISO;
+pub const PF_ECMA: ::c_int = AF_ECMA;
+pub const PF_DATAKIT: ::c_int = AF_DATAKIT;
+pub const PF_CCITT: ::c_int = AF_CCITT;
+pub const PF_SNA: ::c_int = AF_SNA;
+pub const PF_DECnet: ::c_int = AF_DECnet;
+pub const PF_DLI: ::c_int = AF_DLI;
+pub const PF_LAT: ::c_int = AF_LAT;
+pub const PF_HYLINK: ::c_int = AF_HYLINK;
+pub const PF_APPLETALK: ::c_int = AF_APPLETALK;
+pub const PF_ROUTE: ::c_int = AF_ROUTE;
+pub const PF_LINK: ::c_int = AF_LINK;
+pub const PF_XTP: ::c_int = pseudo_AF_XTP;
+pub const PF_COIP: ::c_int = AF_COIP;
+pub const PF_CNT: ::c_int = AF_CNT;
+pub const PF_SIP: ::c_int = AF_SIP;
+pub const PF_IPX: ::c_int = AF_IPX;
+pub const PF_RTIP: ::c_int = pseudo_AF_RTIP;
+pub const PF_PIP: ::c_int = pseudo_AF_PIP;
+pub const PF_ISDN: ::c_int = AF_ISDN;
+pub const PF_KEY: ::c_int = pseudo_AF_KEY;
+pub const PF_INET6: ::c_int = AF_INET6;
+pub const PF_NATM: ::c_int = AF_NATM;
+pub const PF_ATM: ::c_int = AF_ATM;
+pub const PF_NETGRAPH: ::c_int = AF_NETGRAPH;
+
+pub const SOMAXCONN: ::c_int = 128;
+
+pub const MSG_OOB: ::c_int = 0x00000001;
+pub const MSG_PEEK: ::c_int = 0x00000002;
+pub const MSG_DONTROUTE: ::c_int = 0x00000004;
+pub const MSG_EOR: ::c_int =  0x00000008;
+pub const MSG_TRUNC: ::c_int = 0x00000010;
+pub const MSG_CTRUNC: ::c_int = 0x00000020;
+pub const MSG_WAITALL: ::c_int = 0x00000040;
+pub const MSG_DONTWAIT: ::c_int = 0x00000080;
+pub const MSG_EOF: ::c_int = 0x00000100;
+
 pub const SOCK_STREAM: ::c_int = 1;
 pub const SOCK_DGRAM: ::c_int = 2;
 pub const SOCK_RAW: ::c_int = 3;
+pub const SOCK_RDM: ::c_int = 4;
 pub const SOCK_SEQPACKET: ::c_int = 5;
+pub const SOCK_CLOEXEC: ::c_int = 0x10000000;
+pub const SOCK_NONBLOCK: ::c_int = 0x20000000;
+pub const SOCK_MAXADDRLEN: ::c_int = 255;
+pub const IPPROTO_ICMP: ::c_int = 1;
+pub const IPPROTO_ICMPV6: ::c_int = 58;
 pub const IPPROTO_TCP: ::c_int = 6;
 pub const IPPROTO_IP: ::c_int = 0;
 pub const IPPROTO_IPV6: ::c_int = 41;
@@ -572,6 +664,9 @@ pub const SO_USELOOPBACK: ::c_int = 0x0040;
 pub const SO_LINGER: ::c_int = 0x0080;
 pub const SO_OOBINLINE: ::c_int = 0x0100;
 pub const SO_REUSEPORT: ::c_int = 0x0200;
+pub const SO_TIMESTAMP: ::c_int = 0x0400;
+pub const SO_NOSIGPIPE: ::c_int = 0x0800;
+pub const SO_ACCEPTFILTER: ::c_int = 0x1000;
 pub const SO_SNDBUF: ::c_int = 0x1001;
 pub const SO_RCVBUF: ::c_int = 0x1002;
 pub const SO_SNDLOWAT: ::c_int = 0x1003;
@@ -751,9 +846,43 @@ pub const SLIPDISC: ::c_int = 0x4;
 pub const PPPDISC: ::c_int = 0x5;
 pub const NETGRAPHDISC: ::c_int = 0x6;
 
+pub const B0: speed_t = 0;
+pub const B50: speed_t = 50;
+pub const B75: speed_t = 75;
+pub const B110: speed_t = 110;
+pub const B134: speed_t = 134;
+pub const B150: speed_t = 150;
+pub const B200: speed_t = 200;
+pub const B300: speed_t = 300;
+pub const B600: speed_t = 600;
+pub const B1200: speed_t = 1200;
+pub const B1800: speed_t = 1800;
+pub const B2400: speed_t = 2400;
+pub const B4800: speed_t = 4800;
+pub const B9600: speed_t = 9600;
+pub const B19200: speed_t = 19200;
+pub const B38400: speed_t = 38400;
+pub const B7200: speed_t = 7200;
+pub const B14400: speed_t = 14400;
+pub const B28800: speed_t = 28800;
+pub const B57600: speed_t = 57600;
+pub const B76800: speed_t = 76800;
+pub const B115200: speed_t = 115200;
+pub const B230400: speed_t = 230400;
+pub const EXTA: speed_t = 19200;
+pub const EXTB: speed_t = 38400;
+
 pub const SEM_FAILED: *mut sem_t = 0 as *mut sem_t;
 
+pub const CRTSCTS: ::tcflag_t = 0x00030000;
+
+pub const AT_FDCWD: ::c_int = -100;
+
 f! {
+    pub fn WIFCONTINUED(status: ::c_int) -> bool {
+        status == 0x13
+    }
+
     pub fn WSTOPSIG(status: ::c_int) -> ::c_int {
         status >> 8
     }
@@ -789,6 +918,7 @@ extern {
     pub fn aio_cancel(fd: ::c_int, aiocbp: *mut aiocb) -> ::c_int;
     pub fn lio_listio(mode: ::c_int, aiocb_list: *const *mut aiocb,
                       nitems: ::c_int, sevp: *mut sigevent) -> ::c_int;
+    pub fn dirfd(dirp: *mut ::DIR) -> ::c_int;
     pub fn getnameinfo(sa: *const ::sockaddr,
                        salen: ::socklen_t,
                        host: *mut ::c_char,
@@ -858,6 +988,8 @@ extern {
                      base: ::locale_t) -> ::locale_t;
     pub fn uselocale(loc: ::locale_t) -> ::locale_t;
     pub fn querylocale(mask: ::c_int, loc: ::locale_t) -> *const ::c_char;
+    pub fn accept4(s: ::c_int, addr: *mut ::sockaddr,
+                   addrlen: *mut ::socklen_t, flags: ::c_int) -> ::c_int;
     pub fn pthread_set_name_np(tid: ::pthread_t, name: *const ::c_char);
     pub fn pthread_attr_get_np(tid: ::pthread_t,
                                attr: *mut ::pthread_attr_t) -> ::c_int;
@@ -866,38 +998,23 @@ extern {
     pub fn pthread_attr_getstack(attr: *const ::pthread_attr_t,
                                  stackaddr: *mut *mut ::c_void,
                                  stacksize: *mut ::size_t) -> ::c_int;
+    pub fn pthread_condattr_setpshared(attr: *mut pthread_condattr_t,
+                                       pshared: ::c_int) -> ::c_int;
+    pub fn pthread_condattr_getpshared(attr: *const pthread_condattr_t,
+                                       pshared: *mut ::c_int) -> ::c_int;
+    pub fn pthread_mutexattr_setpshared(attr: *mut pthread_mutexattr_t,
+                                        pshared: ::c_int) -> ::c_int;
+    pub fn pthread_mutexattr_getpshared(attr: *const pthread_mutexattr_t,
+                                        pshared: *mut ::c_int) -> ::c_int;
     pub fn getpriority(which: ::c_int, who: ::c_int) -> ::c_int;
     pub fn setpriority(which: ::c_int, who: ::c_int, prio: ::c_int) -> ::c_int;
 
-    pub fn openat(dirfd: ::c_int, pathname: *const ::c_char,
-                  flags: ::c_int, ...) -> ::c_int;
-    pub fn faccessat(dirfd: ::c_int, pathname: *const ::c_char,
-                     mode: ::c_int, flags: ::c_int) -> ::c_int;
-    pub fn fchmodat(dirfd: ::c_int, pathname: *const ::c_char,
-                    mode: ::mode_t, flags: ::c_int) -> ::c_int;
-    pub fn fchownat(dirfd: ::c_int, pathname: *const ::c_char,
-                    owner: ::uid_t, group: ::gid_t,
-                    flags: ::c_int) -> ::c_int;
-    pub fn fstatat(dirfd: ::c_int, pathname: *const ::c_char,
-                   buf: *mut stat, flags: ::c_int) -> ::c_int;
-    pub fn linkat(olddirfd: ::c_int, oldpath: *const ::c_char,
-                  newdirfd: ::c_int, newpath: *const ::c_char,
-                  flags: ::c_int) -> ::c_int;
-   pub fn mkdirat(dirfd: ::c_int, pathname: *const ::c_char,
-                  mode: ::mode_t) -> ::c_int;
-   pub fn mknodat(dirfd: ::c_int, pathname: *const ::c_char,
-                 mode: ::mode_t, dev: dev_t) -> ::c_int;
-   pub fn readlinkat(dirfd: ::c_int, pathname: *const ::c_char,
-                     buf: *mut ::c_char, bufsiz: ::size_t) -> ::ssize_t;
-   pub fn renameat(olddirfd: ::c_int, oldpath: *const ::c_char,
-                   newdirfd: ::c_int, newpath: *const ::c_char)
-                   -> ::c_int;
-   pub fn symlinkat(target: *const ::c_char, newdirfd: ::c_int,
-                    linkpath: *const ::c_char) -> ::c_int;
-   pub fn unlinkat(dirfd: ::c_int, pathname: *const ::c_char,
-                   flags: ::c_int) -> ::c_int;
-   pub fn mkfifoat(dirfd: ::c_int, pathname: *const ::c_char,
-                   mode: ::mode_t) -> ::c_int;
+    pub fn fdopendir(fd: ::c_int) -> *mut ::DIR;
+
+    pub fn mknodat(dirfd: ::c_int, pathname: *const ::c_char,
+                  mode: ::mode_t, dev: dev_t) -> ::c_int;
+    pub fn mkfifoat(dirfd: ::c_int, pathname: *const ::c_char,
+                    mode: ::mode_t) -> ::c_int;
     pub fn pthread_condattr_getclock(attr: *const pthread_condattr_t,
                                      clock_id: *mut clockid_t) -> ::c_int;
     pub fn pthread_condattr_setclock(attr: *mut pthread_condattr_t,
@@ -907,6 +1024,12 @@ extern {
                          abstime: *const ::timespec) -> ::c_int;
     pub fn pthread_mutex_timedlock(lock: *mut pthread_mutex_t,
                                    abstime: *const ::timespec) -> ::c_int;
+    pub fn pipe2(fds: *mut ::c_int, flags: ::c_int) -> ::c_int;
+    pub fn ppoll(fds: *mut ::pollfd,
+                 nfds: ::nfds_t,
+                 timeout: *const ::timespec,
+                 sigmask: *const sigset_t) -> ::c_int;
+    pub fn settimeofday(tv: *const ::timeval, tz: *const ::timezone) -> ::c_int;
 }
 
 cfg_if! {

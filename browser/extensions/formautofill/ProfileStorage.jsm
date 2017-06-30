@@ -193,24 +193,38 @@ class AutofillRecords {
    */
   add(record) {
     this.log.debug("add:", record);
+    let recordToSave;
+    if (record.deleted) {
+      if (!record.guid) {
+        throw new Error("you must specify the GUID when creating a tombstone");
+      }
+      if (this._findByGUID(record.guid, {includeDeleted: true})) {
+        throw new Error("a record with this GUID already exists");
+      }
+      recordToSave = {
+        guid: record.guid,
+        timeLastModified: record.timeLastModified || Date.now(),
+        deleted: true,
+      };
+    } else {
+      recordToSave = this._clone(record);
+      this._normalizeRecord(recordToSave);
 
-    let recordToSave = this._clone(record);
-    this._normalizeRecord(recordToSave);
+      let guid;
+      while (!guid || this._findByGUID(guid)) {
+        guid = gUUIDGenerator.generateUUID().toString()
+                             .replace(/[{}-]/g, "").substring(0, 12);
+      }
+      recordToSave.guid = guid;
+      recordToSave.version = this.version;
 
-    let guid;
-    while (!guid || this._findByGUID(guid)) {
-      guid = gUUIDGenerator.generateUUID().toString()
-                           .replace(/[{}-]/g, "").substring(0, 12);
+      // Metadata
+      let now = Date.now();
+      recordToSave.timeCreated = now;
+      recordToSave.timeLastModified = now;
+      recordToSave.timeLastUsed = 0;
+      recordToSave.timesUsed = 0;
     }
-    recordToSave.guid = guid;
-    recordToSave.version = this.version;
-
-    // Metadata
-    let now = Date.now();
-    recordToSave.timeCreated = now;
-    recordToSave.timeLastModified = now;
-    recordToSave.timeLastUsed = 0;
-    recordToSave.timesUsed = 0;
 
     this._store.data[this._collectionName].push(recordToSave);
     this._store.saveSoon();
@@ -283,8 +297,17 @@ class AutofillRecords {
   remove(guid) {
     this.log.debug("remove:", guid);
 
-    this._store.data[this._collectionName] =
-      this._store.data[this._collectionName].filter(record => record.guid != guid);
+    let index = this._findIndexByGUID(guid);
+    if (index == -1) {
+      this.log.warn("attempting to remove non-existing entry", guid);
+      return;
+    }
+    // replace the record with a tombstone.
+    this._store.data[this._collectionName][index] = {
+      guid,
+      timeLastModified: Date.now(),
+      deleted: true,
+    };
     this._store.saveSoon();
 
     Services.obs.notifyObservers(null, "formautofill-storage-changed", "remove");
@@ -315,19 +338,20 @@ class AutofillRecords {
   /**
    * Returns all records.
    *
-   * @param   {Object} config
-   *          Specifies how data will be retrieved.
-   * @param   {boolean} config.noComputedFields
+   * @param   {boolean} [options.noComputedFields = false]
    *          Returns raw record without those computed fields.
+   * @param   {boolean} [options.includeDeleted = false]
+   *          Also return any tombstone records.
    * @returns {Array.<Object>}
    *          An array containing clones of all records.
    */
-  getAll(config = {}) {
-    this.log.debug("getAll", config);
+  getAll({noComputedFields = false, includeDeleted = false} = {}) {
+    this.log.debug("getAll", noComputedFields, includeDeleted);
 
+    let records = this._store.data[this._collectionName].filter(r => !r.deleted || includeDeleted);
     // Records are cloned to avoid accidental modifications from outside.
-    let clonedRecords = this._store.data[this._collectionName].map(this._clone);
-    clonedRecords.forEach(record => this._recordReadProcessor(record, config));
+    let clonedRecords = records.map(this._clone);
+    clonedRecords.forEach(record => this._recordReadProcessor(record, {noComputedFields}));
     return clonedRecords;
   }
 
@@ -362,13 +386,15 @@ class AutofillRecords {
     return Object.assign({}, record);
   }
 
-  _findByGUID(guid) {
-    let found = this._findIndexByGUID(guid);
+  _findByGUID(guid, {includeDeleted = false} = {}) {
+    let found = this._findIndexByGUID(guid, {includeDeleted});
     return found < 0 ? undefined : this._store.data[this._collectionName][found];
   }
 
-  _findIndexByGUID(guid) {
-    return this._store.data[this._collectionName].findIndex(record => record.guid == guid);
+  _findIndexByGUID(guid, {includeDeleted = false} = {}) {
+    return this._store.data[this._collectionName].findIndex(record => {
+      return record.guid == guid && (!record.deleted || includeDeleted);
+    });
   }
 
   _normalizeRecord(record) {
@@ -386,7 +412,7 @@ class AutofillRecords {
   }
 
   // An interface to be inherited.
-  _recordReadProcessor(record, config) {}
+  _recordReadProcessor(record, {noComputedFields = false} = {}) {}
 
   // An interface to be inherited.
   _recordWriteProcessor(record) {}
@@ -579,7 +605,7 @@ class Addresses extends AutofillRecords {
   mergeToStorage(targetAddress) {
     let mergedGUIDs = [];
     for (let address of this._store.data[this._collectionName]) {
-      if (this.mergeIfPossible(address.guid, targetAddress)) {
+      if (!address.deleted && this.mergeIfPossible(address.guid, targetAddress)) {
         mergedGUIDs.push(address.guid);
       }
     }

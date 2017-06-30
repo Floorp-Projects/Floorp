@@ -332,9 +332,11 @@ CustomizeMode.prototype = {
         this.visiblePalette.hidden = true;
         this.visiblePalette.removeAttribute("showing");
 
-        // Disable the button-text fade-out mask
-        // during the transition for increased perf.
-        window.PanelUI.contents.setAttribute("customize-transitioning", "true");
+        if (!AppConstants.MOZ_PHOTON_THEME) {
+          // Disable the button-text fade-out mask
+          // during the transition for increased perf.
+          window.PanelUI.contents.setAttribute("customize-transitioning", "true");
+        }
 
         // Move the mainView in the panel to the holder so that we can see it
         // while customizing.
@@ -412,7 +414,9 @@ CustomizeMode.prototype = {
       this._updateEmptyPaletteNotice();
 
       this._updateLWThemeButtonIcon();
-      this.maybeShowTip(panelHolder);
+      if (!AppConstants.MOZ_PHOTON_THEME) {
+        this.maybeShowTip(panelHolder);
+      }
 
       this._handler.isEnteringCustomizeMode = false;
       if (!gPhotonStructure) {
@@ -634,6 +638,17 @@ CustomizeMode.prototype = {
    * excluding certain styles while in any phase of customize mode.
    */
   _doTransition(aEntering) {
+    if (AppConstants.MOZ_PHOTON_THEME) {
+      let docEl = this.document.documentElement;
+      if (aEntering) {
+        docEl.setAttribute("customizing", true);
+        docEl.setAttribute("customize-entered", true);
+      } else {
+        docEl.removeAttribute("customizing");
+        docEl.removeAttribute("customize-entered");
+      }
+      return Promise.resolve();
+    }
     let deck = this.document.getElementById("content-deck");
     let customizeTransitionEndPromise = new Promise(resolve => {
       let customizeTransitionEnd = (aEvent) => {

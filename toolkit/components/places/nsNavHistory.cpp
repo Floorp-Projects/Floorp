@@ -3976,6 +3976,7 @@ nsNavHistory::QueryRowToResult(int64_t itemId,
       // This is a regular query.
       resultNode = new nsNavHistoryQueryResultNode(aTitle, aTime, queries, options);
       resultNode->mItemId = itemId;
+      resultNode->mBookmarkGuid = aBookmarkGuid;
     }
   }
 
@@ -3986,6 +3987,7 @@ nsNavHistory::QueryRowToResult(int64_t itemId,
     // whole result.  Instead make a generic empty query node.
     resultNode = new nsNavHistoryQueryResultNode(aTitle, aURI);
     resultNode->mItemId = itemId;
+    resultNode->mBookmarkGuid = aBookmarkGuid;
     // This is a perf hack to generate an empty query that skips filtering.
     resultNode->GetAsQuery()->Options()->SetExcludeItems(true);
   }

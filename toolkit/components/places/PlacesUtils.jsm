@@ -1111,6 +1111,9 @@ this.PlacesUtils = {
    */
   getFolderContents:
   function PU_getFolderContents(aFolderId, aExcludeItems, aExpandQueries) {
+    if (typeof aFolderId !== "number") {
+      throw new Error("aFolderId should be a number.");
+    }
     var query = this.history.getNewQuery();
     query.setFolders([aFolderId], 1);
     var options = this.history.getNewQueryOptions();

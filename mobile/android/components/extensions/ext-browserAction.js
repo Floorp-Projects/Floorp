@@ -13,7 +13,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "BrowserActions",
                                   "resource://gre/modules/BrowserActions.jsm");
 
 // WeakMap[Extension -> BrowserAction]
-var browserActionMap = new WeakMap();
+let browserActionMap = new WeakMap();
 
 class BrowserAction {
   constructor(options, extension) {
@@ -147,7 +147,7 @@ this.browserAction = class extends ExtensionAPI {
 
     return {
       browserAction: {
-        onClicked: new SingletonEventManager(context, "browserAction.onClicked", fire => {
+        onClicked: new EventManager(context, "browserAction.onClicked", fire => {
           let listener = (event, tab) => {
             fire.async(tabManager.convert(tab));
           };

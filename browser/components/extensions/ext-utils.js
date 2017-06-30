@@ -122,7 +122,7 @@ class WindowTracker extends WindowTrackerBase {
  * @param {function} listener
  *        The listener function to call when a DOM event is received.
  */
-global.WindowEventManager = class extends SingletonEventManager {
+global.WindowEventManager = class extends EventManager {
   constructor(context, name, event, listener) {
     super(context, name, fire => {
       let listener2 = listener.bind(null, fire);

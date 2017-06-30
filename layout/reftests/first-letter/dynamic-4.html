@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+  <style>
+    span.x { color: green; }
+    div::first-letter { font-size: 100px; }
+  </style>
+  <div style="color: red">
+    <span>X</span>
+  </div>
+  <script>
+  addEventListener("load", function() {
+    // Make sure we do our class change after we've done our next restyle, so we
+    // won't get a spurious restyle hiding the problem we're testing.
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        var s = document.querySelector("span");
+        s.className = 'x'
+        document.documentElement.className = "";
+      });
+    });
+  });
+  </script>
+</html>
