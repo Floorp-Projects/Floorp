@@ -46,9 +46,7 @@ MemoryBlockCache::MemoryBlockCache(int64_t aContentLength)
   , mHasGrown(false)
 {
   if (aContentLength <= 0) {
-    LOG("@%p MemoryBlockCache() "
-        "MEMORYBLOCKCACHE_ERRORS='InitUnderuse'",
-        this);
+    LOG("MemoryBlockCache() MEMORYBLOCKCACHE_ERRORS='InitUnderuse'");
     Telemetry::Accumulate(Telemetry::HistogramID::MEMORYBLOCKCACHE_ERRORS,
                           InitUnderuse);
   }
@@ -143,16 +141,16 @@ MemoryBlockCache::Init()
 {
   MutexAutoLock lock(mMutex);
   if (mBuffer.IsEmpty()) {
-    LOG("@%p Init()", this);
+    LOG("Init()");
     // Attempt to pre-allocate buffer for expected content length.
     if (!EnsureBufferCanContain(mInitialContentLength)) {
-      LOG("@%p Init() MEMORYBLOCKCACHE_ERRORS='InitAllocation'", this);
+      LOG("Init() MEMORYBLOCKCACHE_ERRORS='InitAllocation'");
       Telemetry::Accumulate(Telemetry::HistogramID::MEMORYBLOCKCACHE_ERRORS,
                             InitAllocation);
       return NS_ERROR_FAILURE;
     }
   } else {
-    LOG("@%p Init() again", this);
+    LOG("Init() again");
     // Re-initialization - Just erase data.
     MOZ_ASSERT(mBuffer.Length() >= mInitialContentLength);
     memset(mBuffer.Elements(), 0, mBuffer.Length());
@@ -172,16 +170,12 @@ MemoryBlockCache::WriteBlock(uint32_t aBlockIndex,
   size_t offset = BlockIndexToOffset(aBlockIndex);
   if (offset + aData1.Length() + aData2.Length() > mBuffer.Length() &&
       !mHasGrown) {
-    LOG("@%p WriteBlock() "
-        "MEMORYBLOCKCACHE_ERRORS='WriteBlockOverflow'",
-        this);
+    LOG("WriteBlock() MEMORYBLOCKCACHE_ERRORS='WriteBlockOverflow'");
     Telemetry::Accumulate(Telemetry::HistogramID::MEMORYBLOCKCACHE_ERRORS,
                           WriteBlockOverflow);
   }
   if (!EnsureBufferCanContain(offset + aData1.Length() + aData2.Length())) {
-    LOG("%p WriteBlock() "
-        "MEMORYBLOCKCACHE_ERRORS='WriteBlockCannotGrow'",
-        this);
+    LOG("WriteBlock() MEMORYBLOCKCACHE_ERRORS='WriteBlockCannotGrow'");
     Telemetry::Accumulate(Telemetry::HistogramID::MEMORYBLOCKCACHE_ERRORS,
                           WriteBlockCannotGrow);
     return NS_ERROR_FAILURE;
@@ -207,7 +201,7 @@ MemoryBlockCache::Read(int64_t aOffset,
 
   MOZ_ASSERT(aOffset >= 0);
   if (aOffset + aLength > int64_t(mBuffer.Length())) {
-    LOG("@%p Read() MEMORYBLOCKCACHE_ERRORS='ReadOverrun'", this);
+    LOG("Read() MEMORYBLOCKCACHE_ERRORS='ReadOverrun'");
     Telemetry::Accumulate(Telemetry::HistogramID::MEMORYBLOCKCACHE_ERRORS,
                           ReadOverrun);
     return NS_ERROR_FAILURE;
@@ -227,24 +221,18 @@ MemoryBlockCache::MoveBlock(int32_t aSourceBlockIndex, int32_t aDestBlockIndex)
   size_t sourceOffset = BlockIndexToOffset(aSourceBlockIndex);
   size_t destOffset = BlockIndexToOffset(aDestBlockIndex);
   if (sourceOffset + BLOCK_SIZE > mBuffer.Length()) {
-    LOG("@%p MoveBlock() "
-        "MEMORYBLOCKCACHE_ERRORS='MoveBlockSourceOverrun'",
-        this);
+    LOG("MoveBlock() MEMORYBLOCKCACHE_ERRORS='MoveBlockSourceOverrun'");
     Telemetry::Accumulate(Telemetry::HistogramID::MEMORYBLOCKCACHE_ERRORS,
                           MoveBlockSourceOverrun);
     return NS_ERROR_FAILURE;
   }
   if (destOffset + BLOCK_SIZE > mBuffer.Length() && !mHasGrown) {
-    LOG("@%p MoveBlock() "
-        "MEMORYBLOCKCACHE_ERRORS='MoveBlockDestOverflow'",
-        this);
+    LOG("MoveBlock() MEMORYBLOCKCACHE_ERRORS='MoveBlockDestOverflow'");
     Telemetry::Accumulate(Telemetry::HistogramID::MEMORYBLOCKCACHE_ERRORS,
                           MoveBlockDestOverflow);
   }
   if (!EnsureBufferCanContain(destOffset + BLOCK_SIZE)) {
-    LOG("@%p MoveBlock() "
-        "MEMORYBLOCKCACHE_ERRORS='MoveBlockCannotGrow'",
-        this);
+    LOG("MoveBlock() MEMORYBLOCKCACHE_ERRORS='MoveBlockCannotGrow'");
     Telemetry::Accumulate(Telemetry::HistogramID::MEMORYBLOCKCACHE_ERRORS,
                           MoveBlockCannotGrow);
     return NS_ERROR_FAILURE;
