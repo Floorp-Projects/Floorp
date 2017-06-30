@@ -47,7 +47,7 @@ TEST_F(APZCSnappingTester, Bug1265510)
   // Advance in 5ms increments until we've scrolled by 70px. At this point, the
   // closest snap point is y=100, and the inner frame should be under the mouse
   // cursor.
-  while (outer->GetCurrentAsyncScrollOffset(AsyncPanZoomController::AsyncMode::NORMAL).y < 70) {
+  while (outer->GetCurrentAsyncScrollOffset(AsyncPanZoomController::AsyncTransformConsumer::eForHitTesting).y < 70) {
     mcc->AdvanceByMillis(5);
     outer->AdvanceAnimations(mcc->Time());
   }
@@ -56,10 +56,10 @@ TEST_F(APZCSnappingTester, Bug1265510)
   TimeStamp newTransactionTime = now + TimeDuration::FromMilliseconds(gfxPrefs::MouseWheelTransactionTimeoutMs() + 100);
   SmoothWheel(manager, ScreenIntPoint(50, 80), ScreenPoint(0, 6), newTransactionTime);
   inner->AdvanceAnimationsUntilEnd();
-  EXPECT_LT(0.0f, inner->GetCurrentAsyncScrollOffset(AsyncPanZoomController::AsyncMode::NORMAL).y);
+  EXPECT_LT(0.0f, inner->GetCurrentAsyncScrollOffset(AsyncPanZoomController::AsyncTransformConsumer::eForHitTesting).y);
 
   // However, the outer frame should also continue to the snap point, otherwise
   // it is demonstrating incorrect behaviour by violating the mandatory snapping.
   outer->AdvanceAnimationsUntilEnd();
-  EXPECT_EQ(100.0f, outer->GetCurrentAsyncScrollOffset(AsyncPanZoomController::AsyncMode::NORMAL).y);
+  EXPECT_EQ(100.0f, outer->GetCurrentAsyncScrollOffset(AsyncPanZoomController::AsyncTransformConsumer::eForHitTesting).y);
 }

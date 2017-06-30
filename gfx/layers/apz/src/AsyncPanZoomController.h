@@ -785,16 +785,24 @@ public:
    */
 public:
   /**
-   * Allows callers to specify which type of async transform they want:
-   * NORMAL provides the actual async transforms of the APZC, whereas
-   * RESPECT_FORCE_DISABLE will provide empty async transforms if and only if
-   * the metrics has the mForceDisableApz flag set. In general the latter should
-   * only be used by call sites that are applying the transform to update
-   * a layer's position.
+   * Allows consumers of async transforms to specify for what purpose they are
+   * using the async transform:
+   *
+   *   |eForHitTesting| is intended for hit-testing and other uses that need
+   *                    the most up-to-date transform, reflecting all events
+   *                    that have been processed so far, even if the transform
+   *                    is not yet reflected visually.
+   *   |eForCompositing| is intended for the transform that should be reflected
+   *                     visually.
+   *
+   * For example, if an APZC has metrics with the mForceDisableApz flag set,
+   * then the |eForCompositing| async transform will be empty, while the
+   * |eForHitTesting| async transform will reflect processed input events
+   * regardless of mForceDisableApz.
    */
-  enum AsyncMode {
-    NORMAL,
-    RESPECT_FORCE_DISABLE,
+  enum AsyncTransformConsumer {
+    eForHitTesting,
+    eForCompositing,
   };
 
   /**
@@ -802,20 +810,20 @@ public:
    * to this APZC, including the effects of any asynchronous panning and
    * zooming, in ParentLayer pixels.
    */
-  ParentLayerPoint GetCurrentAsyncScrollOffset(AsyncMode aMode) const;
+  ParentLayerPoint GetCurrentAsyncScrollOffset(AsyncTransformConsumer aMode) const;
 
   /**
    * Get the current scroll offset of the scrollable frame corresponding
    * to this APZC, including the effects of any asynchronous panning, in
    * CSS pixels.
    */
-  CSSPoint GetCurrentAsyncScrollOffsetInCssPixels(AsyncMode aMode) const;
+  CSSPoint GetCurrentAsyncScrollOffsetInCssPixels(AsyncTransformConsumer aMode) const;
 
   /**
    * Return a visual effect that reflects this apzc's
    * overscrolled state, if any.
    */
-  AsyncTransformComponentMatrix GetOverscrollTransform(AsyncMode aMode) const;
+  AsyncTransformComponentMatrix GetOverscrollTransform(AsyncTransformConsumer aMode) const;
 
   /**
    * Returns the incremental transformation corresponding to the async pan/zoom
@@ -823,13 +831,13 @@ public:
    * existing transform, it will make the layer appear with the desired pan/zoom
    * amount.
    */
-  AsyncTransform GetCurrentAsyncTransform(AsyncMode aMode) const;
+  AsyncTransform GetCurrentAsyncTransform(AsyncTransformConsumer aMode) const;
 
   /**
    * Returns the same transform as GetCurrentAsyncTransform(), but includes
    * any transform due to axis over-scroll.
    */
-  AsyncTransformComponentMatrix GetCurrentAsyncTransformWithOverscroll(AsyncMode aMode) const;
+  AsyncTransformComponentMatrix GetCurrentAsyncTransformWithOverscroll(AsyncTransformConsumer aMode) const;
 
 
   /* ===================================================================
