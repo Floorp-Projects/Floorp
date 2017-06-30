@@ -1,0 +1,21 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">
+  <rect x="1" y="1" width="30" height="30" rx="2" ry="2" fill="#fff"/>
+  <path d="M3 1h26c1.1 0 2 .479 2 1.071V14H1V2.071C1 1.479 1.9 1 3 1z" fill="#f9f9fa"/>
+  <path d="M1 13.5h30" fill="none" stroke="#adadb3"/>
+  <rect x="1" y="1" width="30" height="30" rx="2" ry="2" fill="none" stroke="#adadb3" stroke-width="2"/>
+  <g opacity=".8" fill="none" stroke="#0c0c0d" stroke-linecap="round">
+    <path d="M3.5 7.5h6"/>
+    <path stroke-linejoin="round" d="M6.5 4.5l-3 3 3 3"/>
+  </g>
+  <g opacity=".8" fill="none" stroke="#0c0c0d" stroke-linecap="round">
+    <path d="M18.5 7.5h-6"/>
+    <path stroke-linejoin="round" d="M15.5 4.5l3 3-3 3"/>
+  </g>
+  <g opacity=".8" fill="none" stroke="#000" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M28.5 4.5v2h-2"/>
+    <path d="M27.623 9.614a3.03 3.03 0 1 1 .636-3.324"/>
+  </g>
+</svg>
