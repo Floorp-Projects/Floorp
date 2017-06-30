@@ -80,6 +80,8 @@ TEST_HARNESS_FILES.testing.mochitest.tests.layout.style.test['css-visited'] += [
     '/layout/reftests/css-visited/mathml-links.html',
     '/layout/reftests/css-visited/outline-1-ref.html',
     '/layout/reftests/css-visited/outline-1.html',
+    '/layout/reftests/css-visited/placeholder-1-ref.html',
+    '/layout/reftests/css-visited/placeholder-1.html',
     '/layout/reftests/css-visited/selector-adj-sibling-1-ref.html',
     '/layout/reftests/css-visited/selector-adj-sibling-1.html',
     '/layout/reftests/css-visited/selector-adj-sibling-2-ref.html',
