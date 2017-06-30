@@ -44,6 +44,12 @@ from xpcshellcommandline import parser_desktop
 
 SCRIPT_DIR = os.path.abspath(os.path.realpath(os.path.dirname(__file__)))
 
+try:
+    from mozbuild.base import MozbuildObject
+    build = MozbuildObject.from_environment(cwd=SCRIPT_DIR)
+except ImportError:
+    build = None
+
 HARNESS_TIMEOUT = 5 * 60
 
 # benchmarking on tbpl revealed that this works best for now
@@ -834,7 +840,8 @@ class XPCShellTests(object):
         else:
             test_object['id'] = path
 
-        test_object['manifest'] = os.path.relpath(test_object['manifest'], root)
+        if root:
+            test_object['manifest'] = os.path.relpath(test_object['manifest'], root)
 
         if os.sep != '/':
             for key in ('id', 'manifest'):
@@ -859,7 +866,11 @@ class XPCShellTests(object):
             self.singleFile = None
 
         mp = self.getTestManifest(self.manifest)
-        normalize = partial(self.normalizeTest, mp.rootdir)
+
+        root = mp.rootdir
+        if build and not root:
+            root = build.topsrcdir
+        normalize = partial(self.normalizeTest, root)
 
         filters = []
         if test_tags:

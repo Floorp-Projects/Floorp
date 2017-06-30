@@ -19,15 +19,39 @@ set -ex
 # which apparently magically accepts the licenses.
 
 mkdir sdk
-curl https://dl.google.com/android/android-sdk_r24.4.1-linux.tgz | \
-    tar xzf - -C sdk --strip-components=1
+curl https://dl.google.com/android/repository/tools_r25.2.5-linux.zip -O
+unzip -d sdk tools_r25.2.5-linux.zip
 
-filter="platform-tools,android-21"
-filter="$filter,sys-img-armeabi-v7a-android-21"
+filter="platform-tools,android-24"
 
-./accept-licenses.sh "android - update sdk -a --no-ui --filter $filter"
+case "$1" in
+  arm | armv7)
+    abi=armeabi-v7a
+    ;;
+
+  aarch64)
+    abi=arm64-v8a
+    ;;
+
+  i686)
+    abi=x86
+    ;;
+
+  x86_64)
+    abi=x86_64
+    ;;
+
+  *)
+    echo "invalid arch: $1"
+    exit 1
+    ;;
+esac;
+
+filter="$filter,sys-img-$abi-android-24"
+
+./android-accept-licenses.sh "android - update sdk -a --no-ui --filter $filter"
 
 echo "no" | android create avd \
-                --name arm-21 \
-                --target android-21 \
-                --abi armeabi-v7a
+                --name $1 \
+                --target android-24 \
+                --abi $abi

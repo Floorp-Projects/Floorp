@@ -232,7 +232,7 @@ this.pageAction = class extends ExtensionAPI {
   // If the page action has a |popup| property, a panel is opened to
   // that URL. Otherwise, a "click" event is emitted, and dispatched to
   // the any click listeners in the add-on.
-  handleClick(window) {
+  async handleClick(window) {
     TelemetryStopwatch.start(popupOpenTimingHistogram, this);
     let tab = window.gBrowser.selectedTab;
     let popupURL = this.tabContext.get(tab).popup;
@@ -244,8 +244,9 @@ this.pageAction = class extends ExtensionAPI {
     // If it has no popup URL defined, we dispatch a click event, but do not
     // open a popup.
     if (popupURL) {
-      new PanelPopup(this.extension, this.getButton(window), popupURL,
-                     this.browserStyle);
+      let popup = new PanelPopup(this.extension, this.getButton(window),
+                                 popupURL, this.browserStyle);
+      await popup.contentReady;
       TelemetryStopwatch.finish(popupOpenTimingHistogram, this);
     } else {
       TelemetryStopwatch.cancel(popupOpenTimingHistogram, this);
@@ -268,9 +269,10 @@ this.pageAction = class extends ExtensionAPI {
 
     return {
       pageAction: {
-        onClicked: new SingletonEventManager(context, "pageAction.onClicked", fire => {
+        onClicked: new InputEventManager(context, "pageAction.onClicked", fire => {
           let listener = (evt, tab) => {
-            fire.async(tabManager.convert(tab));
+            context.withPendingBrowser(tab.linkedBrowser, () =>
+              fire.sync(tabManager.convert(tab)));
           };
 
           pageAction.on("click", listener);

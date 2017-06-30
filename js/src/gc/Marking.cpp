@@ -2985,6 +2985,8 @@ js::TenuringTracer::moveObjectToTenured(JSObject* dst, JSObject* src, AllocKind 
         // inline ProxyValueArray.
         MOZ_ASSERT(src->as<ProxyObject>().usingInlineValueArray());
         dst->as<ProxyObject>().setInlineValueArray();
+        if (JSObjectMovedOp op = dst->getClass()->extObjectMovedOp())
+            op(dst, src);
     } else if (JSObjectMovedOp op = dst->getClass()->extObjectMovedOp()) {
         op(dst, src);
     } else if (src->getClass()->hasFinalize()) {

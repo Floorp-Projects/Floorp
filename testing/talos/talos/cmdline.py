@@ -165,6 +165,9 @@ def create_parser(mach_interface=False):
             help="print available tests")
     add_arg('--print-suites', action=_ListSuite,
             help="list available suites")
+    add_arg('--no-upload-results', action="store_true",
+            dest='no_upload_results',
+            help="If given, it disables uploading of talos results.")
 
     add_logging_group(parser)
     return parser

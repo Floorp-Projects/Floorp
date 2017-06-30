@@ -26,3 +26,8 @@ s! {
         pub int_n_sign_posn: ::c_char,
     }
 }
+
+extern {
+    pub fn accept4(s: ::c_int, addr: *mut ::sockaddr,
+                   addrlen: *mut ::socklen_t, flags: ::c_int) -> ::c_int;
+}

@@ -499,7 +499,7 @@ protected:
   nsCString                         mEntityID;
   uint64_t                          mStartPos;
 
-  nsresult                          mStatus;
+  Atomic<nsresult, ReleaseAcquire>  mStatus;
   uint32_t                          mLoadFlags;
   uint32_t                          mCaps;
   uint32_t                          mClassOfService;

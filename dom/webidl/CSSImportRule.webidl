@@ -10,7 +10,10 @@
 // https://drafts.csswg.org/cssom/#cssimportrule
 interface CSSImportRule : CSSRule {
   readonly attribute DOMString href;
-  [SameObject, PutForwards=mediaText] readonly attribute MediaList media;
+  // Per spec, the .media is never null, but in our implementation it can
+  // be since stylesheet can be null, and in Stylo, media is derived from
+  // the stylesheet.  See <https://bugzilla.mozilla.org/show_bug.cgi?id=1326509>.
+  [SameObject, PutForwards=mediaText] readonly attribute MediaList? media;
   // Per spec, the .styleSheet is never null, but in our implementation it can
   // be.  See <https://bugzilla.mozilla.org/show_bug.cgi?id=1326509>.
   [SameObject] readonly attribute CSSStyleSheet? styleSheet;

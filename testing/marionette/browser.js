@@ -3,11 +3,15 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 "use strict";
+/* global frame */
 
 const {utils: Cu} = Components;
 
 Cu.import("chrome://marionette/content/element.js");
-Cu.import("chrome://marionette/content/error.js");
+const {
+  NoSuchWindowError,
+  UnsupportedOperationError,
+} = Cu.import("chrome://marionette/content/error.js", {});
 Cu.import("chrome://marionette/content/frame.js");
 
 this.EXPORTED_SYMBOLS = ["browser"];
@@ -25,18 +29,17 @@ const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
  * @return {<xul:browser>}
  *     The linked browser for the tab or null if no browser can be found.
  */
-browser.getBrowserForTab = function (tab) {
+browser.getBrowserForTab = function(tab) {
+  // Fennec
   if ("browser" in tab) {
-    // Fennec
     return tab.browser;
 
+  // Firefox
   } else if ("linkedBrowser" in tab) {
-    // Firefox
     return tab.linkedBrowser;
-
-  } else {
-    return null;
   }
+
+  return null;
 };
 
 /**
@@ -48,18 +51,17 @@ browser.getBrowserForTab = function (tab) {
  * @return {<xul:tabbrowser>}
  *     Tab browser or null if it's not a browser window.
  */
-browser.getTabBrowser = function (win) {
+browser.getTabBrowser = function(win) {
+  // Fennec
   if ("BrowserApp" in win) {
-    // Fennec
     return win.BrowserApp;
 
+  // Firefox
   } else if ("gBrowser" in win) {
-    // Firefox
     return win.gBrowser;
-
-  } else {
-    return null;
   }
+
+  return null;
 };
 
 /**
@@ -96,13 +98,13 @@ browser.Context = class {
 
     this.seenEls = new element.Store();
 
-    // A reference to the tab corresponding to the current window handle, if any.
-    // Specifically, this.tab refers to the last tab that Marionette switched
-    // to in this browser window. Note that this may not equal the currently
-    // selected tab. For example, if Marionette switches to tab A, and then
-    // clicks on a button that opens a new tab B in the same browser window,
-    // this.tab will still point to tab A, despite tab B being the currently
-    // selected tab.
+    // A reference to the tab corresponding to the current window handle,
+    // if any.  Specifically, this.tab refers to the last tab that Marionette
+    // switched to in this browser window. Note that this may not equal the
+    // currently selected tab.  For example, if Marionette switches to tab
+    // A, and then clicks on a button that opens a new tab B in the same
+    // browser window, this.tab will still point to tab A, despite tab B
+    // being the currently selected tab.
     this.tab = null;
     this.pendingCommands = [];
 
@@ -126,7 +128,8 @@ browser.Context = class {
   get contentBrowser() {
     if (this.tab) {
       return browser.getBrowserForTab(this.tab);
-    } else if (this.tabBrowser && this.driver.isReftestBrowser(this.tabBrowser)) {
+    } else if (this.tabBrowser &&
+        this.driver.isReftestBrowser(this.tabBrowser)) {
       return this.tabBrowser;
     }
 
@@ -140,7 +143,7 @@ browser.Context = class {
    */
   get curFrameId() {
     let rv = null;
-     if (this.tab || this.driver.isReftestBrowser(this.contentBrowser) ) {
+    if (this.tab || this.driver.isReftestBrowser(this.contentBrowser)) {
       rv = this.getIdForBrowser(this.contentBrowser);
     }
     return rv;
@@ -160,10 +163,9 @@ browser.Context = class {
     // initialization been finished
     if (this.contentBrowser) {
       return this.contentBrowser.currentURI;
-    } else {
-      throw new NoSuchWindowError(
-          "Current window does not have a content browser");
     }
+    throw new NoSuchWindowError(
+        "Current window does not have a content browser");
   }
 
   /**
@@ -230,7 +232,10 @@ browser.Context = class {
   closeTab() {
     // If the current window is not a browser then close it directly. Do the
     // same if only one remaining tab is open, or no tab selected at all.
-    if (!this.tabBrowser || !this.tabBrowser.tabs || this.tabBrowser.tabs.length === 1 || !this.tab) {
+    if (!this.tabBrowser ||
+        !this.tabBrowser.tabs ||
+        this.tabBrowser.tabs.length === 1 ||
+        !this.tab) {
       return this.closeWindow();
     }
 
@@ -267,7 +272,8 @@ browser.Context = class {
   }
 
   /**
-   * Set the current tab and update remoteness tracking if a tabbrowser is available.
+   * Set the current tab and update remoteness tracking if a tabbrowser
+   * is available.
    *
    * @param {number=} index
    *     Tab index to switch to. If the parameter is undefined,
@@ -445,14 +451,17 @@ browser.Windows = class extends Map {
    *     Outer window ID.
    *
    * @return {Window}
-   *     Saved window object, or |undefined| if no window is stored by
-   *     provided |id|.
+   *     Saved window object.
+   *
+   * @throws {RangeError}
+   *     If |id| is not in the store.
    */
   get(id) {
     let wref = super.get(id);
-    if (wref) {
-      return wref.get();
+    if (!wref) {
+      throw new RangeError();
     }
+    return wref.get();
   }
 
 };

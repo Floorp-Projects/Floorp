@@ -1359,7 +1359,7 @@ defineLazyGetter(LocaleData.prototype, "availableLocales", function() {
 
 // This is a generic class for managing event listeners. Example usage:
 //
-// new SingletonEventManager(context, "api.subAPI", fire => {
+// new EventManager(context, "api.subAPI", fire => {
 //   let listener = (...) => {
 //     // Fire any listeners registered with addListener.
 //     fire.async(arg1, arg2);
@@ -1378,14 +1378,15 @@ defineLazyGetter(LocaleData.prototype, "availableLocales", function() {
 // content process). |name| is for debugging. |register| is a function
 // to register the listener. |register| should return an
 // unregister function that will unregister the listener.
-function SingletonEventManager(context, name, register) {
+function EventManager(context, name, register) {
   this.context = context;
   this.name = name;
   this.register = register;
   this.unregister = new Map();
+  this.inputHandling = false;
 }
 
-SingletonEventManager.prototype = {
+EventManager.prototype = {
   addListener(callback, ...args) {
     if (this.unregister.has(callback)) {
       return;
@@ -1472,6 +1473,7 @@ SingletonEventManager.prototype = {
       addListener: (...args) => this.addListener(...args),
       removeListener: (...args) => this.removeListener(...args),
       hasListener: (...args) => this.hasListener(...args),
+      setUserInput: this.inputHandling,
       [Schemas.REVOKE]: () => this.revoke(),
     };
   },
@@ -1508,12 +1510,12 @@ const stylesheetMap = new DefaultMap(url => {
 ExtensionCommon = {
   BaseContext,
   CanOfAPIs,
+  EventManager,
   LocalAPIImplementation,
   LocaleData,
   NoCloneSpreadArgs,
   SchemaAPIInterface,
   SchemaAPIManager,
-  SingletonEventManager,
   SpreadArgs,
   ignoreEvent,
   stylesheetMap,

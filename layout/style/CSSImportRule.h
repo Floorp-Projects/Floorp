@@ -37,7 +37,7 @@ public:
   // WebIDL interface
   uint16_t Type() const final { return nsIDOMCSSRule::IMPORT_RULE; }
   // The XPCOM GetHref is fine, since it never fails.
-  virtual dom::MediaList* Media() const = 0;
+  virtual dom::MediaList* GetMedia() const = 0;
   virtual StyleSheet* GetStyleSheet() const = 0;
 
   JSObject* WrapObject(JSContext* aCx,

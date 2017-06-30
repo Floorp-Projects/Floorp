@@ -41,6 +41,7 @@ nsTArray<nsCString>* AudioInputCubeb::mDeviceNames;
 cubeb_device_collection AudioInputCubeb::mDevices = { nullptr, 0 };
 bool AudioInputCubeb::mAnyInUse = false;
 StaticMutex AudioInputCubeb::sMutex;
+uint32_t AudioInputCubeb::sUserChannelCount = 0;
 
 // AudioDeviceID is an annoying opaque value that's really a string
 // pointer, and is freed when the cubeb_device_collection is destroyed

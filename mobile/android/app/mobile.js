@@ -916,6 +916,7 @@ pref("dom.presentation.receiver.enabled", true); // enable 1-UA mode
 
 pref("dom.audiochannel.audioCompeting", true);
 pref("dom.audiochannel.mediaControl", true);
+pref("media.block-autoplay-until-in-foreground", false);
 
 // Space separated list of URLS that are allowed to send objects (instead of
 // only strings) through webchannels. This list is duplicated in browser/app/profile/firefox.js

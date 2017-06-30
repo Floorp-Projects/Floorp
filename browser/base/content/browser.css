@@ -18,7 +18,11 @@
   color: var(--lwt-text-color) !important;
 }
 
+%ifndef MOZ_PHOTON_THEME
 :root:-moz-lwtheme:not([customization-lwtheme]) {
+%else
+:root:-moz-lwtheme {
+%endif
   background-color: var(--lwt-accent-color) !important;
   background-image: var(--lwt-header-image), var(--lwt-additional-images) !important;
   background-position: var(--lwt-background-alignment) !important;
@@ -468,6 +472,14 @@ toolbar:not(#TabsToolbar) > #personal-bookmarks {
 #reload-button:not([displaystop]) + #stop-button,
 #reload-button[displaystop] {
   visibility: collapse;
+}
+
+/* The reload-button is only disabled temporarily when it becomes visible
+   to prevent users from accidentally clicking it. We don't however need
+   to show this disabled state, as the flicker that it generates is short
+   enough to be visible but not long enough to explain anything to users. */
+#reload-button[disabled]:not(:-moz-window-inactive) > .toolbarbutton-icon {
+  opacity: 1 !important;
 }
 
 #PanelUI-feeds > .feed-toolbarbutton:-moz-locale-dir(rtl) {
@@ -1184,6 +1196,7 @@ toolbarpaletteitem[place="palette"] > #downloads-button[indicator] > #downloads-
 %endif
 
 /* Customize mode */
+%ifndef MOZ_PHOTON_THEME
 #navigator-toolbox,
 #browser-bottombox,
 #content-deck {
@@ -1197,6 +1210,7 @@ toolbarpaletteitem[place="palette"] > #downloads-button[indicator] > #downloads-
   transition-duration: 1ms;
   transition-timing-function: linear;
 }
+%endif
 
 #PanelUI-contents > .panel-customization-placeholder > .panel-customization-placeholder-child {
   list-style-image: none;
@@ -1237,7 +1251,6 @@ toolbarpaletteitem[place="palette"] > #downloads-button[indicator] > #downloads-
 }
 
 #customization-panelHolder > #widget-overflow-fixed-list {
-  padding-bottom: 50px; /* Make sure there's always space to drop stuff. */
   flex: 0 1 auto; /* Size to content, but allow ourselves to shrink */
   display: flex;
   flex-direction: column;

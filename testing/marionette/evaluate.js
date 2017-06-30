@@ -12,7 +12,12 @@ Cu.import("resource://gre/modules/Timer.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 Cu.import("chrome://marionette/content/element.js");
-Cu.import("chrome://marionette/content/error.js");
+const {
+  error,
+  JavaScriptError,
+  ScriptTimeoutError,
+  WebDriverError,
+} = Cu.import("chrome://marionette/content/error.js", {});
 
 const logger = Log.repository.getLogger("Marionette");
 
@@ -65,7 +70,7 @@ this.evaluate = {};
  *
  * @param {nsISandbox) sb
  *     The sandbox the script will be evaluted in.
- * @param {string} script
+ * @param {string} script
  *     The script to evaluate.
  * @param {Array.<?>=} args
  *     A sequence of arguments to call the script with.
@@ -94,12 +99,12 @@ this.evaluate = {};
  *     the script.  Note that the return value requires serialisation before
  *     it can be sent to the client.
  *
- * @throws JavaScriptError
+ * @throws {JavaScriptError}
  *   If an Error was thrown whilst evaluating the script.
- * @throws ScriptTimeoutError
+ * @throws {ScriptTimeoutError}
  *   If the script was interrupted due to script timeout.
  */
-evaluate.sandbox = function (sb, script, args = [], opts = {}) {
+evaluate.sandbox = function(sb, script, args = [], opts = {}) {
   let scriptTimeoutID, timeoutHandler, unloadHandler;
 
   let promise = new Promise((resolve, reject) => {
@@ -107,7 +112,7 @@ evaluate.sandbox = function (sb, script, args = [], opts = {}) {
     sb[COMPLETE] = resolve;
     timeoutHandler = () => reject(new ScriptTimeoutError("Timed out"));
     unloadHandler = sandbox.cloneInto(
-        () => reject(new JavaScriptError("Document was unloaded during execution")),
+        () => reject(new JavaScriptError("Document was unloaded")),
         sb);
 
     // wrap in function
@@ -146,19 +151,23 @@ evaluate.sandbox = function (sb, script, args = [], opts = {}) {
     }
 
     // timeout and unload handlers
-    scriptTimeoutID = setTimeout(timeoutHandler, opts.timeout || DEFAULT_TIMEOUT);
+    const timeout = opts.timeout || DEFAULT_TIMEOUT;
+    scriptTimeoutID = setTimeout(timeoutHandler, timeout);
     sb.window.onunload = unloadHandler;
+
+    const file = opts.filename || "dummy file";
+    const line = opts.line || 0;
 
     let res;
     try {
-      res = Cu.evalInSandbox(src, sb, "1.8", opts.filename || "dummy file", 0);
+      res = Cu.evalInSandbox(src, sb, "1.8", file, 0);
     } catch (e) {
-      let err = new JavaScriptError(
-          e,
-          "execute_script",
-          opts.filename,
-          opts.line,
-          script);
+      let err = new JavaScriptError(e, {
+        fnName: "execute_script",
+        file,
+        line,
+        script,
+      });
       reject(err);
     }
 
@@ -191,42 +200,42 @@ evaluate.sandbox = function (sb, script, args = [], opts = {}) {
  *     Same object as provided by |obj| with the web elements replaced
  *     by DOM elements.
  */
-evaluate.fromJSON = function (obj, seenEls, win, shadowRoot = undefined) {
+evaluate.fromJSON = function(obj, seenEls, win, shadowRoot = undefined) {
   switch (typeof obj) {
     case "boolean":
     case "number":
     case "string":
+    default:
       return obj;
 
     case "object":
       if (obj === null) {
         return obj;
-      }
 
       // arrays
-      else if (Array.isArray(obj)) {
+      } else if (Array.isArray(obj)) {
         return obj.map(e => evaluate.fromJSON(e, seenEls, win, shadowRoot));
-      }
 
       // web elements
-      else if (Object.keys(obj).includes(element.Key) ||
+      } else if (Object.keys(obj).includes(element.Key) ||
           Object.keys(obj).includes(element.LegacyKey)) {
+        /* eslint-disable */
         let uuid = obj[element.Key] || obj[element.LegacyKey];
         let el = seenEls.get(uuid, {frame: win, shadowRoot: shadowRoot});
+        /* eslint-enable */
         if (!el) {
           throw new WebDriverError(`Unknown element: ${uuid}`);
         }
         return el;
+
       }
 
       // arbitrary objects
-      else {
-        let rv = {};
-        for (let prop in obj) {
-          rv[prop] = evaluate.fromJSON(obj[prop], seenEls, win, shadowRoot);
-        }
-        return rv;
+      let rv = {};
+      for (let prop in obj) {
+        rv[prop] = evaluate.fromJSON(obj[prop], seenEls, win, shadowRoot);
       }
+      return rv;
   }
 };
 
@@ -246,48 +255,48 @@ evaluate.fromJSON = function (obj, seenEls, win, shadowRoot = undefined) {
  *     Same object as provided by |obj| with the elements replaced by
  *     web elements.
  */
-evaluate.toJSON = function (obj, seenEls) {
+evaluate.toJSON = function(obj, seenEls) {
   const t = Object.prototype.toString.call(obj);
 
   // null
   if (t == "[object Undefined]" || t == "[object Null]") {
     return null;
-  }
 
   // literals
-  else if (t == "[object Boolean]" || t == "[object Number]" || t == "[object String]") {
+  } else if (t == "[object Boolean]" ||
+      t == "[object Number]" ||
+      t == "[object String]") {
     return obj;
-  }
 
   // Array, NodeList, HTMLCollection, et al.
-  else if (element.isCollection(obj)) {
+  } else if (element.isCollection(obj)) {
     return [...obj].map(el => evaluate.toJSON(el, seenEls));
-  }
 
   // HTMLElement
-  else if ("nodeType" in obj && obj.nodeType == obj.ELEMENT_NODE) {
+  } else if ("nodeType" in obj && obj.nodeType == obj.ELEMENT_NODE) {
     let uuid = seenEls.add(obj);
     return element.makeWebElement(uuid);
-  }
 
   // custom JSON representation
-  else if (typeof obj["toJSON"] == "function") {
+  } else if (typeof obj["toJSON"] == "function") {
     let unsafeJSON = obj.toJSON();
     return evaluate.toJSON(unsafeJSON, seenEls);
   }
 
   // arbitrary objects + files
-  else {
-    let rv = {};
-    for (let prop in obj) {
-      try {
-        rv[prop] = evaluate.toJSON(obj[prop], seenEls);
-      } catch (e if (e.result == Cr.NS_ERROR_NOT_IMPLEMENTED)) {
+  let rv = {};
+  for (let prop in obj) {
+    try {
+      rv[prop] = evaluate.toJSON(obj[prop], seenEls);
+    } catch (e) {
+      if (e.result == Cr.NS_ERROR_NOT_IMPLEMENTED) {
         logger.debug(`Skipping ${prop}: ${e.message}`);
+      } else {
+        throw e;
       }
     }
-    return rv;
   }
+  return rv;
 };
 
 this.sandbox = {};
@@ -300,7 +309,7 @@ this.sandbox = {};
  * Unlike for |Components.utils.cloneInto|, |obj| may contain functions
  * and DOM elemnets.
  */
-sandbox.cloneInto = function (obj, sb) {
+sandbox.cloneInto = function(obj, sb) {
   return Cu.cloneInto(obj, sb, {cloneFunctions: true, wrapReflectors: true});
 };
 
@@ -309,7 +318,7 @@ sandbox.cloneInto = function (obj, sb) {
  * map property, or a normal map, of function names and function
  * references.
  *
- * @param {Sandbox} sb
+ * @param {Sandbox} sb
  *     The sandbox to augment.
  * @param {Object} adapter
  *     Object that holds an {@code exports} property, or a map, of
@@ -318,11 +327,11 @@ sandbox.cloneInto = function (obj, sb) {
  * @return {Sandbox}
  *     The augmented sandbox.
  */
-sandbox.augment = function (sb, adapter) {
+sandbox.augment = function(sb, adapter) {
   function* entries(obj) {
-     for (let key of Object.keys(obj)) {
-       yield [key, obj[key]];
-     }
+    for (let key of Object.keys(obj)) {
+      yield [key, obj[key]];
+    }
   }
 
   let funcs = adapter.exports || entries(adapter);
@@ -345,7 +354,7 @@ sandbox.augment = function (sb, adapter) {
  * @return {Sandbox}
  *     The created sandbox.
  */
-sandbox.create = function (window, principal = null, opts = {}) {
+sandbox.create = function(window, principal = null, opts = {}) {
   let p = principal || window;
   opts = Object.assign({
     sameZoneAs: window,
@@ -366,7 +375,7 @@ sandbox.create = function (window, principal = null, opts = {}) {
  * @return {Sandbox}
  *     The created sandbox.
  */
-sandbox.createMutable = function (window) {
+sandbox.createMutable = function(window) {
   let opts = {
     wantComponents: false,
     wantXrays: false,
@@ -374,13 +383,13 @@ sandbox.createMutable = function (window) {
   return sandbox.create(window, null, opts);
 };
 
-sandbox.createSystemPrincipal = function (window) {
+sandbox.createSystemPrincipal = function(window) {
   let principal = Cc["@mozilla.org/systemprincipal;1"]
       .createInstance(Ci.nsIPrincipal);
   return sandbox.create(window, principal);
 };
 
-sandbox.createSimpleTest = function (window, harness) {
+sandbox.createSimpleTest = function(window, harness) {
   let sb = sandbox.create(window);
   sb = sandbox.augment(sb, harness);
   sb[FINISH] = () => sb[COMPLETE](harness.generate_results());

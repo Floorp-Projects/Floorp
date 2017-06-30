@@ -26,14 +26,14 @@ var {
   ExtensionError,
 } = ExtensionUtils;
 
-function _(key, ...args) {
+const _ = (key, ...args) => {
   if (args.length) {
     return strBundle.formatStringFromName(key, args, args.length);
   }
   return strBundle.GetStringFromName(key);
-}
+};
 
-function installType(addon) {
+const installType = addon => {
   if (addon.temporarilyInstalled) {
     return "development";
   } else if (addon.foreignInstall) {
@@ -42,9 +42,9 @@ function installType(addon) {
     return "other";
   }
   return "normal";
-}
+};
 
-function getExtensionInfoForAddon(extension, addon) {
+const getExtensionInfoForAddon = (extension, addon) => {
   let extInfo = {
     id: addon.id,
     name: addon.name,
@@ -85,7 +85,7 @@ function getExtensionInfoForAddon(extension, addon) {
     extInfo.updateUrl = addon.updateURL;
   }
   return extInfo;
-}
+};
 
 const listenerMap = new WeakMap();
 // Some management APIs are intentionally limited.
@@ -141,7 +141,7 @@ class AddonListener {
 
 let addonListener;
 
-function getListener(extension, context) {
+const getManagementListener = (extension, context) => {
   if (!listenerMap.has(extension)) {
     if (!addonListener) {
       addonListener = new AddonListener();
@@ -158,7 +158,7 @@ function getListener(extension, context) {
     });
   }
   return addonListener;
-}
+};
 
 this.management = class extends ExtensionAPI {
   getAPI(context) {
@@ -224,47 +224,47 @@ this.management = class extends ExtensionAPI {
           addon.userDisabled = !enabled;
         },
 
-        onDisabled: new SingletonEventManager(context, "management.onDisabled", fire => {
+        onDisabled: new EventManager(context, "management.onDisabled", fire => {
           let listener = (event, data) => {
             fire.async(data);
           };
 
-          getListener(extension, context).on("onDisabled", listener);
+          getManagementListener(extension, context).on("onDisabled", listener);
           return () => {
-            getListener(extension, context).off("onDisabled", listener);
+            getManagementListener(extension, context).off("onDisabled", listener);
           };
         }).api(),
 
-        onEnabled: new SingletonEventManager(context, "management.onEnabled", fire => {
+        onEnabled: new EventManager(context, "management.onEnabled", fire => {
           let listener = (event, data) => {
             fire.async(data);
           };
 
-          getListener(extension, context).on("onEnabled", listener);
+          getManagementListener(extension, context).on("onEnabled", listener);
           return () => {
-            getListener(extension, context).off("onEnabled", listener);
+            getManagementListener(extension, context).off("onEnabled", listener);
           };
         }).api(),
 
-        onInstalled: new SingletonEventManager(context, "management.onInstalled", fire => {
+        onInstalled: new EventManager(context, "management.onInstalled", fire => {
           let listener = (event, data) => {
             fire.async(data);
           };
 
-          getListener(extension, context).on("onInstalled", listener);
+          getManagementListener(extension, context).on("onInstalled", listener);
           return () => {
-            getListener(extension, context).off("onInstalled", listener);
+            getManagementListener(extension, context).off("onInstalled", listener);
           };
         }).api(),
 
-        onUninstalled: new SingletonEventManager(context, "management.onUninstalled", fire => {
+        onUninstalled: new EventManager(context, "management.onUninstalled", fire => {
           let listener = (event, data) => {
             fire.async(data);
           };
 
-          getListener(extension, context).on("onUninstalled", listener);
+          getManagementListener(extension, context).on("onUninstalled", listener);
           return () => {
-            getListener(extension, context).off("onUninstalled", listener);
+            getManagementListener(extension, context).off("onUninstalled", listener);
           };
         }).api(),
 

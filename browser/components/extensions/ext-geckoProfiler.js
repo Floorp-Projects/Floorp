@@ -22,7 +22,7 @@ var {
   ExtensionError,
 } = ExtensionUtils;
 
-function parseSym(data) {
+const parseSym = data => {
   const worker = new ChromeWorker("resource://app/modules/ParseSymbols-worker.js");
   const promise = new Promise((resolve, reject) => {
     worker.onmessage = (e) => {
@@ -35,7 +35,7 @@ function parseSym(data) {
   });
   worker.postMessage(data);
   return promise;
-}
+};
 
 class NMParser {
   constructor() {
@@ -120,14 +120,14 @@ class CppFiltParser {
   }
 }
 
-async function readAllData(pipe, processData) {
+const readAllData = async function(pipe, processData) {
   let data;
   while ((data = await pipe.readString())) {
     processData(data);
   }
-}
+};
 
-async function spawnProcess(name, cmdArgs, processData, stdin = null) {
+const spawnProcess = async function(name, cmdArgs, processData, stdin = null) {
   const opts = {
     command: await Subprocess.pathSearch(name),
     arguments: cmdArgs,
@@ -141,9 +141,9 @@ async function spawnProcess(name, cmdArgs, processData, stdin = null) {
   }
 
   await readAllData(proc.stdout, processData);
-}
+};
 
-async function getSymbolsFromNM(path, arch) {
+const getSymbolsFromNM = async function(path, arch) {
   const parser = new NMParser();
 
   const args = [path];
@@ -173,20 +173,20 @@ async function getSymbolsFromNM(path, arch) {
   }
 
   return ParseSymbols.convertSymsMapToExpectedSymFormat(syms, approximateLength);
-}
+};
 
-function pathComponentsForSymbolFile(debugName, breakpadId) {
+const pathComponentsForSymbolFile = (debugName, breakpadId) => {
   const symName = debugName.replace(/(\.pdb)?$/, ".sym");
   return [debugName, breakpadId, symName];
-}
+};
 
-function urlForSymFile(debugName, breakpadId) {
+const urlForSymFile = (debugName, breakpadId) => {
   const profilerSymbolsURL = Services.prefs.getCharPref(PREF_SYMBOLS_URL,
                                                         "http://symbols.mozilla.org/");
   return profilerSymbolsURL + pathComponentsForSymbolFile(debugName, breakpadId).join("/");
-}
+};
 
-function getContainingObjdirDist(path) {
+const getContainingObjdirDist = path => {
   let curPath = path;
   let curPathBasename = OS.Path.basename(curPath);
   while (curPathBasename) {
@@ -201,9 +201,9 @@ function getContainingObjdirDist(path) {
     curPathBasename = OS.Path.basename(curPath);
   }
   return null;
-}
+};
 
-function filePathForSymFileInObjDir(binaryPath, debugName, breakpadId) {
+const filePathForSymFileInObjDir = (binaryPath, debugName, breakpadId) => {
   // `mach buildsymbols` generates symbol files located
   // at /path/to/objdir/dist/crashreporter-symbols/.
   const objDirDist = getContainingObjdirDist(binaryPath);
@@ -213,15 +213,15 @@ function filePathForSymFileInObjDir(binaryPath, debugName, breakpadId) {
   return OS.Path.join(objDirDist,
                       "crashreporter-symbols",
                       ...pathComponentsForSymbolFile(debugName, breakpadId));
-}
+};
 
 const symbolCache = new Map();
 
-function primeSymbolStore(libs) {
+const primeSymbolStore = libs => {
   for (const {debugName, breakpadId, path, arch} of libs) {
     symbolCache.set(urlForSymFile(debugName, breakpadId), {path, arch});
   }
-}
+};
 
 const isRunningObserver = {
   _observers: new Set(),
@@ -374,7 +374,7 @@ this.geckoProfiler = class extends ExtensionAPI {
           throw new Error(`Ran out of options to get symbols from library ${debugName} ${breakpadId}.`);
         },
 
-        onRunning: new SingletonEventManager(context, "geckoProfiler.onRunning", fire => {
+        onRunning: new EventManager(context, "geckoProfiler.onRunning", fire => {
           isRunningObserver.addObserver(fire.async);
           return () => {
             isRunningObserver.removeObserver(fire.async);

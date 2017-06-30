@@ -808,6 +808,8 @@ public:
     return mStreamTracksStartTimeStamp;
   }
 
+  bool OpenNewAudioCallbackDriver(AudioDataListener *aListener);
+
   // XXX need a Reset API
 
   friend class MediaStreamGraphImpl;

@@ -26,6 +26,7 @@ fails-if(!stylo) fails-if(styloVsGecko) == dynamic-1.html dynamic-1-ref.html # b
 random-if(d2d) == dynamic-2.html dynamic-2-ref.html
 == dynamic-3a.html dynamic-3-ref.html
 == dynamic-3b.html dynamic-3-ref.html
+== dynamic-4.html dynamic-4-ref.html
 == 23605-1.html 23605-1-ref.html
 == 23605-2.html 23605-2-ref.html
 == 23605-3.html 23605-3-ref.html

@@ -301,6 +301,7 @@ pub const MCL_CURRENT: ::c_int = 0x2000;
 pub const MCL_FUTURE: ::c_int = 0x4000;
 
 pub const SIGSTKSZ: ::size_t = 16384;
+pub const MINSIGSTKSZ: ::size_t = 4096;
 pub const CBAUD: ::tcflag_t = 0x0000100f;
 pub const TAB1: ::c_int = 0x800;
 pub const TAB2: ::c_int = 0x1000;

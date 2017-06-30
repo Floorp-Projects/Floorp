@@ -123,6 +123,7 @@ linux64-ccov/opt:
         - common-tests
         - web-platform-tests
         - awsy
+        - talos
         - headless
 linux64-jsdcov/opt:
     build-platform: linux64-jsdcov/opt

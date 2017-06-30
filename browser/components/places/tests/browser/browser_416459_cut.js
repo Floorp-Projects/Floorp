@@ -54,7 +54,7 @@ add_task(async function() {
   info("Selecting UnfiledBookmarks in the left pane");
   PlacesOrganizer.selectLeftPaneQuery("UnfiledBookmarks");
   info("Pasting clipboard");
-  ContentTree.view.controller.paste();
+  await ContentTree.view.controller.paste();
 
   await selectBookmarksIn(organizer, bookmarks, "UnfiledBookmarks");
 });
