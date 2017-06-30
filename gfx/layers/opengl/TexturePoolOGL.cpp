@@ -7,14 +7,17 @@
 #include "GLContext.h"                  // for GLContext
 #include "mozilla/Monitor.h"            // for Monitor, MonitorAutoLock
 #include "mozilla/mozalloc.h"           // for operator delete, etc
+#include "mozilla/layers/CompositorThread.h"
 #include "nsDebug.h"                    // for NS_ASSERTION, NS_ERROR, etc
 #include "nsDeque.h"                    // for nsDeque
+#include "nsThreadUtils.h"
 
 #ifdef MOZ_WIDGET_ANDROID
 #include "GeneratedJNINatives.h"
 #endif
 
-#define TEXTURE_POOL_SIZE 10
+static const unsigned int TEXTURE_POOL_SIZE = 10;
+static const unsigned int TEXTURE_REFILL_THRESHOLD = TEXTURE_POOL_SIZE / 2;
 
 namespace mozilla {
 namespace gl {
@@ -23,6 +26,8 @@ static GLContext* sActiveContext = nullptr;
 
 static Monitor* sMonitor = nullptr;
 static nsDeque* sTextures = nullptr;
+
+static bool sHasPendingFillTask = false;
 
 #ifdef MOZ_WIDGET_ANDROID
 
@@ -36,6 +41,22 @@ public:
 };
 
 #endif // MOZ_WIDGET_ANDROID
+
+void TexturePoolOGL::MaybeFillTextures()
+{
+  if (sTextures->GetSize() < TEXTURE_REFILL_THRESHOLD &&
+      !sHasPendingFillTask) {
+    sHasPendingFillTask = true;
+    MessageLoop* loop = mozilla::layers::CompositorThreadHolder::Loop();
+    MOZ_ASSERT(loop);
+    loop->PostTask(
+      NS_NewRunnableFunction(
+        "TexturePoolOGL::MaybeFillTextures",
+        [] () {
+          TexturePoolOGL::Fill(sActiveContext);
+    }));
+  }
+}
 
 GLuint TexturePoolOGL::AcquireTexture()
 {
@@ -72,6 +93,8 @@ GLuint TexturePoolOGL::AcquireTexture()
     delete popped;
 
     NS_ASSERTION(texture, "Failed to retrieve texture from pool");
+
+    MaybeFillTextures();
   }
 
   return texture;
@@ -97,6 +120,7 @@ void TexturePoolOGL::Fill(GLContext* aContext)
   NS_ASSERTION(sMonitor, "not initialized");
 
   MonitorAutoLock lock(*sMonitor);
+  sHasPendingFillTask = false;
 
   if (sActiveContext != aContext) {
     Clear();
