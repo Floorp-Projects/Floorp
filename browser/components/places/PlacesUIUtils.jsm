@@ -1010,12 +1010,10 @@ this.PlacesUIUtils = {
    * @param   aEvent
    *          The DOM mouse/key event with modifier keys set that track the
    *          user's preferred destination window or tab.
-   * @param   aView
-   *          The controller associated with aNode.
    */
   openNodeWithEvent:
-  function PUIU_openNodeWithEvent(aNode, aEvent, aView) {
-    let window = aView.ownerWindow;
+  function PUIU_openNodeWithEvent(aNode, aEvent) {
+    let window = aEvent.target.ownerGlobal;
     this._openNodeIn(aNode, window.whereToOpenLink(aEvent, false, true), window);
   },
 
