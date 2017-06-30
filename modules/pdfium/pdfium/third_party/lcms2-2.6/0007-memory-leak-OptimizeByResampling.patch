@@ -1,0 +1,13 @@
+diff --git a/third_party/lcms2-2.6/src/cmsopt.c b/third_party/lcms2-2.6/src/cmsopt.c
+index f885ef3..684910d 100644
+--- a/third_party/lcms2-2.6/src/cmsopt.c
++++ b/third_party/lcms2-2.6/src/cmsopt.c
+@@ -612,7 +612,7 @@ cmsBool OptimizeByResampling(cmsPipeline** Lut, cmsUInt32Number Intent, cmsUInt3
+ 
+     // Allocate the CLUT
+     CLUT = cmsStageAllocCLut16bit(Src ->ContextID, nGridPoints, Src ->InputChannels, Src->OutputChannels, NULL);
+-    if (CLUT == NULL) return FALSE;
++    if (CLUT == NULL) goto Error;
+ 
+     // Add the CLUT to the destination LUT
+     if (!cmsPipelineInsertStage(Dest, cmsAT_END, CLUT)) {

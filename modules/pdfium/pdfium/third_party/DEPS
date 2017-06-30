@@ -1,0 +1,7 @@
+include_rules = [
+  # A lot of third_party code has been modified to use fxcrt.
+  '+core/fxcrt/fx_basic.h',
+  '+core/fxcrt/fx_coordinates.h',
+  '+core/fxcrt/fx_memory.h',
+  '+core/fxcrt/fx_system.h',
+]

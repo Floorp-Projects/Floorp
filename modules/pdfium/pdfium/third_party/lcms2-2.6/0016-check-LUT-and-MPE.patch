@@ -1,0 +1,170 @@
+diff --git a/third_party/lcms2-2.6/src/cmslut.c b/third_party/lcms2-2.6/src/cmslut.c
+index 9b0eb4b54..19d43361f 100644
+--- a/third_party/lcms2-2.6/src/cmslut.c
++++ b/third_party/lcms2-2.6/src/cmslut.c
+@@ -1255,21 +1255,39 @@ cmsStage* CMSEXPORT cmsStageDup(cmsStage* mpe)
+ // ***********************************************************************************************************
+ 
+ // This function sets up the channel count
+-
+ static
+-void BlessLUT(cmsPipeline* lut)
++cmsBool BlessLUT(cmsPipeline* lut)
+ {
+     // We can set the input/ouput channels only if we have elements.
+     if (lut ->Elements != NULL) {
+ 
+-        cmsStage *First, *Last;
++        cmsStage* prev;
++        cmsStage* next;
++        cmsStage* First;
++        cmsStage* Last;
+ 
+         First  = cmsPipelineGetPtrToFirstStage(lut);
+         Last   = cmsPipelineGetPtrToLastStage(lut);
+ 
+-        if (First != NULL)lut ->InputChannels = First ->InputChannels;
+-        if (Last != NULL) lut ->OutputChannels = Last ->OutputChannels;
++        if (First == NULL || Last == NULL) return FALSE;
++
++        lut->InputChannels = First->InputChannels;
++        lut->OutputChannels = Last->OutputChannels;
++
++        // Check chain consistency
++        prev = First;
++        next = prev->Next;
++
++        while (next != NULL)
++        {
++            if (next->InputChannels != prev->OutputChannels)
++                return FALSE;
++
++            next = next->Next;
++            prev = prev->Next;
++        }
+     }
++    return TRUE;    
+ }
+ 
+ 
+@@ -1331,6 +1349,7 @@ cmsPipeline* CMSEXPORT cmsPipelineAlloc(cmsContext ContextID, cmsUInt32Number In
+ {
+        cmsPipeline* NewLUT;
+ 
++       // A value of zero in channels is allowed as placeholder
+        if (InputChannels >= cmsMAXCHANNELS ||
+            OutputChannels >= cmsMAXCHANNELS) return NULL;
+ 
+@@ -1348,7 +1367,11 @@ cmsPipeline* CMSEXPORT cmsPipelineAlloc(cmsContext ContextID, cmsUInt32Number In
+        NewLUT ->Data        = NewLUT;
+        NewLUT ->ContextID   = ContextID;
+ 
+-       BlessLUT(NewLUT);
++       if (!BlessLUT(NewLUT))
++       {
++           _cmsFree(ContextID, NewLUT);
++           return NULL;
++       }
+ 
+        return NewLUT;
+ }
+@@ -1454,7 +1477,12 @@ cmsPipeline* CMSEXPORT cmsPipelineDup(const cmsPipeline* lut)
+ 
+     NewLUT ->SaveAs8Bits    = lut ->SaveAs8Bits;
+ 
+-    BlessLUT(NewLUT);
++    if (!BlessLUT(NewLUT))
++    {
++        _cmsFree(lut->ContextID, NewLUT);
++        return NULL;
++    }
++
+     return NewLUT;
+ }
+ 
+@@ -1491,8 +1519,7 @@ int CMSEXPORT cmsPipelineInsertStage(cmsPipeline* lut, cmsStageLoc loc, cmsStage
+             return FALSE;
+     }
+ 
+-    BlessLUT(lut);
+-    return TRUE;
++    return BlessLUT(lut);    
+ }
+ 
+ // Unlink an element and return the pointer to it
+@@ -1547,6 +1574,7 @@ void CMSEXPORT cmsPipelineUnlinkStage(cmsPipeline* lut, cmsStageLoc loc, cmsStag
+     else
+         cmsStageFree(Unlinked);
+ 
++    // May fail, but we ignore it
+     BlessLUT(lut);
+ }
+ 
+@@ -1573,8 +1601,7 @@ cmsBool  CMSEXPORT cmsPipelineCat(cmsPipeline* l1, const cmsPipeline* l2)
+                 return FALSE;
+     }
+ 
+-    BlessLUT(l1);
+-    return TRUE;
++    return BlessLUT(l1);    
+ }
+ 
+ 
+diff --git a/third_party/lcms2-2.6/src/cmstypes.c b/third_party/lcms2-2.6/src/cmstypes.c
+index e5ed06c33..0256e247b 100644
+--- a/third_party/lcms2-2.6/src/cmstypes.c
++++ b/third_party/lcms2-2.6/src/cmstypes.c
+@@ -1755,8 +1755,8 @@ void *Type_LUT8_Read(struct _cms_typehandler_struct* self, cmsIOHANDLER* io, cms
+     if (!_cmsReadUInt8Number(io, NULL)) goto Error;
+ 
+     // Do some checking
+-    if (InputChannels > cmsMAXCHANNELS)  goto Error;
+-    if (OutputChannels > cmsMAXCHANNELS) goto Error;
++    if (InputChannels == 0 || InputChannels > cmsMAXCHANNELS)  goto Error;
++    if (OutputChannels == 0 || OutputChannels > cmsMAXCHANNELS) goto Error;
+ 
+    // Allocates an empty Pipeline
+     NewLUT = cmsPipelineAlloc(self ->ContextID, InputChannels, OutputChannels);
+@@ -2048,8 +2048,8 @@ void *Type_LUT16_Read(struct _cms_typehandler_struct* self, cmsIOHANDLER* io, cm
+     if (!_cmsReadUInt8Number(io, NULL)) return NULL;
+ 
+     // Do some checking
+-    if (InputChannels > cmsMAXCHANNELS)  goto Error;
+-    if (OutputChannels > cmsMAXCHANNELS) goto Error;
++    if (InputChannels == 0 || InputChannels > cmsMAXCHANNELS)  goto Error;
++    if (OutputChannels == 0 || OutputChannels > cmsMAXCHANNELS) goto Error;
+ 
+     // Allocates an empty LUT
+     NewLUT = cmsPipelineAlloc(self ->ContextID, InputChannels, OutputChannels);
+@@ -2486,7 +2486,10 @@ void* Type_LUTA2B_Read(struct _cms_typehandler_struct* self, cmsIOHANDLER* io, c
+     if (!_cmsReadUInt32Number(io, &offsetC)) return NULL;
+     if (!_cmsReadUInt32Number(io, &offsetA)) return NULL;
+ 
+-   // Allocates an empty LUT
++    if (inputChan == 0 || inputChan >= cmsMAXCHANNELS) return NULL;
++    if (outputChan == 0 || outputChan >= cmsMAXCHANNELS) return NULL;
++
++    // Allocates an empty LUT
+     NewLUT = cmsPipelineAlloc(self ->ContextID, inputChan, outputChan);
+     if (NewLUT == NULL) return NULL;
+ 
+@@ -2794,6 +2797,9 @@ void* Type_LUTB2A_Read(struct _cms_typehandler_struct* self, cmsIOHANDLER* io, c
+     if (!_cmsReadUInt8Number(io, &inputChan)) return NULL;
+     if (!_cmsReadUInt8Number(io, &outputChan)) return NULL;
+ 
++    if (inputChan == 0 || inputChan >= cmsMAXCHANNELS) return NULL;
++    if (outputChan == 0 || outputChan >= cmsMAXCHANNELS) return NULL;
++
+     // Padding
+     if (!_cmsReadUInt16Number(io, NULL)) return NULL;
+ 
+@@ -4443,6 +4449,9 @@ void *Type_MPE_Read(struct _cms_typehandler_struct* self, cmsIOHANDLER* io, cmsU
+     if (!_cmsReadUInt16Number(io, &InputChans)) return NULL;
+     if (!_cmsReadUInt16Number(io, &OutputChans)) return NULL;
+ 
++    if (InputChans == 0 || InputChans >= cmsMAXCHANNELS) return NULL;
++    if (OutputChans == 0 || OutputChans >= cmsMAXCHANNELS) return NULL;
++
+     // Allocates an empty LUT
+     NewLUT = cmsPipelineAlloc(self ->ContextID, InputChans, OutputChans);
+     if (NewLUT == NULL) return NULL;

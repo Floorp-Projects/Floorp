@@ -1,0 +1,13 @@
+public/ README
+
+The header files in this directory are the only ones that should ever be
+included by an embedder of PDFium.  If there arises a need for functionality
+beyond what is present here, then a new API must be added here to provide it.
+
+These header files must be entirely contained in this directory; they must
+never include other header files from outside of it.
+
+These files must compile cleanly without warnings on both C and C++ compilers.
+
+Changes to these files must be carefully considered to avoid breaking
+compatibility.

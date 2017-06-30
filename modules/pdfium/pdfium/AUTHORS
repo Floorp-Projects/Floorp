@@ -1,0 +1,41 @@
+# Names should be added to this file with this pattern:
+#
+# For individuals:
+#   Name <email address>
+#
+# For organizations:
+#   Organization <fnmatch pattern>
+#
+# See python fnmatch module documentation for more information.
+
+Andrey Khalyavin <halyavin@chromium.org>
+Antonio Gomes <tonikitoo@igalia.com>
+Brett Wilson <brettw@chromium.org>
+Bruce Dawson <brucedawson@chromium.org>
+Chery Cherian <cherycherian@gmail.com>
+Chris Palmer <palmer@chromium.org>
+Dan Sinclair <dsinclair@chromium.org>
+Finnur Thorarinsson <finnur@chromium.org>
+GiWan Go <gogil@stealien.com>
+Jiang Jiang <jiangj@opera.com>
+Jochen Eisinger <jochen@chromium.org>
+John Abd-El-Malek <jam@chromium.org>
+Julien Tinnes <jln@chromium.org>
+Ke Liu <stackexploit@gmail.com>
+Kostya Serebryany <kcc@chromium.org>
+Lei Zhang <thestig@chromium.org>
+Lucas Nihlen <luken@chromium.org>
+Matt Giuca <mgiuca@chromium.org>
+Michael Doppler <m.doppler@gmail.com>
+Miklos Vajna <vmiklos@vmiklos.hu>
+Nico Weber <thakis@chromium.org>
+Peter Kasting <pkasting@chromium.org>
+Raymes Khoury <raymes@chromium.org>
+Reid Kleckner <rnk@chromium.org>
+Robert Sesek <rsesek@chromium.org>
+Sam Clegg <sbc@chromium.org>
+Thomas Sepez <tsepez@chromium.org>
+
+DocsCorp Pty Ltd. <*@docscorp.com>
+Foxit Software Inc <*@foxitsoftware.com>
+Google Inc. <*@google.com>

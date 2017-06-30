@@ -1,0 +1,45 @@
+diff --git a/third_party/agg23/agg_math_stroke.h b/third_party/agg23/agg_math_stroke.h
+index 6d7ba8a..2b06b1b 100644
+--- a/third_party/agg23/agg_math_stroke.h
++++ b/third_party/agg23/agg_math_stroke.h
+@@ -60,28 +60,30 @@ void stroke_calc_arc(VertexConsumer& out_vertices,
+     }
+     da = FXSYS_acos(width / (width + ((1.0f / 8) / approximation_scale))) * 2;
+     out_vertices.add(coord_type(x + dx1, y + dy1));
+-    if(!ccw) {
+-        if(a1 > a2) {
+-            a2 += 2 * FX_PI;
++    if (da > 0) {
++      if (!ccw) {
++        if (a1 > a2) {
++          a2 += 2 * FX_PI;
+         }
+         a2 -= da / 4;
+         a1 += da;
+-        while(a1 < a2) {
++        while (a1 < a2) {
+           out_vertices.add(coord_type(x + (width * FXSYS_cos(a1)),
+                                       y + (width * FXSYS_sin(a1))));
+-            a1 += da;
++          a1 += da;
+         }
+-    } else {
+-        if(a1 < a2) {
+-            a2 -= 2 * FX_PI;
++      } else {
++        if (a1 < a2) {
++          a2 -= 2 * FX_PI;
+         }
+         a2 += da / 4;
+         a1 -= da;
+-        while(a1 > a2) {
++        while (a1 > a2) {
+           out_vertices.add(coord_type(x + (width * FXSYS_cos(a1)),
+                                       y + (width * FXSYS_sin(a1))));
+-            a1 -= da;
++          a1 -= da;
+         }
++      }
+     }
+     out_vertices.add(coord_type(x + dx2, y + dy2));
+ }
