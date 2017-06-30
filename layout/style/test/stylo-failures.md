@@ -89,8 +89,7 @@ to mochitest command.
 * test_author_specified_style.html: support serializing color as author specified bug 1348165 [27]
 * browser_newtab_share_rule_processors.js: agent style sheet sharing [1]
 * :visited support (bug 1328509)
-  * test_visited_reftests.html `color-on-bullets-1.html` [2]
-  * ... `inherit-keyword-1.xhtml` [2]
+  * test_visited_reftests.html `inherit-keyword-1.xhtml` [2]
   * ... `mathml-links.html` [2]
   * ... `caret-color-on-visited-1.html` [2]
 
