@@ -292,9 +292,6 @@ IsValidGUID(const nsACString& aGUID)
 void
 TruncateTitle(const nsACString& aTitle, nsACString& aTrimmed)
 {
-  if (aTitle.IsVoid()) {
-    return;
-  }
   aTrimmed = aTitle;
   if (aTitle.Length() > TITLE_LENGTH_MAX) {
     aTrimmed = StringHead(aTitle, TITLE_LENGTH_MAX);

@@ -35,7 +35,8 @@
  *
  *  - title (string)
  *      The item's title, if any.  Empty titles and null titles are considered
- *      the same. Titles longer than DB_TITLE_LENGTH_MAX will be truncated.
+ *      the same, and the property is unset on retrieval in such a case.
+ *      Titles longer than DB_TITLE_LENGTH_MAX will be truncated.
  *
  *  The following properties are only valid for URLs:
  *
@@ -190,8 +191,7 @@ var Bookmarks = Object.freeze({
         url: { requiredIf: b => b.type == this.TYPE_BOOKMARK,
                validIf: b => b.type == this.TYPE_BOOKMARK },
         parentGuid: { required: true },
-        title: { defaultValue: "",
-                 validIf: b => [ this.TYPE_BOOKMARK,
+        title: { validIf: b => [ this.TYPE_BOOKMARK,
                                  this.TYPE_FOLDER ].includes(b.type) },
         dateAdded: { defaultValue: addedTime },
         lastModified: { defaultValue: modTime,
@@ -224,7 +224,7 @@ var Bookmarks = Object.freeze({
       let isTagging = parent._parentId == PlacesUtils.tagsFolderId;
       let isTagsFolder = parent._id == PlacesUtils.tagsFolderId;
       notify(observers, "onItemAdded", [ itemId, parent._id, item.index,
-                                         item.type, uri, item.title,
+                                         item.type, uri, item.title || null,
                                          PlacesUtils.toPRTime(item.dateAdded), item.guid,
                                          item.parentGuid, item.source ],
                                        { isTagging: isTagging || isTagsFolder });
@@ -351,8 +351,7 @@ var Bookmarks = Object.freeze({
           url: { requiredIf: b => b.type == TYPE_BOOKMARK,
                  validIf: b => b.type == TYPE_BOOKMARK },
           parentGuid: { required: true },
-          title: { defaultValue: "",
-                   validIf: b => [ TYPE_BOOKMARK,
+          title: { validIf: b => [ TYPE_BOOKMARK,
                                    TYPE_FOLDER ].includes(b.type) },
           dateAdded: { defaultValue: time,
                        validIf: b => !b.lastModified ||
@@ -471,7 +470,7 @@ var Bookmarks = Object.freeze({
         }
 
         notify(observers, "onItemAdded", [ itemId, parentId, item.index,
-                                           item.type, uri, item.title,
+                                           item.type, uri, item.title || null,
                                            PlacesUtils.toPRTime(item.dateAdded), item.guid,
                                            item.parentGuid, item.source ],
                                          { isTagging: false });
@@ -1155,8 +1154,7 @@ function updateBookmark(info, item, newParent) {
     let tuples = new Map();
     tuples.set("lastModified", { value: PlacesUtils.toPRTime(info.lastModified) });
     if (info.hasOwnProperty("title"))
-      tuples.set("title", { value: info.title,
-                            fragment: `title = NULLIF(:title, "")` });
+      tuples.set("title", { value: info.title });
     if (info.hasOwnProperty("dateAdded"))
       tuples.set("dateAdded", { value: PlacesUtils.toPRTime(info.dateAdded) });
 
@@ -1296,6 +1294,10 @@ function updateBookmark(info, item, newParent) {
 
     let updatedItem = mergeIntoNewObject(item, info, additionalParentInfo);
 
+    // Don't return an empty title to the caller.
+    if (updatedItem.hasOwnProperty("title") && updatedItem.title === null)
+      delete updatedItem.title;
+
     return updatedItem;
   });
 }
@@ -1339,8 +1341,8 @@ function insertBookmark(item, parent) {
                                     dateAdded, lastModified, guid,
                                     syncChangeCounter, syncStatus)
          VALUES (CASE WHEN :url ISNULL THEN NULL ELSE (SELECT id FROM moz_places WHERE url_hash = hash(:url) AND url = :url) END,
-                 :type, :parent, :index, NULLIF(:title, ""), :date_added,
-                 :last_modified, :guid, :syncChangeCounter, :syncStatus)
+                 :type, :parent, :index, :title, :date_added, :last_modified,
+                 :guid, :syncChangeCounter, :syncStatus)
         `, { url: item.hasOwnProperty("url") ? item.url.href : null,
              type: item.type, parent: parent._id, index: item.index,
              title: item.title, date_added: PlacesUtils.toPRTime(item.dateAdded),
@@ -1373,6 +1375,10 @@ function insertBookmark(item, parent) {
       // ...though we don't wait for the calculation.
       updateFrecency(db, [item.url]).catch(Cu.reportError);
     }
+
+    // Don't return an empty title to the caller.
+    if (item.hasOwnProperty("title") && item.title === null)
+      delete item.title;
 
     return item;
   });
@@ -1414,7 +1420,7 @@ function insertBookmarkTree(items, source, parent, urls, lastAddedForParent) {
          VALUES (CASE WHEN :url ISNULL THEN NULL ELSE (SELECT id FROM moz_places WHERE url_hash = hash(:url) AND url = :url) END, :type,
          (SELECT id FROM moz_bookmarks WHERE guid = :parentGuid),
          IFNULL(:index, (SELECT count(*) FROM moz_bookmarks WHERE parent = :rootId)),
-         NULLIF(:title, ""), :date_added, :last_modified, :guid,
+         :title, :date_added, :last_modified, :guid,
          :syncChangeCounter, :syncStatus)`, items);
 
       await setAncestorsLastModified(db, parent.guid, lastAddedForParent,
@@ -1560,8 +1566,8 @@ async function queryBookmarks(info) {
       // hence setting them to NULL
       let rows = await db.executeCached(
         `SELECT b.guid, IFNULL(p.guid, "") AS parentGuid, b.position AS 'index',
-                b.dateAdded, b.lastModified, b.type,
-                IFNULL(b.title, "") AS title, h.url AS url, b.parent, p.parent,
+                b.dateAdded, b.lastModified, b.type, b.title,
+                h.url AS url, b.parent, p.parent,
                 NULL AS _id,
                 NULL AS _childCount,
                 NULL AS _grandParentId,
@@ -1585,8 +1591,8 @@ async function fetchBookmark(info, concurrent) {
   let query = async function(db) {
     let rows = await db.executeCached(
       `SELECT b.guid, IFNULL(p.guid, "") AS parentGuid, b.position AS 'index',
-              b.dateAdded, b.lastModified, b.type, IFNULL(b.title, "") AS title,
-              h.url AS url, b.id AS _id, b.parent AS _parentId,
+              b.dateAdded, b.lastModified, b.type, b.title, h.url AS url,
+              b.id AS _id, b.parent AS _parentId,
               (SELECT count(*) FROM moz_bookmarks WHERE parent = b.id) AS _childCount,
               p.parent AS _grandParentId, b.syncStatus AS _syncStatus
        FROM moz_bookmarks b
@@ -1610,8 +1616,8 @@ async function fetchBookmarkByPosition(info, concurrent) {
     let index = info.index == Bookmarks.DEFAULT_INDEX ? null : info.index;
     let rows = await db.executeCached(
       `SELECT b.guid, IFNULL(p.guid, "") AS parentGuid, b.position AS 'index',
-              b.dateAdded, b.lastModified, b.type, IFNULL(b.title, "") AS title,
-              h.url AS url, b.id AS _id, b.parent AS _parentId,
+              b.dateAdded, b.lastModified, b.type, b.title, h.url AS url,
+              b.id AS _id, b.parent AS _parentId,
               (SELECT count(*) FROM moz_bookmarks WHERE parent = b.id) AS _childCount,
               p.parent AS _grandParentId, b.syncStatus AS _syncStatus
        FROM moz_bookmarks b
@@ -1639,8 +1645,8 @@ async function fetchBookmarksByURL(info, concurrent) {
     let rows = await db.executeCached(
       `/* do not warn (bug no): not worth to add an index */
       SELECT b.guid, IFNULL(p.guid, "") AS parentGuid, b.position AS 'index',
-              b.dateAdded, b.lastModified, b.type, IFNULL(b.title, "") AS title,
-              h.url AS url, b.id AS _id, b.parent AS _parentId,
+              b.dateAdded, b.lastModified, b.type, b.title, h.url AS url,
+              b.id AS _id, b.parent AS _parentId,
               NULL AS _childCount, /* Unused for now */
               p.parent AS _grandParentId, b.syncStatus AS _syncStatus
       FROM moz_bookmarks b
@@ -1668,9 +1674,8 @@ function fetchRecentBookmarks(numberOfItems) {
       let tagsFolderId = await promiseTagsFolderId();
       let rows = await db.executeCached(
         `SELECT b.guid, IFNULL(p.guid, "") AS parentGuid, b.position AS 'index',
-                b.dateAdded, b.lastModified, b.type,
-                IFNULL(b.title, "") AS title, h.url AS url, NULL AS _id,
-                NULL AS _parentId, NULL AS _childCount, NULL AS _grandParentId,
+                b.dateAdded, b.lastModified, b.type, b.title, h.url AS url,
+                NULL AS _id, NULL AS _parentId, NULL AS _childCount, NULL AS _grandParentId,
                 NULL AS _syncStatus
         FROM moz_bookmarks b
         JOIN moz_bookmarks p ON p.id = b.parent
@@ -1698,8 +1703,8 @@ function fetchBookmarksByParent(info) {
 
     let rows = await db.executeCached(
       `SELECT b.guid, IFNULL(p.guid, "") AS parentGuid, b.position AS 'index',
-              b.dateAdded, b.lastModified, b.type, IFNULL(b.title, "") AS title,
-              h.url AS url, b.id AS _id, b.parent AS _parentId,
+              b.dateAdded, b.lastModified, b.type, b.title, h.url AS url,
+              b.id AS _id, b.parent AS _parentId,
               (SELECT count(*) FROM moz_bookmarks WHERE parent = b.id) AS _childCount,
               p.parent AS _grandParentId, b.syncStatus AS _syncStatus
        FROM moz_bookmarks b
@@ -1983,7 +1988,7 @@ function removeSameValueProperties(dest, src) {
 function rowsToItemsArray(rows) {
   return rows.map(row => {
     let item = {};
-    for (let prop of ["guid", "index", "type", "title"]) {
+    for (let prop of ["guid", "index", "type"]) {
       item[prop] = row.getResultByName(prop);
     }
     for (let prop of ["dateAdded", "lastModified"]) {
@@ -1991,15 +1996,11 @@ function rowsToItemsArray(rows) {
       if (value)
         item[prop] = PlacesUtils.toDate(value);
     }
-    let parentGuid = row.getResultByName("parentGuid");
-    if (parentGuid) {
-      item.parentGuid = parentGuid;
+    for (let prop of ["title", "parentGuid", "url" ]) {
+      let val = row.getResultByName(prop);
+      if (val)
+        item[prop] = prop === "url" ? new URL(val) : val;
     }
-    let url = row.getResultByName("url");
-    if (url) {
-      item.url = new URL(url);
-    }
-
     for (let prop of ["_id", "_parentId", "_childCount", "_grandParentId",
                       "_syncStatus"]) {
       let val = row.getResultByName(prop);
@@ -2167,9 +2168,8 @@ async function(db, folderGuids, options) {
        )
        SELECT b.id AS _id, b.parent AS _parentId, b.position AS 'index',
               b.type, url, b.guid, p.guid AS parentGuid, b.dateAdded,
-              b.lastModified, IFNULL(b.title, "") AS title,
-              p.parent AS _grandParentId, NULL AS _childCount,
-              b.syncStatus AS _syncStatus
+              b.lastModified, b.title, p.parent AS _grandParentId,
+              NULL AS _childCount, b.syncStatus AS _syncStatus
        FROM descendants
        JOIN moz_bookmarks b ON did = b.id
        JOIN moz_bookmarks p ON p.id = b.parent

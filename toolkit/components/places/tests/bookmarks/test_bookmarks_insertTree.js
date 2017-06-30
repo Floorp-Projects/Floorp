@@ -129,7 +129,7 @@ add_task(async function create_separator() {
   Assert.equal(bm.index, 0);
   Assert.equal(bm.dateAdded, bm.lastModified);
   Assert.equal(bm.type, PlacesUtils.bookmarks.TYPE_SEPARATOR);
-  Assert.strictEqual(bm.title, "");
+  Assert.ok(!("title" in bm), "title should not be set");
 });
 
 add_task(async function create_plain_bm() {
