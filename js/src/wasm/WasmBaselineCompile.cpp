@@ -5146,7 +5146,9 @@ BaseCompiler::sniffConditionalControlCmp(Cond compareOp, ValType operandType)
 {
     MOZ_ASSERT(latentOp_ == LatentOp::None, "Latent comparison state not properly reset");
 
-    switch (iter_.peekOp()) {
+    OpBytes op;
+    iter_.peekOp(&op);
+    switch (op.b0) {
       case uint16_t(Op::Select):
 #ifdef JS_CODEGEN_X86
         // On x86, with only 5 available registers, a latent i64 binary
@@ -5169,7 +5171,9 @@ BaseCompiler::sniffConditionalControlEqz(ValType operandType)
 {
     MOZ_ASSERT(latentOp_ == LatentOp::None, "Latent comparison state not properly reset");
 
-    switch (iter_.peekOp()) {
+    OpBytes op;
+    iter_.peekOp(&op);
+    switch (op.b0) {
       case uint16_t(Op::BrIf):
       case uint16_t(Op::Select):
       case uint16_t(Op::If):
@@ -6885,11 +6889,11 @@ BaseCompiler::emitBody()
 
         overhead--;
 
-        uint16_t op;
+        OpBytes op;
         CHECK(iter_.readOp(&op));
 
         // When debugEnabled_, every operator has breakpoint site but Op::End.
-        if (debugEnabled_ && op != (uint16_t)Op::End) {
+        if (debugEnabled_ && op.b0 != (uint16_t)Op::End) {
             // TODO sync only registers that can be clobbered by the exit
             // prologue/epilogue or disable these registers for use in
             // baseline compiler when debugEnabled_ is set.
@@ -6898,7 +6902,7 @@ BaseCompiler::emitBody()
             insertBreakablePoint(CallSiteDesc::Breakpoint);
         }
 
-        switch (op) {
+        switch (op.b0) {
           case uint16_t(Op::End):
             if (!emitEnd())
                 return false;
@@ -7366,7 +7370,7 @@ BaseCompiler::emitBody()
             CHECK_NEXT(emitCurrentMemory());
 
           default:
-            return iter_.unrecognizedOpcode(op);
+            return iter_.unrecognizedOpcode(&op);
         }
 
 #undef CHECK

@@ -3227,7 +3227,7 @@ EmitBodyExprs(FunctionCompiler& f)
 
 #define CHECK_ASMJS(c)                                                        \
     if (!f.env().isAsmJS())                                                   \
-        return f.iter().unrecognizedOpcode(op);                               \
+        return f.iter().unrecognizedOpcode(&op);                              \
     if (!(c))                                                                 \
         return false;                                                         \
     break
@@ -3236,11 +3236,11 @@ EmitBodyExprs(FunctionCompiler& f)
         if (!f.mirGen().ensureBallast())
             return false;
 
-        uint16_t op;
+        OpBytes op;
         if (!f.iter().readOp(&op))
             return false;
 
-        switch (op) {
+        switch (op.b0) {
           case uint16_t(Op::End):
             if (!EmitEnd(f))
                 return false;
@@ -3447,10 +3447,10 @@ EmitBodyExprs(FunctionCompiler& f)
             CHECK(EmitMul(f, ValType::I32, MIRType::Int32));
           case uint16_t(Op::I32DivS):
           case uint16_t(Op::I32DivU):
-            CHECK(EmitDiv(f, ValType::I32, MIRType::Int32, Op(op) == Op::I32DivU));
+            CHECK(EmitDiv(f, ValType::I32, MIRType::Int32, Op(op.b0) == Op::I32DivU));
           case uint16_t(Op::I32RemS):
           case uint16_t(Op::I32RemU):
-            CHECK(EmitRem(f, ValType::I32, MIRType::Int32, Op(op) == Op::I32RemU));
+            CHECK(EmitRem(f, ValType::I32, MIRType::Int32, Op(op.b0) == Op::I32RemU));
           case uint16_t(Op::I32And):
             CHECK(EmitBitwise<MBitAnd>(f, ValType::I32, MIRType::Int32));
           case uint16_t(Op::I32Or):
@@ -3465,7 +3465,7 @@ EmitBodyExprs(FunctionCompiler& f)
             CHECK(EmitBitwise<MUrsh>(f, ValType::I32, MIRType::Int32));
           case uint16_t(Op::I32Rotl):
           case uint16_t(Op::I32Rotr):
-            CHECK(EmitRotate(f, ValType::I32, Op(op) == Op::I32Rotl));
+            CHECK(EmitRotate(f, ValType::I32, Op(op.b0) == Op::I32Rotl));
           case uint16_t(Op::I64Clz):
             CHECK(EmitUnaryWithType<MClz>(f, ValType::I64, MIRType::Int64));
           case uint16_t(Op::I64Ctz):
@@ -3480,10 +3480,10 @@ EmitBodyExprs(FunctionCompiler& f)
             CHECK(EmitMul(f, ValType::I64, MIRType::Int64));
           case uint16_t(Op::I64DivS):
           case uint16_t(Op::I64DivU):
-            CHECK(EmitDiv(f, ValType::I64, MIRType::Int64, Op(op) == Op::I64DivU));
+            CHECK(EmitDiv(f, ValType::I64, MIRType::Int64, Op(op.b0) == Op::I64DivU));
           case uint16_t(Op::I64RemS):
           case uint16_t(Op::I64RemU):
-            CHECK(EmitRem(f, ValType::I64, MIRType::Int64, Op(op) == Op::I64RemU));
+            CHECK(EmitRem(f, ValType::I64, MIRType::Int64, Op(op.b0) == Op::I64RemU));
           case uint16_t(Op::I64And):
             CHECK(EmitBitwise<MBitAnd>(f, ValType::I64, MIRType::Int64));
           case uint16_t(Op::I64Or):
@@ -3498,7 +3498,7 @@ EmitBodyExprs(FunctionCompiler& f)
             CHECK(EmitBitwise<MUrsh>(f, ValType::I64, MIRType::Int64));
           case uint16_t(Op::I64Rotl):
           case uint16_t(Op::I64Rotr):
-            CHECK(EmitRotate(f, ValType::I64, Op(op) == Op::I64Rotl));
+            CHECK(EmitRotate(f, ValType::I64, Op(op.b0) == Op::I64Rotl));
           case uint16_t(Op::F32Abs):
             CHECK(EmitUnaryWithType<MAbs>(f, ValType::F32, MIRType::Float32));
           case uint16_t(Op::F32Neg):
@@ -3523,7 +3523,7 @@ EmitBodyExprs(FunctionCompiler& f)
             CHECK(EmitDiv(f, ValType::F32, MIRType::Float32, /* isUnsigned = */ false));
           case uint16_t(Op::F32Min):
           case uint16_t(Op::F32Max):
-            CHECK(EmitMinMax(f, ValType::F32, MIRType::Float32, Op(op) == Op::F32Max));
+            CHECK(EmitMinMax(f, ValType::F32, MIRType::Float32, Op(op.b0) == Op::F32Max));
           case uint16_t(Op::F32CopySign):
             CHECK(EmitCopySign(f, ValType::F32));
           case uint16_t(Op::F64Abs):
@@ -3550,7 +3550,7 @@ EmitBodyExprs(FunctionCompiler& f)
             CHECK(EmitDiv(f, ValType::F64, MIRType::Double, /* isUnsigned = */ false));
           case uint16_t(Op::F64Min):
           case uint16_t(Op::F64Max):
-            CHECK(EmitMinMax(f, ValType::F64, MIRType::Double, Op(op) == Op::F64Max));
+            CHECK(EmitMinMax(f, ValType::F64, MIRType::Double, Op(op.b0) == Op::F64Max));
           case uint16_t(Op::F64CopySign):
             CHECK(EmitCopySign(f, ValType::F64));
 
@@ -3559,26 +3559,26 @@ EmitBodyExprs(FunctionCompiler& f)
             CHECK(EmitConversion<MWrapInt64ToInt32>(f, ValType::I64, ValType::I32));
           case uint16_t(Op::I32TruncSF32):
           case uint16_t(Op::I32TruncUF32):
-            CHECK(EmitTruncate(f, ValType::F32, ValType::I32, Op(op) == Op::I32TruncUF32));
+            CHECK(EmitTruncate(f, ValType::F32, ValType::I32, Op(op.b0) == Op::I32TruncUF32));
           case uint16_t(Op::I32TruncSF64):
           case uint16_t(Op::I32TruncUF64):
-            CHECK(EmitTruncate(f, ValType::F64, ValType::I32, Op(op) == Op::I32TruncUF64));
+            CHECK(EmitTruncate(f, ValType::F64, ValType::I32, Op(op.b0) == Op::I32TruncUF64));
           case uint16_t(Op::I64ExtendSI32):
           case uint16_t(Op::I64ExtendUI32):
-            CHECK(EmitExtendI32(f, Op(op) == Op::I64ExtendUI32));
+            CHECK(EmitExtendI32(f, Op(op.b0) == Op::I64ExtendUI32));
           case uint16_t(Op::I64TruncSF32):
           case uint16_t(Op::I64TruncUF32):
-            CHECK(EmitTruncate(f, ValType::F32, ValType::I64, Op(op) == Op::I64TruncUF32));
+            CHECK(EmitTruncate(f, ValType::F32, ValType::I64, Op(op.b0) == Op::I64TruncUF32));
           case uint16_t(Op::I64TruncSF64):
           case uint16_t(Op::I64TruncUF64):
-            CHECK(EmitTruncate(f, ValType::F64, ValType::I64, Op(op) == Op::I64TruncUF64));
+            CHECK(EmitTruncate(f, ValType::F64, ValType::I64, Op(op.b0) == Op::I64TruncUF64));
           case uint16_t(Op::F32ConvertSI32):
             CHECK(EmitConversion<MToFloat32>(f, ValType::I32, ValType::F32));
           case uint16_t(Op::F32ConvertUI32):
             CHECK(EmitConversion<MWasmUnsignedToFloat32>(f, ValType::I32, ValType::F32));
           case uint16_t(Op::F32ConvertSI64):
           case uint16_t(Op::F32ConvertUI64):
-            CHECK(EmitConvertI64ToFloatingPoint(f, ValType::F32, MIRType::Float32, Op(op) == Op::F32ConvertUI64));
+            CHECK(EmitConvertI64ToFloatingPoint(f, ValType::F32, MIRType::Float32, Op(op.b0) == Op::F32ConvertUI64));
           case uint16_t(Op::F32DemoteF64):
             CHECK(EmitConversion<MToFloat32>(f, ValType::F64, ValType::F32));
           case uint16_t(Op::F64ConvertSI32):
@@ -3587,7 +3587,7 @@ EmitBodyExprs(FunctionCompiler& f)
             CHECK(EmitConversion<MWasmUnsignedToDouble>(f, ValType::I32, ValType::F64));
           case uint16_t(Op::F64ConvertSI64):
           case uint16_t(Op::F64ConvertUI64):
-            CHECK(EmitConvertI64ToFloatingPoint(f, ValType::F64, MIRType::Double, Op(op) == Op::F64ConvertUI64));
+            CHECK(EmitConvertI64ToFloatingPoint(f, ValType::F64, MIRType::Double, Op(op.b0) == Op::F64ConvertUI64));
           case uint16_t(Op::F64PromoteF32):
             CHECK(EmitConversion<MToDouble>(f, ValType::F32, ValType::F64));
 
@@ -3603,80 +3603,82 @@ EmitBodyExprs(FunctionCompiler& f)
 
           // asm.js-specific operators
 
-          case uint16_t(Op::TeeGlobal):
-            CHECK_ASMJS(EmitTeeGlobal(f));
-          case uint16_t(Op::I32Min):
-          case uint16_t(Op::I32Max):
-            CHECK_ASMJS(EmitMinMax(f, ValType::I32, MIRType::Int32, Op(op) == Op::I32Max));
-          case uint16_t(Op::I32Neg):
-            CHECK_ASMJS(EmitUnaryWithType<MWasmNeg>(f, ValType::I32, MIRType::Int32));
-          case uint16_t(Op::I32BitNot):
-            CHECK_ASMJS(EmitBitNot(f, ValType::I32));
-          case uint16_t(Op::I32Abs):
-            CHECK_ASMJS(EmitUnaryWithType<MAbs>(f, ValType::I32, MIRType::Int32));
-          case uint16_t(Op::F32TeeStoreF64):
-            CHECK_ASMJS(EmitTeeStoreWithCoercion(f, ValType::F32, Scalar::Float64));
-          case uint16_t(Op::F64TeeStoreF32):
-            CHECK_ASMJS(EmitTeeStoreWithCoercion(f, ValType::F64, Scalar::Float32));
-          case uint16_t(Op::I32TeeStore8):
-            CHECK_ASMJS(EmitTeeStore(f, ValType::I32, Scalar::Int8));
-          case uint16_t(Op::I32TeeStore16):
-            CHECK_ASMJS(EmitTeeStore(f, ValType::I32, Scalar::Int16));
-          case uint16_t(Op::I64TeeStore8):
-            CHECK_ASMJS(EmitTeeStore(f, ValType::I64, Scalar::Int8));
-          case uint16_t(Op::I64TeeStore16):
-            CHECK_ASMJS(EmitTeeStore(f, ValType::I64, Scalar::Int16));
-          case uint16_t(Op::I64TeeStore32):
-            CHECK_ASMJS(EmitTeeStore(f, ValType::I64, Scalar::Int32));
-          case uint16_t(Op::I32TeeStore):
-            CHECK_ASMJS(EmitTeeStore(f, ValType::I32, Scalar::Int32));
-          case uint16_t(Op::I64TeeStore):
-            CHECK_ASMJS(EmitTeeStore(f, ValType::I64, Scalar::Int64));
-          case uint16_t(Op::F32TeeStore):
-            CHECK_ASMJS(EmitTeeStore(f, ValType::F32, Scalar::Float32));
-          case uint16_t(Op::F64TeeStore):
-            CHECK_ASMJS(EmitTeeStore(f, ValType::F64, Scalar::Float64));
-          case uint16_t(Op::F64Mod):
-            CHECK_ASMJS(EmitRem(f, ValType::F64, MIRType::Double, /* isUnsigned = */ false));
-          case uint16_t(Op::F64Sin):
-            CHECK_ASMJS(EmitUnaryMathBuiltinCall(f, SymbolicAddress::SinD, ValType::F64));
-          case uint16_t(Op::F64Cos):
-            CHECK_ASMJS(EmitUnaryMathBuiltinCall(f, SymbolicAddress::CosD, ValType::F64));
-          case uint16_t(Op::F64Tan):
-            CHECK_ASMJS(EmitUnaryMathBuiltinCall(f, SymbolicAddress::TanD, ValType::F64));
-          case uint16_t(Op::F64Asin):
-            CHECK_ASMJS(EmitUnaryMathBuiltinCall(f, SymbolicAddress::ASinD, ValType::F64));
-          case uint16_t(Op::F64Acos):
-            CHECK_ASMJS(EmitUnaryMathBuiltinCall(f, SymbolicAddress::ACosD, ValType::F64));
-          case uint16_t(Op::F64Atan):
-            CHECK_ASMJS(EmitUnaryMathBuiltinCall(f, SymbolicAddress::ATanD, ValType::F64));
-          case uint16_t(Op::F64Exp):
-            CHECK_ASMJS(EmitUnaryMathBuiltinCall(f, SymbolicAddress::ExpD, ValType::F64));
-          case uint16_t(Op::F64Log):
-            CHECK_ASMJS(EmitUnaryMathBuiltinCall(f, SymbolicAddress::LogD, ValType::F64));
-          case uint16_t(Op::F64Pow):
-            CHECK_ASMJS(EmitBinaryMathBuiltinCall(f, SymbolicAddress::PowD, ValType::F64));
-          case uint16_t(Op::F64Atan2):
-            CHECK_ASMJS(EmitBinaryMathBuiltinCall(f, SymbolicAddress::ATan2D, ValType::F64));
-          case uint16_t(Op::OldCallIndirect):
-            CHECK_ASMJS(EmitCallIndirect(f, /* oldStyle = */ true));
+          case uint16_t(Op::MozPrefix): {
+            switch (op.b1) {
+              case uint16_t(MozOp::TeeGlobal):
+                CHECK_ASMJS(EmitTeeGlobal(f));
+              case uint16_t(MozOp::I32Min):
+              case uint16_t(MozOp::I32Max):
+                CHECK_ASMJS(EmitMinMax(f, ValType::I32, MIRType::Int32, MozOp(op.b1) == MozOp::I32Max));
+              case uint16_t(MozOp::I32Neg):
+                CHECK_ASMJS(EmitUnaryWithType<MWasmNeg>(f, ValType::I32, MIRType::Int32));
+              case uint16_t(MozOp::I32BitNot):
+                CHECK_ASMJS(EmitBitNot(f, ValType::I32));
+              case uint16_t(MozOp::I32Abs):
+                CHECK_ASMJS(EmitUnaryWithType<MAbs>(f, ValType::I32, MIRType::Int32));
+              case uint16_t(MozOp::F32TeeStoreF64):
+                CHECK_ASMJS(EmitTeeStoreWithCoercion(f, ValType::F32, Scalar::Float64));
+              case uint16_t(MozOp::F64TeeStoreF32):
+                CHECK_ASMJS(EmitTeeStoreWithCoercion(f, ValType::F64, Scalar::Float32));
+              case uint16_t(MozOp::I32TeeStore8):
+                CHECK_ASMJS(EmitTeeStore(f, ValType::I32, Scalar::Int8));
+              case uint16_t(MozOp::I32TeeStore16):
+                CHECK_ASMJS(EmitTeeStore(f, ValType::I32, Scalar::Int16));
+              case uint16_t(MozOp::I64TeeStore8):
+                CHECK_ASMJS(EmitTeeStore(f, ValType::I64, Scalar::Int8));
+              case uint16_t(MozOp::I64TeeStore16):
+                CHECK_ASMJS(EmitTeeStore(f, ValType::I64, Scalar::Int16));
+              case uint16_t(MozOp::I64TeeStore32):
+                CHECK_ASMJS(EmitTeeStore(f, ValType::I64, Scalar::Int32));
+              case uint16_t(MozOp::I32TeeStore):
+                CHECK_ASMJS(EmitTeeStore(f, ValType::I32, Scalar::Int32));
+              case uint16_t(MozOp::I64TeeStore):
+                CHECK_ASMJS(EmitTeeStore(f, ValType::I64, Scalar::Int64));
+              case uint16_t(MozOp::F32TeeStore):
+                CHECK_ASMJS(EmitTeeStore(f, ValType::F32, Scalar::Float32));
+              case uint16_t(MozOp::F64TeeStore):
+                CHECK_ASMJS(EmitTeeStore(f, ValType::F64, Scalar::Float64));
+              case uint16_t(MozOp::F64Mod):
+                CHECK_ASMJS(EmitRem(f, ValType::F64, MIRType::Double, /* isUnsigned = */ false));
+              case uint16_t(MozOp::F64Sin):
+                CHECK_ASMJS(EmitUnaryMathBuiltinCall(f, SymbolicAddress::SinD, ValType::F64));
+              case uint16_t(MozOp::F64Cos):
+                CHECK_ASMJS(EmitUnaryMathBuiltinCall(f, SymbolicAddress::CosD, ValType::F64));
+              case uint16_t(MozOp::F64Tan):
+                CHECK_ASMJS(EmitUnaryMathBuiltinCall(f, SymbolicAddress::TanD, ValType::F64));
+              case uint16_t(MozOp::F64Asin):
+                CHECK_ASMJS(EmitUnaryMathBuiltinCall(f, SymbolicAddress::ASinD, ValType::F64));
+              case uint16_t(MozOp::F64Acos):
+                CHECK_ASMJS(EmitUnaryMathBuiltinCall(f, SymbolicAddress::ACosD, ValType::F64));
+              case uint16_t(MozOp::F64Atan):
+                CHECK_ASMJS(EmitUnaryMathBuiltinCall(f, SymbolicAddress::ATanD, ValType::F64));
+              case uint16_t(MozOp::F64Exp):
+                CHECK_ASMJS(EmitUnaryMathBuiltinCall(f, SymbolicAddress::ExpD, ValType::F64));
+              case uint16_t(MozOp::F64Log):
+                CHECK_ASMJS(EmitUnaryMathBuiltinCall(f, SymbolicAddress::LogD, ValType::F64));
+              case uint16_t(MozOp::F64Pow):
+                CHECK_ASMJS(EmitBinaryMathBuiltinCall(f, SymbolicAddress::PowD, ValType::F64));
+              case uint16_t(MozOp::F64Atan2):
+                CHECK_ASMJS(EmitBinaryMathBuiltinCall(f, SymbolicAddress::ATan2D, ValType::F64));
+              case uint16_t(MozOp::OldCallIndirect):
+                CHECK_ASMJS(EmitCallIndirect(f, /* oldStyle = */ true));
 
-          // Atomics
-          case uint16_t(Op::I32AtomicsLoad):
-            CHECK_ASMJS(EmitAtomicsLoad(f));
-          case uint16_t(Op::I32AtomicsStore):
-            CHECK_ASMJS(EmitAtomicsStore(f));
-          case uint16_t(Op::I32AtomicsBinOp):
-            CHECK_ASMJS(EmitAtomicsBinOp(f));
-          case uint16_t(Op::I32AtomicsCompareExchange):
-            CHECK_ASMJS(EmitAtomicsCompareExchange(f));
-          case uint16_t(Op::I32AtomicsExchange):
-            CHECK_ASMJS(EmitAtomicsExchange(f));
+                // Atomics
+              case uint16_t(MozOp::I32AtomicsLoad):
+                CHECK_ASMJS(EmitAtomicsLoad(f));
+              case uint16_t(MozOp::I32AtomicsStore):
+                CHECK_ASMJS(EmitAtomicsStore(f));
+              case uint16_t(MozOp::I32AtomicsBinOp):
+                CHECK_ASMJS(EmitAtomicsBinOp(f));
+              case uint16_t(MozOp::I32AtomicsCompareExchange):
+                CHECK_ASMJS(EmitAtomicsCompareExchange(f));
+              case uint16_t(MozOp::I32AtomicsExchange):
+                CHECK_ASMJS(EmitAtomicsExchange(f));
 
-          // SIMD
-#define CASE(TYPE, OP, SIGN)                                                    \
-          case uint16_t(Op::TYPE##OP):                                          \
-            CHECK_ASMJS(EmitSimdOp(f, ValType::TYPE, SimdOperation::Fn_##OP, SIGN));
+                // SIMD
+#define CASE(TYPE, OP, SIGN)                                          \
+              case uint16_t(MozOp::TYPE##OP):                         \
+                CHECK_ASMJS(EmitSimdOp(f, ValType::TYPE, SimdOperation::Fn_##OP, SIGN));
 #define I8x16CASE(OP) CASE(I8x16, OP, SimdSign::Signed)
 #define I16x8CASE(OP) CASE(I16x8, OP, SimdSign::Signed)
 #define I32x4CASE(OP) CASE(I32x4, OP, SimdSign::Signed)
@@ -3684,18 +3686,18 @@ EmitBodyExprs(FunctionCompiler& f)
 #define B8x16CASE(OP) CASE(B8x16, OP, SimdSign::NotApplicable)
 #define B16x8CASE(OP) CASE(B16x8, OP, SimdSign::NotApplicable)
 #define B32x4CASE(OP) CASE(B32x4, OP, SimdSign::NotApplicable)
-#define ENUMERATE(TYPE, FORALL, DO)                                             \
-          case uint16_t(Op::TYPE##Constructor):                                 \
-            CHECK_ASMJS(EmitSimdOp(f, ValType::TYPE, SimdOperation::Constructor, SimdSign::NotApplicable)); \
-          FORALL(DO)
+#define ENUMERATE(TYPE, FORALL, DO)                                   \
+              case uint16_t(MozOp::TYPE##Constructor):                \
+                CHECK_ASMJS(EmitSimdOp(f, ValType::TYPE, SimdOperation::Constructor, SimdSign::NotApplicable)); \
+                FORALL(DO)
 
-          ENUMERATE(I8x16, FORALL_INT8X16_ASMJS_OP, I8x16CASE)
-          ENUMERATE(I16x8, FORALL_INT16X8_ASMJS_OP, I16x8CASE)
-          ENUMERATE(I32x4, FORALL_INT32X4_ASMJS_OP, I32x4CASE)
-          ENUMERATE(F32x4, FORALL_FLOAT32X4_ASMJS_OP, F32x4CASE)
-          ENUMERATE(B8x16, FORALL_BOOL_SIMD_OP, B8x16CASE)
-          ENUMERATE(B16x8, FORALL_BOOL_SIMD_OP, B16x8CASE)
-          ENUMERATE(B32x4, FORALL_BOOL_SIMD_OP, B32x4CASE)
+              ENUMERATE(I8x16, FORALL_INT8X16_ASMJS_OP, I8x16CASE)
+              ENUMERATE(I16x8, FORALL_INT16X8_ASMJS_OP, I16x8CASE)
+              ENUMERATE(I32x4, FORALL_INT32X4_ASMJS_OP, I32x4CASE)
+              ENUMERATE(F32x4, FORALL_FLOAT32X4_ASMJS_OP, F32x4CASE)
+              ENUMERATE(B8x16, FORALL_BOOL_SIMD_OP, B8x16CASE)
+              ENUMERATE(B16x8, FORALL_BOOL_SIMD_OP, B16x8CASE)
+              ENUMERATE(B32x4, FORALL_BOOL_SIMD_OP, B32x4CASE)
 
 #undef CASE
 #undef I8x16CASE
@@ -3707,70 +3709,76 @@ EmitBodyExprs(FunctionCompiler& f)
 #undef B32x4CASE
 #undef ENUMERATE
 
-          case uint16_t(Op::I8x16Const):
-            CHECK_ASMJS(EmitI8x16Const(f));
-          case uint16_t(Op::I16x8Const):
-            CHECK_ASMJS(EmitI16x8Const(f));
-          case uint16_t(Op::I32x4Const):
-            CHECK_ASMJS(EmitI32x4Const(f));
-          case uint16_t(Op::F32x4Const):
-            CHECK_ASMJS(EmitF32x4Const(f));
-          case uint16_t(Op::B8x16Const):
-            CHECK_ASMJS(EmitB8x16Const(f));
-          case uint16_t(Op::B16x8Const):
-            CHECK_ASMJS(EmitB16x8Const(f));
-          case uint16_t(Op::B32x4Const):
-            CHECK_ASMJS(EmitB32x4Const(f));
+              case uint16_t(MozOp::I8x16Const):
+                CHECK_ASMJS(EmitI8x16Const(f));
+              case uint16_t(MozOp::I16x8Const):
+                CHECK_ASMJS(EmitI16x8Const(f));
+              case uint16_t(MozOp::I32x4Const):
+                CHECK_ASMJS(EmitI32x4Const(f));
+              case uint16_t(MozOp::F32x4Const):
+                CHECK_ASMJS(EmitF32x4Const(f));
+              case uint16_t(MozOp::B8x16Const):
+                CHECK_ASMJS(EmitB8x16Const(f));
+              case uint16_t(MozOp::B16x8Const):
+                CHECK_ASMJS(EmitB16x8Const(f));
+              case uint16_t(MozOp::B32x4Const):
+                CHECK_ASMJS(EmitB32x4Const(f));
 
-          case uint16_t(Op::I8x16addSaturateU):
-            CHECK_ASMJS(EmitSimdOp(f, ValType::I8x16, SimdOperation::Fn_addSaturate, SimdSign::Unsigned));
-          case uint16_t(Op::I8x16subSaturateU):
-            CHECK_ASMJS(EmitSimdOp(f, ValType::I8x16, SimdOperation::Fn_subSaturate, SimdSign::Unsigned));
-          case uint16_t(Op::I8x16shiftRightByScalarU):
-            CHECK_ASMJS(EmitSimdOp(f, ValType::I8x16, SimdOperation::Fn_shiftRightByScalar, SimdSign::Unsigned));
-          case uint16_t(Op::I8x16lessThanU):
-            CHECK_ASMJS(EmitSimdOp(f, ValType::I8x16, SimdOperation::Fn_lessThan, SimdSign::Unsigned));
-          case uint16_t(Op::I8x16lessThanOrEqualU):
-            CHECK_ASMJS(EmitSimdOp(f, ValType::I8x16, SimdOperation::Fn_lessThanOrEqual, SimdSign::Unsigned));
-          case uint16_t(Op::I8x16greaterThanU):
-            CHECK_ASMJS(EmitSimdOp(f, ValType::I8x16, SimdOperation::Fn_greaterThan, SimdSign::Unsigned));
-          case uint16_t(Op::I8x16greaterThanOrEqualU):
-            CHECK_ASMJS(EmitSimdOp(f, ValType::I8x16, SimdOperation::Fn_greaterThanOrEqual, SimdSign::Unsigned));
-          case uint16_t(Op::I8x16extractLaneU):
-            CHECK_ASMJS(EmitSimdOp(f, ValType::I8x16, SimdOperation::Fn_extractLane, SimdSign::Unsigned));
+              case uint16_t(MozOp::I8x16addSaturateU):
+                CHECK_ASMJS(EmitSimdOp(f, ValType::I8x16, SimdOperation::Fn_addSaturate, SimdSign::Unsigned));
+              case uint16_t(MozOp::I8x16subSaturateU):
+                CHECK_ASMJS(EmitSimdOp(f, ValType::I8x16, SimdOperation::Fn_subSaturate, SimdSign::Unsigned));
+              case uint16_t(MozOp::I8x16shiftRightByScalarU):
+                CHECK_ASMJS(EmitSimdOp(f, ValType::I8x16, SimdOperation::Fn_shiftRightByScalar, SimdSign::Unsigned));
+              case uint16_t(MozOp::I8x16lessThanU):
+                CHECK_ASMJS(EmitSimdOp(f, ValType::I8x16, SimdOperation::Fn_lessThan, SimdSign::Unsigned));
+              case uint16_t(MozOp::I8x16lessThanOrEqualU):
+                CHECK_ASMJS(EmitSimdOp(f, ValType::I8x16, SimdOperation::Fn_lessThanOrEqual, SimdSign::Unsigned));
+              case uint16_t(MozOp::I8x16greaterThanU):
+                CHECK_ASMJS(EmitSimdOp(f, ValType::I8x16, SimdOperation::Fn_greaterThan, SimdSign::Unsigned));
+              case uint16_t(MozOp::I8x16greaterThanOrEqualU):
+                CHECK_ASMJS(EmitSimdOp(f, ValType::I8x16, SimdOperation::Fn_greaterThanOrEqual, SimdSign::Unsigned));
+              case uint16_t(MozOp::I8x16extractLaneU):
+                CHECK_ASMJS(EmitSimdOp(f, ValType::I8x16, SimdOperation::Fn_extractLane, SimdSign::Unsigned));
 
-          case uint16_t(Op::I16x8addSaturateU):
-            CHECK_ASMJS(EmitSimdOp(f, ValType::I16x8, SimdOperation::Fn_addSaturate, SimdSign::Unsigned));
-          case uint16_t(Op::I16x8subSaturateU):
-            CHECK_ASMJS(EmitSimdOp(f, ValType::I16x8, SimdOperation::Fn_subSaturate, SimdSign::Unsigned));
-          case uint16_t(Op::I16x8shiftRightByScalarU):
-            CHECK_ASMJS(EmitSimdOp(f, ValType::I16x8, SimdOperation::Fn_shiftRightByScalar, SimdSign::Unsigned));
-          case uint16_t(Op::I16x8lessThanU):
-            CHECK_ASMJS(EmitSimdOp(f, ValType::I16x8, SimdOperation::Fn_lessThan, SimdSign::Unsigned));
-          case uint16_t(Op::I16x8lessThanOrEqualU):
-            CHECK_ASMJS(EmitSimdOp(f, ValType::I16x8, SimdOperation::Fn_lessThanOrEqual, SimdSign::Unsigned));
-          case uint16_t(Op::I16x8greaterThanU):
-            CHECK_ASMJS(EmitSimdOp(f, ValType::I16x8, SimdOperation::Fn_greaterThan, SimdSign::Unsigned));
-          case uint16_t(Op::I16x8greaterThanOrEqualU):
-            CHECK_ASMJS(EmitSimdOp(f, ValType::I16x8, SimdOperation::Fn_greaterThanOrEqual, SimdSign::Unsigned));
-          case uint16_t(Op::I16x8extractLaneU):
-            CHECK_ASMJS(EmitSimdOp(f, ValType::I16x8, SimdOperation::Fn_extractLane, SimdSign::Unsigned));
+              case uint16_t(MozOp::I16x8addSaturateU):
+                CHECK_ASMJS(EmitSimdOp(f, ValType::I16x8, SimdOperation::Fn_addSaturate, SimdSign::Unsigned));
+              case uint16_t(MozOp::I16x8subSaturateU):
+                CHECK_ASMJS(EmitSimdOp(f, ValType::I16x8, SimdOperation::Fn_subSaturate, SimdSign::Unsigned));
+              case uint16_t(MozOp::I16x8shiftRightByScalarU):
+                CHECK_ASMJS(EmitSimdOp(f, ValType::I16x8, SimdOperation::Fn_shiftRightByScalar, SimdSign::Unsigned));
+              case uint16_t(MozOp::I16x8lessThanU):
+                CHECK_ASMJS(EmitSimdOp(f, ValType::I16x8, SimdOperation::Fn_lessThan, SimdSign::Unsigned));
+              case uint16_t(MozOp::I16x8lessThanOrEqualU):
+                CHECK_ASMJS(EmitSimdOp(f, ValType::I16x8, SimdOperation::Fn_lessThanOrEqual, SimdSign::Unsigned));
+              case uint16_t(MozOp::I16x8greaterThanU):
+                CHECK_ASMJS(EmitSimdOp(f, ValType::I16x8, SimdOperation::Fn_greaterThan, SimdSign::Unsigned));
+              case uint16_t(MozOp::I16x8greaterThanOrEqualU):
+                CHECK_ASMJS(EmitSimdOp(f, ValType::I16x8, SimdOperation::Fn_greaterThanOrEqual, SimdSign::Unsigned));
+              case uint16_t(MozOp::I16x8extractLaneU):
+                CHECK_ASMJS(EmitSimdOp(f, ValType::I16x8, SimdOperation::Fn_extractLane, SimdSign::Unsigned));
 
-          case uint16_t(Op::I32x4shiftRightByScalarU):
-            CHECK_ASMJS(EmitSimdOp(f, ValType::I32x4, SimdOperation::Fn_shiftRightByScalar, SimdSign::Unsigned));
-          case uint16_t(Op::I32x4lessThanU):
-            CHECK_ASMJS(EmitSimdOp(f, ValType::I32x4, SimdOperation::Fn_lessThan, SimdSign::Unsigned));
-          case uint16_t(Op::I32x4lessThanOrEqualU):
-            CHECK_ASMJS(EmitSimdOp(f, ValType::I32x4, SimdOperation::Fn_lessThanOrEqual, SimdSign::Unsigned));
-          case uint16_t(Op::I32x4greaterThanU):
-            CHECK_ASMJS(EmitSimdOp(f, ValType::I32x4, SimdOperation::Fn_greaterThan, SimdSign::Unsigned));
-          case uint16_t(Op::I32x4greaterThanOrEqualU):
-            CHECK_ASMJS(EmitSimdOp(f, ValType::I32x4, SimdOperation::Fn_greaterThanOrEqual, SimdSign::Unsigned));
-          case uint16_t(Op::I32x4fromFloat32x4U):
-            CHECK_ASMJS(EmitSimdOp(f, ValType::I32x4, SimdOperation::Fn_fromFloat32x4, SimdSign::Unsigned));
+              case uint16_t(MozOp::I32x4shiftRightByScalarU):
+                CHECK_ASMJS(EmitSimdOp(f, ValType::I32x4, SimdOperation::Fn_shiftRightByScalar, SimdSign::Unsigned));
+              case uint16_t(MozOp::I32x4lessThanU):
+                CHECK_ASMJS(EmitSimdOp(f, ValType::I32x4, SimdOperation::Fn_lessThan, SimdSign::Unsigned));
+              case uint16_t(MozOp::I32x4lessThanOrEqualU):
+                CHECK_ASMJS(EmitSimdOp(f, ValType::I32x4, SimdOperation::Fn_lessThanOrEqual, SimdSign::Unsigned));
+              case uint16_t(MozOp::I32x4greaterThanU):
+                CHECK_ASMJS(EmitSimdOp(f, ValType::I32x4, SimdOperation::Fn_greaterThan, SimdSign::Unsigned));
+              case uint16_t(MozOp::I32x4greaterThanOrEqualU):
+                CHECK_ASMJS(EmitSimdOp(f, ValType::I32x4, SimdOperation::Fn_greaterThanOrEqual, SimdSign::Unsigned));
+              case uint16_t(MozOp::I32x4fromFloat32x4U):
+                CHECK_ASMJS(EmitSimdOp(f, ValType::I32x4, SimdOperation::Fn_fromFloat32x4, SimdSign::Unsigned));
+
+              default:
+                return f.iter().unrecognizedOpcode(&op);
+            }
+            break;
+          }
 
           default:
-            return f.iter().unrecognizedOpcode(op);
+            return f.iter().unrecognizedOpcode(&op);
         }
     }
 

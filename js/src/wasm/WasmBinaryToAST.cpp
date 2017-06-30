@@ -966,12 +966,12 @@ static bool
 AstDecodeExpr(AstDecodeContext& c)
 {
     uint32_t exprOffset = c.iter().currentOffset();
-    uint16_t op;
+    OpBytes op;
     if (!c.iter().readOp(&op))
         return false;
 
     AstExpr* tmp;
-    switch (op) {
+    switch (op.b0) {
       case uint16_t(Op::Nop):
         if (!AstDecodeNop(c))
             return false;
@@ -1040,7 +1040,7 @@ AstDecodeExpr(AstDecodeContext& c)
         break;
       case uint16_t(Op::Block):
       case uint16_t(Op::Loop):
-        if (!AstDecodeBlock(c, Op(op)))
+        if (!AstDecodeBlock(c, Op(op.b0)))
             return false;
         break;
       case uint16_t(Op::If):
@@ -1058,13 +1058,13 @@ AstDecodeExpr(AstDecodeContext& c)
       case uint16_t(Op::I32Clz):
       case uint16_t(Op::I32Ctz):
       case uint16_t(Op::I32Popcnt):
-        if (!AstDecodeUnary(c, ValType::I32, Op(op)))
+        if (!AstDecodeUnary(c, ValType::I32, Op(op.b0)))
             return false;
         break;
       case uint16_t(Op::I64Clz):
       case uint16_t(Op::I64Ctz):
       case uint16_t(Op::I64Popcnt):
-        if (!AstDecodeUnary(c, ValType::I64, Op(op)))
+        if (!AstDecodeUnary(c, ValType::I64, Op(op.b0)))
             return false;
         break;
       case uint16_t(Op::F32Abs):
@@ -1074,7 +1074,7 @@ AstDecodeExpr(AstDecodeContext& c)
       case uint16_t(Op::F32Sqrt):
       case uint16_t(Op::F32Trunc):
       case uint16_t(Op::F32Nearest):
-        if (!AstDecodeUnary(c, ValType::F32, Op(op)))
+        if (!AstDecodeUnary(c, ValType::F32, Op(op.b0)))
             return false;
         break;
       case uint16_t(Op::F64Abs):
@@ -1084,7 +1084,7 @@ AstDecodeExpr(AstDecodeContext& c)
       case uint16_t(Op::F64Sqrt):
       case uint16_t(Op::F64Trunc):
       case uint16_t(Op::F64Nearest):
-        if (!AstDecodeUnary(c, ValType::F64, Op(op)))
+        if (!AstDecodeUnary(c, ValType::F64, Op(op.b0)))
             return false;
         break;
       case uint16_t(Op::I32Add):
@@ -1102,7 +1102,7 @@ AstDecodeExpr(AstDecodeContext& c)
       case uint16_t(Op::I32ShrU):
       case uint16_t(Op::I32Rotl):
       case uint16_t(Op::I32Rotr):
-        if (!AstDecodeBinary(c, ValType::I32, Op(op)))
+        if (!AstDecodeBinary(c, ValType::I32, Op(op.b0)))
             return false;
         break;
       case uint16_t(Op::I64Add):
@@ -1120,7 +1120,7 @@ AstDecodeExpr(AstDecodeContext& c)
       case uint16_t(Op::I64ShrU):
       case uint16_t(Op::I64Rotl):
       case uint16_t(Op::I64Rotr):
-        if (!AstDecodeBinary(c, ValType::I64, Op(op)))
+        if (!AstDecodeBinary(c, ValType::I64, Op(op.b0)))
             return false;
         break;
       case uint16_t(Op::F32Add):
@@ -1130,7 +1130,7 @@ AstDecodeExpr(AstDecodeContext& c)
       case uint16_t(Op::F32Min):
       case uint16_t(Op::F32Max):
       case uint16_t(Op::F32CopySign):
-        if (!AstDecodeBinary(c, ValType::F32, Op(op)))
+        if (!AstDecodeBinary(c, ValType::F32, Op(op.b0)))
             return false;
         break;
       case uint16_t(Op::F64Add):
@@ -1140,7 +1140,7 @@ AstDecodeExpr(AstDecodeContext& c)
       case uint16_t(Op::F64Min):
       case uint16_t(Op::F64Max):
       case uint16_t(Op::F64CopySign):
-        if (!AstDecodeBinary(c, ValType::F64, Op(op)))
+        if (!AstDecodeBinary(c, ValType::F64, Op(op.b0)))
             return false;
         break;
       case uint16_t(Op::I32Eq):
@@ -1153,7 +1153,7 @@ AstDecodeExpr(AstDecodeContext& c)
       case uint16_t(Op::I32GtU):
       case uint16_t(Op::I32GeS):
       case uint16_t(Op::I32GeU):
-        if (!AstDecodeComparison(c, ValType::I32, Op(op)))
+        if (!AstDecodeComparison(c, ValType::I32, Op(op.b0)))
             return false;
         break;
       case uint16_t(Op::I64Eq):
@@ -1166,7 +1166,7 @@ AstDecodeExpr(AstDecodeContext& c)
       case uint16_t(Op::I64GtU):
       case uint16_t(Op::I64GeS):
       case uint16_t(Op::I64GeU):
-        if (!AstDecodeComparison(c, ValType::I64, Op(op)))
+        if (!AstDecodeComparison(c, ValType::I64, Op(op.b0)))
             return false;
         break;
       case uint16_t(Op::F32Eq):
@@ -1175,7 +1175,7 @@ AstDecodeExpr(AstDecodeContext& c)
       case uint16_t(Op::F32Le):
       case uint16_t(Op::F32Gt):
       case uint16_t(Op::F32Ge):
-        if (!AstDecodeComparison(c, ValType::F32, Op(op)))
+        if (!AstDecodeComparison(c, ValType::F32, Op(op.b0)))
             return false;
         break;
       case uint16_t(Op::F64Eq):
@@ -1184,150 +1184,150 @@ AstDecodeExpr(AstDecodeContext& c)
       case uint16_t(Op::F64Le):
       case uint16_t(Op::F64Gt):
       case uint16_t(Op::F64Ge):
-        if (!AstDecodeComparison(c, ValType::F64, Op(op)))
+        if (!AstDecodeComparison(c, ValType::F64, Op(op.b0)))
             return false;
         break;
       case uint16_t(Op::I32Eqz):
-        if (!AstDecodeConversion(c, ValType::I32, ValType::I32, Op(op)))
+        if (!AstDecodeConversion(c, ValType::I32, ValType::I32, Op(op.b0)))
             return false;
         break;
       case uint16_t(Op::I64Eqz):
       case uint16_t(Op::I32WrapI64):
-        if (!AstDecodeConversion(c, ValType::I64, ValType::I32, Op(op)))
+        if (!AstDecodeConversion(c, ValType::I64, ValType::I32, Op(op.b0)))
             return false;
         break;
       case uint16_t(Op::I32TruncSF32):
       case uint16_t(Op::I32TruncUF32):
       case uint16_t(Op::I32ReinterpretF32):
-        if (!AstDecodeConversion(c, ValType::F32, ValType::I32, Op(op)))
+        if (!AstDecodeConversion(c, ValType::F32, ValType::I32, Op(op.b0)))
             return false;
         break;
       case uint16_t(Op::I32TruncSF64):
       case uint16_t(Op::I32TruncUF64):
-        if (!AstDecodeConversion(c, ValType::F64, ValType::I32, Op(op)))
+        if (!AstDecodeConversion(c, ValType::F64, ValType::I32, Op(op.b0)))
             return false;
         break;
       case uint16_t(Op::I64ExtendSI32):
       case uint16_t(Op::I64ExtendUI32):
-        if (!AstDecodeConversion(c, ValType::I32, ValType::I64, Op(op)))
+        if (!AstDecodeConversion(c, ValType::I32, ValType::I64, Op(op.b0)))
             return false;
         break;
       case uint16_t(Op::I64TruncSF32):
       case uint16_t(Op::I64TruncUF32):
-        if (!AstDecodeConversion(c, ValType::F32, ValType::I64, Op(op)))
+        if (!AstDecodeConversion(c, ValType::F32, ValType::I64, Op(op.b0)))
             return false;
         break;
       case uint16_t(Op::I64TruncSF64):
       case uint16_t(Op::I64TruncUF64):
       case uint16_t(Op::I64ReinterpretF64):
-        if (!AstDecodeConversion(c, ValType::F64, ValType::I64, Op(op)))
+        if (!AstDecodeConversion(c, ValType::F64, ValType::I64, Op(op.b0)))
             return false;
         break;
       case uint16_t(Op::F32ConvertSI32):
       case uint16_t(Op::F32ConvertUI32):
       case uint16_t(Op::F32ReinterpretI32):
-        if (!AstDecodeConversion(c, ValType::I32, ValType::F32, Op(op)))
+        if (!AstDecodeConversion(c, ValType::I32, ValType::F32, Op(op.b0)))
             return false;
         break;
       case uint16_t(Op::F32ConvertSI64):
       case uint16_t(Op::F32ConvertUI64):
-        if (!AstDecodeConversion(c, ValType::I64, ValType::F32, Op(op)))
+        if (!AstDecodeConversion(c, ValType::I64, ValType::F32, Op(op.b0)))
             return false;
         break;
       case uint16_t(Op::F32DemoteF64):
-        if (!AstDecodeConversion(c, ValType::F64, ValType::F32, Op(op)))
+        if (!AstDecodeConversion(c, ValType::F64, ValType::F32, Op(op.b0)))
             return false;
         break;
       case uint16_t(Op::F64ConvertSI32):
       case uint16_t(Op::F64ConvertUI32):
-        if (!AstDecodeConversion(c, ValType::I32, ValType::F64, Op(op)))
+        if (!AstDecodeConversion(c, ValType::I32, ValType::F64, Op(op.b0)))
             return false;
         break;
       case uint16_t(Op::F64ConvertSI64):
       case uint16_t(Op::F64ConvertUI64):
       case uint16_t(Op::F64ReinterpretI64):
-        if (!AstDecodeConversion(c, ValType::I64, ValType::F64, Op(op)))
+        if (!AstDecodeConversion(c, ValType::I64, ValType::F64, Op(op.b0)))
             return false;
         break;
       case uint16_t(Op::F64PromoteF32):
-        if (!AstDecodeConversion(c, ValType::F32, ValType::F64, Op(op)))
+        if (!AstDecodeConversion(c, ValType::F32, ValType::F64, Op(op.b0)))
             return false;
         break;
       case uint16_t(Op::I32Load8S):
       case uint16_t(Op::I32Load8U):
-        if (!AstDecodeLoad(c, ValType::I32, 1, Op(op)))
+        if (!AstDecodeLoad(c, ValType::I32, 1, Op(op.b0)))
             return false;
         break;
       case uint16_t(Op::I32Load16S):
       case uint16_t(Op::I32Load16U):
-        if (!AstDecodeLoad(c, ValType::I32, 2, Op(op)))
+        if (!AstDecodeLoad(c, ValType::I32, 2, Op(op.b0)))
             return false;
         break;
       case uint16_t(Op::I32Load):
-        if (!AstDecodeLoad(c, ValType::I32, 4, Op(op)))
+        if (!AstDecodeLoad(c, ValType::I32, 4, Op(op.b0)))
             return false;
         break;
       case uint16_t(Op::I64Load8S):
       case uint16_t(Op::I64Load8U):
-        if (!AstDecodeLoad(c, ValType::I64, 1, Op(op)))
+        if (!AstDecodeLoad(c, ValType::I64, 1, Op(op.b0)))
             return false;
         break;
       case uint16_t(Op::I64Load16S):
       case uint16_t(Op::I64Load16U):
-        if (!AstDecodeLoad(c, ValType::I64, 2, Op(op)))
+        if (!AstDecodeLoad(c, ValType::I64, 2, Op(op.b0)))
             return false;
         break;
       case uint16_t(Op::I64Load32S):
       case uint16_t(Op::I64Load32U):
-        if (!AstDecodeLoad(c, ValType::I64, 4, Op(op)))
+        if (!AstDecodeLoad(c, ValType::I64, 4, Op(op.b0)))
             return false;
         break;
       case uint16_t(Op::I64Load):
-        if (!AstDecodeLoad(c, ValType::I64, 8, Op(op)))
+        if (!AstDecodeLoad(c, ValType::I64, 8, Op(op.b0)))
             return false;
         break;
       case uint16_t(Op::F32Load):
-        if (!AstDecodeLoad(c, ValType::F32, 4, Op(op)))
+        if (!AstDecodeLoad(c, ValType::F32, 4, Op(op.b0)))
             return false;
         break;
       case uint16_t(Op::F64Load):
-        if (!AstDecodeLoad(c, ValType::F64, 8, Op(op)))
+        if (!AstDecodeLoad(c, ValType::F64, 8, Op(op.b0)))
             return false;
         break;
       case uint16_t(Op::I32Store8):
-        if (!AstDecodeStore(c, ValType::I32, 1, Op(op)))
+        if (!AstDecodeStore(c, ValType::I32, 1, Op(op.b0)))
             return false;
         break;
       case uint16_t(Op::I32Store16):
-        if (!AstDecodeStore(c, ValType::I32, 2, Op(op)))
+        if (!AstDecodeStore(c, ValType::I32, 2, Op(op.b0)))
             return false;
         break;
       case uint16_t(Op::I32Store):
-        if (!AstDecodeStore(c, ValType::I32, 4, Op(op)))
+        if (!AstDecodeStore(c, ValType::I32, 4, Op(op.b0)))
             return false;
         break;
       case uint16_t(Op::I64Store8):
-        if (!AstDecodeStore(c, ValType::I64, 1, Op(op)))
+        if (!AstDecodeStore(c, ValType::I64, 1, Op(op.b0)))
             return false;
         break;
       case uint16_t(Op::I64Store16):
-        if (!AstDecodeStore(c, ValType::I64, 2, Op(op)))
+        if (!AstDecodeStore(c, ValType::I64, 2, Op(op.b0)))
             return false;
         break;
       case uint16_t(Op::I64Store32):
-        if (!AstDecodeStore(c, ValType::I64, 4, Op(op)))
+        if (!AstDecodeStore(c, ValType::I64, 4, Op(op.b0)))
             return false;
         break;
       case uint16_t(Op::I64Store):
-        if (!AstDecodeStore(c, ValType::I64, 8, Op(op)))
+        if (!AstDecodeStore(c, ValType::I64, 8, Op(op.b0)))
             return false;
         break;
       case uint16_t(Op::F32Store):
-        if (!AstDecodeStore(c, ValType::F32, 4, Op(op)))
+        if (!AstDecodeStore(c, ValType::F32, 4, Op(op.b0)))
             return false;
         break;
       case uint16_t(Op::F64Store):
-        if (!AstDecodeStore(c, ValType::F64, 8, Op(op)))
+        if (!AstDecodeStore(c, ValType::F64, 8, Op(op.b0)))
             return false;
         break;
       case uint16_t(Op::CurrentMemory):
@@ -1348,7 +1348,7 @@ AstDecodeExpr(AstDecodeContext& c)
         break;
       case uint16_t(Op::Br):
       case uint16_t(Op::BrIf):
-        if (!AstDecodeBranch(c, Op(op)))
+        if (!AstDecodeBranch(c, Op(op.b0)))
             return false;
         break;
       case uint16_t(Op::BrTable):
@@ -1369,7 +1369,7 @@ AstDecodeExpr(AstDecodeContext& c)
             return false;
         break;
       default:
-        return c.iter().unrecognizedOpcode(op);
+        return c.iter().unrecognizedOpcode(&op);
     }
 
     AstExpr* lastExpr = c.top().expr;
