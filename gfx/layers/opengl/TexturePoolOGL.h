@@ -32,6 +32,9 @@ public:
 
   // Clears all internal data structures in preparation for shutdown
   static void Shutdown();
+private:
+  // These methods are used to refill textures to avoid pool becomes dry
+  static void MaybeFillTextures();
 };
 
 } // namespace gl
