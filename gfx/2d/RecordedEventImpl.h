@@ -877,7 +877,9 @@ public:
   }
 
   explicit RecordedFontData(UnscaledFont *aUnscaledFont)
-    : RecordedEventDerived(FONTDATA), mData(nullptr)
+    : RecordedEventDerived(FONTDATA)
+    , mType(aUnscaledFont->GetType())
+    , mData(nullptr)
   {
     mGetFontFileDataSucceeded = aUnscaledFont->GetFontFileData(&FontDataProc, this);
   }
@@ -901,6 +903,7 @@ public:
 private:
   friend class RecordedEvent;
 
+  FontType mType;
   uint8_t* mData;
   RecordedFontDetails mFontDetails;
 
@@ -2683,8 +2686,8 @@ RecordedFontData::PlayEvent(Translator *aTranslator) const
 {
   RefPtr<NativeFontResource> fontResource =
     Factory::CreateNativeFontResource(mData, mFontDetails.size,
-                                      aTranslator->GetDesiredFontType(),
-                                      aTranslator->GetFontContext());
+                                      aTranslator->GetReferenceDrawTarget()->GetBackendType(),
+                                      mType, aTranslator->GetFontContext());
   if (!fontResource) {
     return false;
   }
@@ -2699,6 +2702,7 @@ RecordedFontData::Record(S &aStream) const
 {
   MOZ_ASSERT(mGetFontFileDataSucceeded);
 
+  WriteElement(aStream, mType);
   WriteElement(aStream, mFontDetails.fontDataKey);
   WriteElement(aStream, mFontDetails.size);
   aStream.write((const char*)mData, mFontDetails.size);
@@ -2737,8 +2741,10 @@ RecordedFontData::GetFontDetails(RecordedFontDetails& fontDetails)
 template<class S>
 RecordedFontData::RecordedFontData(S &aStream)
   : RecordedEventDerived(FONTDATA)
+  , mType(FontType::SKIA)
   , mData(nullptr)
 {
+  ReadElement(aStream, mType);
   ReadElement(aStream, mFontDetails.fontDataKey);
   ReadElement(aStream, mFontDetails.size);
   mData = new uint8_t[mFontDetails.size];

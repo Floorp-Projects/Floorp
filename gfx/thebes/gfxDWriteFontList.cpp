@@ -613,7 +613,7 @@ gfxDWriteFontEntry::CreateFontFace(IDWriteFontFace **aFontFace,
             hr = mFont->CreateFontFace(getter_AddRefs(mFontFace));
         } else if (mFontFile) {
             IDWriteFontFile *fontFile = mFontFile.get();
-            hr = gfxWindowsPlatform::GetPlatform()->GetDWriteFactory()->
+            hr = Factory::GetDWriteFactory()->
                 CreateFontFace(mFaceType,
                                1,
                                &fontFile,
@@ -644,7 +644,7 @@ gfxDWriteFontEntry::CreateFontFace(IDWriteFontFace **aFontFace,
         if (FAILED(mFontFace->GetFiles(&numberOfFiles, files.Elements()))) {
             return NS_ERROR_FAILURE;
         }
-        HRESULT hr = gfxWindowsPlatform::GetPlatform()->GetDWriteFactory()->
+        HRESULT hr = Factory::GetDWriteFactory()->
             CreateFontFace(mFontFace->GetType(),
                            numberOfFiles,
                            files.Elements(),
@@ -883,7 +883,7 @@ gfxDWriteFontList::InitFontListForPlatform()
     mFontSubstitutes.Clear();
     mNonExistingFonts.Clear();
 
-    hr = gfxWindowsPlatform::GetPlatform()->GetDWriteFactory()->
+    hr = Factory::GetDWriteFactory()->
         GetGdiInterop(getter_AddRefs(mGDIInterop));
     if (FAILED(hr)) {
         Telemetry::Accumulate(Telemetry::DWRITEFONT_INIT_PROBLEM,
@@ -894,7 +894,7 @@ gfxDWriteFontList::InitFontListForPlatform()
     QueryPerformanceCounter(&t2); // base-class/interop initialization
 
     RefPtr<IDWriteFactory> factory =
-        gfxWindowsPlatform::GetPlatform()->GetDWriteFactory();
+        Factory::GetDWriteFactory();
 
     hr = factory->GetSystemFontCollection(getter_AddRefs(mSystemFonts));
     NS_ASSERTION(SUCCEEDED(hr), "GetSystemFontCollection failed!");
@@ -1425,7 +1425,7 @@ gfxDWriteFontList::GlobalFontFallback(const uint32_t aCh,
     HRESULT hr;
 
     RefPtr<IDWriteFactory> dwFactory =
-        gfxWindowsPlatform::GetPlatform()->GetDWriteFactory();
+        Factory::GetDWriteFactory();
     if (!dwFactory) {
         return nullptr;
     }
