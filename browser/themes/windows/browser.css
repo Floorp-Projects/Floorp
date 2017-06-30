@@ -136,11 +136,6 @@ toolbar[brighttext] {
   border-bottom-color: rgba(0,0,0,.3);
 }
 
-%ifdef MOZ_PHOTON_THEME
-#navigator-toolbox > toolbar:not(#toolbar-menubar):not(#TabsToolbar):not(:-moz-lwtheme) {
-  background-color: var(--toolbar-background-color);
-}
-%else
 #navigator-toolbox > toolbar:not(#toolbar-menubar):not(#TabsToolbar) {
   background-clip: padding-box;
   background-image: linear-gradient(@toolbarHighlight@, @toolbarHighlight@);
@@ -159,7 +154,6 @@ toolbar[brighttext] {
 #navigator-toolbox > toolbar:not(#toolbar-menubar):not(#TabsToolbar):not(:-moz-lwtheme) {
   background-color: -moz-Dialog;
 }
-%endif
 
 #navigator-toolbox > toolbar:not(#toolbar-menubar):not(#TabsToolbar):not(#nav-bar):not(#addon-bar) {
   overflow: -moz-hidden-unscrollable;

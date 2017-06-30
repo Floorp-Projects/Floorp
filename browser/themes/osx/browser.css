@@ -172,12 +172,6 @@ toolbar:-moz-lwtheme {
   border-top: 1px solid rgba(0,0,0,0.65);
 }
 
-%ifdef MOZ_PHOTON_THEME
-#navigator-toolbox > toolbar:not(#TabsToolbar):not(:-moz-lwtheme) {
-  -moz-appearance: none;
-  background: var(--toolbar-background-color);
-}
-%else
 #navigator-toolbox > toolbar:not(#TabsToolbar):not(#nav-bar):not(:-moz-lwtheme) {
   -moz-appearance: none;
   background: url(chrome://browser/skin/Toolbar-background-noise.png) hsl(0,0%,83%);
@@ -193,7 +187,6 @@ toolbar:-moz-lwtheme {
     background-color: hsl(0,0%,95%);
   }
 }
-%endif
 
 #navigator-toolbox > toolbar:not(#toolbar-menubar):not(#TabsToolbar):not(#nav-bar):not(#addon-bar) {
   overflow: -moz-hidden-unscrollable;
@@ -207,7 +200,6 @@ toolbar:-moz-lwtheme {
   transition: min-height 170ms ease-out, max-height 170ms ease-out, visibility 170ms linear;
 }
 
-%ifndef MOZ_PHOTON_THEME
 #nav-bar {
   -moz-appearance: none;
   background: url(chrome://browser/skin/Toolbar-background-noise.png),
@@ -241,7 +233,6 @@ toolbar:-moz-lwtheme {
     background: linear-gradient(hsl(0,0%,97%), hsl(0,0%,95%));
   }
 }
-%endif
 
 /* Draw the bottom border of the tabs toolbar when it's not using
    -moz-appearance: toolbar. */
@@ -282,12 +273,10 @@ toolbar:-moz-lwtheme {
   min-height: 23px;
 }
 
-%ifndef MOZ_PHOTON_THEME
 #navigator-toolbox > toolbar:not(#TabsToolbar):-moz-lwtheme {
   background-color: @toolbarColorLWT@;
   background-image: url(chrome://browser/skin/Toolbar-background-noise.png);
 }
-%endif
 
 #PersonalToolbar:not(:-moz-lwtheme):-moz-window-inactive,
 #nav-bar:not(:-moz-lwtheme):-moz-window-inactive {
