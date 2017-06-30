@@ -661,27 +661,16 @@ toolbarpaletteitem[place="palette"] > #personal-bookmarks > #bookmarks-toolbar-p
   border-inline-end-style: none;
   padding-inline-end: 5px;
 }
-
 .urlbar-input-box {
   margin: 0;
   padding: 3px 0 2px;
 }
-
-.urlbar-input-box,
-#urlbar-display-box {
-  padding-inline-start: 4px;
-  border-inline-start: 1px solid var(--urlbar-separator-color);
-  border-image: linear-gradient(transparent 15%, var(--urlbar-separator-color) 15%, var(--urlbar-separator-color) 85%, transparent 85%);
-  border-image-slice: 1;
-}
-
 .urlbar-history-dropmarker {
   padding: 0 3px;
   list-style-image: var(--urlbar-dropmarker-url);
   -moz-image-region: var(--urlbar-dropmarker-region);
   transition: opacity 0.15s ease;
 }
-
 #urlbar-wrapper[switchingtabs] > #urlbar > .urlbar-textbox-container > .urlbar-history-dropmarker {
   transition: none;
 }
