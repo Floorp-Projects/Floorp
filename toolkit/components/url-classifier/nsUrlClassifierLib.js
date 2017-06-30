@@ -13,15 +13,7 @@ const G_GDEBUG = false;
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 #include ./content/moz/lang.js
-#include ./content/moz/preferences.js
-#include ./content/moz/debug.js
-#include ./content/moz/alarm.js
-#include ./content/moz/cryptohasher.js
-#include ./content/moz/observer.js
-#include ./content/moz/protocol4.js
-
 #include ./content/request-backoff.js
-#include ./content/xml-fetcher.js
 
 // Wrap a general-purpose |RequestBackoff| to a v4-specific one
 // since both listmanager and hashcompleter would use it.

@@ -18,11 +18,11 @@ Cu.import("resource://gre/modules/Services.jsm");
 // Lower and upper limits on the server-provided polling frequency
 const minDelayMs = 5 * 60 * 1000;
 const maxDelayMs = 24 * 60 * 60 * 1000;
+const defaultUpdateIntervalMs = 30 * 60 * 1000;
 
 // Log only if browser.safebrowsing.debug is true
 this.log = function log(...stuff) {
-  var prefs_ = new G_Preferences();
-  var debug = prefs_.getPref("browser.safebrowsing.debug");
+  var debug = Services.prefs.getBoolPref("browser.safebrowsing.debug");
   if (!debug) {
     return;
   }
@@ -34,14 +34,6 @@ this.log = function log(...stuff) {
   dump(msg + "\n");
 }
 
-this.QueryAdapter = function QueryAdapter(callback) {
-  this.callback_ = callback;
-};
-
-QueryAdapter.prototype.handleResponse = function(value) {
-  this.callback_.handleEvent(value);
-}
-
 /**
  * A ListManager keeps track of black and white lists and knows
  * how to update them.
@@ -50,8 +42,7 @@ QueryAdapter.prototype.handleResponse = function(value) {
  */
 this.PROT_ListManager = function PROT_ListManager() {
   log("Initializing list manager");
-  this.prefs_ = new G_Preferences();
-  this.updateInterval = this.prefs_.getPref("urlclassifier.updateinterval", 30 * 60) * 1000;
+  this.updateInterval = defaultUpdateIntervalMs;
 
   // A map of tableNames to objects of type
   // { updateUrl: <updateUrl>, gethashUrl: <gethashUrl> }
@@ -61,13 +52,8 @@ this.PROT_ListManager = function PROT_ListManager() {
   //                              goog-malware-shavar: true }
   this.needsUpdate_ = {};
 
-  this.observerServiceObserver_ = new G_ObserverServiceObserver(
-                                          'quit-application',
-                                          BindToObject(this.shutdown_, this),
-                                          true /*only once*/);
-
-  // A map of updateUrls to single-use G_Alarms. An entry exists if and only if
-  // there is at least one table with updates enabled for that url. G_Alarms
+  // A map of updateUrls to single-use nsITimer. An entry exists if and only if
+  // there is at least one table with updates enabled for that url. nsITimers
   // are reset when enabling/disabling updates or on update callbacks (update
   // success, update failure, download error).
   this.updateCheckers_ = {};
@@ -75,19 +61,7 @@ this.PROT_ListManager = function PROT_ListManager() {
   this.dbService_ = Cc["@mozilla.org/url-classifier/dbservice;1"]
                    .getService(Ci.nsIUrlClassifierDBService);
 
-
-  this.hashCompleter_ = Cc["@mozilla.org/url-classifier/hashcompleter;1"]
-                        .getService(Ci.nsIUrlClassifierHashCompleter);
-}
-
-/**
- * xpcom-shutdown callback
- * Delete all of our data tables which seem to leak otherwise.
- */
-PROT_ListManager.prototype.shutdown_ = function() {
-  for (var name in this.tablesData) {
-    delete this.tablesData[name];
-  }
+  Services.obs.addObserver(this, "quit-application");
 }
 
 /**
@@ -124,6 +98,22 @@ PROT_ListManager.prototype.registerTable = function(tableName,
 
   return true;
 }
+
+/**
+ * quit-application callback
+ * Delete all of our data tables which seem to leak otherwise.
+ */
+
+PROT_ListManager.prototype.observe = function(aSubject, aTopic, aData) {
+  if (aTopic == "quit-application") {
+    this.stopUpdateCheckers();
+    for (var name in this.tablesData) {
+      delete this.tablesData[name];
+    }
+    Services.obs.removeObserver(this, "quit-application");
+  }
+}
+
 
 PROT_ListManager.prototype.getGethashUrl = function(tableName) {
   if (this.tablesData[tableName] && this.tablesData[tableName].gethashUrl) {
@@ -197,6 +187,19 @@ PROT_ListManager.prototype.requireTableUpdates = function() {
 }
 
 /**
+ *  Set timer to check update after delay
+ */
+PROT_ListManager.prototype.setUpdateCheckTimer = function (updateUrl,
+                                                           delay)
+{
+  this.updateCheckers_[updateUrl] = Cc["@mozilla.org/timer;1"]
+                                    .createInstance(Ci.nsITimer);
+  this.updateCheckers_[updateUrl].initWithCallback(() => {
+    this.updateCheckers_[updateUrl] = null;
+    this.checkForUpdates(updateUrl);
+  }, delay, Ci.nsITimer.TYPE_ONE_SHOT);
+}
+/**
  * Acts as a nsIUrlClassifierCallback for getTables.
  */
 PROT_ListManager.prototype.kickoffUpdate_ = function (onDiskTableData)
@@ -234,17 +237,21 @@ PROT_ListManager.prototype.kickoffUpdate_ = function (onDiskTableData)
       // Use the initialUpdateDelay + fuzz unless we had previous updates
       // and the server told us when to try again.
       let updateDelay = initialUpdateDelay;
-      let targetPref = "browser.safebrowsing.provider." + provider + ".nextupdatetime";
-      let nextUpdate = this.prefs_.getPref(targetPref);
+      let nextUpdatePref = "browser.safebrowsing.provider." + provider +
+                           ".nextupdatetime";
+      let nextUpdate;
+      try {
+        nextUpdate = Services.prefs.getCharPref(nextUpdatePref);
+      } catch (ex) {
+      }
+
       if (nextUpdate) {
         updateDelay = Math.min(maxDelayMs, Math.max(0, nextUpdate - Date.now()));
         log("Next update at " + nextUpdate);
       }
-      log("Next update " + updateDelay + "ms from now");
+      log("Next update " + updateDelay / 60000 + "min from now");
 
-      this.updateCheckers_[updateUrl] =
-        new G_Alarm(BindToObject(this.checkForUpdates, this, updateUrl),
-                    updateDelay, false /* repeating */);
+      this.setUpdateCheckTimer(updateUrl, updateDelay);
     } else {
       log("No updates needed or already initialized for " + updateUrl);
     }
@@ -276,35 +283,11 @@ PROT_ListManager.prototype.maybeToggleUpdateChecking = function() {
     if (!this.startingUpdate_) {
       this.startingUpdate_ = true;
       // check the current state of tables in the database
-      this.dbService_.getTables(BindToObject(this.kickoffUpdate_, this));
+      this.dbService_.getTables(this.kickoffUpdate_.bind(this));
     }
   } else {
     log("Stopping managing lists (if currently active)");
     this.stopUpdateCheckers();                    // Cancel pending updates
-  }
-}
-
-/**
- * Provides an exception free way to look up the data in a table. We
- * use this because at certain points our tables might not be loaded,
- * and querying them could throw.
- *
- * @param table String Name of the table that we want to consult
- * @param key Principal being used to lookup the database
- * @param callback nsIUrlListManagerCallback (ie., Function) given false or the
- *        value in the table corresponding to key.  If the table name does not
- *        exist, we return false, too.
- */
-PROT_ListManager.prototype.safeLookup = function(key, callback) {
-  try {
-    log("safeLookup: " + key);
-    var cb = new QueryAdapter(callback);
-    this.dbService_.lookup(key,
-                           BindToObject(cb.handleResponse, cb),
-                           true);
-  } catch(e) {
-    log("safeLookup masked failure for key " + key + ": " + e);
-    callback.handleEvent("");
   }
 }
 
@@ -512,18 +495,17 @@ PROT_ListManager.prototype.updateSuccess_ = function(tableList, updateUrl,
   // timer since the delay is set differently at every callback.
   if (delay > maxDelayMs) {
     log("Ignoring delay from server (too long), waiting " +
-        maxDelayMs + "ms");
+        maxDelayMs / 60000 + "min");
     delay = maxDelayMs;
   } else if (delay < minDelayMs) {
     log("Ignoring delay from server (too short), waiting " +
-        this.updateInterval + "ms");
+        this.updateInterval / 60000 + "min");
     delay = this.updateInterval;
   } else {
-    log("Waiting " + delay + "ms");
+    log("Waiting " + delay / 60000 + "min");
   }
-  this.updateCheckers_[updateUrl] =
-    new G_Alarm(BindToObject(this.checkForUpdates, this, updateUrl),
-                delay, false);
+
+  this.setUpdateCheckTimer(updateUrl, delay);
 
   // Let the backoff object know that we completed successfully.
   this.requestBackoffs_[updateUrl].noteServerResponse(200);
@@ -548,13 +530,13 @@ PROT_ListManager.prototype.updateSuccess_ = function(tableList, updateUrl,
   let lastUpdatePref = "browser.safebrowsing.provider." + provider + ".lastupdatetime";
   let now = Date.now();
   log("Setting last update of " + provider + " to " + now);
-  this.prefs_.setPref(lastUpdatePref, now.toString());
+  Services.prefs.setCharPref(lastUpdatePref, now.toString());
 
   let nextUpdatePref = "browser.safebrowsing.provider." + provider + ".nextupdatetime";
   let targetTime = now + delay;
   log("Setting next update of " + provider + " to " + targetTime
-      + " (" + delay + "ms from now)");
-  this.prefs_.setPref(nextUpdatePref, targetTime.toString());
+      + " (" + delay / 60000 + "min from now)");
+  Services.prefs.setCharPref(nextUpdatePref, targetTime.toString());
 
   Services.obs.notifyObservers(null, "safebrowsing-update-finished", "success");
 }
@@ -567,9 +549,7 @@ PROT_ListManager.prototype.updateError_ = function(table, updateUrl, result) {
   log("update error for " + table + " from " + updateUrl + ": " + result + "\n");
   // There was some trouble applying the updates. Don't try again for at least
   // updateInterval milliseconds.
-  this.updateCheckers_[updateUrl] =
-    new G_Alarm(BindToObject(this.checkForUpdates, this, updateUrl),
-                this.updateInterval, false);
+  this.setUpdateCheckTimer(updateUrl, this.updateInterval);
 
   Services.obs.notifyObservers(null, "safebrowsing-update-finished",
                                "update error: " + result);
@@ -595,9 +575,8 @@ PROT_ListManager.prototype.downloadError_ = function(table, updateUrl, status) {
   } else {
     log("Got non error status for error callback?!");
   }
-  this.updateCheckers_[updateUrl] =
-    new G_Alarm(BindToObject(this.checkForUpdates, this, updateUrl),
-                delay, false);
+
+  this.setUpdateCheckTimer(updateUrl, delay);
 
   Services.obs.notifyObservers(null, "safebrowsing-update-finished",
                                "download error: " + status);
@@ -627,6 +606,7 @@ PROT_ListManager.prototype.getBackOffTime = function(provider) {
 PROT_ListManager.prototype.QueryInterface = function(iid) {
   if (iid.equals(Ci.nsISupports) ||
       iid.equals(Ci.nsIUrlListManager) ||
+      iid.equals(Ci.nsIObserver) ||
       iid.equals(Ci.nsITimerCallback))
     return this;
 
