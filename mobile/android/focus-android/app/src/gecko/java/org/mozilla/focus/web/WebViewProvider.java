@@ -20,7 +20,6 @@ import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.View;
 
-import org.mozilla.gecko.BaseGeckoInterface;
 import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.GeckoThread;
 import org.mozilla.gecko.GeckoView;
@@ -82,12 +81,12 @@ public class WebViewProvider {
 
         @Override
         public void stopLoading() {
-            // TODO: Stop loading website
+            this.stop();
+            callback.onPageFinished(isSecure);
         }
 
         @Override
         public String getUrl() {
-            // TODO: Get current URL
             return currentUrl;
         }
 
@@ -99,17 +98,16 @@ public class WebViewProvider {
 
         @Override
         public void cleanup() {
-            // TODO: Remove browsing session/data
+            // We're running in a private browsing window, so nothing to do
         }
 
         @Override
         public void setBlockingEnabled(boolean enabled) {
-            // TODO: Enable / disable content blocking
+            // We can't actually do this?
         }
 
         @Override
         public boolean isBlockingEnabled() {
-            // TODO: Return whether content blocking is enabled
             return true;
         }
 
@@ -127,6 +125,10 @@ public class WebViewProvider {
             return new ContentListener() {
                 @Override
                 public void onTitleChange(GeckoView geckoView, String s) {
+                }
+
+                @Override
+                public void onFullScreen(GeckoView geckoView, boolean fullScreen) {
                 }
             };
         }

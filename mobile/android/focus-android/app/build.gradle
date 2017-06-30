@@ -90,8 +90,8 @@ android {
 
     variantFilter { variant ->
         def flavors = variant.flavors*.name
-        // We only need a gecko debug build for now.
-        if (flavors.contains("gecko") && (variant.buildType.name != "debug" || flavors.contains("klar"))) {
+        // We only need a gecko debug and beta build for now.
+        if (flavors.contains("gecko") && ((variant.buildType.name != "debug" && variant.buildType.name != "beta") || flavors.contains("klar"))) {
             setIgnore(true)
         }
     }
