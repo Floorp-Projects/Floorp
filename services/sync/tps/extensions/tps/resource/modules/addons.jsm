@@ -118,9 +118,7 @@ Addon.prototype = {
       throw new Error("Unknown flag to setEnabled: " + flag);
     }
 
-    let cb = Async.makeSpinningCallback();
-    AddonUtils.updateUserDisabled(this.addon, userDisabled, cb);
-    cb.wait();
+    AddonUtils.updateUserDisabled(this.addon, userDisabled);
 
     return true;
   }
