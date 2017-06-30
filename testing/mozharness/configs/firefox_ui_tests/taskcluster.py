@@ -16,5 +16,5 @@ config = {
     "pip_index": False,
 
     "download_minidump_stackwalk": True,
-    "tooltool_cache": "/builds/worker/tooltool-cache",
+    "tooltool_cache": "/home/worker/tooltool-cache",
 }
