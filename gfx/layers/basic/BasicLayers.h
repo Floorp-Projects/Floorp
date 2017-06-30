@@ -13,7 +13,6 @@
 #include "mozilla/Attributes.h"         // for override
 #include "mozilla/WidgetUtils.h"        // for ScreenRotation
 #include "mozilla/layers/LayersTypes.h"  // for BufferMode, LayersBackend, etc
-#include "mozilla/TimeStamp.h"
 #include "nsAString.h"
 #include "nsCOMPtr.h"                   // for already_AddRefed
 #include "nsISupportsImpl.h"            // for gfxContext::AddRef, etc
@@ -169,11 +168,6 @@ public:
   virtual int32_t GetMaxTextureSize() const override { return INT32_MAX; }
   bool CompositorMightResample() { return mCompositorMightResample; }
 
-  TimeStamp GetCompositionTime() const
-  {
-    return mCompositionTime;
-  }
-
 protected:
   enum TransactionPhase {
     PHASE_NONE, PHASE_CONSTRUCTION, PHASE_DRAWING, PHASE_FORWARD
@@ -204,11 +198,6 @@ protected:
 
   void FlashWidgetUpdateArea(gfxContext* aContext);
 
-  void SetCompositionTime(TimeStamp aTimeStamp)
-  {
-    mCompositionTime = aTimeStamp;
-  }
-
   // Widget whose surface should be used as the basis for PaintedLayer
   // buffers.
   nsIWidget* mWidget;
@@ -224,8 +213,6 @@ protected:
   bool mUsingDefaultTarget;
   bool mTransactionIncomplete;
   bool mCompositorMightResample;
-
-  TimeStamp mCompositionTime;
 };
 
 } // namespace layers
