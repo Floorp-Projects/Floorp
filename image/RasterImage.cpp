@@ -430,7 +430,7 @@ RasterImage::WillDrawOpaqueNow()
   // If we are not locked our decoded data could get discard at any time (ie
   // between the call to this function and when we are asked to draw), so we
   // have to return false if we are unlocked.
-  if (IsUnlocked()) {
+  if (mLockCount == 0) {
     return false;
   }
 
@@ -639,7 +639,7 @@ RasterImage::GetImageContainer(LayerManager* aManager, uint32_t aFlags)
     return nullptr;
   }
 
-  if (IsUnlocked()) {
+  if (mAnimationConsumers == 0) {
     SendOnUnlockedDraw(aFlags);
   }
 
@@ -1451,7 +1451,7 @@ RasterImage::Draw(gfxContext* aContext,
     return DrawResult::BAD_ARGS;
   }
 
-  if (IsUnlocked()) {
+  if (mAnimationConsumers == 0) {
     SendOnUnlockedDraw(aFlags);
   }
 
