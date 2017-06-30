@@ -891,7 +891,7 @@ ifdef MOZ_MSVCBITS
 # to use the 64-bit linker for build.rs scripts. This conflict results
 # in a build failure (see bug 1350001). So we clear out the environment
 # variables that are actually relevant to 32- vs 64-bit builds.
-environment_cleaner = PATH='' LIB='' LIBPATH=''
+environment_cleaner = -u VCINSTALLDIR PATH='' LIB='' LIBPATH=''
 # The servo build needs to know where python is, and we're removing the PATH
 # so we tell it explicitly via the PYTHON env var.
 environment_cleaner += PYTHON='$(shell which $(PYTHON))'

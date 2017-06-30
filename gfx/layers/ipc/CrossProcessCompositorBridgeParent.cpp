@@ -207,10 +207,19 @@ CrossProcessCompositorBridgeParent::AllocPWebRenderBridgeParent(const wr::Pipeli
   MonitorAutoLock lock(*sIndirectLayerTreesLock);
   MOZ_ASSERT(sIndirectLayerTrees.find(layersId) != sIndirectLayerTrees.end());
   MOZ_ASSERT(sIndirectLayerTrees[layersId].mWrBridge == nullptr);
+  WebRenderBridgeParent* parent = nullptr;
   CompositorBridgeParent* cbp = sIndirectLayerTrees[layersId].mParent;
+  if (!cbp) {
+    // This could happen when this function is called after CompositorBridgeParent destruction.
+    // This was observed during Tab move between different windows.
+    NS_WARNING("Created child without a matching parent?");
+    parent = WebRenderBridgeParent::CeateDestroyed();
+    *aIdNamespace = parent->GetIdNameSpace();
+    *aTextureFactoryIdentifier = TextureFactoryIdentifier(LayersBackend::LAYERS_NONE);
+    return parent;
+  }
   WebRenderBridgeParent* root = sIndirectLayerTrees[cbp->RootLayerTreeId()].mWrBridge.get();
 
-  WebRenderBridgeParent* parent = nullptr;
   RefPtr<wr::WebRenderAPI> api = root->GetWebRenderAPI();
   RefPtr<WebRenderCompositableHolder> holder = root->CompositableHolder();
   RefPtr<CompositorAnimationStorage> animStorage = cbp->GetAnimationStorage(0);

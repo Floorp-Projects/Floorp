@@ -91,7 +91,8 @@ NS_INTERFACE_MAP_END
 
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(nsBaseContentList)
-NS_IMPL_CYCLE_COLLECTING_RELEASE(nsBaseContentList)
+NS_IMPL_CYCLE_COLLECTING_RELEASE_WITH_LAST_RELEASE(nsBaseContentList,
+                                                   LastRelease())
 
 
 NS_IMETHODIMP
@@ -589,6 +590,17 @@ nsContentList::NodeWillBeDestroyed(const nsINode* aNode)
 
   // We will get no more updates, so we can never know we're up to
   // date
+  SetDirty();
+}
+
+void
+nsContentList::LastRelease()
+{
+  RemoveFromCaches();
+  if (mRootNode) {
+    mRootNode->RemoveMutationObserver(this);
+    mRootNode = nullptr;
+  }
   SetDirty();
 }
 

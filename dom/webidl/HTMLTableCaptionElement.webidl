@@ -15,6 +15,6 @@
 interface HTMLTableCaptionElement : HTMLElement {};
 
 partial interface HTMLTableCaptionElement {
-           [SetterThrows]
+           [CEReactions, SetterThrows]
            attribute DOMString align;
 };

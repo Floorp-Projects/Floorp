@@ -18,17 +18,26 @@ interface HTMLHyperlinkElementUtils {
   // Bug 824857 should remove this.
   stringifier;
 
-  [SetterThrows]
+  [CEReactions, SetterThrows]
            attribute USVString href;
 
   readonly attribute USVString origin;
+  [CEReactions]
            attribute USVString protocol;
+  [CEReactions]
            attribute USVString username;
+  [CEReactions]
            attribute USVString password;
+  [CEReactions]
            attribute USVString host;
+  [CEReactions]
            attribute USVString hostname;
+  [CEReactions]
            attribute USVString port;
+  [CEReactions]
            attribute USVString pathname;
+  [CEReactions]
            attribute USVString search;
+  [CEReactions]
            attribute USVString hash;
 };

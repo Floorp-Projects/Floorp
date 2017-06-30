@@ -16,6 +16,11 @@
 
 #include <objbase.h>
 #include <objidl.h>
+#include <winnt.h>
+
+#if defined(_MSC_VER)
+extern "C" IMAGE_DOS_HEADER __ImageBase;
+#endif
 
 namespace mozilla {
 namespace mscom {
@@ -74,6 +79,23 @@ IsValidGUID(REFGUID aCheckGuid)
   BYTE version = HIBYTE(aCheckGuid.Data3) >> 4;
   // Other versions are specified in RFC4122 but these are the two used by COM.
   return version == 1 || version == 4;
+}
+
+uintptr_t
+GetContainingModuleHandle()
+{
+  HMODULE thisModule = nullptr;
+#if defined(_MSC_VER)
+  thisModule = reinterpret_cast<HMODULE>(&__ImageBase);
+#else
+  if (!GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS |
+                         GET_MODULE_HANDLE_EX_UNCHANGED_REFCOUNT,
+                         reinterpret_cast<LPCTSTR>(&GetContainingModuleHandle),
+                         &thisModule)) {
+    return nullptr;
+  }
+#endif
+  return reinterpret_cast<uintptr_t>(thisModule);
 }
 
 #if defined(MOZILLA_INTERNAL_API)

@@ -12,6 +12,6 @@ const { PrefsHelper } = require("devtools/client/shared/prefs");
 exports.Prefs = new PrefsHelper("devtools.netmonitor", {
   networkDetailsWidth: ["Int", "panes-network-details-width"],
   networkDetailsHeight: ["Int", "panes-network-details-height"],
-  hiddenColumns: ["Json", "hiddenColumns"],
+  visibleColumns: ["Json", "visibleColumns"],
   filters: ["Json", "filters"]
 });

@@ -159,12 +159,12 @@ CompositorBridgeChild::Destroy()
     layers->Destroy();
   }
 
-  AutoTArray<PWebRenderBridgeChild*, 16> wRBridges;
-  ManagedPWebRenderBridgeChild(wRBridges);
-  for (int i = wRBridges.Length() - 1; i >= 0; --i) {
-    RefPtr<WebRenderBridgeChild> wRBridge =
-      static_cast<WebRenderBridgeChild*>(wRBridges[i]);
-    wRBridge->Destroy();
+  AutoTArray<PWebRenderBridgeChild*, 16> wrBridges;
+  ManagedPWebRenderBridgeChild(wrBridges);
+  for (int i = wrBridges.Length() - 1; i >= 0; --i) {
+    RefPtr<WebRenderBridgeChild> wrBridge =
+      static_cast<WebRenderBridgeChild*>(wrBridges[i]);
+    wrBridge->Destroy(/* aIsSync */ false);
   }
 
   const ManagedContainer<PTextureChild>& textures = ManagedPTextureChild();

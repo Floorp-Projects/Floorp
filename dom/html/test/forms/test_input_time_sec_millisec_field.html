@@ -1,0 +1,134 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1374967
+-->
+<head>
+  <title>Test second and millisecond fields in input type=time</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <meta charset="UTF-8">
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1374967">Mozilla Bug 1374967</a>
+<p id="display"></p>
+<div id="content">
+  <input id="input1" type="time">
+  <input id="input2" type="time" value="12:30:40">
+  <input id="input3" type="time" value="12:30:40.567">
+  <input id="input4" type="time" step="1">
+  <input id="input5" type="time" step="61">
+  <input id="input6" type="time" step="120">
+  <input id="input7" type="time" step="0.01">
+  <input id="input8" type="time" step="0.001">
+  <input id="input9" type="time" step="1.001">
+  <input id="input10" type="time" min="01:30:05">
+  <input id="input11" type="time" min="01:30:05.100">
+  <input id="dummy">
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(function() {
+  test();
+  SimpleTest.finish();
+});
+
+const NUM_OF_FIELDS_DEFAULT = 3;
+const NUM_OF_FIELDS_WITH_SECOND = NUM_OF_FIELDS_DEFAULT + 1;
+const NUM_OF_FIELDS_WITH_MILLISEC = NUM_OF_FIELDS_WITH_SECOND + 1;
+
+function countNumberOfFields(aElement) {
+  is(aElement.type, "time", "Input element type should be 'time'");
+
+  let inputRect = aElement.getBoundingClientRect();
+  let firstField_X = 15;
+  let firstField_Y = inputRect.height / 2;
+
+  // Make sure to start on the first field.
+  synthesizeMouse(aElement, firstField_X, firstField_Y, {});
+  is(document.activeElement, aElement, "Input element should be focused");
+
+  let n = 0;
+  while (document.activeElement == aElement) {
+    n++;
+    synthesizeKey("VK_TAB", {});
+  }
+
+  return n;
+}
+
+function test() {
+  // Normal input time element.
+  let elem = document.getElementById("input1");
+  is(countNumberOfFields(elem), NUM_OF_FIELDS_DEFAULT, "Default input time");
+
+  // Dynamically changing the value with second part.
+  elem.value = "10:20:30";
+  is(countNumberOfFields(elem), NUM_OF_FIELDS_WITH_SECOND,
+     "Input time after changing value with second part");
+
+  // Dynamically changing the step to 1 millisecond.
+  elem.step = "0.001";
+  is(countNumberOfFields(elem), NUM_OF_FIELDS_WITH_MILLISEC,
+     "Input time after changing step to 1 millisecond");
+
+  // Input time with value with second part.
+  elem = document.getElementById("input2");
+  is(countNumberOfFields(elem), NUM_OF_FIELDS_WITH_SECOND,
+     "Input time with value with second part");
+
+  // Input time with value with second and millisecond part.
+  elem = document.getElementById("input3");
+  is(countNumberOfFields(elem), NUM_OF_FIELDS_WITH_MILLISEC,
+     "Input time with value with second and millisecond part");
+
+  // Input time with step set as 1 second.
+  elem = document.getElementById("input4");
+  is(countNumberOfFields(elem), NUM_OF_FIELDS_WITH_SECOND,
+     "Input time with step set as 1 second");
+
+  // Input time with step set as 61 seconds.
+  elem = document.getElementById("input5");
+  is(countNumberOfFields(elem), NUM_OF_FIELDS_WITH_SECOND,
+     "Input time with step set as 61 seconds");
+
+  // Input time with step set as 2 minutes.
+  elem = document.getElementById("input6");
+  is(countNumberOfFields(elem), NUM_OF_FIELDS_DEFAULT,
+     "Input time with step set as 2 minutes");
+
+  // Input time with step set as 10 milliseconds.
+  elem = document.getElementById("input7");
+  is(countNumberOfFields(elem), NUM_OF_FIELDS_WITH_MILLISEC,
+     "Input time with step set as 10 milliseconds");
+
+  // Input time with step set as 100 milliseconds.
+  elem = document.getElementById("input8");
+  is(countNumberOfFields(elem), NUM_OF_FIELDS_WITH_MILLISEC,
+     "Input time with step set as 100 milliseconds");
+
+  // Input time with step set as 1001 milliseconds.
+  elem = document.getElementById("input9");
+  is(countNumberOfFields(elem), NUM_OF_FIELDS_WITH_MILLISEC,
+     "Input time with step set as 1001 milliseconds");
+
+  // Input time with min with second part and default step (60 seconds). Note
+  // that step base is min, when there is a min.
+  elem = document.getElementById("input10");
+  is(countNumberOfFields(elem), NUM_OF_FIELDS_WITH_SECOND,
+     "Input time with min with second part");
+
+  // Input time with min with second and millisecond part and default step (60
+  // seconds). Note that step base is min, when there is a min.
+  elem = document.getElementById("input11");
+  is(countNumberOfFields(elem), NUM_OF_FIELDS_WITH_MILLISEC,
+     "Input time with min with second and millisecond part");
+}
+
+</script>
+</pre>
+</body>
+</html>

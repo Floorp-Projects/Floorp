@@ -708,6 +708,7 @@ private:
     // Will be true if the onCacheEntryAvailable callback is not called by the
     // time we send the network request
     Atomic<bool> mRaceCacheWithNetwork;
+    bool mCacheAsyncOpenCalled;
 
 protected:
     virtual void DoNotifyListenerCleanup() override;

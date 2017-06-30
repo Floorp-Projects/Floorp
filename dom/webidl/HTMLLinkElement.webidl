@@ -16,21 +16,21 @@
 interface HTMLLinkElement : HTMLElement {
   [Pure]
            attribute boolean disabled;
-  [SetterThrows, Pure]
+  [CEReactions, SetterThrows, Pure]
            attribute DOMString href;
-  [SetterThrows, Pure]
+  [CEReactions, SetterThrows, Pure]
            attribute DOMString? crossOrigin;
-  [SetterThrows, Pure]
+  [CEReactions, SetterThrows, Pure]
            attribute DOMString rel;
   [PutForwards=value]
   readonly attribute DOMTokenList relList;
-  [SetterThrows, Pure]
+  [CEReactions, SetterThrows, Pure]
            attribute DOMString media;
-  [SetterThrows, Pure]
+  [CEReactions, SetterThrows, Pure]
            attribute DOMString hreflang;
-  [SetterThrows, Pure]
+  [CEReactions, SetterThrows, Pure]
            attribute DOMString type;
-  [SetterThrows, Pure]
+  [CEReactions, SetterThrows, Pure]
            attribute DOMString referrerPolicy;
   [PutForwards=value] readonly attribute DOMTokenList sizes;
 };
@@ -38,16 +38,16 @@ HTMLLinkElement implements LinkStyle;
 
 // http://www.whatwg.org/specs/web-apps/current-work/#other-elements,-attributes-and-apis
 partial interface HTMLLinkElement {
-  [SetterThrows, Pure]
+  [CEReactions, SetterThrows, Pure]
            attribute DOMString charset;
-  [SetterThrows, Pure]
+  [CEReactions, SetterThrows, Pure]
            attribute DOMString rev;
-  [SetterThrows, Pure]
+  [CEReactions, SetterThrows, Pure]
            attribute DOMString target;
 };
 
 // https://w3c.github.io/webappsec/specs/subresourceintegrity/#htmllinkelement-1
 partial interface HTMLLinkElement {
-  [SetterThrows]
+  [CEReactions, SetterThrows]
   attribute DOMString integrity;
 };

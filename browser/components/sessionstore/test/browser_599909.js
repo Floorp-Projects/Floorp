@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+const RESTRICT_TOKEN_OPENPAGE = "%";
+
 var stateBackup = ss.getBrowserState();
 
 function cleanup() {
@@ -116,5 +118,5 @@ function checkAutocompleteResults(aExpected, aCallback) {
   };
 
   info("Searching open pages.");
-  gController.startSearch(Services.prefs.getCharPref("browser.urlbar.restrict.openpage"));
+  gController.startSearch(RESTRICT_TOKEN_OPENPAGE);
 }

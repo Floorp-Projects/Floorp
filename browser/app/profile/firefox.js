@@ -314,18 +314,6 @@ pref("browser.urlbar.maxRichResults", 10);
 // autocomplete.xml.
 pref("browser.urlbar.delay", 50);
 
-// The special characters below can be typed into the urlbar to either restrict
-// the search to visited history, bookmarked, tagged pages; or force a match on
-// just the title text or url.
-pref("browser.urlbar.restrict.history", "^");
-pref("browser.urlbar.restrict.bookmark", "*");
-pref("browser.urlbar.restrict.tag", "+");
-pref("browser.urlbar.restrict.openpage", "%");
-pref("browser.urlbar.restrict.typed", "~");
-pref("browser.urlbar.restrict.searches", "$");
-pref("browser.urlbar.match.title", "#");
-pref("browser.urlbar.match.url", "@");
-
 // The default behavior for the urlbar can be configured to use any combination
 // of the match filters with each additional filter adding more results (union).
 pref("browser.urlbar.suggest.history",              true);
@@ -691,7 +679,7 @@ pref("plugins.click_to_play", true);
 pref("plugins.testmode", false);
 
 // Should plugins that are hidden show the infobar UI?
-pref("plugins.show_infobar", true);
+pref("plugins.show_infobar", false);
 
 // Should dismissing the hidden plugin infobar suppress it permanently?
 pref("plugins.remember_infobar_dismissal", true);

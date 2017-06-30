@@ -14,9 +14,9 @@
 // http://www.whatwg.org/specs/web-apps/current-work/#the-base-element
 [HTMLConstructor]
 interface HTMLBaseElement : HTMLElement {
-           [SetterThrows, Pure]
+           [CEReactions, SetterThrows, Pure]
            attribute DOMString href;
-           [SetterThrows, Pure]
+           [CEReactions, SetterThrows, Pure]
            attribute DOMString target;
 };
 

@@ -1615,7 +1615,8 @@ Disassemble1(JSContext* cx, HandleScript script, jsbytecode* pc,
     if (!dumpStack())
         return 0;
 
-    sp->put("\n");
+    if (!sp->put("\n"))
+        return 0;
     return len;
 }
 

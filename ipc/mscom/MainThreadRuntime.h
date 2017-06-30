@@ -8,6 +8,9 @@
 #define mozilla_mscom_MainThreadRuntime_h
 
 #include "mozilla/Attributes.h"
+#if defined(ACCESSIBILITY)
+#include "mozilla/mscom/ActivationContext.h"
+#endif // defined(ACCESSIBILITY)
 #include "mozilla/mscom/COMApartmentRegion.h"
 #include "mozilla/mscom/MainThreadClientInfo.h"
 #include "mozilla/RefPtr.h"
@@ -40,8 +43,11 @@ public:
 private:
   HRESULT InitializeSecurity();
 
-  STARegion mStaRegion;
   HRESULT mInitResult;
+#if defined(ACCESSIBILITY)
+  ActivationContextRegion mActCtxRgn;
+#endif // defined(ACCESSIBILITY)
+  STARegion mStaRegion;
 
   RefPtr<MainThreadClientInfo>  mClientInfo;
 
