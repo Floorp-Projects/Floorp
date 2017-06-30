@@ -39,6 +39,9 @@
 #ifdef MOZ_PHOTON_THEME
   skin/classic/browser/customizableui/empty-overflow-panel.png     (../shared/customizableui/empty-overflow-panel.png)
   skin/classic/browser/customizableui/empty-overflow-panel@2x.png  (../shared/customizableui/empty-overflow-panel@2x.png)
+  skin/classic/browser/customizableui/density-compact.svg      (../shared/customizableui/density-compact.svg)
+  skin/classic/browser/customizableui/density-normal.svg       (../shared/customizableui/density-normal.svg)
+  skin/classic/browser/customizableui/density-touch.svg        (../shared/customizableui/density-touch.svg)
 #else
   skin/classic/browser/customizableui/customize-illustration.png  (../shared/customizableui/customize-illustration.png)
   skin/classic/browser/customizableui/customize-illustration@2x.png  (../shared/customizableui/customize-illustration@2x.png)

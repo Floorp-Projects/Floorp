@@ -51,6 +51,7 @@
           </hbox>
         </panel>
       </button>
+#ifdef MOZ_PHOTON_THEME
       <button id="customization-uidensity-button"
               label="&customizeMode.uidensity;"
               class="customizationmode-button"
@@ -106,6 +107,7 @@
 #endif
         </panel>
       </button>
+#endif
 
       <spacer id="customization-footer-spacer"/>
       <button id="customization-undo-reset-button"
