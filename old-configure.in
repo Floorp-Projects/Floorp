@@ -3456,7 +3456,9 @@ if test -n "$MOZ_USE_NATIVE_POPUP_WINDOWS"; then
   AC_DEFINE(MOZ_USE_NATIVE_POPUP_WINDOWS)
 fi
 
-if test -n "$MOZ_TREE_FREETYPE"; then
+# Avoid defining MOZ_ENABLE_CAIRO_FT on Windows platforms because
+# "cairo-ft-font.c" includes <dlfcn.h>, which only exists on posix platforms
+if test -n "$MOZ_TREE_FREETYPE" -a "$OS_TARGET" != WINNT; then
    MOZ_ENABLE_CAIRO_FT=1
    FT_FONT_FEATURE="#define CAIRO_HAS_FT_FONT 1"
    CAIRO_FT_CFLAGS="-I$_topsrcdir/modules/freetype2/include"
