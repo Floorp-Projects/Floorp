@@ -2127,7 +2127,8 @@ void MediaPipelineReceiveAudio::DetachMedia()
   }
 }
 
-nsresult MediaPipelineReceiveAudio::Init() {
+nsresult MediaPipelineReceiveAudio::Init()
+{
   ASSERT_ON_THREAD(main_thread_);
   MOZ_MTLOG(ML_DEBUG, __FUNCTION__);
 
@@ -2171,8 +2172,8 @@ public:
     // delta and thus messes up handling of the graph
     if (delta > 0) {
       VideoSegment segment;
-      segment.AppendFrame(image.forget(), delta, IntSize(width_, height_),
-                          principal_handle_);
+      IntSize size = image ? image->GetSize() : IntSize(width_, height_);
+      segment.AppendFrame(image.forget(), delta, size, principal_handle_);
       // Handle track not actually added yet or removed/finished
       if (source_->AppendToTrack(track_id_, &segment)) {
         played_ticks_ = desired_time;
@@ -2197,41 +2198,24 @@ public:
                         uint32_t time_stamp,
                         int64_t render_time)
   {
-    RenderVideoFrame(buffer.DataY(),
-                     buffer.StrideY(),
-                     buffer.DataU(),
-                     buffer.StrideU(),
-                     buffer.DataV(),
-                     buffer.StrideV(),
-                     time_stamp, render_time);
-  }
-
-  void RenderVideoFrame(const uint8_t* buffer_y,
-                        uint32_t y_stride,
-                        const uint8_t* buffer_u,
-                        uint32_t u_stride,
-                        const uint8_t* buffer_v,
-                        uint32_t v_stride,
-                        uint32_t time_stamp,
-                        int64_t render_time)
-  {
-    MOZ_ASSERT(buffer_y);
+    MOZ_ASSERT(buffer.DataY());
     // Create a video frame using |buffer|.
     RefPtr<PlanarYCbCrImage> yuvImage =
       image_container_->CreatePlanarYCbCrImage();
 
     PlanarYCbCrData yuvData;
-    yuvData.mYChannel = const_cast<uint8_t*>(buffer_y);
-    yuvData.mYSize = IntSize(y_stride, height_);
-    yuvData.mYStride = y_stride;
-    MOZ_ASSERT(u_stride == v_stride);
-    yuvData.mCbCrStride = u_stride;
-    yuvData.mCbChannel = const_cast<uint8_t*>(buffer_u);
-    yuvData.mCrChannel = const_cast<uint8_t*>(buffer_v);
-    yuvData.mCbCrSize = IntSize(yuvData.mCbCrStride, (height_ + 1) >> 1);
+    yuvData.mYChannel = const_cast<uint8_t*>(buffer.DataY());
+    yuvData.mYSize = IntSize(buffer.width(), buffer.height());
+    yuvData.mYStride = buffer.StrideY();
+    MOZ_ASSERT(buffer.StrideU() == buffer.StrideV());
+    yuvData.mCbCrStride = buffer.StrideU();
+    yuvData.mCbChannel = const_cast<uint8_t*>(buffer.DataU());
+    yuvData.mCrChannel = const_cast<uint8_t*>(buffer.DataV());
+    yuvData.mCbCrSize =
+      IntSize((buffer.width() + 1) >> 1, (buffer.height() + 1) >> 1);
     yuvData.mPicX = 0;
     yuvData.mPicY = 0;
-    yuvData.mPicSize = IntSize(width_, height_);
+    yuvData.mPicSize = IntSize(buffer.width(), buffer.height());
     yuvData.mStereoMode = StereoMode::MONO;
 
     if (!yuvImage->CopyData(yuvData)) {
