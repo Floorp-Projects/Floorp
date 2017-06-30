@@ -3663,6 +3663,9 @@ this.XPIProvider = {
 
     let result = [];
     for (let addon of XPIStates.enabledAddons()) {
+      if (aTypes && !aTypes.includes(addon.type)) {
+        continue;
+      }
       let location = this.installLocationsByName[addon.location.name];
       let scope, isSystem;
       if (location) {
