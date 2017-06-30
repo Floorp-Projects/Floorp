@@ -22,7 +22,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1345361
   gScript.addMessageListener("test-fail", testFailHandler);
 
   const simplestMethods = [{
-    supportedMethods: [ "basic-card" ],
+    supportedMethods: "basic-card",
   }];
   const simplestDetails = {
     total: {
@@ -35,7 +35,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1345361
   };
 
   const complexMethods = [{
-    supportedMethods: [ "basic-card" ],
+    supportedMethods: "basic-card",
     data: {
       supportedNetworks: ['unionpay', 'visa', 'mastercard', 'amex', 'discover',
                           'diners', 'jcb', 'mir',
@@ -71,7 +71,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1345361
     ],
     modifiers: [
       {
-        supportedMethods: ["basic-card"],
+        supportedMethods: "basic-card",
         total: {
           label: "Discounted Total",
           amount: {

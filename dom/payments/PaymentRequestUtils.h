@@ -23,10 +23,6 @@ DeserializeToJSObject(const nsAString& aSerializedObject,
                       JSContext* aCx,
                       JS::MutableHandleObject aObject);
 
-nsresult
-ConvertStringstoISupportsStrings(const nsTArray<nsString>& aStrings,
-                                 nsIArray** aIStrings);
-
 } // end of namespace dom
 } // end of namespace mozilla
 

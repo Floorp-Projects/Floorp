@@ -43,31 +43,5 @@ DeserializeToJSObject(const nsAString& aSerializedObject, JSContext* aCx, JS::Mu
   return NS_OK;
 }
 
-nsresult
-ConvertStringstoISupportsStrings(const nsTArray<nsString>& aStrings,
-                                 nsIArray** aIStrings)
-{
-  NS_ENSURE_ARG_POINTER(aIStrings);
-  *aIStrings = nullptr;
-  nsCOMPtr<nsIMutableArray> iStrings = do_CreateInstance(NS_ARRAY_CONTRACTID);
-  for (const nsString& string : aStrings) {
-    nsCOMPtr<nsISupportsString> iString =
-      do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID);
-    if (NS_WARN_IF(!iString)) {
-      return NS_ERROR_FAILURE;
-    }
-    nsresult rv = iString->SetData(string);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-    rv = iStrings->AppendElement(iString, false);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-  }
-  iStrings.forget(aIStrings);
-  return NS_OK;
-}
-
 } // end of namespace dom
 } // end of namespace mozilla

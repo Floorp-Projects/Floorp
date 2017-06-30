@@ -18,7 +18,7 @@ namespace payments {
 NS_IMPL_ISUPPORTS(PaymentMethodData,
                   nsIPaymentMethodData)
 
-PaymentMethodData::PaymentMethodData(nsIArray* aSupportedMethods,
+PaymentMethodData::PaymentMethodData(const nsAString& aSupportedMethods,
                                      const nsAString& aData)
   : mSupportedMethods(aSupportedMethods)
   , mData(aData)
@@ -30,25 +30,16 @@ PaymentMethodData::Create(const IPCPaymentMethodData& aIPCMethodData,
                           nsIPaymentMethodData** aMethodData)
 {
   NS_ENSURE_ARG_POINTER(aMethodData);
-  nsCOMPtr<nsIArray> supportedMethods;
-  nsresult rv = ConvertStringstoISupportsStrings(aIPCMethodData.supportedMethods(),
-                                                 getter_AddRefs(supportedMethods));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
   nsCOMPtr<nsIPaymentMethodData> methodData =
-    new PaymentMethodData(supportedMethods, aIPCMethodData.data());
+    new PaymentMethodData(aIPCMethodData.supportedMethods(), aIPCMethodData.data());
   methodData.forget(aMethodData);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-PaymentMethodData::GetSupportedMethods(nsIArray** aSupportedMethods)
+PaymentMethodData::GetSupportedMethods(nsAString& aSupportedMethods)
 {
-  NS_ENSURE_ARG_POINTER(aSupportedMethods);
-  MOZ_ASSERT(mSupportedMethods);
-  nsCOMPtr<nsIArray> supportedMethods = mSupportedMethods;
-  supportedMethods.forget(aSupportedMethods);
+  aSupportedMethods = mSupportedMethods;
   return NS_OK;
 }
 
@@ -156,7 +147,7 @@ PaymentItem::GetPending(bool* aPending)
 NS_IMPL_ISUPPORTS(PaymentDetailsModifier,
                   nsIPaymentDetailsModifier)
 
-PaymentDetailsModifier::PaymentDetailsModifier(nsIArray* aSupportedMethods,
+PaymentDetailsModifier::PaymentDetailsModifier(const nsAString& aSupportedMethods,
                                                nsIPaymentItem* aTotal,
                                                nsIArray* aAdditionalDisplayItems,
                                                const nsAString& aData)
@@ -178,13 +169,6 @@ PaymentDetailsModifier::Create(const IPCPaymentDetailsModifier& aIPCModifier,
     return rv;
   }
 
-  nsCOMPtr<nsIArray> supportedMethods;
-  rv = ConvertStringstoISupportsStrings(aIPCModifier.supportedMethods(),
-                                        getter_AddRefs(supportedMethods));
-   if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
   nsCOMPtr<nsIArray> displayItems;
   if (aIPCModifier.additionalDisplayItemsPassed()) {
     nsCOMPtr<nsIMutableArray> items = do_CreateInstance(NS_ARRAY_CONTRACTID);
@@ -203,18 +187,18 @@ PaymentDetailsModifier::Create(const IPCPaymentDetailsModifier& aIPCModifier,
     displayItems = items.forget();
   }
   nsCOMPtr<nsIPaymentDetailsModifier> modifier =
-    new PaymentDetailsModifier(supportedMethods, total, displayItems, aIPCModifier.data());
+    new PaymentDetailsModifier(aIPCModifier.supportedMethods(),
+                               total,
+                               displayItems,
+                               aIPCModifier.data());
   modifier.forget(aModifier);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-PaymentDetailsModifier::GetSupportedMethods(nsIArray** aSupportedMethods)
+PaymentDetailsModifier::GetSupportedMethods(nsAString& aSupportedMethods)
 {
-  NS_ENSURE_ARG_POINTER(aSupportedMethods);
-  MOZ_ASSERT(mSupportedMethods);
-  nsCOMPtr<nsIArray> supportedMethods = mSupportedMethods;
-  supportedMethods.forget(aSupportedMethods);
+  aSupportedMethods = mSupportedMethods;
   return NS_OK;
 }
 
@@ -659,7 +643,7 @@ PaymentRequest::UpdatePaymentDetails(nsIPaymentDetails* aPaymentDetails)
 
 NS_IMPL_ISUPPORTS(PaymentAddress, nsIPaymentAddress)
 
-nsresult
+NS_IMETHODIMP
 PaymentAddress::Init(const nsAString& aCountry,
                      nsIArray* aAddressLine,
                      const nsAString& aRegion,
@@ -686,14 +670,14 @@ PaymentAddress::Init(const nsAString& aCountry,
   return NS_OK;
 }
 
-nsresult
+NS_IMETHODIMP
 PaymentAddress::GetCountry(nsAString& aCountry)
 {
   aCountry = mCountry;
   return NS_OK;
 }
 
-nsresult
+NS_IMETHODIMP
 PaymentAddress::GetAddressLine(nsIArray** aAddressLine)
 {
   NS_ENSURE_ARG_POINTER(aAddressLine);
@@ -702,63 +686,63 @@ PaymentAddress::GetAddressLine(nsIArray** aAddressLine)
   return NS_OK;
 }
 
-nsresult
+NS_IMETHODIMP
 PaymentAddress::GetRegion(nsAString& aRegion)
 {
   aRegion = mRegion;
   return NS_OK;
 }
 
-nsresult
+NS_IMETHODIMP
 PaymentAddress::GetCity(nsAString& aCity)
 {
   aCity = mCity;
   return NS_OK;
 }
 
-nsresult
+NS_IMETHODIMP
 PaymentAddress::GetDependentLocality(nsAString& aDependentLocality)
 {
   aDependentLocality = mDependentLocality;
   return NS_OK;
 }
 
-nsresult
+NS_IMETHODIMP
 PaymentAddress::GetPostalCode(nsAString& aPostalCode)
 {
   aPostalCode = mPostalCode;
   return NS_OK;
 }
 
-nsresult
+NS_IMETHODIMP
 PaymentAddress::GetSortingCode(nsAString& aSortingCode)
 {
   aSortingCode = mSortingCode;
   return NS_OK;
 }
 
-nsresult
+NS_IMETHODIMP
 PaymentAddress::GetLanguageCode(nsAString& aLanguageCode)
 {
   aLanguageCode = mLanguageCode;
   return NS_OK;
 }
 
-nsresult
+NS_IMETHODIMP
 PaymentAddress::GetOrganization(nsAString& aOrganization)
 {
   aOrganization = mOrganization;
   return NS_OK;
 }
 
-nsresult
+NS_IMETHODIMP
 PaymentAddress::GetRecipient(nsAString& aRecipient)
 {
   aRecipient = mRecipient;
   return NS_OK;
 }
 
-nsresult
+NS_IMETHODIMP
 PaymentAddress::GetPhone(nsAString& aPhone)
 {
   aPhone = mPhone;

@@ -7,11 +7,7 @@ function checkSimplePayment(aSimplePayment) {
 
   const methodData = aSimplePayment.paymentMethods.queryElementAt(0, Ci.nsIPaymentMethodData);
   ok(methodData, "Fail to get payment methodData.");
-  is(methodData.supportedMethods.length, 2, "supportedMethods' length should be 2.");
-  let supportedMethod = methodData.supportedMethods.queryElementAt(0, Ci.nsISupportsString);
-  is(supportedMethod, "MyPay", "1st supported method should be 'MyPay'.");
-  supportedMethod = methodData.supportedMethods.queryElementAt(1, Ci.nsISupportsString);
-  is(supportedMethod, "TestPay", "2nd supported method should be 'TestPay'.");
+  is(methodData.supportedMethods, "MyPay", "supported method should be 'MyPay'.");
   is(methodData.data, "", "method data should be empty");
 
   // checking the passed PaymentDetails parameter
@@ -40,11 +36,7 @@ function checkComplexPayment(aPayment) {
 
   const methodData = aPayment.paymentMethods.queryElementAt(0, Ci.nsIPaymentMethodData);
   ok(methodData, "Fail to get payment methodData.");
-  is(methodData.supportedMethods.length, 2, "supportedMethods' length should be 2.");
-  let supportedMethod = methodData.supportedMethods.queryElementAt(0, Ci.nsISupportsString);
-  is(supportedMethod, "MyPay", "1st supported method should be 'MyPay'.");
-  supportedMethod = methodData.supportedMethods.queryElementAt(1, Ci.nsISupportsString);
-  is(supportedMethod, "TestPay", "2nd supported method should be 'TestPay'.");
+  is(methodData.supportedMethods, "MyPay", "supported method should be 'MyPay'.");
   is(methodData.data, "", "method data should be empty");
 
   // checking the passed PaymentDetails parameter
@@ -69,10 +61,7 @@ function checkComplexPayment(aPayment) {
   is(modifiers.length, 1, "modifiers' length should be 1.");
 
   const modifier = modifiers.queryElementAt(0, Ci.nsIPaymentDetailsModifier);
-  const modifierSupportedMethods = modifier.supportedMethods;
-  is(modifierSupportedMethods.length, 1, "modifier's supported methods length should be 1.");
-  supportedMethod = modifierSupportedMethods.queryElementAt(0, Ci.nsISupportsString);
-  is(supportedMethod, "MyPay", "modifier's supported method name should be 'MyPay'.");
+  is(modifier.supportedMethods, "MyPay", "modifier's supported method name should be 'MyPay'.");
   is(modifier.total.label, "Discounted donation", "modifier's total label should be 'Discounted donation'.");
   is(modifier.total.amount.currency, "USD", "modifier's total currency should be 'USD'.");
   is(modifier.total.amount.value, "45.00", "modifier's total value should be '45.00'.");
