@@ -73,10 +73,6 @@ const BASE_SCHEMA = "chrome://extensions/content/schemas/manifest.json";
 const CATEGORY_EXTENSION_SCHEMAS = "webextension-schemas";
 const CATEGORY_EXTENSION_SCRIPTS = "webextension-scripts";
 
-const XUL_URL = "data:application/vnd.mozilla.xul+xml;charset=utf-8," + encodeURI(
-  `<?xml version="1.0"?>
-  <window id="documentElement"/>`);
-
 let schemaURLs = new Set();
 
 schemaURLs.add("chrome://extensions/content/schemas/experiments.json");
@@ -839,7 +835,7 @@ class HiddenXULWindow {
     let system = Services.scriptSecurityManager.getSystemPrincipal();
     this.chromeShell.createAboutBlankContentViewer(system);
     this.chromeShell.useGlobalHistory = false;
-    this.chromeShell.loadURI(XUL_URL, 0, null, null, null);
+    this.chromeShell.loadURI("chrome://extensions/content/dummy.xul", 0, null, null, null);
 
     await promiseObserved("chrome-document-global-created",
                           win => win.document == this.chromeShell.document);
