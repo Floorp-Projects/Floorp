@@ -57,7 +57,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   Kinto: "resource://services-common/kinto-offline-client.js",
   FirefoxAdapter: "resource://services-common/kinto-storage-adapter.js",
   Observers: "resource://services-common/observers.js",
-  Sqlite: "resource://gre/modules/Sqlite.jsm",
   Utils: "resource://services-sync/util.js",
 });
 
@@ -337,9 +336,7 @@ global.KeyRingEncryptionRemoteTransformer = KeyRingEncryptionRemoteTransformer;
  */
 const storageSyncInit = (async function() {
   const path = "storage-sync.sqlite";
-  const opts = {path, sharedMemoryCache: false};
-  const connection = await Sqlite.openConnection(opts);
-  await FirefoxAdapter._init(connection);
+  const connection = await FirefoxAdapter.openConnection({path});
   return {
     connection,
     kinto: new Kinto({
@@ -353,8 +350,7 @@ const storageSyncInit = (async function() {
 AsyncShutdown.profileBeforeChange.addBlocker(
   "ExtensionStorageSync: close Sqlite handle",
   async function() {
-    const ret = await storageSyncInit;
-    const {connection} = ret;
+    const {connection} = await storageSyncInit;
     await connection.close();
   }
 );
