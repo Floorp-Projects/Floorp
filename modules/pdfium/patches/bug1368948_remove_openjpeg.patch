@@ -1,0 +1,152 @@
+# HG changeset patch
+# User Bruce Sun <brsun@mozilla.com>
+# Date 1498781299 25200
+#      Thu Jun 29 17:08:19 2017 -0700
+# Node ID ae3e3cc9d3048e4ed01890c362810e3816b7b6ea
+# Parent  dec90fe0b38375822ff169695c2ac18b96be4f51
+Bug 1368948: Prevent PDFium from trying to use the removed OpenJPEG code.
+
+Our PDFium update script at modules/pdfium/update.sh removes the OpenJPEG code
+from our copy of PDFium.  This patch makes sure that the remaining PDFium code
+does not try to use OpenJPEG.
+
+MozReview-Commit-ID: 1ef0OObTzHw
+
+diff --git a/modules/pdfium/pdfium/core/fxcodec/codec/ccodec_jpxmodule.h b/modules/pdfium/pdfium/core/fxcodec/codec/ccodec_jpxmodule.h
+--- a/modules/pdfium/pdfium/core/fxcodec/codec/ccodec_jpxmodule.h
++++ b/modules/pdfium/pdfium/core/fxcodec/codec/ccodec_jpxmodule.h
+@@ -11,26 +11,26 @@
+ 
+ #include "core/fxcrt/fx_system.h"
+ 
+ class CJPX_Decoder;
+ class CPDF_ColorSpace;
+ 
+ class CCodec_JpxModule {
+  public:
+-  CCodec_JpxModule();
+-  ~CCodec_JpxModule();
++  CCodec_JpxModule() {}
++  ~CCodec_JpxModule() {}
+ 
+   CJPX_Decoder* CreateDecoder(const uint8_t* src_buf,
+                               uint32_t src_size,
+-                              CPDF_ColorSpace* cs);
++                              CPDF_ColorSpace* cs) { return nullptr; }
+   void GetImageInfo(CJPX_Decoder* pDecoder,
+                     uint32_t* width,
+                     uint32_t* height,
+-                    uint32_t* components);
++                    uint32_t* components) {}
+   bool Decode(CJPX_Decoder* pDecoder,
+               uint8_t* dest_data,
+               int pitch,
+-              const std::vector<uint8_t>& offsets);
+-  void DestroyDecoder(CJPX_Decoder* pDecoder);
++              const std::vector<uint8_t>& offsets) { return false; }
++  void DestroyDecoder(CJPX_Decoder* pDecoder) {}
+ };
+ 
+ #endif  // CORE_FXCODEC_CODEC_CCODEC_JPXMODULE_H_
+diff --git a/modules/pdfium/pdfium/core/fxcodec/codec/fx_codec.cpp b/modules/pdfium/pdfium/core/fxcodec/codec/fx_codec.cpp
+--- a/modules/pdfium/pdfium/core/fxcodec/codec/fx_codec.cpp
++++ b/modules/pdfium/pdfium/core/fxcodec/codec/fx_codec.cpp
+@@ -6,17 +6,16 @@
+ 
+ #include "core/fxcodec/fx_codec.h"
+ 
+ #include <algorithm>
+ #include <cmath>
+ #include <memory>
+ #include <utility>
+ 
+-#include "core/fxcodec/codec/codec_int.h"
+ #include "core/fxcrt/fx_ext.h"
+ #include "core/fxcrt/fx_safe_types.h"
+ #include "third_party/base/logging.h"
+ #include "third_party/base/ptr_util.h"
+ 
+ CCodec_ModuleMgr::CCodec_ModuleMgr()
+     : m_pBasicModule(new CCodec_BasicModule),
+       m_pFaxModule(new CCodec_FaxModule),
+diff --git a/modules/pdfium/pdfium/core/fxcodec/codec/fx_codec_fax.cpp b/modules/pdfium/pdfium/core/fxcodec/codec/fx_codec_fax.cpp
+--- a/modules/pdfium/pdfium/core/fxcodec/codec/fx_codec_fax.cpp
++++ b/modules/pdfium/pdfium/core/fxcodec/codec/fx_codec_fax.cpp
+@@ -3,17 +3,16 @@
+ // found in the LICENSE file.
+ 
+ // Original code copyright 2014 Foxit Software Inc. http://www.foxitsoftware.com
+ 
+ #include <algorithm>
+ #include <memory>
+ #include <vector>
+ 
+-#include "core/fxcodec/codec/codec_int.h"
+ #include "core/fxcodec/fx_codec.h"
+ #include "core/fxcrt/fx_memory.h"
+ #include "third_party/base/ptr_util.h"
+ 
+ namespace {
+ 
+ const uint8_t OneLeadPos[256] = {
+     8, 7, 6, 6, 5, 5, 5, 5, 4, 4, 4, 4, 4, 4, 4, 4, 3, 3, 3, 3, 3, 3, 3, 3,
+diff --git a/modules/pdfium/pdfium/core/fxcodec/codec/fx_codec_flate.cpp b/modules/pdfium/pdfium/core/fxcodec/codec/fx_codec_flate.cpp
+--- a/modules/pdfium/pdfium/core/fxcodec/codec/fx_codec_flate.cpp
++++ b/modules/pdfium/pdfium/core/fxcodec/codec/fx_codec_flate.cpp
+@@ -1,16 +1,14 @@
+ // Copyright 2014 PDFium Authors. All rights reserved.
+ // Use of this source code is governed by a BSD-style license that can be
+ // found in the LICENSE file.
+ 
+ // Original code copyright 2014 Foxit Software Inc. http://www.foxitsoftware.com
+ 
+-#include "core/fxcodec/codec/codec_int.h"
+-
+ #include <algorithm>
+ #include <memory>
+ #include <utility>
+ #include <vector>
+ 
+ #include "core/fxcodec/fx_codec.h"
+ #include "core/fxcrt/fx_ext.h"
+ #include "third_party/base/ptr_util.h"
+diff --git a/modules/pdfium/pdfium/core/fxcodec/codec/fx_codec_icc.cpp b/modules/pdfium/pdfium/core/fxcodec/codec/fx_codec_icc.cpp
+--- a/modules/pdfium/pdfium/core/fxcodec/codec/fx_codec_icc.cpp
++++ b/modules/pdfium/pdfium/core/fxcodec/codec/fx_codec_icc.cpp
+@@ -1,15 +1,14 @@
+ // Copyright 2014 PDFium Authors. All rights reserved.
+ // Use of this source code is governed by a BSD-style license that can be
+ // found in the LICENSE file.
+ 
+ // Original code copyright 2014 Foxit Software Inc. http://www.foxitsoftware.com
+ 
+-#include "core/fxcodec/codec/codec_int.h"
+ #include "core/fxcodec/fx_codec.h"
+ #include "third_party/lcms2-2.6/include/lcms2.h"
+ 
+ struct CLcmsCmm {
+   cmsHTRANSFORM m_hTransform;
+   int m_nSrcComponents;
+   int m_nDstComponents;
+   bool m_bLab;
+diff --git a/modules/pdfium/pdfium/core/fxcodec/codec/fx_codec_jpeg.cpp b/modules/pdfium/pdfium/core/fxcodec/codec/fx_codec_jpeg.cpp
+--- a/modules/pdfium/pdfium/core/fxcodec/codec/fx_codec_jpeg.cpp
++++ b/modules/pdfium/pdfium/core/fxcodec/codec/fx_codec_jpeg.cpp
+@@ -4,17 +4,16 @@
+ 
+ // Original code copyright 2014 Foxit Software Inc. http://www.foxitsoftware.com
+ 
+ #include <setjmp.h>
+ 
+ #include <memory>
+ #include <utility>
+ 
+-#include "core/fxcodec/codec/codec_int.h"
+ #include "core/fxcodec/fx_codec.h"
+ #include "core/fxcrt/fx_safe_types.h"
+ #include "core/fxge/fx_dib.h"
+ #include "third_party/base/ptr_util.h"
+ 
+ extern "C" {
+ #undef FAR
+ #if defined(USE_SYSTEM_LIBJPEG)

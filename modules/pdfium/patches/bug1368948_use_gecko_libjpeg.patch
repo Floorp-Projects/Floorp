@@ -1,0 +1,32 @@
+# HG changeset patch
+# User Bruce Sun <brsun@mozilla.com>
+# Date 1498781267 25200
+#      Thu Jun 29 17:07:47 2017 -0700
+# Node ID 7a6b973eaa086031ad64990d96bbf157ef02ea65
+# Parent  528bde20b353af9b8f075c4d2c54f63061eb0e61
+Bug 1368948: Make PDFium use Mozilla's in-tree copy of libjpeg instead of its own copy.
+
+MozReview-Commit-ID: Fbc6EdA4OBY
+
+diff --git a/modules/pdfium/pdfium/core/fxcodec/codec/fx_codec_jpeg.cpp b/modules/pdfium/pdfium/core/fxcodec/codec/fx_codec_jpeg.cpp
+--- a/modules/pdfium/pdfium/core/fxcodec/codec/fx_codec_jpeg.cpp
++++ b/modules/pdfium/pdfium/core/fxcodec/codec/fx_codec_jpeg.cpp
+@@ -15,17 +15,17 @@
+ #include "core/fxge/fx_dib.h"
+ #include "third_party/base/ptr_util.h"
+ 
+ extern "C" {
+ #undef FAR
+ #if defined(USE_SYSTEM_LIBJPEG)
+ #include <jpeglib.h>
+ #elif defined(USE_LIBJPEG_TURBO)
+-#include "third_party/libjpeg_turbo/jpeglib.h"
++#include "jpeglib.h"
+ #else
+ #include "third_party/libjpeg/jpeglib.h"
+ #endif
+ }
+ 
+ extern "C" {
+ 
+ static void JpegScanSOI(const uint8_t** src_buf, uint32_t* src_size) {
