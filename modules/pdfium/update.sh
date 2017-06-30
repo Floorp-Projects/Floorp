@@ -93,9 +93,25 @@ cleanup_files() {
 }
 
 apply_patches() {
-    # Apply patches, ex:
-    # patch -p3 < some.patch
-    return
+    # Patch to fix build errors due to lacking GDI+ prerequisite headers
+    echo "Applying patches/bug1368948_gdiplus_prerequisite.patch"
+    patch -p3 < patches/bug1368948_gdiplus_prerequisite.patch
+
+    # Patch to use freetype library within Gecko
+    echo "Applying patches/bug1368948_use_gecko_freetype.patch"
+    patch -p3 < patches/bug1368948_use_gecko_freetype.patch
+
+    # Patch to use libjpeg library within Gecko
+    echo "Applying patches/bug1368948_use_gecko_libjpeg.patch"
+    patch -p3 < patches/bug1368948_use_gecko_libjpeg.patch
+
+    # Patch to use zlib library within Gecko
+    echo "Applying patches/bug1368948_use_gecko_zlib.patch"
+    patch -p3 < patches/bug1368948_use_gecko_zlib.patch
+
+    # Patch to remove openjpeg support
+    echo "Applying patches/bug1368948_remove_openjpeg.patch"
+    patch -p3 < patches/bug1368948_remove_openjpeg.patch
 }
 
 update_readme() {

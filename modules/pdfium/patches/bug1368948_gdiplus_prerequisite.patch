@@ -1,0 +1,34 @@
+# HG changeset patch
+# User Bruce Sun <brsun@mozilla.com>
+# Date 1498781240 25200
+#      Thu Jun 29 17:07:20 2017 -0700
+# Node ID 20556f24d36ccfb4471b9ef86241a6f8912e8a19
+# Parent  5c522cd3d85e88d3cd7415c917985af687a8a0a6
+Bug 1368948: Undefine WIN32_LEAN_AND_MEAN when building PDFium to avoid build errors in GDI+ headers.
+
+Mozilla build system includes mozilla-config.h, which defines WIN32_LEAN_AND_MEAN.
+Some definitions are stripped from header files by WIN32_LEAN_AND_MEAN causing build
+errors in GDI+ headers. Including objidl.h would fix these errors, but since Chromium
+builds PDFium without WIN32_LEAN_AND_MEAN, we do the same.
+
+MozReview-Commit-ID: HQYrtJgQXHP
+
+diff --git a/modules/pdfium/pdfium/core/fxge/win32/fx_win32_gdipext.cpp b/modules/pdfium/pdfium/core/fxge/win32/fx_win32_gdipext.cpp
+--- a/modules/pdfium/pdfium/core/fxge/win32/fx_win32_gdipext.cpp
++++ b/modules/pdfium/pdfium/core/fxge/win32/fx_win32_gdipext.cpp
+@@ -1,14 +1,15 @@
+ // Copyright 2014 PDFium Authors. All rights reserved.
+ // Use of this source code is governed by a BSD-style license that can be
+ // found in the LICENSE file.
+ 
+ // Original code copyright 2014 Foxit Software Inc. http://www.foxitsoftware.com
+ 
++#undef WIN32_LEAN_AND_MEAN
+ #include <windows.h>
+ 
+ #include <algorithm>
+ #include <memory>
+ 
+ #include "core/fxcrt/fx_system.h"
+ #include "core/fxge/cfx_gemodule.h"
+ #include "core/fxge/cfx_graphstatedata.h"

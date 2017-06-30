@@ -1,0 +1,32 @@
+# HG changeset patch
+# User Bruce Sun <brsun@mozilla.com>
+# Date 1498781283 25200
+#      Thu Jun 29 17:08:03 2017 -0700
+# Node ID dec90fe0b38375822ff169695c2ac18b96be4f51
+# Parent  7a6b973eaa086031ad64990d96bbf157ef02ea65
+Bug 1368948: Make PDFium use Mozilla's in-tree copy of zlip instead of its own copy.
+
+MozReview-Commit-ID: FlQwnJ9O3cQ
+
+diff --git a/modules/pdfium/pdfium/core/fxcodec/codec/fx_codec_flate.cpp b/modules/pdfium/pdfium/core/fxcodec/codec/fx_codec_flate.cpp
+--- a/modules/pdfium/pdfium/core/fxcodec/codec/fx_codec_flate.cpp
++++ b/modules/pdfium/pdfium/core/fxcodec/codec/fx_codec_flate.cpp
+@@ -9,17 +9,17 @@
+ #include <algorithm>
+ #include <memory>
+ #include <utility>
+ #include <vector>
+ 
+ #include "core/fxcodec/fx_codec.h"
+ #include "core/fxcrt/fx_ext.h"
+ #include "third_party/base/ptr_util.h"
+-#include "third_party/zlib_v128/zlib.h"
++#include "zlib.h"
+ 
+ extern "C" {
+ static void* my_alloc_func(void* opaque,
+                            unsigned int items,
+                            unsigned int size) {
+   return FX_Alloc2D(uint8_t, items, size);
+ }
+ static void my_free_func(void* opaque, void* address) {

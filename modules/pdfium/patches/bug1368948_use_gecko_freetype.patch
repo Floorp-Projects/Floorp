@@ -1,0 +1,32 @@
+# HG changeset patch
+# User Bruce Sun <brsun@mozilla.com>
+# Date 1498781255 25200
+#      Thu Jun 29 17:07:35 2017 -0700
+# Node ID 528bde20b353af9b8f075c4d2c54f63061eb0e61
+# Parent  20556f24d36ccfb4471b9ef86241a6f8912e8a19
+Bug 1368948: Make PDFium use Mozilla's in-tree copy of FreeType instead of its own copy.
+
+MozReview-Commit-ID: 8P48C8xavbs
+
+diff --git a/modules/pdfium/pdfium/core/fxge/freetype/fx_freetype.cpp b/modules/pdfium/pdfium/core/fxge/freetype/fx_freetype.cpp
+--- a/modules/pdfium/pdfium/core/fxge/freetype/fx_freetype.cpp
++++ b/modules/pdfium/pdfium/core/fxge/freetype/fx_freetype.cpp
+@@ -1,17 +1,17 @@
+ // Copyright 2014 PDFium Authors. All rights reserved.
+ // Use of this source code is governed by a BSD-style license that can be
+ // found in the LICENSE file.
+ 
+ // Original code copyright 2014 Foxit Software Inc. http://www.foxitsoftware.com
+ 
+ #include "core/fxge/fx_freetype.h"
+ 
+-#include "third_party/freetype/src/psnames/pstables.h"
++#include "psnames/pstables.h"
+ 
+ static int xyq_search_node(char* glyph_name,
+                            int name_offset,
+                            int table_offset,
+                            wchar_t unicode) {
+   int i, count;
+ 
+   // copy letters
