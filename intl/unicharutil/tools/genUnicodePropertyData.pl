@@ -30,14 +30,13 @@
 #
 #     The Unicode data files listed above should be together in one directory.
 #
-#     We also require the files
+#     We also require the file
 #        http://www.unicode.org/Public/security/latest/IdentifierStatus.txt
-#        http://www.unicode.org/Public/security/latest/IdentifierType.txt
-#     These files should be in a sub-directory "security" immediately below the
+#     This file should be in a sub-directory "security" immediately below the
 #        directory containing the other Unicode data files.
 #
-#     We also require the latest data file for UTR50, currently revision-16:
-#        http://www.unicode.org/Public/vertical/revision-16/VerticalOrientation-16.txt
+#     We also require the latest data file for UTR50, currently revision-17:
+#        http://www.unicode.org/Public/vertical/revision-17/VerticalOrientation-17.txt
 #     This file should be in a sub-directory "vertical" immediately below the
 #        directory containing the other Unicode data files.
 #
@@ -168,9 +167,7 @@ my %idType = (
 # These match the IdentifierType enum in nsUnicodeProperties.h.
 my %mappedIdType = (
   "Restricted"   => 0,
-  "Allowed"      => 1,
-  "Aspirational" => 2 # for Aspirational characters that are not excluded
-                      # by another attribute.
+  "Allowed"      => 1
 );
 
 my %bidicategoryCode = (
@@ -441,8 +438,11 @@ while (<FH>) {
 while (<FH>) {
     if (m/([0-9A-F]{4,6})(?:\.\.([0-9A-F]{4,6}))*\s+;\s+([^ ]+)/) {
         my $script = uc($3);
-        warn "unknown ICU script $script" unless exists $scriptCode{$script};
-        my $script = $scriptCode{$script};
+        unless (exists $scriptCode{$script}) {
+            warn "unknown ICU script $script";
+            $scriptCode{$script} = $scriptCode{"UNKNOWN"};
+        }
+        $script = $scriptCode{$script};
         my $start = hex "0x$1";
         my $end = (defined $2) ? hex "0x$2" : $start;
         for (my $i = $start; $i <= $end; ++$i) {
@@ -619,32 +619,6 @@ while (<FH>) {
 }
 close FH;
 
-# read IdentifierType.txt, to find Aspirational characters
-open FH, "< $UNICODE/security/IdentifierType.txt" or die "can't open UCD file IdentifierType.txt\n";
-push @versionInfo, "";
-while (<FH>) {
-  chomp;
-  s/\xef\xbb\xbf//;
-  push @versionInfo, $_;
-  last if /Date:/;
-}
-while (<FH>) {
-  if (m/([0-9A-F]{4,6})(?:\.\.([0-9A-F]{4,6}))*\s+;\s+([^#]+)/) {
-    my $idtype = $3;
-    foreach (split(/ /, $idtype)) {
-      warn "unknown Identifier Type $_" unless exists $idType{$_};
-    }
-    my $start = hex "0x$1";
-    my $end = (defined $2) ? hex "0x$2" : $start;
-    if ($idtype =~ /Aspirational/ and (not $idtype =~ /Exclusion|Not_XID|Not_NFKC/)) {
-      for (my $i = $start; $i <= $end; ++$i) {
-        $idtype[$i] = $mappedIdType{'Aspirational'};
-      }
-    }
-  }
-}
-close FH;
-
 open FH, "< $UNICODE/Unihan_Variants.txt" or die "can't open UCD file Unihan_Variants.txt (from Unihan.zip)\n";
 push @versionInfo, "";
 while (<FH>) {
@@ -681,8 +655,8 @@ while (<FH>) {
 }
 close FH;
 
-# read VerticalOrientation-16.txt
-open FH, "< $UNICODE/vertical/VerticalOrientation-16.txt" or die "can't open UTR50 data file VerticalOrientation-16.txt\n";
+# read VerticalOrientation-17.txt
+open FH, "< $UNICODE/vertical/VerticalOrientation-17.txt" or die "can't open UTR50 data file VerticalOrientation-17.txt\n";
 push @versionInfo, "";
 while (<FH>) {
     chomp;
