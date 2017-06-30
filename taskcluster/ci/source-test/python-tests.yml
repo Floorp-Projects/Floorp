@@ -46,9 +46,7 @@ marionette-harness:
 
 mochitest-harness:
     description: testing/mochitest unittests
-    platform:
-        - linux64/opt
-        - linux64/debug
+    platform: linux64/opt
     require-build: true
     treeherder:
         symbol: py(mch)
