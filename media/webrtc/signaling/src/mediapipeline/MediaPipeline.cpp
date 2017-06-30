@@ -2148,13 +2148,11 @@ void MediaPipelineReceiveAudio::SetPrincipalHandle_m(const PrincipalHandle& prin
 class MediaPipelineReceiveVideo::PipelineListener
   : public GenericReceiveListener {
 public:
-  PipelineListener(SourceMediaStream * source, TrackID track_id)
-    : GenericReceiveListener(source, track_id),
-      width_(0),
-      height_(0),
-      image_container_(),
-      image_(),
-      monitor_("Video PipelineListener")
+  PipelineListener(SourceMediaStream* source, TrackID track_id)
+    : GenericReceiveListener(source, track_id)
+    , image_container_()
+    , image_()
+    , mutex_("Video PipelineListener")
   {
     image_container_ =
       LayerManager::CreateImageContainer(ImageContainer::ASYNCHRONOUS);
@@ -2163,7 +2161,7 @@ public:
   // Implement MediaStreamListener
   void NotifyPull(MediaStreamGraph* graph, StreamTime desired_time) override
   {
-    ReentrantMonitorAutoEnter enter(monitor_);
+    MutexAutoLock lock(mutex_);
 
     RefPtr<Image> image = image_;
     StreamTime delta = desired_time - played_ticks_;
@@ -2189,7 +2187,7 @@ public:
   void FrameSizeChange(unsigned int width,
                        unsigned int height,
                        unsigned int number_of_streams) {
-    ReentrantMonitorAutoEnter enter(monitor_);
+    MutexAutoLock enter(mutex_);
 
     width_ = width;
     height_ = height;
@@ -2241,7 +2239,7 @@ public:
       return;
     }
 
-    ReentrantMonitorAutoEnter enter(monitor_);
+    MutexAutoLock lock(mutex_);
     image_ = yuvImage;
   }
 
@@ -2250,10 +2248,10 @@ private:
   int height_;
   RefPtr<layers::ImageContainer> image_container_;
   RefPtr<layers::Image> image_;
-  mozilla::ReentrantMonitor monitor_; // Monitor for processing WebRTC frames.
-                                      // Protects image_ against:
-                                      // - Writing from the GIPS thread
-                                      // - Reading from the MSG thread
+  Mutex mutex_; // Mutex for processing WebRTC frames.
+                // Protects image_ against:
+                // - Writing from the GIPS thread
+                // - Reading from the MSG thread
 };
 
 class MediaPipelineReceiveVideo::PipelineRenderer : public mozilla::VideoRenderer
