@@ -1669,7 +1669,7 @@ add_task(async function test_experimentsAPI() {
   const EXPERIMENT2 = "experiment-2";
   const EXPERIMENT2_BRANCH = "other-branch";
 
-  let checkExperiment = (environmentData, id, branch, type=null) => {
+  let checkExperiment = (environmentData, id, branch, type = null) => {
     Assert.ok("experiments" in environmentData,
               "The current environment must report the experiment annotations.");
     Assert.ok(id in environmentData.experiments,
