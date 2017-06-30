@@ -666,11 +666,6 @@
                        key="key_savePage"
                        command="Browser:SavePage"
                        />
-        <toolbarbutton id="appMenu-page-setup-button"
-                       class="subviewbutton"
-                       label="&printSetupCmd.label;"
-                       command="cmd_pageSetup"
-                       />
         <toolbarbutton id="appMenu-print-button"
                        class="subviewbutton subviewbutton-iconic"
                        label="&printButton.label;"
