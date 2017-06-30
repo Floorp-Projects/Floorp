@@ -125,9 +125,8 @@ public:
           aStream->ScheduleCheckForInactive();
           RefPtr<PlayingRefChanged> refchanged =
             new PlayingRefChanged(aStream, PlayingRefChanged::RELEASE);
-          aStream->Graph()->
-            DispatchToMainThreadAfterStreamStateUpdate(mAbstractMainThread,
-                                                       refchanged.forget());
+          aStream->Graph()->DispatchToMainThreadAfterStreamStateUpdate(
+            refchanged.forget());
         }
         aOutput->SetNull(WEBAUDIO_BLOCK_SIZE);
         return;
@@ -147,9 +146,8 @@ public:
       if (mLeftOverData <= 0) {
         RefPtr<PlayingRefChanged> refchanged =
           new PlayingRefChanged(aStream, PlayingRefChanged::ADDREF);
-        aStream->Graph()->
-          DispatchToMainThreadAfterStreamStateUpdate(mAbstractMainThread,
-                                                     refchanged.forget());
+        aStream->Graph()->DispatchToMainThreadAfterStreamStateUpdate(
+          refchanged.forget());
       }
       mLeftOverData = mBufferLength;
       MOZ_ASSERT(mLeftOverData > 0);

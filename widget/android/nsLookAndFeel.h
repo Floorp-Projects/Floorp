@@ -8,7 +8,7 @@
 #include "nsXPLookAndFeel.h"
 #include "AndroidBridge.h"
 
-class nsLookAndFeel: public nsXPLookAndFeel
+class nsLookAndFeel final : public nsXPLookAndFeel
 {
 public:
     nsLookAndFeel();

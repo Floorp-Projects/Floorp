@@ -14,7 +14,7 @@ add_task(function* () {
   let { document, parent, windowRequire } = monitor.panelWin;
   let { Prefs } = windowRequire("devtools/client/netmonitor/src/utils/prefs");
 
-  let prefBefore = Prefs.hiddenColumns;
+  let prefBefore = Prefs.visibleColumns;
 
   hideColumn("status");
   hideColumn("waterfall");
@@ -24,7 +24,7 @@ add_task(function* () {
 
   parent.document.querySelector("#request-list-header-reset-columns").click();
 
-  is(JSON.stringify(prefBefore), JSON.stringify(Prefs.hiddenColumns),
+  is(JSON.stringify(prefBefore), JSON.stringify(Prefs.visibleColumns),
      "Reset columns item should reset columns pref");
 
   function* hideColumn(column) {

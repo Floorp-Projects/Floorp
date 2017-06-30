@@ -95,7 +95,13 @@ Accessible::HasNumericValue() const
     return true;
 
   const nsRoleMapEntry* roleMapEntry = ARIARoleMap();
-  return roleMapEntry && roleMapEntry->valueRule != eNoValue;
+  if (!roleMapEntry || roleMapEntry->valueRule == eNoValue)
+    return false;
+
+  if (roleMapEntry->valueRule == eHasValueMinMaxIfFocusable)
+    return InteractiveState() & states::FOCUSABLE;
+
+  return true;
 }
 
 inline void

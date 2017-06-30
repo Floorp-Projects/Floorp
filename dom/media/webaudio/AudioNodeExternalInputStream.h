@@ -23,12 +23,12 @@ class AbstractThread;
 class AudioNodeExternalInputStream final : public AudioNodeStream
 {
 public:
-  static already_AddRefed<AudioNodeExternalInputStream>
-  Create(MediaStreamGraph* aGraph, AudioNodeEngine* aEngine, AbstractThread* aMainThread);
+  static already_AddRefed<AudioNodeExternalInputStream> Create(
+    MediaStreamGraph* aGraph,
+    AudioNodeEngine* aEngine);
 
 protected:
-  AudioNodeExternalInputStream(AudioNodeEngine* aEngine, TrackRate aSampleRate,
-                               AbstractThread* aMainThread);
+  AudioNodeExternalInputStream(AudioNodeEngine* aEngine, TrackRate aSampleRate);
   ~AudioNodeExternalInputStream();
 
 public:

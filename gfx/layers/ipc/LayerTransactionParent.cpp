@@ -97,6 +97,9 @@ LayerTransactionParent::RecvShutdownSync()
 void
 LayerTransactionParent::Destroy()
 {
+  if (mDestroyed) {
+    return;
+  }
   mDestroyed = true;
   mCompositables.clear();
 }
@@ -902,6 +905,7 @@ LayerTransactionParent::RecvForceComposite()
 void
 LayerTransactionParent::ActorDestroy(ActorDestroyReason why)
 {
+  Destroy();
 }
 
 bool

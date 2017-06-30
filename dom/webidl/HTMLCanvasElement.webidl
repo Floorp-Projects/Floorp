@@ -15,9 +15,9 @@ interface Variant;
 
 [HTMLConstructor]
 interface HTMLCanvasElement : HTMLElement {
-  [Pure, SetterThrows]
+  [CEReactions, Pure, SetterThrows]
            attribute unsigned long width;
-  [Pure, SetterThrows]
+  [CEReactions, Pure, SetterThrows]
            attribute unsigned long height;
 
   [Throws]

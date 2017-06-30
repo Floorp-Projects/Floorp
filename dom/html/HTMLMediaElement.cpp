@@ -3399,24 +3399,34 @@ HTMLMediaElement::AddCaptureMediaTrackToOutputStream(MediaTrack* aTrack,
        track.get(), destinationTrackID, inputTrack, port.get()));
 }
 
+bool
+HTMLMediaElement::CanBeCaptured(bool aCaptureAudio)
+{
+  // Don't bother capturing when the document has gone away
+  nsPIDOMWindowInner* window = OwnerDoc()->GetInnerWindow();
+  if (!window) {
+    return false;
+  }
+
+  // Prevent capturing restricted video
+  if (!aCaptureAudio && ContainsRestrictedContent()) {
+    return false;
+  }
+  return true;
+}
+
 already_AddRefed<DOMMediaStream>
 HTMLMediaElement::CaptureStreamInternal(bool aFinishWhenEnded,
                                         bool aCaptureAudio,
                                         MediaStreamGraph* aGraph)
 {
   MOZ_RELEASE_ASSERT(aGraph);
+  MOZ_ASSERT(CanBeCaptured(aCaptureAudio));
 
   MarkAsContentSource(CallerAPI::CAPTURE_STREAM);
   MarkAsTainted();
 
-  nsPIDOMWindowInner* window = OwnerDoc()->GetInnerWindow();
-  if (!window) {
-    return nullptr;
-  }
-  if (!aCaptureAudio && ContainsRestrictedContent()) {
-    return nullptr;
-  }
-
+  // We don't support routing to a different graph.
   if (!mOutputStreams.IsEmpty() &&
       aGraph != mOutputStreams[0].mStream->GetInputStream()->Graph()) {
     return nullptr;
@@ -3424,6 +3434,7 @@ HTMLMediaElement::CaptureStreamInternal(bool aFinishWhenEnded,
 
   OutputMediaStream* out = mOutputStreams.AppendElement();
   MediaStreamTrackSourceGetter* getter = new CaptureStreamTrackSourceGetter(this);
+  nsPIDOMWindowInner* window = OwnerDoc()->GetInnerWindow();
   out->mStream = DOMMediaStream::CreateTrackUnionStreamAsInput(window, aGraph, getter);
   out->mStream->SetInactiveOnFinish();
   out->mFinishWhenEnded = aFinishWhenEnded;
@@ -3530,8 +3541,21 @@ HTMLMediaElement::MozCaptureStream(ErrorResult& aRv)
   MediaStreamGraph::GraphDriverType graphDriverType =
     HasAudio() ? MediaStreamGraph::AUDIO_THREAD_DRIVER
                : MediaStreamGraph::SYSTEM_THREAD_DRIVER;
+
+
+  nsPIDOMWindowInner* window = OwnerDoc()->GetInnerWindow();
+  if (!window) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return nullptr;
+  }
+
+  if (!CanBeCaptured(false)) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return nullptr;
+  }
+
   MediaStreamGraph* graph =
-    MediaStreamGraph::GetInstance(graphDriverType, mAudioChannel);
+    MediaStreamGraph::GetInstance(graphDriverType, mAudioChannel, window);
 
   RefPtr<DOMMediaStream> stream =
     CaptureStreamInternal(false, false, graph);
@@ -3549,8 +3573,20 @@ HTMLMediaElement::MozCaptureStreamUntilEnded(ErrorResult& aRv)
   MediaStreamGraph::GraphDriverType graphDriverType =
     HasAudio() ? MediaStreamGraph::AUDIO_THREAD_DRIVER
                : MediaStreamGraph::SYSTEM_THREAD_DRIVER;
+
+  nsPIDOMWindowInner* window = OwnerDoc()->GetInnerWindow();
+  if (!window) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return nullptr;
+  }
+
+  if (!CanBeCaptured(false)) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return nullptr;
+  }
+
   MediaStreamGraph* graph =
-    MediaStreamGraph::GetInstance(graphDriverType, mAudioChannel);
+    MediaStreamGraph::GetInstance(graphDriverType, mAudioChannel, window);
 
   RefPtr<DOMMediaStream> stream =
     CaptureStreamInternal(true, false, graph);
@@ -4833,8 +4869,7 @@ public:
     mBlocked(false),
     mFinished(false),
     mMutex(aName),
-    mPendingNotifyOutput(false),
-    mAbstractMainThread(aElement->AbstractMainThread())
+    mPendingNotifyOutput(false)
   {}
   void Forget()
   {
@@ -4902,14 +4937,12 @@ public:
         this,
         &StreamListener::DoNotifyUnblocked);
     }
-    aGraph->DispatchToMainThreadAfterStreamStateUpdate(mAbstractMainThread,
-                                                       event.forget());
+    aGraph->DispatchToMainThreadAfterStreamStateUpdate(event.forget());
   }
   virtual void NotifyHasCurrentData(MediaStreamGraph* aGraph) override
   {
     MutexAutoLock lock(mMutex);
     aGraph->DispatchToMainThreadAfterStreamStateUpdate(
-      mAbstractMainThread,
       NewRunnableMethod(
         "dom::HTMLMediaElement::StreamListener::DoNotifyHaveCurrentData",
         this,
@@ -4923,7 +4956,6 @@ public:
       return;
     mPendingNotifyOutput = true;
     aGraph->DispatchToMainThreadAfterStreamStateUpdate(
-      mAbstractMainThread,
       NewRunnableMethod("dom::HTMLMediaElement::StreamListener::DoNotifyOutput",
                         this,
                         &StreamListener::DoNotifyOutput));
@@ -4939,7 +4971,6 @@ private:
   // mMutex protects the fields below; they can be accessed on any thread
   Mutex mMutex;
   bool mPendingNotifyOutput;
-  const RefPtr<AbstractThread> mAbstractMainThread;
 };
 
 class HTMLMediaElement::MediaStreamTracksAvailableCallback:
@@ -7176,7 +7207,7 @@ HTMLMediaElement::AudioCaptureStreamChange(bool aCapture)
     uint64_t id = window->WindowID();
     MediaStreamGraph* msg =
       MediaStreamGraph::GetInstance(MediaStreamGraph::AUDIO_THREAD_DRIVER,
-                                    mAudioChannel);
+                                    mAudioChannel, window);
 
     if (GetSrcMediaStream()) {
       mCaptureStreamPort = msg->ConnectToCaptureStream(id, GetSrcMediaStream());

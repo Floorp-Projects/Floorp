@@ -14,10 +14,12 @@
 #include "nsIXULRuntime.h"
 #include "nsWinUtils.h"
 #include "mozilla/a11y/ProxyAccessible.h"
+#include "mozilla/mscom/ActivationContext.h"
 #include "mozilla/mscom/InterceptorLog.h"
 #include "mozilla/mscom/Registration.h"
 #include "mozilla/mscom/Utils.h"
 #include "mozilla/StaticPtr.h"
+#include "mozilla/WindowsVersion.h"
 #include "ProxyWrappers.h"
 
 using namespace mozilla;
@@ -28,7 +30,6 @@ static StaticAutoPtr<RegisteredProxy> gRegCustomProxy;
 static StaticAutoPtr<RegisteredProxy> gRegProxy;
 static StaticAutoPtr<RegisteredProxy> gRegAccTlb;
 static StaticAutoPtr<RegisteredProxy> gRegMiscTlb;
-
 void
 a11y::PlatformInit()
 {

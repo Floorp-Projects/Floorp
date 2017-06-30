@@ -19,8 +19,8 @@ interface HTMLUListElement : HTMLElement {
 
 // http://www.whatwg.org/specs/web-apps/current-work/#other-elements,-attributes-and-apis
 partial interface HTMLUListElement {
-           [SetterThrows]
+           [CEReactions, SetterThrows]
            attribute boolean compact;
-           [SetterThrows]
+           [CEReactions, SetterThrows]
            attribute DOMString type;
 };

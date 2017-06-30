@@ -13,21 +13,21 @@
 
 [HTMLConstructor]
 interface HTMLIFrameElement : HTMLElement {
-  [SetterThrows, Pure]
+  [CEReactions, SetterThrows, Pure]
            attribute DOMString src;
-  [SetterThrows, Pure]
+  [CEReactions, SetterThrows, Pure]
            attribute DOMString srcdoc;
-  [SetterThrows, Pure]
+  [CEReactions, SetterThrows, Pure]
            attribute DOMString name;
   [PutForwards=value] readonly attribute DOMTokenList sandbox;
            // attribute boolean seamless;
-  [SetterThrows, Pure]
+  [CEReactions, SetterThrows, Pure]
            attribute boolean allowFullscreen;
-  [SetterThrows, Pure]
+  [CEReactions, SetterThrows, Pure]
            attribute DOMString width;
-  [SetterThrows, Pure]
+  [CEReactions, SetterThrows, Pure]
            attribute DOMString height;
-  [SetterThrows, Pure]
+  [CEReactions, SetterThrows, Pure]
            attribute DOMString referrerPolicy;
   [NeedsSubjectPrincipal]
   readonly attribute Document? contentDocument;
@@ -36,17 +36,19 @@ interface HTMLIFrameElement : HTMLElement {
 
 // http://www.whatwg.org/specs/web-apps/current-work/#other-elements,-attributes-and-apis
 partial interface HTMLIFrameElement {
-  [SetterThrows, Pure]
+  [CEReactions, SetterThrows, Pure]
            attribute DOMString align;
-  [SetterThrows, Pure]
+  [CEReactions, SetterThrows, Pure]
            attribute DOMString scrolling;
-  [SetterThrows, Pure]
+  [CEReactions, SetterThrows, Pure]
            attribute DOMString frameBorder;
-  [SetterThrows, Pure]
+  [CEReactions, SetterThrows, Pure]
            attribute DOMString longDesc;
 
-  [TreatNullAs=EmptyString,SetterThrows,Pure] attribute DOMString marginHeight;
-  [TreatNullAs=EmptyString,SetterThrows,Pure] attribute DOMString marginWidth;
+  [CEReactions, TreatNullAs=EmptyString, SetterThrows, Pure]
+           attribute DOMString marginHeight;
+  [CEReactions, TreatNullAs=EmptyString, SetterThrows, Pure]
+           attribute DOMString marginWidth;
 };
 
 partial interface HTMLIFrameElement {

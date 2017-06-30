@@ -590,8 +590,6 @@ public:
   // a dead pointer. Main thread only.
   void UnregisterTrackListener(TrackListener* aListener);
 
-  AbstractThread* AbstractMainThread() const { return mAbstractMainThread; }
-
 protected:
   virtual ~DOMMediaStream();
 
@@ -756,7 +754,6 @@ private:
   nsCOMPtr<nsIPrincipal> mVideoPrincipal;
   nsTArray<dom::PrincipalChangeObserver<DOMMediaStream>*> mPrincipalChangeObservers;
   CORSMode mCORSMode;
-  const RefPtr<AbstractThread> mAbstractMainThread;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(DOMMediaStream,

@@ -2517,7 +2517,7 @@ var AddonManagerInternal = {
     for (let provider of this.providers) {
       let providerAddons;
       if ("getActiveAddons" in provider) {
-        providerAddons = await callProvider(provider, "getActiveAddons", aTypes);
+        providerAddons = await callProvider(provider, "getActiveAddons", null, aTypes);
       } else {
         providerAddons = await promiseCallProvider(provider, "getAddonsByTypes", aTypes);
         providerAddons = providerAddons.filter(a => a.isActive);

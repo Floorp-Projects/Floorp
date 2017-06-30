@@ -13,7 +13,7 @@
 // http://www.whatwg.org/specs/web-apps/current-work/#the-map-element
 [HTMLConstructor]
 interface HTMLMapElement : HTMLElement {
-  [SetterThrows, Pure]
+  [CEReactions, SetterThrows, Pure]
            attribute DOMString name;
   [Constant]
   readonly attribute HTMLCollection areas;

@@ -489,6 +489,9 @@ body,
   width: 8%;
 }
 
+.requests-list-response-header {
+  width: 13%;
+}
 
 .requests-list-domain.requests-list-column {
   text-align: start;

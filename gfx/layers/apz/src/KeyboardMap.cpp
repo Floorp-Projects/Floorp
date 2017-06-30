@@ -44,6 +44,30 @@ KeyboardShortcut::KeyboardShortcut(KeyboardInput::KeyboardEventType aEventType,
 {
 }
 
+/* static */ void
+KeyboardShortcut::AppendHardcodedShortcuts(nsTArray<KeyboardShortcut>& aShortcuts)
+{
+  // Tab
+  KeyboardShortcut tab1;
+  tab1.mDispatchToContent = true;
+  tab1.mKeyCode = NS_VK_TAB;
+  tab1.mCharCode = 0;
+  tab1.mModifiers = 0;
+  tab1.mModifiersMask = 0;
+  tab1.mEventType = KeyboardInput::KEY_PRESS;
+  aShortcuts.AppendElement(tab1);
+
+  // F6
+  KeyboardShortcut tab2;
+  tab2.mDispatchToContent = true;
+  tab2.mKeyCode = NS_VK_F6;
+  tab2.mCharCode = 0;
+  tab2.mModifiers = 0;
+  tab2.mModifiersMask = 0;
+  tab2.mEventType = KeyboardInput::KEY_PRESS;
+  aShortcuts.AppendElement(tab2);
+}
+
 bool
 KeyboardShortcut::Matches(const KeyboardInput& aInput,
                           const IgnoreModifierState& aIgnore,

@@ -33,7 +33,8 @@
 #define SM_SYSTEMDOCKED         0x00002004
 #endif
 
-class nsLookAndFeel: public nsXPLookAndFeel {
+class nsLookAndFeel final : public nsXPLookAndFeel
+{
   static OperatingSystemVersion GetOperatingSystemVersion();
 public:
   nsLookAndFeel();

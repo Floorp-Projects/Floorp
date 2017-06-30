@@ -159,7 +159,6 @@ protected:
   uint32_t mVideoBitsPerSecond;
   uint32_t mBitsPerSecond;
 
-  const RefPtr<AbstractThread> mAbstractMainThread;
 private:
   // Register MediaRecorder into Document to listen the activity changes.
   void RegisterActivityObserver();

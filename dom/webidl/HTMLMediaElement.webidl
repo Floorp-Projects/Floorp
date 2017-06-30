@@ -17,18 +17,18 @@ interface HTMLMediaElement : HTMLElement {
   readonly attribute MediaError? error;
 
   // network state
-  [SetterThrows]
+  [CEReactions, SetterThrows]
            attribute DOMString src;
   readonly attribute DOMString currentSrc;
 
-  [SetterThrows]
+  [CEReactions, SetterThrows]
            attribute DOMString? crossOrigin;
   const unsigned short NETWORK_EMPTY = 0;
   const unsigned short NETWORK_IDLE = 1;
   const unsigned short NETWORK_LOADING = 2;
   const unsigned short NETWORK_NO_SOURCE = 3;
   readonly attribute unsigned short networkState;
-  [SetterThrows]
+  [CEReactions, SetterThrows]
            attribute DOMString preload;
   [NewObject]
   readonly attribute TimeRanges buffered;
@@ -63,9 +63,9 @@ interface HTMLMediaElement : HTMLElement {
   [NewObject]
   readonly attribute TimeRanges seekable;
   readonly attribute boolean ended;
-  [SetterThrows]
+  [CEReactions, SetterThrows]
            attribute boolean autoplay;
-  [SetterThrows]
+  [CEReactions, SetterThrows]
            attribute boolean loop;
   [Throws]
   Promise<void> play();
@@ -78,12 +78,12 @@ interface HTMLMediaElement : HTMLElement {
   //         attribute MediaController? controller;
 
   // controls
-  [SetterThrows]
+  [CEReactions, SetterThrows]
            attribute boolean controls;
   [SetterThrows]
            attribute double volume;
            attribute boolean muted;
-  [SetterThrows]
+  [CEReactions, SetterThrows]
            attribute boolean defaultMuted;
 
   // TODO: Bug 847379

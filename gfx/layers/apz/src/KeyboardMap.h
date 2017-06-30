@@ -51,6 +51,13 @@ public:
                    Modifiers aModifiers,
                    Modifiers aModifiersMask);
 
+  /**
+   * There are some default actions for keyboard inputs that are hardcoded in
+   * EventStateManager instead of being represented as XBL handlers. This adds
+   * keyboard shortcuts to match these inputs and dispatch them to content.
+   */
+  static void AppendHardcodedShortcuts(nsTArray<KeyboardShortcut>& aShortcuts);
+
 protected:
   friend mozilla::layers::KeyboardMap;
 

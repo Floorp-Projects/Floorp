@@ -758,7 +758,8 @@ with only_when(building_stylo_bindgen):
                 Please check your system configuration.
                 '''.format(libclang_path, libclang_arg, searched)))
 
-            if not os.path.exists(clang_path):
+            clang_resolved = find_program(clang_path)
+            if not clang_resolved:
                 die(dedent('''\
                 The file {} returned by `llvm-config {}` does not exist.
                 Please check your system configuration.
@@ -766,7 +767,7 @@ with only_when(building_stylo_bindgen):
 
             return namespace(
                 libclang_path=libclang_path,
-                clang_path=clang_path,
+                clang_path=clang_resolved,
             )
 
         if (not libclang_path and clang_path) or \
@@ -791,15 +792,15 @@ with only_when(building_stylo_bindgen):
             specified by --with-libclang-path (searched for files {}).
             '''.format(libclang_path, searched)))
 
-        if not os.path.exists(clang_path) or \
-           not os.path.isfile(clang_path):
+        clang_resolved = find_program(clang_path)
+        if not clang_resolved:
             die(dedent('''\
             The argument to --with-clang-path is not a file: {}
             '''.format(clang_path)))
 
         return namespace(
             libclang_path=libclang_path,
-            clang_path=clang_path,
+            clang_path=clang_resolved,
         )
 
     set_config('MOZ_LIBCLANG_PATH', bindgen_config_paths.libclang_path)

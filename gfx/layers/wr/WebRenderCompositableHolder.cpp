@@ -66,8 +66,15 @@ WebRenderCompositableHolder::AddPipeline(const wr::PipelineId& aPipelineId)
   }
   uint64_t id = wr::AsUint64(aPipelineId);
 
-  MOZ_ASSERT(!mPipelineTexturesHolders.Get(id));
-  PipelineTexturesHolder* holder = new PipelineTexturesHolder();
+  PipelineTexturesHolder* holder = mPipelineTexturesHolders.Get(wr::AsUint64(aPipelineId));
+  if(holder) {
+    // This could happen during tab move between different windows.
+    // Previously removed holder could be still alive for waiting destroyed.
+    MOZ_ASSERT(holder->mDestroyedEpoch.isSome());
+    holder->mDestroyedEpoch = Nothing(); // Revive holder
+    return;
+  }
+  holder = new PipelineTexturesHolder();
   mPipelineTexturesHolders.Put(id, holder);
 }
 
@@ -83,7 +90,6 @@ WebRenderCompositableHolder::RemovePipeline(const wr::PipelineId& aPipelineId, c
   if (!holder) {
     return;
   }
-  MOZ_ASSERT(holder->mDestroyedEpoch.isNothing());
   holder->mDestroyedEpoch = Some(aEpoch);
 }
 
@@ -135,7 +141,6 @@ WebRenderCompositableHolder::UpdateAsyncImagePipeline(const wr::PipelineId& aPip
     return;
   }
   AsyncImagePipelineHolder* holder = mAsyncImagePipelineHolders.Get(wr::AsUint64(aPipelineId));
-  MOZ_ASSERT(holder);
   if (!holder) {
     return;
   }

@@ -1,0 +1,58 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Bug 1331680 - test access to cookies in the documents synthesized from service worker responses</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none">
+<iframe></iframe>
+</div>
+<pre id="test"></pre>
+<script class="testbody" type="text/javascript">
+
+  var iframe;
+  function runTest() {
+    iframe = document.querySelector("iframe");
+    iframe.src = "https://example.com/tests/dom/workers/test/serviceworkers/fetch/cookie/register.html";
+    window.onmessage = function(e) {
+      if (e.data.status == "ok") {
+        ok(e.data.result, e.data.message);
+      } else if (e.data.status == "registrationdone") {
+        // Remove the iframe and recreate a new one to ensure that any traces
+        // of the cookies have been removed from the child process.
+        iframe.remove();
+        iframe = document.createElement("iframe");
+        document.getElementById("content").appendChild(iframe);
+
+        iframe.src = "https://example.com/tests/dom/workers/test/serviceworkers/fetch/cookie/synth.html";
+      } else if (e.data.status == "done") {
+        is(e.data.cookie, "foo=bar", "The synthesized document has access to its cookies");
+
+        iframe.src = "https://example.com/tests/dom/workers/test/serviceworkers/fetch/cookie/unregister.html";
+      } else if (e.data.status == "unregistrationdone") {
+        window.onmessage = null;
+        ok(true, "Test finished successfully");
+        SimpleTest.finish();
+      }
+    };
+  }
+
+  SimpleTest.waitForExplicitFinish();
+  onload = function() {
+    SpecialPowers.pushPrefEnv({"set": [
+      ["dom.serviceWorkers.exemptFromPerDomainMax", true],
+      ["dom.serviceWorkers.enabled", true],
+      ["dom.serviceWorkers.testing.enabled", true],
+    ]}, runTest);
+  };
+</script>
+</pre>
+</body>
+</html>
