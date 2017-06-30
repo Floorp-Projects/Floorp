@@ -31,6 +31,13 @@ static GLContext* sActiveContext = nullptr;
 static Monitor* sMonitor = nullptr;
 static nsDeque* sTextures = nullptr;
 
+enum class PoolState : uint8_t {
+  NOT_INITIALIZE,
+  INITIALIZED,
+  SHUTDOWN
+};
+static PoolState sPoolState = PoolState::NOT_INITIALIZE;
+
 static bool sHasPendingFillTask = false;
 
 #ifdef MOZ_WIDGET_ANDROID
@@ -65,7 +72,8 @@ void TexturePoolOGL::MaybeFillTextures()
 
 GLuint TexturePoolOGL::AcquireTexture()
 {
-  NS_ASSERTION(sMonitor, "not initialized");
+  MOZ_ASSERT(sPoolState != PoolState::NOT_INITIALIZE, "not initialized");
+  MOZ_ASSERT(sPoolState != PoolState::SHUTDOWN, "should not be called after shutdown");
 
   MonitorAutoLock lock(*sMonitor);
 
@@ -122,8 +130,9 @@ static void Clear()
 
 void TexturePoolOGL::Fill(GLContext* aContext)
 {
-  NS_ASSERTION(aContext, "NULL GLContext");
-  NS_ASSERTION(sMonitor, "not initialized");
+  MOZ_ASSERT(aContext, "NULL GLContext");
+  MOZ_ASSERT(sPoolState != PoolState::NOT_INITIALIZE, "not initialized");
+  MOZ_ASSERT(sPoolState != PoolState::SHUTDOWN, "should not be called after shutdown");
 
   MonitorAutoLock lock(*sMonitor);
   sHasPendingFillTask = false;
@@ -157,6 +166,7 @@ GLContext* TexturePoolOGL::GetGLContext()
 
 void TexturePoolOGL::Init()
 {
+  MOZ_ASSERT(sPoolState != PoolState::INITIALIZED);
   sMonitor = new Monitor("TexturePoolOGL.sMonitor");
   sTextures = new nsDeque();
 
@@ -165,10 +175,13 @@ void TexturePoolOGL::Init()
     GeckoSurfaceTextureSupport::Init();
   }
 #endif
+  sPoolState = PoolState::INITIALIZED;
 }
 
 void TexturePoolOGL::Shutdown()
 {
+  MOZ_ASSERT(sPoolState == PoolState::INITIALIZED);
+  sPoolState = PoolState::SHUTDOWN;
   delete sMonitor;
   delete sTextures;
 }
