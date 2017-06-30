@@ -33,6 +33,7 @@ EXPORTS.mozilla = [
     'Compression.h',
     'DebugOnly.h',
     'decimal/Decimal.h',
+    'DefineEnum.h',
     'double-conversion/source/double-conversion.h',
     'double-conversion/source/utils.h',
     'DoublyLinkedList.h',
