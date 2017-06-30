@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<meta charset='UTF-8'>
+<!--
+Color Test
+
+Clear the four quadrants of the canvas as follows:
++------+------+
+| blue |black |
+|      |      |
++------+------+
+| red  |green |
+|      |      |
++------+------+
+
+Clear with a given alpha value. What effect this has depends on the
+context-creation args passed to this page.
+-->
+<html class='reftest-wait'>
+
+<head>
+  <script type='text/javascript' src='webgl-utils.js'></script>
+  <script type='text/javascript'>
+'use strict';
+
+var COLOR_VALUE = 127.0 / 255.0;
+var ALPHA_VALUE = 127.0 / 255.0;
+
+function renderFrame(gl) {
+  gl.enable(gl.SCISSOR_TEST);
+
+  gl.scissor(0, 0, 100, 100);
+  gl.clearColor(COLOR_VALUE, 0.0, 0.0, ALPHA_VALUE);
+  gl.clear(gl.COLOR_BUFFER_BIT);
+
+  gl.scissor(100, 0, 100, 100);
+  gl.clearColor(0.0, COLOR_VALUE, 0.0, ALPHA_VALUE);
+  gl.clear(gl.COLOR_BUFFER_BIT);
+
+  gl.scissor(0, 100, 100, 100);
+  gl.clearColor(0.0, 0.0, COLOR_VALUE, ALPHA_VALUE);
+  gl.clear(gl.COLOR_BUFFER_BIT);
+
+  gl.scissor(100, 100, 100, 100);
+  gl.clearColor(0.0, 0.0, 0.0, ALPHA_VALUE);
+  gl.clear(gl.COLOR_BUFFER_BIT);
+
+  gl.scissor(0, 75, 50, 50);
+  gl.clearColor(0.0, 0.0, 1.0, 1.0);
+  gl.clear(gl.COLOR_BUFFER_BIT);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// Boilerplate
+
+var TIMEOUT_MS = 30 * 1000;
+
+function setStatus(text) {
+  var elem = document.getElementById('status');
+  elem.innerHTML = text;
+}
+
+var gIsComplete = false;
+
+function markComplete(statusText) {
+  if (!statusText)
+    statusText = '';
+
+  if (gIsComplete)
+    return;
+  gIsComplete = true;
+
+  setStatus(statusText);
+  document.documentElement.removeAttribute('class');
+}
+
+function markError(text) {
+  markComplete('Error: ' + text);
+}
+
+function markTimedOut() {
+  markError('Timed out waiting on test completion.');
+}
+
+function runFrame(gl, frameCount, maxFrameCount) {
+  renderFrame(gl);
+  frameCount++;
+
+  if (frameCount >= maxFrameCount) {
+    console.log('Rendered ' + frameCount + ' frames.');
+    markComplete();
+    return;
+  }
+
+  requestAnimationFrame(function(){
+    runFrame(gl, frameCount, maxFrameCount);
+  });
+}
+
+function runTest() {
+  var canvas = document.getElementById('canvas');
+
+  var gl = initGL(canvas);
+  if (!gl) {
+    markError('WebGL context creation failed.');
+    return;
+  }
+
+  var maxFrameCount = arg('frame', 1);
+  if (maxFrameCount < 1) {
+    markError('Invalid `frame` arg: ' + maxFrameCount);
+    return;
+  }
+
+  setStatus('Waiting...');
+
+  runFrame(gl, 0, maxFrameCount);
+  setTimeout(markTimedOut, TIMEOUT_MS);
+}
+  </script>
+</head>
+
+<body onload='runTest();'>
+<canvas style="position:fixed; left: 0px; top: 0px;" id='canvas' width='200' height='200'></canvas>
+<div id='status'></div>
+</body>
+
+</html>
