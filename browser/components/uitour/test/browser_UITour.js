@@ -8,6 +8,8 @@ var gContentAPI;
 var gContentWindow;
 
 Components.utils.import("resource://testing-common/TelemetryArchiveTesting.jsm", this);
+Components.utils.import("resource://gre/modules/ProfileAge.jsm", this);
+
 
 function test() {
   UITourTest();
@@ -299,6 +301,21 @@ var tests = [
         ok(typeof(result2.distribution) !== "undefined", "Check distribution isn't undefined.");
         is(result2.distribution, testDistributionID, "Should have the distribution as set in preference.");
 
+        done();
+      });
+    });
+  },
+  function test_getConfigurationProfileAge(done) {
+    gContentAPI.getConfiguration("appinfo", (result) => {
+      ok(typeof(result.profileCreatedWeeksAgo) === "number", "profileCreatedWeeksAgo should be number.");
+      ok(result.profileResetWeeksAgo === null, "profileResetWeeksAgo should be null.");
+
+      // Set profile reset date to 15 days ago.
+      let profileAccessor = new ProfileAge();
+      profileAccessor.recordProfileReset(Date.now() - (15 * 24 * 60 * 60 * 1000));
+      gContentAPI.getConfiguration("appinfo", (result2) => {
+        ok(typeof(result2.profileResetWeeksAgo) === "number", "profileResetWeeksAgo should be number.");
+        is(result2.profileResetWeeksAgo, 2, "profileResetWeeksAgo should be 2.");
         done();
       });
     });
