@@ -11,7 +11,7 @@ config = {
 
     "upload_env": {
         'UPLOAD_HOST': 'localhost',
-        'UPLOAD_PATH': '/builds/worker/artifacts/',
+        'UPLOAD_PATH': '/home/worker/artifacts/',
     },
     "mozilla_dir": "src/",
     "simple_name_move": True,
