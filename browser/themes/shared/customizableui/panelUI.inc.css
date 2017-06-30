@@ -352,7 +352,7 @@ panel[photon] > .panel-arrowcontainer > .panel-arrowcontent {
 
 photonpanelmultiview panelview {
   background: var(--arrowpanel-background);
-  padding: 6px 0;
+  padding: 0;
 }
 
 #appMenu-popup panelview,
@@ -361,8 +361,8 @@ photonpanelmultiview panelview {
   max-width: 30em;
 }
 
-photonpanelmultiview panelview[title] {
-  padding-top: 0;
+photonpanelmultiview .panel-subview-body {
+  margin: 4px 0;
 }
 
 /* END photonpanelview adjustments */
@@ -1260,11 +1260,12 @@ panelview:not([mainView]) .subviewbutton.panel-subview-footer > .toolbarbutton-t
 
 /* START photon adjustments */
 
-photonpanelmultiview .PanelUI-subView .subviewbutton:not(.panel-subview-footer) {
+photonpanelmultiview .PanelUI-subView .subviewbutton,
+photonpanelmultiview .cui-widget-panelview .subviewbutton:not(.panel-subview-footer),
+photonpanelmultiview .subview-subheader {
   border-radius: 0;
   border-width: 0;
-  margin-left: 0;
-  margin-right: 0;
+  margin: 0;
   padding: 4px 12px;
 }
 
@@ -1277,7 +1278,7 @@ photonpanelmultiview .subviewbutton > .toolbarbutton-text {
   padding-inline-start: 24px; /* This is 16px for the icon + 8px for the padding as defined above. */
 }
 
-photonpanelmultiview .subviewbutton-iconic:not(.subviewbutton-back) > .toolbarbutton-text,
+photonpanelmultiview .subviewbutton-iconic > .toolbarbutton-text,
 photonpanelmultiview .cui-withicon > .toolbarbutton-text,
 photonpanelmultiview .subviewbutton[image] > .toolbarbutton-text,
 photonpanelmultiview .subviewbutton[checked="true"] > .toolbarbutton-text {
@@ -1288,10 +1289,6 @@ photonpanelmultiview .panel-banner-item > .toolbarbutton-multiline-text {
   font: menu;
   padding: 0;
   padding-inline-start: 8px; /* See '.subviewbutton-iconic > .toolbarbutton-text' rule above. */
-}
-
-photonpanelmultiview .PanelUI-subView .panel-subview-footer {
-  font-size: 1.2rem;
 }
 
 photonpanelmultiview .subviewbutton {
@@ -1365,6 +1362,19 @@ photonpanelmultiview .toolbaritem-combined-buttons > .subviewbutton:not(.subview
 photonpanelmultiview .panel-banner-item::after {
   margin-inline-end: 14px;
   margin-inline-start: 10px;
+}
+
+photonpanelmultiview .subview-subheader {
+  color: GrayText;
+}
+
+photonpanelmultiview .subview-subheader,
+photonpanelmultiview .panel-subview-footer {
+  font: menu;
+}
+
+photonpanelmultiview panelview:not([mainView]) .subviewbutton.panel-subview-footer > .toolbarbutton-text {
+  text-align: start;
 }
 
 /* END photon adjustments */
@@ -2075,7 +2085,6 @@ menuitem[checked="true"].subviewbutton > .menu-iconic-left {
   display: flex;
   flex: 1 auto;
   height: 40px; /* fixed item height to prevent flex sizing; height + 2*4px padding */
-  margin-bottom: 6px;
   padding: 4px;
 }
 
@@ -2119,6 +2128,10 @@ photonpanelmultiview#customizationui-widget-multiview > .panel-viewcontainer {
 photonpanelmultiview .cui-widget-panelview {
   overflow-x: visible;
   overflow-y: visible;
+}
+
+photonpanelmultiview #panelMenu_pocket {
+  display: none;
 }
 
 /* END photon adjustments */
