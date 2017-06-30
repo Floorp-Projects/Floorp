@@ -21,6 +21,7 @@
 #include "transportflow.h"
 #include "AudioPacketizer.h"
 #include "StreamTracks.h"
+#include "signaling/src/peerconnection/PacketDumper.h"
 
 #include "webrtc/modules/rtp_rtcp/include/rtp_header_parser.h"
 
@@ -321,6 +322,8 @@ class MediaPipeline : public sigslot::has_slots<> {
   // Written on Init, all following accesses are on the STS thread.
   nsAutoPtr<MediaPipelineFilter> filter_;
   nsAutoPtr<webrtc::RtpHeaderParser> rtp_parser_;
+
+  nsAutoPtr<PacketDumper> packet_dumper_;
 
  private:
   // Gets the current time as a DOMHighResTimeStamp
