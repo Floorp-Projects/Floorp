@@ -49,12 +49,10 @@ toolbar[brighttext] :-moz-any(@primaryToolbarButtons@) {
   list-style-image: url("chrome://browser/skin/home.svg");
 }
 
-#star-button,
 #bookmarks-menu-button[cui-areatype="toolbar"] {
   list-style-image: url("chrome://browser/skin/bookmark-hollow.svg");
 }
 
-#star-button[starred],
 #bookmarks-menu-button[cui-areatype="toolbar"][starred] {
   list-style-image: url("chrome://browser/skin/bookmark.svg");
 }
