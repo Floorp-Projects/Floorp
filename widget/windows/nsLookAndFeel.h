@@ -9,6 +9,7 @@
 #include "nsXPLookAndFeel.h"
 #include "gfxFont.h"
 #include "mozilla/RangedArray.h"
+#include "nsIWindowsRegKey.h"
 
 /*
  * Gesture System Metrics
@@ -51,6 +52,13 @@ public:
   void SetIntCacheImpl(const nsTArray<LookAndFeelInt>& aLookAndFeelIntCache) override;
 
 private:
+  /**
+   * Fetches the Windows accent color from the Windows settings if
+   * the accent color is set to apply to the title bar, otherwise
+   * returns an error code.
+   */
+  nsresult GetAccentColor(nscolor& aColor);
+
   // Content process cached values that get shipped over from the browser
   // process.
   int32_t mUseAccessibilityTheme;
@@ -71,6 +79,8 @@ private:
   mozilla::RangedArray<CachedSystemFont,
                        FontID_MINIMUM,
                        FontID_MAXIMUM + 1 - FontID_MINIMUM> mSystemFontCache;
+
+  nsCOMPtr<nsIWindowsRegKey> mDwmKey;
 };
 
 #endif

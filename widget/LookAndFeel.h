@@ -158,6 +158,8 @@ public:
 
     // vista rebars
 
+    // accent color for title bar
+    eColorID__moz_win_accentcolor,
     // media rebar text
     eColorID__moz_win_mediatext,
     // communications rebar text
