@@ -56,9 +56,7 @@
         <xul:hbox flex="1">
           <xul:menulist class="actionsMenu" flex="1" crop="end" selectedIndex="1"
                         xbl:inherits="tooltiptext=actionDescription"
-                        oncommand="Services.prefs.getBoolPref('browser.preferences.useOldOrganization') ?
-                          gApplicationsPane.onSelectAction(event.originalTarget) :
-                          gMainPane.onSelectAction(event.originalTarget)">
+                        oncommand="gApplicationsPane.onSelectAction(event.originalTarget)">
             <xul:menupopup/>
           </xul:menulist>
         </xul:hbox>
@@ -67,11 +65,7 @@
 
     <implementation>
       <constructor>
-        if (Services.prefs.getBoolPref("browser.preferences.useOldOrganization")) {
-          gApplicationsPane.rebuildActionsMenu();
-        } else {
-          gMainPane.rebuildActionsMenu();
-        }
+        gApplicationsPane.rebuildActionsMenu();
       </constructor>
     </implementation>
 
