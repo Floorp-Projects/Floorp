@@ -481,6 +481,13 @@ if (typeof Mozilla == "undefined") {
    * @property {String} distribution - Contains the distributionId property. This value will be
    *                                   "default" in most cases but can differ for repack or
    *                                   funnelcake builds. Since Fx48
+   * @property {Number} profileCreatedWeeksAgo - The number of weeks since the profile was created,
+   *                                             starting from 0 for profiles dating less than
+   *                                             seven days old. Since Fx56.
+   * @property {Number} profileResetWeeksAgo - The number of weeks since the profile was last reset,
+   *                                           starting from 0 for profiles reset less than seven
+   *                                           days ago. If the profile has never been reset it
+   *                                           returns null. Since Fx56.
    * @property {String} version - Version string e.g. "48.0a2"
    * @since 35
    */
