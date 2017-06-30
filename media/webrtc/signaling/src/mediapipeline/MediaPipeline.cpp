@@ -2217,33 +2217,32 @@ public:
                         uint32_t time_stamp,
                         int64_t render_time)
   {
-    ReentrantMonitorAutoEnter enter(monitor_);
+    MOZ_ASSERT(buffer_y);
+    // Create a video frame using |buffer|.
+    RefPtr<PlanarYCbCrImage> yuvImage =
+      image_container_->CreatePlanarYCbCrImage();
 
-    if (buffer_y) {
-      // Create a video frame using |buffer|.
-      RefPtr<PlanarYCbCrImage> yuvImage = image_container_->CreatePlanarYCbCrImage();
+    PlanarYCbCrData yuvData;
+    yuvData.mYChannel = const_cast<uint8_t*>(buffer_y);
+    yuvData.mYSize = IntSize(y_stride, height_);
+    yuvData.mYStride = y_stride;
+    MOZ_ASSERT(u_stride == v_stride);
+    yuvData.mCbCrStride = u_stride;
+    yuvData.mCbChannel = const_cast<uint8_t*>(buffer_u);
+    yuvData.mCrChannel = const_cast<uint8_t*>(buffer_v);
+    yuvData.mCbCrSize = IntSize(yuvData.mCbCrStride, (height_ + 1) >> 1);
+    yuvData.mPicX = 0;
+    yuvData.mPicY = 0;
+    yuvData.mPicSize = IntSize(width_, height_);
+    yuvData.mStereoMode = StereoMode::MONO;
 
-      PlanarYCbCrData yuvData;
-      yuvData.mYChannel = const_cast<uint8_t*>(buffer_y);
-      yuvData.mYSize = IntSize(y_stride, height_);
-      yuvData.mYStride = y_stride;
-      MOZ_ASSERT(u_stride == v_stride);
-      yuvData.mCbCrStride = u_stride;
-      yuvData.mCbChannel = const_cast<uint8_t*>(buffer_u);
-      yuvData.mCrChannel = const_cast<uint8_t*>(buffer_v);
-      yuvData.mCbCrSize = IntSize(yuvData.mCbCrStride, (height_ + 1) >> 1);
-      yuvData.mPicX = 0;
-      yuvData.mPicY = 0;
-      yuvData.mPicSize = IntSize(width_, height_);
-      yuvData.mStereoMode = StereoMode::MONO;
-
-      if (!yuvImage->CopyData(yuvData)) {
-        MOZ_ASSERT(false);
-        return;
-      }
-
-      image_ = yuvImage;
+    if (!yuvImage->CopyData(yuvData)) {
+      MOZ_ASSERT(false);
+      return;
     }
+
+    ReentrantMonitorAutoEnter enter(monitor_);
+    image_ = yuvImage;
   }
 
 private:
