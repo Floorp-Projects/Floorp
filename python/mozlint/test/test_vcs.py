@@ -102,13 +102,18 @@ def test_vcs_helper(repo):
 
     next(repo.setup)
 
-    assert_files(vcs.by_workdir(), ['bar', 'baz'])
+    assert_files(vcs.by_workdir('all'), ['bar', 'baz'])
+    if repo.vcs == 'git':
+        assert_files(vcs.by_workdir('staged'), ['baz'])
+    elif repo.vcs == 'hg':
+        assert_files(vcs.by_workdir('staged'), ['bar', 'baz'])
     assert_files(vcs.by_outgoing(), [])
     assert_files(vcs.by_outgoing(remotepath), [])
 
     next(repo.setup)
 
-    assert_files(vcs.by_workdir(), [])
+    assert_files(vcs.by_workdir('all'), [])
+    assert_files(vcs.by_workdir('staged'), [])
     assert_files(vcs.by_outgoing(), ['bar', 'baz'])
     assert_files(vcs.by_outgoing(remotepath), ['bar', 'baz'])
 
