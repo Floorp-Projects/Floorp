@@ -111,7 +111,7 @@ class LintRoller(object):
 
         # Calculate files from VCS
         if workdir:
-            paths.update(self.vcs.by_workdir())
+            paths.update(self.vcs.by_workdir(workdir))
         if outgoing:
             paths.update(self.vcs.by_outgoing(outgoing))
 
