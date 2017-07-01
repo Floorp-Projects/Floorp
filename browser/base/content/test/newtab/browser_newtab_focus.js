@@ -64,7 +64,7 @@ function promiseTourNotificationOpened(browser) {
     return ContentTask.spawn(browser, {}, function() {
       return new Promise(resolve => {
         let bar = content.document.querySelector("#onboarding-notification-bar");
-        if (bar && bar.classList.contains("onboarding-opened")) {
+        if (bar && bar.classList.contains("onboarding-opened") && bar.dataset.cssTransition == "end") {
           resolve(true);
           return;
         }
