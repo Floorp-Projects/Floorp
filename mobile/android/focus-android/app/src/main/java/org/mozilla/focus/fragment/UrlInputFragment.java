@@ -116,7 +116,7 @@ public class UrlInputFragment extends Fragment implements View.OnClickListener, 
 
         searchViewContainer = view.findViewById(R.id.search_hint_container);
 
-        searchView =  (TextView)view.findViewById(R.id.search_hint);
+        searchView =  (TextView) view.findViewById(R.id.search_hint);
         searchView.setOnClickListener(this);
 
         urlAutoCompleteFilter = new UrlAutoCompleteFilter();

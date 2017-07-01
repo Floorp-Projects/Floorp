@@ -151,7 +151,9 @@ public class SafeIntent {
         return intent.getAction();
     }
 
-    public int getFlags() { return intent.getFlags(); }
+    public int getFlags() {
+        return intent.getFlags();
+    }
 
     public String getDataString() {
         try {

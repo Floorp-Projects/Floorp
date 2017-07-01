@@ -142,8 +142,7 @@ public class ImageSelectTest {
         Assert.assertTrue(warning.exists());
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             copyMenu.click();
-        }
-        else {
+        } else {
             TestHelper.mDevice.pressBack();
         }
 

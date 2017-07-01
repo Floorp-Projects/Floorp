@@ -636,8 +636,9 @@ public class InlineAutocompleteEditText extends android.support.v7.widget.AppCom
 
     @Override
     public boolean onKeyPreIme(int keyCode, KeyEvent event) {
-        if (mOnKeyPreImeListener != null)
+        if (mOnKeyPreImeListener != null) {
             return mOnKeyPreImeListener.onKeyPreIme(this, keyCode, event);
+        }
 
         return false;
     }
@@ -652,8 +653,9 @@ public class InlineAutocompleteEditText extends android.support.v7.widget.AppCom
 
     @Override
     protected void onSelectionChanged(int selStart, int selEnd) {
-        if (mOnSelectionChangedListener != null)
+        if (mOnSelectionChangedListener != null) {
             mOnSelectionChangedListener.onSelectionChanged(selStart, selEnd);
+        }
 
         super.onSelectionChanged(selStart, selEnd);
     }
@@ -669,8 +671,9 @@ public class InlineAutocompleteEditText extends android.support.v7.widget.AppCom
     @Override
     public void onWindowFocusChanged(boolean hasFocus) {
         super.onWindowFocusChanged(hasFocus);
-        if (mOnWindowFocusChangeListener != null)
+        if (mOnWindowFocusChangeListener != null) {
             mOnWindowFocusChangeListener.onWindowFocusChanged(hasFocus);
+        }
     }
 
     @Override
