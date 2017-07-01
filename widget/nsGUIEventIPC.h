@@ -446,9 +446,6 @@ struct ParamTraits<mozilla::WidgetKeyboardEvent>
     WriteParam(aMsg, aParam.mLocation);
     WriteParam(aMsg, aParam.mUniqueId);
     WriteParam(aMsg, aParam.mIsSynthesizedByTIP);
-    WriteParam(aMsg,
-               static_cast<paramType::InputMethodAppStateType>
-                 (aParam.mInputMethodAppState));
 #ifdef XP_MACOSX
     WriteParam(aMsg, aParam.mNativeKeyCode);
     WriteParam(aMsg, aParam.mNativeModifierFlags);
@@ -472,7 +469,6 @@ struct ParamTraits<mozilla::WidgetKeyboardEvent>
   {
     mozilla::KeyNameIndexType keyNameIndex = 0;
     mozilla::CodeNameIndexType codeNameIndex = 0;
-    paramType::InputMethodAppStateType inputMethodAppState = 0;
     if (ReadParam(aMsg, aIter,
                   static_cast<mozilla::WidgetInputEvent*>(aResult)) &&
         ReadParam(aMsg, aIter, &keyNameIndex) &&
@@ -489,7 +485,6 @@ struct ParamTraits<mozilla::WidgetKeyboardEvent>
         ReadParam(aMsg, aIter, &aResult->mLocation) &&
         ReadParam(aMsg, aIter, &aResult->mUniqueId) &&
         ReadParam(aMsg, aIter, &aResult->mIsSynthesizedByTIP) &&
-        ReadParam(aMsg, aIter, &inputMethodAppState) &&
 #ifdef XP_MACOSX
         ReadParam(aMsg, aIter, &aResult->mNativeKeyCode) &&
         ReadParam(aMsg, aIter, &aResult->mNativeModifierFlags) &&
@@ -510,8 +505,6 @@ struct ParamTraits<mozilla::WidgetKeyboardEvent>
       aResult->mCodeNameIndex =
         static_cast<mozilla::CodeNameIndex>(codeNameIndex);
       aResult->mNativeKeyEvent = nullptr;
-      aResult->mInputMethodAppState =
-        static_cast<paramType::InputMethodAppState>(inputMethodAppState);
       return true;
     }
     return false;
