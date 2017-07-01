@@ -2,8 +2,8 @@ import json
 import pytest
 import types
 
-from tests.support.inline import inline
-from tests.support.asserts import assert_error, assert_success
+from support.inline import inline
+from support.asserts import assert_error, assert_success
 
 alert_doc = inline("<script>window.alert()</script>")
 frame_doc = inline("<p>frame")
