@@ -6,6 +6,7 @@
 #ifndef mozilla_layers_CheckerboardEvent_h
 #define mozilla_layers_CheckerboardEvent_h
 
+#include "mozilla/DefineEnum.h"
 #include "mozilla/Monitor.h"
 #include "mozilla/TimeStamp.h"
 #include <sstream>
@@ -25,19 +26,17 @@ namespace layers {
  */
 class CheckerboardEvent {
 public:
-  enum RendertraceProperty {
-    Page,
-    PaintedCriticalDisplayPort,
-    PaintedDisplayPort,
-    RequestedDisplayPort,
-    UserVisible,
+  MOZ_DEFINE_ENUM_AT_CLASS_SCOPE(
+    RendertraceProperty, (
+      Page,
+      PaintedCriticalDisplayPort,
+      PaintedDisplayPort,
+      RequestedDisplayPort,
+      UserVisible
+  ));
 
-    // sentinel final value
-    MAX_RendertraceProperty
-  };
-
-  static const char* sDescriptions[MAX_RendertraceProperty];
-  static const char* sColors[MAX_RendertraceProperty];
+  static const char* sDescriptions[sRendertracePropertyCount];
+  static const char* sColors[sRendertracePropertyCount];
 
 public:
   explicit CheckerboardEvent(bool aRecordTrace);
@@ -207,7 +206,7 @@ private:
    * checkerboarding actually starts, so that we have some data on what
    * was happening before the checkerboarding started.
    */
-  PropertyBuffer mBufferedProperties[MAX_RendertraceProperty];
+  PropertyBuffer mBufferedProperties[sRendertracePropertyCount];
   /**
    * The rendertrace info buffer that gives us info on what was happening
    * during the checkerboard event.

@@ -217,11 +217,6 @@ ChromeProcessController::HandleTap(TapType aType,
   case TapType::eLongTapUp:
     mAPZEventState->ProcessLongTapUp(presShell, point, scale, aModifiers);
     break;
-  case TapType::eSentinel:
-    // Should never happen, but we need to handle this case branch for the
-    // compiler to be happy.
-    MOZ_ASSERT(false);
-    break;
   }
 }
 

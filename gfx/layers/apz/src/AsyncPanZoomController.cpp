@@ -949,7 +949,6 @@ nsEventStatus AsyncPanZoomController::HandleInputEvent(const InputData& aEvent,
       case MultiTouchInput::MULTITOUCH_MOVE: rv = OnTouchMove(multiTouchInput); break;
       case MultiTouchInput::MULTITOUCH_END: rv = OnTouchEnd(multiTouchInput); break;
       case MultiTouchInput::MULTITOUCH_CANCEL: rv = OnTouchCancel(multiTouchInput); break;
-      case MultiTouchInput::MULTITOUCH_SENTINEL: MOZ_ASSERT_UNREACHABLE("Invalid value"); break;
     }
     break;
   }
@@ -968,7 +967,6 @@ nsEventStatus AsyncPanZoomController::HandleInputEvent(const InputData& aEvent,
       case PanGestureInput::PANGESTURE_MOMENTUMSTART: rv = OnPanMomentumStart(panGestureInput); break;
       case PanGestureInput::PANGESTURE_MOMENTUMPAN: rv = OnPan(panGestureInput, false); break;
       case PanGestureInput::PANGESTURE_MOMENTUMEND: rv = OnPanMomentumEnd(panGestureInput); break;
-      case PanGestureInput::PANGESTURE_SENTINEL: MOZ_ASSERT_UNREACHABLE("Invalid value"); break;
     }
     break;
   }
@@ -1011,10 +1009,6 @@ nsEventStatus AsyncPanZoomController::HandleInputEvent(const InputData& aEvent,
     rv = OnKeyboard(keyInput);
     break;
   }
-  case SENTINEL_INPUT: {
-    MOZ_ASSERT_UNREACHABLE("Invalid value");
-    break;
-  }
   }
 
   return rv;
@@ -1033,7 +1027,6 @@ nsEventStatus AsyncPanZoomController::HandleGestureEvent(const InputData& aEvent
       case PinchGestureInput::PINCHGESTURE_START: rv = OnScaleBegin(pinchGestureInput); break;
       case PinchGestureInput::PINCHGESTURE_SCALE: rv = OnScale(pinchGestureInput); break;
       case PinchGestureInput::PINCHGESTURE_END: rv = OnScaleEnd(pinchGestureInput); break;
-      case PinchGestureInput::PINCHGESTURE_SENTINEL: MOZ_ASSERT_UNREACHABLE("Invalid value"); break;
     }
     break;
   }
@@ -1047,7 +1040,6 @@ nsEventStatus AsyncPanZoomController::HandleGestureEvent(const InputData& aEvent
       case TapGestureInput::TAPGESTURE_DOUBLE: rv = OnDoubleTap(tapGestureInput); break;
       case TapGestureInput::TAPGESTURE_SECOND: rv = OnSecondTap(tapGestureInput); break;
       case TapGestureInput::TAPGESTURE_CANCEL: rv = OnCancelTap(tapGestureInput); break;
-      case TapGestureInput::TAPGESTURE_SENTINEL: MOZ_ASSERT_UNREACHABLE("Invalid value"); break;
     }
     break;
   }
@@ -1610,10 +1602,6 @@ AsyncPanZoomController::GetScrollWheelDelta(const ScrollWheelInput& aEvent) cons
       delta = ToParentLayerCoordinates(ScreenPoint(aEvent.mDeltaX, aEvent.mDeltaY), aEvent.mOrigin);
       break;
     }
-    case ScrollWheelInput::SCROLLDELTA_SENTINEL: {
-      MOZ_ASSERT_UNREACHABLE("Invalid value");
-      break;
-    }
   }
 
   // Apply user-set multipliers.
@@ -1686,10 +1674,6 @@ void ReportKeyboardScrollAction(const KeyboardScrollAction& aAction)
     case KeyboardScrollAction::eScrollComplete: {
       scrollMethod = ScrollInputMethod::ApzCompleteScroll;
       break;
-    }
-    case KeyboardScrollAction::eSentinel: {
-      MOZ_ASSERT_UNREACHABLE("Invalid KeyboardScrollAction.");
-      return;
     }
   }
 
@@ -1816,8 +1800,6 @@ AsyncPanZoomController::GetKeyboardDestination(const KeyboardScrollAction& aActi
       }
       break;
     }
-    case KeyboardScrollAction::eSentinel:
-      MOZ_ASSERT_UNREACHABLE("unexpected keyboard delta type");
   }
 
   return scrollDestination;
@@ -1863,7 +1845,6 @@ AsyncPanZoomController::CanScroll(ScrollDirection aDirection) const
   case ScrollDirection::VERTICAL:   return mY.CanScroll();
 
   case ScrollDirection::NONE:
-  case ScrollDirection::SENTINEL:
     MOZ_ASSERT_UNREACHABLE("Invalid value");
     break;
   }
@@ -1907,8 +1888,6 @@ ScrollInputMethodForWheelDeltaType(ScrollWheelInput::ScrollDeltaType aDeltaType)
     case ScrollWheelInput::SCROLLDELTA_PIXEL: {
       return ScrollInputMethod::ApzWheelPixel;
     }
-    case ScrollWheelInput::SCROLLDELTA_SENTINEL:
-      break;
   }
   MOZ_ASSERT_UNREACHABLE("Invalid value");
   return ScrollInputMethod::ApzWheelLine;
@@ -2021,11 +2000,6 @@ nsEventStatus AsyncPanZoomController::OnScrollWheel(const ScrollWheelInput& aEve
 
       WheelScrollAnimation* animation = mAnimation->AsWheelScrollAnimation();
       animation->UpdateDelta(aEvent.mTimeStamp, deltaInAppUnits, nsSize(velocity.x, velocity.y));
-      break;
-    }
-
-    case ScrollWheelInput::SCROLLMODE_SENTINEL: {
-      MOZ_ASSERT_UNREACHABLE("Invalid ScrollMode.");
       break;
     }
   }
