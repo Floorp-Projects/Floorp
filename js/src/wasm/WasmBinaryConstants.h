@@ -323,7 +323,7 @@ enum class Op
     I64Extend32S                         = 0xc4,
 #endif
 
-    AtomicPrefix                         = 0xfe,
+    ThreadPrefix                         = 0xfe,
     MozPrefix                            = 0xff,
 
     Limit                                = 0x100
@@ -332,8 +332,93 @@ enum class Op
 inline bool
 IsPrefixByte(uint8_t b)
 {
-    return b >= uint8_t(Op::AtomicPrefix);
+    return b >= uint8_t(Op::ThreadPrefix);
 }
+
+// Opcodes from threads proposal as of June 30, 2017
+enum class ThreadOp
+{
+    // Wait and wake
+    Wake                                 = 0x00,
+    I32Wait                              = 0x01,
+    I64Wait                              = 0x02,
+
+    // Load and store
+    I32AtomicLoad                        = 0x10,
+    I64AtomicLoad                        = 0x11,
+    I32AtomicLoad8U                      = 0x12,
+    I32AtomicLoad16U                     = 0x13,
+    I64AtomicLoad8U                      = 0x14,
+    I64AtomicLoad16U                     = 0x15,
+    I64AtomicLoad32U                     = 0x16,
+    I32AtomicStore                       = 0x17,
+    I64AtomicStore                       = 0x18,
+    I32AtomicStore8U                     = 0x19,
+    I32AtomicStore16U                    = 0x1a,
+    I64AtomicStore8U                     = 0x1b,
+    I64AtomicStore16U                    = 0x1c,
+    I64AtomicStore32U                    = 0x1d,
+
+    // Read-modify-write operations
+    I32AtomicAdd                         = 0x1e,
+    I64AtomicAdd                         = 0x1f,
+    I32AtomicAdd8U                       = 0x20,
+    I32AtomicAdd16U                      = 0x21,
+    I64AtomicAdd8U                       = 0x22,
+    I64AtomicAdd16U                      = 0x23,
+    I64AtomicAdd32U                      = 0x24,
+
+    I32AtomicSub                         = 0x25,
+    I64AtomicSub                         = 0x26,
+    I32AtomicSub8U                       = 0x27,
+    I32AtomicSub16U                      = 0x28,
+    I64AtomicSub8U                       = 0x29,
+    I64AtomicSub16U                      = 0x2a,
+    I64AtomicSub32U                      = 0x2b,
+
+    I32AtomicAnd                         = 0x2c,
+    I64AtomicAnd                         = 0x2d,
+    I32AtomicAnd8U                       = 0x2e,
+    I32AtomicAnd16U                      = 0x2f,
+    I64AtomicAnd8U                       = 0x30,
+    I64AtomicAnd16U                      = 0x31,
+    I64AtomicAnd32U                      = 0x32,
+
+    I32AtomicOr                          = 0x33,
+    I64AtomicOr                          = 0x34,
+    I32AtomicOr8U                        = 0x35,
+    I32AtomicOr16U                       = 0x36,
+    I64AtomicOr8U                        = 0x37,
+    I64AtomicOr16U                       = 0x38,
+    I64AtomicOr32U                       = 0x39,
+
+    I32AtomicXor                         = 0x3a,
+    I64AtomicXor                         = 0x3b,
+    I32AtomicXor8U                       = 0x3c,
+    I32AtomicXor16U                      = 0x3d,
+    I64AtomicXor8U                       = 0x3e,
+    I64AtomicXor16U                      = 0x3f,
+    I64AtomicXor32U                      = 0x40,
+
+    I32AtomicXchg                        = 0x41,
+    I64AtomicXchg                        = 0x42,
+    I32AtomicXchg8U                      = 0x43,
+    I32AtomicXchg16U                     = 0x44,
+    I64AtomicXchg8U                      = 0x45,
+    I64AtomicXchg16U                     = 0x46,
+    I64AtomicXchg32U                     = 0x47,
+
+    // CompareExchange
+    I32AtomicCmpXchg                     = 0x48,
+    I64AtomicCmpXchg                     = 0x49,
+    I32AtomicCmpXchg8U                   = 0x4a,
+    I32AtomicCmpXchg16U                  = 0x4b,
+    I64AtomicCmpXchg8U                   = 0x4c,
+    I64AtomicCmpXchg16U                  = 0x4d,
+    I64AtomicCmpXchg32U                  = 0x4e,
+
+    Limit
+};
 
 enum class MozOp
 {

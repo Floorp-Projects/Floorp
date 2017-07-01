@@ -284,6 +284,12 @@ class Encoder
         return writeFixedU8(uint8_t(Op::MozPrefix)) &&
                writeFixedU8(uint8_t(op));
     }
+    MOZ_MUST_USE bool writeOp(ThreadOp op) {
+        static_assert(size_t(ThreadOp::Limit) <= 256, "fits");
+        MOZ_ASSERT(size_t(op) < size_t(ThreadOp::Limit));
+        return writeFixedU8(uint8_t(Op::ThreadPrefix)) &&
+               writeFixedU8(uint8_t(op));
+    }
 
     // Fixed-length encodings that allow back-patching.
 
