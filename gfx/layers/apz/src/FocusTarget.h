@@ -8,7 +8,8 @@
 
 #include <stdint.h> // for int32_t, uint32_t
 
-#include "FrameMetrics.h" // for FrameMetrics::ViewID
+#include "FrameMetrics.h"        // for FrameMetrics::ViewID
+#include "mozilla/DefineEnum.h"  // for MOZ_DEFINE_ENUM
 
 class nsIPresShell;
 
@@ -30,15 +31,13 @@ public:
     FrameMetrics::ViewID mVertical;
   };
 
-  enum FocusTargetType
-  {
-    eNone,
-    eRefLayer,
-    eScrollLayer,
+  MOZ_DEFINE_ENUM_AT_CLASS_SCOPE(
+    FocusTargetType, (
+      eNone,
+      eRefLayer,
+      eScrollLayer
+  ));
 
-    // Used as an upper bound for ContiguousEnumSerializer
-    eSentinel,
-  };
   union FocusTargetData
   {
     uint64_t      mRefLayerId;
