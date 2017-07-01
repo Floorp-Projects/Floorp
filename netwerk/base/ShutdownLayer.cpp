@@ -73,7 +73,7 @@ nsresult mozilla::net::AttachShutdownLayer(PRFileDesc *aFd)
   status = PR_PushIOLayer(aFd, PR_NSPR_IO_LAYER, layer);
 
   if (status == PR_FAILURE) {
-    PR_DELETE(layer);
+    PR_Free(layer); // PR_CreateIOLayerStub() uses PR_Malloc().
     return NS_ERROR_FAILURE;
   }
   return NS_OK;

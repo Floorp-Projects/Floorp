@@ -5,7 +5,6 @@
 
 #include "nsNPAPIPluginStreamListener.h"
 #include "plstr.h"
-#include "prmem.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsDirectoryServiceUtils.h"
 #include "nsIFile.h"
@@ -169,7 +168,7 @@ nsNPAPIPluginStreamListener::~nsNPAPIPluginStreamListener()
   
   // lets get rid of the buffer
   if (mStreamBuffer) {
-    PR_Free(mStreamBuffer);
+    free(mStreamBuffer);
     mStreamBuffer=nullptr;
   }
   
@@ -500,7 +499,7 @@ nsNPAPIPluginStreamListener::OnDataAvailable(nsPluginStreamListenerPeer* streamP
     mStreamBufferSize = std::min(mStreamBufferSize,
                                uint32_t(MAX_PLUGIN_NECKO_BUFFER));
     
-    mStreamBuffer = (char*) PR_Malloc(mStreamBufferSize);
+    mStreamBuffer = (char*) malloc(mStreamBufferSize);
     if (!mStreamBuffer)
       return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -546,7 +545,7 @@ nsNPAPIPluginStreamListener::OnDataAvailable(nsPluginStreamListenerPeer* streamP
         // don't have enough space to store what we got off the network.
         // Reallocate our internal buffer.
         mStreamBufferSize = mStreamBufferByteCount + length;
-        char *buf = (char*)PR_Realloc(mStreamBuffer, mStreamBufferSize);
+        char* buf = (char*) realloc(mStreamBuffer, mStreamBufferSize);
         if (!buf)
           return NS_ERROR_OUT_OF_MEMORY;
         

@@ -18,7 +18,6 @@ using namespace std;
 #include "nsThreadUtils.h"
 #include "runnable_utils.h"
 #include "signaling/src/common/EncodingConstraints.h"
-#include "prmem.h"
 
 #define GTEST_HAS_RTTI 0
 #include "gtest/gtest.h"
@@ -785,7 +784,7 @@ class TransportConduitTest : public ::testing::Test
     MOZ_ASSERT(!(orig_width & 1));
     MOZ_ASSERT(!(orig_height & 1));
     int len = ((orig_width * orig_height) * 3 / 2);
-    uint8_t* frame = (uint8_t*) PR_MALLOC(len);
+    uint8_t* frame = (uint8_t*) malloc(len);
 
     memset(frame, COLOR, len);
     mVideoSession->SendVideoFrame((unsigned char*)frame,
@@ -794,7 +793,7 @@ class TransportConduitTest : public ::testing::Test
                                   orig_height,
                                   mozilla::kVideoI420,
                                   0);
-    PR_Free(frame);
+    free(frame);
 
     // Get the new resolution as adjusted by the max-fs constraint.
     *new_width = mVideoSession->SendingWidth();

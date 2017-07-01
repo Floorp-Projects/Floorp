@@ -4,7 +4,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
  
 #include "nsDecodeAppleFile.h"
-#include "prmem.h"
 #include "nsCRT.h"
 
 
@@ -20,7 +19,7 @@ nsDecodeAppleFile::nsDecodeAppleFile()
 {
   m_state = parseHeaders;
   m_dataBufferLength = 0;
-  m_dataBuffer = (unsigned char*) PR_MALLOC(MAX_BUFFERSIZE);
+  m_dataBuffer = (unsigned char*) malloc(MAX_BUFFERSIZE);
   m_entries = nullptr;
   m_rfRefNum = -1;
   m_totalDataForkWritten = 0;
@@ -35,8 +34,8 @@ nsDecodeAppleFile::nsDecodeAppleFile()
 
 nsDecodeAppleFile::~nsDecodeAppleFile()
 {
-  
-  PR_FREEIF(m_dataBuffer);
+  free(m_dataBuffer);
+  m_dataBuffer = nullptr;
   if (m_entries)
     delete [] m_entries;
 }

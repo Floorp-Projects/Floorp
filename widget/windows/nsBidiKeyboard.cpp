@@ -7,7 +7,6 @@
 #include <stdio.h>
 #include "nsBidiKeyboard.h"
 #include "WidgetUtils.h"
-#include "prmem.h"
 #include <tchar.h>
 
 NS_IMPL_ISUPPORTS(nsBidiKeyboard, nsIBidiKeyboard)
@@ -102,13 +101,13 @@ nsresult nsBidiKeyboard::SetupBidiKeyboards()
     return NS_ERROR_FAILURE;
 
   // allocate a buffer to hold the list
-  buf = (HKL far*) PR_Malloc(keyboards * sizeof(HKL));
+  buf = (HKL far*) malloc(keyboards * sizeof(HKL));
   if (!buf)
     return NS_ERROR_OUT_OF_MEMORY;
 
   // Call again to fill the buffer
   if (::GetKeyboardLayoutList(keyboards, buf) != keyboards) {
-    PR_Free(buf);
+    free(buf);
     return NS_ERROR_UNEXPECTED;
   }
 
@@ -126,7 +125,7 @@ nsresult nsBidiKeyboard::SetupBidiKeyboards()
       isLTRKeyboardSet = true;
     }
   }
-  PR_Free(buf);
+  free(buf);
   mInitialized = true;
 
   // If there is not at least one keyboard of each directionality, Bidi
