@@ -1464,6 +1464,7 @@ Gecko_CreateGradient(uint8_t aShape,
                      uint8_t aSize,
                      bool aRepeating,
                      bool aLegacySyntax,
+                     bool aMozLegacySyntax,
                      uint32_t aStopCount)
 {
   nsStyleGradient* result = new nsStyleGradient();
@@ -1472,6 +1473,7 @@ Gecko_CreateGradient(uint8_t aShape,
   result->mSize = aSize;
   result->mRepeating = aRepeating;
   result->mLegacySyntax = aLegacySyntax;
+  result->mMozLegacySyntax = aMozLegacySyntax;
 
   result->mAngle.SetNoneValue();
   result->mBgPosX.SetNoneValue();
