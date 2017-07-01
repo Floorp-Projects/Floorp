@@ -4,8 +4,8 @@ import urlparse
 
 import webdriver
 
-from tests.support.http_request import HTTPRequest
-from tests.support import merge_dictionaries
+from support.http_request import HTTPRequest
+from support import merge_dictionaries
 
 default_host = "http://127.0.0.1"
 default_port = "4444"

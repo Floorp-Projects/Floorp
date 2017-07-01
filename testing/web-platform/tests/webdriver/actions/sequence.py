@@ -1,7 +1,7 @@
 import pytest
 
-from tests.actions.support.refine import get_keys, filter_dict, get_events
-from tests.actions.support.keys import Keys
+from support.refine import get_keys, filter_dict, get_events
+from support.keys import Keys
 
 
 def test_no_actions_send_no_events(session, key_reporter, key_chain):

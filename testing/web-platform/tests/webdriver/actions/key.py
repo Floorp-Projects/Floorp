@@ -1,7 +1,7 @@
 import pytest
 
-from tests.actions.support.keys import Keys
-from tests.actions.support.refine import filter_dict, get_keys, get_events
+from support.keys import Keys
+from support.refine import filter_dict, get_keys, get_events
 
 
 def test_lone_keyup_sends_no_events(session, key_reporter, key_chain):
