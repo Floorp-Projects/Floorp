@@ -110,7 +110,7 @@ nsUnixSystemProxySettings::GetProxyForURI(const nsACString & aSpec,
     c++;
   }
 
-  PR_Free(proxyArray);
+  free(proxyArray);
   return NS_OK;
 }
 

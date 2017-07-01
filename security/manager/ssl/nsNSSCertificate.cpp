@@ -39,7 +39,6 @@
 #include "pkix/pkixtypes.h"
 #include "pkix/Result.h"
 #include "prerror.h"
-#include "prmem.h"
 #include "secasn1.h"
 #include "secder.h"
 #include "secerr.h"

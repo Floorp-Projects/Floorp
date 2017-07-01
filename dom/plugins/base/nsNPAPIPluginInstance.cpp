@@ -11,7 +11,6 @@
 #endif
 
 #include "mozilla/Logging.h"
-#include "prmem.h"
 #include "nscore.h"
 #include "prenv.h"
 
@@ -167,7 +166,7 @@ nsNPAPIPluginInstance::~nsNPAPIPluginInstance()
 #endif
 
   if (mMIMEType) {
-    PR_Free((void *)mMIMEType);
+    free(mMIMEType);
     mMIMEType = nullptr;
   }
 

@@ -6,7 +6,6 @@
 #include "nsCollation.h"
 #include "nsCOMPtr.h"
 #include "nsUnicharUtils.h"
-#include "prmem.h"
 
 #include  <string.h>
 
@@ -63,7 +62,7 @@ nsCollation::AllocateRawSortKey(int32_t strength,
 
   NS_ConvertUTF16toUTF8 str(stringNormalized);
   size_t len = str.Length() + 1;
-  void *buffer = PR_Malloc(len);
+  void* buffer = malloc(len);
   memcpy(buffer, str.get(), len);
   *key = (uint8_t *)buffer;
   *outLen = len;

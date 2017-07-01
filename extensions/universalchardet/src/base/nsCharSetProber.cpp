@@ -4,7 +4,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
  
 #include "nsCharSetProber.h"
-#include "prmem.h"
 
 //This filter applies to all scripts which do not use English characters
 bool nsCharSetProber::FilterWithoutEnglishLetters(const char* aBuf, uint32_t aLen, char** newBuf, uint32_t& newLen)
@@ -13,7 +12,7 @@ bool nsCharSetProber::FilterWithoutEnglishLetters(const char* aBuf, uint32_t aLe
   char *prevPtr, *curPtr;
   
   bool meetMSB = false;   
-  newptr = *newBuf = (char*)PR_Malloc(aLen);
+  newptr = *newBuf = (char*)malloc(aLen);
   if (!newptr)
     return false;
 
@@ -54,7 +53,7 @@ bool nsCharSetProber::FilterWithEnglishLetters(const char* aBuf, uint32_t aLen, 
   char *prevPtr, *curPtr;
   bool isInTag = false;
 
-  newptr = *newBuf = (char*)PR_Malloc(aLen);
+  newptr = *newBuf = (char*)malloc(aLen);
   if (!newptr)
     return false;
 
