@@ -1,5 +1,5 @@
-from tests.support.inline import inline
-from tests.support.asserts import assert_error, assert_success
+from support.inline import inline
+from support.asserts import assert_error, assert_success
 
 alert_doc = inline("<script>window.alert()</script>")
 

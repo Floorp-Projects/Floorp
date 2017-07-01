@@ -31,4 +31,4 @@ def key_reporter(session, test_actions_page, request):
 
 @pytest.fixture
 def test_actions_page(session, url):
-    session.url = url("/webdriver/tests/actions/support/test_actions_wdspec.html")
+    session.url = url("/webdriver/actions/support/test_actions_wdspec.html")

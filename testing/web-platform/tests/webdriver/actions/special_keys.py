@@ -1,8 +1,8 @@
 # META: timeout=long
 
 import pytest
-from tests.actions.support.keys import ALL_EVENTS, Keys
-from tests.actions.support.refine import filter_dict, get_keys, get_events
+from support.keys import ALL_EVENTS, Keys
+from support.refine import filter_dict, get_keys, get_events
 
 
 @pytest.mark.parametrize("name,expected", ALL_EVENTS.items())
