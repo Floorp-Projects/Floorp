@@ -72,8 +72,7 @@ ProxyObject::New(JSContext* cx, const BaseProxyHandler* handler, HandleValue pri
         MOZ_ASSERT(priv.isNull() || (priv.isGCThing() && priv.toGCThing()->isTenured()));
         newKind = SingletonObject;
     } else if ((priv.isGCThing() && priv.toGCThing()->isTenured()) ||
-               !handler->canNurseryAllocate() ||
-               !handler->finalizeInBackground(priv))
+               !handler->canNurseryAllocate())
     {
         newKind = TenuredObject;
     }
