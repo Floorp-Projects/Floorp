@@ -352,7 +352,6 @@
 }
 
 #onboarding-notification-bar.onboarding-opened {
-  transition: none;
   transform: translateY(0px);
 }
 
