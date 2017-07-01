@@ -403,7 +403,7 @@ task generateLocaleList {
         localeList << "public class LocaleList {" << "\n"
         // findbugs doesn't like "public static final String[]", see http://findbugs.sourceforge.net/bugDescriptions.html#MS_MUTABLE_ARRAY
         localeList << "    public static final List<String> BUNDLED_LOCALES = Collections.unmodifiableList(Arrays.asList(new String[] { "
-        localeList << getEnabledLocales().join(",") + " }));" << "\n"
+        localeList << getEnabledLocales().join(", ") + " }));" << "\n"
         localeList << "}" << "\n"
     }
 }
