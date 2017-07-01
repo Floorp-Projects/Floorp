@@ -159,7 +159,7 @@ add_task(async function test_url() {
           // When activity stream is enabled, about:newtab runs in the content process
           // which causes some timing issues for onUpdated. So if we encounter
           // about:newtab, return early and continue waiting for about:blank.
-          if ("about:newtab" === changeInfo.url) {
+          if (changeInfo.url === "about:newtab") {
             return;
           }
           browser.test.assertEq("about:blank", changeInfo.url,
