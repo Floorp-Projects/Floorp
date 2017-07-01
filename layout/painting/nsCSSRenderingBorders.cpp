@@ -3552,8 +3552,7 @@ nsCSSBorderRenderer::CanCreateWebRenderCommands()
 
 void
 nsCSSBorderRenderer::CreateWebRenderCommands(wr::DisplayListBuilder& aBuilder,
-                                             const layers::StackingContextHelper& aSc,
-                                             layers::WebRenderDisplayItemLayer* aLayer)
+                                             const layers::StackingContextHelper& aSc)
 {
   LayoutDeviceRect outerRect = LayoutDeviceRect::FromUnknownRect(mOuterRect);
   WrRect transformedRect = aSc.ToRelativeWrRect(outerRect);
