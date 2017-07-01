@@ -108,8 +108,7 @@ public:
 
   bool CanCreateWebRenderCommands();
   void CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder,
-                               const mozilla::layers::StackingContextHelper& aSc,
-                               mozilla::layers::WebRenderDisplayItemLayer* aLayer);
+                               const mozilla::layers::StackingContextHelper& aSc);
 
   // utility function used for background painting as well as borders
   static void ComputeInnerRadii(const RectCornerRadii& aRadii,

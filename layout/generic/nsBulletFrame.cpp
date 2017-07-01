@@ -538,10 +538,10 @@ public:
                                              LayerManager* aManager,
                                              const ContainerLayerParameters& aParameters) override;
 
-  virtual void CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder,
-                                       const StackingContextHelper& aSc,
-                                       nsTArray<layers::WebRenderParentCommand>& aParentCommands,
-                                       layers::WebRenderDisplayItemLayer* aLayer) override;
+  virtual void CreateWebRenderCommand(mozilla::wr::DisplayListBuilder& aBuilder,
+                                      const StackingContextHelper& aSc,
+                                      nsTArray<layers::WebRenderParentCommand>& aParentCommands,
+                                      layers::WebRenderDisplayItemLayer* aLayer) override;
 
   virtual void HitTest(nsDisplayListBuilder* aBuilder, const nsRect& aRect,
                        HitTestState* aState,
@@ -647,10 +647,10 @@ nsDisplayBullet::BuildLayer(nsDisplayListBuilder* aBuilder,
 }
 
 void
-nsDisplayBullet::CreateWebRenderCommands(wr::DisplayListBuilder& aBuilder,
-                                         const StackingContextHelper& aSc,
-                                         nsTArray<layers::WebRenderParentCommand>& aParentCommands,
-                                         layers::WebRenderDisplayItemLayer* aLayer)
+nsDisplayBullet::CreateWebRenderCommand(wr::DisplayListBuilder& aBuilder,
+                                        const StackingContextHelper& aSc,
+                                        nsTArray<layers::WebRenderParentCommand>& aParentCommands,
+                                        layers::WebRenderDisplayItemLayer* aLayer)
 {
   if (!mBulletRenderer)
     return;
