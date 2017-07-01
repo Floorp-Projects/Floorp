@@ -3,7 +3,7 @@ apply plugin: 'findbugs'
 apply plugin: 'jacoco'
 apply plugin: 'jacoco-android'
 apply plugin: 'pmd'
-
+apply plugin: 'checkstyle'
 
 android {
     compileSdkVersion 25
@@ -541,6 +541,15 @@ task pmd(type: Pmd, group: 'verification') {
     }
 }
 
+task checkstyle(type: Checkstyle) {
+    configFile file("${project.rootDir}/quality/checkstyle.xml")
+    source 'src'
+    include '**/*.java'
+    exclude '**/gen/**'
+
+    classpath = files()
+}
+
 afterEvaluate {
-    check.dependsOn 'findbugs', 'pmd'
+    check.dependsOn 'findbugs', 'pmd', 'checkstyle'
 }
