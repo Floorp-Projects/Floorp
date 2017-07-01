@@ -66,7 +66,6 @@ using namespace mozilla::widget;
 static NS_DEFINE_CID(kXULFilePickerCID, XULFILEPICKER_CID);
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsWindow)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsChildWindow)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsTransferable)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsBidiKeyboard)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsHTMLFormatConverter)
@@ -230,7 +229,7 @@ NS_DEFINE_NAMED_CID(NS_GFXINFO_CID);
 
 static const mozilla::Module::CIDEntry kWidgetCIDs[] = {
     { &kNS_WINDOW_CID, false, nullptr, nsWindowConstructor },
-    { &kNS_CHILD_CID, false, nullptr, nsChildWindowConstructor },
+    { &kNS_CHILD_CID, false, nullptr, nsWindowConstructor },
     { &kNS_APPSHELL_CID, false, nullptr, nsAppShellConstructor, Module::ALLOW_IN_GPU_PROCESS },
     { &kNS_COLORPICKER_CID, false, nullptr, nsColorPickerConstructor, Module::MAIN_PROCESS_ONLY },
     { &kNS_FILEPICKER_CID, false, nullptr, nsFilePickerConstructor, Module::MAIN_PROCESS_ONLY },
