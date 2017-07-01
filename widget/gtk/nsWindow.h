@@ -68,7 +68,7 @@ class TimeStamp;
 class CurrentX11TimeGetter;
 }
 
-class nsWindow : public nsBaseWidget
+class nsWindow final : public nsBaseWidget
 {
 public:
     typedef mozilla::gfx::DrawTarget DrawTarget;
@@ -565,12 +565,6 @@ private:
     RefPtr<mozilla::widget::IMContextWrapper> mIMContext;
 
     mozilla::UniquePtr<mozilla::CurrentX11TimeGetter> mCurrentTimeGetter;
-};
-
-class nsChildWindow : public nsWindow {
-public:
-    nsChildWindow();
-    ~nsChildWindow();
 };
 
 #endif /* __nsWindow_h__ */
