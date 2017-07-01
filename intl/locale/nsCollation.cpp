@@ -5,7 +5,6 @@
 
 #include "nsCollation.h"
 #include "nsIServiceManager.h"
-#include "prmem.h"
 #include "nsString.h"
 
 NS_IMPL_ISUPPORTS(nsCollation, nsICollation)
@@ -142,8 +141,8 @@ nsCollation::AllocateRawSortKey(int32_t strength, const nsAString& stringIn,
   int32_t keyLength = ucol_getSortKey(mCollatorICU, str, stringInLen, nullptr, 0);
   NS_ENSURE_TRUE((stringInLen == 0 || keyLength > 0), NS_ERROR_FAILURE);
 
-  // Since key is freed elsewhere with PR_Free, allocate with PR_Malloc.
-  uint8_t* newKey = (uint8_t*)PR_Malloc(keyLength + 1);
+  // Since key is freed elsewhere with free, allocate with malloc.
+  uint8_t* newKey = (uint8_t*)malloc(keyLength + 1);
   if (!newKey) {
       return NS_ERROR_OUT_OF_MEMORY;
   }

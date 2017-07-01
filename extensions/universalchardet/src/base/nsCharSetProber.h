@@ -32,7 +32,7 @@ public:
 
   // Helper functions used in the Latin1 and Group probers.
   // both functions Allocate a new buffer for newBuf. This buffer should be 
-  // freed by the caller using PR_FREEIF.
+  // freed by the caller using free().
   // Both functions return false in case of memory allocation failure.
   static bool FilterWithoutEnglishLetters(const char* aBuf, uint32_t aLen, char** newBuf, uint32_t& newLen);
   static bool FilterWithEnglishLetters(const char* aBuf, uint32_t aLen, char** newBuf, uint32_t& newLen);

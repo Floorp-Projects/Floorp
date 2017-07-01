@@ -12,7 +12,6 @@
 #include "nsITransferable.h"
 #include "nsGfxCIID.h"
 #include "nsMemory.h"
-#include "prmem.h"
 #include "imgIEncoder.h"
 #include "nsLiteralString.h"
 #include "nsComponentManagerUtils.h"

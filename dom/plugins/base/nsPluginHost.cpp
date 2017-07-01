@@ -11,7 +11,6 @@
 #include <cstdlib>
 #include <stdio.h>
 #include "prio.h"
-#include "prmem.h"
 #include "nsNPAPIPlugin.h"
 #include "nsNPAPIPluginStreamListener.h"
 #include "nsNPAPIPluginInstance.h"
