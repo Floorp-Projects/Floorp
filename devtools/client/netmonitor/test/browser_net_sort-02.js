@@ -208,15 +208,19 @@ add_task(function* () {
       if (header != target) {
         ok(!header.hasAttribute("data-sorted"),
           "The " + header.id + " header does not have a 'data-sorted' attribute.");
-        ok(!header.getAttribute("title"),
-          "The " + header.id + " header does not have a 'title' attribute.");
+        ok(!header.getAttribute("title").includes(L10N.getStr("networkMenu.sortedAsc")) &&
+          !header.getAttribute("title").includes(L10N.getStr("networkMenu.sortedDesc")),
+          "The " + header.id +
+          " header does not include any sorting in the 'title' attribute.");
       } else {
         is(header.getAttribute("data-sorted"), direction,
           "The " + header.id + " header has a correct 'data-sorted' attribute.");
-        is(header.getAttribute("title"), direction == "ascending"
+        const sorted = direction == "ascending"
           ? L10N.getStr("networkMenu.sortedAsc")
-          : L10N.getStr("networkMenu.sortedDesc"),
-          "The " + header.id + " header has a correct 'title' attribute.");
+          : L10N.getStr("networkMenu.sortedDesc");
+        ok(header.getAttribute("title").includes(sorted),
+          "The " + header.id +
+          " header includes the used sorting in the 'title' attribute.");
       }
     }
   }
