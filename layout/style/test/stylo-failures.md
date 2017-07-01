@@ -53,11 +53,6 @@ to mochitest command.
   * test_initial_computation.html `grid` [4]
   * test_property_syntax_errors.html `grid`: actually there are issues with this [8]
   * test_value_storage.html `'grid` [195]
-* Unsupported prefixed values
-  * moz-prefixed gradient functions bug 1337655
-    * test_value_storage.html `-moz-linear-gradient` [322]
-    * ... `-moz-radial-gradient` [309]
-    * ... `-moz-repeating-` [298]
 * Unsupported values
   * SVG-in-OpenType values not supported servo/servo#15211 bug 1355412
     * test_value_storage.html `context-` [7]
