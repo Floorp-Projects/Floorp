@@ -11,6 +11,7 @@
 #include "InputData.h"                  // for PinchGestureInput
 #include "Units.h"                      // for CSSPoint, CSSRect, etc
 #include "mozilla/Assertions.h"         // for MOZ_ASSERT_HELPER2
+#include "mozilla/DefineEnum.h"         // for MOZ_DEFINE_ENUM
 #include "mozilla/EventForwards.h"      // for Modifiers
 #include "nsISupportsImpl.h"
 
@@ -49,15 +50,14 @@ public:
    * a click event with detail=2 to web content (similar to what a mouse double-
    * click would do).
    */
-  enum class TapType {
-    eSingleTap,
-    eDoubleTap,
-    eSecondTap,
-    eLongTap,
-    eLongTapUp,
-
-    eSentinel,
-  };
+  MOZ_DEFINE_ENUM_CLASS_AT_CLASS_SCOPE(
+    TapType, (
+      eSingleTap,
+      eDoubleTap,
+      eSecondTap,
+      eLongTap,
+      eLongTapUp
+  ));
 
   /**
    * Requests handling of a tap event. |aPoint| is in LD pixels, relative to the
@@ -107,34 +107,32 @@ public:
    */
   virtual void DispatchToRepaintThread(already_AddRefed<Runnable> aTask) = 0;
 
-  enum class APZStateChange {
-    /**
-     * APZ started modifying the view (including panning, zooming, and fling).
-     */
-    eTransformBegin,
-    /**
-     * APZ finished modifying the view.
-     */
-    eTransformEnd,
-    /**
-     * APZ started a touch.
-     * |aArg| is 1 if touch can be a pan, 0 otherwise.
-     */
-    eStartTouch,
-    /**
-     * APZ started a pan.
-     */
-    eStartPanning,
-    /**
-     * APZ finished processing a touch.
-     * |aArg| is 1 if touch was a click, 0 otherwise.
-     */
-    eEndTouch,
+  MOZ_DEFINE_ENUM_CLASS_AT_CLASS_SCOPE(
+    APZStateChange, (
+      /**
+       * APZ started modifying the view (including panning, zooming, and fling).
+       */
+      eTransformBegin,
+      /**
+       * APZ finished modifying the view.
+       */
+      eTransformEnd,
+      /**
+       * APZ started a touch.
+       * |aArg| is 1 if touch can be a pan, 0 otherwise.
+       */
+      eStartTouch,
+      /**
+       * APZ started a pan.
+       */
+      eStartPanning,
+      /**
+       * APZ finished processing a touch.
+       * |aArg| is 1 if touch was a click, 0 otherwise.
+       */
+      eEndTouch
+  ));
 
-    // Sentinel value for IPC, this must be the last item in the enum and
-    // should not be used as an actual message value.
-    eSentinel
-  };
   /**
    * General notices of APZ state changes for consumers.
    * |aGuid| identifies the APZC originating the state change.

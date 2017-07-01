@@ -113,9 +113,6 @@ FocusState::Update(uint64_t aRootLayerTreeId,
         mLastContentProcessedEvent = target.mSequenceNumber;
         return;
       }
-      case FocusTarget::eSentinel: {
-        MOZ_ASSERT_UNREACHABLE("Invalid FocusTargetType");
-      }
     }
   }
 }
