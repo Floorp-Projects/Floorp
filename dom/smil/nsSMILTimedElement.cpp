@@ -216,13 +216,13 @@ nsSMILTimedElement::RemoveInstanceTimes(InstanceTimeList& aArray,
 //----------------------------------------------------------------------
 // Static members
 
-nsAttrValue::EnumTable nsSMILTimedElement::sFillModeTable[] = {
+const nsAttrValue::EnumTable nsSMILTimedElement::sFillModeTable[] = {
       {"remove", FILL_REMOVE},
       {"freeze", FILL_FREEZE},
       {nullptr, 0}
 };
 
-nsAttrValue::EnumTable nsSMILTimedElement::sRestartModeTable[] = {
+const nsAttrValue::EnumTable nsSMILTimedElement::sRestartModeTable[] = {
       {"always", RESTART_ALWAYS},
       {"whenNotActive", RESTART_WHENNOTACTIVE},
       {"never", RESTART_NEVER},
