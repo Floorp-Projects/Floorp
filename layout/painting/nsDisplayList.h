@@ -3354,7 +3354,11 @@ public:
   virtual already_AddRefed<Layer> BuildLayer(nsDisplayListBuilder* aBuilder,
                                              LayerManager* aManager,
                                              const ContainerLayerParameters& aContainerParameters) override;
-
+  virtual bool CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder,
+                                       const StackingContextHelper& aSc,
+                                       nsTArray<WebRenderParentCommand>& aParentCommands,
+                                       mozilla::layers::WebRenderLayerManager* aManager,
+                                       nsDisplayListBuilder* aDisplayListBuilder) override;
   virtual nsRegion GetOpaqueRegion(nsDisplayListBuilder* aBuilder,
                                    bool* aSnap) override;
   virtual mozilla::Maybe<nscolor> IsUniform(nsDisplayListBuilder* aBuilder) override;
@@ -4630,6 +4634,11 @@ public:
   virtual already_AddRefed<Layer> BuildLayer(nsDisplayListBuilder* aBuilder,
                                              LayerManager* aManager,
                                              const ContainerLayerParameters& aContainerParameters) override;
+  virtual bool CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder,
+                                       const StackingContextHelper& aSc,
+                                       nsTArray<WebRenderParentCommand>& aParentCommands,
+                                       mozilla::layers::WebRenderLayerManager* aManager,
+                                       nsDisplayListBuilder* aDisplayListBuilder) override;
   virtual bool ShouldBuildLayerEvenIfInvisible(nsDisplayListBuilder* aBuilder) override;
   virtual bool ComputeVisibility(nsDisplayListBuilder *aBuilder,
                                  nsRegion *aVisibleRegion) override;
