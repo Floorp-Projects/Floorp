@@ -131,7 +131,7 @@ public class ImageSelectTest {
 
         // Find image and long tap it
         Assert.assertTrue(rabbitImage.exists());
-        rabbitImage.dragTo(rabbitImage,5);
+        rabbitImage.dragTo(rabbitImage, 5);
         imageMenuTitle.waitForExists(waitingTime);
         Assert.assertTrue(imageMenuTitle.exists());
         Assert.assertEquals(imageMenuTitleText.getText(),
@@ -181,7 +181,7 @@ public class ImageSelectTest {
 
         // Find image and long tap it
         Assert.assertTrue(rabbitImage.exists());
-        rabbitImage.dragTo(rabbitImage,5);
+        rabbitImage.dragTo(rabbitImage, 5);
         imageMenuTitle.waitForExists(waitingTime);
         Assert.assertTrue(shareMenu.exists());
         Assert.assertTrue(copyMenu.exists());
@@ -217,7 +217,7 @@ public class ImageSelectTest {
                 .enabled(true));
         webImage.waitForExists(waitingTime);
         Assert.assertTrue(webImage.exists());
-        webImage.dragTo(webImage,5);
+        webImage.dragTo(webImage, 5);
         imageMenuTitle.waitForExists(waitingTime);
         Assert.assertTrue(imageMenuTitle.exists());
         Assert.assertTrue(shareMenu.exists());

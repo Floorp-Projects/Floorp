@@ -94,7 +94,7 @@ public class UrlMatcher implements  SharedPreferences.OnSharedPreferenceChangeLi
         }
 
         final EntityList entityList;
-        try (final JsonReader jsonReader = new JsonReader(new InputStreamReader(context.getResources().openRawResource(entityListFile), StandardCharsets.UTF_8))){
+        try (final JsonReader jsonReader = new JsonReader(new InputStreamReader(context.getResources().openRawResource(entityListFile), StandardCharsets.UTF_8))) {
             entityList = EntityListProcessor.getEntityMapFromJSON(jsonReader);
         } catch (IOException e) {
             throw new IllegalStateException("Unable to parse entity list");

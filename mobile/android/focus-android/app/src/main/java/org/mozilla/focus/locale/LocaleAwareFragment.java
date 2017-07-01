@@ -21,7 +21,7 @@ public abstract class LocaleAwareFragment extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
-        
+
         LocaleManager.getInstance()
                 .correctLocale(getContext(), getResources(), getResources().getConfiguration());
 

@@ -65,7 +65,7 @@ public class HtmlLoader {
         try (final InputStream pngInputStream = context.getResources().openRawResource(resourceID)) {
             // Base64 encodes 3 bytes at a time, make sure we have a multiple of 3 here
             // I don't know what a sensible chunk size is, let's just go with 300b.
-            final byte[] data = new byte[3*100];
+            final byte[] data = new byte[3 * 100];
             int bytesRead;
             boolean headerVerified = false;
 

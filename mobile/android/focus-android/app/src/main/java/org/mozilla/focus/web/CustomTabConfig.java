@@ -92,7 +92,7 @@ public class CustomTabConfig {
         final int maxSize = context.getResources().getDimensionPixelSize(R.dimen.customtabs_toolbar_icon_size);
 
         if (candidateIcon.getWidth() <= maxSize &&
-                candidateIcon.getHeight() <= maxSize){
+                candidateIcon.getHeight() <= maxSize) {
             return candidateIcon;
         } else {
             candidateIcon.recycle();

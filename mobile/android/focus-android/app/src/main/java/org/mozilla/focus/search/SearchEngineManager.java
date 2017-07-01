@@ -173,7 +173,9 @@ public class SearchEngineManager extends BroadcastReceiver {
         while (searchEngines == null) {
             try {
                 wait();
-            } catch (InterruptedException ignored) {}
+            } catch (InterruptedException ignored) {
+                // Ignore
+            }
         }
     }
 }

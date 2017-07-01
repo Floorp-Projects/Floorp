@@ -165,15 +165,21 @@ public final class TestHelper {
     static void pressEnterKey() {
         mDevice.pressKeyCode(KEYCODE_ENTER);
     }
-    static void pressBackKey() {mDevice.pressBack();}
-    static void pressHomeKey() {mDevice.pressHome();}
-    static void openNotification() {mDevice.openNotification();}
+    static void pressBackKey() {
+        mDevice.pressBack();
+    }
+    static void pressHomeKey() {
+        mDevice.pressHome();
+    }
+    static void openNotification() {
+        mDevice.openNotification();
+    }
 
     static void swipeUpScreen () {
         int dHeight = mDevice.getDisplayHeight();
         int dWidth = mDevice.getDisplayWidth();
-        int xScrollPosition = dWidth/2;
-        int yScrollStart = dHeight/4 * 3;
+        int xScrollPosition = dWidth / 2;
+        int yScrollStart = dHeight / 4 * 3;
         mDevice.swipe(
                 xScrollPosition,
                 yScrollStart,
@@ -186,8 +192,8 @@ public final class TestHelper {
     static void swipedownScreen () {
         int dHeight = mDevice.getDisplayHeight();
         int dWidth = mDevice.getDisplayWidth();
-        int xScrollPosition = dWidth/2;
-        int yScrollStart = dHeight/4;
+        int xScrollPosition = dWidth / 2;
+        int yScrollStart = dHeight / 4;
         mDevice.swipe(
                 xScrollPosition,
                 yScrollStart,

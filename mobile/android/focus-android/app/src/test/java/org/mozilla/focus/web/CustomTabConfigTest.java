@@ -226,7 +226,7 @@ public class CustomTabConfigTest {
         final CustomTabsIntent.Builder builder = new CustomTabsIntent.Builder();
 
         {
-            final Bitmap bitmap = Bitmap.createBitmap(new int[maxSize*maxSize], maxSize, maxSize, Bitmap.Config.ARGB_8888);
+            final Bitmap bitmap = Bitmap.createBitmap(new int[maxSize * maxSize], maxSize, maxSize, Bitmap.Config.ARGB_8888);
 
             builder.setCloseButtonIcon(bitmap);
         }
