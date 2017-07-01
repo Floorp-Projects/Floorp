@@ -1386,6 +1386,10 @@ AstDecodeExpr(AstDecodeContext& c)
         if (!c.push(AstDecodeStackItem(tmp)))
             return false;
         break;
+      case uint16_t(Op::ThreadPrefix):
+        MOZ_CRASH("ThreadPrefix ops not yet implemented");
+      case uint16_t(Op::MozPrefix):
+        return c.iter().unrecognizedOpcode(&op);
       default:
         return c.iter().unrecognizedOpcode(&op);
     }
