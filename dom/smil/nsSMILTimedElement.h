@@ -584,7 +584,7 @@ protected:
     FILL_FREEZE
   };
   nsSMILFillMode                  mFillMode;
-  static nsAttrValue::EnumTable   sFillModeTable[];
+  static const nsAttrValue::EnumTable sFillModeTable[];
 
   enum nsSMILRestartMode : uint8_t
   {
@@ -593,7 +593,7 @@ protected:
     RESTART_NEVER
   };
   nsSMILRestartMode               mRestartMode;
-  static nsAttrValue::EnumTable   sRestartModeTable[];
+  static const nsAttrValue::EnumTable sRestartModeTable[];
 
   InstanceTimeList                mBeginInstances;
   InstanceTimeList                mEndInstances;
