@@ -1955,10 +1955,16 @@ public:
     * The layer this item is in is passed in as rects must be relative
     * to their parent.
     */
-   virtual void CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder,
+   virtual void CreateWebRenderCommand(mozilla::wr::DisplayListBuilder& aBuilder,
+                                       const StackingContextHelper& aSc,
+                                       nsTArray<WebRenderParentCommand>& aParentCommands,
+                                       WebRenderDisplayItemLayer* aLayer) {}
+   virtual bool CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder,
                                         const StackingContextHelper& aSc,
                                         nsTArray<WebRenderParentCommand>& aParentCommands,
-                                        WebRenderDisplayItemLayer* aLayer) {}
+                                        mozilla::layers::WebRenderLayerManager* aManager,
+                                        nsDisplayListBuilder* aDisplayListBuilder) { return false; }
+
   /**
    * Builds a DisplayItemLayer and sets the display item to this.
    */
