@@ -493,7 +493,6 @@ function removeMessageListenerId(messageName, handler) {
   removeMessageListener(messageName + listenerId, handler);
 }
 
-var getTitleFn = dispatch(getTitle);
 var getPageSourceFn = dispatch(getPageSource);
 var getActiveElementFn = dispatch(getActiveElement);
 var getElementAttributeFn = dispatch(getElementAttribute);
@@ -535,7 +534,6 @@ function startListeners() {
   addMessageListenerId("Marionette:get", get);
   addMessageListenerId("Marionette:waitForPageLoaded", waitForPageLoaded);
   addMessageListenerId("Marionette:cancelRequest", cancelRequest);
-  addMessageListenerId("Marionette:getTitle", getTitleFn);
   addMessageListenerId("Marionette:getPageSource", getPageSourceFn);
   addMessageListenerId("Marionette:goBack", goBack);
   addMessageListenerId("Marionette:goForward", goForward);
@@ -609,7 +607,6 @@ function deleteSession(msg) {
   removeMessageListenerId("Marionette:get", get);
   removeMessageListenerId("Marionette:waitForPageLoaded", waitForPageLoaded);
   removeMessageListenerId("Marionette:cancelRequest", cancelRequest);
-  removeMessageListenerId("Marionette:getTitle", getTitleFn);
   removeMessageListenerId("Marionette:getPageSource", getPageSourceFn);
   removeMessageListenerId("Marionette:goBack", goBack);
   removeMessageListenerId("Marionette:goForward", goForward);
@@ -1239,13 +1236,6 @@ function refresh(msg) {
   } catch (e) {
     sendError(e, command_id);
   }
-}
-
-/**
- * Get the title of the current browsing context.
- */
-function getTitle() {
-  return curContainer.frame.top.document.title;
 }
 
 /**
