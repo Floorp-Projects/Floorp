@@ -389,6 +389,8 @@ this.PlacesUtils = {
    * @return microseconds from the epoch.
    */
   toPRTime(date) {
+    if (typeof date != "number" && date.constructor.name != "Date")
+      throw new Error("Invalid value passed to toPRTime");
     return date * 1000;
   },
 
@@ -400,6 +402,8 @@ this.PlacesUtils = {
    * @return a Date object.
    */
   toDate(time) {
+    if (typeof time != "number")
+      throw new Error("Invalid value passed to toDate");
     return new Date(parseInt(time / 1000));
   },
 

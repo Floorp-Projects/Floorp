@@ -155,10 +155,13 @@ add_task(async function test_url() {
     // Create a new tab for testing update.
     browser.tabs.create({}, function(tab) {
       browser.tabs.onUpdated.addListener(function onUpdated(tabId, changeInfo) {
-        // Check callback
-        browser.test.assertEq(tabId, tab.id, "Check tab id");
-        browser.test.log("onUpdate: " + JSON.stringify(changeInfo));
         if ("url" in changeInfo) {
+          // When activity stream is enabled, about:newtab runs in the content process
+          // which causes some timing issues for onUpdated. So if we encounter
+          // about:newtab, return early and continue waiting for about:blank.
+          if (changeInfo.url === "about:newtab") {
+            return;
+          }
           browser.test.assertEq("about:blank", changeInfo.url,
                                 "Check changeInfo.url");
           browser.tabs.onUpdated.removeListener(onUpdated);
@@ -166,6 +169,9 @@ add_task(async function test_url() {
           browser.tabs.remove(tabId);
           browser.test.notifyPass("finish");
         }
+        // Check callback
+        browser.test.assertEq(tabId, tab.id, "Check tab id");
+        browser.test.log("onUpdate: " + JSON.stringify(changeInfo));
       });
       browser.tabs.update(tab.id, {url: "about:blank"});
     });

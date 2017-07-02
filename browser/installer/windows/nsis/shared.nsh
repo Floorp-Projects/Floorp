@@ -107,11 +107,6 @@
   ; Register AccessibleHandler.dll with COM (this writes to HKLM)
   ${RegisterAccessibleHandler}
 
-!ifndef HAVE_64BIT_BUILD
-  ; Clean up any IAccessible registry corruption
-  ${FixCorruptOleAccRegistration}
-!endif
-
 !ifdef MOZ_MAINTENANCE_SERVICE
   Call IsUserAdmin
   Pop $R0
@@ -926,49 +921,6 @@
   ${RegisterDLL} "$INSTDIR\AccessibleHandler.dll"
 !macroend
 !define RegisterAccessibleHandler "!insertmacro RegisterAccessibleHandler"
-
-!ifndef HAVE_64BIT_BUILD
-!define IID_IAccessible "{618736E0-3C3D-11CF-810C-00AA00389B71}"
-!define CLSID_UniversalMarshaler "{00020404-0000-0000-C000-000000000046}"
-!define OleAccTypeLib "{1EA4DBF0-3C3B-11CF-810C-00AA00389B71}"
-!define OleAccTypeLibVersion "1.1"
-Function FixCorruptOleAccRegistration
-  Push $0
-
-  ; Read IAccessible's ProxyStubClsid32. If it is not CLSID_UniversalMarshaler
-  ; then we must be running Windows 10 Creators Update which does not use a
-  ; type library.
-  ReadRegStr $0 HKCR "Interface\${IID_IAccessible}\ProxyStubClsid32" ""
-  ${Unless} "$0" == "${CLSID_UniversalMarshaler}"
-    Pop $0
-    Return
-  ${EndIf}
-
-  Push $1
-
-  ; IAccessible is using the universal marshler, therefore we expect a valid
-  ; TypeLib key to exist
-  ClearErrors
-  ReadRegStr $0 HKCR "Interface\${IID_IAccessible}\TypeLib" ""
-  ReadRegStr $1 HKCR "Interface\${IID_IAccessible}\TypeLib" "Version"
-  ReadRegStr $0 HKCR "TypeLib\$0\$1\0\win32" ""
-  Pop $1
-  ${IfNot} ${Errors}
-  ${AndIf} ${FileExists} "$0"
-    Pop $0
-    Return
-  ${EndIf}
-
-  Pop $0
-
-  ; Some third-party code has previously overridden system typelibs
-  ; with their own but did not clean itself up during uninstall.
-  ; Revert to the system typelib.
-  WriteRegStr HKCR "Interface\${IID_IAccessible}\TypeLib" "" "${OleAccTypeLib}"
-  WriteRegStr HKCR "Interface\${IID_IAccessible}\TypeLib" "Version" "${OleAccTypeLibVersion}"
-FunctionEnd
-!define FixCorruptOleAccRegistration "Call FixCorruptOleAccRegistration"
-!endif
 
 ; Removes various registry entries for reasons noted below (does not use SHCTX).
 !macro RemoveDeprecatedKeys

@@ -600,6 +600,12 @@ class MochitestArguments(ArgumentContainer):
           "help": "File describes all failure patterns of the tests.",
           "suppress": True,
           }],
+        [["--work-path"],
+         {"default": None,
+          "dest": "workPath",
+          "help": "Path to the base dir of all test files.",
+          "suppress": True,
+          }],
     ]
 
     defaults = {

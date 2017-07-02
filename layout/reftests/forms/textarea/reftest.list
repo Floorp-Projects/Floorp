@@ -10,5 +10,5 @@ fuzzy-if(skiaContent,1,1) == rtl.html rtl-dynamic-attr.html
 fuzzy-if(skiaContent,1,1) == rtl.html rtl-dynamic-style.html
 == rtl.html in-dynamic-rtl-doc.html
 fuzzy-if(skiaContent,1,3) == setvalue-framereconstruction-1.html setvalue-framereconstruction-ref.html
-fuzzy-if(asyncPan&&!layersGPUAccelerated,102,4168) fails-if(styloVsGecko||stylo) == padding-scrollbar-placement.html padding-scrollbar-placement-ref.html
+fuzzy-if(asyncPan&&!layersGPUAccelerated,102,4168) == padding-scrollbar-placement.html padding-scrollbar-placement-ref.html
 == various-cols.html various-cols-ref.html

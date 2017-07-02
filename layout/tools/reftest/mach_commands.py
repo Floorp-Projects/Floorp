@@ -78,6 +78,7 @@ class ReftestRunner(MozbuildObject):
 
         args.extraProfileFiles.append(os.path.join(self.topobjdir, "dist", "plugins"))
         args.symbolsPath = os.path.join(self.topobjdir, "crashreporter-symbols")
+        args.workPath = self.topsrcdir
 
         if not args.tests:
             args.tests = [os.path.join(*default_manifest[args.suite])]

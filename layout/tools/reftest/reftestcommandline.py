@@ -241,6 +241,11 @@ class ReftestArgumentsParser(argparse.ArgumentParser):
                           nargs="*",
                           help="Path to test file, manifest file, or directory containing tests")
 
+        self.add_argument("--work-path",
+                          action="store",
+                          dest="workPath",
+                          help="Path to the base dir of all test files.")
+
         mozlog.commandline.add_logging_group(self)
 
     def get_ip(self):

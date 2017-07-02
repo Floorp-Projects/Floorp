@@ -1105,7 +1105,9 @@ Http2Session::CleanupStream(Http2Stream *aStream, nsresult aResult,
         SpdyPushCache *cache = nullptr;
         requestContext->GetSpdyPushCache(&cache);
         if (cache) {
-          Http2PushedStream *trash = cache->RemovePushedStreamHttp2(hashKey);
+          // Make sure the id of the stream in the push cache is the same
+          // as the id of the stream we're cleaning up! See bug 1368080.
+          Http2PushedStream *trash = cache->RemovePushedStreamHttp2ByID(hashKey, aStream->StreamID());
           LOG3(("Http2Session::CleanupStream %p aStream=%p pushStream=%p trash=%p",
                 this, aStream, pushStream, trash));
         }
@@ -1832,8 +1834,9 @@ Http2Session::RecvPushPromise(Http2Session *self)
   } else {
     LOG3(("Http2Session::RecvPushPromise %p place stream into session cache\n", self));
     if (!cache->RegisterPushedStreamHttp2(key, pushedStream)) {
+      // This only happens if they've already pushed us this item.
       LOG3(("Http2Session::RecvPushPromise registerPushedStream Failed\n"));
-      self->CleanupStream(pushedStream, NS_ERROR_FAILURE, INTERNAL_ERROR);
+      self->CleanupStream(pushedStream, NS_ERROR_FAILURE, REFUSED_STREAM_ERROR);
       self->ResetDownstreamState();
       return NS_OK;
     }

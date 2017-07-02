@@ -19,7 +19,6 @@
 #include "FileDescriptor.h"
 #include "FileDescriptorFile.h"
 #include "LoadInfo.h"
-#include "nsContentUtils.h"
 #include "nsServiceManagerUtils.h"
 #include "nsIFile.h"
 #include "nsIFileChannel.h"
@@ -557,12 +556,6 @@ ExtensionProtocolHandler::NewStream(nsIURI* aChildURI,
    * Now get a channel for the resolved child URI and make sure the
    * channel is a file channel.
    */
-
-  nsCOMPtr<nsIPrincipal> childPrincipal;
-  NS_TRY(aChildLoadInfo->GetLoadingPrincipal(getter_AddRefs(childPrincipal)));
-  if (nsContentUtils::IsSystemPrincipal(childPrincipal)) {
-    return Err(NS_ERROR_FILE_ACCESS_DENIED);
-  }
 
   nsCOMPtr<nsIChannel> channel;
   NS_TRY(NS_NewChannelInternal(getter_AddRefs(channel),

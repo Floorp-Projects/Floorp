@@ -1312,8 +1312,7 @@ var gBrowserInit = {
     // have been initialized.
     Services.obs.notifyObservers(window, "browser-window-before-show");
 
-    gUIDensity.update();
-    gPrefService.addObserver(gUIDensity.prefDomain, gUIDensity);
+    gUIDensity.init();
 
     let isResistFingerprintingEnabled = gPrefService.getBoolPref("privacy.resistFingerprinting");
 
@@ -1775,7 +1774,7 @@ var gBrowserInit = {
 
     Services.obs.removeObserver(gPluginHandler.NPAPIPluginCrashed, "plugin-crashed");
 
-    gPrefService.removeObserver(gUIDensity.prefDomain, gUIDensity);
+    gUIDensity.uninit();
 
     try {
       gBrowser.removeProgressListener(window.XULBrowserWindow);
@@ -5456,26 +5455,50 @@ function displaySecurityInfo() {
 
 // Updates the UI density (for touch and compact mode) based on the uidensity pref.
 var gUIDensity = {
+  MODE_NORMAL: 0,
   MODE_COMPACT: 1,
   MODE_TOUCH: 2,
-  prefDomain: "browser.uidensity",
+  uiDensityPref: "browser.uidensity",
+  autoTouchModePref: "browser.touchmode.auto",
+
+  init() {
+    this.update();
+    gPrefService.addObserver(this.uiDensityPref, this);
+    gPrefService.addObserver(this.autoTouchModePref, this);
+  },
+
+  uninit() {
+    gPrefService.removeObserver(this.uiDensityPref, this);
+    gPrefService.removeObserver(this.autoTouchModePref, this);
+  },
 
   observe(aSubject, aTopic, aPrefName) {
-    if (aTopic != "nsPref:changed" || aPrefName != this.prefDomain)
+    if (aTopic != "nsPref:changed" ||
+        (aPrefName != this.uiDensityPref &&
+         aPrefName != this.autoTouchModePref)) {
       return;
+    }
 
     this.update();
   },
 
-  update() {
-    let mode;
+  getCurrentDensity() {
     // Automatically override the uidensity to touch in Windows tablet mode.
     if (AppConstants.isPlatformAndVersionAtLeast("win", "10") &&
         WindowsUIUtils.inTabletMode &&
-        gPrefService.getBoolPref("browser.touchmode.auto")) {
-      mode = this.MODE_TOUCH;
-    } else {
-      mode = gPrefService.getIntPref(this.prefDomain);
+        gPrefService.getBoolPref(this.autoTouchModePref)) {
+      return { mode: this.MODE_TOUCH, overridden: true };
+    }
+    return { mode: gPrefService.getIntPref(this.uiDensityPref), overridden: false };
+  },
+
+  setCurrentMode(mode) {
+    gPrefService.setIntPref(this.uiDensityPref, mode);
+  },
+
+  update(mode) {
+    if (mode == null) {
+      mode = this.getCurrentDensity().mode;
     }
 
     let doc = document.documentElement;
@@ -8176,10 +8199,11 @@ var RestoreLastSessionObserver = {
     if (SessionStore.canRestoreLastSession &&
         !PrivateBrowsingUtils.isWindowPrivate(window)) {
       if (Services.prefs.getBoolPref("browser.tabs.restorebutton")) {
-        let {restoreTabsButton} = gBrowser.tabContainer;
+        let {restoreTabsButton, restoreTabsButtonWrapperWidth} = gBrowser.tabContainer;
         let restoreTabsButtonWrapper = restoreTabsButton.parentNode;
         restoreTabsButtonWrapper.setAttribute("session-exists", "true");
         gBrowser.tabContainer.updateSessionRestoreVisibility();
+        restoreTabsButton.style.maxWidth = `${restoreTabsButtonWrapperWidth}px`;
         gBrowser.tabContainer.addEventListener("TabOpen", this);
       }
       Services.obs.addObserver(this, "sessionstore-last-session-cleared", true);
@@ -8196,17 +8220,16 @@ var RestoreLastSessionObserver = {
   },
 
   removeRestoreButton() {
-    let {restoreTabsButton, restoreTabsButtonWrapperWidth} = gBrowser.tabContainer;
+    let {restoreTabsButton} = gBrowser.tabContainer;
     let restoreTabsButtonWrapper = restoreTabsButton.parentNode;
-    restoreTabsButtonWrapper.removeAttribute("session-exists");
     gBrowser.tabContainer.addEventListener("transitionend", function maxWidthTransitionHandler(e) {
-      if (e.propertyName == "max-width") {
+      if (e.target == gBrowser.tabContainer && e.propertyName == "max-width") {
         gBrowser.tabContainer.updateSessionRestoreVisibility();
         gBrowser.tabContainer.removeEventListener("transitionend", maxWidthTransitionHandler);
       }
     });
-    restoreTabsButton.style.maxWidth = `${restoreTabsButtonWrapperWidth}px`;
-    requestAnimationFrame(() => restoreTabsButton.style.maxWidth = 0);
+    restoreTabsButtonWrapper.removeAttribute("session-exists");
+    restoreTabsButton.style.maxWidth = 0;
     gBrowser.tabContainer.removeEventListener("TabOpen", this);
   },
 

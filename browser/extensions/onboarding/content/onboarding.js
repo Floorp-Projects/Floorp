@@ -55,8 +55,8 @@ var onboardingTours = [
       let div = win.document.createElement("div");
       div.innerHTML = `
         <section class="onboarding-tour-description">
-          <h1 data-l10n-id="onboarding.tour-private-browsing.title"></h1>
-          <p data-l10n-id="onboarding.tour-private-browsing.description"></p>
+          <h1 data-l10n-id="onboarding.tour-private-browsing.title2"></h1>
+          <p data-l10n-id="onboarding.tour-private-browsing.description2"></p>
         </section>
         <section class="onboarding-tour-content">
           <img src="resource://onboarding/img/figure_private.svg" />
@@ -82,8 +82,8 @@ var onboardingTours = [
       let div = win.document.createElement("div");
       div.innerHTML = `
         <section class="onboarding-tour-description">
-          <h1 data-l10n-id="onboarding.tour-addons.title"></h1>
-          <p data-l10n-id="onboarding.tour-addons.description"></p>
+          <h1 data-l10n-id="onboarding.tour-addons.title2"></h1>
+          <p data-l10n-id="onboarding.tour-addons.description2"></p>
         </section>
         <section class="onboarding-tour-content">
           <img src="resource://onboarding/img/figure_addons.svg" />
@@ -109,8 +109,8 @@ var onboardingTours = [
       let div = win.document.createElement("div");
       div.innerHTML = `
         <section class="onboarding-tour-description">
-          <h1 data-l10n-id="onboarding.tour-customize.title"></h1>
-          <p data-l10n-id="onboarding.tour-customize.description"></p>
+          <h1 data-l10n-id="onboarding.tour-customize.title2"></h1>
+          <p data-l10n-id="onboarding.tour-customize.description2"></p>
         </section>
         <section class="onboarding-tour-content">
           <img src="resource://onboarding/img/figure_customize.svg" />
@@ -124,7 +124,7 @@ var onboardingTours = [
   },
   {
     id: "onboarding-tour-search",
-    tourNameId: "onboarding.tour-search",
+    tourNameId: "onboarding.tour-search2",
     getNotificationStrings(bundle) {
       return {
         title: bundle.GetStringFromName("onboarding.notification.onboarding-tour-search.title"),
@@ -136,8 +136,8 @@ var onboardingTours = [
       let div = win.document.createElement("div");
       div.innerHTML = `
         <section class="onboarding-tour-description">
-          <h1 data-l10n-id="onboarding.tour-search.title"></h1>
-          <p data-l10n-id="onboarding.tour-search.description"></p>
+          <h1 data-l10n-id="onboarding.tour-search.title2"></h1>
+          <p data-l10n-id="onboarding.tour-search.description2"></p>
         </section>
         <section class="onboarding-tour-content">
           <img src="resource://onboarding/img/figure_search.svg" />
@@ -165,8 +165,8 @@ var onboardingTours = [
         "onboarding.tour-default-browser.win7.button" : "onboarding.tour-default-browser.button";
       div.innerHTML = `
         <section class="onboarding-tour-description">
-          <h1 data-l10n-id="onboarding.tour-default-browser.title"></h1>
-          <p data-l10n-id="onboarding.tour-default-browser.description"></p>
+          <h1 data-l10n-id="onboarding.tour-default-browser.title2"></h1>
+          <p data-l10n-id="onboarding.tour-default-browser.description2"></p>
         </section>
         <section class="onboarding-tour-content">
           <img src="resource://onboarding/img/figure_default.svg" />
@@ -180,7 +180,7 @@ var onboardingTours = [
   },
   {
     id: "onboarding-tour-sync",
-    tourNameId: "onboarding.tour-sync",
+    tourNameId: "onboarding.tour-sync2",
     getNotificationStrings(bundle) {
       return {
         title: bundle.GetStringFromName("onboarding.notification.onboarding-tour-sync.title"),
@@ -193,8 +193,8 @@ var onboardingTours = [
       div.classList.add("onboarding-no-button");
       div.innerHTML = `
         <section class="onboarding-tour-description">
-          <h1 data-l10n-id="onboarding.tour-sync.title"></h1>
-          <p data-l10n-id="onboarding.tour-sync.description"></p>
+          <h1 data-l10n-id="onboarding.tour-sync.title2"></h1>
+          <p data-l10n-id="onboarding.tour-sync.description2"></p>
         </section>
         <section class="onboarding-tour-content">
           <form>
@@ -260,7 +260,7 @@ class Onboarding {
     if (doc.hidden) {
       // When the preloaded-browser feature is on,
       // it would preload an hidden about:newtab in the background.
-      // We don't wnat to show notification in that hidden state.
+      // We don't want to show notification in that hidden state.
       let onVisible = () => {
         if (!doc.hidden) {
           doc.removeEventListener("visibilitychange", onVisible);
@@ -324,11 +324,9 @@ class Onboarding {
       case "onboarding-overlay":
         this.toggleOverlay();
         break;
-
       case "onboarding-notification-close-btn":
         this.hideNotification();
         break;
-
       case "onboarding-notification-action-btn":
         let tourId = this._notificationBar.dataset.targetTourId;
         this.toggleOverlay();
@@ -488,7 +486,7 @@ class Onboarding {
   _renderNotificationBar() {
     let div = this._window.document.createElement("div");
     div.id = "onboarding-notification-bar";
-    // Here we use `innerHTML` is for more friendly reading.
+    // We use `innerHTML` for more friendly reading.
     // The security should be fine because this is not from an external input.
     div.innerHTML = `
       <div id="onboarding-notification-icon"></div>
@@ -524,7 +522,7 @@ class Onboarding {
   _renderOverlay() {
     let div = this._window.document.createElement("div");
     div.id = "onboarding-overlay";
-    // Here we use `innerHTML` is for more friendly reading.
+    // We use `innerHTML` for more friendly reading.
     // The security should be fine because this is not from an external input.
     div.innerHTML = `
       <div id="onboarding-overlay-dialog">

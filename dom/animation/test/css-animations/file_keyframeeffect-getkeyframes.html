@@ -121,6 +121,11 @@
   to { filter: blur(5px) sepia(60%) saturate(30%); }
 }
 
+@keyframes anim-filter-drop-shadow {
+  from { filter: drop-shadow(10px 10px 10px rgb(0, 255, 0)); }
+  to { filter: drop-shadow(50px 30px 10px rgb(255, 0, 0)); }
+}
+
 @keyframes anim-text-shadow {
   to { text-shadow: none; }
 }
@@ -563,15 +568,32 @@ test(function(t) {
 }, 'KeyframeEffectReadOnly.getKeyframes() returns expected values for ' +
    'animations with filter properties and missing keyframes');
 
+test(function(t) {
+  var div = addDiv(t);
+
+  div.style.animation = 'anim-filter-drop-shadow 100s';
+  var frames = getKeyframes(div);
+
+  assert_equals(frames.length, 2, "number of frames");
+
+  var expected = [
+    { offset: 0, computedOffset: 0, easing: "ease",
+      filter: "drop-shadow(10px 10px 10px rgb(0, 255, 0))" },
+    { offset: 1, computedOffset: 1, easing: "ease",
+      filter: "drop-shadow(50px 30px 10px rgb(255, 0, 0))" },
+  ];
+
+  for (var i = 0; i < frames.length; i++) {
+    assert_frames_equal(frames[i], expected[i], "ComputedKeyframe #" + i);
+  }
+}, 'KeyframeEffectReadOnly.getKeyframes() returns expected values for ' +
+   'animation with drop-shadow of filter property');
+
 // Gecko-specific test case: We are specifically concerned here that the
 // computed value for text-shadow and a "none" specified on a keyframe
 // are correctly represented.
 
 test(function(t) {
-  if (!isServoEnabled()) {
-    // FIXME : Bug 1374564 : the serialization of text-shadow is wrong on gecko
-    return;
-  }
   var div = addDiv(t);
 
   div.style.textShadow = '1px 1px 2px rgb(0, 0, 0), ' +

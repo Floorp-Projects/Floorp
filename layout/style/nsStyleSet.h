@@ -108,7 +108,7 @@ class nsStyleSet final
 
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
-  void Init(nsPresContext *aPresContext);
+  void Init(nsPresContext* aPresContext, nsBindingManager* aBindingManager);
 
   nsRuleNode* GetRuleTree() { return mRuleTree; }
 
@@ -385,13 +385,6 @@ class nsStyleSet final
    */
   bool MediumFeaturesChanged();
 
-  // APIs for registering objects that can supply additional
-  // rules during processing.
-  void SetBindingManager(nsBindingManager* aBindingManager)
-  {
-    mBindingManager = aBindingManager;
-  }
-
   // APIs to manipulate the style sheet lists.  The sheets in each
   // list are stored with the most significant sheet last.
   nsresult AppendStyleSheet(mozilla::SheetType aType,
@@ -419,7 +412,7 @@ class nsStyleSet final
     return mSheets[aType][aIndex];
   }
 
-  void AppendAllXBLStyleSheets(nsTArray<mozilla::CSSStyleSheet*>& aArray) const;
+  void AppendAllXBLStyleSheets(nsTArray<mozilla::StyleSheet*>& aArray) const;
 
   nsresult RemoveDocStyleSheet(mozilla::CSSStyleSheet* aSheet);
   nsresult AddDocStyleSheet(mozilla::CSSStyleSheet* aSheet,

@@ -23,12 +23,12 @@ public class MmaStubImp implements MmaInterface {
     }
 
     @Override
-    public void track(String leanplumEvent) {
+    public void event(String leanplumEvent) {
 
     }
 
     @Override
-    public void track(String leanplumEvent, double value) {
+    public void event(String leanplumEvent, double value) {
 
     }
 

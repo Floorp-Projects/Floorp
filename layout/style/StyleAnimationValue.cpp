@@ -326,7 +326,8 @@ ToPrimitive(nsCSSValue::Array* aArray)
 
 static void
 AppendCSSShadowValue(const nsCSSShadowItem *aShadow,
-                     nsCSSValueList **&aResultTail)
+                     nsCSSValueList **&aResultTail,
+                     nsCSSPropertyID aProperty)
 {
   MOZ_ASSERT(aShadow, "shadow expected");
 
@@ -335,9 +336,9 @@ AppendCSSShadowValue(const nsCSSShadowItem *aShadow,
   arr->Item(0).SetIntegerCoordValue(aShadow->mXOffset);
   arr->Item(1).SetIntegerCoordValue(aShadow->mYOffset);
   arr->Item(2).SetIntegerCoordValue(aShadow->mRadius);
-  // NOTE: This code sometimes stores mSpread: 0 even when
-  // the parser would be required to leave it null.
-  arr->Item(3).SetIntegerCoordValue(aShadow->mSpread);
+  if (aProperty == eCSSProperty_box_shadow) {
+    arr->Item(3).SetIntegerCoordValue(aShadow->mSpread);
+  }
   if (aShadow->mHasColor) {
     arr->Item(4).SetColorValue(aShadow->mColor);
   }
@@ -886,7 +887,8 @@ GetNumberOrPercent(const nsCSSValue &aValue);
 static bool
 ComputeSingleShadowSquareDistance(const nsCSSValueList* aShadow1,
                                   const nsCSSValueList* aShadow2,
-                                  double& aSquareDistance)
+                                  double& aSquareDistance,
+                                  nsCSSPropertyID aProperty)
 {
   MOZ_ASSERT(aShadow1->mValue.GetUnit() == eCSSUnit_Array, "wrong unit");
   MOZ_ASSERT(aShadow2->mValue.GetUnit() == eCSSUnit_Array, "wrong unit");
@@ -896,6 +898,11 @@ ComputeSingleShadowSquareDistance(const nsCSSValueList* aShadow1,
   double squareDistance = 0.0;
   // X, Y, Radius, Spread
   for (size_t i = 0; i < 4; ++i) {
+    // Spread value is not necessary on text-shadow,
+    // so we skip the computing distance.
+    if (i == 3 && (aProperty != eCSSProperty_box_shadow)) {
+      continue;
+    }
     MOZ_ASSERT(array1->Item(i).GetUnit() == eCSSUnit_Pixel,
                "unexpected unit");
     MOZ_ASSERT(array2->Item(i).GetUnit() == eCSSUnit_Pixel,
@@ -1002,7 +1009,8 @@ ComputeFilterSquareDistance(const nsCSSValueList* aList1,
                  "drop-shadow filter func doesn't support lists");
       if (!ComputeSingleShadowSquareDistance(func1.GetListValue(),
                                              func2.GetListValue(),
-                                             aSquareDistance)) {
+                                             aSquareDistance,
+                                             eCSSProperty_filter)) {
         return false;
       }
       break;
@@ -1793,7 +1801,8 @@ StyleAnimationValue::ComputeDistance(nsCSSPropertyID aProperty,
       while (shadow1) {
         double squareDistance = 0.0;
         if (!ComputeSingleShadowSquareDistance(shadow1, shadow2,
-                                               squareDistance)) {
+                                               squareDistance,
+                                               aProperty)) {
           NS_ERROR("Unexpected ComputeSingleShadowSquareDistance failure; "
                    "why didn't we fail earlier, in AddWeighted calls above?");
         }
@@ -2036,7 +2045,8 @@ AppendToCSSValuePairList(UniquePtr<nsCSSValuePairList>& aHead,
 static UniquePtr<nsCSSValueList>
 AddWeightedShadowItems(double aCoeff1, const nsCSSValue &aValue1,
                        double aCoeff2, const nsCSSValue &aValue2,
-                       ColorAdditionType aColorAdditionType)
+                       ColorAdditionType aColorAdditionType,
+                       nsCSSPropertyID aProperty)
 {
   // X, Y, Radius, Spread, Color, Inset
   MOZ_ASSERT(aValue1.GetUnit() == eCSSUnit_Array,
@@ -2048,6 +2058,9 @@ AddWeightedShadowItems(double aCoeff1, const nsCSSValue &aValue1,
   RefPtr<nsCSSValue::Array> resultArray = nsCSSValue::Array::Create(6);
 
   for (size_t i = 0; i < 4; ++i) {
+    // The text-shadow is not need to spread radius,
+    // So we skip this interpolation.
+    if (i == 3 && (aProperty != eCSSProperty_box_shadow)) continue;
     AddCSSValuePixel(aCoeff1, array1->Item(i), aCoeff2, array2->Item(i),
                      resultArray->Item(i),
                      // blur radius must be nonnegative
@@ -2231,7 +2244,8 @@ AddWeightedFilterFunctionImpl(double aCoeff1, const nsCSSValueList* aList1,
                                funcArg1.GetListValue()->mValue,
                                aCoeff2,
                                funcArg2.GetListValue()->mValue,
-                               aColorAdditionType);
+                               aColorAdditionType,
+                               eCSSProperty_filter);
       if (!shadowValue) {
         return nullptr;
       }
@@ -2771,7 +2785,8 @@ AddWeightedShadowList(double aCoeff1,
                       const nsCSSValueList* aShadow1,
                       double aCoeff2,
                       const nsCSSValueList* aShadow2,
-                      ColorAdditionType aColorAdditionType)
+                      ColorAdditionType aColorAdditionType,
+                      nsCSSPropertyID aProperty)
 {
   // This is implemented according to:
   // http://dev.w3.org/csswg/css3-transitions/#animation-of-property-types-
@@ -2783,7 +2798,8 @@ AddWeightedShadowList(double aCoeff1,
     UniquePtr<nsCSSValueList> shadowValue =
       AddWeightedShadowItems(aCoeff1, aShadow1->mValue,
                              aCoeff2, aShadow2->mValue,
-                             aColorAdditionType);
+                             aColorAdditionType,
+                             aProperty);
     if (!shadowValue) {
       return nullptr;
     }
@@ -2809,7 +2825,7 @@ AddWeightedShadowList(double aCoeff1,
       UniquePtr<nsCSSValueList> shadowValue =
         AddWeightedShadowItems(longCoeff, longShadow->mValue,
                                0.0, longShadow->mValue,
-                               aColorAdditionType);
+                               aColorAdditionType, aProperty);
       if (!shadowValue) {
         return nullptr;
       }
@@ -3179,7 +3195,8 @@ StyleAnimationValue::AddWeighted(nsCSSPropertyID aProperty,
                               aValue1.GetCSSValueListValue(),
                               aCoeff2,
                               aValue2.GetCSSValueListValue(),
-                              ColorAdditionType::Clamped);
+                              ColorAdditionType::Clamped,
+                              aProperty);
       if (!result) {
         return false;
       }
@@ -3332,7 +3349,8 @@ StyleAnimationValue::Accumulate(nsCSSPropertyID aProperty,
       UniquePtr<nsCSSValueList> resultList =
         AddWeightedShadowList(1.0, result.GetCSSValueListValue(),
                               aCount, aA.GetCSSValueListValue(),
-                              ColorAdditionType::Unclamped);
+                              ColorAdditionType::Unclamped,
+                              aProperty);
       if (resultList) {
         result.SetAndAdoptCSSValueListValue(resultList.release(), eUnit_Shadow);
       }
@@ -4568,7 +4586,8 @@ StyleAnimationValue::ExtractComputedValue(nsCSSPropertyID aProperty,
                 nsCSSShadowArray* shadowArray = filter.GetDropShadow();
                 MOZ_ASSERT(shadowArray->Length() == 1,
                            "expected exactly one shadow");
-                AppendCSSShadowValue(shadowArray->ShadowAt(0), tmpShadowResultTail);
+                AppendCSSShadowValue(shadowArray->ShadowAt(0),
+                                     tmpShadowResultTail, aProperty);
                 *shadowResult = *tmpShadowValue;
               } else {
                 // We checked all possible nsStyleFilter types but
@@ -4816,7 +4835,7 @@ StyleAnimationValue::ExtractComputedValue(nsCSSPropertyID aProperty,
       nsAutoPtr<nsCSSValueList> result;
       nsCSSValueList **resultTail = getter_Transfers(result);
       for (uint32_t i = 0, i_end = shadowArray->Length(); i < i_end; ++i) {
-        AppendCSSShadowValue(shadowArray->ShadowAt(i), resultTail);
+        AppendCSSShadowValue(shadowArray->ShadowAt(i), resultTail, aProperty);
       }
       aComputedValue.SetAndAdoptCSSValueListValue(result.forget(),
                                                   eUnit_Shadow);

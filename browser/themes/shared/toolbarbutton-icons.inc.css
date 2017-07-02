@@ -194,12 +194,12 @@ toolbar:not([brighttext]) #bookmarks-menu-button[cui-areatype="toolbar"][starred
 }
 
 #sidebar-button[cui-areatype="toolbar"] {
-  list-style-image: url("chrome://browser/skin/sidebars.svg");
+  list-style-image: url("chrome://browser/skin/sidebars-right.svg");
 }
 
 #sidebar-button[cui-areatype="toolbar"]:-moz-locale-dir(ltr):not([positionend]),
 #sidebar-button[cui-areatype="toolbar"]:-moz-locale-dir(rtl)[positionend] {
-  transform: scaleX(-1);
+  list-style-image: url("chrome://browser/skin/sidebars.svg");
 }
 
 #panic-button[cui-areatype="toolbar"] {

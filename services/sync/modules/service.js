@@ -37,14 +37,14 @@ Cu.import("resource://services-sync/telemetry.js");
 Cu.import("resource://services-sync/util.js");
 
 const ENGINE_MODULES = {
-  Addons: "addons.js",
-  Bookmarks: "bookmarks.js",
-  Form: "forms.js",
-  History: "history.js",
-  Password: "passwords.js",
-  Prefs: "prefs.js",
-  Tab: "tabs.js",
-  ExtensionStorage: "extension-storage.js",
+  Addons: {module: "addons.js", symbol: "AddonsEngine"},
+  Bookmarks: {module: "bookmarks.js", symbol: "BookmarksEngine"},
+  Form: {module: "forms.js", symbol: "FormEngine"},
+  History: {module: "history.js", symbol: "HistoryEngine"},
+  Password: {module: "passwords.js", symbol: "PasswordEngine"},
+  Prefs: {module: "prefs.js", symbol: "PrefsEngine"},
+  Tab: {module: "tabs.js", symbol: "TabEngine"},
+  ExtensionStorage: {module: "extension-storage.js", symbol: "ExtensionStorageEngine"},
 };
 
 const STORAGE_INFO_TYPES = [INFO_COLLECTIONS,
@@ -356,15 +356,18 @@ Sync11Service.prototype = {
     this.engineManager = new EngineManager(this);
 
     let engines = [];
-    // Applications can provide this preference (comma-separated list)
-    // to specify which engines should be registered on startup.
-    let pref = Svc.Prefs.get("registerEngines");
-    if (pref) {
-      engines = pref.split(",");
+    // We allow a pref, which has no default value, to limit the engines
+    // which are registered. We expect only tests will use this.
+    if (Svc.Prefs.has("registerEngines")) {
+      engines = Svc.Prefs.get("registerEngines").split(",");
+      this._log.info("Registering custom set of engines", engines);
+    } else {
+      // default is all engines.
+      engines = Object.keys(ENGINE_MODULES);
     }
 
     let declined = [];
-    pref = Svc.Prefs.get("declinedEngines");
+    let pref = Svc.Prefs.get("declinedEngines");
     if (pref) {
       declined = pref.split(",");
     }
@@ -376,18 +379,19 @@ Sync11Service.prototype = {
         this._log.info("Do not know about engine: " + name);
         continue;
       }
-
+      let {module, symbol} = ENGINE_MODULES[name];
+      if (!module.includes(":")) {
+        module = "resource://services-sync/engines/" + module;
+      }
       let ns = {};
       try {
-        Cu.import("resource://services-sync/engines/" + ENGINE_MODULES[name], ns);
-
-        let engineName = name + "Engine";
-        if (!(engineName in ns)) {
-          this._log.warn("Could not find exported engine instance: " + engineName);
+        Cu.import(module, ns);
+        if (!(symbol in ns)) {
+          this._log.warn("Could not find exported engine instance: " + symbol);
           continue;
         }
 
-        this.engineManager.register(ns[engineName]);
+        this.engineManager.register(ns[symbol]);
       } catch (ex) {
         this._log.warn("Could not register engine " + name, ex);
       }

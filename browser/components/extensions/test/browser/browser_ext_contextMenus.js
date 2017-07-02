@@ -59,6 +59,13 @@ add_task(async function() {
     },
 
     background: async function() {
+      browser.test.onMessage.addListener(msg => {
+        if (msg == "removeall") {
+          browser.contextMenus.removeAll();
+          browser.test.sendMessage("removed");
+        }
+      });
+
       // A generic onclick callback function.
       function genericOnClick(info, tab) {
         browser.test.sendMessage("onclick", {info, tab});
@@ -86,10 +93,7 @@ add_task(async function() {
         if (context == "selection") {
           browser.contextMenus.update("ext-selection", {
             title: "selection is: '%s'",
-            onclick: (info, tab) => {
-              browser.contextMenus.removeAll();
-              genericOnClick(info, tab);
-            },
+            onclick: genericOnClick,
           });
         }
       }
@@ -290,13 +294,79 @@ add_task(async function() {
   expectedClickInfo = {
     menuItemId: "ext-selection",
     pageUrl: PAGE,
-    selectionText: "just some text 1234567890123456789012345678901234567890123456789012345678901234567890123456789012",
+    selectionText: " just some text 1234567890123456789012345678901234567890123456789012345678901234567890123456789012",
   };
 
   result = await extension.awaitMessage("onclick");
   checkClickInfo(result);
   result = await extension.awaitMessage("browser.contextMenus.onClicked");
   checkClickInfo(result);
+
+  // Select a lot of text
+  await ContentTask.spawn(gBrowser.selectedBrowser, { }, function* (arg) {
+    let doc = content.document;
+    let range = doc.createRange();
+    let selection = content.getSelection();
+    selection.removeAllRanges();
+    let textNode = doc.getElementById("longtext").firstChild;
+    range.setStart(textNode, 0);
+    range.setEnd(textNode, textNode.length);
+    selection.addRange(range);
+  });
+
+  // Bring up context menu again
+  extensionMenuRoot = await openExtensionContextMenu("#longtext");
+
+  // Check some menu items
+  items = extensionMenuRoot.getElementsByAttribute("label", "selection is: 'Sed ut perspiciatis unde omnis iste natus err...'");
+  is(items.length, 1, `contextMenu item for longtext selection was found (context=selection)`);
+  await closeExtensionContextMenu(items[0]);
+
+  expectedClickInfo = {
+    menuItemId: "ext-selection",
+    pageUrl: PAGE,
+  };
+
+  result = await extension.awaitMessage("onclick");
+  checkClickInfo(result);
+  result = await extension.awaitMessage("browser.contextMenus.onClicked");
+  checkClickInfo(result);
+  ok(result.info.selectionText.endsWith("quo voluptas nulla pariatur?"), "long text selection worked");
+
+
+  // Select a lot of text, excercise the nsIDOMNSEditableElement code path in
+  // the Browser:GetSelection handler.
+  await ContentTask.spawn(gBrowser.selectedBrowser, { }, function(arg) {
+    let doc = content.document;
+    let node = doc.getElementById("editabletext");
+    // content.js handleContentContextMenu fails intermittently without focus.
+    node.focus();
+    node.selectionStart = 0;
+    node.selectionEnd = 844;
+  });
+
+  // Bring up context menu again
+  extensionMenuRoot = await openExtensionContextMenu("#editabletext");
+
+  // Check some menu items
+  items = extensionMenuRoot.getElementsByAttribute("label", "editable");
+  is(items.length, 1, "contextMenu item for text input element was found (context=editable)");
+  await closeExtensionContextMenu(items[0]);
+
+  expectedClickInfo = {
+    menuItemId: "ext-editable",
+    editable: true,
+    pageUrl: PAGE,
+  };
+
+  result = await extension.awaitMessage("onclick");
+  checkClickInfo(result);
+  result = await extension.awaitMessage("browser.contextMenus.onClicked");
+  checkClickInfo(result);
+  ok(result.info.selectionText.endsWith("perferendis doloribus asperiores repellat."), "long text selection worked");
+
+  extension.sendMessage("removeall");
+  await extension.awaitMessage("removed");
 
   let contentAreaContextMenu = await openContextMenu("#img1");
   items = contentAreaContextMenu.getElementsByAttribute("ext-type", "top-level-menu");

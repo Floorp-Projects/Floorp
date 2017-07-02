@@ -370,6 +370,7 @@ class DesktopUnittest(TestingMixin, MercurialScript, BlobUploadMixin, MozbaseMix
                 'error_summary_file': error_summary_file,
                 'gtest_dir': os.path.join(dirs['abs_test_install_dir'],
                                           'gtest'),
+                'abs_work_dir': dirs['abs_work_dir'],
             }
 
             # TestingMixin._download_and_extract_symbols() will set

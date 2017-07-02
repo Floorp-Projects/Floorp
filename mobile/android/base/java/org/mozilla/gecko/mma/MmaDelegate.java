@@ -34,7 +34,6 @@ public class MmaDelegate {
     public static final String INTERACT_WITH_SEARCH_URL_AREA = "E_Interact_With_Search_URL_Area";
     public static final String SCREENSHOT = "E_Screenshot";
     public static final String SAVED_LOGIN_AND_PASSWORD = "E_Saved_Login_And_Password";
-    public static final String REVISIT_WEBSITE = "E_Revisit_Website";
     public static final String LAUNCH_BUT_NOT_DEFAULT_BROWSER = "E_Launch_But_Not_Default_Browser";
 
 
@@ -65,7 +64,7 @@ public class MmaDelegate {
                     if (value) {
                         mmaHelper.init(activity);
                         if (!isDefaultBrowser(activity)) {
-                            mmaHelper.track(MmaDelegate.LAUNCH_BUT_NOT_DEFAULT_BROWSER);
+                            mmaHelper.event(MmaDelegate.LAUNCH_BUT_NOT_DEFAULT_BROWSER);
                         }
                         isGeckoPrefOn = true;
                     } else {
@@ -80,13 +79,13 @@ public class MmaDelegate {
 
     public static void track(String event) {
         if (isMmaEnabled()) {
-            mmaHelper.track(event);
+            mmaHelper.event(event);
         }
     }
 
     public static void track(String event, long value) {
         if (isMmaEnabled()) {
-            mmaHelper.track(event, value);
+            mmaHelper.event(event, value);
         }
     }
 

@@ -116,22 +116,20 @@
 
 #onboarding-tour-list > li {
   list-style: none;
-  border-inline-start: 6px solid transparent;
-  border-radius: 2px;
   padding-inline-start: 49px;
   padding-top: 14px;
   padding-bottom: 14px;
-  margin-inline-start: 10px;
+  margin-inline-start: 16px;
   margin-bottom: 9px;
   background-repeat: no-repeat;
-  background-position: left 10px top 7px;
-  background-size: 34px;
+  background-position: left 17px top 14px;
+  background-size: 20px;
   font-size: 16px;
   cursor: pointer;
 }
 
 #onboarding-tour-list > li:dir(rtl) {
-  background-position-x: right 10px;
+  background-position-x: right 17px;
 }
 
 #onboarding-tour-list > li.onboarding-complete::before {
@@ -147,8 +145,7 @@
 
 #onboarding-tour-list > li.onboarding-active,
 #onboarding-tour-list > li:hover {
-  border-inline-start-color: #5ce6e6;
-  background-color: #fff;
+  color: #0A84FF;
 }
 
 /* Sync tour */
@@ -221,15 +218,19 @@
 .onboarding-tour-content {
   grid-row: tour-page-start / tour-button-start;
   grid-column: tour-content-start / tour-page-end;
-  padding-top: 0;
-  padding-bottom: 0;
-  padding-inline-start: 0;
-  padding-inline-end: 27px;
+  padding: 0;
+  text-align: end;
 }
 
 .onboarding-tour-content > img {
   width: 352px;
-  margin: 0 calc(50% - 176px);
+  margin: 0;
+}
+
+/* These illustrations need to be stuck on the right side to the border. Thus we
+   need to flip them horizontally on RTL . */
+.onboarding-tour-content > img:dir(rtl) {
+  transform: scaleX(-1);
 }
 
 .onboarding-tour-content > iframe {
@@ -365,6 +366,10 @@
   transform: translateY(-50%);
 }
 
+#onboarding-notification-icon:dir(rtl) {
+  background-position: right 34px center;
+}
+
 #onboarding-notification-icon::after {
   --height: 22px;
   content: attr(data-tooltip);
@@ -396,8 +401,8 @@
   display: flex;
   align-items: center;
   position: absolute;
-  offset-block-start: 50%;
-  offset-inline-start: 50%;
+  top: 50%;
+  left: 50%;
   transform: translate(-50%, -50%);
 }
 

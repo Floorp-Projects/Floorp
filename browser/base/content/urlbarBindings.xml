@@ -2114,6 +2114,24 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
         </body>
       </method>
 
+      <method name="maybeSetupSpeculativeConnect">
+        <parameter name="aUriString"/>
+        <body><![CDATA[
+          // We shouldn't leak autocomplete result in the private context.
+          if (!Services.prefs.getBoolPref("browser.urlbar.speculativeConnect.enabled") ||
+              this.input.inPrivateContext) {
+            return;
+          }
+          try {
+            let uri = makeURI(aUriString);
+            Services.io.speculativeConnect2(uri, gBrowser.contentPrincipal, null);
+          } catch (ex) {
+            // Can't setup speculative connection for this uri string for some
+            // reason, just ignore it.
+          }
+        ]]></body>
+      </method>
+
       <method name="onResultsAdded">
         <body>
           <![CDATA[
@@ -2125,6 +2143,20 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
               this.richlistbox.suppressMenuItemEvent = true;
               this.input.controller.setInitiallySelectedIndex(0);
               this.richlistbox.suppressMenuItemEvent = false;
+            }
+            // If this is the first time we get the result from the current
+            // search, and the result is an "autofill" result, that means it's
+            // the site that user frequently visits. Then we could speculatively
+            // connect to this site as a performance optimization.
+            if (!this.input.gotResultForCurrentQuery &&
+                this.input.mController.matchCount > 0 &&
+                this.input.mController.getStyleAt(0).includes("autofill")) {
+              let uri = this.input.mController.getFinalCompleteValueAt(0);
+              // "http" will be stripped out, but other scheme won't.
+              if (!uri.includes("://")) {
+                uri = "http://" + uri;
+              }
+              this.maybeSetupSpeculativeConnect(uri);
             }
 
             // When a result is present the footer should always be visible.

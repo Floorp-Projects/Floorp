@@ -46,6 +46,7 @@ public:
   MOZ_MUST_USE bool  RegisterPushedStreamHttp2(const nsCString& key,
                                                Http2PushedStream *stream);
   Http2PushedStream *RemovePushedStreamHttp2(const nsCString& key);
+  Http2PushedStream *RemovePushedStreamHttp2ByID(const nsCString& key, const uint32_t& streamID);
 private:
   nsDataHashtable<nsCStringHashKey, Http2PushedStream *> mHashHttp2;
 };

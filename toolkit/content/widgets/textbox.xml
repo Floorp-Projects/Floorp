@@ -317,6 +317,7 @@
     <content>
       <children/>
       <xul:hbox class="textbox-input-box" flex="1" xbl:inherits="context,spellcheck" align="center">
+        <xul:image class="textbox-search-sign"/>
         <html:input class="textbox-input" anonid="input" mozactionhint="search"
                     xbl:inherits="value,type,maxlength,disabled,size,readonly,placeholder,tabindex,accesskey,mozactionhint,spellcheck"/>
         <xul:deck class="textbox-search-icons" anonid="search-icons">
