@@ -122,7 +122,7 @@ public:
   { return CompareTo(aOther) >= 0; }
 
 private:
-  static nsSMILTime kUnresolvedMillis;
+  static const nsSMILTime kUnresolvedMillis;
 
   nsSMILTime mMilliseconds;
   enum {

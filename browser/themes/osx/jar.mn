@@ -151,7 +151,9 @@ browser.jar:
   skin/classic/browser/sync-mobileIcon.svg  (../shared/sync-mobileIcon.svg)
   skin/classic/browser/syncProgress-horizontalbar.png
   skin/classic/browser/syncProgress-horizontalbar@2x.png
+#ifndef MOZ_PHOTON_THEME
   skin/classic/browser/Toolbar-background-noise.png         (Toolbar-background-noise.png)
+#endif
   skin/classic/browser/yosemite/menuPanel-customize.png                (menuPanel-customize-yosemite.png)
   skin/classic/browser/yosemite/menuPanel-customize@2x.png             (menuPanel-customize-yosemite@2x.png)
   skin/classic/browser/yosemite/menuPanel-exit.png                     (menuPanel-exit-yosemite.png)

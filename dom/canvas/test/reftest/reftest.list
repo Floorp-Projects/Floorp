@@ -174,3 +174,6 @@ include filters/reftest.list
 
 # Bug 1366027
 == clipped-dash-stroke-rect.html clipped-dash-stroke-rect-ref.html
+
+# Bug 1377303
+== visible-occluded.html visible-occluded-ref.html

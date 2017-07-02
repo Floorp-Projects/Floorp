@@ -1,0 +1,9 @@
+include_rules = [
+  '+core',
+  '+public',
+  '+v8',
+  '+xfa/fwl',
+  '+xfa/fxbarcode',
+  '+xfa/fxfa',
+  '+xfa/fxgraphics',
+  ]

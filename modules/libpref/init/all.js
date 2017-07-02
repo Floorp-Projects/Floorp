@@ -4685,7 +4685,7 @@ pref("network.tcp.keepalive.retry_interval", 1); // seconds
 pref("network.tcp.keepalive.probe_count", 4);
 #endif
 
-pref("network.tcp.tcp_fastopen_enable", true);
+pref("network.tcp.tcp_fastopen_enable", false);
 pref("network.tcp.tcp_fastopen_consecutive_failure_limit", 5);
 
 // Whether to disable acceleration for all widgets.
@@ -4828,6 +4828,7 @@ pref("layers.force-active", false);
 pref("layers.gralloc.disable", false);
 
 pref("webrender.highlight-painted-layers", false);
+pref("gfx.webrender.layers-free", false);
 
 // Enable/Disable the geolocation API for content
 pref("geo.enabled", true);
@@ -5726,9 +5727,13 @@ pref("fuzzing.enabled", false);
 #endif
 
 #if defined(XP_WIN)
+#if defined(NIGHTLY_BUILD)
+pref("layers.mlgpu.dev-enabled", true);
+#else
 pref("layers.mlgpu.dev-enabled", false);
+#endif
 
-// Both this and the master "enabled" pref must be on to use Advanced LAyers
+// Both this and the master "enabled" pref must be on to use Advanced Layers
 // on Windows 7.
 pref("layers.mlgpu.enable-on-windows7", false);
 #endif

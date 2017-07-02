@@ -25,12 +25,6 @@ nsresult
 ConvertMethodData(const PaymentMethodData& aMethodData,
                   IPCPaymentMethodData& aIPCMethodData)
 {
-  // Convert Sequence<nsString> to nsTArray<nsString>
-  nsTArray<nsString> supportedMethods;
-  for (const nsString& method : aMethodData.mSupportedMethods) {
-    supportedMethods.AppendElement(method);
-  }
-
   // Convert JSObject to a serialized string
   nsAutoString serializedData;
   if (aMethodData.mData.WasPassed()) {
@@ -42,7 +36,7 @@ ConvertMethodData(const PaymentMethodData& aMethodData,
       return rv;
     }
   }
-  aIPCMethodData = IPCPaymentMethodData(supportedMethods, serializedData);
+  aIPCMethodData = IPCPaymentMethodData(aMethodData.mSupportedMethods, serializedData);
   return NS_OK;
 }
 
@@ -65,12 +59,6 @@ nsresult
 ConvertModifier(const PaymentDetailsModifier& aModifier,
                 IPCPaymentDetailsModifier& aIPCModifier)
 {
-  // Convert Sequence<nsString> to nsTArray<nsString>
-  nsTArray<nsString> supportedMethods;
-  for (const nsString& method : aModifier.mSupportedMethods) {
-    supportedMethods.AppendElement(method);
-  }
-
   // Convert JSObject to a serialized string
   nsAutoString serializedData;
   if (aModifier.mData.WasPassed()) {
@@ -94,11 +82,11 @@ ConvertModifier(const PaymentDetailsModifier& aModifier,
       additionalDisplayItems.AppendElement(displayItem);
     }
   }
-  aIPCModifier = IPCPaymentDetailsModifier(supportedMethods,
-                                          total,
-                                          additionalDisplayItems,
-                                          serializedData,
-                                          aModifier.mAdditionalDisplayItems.WasPassed());
+  aIPCModifier = IPCPaymentDetailsModifier(aModifier.mSupportedMethods,
+                                           total,
+                                           additionalDisplayItems,
+                                           serializedData,
+                                           aModifier.mAdditionalDisplayItems.WasPassed());
   return NS_OK;
 }
 

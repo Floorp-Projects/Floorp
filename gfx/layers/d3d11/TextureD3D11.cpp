@@ -460,6 +460,12 @@ D3D11TextureData::Create(IntSize aSize, SurfaceFormat aFormat, SourceSurface* aS
   RefPtr<ID3D11Texture2D> texture11;
   HRESULT hr = device->CreateTexture2D(&newDesc, uploadDataPtr, getter_AddRefs(texture11));
 
+  if (FAILED(hr) || !texture11) {
+    gfxCriticalNote << "[D3D11] 2 CreateTexture2D failure Size: " << aSize
+      << "texture11: " << texture11 << " Code: " << gfx::hexa(hr);
+    return nullptr;
+  }
+
   if (srcSurf && DeviceManagerDx::Get()->HasCrashyInitData()) {
     D3D11_BOX box;
     box.front = box.top = box.left = 0;
@@ -473,11 +479,6 @@ D3D11TextureData::Create(IntSize aSize, SurfaceFormat aFormat, SourceSurface* aS
 
   if (srcSurf) {
     srcSurf->Unmap();
-  }
-  if (FAILED(hr)) {
-    gfxCriticalError(CriticalLog::DefaultOptions(Factory::ReasonableSurfaceSize(aSize)))
-      << "[D3D11] 2 CreateTexture2D failure " << aSize << " Code: " << gfx::hexa(hr);
-    return nullptr;
   }
 
   // If we created the texture with a keyed mutex, then we expect all operations

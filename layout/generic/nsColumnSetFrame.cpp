@@ -43,10 +43,11 @@ public:
   virtual already_AddRefed<Layer> BuildLayer(nsDisplayListBuilder* aBuilder,
                                              LayerManager* aManager,
                                              const ContainerLayerParameters& aContainerParameters) override;
-  virtual void CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder,
+  virtual bool CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder,
                                        const StackingContextHelper& aSc,
                                        nsTArray<WebRenderParentCommand>& aParentCommands,
-                                       mozilla::layers::WebRenderDisplayItemLayer* aLayer) override;
+                                       mozilla::layers::WebRenderLayerManager* aManager,
+                                       nsDisplayListBuilder* aDisplayListBuilder) override;
   virtual void Paint(nsDisplayListBuilder* aBuilder,
                      gfxContext* aCtx) override;
 
@@ -103,16 +104,36 @@ nsDisplayColumnRule::BuildLayer(nsDisplayListBuilder* aBuilder,
   return BuildDisplayItemLayer(aBuilder, aManager, aContainerParameters);
 }
 
-void
-nsDisplayColumnRule::CreateWebRenderCommands(wr::DisplayListBuilder& aBuilder,
+bool
+nsDisplayColumnRule::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder,
                                              const StackingContextHelper& aSc,
                                              nsTArray<WebRenderParentCommand>& aParentCommands,
-                                             WebRenderDisplayItemLayer* aLayer)
+                                             mozilla::layers::WebRenderLayerManager* aManager,
+                                             nsDisplayListBuilder* aDisplayListBuilder)
 {
-  MOZ_ASSERT(!mBorderRenderers.IsEmpty());
-  for (auto iter = mBorderRenderers.begin(); iter != mBorderRenderers.end(); iter++) {
-      iter->CreateWebRenderCommands(aBuilder, aSc, aLayer);
+  if (aManager->IsLayersFreeTransaction()) {
+    RefPtr<gfxContext> screenRefCtx =
+      gfxContext::CreateOrNull(gfxPlatform::GetPlatform()->ScreenReferenceDrawTarget());
+
+    static_cast<nsColumnSetFrame*>(mFrame)->
+      CreateBorderRenderers(mBorderRenderers, screenRefCtx, mVisibleRect, ToReferenceFrame());
+
+    if (mBorderRenderers.IsEmpty()) {
+      return false;
+    }
+
+    for (auto iter = mBorderRenderers.begin(); iter != mBorderRenderers.end(); iter++) {
+      if (!iter->CanCreateWebRenderCommands()) {
+        return false;
+      }
+    }
   }
+
+  for (auto iter = mBorderRenderers.begin(); iter != mBorderRenderers.end(); iter++) {
+    iter->CreateWebRenderCommands(aBuilder, aSc);
+  }
+
+  return true;
 }
 
 /**

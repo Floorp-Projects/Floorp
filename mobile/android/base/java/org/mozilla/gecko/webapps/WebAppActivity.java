@@ -31,6 +31,7 @@ import android.widget.TextView;
 import org.json.JSONObject;
 import org.json.JSONException;
 
+import org.mozilla.gecko.ActivityHandlerHelper;
 import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.EventDispatcher;
 import org.mozilla.gecko.GeckoAppShell;
@@ -42,6 +43,7 @@ import org.mozilla.gecko.TelemetryContract;
 import org.mozilla.gecko.icons.decoders.FaviconDecoder;
 import org.mozilla.gecko.icons.decoders.LoadFaviconResult;
 import org.mozilla.gecko.mozglue.SafeIntent;
+import org.mozilla.gecko.prompts.PromptService;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.Tab;
 import org.mozilla.gecko.Tabs;
@@ -63,6 +65,7 @@ public class WebAppActivity extends AppCompatActivity
 
     private TextView mUrlView;
     private GeckoView mGeckoView;
+    private PromptService mPromptService;
 
     private Uri mScope;
 
@@ -101,6 +104,8 @@ public class WebAppActivity extends AppCompatActivity
 
         mGeckoView.setNavigationListener(this);
 
+        mPromptService = new PromptService(this, mGeckoView.getEventDispatcher());
+
         final GeckoViewSettings settings = mGeckoView.getSettings();
         settings.setBoolean(GeckoViewSettings.USE_MULTIPROCESS, false);
 
@@ -110,6 +115,19 @@ public class WebAppActivity extends AppCompatActivity
         }
 
         loadManifest(getIntent().getStringExtra(MANIFEST_PATH));
+    }
+
+    @Override
+    public void onDestroy() {
+        mPromptService.destroy();
+        super.onDestroy();
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (!ActivityHandlerHelper.handleActivityResult(requestCode, resultCode, data)) {
+            super.onActivityResult(requestCode, resultCode, data);
+        }
     }
 
     @Override

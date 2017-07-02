@@ -74,7 +74,6 @@ Zip::Zip(const char *filename, void *mapped, size_t size)
 
 Zip::~Zip()
 {
-  ZipCollection::Forget(this);
   if (name) {
     munmap(mapped, size);
     DEBUG_LOG("Unmapped %s @%p", name, mapped);
@@ -195,11 +194,9 @@ ZipCollection::GetZip(const char *path)
   {
     AutoLock lock(&sZipCollectionMutex);
     /* Search the list of Zips we already have for a match */
-    for (std::vector<Zip *>::iterator it = Singleton.zips.begin();
-         it < Singleton.zips.end(); ++it) {
-      if ((*it)->GetName() && (strcmp((*it)->GetName(), path) == 0)) {
-        RefPtr<Zip> zip = *it;
-        return zip.forget();
+    for (const auto& zip: Singleton.zips) {
+      if (zip->GetName() && (strcmp(zip->GetName(), path) == 0)) {
+        return RefPtr<Zip>(zip).forget();
       }
     }
   }
@@ -215,12 +212,16 @@ ZipCollection::Register(Zip *zip)
 }
 
 void
-ZipCollection::Forget(Zip *zip)
+ZipCollection::Forget(const Zip *zip)
 {
   AutoLock lock(&sZipCollectionMutex);
+  if (zip->refCount() > 1) {
+    // Someone has acquired a reference before we had acquired the lock,
+    // ignore this request.
+    return;
+  }
   DEBUG_LOG("ZipCollection::Forget(\"%s\")", zip->GetName());
-  std::vector<Zip *>::iterator it = std::find(Singleton.zips.begin(),
-                                              Singleton.zips.end(), zip);
+  const auto it = std::find(Singleton.zips.begin(), Singleton.zips.end(), zip);
   if (*it == zip) {
     Singleton.zips.erase(it);
   } else {

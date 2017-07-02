@@ -30,13 +30,16 @@ Wrapper::finalizeInBackground(const Value& priv) const
     /*
      * Make the 'background-finalized-ness' of the wrapper the same as the
      * wrapped object, to allow transplanting between them.
-     *
-     * If the wrapped object is in the nursery then we know it doesn't have a
-     * finalizer, and so background finalization is ok.
      */
-    if (IsInsideNursery(&priv.toObject()))
-        return true;
-    return IsBackgroundFinalized(priv.toObject().asTenured().getAllocKind());
+    JSObject* wrapped = MaybeForwarded(&priv.toObject());
+    gc::AllocKind wrappedKind;
+    if (IsInsideNursery(wrapped)) {
+        JSRuntime *rt = wrapped->runtimeFromActiveCooperatingThread();
+        wrappedKind = wrapped->allocKindForTenure(rt->gc.nursery());
+    } else {
+        wrappedKind = wrapped->asTenured().getAllocKind();
+    }
+    return IsBackgroundFinalized(wrappedKind);
 }
 
 bool

@@ -11,7 +11,7 @@ namespace dom {
 
 struct IPCPaymentMethodData
 {
-  nsString[] supportedMethods;
+  nsString supportedMethods;
   nsString data;
 };
 
@@ -30,7 +30,7 @@ struct IPCPaymentItem
 
 struct IPCPaymentDetailsModifier
 {
-  nsString[] supportedMethods;
+  nsString supportedMethods;
   IPCPaymentItem total;
   IPCPaymentItem[] additionalDisplayItems;
   nsString data;

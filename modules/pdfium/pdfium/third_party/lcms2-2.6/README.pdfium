@@ -1,0 +1,32 @@
+Name: Little CMS
+URL: http://www.littlecms.com/
+Version: 2.6
+Security Critical: yes
+License: MIT License
+
+Description:
+Color Management Engine.
+
+Local Modifications:
+
+0000-tag-type-confusion.patch: Fix a type confusion.
+0001-from16-to-8-overflow.patch: Prevent a UBSan warning.
+0002-infinite-loop-GrowNamedColorList.patch: Fix infinite loop when calling GrowNamedColorList.
+0003-uninit.patch: Fix use uninitialized value and stack buffer overflow read.
+0004-memory-leak-Type_Curve_Read.patch: Fix memory leak in Type_Curve_Read.
+0005-memory-leak-AllocEmptyTransform.patch: Fix memory leak in AllocEmptyTransform.
+0006-memory-leak-Type_NamedColor_Read.patch: Fix memory leak in Type_NamedColor_Read.
+0007-memory-leak-OptimizeByResampling.patch: Fix memory leak in OptimizeByResampling.
+0008-memory-leak-Type_MPEmatrix_Read.patch: Fix memory leak in MPEmatrix_Read.
+0009-cmsStageAllocMatrix-param-swap.patch: Fix rows/cols swap in cmsStageAllocMatrix.
+0010-reject-nan.patch: Reject NaN when reading float numbers.
+0011-memory-leak-ReadSegmentedCurve.patch: Fix memory leak in ReadSegmentedCurve.
+0012-backport-c0a98d86.patch: Fix several issues. Backport from upstream
+    https://github.com/mm2/Little-CMS/commit/c0a98d86
+0013-utf8.patch: Encode source files as utf-8.
+0014-avoid-fixed-inf.patch: Avoid fixed number LUT optimization on inf values.
+0015-sanitize-float-read.patch: Sanitize floating point read. Partially backport
+    from upstream https://github.com/mm2/Little-CMS/commit/4011a6e3
+0016-check-LUT-and-MPE.patch: check LUT consistency and sanitize MPE profiles.
+0017-upstream-integer-overflow-MPEmatrix_Read.patch: fix some integer overflows.
+TODO(ochang): List other patches.

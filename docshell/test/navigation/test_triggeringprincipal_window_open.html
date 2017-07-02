@@ -55,16 +55,19 @@ httpWin.onload = function() {
 
 // ----------------------------------------------------------------------------
 // Test 2: window.open(data:)
-var dataWin = window.open("data:text/html,<html><body>data</body></html>", "_blank", "width=10,height=10");
-dataWin.onload = function() {
-  var dataChannel = SpecialPowers.wrap(dataWin.document).docShell.currentDocumentChannel;
+var dataWin = window.open("data:text/html,<html><script>opener.postMessage('loaded','*');<\/script></html>", "_blank", "width=10,height=10");
+window.onmessage = function (evt) {
+  is(evt.data, "loaded", "message should be loaded");
+
+  var doc = SpecialPowers.wrap(dataWin).document;
+  var dataChannel = doc.docShell.currentDocumentChannel;
   var dataTriggeringPrincipal = dataChannel.loadInfo.triggeringPrincipal.URI.asciiSpec;
   var dataLoadingPrincipal = dataChannel.loadInfo.loadingPrincipal;
 
   is(dataTriggeringPrincipal, TRIGGERING_PRINCIPAL_URI,
      "TriggeringPrincipal for window.open(data:) should be the principal of the document");
 
-  is(dataWin.document.referrer, "",
+  is(doc.referrer, "",
      "Referrer for window.open(data:) should be empty");
 
   is(dataLoadingPrincipal, null,

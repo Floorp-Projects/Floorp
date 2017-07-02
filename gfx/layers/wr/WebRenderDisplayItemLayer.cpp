@@ -45,7 +45,15 @@ WebRenderDisplayItemLayer::RenderLayer(wr::DisplayListBuilder& aBuilder,
     wr::DisplayListBuilder builder(WrBridge()->GetPipeline(), contentSize);
     // We might have recycled this layer. Throw away the old commands.
     mParentCommands.Clear();
-    mItem->CreateWebRenderCommands(builder, aSc, mParentCommands, this);
+
+    // TODO: Remove the old interface once we add support for image type display items.
+    if (mItem->GetType() == nsDisplayItem::TYPE_BACKGROUND ||
+        mItem->GetType() == nsDisplayItem::TYPE_BULLET) {
+      mItem->CreateWebRenderCommand(builder, aSc, mParentCommands, this);
+    } else {
+      mItem->CreateWebRenderCommands(builder, aSc, mParentCommands, WrManager(),
+                                     GetDisplayListBuilder());
+    }
     builder.Finalize(contentSize, mBuiltDisplayList);
   } else {
     // else we have an empty transaction and just use the

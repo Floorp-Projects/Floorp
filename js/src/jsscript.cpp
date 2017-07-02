@@ -50,6 +50,7 @@
 #include "vm/SelfHosting.h"
 #include "vm/Shape.h"
 #include "vm/SharedImmutableStringsCache.h"
+#include "vm/StringBuffer.h"
 #include "vm/Xdr.h"
 #include "vtune/VTuneWrapper.h"
 
@@ -1486,11 +1487,11 @@ JSScript::sourceData(JSContext* cx, HandleScript script)
     return script->scriptSource()->substring(cx, script->sourceStart(), script->sourceEnd());
 }
 
-/* static */ JSFlatString*
-JSScript::sourceDataForToString(JSContext* cx, HandleScript script)
+bool
+JSScript::appendSourceDataForToString(JSContext* cx, StringBuffer& buf)
 {
-    MOZ_ASSERT(script->scriptSource()->hasSourceData());
-    return script->scriptSource()->substring(cx, script->toStringStart(), script->toStringEnd());
+    MOZ_ASSERT(scriptSource()->hasSourceData());
+    return scriptSource()->appendSubstring(cx, buf, toStringStart(), toStringEnd());
 }
 
 UncompressedSourceCache::AutoHoldEntry::AutoHoldEntry()
@@ -1794,6 +1795,22 @@ ScriptSource::substringDontDeflate(JSContext* cx, size_t start, size_t stop)
     if (!chars.get())
         return nullptr;
     return NewStringCopyNDontDeflate<CanGC>(cx, chars.get(), len);
+}
+
+bool
+ScriptSource::appendSubstring(JSContext* cx, StringBuffer& buf, size_t start, size_t stop)
+{
+    MOZ_ASSERT(start <= stop);
+    size_t len = stop - start;
+    UncompressedSourceCache::AutoHoldEntry holder;
+    PinnedChars chars(cx, this, holder, start, len);
+    if (!chars.get())
+        return false;
+    // Sources can be large and we don't want to check "is this char Latin1"
+    // for each source code character, so inflate the buffer here.
+    if (len > 100 && !buf.ensureTwoByteChars())
+        return false;
+    return buf.append(chars.get(), len);
 }
 
 JSFlatString*
