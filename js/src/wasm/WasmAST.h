@@ -183,6 +183,10 @@ class AstNode : public AstBase
 
 enum class AstExprKind
 {
+    AtomicCmpXchg,
+    AtomicLoad,
+    AtomicRMW,
+    AtomicStore,
     BinaryOperator,
     Block,
     Branch,
@@ -209,7 +213,9 @@ enum class AstExprKind
     Store,
     TernaryOperator,
     UnaryOperator,
-    Unreachable
+    Unreachable,
+    Wait,
+    Wake
 };
 
 class AstExpr : public AstNode
@@ -540,6 +546,128 @@ class AstStore : public AstExpr
     Op op() const { return op_; }
     const AstLoadStoreAddress& address() const { return address_; }
     AstExpr& value() const { return *value_; }
+};
+
+class AstAtomicCmpXchg : public AstExpr
+{
+    ThreadOp op_;
+    AstLoadStoreAddress address_;
+    AstExpr* expected_;
+    AstExpr* replacement_;
+
+  public:
+    static const AstExprKind Kind = AstExprKind::AtomicCmpXchg;
+    explicit AstAtomicCmpXchg(ThreadOp op, const AstLoadStoreAddress &address, AstExpr* expected,
+                              AstExpr* replacement)
+      : AstExpr(Kind, ExprType::Limit),
+        op_(op),
+        address_(address),
+        expected_(expected),
+        replacement_(replacement)
+    {}
+
+    ThreadOp op() const { return op_; }
+    const AstLoadStoreAddress& address() const { return address_; }
+    AstExpr& expected() const { return *expected_; }
+    AstExpr& replacement() const { return *replacement_; }
+};
+
+class AstAtomicLoad : public AstExpr
+{
+    ThreadOp op_;
+    AstLoadStoreAddress address_;
+
+  public:
+    static const AstExprKind Kind = AstExprKind::AtomicLoad;
+    explicit AstAtomicLoad(ThreadOp op, const AstLoadStoreAddress &address)
+      : AstExpr(Kind, ExprType::Limit),
+        op_(op),
+        address_(address)
+    {}
+
+    ThreadOp op() const { return op_; }
+    const AstLoadStoreAddress& address() const { return address_; }
+};
+
+class AstAtomicRMW : public AstExpr
+{
+    ThreadOp op_;
+    AstLoadStoreAddress address_;
+    AstExpr* value_;
+
+  public:
+    static const AstExprKind Kind = AstExprKind::AtomicRMW;
+    explicit AstAtomicRMW(ThreadOp op, const AstLoadStoreAddress &address, AstExpr* value)
+      : AstExpr(Kind, ExprType::Limit),
+        op_(op),
+        address_(address),
+        value_(value)
+    {}
+
+    ThreadOp op() const { return op_; }
+    const AstLoadStoreAddress& address() const { return address_; }
+    AstExpr& value() const { return *value_; }
+};
+
+class AstAtomicStore : public AstExpr
+{
+    ThreadOp op_;
+    AstLoadStoreAddress address_;
+    AstExpr* value_;
+
+  public:
+    static const AstExprKind Kind = AstExprKind::AtomicStore;
+    explicit AstAtomicStore(ThreadOp op, const AstLoadStoreAddress &address, AstExpr* value)
+      : AstExpr(Kind, ExprType::Void),
+        op_(op),
+        address_(address),
+        value_(value)
+    {}
+
+    ThreadOp op() const { return op_; }
+    const AstLoadStoreAddress& address() const { return address_; }
+    AstExpr& value() const { return *value_; }
+};
+
+class AstWait : public AstExpr
+{
+    ThreadOp op_;
+    AstLoadStoreAddress address_;
+    AstExpr* expected_;
+    AstExpr* timeout_;
+
+  public:
+    static const AstExprKind Kind = AstExprKind::Wait;
+    explicit AstWait(ThreadOp op, const AstLoadStoreAddress &address, AstExpr* expected,
+                     AstExpr* timeout)
+      : AstExpr(Kind, ExprType::I32),
+        op_(op),
+        address_(address),
+        expected_(expected),
+        timeout_(timeout)
+    {}
+
+    ThreadOp op() const { return op_; }
+    const AstLoadStoreAddress& address() const { return address_; }
+    AstExpr& expected() const { return *expected_; }
+    AstExpr& timeout() const { return *timeout_; }
+};
+
+class AstWake : public AstExpr
+{
+    AstLoadStoreAddress address_;
+    AstExpr* count_;
+
+  public:
+    static const AstExprKind Kind = AstExprKind::Wake;
+    explicit AstWake(const AstLoadStoreAddress &address, AstExpr* count)
+      : AstExpr(Kind, ExprType::I32),
+        address_(address),
+        count_(count)
+    {}
+
+    const AstLoadStoreAddress& address() const { return address_; }
+    AstExpr& count() const { return *count_; }
 };
 
 class AstCurrentMemory final : public AstExpr
