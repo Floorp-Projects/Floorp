@@ -1016,7 +1016,17 @@ BaselineCompiler::emitBody()
             return Method_Error;
 
         switch (op) {
-          default:
+          // ===== NOT Yet Implemented =====
+          case JSOP_FORCEINTERPRETER:
+            // Intentionally not implemented.
+          case JSOP_SETINTRINSIC:
+            // Run-once opcode during self-hosting initialization.
+          case JSOP_UNUSED222:
+          case JSOP_UNUSED223:
+          case JSOP_LIMIT:
+            // === !! WARNING WARNING WARNING !! ===
+            // Do you really want to sacrifice performance by not implementing
+            // this operation in the BaselineCompiler?
             JitSpew(JitSpew_BaselineAbort, "Unhandled op: %s", CodeName[op]);
             return Method_CantCompile;
 
