@@ -55,3 +55,8 @@ dependencies {
     testCompile 'org.mockito:mockito-core:2.7.19'
     testCompile 'com.squareup.okhttp3:mockwebserver:3.6.0'
 }
+
+apply from: '../publish.gradle'
+def packageName = 'telemetry'
+def description = ' A generic library for generating and sending telemetry pings from Android applications to Mozilla\'s telemetry service.'
+ext.configurePublish(packageName, description)
