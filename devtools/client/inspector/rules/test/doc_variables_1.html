@@ -1,0 +1,23 @@
+<!-- Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/ -->
+<html>
+<head>
+  <title>variables test</title>
+
+  <style>
+    * {
+      --color: tomato;
+      --bg: violet;
+    }
+
+    div {
+      --color: chartreuse;
+      color: var(--color, red);
+      background-color: var(--not-set, var(--bg));
+    }
+  </style>
+</head>
+<body>
+  <div id="target" style="--bg: seagreen;"> the ocean </div>
+</body>
+</html>
