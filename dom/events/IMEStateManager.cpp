@@ -440,10 +440,27 @@ IMEStateManager::OnChangeFocusInternal(nsPresContext* aPresContext,
     }
   }
 
-  if (sActiveIMEContentObserver &&
-      (aPresContext || !sActiveIMEContentObserver->KeepAliveDuringDeactive()) &&
-      !sActiveIMEContentObserver->IsManaging(aPresContext, aContent)) {
-    DestroyIMEContentObserver();
+  if (sActiveIMEContentObserver) {
+    // If there is active IMEContentObserver, it means that focused content was
+    // in this process.  So, if a tab parent gets focus, it means that the
+    // focused editor in this process is being blurred.
+    if (newTabParent) {
+      DestroyIMEContentObserver();
+    }
+    // If the process is being inactivated, then, IMEContentObserver should
+    // stop observing the contents unless native IME requests to keep
+    // composition even during deactivated.
+    else if (!aPresContext) {
+      if (!sActiveIMEContentObserver->KeepAliveDuringDeactive()) {
+        DestroyIMEContentObserver();
+      }
+    }
+    // Otherwise, i.e., new focused content is in this process, let's check
+    // whether the new focused content is already being managed by the
+    // active IME content observer.
+    else if (!sActiveIMEContentObserver->IsManaging(aPresContext, aContent)) {
+      DestroyIMEContentObserver();
+    }
   }
 
   if (!aPresContext) {
