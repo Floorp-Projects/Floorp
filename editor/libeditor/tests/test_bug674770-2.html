@@ -14,7 +14,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=674770
 <p id="display"></p>
 <div id="content">
 <iframe id="iframe" style="display: block; height: 14em;"
-  src="data:text/html,<input id='text' value='pasted'><input id='input' style='display: block;'><p id='editor1' contenteditable>editor1:</p><p id='editor2' contenteditable>editor2:</p>"></iframe>
+  srcdoc="<input id='text' value='pasted'><input id='input' style='display: block;'><p id='editor1' contenteditable>editor1:</p><p id='editor2' contenteditable>editor2:</p>"></iframe>
 </div>
 <pre id="test">
 <script type="application/javascript">
@@ -337,8 +337,7 @@ function initForBodyEditableDocumentTests()
 
   iframe.onload =
     function (aEvent) { SimpleTest.executeSoon(runBodyEditableDocumentTests1); };
-  iframe.src =
-    "data:text/html,<body contenteditable>body:</body>";
+  iframe.srcdoc = "<body contenteditable>body:</body>";
 }
 
 function runBodyEditableDocumentTests1()
