@@ -1047,6 +1047,211 @@ RenderReturn(WasmRenderContext& c, AstReturn& ret)
 }
 
 static bool
+RenderAtomicCmpXchg(WasmRenderContext& c, AstAtomicCmpXchg& cmpxchg)
+{
+    if (!RenderLoadStoreBase(c, cmpxchg.address()))
+        return false;
+
+    if (!RenderExpr(c, cmpxchg.expected()))
+        return false;
+    if (!RenderExpr(c, cmpxchg.replacement()))
+        return false;
+
+    if (!RenderIndent(c))
+        return false;
+
+    MAP_AST_EXPR(c, cmpxchg);
+    const char* opname;
+    switch (cmpxchg.op()) {
+      case ThreadOp::I32AtomicCmpXchg8U:  opname = "i32.atomic.rmw8_u.cmpxchg"; break;
+      case ThreadOp::I64AtomicCmpXchg8U:  opname = "i64.atomic.rmw8_u.cmpxchg"; break;
+      case ThreadOp::I32AtomicCmpXchg16U: opname = "i32.atomic.rmw16_u.cmpxchg"; break;
+      case ThreadOp::I64AtomicCmpXchg16U: opname = "i64.atomic.rmw16_u.cmpxchg"; break;
+      case ThreadOp::I64AtomicCmpXchg32U: opname = "i64.atomic.rmw32_u.cmpxchg"; break;
+      case ThreadOp::I32AtomicCmpXchg:    opname = "i32.atomic.rmw.cmpxchg"; break;
+      case ThreadOp::I64AtomicCmpXchg:    opname = "i64.atomic.rmw.cmpxchg"; break;
+      default:                            return Fail(c, "unexpected cmpxchg operator");
+    }
+
+    if (!c.buffer.append(opname, strlen(opname)))
+        return false;
+
+    return RenderLoadStoreAddress(c, cmpxchg.address(), 0);
+}
+
+static bool
+RenderAtomicLoad(WasmRenderContext& c, AstAtomicLoad& load)
+{
+    if (!RenderLoadStoreBase(c, load.address()))
+        return false;
+
+    if (!RenderIndent(c))
+        return false;
+
+    MAP_AST_EXPR(c, load);
+    const char* opname;
+    switch (load.op()) {
+      case ThreadOp::I32AtomicLoad8U:  opname = "i32.atomic.load8_u"; break;
+      case ThreadOp::I64AtomicLoad8U:  opname = "i64.atomic.load8_u"; break;
+      case ThreadOp::I32AtomicLoad16U: opname = "i32.atomic.load16_u"; break;
+      case ThreadOp::I64AtomicLoad16U: opname = "i64.atomic.load16_u"; break;
+      case ThreadOp::I64AtomicLoad32U: opname = "i64.atomic.load32_u"; break;
+      case ThreadOp::I32AtomicLoad:    opname = "i32.atomic.load"; break;
+      case ThreadOp::I64AtomicLoad:    opname = "i64.atomic.load"; break;
+      default:                         return Fail(c, "unexpected load operator");
+    }
+
+    if (!c.buffer.append(opname, strlen(opname)))
+        return false;
+
+    return RenderLoadStoreAddress(c, load.address(), 0);
+}
+
+static bool
+RenderAtomicRMW(WasmRenderContext& c, AstAtomicRMW& rmw)
+{
+    if (!RenderLoadStoreBase(c, rmw.address()))
+        return false;
+
+    if (!RenderExpr(c, rmw.value()))
+        return false;
+
+    if (!RenderIndent(c))
+        return false;
+
+    MAP_AST_EXPR(c, rmw);
+    const char* opname;
+    switch (rmw.op()) {
+      case ThreadOp::I32AtomicAdd:     opname = "i32.atomic.rmw.add"; break;
+      case ThreadOp::I64AtomicAdd:     opname = "i64.atomic.rmw.add"; break;
+      case ThreadOp::I32AtomicAdd8U:   opname = "i32.atomic.rmw8_u.add"; break;
+      case ThreadOp::I32AtomicAdd16U:  opname = "i32.atomic.rmw16_u.add"; break;
+      case ThreadOp::I64AtomicAdd8U:   opname = "i64.atomic.rmw8_u.add"; break;
+      case ThreadOp::I64AtomicAdd16U:  opname = "i64.atomic.rmw16_u.add"; break;
+      case ThreadOp::I64AtomicAdd32U:  opname = "i64.atomic.rmw32_u.add"; break;
+      case ThreadOp::I32AtomicSub:     opname = "i32.atomic.rmw.sub"; break;
+      case ThreadOp::I64AtomicSub:     opname = "i64.atomic.rmw.sub"; break;
+      case ThreadOp::I32AtomicSub8U:   opname = "i32.atomic.rmw8_u.sub"; break;
+      case ThreadOp::I32AtomicSub16U:  opname = "i32.atomic.rmw16_u.sub"; break;
+      case ThreadOp::I64AtomicSub8U:   opname = "i64.atomic.rmw8_u.sub"; break;
+      case ThreadOp::I64AtomicSub16U:  opname = "i64.atomic.rmw16_u.sub"; break;
+      case ThreadOp::I64AtomicSub32U:  opname = "i64.atomic.rmw32_u.sub"; break;
+      case ThreadOp::I32AtomicAnd:     opname = "i32.atomic.rmw.and"; break;
+      case ThreadOp::I64AtomicAnd:     opname = "i64.atomic.rmw.and"; break;
+      case ThreadOp::I32AtomicAnd8U:   opname = "i32.atomic.rmw8_u.and"; break;
+      case ThreadOp::I32AtomicAnd16U:  opname = "i32.atomic.rmw16_u.and"; break;
+      case ThreadOp::I64AtomicAnd8U:   opname = "i64.atomic.rmw8_u.and"; break;
+      case ThreadOp::I64AtomicAnd16U:  opname = "i64.atomic.rmw16_u.and"; break;
+      case ThreadOp::I64AtomicAnd32U:  opname = "i64.atomic.rmw32_u.and"; break;
+      case ThreadOp::I32AtomicOr:      opname = "i32.atomic.rmw.or"; break;
+      case ThreadOp::I64AtomicOr:      opname = "i64.atomic.rmw.or"; break;
+      case ThreadOp::I32AtomicOr8U:    opname = "i32.atomic.rmw8_u.or"; break;
+      case ThreadOp::I32AtomicOr16U:   opname = "i32.atomic.rmw16_u.or"; break;
+      case ThreadOp::I64AtomicOr8U:    opname = "i64.atomic.rmw8_u.or"; break;
+      case ThreadOp::I64AtomicOr16U:   opname = "i64.atomic.rmw16_u.or"; break;
+      case ThreadOp::I64AtomicOr32U:   opname = "i64.atomic.rmw32_u.or"; break;
+      case ThreadOp::I32AtomicXor:     opname = "i32.atomic.rmw.xor"; break;
+      case ThreadOp::I64AtomicXor:     opname = "i64.atomic.rmw.xor"; break;
+      case ThreadOp::I32AtomicXor8U:   opname = "i32.atomic.rmw8_u.xor"; break;
+      case ThreadOp::I32AtomicXor16U:  opname = "i32.atomic.rmw16_u.xor"; break;
+      case ThreadOp::I64AtomicXor8U:   opname = "i64.atomic.rmw8_u.xor"; break;
+      case ThreadOp::I64AtomicXor16U:  opname = "i64.atomic.rmw16_u.xor"; break;
+      case ThreadOp::I64AtomicXor32U:  opname = "i64.atomic.rmw32_u.xor"; break;
+      case ThreadOp::I32AtomicXchg:    opname = "i32.atomic.rmw.xchg"; break;
+      case ThreadOp::I64AtomicXchg:    opname = "i64.atomic.rmw.xchg"; break;
+      case ThreadOp::I32AtomicXchg8U:  opname = "i32.atomic.rmw8_u.xchg"; break;
+      case ThreadOp::I32AtomicXchg16U: opname = "i32.atomic.rmw16_u.xchg"; break;
+      case ThreadOp::I64AtomicXchg8U:  opname = "i64.atomic.rmw8_u.xchg"; break;
+      case ThreadOp::I64AtomicXchg16U: opname = "i64.atomic.rmw16_u.xchg"; break;
+      case ThreadOp::I64AtomicXchg32U: opname = "i64.atomic.rmw32_u.xchg"; break;
+      default:                         return Fail(c, "unexpected rmw operator");
+    }
+
+    if (!c.buffer.append(opname, strlen(opname)))
+        return false;
+
+    return RenderLoadStoreAddress(c, rmw.address(), 0);
+}
+
+static bool
+RenderAtomicStore(WasmRenderContext& c, AstAtomicStore& store)
+{
+    if (!RenderLoadStoreBase(c, store.address()))
+        return false;
+
+    if (!RenderExpr(c, store.value()))
+        return false;
+
+    if (!RenderIndent(c))
+        return false;
+
+    MAP_AST_EXPR(c, store);
+    const char* opname;
+    switch (store.op()) {
+      case ThreadOp::I32AtomicStore8U:  opname = "i32.atomic.store8_u"; break;
+      case ThreadOp::I64AtomicStore8U:  opname = "i64.atomic.store8_u"; break;
+      case ThreadOp::I32AtomicStore16U: opname = "i32.atomic.store16_u"; break;
+      case ThreadOp::I64AtomicStore16U: opname = "i64.atomic.store16_u"; break;
+      case ThreadOp::I64AtomicStore32U: opname = "i64.atomic.store32_u"; break;
+      case ThreadOp::I32AtomicStore:    opname = "i32.atomic.store"; break;
+      case ThreadOp::I64AtomicStore:    opname = "i64.atomic.store"; break;
+      default:                          return Fail(c, "unexpected store operator");
+    }
+
+    if (!c.buffer.append(opname, strlen(opname)))
+        return false;
+
+    return RenderLoadStoreAddress(c, store.address(), 0);
+}
+
+static bool
+RenderWait(WasmRenderContext& c, AstWait& wait)
+{
+    if (!RenderLoadStoreBase(c, wait.address()))
+        return false;
+
+    if (!RenderExpr(c, wait.expected()))
+        return false;
+
+    if (!RenderExpr(c, wait.timeout()))
+        return false;
+
+    if (!RenderIndent(c))
+        return false;
+
+    MAP_AST_EXPR(c, wait);
+    const char* opname;
+    switch (wait.op()) {
+      case ThreadOp::I32Wait:  opname = "i32.atomic.wait"; break;
+      case ThreadOp::I64Wait:  opname = "i64.atomic.wait"; break;
+      default:           return Fail(c, "unexpected wait operator");
+    }
+
+    if (!c.buffer.append(opname, strlen(opname)))
+        return false;
+
+    return RenderLoadStoreAddress(c, wait.address(), 0);
+}
+
+static bool
+RenderWake(WasmRenderContext& c, AstWake& wake)
+{
+    if (!RenderLoadStoreBase(c, wake.address()))
+        return false;
+
+    if (!RenderExpr(c, wake.count()))
+        return false;
+
+    if (!RenderIndent(c))
+        return false;
+
+    if (!c.buffer.append("atomic.wake", strlen("atomic.wake")))
+        return false;
+
+    return RenderLoadStoreAddress(c, wake.address(), 0);
+}
+
+static bool
 RenderExpr(WasmRenderContext& c, AstExpr& expr, bool newLine /* = true */)
 {
     switch (expr.kind()) {
@@ -1153,6 +1358,30 @@ RenderExpr(WasmRenderContext& c, AstExpr& expr, bool newLine /* = true */)
         break;
       case AstExprKind::GrowMemory:
         if (!RenderGrowMemory(c, expr.as<AstGrowMemory>()))
+            return false;
+        break;
+      case AstExprKind::AtomicCmpXchg:
+        if (!RenderAtomicCmpXchg(c, expr.as<AstAtomicCmpXchg>()))
+            return false;
+        break;
+      case AstExprKind::AtomicLoad:
+        if (!RenderAtomicLoad(c, expr.as<AstAtomicLoad>()))
+            return false;
+        break;
+      case AstExprKind::AtomicRMW:
+        if (!RenderAtomicRMW(c, expr.as<AstAtomicRMW>()))
+            return false;
+        break;
+      case AstExprKind::AtomicStore:
+        if (!RenderAtomicStore(c, expr.as<AstAtomicStore>()))
+            return false;
+        break;
+      case AstExprKind::Wait:
+        if (!RenderWait(c, expr.as<AstWait>()))
+            return false;
+        break;
+      case AstExprKind::Wake:
+        if (!RenderWake(c, expr.as<AstWake>()))
             return false;
         break;
       default:
