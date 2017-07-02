@@ -136,16 +136,6 @@ function no_audio_resumed() {
   is(autoPlay.paused && nonAutoPlay.paused, true, "No audio was resumed.");
 }
 
-function play_nonautoplay_audio_should_be_blocked(suspendedType) {
-  var nonAutoPlay = content.document.getElementById("nonautoplay");
-  if (!nonAutoPlay) {
-    ok(false, "Can't get the audio element!");
-  }
-
-  nonAutoPlay.play();
-  ok(nonAutoPlay.paused, "The blocked audio can't be playback.");
-}
-
 async function suspended_pause(url, browser) {
   info("### Start test for suspended-pause ###");
   browser.loadURI(url);
@@ -246,38 +236,9 @@ async function suspended_stop_disposable(url, browser) {
                                    check_all_audio_suspended);
 }
 
-async function suspended_block(url, browser) {
-  info("### Start test for suspended-block ###");
-  browser.loadURI(url);
-
-  info("- page should have playing audio -");
-  await wait_for_event(browser, "DOMAudioPlaybackStarted");
-
-  info("- the default suspended state of all audio should be non-suspened-");
-  await ContentTask.spawn(browser, SuspendedType.NONE_SUSPENDED,
-                                   check_all_audio_suspended);
-
-  info("- block autoplay audio -");
-  browser.blockMedia();
-  await ContentTask.spawn(browser, SuspendedType.SUSPENDED_BLOCK,
-                                   check_autoplay_audio_suspended);
-  await ContentTask.spawn(browser, SuspendedType.NONE_SUSPENDED,
-                                   check_nonautoplay_audio_suspended);
-
-  info("- no audio can be playback during suspended-block -");
-  await ContentTask.spawn(browser, SuspendedType.SUSPENDED_BLOCK,
-                                   play_nonautoplay_audio_should_be_blocked);
-
-  info("- both audio should be resumed at the same time -");
-  browser.resumeMedia();
-  await ContentTask.spawn(browser, SuspendedType.NONE_SUSPENDED,
-                                   check_all_audio_suspended);
-}
-
 add_task(async function setup_test_preference() {
   await SpecialPowers.pushPrefEnv({"set": [
-    ["media.useAudioChannelService.testing", true],
-    ["media.block-autoplay-until-in-foreground", true]
+    ["media.useAudioChannelService.testing", true]
   ]});
 });
 
@@ -300,11 +261,4 @@ add_task(async function test_suspended_stop_disposable() {
       gBrowser,
       url: "about:blank"
     }, suspended_stop_disposable.bind(this, PAGE));
-});
-
-add_task(async function test_suspended_block() {
-  await BrowserTestUtils.withNewTab({
-      gBrowser,
-      url: "about:blank"
-    }, suspended_block.bind(this, PAGE));
 });

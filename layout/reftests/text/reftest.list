@@ -151,7 +151,7 @@ HTTP(..) == zwnj-02.xhtml zwnj-02-ref.xhtml # HTTP(..) for ../filters.svg
 == initial-zwj-1.html initial-zwj-1-ref.html
 == cgj-01.html cgj-01-ref.html
 == 444656.html 444656-ref.html
-fails-if(styloVsGecko) == 449555-1.html 449555-1-ref.html
+== 449555-1.html 449555-1-ref.html
 == 467722.html 467722-ref.html
 fuzzy-if(skiaContent,1,600) HTTP(..) == 475092-sub.html 475092-ref.html
 fails-if(Android) fuzzy-if(skiaContent&&!Android,90,3100) HTTP(..) == 475092-pos.html 475092-sub.html # bug 482596

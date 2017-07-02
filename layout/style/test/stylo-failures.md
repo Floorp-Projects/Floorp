@@ -53,17 +53,6 @@ to mochitest command.
   * test_initial_computation.html `grid` [4]
   * test_property_syntax_errors.html `grid`: actually there are issues with this [8]
   * test_value_storage.html `'grid` [195]
-* Unimplemented CSS properties:
-  * font-variant-alternates property bug 1355721
-    * test_property_syntax_errors.html `font-variant-alternates` [2]
-    * test_value_storage.html `'font-variant'` [14]
-    * ... `font-variant-alternates` [22]
-    * test_specified_value_serialization.html `bug-721136` [1]
-* Unsupported prefixed values
-  * moz-prefixed gradient functions bug 1337655
-    * test_value_storage.html `-moz-linear-gradient` [322]
-    * ... `-moz-radial-gradient` [309]
-    * ... `-moz-repeating-` [298]
 * Unsupported values
   * SVG-in-OpenType values not supported servo/servo#15211 bug 1355412
     * test_value_storage.html `context-` [7]
@@ -78,15 +67,12 @@ to mochitest command.
   * system font serialization with subprop specified bug 1364286
     * test_system_font_serialization.html [3]
   * serialize subprops to -moz-use-system-font when using system font bug 1364289
-    * test_value_storage.html `'font'` [224]
+    * test_value_storage.html `'font'` [240]
   * different serialization for gradient functions in computed value bug 1367274
     * test_computed_style.html `gradient` [13]
 * Unsupported pseudo-elements or anon boxes
   * :-moz-tree bits bug 1348488
     * test_selectors.html `:-moz-tree` [10]
-* Unsupported pseudo-classes
-  * :-moz-window-inactive bug 1348489
-    * test_selectors.html `:-moz-window-inactive` [2]
 * Unit should be preserved after parsing servo/servo#15346
   * test_units_time.html [1]
 * getComputedStyle style doesn't contain custom properties bug 1336891
@@ -95,10 +81,8 @@ to mochitest command.
 * test_author_specified_style.html: support serializing color as author specified bug 1348165 [27]
 * browser_newtab_share_rule_processors.js: agent style sheet sharing [1]
 * :visited support (bug 1328509)
-  * test_visited_reftests.html `color-on-bullets-1.html` [2]
-  * ... `inherit-keyword-1.xhtml` [2]
+  * test_visited_reftests.html `inherit-keyword-1.xhtml` [2]
   * ... `mathml-links.html` [2]
-  * ... `caret-color-on-visited-1.html` [2]
 
 ## Assertions
 

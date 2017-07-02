@@ -834,19 +834,6 @@
         </body>
       </method>
 
-      <method name="blockMedia">
-        <body>
-          <![CDATA[
-            if (!this.mPrefs.getBoolPref("media.block-autoplay-until-in-foreground", true)) {
-              return;
-            }
-            this._mediaBlocked = true;
-            this.messageManager.sendAsyncMessage("AudioPlayback",
-                                                 {type: "blockInactivePageMedia"});
-          ]]>
-        </body>
-      </method>
-
       <method name="resumeMedia">
         <body>
           <![CDATA[

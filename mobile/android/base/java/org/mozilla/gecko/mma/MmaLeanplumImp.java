@@ -82,13 +82,13 @@ public class MmaLeanplumImp implements MmaInterface {
     }
 
     @Override
-    public void track(String leanplumEvent) {
+    public void event(String leanplumEvent) {
         Leanplum.track(leanplumEvent);
 
     }
 
     @Override
-    public void track(String leanplumEvent, double value) {
+    public void event(String leanplumEvent, double value) {
         Leanplum.track(leanplumEvent, value);
 
     }

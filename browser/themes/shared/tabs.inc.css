@@ -628,7 +628,8 @@
   border-radius: 3px;
   margin: 3px;
   margin-inline-start: 9px;
-  transition: max-width 300ms;
+  transition: max-width 100ms;
+  padding: 0 5px;
 }
 
 .restore-tabs-button:hover {
@@ -660,5 +661,4 @@
 
 .restore-tabs-button > .toolbarbutton-text {
   display: -moz-box;
-  padding: 0 5px;
 }

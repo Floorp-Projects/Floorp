@@ -178,6 +178,18 @@ bool StartMacSandbox(MacSandboxInfo aInfo, std::string &aErrorMessage)
       params.push_back(aInfo.hasSandboxedProfile ? "TRUE" : "FALSE");
       params.push_back("HAS_FILE_PRIVILEGES");
       params.push_back(aInfo.hasFilePrivileges ? "TRUE" : "FALSE");
+      if (!aInfo.testingReadPath1.empty()) {
+        params.push_back("TESTING_READ_PATH1");
+        params.push_back(aInfo.testingReadPath1.c_str());
+      }
+      if (!aInfo.testingReadPath2.empty()) {
+        params.push_back("TESTING_READ_PATH2");
+        params.push_back(aInfo.testingReadPath2.c_str());
+      }
+      if (!aInfo.testingReadPath3.empty()) {
+        params.push_back("TESTING_READ_PATH3");
+        params.push_back(aInfo.testingReadPath3.c_str());
+      }
 #ifdef DEBUG
       if (!aInfo.debugWriteDir.empty()) {
         params.push_back("DEBUG_WRITE_DIR");

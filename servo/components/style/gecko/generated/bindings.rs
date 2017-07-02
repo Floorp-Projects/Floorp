@@ -553,6 +553,9 @@ extern "C" {
     pub fn Gecko_ElementState(element: RawGeckoElementBorrowed) -> u64;
 }
 extern "C" {
+    pub fn Gecko_DocumentState(aDocument: *const nsIDocument) -> u64;
+}
+extern "C" {
     pub fn Gecko_IsTextNode(node: RawGeckoNodeBorrowed) -> bool;
 }
 extern "C" {
@@ -874,6 +877,17 @@ extern "C" {
     pub fn Gecko_nsFont_Destroy(dst: *mut nsFont);
 }
 extern "C" {
+    pub fn Gecko_ClearAlternateValues(font: *mut nsFont, length: usize);
+}
+extern "C" {
+    pub fn Gecko_AppendAlternateValues(font: *mut nsFont, alternate_name: u32,
+                                       atom: *mut nsIAtom);
+}
+extern "C" {
+    pub fn Gecko_CopyAlternateValuesFrom(dest: *mut nsFont,
+                                         src: *const nsFont);
+}
+extern "C" {
     pub fn Gecko_SetImageOrientation(aVisibility: *mut nsStyleVisibility,
                                      aRadians: f64, aFlip: bool);
 }
@@ -938,8 +952,8 @@ extern "C" {
 }
 extern "C" {
     pub fn Gecko_CreateGradient(shape: u8, size: u8, repeating: bool,
-                                legacy_syntax: bool, stops: u32)
-     -> *mut nsStyleGradient;
+                                legacy_syntax: bool, moz_legacy_syntax: bool,
+                                stops: u32) -> *mut nsStyleGradient;
 }
 extern "C" {
     pub fn Gecko_SetListStyleImageNone(style_struct: *mut nsStyleList);
