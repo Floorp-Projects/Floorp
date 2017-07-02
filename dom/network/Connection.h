@@ -65,7 +65,7 @@ protected:
   Connection(nsPIDOMWindowInner* aWindow);
   virtual ~Connection();
 
-  void Update(ConnectionType aType, bool aIsWifi, bool aDHCPGateway,
+  void Update(ConnectionType aType, bool aIsWifi, uint32_t aDHCPGateway,
               bool aNotify);
 
   virtual void ShutdownInternal() = 0;
