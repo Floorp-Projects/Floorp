@@ -779,6 +779,7 @@ protected:
           Mid mid;
           Candidate candidate;
           Tie(level, mid, candidate) = levelMidAndCandidate;
+  std::cerr << "trickeling candidate: " << candidate << " level: " << level << " mid: " << mid << std::endl;
           session.AddRemoteIceCandidate(candidate, mid, level);
         }
         mCandidatesToTrickle.clear();
@@ -1223,6 +1224,78 @@ TEST_P(JsepSessionTest, FullCall)
   SetLocalAnswer(answer);
   SetRemoteAnswer(answer);
 }
+
+TEST_P(JsepSessionTest, GetDescriptions)
+{
+  AddTracks(*mSessionOff);
+  std::string offer = CreateOffer();
+  SetLocalOffer(offer);
+  std::string desc = mSessionOff->GetLocalDescription(kJsepDescriptionCurrent);
+  ASSERT_EQ(0U, desc.size());
+  desc = mSessionOff->GetLocalDescription(kJsepDescriptionPending);
+  ASSERT_NE(0U, desc.size());
+  desc = mSessionOff->GetLocalDescription(kJsepDescriptionPendingOrCurrent);
+  ASSERT_NE(0U, desc.size());
+  desc = mSessionOff->GetRemoteDescription(kJsepDescriptionPendingOrCurrent);
+  ASSERT_EQ(0U, desc.size());
+  desc = mSessionAns->GetLocalDescription(kJsepDescriptionPendingOrCurrent);
+  ASSERT_EQ(0U, desc.size());
+  desc = mSessionAns->GetRemoteDescription(kJsepDescriptionPendingOrCurrent);
+  ASSERT_EQ(0U, desc.size());
+
+  SetRemoteOffer(offer);
+  desc = mSessionAns->GetRemoteDescription(kJsepDescriptionCurrent);
+  ASSERT_EQ(0U, desc.size());
+  desc = mSessionAns->GetRemoteDescription(kJsepDescriptionPending);
+  ASSERT_NE(0U, desc.size());
+  desc = mSessionAns->GetRemoteDescription(kJsepDescriptionPendingOrCurrent);
+  ASSERT_NE(0U, desc.size());
+  desc = mSessionAns->GetLocalDescription(kJsepDescriptionPendingOrCurrent);
+  ASSERT_EQ(0U, desc.size());
+  desc = mSessionOff->GetLocalDescription(kJsepDescriptionPendingOrCurrent);
+  ASSERT_NE(0U, desc.size());
+  desc = mSessionOff->GetRemoteDescription(kJsepDescriptionPendingOrCurrent);
+  ASSERT_EQ(0U, desc.size());
+
+  AddTracks(*mSessionAns);
+  std::string answer = CreateAnswer();
+  SetLocalAnswer(answer);
+  desc = mSessionAns->GetLocalDescription(kJsepDescriptionCurrent);
+  ASSERT_NE(0U, desc.size());
+  desc = mSessionAns->GetLocalDescription(kJsepDescriptionPending);
+  ASSERT_EQ(0U, desc.size());
+  desc = mSessionAns->GetLocalDescription(kJsepDescriptionPendingOrCurrent);
+  ASSERT_NE(0U, desc.size());
+  desc = mSessionAns->GetRemoteDescription(kJsepDescriptionCurrent);
+  ASSERT_NE(0U, desc.size());
+  desc = mSessionAns->GetRemoteDescription(kJsepDescriptionPending);
+  ASSERT_EQ(0U, desc.size());
+  desc = mSessionAns->GetRemoteDescription(kJsepDescriptionPendingOrCurrent);
+  ASSERT_NE(0U, desc.size());
+  desc = mSessionOff->GetLocalDescription(kJsepDescriptionPendingOrCurrent);
+  ASSERT_NE(0U, desc.size());
+  desc = mSessionOff->GetRemoteDescription(kJsepDescriptionPendingOrCurrent);
+  ASSERT_EQ(0U, desc.size());
+
+  SetRemoteAnswer(answer);
+  desc = mSessionOff->GetLocalDescription(kJsepDescriptionCurrent);
+  ASSERT_NE(0U, desc.size());
+  desc = mSessionOff->GetLocalDescription(kJsepDescriptionPending);
+  ASSERT_EQ(0U, desc.size());
+  desc = mSessionOff->GetLocalDescription(kJsepDescriptionPendingOrCurrent);
+  ASSERT_NE(0U, desc.size());
+  desc = mSessionOff->GetRemoteDescription(kJsepDescriptionCurrent);
+  ASSERT_NE(0U, desc.size());
+  desc = mSessionOff->GetRemoteDescription(kJsepDescriptionPending);
+  ASSERT_EQ(0U, desc.size());
+  desc = mSessionOff->GetRemoteDescription(kJsepDescriptionPendingOrCurrent);
+  ASSERT_NE(0U, desc.size());
+  desc = mSessionAns->GetLocalDescription(kJsepDescriptionPendingOrCurrent);
+  ASSERT_NE(0U, desc.size());
+  desc = mSessionAns->GetRemoteDescription(kJsepDescriptionPendingOrCurrent);
+  ASSERT_NE(0U, desc.size());
+}
+
 
 TEST_P(JsepSessionTest, RenegotiationNoChange)
 {
@@ -2493,7 +2566,7 @@ TEST_P(JsepSessionTest, FullCallWithCandidates)
   mOffCandidates->Gather(*mSessionOff, types);
 
   UniquePtr<Sdp> localOffer(Parse(
-        mSessionOff->GetLocalDescription(kJsepDescriptionCurrent)));
+        mSessionOff->GetLocalDescription(kJsepDescriptionPending)));
   for (size_t i = 0; i < localOffer->GetMediaSectionCount(); ++i) {
     mOffCandidates->CheckRtpCandidates(
         true, localOffer->GetMediaSection(i), i,
@@ -2519,7 +2592,7 @@ TEST_P(JsepSessionTest, FullCallWithCandidates)
   mOffCandidates->Trickle(*mSessionAns);
 
   UniquePtr<Sdp> remoteOffer(Parse(
-        mSessionAns->GetRemoteDescription(kJsepDescriptionCurrent)));
+        mSessionAns->GetRemoteDescription(kJsepDescriptionPending)));
   for (size_t i = 0; i < remoteOffer->GetMediaSectionCount(); ++i) {
     mOffCandidates->CheckRtpCandidates(
         true, remoteOffer->GetMediaSection(i), i,
@@ -2683,7 +2756,7 @@ TEST_P(JsepSessionTest, RenegotiationWithCandidates)
   mOffCandidates->Trickle(*mSessionAns);
 
   UniquePtr<Sdp> localOffer(Parse(
-        mSessionOff->GetLocalDescription(kJsepDescriptionCurrent)));
+        mSessionOff->GetLocalDescription(kJsepDescriptionPending)));
   for (size_t i = 0; i < localOffer->GetMediaSectionCount(); ++i) {
     mOffCandidates->CheckRtpCandidates(
         true, localOffer->GetMediaSection(i), i,
@@ -2706,7 +2779,7 @@ TEST_P(JsepSessionTest, RenegotiationWithCandidates)
   }
 
   UniquePtr<Sdp> remoteOffer(Parse(
-        mSessionAns->GetRemoteDescription(kJsepDescriptionCurrent)));
+        mSessionAns->GetRemoteDescription(kJsepDescriptionPending)));
   for (size_t i = 0; i < remoteOffer->GetMediaSectionCount(); ++i) {
     mOffCandidates->CheckRtpCandidates(
         true, remoteOffer->GetMediaSection(i), i,
