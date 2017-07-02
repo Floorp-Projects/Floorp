@@ -1,0 +1,33 @@
+diff --git a/third_party/agg23/agg_clip_liang_barsky.h b/third_party/agg23/agg_clip_liang_barsky.h
+index db6ca97..5b1261f 100644
+--- a/third_party/agg23/agg_clip_liang_barsky.h
++++ b/third_party/agg23/agg_clip_liang_barsky.h
+@@ -20,6 +20,7 @@
+ #ifndef AGG_CLIP_LIANG_BARSKY_INCLUDED
+ #define AGG_CLIP_LIANG_BARSKY_INCLUDED
+ #include "agg_basics.h"
++#include "third_party/base/numerics/safe_math.h"
+ namespace agg
+ {
+ template<class T>
+@@ -36,8 +37,18 @@ inline unsigned clip_liang_barsky(T x1, T y1, T x2, T y2,
+                                   T* x, T* y)
+ {
+     const FX_FLOAT nearzero = 1e-30f;
+-    FX_FLOAT deltax = (FX_FLOAT)(x2 - x1);
+-    FX_FLOAT deltay = (FX_FLOAT)(y2 - y1);
++
++    pdfium::base::CheckedNumeric<FX_FLOAT> width = x2;
++    width -= x1;
++    if (!width.IsValid())
++        return 0;
++    pdfium::base::CheckedNumeric<FX_FLOAT> height = y2;
++    height -= y1;
++    if (!height.IsValid())
++        return 0;
++
++    FX_FLOAT deltax = width.ValueOrDefault(0);
++    FX_FLOAT deltay = height.ValueOrDefault(0);
+     unsigned np = 0;
+     if(deltax == 0) {
+         deltax = (x1 > clip_box.x1) ? -nearzero : nearzero;

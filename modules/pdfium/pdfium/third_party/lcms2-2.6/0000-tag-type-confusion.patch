@@ -1,0 +1,14 @@
+diff --git a/third_party/lcms2-2.6/src/cmsio0.c b/third_party/lcms2-2.6/src/cmsio0.c
+index 6549d15..5f9f08a 100644
+--- a/third_party/lcms2-2.6/src/cmsio0.c
++++ b/third_party/lcms2-2.6/src/cmsio0.c
+@@ -719,7 +719,8 @@ cmsBool _cmsReadHeader(_cmsICCPROFILE* Icc)
+         for (j=0; j < Icc ->TagCount; j++) {
+ 
+             if ((Icc ->TagOffsets[j] == Tag.offset) &&
+-                (Icc ->TagSizes[j]   == Tag.size)) {
++                (Icc ->TagSizes[j]   == Tag.size) &&
++                (Icc ->TagNames[j]   == Tag.sig)) {
+ 
+                 Icc ->TagLinked[Icc ->TagCount] = Icc ->TagNames[j];
+             }

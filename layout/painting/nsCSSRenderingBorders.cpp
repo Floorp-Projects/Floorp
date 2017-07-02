@@ -30,6 +30,7 @@
 #include "gfxGradientCache.h"
 #include "mozilla/layers/StackingContextHelper.h"
 #include "mozilla/layers/WebRenderDisplayItemLayer.h"
+#include "mozilla/Range.h"
 #include <algorithm>
 
 using namespace mozilla;
@@ -3551,8 +3552,7 @@ nsCSSBorderRenderer::CanCreateWebRenderCommands()
 
 void
 nsCSSBorderRenderer::CreateWebRenderCommands(wr::DisplayListBuilder& aBuilder,
-                                             const layers::StackingContextHelper& aSc,
-                                             layers::WebRenderDisplayItemLayer* aLayer)
+                                             const layers::StackingContextHelper& aSc)
 {
   LayoutDeviceRect outerRect = LayoutDeviceRect::FromUnknownRect(mOuterRect);
   WrRect transformedRect = aSc.ToRelativeWrRect(outerRect);
@@ -3565,10 +3565,11 @@ nsCSSBorderRenderer::CreateWebRenderCommands(wr::DisplayListBuilder& aBuilder,
                                                      LayerSize(mBorderRadii[1].width, mBorderRadii[1].height),
                                                      LayerSize(mBorderRadii[3].width, mBorderRadii[3].height),
                                                      LayerSize(mBorderRadii[2].width, mBorderRadii[2].height));
+  Range<const WrBorderSide> wrsides(side, 4);
   aBuilder.PushBorder(transformedRect,
                       transformedRect,
                       wr::ToWrBorderWidths(mBorderWidths[0], mBorderWidths[1], mBorderWidths[2], mBorderWidths[3]),
-                      side[0], side[1], side[2], side[3],
+                      wrsides,
                       borderRadius);
 }
 

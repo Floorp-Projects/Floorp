@@ -19,6 +19,33 @@ StackingContextHelper::StackingContextHelper()
 
 StackingContextHelper::StackingContextHelper(const StackingContextHelper& aParentSC,
                                              wr::DisplayListBuilder& aBuilder,
+                                             LayerRect aBoundForSC,
+                                             LayerPoint aOrigin,
+                                             uint64_t aAnimationsId,
+                                             float* aOpacityPtr,
+                                             gfx::Matrix4x4* aTransformPtr,
+                                             const nsTArray<WrFilterOp>& aFilters)
+  : mBuilder(&aBuilder)
+{
+  WrRect scBounds = aParentSC.ToRelativeWrRect(aBoundForSC);
+  if (aTransformPtr) {
+    mTransform = *aTransformPtr;
+  }
+
+  mBuilder->PushStackingContext(scBounds,
+                                aAnimationsId,
+                                aOpacityPtr,
+                                aTransformPtr,
+                                WrTransformStyle::Flat,
+                                // TODO: set correct blend mode.
+                                wr::ToWrMixBlendMode(gfx::CompositionOp::OP_OVER),
+                                aFilters);
+
+  mOrigin = aOrigin;
+}
+
+StackingContextHelper::StackingContextHelper(const StackingContextHelper& aParentSC,
+                                             wr::DisplayListBuilder& aBuilder,
                                              WebRenderLayer* aLayer,
                                              const Maybe<gfx::Matrix4x4>& aTransform,
                                              const nsTArray<WrFilterOp>& aFilters)

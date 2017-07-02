@@ -308,7 +308,6 @@ public:
   void CreateWebRenderCommandsForBCBorders(mozilla::wr::DisplayListBuilder& aBuilder,
                                            const mozilla::layers::StackingContextHelper& aSc,
                                            nsTArray<mozilla::layers::WebRenderParentCommand>& aParentCommands,
-                                           mozilla::layers::WebRenderDisplayItemLayer* aLayer,
                                            const nsPoint& aPt);
 
   virtual void MarkIntrinsicISizesDirty() override;

@@ -1,0 +1,13 @@
+diff --git a/third_party/lcms2-2.6/src/cmsplugin.c b/third_party/lcms2-2.6/src/cmsplugin.c
+index 8903d2b..b95befb 100644
+--- a/third_party/lcms2-2.6/src/cmsplugin.c
++++ b/third_party/lcms2-2.6/src/cmsplugin.c
+@@ -179,6 +179,8 @@ cmsBool CMSEXPORT  _cmsReadFloat32Number(cmsIOHANDLER* io, cmsFloat32Number* n)
+ 
+         tmp = _cmsAdjustEndianess32(tmp);
+         *n = *(cmsFloat32Number*) &tmp;
++        if (isnan(*n))
++            return FALSE;
+     }
+     return TRUE;
+ }

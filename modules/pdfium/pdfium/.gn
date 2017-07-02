@@ -1,0 +1,15 @@
+# Copyright 2016 PDFium Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+buildconfig = "//build/config/BUILDCONFIG.gn"
+secondary_source = "//build/secondary/"
+
+default_args = {
+  v8_extra_library_files = []
+  v8_experimental_extra_library_files = []
+  v8_enable_inspector = false
+
+  # Turns on compiler optimizations in V8 in Debug build.
+  v8_optimized_debug = true
+}

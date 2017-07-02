@@ -20,6 +20,7 @@
 #include "WebRenderPaintedLayerBlob.h"
 #include "WebRenderTextLayer.h"
 #include "WebRenderDisplayItemLayer.h"
+#include "nsDisplayList.h"
 
 namespace mozilla {
 
@@ -32,6 +33,7 @@ WebRenderLayerManager::WebRenderLayerManager(nsIWidget* aWidget)
   , mLatestTransactionId(0)
   , mNeedsComposite(false)
   , mIsFirstPaint(false)
+  , mEndTransactionWithoutLayers(false)
   , mTarget(nullptr)
   , mPaintSequenceNumber(0)
 {
@@ -174,10 +176,80 @@ PopulateScrollData(WebRenderScrollData& aTarget, Layer* aLayer)
 }
 
 void
+WebRenderLayerManager::CreateWebRenderCommandsFromDisplayList(nsDisplayList* aDisplayList,
+                                                              nsDisplayListBuilder* aDisplayListBuilder,
+                                                              StackingContextHelper& aSc,
+                                                              wr::DisplayListBuilder& aBuilder)
+{
+  nsDisplayList savedItems;
+  nsDisplayItem* item;
+  while ((item = aDisplayList->RemoveBottom()) != nullptr) {
+    nsDisplayItem::Type itemType = item->GetType();
+
+    // If the item is a event regions item, but is empty (has no regions in it)
+    // then we should just throw it out
+    if (itemType == nsDisplayItem::TYPE_LAYER_EVENT_REGIONS) {
+      nsDisplayLayerEventRegions* eventRegions =
+        static_cast<nsDisplayLayerEventRegions*>(item);
+      if (eventRegions->IsEmpty()) {
+        item->~nsDisplayItem();
+        continue;
+      }
+    }
+
+    // Peek ahead to the next item and try merging with it or swapping with it
+    // if necessary.
+    nsDisplayItem* aboveItem;
+    while ((aboveItem = aDisplayList->GetBottom()) != nullptr) {
+      if (aboveItem->TryMerge(item)) {
+        aDisplayList->RemoveBottom();
+        item->~nsDisplayItem();
+        item = aboveItem;
+        itemType = item->GetType();
+      } else {
+        break;
+      }
+    }
+
+    nsDisplayList* itemSameCoordinateSystemChildren
+      = item->GetSameCoordinateSystemChildren();
+    if (item->ShouldFlattenAway(aDisplayListBuilder)) {
+      aDisplayList->AppendToBottom(itemSameCoordinateSystemChildren);
+      item->~nsDisplayItem();
+      continue;
+    }
+
+    savedItems.AppendToTop(item);
+
+    if (!item->CreateWebRenderCommands(aBuilder, aSc, mParentCommands, this,
+                                       aDisplayListBuilder)) {
+      // TODO: fallback
+    }
+  }
+  aDisplayList->AppendToTop(&savedItems);
+}
+
+void
+WebRenderLayerManager::EndTransactionWithoutLayer(nsDisplayList* aDisplayList,
+                                                  nsDisplayListBuilder* aDisplayListBuilder)
+{
+  MOZ_ASSERT(aDisplayList && aDisplayListBuilder);
+  mEndTransactionWithoutLayers = true;
+  DiscardImages();
+  WrBridge()->RemoveExpiredFontKeys();
+  EndTransactionInternal(nullptr,
+                         nullptr,
+                         EndTransactionFlags::END_DEFAULT,
+                         aDisplayList,
+                         aDisplayListBuilder);
+}
+
+void
 WebRenderLayerManager::EndTransaction(DrawPaintedLayerCallback aCallback,
                                       void* aCallbackData,
                                       EndTransactionFlags aFlags)
 {
+  mEndTransactionWithoutLayers = false;
   DiscardImages();
   WrBridge()->RemoveExpiredFontKeys();
   EndTransactionInternal(aCallback, aCallbackData, aFlags);
@@ -186,7 +258,9 @@ WebRenderLayerManager::EndTransaction(DrawPaintedLayerCallback aCallback,
 bool
 WebRenderLayerManager::EndTransactionInternal(DrawPaintedLayerCallback aCallback,
                                               void* aCallbackData,
-                                              EndTransactionFlags aFlags)
+                                              EndTransactionFlags aFlags,
+                                              nsDisplayList* aDisplayList,
+                                              nsDisplayListBuilder* aDisplayListBuilder)
 {
   AutoProfilerTracing tracing("Paint", "RenderLayers");
   mPaintedLayerCallback = aCallback;
@@ -205,12 +279,29 @@ WebRenderLayerManager::EndTransactionInternal(DrawPaintedLayerCallback aCallback
     return false;
   }
   DiscardCompositorAnimations();
-  mRoot->StartPendingAnimations(mAnimationReadyTime);
 
-  StackingContextHelper sc;
   WrSize contentSize { (float)size.width, (float)size.height };
   wr::DisplayListBuilder builder(WrBridge()->GetPipeline(), contentSize);
-  WebRenderLayer::ToWebRenderLayer(mRoot)->RenderLayer(builder, sc);
+
+  if (mEndTransactionWithoutLayers) {
+    // aDisplayList being null here means this is an empty transaction following a layers-free
+    // transaction, so we reuse the previously built displaylist.
+    if (aDisplayList && aDisplayListBuilder) {
+      StackingContextHelper sc;
+      mParentCommands.Clear();
+      CreateWebRenderCommandsFromDisplayList(aDisplayList, aDisplayListBuilder, sc, builder);
+      builder.Finalize(contentSize, mBuiltDisplayList);
+    }
+
+    builder.PushBuiltDisplayList(mBuiltDisplayList);
+    WrBridge()->AddWebRenderParentCommands(mParentCommands);
+  } else {
+    mRoot->StartPendingAnimations(mAnimationReadyTime);
+    StackingContextHelper sc;
+
+    WebRenderLayer::ToWebRenderLayer(mRoot)->RenderLayer(builder, sc);
+  }
+
   mWidget->AddWindowOverlayWebRenderCommands(WrBridge(), builder);
   WrBridge()->ClearReadLocks();
 

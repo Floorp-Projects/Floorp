@@ -1,0 +1,1891 @@
+# Copyright 2016 The Chromium Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+import("//testing/test.gni")
+import("pdfium.gni")
+
+config("pdfium_common_config") {
+  cflags = []
+  ldflags = []
+  include_dirs = [
+    ".",
+    "third_party/freetype/include",
+    "third_party/freetype/include/freetype",
+  ]
+  defines = [
+    "OPJ_STATIC",
+    "PNG_PREFIX",
+    "PNG_USE_READ_MACROS",
+  ]
+
+  if (pdf_use_skia) {
+    defines += [ "_SKIA_SUPPORT_" ]
+  }
+
+  if (pdf_use_skia_paths) {
+    defines += [ "_SKIA_SUPPORT_PATHS_" ]
+  }
+
+  if (pdf_enable_v8) {
+    defines += [ "PDF_ENABLE_V8" ]
+  }
+
+  if (pdf_enable_xfa) {
+    defines += [ "PDF_ENABLE_XFA" ]
+    if (pdf_enable_xfa_bmp) {
+      defines += [ "PDF_ENABLE_XFA_BMP" ]
+    }
+    if (pdf_enable_xfa_gif) {
+      defines += [ "PDF_ENABLE_XFA_GIF" ]
+    }
+    if (pdf_enable_xfa_png) {
+      defines += [ "PDF_ENABLE_XFA_PNG" ]
+    }
+    if (pdf_enable_xfa_tiff) {
+      defines += [ "PDF_ENABLE_XFA_TIFF" ]
+    }
+  }
+
+  if (pdf_use_win32_gdi) {
+    defines += [ "PDFIUM_PRINT_TEXT_WITH_GDI" ]
+  }
+
+  if (use_coverage && is_clang) {
+    cflags += [
+      "--coverage",
+      "-g",
+      "-O0",
+    ]
+    ldflags += [ "--coverage" ]
+  }
+}
+
+config("pdfium_core_config") {
+  cflags = []
+  configs = [ ":pdfium_common_config" ]
+  defines = [ "V8_DEPRECATION_WARNINGS" ]
+  if (is_linux) {
+    if (current_cpu == "x64") {
+      defines += [ "_FX_CPU_=_FX_X64_" ]
+      cflags += [ "-fPIC" ]
+    } else if (current_cpu == "x86") {
+      defines += [ "_FX_CPU_=_FX_X86_" ]
+    }
+  }
+  if (is_win) {
+    cflags += [ "/wd4267" ]
+  }
+}
+
+config("xfa_warnings") {
+  visibility = [ ":*" ]
+  if (is_posix && !is_clang) {  # When GCC.
+    cflags = [ "-Wno-strict-overflow" ]
+  }
+}
+
+static_library("pdfium") {
+  sources = [
+    "fpdfsdk/cba_annotiterator.cpp",
+    "fpdfsdk/cba_annotiterator.h",
+    "fpdfsdk/cfx_systemhandler.cpp",
+    "fpdfsdk/cfx_systemhandler.h",
+    "fpdfsdk/cpdfsdk_annot.cpp",
+    "fpdfsdk/cpdfsdk_annot.h",
+    "fpdfsdk/cpdfsdk_annothandlermgr.cpp",
+    "fpdfsdk/cpdfsdk_annothandlermgr.h",
+    "fpdfsdk/cpdfsdk_annotiteration.cpp",
+    "fpdfsdk/cpdfsdk_annotiteration.h",
+    "fpdfsdk/cpdfsdk_baannot.cpp",
+    "fpdfsdk/cpdfsdk_baannot.h",
+    "fpdfsdk/cpdfsdk_baannothandler.cpp",
+    "fpdfsdk/cpdfsdk_baannothandler.h",
+    "fpdfsdk/cpdfsdk_datetime.cpp",
+    "fpdfsdk/cpdfsdk_datetime.h",
+    "fpdfsdk/cpdfsdk_formfillenvironment.cpp",
+    "fpdfsdk/cpdfsdk_formfillenvironment.h",
+    "fpdfsdk/cpdfsdk_interform.cpp",
+    "fpdfsdk/cpdfsdk_interform.h",
+    "fpdfsdk/cpdfsdk_pageview.cpp",
+    "fpdfsdk/cpdfsdk_pageview.h",
+    "fpdfsdk/cpdfsdk_widget.cpp",
+    "fpdfsdk/cpdfsdk_widget.h",
+    "fpdfsdk/cpdfsdk_widgethandler.cpp",
+    "fpdfsdk/cpdfsdk_widgethandler.h",
+    "fpdfsdk/fpdf_dataavail.cpp",
+    "fpdfsdk/fpdf_ext.cpp",
+    "fpdfsdk/fpdf_flatten.cpp",
+    "fpdfsdk/fpdf_progressive.cpp",
+    "fpdfsdk/fpdf_searchex.cpp",
+    "fpdfsdk/fpdf_structtree.cpp",
+    "fpdfsdk/fpdf_sysfontinfo.cpp",
+    "fpdfsdk/fpdf_transformpage.cpp",
+    "fpdfsdk/fpdfdoc.cpp",
+    "fpdfsdk/fpdfeditimg.cpp",
+    "fpdfsdk/fpdfeditpage.cpp",
+    "fpdfsdk/fpdfeditpath.cpp",
+    "fpdfsdk/fpdfedittext.cpp",
+    "fpdfsdk/fpdfformfill.cpp",
+    "fpdfsdk/fpdfppo.cpp",
+    "fpdfsdk/fpdfsave.cpp",
+    "fpdfsdk/fpdftext.cpp",
+    "fpdfsdk/fpdfview.cpp",
+    "fpdfsdk/fsdk_actionhandler.cpp",
+    "fpdfsdk/fsdk_actionhandler.h",
+    "fpdfsdk/fsdk_pauseadapter.cpp",
+    "fpdfsdk/fsdk_pauseadapter.h",
+    "fpdfsdk/pdfsdk_fieldaction.cpp",
+    "fpdfsdk/pdfsdk_fieldaction.h",
+    "public/fpdf_dataavail.h",
+    "public/fpdf_doc.h",
+    "public/fpdf_edit.h",
+    "public/fpdf_ext.h",
+    "public/fpdf_flatten.h",
+    "public/fpdf_formfill.h",
+    "public/fpdf_fwlevent.h",
+    "public/fpdf_ppo.h",
+    "public/fpdf_progressive.h",
+    "public/fpdf_save.h",
+    "public/fpdf_searchex.h",
+    "public/fpdf_structtree.h",
+    "public/fpdf_sysfontinfo.h",
+    "public/fpdf_text.h",
+    "public/fpdf_transformpage.h",
+    "public/fpdfview.h",
+  ]
+
+  libs = []
+  configs += [ ":pdfium_core_config" ]
+
+  deps = [
+    ":fdrm",
+    ":formfiller",
+    ":fpdfapi",
+    ":fpdfdoc",
+    ":fpdftext",
+    ":fxcodec",
+    ":fxcrt",
+    ":fxedit",
+    ":fxge",
+    ":javascript",
+    ":pdfwindow",
+    "third_party:bigint",
+    "third_party:pdfium_base",
+  ]
+
+  public_deps = [
+    ":fxcrt",
+  ]
+  if (pdf_enable_xfa) {
+    sources += [
+      "fpdfsdk/cpdfsdk_xfawidget.cpp",
+      "fpdfsdk/cpdfsdk_xfawidget.h",
+      "fpdfsdk/cpdfsdk_xfawidgethandler.cpp",
+      "fpdfsdk/cpdfsdk_xfawidgethandler.h",
+    ]
+
+    deps += [ ":fpdfxfa" ]
+  }
+
+  if (is_win) {
+    libs += [
+      "advapi32.lib",
+      "gdi32.lib",
+      "user32.lib",
+    ]
+  }
+
+  if (is_mac) {
+    libs += [
+      "AppKit.framework",
+      "CoreFoundation.framework",
+    ]
+  }
+
+  if (pdfium_bundle_freetype) {
+    deps += [ "third_party:fx_freetype" ]
+  } else {
+    libs += [ "freetype" ]
+  }
+}
+
+static_library("test_support") {
+  testonly = true
+  sources = [
+    "testing/fx_string_testhelpers.cpp",
+    "testing/fx_string_testhelpers.h",
+    "testing/test_support.cpp",
+    "testing/test_support.h",
+    "testing/utils/path_service.cpp",
+    "testing/utils/path_service.h",
+  ]
+  data = [
+    "testing/resources/",
+  ]
+  deps = [
+    ":pdfium",
+    "//testing/gmock",
+    "//testing/gtest",
+  ]
+  include_dirs = []
+  if (pdf_enable_v8) {
+    deps += [
+      "//v8",
+      "//v8:v8_libplatform",
+    ]
+    include_dirs += [
+      "//v8",
+      "//v8/include",
+    ]
+    configs += [ "//v8:external_startup_data" ]
+  }
+  configs += [ ":pdfium_core_config" ]
+}
+
+# Targets below this are only visible within this file (and to the
+# top-level gn_visibility target used to help gn_all build everything).
+visibility = [
+  ":*",
+  "//:gn_visibility",
+]
+
+static_library("fdrm") {
+  sources = [
+    "core/fdrm/crypto/fx_crypt.cpp",
+    "core/fdrm/crypto/fx_crypt.h",
+    "core/fdrm/crypto/fx_crypt_aes.cpp",
+    "core/fdrm/crypto/fx_crypt_sha.cpp",
+  ]
+  configs += [ ":pdfium_core_config" ]
+  deps = [
+    ":fxcrt",
+  ]
+}
+
+static_library("fpdfdoc") {
+  sources = [
+    "core/fpdfdoc/cline.cpp",
+    "core/fpdfdoc/cline.h",
+    "core/fpdfdoc/clines.cpp",
+    "core/fpdfdoc/clines.h",
+    "core/fpdfdoc/cpdf_aaction.cpp",
+    "core/fpdfdoc/cpdf_aaction.h",
+    "core/fpdfdoc/cpdf_action.cpp",
+    "core/fpdfdoc/cpdf_action.h",
+    "core/fpdfdoc/cpdf_actionfields.cpp",
+    "core/fpdfdoc/cpdf_actionfields.h",
+    "core/fpdfdoc/cpdf_annot.cpp",
+    "core/fpdfdoc/cpdf_annot.h",
+    "core/fpdfdoc/cpdf_annotlist.cpp",
+    "core/fpdfdoc/cpdf_annotlist.h",
+    "core/fpdfdoc/cpdf_apsettings.cpp",
+    "core/fpdfdoc/cpdf_apsettings.h",
+    "core/fpdfdoc/cpdf_bookmark.cpp",
+    "core/fpdfdoc/cpdf_bookmark.h",
+    "core/fpdfdoc/cpdf_bookmarktree.cpp",
+    "core/fpdfdoc/cpdf_bookmarktree.h",
+    "core/fpdfdoc/cpdf_defaultappearance.cpp",
+    "core/fpdfdoc/cpdf_defaultappearance.h",
+    "core/fpdfdoc/cpdf_dest.cpp",
+    "core/fpdfdoc/cpdf_dest.h",
+    "core/fpdfdoc/cpdf_docjsactions.cpp",
+    "core/fpdfdoc/cpdf_docjsactions.h",
+    "core/fpdfdoc/cpdf_filespec.cpp",
+    "core/fpdfdoc/cpdf_filespec.h",
+    "core/fpdfdoc/cpdf_formcontrol.cpp",
+    "core/fpdfdoc/cpdf_formcontrol.h",
+    "core/fpdfdoc/cpdf_formfield.cpp",
+    "core/fpdfdoc/cpdf_formfield.h",
+    "core/fpdfdoc/cpdf_iconfit.cpp",
+    "core/fpdfdoc/cpdf_iconfit.h",
+    "core/fpdfdoc/cpdf_interform.cpp",
+    "core/fpdfdoc/cpdf_interform.h",
+    "core/fpdfdoc/cpdf_link.cpp",
+    "core/fpdfdoc/cpdf_link.h",
+    "core/fpdfdoc/cpdf_linklist.cpp",
+    "core/fpdfdoc/cpdf_linklist.h",
+    "core/fpdfdoc/cpdf_metadata.cpp",
+    "core/fpdfdoc/cpdf_metadata.h",
+    "core/fpdfdoc/cpdf_nametree.cpp",
+    "core/fpdfdoc/cpdf_nametree.h",
+    "core/fpdfdoc/cpdf_numbertree.cpp",
+    "core/fpdfdoc/cpdf_numbertree.h",
+    "core/fpdfdoc/cpdf_occontext.cpp",
+    "core/fpdfdoc/cpdf_occontext.h",
+    "core/fpdfdoc/cpdf_pagelabel.cpp",
+    "core/fpdfdoc/cpdf_pagelabel.h",
+    "core/fpdfdoc/cpdf_variabletext.cpp",
+    "core/fpdfdoc/cpdf_variabletext.h",
+    "core/fpdfdoc/cpdf_viewerpreferences.cpp",
+    "core/fpdfdoc/cpdf_viewerpreferences.h",
+    "core/fpdfdoc/cpvt_arraytemplate.h",
+    "core/fpdfdoc/cpvt_color.cpp",
+    "core/fpdfdoc/cpvt_color.h",
+    "core/fpdfdoc/cpvt_dash.h",
+    "core/fpdfdoc/cpvt_floatrect.h",
+    "core/fpdfdoc/cpvt_fontmap.cpp",
+    "core/fpdfdoc/cpvt_fontmap.h",
+    "core/fpdfdoc/cpvt_generateap.cpp",
+    "core/fpdfdoc/cpvt_generateap.h",
+    "core/fpdfdoc/cpvt_line.h",
+    "core/fpdfdoc/cpvt_lineinfo.h",
+    "core/fpdfdoc/cpvt_secprops.h",
+    "core/fpdfdoc/cpvt_section.h",
+    "core/fpdfdoc/cpvt_sectioninfo.cpp",
+    "core/fpdfdoc/cpvt_sectioninfo.h",
+    "core/fpdfdoc/cpvt_word.h",
+    "core/fpdfdoc/cpvt_wordinfo.cpp",
+    "core/fpdfdoc/cpvt_wordinfo.h",
+    "core/fpdfdoc/cpvt_wordplace.h",
+    "core/fpdfdoc/cpvt_wordprops.h",
+    "core/fpdfdoc/cpvt_wordrange.h",
+    "core/fpdfdoc/csection.cpp",
+    "core/fpdfdoc/csection.h",
+    "core/fpdfdoc/ctypeset.cpp",
+    "core/fpdfdoc/ctypeset.h",
+    "core/fpdfdoc/doc_tagged.cpp",
+    "core/fpdfdoc/fpdf_tagged.h",
+    "core/fpdfdoc/ipdf_formnotify.h",
+    "core/fpdfdoc/ipvt_fontmap.h",
+    "core/fpdfdoc/tagged_int.h",
+  ]
+  configs += [ ":pdfium_core_config" ]
+  deps = [
+    ":fxcrt",
+  ]
+}
+
+static_library("fpdfapi") {
+  sources = [
+    "core/fpdfapi/cmaps/CNS1/Adobe-CNS1-UCS2_5.cpp",
+    "core/fpdfapi/cmaps/CNS1/B5pc-H_0.cpp",
+    "core/fpdfapi/cmaps/CNS1/B5pc-V_0.cpp",
+    "core/fpdfapi/cmaps/CNS1/CNS-EUC-H_0.cpp",
+    "core/fpdfapi/cmaps/CNS1/CNS-EUC-V_0.cpp",
+    "core/fpdfapi/cmaps/CNS1/ETen-B5-H_0.cpp",
+    "core/fpdfapi/cmaps/CNS1/ETen-B5-V_0.cpp",
+    "core/fpdfapi/cmaps/CNS1/ETenms-B5-H_0.cpp",
+    "core/fpdfapi/cmaps/CNS1/ETenms-B5-V_0.cpp",
+    "core/fpdfapi/cmaps/CNS1/HKscs-B5-H_5.cpp",
+    "core/fpdfapi/cmaps/CNS1/HKscs-B5-V_5.cpp",
+    "core/fpdfapi/cmaps/CNS1/UniCNS-UCS2-H_3.cpp",
+    "core/fpdfapi/cmaps/CNS1/UniCNS-UCS2-V_3.cpp",
+    "core/fpdfapi/cmaps/CNS1/UniCNS-UTF16-H_0.cpp",
+    "core/fpdfapi/cmaps/CNS1/cmaps_cns1.cpp",
+    "core/fpdfapi/cmaps/GB1/Adobe-GB1-UCS2_5.cpp",
+    "core/fpdfapi/cmaps/GB1/GB-EUC-H_0.cpp",
+    "core/fpdfapi/cmaps/GB1/GB-EUC-V_0.cpp",
+    "core/fpdfapi/cmaps/GB1/GBK-EUC-H_2.cpp",
+    "core/fpdfapi/cmaps/GB1/GBK-EUC-V_2.cpp",
+    "core/fpdfapi/cmaps/GB1/GBK2K-H_5.cpp",
+    "core/fpdfapi/cmaps/GB1/GBK2K-V_5.cpp",
+    "core/fpdfapi/cmaps/GB1/GBKp-EUC-H_2.cpp",
+    "core/fpdfapi/cmaps/GB1/GBKp-EUC-V_2.cpp",
+    "core/fpdfapi/cmaps/GB1/GBpc-EUC-H_0.cpp",
+    "core/fpdfapi/cmaps/GB1/GBpc-EUC-V_0.cpp",
+    "core/fpdfapi/cmaps/GB1/UniGB-UCS2-H_4.cpp",
+    "core/fpdfapi/cmaps/GB1/UniGB-UCS2-V_4.cpp",
+    "core/fpdfapi/cmaps/GB1/cmaps_gb1.cpp",
+    "core/fpdfapi/cmaps/Japan1/83pv-RKSJ-H_1.cpp",
+    "core/fpdfapi/cmaps/Japan1/90ms-RKSJ-H_2.cpp",
+    "core/fpdfapi/cmaps/Japan1/90ms-RKSJ-V_2.cpp",
+    "core/fpdfapi/cmaps/Japan1/90msp-RKSJ-H_2.cpp",
+    "core/fpdfapi/cmaps/Japan1/90msp-RKSJ-V_2.cpp",
+    "core/fpdfapi/cmaps/Japan1/90pv-RKSJ-H_1.cpp",
+    "core/fpdfapi/cmaps/Japan1/Add-RKSJ-H_1.cpp",
+    "core/fpdfapi/cmaps/Japan1/Add-RKSJ-V_1.cpp",
+    "core/fpdfapi/cmaps/Japan1/Adobe-Japan1-UCS2_4.cpp",
+    "core/fpdfapi/cmaps/Japan1/EUC-H_1.cpp",
+    "core/fpdfapi/cmaps/Japan1/EUC-V_1.cpp",
+    "core/fpdfapi/cmaps/Japan1/Ext-RKSJ-H_2.cpp",
+    "core/fpdfapi/cmaps/Japan1/Ext-RKSJ-V_2.cpp",
+    "core/fpdfapi/cmaps/Japan1/H_1.cpp",
+    "core/fpdfapi/cmaps/Japan1/UniJIS-UCS2-HW-H_4.cpp",
+    "core/fpdfapi/cmaps/Japan1/UniJIS-UCS2-HW-V_4.cpp",
+    "core/fpdfapi/cmaps/Japan1/UniJIS-UCS2-H_4.cpp",
+    "core/fpdfapi/cmaps/Japan1/UniJIS-UCS2-V_4.cpp",
+    "core/fpdfapi/cmaps/Japan1/V_1.cpp",
+    "core/fpdfapi/cmaps/Japan1/cmaps_japan1.cpp",
+    "core/fpdfapi/cmaps/Korea1/Adobe-Korea1-UCS2_2.cpp",
+    "core/fpdfapi/cmaps/Korea1/KSC-EUC-H_0.cpp",
+    "core/fpdfapi/cmaps/Korea1/KSC-EUC-V_0.cpp",
+    "core/fpdfapi/cmaps/Korea1/KSCms-UHC-HW-H_1.cpp",
+    "core/fpdfapi/cmaps/Korea1/KSCms-UHC-HW-V_1.cpp",
+    "core/fpdfapi/cmaps/Korea1/KSCms-UHC-H_1.cpp",
+    "core/fpdfapi/cmaps/Korea1/KSCms-UHC-V_1.cpp",
+    "core/fpdfapi/cmaps/Korea1/KSCpc-EUC-H_0.cpp",
+    "core/fpdfapi/cmaps/Korea1/UniKS-UCS2-H_1.cpp",
+    "core/fpdfapi/cmaps/Korea1/UniKS-UCS2-V_1.cpp",
+    "core/fpdfapi/cmaps/Korea1/UniKS-UTF16-H_0.cpp",
+    "core/fpdfapi/cmaps/Korea1/cmaps_korea1.cpp",
+    "core/fpdfapi/cmaps/cmap_int.h",
+    "core/fpdfapi/cmaps/fpdf_cmaps.cpp",
+    "core/fpdfapi/cpdf_modulemgr.cpp",
+    "core/fpdfapi/cpdf_modulemgr.h",
+    "core/fpdfapi/cpdf_pagerendercontext.cpp",
+    "core/fpdfapi/cpdf_pagerendercontext.h",
+    "core/fpdfapi/edit/cpdf_creator.h",
+    "core/fpdfapi/edit/cpdf_pagecontentgenerator.cpp",
+    "core/fpdfapi/edit/cpdf_pagecontentgenerator.h",
+    "core/fpdfapi/edit/editint.h",
+    "core/fpdfapi/edit/fpdf_edit_create.cpp",
+    "core/fpdfapi/font/cpdf_cidfont.cpp",
+    "core/fpdfapi/font/cpdf_cidfont.h",
+    "core/fpdfapi/font/cpdf_font.cpp",
+    "core/fpdfapi/font/cpdf_font.h",
+    "core/fpdfapi/font/cpdf_fontencoding.cpp",
+    "core/fpdfapi/font/cpdf_fontencoding.h",
+    "core/fpdfapi/font/cpdf_simplefont.cpp",
+    "core/fpdfapi/font/cpdf_simplefont.h",
+    "core/fpdfapi/font/cpdf_truetypefont.cpp",
+    "core/fpdfapi/font/cpdf_truetypefont.h",
+    "core/fpdfapi/font/cpdf_type1font.cpp",
+    "core/fpdfapi/font/cpdf_type1font.h",
+    "core/fpdfapi/font/cpdf_type3char.cpp",
+    "core/fpdfapi/font/cpdf_type3char.h",
+    "core/fpdfapi/font/cpdf_type3font.cpp",
+    "core/fpdfapi/font/cpdf_type3font.h",
+    "core/fpdfapi/font/font_int.h",
+    "core/fpdfapi/font/fpdf_font.cpp",
+    "core/fpdfapi/font/fpdf_font_cid.cpp",
+    "core/fpdfapi/font/ttgsubtable.cpp",
+    "core/fpdfapi/font/ttgsubtable.h",
+    "core/fpdfapi/page/cpdf_allstates.cpp",
+    "core/fpdfapi/page/cpdf_allstates.h",
+    "core/fpdfapi/page/cpdf_clippath.cpp",
+    "core/fpdfapi/page/cpdf_clippath.h",
+    "core/fpdfapi/page/cpdf_color.cpp",
+    "core/fpdfapi/page/cpdf_color.h",
+    "core/fpdfapi/page/cpdf_colorspace.cpp",
+    "core/fpdfapi/page/cpdf_colorspace.h",
+    "core/fpdfapi/page/cpdf_colorstate.cpp",
+    "core/fpdfapi/page/cpdf_colorstate.h",
+    "core/fpdfapi/page/cpdf_contentmark.cpp",
+    "core/fpdfapi/page/cpdf_contentmark.h",
+    "core/fpdfapi/page/cpdf_contentmarkitem.cpp",
+    "core/fpdfapi/page/cpdf_contentmarkitem.h",
+    "core/fpdfapi/page/cpdf_contentparser.cpp",
+    "core/fpdfapi/page/cpdf_contentparser.h",
+    "core/fpdfapi/page/cpdf_countedobject.h",
+    "core/fpdfapi/page/cpdf_docpagedata.cpp",
+    "core/fpdfapi/page/cpdf_docpagedata.h",
+    "core/fpdfapi/page/cpdf_form.cpp",
+    "core/fpdfapi/page/cpdf_form.h",
+    "core/fpdfapi/page/cpdf_formobject.cpp",
+    "core/fpdfapi/page/cpdf_formobject.h",
+    "core/fpdfapi/page/cpdf_generalstate.cpp",
+    "core/fpdfapi/page/cpdf_generalstate.h",
+    "core/fpdfapi/page/cpdf_graphicstates.cpp",
+    "core/fpdfapi/page/cpdf_graphicstates.h",
+    "core/fpdfapi/page/cpdf_image.cpp",
+    "core/fpdfapi/page/cpdf_image.h",
+    "core/fpdfapi/page/cpdf_imageobject.cpp",
+    "core/fpdfapi/page/cpdf_imageobject.h",
+    "core/fpdfapi/page/cpdf_meshstream.cpp",
+    "core/fpdfapi/page/cpdf_meshstream.h",
+    "core/fpdfapi/page/cpdf_page.cpp",
+    "core/fpdfapi/page/cpdf_page.h",
+    "core/fpdfapi/page/cpdf_pagemodule.cpp",
+    "core/fpdfapi/page/cpdf_pagemodule.h",
+    "core/fpdfapi/page/cpdf_pageobject.cpp",
+    "core/fpdfapi/page/cpdf_pageobject.h",
+    "core/fpdfapi/page/cpdf_pageobjectholder.cpp",
+    "core/fpdfapi/page/cpdf_pageobjectholder.h",
+    "core/fpdfapi/page/cpdf_pageobjectlist.cpp",
+    "core/fpdfapi/page/cpdf_pageobjectlist.h",
+    "core/fpdfapi/page/cpdf_path.cpp",
+    "core/fpdfapi/page/cpdf_path.h",
+    "core/fpdfapi/page/cpdf_pathobject.cpp",
+    "core/fpdfapi/page/cpdf_pathobject.h",
+    "core/fpdfapi/page/cpdf_pattern.cpp",
+    "core/fpdfapi/page/cpdf_pattern.h",
+    "core/fpdfapi/page/cpdf_shadingobject.cpp",
+    "core/fpdfapi/page/cpdf_shadingobject.h",
+    "core/fpdfapi/page/cpdf_shadingpattern.cpp",
+    "core/fpdfapi/page/cpdf_shadingpattern.h",
+    "core/fpdfapi/page/cpdf_streamcontentparser.cpp",
+    "core/fpdfapi/page/cpdf_streamcontentparser.h",
+    "core/fpdfapi/page/cpdf_streamparser.cpp",
+    "core/fpdfapi/page/cpdf_streamparser.h",
+    "core/fpdfapi/page/cpdf_textobject.cpp",
+    "core/fpdfapi/page/cpdf_textobject.h",
+    "core/fpdfapi/page/cpdf_textstate.cpp",
+    "core/fpdfapi/page/cpdf_textstate.h",
+    "core/fpdfapi/page/cpdf_tilingpattern.cpp",
+    "core/fpdfapi/page/cpdf_tilingpattern.h",
+    "core/fpdfapi/page/fpdf_page_colors.cpp",
+    "core/fpdfapi/page/fpdf_page_func.cpp",
+    "core/fpdfapi/page/pageint.h",
+    "core/fpdfapi/parser/cfdf_document.cpp",
+    "core/fpdfapi/parser/cfdf_document.h",
+    "core/fpdfapi/parser/cpdf_array.cpp",
+    "core/fpdfapi/parser/cpdf_array.h",
+    "core/fpdfapi/parser/cpdf_boolean.cpp",
+    "core/fpdfapi/parser/cpdf_boolean.h",
+    "core/fpdfapi/parser/cpdf_crypto_handler.cpp",
+    "core/fpdfapi/parser/cpdf_crypto_handler.h",
+    "core/fpdfapi/parser/cpdf_data_avail.cpp",
+    "core/fpdfapi/parser/cpdf_data_avail.h",
+    "core/fpdfapi/parser/cpdf_dictionary.cpp",
+    "core/fpdfapi/parser/cpdf_dictionary.h",
+    "core/fpdfapi/parser/cpdf_document.cpp",
+    "core/fpdfapi/parser/cpdf_document.h",
+    "core/fpdfapi/parser/cpdf_hint_tables.cpp",
+    "core/fpdfapi/parser/cpdf_hint_tables.h",
+    "core/fpdfapi/parser/cpdf_indirect_object_holder.cpp",
+    "core/fpdfapi/parser/cpdf_indirect_object_holder.h",
+    "core/fpdfapi/parser/cpdf_linearized_header.cpp",
+    "core/fpdfapi/parser/cpdf_linearized_header.h",
+    "core/fpdfapi/parser/cpdf_name.cpp",
+    "core/fpdfapi/parser/cpdf_name.h",
+    "core/fpdfapi/parser/cpdf_null.cpp",
+    "core/fpdfapi/parser/cpdf_null.h",
+    "core/fpdfapi/parser/cpdf_number.cpp",
+    "core/fpdfapi/parser/cpdf_number.h",
+    "core/fpdfapi/parser/cpdf_object.cpp",
+    "core/fpdfapi/parser/cpdf_object.h",
+    "core/fpdfapi/parser/cpdf_parser.cpp",
+    "core/fpdfapi/parser/cpdf_parser.h",
+    "core/fpdfapi/parser/cpdf_reference.cpp",
+    "core/fpdfapi/parser/cpdf_reference.h",
+    "core/fpdfapi/parser/cpdf_security_handler.cpp",
+    "core/fpdfapi/parser/cpdf_security_handler.h",
+    "core/fpdfapi/parser/cpdf_simple_parser.cpp",
+    "core/fpdfapi/parser/cpdf_simple_parser.h",
+    "core/fpdfapi/parser/cpdf_stream.cpp",
+    "core/fpdfapi/parser/cpdf_stream.h",
+    "core/fpdfapi/parser/cpdf_stream_acc.cpp",
+    "core/fpdfapi/parser/cpdf_stream_acc.h",
+    "core/fpdfapi/parser/cpdf_string.cpp",
+    "core/fpdfapi/parser/cpdf_string.h",
+    "core/fpdfapi/parser/cpdf_syntax_parser.cpp",
+    "core/fpdfapi/parser/cpdf_syntax_parser.h",
+    "core/fpdfapi/parser/fpdf_parser_decode.cpp",
+    "core/fpdfapi/parser/fpdf_parser_decode.h",
+    "core/fpdfapi/parser/fpdf_parser_utility.cpp",
+    "core/fpdfapi/parser/fpdf_parser_utility.h",
+    "core/fpdfapi/render/cpdf_charposlist.cpp",
+    "core/fpdfapi/render/cpdf_charposlist.h",
+    "core/fpdfapi/render/cpdf_devicebuffer.cpp",
+    "core/fpdfapi/render/cpdf_devicebuffer.h",
+    "core/fpdfapi/render/cpdf_dibsource.cpp",
+    "core/fpdfapi/render/cpdf_dibsource.h",
+    "core/fpdfapi/render/cpdf_dibtransferfunc.cpp",
+    "core/fpdfapi/render/cpdf_dibtransferfunc.h",
+    "core/fpdfapi/render/cpdf_docrenderdata.cpp",
+    "core/fpdfapi/render/cpdf_docrenderdata.h",
+    "core/fpdfapi/render/cpdf_imagecacheentry.cpp",
+    "core/fpdfapi/render/cpdf_imagecacheentry.h",
+    "core/fpdfapi/render/cpdf_imageloader.cpp",
+    "core/fpdfapi/render/cpdf_imageloader.h",
+    "core/fpdfapi/render/cpdf_imagerenderer.cpp",
+    "core/fpdfapi/render/cpdf_imagerenderer.h",
+    "core/fpdfapi/render/cpdf_pagerendercache.cpp",
+    "core/fpdfapi/render/cpdf_pagerendercache.h",
+    "core/fpdfapi/render/cpdf_progressiverenderer.cpp",
+    "core/fpdfapi/render/cpdf_progressiverenderer.h",
+    "core/fpdfapi/render/cpdf_rendercontext.cpp",
+    "core/fpdfapi/render/cpdf_rendercontext.h",
+    "core/fpdfapi/render/cpdf_renderoptions.cpp",
+    "core/fpdfapi/render/cpdf_renderoptions.h",
+    "core/fpdfapi/render/cpdf_renderstatus.cpp",
+    "core/fpdfapi/render/cpdf_renderstatus.h",
+    "core/fpdfapi/render/cpdf_scaledrenderbuffer.cpp",
+    "core/fpdfapi/render/cpdf_scaledrenderbuffer.h",
+    "core/fpdfapi/render/cpdf_textrenderer.cpp",
+    "core/fpdfapi/render/cpdf_textrenderer.h",
+    "core/fpdfapi/render/cpdf_transferfunc.cpp",
+    "core/fpdfapi/render/cpdf_transferfunc.h",
+    "core/fpdfapi/render/cpdf_type3cache.cpp",
+    "core/fpdfapi/render/cpdf_type3cache.h",
+    "core/fpdfapi/render/cpdf_type3glyphs.cpp",
+    "core/fpdfapi/render/cpdf_type3glyphs.h",
+  ]
+  configs += [ ":pdfium_core_config" ]
+  deps = [
+    ":fxcrt",
+  ]
+}
+
+static_library("fpdftext") {
+  sources = [
+    "core/fpdftext/cpdf_linkextract.cpp",
+    "core/fpdftext/cpdf_linkextract.h",
+    "core/fpdftext/cpdf_textpage.cpp",
+    "core/fpdftext/cpdf_textpage.h",
+    "core/fpdftext/cpdf_textpagefind.cpp",
+    "core/fpdftext/cpdf_textpagefind.h",
+    "core/fpdftext/unicodenormalizationdata.cpp",
+    "core/fpdftext/unicodenormalizationdata.h",
+  ]
+  configs += [ ":pdfium_core_config" ]
+  deps = [
+    ":fxcrt",
+  ]
+}
+
+static_library("fxcodec") {
+  sources = [
+    "core/fxcodec/JBig2_DocumentContext.h",
+    "core/fxcodec/codec/ccodec_basicmodule.h",
+    "core/fxcodec/codec/ccodec_faxmodule.h",
+    "core/fxcodec/codec/ccodec_flatemodule.h",
+    "core/fxcodec/codec/ccodec_iccmodule.h",
+    "core/fxcodec/codec/ccodec_jbig2module.h",
+    "core/fxcodec/codec/ccodec_jpegmodule.h",
+    "core/fxcodec/codec/ccodec_jpxmodule.h",
+    "core/fxcodec/codec/ccodec_scanlinedecoder.h",
+    "core/fxcodec/codec/codec_int.h",
+    "core/fxcodec/codec/fx_codec.cpp",
+    "core/fxcodec/codec/fx_codec_fax.cpp",
+    "core/fxcodec/codec/fx_codec_flate.cpp",
+    "core/fxcodec/codec/fx_codec_icc.cpp",
+    "core/fxcodec/codec/fx_codec_jbig.cpp",
+    "core/fxcodec/codec/fx_codec_jpeg.cpp",
+    "core/fxcodec/codec/fx_codec_jpx_opj.cpp",
+    "core/fxcodec/fx_codec.h",
+    "core/fxcodec/fx_codec_def.h",
+    "core/fxcodec/jbig2/JBig2_ArithDecoder.cpp",
+    "core/fxcodec/jbig2/JBig2_ArithDecoder.h",
+    "core/fxcodec/jbig2/JBig2_ArithIntDecoder.cpp",
+    "core/fxcodec/jbig2/JBig2_ArithIntDecoder.h",
+    "core/fxcodec/jbig2/JBig2_BitStream.cpp",
+    "core/fxcodec/jbig2/JBig2_BitStream.h",
+    "core/fxcodec/jbig2/JBig2_Context.cpp",
+    "core/fxcodec/jbig2/JBig2_Context.h",
+    "core/fxcodec/jbig2/JBig2_Define.h",
+    "core/fxcodec/jbig2/JBig2_GrdProc.cpp",
+    "core/fxcodec/jbig2/JBig2_GrdProc.h",
+    "core/fxcodec/jbig2/JBig2_GrrdProc.cpp",
+    "core/fxcodec/jbig2/JBig2_GrrdProc.h",
+    "core/fxcodec/jbig2/JBig2_GsidProc.cpp",
+    "core/fxcodec/jbig2/JBig2_GsidProc.h",
+    "core/fxcodec/jbig2/JBig2_HtrdProc.cpp",
+    "core/fxcodec/jbig2/JBig2_HtrdProc.h",
+    "core/fxcodec/jbig2/JBig2_HuffmanDecoder.cpp",
+    "core/fxcodec/jbig2/JBig2_HuffmanDecoder.h",
+    "core/fxcodec/jbig2/JBig2_HuffmanTable.cpp",
+    "core/fxcodec/jbig2/JBig2_HuffmanTable.h",
+    "core/fxcodec/jbig2/JBig2_HuffmanTable_Standard.cpp",
+    "core/fxcodec/jbig2/JBig2_HuffmanTable_Standard.h",
+    "core/fxcodec/jbig2/JBig2_Image.cpp",
+    "core/fxcodec/jbig2/JBig2_Image.h",
+    "core/fxcodec/jbig2/JBig2_Page.h",
+    "core/fxcodec/jbig2/JBig2_PatternDict.cpp",
+    "core/fxcodec/jbig2/JBig2_PatternDict.h",
+    "core/fxcodec/jbig2/JBig2_PddProc.cpp",
+    "core/fxcodec/jbig2/JBig2_PddProc.h",
+    "core/fxcodec/jbig2/JBig2_SddProc.cpp",
+    "core/fxcodec/jbig2/JBig2_SddProc.h",
+    "core/fxcodec/jbig2/JBig2_Segment.cpp",
+    "core/fxcodec/jbig2/JBig2_Segment.h",
+    "core/fxcodec/jbig2/JBig2_SymbolDict.cpp",
+    "core/fxcodec/jbig2/JBig2_SymbolDict.h",
+    "core/fxcodec/jbig2/JBig2_TrdProc.cpp",
+    "core/fxcodec/jbig2/JBig2_TrdProc.h",
+  ]
+  configs += [ ":pdfium_core_config" ]
+  include_dirs = []
+  deps = [
+    ":fxcrt",
+    "third_party:fx_lcms2",
+    "third_party:fx_libopenjpeg",
+    "third_party:fx_zlib",
+
+    # This is a generic JPEG library dependency.
+    "//third_party:jpeg",
+  ]
+
+  if (pdf_enable_xfa) {
+    sources += [
+      "core/fxcodec/codec/ccodec_bmpmodule.cpp",
+      "core/fxcodec/codec/ccodec_bmpmodule.h",
+      "core/fxcodec/codec/ccodec_gifmodule.cpp",
+      "core/fxcodec/codec/ccodec_gifmodule.h",
+      "core/fxcodec/codec/ccodec_pngmodule.cpp",
+      "core/fxcodec/codec/ccodec_pngmodule.h",
+      "core/fxcodec/codec/ccodec_progressivedecoder.h",
+      "core/fxcodec/codec/ccodec_tiffmodule.cpp",
+      "core/fxcodec/codec/ccodec_tiffmodule.h",
+      "core/fxcodec/codec/fx_codec_progress.cpp",
+      "core/fxcodec/codec/icodec_bmpmodule.h",
+      "core/fxcodec/codec/icodec_gifmodule.h",
+      "core/fxcodec/codec/icodec_pngmodule.h",
+      "core/fxcodec/codec/icodec_tiffmodule.h",
+      "core/fxcodec/lbmp/fx_bmp.cpp",
+      "core/fxcodec/lbmp/fx_bmp.h",
+      "core/fxcodec/lgif/fx_gif.cpp",
+      "core/fxcodec/lgif/fx_gif.h",
+    ]
+    deps += [
+      "third_party:fx_lpng",
+      "third_party:fx_tiff",
+    ]
+  }
+  if (is_posix) {
+    # core/fxcodec/fx_libopenjpeg/src/fx_mct.c does an pointer-to-int
+    # conversion to check that an address is 16-bit aligned (benign).
+    cflags_c = [ "-Wno-pointer-to-int-cast" ]
+  }
+}
+
+config("fxge_warnings") {
+  if (is_clang) {
+    cflags = [
+      # http://code.google.com/p/pdfium/issues/detail?id=188
+      "-Wno-switch",
+    ]
+  }
+}
+
+static_library("fxcrt") {
+  sources = [
+    "core/fxcrt/cfx_maybe_owned.h",
+    "core/fxcrt/cfx_observable.h",
+    "core/fxcrt/cfx_retain_ptr.h",
+    "core/fxcrt/cfx_shared_copy_on_write.h",
+    "core/fxcrt/cfx_string_c_template.h",
+    "core/fxcrt/cfx_string_data_template.h",
+    "core/fxcrt/cfx_string_pool_template.h",
+    "core/fxcrt/cfx_weak_ptr.h",
+    "core/fxcrt/extension.h",
+    "core/fxcrt/fx_basic.h",
+    "core/fxcrt/fx_basic_array.cpp",
+    "core/fxcrt/fx_basic_bstring.cpp",
+    "core/fxcrt/fx_basic_buffer.cpp",
+    "core/fxcrt/fx_basic_coords.cpp",
+    "core/fxcrt/fx_basic_gcc.cpp",
+    "core/fxcrt/fx_basic_memmgr.cpp",
+    "core/fxcrt/fx_basic_utf.cpp",
+    "core/fxcrt/fx_basic_util.cpp",
+    "core/fxcrt/fx_basic_wstring.cpp",
+    "core/fxcrt/fx_bidi.cpp",
+    "core/fxcrt/fx_bidi.h",
+    "core/fxcrt/fx_coordinates.h",
+    "core/fxcrt/fx_ext.h",
+    "core/fxcrt/fx_extension.cpp",
+    "core/fxcrt/fx_memory.h",
+    "core/fxcrt/fx_safe_types.h",
+    "core/fxcrt/fx_stream.h",
+    "core/fxcrt/fx_string.h",
+    "core/fxcrt/fx_system.h",
+    "core/fxcrt/fx_ucd.h",
+    "core/fxcrt/fx_ucddata.cpp",
+    "core/fxcrt/fx_unicode.cpp",
+    "core/fxcrt/fx_xml.h",
+    "core/fxcrt/fx_xml_composer.cpp",
+    "core/fxcrt/fx_xml_parser.cpp",
+    "core/fxcrt/fxcrt_posix.cpp",
+    "core/fxcrt/fxcrt_posix.h",
+    "core/fxcrt/fxcrt_stream.cpp",
+    "core/fxcrt/fxcrt_windows.cpp",
+    "core/fxcrt/fxcrt_windows.h",
+    "core/fxcrt/xml_int.h",
+  ]
+  configs += [ ":pdfium_core_config" ]
+  visibility += [ "third_party:*" ]
+  deps = [
+    "third_party:pdfium_base",
+  ]
+  public_deps = [
+    "third_party:pdfium_base",
+  ]
+
+  if (pdf_enable_xfa) {
+    sources += [
+      "core/fxcrt/fx_arabic.cpp",
+      "core/fxcrt/fx_arabic.h",
+      "core/fxcrt/fx_arb.h",
+    ]
+  }
+}
+
+static_library("fxge") {
+  sources = [
+    "core/fxge/android/cfpf_skiabufferfont.h",
+    "core/fxge/android/cfpf_skiadevicemodule.cpp",
+    "core/fxge/android/cfpf_skiadevicemodule.h",
+    "core/fxge/android/cfpf_skiafilefont.h",
+    "core/fxge/android/cfpf_skiafont.cpp",
+    "core/fxge/android/cfpf_skiafont.h",
+    "core/fxge/android/cfpf_skiafontdescriptor.h",
+    "core/fxge/android/cfpf_skiafontmgr.cpp",
+    "core/fxge/android/cfpf_skiafontmgr.h",
+    "core/fxge/android/cfpf_skiapathfont.h",
+    "core/fxge/android/cfx_androidfontinfo.cpp",
+    "core/fxge/android/cfx_androidfontinfo.h",
+    "core/fxge/android/fx_android_imp.cpp",
+    "core/fxge/cfx_facecache.h",
+    "core/fxge/cfx_fontcache.h",
+    "core/fxge/cfx_fontmapper.h",
+    "core/fxge/cfx_fontmgr.h",
+    "core/fxge/cfx_fxgedevice.h",
+    "core/fxge/cfx_gemodule.h",
+    "core/fxge/cfx_graphstate.h",
+    "core/fxge/cfx_graphstatedata.h",
+    "core/fxge/cfx_pathdata.h",
+    "core/fxge/cfx_renderdevice.h",
+    "core/fxge/cfx_substfont.h",
+    "core/fxge/cfx_unicodeencoding.h",
+    "core/fxge/cfx_windowsdevice.h",
+    "core/fxge/dib/dib_int.h",
+    "core/fxge/dib/fx_dib_composite.cpp",
+    "core/fxge/dib/fx_dib_convert.cpp",
+    "core/fxge/dib/fx_dib_engine.cpp",
+    "core/fxge/dib/fx_dib_main.cpp",
+    "core/fxge/dib/fx_dib_transform.cpp",
+    "core/fxge/fontdata/chromefontdata/FoxitDingbats.cpp",
+    "core/fxge/fontdata/chromefontdata/FoxitFixed.cpp",
+    "core/fxge/fontdata/chromefontdata/FoxitFixedBold.cpp",
+    "core/fxge/fontdata/chromefontdata/FoxitFixedBoldItalic.cpp",
+    "core/fxge/fontdata/chromefontdata/FoxitFixedItalic.cpp",
+    "core/fxge/fontdata/chromefontdata/FoxitSans.cpp",
+    "core/fxge/fontdata/chromefontdata/FoxitSansBold.cpp",
+    "core/fxge/fontdata/chromefontdata/FoxitSansBoldItalic.cpp",
+    "core/fxge/fontdata/chromefontdata/FoxitSansItalic.cpp",
+    "core/fxge/fontdata/chromefontdata/FoxitSansMM.cpp",
+    "core/fxge/fontdata/chromefontdata/FoxitSerif.cpp",
+    "core/fxge/fontdata/chromefontdata/FoxitSerifBold.cpp",
+    "core/fxge/fontdata/chromefontdata/FoxitSerifBoldItalic.cpp",
+    "core/fxge/fontdata/chromefontdata/FoxitSerifItalic.cpp",
+    "core/fxge/fontdata/chromefontdata/FoxitSerifMM.cpp",
+    "core/fxge/fontdata/chromefontdata/FoxitSymbol.cpp",
+    "core/fxge/fontdata/chromefontdata/chromefontdata.h",
+    "core/fxge/freetype/fx_freetype.cpp",
+    "core/fxge/fx_dib.h",
+    "core/fxge/fx_font.h",
+    "core/fxge/fx_freetype.h",
+    "core/fxge/ge/cfx_cliprgn.cpp",
+    "core/fxge/ge/cfx_cliprgn.h",
+    "core/fxge/ge/cfx_facecache.cpp",
+    "core/fxge/ge/cfx_folderfontinfo.cpp",
+    "core/fxge/ge/cfx_folderfontinfo.h",
+    "core/fxge/ge/cfx_font.cpp",
+    "core/fxge/ge/cfx_fontcache.cpp",
+    "core/fxge/ge/cfx_fontmapper.cpp",
+    "core/fxge/ge/cfx_fontmgr.cpp",
+    "core/fxge/ge/cfx_gemodule.cpp",
+    "core/fxge/ge/cfx_graphstate.cpp",
+    "core/fxge/ge/cfx_graphstatedata.cpp",
+    "core/fxge/ge/cfx_pathdata.cpp",
+    "core/fxge/ge/cfx_renderdevice.cpp",
+    "core/fxge/ge/cfx_substfont.cpp",
+    "core/fxge/ge/cfx_unicodeencoding.cpp",
+    "core/fxge/ge/cttfontdesc.cpp",
+    "core/fxge/ge/cttfontdesc.h",
+    "core/fxge/ge/fx_ge_fontmap.cpp",
+    "core/fxge/ge/fx_ge_linux.cpp",
+    "core/fxge/ge/fx_ge_text.cpp",
+    "core/fxge/ge/fx_text_int.h",
+    "core/fxge/ifx_renderdevicedriver.cpp",
+    "core/fxge/ifx_renderdevicedriver.h",
+    "core/fxge/ifx_systemfontinfo.h",
+    "core/fxge/win32/cfx_windowsdib.h",
+  ]
+
+  configs += [
+    ":fxge_warnings",
+    ":pdfium_core_config",
+  ]
+
+  deps = [
+    ":fxcrt",
+  ]
+
+  if (pdf_enable_xfa) {
+    sources += [
+      "core/fxge/cfx_unicodeencodingex.h",
+      "core/fxge/ge/cfx_unicodeencodingex.cpp",
+    ]
+  }
+
+  if (pdf_use_skia || pdf_use_skia_paths) {
+    sources += [ "core/fxge/skia/fx_skia_device.cpp" ]
+    deps += [ "//skia" ]
+  } else {
+    sources += [
+      "core/fxge/agg/fx_agg_driver.cpp",
+      "core/fxge/agg/fx_agg_driver.h",
+    ]
+    deps += [ "third_party:fx_agg" ]
+
+    if (is_mac) {
+      sources += [ "core/fxge/apple/fx_apple_platform.cpp" ]
+    }
+  }
+
+  if (is_win) {
+    sources += [
+      "core/fxge/win32/cfx_psrenderer.cpp",
+      "core/fxge/win32/cfx_psrenderer.h",
+      "core/fxge/win32/cpsoutput.cpp",
+      "core/fxge/win32/cpsoutput.h",
+      "core/fxge/win32/dwrite_int.h",
+      "core/fxge/win32/fx_win32_device.cpp",
+      "core/fxge/win32/fx_win32_dib.cpp",
+      "core/fxge/win32/fx_win32_dwrite.cpp",
+      "core/fxge/win32/fx_win32_gdipext.cpp",
+      "core/fxge/win32/fx_win32_print.cpp",
+      "core/fxge/win32/win32_int.h",
+    ]
+    configs -= [ "//build/config/win:lean_and_mean" ]
+  }
+
+  if (is_mac) {
+    sources += [
+      "core/fxge/apple/apple_int.h",
+      "core/fxge/apple/fx_mac_imp.cpp",
+      "core/fxge/apple/fx_quartz_device.cpp",
+    ]
+  }
+}
+
+static_library("fxedit") {
+  sources = [
+    "fpdfsdk/fxedit/fx_edit.h",
+    "fpdfsdk/fxedit/fxet_ap.cpp",
+    "fpdfsdk/fxedit/fxet_edit.cpp",
+    "fpdfsdk/fxedit/fxet_edit.h",
+    "fpdfsdk/fxedit/fxet_list.cpp",
+    "fpdfsdk/fxedit/fxet_list.h",
+  ]
+  configs += [ ":pdfium_core_config" ]
+  deps = [
+    ":fxcrt",
+  ]
+}
+
+static_library("pdfwindow") {
+  sources = [
+    "fpdfsdk/pdfwindow/PWL_Button.cpp",
+    "fpdfsdk/pdfwindow/PWL_Button.h",
+    "fpdfsdk/pdfwindow/PWL_Caret.cpp",
+    "fpdfsdk/pdfwindow/PWL_Caret.h",
+    "fpdfsdk/pdfwindow/PWL_ComboBox.cpp",
+    "fpdfsdk/pdfwindow/PWL_ComboBox.h",
+    "fpdfsdk/pdfwindow/PWL_Edit.cpp",
+    "fpdfsdk/pdfwindow/PWL_Edit.h",
+    "fpdfsdk/pdfwindow/PWL_EditCtrl.cpp",
+    "fpdfsdk/pdfwindow/PWL_EditCtrl.h",
+    "fpdfsdk/pdfwindow/PWL_FontMap.cpp",
+    "fpdfsdk/pdfwindow/PWL_FontMap.h",
+    "fpdfsdk/pdfwindow/PWL_Icon.cpp",
+    "fpdfsdk/pdfwindow/PWL_Icon.h",
+    "fpdfsdk/pdfwindow/PWL_ListBox.cpp",
+    "fpdfsdk/pdfwindow/PWL_ListBox.h",
+    "fpdfsdk/pdfwindow/PWL_ScrollBar.cpp",
+    "fpdfsdk/pdfwindow/PWL_ScrollBar.h",
+    "fpdfsdk/pdfwindow/PWL_SpecialButton.cpp",
+    "fpdfsdk/pdfwindow/PWL_SpecialButton.h",
+    "fpdfsdk/pdfwindow/PWL_Utils.cpp",
+    "fpdfsdk/pdfwindow/PWL_Utils.h",
+    "fpdfsdk/pdfwindow/PWL_Wnd.cpp",
+    "fpdfsdk/pdfwindow/PWL_Wnd.h",
+    "fpdfsdk/pdfwindow/cpwl_color.cpp",
+    "fpdfsdk/pdfwindow/cpwl_color.h",
+  ]
+  configs += [ ":pdfium_core_config" ]
+  deps = [
+    ":fxcrt",
+  ]
+}
+
+static_library("javascript") {
+  sources = [
+    "fpdfsdk/javascript/ijs_event_context.h",
+    "fpdfsdk/javascript/ijs_runtime.h",
+  ]
+  configs += [ ":pdfium_core_config" ]
+  deps = [
+    ":fxcrt",
+  ]
+
+  if (pdf_enable_v8) {
+    sources += [
+      "fpdfsdk/javascript/Annot.cpp",
+      "fpdfsdk/javascript/Annot.h",
+      "fpdfsdk/javascript/Consts.cpp",
+      "fpdfsdk/javascript/Consts.h",
+      "fpdfsdk/javascript/Document.cpp",
+      "fpdfsdk/javascript/Document.h",
+      "fpdfsdk/javascript/Field.cpp",
+      "fpdfsdk/javascript/Field.h",
+      "fpdfsdk/javascript/Icon.cpp",
+      "fpdfsdk/javascript/Icon.h",
+      "fpdfsdk/javascript/JS_Define.h",
+      "fpdfsdk/javascript/JS_EventHandler.cpp",
+      "fpdfsdk/javascript/JS_EventHandler.h",
+      "fpdfsdk/javascript/JS_GlobalData.cpp",
+      "fpdfsdk/javascript/JS_GlobalData.h",
+      "fpdfsdk/javascript/JS_KeyValue.cpp",
+      "fpdfsdk/javascript/JS_KeyValue.h",
+      "fpdfsdk/javascript/JS_Object.cpp",
+      "fpdfsdk/javascript/JS_Object.h",
+      "fpdfsdk/javascript/JS_Value.cpp",
+      "fpdfsdk/javascript/JS_Value.h",
+      "fpdfsdk/javascript/PublicMethods.cpp",
+      "fpdfsdk/javascript/PublicMethods.h",
+      "fpdfsdk/javascript/app.cpp",
+      "fpdfsdk/javascript/app.h",
+      "fpdfsdk/javascript/cjs_event_context.cpp",
+      "fpdfsdk/javascript/cjs_event_context.h",
+      "fpdfsdk/javascript/cjs_runtime.cpp",
+      "fpdfsdk/javascript/cjs_runtime.h",
+      "fpdfsdk/javascript/color.cpp",
+      "fpdfsdk/javascript/color.h",
+      "fpdfsdk/javascript/console.cpp",
+      "fpdfsdk/javascript/console.h",
+      "fpdfsdk/javascript/event.cpp",
+      "fpdfsdk/javascript/event.h",
+      "fpdfsdk/javascript/global.cpp",
+      "fpdfsdk/javascript/global.h",
+      "fpdfsdk/javascript/report.cpp",
+      "fpdfsdk/javascript/report.h",
+      "fpdfsdk/javascript/resource.cpp",
+      "fpdfsdk/javascript/resource.h",
+      "fpdfsdk/javascript/util.cpp",
+      "fpdfsdk/javascript/util.h",
+    ]
+    deps += [ ":fxjs" ]
+    configs += [ "//v8:external_startup_data" ]
+  } else {
+    sources += [ "fpdfsdk/javascript/JS_Runtime_Stub.cpp" ]
+  }
+}
+
+static_library("formfiller") {
+  sources = [
+    "fpdfsdk/formfiller/cba_fontmap.cpp",
+    "fpdfsdk/formfiller/cba_fontmap.h",
+    "fpdfsdk/formfiller/cffl_checkbox.cpp",
+    "fpdfsdk/formfiller/cffl_checkbox.h",
+    "fpdfsdk/formfiller/cffl_combobox.cpp",
+    "fpdfsdk/formfiller/cffl_combobox.h",
+    "fpdfsdk/formfiller/cffl_formfiller.cpp",
+    "fpdfsdk/formfiller/cffl_formfiller.h",
+    "fpdfsdk/formfiller/cffl_interactiveformfiller.cpp",
+    "fpdfsdk/formfiller/cffl_interactiveformfiller.h",
+    "fpdfsdk/formfiller/cffl_listbox.cpp",
+    "fpdfsdk/formfiller/cffl_listbox.h",
+    "fpdfsdk/formfiller/cffl_pushbutton.cpp",
+    "fpdfsdk/formfiller/cffl_pushbutton.h",
+    "fpdfsdk/formfiller/cffl_radiobutton.cpp",
+    "fpdfsdk/formfiller/cffl_radiobutton.h",
+    "fpdfsdk/formfiller/cffl_textfield.cpp",
+    "fpdfsdk/formfiller/cffl_textfield.h",
+  ]
+  configs += [ ":pdfium_core_config" ]
+  deps = [
+    ":fxcrt",
+  ]
+}
+
+if (pdf_enable_v8) {
+  static_library("fxjs") {
+    sources = [
+      "fxjs/fxjs_v8.cpp",
+      "fxjs/fxjs_v8.h",
+    ]
+    configs += [ ":pdfium_core_config" ]
+    deps = [
+      ":fxcrt",
+      "//v8",
+      "//v8:v8_libplatform",
+    ]
+    include_dirs = [
+      "//v8",
+      "//v8/include",
+    ]
+    public_deps = [
+      "//v8",
+    ]
+
+    if (pdf_enable_xfa) {
+      sources += [
+        "fxjs/cfxjse_arguments.cpp",
+        "fxjs/cfxjse_arguments.h",
+        "fxjs/cfxjse_class.cpp",
+        "fxjs/cfxjse_class.h",
+        "fxjs/cfxjse_context.cpp",
+        "fxjs/cfxjse_context.h",
+        "fxjs/cfxjse_isolatetracker.cpp",
+        "fxjs/cfxjse_isolatetracker.h",
+        "fxjs/cfxjse_runtimedata.cpp",
+        "fxjs/cfxjse_runtimedata.h",
+        "fxjs/cfxjse_value.cpp",
+        "fxjs/cfxjse_value.h",
+        "fxjs/fxjse.h",
+      ]
+    }
+  }
+}
+
+if (pdf_enable_xfa) {
+  static_library("fpdfxfa") {
+    sources = [
+      "fpdfsdk/fpdfxfa/cpdfxfa_context.cpp",
+      "fpdfsdk/fpdfxfa/cpdfxfa_context.h",
+      "fpdfsdk/fpdfxfa/cpdfxfa_docenvironment.cpp",
+      "fpdfsdk/fpdfxfa/cpdfxfa_docenvironment.h",
+      "fpdfsdk/fpdfxfa/cpdfxfa_page.cpp",
+      "fpdfsdk/fpdfxfa/cpdfxfa_page.h",
+      "fpdfsdk/fpdfxfa/cxfa_fwladaptertimermgr.cpp",
+      "fpdfsdk/fpdfxfa/cxfa_fwladaptertimermgr.h",
+    ]
+    deps = [
+      ":fxcrt",
+      ":fxjs",
+      ":xfa",
+    ]
+    configs += [ ":pdfium_core_config" ]
+  }
+
+  static_library("xfa") {
+    sources = [
+      "xfa/fde/cfde_path.cpp",
+      "xfa/fde/cfde_path.h",
+      "xfa/fde/cfde_txtedtbuf.cpp",
+      "xfa/fde/cfde_txtedtbuf.h",
+      "xfa/fde/cfde_txtedtdorecord_deleterange.cpp",
+      "xfa/fde/cfde_txtedtdorecord_deleterange.h",
+      "xfa/fde/cfde_txtedtdorecord_insert.cpp",
+      "xfa/fde/cfde_txtedtdorecord_insert.h",
+      "xfa/fde/cfde_txtedtengine.cpp",
+      "xfa/fde/cfde_txtedtengine.h",
+      "xfa/fde/cfde_txtedtpage.cpp",
+      "xfa/fde/cfde_txtedtpage.h",
+      "xfa/fde/cfde_txtedtparag.cpp",
+      "xfa/fde/cfde_txtedtparag.h",
+      "xfa/fde/cfde_txtedttextset.cpp",
+      "xfa/fde/cfde_txtedttextset.h",
+      "xfa/fde/cfx_chariter.cpp",
+      "xfa/fde/cfx_chariter.h",
+      "xfa/fde/cfx_wordbreak.cpp",
+      "xfa/fde/cfx_wordbreak.h",
+      "xfa/fde/css/cfde_csscolorvalue.cpp",
+      "xfa/fde/css/cfde_csscolorvalue.h",
+      "xfa/fde/css/cfde_csscomputedstyle.cpp",
+      "xfa/fde/css/cfde_csscomputedstyle.h",
+      "xfa/fde/css/cfde_csscustomproperty.cpp",
+      "xfa/fde/css/cfde_csscustomproperty.h",
+      "xfa/fde/css/cfde_cssdeclaration.cpp",
+      "xfa/fde/css/cfde_cssdeclaration.h",
+      "xfa/fde/css/cfde_cssenumvalue.cpp",
+      "xfa/fde/css/cfde_cssenumvalue.h",
+      "xfa/fde/css/cfde_cssnumbervalue.cpp",
+      "xfa/fde/css/cfde_cssnumbervalue.h",
+      "xfa/fde/css/cfde_csspropertyholder.cpp",
+      "xfa/fde/css/cfde_csspropertyholder.h",
+      "xfa/fde/css/cfde_cssrulecollection.cpp",
+      "xfa/fde/css/cfde_cssrulecollection.h",
+      "xfa/fde/css/cfde_cssselector.cpp",
+      "xfa/fde/css/cfde_cssselector.h",
+      "xfa/fde/css/cfde_cssstringvalue.cpp",
+      "xfa/fde/css/cfde_cssstringvalue.h",
+      "xfa/fde/css/cfde_cssstylerule.cpp",
+      "xfa/fde/css/cfde_cssstylerule.h",
+      "xfa/fde/css/cfde_cssstyleselector.cpp",
+      "xfa/fde/css/cfde_cssstyleselector.h",
+      "xfa/fde/css/cfde_cssstylesheet.cpp",
+      "xfa/fde/css/cfde_cssstylesheet.h",
+      "xfa/fde/css/cfde_csssyntaxparser.cpp",
+      "xfa/fde/css/cfde_csssyntaxparser.h",
+      "xfa/fde/css/cfde_csstextbuf.cpp",
+      "xfa/fde/css/cfde_csstextbuf.h",
+      "xfa/fde/css/cfde_cssvalue.cpp",
+      "xfa/fde/css/cfde_cssvalue.h",
+      "xfa/fde/css/cfde_cssvaluelist.cpp",
+      "xfa/fde/css/cfde_cssvaluelist.h",
+      "xfa/fde/css/cfde_cssvaluelistparser.cpp",
+      "xfa/fde/css/cfde_cssvaluelistparser.h",
+      "xfa/fde/css/fde_css.h",
+      "xfa/fde/css/fde_cssdatatable.cpp",
+      "xfa/fde/css/fde_cssdatatable.h",
+      "xfa/fde/fde_gedevice.cpp",
+      "xfa/fde/fde_iterator.cpp",
+      "xfa/fde/fde_iterator.h",
+      "xfa/fde/fde_object.h",
+      "xfa/fde/fde_render.cpp",
+      "xfa/fde/fde_render.h",
+      "xfa/fde/ifde_txtedtdorecord.h",
+      "xfa/fde/ifde_txtedtengine.h",
+      "xfa/fde/ifde_txtedtpage.h",
+      "xfa/fde/ifx_chariter.h",
+      "xfa/fde/tto/fde_textout.cpp",
+      "xfa/fde/tto/fde_textout.h",
+      "xfa/fde/xml/cfx_saxreader.cpp",
+      "xfa/fde/xml/cfx_saxreader.h",
+      "xfa/fde/xml/fde_xml.h",
+      "xfa/fde/xml/fde_xml_imp.cpp",
+      "xfa/fde/xml/fde_xml_imp.h",
+      "xfa/fgas/crt/fgas_codepage.cpp",
+      "xfa/fgas/crt/fgas_codepage.h",
+      "xfa/fgas/crt/fgas_language.h",
+      "xfa/fgas/crt/fgas_stream.cpp",
+      "xfa/fgas/crt/fgas_stream.h",
+      "xfa/fgas/crt/fgas_utils.cpp",
+      "xfa/fgas/crt/fgas_utils.h",
+      "xfa/fgas/font/cfgas_fontmgr.cpp",
+      "xfa/fgas/font/cfgas_fontmgr.h",
+      "xfa/fgas/font/cfgas_gefont.cpp",
+      "xfa/fgas/font/cfgas_gefont.h",
+      "xfa/fgas/font/fgas_fontutils.cpp",
+      "xfa/fgas/font/fgas_fontutils.h",
+      "xfa/fgas/layout/fgas_linebreak.cpp",
+      "xfa/fgas/layout/fgas_linebreak.h",
+      "xfa/fgas/layout/fgas_rtfbreak.cpp",
+      "xfa/fgas/layout/fgas_rtfbreak.h",
+      "xfa/fgas/layout/fgas_textbreak.cpp",
+      "xfa/fgas/layout/fgas_textbreak.h",
+      "xfa/fgas/localization/fgas_datetime.cpp",
+      "xfa/fgas/localization/fgas_datetime.h",
+      "xfa/fgas/localization/fgas_locale.cpp",
+      "xfa/fgas/localization/fgas_locale.h",
+      "xfa/fgas/localization/fgas_localeimp.h",
+      "xfa/fwl/cfwl_app.cpp",
+      "xfa/fwl/cfwl_app.h",
+      "xfa/fwl/cfwl_barcode.cpp",
+      "xfa/fwl/cfwl_barcode.h",
+      "xfa/fwl/cfwl_caret.cpp",
+      "xfa/fwl/cfwl_caret.h",
+      "xfa/fwl/cfwl_checkbox.cpp",
+      "xfa/fwl/cfwl_checkbox.h",
+      "xfa/fwl/cfwl_combobox.cpp",
+      "xfa/fwl/cfwl_combobox.h",
+      "xfa/fwl/cfwl_comboboxproxy.cpp",
+      "xfa/fwl/cfwl_comboboxproxy.h",
+      "xfa/fwl/cfwl_comboedit.cpp",
+      "xfa/fwl/cfwl_comboedit.h",
+      "xfa/fwl/cfwl_combolist.cpp",
+      "xfa/fwl/cfwl_combolist.h",
+      "xfa/fwl/cfwl_datetimeedit.cpp",
+      "xfa/fwl/cfwl_datetimeedit.h",
+      "xfa/fwl/cfwl_datetimepicker.cpp",
+      "xfa/fwl/cfwl_datetimepicker.h",
+      "xfa/fwl/cfwl_edit.cpp",
+      "xfa/fwl/cfwl_edit.h",
+      "xfa/fwl/cfwl_event.cpp",
+      "xfa/fwl/cfwl_event.h",
+      "xfa/fwl/cfwl_eventcheckword.cpp",
+      "xfa/fwl/cfwl_eventcheckword.h",
+      "xfa/fwl/cfwl_eventmouse.cpp",
+      "xfa/fwl/cfwl_eventmouse.h",
+      "xfa/fwl/cfwl_eventscroll.cpp",
+      "xfa/fwl/cfwl_eventscroll.h",
+      "xfa/fwl/cfwl_eventselectchanged.cpp",
+      "xfa/fwl/cfwl_eventselectchanged.h",
+      "xfa/fwl/cfwl_eventtarget.cpp",
+      "xfa/fwl/cfwl_eventtarget.h",
+      "xfa/fwl/cfwl_eventtextchanged.cpp",
+      "xfa/fwl/cfwl_eventtextchanged.h",
+      "xfa/fwl/cfwl_eventvalidate.cpp",
+      "xfa/fwl/cfwl_eventvalidate.h",
+      "xfa/fwl/cfwl_form.cpp",
+      "xfa/fwl/cfwl_form.h",
+      "xfa/fwl/cfwl_formproxy.cpp",
+      "xfa/fwl/cfwl_formproxy.h",
+      "xfa/fwl/cfwl_listbox.cpp",
+      "xfa/fwl/cfwl_listbox.h",
+      "xfa/fwl/cfwl_listitem.cpp",
+      "xfa/fwl/cfwl_listitem.h",
+      "xfa/fwl/cfwl_message.cpp",
+      "xfa/fwl/cfwl_message.h",
+      "xfa/fwl/cfwl_messagekey.cpp",
+      "xfa/fwl/cfwl_messagekey.h",
+      "xfa/fwl/cfwl_messagekillfocus.cpp",
+      "xfa/fwl/cfwl_messagekillfocus.h",
+      "xfa/fwl/cfwl_messagemouse.cpp",
+      "xfa/fwl/cfwl_messagemouse.h",
+      "xfa/fwl/cfwl_messagemousewheel.cpp",
+      "xfa/fwl/cfwl_messagemousewheel.h",
+      "xfa/fwl/cfwl_messagesetfocus.cpp",
+      "xfa/fwl/cfwl_messagesetfocus.h",
+      "xfa/fwl/cfwl_monthcalendar.cpp",
+      "xfa/fwl/cfwl_monthcalendar.h",
+      "xfa/fwl/cfwl_notedriver.cpp",
+      "xfa/fwl/cfwl_notedriver.h",
+      "xfa/fwl/cfwl_noteloop.cpp",
+      "xfa/fwl/cfwl_noteloop.h",
+      "xfa/fwl/cfwl_picturebox.cpp",
+      "xfa/fwl/cfwl_picturebox.h",
+      "xfa/fwl/cfwl_pushbutton.cpp",
+      "xfa/fwl/cfwl_pushbutton.h",
+      "xfa/fwl/cfwl_scrollbar.cpp",
+      "xfa/fwl/cfwl_scrollbar.h",
+      "xfa/fwl/cfwl_spinbutton.cpp",
+      "xfa/fwl/cfwl_spinbutton.h",
+      "xfa/fwl/cfwl_themebackground.h",
+      "xfa/fwl/cfwl_themepart.cpp",
+      "xfa/fwl/cfwl_themepart.h",
+      "xfa/fwl/cfwl_themetext.h",
+      "xfa/fwl/cfwl_timer.cpp",
+      "xfa/fwl/cfwl_timer.h",
+      "xfa/fwl/cfwl_timerinfo.cpp",
+      "xfa/fwl/cfwl_timerinfo.h",
+      "xfa/fwl/cfwl_widget.cpp",
+      "xfa/fwl/cfwl_widget.h",
+      "xfa/fwl/cfwl_widgetmgr.cpp",
+      "xfa/fwl/cfwl_widgetmgr.h",
+      "xfa/fwl/cfwl_widgetproperties.cpp",
+      "xfa/fwl/cfwl_widgetproperties.h",
+      "xfa/fwl/cfx_barcode.cpp",
+      "xfa/fwl/cfx_barcode.h",
+      "xfa/fwl/fwl_widgetdef.h",
+      "xfa/fwl/fwl_widgethit.h",
+      "xfa/fwl/ifwl_adaptertimermgr.h",
+      "xfa/fwl/ifwl_themeprovider.h",
+      "xfa/fwl/ifwl_widgetdelegate.h",
+      "xfa/fwl/ifwl_widgetmgrdelegate.h",
+      "xfa/fwl/theme/cfwl_barcodetp.cpp",
+      "xfa/fwl/theme/cfwl_barcodetp.h",
+      "xfa/fwl/theme/cfwl_carettp.cpp",
+      "xfa/fwl/theme/cfwl_carettp.h",
+      "xfa/fwl/theme/cfwl_checkboxtp.cpp",
+      "xfa/fwl/theme/cfwl_checkboxtp.h",
+      "xfa/fwl/theme/cfwl_comboboxtp.cpp",
+      "xfa/fwl/theme/cfwl_comboboxtp.h",
+      "xfa/fwl/theme/cfwl_datetimepickertp.cpp",
+      "xfa/fwl/theme/cfwl_datetimepickertp.h",
+      "xfa/fwl/theme/cfwl_edittp.cpp",
+      "xfa/fwl/theme/cfwl_edittp.h",
+      "xfa/fwl/theme/cfwl_listboxtp.cpp",
+      "xfa/fwl/theme/cfwl_listboxtp.h",
+      "xfa/fwl/theme/cfwl_monthcalendartp.cpp",
+      "xfa/fwl/theme/cfwl_monthcalendartp.h",
+      "xfa/fwl/theme/cfwl_pictureboxtp.cpp",
+      "xfa/fwl/theme/cfwl_pictureboxtp.h",
+      "xfa/fwl/theme/cfwl_pushbuttontp.cpp",
+      "xfa/fwl/theme/cfwl_pushbuttontp.h",
+      "xfa/fwl/theme/cfwl_scrollbartp.cpp",
+      "xfa/fwl/theme/cfwl_scrollbartp.h",
+      "xfa/fwl/theme/cfwl_utils.h",
+      "xfa/fwl/theme/cfwl_widgettp.cpp",
+      "xfa/fwl/theme/cfwl_widgettp.h",
+      "xfa/fxbarcode/BC_Dimension.cpp",
+      "xfa/fxbarcode/BC_Dimension.h",
+      "xfa/fxbarcode/BC_Library.cpp",
+      "xfa/fxbarcode/BC_Library.h",
+      "xfa/fxbarcode/BC_TwoDimWriter.cpp",
+      "xfa/fxbarcode/BC_TwoDimWriter.h",
+      "xfa/fxbarcode/BC_UtilCodingConvert.cpp",
+      "xfa/fxbarcode/BC_UtilCodingConvert.h",
+      "xfa/fxbarcode/BC_Utils.cpp",
+      "xfa/fxbarcode/BC_Writer.cpp",
+      "xfa/fxbarcode/BC_Writer.h",
+      "xfa/fxbarcode/cbc_codabar.cpp",
+      "xfa/fxbarcode/cbc_codabar.h",
+      "xfa/fxbarcode/cbc_code128.cpp",
+      "xfa/fxbarcode/cbc_code128.h",
+      "xfa/fxbarcode/cbc_code39.cpp",
+      "xfa/fxbarcode/cbc_code39.h",
+      "xfa/fxbarcode/cbc_codebase.cpp",
+      "xfa/fxbarcode/cbc_codebase.h",
+      "xfa/fxbarcode/cbc_datamatrix.cpp",
+      "xfa/fxbarcode/cbc_datamatrix.h",
+      "xfa/fxbarcode/cbc_ean13.cpp",
+      "xfa/fxbarcode/cbc_ean13.h",
+      "xfa/fxbarcode/cbc_ean8.cpp",
+      "xfa/fxbarcode/cbc_ean8.h",
+      "xfa/fxbarcode/cbc_onecode.cpp",
+      "xfa/fxbarcode/cbc_onecode.h",
+      "xfa/fxbarcode/cbc_pdf417i.cpp",
+      "xfa/fxbarcode/cbc_pdf417i.h",
+      "xfa/fxbarcode/cbc_qrcode.cpp",
+      "xfa/fxbarcode/cbc_qrcode.h",
+      "xfa/fxbarcode/cbc_upca.cpp",
+      "xfa/fxbarcode/cbc_upca.h",
+      "xfa/fxbarcode/common/BC_CommonBitArray.cpp",
+      "xfa/fxbarcode/common/BC_CommonBitArray.h",
+      "xfa/fxbarcode/common/BC_CommonBitMatrix.cpp",
+      "xfa/fxbarcode/common/BC_CommonBitMatrix.h",
+      "xfa/fxbarcode/common/BC_CommonByteArray.cpp",
+      "xfa/fxbarcode/common/BC_CommonByteArray.h",
+      "xfa/fxbarcode/common/BC_CommonByteMatrix.cpp",
+      "xfa/fxbarcode/common/BC_CommonByteMatrix.h",
+      "xfa/fxbarcode/common/reedsolomon/BC_ReedSolomon.cpp",
+      "xfa/fxbarcode/common/reedsolomon/BC_ReedSolomon.h",
+      "xfa/fxbarcode/common/reedsolomon/BC_ReedSolomonGF256.cpp",
+      "xfa/fxbarcode/common/reedsolomon/BC_ReedSolomonGF256.h",
+      "xfa/fxbarcode/common/reedsolomon/BC_ReedSolomonGF256Poly.cpp",
+      "xfa/fxbarcode/common/reedsolomon/BC_ReedSolomonGF256Poly.h",
+      "xfa/fxbarcode/datamatrix/BC_ASCIIEncoder.cpp",
+      "xfa/fxbarcode/datamatrix/BC_ASCIIEncoder.h",
+      "xfa/fxbarcode/datamatrix/BC_Base256Encoder.cpp",
+      "xfa/fxbarcode/datamatrix/BC_Base256Encoder.h",
+      "xfa/fxbarcode/datamatrix/BC_C40Encoder.cpp",
+      "xfa/fxbarcode/datamatrix/BC_C40Encoder.h",
+      "xfa/fxbarcode/datamatrix/BC_DataMatrixSymbolInfo144.cpp",
+      "xfa/fxbarcode/datamatrix/BC_DataMatrixSymbolInfo144.h",
+      "xfa/fxbarcode/datamatrix/BC_DataMatrixWriter.cpp",
+      "xfa/fxbarcode/datamatrix/BC_DataMatrixWriter.h",
+      "xfa/fxbarcode/datamatrix/BC_DefaultPlacement.cpp",
+      "xfa/fxbarcode/datamatrix/BC_DefaultPlacement.h",
+      "xfa/fxbarcode/datamatrix/BC_EdifactEncoder.cpp",
+      "xfa/fxbarcode/datamatrix/BC_EdifactEncoder.h",
+      "xfa/fxbarcode/datamatrix/BC_Encoder.cpp",
+      "xfa/fxbarcode/datamatrix/BC_Encoder.h",
+      "xfa/fxbarcode/datamatrix/BC_EncoderContext.cpp",
+      "xfa/fxbarcode/datamatrix/BC_EncoderContext.h",
+      "xfa/fxbarcode/datamatrix/BC_ErrorCorrection.cpp",
+      "xfa/fxbarcode/datamatrix/BC_ErrorCorrection.h",
+      "xfa/fxbarcode/datamatrix/BC_HighLevelEncoder.cpp",
+      "xfa/fxbarcode/datamatrix/BC_HighLevelEncoder.h",
+      "xfa/fxbarcode/datamatrix/BC_SymbolInfo.cpp",
+      "xfa/fxbarcode/datamatrix/BC_SymbolInfo.h",
+      "xfa/fxbarcode/datamatrix/BC_SymbolShapeHint.cpp",
+      "xfa/fxbarcode/datamatrix/BC_SymbolShapeHint.h",
+      "xfa/fxbarcode/datamatrix/BC_TextEncoder.cpp",
+      "xfa/fxbarcode/datamatrix/BC_TextEncoder.h",
+      "xfa/fxbarcode/datamatrix/BC_X12Encoder.cpp",
+      "xfa/fxbarcode/datamatrix/BC_X12Encoder.h",
+      "xfa/fxbarcode/oned/BC_OneDimWriter.cpp",
+      "xfa/fxbarcode/oned/BC_OneDimWriter.h",
+      "xfa/fxbarcode/oned/BC_OnedCodaBarWriter.cpp",
+      "xfa/fxbarcode/oned/BC_OnedCodaBarWriter.h",
+      "xfa/fxbarcode/oned/BC_OnedCode128Writer.cpp",
+      "xfa/fxbarcode/oned/BC_OnedCode128Writer.h",
+      "xfa/fxbarcode/oned/BC_OnedCode39Writer.cpp",
+      "xfa/fxbarcode/oned/BC_OnedCode39Writer.h",
+      "xfa/fxbarcode/oned/BC_OnedEAN13Writer.cpp",
+      "xfa/fxbarcode/oned/BC_OnedEAN13Writer.h",
+      "xfa/fxbarcode/oned/BC_OnedEAN8Writer.cpp",
+      "xfa/fxbarcode/oned/BC_OnedEAN8Writer.h",
+      "xfa/fxbarcode/oned/BC_OnedUPCAWriter.cpp",
+      "xfa/fxbarcode/oned/BC_OnedUPCAWriter.h",
+      "xfa/fxbarcode/pdf417/BC_PDF417.cpp",
+      "xfa/fxbarcode/pdf417/BC_PDF417.h",
+      "xfa/fxbarcode/pdf417/BC_PDF417BarcodeMatrix.cpp",
+      "xfa/fxbarcode/pdf417/BC_PDF417BarcodeMatrix.h",
+      "xfa/fxbarcode/pdf417/BC_PDF417BarcodeRow.cpp",
+      "xfa/fxbarcode/pdf417/BC_PDF417BarcodeRow.h",
+      "xfa/fxbarcode/pdf417/BC_PDF417Compaction.cpp",
+      "xfa/fxbarcode/pdf417/BC_PDF417Compaction.h",
+      "xfa/fxbarcode/pdf417/BC_PDF417ErrorCorrection.cpp",
+      "xfa/fxbarcode/pdf417/BC_PDF417ErrorCorrection.h",
+      "xfa/fxbarcode/pdf417/BC_PDF417HighLevelEncoder.cpp",
+      "xfa/fxbarcode/pdf417/BC_PDF417HighLevelEncoder.h",
+      "xfa/fxbarcode/pdf417/BC_PDF417Writer.cpp",
+      "xfa/fxbarcode/pdf417/BC_PDF417Writer.h",
+      "xfa/fxbarcode/qrcode/BC_QRCodeWriter.cpp",
+      "xfa/fxbarcode/qrcode/BC_QRCodeWriter.h",
+      "xfa/fxbarcode/qrcode/BC_QRCoder.cpp",
+      "xfa/fxbarcode/qrcode/BC_QRCoder.h",
+      "xfa/fxbarcode/qrcode/BC_QRCoderBitVector.cpp",
+      "xfa/fxbarcode/qrcode/BC_QRCoderBitVector.h",
+      "xfa/fxbarcode/qrcode/BC_QRCoderBlockPair.cpp",
+      "xfa/fxbarcode/qrcode/BC_QRCoderBlockPair.h",
+      "xfa/fxbarcode/qrcode/BC_QRCoderECB.cpp",
+      "xfa/fxbarcode/qrcode/BC_QRCoderECB.h",
+      "xfa/fxbarcode/qrcode/BC_QRCoderECBlocks.cpp",
+      "xfa/fxbarcode/qrcode/BC_QRCoderECBlocks.h",
+      "xfa/fxbarcode/qrcode/BC_QRCoderEncoder.cpp",
+      "xfa/fxbarcode/qrcode/BC_QRCoderEncoder.h",
+      "xfa/fxbarcode/qrcode/BC_QRCoderErrorCorrectionLevel.cpp",
+      "xfa/fxbarcode/qrcode/BC_QRCoderErrorCorrectionLevel.h",
+      "xfa/fxbarcode/qrcode/BC_QRCoderMaskUtil.cpp",
+      "xfa/fxbarcode/qrcode/BC_QRCoderMaskUtil.h",
+      "xfa/fxbarcode/qrcode/BC_QRCoderMatrixUtil.cpp",
+      "xfa/fxbarcode/qrcode/BC_QRCoderMatrixUtil.h",
+      "xfa/fxbarcode/qrcode/BC_QRCoderMode.cpp",
+      "xfa/fxbarcode/qrcode/BC_QRCoderMode.h",
+      "xfa/fxbarcode/qrcode/BC_QRCoderVersion.cpp",
+      "xfa/fxbarcode/qrcode/BC_QRCoderVersion.h",
+      "xfa/fxbarcode/utils.h",
+      "xfa/fxfa/app/cxfa_csstagprovider.cpp",
+      "xfa/fxfa/app/cxfa_csstagprovider.h",
+      "xfa/fxfa/app/cxfa_eventparam.cpp",
+      "xfa/fxfa/app/cxfa_linkuserdata.cpp",
+      "xfa/fxfa/app/cxfa_linkuserdata.h",
+      "xfa/fxfa/app/cxfa_loadercontext.cpp",
+      "xfa/fxfa/app/cxfa_loadercontext.h",
+      "xfa/fxfa/app/cxfa_pieceline.cpp",
+      "xfa/fxfa/app/cxfa_pieceline.h",
+      "xfa/fxfa/app/cxfa_textlayout.cpp",
+      "xfa/fxfa/app/cxfa_textlayout.h",
+      "xfa/fxfa/app/cxfa_textparsecontext.cpp",
+      "xfa/fxfa/app/cxfa_textparsecontext.h",
+      "xfa/fxfa/app/cxfa_textparser.cpp",
+      "xfa/fxfa/app/cxfa_textparser.h",
+      "xfa/fxfa/app/cxfa_texttabstopscontext.cpp",
+      "xfa/fxfa/app/cxfa_texttabstopscontext.h",
+      "xfa/fxfa/app/cxfa_textuserdata.cpp",
+      "xfa/fxfa/app/cxfa_textuserdata.h",
+      "xfa/fxfa/app/xfa_checksum.cpp",
+      "xfa/fxfa/app/xfa_ffapp.cpp",
+      "xfa/fxfa/app/xfa_ffbarcode.cpp",
+      "xfa/fxfa/app/xfa_ffbarcode.h",
+      "xfa/fxfa/app/xfa_ffcheckbutton.cpp",
+      "xfa/fxfa/app/xfa_ffcheckbutton.h",
+      "xfa/fxfa/app/xfa_ffchoicelist.cpp",
+      "xfa/fxfa/app/xfa_ffchoicelist.h",
+      "xfa/fxfa/app/xfa_ffdoc.cpp",
+      "xfa/fxfa/app/xfa_ffdochandler.cpp",
+      "xfa/fxfa/app/xfa_ffdocview.cpp",
+      "xfa/fxfa/app/xfa_ffdraw.cpp",
+      "xfa/fxfa/app/xfa_ffdraw.h",
+      "xfa/fxfa/app/xfa_ffexclgroup.cpp",
+      "xfa/fxfa/app/xfa_ffexclgroup.h",
+      "xfa/fxfa/app/xfa_fffield.cpp",
+      "xfa/fxfa/app/xfa_fffield.h",
+      "xfa/fxfa/app/xfa_ffimage.cpp",
+      "xfa/fxfa/app/xfa_ffimage.h",
+      "xfa/fxfa/app/xfa_ffimageedit.cpp",
+      "xfa/fxfa/app/xfa_ffimageedit.h",
+      "xfa/fxfa/app/xfa_ffnotify.cpp",
+      "xfa/fxfa/app/xfa_ffnotify.h",
+      "xfa/fxfa/app/xfa_ffpageview.cpp",
+      "xfa/fxfa/app/xfa_ffpath.cpp",
+      "xfa/fxfa/app/xfa_ffpath.h",
+      "xfa/fxfa/app/xfa_ffpushbutton.cpp",
+      "xfa/fxfa/app/xfa_ffpushbutton.h",
+      "xfa/fxfa/app/xfa_ffsignature.cpp",
+      "xfa/fxfa/app/xfa_ffsignature.h",
+      "xfa/fxfa/app/xfa_ffsubform.cpp",
+      "xfa/fxfa/app/xfa_ffsubform.h",
+      "xfa/fxfa/app/xfa_fftext.cpp",
+      "xfa/fxfa/app/xfa_fftext.h",
+      "xfa/fxfa/app/xfa_fftextedit.cpp",
+      "xfa/fxfa/app/xfa_fftextedit.h",
+      "xfa/fxfa/app/xfa_ffwidget.cpp",
+      "xfa/fxfa/app/xfa_ffwidgetacc.cpp",
+      "xfa/fxfa/app/xfa_ffwidgetacc.h",
+      "xfa/fxfa/app/xfa_ffwidgethandler.cpp",
+      "xfa/fxfa/app/xfa_fontmgr.cpp",
+      "xfa/fxfa/app/xfa_fwladapter.cpp",
+      "xfa/fxfa/app/xfa_fwladapter.h",
+      "xfa/fxfa/app/xfa_fwltheme.cpp",
+      "xfa/fxfa/app/xfa_fwltheme.h",
+      "xfa/fxfa/app/xfa_rendercontext.cpp",
+      "xfa/fxfa/app/xfa_textpiece.cpp",
+      "xfa/fxfa/app/xfa_textpiece.h",
+      "xfa/fxfa/cxfa_eventparam.h",
+      "xfa/fxfa/fm2js/xfa_error.cpp",
+      "xfa/fxfa/fm2js/xfa_error.h",
+      "xfa/fxfa/fm2js/xfa_expression.cpp",
+      "xfa/fxfa/fm2js/xfa_expression.h",
+      "xfa/fxfa/fm2js/xfa_fm2jscontext.cpp",
+      "xfa/fxfa/fm2js/xfa_fm2jscontext.h",
+      "xfa/fxfa/fm2js/xfa_fmparse.cpp",
+      "xfa/fxfa/fm2js/xfa_fmparse.h",
+      "xfa/fxfa/fm2js/xfa_lexer.cpp",
+      "xfa/fxfa/fm2js/xfa_lexer.h",
+      "xfa/fxfa/fm2js/xfa_program.cpp",
+      "xfa/fxfa/fm2js/xfa_program.h",
+      "xfa/fxfa/fm2js/xfa_simpleexpression.cpp",
+      "xfa/fxfa/fm2js/xfa_simpleexpression.h",
+      "xfa/fxfa/fxfa.h",
+      "xfa/fxfa/fxfa_basic.h",
+      "xfa/fxfa/fxfa_widget.h",
+      "xfa/fxfa/parser/cscript_datawindow.cpp",
+      "xfa/fxfa/parser/cscript_datawindow.h",
+      "xfa/fxfa/parser/cscript_eventpseudomodel.cpp",
+      "xfa/fxfa/parser/cscript_eventpseudomodel.h",
+      "xfa/fxfa/parser/cscript_hostpseudomodel.cpp",
+      "xfa/fxfa/parser/cscript_hostpseudomodel.h",
+      "xfa/fxfa/parser/cscript_layoutpseudomodel.cpp",
+      "xfa/fxfa/parser/cscript_layoutpseudomodel.h",
+      "xfa/fxfa/parser/cscript_logpseudomodel.cpp",
+      "xfa/fxfa/parser/cscript_logpseudomodel.h",
+      "xfa/fxfa/parser/cscript_signaturepseudomodel.cpp",
+      "xfa/fxfa/parser/cscript_signaturepseudomodel.h",
+      "xfa/fxfa/parser/cxfa_arc.h",
+      "xfa/fxfa/parser/cxfa_arraynodelist.cpp",
+      "xfa/fxfa/parser/cxfa_assist.cpp",
+      "xfa/fxfa/parser/cxfa_assist.h",
+      "xfa/fxfa/parser/cxfa_attachnodelist.cpp",
+      "xfa/fxfa/parser/cxfa_bind.cpp",
+      "xfa/fxfa/parser/cxfa_bind.h",
+      "xfa/fxfa/parser/cxfa_binditems.cpp",
+      "xfa/fxfa/parser/cxfa_binditems.h",
+      "xfa/fxfa/parser/cxfa_border.h",
+      "xfa/fxfa/parser/cxfa_box.cpp",
+      "xfa/fxfa/parser/cxfa_box.h",
+      "xfa/fxfa/parser/cxfa_calculate.cpp",
+      "xfa/fxfa/parser/cxfa_calculate.h",
+      "xfa/fxfa/parser/cxfa_caption.cpp",
+      "xfa/fxfa/parser/cxfa_caption.h",
+      "xfa/fxfa/parser/cxfa_containerlayoutitem.cpp",
+      "xfa/fxfa/parser/cxfa_containerlayoutitem.h",
+      "xfa/fxfa/parser/cxfa_contentlayoutitem.cpp",
+      "xfa/fxfa/parser/cxfa_contentlayoutitem.h",
+      "xfa/fxfa/parser/cxfa_corner.h",
+      "xfa/fxfa/parser/cxfa_data.cpp",
+      "xfa/fxfa/parser/cxfa_data.h",
+      "xfa/fxfa/parser/cxfa_dataexporter.cpp",
+      "xfa/fxfa/parser/cxfa_dataexporter.h",
+      "xfa/fxfa/parser/cxfa_dataimporter.cpp",
+      "xfa/fxfa/parser/cxfa_dataimporter.h",
+      "xfa/fxfa/parser/cxfa_document.cpp",
+      "xfa/fxfa/parser/cxfa_document.h",
+      "xfa/fxfa/parser/cxfa_document_parser.cpp",
+      "xfa/fxfa/parser/cxfa_document_parser.h",
+      "xfa/fxfa/parser/cxfa_edge.h",
+      "xfa/fxfa/parser/cxfa_event.cpp",
+      "xfa/fxfa/parser/cxfa_event.h",
+      "xfa/fxfa/parser/cxfa_exdata.cpp",
+      "xfa/fxfa/parser/cxfa_exdata.h",
+      "xfa/fxfa/parser/cxfa_fill.cpp",
+      "xfa/fxfa/parser/cxfa_fill.h",
+      "xfa/fxfa/parser/cxfa_font.cpp",
+      "xfa/fxfa/parser/cxfa_font.h",
+      "xfa/fxfa/parser/cxfa_image.cpp",
+      "xfa/fxfa/parser/cxfa_image.h",
+      "xfa/fxfa/parser/cxfa_layoutitem.cpp",
+      "xfa/fxfa/parser/cxfa_layoutitem.h",
+      "xfa/fxfa/parser/cxfa_layoutpagemgr.cpp",
+      "xfa/fxfa/parser/cxfa_layoutpagemgr.h",
+      "xfa/fxfa/parser/cxfa_layoutprocessor.cpp",
+      "xfa/fxfa/parser/cxfa_layoutprocessor.h",
+      "xfa/fxfa/parser/cxfa_line.cpp",
+      "xfa/fxfa/parser/cxfa_line.h",
+      "xfa/fxfa/parser/cxfa_margin.cpp",
+      "xfa/fxfa/parser/cxfa_margin.h",
+      "xfa/fxfa/parser/cxfa_measurement.cpp",
+      "xfa/fxfa/parser/cxfa_measurement.h",
+      "xfa/fxfa/parser/cxfa_node.cpp",
+      "xfa/fxfa/parser/cxfa_nodehelper.cpp",
+      "xfa/fxfa/parser/cxfa_nodehelper.h",
+      "xfa/fxfa/parser/cxfa_nodelist.cpp",
+      "xfa/fxfa/parser/cxfa_object.cpp",
+      "xfa/fxfa/parser/cxfa_occur.cpp",
+      "xfa/fxfa/parser/cxfa_occur.h",
+      "xfa/fxfa/parser/cxfa_para.cpp",
+      "xfa/fxfa/parser/cxfa_para.h",
+      "xfa/fxfa/parser/cxfa_rectangle.h",
+      "xfa/fxfa/parser/cxfa_resolveprocessor.cpp",
+      "xfa/fxfa/parser/cxfa_resolveprocessor.h",
+      "xfa/fxfa/parser/cxfa_script.cpp",
+      "xfa/fxfa/parser/cxfa_script.h",
+      "xfa/fxfa/parser/cxfa_scriptcontext.cpp",
+      "xfa/fxfa/parser/cxfa_scriptcontext.h",
+      "xfa/fxfa/parser/cxfa_simple_parser.cpp",
+      "xfa/fxfa/parser/cxfa_simple_parser.h",
+      "xfa/fxfa/parser/cxfa_stroke.cpp",
+      "xfa/fxfa/parser/cxfa_stroke.h",
+      "xfa/fxfa/parser/cxfa_submit.cpp",
+      "xfa/fxfa/parser/cxfa_submit.h",
+      "xfa/fxfa/parser/cxfa_text.cpp",
+      "xfa/fxfa/parser/cxfa_text.h",
+      "xfa/fxfa/parser/cxfa_thisproxy.cpp",
+      "xfa/fxfa/parser/cxfa_tooltip.cpp",
+      "xfa/fxfa/parser/cxfa_tooltip.h",
+      "xfa/fxfa/parser/cxfa_traversestrategy_contentareacontainerlayoutitem.h",
+      "xfa/fxfa/parser/cxfa_traversestrategy_contentlayoutitem.h",
+      "xfa/fxfa/parser/cxfa_traversestrategy_layoutitem.h",
+      "xfa/fxfa/parser/cxfa_validate.cpp",
+      "xfa/fxfa/parser/cxfa_validate.h",
+      "xfa/fxfa/parser/cxfa_value.cpp",
+      "xfa/fxfa/parser/cxfa_value.h",
+      "xfa/fxfa/parser/cxfa_valuearray.cpp",
+      "xfa/fxfa/parser/cxfa_valuearray.h",
+      "xfa/fxfa/parser/cxfa_widetextread.cpp",
+      "xfa/fxfa/parser/cxfa_widetextread.h",
+      "xfa/fxfa/parser/cxfa_widgetdata.cpp",
+      "xfa/fxfa/parser/cxfa_widgetdata.h",
+      "xfa/fxfa/parser/cxfa_xml_parser.cpp",
+      "xfa/fxfa/parser/cxfa_xml_parser.h",
+      "xfa/fxfa/parser/xfa_basic_data.cpp",
+      "xfa/fxfa/parser/xfa_basic_data.h",
+      "xfa/fxfa/parser/xfa_basic_data_attributes.cpp",
+      "xfa/fxfa/parser/xfa_basic_data_element_attributes.cpp",
+      "xfa/fxfa/parser/xfa_basic_data_element_properties.cpp",
+      "xfa/fxfa/parser/xfa_basic_data_element_script.cpp",
+      "xfa/fxfa/parser/xfa_basic_data_enum.cpp",
+      "xfa/fxfa/parser/xfa_basic_data_packets.cpp",
+      "xfa/fxfa/parser/xfa_document_datamerger_imp.cpp",
+      "xfa/fxfa/parser/xfa_document_datamerger_imp.h",
+      "xfa/fxfa/parser/xfa_layout_itemlayout.cpp",
+      "xfa/fxfa/parser/xfa_layout_itemlayout.h",
+      "xfa/fxfa/parser/xfa_locale.cpp",
+      "xfa/fxfa/parser/xfa_locale.h",
+      "xfa/fxfa/parser/xfa_localemgr.cpp",
+      "xfa/fxfa/parser/xfa_localemgr.h",
+      "xfa/fxfa/parser/xfa_localevalue.cpp",
+      "xfa/fxfa/parser/xfa_localevalue.h",
+      "xfa/fxfa/parser/xfa_object.h",
+      "xfa/fxfa/parser/xfa_resolvenode_rs.h",
+      "xfa/fxfa/parser/xfa_utils.cpp",
+      "xfa/fxfa/parser/xfa_utils.h",
+      "xfa/fxfa/xfa_checksum.h",
+      "xfa/fxfa/xfa_ffapp.h",
+      "xfa/fxfa/xfa_ffdoc.h",
+      "xfa/fxfa/xfa_ffdochandler.h",
+      "xfa/fxfa/xfa_ffdocview.h",
+      "xfa/fxfa/xfa_ffpageview.h",
+      "xfa/fxfa/xfa_ffwidget.h",
+      "xfa/fxfa/xfa_ffwidgethandler.h",
+      "xfa/fxfa/xfa_fontmgr.h",
+      "xfa/fxfa/xfa_rendercontext.h",
+      "xfa/fxgraphics/cfx_color.cpp",
+      "xfa/fxgraphics/cfx_color.h",
+      "xfa/fxgraphics/cfx_graphics.cpp",
+      "xfa/fxgraphics/cfx_graphics.h",
+      "xfa/fxgraphics/cfx_path.cpp",
+      "xfa/fxgraphics/cfx_path.h",
+      "xfa/fxgraphics/cfx_pattern.cpp",
+      "xfa/fxgraphics/cfx_pattern.h",
+      "xfa/fxgraphics/cfx_shading.cpp",
+      "xfa/fxgraphics/cfx_shading.h",
+    ]
+    include_dirs = [ "." ]
+    deps = [
+      ":fxcrt",
+      ":fxjs",
+    ]
+    configs += [
+      ":pdfium_core_config",
+      ":xfa_warnings",
+    ]
+  }
+}
+
+test("pdfium_unittests") {
+  sources = [
+    "core/fdrm/crypto/fx_crypt_unittest.cpp",
+    "core/fpdfapi/edit/cpdf_pagecontentgenerator_unittest.cpp",
+    "core/fpdfapi/font/fpdf_font_cid_unittest.cpp",
+    "core/fpdfapi/font/fpdf_font_unittest.cpp",
+    "core/fpdfapi/page/cpdf_streamcontentparser_unittest.cpp",
+    "core/fpdfapi/page/cpdf_streamparser_unittest.cpp",
+    "core/fpdfapi/parser/cpdf_array_unittest.cpp",
+    "core/fpdfapi/parser/cpdf_document_unittest.cpp",
+    "core/fpdfapi/parser/cpdf_object_unittest.cpp",
+    "core/fpdfapi/parser/cpdf_parser_unittest.cpp",
+    "core/fpdfapi/parser/cpdf_simple_parser_unittest.cpp",
+    "core/fpdfapi/parser/cpdf_syntax_parser_unittest.cpp",
+    "core/fpdfapi/parser/fpdf_parser_decode_unittest.cpp",
+    "core/fpdfdoc/cpdf_dest_unittest.cpp",
+    "core/fpdfdoc/cpdf_filespec_unittest.cpp",
+    "core/fpdfdoc/cpdf_formfield_unittest.cpp",
+    "core/fpdftext/fpdf_text_int_unittest.cpp",
+    "core/fxcodec/codec/fx_codec_a85_unittest.cpp",
+    "core/fxcodec/codec/fx_codec_jpx_unittest.cpp",
+    "core/fxcodec/codec/fx_codec_rle_unittest.cpp",
+    "core/fxcodec/jbig2/JBig2_Image_unittest.cpp",
+    "core/fxcrt/cfx_maybe_owned_unittest.cpp",
+    "core/fxcrt/cfx_observable_unittest.cpp",
+    "core/fxcrt/cfx_retain_ptr_unittest.cpp",
+    "core/fxcrt/cfx_shared_copy_on_write_unittest.cpp",
+    "core/fxcrt/cfx_string_pool_template_unittest.cpp",
+    "core/fxcrt/cfx_weak_ptr_unittest.cpp",
+    "core/fxcrt/fx_basic_bstring_unittest.cpp",
+    "core/fxcrt/fx_basic_gcc_unittest.cpp",
+    "core/fxcrt/fx_basic_memmgr_unittest.cpp",
+    "core/fxcrt/fx_basic_util_unittest.cpp",
+    "core/fxcrt/fx_basic_wstring_unittest.cpp",
+    "core/fxcrt/fx_bidi_unittest.cpp",
+    "core/fxcrt/fx_extension_unittest.cpp",
+    "core/fxcrt/fx_system_unittest.cpp",
+    "core/fxge/dib/fx_dib_engine_unittest.cpp",
+    "fpdfsdk/fpdfdoc_unittest.cpp",
+    "fpdfsdk/fpdfeditimg_unittest.cpp",
+    "fpdfsdk/fpdfview_unittest.cpp",
+  ]
+  deps = [
+    ":pdfium",
+    ":test_support",
+    "//testing/gtest",
+    "//testing/gtest:gtest_main",
+  ]
+  include_dirs = []
+  if (pdf_enable_xfa) {
+    sources += [
+      "xfa/fde/cfde_txtedtbuf_unittest.cpp",
+      "xfa/fde/css/cfde_cssdeclaration_unittest.cpp",
+      "xfa/fde/css/cfde_cssstylesheet_unittest.cpp",
+      "xfa/fde/css/cfde_cssvaluelistparser_unittest.cpp",
+      "xfa/fde/xml/fde_xml_imp_unittest.cpp",
+      "xfa/fxbarcode/pdf417/BC_PDF417HighLevelEncoder_unittest.cpp",
+      "xfa/fxfa/app/cxfa_textparser_unittest.cpp",
+      "xfa/fxfa/app/xfa_ffapp_unittest.cpp",
+      "xfa/fxfa/fm2js/xfa_simpleexpression_unittest.cpp",
+      "xfa/fxfa/parser/xfa_utils_unittest.cpp",
+    ]
+  }
+  if (pdf_use_skia || pdf_use_skia_paths) {
+    sources += [ "core/fxge/skia/fx_skia_device_unittest.cpp" ]
+    deps += [ "//skia" ]
+  }
+  if (pdf_enable_v8) {
+    sources += [ "fpdfsdk/javascript/public_methods_unittest.cpp" ]
+    include_dirs += [
+      "//v8",
+      "//v8/include",
+    ]
+  }
+  configs += [ ":pdfium_core_config" ]
+  if (is_android) {
+    use_raw_android_executable = true
+  }
+}
+
+test("pdfium_embeddertests") {
+  sources = [
+    "core/fpdfapi/page/fpdf_page_func_embeddertest.cpp",
+    "core/fpdfapi/parser/cpdf_parser_embeddertest.cpp",
+    "core/fpdfapi/parser/cpdf_security_handler_embeddertest.cpp",
+    "core/fpdfapi/parser/fpdf_parser_decode_embeddertest.cpp",
+    "core/fpdfapi/render/fpdf_render_loadimage_embeddertest.cpp",
+    "core/fpdfapi/render/fpdf_render_pattern_embeddertest.cpp",
+    "core/fxcodec/codec/fx_codec_embeddertest.cpp",
+    "core/fxge/ge/fx_ge_text_embeddertest.cpp",
+    "fpdfsdk/fpdf_dataavail_embeddertest.cpp",
+    "fpdfsdk/fpdf_flatten_embeddertest.cpp",
+    "fpdfsdk/fpdf_structtree_embeddertest.cpp",
+    "fpdfsdk/fpdfdoc_embeddertest.cpp",
+    "fpdfsdk/fpdfedit_embeddertest.cpp",
+    "fpdfsdk/fpdfext_embeddertest.cpp",
+    "fpdfsdk/fpdfformfill_embeddertest.cpp",
+    "fpdfsdk/fpdfppo_embeddertest.cpp",
+    "fpdfsdk/fpdfsave_embeddertest.cpp",
+    "fpdfsdk/fpdftext_embeddertest.cpp",
+    "fpdfsdk/fpdfview_c_api_test.c",
+    "fpdfsdk/fpdfview_c_api_test.h",
+    "fpdfsdk/fpdfview_embeddertest.cpp",
+    "fpdfsdk/fsdk_baseform_embeddertest.cpp",
+    "testing/embedder_test.cpp",
+    "testing/embedder_test.h",
+    "testing/embedder_test_mock_delegate.h",
+    "testing/embedder_test_timer_handling_delegate.h",
+    "xfa/fxfa/parser/cxfa_simple_parser_embeddertest.cpp",
+  ]
+  deps = [
+    ":pdfium",
+    ":test_support",
+    "//testing/gmock",
+    "//testing/gtest",
+  ]
+  include_dirs = [ "testing/gmock/include" ]
+  configs += [ ":pdfium_core_config" ]
+
+  if (pdf_enable_v8) {
+    sources += [
+      "fpdfsdk/javascript/public_methods_embeddertest.cpp",
+      "fxjs/fxjs_v8_embeddertest.cpp",
+      "testing/js_embedder_test.cpp",
+      "testing/js_embedder_test.h",
+    ]
+    deps += [ ":fxjs" ]
+    configs += [ "//v8:external_startup_data" ]
+  }
+  if (is_android) {
+    ignore_all_data_deps = true
+    use_raw_android_executable = true
+  }
+}
+
+if (pdf_is_standalone) {
+  source_set("samples") {
+    testonly = true
+    deps = [
+      "//samples",
+    ]
+  }
+  group("fuzzers") {
+    testonly = true
+    deps = [
+      "//testing/libfuzzer",
+    ]
+  }
+}

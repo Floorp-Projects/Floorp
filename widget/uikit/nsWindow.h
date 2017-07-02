@@ -15,7 +15,7 @@
 @class UIView;
 @class ChildView;
 
-class nsWindow :
+class nsWindow final :
     public nsBaseWidget
 {
     typedef nsBaseWidget Inherited;

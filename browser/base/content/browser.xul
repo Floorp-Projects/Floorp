@@ -850,8 +850,8 @@
                 </box>
                 <box id="notification-popup-box"
                      hidden="true"
-                     onmouseover="document.getElementById('identity-icon').classList.add('no-hover');"
-                     onmouseout="document.getElementById('identity-icon').classList.remove('no-hover');"
+                     onmouseover="document.getElementById('identity-box').classList.add('no-hover');"
+                     onmouseout="document.getElementById('identity-box').classList.remove('no-hover');"
                      align="center">
                   <image id="default-notification-icon" class="notification-anchor-icon" role="button"
                          tooltiptext="&urlbar.defaultNotificationAnchor.tooltip;"/>

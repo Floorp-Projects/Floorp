@@ -11,13 +11,12 @@
  */
 
 /*
- * Created on Tue Apr  4 21:22:17 2017 from UCD data files with version info:
+ * Created on Wed Jun 28 17:08:23 2017 from UCD data files with version info:
  *
 
 # Unicode Character Database
-# Date: 2016-06-20, 14:59:00 GMT [KW]
-# © 2016 Unicode®, Inc.
-# Unicode and the Unicode Logo are registered trademarks of Unicode, Inc. in the U.S. and other countries.
+# Date: 2017-06-18, 23:32:00 GMT [KW]
+# © 2017 Unicode®, Inc.
 # For terms of use, see http://www.unicode.org/terms_of_use.html
 #
 # For documentation, see the following:
@@ -25,44 +24,41 @@
 # UAX #38, "Unicode Han Database (Unihan)"
 # UAX #44, "Unicode Character Database."
 #
-# The UAXes can be accessed at http://www.unicode.org/versions/Unicode9.0.0/
+# The UAXes can be accessed at http://www.unicode.org/versions/Unicode10.0.0/
 
 This directory contains the final data files
-for the Unicode Character Database, for Version 9.0.0 of the Unicode Standard.
+for the Unicode Character Database, for Version 10.0.0 of the Unicode Standard.
 
-# Scripts-9.0.0.txt
-# Date: 2016-06-01, 10:34:37 GMT
+# Scripts-10.0.0.txt
+# Date: 2017-03-11, 06:40:37 GMT
 
-# BidiMirroring-9.0.0.txt
-# Date: 2016-01-21, 22:00:00 GMT [KW, LI]
+# BidiMirroring-10.0.0.txt
+# Date: 2017-04-12, 17:30:00 GMT [KW, LI]
 
-# BidiBrackets-9.0.0.txt
-# Date: 2016-06-07, 22:30:00 GMT [AG, LI, KW]
+# BidiBrackets-10.0.0.txt
+# Date: 2017-04-12, 17:30:00 GMT [AG, LI, KW]
 
-# HangulSyllableType-9.0.0.txt
-# Date: 2016-03-02, 18:55:01 GMT
+# HangulSyllableType-10.0.0.txt
+# Date: 2017-02-14, 04:26:11 GMT
 
-# LineBreak-9.0.0.txt
-# Date: 2016-05-26, 01:00:00 GMT [KW, LI]
+# LineBreak-10.0.0.txt
+# Date: 2017-03-08, 02:00:00 GMT [KW, LI]
 
-# EastAsianWidth-9.0.0.txt
-# Date: 2016-05-27, 17:00:00 GMT [KW, LI]
+# EastAsianWidth-10.0.0.txt
+# Date: 2017-03-08, 02:00:00 GMT [KW, LI]
 
-# DerivedCoreProperties-9.0.0.txt
-# Date: 2016-06-01, 10:34:24 GMT
+# DerivedCoreProperties-10.0.0.txt
+# Date: 2017-03-19, 00:05:15 GMT
 
 # IdentifierStatus.txt
-# Date: 2016-06-16, 13:41:30 GMT
-
-# IdentifierType.txt
-# Date: 2016-06-16, 13:41:30 GMT
+# Date: 2017-04-08, 16:13:41 GMT
 
 #
 # Unihan_Variants.txt
-# Date: 2016-06-01 07:01:48 GMT [JHJ]
+# Date: 2017-05-14 07:01:48 GMT [JHJ]
 
-# VerticalOrientation-16.txt
-# Date: 2016-07-23, 01:00:00 GMT [EM, KI, LI]
+# VerticalOrientation-17.txt
+# Date: 2016-10-20, 07:00:00 GMT [EM, KI, LI]
 
  *
  * * * * * This file contains MACHINE-GENERATED DATA, do not edit! * * * * *

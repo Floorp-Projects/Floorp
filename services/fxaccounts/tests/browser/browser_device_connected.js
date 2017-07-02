@@ -3,8 +3,6 @@
 
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 
-const { MockRegistrar } =
-  Cu.import("resource://testing-common/MockRegistrar.jsm", {});
 const gBrowserGlue = Cc["@mozilla.org/browser/browserglue;1"]
                      .getService(Ci.nsIObserver);
 const accountsBundle = Services.strings.createBundle(
@@ -21,19 +19,7 @@ add_task(async function setup() {
     }
   };
   gBrowserGlue.observe({wrappedJSObject: fxAccounts}, "browser-glue-test", "mock-fxaccounts");
-  const alertsService = {
-    QueryInterface: XPCOMUtils.generateQI([Ci.nsIAlertsService, Ci.nsISupports]),
-    showAlertNotification: (image, title, text, clickable, cookie, clickCallback) => {
-      // We can't simulate a click on the alert popup,
-      // so instead we call the click listener ourselves directly
-      clickCallback.observe(null, "alertclickcallback", null);
-      Assert.equal(text, expectedBody);
-    }
-  };
-  let alertsServiceCID = MockRegistrar.register("@mozilla.org/alerts-service;1", alertsService);
-  registerCleanupFunction(() => {
-    MockRegistrar.unregister(alertsServiceCID);
-  });
+  setupMockAlertsService();
 });
 
 async function testDeviceConnected(deviceName) {

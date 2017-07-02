@@ -5,6 +5,9 @@
 
 #include "mozilla/layers/FocusState.h"
 
+// #define FS_LOG(...) printf_stderr("FS: " __VA_ARGS__)
+#define FS_LOG(...)
+
 namespace mozilla {
 namespace layers {
 
@@ -21,6 +24,10 @@ FocusState::FocusState()
 bool
 FocusState::IsCurrent() const
 {
+  FS_LOG("Checking IsCurrent() with cseq=%" PRIu64 ", aseq=%" PRIu64 "\n",
+         mLastContentProcessedEvent,
+         mLastAPZProcessedEvent);
+
   MOZ_ASSERT(mLastContentProcessedEvent <= mLastAPZProcessedEvent);
   return mLastContentProcessedEvent == mLastAPZProcessedEvent;
 }
@@ -36,6 +43,12 @@ FocusState::Update(uint64_t aRootLayerTreeId,
                    uint64_t aOriginatingLayersId,
                    const FocusTarget& aState)
 {
+  FS_LOG("Update with rlt=%" PRIu64 ", olt=%" PRIu64 ", ft=(%d, %" PRIu64 ")\n",
+         aRootLayerTreeId,
+         aOriginatingLayersId,
+         (int)aState.mType,
+         aState.mSequenceNumber);
+
   // Update the focus tree with the latest target
   mFocusTree[aOriginatingLayersId] = aState;
 
@@ -51,6 +64,8 @@ FocusState::Update(uint64_t aRootLayerTreeId,
   while (true) {
     auto currentNode = mFocusTree.find(mFocusLayersId);
     if (currentNode == mFocusTree.end()) {
+      FS_LOG("Setting target to nil (cannot find lt=%" PRIu64 ")\n",
+             mFocusLayersId);
       return;
     }
 
@@ -64,14 +79,23 @@ FocusState::Update(uint64_t aRootLayerTreeId,
         // Guard against infinite loops
         MOZ_ASSERT(mFocusLayersId != target.mData.mRefLayerId);
         if (mFocusLayersId == target.mData.mRefLayerId) {
+          FS_LOG("Setting target to nil (bailing out of infinite loop, lt=%" PRIu64 ")\n",
+                 mFocusLayersId);
           return;
         }
+
+        FS_LOG("Looking for target in lt=%" PRIu64 "\n", target.mData.mRefLayerId);
 
         // The focus target is in a child layer tree
         mFocusLayersId = target.mData.mRefLayerId;
         break;
       }
       case FocusTarget::eScrollLayer: {
+        FS_LOG("Setting target to h=%" PRIu64 ", v=%" PRIu64 ", and seq=%" PRIu64 "\n",
+               target.mData.mScrollTargets.mHorizontal,
+               target.mData.mScrollTargets.mVertical,
+               target.mSequenceNumber);
+
         // This is the global focus target
         mFocusHorizontalTarget = target.mData.mScrollTargets.mHorizontal;
         mFocusVerticalTarget = target.mData.mScrollTargets.mVertical;
@@ -82,6 +106,8 @@ FocusState::Update(uint64_t aRootLayerTreeId,
         return;
       }
       case FocusTarget::eNone: {
+        FS_LOG("Setting target to nil (reached a nil target)\n");
+
         // Mark what sequence number this target has for debugging purposes so
         // we can always accurately report on whether we are stale or not
         mLastContentProcessedEvent = target.mSequenceNumber;

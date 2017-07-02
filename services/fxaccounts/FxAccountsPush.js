@@ -184,6 +184,9 @@ FxAccountsPushService.prototype = {
         return;
       case ON_COLLECTION_CHANGED_NOTIFICATION:
         Services.obs.notifyObservers(null, ON_COLLECTION_CHANGED_NOTIFICATION, payload.data.collections);
+      case ON_VERIFY_LOGIN_NOTIFICATION:
+        Services.obs.notifyObservers(null, ON_VERIFY_LOGIN_NOTIFICATION, JSON.stringify(payload.data));
+        break;
       default:
         this.log.warn("FxA Push command unrecognized: " + payload.command);
     }
