@@ -45,10 +45,7 @@ function scrollDown150PxWithPixelScrolling(scrollbox) {
 }
 
 function runTest() {
-  var win = open('data:text/html,<!DOCTYPE html>\n' +
-    '<div id="scrollbox" style="height: 100px; overflow: auto;">' +
-    '  <div style="height: 1000px;"></div>' +
-    '</div>', '_blank', 'width=300,height=300');
+  var win = open('bug607464.html', '_blank', 'width=300,height=300');
   SimpleTest.waitForFocus(function () {
     var scrollbox = win.document.getElementById("scrollbox");
     let scrollTopBefore = scrollbox.scrollTop;

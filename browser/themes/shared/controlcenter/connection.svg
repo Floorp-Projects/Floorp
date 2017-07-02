@@ -9,29 +9,21 @@
     svg > rect:not(:target) {
       display: none;
     }
-
-    #connection-secure {
-      fill: #4d9a26;
-    }
   </style>
-
   <defs>
     <rect id="shape-lock-clasp-outer" x="5" y="1" width="14" height="20" rx="7" ry="7" />
     <rect id="shape-lock-clasp-inner" x="8" y="4" width="8" height="14" rx="4" ry="4" />
     <rect id="shape-lock-base" x="3" y="10" width="18" height="13" rx="1.5" ry="1.5" />
-
     <mask id="mask-clasp-cutout">
       <rect width="24" height="24" fill="#000" />
       <use xlink:href="#shape-lock-clasp-outer" fill="#fff" />
       <use xlink:href="#shape-lock-clasp-inner" fill="#000" />
     </mask>
-
     <mask id="mask-lock">
       <use xlink:href="#shape-lock-clasp-outer" mask="url(#mask-clasp-cutout)" fill="#fff"/>
       <use xlink:href="#shape-lock-base" fill="#fff"/>
     </mask>
   </defs>
-
   <rect id="connection-degraded" class="fieldtext" width="24" height="24" mask="url(#mask-lock)"/>
-  <rect id="connection-secure" width="24" height="24" mask="url(#mask-lock)"/>
+  <rect id="connection-secure" width="24" height="24" mask="url(#mask-lock)" fill="context-fill"/>
 </svg>

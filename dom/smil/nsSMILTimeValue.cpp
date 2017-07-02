@@ -6,7 +6,7 @@
 
 #include "nsSMILTimeValue.h"
 
-nsSMILTime nsSMILTimeValue::kUnresolvedMillis = INT64_MAX;
+const nsSMILTime nsSMILTimeValue::kUnresolvedMillis = INT64_MAX;
 
 //----------------------------------------------------------------------
 // nsSMILTimeValue methods:

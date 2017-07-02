@@ -22,10 +22,7 @@ function checkSimplestRequest(payRequest) {
   if (!methodData) {
     emitTestFail("Fail to get payment methodData.");
   }
-  if (methodData.supportedMethods.length != 1) {
-    emitTestFail("supportedMethods' length should be 1.");
-  }
-  const supportedMethod = methodData.supportedMethods.queryElementAt(0, Ci.nsISupportsString);
+  const supportedMethod = methodData.supportedMethods;
   if (supportedMethod != "basic-card") {
     emitTestFail("supported method should be 'basic-card'.");
   }
@@ -80,10 +77,7 @@ function checkComplexRequest(payRequest) {
   if (!methodData) {
     emitTestFail("Fail to get payment methodData.");
   }
-  if (methodData.supportedMethods.length != 1) {
-    emitTestFail("supportedMethods' length should be 1.");
-  }
-  let supportedMethod = methodData.supportedMethods.queryElementAt(0, Ci.nsISupportsString);
+  let supportedMethod = methodData.supportedMethods;
   if (supportedMethod != "basic-card") {
     emitTestFail("supported method should be 'basic-card'.");
   }
@@ -142,11 +136,7 @@ function checkComplexRequest(payRequest) {
     emitTestFail("modifiers' length should be 1.");
   }
   const modifier = modifiers.queryElementAt(0, Ci.nsIPaymentDetailsModifier);
-  const modifierSupportedMethods = modifier.supportedMethods;
-  if (modifierSupportedMethods.length != 1) {
-    emitTestFail("modifier's supported methods length should be 1.");
-  }
-  supportedMethod = modifierSupportedMethods.queryElementAt(0, Ci.nsISupportsString);
+  const supportedMethods = modifier.supportedMethods;
   if (supportedMethod != "basic-card") {
     emitTestFail("modifier's supported method name should be 'basic-card'.");
   }

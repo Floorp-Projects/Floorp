@@ -50,6 +50,9 @@
 #  define APZCTM_LOG(...)
 #endif
 
+// #define APZ_KEY_LOG(...) printf_stderr("APZKEY: " __VA_ARGS__)
+#define APZ_KEY_LOG(...)
+
 namespace mozilla {
 namespace layers {
 
@@ -185,7 +188,16 @@ public:
   {
     if (mMayChangeFocus) {
       mFocusState.ReceiveFocusChangingEvent();
+
+      APZ_KEY_LOG("Marking input with type=%d as focus changing with seq=%" PRIu64 "\n",
+                  (int)mEvent.mInputType,
+                  mFocusState.LastAPZProcessedEvent());
+    } else {
+      APZ_KEY_LOG("Marking input with type=%d as non focus changing with seq=%" PRIu64 "\n",
+                  (int)mEvent.mInputType,
+                  mFocusState.LastAPZProcessedEvent());
     }
+
     mEvent.mFocusSequenceNumber = mFocusState.LastAPZProcessedEvent();
   }
 
@@ -1249,6 +1261,7 @@ APZCTreeManager::ReceiveInputEvent(InputData& aEvent,
       // Disable async keyboard scrolling when accessibility.browsewithcaret is enabled
       if (!gfxPrefs::APZKeyboardEnabled() ||
           gfxPrefs::AccessibilityBrowseWithCaret()) {
+        APZ_KEY_LOG("Skipping key input from invalid prefs\n");
         return result;
       }
 
@@ -1258,6 +1271,8 @@ APZCTreeManager::ReceiveInputEvent(InputData& aEvent,
       Maybe<KeyboardShortcut> shortcut = mKeyboardMap.FindMatch(keyInput);
 
       if (!shortcut) {
+        APZ_KEY_LOG("Skipping key input with no shortcut\n");
+
         // If we don't have a shortcut for this key event, then we can keep our focus
         // only if we know there are no key event listeners for this target
         if (mFocusState.CanIgnoreKeyboardShortcutMisses()) {
@@ -1269,6 +1284,7 @@ APZCTreeManager::ReceiveInputEvent(InputData& aEvent,
       // Check if this shortcut needs to be dispatched to content. Anything matching
       // this is assumed to be able to change focus.
       if (shortcut->mDispatchToContent) {
+        APZ_KEY_LOG("Skipping key input with dispatch-to-content shortcut\n");
         return result;
       }
 
@@ -1299,6 +1315,7 @@ APZCTreeManager::ReceiveInputEvent(InputData& aEvent,
       // the focused element has event listeners, or the focused element doesn't have a
       // layerized scroll frame. In any case we need to dispatch to content.
       if (!targetGuid) {
+        APZ_KEY_LOG("Skipping key input with no current focus target\n");
         return result;
       }
 
@@ -1306,12 +1323,16 @@ APZCTreeManager::ReceiveInputEvent(InputData& aEvent,
                                                                 targetGuid->mScrollId);
 
       if (!targetApzc) {
+        APZ_KEY_LOG("Skipping key input with focus target but no APZC\n");
         return result;
       }
 
       // Attach the keyboard scroll action to the input event for processing
       // by the input queue.
       keyInput.mAction = action;
+
+      APZ_KEY_LOG("Dispatching key input with apzc=%p\n",
+                  targetApzc.get());
 
       // Dispatch the event to the input queue.
       result = mInputQueue->ReceiveInputEvent(

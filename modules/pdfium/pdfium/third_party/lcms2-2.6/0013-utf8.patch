@@ -1,0 +1,99 @@
+diff --git a/third_party/lcms2-2.6/src/cmscgats.c b/third_party/lcms2-2.6/src/cmscgats.c
+index 9017435..5720c66 100644
+--- a/third_party/lcms2-2.6/src/cmscgats.c
++++ b/third_party/lcms2-2.6/src/cmscgats.c
+@@ -258,7 +258,7 @@ static PROPERTY PredefinedProperties[] = {
+                                // needed.
+ 
+         {"SAMPLE_BACKING",   WRITE_STRINGIFY},   // Identifies the backing material used behind the sample during
+-                               // measurement. Allowed values are “black? “white? or {"na".
++                               // measurement. Allowed values are "black" "white" or "na".
+ 
+         {"CHISQ_DOF",        WRITE_STRINGIFY},   // Degrees of freedom associated with the Chi squared statistic
+ 
+@@ -274,7 +274,7 @@ static PROPERTY PredefinedProperties[] = {
+                                // denote the use of filters such as none, D65, Red, Green or Blue.
+ 
+        {"POLARIZATION",      WRITE_STRINGIFY},   // Identifies the use of a physical polarization filter during measurement. Allowed
+-                               // values are {"yes? “white? “none?or “na?
++                               // values are "yes" "white" "none" or "na"
+ 
+        {"WEIGHTING_FUNCTION", WRITE_PAIR},   // Indicates such functions as: the CIE standard observer functions used in the
+                                // calculation of various data parameters (2 degree and 10 degree), CIE standard
+diff --git a/third_party/lcms2-2.6/src/cmstypes.c b/third_party/lcms2-2.6/src/cmstypes.c
+index 386439b..e5ed06c 100644
+--- a/third_party/lcms2-2.6/src/cmstypes.c
++++ b/third_party/lcms2-2.6/src/cmstypes.c
+@@ -962,7 +962,7 @@ cmsBool  Type_Text_Description_Write(struct _cms_typehandler_struct* self, cmsIO
+     len = cmsMLUgetASCII(mlu, cmsNoLanguage, cmsNoCountry, NULL, 0);
+ 
+     // From ICC3.4: It has been found that textDescriptionType can contain misaligned data
+-    //(see clause 4.1 for the definition of “aligned?. Because the Unicode language
++    //(see clause 4.1 for the definition of 'aligned'. Because the Unicode language
+     // code and Unicode count immediately follow the ASCII description, their
+     // alignment is not correct if the ASCII count is not a multiple of four. The
+     // ScriptCode code is misaligned when the ASCII count is odd. Profile reading and
+@@ -3064,9 +3064,10 @@ void Type_ColorantTable_Free(struct _cms_typehandler_struct* self, void* Ptr)
+ //The namedColor2Type is a count value and array of structures that provide color
+ //coordinates for 7-bit ASCII color names. For each named color, a PCS and optional
+ //device representation of the color are given. Both representations are 16-bit values.
+-//The device representation corresponds to the header’s “color space of data?field.
+-//This representation should be consistent with the “number of device components?//field in the namedColor2Type. If this field is 0, device coordinates are not provided.
+-//The PCS representation corresponds to the header’s PCS field. The PCS representation
++//The device representation corresponds to the header's 'color space of data' field.
++//This representation should be consistent with the 'number of device components'
++//field in the namedColor2Type. If this field is 0, device coordinates are not provided.
++//The PCS representation corresponds to the header's PCS field. The PCS representation
+ //is always provided. Color names are fixed-length, 32-byte fields including null
+ //termination. In order to maintain maximum portability, it is strongly recommended
+ //that special characters of the 7-bit ASCII set not be used.
+@@ -3809,7 +3810,8 @@ void Type_Screening_Free(struct _cms_typehandler_struct* self, void* Ptr)
+ // ********************************************************************************
+ //
+ //This type represents a set of viewing condition parameters including:
+-//CIE ’absolute?illuminant white point tristimulus values and CIE ’absolute?//surround tristimulus values.
++//CIE 'absolute'illuminant white point tristimulus values and CIE 'absolute'
++//surround tristimulus values.
+ 
+ static
+ void *Type_ViewingConditions_Read(struct _cms_typehandler_struct* self, cmsIOHANDLER* io, cmsUInt32Number* nItems, cmsUInt32Number SizeOfTag)
+@@ -3895,7 +3897,7 @@ void GenericMPEfree(struct _cms_typehandler_struct* self, void *Ptr)
+ }
+ 
+ // Each curve is stored in one or more curve segments, with break-points specified between curve segments.
+-// The first curve segment always starts at –Infinity, and the last curve segment always ends at +Infinity. The
++// The first curve segment always starts at -Infinity, and the last curve segment always ends at +Infinity. The
+ // first and last curve segments shall be specified in terms of a formula, whereas the other segments shall be
+ // specified either in terms of a formula, or by a sampled curve.
+ 
+diff --git a/third_party/lcms2-2.6/src/cmsvirt.c b/third_party/lcms2-2.6/src/cmsvirt.c
+index b324c99..d19ace1 100644
+--- a/third_party/lcms2-2.6/src/cmsvirt.c
++++ b/third_party/lcms2-2.6/src/cmsvirt.c
+@@ -612,18 +612,18 @@ cmsHPROFILE CMSEXPORT cmsCreateXYZProfile(void)
+ 
+ //sRGB Curves are defined by:
+ //
+-//If  R’sRGB,G’sRGB, B’sRGB < 0.04045
++//If  R'sRGB,G'sRGB, B'sRGB < 0.04045
+ //
+-//    R =  R’sRGB / 12.92
+-//    G =  G’sRGB / 12.92
+-//    B =  B’sRGB / 12.92
++//    R =  R'sRGB / 12.92
++//    G =  G'sRGB / 12.92
++//    B =  B'sRGB / 12.92
+ //
+ //
+-//else if  R’sRGB,G’sRGB, B’sRGB >= 0.04045
++//else if  R'sRGB,G'sRGB, B'sRGB >= 0.04045
+ //
+-//    R = ((R’sRGB + 0.055) / 1.055)^2.4
+-//    G = ((G’sRGB + 0.055) / 1.055)^2.4
+-//    B = ((B’sRGB + 0.055) / 1.055)^2.4
++//    R = ((R'sRGB + 0.055) / 1.055)^2.4
++//    G = ((G'sRGB + 0.055) / 1.055)^2.4
++//    B = ((B'sRGB + 0.055) / 1.055)^2.4
+ 
+ static
+ cmsToneCurve* Build_sRGBGamma(cmsContext ContextID)

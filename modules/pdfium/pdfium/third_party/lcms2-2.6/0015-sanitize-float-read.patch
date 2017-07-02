@@ -1,0 +1,15 @@
+diff --git a/third_party/lcms2-2.6/src/cmsplugin.c b/third_party/lcms2-2.6/src/cmsplugin.c
+index b95befb..4ba998b 100644
+--- a/third_party/lcms2-2.6/src/cmsplugin.c
++++ b/third_party/lcms2-2.6/src/cmsplugin.c
+@@ -182,7 +182,9 @@ cmsBool CMSEXPORT  _cmsReadFloat32Number(cmsIOHANDLER* io, cmsFloat32Number* n)
+         if (isnan(*n))
+             return FALSE;
+     }
+-    return TRUE;
++
++    // fpclassify() required by C99
++    return (fpclassify(*n) == FP_ZERO) || (fpclassify(*n) == FP_NORMAL);
+ }
+ 
+ 

@@ -314,35 +314,6 @@ def freetype2_combined_info(fontconfig_info, freetype2_info):
 add_old_configure_assignment('_HAVE_FREETYPE2',
                              depends_if(freetype2_info)(lambda _: True))
 
-# Build Freetype in the tree
-# ==============================================================
-@depends(target)
-def tree_freetype(target):
-    if target.os == 'Android':
-        return True
-
-set_define('MOZ_TREE_FREETYPE', tree_freetype)
-set_config('MOZ_TREE_FREETYPE', tree_freetype)
-add_old_configure_assignment('MOZ_TREE_FREETYPE', tree_freetype)
-
-set_define('HAVE_FT_BITMAP_SIZE_Y_PPEM', tree_freetype)
-set_define('HAVE_FT_GLYPHSLOT_EMBOLDEN', tree_freetype)
-set_define('HAVE_FT_LOAD_SFNT_TABLE', tree_freetype)
-
-@depends(freetype2_combined_info, tree_freetype, check_build_environment)
-def ft2_info(freetype2_combined_info, tree_freetype, build_env):
-    if tree_freetype:
-        return namespace(cflags=('-I%s/modules/freetype2/include' % build_env.topsrcdir,),
-                         libs=())
-    if freetype2_combined_info:
-        return freetype2_combined_info
-
-set_config('FT2_LIBS', ft2_info.libs)
-add_old_configure_assignment('FT2_LIBS',
-                             ft2_info.libs)
-add_old_configure_assignment('FT2_CFLAGS',
-                             ft2_info.cflags)
-
 # Apple platform decoder support
 # ==============================================================
 @depends(toolkit)
@@ -1124,6 +1095,35 @@ def skia_includes(skia, skia_gpu):
     return includes
 
 set_config('SKIA_INCLUDES', skia_includes)
+
+# Build Freetype in the tree
+# ==============================================================
+@depends(target, skia_pdf)
+def tree_freetype(target, skia_pdf):
+    if target.os == 'Android' or (skia_pdf and target.os == 'WINNT'):
+        return True
+
+set_define('MOZ_TREE_FREETYPE', tree_freetype)
+set_config('MOZ_TREE_FREETYPE', tree_freetype)
+add_old_configure_assignment('MOZ_TREE_FREETYPE', tree_freetype)
+
+set_define('HAVE_FT_BITMAP_SIZE_Y_PPEM', tree_freetype)
+set_define('HAVE_FT_GLYPHSLOT_EMBOLDEN', tree_freetype)
+set_define('HAVE_FT_LOAD_SFNT_TABLE', tree_freetype)
+
+@depends(freetype2_combined_info, tree_freetype, check_build_environment)
+def ft2_info(freetype2_combined_info, tree_freetype, build_env):
+    if tree_freetype:
+        return namespace(cflags=('-I%s/modules/freetype2/include' % build_env.topsrcdir,),
+                         libs=())
+    if freetype2_combined_info:
+        return freetype2_combined_info
+
+set_config('FT2_LIBS', ft2_info.libs)
+add_old_configure_assignment('FT2_LIBS',
+                             ft2_info.libs)
+add_old_configure_assignment('FT2_CFLAGS',
+                             ft2_info.cflags)
 
 # Mortar
 # ==============================================================

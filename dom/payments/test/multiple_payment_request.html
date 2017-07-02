@@ -8,7 +8,7 @@
   <body>
     <script type="text/javascript">
     const supportedInstruments = [{
-      supportedMethods: [ "MyPay", "TestPay" ]
+      supportedMethods: "MyPay"
     }];
     const complexDetails = {
       id: "complex details",
@@ -28,7 +28,7 @@
       ],
       modifiers: [
         {
-          supportedMethods: ["MyPay"],
+          supportedMethods: "MyPay",
           total: {
             label: "Discounted donation",
             amount: { currency: "USD", value: "45.00", }

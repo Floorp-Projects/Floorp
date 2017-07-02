@@ -1,0 +1,8 @@
+# This file is used by git cl to get repository specific information.
+CC_LIST: pdfium-reviews@googlegroups.com
+CODE_REVIEW_SERVER: codereview.chromium.org
+GERRIT_HOST: True
+PROJECT: pdfium
+STATUS: http://pdfium-status.appspot.com/status
+TRY_ON_UPLOAD: False
+VIEW_VC: https://pdfium.googlesource.com/pdfium/+/

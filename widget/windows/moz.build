@@ -101,6 +101,8 @@ if CONFIG['NS_PRINTING']:
         'PDFViaEMFPrintHelper.cpp',
         'WindowsEMF.cpp',
     ]
+    if CONFIG['MOZ_ENABLE_SKIA_PDF']:
+        DIRS += ['/modules/pdfium']
 
 if CONFIG['NS_ENABLE_TSF']:
     SOURCES += [

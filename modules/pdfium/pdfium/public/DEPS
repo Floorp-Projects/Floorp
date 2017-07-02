@@ -1,0 +1,8 @@
+include_rules = [
+  # public/ needs to be standalone. Explicitly disallow everything.
+  '-core',
+  '-fpdfsdk',
+  '-testing',
+  '-third_party',
+  '-v8',
+]

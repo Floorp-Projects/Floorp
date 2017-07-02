@@ -8,12 +8,6 @@ const testPageURL =
 
 add_task(async function testPermissionDenied() {
   removePermission(testPageURL, "persistent-storage");
-  info("Creating tab");
-  gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
-
-  info("Loading test page: " + testPageURL);
-  gBrowser.selectedBrowser.loadURI(testPageURL);
-  await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
 
   registerPopupEventHandler("popupshowing", function () {
     ok(true, "prompt showing");
@@ -26,7 +20,12 @@ add_task(async function testPermissionDenied() {
     ok(true, "prompt hidden");
   });
 
-  await promiseMessage(false, gBrowser);
+  info("Creating tab");
+  gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
+
+  info("Loading test page: " + testPageURL);
+  gBrowser.selectedBrowser.loadURI(testPageURL);
+  await waitForMessage(false, gBrowser);
 
   is(getPermission(testPageURL, "persistent-storage"),
      Components.interfaces.nsIPermissionManager.DENY_ACTION,
@@ -37,13 +36,6 @@ add_task(async function testPermissionDenied() {
 });
 
 add_task(async function testNoPermissionPrompt() {
-  info("Creating tab");
-  gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
-
-  info("Loading test page: " + testPageURL);
-  gBrowser.selectedBrowser.loadURI(testPageURL);
-  await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
-
   registerPopupEventHandler("popupshowing", function () {
     ok(false, "Shouldn't show a popup this time");
   });
@@ -54,7 +46,12 @@ add_task(async function testNoPermissionPrompt() {
     ok(false, "Shouldn't show a popup this time");
   });
 
-  await promiseMessage(false, gBrowser);
+  info("Creating tab");
+  gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
+
+  info("Loading test page: " + testPageURL);
+  gBrowser.selectedBrowser.loadURI(testPageURL);
+  await waitForMessage(false, gBrowser);
 
   is(getPermission(testPageURL, "persistent-storage"),
      Components.interfaces.nsIPermissionManager.DENY_ACTION,
@@ -65,13 +62,6 @@ add_task(async function testNoPermissionPrompt() {
 });
 
 add_task(async function testPermissionDeniedDismiss() {
-  info("Creating tab");
-  gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
-
-  info("Loading test page: " + testPageURL);
-  gBrowser.selectedBrowser.loadURI(testPageURL);
-  await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
-
   registerPopupEventHandler("popupshowing", function () {
     ok(true, "prompt showing");
   });
@@ -84,7 +74,12 @@ add_task(async function testPermissionDeniedDismiss() {
     ok(true, "prompt hidden");
   });
 
-  await promiseMessage(false, gBrowser);
+  info("Creating tab");
+  gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
+
+  info("Loading test page: " + testPageURL);
+  gBrowser.selectedBrowser.loadURI(testPageURL);
+  await waitForMessage(false, gBrowser);
 
   is(getPermission(testPageURL, "persistent-storage"),
      Components.interfaces.nsIPermissionManager.DENY_ACTION,

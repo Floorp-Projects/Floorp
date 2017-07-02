@@ -327,24 +327,13 @@ menuitem.bookmark-item {
   -moz-appearance: none;
   -moz-box-align: stretch;
 }
-
 .urlbar-input-box {
   margin: 0;
 }
-
-.urlbar-input-box,
-#urlbar-display-box {
-  padding-inline-start: 4px;
-  border-inline-start: 1px solid var(--urlbar-separator-color);
-  border-image: linear-gradient(transparent 15%, var(--urlbar-separator-color) 15%, var(--urlbar-separator-color) 85%, transparent 85%);
-  border-image-slice: 1;
-}
-
 .urlbar-history-dropmarker {
   -moz-appearance: toolbarbutton-dropdown;
   transition: opacity 0.15s ease;
 }
-
 #urlbar-wrapper[switchingtabs] > #urlbar > .urlbar-textbox-container > .urlbar-history-dropmarker {
   transition: none;
 }

@@ -1,0 +1,4 @@
+include_rules = [
+  '+third_party/libpng16/png.h',
+  '+third_party/libtiff/tiffiop.h',
+]
