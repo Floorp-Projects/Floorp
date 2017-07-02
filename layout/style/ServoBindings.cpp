@@ -516,12 +516,14 @@ ServoStyleSheet* Gecko_StyleSheet_Clone(
 void
 Gecko_StyleSheet_AddRef(const ServoStyleSheet* aSheet)
 {
+  MOZ_ASSERT(NS_IsMainThread());
   const_cast<ServoStyleSheet*>(aSheet)->AddRef();
 }
 
 void
 Gecko_StyleSheet_Release(const ServoStyleSheet* aSheet)
 {
+  MOZ_ASSERT(NS_IsMainThread());
   const_cast<ServoStyleSheet*>(aSheet)->Release();
 }
 
