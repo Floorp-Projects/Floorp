@@ -968,6 +968,261 @@ AstDecodeReturn(AstDecodeContext& c)
 }
 
 static bool
+AstDecodeAtomicLoad(AstDecodeContext& c, ThreadOp op)
+{
+    ValType type;
+    uint32_t byteSize;
+    switch (op) {
+      case ThreadOp::I32AtomicLoad:    type = ValType::I32; byteSize = 4; break;
+      case ThreadOp::I64AtomicLoad:    type = ValType::I64; byteSize = 8; break;
+      case ThreadOp::I32AtomicLoad8U:  type = ValType::I32; byteSize = 1; break;
+      case ThreadOp::I32AtomicLoad16U: type = ValType::I32; byteSize = 2; break;
+      case ThreadOp::I64AtomicLoad8U:  type = ValType::I64; byteSize = 1; break;
+      case ThreadOp::I64AtomicLoad16U: type = ValType::I64; byteSize = 2; break;
+      case ThreadOp::I64AtomicLoad32U: type = ValType::I64; byteSize = 4; break;
+      default:
+        MOZ_CRASH("Should not happen");
+    }
+
+    LinearMemoryAddress<Nothing> addr;
+    if (!c.iter().readAtomicLoad(&addr, type, byteSize))
+        return false;
+
+    AstDecodeStackItem item = c.popCopy();
+
+    AstAtomicLoad* load = new(c.lifo) AstAtomicLoad(op, AstDecodeLoadStoreAddress(addr, item));
+    if (!load)
+        return false;
+
+    if (!c.push(AstDecodeStackItem(load)))
+        return false;
+
+    return true;
+}
+
+static bool
+AstDecodeAtomicStore(AstDecodeContext& c, ThreadOp op)
+{
+    ValType type;
+    uint32_t byteSize;
+    switch (op) {
+      case ThreadOp::I32AtomicStore:    type = ValType::I32; byteSize = 4; break;
+      case ThreadOp::I64AtomicStore:    type = ValType::I64; byteSize = 8; break;
+      case ThreadOp::I32AtomicStore8U:  type = ValType::I32; byteSize = 1; break;
+      case ThreadOp::I32AtomicStore16U: type = ValType::I32; byteSize = 2; break;
+      case ThreadOp::I64AtomicStore8U:  type = ValType::I64; byteSize = 1; break;
+      case ThreadOp::I64AtomicStore16U: type = ValType::I64; byteSize = 2; break;
+      case ThreadOp::I64AtomicStore32U: type = ValType::I64; byteSize = 4; break;
+      default:
+        MOZ_CRASH("Should not happen");
+    }
+
+    Nothing nothing;
+    LinearMemoryAddress<Nothing> addr;
+    if (!c.iter().readAtomicStore(&addr, type, byteSize, &nothing))
+        return false;
+
+    AstDecodeStackItem value = c.popCopy();
+    AstDecodeStackItem item = c.popCopy();
+
+    AstAtomicStore* store = new(c.lifo) AstAtomicStore(op, AstDecodeLoadStoreAddress(addr, item), value.expr);
+    if (!store)
+        return false;
+
+    AstExpr* wrapped = c.handleVoidExpr(store);
+    if (!wrapped)
+        return false;
+
+    if (!c.push(AstDecodeStackItem(wrapped)))
+        return false;
+
+    return true;
+}
+
+static bool
+AstDecodeAtomicRMW(AstDecodeContext& c, ThreadOp op)
+{
+    ValType type;
+    uint32_t byteSize;
+    switch (op) {
+      case ThreadOp::I32AtomicAdd:
+      case ThreadOp::I32AtomicSub:
+      case ThreadOp::I32AtomicAnd:
+      case ThreadOp::I32AtomicOr:
+      case ThreadOp::I32AtomicXor:
+      case ThreadOp::I32AtomicXchg:
+        type = ValType::I32;
+        byteSize = 4;
+        break;
+      case ThreadOp::I64AtomicAdd:
+      case ThreadOp::I64AtomicSub:
+      case ThreadOp::I64AtomicAnd:
+      case ThreadOp::I64AtomicOr:
+      case ThreadOp::I64AtomicXor:
+      case ThreadOp::I64AtomicXchg:
+        type = ValType::I64;
+        byteSize = 8;
+        break;
+      case ThreadOp::I32AtomicAdd8U:
+      case ThreadOp::I32AtomicSub8U:
+      case ThreadOp::I32AtomicOr8U:
+      case ThreadOp::I32AtomicXor8U:
+      case ThreadOp::I32AtomicXchg8U:
+      case ThreadOp::I32AtomicAnd8U:
+        type = ValType::I32;
+        byteSize = 1;
+        break;
+      case ThreadOp::I32AtomicAdd16U:
+      case ThreadOp::I32AtomicSub16U:
+      case ThreadOp::I32AtomicAnd16U:
+      case ThreadOp::I32AtomicOr16U:
+      case ThreadOp::I32AtomicXor16U:
+      case ThreadOp::I32AtomicXchg16U:
+        type = ValType::I32;
+        byteSize = 2;
+        break;
+      case ThreadOp::I64AtomicAdd8U:
+      case ThreadOp::I64AtomicSub8U:
+      case ThreadOp::I64AtomicAnd8U:
+      case ThreadOp::I64AtomicOr8U:
+      case ThreadOp::I64AtomicXor8U:
+      case ThreadOp::I64AtomicXchg8U:
+        type = ValType::I64;
+        byteSize = 1;
+        break;
+      case ThreadOp::I64AtomicAdd16U:
+      case ThreadOp::I64AtomicSub16U:
+      case ThreadOp::I64AtomicAnd16U:
+      case ThreadOp::I64AtomicOr16U:
+      case ThreadOp::I64AtomicXor16U:
+      case ThreadOp::I64AtomicXchg16U:
+        type = ValType::I64;
+        byteSize = 2;
+        break;
+      case ThreadOp::I64AtomicAdd32U:
+      case ThreadOp::I64AtomicSub32U:
+      case ThreadOp::I64AtomicAnd32U:
+      case ThreadOp::I64AtomicOr32U:
+      case ThreadOp::I64AtomicXor32U:
+      case ThreadOp::I64AtomicXchg32U:
+        type = ValType::I64;
+        byteSize = 4;
+        break;
+      default:
+        MOZ_CRASH("Should not happen");
+    }
+
+    Nothing nothing;
+    LinearMemoryAddress<Nothing> addr;
+    if (!c.iter().readAtomicRMW(&addr, type, byteSize, &nothing))
+        return false;
+
+    AstDecodeStackItem value = c.popCopy();
+    AstDecodeStackItem item = c.popCopy();
+
+    AstAtomicRMW* rmw = new(c.lifo) AstAtomicRMW(op, AstDecodeLoadStoreAddress(addr, item),
+                                                 value.expr);
+    if (!rmw)
+        return false;
+
+    if (!c.push(AstDecodeStackItem(rmw)))
+        return false;
+
+    return true;
+}
+
+static bool
+AstDecodeAtomicCmpXchg(AstDecodeContext& c, ThreadOp op)
+{
+    ValType type;
+    uint32_t byteSize;
+    switch (op) {
+      case ThreadOp::I32AtomicCmpXchg:    type = ValType::I32; byteSize = 4; break;
+      case ThreadOp::I64AtomicCmpXchg:    type = ValType::I64; byteSize = 8; break;
+      case ThreadOp::I32AtomicCmpXchg8U:  type = ValType::I32; byteSize = 1; break;
+      case ThreadOp::I32AtomicCmpXchg16U: type = ValType::I32; byteSize = 2; break;
+      case ThreadOp::I64AtomicCmpXchg8U:  type = ValType::I64; byteSize = 1; break;
+      case ThreadOp::I64AtomicCmpXchg16U: type = ValType::I64; byteSize = 2; break;
+      case ThreadOp::I64AtomicCmpXchg32U: type = ValType::I64; byteSize = 4; break;
+      default:
+        MOZ_CRASH("Should not happen");
+    }
+
+    Nothing nothing;
+    LinearMemoryAddress<Nothing> addr;
+    if (!c.iter().readAtomicCmpXchg(&addr, type, byteSize, &nothing, &nothing))
+        return false;
+
+    AstDecodeStackItem replacement = c.popCopy();
+    AstDecodeStackItem expected = c.popCopy();
+    AstDecodeStackItem item = c.popCopy();
+
+    AstAtomicCmpXchg* cmpxchg =
+        new(c.lifo) AstAtomicCmpXchg(op, AstDecodeLoadStoreAddress(addr, item), expected.expr,
+                                     replacement.expr);
+    if (!cmpxchg)
+        return false;
+
+    if (!c.push(AstDecodeStackItem(cmpxchg)))
+        return false;
+
+    return true;
+}
+
+static bool
+AstDecodeWait(AstDecodeContext& c, ThreadOp op)
+{
+    ValType type;
+    uint32_t byteSize;
+    switch (op) {
+      case ThreadOp::I32Wait: type = ValType::I32; byteSize = 4; break;
+      case ThreadOp::I64Wait: type = ValType::I64; byteSize = 8; break;
+      default:
+        MOZ_CRASH("Should not happen");
+    }
+
+    Nothing nothing;
+    LinearMemoryAddress<Nothing> addr;
+    if (!c.iter().readWait(&addr, type, byteSize, &nothing, &nothing))
+        return false;
+
+    AstDecodeStackItem timeout = c.popCopy();
+    AstDecodeStackItem value = c.popCopy();
+    AstDecodeStackItem item = c.popCopy();
+
+    AstWait* wait = new(c.lifo) AstWait(op, AstDecodeLoadStoreAddress(addr, item), value.expr,
+                                        timeout.expr);
+    if (!wait)
+        return false;
+
+    if (!c.push(AstDecodeStackItem(wait)))
+        return false;
+
+    return true;
+}
+
+static bool
+AstDecodeWake(AstDecodeContext& c)
+{
+    Nothing nothing;
+    LinearMemoryAddress<Nothing> addr;
+    if (!c.iter().readWake(&addr, &nothing))
+        return false;
+
+    AstDecodeStackItem count = c.popCopy();
+    AstDecodeStackItem item = c.popCopy();
+
+    AstWake* wake = new(c.lifo) AstWake(AstDecodeLoadStoreAddress(addr, item), count.expr);
+    if (!wake)
+        return false;
+
+    if (!c.push(AstDecodeStackItem(wake)))
+        return false;
+
+    return true;
+}
+
+static bool
 AstDecodeExpr(AstDecodeContext& c)
 {
     uint32_t exprOffset = c.iter().currentOffset();
@@ -1387,7 +1642,95 @@ AstDecodeExpr(AstDecodeContext& c)
             return false;
         break;
       case uint16_t(Op::ThreadPrefix):
-        MOZ_CRASH("ThreadPrefix ops not yet implemented");
+        switch (op.b1) {
+          case uint16_t(ThreadOp::Wake):
+            if (!AstDecodeWake(c))
+                return false;
+            break;
+          case uint16_t(ThreadOp::I32Wait):
+          case uint16_t(ThreadOp::I64Wait):
+            if (!AstDecodeWait(c, ThreadOp(op.b1)))
+                return false;
+            break;
+          case uint16_t(ThreadOp::I32AtomicLoad):
+          case uint16_t(ThreadOp::I64AtomicLoad):
+          case uint16_t(ThreadOp::I32AtomicLoad8U):
+          case uint16_t(ThreadOp::I32AtomicLoad16U):
+          case uint16_t(ThreadOp::I64AtomicLoad8U):
+          case uint16_t(ThreadOp::I64AtomicLoad16U):
+          case uint16_t(ThreadOp::I64AtomicLoad32U):
+            if (!AstDecodeAtomicLoad(c, ThreadOp(op.b1)))
+                return false;
+            break;
+          case uint16_t(ThreadOp::I32AtomicStore):
+          case uint16_t(ThreadOp::I64AtomicStore):
+          case uint16_t(ThreadOp::I32AtomicStore8U):
+          case uint16_t(ThreadOp::I32AtomicStore16U):
+          case uint16_t(ThreadOp::I64AtomicStore8U):
+          case uint16_t(ThreadOp::I64AtomicStore16U):
+          case uint16_t(ThreadOp::I64AtomicStore32U):
+            if (!AstDecodeAtomicStore(c, ThreadOp(op.b1)))
+                return false;
+            break;
+          case uint16_t(ThreadOp::I32AtomicAdd):
+          case uint16_t(ThreadOp::I64AtomicAdd):
+          case uint16_t(ThreadOp::I32AtomicAdd8U):
+          case uint16_t(ThreadOp::I32AtomicAdd16U):
+          case uint16_t(ThreadOp::I64AtomicAdd8U):
+          case uint16_t(ThreadOp::I64AtomicAdd16U):
+          case uint16_t(ThreadOp::I64AtomicAdd32U):
+          case uint16_t(ThreadOp::I32AtomicSub):
+          case uint16_t(ThreadOp::I64AtomicSub):
+          case uint16_t(ThreadOp::I32AtomicSub8U):
+          case uint16_t(ThreadOp::I32AtomicSub16U):
+          case uint16_t(ThreadOp::I64AtomicSub8U):
+          case uint16_t(ThreadOp::I64AtomicSub16U):
+          case uint16_t(ThreadOp::I64AtomicSub32U):
+          case uint16_t(ThreadOp::I32AtomicAnd):
+          case uint16_t(ThreadOp::I64AtomicAnd):
+          case uint16_t(ThreadOp::I32AtomicAnd8U):
+          case uint16_t(ThreadOp::I32AtomicAnd16U):
+          case uint16_t(ThreadOp::I64AtomicAnd8U):
+          case uint16_t(ThreadOp::I64AtomicAnd16U):
+          case uint16_t(ThreadOp::I64AtomicAnd32U):
+          case uint16_t(ThreadOp::I32AtomicOr):
+          case uint16_t(ThreadOp::I64AtomicOr):
+          case uint16_t(ThreadOp::I32AtomicOr8U):
+          case uint16_t(ThreadOp::I32AtomicOr16U):
+          case uint16_t(ThreadOp::I64AtomicOr8U):
+          case uint16_t(ThreadOp::I64AtomicOr16U):
+          case uint16_t(ThreadOp::I64AtomicOr32U):
+          case uint16_t(ThreadOp::I32AtomicXor):
+          case uint16_t(ThreadOp::I64AtomicXor):
+          case uint16_t(ThreadOp::I32AtomicXor8U):
+          case uint16_t(ThreadOp::I32AtomicXor16U):
+          case uint16_t(ThreadOp::I64AtomicXor8U):
+          case uint16_t(ThreadOp::I64AtomicXor16U):
+          case uint16_t(ThreadOp::I64AtomicXor32U):
+          case uint16_t(ThreadOp::I32AtomicXchg):
+          case uint16_t(ThreadOp::I64AtomicXchg):
+          case uint16_t(ThreadOp::I32AtomicXchg8U):
+          case uint16_t(ThreadOp::I32AtomicXchg16U):
+          case uint16_t(ThreadOp::I64AtomicXchg8U):
+          case uint16_t(ThreadOp::I64AtomicXchg16U):
+          case uint16_t(ThreadOp::I64AtomicXchg32U):
+            if (!AstDecodeAtomicRMW(c, ThreadOp(op.b1)))
+                return false;
+            break;
+          case uint16_t(ThreadOp::I32AtomicCmpXchg):
+          case uint16_t(ThreadOp::I64AtomicCmpXchg):
+          case uint16_t(ThreadOp::I32AtomicCmpXchg8U):
+          case uint16_t(ThreadOp::I32AtomicCmpXchg16U):
+          case uint16_t(ThreadOp::I64AtomicCmpXchg8U):
+          case uint16_t(ThreadOp::I64AtomicCmpXchg16U):
+          case uint16_t(ThreadOp::I64AtomicCmpXchg32U):
+            if (!AstDecodeAtomicCmpXchg(c, ThreadOp(op.b1)))
+                return false;
+            break;
+          default:
+            return c.iter().unrecognizedOpcode(&op);
+        }
+        break;
       case uint16_t(Op::MozPrefix):
         return c.iter().unrecognizedOpcode(&op);
       default:
