@@ -566,7 +566,8 @@
 }
 
 .ruleview-selector-separator,
-.ruleview-selector-unmatched {
+.ruleview-selector-unmatched,
+.ruleview-variable-unmatched {
   color: #888;
 }
 
