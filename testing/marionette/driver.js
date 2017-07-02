@@ -195,6 +195,22 @@ Object.defineProperty(GeckoDriver.prototype, "currentURL", {
   },
 });
 
+Object.defineProperty(GeckoDriver.prototype, "title", {
+  get() {
+    switch (this.context) {
+      case Context.CHROME:
+        let chromeWin = this.getCurrentWindow();
+        return chromeWin.document.documentElement.getAttribute("title");
+
+      case Context.CONTENT:
+        return this.curBrowser.currentTitle;
+
+      default:
+        throw TypeError(`Unknown context: ${this.context}`);
+    }
+  },
+});
+
 Object.defineProperty(GeckoDriver.prototype, "proxy", {
   get() {
     return this.capabilities.get("proxy");
@@ -1016,18 +1032,10 @@ GeckoDriver.prototype.getCurrentUrl = function(cmd) {
  *     A modal dialog is open, blocking this operation.
  */
 GeckoDriver.prototype.getTitle = function* (cmd, resp) {
-  const win = assert.window(this.getCurrentWindow());
+  assert.window(this.getCurrentWindow());
   assert.noUserPrompt(this.dialog);
 
-  switch (this.context) {
-    case Context.CHROME:
-      resp.body.value = win.document.documentElement.getAttribute("title");
-      break;
-
-    case Context.CONTENT:
-      resp.body.value = yield this.listener.getTitle();
-      break;
-  }
+  return this.title;
 };
 
 /** Gets the current type of the window. */
