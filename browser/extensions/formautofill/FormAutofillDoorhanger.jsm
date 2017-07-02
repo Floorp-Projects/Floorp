@@ -51,6 +51,29 @@ const CONTENT = {
       popupIconURL: "chrome://formautofill/content/icon-address-save.svg",
     },
   },
+  update: {
+    notificationId: "autofill-address",
+    message: GetStringFromName("updateAddressMessage"),
+    anchor: {
+      id: "autofill-address-notification-icon",
+      URL: "chrome://formautofill/content/formfill-anchor.svg",
+      tooltiptext: GetStringFromName("openAutofillMessagePanel"),
+    },
+    mainAction: {
+      label: GetStringFromName("updateAddressLabel"),
+      accessKey: "U",
+      callbackState: "update",
+    },
+    secondaryActions: [{
+      label: GetStringFromName("createAddressLabel"),
+      accessKey: "C",
+      callbackState: "create",
+    }],
+    options: {
+      persistWhileVisible: true,
+      popupIconURL: "chrome://formautofill/content/icon-address-update.svg",
+    },
+  },
 };
 
 let FormAutofillDoorhanger = {

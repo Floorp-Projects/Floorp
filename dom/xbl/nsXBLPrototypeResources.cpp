@@ -168,7 +168,7 @@ void
 nsXBLPrototypeResources::ComputeServoStyleSet(nsPresContext* aPresContext)
 {
   mServoStyleSet.reset(new ServoStyleSet());
-  mServoStyleSet->Init(aPresContext);
+  mServoStyleSet->Init(aPresContext, nullptr);
   for (StyleSheet* sheet : mStyleSheetList) {
     MOZ_ASSERT(sheet->IsServo(),
                "This should only be called with Servo-flavored style backend!");

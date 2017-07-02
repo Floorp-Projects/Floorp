@@ -6,6 +6,7 @@
 Cu.import("resource://services-sync/main.js");
 
 Services.prefs.setCharPref("services.sync.username", "someone@somewhere.com");
+Services.prefs.setCharPref("services.sync.registerEngines", "");
 
 // A mock "Tabs" engine which autocomplete will use instead of the real
 // engine. We pass a constructor that Sync creates.

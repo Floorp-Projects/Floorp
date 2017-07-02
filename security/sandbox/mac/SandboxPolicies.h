@@ -63,6 +63,9 @@ static const char contentSandboxRules[] = R"(
   (define home-path (param "HOME_PATH"))
   (define hasFilePrivileges (param "HAS_FILE_PRIVILEGES"))
   (define debugWriteDir (param "DEBUG_WRITE_DIR"))
+  (define testingReadPath1 (param "TESTING_READ_PATH1"))
+  (define testingReadPath2 (param "TESTING_READ_PATH2"))
+  (define testingReadPath3 (param "TESTING_READ_PATH3"))
 
   (if (string=? should-log "TRUE")
     (deny default)
@@ -208,6 +211,13 @@ static const char contentSandboxRules[] = R"(
 
       (literal appPath)
       (literal appBinaryPath))
+
+  (when testingReadPath1
+    (allow file-read* (subpath testingReadPath1)))
+  (when testingReadPath2
+    (allow file-read* (subpath testingReadPath2)))
+  (when testingReadPath3
+    (allow file-read* (subpath testingReadPath3)))
 
   (allow file-read-metadata (home-subpath "/Library"))
 

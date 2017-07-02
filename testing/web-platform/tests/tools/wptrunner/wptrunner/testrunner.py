@@ -710,9 +710,8 @@ class ManagerGroup(object):
     def run(self, test_type, tests):
         """Start all managers in the group"""
         self.logger.debug("Using %i processes" % self.size)
-
         type_tests = tests[test_type]
-        if type_tests is None:
+        if not type_tests:
             self.logger.info("No %s tests to run" % test_type)
             return
 

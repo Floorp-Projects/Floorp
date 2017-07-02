@@ -713,6 +713,13 @@ CheckProxyFlags()
                   ((Flags >> JSCLASS_RESERVED_SLOTS_SHIFT) & JSCLASS_RESERVED_SLOTS_MASK)
                   <= shadow::Object::MAX_FIXED_SLOTS,
                   "ProxyValueArray size must not exceed max JSObject size");
+
+    // Proxies must not have the JSCLASS_SKIP_NURSERY_FINALIZE flag set: they
+    // always have finalizers, and whether they can be nursery allocated is
+    // controlled by the canNurseryAllocate() method on the proxy handler.
+    static_assert(!(Flags & JSCLASS_SKIP_NURSERY_FINALIZE),
+                  "Proxies must not use JSCLASS_SKIP_NURSERY_FINALIZE; use "
+                  "the canNurseryAllocate() proxy handler method instead.");
     return Flags;
 }
 

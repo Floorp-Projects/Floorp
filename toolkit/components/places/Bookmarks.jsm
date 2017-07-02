@@ -1992,7 +1992,9 @@ function rowsToItemsArray(rows) {
       item[prop] = row.getResultByName(prop);
     }
     for (let prop of ["dateAdded", "lastModified"]) {
-      item[prop] = PlacesUtils.toDate(row.getResultByName(prop));
+      let value = row.getResultByName(prop);
+      if (value)
+        item[prop] = PlacesUtils.toDate(value);
     }
     for (let prop of ["title", "parentGuid", "url" ]) {
       let val = row.getResultByName(prop);

@@ -25,7 +25,7 @@ import mozfile
 
 from mozlog import get_proxy_logger
 
-from talos.utils import TalosCrash, TalosRegression
+from talos.utils import TalosCrash, TalosError, TalosRegression
 from talos.talos_process import run_browser
 from talos.ffsetup import FFSetup
 from talos.cmanager import CounterManagement
@@ -34,8 +34,6 @@ LOG = get_proxy_logger()
 
 
 class TTest(object):
-    platform_type = utils.PLATFORM_TYPE
-
     def check_for_crashes(self, browser_config, minidump_dir, test_name):
         # check for minidumps
         found = mozcrash.check_for_crashes(minidump_dir,
@@ -59,19 +57,32 @@ class TTest(object):
 
         """
 
-        LOG.debug("operating with platform_type : %s" % self.platform_type)
-
-        # Bug 1262954: winxp + e10s, disable hwaccel
-        if self.platform_type == "win_" and browser_config['e10s']:
-            prefs = browser_config['preferences']
-            prefs['layers.acceleration.disabled'] = True
-
         with FFSetup(browser_config, test_config) as setup:
             return self._runTest(browser_config, test_config, setup)
 
+    @staticmethod
+    def _get_counter_prefix():
+        if platform.system() == "Linux":
+            return 'linux'
+        elif platform.system() in ("Windows", "Microsoft"):
+            if '6.1' in platform.version():  # w7
+                return 'w7'
+            elif '6.2' in platform.version():  # w8
+                return 'w8'
+            # Bug 1264325 - FIXME: with python 2.7.11: reports win8 instead of 8.1
+            elif '6.3' in platform.version():
+                return 'w8'
+            # Bug 1264325 - FIXME: with python 2.7.11: reports win8 instead of 10
+            elif '10.0' in platform.version():
+                return 'w8'
+            else:
+                raise TalosError('unsupported windows version')
+        elif platform.system() == "Darwin":
+            return 'mac'
+
     def _runTest(self, browser_config, test_config, setup):
         minidump_dir = os.path.join(setup.profile_dir, 'minidumps')
-        counters = test_config.get(self.platform_type + 'counters', [])
+        counters = test_config.get('%s_counters' % self._get_counter_prefix(), [])
         resolution = test_config['resolution']
 
         # add the mainthread_io to the environment variable, as defined

@@ -26,8 +26,6 @@
  *
  * Pending pseudo-classes:
  *
- *  :-moz-window-inactive.
- *
  *  :scope -> <style scoped>, pending discussion.
  *
  * This follows the order defined in layout/style/nsCSSPseudoClassList.h when
@@ -66,6 +64,7 @@ macro_rules! apply_non_ts_list {
                 // TODO(emilio): Needs pref check for
                 // full-screen-api.unprefix.enabled!
                 ("fullscreen", Fullscreen, fullscreen, IN_FULLSCREEN_STATE, _),
+                ("-moz-full-screen", MozFullScreen, mozFullScreen, IN_FULLSCREEN_STATE, _),
                 // TODO(emilio): This is inconsistently named (the capital R).
                 ("-moz-focusring", MozFocusRing, mozFocusRing, IN_FOCUSRING_STATE, _),
                 ("-moz-broken", MozBroken, mozBroken, IN_BROKEN_STATE, _),
@@ -116,6 +115,7 @@ macro_rules! apply_non_ts_list {
                 ("-moz-lwtheme", MozLWTheme, mozLWTheme, _, _),
                 ("-moz-lwtheme-brighttext", MozLWThemeBrightText, mozLWThemeBrightText, _, _),
                 ("-moz-lwtheme-darktext", MozLWThemeDarkText, mozLWThemeDarkText, _, _),
+                ("-moz-window-inactive", MozWindowInactive, mozWindowInactive, _, _),
             ],
             string: [
                 ("-moz-system-metric", MozSystemMetric, mozSystemMetric, _, PSEUDO_CLASS_INTERNAL),

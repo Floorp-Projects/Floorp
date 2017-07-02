@@ -33,7 +33,7 @@ Who will have Leanplum enabled?
   triggers and message interaction history to Leanplum server when available.
 
 
-Where does data sent to the Leaplum backend go?
+Where does data sent to the Leanplum backend go?
 ==============================================
 
 The Leanplum SDK is hard-coded to send data to the endpoint https://www.leanplum.com.  The endpoint is
@@ -50,44 +50,47 @@ What data is collected and sent to the Leanplum backend?
 The Leanplum SDK collects and sends two messages to the Leanplum backend.  The messages have the
 following parameters::
 
-  // Things we are collecting to use specifically for campaigns
-  "action" -> "start"                   // start: Leanplum SDK starts. track: an event is tracked.
-  "event" -> "Launch"                   // Used when an event is triggered. e.g. SaveBookmark.
+  // Sent every time when an event is triggered
+  "action" -> "track"                   // track: an event is tracked.
+  "event" -> "Launch"                   // Used when an event is triggered. e.g. E_Saved_Bookmark.
   "info" -> ""                          // Used when an event is triggered. Basic context associated with the event.
   "value" -> 0.0                        // Used when an event is triggered. Value of that event.
   "messageId" -> 5111602214338560       // Used when an event is triggered. The ID of the message.
 
-  // User related information
+  // Sent when the app starts
+  "action" -> "start"                   // start: Leanplum SDK starts. heartbeat
   "userAttributes" -> "{                // A set of key-value pairs used to describe the user.
-    "focus" -> "installed"              // Currently we are only tracking if Focus for Android is installed.
+    "focus" -> true                     // If Focus for Android is installed.
   }"
-  "deviceId" -> "b13b3c239d01aa7c"      // Set by Fennec, we use random uuid so users are anonymous to Leanplum.
-  "userId" -> "b13b3c239d01aa7c"        // Same as above.
   "appId" -> "app_6Ao...."              // Leanplum App ID.
   "clientKey" -> "dev_srwDUNZR...."     // Leanplum client access key.
-
-  // Basic system data
   "systemName" -> "Android OS"          // Fixed String in SDK.
-  "time" -> "1.497595093902E9"          // System time in second.
-  "token" -> "nksZ5pa0R5iegC7wj...."    // from Leanplum backend.
   "locale" -> "zh_TW"                   // System Locale.
-  "devMode" -> "true"                   // If the SDK is in developer mode.
   "timezone" -> "Asia/Taipei"           // System Timezone.
   "versionName" -> "55.0a1"             // Fennec version.
   "systemVersion" -> "7.1.2"            // System version.
-  "sdkVersion" -> "2.2.2-SNAPSHOT"      // Leanplum SDK version.
   "deviceModel" -> "Google Pixel"       // System device model.
   "timezoneOffsetSeconds" -> "28800"    // User timezone offset with PST.
   "deviceName" -> "Google Pixel"        // System device name.
-
-  // Not used
   "region" -> "(detect)"                // Not used. We strip play-SERVICES-location so this is will be the default stub value in Leanplum SDK.
   "city" -> "(detect)"                  // Same as above.
   "country" -> "(detect)"               // Same as above.
   "location" -> "(detect)"              // Same as above.
-  "newsfeedMessages" -> " size = 0"     // Not used. New Leanpum Inbox message(Leanplum feature) count.
+  "newsfeedMessages" -> " size = 0"     // Not used. New Leanplum Inbox message(Leanplum feature) count.
   "includeDefaults" -> "false"          // Not used. Always false.
 
+  // Other life cycle actions
+  "action" -> "heartbeat"               // heartbeat: every 15 minutes when app is in the foreground
+                                        // pauseSession: when app goes to background
+                                        // resumeSession: when app goes to foreground
+
+  // Sent for every action
+  "userId" -> "b13b3c239d01aa7c"        // Set by Fennec, we use random uuid so users are anonymous to Leanplum.
+  "deviceId" -> "b13b3c239d01aa7c"      // Same as above.
+  "sdkVersion" -> "2.2.2-SNAPSHOT"      // Leanplum SDK version.
+  "devMode" -> "true"                   // If the SDK is in developer mode. For official builds, it's false.
+  "time" -> "1.497595093902E9"          // System time in second.
+  "token" -> "nksZ5pa0R5iegC7wj...."    // Token come from Leanplum backend.
 
 Notes on what data is collected
 -------------------------------
@@ -98,38 +101,91 @@ Since Device ID is a random UUID, Leanplum can't map the device to any know Clie
 Events:
 Most of the Leanplum events can be mapped to a single combination of Telemetry event (Event+Method+Extra).
 Some events are not collected in Mozilla Telemetry. This will be addressed separately in each campaign review.
-List of current Events are :
-* Loads articles (reader mode ready)
-* Visiting a website (with match to past history) x times
-* Download videos or any other media (x times)
-* SavePassword (Save password and login) (x times)
-* SaveBookmark (x times)
-* LoadBookmark (x times) (loading the bookmark URL)
+There are three elements that are used for each event. They are: event name, value(default: 0.0), and info(default: "").
+Default value for event value is 0.0. Default value for event info is empty string.
+
+List of current Events related data that is sent:
+* When a page could be reader mode and is visible to the user
+{
+  "event" : "E_Reader_Available"
+}
+* Download videos or any other media
+{
+  "event" : "E_Download_Media_Saved_Image"
+}
+* Save password and login from door hanger
+{
+  "event" : "E_Saved_Login_And_Password"
+}
+* Save a bookmark from Fennec menu
+{
+  "event" : "E_Saved_Bookmark"
+}
+* Load the bookmark from home panel
+{
+  "event" : "E_Opened_Bookmark"
+}
 * Interact with search url area
-* When user take a screenshot  X times
+{
+  "event" : "E_Interact_With_Search_URL_Area"
+}
+* When a screenshot is taken
+{
+  "event" : "E_Screenshot"
+}
 
 Deep Links:
 Deep links are actions that can point Fennec to open certain pages or load features such as `show bookmark list` or
-`open a SUMO page`.
-* Link to Set Default Browser settings
-* Link to specific Add-on page
-* Link to sync signup/sign in
-* Link to default search engine settings
-* Link to “Save as PDF” feature
-* Take user directly to a Sign up for a newsletter
-* Link to bookmark list
-* Link to history list
-* Link to general preferences
-* Link to privacy preferences
-* Link to notifications preferences
-* Link to accessibility preferences
+`open a SUMO page`. When users see a prompt Leanplum message, they can click the button(s) on it. These buttons can
+trigger the following deep links
+* Link to Set Default Browser settings (firefox://default_browser)
+* Link to specific Add-on page (http://link_to_the_add_on_page)
+* Link to sync signup/sign in (firefox://sign_up)
+* Link to default search engine settings (firefox://preferences_search)
+* Link to “Save as PDF” feature (firefox://save_as_pdf)
+* Take user directly to a Sign up for a newsletter (http://link_to_newsletter_page)
+* Link to bookmark list (firefox://bookmark_list)
+* Link to history list (firefox://history_list)
+* Link to general preferences (firefox://preferences)
+* Link to privacy preferences (firefox://preferences_privacy)
+* Link to notifications preferences (firefox://preferences_notifications)
+* Link to accessibility preferences (firefox://preferences_accessibility)
 
 Messages :
-Messages are in-app prompts to the user from Leanplum. The interaction of that prompt will be kept and sent ot Leanplum backend.
-Such as "Accept" and "Show".
-List of current messages are:
-* Open App promote default browser: If a user starts Firefox twice a week, and haven't set Firefox for default browser, he'll see this prompt.
+Messages are in-app prompts to the user from Leanplum. The interaction of that prompt will be kept and sent to Leanplum backend (such
+as "Accept" and "Show"). A messages is a combination of an Event and a Deep Link. The combinations are downloaded from Leanplum
+when Leanplum SDK is initialized. When the criteria is met (set in Leanplum backend, could be when an event happens a certain number of times,
+and/or targeting certain user attribute ), a prompt message will show up. And there may be buttons for users to click. Those clicks
+may trigger deep links.
 
+List of current messages are:
+* Load Bookmark - Default Browser Promotion
+  LoadBookmark Promote Default Browser : A user click an item in bookmark list, a dialog will be shown to ask you make Fennec default.
+  Event             : E_Opened_Bookmark
+  Deep Link         : firefox://default_browser
+  User Attribute    : defaultBrowser : false
+
+* Open Firefox X times - Default Browser Promotion
+  Open Firefox and show dialog to link to default browser settings
+  Event             : Launch(default Leanplum event, no need to add code)
+  Deep Link         : firefox://default_browser
+  User Attribute    : defaultBrowser : false
+
+* Add Bookmark X times - Default Browser Promotion
+  Add a bookmark and show dialog to link to default browser settings
+  Event             : E_Saved_Bookmark
+  Deep Link         : firefox://default_browser
+  User Attribute    : defaultBrowser : false
+
+* Search URL Area - Default Search Engine Promotion
+  Interact with search Promote Engine : A user enter the url bar, we'll show the search settings
+  Event             : E_Interact_With_Search_URL_Area
+  Deep Link         : firefox://preferences_search
+
+* Save Bookmark - Bookmark List Promotion
+  Save Bookmark Promote Bookmark : When a user save a page as bookmark, we prompt the user to go to bookmark list.
+  Event             : E_Saved_Bookmark
+  Deep Link         : firefox://bookmark_list
 
 Technical notes
 ~~~~~~~~~~~~~~~
@@ -140,7 +196,7 @@ Build flags controlling the Leanplum SDK integration
 To test this locally, add lines like:
 
 export MOZ_ANDROID_MMA=1
-ac_add_options --with-leaplum-sdk-keyfile=/path/to/leaplum-sdk-developer.token
+ac_add_options --with-leanplum-sdk-keyfile=/path/to/leanplum-sdk-developer.token
 
 MOZ_ANDROID_MMA depends on MOZ_NATIVE_DEVICES and MOZ_ANDROID_GCM.
 Since Leanplum requires Google Play Services library, those flags are a proxy for it, and enable respectively.

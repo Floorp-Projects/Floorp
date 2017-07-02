@@ -1006,9 +1006,6 @@ var AudioPlaybackListener = {
       case "mediaControlStopped":
         utils.mediaSuspend = suspendTypes.SUSPENDED_STOP_DISPOSABLE;
         break;
-      case "blockInactivePageMedia":
-        utils.mediaSuspend = suspendTypes.SUSPENDED_BLOCK;
-        break;
       case "resumeMedia":
         utils.mediaSuspend = suspendTypes.NONE_SUSPENDED;
         break;

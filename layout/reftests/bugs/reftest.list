@@ -83,11 +83,11 @@ fuzzy-if(gtkWidget,6,26200) == 28811-2b.html 28811-2-ref.html  # Bug 1128229
 == 76331-1.html 76331-1-ref.html
 == 81947-1.html 81947-ref.html
 == 82711-1.html 82711-1-ref.html
-fails-if(styloVsGecko) == 82711-2.html 82711-2-ref.html
+== 82711-2.html 82711-2-ref.html
 == 82711-3.html 82711-3-ref.html
 != 82711-1-ref.html 82711-2-ref.html
 != 82711-1-ref.html 82711-3-ref.html
-fails-if(styloVsGecko) != 82711-2-ref.html 82711-3-ref.html
+!= 82711-2-ref.html 82711-3-ref.html
 fuzzy-if(Android,4,1) == 84400-1.html 84400-1-ref.html
 fuzzy-if(skiaContent,2,13) == 84400-2.html 84400-2-ref.html
 == 97777-1.html 97777-1-ref.html
@@ -661,7 +661,7 @@ fails-if(Android) fuzzy-if(skiaContent&&!Android,2,40) == 373381-2.html 373381-2
 fails-if(Android) random-if(d2d) == 373381-3.html 373381-3-ref.html
 fails-if(Android) == 373381-4.html 373381-4-ref.html
 == 373383-1.html 373383-1-ref.html
-fails-if(styloVsGecko) == 373433-1.html 373433-1-ref.html
+== 373433-1.html 373433-1-ref.html
 == 373533-1.xhtml about:blank
 == 373533-2.xhtml about:blank
 == 373533-3.xhtml about:blank
@@ -1811,7 +1811,7 @@ fuzzy-if(skiaContent,1,5) == 956513-1.svg 956513-1-ref.svg
 fuzzy-if(skiaContent,1,80) == 961887-1.html 961887-1-ref.html
 == 961887-2.html 961887-2-ref.html
 == 961887-3.html 961887-3-ref.html
-pref(layout.css.overflow-clip-box.enabled,true) fuzzy(50,145) fuzzy-if(asyncPan&&!layersGPUAccelerated,102,3712) fails-if(styloVsGecko||stylo) == 966992-1.html 966992-1-ref.html
+pref(layout.css.overflow-clip-box.enabled,true) fuzzy(50,145) fuzzy-if(asyncPan&&!layersGPUAccelerated,102,3712) == 966992-1.html 966992-1-ref.html
 skip-if(Android) == 966510-1.html 966510-1-ref.html # scrollable elements other than the root probably won't work well on android until bug 776030 is fixed
 skip-if(Android) == 966510-2.html 966510-2-ref.html # same as above
 fuzzy-if(skiaContent,1,123) == 978911-1.svg 978911-1-ref.svg
@@ -1952,7 +1952,7 @@ fuzzy-if(skiaContent,1,1) == 1202512-2.html 1202512-2-ref.html
 == 1209994-3.html 1209994-3-ref.html
 == 1209994-4.html 1209994-4-ref.html
 == 1222226-1.html 1222226-1-ref.html
-pref(layout.css.overflow-clip-box.enabled,true) fails-if(styloVsGecko||stylo) == 1226278.html 1226278-ref.html
+pref(layout.css.overflow-clip-box.enabled,true) == 1226278.html 1226278-ref.html
 == 1230466.html about:blank
 random-if(gtkWidget) != 1238243-1.html 1238243-1-notref.html # may fail on Linux, depending on Korean fonts available
 == 1238243-2.html 1238243-2-ref.html

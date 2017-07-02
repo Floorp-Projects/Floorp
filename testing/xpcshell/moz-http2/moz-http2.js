@@ -807,6 +807,30 @@ function handleRequest(req, res) {
     return;
   }
 
+  else if (u.pathname === "/doublepush") {
+    push1 = res.push('/doublypushed');
+    push1.writeHead(200, {
+      'content-type': 'text/plain',
+      'pushed' : 'yes',
+      'content-length' : 6,
+      'X-Connection-Http2': 'yes'
+    });
+    push1.end('pushed');
+
+    push2 = res.push('/doublypushed');
+    push2.writeHead(200, {
+      'content-type': 'text/plain',
+      'pushed' : 'yes',
+      'content-length' : 6,
+      'X-Connection-Http2': 'yes'
+    });
+    push2.end('pushed');
+  }
+
+  else if (u.pathname === "/doublypushed") {
+    content = 'not pushed';
+  }
+
   res.setHeader('Content-Type', 'text/html');
   if (req.httpVersionMajor != 2) {
     res.setHeader('Connection', 'close');

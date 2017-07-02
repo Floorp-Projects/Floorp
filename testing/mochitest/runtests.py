@@ -1776,6 +1776,23 @@ toolbar#nav-bar {
            '5.1' in platform.version() and options.e10s:
             prefs['layers.acceleration.disabled'] = True
 
+        sandbox_whitelist_paths = [SCRIPT_DIR]
+        try:
+            if options.workPath:
+                sandbox_whitelist_paths.append(options.workPath)
+        except AttributeError:
+            pass
+        try:
+            if options.topsrcdir:
+                sandbox_whitelist_paths.append(options.topsrcdir)
+        except AttributeError:
+            pass
+        if platform.system() == "Linux":
+            # Trailing slashes are needed to indicate directories on Linux
+            for idx, path in enumerate(sandbox_whitelist_paths):
+                if not path.endswith("/"):
+                    sandbox_whitelist_paths[idx] = path + "/"
+
         # interpolate preferences
         interpolation = {
             "server": "%s:%s" %
@@ -1809,7 +1826,8 @@ toolbar#nav-bar {
                                addons=extensions,
                                locations=self.locations,
                                preferences=prefs,
-                               proxy=proxy
+                               proxy=proxy,
+                               whitelistpaths=sandbox_whitelist_paths
                                )
 
         # Fix options.profilePath for legacy consumers.

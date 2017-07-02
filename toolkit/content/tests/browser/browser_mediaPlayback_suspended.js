@@ -14,31 +14,6 @@ function wait_for_event(browser, event) {
   });
 }
 
-function check_audio_onplay() {
-  var list = content.document.getElementsByTagName("audio");
-  if (list.length != 1) {
-    ok(false, "There should be only one audio element in page!")
-  }
-
-  var audio = list[0];
-  return new Promise((resolve, reject) => {
-    audio.onplay = () => {
-      ok(false, "Should not receive play event!");
-      this.onplay = null;
-      reject();
-    };
-
-    audio.pause();
-    audio.play();
-
-    setTimeout(() => {
-      ok(true, "Doesn't receive play event when media was blocked.");
-      audio.onplay = null;
-      resolve();
-    }, 1000)
-  });
-}
-
 function check_audio_suspended(suspendedType) {
   var list = content.document.getElementsByTagName("audio");
   if (list.length != 1) {
@@ -134,30 +109,9 @@ async function suspended_stop_disposable(url, browser) {
                                    check_audio_suspended);
 }
 
-async function suspended_block(url, browser) {
-  info("### Start test for suspended-block ###");
-  browser.loadURI(url);
-
-  info("- page should have playing audio -");
-  await wait_for_event(browser, "DOMAudioPlaybackStarted");
-
-  info("- block playing audio -");
-  browser.blockMedia();
-  await ContentTask.spawn(browser, SuspendedType.SUSPENDED_BLOCK,
-                                   check_audio_suspended);
-  await ContentTask.spawn(browser, null,
-                                   check_audio_onplay);
-
-  info("- resume blocked audio -");
-  browser.resumeMedia();
-  await ContentTask.spawn(browser, SuspendedType.NONE_SUSPENDED,
-                                   check_audio_suspended);
-}
-
 add_task(async function setup_test_preference() {
   await SpecialPowers.pushPrefEnv({"set": [
-    ["media.useAudioChannelService.testing", true],
-    ["media.block-autoplay-until-in-foreground", true]
+    ["media.useAudioChannelService.testing", true]
   ]});
 });
 
@@ -180,11 +134,4 @@ add_task(async function test_suspended_stop_disposable() {
       gBrowser,
       url: "about:blank"
     }, suspended_stop_disposable.bind(this, PAGE));
-});
-
-add_task(async function test_suspended_block() {
-  await BrowserTestUtils.withNewTab({
-      gBrowser,
-      url: "about:blank"
-    }, suspended_block.bind(this, PAGE));
 });

@@ -666,7 +666,10 @@ add_task(async function checkUndoVisitsState() {
 
 add_task(async function checkHistoryRemovalCompletion() {
   AutoMigrate._errorMap = {bookmarks: 0, visits: 0, logins: 0};
-  await AutoMigrate._removeSomeVisits([{url: "http://www.example.com/", limit: -1}]);
+  await AutoMigrate._removeSomeVisits([{url: "http://www.example.com/",
+                                        first: 0,
+                                        last: PlacesUtils.toPRTime(new Date()),
+                                        limit: -1}]);
   ok(true, "Removing visits should complete even if removing some visits failed.");
   Assert.equal(AutoMigrate._errorMap.visits, 1, "Should have logged the error for visits.");
 

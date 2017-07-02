@@ -683,6 +683,11 @@ nsHttpServer.prototype =
     this._handler.registerContentType(ext, type);
   },
 
+  get connectionNumber()
+  {
+    return this._connectionGen;
+  },
+
   //
   // see nsIHttpServer.serverIdentity
   //

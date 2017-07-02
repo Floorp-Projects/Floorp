@@ -34,15 +34,13 @@ class TalosResults(object):
         output all results to appropriate URLs
         - output_formats: a dict mapping formats to a list of URLs
         """
-        tbpl_output = {}
         try:
 
             for key, urls in output_formats.items():
                 _output = output.Output(self)
                 results = _output()
                 for url in urls:
-                    _output.output(results, url, tbpl_output)
-
+                    _output.output(results, url)
         except utils.TalosError as e:
             # print to results.out
             try:
@@ -56,9 +54,6 @@ class TalosResults(object):
                 pass
             print('\nFAIL: %s' % str(e).replace('\n', '\nRETURN:'))
             raise e
-
-        if tbpl_output:
-            print("TinderboxPrint: TalosResult: %s" % json.dumps(tbpl_output))
 
 
 class TestResults(object):

@@ -60,6 +60,12 @@ XPCOMUtils.defineLazyGetter(Services, "ppmm", () => {
            .QueryInterface(Ci.nsIProcessScriptLoader);
 });
 
+XPCOMUtils.defineLazyGetter(Services, "io", () => {
+  return Cc["@mozilla.org/network/io-service;1"]
+           .getService(Ci.nsIIOService2)
+           .QueryInterface(Ci.nsISpeculativeConnect);
+});
+
 var initTable = [
   ["androidBridge", "@mozilla.org/android/bridge;1", "nsIAndroidBridge",
    AppConstants.platform == "android"],
@@ -74,7 +80,6 @@ var initTable = [
   ["droppedLinkHandler", "@mozilla.org/content/dropped-link-handler;1", "nsIDroppedLinkHandler"],
   ["els", "@mozilla.org/eventlistenerservice;1", "nsIEventListenerService"],
   ["eTLD", "@mozilla.org/network/effective-tld-service;1", "nsIEffectiveTLDService"],
-  ["io", "@mozilla.org/network/io-service;1", "nsIIOService2"],
   ["intl", "@mozilla.org/mozintl;1", "mozIMozIntl"],
   ["locale", "@mozilla.org/intl/localeservice;1", "mozILocaleService"],
   ["logins", "@mozilla.org/login-manager;1", "nsILoginManager"],

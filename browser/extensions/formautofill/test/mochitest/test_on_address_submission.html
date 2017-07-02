@@ -99,6 +99,26 @@ add_task(async function new_address_submitted_and_merged() {
   delete expectedAddresses[0].timesUsed;
 });
 
+// Submit an updated autofill address and merge.
+add_task(async function check_storage_after_form_submitted() {
+  document.querySelector("form").reset();
+  // Add country to second address in storage
+  await setInput("#country", "US");
+  TEST_ADDRESSES[1].country = "US";
+
+  await setInput("#organization", "Moz");
+  doKey("down");
+  await expectPopup();
+  doKey("down");
+  doKey("return");
+  clickOnElement("input[type=submit]");
+
+  let expectedAddresses = TEST_ADDRESSES.slice(0);
+  await onAddressChanged("merge");
+  let matching = await checkAddresses(expectedAddresses);
+  ok(matching, "Updated address merged as expected");
+});
+
 </script>
 
 <div>

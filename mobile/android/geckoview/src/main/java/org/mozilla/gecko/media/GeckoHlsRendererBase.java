@@ -50,6 +50,10 @@ public abstract class GeckoHlsRendererBase extends BaseRenderer {
     protected abstract boolean clearInputSamplesQueue();
     protected abstract void notifyPlayerInputFormatChanged(Format newFormat);
 
+    private DecoderInputBuffer mBufferForRead =
+        new DecoderInputBuffer(DecoderInputBuffer.BUFFER_REPLACEMENT_MODE_NORMAL);
+    private final DecoderInputBuffer mflagsOnlyBuffer = DecoderInputBuffer.newFlagsOnlyInstance();
+
     protected void assertTrue(boolean condition) {
         if (DEBUG && !condition) {
             throw new AssertionError("Expected condition to be true");
@@ -87,25 +91,28 @@ public abstract class GeckoHlsRendererBase extends BaseRenderer {
         return fmt;
     }
 
-    public long getFirstSamplePTS() { return mFirstSampleStartTime; }
+    public synchronized long getFirstSamplePTS() { return mFirstSampleStartTime; }
 
     public synchronized ConcurrentLinkedQueue<GeckoHLSSample> getQueuedSamples(int number) {
         ConcurrentLinkedQueue<GeckoHLSSample> samples =
             new ConcurrentLinkedQueue<GeckoHLSSample>();
 
+        GeckoHLSSample sample = null;
         int queuedSize = mDemuxedInputSamples.size();
         for (int i = 0; i < queuedSize; i++) {
             if (i >= number) {
                 break;
             }
-            GeckoHLSSample sample = mDemuxedInputSamples.poll();
+            sample = mDemuxedInputSamples.poll();
             samples.offer(sample);
         }
-        if (samples.isEmpty()) {
+
+        sample = samples.isEmpty() ? null : samples.peek();
+        if (sample == null) {
             if (DEBUG) { Log.d(LOGTAG, "getQueuedSamples isEmpty, mWaitingForData = true !"); }
             mWaitingForData = true;
         } else if (mFirstSampleStartTime == Long.MIN_VALUE) {
-            mFirstSampleStartTime = samples.peek().info.presentationTimeUs;
+            mFirstSampleStartTime = sample.info.presentationTimeUs;
             if (DEBUG) { Log.d(LOGTAG, "mFirstSampleStartTime = " + mFirstSampleStartTime); }
         }
         return samples;
@@ -189,19 +196,17 @@ public abstract class GeckoHlsRendererBase extends BaseRenderer {
             return false;
         }
 
-        DecoderInputBuffer bufferForRead =
-            new DecoderInputBuffer(DecoderInputBuffer.BUFFER_REPLACEMENT_MODE_NORMAL);
-        bufferForRead.data = mInputBuffer;
-        if (bufferForRead.data != null) {
-            bufferForRead.clear();
+        mBufferForRead.data = mInputBuffer;
+        if (mBufferForRead.data != null) {
+            mBufferForRead.clear();
         }
 
-        handleReconfiguration(bufferForRead);
+        handleReconfiguration(mBufferForRead);
 
         // Read data from HlsMediaSource
         int result = C.RESULT_NOTHING_READ;
         try {
-            result = readSource(mFormatHolder, bufferForRead, false);
+            result = readSource(mFormatHolder, mBufferForRead, false);
         } catch (Exception e) {
             Log.e(LOGTAG, "[feedInput] Exception when readSource :", e);
             return false;
@@ -212,20 +217,20 @@ public abstract class GeckoHlsRendererBase extends BaseRenderer {
         }
 
         if (result == C.RESULT_FORMAT_READ) {
-            handleFormatRead(bufferForRead);
+            handleFormatRead(mBufferForRead);
             return true;
         }
 
         // We've read a buffer.
-        if (bufferForRead.isEndOfStream()) {
+        if (mBufferForRead.isEndOfStream()) {
             if (DEBUG) { Log.d(LOGTAG, "Now we're at the End Of Stream."); }
-            handleEndOfStream(bufferForRead);
+            handleEndOfStream(mBufferForRead);
             return false;
         }
 
-        bufferForRead.flip();
+        mBufferForRead.flip();
 
-        handleSamplePreparation(bufferForRead);
+        handleSamplePreparation(mBufferForRead);
 
         maybeNotifyDataArrived();
         return true;
@@ -240,7 +245,8 @@ public abstract class GeckoHlsRendererBase extends BaseRenderer {
     }
 
     private void readFormat() {
-        int result = readSource(mFormatHolder, null, true);
+        mflagsOnlyBuffer.clear();
+        int result = readSource(mFormatHolder, mflagsOnlyBuffer, true);
         if (result == C.RESULT_FORMAT_READ) {
             onInputFormatChanged(mFormatHolder.format);
         }

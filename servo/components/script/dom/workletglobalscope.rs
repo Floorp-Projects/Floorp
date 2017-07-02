@@ -13,12 +13,14 @@ use dom::testworkletglobalscope::TestWorkletTask;
 use dom_struct::dom_struct;
 use ipc_channel::ipc;
 use ipc_channel::ipc::IpcSender;
+use js::jsapi::JSContext;
 use js::jsval::UndefinedValue;
 use js::rust::Runtime;
 use microtask::Microtask;
 use microtask::MicrotaskQueue;
 use msg::constellation_msg::PipelineId;
 use net_traits::ResourceThreads;
+use net_traits::image_cache::ImageCache;
 use profile_traits::mem;
 use profile_traits::time;
 use script_traits::ScriptMsg;
@@ -26,6 +28,7 @@ use script_traits::TimerSchedulerMsg;
 use servo_url::ImmutableOrigin;
 use servo_url::MutableOrigin;
 use servo_url::ServoUrl;
+use std::sync::Arc;
 
 #[dom_struct]
 /// https://drafts.css-houdini.org/worklets/#workletglobalscope
@@ -59,6 +62,11 @@ impl WorkletGlobalScope {
             base_url: base_url,
             microtask_queue: MicrotaskQueue::default(),
         }
+    }
+
+    /// Get the JS context.
+    pub fn get_cx(&self) -> *mut JSContext {
+        self.globalscope.get_cx()
     }
 
     /// Evaluate a JS script in this global.
@@ -117,6 +125,8 @@ pub struct WorkletGlobalScopeInit {
     pub constellation_chan: IpcSender<ScriptMsg>,
     /// Message to send to the scheduler
     pub scheduler_chan: IpcSender<TimerSchedulerMsg>,
+    /// The image cache
+    pub image_cache: Arc<ImageCache>,
 }
 
 /// https://drafts.css-houdini.org/worklets/#worklet-global-scope-type

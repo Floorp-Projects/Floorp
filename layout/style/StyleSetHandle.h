@@ -25,6 +25,7 @@ class Element;
 class ShadowRoot;
 } // namespace dom
 } // namespace mozilla
+class nsBindingManager;
 class nsCSSCounterStyleRule;
 struct nsFontFaceRuleContainer;
 class nsIAtom;
@@ -109,7 +110,7 @@ public:
     // nsStyleSet or ServoStyleSet.  See corresponding comments in
     // nsStyleSet.h for descriptions of these methods.
 
-    inline void Init(nsPresContext* aPresContext);
+    inline void Init(nsPresContext* aPresContext, nsBindingManager* aBindingManager);
     inline void BeginShutdown();
     inline void Shutdown();
     inline bool GetAuthorStyleDisabled() const;
@@ -152,6 +153,7 @@ public:
                                     StyleSheet* aReferenceSheet);
     inline int32_t SheetCount(SheetType aType) const;
     inline StyleSheet* StyleSheetAt(SheetType aType, int32_t aIndex) const;
+    inline void AppendAllXBLStyleSheets(nsTArray<StyleSheet*>& aArray) const;
     inline nsresult RemoveDocStyleSheet(StyleSheet* aSheet);
     inline nsresult AddDocStyleSheet(StyleSheet* aSheet, nsIDocument* aDocument);
     inline void RecordStyleSheetChange(StyleSheet* aSheet, StyleSheet::ChangeType);

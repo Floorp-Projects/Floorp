@@ -221,6 +221,9 @@ function treatAsSafeArgument(entry, varName, csuName)
         ["Gecko_nsStyleSVG_CopyContextProperties", "aDst", null],
         ["Gecko_nsStyleFont_PrefillDefaultForGeneric", "aFont", null],
         ["Gecko_nsStyleSVG_SetContextPropertiesLength", "aSvg", null],
+        ["Gecko_ClearAlternateValues", "aFont", null],
+        ["Gecko_AppendAlternateValues", "aFont", null],
+        ["Gecko_CopyAlternateValuesFrom", "aDest", null],
     ];
     for (var [entryMatch, varMatch, csuMatch] of whitelist) {
         assert(entryMatch || varMatch || csuMatch);

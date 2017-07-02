@@ -245,17 +245,26 @@
   height: 16px;
 }
 
+#customization-uidensity-button > .box-inherit > .box-inherit > .button-text,
 #customization-lwtheme-button > .box-inherit > .box-inherit > .button-text {
   /* Sadly, button.css thinks its margins are perfect for everyone. */
   margin-inline-start: 6px !important;
 }
 
+#customization-uidensity-button > .box-inherit > .box-inherit > .button-icon,
 #customization-lwtheme-button > .box-inherit > .box-inherit > .button-icon {
   width: 16px;
   height: 16px;
   border-radius: 2px;
-  background-image: url("chrome://browser/content/default-theme-icon.svg");
   background-size: contain;
+}
+
+#customization-lwtheme-button > .box-inherit > .box-inherit > .button-icon {
+  background-image: url("chrome://browser/content/default-theme-icon.svg");
+}
+
+#customization-uidensity-button > .box-inherit > .box-inherit > .button-icon {
+  background-image: url("chrome://browser/skin/customizableui/density-normal.svg");
 }
 
 %ifndef MOZ_PHOTON_THEME
@@ -407,18 +416,38 @@ toolbarpaletteitem[place="toolbar"]:not([mousedown="true"]):-moz-focusring {
   margin-right: 0;
 }
 
+#customization-uidensity-touch-spacer {
+  border-top: 1px solid ThreeDLightShadow;
+  margin: 0 -10px 10px;
+}
+
+#customization-uidensity-autotouchmode-checkbox {
+  margin-bottom: 10px;
+}
+
+#customization-uidensity-menu > .panel-arrowcontainer > .panel-arrowcontent,
 #customization-lwtheme-menu > .panel-arrowcontainer > .panel-arrowcontent {
   -moz-box-orient: vertical;
+}
+
+#customization-lwtheme-menu > .panel-arrowcontainer > .panel-arrowcontent {
   /* Make the panel padding uniform across all platforms due to the
      styling of the section headers and footer. */
   padding: 10px;
 }
 
+#customization-uidensity-menu > .panel-arrowcontainer > .panel-arrowcontent {
+  padding: 5px 10px;
+}
+
+.customization-uidensity-menu-button > .menu-iconic-left > .menu-iconic-icon,
 .customization-lwtheme-menu-theme > .toolbarbutton-icon {
   width: 32px;
   height: 32px;
+  margin: 5px;
 }
 
+.customization-uidensity-menu-button,
 .customization-lwtheme-menu-theme {
   -moz-appearance: none;
   border: 1px solid transparent;
@@ -433,21 +462,34 @@ toolbarpaletteitem[place="toolbar"]:not([mousedown="true"]):-moz-focusring {
   list-style-image: url(chrome://browser/content/default-theme-icon.svg);
 }
 
+#customization-uidensity-menu-button-normal {
+  list-style-image: url("chrome://browser/skin/customizableui/density-normal.svg");
+}
+
+#customization-uidensity-menu-button-compact {
+  list-style-image: url("chrome://browser/skin/customizableui/density-compact.svg");
+}
+
+#customization-uidensity-menu-button-touch {
+  list-style-image: url("chrome://browser/skin/customizableui/density-touch.svg");
+}
+
+.customization-uidensity-menu-button[active="true"],
+.customization-uidensity-menu-button:hover,
 .customization-lwtheme-menu-theme[active="true"],
 .customization-lwtheme-menu-theme:hover {
   background-color: var(--arrowpanel-dimmed);
   border-color: var(--panel-separator-color);
 }
 
+.customization-uidensity-menu-button[active="true"],
+.customization-uidensity-menu-button:hover:active,
 .customization-lwtheme-menu-theme[active="true"],
 .customization-lwtheme-menu-theme:hover:active {
   background-color: var(--arrowpanel-dimmed-further);
 }
 
-.customization-lwtheme-menu-theme > .toolbarbutton-icon {
-  margin: 5px;
-}
-
+.customization-uidensity-menu-button > .menu-iconic-text,
 .customization-lwtheme-menu-theme > .toolbarbutton-text {
   text-align: start;
 }

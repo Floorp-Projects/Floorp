@@ -45,6 +45,8 @@ const kPrefCustomizationState        = "browser.uiCustomization.state";
 const kPrefCustomizationAutoAdd      = "browser.uiCustomization.autoAdd";
 const kPrefCustomizationDebug        = "browser.uiCustomization.debug";
 const kPrefDrawInTitlebar            = "browser.tabs.drawInTitlebar";
+const kPrefUIDensity                 = "browser.uidensity";
+const kPrefAutoTouchMode             = "browser.touchmode.auto";
 
 const kExpectedWindowURL = "chrome://browser/content/browser.xul";
 
@@ -159,6 +161,8 @@ var gUIStateBeforeReset = {
   uiCustomizationState: null,
   drawInTitlebar: null,
   currentTheme: null,
+  uiDensity: null,
+  autoTouchMode: null,
 };
 
 var gDefaultPanelPlacements = null;
@@ -2551,6 +2555,8 @@ var CustomizableUIInternal = {
     try {
       gUIStateBeforeReset.drawInTitlebar = Services.prefs.getBoolPref(kPrefDrawInTitlebar);
       gUIStateBeforeReset.uiCustomizationState = Services.prefs.getCharPref(kPrefCustomizationState);
+      gUIStateBeforeReset.uiDensity = Services.prefs.getIntPref(kPrefUIDensity);
+      gUIStateBeforeReset.autoTouchMode = Services.prefs.getBoolPref(kPrefAutoTouchMode);
       gUIStateBeforeReset.currentTheme = LightweightThemeManager.currentTheme;
     } catch (e) { }
 
@@ -2558,6 +2564,8 @@ var CustomizableUIInternal = {
 
     Services.prefs.clearUserPref(kPrefCustomizationState);
     Services.prefs.clearUserPref(kPrefDrawInTitlebar);
+    Services.prefs.clearUserPref(kPrefUIDensity);
+    Services.prefs.clearUserPref(kPrefAutoTouchMode);
     LightweightThemeManager.currentTheme = null;
     log.debug("State reset");
 
@@ -2628,6 +2636,8 @@ var CustomizableUIInternal = {
     let uiCustomizationState = gUIStateBeforeReset.uiCustomizationState;
     let drawInTitlebar = gUIStateBeforeReset.drawInTitlebar;
     let currentTheme = gUIStateBeforeReset.currentTheme;
+    let uiDensity = gUIStateBeforeReset.uiDensity;
+    let autoTouchMode = gUIStateBeforeReset.autoTouchMode;
 
     // Need to clear the previous state before setting the prefs
     // because pref observers may check if there is a previous UI state.
@@ -2635,6 +2645,8 @@ var CustomizableUIInternal = {
 
     Services.prefs.setCharPref(kPrefCustomizationState, uiCustomizationState);
     Services.prefs.setBoolPref(kPrefDrawInTitlebar, drawInTitlebar);
+    Services.prefs.setIntPref(kPrefUIDensity, uiDensity);
+    Services.prefs.setBoolPref(kPrefAutoTouchMode, autoTouchMode);
     LightweightThemeManager.currentTheme = currentTheme;
     this.loadSavedState();
     // If the user just customizes toolbar/titlebar visibility, gSavedState will be null
@@ -2807,6 +2819,16 @@ var CustomizableUIInternal = {
           return false;
         }
       }
+    }
+
+    if (Services.prefs.prefHasUserValue(kPrefUIDensity)) {
+      log.debug(kPrefUIDensity + " pref is non-default");
+      return false;
+    }
+
+    if (Services.prefs.prefHasUserValue(kPrefAutoTouchMode)) {
+      log.debug(kPrefAutoTouchMode + " pref is non-default");
+      return false;
     }
 
     if (Services.prefs.prefHasUserValue(kPrefDrawInTitlebar)) {
@@ -3540,7 +3562,9 @@ this.CustomizableUI = {
   get canUndoReset() {
     return gUIStateBeforeReset.uiCustomizationState != null ||
            gUIStateBeforeReset.drawInTitlebar != null ||
-           gUIStateBeforeReset.currentTheme != null;
+           gUIStateBeforeReset.currentTheme != null ||
+           gUIStateBeforeReset.autoTouchMode != null ||
+           gUIStateBeforeReset.uiDensity != null;
   },
 
   /**

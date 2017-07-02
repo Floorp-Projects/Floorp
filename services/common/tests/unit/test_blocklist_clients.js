@@ -114,6 +114,21 @@ function run_test() {
   });
 }
 
+add_task(async function test_initial_dump_is_loaded_as_synced_when_collection_is_empty() {
+  for (let {client} of gBlocklistClients) {
+    // Test an empty db populates, but don't reach server (specified timestamp <= dump).
+    await client.maybeSync(1, Date.now());
+
+    // Open the collection, verify the loaded data has status to synced:
+    const sqliteHandle = await FirefoxAdapter.openConnection({path: kintoFilename});
+    const collection = kintoCollection(client.collectionName, sqliteHandle);
+    const list = await collection.list();
+    equal(list.data[0]._status, "synced");
+    await sqliteHandle.close();
+  }
+});
+add_task(clear_state);
+
 add_task(async function test_records_obtained_from_server_are_stored_in_db() {
   for (let {client} of gBlocklistClients) {
     // Test an empty db populates
@@ -127,6 +142,22 @@ add_task(async function test_records_obtained_from_server_are_stored_in_db() {
     equal(list.data.length, 1);
     await sqliteHandle.close();
   }
+});
+add_task(clear_state);
+
+add_task(async function test_records_changes_are_overwritten_by_server_changes() {
+  const {client} = gBlocklistClients[0];
+
+  // Create some local conflicting data, and make sure it syncs without error.
+  const sqliteHandle = await FirefoxAdapter.openConnection({path: kintoFilename});
+  const collection = kintoCollection(client.collectionName, sqliteHandle);
+  await collection.create({
+    "versionRange": [],
+    "id": "9d500963-d80e-3a91-6e74-66f3811b99cc"
+  }, { useRecordId: true });
+  await sqliteHandle.close();
+
+  await client.maybeSync(2000, Date.now(), {loadDump: false});
 });
 add_task(clear_state);
 

@@ -3598,9 +3598,7 @@ var SessionStoreInternal = {
       tab.toggleMuteAudio(tabData.muteReason);
     }
 
-    if (tabData.mediaBlocked) {
-      browser.blockMedia();
-    } else {
+    if (!tabData.mediaBlocked) {
       browser.resumeMedia();
     }
 

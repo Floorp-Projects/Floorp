@@ -3,6 +3,7 @@
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import os
+import platform
 import time
 import tempfile
 import uuid
@@ -44,7 +45,8 @@ class Profile(object):
     """
 
     def __init__(self, profile=None, addons=None, addon_manifests=None,
-                 preferences=None, locations=None, proxy=None, restore=True):
+                 preferences=None, locations=None, proxy=None, restore=True,
+                 whitelistpaths=None):
         """
         :param profile: Path to the profile
         :param addons: String of one or list of addons to install
@@ -53,6 +55,8 @@ class Profile(object):
         :param locations: ServerLocations object
         :param proxy: Setup a proxy
         :param restore: Flag for removing all custom settings during cleanup
+        :param whitelistpaths: List of paths to pass to Firefox to allow read
+            access to from the content process sandbox.
         """
         self._addons = addons
         self._addon_manifests = addon_manifests
@@ -70,6 +74,7 @@ class Profile(object):
         else:
             preferences = []
         self._preferences = preferences
+        self._whitelistpaths = whitelistpaths
 
         # Handle profile creation
         self.create_new = not profile
@@ -106,6 +111,25 @@ class Profile(object):
 
         self.permissions = Permissions(self.profile, self._locations)
         prefs_js, user_js = self.permissions.network_prefs(self._proxy)
+
+        if self._whitelistpaths:
+            # On macOS we don't want to support a generalized read whitelist,
+            # and the macOS sandbox policy language doesn't have support for
+            # lists, so we handle these specially.
+            if platform.system() == "Darwin":
+                assert len(self._whitelistpaths) <= 2
+                if len(self._whitelistpaths) == 2:
+                    prefs_js.append((
+                        "security.sandbox.content.mac.testing_read_path2",
+                        self._whitelistpaths[1]
+                    ))
+                prefs_js.append((
+                    "security.sandbox.content.mac.testing_read_path1",
+                    self._whitelistpaths[0]
+                ))
+            else:
+                prefs_js.append(("security.sandbox.content.read_path_whitelist",
+                                 ",".join(self._whitelistpaths)))
         self.set_preferences(prefs_js, 'prefs.js')
         self.set_preferences(user_js)
 

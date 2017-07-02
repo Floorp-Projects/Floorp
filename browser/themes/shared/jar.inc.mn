@@ -39,6 +39,9 @@
 #ifdef MOZ_PHOTON_THEME
   skin/classic/browser/customizableui/empty-overflow-panel.png     (../shared/customizableui/empty-overflow-panel.png)
   skin/classic/browser/customizableui/empty-overflow-panel@2x.png  (../shared/customizableui/empty-overflow-panel@2x.png)
+  skin/classic/browser/customizableui/density-compact.svg      (../shared/customizableui/density-compact.svg)
+  skin/classic/browser/customizableui/density-normal.svg       (../shared/customizableui/density-normal.svg)
+  skin/classic/browser/customizableui/density-touch.svg        (../shared/customizableui/density-touch.svg)
 #else
   skin/classic/browser/customizableui/customize-illustration.png  (../shared/customizableui/customize-illustration.png)
   skin/classic/browser/customizableui/customize-illustration@2x.png  (../shared/customizableui/customize-illustration@2x.png)
@@ -163,6 +166,7 @@
   skin/classic/browser/settings.svg                   (../shared/icons/settings.svg)
   skin/classic/browser/share.svg                      (../shared/icons/share.svg)
   skin/classic/browser/sidebars.svg                   (../shared/icons/sidebars.svg)
+  skin/classic/browser/sidebars-right.svg             (../shared/icons/sidebars-right.svg)
   skin/classic/browser/stop.svg                       (../shared/icons/stop.svg)
   skin/classic/browser/sync.svg                       (../shared/icons/sync.svg)
   skin/classic/browser/synced-tabs.svg                (../shared/icons/synced-tabs.svg)

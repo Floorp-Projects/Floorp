@@ -51,6 +51,63 @@
           </hbox>
         </panel>
       </button>
+#ifdef MOZ_PHOTON_THEME
+      <button id="customization-uidensity-button"
+              label="&customizeMode.uidensity;"
+              class="customizationmode-button"
+              type="menu">
+        <panel type="arrow" id="customization-uidensity-menu"
+               onpopupshowing="gCustomizeMode.onUIDensityMenuShowing();"
+               position="topcenter bottomleft"
+               flip="none"
+               role="menu">
+          <menuitem id="customization-uidensity-menu-button-normal"
+                    class="menuitem-iconic customization-uidensity-menu-button"
+                    role="menuitemradio"
+                    label="&customizeMode.uidensity.menuNormal.label;"
+                    accesskey="&customizeMode.uidensity.menuNormal.accessKey;"
+                    tooltiptext="&customizeMode.uidensity.menuNormal.tooltip;"
+                    tabindex="0"
+                    onfocus="gCustomizeMode.updateUIDensity(this.mode);"
+                    onmouseover="gCustomizeMode.updateUIDensity(this.mode);"
+                    onblur="gCustomizeMode.resetUIDensity();"
+                    onmouseout="gCustomizeMode.resetUIDensity();"
+                    oncommand="gCustomizeMode.setUIDensity(this.mode);" />
+          <menuitem id="customization-uidensity-menu-button-compact"
+                    class="menuitem-iconic customization-uidensity-menu-button"
+                    role="menuitemradio"
+                    label="&customizeMode.uidensity.menuCompact.label;"
+                    accesskey="&customizeMode.uidensity.menuCompact.accessKey;"
+                    tooltiptext="&customizeMode.uidensity.menuCompact.tooltip;"
+                    tabindex="0"
+                    onfocus="gCustomizeMode.updateUIDensity(this.mode);"
+                    onmouseover="gCustomizeMode.updateUIDensity(this.mode);"
+                    onblur="gCustomizeMode.resetUIDensity();"
+                    onmouseout="gCustomizeMode.resetUIDensity();"
+                    oncommand="gCustomizeMode.setUIDensity(this.mode);" />
+#ifndef XP_MACOSX
+          <menuitem id="customization-uidensity-menu-button-touch"
+                    class="menuitem-iconic customization-uidensity-menu-button"
+                    role="menuitemradio"
+                    label="&customizeMode.uidensity.menuTouch.label;"
+                    accesskey="&customizeMode.uidensity.menuTouch.accessKey;"
+                    tooltiptext="&customizeMode.uidensity.menuTouch.tooltip;"
+                    tabindex="0"
+                    onfocus="gCustomizeMode.updateUIDensity(this.mode);"
+                    onmouseover="gCustomizeMode.updateUIDensity(this.mode);"
+                    onblur="gCustomizeMode.resetUIDensity();"
+                    onmouseout="gCustomizeMode.resetUIDensity();"
+                    oncommand="gCustomizeMode.setUIDensity(this.mode);">
+          </menuitem>
+          <spacer hidden="true" id="customization-uidensity-touch-spacer"/>
+          <checkbox id="customization-uidensity-autotouchmode-checkbox"
+                    hidden="true"
+                    label="&customizeMode.uidensity.autoTouchMode.checkbox.label;"
+                    oncommand="gCustomizeMode.updateAutoTouchMode(this.checked)"/>
+#endif
+        </panel>
+      </button>
+#endif
 
       <spacer id="customization-footer-spacer"/>
       <button id="customization-undo-reset-button"

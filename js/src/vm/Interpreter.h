@@ -439,6 +439,9 @@ SetObjectElement(JSContext* cx, HandleObject obj, HandleValue index, HandleValue
 
 bool
 SetObjectElement(JSContext* cx, HandleObject obj, HandleValue index, HandleValue value,
+                 HandleValue receiver, bool strict);
+bool
+SetObjectElement(JSContext* cx, HandleObject obj, HandleValue index, HandleValue value,
                  HandleValue receiver, bool strict, HandleScript script, jsbytecode* pc);
 
 bool
@@ -597,6 +600,10 @@ HomeObjectSuperBase(JSContext* cx, HandleObject homeObj);
 
 JSObject*
 SuperFunOperation(JSContext* cx, HandleObject callee);
+
+bool
+SetPropertySuper(JSContext* cx, HandleObject obj, HandleValue receiver,
+                 HandlePropertyName id, HandleValue rval, bool strict);
 
 }  /* namespace js */
 

@@ -340,14 +340,3 @@ function addSVGElement(target, tag, attrs) {
   target.appendChild(element);
   return element;
 }
-
-/*
- * Return true if servo is enabled.
- */
-function isServoEnabled() {
-  try {
-    return SpecialPowers.getBoolPref('layout.css.servo.enabled');
-  } catch(e) {
-    return false;
-  }
-}
