@@ -2713,21 +2713,6 @@ GeckoDriver.prototype.deleteSession = function(cmd, resp) {
   this.capabilities = new session.Capabilities();
 };
 
-/** Returns the current status of the Application Cache. */
-GeckoDriver.prototype.getAppCacheStatus = function* (cmd, resp) {
-  assert.window(this.getCurrentWindow());
-
-  switch (this.context) {
-    case Context.CHROME:
-      throw new UnsupportedOperationError(
-          "Command 'getAppCacheStatus' is not yet available in chrome context");
-
-    case Context.CONTENT:
-      resp.body.value = yield this.listener.getAppCacheStatus();
-      break;
-  }
-};
-
 /**
  * Takes a screenshot of a web element, current frame, or viewport.
  *
@@ -3368,7 +3353,6 @@ GeckoDriver.prototype.commands = {
   "WebDriver:GetActiveElement": GeckoDriver.prototype.getActiveElement,
   "WebDriver:GetActiveFrame": GeckoDriver.prototype.getActiveFrame,
   "WebDriver:GetAlertText": GeckoDriver.prototype.getTextFromDialog,
-  "WebDriver:GetAppCacheStatus": GeckoDriver.prototype.getAppCacheStatus,
   "WebDriver:GetCapabilities": GeckoDriver.prototype.getSessionCapabilities,
   "WebDriver:GetChromeWindowHandle": GeckoDriver.prototype.getChromeWindowHandle,
   "WebDriver:GetChromeWindowHandles": GeckoDriver.prototype.getChromeWindowHandles,
@@ -3427,7 +3411,6 @@ GeckoDriver.prototype.commands = {
   "fullscreen": GeckoDriver.prototype.fullscreen,
   "getActiveElement": GeckoDriver.prototype.getActiveElement,
   "getActiveFrame": GeckoDriver.prototype.getActiveFrame,
-  "getAppCacheStatus": GeckoDriver.prototype.getAppCacheStatus,
   "getChromeWindowHandle": GeckoDriver.prototype.getChromeWindowHandle,
   "getChromeWindowHandles": GeckoDriver.prototype.getChromeWindowHandles,
   "getCookies": GeckoDriver.prototype.getCookies,

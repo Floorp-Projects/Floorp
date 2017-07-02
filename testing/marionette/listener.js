@@ -564,7 +564,6 @@ function startListeners() {
   addMessageListenerId("Marionette:switchToShadowRoot", switchToShadowRootFn);
   addMessageListenerId("Marionette:deleteSession", deleteSession);
   addMessageListenerId("Marionette:sleepSession", sleepSession);
-  addMessageListenerId("Marionette:getAppCacheStatus", getAppCacheStatus);
   addMessageListenerId("Marionette:takeScreenshot", takeScreenshotFn);
   addMessageListenerId("Marionette:reftestWait", reftestWaitFn);
 }
@@ -648,7 +647,6 @@ function deleteSession(msg) {
       "Marionette:switchToShadowRoot", switchToShadowRootFn);
   removeMessageListenerId("Marionette:deleteSession", deleteSession);
   removeMessageListenerId("Marionette:sleepSession", sleepSession);
-  removeMessageListenerId("Marionette:getAppCacheStatus", getAppCacheStatus);
   removeMessageListenerId("Marionette:takeScreenshot", takeScreenshotFn);
 
   seenEls.clear();
@@ -1691,11 +1689,6 @@ function switchToFrame(msg) {
 
     sendOk(command_id);
   }
-}
-
-function getAppCacheStatus(msg) {
-  sendResponse(
-      curContainer.frame.applicationCache.status, msg.json.command_id);
 }
 
 /**
