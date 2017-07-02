@@ -363,7 +363,9 @@ TextPropertyEditor.prototype = {
       shapeClass: "ruleview-shape",
       defaultColorType: !propDirty,
       urlClass: "theme-link",
-      baseURI: this.sheetHref
+      baseURI: this.sheetHref,
+      unmatchedVariableClass: "ruleview-variable-unmatched",
+      isVariableInUse: varName => this.rule.elementStyle.getVariable(varName),
     };
     let frag = outputParser.parseCssProperty(name, val, parserOptions);
     this.valueSpan.innerHTML = "";

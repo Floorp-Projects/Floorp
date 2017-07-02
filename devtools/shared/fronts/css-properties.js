@@ -149,7 +149,8 @@ CssProperties.prototype = {
    * @return {Boolean}
    */
   isInherited(property) {
-    return this.properties[property] && this.properties[property].isInherited;
+    return (this.properties[property] && this.properties[property].isInherited) ||
+            isCssVariable(property);
   },
 
   /**
@@ -350,5 +351,6 @@ module.exports = {
   CssProperties,
   getCssProperties,
   getClientCssProperties,
-  initCssProperties
+  initCssProperties,
+  isCssVariable,
 };

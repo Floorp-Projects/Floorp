@@ -29,6 +29,7 @@ function* performTest() {
   testParseFilter(doc, parser);
   testParseAngle(doc, parser);
   testParseShape(doc, parser);
+  testParseVariable(doc, parser);
 
   host.destroy();
 }
@@ -411,5 +412,52 @@ function testParseShape(doc, parser) {
     let spans = frag.querySelectorAll(".ruleview-shape-point");
     is(spans.length, spanCount, desc + " span count");
     is(frag.textContent, definition, desc + " text content");
+  }
+}
+
+function testParseVariable(doc, parser) {
+  let TESTS = [
+    {
+      text: "var(--seen)",
+      variables: {"--seen": "chartreuse" },
+      expected: "<span>var(<span title=\"--seen = chartreuse\">--seen</span>)</span>"
+    },
+    {
+      text: "var(--not-seen)",
+      variables: {},
+      expected: "<span>var(<span class=\"unmatched-class\" " +
+        "title=\"--not-seen is not set\">--not-seen</span>)</span>"
+    },
+    {
+      text: "var(--seen, seagreen)",
+      variables: {"--seen": "chartreuse" },
+      expected: "<span>var(<span title=\"--seen = chartreuse\">--seen</span>," +
+        "<span class=\"unmatched-class\"> <span data-color=\"seagreen\"><span>seagreen" +
+        "</span></span></span>)</span>"
+    },
+    {
+      text: "var(--not-seen, var(--seen))",
+      variables: {"--seen": "chartreuse" },
+      expected: "<span>var(<span class=\"unmatched-class\" " +
+        "title=\"--not-seen is not set\">--not-seen</span>,<span> <span>var(<span " +
+        "title=\"--seen = chartreuse\">--seen</span>)</span></span>)</span>"
+    },
+  ];
+
+  for (let test of TESTS) {
+    let getValue = function (varName) {
+      return test.variables[varName];
+    };
+
+    let frag = parser.parseCssProperty("color", test.text, {
+      isVariableInUse: getValue,
+      unmatchedVariableClass: "unmatched-class"
+    });
+
+    let target = doc.querySelector("div");
+    target.appendChild(frag);
+
+    is(target.innerHTML, test.expected, test.text);
+    target.innerHTML = "";
   }
 }
