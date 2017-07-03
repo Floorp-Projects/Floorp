@@ -31,7 +31,7 @@ class nsImageMap final : public nsStubMutationObserver,
 public:
   nsImageMap();
 
-  nsresult Init(nsImageFrame* aImageFrame, nsIContent* aMap);
+  void Init(nsImageFrame* aImageFrame, nsIContent* aMap);
 
   /**
    * Return the first area element (in content order) for the given aX,aY pixel
@@ -80,11 +80,12 @@ protected:
 
   void FreeAreas();
 
-  nsresult UpdateAreas();
-  nsresult SearchForAreas(nsIContent* aParent, bool& aFoundArea,
-                          bool& aFoundAnchor);
+  void UpdateAreas();
+  void SearchForAreas(nsIContent* aParent,
+                      bool& aFoundArea,
+                      bool& aFoundAnchor);
 
-  nsresult AddArea(nsIContent* aArea);
+  void AddArea(nsIContent* aArea);
 
   void MaybeUpdateAreas(nsIContent *aContent);
 
