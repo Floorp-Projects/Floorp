@@ -36,6 +36,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=452388
 
       // test (checkbox) checkable and checked states
       testStates("checkbox_checked_true", (STATE_CHECKABLE | STATE_CHECKED));
+      testStates("checkbox_checked_mixed", (STATE_CHECKABLE | STATE_MIXED), 0, STATE_CHECKED);
       testStates("checkbox_checked_false", STATE_CHECKABLE, 0, STATE_CHECKED);
       testStates("checkbox_checked_empty", STATE_CHECKABLE , 0, STATE_CHECKED);
       testStates("checkbox_checked_undefined", STATE_CHECKABLE, 0, STATE_CHECKED);
@@ -98,6 +99,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=452388
 
       // test (menuitem) checkable and checked states, which are unsupported on this role
       testStates("menuitem_checked_true", 0, 0, (STATE_CHECKABLE | STATE_CHECKED));
+      testStates("menuitem_checked_mixed", 0, 0, (STATE_CHECKABLE | STATE_CHECKED | STATE_MIXED));
       testStates("menuitem_checked_false", 0, 0, (STATE_CHECKABLE | STATE_CHECKED));
       testStates("menuitem_checked_empty", 0, 0, (STATE_CHECKABLE | STATE_CHECKED));
       testStates("menuitem_checked_undefined", 0, 0, (STATE_CHECKABLE | STATE_CHECKED));
@@ -105,6 +107,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=452388
 
       // test (menuitemcheckbox) checkable and checked states
       testStates("menuitemcheckbox_checked_true", (STATE_CHECKABLE | STATE_CHECKED));
+      testStates("menuitemcheckbox_checked_mixed", (STATE_CHECKABLE | STATE_MIXED), 0, STATE_CHECKED);
       testStates("menuitemcheckbox_checked_false", STATE_CHECKABLE, 0, STATE_CHECKED);
       testStates("menuitemcheckbox_checked_empty", STATE_CHECKABLE, 0, STATE_CHECKED);
       testStates("menuitemcheckbox_checked_undefined", STATE_CHECKABLE, 0, STATE_CHECKED);
@@ -119,6 +122,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=452388
 
       // test (menuitemradio) checkable and checked states
       testStates("menuitemradio_checked_true", (STATE_CHECKABLE | STATE_CHECKED));
+      testStates("menuitemradio_checked_mixed", STATE_CHECKABLE, 0, (STATE_MIXED | STATE_CHECKED));
       testStates("menuitemradio_checked_false", STATE_CHECKABLE, 0, STATE_CHECKED);
       testStates("menuitemradio_checked_empty", STATE_CHECKABLE, 0, STATE_CHECKED);
       testStates("menuitemradio_checked_undefined", STATE_CHECKABLE, 0, STATE_CHECKED);
@@ -133,6 +137,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=452388
 
       // test (radio) checkable and checked states
       testStates("radio_checked_true", (STATE_CHECKABLE | STATE_CHECKED));
+      testStates("radio_checked_mixed", STATE_CHECKABLE, 0, (STATE_MIXED | STATE_CHECKED));
       testStates("radio_checked_false", STATE_CHECKABLE, 0, STATE_CHECKED);
       testStates("radio_checked_empty", STATE_CHECKABLE, 0, STATE_CHECKED);
       testStates("radio_checked_undefined", STATE_CHECKABLE, 0, STATE_CHECKED);
@@ -235,6 +240,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=452388
   <div id="button_pressed_absent" role="button">This button has <emph>no</emph> aria-pressed attribute and should <emph>not</emph> get ROLE_TOGGLE_BUTTON.</div>
 
   <div id="checkbox_checked_true" role="checkbox" aria-checked="true">This checkbox has aria-checked="true" and should get STATE_CHECKABLE. It should also get STATE_checked.</div>
+  <div id="checkbox_checked_mixed" role="checkbox" aria-checked="mixed">This checkbox has aria-checked="mixed" and should get STATE_CHECKABLE. It should also get STATE_MIXED.</div>
   <div id="checkbox_checked_false" role="checkbox" aria-checked="false">This checkbox has aria-checked="false" and should get STATE_CHECKABLE.</div>
   <div id="checkbox_checked_empty" role="checkbox" aria-checked="">This checkbox has aria-checked="" and should <emph>not</emph> get STATE_CHECKABLE.</div>
   <div id="checkbox_checked_undefined" role="checkbox" aria-checked="undefined">This checkbox has aria-checked="undefined" and should <emph>not</emph> get STATE_CHECKABLE.</div>
@@ -296,12 +302,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=452388
 
   <div role="menu">
     <div id="menuitem_checked_true" role="menuitem" aria-checked="true">Generic menuitems don't support aria-checked.</div>
+    <div id="menuitem_checked_mixed" role="menuitem" aria-checked="mixed">Generic menuitems don't support aria-checked.</div>
     <div id="menuitem_checked_false" role="menuitem" aria-checked="false">Generic menuitems don't support aria-checked.</div>
     <div id="menuitem_checked_empty" role="menuitem" aria-checked="">Generic menuitems don't support aria-checked.</div>
     <div id="menuitem_checked_undefined" role="menuitem" aria-checked="undefined">Generic menuitems don't support aria-checked.</div>
     <div id="menuitem_checked_absent" role="menuitem">Generic menuitems don't support aria-checked.</div>
 
     <div id="menuitemcheckbox_checked_true" role="menuitemcheckbox" aria-checked="true">This menuitemcheckbox has aria-checked="true" and should get STATE_CHECKABLE. It should also get STATE_checked.</div>
+    <div id="menuitemcheckbox_checked_mixed" role="menuitemcheckbox" aria-checked="mixed">This menuitemcheckbox has aria-checked="mixed" and should get STATE_CHECKABLE. It should also get STATE_MIXED.</div>
     <div id="menuitemcheckbox_checked_false" role="menuitemcheckbox" aria-checked="false">This menuitemcheckbox has aria-checked="false" and should get STATE_CHECKABLE.</div>
     <div id="menuitemcheckbox_checked_empty" role="menuitemcheckbox" aria-checked="">This menuitemcheckbox has aria-checked="" and should <emph>not</emph> get STATE_CHECKABLE.</div>
     <div id="menuitemcheckbox_checked_undefined" role="menuitemcheckbox" aria-checked="undefined">This menuitemcheckbox has aria-checked="undefined" and should <emph>not</emph> get STATE_CHECKABLE.</div>
@@ -314,6 +322,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=452388
     <div id="menuitemcheckbox_readonly_absent" role="menuitemcheckbox">This menuitemcheckbox has <emph>no</emph> aria-readonly attribute and should <emph>not</emph> get STATE_READONLY.</div>
 
     <div id="menuitemradio_checked_true" role="menuitemradio" aria-checked="true">This menuitem has aria-checked="true" and should get STATE_CHECKABLE. It should also get STATE_checked.</div>
+    <div id="menuitemradio_checked_mixed" role="menuitemradio" aria-checked="mixed">This menuitem has aria-checked="mixed" and should get STATE_CHECKABLE. It should not get STATE_MIXED.</div>
     <div id="menuitemradio_checked_false" role="menuitemradio" aria-checked="false">This menuitem has aria-checked="false" and should get STATE_CHECKABLE.</div>
     <div id="menuitemradio_checked_empty" role="menuitemradio" aria-checked="">This menuitem has aria-checked="" and should <emph>not</emph> get STATE_CHECKABLE.</div>
     <div id="menuitemradio_checked_undefined" role="menuitemradio" aria-checked="undefined">This menuitem has aria-checked="undefined" and should <emph>not</emph> get STATE_CHECKABLE.</div>
@@ -327,6 +336,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=452388
     <div id="menuitemradio_readonly_absent" role="menuitemradio">This menuitemradio has <emph>no</emph> aria-readonly attribute and should <emph>not</emph> get STATE_READONLY.</div>
 
   <div id="radio_checked_true" role="radio" aria-checked="true">This menuitem has aria-checked="true" and should get STATE_CHECKABLE. It should also get STATE_CHECKED.</div>
+  <div id="radio_checked_mixed" role="radio" aria-checked="mixed">This radio button has aria-checked="mixed" and should get STATE_CHECKABLE. It should not get STATE_MIXED.</div>
   <div id="radio_checked_false" role="radio" aria-checked="false">This menuitem has aria-checked="false" and should get STATE_CHECKABLE.</div>
   <div id="radio_checked_empty" role="radio" aria-checked="">This menuitem has aria-checked="" and should <emph>not</emph> get STATE_CHECKABLE.</div>
   <div id="radio_checked_undefined" role="radio" aria-checked="undefined">This menuitem has aria-checked="undefined" and should <emph>not</emph> get STATE_CHECKABLE.</div>
