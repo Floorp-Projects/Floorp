@@ -255,6 +255,7 @@ private:
   class AccurateSeekingState;
   class NextFrameSeekingState;
   class NextFrameSeekingFromDormantState;
+  class VideoOnlySeekingState;
   class BufferingState;
   class CompletedState;
   class ShutdownState;
