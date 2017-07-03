@@ -156,6 +156,13 @@ private:
 };
 
 // This class contains the info for a single thread.
+//
+// Note: A thread's ThreadInfo can be held onto after the thread itself exits,
+// because we may need to output profiling information about that thread. But
+// some of the fields in this class are only relevant while the thread is
+// alive. It's possible that this class could be refactored so there is a
+// clearer split between those fields and the fields that are still relevant
+// after the thread exists.
 class ThreadInfo final
 {
 public:
