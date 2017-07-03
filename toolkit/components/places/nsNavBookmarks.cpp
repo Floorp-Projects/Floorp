@@ -1987,19 +1987,19 @@ nsNavBookmarks::SetItemTitle(int64_t aItemId, const nsACString& aTitle,
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  NOTIFY_OBSERVERS(mCanNotify, mCacheObservers, mObservers,
-                   nsINavBookmarkObserver,
-                   OnItemChanged(bookmark.id,
-                                 NS_LITERAL_CSTRING("title"),
-                                 false,
-                                 title,
-                                 bookmark.lastModified,
-                                 bookmark.type,
-                                 bookmark.parentId,
-                                 bookmark.guid,
-                                 bookmark.parentGuid,
-                                 EmptyCString(),
-                                 aSource));
+  NOTIFY_BOOKMARKS_OBSERVERS(mCanNotify, mCacheObservers, mObservers,
+                             SKIP_TAGS(isChangingTagFolder),
+                             OnItemChanged(bookmark.id,
+                                           NS_LITERAL_CSTRING("title"),
+                                           false,
+                                           title,
+                                           bookmark.lastModified,
+                                           bookmark.type,
+                                           bookmark.parentId,
+                                           bookmark.guid,
+                                           bookmark.parentGuid,
+                                           EmptyCString(),
+                                           aSource));
   return NS_OK;
 }
 

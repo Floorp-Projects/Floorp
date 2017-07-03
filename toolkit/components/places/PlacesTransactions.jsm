@@ -1270,7 +1270,7 @@ PT.EditUrl.prototype = Object.seal({
           PlacesUtils.tagging.untagURI(originalURI, originalTags);
         let currentNewURITags = PlacesUtils.tagging.getTagsForURI(uri);
         newURIAdditionalTags = originalTags.filter(t => !currentNewURITags.includes(t));
-        if (newURIAdditionalTags)
+        if (newURIAdditionalTags && newURIAdditionalTags.length > 0)
           PlacesUtils.tagging.tagURI(uri, newURIAdditionalTags);
       }
     }
@@ -1559,12 +1559,18 @@ PT.Untag.prototype = {
       } else {
         tagsToRemove = tagsSet;
       }
-      PlacesUtils.tagging.untagURI(uri, tagsToRemove);
+      if (tagsToRemove.length > 0) {
+        PlacesUtils.tagging.untagURI(uri, tagsToRemove);
+      }
       onUndo.unshift(() => {
-        PlacesUtils.tagging.tagURI(uri, tagsToRemove);
+        if (tagsToRemove.length > 0) {
+          PlacesUtils.tagging.tagURI(uri, tagsToRemove);
+        }
       });
       onRedo.push(() => {
-        PlacesUtils.tagging.untagURI(uri, tagsToRemove);
+        if (tagsToRemove.length > 0) {
+          PlacesUtils.tagging.untagURI(uri, tagsToRemove);
+        }
       });
     }
     this.undo = async function() {
