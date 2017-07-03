@@ -67,7 +67,7 @@ const CM_SCRIPTS = [
 ];
 
 const CM_IFRAME =
-  "data:text/html;charset=utf8,<!DOCTYPE html>" +
+  "<!DOCTYPE html>" +
   "<html dir='ltr'>" +
   "  <head>" +
   "    <style>" +
@@ -298,7 +298,7 @@ Editor.prototype = {
       };
 
       env.addEventListener("load", onLoad, true);
-      env.setAttribute("src", CM_IFRAME);
+      env.setAttribute("srcdoc", CM_IFRAME);
       el.appendChild(env);
 
       this.once("destroy", () => el.removeChild(env));
