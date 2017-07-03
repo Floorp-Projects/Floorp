@@ -398,18 +398,16 @@ function open_properties_dialog() {
         return;
       ww.unregisterNotification(windowObserver);
       let observerWindow = aSubject.QueryInterface(Ci.nsIDOMWindow);
-      waitForFocus(() => {
-        // Windows has been loaded, execute our test now.
-        executeSoon(function() {
-          // Ensure overlay is loaded
-          ok(observerWindow.gEditItemOverlay.initialized, "EditItemOverlay is initialized");
-          gCurrentTest.window = observerWindow;
-          try {
-            gCurrentTest.run();
-          } catch (ex) {
-            ok(false, "An error occured during test run: " + ex.message);
-          }
-        });
+      waitForFocus(async () => {
+        // Ensure overlay is loaded
+        await BrowserTestUtils.waitForCondition(
+          () => observerWindow.gEditItemOverlay.initialized, "EditItemOverlay is initialized");
+        gCurrentTest.window = observerWindow;
+        try {
+          gCurrentTest.run();
+        } catch (ex) {
+          ok(false, "An error occured during test run: " + ex.message);
+        }
       }, observerWindow);
     }
     ww.registerNotification(windowObserver);
