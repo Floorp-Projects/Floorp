@@ -11,6 +11,7 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.preference.PreferenceManager;
 import android.util.AttributeSet;
+import android.view.View;
 import android.webkit.CookieManager;
 import android.webkit.DownloadListener;
 import android.webkit.WebBackForwardList;
@@ -196,6 +197,23 @@ public class WebkitView extends NestedWebView implements IWebView, SharedPrefere
                     }
                     callback.onProgress(newProgress);
                 }
+            }
+
+            @Override
+            public void onShowCustomView(View view, final CustomViewCallback webviewCallback) {
+                final FullscreenCallback fullscreenCallback = new FullscreenCallback() {
+                    @Override
+                    public void fullScreenExited() {
+                        webviewCallback.onCustomViewHidden();
+                    }
+                };
+
+                callback.onEnterFullScreen(fullscreenCallback, view);
+            }
+
+            @Override
+            public void onHideCustomView() {
+                callback.onExitFullScreen();
             }
         };
     }

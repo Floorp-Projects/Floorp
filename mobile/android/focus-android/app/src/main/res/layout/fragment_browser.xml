@@ -8,73 +8,86 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools">
 
-    <View
-        android:id="@+id/background"
+    <FrameLayout
+        android:id="@+id/browser_container"
         android:layout_width="match_parent"
-        android:layout_height="81dp"
-        android:background="@drawable/animated_background" />
+        android:layout_height="match_parent">
 
-    <org.mozilla.focus.widget.ResizableKeyboardLayout
-        app:viewToHideWhenActivated="@+id/erase"
-        android:layout_marginTop="25dp"
-        android:id="@+id/main_content"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation="vertical"
-        android:clipChildren="false">
+        <View
+            android:id="@+id/background"
+            android:layout_width="match_parent"
+            android:layout_height="81dp"
+            android:background="@drawable/animated_background" />
 
-        <org.mozilla.focus.web.IWebView
-            android:id="@+id/webview"
+        <org.mozilla.focus.widget.ResizableKeyboardLayout
+            app:viewToHideWhenActivated="@+id/erase"
+            android:layout_marginTop="25dp"
+            android:id="@+id/main_content"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            app:layout_behavior="@string/appbar_scrolling_view_behavior" />
-
-        <android.support.design.widget.AppBarLayout
-            android:id="@+id/appbar"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="@android:color/transparent"
-            app:elevation="0dp"
+            android:orientation="vertical"
             android:clipChildren="false">
 
-            <FrameLayout
-                android:id="@+id/urlbar"
+            <org.mozilla.focus.web.IWebView
+                android:id="@+id/webview"
                 android:layout_width="match_parent"
-                android:layout_height="56dp"
-                app:layout_scrollFlags="scroll|enterAlways|snap"
+                android:layout_height="match_parent"
+                app:layout_behavior="@string/appbar_scrolling_view_behavior" />
+
+            <android.support.design.widget.AppBarLayout
+                android:id="@+id/appbar"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@android:color/transparent"
+                app:elevation="0dp"
                 android:clipChildren="false">
 
-                <include layout="@layout/toolbar"/>
-
-                <org.mozilla.focus.widget.AnimatedProgressBar
-                    android:id="@+id/progress"
-                    style="@style/Base.Widget.AppCompat.ProgressBar.Horizontal"
+                <FrameLayout
+                    android:id="@+id/urlbar"
                     android:layout_width="match_parent"
-                    android:layout_height="3dp"
-                    android:progressDrawable="@drawable/photon_progressbar"
-                    app:shiftDuration="@integer/progress_shift_duration"
-                    app:wrapShiftDrawable="true"
-                    android:layout_gravity="bottom"
-                    android:layout_marginBottom="-1dp"
-                    android:importantForAccessibility="yes"
-                    tools:progress="50" />
-            </FrameLayout>
+                    android:layout_height="56dp"
+                    app:layout_scrollFlags="scroll|enterAlways|snap"
+                    android:clipChildren="false">
 
-        </android.support.design.widget.AppBarLayout>
+                    <include layout="@layout/toolbar"/>
 
-        <android.support.design.widget.FloatingActionButton
-            android:id="@+id/erase"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="end|bottom"
-            android:layout_marginBottom="@dimen/floating_action_button_margin"
-            android:layout_marginEnd="@dimen/floating_action_button_margin"
-            android:elevation="4dp"
-            android:src="@drawable/ic_delete"
-            app:backgroundTint="@color/colorFloatingActionButtonTint"
-            app:rippleColor="#50FFFFFF"
-            app:layout_behavior="org.mozilla.focus.widget.FloatingActionButtonBehavior"
-            android:contentDescription="@string/content_description_erase" />
+                    <org.mozilla.focus.widget.AnimatedProgressBar
+                        android:id="@+id/progress"
+                        style="@style/Base.Widget.AppCompat.ProgressBar.Horizontal"
+                        android:layout_width="match_parent"
+                        android:layout_height="3dp"
+                        android:progressDrawable="@drawable/photon_progressbar"
+                        app:shiftDuration="@integer/progress_shift_duration"
+                        app:wrapShiftDrawable="true"
+                        android:layout_gravity="bottom"
+                        android:layout_marginBottom="-1dp"
+                        android:importantForAccessibility="yes"
+                        tools:progress="50" />
+                </FrameLayout>
 
-    </org.mozilla.focus.widget.ResizableKeyboardLayout>
+            </android.support.design.widget.AppBarLayout>
+
+            <android.support.design.widget.FloatingActionButton
+                android:id="@+id/erase"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="end|bottom"
+                android:layout_marginBottom="@dimen/floating_action_button_margin"
+                android:layout_marginEnd="@dimen/floating_action_button_margin"
+                android:elevation="4dp"
+                android:src="@drawable/ic_delete"
+                app:backgroundTint="@color/colorFloatingActionButtonTint"
+                app:rippleColor="#50FFFFFF"
+                app:layout_behavior="org.mozilla.focus.widget.FloatingActionButtonBehavior"
+                android:contentDescription="@string/content_description_erase" />
+
+        </org.mozilla.focus.widget.ResizableKeyboardLayout>
+    </FrameLayout>
+
+    <FrameLayout
+        android:id="@+id/video_container"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@android:color/black"
+        android:visibility="gone" />
 </FrameLayout>

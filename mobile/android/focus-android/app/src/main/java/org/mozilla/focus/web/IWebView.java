@@ -6,6 +6,9 @@
 package org.mozilla.focus.web;
 
 import android.os.Bundle;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+import android.view.View;
 
 public interface IWebView {
     class HitTarget {
@@ -45,6 +48,28 @@ public interface IWebView {
         void onDownloadStart(Download download);
 
         void onLongPress(final HitTarget hitTarget);
+
+        /**
+         * Notify the host application that the current page has entered full screen mode.
+         *
+         * The callback needs to be invoked to request the page to exit full screen mode.
+         *
+         * Some IWebView implementations may pass a custom View which contains the web contents in
+         * full screen mode.
+         */
+        void onEnterFullScreen(@NonNull  FullscreenCallback callback, @Nullable View view);
+
+        /**
+         * Notify the host application that the current page has exited full screen mode.
+         *
+         * If a View was passed when the application entered full screen mode then this view must
+         * be hidden now.
+         */
+        void onExitFullScreen();
+    }
+
+    interface FullscreenCallback {
+        void fullScreenExited();
     }
 
     /**

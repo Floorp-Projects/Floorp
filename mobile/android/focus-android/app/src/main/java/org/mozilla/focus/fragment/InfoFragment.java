@@ -92,8 +92,13 @@ public class InfoFragment extends WebFragment {
             public void onLongPress(IWebView.HitTarget hitTarget) {}
 
             @Override
-            public void onURLChanged(String url) {
-            }
+            public void onURLChanged(String url) {}
+
+            @Override
+            public void onEnterFullScreen(@NonNull IWebView.FullscreenCallback callback, @Nullable View view) {}
+
+            @Override
+            public void onExitFullScreen() {}
         };
     }
 
