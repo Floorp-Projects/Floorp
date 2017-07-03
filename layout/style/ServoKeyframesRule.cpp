@@ -75,6 +75,7 @@ public:
   void AppendRule() {
     mRules.AppendObject(nullptr);
   }
+
   void RemoveRule(uint32_t aIndex) {
     mRules.RemoveObjectAt(aIndex);
   }
@@ -279,11 +280,10 @@ ServoKeyframesRule::AppendRule(const nsAString& aRule)
 
   NS_ConvertUTF16toUTF8 rule(aRule);
   UpdateRule([this, sheet, &rule]() {
-    if (Servo_KeyframesRule_AppendRule(mRawRule, sheet->AsServo()->RawSheet(),
-                                       &rule)) {
-      if (mKeyframeList) {
-        mKeyframeList->AppendRule();
-      }
+    bool parsedOk = Servo_KeyframesRule_AppendRule(
+      mRawRule, sheet->AsServo()->RawContents(), &rule);
+    if (parsedOk && mKeyframeList) {
+      mKeyframeList->AppendRule();
     }
   });
   return NS_OK;
