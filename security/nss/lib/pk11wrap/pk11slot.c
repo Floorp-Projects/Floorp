@@ -2484,7 +2484,11 @@ PK11_RandomUpdate(void *data, size_t bytes)
 
     if (!bestIsInternal) {
         /* do internal slot, too. */
-        slot = PK11_GetInternalSlot(); /* can't fail */
+        slot = PK11_GetInternalSlot();
+        PORT_Assert(slot);
+        if (!slot) {
+            return SECFailure;
+        }
         status = PK11_SeedRandom(slot, data, bytes);
         PK11_FreeSlot(slot);
     }
