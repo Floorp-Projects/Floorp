@@ -947,7 +947,7 @@ nsComponentManagerImpl::GetClassObjectByContractID(const char* aContractID,
   nsresult rv;
 
   MOZ_LOG(nsComponentManagerLog, LogLevel::Debug,
-         ("nsComponentManager: GetClassObject(%s)", aContractID));
+         ("nsComponentManager: GetClassObjectByContractID(%s)", aContractID));
 
   nsCOMPtr<nsIFactory> factory = FindFactory(aContractID, strlen(aContractID));
   if (!factory) {
@@ -957,7 +957,7 @@ nsComponentManagerImpl::GetClassObjectByContractID(const char* aContractID,
   rv = factory->QueryInterface(aIID, aResult);
 
   MOZ_LOG(nsComponentManagerLog, LogLevel::Warning,
-         ("\t\tGetClassObject() %s", NS_SUCCEEDED(rv) ? "succeeded" : "FAILED"));
+         ("\t\tGetClassObjectByContractID() %s", NS_SUCCEEDED(rv) ? "succeeded" : "FAILED"));
 
   return rv;
 }
