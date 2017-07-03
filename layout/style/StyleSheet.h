@@ -84,7 +84,7 @@ public:
     mOwningNode = aOwningNode;
   }
 
-  css::SheetParsingMode ParsingMode() { return mParsingMode; }
+  css::SheetParsingMode ParsingMode() const { return mParsingMode; }
   mozilla::dom::CSSStyleSheetParsingMode ParsingModeDOM();
 
   /**
@@ -169,6 +169,9 @@ public:
   dom::CSSImportRule* GetOwnerRule() const { return mOwnerRule; }
 
   void PrependStyleSheet(StyleSheet* aSheet);
+
+  // Prepend a stylesheet to the child list without calling Will/DidDirty.
+  void PrependStyleSheetSilently(StyleSheet* aSheet);
 
   StyleSheet* GetFirstChild() const;
   StyleSheet* GetMostRecentlyAddedChildSheet() const {

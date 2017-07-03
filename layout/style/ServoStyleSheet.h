@@ -29,11 +29,12 @@ class LoaderReusableStyleSheets;
 // Servo Style Sheet Inner Data Container
 //
 
-struct ServoStyleSheetInner : public StyleSheetInfo
+struct ServoStyleSheetInner final : public StyleSheetInfo
 {
   ServoStyleSheetInner(CORSMode aCORSMode,
                        ReferrerPolicy aReferrerPolicy,
-                       const dom::SRIMetadata& aIntegrity);
+                       const dom::SRIMetadata& aIntegrity,
+                       css::SheetParsingMode aParsingMode);
   ServoStyleSheetInner(ServoStyleSheetInner& aCopy,
                        ServoStyleSheet* aPrimarySheet);
   ~ServoStyleSheetInner();
@@ -42,7 +43,8 @@ struct ServoStyleSheetInner : public StyleSheetInfo
 
   size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const;
 
-  RefPtr<const RawServoStyleSheet> mSheet;
+  RefPtr<const RawServoStyleSheetContents> mContents;
+
   // XXX StyleSheetInfo already has mSheetURI, mBaseURI, and mPrincipal.
   // Can we somehow replace them with URLExtraData directly? The issue
   // is currently URLExtraData is immutable, but URIs in StyleSheetInfo
@@ -72,6 +74,9 @@ public:
                   net::ReferrerPolicy aReferrerPolicy,
                   const dom::SRIMetadata& aIntegrity);
 
+  already_AddRefed<ServoStyleSheet> CreateEmptyChildSheet(
+      already_AddRefed<dom::MediaList> aMediaList) const;
+
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(ServoStyleSheet, StyleSheet)
 
@@ -88,21 +93,15 @@ public:
                                    nsCompatibility aCompatMode,
                                    css::LoaderReusableStyleSheets* aReusableSheets = nullptr);
 
-  /**
-   * Called instead of ParseSheet to initialize the Servo stylesheet object
-   * for a failed load. Either ParseSheet or LoadFailed must be called before
-   * adding a ServoStyleSheet to a ServoStyleSet.
-   */
-  void LoadFailed();
-
   nsresult ReparseSheet(const nsAString& aInput);
 
-  const RawServoStyleSheet* RawSheet() const {
-    return Inner()->mSheet;
+  const RawServoStyleSheetContents* RawContents() const {
+    return Inner()->mContents;
   }
-  void SetSheetForImport(const RawServoStyleSheet* aSheet) {
-    MOZ_ASSERT(!Inner()->mSheet);
-    Inner()->mSheet = aSheet;
+
+  void SetContentsForImport(const RawServoStyleSheetContents* aContents) {
+    MOZ_ASSERT(!Inner()->mContents);
+    Inner()->mContents = aContents;
   }
 
   URLExtraData* URLData() const { return Inner()->mURLData; }
@@ -152,6 +151,10 @@ private:
                   nsINode* aOwningNodeToUse);
 
   void DropRuleList();
+
+  // Take the recently cloned sheets from the `@import` rules, and reparent them
+  // correctly to `aPrimarySheet`.
+  void BuildChildListAfterInnerClone();
 
   RefPtr<ServoCSSRuleList> mRuleList;
 

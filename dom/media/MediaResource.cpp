@@ -33,10 +33,6 @@
 #include "nsProxyRelease.h"
 #include "nsIContentPolicy.h"
 
-#ifdef MOZ_ANDROID_HLS_SUPPORT
-#include "HLSResource.h"
-#endif
-
 using mozilla::media::TimeUnit;
 
 #undef LOG
@@ -1444,13 +1440,6 @@ MediaResource::Create(MediaResourceCallback* aCallback,
   }
 
   RefPtr<MediaResource> resource;
-
-#ifdef MOZ_ANDROID_HLS_SUPPORT
-  if (DecoderTraits::IsHttpLiveStreamingType(containerType.value())) {
-    resource = new HLSResource(aCallback, aChannel, uri);
-    return resource.forget();
-  }
-#endif
 
   // Let's try to create a FileMediaResource in case the channel is a nsIFile
   nsCOMPtr<nsIFileChannel> fc = do_QueryInterface(aChannel);
