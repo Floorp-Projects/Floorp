@@ -88,8 +88,8 @@ nsDiskCacheMap::Open(nsIFile *  cacheDirectory,
         memset(&mHeader, 0, sizeof(nsDiskCacheHeader));
         mHeader.mVersion = nsDiskCache::kCurrentVersion;
         mHeader.mRecordCount = kMinRecordCount;
-        mRecordArray = (nsDiskCacheRecord *)
-            PR_CALLOC(mHeader.mRecordCount * sizeof(nsDiskCacheRecord));
+        mRecordArray = (nsDiskCacheRecord*)
+            calloc(mHeader.mRecordCount, sizeof(nsDiskCacheRecord));
         if (!mRecordArray) {
             *corruptInfo = nsDiskCache::kOutOfMemory;
             rv = NS_ERROR_OUT_OF_MEMORY;
@@ -131,7 +131,7 @@ nsDiskCacheMap::Open(nsIFile *  cacheDirectory,
         }
 
         // Get the space for the records
-        mRecordArray = (nsDiskCacheRecord *) PR_MALLOC(recordArraySize);
+        mRecordArray = (nsDiskCacheRecord*) malloc(recordArraySize);
         if (!mRecordArray) {
             *corruptInfo = nsDiskCache::kOutOfMemory;
             rv = NS_ERROR_OUT_OF_MEMORY;
@@ -230,8 +230,10 @@ nsDiskCacheMap::Close(bool flush)
         mCleanFD = nullptr;
     }
 
-    PR_FREEIF(mRecordArray);
-    PR_FREEIF(mBuffer);
+    free(mRecordArray);
+    mRecordArray = nullptr;
+    free(mBuffer);
+    mBuffer = nullptr;
     mBufferSize = 0;
     return rv;
 }
@@ -348,8 +350,8 @@ nsDiskCacheMap::GrowRecords()
     int32_t newCount = mHeader.mRecordCount << 1;
     if (newCount > mMaxRecordCount)
         newCount = mMaxRecordCount;
-    nsDiskCacheRecord *newArray = (nsDiskCacheRecord *)
-            PR_REALLOC(mRecordArray, newCount * sizeof(nsDiskCacheRecord));
+    nsDiskCacheRecord* newArray = (nsDiskCacheRecord *)
+            realloc(mRecordArray, newCount * sizeof(nsDiskCacheRecord));
     if (!newArray)
         return NS_ERROR_OUT_OF_MEMORY;
 
@@ -414,7 +416,7 @@ nsDiskCacheMap::ShrinkRecords()
     // Shrink the record array memory block itself
     uint32_t newCount = newRecordsPerBucket * kBuckets;
     nsDiskCacheRecord* newArray = (nsDiskCacheRecord *)
-            PR_REALLOC(mRecordArray, newCount * sizeof(nsDiskCacheRecord));
+            realloc(mRecordArray, newCount * sizeof(nsDiskCacheRecord));
     if (!newArray)
         return NS_ERROR_OUT_OF_MEMORY;
 
@@ -1191,7 +1193,7 @@ nsresult
 nsDiskCacheMap::EnsureBuffer(uint32_t bufSize)
 {
     if (mBufferSize < bufSize) {
-        char * buf = (char *)PR_REALLOC(mBuffer, bufSize);
+        char* buf = (char*) realloc(mBuffer, bufSize);
         if (!buf) {
             mBufferSize = 0;
             return NS_ERROR_OUT_OF_MEMORY;

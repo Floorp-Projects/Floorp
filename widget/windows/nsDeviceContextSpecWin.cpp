@@ -12,8 +12,6 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/RefPtr.h"
 
-#include "prmem.h"
-
 #include <winspool.h>
 
 #include "nsIWidget.h"
@@ -225,13 +223,13 @@ static void CleanAndCopyString(wchar_t*& aStr, const wchar_t* aNewStr)
       wcscpy(aStr, aNewStr);
       return;
     } else {
-      PR_Free(aStr);
+      free(aStr);
       aStr = nullptr;
     }
   }
 
   if (nullptr != aNewStr) {
-    aStr = (wchar_t *)PR_Malloc(sizeof(wchar_t)*(wcslen(aNewStr) + 1));
+    aStr = (wchar_t*) malloc(sizeof(wchar_t) * (wcslen(aNewStr) + 1));
     wcscpy(aStr, aNewStr);
   }
 }

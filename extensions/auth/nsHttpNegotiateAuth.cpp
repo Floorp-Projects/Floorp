@@ -588,7 +588,7 @@ nsHttpNegotiateAuth::GenerateCredentials(nsIHttpAuthenticableChannel *authChanne
     else
         snprintf(*creds, bufsize, "%s %s", kNegotiate, encoded_token);
 
-    PR_Free(encoded_token);
+    PR_Free(encoded_token); // PL_Base64Encode() uses PR_Malloc().
     return rv;
 }
 

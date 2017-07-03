@@ -747,7 +747,7 @@ RDFContentSinkImpl::AddText(const char16_t* aText, int32_t aLength)
     int32_t amount = mTextSize - mTextLength;
     if (amount < aLength) {
         // Grow the buffer by at least a factor of two to prevent thrashing.
-        // Since PR_REALLOC will leave mText intact if the call fails,
+        // Since realloc() will leave mText intact if the call fails,
         // don't clobber mText or mTextSize until the new mem is allocated.
         int32_t newSize = (2 * mTextSize > (mTextSize + aLength)) ?
                           (2 * mTextSize) : (mTextSize + aLength);
