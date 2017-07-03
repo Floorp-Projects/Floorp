@@ -10,7 +10,6 @@
 #include "base/basictypes.h"            // for DISALLOW_EVIL_CONSTRUCTORS
 #include "mozilla/Assertions.h"         // for MOZ_ASSERT_HELPER2
 #include "mozilla/Attributes.h"         // for override
-#include "mozilla/Monitor.h"
 #include "mozilla/ipc/ProtocolUtils.h"
 #include "mozilla/layers/PCompositorBridgeChild.h"
 #include "mozilla/layers/TextureForwarder.h" // for TextureForwarder
@@ -221,32 +220,9 @@ public:
 
   wr::PipelineId GetNextPipelineId();
 
-  // Must only be called from the main thread. Notifies the CompositorBridge
-  // that the paint thread is going to begin painting asynchronously.
-  void NotifyBeginAsyncPaint();
-
-  // Must only be called from the paint thread. Notifies the CompositorBridge
-  // that the paint thread has finished an asynchronous paint request.
-  void NotifyFinishedAsyncPaint();
-
-  // Must only be called from the main thread. Notifies the CompoistorBridge
-  // that a transaction is about to be sent, and if the paint thread is
-  // currently painting, to begin delaying IPC messages.
-  void PostponeMessagesIfAsyncPainting();
-
-  // Must only be called from the main thread. Ensures that any paints from
-  // previous frames have been flushed. The main thread blocks until the
-  // operation completes.
-  void FlushAsyncPaints();
-
 private:
   // Private destructor, to discourage deletion outside of Release():
   virtual ~CompositorBridgeChild();
-
-  // Must only be called from the paint thread. If the main thread is delaying
-  // IPC messages, this forwards all such delayed IPC messages to the I/O thread
-  // and resumes IPC.
-  void ResumeIPCAfterAsyncPaint();
 
   void AfterDestroy();
 
@@ -352,20 +328,6 @@ private:
   uint64_t mProcessToken;
 
   FixedSizeSmallShmemSectionAllocator* mSectionAllocator;
-
-  // Off-Main-Thread Painting state. This covers access to the OMTP-related
-  // state below.
-  Monitor mPaintLock;
-
-  // Contains the number of outstanding asynchronous paints tied to a
-  // PLayerTransaction on this bridge. This is R/W on both the main and paint
-  // threads, and must be accessed within the paint lock.
-  size_t mOutstandingAsyncPaints;
-
-  // True if this CompositorBridge is currently delaying its messages until the
-  // paint thread completes. This is R/W on both the main and paint threads, and
-  // must be accessed within the paint lock.
-  bool mIsWaitingForPaint;
 };
 
 } // namespace layers
