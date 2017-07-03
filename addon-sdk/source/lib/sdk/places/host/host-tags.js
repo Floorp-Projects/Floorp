@@ -37,7 +37,8 @@ function tag (message) {
     event: message.event
   };
 
-  resData.data = taggingService.tagURI(newURI(data.url), data.tags);
+  if (data.tags && data.tags.length > 0)
+    resData.data = taggingService.tagURI(newURI(data.url), data.tags);
   respond(resData);
 }
 
@@ -48,7 +49,8 @@ function untag (message) {
     event: message.event
   };
 
-  resData.data = taggingService.untagURI(newURI(data.url), data.tags);
+  if (!data.tags || data.tags.length > 0)
+    resData.data = taggingService.untagURI(newURI(data.url), data.tags);
   respond(resData);
 }
 
