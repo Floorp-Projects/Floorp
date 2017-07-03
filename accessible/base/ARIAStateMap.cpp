@@ -145,6 +145,16 @@ aria::MapToState(EStateRule aRule, dom::Element* aElement, uint64_t* aState)
       return true;
     }
 
+    case eARIACurrent:
+    {
+      static const TokenTypeData data(
+        nsGkAtoms::aria_current, eBoolType,
+        0, states::CURRENT);
+
+      MapTokenType(aElement, aState, data);
+      return true;
+    }
+
     case eARIADisabled:
     {
       static const TokenTypeData data(
