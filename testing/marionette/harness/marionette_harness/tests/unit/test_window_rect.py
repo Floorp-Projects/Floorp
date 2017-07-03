@@ -82,10 +82,16 @@ class TestPosition(MarionetteTestCase):
 
         os = self.marionette.session_capabilities["platformName"]
 
+        # Regardless of platform, headless always supports being positioned
+        # off-screen.
+        if self.marionette.session_capabilities["moz:headless"]:
+            self.assertEqual(-8, position["x"])
+            self.assertEqual(-8, position["y"])
+
         # Certain WMs prohibit windows from being moved off-screen,
         # but we don't have this information.  It should be safe to
         # assume a window can be moved to (0,0) or less.
-        if os == "linux":
+        elif os == "linux":
             # certain WMs prohibit windows from being moved off-screen
             self.assertLessEqual(position["x"], 0)
             self.assertLessEqual(position["y"], 0)
