@@ -105,7 +105,7 @@ function Test() {
   // This maps a state name to the number of times it's been observed.
   this.stateCounts = {};
   // Promise object resolved when the next test can be run.
-  this.deferNextTest = Promise.defer();
+  this.deferNextTest = PromiseUtils.defer();
 }
 
 Test.prototype = {
