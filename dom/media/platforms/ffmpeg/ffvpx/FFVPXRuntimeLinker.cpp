@@ -66,10 +66,10 @@ FFVPXRuntimeLinker::Init()
   nsCOMPtr<nsIFile> xulFile = do_CreateInstance(NS_LOCAL_FILE_CONTRACTID);
   if (!xulFile ||
       NS_FAILED(xulFile->InitWithNativePath(nsDependentCString(path)))) {
-    PR_Free(path);
+    PR_Free(path); // PR_GetLibraryFilePathname() uses PR_Malloc().
     return false;
   }
-  PR_Free(path);
+  PR_Free(path); // PR_GetLibraryFilePathname() uses PR_Malloc().
 
   nsCOMPtr<nsIFile> rootDir;
   if (NS_FAILED(xulFile->GetParent(getter_AddRefs(rootDir))) || !rootDir) {

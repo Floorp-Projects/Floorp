@@ -5,7 +5,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include <string.h>
-#include "prmem.h"
 #include "prprf.h"
 #include "plstr.h"
 #include "plbase64.h"
@@ -972,7 +971,7 @@ char *DecodeQ(const char *in, uint32_t length)
 {
   char *out, *dest = nullptr;
 
-  out = dest = (char *)PR_Calloc(length + 1, sizeof(char));
+  out = dest = (char*) calloc(length + 1, sizeof(char));
   if (dest == nullptr)
     return nullptr;
   while (length > 0) {
@@ -1010,7 +1009,7 @@ char *DecodeQ(const char *in, uint32_t length)
   return dest;
 
  badsyntax:
-  PR_Free(dest);
+  free(dest);
   return nullptr;
 }
 
@@ -1146,7 +1145,7 @@ nsresult DecodeQOrBase64Str(const char *aEncoded, size_t aLen, char aQOrBase64,
                                       IS_7BIT_NON_ASCII_CHARSET(aCharset),
                                       true, 1, utf8Text);
   }
-  PR_Free(decodedText);
+  free(decodedText);
   if (NS_FAILED(rv)) {
     return rv;
   }

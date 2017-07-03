@@ -19,7 +19,6 @@
 #include "nsToolkitCompsCID.h"
 #include "nsXPIDLString.h"
 #include "nsNetUtil.h"
-#include "prmem.h"
 #include "nsString.h"
 #include "nsCRT.h"
 #include "nspr.h"
@@ -272,13 +271,13 @@ nsresult nsReadConfig::openAndEvaluateJSFile(const char *aFileName, int32_t obsc
     rv = inStr->Available(&fs64);
     if (NS_FAILED(rv))
         return rv;
-    // PR_Malloc dones't support over 4GB
+    // This used to use PR_Malloc(), which doesn't support over 4GB.
     if (fs64 > UINT32_MAX)
       return NS_ERROR_FILE_TOO_BIG;
     uint32_t fs = (uint32_t)fs64;
 
-    char *buf = (char *)PR_Malloc(fs * sizeof(char));
-    if (!buf) 
+    char* buf = (char*) malloc(fs * sizeof(char));
+    if (!buf)
         return NS_ERROR_OUT_OF_MEMORY;
 
     rv = inStr->Read(buf, (uint32_t)fs, &amt);
@@ -295,7 +294,7 @@ nsresult nsReadConfig::openAndEvaluateJSFile(const char *aFileName, int32_t obsc
                                        isEncoded ? true:false);
     }
     inStr->Close();
-    PR_Free(buf);
-    
+    free(buf);
+
     return rv;
 }
