@@ -15,7 +15,7 @@
 #include "mozilla/Types.h"
 #include "nscore.h"
 
-typedef size_t PLDHashNumber;
+typedef uint32_t PLDHashNumber;
 
 class PLDHashTable;
 struct PLDHashTableOps;
@@ -490,15 +490,10 @@ public:
   }
 
 private:
-  // Multiplicative hash uses an unsigned pointer sized integer and the golden ratio,
-  // expressed as a fixed-point pointer sized fraction.
-  static const uint32_t kHashBits = sizeof(size_t) * 8;
-#ifdef HAVE_64BIT_BUILD
-  // Golden ratio borrowed from http://burtleburtle.net/bob/hash/evahash.html.
-  static const uint64_t kGoldenRatio = 0X9E3779B97F4A7C13ULL;
-#else
+  // Multiplicative hash uses an unsigned 32 bit integer and the golden ratio,
+  // expressed as a fixed-point 32-bit fraction.
+  static const uint32_t kHashBits = 32;
   static const uint32_t kGoldenRatio = 0x9E3779B9U;
-#endif
 
   static uint32_t HashShift(uint32_t aEntrySize, uint32_t aLength);
 
@@ -527,10 +522,10 @@ private:
   }
 
   PLDHashNumber Hash1(PLDHashNumber aHash0);
-  void Hash2(PLDHashNumber aHash, size_t& aHash2Out, size_t& aSizeMaskOut);
+  void Hash2(PLDHashNumber aHash, uint32_t& aHash2Out, uint32_t& aSizeMaskOut);
 
   static bool MatchEntryKeyhash(PLDHashEntryHdr* aEntry, PLDHashNumber aHash);
-  PLDHashEntryHdr* AddressEntry(size_t aIndex);
+  PLDHashEntryHdr* AddressEntry(uint32_t aIndex);
 
   // We store mHashShift rather than sizeLog2 to optimize the collision-free
   // case in SearchTable.
