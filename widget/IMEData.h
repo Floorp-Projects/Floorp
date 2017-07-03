@@ -327,6 +327,9 @@ struct InputContext final
   }
 };
 
+// FYI: Implemented in nsBaseWidget.cpp
+const char* ToChar(InputContext::Origin aOrigin);
+
 struct InputContextAction final
 {
   /**
