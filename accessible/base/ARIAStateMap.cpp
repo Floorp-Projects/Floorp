@@ -364,10 +364,12 @@ MapTokenType(dom::Element* aElement, uint64_t* aState,
              const TokenTypeData& aData)
 {
   if (nsAccUtils::HasDefinedARIAToken(aElement, aData.mAttrName)) {
-    if ((aData.mType & eMixedType) &&
-        aElement->AttrValueIs(kNameSpaceID_None, aData.mAttrName,
+    if (aElement->AttrValueIs(kNameSpaceID_None, aData.mAttrName,
                               nsGkAtoms::mixed, eCaseMatters)) {
-      *aState |= aData.mPermanentState | states::MIXED;
+      if (aData.mType & eMixedType)
+        *aState |= aData.mPermanentState | states::MIXED;
+      else // unsupported use of 'mixed' is an authoring error
+        *aState |= aData.mPermanentState | aData.mFalseState;
       return;
     }
 
