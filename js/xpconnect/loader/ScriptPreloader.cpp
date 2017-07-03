@@ -241,10 +241,6 @@ ScriptPreloader::ForceWriteCacheFile()
     if (mSaveThread) {
         MonitorAutoLock mal(mSaveMonitor);
 
-        // Make sure we've prepared scripts, so we don't risk deadlocking while
-        // dispatching the prepare task during shutdown.
-        PrepareCacheWriteInternal();
-
         // Unblock the save thread, so it can start saving before we get to
         // XPCOM shutdown.
         mal.Notify();
@@ -256,10 +252,6 @@ ScriptPreloader::Cleanup()
 {
     if (mSaveThread) {
         MonitorAutoLock mal(mSaveMonitor);
-
-        // Make sure the save thread is not blocked dispatching a sync task to
-        // the main thread, or we will deadlock.
-        MOZ_RELEASE_ASSERT(!mBlockedOnSyncDispatch);
 
         while (!mSaveComplete && mSaveThread) {
             mal.Wait();
@@ -295,10 +287,6 @@ ScriptPreloader::InvalidateCache()
     // next startup.
     if (mSaveComplete && mChildCache) {
         mSaveComplete = false;
-
-        // Make sure scripts are prepared to avoid deadlock when invalidating
-        // the cache during shutdown.
-        PrepareCacheWriteInternal();
 
         Unused << NS_NewNamedThread("SaveScripts",
                                     getter_AddRefs(mSaveThread), this);
@@ -511,11 +499,9 @@ Write(PRFileDesc* fd, const void* data, int32_t len)
 }
 
 void
-ScriptPreloader::PrepareCacheWriteInternal()
+ScriptPreloader::PrepareCacheWrite()
 {
     MOZ_ASSERT(NS_IsMainThread());
-
-    mSaveMonitor.AssertCurrentThreadOwns();
 
     auto cleanup = MakeScopeExit([&] () {
         if (mChildCache) {
@@ -561,14 +547,6 @@ ScriptPreloader::PrepareCacheWriteInternal()
     mDataPrepared = true;
 }
 
-void
-ScriptPreloader::PrepareCacheWrite()
-{
-    MonitorAutoLock mal(mSaveMonitor);
-
-    PrepareCacheWriteInternal();
-}
-
 // Writes out a script cache file for the scripts accessed during early
 // startup in this session. The cache file is a little-endian binary file with
 // the following format:
@@ -590,9 +568,6 @@ ScriptPreloader::WriteCache()
     MOZ_ASSERT(!NS_IsMainThread());
 
     if (!mDataPrepared && !mSaveComplete) {
-        MOZ_ASSERT(!mBlockedOnSyncDispatch);
-        mBlockedOnSyncDispatch = true;
-
         MonitorAutoUnlock mau(mSaveMonitor);
 
         NS_DispatchToMainThread(
@@ -601,8 +576,6 @@ ScriptPreloader::WriteCache()
                             &ScriptPreloader::PrepareCacheWrite),
           NS_DISPATCH_SYNC);
     }
-
-    mBlockedOnSyncDispatch = false;
 
     if (mSaveComplete) {
         // If we don't have anything we need to save, we're done.
@@ -669,12 +642,8 @@ ScriptPreloader::Run()
     MonitorAutoLock mal(mSaveMonitor);
 
     // Ideally wait about 10 seconds before saving, to avoid unnecessary IO
-    // during early startup. But only if the cache hasn't been invalidated,
-    // since that can trigger a new write during shutdown, and we don't want to
-    // cause shutdown hangs.
-    if (!mCacheInvalidated) {
-        mal.Wait(10000);
-    }
+    // during early startup.
+    mal.Wait(10000);
 
     auto result = WriteCache();
     Unused << NS_WARN_IF(result.isErr());
