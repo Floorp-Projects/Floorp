@@ -857,12 +857,21 @@ you can use these alternative items. Otherwise, their values should be empty.  -
 <!ENTITY customizeMode.lwthemes.menuGetMore.accessKey "G">
 <!ENTITY customizeMode.emptyOverflowList.description "Drag and drop items here to keep them within reach but out of your toolbar…">
 <!ENTITY customizeMode.uidensity "Density">
+<!-- LOCALIZATION NOTE (customizeMode.uidensity.menuNormal.*):
+     “Normal” is displayed in the Customize screen, under the Density menu. -->
 <!ENTITY customizeMode.uidensity.menuNormal.label "Normal">
 <!ENTITY customizeMode.uidensity.menuNormal.tooltip "Normal">
 <!ENTITY customizeMode.uidensity.menuNormal.accessKey "N">
+<!-- LOCALIZATION NOTE (customizeMode.uidensity.menuCompact.*):
+     “Compact” is displayed in the Customize screen, under the Density menu.
+     It’s an adjective (Density -> Compact). -->
 <!ENTITY customizeMode.uidensity.menuCompact.label "Compact">
 <!ENTITY customizeMode.uidensity.menuCompact.tooltip "Compact">
 <!ENTITY customizeMode.uidensity.menuCompact.accessKey "C">
+<!-- LOCALIZATION NOTE (customizeMode.uidensity.menuTouch.*):
+     “Touch” is displayed in the Customize screen, under the Density menu.
+     It’s an adjective (Density -> Touch), and it means that control layout is
+     optimized for touch devices. -->
 <!ENTITY customizeMode.uidensity.menuTouch.label "Touch">
 <!ENTITY customizeMode.uidensity.menuTouch.tooltip "Touch">
 <!ENTITY customizeMode.uidensity.menuTouch.accessKey "T">
