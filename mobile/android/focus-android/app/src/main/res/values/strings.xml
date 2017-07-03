@@ -114,7 +114,7 @@
     <string name="preference_privacy_secure_mode">Stealth</string>
     <!-- Preference Summary: Secure Mode is a setting that prevents the app's content to show up in the "recent apps" screen
      and prevents the user from taking screenshots or casting the app to other displays. %1$s will be replaced with the
-     short name of the app (e.g. Focus). -->
+     name of the app (e.g. Firefox Focus). -->
     <string name="preference_privacy_secure_mode_summary">Turn off stealth mode to take screenshots and see sites you’ve visited using %1$s in your Recent Apps list</string>
 
     <string name="preference_category_performance">Performance</string>
@@ -285,7 +285,7 @@ be temporary, and you can try again later.</li>
 
     <!-- First run tour (page 2): Title -->
     <string name="firstrun_defaultbrowser_title">Power up your privacy</string>
-    <!-- First run tour (page 2): Text, %1$s will be replaced with the short name of the app (e.g. Focus). -->
+    <!-- First run tour (page 2): Text, %1$s will be replaced with the name of the app (e.g. Firefox Focus). -->
     <string name="firstrun_defaultbrowser_text">Set %1$s as your default browser and get the benefits of private browsing when you link to the Web from other Android apps.</string>
 
     <!-- First run tour (page 3): Title -->

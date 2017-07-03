@@ -45,7 +45,7 @@ public class FirstrunPagerAdapter extends PagerAdapter {
                         R.drawable.onboarding_img1),
                 new FirstrunPage(
                         context.getString(R.string.firstrun_defaultbrowser_title),
-                        context.getString(R.string.firstrun_defaultbrowser_text, context.getString(R.string.launcher_name)),
+                        context.getString(R.string.firstrun_defaultbrowser_text, context.getString(R.string.app_name)),
                         R.drawable.onboarding_img2),
                 new FirstrunPage(
                         context.getString(R.string.firstrun_breaking_title),
