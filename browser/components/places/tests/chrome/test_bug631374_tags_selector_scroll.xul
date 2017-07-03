@@ -27,6 +27,7 @@
           src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
   <script type="application/javascript"
           src="chrome://browser/content/places/editBookmarkOverlay.js"/>
+  <script type="application/javascript" src="head.js" />
 
   <body xmlns="http://www.w3.org/1999/xhtml" />
 
@@ -34,7 +35,6 @@
 
   <script type="application/javascript">
   <![CDATA[
-
      /**
       * This test checks that editing tags doesn't scroll the tags selector
       * listbox to wrong positions.
@@ -42,19 +42,15 @@
 
     function runTest() {
       SimpleTest.waitForExplicitFinish();
-
       (async function() {
-        let bs = PlacesUtils.bookmarks;
-
+        await PlacesUtils.bookmarks.eraseEverything();
         let tags = ["a", "b", "c", "d", "e", "f", "g",
                     "h", "i", "l", "m", "n", "o", "p"];
 
         // Add a bookmark and tag it.
         let uri1 = Services.io.newURI("http://www1.mozilla.org/");
-        let bm1 = await bs.insert({
-          parentGuid: bs.toolbarGuid,
-          index: bs.DEFAULT_INDEX,
-          type: bs.TYPE_BOOKMARK,
+        let bm1 = await PlacesUtils.bookmarks.insert({
+          parentGuid: PlacesUtils.bookmarks.toolbarGuid,
           title: "mozilla",
           url: uri1.spec
         });
@@ -62,10 +58,8 @@
 
         // Add a second bookmark so that tags won't disappear when unchecked.
         let uri2 = Services.io.newURI("http://www2.mozilla.org/");
-        let bm2 = await bs.insert({
-          parentGuid: bs.toolbarGuid,
-          index: bs.DEFAULT_INDEX,
-          type: bs.TYPE_BOOKMARK,
+        let bm2 = await PlacesUtils.bookmarks.insert({
+          parentGuid: PlacesUtils.bookmarks.toolbarGuid,
           title: "mozilla",
           url: uri2.spec
         });
@@ -93,7 +87,10 @@
           let selectedTag = listItem.label;
 
           // Uncheck the tag.
+          let promiseNotification = PlacesTestUtils.waitForNotification(
+            "onItemChanged", (id, property) => property == "tags");
           listItem.checked = false;
+          await promiseNotification;
           is(visibleIndex, tagsSelector.getIndexOfFirstVisibleRow(),
              "Scroll position did not change");
 
@@ -104,13 +101,16 @@
           is(newItem.label, selectedTag, "Correct tag is still selected");
 
           // Check the tag.
+          promiseNotification = PlacesTestUtils.waitForNotification(
+            "onItemChanged", (id, property) => property == "tags");
           newItem.checked = true;
+          await promiseNotification;
           is(visibleIndex, tagsSelector.getIndexOfFirstVisibleRow(),
              "Scroll position did not change");
         }
 
         // Remove the second bookmark, then nuke some of the tags.
-        await bs.remove(bm2.guid);
+        await PlacesUtils.bookmarks.remove(bm2);
 
         // Doing this backwords tests more interesting paths.
         for (let i = tags.length - 1; i >= 0 ; i -= 2) {
@@ -125,7 +125,10 @@
           let selectedTag = listItem.label;
 
           // Uncheck the tag.
+          let promiseNotification = PlacesTestUtils.waitForNotification(
+            "onItemChanged", (id, property) => property == "tags");
           listItem.checked = false;
+          await promiseNotification;
 
           // Ensure the first visible tag is still visible in the list.
           let firstVisibleIndex = tagsSelector.getIndexOfFirstVisibleRow();
@@ -145,8 +148,8 @@
         }
 
         // Cleanup.
-        await bs.remove(bm1.guid);
-      })().then(SimpleTest.finish).catch(alert);
+        await PlacesUtils.bookmarks.remove(bm1);
+      })().catch(ex => ok(false, "test failed: " + ex)).then(SimpleTest.finish);
     }
 
     function openTagSelector() {
@@ -158,10 +161,8 @@
           resolve();
         });
       });
-
       // Open the tags selector.
       document.getElementById("editBMPanel_tagsSelectorExpander").doCommand();
-
       return promise;
     }
   ]]>
