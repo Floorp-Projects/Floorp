@@ -327,11 +327,12 @@ class ProxyContextParent extends BaseContext {
     apiManager.emit("proxy-context-load", this);
   }
 
-  withPendingBrowser(browser, callable) {
+  async withPendingBrowser(browser, callable) {
     let savedBrowser = this.pendingEventBrowser;
     this.pendingEventBrowser = browser;
     try {
-      return callable();
+      let result = await callable();
+      return result;
     } finally {
       this.pendingEventBrowser = savedBrowser;
     }
@@ -625,8 +626,9 @@ ParentAPIManager = {
 
     try {
       let args = Cu.cloneInto(data.args, context.sandbox);
+      let pendingBrowser = context.pendingEventBrowser;
       let fun = await context.apiCan.asyncFindAPIPath(data.path);
-      let result = context.withPendingBrowser(context.pendingEventBrowser,
+      let result = context.withPendingBrowser(pendingBrowser,
                                               () => fun(...args));
       if (data.callId) {
         result = result || Promise.resolve();
