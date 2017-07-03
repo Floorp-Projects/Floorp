@@ -829,15 +829,8 @@ interface nsIDOMWindowUtils : nsISupports {
    * @param aListener listener that receives information about the CC graph
    *                  (see @mozilla.org/cycle-collector-logger;1 for a logger
    *                   component)
-   * @param aExtraForgetSkippableCalls indicates how many times
-   *                                   nsCycleCollector_forgetSkippable will
-   *                                   be called before running cycle collection.
-   *                                   -1 prevents the default
-   *                                   nsCycleCollector_forgetSkippable call
-   *                                   which happens after garbage collection.
    */
-  void garbageCollect([optional] in nsICycleCollectorListener aListener,
-                      [optional] in long aExtraForgetSkippableCalls);
+  void garbageCollect([optional] in nsICycleCollectorListener aListener);
 
   /**
    * Force a cycle collection without garbage collection.
@@ -848,15 +841,8 @@ interface nsIDOMWindowUtils : nsISupports {
    * @param aListener listener that receives information about the CC graph
    *                  (see @mozilla.org/cycle-collector-logger;1 for a logger
    *                   component)
-   * @param aExtraForgetSkippableCalls indicates how many times
-   *                                   nsCycleCollector_forgetSkippable will
-   *                                   be called before running cycle collection.
-   *                                   -1 prevents the default
-   *                                   nsCycleCollector_forgetSkippable call
-   *                                   which happens after garbage collection.
    */
-  void cycleCollect([optional] in nsICycleCollectorListener aListener,
-                    [optional] in long aExtraForgetSkippableCalls);
+  void cycleCollect([optional] in nsICycleCollectorListener aListener);
 
   /**
    * Trigger whichever GC or CC timer is currently active and waiting to fire.
