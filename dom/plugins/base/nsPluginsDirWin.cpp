@@ -18,7 +18,6 @@
 #include "nsPluginsDir.h"
 #include "prlink.h"
 #include "plstr.h"
-#include "prmem.h"
 
 #include "windows.h"
 #include "winbase.h"
@@ -151,7 +150,7 @@ static char** MakeStringArray(uint32_t variants, char* data)
   if ((variants <= 0) || !data)
     return nullptr;
 
-  char ** array = (char **)PR_Calloc(variants, sizeof(char *));
+  char** array = (char**) calloc(variants, sizeof(char *));
   if (!array)
     return nullptr;
 
@@ -189,7 +188,7 @@ static void FreeStringArray(uint32_t variants, char ** array)
       array[i] = nullptr;
     }
   }
-  PR_Free(array);
+  free(array);
 }
 
 static bool CanLoadPlugin(char16ptr_t aBinaryPath)
@@ -363,7 +362,7 @@ nsresult nsPluginFile::GetPluginInfo(nsPluginInfo& info, PRLibrary **outLibrary)
   versionsize = ::GetFileVersionInfoSizeW(lpFilepath, &zerome);
 
   if (versionsize > 0)
-    verbuf = PR_Malloc(versionsize);
+    verbuf = malloc(versionsize);
   if (!verbuf)
     return NS_ERROR_OUT_OF_MEMORY;
 
@@ -396,7 +395,7 @@ nsresult nsPluginFile::GetPluginInfo(nsPluginInfo& info, PRLibrary **outLibrary)
     rv = NS_ERROR_FAILURE;
   }
 
-  PR_Free(verbuf);
+  free(verbuf);
 
   return rv;
 }

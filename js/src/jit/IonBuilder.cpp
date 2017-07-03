@@ -1762,6 +1762,7 @@ IonBuilder::inspectOpcode(JSOp op)
 {
     MOZ_ASSERT(analysis_.maybeInfo(pc), "Compiling unreachable op");
 
+    // Add not yet implemented opcodes at the bottom of the switch!
     switch (op) {
       case JSOP_NOP:
       case JSOP_NOP_DESTRUCTURING:
@@ -1776,6 +1777,7 @@ IonBuilder::inspectOpcode(JSOp op)
         pushConstant(UndefinedValue());
         return Ok();
 
+      case JSOP_IFNE:
       case JSOP_IFEQ:
       case JSOP_RETURN:
       case JSOP_RETRVAL:
@@ -1786,6 +1788,10 @@ IonBuilder::inspectOpcode(JSOp op)
       case JSOP_GOTO:
       case JSOP_CONDSWITCH:
       case JSOP_LOOPENTRY:
+      case JSOP_TABLESWITCH:
+      case JSOP_CASE:
+      case JSOP_DEFAULT:
+        // Control flow opcodes should be handled in the ControlFlowGenerator.
         MOZ_CRASH("Shouldn't encounter this opcode.");
 
       case JSOP_BITNOT:
@@ -2336,7 +2342,39 @@ IonBuilder::inspectOpcode(JSOp op)
         return Ok();
       }
 
-#ifdef DEBUG
+      // ===== NOT Yet Implemented =====
+      // Read below!
+
+      // With
+      case JSOP_ENTERWITH:
+      case JSOP_LEAVEWITH:
+
+      // Spread
+      case JSOP_SPREADNEW:
+      case JSOP_SPREADEVAL:
+      case JSOP_STRICTSPREADEVAL:
+
+      // Classes
+      case JSOP_CHECKCLASSHERITAGE:
+      case JSOP_FUNWITHPROTO:
+      case JSOP_OBJWITHPROTO:
+      case JSOP_BUILTINPROTO:
+      case JSOP_INITHOMEOBJECT:
+      case JSOP_CLASSCONSTRUCTOR:
+      case JSOP_DERIVEDCONSTRUCTOR:
+      case JSOP_CHECKTHIS:
+      case JSOP_CHECKRETURN:
+      case JSOP_CHECKTHISREINIT:
+
+      // Super
+      case JSOP_SUPERBASE:
+      case JSOP_SETPROP_SUPER:
+      case JSOP_GETPROP_SUPER:
+      case JSOP_GETELEM_SUPER:
+      case JSOP_SETELEM_SUPER:
+      case JSOP_STRICTSETPROP_SUPER:
+      case JSOP_STRICTSETELEM_SUPER:
+      case JSOP_SUPERFUN:
       // Most of the infrastructure for these exists in Ion, but needs review
       // and testing before these are enabled. Once other opcodes that are used
       // in derived classes are supported in Ion, this can be better validated
@@ -2344,10 +2382,48 @@ IonBuilder::inspectOpcode(JSOp op)
       // JSOP_NEW has special handling.
       case JSOP_SPREADSUPERCALL:
       case JSOP_SUPERCALL:
-        break;
-#endif
 
-      default:
+      // Environments (bug 1366470)
+      case JSOP_PUSHVARENV:
+      case JSOP_POPVARENV:
+
+      // Compound assignment
+      case JSOP_GETBOUNDNAME:
+
+      // Generators / Async (bug 1317690)
+      case JSOP_EXCEPTION:
+      case JSOP_THROWING:
+      case JSOP_ISGENCLOSING:
+      case JSOP_INITIALYIELD:
+      case JSOP_YIELD:
+      case JSOP_FINALYIELDRVAL:
+      case JSOP_RESUME:
+      case JSOP_DEBUGAFTERYIELD:
+      case JSOP_AWAIT:
+      case JSOP_GENERATOR:
+
+      // Misc
+      case JSOP_ARRAYPUSH:
+      case JSOP_DELNAME:
+      case JSOP_FINALLY:
+      case JSOP_GETRVAL:
+      case JSOP_GOSUB:
+      case JSOP_IMPLICITTHIS:
+      case JSOP_RETSUB:
+      case JSOP_SETINTRINSIC:
+      case JSOP_THROWMSG:
+        // === !! WARNING WARNING WARNING !! ===
+        // Do you really want to sacrifice performance by not implementing this
+        // operation in the optimizing compiler?
+        break;
+
+      case JSOP_FORCEINTERPRETER:
+        // Intentionally not implemented.
+        break;
+
+      case JSOP_UNUSED222:
+      case JSOP_UNUSED223:
+      case JSOP_LIMIT:
         break;
     }
 

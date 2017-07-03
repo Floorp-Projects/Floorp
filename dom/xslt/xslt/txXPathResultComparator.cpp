@@ -10,7 +10,6 @@
 #include "txCore.h"
 #include "nsCollationCID.h"
 #include "nsIServiceManager.h"
-#include "prmem.h"
 
 #define kAscending (1<<0)
 #define kUpperFirst (1<<1)
@@ -160,9 +159,9 @@ txResultStringComparator::StringValue::StringValue() : mKey(0),
 
 txResultStringComparator::StringValue::~StringValue()
 {
-    PR_Free(mKey);
+    free(mKey);
     if (mCaseLength > 0)
-        PR_Free((uint8_t*)mCaseKey);
+        free(mCaseKey);
     else
         delete (nsString*)mCaseKey;
 }

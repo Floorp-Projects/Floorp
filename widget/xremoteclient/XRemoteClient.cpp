@@ -10,7 +10,6 @@
 #include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/Sprintf.h"
 #include "XRemoteClient.h"
-#include "prmem.h"
 #include "plstr.h"
 #include "prsystem.h"
 #include "mozilla/Logging.h"

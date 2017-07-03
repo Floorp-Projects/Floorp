@@ -8,7 +8,6 @@
 
 #include "nsPluginsDir.h"
 #include "nsTArray.h"
-#include "prmem.h"
 
 ///////////////////////////////////////////////////////////////////////////////
 // Output format from NPP_GetMIMEDescription: "...mime type[;version]:[extension]:[desecription];..."
@@ -67,9 +66,9 @@ ParsePluginMimeDescription(const char *mdesc, nsPluginInfo &info)
     if (mimeTypeVariantCount) {
         info.fVariantCount         = mimeTypeVariantCount;
         // we can do these 3 mallocs at once, later on code cleanup
-        info.fMimeTypeArray        = (char **)PR_Malloc(mimeTypeVariantCount * sizeof(char *));
-        info.fMimeDescriptionArray = (char **)PR_Malloc(mimeTypeVariantCount * sizeof(char *));
-        info.fExtensionArray       = (char **)PR_Malloc(mimeTypeVariantCount * sizeof(char *));
+        info.fMimeTypeArray        = (char**) malloc(mimeTypeVariantCount * sizeof(char*));
+        info.fMimeDescriptionArray = (char**) malloc(mimeTypeVariantCount * sizeof(char*));
+        info.fExtensionArray       = (char**) malloc(mimeTypeVariantCount * sizeof(char*));
 
         int j,i;
         for (j = i = 0; i < mimeTypeVariantCount; i++) {
@@ -82,7 +81,7 @@ ParsePluginMimeDescription(const char *mdesc, nsPluginInfo &info)
         rv = NS_OK;
     }
     if (mdescDup)
-        PR_Free(mdescDup);
+        PL_strfree(mdescDup);
     return rv;
 }
 

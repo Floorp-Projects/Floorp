@@ -55,6 +55,7 @@
 #include "ssl.h"
 #include "sslerr.h"
 #include "sslproto.h"
+#include "prmem.h"
 
 #ifndef MOZ_NO_SMART_CARDS
 #include "nsSmartCardMonitor.h"
@@ -1101,7 +1102,7 @@ nsNSSComponent::LoadLoadableRoots()
         if (NS_SUCCEEDED(rv)) {
           rv = nssLib->InitWithNativePath(nsDependentCString(nss_path));
         }
-        PR_Free(nss_path);
+        PR_Free(nss_path); // PR_GetLibraryFilePathname() uses PR_Malloc().
         if (NS_SUCCEEDED(rv)) {
           nsCOMPtr<nsIFile> file;
           if (NS_SUCCEEDED(nssLib->GetParent(getter_AddRefs(file)))) {

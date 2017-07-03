@@ -14,7 +14,6 @@
 
 #include "prerror.h"
 #include "plstr.h"
-#include "prmem.h"
 
 #include <jni.h>
 
