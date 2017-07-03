@@ -60,7 +60,7 @@ nsBase64Encoder::Finish(nsACString& result)
     return NS_ERROR_OUT_OF_MEMORY;
 
   result.Assign(b64);
-  PR_Free(b64);
+  PR_Free(b64); // PL_Base64Encode() uses PR_MALLOC().
   // Free unneeded memory and allow reusing the object
   mData.Truncate();
   return NS_OK;

@@ -21,9 +21,9 @@ public:
   static TimeoutBudgetManager& Get();
   void StartRecording(const TimeStamp& aNow);
   void StopRecording();
-  void RecordExecution(const TimeStamp& aNow,
-                       const Timeout* aTimeout,
-                       bool aIsBackground);
+  TimeDuration RecordExecution(const TimeStamp& aNow,
+                               const Timeout* aTimeout,
+                               bool aIsBackground);
   void MaybeCollectTelemetry(const TimeStamp& aNow);
 private:
   TimeoutBudgetManager() : mLastCollection(TimeStamp::Now()) {}

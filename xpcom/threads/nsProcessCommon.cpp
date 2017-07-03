@@ -30,7 +30,6 @@
 #include <stdlib.h>
 
 #if defined(PROCESSMODEL_WINAPI)
-#include "prmem.h"
 #include "nsString.h"
 #include "nsLiteralString.h"
 #include "nsReadableUtils.h"
@@ -152,7 +151,7 @@ assembleCmdLine(char* const* aArgv, wchar_t** aWideCmdLine, UINT aCodePage)
                    + 2               /* we quote every argument */
                    + 1;              /* space in between, or final null */
   }
-  p = cmdLine = (char*)PR_MALLOC(cmdLineSize * sizeof(char));
+  p = cmdLine = (char*) malloc(cmdLineSize * sizeof(char));
   if (!p) {
     return -1;
   }
@@ -227,9 +226,9 @@ assembleCmdLine(char* const* aArgv, wchar_t** aWideCmdLine, UINT aCodePage)
 
   *p = '\0';
   int32_t numChars = MultiByteToWideChar(aCodePage, 0, cmdLine, -1, nullptr, 0);
-  *aWideCmdLine = (wchar_t*)PR_MALLOC(numChars * sizeof(wchar_t));
+  *aWideCmdLine = (wchar_t*) malloc(numChars * sizeof(wchar_t));
   MultiByteToWideChar(aCodePage, 0, cmdLine, -1, *aWideCmdLine, numChars);
-  PR_Free(cmdLine);
+  free(cmdLine);
   return 0;
 }
 #endif
@@ -506,7 +505,7 @@ nsProcess::RunProcess(bool aBlocking, char** aMyArgv, nsIObserver* aObserver,
   mProcess = sinfo.hProcess;
 
   if (cmdLine) {
-    PR_Free(cmdLine);
+    free(cmdLine);
   }
 
   mPid = GetProcessId(mProcess);

@@ -2869,7 +2869,7 @@ WebSocketChannel::SetupRequest()
   if (!b64)
     return NS_ERROR_OUT_OF_MEMORY;
   secKeyString.Assign(b64);
-  PR_Free(b64);
+  PR_Free(b64); // PL_Base64Encode() uses PR_Malloc.
   rv = mHttpChannel->SetRequestHeader(NS_LITERAL_CSTRING("Sec-WebSocket-Key"),
                                       secKeyString, false);
   MOZ_ASSERT(NS_SUCCEEDED(rv));

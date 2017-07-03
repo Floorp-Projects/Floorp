@@ -109,7 +109,8 @@ nsJPEGDecoder::~nsJPEGDecoder()
   mInfo.src = nullptr;
   jpeg_destroy_decompress(&mInfo);
 
-  PR_FREEIF(mBackBuffer);
+  free(mBackBuffer);
+  mBackBuffer = nullptr;
   if (mTransform) {
     qcms_transform_release(mTransform);
   }
@@ -904,7 +905,7 @@ fill_input_buffer (j_decompress_ptr jd)
 
     // Round up to multiple of 256 bytes.
     const size_t roundup_buflen = ((new_backtrack_buflen + 255) >> 8) << 8;
-    JOCTET* buf = (JOCTET*)PR_REALLOC(decoder->mBackBuffer, roundup_buflen);
+    JOCTET* buf = (JOCTET*) realloc(decoder->mBackBuffer, roundup_buflen);
     // Check for OOM
     if (!buf) {
       decoder->mInfo.err->msg_code = JERR_OUT_OF_MEMORY;

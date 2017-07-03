@@ -9,7 +9,6 @@
 #include "nsIFileStreams.h"
 #include "nsThreadUtils.h"
 #include "nsAppDirectoryServiceDefs.h"
-#include "prmem.h"
 #include "nsIObserverService.h"
 #include "nsLiteralString.h"
 #include "nsIPromptService.h"
@@ -414,8 +413,8 @@ nsresult nsAutoConfig::evaluateLocalFile(nsIFile *file)
     int64_t fileSize;
     file->GetFileSize(&fileSize);
     uint32_t fs = fileSize; // Converting 64 bit structure to unsigned int
-    char *buf = (char *)PR_Malloc(fs * sizeof(char));
-    if (!buf) 
+    char* buf = (char*) malloc(fs * sizeof(char));
+    if (!buf)
         return NS_ERROR_OUT_OF_MEMORY;
 
     uint32_t amt = 0;
@@ -425,7 +424,7 @@ nsresult nsAutoConfig::evaluateLocalFile(nsIFile *file)
                                 true, false);
     }
     inStr->Close();
-    PR_Free(buf);
+    free(buf);
     return rv;
 }
 

@@ -179,7 +179,7 @@ Fake_VideoStreamSource::Notify(nsITimer* aTimer)
   const uint8_t chromaBpp = 4;
 
   int len = ((WIDTH * HEIGHT) * 3 / 2);
-  uint8_t* frame = (uint8_t*) PR_Malloc(len);
+  uint8_t* frame = (uint8_t*) malloc(len);
   memset(frame, 0x80, len); // Gray
 
   mozilla::layers::PlanarYCbCrData data;
@@ -213,11 +213,11 @@ mozilla::layers::BufferRecycleBin::BufferRecycleBin() :
 }
 
 void mozilla::layers::BufferRecycleBin::RecycleBuffer(uint8_t* buffer, uint32_t size) {
-  PR_Free(buffer);
+  free(buffer);
 }
 
 uint8_t *mozilla::layers::BufferRecycleBin::GetBuffer(uint32_t size) {
-  return (uint8_t *)PR_MALLOC(size);
+  return (uint8_t*) malloc(size);
 }
 
 // YCbCrImage constructor (from ImageLayers.cpp)
