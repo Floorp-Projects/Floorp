@@ -151,14 +151,14 @@ WebrtcVideoConduit::StreamStatistics::GetVideoStreamStats(
     return true;
   }
   return false;
-};
+}
 
 void
 WebrtcVideoConduit::SendStreamStatistics::DroppedFrames(
   uint32_t& aOutDroppedFrames) const
 {
       aOutDroppedFrames = mDroppedFrames;
-};
+}
 
 void
 WebrtcVideoConduit::SendStreamStatistics::Update(
@@ -178,14 +178,21 @@ WebrtcVideoConduit::SendStreamStatistics::Update(
   } else {
     CSFLogVerbose(logTag, "%s stats.substreams is empty", __FUNCTION__);
   }
-};
+}
 
 void
 WebrtcVideoConduit::ReceiveStreamStatistics::DiscardedPackets(
   uint32_t& aOutDiscPackets) const
 {
   aOutDiscPackets = mDiscardedPackets;
-};
+}
+
+void
+WebrtcVideoConduit::ReceiveStreamStatistics::FramesDecoded(
+  uint32_t& aFramesDecoded) const
+{
+  aFramesDecoded = mFramesDecoded;
+}
 
 void
 WebrtcVideoConduit::ReceiveStreamStatistics::Update(
@@ -194,7 +201,9 @@ WebrtcVideoConduit::ReceiveStreamStatistics::Update(
   CSFLogVerbose(logTag, "%s ", __FUNCTION__);
   StreamStatistics::Update(aStats.decode_frame_rate, aStats.total_bitrate_bps);
   mDiscardedPackets = aStats.discarded_packets;
-};
+  mFramesDecoded = aStats.frame_counts.key_frames
+                   + aStats.frame_counts.delta_frames;
+}
 
 /**
  * Factory Method for VideoConduit
@@ -929,7 +938,8 @@ WebrtcVideoConduit::GetVideoDecoderStats(double* framerateMean,
                                          double* framerateStdDev,
                                          double* bitrateMean,
                                          double* bitrateStdDev,
-                                         uint32_t* discardedPackets)
+                                         uint32_t* discardedPackets,
+                                         uint32_t* framesDecoded)
 {
   {
     MutexAutoLock lock(mCodecMutex);
@@ -939,6 +949,7 @@ WebrtcVideoConduit::GetVideoDecoderStats(double* framerateMean,
     mRecvStreamStats.GetVideoStreamStats(*framerateMean, *framerateStdDev,
       *bitrateMean, *bitrateStdDev);
     mRecvStreamStats.DiscardedPackets(*discardedPackets);
+    mRecvStreamStats.FramesDecoded(*framesDecoded);
     return true;
   }
 }
