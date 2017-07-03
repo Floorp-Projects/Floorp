@@ -52,6 +52,7 @@ class ChannelMediaDecoder : public MediaDecoder
     const RefPtr<AbstractThread> mAbstractMainThread;
   };
 
+protected:
   RefPtr<ResourceCallback> mResourceCallback;
 
 public:
@@ -63,10 +64,10 @@ public:
   // Subclasses must implement this.
   virtual ChannelMediaDecoder* Clone(MediaDecoderInit& aInit) = 0;
 
-  nsresult Load(nsIChannel* aChannel,
-                bool aIsPrivateBrowsing,
-                nsIStreamListener** aStreamListener);
-  nsresult Load(MediaResource* aOriginal);
+  virtual nsresult Load(nsIChannel* aChannel,
+                        bool aIsPrivateBrowsing,
+                        nsIStreamListener** aStreamListener);
+  virtual nsresult Load(MediaResource* aOriginal);
 
 private:
   nsresult OpenResource(nsIStreamListener** aStreamListener);

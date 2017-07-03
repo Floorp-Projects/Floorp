@@ -143,14 +143,14 @@ void Gecko_ConstructStyleChildrenIterator(RawGeckoElementBorrowed aElement,
 void Gecko_DestroyStyleChildrenIterator(RawGeckoStyleChildrenIteratorBorrowedMut aIterator);
 RawGeckoNodeBorrowedOrNull Gecko_GetNextStyleChild(RawGeckoStyleChildrenIteratorBorrowedMut it);
 
-void Gecko_LoadStyleSheet(mozilla::css::Loader* loader,
-                          mozilla::ServoStyleSheet* parent,
-                          mozilla::css::LoaderReusableStyleSheets* reusable_sheets,
-                          RawServoStyleSheetBorrowed child_sheet,
-                          RawGeckoURLExtraData* base_url_data,
-                          const uint8_t* url_bytes,
-                          uint32_t url_length,
-                          RawServoMediaListStrong media_list);
+mozilla::ServoStyleSheet*
+Gecko_LoadStyleSheet(mozilla::css::Loader* loader,
+                     mozilla::ServoStyleSheet* parent,
+                     mozilla::css::LoaderReusableStyleSheets* reusable_sheets,
+                     RawGeckoURLExtraData* base_url_data,
+                     const uint8_t* url_bytes,
+                     uint32_t url_length,
+                     RawServoMediaListStrong media_list);
 
 // Selector Matching.
 uint64_t Gecko_ElementState(RawGeckoElementBorrowed element);
@@ -557,6 +557,12 @@ int32_t Gecko_GetAppUnitsPerPhysicalInch(RawGeckoPresContextBorrowed pres_contex
 void InitializeServo();
 void ShutdownServo();
 void AssertIsMainThreadOrServoLangFontPrefsCacheLocked();
+
+mozilla::ServoStyleSheet* Gecko_StyleSheet_Clone(
+    const mozilla::ServoStyleSheet* aSheet,
+    const mozilla::ServoStyleSheet* aNewParentSheet);
+void Gecko_StyleSheet_AddRef(const mozilla::ServoStyleSheet* aSheet);
+void Gecko_StyleSheet_Release(const mozilla::ServoStyleSheet* aSheet);
 
 const nsMediaFeature* Gecko_GetMediaFeatures();
 nsCSSKeyword Gecko_LookupCSSKeyword(const uint8_t* string, uint32_t len);
