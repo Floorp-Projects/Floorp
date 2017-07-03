@@ -22,12 +22,11 @@ Cu.import("resource://gre/modules/AppConstants.jsm");
 
 const Utils = TelemetryUtils;
 
-const { AddonManager, AddonManagerPrivate } = Cu.import("resource://gre/modules/AddonManager.jsm", {});
-
 XPCOMUtils.defineLazyModuleGetter(this, "AttributionCode",
                                   "resource:///modules/AttributionCode.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "ctypes",
                                   "resource://gre/modules/ctypes.jsm");
+Cu.import("resource://gre/modules/AddonManager.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "LightweightThemeManager",
                                   "resource://gre/modules/LightweightThemeManager.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "ProfileAge",
@@ -483,34 +482,13 @@ EnvironmentAddonBuilder.prototype = {
       return Promise.reject(err);
     }
 
-    this._pendingTask = (async () => {
-      try {
-        // Gather initial addons details
-        await this._updateAddons();
-
-        if (!AddonManagerPrivate.isDBLoaded()) {
-          // The addon database has not been loaded, so listen for the event
-          // triggered by the AddonManager when it is loaded so we can
-          // immediately gather full data at that time.
-          await new Promise(resolve => {
-            const ADDON_LOAD_NOTIFICATION = "xpi-database-loaded";
-            Services.obs.addObserver({
-              observe(subject, topic, data) {
-                Services.obs.removeObserver(this, ADDON_LOAD_NOTIFICATION);
-                resolve();
-              },
-            }, ADDON_LOAD_NOTIFICATION);
-          });
-
-          // Now gather complete addons details.
-          await this._updateAddons();
-        }
-      } catch (err) {
+    this._pendingTask = this._updateAddons().then(
+      () => { this._pendingTask = null; },
+      (err) => {
         this._environment._log.error("init - Exception in _updateAddons", err);
-      } finally {
         this._pendingTask = null;
       }
-    })();
+    );
 
     return this._pendingTask;
   },
@@ -573,12 +551,6 @@ EnvironmentAddonBuilder.prototype = {
       AddonManager.removeAddonListener(this);
       Services.obs.removeObserver(this, EXPERIMENTS_CHANGED_TOPIC);
     }
-
-    // At startup, _pendingTask is set to a Promise that does not resolve
-    // until the addons database has been read so complete details about
-    // addons are available.  Returning it here will cause it to block
-    // profileBeforeChange, guranteeing that full information will be
-    // available by the time profileBeforeChangeTelemetry is fired.
     return this._pendingTask;
   },
 
@@ -629,43 +601,44 @@ EnvironmentAddonBuilder.prototype = {
    */
   async _getActiveAddons() {
     // Request addons, asynchronously.
-    let allAddons = await AddonManager.getActiveAddons(["extension", "service"]);
+    let allAddons = await AddonManager.getAddonsByTypes(["extension", "service"]);
 
-    let isDBLoaded = AddonManagerPrivate.isDBLoaded();
     let activeAddons = {};
     for (let addon of allAddons) {
+      // Skip addons which are not active.
+      if (!addon.isActive) {
+        continue;
+      }
+
       // Weird addon data in the wild can lead to exceptions while collecting
       // the data.
       try {
         // Make sure to have valid dates.
+        let installDate = new Date(Math.max(0, addon.installDate));
         let updateDate = new Date(Math.max(0, addon.updateDate));
 
         activeAddons[addon.id] = {
+          blocklisted: (addon.blocklistState !== Ci.nsIBlocklistService.STATE_NOT_BLOCKED),
+          description: limitStringToLength(addon.description, MAX_ADDON_STRING_LENGTH),
+          name: limitStringToLength(addon.name, MAX_ADDON_STRING_LENGTH),
+          userDisabled: enforceBoolean(addon.userDisabled),
+          appDisabled: addon.appDisabled,
           version: limitStringToLength(addon.version, MAX_ADDON_STRING_LENGTH),
           scope: addon.scope,
           type: addon.type,
+          foreignInstall: enforceBoolean(addon.foreignInstall),
+          hasBinaryComponents: addon.hasBinaryComponents,
+          installDay: Utils.millisecondsToDays(installDate.getTime()),
           updateDay: Utils.millisecondsToDays(updateDate.getTime()),
+          signedState: addon.signedState,
           isSystem: addon.isSystem,
           isWebExtension: addon.isWebExtension,
           multiprocessCompatible: Boolean(addon.multiprocessCompatible),
         };
 
-        // getActiveAddons() gives limited data during startup and full
-        // data after the addons database is loaded.
-        if (isDBLoaded) {
-          let installDate = new Date(Math.max(0, addon.installDate));
-          Object.assign(activeAddons[addon.id], {
-            blocklisted: (addon.blocklistState !== Ci.nsIBlocklistService.STATE_NOT_BLOCKED),
-            description: limitStringToLength(addon.description, MAX_ADDON_STRING_LENGTH),
-            name: limitStringToLength(addon.name, MAX_ADDON_STRING_LENGTH),
-            userDisabled: enforceBoolean(addon.userDisabled),
-            appDisabled: addon.appDisabled,
-            foreignInstall: enforceBoolean(addon.foreignInstall),
-            hasBinaryComponents: addon.hasBinaryComponents,
-            installDay: Utils.millisecondsToDays(installDate.getTime()),
-            signedState: addon.signedState,
-          });
-        }
+        if (addon.signedState !== undefined)
+          activeAddons[addon.id].signedState = addon.signedState;
+
       } catch (ex) {
         this._environment._log.error("_getActiveAddons - An addon was discarded due to an error", ex);
         continue;
@@ -681,7 +654,7 @@ EnvironmentAddonBuilder.prototype = {
    */
   async _getActiveTheme() {
     // Request themes, asynchronously.
-    let themes = await AddonManager.getActiveAddons(["theme"]);
+    let themes = await AddonManager.getAddonsByTypes(["theme"]);
 
     let activeTheme = {};
     // We only store information about the active theme.
