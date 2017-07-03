@@ -63,9 +63,8 @@
 namespace js {
 namespace coverage {
 
-LCovSource::LCovSource(LifoAlloc* alloc, JSObject* sso)
-  : source_(sso),
-    outSF_(alloc),
+LCovSource::LCovSource(LifoAlloc* alloc, const char* name)
+  : name_(name),
     outFN_(alloc),
     outFNDA_(alloc),
     numFunctionsFound_(0),
@@ -76,7 +75,6 @@ LCovSource::LCovSource(LifoAlloc* alloc, JSObject* sso)
     outDA_(alloc),
     numLinesInstrumented_(0),
     numLinesHit_(0),
-    hasFilename_(false),
     hasTopLevelScript_(false)
 {
 }
@@ -85,10 +83,10 @@ void
 LCovSource::exportInto(GenericPrinter& out) const
 {
     // Only write if everything got recorded.
-    if (!hasFilename_ || !hasTopLevelScript_)
+    if (!hasTopLevelScript_)
         return;
 
-    outSF_.exportInto(out);
+    out.printf("SF:%s\n", name_);
 
     outFN_.exportInto(out);
     outFNDA_.exportInto(out);
@@ -104,17 +102,6 @@ LCovSource::exportInto(GenericPrinter& out) const
     out.printf("LH:%" PRIuSIZE "\n", numLinesHit_);
 
     out.put("end_of_record\n");
-}
-
-bool
-LCovSource::writeSourceFilename(ScriptSourceObject* sso)
-{
-    outSF_.printf("SF:%s\n", sso->source()->filename());
-    if (outSF_.hadOutOfMemory())
-        return false;
-
-    hasFilename_ = true;
-    return true;
 }
 
 bool
@@ -404,8 +391,7 @@ LCovCompartment::LCovCompartment()
 }
 
 void
-LCovCompartment::collectCodeCoverageInfo(JSCompartment* comp, JSObject* sso,
-                                         JSScript* script)
+LCovCompartment::collectCodeCoverageInfo(JSCompartment* comp, JSScript* script)
 {
     // Skip any operation if we already some out-of memory issues.
     if (outTN_.hadOutOfMemory())
@@ -415,7 +401,7 @@ LCovCompartment::collectCodeCoverageInfo(JSCompartment* comp, JSObject* sso,
         return;
 
     // Get the existing source LCov summary, or create a new one.
-    LCovSource* source = lookupOrAdd(comp, sso);
+    LCovSource* source = lookupOrAdd(comp, script->getScriptName());
     if (!source)
         return;
 
@@ -426,31 +412,8 @@ LCovCompartment::collectCodeCoverageInfo(JSCompartment* comp, JSObject* sso,
     }
 }
 
-void
-LCovCompartment::collectSourceFile(JSCompartment* comp, ScriptSourceObject* sso)
-{
-    // Do not add sources if there is no file name associated to it.
-    if (!sso->source()->filename())
-        return;
-
-    // Skip any operation if we already some out-of memory issues.
-    if (outTN_.hadOutOfMemory())
-        return;
-
-    // Get the existing source LCov summary, or create a new one.
-    LCovSource* source = lookupOrAdd(comp, sso);
-    if (!source)
-        return;
-
-    // Write source filename into the LCovSource.
-    if (!source->writeSourceFilename(sso)) {
-        outTN_.reportOutOfMemory();
-        return;
-    }
-}
-
 LCovSource*
-LCovCompartment::lookupOrAdd(JSCompartment* comp, JSObject* sso)
+LCovCompartment::lookupOrAdd(JSCompartment* comp, const char* name)
 {
     // On the first call, write the compartment name, and allocate a LCovSource
     // vector in the LifoAlloc.
@@ -468,13 +431,13 @@ LCovCompartment::lookupOrAdd(JSCompartment* comp, JSObject* sso)
     } else {
         // Find the first matching source.
         for (LCovSource& source : *sources_) {
-            if (source.match(sso))
+            if (source.match(name))
                 return &source;
         }
     }
 
     // Allocate a new LCovSource for the current top-level.
-    if (!sources_->append(Move(LCovSource(&alloc_, sso)))) {
+    if (!sources_->append(Move(LCovSource(&alloc_, name)))) {
         outTN_.reportOutOfMemory();
         return nullptr;
     }
