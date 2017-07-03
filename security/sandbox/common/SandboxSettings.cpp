@@ -6,10 +6,18 @@
 
 #include "mozISandboxSettings.h"
 
+#include "mozilla/Omnijar.h"
 #include "mozilla/ModuleUtils.h"
 #include "mozilla/Preferences.h"
 
 namespace mozilla {
+
+bool IsDevelopmentBuild()
+{
+  nsCOMPtr<nsIFile> path = mozilla::Omnijar::GetPath(mozilla::Omnijar::GRE);
+  // If the path doesn't exist, we're a dev build.
+  return path == nullptr;
+}
 
 int GetEffectiveContentSandboxLevel() {
   int level = Preferences::GetInt("security.sandbox.content.level");
