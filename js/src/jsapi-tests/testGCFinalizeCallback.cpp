@@ -35,6 +35,12 @@ BEGIN_TEST(testGCFinalizeCallback)
     CHECK(checkFinalizeStatus());
     CHECK(checkFinalizeIsZoneGC(false));
 
+#ifdef JS_GC_ZEAL
+    // Bug 1377593 - the below tests want to control how many zones are GC'ing,
+    // and some zeal modes will convert them into all-zones GCs.
+    JS_SetGCZeal(cx, 0, 0);
+#endif
+
     JS::RootedObject global1(cx, createTestGlobal());
     JS::RootedObject global2(cx, createTestGlobal());
     JS::RootedObject global3(cx, createTestGlobal());
