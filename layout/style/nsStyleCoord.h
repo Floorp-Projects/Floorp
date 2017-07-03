@@ -224,7 +224,6 @@ public:
   double      GetAngleValueInRadians() const;
   float       GetFlexFractionValue() const;
   Calc*       GetCalcValue() const;
-  uint32_t    HashValue(uint32_t aHash) const;
   template<typename T,
            typename = typename std::enable_if<std::is_enum<T>::value>::type>
   T GetEnumValue() const
