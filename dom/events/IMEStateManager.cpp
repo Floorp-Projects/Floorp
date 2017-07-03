@@ -144,6 +144,7 @@ nsIWidget* IMEStateManager::sActiveInputContextWidget = nullptr;
 StaticRefPtr<TabParent> IMEStateManager::sActiveTabParent;
 StaticRefPtr<IMEContentObserver> IMEStateManager::sActiveIMEContentObserver;
 TextCompositionArray* IMEStateManager::sTextCompositions = nullptr;
+InputContext::Origin IMEStateManager::sOrigin = InputContext::ORIGIN_MAIN;
 bool IMEStateManager::sInstalledMenuKeyboardListener = false;
 bool IMEStateManager::sIsGettingNewIMEState = false;
 bool IMEStateManager::sCheckForIMEUnawareWebApps = false;
@@ -163,6 +164,9 @@ IMEStateManager::Init()
     &sInputModeSupported,
     "dom.forms.inputmode",
     false);
+
+  sOrigin = XRE_IsParentProcess() ? InputContext::ORIGIN_MAIN :
+                                    InputContext::ORIGIN_CONTENT;
 }
 
 // static
@@ -304,7 +308,9 @@ IMEStateManager::OnDestroyPresContext(nsPresContext* aPresContext)
     IMEState newState = GetNewIMEState(sPresContext, nullptr);
     InputContextAction action(InputContextAction::CAUSE_UNKNOWN,
                               InputContextAction::LOST_FOCUS);
-    SetIMEState(newState, nullptr, sWidget, action);
+    InputContext::Origin origin =
+      sActiveTabParent ? InputContext::ORIGIN_CONTENT : sOrigin;
+    SetIMEState(newState, nullptr, sWidget, action, origin);
   }
   sWidget = nullptr;
   sContent = nullptr;
@@ -359,7 +365,9 @@ IMEStateManager::OnRemoveContent(nsPresContext* aPresContext,
     IMEState newState = GetNewIMEState(sPresContext, nullptr);
     InputContextAction action(InputContextAction::CAUSE_UNKNOWN,
                               InputContextAction::LOST_FOCUS);
-    SetIMEState(newState, nullptr, sWidget, action);
+    InputContext::Origin origin =
+      sActiveTabParent ? InputContext::ORIGIN_CONTENT : sOrigin;
+    SetIMEState(newState, nullptr, sWidget, action, origin);
   }
 
   sWidget = nullptr;
@@ -513,23 +521,26 @@ IMEStateManager::OnChangeFocusInternal(nsPresContext* aPresContext,
       setIMEState = sInstalledMenuKeyboardListener;
     } else if (focusActuallyChanging) {
       InputContext context = newWidget->GetInputContext();
-      if (context.mIMEState.mEnabled == IMEState::DISABLED) {
+      if (context.mIMEState.mEnabled == IMEState::DISABLED &&
+          context.mOrigin == InputContext::ORIGIN_CONTENT) {
         setIMEState = false;
         MOZ_LOG(sISMLog, LogLevel::Debug,
           ("  OnChangeFocusInternal(), doesn't set IME "
            "state because focused element (or document) is in a child process "
-           "and the IME state is already disabled"));
+           "and the IME state is already disabled by a remote process"));
       } else {
         MOZ_LOG(sISMLog, LogLevel::Debug,
           ("  OnChangeFocusInternal(), will disable IME "
            "until new focused element (or document) in the child process "
            "will get focus actually"));
       }
-    } else {
-      // When focus is NOT changed actually, we shouldn't set IME state since
-      // that means that the window is being activated and the child process
-      // may have composition.  Then, we shouldn't commit the composition with
-      // making IME state disabled.
+    } else if (newWidget->GetInputContext().mOrigin !=
+                 InputContext::ORIGIN_CONTENT) {
+      // When focus is NOT changed actually, we shouldn't set IME state if
+      // current input context was set by a remote process since that means
+      // that the window is being activated and the child process may have
+      // composition.  Then, we shouldn't commit the composition with making
+      // IME state disabled.
       setIMEState = false;
       MOZ_LOG(sISMLog, LogLevel::Debug,
         ("  OnChangeFocusInternal(), doesn't set IME "
@@ -566,7 +577,8 @@ IMEStateManager::OnChangeFocusInternal(nsPresContext* aPresContext,
     }
 
     // Update IME state for new focus widget
-    SetIMEState(newState, aContent, newWidget, aAction);
+    SetIMEState(newState, aContent, newWidget, aAction,
+                newTabParent ? InputContext::ORIGIN_CONTENT : sOrigin);
   }
 
   sActiveTabParent = newTabParent;
@@ -717,7 +729,7 @@ IMEStateManager::OnClickInEditor(nsPresContext* aPresContext,
 
   InputContextAction action(cause, InputContextAction::FOCUS_NOT_CHANGED);
   IMEState newState = GetNewIMEState(aPresContext, aContent);
-  SetIMEState(newState, aContent, widget, action);
+  SetIMEState(newState, aContent, widget, action, sOrigin);
 }
 
 // static
@@ -926,7 +938,7 @@ IMEStateManager::UpdateIMEState(const IMEState& aNewIMEState,
   if (updateIMEState) {
     InputContextAction action(InputContextAction::CAUSE_UNKNOWN,
                               InputContextAction::FOCUS_NOT_CHANGED);
-    SetIMEState(aNewIMEState, aContent, widget, action);
+    SetIMEState(aNewIMEState, aContent, widget, action, sOrigin);
     if (NS_WARN_IF(widget->Destroyed())) {
       MOZ_LOG(sISMLog, LogLevel::Error,
         ("  UpdateIMEState(), widget has gone during setting input context"));
@@ -1086,22 +1098,25 @@ void
 IMEStateManager::SetIMEState(const IMEState& aState,
                              nsIContent* aContent,
                              nsIWidget* aWidget,
-                             InputContextAction aAction)
+                             InputContextAction aAction,
+                             InputContext::Origin aOrigin)
 {
   MOZ_LOG(sISMLog, LogLevel::Info,
     ("SetIMEState(aState={ mEnabled=%s, mOpen=%s }, "
      "aContent=0x%p (TabParent=0x%p), aWidget=0x%p, aAction={ mCause=%s, "
-     "mFocusChange=%s })",
+     "mFocusChange=%s }, aOrigin=%s)",
      GetIMEStateEnabledName(aState.mEnabled),
      GetIMEStateSetOpenName(aState.mOpen), aContent,
      TabParent::GetFrom(aContent), aWidget,
      GetActionCauseName(aAction.mCause),
-     GetActionFocusChangeName(aAction.mFocusChange)));
+     GetActionFocusChangeName(aAction.mFocusChange),
+     ToChar(aOrigin)));
 
   NS_ENSURE_TRUE_VOID(aWidget);
 
   InputContext context;
   context.mIMEState = aState;
+  context.mOrigin = aOrigin;
   context.mMayBeIMEUnaware = context.mIMEState.IsEditable() &&
     sCheckForIMEUnawareWebApps && MayBeIMEUnawareWebApp(aContent);
 
