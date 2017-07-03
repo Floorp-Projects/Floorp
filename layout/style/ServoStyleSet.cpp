@@ -34,15 +34,6 @@
 using namespace mozilla;
 using namespace mozilla::dom;
 
-static inline uint64_t UniqueIDForSheet(ServoStyleSheet* aSheet)
-{
-  // Servo tracks sheets by unique ID, and it's important that a given
-  // ServoStyleSheet has the same unique ID throughout its lifetime.
-  // Instead of tracking an arbitrary unique ID for each sheet,
-  // we use the sheet address as a unique ID.
-  return reinterpret_cast<uint64_t>(aSheet);
-}
-
 ServoStyleSet::ServoStyleSet()
   : mPresContext(nullptr)
   , mAllowResolveStaleStyles(false)
@@ -81,10 +72,9 @@ ServoStyleSet::Init(nsPresContext* aPresContext, nsBindingManager* aBindingManag
       // because Servo only needs to maintain relative ordering within a sheet
       // type, which this preserves.
 
-      MOZ_ASSERT(sheet->RawSheet(), "We should only append non-null raw sheets.");
-      Servo_StyleSet_AppendStyleSheet(mRawSet.get(),
-                                      sheet->RawSheet(),
-                                      UniqueIDForSheet(sheet));
+      MOZ_ASSERT(sheet->RawContents(),
+                 "We should only append non-null raw sheets.");
+      Servo_StyleSet_AppendStyleSheet(mRawSet.get(), sheet);
     }
   }
 
@@ -709,7 +699,7 @@ ServoStyleSet::AppendStyleSheet(SheetType aType,
   MOZ_ASSERT(aSheet);
   MOZ_ASSERT(aSheet->IsApplicable());
   MOZ_ASSERT(nsStyleSet::IsCSSSheetType(aType));
-  MOZ_ASSERT(aSheet->RawSheet(), "Raw sheet should be in place before insertion.");
+  MOZ_ASSERT(aSheet->RawContents(), "Raw sheet should be in place before insertion.");
 
   RemoveSheetOfType(aType, aSheet);
   AppendSheetOfType(aType, aSheet);
@@ -718,9 +708,7 @@ ServoStyleSet::AppendStyleSheet(SheetType aType,
     // Maintain a mirrored list of sheets on the servo side.
     // Servo will remove aSheet from its original position as part of the call
     // to Servo_StyleSet_AppendStyleSheet.
-    Servo_StyleSet_AppendStyleSheet(mRawSet.get(),
-                                    aSheet->RawSheet(),
-                                    UniqueIDForSheet(aSheet));
+    Servo_StyleSet_AppendStyleSheet(mRawSet.get(), aSheet);
     SetStylistStyleSheetsDirty();
   }
 
@@ -734,7 +722,8 @@ ServoStyleSet::PrependStyleSheet(SheetType aType,
   MOZ_ASSERT(aSheet);
   MOZ_ASSERT(aSheet->IsApplicable());
   MOZ_ASSERT(nsStyleSet::IsCSSSheetType(aType));
-  MOZ_ASSERT(aSheet->RawSheet(), "Raw sheet should be in place before insertion.");
+  MOZ_ASSERT(aSheet->RawContents(),
+             "Raw sheet should be in place before insertion.");
 
   RemoveSheetOfType(aType, aSheet);
   PrependSheetOfType(aType, aSheet);
@@ -743,9 +732,7 @@ ServoStyleSet::PrependStyleSheet(SheetType aType,
     // Maintain a mirrored list of sheets on the servo side.
     // Servo will remove aSheet from its original position as part of the call
     // to Servo_StyleSet_PrependStyleSheet.
-    Servo_StyleSet_PrependStyleSheet(mRawSet.get(),
-                                     aSheet->RawSheet(),
-                                     UniqueIDForSheet(aSheet));
+    Servo_StyleSet_PrependStyleSheet(mRawSet.get(), aSheet);
     SetStylistStyleSheetsDirty();
   }
 
@@ -762,7 +749,7 @@ ServoStyleSet::RemoveStyleSheet(SheetType aType,
   RemoveSheetOfType(aType, aSheet);
   if (mRawSet) {
     // Maintain a mirrored list of sheets on the servo side.
-    Servo_StyleSet_RemoveStyleSheet(mRawSet.get(), UniqueIDForSheet(aSheet));
+    Servo_StyleSet_RemoveStyleSheet(mRawSet.get(), aSheet);
     SetStylistStyleSheetsDirty();
   }
 
@@ -784,7 +771,7 @@ ServoStyleSet::ReplaceSheets(SheetType aType,
   for (const auto& sheet : mSheets[aType]) {
     sheet->DropStyleSet(this);
     if (mRawSet) {
-      Servo_StyleSet_RemoveStyleSheet(mRawSet.get(), UniqueIDForSheet(sheet));
+      Servo_StyleSet_RemoveStyleSheet(mRawSet.get(), sheet);
     }
   }
   mSheets[aType].Clear();
@@ -793,10 +780,8 @@ ServoStyleSet::ReplaceSheets(SheetType aType,
   for (auto& sheet : aNewSheets) {
     AppendSheetOfType(aType, sheet);
     if (mRawSet) {
-      MOZ_ASSERT(sheet->RawSheet(), "Raw sheet should be in place before replacement.");
-      Servo_StyleSet_AppendStyleSheet(mRawSet.get(),
-                                      sheet->RawSheet(),
-                                      UniqueIDForSheet(sheet));
+      MOZ_ASSERT(sheet->RawContents(), "Raw sheet should be in place before replacement.");
+      Servo_StyleSet_AppendStyleSheet(mRawSet.get(), sheet);
     }
   }
 
@@ -812,8 +797,8 @@ ServoStyleSet::InsertStyleSheetBefore(SheetType aType,
   MOZ_ASSERT(aReferenceSheet);
   MOZ_ASSERT(aNewSheet->IsApplicable());
   MOZ_ASSERT(aNewSheet != aReferenceSheet, "Can't place sheet before itself.");
-  MOZ_ASSERT(aNewSheet->RawSheet(), "Raw sheet should be in place before insertion.");
-  MOZ_ASSERT(aReferenceSheet->RawSheet(), "Reference sheet should have a raw sheet.");
+  MOZ_ASSERT(aNewSheet->RawContents(), "Raw sheet should be in place before insertion.");
+  MOZ_ASSERT(aReferenceSheet->RawContents(), "Reference sheet should have a raw sheet.");
 
   // Servo will remove aNewSheet from its original position as part of the
   // call to Servo_StyleSet_InsertStyleSheetBefore.
@@ -822,10 +807,8 @@ ServoStyleSet::InsertStyleSheetBefore(SheetType aType,
 
   if (mRawSet) {
     // Maintain a mirrored list of sheets on the servo side.
-    Servo_StyleSet_InsertStyleSheetBefore(mRawSet.get(),
-                                          aNewSheet->RawSheet(),
-                                          UniqueIDForSheet(aNewSheet),
-                                          UniqueIDForSheet(aReferenceSheet));
+    Servo_StyleSet_InsertStyleSheetBefore(
+        mRawSet.get(), aNewSheet, aReferenceSheet);
     SetStylistStyleSheetsDirty();
   }
 
@@ -836,16 +819,7 @@ void
 ServoStyleSet::UpdateStyleSheet(ServoStyleSheet* aSheet)
 {
   MOZ_ASSERT(aSheet);
-
-  if (mRawSet) {
-    // Inform servo that the underlying raw sheet has changed.
-    Servo_StyleSet_UpdateStyleSheet(mRawSet.get(),
-                                    aSheet->RawSheet(),
-                                    UniqueIDForSheet(aSheet));
-    // No need to set the stylesheets as dirty, since this is only
-    // used to notify servo of a cloned raw sheet. It styles the
-    // same until the sheet is changed through other methods.
-  }
+  // TODO(emilio): Get rid of this.
 }
 
 int32_t
@@ -856,8 +830,7 @@ ServoStyleSet::SheetCount(SheetType aType) const
 }
 
 ServoStyleSheet*
-ServoStyleSet::StyleSheetAt(SheetType aType,
-                            int32_t aIndex) const
+ServoStyleSet::StyleSheetAt(SheetType aType, int32_t aIndex) const
 {
   MOZ_ASSERT(nsStyleSet::IsCSSSheetType(aType));
   return mSheets[aType][aIndex];
@@ -882,7 +855,7 @@ ServoStyleSet::AddDocStyleSheet(ServoStyleSheet* aSheet,
                                 nsIDocument* aDocument)
 {
   MOZ_ASSERT(aSheet->IsApplicable());
-  MOZ_ASSERT(aSheet->RawSheet(), "Raw sheet should be in place by this point.");
+  MOZ_ASSERT(aSheet->RawContents(), "Raw sheet should be in place by this point.");
 
   RefPtr<StyleSheet> strong(aSheet);
 
@@ -898,10 +871,7 @@ ServoStyleSet::AddDocStyleSheet(ServoStyleSheet* aSheet,
 
     if (mRawSet) {
       // Maintain a mirrored list of sheets on the servo side.
-      Servo_StyleSet_InsertStyleSheetBefore(mRawSet.get(),
-                                            aSheet->RawSheet(),
-                                            UniqueIDForSheet(aSheet),
-                                            UniqueIDForSheet(beforeSheet));
+      Servo_StyleSet_InsertStyleSheetBefore(mRawSet.get(), aSheet, beforeSheet);
       SetStylistStyleSheetsDirty();
     }
   } else {
@@ -910,9 +880,7 @@ ServoStyleSet::AddDocStyleSheet(ServoStyleSheet* aSheet,
 
     if (mRawSet) {
       // Maintain a mirrored list of sheets on the servo side.
-      Servo_StyleSet_AppendStyleSheet(mRawSet.get(),
-                                      aSheet->RawSheet(),
-                                      UniqueIDForSheet(aSheet));
+      Servo_StyleSet_AppendStyleSheet(mRawSet.get(), aSheet);
       SetStylistStyleSheetsDirty();
     }
   }

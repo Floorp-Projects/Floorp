@@ -27,10 +27,11 @@ static void ServoParsingBench() {
   RefPtr<URLExtraData> data = new URLExtraData(
     NullPrincipalURI::Create(), nullptr, NullPrincipal::Create());
   for (int i = 0; i < PARSING_REPETITIONS; i++) {
-    RefPtr<RawServoStyleSheet> stylesheet = Servo_StyleSheet_FromUTF8Bytes(
-      nullptr, nullptr, &css, eAuthorSheetFeatures, nullptr,
-      data, 0, eCompatibility_FullStandards
-    ).Consume();
+    RefPtr<RawServoStyleSheetContents> stylesheet =
+      Servo_StyleSheet_FromUTF8Bytes(
+        nullptr, nullptr, &css, eAuthorSheetFeatures,
+        data, 0, eCompatibility_FullStandards
+      ).Consume();
   }
 }
 

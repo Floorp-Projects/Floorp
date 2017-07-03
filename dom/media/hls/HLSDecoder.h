@@ -33,6 +33,11 @@ public:
   // If provided, codecs are checked for support.
   static bool IsSupportedType(const MediaContainerType& aContainerType);
 
+  nsresult Load(nsIChannel* aChannel,
+                bool aIsPrivateBrowsing,
+                nsIStreamListener**) override;
+  nsresult Load(MediaResource*) override;
+
 private:
   RefPtr<MediaFormatReader> mReader;
 };

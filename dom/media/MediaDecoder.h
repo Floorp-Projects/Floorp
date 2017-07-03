@@ -131,8 +131,7 @@ public:
   // Called if the media file encounters a network error.
   void NetworkError();
 
-  // Get the current MediaResource being used. Its URI will be returned
-  // by currentSrc. Returns what was passed to Load(), if Load() has been called.
+  // Get the current MediaResource being used.
   // Note: The MediaResource is refcounted, but it outlives the MediaDecoder,
   // so it's OK to use the reference returned by this function without
   // refcounting, *unless* you need to store and use the reference after the
