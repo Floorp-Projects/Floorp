@@ -367,8 +367,6 @@ private:
     // XDR, and calculating their size-based offsets.
     void PrepareCacheWrite();
 
-    void PrepareCacheWriteInternal();
-
     // Returns a file pointer for the cache file with the given name in the
     // current profile.
     Result<nsCOMPtr<nsIFile>, nsresult>
@@ -412,7 +410,6 @@ private:
     bool mSaveComplete = false;
     bool mDataPrepared = false;
     bool mCacheInvalidated = false;
-    bool mBlockedOnSyncDispatch = false;
 
     // The list of scripts that we read from the initial startup cache file,
     // but have yet to initiate a decode task for.
