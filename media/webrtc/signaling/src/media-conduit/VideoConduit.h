@@ -322,7 +322,8 @@ public:
                             double* framerateStdDev,
                             double* bitrateMean,
                             double* bitrateStdDev,
-                            uint32_t* discardedPackets) override;
+                            uint32_t* discardedPackets,
+                            uint32_t* framesDecoded) override;
   bool GetAVStats(int32_t* jitterBufferDelayMs,
                   int32_t* playoutBufferDelayMs,
                   int32_t* avSyncOffsetMs) override;
@@ -398,9 +399,15 @@ private:
      * @param aOutDiscPackets: number of discarded packets
      */
     void DiscardedPackets(uint32_t& aOutDiscPackets) const;
+   /**
+    * Returns the number of frames decoded
+    * @param aOutDiscPackets: number of frames decoded
+    */
+    void FramesDecoded(uint32_t& aFramesDecoded) const;
     void Update(const webrtc::VideoReceiveStream::Stats& aStats);
   private:
     uint32_t mDiscardedPackets = 0;
+    uint32_t mFramesDecoded = 0;
   };
   /*
    * Stores encoder configuration information and produces
