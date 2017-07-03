@@ -7,7 +7,9 @@
 #include "PaintThread.h"
 
 #include "base/task.h"
+#include "mozilla/layers/CompositorBridgeChild.h"
 #include "mozilla/gfx/2D.h"
+#include "mozilla/Preferences.h"
 #include "mozilla/SyncRunnable.h"
 
 namespace mozilla {
@@ -108,13 +110,18 @@ PaintThread::IsOnPaintThread()
 }
 
 void
-PaintThread::PaintContentsAsync(gfx::DrawTargetCapture* aCapture,
+PaintThread::PaintContentsAsync(CompositorBridgeChild* aBridge,
+                                gfx::DrawTargetCapture* aCapture,
                                 gfx::DrawTarget* aTarget)
 {
   MOZ_ASSERT(IsOnPaintThread());
 
   // Draw all the things into the actual dest target.
   aTarget->DrawCapturedDT(aCapture, Matrix());
+
+  if (aBridge) {
+    aBridge->NotifyFinishedAsyncPaint();
+  }
 }
 
 void
@@ -123,17 +130,28 @@ PaintThread::PaintContents(DrawTargetCapture* aCapture,
 {
   MOZ_ASSERT(NS_IsMainThread());
 
+  // If painting asynchronously, we need to acquire the compositor bridge which
+  // owns the underlying MessageChannel. Otherwise we leave it null and use
+  // synchronous dispatch.
+  RefPtr<CompositorBridgeChild> cbc;
+  if (!gfxPrefs::LayersOMTPForceSync()) {
+    cbc = CompositorBridgeChild::Get();
+    cbc->NotifyBeginAsyncPaint();
+  }
   RefPtr<DrawTargetCapture> capture(aCapture);
   RefPtr<DrawTarget> target(aTarget);
 
   RefPtr<Runnable> task = NS_NewRunnableFunction("PaintThread::PaintContents",
     [=, this]() -> void
   {
-    PaintContentsAsync(capture, target);
+    PaintContentsAsync(cbc, capture, target);
   });
 
-  SyncRunnable::DispatchToThread(sThread, task);
-  return;
+  if (cbc) {
+    sThread->Dispatch(task.forget());
+  } else {
+    SyncRunnable::DispatchToThread(sThread, task);
+  }
 }
 
 } // namespace layers
