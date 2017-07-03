@@ -20,6 +20,8 @@ class DrawTargetCapture;
 
 namespace layers {
 
+class CompositorBridgeChild;
+
 class PaintThread final
 {
   friend void DestroyPaintThread(UniquePtr<PaintThread>&& aPaintThread);
@@ -45,7 +47,8 @@ private:
   bool Init();
   void ShutdownOnPaintThread();
   void InitOnPaintThread();
-  void PaintContentsAsync(gfx::DrawTargetCapture* aCapture,
+  void PaintContentsAsync(CompositorBridgeChild* aBridge,
+                          gfx::DrawTargetCapture* aCapture,
                           gfx::DrawTarget* aTarget);
 
   static StaticAutoPtr<PaintThread> sSingleton;
