@@ -353,6 +353,7 @@ struct ParamTraits<mozilla::dom::RTCInboundRTPStreamStats>
   {
     WriteParam(aMsg, aParam.mBytesReceived);
     WriteParam(aMsg, aParam.mDiscardedPackets);
+    WriteParam(aMsg, aParam.mFramesDecoded);
     WriteParam(aMsg, aParam.mJitter);
     WriteParam(aMsg, aParam.mMozAvSyncDelay);
     WriteParam(aMsg, aParam.mMozJitterBufferDelay);
@@ -367,6 +368,7 @@ struct ParamTraits<mozilla::dom::RTCInboundRTPStreamStats>
   {
     if (!ReadParam(aMsg, aIter, &(aResult->mBytesReceived)) ||
         !ReadParam(aMsg, aIter, &(aResult->mDiscardedPackets)) ||
+        !ReadParam(aMsg, aIter, &(aResult->mFramesDecoded)) ||
         !ReadParam(aMsg, aIter, &(aResult->mJitter)) ||
         !ReadParam(aMsg, aIter, &(aResult->mMozAvSyncDelay)) ||
         !ReadParam(aMsg, aIter, &(aResult->mMozJitterBufferDelay)) ||
