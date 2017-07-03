@@ -248,7 +248,8 @@ protected:
   static void SetIMEState(const IMEState &aState,
                           nsIContent* aContent,
                           nsIWidget* aWidget,
-                          InputContextAction aAction);
+                          InputContextAction aAction,
+                          InputContext::Origin aOrigin);
   static void SetInputContext(nsIWidget* aWidget,
                               const InputContext& aInputContext,
                               const InputContextAction& aAction);
@@ -299,6 +300,9 @@ protected:
   // The instances in this array can be destroyed automatically if you do
   // something to cause committing or canceling the composition.
   static TextCompositionArray* sTextCompositions;
+
+  // Origin type of current process.
+  static InputContext::Origin sOrigin;
 
   static bool           sInstalledMenuKeyboardListener;
   static bool           sIsGettingNewIMEState;
