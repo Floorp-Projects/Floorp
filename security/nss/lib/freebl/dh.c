@@ -85,6 +85,11 @@ DH_GenParam(int primeLen, DHParams **params)
     CHECK_MPI_OK(mp_div_2(&psub1, &q));
     /* construct a generator from the prime. */
     ab = PORT_Alloc(primeLen);
+    if (!ab) {
+        PORT_SetError(SEC_ERROR_NO_MEMORY);
+        rv = SECFailure;
+        goto cleanup;
+    }
     /* generate a candidate number a in p's field */
     CHECK_SEC_OK(RNG_GenerateGlobalRandomBytes(ab, primeLen));
     CHECK_MPI_OK(mp_read_unsigned_octets(&a, ab, primeLen));
@@ -114,14 +119,16 @@ cleanup:
     mp_clear(&h);
     mp_clear(&psub1);
     mp_clear(&test);
-    if (ab)
+    if (ab) {
         PORT_ZFree(ab, primeLen);
+    }
     if (err) {
         MP_TO_SEC_ERROR(err);
         rv = SECFailure;
     }
-    if (rv)
+    if (rv != SECSuccess) {
         PORT_FreeArena(arena, PR_TRUE);
+    }
     return rv;
 }
 
