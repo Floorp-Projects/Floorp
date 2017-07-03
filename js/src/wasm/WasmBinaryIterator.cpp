@@ -24,9 +24,9 @@ using namespace js::wasm;
 
 #ifdef DEBUG
 OpKind
-wasm::Classify(Op op)
+wasm::Classify(OpBytes op)
 {
-    switch (op) {
+    switch (Op(op.b0)) {
       case Op::Block:
         return OpKind::Block;
       case Op::Loop:
@@ -43,20 +43,6 @@ wasm::Classify(Op op)
         return OpKind::F32;
       case Op::F64Const:
         return OpKind::F64;
-      case Op::I8x16Const:
-        return OpKind::I8x16;
-      case Op::I16x8Const:
-        return OpKind::I16x8;
-      case Op::I32x4Const:
-        return OpKind::I32x4;
-      case Op::B8x16Const:
-        return OpKind::B8x16;
-      case Op::B16x8Const:
-        return OpKind::B16x8;
-      case Op::B32x4Const:
-        return OpKind::B32x4;
-      case Op::F32x4Const:
-        return OpKind::F32x4;
       case Op::Br:
         return OpKind::Br;
       case Op::BrIf:
@@ -85,31 +71,6 @@ wasm::Classify(Op op)
       case Op::F64Trunc:
       case Op::F64Nearest:
       case Op::F64Sqrt:
-      case Op::I32BitNot:
-      case Op::I32Abs:
-      case Op::F64Sin:
-      case Op::F64Cos:
-      case Op::F64Tan:
-      case Op::F64Asin:
-      case Op::F64Acos:
-      case Op::F64Atan:
-      case Op::F64Exp:
-      case Op::F64Log:
-      case Op::I32Neg:
-      case Op::I8x16neg:
-      case Op::I8x16not:
-      case Op::I16x8neg:
-      case Op::I16x8not:
-      case Op::I32x4neg:
-      case Op::I32x4not:
-      case Op::F32x4neg:
-      case Op::F32x4sqrt:
-      case Op::F32x4abs:
-      case Op::F32x4reciprocalApproximation:
-      case Op::F32x4reciprocalSqrtApproximation:
-      case Op::B8x16not:
-      case Op::B16x8not:
-      case Op::B32x4not:
         return OpKind::Unary;
       case Op::I32Add:
       case Op::I32Sub:
@@ -155,54 +116,6 @@ wasm::Classify(Op op)
       case Op::F64Min:
       case Op::F64Max:
       case Op::F64CopySign:
-      case Op::I32Min:
-      case Op::I32Max:
-      case Op::F64Mod:
-      case Op::F64Pow:
-      case Op::F64Atan2:
-      case Op::I8x16add:
-      case Op::I8x16sub:
-      case Op::I8x16mul:
-      case Op::I8x16addSaturate:
-      case Op::I8x16subSaturate:
-      case Op::I8x16addSaturateU:
-      case Op::I8x16subSaturateU:
-      case Op::I8x16and:
-      case Op::I8x16or:
-      case Op::I8x16xor:
-      case Op::I16x8add:
-      case Op::I16x8sub:
-      case Op::I16x8mul:
-      case Op::I16x8addSaturate:
-      case Op::I16x8subSaturate:
-      case Op::I16x8addSaturateU:
-      case Op::I16x8subSaturateU:
-      case Op::I16x8and:
-      case Op::I16x8or:
-      case Op::I16x8xor:
-      case Op::I32x4add:
-      case Op::I32x4sub:
-      case Op::I32x4mul:
-      case Op::I32x4and:
-      case Op::I32x4or:
-      case Op::I32x4xor:
-      case Op::F32x4add:
-      case Op::F32x4sub:
-      case Op::F32x4mul:
-      case Op::F32x4div:
-      case Op::F32x4min:
-      case Op::F32x4max:
-      case Op::F32x4minNum:
-      case Op::F32x4maxNum:
-      case Op::B8x16and:
-      case Op::B8x16or:
-      case Op::B8x16xor:
-      case Op::B16x8and:
-      case Op::B16x8or:
-      case Op::B16x8xor:
-      case Op::B32x4and:
-      case Op::B32x4or:
-      case Op::B32x4xor:
         return OpKind::Binary;
       case Op::I32Eq:
       case Op::I32Ne:
@@ -264,22 +177,6 @@ wasm::Classify(Op op)
       case Op::F64ConvertUI64:
       case Op::F64ReinterpretI64:
       case Op::F64PromoteF32:
-      case Op::I32x4fromFloat32x4:
-      case Op::I32x4fromFloat32x4U:
-      case Op::F32x4fromInt32x4:
-      case Op::F32x4fromUint32x4:
-      case Op::I32x4fromFloat32x4Bits:
-      case Op::I32x4fromInt8x16Bits:
-      case Op::I32x4fromInt16x8Bits:
-      case Op::I16x8fromInt8x16Bits:
-      case Op::I16x8fromInt32x4Bits:
-      case Op::I16x8fromFloat32x4Bits:
-      case Op::I8x16fromInt16x8Bits:
-      case Op::I8x16fromInt32x4Bits:
-      case Op::I8x16fromFloat32x4Bits:
-      case Op::F32x4fromInt8x16Bits:
-      case Op::F32x4fromInt16x8Bits:
-      case Op::F32x4fromInt32x4Bits:
         return OpKind::Conversion;
       case Op::I32Load8S:
       case Op::I32Load8U:
@@ -295,16 +192,6 @@ wasm::Classify(Op op)
       case Op::I64Load:
       case Op::F32Load:
       case Op::F64Load:
-      case Op::I8x16load:
-      case Op::I16x8load:
-      case Op::I32x4load:
-      case Op::I32x4load1:
-      case Op::I32x4load2:
-      case Op::I32x4load3:
-      case Op::F32x4load:
-      case Op::F32x4load1:
-      case Op::F32x4load2:
-      case Op::F32x4load3:
         return OpKind::Load;
       case Op::I32Store8:
       case Op::I32Store16:
@@ -316,28 +203,6 @@ wasm::Classify(Op op)
       case Op::F32Store:
       case Op::F64Store:
         return OpKind::Store;
-      case Op::I32TeeStore8:
-      case Op::I32TeeStore16:
-      case Op::I64TeeStore8:
-      case Op::I64TeeStore16:
-      case Op::I64TeeStore32:
-      case Op::I32TeeStore:
-      case Op::I64TeeStore:
-      case Op::F32TeeStore:
-      case Op::F64TeeStore:
-      case Op::F32TeeStoreF64:
-      case Op::F64TeeStoreF32:
-      case Op::I8x16store:
-      case Op::I16x8store:
-      case Op::I32x4store:
-      case Op::I32x4store1:
-      case Op::I32x4store2:
-      case Op::I32x4store3:
-      case Op::F32x4store:
-      case Op::F32x4store1:
-      case Op::F32x4store2:
-      case Op::F32x4store3:
-        return OpKind::TeeStore;
       case Op::Select:
         return OpKind::Select;
       case Op::GetLocal:
@@ -350,14 +215,10 @@ wasm::Classify(Op op)
         return OpKind::GetGlobal;
       case Op::SetGlobal:
         return OpKind::SetGlobal;
-      case Op::TeeGlobal:
-        return OpKind::TeeGlobal;
       case Op::Call:
         return OpKind::Call;
       case Op::CallIndirect:
         return OpKind::CallIndirect;
-      case Op::OldCallIndirect:
-        return OpKind::OldCallIndirect;
       case Op::Return:
       case Op::Limit:
         // Accept Limit, for use in decoding the end of a function after the body.
@@ -368,130 +229,285 @@ wasm::Classify(Op op)
         return OpKind::Else;
       case Op::End:
         return OpKind::End;
-      case Op::I32AtomicsLoad:
-        return OpKind::AtomicLoad;
-      case Op::I32AtomicsStore:
-        return OpKind::AtomicStore;
-      case Op::I32AtomicsBinOp:
-        return OpKind::AtomicBinOp;
-      case Op::I32AtomicsCompareExchange:
-        return OpKind::AtomicCompareExchange;
-      case Op::I32AtomicsExchange:
-        return OpKind::AtomicExchange;
-      case Op::I8x16extractLane:
-      case Op::I8x16extractLaneU:
-      case Op::I16x8extractLane:
-      case Op::I16x8extractLaneU:
-      case Op::I32x4extractLane:
-      case Op::F32x4extractLane:
-      case Op::B8x16extractLane:
-      case Op::B16x8extractLane:
-      case Op::B32x4extractLane:
-        return OpKind::ExtractLane;
-      case Op::I8x16replaceLane:
-      case Op::I16x8replaceLane:
-      case Op::I32x4replaceLane:
-      case Op::F32x4replaceLane:
-      case Op::B8x16replaceLane:
-      case Op::B16x8replaceLane:
-      case Op::B32x4replaceLane:
-        return OpKind::ReplaceLane;
-      case Op::I8x16swizzle:
-      case Op::I16x8swizzle:
-      case Op::I32x4swizzle:
-      case Op::F32x4swizzle:
-        return OpKind::Swizzle;
-      case Op::I8x16shuffle:
-      case Op::I16x8shuffle:
-      case Op::I32x4shuffle:
-      case Op::F32x4shuffle:
-        return OpKind::Shuffle;
-      case Op::I16x8check:
-      case Op::I16x8splat:
-      case Op::I32x4check:
-      case Op::I32x4splat:
-      case Op::I8x16check:
-      case Op::I8x16splat:
-      case Op::F32x4check:
-      case Op::F32x4splat:
-      case Op::B16x8check:
-      case Op::B16x8splat:
-      case Op::B32x4check:
-      case Op::B32x4splat:
-      case Op::B8x16check:
-      case Op::B8x16splat:
-        return OpKind::Splat;
-      case Op::I8x16select:
-      case Op::I16x8select:
-      case Op::I32x4select:
-      case Op::F32x4select:
-        return OpKind::SimdSelect;
-      case Op::I8x16Constructor:
-      case Op::I16x8Constructor:
-      case Op::I32x4Constructor:
-      case Op::F32x4Constructor:
-      case Op::B8x16Constructor:
-      case Op::B16x8Constructor:
-      case Op::B32x4Constructor:
-        return OpKind::SimdCtor;
-      case Op::B8x16allTrue:
-      case Op::B8x16anyTrue:
-      case Op::B16x8allTrue:
-      case Op::B16x8anyTrue:
-      case Op::B32x4allTrue:
-      case Op::B32x4anyTrue:
-        return OpKind::SimdBooleanReduction;
-      case Op::I8x16shiftLeftByScalar:
-      case Op::I8x16shiftRightByScalar:
-      case Op::I8x16shiftRightByScalarU:
-      case Op::I16x8shiftLeftByScalar:
-      case Op::I16x8shiftRightByScalar:
-      case Op::I16x8shiftRightByScalarU:
-      case Op::I32x4shiftLeftByScalar:
-      case Op::I32x4shiftRightByScalar:
-      case Op::I32x4shiftRightByScalarU:
-        return OpKind::SimdShiftByScalar;
-      case Op::I8x16equal:
-      case Op::I8x16notEqual:
-      case Op::I8x16greaterThan:
-      case Op::I8x16greaterThanOrEqual:
-      case Op::I8x16lessThan:
-      case Op::I8x16lessThanOrEqual:
-      case Op::I8x16greaterThanU:
-      case Op::I8x16greaterThanOrEqualU:
-      case Op::I8x16lessThanU:
-      case Op::I8x16lessThanOrEqualU:
-      case Op::I16x8equal:
-      case Op::I16x8notEqual:
-      case Op::I16x8greaterThan:
-      case Op::I16x8greaterThanOrEqual:
-      case Op::I16x8lessThan:
-      case Op::I16x8lessThanOrEqual:
-      case Op::I16x8greaterThanU:
-      case Op::I16x8greaterThanOrEqualU:
-      case Op::I16x8lessThanU:
-      case Op::I16x8lessThanOrEqualU:
-      case Op::I32x4equal:
-      case Op::I32x4notEqual:
-      case Op::I32x4greaterThan:
-      case Op::I32x4greaterThanOrEqual:
-      case Op::I32x4lessThan:
-      case Op::I32x4lessThanOrEqual:
-      case Op::I32x4greaterThanU:
-      case Op::I32x4greaterThanOrEqualU:
-      case Op::I32x4lessThanU:
-      case Op::I32x4lessThanOrEqualU:
-      case Op::F32x4equal:
-      case Op::F32x4notEqual:
-      case Op::F32x4greaterThan:
-      case Op::F32x4greaterThanOrEqual:
-      case Op::F32x4lessThan:
-      case Op::F32x4lessThanOrEqual:
-        return OpKind::SimdComparison;
       case Op::CurrentMemory:
         return OpKind::CurrentMemory;
       case Op::GrowMemory:
         return OpKind::GrowMemory;
+      case Op::AtomicPrefix:
+          break;
+      case Op::MozPrefix: {
+          switch (MozOp(op.b1)) {
+            case MozOp::Limit:
+              // Reject Limit for the MozPrefix encoding
+              break;
+            case MozOp::TeeGlobal:
+              return OpKind::TeeGlobal;
+            case MozOp::I8x16Const:
+              return OpKind::I8x16;
+            case MozOp::I16x8Const:
+              return OpKind::I16x8;
+            case MozOp::I32x4Const:
+              return OpKind::I32x4;
+            case MozOp::B8x16Const:
+              return OpKind::B8x16;
+            case MozOp::B16x8Const:
+              return OpKind::B16x8;
+            case MozOp::B32x4Const:
+              return OpKind::B32x4;
+            case MozOp::F32x4Const:
+              return OpKind::F32x4;
+            case MozOp::I32BitNot:
+            case MozOp::I32Abs:
+            case MozOp::I32Neg:
+            case MozOp::I8x16neg:
+            case MozOp::I8x16not:
+            case MozOp::I16x8neg:
+            case MozOp::I16x8not:
+            case MozOp::I32x4neg:
+            case MozOp::I32x4not:
+            case MozOp::F32x4neg:
+            case MozOp::F32x4sqrt:
+            case MozOp::F32x4abs:
+            case MozOp::F32x4reciprocalApproximation:
+            case MozOp::F32x4reciprocalSqrtApproximation:
+            case MozOp::B8x16not:
+            case MozOp::B16x8not:
+            case MozOp::B32x4not:
+              return OpKind::Unary;
+            case MozOp::I32Min:
+            case MozOp::I32Max:
+            case MozOp::F64Mod:
+            case MozOp::F64Pow:
+            case MozOp::F64Atan2:
+            case MozOp::I8x16add:
+            case MozOp::I8x16sub:
+            case MozOp::I8x16mul:
+            case MozOp::I8x16addSaturate:
+            case MozOp::I8x16subSaturate:
+            case MozOp::I8x16addSaturateU:
+            case MozOp::I8x16subSaturateU:
+            case MozOp::I8x16and:
+            case MozOp::I8x16or:
+            case MozOp::I8x16xor:
+            case MozOp::I16x8add:
+            case MozOp::I16x8sub:
+            case MozOp::I16x8mul:
+            case MozOp::I16x8addSaturate:
+            case MozOp::I16x8subSaturate:
+            case MozOp::I16x8addSaturateU:
+            case MozOp::I16x8subSaturateU:
+            case MozOp::I16x8and:
+            case MozOp::I16x8or:
+            case MozOp::I16x8xor:
+            case MozOp::I32x4add:
+            case MozOp::I32x4sub:
+            case MozOp::I32x4mul:
+            case MozOp::I32x4and:
+            case MozOp::I32x4or:
+            case MozOp::I32x4xor:
+            case MozOp::F32x4add:
+            case MozOp::F32x4sub:
+            case MozOp::F32x4mul:
+            case MozOp::F32x4div:
+            case MozOp::F32x4min:
+            case MozOp::F32x4max:
+            case MozOp::F32x4minNum:
+            case MozOp::F32x4maxNum:
+            case MozOp::B8x16and:
+            case MozOp::B8x16or:
+            case MozOp::B8x16xor:
+            case MozOp::B16x8and:
+            case MozOp::B16x8or:
+            case MozOp::B16x8xor:
+            case MozOp::B32x4and:
+            case MozOp::B32x4or:
+            case MozOp::B32x4xor:
+              return OpKind::Binary;
+            case MozOp::F64Sin:
+            case MozOp::F64Cos:
+            case MozOp::F64Tan:
+            case MozOp::F64Asin:
+            case MozOp::F64Acos:
+            case MozOp::F64Atan:
+            case MozOp::F64Exp:
+            case MozOp::F64Log:
+              return OpKind::Unary;
+            case MozOp::I32TeeStore8:
+            case MozOp::I32TeeStore16:
+            case MozOp::I64TeeStore8:
+            case MozOp::I64TeeStore16:
+            case MozOp::I64TeeStore32:
+            case MozOp::I32TeeStore:
+            case MozOp::I64TeeStore:
+            case MozOp::F32TeeStore:
+            case MozOp::F64TeeStore:
+            case MozOp::F32TeeStoreF64:
+            case MozOp::F64TeeStoreF32:
+              return OpKind::TeeStore;
+            case MozOp::I32x4fromFloat32x4:
+            case MozOp::I32x4fromFloat32x4U:
+            case MozOp::F32x4fromInt32x4:
+            case MozOp::F32x4fromUint32x4:
+            case MozOp::I32x4fromFloat32x4Bits:
+            case MozOp::I32x4fromInt8x16Bits:
+            case MozOp::I32x4fromInt16x8Bits:
+            case MozOp::I16x8fromInt8x16Bits:
+            case MozOp::I16x8fromInt32x4Bits:
+            case MozOp::I16x8fromFloat32x4Bits:
+            case MozOp::I8x16fromInt16x8Bits:
+            case MozOp::I8x16fromInt32x4Bits:
+            case MozOp::I8x16fromFloat32x4Bits:
+            case MozOp::F32x4fromInt8x16Bits:
+            case MozOp::F32x4fromInt16x8Bits:
+            case MozOp::F32x4fromInt32x4Bits:
+              return OpKind::Conversion;
+            case MozOp::I8x16load:
+            case MozOp::I16x8load:
+            case MozOp::I32x4load:
+            case MozOp::I32x4load1:
+            case MozOp::I32x4load2:
+            case MozOp::I32x4load3:
+            case MozOp::F32x4load:
+            case MozOp::F32x4load1:
+            case MozOp::F32x4load2:
+            case MozOp::F32x4load3:
+              return OpKind::Load;
+            case MozOp::I8x16store:
+            case MozOp::I16x8store:
+            case MozOp::I32x4store:
+            case MozOp::I32x4store1:
+            case MozOp::I32x4store2:
+            case MozOp::I32x4store3:
+            case MozOp::F32x4store:
+            case MozOp::F32x4store1:
+            case MozOp::F32x4store2:
+            case MozOp::F32x4store3:
+              return OpKind::TeeStore;
+            case MozOp::OldCallIndirect:
+              return OpKind::OldCallIndirect;
+            case MozOp::I32AtomicsLoad:
+              return OpKind::AtomicLoad;
+            case MozOp::I32AtomicsStore:
+              return OpKind::AtomicStore;
+            case MozOp::I32AtomicsBinOp:
+              return OpKind::AtomicBinOp;
+            case MozOp::I32AtomicsCompareExchange:
+              return OpKind::AtomicCompareExchange;
+            case MozOp::I32AtomicsExchange:
+              return OpKind::AtomicExchange;
+            case MozOp::I8x16extractLane:
+            case MozOp::I8x16extractLaneU:
+            case MozOp::I16x8extractLane:
+            case MozOp::I16x8extractLaneU:
+            case MozOp::I32x4extractLane:
+            case MozOp::F32x4extractLane:
+            case MozOp::B8x16extractLane:
+            case MozOp::B16x8extractLane:
+            case MozOp::B32x4extractLane:
+              return OpKind::ExtractLane;
+            case MozOp::I8x16replaceLane:
+            case MozOp::I16x8replaceLane:
+            case MozOp::I32x4replaceLane:
+            case MozOp::F32x4replaceLane:
+            case MozOp::B8x16replaceLane:
+            case MozOp::B16x8replaceLane:
+            case MozOp::B32x4replaceLane:
+              return OpKind::ReplaceLane;
+            case MozOp::I8x16swizzle:
+            case MozOp::I16x8swizzle:
+            case MozOp::I32x4swizzle:
+            case MozOp::F32x4swizzle:
+              return OpKind::Swizzle;
+            case MozOp::I8x16shuffle:
+            case MozOp::I16x8shuffle:
+            case MozOp::I32x4shuffle:
+            case MozOp::F32x4shuffle:
+              return OpKind::Shuffle;
+            case MozOp::I16x8check:
+            case MozOp::I16x8splat:
+            case MozOp::I32x4check:
+            case MozOp::I32x4splat:
+            case MozOp::I8x16check:
+            case MozOp::I8x16splat:
+            case MozOp::F32x4check:
+            case MozOp::F32x4splat:
+            case MozOp::B16x8check:
+            case MozOp::B16x8splat:
+            case MozOp::B32x4check:
+            case MozOp::B32x4splat:
+            case MozOp::B8x16check:
+            case MozOp::B8x16splat:
+              return OpKind::Splat;
+            case MozOp::I8x16select:
+            case MozOp::I16x8select:
+            case MozOp::I32x4select:
+            case MozOp::F32x4select:
+              return OpKind::SimdSelect;
+            case MozOp::I8x16Constructor:
+            case MozOp::I16x8Constructor:
+            case MozOp::I32x4Constructor:
+            case MozOp::F32x4Constructor:
+            case MozOp::B8x16Constructor:
+            case MozOp::B16x8Constructor:
+            case MozOp::B32x4Constructor:
+              return OpKind::SimdCtor;
+            case MozOp::B8x16allTrue:
+            case MozOp::B8x16anyTrue:
+            case MozOp::B16x8allTrue:
+            case MozOp::B16x8anyTrue:
+            case MozOp::B32x4allTrue:
+            case MozOp::B32x4anyTrue:
+              return OpKind::SimdBooleanReduction;
+            case MozOp::I8x16shiftLeftByScalar:
+            case MozOp::I8x16shiftRightByScalar:
+            case MozOp::I8x16shiftRightByScalarU:
+            case MozOp::I16x8shiftLeftByScalar:
+            case MozOp::I16x8shiftRightByScalar:
+            case MozOp::I16x8shiftRightByScalarU:
+            case MozOp::I32x4shiftLeftByScalar:
+            case MozOp::I32x4shiftRightByScalar:
+            case MozOp::I32x4shiftRightByScalarU:
+              return OpKind::SimdShiftByScalar;
+            case MozOp::I8x16equal:
+            case MozOp::I8x16notEqual:
+            case MozOp::I8x16greaterThan:
+            case MozOp::I8x16greaterThanOrEqual:
+            case MozOp::I8x16lessThan:
+            case MozOp::I8x16lessThanOrEqual:
+            case MozOp::I8x16greaterThanU:
+            case MozOp::I8x16greaterThanOrEqualU:
+            case MozOp::I8x16lessThanU:
+            case MozOp::I8x16lessThanOrEqualU:
+            case MozOp::I16x8equal:
+            case MozOp::I16x8notEqual:
+            case MozOp::I16x8greaterThan:
+            case MozOp::I16x8greaterThanOrEqual:
+            case MozOp::I16x8lessThan:
+            case MozOp::I16x8lessThanOrEqual:
+            case MozOp::I16x8greaterThanU:
+            case MozOp::I16x8greaterThanOrEqualU:
+            case MozOp::I16x8lessThanU:
+            case MozOp::I16x8lessThanOrEqualU:
+            case MozOp::I32x4equal:
+            case MozOp::I32x4notEqual:
+            case MozOp::I32x4greaterThan:
+            case MozOp::I32x4greaterThanOrEqual:
+            case MozOp::I32x4lessThan:
+            case MozOp::I32x4lessThanOrEqual:
+            case MozOp::I32x4greaterThanU:
+            case MozOp::I32x4greaterThanOrEqualU:
+            case MozOp::I32x4lessThanU:
+            case MozOp::I32x4lessThanOrEqualU:
+            case MozOp::F32x4equal:
+            case MozOp::F32x4notEqual:
+            case MozOp::F32x4greaterThan:
+            case MozOp::F32x4greaterThanOrEqual:
+            case MozOp::F32x4lessThan:
+            case MozOp::F32x4lessThanOrEqual:
+              return OpKind::SimdComparison;
+          }
+          break;
+      }
     }
     MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE("unimplemented opcode");
 }

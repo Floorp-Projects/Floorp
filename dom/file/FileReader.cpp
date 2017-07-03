@@ -323,6 +323,8 @@ FileReader::DoReadData(uint64_t aCount)
     //Update memory buffer to reflect the contents of the file
     if (!size.isValid() ||
         // PR_Realloc doesn't support over 4GB memory size even if 64-bit OS
+        // XXX: it's likely that this check is unnecessary and the comment is
+        // wrong because we no longer use PR_Realloc outside of NSPR and NSS.
         size.value() > UINT32_MAX ||
         size.value() > mTotal) {
       return NS_ERROR_OUT_OF_MEMORY;

@@ -84,7 +84,6 @@ using mozilla::InjectCrashRunnable;
 #include <time.h>
 #include <prenv.h>
 #include <prio.h>
-#include <prmem.h>
 #include "mozilla/Mutex.h"
 #include "nsDebug.h"
 #include "nsCRT.h"

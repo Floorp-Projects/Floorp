@@ -11,7 +11,6 @@
 #include "Layers.h"
 #include "ImageContainer.h"
 #include "ImageTypes.h"
-#include "prmem.h"
 #include "nsContentUtils.h"
 #include "MediaStreamGraph.h"
 
@@ -148,7 +147,7 @@ static void AllocateSolidColorFrame(layers::PlanarYCbCrData& aData,
   int yLen = aWidth*aHeight;
   int cbLen = yLen>>2;
   int crLen = cbLen;
-  uint8_t* frame = (uint8_t*) PR_Malloc(yLen+cbLen+crLen);
+  uint8_t* frame = (uint8_t*) malloc(yLen+cbLen+crLen);
   memset(frame, aY, yLen);
   memset(frame+yLen, aCb, cbLen);
   memset(frame+yLen+cbLen, aCr, crLen);
@@ -168,7 +167,7 @@ static void AllocateSolidColorFrame(layers::PlanarYCbCrData& aData,
 
 static void ReleaseFrame(layers::PlanarYCbCrData& aData)
 {
-  PR_Free(aData.mYChannel);
+  free(aData.mYChannel);
 }
 
 nsresult

@@ -21,7 +21,6 @@
 #include "nsIComponentManager.h"
 #include "prio.h"
 #include "private/pprio.h"  // To get PR_ImportFile
-#include "prmem.h"
 #include "nsHashKeys.h"
 
 #include "nsXPIDLString.h"

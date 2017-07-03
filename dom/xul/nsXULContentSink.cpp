@@ -42,7 +42,6 @@
 #include "nsReadableUtils.h"
 #include "nsXULElement.h"
 #include "mozilla/Logging.h"
-#include "prmem.h"
 #include "nsCRT.h"
 
 #include "nsXULPrototypeDocument.h"     // XXXbe temporary

@@ -37,7 +37,6 @@ using mozilla::plugins::PluginInstanceParent;
 #include "mozilla/UniquePtrExtensions.h"
 #include "nsGfxCIID.h"
 #include "gfxContext.h"
-#include "prmem.h"
 #include "WinUtils.h"
 #include "nsIWidgetListener.h"
 #include "mozilla/Unused.h"
@@ -556,7 +555,7 @@ nsresult nsWindowGfx::CreateIcon(imgIContainer *aContainer,
   }
 
   HBITMAP mbmp = DataToBitmap(a1data, iconSize.width, -iconSize.height, 1);
-  PR_Free(a1data);
+  free(a1data);
 
   ICONINFO info = {0};
   info.fIcon = !aIsCursor;
@@ -583,7 +582,7 @@ uint8_t* nsWindowGfx::Data32BitTo1Bit(uint8_t* aImageData,
   uint32_t outBpr = ((aWidth + 31) / 8) & ~3;
 
   // Allocate and clear mask buffer
-  uint8_t* outData = (uint8_t*)PR_Calloc(outBpr, aHeight);
+  uint8_t* outData = (uint8_t*) calloc(outBpr, aHeight);
   if (!outData)
     return nullptr;
 

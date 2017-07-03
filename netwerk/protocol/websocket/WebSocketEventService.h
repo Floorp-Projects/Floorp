@@ -34,6 +34,7 @@ public:
   NS_DECL_NSIOBSERVER
   NS_DECL_NSIWEBSOCKETEVENTSERVICE
 
+  static already_AddRefed<WebSocketEventService> Get();
   static already_AddRefed<WebSocketEventService> GetOrCreate();
 
   void WebSocketCreated(uint32_t aWebSocketSerialID,

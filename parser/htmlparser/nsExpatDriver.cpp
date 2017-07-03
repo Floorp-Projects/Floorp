@@ -15,7 +15,6 @@
 #include "nsIUnicharInputStream.h"
 #include "nsIProtocolHandler.h"
 #include "nsNetUtil.h"
-#include "prmem.h"
 #include "nsTextFormatter.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsCRT.h"
@@ -1228,12 +1227,11 @@ nsExpatDriver::WillBuildModel(const CParserContext& aParserContext,
 
   mOriginalSink = aSink;
 
-  static const XML_Memory_Handling_Suite memsuite =
-    {
-      (void *(*)(size_t))PR_Malloc,
-      (void *(*)(void *, size_t))PR_Realloc,
-      PR_Free
-    };
+  static const XML_Memory_Handling_Suite memsuite = {
+    malloc,
+    realloc,
+    free
+  };
 
   static const char16_t kExpatSeparator[] = { kExpatSeparatorChar, '\0' };
 

@@ -436,9 +436,23 @@ assertEq(arr[0].byteLength, nameSec.body.length - 5 /* 4name */);
 for (var bad of [0xff, 0, 1, 0x3f])
     assertErrorMessage(() => wasmEval(moduleWithSections([sigSection([v2vSig]), declSection([0]), bodySection([funcBody({locals:[], body:[BlockCode, bad, EndCode]})])])), CompileError, /invalid inline block type/);
 
-// Ensure all asm.js opcodes rejected
-for (var i = FirstInvalidOpcode; i <= 0xff; i++) {
-    var binary = moduleWithSections([v2vSigSection, declSection([0]), bodySection([funcBody({locals:[], body:[i]})])]);
+// Ensure all invalid opcodes rejected
+for (let i = FirstInvalidOpcode; i <= LastInvalidOpcode; i++) {
+    let binary = moduleWithSections([v2vSigSection, declSection([0]), bodySection([funcBody({locals:[], body:[i]})])]);
+    assertErrorMessage(() => wasmEval(binary), CompileError, /unrecognized opcode/);
+    assertEq(WebAssembly.validate(binary), false);
+}
+
+// Prefixed opcodes
+for (let prefix of [AtomicPrefix, MozPrefix]) {
+    for (let i = 0; i <= 255; i++) {
+	let binary = moduleWithSections([v2vSigSection, declSection([0]), bodySection([funcBody({locals:[], body:[prefix, i]})])]);
+	assertErrorMessage(() => wasmEval(binary), CompileError, /unrecognized opcode/);
+	assertEq(WebAssembly.validate(binary), false);
+    }
+
+    // Prefix without a subsequent opcode
+    let binary = moduleWithSections([v2vSigSection, declSection([0]), bodySection([funcBody({locals:[], body:[prefix]})])]);
     assertErrorMessage(() => wasmEval(binary), CompileError, /unrecognized opcode/);
     assertEq(WebAssembly.validate(binary), false);
 }
