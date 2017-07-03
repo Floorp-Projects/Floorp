@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+
+<style>div { color: green; }</style>
+
+<link id="theOnlyLink" rel="stylesheet" type="text/css" href="import_useless1.css">
+
+<div id="theOnlyDiv">This text will change colors several times.</div>
+
+<script>
+  SimpleTest.waitForExplicitFinish();
+
+  let DOMUtils = SpecialPowers.Cc["@mozilla.org/inspector/dom-utils;1"]
+                 .getService(SpecialPowers.Ci.inIDOMUtils);
+  const Cu = SpecialPowers.Components.utils;
+  const { ContentTaskUtils } = Cu.import("resource://testing-common/ContentTaskUtils.jsm", {});
+
+  document.styleSheetChangeEventsEnabled = true;
+
+  let theOnlyDiv = document.getElementById("theOnlyDiv");
+  let stylesheet = document.getElementById("theOnlyLink").sheet;
+
+  runTest();
+
+  function cssRulesToString(cssRules) {
+    return Array.from(cssRules).map(rule => rule.cssText).join('');
+  }
+
+  async function runTest() {
+
+    // Test that the div is initially red (from base.css)
+    is(getComputedStyle(theOnlyDiv).color, "rgb(0, 128, 0)", "div begins as green.");
+
+    stylesheet.insertRule('@import url("import_useless2.css")', 0);
+    stylesheet.insertRule('@import url("import_useless2.css")', 1);
+
+    // Wait for two StyleRuleAdded events to be fired.
+    await ContentTaskUtils.waitForEvent(document, "StyleRuleAdded", true);
+    await ContentTaskUtils.waitForEvent(document, "StyleRuleAdded", true);
+
+    // Get the imported sheets and confirm they are non-null and have rules.
+    let importSheet1 = stylesheet.cssRules[0].styleSheet;
+    let importSheet2 = stylesheet.cssRules[1].styleSheet;
+
+    ok(importSheet1 && importSheet2, "Imported sheets exist.");
+    if (!(importSheet1 && importSheet2)) {
+      SimpleTest.finish();
+      return;
+    }
+
+    ok(importSheet1.cssRules && importSheet2.cssRules, "Imported sheets have rules.");
+    if (!(importSheet1.cssRules && importSheet2.cssRules)) {
+      SimpleTest.finish();
+      return;
+    }
+
+    // Confirm that these two sheets are meaningfully the same.
+    is(cssRulesToString(importSheet1.cssRules), cssRulesToString(importSheet2.cssRules), "Cloned sheet rules are equivalent.");
+
+    // Add a color-changing rule to the first stylesheet.
+    importSheet1.insertRule('div { color: blue; }');
+    // And make sure that it has an effect.
+    is(getComputedStyle(theOnlyDiv).color, "rgb(0, 0, 255)", "div becomes blue.");
+
+    // Make sure that the two sheets have different rules now.
+    isnot(cssRulesToString(importSheet1.cssRules), cssRulesToString(importSheet2.cssRules), "Cloned sheet rules are no longer equivalent.");
+
+    // Add a color-changing rule to the second stylesheet (that will mask the first).
+    importSheet2.insertRule('div { color: red; }');
+    // And make sure that it has an effect.
+    is(getComputedStyle(theOnlyDiv).color, "rgb(255, 0, 0)", "div becomes red.");
+
+    // Delete the second sheet by removing the import rule, and make sure the color changes back.
+    stylesheet.deleteRule(1);
+    is(getComputedStyle(theOnlyDiv).color, "rgb(0, 0, 255)", "div goes back to blue.");
+
+    // Delete the first sheet by removing the import rule, and make sure the color changes back.
+    stylesheet.deleteRule(0);
+    is(getComputedStyle(theOnlyDiv).color, "rgb(0, 128, 0)", "div goes back to green.");
+
+    SimpleTest.finish();
+  }
+
+
+</script>
+</html>
