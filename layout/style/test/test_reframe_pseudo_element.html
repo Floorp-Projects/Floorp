@@ -1,0 +1,33 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>
+  Test for bug 1376352: We don't reframe all the time a replaced element that
+  matches generated content rules.
+</title>
+<link rel="author" href="mailto:emilio@crisal.io" title="Emilio Cobos Álvarez">
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<style>
+input::before {
+  content: "Foo";
+}
+</style>
+<input type="text">
+<script>
+SimpleTest.waitForExplicitFinish();
+const utils = SpecialPowers.getDOMWindowUtils(window);
+document.documentElement.offsetTop;
+const input = document.querySelector('input');
+
+const previousConstructCount = utils.framesConstructed;
+const previousRestyleGeneration = utils.restyleGeneration;
+
+input.style.color = "blue";
+
+document.documentElement.offsetTop;
+isnot(previousRestyleGeneration, utils.restyleGeneration,
+      "We should have restyled");
+is(previousConstructCount, utils.framesConstructed,
+   "We shouldn't have reframed");
+
+SimpleTest.finish();
+</script>
