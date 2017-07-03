@@ -166,8 +166,6 @@ var whitelist = [
   {file: "resource://gre/modules/ISO8601DateUtils.jsm"},
   // Bug 1337345
   {file: "resource://gre/modules/Manifest.jsm"},
-  // Bug 1351089
-  {file: "resource://gre/modules/PresentationDeviceInfoManager.jsm"},
   // Bug 1351097
   {file: "resource://gre/modules/accessibility/AccessFu.jsm"},
   // Bug 1351637
