@@ -1251,7 +1251,7 @@ public:
     return TimeUnit::Zero();
   }
 
-private:
+protected:
   void DemuxerSeek()
   {
     // Request the demuxer to perform seek.
@@ -1768,6 +1768,13 @@ private:
   }
 };
 
+class MediaDecoderStateMachine::VideoOnlySeekingState
+  : public MediaDecoderStateMachine::AccurateSeekingState
+{
+public:
+  explicit VideoOnlySeekingState(Master* aPtr) : AccurateSeekingState(aPtr) { }
+};
+
 RefPtr<MediaDecoder::SeekPromise>
 MediaDecoderStateMachine::DormantState::HandleSeek(SeekTarget aTarget)
 {
@@ -2162,6 +2169,9 @@ MediaDecoderStateMachine::
 StateObject::SetSeekingState(SeekJob&& aSeekJob, EventVisibility aVisibility)
 {
   if (aSeekJob.mTarget->IsAccurate() || aSeekJob.mTarget->IsFast()) {
+    if (aSeekJob.mTarget->IsVideoOnly()) {
+      return SetState<VideoOnlySeekingState>(Move(aSeekJob), aVisibility);
+    }
     return SetState<AccurateSeekingState>(Move(aSeekJob), aVisibility);
   }
 
