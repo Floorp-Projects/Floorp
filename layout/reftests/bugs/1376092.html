@@ -1,0 +1,14 @@
+<!doctype html>
+<html class="reftest-wait">
+<link rel="woof" href="1376092.css">
+<script>
+let link = document.querySelector('link');
+link.onload = function() {
+  link.media = "";
+  document.documentElement.className = "";
+}
+link.media = "only x";
+link.rel = "stylesheet";
+</script>
+Should be green.
+</html>

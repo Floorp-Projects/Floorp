@@ -96,7 +96,6 @@ to mochitest command.
 ## Unknown / Unsure
 
 * test_selectors_on_anonymous_content.html: xbl and :nth-child [1]
-* test_parse_rule.html `rgb(0, 128, 0)`: color properties not getting computed [5]
 
 ## Ignore
 
