@@ -266,6 +266,11 @@ testing/web-platform/tests for tests that may be shared
         with open(path, "w") as f:
             f.write(template)
 
+        ref_path = kwargs["ref"]
+        if ref_path and not os.path.exists(ref_path):
+            with open(ref_path, "w") as f:
+                f.write(self.template_prefix % {"documentElement": ""})
+
         if kwargs["no_editor"]:
             editor = None
         elif kwargs["editor"]:
@@ -279,6 +284,8 @@ testing/web-platform/tests for tests that may be shared
 
         proc = None
         if editor:
+            if ref_path:
+                path = "%s %s" % (path, ref_path)
             proc = subprocess.Popen("%s %s" % (editor, path), shell=True)
 
         if proc:
@@ -316,7 +323,7 @@ def create_parser_create():
                    help="Allow overwriting an existing test file")
     p.add_argument("-r", "--reftest", action="store_true",
                    help="Create a reftest rather than a testharness (js) test"),
-    p.add_argument("-ref", "--reference", dest="ref", help="Path to the reference file")
+    p.add_argument("-m", "--reference", dest="ref", help="Path to the reference file")
     p.add_argument("--mismatch", action="store_true",
                    help="Create a mismatch reftest")
     p.add_argument("--wait", action="store_true",
