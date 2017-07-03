@@ -67,6 +67,13 @@ public:
 
   T& operator*() const { return *get(); }
 
+  T* forget()
+  {
+    T* temp = mRawPtr;
+    mRawPtr = nullptr;
+    return temp;
+  }
+
 private:
   // Disallow copy constructor, but only in debug mode.  We only define
   // a default constructor in debug mode (see above); if we declared
