@@ -1677,7 +1677,7 @@ DumpHelp()
   printf("  --console          Start %s with a debugging console.\n", (const char*) gAppData->name);
 #endif
 
-#ifdef MOZ_WIDGET_GTK
+#if defined(XP_WIN) || defined(MOZ_WIDGET_GTK) || defined(XP_MACOSX)
   printf("  --headless         Run without a GUI.\n");
 #endif
 
@@ -3172,7 +3172,7 @@ XREMain::XRE_mainInit(bool* aExitFlag)
   }
 
   if (gfxPlatform::IsHeadless()) {
-#if defined(XP_WIN) || defined(MOZ_WIDGET_GTK)
+#if defined(XP_WIN) || defined(MOZ_WIDGET_GTK) || defined(XP_MACOSX)
     printf_stderr("*** You are running in headless mode.\n");
 #else
     Output(true, "Error: headless mode is not currently supported on this platform.\n");
