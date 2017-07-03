@@ -81,9 +81,9 @@ bool LaunchApp(const std::vector<std::string>& argv,
     if (combined_env_vars.find(varName) == combined_env_vars.end()) {
       combined_env_vars[varName] = varValue;
     }
-    PR_Free(environ[pos++]);
+    PR_Free(environ[pos++]); // PR_DuplicateEnvironment() uses PR_Malloc().
   }
-  PR_Free(environ);
+  PR_Free(environ); // PR_DuplicateEnvironment() uses PR_Malloc().
   int varsLen = combined_env_vars.size() + 1;
 
   char** vars = new char*[varsLen];

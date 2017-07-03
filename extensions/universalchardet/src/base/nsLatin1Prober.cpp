@@ -4,7 +4,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsLatin1Prober.h"
-#include "prmem.h"
 #include <stdio.h>
 
 #define UDF    0        // undefined
@@ -106,7 +105,7 @@ nsProbingState nsLatin1Prober::HandleData(const char* aBuf, uint32_t aLen)
   }
 
   if (newBuf1 != aBuf)
-    PR_FREEIF(newBuf1);
+    free(newBuf1);
 
   return mState;
 }

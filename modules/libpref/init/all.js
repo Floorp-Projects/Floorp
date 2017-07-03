@@ -1,4 +1,3 @@
-
 /* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -1257,8 +1256,23 @@ pref("dom.min_tracking_timeout_value", 4);
 // And for background windows
 // Note that this requires the privacy.trackingprotection.annotate_channels pref to be on in order to have any effect.
 pref("dom.min_tracking_background_timeout_value", 10000);
-// Delay in ms from document load until we start throttling tracking timeouts.
-pref("dom.timeout.tracking_throttling_delay", 30000);
+// Delay in ms from document load until we start throttling background timeouts.
+pref("dom.timeout.throttling_delay", 30000);
+
+// Time (in ms) that it takes to regenerate 1ms.
+pref("dom.timeout.background_budget_regeneration_rate", 100);
+// Maximum value (in ms) for the background budget. Only valid for
+// values greater than 0.
+pref("dom.timeout.background_throttling_max_budget", 50);
+// Time (in ms) that it takes to regenerate 1ms.
+pref("dom.timeout.foreground_budget_regeneration_rate", 1);
+// Maximum value (in ms) for the background budget. Only valid for
+// values greater than 0.
+pref("dom.timeout.foreground_throttling_max_budget", -1);
+// The maximum amount a timeout can be delayed by budget throttling
+pref("dom.timeout.budget_throttling_max_delay", 15000);
+// Turn off budget throttling by default
+pref("dom.timeout.enable_budget_timer_throttling", false);
 
 // Don't use new input types
 pref("dom.experimental_forms", false);

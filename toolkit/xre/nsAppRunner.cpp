@@ -43,7 +43,6 @@
 #include <sys/sysctl.h>
 #endif
 
-#include "prmem.h"
 #include "prnetdb.h"
 #include "prprf.h"
 #include "prproces.h"

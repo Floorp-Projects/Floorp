@@ -8,7 +8,6 @@
 #include "nsIMemory.h"
 #include "nsPluginsDir.h"
 #include "nsPluginsDirUtils.h"
-#include "prmem.h"
 #include "prenv.h"
 #include "prerror.h"
 #include "prio.h"
@@ -404,9 +403,12 @@ nsresult nsPluginFile::FreePluginInfo(nsPluginInfo& info)
             PL_strfree(info.fExtensionArray[i]);
     }
 
-    PR_FREEIF(info.fMimeTypeArray);
-    PR_FREEIF(info.fMimeDescriptionArray);
-    PR_FREEIF(info.fExtensionArray);
+    free(info.fMimeTypeArray);
+    info.fMimeTypeArray = nullptr;
+    free(info.fMimeDescriptionArray);
+    info.fMimeDescriptionArray = nullptr;
+    free(info.fExtensionArray);
+    info.fExtensionArray = nullptr;
 
     if (info.fFullPath != nullptr)
         PL_strfree(info.fFullPath);

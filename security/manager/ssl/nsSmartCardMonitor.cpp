@@ -242,8 +242,8 @@ SmartCardMonitoringThread::SetTokenName(CK_SLOT_ID slotid,
   if (mHash) {
     if (tokenName) {
       int len = strlen(tokenName) + 1;
-      /* this must match the allocator used in
-       * PLHashAllocOps.freeEntry DefaultFreeEntry */
+      // Use PR_Malloc() because PLHashAllocOps.freeEntry for mHash is
+      // DefaultFreeEntry(), which uses PR_Free().
       char* entry = (char*)PR_Malloc(len + sizeof(uint32_t));
 
       if (entry) {

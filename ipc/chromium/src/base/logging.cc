@@ -5,7 +5,6 @@
 // found in the LICENSE file.
 
 #include "base/logging.h"
-#include "prmem.h"
 #include "base/string_util.h"
 #include "nsXPCOM.h"
 #include "mozilla/Move.h"

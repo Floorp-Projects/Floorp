@@ -6,7 +6,6 @@
 #include <math.h>
 
 #include "prlink.h"
-#include "prmem.h"
 #include "prenv.h"
 #include "gfxPrefs.h"
 #include "nsString.h"

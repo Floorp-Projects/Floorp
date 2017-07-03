@@ -22,7 +22,6 @@
 #include "mozilla/UniquePtr.h"
 
 #include "prenv.h"
-#include "prmem.h"
 
 #ifdef MOZ_WIDGET_GONK
 /*
@@ -64,7 +63,7 @@ public:
 
   explicit EnvironmentEnvp(const environment_map &em)
   {
-    mEnvp = (char **)PR_Malloc(sizeof(char *) * (em.size() + 1));
+    mEnvp = (char**) malloc(sizeof(char *) * (em.size() + 1));
     if (!mEnvp) {
       return;
     }
@@ -75,7 +74,7 @@ public:
       str += "=";
       str += it->second;
       size_t len = str.length() + 1;
-      *e = static_cast<char*>(PR_Malloc(len));
+      *e = static_cast<char*>(malloc(len));
       memcpy(*e, str.c_str(), len);
     }
     *e = NULL;
@@ -87,9 +86,9 @@ public:
       return;
     }
     for (char **e = mEnvp; *e; ++e) {
-      PR_Free(*e);
+      free(*e);
     }
-    PR_Free(mEnvp);
+    free(mEnvp);
   }
 
   char * const *AsEnvp() { return mEnvp; }

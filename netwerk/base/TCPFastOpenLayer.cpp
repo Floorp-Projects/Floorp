@@ -351,7 +351,7 @@ AttachTCPFastOpenIOLayer(PRFileDesc *fd)
 
   if (status == PR_FAILURE) {
     delete secret;
-    PR_DELETE(layer);
+    PR_Free(layer); // PR_CreateIOLayerStub() uses PR_Malloc().
     return NS_ERROR_FAILURE;
   }
   return NS_OK;

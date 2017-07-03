@@ -23,7 +23,6 @@
 
 #include "mozilla/Logging.h"
 #include "prtime.h"
-#include "prmem.h"
 
 #include "nsNativeCharsetUtils.h"
 #include "nsThreadUtils.h"
