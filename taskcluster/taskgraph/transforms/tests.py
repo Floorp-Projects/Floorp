@@ -520,6 +520,8 @@ def enable_code_coverage(config, tests):
                 test['mozharness']['extra-options'].append('--tppagecycles,1')
                 test['mozharness']['extra-options'].append('--add-option')
                 test['mozharness']['extra-options'].append('--no-upload-results')
+                test['mozharness']['extra-options'].append('--add-option')
+                test['mozharness']['extra-options'].append('--tptimeout,15000')
         elif test['build-platform'] == 'linux64-jsdcov/opt':
             test['run-on-projects'] = ['mozilla-central']
         yield test
