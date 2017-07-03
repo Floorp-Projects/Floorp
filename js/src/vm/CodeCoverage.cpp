@@ -79,6 +79,28 @@ LCovSource::LCovSource(LifoAlloc* alloc, const char* name)
 {
 }
 
+LCovSource::LCovSource(LCovSource&& src)
+  : name_(src.name_),
+    outFN_(src.outFN_),
+    outFNDA_(src.outFNDA_),
+    numFunctionsFound_(src.numFunctionsFound_),
+    numFunctionsHit_(src.numFunctionsHit_),
+    outBRDA_(src.outBRDA_),
+    numBranchesFound_(src.numBranchesFound_),
+    numBranchesHit_(src.numBranchesHit_),
+    outDA_(src.outDA_),
+    numLinesInstrumented_(src.numLinesInstrumented_),
+    numLinesHit_(src.numLinesHit_),
+    hasTopLevelScript_(src.hasTopLevelScript_)
+{
+    src.name_ = nullptr;
+}
+
+LCovSource::~LCovSource()
+{
+    js_delete(name_);
+}
+
 void
 LCovSource::exportInto(GenericPrinter& out) const
 {
@@ -436,8 +458,14 @@ LCovCompartment::lookupOrAdd(JSCompartment* comp, const char* name)
         }
     }
 
+    char* source_name = js_strdup(name);
+    if (!source_name) {
+        outTN_.reportOutOfMemory();
+        return nullptr;
+    }
+
     // Allocate a new LCovSource for the current top-level.
-    if (!sources_->append(Move(LCovSource(&alloc_, name)))) {
+    if (!sources_->append(Move(LCovSource(&alloc_, source_name)))) {
         outTN_.reportOutOfMemory();
         return nullptr;
     }

@@ -29,6 +29,8 @@ class LCovSource
 {
   public:
     explicit LCovSource(LifoAlloc* alloc, const char* name);
+    LCovSource(LCovSource&& src);
+    ~LCovSource();
 
     // Whether the given script name matches this LCovSource.
     bool match(const char* name) const {
