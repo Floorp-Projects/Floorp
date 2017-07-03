@@ -2118,8 +2118,15 @@ public abstract class GeckoApp extends GeckoActivity
         final String action = intent.getAction();
 
         if (ACTION_SHUTDOWN.equals(action)) {
-            mShutdownOnDestroy = true;
-            GeckoThread.forceQuit();
+            PrefsHelper.getPref(GeckoPreferences.PREFS_SHUTDOWN_INTENT,
+                                new PrefsHelper.PrefHandlerBase() {
+                @Override public void prefValue(String pref, boolean value) {
+                    if (value) {
+                        mShutdownOnDestroy = true;
+                        GeckoThread.forceQuit();
+                    }
+                }
+            });
             return;
         }
 
