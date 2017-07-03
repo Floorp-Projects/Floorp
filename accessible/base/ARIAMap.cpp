@@ -1202,6 +1202,7 @@ nsRoleMapEntry aria::gEmptyRoleMap = {
  */
 static const EStateRule sWAIUnivStateMap[] = {
   eARIABusy,
+  eARIACurrent,
   eARIADisabled,
   eARIAExpanded,  // Currently under spec review but precedent exists
   eARIAHasPopup,  // Note this is technically a "property"

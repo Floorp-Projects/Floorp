@@ -110,5 +110,6 @@ static const AtkStateMap gAtkStateMap[] = {                     // Cross Platfor
   { ATK_STATE_SENSITIVE,                      kMapDirectly },   // states::SENSITIVE               = 1 << 45
   { ATK_STATE_EXPANDABLE,                     kMapDirectly },   // states::EXPANDABLE              = 1 << 46
   { kNone,                                    kMapDirectly },   // states::PINNED                  = 1 << 47
-  { kNone,                                    kNoSuchState },   //                                 = 1 << 48
+  { ATK_STATE_ACTIVE,                         kMapDirectly },   // states::CURRENT                 = 1 << 48
+  { kNone,                                    kNoSuchState },   //                                 = 1 << 49
 };
