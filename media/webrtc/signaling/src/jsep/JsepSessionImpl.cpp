@@ -9,7 +9,6 @@
 #include <bitset>
 #include <stdlib.h>
 
-#include "plarena.h"
 #include "nspr.h"
 #include "nss.h"
 #include "pk11pub.h"
