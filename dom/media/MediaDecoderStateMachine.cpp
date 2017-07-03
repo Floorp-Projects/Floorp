@@ -88,6 +88,10 @@ using namespace mozilla::media;
 // constants directly, so we put them in a namespace.
 namespace detail {
 
+// Resume a suspended video decoder to the current playback position plus this
+// time premium for compensating the seeking delay.
+static constexpr auto RESUME_VIDEO_PREMIUM = TimeUnit::FromMicroseconds(125000);
+
 // If audio queue has less than this much decoded audio, we won't risk
 // trying to decode the video, we'll skip decoding video up to the next
 // keyframe. We may increase this value for an individual decoder if we
@@ -3185,7 +3189,8 @@ void MediaDecoderStateMachine::SetVideoDecodeModeInternal(VideoDecodeMode aMode)
   CancelSuspendTimer();
 
   if (mVideoDecodeSuspended) {
-    mStateObj->HandleResumeVideoDecoding(GetMediaTime());
+    const auto target = mMediaSink->IsStarted() ? GetClock() : GetMediaTime();
+    mStateObj->HandleResumeVideoDecoding(target + detail::RESUME_VIDEO_PREMIUM);
   }
 }
 
