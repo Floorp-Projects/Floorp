@@ -519,7 +519,7 @@ this.CrashSubmit = {
             let matchesIgnore = entry.name.match(/(.+)\.dmp.ignore$/);
 
             if (matchesIgnore) {
-              let id = matches[1];
+              let id = matchesIgnore[1];
 
               if (UUID_REGEX.test(id)) {
                 ignored[id] = true;
@@ -532,7 +532,7 @@ this.CrashSubmit = {
       for (let entry in entries) {
         let entryInfo = await entries[entry];
 
-        if (!(`${entry}.dmp.ignore` in ignored) &&
+        if (!(entry in ignored) &&
             entryInfo.lastAccessDate > minFileDate) {
           ids.push(entry);
         }
