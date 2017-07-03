@@ -155,7 +155,6 @@ function startAddonManagerOnly() {
                        .getService(Ci.nsIObserver)
                        .QueryInterface(Ci.nsITimerCallback);
   addonManager.observe(null, "addons-startup", null);
-  Services.obs.notifyObservers(null, "sessionstore-windows-restored");
 }
 
 function getExperimentAddons(previous = false) {

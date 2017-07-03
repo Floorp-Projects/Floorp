@@ -255,15 +255,6 @@ function run_test_1() {
     gExtensionsJSON.create(AM_Ci.nsIFile.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
     startupManager(false);
 
-    // Load the database.
-    awaitPromise(new Promise(resolve => {
-      Services.obs.addObserver(function listener() {
-        Services.obs.removeObserver(listener, "xpi-database-loaded");
-        resolve();
-      }, "xpi-database-loaded");
-      Services.obs.notifyObservers(null, "sessionstore-windows-restored");
-    }));
-
     // Accessing the add-ons should open and recover the database
     AddonManager.getAddonsByIDs(["addon1@tests.mozilla.org",
                                  "addon2@tests.mozilla.org",
