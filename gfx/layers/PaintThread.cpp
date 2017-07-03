@@ -6,10 +6,7 @@
 
 #include "PaintThread.h"
 
-#include "base/task.h"
-#include "mozilla/layers/CompositorBridgeChild.h"
 #include "mozilla/gfx/2D.h"
-#include "mozilla/Preferences.h"
 #include "mozilla/SyncRunnable.h"
 
 namespace mozilla {
@@ -18,8 +15,6 @@ namespace layers {
 using namespace gfx;
 
 StaticAutoPtr<PaintThread> PaintThread::sSingleton;
-StaticRefPtr<nsIThread> PaintThread::sThread;
-PlatformThreadId PaintThread::sThreadId;
 
 void
 PaintThread::Release()
@@ -35,25 +30,24 @@ void
 PaintThread::InitOnPaintThread()
 {
   MOZ_ASSERT(!NS_IsMainThread());
-  sThreadId = PlatformThread::CurrentId();
+  mThreadId = PlatformThread::CurrentId();
 }
 
 bool
 PaintThread::Init()
 {
   MOZ_ASSERT(NS_IsMainThread());
+  nsresult rv = NS_NewNamedThread("PaintThread", getter_AddRefs(mThread));
 
-  RefPtr<nsIThread> thread;
-  nsresult rv = NS_NewNamedThread("PaintThread", getter_AddRefs(thread));
   if (NS_FAILED(rv)) {
     return false;
   }
-  sThread = thread;
 
   nsCOMPtr<nsIRunnable> paintInitTask =
     NewRunnableMethod("PaintThread::InitOnPaintThread",
                       this, &PaintThread::InitOnPaintThread);
-  SyncRunnable::DispatchToThread(sThread, paintInitTask);
+
+  SyncRunnable::DispatchToThread(PaintThread::sSingleton->mThread, paintInitTask);
   return true;
 }
 
@@ -75,83 +69,49 @@ PaintThread::Get()
   return PaintThread::sSingleton.get();
 }
 
-void
-DestroyPaintThread(UniquePtr<PaintThread>&& pt)
-{
-  MOZ_ASSERT(PaintThread::IsOnPaintThread());
-  pt->ShutdownOnPaintThread();
-}
-
 /* static */ void
 PaintThread::Shutdown()
 {
-  MOZ_ASSERT(NS_IsMainThread());
-
-  UniquePtr<PaintThread> pt(sSingleton.forget());
-  if (!pt) {
+  if (!PaintThread::sSingleton) {
     return;
   }
 
-  sThread->Dispatch(NewRunnableFunction(DestroyPaintThread, Move(pt)));
-  sThread->Shutdown();
-  sThread = nullptr;
+  PaintThread::sSingleton->ShutdownImpl();
+  PaintThread::sSingleton = nullptr;
 }
 
 void
-PaintThread::ShutdownOnPaintThread()
+PaintThread::ShutdownImpl()
 {
-  MOZ_ASSERT(IsOnPaintThread());
+  MOZ_ASSERT(NS_IsMainThread());
+  PaintThread::sSingleton->mThread->AsyncShutdown();
 }
 
-/* static */ bool
+bool
 PaintThread::IsOnPaintThread()
 {
-  return sThreadId == PlatformThread::CurrentId();
-}
-
-void
-PaintThread::PaintContentsAsync(CompositorBridgeChild* aBridge,
-                                gfx::DrawTargetCapture* aCapture,
-                                gfx::DrawTarget* aTarget)
-{
-  MOZ_ASSERT(IsOnPaintThread());
-
-  // Draw all the things into the actual dest target.
-  aTarget->DrawCapturedDT(aCapture, Matrix());
-
-  if (aBridge) {
-    aBridge->NotifyFinishedAsyncPaint();
-  }
+  MOZ_ASSERT(mThread);
+  return PlatformThread::CurrentId() == mThreadId;
 }
 
 void
 PaintThread::PaintContents(DrawTargetCapture* aCapture,
                            DrawTarget* aTarget)
 {
-  MOZ_ASSERT(NS_IsMainThread());
+  if (!IsOnPaintThread()) {
+    MOZ_ASSERT(NS_IsMainThread());
+    nsCOMPtr<nsIRunnable> paintTask =
+      NewRunnableMethod<DrawTargetCapture*, DrawTarget*>("PaintThread::PaintContents",
+                                                         this,
+                                                         &PaintThread::PaintContents,
+                                                         aCapture, aTarget);
 
-  // If painting asynchronously, we need to acquire the compositor bridge which
-  // owns the underlying MessageChannel. Otherwise we leave it null and use
-  // synchronous dispatch.
-  RefPtr<CompositorBridgeChild> cbc;
-  if (!gfxPrefs::LayersOMTPForceSync()) {
-    cbc = CompositorBridgeChild::Get();
-    cbc->NotifyBeginAsyncPaint();
+    SyncRunnable::DispatchToThread(mThread, paintTask);
+    return;
   }
-  RefPtr<DrawTargetCapture> capture(aCapture);
-  RefPtr<DrawTarget> target(aTarget);
 
-  RefPtr<Runnable> task = NS_NewRunnableFunction("PaintThread::PaintContents",
-    [=, this]() -> void
-  {
-    PaintContentsAsync(cbc, capture, target);
-  });
-
-  if (cbc) {
-    sThread->Dispatch(task.forget());
-  } else {
-    SyncRunnable::DispatchToThread(sThread, task);
-  }
+  // Draw all the things into the actual dest target.
+  aTarget->DrawCapturedDT(aCapture, Matrix());
 }
 
 } // namespace layers
