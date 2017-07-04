@@ -96,7 +96,8 @@ ImageFactory::CreateImage(nsIRequest* aRequest,
   // Record the image load for startup performance testing.
   if (NS_IsMainThread()) {
     nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
-    if (NS_WARN_IF(obs)) {
+    NS_WARNING_ASSERTION(obs, "Can't get an observer service handle");
+    if (obs) {
       nsAutoCString spec;
       aURI->GetSpec(spec);
       obs->NotifyObservers(nullptr, "image-loading", NS_ConvertUTF8toUTF16(spec).get());
