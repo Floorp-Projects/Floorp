@@ -23,7 +23,6 @@
 #include "nsIContentViewer.h"
 #include "mozilla/dom/NodeInfo.h"
 #include "mozilla/dom/ScriptLoader.h"
-#include "nsToken.h"
 #include "nsIAppShell.h"
 #include "nsCRT.h"
 #include "prtime.h"
