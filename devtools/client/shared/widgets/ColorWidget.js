@@ -265,6 +265,7 @@ ColorWidget.prototype = {
     this.element = this.parentEl.ownerDocument.createElementNS(XHTML_NS, "div");
 
     this.element.className = "colorwidget-container";
+    // eslint-disable-next-line no-unsanitized/property
     this.element.innerHTML = `
       <div class="colorwidget-top">
         <div class="colorwidget-fill"></div>

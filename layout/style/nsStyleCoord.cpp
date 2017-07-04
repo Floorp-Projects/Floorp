@@ -84,40 +84,6 @@ bool nsStyleCoord::operator==(const nsStyleCoord& aOther) const
   return false;
 }
 
-uint32_t nsStyleCoord::HashValue(uint32_t aHash = 0) const
-{
-  aHash = mozilla::AddToHash(aHash, mUnit);
-
-  switch (mUnit) {
-    case eStyleUnit_Null:
-    case eStyleUnit_Normal:
-    case eStyleUnit_Auto:
-    case eStyleUnit_None:
-      return mozilla::AddToHash(aHash, true);
-    case eStyleUnit_Percent:
-    case eStyleUnit_Factor:
-    case eStyleUnit_Degree:
-    case eStyleUnit_Grad:
-    case eStyleUnit_Radian:
-    case eStyleUnit_Turn:
-    case eStyleUnit_FlexFraction:
-      return mozilla::AddToHash(aHash, mValue.mFloat);
-    case eStyleUnit_Coord:
-    case eStyleUnit_Integer:
-    case eStyleUnit_Enumerated:
-      return mozilla::AddToHash(aHash, mValue.mInt);
-    case eStyleUnit_Calc:
-      Calc* calcValue = GetCalcValue();
-      aHash = mozilla::AddToHash(aHash, calcValue->mLength);
-      if (HasPercent()) {
-        return mozilla::AddToHash(aHash, calcValue->mPercent);
-      }
-      return aHash;
-  }
-  MOZ_ASSERT(false, "unexpected unit");
-  return aHash;
-}
-
 void nsStyleCoord::Reset()
 {
   Reset(mUnit, mValue);

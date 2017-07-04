@@ -162,6 +162,7 @@ CSSFilterEditorWidget.prototype = {
     let newPresetPlaceholder = L10N.getStr("newPresetPlaceholder");
     let savePresetButton = L10N.getStr("savePresetButton");
 
+    // eslint-disable-next-line no-unsanitized/property
     this.el.innerHTML = `
       <div class="filters-list">
         <div id="filters"></div>
@@ -216,6 +217,7 @@ CSSFilterEditorWidget.prototype = {
     let select = this.filterSelect;
     filterList.forEach(filter => {
       let option = this.doc.createElementNS(XHTML_NS, "option");
+      // eslint-disable-next-line no-unsanitized/property
       option.innerHTML = option.value = filter.name;
       select.appendChild(option);
     });
@@ -628,6 +630,7 @@ CSSFilterEditorWidget.prototype = {
    */
   render: function () {
     if (!this.filters.length) {
+  // eslint-disable-next-line no-unsanitized/property
       this.filtersList.innerHTML = `<p> ${L10N.getStr("emptyFilterList")} <br />
                                  ${L10N.getStr("addUsingList")} </p>`;
       this.emit("render");
@@ -709,6 +712,7 @@ CSSFilterEditorWidget.prototype = {
       }
 
       if (!presets || !presets.length) {
+      // eslint-disable-next-line no-unsanitized/property
         this.presetsList.innerHTML = `<p>${L10N.getStr("emptyPresetList")}</p>`;
         this.emit("render");
         return;

@@ -635,6 +635,7 @@ protected:
 
   // Main thread + webrender only
   mozilla::Maybe<mozilla::wr::ImageKey> mTitlebarImageKey;
+  mozilla::gfx::IntSize mTitlebarImageSize;
 
   // The area of mTitlebarCGContext that has changed and needs to be
   // uploaded to to mTitlebarImage. Main thread only.

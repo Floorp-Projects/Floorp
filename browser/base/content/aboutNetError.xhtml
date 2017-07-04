@@ -177,11 +177,13 @@
           errDesc  = document.getElementById("ed_generic");
         }
 
+        // eslint-disable-next-line no-unsanitized/property
         document.querySelector(".title-text").innerHTML = errTitle.innerHTML;
 
         var sd = document.getElementById("errorShortDescText");
         if (sd) {
           if (gIsCertError) {
+          // eslint-disable-next-line no-unsanitized/property
             sd.innerHTML = errDesc.innerHTML;
           } else {
             sd.textContent = getDescription();
@@ -201,6 +203,7 @@
 
         var ld = document.getElementById("errorLongDesc");
         if (ld) {
+        // eslint-disable-next-line no-unsanitized/property
           ld.innerHTML = errDesc.innerHTML;
         }
 

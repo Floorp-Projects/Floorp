@@ -9,6 +9,7 @@
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/CycleCollectedJSContext.h"
 #include "mozilla/Move.h"
+#include "mozilla/SystemGroup.h"
 #include "js/Debug.h"
 
 namespace mozilla {
@@ -23,7 +24,11 @@ DebuggerOnGCRunnable::Enqueue(JSContext* aCx, const JS::GCDescription& aDesc)
 
   RefPtr<DebuggerOnGCRunnable> runOnGC =
     new DebuggerOnGCRunnable(Move(gcEvent));
-  return NS_DispatchToCurrentThread(runOnGC);
+  if (NS_IsMainThread()) {
+    return SystemGroup::Dispatch("DebuggerOnGCRunnable", TaskCategory::GarbageCollection, runOnGC.forget());
+  } else {
+    return NS_DispatchToCurrentThread(runOnGC);
+  }
 }
 
 NS_IMETHODIMP

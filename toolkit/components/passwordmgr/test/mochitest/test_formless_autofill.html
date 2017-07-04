@@ -121,6 +121,7 @@ add_task(async function test() {
 
     let processedFormPromise = promiseFormsProcessed(numFormLikesExpected);
 
+    // eslint-disable-next-line no-unsanitized/property
     frameDoc.documentElement.innerHTML = tc.document;
     info("waiting for " + numFormLikesExpected + " processed form(s)");
     await processedFormPromise;

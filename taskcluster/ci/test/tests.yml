@@ -21,6 +21,8 @@ awsy:
             by-test-platform:
                 windows.*/opt:
                     - awsy/taskcluster_windows_config.py
+                macosx.*/opt:
+                    - awsy/macosx_config.py
                 default:
                     - awsy/linux_config.py
 

@@ -3255,6 +3255,7 @@ var gDetailView = {
       // plugins without having bug 624602 fixed yet, and intentionally ignores
       // localisation.
       if (aAddon.isGMPlugin) {
+        // eslint-disable-next-line no-unsanitized/property
         fullDesc.innerHTML = aAddon.fullDescription;
       } else {
         fullDesc.textContent = aAddon.fullDescription;

@@ -1985,10 +1985,11 @@ RuntimeService::ShutdownIdleThreads(nsITimer* aTimer, void* /* aClosure */)
 
     // Reschedule the timer.
     MOZ_ALWAYS_SUCCEEDS(
-      aTimer->InitWithFuncCallback(ShutdownIdleThreads,
-                                   nullptr,
-                                   delay,
-                                   nsITimer::TYPE_ONE_SHOT));
+      aTimer->InitWithNamedFuncCallback(ShutdownIdleThreads,
+                                        nullptr,
+                                        delay,
+                                        nsITimer::TYPE_ONE_SHOT,
+                                        "RuntimeService::ShutdownIdleThreads"));
   }
 
   for (uint32_t index = 0; index < expiredThreads.Length(); index++) {
@@ -2622,10 +2623,11 @@ RuntimeService::NoteIdleThread(WorkerThread* aThread)
     MOZ_ALWAYS_SUCCEEDS(aThread->Shutdown());
   } else if (scheduleTimer) {
     MOZ_ALWAYS_SUCCEEDS(
-      mIdleThreadTimer->InitWithFuncCallback(ShutdownIdleThreads,
-                                             nullptr,
-                                             IDLE_THREAD_TIMEOUT_SEC * 1000,
-                                             nsITimer::TYPE_ONE_SHOT));
+      mIdleThreadTimer->InitWithNamedFuncCallback(ShutdownIdleThreads,
+                                                  nullptr,
+                                                  IDLE_THREAD_TIMEOUT_SEC * 1000,
+                                                  nsITimer::TYPE_ONE_SHOT,
+                                                  "RuntimeService::ShutdownIdleThreads"));
   }
 }
 
