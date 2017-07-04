@@ -685,12 +685,19 @@
     <handlers>
       <handler event="touchstart">
         <![CDATA[
-          if (event.touches.length > 1) {
+          function isScrollbarElement(target) {
+            return (target.localName == "thumb" || target.localName == "slider")
+                && target.namespaceURI == "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+          }
+          if (event.touches.length > 1 || isScrollbarElement(event.touches[0].target)) {
             // Multiple touch points detected, abort. In particular this aborts
             // the panning gesture when the user puts a second finger down after
             // already panning with one finger. Aborting at this point prevents
             // the pan gesture from being resumed until all fingers are lifted
             // (as opposed to when the user is back down to one finger).
+            // Additionally, if the user lands on the scrollbar don't use this
+            // code for scrolling, instead allow gecko to handle scrollbar
+            // interaction normally.
             this._touchY = -1;
           } else {
             this._touchY = event.touches[0].screenY;
