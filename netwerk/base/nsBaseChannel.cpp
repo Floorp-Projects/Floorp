@@ -139,12 +139,13 @@ nsBaseChannel::Redirect(nsIChannel *newChannel, uint32_t redirectFlags,
       new nsAsyncRedirectVerifyHelper();
 
   bool checkRedirectSynchronously = !openNewChannel;
+  nsCOMPtr<nsIEventTarget> target = GetNeckoTarget();
 
   mRedirectChannel = newChannel;
   mRedirectFlags = redirectFlags;
   mOpenRedirectChannel = openNewChannel;
   nsresult rv = redirectCallbackHelper->Init(this, newChannel, redirectFlags,
-                                             checkRedirectSynchronously);
+                                             target, checkRedirectSynchronously);
   if (NS_FAILED(rv))
     return rv;
 

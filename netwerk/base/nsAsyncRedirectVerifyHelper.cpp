@@ -63,15 +63,20 @@ nsAsyncRedirectVerifyHelper::~nsAsyncRedirectVerifyHelper()
 }
 
 nsresult
-nsAsyncRedirectVerifyHelper::Init(nsIChannel* oldChan, nsIChannel* newChan,
-                                  uint32_t flags, bool synchronize)
+nsAsyncRedirectVerifyHelper::Init(nsIChannel* oldChan,
+                                  nsIChannel* newChan,
+                                  uint32_t flags,
+                                  nsIEventTarget* mainThreadEventTarget,
+                                  bool synchronize)
 {
     LOG(("nsAsyncRedirectVerifyHelper::Init() "
          "oldChan=%p newChan=%p", oldChan, newChan));
     mOldChan           = oldChan;
     mNewChan           = newChan;
     mFlags             = flags;
-    mCallbackEventTarget = GetCurrentThreadEventTarget();
+    mCallbackEventTarget = NS_IsMainThread() && mainThreadEventTarget
+      ? mainThreadEventTarget
+      : GetCurrentThreadEventTarget();
 
     if (!(flags & (nsIChannelEventSink::REDIRECT_INTERNAL |
                    nsIChannelEventSink::REDIRECT_STS_UPGRADE))) {
@@ -85,8 +90,11 @@ nsAsyncRedirectVerifyHelper::Init(nsIChannel* oldChan, nsIChannel* newChan,
     if (synchronize)
       mWaitingForRedirectCallback = true;
 
+    nsCOMPtr<nsIRunnable> runnable = this;
     nsresult rv;
-    rv = NS_DispatchToMainThread(this);
+    rv = mainThreadEventTarget
+      ? mainThreadEventTarget->Dispatch(runnable.forget())
+      : GetMainThreadEventTarget()->Dispatch(runnable.forget());
     NS_ENSURE_SUCCESS(rv, rv);
 
     if (synchronize) {

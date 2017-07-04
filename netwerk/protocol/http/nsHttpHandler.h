@@ -331,9 +331,11 @@ public:
 
     // Called by channels before a redirect happens. This notifies both the
     // channel's and the global redirect observers.
-    MOZ_MUST_USE nsresult AsyncOnChannelRedirect(nsIChannel* oldChan,
-                                                 nsIChannel* newChan,
-                                                 uint32_t flags);
+    MOZ_MUST_USE nsresult AsyncOnChannelRedirect(
+                              nsIChannel* oldChan,
+                              nsIChannel* newChan,
+                              uint32_t flags,
+                              nsIEventTarget* mainThreadEventTarget = nullptr);
 
     // Called by the channel when the response is read from the cache without
     // communicating with the server.
