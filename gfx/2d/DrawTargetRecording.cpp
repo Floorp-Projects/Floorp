@@ -32,7 +32,7 @@ void RecordingSourceSurfaceUserDataFunc(void *aUserData)
   userData->recorder->RemoveSourceSurface((SourceSurface*)userData->refPtr);
   userData->recorder->RemoveStoredObject(userData->refPtr);
   userData->recorder->RecordEvent(
-    RecordedSourceSurfaceDestruction(userData->refPtr));
+    RecordedSourceSurfaceDestruction(ReferencePtr(userData->refPtr)));
 
   delete userData;
 }
@@ -91,7 +91,7 @@ public:
   ~SourceSurfaceRecording()
   {
     mRecorder->RemoveStoredObject(this);
-    mRecorder->RecordEvent(RecordedSourceSurfaceDestruction(this));
+    mRecorder->RecordEvent(RecordedSourceSurfaceDestruction(ReferencePtr(this)));
   }
 
   virtual SurfaceType GetType() const { return SurfaceType::RECORDING; }
@@ -160,7 +160,7 @@ public:
   ~GradientStopsRecording()
   {
     mRecorder->RemoveStoredObject(this);
-    mRecorder->RecordEvent(RecordedGradientStopsDestruction(this));
+    mRecorder->RecordEvent(RecordedGradientStopsDestruction(ReferencePtr(this)));
   }
 
   virtual BackendType GetBackendType() const { return BackendType::RECORDING; }
@@ -183,7 +183,7 @@ public:
   ~FilterNodeRecording()
   {
     mRecorder->RemoveStoredObject(this);
-    mRecorder->RecordEvent(RecordedFilterNodeDestruction(this));
+    mRecorder->RecordEvent(RecordedFilterNodeDestruction(ReferencePtr(this)));
   }
 
   virtual void SetInput(uint32_t aIndex, SourceSurface *aSurface) override
@@ -258,7 +258,7 @@ DrawTargetRecording::DrawTargetRecording(const DrawTargetRecording *aDT,
 
 DrawTargetRecording::~DrawTargetRecording()
 {
-  mRecorder->RecordEvent(RecordedDrawTargetDestruction(this));
+  mRecorder->RecordEvent(RecordedDrawTargetDestruction(ReferencePtr(this)));
 }
 
 void
@@ -316,7 +316,7 @@ void RecordingFontUserDataDestroyFunc(void *aUserData)
   RecordingFontUserData *userData =
     static_cast<RecordingFontUserData*>(aUserData);
 
-  userData->recorder->RecordEvent(RecordedScaledFontDestruction(userData->refPtr));
+  userData->recorder->RecordEvent(RecordedScaledFontDestruction(ReferencePtr(userData->refPtr)));
   userData->recorder->RemoveScaledFont((ScaledFont*)userData->refPtr);
   delete userData;
 }
@@ -508,7 +508,7 @@ DrawTargetRecording::PushClipRect(const Rect &aRect)
 void
 DrawTargetRecording::PopClip()
 {
-  mRecorder->RecordEvent(RecordedPopClip(this));
+  mRecorder->RecordEvent(RecordedPopClip(static_cast<DrawTarget*>(this)));
 }
 
 void
@@ -529,7 +529,7 @@ DrawTargetRecording::PushLayer(bool aOpaque, Float aOpacity,
 void
 DrawTargetRecording::PopLayer()
 {
-  mRecorder->RecordEvent(RecordedPopLayer(this));
+  mRecorder->RecordEvent(RecordedPopLayer(static_cast<DrawTarget*>(this)));
 }
 
 already_AddRefed<SourceSurface>
@@ -613,7 +613,7 @@ DrawTargetRecording::EnsurePathStored(const Path *aPath)
     pathRecording = builderRecording->Finish().downcast<PathRecording>();
   }
 
-  mRecorder->RecordEvent(RecordedPathCreation(pathRecording));
+  mRecorder->RecordEvent(RecordedPathCreation(pathRecording.get()));
   mRecorder->AddStoredObject(pathRecording);
   pathRecording->mStoredRecorders.push_back(mRecorder);
 
