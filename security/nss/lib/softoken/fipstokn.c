@@ -36,7 +36,7 @@
 #ifdef LINUX
 #include <pthread.h>
 #include <dlfcn.h>
-#define LIBAUDIT_NAME "libaudit.so.0"
+#define LIBAUDIT_NAME "libaudit.so.1"
 #ifndef AUDIT_CRYPTO_TEST_USER
 #define AUDIT_CRYPTO_TEST_USER 2400         /* Crypto test results */
 #define AUDIT_CRYPTO_PARAM_CHANGE_USER 2401 /* Crypto attribute change */

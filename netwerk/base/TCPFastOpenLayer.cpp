@@ -400,8 +400,8 @@ TCPFastOpenFinish(PRFileDesc *fd, PRErrorCode &err,
     // We have some data ready in the buffer we will send it with the syn
     // packet.
     PRInt32 rv = (tfoFd->lower->methods->sendto)(tfoFd->lower,
-                                                 secret->mFirstPacketBuf,
-                                                 secret->mFirstPacketBufLen,
+                                                 nullptr,
+                                                 0,
                                                  0, //flags
                                                  &secret->mAddr,
                                                  PR_INTERVAL_NO_WAIT);

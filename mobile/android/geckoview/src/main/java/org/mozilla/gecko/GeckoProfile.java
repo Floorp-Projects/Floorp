@@ -80,6 +80,7 @@ public final class GeckoProfile {
             new ConcurrentHashMap<String, GeckoProfile>(
                     /* capacity */ 4, /* load factor */ 0.75f, /* concurrency */ 2);
     private static String sDefaultProfileName;
+    private static String sIntentArgs;
 
     private final String mName;
     private final File mMozillaDir;
@@ -106,6 +107,10 @@ public final class GeckoProfile {
 
     public static void leaveGuestMode(final Context context) {
         GeckoSharedPrefs.forApp(context).edit().putBoolean(GUEST_MODE_PREF, false).commit();
+    }
+
+    public static void setIntentArgs(final String intentArgs) {
+        sIntentArgs = intentArgs;
     }
 
     public static GeckoProfile initFromArgs(final Context context, final String args) {
@@ -214,15 +219,7 @@ public final class GeckoProfile {
                 return profile;
             }
 
-            final String args;
-            if (context instanceof Activity) {
-                args = IntentUtils.getStringExtraSafe(((Activity) context).getIntent(), "args");
-            } else {
-                args = null;
-            }
-
-            return GeckoProfile.initFromArgs(context, args);
-
+            return GeckoProfile.initFromArgs(context, sIntentArgs);
         } else if (profileName == null) {
             // If only profile dir was passed in, use custom (anonymous) profile.
             profileName = CUSTOM_PROFILE;
