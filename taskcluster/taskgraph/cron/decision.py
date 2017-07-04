@@ -65,6 +65,11 @@ def make_decision_task(params, symbol, arguments=[], head_rev=None):
     descr_md = 'Created by a [cron task](https://tools.taskcluster.net/task-inspector/#{}/)'
     task['metadata']['description'] = descr_md.format(cron_task_id)
 
+    # create new indices so these aren't mixed in with regular decision tasks
+    for i, route in enumerate(task['routes']):
+        if route.startswith('index'):
+            task['routes'][i] = route + '-' + params['job_name']
+
     th = task['extra']['treeherder']
     th['groupSymbol'] = 'cron'
     th['symbol'] = symbol
