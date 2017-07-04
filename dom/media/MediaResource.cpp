@@ -179,6 +179,14 @@ ChannelMediaResource::Listener::GetInterface(const nsIID & aIID, void **aResult)
   return QueryInterface(aIID, aResult);
 }
 
+static bool
+IsPayloadCompressed(nsIHttpChannel* aChannel)
+{
+  nsAutoCString encoding;
+  Unused << aChannel->GetResponseHeader(NS_LITERAL_CSTRING("Content-Encoding"), encoding);
+  return encoding.Length() > 0;
+}
+
 nsresult
 ChannelMediaResource::OnStartRequest(nsIRequest* aRequest)
 {
@@ -251,7 +259,10 @@ ChannelMediaResource::OnStartRequest(nsIRequest* aRequest)
     bool dataIsBounded = false;
 
     int64_t contentLength = -1;
-    hc->GetContentLength(&contentLength);
+    const bool isCompressed = IsPayloadCompressed(hc);
+    if (!isCompressed) {
+      hc->GetContentLength(&contentLength);
+    }
     if (contentLength >= 0 &&
         (responseStatus == HTTP_OK_CODE ||
          responseStatus == HTTP_PARTIAL_RESPONSE_CODE)) {
@@ -264,7 +275,9 @@ ChannelMediaResource::OnStartRequest(nsIRequest* aRequest)
     // Content-Range header tells us otherwise.
     bool boundedSeekLimit = true;
     // Check response code for byte-range requests (seeking, chunk requests).
-    if (responseStatus == HTTP_PARTIAL_RESPONSE_CODE) {
+    // We don't expect to get a 206 response for a compressed stream, but
+    // double check just to be sure.
+    if (!isCompressed && responseStatus == HTTP_PARTIAL_RESPONSE_CODE) {
       // Parse Content-Range header.
       int64_t rangeStart = 0;
       int64_t rangeEnd = 0;
@@ -313,8 +326,8 @@ ChannelMediaResource::OnStartRequest(nsIRequest* aRequest)
 
     // If we get an HTTP_OK_CODE response to our byte range request,
     // and the server isn't sending Accept-Ranges:bytes then we don't
-    // support seeking.
-    seekable = acceptsRanges;
+    // support seeking. We also can't seek in compressed streams.
+    seekable = !isCompressed && acceptsRanges;
     if (seekable && boundedSeekLimit) {
       // If range requests are supported, and we did not see an unbounded
       // upper range limit, we assume the resource is bounded.
@@ -531,7 +544,7 @@ nsresult ChannelMediaResource::Open(nsIStreamListener **aStreamListener)
   int64_t cl = -1;
   if (mChannel) {
     nsCOMPtr<nsIHttpChannel> hc = do_QueryInterface(mChannel);
-    if (hc) {
+    if (hc && !IsPayloadCompressed(hc)) {
       if (NS_FAILED(hc->GetContentLength(&cl))) {
         cl = -1;
       }
@@ -569,7 +582,7 @@ nsresult ChannelMediaResource::OpenChannel(nsIStreamListener** aStreamListener)
   // that expect to know the length of a resource can get it before
   // OnStartRequest() fires.
   nsCOMPtr<nsIHttpChannel> hc = do_QueryInterface(mChannel);
-  if (hc) {
+  if (hc && !IsPayloadCompressed(hc)) {
     int64_t cl = -1;
     if (NS_SUCCEEDED(hc->GetContentLength(&cl)) && cl != -1) {
       mCacheStream.NotifyDataLength(cl);
