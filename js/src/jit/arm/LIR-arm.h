@@ -681,6 +681,147 @@ class LWasmUnalignedStoreI64 : public details::LWasmUnalignedStoreBase<1 + INT64
     }
 };
 
+class LWasmAtomicLoadI64 : public LInstructionHelper<INT64_PIECES, 1, 0>
+{
+  public:
+    LIR_HEADER(WasmAtomicLoadI64);
+
+    LWasmAtomicLoadI64(const LAllocation& ptr) {
+        setOperand(0, ptr);
+    }
+
+    MWasmLoad* mir() const {
+        return mir_->toWasmLoad();
+    }
+    const LAllocation* ptr() {
+        return getOperand(0);
+    }
+};
+
+class LWasmAtomicStoreI64 : public LInstructionHelper<0, 1 + INT64_PIECES, 2>
+{
+  public:
+    LIR_HEADER(WasmAtomicStoreI64);
+
+    LWasmAtomicStoreI64(const LAllocation& ptr, const LInt64Allocation& value,
+                        const LDefinition& tmpLow, const LDefinition& tmpHigh)
+    {
+        setOperand(0, ptr);
+        setInt64Operand(1, value);
+        setTemp(0, tmpLow);
+        setTemp(1, tmpHigh);
+    }
+
+    MWasmStore* mir() const {
+        return mir_->toWasmStore();
+    }
+    const LAllocation* ptr() {
+        return getOperand(0);
+    }
+    const LInt64Allocation value() {
+        return getInt64Operand(1);
+    }
+    const LDefinition* tmpLow() {
+        return getTemp(0);
+    }
+    const LDefinition* tmpHigh() {
+        return getTemp(1);
+    }
+};
+
+class LWasmCompareExchangeI64 : public LInstructionHelper<INT64_PIECES, 1 + 2*INT64_PIECES, 0>
+{
+  public:
+    LIR_HEADER(WasmCompareExchangeI64);
+
+    LWasmCompareExchangeI64(const LAllocation& ptr, const LInt64Allocation& expected,
+                            const LInt64Allocation& replacement)
+    {
+        setOperand(0, ptr);
+        setInt64Operand(1, expected);
+        setInt64Operand(1 + INT64_PIECES, replacement);
+    }
+
+    MAsmJSCompareExchangeHeap* mir() const {
+        return mir_->toAsmJSCompareExchangeHeap();
+    }
+    const LAllocation* ptr() {
+        return getOperand(0);
+    }
+    const LInt64Allocation expected() {
+        return getInt64Operand(1);
+    }
+    const LInt64Allocation replacement() {
+        return getInt64Operand(1 + INT64_PIECES);
+    }
+};
+
+class LWasmAtomicBinopI64 : public LInstructionHelper<INT64_PIECES, 1 + INT64_PIECES, 2>
+{
+    const wasm::MemoryAccessDesc& access_;
+    AtomicOp op_;
+
+  public:
+    LIR_HEADER(WasmAtomicBinopI64);
+
+    LWasmAtomicBinopI64(const LAllocation& ptr, const LInt64Allocation& value,
+                        const LDefinition& tmpLow, const LDefinition& tmpHigh,
+                        const wasm::MemoryAccessDesc& access, AtomicOp op)
+      : access_(access),
+        op_(op)
+    {
+        setOperand(0, ptr);
+        setInt64Operand(1, value);
+        setTemp(0, tmpLow);
+        setTemp(1, tmpHigh);
+    }
+
+    const LAllocation* ptr() {
+        return getOperand(0);
+    }
+    const LInt64Allocation value() {
+        return getInt64Operand(1);
+    }
+    const wasm::MemoryAccessDesc& access() {
+        return access_;
+    }
+    AtomicOp operation() const {
+        return op_;
+    }
+    const LDefinition* tmpLow() {
+        return getTemp(0);
+    }
+    const LDefinition* tmpHigh() {
+        return getTemp(1);
+    }
+};
+
+class LWasmAtomicExchangeI64 : public LInstructionHelper<INT64_PIECES, 1 + INT64_PIECES, 0>
+{
+    const wasm::MemoryAccessDesc& access_;
+
+  public:
+    LIR_HEADER(WasmAtomicExchangeI64);
+
+    LWasmAtomicExchangeI64(const LAllocation& ptr, const LInt64Allocation& value,
+                           const wasm::MemoryAccessDesc& access)
+      : access_(access)
+    {
+        setOperand(0, ptr);
+        setInt64Operand(1, value);
+    }
+
+    const LAllocation* ptr() {
+        return getOperand(0);
+    }
+    const LInt64Allocation value() {
+        return getInt64Operand(1);
+    }
+    const wasm::MemoryAccessDesc& access() {
+        return access_;
+    }
+};
+
 } // namespace jit
 } // namespace js
 

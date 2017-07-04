@@ -303,6 +303,7 @@ class LIRGenerator : public LIRGeneratorSpecific
     void visitWasmAddOffset(MWasmAddOffset* ins);
     void visitWasmLoadTls(MWasmLoadTls* ins);
     void visitWasmBoundsCheck(MWasmBoundsCheck* ins);
+    void visitWasmAlignmentCheck(MWasmAlignmentCheck* ins);
     void visitWasmLoadGlobalVar(MWasmLoadGlobalVar* ins);
     void visitWasmStoreGlobalVar(MWasmStoreGlobalVar* ins);
     void visitWasmParameter(MWasmParameter* ins);

@@ -278,6 +278,12 @@ class CodeGeneratorARM : public CodeGeneratorShared
     void atomicBinopToTypedIntArray(AtomicOp op, Scalar::Type arrayType, const S& value,
                                     const T& mem, Register flagTemp);
 
+    void visitWasmAtomicLoadI64(LWasmAtomicLoadI64* lir);
+    void visitWasmAtomicStoreI64(LWasmAtomicStoreI64* lir);
+    void visitWasmCompareExchangeI64(LWasmCompareExchangeI64* lir);
+    void visitWasmAtomicBinopI64(LWasmAtomicBinopI64* lir);
+    void visitWasmAtomicExchangeI64(LWasmAtomicExchangeI64* lir);
+
   protected:
     void visitEffectiveAddress(LEffectiveAddress* ins);
     void visitUDiv(LUDiv* ins);

@@ -775,16 +775,43 @@ class FunctionCompiler
         return load;
     }
 
-    void checkOffsetAndBounds(MemoryAccessDesc* access, MDefinition** base)
+    // Only sets *mustAdd if it also returns true.
+    bool needAlignmentCheck(MemoryAccessDesc* access, MDefinition* base, bool* mustAdd) {
+        MOZ_ASSERT(!*mustAdd);
+
+        // asm.js accesses are always aligned and need no check.
+        if (env_.isAsmJS() || !access->isAtomic())
+            return false;
+
+        if (base->isConstant()) {
+            int32_t ptr = base->toConstant()->toInt32();
+            // OK to wrap around the address computation here.
+            if (((ptr + access->offset()) & (access->byteSize() - 1)) == 0)
+                return false;
+        }
+
+        *mustAdd = (access->offset() & (access->byteSize() - 1)) != 0;
+        return true;
+    }
+
+    void checkOffsetAndAlignmentAndBounds(MemoryAccessDesc* access, MDefinition** base)
     {
+        MOZ_ASSERT(!inDeadCode());
+
+        bool mustAdd = false;
+        bool alignmentCheck = needAlignmentCheck(access, *base, &mustAdd);
+
         // If the offset is bigger than the guard region, a separate instruction
         // is necessary to add the offset to the base and check for overflow.
-        if (access->offset() >= OffsetGuardLimit || !JitOptions.wasmFoldOffsets) {
-            auto* ins = MWasmAddOffset::New(alloc(), *base, access->offset(), bytecodeOffset());
-            curBlock_->add(ins);
+        //
+        // Also add the offset if we have a Wasm atomic access that needs
+        // alignment checking and the offset affects alignment.
+        if (access->offset() >= OffsetGuardLimit || mustAdd || !JitOptions.wasmFoldOffsets)
+            *base = computeEffectiveAddress(*base, access);
 
-            *base = ins;
-            access->clearOffset();
+        if (alignmentCheck) {
+            curBlock_->add(MWasmAlignmentCheck::New(alloc(), *base, access->byteSize(),
+                                                    bytecodeOffset()));
         }
 
         MWasmLoadTls* boundsCheckLimit = maybeLoadBoundsCheckLimit();
@@ -792,7 +819,49 @@ class FunctionCompiler
             curBlock_->add(MWasmBoundsCheck::New(alloc(), *base, boundsCheckLimit, bytecodeOffset()));
     }
 
+    bool isSmallerAccessForI64(ValType result, const MemoryAccessDesc* access) {
+        if (result == ValType::I64 && access->byteSize() <= 4) {
+            // These smaller accesses should all be zero-extending.
+            MOZ_ASSERT(!isSignedIntType(access->type()));
+            return true;
+        }
+        return false;
+    }
+
   public:
+    MDefinition* computeEffectiveAddress(MDefinition* base, MemoryAccessDesc* access) {
+        MOZ_ASSERT(!access->isPlainAsmJS());
+
+        if (inDeadCode())
+            return nullptr;
+
+        auto* ins = MWasmAddOffset::New(alloc(), base, access->offset(), bytecodeOffset());
+        curBlock_->add(ins);
+        access->clearOffset();
+        return ins;
+    }
+
+    bool checkWaitWakeResult(MDefinition* value) {
+        if (inDeadCode())
+            return true;
+
+        auto* zero = constant(Int32Value(0), MIRType::Int32);
+        auto* cond = compare(value, zero, JSOP_LT, MCompare::Compare_Int32);
+
+        MBasicBlock* failBlock;
+        if (!newBlock(curBlock_, &failBlock))
+            return false;
+
+        MBasicBlock* okBlock;
+        if (!newBlock(curBlock_, &okBlock))
+            return false;
+
+        curBlock_->end(MTest::New(alloc(), cond, failBlock, okBlock));
+        failBlock->end(MWasmTrap::New(alloc(), wasm::Trap::ThrowReported, bytecodeOffset()));
+        curBlock_ = okBlock;
+        return true;
+    }
+
     MDefinition* load(MDefinition* base, MemoryAccessDesc* access, ValType result)
     {
         if (inDeadCode())
@@ -805,20 +874,17 @@ class FunctionCompiler
             MWasmLoadTls* boundsCheckLimit = maybeLoadBoundsCheckLimit();
             load = MAsmJSLoadHeap::New(alloc(), memoryBase, base, boundsCheckLimit, access->type());
         } else {
-            checkOffsetAndBounds(access, &base);
+            checkOffsetAndAlignmentAndBounds(access, &base);
             load = MWasmLoad::New(alloc(), memoryBase, base, *access, ToMIRType(result));
         }
-
-        if (load)
-            curBlock_->add(load);
-
+        curBlock_->add(load);
         return load;
     }
 
-    MOZ_MUST_USE bool store(MDefinition* base, MemoryAccessDesc* access, MDefinition* v)
+    void store(MDefinition* base, MemoryAccessDesc* access, MDefinition* v)
     {
         if (inDeadCode())
-            return true;
+            return;
 
         MWasmLoadTls* memoryBase = maybeLoadMemoryBase();
         MInstruction* store = nullptr;
@@ -828,58 +894,94 @@ class FunctionCompiler
             store = MAsmJSStoreHeap::New(alloc(), memoryBase, base, boundsCheckLimit,
                                          access->type(), v);
         } else {
-            checkOffsetAndBounds(access, &base);
+            checkOffsetAndAlignmentAndBounds(access, &base);
             store = MWasmStore::New(alloc(), memoryBase, base, *access, v);
         }
-
-        if (store)
-            curBlock_->add(store);
-
-        return !!store;
+        curBlock_->add(store);
     }
 
     MDefinition* atomicCompareExchangeHeap(MDefinition* base, MemoryAccessDesc* access,
-                                           MDefinition* oldv, MDefinition* newv)
+                                           ValType result, MDefinition* oldv, MDefinition* newv)
     {
         if (inDeadCode())
             return nullptr;
 
-        checkOffsetAndBounds(access, &base);
+        checkOffsetAndAlignmentAndBounds(access, &base);
+
+        if (isSmallerAccessForI64(result, access)) {
+            auto* cvtOldv = MWrapInt64ToInt32::New(alloc(), oldv, /*bottomHalf=*/ true);
+            curBlock_->add(cvtOldv);
+            oldv = cvtOldv;
+
+            auto* cvtNewv = MWrapInt64ToInt32::New(alloc(), newv, /*bottomHalf=*/ true);
+            curBlock_->add(cvtNewv);
+            newv = cvtNewv;
+        }
+
         MWasmLoadTls* memoryBase = maybeLoadMemoryBase();
-        auto* cas = MAsmJSCompareExchangeHeap::New(alloc(), bytecodeOffset(), memoryBase, base,
-                                                   *access, oldv, newv, tlsPointer_);
-        if (cas)
+        MInstruction* cas = MAsmJSCompareExchangeHeap::New(alloc(), bytecodeOffset(), memoryBase,
+                                                           base, *access, oldv, newv, tlsPointer_);
+        curBlock_->add(cas);
+
+        if (isSmallerAccessForI64(result, access)) {
+            cas = MExtendInt32ToInt64::New(alloc(), cas, true);
             curBlock_->add(cas);
+        }
+
         return cas;
     }
 
-    MDefinition* atomicExchangeHeap(MDefinition* base, MemoryAccessDesc* access,
+    MDefinition* atomicExchangeHeap(MDefinition* base, MemoryAccessDesc* access, ValType result,
                                     MDefinition* value)
     {
         if (inDeadCode())
             return nullptr;
 
-        checkOffsetAndBounds(access, &base);
+        checkOffsetAndAlignmentAndBounds(access, &base);
+
+        if (isSmallerAccessForI64(result, access)) {
+            auto* cvtValue = MWrapInt64ToInt32::New(alloc(), value, /*bottomHalf=*/ true);
+            curBlock_->add(cvtValue);
+            value = cvtValue;
+        }
+
         MWasmLoadTls* memoryBase = maybeLoadMemoryBase();
-        auto* cas = MAsmJSAtomicExchangeHeap::New(alloc(), bytecodeOffset(), memoryBase, base,
-                                                  *access, value, tlsPointer_);
-        if (cas)
-            curBlock_->add(cas);
-        return cas;
+        MInstruction* xchg = MAsmJSAtomicExchangeHeap::New(alloc(), bytecodeOffset(), memoryBase,
+                                                           base, *access, value, tlsPointer_);
+        curBlock_->add(xchg);
+
+        if (isSmallerAccessForI64(result, access)) {
+            xchg = MExtendInt32ToInt64::New(alloc(), xchg, true);
+            curBlock_->add(xchg);
+        }
+
+        return xchg;
     }
 
     MDefinition* atomicBinopHeap(AtomicOp op, MDefinition* base, MemoryAccessDesc* access,
-                                 MDefinition* v)
+                                 ValType result, MDefinition* value)
     {
         if (inDeadCode())
             return nullptr;
 
-        checkOffsetAndBounds(access, &base);
+        checkOffsetAndAlignmentAndBounds(access, &base);
+
+        if (isSmallerAccessForI64(result, access)) {
+            auto* cvtValue = MWrapInt64ToInt32::New(alloc(), value, /*bottomHalf=*/ true);
+            curBlock_->add(cvtValue);
+            value = cvtValue;
+        }
+
         MWasmLoadTls* memoryBase = maybeLoadMemoryBase();
-        auto* binop = MAsmJSAtomicBinopHeap::New(alloc(), bytecodeOffset(), op, memoryBase, base,
-                                                 *access, v, tlsPointer_);
-        if (binop)
+        MInstruction* binop = MAsmJSAtomicBinopHeap::New(alloc(), bytecodeOffset(), op, memoryBase,
+                                                         base, *access, value, tlsPointer_);
+        curBlock_->add(binop);
+
+        if (isSmallerAccessForI64(result, access)) {
+            binop = MExtendInt32ToInt64::New(alloc(), binop, true);
             curBlock_->add(binop);
+        }
+
         return binop;
     }
 
@@ -2523,7 +2625,8 @@ EmitStore(FunctionCompiler& f, ValType resultType, Scalar::Type viewType)
 
     MemoryAccessDesc access(viewType, addr.align, addr.offset, f.bytecodeIfNotAsmJS());
 
-    return f.store(addr.base, &access, value);
+    f.store(addr.base, &access, value);
+    return true;
 }
 
 static bool
@@ -2536,7 +2639,8 @@ EmitTeeStore(FunctionCompiler& f, ValType resultType, Scalar::Type viewType)
 
     MemoryAccessDesc access(viewType, addr.align, addr.offset, f.bytecodeIfNotAsmJS());
 
-    return f.store(addr.base, &access, value);
+    f.store(addr.base, &access, value);
+    return true;
 }
 
 static bool
@@ -2556,7 +2660,8 @@ EmitTeeStoreWithCoercion(FunctionCompiler& f, ValType resultType, Scalar::Type v
 
     MemoryAccessDesc access(viewType, addr.align, addr.offset, f.bytecodeIfNotAsmJS());
 
-    return f.store(addr.base, &access, value);
+    f.store(addr.base, &access, value);
+    return true;
 }
 
 static bool
@@ -2647,8 +2752,8 @@ EmitOldAtomicsLoad(FunctionCompiler& f)
     if (!f.iter().readOldAtomicLoad(&addr, &viewType))
         return false;
 
-    MemoryAccessDesc access(viewType, addr.align, addr.offset, Some(f.bytecodeOffset()), 0,
-                            MembarBeforeLoad, MembarAfterLoad);
+    MemoryAccessDesc access(viewType, addr.align, addr.offset, Some(f.bytecodeOffset()),
+                            /*numSimdExprs=*/ 0, MembarBeforeLoad, MembarAfterLoad);
 
     auto* ins = f.load(addr.base, &access, ValType::I32);
     if (!f.inDeadCode() && !ins)
@@ -2667,12 +2772,10 @@ EmitOldAtomicsStore(FunctionCompiler& f)
     if (!f.iter().readOldAtomicStore(&addr, &viewType, &value))
         return false;
 
-    MemoryAccessDesc access(viewType, addr.align, addr.offset, Some(f.bytecodeOffset()), 0,
-                            MembarBeforeStore, MembarAfterStore);
+    MemoryAccessDesc access(viewType, addr.align, addr.offset, Some(f.bytecodeOffset()),
+                            /*numSimdExprs=*/ 0, MembarBeforeStore, MembarAfterStore);
 
-    if (!f.store(addr.base, &access, value))
-        return false;
-
+    f.store(addr.base, &access, value);
     f.iter().setResult(value);
     return true;
 }
@@ -2687,10 +2790,10 @@ EmitOldAtomicsBinOp(FunctionCompiler& f)
     if (!f.iter().readOldAtomicBinOp(&addr, &viewType, &op, &value))
         return false;
 
-    MemoryAccessDesc access(viewType, addr.align, addr.offset, Some(f.bytecodeOffset()));
+    MemoryAccessDesc access(viewType, addr.align, addr.offset, Some(f.bytecodeOffset()),
+                            /*numSimdExprs=*/ 0, MembarFull, MembarFull);
 
-    // TODO: Should apply this to a resultType == ValType::I32
-    auto* ins = f.atomicBinopHeap(op, addr.base, &access, value);
+    auto* ins = f.atomicBinopHeap(op, addr.base, &access, ValType::I32, value);
     if (!f.inDeadCode() && !ins)
         return false;
 
@@ -2708,10 +2811,10 @@ EmitOldAtomicsCompareExchange(FunctionCompiler& f)
     if (!f.iter().readOldAtomicCompareExchange(&addr, &viewType, &oldValue, &newValue))
         return false;
 
-    MemoryAccessDesc access(viewType, addr.align, addr.offset, Some(f.bytecodeOffset()));
+    MemoryAccessDesc access(viewType, addr.align, addr.offset, Some(f.bytecodeOffset()),
+                            /*numSimdExprs=*/ 0, MembarFull, MembarFull);
 
-    // TODO: resultType is ignored here
-    auto* ins = f.atomicCompareExchangeHeap(addr.base, &access, oldValue, newValue);
+    auto* ins = f.atomicCompareExchangeHeap(addr.base, &access, ValType::I32, oldValue, newValue);
     if (!f.inDeadCode() && !ins)
         return false;
 
@@ -2728,10 +2831,10 @@ EmitOldAtomicsExchange(FunctionCompiler& f)
     if (!f.iter().readOldAtomicExchange(&addr, &viewType, &value))
         return false;
 
-    MemoryAccessDesc access(viewType, addr.align, addr.offset, Some(f.bytecodeOffset()));
+    MemoryAccessDesc access(viewType, addr.align, addr.offset, Some(f.bytecodeOffset()),
+                            /*numSimdExprs=*/ 0, MembarFull, MembarFull);
 
-    // TODO: resultType is ignored here
-    auto* ins = f.atomicExchangeHeap(addr.base, &access, value);
+    auto* ins = f.atomicExchangeHeap(addr.base, &access, ValType::I32, value);
     if (!f.inDeadCode() && !ins)
         return false;
 
@@ -2982,7 +3085,8 @@ EmitSimdStore(FunctionCompiler& f, ValType resultType, unsigned numElems)
 
     MemoryAccessDesc access(viewType, addr.align, addr.offset, Some(f.bytecodeOffset()), numElems);
 
-    return f.store(addr.base, &access, value);
+    f.store(addr.base, &access, value);
+    return true;
 }
 
 static bool
@@ -3271,6 +3375,186 @@ EmitCurrentMemory(FunctionCompiler& f)
     f.iter().setResult(ret);
     return true;
 }
+
+#ifdef ENABLE_WASM_THREAD_OPS
+
+static bool
+EmitAtomicCmpXchg(FunctionCompiler& f, ValType type, Scalar::Type viewType)
+{
+    LinearMemoryAddress<MDefinition*> addr;
+    MDefinition* oldValue;
+    MDefinition* newValue;
+    if (!f.iter().readAtomicCmpXchg(&addr, type, byteSize(viewType), &oldValue, &newValue))
+        return false;
+
+    MemoryAccessDesc access(viewType, addr.align, addr.offset, Some(f.bytecodeOffset()),
+                            /*numSimdExprs=*/ 0, MembarFull, MembarFull);
+    auto* ins = f.atomicCompareExchangeHeap(addr.base, &access, type, oldValue, newValue);
+    if (!f.inDeadCode() && !ins)
+        return false;
+
+    f.iter().setResult(ins);
+    return true;
+}
+
+static bool
+EmitAtomicLoad(FunctionCompiler& f, ValType type, Scalar::Type viewType)
+{
+    LinearMemoryAddress<MDefinition*> addr;
+    if (!f.iter().readAtomicLoad(&addr, type, byteSize(viewType)))
+        return false;
+
+    MemoryAccessDesc access(viewType, addr.align, addr.offset, Some(f.bytecodeOffset()),
+                            /*numSimdExprs=*/ 0, MembarBeforeLoad, MembarAfterLoad);
+    auto* ins = f.load(addr.base, &access, type);
+    if (!f.inDeadCode() && !ins)
+        return false;
+
+    f.iter().setResult(ins);
+    return true;
+}
+
+static bool
+EmitAtomicRMW(FunctionCompiler& f, ValType type, Scalar::Type viewType, jit::AtomicOp op)
+{
+    LinearMemoryAddress<MDefinition*> addr;
+    MDefinition* value;
+    if (!f.iter().readAtomicRMW(&addr, type, byteSize(viewType), &value))
+        return false;
+
+    MemoryAccessDesc access(viewType, addr.align, addr.offset, Some(f.bytecodeOffset()),
+                            /*numSimdExprs=*/ 0, MembarFull, MembarFull);
+    auto* ins = f.atomicBinopHeap(op, addr.base, &access, type, value);
+    if (!f.inDeadCode() && !ins)
+        return false;
+
+    f.iter().setResult(ins);
+    return true;
+}
+
+static bool
+EmitAtomicStore(FunctionCompiler& f, ValType type, Scalar::Type viewType)
+{
+    LinearMemoryAddress<MDefinition*> addr;
+    MDefinition* value;
+    if (!f.iter().readAtomicStore(&addr, type, byteSize(viewType), &value))
+        return false;
+
+    MemoryAccessDesc access(viewType, addr.align, addr.offset, Some(f.bytecodeOffset()),
+                            /*numSimdExprs=*/ 0, MembarBeforeStore, MembarAfterStore);
+    f.store(addr.base, &access, value);
+    return true;
+}
+
+static bool
+EmitWait(FunctionCompiler& f, ValType type, uint32_t byteSize)
+{
+    uint32_t lineOrBytecode = f.readCallSiteLineOrBytecode();
+
+    CallCompileState args(f, lineOrBytecode);
+    if (!f.startCall(&args))
+        return false;
+
+    if (!f.passInstance(&args))
+        return false;
+
+    LinearMemoryAddress<MDefinition*> addr;
+    MDefinition* expected;
+    MDefinition* timeout;
+    if (!f.iter().readWait(&addr, type, byteSize, &expected, &timeout))
+        return false;
+
+    MemoryAccessDesc access(type == ValType::I32 ? Scalar::Int32 : Scalar::Int64, addr.align,
+                            addr.offset, Some(f.bytecodeOffset()));
+    MDefinition* ptr = f.computeEffectiveAddress(addr.base, &access);
+    if (!f.inDeadCode() && !ptr)
+        return false;
+
+    if (!f.passArg(ptr, ValType::I32, &args))
+        return false;
+
+    if (!f.passArg(expected, type, &args))
+        return false;
+
+    if (!f.passArg(timeout, ValType::I64, &args))
+        return false;
+
+    if (!f.finishCall(&args))
+        return false;
+
+    SymbolicAddress callee = type == ValType::I32 ? SymbolicAddress::WaitI32 : SymbolicAddress::WaitI64;
+    MDefinition* ret;
+    if (!f.builtinInstanceMethodCall(callee, args, ValType::I32, &ret))
+        return false;
+
+    if (!f.checkWaitWakeResult(ret))
+        return false;
+
+    f.iter().setResult(ret);
+    return true;
+}
+
+static bool
+EmitWake(FunctionCompiler& f)
+{
+    uint32_t lineOrBytecode = f.readCallSiteLineOrBytecode();
+
+    CallCompileState args(f, lineOrBytecode);
+    if (!f.startCall(&args))
+        return false;
+
+    if (!f.passInstance(&args))
+        return false;
+
+    LinearMemoryAddress<MDefinition*> addr;
+    MDefinition* count;
+    if (!f.iter().readWake(&addr, &count))
+        return false;
+
+    MemoryAccessDesc access(Scalar::Int32, addr.align, addr.offset, Some(f.bytecodeOffset()));
+    MDefinition* ptr = f.computeEffectiveAddress(addr.base, &access);
+    if (!f.inDeadCode() && !ptr)
+        return false;
+
+    if (!f.passArg(ptr, ValType::I32, &args))
+        return false;
+
+    if (!f.passArg(count, ValType::I32, &args))
+        return false;
+
+    if (!f.finishCall(&args))
+        return false;
+
+    MDefinition* ret;
+    if (!f.builtinInstanceMethodCall(SymbolicAddress::Wake, args, ValType::I32, &ret))
+        return false;
+
+    if (!f.checkWaitWakeResult(ret))
+        return false;
+
+    f.iter().setResult(ret);
+    return true;
+}
+
+static bool
+EmitAtomicXchg(FunctionCompiler& f, ValType type, Scalar::Type viewType)
+{
+    LinearMemoryAddress<MDefinition*> addr;
+    MDefinition* value;
+    if (!f.iter().readAtomicRMW(&addr, type, byteSize(viewType), &value))
+        return false;
+
+    MemoryAccessDesc access(viewType, addr.align, addr.offset, Some(f.bytecodeOffset()),
+                            /*numSimdExprs=*/ 0, MembarFull, MembarFull);
+    MDefinition* ins = f.atomicExchangeHeap(addr.base, &access, type, value);
+    if (!f.inDeadCode() && !ins)
+        return false;
+
+    f.iter().setResult(ins);
+    return true;
+}
+
+#endif // ENABLE_WASM_THREAD_OPS
 
 static bool
 EmitBodyExprs(FunctionCompiler& f)
@@ -3668,7 +3952,158 @@ EmitBodyExprs(FunctionCompiler& f)
 
           // Thread operations
           case uint16_t(Op::ThreadPrefix): {
-            MOZ_CRASH("NYI");
+#ifdef ENABLE_WASM_THREAD_OPS
+            switch (op.b1) {
+              case uint16_t(ThreadOp::Wake):
+                CHECK(EmitWake(f));
+
+              case uint16_t(ThreadOp::I32Wait):
+                CHECK(EmitWait(f, ValType::I32, 4));
+              case uint16_t(ThreadOp::I64Wait):
+                CHECK(EmitWait(f, ValType::I64, 8));
+
+              case uint16_t(ThreadOp::I32AtomicLoad):
+                CHECK(EmitAtomicLoad(f, ValType::I32, Scalar::Int32));
+              case uint16_t(ThreadOp::I64AtomicLoad):
+                CHECK(EmitAtomicLoad(f, ValType::I64, Scalar::Int64));
+              case uint16_t(ThreadOp::I32AtomicLoad8U):
+                CHECK(EmitAtomicLoad(f, ValType::I32, Scalar::Uint8));
+              case uint16_t(ThreadOp::I32AtomicLoad16U):
+                CHECK(EmitAtomicLoad(f, ValType::I32, Scalar::Uint16));
+              case uint16_t(ThreadOp::I64AtomicLoad8U):
+                CHECK(EmitAtomicLoad(f, ValType::I64, Scalar::Uint8));
+              case uint16_t(ThreadOp::I64AtomicLoad16U):
+                CHECK(EmitAtomicLoad(f, ValType::I64, Scalar::Uint16));
+              case uint16_t(ThreadOp::I64AtomicLoad32U):
+                CHECK(EmitAtomicLoad(f, ValType::I64, Scalar::Uint32));
+
+              case uint16_t(ThreadOp::I32AtomicStore):
+                CHECK(EmitAtomicStore(f, ValType::I32, Scalar::Int32));
+              case uint16_t(ThreadOp::I64AtomicStore):
+                CHECK(EmitAtomicStore(f, ValType::I64, Scalar::Int64));
+              case uint16_t(ThreadOp::I32AtomicStore8U):
+                CHECK(EmitAtomicStore(f, ValType::I32, Scalar::Uint8));
+              case uint16_t(ThreadOp::I32AtomicStore16U):
+                CHECK(EmitAtomicStore(f, ValType::I32, Scalar::Uint16));
+              case uint16_t(ThreadOp::I64AtomicStore8U):
+                CHECK(EmitAtomicStore(f, ValType::I64, Scalar::Uint8));
+              case uint16_t(ThreadOp::I64AtomicStore16U):
+                CHECK(EmitAtomicStore(f, ValType::I64, Scalar::Uint16));
+              case uint16_t(ThreadOp::I64AtomicStore32U):
+                CHECK(EmitAtomicStore(f, ValType::I64, Scalar::Uint32));
+
+              case uint16_t(ThreadOp::I32AtomicAdd):
+                CHECK(EmitAtomicRMW(f, ValType::I32, Scalar::Int32, AtomicFetchAddOp));
+              case uint16_t(ThreadOp::I64AtomicAdd):
+                CHECK(EmitAtomicRMW(f, ValType::I64, Scalar::Int64, AtomicFetchAddOp));
+              case uint16_t(ThreadOp::I32AtomicAdd8U):
+                CHECK(EmitAtomicRMW(f, ValType::I32, Scalar::Uint8, AtomicFetchAddOp));
+              case uint16_t(ThreadOp::I32AtomicAdd16U):
+                CHECK(EmitAtomicRMW(f, ValType::I32, Scalar::Uint16, AtomicFetchAddOp));
+              case uint16_t(ThreadOp::I64AtomicAdd8U):
+                CHECK(EmitAtomicRMW(f, ValType::I64, Scalar::Uint8, AtomicFetchAddOp));
+              case uint16_t(ThreadOp::I64AtomicAdd16U):
+                CHECK(EmitAtomicRMW(f, ValType::I64, Scalar::Uint16, AtomicFetchAddOp));
+              case uint16_t(ThreadOp::I64AtomicAdd32U):
+                CHECK(EmitAtomicRMW(f, ValType::I64, Scalar::Uint32, AtomicFetchAddOp));
+
+              case uint16_t(ThreadOp::I32AtomicSub):
+                CHECK(EmitAtomicRMW(f, ValType::I32, Scalar::Int32, AtomicFetchSubOp));
+              case uint16_t(ThreadOp::I64AtomicSub):
+                CHECK(EmitAtomicRMW(f, ValType::I64, Scalar::Int64, AtomicFetchSubOp));
+              case uint16_t(ThreadOp::I32AtomicSub8U):
+                CHECK(EmitAtomicRMW(f, ValType::I32, Scalar::Uint8, AtomicFetchSubOp));
+              case uint16_t(ThreadOp::I32AtomicSub16U):
+                CHECK(EmitAtomicRMW(f, ValType::I32, Scalar::Uint16, AtomicFetchSubOp));
+              case uint16_t(ThreadOp::I64AtomicSub8U):
+                CHECK(EmitAtomicRMW(f, ValType::I64, Scalar::Uint8, AtomicFetchSubOp));
+              case uint16_t(ThreadOp::I64AtomicSub16U):
+                CHECK(EmitAtomicRMW(f, ValType::I64, Scalar::Uint16, AtomicFetchSubOp));
+              case uint16_t(ThreadOp::I64AtomicSub32U):
+                CHECK(EmitAtomicRMW(f, ValType::I64, Scalar::Uint32, AtomicFetchSubOp));
+
+              case uint16_t(ThreadOp::I32AtomicAnd):
+                CHECK(EmitAtomicRMW(f, ValType::I32, Scalar::Int32, AtomicFetchAndOp));
+              case uint16_t(ThreadOp::I64AtomicAnd):
+                CHECK(EmitAtomicRMW(f, ValType::I64, Scalar::Int64, AtomicFetchAndOp));
+              case uint16_t(ThreadOp::I32AtomicAnd8U):
+                CHECK(EmitAtomicRMW(f, ValType::I32, Scalar::Uint8, AtomicFetchAndOp));
+              case uint16_t(ThreadOp::I32AtomicAnd16U):
+                CHECK(EmitAtomicRMW(f, ValType::I32, Scalar::Uint16, AtomicFetchAndOp));
+              case uint16_t(ThreadOp::I64AtomicAnd8U):
+                CHECK(EmitAtomicRMW(f, ValType::I64, Scalar::Uint8, AtomicFetchAndOp));
+              case uint16_t(ThreadOp::I64AtomicAnd16U):
+                CHECK(EmitAtomicRMW(f, ValType::I64, Scalar::Uint16, AtomicFetchAndOp));
+              case uint16_t(ThreadOp::I64AtomicAnd32U):
+                CHECK(EmitAtomicRMW(f, ValType::I64, Scalar::Uint32, AtomicFetchAndOp));
+
+              case uint16_t(ThreadOp::I32AtomicOr):
+                CHECK(EmitAtomicRMW(f, ValType::I32, Scalar::Int32, AtomicFetchOrOp));
+              case uint16_t(ThreadOp::I64AtomicOr):
+                CHECK(EmitAtomicRMW(f, ValType::I64, Scalar::Int64, AtomicFetchOrOp));
+              case uint16_t(ThreadOp::I32AtomicOr8U):
+                CHECK(EmitAtomicRMW(f, ValType::I32, Scalar::Uint8, AtomicFetchOrOp));
+              case uint16_t(ThreadOp::I32AtomicOr16U):
+                CHECK(EmitAtomicRMW(f, ValType::I32, Scalar::Uint16, AtomicFetchOrOp));
+              case uint16_t(ThreadOp::I64AtomicOr8U):
+                CHECK(EmitAtomicRMW(f, ValType::I64, Scalar::Uint8, AtomicFetchOrOp));
+              case uint16_t(ThreadOp::I64AtomicOr16U):
+                CHECK(EmitAtomicRMW(f, ValType::I64, Scalar::Uint16, AtomicFetchOrOp));
+              case uint16_t(ThreadOp::I64AtomicOr32U):
+                CHECK(EmitAtomicRMW(f, ValType::I64, Scalar::Uint32, AtomicFetchOrOp));
+
+              case uint16_t(ThreadOp::I32AtomicXor):
+                CHECK(EmitAtomicRMW(f, ValType::I32, Scalar::Int32, AtomicFetchXorOp));
+              case uint16_t(ThreadOp::I64AtomicXor):
+                CHECK(EmitAtomicRMW(f, ValType::I64, Scalar::Int64, AtomicFetchXorOp));
+              case uint16_t(ThreadOp::I32AtomicXor8U):
+                CHECK(EmitAtomicRMW(f, ValType::I32, Scalar::Uint8, AtomicFetchXorOp));
+              case uint16_t(ThreadOp::I32AtomicXor16U):
+                CHECK(EmitAtomicRMW(f, ValType::I32, Scalar::Uint16, AtomicFetchXorOp));
+              case uint16_t(ThreadOp::I64AtomicXor8U):
+                CHECK(EmitAtomicRMW(f, ValType::I64, Scalar::Uint8, AtomicFetchXorOp));
+              case uint16_t(ThreadOp::I64AtomicXor16U):
+                CHECK(EmitAtomicRMW(f, ValType::I64, Scalar::Uint16, AtomicFetchXorOp));
+              case uint16_t(ThreadOp::I64AtomicXor32U):
+                CHECK(EmitAtomicRMW(f, ValType::I64, Scalar::Uint32, AtomicFetchXorOp));
+
+              case uint16_t(ThreadOp::I32AtomicXchg):
+                CHECK(EmitAtomicXchg(f, ValType::I32, Scalar::Int32));
+              case uint16_t(ThreadOp::I64AtomicXchg):
+                CHECK(EmitAtomicXchg(f, ValType::I64, Scalar::Int64));
+              case uint16_t(ThreadOp::I32AtomicXchg8U):
+                CHECK(EmitAtomicXchg(f, ValType::I32, Scalar::Uint8));
+              case uint16_t(ThreadOp::I32AtomicXchg16U):
+                CHECK(EmitAtomicXchg(f, ValType::I32, Scalar::Uint16));
+              case uint16_t(ThreadOp::I64AtomicXchg8U):
+                CHECK(EmitAtomicXchg(f, ValType::I64, Scalar::Uint8));
+              case uint16_t(ThreadOp::I64AtomicXchg16U):
+                CHECK(EmitAtomicXchg(f, ValType::I64, Scalar::Uint16));
+              case uint16_t(ThreadOp::I64AtomicXchg32U):
+                CHECK(EmitAtomicXchg(f, ValType::I64, Scalar::Uint32));
+
+              case uint16_t(ThreadOp::I32AtomicCmpXchg):
+                CHECK(EmitAtomicCmpXchg(f, ValType::I32, Scalar::Int32));
+              case uint16_t(ThreadOp::I64AtomicCmpXchg):
+                CHECK(EmitAtomicCmpXchg(f, ValType::I64, Scalar::Int64));
+              case uint16_t(ThreadOp::I32AtomicCmpXchg8U):
+                CHECK(EmitAtomicCmpXchg(f, ValType::I32, Scalar::Uint8));
+              case uint16_t(ThreadOp::I32AtomicCmpXchg16U):
+                CHECK(EmitAtomicCmpXchg(f, ValType::I32, Scalar::Uint16));
+              case uint16_t(ThreadOp::I64AtomicCmpXchg8U):
+                CHECK(EmitAtomicCmpXchg(f, ValType::I64, Scalar::Uint8));
+              case uint16_t(ThreadOp::I64AtomicCmpXchg16U):
+                CHECK(EmitAtomicCmpXchg(f, ValType::I64, Scalar::Uint16));
+              case uint16_t(ThreadOp::I64AtomicCmpXchg32U):
+                CHECK(EmitAtomicCmpXchg(f, ValType::I64, Scalar::Uint32));
+
+              default:
+                return f.iter().unrecognizedOpcode(&op);
+            }
+#else
+            return f.iter().unrecognizedOpcode(&op);
+#endif  // ENABLE_WASM_THREAD_OPS
+            break;
           }
 
           // asm.js-specific operators

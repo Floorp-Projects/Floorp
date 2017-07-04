@@ -23,6 +23,11 @@
     _(DivOrModI64)                 \
     _(UDivOrModI64)                \
     _(WasmTruncateToInt64)         \
+    _(WasmAtomicLoadI64)           \
+    _(WasmAtomicStoreI64)          \
+    _(WasmCompareExchangeI64)      \
+    _(WasmAtomicBinopI64)          \
+    _(WasmAtomicExchangeI64)       \
     _(WasmUnalignedLoad)           \
     _(WasmUnalignedStore)          \
     _(WasmUnalignedLoadI64)        \
