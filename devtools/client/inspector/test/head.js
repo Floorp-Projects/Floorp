@@ -710,7 +710,7 @@ function* assertShowPreviewTooltip(view, target) {
 
   let name = "previewTooltip";
   ok(view.tooltips._instances.has(name),
-    `Tooltip '${name}' has been instanciated`);
+    `Tooltip '${name}' has been instantiated`);
   let tooltip = view.tooltips.getTooltip(name);
 
   if (!tooltip.isVisible()) {
