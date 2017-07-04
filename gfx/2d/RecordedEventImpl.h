@@ -1248,8 +1248,9 @@ RecordedEvent::RecordPatternData(S &aStream, const PatternStorage &aPattern) con
   }
 }
 
-inline void
-RecordedEvent::ReadPatternData(std::istream &aStream, PatternStorage &aPattern) const
+template<class S>
+void
+RecordedEvent::ReadPatternData(S &aStream, PatternStorage &aPattern) const
 {
   ReadElement(aStream, aPattern.mType);
 
@@ -1354,8 +1355,9 @@ RecordedEvent::RecordStrokeOptions(S &aStream, const StrokeOptions &aStrokeOptio
   aStream.write((char*)aStrokeOptions.mDashPattern, sizeof(Float) * aStrokeOptions.mDashLength);
 }
 
-inline void
-RecordedEvent::ReadStrokeOptions(std::istream &aStream, StrokeOptions &aStrokeOptions)
+template<class S>
+void
+RecordedEvent::ReadStrokeOptions(S &aStream, StrokeOptions &aStrokeOptions)
 {
   uint64_t dashLength;
   JoinStyle joinStyle;
