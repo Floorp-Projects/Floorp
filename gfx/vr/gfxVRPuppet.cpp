@@ -465,9 +465,11 @@ VRDisplayPuppet::SubmitFrame(TextureSourceD3D11* aSource,
   // return true to indicate that we have blocked.
   return false;
 }
-#else
+
+#elif defined(XP_MACOSX)
+
 bool
-VRDisplayPuppet::SubmitFrame(TextureSourceOGL* aSource,
+VRDisplayPuppet::SubmitFrame(MacIOSurface* aMacIOSurface,
                              const IntSize& aSize,
                              const gfx::Rect& aLeftEyeRect,
                              const gfx::Rect& aRightEyeRect)
@@ -481,6 +483,7 @@ VRDisplayPuppet::SubmitFrame(TextureSourceOGL* aSource,
 
   return false;
 }
+
 #endif
 
 void

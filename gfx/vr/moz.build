@@ -30,9 +30,15 @@ UNIFIED_SOURCES += [
     'ipc/VRManagerChild.cpp',
     'ipc/VRManagerParent.cpp',
     'VRDisplayClient.cpp',
-    'VRDisplayHost.cpp',
     'VRDisplayPresentation.cpp',
     'VRManager.cpp',
+]
+
+# VRDisplayHost includes MacIOSurface.h which includes Mac headers
+# which define Size and Points types in the root namespace that
+# often conflict with our own types.
+SOURCES += [
+    'VRDisplayHost.cpp',
 ]
 
 # Build OpenVR on Windows, Linux, and macOS desktop targets

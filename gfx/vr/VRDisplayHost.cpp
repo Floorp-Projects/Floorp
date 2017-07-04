@@ -6,6 +6,8 @@
 #include "VRDisplayHost.h"
 #include "gfxVR.h"
 #include "ipc/VRLayerParent.h"
+#include "mozilla/layers/TextureHost.h"
+#include "mozilla/dom/GamepadBinding.h" // For GamepadMappingType
 
 #if defined(XP_WIN)
 
@@ -13,6 +15,10 @@
 #include "gfxWindowsPlatform.h"
 #include "../layers/d3d11/CompositorD3D11.h"
 #include "mozilla/layers/TextureD3D11.h"
+
+#elif defined(XP_MACOSX)
+
+#include "mozilla/gfx/MacIOSurface.h"
 
 #endif
 
@@ -152,8 +158,6 @@ VRDisplayHost::NotifyVSync()
   }
 }
 
-#if defined(XP_WIN)
-
 void
 VRDisplayHost::SubmitFrame(VRLayerParent* aLayer, PTextureParent* aTexture,
                            const gfx::Rect& aLeftEyeRect,
@@ -170,7 +174,10 @@ VRDisplayHost::SubmitFrame(VRLayerParent* aLayer, PTextureParent* aTexture,
   }
   mFrameStarted = false;
 
+#if defined(XP_WIN)
+
   TextureHost* th = TextureHost::AsTextureHost(aTexture);
+
   // WebVR doesn't use the compositor to compose the frame, so use
   // AutoLockTextureHostWithoutCompositor here.
   AutoLockTextureHostWithoutCompositor autoLock(th);
@@ -190,13 +197,38 @@ VRDisplayHost::SubmitFrame(VRLayerParent* aLayer, PTextureParent* aTexture,
 
   TextureSourceD3D11* sourceD3D11 = source->AsSourceD3D11();
   if (!sourceD3D11) {
-    NS_WARNING("WebVR support currently only implemented for D3D11");
+    NS_WARNING("VRDisplayHost::SubmitFrame failed to get a TextureSourceD3D11");
     return;
   }
 
   if (!SubmitFrame(sourceD3D11, texSize, aLeftEyeRect, aRightEyeRect)) {
     return;
   }
+
+#elif defined(XP_MACOSX)
+
+  TextureHost* th = TextureHost::AsTextureHost(aTexture);
+
+  MacIOSurface* surf = th->GetMacIOSurface();
+  if (!surf) {
+    NS_WARNING("VRDisplayHost::SubmitFrame failed to get a MacIOSurface");
+    return;
+  }
+
+  IntSize texSize = gfx::IntSize(surf->GetDevicePixelWidth(),
+                                 surf->GetDevicePixelHeight());
+
+  if (!SubmitFrame(surf, texSize, aLeftEyeRect, aRightEyeRect)) {
+    return;
+  }
+
+#else
+
+  NS_WARNING("WebVR is not supported on this platform.");
+  return;
+#endif
+
+#if defined(XP_WIN) || defined(XP_MACOSX)
 
   /**
    * Trigger the next VSync immediately after we are successfully
@@ -211,19 +243,8 @@ VRDisplayHost::SubmitFrame(VRLayerParent* aLayer, PTextureParent* aTexture,
   VRManager *vm = VRManager::Get();
   MOZ_ASSERT(vm);
   vm->NotifyVRVsync(mDisplayInfo.mDisplayID);
-}
-
-#else
-
-void
-VRDisplayHost::SubmitFrame(VRLayerParent* aLayer, PTextureParent* aTexture,
-                           const gfx::Rect& aLeftEyeRect,
-                           const gfx::Rect& aRightEyeRect)
-{
-  NS_WARNING("WebVR only supported in Windows.");
-}
-
 #endif
+}
 
 bool
 VRDisplayHost::CheckClearDisplayInfoDirty()
