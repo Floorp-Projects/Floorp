@@ -621,23 +621,22 @@ void ProfileBuffer::StreamSamplesToJSON(SpliceableJSONWriter& aWriter, int aThre
           sample.emplace();
           sample->mTime = currentTime;
 
-          // Seek forward through the entire sample, looking for frames
-          // this is an easier approach to reason about than adding more
-          // control variables and cases to the loop that goes through the buffer once
+          // Process all the remaining entries within this sample.
 
           UniqueStacks::Stack stack =
             aUniqueStacks.BeginStack(UniqueStacks::OnStackFrameKey("(root)"));
 
-          int framePos = (readPos + 1) % mEntrySize;
-          ProfileBufferEntry frame = mEntries[framePos];
-          while (framePos != mWritePos && !frame.isSample() && !frame.isThreadId()) {
+          int entryPos = (readPos + 1) % mEntrySize;
+          ProfileBufferEntry entry = mEntries[entryPos];
+          while (entryPos != mWritePos && !entry.isSample() &&
+                 !entry.isThreadId()) {
             int incBy = 1;
-            frame = mEntries[framePos];
+            entry = mEntries[entryPos];
 
             // Read ahead to the next entry. If it's an EmbeddedString entry
             // process it now.
-            const char* string = frame.u.mString;
-            int readAheadPos = (framePos + 1) % mEntrySize;
+            const char* string = entry.u.mString;
+            int readAheadPos = (entryPos + 1) % mEntrySize;
             // Make sure the string is always null terminated if it fills up
             // DYNAMIC_MAX_STRING-2
             strbuf[DYNAMIC_MAX_STRING-1] = '\0';
@@ -648,30 +647,30 @@ void ProfileBuffer::StreamSamplesToJSON(SpliceableJSONWriter& aWriter, int aThre
                 processEmbeddedString(readAheadPos, &incBy, strbuf.get());
             }
 
-            // Write one frame. It can have either
+            // Write one entry. It can have either
             // 1. only location - a NativeLeafAddr containing a memory address
             // 2. location and line number - a CodeLocation followed by
             //    EmbeddedStrings, an optional LineNumber and an
             //    optional Category
             // 3. a JitReturnAddress containing a native code address
-            if (frame.isNativeLeafAddr()) {
+            if (entry.isNativeLeafAddr()) {
               // Bug 753041
               // We need a double cast here to tell GCC that we don't want to sign
               // extend 32-bit addresses starting with 0xFXXXXXX.
               unsigned long long pc =
-                (unsigned long long)(uintptr_t)frame.u.mPtr;
+                (unsigned long long)(uintptr_t)entry.u.mPtr;
               snprintf(strbuf.get(), DYNAMIC_MAX_STRING, "%#llx", pc);
               stack.AppendFrame(UniqueStacks::OnStackFrameKey(strbuf.get()));
 
-            } else if (frame.isCodeLocation()) {
+            } else if (entry.isCodeLocation()) {
               UniqueStacks::OnStackFrameKey frameKey(string);
-              readAheadPos = (framePos + incBy) % mEntrySize;
+              readAheadPos = (entryPos + incBy) % mEntrySize;
               if (readAheadPos != mWritePos &&
                   mEntries[readAheadPos].isLineNumber()) {
                 frameKey.mLine = Some((unsigned) mEntries[readAheadPos].u.mInt);
                 incBy++;
               }
-              readAheadPos = (framePos + incBy) % mEntrySize;
+              readAheadPos = (entryPos + incBy) % mEntrySize;
               if (readAheadPos != mWritePos &&
                   mEntries[readAheadPos].isCategory()) {
                 frameKey.mCategory =
@@ -680,9 +679,9 @@ void ProfileBuffer::StreamSamplesToJSON(SpliceableJSONWriter& aWriter, int aThre
               }
               stack.AppendFrame(frameKey);
 
-            } else if (frame.isJitReturnAddr()) {
+            } else if (entry.isJitReturnAddr()) {
               // A JIT frame may expand to multiple frames due to inlining.
-              void* pc = frame.u.mPtr;
+              void* pc = entry.u.mPtr;
               unsigned depth = aUniqueStacks.LookupJITFrameDepth(pc);
               if (depth == 0) {
                 StreamJSFramesOp framesOp(pc, stack);
@@ -696,7 +695,7 @@ void ProfileBuffer::StreamSamplesToJSON(SpliceableJSONWriter& aWriter, int aThre
                 }
               }
             }
-            framePos = (framePos + incBy) % mEntrySize;
+            entryPos = (entryPos + incBy) % mEntrySize;
           }
 
           sample->mStack = stack.GetOrAddIndex();
