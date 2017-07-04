@@ -176,7 +176,7 @@ sub genTest {
   <meta http-equiv="Content-type" content="text/html; charset=utf-8">
   <style type="text/css">
    \@font-face { font-family: foo; src: url($testFont); }
-   p { font-family: foo; text-transform: ${whichMapping}case; }
+   p { font-family: foo; font-size: 12px; text-transform: ${whichMapping}case; }
   </style>
  </head>
  <body>
@@ -202,7 +202,7 @@ __END__
   <meta http-equiv="Content-type" content="text/html; charset=utf-8">
   <style type="text/css">
    \@font-face { font-family: foo; src: url($testFont); }
-   p { font-family: foo; }
+   p { font-family: foo; font-size: 12px; }
   </style>
  </head>
  <body>
