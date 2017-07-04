@@ -1068,7 +1068,7 @@ HTMLContentSink::FlushPendingNotifications(FlushType aType)
         FlushTags();
       }
     }
-    if (aType >= FlushType::InterruptibleLayout) {
+    if (aType >= FlushType::EnsurePresShellInitAndFrames) {
       // Make sure that layout has started so that the reflow flush
       // will actually happen.
       StartLayout(true);
