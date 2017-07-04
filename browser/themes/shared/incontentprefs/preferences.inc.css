@@ -673,3 +673,7 @@ menulist[indicator=true] > menupopup menuitem[indicator=true]:not([image]) > .me
 menulist[indicator=true] > menupopup menuitem[indicator=true]:not([image]) > .menu-iconic-left > .menu-iconic-icon:-moz-locale-dir(rtl) {
   transform: scaleX(-1);
 }
+
+.menu-iconic-highlightable-text {
+  margin: 0; /* Align with the margin of xul:label.menu-iconic-text */
+}
