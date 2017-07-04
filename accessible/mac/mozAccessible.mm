@@ -798,7 +798,7 @@ ConvertToNSArray(nsTArray<ProxyAccessible*>& aArray)
     if (roleAtom == nsGkAtoms::note_)
       return @"AXDocumentNote";
     if (roleAtom == nsGkAtoms::region)
-      return @"AXDocumentRegion";
+      return @"AXLandmarkRegion";
     if (roleAtom == nsGkAtoms::status)
       return @"AXApplicationStatus";
     if (roleAtom == nsGkAtoms::tabpanel)
@@ -952,7 +952,6 @@ static const RoleDescrMap sRoleDescrMap[] = {
   { @"AXDocumentArticle", NS_LITERAL_STRING("article") },
   { @"AXDocumentMath", NS_LITERAL_STRING("math") },
   { @"AXDocumentNote", NS_LITERAL_STRING("note") },
-  { @"AXDocumentRegion", NS_LITERAL_STRING("region") },
   { @"AXLandmarkApplication", NS_LITERAL_STRING("application") },
   { @"AXLandmarkBanner", NS_LITERAL_STRING("banner") },
   { @"AXLandmarkComplementary", NS_LITERAL_STRING("complementary") },
