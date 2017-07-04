@@ -149,7 +149,9 @@
 %define HAVE_SYS_TIME_H 0
 %define HAVE_SYS_UN_H 0
 %define HAVE_SYS_VIDEOIO_H 0
+%ifndef HAVE_UNISTD_H
 %define HAVE_UNISTD_H 0
+%endif
 %define HAVE_WINDOWS_H 1
 %define HAVE_WINSOCK2_H 1
 %define HAVE_INTRINSICS_NEON 0
