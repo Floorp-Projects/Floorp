@@ -43,6 +43,12 @@ ProfileBufferEntry::ProfileBufferEntry(Kind aKind, const char *aString)
   u.mString = aString;
 }
 
+ProfileBufferEntry::ProfileBufferEntry(Kind aKind, char aChars[kNumChars])
+  : mKind(aKind)
+{
+  memcpy(u.mChars, aChars, kNumChars);
+}
+
 ProfileBufferEntry::ProfileBufferEntry(Kind aKind, void* aPtr)
   : mKind(aKind)
 {
