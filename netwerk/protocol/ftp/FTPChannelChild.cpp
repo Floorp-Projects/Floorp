@@ -5,7 +5,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/SystemGroup.h"
 #include "mozilla/net/NeckoChild.h"
 #include "mozilla/net/ChannelDiverterChild.h"
 #include "mozilla/net/FTPChannelChild.h"
@@ -34,8 +33,7 @@ namespace mozilla {
 namespace net {
 
 FTPChannelChild::FTPChannelChild(nsIURI* uri)
-: NeckoTargetHolder(nullptr)
-, mIPCOpen(false)
+: mIPCOpen(false)
 , mUnknownDecoderInvolved(false)
 , mCanceled(false)
 , mSuspendCount(0)
@@ -206,7 +204,7 @@ FTPChannelChild::AsyncOpen(::nsIStreamListener* listener, nsISupports* aContext)
   NS_ENSURE_SUCCESS(rv, rv);
 
   // This must happen before the constructor message is sent.
-  EnsureNeckoTarget();
+  SetupNeckoTarget();
 
   gNeckoChild->
     SendPFTPChannelConstructor(this, tabChild, IPC::SerializedLoadContext(this),
@@ -615,15 +613,7 @@ FTPChannelChild::DoOnStopRequest(const nsresult& aChannelStatus,
                              NS_ConvertASCIItoUTF16(aErrorMsg));
         }
 
-        if (mNeckoTarget) {
-          mNeckoTarget->Dispatch(alertEvent.forget(),
-                                 nsIEventTarget::DISPATCH_NORMAL);
-        } else {
-          // In case |mNeckoTarget| is null, dispatch by SystemGroup.
-          SystemGroup::Dispatch("FTPAlertEvent",
-                                TaskCategory::Other,
-                                alertEvent.forget());
-        }
+        Dispatch(alertEvent.forget());
       }
     }
 
@@ -837,7 +827,7 @@ FTPChannelChild::ConnectParent(uint32_t id)
   }
 
   // This must happen before the constructor message is sent.
-  EnsureNeckoTarget();
+  SetupNeckoTarget();
 
   // The socket transport in the chrome process now holds a logical ref to us
   // until OnStopRequest, or we do a redirect, or we hit an IPDL error.
@@ -946,7 +936,7 @@ FTPChannelChild::GetDivertingToParent(bool* aDiverting)
 }
 
 void
-FTPChannelChild::EnsureNeckoTarget()
+FTPChannelChild::SetupNeckoTarget()
 {
   if (mNeckoTarget) {
     return;

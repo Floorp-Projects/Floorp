@@ -52,7 +52,8 @@ private:
 // nsBaseChannel
 
 nsBaseChannel::nsBaseChannel()
-  : mPumpingData(false)
+  : NeckoTargetHolder(nullptr)
+  , mPumpingData(false)
   , mLoadFlags(LOAD_NORMAL)
   , mQueriedProgressSink(true)
   , mSynthProgressEvents(false)
@@ -261,7 +262,8 @@ nsBaseChannel::BeginPumpingData()
   NS_ASSERTION(!stream || !channel, "Got both a channel and a stream?");
 
   if (channel) {
-      rv = NS_DispatchToCurrentThread(new RedirectRunnable(this, channel));
+      nsCOMPtr<nsIRunnable> runnable = new RedirectRunnable(this, channel);
+      rv = Dispatch(runnable.forget());
       if (NS_SUCCEEDED(rv))
           mWaitingOnAsyncRedirect = true;
       return rv;
@@ -273,8 +275,7 @@ nsBaseChannel::BeginPumpingData()
   // and especially when we call into the loadgroup.  Our caller takes care to
   // release mPump if we return an error.
 
-  nsCOMPtr<nsIEventTarget> target =
-    nsContentUtils::GetEventTargetByLoadInfo(mLoadInfo, TaskCategory::Other);
+  nsCOMPtr<nsIEventTarget> target = GetNeckoTarget();
   rv = nsInputStreamPump::Create(getter_AddRefs(mPump), stream, -1, -1, 0, 0,
                                  true, target);
   if (NS_SUCCEEDED(rv)) {
@@ -503,6 +504,9 @@ NS_IMETHODIMP
 nsBaseChannel::SetLoadInfo(nsILoadInfo* aLoadInfo)
 {
   mLoadInfo = aLoadInfo;
+
+  // Need to update |mNeckoTarget| when load info has changed.
+  SetupNeckoTarget();
   return NS_OK;
 }
 
@@ -682,6 +686,8 @@ nsBaseChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *ctxt)
   NS_ENSURE_TRUE(!mPumpingData, NS_ERROR_IN_PROGRESS);
   NS_ENSURE_TRUE(!mWasOpened, NS_ERROR_ALREADY_OPENED);
   NS_ENSURE_ARG(listener);
+
+  SetupNeckoTarget();
 
   // Skip checking for chrome:// sub-resources.
   nsAutoCString scheme;
@@ -923,7 +929,7 @@ nsBaseChannel::OnDataAvailable(nsIRequest *request, nsISupports *ctxt,
 
       nsCOMPtr<nsIRunnable> runnable =
         new OnTransportStatusAsyncEvent(this, prog, mContentLength);
-      NS_DispatchToMainThread(runnable);
+      Dispatch(runnable.forget());
     }
   }
 
@@ -981,4 +987,11 @@ nsBaseChannel::CheckListenerChain()
   }
 
   return listener->CheckListenerChain();
+}
+
+void
+nsBaseChannel::SetupNeckoTarget()
+{
+  mNeckoTarget =
+    nsContentUtils::GetEventTargetByLoadInfo(mLoadInfo, TaskCategory::Other);
 }
