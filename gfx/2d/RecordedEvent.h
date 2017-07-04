@@ -274,11 +274,13 @@ public:
 
   template<class S>
   void RecordPatternData(S &aStream, const PatternStorage &aPatternStorage) const;
-  void ReadPatternData(std::istream &aStream, PatternStorage &aPatternStorage) const;
+  template<class S>
+  void ReadPatternData(S &aStream, PatternStorage &aPatternStorage) const;
   void StorePattern(PatternStorage &aDestination, const Pattern &aSource) const;
   template<class S>
   void RecordStrokeOptions(S &aStream, const StrokeOptions &aStrokeOptions) const;
-  void ReadStrokeOptions(std::istream &aStream, StrokeOptions &aStrokeOptions);
+  template<class S>
+  void ReadStrokeOptions(S &aStream, StrokeOptions &aStrokeOptions);
 
   virtual std::string GetName() const = 0;
 
