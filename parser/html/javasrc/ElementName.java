@@ -22,6 +22,22 @@
 
 package nu.validator.htmlparser.impl;
 
+// uncomment to regenerate self
+//import java.io.BufferedReader;
+//import java.io.File;
+//import java.io.FileInputStream;
+//import java.io.IOException;
+//import java.io.InputStreamReader;
+//import java.util.Arrays;
+//import java.util.Collections;
+//import java.util.HashMap;
+//import java.util.LinkedList;
+//import java.util.List;
+//import java.util.Map;
+//import java.util.Map.Entry;
+//import java.util.regex.Matcher;
+//import java.util.regex.Pattern;
+
 import nu.validator.htmlparser.annotation.Inline;
 import nu.validator.htmlparser.annotation.Local;
 import nu.validator.htmlparser.annotation.NoLength;
@@ -29,7 +45,7 @@ import nu.validator.htmlparser.annotation.Unsigned;
 import nu.validator.htmlparser.common.Interner;
 
 public final class ElementName
-// uncomment when regenerating self
+        // uncomment when regenerating self
 //        implements Comparable<ElementName>
 {
 
@@ -39,14 +55,14 @@ public final class ElementName
     public static final int GROUP_MASK = 127;
 
     /**
-     * Indicates that the element is not a pre-interned element. Forbidden
-     * on preinterned elements.
+     * Indicates that the element is not a pre-interned element. Forbidden on
+     * preinterned elements.
      */
     public static final int NOT_INTERNED = (1 << 30);
 
     /**
-     * Indicates that the element is in the "special" category. This bit
-     * should not be pre-set on MathML or SVG specials--only on HTML specials.
+     * Indicates that the element is in the "special" category. This bit should
+     * not be pre-set on MathML or SVG specials--only on HTML specials.
      */
     public static final int SPECIAL = (1 << 29);
 
@@ -57,8 +73,8 @@ public final class ElementName
     public static final int FOSTER_PARENTING = (1 << 28);
 
     /**
-     * The element is scoping. This bit should be pre-set on elements
-     * that are scoping as HTML.
+     * The element is scoping. This bit should be pre-set on elements that are
+     * scoping as HTML.
      */
     public static final int SCOPING = (1 << 27);
 
@@ -86,6 +102,10 @@ public final class ElementName
 
     private @Local String camelCaseName;
 
+    // CPPONLY: private @HtmlCreator Object htmlCreator;
+
+    // CPPONLY: private @SvgCreator Object svgCreator;
+
     /**
      * The lowest 7 bits are the dispatch group. The high bits are flags.
      */
@@ -98,6 +118,14 @@ public final class ElementName
     @Inline public @Local String getCamelCaseName() {
         return camelCaseName;
     }
+
+    // CPPONLY: @Inline public @HtmlCreator Object getHtmlCreator() {
+    // CPPONLY: return htmlCreator;
+    // CPPONLY: }
+
+    // CPPONLY: @Inline public @SvgCreator Object getSvgCreator() {
+    // CPPONLY: return svgCreator;
+    // CPPONLY: }
 
     @Inline public int getFlags() {
         return flags;
@@ -129,7 +157,8 @@ public final class ElementName
         return -1;
     }
 
-    @Inline static ElementName elementNameByBuffer(@NoLength char[] buf, int offset, int length, Interner interner) {
+    @Inline static ElementName elementNameByBuffer(@NoLength char[] buf,
+            int offset, int length, Interner interner) {
         @Unsigned int hash = ElementName.bufToHash(buf, length);
         int[] hashes;
         hashes = ElementName.ELEMENT_HASHES;
@@ -154,7 +183,8 @@ public final class ElementName
      * @param len
      * @return
      */
-    @Inline private static @Unsigned int bufToHash(@NoLength char[] buf, int length) {
+    @Inline private static @Unsigned int bufToHash(@NoLength char[] buf,
+            int length) {
         @Unsigned int len = length;
         @Unsigned int first = buf[0];
         first <<= 19;
@@ -184,15 +214,21 @@ public final class ElementName
     }
 
     private ElementName(@Local String name, @Local String camelCaseName,
+            // CPPONLY: @HtmlCreator Object htmlCreator, @SvgCreator Object
+            // CPPONLY: svgCreator,
             int flags) {
         this.name = name;
         this.camelCaseName = camelCaseName;
+        // CPPONLY: this.htmlCreator = htmlCreator;
+        // CPPONLY: this.svgCreator = svgCreator;
         this.flags = flags;
     }
 
     public ElementName() {
         this.name = null;
         this.camelCaseName = null;
+        // CPPONLY: this.htmlCreator = NS_NewHTMLUnknownElement;
+        // CPPONLY: this.svgCreator = NS_NewSVGUnknownElement;
         this.flags = TreeBuilder.OTHER | NOT_INTERNED;
     }
 
@@ -200,26 +236,131 @@ public final class ElementName
         // The translator adds refcount debug code here.
     }
 
-    @Inline public void setNameForNonInterned(@Local String name) {
+    @Inline public void setNameForNonInterned(@Local String name
+    // CPPONLY: , boolean custom
+    ) {
         // No need to worry about refcounting the local name, because in the
         // C++ case the scoped atom table remembers its own atoms.
         this.name = name;
         this.camelCaseName = name;
+        // CPPONLY: if (custom) {
+        // CPPONLY: this.htmlCreator = NS_NewCustomElement;
+        // CPPONLY: } else {
+        // CPPONLY: this.htmlCreator = NS_NewHTMLUnknownElement;
+        // CPPONLY: }
         // The assertion below relies on TreeBuilder.OTHER being zero!
         // TreeBuilder.OTHER isn't referenced here, because it would create
         // a circular C++ header dependency given that this method is inlined.
         assert this.flags == ElementName.NOT_INTERNED;
     }
 
-    public static final ElementName ANNOTATION_XML = new ElementName("annotation-xml", "annotation-xml", TreeBuilder.ANNOTATION_XML | SCOPING_AS_MATHML);
+    // CPPONLY: @Inline public boolean isCustom() {
+    // CPPONLY: return this.htmlCreator == NS_NewCustomElement;
+    // CPPONLY: }
+
+    public static final ElementName ANNOTATION_XML = new ElementName(
+            "annotation-xml", "annotation-xml",
+            // CPPONLY: NS_NewHTMLUnknownElement, NS_NewSVGUnknownElement,
+            TreeBuilder.ANNOTATION_XML | SCOPING_AS_MATHML);
 
     // START CODE ONLY USED FOR GENERATING CODE uncomment and run to regenerate
 
+//    private static final Pattern HTML_TAG_DEF = Pattern.compile(
+//            "^HTML_TAG\\(([^,]+),\\s*([^,]+),\\s*[^,]+\\).*$");
+//
+//    private static final Pattern HTML_HTMLELEMENT_TAG_DEF = Pattern.compile(
+//            "^HTML_HTMLELEMENT_TAG\\(([^\\)]+)\\).*$");
+//
+//    private static final Pattern SVG_TAG_DEF = Pattern.compile(
+//            "^SVG_(?:FROM_PARSER_)?TAG\\(([^,]+),\\s*([^\\)]+)\\).*$");
+//
+//    private static final Map<String, String> htmlMap = new HashMap<String, String>();
+//
+//    private static final Map<String, String> svgMap = new HashMap<String, String>();
+//
+//    private static void ingestHtmlTags(File htmlList) throws IOException {
+//        // This doesn't need to be efficient, so let's make it easy to write.
+//        BufferedReader htmlReader = new BufferedReader(
+//                new InputStreamReader(new FileInputStream(htmlList), "utf-8"));
+//        try {
+//            String line;
+//            while ((line = htmlReader.readLine()) != null) {
+//                if (!line.startsWith("HTML_")) {
+//                    continue;
+//                }
+//                if (line.startsWith("HTML_OTHER")) {
+//                    continue;
+//                }
+//                Matcher m = HTML_TAG_DEF.matcher(line);
+//                if (m.matches()) {
+//                    String iface = m.group(2);
+//                    if ("Unknown".equals(iface)) {
+//                        continue;
+//                    }
+//                    htmlMap.put(m.group(1), "NS_NewHTML" + iface + "Element");
+//                } else {
+//                    m = HTML_HTMLELEMENT_TAG_DEF.matcher(line);
+//                    if (!m.matches()) {
+//                        throw new RuntimeException(
+//                                "Malformed HTML element definition: " + line);
+//                    }
+//                    htmlMap.put(m.group(1), "NS_NewHTMLElement");
+//                }
+//            }
+//        } finally {
+//            htmlReader.close();
+//        }
+//    }
+//
+//    private static void ingestSvgTags(File svgList) throws IOException {
+//        // This doesn't need to be efficient, so let's make it easy to write.
+//        BufferedReader svgReader = new BufferedReader(
+//                new InputStreamReader(new FileInputStream(svgList), "utf-8"));
+//        try {
+//            String line;
+//            while ((line = svgReader.readLine()) != null) {
+//                if (!line.startsWith("SVG_")) {
+//                    continue;
+//                }
+//                Matcher m = SVG_TAG_DEF.matcher(line);
+//                if (!m.matches()) {
+//                    throw new RuntimeException(
+//                            "Malformed SVG element definition: " + line);
+//                }
+//                String name = m.group(1);
+//                if ("svgSwitch".equals(name)) {
+//                    name = "switch";
+//                }
+//                svgMap.put(name, "NS_NewSVG" + m.group(2) + "Element");
+//            }
+//        } finally {
+//            svgReader.close();
+//        }
+//    }
+//
+//    private static String htmlCreator(String name) {
+//        String creator = htmlMap.remove(name);
+//        if (creator != null) {
+//            return creator;
+//        }
+//        return "NS_NewHTMLUnknownElement";
+//    }
+//
+//    private static String svgCreator(String name) {
+//        String creator = svgMap.remove(name);
+//        if (creator != null) {
+//            return creator;
+//        }
+//        return "NS_NewSVGUnknownElement";
+//    }
+//
 //    /**
 //     * @see java.lang.Object#toString()
 //     */
 //    @Override public String toString() {
-//        return "(\"" + name + "\", \"" + camelCaseName + "\", " + decomposedFlags() + ")";
+//        return "(\"" + name + "\", \"" + camelCaseName + "\", \n// CPP"
+//                + "ONLY: " + htmlCreator(name) + ",\n//CPP" + "ONLY: "
+//                + svgCreator(camelCaseName) + ", \n" + decomposedFlags() + ")";
 //    }
 //
 //    private String decomposedFlags() {
@@ -252,7 +393,9 @@ public final class ElementName
 //            char c = name.charAt(i);
 //            if (c == '-') {
 //                if (!"annotation-xml".equals(name)) {
-//                    throw new RuntimeException("Non-annotation-xml element name with hyphen: " + name);
+//                    throw new RuntimeException(
+//                            "Non-annotation-xml element name with hyphen: "
+//                                    + name);
 //                }
 //                buf[i] = '_';
 //            } else if (c >= '0' && c <= '9') {
@@ -312,8 +455,6 @@ public final class ElementName
 //                return "IMAGE";
 //            case TreeBuilder.INPUT:
 //                return "INPUT";
-//            case TreeBuilder.ISINDEX:
-//                return "ISINDEX";
 //            case TreeBuilder.LI:
 //                return "LI";
 //            case TreeBuilder.LINK_OR_BASEFONT_OR_BGSOUND:
@@ -444,9 +585,23 @@ public final class ElementName
 //    /**
 //     * Regenerate self
 //     *
-//     * @param args
+//     * The args should be the paths to m-c files
+//     * parser/htmlparser/nsHTMLTagList.h and dom/svg/SVGTagList.h.
 //     */
 //    public static void main(String[] args) {
+//        File htmlList = new File(args[0]);
+//        File svgList = new File(args[1]);
+//        try {
+//            ingestHtmlTags(htmlList);
+//        } catch (IOException e) {
+//            throw new RuntimeException(e);
+//        }
+//        try {
+//            ingestSvgTags(svgList);
+//        } catch (IOException e) {
+//            throw new RuntimeException(e);
+//        }
+//
 //        Arrays.sort(ELEMENT_NAMES);
 //        for (int i = 0; i < ELEMENT_NAMES.length; i++) {
 //            int hash = ELEMENT_NAMES[i].hash();
@@ -456,26 +611,29 @@ public final class ElementName
 //            }
 //            for (int j = i + 1; j < ELEMENT_NAMES.length; j++) {
 //                if (hash == ELEMENT_NAMES[j].hash()) {
-//                    System.err.println("Hash collision: " + ELEMENT_NAMES[i].name
-//                            + ", " + ELEMENT_NAMES[j].name);
+//                    System.err.println(
+//                            "Hash collision: " + ELEMENT_NAMES[i].name + ", "
+//                                    + ELEMENT_NAMES[j].name);
 //                    return;
 //                }
 //            }
 //        }
 //        for (int i = 0; i < ELEMENT_NAMES.length; i++) {
 //            ElementName el = ELEMENT_NAMES[i];
-//            System.out.println("public static final ElementName "
-//                    + el.constName() + " = new ElementName" + el.toString()
-//                    + ";");
+//            System.out.println(
+//                    "public static final ElementName " + el.constName()
+//                            + " = new ElementName" + el.toString() + ";");
 //        }
 //
 //        LinkedList<ElementName> sortedNames = new LinkedList<ElementName>();
 //        Collections.addAll(sortedNames, ELEMENT_NAMES);
 //        ElementName[] levelOrder = new ElementName[ELEMENT_NAMES.length];
-//        int bstDepth = (int) Math.ceil(Math.log(ELEMENT_NAMES.length) / Math.log(2));
+//        int bstDepth = (int) Math.ceil(
+//                Math.log(ELEMENT_NAMES.length) / Math.log(2));
 //        fillLevelOrderArray(sortedNames, bstDepth, 0, levelOrder);
 //
-//        System.out.println("private final static @NoLength ElementName[] ELEMENT_NAMES = {");
+//        System.out.println(
+//                "private final static @NoLength ElementName[] ELEMENT_NAMES = {");
 //        for (int i = 0; i < levelOrder.length; i++) {
 //            ElementName el = levelOrder[i];
 //            System.out.println(el.constName() + ",");
@@ -487,620 +645,1207 @@ public final class ElementName
 //            System.out.println(Integer.toString(el.hash()) + ",");
 //        }
 //        System.out.println("};");
+//
+//        for (Entry<String, String> entry : htmlMap.entrySet()) {
+//            System.err.println("Missing HTML element: " + entry.getKey());
+//        }
+//        for (Entry<String, String> entry : svgMap.entrySet()) {
+//            System.err.println("Missing SVG element: " + entry.getKey());
+//        }
 //    }
 
     // START GENERATED CODE
-    public static final ElementName BIG = new ElementName("big", "big", TreeBuilder.B_OR_BIG_OR_CODE_OR_EM_OR_I_OR_S_OR_SMALL_OR_STRIKE_OR_STRONG_OR_TT_OR_U);
-    public static final ElementName BDO = new ElementName("bdo", "bdo", TreeBuilder.OTHER);
-    public static final ElementName COL = new ElementName("col", "col", TreeBuilder.COL | SPECIAL);
-    public static final ElementName DEL = new ElementName("del", "del", TreeBuilder.OTHER);
-    public static final ElementName DFN = new ElementName("dfn", "dfn", TreeBuilder.OTHER);
-    public static final ElementName DIR = new ElementName("dir", "dir", TreeBuilder.ADDRESS_OR_ARTICLE_OR_ASIDE_OR_DETAILS_OR_DIALOG_OR_DIR_OR_FIGCAPTION_OR_FIGURE_OR_FOOTER_OR_HEADER_OR_HGROUP_OR_MAIN_OR_NAV_OR_SECTION_OR_SUMMARY | SPECIAL);
-    public static final ElementName DIV = new ElementName("div", "div", TreeBuilder.DIV_OR_BLOCKQUOTE_OR_CENTER_OR_MENU | SPECIAL);
-    public static final ElementName IMG = new ElementName("img", "img", TreeBuilder.IMG | SPECIAL);
-    public static final ElementName INS = new ElementName("ins", "ins", TreeBuilder.OTHER);
-    public static final ElementName KBD = new ElementName("kbd", "kbd", TreeBuilder.OTHER);
-    public static final ElementName MAP = new ElementName("map", "map", TreeBuilder.OTHER);
-    public static final ElementName NAV = new ElementName("nav", "nav", TreeBuilder.ADDRESS_OR_ARTICLE_OR_ASIDE_OR_DETAILS_OR_DIALOG_OR_DIR_OR_FIGCAPTION_OR_FIGURE_OR_FOOTER_OR_HEADER_OR_HGROUP_OR_MAIN_OR_NAV_OR_SECTION_OR_SUMMARY | SPECIAL);
-    public static final ElementName PRE = new ElementName("pre", "pre", TreeBuilder.PRE_OR_LISTING | SPECIAL);
-    public static final ElementName A = new ElementName("a", "a", TreeBuilder.A);
-    public static final ElementName B = new ElementName("b", "b", TreeBuilder.B_OR_BIG_OR_CODE_OR_EM_OR_I_OR_S_OR_SMALL_OR_STRIKE_OR_STRONG_OR_TT_OR_U);
-    public static final ElementName RTC = new ElementName("rtc", "rtc", TreeBuilder.RB_OR_RTC | OPTIONAL_END_TAG);
-    public static final ElementName SUB = new ElementName("sub", "sub", TreeBuilder.RUBY_OR_SPAN_OR_SUB_OR_SUP_OR_VAR);
-    public static final ElementName SVG = new ElementName("svg", "svg", TreeBuilder.SVG);
-    public static final ElementName SUP = new ElementName("sup", "sup", TreeBuilder.RUBY_OR_SPAN_OR_SUB_OR_SUP_OR_VAR);
-    public static final ElementName SET = new ElementName("set", "set", TreeBuilder.OTHER);
-    public static final ElementName USE = new ElementName("use", "use", TreeBuilder.OTHER);
-    public static final ElementName VAR = new ElementName("var", "var", TreeBuilder.RUBY_OR_SPAN_OR_SUB_OR_SUP_OR_VAR);
-    public static final ElementName G = new ElementName("g", "g", TreeBuilder.OTHER);
-    public static final ElementName WBR = new ElementName("wbr", "wbr", TreeBuilder.AREA_OR_WBR | SPECIAL);
-    public static final ElementName XMP = new ElementName("xmp", "xmp", TreeBuilder.XMP | SPECIAL);
-    public static final ElementName I = new ElementName("i", "i", TreeBuilder.B_OR_BIG_OR_CODE_OR_EM_OR_I_OR_S_OR_SMALL_OR_STRIKE_OR_STRONG_OR_TT_OR_U);
-    public static final ElementName P = new ElementName("p", "p", TreeBuilder.P | SPECIAL | OPTIONAL_END_TAG);
-    public static final ElementName Q = new ElementName("q", "q", TreeBuilder.OTHER);
-    public static final ElementName S = new ElementName("s", "s", TreeBuilder.B_OR_BIG_OR_CODE_OR_EM_OR_I_OR_S_OR_SMALL_OR_STRIKE_OR_STRONG_OR_TT_OR_U);
-    public static final ElementName U = new ElementName("u", "u", TreeBuilder.B_OR_BIG_OR_CODE_OR_EM_OR_I_OR_S_OR_SMALL_OR_STRIKE_OR_STRONG_OR_TT_OR_U);
-    public static final ElementName H1 = new ElementName("h1", "h1", TreeBuilder.H1_OR_H2_OR_H3_OR_H4_OR_H5_OR_H6 | SPECIAL);
-    public static final ElementName H2 = new ElementName("h2", "h2", TreeBuilder.H1_OR_H2_OR_H3_OR_H4_OR_H5_OR_H6 | SPECIAL);
-    public static final ElementName H3 = new ElementName("h3", "h3", TreeBuilder.H1_OR_H2_OR_H3_OR_H4_OR_H5_OR_H6 | SPECIAL);
-    public static final ElementName H4 = new ElementName("h4", "h4", TreeBuilder.H1_OR_H2_OR_H3_OR_H4_OR_H5_OR_H6 | SPECIAL);
-    public static final ElementName H5 = new ElementName("h5", "h5", TreeBuilder.H1_OR_H2_OR_H3_OR_H4_OR_H5_OR_H6 | SPECIAL);
-    public static final ElementName H6 = new ElementName("h6", "h6", TreeBuilder.H1_OR_H2_OR_H3_OR_H4_OR_H5_OR_H6 | SPECIAL);
-    public static final ElementName AREA = new ElementName("area", "area", TreeBuilder.AREA_OR_WBR | SPECIAL);
-    public static final ElementName FEFUNCA = new ElementName("fefunca", "feFuncA", TreeBuilder.OTHER);
-    public static final ElementName METADATA = new ElementName("metadata", "metadata", TreeBuilder.OTHER);
-    public static final ElementName META = new ElementName("meta", "meta", TreeBuilder.META | SPECIAL);
-    public static final ElementName TEXTAREA = new ElementName("textarea", "textarea", TreeBuilder.TEXTAREA | SPECIAL);
-    public static final ElementName FEFUNCB = new ElementName("fefuncb", "feFuncB", TreeBuilder.OTHER);
-    public static final ElementName RB = new ElementName("rb", "rb", TreeBuilder.RB_OR_RTC | OPTIONAL_END_TAG);
-    public static final ElementName DESC = new ElementName("desc", "desc", TreeBuilder.FOREIGNOBJECT_OR_DESC | SCOPING_AS_SVG);
-    public static final ElementName DD = new ElementName("dd", "dd", TreeBuilder.DD_OR_DT | SPECIAL | OPTIONAL_END_TAG);
-    public static final ElementName BGSOUND = new ElementName("bgsound", "bgsound", TreeBuilder.LINK_OR_BASEFONT_OR_BGSOUND | SPECIAL);
-    public static final ElementName EMBED = new ElementName("embed", "embed", TreeBuilder.EMBED | SPECIAL);
-    public static final ElementName FEBLEND = new ElementName("feblend", "feBlend", TreeBuilder.OTHER);
-    public static final ElementName FEFLOOD = new ElementName("feflood", "feFlood", TreeBuilder.OTHER);
-    public static final ElementName HEAD = new ElementName("head", "head", TreeBuilder.HEAD | SPECIAL | OPTIONAL_END_TAG);
-    public static final ElementName LEGEND = new ElementName("legend", "legend", TreeBuilder.OTHER);
-    public static final ElementName NOEMBED = new ElementName("noembed", "noembed", TreeBuilder.NOEMBED | SPECIAL);
-    public static final ElementName TD = new ElementName("td", "td", TreeBuilder.TD_OR_TH | SPECIAL | SCOPING | OPTIONAL_END_TAG);
-    public static final ElementName THEAD = new ElementName("thead", "thead", TreeBuilder.TBODY_OR_THEAD_OR_TFOOT | SPECIAL | FOSTER_PARENTING | OPTIONAL_END_TAG);
-    public static final ElementName ASIDE = new ElementName("aside", "aside", TreeBuilder.ADDRESS_OR_ARTICLE_OR_ASIDE_OR_DETAILS_OR_DIALOG_OR_DIR_OR_FIGCAPTION_OR_FIGURE_OR_FOOTER_OR_HEADER_OR_HGROUP_OR_MAIN_OR_NAV_OR_SECTION_OR_SUMMARY | SPECIAL);
-    public static final ElementName ARTICLE = new ElementName("article", "article", TreeBuilder.ADDRESS_OR_ARTICLE_OR_ASIDE_OR_DETAILS_OR_DIALOG_OR_DIR_OR_FIGCAPTION_OR_FIGURE_OR_FOOTER_OR_HEADER_OR_HGROUP_OR_MAIN_OR_NAV_OR_SECTION_OR_SUMMARY | SPECIAL);
-    public static final ElementName ANIMATE = new ElementName("animate", "animate", TreeBuilder.OTHER);
-    public static final ElementName BASE = new ElementName("base", "base", TreeBuilder.BASE | SPECIAL);
-    public static final ElementName BLOCKQUOTE = new ElementName("blockquote", "blockquote", TreeBuilder.DIV_OR_BLOCKQUOTE_OR_CENTER_OR_MENU | SPECIAL);
-    public static final ElementName CODE = new ElementName("code", "code", TreeBuilder.B_OR_BIG_OR_CODE_OR_EM_OR_I_OR_S_OR_SMALL_OR_STRIKE_OR_STRONG_OR_TT_OR_U);
-    public static final ElementName CIRCLE = new ElementName("circle", "circle", TreeBuilder.OTHER);
-    public static final ElementName CITE = new ElementName("cite", "cite", TreeBuilder.OTHER);
-    public static final ElementName ELLIPSE = new ElementName("ellipse", "ellipse", TreeBuilder.OTHER);
-    public static final ElementName FETURBULENCE = new ElementName("feturbulence", "feTurbulence", TreeBuilder.OTHER);
-    public static final ElementName FEMERGENODE = new ElementName("femergenode", "feMergeNode", TreeBuilder.OTHER);
-    public static final ElementName FEIMAGE = new ElementName("feimage", "feImage", TreeBuilder.OTHER);
-    public static final ElementName FEMERGE = new ElementName("femerge", "feMerge", TreeBuilder.OTHER);
-    public static final ElementName FETILE = new ElementName("fetile", "feTile", TreeBuilder.OTHER);
-    public static final ElementName FRAME = new ElementName("frame", "frame", TreeBuilder.FRAME | SPECIAL);
-    public static final ElementName FIGURE = new ElementName("figure", "figure", TreeBuilder.ADDRESS_OR_ARTICLE_OR_ASIDE_OR_DETAILS_OR_DIALOG_OR_DIR_OR_FIGCAPTION_OR_FIGURE_OR_FOOTER_OR_HEADER_OR_HGROUP_OR_MAIN_OR_NAV_OR_SECTION_OR_SUMMARY | SPECIAL);
-    public static final ElementName FECOMPOSITE = new ElementName("fecomposite", "feComposite", TreeBuilder.OTHER);
-    public static final ElementName IMAGE = new ElementName("image", "image", TreeBuilder.IMAGE);
-    public static final ElementName IFRAME = new ElementName("iframe", "iframe", TreeBuilder.IFRAME | SPECIAL);
-    public static final ElementName LINE = new ElementName("line", "line", TreeBuilder.OTHER);
-    public static final ElementName MARQUEE = new ElementName("marquee", "marquee", TreeBuilder.MARQUEE_OR_APPLET | SPECIAL | SCOPING);
-    public static final ElementName POLYLINE = new ElementName("polyline", "polyline", TreeBuilder.OTHER);
-    public static final ElementName PICTURE = new ElementName("picture", "picture", TreeBuilder.OTHER);
-    public static final ElementName SOURCE = new ElementName("source", "source", TreeBuilder.PARAM_OR_SOURCE_OR_TRACK);
-    public static final ElementName STRIKE = new ElementName("strike", "strike", TreeBuilder.B_OR_BIG_OR_CODE_OR_EM_OR_I_OR_S_OR_SMALL_OR_STRIKE_OR_STRONG_OR_TT_OR_U);
-    public static final ElementName STYLE = new ElementName("style", "style", TreeBuilder.STYLE | SPECIAL);
-    public static final ElementName TABLE = new ElementName("table", "table", TreeBuilder.TABLE | SPECIAL | FOSTER_PARENTING | SCOPING);
-    public static final ElementName TITLE = new ElementName("title", "title", TreeBuilder.TITLE | SPECIAL | SCOPING_AS_SVG);
-    public static final ElementName TIME = new ElementName("time", "time", TreeBuilder.OTHER);
-    public static final ElementName TEMPLATE = new ElementName("template", "template", TreeBuilder.TEMPLATE | SPECIAL | SCOPING);
-    public static final ElementName ALTGLYPHDEF = new ElementName("altglyphdef", "altGlyphDef", TreeBuilder.OTHER);
-    public static final ElementName GLYPHREF = new ElementName("glyphref", "glyphRef", TreeBuilder.OTHER);
-    public static final ElementName DIALOG = new ElementName("dialog", "dialog", TreeBuilder.ADDRESS_OR_ARTICLE_OR_ASIDE_OR_DETAILS_OR_DIALOG_OR_DIR_OR_FIGCAPTION_OR_FIGURE_OR_FOOTER_OR_HEADER_OR_HGROUP_OR_MAIN_OR_NAV_OR_SECTION_OR_SUMMARY | SPECIAL);
-    public static final ElementName FEFUNCG = new ElementName("fefuncg", "feFuncG", TreeBuilder.OTHER);
-    public static final ElementName FEDIFFUSELIGHTING = new ElementName("fediffuselighting", "feDiffuseLighting", TreeBuilder.OTHER);
-    public static final ElementName FESPECULARLIGHTING = new ElementName("fespecularlighting", "feSpecularLighting", TreeBuilder.OTHER);
-    public static final ElementName LISTING = new ElementName("listing", "listing", TreeBuilder.PRE_OR_LISTING | SPECIAL);
-    public static final ElementName STRONG = new ElementName("strong", "strong", TreeBuilder.B_OR_BIG_OR_CODE_OR_EM_OR_I_OR_S_OR_SMALL_OR_STRIKE_OR_STRONG_OR_TT_OR_U);
-    public static final ElementName ALTGLYPH = new ElementName("altglyph", "altGlyph", TreeBuilder.OTHER);
-    public static final ElementName CLIPPATH = new ElementName("clippath", "clipPath", TreeBuilder.OTHER);
-    public static final ElementName MGLYPH = new ElementName("mglyph", "mglyph", TreeBuilder.MGLYPH_OR_MALIGNMARK);
-    public static final ElementName MATH = new ElementName("math", "math", TreeBuilder.MATH);
-    public static final ElementName MPATH = new ElementName("mpath", "mpath", TreeBuilder.OTHER);
-    public static final ElementName PATH = new ElementName("path", "path", TreeBuilder.OTHER);
-    public static final ElementName TH = new ElementName("th", "th", TreeBuilder.TD_OR_TH | SPECIAL | SCOPING | OPTIONAL_END_TAG);
-    public static final ElementName SWITCH = new ElementName("switch", "switch", TreeBuilder.OTHER);
-    public static final ElementName TEXTPATH = new ElementName("textpath", "textPath", TreeBuilder.OTHER);
-    public static final ElementName LI = new ElementName("li", "li", TreeBuilder.LI | SPECIAL | OPTIONAL_END_TAG);
-    public static final ElementName MI = new ElementName("mi", "mi", TreeBuilder.MI_MO_MN_MS_MTEXT | SCOPING_AS_MATHML);
-    public static final ElementName LINK = new ElementName("link", "link", TreeBuilder.LINK_OR_BASEFONT_OR_BGSOUND | SPECIAL);
-    public static final ElementName MARK = new ElementName("mark", "mark", TreeBuilder.OTHER);
-    public static final ElementName MALIGNMARK = new ElementName("malignmark", "malignmark", TreeBuilder.MGLYPH_OR_MALIGNMARK);
-    public static final ElementName MASK = new ElementName("mask", "mask", TreeBuilder.OTHER);
-    public static final ElementName TRACK = new ElementName("track", "track", TreeBuilder.PARAM_OR_SOURCE_OR_TRACK | SPECIAL);
-    public static final ElementName DL = new ElementName("dl", "dl", TreeBuilder.UL_OR_OL_OR_DL | SPECIAL);
-    public static final ElementName HTML = new ElementName("html", "html", TreeBuilder.HTML | SPECIAL | SCOPING | OPTIONAL_END_TAG);
-    public static final ElementName OL = new ElementName("ol", "ol", TreeBuilder.UL_OR_OL_OR_DL | SPECIAL);
-    public static final ElementName LABEL = new ElementName("label", "label", TreeBuilder.OTHER);
-    public static final ElementName UL = new ElementName("ul", "ul", TreeBuilder.UL_OR_OL_OR_DL | SPECIAL);
-    public static final ElementName SMALL = new ElementName("small", "small", TreeBuilder.B_OR_BIG_OR_CODE_OR_EM_OR_I_OR_S_OR_SMALL_OR_STRIKE_OR_STRONG_OR_TT_OR_U);
-    public static final ElementName SYMBOL = new ElementName("symbol", "symbol", TreeBuilder.OTHER);
-    public static final ElementName ALTGLYPHITEM = new ElementName("altglyphitem", "altGlyphItem", TreeBuilder.OTHER);
-    public static final ElementName ANIMATETRANSFORM = new ElementName("animatetransform", "animateTransform", TreeBuilder.OTHER);
-    public static final ElementName ACRONYM = new ElementName("acronym", "acronym", TreeBuilder.OTHER);
-    public static final ElementName EM = new ElementName("em", "em", TreeBuilder.B_OR_BIG_OR_CODE_OR_EM_OR_I_OR_S_OR_SMALL_OR_STRIKE_OR_STRONG_OR_TT_OR_U);
-    public static final ElementName FORM = new ElementName("form", "form", TreeBuilder.FORM | SPECIAL);
-    public static final ElementName MENUITEM = new ElementName("menuitem", "menuitem", TreeBuilder.MENUITEM);
-    public static final ElementName PARAM = new ElementName("param", "param", TreeBuilder.PARAM_OR_SOURCE_OR_TRACK | SPECIAL);
-    public static final ElementName ANIMATEMOTION = new ElementName("animatemotion", "animateMotion", TreeBuilder.OTHER);
-    public static final ElementName BUTTON = new ElementName("button", "button", TreeBuilder.BUTTON | SPECIAL);
-    public static final ElementName CAPTION = new ElementName("caption", "caption", TreeBuilder.CAPTION | SPECIAL | SCOPING);
-    public static final ElementName FIGCAPTION = new ElementName("figcaption", "figcaption", TreeBuilder.ADDRESS_OR_ARTICLE_OR_ASIDE_OR_DETAILS_OR_DIALOG_OR_DIR_OR_FIGCAPTION_OR_FIGURE_OR_FOOTER_OR_HEADER_OR_HGROUP_OR_MAIN_OR_NAV_OR_SECTION_OR_SUMMARY | SPECIAL);
-    public static final ElementName MN = new ElementName("mn", "mn", TreeBuilder.MI_MO_MN_MS_MTEXT | SCOPING_AS_MATHML);
-    public static final ElementName KEYGEN = new ElementName("keygen", "keygen", TreeBuilder.KEYGEN);
-    public static final ElementName MAIN = new ElementName("main", "main", TreeBuilder.ADDRESS_OR_ARTICLE_OR_ASIDE_OR_DETAILS_OR_DIALOG_OR_DIR_OR_FIGCAPTION_OR_FIGURE_OR_FOOTER_OR_HEADER_OR_HGROUP_OR_MAIN_OR_NAV_OR_SECTION_OR_SUMMARY | SPECIAL);
-    public static final ElementName OPTION = new ElementName("option", "option", TreeBuilder.OPTION | OPTIONAL_END_TAG);
-    public static final ElementName POLYGON = new ElementName("polygon", "polygon", TreeBuilder.OTHER);
-    public static final ElementName PATTERN = new ElementName("pattern", "pattern", TreeBuilder.OTHER);
-    public static final ElementName SPAN = new ElementName("span", "span", TreeBuilder.RUBY_OR_SPAN_OR_SUB_OR_SUP_OR_VAR);
-    public static final ElementName SECTION = new ElementName("section", "section", TreeBuilder.ADDRESS_OR_ARTICLE_OR_ASIDE_OR_DETAILS_OR_DIALOG_OR_DIR_OR_FIGCAPTION_OR_FIGURE_OR_FOOTER_OR_HEADER_OR_HGROUP_OR_MAIN_OR_NAV_OR_SECTION_OR_SUMMARY | SPECIAL);
-    public static final ElementName TSPAN = new ElementName("tspan", "tspan", TreeBuilder.OTHER);
-    public static final ElementName AUDIO = new ElementName("audio", "audio", TreeBuilder.OTHER);
-    public static final ElementName MO = new ElementName("mo", "mo", TreeBuilder.MI_MO_MN_MS_MTEXT | SCOPING_AS_MATHML);
-    public static final ElementName VIDEO = new ElementName("video", "video", TreeBuilder.OTHER);
-    public static final ElementName COLGROUP = new ElementName("colgroup", "colgroup", TreeBuilder.COLGROUP | SPECIAL | OPTIONAL_END_TAG);
-    public static final ElementName FEDISPLACEMENTMAP = new ElementName("fedisplacementmap", "feDisplacementMap", TreeBuilder.OTHER);
-    public static final ElementName HGROUP = new ElementName("hgroup", "hgroup", TreeBuilder.ADDRESS_OR_ARTICLE_OR_ASIDE_OR_DETAILS_OR_DIALOG_OR_DIR_OR_FIGCAPTION_OR_FIGURE_OR_FOOTER_OR_HEADER_OR_HGROUP_OR_MAIN_OR_NAV_OR_SECTION_OR_SUMMARY | SPECIAL);
-    public static final ElementName RP = new ElementName("rp", "rp", TreeBuilder.RT_OR_RP | OPTIONAL_END_TAG);
-    public static final ElementName OPTGROUP = new ElementName("optgroup", "optgroup", TreeBuilder.OPTGROUP | OPTIONAL_END_TAG);
-    public static final ElementName SAMP = new ElementName("samp", "samp", TreeBuilder.OTHER);
-    public static final ElementName STOP = new ElementName("stop", "stop", TreeBuilder.OTHER);
-    public static final ElementName BR = new ElementName("br", "br", TreeBuilder.BR | SPECIAL);
-    public static final ElementName ABBR = new ElementName("abbr", "abbr", TreeBuilder.OTHER);
-    public static final ElementName ANIMATECOLOR = new ElementName("animatecolor", "animateColor", TreeBuilder.OTHER);
-    public static final ElementName CENTER = new ElementName("center", "center", TreeBuilder.DIV_OR_BLOCKQUOTE_OR_CENTER_OR_MENU | SPECIAL);
-    public static final ElementName HR = new ElementName("hr", "hr", TreeBuilder.HR | SPECIAL);
-    public static final ElementName FEFUNCR = new ElementName("fefuncr", "feFuncR", TreeBuilder.OTHER);
-    public static final ElementName FECOMPONENTTRANSFER = new ElementName("fecomponenttransfer", "feComponentTransfer", TreeBuilder.OTHER);
-    public static final ElementName FILTER = new ElementName("filter", "filter", TreeBuilder.OTHER);
-    public static final ElementName FOOTER = new ElementName("footer", "footer", TreeBuilder.ADDRESS_OR_ARTICLE_OR_ASIDE_OR_DETAILS_OR_DIALOG_OR_DIR_OR_FIGCAPTION_OR_FIGURE_OR_FOOTER_OR_HEADER_OR_HGROUP_OR_MAIN_OR_NAV_OR_SECTION_OR_SUMMARY | SPECIAL);
-    public static final ElementName FEGAUSSIANBLUR = new ElementName("fegaussianblur", "feGaussianBlur", TreeBuilder.OTHER);
-    public static final ElementName HEADER = new ElementName("header", "header", TreeBuilder.ADDRESS_OR_ARTICLE_OR_ASIDE_OR_DETAILS_OR_DIALOG_OR_DIR_OR_FIGCAPTION_OR_FIGURE_OR_FOOTER_OR_HEADER_OR_HGROUP_OR_MAIN_OR_NAV_OR_SECTION_OR_SUMMARY | SPECIAL);
-    public static final ElementName MARKER = new ElementName("marker", "marker", TreeBuilder.OTHER);
-    public static final ElementName METER = new ElementName("meter", "meter", TreeBuilder.OTHER);
-    public static final ElementName NOBR = new ElementName("nobr", "nobr", TreeBuilder.NOBR);
-    public static final ElementName TR = new ElementName("tr", "tr", TreeBuilder.TR | SPECIAL | FOSTER_PARENTING | OPTIONAL_END_TAG);
-    public static final ElementName ADDRESS = new ElementName("address", "address", TreeBuilder.ADDRESS_OR_ARTICLE_OR_ASIDE_OR_DETAILS_OR_DIALOG_OR_DIR_OR_FIGCAPTION_OR_FIGURE_OR_FOOTER_OR_HEADER_OR_HGROUP_OR_MAIN_OR_NAV_OR_SECTION_OR_SUMMARY | SPECIAL);
-    public static final ElementName CANVAS = new ElementName("canvas", "canvas", TreeBuilder.OTHER);
-    public static final ElementName DEFS = new ElementName("defs", "defs", TreeBuilder.OTHER);
-    public static final ElementName DETAILS = new ElementName("details", "details", TreeBuilder.ADDRESS_OR_ARTICLE_OR_ASIDE_OR_DETAILS_OR_DIALOG_OR_DIR_OR_FIGCAPTION_OR_FIGURE_OR_FOOTER_OR_HEADER_OR_HGROUP_OR_MAIN_OR_NAV_OR_SECTION_OR_SUMMARY | SPECIAL);
-    public static final ElementName MS = new ElementName("ms", "ms", TreeBuilder.MI_MO_MN_MS_MTEXT | SCOPING_AS_MATHML);
-    public static final ElementName NOFRAMES = new ElementName("noframes", "noframes", TreeBuilder.NOFRAMES | SPECIAL);
-    public static final ElementName PROGRESS = new ElementName("progress", "progress", TreeBuilder.OTHER);
-    public static final ElementName DT = new ElementName("dt", "dt", TreeBuilder.DD_OR_DT | SPECIAL | OPTIONAL_END_TAG);
-    public static final ElementName APPLET = new ElementName("applet", "applet", TreeBuilder.MARQUEE_OR_APPLET | SPECIAL | SCOPING);
-    public static final ElementName BASEFONT = new ElementName("basefont", "basefont", TreeBuilder.LINK_OR_BASEFONT_OR_BGSOUND | SPECIAL);
-    public static final ElementName FOREIGNOBJECT = new ElementName("foreignobject", "foreignObject", TreeBuilder.FOREIGNOBJECT_OR_DESC | SCOPING_AS_SVG);
-    public static final ElementName FIELDSET = new ElementName("fieldset", "fieldset", TreeBuilder.FIELDSET | SPECIAL);
-    public static final ElementName FRAMESET = new ElementName("frameset", "frameset", TreeBuilder.FRAMESET | SPECIAL);
-    public static final ElementName FEOFFSET = new ElementName("feoffset", "feOffset", TreeBuilder.OTHER);
-    public static final ElementName FESPOTLIGHT = new ElementName("fespotlight", "feSpotLight", TreeBuilder.OTHER);
-    public static final ElementName FEPOINTLIGHT = new ElementName("fepointlight", "fePointLight", TreeBuilder.OTHER);
-    public static final ElementName FEDISTANTLIGHT = new ElementName("fedistantlight", "feDistantLight", TreeBuilder.OTHER);
-    public static final ElementName FONT = new ElementName("font", "font", TreeBuilder.FONT);
-    public static final ElementName INPUT = new ElementName("input", "input", TreeBuilder.INPUT | SPECIAL);
-    public static final ElementName LINEARGRADIENT = new ElementName("lineargradient", "linearGradient", TreeBuilder.OTHER);
-    public static final ElementName MTEXT = new ElementName("mtext", "mtext", TreeBuilder.MI_MO_MN_MS_MTEXT | SCOPING_AS_MATHML);
-    public static final ElementName NOSCRIPT = new ElementName("noscript", "noscript", TreeBuilder.NOSCRIPT | SPECIAL);
-    public static final ElementName RT = new ElementName("rt", "rt", TreeBuilder.RT_OR_RP | OPTIONAL_END_TAG);
-    public static final ElementName OBJECT = new ElementName("object", "object", TreeBuilder.OBJECT | SPECIAL | SCOPING);
-    public static final ElementName OUTPUT = new ElementName("output", "output", TreeBuilder.OUTPUT);
-    public static final ElementName PLAINTEXT = new ElementName("plaintext", "plaintext", TreeBuilder.PLAINTEXT | SPECIAL);
-    public static final ElementName TT = new ElementName("tt", "tt", TreeBuilder.B_OR_BIG_OR_CODE_OR_EM_OR_I_OR_S_OR_SMALL_OR_STRIKE_OR_STRONG_OR_TT_OR_U);
-    public static final ElementName RECT = new ElementName("rect", "rect", TreeBuilder.OTHER);
-    public static final ElementName RADIALGRADIENT = new ElementName("radialgradient", "radialGradient", TreeBuilder.OTHER);
-    public static final ElementName SELECT = new ElementName("select", "select", TreeBuilder.SELECT | SPECIAL);
-    public static final ElementName SCRIPT = new ElementName("script", "script", TreeBuilder.SCRIPT | SPECIAL);
-    public static final ElementName TFOOT = new ElementName("tfoot", "tfoot", TreeBuilder.TBODY_OR_THEAD_OR_TFOOT | SPECIAL | FOSTER_PARENTING | OPTIONAL_END_TAG);
-    public static final ElementName TEXT = new ElementName("text", "text", TreeBuilder.OTHER);
-    public static final ElementName MENU = new ElementName("menu", "menu", TreeBuilder.DIV_OR_BLOCKQUOTE_OR_CENTER_OR_MENU | SPECIAL);
-    public static final ElementName FEDROPSHADOW = new ElementName("fedropshadow", "feDropShadow", TreeBuilder.OTHER);
-    public static final ElementName VIEW = new ElementName("view", "view", TreeBuilder.OTHER);
-    public static final ElementName FECOLORMATRIX = new ElementName("fecolormatrix", "feColorMatrix", TreeBuilder.OTHER);
-    public static final ElementName FECONVOLVEMATRIX = new ElementName("feconvolvematrix", "feConvolveMatrix", TreeBuilder.OTHER);
-    public static final ElementName BODY = new ElementName("body", "body", TreeBuilder.BODY | SPECIAL | OPTIONAL_END_TAG);
-    public static final ElementName FEMORPHOLOGY = new ElementName("femorphology", "feMorphology", TreeBuilder.OTHER);
-    public static final ElementName RUBY = new ElementName("ruby", "ruby", TreeBuilder.RUBY_OR_SPAN_OR_SUB_OR_SUP_OR_VAR);
-    public static final ElementName SUMMARY = new ElementName("summary", "summary", TreeBuilder.ADDRESS_OR_ARTICLE_OR_ASIDE_OR_DETAILS_OR_DIALOG_OR_DIR_OR_FIGCAPTION_OR_FIGURE_OR_FOOTER_OR_HEADER_OR_HGROUP_OR_MAIN_OR_NAV_OR_SECTION_OR_SUMMARY | SPECIAL);
-    public static final ElementName TBODY = new ElementName("tbody", "tbody", TreeBuilder.TBODY_OR_THEAD_OR_TFOOT | SPECIAL | FOSTER_PARENTING | OPTIONAL_END_TAG);
-    private final static @NoLength ElementName[] ELEMENT_NAMES = {
-    KEYGEN,
-    FETURBULENCE,
-    FIELDSET,
-    H2,
-    MATH,
-    HEADER,
-    RECT,
-    RTC,
-    FEBLEND,
-    STYLE,
-    LABEL,
-    SAMP,
-    DETAILS,
-    LINEARGRADIENT,
-    VIEW,
-    IMG,
-    WBR,
-    META,
-    ARTICLE,
-    IMAGE,
-    FEFUNCG,
-    LINK,
-    FORM,
-    AUDIO,
-    FECOMPONENTTRANSFER,
-    TR,
-    DT,
-    FEPOINTLIGHT,
-    OBJECT,
-    TFOOT,
-    FEMORPHOLOGY,
-    DEL,
-    NAV,
-    SET,
-    Q,
-    H6,
-    DESC,
-    NOEMBED,
-    CODE,
-    FETILE,
-    POLYLINE,
-    TEMPLATE,
-    STRONG,
-    SWITCH,
-    TRACK,
-    ALTGLYPHITEM,
-    BUTTON,
-    PATTERN,
-    FEDISPLACEMENTMAP,
-    ANIMATECOLOR,
-    FOOTER,
-    METER,
-    CANVAS,
-    NOFRAMES,
-    BASEFONT,
-    FEOFFSET,
-    FONT,
-    NOSCRIPT,
-    PLAINTEXT,
-    SELECT,
-    MENU,
-    FECONVOLVEMATRIX,
-    SUMMARY,
-    BDO,
-    DIR,
-    KBD,
-    A,
-    SVG,
-    VAR,
-    I,
-    U,
-    H4,
-    FEFUNCA,
-    FEFUNCB,
-    BGSOUND,
-    HEAD,
-    THEAD,
-    BASE,
-    CITE,
-    FEIMAGE,
-    FIGURE,
-    LINE,
-    SOURCE,
-    TITLE,
-    GLYPHREF,
-    FESPECULARLIGHTING,
-    CLIPPATH,
-    PATH,
-    LI,
-    MALIGNMARK,
-    HTML,
-    SMALL,
-    ACRONYM,
-    PARAM,
-    FIGCAPTION,
-    OPTION,
-    SECTION,
-    VIDEO,
-    RP,
-    BR,
-    HR,
-    FILTER,
-    FEGAUSSIANBLUR,
-    MARKER,
-    NOBR,
-    ADDRESS,
-    DEFS,
-    MS,
-    PROGRESS,
-    APPLET,
-    FOREIGNOBJECT,
-    FRAMESET,
-    FESPOTLIGHT,
-    FEDISTANTLIGHT,
-    INPUT,
-    MTEXT,
-    RT,
-    OUTPUT,
-    TT,
-    RADIALGRADIENT,
-    SCRIPT,
-    TEXT,
-    FEDROPSHADOW,
-    FECOLORMATRIX,
-    BODY,
-    RUBY,
-    TBODY,
-    BIG,
-    COL,
-    DFN,
-    DIV,
-    INS,
-    MAP,
-    PRE,
-    B,
-    SUB,
-    SUP,
-    USE,
-    G,
-    XMP,
-    P,
-    S,
-    H1,
-    H3,
-    H5,
-    AREA,
-    METADATA,
-    TEXTAREA,
-    RB,
-    DD,
-    EMBED,
-    FEFLOOD,
-    LEGEND,
-    TD,
-    ASIDE,
-    ANIMATE,
-    BLOCKQUOTE,
-    CIRCLE,
-    ELLIPSE,
-    FEMERGENODE,
-    FEMERGE,
-    FRAME,
-    FECOMPOSITE,
-    IFRAME,
-    MARQUEE,
-    PICTURE,
-    STRIKE,
-    TABLE,
-    TIME,
-    ALTGLYPHDEF,
-    DIALOG,
-    FEDIFFUSELIGHTING,
-    LISTING,
-    ALTGLYPH,
-    MGLYPH,
-    MPATH,
-    TH,
-    TEXTPATH,
-    MI,
-    MARK,
-    MASK,
-    DL,
-    OL,
-    UL,
-    SYMBOL,
-    ANIMATETRANSFORM,
-    EM,
-    MENUITEM,
-    ANIMATEMOTION,
-    CAPTION,
-    MN,
-    MAIN,
-    POLYGON,
-    SPAN,
-    TSPAN,
-    MO,
-    COLGROUP,
-    HGROUP,
-    OPTGROUP,
-    STOP,
-    ABBR,
-    CENTER,
-    FEFUNCR,
-    };
-    private final static int[] ELEMENT_HASHES = {
-    1903302038,
-    1749656156,
-    2001349704,
-    893386754,
-    1803929812,
-    1968836118,
-    2007601444,
-    59821379,
-    1733054663,
-    1756625221,
-    1870268949,
-    1941178676,
-    1983633431,
-    2004635806,
-    2060065124,
-    55104723,
-    62450211,
-    1686491348,
-    1747176599,
-    1751288021,
-    1783210839,
-    1853642948,
-    1884120164,
-    1914900309,
-    1967788867,
-    1973420034,
-    1998585858,
-    2001392796,
-    2006028454,
-    2008851557,
-    2085266636,
-    52485715,
-    57733651,
-    60354131,
-    67633153,
-    960495618,
-    1715310660,
-    1737099991,
-    1748100148,
-    1749801286,
-    1755076808,
-    1757268168,
-    1790207270,
-    1806806678,
-    1857653029,
-    1881288348,
-    1898753862,
-    1906135367,
-    1934172497,
-    1965334268,
-    1967795958,
-    1971465813,
-    1982935782,
-    1988763672,
-    1999397992,
-    2001349736,
-    2001495140,
-    2005719336,
-    2006896969,
-    2008125638,
-    2021937364,
-    2068523856,
-    2092255447,
-    51438659,
-    52488851,
-    56151587,
-    59244545,
-    60347747,
-    61925907,
-    63438849,
-    69730305,
-    926941186,
-    1682547543,
-    1699324759,
-    1730965751,
-    1733890180,
-    1740181637,
-    1747814436,
-    1748359220,
-    1749715159,
-    1749905526,
-    1752979652,
-    1756474198,
-    1757146773,
-    1766992520,
-    1783388498,
-    1798686984,
-    1805502724,
-    1818230786,
-    1854228698,
-    1868312196,
-    1874053333,
-    1881613047,
-    1889085973,
-    1900845386,
-    1905563974,
-    1907661127,
-    1925844629,
-    1938817026,
-    1963982850,
-    1967128578,
-    1967795910,
-    1968053806,
-    1971461414,
-    1971938532,
-    1982173479,
-    1983533124,
-    1986527234,
-    1990037800,
-    1998724870,
-    2001309869,
-    2001349720,
-    2001392795,
-    2001392798,
-    2003183333,
-    2005324101,
-    2005925890,
-    2006329158,
-    2006974466,
-    2007781534,
-    2008340774,
-    2008994116,
-    2051837468,
-    2068523853,
-    2083120164,
-    2091479332,
-    2092557349,
-    51434643,
-    51961587,
-    52486755,
-    52490899,
-    55110883,
-    57206291,
-    58773795,
-    59768833,
-    60345171,
-    60352339,
-    61395251,
-    62390273,
-    62973651,
-    67108865,
-    68681729,
-    876609538,
-    910163970,
-    943718402,
-    1679960596,
-    1686489160,
-    1689922072,
-    1703936002,
-    1730150402,
-    1732381397,
-    1733076167,
-    1736200310,
-    1738539010,
-    1747048757,
-    1747306711,
-    1747838298,
-    1748225318,
-    1749395095,
-    1749673195,
-    1749723735,
-    1749813541,
-    1749932347,
-    1751386406,
-    1753362711,
-    1755148615,
-    1756600614,
-    1757137429,
-    1757157700,
-    1763839627,
-    1782357526,
-    1783388497,
-    1786534215,
-    1797585096,
-    1803876550,
-    1803929861,
-    1805647874,
-    1807599880,
-    1818755074,
-    1854228692,
-    1854245076,
-    1864368130,
-    1870135298,
-    1873281026,
-    1874102998,
-    1881498736,
-    1881669634,
-    1887579800,
-    1898223949,
-    1899272519,
-    1902641154,
-    1904412884,
-    1906087319,
-    1907435316,
-    1907959605,
-    1919418370,
-    1932928296,
-    1935549734,
-    1939219752,
-    1941221172,
-    1965115924,
-    1966223078,
-    1967760215,
-    };
+    public static final ElementName BIG = new ElementName("big", "big",
+            // CPPONLY: NS_NewHTMLElement,
+            // CPPONLY: NS_NewSVGUnknownElement,
+            TreeBuilder.B_OR_BIG_OR_CODE_OR_EM_OR_I_OR_S_OR_SMALL_OR_STRIKE_OR_STRONG_OR_TT_OR_U);
+
+    public static final ElementName BDO = new ElementName("bdo", "bdo",
+            // CPPONLY: NS_NewHTMLElement,
+            // CPPONLY: NS_NewSVGUnknownElement,
+            TreeBuilder.OTHER);
+
+    public static final ElementName COL = new ElementName("col", "col",
+            // CPPONLY: NS_NewHTMLTableColElement,
+            // CPPONLY: NS_NewSVGUnknownElement,
+            TreeBuilder.COL | SPECIAL);
+
+    public static final ElementName DEL = new ElementName("del", "del",
+            // CPPONLY: NS_NewHTMLModElement,
+            // CPPONLY: NS_NewSVGUnknownElement,
+            TreeBuilder.OTHER);
+
+    public static final ElementName DFN = new ElementName("dfn", "dfn",
+            // CPPONLY: NS_NewHTMLElement,
+            // CPPONLY: NS_NewSVGUnknownElement,
+            TreeBuilder.OTHER);
+
+    public static final ElementName DIR = new ElementName("dir", "dir",
+            // CPPONLY: NS_NewHTMLSharedElement,
+            // CPPONLY: NS_NewSVGUnknownElement,
+            TreeBuilder.ADDRESS_OR_ARTICLE_OR_ASIDE_OR_DETAILS_OR_DIALOG_OR_DIR_OR_FIGCAPTION_OR_FIGURE_OR_FOOTER_OR_HEADER_OR_HGROUP_OR_MAIN_OR_NAV_OR_SECTION_OR_SUMMARY
+                    | SPECIAL);
+
+    public static final ElementName DIV = new ElementName("div", "div",
+            // CPPONLY: NS_NewHTMLDivElement,
+            // CPPONLY: NS_NewSVGUnknownElement,
+            TreeBuilder.DIV_OR_BLOCKQUOTE_OR_CENTER_OR_MENU | SPECIAL);
+
+    public static final ElementName IMG = new ElementName("img", "img",
+            // CPPONLY: NS_NewHTMLImageElement,
+            // CPPONLY: NS_NewSVGUnknownElement,
+            TreeBuilder.IMG | SPECIAL);
+
+    public static final ElementName INS = new ElementName("ins", "ins",
+            // CPPONLY: NS_NewHTMLModElement,
+            // CPPONLY: NS_NewSVGUnknownElement,
+            TreeBuilder.OTHER);
+
+    public static final ElementName KBD = new ElementName("kbd", "kbd",
+            // CPPONLY: NS_NewHTMLElement,
+            // CPPONLY: NS_NewSVGUnknownElement,
+            TreeBuilder.OTHER);
+
+    public static final ElementName MAP = new ElementName("map", "map",
+            // CPPONLY: NS_NewHTMLMapElement,
+            // CPPONLY: NS_NewSVGUnknownElement,
+            TreeBuilder.OTHER);
+
+    public static final ElementName NAV = new ElementName("nav", "nav",
+            // CPPONLY: NS_NewHTMLElement,
+            // CPPONLY: NS_NewSVGUnknownElement,
+            TreeBuilder.ADDRESS_OR_ARTICLE_OR_ASIDE_OR_DETAILS_OR_DIALOG_OR_DIR_OR_FIGCAPTION_OR_FIGURE_OR_FOOTER_OR_HEADER_OR_HGROUP_OR_MAIN_OR_NAV_OR_SECTION_OR_SUMMARY
+                    | SPECIAL);
+
+    public static final ElementName PRE = new ElementName("pre", "pre",
+            // CPPONLY: NS_NewHTMLPreElement,
+            // CPPONLY: NS_NewSVGUnknownElement,
+            TreeBuilder.PRE_OR_LISTING | SPECIAL);
+
+    public static final ElementName A = new ElementName("a", "a",
+            // CPPONLY: NS_NewHTMLAnchorElement,
+            // CPPONLY: NS_NewSVGAElement,
+            TreeBuilder.A);
+
+    public static final ElementName B = new ElementName("b", "b",
+            // CPPONLY: NS_NewHTMLElement,
+            // CPPONLY: NS_NewSVGUnknownElement,
+            TreeBuilder.B_OR_BIG_OR_CODE_OR_EM_OR_I_OR_S_OR_SMALL_OR_STRIKE_OR_STRONG_OR_TT_OR_U);
+
+    public static final ElementName RTC = new ElementName("rtc", "rtc",
+            // CPPONLY: NS_NewHTMLElement,
+            // CPPONLY: NS_NewSVGUnknownElement,
+            TreeBuilder.RB_OR_RTC | OPTIONAL_END_TAG);
+
+    public static final ElementName SUB = new ElementName("sub", "sub",
+            // CPPONLY: NS_NewHTMLElement,
+            // CPPONLY: NS_NewSVGUnknownElement,
+            TreeBuilder.RUBY_OR_SPAN_OR_SUB_OR_SUP_OR_VAR);
+
+    public static final ElementName SVG = new ElementName("svg", "svg",
+            // CPPONLY: NS_NewHTMLUnknownElement,
+            // CPPONLY: NS_NewSVGSVGElement,
+            TreeBuilder.SVG);
+
+    public static final ElementName SUP = new ElementName("sup", "sup",
+            // CPPONLY: NS_NewHTMLElement,
+            // CPPONLY: NS_NewSVGUnknownElement,
+            TreeBuilder.RUBY_OR_SPAN_OR_SUB_OR_SUP_OR_VAR);
+
+    public static final ElementName SET = new ElementName("set", "set",
+            // CPPONLY: NS_NewHTMLUnknownElement,
+            // CPPONLY: NS_NewSVGSetElement,
+            TreeBuilder.OTHER);
+
+    public static final ElementName USE = new ElementName("use", "use",
+            // CPPONLY: NS_NewHTMLUnknownElement,
+            // CPPONLY: NS_NewSVGUseElement,
+            TreeBuilder.OTHER);
+
+    public static final ElementName VAR = new ElementName("var", "var",
+            // CPPONLY: NS_NewHTMLElement,
+            // CPPONLY: NS_NewSVGUnknownElement,
+            TreeBuilder.RUBY_OR_SPAN_OR_SUB_OR_SUP_OR_VAR);
+
+    public static final ElementName G = new ElementName("g", "g",
+            // CPPONLY: NS_NewHTMLUnknownElement,
+            // CPPONLY: NS_NewSVGGElement,
+            TreeBuilder.OTHER);
+
+    public static final ElementName WBR = new ElementName("wbr", "wbr",
+            // CPPONLY: NS_NewHTMLElement,
+            // CPPONLY: NS_NewSVGUnknownElement,
+            TreeBuilder.AREA_OR_WBR | SPECIAL);
+
+    public static final ElementName XMP = new ElementName("xmp", "xmp",
+            // CPPONLY: NS_NewHTMLPreElement,
+            // CPPONLY: NS_NewSVGUnknownElement,
+            TreeBuilder.XMP | SPECIAL);
+
+    public static final ElementName I = new ElementName("i", "i",
+            // CPPONLY: NS_NewHTMLElement,
+            // CPPONLY: NS_NewSVGUnknownElement,
+            TreeBuilder.B_OR_BIG_OR_CODE_OR_EM_OR_I_OR_S_OR_SMALL_OR_STRIKE_OR_STRONG_OR_TT_OR_U);
+
+    public static final ElementName P = new ElementName("p", "p",
+            // CPPONLY: NS_NewHTMLParagraphElement,
+            // CPPONLY: NS_NewSVGUnknownElement,
+            TreeBuilder.P | SPECIAL | OPTIONAL_END_TAG);
+
+    public static final ElementName Q = new ElementName("q", "q",
+            // CPPONLY: NS_NewHTMLSharedElement,
+            // CPPONLY: NS_NewSVGUnknownElement,
+            TreeBuilder.OTHER);
+
+    public static final ElementName S = new ElementName("s", "s",
+            // CPPONLY: NS_NewHTMLElement,
+            // CPPONLY: NS_NewSVGUnknownElement,
+            TreeBuilder.B_OR_BIG_OR_CODE_OR_EM_OR_I_OR_S_OR_SMALL_OR_STRIKE_OR_STRONG_OR_TT_OR_U);
+
+    public static final ElementName U = new ElementName("u", "u",
+            // CPPONLY: NS_NewHTMLElement,
+            // CPPONLY: NS_NewSVGUnknownElement,
+            TreeBuilder.B_OR_BIG_OR_CODE_OR_EM_OR_I_OR_S_OR_SMALL_OR_STRIKE_OR_STRONG_OR_TT_OR_U);
+
+    public static final ElementName H1 = new ElementName("h1", "h1",
+            // CPPONLY: NS_NewHTMLHeadingElement,
+            // CPPONLY: NS_NewSVGUnknownElement,
+            TreeBuilder.H1_OR_H2_OR_H3_OR_H4_OR_H5_OR_H6 | SPECIAL);
+
+    public static final ElementName H2 = new ElementName("h2", "h2",
+            // CPPONLY: NS_NewHTMLHeadingElement,
+            // CPPONLY: NS_NewSVGUnknownElement,
+            TreeBuilder.H1_OR_H2_OR_H3_OR_H4_OR_H5_OR_H6 | SPECIAL);
+
+    public static final ElementName H3 = new ElementName("h3", "h3",
+            // CPPONLY: NS_NewHTMLHeadingElement,
+            // CPPONLY: NS_NewSVGUnknownElement,
+            TreeBuilder.H1_OR_H2_OR_H3_OR_H4_OR_H5_OR_H6 | SPECIAL);
+
+    public static final ElementName H4 = new ElementName("h4", "h4",
+            // CPPONLY: NS_NewHTMLHeadingElement,
+            // CPPONLY: NS_NewSVGUnknownElement,
+            TreeBuilder.H1_OR_H2_OR_H3_OR_H4_OR_H5_OR_H6 | SPECIAL);
+
+    public static final ElementName H5 = new ElementName("h5", "h5",
+            // CPPONLY: NS_NewHTMLHeadingElement,
+            // CPPONLY: NS_NewSVGUnknownElement,
+            TreeBuilder.H1_OR_H2_OR_H3_OR_H4_OR_H5_OR_H6 | SPECIAL);
+
+    public static final ElementName H6 = new ElementName("h6", "h6",
+            // CPPONLY: NS_NewHTMLHeadingElement,
+            // CPPONLY: NS_NewSVGUnknownElement,
+            TreeBuilder.H1_OR_H2_OR_H3_OR_H4_OR_H5_OR_H6 | SPECIAL);
+
+    public static final ElementName AREA = new ElementName("area", "area",
+            // CPPONLY: NS_NewHTMLAreaElement,
+            // CPPONLY: NS_NewSVGUnknownElement,
+            TreeBuilder.AREA_OR_WBR | SPECIAL);
+
+    public static final ElementName DATA = new ElementName("data", "data",
+            // CPPONLY: NS_NewHTMLDataElement,
+            // CPPONLY: NS_NewSVGUnknownElement,
+            TreeBuilder.OTHER);
+
+    public static final ElementName FEFUNCA = new ElementName("fefunca",
+            "feFuncA",
+            // CPPONLY: NS_NewHTMLUnknownElement,
+            // CPPONLY: NS_NewSVGFEFuncAElement,
+            TreeBuilder.OTHER);
+
+    public static final ElementName METADATA = new ElementName("metadata",
+            "metadata",
+            // CPPONLY: NS_NewHTMLUnknownElement,
+            // CPPONLY: NS_NewSVGMetadataElement,
+            TreeBuilder.OTHER);
+
+    public static final ElementName META = new ElementName("meta", "meta",
+            // CPPONLY: NS_NewHTMLMetaElement,
+            // CPPONLY: NS_NewSVGUnknownElement,
+            TreeBuilder.META | SPECIAL);
+
+    public static final ElementName TEXTAREA = new ElementName("textarea",
+            "textarea",
+            // CPPONLY: NS_NewHTMLTextAreaElement,
+            // CPPONLY: NS_NewSVGUnknownElement,
+            TreeBuilder.TEXTAREA | SPECIAL);
+
+    public static final ElementName FEFUNCB = new ElementName("fefuncb",
+            "feFuncB",
+            // CPPONLY: NS_NewHTMLUnknownElement,
+            // CPPONLY: NS_NewSVGFEFuncBElement,
+            TreeBuilder.OTHER);
+
+    public static final ElementName RB = new ElementName("rb", "rb",
+            // CPPONLY: NS_NewHTMLElement,
+            // CPPONLY: NS_NewSVGUnknownElement,
+            TreeBuilder.RB_OR_RTC | OPTIONAL_END_TAG);
+
+    public static final ElementName DESC = new ElementName("desc", "desc",
+            // CPPONLY: NS_NewHTMLUnknownElement,
+            // CPPONLY: NS_NewSVGDescElement,
+            TreeBuilder.FOREIGNOBJECT_OR_DESC | SCOPING_AS_SVG);
+
+    public static final ElementName DD = new ElementName("dd", "dd",
+            // CPPONLY: NS_NewHTMLElement,
+            // CPPONLY: NS_NewSVGUnknownElement,
+            TreeBuilder.DD_OR_DT | SPECIAL | OPTIONAL_END_TAG);
+
+    public static final ElementName BGSOUND = new ElementName("bgsound",
+            "bgsound",
+            // CPPONLY: NS_NewHTMLUnknownElement,
+            // CPPONLY: NS_NewSVGUnknownElement,
+            TreeBuilder.LINK_OR_BASEFONT_OR_BGSOUND | SPECIAL);
+
+    public static final ElementName EMBED = new ElementName("embed", "embed",
+            // CPPONLY: NS_NewHTMLEmbedElement,
+            // CPPONLY: NS_NewSVGUnknownElement,
+            TreeBuilder.EMBED | SPECIAL);
+
+    public static final ElementName FEBLEND = new ElementName("feblend",
+            "feBlend",
+            // CPPONLY: NS_NewHTMLUnknownElement,
+            // CPPONLY: NS_NewSVGFEBlendElement,
+            TreeBuilder.OTHER);
+
+    public static final ElementName FEFLOOD = new ElementName("feflood",
+            "feFlood",
+            // CPPONLY: NS_NewHTMLUnknownElement,
+            // CPPONLY: NS_NewSVGFEFloodElement,
+            TreeBuilder.OTHER);
+
+    public static final ElementName HEAD = new ElementName("head", "head",
+            // CPPONLY: NS_NewHTMLSharedElement,
+            // CPPONLY: NS_NewSVGUnknownElement,
+            TreeBuilder.HEAD | SPECIAL | OPTIONAL_END_TAG);
+
+    public static final ElementName LEGEND = new ElementName("legend", "legend",
+            // CPPONLY: NS_NewHTMLLegendElement,
+            // CPPONLY: NS_NewSVGUnknownElement,
+            TreeBuilder.OTHER);
+
+    public static final ElementName NOEMBED = new ElementName("noembed",
+            "noembed",
+            // CPPONLY: NS_NewHTMLElement,
+            // CPPONLY: NS_NewSVGUnknownElement,
+            TreeBuilder.NOEMBED | SPECIAL);
+
+    public static final ElementName TD = new ElementName("td", "td",
+            // CPPONLY: NS_NewHTMLTableCellElement,
+            // CPPONLY: NS_NewSVGUnknownElement,
+            TreeBuilder.TD_OR_TH | SPECIAL | SCOPING | OPTIONAL_END_TAG);
+
+    public static final ElementName THEAD = new ElementName("thead", "thead",
+            // CPPONLY: NS_NewHTMLTableSectionElement,
+            // CPPONLY: NS_NewSVGUnknownElement,
+            TreeBuilder.TBODY_OR_THEAD_OR_TFOOT | SPECIAL | FOSTER_PARENTING
+                    | OPTIONAL_END_TAG);
+
+    public static final ElementName ASIDE = new ElementName("aside", "aside",
+            // CPPONLY: NS_NewHTMLElement,
+            // CPPONLY: NS_NewSVGUnknownElement,
+            TreeBuilder.ADDRESS_OR_ARTICLE_OR_ASIDE_OR_DETAILS_OR_DIALOG_OR_DIR_OR_FIGCAPTION_OR_FIGURE_OR_FOOTER_OR_HEADER_OR_HGROUP_OR_MAIN_OR_NAV_OR_SECTION_OR_SUMMARY
+                    | SPECIAL);
+
+    public static final ElementName ARTICLE = new ElementName("article",
+            "article",
+            // CPPONLY: NS_NewHTMLElement,
+            // CPPONLY: NS_NewSVGUnknownElement,
+            TreeBuilder.ADDRESS_OR_ARTICLE_OR_ASIDE_OR_DETAILS_OR_DIALOG_OR_DIR_OR_FIGCAPTION_OR_FIGURE_OR_FOOTER_OR_HEADER_OR_HGROUP_OR_MAIN_OR_NAV_OR_SECTION_OR_SUMMARY
+                    | SPECIAL);
+
+    public static final ElementName ANIMATE = new ElementName("animate",
+            "animate",
+            // CPPONLY: NS_NewHTMLUnknownElement,
+            // CPPONLY: NS_NewSVGAnimateElement,
+            TreeBuilder.OTHER);
+
+    public static final ElementName BASE = new ElementName("base", "base",
+            // CPPONLY: NS_NewHTMLSharedElement,
+            // CPPONLY: NS_NewSVGUnknownElement,
+            TreeBuilder.BASE | SPECIAL);
+
+    public static final ElementName BLOCKQUOTE = new ElementName("blockquote",
+            "blockquote",
+            // CPPONLY: NS_NewHTMLSharedElement,
+            // CPPONLY: NS_NewSVGUnknownElement,
+            TreeBuilder.DIV_OR_BLOCKQUOTE_OR_CENTER_OR_MENU | SPECIAL);
+
+    public static final ElementName CODE = new ElementName("code", "code",
+            // CPPONLY: NS_NewHTMLElement,
+            // CPPONLY: NS_NewSVGUnknownElement,
+            TreeBuilder.B_OR_BIG_OR_CODE_OR_EM_OR_I_OR_S_OR_SMALL_OR_STRIKE_OR_STRONG_OR_TT_OR_U);
+
+    public static final ElementName CIRCLE = new ElementName("circle", "circle",
+            // CPPONLY: NS_NewHTMLUnknownElement,
+            // CPPONLY: NS_NewSVGCircleElement,
+            TreeBuilder.OTHER);
+
+    public static final ElementName CITE = new ElementName("cite", "cite",
+            // CPPONLY: NS_NewHTMLElement,
+            // CPPONLY: NS_NewSVGUnknownElement,
+            TreeBuilder.OTHER);
+
+    public static final ElementName ELLIPSE = new ElementName("ellipse",
+            "ellipse",
+            // CPPONLY: NS_NewHTMLUnknownElement,
+            // CPPONLY: NS_NewSVGEllipseElement,
+            TreeBuilder.OTHER);
+
+    public static final ElementName FETURBULENCE = new ElementName(
+            "feturbulence", "feTurbulence",
+            // CPPONLY: NS_NewHTMLUnknownElement,
+            // CPPONLY: NS_NewSVGFETurbulenceElement,
+            TreeBuilder.OTHER);
+
+    public static final ElementName FEMERGENODE = new ElementName("femergenode",
+            "feMergeNode",
+            // CPPONLY: NS_NewHTMLUnknownElement,
+            // CPPONLY: NS_NewSVGFEMergeNodeElement,
+            TreeBuilder.OTHER);
+
+    public static final ElementName FEIMAGE = new ElementName("feimage",
+            "feImage",
+            // CPPONLY: NS_NewHTMLUnknownElement,
+            // CPPONLY: NS_NewSVGFEImageElement,
+            TreeBuilder.OTHER);
+
+    public static final ElementName FEMERGE = new ElementName("femerge",
+            "feMerge",
+            // CPPONLY: NS_NewHTMLUnknownElement,
+            // CPPONLY: NS_NewSVGFEMergeElement,
+            TreeBuilder.OTHER);
+
+    public static final ElementName FETILE = new ElementName("fetile", "feTile",
+            // CPPONLY: NS_NewHTMLUnknownElement,
+            // CPPONLY: NS_NewSVGFETileElement,
+            TreeBuilder.OTHER);
+
+    public static final ElementName FRAME = new ElementName("frame", "frame",
+            // CPPONLY: NS_NewHTMLFrameElement,
+            // CPPONLY: NS_NewSVGUnknownElement,
+            TreeBuilder.FRAME | SPECIAL);
+
+    public static final ElementName FIGURE = new ElementName("figure", "figure",
+            // CPPONLY: NS_NewHTMLElement,
+            // CPPONLY: NS_NewSVGUnknownElement,
+            TreeBuilder.ADDRESS_OR_ARTICLE_OR_ASIDE_OR_DETAILS_OR_DIALOG_OR_DIR_OR_FIGCAPTION_OR_FIGURE_OR_FOOTER_OR_HEADER_OR_HGROUP_OR_MAIN_OR_NAV_OR_SECTION_OR_SUMMARY
+                    | SPECIAL);
+
+    public static final ElementName FECOMPOSITE = new ElementName("fecomposite",
+            "feComposite",
+            // CPPONLY: NS_NewHTMLUnknownElement,
+            // CPPONLY: NS_NewSVGFECompositeElement,
+            TreeBuilder.OTHER);
+
+    public static final ElementName IMAGE = new ElementName("image", "image",
+            // CPPONLY: NS_NewHTMLElement,
+            // CPPONLY: NS_NewSVGImageElement,
+            TreeBuilder.IMAGE);
+
+    public static final ElementName IFRAME = new ElementName("iframe", "iframe",
+            // CPPONLY: NS_NewHTMLIFrameElement,
+            // CPPONLY: NS_NewSVGUnknownElement,
+            TreeBuilder.IFRAME | SPECIAL);
+
+    public static final ElementName LINE = new ElementName("line", "line",
+            // CPPONLY: NS_NewHTMLUnknownElement,
+            // CPPONLY: NS_NewSVGLineElement,
+            TreeBuilder.OTHER);
+
+    public static final ElementName MARQUEE = new ElementName("marquee",
+            "marquee",
+            // CPPONLY: NS_NewHTMLDivElement,
+            // CPPONLY: NS_NewSVGUnknownElement,
+            TreeBuilder.MARQUEE_OR_APPLET | SPECIAL | SCOPING);
+
+    public static final ElementName POLYLINE = new ElementName("polyline",
+            "polyline",
+            // CPPONLY: NS_NewHTMLUnknownElement,
+            // CPPONLY: NS_NewSVGPolylineElement,
+            TreeBuilder.OTHER);
+
+    public static final ElementName PICTURE = new ElementName("picture",
+            "picture",
+            // CPPONLY: NS_NewHTMLPictureElement,
+            // CPPONLY: NS_NewSVGUnknownElement,
+            TreeBuilder.OTHER);
+
+    public static final ElementName SOURCE = new ElementName("source", "source",
+            // CPPONLY: NS_NewHTMLSourceElement,
+            // CPPONLY: NS_NewSVGUnknownElement,
+            TreeBuilder.PARAM_OR_SOURCE_OR_TRACK);
+
+    public static final ElementName STRIKE = new ElementName("strike", "strike",
+            // CPPONLY: NS_NewHTMLElement,
+            // CPPONLY: NS_NewSVGUnknownElement,
+            TreeBuilder.B_OR_BIG_OR_CODE_OR_EM_OR_I_OR_S_OR_SMALL_OR_STRIKE_OR_STRONG_OR_TT_OR_U);
+
+    public static final ElementName STYLE = new ElementName("style", "style",
+            // CPPONLY: NS_NewHTMLStyleElement,
+            // CPPONLY: NS_NewSVGStyleElement,
+            TreeBuilder.STYLE | SPECIAL);
+
+    public static final ElementName TABLE = new ElementName("table", "table",
+            // CPPONLY: NS_NewHTMLTableElement,
+            // CPPONLY: NS_NewSVGUnknownElement,
+            TreeBuilder.TABLE | SPECIAL | FOSTER_PARENTING | SCOPING);
+
+    public static final ElementName TITLE = new ElementName("title", "title",
+            // CPPONLY: NS_NewHTMLTitleElement,
+            // CPPONLY: NS_NewSVGTitleElement,
+            TreeBuilder.TITLE | SPECIAL | SCOPING_AS_SVG);
+
+    public static final ElementName TIME = new ElementName("time", "time",
+            // CPPONLY: NS_NewHTMLTimeElement,
+            // CPPONLY: NS_NewSVGUnknownElement,
+            TreeBuilder.OTHER);
+
+    public static final ElementName TEMPLATE = new ElementName("template",
+            "template",
+            // CPPONLY: NS_NewHTMLTemplateElement,
+            // CPPONLY: NS_NewSVGUnknownElement,
+            TreeBuilder.TEMPLATE | SPECIAL | SCOPING);
+
+    public static final ElementName ALTGLYPHDEF = new ElementName("altglyphdef",
+            "altGlyphDef",
+            // CPPONLY: NS_NewHTMLUnknownElement,
+            // CPPONLY: NS_NewSVGUnknownElement,
+            TreeBuilder.OTHER);
+
+    public static final ElementName GLYPHREF = new ElementName("glyphref",
+            "glyphRef",
+            // CPPONLY: NS_NewHTMLUnknownElement,
+            // CPPONLY: NS_NewSVGUnknownElement,
+            TreeBuilder.OTHER);
+
+    public static final ElementName DIALOG = new ElementName("dialog", "dialog",
+            // CPPONLY: NS_NewHTMLDialogElement,
+            // CPPONLY: NS_NewSVGUnknownElement,
+            TreeBuilder.ADDRESS_OR_ARTICLE_OR_ASIDE_OR_DETAILS_OR_DIALOG_OR_DIR_OR_FIGCAPTION_OR_FIGURE_OR_FOOTER_OR_HEADER_OR_HGROUP_OR_MAIN_OR_NAV_OR_SECTION_OR_SUMMARY
+                    | SPECIAL);
+
+    public static final ElementName FEFUNCG = new ElementName("fefuncg",
+            "feFuncG",
+            // CPPONLY: NS_NewHTMLUnknownElement,
+            // CPPONLY: NS_NewSVGFEFuncGElement,
+            TreeBuilder.OTHER);
+
+    public static final ElementName FEDIFFUSELIGHTING = new ElementName(
+            "fediffuselighting", "feDiffuseLighting",
+            // CPPONLY: NS_NewHTMLUnknownElement,
+            // CPPONLY: NS_NewSVGFEDiffuseLightingElement,
+            TreeBuilder.OTHER);
+
+    public static final ElementName FESPECULARLIGHTING = new ElementName(
+            "fespecularlighting", "feSpecularLighting",
+            // CPPONLY: NS_NewHTMLUnknownElement,
+            // CPPONLY: NS_NewSVGFESpecularLightingElement,
+            TreeBuilder.OTHER);
+
+    public static final ElementName LISTING = new ElementName("listing",
+            "listing",
+            // CPPONLY: NS_NewHTMLPreElement,
+            // CPPONLY: NS_NewSVGUnknownElement,
+            TreeBuilder.PRE_OR_LISTING | SPECIAL);
+
+    public static final ElementName STRONG = new ElementName("strong", "strong",
+            // CPPONLY: NS_NewHTMLElement,
+            // CPPONLY: NS_NewSVGUnknownElement,
+            TreeBuilder.B_OR_BIG_OR_CODE_OR_EM_OR_I_OR_S_OR_SMALL_OR_STRIKE_OR_STRONG_OR_TT_OR_U);
+
+    public static final ElementName ALTGLYPH = new ElementName("altglyph",
+            "altGlyph",
+            // CPPONLY: NS_NewHTMLUnknownElement,
+            // CPPONLY: NS_NewSVGUnknownElement,
+            TreeBuilder.OTHER);
+
+    public static final ElementName CLIPPATH = new ElementName("clippath",
+            "clipPath",
+            // CPPONLY: NS_NewHTMLUnknownElement,
+            // CPPONLY: NS_NewSVGClipPathElement,
+            TreeBuilder.OTHER);
+
+    public static final ElementName MGLYPH = new ElementName("mglyph", "mglyph",
+            // CPPONLY: NS_NewHTMLUnknownElement,
+            // CPPONLY: NS_NewSVGUnknownElement,
+            TreeBuilder.MGLYPH_OR_MALIGNMARK);
+
+    public static final ElementName MATH = new ElementName("math", "math",
+            // CPPONLY: NS_NewHTMLUnknownElement,
+            // CPPONLY: NS_NewSVGUnknownElement,
+            TreeBuilder.MATH);
+
+    public static final ElementName MPATH = new ElementName("mpath", "mpath",
+            // CPPONLY: NS_NewHTMLUnknownElement,
+            // CPPONLY: NS_NewSVGMPathElement,
+            TreeBuilder.OTHER);
+
+    public static final ElementName PATH = new ElementName("path", "path",
+            // CPPONLY: NS_NewHTMLUnknownElement,
+            // CPPONLY: NS_NewSVGPathElement,
+            TreeBuilder.OTHER);
+
+    public static final ElementName TH = new ElementName("th", "th",
+            // CPPONLY: NS_NewHTMLTableCellElement,
+            // CPPONLY: NS_NewSVGUnknownElement,
+            TreeBuilder.TD_OR_TH | SPECIAL | SCOPING | OPTIONAL_END_TAG);
+
+    public static final ElementName SWITCH = new ElementName("switch", "switch",
+            // CPPONLY: NS_NewHTMLUnknownElement,
+            // CPPONLY: NS_NewSVGSwitchElement,
+            TreeBuilder.OTHER);
+
+    public static final ElementName TEXTPATH = new ElementName("textpath",
+            "textPath",
+            // CPPONLY: NS_NewHTMLUnknownElement,
+            // CPPONLY: NS_NewSVGTextPathElement,
+            TreeBuilder.OTHER);
+
+    public static final ElementName LI = new ElementName("li", "li",
+            // CPPONLY: NS_NewHTMLLIElement,
+            // CPPONLY: NS_NewSVGUnknownElement,
+            TreeBuilder.LI | SPECIAL | OPTIONAL_END_TAG);
+
+    public static final ElementName MI = new ElementName("mi", "mi",
+            // CPPONLY: NS_NewHTMLUnknownElement,
+            // CPPONLY: NS_NewSVGUnknownElement,
+            TreeBuilder.MI_MO_MN_MS_MTEXT | SCOPING_AS_MATHML);
+
+    public static final ElementName LINK = new ElementName("link", "link",
+            // CPPONLY: NS_NewHTMLLinkElement,
+            // CPPONLY: NS_NewSVGUnknownElement,
+            TreeBuilder.LINK_OR_BASEFONT_OR_BGSOUND | SPECIAL);
+
+    public static final ElementName MARK = new ElementName("mark", "mark",
+            // CPPONLY: NS_NewHTMLElement,
+            // CPPONLY: NS_NewSVGUnknownElement,
+            TreeBuilder.OTHER);
+
+    public static final ElementName MALIGNMARK = new ElementName("malignmark",
+            "malignmark",
+            // CPPONLY: NS_NewHTMLUnknownElement,
+            // CPPONLY: NS_NewSVGUnknownElement,
+            TreeBuilder.MGLYPH_OR_MALIGNMARK);
+
+    public static final ElementName MASK = new ElementName("mask", "mask",
+            // CPPONLY: NS_NewHTMLUnknownElement,
+            // CPPONLY: NS_NewSVGMaskElement,
+            TreeBuilder.OTHER);
+
+    public static final ElementName TRACK = new ElementName("track", "track",
+            // CPPONLY: NS_NewHTMLTrackElement,
+            // CPPONLY: NS_NewSVGUnknownElement,
+            TreeBuilder.PARAM_OR_SOURCE_OR_TRACK | SPECIAL);
+
+    public static final ElementName DL = new ElementName("dl", "dl",
+            // CPPONLY: NS_NewHTMLSharedListElement,
+            // CPPONLY: NS_NewSVGUnknownElement,
+            TreeBuilder.UL_OR_OL_OR_DL | SPECIAL);
+
+    public static final ElementName HTML = new ElementName("html", "html",
+            // CPPONLY: NS_NewHTMLSharedElement,
+            // CPPONLY: NS_NewSVGUnknownElement,
+            TreeBuilder.HTML | SPECIAL | SCOPING | OPTIONAL_END_TAG);
+
+    public static final ElementName OL = new ElementName("ol", "ol",
+            // CPPONLY: NS_NewHTMLSharedListElement,
+            // CPPONLY: NS_NewSVGUnknownElement,
+            TreeBuilder.UL_OR_OL_OR_DL | SPECIAL);
+
+    public static final ElementName LABEL = new ElementName("label", "label",
+            // CPPONLY: NS_NewHTMLLabelElement,
+            // CPPONLY: NS_NewSVGUnknownElement,
+            TreeBuilder.OTHER);
+
+    public static final ElementName UL = new ElementName("ul", "ul",
+            // CPPONLY: NS_NewHTMLSharedListElement,
+            // CPPONLY: NS_NewSVGUnknownElement,
+            TreeBuilder.UL_OR_OL_OR_DL | SPECIAL);
+
+    public static final ElementName SMALL = new ElementName("small", "small",
+            // CPPONLY: NS_NewHTMLElement,
+            // CPPONLY: NS_NewSVGUnknownElement,
+            TreeBuilder.B_OR_BIG_OR_CODE_OR_EM_OR_I_OR_S_OR_SMALL_OR_STRIKE_OR_STRONG_OR_TT_OR_U);
+
+    public static final ElementName SYMBOL = new ElementName("symbol", "symbol",
+            // CPPONLY: NS_NewHTMLUnknownElement,
+            // CPPONLY: NS_NewSVGSymbolElement,
+            TreeBuilder.OTHER);
+
+    public static final ElementName ALTGLYPHITEM = new ElementName(
+            "altglyphitem", "altGlyphItem",
+            // CPPONLY: NS_NewHTMLUnknownElement,
+            // CPPONLY: NS_NewSVGUnknownElement,
+            TreeBuilder.OTHER);
+
+    public static final ElementName ANIMATETRANSFORM = new ElementName(
+            "animatetransform", "animateTransform",
+            // CPPONLY: NS_NewHTMLUnknownElement,
+            // CPPONLY: NS_NewSVGAnimateTransformElement,
+            TreeBuilder.OTHER);
+
+    public static final ElementName ACRONYM = new ElementName("acronym",
+            "acronym",
+            // CPPONLY: NS_NewHTMLElement,
+            // CPPONLY: NS_NewSVGUnknownElement,
+            TreeBuilder.OTHER);
+
+    public static final ElementName EM = new ElementName("em", "em",
+            // CPPONLY: NS_NewHTMLElement,
+            // CPPONLY: NS_NewSVGUnknownElement,
+            TreeBuilder.B_OR_BIG_OR_CODE_OR_EM_OR_I_OR_S_OR_SMALL_OR_STRIKE_OR_STRONG_OR_TT_OR_U);
+
+    public static final ElementName FORM = new ElementName("form", "form",
+            // CPPONLY: NS_NewHTMLFormElement,
+            // CPPONLY: NS_NewSVGUnknownElement,
+            TreeBuilder.FORM | SPECIAL);
+
+    public static final ElementName MENUITEM = new ElementName("menuitem",
+            "menuitem",
+            // CPPONLY: NS_NewHTMLMenuItemElement,
+            // CPPONLY: NS_NewSVGUnknownElement,
+            TreeBuilder.MENUITEM);
+
+    public static final ElementName PARAM = new ElementName("param", "param",
+            // CPPONLY: NS_NewHTMLSharedElement,
+            // CPPONLY: NS_NewSVGUnknownElement,
+            TreeBuilder.PARAM_OR_SOURCE_OR_TRACK | SPECIAL);
+
+    public static final ElementName ANIMATEMOTION = new ElementName(
+            "animatemotion", "animateMotion",
+            // CPPONLY: NS_NewHTMLUnknownElement,
+            // CPPONLY: NS_NewSVGAnimateMotionElement,
+            TreeBuilder.OTHER);
+
+    public static final ElementName BUTTON = new ElementName("button", "button",
+            // CPPONLY: NS_NewHTMLButtonElement,
+            // CPPONLY: NS_NewSVGUnknownElement,
+            TreeBuilder.BUTTON | SPECIAL);
+
+    public static final ElementName CAPTION = new ElementName("caption",
+            "caption",
+            // CPPONLY: NS_NewHTMLTableCaptionElement,
+            // CPPONLY: NS_NewSVGUnknownElement,
+            TreeBuilder.CAPTION | SPECIAL | SCOPING);
+
+    public static final ElementName FIGCAPTION = new ElementName("figcaption",
+            "figcaption",
+            // CPPONLY: NS_NewHTMLElement,
+            // CPPONLY: NS_NewSVGUnknownElement,
+            TreeBuilder.ADDRESS_OR_ARTICLE_OR_ASIDE_OR_DETAILS_OR_DIALOG_OR_DIR_OR_FIGCAPTION_OR_FIGURE_OR_FOOTER_OR_HEADER_OR_HGROUP_OR_MAIN_OR_NAV_OR_SECTION_OR_SUMMARY
+                    | SPECIAL);
+
+    public static final ElementName MN = new ElementName("mn", "mn",
+            // CPPONLY: NS_NewHTMLUnknownElement,
+            // CPPONLY: NS_NewSVGUnknownElement,
+            TreeBuilder.MI_MO_MN_MS_MTEXT | SCOPING_AS_MATHML);
+
+    public static final ElementName KEYGEN = new ElementName("keygen", "keygen",
+            // CPPONLY: NS_NewHTMLSpanElement,
+            // CPPONLY: NS_NewSVGUnknownElement,
+            TreeBuilder.KEYGEN);
+
+    public static final ElementName MAIN = new ElementName("main", "main",
+            // CPPONLY: NS_NewHTMLElement,
+            // CPPONLY: NS_NewSVGUnknownElement,
+            TreeBuilder.ADDRESS_OR_ARTICLE_OR_ASIDE_OR_DETAILS_OR_DIALOG_OR_DIR_OR_FIGCAPTION_OR_FIGURE_OR_FOOTER_OR_HEADER_OR_HGROUP_OR_MAIN_OR_NAV_OR_SECTION_OR_SUMMARY
+                    | SPECIAL);
+
+    public static final ElementName OPTION = new ElementName("option", "option",
+            // CPPONLY: NS_NewHTMLOptionElement,
+            // CPPONLY: NS_NewSVGUnknownElement,
+            TreeBuilder.OPTION | OPTIONAL_END_TAG);
+
+    public static final ElementName POLYGON = new ElementName("polygon",
+            "polygon",
+            // CPPONLY: NS_NewHTMLUnknownElement,
+            // CPPONLY: NS_NewSVGPolygonElement,
+            TreeBuilder.OTHER);
+
+    public static final ElementName PATTERN = new ElementName("pattern",
+            "pattern",
+            // CPPONLY: NS_NewHTMLUnknownElement,
+            // CPPONLY: NS_NewSVGPatternElement,
+            TreeBuilder.OTHER);
+
+    public static final ElementName SPAN = new ElementName("span", "span",
+            // CPPONLY: NS_NewHTMLSpanElement,
+            // CPPONLY: NS_NewSVGUnknownElement,
+            TreeBuilder.RUBY_OR_SPAN_OR_SUB_OR_SUP_OR_VAR);
+
+    public static final ElementName SECTION = new ElementName("section",
+            "section",
+            // CPPONLY: NS_NewHTMLElement,
+            // CPPONLY: NS_NewSVGUnknownElement,
+            TreeBuilder.ADDRESS_OR_ARTICLE_OR_ASIDE_OR_DETAILS_OR_DIALOG_OR_DIR_OR_FIGCAPTION_OR_FIGURE_OR_FOOTER_OR_HEADER_OR_HGROUP_OR_MAIN_OR_NAV_OR_SECTION_OR_SUMMARY
+                    | SPECIAL);
+
+    public static final ElementName TSPAN = new ElementName("tspan", "tspan",
+            // CPPONLY: NS_NewHTMLUnknownElement,
+            // CPPONLY: NS_NewSVGTSpanElement,
+            TreeBuilder.OTHER);
+
+    public static final ElementName AUDIO = new ElementName("audio", "audio",
+            // CPPONLY: NS_NewHTMLAudioElement,
+            // CPPONLY: NS_NewSVGUnknownElement,
+            TreeBuilder.OTHER);
+
+    public static final ElementName MO = new ElementName("mo", "mo",
+            // CPPONLY: NS_NewHTMLUnknownElement,
+            // CPPONLY: NS_NewSVGUnknownElement,
+            TreeBuilder.MI_MO_MN_MS_MTEXT | SCOPING_AS_MATHML);
+
+    public static final ElementName VIDEO = new ElementName("video", "video",
+            // CPPONLY: NS_NewHTMLVideoElement,
+            // CPPONLY: NS_NewSVGUnknownElement,
+            TreeBuilder.OTHER);
+
+    public static final ElementName COLGROUP = new ElementName("colgroup",
+            "colgroup",
+            // CPPONLY: NS_NewHTMLTableColElement,
+            // CPPONLY: NS_NewSVGUnknownElement,
+            TreeBuilder.COLGROUP | SPECIAL | OPTIONAL_END_TAG);
+
+    public static final ElementName FEDISPLACEMENTMAP = new ElementName(
+            "fedisplacementmap", "feDisplacementMap",
+            // CPPONLY: NS_NewHTMLUnknownElement,
+            // CPPONLY: NS_NewSVGFEDisplacementMapElement,
+            TreeBuilder.OTHER);
+
+    public static final ElementName HGROUP = new ElementName("hgroup", "hgroup",
+            // CPPONLY: NS_NewHTMLElement,
+            // CPPONLY: NS_NewSVGUnknownElement,
+            TreeBuilder.ADDRESS_OR_ARTICLE_OR_ASIDE_OR_DETAILS_OR_DIALOG_OR_DIR_OR_FIGCAPTION_OR_FIGURE_OR_FOOTER_OR_HEADER_OR_HGROUP_OR_MAIN_OR_NAV_OR_SECTION_OR_SUMMARY
+                    | SPECIAL);
+
+    public static final ElementName RP = new ElementName("rp", "rp",
+            // CPPONLY: NS_NewHTMLElement,
+            // CPPONLY: NS_NewSVGUnknownElement,
+            TreeBuilder.RT_OR_RP | OPTIONAL_END_TAG);
+
+    public static final ElementName OPTGROUP = new ElementName("optgroup",
+            "optgroup",
+            // CPPONLY: NS_NewHTMLOptGroupElement,
+            // CPPONLY: NS_NewSVGUnknownElement,
+            TreeBuilder.OPTGROUP | OPTIONAL_END_TAG);
+
+    public static final ElementName SAMP = new ElementName("samp", "samp",
+            // CPPONLY: NS_NewHTMLElement,
+            // CPPONLY: NS_NewSVGUnknownElement,
+            TreeBuilder.OTHER);
+
+    public static final ElementName STOP = new ElementName("stop", "stop",
+            // CPPONLY: NS_NewHTMLUnknownElement,
+            // CPPONLY: NS_NewSVGStopElement,
+            TreeBuilder.OTHER);
+
+    public static final ElementName BR = new ElementName("br", "br",
+            // CPPONLY: NS_NewHTMLBRElement,
+            // CPPONLY: NS_NewSVGUnknownElement,
+            TreeBuilder.BR | SPECIAL);
+
+    public static final ElementName ABBR = new ElementName("abbr", "abbr",
+            // CPPONLY: NS_NewHTMLElement,
+            // CPPONLY: NS_NewSVGUnknownElement,
+            TreeBuilder.OTHER);
+
+    public static final ElementName ANIMATECOLOR = new ElementName(
+            "animatecolor", "animateColor",
+            // CPPONLY: NS_NewHTMLUnknownElement,
+            // CPPONLY: NS_NewSVGUnknownElement,
+            TreeBuilder.OTHER);
+
+    public static final ElementName CENTER = new ElementName("center", "center",
+            // CPPONLY: NS_NewHTMLElement,
+            // CPPONLY: NS_NewSVGUnknownElement,
+            TreeBuilder.DIV_OR_BLOCKQUOTE_OR_CENTER_OR_MENU | SPECIAL);
+
+    public static final ElementName HR = new ElementName("hr", "hr",
+            // CPPONLY: NS_NewHTMLHRElement,
+            // CPPONLY: NS_NewSVGUnknownElement,
+            TreeBuilder.HR | SPECIAL);
+
+    public static final ElementName FEFUNCR = new ElementName("fefuncr",
+            "feFuncR",
+            // CPPONLY: NS_NewHTMLUnknownElement,
+            // CPPONLY: NS_NewSVGFEFuncRElement,
+            TreeBuilder.OTHER);
+
+    public static final ElementName FECOMPONENTTRANSFER = new ElementName(
+            "fecomponenttransfer", "feComponentTransfer",
+            // CPPONLY: NS_NewHTMLUnknownElement,
+            // CPPONLY: NS_NewSVGFEComponentTransferElement,
+            TreeBuilder.OTHER);
+
+    public static final ElementName FILTER = new ElementName("filter", "filter",
+            // CPPONLY: NS_NewHTMLUnknownElement,
+            // CPPONLY: NS_NewSVGFilterElement,
+            TreeBuilder.OTHER);
+
+    public static final ElementName FOOTER = new ElementName("footer", "footer",
+            // CPPONLY: NS_NewHTMLElement,
+            // CPPONLY: NS_NewSVGUnknownElement,
+            TreeBuilder.ADDRESS_OR_ARTICLE_OR_ASIDE_OR_DETAILS_OR_DIALOG_OR_DIR_OR_FIGCAPTION_OR_FIGURE_OR_FOOTER_OR_HEADER_OR_HGROUP_OR_MAIN_OR_NAV_OR_SECTION_OR_SUMMARY
+                    | SPECIAL);
+
+    public static final ElementName FEGAUSSIANBLUR = new ElementName(
+            "fegaussianblur", "feGaussianBlur",
+            // CPPONLY: NS_NewHTMLUnknownElement,
+            // CPPONLY: NS_NewSVGFEGaussianBlurElement,
+            TreeBuilder.OTHER);
+
+    public static final ElementName HEADER = new ElementName("header", "header",
+            // CPPONLY: NS_NewHTMLElement,
+            // CPPONLY: NS_NewSVGUnknownElement,
+            TreeBuilder.ADDRESS_OR_ARTICLE_OR_ASIDE_OR_DETAILS_OR_DIALOG_OR_DIR_OR_FIGCAPTION_OR_FIGURE_OR_FOOTER_OR_HEADER_OR_HGROUP_OR_MAIN_OR_NAV_OR_SECTION_OR_SUMMARY
+                    | SPECIAL);
+
+    public static final ElementName MARKER = new ElementName("marker", "marker",
+            // CPPONLY: NS_NewHTMLUnknownElement,
+            // CPPONLY: NS_NewSVGMarkerElement,
+            TreeBuilder.OTHER);
+
+    public static final ElementName METER = new ElementName("meter", "meter",
+            // CPPONLY: NS_NewHTMLMeterElement,
+            // CPPONLY: NS_NewSVGUnknownElement,
+            TreeBuilder.OTHER);
+
+    public static final ElementName NOBR = new ElementName("nobr", "nobr",
+            // CPPONLY: NS_NewHTMLElement,
+            // CPPONLY: NS_NewSVGUnknownElement,
+            TreeBuilder.NOBR);
+
+    public static final ElementName TR = new ElementName("tr", "tr",
+            // CPPONLY: NS_NewHTMLTableRowElement,
+            // CPPONLY: NS_NewSVGUnknownElement,
+            TreeBuilder.TR | SPECIAL | FOSTER_PARENTING | OPTIONAL_END_TAG);
+
+    public static final ElementName ADDRESS = new ElementName("address",
+            "address",
+            // CPPONLY: NS_NewHTMLElement,
+            // CPPONLY: NS_NewSVGUnknownElement,
+            TreeBuilder.ADDRESS_OR_ARTICLE_OR_ASIDE_OR_DETAILS_OR_DIALOG_OR_DIR_OR_FIGCAPTION_OR_FIGURE_OR_FOOTER_OR_HEADER_OR_HGROUP_OR_MAIN_OR_NAV_OR_SECTION_OR_SUMMARY
+                    | SPECIAL);
+
+    public static final ElementName CANVAS = new ElementName("canvas", "canvas",
+            // CPPONLY: NS_NewHTMLCanvasElement,
+            // CPPONLY: NS_NewSVGUnknownElement,
+            TreeBuilder.OTHER);
+
+    public static final ElementName DEFS = new ElementName("defs", "defs",
+            // CPPONLY: NS_NewHTMLUnknownElement,
+            // CPPONLY: NS_NewSVGDefsElement,
+            TreeBuilder.OTHER);
+
+    public static final ElementName DETAILS = new ElementName("details",
+            "details",
+            // CPPONLY: NS_NewHTMLDetailsElement,
+            // CPPONLY: NS_NewSVGUnknownElement,
+            TreeBuilder.ADDRESS_OR_ARTICLE_OR_ASIDE_OR_DETAILS_OR_DIALOG_OR_DIR_OR_FIGCAPTION_OR_FIGURE_OR_FOOTER_OR_HEADER_OR_HGROUP_OR_MAIN_OR_NAV_OR_SECTION_OR_SUMMARY
+                    | SPECIAL);
+
+    public static final ElementName MS = new ElementName("ms", "ms",
+            // CPPONLY: NS_NewHTMLUnknownElement,
+            // CPPONLY: NS_NewSVGUnknownElement,
+            TreeBuilder.MI_MO_MN_MS_MTEXT | SCOPING_AS_MATHML);
+
+    public static final ElementName NOFRAMES = new ElementName("noframes",
+            "noframes",
+            // CPPONLY: NS_NewHTMLElement,
+            // CPPONLY: NS_NewSVGUnknownElement,
+            TreeBuilder.NOFRAMES | SPECIAL);
+
+    public static final ElementName PROGRESS = new ElementName("progress",
+            "progress",
+            // CPPONLY: NS_NewHTMLProgressElement,
+            // CPPONLY: NS_NewSVGUnknownElement,
+            TreeBuilder.OTHER);
+
+    public static final ElementName DT = new ElementName("dt", "dt",
+            // CPPONLY: NS_NewHTMLElement,
+            // CPPONLY: NS_NewSVGUnknownElement,
+            TreeBuilder.DD_OR_DT | SPECIAL | OPTIONAL_END_TAG);
+
+    public static final ElementName APPLET = new ElementName("applet", "applet",
+            // CPPONLY: NS_NewHTMLUnknownElement,
+            // CPPONLY: NS_NewSVGUnknownElement,
+            TreeBuilder.MARQUEE_OR_APPLET | SPECIAL | SCOPING);
+
+    public static final ElementName BASEFONT = new ElementName("basefont",
+            "basefont",
+            // CPPONLY: NS_NewHTMLElement,
+            // CPPONLY: NS_NewSVGUnknownElement,
+            TreeBuilder.LINK_OR_BASEFONT_OR_BGSOUND | SPECIAL);
+
+    public static final ElementName CONTENT = new ElementName("content",
+            "content",
+            // CPPONLY: NS_NewHTMLContentElement,
+            // CPPONLY: NS_NewSVGUnknownElement,
+            TreeBuilder.OTHER);
+
+    public static final ElementName DATALIST = new ElementName("datalist",
+            "datalist",
+            // CPPONLY: NS_NewHTMLDataListElement,
+            // CPPONLY: NS_NewSVGUnknownElement,
+            TreeBuilder.OTHER);
+
+    public static final ElementName FOREIGNOBJECT = new ElementName(
+            "foreignobject", "foreignObject",
+            // CPPONLY: NS_NewHTMLUnknownElement,
+            // CPPONLY: NS_NewSVGForeignObjectElement,
+            TreeBuilder.FOREIGNOBJECT_OR_DESC | SCOPING_AS_SVG);
+
+    public static final ElementName FIELDSET = new ElementName("fieldset",
+            "fieldset",
+            // CPPONLY: NS_NewHTMLFieldSetElement,
+            // CPPONLY: NS_NewSVGUnknownElement,
+            TreeBuilder.FIELDSET | SPECIAL);
+
+    public static final ElementName FRAMESET = new ElementName("frameset",
+            "frameset",
+            // CPPONLY: NS_NewHTMLFrameSetElement,
+            // CPPONLY: NS_NewSVGUnknownElement,
+            TreeBuilder.FRAMESET | SPECIAL);
+
+    public static final ElementName FEOFFSET = new ElementName("feoffset",
+            "feOffset",
+            // CPPONLY: NS_NewHTMLUnknownElement,
+            // CPPONLY: NS_NewSVGFEOffsetElement,
+            TreeBuilder.OTHER);
+
+    public static final ElementName FESPOTLIGHT = new ElementName("fespotlight",
+            "feSpotLight",
+            // CPPONLY: NS_NewHTMLUnknownElement,
+            // CPPONLY: NS_NewSVGFESpotLightElement,
+            TreeBuilder.OTHER);
+
+    public static final ElementName FEPOINTLIGHT = new ElementName(
+            "fepointlight", "fePointLight",
+            // CPPONLY: NS_NewHTMLUnknownElement,
+            // CPPONLY: NS_NewSVGFEPointLightElement,
+            TreeBuilder.OTHER);
+
+    public static final ElementName FEDISTANTLIGHT = new ElementName(
+            "fedistantlight", "feDistantLight",
+            // CPPONLY: NS_NewHTMLUnknownElement,
+            // CPPONLY: NS_NewSVGFEDistantLightElement,
+            TreeBuilder.OTHER);
+
+    public static final ElementName FONT = new ElementName("font", "font",
+            // CPPONLY: NS_NewHTMLFontElement,
+            // CPPONLY: NS_NewSVGUnknownElement,
+            TreeBuilder.FONT);
+
+    public static final ElementName INPUT = new ElementName("input", "input",
+            // CPPONLY: NS_NewHTMLInputElement,
+            // CPPONLY: NS_NewSVGUnknownElement,
+            TreeBuilder.INPUT | SPECIAL);
+
+    public static final ElementName LINEARGRADIENT = new ElementName(
+            "lineargradient", "linearGradient",
+            // CPPONLY: NS_NewHTMLUnknownElement,
+            // CPPONLY: NS_NewSVGLinearGradientElement,
+            TreeBuilder.OTHER);
+
+    public static final ElementName MTEXT = new ElementName("mtext", "mtext",
+            // CPPONLY: NS_NewHTMLUnknownElement,
+            // CPPONLY: NS_NewSVGUnknownElement,
+            TreeBuilder.MI_MO_MN_MS_MTEXT | SCOPING_AS_MATHML);
+
+    public static final ElementName NOSCRIPT = new ElementName("noscript",
+            "noscript",
+            // CPPONLY: NS_NewHTMLElement,
+            // CPPONLY: NS_NewSVGUnknownElement,
+            TreeBuilder.NOSCRIPT | SPECIAL);
+
+    public static final ElementName RT = new ElementName("rt", "rt",
+            // CPPONLY: NS_NewHTMLElement,
+            // CPPONLY: NS_NewSVGUnknownElement,
+            TreeBuilder.RT_OR_RP | OPTIONAL_END_TAG);
+
+    public static final ElementName OBJECT = new ElementName("object", "object",
+            // CPPONLY: NS_NewHTMLObjectElement,
+            // CPPONLY: NS_NewSVGUnknownElement,
+            TreeBuilder.OBJECT | SPECIAL | SCOPING);
+
+    public static final ElementName OUTPUT = new ElementName("output", "output",
+            // CPPONLY: NS_NewHTMLOutputElement,
+            // CPPONLY: NS_NewSVGUnknownElement,
+            TreeBuilder.OUTPUT);
+
+    public static final ElementName PLAINTEXT = new ElementName("plaintext",
+            "plaintext",
+            // CPPONLY: NS_NewHTMLElement,
+            // CPPONLY: NS_NewSVGUnknownElement,
+            TreeBuilder.PLAINTEXT | SPECIAL);
+
+    public static final ElementName TT = new ElementName("tt", "tt",
+            // CPPONLY: NS_NewHTMLElement,
+            // CPPONLY: NS_NewSVGUnknownElement,
+            TreeBuilder.B_OR_BIG_OR_CODE_OR_EM_OR_I_OR_S_OR_SMALL_OR_STRIKE_OR_STRONG_OR_TT_OR_U);
+
+    public static final ElementName RECT = new ElementName("rect", "rect",
+            // CPPONLY: NS_NewHTMLUnknownElement,
+            // CPPONLY: NS_NewSVGRectElement,
+            TreeBuilder.OTHER);
+
+    public static final ElementName RADIALGRADIENT = new ElementName(
+            "radialgradient", "radialGradient",
+            // CPPONLY: NS_NewHTMLUnknownElement,
+            // CPPONLY: NS_NewSVGRadialGradientElement,
+            TreeBuilder.OTHER);
+
+    public static final ElementName SELECT = new ElementName("select", "select",
+            // CPPONLY: NS_NewHTMLSelectElement,
+            // CPPONLY: NS_NewSVGUnknownElement,
+            TreeBuilder.SELECT | SPECIAL);
+
+    public static final ElementName SCRIPT = new ElementName("script", "script",
+            // CPPONLY: NS_NewHTMLScriptElement,
+            // CPPONLY: NS_NewSVGScriptElement,
+            TreeBuilder.SCRIPT | SPECIAL);
+
+    public static final ElementName TFOOT = new ElementName("tfoot", "tfoot",
+            // CPPONLY: NS_NewHTMLTableSectionElement,
+            // CPPONLY: NS_NewSVGUnknownElement,
+            TreeBuilder.TBODY_OR_THEAD_OR_TFOOT | SPECIAL | FOSTER_PARENTING
+                    | OPTIONAL_END_TAG);
+
+    public static final ElementName TEXT = new ElementName("text", "text",
+            // CPPONLY: NS_NewHTMLUnknownElement,
+            // CPPONLY: NS_NewSVGTextElement,
+            TreeBuilder.OTHER);
+
+    public static final ElementName MENU = new ElementName("menu", "menu",
+            // CPPONLY: NS_NewHTMLMenuElement,
+            // CPPONLY: NS_NewSVGUnknownElement,
+            TreeBuilder.DIV_OR_BLOCKQUOTE_OR_CENTER_OR_MENU | SPECIAL);
+
+    public static final ElementName FEDROPSHADOW = new ElementName(
+            "fedropshadow", "feDropShadow",
+            // CPPONLY: NS_NewHTMLUnknownElement,
+            // CPPONLY: NS_NewSVGFEDropShadowElement,
+            TreeBuilder.OTHER);
+
+    public static final ElementName SHADOW = new ElementName("shadow", "shadow",
+            // CPPONLY: NS_NewHTMLShadowElement,
+            // CPPONLY: NS_NewSVGUnknownElement,
+            TreeBuilder.OTHER);
+
+    public static final ElementName VIEW = new ElementName("view", "view",
+            // CPPONLY: NS_NewHTMLUnknownElement,
+            // CPPONLY: NS_NewSVGViewElement,
+            TreeBuilder.OTHER);
+
+    public static final ElementName FECOLORMATRIX = new ElementName(
+            "fecolormatrix", "feColorMatrix",
+            // CPPONLY: NS_NewHTMLUnknownElement,
+            // CPPONLY: NS_NewSVGFEColorMatrixElement,
+            TreeBuilder.OTHER);
+
+    public static final ElementName FECONVOLVEMATRIX = new ElementName(
+            "feconvolvematrix", "feConvolveMatrix",
+            // CPPONLY: NS_NewHTMLUnknownElement,
+            // CPPONLY: NS_NewSVGFEConvolveMatrixElement,
+            TreeBuilder.OTHER);
+
+    public static final ElementName BODY = new ElementName("body", "body",
+            // CPPONLY: NS_NewHTMLBodyElement,
+            // CPPONLY: NS_NewSVGUnknownElement,
+            TreeBuilder.BODY | SPECIAL | OPTIONAL_END_TAG);
+
+    public static final ElementName FEMORPHOLOGY = new ElementName(
+            "femorphology", "feMorphology",
+            // CPPONLY: NS_NewHTMLUnknownElement,
+            // CPPONLY: NS_NewSVGFEMorphologyElement,
+            TreeBuilder.OTHER);
+
+    public static final ElementName RUBY = new ElementName("ruby", "ruby",
+            // CPPONLY: NS_NewHTMLElement,
+            // CPPONLY: NS_NewSVGUnknownElement,
+            TreeBuilder.RUBY_OR_SPAN_OR_SUB_OR_SUP_OR_VAR);
+
+    public static final ElementName SUMMARY = new ElementName("summary",
+            "summary",
+            // CPPONLY: NS_NewHTMLSummaryElement,
+            // CPPONLY: NS_NewSVGUnknownElement,
+            TreeBuilder.ADDRESS_OR_ARTICLE_OR_ASIDE_OR_DETAILS_OR_DIALOG_OR_DIR_OR_FIGCAPTION_OR_FIGURE_OR_FOOTER_OR_HEADER_OR_HGROUP_OR_MAIN_OR_NAV_OR_SECTION_OR_SUMMARY
+                    | SPECIAL);
+
+    public static final ElementName TBODY = new ElementName("tbody", "tbody",
+            // CPPONLY: NS_NewHTMLTableSectionElement,
+            // CPPONLY: NS_NewSVGUnknownElement,
+            TreeBuilder.TBODY_OR_THEAD_OR_TFOOT | SPECIAL | FOSTER_PARENTING
+                    | OPTIONAL_END_TAG);
+
+    private final static @NoLength ElementName[] ELEMENT_NAMES = { MN, ELLIPSE,
+            FRAMESET, H2, MGLYPH, NOBR, RADIALGRADIENT, RTC, EMBED, STRIKE, OL,
+            OPTGROUP, PROGRESS, MTEXT, VIEW, IMG, WBR, METADATA, ASIDE,
+            FECOMPOSITE, DIALOG, MI, EM, TSPAN, FEFUNCR, DEFS, CONTENT,
+            FEDISTANTLIGHT, OUTPUT, TEXT, FEMORPHOLOGY, DEL, NAV, SET, Q, H6,
+            RB, LEGEND, BLOCKQUOTE, FEMERGE, MARQUEE, TIME, LISTING, TH, MASK,
+            SYMBOL, ANIMATEMOTION, POLYGON, COLGROUP, ABBR, FEGAUSSIANBLUR,
+            ADDRESS, MS, APPLET, FOREIGNOBJECT, FESPOTLIGHT, INPUT, RT, TT,
+            SCRIPT, FEDROPSHADOW, FECONVOLVEMATRIX, SUMMARY, BDO, DIR, KBD, A,
+            SVG, VAR, I, U, H4, DATA, TEXTAREA, DD, FEFLOOD, TD, ANIMATE,
+            CIRCLE, FEMERGENODE, FRAME, IFRAME, PICTURE, TABLE, ALTGLYPHDEF,
+            FEDIFFUSELIGHTING, ALTGLYPH, MPATH, TEXTPATH, MARK, DL, UL,
+            ANIMATETRANSFORM, MENUITEM, CAPTION, MAIN, SPAN, MO, HGROUP, STOP,
+            CENTER, FILTER, MARKER, TR, CANVAS, DETAILS, NOFRAMES, DT, BASEFONT,
+            DATALIST, FIELDSET, FEOFFSET, FEPOINTLIGHT, FONT, LINEARGRADIENT,
+            NOSCRIPT, OBJECT, PLAINTEXT, RECT, SELECT, TFOOT, MENU, SHADOW,
+            FECOLORMATRIX, BODY, RUBY, TBODY, BIG, COL, DFN, DIV, INS, MAP, PRE,
+            B, SUB, SUP, USE, G, XMP, P, S, H1, H3, H5, AREA, FEFUNCA, META,
+            FEFUNCB, DESC, BGSOUND, FEBLEND, HEAD, NOEMBED, THEAD, ARTICLE,
+            BASE, CODE, CITE, FETURBULENCE, FEIMAGE, FETILE, FIGURE, IMAGE,
+            LINE, POLYLINE, SOURCE, STYLE, TITLE, TEMPLATE, GLYPHREF, FEFUNCG,
+            FESPECULARLIGHTING, STRONG, CLIPPATH, MATH, PATH, SWITCH, LI, LINK,
+            MALIGNMARK, TRACK, HTML, LABEL, SMALL, ALTGLYPHITEM, ACRONYM, FORM,
+            PARAM, BUTTON, FIGCAPTION, KEYGEN, OPTION, PATTERN, SECTION, AUDIO,
+            VIDEO, FEDISPLACEMENTMAP, RP, SAMP, BR, ANIMATECOLOR, HR,
+            FECOMPONENTTRANSFER, FOOTER, HEADER, METER, };
+
+    private final static int[] ELEMENT_HASHES = { 1902641154, 1749395095,
+            2001349720, 893386754, 1803876550, 1971938532, 2007781534, 59821379,
+            1732381397, 1756600614, 1870135298, 1939219752, 1990037800,
+            2005324101, 2060065124, 55104723, 62450211, 1686489160, 1747048757,
+            1749932347, 1782357526, 1818755074, 1881669634, 1907959605,
+            1967760215, 1983533124, 1999917383, 2001392798, 2006329158,
+            2008994116, 2085266636, 52485715, 57733651, 60354131, 67633153,
+            960495618, 1703936002, 1736200310, 1747838298, 1749723735,
+            1753362711, 1757157700, 1786534215, 1805647874, 1854245076,
+            1874102998, 1898223949, 1906087319, 1932928296, 1965115924,
+            1968053806, 1982173479, 1986527234, 1998724870, 2001309869,
+            2001392795, 2003183333, 2005925890, 2006974466, 2008340774,
+            2051837468, 2068523856, 2092255447, 51438659, 52488851, 56151587,
+            59244545, 60347747, 61925907, 63438849, 69730305, 926941186,
+            1681770564, 1689922072, 1730150402, 1733076167, 1738539010,
+            1747306711, 1748225318, 1749673195, 1749813541, 1751386406,
+            1755148615, 1757137429, 1763839627, 1783388497, 1797585096,
+            1803929861, 1807599880, 1854228692, 1864368130, 1873281026,
+            1881498736, 1887579800, 1899272519, 1904412884, 1907435316,
+            1919418370, 1935549734, 1941221172, 1966223078, 1967795910,
+            1971461414, 1973420034, 1982935782, 1983633431, 1988763672,
+            1998585858, 1999397992, 2000525512, 2001349704, 2001349736,
+            2001392796, 2001495140, 2004635806, 2005719336, 2006028454,
+            2006896969, 2007601444, 2008125638, 2008851557, 2021937364,
+            2058653206, 2068523853, 2083120164, 2091479332, 2092557349,
+            51434643, 51961587, 52486755, 52490899, 55110883, 57206291,
+            58773795, 59768833, 60345171, 60352339, 61395251, 62390273,
+            62973651, 67108865, 68681729, 876609538, 910163970, 943718402,
+            1679960596, 1682547543, 1686491348, 1699324759, 1715310660,
+            1730965751, 1733054663, 1733890180, 1737099991, 1740181637,
+            1747176599, 1747814436, 1748100148, 1748359220, 1749656156,
+            1749715159, 1749801286, 1749905526, 1751288021, 1752979652,
+            1755076808, 1756474198, 1756625221, 1757146773, 1757268168,
+            1766992520, 1783210839, 1783388498, 1790207270, 1798686984,
+            1803929812, 1805502724, 1806806678, 1818230786, 1853642948,
+            1854228698, 1857653029, 1868312196, 1870268949, 1874053333,
+            1881288348, 1881613047, 1884120164, 1889085973, 1898753862,
+            1900845386, 1903302038, 1905563974, 1906135367, 1907661127,
+            1914900309, 1925844629, 1934172497, 1938817026, 1941178676,
+            1963982850, 1965334268, 1967128578, 1967788867, 1967795958,
+            1968836118, 1971465813, };
+
 }
