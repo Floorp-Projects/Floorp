@@ -859,7 +859,9 @@ nsWindow::Create(nsIWidget* aParent,
   }
 
   if (mOpeningAnimationSuppressed) {
-    SuppressAnimation(true);
+    DWORD dwAttribute = TRUE;
+    DwmSetWindowAttribute(mWnd, DWMWA_TRANSITIONS_FORCEDISABLED,
+                          &dwAttribute, sizeof dwAttribute);
   }
 
   if (!IsPlugin() &&
@@ -1646,7 +1648,9 @@ nsWindow::Show(bool bState)
 #endif
 
   if (mOpeningAnimationSuppressed) {
-    SuppressAnimation(false);
+    DWORD dwAttribute = FALSE;
+    DwmSetWindowAttribute(mWnd, DWMWA_TRANSITIONS_FORCEDISABLED,
+                          &dwAttribute, sizeof dwAttribute);
   }
 }
 
@@ -2126,14 +2130,6 @@ nsWindow::SetSizeMode(nsSizeMode aMode)
     if (mode == SW_MAXIMIZE || mode == SW_SHOW)
       DispatchFocusToTopLevelWindow(true);
   }
-}
-
-void
-nsWindow::SuppressAnimation(bool aSuppress)
-{
-  DWORD dwAttribute = aSuppress ? TRUE : FALSE;
-  DwmSetWindowAttribute(mWnd, DWMWA_TRANSITIONS_FORCEDISABLED,
-                        &dwAttribute, sizeof dwAttribute);
 }
 
 // Constrain a potential move to fit onscreen

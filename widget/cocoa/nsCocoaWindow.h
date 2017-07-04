@@ -253,7 +253,6 @@ public:
     virtual void            SetSizeConstraints(const SizeConstraints& aConstraints) override;
     virtual void            Move(double aX, double aY) override;
     virtual void            SetSizeMode(nsSizeMode aMode) override;
-    virtual void            SuppressAnimation(bool aSuppress) override;
     virtual void            HideWindowChrome(bool aShouldHide) override;
 
     void EnteredFullScreen(bool aFullScreen, bool aNativeMode = true);
@@ -421,7 +420,6 @@ protected:
 
   int32_t              mNumModalDescendents;
   InputContext         mInputContext;
-  NSWindowAnimationBehavior mWindowAnimationBehavior;
 };
 
 #endif // nsCocoaWindow_h_
