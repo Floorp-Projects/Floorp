@@ -2032,3 +2032,5 @@ fails-if(!stylo||styloVsGecko) == 1365162-1.html 1365162-1-ref.html
 == 1375674.html 1375674-ref.html
 == 1372041.html 1372041-ref.html
 == 1376092.html 1376092-ref.html
+== 1377447-1.html 1377447-1-ref.html
+!= 1377447-1.html 1377447-2.html
