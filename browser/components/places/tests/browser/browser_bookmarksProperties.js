@@ -52,6 +52,7 @@ var gTests = [];
 
 // ------------------------------------------------------------------------------
 // Bug 462662 - Pressing Enter to select tag from autocomplete closes bookmarks properties dialog
+
 gTests.push({
   desc: "Bug 462662 - Pressing Enter to select tag from autocomplete closes bookmarks properties dialog",
   sidebar: SIDEBAR_BOOKMARKS_ID,
@@ -155,6 +156,8 @@ gTests.push({
     // Cleanup.
     PlacesUtils.tagging.untagURI(PlacesUtils._uri(TEST_URL), ["testTag"]);
     await PlacesUtils.bookmarks.remove(this._bookmark);
+    let bm = await PlacesUtils.bookmarks.fetch(this._bookmark.guid);
+    Assert.ok(!bm, "should have been removed");
   }
 });
 
@@ -261,6 +264,8 @@ gTests.push({
     PlacesUtils.tagging.untagURI(PlacesUtils._uri(TEST_URL),
                                  ["testTag"]);
     await PlacesUtils.bookmarks.remove(this._bookmark);
+    let bm = await PlacesUtils.bookmarks.fetch(this._bookmark.guid);
+    Assert.ok(!bm, "should have been removed");
   }
 });
 
@@ -277,6 +282,8 @@ gTests.push({
   async setup() {
     // Add a visit.
     await PlacesTestUtils.addVisits(TEST_URL);
+
+    this._addObserver = PlacesTestUtils.waitForNotification("onItemAdded");
   },
 
   selectNode(tree) {
@@ -293,9 +300,9 @@ gTests.push({
     var self = this;
 
     let unloadPromise = new Promise(resolve => {
-      this.window.addEventListener("unload", function(event) {
+      this.window.addEventListener("unload", event => {
         Assert.ok(self._cleanShutdown, "Dialog window should not be closed by pressing ESC in folder name textbox");
-        executeSoon(function() {
+        executeSoon(() => {
           resolve();
         });
       }, {capture: true, once: true});
@@ -305,18 +312,36 @@ gTests.push({
       if (event.attrName != "place")
         return;
       folderTree.removeEventListener("DOMAttrModified", arguments.callee);
-      executeSoon(function() {
+      executeSoon(async function() {
+        await self._addObserver;
+        let bookmark = await PlacesUtils.bookmarks.fetch({url: TEST_URL});
+        self._bookmarkGuid = bookmark.guid;
+
+        // TODO: Bug 1378711. We shouldn't need to wait for onItemChanged here,
+        // however we are working around an async bug in the PlacesTransactions
+        // manager and ensuring that async functions have completed before moving
+        // on.
+        let promiseItemChanged = PlacesTestUtils.waitForNotification("onItemChanged",
+          (itemId, property, isAnnotationProperty, newValue, lastModified, itemType) =>
+            itemType === PlacesUtils.bookmarks.TYPE_FOLDER && isAnnotationProperty);
+
         // Create a new folder.
         var newFolderButton = self.window.document.getElementById("editBMPanel_newFolderButton");
         newFolderButton.doCommand();
-        Assert.ok(folderTree.hasAttribute("editing"),
+
+        // Wait for the folder to be created and for editing to start.
+        await BrowserTestUtils.waitForCondition(() => folderTree.hasAttribute("editing"),
            "We are editing new folder name in folder tree");
 
         // Press Escape to discard editing new folder name.
         EventUtils.synthesizeKey("VK_ESCAPE", {}, self.window);
         Assert.ok(!folderTree.hasAttribute("editing"),
            "We have finished editing folder name in folder tree");
+        await promiseItemChanged;
         self._cleanShutdown = true;
+        self._removeObserver = PlacesTestUtils.waitForNotification("onItemRemoved",
+          (itemId, parentId, index, type, uri, guid) => guid == self._bookmarkGuid);
+
         self.window.document.documentElement.cancelDialog();
       });
     });
@@ -329,6 +354,10 @@ gTests.push({
   },
 
   async cleanup() {
+    await this._removeObserver;
+    delete this._removeObserver;
+    await PlacesTestUtils.promiseAsyncUpdates();
+
     await PlacesTestUtils.clearHistory();
   }
 });
@@ -355,7 +384,6 @@ add_task(async function test_run() {
 
     await test.cleanup();
     await test.finish();
-    await PlacesTestUtils.promiseAsyncUpdates();
 
     info(`End of test: ${test.desc}`);
   }
