@@ -17,6 +17,7 @@
 #include "nsIDOMComment.h"
 #include "nsIDOMDocumentType.h"
 #include "nsIContent.h"
+#include "nsIContentInlines.h"
 #include "nsIDocument.h"
 #include "nsIDocumentEncoder.h"
 #include "nsIParserService.h"

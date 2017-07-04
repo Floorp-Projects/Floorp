@@ -434,7 +434,7 @@ public:
 
     virtual nsIDOMNode* AsDOMNode() override { return this; }
 
-    virtual bool IsEventAttributeName(nsIAtom* aName) override;
+    virtual bool IsEventAttributeNameInternal(nsIAtom* aName) override;
 
     typedef mozilla::dom::DOMString DOMString;
     void GetXULAttr(nsIAtom* aName, DOMString& aResult) const
