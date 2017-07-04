@@ -48,7 +48,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=429659
       var tempAcc = null;
       try {
         tempAcc = aAcc.getChildAtPoint(screenX.value, screenY.value);
-      } catch(e) {}
+      } catch (e) {}
       is(tempAcc, aAcc,
          "Wrong accessible returned for position of " + aID + "!");
 
@@ -56,7 +56,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=429659
       var imageParentAcc = null;
       try {
         imageParentAcc = aAcc.parent;
-      } catch(e) {}
+      } catch (e) {}
       ok(imageParentAcc, "no parent accessible for " + aID + "!");
 
       if (imageParentAcc) {

@@ -37,13 +37,13 @@
       } else {
         try {
           applicationName = brandBundle.GetStringFromName("brandShortName");
-        } catch(e) {
+        } catch (e) {
         }
 
         if (applicationName == "")
           applicationName = "Gecko based application";
       }
-      is (accessible.name, applicationName, "wrong application accessible name");
+      is(accessible.name, applicationName, "wrong application accessible name");
 
       // nsIAccessibleApplication
       is(accessible.appName, appInfo.name, "Wrong application name");

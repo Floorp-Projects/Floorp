@@ -30,17 +30,17 @@
       var outerDocAcc = docAcc.parent;
 
       var hitAcc = rootAcc.getDeepestChildAtPoint(tgtX, tgtY);
-      is(hitAcc, hititem, "Hit match at " + tgtX + "," + tgtY + 
+      is(hitAcc, hititem, "Hit match at " + tgtX + "," + tgtY +
                           ". Found: " + prettyName(hitAcc));
       var hitAcc2 = docAcc.getDeepestChildAtPoint(tgtX, tgtY);
-      is(hitAcc, hitAcc2, "Hit match at " + tgtX + "," + tgtY + 
+      is(hitAcc, hitAcc2, "Hit match at " + tgtX + "," + tgtY +
                           ". Found: " + prettyName(hitAcc2));
 
       hitAcc = outerDocAcc.getChildAtPoint(tgtX, tgtY);
-      is(hitAcc, docAcc, "Hit match at " + tgtX + "," + tgtY + 
+      is(hitAcc, docAcc, "Hit match at " + tgtX + "," + tgtY +
                          ". Found: " + prettyName(hitAcc));
       hitAcc = docAcc.getChildAtPoint(tgtX, tgtY);
-      is(hitAcc, hittest, "Hit match at " + tgtX + "," + tgtY + 
+      is(hitAcc, hittest, "Hit match at " + tgtX + "," + tgtY +
                           ". Found: " + prettyName(hitAcc));
 
       SimpleTest.finish();

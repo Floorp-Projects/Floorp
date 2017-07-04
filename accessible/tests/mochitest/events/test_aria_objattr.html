@@ -50,8 +50,8 @@
       this.finalCheck = function updateARIAHidden()
       {
         if (aIsDefined) {
-          testAttrs(aID, {"hidden" : "true"}, true);
-          testAttrs(aChildId, {"hidden" : "true"}, true);
+          testAttrs(aID, {"hidden": "true"}, true);
+          testAttrs(aChildId, {"hidden": "true"}, true);
         } else {
           testAbsentAttrs(aID, { "hidden": "true"});
           testAbsentAttrs(aChildId, { "hidden": "true"});

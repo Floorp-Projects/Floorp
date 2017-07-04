@@ -303,7 +303,7 @@ function testTableIndexes(aIdentifier, aIdxes)
           }
 
           if (strIdx) {
-            is (parseInt(strIdx), idx,
+            is(parseInt(strIdx), idx,
                 cellId + ": cell index from object attributes of cell accessible isn't corrent.");
           }
 
@@ -404,12 +404,12 @@ function testTableSelection(aIdentifier, aCellsArray, aMsg)
   var actualSelCols = acc.getSelectedColumnIndices(actualSelColsCountObj);
 
   var actualSelColsCount = actualSelColsCountObj.value;
-  is (actualSelColsCount, selCols.length,
+  is(actualSelColsCount, selCols.length,
       msg + "Wrong count of selected columns for " + prettyName(aIdentifier) +
       "from getSelectedColumns.");
 
   for (var i = 0; i < actualSelColsCount; i++) {
-    is (actualSelCols[i], selCols[i],
+    is(actualSelCols[i], selCols[i],
         msg + "Column at index " + selCols[i] + " should be selected.");
   }
 
@@ -444,12 +444,12 @@ function testTableSelection(aIdentifier, aCellsArray, aMsg)
   var actualSelRows = acc.getSelectedRowIndices(actualSelrowCountObj);
 
   var actualSelrowCount = actualSelrowCountObj.value;
-  is (actualSelrowCount, selRows.length,
+  is(actualSelrowCount, selRows.length,
       msg + "Wrong count of selected rows for " + prettyName(aIdentifier) +
       "from getSelectedRows.");
 
   for (var i = 0; i < actualSelrowCount; i++) {
-    is (actualSelRows[i], selRows[i],
+    is(actualSelRows[i], selRows[i],
         msg + "Row at index " + selRows[i] + " should be selected.");
   }
 

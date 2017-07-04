@@ -44,7 +44,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=441519
           try {
             outerDocAcc.getActionName(0);
             do_throw("No exception thrown for actionName!");
-          } catch(e) {
+          } catch (e) {
             ok(e.result, ns_error_invalid_arg,
                "Wrong return value for actionName call!");
           }
@@ -52,7 +52,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=441519
           try {
             actionTempStr = outerDocAcc.getActionDescription(0);
             do_throw("No exception thrown for actionDescription!");
-          } catch(e) {
+          } catch (e) {
             ok(e.result, ns_error_invalid_arg,
                "Wrong return value for actionDescription call!");
           }
@@ -60,7 +60,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=441519
           try {
             outerDocAcc.doAction(0);
             do_throw("No exception thrown for doAction!");
-          } catch(e) {
+          } catch (e) {
             ok(e.result, ns_error_invalid_arg,
                "Wrong return value for doAction call!");
           }

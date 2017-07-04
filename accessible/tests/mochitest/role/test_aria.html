@@ -107,11 +107,11 @@
       for (l in weak_landmarks) {
         var id = weak_landmarks[l] + "_table";
         testRole(id, ROLE_TABLE);
-        
+    
         var accessibleTable = getAccessible(id, [nsIAccessibleTable], null,
                                             DONOTFAIL_IF_NO_INTERFACE);
         ok(!!accessibleTable, "landmarked table should have nsIAccessibleTable");
-        
+    
         if (accessibleTable)
           is(accessibleTable.getCellAt(0,0).firstChild.name, "hi", "no cell");
       }
