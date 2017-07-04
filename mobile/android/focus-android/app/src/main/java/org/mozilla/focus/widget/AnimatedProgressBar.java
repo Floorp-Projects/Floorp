@@ -17,6 +17,7 @@ import android.os.Build;
 import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.v4.view.ViewCompat;
 import android.util.AttributeSet;
 import android.view.animation.AnimationUtils;
 import android.view.animation.Interpolator;
@@ -34,6 +35,7 @@ public class AnimatedProgressBar extends ProgressBar {
     private float mClipRegion = 0f;
     private int mExpectedProgress = 0;
     private Rect tempRect;
+    private boolean mIsRtl;
 
     private ValueAnimator.AnimatorUpdateListener mListener = new ValueAnimator.AnimatorUpdateListener() {
         @Override
@@ -101,8 +103,14 @@ public class AnimatedProgressBar extends ProgressBar {
             super.onDraw(canvas);
         } else {
             canvas.getClipBounds(tempRect);
+            final float clipWidth = tempRect.width() * mClipRegion;
             canvas.save();
-            canvas.clipRect(tempRect.left + tempRect.width() * mClipRegion, tempRect.top, tempRect.right, tempRect.bottom);
+
+            if (mIsRtl) {
+                canvas.clipRect(tempRect.left, tempRect.top, tempRect.right - clipWidth, tempRect.bottom);
+            } else {
+                canvas.clipRect(tempRect.left + clipWidth, tempRect.top, tempRect.right, tempRect.bottom);
+            }
             super.onDraw(canvas);
             canvas.restore();
         }
@@ -126,6 +134,8 @@ public class AnimatedProgressBar extends ProgressBar {
     }
 
     private void animateClosing() {
+        mIsRtl = (ViewCompat.getLayoutDirection(this) == ViewCompat.LAYOUT_DIRECTION_RTL);
+
         mClosingAnimator.cancel();
 
         final Handler handler = getHandler();
