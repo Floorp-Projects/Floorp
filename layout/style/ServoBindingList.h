@@ -470,6 +470,8 @@ SERVO_BINDING_FUNC(Servo_ComputedValues_Inherit, ServoComputedValuesStrong,
 SERVO_BINDING_FUNC(Servo_ComputedValues_GetVisitedStyle,
                    ServoComputedValuesStrong,
                    ServoComputedValuesBorrowed values)
+SERVO_BINDING_FUNC(Servo_ComputedValues_GetStyleBits, uint64_t,
+                   ServoComputedValuesBorrowed values)
 // Gets the source style rules for the computed values. This returns
 // the result via rules, which would include a list of unowned pointers
 // to RawServoStyleRule.
