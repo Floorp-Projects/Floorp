@@ -66,10 +66,7 @@ private:
   ProfileBufferEntry(Kind aKind, void *aTagPtr);
   ProfileBufferEntry(Kind aKind, ProfilerMarker *aTagMarker);
   ProfileBufferEntry(Kind aKind, double aTagDouble);
-  ProfileBufferEntry(Kind aKind, uintptr_t aTagOffset);
-  ProfileBufferEntry(Kind aKind, Address aTagAddress);
   ProfileBufferEntry(Kind aKind, int aTagLine);
-  ProfileBufferEntry(Kind aKind, char aTagChar);
 
 public:
 # define DEF_MAKE_(k, t) \
@@ -99,16 +96,14 @@ private:
   FRIEND_TEST(ThreadProfile, InsertTagsWrap);
   FRIEND_TEST(ThreadProfile, MemoryMeasure);
   friend class ProfileBuffer;
+
   union {
     const char* mTagData;
     char        mTagChars[sizeof(void*)];
     void*       mTagPtr;
     ProfilerMarker* mTagMarker;
     double      mTagDouble;
-    Address     mTagAddress;
-    uintptr_t   mTagOffset;
     int         mTagInt;
-    char        mTagChar;
   };
   Kind mKind;
 };
