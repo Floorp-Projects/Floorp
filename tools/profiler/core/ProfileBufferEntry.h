@@ -84,11 +84,6 @@ public:
   PROFILE_BUFFER_ENTRY_KIND_LIST(DEF_METHODS_)
 # undef DEF_METHODS_
 
-  const ProfilerMarker* getMarker() {
-    MOZ_ASSERT(isMarker());
-    return mTagMarker;
-  }
-
 private:
   FRIEND_TEST(ThreadProfile, InsertOneTag);
   FRIEND_TEST(ThreadProfile, InsertOneTagWithTinyBuffer);
