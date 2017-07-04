@@ -699,6 +699,9 @@ NSS_PutEnv(const char *envVarName, const char *envValue)
 #endif
 
     encoded = (char *)PORT_ZAlloc(strlen(envVarName) + 2 + strlen(envValue));
+    if (!encoded) {
+        return SECFailure;
+    }
     strcpy(encoded, envVarName);
     strcat(encoded, "=");
     strcat(encoded, envValue);

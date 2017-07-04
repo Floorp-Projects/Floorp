@@ -394,7 +394,7 @@ SSL_IMPORT SECStatus SSL_SignaturePrefGet(
 ** can be set or retrieved using SSL_SignatureSchemePrefSet or
 ** SSL_SignatureSchemePrefGet.
 */
-SSL_IMPORT unsigned int SSL_SignatureMaxCount();
+SSL_IMPORT unsigned int SSL_SignatureMaxCount(void);
 
 /*
 ** Define custom priorities for EC and FF groups used in DH key exchange and EC

@@ -4030,6 +4030,7 @@ nsHalfOpenSocket::OnOutputStreamReady(nsIAsyncOutputStream *out)
         mFastOpenInProgress = false;
         mConnectionNegotiatingFastOpen = nullptr;
     }
+    MOZ_DIAGNOSTIC_ASSERT(mEnt);
     nsresult rv =  SetupConn(out, false);
     if (mEnt) {
         mEnt->mDoNotDestroy = false;
@@ -4042,6 +4043,8 @@ nsHttpConnectionMgr::
 nsHalfOpenSocket::FastOpenEnabled()
 {
     LOG(("nsHalfOpenSocket::FastOpenEnabled [this=%p]\n", this));
+
+    MOZ_DIAGNOSTIC_ASSERT(mEnt);
 
     if (!mEnt) {
         return false;
@@ -4161,7 +4164,9 @@ nsHalfOpenSocket::StartFastOpen()
             SetupBackupTimer();
         }
     }
-    mEnt->mDoNotDestroy = false;
+    if (mEnt) {
+        mEnt->mDoNotDestroy = false;
+    }
     return rv;
 }
 
@@ -4256,17 +4261,14 @@ nsHalfOpenSocket::SetFastOpenConnected(nsresult aError, bool aWillRetry)
         mStreamOut = nullptr;
         mStreamIn = nullptr;
 
-        // If backup transport ha already started put this HalfOpen back to
-        // mEnt list.
-        if (mBackupTransport) {
-            mEnt->mHalfOpens.AppendElement(this);
-            gHttpHandler->ConnMgr()->mNumHalfOpenConns++;
-        }
+        Abandon();
     }
 
     mFastOpenInProgress = false;
     mConnectionNegotiatingFastOpen = nullptr;
-    mEnt->mDoNotDestroy = false;
+    if (mEnt) {
+        mEnt->mDoNotDestroy = false;
+    }
 }
 
 void
@@ -4539,6 +4541,7 @@ nsHttpConnectionMgr::nsHalfOpenSocket::OnTransportStatus(nsITransport *trans,
 {
     MOZ_ASSERT(OnSocketThread(), "not on socket thread");
 
+    MOZ_DIAGNOSTIC_ASSERT(mEnt);
     if (mTransaction) {
         RefPtr<PendingTransactionInfo> info = FindTransactionHelper(false);
         if ((trans == mSocketTransport) ||
