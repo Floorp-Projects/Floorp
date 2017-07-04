@@ -25,10 +25,18 @@ function fromNow(hours) {
 }
 
 function parseRoutes(routes) {
-  return [
+  let rv = [
     `tc-treeherder.v2.${process.env.TC_PROJECT}.${process.env.NSS_HEAD_REVISION}.${process.env.NSS_PUSHLOG_ID}`,
     ...routes
   ];
+
+  // Notify about failures (except on try).
+  if (process.env.TC_PROJECT != "nss-try") {
+    rv.push(`notify.email.${process.env.TC_OWNER}.on-failed`,
+            `notify.email.${process.env.TC_OWNER}.on-exception`);
+  }
+
+  return rv;
 }
 
 function parseFeatures(list) {
