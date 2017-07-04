@@ -6,11 +6,10 @@ from firefox_puppeteer import PuppeteerMixin
 from marionette_harness import MarionetteTestCase
 
 
-class TestRestoreWindowsAfterRestart(PuppeteerMixin, MarionetteTestCase):
+class TestBaseRestoreWindows(PuppeteerMixin, MarionetteTestCase):
 
-    def setUp(self):
-        super(TestRestoreWindowsAfterRestart, self).setUp()
-
+    def setUp(self, startup_page=1):
+        super(TestBaseRestoreWindows, self).setUp()
         # Each list element represents a window of tabs loaded at
         # some testing URL
         self.test_windows = set([
@@ -35,9 +34,12 @@ class TestRestoreWindowsAfterRestart(PuppeteerMixin, MarionetteTestCase):
              self.marionette.absolute_url('layout/mozilla_mission.html')),
         ])
 
+        self.all_windows = self.test_windows | self.private_windows
+
         self.marionette.enforce_gecko_prefs({
-            # Set browser to restore previous session
-            'browser.startup.page': 3,
+            # Set browser restore previous session pref,
+            # depending on what the test requires.
+            'browser.startup.page': startup_page,
             # Make the content load right away instead of waiting for
             # the user to click on the background tabs
             'browser.sessionstore.restore_on_demand': False,
@@ -47,40 +49,15 @@ class TestRestoreWindowsAfterRestart(PuppeteerMixin, MarionetteTestCase):
             'browser.sessionstore.debug.no_auto_updates': True,
         })
 
+        self.open_windows(self.test_windows)
+        self.open_windows(self.private_windows, is_private=True)
+
     def tearDown(self):
         try:
             # Create a fresh profile for subsequent tests.
             self.restart(clean=True)
         finally:
-            super(TestRestoreWindowsAfterRestart, self).tearDown()
-
-    def test_with_variety(self):
-        """ Opens a set of windows, both standard and private, with
-        some number of tabs in them. Once the tabs have loaded, restarts
-        the browser, and then ensures that the standard tabs have been
-        restored, and that the private ones have not.
-        """
-        self.open_windows(self.test_windows)
-        self.open_windows(self.private_windows, is_private=True)
-
-        self.restart()
-
-        windows = self.puppeteer.windows.all
-
-        # There's no guarantee that Marionette will return us an
-        # iterator for the opened windows that will match the
-        # order within our window list. Instead, we'll convert
-        # the list of URLs within each open window to a set of
-        # tuples that will allow us to do a direct comparison
-        # while allowing the windows to be in any order.
-        opened_windows = set()
-        for win in windows:
-            urls = tuple()
-            for tab in win.tabbar.tabs:
-                urls = urls + tuple([tab.location])
-            opened_windows.add(urls)
-
-        self.assertEqual(opened_windows, self.test_windows)
+            super(TestBaseRestoreWindows, self).tearDown()
 
     def open_windows(self, window_sets, is_private=False):
         """ Opens a set of windows with tabs pointing at some
@@ -148,3 +125,66 @@ class TestRestoreWindowsAfterRestart(PuppeteerMixin, MarionetteTestCase):
                         with self.marionette.using_context('chrome'):
                             win.tabbar.open_tab()
                     self.marionette.navigate(url)
+
+    def convert_open_windows_to_set(self):
+        windows = self.puppeteer.windows.all
+
+        # There's no guarantee that Marionette will return us an
+        # iterator for the opened windows that will match the
+        # order within our window list. Instead, we'll convert
+        # the list of URLs within each open window to a set of
+        # tuples that will allow us to do a direct comparison
+        # while allowing the windows to be in any order.
+
+        opened_windows = set()
+        for win in windows:
+            urls = tuple()
+            for tab in win.tabbar.tabs:
+                urls = urls + tuple([tab.location])
+            opened_windows.add(urls)
+        return opened_windows
+
+
+class TestSessionStoreEnabled(TestBaseRestoreWindows):
+    def setUp(self):
+        super(TestSessionStoreEnabled, self).setUp(startup_page=3)
+
+    def test_with_variety(self):
+        """ Opens a set of windows, both standard and private, with
+        some number of tabs in them. Once the tabs have loaded, restarts
+        the browser, and then ensures that the standard tabs have been
+        restored, and that the private ones have not.
+        """
+        self.assertEqual(self.convert_open_windows_to_set(), self.all_windows,
+                         msg='Not all requested windows have been opened.')
+
+        self.marionette.quit(in_app=True)
+        self.marionette.start_session()
+        self.marionette.set_context('chrome')
+
+        self.assertEqual(self.convert_open_windows_to_set(), self.test_windows,
+                         msg='Non private windows and tabs should have been restored.')
+
+
+class TestSessionStoreDisabled(TestBaseRestoreWindows):
+    def test_no_restore_with_quit(self):
+        self.assertEqual(self.convert_open_windows_to_set(), self.all_windows,
+                         msg='Not all requested windows have been opened.')
+
+        self.marionette.quit(in_app=True)
+        self.marionette.start_session()
+        self.marionette.set_context('chrome')
+
+        self.assertEqual(len(self.puppeteer.windows.all), 1,
+                         msg='Windows from last session shouldn`t have been restored.')
+        self.assertEqual(len(self.puppeteer.windows.current.tabbar.tabs), 1,
+                         msg='Tabs from last session shouldn`t have been restored.')
+
+    def test_restore_with_restart(self):
+        self.assertEqual(self.convert_open_windows_to_set(), self.all_windows,
+                         msg='Not all requested windows have been opened.')
+
+        self.restart()
+
+        self.assertEqual(self.convert_open_windows_to_set(), self.test_windows,
+                         msg='Non private windows and tabs should have been restored.')
