@@ -523,17 +523,6 @@ nsStyleContext::SetStyleBits()
   // add to ApplyStyleFixups in Gecko and StyleAdjuster as part of Servo's
   // cascade.
 
-  // See if we have any text decorations.
-  // First see if our parent has text decorations.  If our parent does, then we inherit the bit.
-  if (mParent && mParent->HasTextDecorationLines()) {
-    AddStyleBit(NS_STYLE_HAS_TEXT_DECORATION_LINES);
-  } else {
-    // We might have defined a decoration.
-    if (StyleTextReset()->HasTextDecorationLines()) {
-      AddStyleBit(NS_STYLE_HAS_TEXT_DECORATION_LINES);
-    }
-  }
-
   if ((mParent && mParent->HasPseudoElementData()) || IsPseudoElement()) {
     AddStyleBit(NS_STYLE_HAS_PSEUDO_ELEMENT_DATA);
   }
@@ -715,6 +704,17 @@ GeckoStyleContext::ApplyStyleFixups(bool aSkipParentDisplayBasedStyleFixup)
                "incorrectly based on the old writing mode value");
     nsStyleVisibility* mutableVis = GET_UNIQUE_STYLE_DATA(Visibility);
     mutableVis->mWritingMode = NS_STYLE_WRITING_MODE_HORIZONTAL_TB;
+  }
+
+  // See if we have any text decorations.
+  // First see if our parent has text decorations.  If our parent does, then we inherit the bit.
+  if (mParent && mParent->HasTextDecorationLines()) {
+    AddStyleBit(NS_STYLE_HAS_TEXT_DECORATION_LINES);
+  } else {
+    // We might have defined a decoration.
+    if (StyleTextReset()->HasTextDecorationLines()) {
+      AddStyleBit(NS_STYLE_HAS_TEXT_DECORATION_LINES);
+    }
   }
 
   // CSS 2.1 10.1: Propagate the root element's 'direction' to the ICB.
