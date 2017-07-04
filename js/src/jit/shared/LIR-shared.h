@@ -8267,6 +8267,21 @@ class LWasmBoundsCheck : public LInstructionHelper<0, 2, 0>
     }
 };
 
+class LWasmAlignmentCheck : public LInstructionHelper<0, 1, 0>
+{
+  public:
+    LIR_HEADER(WasmAlignmentCheck);
+    explicit LWasmAlignmentCheck(const LAllocation& ptr) {
+        setOperand(0, ptr);
+    }
+    MWasmAlignmentCheck* mir() const {
+        return mir_->toWasmAlignmentCheck();
+    }
+    const LAllocation* ptr() {
+        return getOperand(0);
+    }
+};
+
 class LWasmLoadTls : public LInstructionHelper<1, 1, 0>
 {
   public:

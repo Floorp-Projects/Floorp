@@ -465,8 +465,9 @@ void
 CodeGeneratorX64::emitWasmStore(T* ins)
 {
     const MWasmStore* mir = ins->mir();
+    const wasm::MemoryAccessDesc& access = mir->access();
 
-    uint32_t offset = mir->access().offset();
+    uint32_t offset = access.offset();
     MOZ_ASSERT(offset < wasm::OffsetGuardLimit);
 
     const LAllocation* value = ins->getOperand(ins->ValueIndex);
@@ -475,7 +476,7 @@ CodeGeneratorX64::emitWasmStore(T* ins)
                       ? Operand(HeapReg, offset)
                       : Operand(HeapReg, ToRegister(ptr), TimesOne, offset);
 
-    wasmStore(mir->access(), value, dstAddr);
+    wasmStore(access, value, dstAddr);
 }
 
 void
@@ -540,7 +541,6 @@ void
 CodeGeneratorX64::visitAsmJSCompareExchangeHeap(LAsmJSCompareExchangeHeap* ins)
 {
     MAsmJSCompareExchangeHeap* mir = ins->mir();
-    MOZ_ASSERT(mir->access().offset() == 0);
 
     Register ptr = ToRegister(ins->ptr());
     Register oldval = ToRegister(ins->oldValue());
@@ -548,43 +548,51 @@ CodeGeneratorX64::visitAsmJSCompareExchangeHeap(LAsmJSCompareExchangeHeap* ins)
     MOZ_ASSERT(ins->addrTemp()->isBogusTemp());
 
     Scalar::Type accessType = mir->access().type();
-    BaseIndex srcAddr(HeapReg, ptr, TimesOne);
+    BaseIndex srcAddr(HeapReg, ptr, TimesOne, mir->access().offset());
 
-    masm.compareExchangeToTypedIntArray(accessType == Scalar::Uint32 ? Scalar::Int32 : accessType,
-                                        srcAddr,
-                                        oldval,
-                                        newval,
-                                        InvalidReg,
-                                        ToAnyRegister(ins->output()));
+    if (accessType == Scalar::Int64) {
+        MOZ_ASSERT(!mir->access().isPlainAsmJS());
+        masm.compareExchange64(srcAddr, Register64(oldval), Register64(newval),
+                               ToOutRegister64(ins));
+    } else {
+        masm.compareExchangeToTypedIntArray(accessType == Scalar::Uint32 ? Scalar::Int32 : accessType,
+                                            srcAddr,
+                                            oldval,
+                                            newval,
+                                            InvalidReg,
+                                            ToAnyRegister(ins->output()));
+    }
 }
 
 void
 CodeGeneratorX64::visitAsmJSAtomicExchangeHeap(LAsmJSAtomicExchangeHeap* ins)
 {
     MAsmJSAtomicExchangeHeap* mir = ins->mir();
-    MOZ_ASSERT(mir->access().offset() == 0);
 
     Register ptr = ToRegister(ins->ptr());
     Register value = ToRegister(ins->value());
     MOZ_ASSERT(ins->addrTemp()->isBogusTemp());
 
     Scalar::Type accessType = mir->access().type();
-    MOZ_ASSERT(accessType <= Scalar::Uint32);
 
-    BaseIndex srcAddr(HeapReg, ptr, TimesOne);
+    BaseIndex srcAddr(HeapReg, ptr, TimesOne, mir->access().offset());
 
-    masm.atomicExchangeToTypedIntArray(accessType == Scalar::Uint32 ? Scalar::Int32 : accessType,
-                                       srcAddr,
-                                       value,
-                                       InvalidReg,
-                                       ToAnyRegister(ins->output()));
+    if (accessType == Scalar::Int64) {
+        MOZ_ASSERT(!mir->access().isPlainAsmJS());
+        masm.atomicExchange64(srcAddr, Register64(value), ToOutRegister64(ins));
+    } else {
+        masm.atomicExchangeToTypedIntArray(accessType == Scalar::Uint32 ? Scalar::Int32 : accessType,
+                                           srcAddr,
+                                           value,
+                                           InvalidReg,
+                                           ToAnyRegister(ins->output()));
+    }
 }
 
 void
 CodeGeneratorX64::visitAsmJSAtomicBinopHeap(LAsmJSAtomicBinopHeap* ins)
 {
     MAsmJSAtomicBinopHeap* mir = ins->mir();
-    MOZ_ASSERT(mir->access().offset() == 0);
     MOZ_ASSERT(mir->hasUses());
 
     Register ptr = ToRegister(ins->ptr());
@@ -598,9 +606,21 @@ CodeGeneratorX64::visitAsmJSAtomicBinopHeap(LAsmJSAtomicBinopHeap* ins)
         accessType = Scalar::Int32;
 
     AtomicOp op = mir->operation();
-    BaseIndex srcAddr(HeapReg, ptr, TimesOne);
+    BaseIndex srcAddr(HeapReg, ptr, TimesOne, mir->access().offset());
 
-    if (value->isConstant()) {
+    if (accessType == Scalar::Int64) {
+        Register64 val = Register64(ToRegister(value));
+        Register64 out = Register64(output.gpr());
+        Register64 tmp = Register64(temp);
+        switch (op) {
+          case AtomicFetchAddOp: masm.atomicFetchAdd64(val, srcAddr, tmp, out); break;
+          case AtomicFetchSubOp: masm.atomicFetchSub64(val, srcAddr, tmp, out); break;
+          case AtomicFetchAndOp: masm.atomicFetchAnd64(val, srcAddr, tmp, out); break;
+          case AtomicFetchOrOp:  masm.atomicFetchOr64(val, srcAddr, tmp, out);  break;
+          case AtomicFetchXorOp: masm.atomicFetchXor64(val, srcAddr, tmp, out); break;
+          default:               MOZ_CRASH("Invalid typed array atomic operation");
+        }
+    } else if (value->isConstant()) {
         atomicBinopToTypedIntArray(op, accessType, Imm32(ToInt32(value)), srcAddr, temp, InvalidReg,
                                    output);
     } else {
@@ -613,7 +633,6 @@ void
 CodeGeneratorX64::visitAsmJSAtomicBinopHeapForEffect(LAsmJSAtomicBinopHeapForEffect* ins)
 {
     MAsmJSAtomicBinopHeap* mir = ins->mir();
-    MOZ_ASSERT(mir->access().offset() == 0);
     MOZ_ASSERT(!mir->hasUses());
 
     Register ptr = ToRegister(ins->ptr());
@@ -623,12 +642,28 @@ CodeGeneratorX64::visitAsmJSAtomicBinopHeapForEffect(LAsmJSAtomicBinopHeapForEff
     Scalar::Type accessType = mir->access().type();
     AtomicOp op = mir->operation();
 
-    BaseIndex srcAddr(HeapReg, ptr, TimesOne);
+    BaseIndex srcAddr(HeapReg, ptr, TimesOne, mir->access().offset());
 
-    if (value->isConstant())
-        atomicBinopToTypedIntArray(op, accessType, Imm32(ToInt32(value)), srcAddr);
-    else
+    if (accessType == Scalar::Int64) {
+        Register64 val = Register64(ToRegister(value));
+        switch (op) {
+          case AtomicFetchAddOp: masm.atomicAdd64(srcAddr, val); break;
+          case AtomicFetchSubOp: masm.atomicSub64(srcAddr, val); break;
+          case AtomicFetchAndOp: masm.atomicAnd64(srcAddr, val); break;
+          case AtomicFetchOrOp:  masm.atomicOr64(srcAddr, val);  break;
+          case AtomicFetchXorOp: masm.atomicXor64(srcAddr, val); break;
+          default:               MOZ_CRASH("Invalid typed array atomic operation");
+        }
+    } else if (value->isConstant()) {
+        Imm32 c(0);
+        if (value->toConstant()->type() == MIRType::Int64)
+            c = Imm32(ToInt64(value));
+        else
+            c = Imm32(ToInt32(value));
+        atomicBinopToTypedIntArray(op, accessType, c, srcAddr);
+    } else {
         atomicBinopToTypedIntArray(op, accessType, ToRegister(value), srcAddr);
+    }
 }
 
 void
