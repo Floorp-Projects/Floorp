@@ -506,6 +506,7 @@ HTMLTooltip.prototype = {
     if (this.type === TYPE.ARROW) {
       html += '<div class="tooltip-arrow"></div>';
     }
+    // eslint-disable-next-line no-unsanitized/property
     container.innerHTML = html;
     return container;
   },

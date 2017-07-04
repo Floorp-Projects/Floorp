@@ -42,6 +42,7 @@ function NarrateControls(mm, win, languagePromise) {
   dropdown.id = "narrate-dropdown";
   // We need inline svg here for the animation to work (bug 908634 & 1190881).
   // The style animation can't be scoped (bug 830056).
+  // eslint-disable-next-line no-unsanitized/property
   dropdown.innerHTML =
     localize`<style scoped>
       @import url("chrome://global/skin/narrateControls.css");

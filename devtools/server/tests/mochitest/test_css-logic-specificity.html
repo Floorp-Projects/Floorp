@@ -42,6 +42,7 @@ Test that css-logic calculates CSS specificity properly
     function createDocument() {
       let text = TEST_DATA.map(i=>i.text).join(",");
       text = '<style type="text/css">' + text + " {color:red;}</style>";
+      // eslint-disable-next-line no-unsanitized/property
       document.body.innerHTML = text;
     }
 

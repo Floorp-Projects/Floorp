@@ -8,6 +8,7 @@
 #include "PLDHashTable.h"
 #include "nsExpirationTracker.h"
 #include "nsClassHashtable.h"
+#include "mozilla/SystemGroup.h"
 #include "mozilla/Telemetry.h"
 #include "gfxGradientCache.h"
 #include <time.h>
@@ -123,7 +124,8 @@ class GradientCache final : public nsExpirationTracker<GradientCacheData,4>
   public:
     GradientCache()
       : nsExpirationTracker<GradientCacheData,4>(MAX_GENERATION_MS,
-                                                 "GradientCache")
+                                                 "GradientCache",
+                                                 SystemGroup::EventTargetFor(TaskCategory::Other))
     {
       srand(time(nullptr));
       mTimerPeriod = rand() % MAX_GENERATION_MS + 1;
