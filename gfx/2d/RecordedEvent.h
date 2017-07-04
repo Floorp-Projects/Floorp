@@ -288,6 +288,8 @@ public:
 
   void OutputSimplePatternInfo(const PatternStorage &aStorage, std::stringstream &aOutput) const;
 
+  template<class S>
+  static RecordedEvent *LoadEvent(S &aStream, EventType aType);
   static RecordedEvent *LoadEventFromStream(std::istream &aStream, EventType aType);
 
   EventType GetType() { return (EventType)mType; }
