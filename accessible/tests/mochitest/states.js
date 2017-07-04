@@ -187,7 +187,7 @@ function testStatesInSubtree(aAccOrElmOrID, aState, aExtraState, aAbsentState)
   var children = null;
   try {
     children = acc.children;
-  } catch(e) {}
+  } catch (e) {}
   ok(children, "Could not get children for " + aAccOrElmOrID +"!");
 
   if (children) {

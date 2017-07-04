@@ -15,11 +15,11 @@
 
 function doTest()
 {
-  // Test table with role=alert. 
+  // Test table with role=alert.
   var tableInterfaceExposed = true;
   var accTable3 = getAccessible("table3", [nsIAccessibleTable], null, DONOTFAIL_IF_NO_INTERFACE);
   if (!accTable3)
-    tableInterfaceExposed = false;  
+    tableInterfaceExposed = false;
   ok(tableInterfaceExposed, "table interface is not exposed");
 
   if (tableInterfaceExposed) {

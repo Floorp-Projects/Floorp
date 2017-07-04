@@ -214,7 +214,7 @@ var OutputGenerator = {
   _addMathRoles: function _addMathRoles(aOutput, aAccessible, aRoleStr) {
     // First, determine the actual role to use (e.g. mathmlfraction).
     let roleStr = aRoleStr;
-    switch(aAccessible.role) {
+    switch (aAccessible.role) {
       case Roles.MATHML_CELL:
       case Roles.MATHML_ENCLOSED:
       case Roles.MATHML_LABELED_ROW:
@@ -258,12 +258,12 @@ var OutputGenerator = {
     // (e.g. numerator for the first child of a mathmlfraction).
     let mathRole = Utils.getMathRole(aAccessible);
     if (mathRole) {
-      aOutput[this.outputOrder === OUTPUT_DESC_FIRST ? 'push' : 'unshift']
-        ({string: this._getOutputName(mathRole)});
+      aOutput[this.outputOrder === OUTPUT_DESC_FIRST ? 'push' : 'unshift']({
+        string: this._getOutputName(mathRole)});
     }
     if (roleStr) {
-      aOutput[this.outputOrder === OUTPUT_DESC_FIRST ? 'push' : 'unshift']
-        ({string: this._getOutputName(roleStr)});
+      aOutput[this.outputOrder === OUTPUT_DESC_FIRST ? 'push' : 'unshift']({
+        string: this._getOutputName(roleStr)});
     }
   },
 
@@ -684,14 +684,14 @@ this.UtteranceGenerator = {  // jshint ignore:line
     },
 
     list: function list(aAccessible, aRoleStr, aState, aFlags) {
-      return this._getListUtterance
-        (aAccessible, aRoleStr, aFlags, aAccessible.childCount);
+      return this._getListUtterance(aAccessible, aRoleStr, aFlags,
+        aAccessible.childCount);
     },
 
     definitionlist:
       function definitionlist(aAccessible, aRoleStr, aState, aFlags) {
-        return this._getListUtterance
-          (aAccessible, aRoleStr, aFlags, aAccessible.childCount / 2);
+        return this._getListUtterance(aAccessible, aRoleStr, aFlags,
+          aAccessible.childCount / 2);
       },
 
     application: function application(aAccessible, aRoleStr, aState, aFlags) {

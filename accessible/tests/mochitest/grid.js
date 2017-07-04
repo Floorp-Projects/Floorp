@@ -81,7 +81,7 @@ function grid(aTableIdentifier)
       return;
 
     var cell = aEvent.target;
-    switch(aEvent.keyCode) {
+    switch (aEvent.keyCode) {
       case nsIDOMKeyEvent.DOM_VK_UP:
         var colsCount = this.getColsCount();
         var idx = this.getIndexByCell(cell);

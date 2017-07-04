@@ -22,105 +22,105 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=558036
     function doTest()
     {
       // aria
-      testAttrs("atomic", {"atomic" : "true", "container-atomic" : "true"}, true);
-      testAttrs(getNode("atomic").firstChild, {"container-atomic" : "true"}, true);
-      testAbsentAttrs("atomic_false", {"atomic" : "false", "container-atomic" : "false"});
-      testAbsentAttrs(getNode("atomic_false").firstChild, {"container-atomic" : "false"});
+      testAttrs("atomic", {"atomic": "true", "container-atomic": "true"}, true);
+      testAttrs(getNode("atomic").firstChild, {"container-atomic": "true"}, true);
+      testAbsentAttrs("atomic_false", {"atomic": "false", "container-atomic": "false"});
+      testAbsentAttrs(getNode("atomic_false").firstChild, {"container-atomic": "false"});
 
-      testAttrs("autocomplete", {"autocomplete" : "true"}, true);
-      testAttrs("checkbox", {"checkable" : "true"}, true);
-      testAttrs("checkedCheckbox", {"checkable" : "true"}, true);
-      testAbsentAttrs("checkedMenuitem", {"checkable" : "true"}, true);
-      testAttrs("checkedMenuitemCheckbox", {"checkable" : "true"}, true);
-      testAttrs("checkedMenuitemRadio", {"checkable" : "true"}, true);
-      testAttrs("checkedOption", {"checkable" : "true"}, true);
-      testAttrs("checkedRadio", {"checkable" : "true"}, true);
-      testAttrs("checkedTreeitem", {"checkable" : "true"}, true);
-      testAttrs("dropeffect", {"dropeffect" : "copy"}, true);
-      testAttrs("grabbed", {"grabbed" : "true"}, true);
+      testAttrs("autocomplete", {"autocomplete": "true"}, true);
+      testAttrs("checkbox", {"checkable": "true"}, true);
+      testAttrs("checkedCheckbox", {"checkable": "true"}, true);
+      testAbsentAttrs("checkedMenuitem", {"checkable": "true"}, true);
+      testAttrs("checkedMenuitemCheckbox", {"checkable": "true"}, true);
+      testAttrs("checkedMenuitemRadio", {"checkable": "true"}, true);
+      testAttrs("checkedOption", {"checkable": "true"}, true);
+      testAttrs("checkedRadio", {"checkable": "true"}, true);
+      testAttrs("checkedTreeitem", {"checkable": "true"}, true);
+      testAttrs("dropeffect", {"dropeffect": "copy"}, true);
+      testAttrs("grabbed", {"grabbed": "true"}, true);
       testAttrs("haspopupTrue", { "haspopup": "true" }, true);
       testAbsentAttrs("haspopupFalse", { "haspopup": "false" });
       testAbsentAttrs("haspopupEmpty", { "haspopup": "" });
-      testAttrs("hidden", {"hidden" : "true"}, true);
+      testAttrs("hidden", {"hidden": "true"}, true);
       testAbsentAttrs("hidden_false", { "hidden": "false" });
-      testAbsentAttrs("modal", {"modal" : "true"});
-      testAttrs("sortAscending", {"sort" : "ascending"}, true);
-      testAttrs("sortDescending", {"sort" : "descending"}, true);
-      testAttrs("sortNone", {"sort" : "none"}, true);
-      testAttrs("sortOther", {"sort" : "other"}, true);
-      testAttrs("roledescr", {"roledescription" : "spreadshit"}, true);
-      testAttrs("currentPage", {"current" : "page"}, true);
+      testAbsentAttrs("modal", {"modal": "true"});
+      testAttrs("sortAscending", {"sort": "ascending"}, true);
+      testAttrs("sortDescending", {"sort": "descending"}, true);
+      testAttrs("sortNone", {"sort": "none"}, true);
+      testAttrs("sortOther", {"sort": "other"}, true);
+      testAttrs("roledescr", {"roledescription": "spreadshit"}, true);
+      testAttrs("currentPage", {"current": "page"}, true);
 
       // inherited attributes by subdocuments
       var subdoc = getAccessible("iframe").firstChild;
-      testAttrs(subdoc, {"busy" : "true"}, true);
+      testAttrs(subdoc, {"busy": "true"}, true);
 
       // live object attribute
 
       // HTML
-      testAttrs("output", {"live" : "polite"}, true);
+      testAttrs("output", {"live": "polite"}, true);
 
       // ARIA
-      testAttrs("live", {"live" : "polite"}, true);
-      testAttrs("live2", {"live" : "polite"}, true);
-      testAbsentAttrs("live3", {"live" : ""});
-      testAttrs("log", {"live" : "polite"}, true);
-      testAttrs("logAssertive", {"live" : "assertive"}, true);
-      testAttrs("marquee", {"live" : "off"}, true);
-      testAttrs("status", {"live" : "polite"}, true);
-      testAttrs("timer", {"live" : "off"}, true);
-      testAbsentAttrs("tablist", {"live" : "polite"});
+      testAttrs("live", {"live": "polite"}, true);
+      testAttrs("live2", {"live": "polite"}, true);
+      testAbsentAttrs("live3", {"live": ""});
+      testAttrs("log", {"live": "polite"}, true);
+      testAttrs("logAssertive", {"live": "assertive"}, true);
+      testAttrs("marquee", {"live": "off"}, true);
+      testAttrs("status", {"live": "polite"}, true);
+      testAttrs("timer", {"live": "off"}, true);
+      testAbsentAttrs("tablist", {"live": "polite"});
 
       // container-live object attribute
-      testAttrs("liveChild", {"container-live" : "polite"}, true);
-      testAttrs("live2Child", {"container-live" : "polite"}, true);
-      testAttrs("logChild", {"container-live" : "polite"}, true);
-      testAttrs("logAssertiveChild", {"container-live" : "assertive"}, true);
-      testAttrs("marqueeChild", {"container-live" : "off"}, true);
-      testAttrs("statusChild", {"container-live" : "polite"}, true);
-      testAttrs("timerChild", {"container-live" : "off"}, true);
-      testAbsentAttrs("tablistChild", {"container-live" : "polite"});
+      testAttrs("liveChild", {"container-live": "polite"}, true);
+      testAttrs("live2Child", {"container-live": "polite"}, true);
+      testAttrs("logChild", {"container-live": "polite"}, true);
+      testAttrs("logAssertiveChild", {"container-live": "assertive"}, true);
+      testAttrs("marqueeChild", {"container-live": "off"}, true);
+      testAttrs("statusChild", {"container-live": "polite"}, true);
+      testAttrs("timerChild", {"container-live": "off"}, true);
+      testAbsentAttrs("tablistChild", {"container-live": "polite"});
 
       // container-live-role object attribute
-      testAttrs("log", {"container-live-role" : "log"}, true);
-      testAttrs("logAssertive", {"container-live-role" : "log"}, true);
-      testAttrs("marquee", {"container-live-role" : "marquee"}, true);
-      testAttrs("status", {"container-live-role" : "status"}, true);
-      testAttrs("timer", {"container-live-role" : "timer"}, true);
-      testAttrs("logChild", {"container-live-role" : "log"}, true);
-      testAttrs("logAssertive", {"container-live-role" : "log"}, true);
-      testAttrs("logAssertiveChild", {"container-live-role" : "log"}, true);
-      testAttrs("marqueeChild", {"container-live-role" : "marquee"}, true);
-      testAttrs("statusChild", {"container-live-role" : "status"}, true);
-      testAttrs("timerChild", {"container-live-role" : "timer"}, true);
-      testAbsentAttrs("tablistChild", {"container-live-role" : "tablist"});
+      testAttrs("log", {"container-live-role": "log"}, true);
+      testAttrs("logAssertive", {"container-live-role": "log"}, true);
+      testAttrs("marquee", {"container-live-role": "marquee"}, true);
+      testAttrs("status", {"container-live-role": "status"}, true);
+      testAttrs("timer", {"container-live-role": "timer"}, true);
+      testAttrs("logChild", {"container-live-role": "log"}, true);
+      testAttrs("logAssertive", {"container-live-role": "log"}, true);
+      testAttrs("logAssertiveChild", {"container-live-role": "log"}, true);
+      testAttrs("marqueeChild", {"container-live-role": "marquee"}, true);
+      testAttrs("statusChild", {"container-live-role": "status"}, true);
+      testAttrs("timerChild", {"container-live-role": "timer"}, true);
+      testAbsentAttrs("tablistChild", {"container-live-role": "tablist"});
 
       // absent aria-label and aria-labelledby object attribute
-      testAbsentAttrs("label", {"label" : "foo"});
-      testAbsentAttrs("labelledby", {"labelledby" : "label"});
+      testAbsentAttrs("label", {"label": "foo"});
+      testAbsentAttrs("labelledby", {"labelledby": "label"});
 
       // container that has no default live attribute
-      testAttrs("liveGroup", {"live" : "polite"}, true);
-      testAttrs("liveGroupChild", {"container-live" : "polite"}, true);
-      testAttrs("liveGroup", {"container-live-role" : "group"}, true);
-      testAttrs("liveGroupChild", {"container-live-role" : "group"}, true);
+      testAttrs("liveGroup", {"live": "polite"}, true);
+      testAttrs("liveGroupChild", {"container-live": "polite"}, true);
+      testAttrs("liveGroup", {"container-live-role": "group"}, true);
+      testAttrs("liveGroupChild", {"container-live-role": "group"}, true);
 
       // text input type
       testAbsentAttrs("button", { "text-input-type": "button"});
       testAbsentAttrs("checkbox", { "text-input-type": "checkbox"});
       testAbsentAttrs("radio", { "text-input-type": "radio"});
-      testAttrs("email", {"text-input-type" : "email"}, true);
-      testAttrs("search", {"text-input-type" : "search"}, true);
-      testAttrs("tel", {"text-input-type" : "tel"}, true);
-      testAttrs("url", {"text-input-type" : "url"}, true);
+      testAttrs("email", {"text-input-type": "email"}, true);
+      testAttrs("search", {"text-input-type": "search"}, true);
+      testAttrs("tel", {"text-input-type": "tel"}, true);
+      testAttrs("url", {"text-input-type": "url"}, true);
 
       // ARIA
-      testAttrs("searchbox", {"text-input-type" : "search"}, true);
+      testAttrs("searchbox", {"text-input-type": "search"}, true);
 
       // html
-      testAttrs("radio", {"checkable" : "true"}, true); 
-      testAttrs("checkbox", {"checkable" : "true"}, true); 
-      testAttrs("draggable", {"draggable" : "true"}, true);
+      testAttrs("radio", {"checkable": "true"}, true);
+      testAttrs("checkbox", {"checkable": "true"}, true);
+      testAttrs("draggable", {"draggable": "true"}, true);
       testAttrs("th1", { "abbr": "SS#" }, true);
       testAttrs("th2", { "abbr": "SS#" }, true);
       testAttrs("th2", { "axis": "social" }, true);
@@ -142,7 +142,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=558036
       testAbsentAttrs(getAccessible("listitem").firstChild, { "tag": "" });
 
       // experimental aria
-      testAttrs("experimental", {"blah" : "true"}, true);
+      testAttrs("experimental", {"blah": "true"}, true);
 
       SimpleTest.finish();
     }
