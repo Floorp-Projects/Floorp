@@ -479,6 +479,17 @@ if (System.env.TASK_ID && System.env.RUN_ID) {
     gradle.addListener(makeTaskExecutionListener(artifactRootUrl))
 }
 
+if (gradle.startParameter.taskNames.any { it.endsWith('UnitTest') }) {
+    // Approach cribbed from https://github.com/rwinch/jce-checker.
+    int maxKeyLen = javax.crypto.Cipher.getMaxAllowedKeyLength("AES")
+    if (maxKeyLen <= 128) {
+        throw new GradleException(
+            "Android unit tests require " +
+            "Java Cryptography Extension (JCE) Unlimited Strength Jurisdiction Policy, see " +
+            "http://www.oracle.com/technetwork/java/javase/downloads/jce8-download-2133166.html")
+    }
+}
+
 // Bug 1320035: Gradle configuration for running findbugs.  Findbugs only allows
 // to generate one report per invocation: https://stackoverflow.com/a/42720235.
 // Run two tasks, accepting the cost of duplicate work.
