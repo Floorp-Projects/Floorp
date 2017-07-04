@@ -58,12 +58,24 @@ module.exports = createClass({
         file = file.parent;
       }
 
-      AddonManager.installTemporaryAddon(file)
-        .catch(e => {
-          console.error(e);
-          this.setState({ installError: e.message });
-        });
+      this.installAddon(file);
     });
+  },
+
+  retryInstall() {
+    this.setState({ installError: null });
+    this.installAddon(this.state.lastInstallErrorFile);
+  },
+
+  installAddon(file) {
+    AddonManager.installTemporaryAddon(file)
+      .then(() => {
+        this.setState({ lastInstallErrorFile: null });
+      })
+      .catch(e => {
+        console.error(e);
+        this.setState({ installError: e.message, lastInstallErrorFile: file });
+      });
   },
 
   render() {
@@ -93,6 +105,9 @@ module.exports = createClass({
           onClick: this.loadAddonFromFile,
         }, Strings.GetStringFromName("loadTemporaryAddon"))
       ),
-      AddonsInstallError({ error: this.state.installError }));
+      AddonsInstallError({
+        error: this.state.installError,
+        retryInstall: this.retryInstall,
+      }));
   }
 });
