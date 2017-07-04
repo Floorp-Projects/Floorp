@@ -68,7 +68,6 @@ mozmem_malloc_impl(_ZdaPvRKSt9nothrow_t)(void *ptr)
 #undef strndup
 #undef strdup
 
-#ifndef XP_DARWIN
 MOZ_MEMORY_API char *
 strndup_impl(const char *src, size_t len)
 {
@@ -86,7 +85,6 @@ strdup_impl(const char *src)
   size_t len = strlen(src);
   return strndup_impl(src, len);
 }
-#endif /* XP_DARWIN */
 
 #ifdef ANDROID
 #include <stdarg.h>
