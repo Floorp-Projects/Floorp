@@ -42,6 +42,7 @@
 #include "nsHtml5Macros.h"
 #include "nsIContentHandle.h"
 #include "nsHtml5Portability.h"
+#include "nsHtml5ContentCreatorFunction.h"
 
 #include "nsHtml5AttributeName.h"
 #include "nsHtml5ElementName.h"
@@ -91,13 +92,21 @@ nsHtml5StackNode::nsHtml5StackNode(int32_t idxInTreeBuilder)
   MOZ_COUNT_CTOR(nsHtml5StackNode);
 }
 
+mozilla::dom::HTMLContentCreatorFunction
+nsHtml5StackNode::getHtmlCreator()
+{
+  return htmlCreator;
+}
+
 void
-nsHtml5StackNode::setValues(int32_t flags,
-                            int32_t ns,
-                            nsIAtom* name,
-                            nsIContentHandle* node,
-                            nsIAtom* popName,
-                            nsHtml5HtmlAttributes* attributes)
+nsHtml5StackNode::setValues(
+  int32_t flags,
+  int32_t ns,
+  nsIAtom* name,
+  nsIContentHandle* node,
+  nsIAtom* popName,
+  nsHtml5HtmlAttributes* attributes,
+  mozilla::dom::HTMLContentCreatorFunction htmlCreator)
 {
   MOZ_ASSERT(isUnused());
   this->flags = flags;
@@ -107,6 +116,7 @@ nsHtml5StackNode::setValues(int32_t flags,
   this->node = node;
   this->attributes = attributes;
   this->refcount = 1;
+  this->htmlCreator = htmlCreator;
 }
 
 void
@@ -123,6 +133,7 @@ nsHtml5StackNode::setValues(nsHtml5ElementName* elementName,
   this->refcount = 1;
   MOZ_ASSERT(elementName->isInterned(),
              "Don't use this constructor for custom elements.");
+  this->htmlCreator = nullptr;
 }
 
 void
@@ -140,6 +151,7 @@ nsHtml5StackNode::setValues(nsHtml5ElementName* elementName,
   this->refcount = 1;
   MOZ_ASSERT(elementName->isInterned(),
              "Don't use this constructor for custom elements.");
+  this->htmlCreator = elementName->getHtmlCreator();
 }
 
 void
@@ -155,6 +167,7 @@ nsHtml5StackNode::setValues(nsHtml5ElementName* elementName,
   this->node = node;
   this->attributes = nullptr;
   this->refcount = 1;
+  this->htmlCreator = nullptr;
 }
 
 void
@@ -170,6 +183,7 @@ nsHtml5StackNode::setValues(nsHtml5ElementName* elementName,
   this->node = node;
   this->attributes = nullptr;
   this->refcount = 1;
+  this->htmlCreator = nullptr;
 }
 
 void
@@ -187,6 +201,7 @@ nsHtml5StackNode::setValues(nsHtml5ElementName* elementName,
   this->node = node;
   this->attributes = nullptr;
   this->refcount = 1;
+  this->htmlCreator = nullptr;
 }
 
 int32_t 
