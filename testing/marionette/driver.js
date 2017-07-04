@@ -473,8 +473,7 @@ GeckoDriver.prototype.startBrowser = function(win, isNewSession = false) {
   this.curFrame = null;
   this.addBrowser(win);
   this.curBrowser.isNewSession = isNewSession;
-  this.curBrowser.startSession(
-      isNewSession, win, this.whenBrowserStarted.bind(this));
+  this.whenBrowserStarted(win, isNewSession);
 };
 
 /**
@@ -708,8 +707,9 @@ GeckoDriver.prototype.newSession = function* (cmd, resp) {
     waitForWindow.call(this);
   } else if (this.appName != "Firefox" && this.curBrowser === null) {
     // if there is a content listener, then we just wake it up
-    this.addBrowser(this.getCurrentWindow());
-    this.curBrowser.startSession(this.whenBrowserStarted.bind(this));
+    let win = this.getCurrentWindow();
+    this.addBrowser(win);
+    this.whenBrowserStarted(win, false);
     this.mm.broadcastAsyncMessage("Marionette:restart", {});
   } else {
     throw new WebDriverError("Session already running");
