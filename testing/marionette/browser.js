@@ -234,11 +234,6 @@ browser.Context = class {
     });
   }
 
-  /** Called when we start a session with this browser. */
-  startSession(newSession, win, callback) {
-    callback(win, newSession);
-  }
-
   /**
    * Close the current tab.
    *
