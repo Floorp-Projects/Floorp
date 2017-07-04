@@ -129,24 +129,6 @@
     "bug_numbers": [1172689],
     "description": "Recorded when application reputation remote lookup is performed, `true` is recorded if the lookup times out."
   },
-  "APPLICATION_REPUTATION_BLOCKLIST_MATCH": {
-    "record_in_processes": ["main", "content"],
-    "alert_emails": ["safebrowsing-telemetry@mozilla.org"],
-    "expires_in_version": "60",
-    "kind": "enumerated",
-    "n_values": 4,
-    "bug_numbers": [1331139],
-    "description": "For each Application Reputation lookup against both the V2 and V4 Google lists, note which version of block list returned a match (0 = no match, 1 = match only V2, 2 = match only V4, 3 = match both V2 and V4)"
-  },
-  "APPLICATION_REPUTATION_ALLOWLIST_MATCH": {
-    "record_in_processes": ["main", "content"],
-    "alert_emails": ["safebrowsing-telemetry@mozilla.org"],
-    "expires_in_version": "60",
-    "kind": "enumerated",
-    "n_values": 4,
-    "bug_numbers": [1331139],
-    "description": "For each Application Reputation lookup against both the V2 and V4 Google lists, note which version of the allow list returned a match (0 = no match, 1 = match only V2, 2 = match only V4, 3 = match both V2 and V4)"
-  },
   "ASYNC_ANIMATION_CONTENT_TOO_LARGE_FRAME_SIZE": {
     "record_in_processes": ["main", "content"],
     "alert_emails": ["bbirtles@mozilla.com"],
