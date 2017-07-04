@@ -242,10 +242,12 @@ public:
     if (mSetupPAC) {
       mSetupPAC = false;
 
+      nsCOMPtr<nsIEventTarget> target = mPACMan->GetNeckoTarget();
       mPACMan->mPAC.Init(mSetupPACURI,
                          mSetupPACData,
                          mPACMan->mIncludePath,
-                         mExtraHeapSize);
+                         mExtraHeapSize,
+                         target);
 
       RefPtr<PACLoadComplete> runnable = new PACLoadComplete(mPACMan);
       mPACMan->Dispatch(runnable.forget());

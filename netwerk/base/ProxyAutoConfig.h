@@ -10,6 +10,7 @@
 #include "nsString.h"
 #include "nsCOMPtr.h"
 
+class nsIEventTarget;
 class nsITimer;
 namespace JS {
 class CallArgs;
@@ -32,7 +33,8 @@ public:
   nsresult Init(const nsCString &aPACURI,
                 const nsCString &aPACScript,
                 bool aIncludePath,
-                uint32_t aExtraHeapSize);
+                uint32_t aExtraHeapSize,
+                nsIEventTarget *aEventTarget);
   void     SetThreadLocalIndex(uint32_t index);
   void     Shutdown();
   void     GC();
@@ -98,6 +100,7 @@ private:
   uint32_t          mExtraHeapSize;
   nsCString         mRunningHost;
   nsCOMPtr<nsITimer> mTimer;
+  nsCOMPtr<nsIEventTarget> mMainThreadEventTarget;
 };
 
 } // namespace net
