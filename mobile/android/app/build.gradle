@@ -438,8 +438,13 @@ def makeTaskExecutionListener(artifactRootUrl) {
                 println "TEST-UNEXPECTED-FAIL | android-test | There were failing tests. See the reports at: $url"
                 break
 
-            case ':app:findbugsOfficialAustralisDebug':
+            case ':app:findbugsHtmlOfficialAustralisDebug':
                 def url = "${artifactRootUrl}/public/android/findbugs/findbugs-officialAustralisDebug-output.html"
+                println "TEST-UNEXPECTED-FAIL | android-findbugs | Findbugs found issues in the project. See the report at: $url"
+                break
+
+            case ':app:findbugsXmlOfficialAustralisDebug':
+                def url = "${artifactRootUrl}/public/android/findbugs/findbugs-officialAustralisDebug-output.xml"
                 println "TEST-UNEXPECTED-FAIL | android-findbugs | Findbugs found issues in the project. See the report at: $url"
                 break
 
@@ -453,8 +458,13 @@ def makeTaskExecutionListener(artifactRootUrl) {
                 println "TEST-UNEXPECTED-FAIL | android-test | There were failing tests. See the reports at: $url"
                 break
 
-            case ':app:findbugsOfficialPhotonDebug':
+            case ':app:findbugsHtmlOfficialPhotonDebug':
                 def url = "${artifactRootUrl}/public/android/findbugs/findbugs-officialPhotonDebug-output.html"
+                println "TEST-UNEXPECTED-FAIL | android-findbugs | Findbugs found issues in the project. See the report at: $url"
+                break
+
+            case ':app:findbugsXmlOfficialPhotonDebug':
+                def url = "${artifactRootUrl}/public/android/findbugs/findbugs-officialPhotonDebug-output.xml"
                 println "TEST-UNEXPECTED-FAIL | android-findbugs | Findbugs found issues in the project. See the report at: $url"
                 break
             }
@@ -469,10 +479,13 @@ if (System.env.TASK_ID && System.env.RUN_ID) {
     gradle.addListener(makeTaskExecutionListener(artifactRootUrl))
 }
 
-// Bug 1320035: Gradle configuration for running findbugs
+// Bug 1320035: Gradle configuration for running findbugs.  Findbugs only allows
+// to generate one report per invocation: https://stackoverflow.com/a/42720235.
+// Run two tasks, accepting the cost of duplicate work.
 android.applicationVariants.all { variant ->
-    task("findbugs${variant.name.capitalize()}", type: FindBugs) {
-        description "Analyze ${variant.name} code with findbugs"
+    task("findbugsHtml${variant.name.capitalize()}", type: FindBugs) {
+        // TODO: figure out how to share the shared configuration.
+        description "Analyze ${variant.name} code with findbugs (HTML report)"
         group "Verification"
 
         ignoreFailures = false // We want builds to fail when running this task and issues are found
@@ -485,15 +498,37 @@ android.applicationVariants.all { variant ->
         classpath = variant.javaCompile.classpath
 
         excludeFilter = file("findbugs-exclude.xml")
+        dependsOn "assemble${variant.name.capitalize()}"
 
         reports {
-            html.enabled = true // We only care about HTML reports for humans
-            xml.enabled = false
-
+            html.enabled = true // HTML reports for humans.
             html.destination = "$project.buildDir/outputs/findbugs/findbugs-${variant.name}-output.html"
+            xml.enabled = false
         }
+    }
 
+    task("findbugsXml${variant.name.capitalize()}", type: FindBugs) {
+        // TODO: figure out how to share the shared configuration.
+        description "Analyze ${variant.name} code with findbugs (XML report)"
+        group "Verification"
+
+        ignoreFailures = false // We want builds to fail when running this task and issues are found
+        effort = "max"         // Using more memory and time to find issues is acceptable in automation
+        reportLevel = "high"   // For now we only care about high priority bugs. After we have fixed
+                               // the issues with medium/low priority we can lower the report level here.
+        
+        classes = files("$project.buildDir/intermediates/classes")
+        source = variant.javaCompile.source
+        classpath = variant.javaCompile.classpath
+
+        excludeFilter = file("findbugs-exclude.xml")
         dependsOn "assemble${variant.name.capitalize()}"
+
+        reports {
+            xml.enabled = true // XML reports for machines.
+            xml.destination = "$project.buildDir/outputs/findbugs/findbugs-${variant.name}-output.xml"
+            html.enabled = false
+        }
     }
 }
 
