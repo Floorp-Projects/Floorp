@@ -299,7 +299,7 @@ proxy.AsyncMessageChannel = class {
     }
 
     let l = this.listeners_.get(path);
-    globalMessageManager.removeMessageListener(path, l[1]);
+    globalMessageManager.removeMessageListener(path, l);
     return this.listeners_.delete(path);
   }
 
