@@ -4561,7 +4561,7 @@ var XULBrowserWindow = {
 
         // XXX: This needs to be based on window activity...
         this.stopCommand.removeAttribute("disabled");
-        CombinedStopReload.switchToStop(aRequest, aWebProgress);
+        CombinedStopReload.switchToStop();
       }
     } else if (aStateFlags & nsIWebProgressListener.STATE_STOP) {
       // This (thanks to the filter) is a network stop or the last
@@ -4615,7 +4615,7 @@ var XULBrowserWindow = {
         this._busyUI = false;
 
         this.stopCommand.setAttribute("disabled", "true");
-        CombinedStopReload.switchToReload(aRequest, aWebProgress);
+        CombinedStopReload.switchToReload(aRequest instanceof Ci.nsIRequest);
       }
     }
   },
@@ -4921,107 +4921,41 @@ var CombinedStopReload = {
     stop.addEventListener("click", this);
     this.reload = reload;
     this.stop = stop;
-    this.stopReloadContainer = this.reload.parentNode;
-
-    // Disable animations until the browser has fully loaded.
-    this.animate = false;
-    let startupInfo = Cc["@mozilla.org/toolkit/app-startup;1"]
-                        .getService(Ci.nsIAppStartup)
-                        .getStartupInfo();
-    if (startupInfo.sessionRestored) {
-      this.startAnimationPrefMonitoring();
-    } else {
-      Services.obs.addObserver(this, "sessionstore-windows-restored");
-    }
   },
 
   uninit() {
     if (!this._initialized)
       return;
 
-    Services.prefs.removeObserver("toolkit.cosmeticAnimations.enabled", this);
     this._cancelTransition();
     this._initialized = false;
     this.stop.removeEventListener("click", this);
-    this.stopReloadContainer.removeEventListener("animationend", this);
-    this.stopReloadContainer = null;
     this.reload = null;
     this.stop = null;
   },
 
   handleEvent(event) {
-    switch (event.type) {
-      case "click":
-        if (event.button == 0 &&
-            !this.stop.disabled) {
-          this._stopClicked = true;
-        }
-      case "animationend": {
-        if (event.target.classList.contains("toolbarbutton-animatable-image") &&
-            (event.animationName == "reload-to-stop" ||
-             event.animationName == "stop-to-reload" ||
-             event.animationName == "reload-to-stop-rtl" ||
-             event.animationName == "stop-to-reload-rtl")) {
-          this.stopReloadContainer.removeAttribute("animate");
-        }
-      }
-    }
+    // the only event we listen to is "click" on the stop button
+    if (event.button == 0 &&
+        !this.stop.disabled)
+      this._stopClicked = true;
   },
 
-  observe(subject, topic, data) {
-    if (topic == "sessionstore-windows-restored") {
-      Services.obs.removeObserver(this, "sessionstore-windows-restored");
-      this.startAnimationPrefMonitoring();
-    } else if (topic == "nsPref:changed") {
-      this.animate = Services.prefs.getBoolPref("toolkit.cosmeticAnimations.enabled");
-    }
-  },
-
-  startAnimationPrefMonitoring() {
-    requestIdleCallback(() => {
-      this.animate = Services.prefs.getBoolPref("toolkit.cosmeticAnimations.enabled") &&
-                     Services.prefs.getBoolPref("browser.stopReloadAnimation.enabled");
-      Services.prefs.addObserver("toolkit.cosmeticAnimations.enabled", this);
-      this.stopReloadContainer.addEventListener("animationend", this);
-    });
-  },
-
-  switchToStop(aRequest, aWebProgress) {
+  switchToStop() {
     if (!this._initialized)
       return;
 
-    let shouldAnimate = AppConstants.MOZ_PHOTON_ANIMATIONS &&
-                        aRequest instanceof Ci.nsIRequest &&
-                        aWebProgress.isTopLevel &&
-                        aWebProgress.isLoadingDocument &&
-                        this.animate;
-
     this._cancelTransition();
-    if (shouldAnimate)
-      this.stopReloadContainer.setAttribute("animate", "true");
-    else
-      this.stopReloadContainer.removeAttribute("animate");
     this.reload.setAttribute("displaystop", "true");
   },
 
-  switchToReload(aRequest, aWebProgress) {
+  switchToReload(aDelay) {
     if (!this._initialized)
       return;
 
-    let shouldAnimate = AppConstants.MOZ_PHOTON_ANIMATIONS &&
-                        aRequest instanceof Ci.nsIRequest &&
-                        aWebProgress.isTopLevel &&
-                        !aWebProgress.isLoadingDocument &&
-                        this.animate;
-
-    if (shouldAnimate)
-      this.stopReloadContainer.setAttribute("animate", "true");
-    else
-      this.stopReloadContainer.removeAttribute("animate");
-
     this.reload.removeAttribute("displaystop");
 
-    if (!shouldAnimate || this._stopClicked) {
+    if (!aDelay || this._stopClicked) {
       this._stopClicked = false;
       this._cancelTransition();
       this.reload.disabled = XULBrowserWindow.reloadCommand
