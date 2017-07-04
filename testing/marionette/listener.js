@@ -493,7 +493,6 @@ function removeMessageListenerId(messageName, handler) {
   removeMessageListener(messageName + listenerId, handler);
 }
 
-var getTitleFn = dispatch(getTitle);
 var getPageSourceFn = dispatch(getPageSource);
 var getActiveElementFn = dispatch(getActiveElement);
 var getElementAttributeFn = dispatch(getElementAttribute);
@@ -535,7 +534,6 @@ function startListeners() {
   addMessageListenerId("Marionette:get", get);
   addMessageListenerId("Marionette:waitForPageLoaded", waitForPageLoaded);
   addMessageListenerId("Marionette:cancelRequest", cancelRequest);
-  addMessageListenerId("Marionette:getTitle", getTitleFn);
   addMessageListenerId("Marionette:getPageSource", getPageSourceFn);
   addMessageListenerId("Marionette:goBack", goBack);
   addMessageListenerId("Marionette:goForward", goForward);
@@ -564,7 +562,6 @@ function startListeners() {
   addMessageListenerId("Marionette:switchToShadowRoot", switchToShadowRootFn);
   addMessageListenerId("Marionette:deleteSession", deleteSession);
   addMessageListenerId("Marionette:sleepSession", sleepSession);
-  addMessageListenerId("Marionette:getAppCacheStatus", getAppCacheStatus);
   addMessageListenerId("Marionette:takeScreenshot", takeScreenshotFn);
   addMessageListenerId("Marionette:reftestWait", reftestWaitFn);
 }
@@ -610,7 +607,6 @@ function deleteSession(msg) {
   removeMessageListenerId("Marionette:get", get);
   removeMessageListenerId("Marionette:waitForPageLoaded", waitForPageLoaded);
   removeMessageListenerId("Marionette:cancelRequest", cancelRequest);
-  removeMessageListenerId("Marionette:getTitle", getTitleFn);
   removeMessageListenerId("Marionette:getPageSource", getPageSourceFn);
   removeMessageListenerId("Marionette:goBack", goBack);
   removeMessageListenerId("Marionette:goForward", goForward);
@@ -648,7 +644,6 @@ function deleteSession(msg) {
       "Marionette:switchToShadowRoot", switchToShadowRootFn);
   removeMessageListenerId("Marionette:deleteSession", deleteSession);
   removeMessageListenerId("Marionette:sleepSession", sleepSession);
-  removeMessageListenerId("Marionette:getAppCacheStatus", getAppCacheStatus);
   removeMessageListenerId("Marionette:takeScreenshot", takeScreenshotFn);
 
   seenEls.clear();
@@ -1244,13 +1239,6 @@ function refresh(msg) {
 }
 
 /**
- * Get the title of the current browsing context.
- */
-function getTitle() {
-  return curContainer.frame.top.document.title;
-}
-
-/**
  * Get source of the current browsing context's DOM.
  */
 function getPageSource() {
@@ -1691,11 +1679,6 @@ function switchToFrame(msg) {
 
     sendOk(command_id);
   }
-}
-
-function getAppCacheStatus(msg) {
-  sendResponse(
-      curContainer.frame.applicationCache.status, msg.json.command_id);
 }
 
 /**

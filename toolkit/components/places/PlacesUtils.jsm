@@ -230,10 +230,13 @@ const BOOKMARK_VALIDATORS = Object.freeze({
                                   PlacesUtils.bookmarks.TYPE_FOLDER,
                                   PlacesUtils.bookmarks.TYPE_SEPARATOR ].includes(v)),
   title: v => {
-    simpleValidateFunc(val => val === null || typeof(val) == "string").call(this, v);
-    if (!v)
-      return null;
-    return v.slice(0, DB_TITLE_LENGTH_MAX);
+    if (v === null) {
+      return "";
+    }
+    if (typeof(v) == "string") {
+      return v.slice(0, DB_TITLE_LENGTH_MAX);
+    }
+    throw new Error("Invalid title");
   },
   url: v => {
     simpleValidateFunc(val => (typeof(val) == "string" && val.length <= DB_URL_LENGTH_MAX) ||
@@ -1951,8 +1954,8 @@ this.PlacesUtils = {
          FROM moz_bookmarks b2
          JOIN descendants ON b2.parent = descendants.id AND b2.id <> :tags_folder)
        SELECT d.level, d.id, d.guid, d.parent, d.parentGuid, d.type,
-              d.position AS [index], d.title, d.dateAdded, d.lastModified,
-              h.url, (SELECT icon_url FROM moz_icons i
+              d.position AS [index], IFNULL(d.title, "") AS title, d.dateAdded,
+              d.lastModified, h.url, (SELECT icon_url FROM moz_icons i
                       JOIN moz_icons_to_pages ON icon_id = i.id
                       JOIN moz_pages_w_icons pi ON page_id = pi.id
                       WHERE pi.page_url_hash = hash(h.url) AND pi.page_url = h.url

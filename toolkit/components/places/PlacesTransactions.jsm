@@ -192,30 +192,31 @@ function setTimeout(callback, ms) {
   timer.initWithCallback(callback, ms, timer.TYPE_ONE_SHOT);
 }
 
-var TransactionsHistory = [];
-TransactionsHistory.__proto__ = {
-  __proto__: Array.prototype,
+class TransactionsHistoryArray extends Array {
+  constructor() {
+    super();
 
-  // The index of the first undo entry (if any) - See the documentation
-  // at the top of this file.
-  _undoPosition: 0,
+    // The index of the first undo entry (if any) - See the documentation
+    // at the top of this file.
+    this._undoPosition = 0;
+    // Outside of this module, the API of transactions is inaccessible, and so
+    // are any internal properties.  To achieve that, transactions are proxified
+    // in their constructors.  This maps the proxies to their respective raw
+    // objects.
+    this.proxifiedToRaw = new WeakMap();
+  }
+
   get undoPosition() {
     return this._undoPosition;
-  },
+  }
 
   // Handy shortcuts
   get topUndoEntry() {
     return this.undoPosition < this.length ? this[this.undoPosition] : null;
-  },
+  }
   get topRedoEntry() {
     return this.undoPosition > 0 ? this[this.undoPosition - 1] : null;
-  },
-
-  // Outside of this module, the API of transactions is inaccessible, and so
-  // are any internal properties.  To achieve that, transactions are proxified
-  // in their constructors.  This maps the proxies to their respective raw
-  // objects.
-  proxifiedToRaw: new WeakMap(),
+  }
 
   /**
    * Proxify a transaction object for consumers.
@@ -232,7 +233,7 @@ TransactionsHistory.__proto__ = {
     });
     this.proxifiedToRaw.set(proxy, rawTransaction);
     return proxy;
-  },
+  }
 
   /**
    * Check if the given object is a the proxy object for some transaction.
@@ -243,7 +244,7 @@ TransactionsHistory.__proto__ = {
    */
   isProxifiedTransactionObject(value) {
     return this.proxifiedToRaw.has(value);
-  },
+  }
 
   /**
    * Get the raw transaction for the given proxy.
@@ -254,7 +255,7 @@ TransactionsHistory.__proto__ = {
    */
   getRawTransaction(proxy) {
     return this.proxifiedToRaw.get(proxy);
-  },
+  }
 
   /**
    * Add a transaction either as a new entry, if forced or if there are no undo
@@ -278,7 +279,7 @@ TransactionsHistory.__proto__ = {
     } else {
       this[this.undoPosition].unshift(proxifiedTransaction);
     }
-  },
+  }
 
   /**
    * Clear all undo entries.
@@ -286,7 +287,7 @@ TransactionsHistory.__proto__ = {
   clearUndoEntries() {
     if (this.undoPosition < this.length)
       this.splice(this.undoPosition);
-  },
+  }
 
   /**
    * Clear all redo entries.
@@ -296,7 +297,7 @@ TransactionsHistory.__proto__ = {
       this.splice(0, this.undoPosition);
       this._undoPosition = 0;
     }
-  },
+  }
 
   /**
    * Clear all entries.
@@ -307,8 +308,10 @@ TransactionsHistory.__proto__ = {
       this._undoPosition = 0;
     }
   }
-};
+}
 
+XPCOMUtils.defineLazyGetter(this, "TransactionsHistory",
+                            () => new TransactionsHistoryArray());
 
 var PlacesTransactions = {
   /**

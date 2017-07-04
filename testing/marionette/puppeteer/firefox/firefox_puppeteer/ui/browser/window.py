@@ -88,7 +88,7 @@ class BrowserWindow(BaseWindow):
 
         notifications_map = {
             'addon-install-blocked-notification': AddOnInstallBlockedNotification,
-            'addon-install-confirmation-notification': AddOnInstallConfirmationNotification,
+            'addon-webext-permissions-notification': AddOnInstallConfirmationNotification,
             'addon-install-complete-notification': AddOnInstallCompleteNotification,
             'addon-install-failed-notification': AddOnInstallFailedNotification,
             'addon-progress-notification': AddOnProgressNotification,
