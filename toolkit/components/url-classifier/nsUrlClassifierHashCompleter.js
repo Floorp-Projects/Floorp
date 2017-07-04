@@ -15,6 +15,7 @@ const PARTIAL_LENGTH = 4;
 
 // Upper limit on the server response minimumWaitDuration
 const MIN_WAIT_DURATION_MAX_VALUE = 24 * 60 * 60 * 1000;
+const PREF_DEBUG_ENABLED = "browser.safebrowsing.debug";
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
@@ -28,10 +29,11 @@ XPCOMUtils.defineLazyServiceGetter(this, 'gUrlUtil',
                                    '@mozilla.org/url-classifier/utils;1',
                                    'nsIUrlClassifierUtils');
 
+let loggingEnabled = false;
+
 // Log only if browser.safebrowsing.debug is true
 function log(...stuff) {
-  let logging = Services.prefs.getBoolPref("browser.safebrowsing.debug", false);
-  if (!logging) {
+  if (!loggingEnabled) {
     return;
   }
 
@@ -181,7 +183,7 @@ function HashCompleter() {
   this._nextGethashTimeMs = {};
 
   Services.obs.addObserver(this, "quit-application");
-
+  Services.prefs.addObserver(PREF_DEBUG_ENABLED, this);
 }
 
 HashCompleter.prototype = {
@@ -290,9 +292,16 @@ HashCompleter.prototype = {
   },
 
   observe: function HC_observe(aSubject, aTopic, aData) {
-    if (aTopic == "quit-application") {
+    switch (aTopic) {
+    case "quit-application":
       this._shuttingDown = true;
       Services.obs.removeObserver(this, "quit-application");
+      break;
+    case "nsPref:changed":
+      if (aData == PREF_DEBUG_ENABLED) {
+        loggingEnabled = Services.prefs.getBoolPref(PREF_DEBUG_ENABLED);
+      }
+      break;
     }
   },
 };
