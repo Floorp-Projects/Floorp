@@ -104,6 +104,7 @@ public class UrlInputFragment extends Fragment implements View.OnClickListener, 
     private View urlInputBackgroundView;
     private View toolbarBackgroundView;
 
+    private volatile boolean isAnimating;
     private boolean isBackPressed;
 
     @Override
@@ -205,7 +206,7 @@ public class UrlInputFragment extends Fragment implements View.OnClickListener, 
         }
     }
 
-    private void animateAndDismiss() {
+    private synchronized void animateAndDismiss() {
         // Don't allow any more clicks: dismissView is still visible until the animation ends,
         // but we don't want to restart animations and/or trigger hiding again (which could potentially
         // cause crashes since we don't know what state we're in). Ignoring further clicks is the simplest
@@ -227,6 +228,13 @@ public class UrlInputFragment extends Fragment implements View.OnClickListener, 
      * Play animation between home screen and the URL input.
      */
     private void playHomeScreenAnimation(final boolean reverse) {
+        if (isAnimating) {
+            // We are already animating, let's ignore another request.
+            return;
+        }
+
+        isAnimating = true;
+
         int[] screenLocation = new int[2];
         urlInputContainerView.getLocationOnScreen(screenLocation);
 
@@ -287,6 +295,8 @@ public class UrlInputFragment extends Fragment implements View.OnClickListener, 
                         } else {
                             urlView.setCursorVisible(true);
                         }
+
+                        isAnimating = false;
                     }
                 });
 
@@ -309,6 +319,13 @@ public class UrlInputFragment extends Fragment implements View.OnClickListener, 
     }
 
     private void playBrowserScreenAnimation(final boolean reverse) {
+        if (isAnimating) {
+            // We are already animating, let's ignore another request.
+            return;
+        }
+
+        isAnimating = true;
+
         {
             float containerMargin = ((FrameLayout.LayoutParams) urlInputContainerView.getLayoutParams()).bottomMargin;
 
@@ -353,6 +370,8 @@ public class UrlInputFragment extends Fragment implements View.OnClickListener, 
                             } else {
                                 clearView.setAlpha(1);
                             }
+
+                            isAnimating = false;
                         }
                     });
         }
