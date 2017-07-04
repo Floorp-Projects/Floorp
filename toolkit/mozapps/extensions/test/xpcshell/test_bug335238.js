@@ -88,6 +88,17 @@ var BlocklistService = {
     return Ci.nsIBlocklistService.STATE_NOT_BLOCKED;
   },
 
+  getAddonBlocklistEntry(aAddon, aAppVersion, aToolkitVersion) {
+    let state = this.getAddonBlocklistState(aAddon, aAppVersion, aToolkitVersion);
+    if (state != Ci.nsIBlocklistService.STATE_NOT_BLOCKED) {
+      return {
+        state,
+        url: "http://example.com/",
+      };
+    }
+    return null;
+  },
+
   getPluginBlocklistState(aPlugin, aVersion, aAppVersion, aToolkitVersion) {
     return Ci.nsIBlocklistService.STATE_NOT_BLOCKED;
   },
