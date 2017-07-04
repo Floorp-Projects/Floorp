@@ -3545,9 +3545,10 @@ ContentChild::RecvShareCodeCoverageMutex(const CrossProcessMutexHandle& aHandle)
 already_AddRefed<nsIEventTarget>
 ContentChild::GetSpecificMessageEventTarget(const Message& aMsg)
 {
-  if (aMsg.type() == PJavaScript::Msg_DropTemporaryStrongReferences__ID
-      || aMsg.type() == PJavaScript::Msg_DropObject__ID
-      || aMsg.type() == PContent::Msg_NotifyVisited__ID) {
+  if ((aMsg.type() == PJavaScript::Msg_DropTemporaryStrongReferences__ID
+       || aMsg.type() == PJavaScript::Msg_DropObject__ID
+       || aMsg.type() == PContent::Msg_NotifyVisited__ID)
+      && SystemGroup::Initialized()) {
     return do_AddRef(SystemGroup::EventTargetFor(TaskCategory::Other));
   }
 
