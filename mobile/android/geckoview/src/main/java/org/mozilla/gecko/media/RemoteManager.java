@@ -19,6 +19,7 @@ import android.util.Log;
 
 import java.util.LinkedList;
 import java.util.List;
+import java.util.NoSuchElementException;
 
 import org.mozilla.gecko.gfx.GeckoSurface;
 
@@ -58,7 +59,11 @@ public final class RemoteManager implements IBinder.DeathRecipient {
         @Override
         public void onServiceDisconnected(ComponentName name) {
             if (DEBUG) Log.d(LOGTAG, "service disconnected");
-            mRemote.asBinder().unlinkToDeath(RemoteManager.this, 0);
+            try {
+                mRemote.asBinder().unlinkToDeath(RemoteManager.this, 0);
+            } catch (NoSuchElementException e) {
+                Log.w(LOGTAG, "death recipient already released");
+            }
             synchronized (this) {
                 mRemote = null;
                 notify();
