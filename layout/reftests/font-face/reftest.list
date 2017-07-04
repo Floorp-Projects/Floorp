@@ -82,7 +82,7 @@ HTTP(..) == disable-sheet-1.html disable-sheet-1-ref.html
 HTTP(..) == disable-sheet-4.html disable-sheet-4-ref.html
 skip-if(styloVsGecko) HTTP(..) == disable-sheet-5.html disable-sheet-4-ref.html
 HTTP(..) == sheet-set-base-1.html sheet-set-base-1-ref.html
-random-if(cocoaWidget) skip-if(styloVsGecko) HTTP(..) == sheet-set-switch-1.html sheet-set-switch-1-ref.html # bug 468217
+random-if(cocoaWidget) HTTP(..) == sheet-set-switch-1.html sheet-set-switch-1-ref.html # bug 468217
 skip-if(styloVsGecko) HTTP(..) == insert-rule-1a.html insert-rule-1-ref.html
 skip-if(styloVsGecko) HTTP(..) == insert-rule-1b.html insert-rule-1-ref.html
 skip-if(styloVsGecko) HTTP(..) == delete-rule-1.html delete-rule-1-ref.html

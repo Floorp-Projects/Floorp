@@ -1,0 +1,14 @@
+<!doctype html>
+<style>
+div::before {
+  content: none;
+}
+.foo::before {
+  content: "Woof";
+}
+</style>
+<div></div>
+<script>
+  document.body.offsetTop;
+  document.querySelector('div').classList.add('foo');
+</script>
