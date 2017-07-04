@@ -1050,7 +1050,7 @@ struct ScrollableLayerGuid {
     return false;
   }
 
-  uint32_t Hash() const
+  PLDHashNumber Hash() const
   {
     return HashGeneric(mLayersId, mPresShellId, mScrollId);
   }
