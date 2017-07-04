@@ -7315,6 +7315,30 @@ gc::MergeCompartments(JSCompartment* source, JSCompartment* target)
 
     // Atoms which are marked in source's zone are now marked in target's zone.
     cx->atomMarking().adoptMarkedAtoms(target->zone(), source->zone());
+
+    // Merge script name maps in the target compartment's map.
+    if (cx->runtime()->lcovOutput().isEnabled() && source->scriptNameMap) {
+        AutoEnterOOMUnsafeRegion oomUnsafe;
+
+        if (!target->scriptNameMap) {
+            target->scriptNameMap = cx->new_<ScriptNameMap>();
+
+            if (!target->scriptNameMap)
+                oomUnsafe.crash("Failed to create a script name map.");
+
+            if (!target->scriptNameMap->init())
+                oomUnsafe.crash("Failed to initialize a script name map.");
+        }
+
+        for (ScriptNameMap::Range r = source->scriptNameMap->all(); !r.empty(); r.popFront()) {
+            JSScript* key = r.front().key();
+            const char* value = r.front().value();
+            if (!target->scriptNameMap->putNew(key, value))
+                oomUnsafe.crash("Failed to add an entry in the script name map.");
+        }
+
+        source->scriptNameMap->clear();
+    }
 }
 
 void
