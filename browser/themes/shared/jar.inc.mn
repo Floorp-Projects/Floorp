@@ -129,20 +129,26 @@
 #endif
   skin/classic/browser/characterEncoding.svg          (../shared/icons/characterEncoding.svg)
   skin/classic/browser/chevron.svg                    (../shared/icons/chevron.svg)
+#ifdef MOZ_PHOTON_ANIMATIONS
   skin/classic/browser/chevron-animation.svg          (../shared/icons/chevron-animation.svg)
+#endif
   skin/classic/browser/check.svg                      (../shared/icons/check.svg)
   skin/classic/browser/containers.svg                 (../shared/icons/containers.svg)
   skin/classic/browser/customize.svg                  (../shared/icons/customize.svg)
   skin/classic/browser/developer.svg                  (../shared/icons/developer.svg)
   skin/classic/browser/device-mobile.svg              (../shared/icons/device-mobile.svg)
+#ifdef MOZ_PHOTON_THEME
   skin/classic/browser/device-desktop.svg             (../shared/icons/device-desktop.svg)
+#endif
 #ifndef MOZ_PHOTON_THEME
   skin/classic/browser/download.svg                   (../shared/icons/download.svg)
 #endif
   skin/classic/browser/edit-copy.svg                  (../shared/icons/edit-copy.svg)
   skin/classic/browser/edit-cut.svg                   (../shared/icons/edit-cut.svg)
   skin/classic/browser/edit-paste.svg                 (../shared/icons/edit-paste.svg)
+#ifdef MOZ_PHOTON_THEME
   skin/classic/browser/email-link.svg                 (../shared/icons/email-link.svg)
+#endif
   skin/classic/browser/feed.svg                       (../shared/icons/feed.svg)
   skin/classic/browser/find.svg                       (../shared/icons/find.svg)
   skin/classic/browser/forget.svg                     (../shared/icons/forget.svg)
@@ -154,13 +160,17 @@
   skin/classic/browser/history.svg                    (../shared/icons/history.svg)
   skin/classic/browser/home.svg                       (../shared/icons/home.svg)
   skin/classic/browser/library.svg                    (../shared/icons/library.svg)
+#ifdef MOZ_PHOTON_THEME
   skin/classic/browser/link.svg                       (../shared/icons/link.svg)
+#endif
   skin/classic/browser/mail.svg                       (../shared/icons/mail.svg)
   skin/classic/browser/menu.svg                       (../shared/icons/menu.svg)
   skin/classic/browser/new-tab.svg                    (../shared/icons/new-tab.svg)
   skin/classic/browser/new-window.svg                 (../shared/icons/new-window.svg)
   skin/classic/browser/open.svg                       (../shared/icons/open.svg)
+#ifdef MOZ_PHOTON_THEME
   skin/classic/browser/page-action.svg                (../shared/icons/page-action.svg)
+#endif
   skin/classic/browser/print.svg                      (../shared/icons/print.svg)
   skin/classic/browser/privateBrowsing.svg            (../shared/icons/privateBrowsing.svg)
   skin/classic/browser/quit.svg                       (../shared/icons/quit.svg)
@@ -194,7 +204,9 @@
   skin/classic/browser/tabbrowser/connecting.png               (../shared/tabbrowser/connecting.png)
   skin/classic/browser/tabbrowser/connecting@2x.png            (../shared/tabbrowser/connecting@2x.png)
   skin/classic/browser/tabbrowser/crashed.svg                  (../shared/tabbrowser/crashed.svg)
+#ifdef MOZ_PHOTON_THEME
   skin/classic/browser/tabbrowser/indicator-tab-attention.svg  (../shared/tabbrowser/indicator-tab-attention.svg)
+#endif
   skin/classic/browser/tabbrowser/pendingpaint.png             (../shared/tabbrowser/pendingpaint.png)
   skin/classic/browser/tabbrowser/tab-audio-playing.svg        (../shared/tabbrowser/tab-audio-playing.svg)
   skin/classic/browser/tabbrowser/tab-audio-muted.svg          (../shared/tabbrowser/tab-audio-muted.svg)
