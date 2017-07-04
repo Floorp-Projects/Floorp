@@ -1,0 +1,25 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <title>Bug 1370177 gzipped mp4 with Content-Length</title>
+    <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+    <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+    <script type="text/javascript" src="manifest.js"></script>
+  </head>
+  <body>
+    <!--
+      Tests that an MP4 file served over a "Content-Encoding: gzip"
+      HTTP channel with a "Content-Length" header set to the length
+      of the compressed file works.
+    -->
+    <video id='v' src="http://mochi.test:8888/tests/dom/media/test/gzipped_mp4.sjs" controls autoplay></video>
+    <script>
+      SimpleTest.waitForExplicitFinish();
+      var v = document.getElementById('v');
+      v.addEventListener("ended", ()=>{
+        SimpleTest.finish();
+        mediaTestCleanup();
+      });
+    </script>
+  </body>
+</html>
