@@ -1465,7 +1465,7 @@ nsXMLContentSink::FlushPendingNotifications(FlushType aType)
         FlushText(false);
       }
     }
-    if (aType >= FlushType::EnsurePresShellInitAndFrames) {
+    if (aType >= FlushType::InterruptibleLayout) {
       // Make sure that layout has started so that the reflow flush
       // will actually happen.
       MaybeStartLayout(true);
