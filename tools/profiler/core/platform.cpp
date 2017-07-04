@@ -2183,7 +2183,7 @@ profiler_init(void* aStackTop)
                       ProfilerFeature::Threads |
                       0;
 
-  const char* filters[] = { "GeckoMain", "Compositor" };
+  const char* filters[] = { "GeckoMain", "Compositor", "DOM Worker" };
 
   if (getenv("MOZ_PROFILER_HELP")) {
     PrintUsageThenExit(0); // terminates execution
