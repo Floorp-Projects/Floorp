@@ -1352,14 +1352,15 @@ ServoStyleSet::StyleRuleMap()
 
 bool
 ServoStyleSet::MightHaveAttributeDependency(const Element& aElement,
-                                            nsIAtom* aAttribute)
+                                            nsIAtom* aAttribute) const
 {
   return Servo_StyleSet_MightHaveAttributeDependency(
       mRawSet.get(), &aElement, aAttribute);
 }
 
 bool
-ServoStyleSet::HasStateDependency(const Element& aElement, EventStates aState)
+ServoStyleSet::HasStateDependency(const Element& aElement,
+                                  EventStates aState) const
 {
   return Servo_StyleSet_HasStateDependency(
       mRawSet.get(), &aElement, aState.ServoValue());
