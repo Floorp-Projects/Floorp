@@ -1281,16 +1281,6 @@ nsDOMWindowUtils::SendNativeTouchTap(int32_t aScreenX,
 }
 
 NS_IMETHODIMP
-nsDOMWindowUtils::SuppressAnimation(bool aSuppress)
-{
-  nsIWidget* widget = GetWidget();
-  if (widget) {
-    widget->SuppressAnimation(aSuppress);
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsDOMWindowUtils::ClearNativeTouchSequence(nsIObserver* aObserver)
 {
   nsCOMPtr<nsIWidget> widget = GetWidget();

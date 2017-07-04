@@ -638,12 +638,6 @@ interface nsIDOMWindowUtils : nsISupports {
                            [optional] in nsIObserver aObserver);
 
   /**
-   * Suppress animations that are applied to a window by OS when
-   * resizing, moving, changing size mode, ...
-   */
-  void suppressAnimation(in boolean aSuppress);
-
-  /**
    * The values for sendNativeMouseScrollEvent's aAdditionalFlags.
    */
 
