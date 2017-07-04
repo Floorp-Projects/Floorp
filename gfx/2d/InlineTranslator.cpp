@@ -5,10 +5,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "InlineTranslator.h"
+#include "RecordedEventImpl.h"
+#include "DrawEventRecorder.h"
 
 #include "gfxContext.h"
 #include "nsDeviceContext.h"
-#include "mozilla/gfx/RecordedEvent.h"
 #include "mozilla/gfx/RecordingTypes.h"
 #include "mozilla/UniquePtr.h"
 

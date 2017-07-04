@@ -3115,6 +3115,59 @@ RecordedFilterNodeSetInput::OutputSimpleEventInfo(stringstream &aStringStream) c
   aStringStream << ")";
 }
 
+#define LOAD_EVENT_TYPE(_typeenum, _class) \
+  case _typeenum: return new _class(aStream)
+
+template<class S>
+RecordedEvent *
+RecordedEvent::LoadEvent(S &aStream, EventType aType)
+{
+  switch (aType) {
+    LOAD_EVENT_TYPE(DRAWTARGETCREATION, RecordedDrawTargetCreation);
+    LOAD_EVENT_TYPE(DRAWTARGETDESTRUCTION, RecordedDrawTargetDestruction);
+    LOAD_EVENT_TYPE(FILLRECT, RecordedFillRect);
+    LOAD_EVENT_TYPE(STROKERECT, RecordedStrokeRect);
+    LOAD_EVENT_TYPE(STROKELINE, RecordedStrokeLine);
+    LOAD_EVENT_TYPE(CLEARRECT, RecordedClearRect);
+    LOAD_EVENT_TYPE(COPYSURFACE, RecordedCopySurface);
+    LOAD_EVENT_TYPE(SETTRANSFORM, RecordedSetTransform);
+    LOAD_EVENT_TYPE(PUSHCLIPRECT, RecordedPushClipRect);
+    LOAD_EVENT_TYPE(PUSHCLIP, RecordedPushClip);
+    LOAD_EVENT_TYPE(POPCLIP, RecordedPopClip);
+    LOAD_EVENT_TYPE(FILL, RecordedFill);
+    LOAD_EVENT_TYPE(FILLGLYPHS, RecordedFillGlyphs);
+    LOAD_EVENT_TYPE(MASK, RecordedMask);
+    LOAD_EVENT_TYPE(STROKE, RecordedStroke);
+    LOAD_EVENT_TYPE(DRAWSURFACE, RecordedDrawSurface);
+    LOAD_EVENT_TYPE(DRAWSURFACEWITHSHADOW, RecordedDrawSurfaceWithShadow);
+    LOAD_EVENT_TYPE(DRAWFILTER, RecordedDrawFilter);
+    LOAD_EVENT_TYPE(PATHCREATION, RecordedPathCreation);
+    LOAD_EVENT_TYPE(PATHDESTRUCTION, RecordedPathDestruction);
+    LOAD_EVENT_TYPE(SOURCESURFACECREATION, RecordedSourceSurfaceCreation);
+    LOAD_EVENT_TYPE(SOURCESURFACEDESTRUCTION, RecordedSourceSurfaceDestruction);
+    LOAD_EVENT_TYPE(FILTERNODECREATION, RecordedFilterNodeCreation);
+    LOAD_EVENT_TYPE(FILTERNODEDESTRUCTION, RecordedFilterNodeDestruction);
+    LOAD_EVENT_TYPE(GRADIENTSTOPSCREATION, RecordedGradientStopsCreation);
+    LOAD_EVENT_TYPE(GRADIENTSTOPSDESTRUCTION, RecordedGradientStopsDestruction);
+    LOAD_EVENT_TYPE(SNAPSHOT, RecordedSnapshot);
+    LOAD_EVENT_TYPE(SCALEDFONTCREATION, RecordedScaledFontCreation);
+    LOAD_EVENT_TYPE(SCALEDFONTDESTRUCTION, RecordedScaledFontDestruction);
+    LOAD_EVENT_TYPE(MASKSURFACE, RecordedMaskSurface);
+    LOAD_EVENT_TYPE(FILTERNODESETATTRIBUTE, RecordedFilterNodeSetAttribute);
+    LOAD_EVENT_TYPE(FILTERNODESETINPUT, RecordedFilterNodeSetInput);
+    LOAD_EVENT_TYPE(CREATESIMILARDRAWTARGET, RecordedCreateSimilarDrawTarget);
+    LOAD_EVENT_TYPE(FONTDATA, RecordedFontData);
+    LOAD_EVENT_TYPE(FONTDESC, RecordedFontDescriptor);
+    LOAD_EVENT_TYPE(PUSHLAYER, RecordedPushLayer);
+    LOAD_EVENT_TYPE(POPLAYER, RecordedPopLayer);
+    LOAD_EVENT_TYPE(UNSCALEDFONTCREATION, RecordedUnscaledFontCreation);
+    LOAD_EVENT_TYPE(UNSCALEDFONTDESTRUCTION, RecordedUnscaledFontDestruction);
+  default:
+    return nullptr;
+  }
+}
+
+
 } // namespace gfx
 } // namespace mozilla
 
