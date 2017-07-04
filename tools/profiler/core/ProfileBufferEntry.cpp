@@ -708,10 +708,9 @@ ProfileBuffer::StreamMarkersToJSON(SpliceableJSONWriter& aWriter,
     if (entry.isThreadId()) {
       currentThreadID = entry.mTagInt;
     } else if (currentThreadID == aThreadId && entry.isMarker()) {
-      const ProfilerMarker* marker = entry.getMarker();
+      const ProfilerMarker* marker = entry.mTagMarker;
       if (marker->GetTime() >= aSinceTime) {
-        entry.getMarker()->StreamJSON(aWriter, aProcessStartTime,
-                                      aUniqueStacks);
+        entry.mTagMarker->StreamJSON(aWriter, aProcessStartTime, aUniqueStacks);
       }
     }
     readPos = (readPos + 1) % mEntrySize;
