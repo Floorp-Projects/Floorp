@@ -84,7 +84,7 @@ devtools.jar:
     content/framework/toolbox-init.js (framework/toolbox-init.js)
     content/framework/options-panel.css (framework/options-panel.css)
     content/framework/toolbox-process-window.xul (framework/toolbox-process-window.xul)
-*   content/framework/toolbox-process-window.js (framework/toolbox-process-window.js)
+    content/framework/toolbox-process-window.js (framework/toolbox-process-window.js)
     content/framework/dev-edition-promo/dev-edition-promo.xul (framework/dev-edition-promo/dev-edition-promo.xul)
 *   content/framework/dev-edition-promo/dev-edition-promo.css (framework/dev-edition-promo/dev-edition-promo.css)
     content/framework/dev-edition-promo/dev-edition-logo.png (framework/dev-edition-promo/dev-edition-logo.png)

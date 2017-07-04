@@ -138,9 +138,6 @@ devtools/shared/tests/mochitest/*.html
 devtools/shared/webconsole/test/test_*.html
 
 # Ignore devtools pre-processed files
-devtools/client/framework/toolbox-process-window.js
-devtools/client/performance/system.js
-devtools/client/webide/webide-prefs.js
 devtools/client/preferences/**
 
 # Ignore devtools third-party libs
