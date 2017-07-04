@@ -2523,8 +2523,9 @@ PeerConnectionImpl::InsertDTMF(mozilla::dom::RTCRtpSender& sender,
   state->mDuration = duration;
   state->mInterToneGap = interToneGap;
   if (!state->mTones.IsEmpty()) {
-    state->mSendTimer->InitWithFuncCallback(DTMFSendTimerCallback_m, state, 0,
-                                            nsITimer::TYPE_ONE_SHOT);
+    state->mSendTimer->InitWithNamedFuncCallback(DTMFSendTimerCallback_m, state, 0,
+                                                 nsITimer::TYPE_ONE_SHOT,
+                                                 "DTMFSendTimerCallback_m");
   }
   return NS_OK;
 }
@@ -4048,13 +4049,15 @@ PeerConnectionImpl::DTMFSendTimerCallback_m(nsITimer* timer, void* closure)
     state->mTones.Cut(0, 1);
 
     if (tone == -1) {
-      state->mSendTimer->InitWithFuncCallback(DTMFSendTimerCallback_m, state,
-                                              2000, nsITimer::TYPE_ONE_SHOT);
+      state->mSendTimer->InitWithNamedFuncCallback(DTMFSendTimerCallback_m, state,
+                                                   2000, nsITimer::TYPE_ONE_SHOT,
+                                                   "DTMFSendTimerCallback_m");
     } else {
       // Reset delay if necessary
-      state->mSendTimer->InitWithFuncCallback(DTMFSendTimerCallback_m, state,
-                                              state->mDuration + state->mInterToneGap,
-                                              nsITimer::TYPE_ONE_SHOT);
+      state->mSendTimer->InitWithNamedFuncCallback(DTMFSendTimerCallback_m, state,
+                                                   state->mDuration + state->mInterToneGap,
+                                                   nsITimer::TYPE_ONE_SHOT,
+                                                   "DTMFSendTimerCallback_m");
 
       RefPtr<AudioSessionConduit> conduit =
         state->mPeerConnectionImpl->mMedia->GetAudioConduit(state->mLevel);

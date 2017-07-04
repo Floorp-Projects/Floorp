@@ -31,8 +31,11 @@
       $("status").style.display = "inline";
 
       createXpiDataUri(base, files, {
+
+        // eslint-disable-next-line no-unsanitized/property
         onprogress(p) { $("status-text").innerHTML = "Preparing ... " + p.toFixed(0) + "%"; },
 
+        // eslint-disable-next-line no-unsanitized/property
         onerror(e) { $("status-text").innerHTML = "Oops, couldn't generate XPI. Reload to retry.<br/>" + e; },
 
         onsuccess(u) {

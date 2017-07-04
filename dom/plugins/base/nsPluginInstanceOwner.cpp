@@ -1419,8 +1419,9 @@ void nsPluginInstanceOwner::AddToCARefreshTimer() {
 
   if (sCARefreshListeners->Length() == 1) {
     *sCATimer = do_CreateInstance("@mozilla.org/timer;1");
-    (*sCATimer)->InitWithFuncCallback(CARefresh, nullptr,
-                   DEFAULT_REFRESH_RATE, nsITimer::TYPE_REPEATING_SLACK);
+    (*sCATimer)->InitWithNamedFuncCallback(CARefresh, nullptr,
+                                           DEFAULT_REFRESH_RATE, nsITimer::TYPE_REPEATING_SLACK,
+                                           "nsPluginInstanceOwner::CARefresh");
   }
 }
 
