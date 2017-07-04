@@ -513,6 +513,8 @@ DetailedCacheHitTelemetry::AddRecord(ERecType aType, TimeStamp aLoadStart)
 
 StaticMutex CachePerfStats::sLock;
 CachePerfStats::PerfData CachePerfStats::sData[CachePerfStats::LAST];
+uint32_t CachePerfStats::sCacheSlowCnt = 0;
+uint32_t CachePerfStats::sCacheNotSlowCnt = 0;
 
 CachePerfStats::MMA::MMA(uint32_t aTotalWeight, bool aFilter)
   : mSum(0)
@@ -636,6 +638,14 @@ CachePerfStats::GetAverage(EDataType aType, bool aFiltered)
   return sData[aType].GetAverage(aFiltered);
 }
 
+// static
+uint32_t
+CachePerfStats::GetStdDev(EDataType aType, bool aFiltered)
+{
+  StaticMutexAutoLock lock(sLock);
+  return sData[aType].GetStdDev(aFiltered);
+}
+
 //static
 bool
 CachePerfStats::IsCacheSlow()
@@ -654,11 +664,24 @@ CachePerfStats::IsCacheSlow()
     uint32_t maxdiff = (avgLong / 4) + (2 * stddevLong);
 
     if (avgShort > avgLong + maxdiff) {
+      LOG(("CachePerfStats::IsCacheSlow() - result is slow based on perf "
+           "type %u [avgShort=%u, avgLong=%u, stddevLong=%u]", i, avgShort,
+           avgLong, stddevLong));
+      ++sCacheSlowCnt;
       return true;
     }
   }
 
+  ++sCacheNotSlowCnt;
   return false;
+}
+
+//static
+void
+CachePerfStats::GetSlowStats(uint32_t *aSlow, uint32_t *aNotSlow)
+{
+  *aSlow = sCacheSlowCnt;
+  *aNotSlow = sCacheNotSlowCnt;
 }
 
 void
