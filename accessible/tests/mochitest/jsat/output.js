@@ -20,7 +20,7 @@ Cu.import("resource://gre/modules/accessibility/OutputGenerator.jsm", this);
 function testContextOutput(expected, aAccOrElmOrID, aOldAccOrElmOrID, aGenerator) {
   var accessible = getAccessible(aAccOrElmOrID);
   var oldAccessible = aOldAccOrElmOrID !== null ?
-	getAccessible(aOldAccOrElmOrID || 'root') : null;
+    getAccessible(aOldAccOrElmOrID || 'root') : null;
   var context = new PivotContext(accessible, oldAccessible);
   var output = aGenerator.genForContext(context);
 

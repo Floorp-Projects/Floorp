@@ -133,7 +133,7 @@ var Provider = {
           let str = bundle.GetStringFromName("TriggerUpdate")
           btn.appendChild(document.createTextNode(str));
           td.appendChild(btn);
-	      } else {
+        } else {
           let str = column.id === "col-lastupdateresult" ? STR_NA : "";
           td.appendChild(document.createTextNode(str));
         }

@@ -132,7 +132,7 @@ var dialog = {
         }
         elm.setAttribute("description", uri.prePath);
       } else if (app instanceof Ci.nsIDBusHandlerApp) {
-	  elm.setAttribute("description", app.method);
+        elm.setAttribute("description", app.method);
       } else
         throw "unknown handler type";
 
