@@ -405,10 +405,15 @@ public class UrlInputFragment extends Fragment implements View.OnClickListener, 
     }
 
     private void dismiss() {
+        // This method is called from animation callbacks. In the short time frame between the animation
+        // starting and ending the activity can be paused. In this case this code can throw an
+        // IllegalStateException because we already saved the state (of the activity / fragment) before
+        // this transaction is committed. To avoid this we commit while allowing a state loss here.
+        // We do not save any state in this fragment (It's getting destroyed) so this should not be a problem.
         getActivity().getSupportFragmentManager()
                 .beginTransaction()
                 .remove(this)
-                .commit();
+                .commitAllowingStateLoss();
     }
 
     @Override
