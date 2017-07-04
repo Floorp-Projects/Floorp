@@ -97,8 +97,8 @@
 
     is(anode.attributes.length, attrs.length, 'correct number of attributes');
     for (var i = 0; i < attrs.length; i++) {
-      is(anode.attributes[i], attrs[i],
-         `${attrs[i]} attribute is expected at ${i}th index`);
+      ok(attrs.indexOf(anode.attributes[i]) >= 0,
+         `${anode.attributes[i]} attribute is expected and found`);
     }
 
     finish();
