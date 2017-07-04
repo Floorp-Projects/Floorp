@@ -1,4 +1,5 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -30,35 +31,41 @@ using mozilla::UniquePtr;
 // BEGIN ProfileBufferEntry
 
 ProfileBufferEntry::ProfileBufferEntry()
-  : mTagData(nullptr)
-  , mKind(Kind::INVALID)
-{ }
+  : mKind(Kind::INVALID)
+{
+  u.mString = nullptr;
+}
 
-// aTagData must not need release (i.e. be a string from the text segment)
-ProfileBufferEntry::ProfileBufferEntry(Kind aKind, const char *aTagData)
-  : mTagData(aTagData)
-  , mKind(aKind)
-{ }
+// aString must be a static string.
+ProfileBufferEntry::ProfileBufferEntry(Kind aKind, const char *aString)
+  : mKind(aKind)
+{
+  u.mString = aString;
+}
 
-ProfileBufferEntry::ProfileBufferEntry(Kind aKind, void *aTagPtr)
-  : mTagPtr(aTagPtr)
-  , mKind(aKind)
-{ }
+ProfileBufferEntry::ProfileBufferEntry(Kind aKind, void* aPtr)
+  : mKind(aKind)
+{
+  u.mPtr = aPtr;
+}
 
-ProfileBufferEntry::ProfileBufferEntry(Kind aKind, ProfilerMarker *aTagMarker)
-  : mTagMarker(aTagMarker)
-  , mKind(aKind)
-{ }
+ProfileBufferEntry::ProfileBufferEntry(Kind aKind, ProfilerMarker* aMarker)
+  : mKind(aKind)
+{
+  u.mMarker = aMarker;
+}
 
-ProfileBufferEntry::ProfileBufferEntry(Kind aKind, double aTagDouble)
-  : mTagDouble(aTagDouble)
-  , mKind(aKind)
-{ }
+ProfileBufferEntry::ProfileBufferEntry(Kind aKind, double aDouble)
+  : mKind(aKind)
+{
+  u.mDouble = aDouble;
+}
 
-ProfileBufferEntry::ProfileBufferEntry(Kind aKind, int aTagInt)
-  : mTagInt(aTagInt)
-  , mKind(aKind)
-{ }
+ProfileBufferEntry::ProfileBufferEntry(Kind aKind, int aInt)
+  : mKind(aKind)
+{
+  u.mInt = aInt;
+}
 
 // END ProfileBufferEntry
 ////////////////////////////////////////////////////////////////////////
@@ -570,13 +577,13 @@ void ProfileBuffer::StreamSamplesToJSON(SpliceableJSONWriter& aWriter, int aThre
   while (readPos != mWritePos) {
     ProfileBufferEntry entry = mEntries[readPos];
     if (entry.isThreadId()) {
-      currentThreadID = entry.mTagInt;
+      currentThreadID = entry.u.mInt;
       currentTime.reset();
       int readAheadPos = (readPos + 1) % mEntrySize;
       if (readAheadPos != mWritePos) {
         ProfileBufferEntry readAheadEntry = mEntries[readAheadPos];
         if (readAheadEntry.isTime()) {
-          currentTime = Some(readAheadEntry.mTagDouble);
+          currentTime = Some(readAheadEntry.u.mDouble);
         }
       }
     }
@@ -584,17 +591,17 @@ void ProfileBuffer::StreamSamplesToJSON(SpliceableJSONWriter& aWriter, int aThre
       switch (entry.kind()) {
       case ProfileBufferEntry::Kind::Responsiveness:
         if (sample.isSome()) {
-          sample->mResponsiveness = Some(entry.mTagDouble);
+          sample->mResponsiveness = Some(entry.u.mDouble);
         }
         break;
       case ProfileBufferEntry::Kind::ResidentMemory:
         if (sample.isSome()) {
-          sample->mRSS = Some(entry.mTagDouble);
+          sample->mRSS = Some(entry.u.mDouble);
         }
         break;
       case ProfileBufferEntry::Kind::UnsharedMemory:
         if (sample.isSome()) {
-          sample->mUSS = Some(entry.mTagDouble);
+          sample->mUSS = Some(entry.u.mDouble);
          }
         break;
       case ProfileBufferEntry::Kind::Sample:
@@ -623,14 +630,14 @@ void ProfileBuffer::StreamSamplesToJSON(SpliceableJSONWriter& aWriter, int aThre
 
             // Read ahead to the next tag, if it's an EmbeddedString
             // tag process it now
-            const char* tagStringData = frame.mTagData;
+            const char* string = frame.u.mString;
             int readAheadPos = (framePos + 1) % mEntrySize;
             // Make sure the string is always null terminated if it fills up
             // DYNAMIC_MAX_STRING-2
             tagBuff[DYNAMIC_MAX_STRING-1] = '\0';
 
             if (readAheadPos != mWritePos && mEntries[readAheadPos].isEmbeddedString()) {
-              tagStringData = processDynamicTag(framePos, &incBy, tagBuff.get());
+              string = processDynamicTag(framePos, &incBy, tagBuff.get());
             }
 
             // Write one frame. It can have either
@@ -643,27 +650,29 @@ void ProfileBuffer::StreamSamplesToJSON(SpliceableJSONWriter& aWriter, int aThre
               // Bug 753041
               // We need a double cast here to tell GCC that we don't want to sign
               // extend 32-bit addresses starting with 0xFXXXXXX.
-              unsigned long long pc = (unsigned long long)(uintptr_t)frame.mTagPtr;
+              unsigned long long pc =
+                (unsigned long long)(uintptr_t)frame.u.mPtr;
               snprintf(tagBuff.get(), DYNAMIC_MAX_STRING, "%#llx", pc);
               stack.AppendFrame(UniqueStacks::OnStackFrameKey(tagBuff.get()));
             } else if (frame.isCodeLocation()) {
-              UniqueStacks::OnStackFrameKey frameKey(tagStringData);
+              UniqueStacks::OnStackFrameKey frameKey(string);
               readAheadPos = (framePos + incBy) % mEntrySize;
               if (readAheadPos != mWritePos &&
                   mEntries[readAheadPos].isLineNumber()) {
-                frameKey.mLine = Some((unsigned) mEntries[readAheadPos].mTagInt);
+                frameKey.mLine = Some((unsigned) mEntries[readAheadPos].u.mInt);
                 incBy++;
               }
               readAheadPos = (framePos + incBy) % mEntrySize;
               if (readAheadPos != mWritePos &&
                   mEntries[readAheadPos].isCategory()) {
-                frameKey.mCategory = Some((unsigned) mEntries[readAheadPos].mTagInt);
+                frameKey.mCategory =
+                  Some((unsigned) mEntries[readAheadPos].u.mInt);
                 incBy++;
               }
               stack.AppendFrame(frameKey);
             } else if (frame.isJitReturnAddr()) {
               // A JIT frame may expand to multiple frames due to inlining.
-              void* pc = frame.mTagPtr;
+              void* pc = frame.u.mPtr;
               unsigned depth = aUniqueStacks.LookupJITFrameDepth(pc);
               if (depth == 0) {
                 StreamJSFramesOp framesOp(pc, stack);
@@ -706,11 +715,11 @@ ProfileBuffer::StreamMarkersToJSON(SpliceableJSONWriter& aWriter,
   while (readPos != mWritePos) {
     ProfileBufferEntry entry = mEntries[readPos];
     if (entry.isThreadId()) {
-      currentThreadID = entry.mTagInt;
+      currentThreadID = entry.u.mInt;
     } else if (currentThreadID == aThreadId && entry.isMarker()) {
-      const ProfilerMarker* marker = entry.mTagMarker;
+      const ProfilerMarker* marker = entry.u.mMarker;
       if (marker->GetTime() >= aSinceTime) {
-        entry.mTagMarker->StreamJSON(aWriter, aProcessStartTime, aUniqueStacks);
+        entry.u.mMarker->StreamJSON(aWriter, aProcessStartTime, aUniqueStacks);
       }
     }
     readPos = (readPos + 1) % mEntrySize;
@@ -738,7 +747,7 @@ ProfileBuffer::FindLastSampleOfThread(int aThreadId, const LastSample& aLS)
     // is still valid.
     MOZ_RELEASE_ASSERT(0 <= ix && ix < mEntrySize);
     ProfileBufferEntry& entry = mEntries[ix];
-    bool isStillValid = entry.isThreadId() && entry.mTagInt == aThreadId;
+    bool isStillValid = entry.isThreadId() && entry.u.mInt == aThreadId;
     return isStillValid ? ix : -1;
   }
 
@@ -759,7 +768,7 @@ ProfileBuffer::DuplicateLastSample(int aThreadId,
   }
 
   MOZ_ASSERT(mEntries[lastSampleStartPos].isThreadId() &&
-             mEntries[lastSampleStartPos].mTagInt == aThreadId);
+             mEntries[lastSampleStartPos].u.mInt == aThreadId);
 
   addTagThreadId(aThreadId, &aLS);
 
