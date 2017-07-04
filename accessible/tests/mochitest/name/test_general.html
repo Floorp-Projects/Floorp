@@ -27,7 +27,7 @@
 
       //////////////////////////////////////////////////////////////////////////
       // aria-labelledby
-      
+    
       // Single relation. The value of 'aria-labelledby' contains the ID of
       // an element. Gets the name from text node of that element.
       testName("btn_labelledby_text", "text");
@@ -43,7 +43,7 @@
 
       //////////////////////////////////////////////////////////////////////////
       // Name from subtree (single relation labelled_by).
-      
+    
       // Gets the name from text nodes contained by nested elements
       testName("btn_labelledby_mixed", "nomore text");
 
@@ -51,7 +51,7 @@
       // hidden elements (bug 443081).
       testName("btn_labelledby_mixed_hidden_child", "nomore text2");
 
-      // Gets the name from hidden text nodes contained by nested elements, 
+      // Gets the name from hidden text nodes contained by nested elements,
       // (label element is hidden entirely), (bug 443081).
       testName("btn_labelledby_mixed_hidden", "lala more hidden text");
 
@@ -162,7 +162,7 @@
       // a text child.
       testName("textareawithchild", "Story Foo is ended.");
 
-      // new textarea name should reflect the value change. 
+      // new textarea name should reflect the value change.
       var elem = document.getElementById("textareawithchild");
       elem.value = "Bar";
 

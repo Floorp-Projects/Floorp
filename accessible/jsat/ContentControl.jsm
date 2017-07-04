@@ -324,7 +324,7 @@ this.ContentControl.prototype = {
     let direction = aMessage.json.direction;
     let granularity;
 
-    switch(aMessage.json.granularity) {
+    switch (aMessage.json.granularity) {
       case MOVEMENT_GRANULARITY_CHARACTER:
         granularity = Ci.nsIAccessiblePivot.CHAR_BOUNDARY;
         break;

@@ -27,7 +27,7 @@
     function getOnclickSeq(aID)
     {
       return [
-        new caretMoveChecker(0, aID), 
+        new caretMoveChecker(0, aID),
         new unexpectedInvokerChecker(EVENT_TEXT_SELECTION_CHANGED, aID)
       ];
     }

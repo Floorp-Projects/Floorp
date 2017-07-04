@@ -96,7 +96,7 @@ function testGroupAttrs(aAccOrElmOrID, aPosInSet, aSetSize, aLevel)
     is(levelObj.value, aLevel,
        "Wrong group level for " + prettyName(aAccOrElmOrID));
 
-    var attrs = { "level" : String(aLevel) };
+    var attrs = { "level": String(aLevel) };
     testAttrs(aAccOrElmOrID, attrs, true);
   }
 }
@@ -159,7 +159,7 @@ function testTextAttrs(aID, aOffset, aAttrs, aDefAttrs,
 
   attrs = getTextAttributes(aID, accessible, true, aOffset,
                             startOffset, endOffset);
-  
+
   if (!attrs)
     return;
 
@@ -181,18 +181,18 @@ function testDefaultTextAttrs(aID, aDefAttrs, aSkipUnexpectedAttrs)
   var accessible = getAccessible(aID, [nsIAccessibleText]);
   if (!accessible)
     return;
-  
+
   var defAttrs = null;
-  try{
+  try {
     defAttrs = accessible.defaultTextAttributes;
   } catch (e) {
   }
-  
+
   if (!defAttrs) {
     ok(false, "Can't get default text attributes for " + aID);
     return;
   }
-  
+
   var errorMsg = ". Getting default text attributes for " + aID;
   compareAttrs(errorMsg, defAttrs, aDefAttrs, aSkipUnexpectedAttrs);
 }
@@ -318,12 +318,12 @@ function testAttrsInternal(aAccOrElmOrID, aAttrs, aSkipUnexpectedAttrs,
   try {
     attrs = accessible.attributes;
   } catch (e) { }
-  
+
   if (!attrs) {
     ok(false, "Can't get object attributes for " + prettyName(aAccOrElmOrID));
     return;
   }
-  
+
   var errorMsg = " for " + prettyName(aAccOrElmOrID);
   compareAttrs(errorMsg, attrs, aAttrs, aSkipUnexpectedAttrs, aAbsentAttrs);
 }
@@ -356,7 +356,7 @@ function compareAttrs(aErrorMsg, aAttrs, aExpectedAttrs, aSkipUnexpectedAttrs,
     var value = "";
     try {
       value = aAttrs.getStringProperty(name);
-    } catch(e) { }
+    } catch (e) { }
 
     if (!value)
       ok(false,

@@ -40,7 +40,7 @@
         // is not empty
         if (aValuenow != undefined)
           this.DOMNode.setAttribute("aria-valuenow", aValuenow);
- 
+
         // Note: this should always fire an EVENT_VALUE_CHANGE
         if (aValuetext != undefined)
           this.DOMNode.setAttribute("aria-valuetext", aValuetext);
@@ -51,7 +51,7 @@
         if (!acc)
           return;
 
-        // Note: always test against valuetext first because the existence of 
+        // Note: always test against valuetext first because the existence of
         // aria-valuetext takes precedence over aria-valuenow in gecko.
         is(acc.value, (aValuetext != undefined)? aValuetext : aValuenow,
             "Wrong value of " + prettyName(aNodeOrID));
