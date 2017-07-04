@@ -6,6 +6,7 @@
 #ifndef nsBaseChannel_h__
 #define nsBaseChannel_h__
 
+#include "mozilla/net/NeckoTargetHolder.h"
 #include "nsString.h"
 #include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
@@ -47,6 +48,7 @@ class nsBaseChannel : public nsHashPropertyBag
                     , public nsITransportEventSink
                     , public nsIAsyncVerifyRedirectCallback
                     , public mozilla::net::PrivateBrowsingChannel<nsBaseChannel>
+                    , public mozilla::net::NeckoTargetHolder
                     , protected nsIStreamListener
                     , protected nsIThreadRetargetableStreamListener
 {
@@ -226,6 +228,8 @@ protected:
   void DisallowThreadRetargeting() {
     mAllowThreadRetargeting = false;
   }
+
+  virtual void SetupNeckoTarget();
 
 private:
   NS_DECL_NSISTREAMLISTENER
