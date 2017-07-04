@@ -422,7 +422,7 @@ public class UrlInputFragment extends Fragment implements View.OnClickListener, 
     @Override
     public void onCommit() {
         final String input = urlView.getText().toString();
-        if (!input.isEmpty()) {
+        if (!input.trim().isEmpty()) {
             ViewUtils.hideKeyboard(urlView);
 
             final boolean isUrl = UrlUtils.isUrl(input);
