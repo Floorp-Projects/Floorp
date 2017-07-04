@@ -1754,13 +1754,10 @@ public:
 
   void Exit() override
   {
-    if (mSeekJob.Exists() &&
-        mSeekJob.mTarget.isSome()) {
-      // We are discarding this video-only seek operation now, and we still need
-      // to dispatch an event so that the UI can change in response to the end
-      // of video-only seek.
-      mMaster->mOnPlaybackEvent.Notify(MediaEventType::VideoOnlySeekCompleted);
-    }
+    // We are completing or discarding this video-only seek operation now,
+    // dispatch an event so that the UI can change in response to the end
+    // of video-only seek.
+    mMaster->mOnPlaybackEvent.Notify(MediaEventType::VideoOnlySeekCompleted);
 
     AccurateSeekingState::Exit();
   }
@@ -2501,11 +2498,10 @@ SeekingState::SeekCompleted()
     mMaster->mAudioDataRequest.DisconnectIfExists();
   }
 
-  // Cache mTarget for mSeekJob.Resolve() below will reset it.
-  SeekTarget target = mSeekJob.mTarget.ref();
-
   // We want to resolve the seek request prior finishing the first frame
   // to ensure that the seeked event is fired prior loadeded.
+  // Note: SeekJob.Resolve() resets SeekJob.mTarget. Don't use mSeekJob anymore
+  //       hereafter.
   mSeekJob.Resolve(__func__);
 
   // Notify FirstFrameLoaded now if we haven't since we've decoded some data
@@ -2524,12 +2520,6 @@ SeekingState::SeekCompleted()
     // Otherwise we might have |newCurrentTime > mMediaSink->GetPosition()|
     // and fail the assertion in GetClock() since we didn't stop MediaSink.
     mMaster->UpdatePlaybackPositionInternal(newCurrentTime);
-  }
-
-  // Dispatch an event so that the UI can change in response to the end of
-  // video-only seek
-  if (target.IsVideoOnly()) {
-    mMaster->mOnPlaybackEvent.Notify(MediaEventType::VideoOnlySeekCompleted);
   }
 
   // Try to decode another frame to detect if we're at the end...
