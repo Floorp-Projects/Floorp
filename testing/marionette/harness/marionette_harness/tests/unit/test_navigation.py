@@ -613,13 +613,14 @@ class TestTLSNavigation(MarionetteTestCase):
 
 class TestPageLoadStrategy(BaseNavigationTestCase):
 
-    def setUp(self):
-        super(TestPageLoadStrategy, self).setUp()
+    def tearDown(self):
+        self.marionette.delete_session()
+        self.marionette.start_session()
 
-        if self.marionette.session is not None:
-            self.marionette.delete_session()
+        super(TestPageLoadStrategy, self).tearDown()
 
     def test_none(self):
+        self.marionette.delete_session()
         self.marionette.start_session({"desiredCapabilities": {"pageLoadStrategy": "none"}})
 
         # With a strategy of "none" there should be no wait for the page load, and the
@@ -627,6 +628,7 @@ class TestPageLoadStrategy(BaseNavigationTestCase):
         self.marionette.navigate(self.test_page_slow_resource)
 
     def test_eager(self):
+        self.marionette.delete_session()
         self.marionette.start_session({"desiredCapabilities": {"pageLoadStrategy": "eager"}})
 
         self.marionette.navigate(self.test_page_slow_resource)
@@ -635,9 +637,23 @@ class TestPageLoadStrategy(BaseNavigationTestCase):
         self.marionette.find_element(By.ID, "slow")
 
     def test_normal(self):
+        self.marionette.delete_session()
         self.marionette.start_session({"desiredCapabilities": {"pageLoadStrategy": "normal"}})
 
         self.marionette.navigate(self.test_page_slow_resource)
         self.assertEqual(self.test_page_slow_resource, self.marionette.get_url())
         self.assertEqual("complete", self.ready_state)
         self.marionette.find_element(By.ID, "slow")
+
+    @run_if_e10s("Requires e10s mode enabled")
+    def test_strategy_after_remoteness_change(self):
+        """Bug 1378191 - Reset of capabilities after listener reload"""
+        self.marionette.delete_session()
+        self.marionette.start_session({"desiredCapabilities": {"pageLoadStrategy": "eager"}})
+
+        # Trigger a remoteness change which will reload the listener script
+        self.assertTrue(self.is_remote_tab, "Initial tab doesn't have remoteness flag set")
+        self.marionette.navigate("about:robots")
+        self.assertFalse(self.is_remote_tab, "Tab has remoteness flag set")
+        self.marionette.navigate(self.test_page_slow_resource)
+        self.assertEqual("interactive", self.ready_state)
