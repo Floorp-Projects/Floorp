@@ -412,15 +412,19 @@ ChannelMediaResource::OnStopRequest(nsIRequest* aRequest, nsresult aStatus)
   // cases where we don't need to reopen are when *we* closed the stream.
   // But don't reopen if we need to seek and we don't think we can... that would
   // cause us to just re-read the stream, which would be really bad.
-  if (mReopenOnError &&
-      aStatus != NS_ERROR_PARSED_DATA_CACHED && aStatus != NS_BINDING_ABORTED &&
-      (mOffset == 0 || mCacheStream.IsTransportSeekable())) {
-    // If the stream did close normally, then if the server is seekable we'll
-    // just seek to the end of the resource and get an HTTP 416 error because
-    // there's nothing there, so this isn't bad.
+  if (mReopenOnError && aStatus != NS_ERROR_PARSED_DATA_CACHED &&
+      aStatus != NS_BINDING_ABORTED &&
+      (mOffset == 0 || (GetLength() > 0 && mOffset != GetLength() &&
+                        mCacheStream.IsTransportSeekable()))) {
+    // If the stream did close normally, restart the channel if we're either
+    // at the start of the resource, or if the server is seekable and we're
+    // not at the end of stream. We don't restart the stream if we're at the
+    // end because not all web servers handle this case consistently; see:
+    // https://bugzilla.mozilla.org/show_bug.cgi?id=1373618#c36
     nsresult rv = CacheClientSeek(mOffset, false);
-    if (NS_SUCCEEDED(rv))
+    if (NS_SUCCEEDED(rv)) {
       return rv;
+    }
     // If the reopen/reseek fails, just fall through and treat this
     // error as fatal.
   }
