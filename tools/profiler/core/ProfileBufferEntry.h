@@ -89,10 +89,10 @@ public:
   #undef IS_KIND
 
 private:
-  FRIEND_TEST(ThreadProfile, InsertOneTag);
-  FRIEND_TEST(ThreadProfile, InsertOneTagWithTinyBuffer);
-  FRIEND_TEST(ThreadProfile, InsertTagsNoWrap);
-  FRIEND_TEST(ThreadProfile, InsertTagsWrap);
+  FRIEND_TEST(ThreadProfile, InsertOneEntry);
+  FRIEND_TEST(ThreadProfile, InsertOneEntryWithTinyBuffer);
+  FRIEND_TEST(ThreadProfile, InsertEntriesNoWrap);
+  FRIEND_TEST(ThreadProfile, InsertEntriesWrap);
   FRIEND_TEST(ThreadProfile, MemoryMeasure);
   friend class ProfileBuffer;
 
