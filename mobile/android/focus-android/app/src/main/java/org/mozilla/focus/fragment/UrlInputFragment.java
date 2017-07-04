@@ -207,6 +207,11 @@ public class UrlInputFragment extends Fragment implements View.OnClickListener, 
     }
 
     private synchronized void animateAndDismiss() {
+        if (isAnimating) {
+            // We are already animating some state change. Ignore all other requests.
+            return;
+        }
+
         // Don't allow any more clicks: dismissView is still visible until the animation ends,
         // but we don't want to restart animations and/or trigger hiding again (which could potentially
         // cause crashes since we don't know what state we're in). Ignoring further clicks is the simplest
