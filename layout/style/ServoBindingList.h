@@ -157,6 +157,9 @@ SERVO_BINDING_FUNC(Servo_StyleRule_GetSpecificityAtIndex, void,
                    uint64_t* specificity)
 SERVO_BINDING_FUNC(Servo_StyleRule_GetSelectorCount, void,
                    RawServoStyleRuleBorrowed rule, uint32_t* count)
+SERVO_BINDING_FUNC(Servo_StyleRule_SelectorMatchesElement, bool,
+                   RawServoStyleRuleBorrowed, RawGeckoElementBorrowed,
+                   uint32_t index, mozilla::CSSPseudoElementType pseudo_type)
 SERVO_BINDING_FUNC(Servo_ImportRule_GetHref, void,
                    RawServoImportRuleBorrowed rule, nsAString* result)
 SERVO_BINDING_FUNC(Servo_ImportRule_GetSheet,
