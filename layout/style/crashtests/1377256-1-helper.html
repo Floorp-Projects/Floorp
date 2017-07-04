@@ -1,0 +1,13 @@
+<script>
+document.addEventListener("DOMContentLoaded", function(){
+  window.getSelection().modify('extend','backward','character');
+  let n=document.getElementById('a');
+  n.parentNode.removeChild(n);
+  setTimeout(function(){window.parent.finish(); }, 0);
+});
+</script>
+<body id='a'>
+<table contenteditable='true'>
+>
+<th
+</html>
