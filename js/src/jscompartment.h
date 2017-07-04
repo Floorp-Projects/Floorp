@@ -1090,7 +1090,6 @@ struct JSCompartment
     bool collectCoverageForDebug() const;
     bool collectCoverageForPGO() const;
     void clearScriptCounts();
-    void clearScriptNames();
 
     bool needsDelazificationForDebugger() const {
         return debugModeBits & DebuggerNeedsDelazification;
@@ -1117,7 +1116,6 @@ struct JSCompartment
     js::WatchpointMap* watchpointMap;
 
     js::ScriptCountsMap* scriptCountsMap;
-    js::ScriptNameMap* scriptNameMap;
 
     js::DebugScriptMap* debugScriptMap;
 
