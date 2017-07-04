@@ -67,6 +67,8 @@ Utilities:
 <b>Configure DAMP</b> (CTRL-F5 to reset to talos defaults) <button type="button" onclick="deselectAll()">Deselect all tests</button><br/>
 <script>
   for (var test in defaultConfig.subtests) {
+
+    // eslint-disable-next-line no-unsanitized/method
     document.write('<input type="checkbox" id="subtest-' + test + '" ' + (defaultConfig.subtests[test] ? "" : "un") + "checked>"
                   + test + "</input>"
                   + '<span style="color:grey">&nbsp;&nbsp;&nbsp;' + testsInfo[test] + "</span>"

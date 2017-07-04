@@ -320,11 +320,6 @@ WebGLTexture::IsComplete(const char* funcName, uint32_t texUnit,
         return false;
     }
 
-    if (!EnsureLevelInitialized(funcName, mBaseMipmapLevel)) {
-        *out_initFailed = true;
-        return false;
-    }
-
     // Texture completeness is established at GLES 3.0.4, p160-161.
     // "[A] texture is complete unless any of the following conditions hold true:"
 
@@ -450,6 +445,11 @@ WebGLTexture::IsComplete(const char* funcName, uint32_t texUnit,
         //    image is not cube complete, or TEXTURE_MIN_FILTER is one that requires a
         //    mipmap and the texture is not mipmap cube complete."
         // (already covered)
+    }
+
+    if (!EnsureLevelInitialized(funcName, mBaseMipmapLevel)) {
+        *out_initFailed = true;
+        return false;
     }
 
     return true;

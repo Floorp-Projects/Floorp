@@ -422,9 +422,13 @@ public:
         };
 
         NativePanZoomController::GlobalRef npzc = mNPZC;
-        AndroidBridge::Bridge()->PostTaskToUiThread(NewRunnableFunction(
+        RefPtr<nsThread> uiThread = GetAndroidUiThread();
+        if (!uiThread) {
+            return;
+        }
+        uiThread->Dispatch(NewRunnableFunction(
                 static_cast<void(*)(const NPZCRef&)>(callDestroy),
-                mozilla::Move(npzc)), 0);
+                mozilla::Move(npzc)), nsIThread::DISPATCH_NORMAL);
     }
 
 public:

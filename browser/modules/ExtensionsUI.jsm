@@ -378,8 +378,10 @@ this.ExtensionsUI = {
     function eventCallback(topic) {
       let doc = this.browser.ownerDocument;
       if (topic == "showing") {
+        // eslint-disable-next-line no-unsanitized/property
         doc.getElementById("addon-webext-perm-header").innerHTML = strings.header;
         let textEl = doc.getElementById("addon-webext-perm-text");
+        // eslint-disable-next-line no-unsanitized/property
         textEl.innerHTML = strings.text;
         textEl.hidden = !strings.text;
 
@@ -436,6 +438,7 @@ this.ExtensionsUI = {
       ];
 
       win.PopupNotifications.show(browser, "addon-webext-permissions", "",
+      // eslint-disable-next-line no-unsanitized/property
                                   "addons-notification-icon",
                                   action, secondaryActions, popupOptions);
     });
@@ -476,8 +479,10 @@ this.ExtensionsUI = {
         eventCallback(topic) {
           if (topic == "showing") {
             let doc = this.browser.ownerDocument;
+        // eslint-disable-next-line no-unsanitized/property
             doc.getElementById("addon-installed-notification-header")
                .innerHTML = msg1;
+            // eslint-disable-next-line no-unsanitized/property
             doc.getElementById("addon-installed-notification-message")
                .innerHTML = msg2;
           } else if (topic == "dismissed") {

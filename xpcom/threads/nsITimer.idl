@@ -154,21 +154,6 @@ interface nsITimer : nsISupports
 
   /**
    * Initialize a timer to fire after the given millisecond interval.
-   * This version takes a function to call and a closure to pass to
-   * that function.
-   *
-   * @param aFunc      The function to invoke
-   * @param aClosure   An opaque pointer to pass to that function
-   * @param aDelay     The millisecond interval
-   * @param aType      Timer type per TYPE* consts defined above
-   */
-  [noscript] void initWithFuncCallback(in nsTimerCallbackFunc aCallback,
-                                       in voidPtr aClosure,
-                                       in unsigned long aDelay,
-                                       in unsigned long aType);
-
-  /**
-   * Initialize a timer to fire after the given millisecond interval.
    * This version takes a callback object.
    *
    * @param aFunc      nsITimerCallback interface to call when timer expires

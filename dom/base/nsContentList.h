@@ -109,7 +109,7 @@ protected:
   {
   }
 
-  nsTArray< nsCOMPtr<nsIContent> > mElements;
+  AutoTArray<nsCOMPtr<nsIContent>, 10> mElements;
 };
 
 
