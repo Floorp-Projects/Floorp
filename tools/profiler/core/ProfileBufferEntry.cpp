@@ -40,13 +40,13 @@ ProfileBufferEntry::ProfileBufferEntry(Kind aKind, const char *aTagData)
   , mKind(aKind)
 { }
 
-ProfileBufferEntry::ProfileBufferEntry(Kind aKind, ProfilerMarker *aTagMarker)
-  : mTagMarker(aTagMarker)
+ProfileBufferEntry::ProfileBufferEntry(Kind aKind, void *aTagPtr)
+  : mTagPtr(aTagPtr)
   , mKind(aKind)
 { }
 
-ProfileBufferEntry::ProfileBufferEntry(Kind aKind, void *aTagPtr)
-  : mTagPtr(aTagPtr)
+ProfileBufferEntry::ProfileBufferEntry(Kind aKind, ProfilerMarker *aTagMarker)
+  : mTagMarker(aTagMarker)
   , mKind(aKind)
 { }
 
@@ -55,23 +55,8 @@ ProfileBufferEntry::ProfileBufferEntry(Kind aKind, double aTagDouble)
   , mKind(aKind)
 { }
 
-ProfileBufferEntry::ProfileBufferEntry(Kind aKind, uintptr_t aTagOffset)
-  : mTagOffset(aTagOffset)
-  , mKind(aKind)
-{ }
-
-ProfileBufferEntry::ProfileBufferEntry(Kind aKind, Address aTagAddress)
-  : mTagAddress(aTagAddress)
-  , mKind(aKind)
-{ }
-
 ProfileBufferEntry::ProfileBufferEntry(Kind aKind, int aTagInt)
   : mTagInt(aTagInt)
-  , mKind(aKind)
-{ }
-
-ProfileBufferEntry::ProfileBufferEntry(Kind aKind, char aTagChar)
-  : mTagChar(aTagChar)
   , mKind(aKind)
 { }
 
