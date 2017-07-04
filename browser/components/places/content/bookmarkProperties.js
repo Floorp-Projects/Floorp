@@ -371,9 +371,9 @@ var BookmarkPropertiesPanel = {
     }
   },
 
-	// Hack for implementing batched-Undo around the editBookmarkOverlay
-	// instant-apply code. For all the details see the comment above beginBatch
-	// in browser-places.js
+  // Hack for implementing batched-Undo around the editBookmarkOverlay
+  // instant-apply code. For all the details see the comment above beginBatch
+  // in browser-places.js
   _batchBlockingDeferred: null,
   _beginBatch() {
     if (this._batching)

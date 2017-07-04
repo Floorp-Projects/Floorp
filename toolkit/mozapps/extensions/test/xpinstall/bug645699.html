@@ -12,13 +12,13 @@ function startInstall() {
   var whiteUrl = "https://example.org/";
 
   try {
-    Object.defineProperty(window, "location", { value: { href: whiteUrl }	});
+    Object.defineProperty(window, "location", { value: { href: whiteUrl } });
     throw new Error("Object.defineProperty(window, 'location', ...) should have thrown");
   } catch (exc) {
     if (!(exc instanceof TypeError))
       throw exc;
   }
-  Object.defineProperty(document, "documentURIObject", { spec: { href: whiteUrl }	});
+  Object.defineProperty(document, "documentURIObject", { spec: { href: whiteUrl } });
 
   InstallTrigger.install({
     "Unsigned XPI": "http://example.com/browser/toolkit/mozapps/extensions/test/xpinstall/amosigned.xpi"

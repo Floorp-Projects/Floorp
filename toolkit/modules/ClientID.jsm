@@ -18,7 +18,7 @@ const LOGGER_PREFIX = "ClientID::";
 XPCOMUtils.defineLazyModuleGetter(this, "CommonUtils",
                                   "resource://services-common/utils.js");
 XPCOMUtils.defineLazyModuleGetter(this, "OS",
-				  "resource://gre/modules/osfile.jsm");
+                                  "resource://gre/modules/osfile.jsm");
 
 XPCOMUtils.defineLazyGetter(this, "gDatareportingPath", () => {
   return OS.Path.join(OS.Constants.Path.profileDir, "datareporting");

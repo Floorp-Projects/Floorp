@@ -3,7 +3,7 @@ var testGenerator = testSteps();
 function* testSteps()
 {
   const name = this.window ? window.location.pathname :
-	       "test_storage_manager_estimate.js";
+               "test_storage_manager_estimate.js";
   const objectStoreName = "storagesManager";
   const arraySize = 1e6;
 
