@@ -2011,7 +2011,7 @@ History::NotifyVisited(nsIURI* aURI)
       }
 
       doc->Dispatch("NotifyVisitedForDocument", TaskCategory::Other,
-                    NS_NewRunnableFunction([uri, doc] {
+                    NS_NewRunnableFunction("History::NotifyVisitedForDocument", [uri, doc] {
                       nsCOMPtr<IHistory> history = services::GetHistoryService();
                       static_cast<History*>(history.get())->NotifyVisitedForDocument(uri, doc);
                     }));
