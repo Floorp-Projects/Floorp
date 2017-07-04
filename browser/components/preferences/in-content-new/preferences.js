@@ -278,7 +278,7 @@ const CONFIRM_RESTART_PROMPT_CANCEL = 1;
 const CONFIRM_RESTART_PROMPT_RESTART_LATER = 2;
 function confirmRestartPrompt(aRestartToEnable, aDefaultButtonIndex,
                               aWantRevertAsCancelButton,
-			      aWantRestartLaterButton) {
+                              aWantRestartLaterButton) {
   let brandName = document.getElementById("bundleBrand").getString("brandShortName");
   let bundle = document.getElementById("bundlePreferences");
   let msg = bundle.getFormattedString(aRestartToEnable ?

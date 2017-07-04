@@ -10,7 +10,6 @@ const Cu = Components.utils;
 const Ci = Components.interfaces;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-
 /**
  * Returns whether the given URL very likely has input
  * fields that contain serialized session store data.

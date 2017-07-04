@@ -521,7 +521,7 @@ function checkSystemSection(data) {
 
   if (gIsWindows || gIsMac || gIsLinux) {
     let EXTRA_CPU_FIELDS = ["cores", "model", "family", "stepping",
-			    "l2cacheKB", "l3cacheKB", "speedMHz", "vendor"];
+                            "l2cacheKB", "l3cacheKB", "speedMHz", "vendor"];
 
     for (let f of EXTRA_CPU_FIELDS) {
       // Note this is testing TelemetryEnvironment.js only, not that the
@@ -539,18 +539,18 @@ function checkSystemSection(data) {
 
     // We insist these are available
     for (let f of ["cores"]) {
-	Assert.ok(!(f in data.system.cpu) ||
-		  Number.isFinite(data.system.cpu[f]),
-		  f + " must be a number if non null.");
+      Assert.ok(!(f in data.system.cpu) ||
+                Number.isFinite(data.system.cpu[f]),
+                f + " must be a number if non null.");
     }
 
     // These should be numbers if they are not null
     for (let f of ["model", "family", "stepping", "l2cacheKB",
-		   "l3cacheKB", "speedMHz"]) {
-	Assert.ok(!(f in data.system.cpu) ||
-		  data.system.cpu[f] === null ||
-		  Number.isFinite(data.system.cpu[f]),
-		  f + " must be a number if non null.");
+                   "l3cacheKB", "speedMHz"]) {
+      Assert.ok(!(f in data.system.cpu) ||
+                data.system.cpu[f] === null ||
+                Number.isFinite(data.system.cpu[f]),
+                f + " must be a number if non null.");
     }
   }
 
@@ -937,7 +937,7 @@ add_task(async function test_prefWatchPolicies() {
   Assert.ok(!(PREF_TEST_3 in userPrefs),
             "Do not report if preference not user set.");
   Assert.equal(userPrefs[PREF_TEST_5], expectedValue,
-	      "The pref value in the environment data should still be the same");
+               "The pref value in the environment data should still be the same");
 });
 
 add_task(async function test_prefWatch_prefReset() {

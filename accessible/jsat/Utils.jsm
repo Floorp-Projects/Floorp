@@ -660,7 +660,7 @@ this.Logger = { // jshint ignore:line
       let pivot = aEvent.accessible.QueryInterface(
         Ci.nsIAccessibleDocument).virtualCursor;
       str += ' (' + this.accessibleToString(event.oldAccessible) + ' -> ' +
-	this.accessibleToString(pivot.position) + ')';
+        this.accessibleToString(pivot.position) + ')';
     }
 
     return str;

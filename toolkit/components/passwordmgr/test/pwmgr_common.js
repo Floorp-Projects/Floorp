@@ -478,7 +478,7 @@ if (this.addMessageListener) {
           dump("Removing " + notes.length + " popup notifications.\n");
         }
         for (let note of notes) {
-	  note.remove();
+          note.remove();
         }
       }
     });
