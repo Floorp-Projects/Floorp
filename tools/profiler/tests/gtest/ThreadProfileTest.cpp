@@ -25,7 +25,7 @@ TEST(ThreadProfile, InsertOneTag) {
   ASSERT_TRUE(pb->mEntries != nullptr);
   ASSERT_TRUE(pb->mEntries[pb->mReadPos].kind() ==
               ProfileBufferEntry::Kind::Time);
-  ASSERT_TRUE(pb->mEntries[pb->mReadPos].mTagDouble == 123.1);
+  ASSERT_TRUE(pb->mEntries[pb->mReadPos].u.mDouble == 123.1);
 }
 
 // See if we can insert some tags
@@ -42,7 +42,7 @@ TEST(ThreadProfile, InsertTagsNoWrap) {
   while (readPos != pb->mWritePos) {
     ASSERT_TRUE(pb->mEntries[readPos].kind() ==
                 ProfileBufferEntry::Kind::Time);
-    ASSERT_TRUE(pb->mEntries[readPos].mTagDouble == readPos);
+    ASSERT_TRUE(pb->mEntries[readPos].u.mDouble == readPos);
     readPos = (readPos + 1) % pb->mEntrySize;
   }
 }
@@ -66,7 +66,7 @@ TEST(ThreadProfile, InsertTagsWrap) {
     ASSERT_TRUE(pb->mEntries[readPos].kind() ==
                 ProfileBufferEntry::Kind::Time);
     // the first few tags were discarded when we wrapped
-    ASSERT_TRUE(pb->mEntries[readPos].mTagDouble == ctr + (test_size - tags));
+    ASSERT_TRUE(pb->mEntries[readPos].u.mDouble == ctr + (test_size - tags));
     ctr++;
     readPos = (readPos + 1) % pb->mEntrySize;
   }

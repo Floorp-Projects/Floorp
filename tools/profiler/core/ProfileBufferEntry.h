@@ -61,12 +61,12 @@ public:
   ProfileBufferEntry();
 
 private:
-  // aTagData must not need release (i.e. be a string from the text segment)
-  ProfileBufferEntry(Kind aKind, const char *aTagData);
-  ProfileBufferEntry(Kind aKind, void *aTagPtr);
-  ProfileBufferEntry(Kind aKind, ProfilerMarker *aTagMarker);
-  ProfileBufferEntry(Kind aKind, double aTagDouble);
-  ProfileBufferEntry(Kind aKind, int aTagLine);
+  // aString must be a static string.
+  ProfileBufferEntry(Kind aKind, const char *aString);
+  ProfileBufferEntry(Kind aKind, void *aPtr);
+  ProfileBufferEntry(Kind aKind, ProfilerMarker *aMarker);
+  ProfileBufferEntry(Kind aKind, double aDouble);
+  ProfileBufferEntry(Kind aKind, int aInt);
 
 public:
 # define DEF_MAKE_(k, t) \
@@ -92,15 +92,15 @@ private:
   FRIEND_TEST(ThreadProfile, MemoryMeasure);
   friend class ProfileBuffer;
 
-  union {
-    const char* mTagData;
-    char        mTagChars[sizeof(void*)];
-    void*       mTagPtr;
-    ProfilerMarker* mTagMarker;
-    double      mTagDouble;
-    int         mTagInt;
-  };
   Kind mKind;
+  union {
+    const char*     mString;
+    char            mChars[sizeof(void*)];
+    void*           mPtr;
+    ProfilerMarker* mMarker;
+    double          mDouble;
+    int             mInt;
+  } u;
 };
 
 #if !defined(GP_ARCH_arm)

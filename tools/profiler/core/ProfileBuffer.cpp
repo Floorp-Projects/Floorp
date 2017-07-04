@@ -94,13 +94,13 @@ char* ProfileBuffer::processDynamicTag(int readPos,
   int readAheadPos = (readPos + 1) % mEntrySize;
   int tagBuffPos = 0;
 
-  // Read the string stored in mTagData until the null character is seen
+  // Read the string stored in mChars until the null character is seen.
   bool seenNullByte = false;
   while (readAheadPos != mWritePos && !seenNullByte) {
     (*tagsConsumed)++;
     ProfileBufferEntry readAheadEntry = mEntries[readAheadPos];
     for (size_t pos = 0; pos < sizeof(void*); pos++) {
-      tagBuff[tagBuffPos] = readAheadEntry.mTagChars[pos];
+      tagBuff[tagBuffPos] = readAheadEntry.u.mChars[pos];
       if (tagBuff[tagBuffPos] == '\0' || tagBuffPos == DYNAMIC_MAX_STRING-2) {
         seenNullByte = true;
         break;
