@@ -272,14 +272,6 @@ PROFILER_FUNC_VOID(
                                      const std::function<ProfilerStackCallback>& aCallback,
                                      bool aSampleNative = true))
 
-// This method tries to initialize any internal state used in order to sample
-// threads. This initialization may be expensive on some platforms, so this
-// method may block for a while. Do not run this method on the main thread.
-//
-// This method may be safely called multiple times, and will be a no-op when
-// called after the first time.
-PROFILER_FUNC_VOID(profiler_initialize_stackwalk());
-
 struct ProfilerBacktraceDestructor
 {
 #ifdef MOZ_GECKO_PROFILER
