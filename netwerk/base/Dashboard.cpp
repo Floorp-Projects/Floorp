@@ -20,6 +20,7 @@
 #include "nsURLHelper.h"
 #include "mozilla/Logging.h"
 #include "nsIOService.h"
+#include "../cache2/CacheFileUtils.h"
 
 using mozilla::AutoSafeJSContext;
 using mozilla::dom::Sequence;
@@ -821,6 +822,28 @@ Dashboard::GetRcwnData(RcwnData *aData)
     dict.mTotalNetworkRequests = gIOService->GetTotalRequestNumber();
     dict.mRcwnCacheWonCount = gIOService->GetCacheWonRequestNumber();
     dict.mRcwnNetWonCount = gIOService->GetNetWonRequestNumber();
+
+    uint32_t cacheSlow, cacheNotSlow;
+    CacheFileUtils::CachePerfStats::GetSlowStats(&cacheSlow, &cacheNotSlow);
+    dict.mCacheSlowCount = cacheSlow;
+    dict.mCacheNotSlowCount = cacheNotSlow;
+
+    dict.mPerfStats.Construct();
+    Sequence<mozilla::dom::RcwnPerfStats> &perfStats = dict.mPerfStats.Value();
+    uint32_t length = CacheFileUtils::CachePerfStats::LAST;
+    if (!perfStats.SetCapacity(length, fallible)) {
+        JS_ReportOutOfMemory(cx);
+        return NS_ERROR_OUT_OF_MEMORY;
+    }
+
+    for (uint32_t i = 0; i < length; i++) {
+        CacheFileUtils::CachePerfStats::EDataType perfType =
+            static_cast<CacheFileUtils::CachePerfStats::EDataType>(i);
+        dom::RcwnPerfStats &elem = *perfStats.AppendElement(fallible);
+        elem.mAvgShort = CacheFileUtils::CachePerfStats::GetAverage(perfType, false);
+        elem.mAvgLong = CacheFileUtils::CachePerfStats::GetAverage(perfType, true);
+        elem.mStddevLong = CacheFileUtils::CachePerfStats::GetStdDev(perfType, true);
+    }
 
     JS::RootedValue val(cx);
     if (!ToJSValue(cx, dict, &val)) {
