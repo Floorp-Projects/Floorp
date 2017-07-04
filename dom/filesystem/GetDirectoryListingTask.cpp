@@ -228,7 +228,7 @@ GetDirectoryListingTaskParent::GetSuccessRequestResult(ErrorResult& aRv) const
       nsresult rv = NS_NewLocalFile(mTargetData[i].mPath, true,
                                     getter_AddRefs(path));
       if (NS_WARN_IF(NS_FAILED(rv))) {
-        return FileSystemErrorResponse(rv);
+        continue;
       }
 
       FileSystemDirectoryListingResponseFile fileData;
@@ -251,7 +251,7 @@ GetDirectoryListingTaskParent::GetSuccessRequestResult(ErrorResult& aRv) const
       rv =
         IPCBlobUtils::Serialize(blobImpl, mRequestParent->Manager(), ipcBlob);
       if (NS_WARN_IF(NS_FAILED(rv))) {
-        return FileSystemErrorResponse(rv);
+        continue;
       }
 
       fileData.blob() = ipcBlob;
