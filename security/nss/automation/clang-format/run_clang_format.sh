@@ -22,6 +22,7 @@ blacklist=(
      "./lib/sqlite" \
      "./gtests/google_test" \
      "./.hg" \
+     "./out" \
 )
 
 top="$(dirname $0)/../.."

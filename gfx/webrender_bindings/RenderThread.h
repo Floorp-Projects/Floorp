@@ -18,6 +18,7 @@
 #include "mozilla/webrender/webrender_ffi.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/webrender/WebRenderTypes.h"
+#include "mozilla/layers/SynchronousTask.h"
 
 namespace mozilla {
 namespace wr {
@@ -143,6 +144,7 @@ private:
   explicit RenderThread(base::Thread* aThread);
 
   void DeferredRenderTextureHostDestroy(RefPtr<RenderTextureHost> aTexture);
+  void ShutDownTask(layers::SynchronousTask* aTask);
 
   ~RenderThread();
 
@@ -157,6 +159,7 @@ private:
 
   Mutex mRenderTextureMapLock;
   nsRefPtrHashtable<nsUint64HashKey, RenderTextureHost> mRenderTextures;
+  bool mHasShutdown;
 };
 
 } // namespace wr

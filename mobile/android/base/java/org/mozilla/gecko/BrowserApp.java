@@ -628,6 +628,8 @@ public class BrowserApp extends GeckoApp
         final SafeIntent intent = new SafeIntent(getIntent());
         final boolean isInAutomation = IntentUtils.getIsInAutomationFromEnvironment(intent);
 
+        GeckoProfile.setIntentArgs(intent.getStringExtra("args"));
+
         if (!isInAutomation && AppConstants.MOZ_ANDROID_DOWNLOAD_CONTENT_SERVICE) {
             // Kick off download of app content as early as possible so that in the best case it's
             // available before the user starts using the browser.

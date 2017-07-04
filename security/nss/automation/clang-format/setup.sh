@@ -13,6 +13,7 @@ apt_packages+=('curl')
 apt_packages+=('xz-utils')
 apt_packages+=('mercurial')
 apt_packages+=('git')
+apt_packages+=('locales')
 apt-get install -y --no-install-recommends ${apt_packages[@]}
 
 # Download clang.

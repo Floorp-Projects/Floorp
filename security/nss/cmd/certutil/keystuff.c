@@ -17,14 +17,6 @@
 #include <conio.h>
 #endif
 
-#if defined(__sun) && !defined(SVR4)
-extern int fclose(FILE *);
-extern int fprintf(FILE *, char *, ...);
-extern int isatty(int);
-extern char *sys_errlist[];
-#define strerror(errno) sys_errlist[errno]
-#endif
-
 #include "nspr.h"
 #include "prtypes.h"
 #include "prtime.h"
