@@ -5,45 +5,32 @@
 
 var gActiveListeners = {};
 
-// These event (un)registration handlers only work for one window, DONOT use
-// them with multiple windows.
-function registerPopupEventHandler(eventName, callback, win) {
-  if (!win) {
-    win = window;
-  }
+function registerPopupEventHandler(eventName, callback) {
   gActiveListeners[eventName] = function(event) {
-    if (event.target != win.PopupNotifications.panel)
+    if (event.target != PopupNotifications.panel)
       return;
-    win.PopupNotifications.panel.removeEventListener(
-                                                   eventName,
-                                                   gActiveListeners[eventName]);
+    PopupNotifications.panel.removeEventListener(eventName,
+                                                 gActiveListeners[eventName]);
     delete gActiveListeners[eventName];
 
-    callback.call(win.PopupNotifications.panel);
+    callback.call(PopupNotifications.panel);
   }
-  win.PopupNotifications.panel.addEventListener(eventName,
-                                                gActiveListeners[eventName]);
+  PopupNotifications.panel.addEventListener(eventName,
+                                            gActiveListeners[eventName]);
 }
 
-function unregisterPopupEventHandler(eventName, win)
+function unregisterPopupEventHandler(eventName)
 {
-  if (!win) {
-    win = window;
-  }
-  win.PopupNotifications.panel.removeEventListener(eventName,
-                                                   gActiveListeners[eventName]);
+  PopupNotifications.panel.removeEventListener(eventName,
+                                               gActiveListeners[eventName]);
   delete gActiveListeners[eventName];
 }
 
-function unregisterAllPopupEventHandlers(win)
+function unregisterAllPopupEventHandlers()
 {
-  if (!win) {
-    win = window;
-  }
   for (let eventName in gActiveListeners) {
-    win.PopupNotifications.panel.removeEventListener(
-                                                   eventName,
-                                                   gActiveListeners[eventName]);
+    PopupNotifications.panel.removeEventListener(eventName,
+                                                 gActiveListeners[eventName]);
   }
   gActiveListeners = {};
 }
