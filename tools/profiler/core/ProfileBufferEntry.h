@@ -30,7 +30,7 @@ class ProfilerMarker;
 #define FOR_EACH_PROFILE_BUFFER_ENTRY_KIND(macro) \
   macro(Category,        int) \
   macro(CodeLocation,    const char*) \
-  macro(EmbeddedString,  void*) \
+  macro(EmbeddedString,  char*) /* char[kNumChars], really */ \
   macro(JitReturnAddr,   void*) \
   macro(LineNumber,      int) \
   macro(NativeLeafAddr,  void*) \
@@ -60,9 +60,14 @@ public:
 
   ProfileBufferEntry();
 
+  // This is equal to sizeof(double), which is the largest non-char variant in
+  // |u|.
+  static const size_t kNumChars = 8;
+
 private:
   // aString must be a static string.
   ProfileBufferEntry(Kind aKind, const char *aString);
+  ProfileBufferEntry(Kind aKind, char aChars[kNumChars]);
   ProfileBufferEntry(Kind aKind, void *aPtr);
   ProfileBufferEntry(Kind aKind, ProfilerMarker *aMarker);
   ProfileBufferEntry(Kind aKind, double aDouble);
@@ -94,7 +99,7 @@ private:
   Kind mKind;
   union {
     const char*     mString;
-    char            mChars[sizeof(void*)];
+    char            mChars[kNumChars];
     void*           mPtr;
     ProfilerMarker* mMarker;
     double          mDouble;
@@ -103,6 +108,8 @@ private:
 };
 
 #if !defined(GP_ARCH_arm)
+// Packed layout: 1 byte for the tag + 8 bytes for the value.
+static_assert(sizeof(ProfileBufferEntry) == 9, "bad ProfileBufferEntry size");
 #pragma pack(pop)
 #endif
 

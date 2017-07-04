@@ -99,7 +99,7 @@ char* ProfileBuffer::processDynamicTag(int readPos,
   while (readAheadPos != mWritePos && !seenNullByte) {
     (*tagsConsumed)++;
     ProfileBufferEntry readAheadEntry = mEntries[readAheadPos];
-    for (size_t pos = 0; pos < sizeof(void*); pos++) {
+    for (size_t pos = 0; pos < ProfileBufferEntry::kNumChars; pos++) {
       tagBuff[tagBuffPos] = readAheadEntry.u.mChars[pos];
       if (tagBuff[tagBuffPos] == '\0' || tagBuffPos == DYNAMIC_MAX_STRING-2) {
         seenNullByte = true;
