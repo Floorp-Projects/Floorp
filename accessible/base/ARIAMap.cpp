@@ -912,12 +912,12 @@ static const nsRoleMapEntry sWAIRoleMaps[] =
   },
   { // region
     &nsGkAtoms::region,
-    roles::PANE,
+    roles::REGION,
     kUseMapRole,
     eNoValue,
     eNoAction,
     eNoLiveAttr,
-    kGenericAccType,
+    eLandmark,
     kNoReqStates
   },
   { // row
