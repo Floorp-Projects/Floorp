@@ -786,19 +786,11 @@
                            class="toolbarbutton-1"
                            command="Browser:ReloadOrDuplicate"
                            onclick="checkForMiddleClick(this, event);"
-                           tooltip="dynamic-shortcut-tooltip">
-              <box class="toolbarbutton-animatable-box">
-                <image class="toolbarbutton-animatable-image"/>
-              </box>
-            </toolbarbutton>
+                           tooltip="dynamic-shortcut-tooltip"/>
             <toolbarbutton id="stop-button"
                            class="toolbarbutton-1"
                            command="Browser:Stop"
-                           tooltip="dynamic-shortcut-tooltip">
-              <box class="toolbarbutton-animatable-box">
-                <image class="toolbarbutton-animatable-image"/>
-              </box>
-            </toolbarbutton>
+                           tooltip="dynamic-shortcut-tooltip"/>
           </toolbaritem>
 #endif
           <hbox id="urlbar-wrapper" flex="1">
