@@ -1184,10 +1184,11 @@ ParentImpl::ShutdownBackgroundThread()
       TimerCallbackClosure closure(thread, liveActors);
 
       MOZ_ALWAYS_SUCCEEDS(
-        shutdownTimer->InitWithFuncCallback(&ShutdownTimerCallback,
-                                            &closure,
-                                            kShutdownTimerDelayMS,
-                                            nsITimer::TYPE_ONE_SHOT));
+        shutdownTimer->InitWithNamedFuncCallback(&ShutdownTimerCallback,
+                                                 &closure,
+                                                 kShutdownTimerDelayMS,
+                                                 nsITimer::TYPE_ONE_SHOT,
+                                                 "ParentImpl::ShutdownTimerCallback"));
 
       SpinEventLoopUntil([&]() { return !sLiveActorCount; });
 

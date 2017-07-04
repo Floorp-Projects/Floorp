@@ -2096,9 +2096,17 @@ nsChildView::AddWindowOverlayWebRenderCommands(layers::WebRenderBridgeChild* aWr
       titlebarCGContextDataLength,
       static_cast<uint8_t *>(CGBitmapContextGetData(mTitlebarCGContext)));
 
+    if (mTitlebarImageKey &&
+        mTitlebarImageSize != size) {
+      // Delete wr::ImageKey. wr::ImageKey does not support size change.
+      CleanupWebRenderWindowOverlay(aWrBridge);
+      MOZ_ASSERT(mTitlebarImageKey.isNothing());
+    }
+
     if (!mTitlebarImageKey) {
       mTitlebarImageKey = Some(aWrBridge->GetNextImageKey());
       aWrBridge->SendAddImage(*mTitlebarImageKey, size, stride, format, buffer);
+      mTitlebarImageSize = size;
       updatedTitlebarRegion.SetEmpty();
     }
 

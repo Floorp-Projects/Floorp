@@ -597,6 +597,7 @@ Pref.prototype = {
       this.li.setAttribute("contextmenu", "prefs-context-menu");
 
       // Create list item outline, bind to object actions
+      // eslint-disable-next-line no-unsanitized/property
       this.li.innerHTML =
         "<div class='pref-name' " +
             "onclick='AboutConfig.selectOrToggleBoolPref(event);'>" +
