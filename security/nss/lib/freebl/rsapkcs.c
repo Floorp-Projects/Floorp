@@ -290,10 +290,12 @@ MGF1(HASH_HashType hashAlg,
     const SECHashObject *hash;
     void *hashContext;
     unsigned char C[4];
+    SECStatus rv = SECSuccess;
 
     hash = HASH_GetRawHashObject(hashAlg);
-    if (hash == NULL)
+    if (hash == NULL) {
         return SECFailure;
+    }
 
     hashContext = (*hash->create)();
     rounds = (maskLen + hash->length - 1) / hash->length;
@@ -314,14 +316,19 @@ MGF1(HASH_HashType hashAlg,
             (*hash->end)(hashContext, tempHash, &digestLen, hash->length);
         } else { /* we're in the last round and need to cut the hash */
             temp = (unsigned char *)PORT_Alloc(hash->length);
+            if (!temp) {
+                rv = SECFailure;
+                goto done;
+            }
             (*hash->end)(hashContext, temp, &digestLen, hash->length);
             PORT_Memcpy(tempHash, temp, maskLen - counter * hash->length);
             PORT_Free(temp);
         }
     }
-    (*hash->destroy)(hashContext, PR_TRUE);
 
-    return SECSuccess;
+done:
+    (*hash->destroy)(hashContext, PR_TRUE);
+    return rv;
 }
 
 /* XXX Doesn't set error code */

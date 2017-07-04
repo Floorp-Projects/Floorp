@@ -12,6 +12,7 @@
 #include "prio.h"
 #include "blapi.h"
 #include "seccomon.h"
+#include "secerr.h"
 #include "stdio.h"
 #include "prmem.h"
 #include "hasht.h"
@@ -233,8 +234,12 @@ static char *
 mkCheckFileName(const char *libName)
 {
     int ln_len = PORT_Strlen(libName);
-    char *output = PORT_Alloc(ln_len + sizeof(SGN_SUFFIX));
     int index = ln_len + 1 - sizeof("." SHLIB_SUFFIX);
+    char *output = PORT_Alloc(ln_len + sizeof(SGN_SUFFIX));
+    if (!output) {
+        PORT_SetError(SEC_ERROR_NO_MEMORY);
+        return NULL;
+    }
 
     if ((index > 0) &&
         (PORT_Strncmp(&libName[index],
