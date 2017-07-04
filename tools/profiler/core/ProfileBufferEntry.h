@@ -27,20 +27,20 @@
 
 class ProfilerMarker;
 
-#define PROFILE_BUFFER_ENTRY_KIND_LIST(_) \
-    _(Category,        int)               \
-    _(CodeLocation,    const char *)      \
-    _(EmbeddedString,  void *)            \
-    _(JitReturnAddr,   void *)            \
-    _(LineNumber,      int)               \
-    _(NativeLeafAddr,  void *)            \
-    _(Marker,          ProfilerMarker *)  \
-    _(ResidentMemory,  double)            \
-    _(Responsiveness,  double)            \
-    _(Sample,          const char *)      \
-    _(ThreadId,        int)               \
-    _(Time,            double)            \
-    _(UnsharedMemory,  double)
+#define FOR_EACH_PROFILE_BUFFER_ENTRY_KIND(macro) \
+  macro(Category,        int) \
+  macro(CodeLocation,    const char*) \
+  macro(EmbeddedString,  void*) \
+  macro(JitReturnAddr,   void*) \
+  macro(LineNumber,      int) \
+  macro(NativeLeafAddr,  void*) \
+  macro(Marker,          ProfilerMarker*) \
+  macro(ResidentMemory,  double) \
+  macro(Responsiveness,  double) \
+  macro(Sample,          const char*) \
+  macro(ThreadId,        int) \
+  macro(Time,            double) \
+  macro(UnsharedMemory,  double)
 
 // NB: Packing this structure has been shown to cause SIGBUS issues on ARM.
 #if !defined(GP_ARCH_arm)
@@ -52,9 +52,9 @@ class ProfileBufferEntry
 public:
   enum class Kind : uint8_t {
     INVALID = 0,
-#   define DEF_ENUM_(k, t) k,
-    PROFILE_BUFFER_ENTRY_KIND_LIST(DEF_ENUM_)
-#   undef DEF_ENUM_
+    #define KIND(k, t) k,
+    FOR_EACH_PROFILE_BUFFER_ENTRY_KIND(KIND)
+    #undef KIND
     LIMIT
   };
 
@@ -69,20 +69,19 @@ private:
   ProfileBufferEntry(Kind aKind, int aInt);
 
 public:
-# define DEF_MAKE_(k, t) \
-    static ProfileBufferEntry k(t val) { \
-      return ProfileBufferEntry(Kind::k, val); \
+  #define CTOR(k, t) \
+    static ProfileBufferEntry k(t aVal) { \
+      return ProfileBufferEntry(Kind::k, aVal); \
     }
-  PROFILE_BUFFER_ENTRY_KIND_LIST(DEF_MAKE_)
-# undef DEF_MAKE_
+  FOR_EACH_PROFILE_BUFFER_ENTRY_KIND(CTOR)
+  #undef CTOR
 
   Kind kind() const { return mKind; }
   bool hasKind(Kind k) const { return kind() == k; }
 
-# define DEF_METHODS_(k, t) \
-    bool is##k() const { return hasKind(Kind::k); }
-  PROFILE_BUFFER_ENTRY_KIND_LIST(DEF_METHODS_)
-# undef DEF_METHODS_
+  #define IS_KIND(k, t) bool is##k() const { return hasKind(Kind::k); }
+  FOR_EACH_PROFILE_BUFFER_ENTRY_KIND(IS_KIND)
+  #undef IS_KIND
 
 private:
   FRIEND_TEST(ThreadProfile, InsertOneTag);
