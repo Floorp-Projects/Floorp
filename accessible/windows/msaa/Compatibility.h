@@ -39,6 +39,12 @@ public:
    */
   static bool IsDolphin() { return !!(sConsumers & DOLPHIN); }
 
+  /**
+   * @return ID of a11y manifest resource to be passed to
+   * mscom::ActivationContext
+   */
+  static uint16_t GetActCtxResourceId();
+
 private:
   Compatibility();
   Compatibility(const Compatibility&);
