@@ -677,7 +677,7 @@
               this.updateErrorText();
               this.setupStatusFader(true);
               // If video hasn't shown anything yet, disable the controls.
-              if (!this.firstFrameShown) {
+              if (!this.firstFrameShown && !this.isAudioOnly) {
                 this.startFadeOut(this.controlBar);
               }
               this.controlsSpacer.removeAttribute("hideCursor");
