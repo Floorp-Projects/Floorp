@@ -6,7 +6,7 @@
 #if !defined(MediaQueue_h_)
 #define MediaQueue_h_
 
-#include "mozilla/ReentrantMonitor.h"
+#include "mozilla/RecursiveMutex.h"
 #include "mozilla/TaskQueue.h"
 
 #include "nsDeque.h"
@@ -29,7 +29,7 @@ class MediaQueue : private nsDeque {
 public:
   MediaQueue()
     : nsDeque(new MediaQueueDeallocator<T>()),
-      mReentrantMonitor("mediaqueue"),
+      mRecursiveMutex("mediaqueue"),
       mEndOfStream(false)
   {}
 
@@ -38,12 +38,12 @@ public:
   }
 
   inline size_t GetSize() const {
-    ReentrantMonitorAutoEnter mon(mReentrantMonitor);
+    RecursiveMutexAutoLock lock(mRecursiveMutex);
     return nsDeque::GetSize();
   }
 
   inline void Push(T* aItem) {
-    ReentrantMonitorAutoEnter mon(mReentrantMonitor);
+    RecursiveMutexAutoLock lock(mRecursiveMutex);
     MOZ_ASSERT(!mEndOfStream);
     MOZ_ASSERT(aItem);
     NS_ADDREF(aItem);
@@ -53,7 +53,7 @@ public:
   }
 
   inline already_AddRefed<T> PopFront() {
-    ReentrantMonitorAutoEnter mon(mReentrantMonitor);
+    RecursiveMutexAutoLock lock(mRecursiveMutex);
     RefPtr<T> rv = dont_AddRef(static_cast<T*>(nsDeque::PopFront()));
     if (rv) {
       mPopEvent.Notify(rv);
@@ -62,12 +62,12 @@ public:
   }
 
   inline RefPtr<T> PeekFront() const {
-    ReentrantMonitorAutoEnter mon(mReentrantMonitor);
+    RecursiveMutexAutoLock lock(mRecursiveMutex);
     return static_cast<T*>(nsDeque::PeekFront());
   }
 
   void Reset() {
-    ReentrantMonitorAutoEnter mon(mReentrantMonitor);
+    RecursiveMutexAutoLock lock(mRecursiveMutex);
     while (GetSize() > 0) {
       RefPtr<T> x = dont_AddRef(static_cast<T*>(nsDeque::PopFront()));
     }
@@ -75,7 +75,7 @@ public:
   }
 
   bool AtEndOfStream() const {
-    ReentrantMonitorAutoEnter mon(mReentrantMonitor);
+    RecursiveMutexAutoLock lock(mRecursiveMutex);
     return GetSize() == 0 && mEndOfStream;
   }
 
@@ -83,13 +83,13 @@ public:
   // This happens when the media stream has been completely decoded. Note this
   // does not mean that the corresponding stream has finished playback.
   bool IsFinished() const {
-    ReentrantMonitorAutoEnter mon(mReentrantMonitor);
+    RecursiveMutexAutoLock lock(mRecursiveMutex);
     return mEndOfStream;
   }
 
   // Informs the media queue that it won't be receiving any more items.
   void Finish() {
-    ReentrantMonitorAutoEnter mon(mReentrantMonitor);
+    RecursiveMutexAutoLock lock(mRecursiveMutex);
     if (!mEndOfStream) {
       mEndOfStream = true;
       mFinishEvent.Notify();
@@ -98,7 +98,7 @@ public:
 
   // Returns the approximate number of microseconds of items in the queue.
   int64_t Duration() {
-    ReentrantMonitorAutoEnter mon(mReentrantMonitor);
+    RecursiveMutexAutoLock lock(mRecursiveMutex);
     if (GetSize() == 0) {
       return 0;
     }
@@ -108,14 +108,14 @@ public:
   }
 
   void LockedForEach(nsDequeFunctor& aFunctor) const {
-    ReentrantMonitorAutoEnter mon(mReentrantMonitor);
+    RecursiveMutexAutoLock lock(mRecursiveMutex);
     ForEach(aFunctor);
   }
 
   // Extracts elements from the queue into aResult, in order.
   // Elements whose start time is before aTime are ignored.
   void GetElementsAfter(int64_t aTime, nsTArray<RefPtr<T>>* aResult) {
-    ReentrantMonitorAutoEnter mon(mReentrantMonitor);
+    RecursiveMutexAutoLock lock(mRecursiveMutex);
     if (GetSize() == 0)
       return;
     size_t i;
@@ -138,14 +138,14 @@ public:
   }
 
   void GetFirstElements(uint32_t aMaxElements, nsTArray<RefPtr<T>>* aResult) {
-    ReentrantMonitorAutoEnter mon(mReentrantMonitor);
+    RecursiveMutexAutoLock lock(mRecursiveMutex);
     for (size_t i = 0; i < aMaxElements && i < GetSize(); ++i) {
       *aResult->AppendElement() = static_cast<T*>(ObjectAt(i));
     }
   }
 
   uint32_t FrameCount() {
-    ReentrantMonitorAutoEnter mon(mReentrantMonitor);
+    RecursiveMutexAutoLock lock(mRecursiveMutex);
     uint32_t frames = 0;
     for (size_t i = 0; i < GetSize(); ++i) {
       T* v = static_cast<T*>(ObjectAt(i));
@@ -167,7 +167,7 @@ public:
   }
 
 private:
-  mutable ReentrantMonitor mReentrantMonitor;
+  mutable RecursiveMutex mRecursiveMutex;
   MediaEventProducer<RefPtr<T>> mPopEvent;
   MediaEventProducer<RefPtr<T>> mPushEvent;
   MediaEventProducer<void> mFinishEvent;
