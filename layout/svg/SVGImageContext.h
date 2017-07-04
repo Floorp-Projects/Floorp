@@ -97,8 +97,8 @@ public:
     return !(*this == aOther);
   }
 
-  uint32_t Hash() const {
-    uint32_t hash = 0;
+  PLDHashNumber Hash() const {
+    PLDHashNumber hash = 0;
     if (mContextPaint) {
       hash = HashGeneric(hash, mContextPaint->Hash());
     }
@@ -108,10 +108,10 @@ public:
   }
 
 private:
-  static uint32_t HashSize(const CSSIntSize& aSize) {
+  static PLDHashNumber HashSize(const CSSIntSize& aSize) {
     return HashGeneric(aSize.width, aSize.height);
   }
-  static uint32_t HashPAR(const SVGPreserveAspectRatio& aPAR) {
+  static PLDHashNumber HashPAR(const SVGPreserveAspectRatio& aPAR) {
     return aPAR.Hash();
   }
 
