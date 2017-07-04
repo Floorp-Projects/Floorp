@@ -394,19 +394,20 @@ public class UrlInputFragment extends Fragment implements View.OnClickListener, 
 
     @Override
     public void onCommit() {
-        ViewUtils.hideKeyboard(urlView);
+        final String input = urlView.getText().toString();
+        if (!input.isEmpty()) {
+            ViewUtils.hideKeyboard(urlView);
 
-        final String rawUrl = urlView.getText().toString();
+            final boolean isUrl = UrlUtils.isUrl(input);
 
-        final boolean isUrl = UrlUtils.isUrl(rawUrl);
+            final String url = isUrl
+                    ? UrlUtils.normalize(input)
+                    : UrlUtils.createSearchUrl(getContext(), input);
 
-        final String url = isUrl
-                ? UrlUtils.normalize(rawUrl)
-                : UrlUtils.createSearchUrl(getContext(), rawUrl);
+            openUrl(url);
 
-        openUrl(url);
-
-        TelemetryWrapper.urlBarEvent(isUrl);
+            TelemetryWrapper.urlBarEvent(isUrl);
+        }
     }
 
     private void onSearch() {
