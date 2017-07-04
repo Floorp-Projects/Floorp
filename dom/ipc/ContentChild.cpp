@@ -3389,20 +3389,6 @@ ContentChild::GetConstructedEventTarget(const Message& aMsg)
   return nsIContentChild::GetConstructedEventTarget(aMsg);
 }
 
-// The IPC code will call this method asking us to assign an event target to
-// specific messages.
-already_AddRefed<nsIEventTarget>
-ContentChild::GetSpecificMessageEventTarget(const Message& aMsg)
-{
-  if (aMsg.type() == PContent::Msg_NotifyVisited__ID && SystemGroup::Initialized()) {
-    // NotifyVisited is a frequent message. We want to handle it in the
-    // SystemGroup, and then dispatch individual runnables into each TabGroup.
-    return do_AddRef(SystemGroup::EventTargetFor(TaskCategory::Other));
-  }
-
-  return nullptr;
-}
-
 void
 ContentChild::FileCreationRequest(nsID& aUUID, FileCreatorHelper* aHelper,
                                   const nsAString& aFullPath,
@@ -3560,7 +3546,8 @@ already_AddRefed<nsIEventTarget>
 ContentChild::GetSpecificMessageEventTarget(const Message& aMsg)
 {
   if (aMsg.type() == PJavaScript::Msg_DropTemporaryStrongReferences__ID
-      || aMsg.type() == PJavaScript::Msg_DropObject__ID) {
+      || aMsg.type() == PJavaScript::Msg_DropObject__ID
+      || aMsg.type() == PContent::Msg_NotifyVisited__ID) {
     return do_AddRef(SystemGroup::EventTargetFor(TaskCategory::Other));
   }
 
