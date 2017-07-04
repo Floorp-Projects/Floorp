@@ -388,6 +388,7 @@ AutocompletePopup.prototype = {
     }
 
     // Update the clone content to match the current list content.
+    // eslint-disable-next-line no-unsanitized/property
     this._listClone.innerHTML = this._list.innerHTML;
 
     this._activeElement.setAttribute("aria-activedescendant", id);

@@ -91,8 +91,9 @@ ChannelMediaDecoder::ResourceCallback::NotifyDataArrived()
   // calls to MediaDecoder::NotifyDataArrived() which will update the buffer
   // ranges of the reader.
   mTimerArmed = true;
-  mTimer->InitWithFuncCallback(
-    TimerCallback, this, sDelay, nsITimer::TYPE_ONE_SHOT);
+  mTimer->InitWithNamedFuncCallback(
+    TimerCallback, this, sDelay, nsITimer::TYPE_ONE_SHOT,
+    "ChannelMediaDecoder::ResourceCallback::TimerCallback");
 }
 
 void

@@ -172,7 +172,6 @@ BrowserElementParent.prototype = {
       "fullscreen-origin-change": this._fullscreenOriginChange,
       "exit-dom-fullscreen": this._exitDomFullscreen,
       "got-visible": this._gotDOMRequestResult,
-      "visibilitychange": this._childVisibilityChange,
       "got-set-input-method-active": this._gotDOMRequestResult,
       "scrollviewchange": this._handleScrollViewChange,
       "caretstatechanged": this._handleCaretStateChanged,
@@ -860,16 +859,6 @@ BrowserElementParent.prototype = {
   _ownerVisibilityChange: function() {
     this._sendAsyncMsg('owner-visibility-change',
                        {visible: !this._window.document.hidden});
-  },
-
-  /*
-   * Called when the child notices that its visibility has changed.
-   */
-  _childVisibilityChange: function(data) {
-    debug("_childVisibilityChange(" + data.json.visible + ")");
-    this._frameLoader.visible = data.json.visible;
-
-    this._fireEventFromMsg(data);
   },
 
   _requestedDOMFullscreen: function() {

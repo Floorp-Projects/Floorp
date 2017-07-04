@@ -681,6 +681,9 @@ private:
   virtual already_AddRefed<nsIEventTarget>
   GetConstructedEventTarget(const Message& aMsg) override;
 
+  virtual already_AddRefed<nsIEventTarget>
+  GetSpecificMessageEventTarget(const Message& aMsg) override;
+
   InfallibleTArray<nsAutoPtr<AlertObserver> > mAlertObservers;
   RefPtr<ConsoleListener> mConsoleListener;
 
