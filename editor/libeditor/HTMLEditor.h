@@ -858,10 +858,8 @@ protected:
                                   nsIDOMEventListener* aListener,
                                   bool aUseCapture,
                                   Element* aElement,
-                                  nsIContent* aParentContent,
                                   nsIPresShell* aShell);
   void DeleteRefToAnonymousNode(nsIContent* aContent,
-                                nsIContent* aParentContent,
                                 nsIPresShell* aShell);
 
   nsresult ShowResizersInner(nsIDOMElement *aResizedElement);
