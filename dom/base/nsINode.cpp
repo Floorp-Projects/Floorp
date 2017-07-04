@@ -108,8 +108,6 @@
 #include "mozilla/dom/NodeBinding.h"
 #include "mozilla/dom/BindingDeclarations.h"
 
-#include "XPathGenerator.h"
-
 #ifdef ACCESSIBILITY
 #include "mozilla/dom/AccessibleNode.h"
 #endif
@@ -3023,12 +3021,6 @@ nsINode::AddAnimationObserverUnlessExists(
 {
   AddMutationObserverUnlessExists(aAnimationObserver);
   OwnerDoc()->SetMayHaveAnimationObservers();
-}
-
-void
-nsINode::GenerateXPath(nsAString& aResult)
-{
-  XPathGenerator::Generate(this, aResult);
 }
 
 bool

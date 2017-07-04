@@ -128,7 +128,6 @@ EXPORTS += [
     'nsWrapperCache.h',
     'nsWrapperCacheInlines.h',
     'nsXMLNameSpaceMap.h',
-    'XPathGenerator.h',
 ]
 
 if CONFIG['MOZ_WEBRTC']:
@@ -363,7 +362,6 @@ UNIFIED_SOURCES += [
     'WebSocket.cpp',
     'WindowNamedPropertiesHandler.cpp',
     'WindowOrientationObserver.cpp',
-    'XPathGenerator.cpp',
 ]
 
 if CONFIG['MOZ_WEBRTC']:
