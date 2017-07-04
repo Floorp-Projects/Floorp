@@ -206,6 +206,9 @@ jobs:
                 MOZHARNESS_SCRIPT: "mozharness/scripts/fx_desktop_build.py"
                 TOOLTOOL_MANIFEST: "mobile/android/config/tooltool-manifests/android-frontend/releng.manifest"
             artifacts:
+              - name: public/android/checkstyle/checkstyle.html
+                path: /home/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/app/reports/checkstyle/checkstyle.html
+                type: file
               - name: public/android/checkstyle/checkstyle.xml
                 path: /home/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/app/reports/checkstyle/checkstyle.xml
                 type: file
