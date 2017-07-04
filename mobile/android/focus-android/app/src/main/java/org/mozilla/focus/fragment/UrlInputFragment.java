@@ -105,7 +105,6 @@ public class UrlInputFragment extends Fragment implements View.OnClickListener, 
     private View toolbarBackgroundView;
 
     private volatile boolean isAnimating;
-    private boolean isBackPressed;
 
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
@@ -131,7 +130,7 @@ public class UrlInputFragment extends Fragment implements View.OnClickListener, 
             @Override
             public void onFocusChange(View v, boolean hasFocus) {
                 // Avoid showing keyboard again when returning to the previous page by back key.
-                if (hasFocus && !isBackPressed) {
+                if (hasFocus && !isAnimating) {
                     ViewUtils.showKeyboard(urlView);
                 }
             }
@@ -163,7 +162,6 @@ public class UrlInputFragment extends Fragment implements View.OnClickListener, 
     }
 
     public boolean onBackPressed() {
-        isBackPressed = true;
         animateAndDismiss();
         return true;
     }
