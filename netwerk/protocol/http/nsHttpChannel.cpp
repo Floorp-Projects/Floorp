@@ -3012,11 +3012,11 @@ nsHttpChannel::ResolveProxy()
     // then it is ok to use that version.
     nsCOMPtr<nsIProtocolProxyService2> pps2 = do_QueryInterface(pps);
     if (pps2) {
-        rv = pps2->AsyncResolve2(this, mProxyResolveFlags,
-                                 this, getter_AddRefs(mProxyRequest));
+        rv = pps2->AsyncResolve2(this, mProxyResolveFlags, this,
+                                 nullptr, getter_AddRefs(mProxyRequest));
     } else {
         rv = pps->AsyncResolve(static_cast<nsIChannel*>(this), mProxyResolveFlags,
-                               this, getter_AddRefs(mProxyRequest));
+                               this, nullptr, getter_AddRefs(mProxyRequest));
     }
 
     return rv;

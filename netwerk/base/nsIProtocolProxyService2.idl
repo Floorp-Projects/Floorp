@@ -26,5 +26,6 @@ interface nsIProtocolProxyService2 : nsIProtocolProxyService
      *    The nsICancelable return value will be null in that case.
      */
   nsICancelable asyncResolve2(in nsIChannel aChannel, in unsigned long aFlags,
-                              in nsIProtocolProxyCallback aCallback);
+                              in nsIProtocolProxyCallback aCallback,
+                              [optional] in nsIEventTarget aMainThreadTarget);
 };

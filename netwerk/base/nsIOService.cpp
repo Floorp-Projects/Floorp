@@ -1892,9 +1892,11 @@ nsIOService::SpeculativeConnectInternal(nsIURI *aURI,
         new IOServiceProxyCallback(aCallbacks, this);
     nsCOMPtr<nsIProtocolProxyService2> pps2 = do_QueryInterface(pps);
     if (pps2) {
-        return pps2->AsyncResolve2(channel, 0, callback, getter_AddRefs(cancelable));
+        return pps2->AsyncResolve2(channel, 0, callback, nullptr,
+                                   getter_AddRefs(cancelable));
     }
-    return pps->AsyncResolve(channel, 0, callback, getter_AddRefs(cancelable));
+    return pps->AsyncResolve(channel, 0, callback, nullptr,
+                             getter_AddRefs(cancelable));
 }
 
 NS_IMETHODIMP
