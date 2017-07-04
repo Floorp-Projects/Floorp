@@ -47,9 +47,9 @@
     function* testStructure(mm) {
       let lastResult;
 
-      mm.addMessageListener("test687194:resolveChromeURI:Answer", function(msg) {
+      mm.addMessageListener("test687194:resolveChromeURI:Answer", SpecialPowers.wrapCallback(function(msg) {
         test.next(msg.data);
-      });
+      }));
 
       mm.sendAsyncMessage("test687194:resolveChromeURI",
                           { URI: "chrome://bug687194/content/e10sbug.js" });
