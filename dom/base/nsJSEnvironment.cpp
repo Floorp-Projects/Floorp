@@ -1503,8 +1503,8 @@ struct CycleCollectorStats
   constexpr CycleCollectorStats() :
     mMaxGCDuration(0), mRanSyncForgetSkippable(false), mSuspected(0),
     mMaxSkippableDuration(0), mMaxSliceTime(0), mMaxSliceTimeSinceClear(0),
-    mTotalSliceTime(0), mAnyLockedOut(false), mExtraForgetSkippableCalls(0),
-    mFile(nullptr) {}
+    mTotalSliceTime(0), mAnyLockedOut(false), mFile(nullptr)
+  {}
 
   void Init()
   {
@@ -1544,11 +1544,9 @@ struct CycleCollectorStats
     mMaxSliceTime = 0;
     mTotalSliceTime = 0;
     mAnyLockedOut = false;
-    mExtraForgetSkippableCalls = 0;
   }
 
-  void PrepareForCycleCollectionSlice(TimeStamp aDeadline = TimeStamp(),
-                                      int32_t aExtraForgetSkippableCalls = 0);
+  void PrepareForCycleCollectionSlice(TimeStamp aDeadline = TimeStamp());
 
   void FinishCycleCollectionSlice()
   {
@@ -1582,7 +1580,6 @@ struct CycleCollectorStats
     mMaxSliceTimeSinceClear = std::max(mMaxSliceTimeSinceClear, sliceTime);
     mTotalSliceTime += sliceTime;
     mBeginSliceTime = TimeStamp();
-    MOZ_ASSERT(mExtraForgetSkippableCalls == 0, "Forget to reset extra forget skippable calls?");
   }
 
   void RunForgetSkippable();
@@ -1621,8 +1618,6 @@ struct CycleCollectorStats
   // True if we were locked out by the GC in any slice of the current CC.
   bool mAnyLockedOut;
 
-  int32_t mExtraForgetSkippableCalls;
-
   // A file to dump CC activity to; set by MOZ_CCTIMER environment variable.
   FILE* mFile;
 
@@ -1634,8 +1629,7 @@ struct CycleCollectorStats
 CycleCollectorStats gCCStats;
 
 void
-CycleCollectorStats::PrepareForCycleCollectionSlice(TimeStamp aDeadline,
-                                                    int32_t aExtraForgetSkippableCalls)
+CycleCollectorStats::PrepareForCycleCollectionSlice(TimeStamp aDeadline)
 {
   mBeginSliceTime = TimeStamp::Now();
   mIdleDeadline = aDeadline;
@@ -1647,8 +1641,6 @@ CycleCollectorStats::PrepareForCycleCollectionSlice(TimeStamp aDeadline,
     uint32_t gcTime = TimeBetween(mBeginSliceTime, TimeStamp::Now());
     mMaxGCDuration = std::max(mMaxGCDuration, gcTime);
   }
-
-  mExtraForgetSkippableCalls = aExtraForgetSkippableCalls;
 }
 
 void
@@ -1656,33 +1648,23 @@ CycleCollectorStats::RunForgetSkippable()
 {
   // Run forgetSkippable synchronously to reduce the size of the CC graph. This
   // is particularly useful if we recently finished a GC.
-  if (mExtraForgetSkippableCalls >= 0) {
-    TimeStamp beginForgetSkippable = TimeStamp::Now();
-    bool ranSyncForgetSkippable = false;
-    while (sCleanupsSinceLastGC < NS_MAJOR_FORGET_SKIPPABLE_CALLS) {
-      FireForgetSkippable(nsCycleCollector_suspectedCount(), false, TimeStamp());
-      ranSyncForgetSkippable = true;
-    }
-
-    for (int32_t i = 0; i < mExtraForgetSkippableCalls; ++i) {
-      FireForgetSkippable(nsCycleCollector_suspectedCount(), false, TimeStamp());
-      ranSyncForgetSkippable = true;
-    }
-
-    if (ranSyncForgetSkippable) {
-      mMaxSkippableDuration =
-        std::max(mMaxSkippableDuration, TimeUntilNow(beginForgetSkippable));
-      mRanSyncForgetSkippable = true;
-    }
-
+  TimeStamp beginForgetSkippable = TimeStamp::Now();
+  bool ranSyncForgetSkippable = false;
+  while (sCleanupsSinceLastGC < NS_MAJOR_FORGET_SKIPPABLE_CALLS) {
+    FireForgetSkippable(nsCycleCollector_suspectedCount(), false, TimeStamp());
+    ranSyncForgetSkippable = true;
   }
-  mExtraForgetSkippableCalls = 0;
+
+  if (ranSyncForgetSkippable) {
+    mMaxSkippableDuration =
+      std::max(mMaxSkippableDuration, TimeUntilNow(beginForgetSkippable));
+    mRanSyncForgetSkippable = true;
+  }
 }
 
 //static
 void
-nsJSContext::CycleCollectNow(nsICycleCollectorListener *aListener,
-                             int32_t aExtraForgetSkippableCalls)
+nsJSContext::CycleCollectNow(nsICycleCollectorListener *aListener)
 {
   if (!NS_IsMainThread()) {
     return;
@@ -1690,8 +1672,7 @@ nsJSContext::CycleCollectNow(nsICycleCollectorListener *aListener,
 
   AUTO_PROFILER_LABEL("nsJSContext::CycleCollectNow", CC);
 
-  gCCStats.PrepareForCycleCollectionSlice(TimeStamp(),
-                                          aExtraForgetSkippableCalls);
+  gCCStats.PrepareForCycleCollectionSlice(TimeStamp());
   nsCycleCollector_collect(aListener);
   gCCStats.FinishCycleCollectionSlice();
 }

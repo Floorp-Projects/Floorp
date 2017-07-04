@@ -21,7 +21,7 @@ sync_javaparser:: \
     then rm -rf javaparser ; \
     git clone https://github.com/javaparser/javaparser.git ; \
   fi ; \
-  cd javaparser ; git checkout javaparser-1.0.6 ; cd .. 
+  cd javaparser ; git checkout javaparser-1.0.6 ; cd ..
 
 sync_htmlparser:: \
 ; if [ -d htmlparser/.hg ] ; \
@@ -37,13 +37,13 @@ translate:: translator \
 ; mkdir -p ../javasrc ; \
   java -jar translator.jar \
     htmlparser/src/nu/validator/htmlparser/impl \
-    .. ../nsHtml5AtomList.h
+    .. ../../../dom/base/nsGkAtomList.h
 
 translate_from_snapshot:: translator \
 ; mkdir -p ../javasrc ; \
   java -jar translator.jar \
     ../javasrc \
-    .. ../nsHtml5AtomList.h
+    .. ../../../dom/base/nsGkAtomList.h
 
 named_characters:: translator \
 ; java -cp translator.jar \

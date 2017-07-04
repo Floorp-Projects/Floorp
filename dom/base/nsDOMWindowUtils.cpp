@@ -1383,22 +1383,20 @@ nsDOMWindowUtils::Focus(nsIDOMElement* aElement)
 }
 
 NS_IMETHODIMP
-nsDOMWindowUtils::GarbageCollect(nsICycleCollectorListener *aListener,
-                                 int32_t aExtraForgetSkippableCalls)
+nsDOMWindowUtils::GarbageCollect(nsICycleCollectorListener *aListener)
 {
   AUTO_PROFILER_LABEL("nsDOMWindowUtils::GarbageCollect", GC);
 
   nsJSContext::GarbageCollectNow(JS::gcreason::DOM_UTILS);
-  nsJSContext::CycleCollectNow(aListener, aExtraForgetSkippableCalls);
+  nsJSContext::CycleCollectNow(aListener);
 
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsDOMWindowUtils::CycleCollect(nsICycleCollectorListener *aListener,
-                               int32_t aExtraForgetSkippableCalls)
+nsDOMWindowUtils::CycleCollect(nsICycleCollectorListener *aListener)
 {
-  nsJSContext::CycleCollectNow(aListener, aExtraForgetSkippableCalls);
+  nsJSContext::CycleCollectNow(aListener);
   return NS_OK;
 }
 

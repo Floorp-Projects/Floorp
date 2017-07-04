@@ -266,6 +266,11 @@ testing/web-platform/tests for tests that may be shared
         with open(path, "w") as f:
             f.write(template)
 
+        ref_path = kwargs["ref"]
+        if ref_path and not os.path.exists(ref_path):
+            with open(ref_path, "w") as f:
+                f.write(self.template_prefix % {"documentElement": ""})
+
         if kwargs["no_editor"]:
             editor = None
         elif kwargs["editor"]:
@@ -279,15 +284,14 @@ testing/web-platform/tests for tests that may be shared
 
         proc = None
         if editor:
+            if ref_path:
+                path = "%s %s" % (path, ref_path)
             proc = subprocess.Popen("%s %s" % (editor, path), shell=True)
-
-        if not kwargs["no_run"]:
-            p = create_parser_wpt()
-            wpt_kwargs = vars(p.parse_args(["--manifest-update", path]))
-            context.commands.dispatch("web-platform-tests", context, **wpt_kwargs)
 
         if proc:
             proc.wait()
+
+        context.commands.dispatch("wpt-manifest-update", context, {"check_clean": False, "rebuild": False})
 
 
 class WPTManifestUpdater(MozbuildObject):
@@ -313,15 +317,13 @@ def create_parser_create():
     p.add_argument("--no-editor", action="store_true",
                    help="Don't try to open the test in an editor")
     p.add_argument("-e", "--editor", action="store", help="Editor to use")
-    p.add_argument("--no-run", action="store_true",
-                   help="Don't try to update the wpt manifest or open the test in a browser")
     p.add_argument("--long-timeout", action="store_true",
                    help="Test should be given a long timeout (typically 60s rather than 10s, but varies depending on environment)")
     p.add_argument("--overwrite", action="store_true",
                    help="Allow overwriting an existing test file")
     p.add_argument("-r", "--reftest", action="store_true",
                    help="Create a reftest rather than a testharness (js) test"),
-    p.add_argument("-ref", "--reference", dest="ref", help="Path to the reference file")
+    p.add_argument("-m", "--reference", dest="ref", help="Path to the reference file")
     p.add_argument("--mismatch", action="store_true",
                    help="Create a mismatch reftest")
     p.add_argument("--wait", action="store_true",
@@ -397,7 +399,6 @@ class MachCommands(MachCommandBase):
 
     @Command("web-platform-tests-create",
              category="testing",
-             conditions=[conditions.is_firefox],
              parser=create_parser_create)
     def create_web_platform_test(self, **params):
         self.setup()
@@ -406,7 +407,6 @@ class MachCommands(MachCommandBase):
 
     @Command("wpt-create",
              category="testing",
-             conditions=[conditions.is_firefox],
              parser=create_parser_create)
     def create_wpt(self, **params):
         return self.create_web_platform_test(**params)

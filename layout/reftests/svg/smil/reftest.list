@@ -156,10 +156,10 @@ skip-if(styloVsGecko) == anim-view-01.svg#view lime.svg # bug 1354406
 == anim-use-href-01.svg lime.svg
 
 # animate the class attribute
-fails-if(styloVsGecko||stylo) == anim-class-01.svg lime.svg
-fails-if(styloVsGecko||stylo) == anim-class-02.svg lime.svg
-fails-if(styloVsGecko||stylo) == anim-class-03.svg lime.svg
-fails-if(styloVsGecko||stylo) == anim-class-04.svg anim-class-04-ref.svg
+== anim-class-01.svg lime.svg
+== anim-class-02.svg lime.svg
+== anim-class-03.svg lime.svg
+== anim-class-04.svg anim-class-04-ref.svg
 
 # animate with some paint server values
 fails-if(styloVsGecko||stylo) == anim-paintserver-1.svg anim-paintserver-1-ref.svg

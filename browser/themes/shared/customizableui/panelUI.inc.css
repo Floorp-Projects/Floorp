@@ -1696,13 +1696,19 @@ toolbarpaletteitem[haswideitem][place="panel"] + toolbarpaletteitem[haswideitem]
 }
 
 .cui-widget-panelview,
+%ifndef MOZ_PHOTON_THEME
 #widget-overflow-scroller {
+%else
+#widget-overflow-mainView {
+%endif
   overflow-y: auto;
   overflow-x: hidden;
 }
 
 #widget-overflow-scroller {
+%ifndef MOZ_PHOTON_THEME
   max-height: 30em;
+%endif
   margin-top: 10px;
   margin-bottom: 10px;
 }

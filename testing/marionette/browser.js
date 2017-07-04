@@ -150,6 +150,25 @@ browser.Context = class {
   }
 
   /**
+   * Returns the current title of the content browser.
+   *
+   * @return {string}
+   *     Read-only property containing the current title.
+   *
+   * @throws {NoSuchWindowError}
+   *     If the current ChromeWindow does not have a content browser.
+   */
+  get currentTitle() {
+    // Bug 1363368 - contentBrowser could be null until we wait for its
+    // initialization been finished
+    if (this.contentBrowser) {
+      return this.contentBrowser.contentTitle;
+    }
+    throw new NoSuchWindowError(
+        "Current window does not have a content browser");
+  }
+
+  /**
    * Returns the current URI of the content browser.
    *
    * @return {nsIURI}
