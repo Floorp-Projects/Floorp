@@ -512,6 +512,7 @@ def enable_code_coverage(config, tests):
 
             if test['test-name'].startswith('talos'):
                 test['max-run-time'] = 7200
+                test['docker-image'] = {"in-tree": "desktop1604-test"}
                 test['mozharness']['config'] = ['talos/linux64_config_taskcluster.py']
                 test['mozharness']['extra-options'].append('--add-option')
                 test['mozharness']['extra-options'].append('--cycles,1')
