@@ -1367,7 +1367,6 @@ void
 JSScript::destroyScriptName()
 {
     auto p = GetScriptNameMapEntry(this);
-    js_delete(p->value());
     compartment()->scriptNameMap->remove(p);
 }
 
