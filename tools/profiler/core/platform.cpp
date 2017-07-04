@@ -664,17 +664,16 @@ AddDynamicCodeLocationTag(ProfileBuffer* aBuffer, const char* aStr)
 
   size_t strLen = strlen(aStr) + 1;   // +1 for the null terminator
   for (size_t j = 0; j < strLen; ) {
-    // Store as many characters in the void* as the platform allows.
-    char text[sizeof(void*)];
-    size_t len = sizeof(void*) / sizeof(char);
-    if (j+len >= strLen) {
+    // Store up to kNumChars characters in the entry.
+    char chars[ProfileBufferEntry::kNumChars];
+    size_t len = ProfileBufferEntry::kNumChars;
+    if (j + len >= strLen) {
       len = strLen - j;
     }
-    memcpy(text, &aStr[j], len);
-    j += sizeof(void*) / sizeof(char);
+    memcpy(chars, &aStr[j], len);
+    j += ProfileBufferEntry::kNumChars;
 
-    // Cast to *((void**) to pass the text data to a void*.
-    aBuffer->addTag(ProfileBufferEntry::EmbeddedString(*((void**)(&text[0]))));
+    aBuffer->addTag(ProfileBufferEntry::EmbeddedString(chars));
   }
 }
 
