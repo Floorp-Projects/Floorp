@@ -240,7 +240,7 @@ public:
 
 
 StaticRefPtr<BackgroundHangManager> BackgroundHangManager::sInstance;
-bool BackgroundHangManager::sDisabled = true;
+bool BackgroundHangManager::sDisabled = false;
 
 MOZ_THREAD_LOCAL(BackgroundHangThread*) BackgroundHangThread::sTlsKey;
 bool BackgroundHangThread::sTlsKeyInitialized;
@@ -277,12 +277,6 @@ BackgroundHangManager::~BackgroundHangManager()
 void
 BackgroundHangManager::RunMonitorThread()
 {
-  // Make sure to initialize any state required to perform stack walking as soon
-  // as possible, so it does not interfere with us collecting hang stacks. We
-  // don't want to be on the main thread, or holding the BHR lock, because this
-  // can take a long time, so we do it before grabbing the lock off-main-thread.
-  profiler_initialize_stackwalk();
-
   // Keep us locked except when waiting
   MonitorAutoLock autoLock(mLock);
 
@@ -719,10 +713,6 @@ BackgroundHangMonitor::Startup()
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
 #ifdef MOZ_ENABLE_BACKGROUND_HANG_MONITOR
   MOZ_ASSERT(!BackgroundHangManager::sInstance, "Already initialized");
-
-  // Enable the BackgroundHangManager by setting sDisabled to false in Startup.
-  MOZ_ASSERT(BackgroundHangManager::sDisabled);
-  BackgroundHangManager::sDisabled = false;
 
   if (!strcmp(NS_STRINGIFY(MOZ_UPDATE_CHANNEL), "beta")) {
     if (XRE_IsParentProcess()) { // cached ClientID hasn't been read yet
