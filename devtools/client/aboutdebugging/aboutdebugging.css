@@ -159,7 +159,10 @@ button {
 }
 
 .addons-install-error {
+  align-items: center;
   background-color: #f3b0b0;
+  display: flex;
+  justify-content: space-between;
 }
 
 .service-worker-multi-process {
