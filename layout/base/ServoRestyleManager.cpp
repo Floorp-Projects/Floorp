@@ -981,6 +981,21 @@ ServoRestyleManager::AttributeWillChange(Element* aElement,
                                          nsIAtom* aAttribute, int32_t aModType,
                                          const nsAttrValue* aNewValue)
 {
+  TakeSnapshotForAttributeChange(aElement, aNameSpaceID, aAttribute);
+}
+
+void
+ServoRestyleManager::ClassAttributeWillBeChangedBySMIL(Element* aElement)
+{
+  TakeSnapshotForAttributeChange(aElement, kNameSpaceID_None,
+                                 nsGkAtoms::_class);
+}
+
+void
+ServoRestyleManager::TakeSnapshotForAttributeChange(Element* aElement,
+                                                    int32_t aNameSpaceID,
+                                                    nsIAtom* aAttribute)
+{
   MOZ_ASSERT(!mInStyleRefresh);
 
   if (!aElement->HasServoData()) {

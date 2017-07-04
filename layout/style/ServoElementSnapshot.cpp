@@ -67,7 +67,8 @@ ServoElementSnapshot::AddAttrs(Element* aElement,
   if (aElement->HasID()) {
     mContains |= Flags::Id;
   }
-  if (aElement->MayHaveClass()) {
+  if (const nsAttrValue* classValue = aElement->GetClasses()) {
+    mClass = *classValue;
     mContains |= Flags::MaybeClass;
   }
 }

@@ -71,31 +71,7 @@ class AddOnInstallBlockedNotification(BaseNotification):
 class AddOnInstallConfirmationNotification(BaseNotification):
     """Add-on install confirmation notification."""
 
-    @property
-    def addon_name(self):
-        """Provide access to the add-on name.
-
-        :returns: The add-on name.
-        """
-        label = self.element.find_element(
-            By.CSS_SELECTOR, '#addon-install-confirmation-content label')
-        return label.get_attribute('value')
-
-    def cancel_button(self):
-        """Provide access to the cancel button.
-
-        :returns: The cancel button.
-        """
-        return self.element.find_element(
-            By.ID, 'addon-install-confirmation-cancel')
-
-    def install_button(self):
-        """Provide access to the install button.
-
-        :returns: The install button.
-        """
-        return self.element.find_element(
-            By.ID, 'addon-install-confirmation-accept')
+    pass
 
 
 class AddOnInstallCompleteNotification(BaseNotification):

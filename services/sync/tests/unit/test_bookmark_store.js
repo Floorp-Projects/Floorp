@@ -103,7 +103,7 @@ add_test(function test_bookmark_create() {
     do_check_eq(PlacesUtils.bookmarks.getItemType(id),
                 PlacesUtils.bookmarks.TYPE_BOOKMARK);
     do_check_true(PlacesUtils.bookmarks.getBookmarkURI(id).equals(tburi));
-    do_check_eq(PlacesUtils.bookmarks.getItemTitle(id), null);
+    do_check_eq(PlacesUtils.bookmarks.getItemTitle(id), "");
     let error;
     try {
       PlacesUtils.annotations.getItemAnnotation(id, "bookmarkProperties/description");
@@ -147,7 +147,7 @@ add_test(function test_bookmark_update() {
       PlacesUtils.annotations.getItemAnnotation(
         bmk1_id, "bookmarkProperties/description");
     }, Cr.NS_ERROR_NOT_AVAILABLE);
-    do_check_eq(PlacesUtils.bookmarks.getItemTitle(bmk1_id), null);
+    do_check_eq(PlacesUtils.bookmarks.getItemTitle(bmk1_id), "");
     do_check_eq(PlacesUtils.bookmarks.getKeywordForBookmark(bmk1_id), null);
   } finally {
     _("Clean up.");

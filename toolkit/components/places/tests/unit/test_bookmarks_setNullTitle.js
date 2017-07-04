@@ -5,7 +5,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /**
- * Both SetItemtitle and insertBookmark should allow for null titles.
+ * Both setItemTitle and insertBookmark should default to the empty string
+ * for null titles.
  */
 
 const bs = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
@@ -23,8 +24,8 @@ function run_test() {
   do_check_eq(bs.getItemTitle(itemId), "");
   // Set title to null.
   bs.setItemTitle(itemId, null);
-  // Check returned title is null.
-  do_check_eq(bs.getItemTitle(itemId), null);
+  // Check returned title defaults to an empty string.
+  do_check_eq(bs.getItemTitle(itemId), "");
   // Cleanup.
   bs.removeItem(itemId);
 
@@ -33,8 +34,8 @@ function run_test() {
                              uri(TEST_URL),
                              bs.DEFAULT_INDEX,
                              null);
-  // Check returned title is null.
-  do_check_eq(bs.getItemTitle(itemId), null);
+  // Check returned title defaults to an empty string.
+  do_check_eq(bs.getItemTitle(itemId), "");
   // Set title to an empty string.
   bs.setItemTitle(itemId, "");
   // Check returned title is an empty string.
