@@ -60,10 +60,7 @@ public:
 
   virtual MacIOSurfaceTextureHostOGL* AsMacIOSurfaceTextureHost() override { return this; }
 
-  MacIOSurface* GetMacIOSurface()
-  {
-    return mSurface;
-  }
+  virtual MacIOSurface* GetMacIOSurface() override { return mSurface; }
 
   virtual void CreateRenderTexture(const wr::ExternalImageId& aExternalImageId) override;
 

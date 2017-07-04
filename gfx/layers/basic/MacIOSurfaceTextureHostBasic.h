@@ -74,6 +74,7 @@ public:
   }
 
   virtual gfx::IntSize GetSize() const override;
+  virtual MacIOSurface* GetMacIOSurface() override { return mSurface; }
 
 #ifdef MOZ_LAYERS_HAVE_LOG
   virtual const char* Name() override { return "MacIOSurfaceTextureHostBasic"; }
