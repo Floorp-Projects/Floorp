@@ -9,7 +9,9 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
+import android.support.v4.app.FragmentManager;
 import android.support.v7.widget.PopupMenu;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -78,12 +80,7 @@ public class HomeFragment
     public void onClick(View view) {
         switch (view.getId()) {
             case R.id.fake_urlbar:
-                UrlInputFragment fragment = UrlInputFragment.createWithHomeScreenAnimation(fakeUrlBarView);
-
-                getActivity().getSupportFragmentManager().beginTransaction()
-                        .add(R.id.container, fragment, UrlInputFragment.FRAGMENT_TAG)
-                        .commit();
-
+                showUrlInput();
                 break;
 
             case R.id.menu:
@@ -97,6 +94,23 @@ public class HomeFragment
             default:
                 throw new IllegalStateException("Unhandled view ID in onClick()");
         }
+    }
+
+    private synchronized void showUrlInput() {
+        final FragmentManager fragmentManager = getActivity().getSupportFragmentManager();
+
+        final Fragment existingFragment = fragmentManager.findFragmentByTag(UrlInputFragment.FRAGMENT_TAG);
+        if (existingFragment != null && existingFragment.isAdded() && !existingFragment.isRemoving()) {
+            // We are already showing an URL input fragment. This might have been a double click on the
+            // fake URL bar. Just ignore it.
+            return;
+        }
+
+        final UrlInputFragment fragment = UrlInputFragment.createWithHomeScreenAnimation(fakeUrlBarView);
+
+        fragmentManager.beginTransaction()
+                .add(R.id.container, fragment, UrlInputFragment.FRAGMENT_TAG)
+                .commit();
     }
 
     @Override
