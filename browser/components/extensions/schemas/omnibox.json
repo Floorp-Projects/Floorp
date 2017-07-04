@@ -197,52 +197,5 @@
         "parameters": []
       }
     ]
-  },
-  {
-    "namespace": "omnibox_internal",
-    "description": "The internal namespace used by the omnibox API.",
-    "defaultContexts": ["addon_parent_only"],
-    "functions": [
-      {
-        "name": "addSuggestions",
-        "type": "function",
-        "async": "callback",
-        "description": "Internal function used by omnibox.onInputChanged for adding search suggestions",
-        "parameters": [
-          {
-            "name": "id",
-            "type": "integer",
-            "description": "The ID of the callback received by onInputChangedInternal"
-          },
-          {
-            "name": "suggestResults",
-            "type": "array",
-            "description": "Array of suggest results",
-            "items": {
-              "$ref": "omnibox.SuggestResult"
-            }
-          },
-          {
-            "type": "function",
-            "name": "callback",
-            "optional": true,
-            "parameters": []
-          }
-        ]
-      }
-    ],
-    "events": [
-      {
-        "name": "onInputChanged",
-        "type": "function",
-        "description": "Identical to omnibox.onInputChanged except no 'suggest' callback is provided.",
-        "parameters": [
-          {
-            "type": "string",
-            "name": "text"
-          }
-        ]
-      }
-    ]
   }
 ]
