@@ -25,6 +25,7 @@
 #include "nsIFileStreams.h"
 #include "nsIFileURL.h"
 #include "nsIJARChannel.h"
+#include "nsIMIMEService.h"
 #include "nsIURL.h"
 #include "nsIChannel.h"
 #include "nsIInputStreamPump.h"
@@ -671,8 +672,18 @@ NewSimpleChannel(nsIURI* aURI,
         ExtensionStreamGetter* getter) -> RequestOrReason {
       MOZ_TRY(getter->GetAsync(listener, channel));
       return RequestOrReason(nullptr);
-
     });
+
+  nsresult rv;
+  nsCOMPtr<nsIMIMEService> mime = do_GetService("@mozilla.org/mime;1", &rv);
+  if (NS_SUCCEEDED(rv)) {
+    nsAutoCString contentType;
+    rv = mime->GetTypeFromURI(aURI, contentType);
+    if (NS_SUCCEEDED(rv)) {
+      Unused << channel->SetContentType(contentType);
+    }
+  }
+
   channel.swap(*aRetVal);
 }
 
