@@ -2028,6 +2028,9 @@ PK11_FindObjectsFromNickname(char *nickname, PK11SlotInfo **slotptr,
     if ((delimit = PORT_Strchr(nickname, ':')) != NULL) {
         int len = delimit - nickname;
         tokenName = (char *)PORT_Alloc(len + 1);
+        if (!tokenName) {
+            return CK_INVALID_HANDLE;
+        }
         PORT_Memcpy(tokenName, nickname, len);
         tokenName[len] = 0;
 

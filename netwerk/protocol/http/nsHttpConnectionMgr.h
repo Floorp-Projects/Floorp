@@ -244,9 +244,10 @@ private:
     // contains list of active and idle connections as well as the list of
     // pending transactions.
     //
-    class nsConnectionEntry
+    class nsConnectionEntry : public SupportsWeakPtr<nsConnectionEntry>
     {
     public:
+        MOZ_DECLARE_WEAKREFERENCE_TYPENAME(nsConnectionEntry)
         explicit nsConnectionEntry(nsHttpConnectionInfo *ci);
         ~nsConnectionEntry();
 
@@ -415,7 +416,7 @@ private:
         already_AddRefed<PendingTransactionInfo>
         FindTransactionHelper(bool removeWhenFound);
 
-        nsConnectionEntry             *mEnt;
+        WeakPtr<nsConnectionEntry>     mEnt;
         RefPtr<nsAHttpTransaction>     mTransaction;
         bool                           mDispatchedMTransaction;
         nsCOMPtr<nsISocketTransport>   mSocketTransport;

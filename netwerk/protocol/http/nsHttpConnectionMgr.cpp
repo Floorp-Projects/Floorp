@@ -4030,6 +4030,7 @@ nsHalfOpenSocket::OnOutputStreamReady(nsIAsyncOutputStream *out)
         mFastOpenInProgress = false;
         mConnectionNegotiatingFastOpen = nullptr;
     }
+    MOZ_DIAGNOSTIC_ASSERT(mEnt);
     nsresult rv =  SetupConn(out, false);
     if (mEnt) {
         mEnt->mDoNotDestroy = false;
@@ -4042,6 +4043,8 @@ nsHttpConnectionMgr::
 nsHalfOpenSocket::FastOpenEnabled()
 {
     LOG(("nsHalfOpenSocket::FastOpenEnabled [this=%p]\n", this));
+
+    MOZ_DIAGNOSTIC_ASSERT(mEnt);
 
     if (!mEnt) {
         return false;
@@ -4539,6 +4542,7 @@ nsHttpConnectionMgr::nsHalfOpenSocket::OnTransportStatus(nsITransport *trans,
 {
     MOZ_ASSERT(OnSocketThread(), "not on socket thread");
 
+    MOZ_DIAGNOSTIC_ASSERT(mEnt);
     if (mTransaction) {
         RefPtr<PendingTransactionInfo> info = FindTransactionHelper(false);
         if ((trans == mSocketTransport) ||

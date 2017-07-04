@@ -13107,7 +13107,7 @@ SSL_SignaturePrefGet(PRFileDesc *fd, SSLSignatureAndHashAlg *algorithms,
 }
 
 unsigned int
-SSL_SignatureMaxCount()
+SSL_SignatureMaxCount(void)
 {
     return MAX_SIGNATURE_SCHEMES;
 }

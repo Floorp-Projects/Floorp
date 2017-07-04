@@ -520,6 +520,7 @@ EventListenerManager::EnableDevice(EventMessage aEventMessage)
       // Falls back to SENSOR_ROTATION_VECTOR and SENSOR_ORIENTATION if
       // unavailable on device.
       window->EnableDeviceSensor(SENSOR_GAME_ROTATION_VECTOR);
+      window->EnableDeviceSensor(SENSOR_ROTATION_VECTOR);
 #else
       window->EnableDeviceSensor(SENSOR_ORIENTATION);
 #endif

@@ -233,6 +233,9 @@ BufToHex(SECItem *outbuf)
     unsigned int i;
 
     string = PORT_Alloc(len);
+    if (!string) {
+        return NULL;
+    }
 
     ptr = string;
     for (i = 0; i < outbuf->len; i++) {
