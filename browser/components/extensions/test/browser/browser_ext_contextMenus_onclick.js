@@ -218,6 +218,7 @@ add_task(async function test_onclick_modifiers() {
   async function click(modifiers = {}) {
     const menu = await openContextMenu();
     const items = menu.getElementsByAttribute("label", "modify");
+    is(items.length, 1, "Got exactly one context menu item");
     await closeExtensionContextMenu(items[0], modifiers);
     return extension.awaitMessage("click");
   }
