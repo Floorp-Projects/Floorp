@@ -209,6 +209,170 @@ class LWasmTruncateToInt64 : public LInstructionHelper<INT64_PIECES, 1, 1>
     }
 };
 
+class LWasmAtomicLoadI64 : public LInstructionHelper<INT64_PIECES, 2, 2>
+{
+  public:
+    LIR_HEADER(WasmAtomicLoadI64);
+
+    LWasmAtomicLoadI64(const LAllocation& memoryBase, const LAllocation& ptr, const LDefinition& t1,
+                       const LDefinition& t2)
+    {
+        setOperand(0, memoryBase);
+        setOperand(1, ptr);
+        setTemp(0, t1);
+        setTemp(1, t2);
+    }
+
+    MWasmLoad* mir() const {
+        return mir_->toWasmLoad();
+    }
+    const LAllocation* memoryBase() {
+        return getOperand(0);
+    }
+    const LAllocation* ptr() {
+        return getOperand(1);
+    }
+    const LDefinition* t1() {
+        return getTemp(0);
+    }
+    const LDefinition* t2() {
+        return getTemp(1);
+    }
+};
+
+class LWasmAtomicStoreI64 : public LInstructionHelper<0, 2 + INT64_PIECES, 2>
+{
+  public:
+    LIR_HEADER(WasmAtomicStoreI64);
+
+    LWasmAtomicStoreI64(const LAllocation& memoryBase, const LAllocation& ptr,
+                        const LInt64Allocation& value, const LDefinition& t1,
+                        const LDefinition& t2)
+    {
+        setOperand(0, memoryBase);
+        setOperand(1, ptr);
+        setInt64Operand(2, value);
+        setTemp(0, t1);
+        setTemp(1, t2);
+    }
+
+    MWasmStore* mir() const {
+        return mir_->toWasmStore();
+    }
+    const LAllocation* memoryBase() {
+        return getOperand(0);
+    }
+    const LAllocation* ptr() {
+        return getOperand(1);
+    }
+    const LInt64Allocation value() {
+        return getInt64Operand(2);
+    }
+    const LDefinition* t1() {
+        return getTemp(0);
+    }
+    const LDefinition* t2() {
+        return getTemp(1);
+    }
+};
+
+class LWasmCompareExchangeI64 : public LInstructionHelper<INT64_PIECES, 2 + 2*INT64_PIECES, 0>
+{
+  public:
+    LIR_HEADER(WasmCompareExchangeI64);
+
+    LWasmCompareExchangeI64(const LAllocation& memoryBase, const LAllocation& ptr,
+                            const LInt64Allocation& expected, const LInt64Allocation& replacement)
+    {
+        setOperand(0, memoryBase);
+        setOperand(1, ptr);
+        setInt64Operand(2, expected);
+        setInt64Operand(2 + INT64_PIECES, replacement);
+    }
+
+    MAsmJSCompareExchangeHeap* mir() const {
+        return mir_->toAsmJSCompareExchangeHeap();
+    }
+    const LAllocation* memoryBase() {
+        return getOperand(0);
+    }
+    const LAllocation* ptr() {
+        return getOperand(1);
+    }
+    const LInt64Allocation expected() {
+        return getInt64Operand(2);
+    }
+    const LInt64Allocation replacement() {
+        return getInt64Operand(2 + INT64_PIECES);
+    }
+};
+
+class LWasmAtomicExchangeI64 : public LInstructionHelper<INT64_PIECES, 2 + INT64_PIECES, 0>
+{
+    const wasm::MemoryAccessDesc& access_;
+
+  public:
+    LIR_HEADER(WasmAtomicExchangeI64);
+
+    LWasmAtomicExchangeI64(const LAllocation& memoryBase, const LAllocation& ptr,
+                           const LInt64Allocation& value, const wasm::MemoryAccessDesc& access)
+      : access_(access)
+    {
+        setOperand(0, memoryBase);
+        setOperand(1, ptr);
+        setInt64Operand(2, value);
+    }
+
+    const LAllocation* memoryBase() {
+        return getOperand(0);
+    }
+    const LAllocation* ptr() {
+        return getOperand(1);
+    }
+    const LInt64Allocation value() {
+        return getInt64Operand(2);
+    }
+    const wasm::MemoryAccessDesc& access() {
+        return access_;
+    }
+};
+
+class LWasmAtomicBinopI64 : public LInstructionHelper<INT64_PIECES, 2 + INT64_PIECES, 0>
+{
+    const wasm::MemoryAccessDesc& access_;
+    AtomicOp op_;
+
+  public:
+    LIR_HEADER(WasmAtomicBinopI64);
+
+    LWasmAtomicBinopI64(const LAllocation& memoryBase, const LAllocation& ptr,
+                        const LInt64Allocation& value, const wasm::MemoryAccessDesc& access,
+                        AtomicOp op)
+      : access_(access),
+        op_(op)
+    {
+        setOperand(0, memoryBase);
+        setOperand(1, ptr);
+        setInt64Operand(2, value);
+    }
+
+    const LAllocation* memoryBase() {
+        return getOperand(0);
+    }
+    const LAllocation* ptr() {
+        return getOperand(1);
+    }
+    const LInt64Allocation value() {
+        return getInt64Operand(2);
+    }
+    const wasm::MemoryAccessDesc& access() {
+        return access_;
+    }
+    AtomicOp operation() const {
+        return op_;
+    }
+};
+
 } // namespace jit
 } // namespace js
 

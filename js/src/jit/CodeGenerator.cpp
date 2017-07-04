@@ -12374,6 +12374,15 @@ CodeGenerator::visitWasmBoundsCheck(LWasmBoundsCheck* ins)
 }
 
 void
+CodeGenerator::visitWasmAlignmentCheck(LWasmAlignmentCheck* ins)
+{
+    const MWasmAlignmentCheck* mir = ins->mir();
+    Register ptr = ToRegister(ins->ptr());
+    masm.branchTest32(Assembler::NonZero, ptr, Imm32(mir->byteSize() - 1),
+                      trap(mir, wasm::Trap::UnalignedAccess));
+}
+
+void
 CodeGenerator::visitWasmLoadTls(LWasmLoadTls* ins)
 {
     switch (ins->mir()->type()) {

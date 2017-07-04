@@ -621,9 +621,18 @@ LIRGeneratorARM::visitWasmLoad(MWasmLoad* ins)
     MDefinition* base = ins->base();
     MOZ_ASSERT(base->type() == MIRType::Int32);
 
+    if (ins->access().type() == Scalar::Int64 && ins->access().isAtomic()) {
+        auto* lir = new(alloc()) LWasmAtomicLoadI64(useRegisterAtStart(base));
+        defineInt64Fixed(lir, ins, LInt64Allocation(LAllocation(AnyRegister(IntArgReg1)),
+                                                    LAllocation(AnyRegister(IntArgReg0))));
+        return;
+    }
+
     LAllocation ptr = useRegisterAtStart(base);
 
     if (IsUnaligned(ins->access())) {
+        MOZ_ASSERT(!ins->access().isAtomic());
+
         // Unaligned access expected! Revert to a byte load.
         LDefinition ptrCopy = tempCopy(base, 0);
 
@@ -670,9 +679,22 @@ LIRGeneratorARM::visitWasmStore(MWasmStore* ins)
     MDefinition* base = ins->base();
     MOZ_ASSERT(base->type() == MIRType::Int32);
 
+    if (ins->access().type() == Scalar::Int64 && ins->access().isAtomic()) {
+        auto* lir = new(alloc()) LWasmAtomicStoreI64(useRegister(base),
+                                                     useInt64Fixed(ins->value(),
+                                                                   Register64(IntArgReg1,
+                                                                              IntArgReg0)),
+                                                     tempFixed(IntArgReg2),
+                                                     tempFixed(IntArgReg3));
+        add(lir, ins);
+        return;
+    }
+
     LAllocation ptr = useRegisterAtStart(base);
 
     if (IsUnaligned(ins->access())) {
+        MOZ_ASSERT(!ins->access().isAtomic());
+
         // Unaligned access expected! Revert to a byte store.
         LDefinition ptrCopy = tempCopy(base, 0);
 
@@ -895,13 +917,24 @@ LIRGeneratorARM::visitCompareExchangeTypedArrayElement(MCompareExchangeTypedArra
 void
 LIRGeneratorARM::visitAsmJSCompareExchangeHeap(MAsmJSCompareExchangeHeap* ins)
 {
-    MOZ_ASSERT(ins->access().type() < Scalar::Float32);
-    MOZ_ASSERT(ins->access().offset() == 0);
-
     MDefinition* base = ins->base();
     MOZ_ASSERT(base->type() == MIRType::Int32);
 
+    if (ins->access().type() == Scalar::Int64) {
+        auto* lir = new(alloc()) LWasmCompareExchangeI64(useRegister(base),
+                                                         useInt64Register(ins->oldValue()),
+                                                         useInt64Fixed(ins->newValue(),
+                                                                       Register64(IntArgReg3,
+                                                                                  IntArgReg2)));
+        defineInt64Fixed(lir, ins, LInt64Allocation(LAllocation(AnyRegister(IntArgReg1)),
+                                                    LAllocation(AnyRegister(IntArgReg0))));
+        return;
+    }
+
+    MOZ_ASSERT(ins->access().type() < Scalar::Float32);
+
     if (byteSize(ins->access().type()) != 4 && !HasLDSTREXBHD()) {
+        MOZ_ASSERT(ins->access().offset() == 0);
         LAsmJSCompareExchangeCallout* lir =
             new(alloc()) LAsmJSCompareExchangeCallout(useFixedAtStart(base, IntArgReg2),
                                                       useFixedAtStart(ins->oldValue(), IntArgReg3),
@@ -925,10 +958,22 @@ void
 LIRGeneratorARM::visitAsmJSAtomicExchangeHeap(MAsmJSAtomicExchangeHeap* ins)
 {
     MOZ_ASSERT(ins->base()->type() == MIRType::Int32);
+
+    if (ins->access().type() == Scalar::Int64) {
+        auto* lir = new(alloc()) LWasmAtomicExchangeI64(useRegister(ins->base()),
+                                                        useInt64Fixed(ins->value(),
+                                                                      Register64(IntArgReg3,
+                                                                                 IntArgReg2)),
+                                                        ins->access());
+        defineInt64Fixed(lir, ins, LInt64Allocation(LAllocation(AnyRegister(IntArgReg1)),
+                                                    LAllocation(AnyRegister(IntArgReg0))));
+        return;
+    }
+
     MOZ_ASSERT(ins->access().type() < Scalar::Float32);
-    MOZ_ASSERT(ins->access().offset() == 0);
 
     if (byteSize(ins->access().type()) < 4 && !HasLDSTREXBHD()) {
+        MOZ_ASSERT(ins->access().offset() == 0);
         // Call out on ARMv6.
         defineReturn(new(alloc()) LAsmJSAtomicExchangeCallout(useFixedAtStart(ins->base(), IntArgReg2),
                                                               useFixedAtStart(ins->value(), IntArgReg3),
@@ -938,21 +983,33 @@ LIRGeneratorARM::visitAsmJSAtomicExchangeHeap(MAsmJSAtomicExchangeHeap* ins)
         return;
     }
 
-    const LAllocation base = useRegisterAtStart(ins->base());
-    const LAllocation value = useRegisterAtStart(ins->value());
+    const LAllocation base = useRegister(ins->base());
+    const LAllocation value = useRegister(ins->value());
     define(new(alloc()) LAsmJSAtomicExchangeHeap(base, value), ins);
 }
 
 void
 LIRGeneratorARM::visitAsmJSAtomicBinopHeap(MAsmJSAtomicBinopHeap* ins)
 {
+    if (ins->access().type() == Scalar::Int64) {
+        auto* lir = new(alloc()) LWasmAtomicBinopI64(useRegister(ins->base()),
+                                                     useInt64Register(ins->value()),
+                                                     tempFixed(IntArgReg2),
+                                                     tempFixed(IntArgReg3),
+                                                     ins->access(),
+                                                     ins->operation());
+        defineInt64Fixed(lir, ins, LInt64Allocation(LAllocation(AnyRegister(IntArgReg1)),
+                                                    LAllocation(AnyRegister(IntArgReg0))));
+        return;
+    }
+
     MOZ_ASSERT(ins->access().type() < Scalar::Float32);
-    MOZ_ASSERT(ins->access().offset() == 0);
 
     MDefinition* base = ins->base();
     MOZ_ASSERT(base->type() == MIRType::Int32);
 
     if (byteSize(ins->access().type()) != 4 && !HasLDSTREXBHD()) {
+        MOZ_ASSERT(ins->access().offset() == 0);
         LAsmJSAtomicBinopCallout* lir =
             new(alloc()) LAsmJSAtomicBinopCallout(useFixedAtStart(base, IntArgReg2),
                                                   useFixedAtStart(ins->value(), IntArgReg3),

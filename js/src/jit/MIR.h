@@ -14186,6 +14186,44 @@ class MWasmAddOffset
     }
 };
 
+class MWasmAlignmentCheck
+  : public MUnaryInstruction,
+    public NoTypePolicy::Data
+{
+    uint32_t byteSize_;
+    wasm::BytecodeOffset bytecodeOffset_;
+
+    explicit MWasmAlignmentCheck(MDefinition* index, uint32_t byteSize,
+                                 wasm::BytecodeOffset bytecodeOffset)
+      : MUnaryInstruction(classOpcode, index),
+        byteSize_(byteSize),
+        bytecodeOffset_(bytecodeOffset)
+    {
+        MOZ_ASSERT(mozilla::IsPowerOfTwo(byteSize));
+        // Alignment check is effectful: it throws for unaligned.
+        setGuard();
+    }
+
+  public:
+    INSTRUCTION_HEADER(WasmAlignmentCheck)
+    TRIVIAL_NEW_WRAPPERS
+    NAMED_OPERANDS((0, index))
+
+    bool congruentTo(const MDefinition* ins) const override;
+
+    AliasSet getAliasSet() const override {
+        return AliasSet::None();
+    }
+
+    uint32_t byteSize() const {
+        return byteSize_;
+    }
+
+    wasm::BytecodeOffset bytecodeOffset() const {
+        return bytecodeOffset_;
+    }
+};
+
 class MWasmLoad
   : public MVariadicInstruction, // memoryBase is nullptr on some platforms
     public NoTypePolicy::Data
@@ -14437,7 +14475,7 @@ class MAsmJSCompareExchangeHeap
         bytecodeOffset_(bytecodeOffset)
     {
         setGuard(); // Not removable
-        setResultType(MIRType::Int32);
+        setResultType(ScalarTypeToMIRType(access.type()));
     }
 
   public:
@@ -14492,7 +14530,7 @@ class MAsmJSAtomicExchangeHeap
         bytecodeOffset_(bytecodeOffset)
     {
         setGuard();             // Not removable
-        setResultType(MIRType::Int32);
+        setResultType(ScalarTypeToMIRType(access.type()));
     }
 
   public:
@@ -14548,7 +14586,7 @@ class MAsmJSAtomicBinopHeap
         bytecodeOffset_(bytecodeOffset)
     {
         setGuard();         // Not removable
-        setResultType(MIRType::Int32);
+        setResultType(ScalarTypeToMIRType(access.type()));
     }
 
   public:

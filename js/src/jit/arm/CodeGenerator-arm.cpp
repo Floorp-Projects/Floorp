@@ -2532,12 +2532,12 @@ void
 CodeGeneratorARM::visitAsmJSCompareExchangeHeap(LAsmJSCompareExchangeHeap* ins)
 {
     MAsmJSCompareExchangeHeap* mir = ins->mir();
-    MOZ_ASSERT(mir->access().offset() == 0);
 
     Scalar::Type vt = mir->access().type();
     const LAllocation* ptr = ins->ptr();
     Register ptrReg = ToRegister(ptr);
-    BaseIndex srcAddr(HeapReg, ptrReg, TimesOne);
+    BaseIndex srcAddr(HeapReg, ptrReg, TimesOne, mir->access().offset());
+
     MOZ_ASSERT(ins->addrTemp()->isBogusTemp());
 
     Register oldval = ToRegister(ins->oldValue());
@@ -2579,12 +2579,11 @@ void
 CodeGeneratorARM::visitAsmJSAtomicExchangeHeap(LAsmJSAtomicExchangeHeap* ins)
 {
     MAsmJSAtomicExchangeHeap* mir = ins->mir();
-    MOZ_ASSERT(mir->access().offset() == 0);
 
     Scalar::Type vt = mir->access().type();
     Register ptrReg = ToRegister(ins->ptr());
     Register value = ToRegister(ins->value());
-    BaseIndex srcAddr(HeapReg, ptrReg, TimesOne);
+    BaseIndex srcAddr(HeapReg, ptrReg, TimesOne, mir->access().offset());
     MOZ_ASSERT(ins->addrTemp()->isBogusTemp());
 
     masm.atomicExchangeToTypedIntArray(vt == Scalar::Uint32 ? Scalar::Int32 : vt,
@@ -2620,7 +2619,6 @@ void
 CodeGeneratorARM::visitAsmJSAtomicBinopHeap(LAsmJSAtomicBinopHeap* ins)
 {
     MAsmJSAtomicBinopHeap* mir = ins->mir();
-    MOZ_ASSERT(mir->access().offset() == 0);
     MOZ_ASSERT(mir->hasUses());
 
     Scalar::Type vt = mir->access().type();
@@ -2630,7 +2628,7 @@ CodeGeneratorARM::visitAsmJSAtomicBinopHeap(LAsmJSAtomicBinopHeap* ins)
     AtomicOp op = mir->operation();
     MOZ_ASSERT(ins->addrTemp()->isBogusTemp());
 
-    BaseIndex srcAddr(HeapReg, ptrReg, TimesOne);
+    BaseIndex srcAddr(HeapReg, ptrReg, TimesOne, mir->access().offset());
 
     if (value->isConstant()) {
         atomicBinopToTypedIntArray(op, vt == Scalar::Uint32 ? Scalar::Int32 : vt,
@@ -2647,7 +2645,6 @@ void
 CodeGeneratorARM::visitAsmJSAtomicBinopHeapForEffect(LAsmJSAtomicBinopHeapForEffect* ins)
 {
     MAsmJSAtomicBinopHeap* mir = ins->mir();
-    MOZ_ASSERT(mir->access().offset() == 0);
     MOZ_ASSERT(!mir->hasUses());
 
     Scalar::Type vt = mir->access().type();
@@ -2657,7 +2654,7 @@ CodeGeneratorARM::visitAsmJSAtomicBinopHeapForEffect(LAsmJSAtomicBinopHeapForEff
     AtomicOp op = mir->operation();
     MOZ_ASSERT(ins->addrTemp()->isBogusTemp());
 
-    BaseIndex srcAddr(HeapReg, ptrReg, TimesOne);
+    BaseIndex srcAddr(HeapReg, ptrReg, TimesOne, mir->access().offset());
 
     if (value->isConstant())
         atomicBinopToTypedIntArray(op, vt, Imm32(ToInt32(value)), srcAddr, flagTemp);
@@ -3472,4 +3469,68 @@ CodeGeneratorARM::visitTestI64AndBranch(LTestI64AndBranch* lir)
     jumpToBlock(lir->ifTrue(), Assembler::NonZero);
     masm.as_cmp(input.low, Imm8(0));
     emitBranch(Assembler::NonZero, lir->ifTrue(), lir->ifFalse());
+}
+
+void
+CodeGeneratorARM::visitWasmAtomicLoadI64(LWasmAtomicLoadI64* lir)
+{
+    Register ptr = ToRegister(lir->ptr());
+    Register64 output = ToOutRegister64(lir);
+    Register64 tmp(InvalidReg, InvalidReg);
+
+    BaseIndex addr(HeapReg, ptr, TimesOne, lir->mir()->access().offset());
+    masm.atomicLoad64(addr, tmp, output);
+}
+
+void
+CodeGeneratorARM::visitWasmAtomicStoreI64(LWasmAtomicStoreI64* lir)
+{
+    Register ptr = ToRegister(lir->ptr());
+    Register64 value = ToRegister64(lir->value());
+    Register64 tmp(ToRegister(lir->tmpHigh()), ToRegister(lir->tmpLow()));
+
+    BaseIndex addr(HeapReg, ptr, TimesOne, lir->mir()->access().offset());
+    masm.atomicExchange64(addr, value, tmp);
+}
+
+void
+CodeGeneratorARM::visitWasmCompareExchangeI64(LWasmCompareExchangeI64* lir)
+{
+    Register ptr = ToRegister(lir->ptr());
+    Register64 expected = ToRegister64(lir->expected());
+    Register64 replacement = ToRegister64(lir->replacement());
+    Register64 out = ToOutRegister64(lir);
+
+    BaseIndex addr(HeapReg, ptr, TimesOne, lir->mir()->access().offset());
+    masm.compareExchange64(addr, expected, replacement, out);
+}
+
+void
+CodeGeneratorARM::visitWasmAtomicBinopI64(LWasmAtomicBinopI64* lir)
+{
+    Register ptr = ToRegister(lir->ptr());
+    Register64 value = ToRegister64(lir->value());
+    Register64 out = ToOutRegister64(lir);
+
+    BaseIndex addr(HeapReg, ptr, TimesOne, lir->access().offset());
+    Register64 tmp(ToRegister(lir->tmpHigh()), ToRegister(lir->tmpLow()));
+    switch (lir->operation()) {
+      case AtomicFetchAddOp: masm.atomicFetchAdd64(value, addr, tmp, out); break;
+      case AtomicFetchSubOp: masm.atomicFetchSub64(value, addr, tmp, out); break;
+      case AtomicFetchAndOp: masm.atomicFetchAnd64(value, addr, tmp, out); break;
+      case AtomicFetchOrOp:  masm.atomicFetchOr64(value, addr, tmp, out); break;
+      case AtomicFetchXorOp: masm.atomicFetchXor64(value, addr, tmp, out); break;
+      default:               MOZ_CRASH();
+    }
+}
+
+void
+CodeGeneratorARM::visitWasmAtomicExchangeI64(LWasmAtomicExchangeI64* lir)
+{
+    Register ptr = ToRegister(lir->ptr());
+    Register64 value = ToRegister64(lir->value());
+    Register64 out = ToOutRegister64(lir);
+
+    BaseIndex addr(HeapReg, ptr, TimesOne, lir->access().offset());
+    masm.atomicExchange64(addr, value, out);
 }
