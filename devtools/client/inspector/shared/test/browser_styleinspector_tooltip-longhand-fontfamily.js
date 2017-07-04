@@ -49,6 +49,7 @@ function* testRuleView(ruleView, nodeFront) {
     "font-family");
 
   // And verify that the tooltip gets shown on this property
+  valueSpan.scrollIntoView(true);
   let previewTooltip = yield assertShowPreviewTooltip(ruleView, valueSpan);
 
   let images = panel.getElementsByTagName("img");
@@ -70,6 +71,7 @@ function* testComputedView(computedView, nodeFront) {
   let panel = tooltip.panel;
   let {valueSpan} = getComputedViewProperty(computedView, "font-family");
 
+  valueSpan.scrollIntoView(true);
   let previewTooltip = yield assertShowPreviewTooltip(computedView, valueSpan);
 
   let images = panel.getElementsByTagName("img");
@@ -99,6 +101,7 @@ function* testExpandedComputedViewProperty(computedView, nodeFront) {
   let tooltip = computedView.tooltips.getTooltip("previewTooltip");
   let panel = tooltip.panel;
 
+  valueSpan.scrollIntoView(true);
   let previewTooltip = yield assertShowPreviewTooltip(computedView, valueSpan);
 
   let images = panel.getElementsByTagName("img");
