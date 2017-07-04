@@ -289,12 +289,9 @@ HTMLEditor::HideGrabber()
   // are no document observers to notify, but we still want to
   // UnbindFromTree.
 
-  nsCOMPtr<nsIContent> parentContent = mGrabber->GetParent();
-  NS_ENSURE_TRUE(parentContent, NS_ERROR_NULL_POINTER);
-
-  DeleteRefToAnonymousNode(mGrabber, parentContent, ps);
+  DeleteRefToAnonymousNode(mGrabber, ps);
   mGrabber = nullptr;
-  DeleteRefToAnonymousNode(mPositioningShadow, parentContent, ps);
+  DeleteRefToAnonymousNode(mPositioningShadow, ps);
   mPositioningShadow = nullptr;
 
   return NS_OK;
@@ -394,10 +391,7 @@ HTMLEditor::EndMoving()
     nsCOMPtr<nsIPresShell> ps = GetPresShell();
     NS_ENSURE_TRUE(ps, NS_ERROR_NOT_INITIALIZED);
 
-    nsCOMPtr<nsIContent> parentContent = mGrabber->GetParent();
-    NS_ENSURE_TRUE(parentContent, NS_ERROR_FAILURE);
-
-    DeleteRefToAnonymousNode(mPositioningShadow, parentContent, ps);
+    DeleteRefToAnonymousNode(mPositioningShadow, ps);
 
     mPositioningShadow = nullptr;
   }

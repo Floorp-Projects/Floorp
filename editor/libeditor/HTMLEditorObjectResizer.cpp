@@ -383,52 +383,46 @@ HTMLEditor::HideResizers()
   // are no document observers to notify, but we still want to
   // UnbindFromTree.
 
-  nsCOMPtr<nsIContent> parentContent;
-
-  if (mTopLeftHandle) {
-    parentContent = mTopLeftHandle->GetParent();
-  }
-
   NS_NAMED_LITERAL_STRING(mousedown, "mousedown");
 
   RemoveListenerAndDeleteRef(mousedown, mEventListener, true,
-                             mTopLeftHandle, parentContent, ps);
+                             mTopLeftHandle, ps);
   mTopLeftHandle = nullptr;
 
   RemoveListenerAndDeleteRef(mousedown, mEventListener, true,
-                             mTopHandle, parentContent, ps);
+                             mTopHandle, ps);
   mTopHandle = nullptr;
 
   RemoveListenerAndDeleteRef(mousedown, mEventListener, true,
-                             mTopRightHandle, parentContent, ps);
+                             mTopRightHandle, ps);
   mTopRightHandle = nullptr;
 
   RemoveListenerAndDeleteRef(mousedown, mEventListener, true,
-                             mLeftHandle, parentContent, ps);
+                             mLeftHandle, ps);
   mLeftHandle = nullptr;
 
   RemoveListenerAndDeleteRef(mousedown, mEventListener, true,
-                             mRightHandle, parentContent, ps);
+                             mRightHandle, ps);
   mRightHandle = nullptr;
 
   RemoveListenerAndDeleteRef(mousedown, mEventListener, true,
-                             mBottomLeftHandle, parentContent, ps);
+                             mBottomLeftHandle, ps);
   mBottomLeftHandle = nullptr;
 
   RemoveListenerAndDeleteRef(mousedown, mEventListener, true,
-                             mBottomHandle, parentContent, ps);
+                             mBottomHandle, ps);
   mBottomHandle = nullptr;
 
   RemoveListenerAndDeleteRef(mousedown, mEventListener, true,
-                             mBottomRightHandle, parentContent, ps);
+                             mBottomRightHandle, ps);
   mBottomRightHandle = nullptr;
 
   RemoveListenerAndDeleteRef(mousedown, mEventListener, true,
-                             mResizingShadow, parentContent, ps);
+                             mResizingShadow, ps);
   mResizingShadow = nullptr;
 
   RemoveListenerAndDeleteRef(mousedown, mEventListener, true,
-                             mResizingInfo, parentContent, ps);
+                             mResizingInfo, ps);
   mResizingInfo = nullptr;
 
   if (mActivatedHandle) {
