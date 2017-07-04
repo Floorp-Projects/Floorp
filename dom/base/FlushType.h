@@ -27,12 +27,13 @@ enum class FlushType : uint8_t {
                            notifications. */
   Style            = 3, /* As above, plus flush style reresolution */
   Frames           = Style,
-  InterruptibleLayout = 4, /* As above, plus flush reflow,
+  EnsurePresShellInitAndFrames = 4, /* As above, plus ensure the pres shell is alive */
+  InterruptibleLayout = 5, /* As above, plus flush reflow,
                               but allow it to be interrupted (so
                               an incomplete layout may result) */
-  Layout           = 5, /* As above, but layout must run to
+  Layout           = 6, /* As above, but layout must run to
                            completion */
-  Display          = 6, /* As above, plus flush painting */
+  Display          = 7, /* As above, plus flush painting */
 
   Count
 };
