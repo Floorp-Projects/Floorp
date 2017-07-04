@@ -901,6 +901,31 @@ fn read_esds() {
 }
 
 #[test]
+fn read_ac3_sample_entry() {
+    let ac3 =
+        vec![
+            0x00, 0x00, 0x00, 0x0b, 0x64, 0x61, 0x63, 0x33, 0x10, 0x11, 0x60
+        ];
+
+    let mut stream = make_box(BoxSize::Auto, b"ac-3", |s| {
+        s.append_repeated(0, 6)
+         .B16(1)    // data_reference_count
+         .B16(0)
+         .append_repeated(0, 6)
+         .B16(2)
+         .B16(16)
+         .append_repeated(0, 4)
+         .B32(48000 << 16)
+         .append_bytes(ac3.as_slice())
+    });
+
+    let mut iter = super::BoxIter::new(&mut stream);
+    let mut stream = iter.next_box().unwrap().unwrap();
+    let (codec_type, _) = super::read_audio_sample_entry(&mut stream)
+          .expect("fail to read ac3 atom");
+    assert_eq!(codec_type, super::CodecType::AC3);
+}
+#[test]
 fn read_stsd_mp4v() {
     let mp4v =
         vec![
@@ -1009,5 +1034,40 @@ fn max_table_limit() {
         Err(Error::Unsupported(s)) => assert_eq!(s, "Over limited value"),
         Ok(_) => panic!("expected an error result"),
         _ => panic!("expected a different error result"),
+    }
+}
+
+#[test]
+fn jpeg_video_sample_entry() {
+    let jpeg = make_box(BoxSize::Auto, b"jpeg", |s| {
+        s.append_repeated(0, 6)
+         .B16(1)
+         .append_repeated(0, 16)
+         .B16(1024)
+         .B16(1024)
+         .append_repeated(0, 14)
+         .append_repeated(0, 32)
+         .append_repeated(0, 4)
+    }).into_inner();
+    let mut stream = make_fullbox(BoxSize::Auto, b"stsd", 0, |s| {
+        s.B32(1)
+         .append_bytes(jpeg.as_slice())
+    });
+
+    let mut iter = super::BoxIter::new(&mut stream);
+    let mut stream = iter.next_box().unwrap().unwrap();
+    let mut track = super::Track::new(0);
+    match super::read_stsd(&mut stream, &mut track) {
+        Ok(sample_description) => {
+            match sample_description.descriptions[0] {
+                super::SampleEntry::Video(ref jpeg) => {
+                    assert_eq!(track.codec_type, super::CodecType::JPEG);
+                    assert_eq!(jpeg.height, 1024);
+                    assert_eq!(jpeg.width, 1024);
+                } ,
+                _ => {},
+            }
+        },
+        _ => panic!("failed to parse a jpeg atom"),
     }
 }

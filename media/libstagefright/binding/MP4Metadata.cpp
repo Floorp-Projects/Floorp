@@ -901,6 +901,8 @@ MP4MetadataRust::GetTrackInfo(mozilla::TrackInfo::TrackType aType,
     case mp4parse_codec_VP9: codec_string = "vp9"; break;
     case mp4parse_codec_MP3: codec_string = "mp3"; break;
     case mp4parse_codec_MP4V: codec_string = "mp4v"; break;
+    case mp4parse_codec_AC3: codec_string = "ac-3"; break;
+    case mp4parse_codec_EC3: codec_string = "ec-3"; break;
   }
   MOZ_LOG(sLog, LogLevel::Debug, ("track codec %s (%u)\n",
         codec_string, info.codec));
