@@ -9,7 +9,14 @@
   This file contains the list of all SVG tags.
 
   It is designed to be used as inline input to SVGElementFactory.cpp
-  *only* through the magic of C preprocessing.
+  through the magic of C preprocessing.
+
+  Additionally, it is consumed by the self-regeneration code in
+  ElementName.java from which nsHtml5ElementName.cpp/h is translated.
+  See parser/html/java/README.txt.
+
+  If you edit this list, you need to re-run ElementName.java
+  self-regeneration and the HTML parser Java to C++ translation.
 
   All entries must be enclosed in the macro SVG_TAG or SVG_FROM_PARSER_TAG
   which will have cruel and unusual things done to them.
