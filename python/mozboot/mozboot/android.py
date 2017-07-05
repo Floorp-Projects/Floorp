@@ -39,10 +39,12 @@ Looks like you have the Android SDK installed at:
 We will install all required Android packages.
 '''
 
-NOT_INSTALLING_ANDROID_PACKAGES = '''
-It looks like you already have the following Android packages:
+ANDROID_SDK_TOO_OLD = '''
+Looks like you have an outdated Android SDK installed at:
 %s
-No need to update!
+I can't update outdated Android SDKs to have the required 'sdkmanager'
+tool.  Move it out of the way (or remove it entirely) and then run
+bootstrap again.
 '''
 
 INSTALLING_ANDROID_PACKAGES = '''
@@ -50,14 +52,6 @@ We are now installing the following Android packages:
 %s
 You may be prompted to agree to the Android license. You may see some of
 output as packages are downloaded and installed.
-'''
-
-MISSING_ANDROID_PACKAGES = '''
-We tried to install the following Android packages:
-%s
-But it looks like we couldn't install:
-%s
-Install these Android packages manually and run this bootstrapper again.
 '''
 
 MOBILE_ANDROID_MOZCONFIG_TEMPLATE = '''
@@ -90,46 +84,6 @@ ac_add_options --with-android-sdk="%s"
 mk_add_options MOZ_OBJDIR=./objdir-frontend
 >>>
 '''
-
-
-def check_output(*args, **kwargs):
-    """Run subprocess.check_output even if Python doesn't provide it."""
-    from base import BaseBootstrapper
-    fn = getattr(subprocess, 'check_output', BaseBootstrapper._check_output)
-
-    return fn(*args, **kwargs)
-
-
-def list_missing_android_packages(android_tool, packages):
-    '''
-    Use the given |android| tool to return the sub-list of Android
-    |packages| given that are not installed.
-    '''
-    missing = []
-
-    # There's no obvious way to see what's been installed already,
-    # but packages that are installed don't appear in the list of
-    # available packages.
-    lines = check_output([android_tool,
-                          'list', 'sdk', '--no-ui', '--extended']).splitlines()
-
-    # Lines look like: 'id: 59 or "extra-google-simulators"'
-    for line in lines:
-        is_id_line = False
-        try:
-            is_id_line = line.startswith("id:")
-        except:
-            # Some lines contain non-ASCII characters.  Ignore them.
-            pass
-        if not is_id_line:
-            continue
-
-        for package in packages:
-            if '"%s"' % package in line:
-                # Not installed!
-                missing.append(package)
-
-    return missing
 
 
 def install_mobile_android_sdk_or_ndk(url, path):
@@ -218,19 +172,19 @@ def ensure_android(os_name, artifact_mode):
     # completed the download. We unpack to
     # ~/.mozbuild/{android-sdk-$OS_NAME, android-ndk-r11c}.
     mozbuild_path, sdk_path, ndk_path = get_paths(os_name)
-    ext = 'zip' if os_name == 'macosx' else 'tgz'
-    sdk_url = 'https://dl.google.com/android/android-sdk_r24.0.1-{}.{}'.format(os_name, ext)
+    os_tag = 'darwin' if os_name == 'macosx' else os_name
+    sdk_url = 'https://dl.google.com/android/repository/sdk-tools-{}-3859397.zip'.format(os_tag)
     ndk_url = android_ndk_url(os_name)
 
-    ensure_android_sdk_and_ndk(path=mozbuild_path,
+    ensure_android_sdk_and_ndk(path=os.path.join(mozbuild_path, 'android-sdk-{}'.format(os_name)),
                                sdk_path=sdk_path, sdk_url=sdk_url,
                                ndk_path=ndk_path, ndk_url=ndk_url,
                                artifact_mode=artifact_mode)
 
-    # We expect the |android| tool to be at
-    # ~/.mozbuild/android-sdk-$OS_NAME/tools/android.
-    android_tool = os.path.join(sdk_path, 'tools', 'android')
-    ensure_android_packages(android_tool=android_tool)
+    # We expect the |sdkmanager| tool to be at
+    # ~/.mozbuild/android-sdk-$OS_NAME/tools/bin/sdkmanager.
+    sdkmanager_tool = os.path.join(sdk_path, 'tools', 'bin', 'sdkmanager')
+    ensure_android_packages(sdkmanager_tool=sdkmanager_tool)
 
 
 def ensure_android_sdk_and_ndk(path, sdk_path, sdk_url, ndk_path, ndk_url, artifact_mode):
@@ -249,45 +203,31 @@ def ensure_android_sdk_and_ndk(path, sdk_path, sdk_url, ndk_path, ndk_url, artif
         else:
             install_mobile_android_sdk_or_ndk(ndk_url, path)
 
-    # We don't want to blindly overwrite, since we use the |android| tool to
-    # install additional parts of the Android toolchain.  If we overwrite,
-    # we lose whatever Android packages the user may have already installed.
-    if os.path.isdir(sdk_path):
+    # We don't want to blindly overwrite, since we use the
+    # |sdkmanager| tool to install additional parts of the Android
+    # toolchain.  If we overwrite, we lose whatever Android packages
+    # the user may have already installed.
+    if os.path.isfile(os.path.join(sdk_path, 'tools', 'bin', 'sdkmanager')):
         print(ANDROID_SDK_EXISTS % sdk_path)
+    elif os.path.isdir(sdk_path):
+        raise NotImplementedError(ANDROID_SDK_TOO_OLD % sdk_path)
     else:
         install_mobile_android_sdk_or_ndk(sdk_url, path)
 
 
-def ensure_android_packages(android_tool, packages=None):
+def ensure_android_packages(sdkmanager_tool, packages=None):
     '''
-    Use the given android tool (like 'android') to install required Android
-    packages.
+    Use the given sdkmanager tool (like 'sdkmanager') to install required
+    Android packages.
     '''
-
-    if not packages:
-        packages = ANDROID_PACKAGES
-
-    # Bug 1171232: The |android| tool behaviour has changed; we no longer can
-    # see what packages are installed easily.  Force installing everything until
-    # we find a way to actually see the missing packages.
-    missing = packages
-    if not missing:
-        print(NOT_INSTALLING_ANDROID_PACKAGES % ', '.join(packages))
-        return
 
     # This tries to install all the required Android packages.  The user
     # may be prompted to agree to the Android license.
-    print(INSTALLING_ANDROID_PACKAGES % ', '.join(missing))
-    subprocess.check_call([android_tool,
-                           'update', 'sdk', '--no-ui', '--all',
-                           '--filter', ','.join(missing)])
-
-    # Bug 1171232: The |android| tool behaviour has changed; we no longer can
-    # see what packages are installed easily.  Don't check until we find a way
-    # to actually verify.
-    failing = []
-    if failing:
-        raise Exception(MISSING_ANDROID_PACKAGES % (', '.join(missing), ', '.join(failing)))
+    package_file_name = os.path.abspath(os.path.join(os.path.dirname(__file__), 'android-packages.txt'))
+    print(package_file_name)
+    print(INSTALLING_ANDROID_PACKAGES % open(package_file_name, 'rt').read())
+    subprocess.check_call([sdkmanager_tool,
+                           '--package_file={}'.format(package_file_name)])
 
 
 def suggest_mozconfig(os_name, artifact_mode=False):
