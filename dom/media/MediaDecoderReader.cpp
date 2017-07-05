@@ -91,10 +91,6 @@ MediaDecoderReader::MediaDecoderReader(AbstractMediaDecoder* aDecoder,
 nsresult
 MediaDecoderReader::Init()
 {
-  if (mDecoder && mDecoder->DataArrivedEvent()) {
-    mDataArrivedListener = mDecoder->DataArrivedEvent()->Connect(
-      mTaskQueue, this, &MediaDecoderReader::NotifyDataArrived);
-  }
   // Dispatch initialization that needs to happen on that task queue.
   mTaskQueue->Dispatch(
     NewRunnableMethod("MediaDecoderReader::InitializationTask",
@@ -374,8 +370,6 @@ MediaDecoderReader::Shutdown()
 
   mBaseAudioPromise.RejectIfExists(NS_ERROR_DOM_MEDIA_END_OF_STREAM, __func__);
   mBaseVideoPromise.RejectIfExists(NS_ERROR_DOM_MEDIA_END_OF_STREAM, __func__);
-
-  mDataArrivedListener.DisconnectIfExists();
 
   ReleaseResources();
   mDuration.DisconnectIfConnected();

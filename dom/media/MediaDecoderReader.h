@@ -378,8 +378,6 @@ private:
   // of Request{Audio,Video}Data.
   MozPromiseHolder<AudioDataPromise> mBaseAudioPromise;
   MozPromiseHolder<VideoDataPromise> mBaseVideoPromise;
-
-  MediaEventListener mDataArrivedListener;
 };
 
 } // namespace mozilla
