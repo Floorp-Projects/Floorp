@@ -26,9 +26,8 @@ FlacDecoder::Clone(MediaDecoderInit& aInit)
 MediaDecoderStateMachine*
 FlacDecoder::CreateStateMachine()
 {
-  RefPtr<MediaDecoderReader> reader =
-    new MediaFormatReader(this, new FlacDemuxer(mResource));
-  return new MediaDecoderStateMachine(this, reader);
+  mReader = new MediaFormatReader(this, new FlacDemuxer(mResource));
+  return new MediaDecoderStateMachine(this, mReader);
 }
 
 /* static */ bool

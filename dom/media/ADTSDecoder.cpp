@@ -25,9 +25,8 @@ ADTSDecoder::Clone(MediaDecoderInit& aInit)
 MediaDecoderStateMachine*
 ADTSDecoder::CreateStateMachine()
 {
-  RefPtr<MediaDecoderReader> reader =
-    new MediaFormatReader(this, new ADTSDemuxer(mResource));
-  return new MediaDecoderStateMachine(this, reader);
+  mReader = new MediaFormatReader(this, new ADTSDemuxer(mResource));
+  return new MediaDecoderStateMachine(this, mReader);
 }
 
 /* static */ bool

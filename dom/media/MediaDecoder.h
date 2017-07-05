@@ -41,6 +41,7 @@ class HTMLMediaElement;
 
 class AbstractThread;
 class VideoFrameContainer;
+class MediaDecoderReader;
 class MediaDecoderStateMachine;
 
 enum class MediaEventType : int8_t;
@@ -520,6 +521,8 @@ protected:
 
   // Media data resource.
   RefPtr<MediaResource> mResource;
+
+  RefPtr<MediaDecoderReader> mReader;
 
   // Amount of buffered data ahead of current time required to consider that
   // the next frame is available.
