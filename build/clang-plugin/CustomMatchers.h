@@ -29,6 +29,35 @@ AST_MATCHER(CXXRecordDecl, hasTrivialCtorDtor) {
   return hasCustomAnnotation(&Node, "moz_trivial_ctor_dtor");
 }
 
+/// This matcher will match lvalue-ref-qualified methods.
+AST_MATCHER(CXXMethodDecl, isLValueRefQualified) {
+  return Node.getRefQualifier() == RQ_LValue;
+}
+
+/// This matcher will match rvalue-ref-qualified methods.
+AST_MATCHER(CXXMethodDecl, isRValueRefQualified) {
+  return Node.getRefQualifier() == RQ_RValue;
+}
+
+AST_POLYMORPHIC_MATCHER(isFirstParty,                                          \
+                        AST_POLYMORPHIC_SUPPORTED_TYPES(Decl, Stmt)) {
+  return !inThirdPartyPath(&Node, &Finder->getASTContext()) &&
+         !ASTIsInSystemHeader(Finder->getASTContext(), Node);
+}
+
+/// This matcher will match temporary expressions.
+/// We need this matcher for compatibility with clang 3.* (clang 4 and above
+/// insert a MaterializeTemporaryExpr everywhere).
+AST_MATCHER(Expr, isTemporary) {
+  return Node.isRValue() || Node.isXValue() || isa<MaterializeTemporaryExpr>(&Node);
+}
+
+/// This matcher will match any method declaration that is marked as returning
+/// a pointer deleted by the destructor of the class.
+AST_MATCHER(CXXMethodDecl, noDanglingOnTemporaries) {
+  return hasCustomAnnotation(&Node, "moz_no_dangling_on_temporaries");
+}
+
 /// This matcher will match any function declaration that is marked to prohibit
 /// calling AddRef or Release on its return value.
 AST_MATCHER(FunctionDecl, hasNoAddRefReleaseOnReturnAttr) {
@@ -153,6 +182,10 @@ AST_MATCHER(CXXConstructorDecl, isInterestingImplicitCtor) {
       !Declaration->isCopyOrMoveConstructor() &&
       // We don't want deleted constructors.
       !Declaration->isDeleted();
+}
+
+AST_MATCHER_P(Expr, ignoreTrivials, internal::Matcher<Expr>, InnerMatcher) {
+  return InnerMatcher.matches(*IgnoreTrivials(&Node), Finder, Builder);
 }
 
 // We can't call this "isImplicit" since it clashes with an existing matcher in
