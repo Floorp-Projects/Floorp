@@ -355,6 +355,10 @@ private:
   // Whether CheckLoadingFinished calls should be ignored.  See comment in
   // OnFontFaceStatusChanged.
   bool mDelayedLoadCheck;
+
+  // Whether the docshell for our document indicated that loads should
+  // bypass the cache.
+  bool mBypassCache;
 };
 
 } // namespace dom
