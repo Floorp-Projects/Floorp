@@ -1309,7 +1309,7 @@ photonpanelmultiview .subviewbutton > .menu-iconic-left {
   margin-inline-end: 0;
 }
 
-photonpanelmultiview .toolbaritem-combined-buttons@inAnyPanel@ {
+#appMenu-popup .toolbaritem-combined-buttons {
   -moz-box-align: center;
   -moz-box-orient: horizontal;
   border: 0;
@@ -1610,6 +1610,7 @@ toolbarpaletteitem[place="palette"] > #search-container {
   min-height: 37px;
 }
 
+%ifndef MOZ_PHOTON_THEME
 .toolbaritem-combined-buttons@inAnyPanel@ {
   background-color: transparent;
   border-radius: 2px;
@@ -1630,28 +1631,42 @@ toolbarpaletteitem[place="palette"] > #search-container {
 toolbarpaletteitem[haswideitem][place="panel"] + toolbarpaletteitem[haswideitem][place="panel"] {
   margin-top: -1px;
 }
+%endif
 
-:root:not([photon-structure]) .toolbaritem-combined-buttons@inAnyPanel@ > toolbarbutton {
+.toolbaritem-combined-buttons@inAnyPanel@ > toolbarbutton {
   border: 0;
-  padding: .5em;
   margin: 0;
   -moz-box-flex: 1;
+%ifndef MOZ_PHOTON_THEME
   min-width: calc(@menuPanelButtonWidth@);
   max-width: calc(@menuPanelButtonWidth@);
+  padding: .5em;
   /* We'd prefer to use height: auto here but it leads to layout bugs in the panel. Cope:
      1.2em for line height + 2 * .5em padding + margin on the label (2 * 2px) */
   height: calc(2.2em + 4px);
   max-height: none;
+%else
+  padding-top: 4px;
+  padding-bottom: 4px;
+%endif
   -moz-box-orient: horizontal;
 }
 
-:root:not([photon-structure]) #edit-controls@inAnyPanel@ > #copy-button,
-:root:not([photon-structure]) #zoom-controls@inAnyPanel@ > #zoom-reset-button {
+%ifdef MOZ_PHOTON_THEME
+/* In customize mode, extend the buttons *only* in the panel, just to make them not look stupid */
+toolbarpaletteitem[place=panel] > .toolbaritem-combined-buttons > toolbarbutton {
+  min-width: calc(@menuPanelButtonWidth@ - 1px);
+  max-width: calc(@menuPanelButtonWidth@ - 1px);
+}
+%else
+#edit-controls@inAnyPanel@ > #copy-button,
+#zoom-controls@inAnyPanel@ > #zoom-reset-button {
   /* reduce the width with 2px for this button to compensate for two separators
      of 1px. */
   min-width: calc(@menuPanelButtonWidth@ - 2px);
   max-width: calc(@menuPanelButtonWidth@ - 2px);
 }
+%endif
 
 #main-window:not([customizing]) .toolbaritem-combined-buttons@inAnyPanel@ > toolbarbutton[disabled] > .toolbarbutton-icon {
   opacity: .25;
@@ -1753,6 +1768,7 @@ toolbaritem[overflowedItem=true],
   padding-inline-start: .5em;
 }
 
+%ifndef MOZ_PHOTON_THEME
 .widget-overflow-list > .toolbaritem-combined-buttons {
   min-height: 28px;
 }
@@ -1770,6 +1786,7 @@ toolbaritem[overflowedItem=true],
   background-size: 1px 18px;
   box-shadow: 0 0 0 1px hsla(0,0%,100%,.2);
 }
+%endif
 
 .subviewbutton[checked="true"] {
   background: url("chrome://global/skin/menu/shared-menu-check.png") center left 7px / 11px 11px no-repeat transparent;
