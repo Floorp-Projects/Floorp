@@ -31,7 +31,6 @@ EXPORTS += [
     'nsParserCIID.h',
     'nsParserConstants.h',
     'nsScannerString.h',
-    'nsToken.h',
 ]
 
 UNIFIED_SOURCES += [

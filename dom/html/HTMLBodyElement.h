@@ -109,7 +109,7 @@ public:
   virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult,
                          bool aPreallocateChildren) const override;
 
-  virtual bool IsEventAttributeName(nsIAtom* aName) override;
+  virtual bool IsEventAttributeNameInternal(nsIAtom* aName) override;
 
 
   virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,

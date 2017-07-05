@@ -910,7 +910,7 @@ this.BrowserTestUtils = {
       messageManager.addMessageListener(message, function onMessage(msg) {
         if (!checkFn || checkFn(msg)) {
           messageManager.removeMessageListener(message, onMessage);
-          resolve();
+          resolve(msg.data);
         }
       });
     });

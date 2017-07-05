@@ -60,9 +60,9 @@ public:
            aOther.mFlags == mFlags;
   }
 
-  uint32_t Hash() const
+  PLDHashNumber Hash() const
   {
-    uint32_t hash = HashGeneric(mSize.width, mSize.height);
+    PLDHashNumber hash = HashGeneric(mSize.width, mSize.height);
     hash = AddToHash(hash, mSVGContext.map(HashSIC).valueOr(0));
     hash = AddToHash(hash, uint8_t(mPlayback), uint32_t(mFlags));
     return hash;
@@ -84,7 +84,7 @@ private:
     , mFlags(aFlags)
   { }
 
-  static uint32_t HashSIC(const SVGImageContext& aSIC) {
+  static PLDHashNumber HashSIC(const SVGImageContext& aSIC) {
     return aSIC.Hash();
   }
 

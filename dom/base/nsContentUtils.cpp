@@ -302,6 +302,7 @@ bool nsContentUtils::sSkipCursorMoveForSameValueSet = false;
 bool nsContentUtils::sRequestIdleCallbackEnabled = false;
 bool nsContentUtils::sLowerNetworkPriority = false;
 bool nsContentUtils::sShowInputPlaceholderOnFocus = true;
+bool nsContentUtils::sAutoFocusEnabled = true;
 #ifndef RELEASE_OR_BETA
 bool nsContentUtils::sBypassCSSOMOriginCheck = false;
 #endif
@@ -763,6 +764,9 @@ nsContentUtils::Init()
 
   Preferences::AddBoolVarCache(&sShowInputPlaceholderOnFocus,
                                "dom.placeholder.show_on_focus", true);
+
+  Preferences::AddBoolVarCache(&sAutoFocusEnabled,
+                               "browser.autofocus", true);
 
   Preferences::AddBoolVarCache(&sIsBytecodeCacheEnabled,
                                "dom.script_loader.bytecode_cache.enabled", false);

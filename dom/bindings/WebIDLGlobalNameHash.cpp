@@ -49,7 +49,7 @@ struct MOZ_STACK_CLASS WebIDLNameTableKey
   const char* mLatin1String;
   const char16_t* mTwoBytesString;
   size_t mLength;
-  uint32_t mHash;
+  PLDHashNumber mHash;
 };
 
 struct WebIDLNameTableEntry : public PLDHashEntryHdr

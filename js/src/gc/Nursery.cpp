@@ -106,11 +106,6 @@ js::Nursery::Nursery(JSRuntime* rt)
   , previousPromotionRate_(0)
   , profileThreshold_(0)
   , enableProfiling_(false)
-#ifdef MOZ_GECKO_PROFILER
-  , trackTimings_(true)
-#else
-  , trackTimings_(false)
-#endif
   , reportTenurings_(0)
   , minorGCTriggerReason_(JS::gcreason::NO_REASON)
   , minorGcCount_(0)
@@ -153,7 +148,6 @@ js::Nursery::init(uint32_t maxNurseryBytes, AutoLockGC& lock)
             exit(0);
         }
         enableProfiling_ = true;
-        trackTimings_ = true;
         profileThreshold_ = TimeDuration::FromMicroseconds(atoi(env));
     }
 
@@ -491,12 +485,8 @@ FOR_EACH_NURSERY_PROFILE_TIME(EXTRACT_NAME)
     "" };
 
     size_t i = 0;
-    if (trackTimings_) {
-        for (auto time : profileDurations_)
-            json.property(names[i++], time, json.MICROSECONDS);
-    } else {
-        json.property(names[0], *profileDurations_.begin(), json.MICROSECONDS);
-    }
+    for (auto time : profileDurations_)
+        json.property(names[i++], time, json.MICROSECONDS);
 
     json.endObject();
 }
@@ -532,10 +522,8 @@ js::Nursery::printTotalProfileTimes()
 void
 js::Nursery::maybeClearProfileDurations()
 {
-    if (trackTimings_) {
-        for (auto& duration : profileDurations_)
-            duration = mozilla::TimeDuration();
-    }
+    for (auto& duration : profileDurations_)
+        duration = mozilla::TimeDuration();
 }
 
 inline void
@@ -549,20 +537,6 @@ js::Nursery::endProfile(ProfileKey key)
 {
     profileDurations_[key] = TimeStamp::Now() - startTimes_[key];
     totalDurations_[key] += profileDurations_[key];
-}
-
-inline void
-js::Nursery::maybeStartProfile(ProfileKey key)
-{
-    if (trackTimings_)
-        startProfile(key);
-}
-
-inline void
-js::Nursery::maybeEndProfile(ProfileKey key)
-{
-    if (trackTimings_)
-        endProfile(key);
 }
 
 void
@@ -608,15 +582,15 @@ js::Nursery::collect(JS::gcreason::Reason reason)
         promotionRate = doCollection(reason, tenureCounts);
 
     // Resize the nursery.
-    maybeStartProfile(ProfileKey::Resize);
+    startProfile(ProfileKey::Resize);
     maybeResizeNursery(reason, promotionRate);
-    maybeEndProfile(ProfileKey::Resize);
+    endProfile(ProfileKey::Resize);
 
     // If we are promoting the nursery, or exhausted the store buffer with
     // pointers to nursery things, which will force a collection well before
     // the nursery is full, look for object groups that are getting promoted
     // excessively and try to pretenure them.
-    maybeStartProfile(ProfileKey::Pretenure);
+    startProfile(ProfileKey::Pretenure);
     uint32_t pretenureCount = 0;
     if (promotionRate > 0.8 || reason == JS::gcreason::FULL_STORE_BUFFER) {
         JSContext* cx = TlsContext.get();
@@ -631,7 +605,7 @@ js::Nursery::collect(JS::gcreason::Reason reason)
             }
         }
     }
-    maybeEndProfile(ProfileKey::Pretenure);
+    endProfile(ProfileKey::Pretenure);
 
     // We ignore gcMaxBytes when allocating for minor collection. However, if we
     // overflowed, we disable the nursery. The next time we allocate, we'll fail
@@ -694,90 +668,90 @@ js::Nursery::doCollection(JS::gcreason::Reason reason,
 
     // The MIR graph only contains nursery pointers if cancelIonCompilations()
     // is set on the store buffer, in which case we cancel all compilations.
-    maybeStartProfile(ProfileKey::CancelIonCompilations);
+    startProfile(ProfileKey::CancelIonCompilations);
     if (sb.cancelIonCompilations())
         js::CancelOffThreadIonCompile(rt);
-    maybeEndProfile(ProfileKey::CancelIonCompilations);
+    endProfile(ProfileKey::CancelIonCompilations);
 
-    maybeStartProfile(ProfileKey::TraceValues);
+    startProfile(ProfileKey::TraceValues);
     sb.traceValues(mover);
-    maybeEndProfile(ProfileKey::TraceValues);
+    endProfile(ProfileKey::TraceValues);
 
-    maybeStartProfile(ProfileKey::TraceCells);
+    startProfile(ProfileKey::TraceCells);
     sb.traceCells(mover);
-    maybeEndProfile(ProfileKey::TraceCells);
+    endProfile(ProfileKey::TraceCells);
 
-    maybeStartProfile(ProfileKey::TraceSlots);
+    startProfile(ProfileKey::TraceSlots);
     sb.traceSlots(mover);
-    maybeEndProfile(ProfileKey::TraceSlots);
+    endProfile(ProfileKey::TraceSlots);
 
-    maybeStartProfile(ProfileKey::TraceWholeCells);
+    startProfile(ProfileKey::TraceWholeCells);
     sb.traceWholeCells(mover);
-    maybeEndProfile(ProfileKey::TraceWholeCells);
+    endProfile(ProfileKey::TraceWholeCells);
 
-    maybeStartProfile(ProfileKey::TraceGenericEntries);
+    startProfile(ProfileKey::TraceGenericEntries);
     sb.traceGenericEntries(&mover);
-    maybeEndProfile(ProfileKey::TraceGenericEntries);
+    endProfile(ProfileKey::TraceGenericEntries);
 
-    maybeStartProfile(ProfileKey::MarkRuntime);
+    startProfile(ProfileKey::MarkRuntime);
     rt->gc.traceRuntimeForMinorGC(&mover, session.lock);
-    maybeEndProfile(ProfileKey::MarkRuntime);
+    endProfile(ProfileKey::MarkRuntime);
 
-    maybeStartProfile(ProfileKey::MarkDebugger);
+    startProfile(ProfileKey::MarkDebugger);
     {
         gcstats::AutoPhase ap(rt->gc.stats(), gcstats::PhaseKind::MARK_ROOTS);
         Debugger::traceAllForMovingGC(&mover);
     }
-    maybeEndProfile(ProfileKey::MarkDebugger);
+    endProfile(ProfileKey::MarkDebugger);
 
-    maybeStartProfile(ProfileKey::ClearNewObjectCache);
+    startProfile(ProfileKey::ClearNewObjectCache);
     rt->caches().newObjectCache.clearNurseryObjects(rt);
-    maybeEndProfile(ProfileKey::ClearNewObjectCache);
+    endProfile(ProfileKey::ClearNewObjectCache);
 
     // Most of the work is done here. This loop iterates over objects that have
     // been moved to the major heap. If these objects have any outgoing pointers
     // to the nursery, then those nursery objects get moved as well, until no
     // objects are left to move. That is, we iterate to a fixed point.
-    maybeStartProfile(ProfileKey::CollectToFP);
+    startProfile(ProfileKey::CollectToFP);
     collectToFixedPoint(mover, tenureCounts);
-    maybeEndProfile(ProfileKey::CollectToFP);
+    endProfile(ProfileKey::CollectToFP);
 
     // Sweep compartments to update the array buffer object's view lists.
-    maybeStartProfile(ProfileKey::SweepArrayBufferViewList);
+    startProfile(ProfileKey::SweepArrayBufferViewList);
     for (CompartmentsIter c(rt, SkipAtoms); !c.done(); c.next())
         c->sweepAfterMinorGC(&mover);
-    maybeEndProfile(ProfileKey::SweepArrayBufferViewList);
+    endProfile(ProfileKey::SweepArrayBufferViewList);
 
     // Update any slot or element pointers whose destination has been tenured.
-    maybeStartProfile(ProfileKey::UpdateJitActivations);
+    startProfile(ProfileKey::UpdateJitActivations);
     js::jit::UpdateJitActivationsForMinorGC(rt, &mover);
     forwardedBuffers.finish();
-    maybeEndProfile(ProfileKey::UpdateJitActivations);
+    endProfile(ProfileKey::UpdateJitActivations);
 
-    maybeStartProfile(ProfileKey::ObjectsTenuredCallback);
+    startProfile(ProfileKey::ObjectsTenuredCallback);
     rt->gc.callObjectsTenuredCallback();
-    maybeEndProfile(ProfileKey::ObjectsTenuredCallback);
+    endProfile(ProfileKey::ObjectsTenuredCallback);
 
     // Sweep.
-    maybeStartProfile(ProfileKey::FreeMallocedBuffers);
+    startProfile(ProfileKey::FreeMallocedBuffers);
     freeMallocedBuffers();
-    maybeEndProfile(ProfileKey::FreeMallocedBuffers);
+    endProfile(ProfileKey::FreeMallocedBuffers);
 
-    maybeStartProfile(ProfileKey::Sweep);
+    startProfile(ProfileKey::Sweep);
     sweep();
-    maybeEndProfile(ProfileKey::Sweep);
+    endProfile(ProfileKey::Sweep);
 
-    maybeStartProfile(ProfileKey::ClearStoreBuffer);
+    startProfile(ProfileKey::ClearStoreBuffer);
     runtime()->gc.storeBuffer().clear();
-    maybeEndProfile(ProfileKey::ClearStoreBuffer);
+    endProfile(ProfileKey::ClearStoreBuffer);
 
     // Make sure hashtables have been updated after the collection.
-    maybeStartProfile(ProfileKey::CheckHashTables);
+    startProfile(ProfileKey::CheckHashTables);
 #ifdef JS_GC_ZEAL
     if (rt->hasZealMode(ZealMode::CheckHashTablesOnMinorGC))
         CheckHashTablesAfterMovingGC(rt);
 #endif
-    maybeEndProfile(ProfileKey::CheckHashTables);
+    endProfile(ProfileKey::CheckHashTables);
 
     // Calculate and return the promotion rate.
     return mover.tenuredSize / double(initialNurserySize);
