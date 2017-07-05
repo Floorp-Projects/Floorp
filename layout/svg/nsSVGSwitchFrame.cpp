@@ -140,7 +140,7 @@ nsSVGSwitchFrame::GetFrameForPoint(const gfxPoint& aPoint)
       if (!m.Invert()) {
         return nullptr;
       }
-      point = m.Transform(point);
+      point = m.TransformPoint(point);
     }
     return svgFrame->GetFrameForPoint(point);
   }

@@ -5273,7 +5273,7 @@ nsDisplayText::RenderToContext(gfxContext* aCtx, nsDisplayListBuilder* aBuilder,
       // compressed at the same time as text.
       gfxPoint pt = nsLayoutUtils::PointToGfxPoint(framePt, A2D);
       gfxMatrix mat = aCtx->CurrentMatrix()
-        .Translate(pt).Scale(scaleFactor, 1.0).Translate(-pt);
+        .PreTranslate(pt).PreScale(scaleFactor, 1.0).PreTranslate(-pt);
       aCtx->SetMatrix(mat);
     }
   }
@@ -7296,7 +7296,7 @@ nsTextFrame::DrawTextRunAndDecorations(Range aRange,
         scaledRestorer.SetContext(aParams.context);
         gfxMatrix unscaled = aParams.context->CurrentMatrix();
         gfxPoint pt(x / app, y / app);
-        unscaled.Translate(pt).Scale(1.0f / scaleFactor, 1.0f).Translate(-pt);
+        unscaled.PreTranslate(pt).PreScale(1.0f / scaleFactor, 1.0f).PreTranslate(-pt);
         aParams.context->SetMatrix(unscaled);
       }
     }

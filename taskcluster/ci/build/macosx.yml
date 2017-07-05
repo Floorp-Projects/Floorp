@@ -4,7 +4,7 @@ macosx64/debug:
         product: firefox
         job-name: macosx64-debug
     treeherder:
-        platform: osx-10-10/debug
+        platform: osx-cross/debug
         symbol: tc(B)
         tier: 1
     worker-type: aws-provisioner-v1/gecko-{level}-b-macosx64
@@ -28,7 +28,7 @@ macosx64/opt:
         product: firefox
         job-name: macosx64-opt
     treeherder:
-        platform: osx-10-10/opt
+        platform: osx-cross/opt
         symbol: tc(B)
         tier: 1
     worker-type: aws-provisioner-v1/gecko-{level}-b-macosx64
@@ -72,7 +72,7 @@ macosx64-noopt/debug:
         product: firefox
         job-name: macosx64-noopt-debug
     treeherder:
-        platform: osx-10-7-noopt/debug
+        platform: osx-cross-noopt/debug
         symbol: tc(B)
         tier: 2
     worker-type: aws-provisioner-v1/gecko-{level}-b-macosx64
@@ -100,7 +100,7 @@ macosx64-add-on-devel/opt:
         product: firefox
         job-name: macosx64-add-on-devel
     treeherder:
-        platform: osx-10-7-add-on-devel/opt
+        platform: osx-cross-add-on-devel/opt
         symbol: tc(B)
         tier: 2
     worker-type: aws-provisioner-v1/gecko-{level}-b-macosx64
@@ -129,7 +129,7 @@ macosx64-nightly/opt:
         job-name: macosx64-opt
         type: nightly
     treeherder:
-        platform: osx-10-10/opt
+        platform: osx-cross/opt
         symbol: tc(N)
         tier: 2
     worker-type: aws-provisioner-v1/gecko-{level}-b-macosx64

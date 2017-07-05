@@ -301,7 +301,7 @@ nsSVGClipPathFrame::PointIsInsideClipPath(nsIFrame* aClippedFrame,
   if (!matrix.Invert()) {
     return false;
   }
-  gfxPoint point = matrix.Transform(aPoint);
+  gfxPoint point = matrix.TransformPoint(aPoint);
 
   // clipPath elements can themselves be clipped by a different clip path. In
   // that case the other clip path further clips away the element that is being
@@ -326,7 +326,7 @@ nsSVGClipPathFrame::PointIsInsideClipPath(nsIFrame* aClippedFrame,
         if (!m.Invert()) {
           return false;
         }
-        pointForChild = m.Transform(point);
+        pointForChild = m.TransformPoint(point);
       }
       if (SVGFrame->GetFrameForPoint(pointForChild)) {
         return true;

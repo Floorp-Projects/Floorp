@@ -258,7 +258,3 @@ add_test(function test_creation_from_empty_db() {
   cleanup_kinto();
   run_next_test();
 });
-
-function run_test() {
-  run_next_test();
-}

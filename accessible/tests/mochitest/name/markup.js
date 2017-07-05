@@ -69,7 +69,7 @@ var gTestIterator =
         this.ruleSetElm.getAttribute("defaultName") : null;
       testName(this.elm, defaultName,
                "Default name test (" + gTestIterator.testID + "). ");
-      testAbsentAttrs(this.elm, {"explicit-name" : "true"});
+      testAbsentAttrs(this.elm, {"explicit-name": "true"});
 
       this.markupIdx++;
       if (this.markupIdx == this.markupElms.length) {
@@ -217,9 +217,9 @@ function testNameForAttrRule(aElm, aRule)
   testName(aElm, name, msg);
 
   if (aRule.getAttribute("explict-name") != "false")
-    testAttrs(aElm, {"explicit-name" : "true"}, true);
+    testAttrs(aElm, {"explicit-name": "true"}, true);
   else
-    testAbsentAttrs(aElm, {"explicit-name" : "true"});
+    testAbsentAttrs(aElm, {"explicit-name": "true"});
 
   // If @recreated attribute is used then this attribute change recreates an
   // accessible. Wait for reorder event in this case or otherwise proceed next
@@ -287,7 +287,7 @@ function testNameForElmRule(aElm, aRule)
 
   var msg = "Element '" + tagname + "' test (" + gTestIterator.testID + ").";
   testName(aElm, labelElm.getAttribute("textequiv"), msg);
-  testAttrs(aElm, {"explicit-name" : "true"}, true);
+  testAttrs(aElm, {"explicit-name": "true"}, true);
 
   var parentNode = labelElm.parentNode;
 
@@ -305,7 +305,7 @@ function testNameForSubtreeRule(aElm, aRule)
 {
   var msg = "From subtree test (" + gTestIterator.testID + ").";
   testName(aElm, aElm.getAttribute("textequiv"), msg);
-  testAbsentAttrs(aElm, {"explicit-name" : "true"});
+  testAbsentAttrs(aElm, {"explicit-name": "true"});
 
   if (gDumpToConsole) {
     dump("\nProcessed from subtree rule. Wait for reorder event on " +
@@ -374,7 +374,7 @@ function evaluateXPath(aNode, aExpr, aResolver)
 
 function htmlDocResolver(aPrefix) {
   var ns = {
-    'html' : 'http://www.w3.org/1999/xhtml'
+    'html': 'http://www.w3.org/1999/xhtml'
   };
   return ns[aPrefix] || null;
 }

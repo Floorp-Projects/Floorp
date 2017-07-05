@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Test context-fill-opacity with different fill-opacity values (test image caching correctness)</title>
+    <style>
+
+img {
+  width: 100px;
+  height: 100px;
+  -moz-context-properties: fill-opacity;
+}
+
+#img1 {
+  fill-opacity: 0.3;
+}
+
+#img2 {
+  fill-opacity: 0.7;
+}
+
+    </style>
+  </head>
+  <body>
+    <img id="img1" src="context-fill-opacity-02.svg">
+    <img id="img2" src="context-fill-opacity-02.svg">
+  </body>
+</html>

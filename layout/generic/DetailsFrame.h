@@ -53,6 +53,12 @@ public:
 
   void AppendAnonymousContentTo(nsTArray<nsIContent*>& aElements,
                                 uint32_t aFilter) override;
+  // Returns true if |aSummaryFrame| is the main summary (i.e. the first child
+  // of this details frame).
+  // This function is used when the summary element is removed from the parent
+  // details element since at that moment the summary element has been already
+  // removed from the details element children.
+  bool HasMainSummaryFrame(nsIFrame* aSummaryFrame);
 
 private:
   nsCOMPtr<nsIContent> mDefaultSummary;

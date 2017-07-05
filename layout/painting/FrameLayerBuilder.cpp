@@ -6219,8 +6219,8 @@ FrameLayerBuilder::DrawPaintedLayer(PaintedLayer* aLayer,
       // snapping when we draw into aContext exactly matches the ideal transform.
       // See above for why this is OK.
       aContext->SetMatrix(
-        aContext->CurrentMatrix().Translate(aLayer->GetResidualTranslation() - gfxPoint(offset.x, offset.y)).
-                                  Scale(userData->mXScale, userData->mYScale));
+        aContext->CurrentMatrix().PreTranslate(aLayer->GetResidualTranslation() - gfxPoint(offset.x, offset.y)).
+                                  PreScale(userData->mXScale, userData->mYScale));
 
       layerBuilder->PaintItems(entry->mItems, iterRect, aContext, aContext,
                                builder, presContext,
@@ -6235,8 +6235,8 @@ FrameLayerBuilder::DrawPaintedLayer(PaintedLayer* aLayer,
     // snapping when we draw into aContext exactly matches the ideal transform.
     // See above for why this is OK.
     aContext->SetMatrix(
-      aContext->CurrentMatrix().Translate(aLayer->GetResidualTranslation() - gfxPoint(offset.x, offset.y)).
-                                Scale(userData->mXScale,userData->mYScale));
+      aContext->CurrentMatrix().PreTranslate(aLayer->GetResidualTranslation() - gfxPoint(offset.x, offset.y)).
+                                PreScale(userData->mXScale,userData->mYScale));
 
     layerBuilder->PaintItems(entry->mItems, aRegionToDraw.GetBounds(), aContext, aContext,
                              builder, presContext,

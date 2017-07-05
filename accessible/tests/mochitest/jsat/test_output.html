@@ -65,9 +65,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=753984
         }, {
           accOrElmOrID: "list",
           expectedUtterance: [[{"string": "list"},
-            {"string": "listItemsCount", "count":1}, {"string": "listStart"},
+            {"string": "listItemsCount", "count": 1}, {"string": "listStart"},
             "1.", "list one"], ["1.", "list one", {"string": "listStart"},
-            {"string": "list"}, {"string": "listItemsCount", "count":1}]
+            {"string": "list"}, {"string": "listItemsCount", "count": 1}]
           ],
           expectedBraille: [[{"string": "listAbbr"}, "list one"],
             ["list one", {"string": "listAbbr"}]]
@@ -99,7 +99,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=753984
           expectedBraille: [["*", "list two"], ["*", "list two"]]
         }, {
           accOrElmOrID: "cell",
-          expectedUtterance: [[{"string":"table"},
+          expectedUtterance: [[{"string": "table"},
             {"string": "tblColumnInfo", "count": 1},
             {"string": "tblRowInfo", "count": 1}, "Fruits and vegetables",
             {"string": "columnInfo", "args": [1]},
@@ -114,7 +114,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=753984
             {"string": "listItemsCount", "count": 4},
             {"string": "columnInfo", "args": [1]},
             {"string": "rowInfo", "args": [1]}, "Fruits and vegetables",
-            {"string":"table"}, {"string": "tblColumnInfo", "count": 1},
+            {"string": "table"}, {"string": "tblColumnInfo", "count": 1},
             {"string": "tblRowInfo", "count": 1}]],
           expectedBraille: [[{"string": "cellInfoAbbr", "args": [ 1, 1]},
             {"string": "listAbbr"}, {"string": "linkAbbr"}, "Apples",
@@ -409,9 +409,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=753984
           accOrElmOrID: "columnheader",
           oldAccOrElmOrID: "grid",
           expectedUtterance: [[{"string": "columnInfo", "args": [1]},
-            {"string": "rowInfo", "args" :[1]}, "Sunday"], ["Sunday",
+            {"string": "rowInfo", "args": [1]}, "Sunday"], ["Sunday",
             {"string": "columnInfo", "args": [1]},
-            {"string": "rowInfo", "args" :[1]}]],
+            {"string": "rowInfo", "args": [1]}]],
           expectedBraille: [[{"string": "cellInfoAbbr", "args": [1, 1]},
             "Sunday"], ["Sunday", {"string": "cellInfoAbbr", "args": [1, 1]}]]
         }, {
