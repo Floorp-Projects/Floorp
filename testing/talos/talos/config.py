@@ -42,6 +42,7 @@ DEFAULTS = dict(
         firstpaint=False,
         userready=False,
         testeventmap=[],
+        base_vs_ref=False,
         tpdisable_e10s=False,
         tpnoisy=True,
         tppagecycles=1,

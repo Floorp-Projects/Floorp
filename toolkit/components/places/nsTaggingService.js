@@ -128,7 +128,7 @@ TaggingService.prototype = {
         // have created it.
         tag.__defineGetter__("id", () => this._getItemIdForTag(tag.name));
       } else {
-        throw Cr.NS_ERROR_INVALID_ARG;
+        throw Components.Exception("Invalid tag value", Cr.NS_ERROR_INVALID_ARG);
       }
       return tag;
     });
@@ -136,8 +136,8 @@ TaggingService.prototype = {
 
   // nsITaggingService
   tagURI: function TS_tagURI(aURI, aTags, aSource) {
-    if (!aURI || !aTags || !Array.isArray(aTags)) {
-      throw Cr.NS_ERROR_INVALID_ARG;
+    if (!aURI || !aTags || !Array.isArray(aTags) || aTags.length == 0) {
+      throw Components.Exception("Invalid value for tags", Cr.NS_ERROR_INVALID_ARG);
     }
 
     // This also does some input validation.
@@ -215,8 +215,8 @@ TaggingService.prototype = {
 
   // nsITaggingService
   untagURI: function TS_untagURI(aURI, aTags, aSource) {
-    if (!aURI || (aTags && !Array.isArray(aTags))) {
-      throw Cr.NS_ERROR_INVALID_ARG;
+    if (!aURI || (aTags && (!Array.isArray(aTags) || aTags.length == 0))) {
+      throw Components.Exception("Invalid value for tags", Cr.NS_ERROR_INVALID_ARG);
     }
 
     if (!aTags) {
@@ -257,8 +257,9 @@ TaggingService.prototype = {
 
   // nsITaggingService
   getURIsForTag: function TS_getURIsForTag(aTagName) {
-    if (!aTagName || aTagName.length == 0)
-      throw Cr.NS_ERROR_INVALID_ARG;
+    if (!aTagName || aTagName.length == 0) {
+      throw Components.Exception("Invalid tag name", Cr.NS_ERROR_INVALID_ARG);
+    }
 
     if (/^\s|\s$/.test(aTagName)) {
       Deprecated.warning("Tag passed to getURIsForTag was not trimmed",
@@ -293,8 +294,9 @@ TaggingService.prototype = {
 
   // nsITaggingService
   getTagsForURI: function TS_getTagsForURI(aURI, aCount) {
-    if (!aURI)
-      throw Cr.NS_ERROR_INVALID_ARG;
+    if (!aURI) {
+      throw Components.Exception("Invalid uri", Cr.NS_ERROR_INVALID_ARG);
+    }
 
     let tags = [];
     let db = PlacesUtils.history.DBConnection;

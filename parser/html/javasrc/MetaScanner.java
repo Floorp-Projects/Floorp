@@ -2,22 +2,22 @@
  * Copyright (c) 2007 Henri Sivonen
  * Copyright (c) 2008-2015 Mozilla Foundation
  *
- * Permission is hereby granted, free of charge, to any person obtaining a 
- * copy of this software and associated documentation files (the "Software"), 
- * to deal in the Software without restriction, including without limitation 
- * the rights to use, copy, modify, merge, publish, distribute, sublicense, 
- * and/or sell copies of the Software, and to permit persons to whom the 
+ * Permission is hereby granted, free of charge, to any person obtaining a
+ * copy of this software and associated documentation files (the "Software"),
+ * to deal in the Software without restriction, including without limitation
+ * the rights to use, copy, modify, merge, publish, distribute, sublicense,
+ * and/or sell copies of the Software, and to permit persons to whom the
  * Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in 
+ * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
  *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL 
- * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING 
- * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+ * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
  * DEALINGS IN THE SOFTWARE.
  */
 
@@ -25,11 +25,11 @@ package nu.validator.htmlparser.impl;
 
 import java.io.IOException;
 
+import org.xml.sax.SAXException;
+
 import nu.validator.htmlparser.annotation.Auto;
 import nu.validator.htmlparser.annotation.Inline;
 import nu.validator.htmlparser.common.ByteReadable;
-
-import org.xml.sax.SAXException;
 
 public abstract class MetaScanner {
 
@@ -37,7 +37,7 @@ public abstract class MetaScanner {
      * Constant for "charset".
      */
     private static final char[] CHARSET = { 'h', 'a', 'r', 's', 'e', 't' };
-    
+
     /**
      * Constant for "content".
      */
@@ -58,13 +58,13 @@ public abstract class MetaScanner {
     private static final int NO = 0;
 
     private static final int M = 1;
-    
+
     private static final int E = 2;
-    
+
     private static final int T = 3;
 
     private static final int A = 4;
-    
+
     private static final int DATA = 0;
 
     private static final int TAG_OPEN = 1;
@@ -90,7 +90,7 @@ public abstract class MetaScanner {
     private static final int AFTER_ATTRIBUTE_VALUE_QUOTED = 11;
 
     private static final int MARKUP_DECLARATION_OPEN = 13;
-    
+
     private static final int MARKUP_DECLARATION_HYPHEN = 14;
 
     private static final int COMMENT_START = 15;
@@ -102,11 +102,11 @@ public abstract class MetaScanner {
     private static final int COMMENT_END_DASH = 18;
 
     private static final int COMMENT_END = 19;
-    
+
     private static final int SELF_CLOSING_START_TAG = 20;
-    
+
     private static final int HTTP_EQUIV_NOT_SEEN = 0;
-    
+
     private static final int HTTP_EQUIV_CONTENT_TYPE = 1;
 
     private static final int HTTP_EQUIV_OTHER = 2;
@@ -115,7 +115,7 @@ public abstract class MetaScanner {
      * The data source.
      */
     protected ByteReadable readable;
-    
+
     /**
      * The state of the state machine that recognizes the tag name "meta".
      */
@@ -125,7 +125,7 @@ public abstract class MetaScanner {
      * The current position in recognizing the attribute name "content".
      */
     private int contentIndex = Integer.MAX_VALUE;
-    
+
     /**
      * The current position in recognizing the attribute name "charset".
      */
@@ -155,13 +155,13 @@ public abstract class MetaScanner {
      * Accumulation buffer for attribute values.
      */
     private @Auto char[] strBuf;
-    
+
     private String content;
-    
+
     private String charset;
-    
+
     private int httpEquivState;
-    
+
     // CPPONLY: private TreeBuilder treeBuilder;
 
     public MetaScanner(
@@ -180,18 +180,19 @@ public abstract class MetaScanner {
         this.charset = null;
         this.httpEquivState = HTTP_EQUIV_NOT_SEEN;
         // CPPONLY: this.treeBuilder = tb;
+        // CPPONLY: this.mEncoding = null;
     }
-    
+
     @SuppressWarnings("unused") private void destructor() {
         Portability.releaseString(content);
         Portability.releaseString(charset);
     }
 
     // [NOCPP[
-    
+
     /**
      * Reads a byte from the data source.
-     * 
+     *
      * -1 means end.
      * @return
      * @throws IOException
@@ -243,7 +244,7 @@ public abstract class MetaScanner {
                                 metaState = M;
                                 state = MetaScanner.TAG_NAME;
                                 break tagopenloop;
-                                // continue stateloop;                                
+                                // continue stateloop;
                             case '!':
                                 state = MetaScanner.MARKUP_DECLARATION_OPEN;
                                 continue stateloop;
@@ -350,7 +351,7 @@ public abstract class MetaScanner {
                                 httpEquivIndex = Integer.MAX_VALUE;
                                 contentTypeIndex = Integer.MAX_VALUE;
                                 state = MetaScanner.ATTRIBUTE_NAME;
-                                break beforeattributenameloop;                                
+                                break beforeattributenameloop;
                             case 'h':
                             case 'H':
                                 contentIndex = Integer.MAX_VALUE;
@@ -358,7 +359,7 @@ public abstract class MetaScanner {
                                 httpEquivIndex = 0;
                                 contentTypeIndex = Integer.MAX_VALUE;
                                 state = MetaScanner.ATTRIBUTE_NAME;
-                                break beforeattributenameloop;                                
+                                break beforeattributenameloop;
                             default:
                                 contentIndex = Integer.MAX_VALUE;
                                 charsetIndex = Integer.MAX_VALUE;
@@ -416,7 +417,7 @@ public abstract class MetaScanner {
                                         ++httpEquivIndex;
                                     } else {
                                         httpEquivIndex = Integer.MAX_VALUE;
-                                    }                                    
+                                    }
                                 }
                                 continue;
                         }
@@ -823,7 +824,7 @@ public abstract class MetaScanner {
         httpEquivState = HTTP_EQUIV_NOT_SEEN;
         return stop;
     }
-    
+
     private boolean handleTagInner() throws SAXException {
         if (charset != null && tryCharset(charset)) {
                 return true;
@@ -844,11 +845,11 @@ public abstract class MetaScanner {
 
     /**
      * Tries to switch to an encoding.
-     * 
+     *
      * @param encoding
      * @return <code>true</code> if successful
      * @throws SAXException
      */
     protected abstract boolean tryCharset(String encoding) throws SAXException;
-    
+
 }

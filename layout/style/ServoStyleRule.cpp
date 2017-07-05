@@ -279,7 +279,14 @@ ServoStyleRule::SelectorMatchesElement(Element* aElement,
                                        const nsAString& aPseudo,
                                        bool* aMatches)
 {
-  // TODO Bug 1370502
+  nsCOMPtr<nsIAtom> pseudoElt = NS_Atomize(aPseudo);
+  const CSSPseudoElementType pseudoType =
+    nsCSSPseudoElements::GetPseudoType(pseudoElt,
+                                       CSSEnabledState::eIgnoreEnabledState);
+  *aMatches = Servo_StyleRule_SelectorMatchesElement(mRawRule,
+                                                     aElement,
+                                                     aSelectorIndex,
+                                                     pseudoType);
   return NS_OK;
 }
 
