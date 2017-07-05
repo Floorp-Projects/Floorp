@@ -168,7 +168,7 @@ class CompileDBBackend(CommonBackend):
             db.append({
                 'directory': directory,
                 'command': ' '.join(shell_quote(a) for a in c),
-                'file': filename,
+                'file': mozpath.join(directory, filename),
             })
 
         import json

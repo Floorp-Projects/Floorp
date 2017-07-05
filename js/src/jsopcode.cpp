@@ -2966,7 +2966,6 @@ GenerateLcovInfo(JSContext* cx, JSCompartment* comp, GenericPrinter& out)
     coverage::LCovCompartment compCover;
     for (JSScript* topLevel: topScripts) {
         RootedScript topScript(cx, topLevel);
-        compCover.collectSourceFile(comp, &topScript->scriptSourceUnwrap());
 
         // We found the top-level script, visit all the functions reachable
         // from the top-level function, and delazify them.
@@ -2978,7 +2977,18 @@ GenerateLcovInfo(JSContext* cx, JSCompartment* comp, GenericPrinter& out)
         RootedFunction fun(cx);
         do {
             script = queue.popCopy();
-            compCover.collectCodeCoverageInfo(comp, script->sourceObject(), script);
+            bool createdScriptName = false;
+            if (!script->hasScriptName()) {
+                createdScriptName = true;
+                if (!script->initScriptName(cx))
+                    return false;
+            }
+
+            compCover.collectCodeCoverageInfo(comp, script);
+
+            // Destroy the script name if we have created it in this function.
+            if (createdScriptName)
+                script->destroyScriptName();
 
             // Iterate from the last to the first object in order to have
             // the functions them visited in the opposite order when popping

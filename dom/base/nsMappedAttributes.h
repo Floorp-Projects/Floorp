@@ -45,7 +45,7 @@ public:
   }
 
   bool Equals(const nsMappedAttributes* aAttributes) const;
-  uint32_t HashValue() const;
+  PLDHashNumber HashValue() const;
 
   void DropStyleSheetReference()
   {

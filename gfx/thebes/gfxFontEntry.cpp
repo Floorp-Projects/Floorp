@@ -698,9 +698,9 @@ gfxFontEntry::GrReleaseTable(const void *aAppFaceHandle,
 {
     gfxFontEntry *fontEntry =
         static_cast<gfxFontEntry*>(const_cast<void*>(aAppFaceHandle));
-    if (auto entry = fontEntry->mGrTableMap->Lookup(aTableBuffer)) {
-        hb_blob_destroy(static_cast<hb_blob_t*>(entry.Data()));
-        entry.Remove();
+    void* value;
+    if (fontEntry->mGrTableMap->Remove(aTableBuffer, &value)) {
+        hb_blob_destroy(static_cast<hb_blob_t*>(value));
     }
 }
 

@@ -21,6 +21,7 @@
 #include "mozilla/UniquePtr.h"
 #include "mozilla/MemoryChecking.h"
 #include "mozilla/Sprintf.h"
+#include "nsThread.h"
 
 #ifdef __GNUC__
 # pragma GCC diagnostic push
@@ -91,26 +92,32 @@ public:
 } // namespace
 
 void
-ThreadStackHelper::GetPseudoStack(Stack& aStack)
+ThreadStackHelper::GetPseudoStack(Stack& aStack, nsACString& aRunnableName)
 {
-  GetStacksInternal(&aStack, nullptr);
+  GetStacksInternal(&aStack, nullptr, aRunnableName);
 }
 
 void
-ThreadStackHelper::GetNativeStack(NativeStack& aNativeStack)
+ThreadStackHelper::GetNativeStack(NativeStack& aNativeStack, nsACString& aRunnableName)
 {
-  GetStacksInternal(nullptr, &aNativeStack);
+  GetStacksInternal(nullptr, &aNativeStack, aRunnableName);
 }
 
 void
-ThreadStackHelper::GetPseudoAndNativeStack(Stack& aStack, NativeStack& aNativeStack)
+ThreadStackHelper::GetPseudoAndNativeStack(Stack& aStack,
+                                           NativeStack& aNativeStack,
+                                           nsACString& aRunnableName)
 {
-  GetStacksInternal(&aStack, &aNativeStack);
+  GetStacksInternal(&aStack, &aNativeStack, aRunnableName);
 }
 
 void
-ThreadStackHelper::GetStacksInternal(Stack* aStack, NativeStack* aNativeStack)
+ThreadStackHelper::GetStacksInternal(Stack* aStack,
+                                     NativeStack* aNativeStack,
+                                     nsACString& aRunnableName)
 {
+  aRunnableName.AssignLiteral("???");
+
 #if defined(MOZ_THREADSTACKHELPER_PSEUDO) || defined(MOZ_THREADSTACKHELPER_NATIVE)
   // Always run PrepareStackBuffer first to clear aStack
   if (aStack && !PrepareStackBuffer(*aStack)) {
@@ -131,7 +138,22 @@ ThreadStackHelper::GetStacksInternal(Stack* aStack, NativeStack* aNativeStack)
   ScopedSetPtr<NativeStack> nativeStackPtr(mNativeStackToFill, aNativeStack);
 #endif
 
-  auto callback = [&, this] (void** aPCs, size_t aCount) {
+  char nameBuffer[1000] = {0};
+  auto callback = [&, this] (void** aPCs, size_t aCount, bool aIsMainThread) {
+    // NOTE: We cannot allocate any memory in this callback, as the target
+    // thread is suspended, so we first copy it into a stack-allocated buffer,
+    // and then once the target thread is resumed, we can copy it into a real
+    // nsCString.
+    //
+    // Currently we only store the names of runnables which are running on the
+    // main thread, so we only want to read sMainThreadRunnableName and copy its
+    // value in the case that we are currently suspending the main thread.
+    if (aIsMainThread && nsThread::sMainThreadRunnableName) {
+      strncpy(nameBuffer, nsThread::sMainThreadRunnableName, sizeof(nameBuffer));
+      // Make sure the string is null-terminated.
+      nameBuffer[sizeof(nameBuffer) - 1] = '\0';
+    }
+
 #ifdef MOZ_THREADSTACKHELPER_PSEUDO
     if (mStackToFill) {
       FillStackBuffer();
@@ -152,6 +174,11 @@ ThreadStackHelper::GetStacksInternal(Stack* aStack, NativeStack* aNativeStack)
     profiler_suspend_and_sample_thread(mThreadId,
                                        callback,
                                        /* aSampleNative = */ !!aNativeStack);
+  }
+
+  // Copy the name buffer allocation into the output string.
+  if (nameBuffer[0] != 0) {
+    aRunnableName = nameBuffer;
   }
 #endif
 }

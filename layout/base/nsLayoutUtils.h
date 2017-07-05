@@ -2724,9 +2724,7 @@ public:
                                   ViewID aScrollId,
                                   const std::string& aKey,
                                   const std::string& aValue) {
-    if (IsAPZTestLoggingEnabled()) {
-      DoLogTestDataForPaint(aManager, aScrollId, aKey, aValue);
-    }
+    DoLogTestDataForPaint(aManager, aScrollId, aKey, aValue);
   }
 
   /**
@@ -2739,10 +2737,8 @@ public:
                                   ViewID aScrollId,
                                   const std::string& aKey,
                                   const Value& aValue) {
-    if (IsAPZTestLoggingEnabled()) {
-      DoLogTestDataForPaint(aManager, aScrollId, aKey,
-          mozilla::ToString(aValue));
-    }
+    DoLogTestDataForPaint(aManager, aScrollId, aKey,
+                          mozilla::ToString(aValue));
   }
 
   /**

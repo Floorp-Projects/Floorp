@@ -276,7 +276,6 @@ class Nursery
     void clearMinorGCRequest() { minorGCTriggerReason_ = JS::gcreason::NO_REASON; }
 
     bool enableProfiling() const { return enableProfiling_; }
-    bool trackTimings() const { return trackTimings_; }
 
   private:
     /* The amount of space in the mapped nursery available to allocations. */
@@ -322,12 +321,6 @@ class Nursery
     /* Report minor collections taking at least this long, if enabled. */
     mozilla::TimeDuration profileThreshold_;
     bool enableProfiling_;
-
-    /*
-     * Track timings if either enableProfiling_ or the Gecko profiler is
-     * compiled in.
-     */
-    bool trackTimings_;
 
     /* Report ObjectGroups with at lest this many instances tenured. */
     int64_t reportTenurings_;
@@ -476,8 +469,6 @@ class Nursery
     void maybeClearProfileDurations();
     void startProfile(ProfileKey key);
     void endProfile(ProfileKey key);
-    void maybeStartProfile(ProfileKey key);
-    void maybeEndProfile(ProfileKey key);
     static void printProfileDurations(const ProfileDurations& times);
 
     friend class TenuringTracer;

@@ -2121,7 +2121,7 @@ profiler_init(void* aStackTop)
                       ProfilerFeature::Threads |
                       0;
 
-  const char* filters[] = { "GeckoMain", "Compositor" };
+  const char* filters[] = { "GeckoMain", "Compositor", "DOM Worker" };
 
   if (getenv("MOZ_PROFILER_HELP")) {
     PrintUsageThenExit(0); // terminates execution
@@ -3043,7 +3043,7 @@ profiler_current_thread_id()
 void
 profiler_suspend_and_sample_thread(
   int aThreadId,
-  const std::function<void(void**, size_t)>& aCallback,
+  const std::function<ProfilerStackCallback>& aCallback,
   bool aSampleNative /* = true */)
 {
   // Allocate the space for the native stack
@@ -3068,7 +3068,7 @@ profiler_suspend_and_sample_thread(
           DoNativeBacktrace(lock, *info, aRegs, nativeStack);
         }
 #endif
-        aCallback(nativeStack.mPCs, nativeStack.mCount);
+        aCallback(nativeStack.mPCs, nativeStack.mCount, info->IsMainThread());
       });
 
       // NOTE: Make sure to disable the sampler before it is destroyed, in case

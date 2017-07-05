@@ -297,7 +297,7 @@ public:
 //
 //-------------------------------------------------------------------------
 
-class nsChildView : public nsBaseWidget
+class nsChildView final : public nsBaseWidget
 {
 private:
   typedef nsBaseWidget Inherited;

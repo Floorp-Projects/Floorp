@@ -182,12 +182,15 @@ private:
   const uint32_t mHash;
   // Annotations attributed to this stack
   HangMonitor::HangAnnotationsVector mAnnotations;
+  // The name of the runnable on the current thread.
+  nsCString mRunnableName;
 
 public:
-  explicit HangHistogram(HangStack&& aStack)
+  explicit HangHistogram(HangStack&& aStack, const nsACString& aRunnableName)
     : mStack(mozilla::Move(aStack))
     , mNativeStackIndex(NO_NATIVE_STACK_INDEX)
     , mHash(GetHash(mStack))
+    , mRunnableName(aRunnableName)
   {
   }
 
@@ -197,6 +200,7 @@ public:
     , mNativeStackIndex(mozilla::Move(aOther.mNativeStackIndex))
     , mHash(mozilla::Move(aOther.mHash))
     , mAnnotations(mozilla::Move(aOther.mAnnotations))
+    , mRunnableName(aOther.mRunnableName)
   {
   }
   bool operator==(const HangHistogram& aOther) const;
@@ -213,6 +217,9 @@ public:
   void SetNativeStackIndex(uint32_t aIndex) {
     MOZ_ASSERT(aIndex != NO_NATIVE_STACK_INDEX);
     mNativeStackIndex = aIndex;
+  }
+  const char* GetRunnableName() const {
+    return mRunnableName.get();
   }
   const HangMonitor::HangAnnotationsVector& GetAnnotations() const {
     return mAnnotations;

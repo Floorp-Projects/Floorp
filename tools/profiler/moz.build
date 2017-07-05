@@ -12,7 +12,6 @@ if CONFIG['MOZ_GECKO_PROFILER']:
     EXPORTS += [
         'public/ChildProfilerController.h',
         'public/ProfilerChild.h',
-        'public/ProfilerMarkerPayload.h',
         'public/ProfilerParent.h',
         'public/shared-libraries.h',
     ]
@@ -120,6 +119,7 @@ include('/ipc/chromium/chromium-config.mozbuild')
 EXPORTS += [
     'public/GeckoProfiler.h',
     'public/GeckoProfilerReporter.h',
+    'public/ProfilerMarkerPayload.h',
 ]
 
 if CONFIG['MOZ_TASK_TRACER']:
