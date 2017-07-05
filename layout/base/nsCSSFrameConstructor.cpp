@@ -4278,8 +4278,7 @@ ConnectAnonymousTreeDescendants(nsIContent* aParent,
   }
 }
 
-static void
-SetNativeAnonymousBitOnDescendants(nsIContent* aRoot)
+void SetNativeAnonymousBitOnDescendants(nsIContent *aRoot)
 {
   for (nsIContent* curr = aRoot; curr; curr = curr->GetNextNode(aRoot)) {
     curr->SetFlags(NODE_IS_NATIVE_ANONYMOUS);
@@ -5899,7 +5898,7 @@ nsCSSFrameConstructor::AddFrameConstructionItemsInternal(nsFrameConstructorState
     }
   }
 
-  const bool isGeneratedContent = !!(aFlags & ITEM_IS_GENERATED_CONTENT);
+  bool isGeneratedContent = ((aFlags & ITEM_IS_GENERATED_CONTENT) != 0);
 
   // Pre-check for display "none" - if we find that, don't create
   // any frame at all
@@ -7343,8 +7342,7 @@ nsCSSFrameConstructor::CreateNeededFrames(
   }
 }
 
-void
-nsCSSFrameConstructor::CreateNeededFrames()
+void nsCSSFrameConstructor::CreateNeededFrames()
 {
   NS_ASSERTION(!nsContentUtils::IsSafeToRunScript(),
                "Someone forgot a script blocker");
@@ -7354,8 +7352,7 @@ nsCSSFrameConstructor::CreateNeededFrames()
     "root element should not have frame created lazily");
   if (rootElement && rootElement->HasFlag(NODE_DESCENDANTS_NEED_FRAMES)) {
     BeginUpdate();
-    TreeMatchContext treeMatchContext(
-        mDocument, TreeMatchContext::ForFrameConstruction);
+    TreeMatchContext treeMatchContext(mDocument, TreeMatchContext::ForFrameConstruction);
     treeMatchContext.InitAncestors(rootElement);
     CreateNeededFrames(rootElement, treeMatchContext);
     EndUpdate();
@@ -7952,6 +7949,8 @@ nsCSSFrameConstructor::ContentRangeInserted(nsIContent* aContainer,
 
   NS_PRECONDITION(aStartChild, "must always pass a child");
 
+  // XXXldb Do we need to re-resolve style to handle the CSS2 + combinator and
+  // the :empty pseudo-class?
 #ifdef DEBUG
   if (gNoisyContentUpdates) {
     printf("nsCSSFrameConstructor::ContentRangeInserted container=%p "
@@ -7967,7 +7966,9 @@ nsCSSFrameConstructor::ContentRangeInserted(nsIContent* aContainer,
       }
     }
   }
+#endif
 
+#ifdef DEBUG
   for (nsIContent* child = aStartChild;
        child != aEndChild;
        child = child->GetNextSibling()) {
@@ -8009,39 +8010,45 @@ nsCSSFrameConstructor::ContentRangeInserted(nsIContent* aContainer,
   // If we have a null parent, then this must be the document element being
   // inserted, or some other child of the document in the DOM (might be a PI,
   // say).
-  if (!aContainer) {
+  if (! aContainer) {
     NS_ASSERTION(isSingleInsert,
                  "root node insertion should be a single insertion");
-    Element* docElement = mDocument->GetRootElement();
+    Element *docElement = mDocument->GetRootElement();
 
     if (aStartChild != docElement) {
       // Not the root element; just bail out
       return;
     }
 
-    NS_PRECONDITION(!mRootElementFrame, "root element frame already created");
+    NS_PRECONDITION(nullptr == mRootElementFrame,
+                    "root element frame already created");
 
     // Create frames for the document element and its child elements
-    if (nsIFrame* def = ConstructDocElementFrame(docElement, aFrameState)) {
+    nsIFrame* docElementFrame =
+      ConstructDocElementFrame(docElement, aFrameState);
+
+    if (docElementFrame) {
       InvalidateCanvasIfNeeded(mPresShell, aStartChild);
 #ifdef DEBUG
       if (gReallyNoisyContentUpdates) {
         printf("nsCSSFrameConstructor::ContentRangeInserted: resulting frame "
                "model:\n");
-        def->List(stdout, 0);
+        docElementFrame->List(stdout, 0);
       }
 #endif
     }
 
     if (aFrameState) {
       // Restore frame state for the root scroll frame if there is one
-      if (nsIFrame* rootScrollFrame = mPresShell->GetRootScrollFrame()) {
+      nsIFrame* rootScrollFrame = mPresShell->GetRootScrollFrame();
+      if (rootScrollFrame) {
         RestoreFrameStateFor(rootScrollFrame, aFrameState);
       }
     }
 
 #ifdef ACCESSIBILITY
-    if (nsAccessibilityService* accService = nsIPresShell::AccService()) {
+    nsAccessibilityService* accService = nsIPresShell::AccService();
+    if (accService) {
       accService->ContentRangeInserted(mPresShell, aContainer,
                                        aStartChild, aEndChild);
     }
@@ -8542,32 +8549,27 @@ nsCSSFrameConstructor::ContentRemoved(nsIContent*  aContainer,
     *aDestroyedFramesFor = aChild;
   }
 
-  // We're destroying our frame(s). This normally happens either when the
-  // content is being removed from the DOM (in which case we'll drop all Servo
-  // data in UnbindFromTree), or when we're recreating frames (usually in
-  // response to having retrieved a ReconstructFrame change hint after
-  // restyling). In both of those cases, there are no pending restyles we need
-  // to worry about.
+  // We're destroying our frame(s). This normally happens either when the content
+  // is being removed from the DOM (in which case we'll drop all Servo data in
+  // UnbindFromTree), or when we're recreating frames (usually in response to
+  // having retrieved a ReconstructFrame change hint after restyling). In both of
+  // those cases, there are no pending restyles we need to worry about.
   //
   // However, there is also the (rare) DestroyFramesFor path, in which we tear
   // down (and usually recreate) the frames for a subtree. In this case, leaving
   // the style data on the elements is problematic for our invariants, because
-  // there might be pending restyles in the subtree. If we simply leave them
-  // as-is, the subsequent traversal when recreating frames will generate a
-  // bunch of bogus change hints to update frames that no longer exist.
+  // there might be pending restyles in the subtree. If we simply leave them as-is,
+  // the subsequent traversal when recreating frames will generate a bunch of bogus
+  // change hints to update frames that no longer exist.
   //
-  // So the two obvious options are to (1) process all pending restyles and take
-  // all the change hints before destroying the frames, or (2) drop all the
-  // style data.  We chose the latter, since that matches the performance
-  // characteristics of the old Gecko style system.
+  // So the two obvious options are to (1) process all pending restyles and take all
+  // the change hints before destroying the frames, or (2) drop all the style data.
+  // We chose the latter, since that matches the performance characteristics of the
+  // old Gecko style system.
   //
-  // That said, it's almost certainly possible to optimize this if it turns out
-  // to be hot. It's just not a priority at the moment.
-  //
-  // FIXME(emilio): This really really feels like a hack, and it's only for the
-  // XBL/Shadow DOM path, so we should do this there instead.
-  if (aFlags == REMOVE_DESTROY_FRAMES && aChild->IsElement() &&
-      aChild->IsStyledByServo()) {
+  // That said, it's almost certainly possible to optimize this if it turns out to be
+  // hot. It's just not a priority at the moment.
+  if (aFlags == REMOVE_DESTROY_FRAMES && aChild->IsElement() && aChild->IsStyledByServo()) {
     ServoRestyleManager::ClearServoDataFromSubtree(aChild->AsElement());
   }
 
@@ -8585,6 +8587,9 @@ nsCSSFrameConstructor::ContentRemoved(nsIContent*  aContainer,
     // part of the fullscreen cleanup code called by Element::UnbindFromTree.)
     presContext->UpdateViewportScrollbarStylesOverride();
   }
+
+  // XXXldb Do we need to re-resolve style to handle the CSS2 + combinator and
+  // the :empty pseudo-class?
 
 #ifdef DEBUG
   if (gNoisyContentUpdates) {
@@ -8650,6 +8655,7 @@ nsCSSFrameConstructor::ContentRemoved(nsIContent*  aContainer,
     }
     return;
   }
+
 #endif // MOZ_XUL
 
   // If we're removing the root, then make sure to remove things starting at
@@ -8678,10 +8684,10 @@ nsCSSFrameConstructor::ContentRemoved(nsIContent*  aContainer,
   if (aContainer && aContainer->HasFlag(NODE_IS_IN_SHADOW_TREE) &&
       !aContainer->IsInNativeAnonymousSubtree() &&
       !aChild->IsInNativeAnonymousSubtree()) {
-    // Recreate frames if content is removed from a ShadowRoot because it may
-    // contain an insertion point which can change how the host is rendered.
-    //
-    // XXXsmaug This is super unefficient!
+    // Recreate frames if content is removed from a ShadowRoot
+    // because it may contain an insertion point which can change
+    // how the host is rendered.
+    //XXXsmaug This is super unefficient!
     nsIContent* bindingParent = aContainer->GetBindingParent();
     *aDidReconstruct = true;
     LAYOUT_PHASE_TEMP_EXIT();
@@ -9096,28 +9102,23 @@ nsCSSFrameConstructor::WillDestroyFrameTree()
 
 // XXXbz I'd really like this method to go away. Once we have inline-block and
 // I can just use that for sized broken images, that can happen, maybe.
-void
-nsCSSFrameConstructor::GetAlternateTextFor(nsIContent*    aContent,
-                                           nsIAtom*       aTag,
-                                           nsXPIDLString& aAltText)
+void nsCSSFrameConstructor::GetAlternateTextFor(nsIContent*    aContent,
+                                                nsIAtom*       aTag,  // content object's tag
+                                                nsXPIDLString& aAltText)
 {
   // The "alt" attribute specifies alternate text that is rendered
-  // when the image can not be displayed.
-  if (aContent->GetAttr(kNameSpaceID_None, nsGkAtoms::alt, aAltText)) {
-    return;
-  }
+  // when the image can not be displayed
 
-  if (nsGkAtoms::input == aTag) {
-    // If there's no "alt" attribute, and aContent is an input element, then use
-    // the value of the "value" attribute
-    if (aContent->GetAttr(kNameSpaceID_None, nsGkAtoms::value, aAltText)) {
-      return;
+  // If there's no "alt" attribute, and aContent is an input
+  // element, then use the value of the "value" attribute
+  if (!aContent->GetAttr(kNameSpaceID_None, nsGkAtoms::alt, aAltText) &&
+      nsGkAtoms::input == aTag) {
+    // If there's no "value" attribute either, then use the localized string
+    // for "Submit" as the alternate text.
+    if (!aContent->GetAttr(kNameSpaceID_None, nsGkAtoms::value, aAltText)) {
+      nsContentUtils::GetLocalizedString(nsContentUtils::eFORMS_PROPERTIES,
+                                         "Submit", aAltText);
     }
-
-    // If there's no "value" attribute either, then use the localized string for
-    // "Submit" as the alternate text.
-    nsContentUtils::GetLocalizedString(nsContentUtils::eFORMS_PROPERTIES,
-                                       "Submit", aAltText);
   }
 }
 
@@ -10853,8 +10854,7 @@ nsCSSFrameConstructor::WrapItemsInPseudoParent(nsIContent* aParentContent,
   aIter.InsertItem(newItem);
 }
 
-void
-nsCSSFrameConstructor::CreateNeededPseudoSiblings(
+void nsCSSFrameConstructor::CreateNeededPseudoSiblings(
     nsFrameConstructorState& aState,
     FrameConstructionItemList& aItems,
     nsIFrame* aParentFrame)
