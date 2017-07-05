@@ -12,15 +12,15 @@ this.omnibox = class extends ExtensionAPI {
         onInputChanged: new EventManager(context, "omnibox.onInputChanged", fire => {
           let listener = (text, id) => {
             fire.asyncWithoutClone(text, suggestions => {
-              context.childManager.callParentFunctionNoReturn("omnibox_internal.addSuggestions", [
+              context.childManager.callParentFunctionNoReturn("omnibox.addSuggestions", [
                 id,
                 suggestions,
               ]);
             });
           };
-          context.childManager.getParentEvent("omnibox_internal.onInputChanged").addListener(listener);
+          context.childManager.getParentEvent("omnibox.onInputChanged").addListener(listener);
           return () => {
-            context.childManager.getParentEvent("omnibox_internal.onInputChanged").removeListener(listener);
+            context.childManager.getParentEvent("omnibox.onInputChanged").removeListener(listener);
           };
         }).api(),
       },

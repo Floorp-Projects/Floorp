@@ -82,7 +82,7 @@ public:
     SetHTMLAttr(nsGkAtoms::rows, aRows, aError);
   }
 
-  virtual bool IsEventAttributeName(nsIAtom *aName) override;
+  virtual bool IsEventAttributeNameInternal(nsIAtom *aName) override;
 
   // Event listener stuff; we need to declare only the ones we need to
   // forward to window that don't come from nsIDOMHTMLFrameSetElement.

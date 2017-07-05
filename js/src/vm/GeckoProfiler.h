@@ -33,14 +33,7 @@
  * is pushed onto a stack that the profiler owns and maintains. This
  * information is then popped at the end of the JS function. The profiler
  * informs the JS engine of this stack at runtime, and it can by turned on/off
- * dynamically.
- *
- * The profiler stack has three parameters: a base pointer, a size, and a
- * maximum size. The stack is the ProfileEntry stack which will have
- * information written to it. The size location is a pointer to an integer
- * which represents the current size of the stack (number of valid frames).
- * This size will be modified when JS functions are called. The maximum
- * specified is the maximum capacity of the ProfileEntry stack.
+ * dynamically. Each stack entry has type ProfileEntry.
  *
  * Throughout execution, the size of the stack recorded in memory may exceed the
  * maximum. The JS engine will not write any information past the maximum limit,
@@ -48,7 +41,7 @@
  * this and iterates the stack accordingly.
  *
  * There is some information pushed on the profiler stack for every JS function
- * that is entered. First is a char* pointer of a description of what function
+ * that is entered. First is a char* label with a description of what function
  * was entered. Currently this string is of the form "function (file:line)" if
  * there's a function name, or just "file:line" if there's no function name
  * available. The other bit of information is the relevant C++ (native) stack

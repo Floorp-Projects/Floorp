@@ -44,11 +44,7 @@ nsProperties::Undefine(const char* prop)
     return NS_ERROR_INVALID_ARG;
   }
 
-  if (auto entry = nsProperties_HashBase::Lookup(prop)) {
-    entry.Remove();
-    return NS_OK;
-  }
-  return NS_ERROR_FAILURE;
+  return nsProperties_HashBase::Remove(prop) ? NS_OK : NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP

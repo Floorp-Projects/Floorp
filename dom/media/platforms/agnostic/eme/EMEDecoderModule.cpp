@@ -113,7 +113,7 @@ public:
     MOZ_ASSERT(aDecrypted.mSample);
 
     nsAutoPtr<DecryptPromiseRequestHolder> holder;
-    mDecrypts.RemoveAndForget(aDecrypted.mSample, holder);
+    mDecrypts.Remove(aDecrypted.mSample, &holder);
     if (holder) {
       holder->Complete();
     } else {

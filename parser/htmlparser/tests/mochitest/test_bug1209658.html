@@ -19,8 +19,8 @@ SimpleTest.waitForExplicitFinish();
 
 addLoadEvent(function loaded() {
   for (var iframe of document.querySelectorAll("iframe")) {
-    is(iframe.contentWindow.location.href, iframe.src, "should load correct URL");
-    is(iframe.contentDocument.body.textContent, '{"<p>Hello</p>": null}',
+    is(SpecialPowers.wrap(iframe).contentWindow.location.href, iframe.src, "should load correct URL");
+    is(SpecialPowers.wrap(iframe).contentDocument.body.textContent, '{"<p>Hello</p>": null}',
        iframe.getAttribute("mimeType") + " should be treated as text");
   }
   SimpleTest.finish();

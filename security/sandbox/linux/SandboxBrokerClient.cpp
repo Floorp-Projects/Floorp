@@ -76,7 +76,7 @@ SandboxBrokerClient::DoCall(const Request* aReq, const char* aPath,
     ios[2].iov_base = const_cast<char*>(aPath2);
     ios[2].iov_len = strlen(aPath2) + 1;
   } else {
-    ios[2].iov_base = 0;
+    ios[2].iov_base = nullptr;
     ios[2].iov_len = 0;
   }
   if (ios[1].iov_len > kMaxPathLen) {
