@@ -213,10 +213,10 @@ var PrintUtils = {
    *        to it will be used).
    */
   printPreview(aListenerObj) {
-    // if we're already in PP mode, don't set the listener; chances
-    // are it is null because someone is calling printPreview() to
-    // get us to refresh the display.
-    if (!this.inPrintPreview) {
+    // If we already have a toolbar someone is calling printPreview() to get us
+    // to refresh the display and aListenerObj won't be passed.
+    let printPreviewTB = document.getElementById("print-preview-toolbar");
+    if (!printPreviewTB) {
       this._listener = aListenerObj;
       this._sourceBrowser = aListenerObj.getSourceBrowser();
       this._originalTitle = this._sourceBrowser.contentTitle;
@@ -225,6 +225,10 @@ var PrintUtils = {
       // Here we log telemetry data for when the user enters print preview.
       this.logTelemetry("PRINT_PREVIEW_OPENED_COUNT");
     } else {
+      // Disable toolbar elements that can cause another update to be triggered
+      // during this update.
+      printPreviewTB.disableUpdateTriggers(true);
+
       // collapse the browser here -- it will be shown in
       // enterPrintPreview; this forces a reflow which fixes display
       // issues in bug 267422.
@@ -317,10 +321,6 @@ var PrintUtils = {
     }
 
     return this._currentPPBrowser.docShell.printPreview;
-  },
-
-  get inPrintPreview() {
-    return document.getElementById("print-preview-toolbar") != null;
   },
 
   // "private" methods and members. Don't use them.
@@ -445,6 +445,10 @@ var PrintUtils = {
           // thrown. This should all get torn out once bug 1088061 is fixed.
           mm.removeMessageListener("Printing:Preview:StateChange", this);
           mm.removeMessageListener("Printing:Preview:ProgressChange", this);
+
+          // Enable toobar elements that we disabled during update.
+          let printPreviewTB = document.getElementById("print-preview-toolbar");
+          printPreviewTB.disableUpdateTriggers(false);
         }
 
         return listener.onStateChange(null, null,
@@ -593,9 +597,11 @@ var PrintUtils = {
       sendEnterPreviewMessage(this._sourceBrowser, false);
     }
 
+    let waitForPrintProgressToEnableToolbar = false;
     if (this._webProgressPP.value) {
       mm.addMessageListener("Printing:Preview:StateChange", this);
       mm.addMessageListener("Printing:Preview:ProgressChange", this);
+      waitForPrintProgressToEnableToolbar = true;
     }
 
     let onEntered = (message) => {
@@ -622,6 +628,12 @@ var PrintUtils = {
           // printPreviewTB.initialize above already calls updateToolbar.
           printPreviewTB.updateToolbar();
         }
+
+        // If we don't have a progress listener to enable the toolbar do it now.
+        if (!waitForPrintProgressToEnableToolbar) {
+          printPreviewTB.disableUpdateTriggers(false);
+        }
+
         ppBrowser.collapsed = false;
         ppBrowser.focus();
         return;
@@ -647,6 +659,13 @@ var PrintUtils = {
       let navToolbox = this._listener.getNavToolbox();
       navToolbox.parentNode.insertBefore(printPreviewTB, navToolbox);
       printPreviewTB.initialize(ppBrowser);
+
+      // The print preview processing may not have fully completed, so if we
+      // have a progress listener, disable the toolbar elements that can trigger
+      // updates and it will enable them when completed.
+      if (waitForPrintProgressToEnableToolbar) {
+        printPreviewTB.disableUpdateTriggers(true);
+      }
 
       // Enable simplify page checkbox when the page is an article
       if (this._sourceBrowser.isArticle) {
