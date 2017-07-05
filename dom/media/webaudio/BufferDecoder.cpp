@@ -33,12 +33,6 @@ BufferDecoder::BeginDecoding(TaskQueue* aTaskQueueIdentity)
   mTaskQueueIdentity = aTaskQueueIdentity;
 }
 
-MediaResource*
-BufferDecoder::GetResource() const
-{
-  return mResource;
-}
-
 void
 BufferDecoder::NotifyDecodedFrames(const FrameStatisticsData& aStats)
 {
