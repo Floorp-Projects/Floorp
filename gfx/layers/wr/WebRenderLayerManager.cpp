@@ -13,6 +13,7 @@
 #include "mozilla/layers/StackingContextHelper.h"
 #include "mozilla/layers/TextureClient.h"
 #include "mozilla/layers/WebRenderBridgeChild.h"
+#include "mozilla/layers/UpdateImageHelper.h"
 #include "WebRenderCanvasLayer.h"
 #include "WebRenderColorLayer.h"
 #include "WebRenderContainerLayer.h"
@@ -223,7 +224,7 @@ WebRenderLayerManager::CreateWebRenderCommandsFromDisplayList(nsDisplayList* aDi
 
     if (!item->CreateWebRenderCommands(aBuilder, aSc, mParentCommands, this,
                                        aDisplayListBuilder)) {
-      // TODO: fallback
+      PushItemAsImage(item, aBuilder, aSc, aDisplayListBuilder);
     }
   }
   aDisplayList->AppendToTop(&savedItems);
@@ -304,49 +305,132 @@ WebRenderLayerManager::PushImage(nsDisplayItem* aItem,
   return true;
 }
 
-bool
-WebRenderLayerManager::PushItemAsBlobImage(nsDisplayItem* aItem,
-                                           wr::DisplayListBuilder& aBuilder,
-                                           const StackingContextHelper& aSc,
-                                           nsDisplayListBuilder* aDisplayListBuilder)
+static void
+PaintItemByDrawTarget(nsDisplayItem* aItem,
+                      DrawTarget* aDT,
+                      const LayerRect& aImageRect,
+                      const LayerPoint& aOffset,
+                      nsDisplayListBuilder* aDisplayListBuilder)
 {
-  const int32_t appUnitsPerDevPixel = aItem->Frame()->PresContext()->AppUnitsPerDevPixel();
+  aDT->ClearRect(aImageRect.ToUnknownRect());
+  RefPtr<gfxContext> context = gfxContext::CreateOrNull(aDT, aOffset.ToUnknownPoint());
+  MOZ_ASSERT(context);
+  aItem->Paint(aDisplayListBuilder, context);
+
+  if (gfxPrefs::WebRenderHighlightPaintedLayers()) {
+    aDT->SetTransform(Matrix());
+    aDT->FillRect(Rect(0, 0, aImageRect.width, aImageRect.height), ColorPattern(Color(1.0, 0.0, 0.0, 0.5)));
+  }
+  if (aItem->Frame()->PresContext()->GetPaintFlashing()) {
+    aDT->SetTransform(Matrix());
+    float r = float(rand()) / RAND_MAX;
+    float g = float(rand()) / RAND_MAX;
+    float b = float(rand()) / RAND_MAX;
+    aDT->FillRect(Rect(0, 0, aImageRect.width, aImageRect.height), ColorPattern(Color(r, g, b, 0.5)));
+  }
+}
+
+bool
+WebRenderLayerManager::PushItemAsImage(nsDisplayItem* aItem,
+                                       wr::DisplayListBuilder& aBuilder,
+                                       const StackingContextHelper& aSc,
+                                       nsDisplayListBuilder* aDisplayListBuilder)
+{
+  RefPtr<WebRenderFallbackData> fallbackData = CreateOrRecycleWebRenderUserData<WebRenderFallbackData>(aItem);
 
   bool snap;
+  nsRect itemBounds = aItem->GetBounds(aDisplayListBuilder, &snap);
+  nsRect clippedBounds = itemBounds;
+
+  const DisplayItemClip& clip = aItem->GetClip();
+  if (clip.HasClip()) {
+    clippedBounds = itemBounds.Intersect(clip.GetClipRect());
+  }
+
+  const int32_t appUnitsPerDevPixel = aItem->Frame()->PresContext()->AppUnitsPerDevPixel();
   LayerRect bounds = ViewAs<LayerPixel>(
-      LayoutDeviceRect::FromAppUnits(aItem->GetBounds(aDisplayListBuilder, &snap), appUnitsPerDevPixel),
+      LayoutDeviceRect::FromAppUnits(clippedBounds, appUnitsPerDevPixel),
       PixelCastJustification::WebRenderHasUnitResolution);
+
   LayerIntSize imageSize = RoundedToInt(bounds.Size());
   LayerRect imageRect;
   imageRect.SizeTo(LayerSize(imageSize));
-
-  RefPtr<gfx::DrawEventRecorderMemory> recorder = MakeAndAddRef<gfx::DrawEventRecorderMemory>();
-  RefPtr<gfx::DrawTarget> dummyDt =
-    gfx::Factory::CreateDrawTarget(gfx::BackendType::SKIA, gfx::IntSize(1, 1), gfx::SurfaceFormat::B8G8R8X8);
-  RefPtr<gfx::DrawTarget> dt = gfx::Factory::CreateRecordingDrawTarget(recorder, dummyDt, imageSize.ToUnknownSize());
-  LayerPoint offset = ViewAs<LayerPixel>(
-      LayoutDevicePoint::FromAppUnits(aItem->ToReferenceFrame(), appUnitsPerDevPixel),
-      PixelCastJustification::WebRenderHasUnitResolution);
-
-  {
-    dt->ClearRect(imageRect.ToUnknownRect());
-    RefPtr<gfxContext> context = gfxContext::CreateOrNull(dt, offset.ToUnknownPoint());
-    MOZ_ASSERT(context);
-
-    aItem->Paint(aDisplayListBuilder, context);
+  if (imageSize.width == 0 || imageSize.height == 0) {
+    return true;
   }
 
-  wr::ByteBuffer bytes(recorder->mOutputStream.mLength, (uint8_t*)recorder->mOutputStream.mData);
+  nsPoint shift = clippedBounds.TopLeft() - itemBounds.TopLeft();
+  LayerPoint offset = ViewAs<LayerPixel>(
+      LayoutDevicePoint::FromAppUnits(aItem->ToReferenceFrame() + shift, appUnitsPerDevPixel),
+      PixelCastJustification::WebRenderHasUnitResolution);
+
+  nsRegion invalidRegion;
+  nsAutoPtr<nsDisplayItemGeometry> geometry = fallbackData->GetGeometry();
+
+  if (geometry) {
+    nsPoint shift = itemBounds.TopLeft() - geometry->mBounds.TopLeft();
+    geometry->MoveBy(shift);
+    aItem->ComputeInvalidationRegion(aDisplayListBuilder, geometry, &invalidRegion);
+    nsRect lastBounds = fallbackData->GetBounds();
+    lastBounds.MoveBy(shift);
+
+    if (!lastBounds.IsEqualInterior(clippedBounds)) {
+      invalidRegion.OrWith(lastBounds);
+      invalidRegion.OrWith(clippedBounds);
+    }
+  }
+
+  if (!geometry || !invalidRegion.IsEmpty()) {
+    if (gfxPrefs::WebRenderBlobImages()) {
+      RefPtr<gfx::DrawEventRecorderMemory> recorder = MakeAndAddRef<gfx::DrawEventRecorderMemory>();
+      RefPtr<gfx::DrawTarget> dummyDt =
+        gfx::Factory::CreateDrawTarget(gfx::BackendType::SKIA, gfx::IntSize(1, 1), gfx::SurfaceFormat::B8G8R8X8);
+      RefPtr<gfx::DrawTarget> dt = gfx::Factory::CreateRecordingDrawTarget(recorder, dummyDt, imageSize.ToUnknownSize());
+      PaintItemByDrawTarget(aItem, dt, imageRect, offset, aDisplayListBuilder);
+      recorder->Finish();
+
+      wr::ByteBuffer bytes(recorder->mOutputStream.mLength, (uint8_t*)recorder->mOutputStream.mData);
+      wr::ImageKey key = WrBridge()->GetNextImageKey();
+      WrBridge()->SendAddBlobImage(key, imageSize.ToUnknownSize(), imageSize.width * 4, dt->GetFormat(), bytes);
+      fallbackData->SetKey(key);
+    } else {
+      fallbackData->CreateImageClientIfNeeded();
+      RefPtr<ImageClient> imageClient = fallbackData->GetImageClient();
+      RefPtr<ImageContainer> imageContainer = LayerManager::CreateImageContainer();
+
+      {
+        UpdateImageHelper helper(imageContainer, imageClient, imageSize.ToUnknownSize());
+        {
+          RefPtr<gfx::DrawTarget> dt = helper.GetDrawTarget();
+          PaintItemByDrawTarget(aItem, dt, imageRect, offset, aDisplayListBuilder);
+        }
+        if (!helper.UpdateImage()) {
+          return false;
+        }
+      }
+
+      // Force update the key in fallback data since we repaint the image in this path.
+      // If not force update, fallbackData may reuse the original key because it
+      // doesn't know UpdateImageHelper already updated the image container.
+      if (!fallbackData->UpdateImageKey(imageContainer, true)) {
+        return false;
+      }
+    }
+
+    geometry = aItem->AllocateGeometry(aDisplayListBuilder);
+  }
+
+  // Update current bounds to fallback data
+  fallbackData->SetGeometry(Move(geometry));
+  fallbackData->SetBounds(clippedBounds);
+
+  MOZ_ASSERT(fallbackData->GetKey());
 
   WrRect dest = aSc.ToRelativeWrRect(imageRect + offset);
-  WrImageKey key = WrBridge()->GetNextImageKey();
-  WrBridge()->SendAddBlobImage(key, imageSize.ToUnknownSize(), imageSize.width * 4, dt->GetFormat(), bytes);
-  AddImageKeyForDiscard(key);
-
   aBuilder.PushImage(dest,
                      dest,
                      wr::ImageRendering::Auto,
-                     key);
+                     fallbackData->GetKey().value());
   return true;
 }
 

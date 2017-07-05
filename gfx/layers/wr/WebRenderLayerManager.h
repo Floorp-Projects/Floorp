@@ -64,10 +64,10 @@ public:
                  mozilla::wr::DisplayListBuilder& aBuilder,
                  const StackingContextHelper& aSc,
                  const LayerRect& aRect);
-  bool PushItemAsBlobImage(nsDisplayItem* aItem,
-                           wr::DisplayListBuilder& aBuilder,
-                           const StackingContextHelper& aSc,
-                           nsDisplayListBuilder* aDisplayListBuilder);
+  bool PushItemAsImage(nsDisplayItem* aItem,
+                       wr::DisplayListBuilder& aBuilder,
+                       const StackingContextHelper& aSc,
+                       nsDisplayListBuilder* aDisplayListBuilder);
   void CreateWebRenderCommandsFromDisplayList(nsDisplayList* aDisplayList,
                                               nsDisplayListBuilder* aDisplayListBuilder,
                                               StackingContextHelper& aSc,
