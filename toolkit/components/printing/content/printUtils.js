@@ -618,10 +618,8 @@ var PrintUtils = {
         if (message.data.changingBrowsers) {
           printPreviewTB.destroy();
           printPreviewTB.initialize(ppBrowser);
-        } else {
-          // printPreviewTB.initialize above already calls updateToolbar.
-          printPreviewTB.updateToolbar();
         }
+        printPreviewTB.updateToolbar();
         ppBrowser.collapsed = false;
         ppBrowser.focus();
         return;
