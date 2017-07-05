@@ -2334,7 +2334,7 @@ SetupImageLayerClip(nsCSSRendering::ImageLayerClipState& aClipState,
     gfxRect bgAreaGfx = nsLayoutUtils::RectToGfxRect(
       aClipState.mAdditionalBGClipArea, aAppUnitsPerPixel);
     bgAreaGfx.Round();
-    bgAreaGfx.Condition();
+    gfxUtils::ConditionRect(bgAreaGfx);
 
     aAutoSR->EnsureSaved(aCtx);
     aCtx->NewPath();
@@ -2408,7 +2408,7 @@ DrawBackgroundColor(nsCSSRendering::ImageLayerClipState& aClipState,
     gfxRect bgAdditionalAreaGfx = nsLayoutUtils::RectToGfxRect(
       aClipState.mAdditionalBGClipArea, aAppUnitsPerPixel);
     bgAdditionalAreaGfx.Round();
-    bgAdditionalAreaGfx.Condition();
+    gfxUtils::ConditionRect(bgAdditionalAreaGfx);
     aCtx->NewPath();
     aCtx->Rectangle(bgAdditionalAreaGfx, true);
     aCtx->Clip();
@@ -4287,15 +4287,14 @@ nsContextBoxBlur::Init(const nsRect& aRect, nscoord aSpreadRadius,
   dirtyRect.RoundOut();
 
   gfxMatrix transform = aDestinationCtx->CurrentMatrix();
-  rect.TransformBoundsBy(transform);
+  rect = transform.TransformBounds(rect);
 
   mPreTransformed = !transform.IsIdentity();
 
   // Create the temporary surface for blurring
-  dirtyRect.TransformBoundsBy(transform);
+  dirtyRect = transform.TransformBounds(dirtyRect);
   if (aSkipRect) {
-    gfxRect skipRect = *aSkipRect;
-    skipRect.TransformBoundsBy(transform);
+    gfxRect skipRect = transform.TransformBounds(*aSkipRect);
     mContext = mAlphaBoxBlur.Init(aDestinationCtx, rect, spreadRadius,
                                   blurRadius, &dirtyRect, &skipRect);
   } else {
@@ -4398,11 +4397,9 @@ nsContextBoxBlur::BlurRectangle(gfxContext* aDestinationCtx,
     nsLayoutUtils::RectToGfxRect(aDirtyRect, aAppUnitsPerDevPixel);
   dirtyRect.RoundOut();
 
-  gfxRect shadowThebesRect = ThebesRect(shadowGfxRect);
-  shadowThebesRect.TransformBoundsBy(transform);
-  dirtyRect.TransformBoundsBy(transform);
-  gfxRect skipRect = aSkipRect;
-  skipRect.TransformBoundsBy(transform);
+  gfxRect shadowThebesRect = transform.TransformBounds(ThebesRect(shadowGfxRect));
+  dirtyRect = transform.TransformBounds(dirtyRect);
+  gfxRect skipRect = transform.TransformBounds(aSkipRect);
 
   if (aCornerRadii) {
     aCornerRadii->Scale(scaleX, scaleY);

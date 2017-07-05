@@ -3343,13 +3343,13 @@ nsCSSBorderRenderer::DrawBorders()
   // rect is supposed to enclose the entire border
   {
     gfxRect outerRect = ThebesRect(mOuterRect);
-    outerRect.Condition();
+    gfxUtils::ConditionRect(outerRect);
     if (outerRect.IsEmpty())
       return;
     mOuterRect = ToRect(outerRect);
 
     gfxRect innerRect = ThebesRect(mInnerRect);
-    innerRect.Condition();
+    gfxUtils::ConditionRect(innerRect);
     mInnerRect = ToRect(innerRect);
   }
 

@@ -8,6 +8,7 @@
 #ifndef mozilla_StyleAnimationValue_h_
 #define mozilla_StyleAnimationValue_h_
 
+#include "gfxPoint.h"
 #include "mozilla/gfx/MatrixFwd.h"
 #include "mozilla/ServoBindingTypes.h"
 #include "mozilla/UniquePtr.h"
