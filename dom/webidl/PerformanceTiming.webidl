@@ -34,5 +34,10 @@ interface PerformanceTiming {
   readonly attribute unsigned long long loadEventStart;
   readonly attribute unsigned long long loadEventEnd;
 
+  // This is a Chrome proprietary extension and not part of the
+  // performance/navigation timing specification
+  [Pref="dom.performance.time_to_non_blank_paint.enabled"]
+  readonly attribute unsigned long long timeToNonBlankPaint;
+
   jsonifier;
 };
