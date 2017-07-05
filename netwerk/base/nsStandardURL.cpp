@@ -1154,12 +1154,12 @@ nsStandardURL::ParseURL(const char *spec, int32_t specLen)
                            &mPath.mPos, &mPath.mLen);
     if (NS_FAILED(rv)) return rv;
 
-    if (mScheme.mLen <= 0) {
 #ifdef DEBUG
+    if (mScheme.mLen <= 0) {
         printf("spec=%s\n", spec);
-#endif
-        return NS_ERROR_MALFORMED_URI;
+        NS_WARNING("malformed url: no scheme");
     }
+#endif
      
     if (mAuthority.mLen > 0) {
         rv = mParser->ParseAuthority(spec + mAuthority.mPos, mAuthority.mLen,
