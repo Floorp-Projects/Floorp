@@ -35,9 +35,6 @@ public:
   static bool IsSupportedType(const MediaContainerType& aContainerType);
 
   void GetMozDebugReaderData(nsACString& aString) override;
-
-private:
-  RefPtr<MediaFormatReader> mReader;
 };
 
 } // namespace mozilla

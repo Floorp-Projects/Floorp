@@ -54,9 +54,6 @@ public:
   IsVideoAccelerated(layers::KnowsCompositor* aKnowsCompositor, nsIGlobalObject* aParent);
 
   void GetMozDebugReaderData(nsACString& aString) override;
-
-private:
-  RefPtr<MediaFormatReader> mReader;
 };
 
 } // namespace mozilla
