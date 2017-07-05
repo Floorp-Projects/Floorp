@@ -79,27 +79,6 @@ public:
                                         Directory* aDirectory) = 0;
 
   /**
-   * Reports whether the instance supports AddIsindex().
-   *
-   * @return true if supported.
-   */
-  virtual bool SupportsIsindexSubmission()
-  {
-    return false;
-  }
-
-  /**
-   * Adds an isindex value to the submission.
-   *
-   * @param aValue the field value
-   */
-  virtual nsresult AddIsindex(const nsAString& aValue)
-  {
-    NS_NOTREACHED("AddIsindex called when not supported");
-    return NS_ERROR_UNEXPECTED;
-  }
-
-  /**
    * Given a URI and the current submission, create the final URI and data
    * stream that will be submitted.  Subclasses *must* implement this.
    *
