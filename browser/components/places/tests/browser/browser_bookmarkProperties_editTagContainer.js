@@ -31,7 +31,7 @@ add_task(async function() {
   Assert.ok(tree.controller.isCommandEnabled("placesCmd_show:info"),
             "'placesCmd_show:info' on current selected node is enabled");
 
-  let promiseTitleResetNotification = promiseBookmarksNotification(
+  let promiseTitleResetNotification = PlacesTestUtils.waitForNotification(
       "onItemChanged", (itemId, prop, isAnno, val) => prop == "title" && val == "tag1");
 
   await withBookmarksDialog(
@@ -48,7 +48,7 @@ add_task(async function() {
       Assert.ok(!namepicker.readOnly, "Name field should not be read-only");
       Assert.equal(namepicker.value, "tag1", "Node title is correct");
 
-      let promiseTitleChangeNotification = promiseBookmarksNotification(
+      let promiseTitleChangeNotification = PlacesTestUtils.waitForNotification(
           "onItemChanged", (itemId, prop, isAnno, val) => prop == "title" && val == "tag2");
 
       fillBookmarkTextField("editBMPanel_namePicker", "tag2", dialogWin);

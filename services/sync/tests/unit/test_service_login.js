@@ -85,6 +85,17 @@ add_task(async function test_login_logout() {
     do_check_eq(Service.status.login, LOGIN_SUCCEEDED);
     do_check_true(Service.isLoggedIn);
 
+    _("Profile refresh edge case: FxA configured but prefs reset");
+    Service.startOver();
+    let config = makeIdentityConfig({ username: "johndoe" }, server);
+    config.fxaccount.token.endpoint = server.baseURI + "/1.1/" + config.username + "/";
+    configureFxAccountIdentity(Service.identity, config);
+
+    Service.login();
+    do_check_eq(Service.status.service, STATUS_OK);
+    do_check_eq(Service.status.login, LOGIN_SUCCEEDED);
+    do_check_true(Service.isLoggedIn);
+
     _("Logout.");
     Service.logout();
     do_check_false(Service.isLoggedIn);

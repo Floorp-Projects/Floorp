@@ -842,6 +842,19 @@ nsPresContext::Init(nsDeviceContext* aDeviceContext)
 
   mDeviceContext = aDeviceContext;
 
+  // In certain rare cases (such as changing page mode), we tear down layout
+  // state and re-initialize a new prescontext for a document. Given that we
+  // hang style state off the DOM, we detect that re-initialization case and
+  // lazily drop the servo data. We don't do this eagerly during layout teardown
+  // because that would incur an extra whole-tree traversal that's unnecessary
+  // most of the time.
+  if (mDocument->IsStyledByServo()) {
+    Element* root = mDocument->GetRootElement();
+    if (root && root->HasServoData()) {
+      ServoRestyleManager::ClearServoDataFromSubtree(root);
+    }
+  }
+
   if (mDeviceContext->SetFullZoom(mFullZoom))
     mDeviceContext->FlushFontCache();
   mCurAppUnitsPerDevPixel = AppUnitsPerDevPixel();

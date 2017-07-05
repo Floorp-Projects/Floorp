@@ -45,15 +45,19 @@ this.FormAutofillUtils = {
     return this._fieldNameInfo[fieldName] == "creditCard";
   },
 
+  getCategoryFromFieldName(fieldName) {
+    return this._fieldNameInfo[fieldName];
+  },
+
   getCategoriesFromFieldNames(fieldNames) {
     let categories = new Set();
     for (let fieldName of fieldNames) {
-      let info = this._fieldNameInfo[fieldName];
+      let info = this.getCategoryFromFieldName(fieldName);
       if (info) {
         categories.add(info);
       }
     }
-    return categories;
+    return Array.from(categories);
   },
 
   getAddressSeparator() {

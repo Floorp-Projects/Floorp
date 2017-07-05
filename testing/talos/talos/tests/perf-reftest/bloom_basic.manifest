@@ -1,1 +1,4 @@
+# base_vs_ref is set in test.py for this test, so each of these pages are run as separate
+# tests, but then compared against eachother; and the reported results are the comparison
 % http://localhost/tests/perf-reftest/bloom-basic.html
+% http://localhost/tests/perf-reftest/bloom-basic-ref.html

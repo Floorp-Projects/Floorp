@@ -1399,7 +1399,8 @@ RasterImage::DrawInternal(DrawableSurface&& aSurface,
   // Record the image drawing for startup performance testing.
   if (NS_IsMainThread()) {
     nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
-    if (NS_WARN_IF(obs)) {
+    NS_WARNING_ASSERTION(obs, "Can't get an observer service handle");
+    if (obs) {
       nsCOMPtr<nsIURI> imageURI = mURI->ToIURI();
       nsAutoCString spec;
       imageURI->GetSpec(spec);

@@ -144,14 +144,14 @@ class ConfigEnvironment(object):
         self.substs['ACDEFINES'] = ' '.join(['-D%s=%s' % (name,
             shell_quote(self.defines[name]).replace('$', '$$'))
             for name in sorted(global_defines)])
-        def serialize(obj):
+        def serialize(name, obj):
             if isinstance(obj, StringTypes):
                 return obj
             if isinstance(obj, Iterable):
                 return ' '.join(obj)
-            raise Exception('Unhandled type %s', type(obj))
+            raise Exception('Unhandled type %s for %s', type(obj), str(name))
         self.substs['ALLSUBSTS'] = '\n'.join(sorted(['%s = %s' % (name,
-            serialize(self.substs[name])) for name in self.substs if self.substs[name]]))
+            serialize(name, self.substs[name])) for name in self.substs if self.substs[name]]))
         self.substs['ALLEMPTYSUBSTS'] = '\n'.join(sorted(['%s =' % name
             for name in self.substs if not self.substs[name]]))
 

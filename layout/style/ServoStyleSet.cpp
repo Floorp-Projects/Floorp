@@ -82,30 +82,6 @@ ServoStyleSet::Init(nsPresContext* aPresContext, nsBindingManager* aBindingManag
   // mRawSet, so there was nothing to flush.
 }
 
-// Traverses the given frame tree, calling ClearServoDataFromSubtree on
-// any NAC that is found.
-static void
-ClearServoDataFromNAC(nsIFrame* aFrame)
-{
-  nsIAnonymousContentCreator* ac = do_QueryFrame(aFrame);
-  if (ac) {
-    nsTArray<nsIContent*> nodes;
-    ac->AppendAnonymousContentTo(nodes, 0);
-    for (nsIContent* node : nodes) {
-      if (node->IsElement()) {
-        ServoRestyleManager::ClearServoDataFromSubtree(node->AsElement());
-      }
-    }
-  }
-
-  nsIFrame::ChildListIterator lists(aFrame);
-  for (; !lists.IsDone(); lists.Next()) {
-    for (nsIFrame* child : lists.CurrentList()) {
-      ClearServoDataFromNAC(child);
-    }
-  }
-}
-
 void
 ServoStyleSet::BeginShutdown()
 {
@@ -116,55 +92,6 @@ ServoStyleSet::BeginShutdown()
     doc->RemoveObserver(mStyleRuleMap);
     doc->CSSLoader()->RemoveObserver(mStyleRuleMap);
     mStyleRuleMap = nullptr;
-  }
-
-  // It's important to do this before mRawSet is released, since that will cause
-  // a RuleTree GC, which needs to happen after we have dropped all of the
-  // document's strong references to RuleNodes.  We also need to do it here,
-  // in BeginShutdown, and not in Shutdown, since Shutdown happens after the
-  // frame tree has been destroyed, but before the script runners that delete
-  // native anonymous content (which also could be holding on the RuleNodes)
-  // have run.  By clearing style here, before the frame tree is destroyed,
-  // the AllChildrenIterator will find the anonymous content.
-  //
-  // Note that this is pretty bad for performance; we should find a way to
-  // get by with the ServoNodeDatas being dropped as part of the document
-  // going away.
-  DocumentStyleRootIterator iter(doc);
-  while (Element* root = iter.GetNextStyleRoot()) {
-    ServoRestyleManager::ClearServoDataFromSubtree(root);
-  }
-
-  // We can also have some cloned canvas custom content stored in the document
-  // (as done in nsCanvasFrame::DestroyFrom), due to bug 1348480, when we create
-  // the clone (wastefully) during PresShell destruction.  Clear data from that
-  // clone.
-  for (RefPtr<AnonymousContent>& ac : doc->GetAnonymousContents()) {
-    ServoRestyleManager::ClearServoDataFromSubtree(ac->GetContentNode());
-  }
-
-  // Also look for any NAC created by position:fixed replicated frames in a
-  // print or print preview presentation.
-  if (nsIPresShell* shell = doc->GetShell()) {
-    if (nsIFrame* pageSeq = shell->FrameConstructor()->GetPageSequenceFrame()) {
-      auto iter = pageSeq->PrincipalChildList().begin();
-      if (*iter) {
-        ++iter;  // skip past first page
-        while (nsIFrame* page = *iter) {
-          MOZ_ASSERT(page->IsPageFrame());
-
-          // The position:fixed replicated frames live on the PageContent frame.
-          nsIFrame* pageContent = page->PrincipalChildList().FirstChild();
-          MOZ_ASSERT(pageContent && pageContent->IsPageContentFrame());
-
-          for (nsIFrame* f : pageContent->GetChildList(nsIFrame::kFixedList)) {
-            ClearServoDataFromNAC(f);
-          }
-
-          ++iter;
-        }
-      }
-    }
   }
 }
 
@@ -1425,14 +1352,15 @@ ServoStyleSet::StyleRuleMap()
 
 bool
 ServoStyleSet::MightHaveAttributeDependency(const Element& aElement,
-                                            nsIAtom* aAttribute)
+                                            nsIAtom* aAttribute) const
 {
   return Servo_StyleSet_MightHaveAttributeDependency(
       mRawSet.get(), &aElement, aAttribute);
 }
 
 bool
-ServoStyleSet::HasStateDependency(const Element& aElement, EventStates aState)
+ServoStyleSet::HasStateDependency(const Element& aElement,
+                                  EventStates aState) const
 {
   return Servo_StyleSet_HasStateDependency(
       mRawSet.get(), &aElement, aState.ServoValue());
