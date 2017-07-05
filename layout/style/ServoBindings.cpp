@@ -1534,6 +1534,27 @@ Gecko_CreateGradient(uint8_t aShape,
   return result;
 }
 
+const mozilla::css::URLValueData*
+Gecko_GetURLValue(const nsStyleImage* aImage)
+{
+  MOZ_ASSERT(aImage && aImage->GetType() == eStyleImageType_Image);
+  return aImage->GetURLValue();
+}
+
+nsIAtom*
+Gecko_GetImageElement(const nsStyleImage* aImage)
+{
+  MOZ_ASSERT(aImage && aImage->GetType() == eStyleImageType_Element);
+  return const_cast<nsIAtom*>(aImage->GetElementId());
+}
+
+const nsStyleGradient*
+Gecko_GetGradientImageValue(const nsStyleImage* aImage)
+{
+  MOZ_ASSERT(aImage && aImage->GetType() == eStyleImageType_Gradient);
+  return aImage->GetGradientData();
+}
+
 void
 Gecko_SetListStyleImageNone(nsStyleList* aList)
 {
