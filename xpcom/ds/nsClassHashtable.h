@@ -56,11 +56,6 @@ public:
    * @returns nullptr if the key is not present.
    */
   UserDataType Get(KeyType aKey) const;
-
-  // obsolete - will be removed after converting existing consumers to Remove.
-  void RemoveAndForget(KeyType aKey, nsAutoPtr<T>& aOut) {
-    Remove(aKey, &aOut);
-  }
 };
 
 //
