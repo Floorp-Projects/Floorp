@@ -7440,14 +7440,14 @@ void PreventGCDuringInteractiveDebug()
 #endif
 
 void
-js::ReleaseAllJITCode(FreeOp* fop, bool addMarkers)
+js::ReleaseAllJITCode(FreeOp* fop)
 {
     js::CancelOffThreadIonCompile(fop->runtime());
 
     JSRuntime::AutoProhibitActiveContextChange apacc(fop->runtime());
     for (ZonesIter zone(fop->runtime(), SkipAtoms); !zone.done(); zone.next()) {
         zone->setPreservingCode(false);
-        zone->discardJitCode(fop, /* discardBaselineCode = */ true, addMarkers);
+        zone->discardJitCode(fop);
     }
 }
 
