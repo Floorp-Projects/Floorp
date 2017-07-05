@@ -54,5 +54,6 @@ SYMBOLS_FILE =  'avutil.symbols'
 NO_VISIBILITY_FLAGS = True
 
 OS_LIBS += CONFIG['REALTIME_LIBS']
+OS_LIBS += ['m']
 
 include("../ffvpxcommon.mozbuild")
