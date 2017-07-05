@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<merge xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:gecko="http://schemas.android.com/apk/res-auto">
+
+    <!-- The site security icon is misaligned with the page title so
+         we add a bottom margin to align their bottoms.
+         Site security icon must have exact position and size as search icon in
+         edit layout -->
+    <org.mozilla.gecko.widget.themed.ThemedImageButton
+        android:id="@+id/site_security"
+        style="@style/UrlBar.Button"
+        android:layout_width="@dimen/browser_toolbar_site_security_width"
+        android:layout_height="@dimen/browser_toolbar_site_security_height"
+        android:layout_gravity="center_vertical"
+        android:layout_marginBottom="@dimen/browser_toolbar_site_security_margin_bottom"
+        android:layout_marginEnd="@dimen/browser_toolbar_site_security_margin_end"
+        android:layout_marginRight="@dimen/browser_toolbar_site_security_margin_end"
+        android:background="@android:color/transparent"
+        android:contentDescription="@string/site_security"
+        android:paddingBottom="@dimen/browser_toolbar_site_security_padding_vertical"
+        android:paddingEnd="@dimen/browser_toolbar_site_security_padding_horizontal"
+        android:paddingLeft="@dimen/browser_toolbar_site_security_padding_horizontal"
+        android:paddingRight="@dimen/browser_toolbar_site_security_padding_horizontal"
+        android:paddingStart="@dimen/browser_toolbar_site_security_padding_horizontal"
+        android:paddingTop="@dimen/browser_toolbar_site_security_padding_vertical"
+        android:scaleType="fitCenter"
+        android:src="@drawable/site_security_icon" />
+
+    <org.mozilla.gecko.widget.FadedMultiColorTextView
+        android:id="@+id/url_bar_title"
+        style="@style/UrlBar.Title"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_weight="1.0"
+        gecko:autoUpdateTheme="false"
+        gecko:fadeBackgroundColor="@color/toolbar_display_layout_bg"
+        gecko:fadeWidth="40dip" />
+
+    <org.mozilla.gecko.toolbar.PageActionLayout
+        android:id="@+id/page_action_layout"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:orientation="horizontal"
+        android:visibility="gone" />
+
+    <ImageButton
+        android:id="@+id/stop"
+        android:layout_width="@dimen/page_action_button_width"
+        android:layout_height="match_parent"
+        android:background="#00ffffff"
+        android:contentDescription="@string/stop"
+        android:src="@drawable/urlbar_stop"
+        android:visibility="gone" />
+
+</merge>

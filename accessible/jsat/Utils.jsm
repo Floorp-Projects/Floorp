@@ -493,7 +493,7 @@ this.Utils = { // jshint ignore:line
     let details = {
       type: aType,
       details: JSON.stringify(
-        typeof aDetails === 'string' ? { eventType : aDetails } : aDetails)
+        typeof aDetails === 'string' ? { eventType: aDetails } : aDetails)
     };
     let window = this.win;
     let shell = window.shell || window.content.shell;
@@ -637,7 +637,7 @@ this.Logger = { // jshint ignore:line
     }
 
     try {
-      return'[ ' + Utils.AccService.getStringRole(aAccessible.role) +
+      return '[ ' + Utils.AccService.getStringRole(aAccessible.role) +
         ' | ' + aAccessible.name + ' ]';
     } catch (x) {
       return '[ defunct ]';
@@ -1068,6 +1068,6 @@ PrefCache.prototype = {
     }
   },
 
-  QueryInterface : XPCOMUtils.generateQI([Ci.nsIObserver,
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver,
                                           Ci.nsISupportsWeakReference])
 };

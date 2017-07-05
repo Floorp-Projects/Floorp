@@ -44,7 +44,7 @@ public:
 
   void Shutdown();
 
-  void Update(ConnectionType aType, bool aIsWifi, bool aDHCPGateway)
+  void Update(ConnectionType aType, bool aIsWifi, uint32_t aDHCPGateway)
   {
     MOZ_ASSERT(mConnection);
     mWorkerPrivate->AssertIsOnWorkerThread();
@@ -137,12 +137,12 @@ private:
 
   const ConnectionType mConnectionType;
   const bool mIsWifi;
-  const bool mDHCPGateway;
+  const uint32_t mDHCPGateway;
 
 public:
   NotifyRunnable(WorkerPrivate* aWorkerPrivate,
                  ConnectionProxy* aProxy, ConnectionType aType,
-                 bool aIsWifi, bool aDHCPGateway)
+                 bool aIsWifi, uint32_t aDHCPGateway)
     : WorkerRunnable(aWorkerPrivate)
     , mProxy(aProxy)
     , mConnectionType(aType)

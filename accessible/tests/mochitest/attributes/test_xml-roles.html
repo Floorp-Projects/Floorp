@@ -20,76 +20,76 @@
     function doTest()
     {
       // Some AT may look for this
-      testAttrs("nav", {"xml-roles" : "navigation"}, true);
-      testAttrs("header", {"xml-roles" : "banner"}, true);
-      testAbsentAttrs("article_header", {"xml-roles" : "banner"});
-      testAbsentAttrs("section_header", {"xml-roles" : "banner"});
-      testAttrs("footer", {"xml-roles" : "contentinfo"}, true);
-      testAbsentAttrs("article_footer", {"xml-roles" : "contentinfo"});
-      testAbsentAttrs("section_footer", {"xml-roles" : "contentinfo"});
-      testAttrs("aside", {"xml-roles" : "complementary"}, true);
-      testAttrs("section", {"xml-roles" : "region"}, true);
-      testAttrs("main", {"xml-roles" : "main"}, true); // // ARIA override
-      testAttrs("form", {"xml-roles" : "form"}, true);
-      testAttrs("feed", {"xml-roles" : "feed"}, true);
-      testAttrs("article", {"xml-roles" : "article"}, true);
-      testAttrs("main_element", {"xml-roles" : "main"}, true);
+      testAttrs("nav", {"xml-roles": "navigation"}, true);
+      testAttrs("header", {"xml-roles": "banner"}, true);
+      testAbsentAttrs("article_header", {"xml-roles": "banner"});
+      testAbsentAttrs("section_header", {"xml-roles": "banner"});
+      testAttrs("footer", {"xml-roles": "contentinfo"}, true);
+      testAbsentAttrs("article_footer", {"xml-roles": "contentinfo"});
+      testAbsentAttrs("section_footer", {"xml-roles": "contentinfo"});
+      testAttrs("aside", {"xml-roles": "complementary"}, true);
+      testAttrs("section", {"xml-roles": "region"}, true);
+      testAttrs("main", {"xml-roles": "main"}, true); // // ARIA override
+      testAttrs("form", {"xml-roles": "form"}, true);
+      testAttrs("feed", {"xml-roles": "feed"}, true);
+      testAttrs("article", {"xml-roles": "article"}, true);
+      testAttrs("main_element", {"xml-roles": "main"}, true);
 
-      testAttrs("search", {"xml-roles" : "searchbox"}, true);
+      testAttrs("search", {"xml-roles": "searchbox"}, true);
 
-      testAttrs("open-1", {"xml-roles" : "open-fence"}, true);
-      testAttrs("open-2", {"xml-roles" : "open-fence"}, true);
-      testAttrs("open-3", {"xml-roles" : "open-fence"}, true);
-      testAttrs("open-4", {"xml-roles" : "open-fence"}, true);
-      testAttrs("open-5", {"xml-roles" : "open-fence"}, true);
-      testAttrs("open-6", {"xml-roles" : "open-fence"}, true);
-      testAttrs("open-7", {"xml-roles" : "open-fence"}, true);
+      testAttrs("open-1", {"xml-roles": "open-fence"}, true);
+      testAttrs("open-2", {"xml-roles": "open-fence"}, true);
+      testAttrs("open-3", {"xml-roles": "open-fence"}, true);
+      testAttrs("open-4", {"xml-roles": "open-fence"}, true);
+      testAttrs("open-5", {"xml-roles": "open-fence"}, true);
+      testAttrs("open-6", {"xml-roles": "open-fence"}, true);
+      testAttrs("open-7", {"xml-roles": "open-fence"}, true);
 
-      testAttrs("sep-1", {"xml-roles" : "separator"}, true);
-      testAttrs("sep-2", {"xml-roles" : "separator"}, true);
-      testAttrs("sep-3", {"xml-roles" : "separator"}, true);
-      testAttrs("sep-4", {"xml-roles" : "separator"}, true);
-      testAttrs("sep-5", {"xml-roles" : "separator"}, true);
-      testAttrs("sep-6", {"xml-roles" : "separator"}, true);
-      testAttrs("sep-7", {"xml-roles" : "separator"}, true);
+      testAttrs("sep-1", {"xml-roles": "separator"}, true);
+      testAttrs("sep-2", {"xml-roles": "separator"}, true);
+      testAttrs("sep-3", {"xml-roles": "separator"}, true);
+      testAttrs("sep-4", {"xml-roles": "separator"}, true);
+      testAttrs("sep-5", {"xml-roles": "separator"}, true);
+      testAttrs("sep-6", {"xml-roles": "separator"}, true);
+      testAttrs("sep-7", {"xml-roles": "separator"}, true);
 
-      testAttrs("close-1", {"xml-roles" : "close-fence"}, true);
-      testAttrs("close-2", {"xml-roles" : "close-fence"}, true);
-      testAttrs("close-3", {"xml-roles" : "close-fence"}, true);
-      testAttrs("close-4", {"xml-roles" : "close-fence"}, true);
-      testAttrs("close-5", {"xml-roles" : "close-fence"}, true);
-      testAttrs("close-6", {"xml-roles" : "close-fence"}, true);
-      testAttrs("close-7", {"xml-roles" : "close-fence"}, true);
+      testAttrs("close-1", {"xml-roles": "close-fence"}, true);
+      testAttrs("close-2", {"xml-roles": "close-fence"}, true);
+      testAttrs("close-3", {"xml-roles": "close-fence"}, true);
+      testAttrs("close-4", {"xml-roles": "close-fence"}, true);
+      testAttrs("close-5", {"xml-roles": "close-fence"}, true);
+      testAttrs("close-6", {"xml-roles": "close-fence"}, true);
+      testAttrs("close-7", {"xml-roles": "close-fence"}, true);
 
-      testAttrs("num", {"xml-roles" : "numerator"}, true);
-      testAttrs("den", {"xml-roles" : "denominator"}, true);
+      testAttrs("num", {"xml-roles": "numerator"}, true);
+      testAttrs("den", {"xml-roles": "denominator"}, true);
 
-      testAttrs("sub-1", {"xml-roles" : "subscript"}, true);
-      testAttrs("sub-2", {"xml-roles" : "subscript"}, true);
-      testAttrs("sub-3", {"xml-roles" : "subscript"}, true);
-      testAttrs("sup-1", {"xml-roles" : "superscript"}, true);
-      testAttrs("sup-2", {"xml-roles" : "superscript"}, true);
-      testAttrs("sup-3", {"xml-roles" : "superscript"}, true);
-      testAttrs("sup-4", {"xml-roles" : "superscript"}, true);
-      testAttrs("presub-1", {"xml-roles" : "presubscript"}, true);
-      testAttrs("presub-2", {"xml-roles" : "presubscript"}, true);
-      testAttrs("presup-1", {"xml-roles" : "presuperscript"}, true);
+      testAttrs("sub-1", {"xml-roles": "subscript"}, true);
+      testAttrs("sub-2", {"xml-roles": "subscript"}, true);
+      testAttrs("sub-3", {"xml-roles": "subscript"}, true);
+      testAttrs("sup-1", {"xml-roles": "superscript"}, true);
+      testAttrs("sup-2", {"xml-roles": "superscript"}, true);
+      testAttrs("sup-3", {"xml-roles": "superscript"}, true);
+      testAttrs("sup-4", {"xml-roles": "superscript"}, true);
+      testAttrs("presub-1", {"xml-roles": "presubscript"}, true);
+      testAttrs("presub-2", {"xml-roles": "presubscript"}, true);
+      testAttrs("presup-1", {"xml-roles": "presuperscript"}, true);
 
-      testAttrs("under-1", {"xml-roles" : "underscript"}, true);
-      testAttrs("under-2", {"xml-roles" : "underscript"}, true);
-      testAttrs("over-1", {"xml-roles" : "overscript"}, true);
-      testAttrs("over-2", {"xml-roles" : "overscript"}, true);
+      testAttrs("under-1", {"xml-roles": "underscript"}, true);
+      testAttrs("under-2", {"xml-roles": "underscript"}, true);
+      testAttrs("over-1", {"xml-roles": "overscript"}, true);
+      testAttrs("over-2", {"xml-roles": "overscript"}, true);
 
-      testAttrs("root-index-1", {"xml-roles" : "root-index"}, true);
+      testAttrs("root-index-1", {"xml-roles": "root-index"}, true);
 
-      testAttrs("base-1", {"xml-roles" : "base"}, true);
-      testAttrs("base-2", {"xml-roles" : "base"}, true);
-      testAttrs("base-3", {"xml-roles" : "base"}, true);
-      testAttrs("base-4", {"xml-roles" : "base"}, true);
-      testAttrs("base-5", {"xml-roles" : "base"}, true);
-      testAttrs("base-6", {"xml-roles" : "base"}, true);
-      testAttrs("base-7", {"xml-roles" : "base"}, true);
-      testAttrs("base-8", {"xml-roles" : "base"}, true);
+      testAttrs("base-1", {"xml-roles": "base"}, true);
+      testAttrs("base-2", {"xml-roles": "base"}, true);
+      testAttrs("base-3", {"xml-roles": "base"}, true);
+      testAttrs("base-4", {"xml-roles": "base"}, true);
+      testAttrs("base-5", {"xml-roles": "base"}, true);
+      testAttrs("base-6", {"xml-roles": "base"}, true);
+      testAttrs("base-7", {"xml-roles": "base"}, true);
+      testAttrs("base-8", {"xml-roles": "base"}, true);
 
       SimpleTest.finish();
     }

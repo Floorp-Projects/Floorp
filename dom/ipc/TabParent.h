@@ -438,17 +438,35 @@ public:
                     int32_t aCharCode, int32_t aModifiers,
                     bool aPreventDefault);
 
-  bool SendRealMouseEvent(mozilla::WidgetMouseEvent& aEvent);
+  /**
+   * The following Send*Event() marks aEvent as posted to remote process if
+   * it succeeded.  So, you can check the result with
+   * aEvent.HasBeenPostedToRemoteProcess().
+   */
+  void SendRealMouseEvent(WidgetMouseEvent& aEvent);
 
-  bool SendRealDragEvent(mozilla::WidgetDragEvent& aEvent,
+  void SendRealDragEvent(WidgetDragEvent& aEvent,
                          uint32_t aDragAction,
                          uint32_t aDropEffect);
 
-  bool SendMouseWheelEvent(mozilla::WidgetWheelEvent& aEvent);
+  void SendMouseWheelEvent(WidgetWheelEvent& aEvent);
 
-  bool SendRealKeyEvent(mozilla::WidgetKeyboardEvent& aEvent);
+  void SendRealKeyEvent(WidgetKeyboardEvent& aEvent);
 
-  bool SendRealTouchEvent(WidgetTouchEvent& aEvent);
+  void SendRealTouchEvent(WidgetTouchEvent& aEvent);
+
+  void SendPluginEvent(WidgetPluginEvent& aEvent);
+
+  /**
+   * Different from above Send*Event(), these methods return true if the
+   * event has been posted to the remote process or failed to do that but
+   * shouldn't be handled by following event listeners.
+   * If you need to check if it's actually posted to the remote process,
+   * you can refer aEvent.HasBeenPostedToRemoteProcess().
+   */
+  bool SendCompositionEvent(mozilla::WidgetCompositionEvent& aEvent);
+
+  bool SendSelectionEvent(mozilla::WidgetSelectionEvent& aEvent);
 
   bool SendHandleTap(TapType aType,
                      const LayoutDevicePoint& aPoint,
@@ -495,10 +513,6 @@ public:
   NS_DECL_NSIWEBBROWSERPERSISTABLE
 
   bool HandleQueryContentEvent(mozilla::WidgetQueryContentEvent& aEvent);
-
-  bool SendCompositionEvent(mozilla::WidgetCompositionEvent& aEvent);
-
-  bool SendSelectionEvent(mozilla::WidgetSelectionEvent& aEvent);
 
   bool SendPasteTransferable(const IPCDataTransfer& aDataTransfer,
                              const bool& aIsPrivateData,

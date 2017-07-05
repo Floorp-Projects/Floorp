@@ -27,6 +27,7 @@ import org.mozilla.gecko.notifications.WhatsNewReceiver;
 import org.mozilla.gecko.preferences.GeckoPreferences;
 import org.mozilla.gecko.promotion.AddToHomeScreenPromotion;
 import org.mozilla.gecko.reader.ReaderModeUtils;
+import org.mozilla.gecko.skin.SkinConfig;
 import org.mozilla.gecko.util.BundleEventListener;
 import org.mozilla.gecko.util.EventCallback;
 import org.mozilla.gecko.util.GeckoBundle;
@@ -1114,7 +1115,11 @@ public class Tabs implements BundleEventListener {
     }
 
     public Tab addPrivateTab() {
-        return loadUrl(AboutPages.PRIVATEBROWSING, Tabs.LOADURL_NEW_TAB | Tabs.LOADURL_PRIVATE);
+        if (SkinConfig.isPhoton()) {
+            return loadUrl(getHomepageForNewTab(mAppContext), Tabs.LOADURL_NEW_TAB | Tabs.LOADURL_PRIVATE);
+        } else {
+            return loadUrl(AboutPages.PRIVATEBROWSING, Tabs.LOADURL_NEW_TAB | Tabs.LOADURL_PRIVATE);
+        }
     }
 
     /**

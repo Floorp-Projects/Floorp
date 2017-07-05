@@ -8,7 +8,7 @@
 
     <!-- Search icon must have exact position and size as site security in
          display layout -->
-    <ImageView android:id="@+id/search_icon"
+    <org.mozilla.gecko.widget.themed.ThemedImageButton android:id="@+id/search_icon"
         android:layout_width="@dimen/browser_toolbar_site_security_width"
         android:layout_height="@dimen/browser_toolbar_site_security_height"
         android:layout_marginBottom="@dimen/browser_toolbar_site_security_margin_bottom"
@@ -38,13 +38,13 @@
           android:paddingEnd="8dp"
           gecko:autoUpdateTheme="false"/>
 
-    <ImageButton android:id="@+id/qrcode"
+    <org.mozilla.gecko.widget.themed.ThemedImageButton android:id="@+id/qrcode"
                  android:layout_width="@dimen/page_action_button_width"
                  android:layout_height="match_parent"
                  android:src="@drawable/ab_qrcode"
                  android:background="@android:color/transparent"/>
 
-    <ImageButton android:id="@+id/mic"
+    <org.mozilla.gecko.widget.themed.ThemedImageButton android:id="@+id/mic"
                  android:layout_width="@dimen/page_action_button_width"
                  android:layout_height="match_parent"
                  android:src="@drawable/ab_mic"

@@ -10,7 +10,7 @@
 #include "mozilla/Assertions.h"         // for MOZ_ASSERT, etc
 #include "mozilla/RefPtr.h"             // for already_AddRefed, RefCounted
 #include "mozilla/gfx/2D.h"             // for DrawTarget
-#include "mozilla/gfx/MatrixFwd.h"      // for Matrix4x4
+#include "mozilla/gfx/MatrixFwd.h"      // for Matrix, Matrix4x4
 #include "mozilla/gfx/Point.h"          // for IntSize, Point
 #include "mozilla/gfx/Polygon.h"        // for Polygon
 #include "mozilla/gfx/Rect.h"           // for Rect, IntRect
@@ -114,7 +114,6 @@ class nsIWidget;
 
 namespace mozilla {
 namespace gfx {
-class Matrix;
 class DrawTarget;
 class DataSourceSurface;
 } // namespace gfx

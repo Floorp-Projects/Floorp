@@ -61,6 +61,9 @@ struct ParamTraits<mozilla::WidgetEvent>
 
   static void Write(Message* aMsg, const paramType& aParam)
   {
+    // Mark the event as posted to another process.
+    const_cast<mozilla::WidgetEvent&>(aParam).MarkAsPostedToRemoteProcess();
+
     WriteParam(aMsg,
       static_cast<mozilla::EventClassIDType>(aParam.mClass));
     WriteParam(aMsg, aParam.mMessage);
@@ -82,6 +85,11 @@ struct ParamTraits<mozilla::WidgetEvent>
                ReadParam(aMsg, aIter, &aResult->mTimeStamp) &&
                ReadParam(aMsg, aIter, &aResult->mFlags);
     aResult->mClass = static_cast<mozilla::EventClassID>(eventClassID);
+    if (ret) {
+      // Reset cross process dispatching state here because the event has not
+      // been dispatched to different process from current process.
+      aResult->ResetCrossProcessDispatchingState();
+    }
     return ret;
   }
 };
@@ -109,7 +117,7 @@ struct ParamTraits<mozilla::WidgetGUIEvent>
 
   static void Write(Message* aMsg, const paramType& aParam)
   {
-    WriteParam(aMsg, static_cast<mozilla::WidgetEvent>(aParam));
+    WriteParam(aMsg, static_cast<const mozilla::WidgetEvent&>(aParam));
     WriteParam(aMsg, aParam.mPluginEvent);
   }
 
@@ -127,7 +135,7 @@ struct ParamTraits<mozilla::WidgetInputEvent>
 
   static void Write(Message* aMsg, const paramType& aParam)
   {
-    WriteParam(aMsg, static_cast<mozilla::WidgetGUIEvent>(aParam));
+    WriteParam(aMsg, static_cast<const mozilla::WidgetGUIEvent&>(aParam));
     WriteParam(aMsg, aParam.mModifiers);
   }
 
@@ -146,7 +154,7 @@ struct ParamTraits<mozilla::WidgetMouseEventBase>
 
   static void Write(Message* aMsg, const paramType& aParam)
   {
-    WriteParam(aMsg, static_cast<mozilla::WidgetInputEvent>(aParam));
+    WriteParam(aMsg, static_cast<const mozilla::WidgetInputEvent&>(aParam));
     WriteParam(aMsg, aParam.button);
     WriteParam(aMsg, aParam.buttons);
     WriteParam(aMsg, aParam.pressure);
@@ -173,7 +181,7 @@ struct ParamTraits<mozilla::WidgetWheelEvent>
 
   static void Write(Message* aMsg, const paramType& aParam)
   {
-    WriteParam(aMsg, static_cast<mozilla::WidgetMouseEventBase>(aParam));
+    WriteParam(aMsg, static_cast<const mozilla::WidgetMouseEventBase&>(aParam));
     WriteParam(aMsg, aParam.mDeltaX);
     WriteParam(aMsg, aParam.mDeltaY);
     WriteParam(aMsg, aParam.mDeltaZ);
@@ -255,7 +263,7 @@ struct ParamTraits<mozilla::WidgetMouseEvent>
 
   static void Write(Message* aMsg, const paramType& aParam)
   {
-    WriteParam(aMsg, static_cast<mozilla::WidgetMouseEventBase>(aParam));
+    WriteParam(aMsg, static_cast<const mozilla::WidgetMouseEventBase&>(aParam));
     WriteParam(aMsg, static_cast<mozilla::WidgetPointerHelper>(aParam));
     WriteParam(aMsg, aParam.mIgnoreRootScrollFrame);
     WriteParam(aMsg, static_cast<paramType::ReasonType>(aParam.mReason));
@@ -296,7 +304,7 @@ struct ParamTraits<mozilla::WidgetDragEvent>
 
   static void Write(Message* aMsg, const paramType& aParam)
   {
-    WriteParam(aMsg, static_cast<mozilla::WidgetMouseEvent>(aParam));
+    WriteParam(aMsg, static_cast<const mozilla::WidgetMouseEvent&>(aParam));
     WriteParam(aMsg, aParam.mUserCancelled);
     WriteParam(aMsg, aParam.mDefaultPreventedOnContent);
   }
@@ -318,7 +326,7 @@ struct ParamTraits<mozilla::WidgetPointerEvent>
 
   static void Write(Message* aMsg, const paramType& aParam)
   {
-    WriteParam(aMsg, static_cast<mozilla::WidgetMouseEvent>(aParam));
+    WriteParam(aMsg, static_cast<const mozilla::WidgetMouseEvent&>(aParam));
     WriteParam(aMsg, aParam.mWidth);
     WriteParam(aMsg, aParam.mHeight);
     WriteParam(aMsg, aParam.mIsPrimary);
@@ -429,7 +437,7 @@ struct ParamTraits<mozilla::WidgetKeyboardEvent>
 
   static void Write(Message* aMsg, const paramType& aParam)
   {
-    WriteParam(aMsg, static_cast<mozilla::WidgetInputEvent>(aParam));
+    WriteParam(aMsg, static_cast<const mozilla::WidgetInputEvent&>(aParam));
     WriteParam(aMsg,
                static_cast<mozilla::KeyNameIndexType>(aParam.mKeyNameIndex));
     WriteParam(aMsg,
@@ -441,14 +449,10 @@ struct ParamTraits<mozilla::WidgetKeyboardEvent>
     WriteParam(aMsg, aParam.mPseudoCharCode);
     WriteParam(aMsg, aParam.mAlternativeCharCodes);
     WriteParam(aMsg, aParam.mIsRepeat);
-    WriteParam(aMsg, aParam.mIsReserved);
     WriteParam(aMsg, aParam.mAccessKeyForwardedToChild);
     WriteParam(aMsg, aParam.mLocation);
     WriteParam(aMsg, aParam.mUniqueId);
     WriteParam(aMsg, aParam.mIsSynthesizedByTIP);
-    WriteParam(aMsg,
-               static_cast<paramType::InputMethodAppStateType>
-                 (aParam.mInputMethodAppState));
 #ifdef XP_MACOSX
     WriteParam(aMsg, aParam.mNativeKeyCode);
     WriteParam(aMsg, aParam.mNativeModifierFlags);
@@ -472,7 +476,6 @@ struct ParamTraits<mozilla::WidgetKeyboardEvent>
   {
     mozilla::KeyNameIndexType keyNameIndex = 0;
     mozilla::CodeNameIndexType codeNameIndex = 0;
-    paramType::InputMethodAppStateType inputMethodAppState = 0;
     if (ReadParam(aMsg, aIter,
                   static_cast<mozilla::WidgetInputEvent*>(aResult)) &&
         ReadParam(aMsg, aIter, &keyNameIndex) &&
@@ -484,12 +487,10 @@ struct ParamTraits<mozilla::WidgetKeyboardEvent>
         ReadParam(aMsg, aIter, &aResult->mPseudoCharCode) &&
         ReadParam(aMsg, aIter, &aResult->mAlternativeCharCodes) &&
         ReadParam(aMsg, aIter, &aResult->mIsRepeat) &&
-        ReadParam(aMsg, aIter, &aResult->mIsReserved) &&
         ReadParam(aMsg, aIter, &aResult->mAccessKeyForwardedToChild) &&
         ReadParam(aMsg, aIter, &aResult->mLocation) &&
         ReadParam(aMsg, aIter, &aResult->mUniqueId) &&
         ReadParam(aMsg, aIter, &aResult->mIsSynthesizedByTIP) &&
-        ReadParam(aMsg, aIter, &inputMethodAppState) &&
 #ifdef XP_MACOSX
         ReadParam(aMsg, aIter, &aResult->mNativeKeyCode) &&
         ReadParam(aMsg, aIter, &aResult->mNativeModifierFlags) &&
@@ -510,8 +511,6 @@ struct ParamTraits<mozilla::WidgetKeyboardEvent>
       aResult->mCodeNameIndex =
         static_cast<mozilla::CodeNameIndex>(codeNameIndex);
       aResult->mNativeKeyEvent = nullptr;
-      aResult->mInputMethodAppState =
-        static_cast<paramType::InputMethodAppState>(inputMethodAppState);
       return true;
     }
     return false;
@@ -609,7 +608,7 @@ struct ParamTraits<mozilla::WidgetCompositionEvent>
 
   static void Write(Message* aMsg, const paramType& aParam)
   {
-    WriteParam(aMsg, static_cast<mozilla::WidgetGUIEvent>(aParam));
+    WriteParam(aMsg, static_cast<const mozilla::WidgetGUIEvent&>(aParam));
     WriteParam(aMsg, aParam.mData);
     WriteParam(aMsg, aParam.mNativeIMEContext);
     bool hasRanges = !!aParam.mRanges;
@@ -693,7 +692,7 @@ struct ParamTraits<mozilla::WidgetQueryContentEvent>
 
   static void Write(Message* aMsg, const paramType& aParam)
   {
-    WriteParam(aMsg, static_cast<mozilla::WidgetGUIEvent>(aParam));
+    WriteParam(aMsg, static_cast<const mozilla::WidgetGUIEvent&>(aParam));
     WriteParam(aMsg, aParam.mSucceeded);
     WriteParam(aMsg, aParam.mUseNativeLineBreak);
     WriteParam(aMsg, aParam.mWithFontRanges);
@@ -734,7 +733,7 @@ struct ParamTraits<mozilla::WidgetSelectionEvent>
 
   static void Write(Message* aMsg, const paramType& aParam)
   {
-    WriteParam(aMsg, static_cast<mozilla::WidgetGUIEvent>(aParam));
+    WriteParam(aMsg, static_cast<const mozilla::WidgetGUIEvent&>(aParam));
     WriteParam(aMsg, aParam.mOffset);
     WriteParam(aMsg, aParam.mLength);
     WriteParam(aMsg, aParam.mReversed);
@@ -967,7 +966,7 @@ struct ParamTraits<mozilla::WidgetPluginEvent>
 
   static void Write(Message* aMsg, const paramType& aParam)
   {
-    WriteParam(aMsg, static_cast<mozilla::WidgetGUIEvent>(aParam));
+    WriteParam(aMsg, static_cast<const mozilla::WidgetGUIEvent&>(aParam));
     WriteParam(aMsg, aParam.mRetargetToFocusedDocument);
   }
 
@@ -1136,7 +1135,7 @@ struct ParamTraits<mozilla::MultiTouchInput>
 
   static void Write(Message* aMsg, const paramType& aParam)
   {
-    WriteParam(aMsg, static_cast<mozilla::InputData>(aParam));
+    WriteParam(aMsg, static_cast<const mozilla::InputData&>(aParam));
     WriteParam(aMsg, aParam.mType);
     WriteParam(aMsg, aParam.mTouches);
     WriteParam(aMsg, aParam.mHandledByAPZ);
@@ -1174,7 +1173,7 @@ struct ParamTraits<mozilla::MouseInput>
 
   static void Write(Message* aMsg, const paramType& aParam)
   {
-    WriteParam(aMsg, static_cast<mozilla::InputData>(aParam));
+    WriteParam(aMsg, static_cast<const mozilla::InputData&>(aParam));
     WriteParam(aMsg, aParam.mButtonType);
     WriteParam(aMsg, aParam.mType);
     WriteParam(aMsg, aParam.mInputSource);
@@ -1212,7 +1211,7 @@ struct ParamTraits<mozilla::PanGestureInput>
 
   static void Write(Message* aMsg, const paramType& aParam)
   {
-    WriteParam(aMsg, static_cast<mozilla::InputData>(aParam));
+    WriteParam(aMsg, static_cast<const mozilla::InputData&>(aParam));
     WriteParam(aMsg, aParam.mType);
     WriteParam(aMsg, aParam.mPanStartPoint);
     WriteParam(aMsg, aParam.mPanDisplacement);
@@ -1260,7 +1259,7 @@ struct ParamTraits<mozilla::PinchGestureInput>
 
   static void Write(Message* aMsg, const paramType& aParam)
   {
-    WriteParam(aMsg, static_cast<mozilla::InputData>(aParam));
+    WriteParam(aMsg, static_cast<const mozilla::InputData&>(aParam));
     WriteParam(aMsg, aParam.mType);
     WriteParam(aMsg, aParam.mFocusPoint);
     WriteParam(aMsg, aParam.mLocalFocusPoint);
@@ -1294,7 +1293,7 @@ struct ParamTraits<mozilla::TapGestureInput>
 
   static void Write(Message* aMsg, const paramType& aParam)
   {
-    WriteParam(aMsg, static_cast<mozilla::InputData>(aParam));
+    WriteParam(aMsg, static_cast<const mozilla::InputData&>(aParam));
     WriteParam(aMsg, aParam.mType);
     WriteParam(aMsg, aParam.mPoint);
     WriteParam(aMsg, aParam.mLocalPoint);
@@ -1332,7 +1331,7 @@ struct ParamTraits<mozilla::ScrollWheelInput>
 
   static void Write(Message* aMsg, const paramType& aParam)
   {
-    WriteParam(aMsg, static_cast<mozilla::InputData>(aParam));
+    WriteParam(aMsg, static_cast<const mozilla::InputData&>(aParam));
     WriteParam(aMsg, aParam.mDeltaType);
     WriteParam(aMsg, aParam.mScrollMode);
     WriteParam(aMsg, aParam.mOrigin);
@@ -1386,7 +1385,7 @@ struct ParamTraits<mozilla::KeyboardInput>
 
   static void Write(Message* aMsg, const paramType& aParam)
   {
-    WriteParam(aMsg, static_cast<mozilla::InputData>(aParam));
+    WriteParam(aMsg, static_cast<const mozilla::InputData&>(aParam));
     WriteParam(aMsg, aParam.mType);
     WriteParam(aMsg, aParam.mKeyCode);
     WriteParam(aMsg, aParam.mCharCode);
