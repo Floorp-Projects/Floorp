@@ -38,6 +38,13 @@ exports.highlighterSpec = highlighterSpec;
 const customHighlighterSpec = generateActorSpec({
   typeName: "customhighlighter",
 
+  events: {
+    "highlighter-event": {
+      type: "highlighter-event",
+      data: Arg(0, "json")
+    }
+  },
+
   methods: {
     release: {
       release: true

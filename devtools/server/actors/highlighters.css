@@ -613,3 +613,7 @@
 :-moz-native-anonymous .shapes-markers {
   fill: var(--highlighter-marker-color);
 }
+
+:-moz-native-anonymous .shapes-marker-hover {
+  fill: var(--highlighter-guide-color);
+}
