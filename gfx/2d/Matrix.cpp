@@ -59,19 +59,7 @@ SafeTangent(double aTheta)
   return FlushToZero(sinTheta / cosTheta);
 }
 
-std::ostream&
-operator<<(std::ostream& aStream, const Matrix& aMatrix)
-{
-  return aStream << "[ " << aMatrix._11
-                 << " "  << aMatrix._12
-                 << "; " << aMatrix._21
-                 << " "  << aMatrix._22
-                 << "; " << aMatrix._31
-                 << " "  << aMatrix._32
-                 << "; ]";
-}
-
-Matrix
+template<> Matrix
 Matrix::Rotation(Float aAngle)
 {
   Matrix newMatrix;
@@ -87,7 +75,7 @@ Matrix::Rotation(Float aAngle)
   return newMatrix;
 }
 
-Rect
+template<> Rect
 Matrix::TransformBounds(const Rect &aRect) const
 {
   int i;
@@ -118,7 +106,7 @@ Matrix::TransformBounds(const Rect &aRect) const
   return Rect(min_x, min_y, max_x - min_x, max_y - min_y);
 }
 
-Matrix&
+template<> Matrix&
 Matrix::NudgeToIntegers()
 {
   NudgeToInteger(&_11);

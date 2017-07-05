@@ -11,6 +11,7 @@
 #include "mozilla/Assertions.h"         // for MOZ_ASSERT, etc
 #include "mozilla/RefPtr.h"             // for RefPtr, already_AddRefed
 #include "mozilla/gfx/2D.h"             // for DrawTarget, etc
+#include "mozilla/gfx/MatrixFwd.h"      // for Matrix
 #include "mozilla/mozalloc.h"           // for operator delete
 #include "nsCOMPtr.h"                   // for already_AddRefed
 #include "nsDebug.h"                    // for NS_RUNTIMEABORT
@@ -19,10 +20,6 @@
 #include "LayersTypes.h"
 
 namespace mozilla {
-namespace gfx {
-class Matrix;
-} // namespace gfx
-
 namespace layers {
 
 class TextureClient;
