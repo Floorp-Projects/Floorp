@@ -75,47 +75,48 @@ Matrix::Rotation(Float aAngle)
   return newMatrix;
 }
 
-template<> Rect
-Matrix::TransformBounds(const Rect &aRect) const
+template<> MatrixDouble
+MatrixDouble::Rotation(Double aAngle)
 {
-  int i;
-  Point quad[4];
-  Float min_x, max_x;
-  Float min_y, max_y;
+  MatrixDouble newMatrix;
 
-  quad[0] = TransformPoint(aRect.TopLeft());
-  quad[1] = TransformPoint(aRect.TopRight());
-  quad[2] = TransformPoint(aRect.BottomLeft());
-  quad[3] = TransformPoint(aRect.BottomRight());
+  Double s = sin(aAngle);
+  Double c = cos(aAngle);
 
-  min_x = max_x = quad[0].x;
-  min_y = max_y = quad[0].y;
+  newMatrix._11 = c;
+  newMatrix._12 = s;
+  newMatrix._21 = -s;
+  newMatrix._22 = c;
 
-  for (i = 1; i < 4; i++) {
-    if (quad[i].x < min_x)
-      min_x = quad[i].x;
-    if (quad[i].x > max_x)
-      max_x = quad[i].x;
-
-    if (quad[i].y < min_y)
-      min_y = quad[i].y;
-    if (quad[i].y > max_y)
-      max_y = quad[i].y;
-  }
-
-  return Rect(min_x, min_y, max_x - min_x, max_y - min_y);
+  return newMatrix;
 }
 
-template<> Matrix&
-Matrix::NudgeToIntegers()
+template<> Matrix4x4
+MatrixDouble::operator*(const Matrix4x4& aMatrix) const
 {
-  NudgeToInteger(&_11);
-  NudgeToInteger(&_12);
-  NudgeToInteger(&_21);
-  NudgeToInteger(&_22);
-  NudgeToInteger(&_31);
-  NudgeToInteger(&_32);
-  return *this;
+  Matrix4x4 resultMatrix;
+
+  resultMatrix._11 = this->_11 * aMatrix._11 + this->_12 * aMatrix._21;
+  resultMatrix._12 = this->_11 * aMatrix._12 + this->_12 * aMatrix._22;
+  resultMatrix._13 = this->_11 * aMatrix._13 + this->_12 * aMatrix._23;
+  resultMatrix._14 = this->_11 * aMatrix._14 + this->_12 * aMatrix._24;
+
+  resultMatrix._21 = this->_21 * aMatrix._11 + this->_22 * aMatrix._21;
+  resultMatrix._22 = this->_21 * aMatrix._12 + this->_22 * aMatrix._22;
+  resultMatrix._23 = this->_21 * aMatrix._13 + this->_22 * aMatrix._23;
+  resultMatrix._24 = this->_21 * aMatrix._14 + this->_22 * aMatrix._24;
+
+  resultMatrix._31 = aMatrix._31;
+  resultMatrix._32 = aMatrix._32;
+  resultMatrix._33 = aMatrix._33;
+  resultMatrix._34 = aMatrix._34;
+
+  resultMatrix._41 = this->_31 * aMatrix._11 + this->_32 * aMatrix._21 + aMatrix._41;
+  resultMatrix._42 = this->_31 * aMatrix._12 + this->_32 * aMatrix._22 + aMatrix._42;
+  resultMatrix._43 = this->_31 * aMatrix._13 + this->_32 * aMatrix._23 + aMatrix._43;
+  resultMatrix._44 = this->_31 * aMatrix._14 + this->_32 * aMatrix._24 + aMatrix._44;
+
+  return resultMatrix;
 }
 
 } // namespace gfx
