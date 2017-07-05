@@ -5,32 +5,45 @@
 
 var gActiveListeners = {};
 
-function registerPopupEventHandler(eventName, callback) {
+// These event (un)registration handlers only work for one window, DONOT use
+// them with multiple windows.
+function registerPopupEventHandler(eventName, callback, win) {
+  if (!win) {
+    win = window;
+  }
   gActiveListeners[eventName] = function(event) {
-    if (event.target != PopupNotifications.panel)
+    if (event.target != win.PopupNotifications.panel)
       return;
-    PopupNotifications.panel.removeEventListener(eventName,
-                                                 gActiveListeners[eventName]);
+    win.PopupNotifications.panel.removeEventListener(
+                                                   eventName,
+                                                   gActiveListeners[eventName]);
     delete gActiveListeners[eventName];
 
-    callback.call(PopupNotifications.panel);
+    callback.call(win.PopupNotifications.panel);
   }
-  PopupNotifications.panel.addEventListener(eventName,
-                                            gActiveListeners[eventName]);
+  win.PopupNotifications.panel.addEventListener(eventName,
+                                                gActiveListeners[eventName]);
 }
 
-function unregisterPopupEventHandler(eventName)
+function unregisterPopupEventHandler(eventName, win)
 {
-  PopupNotifications.panel.removeEventListener(eventName,
-                                               gActiveListeners[eventName]);
+  if (!win) {
+    win = window;
+  }
+  win.PopupNotifications.panel.removeEventListener(eventName,
+                                                   gActiveListeners[eventName]);
   delete gActiveListeners[eventName];
 }
 
-function unregisterAllPopupEventHandlers()
+function unregisterAllPopupEventHandlers(win)
 {
+  if (!win) {
+    win = window;
+  }
   for (let eventName in gActiveListeners) {
-    PopupNotifications.panel.removeEventListener(eventName,
-                                                 gActiveListeners[eventName]);
+    win.PopupNotifications.panel.removeEventListener(
+                                                   eventName,
+                                                   gActiveListeners[eventName]);
   }
   gActiveListeners = {};
 }
@@ -68,8 +81,8 @@ function setFinishedCallback(callback, win)
   if (!win) {
     win = window;
   }
-  ContentTask.spawn(win.gBrowser.selectedBrowser, null, function*() {
-    return yield new Promise(resolve => {
+  ContentTask.spawn(win.gBrowser.selectedBrowser, null, async function() {
+    return await new Promise(resolve => {
       content.wrappedJSObject.testFinishedCallback = (result, exception) => {
         info("got finished callback");
         resolve({result, exception});
