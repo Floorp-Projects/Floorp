@@ -481,6 +481,22 @@ IMEStateManager::OnChangeFocusInternal(nsPresContext* aPresContext,
     else if (!sActiveIMEContentObserver->IsManaging(aPresContext, aContent)) {
       DestroyIMEContentObserver();
     }
+  } else {
+    // If there is no active IMEContentObserver, it means that focused content
+    // may be in another process.
+
+    // If focus is moving from current focused remote process to different
+    // process while the process has IME focus too, we need to notify IME of
+    // blur here because it may be too late the blur notification to reach
+    // this process especially when closing active window.
+    if (sFocusedIMETabParent &&
+        !IsSameProcess(sFocusedIMETabParent, newTabParent)) {
+      MOZ_LOG(sISMLog, LogLevel::Info,
+        ("  OnChangeFocusInternal(), notifying IME of blur of previous focused "
+         "remote process because it may be too late actual notification to "
+         "reach this process"));
+      NotifyIME(NOTIFY_IME_OF_BLUR, sFocusedIMEWidget, sFocusedIMETabParent);
+    }
   }
 
   if (!aPresContext) {
