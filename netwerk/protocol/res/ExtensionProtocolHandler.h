@@ -148,6 +148,30 @@ private:
                                                   nsACString& aResolvedSpec,
                                                   nsIChannel** aRetVal);
 
+#if !defined(XP_WIN)
+  /**
+   * Sets the aResult outparam to true if we are a developer build with the
+   * repo dir environment variable set and the requested file resides in the
+   * repo dir. Developer builds may load system extensions with web-accessible
+   * resources that are symlinks to files in the repo dir. This method is for
+   * checking if an unpacked resource requested by the child is from the repo.
+   * The requested file must be already Normalized().
+   *
+   * @param aRequestedFile the requested web-accessible resource file. Argument
+   *        must be an nsIFile for which Normalize() has already been called.
+   * @param aResult outparam set to true on development builds when the
+   *        requested file resides in the repo
+   */
+  Result<Ok, nsresult> DevRepoContains(nsIFile* aRequestedFile, bool *aResult);
+
+  // On development builds, this points to development repo. Lazily set.
+  nsCOMPtr<nsIFile> mDevRepo;
+
+  // Set to true once we've already tried to load the dev repo path,
+  // allowing for lazy initialization of |mDevRepo|.
+  bool mAlreadyCheckedDevRepo;
+#endif /* !defined(XP_WIN) */
+
   // Used for opening JAR files off the main thread when we just need to
   // obtain a file descriptor to send back to the child.
   RefPtr<mozilla::LazyIdleThread> mFileOpenerThread;
