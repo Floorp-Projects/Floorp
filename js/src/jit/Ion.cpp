@@ -519,29 +519,6 @@ jit::FinishOffThreadBuilder(JSRuntime* runtime, IonBuilder* builder,
         FreeIonBuilder(builder);
 }
 
-static void
-MarkJitProfilerEvent(JSRuntime* rt, JSScript* script, const char* event)
-{
-    if (rt->geckoProfiler().enabled()) {
-        // Register event with profiler.
-        // Format of event payload string:
-        //      "<filename>:<lineno>"
-
-        // Get the script filename, if any, and its length.
-        const char* filename = script->filename();
-        if (filename == nullptr)
-            filename = "<unknown>";
-
-        // Construct the descriptive string.
-        UniqueChars buf = JS_smprintf("Invalidate %s:%" PRIuSIZE, filename, script->lineno());
-
-        // Ignore the event on allocation failure.
-        if (buf)  {
-            rt->geckoProfiler().markEvent(buf.get());
-        }
-    }
-}
-
 static bool
 LinkCodeGen(JSContext* cx, IonBuilder* builder, CodeGenerator *codegen)
 {
@@ -553,8 +530,6 @@ LinkCodeGen(JSContext* cx, IonBuilder* builder, CodeGenerator *codegen)
 
     if (!codegen->link(cx, builder->constraints()))
         return false;
-
-    MarkJitProfilerEvent(cx->runtime(), script, "Ion compilation finished");
 
     return true;
 }
@@ -3184,8 +3159,6 @@ jit::Invalidate(TypeZone& types, FreeOp* fop,
         JitSpew(JitSpew_IonInvalidate, " Invalidate %s:%" PRIuSIZE ", IonScript %p",
                 co->script()->filename(), co->script()->lineno(), co->ion());
 
-        MarkJitProfilerEvent(fop->runtime(), co->script(), "Invalidate");
-
         // Keep the ion script alive during the invalidation and flag this
         // ionScript as being invalidated.  This increment is removed by the
         // loop after the calls to InvalidateActivation.
@@ -3266,6 +3239,25 @@ jit::Invalidate(JSContext* cx, JSScript* script, bool resetUses, bool cancelOffT
 {
     MOZ_ASSERT(script->hasIonScript());
 
+    if (cx->runtime()->geckoProfiler().enabled()) {
+        // Register invalidation with profiler.
+        // Format of event payload string:
+        //      "<filename>:<lineno>"
+
+        // Get the script filename, if any, and its length.
+        const char* filename = script->filename();
+        if (filename == nullptr)
+            filename = "<unknown>";
+
+        // Construct the descriptive string.
+        UniqueChars buf = JS_smprintf("Invalidate %s:%" PRIuSIZE, filename, script->lineno());
+
+        // Ignore the event on allocation failure.
+        if (buf) {
+            cx->runtime()->geckoProfiler().markEvent(buf.get());
+        }
+    }
+
     // RecompileInfoVector has inline space for at least one element.
     RecompileInfoVector scripts;
     MOZ_ASSERT(script->hasIonScript());
@@ -3276,7 +3268,7 @@ jit::Invalidate(JSContext* cx, JSScript* script, bool resetUses, bool cancelOffT
 }
 
 static void
-FinishInvalidationOf(FreeOp* fop, JSScript* script, IonScript* ionScript, bool addMarker)
+FinishInvalidationOf(FreeOp* fop, JSScript* script, IonScript* ionScript)
 {
     TypeZone& types = script->zone()->types;
 
@@ -3289,20 +3281,16 @@ FinishInvalidationOf(FreeOp* fop, JSScript* script, IonScript* ionScript, bool a
     // true. In this case we have to wait until destroying it.
     if (!ionScript->invalidated())
         jit::IonScript::Destroy(fop, ionScript);
-
-    // Register invalidation with profiler, if appropriate.
-    if (addMarker)
-        MarkJitProfilerEvent(fop->runtime(), script, "Invalidate (GC)");
 }
 
 void
-jit::FinishInvalidation(FreeOp* fop, JSScript* script, bool addMarker)
+jit::FinishInvalidation(FreeOp* fop, JSScript* script)
 {
     // In all cases, nullptr out script->ion to avoid re-entry.
     if (script->hasIonScript()) {
         IonScript* ion = script->ionScript();
         script->setIonScript(nullptr, nullptr);
-        FinishInvalidationOf(fop, script, ion, addMarker);
+        FinishInvalidationOf(fop, script, ion);
     }
 }
 
@@ -3318,8 +3306,6 @@ jit::ForbidCompilation(JSContext* cx, JSScript* script)
         Invalidate(cx, script, false);
 
     script->setIonScript(cx->runtime(), ION_DISABLED_SCRIPT);
-
-    MarkJitProfilerEvent(cx->runtime(), script, "Ion compilation disabled");
 }
 
 AutoFlushICache*
