@@ -181,7 +181,6 @@ def old_configure_options(*options):
     '--enable-gamepad',
     '--enable-gconf',
     '--enable-gczeal',
-    '--enable-gold',
     '--enable-hardware-aec-ns',
     '--enable-icf',
     '--enable-install-strip',
