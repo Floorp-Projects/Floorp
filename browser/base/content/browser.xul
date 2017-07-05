@@ -476,7 +476,7 @@
                            command="PageAction:emailLink"/>
             <toolbarbutton id="page-action-send-to-device-button"
                            class="subviewbutton subviewbutton-iconic subviewbutton-nav"
-                           label="&sendToDevice.label;"
+                           label="&sendToDevice.label2;"
                            closemenu="none"
                            oncommand="gPageActionButton.showSendToDeviceView(this);"/>
           </vbox>
