@@ -31,26 +31,26 @@ function run_test() {
 add_task(async function test_prefs() {
   let addon1 = "addon1", addon2 = "addon2";
 
-  GMPScope.GMPPrefs.set(GMPScope.GMPPrefs.KEY_URL, "http://not-really-used");
-  GMPScope.GMPPrefs.set(GMPScope.GMPPrefs.KEY_URL_OVERRIDE, "http://not-really-used-2");
-  GMPScope.GMPPrefs.set(GMPScope.GMPPrefs.KEY_PLUGIN_LAST_UPDATE, "1", addon1);
-  GMPScope.GMPPrefs.set(GMPScope.GMPPrefs.KEY_PLUGIN_VERSION, "2", addon1);
-  GMPScope.GMPPrefs.set(GMPScope.GMPPrefs.KEY_PLUGIN_LAST_UPDATE, "3", addon2);
-  GMPScope.GMPPrefs.set(GMPScope.GMPPrefs.KEY_PLUGIN_VERSION, "4", addon2);
-  GMPScope.GMPPrefs.set(GMPScope.GMPPrefs.KEY_PLUGIN_AUTOUPDATE, false, addon2);
-  GMPScope.GMPPrefs.set(GMPScope.GMPPrefs.KEY_CERT_CHECKATTRS, true);
+  GMPScope.GMPPrefs.setString(GMPScope.GMPPrefs.KEY_URL, "http://not-really-used");
+  GMPScope.GMPPrefs.setString(GMPScope.GMPPrefs.KEY_URL_OVERRIDE, "http://not-really-used-2");
+  GMPScope.GMPPrefs.setInt(GMPScope.GMPPrefs.KEY_PLUGIN_LAST_UPDATE, 1, addon1);
+  GMPScope.GMPPrefs.setString(GMPScope.GMPPrefs.KEY_PLUGIN_VERSION, "2", addon1);
+  GMPScope.GMPPrefs.setInt(GMPScope.GMPPrefs.KEY_PLUGIN_LAST_UPDATE, 3, addon2);
+  GMPScope.GMPPrefs.setInt(GMPScope.GMPPrefs.KEY_PLUGIN_VERSION, 4, addon2);
+  GMPScope.GMPPrefs.setBool(GMPScope.GMPPrefs.KEY_PLUGIN_AUTOUPDATE, false, addon2);
+  GMPScope.GMPPrefs.setBool(GMPScope.GMPPrefs.KEY_CERT_CHECKATTRS, true);
 
-  do_check_eq(GMPScope.GMPPrefs.get(GMPScope.GMPPrefs.KEY_URL), "http://not-really-used");
-  do_check_eq(GMPScope.GMPPrefs.get(GMPScope.GMPPrefs.KEY_URL_OVERRIDE),
+  do_check_eq(GMPScope.GMPPrefs.getString(GMPScope.GMPPrefs.KEY_URL), "http://not-really-used");
+  do_check_eq(GMPScope.GMPPrefs.getString(GMPScope.GMPPrefs.KEY_URL_OVERRIDE),
               "http://not-really-used-2");
-  do_check_eq(GMPScope.GMPPrefs.get(GMPScope.GMPPrefs.KEY_PLUGIN_LAST_UPDATE, "", addon1), "1");
-  do_check_eq(GMPScope.GMPPrefs.get(GMPScope.GMPPrefs.KEY_PLUGIN_VERSION, "", addon1), "2");
-  do_check_eq(GMPScope.GMPPrefs.get(GMPScope.GMPPrefs.KEY_PLUGIN_LAST_UPDATE, "", addon2), "3");
-  do_check_eq(GMPScope.GMPPrefs.get(GMPScope.GMPPrefs.KEY_PLUGIN_VERSION, "", addon2), "4");
-  do_check_eq(GMPScope.GMPPrefs.get(GMPScope.GMPPrefs.KEY_PLUGIN_AUTOUPDATE, undefined, addon2),
+  do_check_eq(GMPScope.GMPPrefs.getInt(GMPScope.GMPPrefs.KEY_PLUGIN_LAST_UPDATE, "", addon1), 1);
+  do_check_eq(GMPScope.GMPPrefs.getString(GMPScope.GMPPrefs.KEY_PLUGIN_VERSION, "", addon1), "2");
+  do_check_eq(GMPScope.GMPPrefs.getInt(GMPScope.GMPPrefs.KEY_PLUGIN_LAST_UPDATE, "", addon2), 3);
+  do_check_eq(GMPScope.GMPPrefs.getInt(GMPScope.GMPPrefs.KEY_PLUGIN_VERSION, "", addon2), 4);
+  do_check_eq(GMPScope.GMPPrefs.getBool(GMPScope.GMPPrefs.KEY_PLUGIN_AUTOUPDATE, undefined, addon2),
               false);
-  do_check_true(GMPScope.GMPPrefs.get(GMPScope.GMPPrefs.KEY_CERT_CHECKATTRS));
-  GMPScope.GMPPrefs.set(GMPScope.GMPPrefs.KEY_PLUGIN_AUTOUPDATE, true, addon2);
+  do_check_true(GMPScope.GMPPrefs.getBool(GMPScope.GMPPrefs.KEY_CERT_CHECKATTRS));
+  GMPScope.GMPPrefs.setBool(GMPScope.GMPPrefs.KEY_PLUGIN_AUTOUPDATE, true, addon2);
 });
 
 /**
@@ -176,12 +176,12 @@ add_test(function test_checkForAddons_bad_ssl() {
   // Add random stuff that cause CertUtil to require https.
   //
   let PREF_KEY_URL_OVERRIDE_BACKUP =
-    Preferences.get(GMPScope.GMPPrefs.KEY_URL_OVERRIDE, undefined);
+    Preferences.get(GMPScope.GMPPrefs.KEY_URL_OVERRIDE, "");
   Preferences.reset(GMPScope.GMPPrefs.KEY_URL_OVERRIDE);
 
   let CERTS_BRANCH_DOT_ONE = GMPScope.GMPPrefs.KEY_CERTS_BRANCH + ".1";
   let PREF_CERTS_BRANCH_DOT_ONE_BACKUP =
-    Preferences.get(CERTS_BRANCH_DOT_ONE, undefined);
+    Preferences.get(CERTS_BRANCH_DOT_ONE, "");
   Services.prefs.setCharPref(CERTS_BRANCH_DOT_ONE, "funky value");
 
 
@@ -462,13 +462,13 @@ async function test_checkForAddons_installAddon(id, includeSize, wantInstallReje
     do_check_eq(readData, data);
 
     // Make sure the prefs are set correctly
-    do_check_true(!!GMPScope.GMPPrefs.get(
+    do_check_true(!!GMPScope.GMPPrefs.getInt(
       GMPScope.GMPPrefs.KEY_PLUGIN_LAST_UPDATE, "", gmpAddon.id));
-    do_check_eq(GMPScope.GMPPrefs.get(GMPScope.GMPPrefs.KEY_PLUGIN_VERSION, "",
-                                      gmpAddon.id),
+    do_check_eq(GMPScope.GMPPrefs.getString(GMPScope.GMPPrefs.KEY_PLUGIN_VERSION, "",
+                                            gmpAddon.id),
                 "1.1");
-    do_check_eq(GMPScope.GMPPrefs.get(GMPScope.GMPPrefs.KEY_PLUGIN_ABI, "",
-                                      gmpAddon.id),
+    do_check_eq(GMPScope.GMPPrefs.getString(GMPScope.GMPPrefs.KEY_PLUGIN_ABI, "",
+                                            gmpAddon.id),
                 UpdateUtils.ABI);
     // Make sure it reports as being installed
     do_check_true(gmpAddon.isInstalled);
@@ -494,7 +494,7 @@ add_task(test_checkForAddons_installAddon.bind(null, "3", true, true));
  * Tests simpleCheckAndInstall when autoupdate is disabled for a GMP
  */
 add_task(async function test_simpleCheckAndInstall_autoUpdateDisabled() {
-  GMPScope.GMPPrefs.set(GMPScope.GMPPrefs.KEY_PLUGIN_AUTOUPDATE, false, GMPScope.OPEN_H264_ID);
+  GMPScope.GMPPrefs.setBool(GMPScope.GMPPrefs.KEY_PLUGIN_AUTOUPDATE, false, GMPScope.OPEN_H264_ID);
   let responseXML =
     "<?xml version=\"1.0\"?>" +
     "<updates>" +
@@ -513,7 +513,7 @@ add_task(async function test_simpleCheckAndInstall_autoUpdateDisabled() {
   let result = await installManager.simpleCheckAndInstall();
   do_check_eq(result.status, "nothing-new-to-install");
   Preferences.reset(GMPScope.GMPPrefs.KEY_UPDATE_LAST_CHECK);
-  GMPScope.GMPPrefs.set(GMPScope.GMPPrefs.KEY_PLUGIN_AUTOUPDATE, true, GMPScope.OPEN_H264_ID);
+  GMPScope.GMPPrefs.setBool(GMPScope.GMPPrefs.KEY_PLUGIN_AUTOUPDATE, true, GMPScope.OPEN_H264_ID);
 });
 
 /**

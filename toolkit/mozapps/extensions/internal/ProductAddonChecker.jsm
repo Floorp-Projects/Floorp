@@ -232,7 +232,7 @@ function parseXML(document) {
  */
 function downloadLocalConfig() {
 
-  if (!GMPPrefs.get(GMPPrefs.KEY_UPDATE_ENABLED, true)) {
+  if (!GMPPrefs.getBool(GMPPrefs.KEY_UPDATE_ENABLED, true)) {
     logger.info("Updates are disabled via media.gmp-manager.updateEnabled");
     return Promise.resolve({usedFallback: true, gmpAddons: []});
   }
@@ -426,7 +426,7 @@ const ProductAddonChecker = {
    *         exception in case of error.
    */
   getProductAddonList(url, allowNonBuiltIn = false, allowedCerts = null) {
-    if (!GMPPrefs.get(GMPPrefs.KEY_UPDATE_ENABLED, true)) {
+    if (!GMPPrefs.getBool(GMPPrefs.KEY_UPDATE_ENABLED, true)) {
       logger.info("Updates are disabled via media.gmp-manager.updateEnabled");
       return Promise.resolve({usedFallback: true, gmpAddons: []});
     }
