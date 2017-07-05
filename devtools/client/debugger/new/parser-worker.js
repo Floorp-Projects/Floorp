@@ -29952,6 +29952,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	          }
 
 	          this.worker.removeEventListener("message", listener);
+
 	          if (result.error) {
 	            reject(result.error);
 	          } else {
@@ -30540,7 +30541,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	        symbols.functions.push({
 	          name: (0, _getFunctionName2.default)(path),
 	          location: path.node.loc,
-	          parameterNames: getFunctionParameterNames(path)
+	          parameterNames: getFunctionParameterNames(path),
+	          identifier: path.node.id
 	        });
 	      }
 
@@ -30803,7 +30805,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	    enter(path) {
 	      var node = path.node;
 
-	      if (t.isMemberExpression(node) && node.property.name === token && (0, _helpers.nodeContainsPosition)(node, location)) {
+	      if (!(0, _helpers.nodeContainsPosition)(node, location)) {
+	        return path.skip();
+	      }
+
+	      if (t.isMemberExpression(node) && node.property.name === token) {
 	        var memberExpression = (0, _helpers.getMemberExpression)(node);
 	        expression = {
 	          expression: memberExpression,
@@ -30837,7 +30843,11 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	  (0, _ast.traverseAst)(source, {
 	    enter(path) {
-	      if ((0, _helpers.isLexicalScope)(path) && (0, _helpers.nodeContainsPosition)(path.node, location)) {
+	      if (!(0, _helpers.nodeContainsPosition)(path.node, location)) {
+	        return path.skip();
+	      }
+
+	      if ((0, _helpers.isLexicalScope)(path)) {
 	        closestPath = path;
 	      }
 	    }
@@ -30855,9 +30865,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	  (0, _ast.traverseAst)(source, {
 	    enter(path) {
-	      if ((0, _helpers.nodeContainsPosition)(path.node, location)) {
-	        closestPath = path;
+	      if (!(0, _helpers.nodeContainsPosition)(path.node, location)) {
+	        return path.skip();
 	      }
+	      closestPath = path;
 	    }
 	  });
 
@@ -30961,31 +30972,23 @@ return /******/ (function(modules) { // webpackBootstrap
 	  value: true
 	});
 
+	var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+
 	var _get = __webpack_require__(1073);
 
 	var _get2 = _interopRequireDefault(_get);
 
 	var _helpers = __webpack_require__(1052);
 
-	var _ast = __webpack_require__(1051);
+	var _getSymbols = __webpack_require__(1050);
+
+	var _getSymbols2 = _interopRequireDefault(_getSymbols);
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-	/**
-	 * Returns all functions (declarations, expressions, arrows) for the given
-	 * source
-	 */
 	function findFunctions(source) {
-	  var fns = [];
-	  (0, _ast.traverseAst)(source, {
-	    enter(path) {
-	      if ((0, _helpers.isFunction)(path)) {
-	        fns.push(path);
-	      }
-	    }
-	  });
-
-	  return fns;
+	  var symbols = (0, _getSymbols2.default)(source);
+	  return symbols.functions;
 	}
 
 	/**
@@ -30994,19 +30997,18 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * but before the function parameters.
 	 */
 
-
-	var getLocation = path => {
-	  var location = Object.assign({}, (0, _get2.default)("node.loc", path));
+	function getLocation(func) {
+	  var location = _extends({}, func.location);
 
 	  // if the function has an identifier, start the block after it so the
 	  // identifier is included in the "scope" of its parent
-	  var identifierEnd = (0, _get2.default)("node.id.loc.end", path);
+	  var identifierEnd = (0, _get2.default)("identifier.loc.end", func);
 	  if (identifierEnd) {
 	    location.start = identifierEnd;
 	  }
 
 	  return location;
-	};
+	}
 
 	/**
 	 * Reduces an array of locations to remove items that are completely enclosed
