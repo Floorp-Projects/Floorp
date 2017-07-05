@@ -53,10 +53,11 @@
  *
  * - On MacOSX, the system libc has a zone allocator, which allows us to
  *   hook custom malloc implementation functions without exporting them.
- *   However, since we want things in Firefox to skip the system zone
- *   allocator, the malloc implementation functions are all exported
- *   unprefixed, as well as duplication functions.
- *   Jemalloc-specific functions are also left unprefixed.
+ *   The malloc implementation functions are all prefixed with "je_" and used
+ *   this way from the custom zone allocator. They are not exported.
+ *   Duplication functions are not included, since they will call the custom
+ *   zone allocator anyways. Jemalloc-specific functions are also left
+ *   unprefixed.
  *
  * - On Android and Gonk, all functions are left unprefixed. Additionally,
  *   C++ allocation functions (operator new/delete) are also exported and
@@ -133,7 +134,7 @@
 #    define mozmem_jemalloc_impl(a)   je_ ## a
 #  else
 #    define MOZ_JEMALLOC_API MOZ_EXTERN_C MFBT_API
-#    if defined(XP_WIN)
+#    if (defined(XP_WIN) || defined(XP_DARWIN))
 #      if defined(MOZ_REPLACE_MALLOC)
 #        define mozmem_malloc_impl(a)   a ## _impl
 #      else
