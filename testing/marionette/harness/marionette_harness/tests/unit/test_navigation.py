@@ -3,6 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import contextlib
+import os
 import urllib
 
 from marionette_driver import By, errors, expected, Wait
@@ -16,6 +17,8 @@ from marionette_harness import (
     WindowManagerMixin,
 )
 
+here = os.path.abspath(os.path.dirname(__file__))
+
 
 def inline(doc):
     return "data:text/html;charset=utf-8,%s" % urllib.quote(doc)
@@ -26,6 +29,9 @@ class BaseNavigationTestCase(WindowManagerMixin, MarionetteTestCase):
     def setUp(self):
         super(BaseNavigationTestCase, self).setUp()
 
+        file_path = os.path.join(here, 'data', 'test.html').replace("\\", "/")
+
+        self.test_page_file_url = "file:///{}".format(file_path)
         self.test_page_frameset = self.marionette.absolute_url("frameset.html")
         self.test_page_insecure = self.fixtures.where_is("test.html", on="https")
         self.test_page_not_remote = "about:robots"
@@ -191,6 +197,25 @@ class TestNavigate(BaseNavigationTestCase):
         self.assertTrue(self.marionette.execute_script(
             "return window.visited", sandbox=None))
 
+    @skip_if_mobile("Test file is only located on host machine")
+    def test_navigate_file_url(self):
+        self.marionette.navigate(self.test_page_file_url)
+        self.marionette.find_element(By.ID, "file-url")
+        self.marionette.navigate(self.test_page_remote)
+
+    @run_if_e10s("Requires e10s mode enabled")
+    @skip_if_mobile("Test file is only located on host machine")
+    def test_navigate_file_url_remoteness_change(self):
+        self.marionette.navigate("about:robots")
+        self.assertFalse(self.is_remote_tab)
+
+        self.marionette.navigate(self.test_page_file_url)
+        self.assertTrue(self.is_remote_tab)
+        self.marionette.find_element(By.ID, "file-url")
+
+        self.marionette.navigate("about:robots")
+        self.assertFalse(self.is_remote_tab)
+
     @skip_if_mobile("Bug 1334095 - Timeout: No new tab has been opened")
     def test_about_blank_for_new_docshell(self):
         self.assertEqual(self.marionette.get_url(), "about:blank")
@@ -331,6 +356,15 @@ class TestBackForwardNavigation(BaseNavigationTestCase):
             {"url": "{}#23".format(self.test_page_remote)},
             {"url": self.test_page_remote},
             {"url": "{}#42".format(self.test_page_remote)},
+        ]
+        self.run_bfcache_test(test_pages)
+
+    @skip_if_mobile("Test file is only located on host machine")
+    def test_file_url(self):
+        test_pages = [
+            {"url": self.test_page_remote},
+            {"url": self.test_page_file_url},
+            {"url": self.test_page_remote},
         ]
         self.run_bfcache_test(test_pages)
 
@@ -511,6 +545,14 @@ class TestRefresh(BaseNavigationTestCase):
 
         self.marionette.refresh()
         self.marionette.find_element(By.NAME, "third")
+
+    @skip_if_mobile("Test file is only located on host machine")
+    def test_file_url(self):
+        self.marionette.navigate(self.test_page_file_url)
+        self.assertEqual(self.test_page_file_url, self.marionette.get_url())
+
+        self.marionette.refresh()
+        self.assertEqual(self.test_page_file_url, self.marionette.get_url())
 
     def test_image(self):
         image = self.marionette.absolute_url('black.png')
