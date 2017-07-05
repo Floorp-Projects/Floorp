@@ -2,7 +2,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import os
 import platform
 
 from mozboot.base import BaseBootstrapper
@@ -109,37 +108,15 @@ class CentOSFedoraBootstrapper(StyloInstall, BaseBootstrapper):
             self.run_as_root(['rpm', '-ivh', yasm])
 
     def ensure_mobile_android_packages(self, artifact_mode=False):
-        import android
-
         # Install Android specific packages.
         self.dnf_install(*self.mobile_android_packages)
 
-        # Fetch Android SDK and NDK.
-        mozbuild_path = os.environ.get('MOZBUILD_STATE_PATH', os.path.expanduser(os.path.join('~', '.mozbuild')))
-        self.sdk_path = os.environ.get('ANDROID_SDK_HOME', os.path.join(mozbuild_path, 'android-sdk-linux'))
-        self.ndk_path = os.environ.get('ANDROID_NDK_HOME', os.path.join(mozbuild_path, 'android-ndk-r11c'))
-        self.sdk_url = 'https://dl.google.com/android/android-sdk_r24.0.1-linux.tgz'
-        self.ndk_url = android.android_ndk_url('linux')
-
-        android.ensure_android_sdk_and_ndk(path=mozbuild_path,
-                                           sdk_path=self.sdk_path, sdk_url=self.sdk_url,
-                                           ndk_path=self.ndk_path, ndk_url=self.ndk_url,
-                                           artifact_mode=artifact_mode)
-
-        # Most recent version of build-tools appears to be 23.0.1 on Fedora
-        packages = [p for p in android.ANDROID_PACKAGES if not p.startswith('build-tools')]
-        packages.append('build-tools-23.0.1')
-
-        # 3. We expect the |android| tool to be at
-        # ~/.mozbuild/android-sdk-linux/tools/android.
-        android_tool = os.path.join(self.sdk_path, 'tools', 'android')
-        android.ensure_android_packages(android_tool=android_tool, packages=packages)
+        import android
+        android.ensure_android('linux', artifact_mode=artifact_mode)
 
     def suggest_mobile_android_mozconfig(self, artifact_mode=False):
         import android
-        android.suggest_mozconfig(sdk_path=self.sdk_path,
-                                  ndk_path=self.ndk_path,
-                                  artifact_mode=artifact_mode)
+        android.suggest_mozconfig('linux', artifact_mode=artifact_mode)
 
     def suggest_mobile_android_artifact_mode_mozconfig(self):
         self.suggest_mobile_android_mozconfig(artifact_mode=True)
