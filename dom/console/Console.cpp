@@ -2085,10 +2085,7 @@ Console::StopTimer(JSContext* aCx, const JS::Value& aName,
   aTimerLabel = key;
 
   DOMHighResTimeStamp value = 0;
-  if (auto entry = mTimerRegistry.Lookup(key)) {
-    value = entry.Data();
-    entry.Remove();
-  } else {
+  if (!mTimerRegistry.Remove(key, &value)) {
     NS_WARNING("mTimerRegistry entry not found");
     return eTimerDoesntExist;
   }
