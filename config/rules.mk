@@ -932,6 +932,10 @@ define CARGO_BUILD
 $(call RUN_CARGO,build,$(1))
 endef
 
+define CARGO_CHECK
+$(call RUN_CARGO,check,$(1))
+endef
+
 cargo_linker_env_var := CARGO_TARGET_$(RUST_TARGET_ENV_NAME)_LINKER
 
 # Don't define a custom linker on Windows, as it's difficult to have a
@@ -973,6 +977,12 @@ force-cargo-library-build:
 	$(call CARGO_BUILD,$(target_cargo_env_vars)) --lib $(cargo_target_flag) $(rust_features_flag)
 
 $(RUST_LIBRARY_FILE): force-cargo-library-build
+
+force-cargo-library-check:
+	$(call CARGO_CHECK,$(target_cargo_env_vars)) --lib $(cargo_target_flag) $(rust_features_flag)
+else
+force-cargo-library-check:
+	@true
 endif # RUST_LIBRARY_FILE
 
 ifdef HOST_RUST_LIBRARY_FILE
@@ -986,6 +996,12 @@ force-cargo-host-library-build:
 	$(call CARGO_BUILD) --lib $(cargo_host_flag) $(host_rust_features_flag)
 
 $(HOST_RUST_LIBRARY_FILE): force-cargo-host-library-build
+
+force-cargo-host-library-check:
+	$(call CARGO_CHECK) --lib $(cargo_host_flag) $(host_rust_features_flag)
+else
+force-cargo-host-library-check:
+	@true
 endif # HOST_RUST_LIBRARY_FILE
 
 ifdef RUST_PROGRAMS
@@ -994,6 +1010,12 @@ force-cargo-program-build:
 	$(call CARGO_BUILD,$(target_cargo_env_vars)) $(addprefix --bin ,$(RUST_CARGO_PROGRAMS)) $(cargo_target_flag)
 
 $(RUST_PROGRAMS): force-cargo-program-build
+
+force-cargo-program-check:
+	$(call CARGO_CHECK,$(target_cargo_env_vars)) $(addprefix --bin ,$(RUST_CARGO_PROGRAMS)) $(cargo_target_flag)
+else
+force-cargo-program-check:
+	@true
 endif # RUST_PROGRAMS
 ifdef HOST_RUST_PROGRAMS
 force-cargo-host-program-build:
@@ -1001,6 +1023,13 @@ force-cargo-host-program-build:
 	$(call CARGO_BUILD) $(addprefix --bin ,$(HOST_RUST_CARGO_PROGRAMS)) $(cargo_host_flag)
 
 $(HOST_RUST_PROGRAMS): force-cargo-host-program-build
+
+force-cargo-host-program-check:
+	$(REPORT_BUILD)
+	$(call CARGO_CHECK) $(addprefix --bin ,$(HOST_RUST_CARGO_PROGRAMS)) $(cargo_host_flag)
+else
+force-cargo-host-program-check:
+	@true
 endif # HOST_RUST_PROGRAMS
 
 $(SOBJS):
