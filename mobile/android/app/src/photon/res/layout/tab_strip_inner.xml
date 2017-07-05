@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<merge xmlns:android="http://schemas.android.com/apk/res/android"
+       xmlns:gecko="http://schemas.android.com/apk/res-auto">
+
+    <org.mozilla.gecko.tabs.TabStripView
+        android:id="@+id/tab_strip"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:paddingTop="8dp"/>
+
+    <!-- The right margin creates a "dead area" on the right side of the button
+         which we compensate for with a touch delegate. See TabStrip -->
+    <org.mozilla.gecko.widget.themed.ThemedImageButton
+        android:id="@+id/tablet_add_tab"
+        style="@style/UrlBar.ImageButton"
+        android:layout_width="@dimen/tablet_tab_strip_height"
+        android:src="@drawable/tab_new"
+        gecko:drawableTintList="@color/tab_new_tab_strip_colors"
+        android:contentDescription="@string/new_tab"
+        android:layout_marginRight="9dp"
+        android:background="@drawable/tab_strip_button"/>
+
+</merge>
