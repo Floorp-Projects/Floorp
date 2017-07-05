@@ -101,3 +101,7 @@ fuzzy(1,1) == mouse-click-twice-float-details.html float-details.html # Bug 1316
 == details-before.html single-summary.html
 == open-details-after.html open-single-summary.html
 == open-details-before.html open-single-summary.html
+
+# Move summary element
+== move-float-summary-to-different-details.html move-float-summary-to-different-details-ref.html
+== move-position-absolute-summary-to-different-details.html move-position-absolute-summary-to-different-details-ref.html
