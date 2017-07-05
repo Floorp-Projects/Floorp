@@ -154,7 +154,6 @@ protected:
     , mCodeNameIndex(CODE_NAME_INDEX_UNKNOWN)
     , mIsRepeat(false)
     , mIsComposing(false)
-    , mIsReserved(false)
     , mIsSynthesizedByTIP(false)
     , mEditCommandsForSingleLineEditorInitialized(false)
     , mEditCommandsForMultiLineEditorInitialized(false)
@@ -184,15 +183,16 @@ public:
     , mCodeNameIndex(CODE_NAME_INDEX_UNKNOWN)
     , mIsRepeat(false)
     , mIsComposing(false)
-    , mIsReserved(false)
     , mIsSynthesizedByTIP(false)
     , mEditCommandsForSingleLineEditorInitialized(false)
     , mEditCommandsForMultiLineEditorInitialized(false)
     , mEditCommandsForRichTextEditorInitialized(false)
   {
     // If this is a keyboard event on a plugin, it shouldn't fired on content.
-    mFlags.mOnlySystemGroupDispatchInContent =
-      mFlags.mNoCrossProcessBoundaryForwarding = IsKeyEventOnPlugin();
+    if (IsKeyEventOnPlugin()) {
+      mFlags.mOnlySystemGroupDispatchInContent = true;
+      StopCrossProcessForwarding();
+    }
   }
 
   static bool IsKeyDownOrKeyDownOnPlugin(EventMessage aMessage)
@@ -296,9 +296,6 @@ public:
   // composition.  This is initialized by EventStateManager.  So, key event
   // dispatchers don't need to initialize this.
   bool mIsComposing;
-  // Indicates if the key combination is reserved by chrome.  This is set by
-  // nsXBLWindowKeyHandler at capturing phase of the default event group.
-  bool mIsReserved;
   // Indicates whether the event is synthesized from Text Input Processor
   // or an actual event from nsAppShell.
   bool mIsSynthesizedByTIP;
@@ -484,7 +481,6 @@ public:
     mAlternativeCharCodes = aEvent.mAlternativeCharCodes;
     mIsRepeat = aEvent.mIsRepeat;
     mIsComposing = aEvent.mIsComposing;
-    mIsReserved = aEvent.mIsReserved;
     mAccessKeyForwardedToChild = aEvent.mAccessKeyForwardedToChild;
     mKeyNameIndex = aEvent.mKeyNameIndex;
     mCodeNameIndex = aEvent.mCodeNameIndex;
