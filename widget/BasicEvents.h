@@ -154,6 +154,10 @@ public:
   // for when the parent process need the know first how the event was used
   // by content before handling it itself.
   bool mWantReplyFromContentProcess : 1;
+  // If mPostedToRemoteProcess is true, the event has been posted to the
+  // remote process (but it's not handled yet if it's not a duplicated event
+  // instance).
+  bool mPostedToRemoteProcess : 1;
 
   // If the event is being handled in target phase, returns true.
   inline bool InTargetPhase() const
@@ -223,6 +227,7 @@ public:
    */
   inline void StopCrossProcessForwarding()
   {
+    MOZ_ASSERT(!mPostedToRemoteProcess);
     mNoRemoteProcessDispatch = true;
     mWantReplyFromContentProcess = false;
   }
@@ -238,6 +243,7 @@ public:
    */
   inline void MarkAsWaitingReplyFromRemoteProcess()
   {
+    MOZ_ASSERT(!mPostedToRemoteProcess);
     // When this is called, it means that event handlers in this process need
     // a reply from content in a remote process.  So, callers should stop
     // propagation in this process first.
@@ -262,6 +268,7 @@ public:
   {
     mNoRemoteProcessDispatch = true;
     mWantReplyFromContentProcess = true;
+    mPostedToRemoteProcess = false;
   }
   /**
    * Return true if the event has already been handled in the remote process.
@@ -279,11 +286,41 @@ public:
     return IsWaitingReplyFromRemoteProcess();
   }
   /**
+   * Mark the event has already posted to a remote process.
+   */
+  inline void MarkAsPostedToRemoteProcess()
+  {
+    MOZ_ASSERT(!IsCrossProcessForwardingStopped());
+    mPostedToRemoteProcess = true;
+  }
+  /**
+   * Reset the cross process dispatching state.  This should be used when a
+   * process receives the event because the state is in the sender.
+   */
+  inline void ResetCrossProcessDispatchingState()
+  {
+    MOZ_ASSERT(!IsCrossProcessForwardingStopped());
+    mPostedToRemoteProcess = false;
+  }
+  /**
+   * Return true if the event has been posted to a remote process.
+   * Note that MarkAsPostedToRemoteProcess() is called by
+   * ParamTraits<mozilla::WidgetEvent>.  Therefore, it *might* be possible
+   * that posting the event failed even if this returns true.  But that must
+   * really rare.  If that'd be problem for you, you should unmark this in
+   * TabParent or somewhere.
+   */
+  inline bool HasBeenPostedToRemoteProcess() const
+  {
+    return mPostedToRemoteProcess;
+  }
+  /**
    * Mark the event is reserved by chrome.  I.e., shouldn't be dispatched to
    * content because it shouldn't be cancelable.
    */
   inline void MarkAsReservedByChrome()
   {
+    MOZ_ASSERT(!mPostedToRemoteProcess);
     mIsReservedByChrome = true;
     // For reserved commands (such as Open New Tab), we don't need to wait for
     // the content to answer, neither to give a chance for content to override
@@ -623,6 +660,28 @@ public:
   inline bool WantReplyFromContentProcess() const
   {
     return mFlags.WantReplyFromContentProcess();
+  }
+  /**
+   * Mark the event has already posted to a remote process.
+   */
+  inline void MarkAsPostedToRemoteProcess()
+  {
+    mFlags.MarkAsPostedToRemoteProcess();
+  }
+  /**
+   * Reset the cross process dispatching state.  This should be used when a
+   * process receives the event because the state is in the sender.
+   */
+  inline void ResetCrossProcessDispatchingState()
+  {
+    mFlags.ResetCrossProcessDispatchingState();
+  }
+  /**
+   * Return true if the event has been posted to a remote process.
+   */
+  inline bool HasBeenPostedToRemoteProcess() const
+  {
+    return mFlags.HasBeenPostedToRemoteProcess();
   }
   /**
    * Mark the event is reserved by chrome.  I.e., shouldn't be dispatched to

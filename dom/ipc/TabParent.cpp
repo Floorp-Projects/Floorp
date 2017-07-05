@@ -818,7 +818,11 @@ TabParent::HandleAccessKey(const WidgetKeyboardEvent& aEvent,
                            const int32_t& aModifierMask)
 {
   if (!mIsDestroyed) {
-    Unused << SendHandleAccessKey(aEvent, aCharCodes, aModifierMask);
+    // Note that we don't need to mark aEvent is posted to a remote process
+    // because the event may be dispatched to it as normal keyboard event.
+    // Therefore, we should use local copy to send it.
+    WidgetKeyboardEvent localEvent(aEvent);
+    Unused << SendHandleAccessKey(localEvent, aCharCodes, aModifierMask);
   }
 }
 
@@ -1083,11 +1087,11 @@ TabParent::SendKeyEvent(const nsAString& aType,
                                          aModifiers, aPreventDefault);
 }
 
-bool
+void
 TabParent::SendRealMouseEvent(WidgetMouseEvent& aEvent)
 {
   if (mIsDestroyed) {
-    return false;
+    return;
   }
   aEvent.mRefPoint += GetChildProcessOffset();
 
@@ -1114,13 +1118,20 @@ TabParent::SendRealMouseEvent(WidgetMouseEvent& aEvent)
 
   if (eMouseMove == aEvent.mMessage) {
     if (aEvent.mReason == WidgetMouseEvent::eSynthesized) {
-      return SendSynthMouseMoveEvent(aEvent, guid, blockId);
-    } else {
-      return SendRealMouseMoveEvent(aEvent, guid, blockId);
+      DebugOnly<bool> ret = SendSynthMouseMoveEvent(aEvent, guid, blockId);
+      NS_WARNING_ASSERTION(ret, "SendSynthMouseMoveEvent() failed");
+      MOZ_ASSERT(!ret || aEvent.HasBeenPostedToRemoteProcess());
+      return;
     }
+    DebugOnly<bool> ret = SendRealMouseMoveEvent(aEvent, guid, blockId);
+    NS_WARNING_ASSERTION(ret, "SendRealMouseMoveEvent() failed");
+    MOZ_ASSERT(!ret || aEvent.HasBeenPostedToRemoteProcess());
+    return;
   }
 
-  return SendRealMouseButtonEvent(aEvent, guid, blockId);
+  DebugOnly<bool> ret = SendRealMouseButtonEvent(aEvent, guid, blockId);
+  NS_WARNING_ASSERTION(ret, "SendRealMouseButtonEvent() failed");
+  MOZ_ASSERT(!ret || aEvent.HasBeenPostedToRemoteProcess());
 }
 
 LayoutDeviceToCSSScale
@@ -1135,15 +1146,18 @@ TabParent::GetLayoutDeviceToCSSScale()
     : 0.0f);
 }
 
-bool
+void
 TabParent::SendRealDragEvent(WidgetDragEvent& aEvent, uint32_t aDragAction,
                              uint32_t aDropEffect)
 {
   if (mIsDestroyed) {
-    return false;
+    return;
   }
   aEvent.mRefPoint += GetChildProcessOffset();
-  return PBrowserParent::SendRealDragEvent(aEvent, aDragAction, aDropEffect);
+  DebugOnly<bool> ret =
+    PBrowserParent::SendRealDragEvent(aEvent, aDragAction, aDropEffect);
+  NS_WARNING_ASSERTION(ret, "PBrowserParent::SendRealDragEvent() failed");
+  MOZ_ASSERT(!ret || aEvent.HasBeenPostedToRemoteProcess());
 }
 
 LayoutDevicePoint
@@ -1152,18 +1166,21 @@ TabParent::AdjustTapToChildWidget(const LayoutDevicePoint& aPoint)
   return aPoint + LayoutDevicePoint(GetChildProcessOffset());
 }
 
-bool
+void
 TabParent::SendMouseWheelEvent(WidgetWheelEvent& aEvent)
 {
   if (mIsDestroyed) {
-    return false;
+    return;
   }
 
   ScrollableLayerGuid guid;
   uint64_t blockId;
   ApzAwareEventRoutingToChild(&guid, &blockId, nullptr);
   aEvent.mRefPoint += GetChildProcessOffset();
-  return PBrowserParent::SendMouseWheelEvent(aEvent, guid, blockId);
+  DebugOnly<bool> ret =
+    PBrowserParent::SendMouseWheelEvent(aEvent, guid, blockId);
+  NS_WARNING_ASSERTION(ret, "PBrowserParent::SendMouseWheelEvent() failed");
+  MOZ_ASSERT(!ret || aEvent.HasBeenPostedToRemoteProcess());
 }
 
 mozilla::ipc::IPCResult
@@ -1428,11 +1445,11 @@ TabParent::RecvClearNativeTouchSequence(const uint64_t& aObserverId)
   return IPC_OK();
 }
 
-bool
+void
 TabParent::SendRealKeyEvent(WidgetKeyboardEvent& aEvent)
 {
   if (mIsDestroyed) {
-    return false;
+    return;
   }
   aEvent.mRefPoint += GetChildProcessOffset();
 
@@ -1444,14 +1461,16 @@ TabParent::SendRealKeyEvent(WidgetKeyboardEvent& aEvent)
     aEvent.PreventNativeKeyBindings();
   }
 
-  return PBrowserParent::SendRealKeyEvent(aEvent);
+  DebugOnly<bool> ret = PBrowserParent::SendRealKeyEvent(aEvent);
+  NS_WARNING_ASSERTION(ret, "PBrowserParent::SendRealKeyEvent() failed");
+  MOZ_ASSERT(!ret || aEvent.HasBeenPostedToRemoteProcess());
 }
 
-bool
+void
 TabParent::SendRealTouchEvent(WidgetTouchEvent& aEvent)
 {
   if (mIsDestroyed) {
-    return false;
+    return;
   }
 
   // PresShell::HandleEventInternal adds touches on touch end/cancel.  This
@@ -1472,7 +1491,7 @@ TabParent::SendRealTouchEvent(WidgetTouchEvent& aEvent)
   ApzAwareEventRoutingToChild(&guid, &blockId, &apzResponse);
 
   if (mIsDestroyed) {
-    return false;
+    return;
   }
 
   LayoutDeviceIntPoint offset = GetChildProcessOffset();
@@ -1480,9 +1499,28 @@ TabParent::SendRealTouchEvent(WidgetTouchEvent& aEvent)
     aEvent.mTouches[i]->mRefPoint += offset;
   }
 
-  return (aEvent.mMessage == eTouchMove) ?
-    PBrowserParent::SendRealTouchMoveEvent(aEvent, guid, blockId, apzResponse) :
+  if (aEvent.mMessage == eTouchMove) {
+    DebugOnly<bool> ret =
+      PBrowserParent::SendRealTouchMoveEvent(aEvent, guid, blockId,
+                                             apzResponse);
+    NS_WARNING_ASSERTION(ret,
+                         "PBrowserParent::SendRealTouchMoveEvent() failed");
+    MOZ_ASSERT(!ret || aEvent.HasBeenPostedToRemoteProcess());
+    return;
+  }
+
+  DebugOnly<bool> ret =
     PBrowserParent::SendRealTouchEvent(aEvent, guid, blockId, apzResponse);
+  NS_WARNING_ASSERTION(ret, "PBrowserParent::SendRealTouchEvent() failed");
+  MOZ_ASSERT(!ret || aEvent.HasBeenPostedToRemoteProcess());
+}
+
+void
+TabParent::SendPluginEvent(WidgetPluginEvent& aEvent)
+{
+  DebugOnly<bool> ret = PBrowserParent::SendPluginEvent(aEvent);
+  NS_WARNING_ASSERTION(ret, "PBrowserParent::SendPluginEvent() failed");
+  MOZ_ASSERT(!ret || aEvent.HasBeenPostedToRemoteProcess());
 }
 
 bool
@@ -2052,7 +2090,11 @@ TabParent::SendCompositionEvent(WidgetCompositionEvent& aEvent)
   if (!mContentCache.OnCompositionEvent(aEvent)) {
     return true;
   }
-  return PBrowserParent::SendCompositionEvent(aEvent);
+  if (NS_WARN_IF(!PBrowserParent::SendCompositionEvent(aEvent))) {
+    return false;
+  }
+  MOZ_ASSERT(aEvent.HasBeenPostedToRemoteProcess());
+  return true;
 }
 
 bool
@@ -2069,6 +2111,7 @@ TabParent::SendSelectionEvent(WidgetSelectionEvent& aEvent)
   if (NS_WARN_IF(!PBrowserParent::SendSelectionEvent(aEvent))) {
     return false;
   }
+  MOZ_ASSERT(aEvent.HasBeenPostedToRemoteProcess());
   aEvent.mSucceeded = true;
   return true;
 }
