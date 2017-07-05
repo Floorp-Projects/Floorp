@@ -505,6 +505,7 @@ add_task(async function test_misreconciled_root() {
   let engine = new BookmarksEngine(Service);
   let store = engine._store;
   let server = serverForFoo(engine);
+  await SyncTestingInfrastructure(server);
 
   // Log real hard for this test.
   store._log.trace = store._log.debug;
@@ -549,6 +550,7 @@ add_task(async function test_misreconciled_root() {
   do_check_eq(parentGUIDBefore, parentGUIDAfter);
   do_check_eq(parentIDBefore, parentIDAfter);
 
+  await store.wipe();
   await PlacesSyncUtils.bookmarks.reset();
   await promiseStopServer(server);
 });
