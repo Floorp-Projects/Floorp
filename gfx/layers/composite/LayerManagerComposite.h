@@ -514,7 +514,7 @@ private:
 #endif
 #if defined(MOZ_WIDGET_ANDROID)
 public:
-  virtual void RequestScreenPixels(UiCompositorControllerParent* aController)
+  virtual void RequestScreenPixels(UiCompositorControllerParent* aController) override
   {
     mScreenPixelsTarget = aController;
   }
