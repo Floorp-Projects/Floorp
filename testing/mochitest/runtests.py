@@ -2321,10 +2321,6 @@ toolbar#nav-bar {
             options.e10s = False
         mozinfo.update({"e10s": options.e10s})  # for test manifest parsing.
 
-        # Add flag to mozinfo to indicate that code coverage is enabled.
-        if os.getenv('GCOV_PREFIX') is not None:
-            mozinfo.update({"coverage": True})
-
         self.setTestRoot(options)
 
         # Despite our efforts to clean up servers started by this script, in practice
