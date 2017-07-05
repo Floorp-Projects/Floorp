@@ -7,6 +7,7 @@
 #include "nsCocoaWindow.h"
 
 #include "NativeKeyBindings.h"
+#include "ScreenHelperCocoa.h"
 #include "TextInputHandler.h"
 #include "nsObjCExceptions.h"
 #include "nsCOMPtr.h"
