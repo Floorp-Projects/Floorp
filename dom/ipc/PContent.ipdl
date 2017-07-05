@@ -991,7 +991,8 @@ parent:
                        bool aSizeSpecified,
                        nsCString aFeatures,
                        nsCString aBaseURI,
-                       float aFullZoom)
+                       float aFullZoom,
+                       Principal aTriggeringPrincipal)
         returns (CreatedWindowInfo window);
 
     async CreateWindowInDifferentProcess(
@@ -1004,7 +1005,8 @@ parent:
       nsCString aFeatures,
       nsCString aBaseURI,
       float aFullZoom,
-      nsString aName);
+      nsString aName,
+      Principal aTriggeringPrincipal);
 
     sync GetAndroidSystemInfo()
         returns (AndroidSystemInfo info);
