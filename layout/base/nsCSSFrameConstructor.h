@@ -60,7 +60,7 @@ public:
   friend class mozilla::ServoRestyleManager;
 
   nsCSSFrameConstructor(nsIDocument* aDocument, nsIPresShell* aPresShell);
-  ~nsCSSFrameConstructor(void) {
+  ~nsCSSFrameConstructor() {
     MOZ_ASSERT(mUpdateCount == 0, "Dying in the middle of our own update?");
   }
 
