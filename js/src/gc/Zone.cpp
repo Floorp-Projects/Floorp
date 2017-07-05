@@ -179,7 +179,7 @@ Zone::sweepWeakMaps()
 }
 
 void
-Zone::discardJitCode(FreeOp* fop, bool discardBaselineCode, bool addMarkers)
+Zone::discardJitCode(FreeOp* fop, bool discardBaselineCode)
 {
     if (!jitZone())
         return;
@@ -202,7 +202,7 @@ Zone::discardJitCode(FreeOp* fop, bool discardBaselineCode, bool addMarkers)
     jit::InvalidateAll(fop, this);
 
     for (auto script = cellIter<JSScript>(); !script.done(); script.next())  {
-        jit::FinishInvalidation(fop, script, addMarkers);
+        jit::FinishInvalidation(fop, script);
 
         /*
          * Discard baseline script if it's not marked as active. Note that
