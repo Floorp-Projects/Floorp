@@ -185,6 +185,10 @@ GetPrincipalFromOrigin(const nsACString& aOrigin, nsIPrincipal** aPrincipal)
     return NS_ERROR_FAILURE;
   }
 
+  // mPrivateBrowsingId must be set to false because PermissionManager is not supposed to have
+  // any knowledge of private browsing. Allowing it to be true changes the suffix being hashed.
+  attrs.mPrivateBrowsingId = 0;
+
   // Disable userContext and firstParty isolation for permissions.
   attrs.StripAttributes(mozilla::OriginAttributes::STRIP_USER_CONTEXT_ID |
                         mozilla::OriginAttributes::STRIP_FIRST_PARTY_DOMAIN);
