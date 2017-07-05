@@ -459,7 +459,7 @@ public:
    * a style sheet.
    */
   bool MightHaveAttributeDependency(const dom::Element& aElement,
-                                    nsIAtom* aAttribute);
+                                    nsIAtom* aAttribute) const;
 
   /**
    * Returns true if a change in event state on an element might require
@@ -469,7 +469,8 @@ public:
    * the changed state isn't depended upon by any pseudo-class selectors
    * in a style sheet.
    */
-  bool HasStateDependency(const dom::Element& aElement, EventStates aState);
+  bool HasStateDependency(const dom::Element& aElement,
+                          EventStates aState) const;
 
 private:
   // On construction, sets sInServoTraversal to the given ServoStyleSet.

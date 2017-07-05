@@ -812,20 +812,13 @@ Sync11Service.prototype = {
         throw "Application is offline, login should not be called";
       }
 
-      if (this._checkSetup() == CLIENT_NOT_CONFIGURED) {
-        throw "Aborting login, client not configured.";
-      }
-
-      // Ask the identity manager to explicitly login now.
       this._log.info("Logging in the user.");
-      let cb = Async.makeSpinningCallback();
-      this.identity.ensureLoggedIn().then(
-        () => cb(null),
-        err => cb(err || "ensureLoggedIn failed")
-      );
-
       // Just let any errors bubble up - they've more context than we do!
-      cb.wait();
+      try {
+        Async.promiseSpinningly(this.identity.ensureLoggedIn());
+      } finally {
+        this._checkSetup(); // _checkSetup has a side effect of setting the right state.
+      }
 
       this._updateCachedURLs();
 

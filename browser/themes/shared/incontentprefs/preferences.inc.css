@@ -623,14 +623,14 @@ groupbox {
   font-size: 1.25rem;
   position: absolute;
   padding: 0 10px;
-  bottom: 100%;
   background-color: #ffe900;
   border: 1px solid #d7b600;
+  -moz-user-select: none;
 }
 
 .search-tooltip:hover,
 .search-tooltip:hover::before {
-  filter: opacity(10%);
+  opacity: .1;
 }
 
 .search-tooltip::before {

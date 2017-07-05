@@ -10,7 +10,7 @@ xul|richlistitem[originaltype="autofill-profile"][selected="true"] > .autofill-i
   background-color: #F2F2F2;
 }
 
-xul|richlistitem[originaltype="autofill-footer"][selected="true"] > .autofill-footer {
+xul|richlistitem[originaltype="autofill-footer"][selected="true"] > .autofill-item-box > .autofill-option-button {
   background-color: #DCDCDE;
 }
 
@@ -29,7 +29,9 @@ xul|richlistitem[originaltype="autofill-footer"][selected="true"] > .autofill-fo
   --item-width: 100%;
 }
 
-.autofill-footer {
+.autofill-footer,
+.autofill-footer[size="small"] {
+  --item-width: 100%;
   --item-padding-vertical: 0;
   --item-padding-horizontal: 0;
 }
@@ -81,7 +83,25 @@ xul|richlistitem[originaltype="autofill-footer"][selected="true"] > .autofill-fo
 }
 
 .autofill-footer {
+  flex-direction: column;
+}
+
+.autofill-footer > .autofill-footer-row {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: var(--item-width);
+}
+
+.autofill-footer > .autofill-warning {
+  padding: 2.5px 0;
+  color: #989898;
+  text-align: center;
+  background-color: rgba(248,232,28,.2);
+  border-bottom: 1px solid rgba(38,38,38,.15);
+}
+
+.autofill-footer > .autofill-option-button {
   height: 41px;
   background-color: #EDEDED;
-  justify-content: center;
 }

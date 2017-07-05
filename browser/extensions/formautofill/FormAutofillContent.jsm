@@ -498,14 +498,32 @@ var FormAutofillContent = {
   },
 
   _previewProfile(doc) {
-    let selectedIndex = ProfileAutocomplete._getSelectedIndex(doc.ownerGlobal);
+    let docWin = doc.ownerGlobal;
+    let selectedIndex = ProfileAutocomplete._getSelectedIndex(docWin);
     let lastAutoCompleteResult = ProfileAutocomplete.getProfileAutoCompleteResult();
+    let focusedInput = formFillController.focusedInput;
+    let mm = this._messageManagerFromWindow(docWin);
 
     if (selectedIndex === -1 ||
+        !focusedInput ||
         !lastAutoCompleteResult ||
         lastAutoCompleteResult.getStyleAt(selectedIndex) != "autofill-profile") {
+      mm.sendAsyncMessage("FormAutofill:UpdateWarningMessage", {});
+
       ProfileAutocomplete._clearProfilePreview();
     } else {
+      let focusedInputDetails = this.getInputDetails(focusedInput);
+      let profile = JSON.parse(lastAutoCompleteResult.getCommentAt(selectedIndex));
+      let allFieldNames = FormAutofillContent.getAllFieldNames(focusedInput);
+      let profileFields = allFieldNames.filter(fieldName => !!profile[fieldName]);
+
+      let focusedCategory = FormAutofillUtils.getCategoryFromFieldName(focusedInputDetails.fieldName);
+      let categories = FormAutofillUtils.getCategoriesFromFieldNames(profileFields);
+      mm.sendAsyncMessage("FormAutofill:UpdateWarningMessage", {
+        focusedCategory,
+        categories,
+      });
+
       ProfileAutocomplete._previewSelectedProfile(selectedIndex);
     }
   },

@@ -325,4 +325,29 @@ this.PlacesTestUtils = Object.freeze({
       dateRemoved: PlacesUtils.toDate(row.getResultByName("dateRemoved")),
     }));
   },
+
+  waitForNotification(notification, conditionFn = () => true, type = "bookmarks") {
+    let iface = type == "bookmarks" ? Ci.nsINavBookmarkObserver
+                                    : Ci.nsINavHistoryObserver;
+    return new Promise(resolve => {
+      let proxifiedObserver = new Proxy({}, {
+        get: (target, name) => {
+          if (name == "QueryInterface")
+            return XPCOMUtils.generateQI([iface]);
+          if (name == notification)
+            return (...args) => {
+              if (conditionFn.apply(this, args)) {
+                PlacesUtils[type].removeObserver(proxifiedObserver);
+                resolve();
+              }
+            }
+          if (name == "skipTags" || name == "skipDescendantsOnItemRemoval") {
+            return false;
+          }
+          return () => false;
+        }
+      });
+      PlacesUtils[type].addObserver(proxifiedObserver);
+    });
+  },
 });

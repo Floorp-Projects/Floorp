@@ -413,7 +413,8 @@ var gSearchResultsPane = {
     searchTooltip.setAttribute("class", "search-tooltip");
     searchTooltip.textContent = query;
 
-    anchorNode.setAttribute("data-has-tooltip", "true");
+    // Set tooltipNode property to track corresponded tooltip node.
+    anchorNode.tooltipNode = searchTooltip;
     anchorNode.parentElement.classList.add("search-tooltip-parent");
     anchorNode.parentElement.appendChild(searchTooltip);
 
@@ -421,8 +422,7 @@ var gSearchResultsPane = {
   },
 
   calculateTooltipPosition(anchorNode) {
-    let searchTooltip = anchorNode.parentElement.querySelector(":scope > .search-tooltip");
-
+    let searchTooltip = anchorNode.tooltipNode;
     // In order to get the up-to-date position of each of the nodes that we're
     // putting tooltips on, we have to flush layout intentionally, and that
     // this is the result of a XUL limitation (bug 1363730).
@@ -430,11 +430,14 @@ var gSearchResultsPane = {
     let tooltipRect = searchTooltip.getBoundingClientRect();
     let parentRect = anchorNode.parentElement.getBoundingClientRect();
 
-    let offSet = (anchorRect.width / 2) - (tooltipRect.width / 2);
+    let offSetLeft = (anchorRect.width / 2) - (tooltipRect.width / 2);
     let relativeOffset = anchorRect.left - parentRect.left;
-    offSet += relativeOffset > 0 ? relativeOffset : 0;
+    offSetLeft += relativeOffset > 0 ? relativeOffset : 0;
+    // 20.5 is reserved for tooltip position
+    let offSetTop = anchorRect.top - parentRect.top - 20.5;
 
-    searchTooltip.style.setProperty("left", `${offSet}px`);
+    searchTooltip.style.setProperty("left", `${offSetLeft}px`);
+    searchTooltip.style.setProperty("top", `${offSetTop}px`);
   },
 
   /**
@@ -446,7 +449,7 @@ var gSearchResultsPane = {
       searchTooltip.parentElement.classList.remove("search-tooltip-parent");
       searchTooltip.remove();
     }
-    this.listSearchTooltips.forEach((anchorNode) => anchorNode.removeAttribute("data-has-tooltip"));
+    this.listSearchTooltips.forEach((anchorNode) => anchorNode.tooltipNode.remove());
     this.listSearchTooltips.clear();
   },
 
