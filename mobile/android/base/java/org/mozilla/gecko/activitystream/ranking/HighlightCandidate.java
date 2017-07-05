@@ -101,9 +101,12 @@ import java.util.Map;
                 candidate.highlight.getMetadata().hasImageUrl() ? 1d : 0d
         );
 
-        // This value is not really the time at which the bookmark was created by the user (Bug 1335198).
-        // Especially synchronized bookmarks can have a recent value but have been bookmarked a long
-        // time ago. But we are sourcing highlights from the recent visited history - so in order to
+        // Historical note: before Bug 1335198, this value was not really the time at which the
+        // bookmark was created by the user. Especially synchronized bookmarks could have a recent
+        // value but have been bookmarked a long time ago.
+        // Current behaviour: synchronized clients will, over time, converge DATE_CREATED field
+        // to the real creation date, or the earliest one mentioned in the clients constellation.
+        // We are sourcing highlights from the recent visited history - so in order to
         // show up this bookmark need to have been visited recently too.
         final int bookmarkDateColumnIndex = cursor.getColumnIndexOrThrow(BrowserContract.Bookmarks.DATE_CREATED);
         if (cursor.isNull(bookmarkDateColumnIndex)) {
