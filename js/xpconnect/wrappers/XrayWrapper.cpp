@@ -213,11 +213,11 @@ const JSClass JSXrayTraits::HolderClass = {
 };
 
 bool
-OpaqueXrayTraits::resolveOwnProperty(JSContext* cx, const Wrapper& jsWrapper, HandleObject wrapper,
+OpaqueXrayTraits::resolveOwnProperty(JSContext* cx, HandleObject wrapper, HandleObject target,
                                      HandleObject holder, HandleId id,
                                      MutableHandle<PropertyDescriptor> desc)
 {
-    bool ok = XrayTraits::resolveOwnProperty(cx, jsWrapper, wrapper, holder, id, desc);
+    bool ok = XrayTraits::resolveOwnProperty(cx, wrapper, target, holder, id, desc);
     if (!ok || desc.object())
         return ok;
 
@@ -518,13 +518,13 @@ ShouldResolveStaticProperties(JSProtoKey key)
 }
 
 bool
-JSXrayTraits::resolveOwnProperty(JSContext* cx, const Wrapper& jsWrapper,
-                                 HandleObject wrapper, HandleObject holder,
+JSXrayTraits::resolveOwnProperty(JSContext* cx, HandleObject wrapper,
+                                 HandleObject target, HandleObject holder,
                                  HandleId id,
                                  MutableHandle<PropertyDescriptor> desc)
 {
     // Call the common code.
-    bool ok = XrayTraits::resolveOwnProperty(cx, jsWrapper, wrapper, holder,
+    bool ok = XrayTraits::resolveOwnProperty(cx, wrapper, target, holder,
                                              id, desc);
     if (!ok || desc.object())
         return ok;
@@ -541,7 +541,6 @@ JSXrayTraits::resolveOwnProperty(JSContext* cx, const Wrapper& jsWrapper,
         return true;
     }
 
-    RootedObject target(cx, getTargetObject(wrapper));
     JSProtoKey key = getProtoKey(holder);
     if (!isPrototype(holder)) {
         // For Object and Array instances, we expose some properties from the
@@ -1505,12 +1504,11 @@ wrappedJSObject_getter(JSContext* cx, unsigned argc, Value* vp)
 }
 
 bool
-XrayTraits::resolveOwnProperty(JSContext* cx, const Wrapper& jsWrapper,
-                               HandleObject wrapper, HandleObject holder, HandleId id,
+XrayTraits::resolveOwnProperty(JSContext* cx, HandleObject wrapper, HandleObject target,
+                               HandleObject holder, HandleId id,
                                MutableHandle<PropertyDescriptor> desc)
 {
     desc.object().set(nullptr);
-    RootedObject target(cx, getTargetObject(wrapper));
     RootedObject expando(cx);
     if (!getExpandoObject(cx, target, wrapper, &expando))
         return false;
@@ -1577,13 +1575,13 @@ XrayTraits::resolveOwnProperty(JSContext* cx, const Wrapper& jsWrapper,
 }
 
 bool
-XPCWrappedNativeXrayTraits::resolveOwnProperty(JSContext* cx, const Wrapper& jsWrapper,
-                                               HandleObject wrapper, HandleObject holder,
+XPCWrappedNativeXrayTraits::resolveOwnProperty(JSContext* cx, HandleObject wrapper,
+                                               HandleObject target, HandleObject holder,
                                                HandleId id,
                                                MutableHandle<PropertyDescriptor> desc)
 {
     // Call the common code.
-    bool ok = XrayTraits::resolveOwnProperty(cx, jsWrapper, wrapper, holder,
+    bool ok = XrayTraits::resolveOwnProperty(cx, wrapper, target, holder,
                                              id, desc);
     if (!ok || desc.object())
         return ok;
@@ -1683,12 +1681,12 @@ XPCWrappedNativeXrayTraits::construct(JSContext* cx, HandleObject wrapper,
 }
 
 bool
-DOMXrayTraits::resolveOwnProperty(JSContext* cx, const Wrapper& jsWrapper, HandleObject wrapper,
+DOMXrayTraits::resolveOwnProperty(JSContext* cx, HandleObject wrapper, HandleObject target,
                                   HandleObject holder, HandleId id,
                                   MutableHandle<PropertyDescriptor> desc)
 {
     // Call the common code.
-    bool ok = XrayTraits::resolveOwnProperty(cx, jsWrapper, wrapper, holder, id, desc);
+    bool ok = XrayTraits::resolveOwnProperty(cx, wrapper, target, holder, id, desc);
     if (!ok || desc.object())
         return ok;
 
@@ -1722,9 +1720,8 @@ DOMXrayTraits::resolveOwnProperty(JSContext* cx, const Wrapper& jsWrapper, Handl
         return true;
     }
 
-    RootedObject obj(cx, getTargetObject(wrapper));
     bool cacheOnHolder;
-    if (!XrayResolveOwnProperty(cx, wrapper, obj, id, desc, cacheOnHolder))
+    if (!XrayResolveOwnProperty(cx, wrapper, target, id, desc, cacheOnHolder))
         return false;
 
     MOZ_ASSERT(!desc.object() || desc.object() == wrapper, "What did we resolve this on?");
@@ -1895,14 +1892,14 @@ HasNativeProperty(JSContext* cx, HandleObject wrapper, HandleId id, bool* hasPro
     MOZ_ASSERT(WrapperFactory::IsXrayWrapper(wrapper));
     XrayTraits* traits = GetXrayTraits(wrapper);
     MOZ_ASSERT(traits);
+    RootedObject target(cx, XrayTraits::getTargetObject(wrapper));
     RootedObject holder(cx, traits->ensureHolder(cx, wrapper));
     NS_ENSURE_TRUE(holder, false);
     *hasProp = false;
     Rooted<PropertyDescriptor> desc(cx);
-    const Wrapper* handler = Wrapper::wrapperHandler(wrapper);
 
     // Try resolveOwnProperty.
-    if (!traits->resolveOwnProperty(cx, *handler, wrapper, holder, id, &desc))
+    if (!traits->resolveOwnProperty(cx, wrapper, target, holder, id, &desc))
         return false;
     if (desc.object()) {
         *hasProp = true;
@@ -2011,6 +2008,7 @@ XrayWrapper<Base, Traits>::getPropertyDescriptor(JSContext* cx, HandleObject wra
 {
     assertEnteredPolicy(cx, wrapper, id, BaseProxyHandler::GET | BaseProxyHandler::SET |
                                          BaseProxyHandler::GET_PROPERTY_DESCRIPTOR);
+    RootedObject target(cx, XrayTraits::getTargetObject(wrapper));
     RootedObject holder(cx, Traits::singleton.ensureHolder(cx, wrapper));
 
     if (!holder)
@@ -2036,7 +2034,7 @@ XrayWrapper<Base, Traits>::getPropertyDescriptor(JSContext* cx, HandleObject wra
     // and unconditionally caches what it finds on the holder.
 
     // Check resolveOwnProperty.
-    if (!Traits::singleton.resolveOwnProperty(cx, *this, wrapper, holder, id, desc))
+    if (!Traits::singleton.resolveOwnProperty(cx, wrapper, target, holder, id, desc))
         return false;
 
     // Check the holder.
@@ -2099,9 +2097,10 @@ XrayWrapper<Base, Traits>::getOwnPropertyDescriptor(JSContext* cx, HandleObject 
 {
     assertEnteredPolicy(cx, wrapper, id, BaseProxyHandler::GET | BaseProxyHandler::SET |
                                          BaseProxyHandler::GET_PROPERTY_DESCRIPTOR);
+    RootedObject target(cx, XrayTraits::getTargetObject(wrapper));
     RootedObject holder(cx, Traits::singleton.ensureHolder(cx, wrapper));
 
-    if (!Traits::singleton.resolveOwnProperty(cx, *this, wrapper, holder, id, desc))
+    if (!Traits::singleton.resolveOwnProperty(cx, wrapper, target, holder, id, desc))
         return false;
     if (desc.object())
         desc.object().set(wrapper);

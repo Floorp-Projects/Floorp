@@ -229,8 +229,9 @@ static const char contentSandboxRules[] = R"(
   (if (string? debugWriteDir)
     (allow file-write* (subpath debugWriteDir)))
 
-; bug 1324610
-  (allow network-outbound (literal "/private/var/run/cupsd"))
+  ; bug 1324610
+  (allow network-outbound file-read*
+    (literal "/private/var/run/cupsd"))
 
   (allow-shared-list "org.mozilla.plugincontainer")
 
@@ -275,11 +276,8 @@ static const char contentSandboxRules[] = R"(
           ; we don't have a profile dir
           (allow file-read* (require-not (home-subpath "/Library")))))))
 
-; level 3: global read access permitted, no global write access,
-;          no read access to the home directory,
-;          no read access to /private/var (but read-metadata allowed above),
-;          no read access to /{Volumes,Network,Users}
-;          read access permitted to $PROFILE/{extensions,chrome}
+  ; level 3: no global read/write access,
+  ;          read access permitted to $PROFILE/{extensions,chrome}
   (if (string=? sandbox-level-3 "TRUE")
     (if (string=? hasFilePrivileges "TRUE")
       ; This process has blanket file read privileges
@@ -287,27 +285,9 @@ static const char contentSandboxRules[] = R"(
       ; This process does not have blanket file read privileges
       (if (string=? hasProfileDir "TRUE")
         ; we have a profile dir
-        (begin
-          (allow file-read* (require-all
-              (require-not (subpath home-path))
-              (require-not (subpath profileDir))
-              (require-not (subpath "/Volumes"))
-              (require-not (subpath "/Network"))
-              (require-not (subpath "/Users"))
-              (require-not (subpath "/private/var"))))
-          (allow file-read* (literal "/private/var/run/cupsd"))
           (allow file-read*
-              (profile-subpath "/extensions")
-              (profile-subpath "/chrome")))
-        ; we don't have a profile dir
-        (begin
-          (allow file-read* (require-all
-            (require-not (subpath home-path))
-            (require-not (subpath "/Volumes"))
-            (require-not (subpath "/Network"))
-            (require-not (subpath "/Users"))
-            (require-not (subpath "/private/var"))))
-          (allow file-read* (literal "/private/var/run/cupsd"))))))
+            (profile-subpath "/extensions")
+            (profile-subpath "/chrome")))))
 
 ; accelerated graphics
   (allow-shared-preferences-read "com.apple.opengl")
@@ -330,7 +310,7 @@ static const char contentSandboxRules[] = R"(
       (iokit-user-client-class "NVDVDContextTesla")
       (iokit-user-client-class "Gen6DVDContext"))
 
-; bug 1237847
+  ; bug 1237847
   (allow file-read* file-write*
       (subpath appTempDir))
 )";

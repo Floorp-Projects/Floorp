@@ -8,7 +8,7 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "webrtc/modules/audio_processing//utility/ooura_fft.h"
+#include "webrtc/modules/audio_processing/utility/ooura_fft.h"
 
 #include <emmintrin.h>
 

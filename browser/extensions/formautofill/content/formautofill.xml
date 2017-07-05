@@ -58,7 +58,7 @@
         <body></body>
       </method>
 
-      <method name="_adjustProfileItemLayout">
+      <method name="_adjustAutofillItemLayout">
         <body>
         <![CDATA[
           let outerBoxRect = this.parentNode.getBoundingClientRect();
@@ -124,11 +124,10 @@
         ]]></setter>
       </property>
 
-
       <method name="_adjustAcItem">
         <body>
         <![CDATA[
-          this._adjustProfileItemLayout();
+          this._adjustAutofillItemLayout();
           this.setAttribute("formautofillattached", "true");
 
           let {primary, secondary} = JSON.parse(this.getAttribute("ac-value"));
@@ -144,6 +143,10 @@
   <binding id="autocomplete-profile-listitem-footer" extends="chrome://formautofill/content/formautofill.xml#autocomplete-profile-listitem-base">
     <xbl:content xmlns="http://www.w3.org/1999/xhtml">
       <div anonid="autofill-footer" class="autofill-item-box autofill-footer">
+        <div anonid="autofill-warning" class="autofill-footer-row autofill-warning">
+        </div>
+        <div anonid="autofill-option-button" class="autofill-footer-row autofill-option-button">
+        </div>
       </div>
     </xbl:content>
 
@@ -159,28 +162,100 @@
           this._itemBox = document.getAnonymousElementByAttribute(
             this, "anonid", "autofill-footer"
           );
+          this._optionButton = document.getAnonymousElementByAttribute(
+            this, "anonid", "autofill-option-button"
+          );
+          this._warningTextBox = document.getAnonymousElementByAttribute(
+            this, "anonid", "autofill-warning"
+          );
+
+          this.allFieldCategories = JSON.parse(this.getAttribute("ac-value")).categories;
+
+          /**
+           * Update the text on the footer.
+           *
+           * @private
+           * @param {string|string[]} categories
+           *        A list of categories that used to generate the message.
+           * @param {boolean} hasExtraCategories
+           *        Used to determine if it has the extra categories other than the focued category. If
+           *        the value is true, we show "Also fill ...", otherwise, show "Fill ..." only.
+           */
+          this._updateText = (categories = this.allFieldCategories, hasExtraCategories = true) => {
+            let warningTextTmplKey = hasExtraCategories ? "phishingWarningMessage" : "phishingWarningMessage2";
+            let sep = this._stringBundle.GetStringFromName("fieldNameSeparator");
+            let categoriesText = categories.map(this._stringBundle.GetStringFromName).join(sep);
+
+            this._warningTextBox.textContent = this._stringBundle.formatStringFromName(warningTextTmplKey,
+              [categoriesText], 1);
+            this.parentNode.parentNode.adjustHeight();
+          };
+
+          /**
+           * A handler for updating warning message once selectedIndex has been changed.
+           *
+           * There're three different states of warning message:
+           * 1. None of addresses were selected: We show all the categories in the form.
+           * 2. An address was selested: Show the additional categories that will also be filled.
+           * 3. An address was selected, but the focused category is the same as the only all categories: Only show
+           * the exact category that we're going to fill in.
+           *
+           * @private
+           * @param {string} focusedCategory
+           *        The category that the focused input's field belongs to.
+           * @param {string[]} categories
+           *        The categories of all the fields contained in the selected address.
+           */
+          this._updateWarningMsgHandler = ({data: {focusedCategory, categories}} = {data: {}}) => {
+            let hasSelectedAddress = focusedCategory && categories;
+            // If the length of categories is 1, that means all the fillable fields are in the same
+            // category. We will change the way to inform user according to this flag.
+            let hasExtraCategories = hasSelectedAddress && categories.length > 1;
+            if (!hasSelectedAddress) {
+              this._updateText();
+              return;
+            }
+
+            let showCategories = hasExtraCategories ?
+                                 categories.filter(category => category != focusedCategory) :
+                                 [focusedCategory];
+            this._updateText(showCategories, hasExtraCategories);
+          };
 
           this._adjustAcItem();
+          this._updateText();
         ]]>
       </constructor>
+
+      <method name="_onCollapse">
+        <body>
+        <![CDATA[
+          /* global messageManager */
+
+          messageManager.removeMessageListener("FormAutofill:UpdateWarningMessage", this._updateWarningMsgHandler);
+        ]]>
+        </body>
+      </method>
 
       <method name="_adjustAcItem">
         <body>
         <![CDATA[
           /* global Cu */
-          this._adjustProfileItemLayout();
+          this._adjustAutofillItemLayout();
           this.setAttribute("formautofillattached", "true");
 
           let {AppConstants} = Cu.import("resource://gre/modules/AppConstants.jsm", {});
-          let footerTextBundleKey = AppConstants.platform == "macosx" ?
+          let buttonTextBundleKey = AppConstants.platform == "macosx" ?
             "autocompleteFooterOptionOSX" : "autocompleteFooterOption";
           // If the popup shows up with small layout, we should use short string to
           // have a better fit in the box.
           if (this._itemBox.getAttribute("size") == "small") {
-            footerTextBundleKey += "Short";
+            buttonTextBundleKey += "Short";
           }
-          let footerText = this._stringBundle.GetStringFromName(footerTextBundleKey);
-          this._itemBox.textContent = footerText;
+          let buttonText = this._stringBundle.GetStringFromName(buttonTextBundleKey);
+          this._optionButton.textContent = buttonText;
+
+          messageManager.addMessageListener("FormAutofill:UpdateWarningMessage", this._updateWarningMsgHandler);
         ]]>
         </body>
       </method>

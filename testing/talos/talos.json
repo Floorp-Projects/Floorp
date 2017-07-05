@@ -82,10 +82,10 @@
             "tests": ["tsvgx", "tsvgr_opacity", "tart", "tscrollx", "cart", "tsvg_static"]
         },
         "perf-reftest": {
-            "tests": ["bloom_basic", "bloom_basic_ref"]
+            "tests": ["bloom_basic"]
         },
         "perf-reftest-e10s": {
-            "tests": ["bloom_basic", "bloom_basic_ref"]
+            "tests": ["bloom_basic"]
         },
         "tp5o": {
             "tests": ["tp5o"],

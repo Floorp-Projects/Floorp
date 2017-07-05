@@ -232,7 +232,7 @@ var Bookmarks = Object.freeze({
 
       // If it's a tag, notify OnItemChanged to all bookmarks for this URL.
       if (isTagging) {
-        for (let entry of (await fetchBookmarksByURL(item))) {
+        for (let entry of (await fetchBookmarksByURL(item, true))) {
           notify(observers, "onItemChanged", [ entry._id, "tags", false, "",
                                                PlacesUtils.toPRTime(entry.lastModified),
                                                entry.type, entry._parentId,
@@ -642,6 +642,7 @@ var Bookmarks = Object.freeze({
                                                updatedItem.source ]);
         }
         if (updateInfo.hasOwnProperty("title")) {
+          let isTagging = updatedItem.parentGuid == Bookmarks.tagsGuid;
           notify(observers, "onItemChanged", [ updatedItem._id, "title",
                                                false, updatedItem.title,
                                                PlacesUtils.toPRTime(updatedItem.lastModified),
@@ -649,7 +650,22 @@ var Bookmarks = Object.freeze({
                                                updatedItem._parentId,
                                                updatedItem.guid,
                                                updatedItem.parentGuid, "",
-                                               updatedItem.source ]);
+                                               updatedItem.source ],
+                                               { isTagging });
+          // If we're updating a tag, we must notify all the tagged bookmarks
+          // about the change.
+          if (isTagging) {
+            let URIs = PlacesUtils.tagging.getURIsForTag(updatedItem.title);
+            for (let uri of URIs) {
+              for (let entry of (await fetchBookmarksByURL({ url: new URL(uri.spec) }, true))) {
+                notify(observers, "onItemChanged", [ entry._id, "tags", false, "",
+                                                     PlacesUtils.toPRTime(entry.lastModified),
+                                                     entry.type, entry._parentId,
+                                                     entry.guid, entry.parentGuid,
+                                                     "", updatedItem.source ]);
+              }
+            }
+          }
         }
         if (updateInfo.hasOwnProperty("url")) {
           notify(observers, "onItemChanged", [ updatedItem._id, "uri",
@@ -738,7 +754,7 @@ var Bookmarks = Object.freeze({
                                          { isTagging: isUntagging });
 
       if (isUntagging) {
-        for (let entry of (await fetchBookmarksByURL(item))) {
+        for (let entry of (await fetchBookmarksByURL(item, true))) {
           notify(observers, "onItemChanged", [ entry._id, "tags", false, "",
                                                PlacesUtils.toPRTime(entry.lastModified),
                                                entry.type, entry._parentId,
@@ -2224,7 +2240,7 @@ async function(db, folderGuids, options) {
 
     let isUntagging = item._grandParentId == PlacesUtils.tagsFolderId;
     if (isUntagging) {
-      for (let entry of (await fetchBookmarksByURL(item))) {
+      for (let entry of (await fetchBookmarksByURL(item, true))) {
         notify(observers, "onItemChanged", [ entry._id, "tags", false, "",
                                              PlacesUtils.toPRTime(entry.lastModified),
                                              entry.type, entry._parentId,

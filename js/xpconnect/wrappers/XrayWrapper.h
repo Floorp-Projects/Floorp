@@ -77,8 +77,8 @@ public:
     // on the holder. If the result is not cached, the lookup will happen afresh
     // for each access, which is the right thing for things like dynamic NodeList
     // properties.
-    virtual bool resolveOwnProperty(JSContext* cx, const js::Wrapper& jsWrapper,
-                                    JS::HandleObject wrapper, JS::HandleObject holder,
+    virtual bool resolveOwnProperty(JSContext* cx, JS::HandleObject wrapper,
+                                    JS::HandleObject target, JS::HandleObject holder,
                                     JS::HandleId id, JS::MutableHandle<JS::PropertyDescriptor> desc);
 
     bool delete_(JSContext* cx, JS::HandleObject wrapper, JS::HandleId id,
@@ -150,7 +150,7 @@ public:
     virtual bool resolveNativeProperty(JSContext* cx, JS::HandleObject wrapper,
                                        JS::HandleObject holder, JS::HandleId id,
                                        JS::MutableHandle<JS::PropertyDescriptor> desc) override;
-    virtual bool resolveOwnProperty(JSContext* cx, const js::Wrapper& jsWrapper, JS::HandleObject wrapper,
+    virtual bool resolveOwnProperty(JSContext* cx, JS::HandleObject wrapper, JS::HandleObject target,
                                     JS::HandleObject holder, JS::HandleId id,
                                     JS::MutableHandle<JS::PropertyDescriptor> desc) override;
     bool defineProperty(JSContext* cx, JS::HandleObject wrapper, JS::HandleId id,
@@ -204,7 +204,7 @@ public:
         //       but we can't do that yet because XrayUtils::HasNativeProperty calls this.
         return true;
     }
-    virtual bool resolveOwnProperty(JSContext* cx, const js::Wrapper& jsWrapper, JS::HandleObject wrapper,
+    virtual bool resolveOwnProperty(JSContext* cx, JS::HandleObject wrapper, JS::HandleObject target,
                                     JS::HandleObject holder, JS::HandleId id,
                                     JS::MutableHandle<JS::PropertyDescriptor> desc) override;
 
@@ -251,7 +251,7 @@ public:
         MOZ_CRASH("resolveNativeProperty hook should never be called with HasPrototype = 1");
     }
 
-    virtual bool resolveOwnProperty(JSContext* cx, const js::Wrapper& jsWrapper, JS::HandleObject wrapper,
+    virtual bool resolveOwnProperty(JSContext* cx, JS::HandleObject wrapper, JS::HandleObject target,
                                     JS::HandleObject holder, JS::HandleId id,
                                     JS::MutableHandle<JS::PropertyDescriptor> desc) override;
 
@@ -368,7 +368,7 @@ public:
         MOZ_CRASH("resolveNativeProperty hook should never be called with HasPrototype = 1");
     }
 
-    virtual bool resolveOwnProperty(JSContext* cx, const js::Wrapper& jsWrapper, JS::HandleObject wrapper,
+    virtual bool resolveOwnProperty(JSContext* cx, JS::HandleObject wrapper, JS::HandleObject target,
                                     JS::HandleObject holder, JS::HandleId id,
                                     JS::MutableHandle<JS::PropertyDescriptor> desc) override;
 

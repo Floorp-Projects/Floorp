@@ -85,22 +85,20 @@ android {
     flavorDimensions "audience", "skin"
 
     productFlavors {
-        // For API 21+ - with multi dex, this will be faster for local development.
+        // For API 21+ - with pre-dexing, this will be faster for local development.
         local {
             dimension "audience"
 
-            // For multi dex, setting `minSdkVersion 21` allows the Android gradle plugin to
+            // For pre-dexing, setting `minSdkVersion 21` allows the Android gradle plugin to
             // pre-DEX each module and produce an APK that can be tested on
             // Android Lollipop without time consuming DEX merging processes.
             minSdkVersion 21
             dexOptions {
                 preDexLibraries true
-                multiDexEnabled true
             }
         }
-        // For API < 21 - does not support multi dex because local development
-        // is slow in that case. Most builds will not require multi dex so this
-        // should not be an issue.
+        // For API < 21 - does not support pre-dexing because local development
+        // is slow in that case.
         localOld {
             dimension "audience"
         }
@@ -268,7 +266,7 @@ dependencies {
     }
 
     // Include LeakCanary in most gradle based builds. LeakCanary adds about 5k methods, so we disable
-    // it for the (non-proguarded, non-multidex) localOld builds to allow space for other libraries.
+    // it for the (non-proguarded, non-predex) localOld builds to allow space for other libraries.
     // Gradle based tests include the no-op version.  Mach based builds only include the no-op version
     // of this library.
     // It doesn't seem like there is a non-trivial way to be conditional on 'localOld', so instead we explicitly

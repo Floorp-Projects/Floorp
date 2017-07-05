@@ -48,7 +48,7 @@
   padding-right: 2px;
 }
 %ifdef MOZ_PHOTON_THEME
-#identity-box:not(.chromeUI) {
+#identity-box:not(.chromeUI):not(.extensionPage) {
   --urlbar-separator-color: transparent;
 }
 #urlbar[pageproxystate=valid] > #identity-box.verifiedIdentity {
@@ -63,6 +63,7 @@
 
 #urlbar[pageproxystate=valid] > #identity-box.verifiedIdentity,
 #urlbar[pageproxystate=valid] > #identity-box.chromeUI,
+#urlbar[pageproxystate=valid] > #identity-box.extensionPage,
 #urlbar-display-box {
   margin-inline-end: 4px;
   border-inline-end: 1px solid var(--urlbar-separator-color);
@@ -71,7 +72,8 @@
 }
 
 #urlbar[pageproxystate=valid] > #identity-box.verifiedIdentity,
-#urlbar[pageproxystate=valid] > #identity-box.chromeUI {
+#urlbar[pageproxystate=valid] > #identity-box.chromeUI,
+#urlbar[pageproxystate=valid] > #identity-box.extensionPage {
   padding-inline-end: 4px;
 }
 
