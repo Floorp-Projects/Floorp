@@ -320,8 +320,8 @@ inline const Stmt *IgnoreTrivials(const Stmt *s) {
       s = mte->GetTemporaryExpr();
     } else if (auto *bte = dyn_cast<CXXBindTemporaryExpr>(s)) {
       s = bte->getSubExpr();
-    } else if (auto *ice = dyn_cast<ImplicitCastExpr>(s)) {
-      s = ice->getSubExpr();
+    } else if (auto *ce = dyn_cast<CastExpr>(s)) {
+      s = ce->getSubExpr();
     } else if (auto *pe = dyn_cast<ParenExpr>(s)) {
       s = pe->getSubExpr();
     } else {
@@ -420,12 +420,42 @@ inline bool inThirdPartyPath(SourceLocation Loc, const SourceManager &SM) {
   return false;
 }
 
-inline bool inThirdPartyPath(const Decl *D) {
+inline bool inThirdPartyPath(const Decl *D, ASTContext *context) {
   D = D->getCanonicalDecl();
   SourceLocation Loc = D->getLocation();
-  const SourceManager &SM = D->getASTContext().getSourceManager();
+  const SourceManager &SM = context->getSourceManager();
 
   return inThirdPartyPath(Loc, SM);
 }
+
+inline bool inThirdPartyPath(const Decl *D) {
+  return inThirdPartyPath(D, &D->getASTContext());
+}
+
+inline bool inThirdPartyPath(const Stmt *S, ASTContext *context) {
+  SourceLocation Loc = S->getLocStart();
+  const SourceManager &SM = context->getSourceManager();
+
+  return inThirdPartyPath(Loc, SM);
+}
+
+/// Polyfill for CXXOperatorCallExpr::isInfixBinaryOp()
+inline bool isInfixBinaryOp(const CXXOperatorCallExpr* OpCall) {
+#if CLANG_VERSION_FULL >= 400
+  return OpCall->isInfixBinaryOp();
+#else
+  // Taken from clang source.
+  if (OpCall->getNumArgs() != 2)
+     return false;
+
+  switch (OpCall->getOperator()) {
+   case OO_Call: case OO_Subscript:
+     return false;
+   default:
+     return true;
+  }
+#endif
+}
+
 
 #endif
