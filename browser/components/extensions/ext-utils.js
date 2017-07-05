@@ -632,6 +632,14 @@ class Window extends WindowBase {
     }
   }
 
+  get title() {
+    return this.window.document.title;
+  }
+
+  setTitlePreface(titlePreface) {
+    this.window.document.documentElement.setAttribute("titlepreface", titlePreface);
+  }
+
   get focused() {
     return this.window.document.hasFocus();
   }
