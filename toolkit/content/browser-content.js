@@ -409,13 +409,13 @@ var Printing = {
     "Printing:Preview:Exit",
     "Printing:Preview:Navigate",
     "Printing:Preview:ParseDocument",
+    "Printing:Preview:UpdatePageCount",
     "Printing:Print",
   ],
 
   init() {
     this.MESSAGES.forEach(msgName => addMessageListener(msgName, this));
     addEventListener("PrintingError", this, true);
-    addEventListener("printPreviewUpdate", this, true);
   },
 
   get shouldSavePrintSettings() {
@@ -423,43 +423,16 @@ var Printing = {
            Services.prefs.getBoolPref("print.save_print_settings");
   },
 
-  printPreviewInitializingInfo: null,
-
   handleEvent(event) {
-    switch (event.type) {
-      case "PrintingError": {
-        let win = event.target.defaultView;
-        let wbp = win.QueryInterface(Ci.nsIInterfaceRequestor)
-                     .getInterface(Ci.nsIWebBrowserPrint);
-        let nsresult = event.detail;
-        sendAsyncMessage("Printing:Error", {
-          isPrinting: wbp.doingPrint,
-          nsresult,
-        });
-        break;
-      }
-
-      case "printPreviewUpdate": {
-        // Only send Printing:Preview:Entered message on first update, indicated
-        // by printPreviewInitializingInfo being set.
-        let info = this.printPreviewInitializingInfo;
-        if (info) {
-          this.printPreviewInitializingInfo = null;
-          sendAsyncMessage("Printing:Preview:Entered", {
-            failed: false,
-            changingBrowsers: info.changingBrowsers
-          });
-
-          // If we have another request waiting, dispatch it now.
-          if (info.nextRequest) {
-            Services.tm.dispatchToMainThread(info.nextRequest);
-          }
-        }
-
-        // Always send page count update.
-        this.updatePageCount();
-        break;
-      }
+    if (event.type == "PrintingError") {
+      let win = event.target.defaultView;
+      let wbp = win.QueryInterface(Ci.nsIInterfaceRequestor)
+                   .getInterface(Ci.nsIWebBrowserPrint);
+      let nsresult = event.detail;
+      sendAsyncMessage("Printing:Error", {
+        isPrinting: wbp.doingPrint,
+        nsresult,
+      });
     }
   },
 
@@ -483,6 +456,11 @@ var Printing = {
 
       case "Printing:Preview:ParseDocument": {
         this.parseDocument(data.URL, Services.wm.getOuterWindowWithId(data.windowID));
+        break;
+      }
+
+      case "Printing:Preview:UpdatePageCount": {
+        this.updatePageCount();
         break;
       }
 
@@ -640,6 +618,28 @@ var Printing = {
   },
 
   enterPrintPreview(contentWindow, simplifiedMode, changingBrowsers, defaultPrinterName) {
+    // We'll call this whenever we've finished reflowing the document, or if
+    // we errored out while attempting to print preview (in which case, we'll
+    // notify the parent that we've failed).
+    let notifyEntered = (error) => {
+      removeEventListener("printPreviewUpdate", onPrintPreviewReady);
+      sendAsyncMessage("Printing:Preview:Entered", {
+        failed: !!error,
+        changingBrowsers,
+      });
+    };
+
+    let onPrintPreviewReady = () => {
+      notifyEntered();
+    };
+
+    // We have to wait for the print engine to finish reflowing all of the
+    // documents and subdocuments before we can tell the parent to flip to
+    // the print preview UI - otherwise, the print preview UI might ask for
+    // information (like the number of pages in the document) before we have
+    // our PresShells set up.
+    addEventListener("printPreviewUpdate", onPrintPreviewReady);
+
     try {
       let printSettings = this.getPrintSettings(defaultPrinterName);
 
@@ -649,36 +649,24 @@ var Printing = {
       if (printSettings && simplifiedMode)
         printSettings.docURL = contentWindow.document.baseURI;
 
-      // The print preview docshell will be in a different TabGroup, so
-      // printPreviewInitialize must be run in a separate runnable to avoid
-      // touching a different TabGroup in our own runnable.
-      let printPreviewInitialize = () => {
+      // The print preview docshell will be in a different TabGroup,
+      // so we run it in a separate runnable to avoid touching a
+      // different TabGroup in our own runnable.
+      Services.tm.dispatchToMainThread(() => {
         try {
-          this.printPreviewInitializingInfo = { changingBrowsers };
           docShell.printPreview.printPreview(printSettings, contentWindow, this);
         } catch (error) {
           // This might fail if we, for example, attempt to print a XUL document.
           // In that case, we inform the parent to bail out of print preview.
           Components.utils.reportError(error);
-          this.printPreviewInitializingInfo = null;
-          sendAsyncMessage("Printing:Preview:Entered", { failed: true });
+          notifyEntered(error);
         }
-      }
-
-      // If printPreviewInitializingInfo is set we are still in the initial
-      // setup of a previous preview request. We delay this one until that has
-      // finished because running them at the same time will almost certainly
-      // cause failures.
-      if (this.printPreviewInitializingInfo) {
-        this.printPreviewInitializingInfo.nextRequest = printPreviewInitialize;
-      } else {
-        Services.tm.dispatchToMainThread(printPreviewInitialize);
-      }
+      });
     } catch (error) {
       // This might fail if we, for example, attempt to print a XUL document.
       // In that case, we inform the parent to bail out of print preview.
       Components.utils.reportError(error);
-      sendAsyncMessage("Printing:Preview:Entered", { failed: true });
+      notifyEntered(error);
     }
   },
 
