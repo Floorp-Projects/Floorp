@@ -906,15 +906,7 @@ ifdef MOZ_USING_SCCACHE
 sccache_wrap := RUSTC_WRAPPER='$(CCACHE)'
 endif
 
-
-# This function is intended to be called by:
-#
-#   $(call CARGO_BUILD,EXTRA_ENV_VAR1=X EXTRA_ENV_VAR2=Y ...)
-#
-# but, given the idiosyncracies of make, can also be called without arguments:
-#
-#   $(call CARGO_BUILD)
-define CARGO_BUILD
+define RUN_CARGO
 env $(environment_cleaner) $(rust_unlock_unstable) $(rustflags_override) $(sccache_wrap) \
 	CARGO_TARGET_DIR=$(CARGO_TARGET_DIR) \
 	RUSTC=$(RUSTC) \
@@ -925,8 +917,19 @@ env $(environment_cleaner) $(rust_unlock_unstable) $(rustflags_override) $(sccac
 	PKG_CONFIG_ALLOW_CROSS=1 \
 	RUST_BACKTRACE=1 \
 	MOZ_TOPOBJDIR=$(topobjdir) \
-	$(1) \
-	$(CARGO) build $(cargo_build_flags)
+	$(2) \
+	$(CARGO) $(1) $(cargo_build_flags)
+endef
+
+# This function is intended to be called by:
+#
+#   $(call CARGO_BUILD,EXTRA_ENV_VAR1=X EXTRA_ENV_VAR2=Y ...)
+#
+# but, given the idiosyncracies of make, can also be called without arguments:
+#
+#   $(call CARGO_BUILD)
+define CARGO_BUILD
+$(call RUN_CARGO,build,$(1))
 endef
 
 cargo_linker_env_var := CARGO_TARGET_$(RUST_TARGET_ENV_NAME)_LINKER
