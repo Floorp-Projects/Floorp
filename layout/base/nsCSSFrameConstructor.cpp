@@ -9732,8 +9732,12 @@ nsCSSFrameConstructor::MaybeRecreateContainerForFrameRemoval(nsIFrame* aFrame,
   if (parent && parent->IsDetailsFrame()) {
     HTMLSummaryElement* summary =
       HTMLSummaryElement::FromContent(aFrame->GetContent());
+    DetailsFrame* detailsFrame = static_cast<DetailsFrame*>(parent);
 
-    if (summary && summary->IsMainSummary()) {
+    // Unlike adding summary element cases, we need to check children of the
+    // parent details frame since at this moment the summary element has been
+    // already removed from the parent details element's child list.
+    if (summary && detailsFrame->HasMainSummaryFrame(aFrame)) {
       // When removing a summary, we should reframe the parent details frame to
       // ensure that another summary is used or the default summary is
       // generated.
