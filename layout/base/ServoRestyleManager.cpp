@@ -961,18 +961,66 @@ ServoRestyleManager::ContentStateChanged(nsIContent* aContent,
   if (Element* parent = aElement->GetFlattenedTreeParentElementForStyle()) {
     parent->NoteDirtyDescendantsForServo();
   }
-  PostRestyleEvent(aElement, restyleHint, changeHint);
+
+  if (restyleHint || changeHint) {
+    Servo_NoteExplicitHints(aElement, restyleHint, changeHint);
+  }
 }
 
 static inline bool
-AttributeInfluencesOtherPseudoClassState(Element* aElement, nsIAtom* aAttribute)
+AttributeInfluencesOtherPseudoClassState(const Element& aElement,
+                                         const nsIAtom* aAttribute)
 {
   // We must record some state for :-moz-browser-frame and
   // :-moz-table-border-nonzero.
-  return (aAttribute == nsGkAtoms::mozbrowser &&
-          aElement->IsAnyOfHTMLElements(nsGkAtoms::iframe, nsGkAtoms::frame)) ||
-         (aAttribute == nsGkAtoms::border &&
-          aElement->IsHTMLElement(nsGkAtoms::table));
+  if (aAttribute == nsGkAtoms::mozbrowser) {
+    return aElement.IsAnyOfHTMLElements(nsGkAtoms::iframe, nsGkAtoms::frame);
+  }
+
+  if (aAttribute == nsGkAtoms::border) {
+    return aElement.IsHTMLElement(nsGkAtoms::table);
+  }
+
+  return false;
+}
+
+static inline bool
+NeedToRecordAttrChange(const ServoStyleSet& aStyleSet,
+                       const Element& aElement,
+                       int32_t aNameSpaceID,
+                       nsIAtom* aAttribute,
+                       bool* aInfluencesOtherPseudoClassState)
+{
+  *aInfluencesOtherPseudoClassState =
+    AttributeInfluencesOtherPseudoClassState(aElement, aAttribute);
+
+  // If the attribute influences one of the pseudo-classes that are backed by
+  // attributes, we just record it.
+  if (*aInfluencesOtherPseudoClassState) {
+    return true;
+  }
+
+  // We assume that id and class attributes are used in class/id selectors, and
+  // thus record them.
+  //
+  // TODO(emilio): We keep a filter of the ids in use somewhere in the StyleSet,
+  // presumably we could try to filter the old and new id, but it's not clear
+  // it's worth it.
+  if (aNameSpaceID == kNameSpaceID_None &&
+      (aAttribute == nsGkAtoms::id || aAttribute == nsGkAtoms::_class)) {
+    return true;
+  }
+
+  // We always record lang="", even though we force a subtree restyle when it
+  // changes, since it can change how its siblings match :lang(..) due to
+  // selectors like :lang(..) + div.
+  if (aAttribute == nsGkAtoms::lang) {
+    return true;
+  }
+
+  // Otherwise, just record the attribute change if a selector in the page may
+  // reference it from an attribute selector.
+  return aStyleSet.MightHaveAttributeDependency(aElement, aAttribute);
 }
 
 void
@@ -1002,15 +1050,12 @@ ServoRestyleManager::TakeSnapshotForAttributeChange(Element* aElement,
     return;
   }
 
-  bool influencesOtherPseudoClassState =
-    AttributeInfluencesOtherPseudoClassState(aElement, aAttribute);
-
-  if (!influencesOtherPseudoClassState &&
-      !((aNameSpaceID == kNameSpaceID_None &&
-         (aAttribute == nsGkAtoms::id ||
-          aAttribute == nsGkAtoms::_class)) ||
-        aAttribute == nsGkAtoms::lang ||
-        StyleSet()->MightHaveAttributeDependency(*aElement, aAttribute))) {
+  bool influencesOtherPseudoClassState;
+  if (!NeedToRecordAttrChange(*StyleSet(),
+                              *aElement,
+                              aNameSpaceID,
+                              aAttribute,
+                              &influencesOtherPseudoClassState)) {
     return;
   }
 
@@ -1026,6 +1071,21 @@ ServoRestyleManager::TakeSnapshotForAttributeChange(Element* aElement,
   }
 }
 
+// For some attribute changes we must restyle the whole subtree:
+//
+// * <td> is affected by the cellpadding on its ancestor table
+// * lang="" and xml:lang="" can affect all descendants due to :lang()
+//
+static inline bool
+AttributeChangeRequiresSubtreeRestyle(const Element& aElement, nsIAtom* aAttr)
+{
+  if (aAttr == nsGkAtoms::cellpadding) {
+    return aElement.IsHTMLElement(nsGkAtoms::table);
+  }
+
+  return aAttr == nsGkAtoms::lang;
+}
+
 void
 ServoRestyleManager::AttributeChanged(Element* aElement, int32_t aNameSpaceID,
                                       nsIAtom* aAttribute, int32_t aModType,
@@ -1033,30 +1093,25 @@ ServoRestyleManager::AttributeChanged(Element* aElement, int32_t aNameSpaceID,
 {
   MOZ_ASSERT(!mInStyleRefresh);
 
-  nsIFrame* primaryFrame = aElement->GetPrimaryFrame();
-  if (primaryFrame) {
+  if (nsIFrame* primaryFrame = aElement->GetPrimaryFrame()) {
     primaryFrame->AttributeChanged(aNameSpaceID, aAttribute, aModType);
   }
 
-  nsChangeHint hint = aElement->GetAttributeChangeHint(aAttribute, aModType);
-  if (hint) {
-    PostRestyleEvent(aElement, nsRestyleHint(0), hint);
-  }
+  auto changeHint = nsChangeHint(0);
+  auto restyleHint = nsRestyleHint(0);
+
+  changeHint |= aElement->GetAttributeChangeHint(aAttribute, aModType);
 
   if (aAttribute == nsGkAtoms::style) {
-    PostRestyleEvent(aElement, eRestyle_StyleAttribute, nsChangeHint(0));
+    restyleHint |= eRestyle_StyleAttribute;
+  } else if (AttributeChangeRequiresSubtreeRestyle(*aElement, aAttribute)) {
+    restyleHint |= eRestyle_Subtree;
+  } else if (aElement->IsAttributeMapped(aAttribute)) {
+    restyleHint |= eRestyle_Self;
   }
 
-  // For some attribute changes we must restyle the whole subtree:
-  //
-  // * <td> is affected by the cellpadding on its ancestor table
-  // * lang="" and xml:lang="" can affect all descendants due to :lang()
-  if ((aAttribute == nsGkAtoms::cellpadding &&
-       aElement->IsHTMLElement(nsGkAtoms::table)) ||
-      aAttribute == nsGkAtoms::lang) {
-    PostRestyleEvent(aElement, eRestyle_Subtree, nsChangeHint(0));
-  } else if (aElement->IsAttributeMapped(aAttribute)) {
-    Servo_NoteExplicitHints(aElement, eRestyle_Self, nsChangeHint(0));
+  if (restyleHint || changeHint) {
+    Servo_NoteExplicitHints(aElement, restyleHint, changeHint);
   }
 }
 

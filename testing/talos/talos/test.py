@@ -107,6 +107,7 @@ class TsBase(Test):
         'firstpaint',
         'userready',
         'testeventmap',
+        'base_vs_ref',
         'extensions',
         'filters',
         'setup',
@@ -251,7 +252,7 @@ class PageloaderTest(Test):
     timeout = None
     keys = ['tpmanifest', 'tpcycles', 'tppagecycles', 'tprender', 'tpchrome',
             'tpmozafterpaint', 'tploadnocache', 'firstpaint', 'userready',
-            'testeventmap', 'rss', 'mainthread', 'resolution', 'cycles',
+            'testeventmap', 'base_vs_ref', 'rss', 'mainthread', 'resolution', 'cycles',
             'gecko_profile', 'gecko_profile_interval', 'gecko_profile_entries',
             'tptimeout', 'win_counters', 'w7_counters', 'linux_counters', 'mac_counters',
             'tpscrolltest', 'xperf_counters', 'timeout', 'shutdown', 'responsiveness',
@@ -801,25 +802,10 @@ class a11yr(PageloaderTest):
 @register_test()
 class bloom_basic(PageloaderTest):
     """
-    Stylo bloom_basic test
+    Stylo bloom_basic: runs bloom_basic and bloom_basic_ref and reports difference
     """
+    base_vs_ref = True  # compare the two test pages with eachother and report comparison
     tpmanifest = '${talos}/tests/perf-reftest/bloom_basic.manifest'
-    tpcycles = 1
-    tppagecycles = 25
-    gecko_profile_interval = 1
-    gecko_profile_entries = 2000000
-    filters = filter.ignore_first.prepare(5) + filter.median.prepare()
-    unit = 'ms'
-    lower_is_better = True
-    alert_threshold = 5.0
-
-
-@register_test()
-class bloom_basic_ref(PageloaderTest):
-    """
-    Stylo bloom_basic_ref test
-    """
-    tpmanifest = '${talos}/tests/perf-reftest/bloom_basic_ref.manifest'
     tpcycles = 1
     tppagecycles = 25
     gecko_profile_interval = 1

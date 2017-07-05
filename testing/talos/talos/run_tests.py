@@ -93,7 +93,6 @@ def run_tests(config, browser_config):
     tests = useBaseTestDefaults(config.get('basetest', {}), tests)
     paths = ['profile_path', 'tpmanifest', 'extensions', 'setup', 'cleanup']
     for test in tests:
-
         # Check for profile_path, tpmanifest and interpolate based on Talos
         # root https://bugzilla.mozilla.org/show_bug.cgi?id=727711
         # Build command line from config
@@ -255,10 +254,18 @@ def run_tests(config, browser_config):
                 # now we have three separate test results, store them
                 for test_result in separate_results_list:
                     talos_results.add(test_result)
+
+            # some tests like bloom_basic run two separate tests and then compare those values
+            # we want the results in perfherder to only be the actual difference between those
+            # and store the base and reference test replicates in results.json for upload
+            elif test.get('base_vs_ref', False):
+                # run the test, results will be reported for each page like two tests in the suite
+                base_and_reference_results = mytest.runTest(browser_config, test)
+                # now compare each test, and create a new test object for the comparison
+                talos_results.add(make_comparison_result(base_and_reference_results))
             else:
                 # just expecting regular test - one result value per iteration
                 talos_results.add(mytest.runTest(browser_config, test))
-
             LOG.test_end(testname, status='OK')
 
     except TalosRegression as exc:
@@ -296,6 +303,56 @@ def run_tests(config, browser_config):
     # we will stop running tests on a failed test, or we will return 0 for
     # green
     return 0
+
+
+def make_comparison_result(base_and_reference_results):
+    ''' Receive a test result object meant to be used as a base vs reference test. The result
+    object will have one test with two subtests; instead of traditional subtests we want to
+    treat them as separate tests, comparing them together and reporting the comparison results.
+
+    Results with multiple pages used as subtests would look like this normally, with the overall
+    result value being the mean of the pages/subtests:
+
+    PERFHERDER_DATA: {"framework": {"name": "talos"}, "suites": [{"extraOptions": ["e10s"],
+    "name": "bloom_basic", "lowerIsBetter": true, "alertThreshold": 5.0, "value": 594.81,
+    "subtests": [{"name": ".html", "lowerIsBetter": true, "alertThreshold": 5.0, "replicates":
+    [586.52, ...], "value": 586.52], "unit": "ms"}, {"name": "-ref.html", "lowerIsBetter": true,
+    "alertThreshold": 5.0, "replicates": [603.225, ...], "value": 603.225, "unit": "ms"}]}]}
+
+    We want to compare the subtests against eachother (base vs ref) and create a new single test
+    results object with the comparison results, that will look like traditional single test results
+    like this:
+
+    PERFHERDER_DATA: {"framework": {"name": "talos"}, "suites": [{"lowerIsBetter": true,
+    "subtests": [{"name": "", "lowerIsBetter": true, "alertThreshold": 5.0, "replicates":
+    [16.705, ...], "value": 16.705, "unit": "ms"}], "extraOptions": ["e10s"], "name":
+    "bloom_basic", "alertThreshold": 5.0}]}
+    '''
+    # separate the 'base' and 'reference' result run values
+    base_result_runs = base_and_reference_results.results[0].results[0]['runs']
+    ref_result_runs = base_and_reference_results.results[0].results[1]['runs']
+
+    # create a new results object for the comparison result; keep replicates from both pages
+    comparison_result = copy.deepcopy(base_and_reference_results)
+
+    # remove original results from our copy as they will be replaced by one comparison result
+    comparison_result.results[0].results = []
+
+    # populate our new comparison result with 'base' and 'ref' replicates
+    comparison_result.results[0].results.append({'index': 0,
+                                                 'runs': [],
+                                                 'page': '',
+                                                 'base_runs': base_result_runs,
+                                                 'ref_runs': ref_result_runs})
+
+    # now step thru each result, compare 'base' vs 'ref', and store the difference in 'runs'
+    _index = 0
+    for next_ref in comparison_result.results[0].results[0]['ref_runs']:
+        diff = abs(next_ref - comparison_result.results[0].results[0]['base_runs'][_index])
+        comparison_result.results[0].results[0]['runs'].append(round(diff, 3))
+        _index += 1
+
+    return comparison_result
 
 
 def convert_to_separate_test_results(multi_value_result, test_event_map):

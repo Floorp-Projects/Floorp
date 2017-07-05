@@ -10,7 +10,11 @@
   font-size: .83em;
 }
 
-.autofill-footer {
+.autofill-footer > .autofill-warning {
+  font-size: .83em;
+}
+
+.autofill-footer > .autofill-option-button {
   font-size: .91em;
 }
 
