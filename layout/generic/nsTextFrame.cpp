@@ -5137,8 +5137,7 @@ nsDisplayText::nsDisplayText(nsDisplayListBuilder* aBuilder, nsTextFrame* aFrame
     Color color;
     if (!capture->ContainsOnlyColoredGlyphs(mFont, color, glyphs)
         || !mFont
-        || !mFont->CanSerialize()
-        || XRE_IsParentProcess()) {
+        || !mFont->CanSerialize()) {
       mFont = nullptr;
       mGlyphs.Clear();
     } else {
