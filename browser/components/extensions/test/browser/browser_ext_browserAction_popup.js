@@ -68,8 +68,7 @@ async function testInArea(area) {
           },
           () => {
             browser.test.log(`Call triggerAction, expect popup "a" again. Leave popup open.`);
-            sendClick({expectEvent: false, expectPopup: "a",
-                       closePopup: false, containingPopupShouldClose: false}, "trigger-action");
+            sendClick({expectEvent: false, expectPopup: "a", closePopup: false}, "trigger-action");
           },
           () => {
             browser.test.log(`Call triggerAction again. Expect remaining popup closed.`);
@@ -110,8 +109,7 @@ async function testInArea(area) {
           () => {
             browser.test.log(`Set popup to "a" and click browser action. Expect popup "a", and leave open.`);
             browser.browserAction.setPopup({popup: "/popup-a.html"});
-            sendClick({expectEvent: false, expectPopup: "a", closePopup: false,
-                       containingPopupShouldClose: false});
+            sendClick({expectEvent: false, expectPopup: "a", closePopup: false});
           },
           () => {
             browser.test.log(`Tell popup "a" to call window.close(). Expect popup closed.`);
@@ -120,17 +118,12 @@ async function testInArea(area) {
         ];
 
         let expect = {};
-        sendClick = ({expectEvent, expectPopup, runNextTest, waitUntilClosed,
-                      closePopup, containingPopupShouldClose = true},
-                     message = "send-click") => {
+        sendClick = ({expectEvent, expectPopup, runNextTest, waitUntilClosed, closePopup}, message = "send-click") => {
           if (closePopup == undefined) {
             closePopup = !expectEvent;
           }
 
-          expect = {
-            event: expectEvent, popup: expectPopup, runNextTest,
-            waitUntilClosed, closePopup, containingPopupShouldClose
-          };
+          expect = {event: expectEvent, popup: expectPopup, runNextTest, waitUntilClosed, closePopup};
           browser.test.sendMessage(message);
         };
 
@@ -221,14 +214,6 @@ async function testInArea(area) {
 
       info("Closing for panel");
       await closeBrowserAction(extension);
-    }
-
-    if (area == getCustomizableUIPanelID() && expecting.containingPopupShouldClose) {
-      let {node} = getBrowserActionWidget(extension).forWindow(window);
-      let panel = node.closest("panel");
-      info(`State of panel ${panel.id} is: ${panel.state}`);
-      ok(!["open", "showing"].includes(panel.state),
-         "Panel containing the action should be closed");
     }
 
     info("Starting next test");
