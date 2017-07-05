@@ -130,7 +130,6 @@ HOST_LIBRARY		:= $(LIB_PREFIX)$(HOST_LIBRARY_NAME).$(LIB_SUFFIX)
 endif
 endif
 
-ifdef LIBRARY
 ifdef FORCE_SHARED_LIB
 ifdef MKSHLIB
 
@@ -142,7 +141,6 @@ EMBED_MANIFEST_AT=2
 
 endif # MKSHLIB
 endif # FORCE_SHARED_LIB
-endif # LIBRARY
 
 ifeq ($(OS_ARCH),WINNT)
 ifndef GNU_CC
