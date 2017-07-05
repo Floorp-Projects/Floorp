@@ -784,7 +784,7 @@ var CustomizableUIInternal = {
 
         this.ensureButtonContextMenu(node, aAreaNode);
         if (node.localName == "toolbarbutton") {
-          if (areaIsPanel) {
+          if (areaIsPanel && !gPhotonStructure) {
             node.setAttribute("wrap", "true");
           } else {
             node.removeAttribute("wrap");
@@ -970,7 +970,9 @@ var CustomizableUIInternal = {
         continue;
       }
       this.ensureButtonContextMenu(child, aPanelContents, true);
-      child.setAttribute("wrap", "true");
+      if (!gPhotonStructure) {
+        child.setAttribute("wrap", "true");
+      }
     }
 
     this.registerBuildArea(aArea, aPanelContents);
