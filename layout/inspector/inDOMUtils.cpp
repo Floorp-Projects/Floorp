@@ -99,7 +99,7 @@ inDOMUtils::GetAllStyleSheets(nsIDOMDocument *aDocument, uint32_t *aLength,
     }
 
     AutoTArray<StyleSheet*, 32> xblSheetArray;
-    styleSet->AsGecko()->AppendAllXBLStyleSheets(xblSheetArray);
+    styleSet->AppendAllXBLStyleSheets(xblSheetArray);
 
     // The XBL stylesheet array will quite often be full of duplicates. Cope:
     nsTHashtable<nsPtrHashKey<StyleSheet>> sheetSet;
