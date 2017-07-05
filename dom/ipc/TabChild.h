@@ -45,8 +45,10 @@
 
 class nsIDOMWindowUtils;
 class nsIHttpChannel;
+class nsISerialEventTarget;
 
 namespace mozilla {
+class AbstractThread;
 namespace layout {
 class RenderFrameChild;
 } // namespace layout
@@ -69,7 +71,6 @@ class TabChild;
 class TabGroup;
 class ClonedMessageData;
 class CoalescedWheelData;
-class TabChildBase;
 
 class TabChildGlobal : public DOMEventTargetHelper,
                        public nsIContentFrameMessageManager,
@@ -78,7 +79,7 @@ class TabChildGlobal : public DOMEventTargetHelper,
                        public nsSupportsWeakReference
 {
 public:
-  explicit TabChildGlobal(TabChildBase* aTabChild);
+  explicit TabChildGlobal(TabChild* aTabChild);
   void Init();
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(TabChildGlobal, DOMEventTargetHelper)
@@ -149,8 +150,19 @@ public:
     MOZ_CRASH("TabChildGlobal doesn't use DOM bindings!");
   }
 
+  // Dispatch a runnable related to the global.
+  virtual nsresult Dispatch(const char* aName,
+                            mozilla::TaskCategory aCategory,
+                            already_AddRefed<nsIRunnable>&& aRunnable) override;
+
+  virtual nsISerialEventTarget*
+  EventTargetFor(mozilla::TaskCategory aCategory) const override;
+
+  virtual AbstractThread*
+  AbstractMainThreadFor(mozilla::TaskCategory aCategory) override;
+
   nsCOMPtr<nsIContentFrameMessageManager> mMessageManager;
-  RefPtr<TabChildBase> mTabChild;
+  RefPtr<TabChild> mTabChild;
 
 protected:
   ~TabChildGlobal();
