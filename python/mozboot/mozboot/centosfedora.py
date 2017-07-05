@@ -22,6 +22,7 @@ class CentOSFedoraBootstrapper(StyloInstall, BaseBootstrapper):
         self.packages = [
             'autoconf213',
             'mercurial',
+            'which',
         ]
 
         self.browser_group_packages = [
@@ -43,7 +44,11 @@ class CentOSFedoraBootstrapper(StyloInstall, BaseBootstrapper):
             'yasm',
         ]
 
-        self.mobile_android_packages = []
+        self.mobile_android_packages = [
+            'java-1.8.0-openjdk-devel',
+            # For downloading the Android SDK and NDK.
+            'wget',
+        ]
 
         if self.distro in ('CentOS', 'CentOS Linux'):
             self.group_packages += [
@@ -75,13 +80,6 @@ class CentOSFedoraBootstrapper(StyloInstall, BaseBootstrapper):
                 'python-dbus',
             ]
 
-            self.mobile_android_packages += [
-                'java-1.8.0-openjdk-devel',
-                'ncurses-devel.i686',
-                'libstdc++.i686',
-                'zlib-devel.i686',
-            ]
-
     def install_system_packages(self):
         self.dnf_groupinstall(*self.group_packages)
         self.dnf_install(*self.packages)
@@ -93,16 +91,10 @@ class CentOSFedoraBootstrapper(StyloInstall, BaseBootstrapper):
         self.ensure_browser_packages(artifact_mode=True)
 
     def install_mobile_android_packages(self):
-        if self.distro in ('CentOS', 'CentOS Linux'):
-            BaseBootstrapper.install_mobile_android_packages(self)
-        elif self.distro == 'Fedora':
-            self.install_fedora_mobile_android_packages()
+        self.ensure_mobile_android_packages(artifact_mode=False)
 
     def install_mobile_android_artifact_mode_packages(self):
-        if self.distro in ('CentOS', 'CentOS Linux'):
-            BaseBootstrapper.install_mobile_android_artifact_mode_packages(self)
-        elif self.distro == 'Fedora':
-            self.install_fedora_mobile_android_packages(artifact_mode=True)
+        self.ensure_mobile_android_packages(artifact_mode=True)
 
     def ensure_browser_packages(self, artifact_mode=False):
         # TODO: Figure out what not to install for artifact mode
@@ -116,7 +108,7 @@ class CentOSFedoraBootstrapper(StyloInstall, BaseBootstrapper):
 
             self.run_as_root(['rpm', '-ivh', yasm])
 
-    def install_fedora_mobile_android_packages(self, artifact_mode=False):
+    def ensure_mobile_android_packages(self, artifact_mode=False):
         import android
 
         # Install Android specific packages.
