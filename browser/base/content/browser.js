@@ -4968,11 +4968,10 @@ var CombinedStopReload = {
 
     // Temporarily disable the reload button to prevent the user from
     // accidentally reloading the page when intending to click the stop button
-    this.reload.disabled = true;
+    this.reload.setAttribute("temporarily-disabled", "true");
     this._timer = setTimeout(function(self) {
       self._timer = 0;
-      self.reload.disabled = XULBrowserWindow.reloadCommand
-                                             .getAttribute("disabled") == "true";
+      self.reload.removeAttribute("temporarily-disabled");
     }, 650, this);
   },
 
