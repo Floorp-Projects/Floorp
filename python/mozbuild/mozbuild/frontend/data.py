@@ -342,7 +342,7 @@ class Linkable(ContextDerived):
             raise LinkageMultipleRustLibrariesError("Cannot link multiple Rust libraries into %s",
                                                     self)
         self.linked_libraries.append(obj)
-        if obj.cxx_link:
+        if obj.cxx_link and not isinstance(obj, SharedLibrary):
             self.cxx_link = True
         obj.refs.append(self)
 
