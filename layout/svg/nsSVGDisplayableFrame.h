@@ -6,12 +6,12 @@
 #ifndef __NS_ISVGCHILDFRAME_H__
 #define __NS_ISVGCHILDFRAME_H__
 
+#include "gfxMatrix.h"
 #include "gfxRect.h"
 #include "nsQueryFrame.h"
 #include "mozilla/gfx/MatrixFwd.h"
 
 class gfxContext;
-class gfxMatrix;
 class nsIFrame;
 class SVGBBox;
 

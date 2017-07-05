@@ -26,6 +26,7 @@
 #include "nsSVGClass.h"
 #include "nsIDOMSVGElement.h"
 #include "SVGContentUtils.h"
+#include "gfxMatrix.h"
 
 class nsSVGAngle;
 class nsSVGBoolean;
@@ -63,7 +64,6 @@ class DOMSVGStringList;
 
 } // namespace mozilla
 
-class gfxMatrix;
 struct nsSVGEnumMapping;
 
 typedef nsStyledElement nsSVGElementBase;
