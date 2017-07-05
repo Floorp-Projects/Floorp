@@ -23,7 +23,7 @@ MediaDecoderStateMachine*
 WaveDecoder::CreateStateMachine()
 {
   return new MediaDecoderStateMachine(
-    this, new MediaFormatReader(this, new WAVDemuxer(GetResource())));
+    this, new MediaFormatReader(this, new WAVDemuxer(mResource)));
 }
 
 /* static */ bool
