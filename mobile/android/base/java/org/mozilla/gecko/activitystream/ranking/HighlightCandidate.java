@@ -131,9 +131,15 @@ import java.util.Map;
                 FEATURE_PATH_LENGTH,
                 (double) uri.getPathSegments().size());
 
-        candidate.features.put(
-                FEATURE_QUERY_LENGTH,
-                (double) uri.getQueryParameterNames().size());
+        if (uri.isHierarchical()) {
+            candidate.features.put(
+                    FEATURE_QUERY_LENGTH,
+                    (double) uri.getQueryParameterNames().size());
+
+        // Opaque URIs do not support getQueryParameterNames.
+        } else {
+            candidate.features.put(FEATURE_QUERY_LENGTH, 0d);
+        }
     }
 
     @VisibleForTesting HighlightCandidate() {
