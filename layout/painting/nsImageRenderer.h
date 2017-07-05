@@ -17,6 +17,7 @@ namespace layers {
 class StackingContextHelper;
 class WebRenderParentCommand;
 class WebRenderDisplayItemLayer;
+class WebRenderLayerManager;
 } // namespace layers
 
 namespace wr {
@@ -212,6 +213,8 @@ public:
                                                 const mozilla::layers::StackingContextHelper& aSc,
                                                 nsTArray<layers::WebRenderParentCommand>& aParentCommands,
                                                 mozilla::layers::WebRenderDisplayItemLayer* aLayer,
+                                                mozilla::layers::WebRenderLayerManager* aManager,
+                                                nsDisplayItem*       aItem,
                                                 const nsRect&        aDest,
                                                 const nsRect&        aFill,
                                                 const nsPoint&       aAnchor,
@@ -297,6 +300,8 @@ private:
                                         const mozilla::layers::StackingContextHelper& aSc,
                                         nsTArray<layers::WebRenderParentCommand>& aParentCommands,
                                         mozilla::layers::WebRenderDisplayItemLayer* aLayer,
+                                        mozilla::layers::WebRenderLayerManager* aManager,
+                                        nsDisplayItem*       aItem,
                                         const nsRect&        aDirtyRect,
                                         const nsRect&        aDest,
                                         const nsRect&        aFill,
