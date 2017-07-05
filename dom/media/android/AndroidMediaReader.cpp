@@ -26,8 +26,9 @@ typedef mozilla::layers::Image Image;
 typedef mozilla::layers::PlanarYCbCrImage PlanarYCbCrImage;
 
 AndroidMediaReader::AndroidMediaReader(AbstractMediaDecoder *aDecoder,
-                                       const MediaContainerType& aContainerType) :
-  MediaDecoderReader(aDecoder),
+                                       const MediaContainerType& aContainerType,
+                                       MediaResource* aResource) :
+  MediaDecoderReader(aDecoder, aResource),
   mType(aContainerType),
   mPlugin(nullptr),
   mHasAudio(false),
@@ -43,7 +44,7 @@ nsresult AndroidMediaReader::ReadMetadata(MediaInfo* aInfo,
   MOZ_ASSERT(OnTaskQueue());
 
   if (!mPlugin) {
-    mPlugin = GetAndroidMediaPluginHost()->CreateDecoder(mDecoder->GetResource(), mType);
+    mPlugin = GetAndroidMediaPluginHost()->CreateDecoder(mResource, mType);
     if (!mPlugin) {
       return NS_ERROR_FAILURE;
     }
@@ -169,7 +170,7 @@ bool AndroidMediaReader::DecodeVideoFrame(bool& aKeyframeSkip,
       return true;
 
     currentImage = bufferCallback.GetImage();
-    int64_t pos = mDecoder->GetResource()->Tell();
+    int64_t pos = mResource->Tell();
     IntRect picture = mPicture;
 
     RefPtr<VideoData> v;
@@ -274,7 +275,7 @@ bool AndroidMediaReader::DecodeAudioData()
   MOZ_ASSERT(OnTaskQueue());
 
   // This is the approximate byte position in the stream.
-  int64_t pos = mDecoder->GetResource()->Tell();
+  int64_t pos = mResource->Tell();
 
   // Read next frame
   MPAPI::AudioFrame source;
