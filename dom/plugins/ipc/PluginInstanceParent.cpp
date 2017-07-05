@@ -2201,7 +2201,7 @@ PluginInstanceParent::UnsubclassPluginWindow()
             // Remove 'this' from the plugin list safely
             nsAutoPtr<PluginInstanceParent> tmp;
             MOZ_ASSERT(sPluginInstanceList);
-            sPluginInstanceList->RemoveAndForget((void*)mPluginHWND, tmp);
+            sPluginInstanceList->Remove((void*)mPluginHWND, &tmp);
             tmp.forget();
             if (!sPluginInstanceList->Count()) {
                 delete sPluginInstanceList;

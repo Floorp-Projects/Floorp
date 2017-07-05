@@ -271,11 +271,7 @@ nsDirectoryService::Undefine(const char* aProp)
   }
 
   nsDependentCString key(aProp);
-  if (auto entry = mHashtable.Lookup(key)) {
-    entry.Remove();
-    return NS_OK;
-  }
-  return NS_ERROR_FAILURE;
+  return mHashtable.Remove(key) ? NS_OK : NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP

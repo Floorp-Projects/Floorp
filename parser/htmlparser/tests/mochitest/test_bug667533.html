@@ -18,8 +18,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=667533
 SimpleTest.waitForExplicitFinish();
 
 function loaded(iframe) {
-  is(iframe.contentWindow.location.href, iframe.src, "should load correct URL");
-  is(iframe.contentDocument.body.textContent, '{"<p>Hello</p>": null}', "application/json should be treated as text");
+  is(SpecialPowers.wrap(iframe).contentWindow.location.href, iframe.src, "should load correct URL");
+  is(SpecialPowers.wrap(iframe).contentDocument.body.textContent, '{"<p>Hello</p>": null}', "application/json should be treated as text");
   SimpleTest.finish();
 }
 </script>

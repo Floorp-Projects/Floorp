@@ -96,7 +96,7 @@ module.exports = createClass({
                 onChange: this.onShowGridLineNumbersCheckboxClick,
               }
             ),
-            getStr("layout.displayNumbersOnLines")
+            getStr("layout.displayNumbersOnLines2")
           )
         ),
         dom.li(

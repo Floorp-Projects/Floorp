@@ -154,10 +154,28 @@ public:
   }
 
   /**
-   * remove the data for the associated key
+   * Remove the entry associated with aKey (if any), optionally _moving_ its
+   * current value into *aData.  Return true if found.
    * @param aKey the key to remove from the hashtable
+   * @param aData where to move the value (if non-null).  If an entry is not
+   *              found, *aData will be assigned a default-constructed value
+   *              (i.e. reset to zero or nullptr for primitive types).
+   * @return true if an entry for aKey was found (and removed)
    */
-  void Remove(KeyType aKey) { this->RemoveEntry(aKey); }
+  bool Remove(KeyType aKey, DataType* aData = nullptr)
+  {
+    if (auto* ent = this->GetEntry(aKey)) {
+      if (aData) {
+        *aData = mozilla::Move(ent->mData);
+      }
+      this->RemoveEntry(ent);
+      return true;
+    }
+    if (aData) {
+      *aData = mozilla::Move(DataType());
+    }
+    return false;
+  }
 
   struct LookupResult {
   private:

@@ -837,7 +837,7 @@ extern void
 TraceRuntime(JSTracer* trc);
 
 extern void
-ReleaseAllJITCode(FreeOp* op, bool addMarkers = true);
+ReleaseAllJITCode(FreeOp* op);
 
 extern void
 PrepareForDebugGC(JSRuntime* rt);

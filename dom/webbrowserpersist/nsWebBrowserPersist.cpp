@@ -2416,7 +2416,7 @@ nsWebBrowserPersist::FixRedirectedChannelEntry(nsIChannel *aNewChannel)
         // If a match was found, remove the data entry with the old channel
         // key and re-add it with the new channel key.
         nsAutoPtr<OutputData> outputData;
-        mOutputMap.RemoveAndForget(matchingKey, outputData);
+        mOutputMap.Remove(matchingKey, &outputData);
         NS_ENSURE_TRUE(outputData, NS_ERROR_FAILURE);
 
         // Store data again with new channel unless told to ignore redirects.

@@ -4,21 +4,17 @@
 
 html {
   background: -moz-Dialog;
+  line-height: 1.6em;
   padding: 0 1em;
   font: message-box;
 }
 
 body {
-  color: -moz-FieldText;
   position: relative;
   min-width: 330px;
   max-width: 50em;
   margin: 4em auto;
-  border: 1px solid ThreeDShadow;
-  border-radius: 10px;
-  padding: 3em;
   padding-inline-start: 30px;
-  background: -moz-Field;
 }
 
 .aboutPageWideContainer {
@@ -29,6 +25,11 @@ body {
   border: 1px solid ThreeDLightShadow;
   width: 300px;
   margin-bottom: 2em;
+}
+
+h1 {
+  font-weight: lighter;
+  font-size: 2.4em;
 }
 
 img {
@@ -46,7 +47,6 @@ ul {
   margin: 0;
   margin-inline-start: 1.5em;
   padding: 0;
-  list-style: square;
 }
 
 ul > li {

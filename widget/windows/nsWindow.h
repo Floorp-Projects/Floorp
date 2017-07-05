@@ -301,7 +301,6 @@ public:
   bool                    const DestroyCalled() { return mDestroyCalled; }
 
   bool IsPopup();
-  virtual bool ShouldUseOffMainThreadCompositing() override;
 
   const IMEContext& DefaultIMC() const { return mDefaultIMC; }
 

@@ -445,7 +445,7 @@ SVGAnimationElement::EndElementAt(float offset, ErrorResult& rv)
 }
 
 bool
-SVGAnimationElement::IsEventAttributeName(nsIAtom* aName)
+SVGAnimationElement::IsEventAttributeNameInternal(nsIAtom* aName)
 {
   return nsContentUtils::IsEventAttributeName(aName, EventNameType_SMIL);
 }

@@ -230,10 +230,10 @@ nsMappedAttributes::Equals(const nsMappedAttributes* aOther) const
   return true;
 }
 
-uint32_t
+PLDHashNumber
 nsMappedAttributes::HashValue() const
 {
-  uint32_t hash = HashGeneric(mRuleMapper);
+  PLDHashNumber hash = HashGeneric(mRuleMapper);
 
   uint32_t i;
   for (i = 0; i < mAttrCount; ++i) {

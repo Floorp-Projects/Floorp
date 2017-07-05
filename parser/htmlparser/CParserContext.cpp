@@ -7,7 +7,6 @@
 
 #include "nsIAtom.h"
 #include "CParserContext.h"
-#include "nsToken.h"
 #include "prenv.h"  
 #include "nsIHTMLContentSink.h"
 #include "nsHTMLTokenizer.h"

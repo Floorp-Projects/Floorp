@@ -73,7 +73,7 @@ public:
   nsSMILTimeContainer* GetTimeContainer();
   virtual nsSMILAnimationFunction& AnimationFunction() = 0;
 
-  virtual bool IsEventAttributeName(nsIAtom* aName) override;
+  virtual bool IsEventAttributeNameInternal(nsIAtom* aName) override;
 
   // Utility methods for within SVG
   void ActivateByHyperlink();
