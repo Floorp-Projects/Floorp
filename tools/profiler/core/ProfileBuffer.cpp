@@ -86,32 +86,3 @@ ProfileBuffer::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
   return n;
 }
 
-#define DYNAMIC_MAX_STRING 8192
-
-char*
-ProfileBuffer::processEmbeddedString(int aReadAheadPos, int* aEntriesConsumed,
-                                     char* aStrBuf)
-{
-  int strBufPos = 0;
-
-  // Read the string stored in mChars until the null character is seen.
-  bool seenNullByte = false;
-  while (aReadAheadPos != mWritePos && !seenNullByte) {
-    (*aEntriesConsumed)++;
-    ProfileBufferEntry readAheadEntry = mEntries[aReadAheadPos];
-    for (size_t pos = 0; pos < ProfileBufferEntry::kNumChars; pos++) {
-      aStrBuf[strBufPos] = readAheadEntry.u.mChars[pos];
-      if (aStrBuf[strBufPos] == '\0' || strBufPos == DYNAMIC_MAX_STRING-2) {
-        seenNullByte = true;
-        break;
-      }
-      strBufPos++;
-    }
-    if (!seenNullByte) {
-      aReadAheadPos = (aReadAheadPos + 1) % mEntrySize;
-    }
-  }
-  return aStrBuf;
-}
-
-
