@@ -122,7 +122,7 @@ pref("network.predictor.max-db-size", 2097152); // bytes
 pref("network.predictor.preserve", 50); // percentage of predictor data to keep when cleaning up
 
 // Use JS mDNS as a fallback
-pref("network.mdns.use_js_fallback", true);
+pref("network.mdns.use_js_fallback", false);
 
 /* history max results display */
 pref("browser.display.history.maxresults", 100);
