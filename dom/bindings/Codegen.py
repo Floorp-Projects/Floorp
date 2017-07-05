@@ -681,7 +681,7 @@ class CGPrototypeJSClass(CGThing):
 
 def NeedsGeneratedHasInstance(descriptor):
     assert descriptor.interface.hasInterfaceObject()
-    return descriptor.hasXPConnectImpls or descriptor.interface.isConsequential()
+    return descriptor.hasXPConnectImpls
 
 
 def InterfaceObjectProtoGetter(descriptor, forXrays=False):
@@ -2007,7 +2007,8 @@ class CGHasInstanceHook(CGAbstractStaticMethod):
         return self.generate_code()
 
     def generate_code(self):
-        header = dedent("""
+        return fill(
+            """
             JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
             if (!args.get(0).isObject()) {
               args.rval().setBoolean(false);
@@ -2015,60 +2016,24 @@ class CGHasInstanceHook(CGAbstractStaticMethod):
             }
 
             JS::Rooted<JSObject*> instance(cx, &args[0].toObject());
-            """)
-        if self.descriptor.interface.hasInterfacePrototypeObject():
-            return (
-                header +
-                fill(
-                    """
 
-                    static_assert(IsBaseOf<nsISupports, ${nativeType}>::value,
-                                  "HasInstance only works for nsISupports-based classes.");
+            static_assert(IsBaseOf<nsISupports, ${nativeType}>::value,
+                          "HasInstance only works for nsISupports-based classes.");
 
-                    bool ok = InterfaceHasInstance(cx, argc, vp);
-                    if (!ok || args.rval().toBoolean()) {
-                      return ok;
-                    }
-
-                    // FIXME Limit this to chrome by checking xpc::AccessCheck::isChrome(obj).
-                    nsCOMPtr<nsISupports> native =
-                      xpc::UnwrapReflectorToISupports(js::UncheckedUnwrap(instance, /* stopAtWindowProxy = */ false));
-                    nsCOMPtr<nsIDOM${name}> qiResult = do_QueryInterface(native);
-                    args.rval().setBoolean(!!qiResult);
-                    return true;
-                    """,
-                    nativeType=self.descriptor.nativeType,
-                    name=self.descriptor.interface.identifier.name))
-
-        hasInstanceCode = dedent("""
-
-            const DOMJSClass* domClass = GetDOMClass(js::UncheckedUnwrap(instance, /* stopAtWindowProxy = */ false));
-            if (!domClass) {
-              // Not a DOM object, so certainly not an instance of this interface
-              args.rval().setBoolean(false);
-              return true;
+            bool ok = InterfaceHasInstance(cx, argc, vp);
+            if (!ok || args.rval().toBoolean()) {
+              return ok;
             }
-            """)
-        if self.descriptor.interface.identifier.name == "ChromeWindow":
-            setRval = "args.rval().setBoolean(UnwrapDOMObject<nsGlobalWindow>(js::UncheckedUnwrap(instance, /* stopAtWindowProxy = */ false))->IsChromeWindow())"
-        else:
-            setRval = "args.rval().setBoolean(true)"
-        # Sort interaces implementing self by name so we get stable output.
-        for iface in sorted(self.descriptor.interface.interfacesImplementingSelf,
-                            key=lambda iface: iface.identifier.name):
-            hasInstanceCode += fill(
-                """
 
-                if (domClass->mInterfaceChain[PrototypeTraits<prototypes::id::${name}>::Depth] == prototypes::id::${name}) {
-                  ${setRval};
-                  return true;
-                }
-                """,
-                name=iface.identifier.name,
-                setRval=setRval)
-        hasInstanceCode += ("args.rval().setBoolean(false);\n"
-                            "return true;\n")
-        return header + hasInstanceCode
+            // FIXME Limit this to chrome by checking xpc::AccessCheck::isChrome(obj).
+            nsCOMPtr<nsISupports> native =
+              xpc::UnwrapReflectorToISupports(js::UncheckedUnwrap(instance, /* stopAtWindowProxy = */ false));
+            nsCOMPtr<nsIDOM${name}> qiResult = do_QueryInterface(native);
+            args.rval().setBoolean(!!qiResult);
+            return true;
+            """,
+            nativeType=self.descriptor.nativeType,
+            name=self.descriptor.interface.identifier.name)
 
 
 def isChromeOnly(m):
