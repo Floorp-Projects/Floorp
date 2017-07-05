@@ -325,9 +325,12 @@ URLMainThread::UpdateURLSearchParams()
   }
 
   nsAutoCString search;
-  nsresult rv = mURI->GetQuery(search);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    search.Truncate();
+  nsCOMPtr<nsIURL> url(do_QueryInterface(mURI));
+  if (url) {
+    nsresult rv = url->GetQuery(search);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      search.Truncate();
+    }
   }
 
   mSearchParams->ParseInput(search);
