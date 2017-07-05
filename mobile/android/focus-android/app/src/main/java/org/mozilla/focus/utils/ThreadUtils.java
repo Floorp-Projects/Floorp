@@ -16,6 +16,7 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 public class ThreadUtils {
     private static final ExecutorService backgroundExecutorService = Executors.newSingleThreadExecutor();
     private static final Handler handler = new Handler(Looper.getMainLooper());
+    private static final Thread uiThread = Looper.getMainLooper().getThread();
 
     @SuppressFBWarnings(value = "RV_RETURN_VALUE_IGNORED_BAD_PRACTICE", justification = "We don't care about the results here")
     public static void postToBackgroundThread(final Runnable runnable) {
@@ -28,5 +29,17 @@ public class ThreadUtils {
 
     public static void postToMainThreadDelayed(final Runnable runnable, long delayMillis) {
         handler.postDelayed(runnable, delayMillis);
+    }
+
+    public static void assertOnUiThread() {
+        final Thread currentThread = Thread.currentThread();
+        final long currentThreadId = currentThread.getId();
+        final long expectedThreadId = uiThread.getId();
+
+        if (currentThreadId == expectedThreadId) {
+            return;
+        }
+
+        throw new IllegalThreadStateException("Expected UI thread, but running on " + currentThread.getName());
     }
 }

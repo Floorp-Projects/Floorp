@@ -26,6 +26,7 @@ import android.widget.TextView;
 import org.mozilla.focus.R;
 import org.mozilla.focus.autocomplete.UrlAutoCompleteFilter;
 import org.mozilla.focus.telemetry.TelemetryWrapper;
+import org.mozilla.focus.utils.ThreadUtils;
 import org.mozilla.focus.utils.UrlUtils;
 import org.mozilla.focus.utils.ViewUtils;
 import org.mozilla.focus.widget.HintFrameLayout;
@@ -204,7 +205,9 @@ public class UrlInputFragment extends Fragment implements View.OnClickListener, 
         }
     }
 
-    private synchronized void animateAndDismiss() {
+    private void animateAndDismiss() {
+        ThreadUtils.assertOnUiThread();
+
         if (isAnimating) {
             // We are already animating some state change. Ignore all other requests.
             return;
