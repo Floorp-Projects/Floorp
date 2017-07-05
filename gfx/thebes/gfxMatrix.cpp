@@ -140,23 +140,15 @@ gfxMatrix::TransformBounds(const gfxRect& rect) const
     return gfxRect(min_x, min_y, max_x - min_x, max_y - min_y);
 }
 
-
-static void NudgeToInteger(double *aVal)
-{
-    float f = float(*aVal);
-    mozilla::gfx::NudgeToInteger(&f);
-    *aVal = f;
-}
-
 gfxMatrix&
 gfxMatrix::NudgeToIntegers(void)
 {
-    NudgeToInteger(&_11);
-    NudgeToInteger(&_21);
-    NudgeToInteger(&_12);
-    NudgeToInteger(&_22);
-    NudgeToInteger(&_31);
-    NudgeToInteger(&_32);
+    mozilla::gfx::NudgeToInteger(&_11);
+    mozilla::gfx::NudgeToInteger(&_21);
+    mozilla::gfx::NudgeToInteger(&_12);
+    mozilla::gfx::NudgeToInteger(&_22);
+    mozilla::gfx::NudgeToInteger(&_31);
+    mozilla::gfx::NudgeToInteger(&_32);
     return *this;
 }
 
