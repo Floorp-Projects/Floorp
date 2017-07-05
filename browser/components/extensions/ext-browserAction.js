@@ -206,8 +206,6 @@ this.browserAction = class extends ExtensionAPI {
           // with the fewest complications.
           event.preventDefault();
           this.emit("click", tabbrowser.selectedBrowser);
-          // Ensure we close any popups this node was in:
-          CustomizableUI.hidePanelForNode(event.target);
         }
       },
     });
