@@ -250,11 +250,6 @@ photonpanelmultiview .panel-subview-header {
   -moz-box-pack: center;
 }
 
-#PanelUI-mainView {
-  display: flex;
-  flex-direction: column;
-}
-
 #appMenu-popup > arrowscrollbox > autorepeatbutton,
 #PanelUI-popup > arrowscrollbox > autorepeatbutton {
   display: none;
@@ -381,12 +376,18 @@ photonpanelmultiview .panel-subview-body {
 }
 
 #PanelUI-contents-scroller {
+  -moz-box-flex: 1;
   overflow-y: auto;
   overflow-x: hidden;
   width: @menuPanelWidth@;
   padding-left: 5px;
   padding-right: 5px;
-  flex: auto;
+  -moz-box-align: center;
+}
+
+/* Allow box layout to take over when the view exceeds the available space. */
+#PanelUI-mainView:not([exceeding]) > #PanelUI-contents-scroller {
+  display: flex;
 }
 
 .toolbaritem-combined-buttons@inAnyPanel@ > toolbarbutton > .toolbarbutton-icon {
