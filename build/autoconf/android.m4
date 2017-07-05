@@ -23,8 +23,6 @@ case "$target" in
     dnl undefined symbol (present on the hardware, just not in the
     dnl NDK.)
     LDFLAGS="-L$android_platform/usr/lib -Wl,-rpath-link=$android_platform/usr/lib --sysroot=$android_platform -Wl,--allow-shlib-undefined $LDFLAGS"
-    dnl Add -llog by default, since we use it all over the place.
-    LIBS="-llog $LIBS"
     ANDROID_PLATFORM="${android_platform}"
 
     AC_DEFINE(ANDROID)
