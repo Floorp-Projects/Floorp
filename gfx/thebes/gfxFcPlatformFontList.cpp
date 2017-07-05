@@ -471,26 +471,47 @@ gfxFontconfigFontEntry::ReleaseGrFace(gr_face* aFace)
 double
 gfxFontconfigFontEntry::GetAspect()
 {
-    if (mAspect == 0.0) {
-        // default to aspect = 0.5
-        mAspect = 0.5;
+    if (mAspect != 0.0) {
+        return mAspect;
+    }
 
-        // create a font to calculate x-height / em-height
-        gfxFontStyle s;
-        s.size = 100.0; // pick large size to avoid possible hinting artifacts
-        RefPtr<gfxFont> font = FindOrMakeFont(&s, false);
-        if (font) {
-            const gfxFont::Metrics& metrics =
-                font->GetMetrics(gfxFont::eHorizontal);
-
-            // The factor of 0.1 ensures that xHeight is sane so fonts don't
-            // become huge.  Strictly ">" ensures that xHeight and emHeight are
-            // not both zero.
-            if (metrics.xHeight > 0.1 * metrics.emHeight) {
-                mAspect = metrics.xHeight / metrics.emHeight;
+    // try to compute aspect from OS/2 metrics if available
+    AutoTable os2Table(this, TRUETYPE_TAG('O','S','/','2'));
+    if (os2Table) {
+        uint16_t upem = UnitsPerEm();
+        if (upem != kInvalidUPEM) {
+            uint32_t len;
+            auto os2 = reinterpret_cast<const OS2Table*>
+                (hb_blob_get_data(os2Table, &len));
+            if (uint16_t(os2->version) >= 2) {
+                if (len >= offsetof(OS2Table, sxHeight) + sizeof(int16_t) &&
+                    int16_t(os2->sxHeight) > 0.1 * upem) {
+                    mAspect = double(int16_t(os2->sxHeight)) / upem;
+                    return mAspect;
+                }
             }
         }
     }
+
+    // default to aspect = 0.5 if the code below fails
+    mAspect = 0.5;
+
+    // create a font to calculate x-height / em-height
+    gfxFontStyle s;
+    s.size = 100.0; // pick large size to avoid possible hinting artifacts
+    RefPtr<gfxFont> font = FindOrMakeFont(&s, false);
+    if (font) {
+        const gfxFont::Metrics& metrics =
+            font->GetMetrics(gfxFont::eHorizontal);
+
+        // The factor of 0.1 ensures that xHeight is sane so fonts don't
+        // become huge.  Strictly ">" ensures that xHeight and emHeight are
+        // not both zero.
+        if (metrics.xHeight > 0.1 * metrics.emHeight) {
+            mAspect = metrics.xHeight / metrics.emHeight;
+        }
+    }
+
     return mAspect;
 }
 
