@@ -487,10 +487,8 @@ CustomElementRegistry::UpgradeCandidates(JSContext* aCx,
   }
 
   nsAutoPtr<nsTArray<nsWeakPtr>> candidates;
-  mCandidatesMap.RemoveAndForget(aKey, candidates);
-  if (candidates) {
-
-
+  if (mCandidatesMap.Remove(aKey, &candidates)) {
+    MOZ_ASSERT(candidates);
     CustomElementReactionsStack* reactionsStack =
       docGroup->CustomElementReactionsStack();
     for (size_t i = 0; i < candidates->Length(); ++i) {
