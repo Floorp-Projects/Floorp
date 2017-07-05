@@ -141,8 +141,8 @@ def main(args):
                       'content. Like --repo, you should not need to set this.')
 
     parser.add_option('--application-choice', dest='application_choice',
-                      help='Pass in an application choice (desktop/android) instead of using the '
-                      'default interactive prompt.')
+                      help='Pass in an application choice (see mozboot.bootstrap.APPLICATIONS) '
+                      'instead of using the default interactive prompt.')
     parser.add_option('--no-interactive', dest='no_interactive', action='store_true',
                       help='Answer yes to any (Y/n) interactive prompts.')
 
