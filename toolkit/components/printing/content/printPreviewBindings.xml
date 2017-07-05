@@ -389,8 +389,6 @@
           }
 
           this.mPageTextBox.value = 1;
-
-          this.mMessageManager.sendAsyncMessage("Printing:Preview:UpdatePageCount");
         ]]>
         </body>
       </method>
