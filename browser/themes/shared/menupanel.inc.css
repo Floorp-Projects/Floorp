@@ -1,5 +1,6 @@
 /* Menu panel and palette styles */
 
+%ifndef MOZ_PHOTON_THEME
 toolbaritem[sdkstylewidget="true"] > toolbarbutton,
 :-moz-any(@primaryToolbarButtons@)[cui-areatype="menu-panel"],
 toolbarpaletteitem[place="palette"] > :-moz-any(@primaryToolbarButtons@) {
@@ -18,12 +19,10 @@ toolbarpaletteitem[place="palette"] > #home-button {
   -moz-image-region: rect(0px, 128px, 32px, 96px);
 }
 
-%ifndef MOZ_PHOTON_THEME
 #bookmarks-menu-button[cui-areatype="menu-panel"],
 toolbarpaletteitem[place="palette"] > #bookmarks-menu-button {
   -moz-image-region: rect(0px, 192px, 32px, 160px);
 }
-%endif
 
 #history-panelmenu[cui-areatype="menu-panel"],
 toolbarpaletteitem[place="palette"] > #history-panelmenu {
@@ -177,6 +176,7 @@ toolbarpaletteitem[place="palette"] > #zoom-controls > #zoom-out-button {
 toolbarpaletteitem[place="palette"] > #zoom-controls > #zoom-in-button {
   -moz-image-region: rect(0px, 96px, 16px, 80px);
 }
+%endif
 
 #add-share-provider {
   list-style-image: url(chrome://browser/skin/menuPanel-small.svg);
