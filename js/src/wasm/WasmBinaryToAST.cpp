@@ -1549,10 +1549,11 @@ AstCreateImports(AstDecodeContext& c)
 
     Maybe<Limits> memory;
     if (c.env().usesMemory()) {
-        Limits limits;
-        limits.initial = c.env().minMemoryLength;
-        limits.maximum = c.env().maxMemoryLength;
-        memory = Some(limits);
+        memory = Some(Limits(c.env().minMemoryLength,
+                             c.env().maxMemoryLength,
+                             c.env().memoryUsage == MemoryUsage::Shared
+                               ? Shareable::True
+                               : Shareable::False));
     }
 
     for (size_t importIndex = 0; importIndex < c.env().imports.length(); importIndex++) {
@@ -1653,10 +1654,11 @@ AstCreateMemory(AstDecodeContext& c)
     if (!GenerateName(c, AstName(u"memory"), c.module().memories().length(), &name))
         return false;
 
-    Limits limits;
-    limits.initial = c.env().minMemoryLength;
-    limits.maximum = c.env().maxMemoryLength;
-    return c.module().addMemory(name, limits);
+    return c.module().addMemory(name, Limits(c.env().minMemoryLength,
+                                             c.env().maxMemoryLength,
+                                             c.env().memoryUsage == MemoryUsage::Shared
+                                               ? Shareable::True
+                                               : Shareable::False));
 }
 
 static AstExpr*

@@ -385,6 +385,7 @@ MSG_DEF(JSMSG_WASM_BAD_I64_TYPE,       0, JSEXN_TYPEERR,     "cannot pass i64 to
 MSG_DEF(JSMSG_WASM_NO_TRANSFER,        0, JSEXN_TYPEERR,     "cannot transfer WebAssembly/asm.js ArrayBuffer")
 MSG_DEF(JSMSG_WASM_STREAM_ERROR,       0, JSEXN_TYPEERR,     "stream error during WebAssembly compilation")
 MSG_DEF(JSMSG_WASM_TEXT_FAIL,          1, JSEXN_SYNTAXERR,   "wasm text error: {0}")
+MSG_DEF(JSMSG_WASM_MISSING_MAXIMUM,    0, JSEXN_TYPEERR,     "'shared' is true but maximum is not specified")
 
 // Proxy
 MSG_DEF(JSMSG_BAD_TRAP_RETURN_VALUE,   2, JSEXN_TYPEERR,"trap {1} for {0} returned a primitive value")

@@ -322,7 +322,7 @@ EnforceRangeU32(JSContext* cx, HandleValue v, uint32_t max, const char* kind, co
 
 static bool
 GetLimits(JSContext* cx, HandleObject obj, uint32_t maxInitial, uint32_t maxMaximum,
-          const char* kind, Limits* limits)
+          const char* kind, Limits* limits, Shareable allowShared)
 {
     JSAtom* initialAtom = Atomize(cx, "initial", strlen("initial"));
     if (!initialAtom)
@@ -341,11 +341,11 @@ GetLimits(JSContext* cx, HandleObject obj, uint32_t maxInitial, uint32_t maxMaxi
         return false;
     RootedId maximumId(cx, AtomToId(maximumAtom));
 
-    bool found;
-    if (!HasProperty(cx, obj, maximumId, &found))
+    bool foundMaximum;
+    if (!HasProperty(cx, obj, maximumId, &foundMaximum))
         return false;
 
-    if (found) {
+    if (foundMaximum) {
         RootedValue maxVal(cx);
         if (!GetProperty(cx, obj, obj, maximumId, &maxVal))
             return false;
@@ -360,6 +360,35 @@ GetLimits(JSContext* cx, HandleObject obj, uint32_t maxInitial, uint32_t maxMaxi
             return false;
         }
     }
+
+    limits->shared = Shareable::False;
+
+#ifdef ENABLE_WASM_THREAD_OPS
+    if (allowShared == Shareable::True) {
+        JSAtom* sharedAtom = Atomize(cx, "shared", strlen("shared"));
+        if (!sharedAtom)
+            return false;
+        RootedId sharedId(cx, AtomToId(sharedAtom));
+
+        bool foundShared;
+        if (!HasProperty(cx, obj, sharedId, &foundShared))
+            return false;
+
+        if (foundShared) {
+            RootedValue sharedVal(cx);
+            if (!GetProperty(cx, obj, obj, sharedId, &sharedVal))
+                return false;
+
+            limits->shared = ToBoolean(sharedVal) ? Shareable::True : Shareable::False;
+
+            if (limits->shared == Shareable::True && !foundMaximum) {
+                JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_WASM_MISSING_MAXIMUM,
+                                          kind);
+                return false;
+            }
+        }
+    }
+#endif
 
     return true;
 }
@@ -1250,8 +1279,11 @@ WasmMemoryObject::construct(JSContext* cx, unsigned argc, Value* vp)
 
     RootedObject obj(cx, &args[0].toObject());
     Limits limits;
-    if (!GetLimits(cx, obj, MaxMemoryInitialPages, MaxMemoryMaximumPages, "Memory", &limits))
+    if (!GetLimits(cx, obj, MaxMemoryInitialPages, MaxMemoryMaximumPages, "Memory", &limits,
+                   Shareable::True))
+    {
         return false;
+    }
 
     limits.initial *= PageSize;
     if (limits.maximum)
@@ -1560,8 +1592,11 @@ WasmTableObject::construct(JSContext* cx, unsigned argc, Value* vp)
     }
 
     Limits limits;
-    if (!GetLimits(cx, obj, MaxTableInitialLength, UINT32_MAX, "Table", &limits))
+    if (!GetLimits(cx, obj, MaxTableInitialLength, UINT32_MAX, "Table", &limits,
+                   Shareable::False))
+    {
         return false;
+    }
 
     RootedWasmTableObject table(cx, WasmTableObject::create(cx, limits));
     if (!table)
