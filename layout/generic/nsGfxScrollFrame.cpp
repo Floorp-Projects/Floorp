@@ -4146,7 +4146,7 @@ static nsSize
 GetScrollPortSizeExcludingHeadersAndFooters(nsIFrame* aViewportFrame,
                                             const nsRect& aScrollPort)
 {
-  nsTArray<TopAndBottom> list;
+  AutoTArray<TopAndBottom, 50> list;
   nsFrameList fixedFrames = aViewportFrame->GetChildList(nsIFrame::kFixedList);
   for (nsFrameList::Enumerator iterator(fixedFrames); !iterator.AtEnd();
        iterator.Next()) {

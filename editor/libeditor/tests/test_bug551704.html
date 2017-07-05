@@ -94,7 +94,7 @@ SimpleTest.waitForFocus(function() {
 
     continueTest();
   });
-  iframe.src = "data:text/html,foo";
+  iframe.srcdoc = "foo";
   document.getElementById("content").appendChild(iframe);
 });
 

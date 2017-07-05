@@ -128,7 +128,7 @@ ImageCacheKey::Spec() const
   return mURI->Spec();
 }
 
-/* static */ uint32_t
+/* static */ PLDHashNumber
 ImageCacheKey::ComputeHash(ImageURL* aURI,
                            const Maybe<uint64_t>& aBlobSerial,
                            const OriginAttributes& aAttrs,

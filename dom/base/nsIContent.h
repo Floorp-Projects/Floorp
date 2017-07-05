@@ -527,10 +527,12 @@ public:
    * Determines if an event attribute name (such as onclick) is valid for
    * a given element type.
    * @note calls nsContentUtils::IsEventAttributeName with right flag
-   * @note overridden by subclasses as needed
+   * @note *Internal is overridden by subclasses as needed
    * @param aName the event name to look up
    */
-  virtual bool IsEventAttributeName(nsIAtom* aName)
+  bool IsEventAttributeName(nsIAtom* aName);
+
+  virtual bool IsEventAttributeNameInternal(nsIAtom* aName)
   {
     return false;
   }

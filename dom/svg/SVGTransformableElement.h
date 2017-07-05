@@ -52,7 +52,7 @@ public:
 
 
   // nsSVGElement overrides
-  virtual bool IsEventAttributeName(nsIAtom* aName) override;
+  virtual bool IsEventAttributeNameInternal(nsIAtom* aName) override;
 
 
   virtual gfxMatrix PrependLocalTransformsTo(

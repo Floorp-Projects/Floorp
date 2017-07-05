@@ -30,6 +30,7 @@ public:
   typedef nsBaseHashtable<KeyClass, nsAutoPtr<T>, T*> base_type;
 
   using base_type::IsEmpty;
+  using base_type::Remove;
 
   nsClassHashtable() {}
   explicit nsClassHashtable(uint32_t aInitLength)
@@ -55,19 +56,6 @@ public:
    * @returns nullptr if the key is not present.
    */
   UserDataType Get(KeyType aKey) const;
-
-  /**
-   * Remove the entry for the given key from the hashtable and return it in
-   * aOut.  If the key is not in the hashtable, aOut's pointer is set to
-   * nullptr.
-   *
-   * Normally, an entry is deleted when it's removed from an nsClassHashtable,
-   * but this function transfers ownership of the entry back to the caller
-   * through aOut -- the entry will be deleted when aOut goes out of scope.
-   *
-   * @param aKey the key to get and remove from the hashtable
-   */
-  void RemoveAndForget(KeyType aKey, nsAutoPtr<T>& aOut);
 };
 
 //
@@ -119,23 +107,6 @@ nsClassHashtable<KeyClass, T>::Get(KeyType aKey) const
   }
 
   return ent->mData;
-}
-
-template<class KeyClass, class T>
-void
-nsClassHashtable<KeyClass, T>::RemoveAndForget(KeyType aKey, nsAutoPtr<T>& aOut)
-{
-  aOut = nullptr;
-
-  typename base_type::EntryType* ent = this->GetEntry(aKey);
-  if (!ent) {
-    return;
-  }
-
-  // Transfer ownership from ent->mData into aOut.
-  aOut = mozilla::Move(ent->mData);
-
-  this->RemoveEntry(ent);
 }
 
 #endif // nsClassHashtable_h__

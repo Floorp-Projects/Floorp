@@ -11,11 +11,6 @@
 #ifndef WEBRTC_BASE_SANITIZER_H_
 #define WEBRTC_BASE_SANITIZER_H_
 
-#ifdef WEBRTC_MOZILLA_BUILD
-// We need to define the __asan_* functions with the right visibility
-#include "nspr/plarena.h"
-#endif
-
 #if defined(__has_feature)
 #if __has_feature(address_sanitizer)
 #define RTC_HAS_ASAN 1

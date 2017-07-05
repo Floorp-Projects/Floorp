@@ -887,6 +887,7 @@ rpc/types.h
 sane/sane.h
 sane/sanei.h
 sane/saneopts.h
+sanitizer/asan_interface.h
 sched.h
 Scrap.h
 Screen.h

@@ -422,7 +422,7 @@ HTMLBodyElement::GetAssociatedEditor()
 }
 
 bool
-HTMLBodyElement::IsEventAttributeName(nsIAtom *aName)
+HTMLBodyElement::IsEventAttributeNameInternal(nsIAtom *aName)
 {
   return nsContentUtils::IsEventAttributeName(aName,
                                               EventNameType_HTML |

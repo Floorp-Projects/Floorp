@@ -206,7 +206,7 @@ typedef struct _nsCocoaWindowList {
 - (void)restoreBackgroundColor;
 @end
 
-class nsCocoaWindow : public nsBaseWidget, public nsPIWidgetCocoa
+class nsCocoaWindow final : public nsBaseWidget, public nsPIWidgetCocoa
 {
 private:
   typedef nsBaseWidget Inherited;

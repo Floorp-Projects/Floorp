@@ -14,6 +14,7 @@
 #include "mozilla/dom/SVGTests.h"
 #include "nsContentUtils.h"
 #include "nsICSSDeclaration.h"
+#include "nsIContentInlines.h"
 #include "nsIDocument.h"
 #include "nsIDOMMutationEvent.h"
 #include "mozilla/InternalMutationEvent.h"

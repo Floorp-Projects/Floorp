@@ -6,6 +6,7 @@
 #ifndef GFX_WEBRENDERLAYERMANAGER_H
 #define GFX_WEBRENDERLAYERMANAGER_H
 
+#include "gfxPrefs.h"
 #include "Layers.h"
 #include "mozilla/MozPromise.h"
 #include "mozilla/layers/APZTestData.h"
@@ -161,6 +162,7 @@ public:
   void LogTestDataForCurrentPaint(FrameMetrics::ViewID aScrollId,
                                   const std::string& aKey,
                                   const std::string& aValue) {
+    MOZ_ASSERT(gfxPrefs::APZTestLoggingEnabled(), "don't call me");
     mApzTestData.LogTestDataForPaint(mPaintSequenceNumber, aScrollId, aKey, aValue);
   }
   // See equivalent function in ClientLayerManager

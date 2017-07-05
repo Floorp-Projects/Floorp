@@ -1794,8 +1794,7 @@ ServiceWorkerManager::ReportToAllClients(const nsCString& aScope,
 
     if (regList->IsEmpty()) {
       regList = nullptr;
-      nsAutoPtr<WeakDocumentList> doomed;
-      mRegisteringDocuments.RemoveAndForget(aScope, doomed);
+      mRegisteringDocuments.Remove(aScope);
     }
   }
 
@@ -1950,8 +1949,7 @@ ServiceWorkerManager::FlushReportsToAllClients(const nsACString& aScope,
 
     if (regList->IsEmpty()) {
       regList = nullptr;
-      nsAutoPtr<WeakDocumentList> doomed;
-      mRegisteringDocuments.RemoveAndForget(aScope, doomed);
+      mRegisteringDocuments.Remove(aScope);
     }
   }
 
@@ -3891,8 +3889,7 @@ ServiceWorkerManager::ShouldReportToWindow(mozIDOMWindowProxy* aWindow,
 
     if (list->IsEmpty()) {
       list = nullptr;
-      nsAutoPtr<WeakDocumentList> doomed;
-      mRegisteringDocuments.RemoveAndForget(aScope, doomed);
+      mRegisteringDocuments.Remove(aScope);
     }
   }
 
@@ -4171,8 +4168,7 @@ ServiceWorkerManager::RemoveNavigationInterception(const nsACString& aScope,
     MOZ_ASSERT(!list->Contains(aChannel));
     if (list->IsEmpty()) {
       list = nullptr;
-      nsAutoPtr<InterceptionList> doomed;
-      mNavigationInterceptions.RemoveAndForget(aScope, doomed);
+      mNavigationInterceptions.Remove(aScope);
     }
   }
 }

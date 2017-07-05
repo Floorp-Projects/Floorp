@@ -92,7 +92,7 @@ public:
     return static_cast<SVGMeetOrSlice>(mMeetOrSlice);
   }
 
-  uint32_t Hash() const {
+  PLDHashNumber Hash() const {
     return HashGeneric(mAlign, mMeetOrSlice);
   }
 

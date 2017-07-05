@@ -69,9 +69,8 @@ this.omnibox = class extends ExtensionAPI {
             extension.off(ExtensionSearchHandler.MSG_INPUT_ENTERED, listener);
           };
         }).api(),
-      },
 
-      omnibox_internal: {
+        // Internal APIs.
         addSuggestions: (id, suggestions) => {
           try {
             ExtensionSearchHandler.addSuggestions(this.keyword, id, suggestions);
@@ -81,7 +80,7 @@ this.omnibox = class extends ExtensionAPI {
           }
         },
 
-        onInputChanged: new EventManager(context, "omnibox_internal.onInputChanged", fire => {
+        onInputChanged: new EventManager(context, "omnibox.onInputChanged", fire => {
           let listener = (eventName, text, id) => {
             fire.sync(text, id);
           };
