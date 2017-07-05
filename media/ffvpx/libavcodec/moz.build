@@ -62,6 +62,7 @@ USE_LIBS += [
      'mozavutil'
 ]
 
-OS_LIBS += ['m']
+if CONFIG['OS_TARGET'] != 'WINNT':
+    OS_LIBS += ['m']
 
 include("../ffvpxcommon.mozbuild")
