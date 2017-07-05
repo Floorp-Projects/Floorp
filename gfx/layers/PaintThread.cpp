@@ -6,6 +6,7 @@
 
 #include "PaintThread.h"
 
+#include "base/task.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/SyncRunnable.h"
 
@@ -15,6 +16,8 @@ namespace layers {
 using namespace gfx;
 
 StaticAutoPtr<PaintThread> PaintThread::sSingleton;
+StaticRefPtr<nsIThread> PaintThread::sThread;
+PlatformThreadId PaintThread::sThreadId;
 
 void
 PaintThread::Release()
@@ -30,24 +33,25 @@ void
 PaintThread::InitOnPaintThread()
 {
   MOZ_ASSERT(!NS_IsMainThread());
-  mThreadId = PlatformThread::CurrentId();
+  sThreadId = PlatformThread::CurrentId();
 }
 
 bool
 PaintThread::Init()
 {
   MOZ_ASSERT(NS_IsMainThread());
-  nsresult rv = NS_NewNamedThread("PaintThread", getter_AddRefs(mThread));
 
+  RefPtr<nsIThread> thread;
+  nsresult rv = NS_NewNamedThread("PaintThread", getter_AddRefs(thread));
   if (NS_FAILED(rv)) {
     return false;
   }
+  sThread = thread;
 
   nsCOMPtr<nsIRunnable> paintInitTask =
     NewRunnableMethod("PaintThread::InitOnPaintThread",
                       this, &PaintThread::InitOnPaintThread);
-
-  SyncRunnable::DispatchToThread(PaintThread::sSingleton->mThread, paintInitTask);
+  SyncRunnable::DispatchToThread(sThread, paintInitTask);
   return true;
 }
 
@@ -69,49 +73,68 @@ PaintThread::Get()
   return PaintThread::sSingleton.get();
 }
 
+void
+DestroyPaintThread(UniquePtr<PaintThread>&& pt)
+{
+  MOZ_ASSERT(PaintThread::IsOnPaintThread());
+  pt->ShutdownOnPaintThread();
+}
+
 /* static */ void
 PaintThread::Shutdown()
 {
-  if (!PaintThread::sSingleton) {
+  MOZ_ASSERT(NS_IsMainThread());
+
+  UniquePtr<PaintThread> pt(sSingleton.forget());
+  if (!pt) {
     return;
   }
 
-  PaintThread::sSingleton->ShutdownImpl();
-  PaintThread::sSingleton = nullptr;
+  sThread->Dispatch(NewRunnableFunction(DestroyPaintThread, Move(pt)));
+  sThread->Shutdown();
+  sThread = nullptr;
 }
 
 void
-PaintThread::ShutdownImpl()
+PaintThread::ShutdownOnPaintThread()
 {
-  MOZ_ASSERT(NS_IsMainThread());
-  PaintThread::sSingleton->mThread->AsyncShutdown();
+  MOZ_ASSERT(IsOnPaintThread());
 }
 
-bool
+/* static */ bool
 PaintThread::IsOnPaintThread()
 {
-  MOZ_ASSERT(mThread);
-  return PlatformThread::CurrentId() == mThreadId;
+  return sThreadId == PlatformThread::CurrentId();
+}
+
+void
+PaintThread::PaintContentsAsync(gfx::DrawTargetCapture* aCapture,
+                                gfx::DrawTarget* aTarget)
+{
+  MOZ_ASSERT(IsOnPaintThread());
+
+  // Draw all the things into the actual dest target.
+  aTarget->DrawCapturedDT(aCapture, Matrix());
 }
 
 void
 PaintThread::PaintContents(DrawTargetCapture* aCapture,
                            DrawTarget* aTarget)
 {
-  if (!IsOnPaintThread()) {
-    MOZ_ASSERT(NS_IsMainThread());
-    nsCOMPtr<nsIRunnable> paintTask =
-      NewRunnableMethod<DrawTargetCapture*, DrawTarget*>("PaintThread::PaintContents",
-                                                         this,
-                                                         &PaintThread::PaintContents,
-                                                         aCapture, aTarget);
+  MOZ_ASSERT(NS_IsMainThread());
 
-    SyncRunnable::DispatchToThread(mThread, paintTask);
-    return;
-  }
+  RefPtr<DrawTargetCapture> capture(aCapture);
+  RefPtr<DrawTarget> target(aTarget);
 
-  // Draw all the things into the actual dest target.
-  aTarget->DrawCapturedDT(aCapture, Matrix());
+  RefPtr<PaintThread> self = this;
+  RefPtr<Runnable> task = NS_NewRunnableFunction("PaintThread::PaintContents",
+    [self, capture, target]() -> void
+  {
+    self->PaintContentsAsync(capture, target);
+  });
+
+  SyncRunnable::DispatchToThread(sThread, task);
+  return;
 }
 
 } // namespace layers
