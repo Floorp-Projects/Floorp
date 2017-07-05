@@ -8,6 +8,7 @@
 #include "gfxPrefs.h"
 #include "GeckoProfiler.h"
 #include "LayersLogging.h"
+#include "mozilla/gfx/DrawEventRecorder.h"
 #include "mozilla/layers/CompositorBridgeChild.h"
 #include "mozilla/layers/StackingContextHelper.h"
 #include "mozilla/layers/TextureClient.h"
@@ -20,7 +21,6 @@
 #include "WebRenderPaintedLayerBlob.h"
 #include "WebRenderTextLayer.h"
 #include "WebRenderDisplayItemLayer.h"
-#include "nsDisplayList.h"
 
 namespace mozilla {
 
@@ -242,6 +242,112 @@ WebRenderLayerManager::EndTransactionWithoutLayer(nsDisplayList* aDisplayList,
                          EndTransactionFlags::END_DEFAULT,
                          aDisplayList,
                          aDisplayListBuilder);
+}
+
+Maybe<wr::ImageKey>
+WebRenderLayerManager::CreateImageKey(nsDisplayItem* aItem,
+                                      ImageContainer* aContainer,
+                                      mozilla::wr::DisplayListBuilder& aBuilder,
+                                      const StackingContextHelper& aSc,
+                                      gfx::IntSize& aSize)
+{
+  RefPtr<WebRenderImageData> imageData = CreateOrRecycleWebRenderUserData<WebRenderImageData>(aItem);
+  MOZ_ASSERT(imageData);
+
+  if (aContainer->IsAsync()) {
+    bool snap;
+    nsRect bounds = aItem->GetBounds(nullptr, &snap);
+    int32_t appUnitsPerDevPixel = aItem->Frame()->PresContext()->AppUnitsPerDevPixel();
+    LayerRect rect = ViewAs<LayerPixel>(
+      LayoutDeviceRect::FromAppUnits(bounds, appUnitsPerDevPixel),
+      PixelCastJustification::WebRenderHasUnitResolution);
+    LayerRect scBounds(0, 0, rect.width, rect.height);
+    imageData->CreateAsyncImageWebRenderCommands(aBuilder,
+                                                 aContainer,
+                                                 aSc,
+                                                 rect,
+                                                 scBounds,
+                                                 gfx::Matrix4x4(),
+                                                 Nothing(),
+                                                 wr::ImageRendering::Auto,
+                                                 wr::MixBlendMode::Normal);
+    return Nothing();
+  }
+
+  AutoLockImage autoLock(aContainer);
+  if (!autoLock.HasImage()) {
+    return Nothing();
+  }
+  mozilla::layers::Image* image = autoLock.GetImage();
+  aSize = image->GetSize();
+
+  return imageData->UpdateImageKey(aContainer);
+}
+
+bool
+WebRenderLayerManager::PushImage(nsDisplayItem* aItem,
+                                 ImageContainer* aContainer,
+                                 mozilla::wr::DisplayListBuilder& aBuilder,
+                                 const StackingContextHelper& aSc,
+                                 const LayerRect& aRect)
+{
+  gfx::IntSize size;
+  Maybe<wr::ImageKey> key = CreateImageKey(aItem, aContainer, aBuilder, aSc, size);
+  if (!key) {
+    return false;
+  }
+
+  wr::ImageRendering filter = wr::ImageRendering::Auto;
+  auto r = aSc.ToRelativeWrRect(aRect);
+  aBuilder.PushImage(r, r, filter, key.value());
+
+  return true;
+}
+
+bool
+WebRenderLayerManager::PushItemAsBlobImage(nsDisplayItem* aItem,
+                                           wr::DisplayListBuilder& aBuilder,
+                                           const StackingContextHelper& aSc,
+                                           nsDisplayListBuilder* aDisplayListBuilder)
+{
+  const int32_t appUnitsPerDevPixel = aItem->Frame()->PresContext()->AppUnitsPerDevPixel();
+
+  bool snap;
+  LayerRect bounds = ViewAs<LayerPixel>(
+      LayoutDeviceRect::FromAppUnits(aItem->GetBounds(aDisplayListBuilder, &snap), appUnitsPerDevPixel),
+      PixelCastJustification::WebRenderHasUnitResolution);
+  LayerIntSize imageSize = RoundedToInt(bounds.Size());
+  LayerRect imageRect;
+  imageRect.SizeTo(LayerSize(imageSize));
+
+  RefPtr<gfx::DrawEventRecorderMemory> recorder = MakeAndAddRef<gfx::DrawEventRecorderMemory>();
+  RefPtr<gfx::DrawTarget> dummyDt =
+    gfx::Factory::CreateDrawTarget(gfx::BackendType::SKIA, gfx::IntSize(1, 1), gfx::SurfaceFormat::B8G8R8X8);
+  RefPtr<gfx::DrawTarget> dt = gfx::Factory::CreateRecordingDrawTarget(recorder, dummyDt, imageSize.ToUnknownSize());
+  LayerPoint offset = ViewAs<LayerPixel>(
+      LayoutDevicePoint::FromAppUnits(aItem->ToReferenceFrame(), appUnitsPerDevPixel),
+      PixelCastJustification::WebRenderHasUnitResolution);
+
+  {
+    dt->ClearRect(imageRect.ToUnknownRect());
+    RefPtr<gfxContext> context = gfxContext::CreateOrNull(dt, offset.ToUnknownPoint());
+    MOZ_ASSERT(context);
+
+    aItem->Paint(aDisplayListBuilder, context);
+  }
+
+  wr::ByteBuffer bytes(recorder->mOutputStream.mLength, (uint8_t*)recorder->mOutputStream.mData);
+
+  WrRect dest = aSc.ToRelativeWrRect(imageRect + offset);
+  WrImageKey key = WrBridge()->GetNextImageKey();
+  WrBridge()->SendAddBlobImage(key, imageSize.ToUnknownSize(), imageSize.width * 4, dt->GetFormat(), bytes);
+  AddImageKeyForDiscard(key);
+
+  aBuilder.PushImage(dest,
+                     dest,
+                     wr::ImageRendering::Auto,
+                     key);
+  return true;
 }
 
 void
