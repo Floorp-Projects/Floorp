@@ -478,7 +478,7 @@ HasStableTSC()
 
   // detect if the Advanced Power Management feature is supported
   __cpuid(regs, 0x80000000);
-  if (regs[0] < 0x80000007) {
+  if ((unsigned int)regs[0] < 0x80000007) {
     // XXX should we return true here?  If there is no APM there may be
     // no way how TSC can run out of sync among cores.
     return false;

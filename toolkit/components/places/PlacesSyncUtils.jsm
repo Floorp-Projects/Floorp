@@ -1420,9 +1420,11 @@ function tagItem(item, tags) {
   // tag IDs, we temporarily tag a dummy URI, ensuring the tags exist.
   let dummyURI = PlacesUtils.toURI("about:weave#BStore_tagURI");
   let bookmarkURI = PlacesUtils.toURI(item.url.href);
-  PlacesUtils.tagging.tagURI(dummyURI, newTags, SOURCE_SYNC);
+  if (newTags && newTags.length > 0)
+    PlacesUtils.tagging.tagURI(dummyURI, newTags, SOURCE_SYNC);
   PlacesUtils.tagging.untagURI(bookmarkURI, null, SOURCE_SYNC);
-  PlacesUtils.tagging.tagURI(bookmarkURI, newTags, SOURCE_SYNC);
+  if (newTags && newTags.length > 0)
+    PlacesUtils.tagging.tagURI(bookmarkURI, newTags, SOURCE_SYNC);
   PlacesUtils.tagging.untagURI(dummyURI, null, SOURCE_SYNC);
 
   return newTags;
