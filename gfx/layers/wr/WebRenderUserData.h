@@ -9,6 +9,8 @@
 #include "mozilla/layers/StackingContextHelper.h"
 #include "mozilla/webrender/WebRenderAPI.h"
 
+class nsDisplayItemGeometry;
+
 namespace mozilla {
 namespace layers {
 class ImageClient;
@@ -30,6 +32,7 @@ public:
 
   enum class UserDataType {
     eImage,
+    eFallback,
   };
 
   virtual UserDataType GetType() = 0;
@@ -51,8 +54,11 @@ public:
   virtual WebRenderImageData* AsImageData() override { return this; }
   virtual UserDataType GetType() override { return UserDataType::eImage; }
   static UserDataType Type() { return UserDataType::eImage; }
+  Maybe<wr::ImageKey> GetKey() { return mKey; }
+  void SetKey(const wr::ImageKey& aKey) { mKey = Some(aKey); }
+  already_AddRefed<ImageClient> GetImageClient();
 
-  Maybe<wr::ImageKey> UpdateImageKey(ImageContainer* aContainer);
+  Maybe<wr::ImageKey> UpdateImageKey(ImageContainer* aContainer, bool aForceUpdate = false);
 
   void CreateAsyncImageWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder,
                                          ImageContainer* aContainer,
@@ -64,8 +70,9 @@ public:
                                          const WrImageRendering& aFilter,
                                          const WrMixBlendMode& aMixBlendMode);
 
-protected:
   void CreateImageClientIfNeeded();
+
+protected:
   void CreateExternalImageIfNeeded();
 
   wr::MaybeExternalImageId mExternalImageId;
@@ -73,6 +80,24 @@ protected:
   RefPtr<ImageClient> mImageClient;
   Maybe<wr::PipelineId> mPipelineId;
   RefPtr<ImageContainer> mContainer;
+};
+
+class WebRenderFallbackData : public WebRenderImageData
+{
+public:
+  explicit WebRenderFallbackData(WebRenderLayerManager* aWRManager);
+  virtual ~WebRenderFallbackData();
+
+  virtual UserDataType GetType() override { return UserDataType::eFallback; }
+  static UserDataType Type() { return UserDataType::eFallback; }
+  nsAutoPtr<nsDisplayItemGeometry> GetGeometry();
+  void SetGeometry(nsAutoPtr<nsDisplayItemGeometry> aGeometry);
+  nsRect GetBounds() { return mBounds; }
+  void SetBounds(const nsRect& aRect) { mBounds = aRect; }
+
+protected:
+  nsAutoPtr<nsDisplayItemGeometry> mGeometry;
+  nsRect mBounds;
 };
 
 } // namespace layers
