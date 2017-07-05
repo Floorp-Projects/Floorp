@@ -75,6 +75,11 @@ public:
   {
     return mPresContext ? mPresContext->GetRootWidget() : nullptr;
   }
+  // Returns the tab parent which has this composition in its remote process.
+  TabParent* GetTabParent() const
+  {
+    return mTabParent;
+  }
   // Returns true if the composition is started with synthesized event which
   // came from nsDOMWindowUtils.
   bool IsSynthesizedForTests() const { return mIsSynthesizedForTests; }
