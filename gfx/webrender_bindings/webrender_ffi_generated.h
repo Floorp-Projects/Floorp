@@ -2,13 +2,17 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* Generated with cbindgen:0.1.10 */
+/* Generated with cbindgen:0.1.13 */
 
 /* DO NOT MODIFY THIS MANUALLY! This file was generated using cbindgen.
- * To generate this file, clone `https://github.com/rlhunt/cbindgen` or run `cargo install cbindgen`,
- * then run `cbindgen gfx/webrender_bindings/ -o gfx/webrender_bindings/webrender_ffi_generated.h` */
+ * To generate this file:
+ *   1. Get the latest cbindgen using `cargo install --force cbindgen`
+ *      a. Alternatively, you can clone `https://github.com/rlhunt/cbindgen` and use a tagged release
+ *   2. Run `cbindgen toolkit/library/rust/ --crate webrender_bindings -o gfx/webrender_bindings/webrender_ffi_generated.h`
+ */
 
-#include <stdint.h>
+#include <cstdint>
+#include <cstdlib>
 
 extern "C" {
 
@@ -527,8 +531,11 @@ struct WrExternalImageHandler {
 };
 
 /* DO NOT MODIFY THIS MANUALLY! This file was generated using cbindgen.
- * To generate this file, clone `https://github.com/rlhunt/cbindgen` or run `cargo install cbindgen`,
- * then run `cbindgen gfx/webrender_bindings/ -o gfx/webrender_bindings/webrender_ffi_generated.h` */
+ * To generate this file:
+ *   1. Get the latest cbindgen using `cargo install --force cbindgen`
+ *      a. Alternatively, you can clone `https://github.com/rlhunt/cbindgen` and use a tagged release
+ *   2. Run `cbindgen toolkit/library/rust/ --crate webrender_bindings -o gfx/webrender_bindings/webrender_ffi_generated.h`
+ */
 
 WR_INLINE
 void wr_api_add_blob_image(WrAPI *aApi,
@@ -893,7 +900,7 @@ void wr_renderer_delete(WrRenderer *aRenderer)
 WR_DESTRUCTOR_SAFE_FUNC;
 
 WR_INLINE
-WrRenderedEpochs* wr_renderer_flush_rendered_epochs(WrRenderer *aRenderer)
+WrRenderedEpochs *wr_renderer_flush_rendered_epochs(WrRenderer *aRenderer)
 WR_FUNC;
 
 WR_INLINE
@@ -936,7 +943,7 @@ void wr_state_delete(WrState *aState)
 WR_DESTRUCTOR_SAFE_FUNC;
 
 WR_INLINE
-WrState* wr_state_new(WrPipelineId aPipelineId,
+WrState *wr_state_new(WrPipelineId aPipelineId,
                       WrSize aContentSize)
 WR_FUNC;
 
@@ -945,7 +952,7 @@ void wr_thread_pool_delete(WrThreadPool *aThreadPool)
 WR_DESTRUCTOR_SAFE_FUNC;
 
 WR_INLINE
-WrThreadPool* wr_thread_pool_new()
+WrThreadPool *wr_thread_pool_new()
 WR_FUNC;
 
 WR_INLINE
@@ -966,5 +973,8 @@ WR_FUNC;
 } // extern "C"
 
 /* DO NOT MODIFY THIS MANUALLY! This file was generated using cbindgen.
- * To generate this file, clone `https://github.com/rlhunt/cbindgen` or run `cargo install cbindgen`,
- * then run `cbindgen gfx/webrender_bindings/ -o gfx/webrender_bindings/webrender_ffi_generated.h` */
+ * To generate this file:
+ *   1. Get the latest cbindgen using `cargo install --force cbindgen`
+ *      a. Alternatively, you can clone `https://github.com/rlhunt/cbindgen` and use a tagged release
+ *   2. Run `cbindgen toolkit/library/rust/ --crate webrender_bindings -o gfx/webrender_bindings/webrender_ffi_generated.h`
+ */
