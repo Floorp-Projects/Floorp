@@ -264,6 +264,8 @@ void Gecko_AppendMozBorderColors(nsStyleBorder* aBorder, mozilla::Side aSide,
                                  nscolor aColor);
 void Gecko_CopyMozBorderColors(nsStyleBorder* aDest, const nsStyleBorder* aSrc,
                                mozilla::Side aSide);
+const nsBorderColors* Gecko_GetMozBorderColors(const nsStyleBorder* aBorder,
+                                               mozilla::Side aSide);
 
 // Font style
 void Gecko_FontFamilyList_Clear(FontFamilyList* aList);
@@ -320,6 +322,10 @@ nsStyleGradient* Gecko_CreateGradient(uint8_t shape,
                                       bool legacy_syntax,
                                       bool moz_legacy_syntax,
                                       uint32_t stops);
+
+const mozilla::css::URLValueData* Gecko_GetURLValue(const nsStyleImage* image);
+nsIAtom* Gecko_GetImageElement(const nsStyleImage* image);
+const nsStyleGradient* Gecko_GetGradientImageValue(const nsStyleImage* image);
 
 // list-style-image style.
 void Gecko_SetListStyleImageNone(nsStyleList* style_struct);
