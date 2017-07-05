@@ -132,9 +132,9 @@ load 1223688-1.html
 load 1223694-1.html
 load 1226400-1.html
 load 1227501-1.html
-skip-if(stylo) load 1230408-1.html # bug 1323716
-skip-if(stylo) load 1233135-1.html # bug 1323716
-skip-if(stylo) load 1233135-2.html # bug 1323716
+load 1230408-1.html
+load 1233135-1.html
+load 1233135-2.html
 load 1238660-1.html
 load 1245260-1.html
 load 1247865-1.html
