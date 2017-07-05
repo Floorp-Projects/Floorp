@@ -695,6 +695,7 @@ pref("apz.fling_friction", "0.002");
 pref("apz.fling_min_velocity_threshold", "0.5");
 pref("apz.fling_stop_on_tap_threshold", "0.05");
 pref("apz.fling_stopped_threshold", "0.01");
+pref("apz.frame_delay.enabled", false);
 pref("apz.highlight_checkerboarded_areas", false);
 pref("apz.keyboard.enabled", false);
 pref("apz.max_velocity_inches_per_ms", "-1.0");

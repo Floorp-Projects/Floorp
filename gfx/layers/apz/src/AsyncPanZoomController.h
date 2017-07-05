@@ -731,6 +731,11 @@ private:
   // This allows us to transform events into Gecko's coordinate space.
   FrameMetrics mExpectedGeckoMetrics;
 
+  // These variables cache the scroll offset and zoom stored in |mFrameMetrics|
+  // the last time SampleCompositedAsyncTransform() was called.
+  CSSPoint mCompositedScrollOffset;
+  CSSToParentLayerScale2D mCompositedZoom;
+
   AxisX mX;
   AxisY mY;
 
@@ -839,6 +844,26 @@ public:
    */
   AsyncTransformComponentMatrix GetCurrentAsyncTransformWithOverscroll(AsyncTransformConsumer aMode) const;
 
+private:
+  /**
+   * Samples the composited async transform, making the result of
+   * |GetCurrentAsyncTransform(eForCompositing)| and similar functions reflect
+   * the async scroll offset and zoom stored in |mFrameMetrics|.
+   *
+   * (This is only relevant when |gfxPrefs::APZFrameDelayEnabled() == true|.
+   * Otherwise, GetCurrentAsyncTransform() always reflects what's stored in
+   * |mFrameMetrics| immediately, without any delay.)
+   */
+  void SampleCompositedAsyncTransform();
+
+  /*
+   * Helper functions to query the async scroll offset and zoom either
+   * directly from |mFrameMetrics|, or from cached variables that store
+   * the scroll offset and zoom from the last time it was sampled by
+   * calling SampleCompositedAsyncTransform(), depending on who is asking.
+   */
+  CSSPoint GetEffectiveScrollOffset(AsyncTransformConsumer aMode) const;
+  CSSToParentLayerScale2D GetEffectiveZoom(AsyncTransformConsumer aMode) const;
 
   /* ===================================================================
    * The functions and members in this section are used to manage
