@@ -401,7 +401,7 @@ RestyleTracker::GetRestyleData(Element* aElement, nsAutoPtr<RestyleData>& aData)
     return false;
   }
 
-  mPendingRestyles.RemoveAndForget(aElement, aData);
+  mPendingRestyles.Remove(aElement, &aData);
   NS_ASSERTION(aData.get(), "Must have data if restyle bit is set");
 
   if (aData->mRestyleHint & eRestyle_LaterSiblings) {
