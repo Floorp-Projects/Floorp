@@ -37,7 +37,6 @@
 #include "nsPrintfCString.h"
 #include "nsTHashtable.h"
 #include "jsapi.h"
-#include "mozilla/dom/Element.h"
 
 // Initial size for the cache holding visited status observers.
 #define VISIT_OBSERVERS_INITIAL_CACHE_LENGTH 64
@@ -1957,8 +1956,6 @@ NS_IMETHODIMP
 History::NotifyVisited(nsIURI* aURI)
 {
   NS_ENSURE_ARG(aURI);
-  // NOTE: This can be run within the SystemGroup, and thus cannot directly
-  // interact with webpages.
 
   nsAutoScriptBlocker scriptBlocker;
 
@@ -1981,74 +1978,13 @@ History::NotifyVisited(nsIURI* aURI)
     return NS_OK;
   }
 
-  // Mark our key as seen, so that any URIs which try to add themselves to this
-  // list while we resolve the callbacks asynchronously immediately mark
-  // themselves as visited.
-  key->mSeen = true;
-
-  // Dispatch an event to each document which has a Link observing this URL.
-  // These will fire asynchronously in the correct DocGroup.
-  nsCOMPtr<nsIURI> uri = aURI;
+  // Update status of each Link node.
   {
-    nsTArray<nsIDocument*> seen;
-    ObserverArray::BackwardIterator iter(key->array);
+    // RemoveEntry will destroy the array, this iterator should not survive it.
+    ObserverArray::ForwardIterator iter(key->array);
     while (iter.HasMore()) {
       Link* link = iter.GetNext();
-      Element* element = link->GetElement();
-      // NOTE: Theoretically GetElement should never return nullptr, but it does
-      // in GTests because they use a mock_Link which returns null from this
-      // method.
-      nsCOMPtr<nsIDocument> doc = element ? element->OwnerDoc() : nullptr;
-      if (!doc) {
-        // If we don't have a document, then just immediately notify it, and
-        // remove it from the list, as we don't have a DocGroup we can dispatch
-        // to.
-        link->SetLinkState(eLinkState_Visited);
-        iter.Remove();
-        continue;
-      } else if (seen.Contains(doc)) {
-        continue;
-      }
-
-      doc->Dispatch("NotifyVisitedForDocument", TaskCategory::Other,
-                    NS_NewRunnableFunction("History::NotifyVisitedForDocument", [uri, doc] {
-                      nsCOMPtr<IHistory> history = services::GetHistoryService();
-                      static_cast<History*>(history.get())->NotifyVisitedForDocument(uri, doc);
-                    }));
-      seen.AppendElement(doc);
-    }
-  }
-
-  // If we don't have any links left, we can remove the array.
-  if (key->array.IsEmpty()) {
-    mObservers.RemoveEntry(key);
-  }
-
-  return NS_OK;
-}
-
-void
-History::NotifyVisitedForDocument(nsIURI* aURI, nsIDocument* aDocument)
-{
-  nsAutoScriptBlocker scriptBlocker;
-
-  // If we have no observers for this URI, we have nothing to notify about.
-  KeyClass* key = mObservers.GetEntry(aURI);
-  if (!key) {
-    return;
-  }
-
-  {
-    // Update status of each Link node. We iterate over the array backwards so
-    // we can remove the items as we encounter them.
-    ObserverArray::BackwardIterator iter(key->array);
-    while (iter.HasMore()) {
-      Link* link = iter.GetNext();
-      if (link->GetElement()->OwnerDoc() == aDocument) {
-        link->SetLinkState(eLinkState_Visited);
-        iter.Remove();
-      }
-
+      link->SetLinkState(eLinkState_Visited);
       // Verify that the observers hash doesn't mutate while looping through
       // the links associated with this URI.
       MOZ_ASSERT(key == mObservers.GetEntry(aURI),
@@ -2056,10 +1992,9 @@ History::NotifyVisitedForDocument(nsIURI* aURI, nsIDocument* aDocument)
     }
   }
 
-  // If we don't have any links left, we can remove the array.
-  if (key->array.IsEmpty()) {
-    mObservers.RemoveEntry(key);
-  }
+  // All the registered nodes can now be removed for this URI.
+  mObservers.RemoveEntry(key);
+  return NS_OK;
 }
 
 class ConcurrentStatementsHolder final : public mozIStorageCompletionCallback {
@@ -2614,16 +2549,8 @@ History::RegisterVisitedCallback(nsIURI* aURI,
 #endif
   KeyClass* key = mObservers.PutEntry(aURI);
   NS_ENSURE_TRUE(key, NS_ERROR_OUT_OF_MEMORY);
-
-  // Check if we're trying to add ourselves to a key which has already been
-  // notified, if we are, set our link state to visited.
-  if (aLink && key->mSeen) {
-    aLink->SetLinkState(eLinkState_Visited);
-    MOZ_ASSERT(!key->array.IsEmpty(), "There should be links pending");
-    return NS_OK;
-  }
-
   ObserverArray& observers = key->array;
+
   if (observers.IsEmpty()) {
     NS_ASSERTION(!keyAlreadyExists,
                  "An empty key was kept around in our hashtable!");

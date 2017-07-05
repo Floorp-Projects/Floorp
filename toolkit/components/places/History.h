@@ -153,12 +153,6 @@ private:
   mozIStorageConnection* GetDBConn();
 
   /**
-   * Mark all links for the given URI in the given document as visited. Used
-   * within NotifyVisited.
-   */
-  void NotifyVisitedForDocument(nsIURI* aURI, nsIDocument* aDocument);
-
-  /**
    * The database handle.  This is initialized lazily by the first call to
    * GetDBConn(), so never use it directly, or, if you really need, always
    * invoke GetDBConn() before.
@@ -190,12 +184,10 @@ private:
   public:
     explicit KeyClass(const nsIURI* aURI)
     : nsURIHashKey(aURI)
-    , mSeen(false)
     {
     }
     KeyClass(const KeyClass& aOther)
     : nsURIHashKey(aOther)
-    , mSeen(aOther.mSeen)
     {
       NS_NOTREACHED("Do not call me!");
     }
@@ -204,7 +196,6 @@ private:
       return array.ShallowSizeOfExcludingThis(aMallocSizeOf);
     }
     ObserverArray array;
-    bool mSeen;
   };
 
   nsTHashtable<KeyClass> mObservers;
