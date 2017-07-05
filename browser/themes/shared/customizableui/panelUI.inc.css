@@ -1261,6 +1261,8 @@ panelview:not([mainView]) .subviewbutton.panel-subview-footer > .toolbarbutton-t
 
 /* START photon adjustments */
 
+.widget-overflow-list > toolbarpaletteitem[place=panel] .toolbarbutton-1,
+photonpanelmultiview .widget-overflow-list .toolbarbutton-1,
 photonpanelmultiview .PanelUI-subView .subviewbutton,
 photonpanelmultiview .cui-widget-panelview .subviewbutton:not(.panel-subview-footer),
 photonpanelmultiview .subview-subheader {
@@ -1380,9 +1382,11 @@ photonpanelmultiview panelview:not([mainView]) .subviewbutton.panel-subview-foot
 
 /* END photon adjustments */
 
-panelview .toolbarbutton-1,
+%ifndef MOZ_PHOTON_THEME
 .widget-overflow-list > .toolbarbutton-1:not(:first-child),
-.widget-overflow-list > toolbaritem:not(:first-child) {
+.widget-overflow-list > toolbaritem:not(:first-child),
+%endif
+panelview .toolbarbutton-1 {
   margin-top: 6px;
 }
 
@@ -1708,24 +1712,31 @@ toolbarpaletteitem[haswideitem][place="panel"] + toolbarpaletteitem[haswideitem]
 }
 
 #widget-overflow-scroller {
-%ifndef MOZ_PHOTON_THEME
+%ifdef MOZ_PHOTON_THEME
+  margin-top: 4px;
+  margin-bottom: 4px;
+%else
   max-height: 30em;
-%endif
   margin-top: 10px;
   margin-bottom: 10px;
+%endif
 }
 
 .widget-overflow-list {
   width: @menuPanelWidth@;
+%ifndef MOZ_PHOTON_THEME
   padding-left: 10px;
   padding-right: 10px;
+%endif
 }
 
 toolbaritem[overflowedItem=true],
 .widget-overflow-list .toolbarbutton-1 {
   width: 100%;
   max-width: @menuPanelWidth@;
+%ifndef MOZ_PHOTON_THEME
   min-height: 36px;
+%endif
   background-repeat: no-repeat;
   background-position: 0 center;
 }
