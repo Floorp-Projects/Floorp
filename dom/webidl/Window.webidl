@@ -373,8 +373,8 @@ partial interface Window {
 };
 #endif
 
-[Func="IsChromeOrXBL"]
-interface ChromeWindow {
+// Mozilla extensions for Chrome windows.
+partial interface Window {
   // The STATE_* constants need to match the corresponding enum in nsGlobalWindow.cpp.
   [Func="nsGlobalWindow::IsPrivilegedChromeWindow"]
   const unsigned short STATE_MAXIMIZED = 1;
@@ -444,10 +444,7 @@ interface ChromeWindow {
    */
   [Throws, Func="nsGlobalWindow::IsPrivilegedChromeWindow"]
   void beginWindowMove(Event mouseDownEvent, optional Element? panel = null);
-};
 
-// Mozilla extensions for Chrome windows.
-partial interface Window {
   [Func="IsChromeOrXBL"]
   readonly attribute boolean isChromeWindow;
 };
@@ -477,7 +474,6 @@ partial interface Window {
     readonly attribute Worklet paintWorklet;
 };
 
-Window implements ChromeWindow;
 Window implements WindowOrWorkerGlobalScope;
 
 partial interface Window {
