@@ -7,6 +7,7 @@ package org.mozilla.focus.webkit;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.os.Environment;
 import android.preference.PreferenceManager;
@@ -32,6 +33,7 @@ import org.mozilla.focus.web.WebViewProvider;
 public class WebkitView extends NestedWebView implements IWebView, SharedPreferences.OnSharedPreferenceChangeListener {
     private static final String KEY_CURRENTURL = "currenturl";
 
+    private IconHolder iconHolder;
     private Callback callback;
     private FocusWebViewClient client;
     private final LinkHandler linkHandler;
@@ -39,7 +41,8 @@ public class WebkitView extends NestedWebView implements IWebView, SharedPrefere
     public WebkitView(Context context, AttributeSet attrs) {
         super(context, attrs);
 
-        client = new FocusWebViewClient(getContext().getApplicationContext());
+        iconHolder = new IconHolder();
+        client = new FocusWebViewClient(getContext().getApplicationContext(), iconHolder);
 
         setWebViewClient(client);
         setWebChromeClient(createWebChromeClient());
@@ -138,6 +141,11 @@ public class WebkitView extends NestedWebView implements IWebView, SharedPrefere
     }
 
     @Override
+    public Bitmap getIcon() {
+        return iconHolder.getIcon();
+    }
+
+    @Override
     public void destroy() {
         super.destroy();
 
@@ -209,6 +217,11 @@ public class WebkitView extends NestedWebView implements IWebView, SharedPrefere
                 };
 
                 callback.onEnterFullScreen(fullscreenCallback, view);
+            }
+
+            @Override
+            public void onReceivedIcon(WebView view, Bitmap icon) {
+                iconHolder.updateIcon(icon);
             }
 
             @Override

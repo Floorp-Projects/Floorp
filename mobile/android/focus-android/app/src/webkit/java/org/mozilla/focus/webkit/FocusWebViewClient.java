@@ -34,12 +34,14 @@ import java.util.Map;
     private final static String ERROR_PROTOCOL = "error:";
 
     private IWebView.Callback callback;
+    private IconHolder iconHolder;
     private boolean errorReceived;
     private Context context;
 
-    public FocusWebViewClient(Context context) {
+    public FocusWebViewClient(Context context, IconHolder iconHolder) {
         super(context);
         this.context = context;
+        this.iconHolder = iconHolder;
     }
 
     public void setCallback(IWebView.Callback callback) {
@@ -143,6 +145,8 @@ import java.util.Map;
 
     @Override
     public void onPageStarted(WebView view, String url, Bitmap favicon) {
+        iconHolder.clearIcon();
+
         if (errorReceived) {
             // When dealing with error pages, webkit sometimes sends onPageStarted()
             // without a matching onPageFinished(). We hack around that by using

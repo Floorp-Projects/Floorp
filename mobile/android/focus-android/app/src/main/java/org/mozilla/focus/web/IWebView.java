@@ -5,6 +5,7 @@
 
 package org.mozilla.focus.web;
 
+import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -108,4 +109,10 @@ public interface IWebView {
     void restoreWebviewState(Bundle savedInstanceState);
 
     void onSaveInstanceState(Bundle outState);
+
+    /**
+     * Get an icon (usually favicon) for the currently displayed website.
+     */
+    @Nullable
+    Bitmap getIcon();
 }

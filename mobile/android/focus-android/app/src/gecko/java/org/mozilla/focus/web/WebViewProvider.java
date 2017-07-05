@@ -6,6 +6,7 @@
 package org.mozilla.focus.web;
 
 import android.content.Context;
+import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.os.SystemClock;
@@ -188,6 +189,11 @@ public class WebViewProvider {
         @Override
         public boolean canGoBack() {
             return canGoBack;
+        }
+
+        @Override
+        public Bitmap getIcon() {
+            return null;
         }
     }
 }
