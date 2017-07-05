@@ -1011,7 +1011,6 @@ static const bool	opt_zero = false;
 #endif
 
 static size_t	opt_dirty_max = DIRTY_MAX_DEFAULT;
-static bool	opt_print_stats = false;
 #ifdef MALLOC_STATIC_SIZES
 #define opt_quantum_2pow	QUANTUM_2POW_MIN
 #define opt_small_max_2pow	SMALL_MAX_2POW_DEFAULT
@@ -1027,10 +1026,6 @@ static size_t	opt_chunk_2pow = CHUNK_2POW_DEFAULT;
  * Begin forward declarations.
  */
 
-#ifdef MOZ_MEMORY_DARWIN
-/* Avoid namespace collision with OS X's malloc APIs. */
-#define malloc_printf moz_malloc_printf
-#endif
 static void	*chunk_alloc(size_t size, size_t alignment, bool base, bool zero);
 static void	chunk_dealloc(void *chunk, size_t size);
 static arena_t	*arenas_extend();
@@ -1312,21 +1307,6 @@ _getprogname(void)
 	return ("<jemalloc>");
 }
 
-/*
- * Print to stderr in such a way as to (hopefully) avoid memory allocation.
- */
-static void
-malloc_printf(const char *format, ...)
-{
-	char buf[4096];
-	va_list ap;
-
-	va_start(ap, format);
-	VsprintfLiteral(buf, format, ap);
-	va_end(ap);
-	_malloc_message(buf, "", "", "");
-}
-
 /******************************************************************************/
 
 static inline void
@@ -1489,119 +1469,6 @@ base_node_dealloc(extent_node_t *node)
 	*(extent_node_t **)node = base_nodes;
 	base_nodes = node;
 	malloc_mutex_unlock(&base_mtx);
-}
-
-/******************************************************************************/
-
-static void
-stats_print(arena_t *arena)
-{
-	unsigned i, gap_start;
-
-#ifdef MOZ_MEMORY_WINDOWS
-	malloc_printf("dirty: %Iu page%s dirty, %I64u sweep%s,"
-	    " %I64u madvise%s, %I64u page%s purged\n",
-	    arena->ndirty, arena->ndirty == 1 ? "" : "s",
-	    arena->stats.npurge, arena->stats.npurge == 1 ? "" : "s",
-	    arena->stats.nmadvise, arena->stats.nmadvise == 1 ? "" : "s",
-	    arena->stats.purged, arena->stats.purged == 1 ? "" : "s");
-#  ifdef MALLOC_DECOMMIT
-	malloc_printf("decommit: %I64u decommit%s, %I64u commit%s,"
-	    " %I64u page%s decommitted\n",
-	    arena->stats.ndecommit, (arena->stats.ndecommit == 1) ? "" : "s",
-	    arena->stats.ncommit, (arena->stats.ncommit == 1) ? "" : "s",
-	    arena->stats.decommitted,
-	    (arena->stats.decommitted == 1) ? "" : "s");
-#  endif
-
-	malloc_printf("            allocated      nmalloc      ndalloc\n");
-	malloc_printf("small:   %12Iu %12I64u %12I64u\n",
-	    arena->stats.allocated_small, arena->stats.nmalloc_small,
-	    arena->stats.ndalloc_small);
-	malloc_printf("large:   %12Iu %12I64u %12I64u\n",
-	    arena->stats.allocated_large, arena->stats.nmalloc_large,
-	    arena->stats.ndalloc_large);
-	malloc_printf("total:   %12Iu %12I64u %12I64u\n",
-	    arena->stats.allocated_small + arena->stats.allocated_large,
-	    arena->stats.nmalloc_small + arena->stats.nmalloc_large,
-	    arena->stats.ndalloc_small + arena->stats.ndalloc_large);
-	malloc_printf("mapped:  %12Iu\n", arena->stats.mapped);
-#else
-	malloc_printf("dirty: %zu page%s dirty, %llu sweep%s,"
-	    " %llu madvise%s, %llu page%s purged\n",
-	    arena->ndirty, arena->ndirty == 1 ? "" : "s",
-	    arena->stats.npurge, arena->stats.npurge == 1 ? "" : "s",
-	    arena->stats.nmadvise, arena->stats.nmadvise == 1 ? "" : "s",
-	    arena->stats.purged, arena->stats.purged == 1 ? "" : "s");
-#  ifdef MALLOC_DECOMMIT
-	malloc_printf("decommit: %llu decommit%s, %llu commit%s,"
-	    " %llu page%s decommitted\n",
-	    arena->stats.ndecommit, (arena->stats.ndecommit == 1) ? "" : "s",
-	    arena->stats.ncommit, (arena->stats.ncommit == 1) ? "" : "s",
-	    arena->stats.decommitted,
-	    (arena->stats.decommitted == 1) ? "" : "s");
-#  endif
-
-	malloc_printf("            allocated      nmalloc      ndalloc\n");
-	malloc_printf("small:   %12zu %12llu %12llu\n",
-	    arena->stats.allocated_small, arena->stats.nmalloc_small,
-	    arena->stats.ndalloc_small);
-	malloc_printf("large:   %12zu %12llu %12llu\n",
-	    arena->stats.allocated_large, arena->stats.nmalloc_large,
-	    arena->stats.ndalloc_large);
-	malloc_printf("total:   %12zu %12llu %12llu\n",
-	    arena->stats.allocated_small + arena->stats.allocated_large,
-	    arena->stats.nmalloc_small + arena->stats.nmalloc_large,
-	    arena->stats.ndalloc_small + arena->stats.ndalloc_large);
-	malloc_printf("mapped:  %12zu\n", arena->stats.mapped);
-#endif
-	malloc_printf("bins:     bin   size regs pgs  requests   newruns"
-	    "    reruns maxruns curruns\n");
-	for (i = 0, gap_start = UINT_MAX; i < ntbins + nqbins + nsbins; i++) {
-		if (arena->bins[i].stats.nrequests == 0) {
-			if (gap_start == UINT_MAX)
-				gap_start = i;
-		} else {
-			if (gap_start != UINT_MAX) {
-				if (i > gap_start + 1) {
-					/* Gap of more than one size class. */
-					malloc_printf("[%u..%u]\n",
-					    gap_start, i - 1);
-				} else {
-					/* Gap of one size class. */
-					malloc_printf("[%u]\n", gap_start);
-				}
-				gap_start = UINT_MAX;
-			}
-			malloc_printf(
-#if defined(MOZ_MEMORY_WINDOWS)
-			    "%13u %1s %4u %4u %3u %9I64u %9I64u"
-			    " %9I64u %7u %7u\n",
-#else
-			    "%13u %1s %4u %4u %3u %9llu %9llu"
-			    " %9llu %7lu %7lu\n",
-#endif
-			    i,
-			    i < ntbins ? "T" : i < ntbins + nqbins ? "Q" : "S",
-			    arena->bins[i].reg_size,
-			    arena->bins[i].nregs,
-			    arena->bins[i].run_size >> pagesize_2pow,
-			    arena->bins[i].stats.nrequests,
-			    arena->bins[i].stats.nruns,
-			    arena->bins[i].stats.reruns,
-			    arena->bins[i].stats.highruns,
-			    arena->bins[i].stats.curruns);
-		}
-	}
-	if (gap_start != UINT_MAX) {
-		if (i > gap_start + 1) {
-			/* Gap of more than one size class. */
-			malloc_printf("[%u..%u]\n", gap_start, i - 1);
-		} else {
-			/* Gap of one size class. */
-			malloc_printf("[%u]\n", gap_start);
-		}
-	}
 }
 
 /*
@@ -4360,112 +4227,6 @@ huge_dalloc(void *ptr)
 	base_node_dealloc(node);
 }
 
-static void
-malloc_print_stats(void)
-{
-
-	if (opt_print_stats) {
-		char s[UMAX2S_BUFSIZE];
-		_malloc_message("___ Begin malloc statistics ___\n", "", "",
-		    "");
-		_malloc_message("Assertions ",
-#ifdef NDEBUG
-		    "disabled",
-#else
-		    "enabled",
-#endif
-		    "\n", "");
-		_malloc_message("Boolean MALLOC_OPTIONS: ",
-		    opt_abort ? "A" : "a", "", "");
-		_malloc_message(opt_junk ? "J" : "j", "", "", "");
-		_malloc_message("P", "", "", "");
-		_malloc_message(opt_zero ? "Z" : "z", "", "", "");
-		_malloc_message("\n", "", "", "");
-
-		_malloc_message("Max arenas: ", umax2s(narenas, s), "\n",
-		    "");
-		_malloc_message("Pointer size: ", umax2s(sizeof(void *), s),
-		    "\n", "");
-		_malloc_message("Quantum size: ", umax2s(quantum, s), "\n",
-		    "");
-		_malloc_message("Max small size: ", umax2s(small_max, s),
-		    "\n", "");
-		_malloc_message("Max dirty pages per arena: ",
-		    umax2s(opt_dirty_max, s), "\n", "");
-
-		_malloc_message("Chunk size: ", umax2s(chunksize, s), "",
-		    "");
-		_malloc_message(" (2^", umax2s(opt_chunk_2pow, s), ")\n",
-		    "");
-
-		{
-			size_t allocated, mapped = 0;
-			unsigned i;
-			arena_t *arena;
-
-			/* Calculate and print allocated/mapped stats. */
-
-			/* arenas. */
-			malloc_spin_lock(&arenas_lock);
-			for (i = 0, allocated = 0; i < narenas; i++) {
-				if (arenas[i] != NULL) {
-					malloc_spin_lock(&arenas[i]->lock);
-					allocated +=
-					    arenas[i]->stats.allocated_small;
-					allocated +=
-					    arenas[i]->stats.allocated_large;
-					mapped += arenas[i]->stats.mapped;
-					malloc_spin_unlock(&arenas[i]->lock);
-				}
-			}
-			malloc_spin_unlock(&arenas_lock);
-
-			/* huge/base. */
-			malloc_mutex_lock(&huge_mtx);
-			allocated += huge_allocated;
-			mapped += huge_mapped;
-			malloc_mutex_unlock(&huge_mtx);
-
-			malloc_mutex_lock(&base_mtx);
-			mapped += base_mapped;
-			malloc_mutex_unlock(&base_mtx);
-
-#ifdef MOZ_MEMORY_WINDOWS
-			malloc_printf("Allocated: %lu, mapped: %lu\n",
-			    allocated, mapped);
-#else
-			malloc_printf("Allocated: %zu, mapped: %zu\n",
-			    allocated, mapped);
-#endif
-
-			/* Print chunk stats. */
-			malloc_printf(
-			    "huge: nmalloc      ndalloc    allocated\n");
-#ifdef MOZ_MEMORY_WINDOWS
-			malloc_printf(" %12llu %12llu %12lu\n",
-			    huge_nmalloc, huge_ndalloc, huge_allocated);
-#else
-			malloc_printf(" %12llu %12llu %12zu\n",
-			    huge_nmalloc, huge_ndalloc, huge_allocated);
-#endif
-			malloc_spin_lock(&arenas_lock);
-			/* Print stats for each arena. */
-			for (i = 0; i < narenas; i++) {
-				arena = arenas[i];
-				if (arena != NULL) {
-					malloc_printf(
-					    "\narenas[%u]:\n", i);
-					malloc_spin_lock(&arena->lock);
-					stats_print(arena);
-					malloc_spin_unlock(&arena->lock);
-				}
-			}
-			malloc_spin_unlock(&arenas_lock);
-		}
-		_malloc_message("--- End malloc statistics ---\n", "", "", "");
-	}
-}
-
 /*
  * FreeBSD's pthreads implementation calls malloc(3), so the malloc
  * implementation has to take pains to avoid infinite recursion during
@@ -4614,12 +4375,6 @@ MALLOC_OUT:
 						opt_chunk_2pow++;
 					break;
 #endif
-				case 'p':
-					opt_print_stats = false;
-					break;
-				case 'P':
-					opt_print_stats = true;
-					break;
 #ifndef MALLOC_STATIC_SIZES
 				case 'q':
 					if (opt_quantum_2pow > QUANTUM_2POW_MIN)
@@ -4662,14 +4417,6 @@ MALLOC_OUT:
 				}
 			}
 		}
-	}
-
-	/* Take care to call atexit() only once. */
-	if (opt_print_stats) {
-#ifndef MOZ_MEMORY_WINDOWS
-		/* Print statistics at exit. */
-		atexit(malloc_print_stats);
-#endif
 	}
 
 #ifndef MALLOC_STATIC_SIZES
@@ -4780,16 +4527,6 @@ MALLOC_OUT:
 #endif
 	return (false);
 }
-
-/* XXX Why not just expose malloc_print_stats()? */
-#ifdef MOZ_MEMORY_WINDOWS
-void
-malloc_shutdown()
-{
-
-	malloc_print_stats();
-}
-#endif
 
 /*
  * End general internal functions.
