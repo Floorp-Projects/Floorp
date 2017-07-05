@@ -231,7 +231,7 @@ ClientSingleTiledLayerBuffer::PaintThebes(const nsIntRegion& aNewValidRegion,
       gfxDevCrash(gfx::LogReason::InvalidContext) << "SingleTiledContextClient context problem " << gfx::hexa(dt);
       return;
     }
-    ctx->SetMatrix(ctx->CurrentMatrix().Translate(-mTilingOrigin.x, -mTilingOrigin.y));
+    ctx->SetMatrix(ctx->CurrentMatrix().PreTranslate(-mTilingOrigin.x, -mTilingOrigin.y));
 
     aCallback(&mPaintedLayer, ctx, paintRegion, paintRegion, DrawRegionClip::DRAW, nsIntRegion(), aCallbackData);
   }

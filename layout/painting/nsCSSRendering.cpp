@@ -1574,7 +1574,7 @@ nsCSSRendering::PaintBoxShadowOuter(nsPresContext* aPresContext,
                                                shadowItem->mYOffset),
                                        aPresContext->AppUnitsPerDevPixel());
       shadowContext->SetMatrix(
-        shadowContext->CurrentMatrix().Translate(devPixelOffset));
+        shadowContext->CurrentMatrix().PreTranslate(devPixelOffset));
 
       nsRect nativeRect = aDirtyRect;
       nativeRect.MoveBy(-nsPoint(shadowItem->mXOffset, shadowItem->mYOffset));
@@ -4287,14 +4287,15 @@ nsContextBoxBlur::Init(const nsRect& aRect, nscoord aSpreadRadius,
   dirtyRect.RoundOut();
 
   gfxMatrix transform = aDestinationCtx->CurrentMatrix();
-  rect = transform.TransformBounds(rect);
+  rect.TransformBoundsBy(transform);
 
   mPreTransformed = !transform.IsIdentity();
 
   // Create the temporary surface for blurring
-  dirtyRect = transform.TransformBounds(dirtyRect);
+  dirtyRect.TransformBoundsBy(transform);
   if (aSkipRect) {
-    gfxRect skipRect = transform.TransformBounds(*aSkipRect);
+    gfxRect skipRect = *aSkipRect;
+    skipRect.TransformBoundsBy(transform);
     mContext = mAlphaBoxBlur.Init(aDestinationCtx, rect, spreadRadius,
                                   blurRadius, &dirtyRect, &skipRect);
   } else {
@@ -4397,9 +4398,11 @@ nsContextBoxBlur::BlurRectangle(gfxContext* aDestinationCtx,
     nsLayoutUtils::RectToGfxRect(aDirtyRect, aAppUnitsPerDevPixel);
   dirtyRect.RoundOut();
 
-  gfxRect shadowThebesRect = transform.TransformBounds(ThebesRect(shadowGfxRect));
-  dirtyRect = transform.TransformBounds(dirtyRect);
-  gfxRect skipRect = transform.TransformBounds(aSkipRect);
+  gfxRect shadowThebesRect = ThebesRect(shadowGfxRect);
+  shadowThebesRect.TransformBoundsBy(transform);
+  dirtyRect.TransformBoundsBy(transform);
+  gfxRect skipRect = aSkipRect;
+  skipRect.TransformBoundsBy(transform);
 
   if (aCornerRadii) {
     aCornerRadii->Scale(scaleX, scaleY);
