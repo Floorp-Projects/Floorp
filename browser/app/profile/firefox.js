@@ -1067,7 +1067,9 @@ pref("security.sandbox.gpu.level", 0);
 // 2 -> "preliminary content sandboxing enabled with profile protection:
 //       write access to home directory is prevented, read and write access
 //       to ~/Library and profile directories are prevented (excluding
-//       $PROFILE/{extensions,weave})"
+//       $PROFILE/{extensions,chrome})"
+// 3 -> "no global read/write access, read access permitted to
+//       $PROFILE/{extensions,chrome}"
 // This setting is read when the content process is started. On Mac the content
 // process is killed when all windows are closed, so a change will take effect
 // when the 1st window is opened.
