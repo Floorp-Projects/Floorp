@@ -957,12 +957,13 @@ KeyframeEffectReadOnly::UpdateTargetRegistration()
   MOZ_ASSERT(isRelevant == IsCurrent() || IsInEffect(),
              "Out of date Animation::IsRelevant value");
 
-  if (isRelevant) {
+  if (isRelevant && !mInEffectSet) {
     EffectSet* effectSet =
       EffectSet::GetOrCreateEffectSet(mTarget->mElement, mTarget->mPseudoType);
     effectSet->AddEffect(*this);
+    mInEffectSet = true;
     UpdateEffectSet(effectSet);
-  } else {
+  } else if (!isRelevant && mInEffectSet) {
     UnregisterTarget();
   }
 }
@@ -970,8 +971,15 @@ KeyframeEffectReadOnly::UpdateTargetRegistration()
 void
 KeyframeEffectReadOnly::UnregisterTarget()
 {
+  if (!mInEffectSet) {
+    return;
+  }
+
   EffectSet* effectSet =
     EffectSet::GetEffectSet(mTarget->mElement, mTarget->mPseudoType);
+  MOZ_ASSERT(effectSet, "If mInEffectSet is true, there must be an EffectSet"
+                        " on the target element");
+  mInEffectSet = false;
   if (effectSet) {
     effectSet->RemoveEffect(*this);
 
@@ -1834,6 +1842,10 @@ KeyframeEffectReadOnly::ContainsAnimatedScale(const nsIFrame* aFrame) const
 void
 KeyframeEffectReadOnly::UpdateEffectSet(EffectSet* aEffectSet) const
 {
+  if (!mInEffectSet) {
+    return;
+  }
+
   EffectSet* effectSet =
     aEffectSet ? aEffectSet
                : EffectSet::GetEffectSet(mTarget->mElement,
