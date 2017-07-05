@@ -59,6 +59,20 @@ public:
   }
 
   /**
+   * DoesTabParentHaveIMEFocus() returns true when aTabParent has IME focus,
+   * i.e., the TabParent sent "focus" notification but not yet sends "blur".
+   * Note that this doesn't check if the remote processes are same because
+   * if another TabParent has focus, committing composition causes firing
+   * composition events in different TabParent.  (Anyway, such case shouldn't
+   * occur.)
+   */
+  static bool DoesTabParentHaveIMEFocus(const TabParent* aTabParent)
+  {
+    MOZ_ASSERT(aTabParent);
+    return sFocusedIMETabParent == aTabParent;
+  }
+
+  /**
    * OnTabParentDestroying() is called when aTabParent is being destroyed.
    */
   static void OnTabParentDestroying(TabParent* aTabParent);
