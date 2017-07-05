@@ -224,13 +224,13 @@ public:
    */
   static nsresult NotifyIME(const IMENotification& aNotification,
                             nsIWidget* aWidget,
-                            bool aOriginIsRemote = false);
+                            TabParent* aTabParent = nullptr);
   static nsresult NotifyIME(IMEMessage aMessage,
                             nsIWidget* aWidget,
-                            bool aOriginIsRemote = false);
+                            TabParent* aTabParent = nullptr);
   static nsresult NotifyIME(IMEMessage aMessage,
                             nsPresContext* aPresContext,
-                            bool aOriginIsRemote = false);
+                            TabParent* aTabParent = nullptr);
 
   static nsINode* GetRootEditableNode(nsPresContext* aPresContext,
                                       nsIContent* aContent);
@@ -280,11 +280,10 @@ protected:
   // sPresContext has gone, we need to clean up some IME state on the widget
   // if the widget is available.
   static nsIWidget* sWidget;
-  // sFocusedIMEWidget is, the widget which was sent to "focus" notification
-  // from IMEContentObserver and not yet sent "blur" notification.
-  // So, if this is not nullptr, the widget needs to receive "blur"
-  // notification.
+  // sFocusedIMETabParent is the tab parent, which send "focus" notification to
+  // sFocusedIMEWidget (and didn't yet sent "blur" notification).
   static nsIWidget* sFocusedIMEWidget;
+  static StaticRefPtr<TabParent> sFocusedIMETabParent;
   // sActiveInputContextWidget is the last widget whose SetInputContext() is
   // called.  This is important to reduce sync IPC cost with parent process.
   // If IMEStateManager set input context to different widget, PuppetWidget can
@@ -308,7 +307,6 @@ protected:
   static bool           sIsGettingNewIMEState;
   static bool           sCheckForIMEUnawareWebApps;
   static bool           sInputModeSupported;
-  static bool           sRemoteHasFocus;
 
   class MOZ_STACK_CLASS GettingNewIMEStateBlocker final
   {

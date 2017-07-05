@@ -6,18 +6,21 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/ContentCache.h"
+
 #include "mozilla/IMEStateManager.h"
+#include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/Logging.h"
+#include "mozilla/Move.h"
+#include "mozilla/RefPtr.h"
+#include "mozilla/SizePrintfMacros.h"
 #include "mozilla/TextComposition.h"
 #include "mozilla/TextEvents.h"
+#include "mozilla/dom/TabParent.h"
 #include "nsIWidget.h"
-#include "mozilla/RefPtr.h"
-#include "mozilla/Move.h"
-#include "mozilla/IntegerPrintfMacros.h"
-#include "mozilla/SizePrintfMacros.h"
 
 namespace mozilla {
 
+using namespace dom;
 using namespace widget;
 
 static const char*
@@ -511,8 +514,9 @@ ContentCacheInChild::SetSelection(nsIWidget* aWidget,
  * mozilla::ContentCacheInParent
  *****************************************************************************/
 
-ContentCacheInParent::ContentCacheInParent()
+ContentCacheInParent::ContentCacheInParent(TabParent& aTabParent)
   : ContentCache()
+  , mTabParent(aTabParent)
   , mCommitStringByRequest(nullptr)
   , mPendingEventsNeedingAck(0)
   , mCompositionStartInChild(UINT32_MAX)
@@ -1234,6 +1238,10 @@ ContentCacheInParent::RequestIMEToCommitComposition(nsIWidget* aWidget,
 
   mCommitStringByRequest = &aCommittedString;
 
+  // TODO: This request may be too late.  For example, while the remote process
+  //       was busy, focus may be already changed to the main process and the
+  //       composition has already been canceled by IMEStateManager.  So, this
+  //       should check if IME focus is in the TabParent.
   aWidget->NotifyIME(IMENotification(aCancel ? REQUEST_TO_CANCEL_COMPOSITION :
                                                REQUEST_TO_COMMIT_COMPOSITION));
 
@@ -1274,7 +1282,7 @@ ContentCacheInParent::MaybeNotifyIME(nsIWidget* aWidget,
                                      const IMENotification& aNotification)
 {
   if (!mPendingEventsNeedingAck) {
-    IMEStateManager::NotifyIME(aNotification, aWidget, true);
+    IMEStateManager::NotifyIME(aNotification, aWidget, &mTabParent);
     return;
   }
 
@@ -1315,7 +1323,7 @@ ContentCacheInParent::FlushPendingNotifications(nsIWidget* aWidget)
     IMENotification notification(mPendingTextChange);
     if (!aWidget->Destroyed()) {
       mPendingTextChange.Clear();
-      IMEStateManager::NotifyIME(notification, aWidget, true);
+      IMEStateManager::NotifyIME(notification, aWidget, &mTabParent);
     }
   }
 
@@ -1323,7 +1331,7 @@ ContentCacheInParent::FlushPendingNotifications(nsIWidget* aWidget)
     IMENotification notification(mPendingSelectionChange);
     if (!aWidget->Destroyed()) {
       mPendingSelectionChange.Clear();
-      IMEStateManager::NotifyIME(notification, aWidget, true);
+      IMEStateManager::NotifyIME(notification, aWidget, &mTabParent);
     }
   }
 
@@ -1333,7 +1341,7 @@ ContentCacheInParent::FlushPendingNotifications(nsIWidget* aWidget)
     IMENotification notification(mPendingLayoutChange);
     if (!aWidget->Destroyed()) {
       mPendingLayoutChange.Clear();
-      IMEStateManager::NotifyIME(notification, aWidget, true);
+      IMEStateManager::NotifyIME(notification, aWidget, &mTabParent);
     }
   }
 
@@ -1343,7 +1351,7 @@ ContentCacheInParent::FlushPendingNotifications(nsIWidget* aWidget)
     IMENotification notification(mPendingCompositionUpdate);
     if (!aWidget->Destroyed()) {
       mPendingCompositionUpdate.Clear();
-      IMEStateManager::NotifyIME(notification, aWidget, true);
+      IMEStateManager::NotifyIME(notification, aWidget, &mTabParent);
     }
   }
 
