@@ -133,7 +133,7 @@ already_AddRefed<SVGMatrix>
 SVGMatrix::Translate(float x, float y)
 {
   RefPtr<SVGMatrix> matrix =
-    new SVGMatrix(gfxMatrix(GetMatrix()).Translate(gfxPoint(x, y)));
+    new SVGMatrix(gfxMatrix(GetMatrix()).PreTranslate(gfxPoint(x, y)));
   return matrix.forget();
 }
 
@@ -148,7 +148,7 @@ SVGMatrix::ScaleNonUniform(float scaleFactorX,
                            float scaleFactorY)
 {
   RefPtr<SVGMatrix> matrix =
-    new SVGMatrix(gfxMatrix(GetMatrix()).Scale(scaleFactorX, scaleFactorY));
+    new SVGMatrix(gfxMatrix(GetMatrix()).PreScale(scaleFactorX, scaleFactorY));
   return matrix.forget();
 }
 
@@ -156,7 +156,7 @@ already_AddRefed<SVGMatrix>
 SVGMatrix::Rotate(float angle)
 {
   RefPtr<SVGMatrix> matrix =
-    new SVGMatrix(gfxMatrix(GetMatrix()).Rotate(angle*radPerDegree));
+    new SVGMatrix(gfxMatrix(GetMatrix()).PreRotate(angle*radPerDegree));
   return matrix.forget();
 }
 
@@ -169,7 +169,7 @@ SVGMatrix::RotateFromVector(float x, float y, ErrorResult& rv)
   }
 
   RefPtr<SVGMatrix> matrix =
-    new SVGMatrix(gfxMatrix(GetMatrix()).Rotate(atan2(y, x)));
+    new SVGMatrix(gfxMatrix(GetMatrix()).PreRotate(atan2(y, x)));
   return matrix.forget();
 }
 

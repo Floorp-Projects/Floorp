@@ -431,8 +431,8 @@ GetContextScale(const gfxMatrix& aMatrix)
   // The context scale is the ratio of the length of the transformed
   // diagonal vector (1,1) to the length of the untransformed diagonal
   // (which is sqrt(2)).
-  gfxPoint p = aMatrix.Transform(gfxPoint(1, 1)) -
-               aMatrix.Transform(gfxPoint(0, 0));
+  gfxPoint p = aMatrix.TransformPoint(gfxPoint(1, 1)) -
+               aMatrix.TransformPoint(gfxPoint(0, 0));
   return SVGContentUtils::ComputeNormalizedHypotenuse(p.x, p.y);
 }
 
@@ -802,15 +802,15 @@ TextRenderedRun::GetTransformFromUserSpaceForPainting(
     AppUnitsToFloatCSSPixels(aContext->AppUnitsPerDevPixel());
 
   // Glyph position in user space.
-  m.Translate(mPosition / cssPxPerDevPx);
+  m.PreTranslate(mPosition / cssPxPerDevPx);
 
   // Take into account any font size scaling and scaling due to textLength="".
-  m.Scale(1.0 / mFontSizeScaleFactor, 1.0 / mFontSizeScaleFactor);
+  m.PreScale(1.0 / mFontSizeScaleFactor, 1.0 / mFontSizeScaleFactor);
 
   // Rotation due to rotate="" or a <textPath>.
-  m.Rotate(mRotate);
+  m.PreRotate(mRotate);
 
-  m.Scale(mLengthAdjustScaleFactor, 1.0);
+  m.PreScale(mLengthAdjustScaleFactor, 1.0);
 
   // Translation to get the text frame in the right place.
   nsPoint t;
@@ -825,7 +825,7 @@ TextRenderedRun::GetTransformFromUserSpaceForPainting(
                   : -aItem.mVisIStartEdge,
                 -mBaseline);
   }
-  m.Translate(AppUnitsToGfxUnits(t, aContext));
+  m.PreTranslate(AppUnitsToGfxUnits(t, aContext));
 
   return m;
 }
@@ -846,13 +846,13 @@ TextRenderedRun::GetTransformFromRunUserSpaceToUserSpace(
   GetClipEdges(start, end);
 
   // Glyph position in user space.
-  m.Translate(mPosition);
+  m.PreTranslate(mPosition);
 
   // Rotation due to rotate="" or a <textPath>.
-  m.Rotate(mRotate);
+  m.PreRotate(mRotate);
 
   // Scale due to textLength="".
-  m.Scale(mLengthAdjustScaleFactor, 1.0);
+  m.PreScale(mLengthAdjustScaleFactor, 1.0);
 
   // Translation to get the text frame in the right place.
   nsPoint t;
@@ -867,8 +867,8 @@ TextRenderedRun::GetTransformFromRunUserSpaceToUserSpace(
                   : 0,
                 -mBaseline);
   }
-  m.Translate(AppUnitsToGfxUnits(t, aContext) *
-                cssPxPerDevPx / mFontSizeScaleFactor);
+  m.PreTranslate(AppUnitsToGfxUnits(t, aContext) *
+                   cssPxPerDevPx / mFontSizeScaleFactor);
 
   return m;
 }
@@ -890,7 +890,7 @@ TextRenderedRun::GetTransformFromRunUserSpaceToFrameUserSpace(
   gfxFloat appPerCssPx = aContext->AppUnitsPerCSSPixel();
   gfxPoint t = IsVertical() ? gfxPoint(0, start / appPerCssPx)
                             : gfxPoint(start / appPerCssPx, 0);
-  return m.Translate(t);
+  return m.PreTranslate(t);
 }
 
 SVGBBox
@@ -999,7 +999,9 @@ TextRenderedRun::GetFrameUserSpaceRect(nsPresContext* aContext,
     return r;
   }
   gfxMatrix m = GetTransformFromRunUserSpaceToFrameUserSpace(aContext);
-  return m.TransformBounds(r.ToThebesRect());
+  gfxRect thebesRect = r.ToThebesRect();
+  thebesRect.TransformBoundsBy(m);
+  return thebesRect;
 }
 
 SVGBBox
@@ -1015,7 +1017,9 @@ TextRenderedRun::GetUserSpaceRect(nsPresContext* aContext,
   if (aAdditionalTransform) {
     m *= *aAdditionalTransform;
   }
-  return m.TransformBounds(r.ToThebesRect());
+  gfxRect thebesRect = r.ToThebesRect();
+  thebesRect.TransformBoundsBy(m);
+  return thebesRect;
 }
 
 void
@@ -1103,7 +1107,7 @@ TextRenderedRun::GetCharNumAtPosition(nsPresContext* aContext,
   if (!m.Invert()) {
     return -1;
   }
-  gfxPoint p = m.Transform(aPoint) / cssPxPerDevPx * mFontSizeScaleFactor;
+  gfxPoint p = m.TransformPoint(aPoint) / cssPxPerDevPx * mFontSizeScaleFactor;
 
   // First check that the point lies vertically between the top and bottom
   // edges of the text.
@@ -3624,8 +3628,8 @@ SVGTextFrame::PaintSVG(gfxContext& aContext,
                       mRect.width / appUnitsPerDevPixel,
                       mRect.height / appUnitsPerDevPixel);
 
-    nsRect canvasRect = nsLayoutUtils::RoundGfxRectToAppRect(
-        GetCanvasTM().TransformBounds(frameRect), 1);
+    frameRect.TransformBoundsBy(GetCanvasTM());
+    nsRect canvasRect = nsLayoutUtils::RoundGfxRectToAppRect(frameRect, 1);
     if (!canvasRect.Intersects(dirtyRect)) {
       return;
     }
@@ -3637,8 +3641,8 @@ SVGTextFrame::PaintSVG(gfxContext& aContext,
   auto auPerDevPx = presContext->AppUnitsPerDevPixel();
   float cssPxPerDevPx = presContext->AppUnitsToFloatCSSPixels(auPerDevPx);
   gfxMatrix canvasTMForChildren = aTransform;
-  canvasTMForChildren.Scale(cssPxPerDevPx, cssPxPerDevPx);
-  initialMatrix.Scale(1 / cssPxPerDevPx, 1 / cssPxPerDevPx);
+  canvasTMForChildren.PreScale(cssPxPerDevPx, cssPxPerDevPx);
+  initialMatrix.PreScale(1 / cssPxPerDevPx, 1 / cssPxPerDevPx);
 
   gfxContextAutoSaveRestore save(&aContext);
   aContext.NewPath();
@@ -3755,7 +3759,7 @@ SVGTextFrame::GetFrameForPoint(const gfxPoint& aPoint)
       return nullptr;
     }
 
-    gfxPoint pointInRunUserSpace = m.Transform(aPoint);
+    gfxPoint pointInRunUserSpace = m.TransformPoint(aPoint);
     gfxRect frameRect =
       run.GetRunUserSpaceRect(presContext, TextRenderedRun::eIncludeFill |
                                            TextRenderedRun::eIncludeStroke).ToThebesRect();
@@ -4279,9 +4283,9 @@ SVGTextFrame::GetExtentOfChar(nsIContent* aContent,
   // The horizontal extent is the origin of the glyph plus the advance
   // in the direction of the glyph's rotation.
   gfxMatrix m;
-  m.Translate(mPositions[startIndex].mPosition);
-  m.Rotate(mPositions[startIndex].mAngle);
-  m.Scale(1 / mFontSizeScaleFactor, 1 / mFontSizeScaleFactor);
+  m.PreTranslate(mPositions[startIndex].mPosition);
+  m.PreRotate(mPositions[startIndex].mAngle);
+  m.PreScale(1 / mFontSizeScaleFactor, 1 / mFontSizeScaleFactor);
 
   gfxRect glyphRect;
   if (it.TextRun()->IsVertical()) {
@@ -4297,7 +4301,8 @@ SVGTextFrame::GetExtentOfChar(nsIContent* aContent,
   }
 
   // Transform the glyph's rect into user space.
-  gfxRect r = m.TransformBounds(glyphRect);
+  glyphRect.TransformBoundsBy(m);
+  gfxRect r = glyphRect;
 
   NS_ADDREF(*aResult = new dom::SVGRect(aContent, r.x, r.y, r.width, r.height));
   return NS_OK;
@@ -5489,7 +5494,7 @@ SVGTextFrame::TransformFramePointToTextChild(const Point& aPoint,
     if (!m.Invert()) {
       return aPoint;
     }
-    gfxPoint pointInRunUserSpace = m.Transform(ThebesPoint(pointInUserSpace));
+    gfxPoint pointInRunUserSpace = m.TransformPoint(ThebesPoint(pointInUserSpace));
 
     if (Inside(runRect, pointInRunUserSpace)) {
       // The point was inside the rendered run's rect, so we choose it.
@@ -5517,8 +5522,8 @@ SVGTextFrame::TransformFramePointToTextChild(const Point& aPoint,
   // Return the point in user units relative to the nsTextFrame,
   // but taking into account mFontSizeScaleFactor.
   gfxMatrix m = hit.GetTransformFromRunUserSpaceToFrameUserSpace(presContext);
-  m.Scale(mFontSizeScaleFactor, mFontSizeScaleFactor);
-  return ToPoint(m.Transform(pointInRun) / cssPxPerDevPx);
+  m.PreScale(mFontSizeScaleFactor, mFontSizeScaleFactor);
+  return ToPoint(m.TransformPoint(pointInRun) / cssPxPerDevPx);
 }
 
 /**
@@ -5564,8 +5569,9 @@ SVGTextFrame::TransformFrameRectFromTextChild(const nsRect& aRect,
       // Transform it up to user space of the <text>, also taking into
       // account the font size scale.
       gfxMatrix m = run.GetTransformFromRunUserSpaceToUserSpace(presContext);
-      m.Scale(mFontSizeScaleFactor, mFontSizeScaleFactor);
-      gfxRect rectInUserSpace = m.Transform(rectInFrameUserSpace);
+      m.PreScale(mFontSizeScaleFactor, mFontSizeScaleFactor);
+      gfxRect rectInUserSpace = rectInFrameUserSpace;
+      rectInUserSpace.TransformBy(m);
 
       // Union it into the result.
       result.UnionRect(result, rectInUserSpace);

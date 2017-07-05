@@ -2020,15 +2020,15 @@ nsMathMLChar::ApplyTransforms(gfxContext* aThebesContext,
     gfxPoint devPixelOffset(NSAppUnitsToFloatPixels(pt.x, aAppUnitsPerGfxUnit),
                             NSAppUnitsToFloatPixels(pt.y, aAppUnitsPerGfxUnit));
     aThebesContext->SetMatrix(
-      aThebesContext->CurrentMatrix().Translate(devPixelOffset).
-                                      Scale(-mScaleX, mScaleY));
+      aThebesContext->CurrentMatrix().PreTranslate(devPixelOffset).
+                                      PreScale(-mScaleX, mScaleY));
   } else {
     nsPoint pt = r.TopLeft();
     gfxPoint devPixelOffset(NSAppUnitsToFloatPixels(pt.x, aAppUnitsPerGfxUnit),
                             NSAppUnitsToFloatPixels(pt.y, aAppUnitsPerGfxUnit));
     aThebesContext->SetMatrix(
-      aThebesContext->CurrentMatrix().Translate(devPixelOffset).
-                                      Scale(mScaleX, mScaleY));
+      aThebesContext->CurrentMatrix().PreTranslate(devPixelOffset).
+                                      PreScale(mScaleX, mScaleY));
   }
 
   // update the bounding rectangle.

@@ -985,7 +985,7 @@ void ClientMultiTiledLayerBuffer::Update(const nsIntRegion& newValidRegion,
       RefPtr<gfxContext> ctx = gfxContext::CreateOrNull(drawTarget);
       MOZ_ASSERT(ctx); // already checked the draw target above
       ctx->SetMatrix(
-        ctx->CurrentMatrix().Scale(mResolution, mResolution).Translate(ThebesPoint(-mTilingOrigin)));
+        ctx->CurrentMatrix().PreScale(mResolution, mResolution).PreTranslate(ThebesPoint(-mTilingOrigin)));
 
       mCallback(&mPaintedLayer, ctx, aPaintRegion, aDirtyRegion,
                 DrawRegionClip::DRAW, nsIntRegion(), mCallbackData);
