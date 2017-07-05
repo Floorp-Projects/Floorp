@@ -8,10 +8,19 @@
 #define MOZILLA_GFX_MATRIX_FWD_H_
 
 
-// Forward declare enough things to define the typedef |Matrix4x4|.
+// Forward declare enough things to define the typedefs |Matrix| and |Matrix4x4|.
 
 namespace mozilla {
 namespace gfx {
+
+template<class T>
+class BaseMatrix;
+
+typedef float Float;
+typedef BaseMatrix<Float> Matrix;
+
+typedef double Double;
+typedef BaseMatrix<Double> MatrixDouble;
 
 struct UnknownUnits;
 

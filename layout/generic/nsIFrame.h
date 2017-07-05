@@ -43,6 +43,7 @@
 #include "Visibility.h"
 #include "nsChangeHint.h"
 #include "nsStyleContextInlines.h"
+#include "mozilla/gfx/MatrixFwd.h"
 
 #ifdef ACCESSIBILITY
 #include "mozilla/a11y/AccTypes.h"
@@ -108,9 +109,6 @@ namespace layers {
 class Layer;
 } // namespace layers
 
-namespace gfx {
-class Matrix;
-} // namespace gfx
 } // namespace mozilla
 
 /**

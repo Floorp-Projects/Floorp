@@ -148,7 +148,7 @@ nsTreeView.prototype =
     data.open = !data.open;
     var rowCount = this.getRowCountIntl(data.children);
 
-    if (data.open) 
+    if (data.open)
       this.mTree.rowCountChanged(aIndex + 1, rowCount);
     else
       this.mTree.rowCountChanged(aIndex + 1, -rowCount);
@@ -218,7 +218,7 @@ nsTreeView.prototype =
     for (var childIdx = 0; childIdx < aChildren.length; childIdx++) {
       rowCount++;
 
-      var data = aChildren[childIdx];      
+      var data = aChildren[childIdx];
       if (data.open)
         rowCount += this.getRowCountIntl(data.children);
     }

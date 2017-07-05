@@ -306,8 +306,8 @@
       // HTML:col and HTML:colgroup under table
 
       obj =
-        { TABLE : [
-          { ROW :[
+        { TABLE: [
+          { ROW: [
             { role: ROLE_CELL },
             { role: ROLE_CELL },
             { role: ROLE_CELL }
@@ -859,7 +859,7 @@
         states: STATE_COLLAPSED | STATE_HASPOPUP,
         extraStates: EXT_STATE_EXPANDABLE,
         actions: "open",
-        children: [ 
+        children: [
           { COMBOBOX_LIST: [
             { role: ROLE_COMBOBOX_OPTION }, // high grade
             { role: ROLE_COMBOBOX_OPTION } // medium grade
@@ -1272,7 +1272,7 @@
         role: ROLE_PARAGRAPH,
         textAttrs: {
           0: { },
-          6: { "text-underline-style" : "solid" }
+          6: { "text-underline-style": "solid" }
         },
         children: [
           { role: ROLE_TEXT_LEAF }, // plain text

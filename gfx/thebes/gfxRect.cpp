@@ -25,6 +25,24 @@ gfxRect::TransformToQuad(const mozilla::gfx::Matrix4x4 &aMatrix) const
   return gfxQuad(points[0], points[1], points[2], points[3]);
 }
 
+void
+gfxRect::TransformBy(const mozilla::gfx::MatrixDouble& aMatrix)
+{
+  *this = gfxRect(aMatrix.TransformPoint(TopLeft()),
+                  aMatrix.TransformSize(Size()));
+}
+
+void
+gfxRect::TransformBoundsBy(const mozilla::gfx::MatrixDouble& aMatrix)
+{
+  RectDouble tmp(x, y, width, height);
+  tmp = aMatrix.TransformBounds(tmp);
+  x = tmp.x;
+  y = tmp.y;
+  width = tmp.width;
+  height = tmp.height;
+}
+
 static bool
 WithinEpsilonOfInteger(gfxFloat aX, gfxFloat aEpsilon)
 {

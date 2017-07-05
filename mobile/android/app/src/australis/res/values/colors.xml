@@ -108,6 +108,9 @@
   <color name="url_bar_domaintext">#363B40</color>
   <color name="url_bar_domaintext_private">#FFFFFF</color>
   <color name="url_bar_blockedtext">#b14646</color>
+  <color name="url_bar_blockedtext_private">@color/url_bar_blockedtext</color>
+  <color name="url_bar_certificate_owner">@color/affirmative_green</color>
+  <color name="url_bar_certificate_owner_private">@color/affirmative_green</color>
   <color name="url_bar_shadow">#12000000</color>
 
   <color name="panel_image_item_background">#D1D9E1</color>

@@ -594,7 +594,7 @@ var Output = {
           androidEvent.bounds, aBrowser);
       }
 
-      switch(androidEvent.eventType) {
+      switch (androidEvent.eventType) {
         case ANDROID_VIEW_TEXT_CHANGED:
           androidEvent.brailleOutput = this.brailleState.adjustText(
             androidEvent.text);

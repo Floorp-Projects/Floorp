@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Test context-stroke-opacity with different stroke-opacity values (test image caching correctness)</title>
+    <style>
+
+img {
+  width: 100px;
+  height: 100px;
+  -moz-context-properties: stroke-opacity;
+}
+
+#img1 {
+  stroke-opacity: 0.3;
+}
+
+#img2 {
+  stroke-opacity: 0.7;
+}
+
+    </style>
+  </head>
+  <body>
+    <img id="img1" src="context-stroke-opacity-02.svg">
+    <img id="img2" src="context-stroke-opacity-02.svg">
+  </body>
+</html>

@@ -126,4 +126,13 @@ DetailsFrame::AppendAnonymousContentTo(nsTArray<nsIContent*>& aElements,
   }
 }
 
+bool
+DetailsFrame::HasMainSummaryFrame(nsIFrame* aSummaryFrame)
+{
+  nsIFrame* firstChild =
+    nsPlaceholderFrame::GetRealFrameFor(mFrames.FirstChild());
+
+  return aSummaryFrame == firstChild;
+}
+
 } // namespace mozilla

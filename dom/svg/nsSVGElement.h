@@ -20,11 +20,13 @@
 #include "nsError.h"
 #include "mozilla/dom/DOMRect.h"
 #include "mozilla/dom/Element.h"
+#include "mozilla/gfx/MatrixFwd.h"
 #include "nsISupportsImpl.h"
 #include "nsStyledElement.h"
 #include "nsSVGClass.h"
 #include "nsIDOMSVGElement.h"
 #include "SVGContentUtils.h"
+#include "gfxMatrix.h"
 
 class nsSVGAngle;
 class nsSVGBoolean;
@@ -60,13 +62,8 @@ class nsSVGAnimatedTransformList;
 class SVGStringList;
 class DOMSVGStringList;
 
-namespace gfx {
-class Matrix;
-} // namespace gfx
-
 } // namespace mozilla
 
-class gfxMatrix;
 struct nsSVGEnumMapping;
 
 typedef nsStyledElement nsSVGElementBase;

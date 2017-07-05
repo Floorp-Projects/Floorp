@@ -109,8 +109,7 @@ public:
                            nsEventStatus* aStatus);
 
   void PostHandleKeyboardEvent(WidgetKeyboardEvent* aKeyboardEvent,
-                               nsEventStatus& aStatus,
-                               bool dispatchedToContentProcess);
+                               nsEventStatus& aStatus);
 
   /**
    * DispatchLegacyMouseScrollEvents() dispatches eLegacyMouseLineOrPageScroll
@@ -895,9 +894,22 @@ protected:
   dom::TabParent *GetCrossProcessTarget();
   bool IsTargetCrossProcess(WidgetGUIEvent* aEvent);
 
-  bool DispatchCrossProcessEvent(WidgetEvent* aEvent,
+  /**
+   * DispatchCrossProcessEvent() try to post aEvent to target remote process.
+   * If you need to check if the event is posted to a remote process, you
+   * can use aEvent->HasBeenPostedToRemoteProcess().
+   */
+  void DispatchCrossProcessEvent(WidgetEvent* aEvent,
                                  nsFrameLoader* aRemote,
                                  nsEventStatus *aStatus);
+  /**
+   * HandleCrossProcessEvent() may post aEvent to target remote processes.
+   * When it succeeded to post the event to at least one remote process,
+   * returns true.  Otherwise, including the case not tried to dispatch to
+   * post the event, returns false.
+   * If you need to check if the event is posted to at least one remote
+   * process, you can use aEvent->HasBeenPostedToRemoteProcess().
+   */
   bool HandleCrossProcessEvent(WidgetEvent* aEvent,
                                nsEventStatus* aStatus);
 

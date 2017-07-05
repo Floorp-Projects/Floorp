@@ -271,10 +271,13 @@ function isToolbarVisible(aToolbar) {
  *        whether to automatically cancel the dialog at the end of the task
  * @param openFn
  *        generator function causing the dialog to open
- * @param task
+ * @param taskFn
  *        the task to execute once the dialog is open
+ * @param closeFn
+ *        A function to be used to wait for pending work when the dialog is
+ *        closing. It is passed the dialog window handle and should return a promise.
  */
-var withBookmarksDialog = async function(autoCancel, openFn, taskFn) {
+var withBookmarksDialog = async function(autoCancel, openFn, taskFn, closeFn) {
   let closed = false;
   let dialogPromise = new Promise(resolve => {
     Services.ww.registerNotification(function winObserver(subject, topic, data) {
@@ -317,6 +320,12 @@ var withBookmarksDialog = async function(autoCancel, openFn, taskFn) {
   }
 
   info("withBookmarksDialog: executing the task");
+
+  let closePromise = () => Promise.resolve();
+  if (closeFn) {
+    closePromise = closeFn(dialogWin);
+  }
+
   try {
     await taskFn(dialogWin);
   } finally {
@@ -325,7 +334,10 @@ var withBookmarksDialog = async function(autoCancel, openFn, taskFn) {
         ok(false, "The test should have closed the dialog!");
       }
       info("withBookmarksDialog: canceling the dialog");
+
       doc.documentElement.cancelDialog();
+
+      await closePromise;
     }
   }
 };

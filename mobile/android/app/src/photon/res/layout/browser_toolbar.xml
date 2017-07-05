@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<merge xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Note: any layout parameters setting the right edge of
+         this View should be matched in the url_bar_translating_edge. -->
+    <ImageView
+        android:id="@+id/url_bar_entry"
+        style="@style/UrlBar.Entry"
+        android:layout_marginBottom="8dp"
+        android:layout_marginTop="8dp"
+        android:clickable="false"
+        android:duplicateParentState="true"
+        android:focusable="false"
+        android:scaleType="fitXY"
+        android:src="@drawable/url_bar_entry" />
+
+    <!-- A View that clips with url_bar_entry and translates
+         around it to animate growing the url bar,
+         which occurs in the display/editing mode transitions. -->
+    <ImageView
+        android:id="@+id/url_bar_translating_edge"
+        style="@style/UrlBar.Edge"
+        android:layout_alignBottom="@id/url_bar_entry"
+        android:layout_alignTop="@id/url_bar_entry"
+        android:clickable="false"
+        android:duplicateParentState="true"
+        android:focusable="false"
+        android:scaleType="fitXY"
+        android:src="@drawable/url_bar_translating_edge"
+        android:visibility="invisible" />
+
+    <org.mozilla.gecko.toolbar.ShapedButtonFrameLayout
+        android:id="@+id/menu"
+        style="@style/UrlBar.Menu"
+        android:background="@drawable/shaped_button"
+        android:contentDescription="@string/menu">
+
+        <org.mozilla.gecko.widget.themed.ThemedImageView
+            android:id="@+id/menu_icon"
+            style="@style/UrlBar.ImageButton"
+            android:layout_width="wrap_content"
+            android:layout_height="@dimen/browser_toolbar_menu_icon_height"
+            android:layout_gravity="center"
+            android:scaleType="centerInside"
+            android:src="@drawable/menu"
+            android:tint="@color/tabs_tray_icon_grey" />
+
+    </org.mozilla.gecko.toolbar.ShapedButtonFrameLayout>
+
+    <org.mozilla.gecko.toolbar.PhoneTabsButton
+        android:id="@+id/tabs"
+        style="@style/UrlBar.Tabs"
+        android:layout_width="64dip"
+        android:layout_alignWithParentIfMissing="true"
+        android:background="@drawable/shaped_button" />
+
+    <!-- The TextSwitcher should be shifted 24dp on the left, to avoid
+         the curve. On a 48dp space, centering 24dp image will leave
+         12dp on all sides. However this image has a perception of
+         2 layers. Hence to center this, an additional 4dp is added to the left.
+         The margins will be 40dp on left, 8dp on right, instead of ideal 30dp
+         and 12dp. -->
+    <org.mozilla.gecko.toolbar.TabCounter
+        android:id="@+id/tabs_counter"
+        style="@style/UrlBar.TabCounter"
+        android:layout_width="24dip"
+        android:layout_height="24dip"
+        android:layout_centerVertical="true"
+        android:background="@drawable/tabs_count"
+        android:clipChildren="false"
+        android:clipToPadding="false"
+        android:gravity="center_horizontal" />
+
+    <!-- Note that the edit components are invisible so that the views
+         depending on their location can properly layout. -->
+    <org.mozilla.gecko.widget.themed.ThemedImageView
+        android:id="@+id/edit_cancel"
+        style="@style/UrlBar.EditCancel"
+        android:background="@drawable/action_bar_button"
+        android:contentDescription="@string/edit_mode_cancel"
+        android:src="@drawable/close_edit_mode_selector"
+        android:visibility="invisible" />
+
+    <!-- The space to the left of the cancel button would be larger than the right because
+         the url bar drawable contains some whitespace, so we compensate by removing
+         some padding from the right (value determined through experimentation). -->
+    <org.mozilla.gecko.toolbar.ToolbarEditLayout
+        android:id="@+id/edit_layout"
+        style="@style/UrlBar.EditLayout"
+        android:visibility="invisible" />
+
+    <org.mozilla.gecko.toolbar.ToolbarDisplayLayout
+        android:id="@+id/display_layout"
+        style="@style/UrlBar.DisplayLayout" />
+
+</merge>

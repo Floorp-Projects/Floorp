@@ -2,6 +2,12 @@
 
 const TEST_URL = "http://mochi.test:8888/browser/browser/components/places/tests/browser/keyword_form.html";
 
+function closeHandler(dialogWin) {
+  let savedItemId = dialogWin.gEditItemOverlay.itemId;
+  return PlacesTestUtils.waitForNotification("onItemRemoved",
+                                             itemId => itemId === savedItemId);
+}
+
 add_task(async function() {
   await BrowserTestUtils.withNewTab({
     gBrowser,
@@ -14,7 +20,7 @@ add_task(async function() {
       let acceptBtn = dialogWin.document.documentElement.getButton("accept");
       ok(acceptBtn.disabled, "Accept button is disabled");
 
-      let promiseKeywordNotification = promiseBookmarksNotification(
+      let promiseKeywordNotification = PlacesTestUtils.waitForNotification(
         "onItemChanged", (itemId, prop, isAnno, val) => prop == "keyword" && val == "kw");
 
       fillBookmarkTextField("editBMPanel_keywordField", "kw", dialogWin);
@@ -43,7 +49,7 @@ add_task(async function() {
       let data = await getShortcutOrURIAndPostData("kw test");
       is(getPostDataString(data.postData), "accenti=\u00E0\u00E8\u00EC\u00F2\u00F9&search=test", "getShortcutOrURI POST data is correct");
       is(data.url, TEST_URL, "getShortcutOrURI URL is correct");
-    });
+    }, closeHandler);
   });
 });
 
@@ -64,13 +70,13 @@ add_task(async function reopen_same_field() {
     // We must wait for the context menu code to build metadata.
     await openContextMenuForContentSelector(browser, '#form1 > input[name="search"]');
 
-    await withBookmarksDialog(true, AddKeywordForSearchField, function(dialogWin) {
+    await withBookmarksDialog(true, AddKeywordForSearchField, async function(dialogWin) {
       let acceptBtn = dialogWin.document.documentElement.getButton("accept");
       ok(acceptBtn.disabled, "Accept button is disabled");
 
       let elt = dialogWin.document.getElementById("editBMPanel_keywordField");
-      is(elt.value, "kw");
-    });
+      await BrowserTestUtils.waitForCondition(() => elt.value == "kw", "Keyword should be the previous value");
+    }, closeHandler);
   });
 });
 
@@ -98,7 +104,7 @@ add_task(async function open_other_field() {
 
       let elt = dialogWin.document.getElementById("editBMPanel_keywordField");
       is(elt.value, "");
-    });
+    }, closeHandler);
   });
 });
 
