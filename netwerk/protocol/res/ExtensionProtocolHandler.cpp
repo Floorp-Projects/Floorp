@@ -42,10 +42,6 @@
 #include "nsILocalFileWin.h"
 #endif
 
-#if !defined(XP_WIN)
-#include "mozilla/SandboxSettings.h"
-#endif
-
 #define EXTENSION_SCHEME "moz-extension"
 using mozilla::ipc::FileDescriptor;
 using OptionalIPCStream = mozilla::ipc::OptionalIPCStream;
@@ -347,9 +343,6 @@ ExtensionProtocolHandler::GetSingleton()
 
 ExtensionProtocolHandler::ExtensionProtocolHandler()
   : SubstitutingProtocolHandler(EXTENSION_SCHEME)
-#if !defined(XP_WIN)
-  , mAlreadyCheckedDevRepo(false)
-#endif
 {
   mUseRemoteFileChannels = IsNeckoChild() &&
     Preferences::GetBool("extensions.webextensions.protocol.remote");
@@ -504,39 +497,6 @@ ExtensionProtocolHandler::SubstituteChannel(nsIURI* aURI,
   return NS_OK;
 }
 
-#if !defined(XP_WIN)
-// The |aRequestedFile| argument must already be Normalize()'d
-Result<Ok, nsresult>
-ExtensionProtocolHandler::DevRepoContains(nsIFile* aRequestedFile,
-                                          bool *aResult)
-{
-  MOZ_ASSERT(!IsNeckoChild());
-  MOZ_ASSERT(aResult);
-  *aResult = false;
-
-  // On the first invocation, set mDevRepo if this is a
-  // development build with MOZ_DEVELOPER_REPO_DIR set.
-  if (!mAlreadyCheckedDevRepo) {
-    mAlreadyCheckedDevRepo = true;
-    if (mozilla::IsDevelopmentBuild()) {
-      char *developer_repo_dir = PR_GetEnv("MOZ_DEVELOPER_REPO_DIR");
-      if (developer_repo_dir) {
-        NS_TRY(NS_NewLocalFile(NS_ConvertUTF8toUTF16(developer_repo_dir),
-                               false, getter_AddRefs(mDevRepo)));
-        NS_TRY(mDevRepo->Normalize());
-      }
-    }
-  }
-
-  if (mDevRepo) {
-    // This is a development build
-    NS_TRY(mDevRepo->Contains(aRequestedFile, aResult));
-  }
-
-  return Ok();
-}
-#endif /* !defined(XP_WIN) */
-
 Result<nsCOMPtr<nsIInputStream>, nsresult>
 ExtensionProtocolHandler::NewStream(nsIURI* aChildURI,
                                     nsILoadInfo* aChildLoadInfo,
@@ -623,17 +583,7 @@ ExtensionProtocolHandler::NewStream(nsIURI* aChildURI,
   bool isResourceFromExtensionDir = false;
   NS_TRY(extensionDir->Contains(requestedFile, &isResourceFromExtensionDir));
   if (!isResourceFromExtensionDir) {
-#if defined(XP_WIN)
     return Err(NS_ERROR_FILE_ACCESS_DENIED);
-#else
-    // On a dev build, we allow an unpacked resource that isn't
-    // from the extension directory as long as it is from the repo.
-    bool isResourceFromDevRepo = false;
-    MOZ_TRY(DevRepoContains(requestedFile, &isResourceFromDevRepo));
-    if (!isResourceFromDevRepo) {
-      return Err(NS_ERROR_FILE_ACCESS_DENIED);
-    }
-#endif /* defined(XP_WIN) */
   }
 
   nsCOMPtr<nsIInputStream> inputStream;
