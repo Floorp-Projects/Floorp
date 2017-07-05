@@ -9721,22 +9721,6 @@ nsCSSFrameConstructor::MaybeRecreateContainerForFrameRemoval(nsIFrame* aFrame,
     return true;
   }
 
-  if (insertionFrame && aFrame->GetParent()->IsDetailsFrame()) {
-    HTMLSummaryElement* summary =
-      HTMLSummaryElement::FromContent(insertionFrame->GetContent());
-
-    if (summary && summary->IsMainSummary()) {
-      // When removing a summary, we should reframe the parent details frame to
-      // ensure that another summary is used or the default summary is
-      // generated.
-      RecreateFramesForContent(aFrame->GetParent()->GetContent(),
-                               false, REMOVE_FOR_RECONSTRUCTION,
-                               aDestroyedFramesFor);
-      return true;
-    }
-  }
-
-  // Now check for possibly needing to reconstruct due to a pseudo parent
   nsIFrame* inFlowFrame =
     (aFrame->GetStateBits() & NS_FRAME_OUT_OF_FLOW) ?
       aFrame->GetPlaceholderFrame() : aFrame;
@@ -9744,6 +9728,23 @@ nsCSSFrameConstructor::MaybeRecreateContainerForFrameRemoval(nsIFrame* aFrame,
   MOZ_ASSERT(inFlowFrame == inFlowFrame->FirstContinuation(),
              "placeholder for primary frame has previous continuations?");
   nsIFrame* parent = inFlowFrame->GetParent();
+
+  if (parent && parent->IsDetailsFrame()) {
+    HTMLSummaryElement* summary =
+      HTMLSummaryElement::FromContent(aFrame->GetContent());
+
+    if (summary && summary->IsMainSummary()) {
+      // When removing a summary, we should reframe the parent details frame to
+      // ensure that another summary is used or the default summary is
+      // generated.
+      RecreateFramesForContent(parent->GetContent(),
+                               false, REMOVE_FOR_RECONSTRUCTION,
+                               aDestroyedFramesFor);
+      return true;
+    }
+  }
+
+  // Now check for possibly needing to reconstruct due to a pseudo parent
   // For the case of ruby pseudo parent, effectively, only pseudo rb/rt frame
   // need to be checked here, since all other types of parent will be catched
   // by "Check ruby containers" section below.
