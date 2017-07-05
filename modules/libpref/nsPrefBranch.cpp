@@ -764,7 +764,7 @@ NS_IMETHODIMP nsPrefBranch::RemoveObserver(const char *aDomain, nsIObserver *aOb
   // pointer go out of scope and destroy the callback.
   PrefCallback key(aDomain, aObserver, this);
   nsAutoPtr<PrefCallback> pCallback;
-  mObservers.RemoveAndForget(&key, pCallback);
+  mObservers.Remove(&key, &pCallback);
   if (pCallback) {
     // aDomain == nullptr is the only possible failure, trapped above
     const PrefName& pref = getPrefName(aDomain);

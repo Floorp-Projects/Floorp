@@ -178,7 +178,7 @@ GeckoMediaPluginService::RunPluginCrashCallbacks(uint32_t aPluginId,
   nsAutoPtr<nsTArray<RefPtr<GMPCrashHelper>>> helpers;
   {
     MutexAutoLock lock(mMutex);
-    mPluginCrashHelpers.RemoveAndForget(aPluginId, helpers);
+    mPluginCrashHelpers.Remove(aPluginId, &helpers);
   }
   if (!helpers) {
     LOGD(("%s::%s(%i) No crash helpers, not handling crash.", __CLASS__, __FUNCTION__, aPluginId));
