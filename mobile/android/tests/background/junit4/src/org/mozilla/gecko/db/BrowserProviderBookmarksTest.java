@@ -18,7 +18,12 @@ import org.mozilla.gecko.background.testhelpers.TestRunner;
 import org.mozilla.gecko.sync.repositories.android.BrowserContractHelpers;
 import org.robolectric.shadows.ShadowContentResolver;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
@@ -32,7 +37,6 @@ public class BrowserProviderBookmarksTest {
 
     private static final long INVALID_ID = -1;
 
-    private ShadowContentResolver contentResolver;
     private ContentProviderClient bookmarksClient;
     private Uri bookmarksTestUri;
     private BrowserProvider provider;
@@ -43,7 +47,7 @@ public class BrowserProviderBookmarksTest {
         provider.onCreate();
         ShadowContentResolver.registerProvider(BrowserContract.AUTHORITY, new DelegatingTestContentProvider(provider));
 
-        contentResolver = new ShadowContentResolver();
+        ShadowContentResolver contentResolver = new ShadowContentResolver();
         bookmarksClient = contentResolver.acquireContentProviderClient(BrowserContractHelpers.BOOKMARKS_CONTENT_URI);
 
         bookmarksTestUri = testUri(BrowserContract.Bookmarks.CONTENT_URI);
@@ -56,6 +60,88 @@ public class BrowserProviderBookmarksTest {
     }
 
     @Test
+    public void testBookmarkChangedCountsOnUpdates() throws RemoteException {
+        final long rootId = getBookmarkIdFromGuid(BrowserContract.Bookmarks.MOBILE_FOLDER_GUID);
+        insertBookmark("bookmark-1", "https://www.mozilla-1.org", "guid-1",
+                rootId, BrowserContract.Bookmarks.TYPE_BOOKMARK);
+
+        ContentValues values = new ContentValues();
+        values.put(BrowserContract.Bookmarks.TITLE, "bookmark-1-2");
+        int changed = bookmarksClient.update(
+                bookmarksTestUri, values, BrowserContract.Bookmarks.GUID + " = ?",
+                new String[] { "guid-1" });
+
+        // Only record itself is changed.
+        assertEquals(1, changed);
+
+        // Test that changing a parent of a record affects three records - record itself, new parent, old parent.
+        insertBookmark("bookmark-1", null, "parent", rootId, BrowserContract.Bookmarks.TYPE_FOLDER);
+        long parentId = getBookmarkIdFromGuid("parent");
+        values = new ContentValues();
+        values.put(BrowserContract.Bookmarks.PARENT, parentId);
+
+        changed = bookmarksClient.update(
+                bookmarksTestUri.buildUpon()
+                        .appendQueryParameter(
+                                BrowserContract.PARAM_OLD_BOOKMARK_PARENT,
+                                String.valueOf(rootId)
+                        ).build(),
+                values,
+                BrowserContract.Bookmarks.GUID + " = ?",
+                new String[] { "guid-1" }
+        );
+
+        assertEquals(3, changed);
+    }
+
+    @Test
+    public void testBookmarkChangedCountsOnDeletions() throws RemoteException {
+        final long rootId = getBookmarkIdFromGuid(BrowserContract.Bookmarks.MOBILE_FOLDER_GUID);
+        insertBookmark("bookmark-1", "https://www.mozilla-1.org", "guid-1",
+                rootId, BrowserContract.Bookmarks.TYPE_BOOKMARK);
+
+        int changed = bookmarksClient.delete(bookmarksTestUri,
+                BrowserContract.Bookmarks.URL + " = ?",
+                new String[] { "https://www.mozilla-1.org" });
+
+        // Note that we also modify parent folder, and so changed counts must reflect that.
+        assertEquals(2, changed);
+
+        insertBookmark("bookmark-2", "https://www.mozilla-2.org", "guid-2",
+                rootId, BrowserContract.Bookmarks.TYPE_BOOKMARK);
+        insertBookmark("bookmark-3", "https://www.mozilla-3.org", "guid-3",
+                rootId, BrowserContract.Bookmarks.TYPE_BOOKMARK);
+        insertBookmark("bookmark-4", "https://www.mozilla-4.org", "guid-4",
+                rootId, BrowserContract.Bookmarks.TYPE_BOOKMARK);
+
+        changed = bookmarksClient.delete(bookmarksTestUri,
+                BrowserContract.Bookmarks.PARENT + " = ?",
+                new String[] { String.valueOf(rootId) });
+
+        assertEquals(4, changed);
+
+        // Test that we correctly count affected records during deletions of subtrees.
+        final Uri parentUri = insertBookmark("parent", null, "parent", rootId,
+                BrowserContract.Bookmarks.TYPE_FOLDER);
+        final long parentId = Long.parseLong(parentUri.getLastPathSegment());
+
+        insertBookmark("bookmark-5", "https://www.mozilla-2.org", "guid-5",
+                parentId, BrowserContract.Bookmarks.TYPE_BOOKMARK);
+        insertBookmark("bookmark-6", "https://www.mozilla-3.org", "guid-6",
+                parentId, BrowserContract.Bookmarks.TYPE_BOOKMARK);
+        // Directly under the root.
+        insertBookmark("bookmark-7", "https://www.mozilla-4.org", "guid-7",
+                rootId, BrowserContract.Bookmarks.TYPE_BOOKMARK);
+
+        changed = bookmarksClient.delete(bookmarksTestUri,
+                BrowserContract.Bookmarks.GUID + " = ?",
+                new String[] { "parent" });
+
+        // 4 = parent, its two children, mobile root.
+        assertEquals(4, changed);
+    }
+
+    @Test
     public void testDeleteBookmarkFolder() throws RemoteException {
         final long rootId = getBookmarkIdFromGuid(BrowserContract.Bookmarks.MOBILE_FOLDER_GUID);
 
@@ -64,7 +150,7 @@ public class BrowserProviderBookmarksTest {
                                              BrowserContract.Bookmarks.TYPE_FOLDER);
         final long parentId = Long.parseLong(parentUri.getLastPathSegment());
 
-        // Insert 10 bookmarks into the parent
+        // Insert 10 bookmarks into the parent.
         for (int i = 0; i < 10; i++) {
             insertBookmark("bookmark-" + i, "https://www.mozilla-" + i + ".org", "guid-" + i,
                            parentId, BrowserContract.Bookmarks.TYPE_BOOKMARK);
@@ -74,15 +160,16 @@ public class BrowserProviderBookmarksTest {
                                  BrowserContract.Bookmarks.PARENT + " = ?";
         final String[] selectionArgs = { String.valueOf(parentId),
                                          String.valueOf(parentId) };
-        // Check insertions. We should have 11 records(1 parent and 10 children).
+        // Check insertions. We should have 11 records (1 parent and 10 children).
         final int inserted = getRowCount(selection, selectionArgs);
         assertEquals(11, inserted);
 
-        final int deleted = bookmarksClient.delete(bookmarksTestUri,
+        final int changed = bookmarksClient.delete(bookmarksTestUri,
                                                    BrowserContract.Bookmarks._ID + " = ?",
                                                    new String[] { String.valueOf(parentId) });
         // Check if parent and all its descendants are deleted.
-        assertEquals(11, deleted);
+        // We also modify parent's parent, and so that is counted as well.
+        assertEquals(12, changed);
 
         // Check records are marked as deleted and column are reset.
         final StringBuilder sb = new StringBuilder(BrowserContract.Bookmarks._ID + " = ? OR ");
@@ -103,10 +190,18 @@ public class BrowserProviderBookmarksTest {
                                                     where, new String[] { String.valueOf(parentId) }, null);
         assertNotNull(cursor);
         assertEquals(11, cursor.getCount());
+        List<String> guids = Arrays.asList("parent", "guid-0", "guid-1", "guid-2", "guid-3", "guid-4", "guid-5", "guid-6", "guid-7", "guid-8", "guid-9");
+        List<String> seenGuids = new ArrayList<>();
         try {
             while (cursor.moveToNext()) {
                 final int isDeleted = cursor.getInt(cursor.getColumnIndexOrThrow(BrowserContract.Bookmarks.IS_DELETED));
                 assertEquals(1, isDeleted);
+
+                final String guid = cursor.getString(cursor.getColumnIndexOrThrow(BrowserContract.Bookmarks.GUID));
+                // Don't depend on iteration order while checking that every guid is correctly preserved.
+                assertTrue(guids.contains(guid));
+                assertFalse(seenGuids.contains(guid));
+                seenGuids.add(guid);
 
                 final int position = cursor.getInt(cursor.getColumnIndexOrThrow(BrowserContract.Bookmarks.POSITION));
                 assertEquals(0, position);

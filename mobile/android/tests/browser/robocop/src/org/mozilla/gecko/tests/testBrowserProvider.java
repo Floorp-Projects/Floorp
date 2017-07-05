@@ -656,11 +656,12 @@ public class testBrowserProvider extends ContentProviderTest {
         public void test() throws Exception {
             long id = insertOneBookmark();
 
-            int deleted = mProvider.delete(BrowserContract.Bookmarks.CONTENT_URI,
+            int changed = mProvider.delete(BrowserContract.Bookmarks.CONTENT_URI,
                                            BrowserContract.Bookmarks._ID + " = ?",
                                            new String[] { String.valueOf(id) });
 
-            mAsserter.is((deleted == 1), true, "Inserted bookmark was deleted");
+            // Deletions also affect parents of folders, and so that must be accounted for.
+            mAsserter.is((changed == 2), true, "Inserted bookmark was deleted");
 
             Cursor c = getBookmarkById(appendUriParam(BrowserContract.Bookmarks.CONTENT_URI, BrowserContract.PARAM_SHOW_DELETED, "1"), id);
             mAsserter.is(c.moveToFirst(), true, "Deleted bookmark was only marked as deleted");
@@ -686,11 +687,12 @@ public class testBrowserProvider extends ContentProviderTest {
                     "Deleted bookmark GUID is not null");
             c.close();
 
-            deleted = mProvider.delete(appendUriParam(BrowserContract.Bookmarks.CONTENT_URI, BrowserContract.PARAM_IS_SYNC, "1"),
+            changed = mProvider.delete(appendUriParam(BrowserContract.Bookmarks.CONTENT_URI, BrowserContract.PARAM_IS_SYNC, "1"),
                                        BrowserContract.Bookmarks._ID + " = ?",
                                        new String[] { String.valueOf(id) });
 
-            mAsserter.is((deleted == 1), true, "Inserted bookmark was deleted");
+            // Deletions from sync skip bumping timestamps of parents.
+            mAsserter.is((changed == 1), true, "Inserted bookmark was deleted");
 
             c = getBookmarkById(appendUriParam(BrowserContract.Bookmarks.CONTENT_URI, BrowserContract.PARAM_SHOW_DELETED, "1"), id);
             mAsserter.is(c.moveToFirst(), false, "Inserted bookmark is now actually deleted");
@@ -698,8 +700,8 @@ public class testBrowserProvider extends ContentProviderTest {
 
             id = insertOneBookmark();
 
-            deleted = mProvider.delete(ContentUris.withAppendedId(BrowserContract.Bookmarks.CONTENT_URI, id), null, null);
-            mAsserter.is((deleted == 1), true,
+            changed = mProvider.delete(ContentUris.withAppendedId(BrowserContract.Bookmarks.CONTENT_URI, id), null, null);
+            mAsserter.is((changed == 2), true,
                          "Inserted bookmark was deleted using URI with id");
 
             c = getBookmarkById(id);
@@ -724,13 +726,13 @@ public class testBrowserProvider extends ContentProviderTest {
                 mAsserter.is(c.moveToFirst(), true, "Inserted bookmark found");
                 c.close();
 
-                deleted = 0;
+                changed = 0;
                 try {
                     Uri uri = ContentUris.withAppendedId(BrowserContract.Bookmarks.CONTENT_URI, parentId);
-                    deleted = mProvider.delete(appendUriParam(uri, BrowserContract.PARAM_IS_SYNC, "1"), null, null);
+                    changed = mProvider.delete(appendUriParam(uri, BrowserContract.PARAM_IS_SYNC, "1"), null, null);
                 } catch(Exception e) {}
 
-                mAsserter.is((deleted == 0), true,
+                mAsserter.is((changed == 0), true,
                              "Should not be able to delete folder that causes orphan bookmarks");
             }
         }
@@ -1802,11 +1804,12 @@ public class testBrowserProvider extends ContentProviderTest {
             mAsserter.is(c.getLong(c.getColumnIndex(BrowserContract.Combined.BOOKMARK_ID)), combinedBookmarkId,
                          "Bookmark id should be set correctly on combined entry");
 
-            int deleted = mProvider.delete(BrowserContract.Bookmarks.CONTENT_URI,
+            int changed = mProvider.delete(BrowserContract.Bookmarks.CONTENT_URI,
                                            BrowserContract.Bookmarks._ID + " = ?",
                                            new String[] { String.valueOf(combinedBookmarkId) });
 
-            mAsserter.is((deleted == 1), true, "Inserted combined bookmark was deleted");
+            // Deletion of a bookmark also affects its parent, and that must be reflected in the count.
+            mAsserter.is((changed == 2), true, "Inserted combined bookmark was deleted");
             c.close();
 
             c = mProvider.query(BrowserContract.Combined.CONTENT_URI, null, "", null, null);

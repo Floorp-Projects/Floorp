@@ -578,6 +578,7 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
                 // fall through
             case BOOKMARKS: {
                 trace("Deleting bookmarks: " + uri);
+                // Since we touch multiple records for most deletions, 'deleted' here really means 'affected'.
                 deleted = deleteBookmarks(uri, selection, selectionArgs);
                 deleteUnusedImages(uri);
                 break;
@@ -1679,7 +1680,7 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
 
         beginWrite(db);
 
-        final int updated = db.update(TABLE_BOOKMARKS, values, inClause, null);
+        int updated = db.update(TABLE_BOOKMARKS, values, inClause, null);
         if (updated == 0) {
             trace("No update on URI: " + uri);
             return updated;
@@ -1702,7 +1703,7 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
         parentValues.put(Bookmarks.DATE_MODIFIED, lastModified);
 
         // Bump old/new parent's lastModified timestamps.
-        db.update(TABLE_BOOKMARKS, parentValues,
+        updated += db.update(TABLE_BOOKMARKS, parentValues,
                   Bookmarks._ID + " in (?, ?)",
                   new String[] { String.valueOf(oldParentId), String.valueOf(newParentId) });
 
@@ -2289,28 +2290,27 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
 
         debug("Marking bookmarks as deleted for URI: " + uri);
 
-        // Bump parent's lastModified timestamp before record deleted.
+        // Deletions of bookmarks almost always affect more than one record, and so we keep track of
+        // number of records changed as opposed to number of records deleted. It's highly unusual,
+        // but not impossible, for a "delete" operation to modify some of the records without
+        // actually marking any as "deleted".
+        // We do this to ensure we correctly fire 'notifyChanged' events whenever > 0 records are touched.
+        int changed = 0;
+
+        // First, bump parents' lastModified timestamp. Running this 'update' query first ensures our
+        // transaction will start off as a 'writer'. Deletion code below performs a SELECT first,
+        // requiring transaction to be upgraded from a reader to a writer, which might result in SQL_BUSY.
+        // NB: this code allows for multi-parent bookmarks.
         final ContentValues parentValues = new ContentValues();
         parentValues.put(Bookmarks.DATE_MODIFIED, System.currentTimeMillis());
-        updateBookmarkParents(db, parentValues, selection, selectionArgs);
+        changed += updateBookmarkParents(db, parentValues, selection, selectionArgs);
 
-        final ContentValues values = new ContentValues();
-        values.put(Bookmarks.IS_DELETED, 1);
-        values.put(Bookmarks.POSITION, 0);
-        // updateBookmarks() and getBookmarkDescendantGUIDs() both use use selection as a SQL filter,
-        // so we don't set column to null here, or the filtering result might be different because of record changed.
-        // We move all values.putNull() operations into bulkDeleteByBookmarkGUIDs().
-
-        // Doing this UPDATE (or the DELETE above) first ensures that the
-        // first operation within this transaction is a write.
-        // The cleanup call below will do a SELECT first, and thus would
-        // require the transaction to be upgraded from a reader to a writer.
-        updateBookmarks(uri, values, selection, selectionArgs);
-
-        // When deleting bookmarks/folders, we have to delete their all descendant bookmarks/folders as well.
-        // We concatenate all IDs into a clause, and delete them at once.
+        // Finally, deleted everything that needs to be deleted all at once.
+        // We need to compute list of all bookmarks and their descendants first.
+        // We calculate our deletion tree based on 'selection', and so above queries do not null-out
+        // any of the bookmark fields. This will be done in `bulkDeleteByBookmarkGUIDs`.
         final List<String> guids = getBookmarkDescendantGUIDs(db, selection, selectionArgs);
-        final int updated = bulkDeleteByBookmarkGUIDs(db, guids, TABLE_BOOKMARKS, Bookmarks.GUID);
+        changed += bulkDeleteByBookmarkGUIDs(db, guids, TABLE_BOOKMARKS, Bookmarks.GUID);
 
         try {
             cleanUpSomeDeletedRecords(uri, TABLE_BOOKMARKS);
@@ -2318,7 +2318,7 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
             // We don't care.
             Log.e(LOGTAG, "Unable to clean up deleted bookmark records: ", e);
         }
-        return updated;
+        return changed;
     }
 
     /**
