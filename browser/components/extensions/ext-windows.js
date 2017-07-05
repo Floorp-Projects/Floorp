@@ -189,6 +189,9 @@ this.windows = class extends ExtensionAPI {
                                                "XULFrameLoaderCreated", onXULFrameLoaderCreated);
               }
             }
+            if (createData.titlePreface) {
+              win.setTitlePreface(createData.titlePreface);
+            }
             return win.convert({populate: true});
           });
         },
@@ -216,6 +219,11 @@ this.windows = class extends ExtensionAPI {
           }
 
           win.updateGeometry(updateInfo);
+
+          if (updateInfo.titlePreface) {
+            win.setTitlePreface(updateInfo.titlePreface);
+            win.window.gBrowser.updateTitlebar();
+          }
 
           // TODO: All the other properties, focused=false...
 
