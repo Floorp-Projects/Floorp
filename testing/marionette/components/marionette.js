@@ -116,7 +116,6 @@ const prefs = {
 };
 
 function MarionetteComponent() {
-  this.enabled = env.exists(ENV_ENABLED);
   this.running = false;
   this.server = null;
 
@@ -129,6 +128,11 @@ function MarionetteComponent() {
   this.finalUIStartup = false;
 
   this.logger = this.setupLogger(prefs.logLevel);
+
+  this.enabled = env.exists(ENV_ENABLED);
+  if (this.enabled) {
+    this.logger.info(`Enabled via ${ENV_ENABLED}`);
+  }
 }
 
 MarionetteComponent.prototype = {
@@ -148,8 +152,9 @@ MarionetteComponent.prototype = {
 
 // Handle -marionette flag
 MarionetteComponent.prototype.handle = function(cmdLine) {
-  if (cmdLine.handleFlag("marionette", false)) {
+  if (!this.enabled && cmdLine.handleFlag("marionette", false)) {
     this.enabled = true;
+    this.logger.info("Enabled via --marionette");
   }
 };
 
