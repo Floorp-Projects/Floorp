@@ -163,6 +163,12 @@ this.PromiseTestUtils = {
       stack = "" + PromiseDebugging.getRejectionStack(promise);
     } catch (ex) {}
 
+    // Always add a newline at the end of the stack for consistent reporting.
+    // This is already present when the stack is provided by PromiseDebugging.
+    if (!stack.endsWith("\n")) {
+      stack += "\n";
+    }
+
     // It's important that we don't store any reference to the provided Promise
     // object or its value after this function returns in order to avoid leaks.
     this._rejections.push({
@@ -251,11 +257,15 @@ this.PromiseTestUtils = {
       }
 
       // Report the error. This operation can throw an exception, depending on
-      // the configuration of the test suite that handles the assertion.
+      // the configuration of the test suite that handles the assertion. The
+      // first line of the message, including the latest call on the stack, is
+      // used to identify related test failures. To keep the first line similar
+      // between executions, we place the time-dependent rejection date on its
+      // own line, after all the other stack lines.
       Assert.ok(false,
                 `A promise chain failed to handle a rejection:` +
-                ` ${rejection.message} - rejection date: ${rejection.date}` +
-                ` - stack: ${rejection.stack}`);
+                ` ${rejection.message} - stack: ${rejection.stack}` +
+                `Rejection date: ${rejection.date}`);
     }
   },
 
