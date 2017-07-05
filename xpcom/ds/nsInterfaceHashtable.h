@@ -53,6 +53,17 @@ public:
    * @return The entry, or nullptr if not found. Do not release this pointer!
    */
   Interface* GetWeak(KeyType aKey, bool* aFound = nullptr) const;
+
+  /**
+   * Remove the entry associated with aKey (if any), optionally _moving_ its
+   * current value into *aData, thereby avoiding calls to AddRef and Release.
+   * Return true if found.
+   * @param aKey the key to remove from the hashtable
+   * @param aData where to move the value (if non-null).  If an entry is not
+   *              found it will be set to nullptr.
+   * @return true if an entry for aKey was found (and removed)
+   */
+  inline bool Remove(KeyType aKey, Interface** aData = nullptr);
 };
 
 template<typename K, typename T>
@@ -137,6 +148,27 @@ nsInterfaceHashtable<KeyClass, Interface>::GetWeak(KeyType aKey,
     *aFound = false;
   }
   return nullptr;
+}
+
+template<class KeyClass, class Interface>
+bool
+nsInterfaceHashtable<KeyClass, Interface>::Remove(KeyType aKey,
+                                                  Interface** aData)
+{
+  typename base_type::EntryType* ent = this->GetEntry(aKey);
+
+  if (ent) {
+    if (aData) {
+      ent->mData.forget(aData);
+    }
+    this->RemoveEntry(ent);
+    return true;
+  }
+
+  if (aData) {
+    *aData = nullptr;
+  }
+  return false;
 }
 
 #endif // nsInterfaceHashtable_h__
