@@ -331,6 +331,7 @@ structs-types = [
     "mozilla::css::GridTemplateAreasValue",
     "mozilla::css::ImageValue",
     "mozilla::css::URLValue",
+    "mozilla::css::URLValueData",
     "mozilla::MallocSizeOf",
     "mozilla::Side",
     "nsIContent",
