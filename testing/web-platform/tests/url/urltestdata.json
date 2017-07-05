@@ -6165,20 +6165,5 @@
     "pathname": "d3958f5c-0777-0845-9dcf-2cb28783acaf",
     "search": "",
     "hash": ""
-  },
-  {
-    "input": "mailto:a@b.com?subject=Hi",
-    "base": "about:blank",
-    "href": "mailto:a@b.com?subject=Hi",
-    "protocol": "mailto:",
-    "username": "",
-    "password": "",
-    "host": "",
-    "hostname": "",
-    "port": "",
-    "pathname": "a@b.com",
-    "search": "?subject=Hi",
-    "searchParams": "subject=Hi",
-    "hash": ""
   }
 ]
