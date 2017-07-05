@@ -18,6 +18,16 @@ add_task(async function autoMigrationUndoNotificationShows() {
   scope.AutoMigrate.canUndo = () => true;
   let undoCalled;
   scope.AutoMigrate.undo = () => { undoCalled = true };
+
+  // Disable preloaded activity-stream about:newtab for this test to only run on
+  // the tiles version
+  await SpecialPowers.pushPrefEnv({set: [
+    ["browser.newtabpage.activity-stream.enabled", false],
+    ["browser.newtab.preload", false]
+  ]});
+  // Open and close about:newtab to remove any preloaded activity-stream version
+  await BrowserTestUtils.removeTab(await BrowserTestUtils.openNewForegroundTab(gBrowser));
+
   for (let url of ["about:newtab", "about:home"]) {
     undoCalled = false;
     // Can't use pushPrefEnv because of bug 1323779
