@@ -708,6 +708,7 @@ private:
     // Will be true if the onCacheEntryAvailable callback is not called by the
     // time we send the network request
     Atomic<bool> mRaceCacheWithNetwork;
+    uint32_t mRaceDelay;
     bool mCacheAsyncOpenCalled;
 
 protected:

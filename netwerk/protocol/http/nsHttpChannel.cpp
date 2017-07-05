@@ -302,6 +302,7 @@ nsHttpChannel::nsHttpChannel()
     , mIsReadingFromCache(false)
     , mOnCacheAvailableCalled(false)
     , mRaceCacheWithNetwork(false)
+    , mRaceDelay(0)
     , mCacheAsyncOpenCalled(false)
     , mDidReval(false)
 {
@@ -8982,29 +8983,37 @@ nsHttpChannel::ReportRcwnStats(nsIRequest* firstResponseRequest, bool isFromNet)
         kDidNotRaceUsedNetwork = 0,
         kDidNotRaceUsedCache = 1,
         kRaceUsedNetwork = 2,
-        kRaceUsedCache = 3
+        kRaceUsedCache = 3,
+        kDelayedRaceUsedNetwork = 4,
+        kDelayedRaceUsedCache = 5
     };
-    static const Telemetry::HistogramID kRcwnTelemetry[4] = {
+    static const Telemetry::HistogramID kRcwnTelemetry[6] = {
         Telemetry::NETWORK_RACE_CACHE_BANDWIDTH_NOT_RACE,
         Telemetry::NETWORK_RACE_CACHE_BANDWIDTH_NOT_RACE,
+        Telemetry::NETWORK_RACE_CACHE_BANDWIDTH_RACE_NETWORK_WIN,
+        Telemetry::NETWORK_RACE_CACHE_BANDWIDTH_RACE_CACHE_WIN,
         Telemetry::NETWORK_RACE_CACHE_BANDWIDTH_RACE_NETWORK_WIN,
         Telemetry::NETWORK_RACE_CACHE_BANDWIDTH_RACE_CACHE_WIN
     };
 
     RaceCacheAndNetStatus rcwnStatus = kDidNotRaceUsedNetwork;
     if (isFromNet) {
-        rcwnStatus = mRaceCacheWithNetwork ? kRaceUsedNetwork : kDidNotRaceUsedNetwork;
+        rcwnStatus = mRaceCacheWithNetwork ?
+            (mRaceDelay ? kDelayedRaceUsedNetwork : kRaceUsedNetwork) :
+            kDidNotRaceUsedNetwork;
     } else if (firstResponseRequest == mCachePump) {
-        rcwnStatus = mRaceCacheWithNetwork ? kRaceUsedCache : kDidNotRaceUsedCache;
+        rcwnStatus = mRaceCacheWithNetwork ?
+            (mRaceDelay ? kDelayedRaceUsedCache : kRaceUsedCache) :
+            kDidNotRaceUsedCache;
     }
     Telemetry::Accumulate(Telemetry::NETWORK_RACE_CACHE_WITH_NETWORK_USAGE,
                           rcwnStatus);
     Telemetry::Accumulate(kRcwnTelemetry[rcwnStatus], mTransferSize);
 
     gIOService->IncrementRequestNumber();
-    if (rcwnStatus == kRaceUsedCache) {
+    if (rcwnStatus == kRaceUsedCache || rcwnStatus == kDelayedRaceUsedCache) {
         gIOService->IncrementCacheWonRequestNumber();
-    } else if (rcwnStatus == kRaceUsedNetwork) {
+    } else if (rcwnStatus == kRaceUsedNetwork || rcwnStatus == kDelayedRaceUsedNetwork) {
         gIOService->IncrementNetWonRequestNumber();
     }
 }
@@ -9232,24 +9241,23 @@ nsHttpChannel::MaybeRaceCacheWithNetwork()
         return NS_OK;
     }
 
-    uint32_t delay;
     if (CacheFileUtils::CachePerfStats::IsCacheSlow()) {
         // If the cache is slow, trigger the network request immediately.
-        delay = 0;
+        mRaceDelay = 0;
     } else {
         // Give cache a headstart of 3 times the average cache entry open time.
-        delay = CacheFileUtils::CachePerfStats::GetAverage(
-                CacheFileUtils::CachePerfStats::ENTRY_OPEN, true) * 3;
+        mRaceDelay = CacheFileUtils::CachePerfStats::GetAverage(
+                     CacheFileUtils::CachePerfStats::ENTRY_OPEN, true) * 3;
         // We use microseconds in CachePerfStats but we need milliseconds
         // for TriggerNetwork.
-        delay /= 1000;
+        mRaceDelay /= 1000;
     }
 
     MOZ_ASSERT(sRCWNEnabled, "The pref must be truned on.");
     LOG(("nsHttpChannel::MaybeRaceCacheWithNetwork [this=%p, delay=%u]\n",
-         this, delay));
+         this, mRaceDelay));
 
-    return TriggerNetwork(delay);
+    return TriggerNetwork(mRaceDelay);
 }
 
 NS_IMETHODIMP
