@@ -915,6 +915,9 @@ enum class Trap
     IntegerDivideByZero,
     // Out of bounds on wasm memory accesses and asm.js SIMD/atomic accesses.
     OutOfBounds,
+    // Unaligned on wasm atomic accesses; also used for non-standard ARM
+    // unaligned access faults.
+    UnalignedAccess,
     // call_indirect to null.
     IndirectCallToNull,
     // call_indirect signature mismatch.
@@ -927,6 +930,9 @@ enum class Trap
     // The internal stack space was exhausted. For compatibility, this throws
     // the same over-recursed error as JS.
     StackOverflow,
+
+    // Signal an error that was reported in C++ code.
+    ThrowReported,
 
     Limit
 };
@@ -1011,7 +1017,8 @@ class CodeRange
         DebugTrap,         // calls C++ to handle debug event
         FarJumpIsland,     // inserted to connect otherwise out-of-range insns
         OutOfBoundsExit,   // stub jumped to by non-standard asm.js SIMD/Atomics
-        UnalignedExit,     // stub jumped to by non-standard ARM unaligned trap
+        UnalignedExit,     // stub jumped to by wasm Atomics and non-standard
+                           // ARM unaligned trap
         Interrupt,         // stub executes asynchronously to interrupt wasm
         Throw              // special stack-unwinding stub jumped to by other stubs
     };
@@ -1356,6 +1363,9 @@ enum class SymbolicAddress
     Int64ToDouble,
     GrowMemory,
     CurrentMemory,
+    WaitI32,
+    WaitI64,
+    Wake,
     Limit
 };
 

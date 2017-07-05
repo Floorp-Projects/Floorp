@@ -48,6 +48,7 @@
 #include "builtin/AtomicsObject.h"
 
 #include "mozilla/Atomics.h"
+#include "mozilla/CheckedInt.h"
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/ScopeExit.h"
@@ -87,13 +88,6 @@ ReportOutOfRange(JSContext* cx)
     // Use JSMSG_BAD_INDEX here, it is what ToIndex uses for some cases that it
     // reports directly.
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_BAD_INDEX);
-    return false;
-}
-
-static bool
-ReportCannotWait(JSContext* cx)
-{
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_ATOMICS_WAIT_NOT_ALLOWED);
     return false;
 }
 
@@ -732,6 +726,67 @@ class AutoLockFutexAPI
 
 } // namespace js
 
+template<typename T>
+static FutexThread::WaitResult
+AtomicsWait(JSContext* cx, SharedArrayRawBuffer* sarb, uint32_t byteOffset, T value,
+            const mozilla::Maybe<mozilla::TimeDuration>& timeout)
+{
+    // Validation and other guards should ensure that this does not happen.
+    MOZ_ASSERT(sarb, "wait is only applicable to shared memory");
+
+    if (!cx->fx.canWait()) {
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_ATOMICS_WAIT_NOT_ALLOWED);
+        return FutexThread::WaitResult::Error;
+    }
+
+    SharedMem<T*> addr = sarb->dataPointerShared().cast<T*>() + (byteOffset / sizeof(T));
+
+    // This lock also protects the "waiters" field on SharedArrayRawBuffer,
+    // and it provides the necessary memory fence.
+    AutoLockFutexAPI lock;
+
+    if (jit::AtomicOperations::loadSafeWhenRacy(addr) != value)
+        return FutexThread::WaitResult::NotEqual;
+
+    FutexWaiter w(byteOffset, cx);
+    if (FutexWaiter* waiters = sarb->waiters()) {
+        w.lower_pri = waiters;
+        w.back = waiters->back;
+        waiters->back->lower_pri = &w;
+        waiters->back = &w;
+    } else {
+        w.lower_pri = w.back = &w;
+        sarb->setWaiters(&w);
+    }
+
+    FutexThread::WaitResult retval = cx->fx.wait(cx, lock.unique(), timeout);
+
+    if (w.lower_pri == &w) {
+        sarb->setWaiters(nullptr);
+    } else {
+        w.lower_pri->back = w.back;
+        w.back->lower_pri = w.lower_pri;
+        if (sarb->waiters() == &w)
+            sarb->setWaiters(w.lower_pri);
+    }
+
+    return retval;
+}
+
+FutexThread::WaitResult
+js::atomics_wait_impl(JSContext* cx, SharedArrayRawBuffer* sarb, uint32_t byteOffset,
+                      int32_t value, const mozilla::Maybe<mozilla::TimeDuration>& timeout)
+{
+    return AtomicsWait(cx, sarb, byteOffset, value, timeout);
+}
+
+FutexThread::WaitResult
+js::atomics_wait_impl(JSContext* cx, SharedArrayRawBuffer* sarb, uint32_t byteOffset,
+                      int64_t value, const mozilla::Maybe<mozilla::TimeDuration>& timeout)
+{
+    return AtomicsWait(cx, sarb, byteOffset, value, timeout);
+}
+
 bool
 js::atomics_wait(JSContext* cx, unsigned argc, Value* vp)
 {
@@ -766,55 +821,62 @@ js::atomics_wait(JSContext* cx, unsigned argc, Value* vp)
         }
     }
 
-    if (!cx->fx.canWait())
-        return ReportCannotWait(cx);
+    Rooted<SharedArrayBufferObject*> sab(cx, view->bufferShared());
+    // The computation will not overflow because range checks have been
+    // performed.
+    uint32_t byteOffset = offset * sizeof(int32_t) +
+                          (view->viewDataShared().cast<uint8_t*>().unwrap(/* arithmetic */) -
+                           sab->dataPointerShared().unwrap(/* arithmetic */));
 
-    // This lock also protects the "waiters" field on SharedArrayRawBuffer,
-    // and it provides the necessary memory fence.
-    AutoLockFutexAPI lock;
-
-    SharedMem<int32_t*> addr = view->viewDataShared().cast<int32_t*>() + offset;
-    if (jit::AtomicOperations::loadSafeWhenRacy(addr) != value) {
+    switch (atomics_wait_impl(cx, sab->rawBufferObject(), byteOffset, value, timeout)) {
+      case FutexThread::WaitResult::NotEqual:
         r.setString(cx->names().futexNotEqual);
         return true;
+      case FutexThread::WaitResult::OK:
+        r.setString(cx->names().futexOK);
+        return true;
+      case FutexThread::WaitResult::TimedOut:
+        r.setString(cx->names().futexTimedOut);
+        return true;
+      case FutexThread::WaitResult::Error:
+        return false;
+      default:
+        MOZ_CRASH("Should not happen");
+    }
+}
+
+int64_t
+js::atomics_wake_impl(SharedArrayRawBuffer* sarb, uint32_t byteOffset, int64_t count)
+{
+    // Validation should ensure this does not happen.
+    MOZ_ASSERT(sarb, "wake is only applicable to shared memory");
+
+    AutoLockFutexAPI lock;
+
+    int64_t woken = 0;
+
+    FutexWaiter* waiters = sarb->waiters();
+    if (waiters && count) {
+        FutexWaiter* iter = waiters;
+        do {
+            FutexWaiter* c = iter;
+            iter = iter->lower_pri;
+            if (c->offset != byteOffset || !c->cx->fx.isWaiting())
+                continue;
+            c->cx->fx.wake(FutexThread::WakeExplicit);
+            // Overflow will be a problem only in two cases:
+            // (1) 128-bit systems with substantially more than 2^64 bytes of
+            //     memory per process, and a very lightweight
+            //     Atomics.waitAsync().  Obviously a future problem.
+            // (2) Bugs.
+            MOZ_RELEASE_ASSERT(woken < INT64_MAX);
+            ++woken;
+            if (count > 0)
+                --count;
+        } while (count && iter != waiters);
     }
 
-    Rooted<SharedArrayBufferObject*> sab(cx, view->bufferShared());
-    SharedArrayRawBuffer* sarb = sab->rawBufferObject();
-
-    FutexWaiter w(offset, cx);
-    if (FutexWaiter* waiters = sarb->waiters()) {
-        w.lower_pri = waiters;
-        w.back = waiters->back;
-        waiters->back->lower_pri = &w;
-        waiters->back = &w;
-    } else {
-        w.lower_pri = w.back = &w;
-        sarb->setWaiters(&w);
-    }
-
-    FutexThread::WaitResult result = FutexThread::FutexOK;
-    bool retval = cx->fx.wait(cx, lock.unique(), timeout, &result);
-    if (retval) {
-        switch (result) {
-          case FutexThread::FutexOK:
-            r.setString(cx->names().futexOK);
-            break;
-          case FutexThread::FutexTimedOut:
-            r.setString(cx->names().futexTimedOut);
-            break;
-        }
-    }
-
-    if (w.lower_pri == &w) {
-        sarb->setWaiters(nullptr);
-    } else {
-        w.lower_pri->back = w.back;
-        w.back->lower_pri = w.lower_pri;
-        if (sarb->waiters() == &w)
-            sarb->setWaiters(w.lower_pri);
-    }
-    return retval;
+    return woken;
 }
 
 bool
@@ -834,37 +896,27 @@ js::atomics_wake(JSContext* cx, unsigned argc, Value* vp)
     uint32_t offset;
     if (!GetTypedArrayIndex(cx, idxv, view, &offset))
         return false;
-    double count;
+    int64_t count;
     if (countv.isUndefined()) {
-        count = mozilla::PositiveInfinity<double>();
+        count = -1;
     } else {
-        if (!ToInteger(cx, countv, &count))
+        double dcount;
+        if (!ToInteger(cx, countv, &dcount))
             return false;
-        if (count < 0.0)
-            count = 0.0;
+        if (dcount < 0.0)
+            dcount = 0.0;
+        count = dcount > INT64_MAX ? -1 : int64_t(dcount);
     }
-
-    AutoLockFutexAPI lock;
 
     Rooted<SharedArrayBufferObject*> sab(cx, view->bufferShared());
-    SharedArrayRawBuffer* sarb = sab->rawBufferObject();
-    int32_t woken = 0;
+    // The computation will not overflow because range checks have been
+    // performed.
+    uint32_t byteOffset = offset * sizeof(int32_t) +
+                          (view->viewDataShared().cast<uint8_t*>().unwrap(/* arithmetic */) -
+                           sab->dataPointerShared().unwrap(/* arithmetic */));
 
-    FutexWaiter* waiters = sarb->waiters();
-    if (waiters && count > 0) {
-        FutexWaiter* iter = waiters;
-        do {
-            FutexWaiter* c = iter;
-            iter = iter->lower_pri;
-            if (c->offset != offset || !c->cx->fx.isWaiting())
-                continue;
-            c->cx->fx.wake(FutexThread::WakeExplicit);
-            ++woken;
-            --count;
-        } while (count > 0 && iter != waiters);
-    }
+    r.setNumber(double(atomics_wake_impl(sab->rawBufferObject(), byteOffset, count)));
 
-    r.setInt32(woken);
     return true;
 }
 
@@ -940,9 +992,9 @@ js::FutexThread::isWaiting()
     return state_ == Waiting || state_ == WaitingInterrupted || state_ == WaitingNotifiedForInterrupt;
 }
 
-bool
+FutexThread::WaitResult
 js::FutexThread::wait(JSContext* cx, js::UniqueLock<js::Mutex>& locked,
-                       mozilla::Maybe<mozilla::TimeDuration>& timeout, WaitResult* result)
+                      const mozilla::Maybe<mozilla::TimeDuration>& timeout)
 {
     MOZ_ASSERT(&cx->fx == this);
     MOZ_ASSERT(cx->fx.canWait());
@@ -954,7 +1006,7 @@ js::FutexThread::wait(JSContext* cx, js::UniqueLock<js::Mutex>& locked,
     if (state_ == WaitingInterrupted) {
         UnlockGuard<Mutex> unlock(locked);
         JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_ATOMICS_WAIT_NOT_ALLOWED);
-        return false;
+        return WaitResult::Error;
     }
 
     // Go back to Idle after returning.
@@ -964,7 +1016,7 @@ js::FutexThread::wait(JSContext* cx, js::UniqueLock<js::Mutex>& locked,
 
     const bool isTimed = timeout.isSome();
 
-    auto finalEnd = timeout.map([](mozilla::TimeDuration& timeout) {
+    auto finalEnd = timeout.map([](const mozilla::TimeDuration& timeout) {
         return mozilla::TimeStamp::Now() + timeout;
     });
 
@@ -996,16 +1048,13 @@ js::FutexThread::wait(JSContext* cx, js::UniqueLock<js::Mutex>& locked,
             // Timeout or spurious wakeup.
             if (isTimed) {
                 auto now = mozilla::TimeStamp::Now();
-                if (now >= *finalEnd) {
-                    *result = FutexTimedOut;
-                    return true;
-                }
+                if (now >= *finalEnd)
+                    return WaitResult::TimedOut;
             }
             break;
 
           case FutexThread::Woken:
-            *result = FutexOK;
-            return true;
+            return WaitResult::OK;
 
           case FutexThread::WaitingNotifiedForInterrupt:
             // The interrupt handler may reenter the engine.  In that case
@@ -1041,12 +1090,10 @@ js::FutexThread::wait(JSContext* cx, js::UniqueLock<js::Mutex>& locked,
             {
                 UnlockGuard<Mutex> unlock(locked);
                 if (!cx->handleInterrupt())
-                    return false;
+                    return WaitResult::Error;
             }
-            if (state_ == Woken) {
-                *result = FutexOK;
-                return true;
-            }
+            if (state_ == Woken)
+                return WaitResult::OK;
             break;
 
           default:
