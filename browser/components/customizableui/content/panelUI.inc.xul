@@ -12,7 +12,7 @@
   <panelmultiview id="PanelUI-multiView" mainViewId="PanelUI-mainView"
                   viewCacheId="appMenu-viewCache">
     <panelview id="PanelUI-mainView" context="customizationPanelContextMenu"
-               descriptionheightworkaround="true">
+               descriptionheightworkaround="true" blockinboxworkaround="true">
       <vbox id="PanelUI-contents-scroller">
         <vbox id="PanelUI-contents" class="panelUI-grid"/>
       </vbox>
