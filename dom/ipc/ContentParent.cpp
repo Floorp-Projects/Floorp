@@ -4650,6 +4650,7 @@ ContentParent::CommonCreateWindow(PBrowserParent* aThisTab,
     aResult = newBrowserDOMWin->OpenURI(aURIToLoad, openerWindow,
                                         nsIBrowserDOMWindow::OPEN_CURRENTWINDOW,
                                         nsIBrowserDOMWindow::OPEN_NEW,
+                                        aTriggeringPrincipal,
                                         getter_AddRefs(win));
   }
 

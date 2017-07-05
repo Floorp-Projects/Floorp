@@ -241,13 +241,18 @@ function tunnelToInnerBrowser(outer, inner) {
       let { detail } = event;
       event.preventDefault();
       let uri = Services.io.newURI(detail.url);
+      let sourceNode = event.dataTransfer.mozSourceNode;
+      let triggeringPrincipal = sourceNode
+        ? sourceNode.nodePrincipal
+        : Services.scriptSecurityManager.getSystemPrincipal();
       // This API is used mainly because it's near the path used for <a target/> with
       // regular browser tabs (which calls `openURIInFrame`).  The more elaborate APIs
       // that support openers, window features, etc. didn't seem callable from JS and / or
       // this event doesn't give enough info to use them.
       browserWindow.browserDOMWindow
         .openURI(uri, null, Ci.nsIBrowserDOMWindow.OPEN_NEWTAB,
-                 Ci.nsIBrowserDOMWindow.OPEN_NEW);
+                 Ci.nsIBrowserDOMWindow.OPEN_NEW,
+                 triggeringPrincipal);
     },
 
     stop() {

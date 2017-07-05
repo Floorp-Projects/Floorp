@@ -99,11 +99,12 @@ interface nsIBrowserDOMWindow : nsISupports
    * @param aFlags flags which control the behavior of the load. The
    *               OPEN_EXTERNAL/OPEN_NEW flag is only used when
    *               aWhere == OPEN_DEFAULTWINDOW.
+   * @param aTriggeringPrincipal the principal that triggered the load of aURI
    * @return the window into which the URI was opened.
   */
   mozIDOMWindowProxy
   openURI(in nsIURI aURI, in mozIDOMWindowProxy aOpener,
-          in short aWhere, in long aFlags);
+          in short aWhere, in long aFlags, in nsIPrincipal aTriggeringPrincipal);
 
   /**
    * As above, but return the nsIFrameLoaderOwner for the new window.
