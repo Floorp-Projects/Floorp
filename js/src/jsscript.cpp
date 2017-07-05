@@ -3164,7 +3164,7 @@ JSScript::finalize(FreeOp* fop)
     // scripts, and store the aggregated information on the compartment.
     MOZ_ASSERT_IF(hasScriptName(), fop->runtime()->lcovOutput().isEnabled());
     if (fop->runtime()->lcovOutput().isEnabled() && hasScriptName()) {
-        compartment()->lcovOutput.collectCodeCoverageInfo(compartment(), this);
+        compartment()->lcovOutput.collectCodeCoverageInfo(compartment(), this, getScriptName());
         destroyScriptName();
     }
 
