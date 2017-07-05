@@ -194,6 +194,45 @@ def install_mobile_android_sdk_or_ndk(url, path):
         os.chdir(old_path)
 
 
+def get_paths(os_name):
+    mozbuild_path = os.environ.get('MOZBUILD_STATE_PATH',
+                                   os.path.expanduser(os.path.join('~', '.mozbuild')))
+    sdk_path = os.environ.get('ANDROID_SDK_HOME',
+                              os.path.join(mozbuild_path, 'android-sdk-{}'.format(os_name)))
+    ndk_path = os.environ.get('ANDROID_NDK_HOME',
+                              os.path.join(mozbuild_path, 'android-ndk-r11c'))
+    return (mozbuild_path, sdk_path, ndk_path)
+
+
+def ensure_android(os_name, artifact_mode):
+    '''
+    Ensure the Android SDK (and NDK, if `artifact_mode` is falsy) are
+    installed.  If not, fetch and unpack the SDK and/or NDK from the
+    given URLs.  Ensure the required Android SDK packages are
+    installed.
+
+    `os_name` can be 'linux' or 'macosx'.
+    '''
+    # The user may have an external Android SDK (in which case we
+    # save them a lengthy download), or they may have already
+    # completed the download. We unpack to
+    # ~/.mozbuild/{android-sdk-$OS_NAME, android-ndk-r11c}.
+    mozbuild_path, sdk_path, ndk_path = get_paths(os_name)
+    ext = 'zip' if os_name == 'macosx' else 'tgz'
+    sdk_url = 'https://dl.google.com/android/android-sdk_r24.0.1-{}.{}'.format(os_name, ext)
+    ndk_url = android_ndk_url(os_name)
+
+    ensure_android_sdk_and_ndk(path=mozbuild_path,
+                               sdk_path=sdk_path, sdk_url=sdk_url,
+                               ndk_path=ndk_path, ndk_url=ndk_url,
+                               artifact_mode=artifact_mode)
+
+    # We expect the |android| tool to be at
+    # ~/.mozbuild/android-sdk-$OS_NAME/tools/android.
+    android_tool = os.path.join(sdk_path, 'tools', 'android')
+    ensure_android_packages(android_tool=android_tool)
+
+
 def ensure_android_sdk_and_ndk(path, sdk_path, sdk_url, ndk_path, ndk_url, artifact_mode):
     '''
     Ensure the Android SDK and NDK are found at the given paths.  If not, fetch
@@ -251,7 +290,8 @@ def ensure_android_packages(android_tool, packages=None):
         raise Exception(MISSING_ANDROID_PACKAGES % (', '.join(missing), ', '.join(failing)))
 
 
-def suggest_mozconfig(sdk_path=None, ndk_path=None, artifact_mode=False):
+def suggest_mozconfig(os_name, artifact_mode=False):
+    _mozbuild_path, sdk_path, ndk_path = get_paths(os_name)
     if artifact_mode:
         print(MOBILE_ANDROID_ARTIFACT_MODE_MOZCONFIG_TEMPLATE % (sdk_path))
     else:
@@ -259,8 +299,13 @@ def suggest_mozconfig(sdk_path=None, ndk_path=None, artifact_mode=False):
 
 
 def android_ndk_url(os_name, ver='r11c'):
-    # Produce a URL like 'https://dl.google.com/android/repository/android-ndk-r11c-linux-x86_64.zip
+    # Produce a URL like
+    # 'https://dl.google.com/android/repository/android-ndk-r11c-linux-x86_64.zip
     base_url = 'https://dl.google.com/android/repository/android-ndk'
+
+    if os_name == 'macosx':
+        # |mach bootstrap| uses 'macosx', but Google uses 'darwin'.
+        os_name = 'darwin'
 
     if sys.maxsize > 2**32:
         arch = 'x86_64'

@@ -66,10 +66,13 @@ class ArchlinuxBootstrapper(StyloInstall, BaseBootstrapper):
     ]
 
     MOBILE_ANDROID_COMMON_PACKAGES = [
-        'zlib',  # mobile/android requires system zlib.
-        'jdk7-openjdk', # It would be nice to handle alternative JDKs.  See https://wiki.archlinux.org/index.php/Java.
-        'wget',  # For downloading the Android SDK and NDK.
-        'multilib/lib32-libstdc++5', # See comment about 32 bit binaries and multilib below.
+        # It would be nice to handle alternative JDKs.  See
+        # https://wiki.archlinux.org/index.php/Java.
+        'jdk7-openjdk',
+        # For downloading the Android SDK and NDK.
+        'wget',
+        # See comment about 32 bit binaries and multilib below.
+        'multilib/lib32-libstdc++5',
         'multilib/lib32-ncurses',
         'multilib/lib32-readline',
         'multilib/lib32-zlib',
@@ -100,12 +103,9 @@ class ArchlinuxBootstrapper(StyloInstall, BaseBootstrapper):
         self.pacman_install(*self.BROWSER_PACKAGES)
 
     def ensure_mobile_android_packages(self, artifact_mode=False):
-        import android
-
         # Multi-part process:
         # 1. System packages.
-        # 2. Android SDK. Android NDK only if we are not in artifact mode.
-        # 3. Android packages.
+        # 2. Android SDK. Android NDK only if we are not in artifact mode. Android packages.
 
         # 1. This is hard to believe, but the Android SDK binaries are 32-bit
         # and that conflicts with 64-bit Arch installations out of the box.  The
@@ -113,7 +113,7 @@ class ArchlinuxBootstrapper(StyloInstall, BaseBootstrapper):
         # requires manual intervention.
         try:
             self.pacman_install(*self.MOBILE_ANDROID_COMMON_PACKAGES)
-        except e:
+        except Exception as e:
             print('Failed to install all packages.  The Android developer '
                   'toolchain requires 32 bit binaries be enabled (see '
                   'https://wiki.archlinux.org/index.php/Android).  You may need to '
@@ -121,27 +121,13 @@ class ArchlinuxBootstrapper(StyloInstall, BaseBootstrapper):
                   'at https://wiki.archlinux.org/index.php/Multilib.')
             raise e
 
-        # 2. The user may have an external Android SDK (in which case we save
-        # them a lengthy download), or they may have already completed the
-        # download. We unpack to ~/.mozbuild/{android-sdk-linux, android-ndk-r11c}.
-        mozbuild_path = os.environ.get('MOZBUILD_STATE_PATH', os.path.expanduser(os.path.join('~', '.mozbuild')))
-        self.sdk_path = os.environ.get('ANDROID_SDK_HOME', os.path.join(mozbuild_path, 'android-sdk-linux'))
-        self.ndk_path = os.environ.get('ANDROID_NDK_HOME', os.path.join(mozbuild_path, 'android-ndk-r11c'))
-        self.sdk_url = 'https://dl.google.com/android/android-sdk_r24.0.1-linux.tgz'
-        self.ndk_url = android.android_ndk_url('linux')
-
-        android.ensure_android_sdk_and_ndk(path=mozbuild_path,
-                                           sdk_path=self.sdk_path, sdk_url=self.sdk_url,
-                                           ndk_path=self.ndk_path, ndk_url=self.ndk_url,
-                                           artifact_mode=artifact_mode)
-        android_tool = os.path.join(self.sdk_path, 'tools', 'android')
-        android.ensure_android_packages(android_tool=android_tool)
+        # 2. Android pieces.
+        import android
+        android.ensure_android('linux', artifact_mode=artifact_mode)
 
     def suggest_mobile_android_mozconfig(self, artifact_mode=False):
         import android
-        android.suggest_mozconfig(sdk_path=self.sdk_path,
-                                  ndk_path=self.ndk_path,
-                                  artifact_mode=artifact_mode)
+        android.suggest_mozconfig('linux', artifact_mode=artifact_mode)
 
     def suggest_mobile_android_artifact_mode_mozconfig(self):
         self.suggest_mobile_android_mozconfig(artifact_mode=True)
