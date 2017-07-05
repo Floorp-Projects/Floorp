@@ -7,6 +7,7 @@
 
 #include "ArithmeticArgChecker.h"
 #include "AssertAssignmentChecker.h"
+#include "DanglingOnTemporaryChecker.h"
 #include "ExplicitImplicitChecker.h"
 #include "ExplicitOperatorBoolChecker.h"
 #include "KungFuDeathGripChecker.h"
