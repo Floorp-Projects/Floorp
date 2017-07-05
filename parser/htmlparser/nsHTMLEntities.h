@@ -14,15 +14,6 @@ public:
   static void ReleaseTable(void);
 
 /**
- * Translate an entity string into it's unicode value. This call
- * returns -1 if the entity cannot be mapped. Note that the string
- * passed in must NOT have the leading "&" nor the trailing ";"
- * in it.
- */
-  static int32_t EntityToUnicode(const nsAString& aEntity);
-  static int32_t EntityToUnicode(const nsCString& aEntity);
-
-/**
  * Translate a unicode value into an entity string. This call
  * returns null if the entity cannot be mapped. 
  * Note that the string returned DOES NOT have the leading "&" nor 
@@ -30,6 +21,5 @@ public:
  */
   static const char* UnicodeToEntity(int32_t aUnicode);
 };
-
 
 #endif /* nsHTMLEntities_h___ */

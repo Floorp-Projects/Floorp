@@ -53,15 +53,6 @@ nsParserService::HTMLIdToAtomTag(int32_t aId) const
 }
 
 NS_IMETHODIMP
-nsParserService::HTMLConvertEntityToUnicode(const nsAString& aEntity,
-                                            int32_t* aUnicode) const
-{
-  *aUnicode = nsHTMLEntities::EntityToUnicode(aEntity);
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsParserService::HTMLConvertUnicodeToEntity(int32_t aUnicode,
                                             nsCString& aEntity) const
 {

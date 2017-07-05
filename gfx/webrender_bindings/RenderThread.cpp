@@ -239,7 +239,11 @@ RenderThread::UpdateAndRender(wr::WindowId aWindowId)
 
   TimeStamp start = TimeStamp::Now();
 
-  renderer->Render();
+  bool ret = renderer->Render();
+  if (!ret) {
+    // Render did not happen, do not call NotifyDidRender.
+    return;
+  }
 
   TimeStamp end = TimeStamp::Now();
 

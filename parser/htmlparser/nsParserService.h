@@ -47,8 +47,6 @@ public:
   
   nsIAtom *HTMLIdToAtomTag(int32_t aId) const override;
 
-  NS_IMETHOD HTMLConvertEntityToUnicode(const nsAString& aEntity, 
-                                        int32_t* aUnicode) const override;
   NS_IMETHOD HTMLConvertUnicodeToEntity(int32_t aUnicode,
                                         nsCString& aEntity) const override;
   NS_IMETHOD IsContainer(int32_t aId, bool& aIsContainer) const override;

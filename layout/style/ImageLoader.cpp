@@ -190,7 +190,7 @@ ImageLoader::DropRequestsForFrame(nsIFrame* aFrame)
 {
   MOZ_ASSERT(aFrame->HasImageRequest(), "why call me?");
   nsAutoPtr<RequestSet> requestSet;
-  mFrameToRequestMap.RemoveAndForget(aFrame, requestSet);
+  mFrameToRequestMap.Remove(aFrame, &requestSet);
   aFrame->SetHasImageRequest(false);
   if (MOZ_UNLIKELY(!requestSet)) {
     MOZ_ASSERT_UNREACHABLE("HasImageRequest was lying");

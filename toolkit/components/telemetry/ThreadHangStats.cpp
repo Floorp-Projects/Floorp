@@ -201,6 +201,12 @@ CreateJSThreadHangStats(JSContext* cx, const Telemetry::ThreadHangStats& thread)
       return nullptr;
     }
 
+    JS::RootedString runnableName(cx, JS_NewStringCopyZ(cx, thread.mHangs[i].GetRunnableName()));
+    if (!runnableName ||
+        !JS_DefineProperty(cx, ret, "runnableName", runnableName, JSPROP_ENUMERATE)) {
+      return nullptr;
+    }
+
     // Check if we have a cached native stack index, and if we do record it.
     uint32_t index = thread.mHangs[i].GetNativeStackIndex();
     if (index != Telemetry::HangHistogram::NO_NATIVE_STACK_INDEX) {
