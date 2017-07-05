@@ -2,13 +2,20 @@ header = """/* This Source Code Form is subject to the terms of the Mozilla Publ
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */"""
 autogen_warning = """/* DO NOT MODIFY THIS MANUALLY! This file was generated using cbindgen.
- * To generate this file, clone `https://github.com/rlhunt/cbindgen` or run `cargo install cbindgen`,
- * then run `cbindgen gfx/webrender_bindings/ -o gfx/webrender_bindings/webrender_ffi_generated.h` */"""
+ * To generate this file:
+ *   1. Get the latest cbindgen using `cargo install --force cbindgen`
+ *      a. Alternatively, you can clone `https://github.com/rlhunt/cbindgen` and use a tagged release
+ *   2. Run `cbindgen toolkit/library/rust/ --crate webrender_bindings -o gfx/webrender_bindings/webrender_ffi_generated.h`
+ */"""
 include_version = true
 braces = "SameLine"
 line_length = 100
 tab_width = 2
 language = "C++"
+
+[parse]
+parse_deps = true
+include = ["webrender", "webrender_traits"]
 
 [fn]
 prefix = "WR_INLINE"
