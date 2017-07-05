@@ -319,7 +319,7 @@ WidgetEvent::CanBeSentToRemoteProcess() const
 {
   // If this event is explicitly marked as shouldn't be sent to remote process,
   // just return false.
-  if (mFlags.mNoCrossProcessBoundaryForwarding) {
+  if (IsCrossProcessForwardingStopped()) {
     return false;
   }
 

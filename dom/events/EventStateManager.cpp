@@ -690,8 +690,8 @@ EventStateManager::PreHandleEvent(nsPresContext* aPresContext,
     // event was sent twice into child process of content.
     // (From specific widget code (sending is not permanent) and
     // from ESM::DispatchMouseOrPointerEvent (sending is permanent)).
-    // Flag mNoCrossProcessBoundaryForwarding helps to
-    // suppress sending accidental event from widget code.
+    // IsCrossProcessForwardingStopped() helps to suppress sending accidental
+    // event from widget code.
     aEvent->StopCrossProcessForwarding();
     break;
   case eMouseExitFromWidget:
@@ -707,7 +707,8 @@ EventStateManager::PreHandleEvent(nsPresContext* aPresContext,
       ClearCachedWidgetCursor(mCurrentTarget);
     }
 
-    // Flag helps to suppress double event sending into process of content.
+    // IsCrossProcessForwardingStopped() helps to suppress double event sending
+    // into process of content.
     // For more information see comment above, at eMouseEnterIntoWidget case.
     aEvent->StopCrossProcessForwarding();
 

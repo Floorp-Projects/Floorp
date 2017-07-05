@@ -1919,7 +1919,7 @@ TabChild::RecvRealKeyEvent(const WidgetKeyboardEvent& aEvent)
   // If a response is desired from the content process, resend the key event.
   // If mAccessKeyForwardedToChild is set, then don't resend the key event yet
   // as RecvHandleAccessKey will do this.
-  if (localEvent.mFlags.mWantReplyFromContentProcess) {
+  if (localEvent.WantReplyFromContentProcess()) {
     SendReplyKeyEvent(localEvent);
   }
 
