@@ -9,12 +9,14 @@ interface mozIDOMWindowProxy;
 interface nsIDOMWindow;
 interface nsIURI;
 interface nsIFrameLoaderOwner;
+interface nsIPrincipal;
 
 [scriptable, uuid(e774db14-79ac-4156-a7a3-aa3fd0a22c10)]
 interface nsIOpenURIInFrameParams : nsISupports
 {
   attribute DOMString referrer;
   readonly attribute boolean isPrivate;
+  attribute nsIPrincipal triggeringPrincipal;
 
   [implicit_jscontext]
   readonly attribute jsval openerOriginAttributes;
