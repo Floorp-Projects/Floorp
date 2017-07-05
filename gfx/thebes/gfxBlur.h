@@ -7,13 +7,13 @@
 #define GFX_BLUR_H
 
 #include "gfxTypes.h"
+#include "gfxRect.h"
 #include "nsSize.h"
 #include "gfxPoint.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/gfx/Blur.h"
 
 class gfxContext;
-struct gfxRect;
 
 namespace mozilla {
   namespace gfx {

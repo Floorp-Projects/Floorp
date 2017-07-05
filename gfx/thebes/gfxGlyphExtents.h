@@ -7,13 +7,13 @@
 #define GFX_GLYPHEXTENTS_H
 
 #include "gfxFont.h"
+#include "gfxRect.h"
 #include "nsTHashtable.h"
 #include "nsHashKeys.h"
 #include "nsTArray.h"
 #include "mozilla/MemoryReporting.h"
 
 class gfxContext;
-struct gfxRect;
 
 namespace mozilla {
 namespace gfx {
