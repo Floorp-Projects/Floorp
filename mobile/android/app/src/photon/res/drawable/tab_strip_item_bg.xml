@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<selector xmlns:android="http://schemas.android.com/apk/res/android"
+	      xmlns:gecko="http://schemas.android.com/apk/res-auto">
+
+    <item android:state_pressed="true"
+          android:state_checked="true"
+          gecko:state_private="true"
+          android:drawable="@color/highlight_nav_pb" />
+
+    <item android:state_checked="true"
+          gecko:state_private="true"
+          android:drawable="@color/tabs_tray_grey_pressed" />
+
+    <item android:state_pressed="true"
+          gecko:state_private="true"
+          android:drawable="@color/highlight_dark_focused" />
+
+    <item android:state_pressed="true"
+          android:state_checked="true"
+          android:drawable="@color/toolbar_grey_pressed" />
+
+    <!-- Lightweight Themes -->
+    <item android:state_checked="true"
+          gecko:state_light="true"
+          android:drawable="@color/background_normal_lwt" />
+    <item android:state_checked="true"
+          gecko:state_dark="true"
+          android:drawable="@color/background_normal_lwt" />
+    <item android:state_pressed="true"
+          gecko:state_light="true"
+          android:drawable="@color/tablet_highlight_lwt" />
+    <item android:state_pressed="true"
+          gecko:state_dark="true"
+          android:drawable="@color/tablet_highlight_dark_lwt" />
+
+    <item android:state_checked="true"
+          android:drawable="@color/toolbar_grey" />
+
+    <item android:state_pressed="true"
+          android:drawable="@color/tabs_tray_grey_pressed" />
+
+    <item android:drawable="@android:color/transparent"/>
+
+</selector>

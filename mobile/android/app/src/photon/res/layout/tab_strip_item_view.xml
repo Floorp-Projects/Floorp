@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<merge xmlns:android="http://schemas.android.com/apk/res/android"
+       xmlns:gecko="http://schemas.android.com/apk/res-auto">
+
+   <ImageView
+        android:id="@+id/favicon"
+        android:layout_width="@dimen/browser_toolbar_favicon_size"
+        android:layout_height="match_parent"
+        android:layout_marginRight="8dp"
+        android:layout_marginEnd="8dp"
+        android:scaleType="centerInside"
+        android:duplicateParentState="true"/>
+
+    <org.mozilla.gecko.widget.FadedSingleColorTextView
+        android:id="@+id/title"
+        android:layout_width="0dip"
+        android:layout_height="match_parent"
+        android:layout_weight="1.0"
+        android:layout_marginRight="-5dp"
+        android:layout_marginEnd="-5dp"
+        android:drawablePadding="6dp"
+        android:gravity="center_vertical"
+        android:textSize="14sp"
+        android:ellipsize="end"
+        android:textColor="@color/tab_strip_item_title"
+        android:maxLines="1"
+        gecko:fadeWidth="30dip"
+        android:duplicateParentState="true"/>
+
+    <org.mozilla.gecko.widget.themed.ThemedImageButton
+        android:id="@+id/close"
+        android:layout_width="40dip"
+        android:layout_height="match_parent"
+        android:background="@android:color/transparent"
+        android:scaleType="center"
+        android:contentDescription="@string/close_tab"
+        android:src="@drawable/tab_close"
+        android:duplicateParentState="true"/>
+
+</merge>
