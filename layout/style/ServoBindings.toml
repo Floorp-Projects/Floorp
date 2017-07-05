@@ -379,6 +379,7 @@ structs-types = [
     "StyleBasicShapeType",
     "StyleShapeSource",
     "StyleTransition",
+    "nsBorderColors",
     "nsCSSCounterStyleRule",
     "nsCSSFontFaceRule",
     "nsCSSKeyword",

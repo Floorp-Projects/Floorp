@@ -264,6 +264,8 @@ void Gecko_AppendMozBorderColors(nsStyleBorder* aBorder, mozilla::Side aSide,
                                  nscolor aColor);
 void Gecko_CopyMozBorderColors(nsStyleBorder* aDest, const nsStyleBorder* aSrc,
                                mozilla::Side aSide);
+const nsBorderColors* Gecko_GetMozBorderColors(const nsStyleBorder* aBorder,
+                                               mozilla::Side aSide);
 
 // Font style
 void Gecko_FontFamilyList_Clear(FontFamilyList* aList);

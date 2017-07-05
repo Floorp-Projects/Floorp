@@ -1220,6 +1220,13 @@ Gecko_CopyMozBorderColors(nsStyleBorder* aDest, const nsStyleBorder* aSrc,
   }
 }
 
+const nsBorderColors*
+Gecko_GetMozBorderColors(const nsStyleBorder* aBorder, mozilla::Side aSide)
+{
+  MOZ_ASSERT(aBorder);
+  return aBorder->mBorderColors ? aBorder->mBorderColors[aSide] : nullptr;
+}
+
 void
 Gecko_FontFamilyList_Clear(FontFamilyList* aList) {
   aList->Clear();
