@@ -8,6 +8,7 @@
 
 #include <map>
 
+#include "gfxPrefs.h"
 #include "FrameMetrics.h"
 #include "nsDebug.h"             // for NS_WARNING
 #include "mozilla/Assertions.h"  // for MOZ_ASSERT
@@ -85,6 +86,7 @@ private:
                        ViewID aScrollId,
                        const std::string& aKey,
                        const std::string& aValue) {
+    MOZ_ASSERT(gfxPrefs::APZTestLoggingEnabled(), "don't call me");
     auto bucketIterator = aDataStore.find(aSequenceNumber);
     if (bucketIterator == aDataStore.end()) {
       MOZ_ASSERT(false, "LogTestDataImpl called with nonexistent sequence number");
