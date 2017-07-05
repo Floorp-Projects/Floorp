@@ -1241,6 +1241,9 @@ DoNativeBacktrace(PSLockRef aLock, const ThreadInfo& aThreadInfo,
 // Writes some components shared by periodic and synchronous profiles to
 // ActivePS's ProfileBuffer. (This should only be called from DoSyncSample()
 // and DoPeriodicSample().)
+//
+// The grammar for entry sequences is in a comment above
+// ProfileBuffer::StreamSamplesToJSON.
 static inline void
 DoSharedSample(PSLockRef aLock, bool aIsSynchronous,
                ThreadInfo& aThreadInfo, const TimeStamp& aNow,
