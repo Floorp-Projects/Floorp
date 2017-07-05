@@ -200,7 +200,6 @@ UNIFIED_SOURCES += [
     'gfxMathTable.cpp',
     'gfxPattern.cpp',
     'gfxPlatformFontList.cpp',
-    'gfxRect.cpp',
     'gfxScriptItemizer.cpp',
     'gfxSkipChars.cpp',
     'gfxSVGGlyphs.cpp',

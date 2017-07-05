@@ -16,6 +16,7 @@
 #include "gfxQuad.h"                    // for gfxQuad
 #include "gfxRect.h"                    // for gfxRect
 #include "gfxTypes.h"                   // for gfxFloat
+#include "gfxUtils.h"                   // for TransformToQuad
 #include "mozilla/gfx/BasePoint3D.h"    // for BasePoint3D
 #include "mozilla/Sprintf.h"            // for SprintfLiteral
 #include "nsRegion.h"                   // for nsIntRegion
@@ -89,8 +90,8 @@ static LayerSortOrder CompareDepth(Layer* aOne, Layer* aTwo) {
     aTwo->GetLocalTransform() * aTwo->GetParent()->GetEffectiveTransform();
 
   // Transform both rectangles and project into 2d space.
-  gfxQuad ourTransformedRect = ourRect.TransformToQuad(ourTransform);
-  gfxQuad otherTransformedRect = otherRect.TransformToQuad(otherTransform);
+  gfxQuad ourTransformedRect = gfxUtils::TransformToQuad(ourRect, ourTransform);
+  gfxQuad otherTransformedRect = gfxUtils::TransformToQuad(otherRect, otherTransform);
 
   gfxRect ourBounds = ourTransformedRect.GetBounds();
   gfxRect otherBounds = otherTransformedRect.GetBounds();

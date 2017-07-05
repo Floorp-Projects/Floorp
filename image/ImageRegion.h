@@ -110,17 +110,17 @@ public:
 
   void TransformBy(const gfxMatrix& aMatrix)
   {
-    mRect.TransformBy(aMatrix);
+    mRect = aMatrix.TransformRect(mRect);
     if (mIsRestricted) {
-      mRestriction.TransformBy(aMatrix);
+      mRestriction = aMatrix.TransformRect(mRestriction);
     }
   }
 
   void TransformBoundsBy(const gfxMatrix& aMatrix)
   {
-    mRect.TransformBoundsBy(aMatrix);
+    mRect = aMatrix.TransformBounds(mRect);
     if (mIsRestricted) {
-      mRestriction.TransformBoundsBy(aMatrix);
+      mRestriction = aMatrix.TransformBounds(mRestriction);
     }
   }
 

@@ -6587,19 +6587,15 @@ ComputeSnappedImageDrawingParameters(gfxContext*     aCtx,
   if (didSnap && !invTransform.HasNonIntegerTranslation()) {
     // This form of Transform is safe to call since non-axis-aligned
     // transforms wouldn't be snapped.
-    devPixelDirty.TransformBy(currentMatrix);
+    devPixelDirty = currentMatrix.TransformRect(devPixelDirty);
     devPixelDirty.RoundOut();
     fill = fill.Intersect(devPixelDirty);
   }
   if (fill.IsEmpty())
     return SnappedImageDrawingParameters();
 
-  gfxRect imageSpaceFill = fill;
-  if (didSnap) {
-    imageSpaceFill.TransformBy(invTransform);
-  } else {
-    imageSpaceFill.TransformBoundsBy(invTransform);
-  }
+  gfxRect imageSpaceFill(didSnap ? invTransform.TransformRect(fill)
+                                 : invTransform.TransformBounds(fill));
 
   // If we didn't snap, we need to post-multiply the matrix on the context to
   // get the final matrix we'll draw with, because we didn't take it into
