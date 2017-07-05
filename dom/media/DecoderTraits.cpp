@@ -373,7 +373,7 @@ DecoderTraits::CreateReader(const MediaContainerType& aType,
 #ifdef MOZ_ANDROID_OMX
   if (MediaDecoder::IsAndroidMediaPluginEnabled() &&
       EnsureAndroidMediaPluginHost()->FindDecoder(aType, nullptr)) {
-    decoderReader = new AndroidMediaReader(aDecoder, aType);
+    decoderReader = new AndroidMediaReader(aDecoder, aType, aResource);
   } else
 #endif
   if (WebMDecoder::IsSupportedType(aType)) {
