@@ -477,6 +477,10 @@
   background-size: 1em;
 }
 
+.ruleview-shape-point.active {
+  background-color: var(--rule-highlight-background-color);
+}
+
 .ruleview-colorswatch::before {
   content: '';
   background-color: #eee;
