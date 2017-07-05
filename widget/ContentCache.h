@@ -412,6 +412,9 @@ private:
 
   // mTabParent is owner of the instance.
   dom::TabParent& MOZ_NON_OWNING_REF mTabParent;
+  // mCompositionString is composition string which were sent to the remote
+  // process but not yet committed in the remote process.
+  nsString mCompositionString;
   // This is not nullptr only while the instance is requesting IME to
   // composition.  Then, data value of dispatched composition events should
   // be stored into the instance.
@@ -437,6 +440,10 @@ private:
   // IME has composition.  So, this is set to true when eCompositionStart is
   // dispatched and set to false when eCompositionCommit(AsIs) is dispatched.
   bool mWidgetHasComposition;
+  // mIsPendingLastCommitEvent is true only when this sends
+  // eCompositionCommit(AsIs) event to the remote process but it's not handled
+  // in the remote process yet.
+  bool mIsPendingLastCommitEvent;
 
   ContentCacheInParent() = delete;
 
