@@ -47,7 +47,8 @@ public final class HardwareCodecCapabilityUtils {
     "GT-I9505",         // S4
     "GT-I9515",         // S4
     "SGH-I337",         // S4
-    "SAMSUNG-SGH-I337"  // S4
+    "SAMSUNG-SGH-I337", // S4
+    "LG-D605"           // LG Optimus L9 II
   };
 
   @WrapForJNI
