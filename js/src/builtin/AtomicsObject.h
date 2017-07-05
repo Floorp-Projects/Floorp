@@ -69,10 +69,12 @@ public:
         WakeForJSInterrupt      // Interrupt requested
     };
 
-    // Result code from wait().
-    enum WaitResult {
-        FutexOK,
-        FutexTimedOut
+    // Result codes from wait() and atomics_wait_impl().
+    enum class WaitResult {
+        Error,                  // Error has been reported, just propagate error signal
+        NotEqual,               // Did not wait because the values differed
+        OK,                     // Waited and was woken
+        TimedOut                // Waited and timed out
     };
 
     // Block the calling thread and wait.
@@ -86,8 +88,8 @@ public:
     // wait() will not wake up spuriously.  It will return true and
     // set *result to a return code appropriate for
     // Atomics.wait() on success, and return false on error.
-    MOZ_MUST_USE bool wait(JSContext* cx, js::UniqueLock<js::Mutex>& locked,
-                           mozilla::Maybe<mozilla::TimeDuration>& timeout, WaitResult* result);
+    MOZ_MUST_USE WaitResult wait(JSContext* cx, js::UniqueLock<js::Mutex>& locked,
+                                 const mozilla::Maybe<mozilla::TimeDuration>& timeout);
 
     // Wake the thread this is associated with.
     //
@@ -150,6 +152,23 @@ public:
 
 JSObject*
 InitAtomicsClass(JSContext* cx, HandleObject obj);
+
+// Go to sleep if the int32_t value at the given address equals `value`.
+MOZ_MUST_USE FutexThread::WaitResult
+atomics_wait_impl(JSContext* cx, SharedArrayRawBuffer* sarb, uint32_t byteOffset, int32_t value,
+                  const mozilla::Maybe<mozilla::TimeDuration>& timeout);
+
+// Go to sleep if the int64_t value at the given address equals `value`.
+MOZ_MUST_USE FutexThread::WaitResult
+atomics_wait_impl(JSContext* cx, SharedArrayRawBuffer* sarb, uint32_t byteOffset, int64_t value,
+                  const mozilla::Maybe<mozilla::TimeDuration>& timeout);
+
+// Wake some waiters on the given address.  If `count` is negative then wake
+// all.  The return value is nonnegative and is the number of waiters woken.  If
+// the number of waiters woken exceeds INT64_MAX then this never returns.  If
+// `count` is nonnegative then the return value is never greater than `count`.
+MOZ_MUST_USE int64_t
+atomics_wake_impl(SharedArrayRawBuffer* sarb, uint32_t byteOffset, int64_t count);
 
 }  /* namespace js */
 

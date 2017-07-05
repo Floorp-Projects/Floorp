@@ -851,7 +851,19 @@ enum ABIFunctionType
         (ArgType_General << (ArgType_Shift * 1)) |
         (ArgType_General << (ArgType_Shift * 2)) |
         (ArgType_Double  << (ArgType_Shift * 3)) |
-        (ArgType_General << (ArgType_Shift * 4))
+        (ArgType_General << (ArgType_Shift * 4)),
+
+    Args_Int_GeneralGeneralGeneralInt64 = Args_General0 |
+        (ArgType_General << (ArgType_Shift * 1)) |
+        (ArgType_General << (ArgType_Shift * 2)) |
+        (ArgType_General << (ArgType_Shift * 3)) |
+        (ArgType_Int64 << (ArgType_Shift * 4)),
+
+    Args_Int_GeneralGeneralInt64Int64 = Args_General0 |
+        (ArgType_General << (ArgType_Shift * 1)) |
+        (ArgType_General << (ArgType_Shift * 2)) |
+        (ArgType_Int64 << (ArgType_Shift * 3)) |
+        (ArgType_Int64 << (ArgType_Shift * 4))
 };
 
 enum class BarrierKind : uint32_t {
