@@ -6,6 +6,7 @@
 
 CHECK(ArithmeticArgChecker, "arithmetic-argument")
 CHECK(AssertAssignmentChecker, "assignment-in-assert")
+CHECK(DanglingOnTemporaryChecker, "dangling-on-temporary")
 CHECK(ExplicitImplicitChecker, "implicit-constructor")
 CHECK(ExplicitOperatorBoolChecker, "explicit-operator-bool")
 CHECK(KungFuDeathGripChecker, "kungfu-death-grip")
