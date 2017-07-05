@@ -42,6 +42,10 @@ public:
   // record the resulting generation and index in |aLS| if it's non-null.
   void addThreadIdEntry(int aThreadId, LastSample* aLS = nullptr);
 
+  // Maximum size of a dynamic string (including the terminating '\0' char)
+  // that we'll write to the ProfileBuffer.
+  static const size_t kMaxDynamicStringLength = 8192;
+
   void StreamSamplesToJSON(SpliceableJSONWriter& aWriter, int aThreadId,
                            double aSinceTime, JSContext* cx,
                            UniqueStacks& aUniqueStacks);
@@ -64,9 +68,7 @@ public:
 
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
-protected:
-  char* processEmbeddedString(int aReadaheadPos, int* aEntriesConsumed,
-                              char* aStrBuf);
+private:
   int FindLastSampleOfThread(int aThreadId, const LastSample& aLS);
 
 public:
