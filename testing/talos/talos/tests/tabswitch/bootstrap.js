@@ -418,6 +418,7 @@ function test(window) {
     }
 
     for (let tab of tabs) {
+      gBrowser.moveTabTo(tab, 1);
       yield forceGC(win, tab.linkedBrowser);
       let time = yield switchToTab(tab);
       dump(`${tab.linkedBrowser.currentURI.spec}: ${time}ms\n`);
