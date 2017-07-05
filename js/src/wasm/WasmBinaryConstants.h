@@ -109,7 +109,15 @@ enum class GlobalTypeImmediate
 
 enum class MemoryTableFlags
 {
-    Default                              = 0x0
+    Default                              = 0x0,
+    HasMaximum                           = 0x1,
+    IsShared                             = 0x2
+};
+
+enum class MemoryMasks
+{
+    AllowUnshared                        = 0x1,
+    AllowShared                          = 0x3
 };
 
 enum class Op

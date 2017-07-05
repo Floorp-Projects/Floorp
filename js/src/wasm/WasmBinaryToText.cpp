@@ -1248,6 +1248,10 @@ RenderLimits(WasmRenderContext& c, const Limits& limits)
         if (!RenderInt32(c, *limits.maximum))
             return false;
     }
+    if (limits.shared == Shareable::True) {
+        if (!c.buffer.append(" shared"))
+            return false;
+    }
     return true;
 }
 
@@ -1258,6 +1262,7 @@ RenderResizableTable(WasmRenderContext& c, const Limits& table)
         return false;
     if (!RenderLimits(c, table))
         return false;
+    MOZ_ASSERT(table.shared == Shareable::False);
     return c.buffer.append(" anyfunc)");
 }
 

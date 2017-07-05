@@ -869,19 +869,23 @@ DecodeSignatureIndex(Decoder& d, const SigWithIdVector& sigs, uint32_t* sigIndex
 }
 
 static bool
-DecodeLimits(Decoder& d, Limits* limits)
+DecodeLimits(Decoder& d, Limits* limits, Shareable allowShared = Shareable::False)
 {
     uint8_t flags;
     if (!d.readFixedU8(&flags))
         return d.fail("expected flags");
 
-    if (flags & ~uint8_t(0x1))
-        return d.failf("unexpected bits set in flags: %" PRIu32, (flags & ~uint8_t(0x1)));
+    uint8_t mask = allowShared == Shareable::True
+                   ? uint8_t(MemoryMasks::AllowShared)
+                   : uint8_t(MemoryMasks::AllowUnshared);
+
+    if (flags & ~uint8_t(mask))
+        return d.failf("unexpected bits set in flags: %" PRIu32, (flags & ~uint8_t(mask)));
 
     if (!d.readVarU32(&limits->initial))
         return d.fail("expected initial length");
 
-    if (flags & 0x1) {
+    if (flags & uint8_t(MemoryTableFlags::HasMaximum)) {
         uint32_t maximum;
         if (!d.readVarU32(&maximum))
             return d.fail("expected maximum length");
@@ -894,6 +898,19 @@ DecodeLimits(Decoder& d, Limits* limits)
 
         limits->maximum.emplace(maximum);
     }
+
+    limits->shared = Shareable::False;
+
+#ifdef ENABLE_WASM_THREAD_OPS
+    if (allowShared == Shareable::True) {
+        if ((flags & uint8_t(MemoryTableFlags::IsShared)) && !(flags & uint8_t(MemoryTableFlags::HasMaximum)))
+            return d.fail("maximum length required for shared memory");
+
+        limits->shared = (flags & uint8_t(MemoryTableFlags::IsShared))
+                       ? Shareable::True
+                       : Shareable::False;
+    }
+#endif
 
     return true;
 }
@@ -964,7 +981,7 @@ DecodeMemoryLimits(Decoder& d, ModuleEnvironment* env)
         return d.fail("already have default memory");
 
     Limits memory;
-    if (!DecodeLimits(d, &memory))
+    if (!DecodeLimits(d, &memory, Shareable::True))
         return false;
 
     if (memory.initial > MaxMemoryInitialPages)
@@ -987,7 +1004,9 @@ DecodeMemoryLimits(Decoder& d, ModuleEnvironment* env)
         memory.maximum = Some(maximumBytes.isValid() ? maximumBytes.value() : UINT32_MAX);
     }
 
-    env->memoryUsage = MemoryUsage::Unshared;
+    env->memoryUsage = memory.shared == Shareable::True
+                     ? MemoryUsage::Shared
+                     : MemoryUsage::Unshared;
     env->minMemoryLength = memory.initial;
     env->maxMemoryLength = memory.maximum;
     return true;
