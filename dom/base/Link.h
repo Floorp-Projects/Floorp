@@ -126,7 +126,7 @@ public:
   void TryDNSPrefetchPreconnectOrPrefetchOrPrerender();
   void CancelPrefetch();
 
-  bool HasPendingLinkUpdate() const { return mHasPendingLinkUpdate; }
+  bool HasPendingLinkUpdate() { return mHasPendingLinkUpdate; }
   void SetHasPendingLinkUpdate() { mHasPendingLinkUpdate = true; }
   void ClearHasPendingLinkUpdate() { mHasPendingLinkUpdate = false; }
 
