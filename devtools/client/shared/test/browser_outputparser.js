@@ -5,6 +5,7 @@
 
 const OutputParser = require("devtools/client/shared/output-parser");
 const {initCssProperties, getCssProperties} = require("devtools/shared/fronts/css-properties");
+const CSS_SHAPES_ENABLED_PREF = "devtools.inspector.shapesHighlighter.enabled";
 
 add_task(function* () {
   yield addTab("about:blank");
@@ -27,6 +28,7 @@ function* performTest() {
   testParseURL(doc, parser);
   testParseFilter(doc, parser);
   testParseAngle(doc, parser);
+  testParseShape(doc, parser);
 
   host.destroy();
 }
@@ -292,4 +294,122 @@ function testParseAngle(doc, parser) {
 
   swatchCount = frag.querySelectorAll(".test-angleswatch").length;
   is(swatchCount, 1, "angle swatch was created");
+}
+
+function testParseShape(doc, parser) {
+  info("Test shape parsing");
+  pushPref(CSS_SHAPES_ENABLED_PREF, true);
+  const tests = [
+    {
+      desc: "Polygon shape",
+      definition: "polygon(evenodd, 0px 0px, 10%200px,30%30% , calc(250px - 10px) 0 ,\n "
+                  + "12em var(--variable), 100% 100%) margin-box",
+      spanCount: 18
+    },
+    {
+      desc: "Invalid polygon shape",
+      definition: "polygon(0px 0px 100px 20px, 20% 20%)",
+      spanCount: 0
+    },
+    {
+      desc: "Circle shape with all arguments",
+      definition: "circle(25% at\n 30% 200px) border-box",
+      spanCount: 4
+    },
+    {
+      desc: "Circle shape with only one center",
+      definition: "circle(25em at 40%)",
+      spanCount: 3
+    },
+    {
+      desc: "Circle shape with no radius",
+      definition: "circle(at 30% 40%)",
+      spanCount: 3
+    },
+    {
+      desc: "Circle shape with no center",
+      definition: "circle(12em)",
+      spanCount: 1
+    },
+    {
+      desc: "Circle shape with no arguments",
+      definition: "circle()",
+      spanCount: 0
+    },
+    {
+      desc: "Circle shape with no space before at",
+      definition: "circle(25%at 30% 30%)",
+      spanCount: 4
+    },
+    {
+      desc: "Invalid circle shape",
+      definition: "circle(25%at30%30%)",
+      spanCount: 0
+    },
+    {
+      desc: "Ellipse shape with all arguments",
+      definition: "ellipse(200px 10em at 25% 120px) content-box",
+      spanCount: 5
+    },
+    {
+      desc: "Ellipse shape with only one center",
+      definition: "ellipse(200px 10% at 120px)",
+      spanCount: 4
+    },
+    {
+      desc: "Ellipse shape with no radius",
+      definition: "ellipse(at 25% 120px)",
+      spanCount: 3
+    },
+    {
+      desc: "Ellipse shape with no center",
+      definition: "ellipse(200px\n10em)",
+      spanCount: 2
+    },
+    {
+      desc: "Ellipse shape with no arguments",
+      definition: "ellipse()",
+      spanCount: 0
+    },
+    {
+      desc: "Invalid ellipse shape",
+      definition: "ellipse(200px100px at 30$ 20%)",
+      spanCount: 0
+    },
+    {
+      desc: "Inset shape with 4 arguments",
+      definition: "inset(200px 100px\n 30%15%)",
+      spanCount: 4
+    },
+    {
+      desc: "Inset shape with 3 arguments",
+      definition: "inset(200px 100px 15%)",
+      spanCount: 3
+    },
+    {
+      desc: "Inset shape with 2 arguments",
+      definition: "inset(200px 100px)",
+      spanCount: 2
+    },
+    {
+      desc: "Inset shape with 1 argument",
+      definition: "inset(200px)",
+      spanCount: 1
+    },
+    {
+      desc: "Inset shape with 0 arguments",
+      definition: "inset()",
+      spanCount: 0
+    }
+  ];
+
+  for (let {desc, definition, spanCount} of tests) {
+    info(desc);
+    let frag = parser.parseCssProperty("clip-path", definition, {
+      shapeClass: "ruleview-shape"
+    });
+    let spans = frag.querySelectorAll(".ruleview-shape-point");
+    is(spans.length, spanCount, desc + " span count");
+    is(frag.textContent, definition, desc + " text content");
+  }
 }

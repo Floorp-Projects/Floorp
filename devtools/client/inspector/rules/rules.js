@@ -26,6 +26,7 @@ const {
   VIEW_NODE_VALUE_TYPE,
   VIEW_NODE_IMAGE_URL_TYPE,
   VIEW_NODE_LOCATION_TYPE,
+  VIEW_NODE_SHAPE_POINT_TYPE,
 } = require("devtools/client/inspector/shared/node-types");
 const StyleInspectorMenu = require("devtools/client/inspector/shared/style-inspector-menu");
 const TooltipsOverlay = require("devtools/client/inspector/shared/tooltips-overlay");
@@ -48,6 +49,7 @@ const FILTER_PROP_RE = /\s*([^:\s]*)\s*:\s*(.*?)\s*;?$/;
 // This is used to parse the filter search value to see if the filter
 // should be strict or not
 const FILTER_STRICT_RE = /\s*`(.*?)`\s*$/;
+const INSET_POINT_TYPES = ["top", "right", "bottom", "left"];
 
 /**
  * Our model looks like this:
@@ -332,6 +334,19 @@ CssRuleView.prototype = {
         pseudoElement: prop.rule.pseudoElement,
         sheetHref: prop.rule.domRule.href,
         textProperty: prop
+      };
+    } else if (classes.contains("ruleview-shape-point") && prop) {
+      type = VIEW_NODE_SHAPE_POINT_TYPE;
+      value = {
+        property: getPropertyNameAndValue(node).name,
+        value: node.textContent,
+        enabled: prop.enabled,
+        overridden: prop.overridden,
+        pseudoElement: prop.rule.pseudoElement,
+        sheetHref: prop.rule.domRule.href,
+        textProperty: prop,
+        toggleActive: getShapeToggleActive(node),
+        point: getShapePoint(node)
       };
     } else if (classes.contains("theme-link") &&
                !classes.contains("ruleview-rule-source") && prop) {
@@ -1537,6 +1552,52 @@ function getPropertyNameAndValue(node) {
     }
     node = node.parentNode;
   }
+}
+
+/**
+ * Walk up the DOM from a given node until a parent property holder is found,
+ * and return an active shape toggle if one exists.
+ *
+ * @param {DOMNode} node
+ *        The node to start from
+ * @returns {DOMNode} The active shape toggle node, if one exists.
+ */
+function getShapeToggleActive(node) {
+  while (true) {
+    if (!node || !node.classList) {
+      return null;
+    }
+    // Check first for ruleview-computed since it's the deepest
+    if (node.classList.contains("ruleview-computed") ||
+        node.classList.contains("ruleview-property")) {
+      return node.querySelector(".ruleview-shape.active");
+    }
+    node = node.parentNode;
+  }
+}
+
+/**
+ * Get the point associated with a shape point node.
+ *
+ * @param {DOMNode} node
+ *        A shape point node
+ * @returns {String} The point associated with the given node.
+ */
+function getShapePoint(node) {
+  let classList = node.classList;
+  let point = node.dataset.point;
+  // Inset points use classes instead of data because a single span can represent
+  // multiple points.
+  let insetClasses = [];
+  classList.forEach(className => {
+    if (INSET_POINT_TYPES.includes(className)) {
+      insetClasses.push(className);
+    }
+  });
+  if (insetClasses.length > 0) {
+    point = insetClasses.join(",");
+  }
+  return point;
 }
 
 function RuleViewTool(inspector, window) {
