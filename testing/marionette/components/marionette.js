@@ -168,6 +168,8 @@ MarionetteComponent.prototype.handle = function (cmdLine) {
 };
 
 MarionetteComponent.prototype.observe = function (subject, topic, data) {
+  this.logger.debug(`Received observer notification "${topic}"`);
+
   switch (topic) {
     case "command-line-startup":
       Services.obs.removeObserver(this, topic);
