@@ -32,7 +32,6 @@ SortIncludes: false
 # All of the following items are default
 # in the Mozila coding style from clang format 4.0
 AlwaysBreakAfterReturnType: TopLevel
-AlignConsecutiveDeclarations: true
 BinPackArguments: false
 BinPackParameters: false
 SpaceAfterTemplateKeyword: false
