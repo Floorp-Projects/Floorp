@@ -345,7 +345,6 @@
         "description": "Clears websites' local storage data.",
         "type": "function",
         "async": "callback",
-        "unsupported": true,
         "parameters": [
           {
             "$ref": "RemovalOptions",

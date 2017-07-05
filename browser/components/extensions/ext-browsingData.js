@@ -83,6 +83,10 @@ const clearHistory = options => {
   return sanitizer.items.history.clear(makeRange(options));
 };
 
+const clearLocalStorage = async function(options) {
+  Services.obs.notifyObservers(null, "extension:purge-localStorage");
+};
+
 const clearPasswords = async function(options) {
   let loginManager = Services.logins;
   let yieldCounter = 0;
@@ -151,6 +155,9 @@ const doRemoval = (options, dataToRemove, extension) => {
           break;
         case "history":
           removalPromises.push(clearHistory(options));
+          break;
+        case "localStorage":
+          removalPromises.push(clearLocalStorage(options));
           break;
         case "passwords":
           removalPromises.push(clearPasswords(options));
@@ -224,6 +231,9 @@ this.browsingData = class extends ExtensionAPI {
         },
         removeHistory(options) {
           return doRemoval(options, {history: true});
+        },
+        removeLocalStorage(options) {
+          return doRemoval(options, {localStorage: true});
         },
         removePasswords(options) {
           return doRemoval(options, {passwords: true});
