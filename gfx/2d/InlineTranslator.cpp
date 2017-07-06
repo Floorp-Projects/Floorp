@@ -5,10 +5,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "InlineTranslator.h"
+#include "RecordedEventImpl.h"
+#include "DrawEventRecorder.h"
 
 #include "gfxContext.h"
 #include "nsDeviceContext.h"
-#include "mozilla/gfx/RecordedEvent.h"
 #include "mozilla/gfx/RecordingTypes.h"
 #include "mozilla/UniquePtr.h"
 
@@ -24,35 +25,60 @@ InlineTranslator::InlineTranslator(DrawTarget* aDT, void* aFontContext)
 }
 
 bool
-InlineTranslator::TranslateRecording(std::istream& aRecording)
+InlineTranslator::TranslateRecording(char *aData, size_t aLen)
 {
+  // an istream like class for reading from memory
+  struct MemReader {
+    MemReader(char *aData, size_t aLen) : mData(aData), mEnd(aData + aLen) {}
+    void read(char* s, streamsize n) {
+      if (n <= (mEnd - mData)) {
+        memcpy(s, mData, n);
+        mData += n;
+      } else {
+        // We've requested more data than is available
+        // set the Reader into an eof state
+        mData = mEnd + 1;
+      }
+    }
+    bool eof() {
+      return mData > mEnd;
+    }
+    bool good() {
+      return !eof();
+    }
+
+    char *mData;
+    char *mEnd;
+  };
+  MemReader reader(aData, aLen);
+
   uint32_t magicInt;
-  ReadElement(aRecording, magicInt);
+  ReadElement(reader, magicInt);
   if (magicInt != mozilla::gfx::kMagicInt) {
     return false;
   }
 
   uint16_t majorRevision;
-  ReadElement(aRecording, majorRevision);
+  ReadElement(reader, majorRevision);
   if (majorRevision != kMajorRevision) {
     return false;
   }
 
   uint16_t minorRevision;
-  ReadElement(aRecording, minorRevision);
+  ReadElement(reader, minorRevision);
   if (minorRevision > kMinorRevision) {
     return false;
   }
 
   int32_t eventType;
-  ReadElement(aRecording, eventType);
-  while (aRecording.good()) {
+  ReadElement(reader, eventType);
+  while (reader.good()) {
     UniquePtr<RecordedEvent> recordedEvent(
-      RecordedEvent::LoadEventFromStream(aRecording,
+      RecordedEvent::LoadEvent(reader,
       static_cast<RecordedEvent::EventType>(eventType)));
 
     // Make sure that the whole event was read from the stream successfully.
-    if (!aRecording.good() || !recordedEvent) {
+    if (!reader.good() || !recordedEvent) {
       return false;
     }
 
@@ -60,7 +86,7 @@ InlineTranslator::TranslateRecording(std::istream& aRecording)
       return false;
     }
 
-    ReadElement(aRecording, eventType);
+    ReadElement(reader, eventType);
   }
 
   return true;

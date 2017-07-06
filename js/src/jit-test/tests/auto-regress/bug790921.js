@@ -1,4 +1,4 @@
-// |jit-test| slow;
+// |jit-test| slow; allow-unhandlable-oom
 // Binary: cache/js-dbg-64-fdfaef738a00-linux
 // Flags: --ion-eager
 //
