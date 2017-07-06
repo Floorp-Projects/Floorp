@@ -72,10 +72,8 @@ protected:
     virtual mozilla::ipc::IPCResult RecvDisableFlashProtectedMode() override;
     virtual mozilla::ipc::IPCResult AnswerNP_GetEntryPoints(NPError* rv) override;
     virtual mozilla::ipc::IPCResult AnswerNP_Initialize(const PluginSettings& aSettings, NPError* rv) override;
-    virtual mozilla::ipc::IPCResult RecvAsyncNP_Initialize(const PluginSettings& aSettings) override;
     virtual mozilla::ipc::IPCResult AnswerSyncNPP_New(PPluginInstanceChild* aActor, NPError* rv)
                                    override;
-    virtual mozilla::ipc::IPCResult RecvAsyncNPP_New(PPluginInstanceChild* aActor) override;
 
     virtual mozilla::ipc::IPCResult
     RecvInitPluginModuleChild(Endpoint<PPluginModuleChild>&& endpoint) override;

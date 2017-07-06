@@ -3351,7 +3351,7 @@ function nsBrowserAccess() {
 nsBrowserAccess.prototype = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIBrowserDOMWindow]),
 
-  _getBrowser: function _getBrowser(aURI, aOpener, aWhere, aFlags) {
+  _getBrowser: function _getBrowser(aURI, aOpener, aWhere, aFlags, aTriggeringPrincipal) {
     let isExternal = !!(aFlags & Ci.nsIBrowserDOMWindow.OPEN_EXTERNAL);
     if (isExternal && aURI && aURI.schemeIs("chrome"))
       return null;
@@ -3427,7 +3427,8 @@ nsBrowserAccess.prototype = {
                                                                       opener: openerWindow,
                                                                       selected: true,
                                                                       isPrivate: isPrivate,
-                                                                      pinned: pinned });
+                                                                      pinned: pinned,
+                                                                      triggeringPrincipal: aTriggeringPrincipal});
 
       return tab.browser;
     }
@@ -3435,14 +3436,18 @@ nsBrowserAccess.prototype = {
     // OPEN_CURRENTWINDOW and illegal values
     let browser = BrowserApp.selectedBrowser;
     if (aURI && browser) {
-      browser.loadURIWithFlags(aURI.spec, loadflags, referrer, null, null);
+      browser.loadURIWithFlags(aURI.spec, {
+        flags: loadflags,
+        referrerURI: referrer,
+        triggeringPrincipal: aTriggeringPrincipal,
+      });
     }
 
     return browser;
   },
 
-  openURI: function browser_openURI(aURI, aOpener, aWhere, aFlags) {
-    let browser = this._getBrowser(aURI, aOpener, aWhere, aFlags);
+  openURI: function browser_openURI(aURI, aOpener, aWhere, aFlags, aTriggeringPrincipal) {
+    let browser = this._getBrowser(aURI, aOpener, aWhere, aFlags, aTriggeringPrincipal);
     return browser ? browser.contentWindow : null;
   },
 
@@ -3454,7 +3459,7 @@ nsBrowserAccess.prototype = {
     //
     // We also ignore aName if it is set, as it is currently only used on the
     // e10s codepath.
-    let browser = this._getBrowser(aURI, null, aWhere, aFlags);
+    let browser = this._getBrowser(aURI, null, aWhere, aFlags, null);
     if (browser)
       return browser.QueryInterface(Ci.nsIFrameLoaderOwner);
     return null;

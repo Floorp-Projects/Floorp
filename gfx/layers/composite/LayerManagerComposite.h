@@ -313,6 +313,7 @@ public:
   virtual already_AddRefed<RefLayer> CreateRefLayer() override;
 
   virtual bool AreComponentAlphaLayersEnabled() override;
+  virtual bool SupportsBackdropCopyForComponentAlpha() override { return false; }
 
   virtual already_AddRefed<DrawTarget>
     CreateOptimalMaskDrawTarget(const IntSize &aSize) override;
@@ -514,7 +515,7 @@ private:
 #endif
 #if defined(MOZ_WIDGET_ANDROID)
 public:
-  virtual void RequestScreenPixels(UiCompositorControllerParent* aController)
+  virtual void RequestScreenPixels(UiCompositorControllerParent* aController) override
   {
     mScreenPixelsTarget = aController;
   }

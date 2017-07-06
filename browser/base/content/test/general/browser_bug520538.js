@@ -4,7 +4,8 @@ function test() {
   window.browserDOMWindow.openURI(makeURI("about:blank"),
                                   null,
                                   Ci.nsIBrowserDOMWindow.OPEN_NEWTAB,
-                                  Ci.nsIBrowserDOMWindow.OPEN_EXTERNAL);
+                                  Ci.nsIBrowserDOMWindow.OPEN_EXTERNAL,
+                                  Services.scriptSecurityManager.getSystemPrincipal());
   is(gBrowser.tabs.length, tabCount + 1,
      "'--new-tab about:blank' opens a new tab");
   is(gBrowser.selectedTab, gBrowser.tabs[tabCount],

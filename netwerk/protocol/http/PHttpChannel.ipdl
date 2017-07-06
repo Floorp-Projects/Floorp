@@ -117,7 +117,7 @@ child:
   // Called to initiate content channel redirect, starts talking to sinks
   // on the content process and reports result via Redirect2Verify above
   async Redirect1Begin(uint32_t           registrarId,
-                       URIParams          newUri,
+                       URIParams          newOriginalUri,
                        uint32_t           redirectFlags,
                        nsHttpResponseHead responseHead,
                        nsCString          securityInfoSerialization,

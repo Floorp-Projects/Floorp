@@ -41,6 +41,21 @@ nsOpenURIInFrameParams::GetIsPrivate(bool* aIsPrivate)
 }
 
 NS_IMETHODIMP
+nsOpenURIInFrameParams::GetTriggeringPrincipal(nsIPrincipal** aTriggeringPrincipal)
+{
+  NS_ADDREF(*aTriggeringPrincipal = mTriggeringPrincipal);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsOpenURIInFrameParams::SetTriggeringPrincipal(nsIPrincipal* aTriggeringPrincipal)
+{
+  NS_ENSURE_TRUE(aTriggeringPrincipal, NS_ERROR_INVALID_ARG);
+  mTriggeringPrincipal = aTriggeringPrincipal;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsOpenURIInFrameParams::GetOpenerOriginAttributes(JSContext* aCx,
                                                   JS::MutableHandle<JS::Value> aValue)
 {

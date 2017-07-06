@@ -22,6 +22,8 @@ add_task(async function() {
           checkComplexPayment(payment);
         } else if (payment.paymentDetails.id == "simple details") {
           checkSimplePayment(payment);
+        } else if (payment.paymentDetails.id == "duplicate shipping options details") {
+          checkDupShippingOptionsPayment(payment);
         } else {
           ok(false, "Unknown payment.");
         }

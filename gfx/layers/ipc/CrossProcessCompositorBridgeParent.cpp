@@ -88,14 +88,15 @@ CrossProcessCompositorBridgeParent::AllocPLayerTransactionParent(
   if (state && state->mLayerManager) {
     state->mCrossProcessParent = this;
     HostLayerManager* lm = state->mLayerManager;
-    LayerTransactionParent* p = new LayerTransactionParent(lm, this, aId);
+    CompositorAnimationStorage* animStorage = state->mParent ? state->mParent->GetAnimationStorage(0) : nullptr;
+    LayerTransactionParent* p = new LayerTransactionParent(lm, this, animStorage, aId);
     p->AddIPDLReference();
     sIndirectLayerTrees[aId].mLayerTree = p;
     return p;
   }
 
   NS_WARNING("Created child without a matching parent?");
-  LayerTransactionParent* p = new LayerTransactionParent(nullptr, this, aId);
+  LayerTransactionParent* p = new LayerTransactionParent(/* aManager */ nullptr, this, /* aAnimStorage */ nullptr, aId);
   p->AddIPDLReference();
   return p;
 }

@@ -798,7 +798,7 @@ ConvertToNSArray(nsTArray<ProxyAccessible*>& aArray)
     if (roleAtom == nsGkAtoms::note_)
       return @"AXDocumentNote";
     if (roleAtom == nsGkAtoms::region)
-      return @"AXLandmarkRegion";
+      return mRole == roles::REGION ? @"AXLandmarkRegion" : nil;
     if (roleAtom == nsGkAtoms::status)
       return @"AXApplicationStatus";
     if (roleAtom == nsGkAtoms::tabpanel)

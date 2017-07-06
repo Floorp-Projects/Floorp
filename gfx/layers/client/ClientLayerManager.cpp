@@ -226,6 +226,9 @@ ClientLayerManager::CreateReadbackLayer()
 bool
 ClientLayerManager::BeginTransactionWithTarget(gfxContext* aTarget)
 {
+  // Wait for any previous async paints to complete before starting to paint again.
+  GetCompositorBridgeChild()->FlushAsyncPaints();
+
   MOZ_ASSERT(mForwarder, "ClientLayerManager::BeginTransaction without forwarder");
   if (!mForwarder->IPCOpen()) {
     gfxCriticalNote << "ClientLayerManager::BeginTransaction with IPC channel down. GPU process may have died.";

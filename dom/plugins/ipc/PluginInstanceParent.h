@@ -21,7 +21,6 @@
 #include "nsDataHashtable.h"
 #include "nsHashKeys.h"
 #include "nsRect.h"
-#include "PluginDataResolver.h"
 
 #include "mozilla/Unused.h"
 #include "mozilla/EventForwards.h"
@@ -43,7 +42,6 @@ class PluginModuleParent;
 class D3D11SurfaceHolder;
 
 class PluginInstanceParent : public PPluginInstanceParent
-                           , public PluginDataResolver
 {
     friend class PluginModuleParent;
     friend class BrowserStreamParent;
@@ -242,9 +240,6 @@ public:
     RecvRedrawPlugin() override;
 
     virtual mozilla::ipc::IPCResult
-    RecvAsyncNPP_NewResult(const NPError& aResult) override;
-
-    virtual mozilla::ipc::IPCResult
     RecvSetNetscapeWindowAsParent(const NativeWindowHandle& childWindow) override;
 
     NPError NPP_SetWindow(const NPWindow* aWindow);
@@ -291,12 +286,6 @@ public:
       return mNPP;
     }
 
-    bool
-    UseSurrogate() const
-    {
-        return mUseSurrogate;
-    }
-
     void
     GetSrcAttribute(nsACString& aOutput) const
     {
@@ -327,12 +316,7 @@ public:
 
     bool IsUsingDirectDrawing();
 
-    virtual PluginAsyncSurrogate* GetAsyncSurrogate() override;
-
-    virtual PluginInstanceParent* GetInstance() override { return this; }
-
-    static PluginInstanceParent* Cast(NPP instance,
-                                      PluginAsyncSurrogate** aSurrogate = nullptr);
+    static PluginInstanceParent* Cast(NPP instance);
 
     // for IME hook
     virtual mozilla::ipc::IPCResult
@@ -382,8 +366,6 @@ private:
 
 private:
     PluginModuleParent* mParent;
-    RefPtr<PluginAsyncSurrogate> mSurrogate;
-    bool mUseSurrogate;
     NPP mNPP;
     const NPNetscapeFuncs* mNPNIface;
     nsCString mSrcAttribute;

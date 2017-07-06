@@ -121,6 +121,37 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1345361
     shippingType: "shipping"
   };
 
+  const duplicateShippingOptionsDetails = {
+    id: "duplicate shipping options details",
+    total: {
+      label: "Total",
+      amount: {
+        currency: "USD",
+        value: "1.00"
+      }
+    },
+    shippingOptions: [
+      {
+        id: "dupShipping",
+        label: "NormalShipping",
+        amount: {
+          currency: "USD",
+          value: "10.00"
+        },
+        selected: true,
+      },
+      {
+        id: "dupShipping",
+        label: "FastShipping",
+        amount: {
+          currency: "USD",
+          value: "30.00"
+        },
+        selected: false,
+      },
+    ],
+  };
+
 
   function testWithSimplestParameters() {
     return new Promise((resolve, reject) => {
@@ -146,12 +177,26 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1345361
     });
   }
 
+  function testWithDuplicateShippingOptionsParameters() {
+    return new Promise((resolve, reject) => {
+      const payRequest = new PaymentRequest(simplestMethods, duplicateShippingOptionsDetails);
+      ok(payRequest, "PaymentRequest should be created");
+      gScript.addMessageListener("check-complete", function checkCompleteHandler() {
+        gScript.removeMessageListener("check-complete", checkCompleteHandler);
+        resolve();
+      });
+      gScript.sendAsyncMessage("check-duplicate-shipping-options-request");
+    });
+  }
+
   function testMultipleRequests() {
     return new Promise((resolve, reject) => {
       const payRequest1 = new PaymentRequest(complexMethods, complexDetails, complexOptions);
       const payRequest2 = new PaymentRequest(simplestMethods, simplestDetails);
+      const payRequest3 = new PaymentRequest(simplestMethods, duplicateShippingOptionsDetails);
       ok(payRequest1, "PaymentRequest with complex parameters should be created");
       ok(payRequest2, "PaymentRequest with simplest parameters should be created");
+      ok(payRequest3, "PaymentRequest with duplicate shipping options parameters should be created");
       gScript.addMessageListener("check-complete", function checkCompleteHandler() {
         gScript.removeMessageListener("check-complete", checkCompleteHandler);
         resolve();
@@ -173,6 +218,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1345361
   function runTests() {
     testWithSimplestParameters()
     .then(testWithComplexParameters)
+    .then(testWithDuplicateShippingOptionsParameters)
     .then(testMultipleRequests)
     .then(teardown)
     .catch( e => {
