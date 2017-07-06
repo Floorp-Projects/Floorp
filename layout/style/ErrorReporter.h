@@ -29,15 +29,18 @@ class Loader;
 class MOZ_STACK_CLASS ErrorReporter {
 public:
   ErrorReporter(const nsCSSScanner &aScanner,
-                const CSSStyleSheet *aSheet,
+                const StyleSheet *aSheet,
                 const Loader *aLoader,
                 nsIURI *aURI);
+  ErrorReporter(const StyleSheet *aSheet,
+                const Loader *aLoader);
   ~ErrorReporter();
 
   static void ReleaseGlobals();
 
   void OutputError();
   void OutputError(uint32_t aLineNumber, uint32_t aLineOffset);
+  void OutputError(uint32_t aLineNumber, uint32_t aLineOffset, nsIURI* aURI, const nsACString& aSource);
   void ClearError();
 
   // In all overloads of ReportUnexpected, aMessage is a stringbundle
@@ -50,6 +53,9 @@ public:
   void ReportUnexpected(const char *aMessage, const nsString& aParam);
   // one parameter, a token
   void ReportUnexpected(const char *aMessage, const nsCSSToken& aToken);
+  // one parameter which has already been escaped appropriately
+  void ReportUnexpectedUnescaped(const char *aMessage,
+                                 const nsAutoString& aParam);
   // two parameters, a token and a character, in that order
   void ReportUnexpected(const char *aMessage, const nsCSSToken& aToken,
                         char16_t aChar);
@@ -71,7 +77,7 @@ private:
   nsString mErrorLine;
   nsString mFileName;
   const nsCSSScanner *mScanner;
-  const CSSStyleSheet *mSheet;
+  const StyleSheet *mSheet;
   const Loader *mLoader;
   nsIURI *mURI;
   uint64_t mInnerWindowID;

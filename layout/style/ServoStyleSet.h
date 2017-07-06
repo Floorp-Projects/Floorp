@@ -417,7 +417,8 @@ public:
    */
   already_AddRefed<ServoComputedValues>
   ResolveForDeclarations(ServoComputedValuesBorrowedOrNull aParentOrNull,
-                         RawServoDeclarationBlockBorrowed aDeclarations);
+                         RawServoDeclarationBlockBorrowed aDeclarations,
+                         css::Loader* aLoader);
 
   already_AddRefed<RawServoAnimationValue>
   ComputeAnimationValue(dom::Element* aElement,
