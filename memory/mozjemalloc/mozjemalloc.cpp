@@ -2060,6 +2060,10 @@ chunk_recycle(extent_tree_t *chunks_szad, extent_tree_t *chunks_ad, size_t size,
 		base_node_dealloc(node);
 #ifdef MALLOC_DECOMMIT
 	pages_commit(ret, size);
+	// pages_commit is guaranteed to zero the chunk.
+	if (zeroed) {
+		*zeroed = true;
+	}
 #endif
 	return (ret);
 }
