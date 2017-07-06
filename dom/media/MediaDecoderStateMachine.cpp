@@ -1106,28 +1106,22 @@ public:
 
   void HandleWaitingForAudio() override
   {
-    if (!mSeekJob.mTarget->IsVideoOnly()) {
-      MOZ_ASSERT(!mDoneAudioSeeking);
-      mMaster->WaitForData(MediaData::AUDIO_DATA);
-    }
+    MOZ_ASSERT(!mDoneAudioSeeking);
+    mMaster->WaitForData(MediaData::AUDIO_DATA);
   }
 
   void HandleAudioCanceled() override
   {
-    if (!mSeekJob.mTarget->IsVideoOnly()) {
-      MOZ_ASSERT(!mDoneAudioSeeking);
-      RequestAudioData();
-    }
+    MOZ_ASSERT(!mDoneAudioSeeking);
+    RequestAudioData();
   }
 
   void HandleEndOfAudio() override
   {
-    if (!mSeekJob.mTarget->IsVideoOnly()) {
-      MOZ_ASSERT(!mDoneAudioSeeking);
-      AudioQueue().Finish();
-      mDoneAudioSeeking = true;
-      MaybeFinishSeek();
-    }
+    MOZ_ASSERT(!mDoneAudioSeeking);
+    AudioQueue().Finish();
+    mDoneAudioSeeking = true;
+    MaybeFinishSeek();
   }
 
   void HandleWaitingForVideo() override
@@ -1791,6 +1785,12 @@ public:
     // DropAudioUpToSeekTarget().
     mMaster->PushAudio(aAudio);
   }
+
+  void HandleWaitingForAudio() override { }
+
+  void HandleAudioCanceled() override { }
+
+  void HandleEndOfAudio() override { }
 };
 
 RefPtr<MediaDecoder::SeekPromise>
