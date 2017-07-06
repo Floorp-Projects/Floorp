@@ -34,8 +34,8 @@ namespace JS { struct Zone; }
  *   RegExpShared:
  *     The compiled representation of the regexp (lazily created, cleared
  *     during some forms of GC).
- *   RegExpCompartment:
- *     Owns all RegExpShared instances in a compartment.
+ *   RegExpZone:
+ *     Owns all RegExpShared instances in a zone.
  */
 namespace js {
 
