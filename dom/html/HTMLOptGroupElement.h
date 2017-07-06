@@ -39,7 +39,7 @@ public:
                      EventChainPreVisitor& aVisitor) override;
 
   virtual EventStates IntrinsicState() const override;
- 
+
   virtual nsresult Clone(mozilla::dom::NodeInfo* aNodeInfo, nsINode** aResult,
                          bool aPreallocateChildren) const override;
 

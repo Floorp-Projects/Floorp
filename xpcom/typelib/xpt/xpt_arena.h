@@ -29,7 +29,7 @@ extern "C" {
 
 /*
  * Simple Arena support. Use with caution!
- */ 
+ */
 
 typedef struct XPTArena XPTArena;
 

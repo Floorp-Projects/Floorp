@@ -102,7 +102,7 @@ nsDiskCacheInputStream::Available(uint64_t * bytesAvailable)
 {
     if (mClosed)  return NS_BASE_STREAM_CLOSED;
     if (mStreamEnd < mPos)  return NS_ERROR_UNEXPECTED;
-    
+
     *bytesAvailable = mStreamEnd - mPos;
     return NS_OK;
 }
@@ -119,7 +119,7 @@ nsDiskCacheInputStream::Read(char * buffer, uint32_t count, uint32_t * bytesRead
                          this));
         return NS_OK;
     }
-    
+
     if (mPos == mStreamEnd) {
         CACHE_LOG_DEBUG(("CACHE: nsDiskCacheInputStream::Read "
                          "[stream=%p] stream at end of file",
@@ -132,7 +132,7 @@ nsDiskCacheInputStream::Read(char * buffer, uint32_t count, uint32_t * bytesRead
                          this));
         return NS_ERROR_UNEXPECTED;
     }
-    
+
     if (count > mStreamEnd - mPos)
         count = mStreamEnd - mPos;
 
@@ -146,10 +146,10 @@ nsDiskCacheInputStream::Read(char * buffer, uint32_t count, uint32_t * bytesRead
                              this, int(rv), PR_ErrorToName(PR_GetError())));
             return rv;
         }
-        
+
         mPos += (uint32_t)result;
         *bytesRead = (uint32_t)result;
-        
+
     } else if (mBuffer) {
         // read data from mBuffer
         memcpy(buffer, mBuffer + mPos, count);
@@ -238,7 +238,7 @@ nsDiskCacheStreamIO::GetInputStream(uint32_t offset, nsIInputStream ** inputStre
     NS_ENSURE_TRUE(offset == 0, NS_ERROR_NOT_IMPLEMENTED);
 
     *inputStream = nullptr;
-    
+
     if (!mBinding)  return NS_ERROR_NOT_AVAILABLE;
 
     if (mOutputStreamIsOpen) {
@@ -256,9 +256,9 @@ nsDiskCacheStreamIO::GetInputStream(uint32_t offset, nsIInputStream ** inputStre
     } else if (mBinding->mRecord.DataFile() == 0) {
         // open file desc for data
         rv = OpenCacheFile(PR_RDONLY, &fd);
-        if (NS_FAILED(rv))  return rv;  // unable to open file        
+        if (NS_FAILED(rv))  return rv;  // unable to open file
         NS_ASSERTION(fd, "cache stream lacking open file.");
-            
+
     } else if (!mBuffer) {
         // read block file for data
         rv = ReadCacheBlocks(mStreamEnd);
@@ -272,7 +272,7 @@ nsDiskCacheStreamIO::GetInputStream(uint32_t offset, nsIInputStream ** inputStre
     // create a new input stream
     nsDiskCacheInputStream * inStream = new nsDiskCacheInputStream(this, fd, mBuffer, mStreamEnd);
     if (!inStream)  return NS_ERROR_OUT_OF_MEMORY;
-    
+
     NS_ADDREF(*inputStream = inStream);
     return NS_OK;
 }
@@ -286,11 +286,11 @@ nsDiskCacheStreamIO::GetOutputStream(uint32_t offset, nsIOutputStream ** outputS
     *outputStream = nullptr;
 
     if (!mBinding)  return NS_ERROR_NOT_AVAILABLE;
-        
+
     NS_ASSERTION(!mOutputStreamIsOpen, "already have an output stream open");
     NS_ASSERTION(mInStreamCount == 0, "we already have input streams open");
     if (mOutputStreamIsOpen || mInStreamCount)  return NS_ERROR_NOT_AVAILABLE;
-    
+
     mStreamEnd = mBinding->mCacheEntry->DataSize();
 
     // Inits file or buffer and truncate at the desired offset
@@ -372,9 +372,9 @@ nsDiskCacheStreamIO::CloseOutputStream()
             }
         }
     }
-  
+
     if (mStreamEnd == 0) return NS_OK;     // nothing to write
- 
+
     // try to write to the cache blocks
     rv = cacheMap->WriteDataCacheBlocks(mBinding, mBuffer, mStreamEnd);
     if (NS_FAILED(rv)) {
@@ -390,7 +390,7 @@ nsDiskCacheStreamIO::CloseOutputStream()
         else
             NS_WARNING("no file descriptor");
     }
-   
+
     return rv;
 }
 
@@ -473,7 +473,7 @@ void
 nsDiskCacheStreamIO::UpdateFileSize()
 {
     NS_ASSERTION(mFD, "nsDiskCacheStreamIO::UpdateFileSize should not have been called");
-    
+
     nsDiskCacheRecord * record = &mBinding->mRecord;
     const uint32_t      oldSizeK  = record->DataFileSize();
     uint32_t            newSizeK  = (mStreamEnd + 0x03FF) >> 10;
@@ -483,14 +483,14 @@ nsDiskCacheStreamIO::UpdateFileSize()
         newSizeK = kMaxDataSizeK;
 
     if (newSizeK == oldSizeK)  return;
-    
+
     record->SetDataFileSize(newSizeK);
 
     // update cache size totals
     nsDiskCacheMap * cacheMap = mDevice->CacheMap();
     cacheMap->DecrementTotalSize(oldSizeK);       // decrement old size
     cacheMap->IncrementTotalSize(newSizeK);       // increment new size
-    
+
     if (!mBinding->mDoomed) {
         nsresult rv = cacheMap->UpdateRecord(record);
         if (NS_FAILED(rv)) {
@@ -505,19 +505,19 @@ nsresult
 nsDiskCacheStreamIO::OpenCacheFile(int flags, PRFileDesc ** fd)
 {
     NS_ENSURE_ARG_POINTER(fd);
-    
+
     CACHE_LOG_DEBUG(("nsDiskCacheStreamIO::OpenCacheFile"));
 
     nsresult         rv;
     nsDiskCacheMap * cacheMap = mDevice->CacheMap();
     nsCOMPtr<nsIFile>           localFile;
-    
+
     rv = cacheMap->GetLocalFileForDiskCacheRecord(&mBinding->mRecord,
                                                   nsDiskCache::kData,
                                                   !!(flags & PR_CREATE_FILE),
                                                   getter_AddRefs(localFile));
     if (NS_FAILED(rv))  return rv;
-    
+
     // create PRFileDesc for input stream - the 00600 is just for consistency
     return localFile->OpenNSPRFileDesc(flags, 00600, fd);
 }
@@ -539,7 +539,7 @@ nsDiskCacheStreamIO::ReadCacheBlocks(uint32_t bufferSize)
         mBuffer = (char *) moz_xmalloc(bufferSize);
         mBufSize = bufferSize;
     }
-    
+
     // read data stored in cache block files
     nsDiskCacheMap *map = mDevice->CacheMap();  // get map reference
     return map->ReadDataCacheBlocks(mBinding, mBuffer, mStreamEnd);
@@ -551,7 +551,7 @@ nsDiskCacheStreamIO::FlushBufferToFile()
 {
     nsresult  rv;
     nsDiskCacheRecord * record = &mBinding->mRecord;
-    
+
     if (!mFD) {
         if (record->DataLocationInitialized() && (record->DataFile() > 0)) {
             // remove cache block storage
@@ -560,7 +560,7 @@ nsDiskCacheStreamIO::FlushBufferToFile()
             if (NS_FAILED(rv))  return rv;
         }
         record->SetDataFileGeneration(mBinding->mGeneration);
-        
+
         // allocate file
         rv = OpenCacheFile(PR_RDWR | PR_CREATE_FILE, &mFD);
         if (NS_FAILED(rv))  return rv;
@@ -569,7 +569,7 @@ nsDiskCacheStreamIO::FlushBufferToFile()
         if (dataSize != -1)
             mozilla::fallocate(mFD, std::min<int64_t>(dataSize, kPreallocateLimit));
     }
-    
+
     // write buffer to the file when there is data in it
     if (mStreamEnd > 0) {
         if (!mBuffer) {
@@ -583,7 +583,7 @@ nsDiskCacheStreamIO::FlushBufferToFile()
 
     // buffer is no longer valid
     DeleteBuffer();
-   
+
     return NS_OK;
 }
 
@@ -613,14 +613,14 @@ nsresult
 nsDiskCacheStreamIO::SeekAndTruncate(uint32_t offset)
 {
     if (!mBinding)  return NS_ERROR_NOT_AVAILABLE;
-    
+
     if (uint32_t(offset) > mStreamEnd)  return NS_ERROR_FAILURE;
-    
+
     // Set the current end to the desired offset
     mStreamEnd = offset;
 
     // Currently stored in file?
-    if (mBinding->mRecord.DataLocationInitialized() && 
+    if (mBinding->mRecord.DataLocationInitialized() &&
         (mBinding->mRecord.DataFile() == 0)) {
         if (!mFD) {
             // we need an mFD, we better open it now
@@ -636,7 +636,7 @@ nsDiskCacheStreamIO::SeekAndTruncate(uint32_t offset)
 
         // When we starting at zero again, close file and start with buffer.
         // If offset is non-zero (and within buffer) an option would be
-        // to read the file into the buffer, but chance is high that it is 
+        // to read the file into the buffer, but chance is high that it is
         // rewritten to the file anyway.
         if (offset == 0) {
             // close file descriptor
@@ -645,7 +645,7 @@ nsDiskCacheStreamIO::SeekAndTruncate(uint32_t offset)
         }
         return NS_OK;
     }
-    
+
     // read data into mBuffer if not read yet.
     if (offset && !mBuffer) {
         nsresult rv = ReadCacheBlocks(kMaxBufferSize);

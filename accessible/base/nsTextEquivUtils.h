@@ -121,7 +121,7 @@ private:
    */
   static nsresult AppendFromAccessibleChildren(Accessible* aAccessible,
                                                nsAString *aString);
-  
+
   /**
    * Calculates text equivalent from the given accessible and its subtree if
    * allowed.

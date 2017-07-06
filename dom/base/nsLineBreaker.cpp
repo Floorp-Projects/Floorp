@@ -62,7 +62,7 @@ nsLineBreaker::FlushCurrentWord()
   AutoTArray<uint8_t,4000> breakState;
   if (!breakState.AppendElements(length))
     return NS_ERROR_OUT_OF_MEMORY;
-  
+
   nsTArray<bool> capitalizationState;
 
   if (!mCurrentWordContainsComplexChar) {
@@ -134,7 +134,7 @@ nsLineBreaker::FlushCurrentWord()
                                      capitalizationState.Elements() + offset);
       }
     }
-    
+
     offset += ti->mLength;
   }
 

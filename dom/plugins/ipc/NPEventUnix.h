@@ -31,7 +31,7 @@ struct NPRemoteEvent {
 // Luckily, as of xorg 1.6.0 / X protocol 11 rev 0, the only pointer
 // field contained in any of these specific X*Event structs is a
 // |Display*|.  So to simplify serializing these XEvents, we make the
-// 
+//
 // ********** XXX ASSUMPTION XXX **********
 //
 // that the process to which the event is forwarded shares the same

@@ -40,7 +40,7 @@
 
 #pragma warning( push )
 // Disable exception handler warnings.
-#pragma warning( disable : 4530 ) 
+#pragma warning( disable : 4530 )
 
 #include <map>
 #include <string>

@@ -122,12 +122,12 @@ public:
      * Returns the previous Object pointer from the list
     **/
     void* previous();
-    
+
     /**
      * Returns the current Object
     **/
     void* current();
-    
+
     /**
      * Removes the Object last returned by the next() or previous() methods;
      * @return the removed Object pointer

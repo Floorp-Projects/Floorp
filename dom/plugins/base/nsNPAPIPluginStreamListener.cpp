@@ -45,26 +45,26 @@ mOwner(owner)
   nsCOMPtr<nsIFile> pluginTmp;
   rv = NS_GetSpecialDirectory(NS_OS_TEMP_DIR, getter_AddRefs(pluginTmp));
   if (NS_FAILED(rv)) return;
-  
+
   mTempFile = do_QueryInterface(pluginTmp, &rv);
   if (NS_FAILED(rv)) return;
-  
+
   // need to create a file with a unique name - use target as the basis
   rv = mTempFile->AppendNative(nsDependentCString(target));
   if (NS_FAILED(rv)) return;
-  
+
   // Yes, make it unique.
-  rv = mTempFile->CreateUnique(nsIFile::NORMAL_FILE_TYPE, 0700); 
+  rv = mTempFile->CreateUnique(nsIFile::NORMAL_FILE_TYPE, 0700);
   if (NS_FAILED(rv)) return;
-  
+
   // create the file
   rv = NS_NewLocalFileOutputStream(getter_AddRefs(mOutputStream), mTempFile, -1, 00600);
   if (NS_FAILED(rv))
     return;
-	
+
   // construct the URL we'll use later in calls to GetURL()
   NS_GetURLSpecFromFile(mTempFile, mFileURL);
-  
+
 #ifdef DEBUG
   printf("File URL = %s\n", mFileURL.get());
 #endif
@@ -129,7 +129,7 @@ nsPluginStreamToFile::Close(void)
 NS_IMPL_ISUPPORTS(nsNPAPIPluginStreamListener,
                   nsITimerCallback, nsIHTTPHeaderListener)
 
-nsNPAPIPluginStreamListener::nsNPAPIPluginStreamListener(nsNPAPIPluginInstance* inst, 
+nsNPAPIPluginStreamListener::nsNPAPIPluginStreamListener(nsNPAPIPluginInstance* inst,
                                                          void* notifyData,
                                                          const char* aURL)
   : mStreamBuffer(nullptr)
@@ -165,16 +165,16 @@ nsNPAPIPluginStreamListener::~nsNPAPIPluginStreamListener()
   // reason because for other cases, notify should have already been
   // called for other reasons elsewhere.
   CallURLNotify(NPRES_NETWORK_ERR);
-  
+
   // lets get rid of the buffer
   if (mStreamBuffer) {
     free(mStreamBuffer);
     mStreamBuffer=nullptr;
   }
-  
+
   if (mNotifyURL)
     PL_strfree(mNotifyURL);
-  
+
   if (mResponseHeaderBuf)
     PL_strfree(mResponseHeaderBuf);
 
@@ -195,9 +195,9 @@ nsNPAPIPluginStreamListener::CleanUpStream(NPReason reason)
 
   if (mStreamCleanedUp)
     return NS_OK;
-  
+
   mStreamCleanedUp = true;
-  
+
   StopDataPump();
 
   // Release any outstanding redirect callback.
@@ -218,7 +218,7 @@ nsNPAPIPluginStreamListener::CleanUpStream(NPReason reason)
 
   if (!mInst || !mInst->CanFireNotifications())
     return rv;
-  
+
   PluginDestructionGuard guard(mInst);
 
   nsNPAPIPlugin* plugin = mInst->GetPlugin();
@@ -236,20 +236,20 @@ nsNPAPIPluginStreamListener::CleanUpStream(NPReason reason)
     NPError error;
     NS_TRY_SAFE_CALL_RETURN(error, (*pluginFunctions->destroystream)(npp, &mNPStreamWrapper->mNPStream, reason), mInst,
                             NS_PLUGIN_CALL_UNSAFE_TO_REENTER_GECKO);
-    
+
     NPP_PLUGIN_LOG(PLUGIN_LOG_NORMAL,
                    ("NPP DestroyStream called: this=%p, npp=%p, reason=%d, return=%d, url=%s\n",
                     this, npp, reason, error, mNPStreamWrapper->mNPStream.url));
-    
+
     if (error == NPERR_NO_ERROR)
       rv = NS_OK;
   }
-  
+
   mStreamState = eStreamStopped;
-  
+
   // fire notification back to plugin, just like before
   CallURLNotify(reason);
-  
+
   return rv;
 }
 
@@ -258,9 +258,9 @@ nsNPAPIPluginStreamListener::CallURLNotify(NPReason reason)
 {
   if (!mCallNotify || !mInst || !mInst->CanFireNotifications())
     return;
-  
+
   PluginDestructionGuard guard(mInst);
-  
+
   mCallNotify = false; // only do this ONCE and prevent recursion
 
   nsNPAPIPlugin* plugin = mInst->GetPlugin();
@@ -272,10 +272,10 @@ nsNPAPIPluginStreamListener::CallURLNotify(NPReason reason)
   if (pluginFunctions->urlnotify) {
     NPP npp;
     mInst->GetNPP(&npp);
-    
+
     NS_TRY_SAFE_CALL_VOID((*pluginFunctions->urlnotify)(npp, mNotifyURL, reason, mNPStreamWrapper->mNPStream.notifyData), mInst,
                           NS_PLUGIN_CALL_UNSAFE_TO_REENTER_GECKO);
-    
+
     NPP_PLUGIN_LOG(PLUGIN_LOG_NORMAL,
                    ("NPP URLNotify called: this=%p, npp=%p, notify=%p, reason=%d, url=%s\n",
                     this, npp, mNPStreamWrapper->mNPStream.notifyData, reason, mNotifyURL));
@@ -313,23 +313,23 @@ nsNPAPIPluginStreamListener::OnStartBinding(nsPluginStreamListenerPeer* streamPe
   streamPeer->GetLastModified((uint32_t*)&(mNPStreamWrapper->mNPStream.lastmodified));
   streamPeer->IsSeekable(&seekable);
   streamPeer->GetContentType(&contentType);
-  
+
   if (!mResponseHeaders.IsEmpty()) {
     mResponseHeaderBuf = PL_strdup(mResponseHeaders.get());
     mNPStreamWrapper->mNPStream.headers = mResponseHeaderBuf;
   }
-  
+
   mStreamListenerPeer = streamPeer;
-  
+
   NPPAutoPusher nppPusher(npp);
-  
+
   NS_TRY_SAFE_CALL_RETURN(error, (*pluginFunctions->newstream)(npp, (char*)contentType, &mNPStreamWrapper->mNPStream, seekable, &streamType), mInst,
                           NS_PLUGIN_CALL_UNSAFE_TO_REENTER_GECKO);
-  
+
   NPP_PLUGIN_LOG(PLUGIN_LOG_NORMAL,
                  ("NPP NewStream called: this=%p, npp=%p, mime=%s, seek=%d, type=%d, return=%d, url=%s\n",
                   this, npp, (char *)contentType, seekable, streamType, error, mNPStreamWrapper->mNPStream.url));
-  
+
   if (error != NPERR_NO_ERROR)
     return NS_ERROR_FAILURE;
 
@@ -447,7 +447,7 @@ nsNPAPIPluginStreamListener::PluginInitJSLoadInProgress()
       return true;
     }
   }
-  
+
   return false;
 }
 
@@ -465,9 +465,9 @@ nsNPAPIPluginStreamListener::OnDataAvailable(nsPluginStreamListenerPeer* streamP
 {
   if (!length || !mInst || !mInst->CanFireNotifications())
     return NS_ERROR_FAILURE;
-  
+
   PluginDestructionGuard guard(mInst);
-  
+
   // Just in case the caller switches plugin info on us.
   mStreamListenerPeer = streamPeer;
 
@@ -479,42 +479,42 @@ nsNPAPIPluginStreamListener::OnDataAvailable(nsPluginStreamListenerPeer* streamP
 
   // check out if plugin implements NPP_Write call
   if (!pluginFunctions->write)
-    return NS_ERROR_FAILURE; // it'll cancel necko transaction 
-  
+    return NS_ERROR_FAILURE; // it'll cancel necko transaction
+
   if (!mStreamBuffer) {
     // To optimize the mem usage & performance we have to allocate
     // mStreamBuffer here in first ODA when length of data available
     // in input stream is known.  mStreamBuffer will be freed in DTOR.
     // we also have to remember the size of that buff to make safe
     // consecutive Read() calls form input stream into our buff.
-    
+
     uint32_t contentLength;
     streamPeer->GetLength(&contentLength);
-    
+
     mStreamBufferSize = std::max(length, contentLength);
-    
+
     // Limit the size of the initial buffer to MAX_PLUGIN_NECKO_BUFFER
     // (16k). This buffer will grow if needed, as in the case where
     // we're getting data faster than the plugin can process it.
     mStreamBufferSize = std::min(mStreamBufferSize,
                                uint32_t(MAX_PLUGIN_NECKO_BUFFER));
-    
+
     mStreamBuffer = (char*) malloc(mStreamBufferSize);
     if (!mStreamBuffer)
       return NS_ERROR_OUT_OF_MEMORY;
   }
-  
+
   // prepare NPP_ calls params
   NPP npp;
   mInst->GetNPP(&npp);
-  
+
   int32_t streamPosition;
   streamPeer->GetStreamOffset(&streamPosition);
   int32_t streamOffset = streamPosition;
-  
+
   if (input) {
     streamOffset += length;
-    
+
     // Set new stream offset for the next ODA call regardless of how
     // following NPP_Write call will behave we pretend to consume all
     // data from the input stream.  It's possible that current steam
@@ -525,14 +525,14 @@ nsNPAPIPluginStreamListener::OnDataAvailable(nsPluginStreamListenerPeer* streamP
     // Note: there is a special case when data flow should be
     // temporarily stopped if NPP_WriteReady returns 0 (bug #89270)
     streamPeer->SetStreamOffset(streamOffset);
-    
+
     // set new end in case the content is compressed
     // initial end is less than end of decompressed stream
-    // and some plugins (e.g. acrobat) can fail. 
+    // and some plugins (e.g. acrobat) can fail.
     if ((int32_t)mNPStreamWrapper->mNPStream.end < streamOffset)
       mNPStreamWrapper->mNPStream.end = streamOffset;
   }
-  
+
   nsresult rv = NS_OK;
   while (NS_SUCCEEDED(rv) && length > 0) {
     if (input && length) {
@@ -548,7 +548,7 @@ nsNPAPIPluginStreamListener::OnDataAvailable(nsPluginStreamListenerPeer* streamP
         char* buf = (char*) realloc(mStreamBuffer, mStreamBufferSize);
         if (!buf)
           return NS_ERROR_OUT_OF_MEMORY;
-        
+
         mStreamBuffer = buf;
       }
 
@@ -560,32 +560,32 @@ nsNPAPIPluginStreamListener::OnDataAvailable(nsPluginStreamListenerPeer* streamP
       rv = input->Read(mStreamBuffer + mStreamBufferByteCount, bytesToRead,
                        &amountRead);
       NS_ENSURE_SUCCESS(rv, rv);
-      
+
       if (amountRead == 0) {
         NS_NOTREACHED("input->Read() returns no data, it's almost impossible "
                       "to get here");
-        
+
         break;
       }
-      
+
       mStreamBufferByteCount += amountRead;
       length -= amountRead;
     } else {
       // No input, nothing to read. Set length to 0 so that we don't
       // keep iterating through this outer loop any more.
-      
+
       length = 0;
     }
-    
+
     // Temporary pointer to the beginning of the data we're writing as
     // we loop and feed the plugin data.
     char *ptrStreamBuffer = mStreamBuffer;
-    
+
     // it is possible plugin's NPP_Write() returns 0 byte consumed. We
     // use zeroBytesWriteCount to count situation like this and break
     // the loop
     int32_t zeroBytesWriteCount = 0;
-    
+
     // mStreamBufferByteCount tells us how many bytes there are in the
     // buffer. WriteReady returns to us how many bytes the plugin is
     // ready to handle.
@@ -593,21 +593,21 @@ nsNPAPIPluginStreamListener::OnDataAvailable(nsPluginStreamListenerPeer* streamP
       int32_t numtowrite;
       if (pluginFunctions->writeready) {
         NPPAutoPusher nppPusher(npp);
-        
+
         NS_TRY_SAFE_CALL_RETURN(numtowrite, (*pluginFunctions->writeready)(npp, &mNPStreamWrapper->mNPStream), mInst,
                                 NS_PLUGIN_CALL_UNSAFE_TO_REENTER_GECKO);
         NPP_PLUGIN_LOG(PLUGIN_LOG_NOISY,
                        ("NPP WriteReady called: this=%p, npp=%p, "
                         "return(towrite)=%d, url=%s\n",
                         this, npp, numtowrite, mNPStreamWrapper->mNPStream.url));
-        
+
         if (mStreamState == eStreamStopped) {
           // The plugin called NPN_DestroyStream() from within
           // NPP_WriteReady(), kill the stream.
-          
+
           return NS_BINDING_ABORTED;
         }
-        
+
         // if WriteReady returned 0, the plugin is not ready to handle
         // the data, suspend the stream (if it isn't already
         // suspended).
@@ -620,62 +620,62 @@ nsNPAPIPluginStreamListener::OnDataAvailable(nsPluginStreamListenerPeer* streamP
         // other streams while it's waiting for data from the
         // javascript: URL loads it requests during
         // initialization. See bug 386493 for more details.
-        
+
         if (numtowrite <= 0 ||
             (!mIsPluginInitJSStream && PluginInitJSLoadInProgress())) {
           if (!mIsSuspended) {
             SuspendRequest();
           }
-          
+
           // Break out of the inner loop, but keep going through the
           // outer loop in case there's more data to read from the
           // input stream.
-          
+
           break;
         }
-        
+
         numtowrite = std::min(numtowrite, mStreamBufferByteCount);
       } else {
         // if WriteReady is not supported by the plugin, just write
         // the whole buffer
         numtowrite = mStreamBufferByteCount;
       }
-      
+
       NPPAutoPusher nppPusher(npp);
-      
+
       int32_t writeCount = 0; // bytes consumed by plugin instance
       NS_TRY_SAFE_CALL_RETURN(writeCount, (*pluginFunctions->write)(npp, &mNPStreamWrapper->mNPStream, streamPosition, numtowrite, ptrStreamBuffer), mInst,
                               NS_PLUGIN_CALL_UNSAFE_TO_REENTER_GECKO);
-      
+
       NPP_PLUGIN_LOG(PLUGIN_LOG_NOISY,
                      ("NPP Write called: this=%p, npp=%p, pos=%d, len=%d, "
                       "buf=%.*s, return(written)=%d,  url=%s\n",
                       this, npp, streamPosition, numtowrite,
                       numtowrite, ptrStreamBuffer, writeCount, mNPStreamWrapper->mNPStream.url));
-      
+
       if (mStreamState == eStreamStopped) {
         // The plugin called NPN_DestroyStream() from within
         // NPP_Write(), kill the stream.
         return NS_BINDING_ABORTED;
       }
-      
+
       if (writeCount > 0) {
         NS_ASSERTION(writeCount <= mStreamBufferByteCount,
                      "Plugin read past the end of the available data!");
-        
+
         writeCount = std::min(writeCount, mStreamBufferByteCount);
         mStreamBufferByteCount -= writeCount;
-        
+
         streamPosition += writeCount;
-        
+
         zeroBytesWriteCount = 0;
-        
+
         if (mStreamBufferByteCount > 0) {
           // This alignment code is most likely bogus, but we'll leave
           // it in for now in case it matters for some plugins on some
           // architectures. Who knows...
           if (writeCount % sizeof(intptr_t)) {
-            // memmove will take care  about alignment 
+            // memmove will take care  about alignment
             memmove(mStreamBuffer, ptrStreamBuffer + writeCount,
                     mStreamBufferByteCount);
             ptrStreamBuffer = mStreamBuffer;
@@ -694,51 +694,51 @@ nsNPAPIPluginStreamListener::OnDataAvailable(nsPluginStreamListenerPeer* streamP
           if (!mIsSuspended) {
             SuspendRequest();
           }
-          
+
           // Break out of the for loop, but keep going through the
           // while loop in case there's more data to read from the
           // input stream.
-          
+
           break;
         }
       } else {
         // Something's really wrong, kill the stream.
         rv = NS_ERROR_FAILURE;
-        
+
         break;
-      }  
+      }
     } // end of inner while loop
-    
+
     if (mStreamBufferByteCount && mStreamBuffer != ptrStreamBuffer) {
       memmove(mStreamBuffer, ptrStreamBuffer, mStreamBufferByteCount);
     }
   }
-  
+
   if (streamPosition != streamOffset) {
     // The plugin didn't consume all available data, or consumed some
     // of our cached data while we're pumping cached data. Adjust the
     // plugin info's stream offset to match reality, except if the
     // plugin info's stream offset was set by a re-entering
     // NPN_RequestRead() call.
-    
+
     int32_t postWriteStreamPosition;
     streamPeer->GetStreamOffset(&postWriteStreamPosition);
-    
+
     if (postWriteStreamPosition == streamOffset) {
       streamPeer->SetStreamOffset(streamPosition);
     }
   }
-  
+
   return rv;
 }
 
 nsresult
-nsNPAPIPluginStreamListener::OnFileAvailable(nsPluginStreamListenerPeer* streamPeer, 
+nsNPAPIPluginStreamListener::OnFileAvailable(nsPluginStreamListenerPeer* streamPeer,
                                              const char* fileName)
 {
   if (!mInst || !mInst->CanFireNotifications())
     return NS_ERROR_FAILURE;
-  
+
   PluginDestructionGuard guard(mInst);
 
   nsNPAPIPlugin* plugin = mInst->GetPlugin();
@@ -752,19 +752,19 @@ nsNPAPIPluginStreamListener::OnFileAvailable(nsPluginStreamListenerPeer* streamP
 
   NPP npp;
   mInst->GetNPP(&npp);
-  
+
   NS_TRY_SAFE_CALL_VOID((*pluginFunctions->asfile)(npp, &mNPStreamWrapper->mNPStream, fileName), mInst,
                         NS_PLUGIN_CALL_UNSAFE_TO_REENTER_GECKO);
-  
+
   NPP_PLUGIN_LOG(PLUGIN_LOG_NORMAL,
                  ("NPP StreamAsFile called: this=%p, npp=%p, url=%s, file=%s\n",
                   this, npp, mNPStreamWrapper->mNPStream.url, fileName));
-  
+
   return NS_OK;
 }
 
 nsresult
-nsNPAPIPluginStreamListener::OnStopBinding(nsPluginStreamListenerPeer* streamPeer, 
+nsNPAPIPluginStreamListener::OnStopBinding(nsPluginStreamListenerPeer* streamPeer,
                                            nsresult status)
 {
   if (NS_FAILED(status)) {
@@ -836,18 +836,18 @@ NS_IMETHODIMP
 nsNPAPIPluginStreamListener::Notify(nsITimer *aTimer)
 {
   NS_ASSERTION(aTimer == mDataPumpTimer, "Uh, wrong timer?");
-  
+
   int32_t oldStreamBufferByteCount = mStreamBufferByteCount;
-  
+
   nsresult rv = OnDataAvailable(mStreamListenerPeer, nullptr, mStreamBufferByteCount);
-  
+
   if (NS_FAILED(rv)) {
     // We ran into an error, no need to keep firing this timer then.
     StopDataPump();
     MaybeRunStopBinding();
     return NS_OK;
   }
-  
+
   if (mStreamBufferByteCount != oldStreamBufferByteCount &&
       ((mStreamState == eStreamTypeSet && mStreamBufferByteCount < 1024) ||
        mStreamBufferByteCount == 0)) {

@@ -261,7 +261,7 @@ SVGMarkerElement::HasValidDimensions() const
 {
   return (!mLengthAttributes[MARKERWIDTH].IsExplicitlySet() ||
            mLengthAttributes[MARKERWIDTH].GetAnimValInSpecifiedUnits() > 0) &&
-         (!mLengthAttributes[MARKERHEIGHT].IsExplicitlySet() || 
+         (!mLengthAttributes[MARKERHEIGHT].IsExplicitlySet() ||
            mLengthAttributes[MARKERHEIGHT].GetAnimValInSpecifiedUnits() > 0);
 }
 
@@ -344,7 +344,7 @@ SVGMarkerElement::GetViewBoxTransform()
   if (!mViewBoxToViewportTransform) {
     float viewportWidth =
       mLengthAttributes[MARKERWIDTH].GetAnimValue(mCoordCtx);
-    float viewportHeight = 
+    float viewportHeight =
       mLengthAttributes[MARKERHEIGHT].GetAnimValue(mCoordCtx);
 
     nsSVGViewBoxRect viewbox = GetViewBoxRect();

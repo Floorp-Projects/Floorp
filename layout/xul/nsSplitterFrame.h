@@ -71,7 +71,7 @@ public:
                                 const nsRect&           aDirtyRect,
                                 const nsDisplayListSet& aLists) override;
 
-  virtual void GetInitialOrientation(bool& aIsHorizontal) override; 
+  virtual void GetInitialOrientation(bool& aIsHorizontal) override;
 
 private:
 

@@ -24,8 +24,8 @@
  * This preference is a workaround to allow users/sysadmins to identify
  * that the profile exists on an NFS share whose implementation
  * is incompatible with SQLite's default locking implementation.
- * Bug 433129 attempted to automatically identify such file-systems, 
- * but a reliable way was not found and it was determined that the fallback 
+ * Bug 433129 attempted to automatically identify such file-systems,
+ * but a reliable way was not found and it was determined that the fallback
  * locking is slower than POSIX locking, so we do not want to do it by default.
 */
 #define PREF_NFS_FILESYSTEM   "storage.nfs_filesystem"
@@ -65,13 +65,13 @@ Histograms gHistograms[] = {
  */
 class IOThreadAutoTimer {
 public:
-  /** 
+  /**
    * IOThreadAutoTimer measures time spent in IO. Additionally it
    * automatically determines whether IO is happening on the main
    * thread and picks an appropriate histogram.
    *
    * @param id takes a telemetry histogram id. The id+1 must be an
-   * equivalent histogram for the main thread. Eg, MOZ_SQLITE_OPEN_MS 
+   * equivalent histogram for the main thread. Eg, MOZ_SQLITE_OPEN_MS
    * is followed by MOZ_SQLITE_OPEN_MAIN_THREAD_MS.
    *
    * @param aOp optionally takes an IO operation to report through the
@@ -757,7 +757,7 @@ xDlError(sqlite3_vfs *vfs, int nByte, char *zErrMsg)
   orig_vfs->xDlError(orig_vfs, nByte, zErrMsg);
 }
 
-void 
+void
 (*xDlSym(sqlite3_vfs *vfs, void *pHdle, const char *zSym))(void){
   sqlite3_vfs *orig_vfs = static_cast<sqlite3_vfs*>(vfs->pAppData);
   return orig_vfs->xDlSym(orig_vfs, pHdle, zSym);
@@ -843,7 +843,7 @@ sqlite3_vfs* ConstructTelemetryVFS()
 #define EXPECTED_VFS     "unix"
 #define EXPECTED_VFS_NFS "unix-excl"
 #endif
-  
+
   bool expected_vfs;
   sqlite3_vfs *vfs;
   if (Preferences::GetBool(PREF_NFS_FILESYSTEM)) {

@@ -227,10 +227,10 @@ nsFileProtocolHandler::NewChannel(nsIURI *uri, nsIChannel **result)
     return NewChannel2(uri, nullptr, result);
 }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsFileProtocolHandler::AllowPort(int32_t port, const char *scheme, bool *result)
 {
-    // don't override anything.  
+    // don't override anything.
     *result = false;
     return NS_OK;
 }
@@ -264,7 +264,7 @@ nsFileProtocolHandler::GetURLSpecFromFile(nsIFile *file, nsACString &result)
 }
 
 NS_IMETHODIMP
-nsFileProtocolHandler::GetURLSpecFromActualFile(nsIFile *file, 
+nsFileProtocolHandler::GetURLSpecFromActualFile(nsIFile *file,
                                                 nsACString &result)
 {
     NS_ENSURE_ARG_POINTER(file);

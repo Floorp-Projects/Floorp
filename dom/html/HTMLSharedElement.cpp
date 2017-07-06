@@ -76,7 +76,7 @@ HTMLSharedElement::GetHref(nsAString& aValue)
     aValue = href;
     return NS_OK;
   }
-  
+
   nsAutoCString spec;
   uri->GetSpec(spec);
   CopyUTF8toUTF16(spec, aValue);
@@ -139,9 +139,9 @@ HTMLSharedElement::IsAttributeMapped(const nsIAtom* aAttribute) const
     static const MappedAttributeEntry attributes[] = {
       { &nsGkAtoms::type },
       // { &nsGkAtoms::compact }, // XXX
-      { nullptr} 
+      { nullptr}
     };
-  
+
     static const MappedAttributeEntry* const map[] = {
       attributes,
       sCommonAttributeMap,

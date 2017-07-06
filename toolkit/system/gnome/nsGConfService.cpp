@@ -169,7 +169,7 @@ nsGConfService::GetStringList(const nsACString &aKey, nsIArray** aResult)
   nsCOMPtr<nsIMutableArray> items(do_CreateInstance(NS_ARRAY_CONTRACTID));
   if (!items)
     return NS_ERROR_OUT_OF_MEMORY;
-    
+
   GError* error = nullptr;
   GSList* list = gconf_client_get_list(mClient, PromiseFlatCString(aKey).get(),
                                        GCONF_VALUE_STRING, &error);
@@ -188,7 +188,7 @@ nsGConfService::GetStringList(const nsACString &aKey, nsIArray** aResult)
     items->AppendElement(obj, false);
     g_free(l->data);
   }
-  
+
   g_slist_free(list);
   items.forget(aResult);
   return NS_OK;

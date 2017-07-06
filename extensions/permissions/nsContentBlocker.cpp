@@ -71,7 +71,7 @@ static const char *kTypeString[] = {
 #define NUMBER_OF_TYPES MOZ_ARRAY_LENGTH(kTypeString)
 uint8_t nsContentBlocker::mBehaviorPref[NUMBER_OF_TYPES];
 
-NS_IMPL_ISUPPORTS(nsContentBlocker, 
+NS_IMPL_ISUPPORTS(nsContentBlocker,
                   nsIContentPolicy,
                   nsIObserver,
                   nsISupportsWeakReference)
@@ -151,7 +151,7 @@ nsContentBlocker::PrefChanged(nsIPrefBranch *aPrefBranch,
 }
 
 // nsIContentPolicy Implementation
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsContentBlocker::ShouldLoad(uint32_t          aContentType,
                              nsIURI           *aContentLocation,
                              nsIURI           *aRequestingLocation,
@@ -171,7 +171,7 @@ nsContentBlocker::ShouldLoad(uint32_t          aContentType,
   // moment, but you never know...
   if (aContentType > NUMBER_OF_TYPES)
     return NS_OK;
-  
+
   // we can't do anything without this
   if (!aContentLocation)
     return NS_OK;
@@ -180,7 +180,7 @@ nsContentBlocker::ShouldLoad(uint32_t          aContentType,
   // shouldProcess, so we cannot make any sane blocking decisions here
   if (aContentType == nsIContentPolicy::TYPE_OBJECT)
     return NS_OK;
-  
+
   // we only want to check http, https, ftp
   // for chrome:// and resources and others, no need to check.
   nsAutoCString scheme;
@@ -251,7 +251,7 @@ nsContentBlocker::ShouldProcess(uint32_t          aContentType,
     }
     return NS_OK;
   }
-  
+
   // This isn't a load from chrome or an object tag - Just do a ShouldLoad()
   // check -- we want the same answer here
   return ShouldLoad(aContentType, aContentLocation, aRequestingLocation,
@@ -300,7 +300,7 @@ nsContentBlocker::TestPermission(nsIURI *aCurrentURI,
     *aFromPrefs = true;
   }
 
-  // Use the fact that the nsIPermissionManager values map to 
+  // Use the fact that the nsIPermissionManager values map to
   // the BEHAVIOR_* values above.
   switch (permission) {
   case BEHAVIOR_ACCEPT:
@@ -328,9 +328,9 @@ nsContentBlocker::TestPermission(nsIURI *aCurrentURI,
       return NS_OK;
 
     // compare tails of names checking to see if they have a common domain
-    // we do this by comparing the tails of both names where each tail 
+    // we do this by comparing the tails of both names where each tail
     // includes at least one dot
-    
+
     // A more generic method somewhere would be nice
 
     nsAutoCString currentHost;
@@ -358,21 +358,21 @@ nsContentBlocker::TestPermission(nsIURI *aCurrentURI,
       *aPermission = false;
       return NS_OK;
     }
-    
+
     // Get the last part of the firstUri with the same length as |tail|
     const nsACString& firstTail =
       Substring(firstHost, firstHost.Length() - tail.Length(), tail.Length());
 
     // Check that both tails are the same, and that just before the tail in
     // |firstUri| there is a dot. That means both url are in the same domain
-    if ((firstHost.Length() > tail.Length() && 
-         firstHost.CharAt(firstHost.Length() - tail.Length() - 1) != '.') || 
+    if ((firstHost.Length() > tail.Length() &&
+         firstHost.CharAt(firstHost.Length() - tail.Length() - 1) != '.') ||
         !tail.Equals(firstTail)) {
       *aPermission = false;
     }
     break;
   }
-  
+
   return NS_OK;
 }
 

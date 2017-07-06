@@ -142,7 +142,7 @@ public:
   nsresult Init();
   void RemoveAllTemporaryOverrides();
 
-  typedef void 
+  typedef void
   (*CertOverrideEnumerator)(const nsCertOverride &aSettings,
                             void *aUserData);
 
@@ -175,7 +175,7 @@ protected:
     nsresult AddEntryToList(const nsACString &host, int32_t port,
                             nsIX509Cert *aCert,
                             const bool aIsTemporary,
-                            const nsACString &algo_oid, 
+                            const nsACString &algo_oid,
                             const nsACString &fingerprint,
                             nsCertOverride::OverrideBits ob,
                             const nsACString &dbKey,

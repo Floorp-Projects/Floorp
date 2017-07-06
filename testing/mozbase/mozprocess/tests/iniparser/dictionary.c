@@ -46,7 +46,7 @@
 static void * mem_double(void * ptr, int size)
 {
     void * newptr ;
- 
+
     newptr = calloc(2*size, 1);
     if (newptr==NULL) {
         return NULL ;
@@ -232,7 +232,7 @@ int dictionary_set(dictionary * d, char * key, char * val)
 	unsigned	hash ;
 
 	if (d==NULL || key==NULL) return -1 ;
-	
+
 	/* Compute hash for this key */
 	hash = dictionary_hash(key) ;
 	/* Find if value is already in dictionary */
@@ -376,7 +376,7 @@ int main(int argc, char *argv[])
 	/* Allocate dictionary */
 	printf("allocating...\n");
 	d = dictionary_new(0);
-	
+
 	/* Set values in dictionary */
 	printf("setting %d values...\n", NVALS);
 	for (i=0 ; i<NVALS ; i++) {

@@ -371,7 +371,7 @@ nsOfflineCacheDeviceInfo::GetUsageReport(char ** usageReport)
     AppendUTF16toUTF8(path, buffer);
   else
     buffer.AppendLiteral("directory unavailable");
-  
+
   buffer.AppendLiteral("</td>\n"
                        "  </tr>\n");
 
@@ -527,7 +527,7 @@ CreateCacheEntry(nsOfflineCacheDevice *device,
   if (device->IsLocked(*fullKey)) {
       return nullptr;
   }
-  
+
   nsresult rv = nsCacheEntry::Create(fullKey->get(), // XXX enable sharing
                                      nsICache::STREAM_BASED,
                                      nsICache::STORE_OFFLINE,
@@ -986,7 +986,7 @@ nsOfflineCacheDevice::CacheSize()
   bool hasRows;
   nsresult rv = statement->ExecuteStep(&hasRows);
   NS_ENSURE_TRUE(NS_SUCCEEDED(rv) && hasRows, 0);
-  
+
   return (uint32_t) statement->AsInt32(0);
 }
 
@@ -1197,7 +1197,7 @@ nsOfflineCacheDevice::InitWithSqlite(mozIStorageService * ss)
   NS_ENSURE_SUCCESS(rv, rv);
 
   // build path to index file
-  nsCOMPtr<nsIFile> indexFile; 
+  nsCOMPtr<nsIFile> indexFile;
   rv = mCacheDirectory->Clone(getter_AddRefs(indexFile));
   NS_ENSURE_SUCCESS(rv, rv);
   rv = indexFile->AppendNative(NS_LITERAL_CSTRING("index.sqlite"));
@@ -1711,7 +1711,7 @@ nsOfflineCacheDevice::BindEntry(nsCacheEntry *entry)
     rv = tmp;
   }
   NS_ENSURE_SUCCESS(rv, rv);
-  
+
   bool hasRows;
   rv = statement->ExecuteStep(&hasRows);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -1737,7 +1737,7 @@ nsOfflineCacheDevice::DoomEntry(nsCacheEntry *entry)
   // but we must not delete the file on disk until we are deactivated.
   // In another word, the file should be deleted if the entry had been
   // deactivated.
-  
+
   DeleteEntry(entry, !entry->IsActive());
 }
 
@@ -1887,7 +1887,7 @@ nsOfflineCacheDevice::Visit(nsICacheVisitor *visitor)
                                      &keepGoing);
   if (NS_FAILED(rv))
     return rv;
-  
+
   if (!keepGoing)
     return NS_OK;
 

@@ -406,7 +406,7 @@ void
 TCPSocket::NotifyCopyComplete(nsresult aStatus)
 {
   mAsyncCopierActive = false;
-  
+
   uint32_t countRemaining;
   nsresult rvRemaining = mMultiplexStream->GetCount(&countRemaining);
   NS_ENSURE_SUCCESS_VOID(rvRemaining);
@@ -420,7 +420,7 @@ TCPSocket::NotifyCopyComplete(nsresult aStatus)
       mMultiplexStream->AppendStream(stream);
       mPendingDataWhileCopierActive.RemoveElementAt(0);
   }
-  
+
   if (mSocketBridgeParent) {
     mozilla::Unused << mSocketBridgeParent->SendUpdateBufferedAmount(BufferedAmount(),
                                                                      mTrackingNumber);

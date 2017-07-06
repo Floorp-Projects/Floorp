@@ -23,7 +23,7 @@ static int32_t gKeywordTableRefCount;
 static nsStaticCaseInsensitiveNameTable* gKeywordTable;
 
 void
-nsCSSKeywords::AddRefTable(void) 
+nsCSSKeywords::AddRefTable(void)
 {
   if (0 == gKeywordTableRefCount++) {
     NS_ASSERTION(!gKeywordTable, "pre existing array!");
@@ -42,7 +42,7 @@ nsCSSKeywords::AddRefTable(void)
 }
 
 void
-nsCSSKeywords::ReleaseTable(void) 
+nsCSSKeywords::ReleaseTable(void)
 {
   if (0 == --gKeywordTableRefCount) {
     if (gKeywordTable) {
@@ -52,23 +52,23 @@ nsCSSKeywords::ReleaseTable(void)
   }
 }
 
-nsCSSKeyword 
+nsCSSKeyword
 nsCSSKeywords::LookupKeyword(const nsACString& aKeyword)
 {
   NS_ASSERTION(gKeywordTable, "no lookup table, needs addref");
   if (gKeywordTable) {
     return nsCSSKeyword(gKeywordTable->Lookup(aKeyword));
-  }  
+  }
   return eCSSKeyword_UNKNOWN;
 }
 
-nsCSSKeyword 
+nsCSSKeyword
 nsCSSKeywords::LookupKeyword(const nsAString& aKeyword)
 {
   NS_ASSERTION(gKeywordTable, "no lookup table, needs addref");
   if (gKeywordTable) {
     return nsCSSKeyword(gKeywordTable->Lookup(aKeyword));
-  }  
+  }
   return eCSSKeyword_UNKNOWN;
 }
 

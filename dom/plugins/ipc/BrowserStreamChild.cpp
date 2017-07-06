@@ -237,7 +237,7 @@ BrowserStreamChild::Deliver()
   }
   if (DESTROYED == mDestroyPending && mNotifyPending) {
     NS_ASSERTION(mStreamNotify, "mDestroyPending but no mStreamNotify?");
-      
+
     mNotifyPending = false;
     mStreamNotify->NPP_URLNotify(mStreamStatus);
     delete mStreamNotify;

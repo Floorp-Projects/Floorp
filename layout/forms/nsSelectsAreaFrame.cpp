@@ -136,7 +136,7 @@ nsSelectsAreaFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 
   nsDisplayListCollection set;
   BuildDisplayListInternal(aBuilder, aDirtyRect, set);
-  
+
   nsOptionEventGrabberWrapper wrapper;
   wrapper.WrapLists(aBuilder, this, set, aLists);
 }
@@ -159,9 +159,9 @@ nsSelectsAreaFrame::BuildDisplayListInternal(nsDisplayListBuilder*   aBuilder,
 }
 
 void
-nsSelectsAreaFrame::Reflow(nsPresContext*           aPresContext, 
+nsSelectsAreaFrame::Reflow(nsPresContext*           aPresContext,
                            ReflowOutput&     aDesiredSize,
-                           const ReflowInput& aReflowInput, 
+                           const ReflowInput& aReflowInput,
                            nsReflowStatus&          aStatus)
 {
   nsListControlFrame* list = GetEnclosingListFrame(this);

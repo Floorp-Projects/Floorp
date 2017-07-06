@@ -30,7 +30,7 @@ public:
             IInterface();
             sp<IBinder>         asBinder();
             sp<const IBinder>   asBinder() const;
-            
+
 protected:
     virtual                     ~IInterface();
     virtual IBinder*            onAsBinder() = 0;
@@ -142,7 +142,7 @@ inline IBinder* BpInterface<INTERFACE>::onAsBinder()
 {
     return remote();
 }
-    
+
 // ----------------------------------------------------------------------
 
 }; // namespace android

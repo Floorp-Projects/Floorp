@@ -43,7 +43,7 @@ GetActionType(nsIContent* aContent)
 
   if (aContent) {
     if (!aContent->GetAttr(kNameSpaceID_None, nsGkAtoms::actiontype_, value))
-      return NS_MATHML_ACTION_TYPE_NONE; 
+      return NS_MATHML_ACTION_TYPE_NONE;
   }
 
   if (value.EqualsLiteral("toggle"))
@@ -103,13 +103,13 @@ nsMathMLmactionFrame::ChildListChanged(int32_t aModType)
 }
 
 // return the frame whose number is given by the attribute selection="number"
-nsIFrame* 
+nsIFrame*
 nsMathMLmactionFrame::GetSelectedFrame()
 {
   nsAutoString value;
-  int32_t selection; 
+  int32_t selection;
 
-  if ((mActionType & NS_MATHML_ACTION_TYPE_CLASS_BITMASK) == 
+  if ((mActionType & NS_MATHML_ACTION_TYPE_CLASS_BITMASK) ==
        NS_MATHML_ACTION_TYPE_CLASS_ERROR) {
     mSelection = -1;
     mInvalidMarkup = true;
@@ -119,7 +119,7 @@ nsMathMLmactionFrame::GetSelectedFrame()
 
   // Selection is not applied to tooltip and statusline.
   // Thereby return the first child.
-  if ((mActionType & NS_MATHML_ACTION_TYPE_CLASS_BITMASK) == 
+  if ((mActionType & NS_MATHML_ACTION_TYPE_CLASS_BITMASK) ==
        NS_MATHML_ACTION_TYPE_CLASS_IGNORE_SELECTION) {
     // We don't touch mChildCount here. It's incorrect to assign it 1,
     // and it's inefficient to count the children. It's fine to leave
@@ -134,7 +134,7 @@ nsMathMLmactionFrame::GetSelectedFrame()
   if (!value.IsEmpty()) {
     nsresult errorCode;
     selection = value.ToInteger(&errorCode);
-    if (NS_FAILED(errorCode)) 
+    if (NS_FAILED(errorCode))
       selection = 1;
   }
   else selection = 1; // default is first frame
@@ -144,7 +144,7 @@ nsMathMLmactionFrame::GetSelectedFrame()
     if (selection > mChildCount || selection < 1)
       selection = -1;
     // quick return if it is identical with our cache
-    if (selection == mSelection) 
+    if (selection == mSelection)
       return mSelectedFrame;
   }
 
@@ -152,9 +152,9 @@ nsMathMLmactionFrame::GetSelectedFrame()
   int32_t count = 0;
   nsIFrame* childFrame = mFrames.FirstChild();
   while (childFrame) {
-    if (!mSelectedFrame) 
+    if (!mSelectedFrame)
       mSelectedFrame = childFrame; // default is first child
-    if (++count == selection) 
+    if (++count == selection)
       mSelectedFrame = childFrame;
 
     childFrame = childFrame->GetNextSibling();
@@ -211,14 +211,14 @@ nsMathMLmactionFrame::AttributeChanged(int32_t  aNameSpaceID,
       needsReflow = true;
     }
   } else if (aAttribute == nsGkAtoms::selection_) {
-    if ((mActionType & NS_MATHML_ACTION_TYPE_CLASS_BITMASK) == 
+    if ((mActionType & NS_MATHML_ACTION_TYPE_CLASS_BITMASK) ==
          NS_MATHML_ACTION_TYPE_CLASS_USE_SELECTION) {
       needsReflow = true;
     }
   } else {
     // let the base class handle other attribute changes
-    return 
-      nsMathMLContainerFrame::AttributeChanged(aNameSpaceID, 
+    return
+      nsMathMLContainerFrame::AttributeChanged(aNameSpaceID,
                                                aAttribute, aModType);
   }
 
@@ -231,7 +231,7 @@ nsMathMLmactionFrame::AttributeChanged(int32_t  aNameSpaceID,
 }
 
 // ################################################################
-// Event handlers 
+// Event handlers
 // ################################################################
 
 NS_IMPL_ISUPPORTS(nsMathMLmactionFrame::MouseListener,

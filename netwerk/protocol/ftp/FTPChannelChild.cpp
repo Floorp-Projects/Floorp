@@ -184,7 +184,7 @@ FTPChannelChild::AsyncOpen(::nsIStreamListener* listener, nsISupports* aContext)
   mListener = listener;
   mListenerContext = aContext;
 
-  // add ourselves to the load group. 
+  // add ourselves to the load group.
   if (mLoadGroup)
     mLoadGroup->AddRequest(this, nullptr);
 
@@ -235,7 +235,7 @@ FTPChannelChild::OpenContentStream(bool async,
   MOZ_CRASH("FTPChannel*Child* should never have OpenContentStream called!");
   return NS_OK;
 }
-  
+
 //-----------------------------------------------------------------------------
 // FTPChannelChild::PFTPChannelChild
 //-----------------------------------------------------------------------------

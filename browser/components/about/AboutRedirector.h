@@ -16,7 +16,7 @@ class AboutRedirector : public nsIAboutModule
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIABOUTMODULE
- 
+
   AboutRedirector() {}
 
   static nsresult

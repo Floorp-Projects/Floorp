@@ -90,7 +90,7 @@ nsViewSourceChannel::Init(nsIURI* uri)
     mApplicationCacheChannel = do_QueryInterface(mChannel);
     mUploadChannel = do_QueryInterface(mChannel);
     mPostChannel = do_QueryInterface(mChannel);
-    
+
     return NS_OK;
 }
 
@@ -104,7 +104,7 @@ nsViewSourceChannel::InitSrcdoc(nsIURI* aURI,
 
     nsCOMPtr<nsIURI> inStreamURI;
     // Need to strip view-source: from the URI.  Hardcoded to
-    // about:srcdoc as this is the only permissible URI for srcdoc 
+    // about:srcdoc as this is the only permissible URI for srcdoc
     // loads
     rv = NS_NewURI(getter_AddRefs(inStreamURI),
                    NS_LITERAL_STRING("about:srcdoc"));
@@ -298,13 +298,13 @@ nsViewSourceChannel::AsyncOpen(nsIStreamListener *aListener, nsISupports *ctxt)
      * mChannel, since we want to make sure we're in the loadgroup
      * when mChannel finishes and fires OnStopRequest()
      */
-    
+
     nsCOMPtr<nsILoadGroup> loadGroup;
     mChannel->GetLoadGroup(getter_AddRefs(loadGroup));
     if (loadGroup)
         loadGroup->AddRequest(static_cast<nsIViewSourceChannel*>
                                          (this), nullptr);
-    
+
     nsresult rv = NS_OK;
     nsCOMPtr<nsILoadInfo> loadInfo = mChannel->GetLoadInfo();
     if (loadInfo && loadInfo->GetEnforceSecurity()) {
@@ -322,7 +322,7 @@ nsViewSourceChannel::AsyncOpen(nsIStreamListener *aListener, nsISupports *ctxt)
     if (NS_SUCCEEDED(rv)) {
         mOpened = true;
     }
-    
+
     return rv;
 }
 
@@ -378,8 +378,8 @@ nsViewSourceChannel::SetLoadFlags(uint32_t aLoadFlags)
 
     // "View source" always wants the currently cached content.
     // We also want to have _this_ channel, not mChannel to be the
-    // 'document' channel in the loadgroup. 
- 
+    // 'document' channel in the loadgroup.
+
     // These should actually be just LOAD_FROM_CACHE and LOAD_DOCUMENT_URI but
     // the win32 compiler fails to deal due to amiguous inheritance.
     // nsIChannel::LOAD_DOCUMENT_URI/nsIRequest::LOAD_FROM_CACHE also fails; the
@@ -402,7 +402,7 @@ nsViewSourceChannel::SetLoadFlags(uint32_t aLoadFlags)
 }
 
 NS_IMETHODIMP
-nsViewSourceChannel::GetContentType(nsACString &aContentType) 
+nsViewSourceChannel::GetContentType(nsACString &aContentType)
 {
     NS_ENSURE_TRUE(mChannel, NS_ERROR_FAILURE);
 
@@ -456,7 +456,7 @@ nsViewSourceChannel::SetContentType(const nsACString &aContentType)
         // We do not take hints
         return NS_ERROR_NOT_AVAILABLE;
     }
-    
+
     mContentType = aContentType;
     return NS_OK;
 }
@@ -597,7 +597,7 @@ nsViewSourceChannel::SetNotificationCallbacks(nsIInterfaceRequestor* aNotificati
     return mChannel->SetNotificationCallbacks(aNotificationCallbacks);
 }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsViewSourceChannel::GetSecurityInfo(nsISupports * *aSecurityInfo)
 {
     NS_ENSURE_TRUE(mChannel, NS_ERROR_FAILURE);
@@ -607,7 +607,7 @@ nsViewSourceChannel::GetSecurityInfo(nsISupports * *aSecurityInfo)
 
 // nsIViewSourceChannel methods
 NS_IMETHODIMP
-nsViewSourceChannel::GetOriginalContentType(nsACString &aContentType) 
+nsViewSourceChannel::GetOriginalContentType(nsACString &aContentType)
 {
     NS_ENSURE_TRUE(mChannel, NS_ERROR_FAILURE);
 
@@ -670,7 +670,7 @@ nsViewSourceChannel::OnStartRequest(nsIRequest *aRequest, nsISupports *aContext)
     mCachingChannel = do_QueryInterface(aRequest);
     mCacheInfoChannel = do_QueryInterface(mChannel);
     mUploadChannel = do_QueryInterface(aRequest);
-    
+
     return mListener->OnStartRequest(static_cast<nsIViewSourceChannel*>
                                                 (this),
                                      aContext);
@@ -704,7 +704,7 @@ NS_IMETHODIMP
 nsViewSourceChannel::OnDataAvailable(nsIRequest *aRequest, nsISupports* aContext,
                                      nsIInputStream *aInputStream,
                                      uint64_t aSourceOffset,
-                                     uint32_t aLength) 
+                                     uint32_t aLength)
 {
     NS_ENSURE_TRUE(mListener, NS_ERROR_FAILURE);
     return mListener->OnDataAvailable(static_cast<nsIViewSourceChannel*>

@@ -11,7 +11,7 @@
 
 class nsPrintProgressParams : public nsIPrintProgressParams
 {
-public: 
+public:
 	NS_DECL_ISUPPORTS
   NS_DECL_NSIPRINTPROGRESSPARAMS
 

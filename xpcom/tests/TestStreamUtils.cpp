@@ -39,7 +39,7 @@ static bool test_consume_stream() {
   if (!buf.Equals(kData))
     return false;
 
-  return true; 
+  return true;
 }
 
 //----
@@ -68,7 +68,7 @@ int main(int argc, char **argv) {
       printf("%25s : %s\n", t->name, t->func() ? "SUCCESS" : "FAILURE");
     }
   }
-  
+
   NS_ShutdownXPCOM(nullptr);
   return 0;
 }

@@ -20,10 +20,10 @@
 class nsPluginManifestLineReader
 {
   public:
-    nsPluginManifestLineReader() {mBase = mCur = mNext = mLimit = 0;} 
+    nsPluginManifestLineReader() {mBase = mCur = mNext = mLimit = 0;}
     ~nsPluginManifestLineReader() { if (mBase) delete[] mBase; mBase=0;}
-    
-    char* Init(uint32_t flen) 
+
+    char* Init(uint32_t flen)
     {
       mBase = mCur = mNext = new char[flen + 1];
       if (mBase) {
@@ -33,15 +33,15 @@ class nsPluginManifestLineReader
       mLength = 0;
       return mBase;
     }
-    
+
     bool NextLine()
     {
       if (mNext >= mLimit)
         return false;
-      
+
       mCur = mNext;
       mLength = 0;
-      
+
       char *lastDelimiter = 0;
       while(mNext < mLimit) {
         if (IsEOL(*mNext)) {
@@ -64,7 +64,7 @@ class nsPluginManifestLineReader
         ++mNext;
         ++mLength;
       }
-      return false;        
+      return false;
     }
 
     int ParseLine(char** chunks, int maxChunks)
@@ -72,7 +72,7 @@ class nsPluginManifestLineReader
       NS_ASSERTION(mCur && maxChunks && chunks, "bad call to ParseLine");
       int found = 0;
       chunks[found++] = mCur;
-      
+
       if (found < maxChunks) {
         for (char* cur = mCur; *cur; cur++) {
           if (*cur == PLUGIN_REGISTRY_FIELD_DELIMITER) {
@@ -87,7 +87,7 @@ class nsPluginManifestLineReader
     }
 
     char*       LinePtr() { return mCur; }
-    uint32_t    LineLength() { return mLength; }    
+    uint32_t    LineLength() { return mLength; }
 
     bool        IsEOL(char c) {return c == '\n' || c == '\r';}
 

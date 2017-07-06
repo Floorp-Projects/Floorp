@@ -78,7 +78,7 @@ public:
   // useable, and represents the default base value of the attribute.
   bool IsExplicitlySet() const
     { return !!mAnimVal || mIsBaseSet; }
-  
+
   bool IsAnimating() const {
     return !!mAnimVal;
   }

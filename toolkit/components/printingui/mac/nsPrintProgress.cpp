@@ -37,7 +37,7 @@ nsPrintProgress::~nsPrintProgress()
 
 NS_IMETHODIMP nsPrintProgress::OpenProgressDialog(mozIDOMWindowProxy *parent,
                                                   const char *dialogURL,
-                                                  nsISupports *parameters, 
+                                                  nsISupports *parameters,
                                                   nsIObserver *openDialogObserver,
                                                   bool *notifyOnOpen)
 {
@@ -88,7 +88,7 @@ NS_IMETHODIMP nsPrintProgress::RegisterListener(nsIWebProgressListener * listene
 {
   if (!listener) //Nothing to do with a null listener!
     return NS_OK;
-  
+
   m_listenerList.AppendObject(listener);
   if (m_closeProgress || m_processCanceled)
     listener->OnStateChange(nullptr, nullptr,
@@ -99,7 +99,7 @@ NS_IMETHODIMP nsPrintProgress::RegisterListener(nsIWebProgressListener * listene
     if (m_pendingStateFlags != -1)
       listener->OnStateChange(nullptr, nullptr, m_pendingStateFlags, m_pendingStateValue);
   }
-    
+
   return NS_OK;
 }
 
@@ -107,7 +107,7 @@ NS_IMETHODIMP nsPrintProgress::UnregisterListener(nsIWebProgressListener *listen
 {
   if (listener)
     m_listenerList.RemoveObject(listener);
-  
+
   return NS_OK;
 }
 
@@ -123,7 +123,7 @@ NS_IMETHODIMP nsPrintProgress::OnStateChange(nsIWebProgress *aWebProgress, nsIRe
 {
   m_pendingStateFlags = aStateFlags;
   m_pendingStateValue = aStatus;
-  
+
   uint32_t count = m_listenerList.Count();
   for (uint32_t i = count - 1; i < count; i --)
   {
@@ -131,7 +131,7 @@ NS_IMETHODIMP nsPrintProgress::OnStateChange(nsIWebProgress *aWebProgress, nsIRe
     if (progressListener)
       progressListener->OnStateChange(aWebProgress, aRequest, aStateFlags, aStatus);
   }
-  
+
   return NS_OK;
 }
 
@@ -144,7 +144,7 @@ NS_IMETHODIMP nsPrintProgress::OnProgressChange(nsIWebProgress *aWebProgress, ns
     if (progressListener)
       progressListener->OnProgressChange(aWebProgress, aRequest, aCurSelfProgress, aMaxSelfProgress, aCurTotalProgress, aMaxTotalProgress);
   }
-  
+
   return NS_OK;
 }
 
@@ -165,7 +165,7 @@ NS_IMETHODIMP nsPrintProgress::OnStatusChange(nsIWebProgress *aWebProgress, nsIR
     if (progressListener)
       progressListener->OnStatusChange(aWebProgress, aRequest, aStatus, aMessage);
   }
-  
+
   return NS_OK;
 }
 

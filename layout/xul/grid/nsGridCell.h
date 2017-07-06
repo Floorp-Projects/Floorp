@@ -4,7 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /**
- 
+
   Author:
   Eric D Vaughan
 
@@ -23,7 +23,7 @@ class nsIFrame;
  * Grid cell is what makes up the cellmap in the grid. Each GridCell contains
  * 2 pointers. One to the matching box in the columns and one to the matching box
  * in the rows. Remember that you can put content in both rows and columns.
- * When asked for preferred/min/max sizes it works like a stack and takes the 
+ * When asked for preferred/min/max sizes it works like a stack and takes the
  * biggest sizes.
  */
 

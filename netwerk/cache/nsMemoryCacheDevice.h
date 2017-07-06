@@ -52,7 +52,7 @@ public:
 
     virtual nsresult EvictEntries(const char * clientID);
     nsresult EvictPrivateEntries();
-    
+
     void             SetCapacity(int32_t  capacity);
     void             SetMaxEntrySize(int32_t  maxSizeInKilobytes);
 

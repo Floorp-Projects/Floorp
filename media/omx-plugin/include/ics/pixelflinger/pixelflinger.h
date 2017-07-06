@@ -76,10 +76,10 @@ enum GGLNames {
 
     // buffers, pixel drawing/reading
     GGL_COLOR                       = 0x1800,
-    
+
     // fog
     GGL_FOG                         = 0x0B60,
-    
+
 	// shade model
 	GGL_FLAT						= 0x1D00,
 	GGL_SMOOTH						= 0x1D01,
@@ -91,7 +91,7 @@ enum GGLNames {
 	GGL_TEXTURE_WRAP_T				= 0x2803,
 	GGL_TEXTURE_WRAP_R				= 0x2804,
 
-	// Texture Filter	
+	// Texture Filter
 	GGL_NEAREST						= 0x2600,
 	GGL_LINEAR						= 0x2601,
 	GGL_NEAREST_MIPMAP_NEAREST		= 0x2700,
@@ -149,7 +149,7 @@ enum GGLNames {
     GGL_EQUIV                       = 0x1509,   // ~(s ^ d)
     GGL_INVERT                      = 0x150A,   // ~d
     GGL_OR_REVERSE                  = 0x150B,   // s | ~d
-    GGL_COPY_INVERTED               = 0x150C,   // ~s 
+    GGL_COPY_INVERTED               = 0x150C,   // ~s
     GGL_OR_INVERTED                 = 0x150D,   // ~s | d
     GGL_NAND                        = 0x150E,   // ~(s & d)
     GGL_SET                         = 0x150F,   // 1
@@ -166,7 +166,7 @@ enum GGLNames {
 	GGL_DST_COLOR					= 0x0306,	// S
 	GGL_ONE_MINUS_DST_COLOR			= 0x0307,	// S
 	GGL_SRC_ALPHA_SATURATE			= 0x0308,	// S
-    
+
     // clear bits
     GGL_DEPTH_BUFFER_BIT            = 0x00000100,
     GGL_STENCIL_BUFFER_BIT          = 0x00000400,
@@ -204,9 +204,9 @@ typedef struct {
 typedef struct {
     // immediate rendering
     void (*pointx)(void *con, const GGLcoord* v, GGLcoord r);
-    void (*linex)(void *con, 
+    void (*linex)(void *con,
             const GGLcoord* v0, const GGLcoord* v1, GGLcoord width);
-    void (*recti)(void* c, GGLint l, GGLint t, GGLint r, GGLint b); 
+    void (*recti)(void* c, GGLint l, GGLint t, GGLint r, GGLint b);
     void (*trianglex)(void* c,
             GGLcoord const* v0, GGLcoord const* v1, GGLcoord const* v2);
 
@@ -263,13 +263,13 @@ typedef struct {
     // texture iterators (16.16)
     void (*texCoord2i)(void* c, GGLint s, GGLint t);
     void (*texCoord2x)(void* c, GGLfixed s, GGLfixed t);
-    
+
     // s, dsdx, dsdy, scale, t, dtdx, dtdy, tscale
     // This api uses block floating-point for S and T texture coordinates.
     // All values are given in 16.16, scaled by 'scale'. In other words,
     // set scale to 0, for 16.16 values.
     void (*texCoordGradScale8xv)(void* c, GGLint tmu, const int32_t* grad8);
-    
+
     void (*texGeni)(void* c, GGLenum coord, GGLenum pname, GGLint param);
 
     // masking
@@ -289,7 +289,7 @@ typedef struct {
     void (*depthFunc)(void* c, GGLenum func);
 
     // logic op
-    void (*logicOp)(void* c, GGLenum opcode); 
+    void (*logicOp)(void* c, GGLenum opcode);
 
     // clear
     void (*clear)(void* c, GGLbitfield mask);

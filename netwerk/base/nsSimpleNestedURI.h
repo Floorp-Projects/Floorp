@@ -46,7 +46,7 @@ public:
     NS_DECL_NSINESTEDURI
 
     // Overrides for various methods nsSimpleURI implements follow.
-  
+
     // nsSimpleURI overrides
     virtual nsresult EqualsInternal(nsIURI* other,
                                     RefHandlingEnum refHandlingMode,
@@ -63,7 +63,7 @@ public:
 
     // Override the nsIClassInfo method GetClassIDNoAlloc to make sure our
     // nsISerializable impl works right.
-    NS_IMETHOD GetClassIDNoAlloc(nsCID *aClassIDNoAlloc) override;  
+    NS_IMETHOD GetClassIDNoAlloc(nsCID *aClassIDNoAlloc) override;
 
 protected:
     nsCOMPtr<nsIURI> mInnerURI;

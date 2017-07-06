@@ -5,7 +5,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /*
- * InitializeDateCacheCleaner registers DateCacheCleaner to 
+ * InitializeDateCacheCleaner registers DateCacheCleaner to
  * SystemTimeChangeObserver. When time zone is changed, DateCacheCleaner calls
  * JS::ResetTimeZone to update the time zone information.
  */

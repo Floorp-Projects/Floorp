@@ -26,7 +26,7 @@ const uint32_t FPR_COUNT            = 8;
 // - 'args[]' contains the arguments passed on stack
 // - 'gpregs[]' contains the arguments passed in integer registers
 // - 'fpregs[]' contains the arguments passed in floating point registers
-// 
+//
 // The parameters are mapped into an array of type 'nsXPTCMiniVariant'
 // and then the method gets called.
 

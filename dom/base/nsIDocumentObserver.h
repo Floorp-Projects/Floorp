@@ -62,16 +62,16 @@ public:
   virtual void EndLoad(nsIDocument *aDocument) = 0;
 
   /**
-   * Notification that the state of a content node has changed. 
+   * Notification that the state of a content node has changed.
    * (ie: gained or lost focus, became active or hovered over)
-   * This method is called automatically by content objects 
-   * when their state is changed (therefore there is normally 
-   * no need to invoke this method directly).  The notification 
-   * is passed to any IDocumentObservers. The notification is 
+   * This method is called automatically by content objects
+   * when their state is changed (therefore there is normally
+   * no need to invoke this method directly).  The notification
+   * is passed to any IDocumentObservers. The notification is
    * passed on to all of the document observers. <p>
    *
    * This notification is not sent when a piece of content is
-   * added/removed from the document or the content itself changed 
+   * added/removed from the document or the content itself changed
    * (the other notifications are used for that).
    *
    * @param aDocument The document being observed
@@ -115,12 +115,12 @@ public:
    */
   virtual void StyleSheetRemoved(mozilla::StyleSheet* aStyleSheet,
                                  bool aDocumentSheet) = 0;
-  
+
   /**
    * A StyleSheet has just changed its applicable state.
    * This method is called automatically when the applicable state
    * of a StyleSheet gets changed. The style sheet passes this
-   * notification to the document. The notification is passed on 
+   * notification to the document. The notification is passed on
    * to all of the document observers.
    *
    * @param aStyleSheet the StyleSheet that has changed state
@@ -130,8 +130,8 @@ public:
   /**
    * A StyleRule has just been modified within a style sheet.
    * This method is called automatically when the rule gets
-   * modified. The style sheet passes this notification to 
-   * the document. The notification is passed on to all of 
+   * modified. The style sheet passes this notification to
+   * the document. The notification is passed on to all of
    * the document observers.
    *
    * @param aStyleSheet the StyleSheet that contians the rule
@@ -144,7 +144,7 @@ public:
    * A StyleRule has just been added to a style sheet.
    * This method is called automatically when the rule gets
    * added to the sheet. The style sheet passes this
-   * notification to the document. The notification is passed on 
+   * notification to the document. The notification is passed on
    * to all of the document observers.
    *
    * @param aStyleSheet the StyleSheet that has been modified
@@ -157,7 +157,7 @@ public:
    * A StyleRule has just been removed from a style sheet.
    * This method is called automatically when the rule gets
    * removed from the sheet. The style sheet passes this
-   * notification to the document. The notification is passed on 
+   * notification to the document. The notification is passed on
    * to all of the document observers.
    *
    * @param aStyleSheet the StyleSheet that has been modified

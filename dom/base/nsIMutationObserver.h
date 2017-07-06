@@ -310,7 +310,7 @@ public:
    * on the node. This is because when the node is destroyed it can not have
    * any ancestors. If you want to know when a descendant node is being
    * removed from the observed node, use the ContentRemoved notification.
-   * 
+   *
    * @param aNode The node being destroyed.
    *
    * @note Callers of this method might not hold a strong reference to

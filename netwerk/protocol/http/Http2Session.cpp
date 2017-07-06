@@ -2220,7 +2220,7 @@ Http2Session::RecvAltSvc(Http2Session *self)
       self->ResetDownstreamState();
       return NS_OK;
     }
-    
+
     if (NS_FAILED(self->SetInputFrameDataStream(self->mInputFrameID)) ||
         !self->mInputFrameDataStream->Transaction() ||
         !self->mInputFrameDataStream->Transaction()->RequestHead()) {

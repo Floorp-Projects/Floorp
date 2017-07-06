@@ -31,7 +31,7 @@ public:
    *    FLAG_BREAK_TYPE_HYPHEN   - a hyphenation point
    */
   virtual void SetBreaks(uint32_t aStart, uint32_t aLength, uint8_t* aBreakBefore) = 0;
-  
+
   /**
    * Indicates which characters should be capitalized. Only called if
    * BREAK_NEED_CAPITALIZATION was requested.
@@ -48,15 +48,15 @@ public:
  * with each text chunk, which might happen during the corresponding AppendText
  * call, or might happen during a later AppendText call or even a Reset()
  * call.
- * 
+ *
  * The linebreak results MUST NOT depend on how the text is broken up
  * into AppendText calls.
- * 
+ *
  * The current strategy is that we break the overall text into
  * whitespace-delimited "words". Then those words are passed to the nsILineBreaker
  * service for deeper analysis if they contain a "complex" character as described
  * below.
- * 
+ *
  * This class also handles detection of which characters should be capitalized
  * for text-transform:capitalize. This is a good place to handle that because
  * we have all the context we need.
@@ -65,7 +65,7 @@ class nsLineBreaker {
 public:
   nsLineBreaker();
   ~nsLineBreaker();
-  
+
   static inline bool IsSpace(char16_t u) { return NS_IsSpace(u); }
 
   static inline bool IsComplexASCIIChar(char16_t u)

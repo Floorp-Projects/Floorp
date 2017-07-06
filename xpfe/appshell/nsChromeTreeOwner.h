@@ -21,7 +21,7 @@
 class nsXULWindow;
 
 class nsChromeTreeOwner : public nsIDocShellTreeOwner,
-                          public nsIBaseWindow, 
+                          public nsIBaseWindow,
                           public nsIInterfaceRequestor,
                           public nsIWebProgressListener,
                           public nsSupportsWeakReference

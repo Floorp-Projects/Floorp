@@ -203,7 +203,7 @@ nsTextFragment::SetTo(const char16_t* aBuffer, int32_t aLength, bool aUpdateBidi
   if (aLength == 0) {
     return true;
   }
-  
+
   char16_t firstChar = *aBuffer;
   if (aLength == 1 && firstChar < 256) {
     m1b = sSingleCharSharedString + firstChar;
@@ -250,7 +250,7 @@ nsTextFragment::SetTo(const char16_t* aBuffer, int32_t aLength, bool aUpdateBidi
       mState.mIs2b = false;
       mState.mLength = aLength;
 
-      return true;        
+      return true;
     }
   }
 

@@ -8,7 +8,7 @@
 /**
  * MODULE NOTES:
  * @created  kmcclusk 10/19/99
- * 
+ *
  */
 
 #ifndef nsIFormProcessor_h__
@@ -41,7 +41,7 @@ class nsIFormProcessor : public nsISupports {
 public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IFORMPROCESSOR_IID)
 
-  /* ProcessValue is called for each name value pair that is 
+  /* ProcessValue is called for each name value pair that is
    * about to be submitted for both "get" and "post" form submissions.
    *
    * The formprocessor is registered as a service that gets called for
@@ -49,9 +49,9 @@ public:
    *
    *   @param aElement element which the attribute/value pair is submitted for
    *   @param aName    value of the form element name attribute about to be submitted
-   *   @param aValue   On entry it contains the value about to be submitted for aName. 
+   *   @param aValue   On entry it contains the value about to be submitted for aName.
    *                   On exit it contains the value which will actually be submitted for aName.
-   *                   
+   *
    */
   virtual nsresult ProcessValue(nsIDOMHTMLElement* aElement,
                                 const nsAString& aName,
@@ -67,9 +67,9 @@ public:
                                    const nsAString& aKeyParams,
                                    nsAString& newValue) = 0;
 
-  /* Provide content for a form element. This method provides a mechanism to provide 
+  /* Provide content for a form element. This method provides a mechanism to provide
    * content which comes from a source other than the document (i.e. a local database)
-   *  
+   *
    *   @param aFormType   Type of form to get content for.
    *   @param aOptions    List of nsStrings which define the contents for the form element
    *   @param aAttr       Attribute to be attached to the form element. It is used to identify

@@ -97,8 +97,8 @@ public:
         return mInner->GetTargets(aSource, aProperty, aTruthValue, aTargets);
     }
 
-    NS_IMETHOD Assert(nsIRDFResource* aSource, 
-                      nsIRDFResource* aProperty, 
+    NS_IMETHOD Assert(nsIRDFResource* aSource,
+                      nsIRDFResource* aProperty,
                       nsIRDFNode* aTarget,
                       bool aTruthValue) override {
         return mInner->Assert(aSource, aProperty, aTarget, aTruthValue);
@@ -177,7 +177,7 @@ public:
     NS_IMETHOD BeginUpdateBatch() override {
         return mInner->BeginUpdateBatch();
     }
-                                                                                
+
     NS_IMETHOD EndUpdateBatch() override {
         return mInner->EndUpdateBatch();
     }
@@ -340,7 +340,7 @@ LocalStoreImpl::CreateLocalStore(nsIFile* aFile)
     rv = NS_NewLocalFileOutputStream(getter_AddRefs(outStream), aFile);
     if (NS_FAILED(rv)) return rv;
 
-    const char defaultRDF[] = 
+    const char defaultRDF[] =
         "<?xml version=\"1.0\"?>\n" \
         "<RDF:RDF xmlns:RDF=\"" RDF_NAMESPACE_URI "\"\n" \
         "         xmlns:NC=\""  NC_NAMESPACE_URI "\">\n" \
@@ -404,13 +404,13 @@ LocalStoreImpl::LoadData()
 
     // Read the datasource synchronously.
     rv = remote->Refresh(true);
-    
+
     if (NS_FAILED(rv)) {
         // Load failed, delete and recreate a fresh localstore
         aFile->Remove(true);
         rv = CreateLocalStore(aFile);
         if (NS_FAILED(rv)) return rv;
-        
+
         rv = remote->Refresh(true);
     }
 

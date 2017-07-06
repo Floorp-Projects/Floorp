@@ -33,7 +33,7 @@ Test03_raw( nsIDOMNode* aDOMNode, nsString* aResult )
 
 		nsIDOMNode* parent = 0;
 		nsresult status = aDOMNode->GetParentNode(&parent);
-		
+
 		if ( NS_SUCCEEDED(status) )
 			{
 				parent->GetNodeName(*aResult);
@@ -54,7 +54,7 @@ Test03_raw_optimized( nsIDOMNode* aDOMNode, nsString* aResult )
 
 		nsIDOMNode* parent;
 		nsresult status = aDOMNode->GetParentNode(&parent);
-		
+
 		if ( NS_SUCCEEDED(status) )
 			{
 				parent->GetNodeName(*aResult);

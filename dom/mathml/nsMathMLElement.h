@@ -37,7 +37,7 @@ public:
   // Implementation of nsISupports is inherited from nsMathMLElementBase
   NS_DECL_ISUPPORTS_INHERITED
 
-  // Forward implementations of parent interfaces of nsMathMLElement to 
+  // Forward implementations of parent interfaces of nsMathMLElement to
   // our base class
   NS_FORWARD_NSIDOMNODE_TO_NSINODE
   NS_FORWARD_NSIDOMELEMENT_TO_GENERIC
@@ -71,9 +71,9 @@ public:
                                 uint32_t        aFlags,
                                 nsIDocument*    aDocument);
 
-  static void MapMathMLAttributesInto(const nsMappedAttributes* aAttributes, 
+  static void MapMathMLAttributesInto(const nsMappedAttributes* aAttributes,
                                       mozilla::GenericSpecifiedValues* aGenericData);
-  
+
   virtual nsresult GetEventTargetParent(
                      mozilla::EventChainPreVisitor& aVisitor) override;
   virtual nsresult PostHandleEvent(

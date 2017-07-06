@@ -46,13 +46,13 @@ nsKeygenThread::nsKeygenThread()
 nsKeygenThread::~nsKeygenThread()
 {
   // clean up in the unlikely case that nobody consumed our results
-  
+
   if (privateKey)
     SECKEY_DestroyPrivateKey(privateKey);
-    
+
   if (publicKey)
     SECKEY_DestroyPublicKey(publicKey);
-    
+
   if (usedSlot)
     PK11_FreeSlot(usedSlot);
 }
@@ -68,7 +68,7 @@ void nsKeygenThread::SetParams(
 {
   nsNSSShutDownPreventionLock locker;
   MutexAutoLock lock(mutex);
- 
+
     if (!alreadyReceivedParams) {
       alreadyReceivedParams = true;
       slot = (a_slot) ? PK11_ReferenceSlot(a_slot) : nullptr;
@@ -93,7 +93,7 @@ nsresult nsKeygenThread::ConsumeResult(
   nsresult rv;
 
   MutexAutoLock lock(mutex);
-  
+
     // GetParams must not be called until thread creator called
     // Join on this thread.
     MOZ_ASSERT(keygenReady, "Logic error in nsKeygenThread::GetParams");
@@ -106,13 +106,13 @@ nsresult nsKeygenThread::ConsumeResult(
       privateKey = 0;
       publicKey = 0;
       usedSlot = 0;
-      
+
       rv = NS_OK;
     }
     else {
       rv = NS_ERROR_FAILURE;
     }
-  
+
   return rv;
 }
 
@@ -130,7 +130,7 @@ nsresult nsKeygenThread::StartKeyGeneration(nsIObserver* aObserver)
     NS_ERROR("nsKeygenThread::StartKeyGeneration called off the main thread");
     return NS_ERROR_NOT_SAME_THREAD;
   }
-  
+
   if (!aObserver)
     return NS_OK;
 
@@ -146,7 +146,7 @@ nsresult nsKeygenThread::StartKeyGeneration(nsIObserver* aObserver)
 
     iAmRunning = true;
 
-    threadHandle = PR_CreateThread(PR_USER_THREAD, nsKeygenThreadRunner, static_cast<void*>(this), 
+    threadHandle = PR_CreateThread(PR_USER_THREAD, nsKeygenThreadRunner, static_cast<void*>(this),
       PR_PRIORITY_NORMAL, PR_GLOBAL_THREAD, PR_JOINABLE_THREAD, 0);
 
     // bool thread_started_ok = (threadHandle != nullptr);
@@ -163,7 +163,7 @@ nsresult nsKeygenThread::UserCanceled(bool *threadAlreadyClosedDialog)
   *threadAlreadyClosedDialog = false;
 
   MutexAutoLock lock(mutex);
-  
+
     if (keygenReady)
       *threadAlreadyClosedDialog = statusDialogClosed;
 
@@ -206,11 +206,11 @@ void nsKeygenThread::Run(void)
       }
     }
   }
-  
+
   // This call gave us ownership over privateKey and publicKey.
   // But as the params structure is owner by our caller,
   // we effectively transferred ownership to the caller.
-  // As long as key generation can't be canceled, we don't need 
+  // As long as key generation can't be canceled, we don't need
   // to care for cleaning this up.
 
   nsCOMPtr<nsIRunnable> notifyObserver;
@@ -250,7 +250,7 @@ void nsKeygenThread::Join()
 {
   if (!threadHandle)
     return;
-  
+
   PR_JoinThread(threadHandle);
   threadHandle = nullptr;
 

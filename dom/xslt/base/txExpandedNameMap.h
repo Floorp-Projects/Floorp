@@ -88,7 +88,7 @@ protected:
         txExpandedNameMap_base& mMap;
         uint32_t mCurrentPos;
     };
-    
+
     friend class iterator_base;
 
     friend class txMapItemComparator;
@@ -97,7 +97,7 @@ protected:
         nsCOMPtr<nsIAtom> mLocalName;
         void* mValue;
     };
-    
+
     nsTArray<MapItem> mItems;
 };
 

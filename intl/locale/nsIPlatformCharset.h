@@ -44,7 +44,7 @@ typedef enum {
 class nsIPlatformCharset : public nsISupports
 {
 public:
- 
+
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IPLATFORMCHARSET_IID)
 
   NS_IMETHOD GetCharset(nsPlatformCharsetSel selector, nsACString& oResult) = 0;

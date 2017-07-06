@@ -67,7 +67,7 @@ protected:
 
   nscoord GetXPosition(gfxContext&          aRenderingContext,
                        nsFontMetrics&       aFontMetrics,
-                       const nsRect&        aRect, 
+                       const nsRect&        aRect,
                        int32_t              aJust,
                        const nsString&      aStr);
 

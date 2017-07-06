@@ -50,7 +50,7 @@ nsJARProtocolHandler::Init()
     return rv;
 }
 
-nsIMIMEService * 
+nsIMIMEService *
 nsJARProtocolHandler::MimeService()
 {
     if (!mMimeService)

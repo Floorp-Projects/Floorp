@@ -27,14 +27,14 @@ private:
     nsDirectoryIndexStream();
     /**
      * aDir will only be used on the calling thread.
-     */ 
+     */
     nsresult Init(nsIFile* aDir);
     ~nsDirectoryIndexStream();
 
 public:
     /**
      * aDir will only be used on the calling thread.
-     */ 
+     */
     static nsresult
     Create(nsIFile* aDir, nsIInputStream** aStreamResult);
 

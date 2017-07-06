@@ -321,7 +321,7 @@ nsSelectMoveScrollCommand::DoCommand(const char *aCommandName, nsISupports *aCom
   nsCOMPtr<nsPIDOMWindowOuter> piWindow(do_QueryInterface(aCommandContext));
   nsCOMPtr<nsISelectionController> selCont;
   GetSelectionControllerFromWindow(piWindow, getter_AddRefs(selCont));
-  NS_ENSURE_TRUE(selCont, NS_ERROR_NOT_INITIALIZED);       
+  NS_ENSURE_TRUE(selCont, NS_ERROR_NOT_INITIALIZED);
 
   bool caretOn = IsCaretOnInWindow(piWindow, selCont);
 
@@ -383,7 +383,7 @@ nsPhysicalSelectMoveScrollCommand::DoCommand(const char *aCommandName,
   nsCOMPtr<nsPIDOMWindowOuter> piWindow(do_QueryInterface(aCommandContext));
   nsCOMPtr<nsISelectionController> selCont;
   GetSelectionControllerFromWindow(piWindow, getter_AddRefs(selCont));
-  NS_ENSURE_TRUE(selCont, NS_ERROR_NOT_INITIALIZED);       
+  NS_ENSURE_TRUE(selCont, NS_ERROR_NOT_INITIALIZED);
 
   bool caretOn = IsCaretOnInWindow(piWindow, selCont);
 
@@ -435,7 +435,7 @@ nsSelectCommand::DoCommand(const char *aCommandName,
   nsCOMPtr<nsPIDOMWindowOuter> piWindow(do_QueryInterface(aCommandContext));
   nsCOMPtr<nsISelectionController> selCont;
   GetSelectionControllerFromWindow(piWindow, getter_AddRefs(selCont));
-  NS_ENSURE_TRUE(selCont, NS_ERROR_NOT_INITIALIZED);       
+  NS_ENSURE_TRUE(selCont, NS_ERROR_NOT_INITIALIZED);
 
   // These commands are so the browser can use caret navigation key bindings -
   // Helps with accessibility - aaronl@netscape.com
@@ -473,7 +473,7 @@ nsPhysicalSelectCommand::DoCommand(const char *aCommandName,
   nsCOMPtr<nsPIDOMWindowOuter> piWindow(do_QueryInterface(aCommandContext));
   nsCOMPtr<nsISelectionController> selCont;
   GetSelectionControllerFromWindow(piWindow, getter_AddRefs(selCont));
-  NS_ENSURE_TRUE(selCont, NS_ERROR_NOT_INITIALIZED);       
+  NS_ENSURE_TRUE(selCont, NS_ERROR_NOT_INITIALIZED);
 
   for (size_t i = 0; i < ArrayLength(physicalSelectCommands); i++) {
     if (!strcmp(aCommandName, physicalSelectCommands[i].command)) {
@@ -604,9 +604,9 @@ protected:
 
   virtual nsresult    IsClipboardCommandEnabled(const char * aCommandName, nsIContentViewerEdit* aEdit, bool *outCmdEnabled) = 0;
   virtual nsresult    DoClipboardCommand(const char *aCommandName, nsIContentViewerEdit* aEdit, nsICommandParams* aParams) = 0;
-  
+
   static nsresult     GetContentViewerEditFromContext(nsISupports *aContext, nsIContentViewerEdit **aEditInterface);
-  
+
   // no member variables, please, we're stateless!
 };
 
@@ -738,7 +738,7 @@ nsClipboardImageCommands::DoClipboardCommand(const char *aCommandName, nsIConten
     return aEdit->CopyImage(nsIContentViewerEdit::COPY_IMAGE_TEXT);
   if (!nsCRT::strcmp(sCopyImageContentsString, aCommandName))
     return aEdit->CopyImage(nsIContentViewerEdit::COPY_IMAGE_DATA);
-  int32_t copyFlags = nsIContentViewerEdit::COPY_IMAGE_DATA | 
+  int32_t copyFlags = nsIContentViewerEdit::COPY_IMAGE_DATA |
                       nsIContentViewerEdit::COPY_IMAGE_HTML;
   if (aParams)
     aParams->GetLongValue("imageCopy", &copyFlags);
@@ -786,15 +786,15 @@ nsClipboardGetContentsCommand::DoClipboardCommand(const char *aCommandName, nsIC
   nsXPIDLCString format;    // nsICommandParams needs to use nsACString
   if (NS_SUCCEEDED(aParams->GetCStringValue("format", getter_Copies(format))))
     mimeType.Assign(format);
-  
+
   bool selectionOnly = false;
   aParams->GetBooleanValue("selection_only", &selectionOnly);
-  
+
   nsAutoString contents;
   nsresult rv = aEdit->GetContents(mimeType.get(), selectionOnly, contents);
   if (NS_FAILED(rv))
     return rv;
-    
+
   return aParams->SetStringValue("result", contents);
 }
 
@@ -811,9 +811,9 @@ protected:
 
   virtual nsresult    IsWebNavCommandEnabled(const char * aCommandName, nsIWebNavigation* aWebNavigation, bool *outCmdEnabled) = 0;
   virtual nsresult    DoWebNavCommand(const char *aCommandName, nsIWebNavigation* aWebNavigation) = 0;
-  
+
   static nsresult     GetWebNavigationFromContext(nsISupports *aContext, nsIWebNavigation **aWebNavigation);
-  
+
   // no member variables, please, we're stateless!
 };
 
@@ -854,7 +854,7 @@ nsWebNavigationBaseCommand::IsCommandEnabled(const char * aCommandName,
   nsCOMPtr<nsIWebNavigation> webNav;
   GetWebNavigationFromContext(aCommandContext, getter_AddRefs(webNav));
   NS_ENSURE_TRUE(webNav, NS_ERROR_INVALID_ARG);
-  
+
   return IsCommandEnabled(aCommandName, webNav, outCmdEnabled);
 }
 
@@ -873,7 +873,7 @@ nsWebNavigationBaseCommand::DoCommand(const char *aCommandName,
   nsCOMPtr<nsIWebNavigation> webNav;
   GetWebNavigationFromContext(aCommandContext, getter_AddRefs(webNav));
   NS_ENSURE_TRUE(webNav, NS_ERROR_INVALID_ARG);
-  
+
   return DoWebNavCommand(aCommandName, webNav);
 }
 
@@ -935,7 +935,7 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSICONTROLLERCOMMAND
 
-protected:                                                                                   
+protected:
   // no member variables, please, we're stateless!
 };
 
@@ -1206,7 +1206,7 @@ nsWindowCommandRegistration::RegisterWindowCommands(
   nsresult rv;
 
   // XXX rework the macros to use a loop is possible, reducing code size
-  
+
   // this set of commands is affected by the 'browse with caret' setting
   NS_REGISTER_FIRST_COMMAND(nsSelectMoveScrollCommand, sScrollTopString);
   NS_REGISTER_NEXT_COMMAND(nsSelectMoveScrollCommand, sScrollBottomString);

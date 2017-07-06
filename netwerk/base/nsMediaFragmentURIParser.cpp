@@ -105,7 +105,7 @@ static uint32_t FirstNonDigit(nsDependentSubstring& aString, uint32_t aStart)
   }
   return aStart;
 }
- 
+
 bool nsMediaFragmentURIParser::ParseNPTSec(nsDependentSubstring& aString, double& aSec)
 {
   nsDependentSubstring original(aString);

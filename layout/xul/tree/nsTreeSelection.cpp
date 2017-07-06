@@ -31,7 +31,7 @@ struct nsTreeRange
 
   nsTreeRange(nsTreeSelection* aSel, int32_t aSingleVal)
     :mSelection(aSel), mPrev(nullptr), mNext(nullptr), mMin(aSingleVal), mMax(aSingleVal) {}
-  nsTreeRange(nsTreeSelection* aSel, int32_t aMin, int32_t aMax) 
+  nsTreeRange(nsTreeSelection* aSel, int32_t aMin, int32_t aMax)
     :mSelection(aSel), mPrev(nullptr), mNext(nullptr), mMin(aMin), mMax(aMax) {}
 
   ~nsTreeRange() { delete mNext; }
@@ -184,7 +184,7 @@ struct nsTreeRange
       cur = cur->mNext;
     }
   }
-  
+
   static void InvalidateRanges(nsITreeBoxObject* aTree,
                                nsTArray<int32_t>& aRanges)
   {
@@ -200,7 +200,7 @@ struct nsTreeRange
     nsTArray<int32_t> ranges;
     CollectRanges(this, ranges);
     InvalidateRanges(mSelection->mTree, ranges);
-    
+
   }
 
   void RemoveAllBut(int32_t aIndex) {
@@ -212,14 +212,14 @@ struct nsTreeRange
 
       mMin = aIndex;
       mMax = aIndex;
-      
+
       nsTreeRange* first = mSelection->mFirstRange;
       if (mPrev)
         mPrev->mNext = mNext;
       if (mNext)
         mNext->mPrev = mPrev;
       mNext = mPrev = nullptr;
-      
+
       if (first != this) {
         delete mSelection->mFirstRange;
         mSelection->mFirstRange = this;
@@ -235,7 +235,7 @@ struct nsTreeRange
       aRange->Connect(mPrev, this);
     else if (mNext)
       mNext->Insert(aRange);
-    else 
+    else
       aRange->Connect(this, nullptr);
   }
 };
@@ -453,7 +453,7 @@ NS_IMETHODIMP nsTreeSelection::RangedSelect(int32_t aStartIndex, int32_t aEndInd
   rv = SetCurrentIndex(aEndIndex);
   if (NS_FAILED(rv))
     return rv;
-  
+
   int32_t start = aStartIndex < aEndIndex ? aStartIndex : aEndIndex;
   int32_t end = aStartIndex < aEndIndex ? aEndIndex : aStartIndex;
 
@@ -496,7 +496,7 @@ NS_IMETHODIMP nsTreeSelection::ClearRange(int32_t aStartIndex, int32_t aEndIndex
     if (mTree)
       mTree->InvalidateRange(start, end);
   }
-  
+
   return NS_OK;
 }
 
@@ -541,7 +541,7 @@ NS_IMETHODIMP nsTreeSelection::SelectAll()
 
   mShiftSelectPivot = -1;
 
-  // Invalidate not necessary when clearing selection, since 
+  // Invalidate not necessary when clearing selection, since
   // we're going to invalidate the world on the SelectAll.
   delete mFirstRange;
 
@@ -590,7 +590,7 @@ NS_IMETHODIMP nsTreeSelection::GetCount(int32_t *count)
     *count = mFirstRange->Count();
   else // No range available, so there's no selected row.
     *count = 0;
-  
+
   return NS_OK;
 }
 
@@ -624,11 +624,11 @@ NS_IMETHODIMP nsTreeSelection::SetCurrentIndex(int32_t aIndex)
   }
   if (mCurrentIndex != -1 && mTree)
     mTree->InvalidateRow(mCurrentIndex);
-  
+
   mCurrentIndex = aIndex;
   if (!mTree)
     return NS_OK;
-  
+
   if (aIndex != -1)
     mTree->InvalidateRow(aIndex);
 
@@ -675,9 +675,9 @@ NS_IMETHODIMP nsTreeSelection::SetCurrentColumn(nsITreeColumn* aCurrentColumn)
     if (mCurrentIndex != -1)
       mTree->InvalidateCell(mCurrentIndex, mCurrentColumn);
   }
-  
+
   mCurrentColumn = aCurrentColumn;
-  
+
   if (mCurrentColumn) {
     if (mFirstRange)
       mTree->InvalidateCell(mFirstRange->mMin, mCurrentColumn);
@@ -744,7 +744,7 @@ nsTreeSelection::AdjustSelection(int32_t aIndex, int32_t aCount)
         // adjustment happens after the range, so no change
         ADD_NEW_RANGE(mFirstRange, this, curr->mMin, curr->mMax);
       }
-      else if (aIndex <= curr->mMin) {  
+      else if (aIndex <= curr->mMin) {
         // adjustment happens before the start of the range, so shift down
         ADD_NEW_RANGE(mFirstRange, this, curr->mMin + aCount, curr->mMax + aCount);
         selChanged = true;

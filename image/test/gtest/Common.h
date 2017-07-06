@@ -122,7 +122,7 @@ already_AddRefed<nsIInputStream> LoadFile(const char* aRelativePath);
 
 /**
  * @returns true if every pixel of @aSurface is @aColor.
- * 
+ *
  * If @aFuzz is nonzero, a tolerance of @aFuzz is allowed in each color
  * component. This may be necessary for tests that involve JPEG images or
  * downscaling.

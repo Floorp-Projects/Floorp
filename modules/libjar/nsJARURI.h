@@ -52,7 +52,7 @@ public:
 
     // nsJARURI
     nsJARURI();
-   
+
     nsresult Init(const char *charsetHint);
     nsresult FormatSpec(const nsACString &entryPath, nsACString &result,
                         bool aIncludeScheme = true);

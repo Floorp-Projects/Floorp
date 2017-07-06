@@ -93,7 +93,7 @@ void ReverbConvolverStage::process(const float* source)
     MOZ_ASSERT(source);
     if (!source)
         return;
-    
+
     // Now, run the convolution (into the delay buffer).
     // An expensive FFT will happen every fftSize / 2 frames.
     const float* output = m_fftConvolver->process(m_fftKernel, source);

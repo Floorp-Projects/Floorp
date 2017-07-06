@@ -310,7 +310,7 @@ public:
    * directions of overflow should be reachable by scrolling and which
    * should not.  Callers should NOT depend on it having any particular
    * behavior (although nsXULScrollFrame currently does).
-   * 
+   *
    * This should only be called when the scrolled frame has been
    * reflowed with the scroll port size given in mScrollPort.
    *
@@ -326,7 +326,7 @@ public:
    * directions of overflow should be reachable by scrolling and which
    * should not.  Callers should NOT depend on it having any particular
    * behavior (although nsXULScrollFrame currently does).
-   * 
+   *
    * Currently it allows scrolling down and to the right for
    * nsHTMLScrollFrames with LTR directionality and for all
    * nsXULScrollFrames, and allows scrolling down and to the left for
@@ -723,7 +723,7 @@ public:
   virtual nscoord GetPrefISize(gfxContext *aRenderingContext) override;
   virtual nsresult GetXULPadding(nsMargin& aPadding) override;
   virtual bool IsXULCollapsed() override;
-  
+
   virtual void Reflow(nsPresContext*           aPresContext,
                       ReflowOutput&     aDesiredSize,
                       const ReflowInput& aReflowInput,
@@ -1033,7 +1033,7 @@ public:
   void SetZoomableByAPZ(bool aZoomable) override {
     mHelper.SetZoomableByAPZ(aZoomable);
   }
-  
+
   ScrollSnapInfo GetScrollSnapInfo() const override {
     return mHelper.GetScrollSnapInfo();
   }
@@ -1084,7 +1084,7 @@ protected:
   // Return whether we're in an "initial" reflow.  Some reflows with
   // NS_FRAME_FIRST_REFLOW set are NOT "initial" as far as we're concerned.
   bool InInitialReflow() const;
-  
+
   /**
    * Override this to return false if computed bsize/min-bsize/max-bsize
    * should NOT be propagated to child content.
@@ -1198,18 +1198,18 @@ public:
   nsresult XULLayout(nsBoxLayoutState& aState);
   void LayoutScrollArea(nsBoxLayoutState& aState, const nsPoint& aScrollPosition);
 
-  static bool AddRemoveScrollbar(bool& aHasScrollbar, 
-                                   nscoord& aXY, 
-                                   nscoord& aSize, 
-                                   nscoord aSbSize, 
-                                   bool aOnRightOrBottom, 
+  static bool AddRemoveScrollbar(bool& aHasScrollbar,
+                                   nscoord& aXY,
+                                   nscoord& aSize,
+                                   nscoord aSbSize,
+                                   bool aOnRightOrBottom,
                                    bool aAdd);
-  
-  bool AddRemoveScrollbar(nsBoxLayoutState& aState, 
-                            bool aOnRightOrBottom, 
-                            bool aHorizontal, 
+
+  bool AddRemoveScrollbar(nsBoxLayoutState& aState,
+                            bool aOnRightOrBottom,
+                            bool aHorizontal,
                             bool aAdd);
-  
+
   bool AddHorizontalScrollbar (nsBoxLayoutState& aState, bool aOnBottom);
   bool AddVerticalScrollbar   (nsBoxLayoutState& aState, bool aOnRight);
   void RemoveHorizontalScrollbar(nsBoxLayoutState& aState, bool aOnBottom);
@@ -1505,11 +1505,11 @@ protected:
   nsXULScrollFrame(nsStyleContext* aContext, bool aIsRoot,
                    bool aClipAllDescendants);
 
-  void ClampAndSetBounds(nsBoxLayoutState& aState, 
+  void ClampAndSetBounds(nsBoxLayoutState& aState,
                          nsRect& aRect,
                          nsPoint aScrollPosition,
                          bool aRemoveOverflowAreas = false) {
-    /* 
+    /*
      * For RTL frames, restore the original scrolled position of the right
      * edge, then subtract the current width to find the physical position.
      */

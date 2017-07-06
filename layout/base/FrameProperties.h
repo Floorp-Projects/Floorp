@@ -134,7 +134,7 @@ struct FramePropertyTypeHelper<SmallValueHolder<T>>
  * The FrameProperties class is optimized for storing 0 or 1 properties on
  * a given frame. Storing very large numbers of properties on a single
  * frame will not be efficient.
- * 
+ *
  * Property values are passed as void* but do not actually have to be
  * valid pointers. You can use NS_INT32_TO_PTR/NS_PTR_TO_INT32 to
  * store int32_t values. Null/zero values can be stored and retrieved.

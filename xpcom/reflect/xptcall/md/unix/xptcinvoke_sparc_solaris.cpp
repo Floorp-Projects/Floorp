@@ -7,7 +7,7 @@
 
 #include "xptcprivate.h"
 
-/* solaris defines __sparc for workshop compilers and 
+/* solaris defines __sparc for workshop compilers and
    linux defines __sparc__ */
 
 #if !defined(__sparc) && !defined(__sparc__)
@@ -107,8 +107,8 @@ invoke_copy_to_stack(uint32_t* d, uint32_t paramCount, nsXPTCVariant* s)
         case nsXPTType::T_I8     : *((int32_t*)   l_d) = l_s->val.i8;          break;
         case nsXPTType::T_I16    : *((int32_t*)  l_d) = l_s->val.i16;         break;
         case nsXPTType::T_I32    : *((int32_t*)  l_d) = l_s->val.i32;         break;
-        case nsXPTType::T_I64    : 
-        case nsXPTType::T_U64    : 
+        case nsXPTType::T_I64    :
+        case nsXPTType::T_U64    :
         case nsXPTType::T_DOUBLE : *((uint32_t*) l_d++) = ((DU *)l_s)->hi;
 				   if (regCount < 5) regCount++;
                                    *((uint32_t*) l_d) = ((DU *)l_s)->lo;

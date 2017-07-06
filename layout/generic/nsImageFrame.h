@@ -89,7 +89,7 @@ public:
                       ReflowOutput&     aDesiredSize,
                       const ReflowInput& aReflowInput,
                       nsReflowStatus&          aStatus) override;
-  
+
   virtual nsresult  GetContentForEvent(mozilla::WidgetEvent* aEvent,
                                        nsIContent** aContent) override;
   virtual nsresult HandleEvent(nsPresContext* aPresContext,
@@ -116,7 +116,7 @@ public:
 
 #ifdef DEBUG_FRAME_DUMP
   virtual nsresult GetFrameName(nsAString& aResult) const override;
-  void List(FILE* out = stderr, const char* aPrefix = "", 
+  void List(FILE* out = stderr, const char* aPrefix = "",
             uint32_t aFlags = 0) const override;
 #endif
 
@@ -146,7 +146,7 @@ public:
    */
   static bool ShouldCreateImageFrameFor(mozilla::dom::Element* aElement,
                                           nsStyleContext* aStyleContext);
-  
+
   DrawResult DisplayAltFeedback(gfxContext& aRenderingContext,
                                 const nsRect& aDirtyRect,
                                 nsPoint aPt,
@@ -341,7 +341,7 @@ private:
   bool mForceSyncDecoding;
 
   static nsIIOService* sIOService;
-  
+
   /* loading / broken image icon support */
 
   // XXXbz this should be handled by the prescontext, I think; that
@@ -393,10 +393,10 @@ private:
     bool             mPrefShowPlaceholders;
     bool             mPrefShowLoadingPlaceholder;
   };
-  
+
 public:
   static IconLoad* gIconLoad; // singleton pattern: one LoadIcons instance is used
-  
+
   friend class nsDisplayImage;
 };
 

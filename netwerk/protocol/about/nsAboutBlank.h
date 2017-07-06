@@ -8,7 +8,7 @@
 
 #include "nsIAboutModule.h"
 
-class nsAboutBlank : public nsIAboutModule 
+class nsAboutBlank : public nsIAboutModule
 {
 public:
     NS_DECL_ISUPPORTS

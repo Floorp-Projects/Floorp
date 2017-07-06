@@ -177,7 +177,7 @@ nsScriptNameSpaceManager::Init()
 
   // Initial filling of the has table has been done.
   // Now, listen for changes.
-  nsCOMPtr<nsIObserverService> serv = 
+  nsCOMPtr<nsIObserverService> serv =
     mozilla::services::GetObserverService();
 
   if (serv) {

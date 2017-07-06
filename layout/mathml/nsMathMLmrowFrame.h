@@ -10,7 +10,7 @@
 #include "nsMathMLContainerFrame.h"
 
 //
-// <mrow> -- horizontally group any number of subexpressions 
+// <mrow> -- horizontally group any number of subexpressions
 // <mphantom> -- make content invisible but preserve its size
 // <mstyle> -- make style changes that affect the rendering of its contents
 //
@@ -35,7 +35,7 @@ public:
   }
 
   virtual eMathMLFrameType
-  GetMathMLFrameType() override; 
+  GetMathMLFrameType() override;
 
   bool
   IsMrowLike() override {

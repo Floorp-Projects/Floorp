@@ -112,7 +112,7 @@ XULButtonAccessible::NativeState()
       if (checked) {
         state |= states::PRESSED;
         xulButtonElement->GetCheckState(&checkState);
-        if (checkState == nsIDOMXULButtonElement::CHECKSTATE_MIXED) { 
+        if (checkState == nsIDOMXULButtonElement::CHECKSTATE_MIXED) {
           state |= states::MIXED;
         }
       }
@@ -337,9 +337,9 @@ XULCheckboxAccessible::NativeState()
   // Possible states: focused, focusable, unavailable(disabled), checked
   // Get focus and disable status from base class
   uint64_t state = LeafAccessible::NativeState();
-  
+
   state |= states::CHECKABLE;
-  
+
   // Determine Checked state
   nsCOMPtr<nsIDOMXULCheckboxElement> xulCheckboxElement =
     do_QueryInterface(mContent);
@@ -467,7 +467,7 @@ XULRadioButtonAccessible::ContainerWidget() const
   * XUL Radio Group
   *   The Radio Group proxies for the Radio Buttons themselves. The Group gets
   *   focus whereas the Buttons do not. So we only have an accessible object for
-  *   this for the purpose of getting the proper RadioButton. Need this here to 
+  *   this for the purpose of getting the proper RadioButton. Need this here to
   *   avoid circular reference problems when navigating the accessible tree and
   *   for getting to the radiobuttons.
   */
@@ -475,7 +475,7 @@ XULRadioButtonAccessible::ContainerWidget() const
 XULRadioGroupAccessible::
   XULRadioGroupAccessible(nsIContent* aContent, DocAccessible* aDoc) :
   XULSelectControlAccessible(aContent, aDoc)
-{ 
+{
 }
 
 role

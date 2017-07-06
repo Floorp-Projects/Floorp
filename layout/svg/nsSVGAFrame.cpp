@@ -46,7 +46,7 @@ public:
 #endif
   // nsSVGDisplayableFrame interface:
   virtual void NotifySVGChanged(uint32_t aFlags) override;
-  
+
   // nsSVGContainerFrame methods:
   virtual gfxMatrix GetCanvasTM() override;
 

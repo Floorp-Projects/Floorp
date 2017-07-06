@@ -43,7 +43,7 @@ public:
       NS_ASSERTION(gfxPlatform::GetPlatform()->
                      SupportsAzureContentForDrawTarget(drawTarget),
                    "Should support Moz2D content drawing");
-      
+
       mPathBuilder = drawTarget->CreatePathBuilder();
     }
 

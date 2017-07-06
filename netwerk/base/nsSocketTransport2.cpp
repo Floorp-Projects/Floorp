@@ -115,7 +115,7 @@ static PRErrorCode RandomizeConnectError(PRErrorCode code)
         struct {
             PRErrorCode err_code;
             const char *err_name;
-        } 
+        }
         errors[] = {
             //
             // These errors should be recoverable provided there is another
@@ -249,7 +249,7 @@ ErrorAccordingToNSPR(PRErrorCode errorCode)
 }
 
 //-----------------------------------------------------------------------------
-// socket input stream impl 
+// socket input stream impl
 //-----------------------------------------------------------------------------
 
 nsSocketInputStream::nsSocketInputStream(nsSocketTransport *trans)
@@ -459,7 +459,7 @@ nsSocketInputStream::CloseWithStatus(nsresult reason)
                static_cast<uint32_t>(reason)));
 
     // may be called from any thread
- 
+
     nsresult rv;
     {
         MutexAutoLock lock(mTransport->mLock);
@@ -514,7 +514,7 @@ nsSocketInputStream::AsyncWait(nsIInputStreamCallback *callback,
 }
 
 //-----------------------------------------------------------------------------
-// socket output stream impl 
+// socket output stream impl
 //-----------------------------------------------------------------------------
 
 nsSocketOutputStream::nsSocketOutputStream(nsSocketTransport *trans)
@@ -611,7 +611,7 @@ nsSocketOutputStream::Write(const char *buf, uint32_t count, uint32_t *countWrit
 
         if (NS_FAILED(mCondition))
             return mCondition;
-        
+
         fd = mTransport->GetFD_LockedAlsoDuringFastOpen();
         if (!fd)
             return NS_BASE_STREAM_WOULD_BLOCK;
@@ -720,7 +720,7 @@ nsSocketOutputStream::CloseWithStatus(nsresult reason)
                 static_cast<uint32_t>(reason)));
 
     // may be called from any thread
- 
+
     nsresult rv;
     {
         MutexAutoLock lock(mTransport->mLock);
@@ -1056,7 +1056,7 @@ nsSocketTransport::SendStatus(nsresult status)
             // This data can  be only tls data or application data as well.
             // socketTransport should send status only if it really has sent
             // application data. socketTransport cannot query transaction for
-            // that info but it can know if transaction has send data if 
+            // that info but it can know if transaction has send data if
             // mOutput.ByteCount() is > 0.
             if (progress == 0) {
                 return;
@@ -1200,7 +1200,7 @@ nsSocketTransport::BuildSocket(PRFileDesc *&fd, bool &proxyTransparent, bool &us
 
             if (mProxyTransparentResolvesHost)
                 controlFlags |= nsISocketProvider::PROXY_RESOLVES_HOST;
-            
+
             if (mConnectionFlags & nsISocketTransport::ANONYMOUS_CONNECT)
                 controlFlags |= nsISocketProvider::ANONYMOUS_CONNECT;
 
@@ -1215,7 +1215,7 @@ nsSocketTransport::BuildSocket(PRFileDesc *&fd, bool &proxyTransparent, bool &us
 
             nsCOMPtr<nsISupports> secinfo;
             if (i == 0) {
-                // if this is the first type, we'll want the 
+                // if this is the first type, we'll want the
                 // service to allocate a new socket
 
                 // when https proxying we want to just connect to the proxy as if
@@ -1234,7 +1234,7 @@ nsSocketTransport::BuildSocket(PRFileDesc *&fd, bool &proxyTransparent, bool &us
                 }
             }
             else {
-                // the socket has already been allocated, 
+                // the socket has already been allocated,
                 // so we just want the service to add itself
                 // to the stack (such as pushing an io layer)
                 rv = provider->AddToSocket(mNetAddr.raw.family,
@@ -1622,7 +1622,7 @@ nsSocketTransport::InitiateSocket()
     }
 
     if (status == PR_SUCCESS) {
-        // 
+        //
         // we are connected!
         //
         OnSocketConnected();
@@ -2083,10 +2083,10 @@ nsSocketTransport::OnSocketEvent(uint32_t type, nsresult status, nsISupports *pa
         }
         // status contains DNS lookup status
         if (NS_FAILED(status)) {
-            // When using a HTTP proxy, NS_ERROR_UNKNOWN_HOST means the HTTP 
+            // When using a HTTP proxy, NS_ERROR_UNKNOWN_HOST means the HTTP
             // proxy host is not found, so we fixup the error code.
-            // For SOCKS proxies (mProxyTransparent == true), the socket 
-            // transport resolves the real host here, so there's no fixup 
+            // For SOCKS proxies (mProxyTransparent == true), the socket
+            // transport resolves the real host here, so there's no fixup
             // (see bug 226943).
             if ((status == NS_ERROR_UNKNOWN_HOST) && !mProxyTransparent &&
                 !mProxyHost.IsEmpty())
@@ -2130,7 +2130,7 @@ nsSocketTransport::OnSocketEvent(uint32_t type, nsresult status, nsISupports *pa
     default:
         SOCKET_LOG(("  unhandled event!\n"));
     }
-    
+
     if (NS_FAILED(mCondition)) {
         SOCKET_LOG(("  after event [this=%p cond=%"  PRIx32 "]\n", this,
                     static_cast<uint32_t>(mCondition)));
@@ -2370,7 +2370,7 @@ nsSocketTransport::OnSocketDetached(PRFileDesc *fd)
         MutexAutoLock lock(mLock);
         if (mFD.IsInitialized()) {
             ReleaseFD_Locked(mFD);
-            // flag mFD as unusable; this prevents other consumers from 
+            // flag mFD as unusable; this prevents other consumers from
             // acquiring a reference to mFD.
             mFDconnected = false;
             mFDFastOpenInProgress = false;
@@ -2378,7 +2378,7 @@ nsSocketTransport::OnSocketDetached(PRFileDesc *fd)
 
         // We must release mCallbacks and mEventSink to avoid memory leak
         // but only when RecoverFromError() above failed. Otherwise we lose
-        // link with UI and security callbacks on next connection attempt 
+        // link with UI and security callbacks on next connection attempt
         // round. That would lead e.g. to a broken certificate exception page.
         if (NS_FAILED(mCondition)) {
             mCallbacks.swap(ourCallbacks);

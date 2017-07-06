@@ -75,7 +75,7 @@ nsSVGMarkerFrame::GetCanvasTM()
   }
 
   SVGMarkerElement *content = static_cast<SVGMarkerElement*>(mContent);
-  
+
   mInUse2 = true;
   gfxMatrix markedTM = mMarkedFrame->GetCanvasTM();
   mInUse2 = false;

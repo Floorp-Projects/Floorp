@@ -480,7 +480,7 @@ nsNavHistory::QueriesToQueryString(nsINavHistoryQuery **aQueries,
                              NS_LITERAL_CSTRING(QUERYKEY_NOTTAGS),
                              query,
                              &nsINavHistoryQuery::GetTagsAreNot);
- 
+
     // transitions
     const nsTArray<uint32_t>& transitions = query->Transitions();
     for (uint32_t i = 0; i < transitions.Length(); ++i) {
@@ -507,7 +507,7 @@ nsNavHistory::QueriesToQueryString(nsINavHistoryQuery **aQueries,
         queryString += NS_LITERAL_CSTRING(QUERYKEY_SORTING_ANNOTATION "=");
         queryString.Append(escaped);
       }
-    } 
+    }
   }
 
   // result type

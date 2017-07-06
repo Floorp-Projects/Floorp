@@ -222,7 +222,7 @@ nsHttpNTLMAuth::ChallengeReceived(nsIHttpAuthenticableChannel *channel,
             // see bug 520607 for details.
             LOG(("Trying to fall back on internal ntlm auth.\n"));
             module = do_CreateInstance(NS_AUTH_MODULE_CONTRACTID_PREFIX "ntlm");
-	
+
             mUseNative = false;
 
             // Prompt user for domain, username, and password.
@@ -351,8 +351,8 @@ nsHttpNTLMAuth::GenerateCredentials(nsIHttpAuthenticableChannel *authChannel,
 
             uint32_t length;
             uint8_t* certArray;
-            cert->GetRawDER(&length, &certArray);						
-			
+            cert->GetRawDER(&length, &certArray);
+
             // If there is a server certificate, we pass it along the
             // first time we call GetNextToken().
             inBufLen = length;

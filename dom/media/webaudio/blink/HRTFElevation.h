@@ -54,11 +54,11 @@ public:
     double elevationAngle() const { return m_elevationAngle; }
     unsigned numberOfAzimuths() const { return NumberOfTotalAzimuths; }
     float sampleRate() const { return m_sampleRate; }
-    
+
     // Returns the left and right kernels for the given azimuth index.
     // The interpolated delays based on azimuthBlend: 0 -> 1 are returned in frameDelayL and frameDelayR.
     void getKernelsFromAzimuth(double azimuthBlend, unsigned azimuthIndex, HRTFKernel* &kernelL, HRTFKernel* &kernelR, double& frameDelayL, double& frameDelayR);
-    
+
     // Total number of azimuths after interpolation.
     static const unsigned NumberOfTotalAzimuths;
 

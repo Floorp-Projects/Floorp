@@ -520,7 +520,7 @@ nsSVGForeignObjectFrame::DoReflow()
   if (!kid)
     return;
 
-  // initiate a synchronous reflow here and now:  
+  // initiate a synchronous reflow here and now:
   RefPtr<gfxContext> renderingContext =
     presContext->PresShell()->CreateReferenceRenderingContext();
 
@@ -550,7 +550,7 @@ nsSVGForeignObjectFrame::DoReflow()
                mRect.height == desiredSize.Height(), "unexpected size");
   FinishReflowChild(kid, presContext, desiredSize, &reflowInput, 0, 0,
                     NS_FRAME_NO_MOVE_FRAME);
-  
+
   mInReflow = false;
 }
 

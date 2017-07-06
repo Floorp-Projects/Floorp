@@ -30,7 +30,7 @@ public:
     virtual void ActorDestroy(ActorDestroyReason why) override
     {
         if (NormalShutdown != why)
-            fail("unexpected destruction!");  
+            fail("unexpected destruction!");
         if (!reentered_)
             fail("never processed raced RPC call!");
         if (!resolved_first_cpow_)

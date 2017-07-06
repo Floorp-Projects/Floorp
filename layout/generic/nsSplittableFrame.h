@@ -23,19 +23,19 @@ public:
   virtual void Init(nsIContent*       aContent,
                     nsContainerFrame* aParent,
                     nsIFrame*         aPrevInFlow) override;
-  
+
   virtual nsSplittableType GetSplittableType() const override;
 
   virtual void DestroyFrom(nsIFrame* aDestructRoot) override;
 
   /*
    * Frame continuations can be either fluid or not:
-   * Fluid continuations ("in-flows") are the result of line breaking, 
+   * Fluid continuations ("in-flows") are the result of line breaking,
    * column breaking, or page breaking.
    * Other (non-fluid) continuations can be the result of BiDi frame splitting.
    * A "flow" is a chain of fluid continuations.
    */
-  
+
   // Get the previous/next continuation, regardless of its type (fluid or non-fluid).
   virtual nsIFrame* GetPrevContinuation() const override;
   virtual nsIFrame* GetNextContinuation() const override;
@@ -53,14 +53,14 @@ public:
   static bool IsInPrevContinuationChain(nsIFrame* aFrame1, nsIFrame* aFrame2);
   static bool IsInNextContinuationChain(nsIFrame* aFrame1, nsIFrame* aFrame2);
 #endif
-  
+
   // Get the previous/next continuation, only if it is fluid (an "in-flow").
   nsIFrame* GetPrevInFlow() const;
   nsIFrame* GetNextInFlow() const;
 
   virtual nsIFrame* GetPrevInFlowVirtual() const override { return GetPrevInFlow(); }
   virtual nsIFrame* GetNextInFlowVirtual() const override { return GetNextInFlow(); }
-  
+
   // Set a previous/next fluid continuation.
   virtual void SetPrevInFlow(nsIFrame*) override;
   virtual void SetNextInFlow(nsIFrame*) override;

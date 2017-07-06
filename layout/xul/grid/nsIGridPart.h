@@ -72,7 +72,7 @@ public:
   virtual int32_t BuildRows(nsIFrame* aBox, nsGridRow* aRows)=0;
   virtual nsMargin GetTotalMargin(nsIFrame* aBox, bool aIsHorizontal)=0;
   virtual int32_t GetRowCount() { return 1; }
-  
+
   /**
    * Return the level of the grid hierarchy this grid part represents.
    */

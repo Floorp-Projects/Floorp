@@ -66,7 +66,7 @@ protected:
 
     Updater* mUpdaters;
 
-    bool Matches(const nsString& aList, 
+    bool Matches(const nsString& aList,
                    const nsAString& aElement);
 
     bool mLocked;

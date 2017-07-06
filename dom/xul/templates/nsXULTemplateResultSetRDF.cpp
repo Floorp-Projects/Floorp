@@ -27,7 +27,7 @@ nsXULTemplateResultSetRDF::HasMoreElements(bool *aResult)
     }
 
     mCheckedNext = true;
-                
+
     do {
         if (mCurrent) {
             mCurrent = mCurrent->mNext;
