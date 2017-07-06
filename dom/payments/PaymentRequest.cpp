@@ -590,6 +590,12 @@ PaymentRequest::UpdateShippingAddress(const nsAString& aCountry,
 }
 
 void
+PaymentRequest::SetShippingOption(const nsAString& aShippingOption)
+{
+  mShippingOption = aShippingOption;
+}
+
+void
 PaymentRequest::GetShippingOption(nsAString& aRetVal) const
 {
   aRetVal = mShippingOption;
@@ -604,10 +610,16 @@ PaymentRequest::UpdateShippingOption(const nsAString& aShippingOption)
   return DispatchUpdateEvent(NS_LITERAL_STRING("shippingoptionchange"));
 }
 
+void
+PaymentRequest::SetShippingType(const Nullable<PaymentShippingType>& aShippingType)
+{
+  mShippingType = aShippingType;
+}
+
 Nullable<PaymentShippingType>
 PaymentRequest::GetShippingType() const
 {
-  return nullptr;
+  return mShippingType;
 }
 
 PaymentRequest::~PaymentRequest()

@@ -9,12 +9,14 @@ interface mozIDOMWindowProxy;
 interface nsIDOMWindow;
 interface nsIURI;
 interface nsIFrameLoaderOwner;
+interface nsIPrincipal;
 
 [scriptable, uuid(e774db14-79ac-4156-a7a3-aa3fd0a22c10)]
 interface nsIOpenURIInFrameParams : nsISupports
 {
   attribute DOMString referrer;
   readonly attribute boolean isPrivate;
+  attribute nsIPrincipal triggeringPrincipal;
 
   [implicit_jscontext]
   readonly attribute jsval openerOriginAttributes;
@@ -97,11 +99,12 @@ interface nsIBrowserDOMWindow : nsISupports
    * @param aFlags flags which control the behavior of the load. The
    *               OPEN_EXTERNAL/OPEN_NEW flag is only used when
    *               aWhere == OPEN_DEFAULTWINDOW.
+   * @param aTriggeringPrincipal the principal that triggered the load of aURI
    * @return the window into which the URI was opened.
   */
   mozIDOMWindowProxy
   openURI(in nsIURI aURI, in mozIDOMWindowProxy aOpener,
-          in short aWhere, in long aFlags);
+          in short aWhere, in long aFlags, in nsIPrincipal aTriggeringPrincipal);
 
   /**
    * As above, but return the nsIFrameLoaderOwner for the new window.

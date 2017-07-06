@@ -132,7 +132,8 @@ AccessibleHandlerControl::Create(AccessibleHandlerControl** aOutObject)
 }
 
 AccessibleHandlerControl::AccessibleHandlerControl()
-  : mCacheGen(0)
+  : mIsRegistered(false)
+  , mCacheGen(0)
   , mIA2Proxy(mscom::RegisterProxy(L"ia2marshal.dll"))
   , mHandlerProxy(mscom::RegisterProxy())
 {
@@ -187,6 +188,20 @@ AccessibleHandlerControl::GetHandlerTypeInfo(ITypeInfo** aOutTypeInfo)
 
   return mHandlerProxy->GetTypeInfoForGuid(CLSID_AccessibleHandler,
                                            aOutTypeInfo);
+}
+
+HRESULT
+AccessibleHandlerControl::Register(NotNull<IGeckoBackChannel*> aGecko)
+{
+  if (mIsRegistered) {
+    return S_OK;
+  }
+
+  long pid = static_cast<long>(::GetCurrentProcessId());
+  HRESULT hr = aGecko->put_HandlerControl(pid, this);
+  mIsRegistered = SUCCEEDED(hr);
+  MOZ_ASSERT(mIsRegistered);
+  return hr;
 }
 
 } // namespace a11y
