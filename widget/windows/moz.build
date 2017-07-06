@@ -97,12 +97,14 @@ if CONFIG['NS_PRINTING']:
         'nsDeviceContextSpecWin.cpp',
         'nsPrintOptionsWin.cpp',
         'nsPrintSettingsWin.cpp',
-        'PDFiumEngineShim.cpp',
-        'PDFViaEMFPrintHelper.cpp',
-        'WindowsEMF.cpp',
     ]
     if CONFIG['MOZ_ENABLE_SKIA_PDF']:
         DIRS += ['/modules/pdfium']
+        UNIFIED_SOURCES += [
+            'PDFiumEngineShim.cpp',
+            'PDFViaEMFPrintHelper.cpp',
+            'WindowsEMF.cpp',
+        ]
 
 if CONFIG['NS_ENABLE_TSF']:
     SOURCES += [
@@ -117,6 +119,7 @@ if CONFIG['MOZ_ENABLE_SKIA_PDF']:
   LOCAL_INCLUDES += [
     '/gfx/skia/skia/include/config',
     '/gfx/skia/skia/include/core',
+    '/modules/pdfium/pdfium/public',
   ]
 
 LOCAL_INCLUDES += [
