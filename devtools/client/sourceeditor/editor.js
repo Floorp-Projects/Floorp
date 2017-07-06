@@ -48,37 +48,14 @@ const {
 
 const { OS } = Services.appinfo;
 
-// CM_STYLES, CM_SCRIPTS and CM_IFRAME represent the HTML,
-// JavaScript and CSS that is injected into an iframe in
-// order to initialize a CodeMirror instance.
-
-const CM_STYLES = [
-  "chrome://devtools/content/sourceeditor/codemirror/lib/codemirror.css",
-  "chrome://devtools/content/sourceeditor/codemirror/addon/dialog/dialog.css",
-  "chrome://devtools/content/sourceeditor/codemirror/mozilla.css"
-];
-
-CM_STYLES.push(
-  "chrome://devtools/content/sourceeditor/codemirror/old-debugger.css"
-);
+// CM_SCRIPTS and CM_IFRAME represent the HTML and JavaScript that is
+// injected into an iframe in order to initialize a CodeMirror instance.
 
 const CM_SCRIPTS = [
   "chrome://devtools/content/sourceeditor/codemirror/codemirror.bundle.js",
 ];
 
-const CM_IFRAME =
-  "data:text/html;charset=utf8,<!DOCTYPE html>" +
-  "<html dir='ltr'>" +
-  "  <head>" +
-  "    <style>" +
-  "      html, body { height: 100%; }" +
-  "      body { margin: 0; overflow: hidden; }" +
-  "      .CodeMirror { width: 100% !important; line-height: 1.25 !important; }" +
-  "    </style>" +
-  CM_STYLES.map(style => "<link rel='stylesheet' href='" + style + "'>").join("\n") +
-  "  </head>" +
-  "  <body class='theme-body devtools-monospace'></body>" +
-  "</html>";
+const CM_IFRAME = "chrome://devtools/content/sourceeditor/codemirror/cmiframe.html";
 
 const CM_MAPPING = [
   "focus",

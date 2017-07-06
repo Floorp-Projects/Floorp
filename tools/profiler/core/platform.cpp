@@ -658,23 +658,22 @@ public:
 };
 
 static void
-AddDynamicCodeLocationTag(ProfileBuffer* aBuffer, const char* aStr)
+AddDynamicCodeLocationEntry(ProfileBuffer* aBuffer, const char* aStr)
 {
-  aBuffer->addTag(ProfileBufferEntry::CodeLocation(""));
+  aBuffer->addEntry(ProfileBufferEntry::CodeLocation(""));
 
   size_t strLen = strlen(aStr) + 1;   // +1 for the null terminator
   for (size_t j = 0; j < strLen; ) {
-    // Store as many characters in the void* as the platform allows.
-    char text[sizeof(void*)];
-    size_t len = sizeof(void*) / sizeof(char);
-    if (j+len >= strLen) {
+    // Store up to kNumChars characters in the entry.
+    char chars[ProfileBufferEntry::kNumChars];
+    size_t len = ProfileBufferEntry::kNumChars;
+    if (j + len >= strLen) {
       len = strLen - j;
     }
-    memcpy(text, &aStr[j], len);
-    j += sizeof(void*) / sizeof(char);
+    memcpy(chars, &aStr[j], len);
+    j += ProfileBufferEntry::kNumChars;
 
-    // Cast to *((void**) to pass the text data to a void*.
-    aBuffer->addTag(ProfileBufferEntry::EmbeddedString(*((void**)(&text[0]))));
+    aBuffer->addEntry(ProfileBufferEntry::EmbeddedString(chars));
   }
 }
 
@@ -711,16 +710,17 @@ AddPseudoEntry(PSLockRef aLock, ProfileBuffer* aBuffer,
       if (spaceLength != 0) {
         combinedStringBuffer[labelLength] = ' ';
       }
-      PodCopy(&combinedStringBuffer[labelLength + spaceLength], dynamicString, dynamicLength);
+      PodCopy(&combinedStringBuffer[labelLength + spaceLength], dynamicString,
+              dynamicLength);
       combinedStringBuffer[combinedLength] = '\0';
       locationString = combinedStringBuffer;
     } else {
       locationString = label;
     }
 
-    // Store the string using 1 or more EmbeddedString tags.
-    // That will happen to the preceding tag.
-    AddDynamicCodeLocationTag(aBuffer, locationString);
+    // Store the string using one or more EmbeddedString entries. That will
+    // happen to the preceding entry.
+    AddDynamicCodeLocationEntry(aBuffer, locationString);
     if (entry.isJs()) {
       JSScript* script = entry.script();
       if (script) {
@@ -736,7 +736,7 @@ AddPseudoEntry(PSLockRef aLock, ProfileBuffer* aBuffer,
       lineno = entry.line();
     }
   } else {
-    aBuffer->addTag(ProfileBufferEntry::CodeLocation(label));
+    aBuffer->addEntry(ProfileBufferEntry::CodeLocation(label));
 
     // XXX: Bug 1010578. Don't assume a CPP entry and try to get the line for
     // js entries as well.
@@ -746,10 +746,10 @@ AddPseudoEntry(PSLockRef aLock, ProfileBuffer* aBuffer,
   }
 
   if (lineno != -1) {
-    aBuffer->addTag(ProfileBufferEntry::LineNumber(lineno));
+    aBuffer->addEntry(ProfileBufferEntry::LineNumber(lineno));
   }
 
-  aBuffer->addTag(ProfileBufferEntry::Category(uint32_t(entry.category())));
+  aBuffer->addEntry(ProfileBufferEntry::Category(int(entry.category())));
 }
 
 // Setting MAX_NATIVE_FRAMES too high risks the unwinder wasting a lot of time
@@ -849,7 +849,7 @@ MergeStacksIntoProfile(PSLockRef aLock, bool aIsSynchronous,
   }
 
   // Start the sample with a root entry.
-  aBuffer->addTag(ProfileBufferEntry::Sample("(root)"));
+  aBuffer->addEntry(ProfileBufferEntry::Sample("(root)"));
 
   // While the pseudo-stack array is ordered oldest-to-youngest, the JS and
   // native arrays are ordered youngest-to-oldest. We must add frames to aInfo
@@ -951,11 +951,11 @@ MergeStacksIntoProfile(PSLockRef aLock, bool aIsSynchronous,
       // with stale JIT code return addresses.
       if (aIsSynchronous ||
           jsFrame.kind == JS::ProfilingFrameIterator::Frame_Wasm) {
-        AddDynamicCodeLocationTag(aBuffer, jsFrame.label);
+        AddDynamicCodeLocationEntry(aBuffer, jsFrame.label);
       } else {
         MOZ_ASSERT(jsFrame.kind == JS::ProfilingFrameIterator::Frame_Ion ||
                    jsFrame.kind == JS::ProfilingFrameIterator::Frame_Baseline);
-        aBuffer->addTag(
+        aBuffer->addEntry(
           ProfileBufferEntry::JitReturnAddr(jsFrames[jsIndex].returnAddress));
       }
 
@@ -968,7 +968,7 @@ MergeStacksIntoProfile(PSLockRef aLock, bool aIsSynchronous,
     if (nativeStackAddr) {
       MOZ_ASSERT(nativeIndex >= 0);
       void* addr = (void*)aNativeStack.mPCs[nativeIndex];
-      aBuffer->addTag(ProfileBufferEntry::NativeLeafAddr(addr));
+      aBuffer->addEntry(ProfileBufferEntry::NativeLeafAddr(addr));
     }
     if (nativeIndex >= 0) {
       nativeIndex--;
@@ -1251,10 +1251,10 @@ DoSharedSample(PSLockRef aLock, bool aIsSynchronous,
 
   MOZ_RELEASE_ASSERT(ActivePS::Exists(aLock));
 
-  aBuffer->addTagThreadId(aThreadInfo.ThreadId(), aLS);
+  aBuffer->addThreadIdEntry(aThreadInfo.ThreadId(), aLS);
 
   TimeDuration delta = aNow - CorePS::ProcessStartTime();
-  aBuffer->addTag(ProfileBufferEntry::Time(delta.ToMilliseconds()));
+  aBuffer->addEntry(ProfileBufferEntry::Time(delta.ToMilliseconds()));
 
   NativeStack nativeStack;
 #if defined(HAVE_NATIVE_UNWIND)
@@ -1270,7 +1270,7 @@ DoSharedSample(PSLockRef aLock, bool aIsSynchronous,
                            nativeStack, aBuffer);
 
     if (ActivePS::FeatureLeaf(aLock)) {
-      aBuffer->addTag(ProfileBufferEntry::NativeLeafAddr((void*)aRegs.mPC));
+      aBuffer->addEntry(ProfileBufferEntry::NativeLeafAddr((void*)aRegs.mPC));
     }
   }
 }
@@ -1304,23 +1304,24 @@ DoPeriodicSample(PSLockRef aLock, ThreadInfo& aThreadInfo,
   while (pendingMarkersList && pendingMarkersList->peek()) {
     ProfilerMarker* marker = pendingMarkersList->popHead();
     buffer->addStoredMarker(marker);
-    buffer->addTag(ProfileBufferEntry::Marker(marker));
+    buffer->addEntry(ProfileBufferEntry::Marker(marker));
   }
 
   ThreadResponsiveness* resp = aThreadInfo.GetThreadResponsiveness();
   if (resp && resp->HasData()) {
     TimeDuration delta = resp->GetUnresponsiveDuration(aNow);
-    buffer->addTag(ProfileBufferEntry::Responsiveness(delta.ToMilliseconds()));
+    buffer->addEntry(
+      ProfileBufferEntry::Responsiveness(delta.ToMilliseconds()));
   }
 
   if (aRSSMemory != 0) {
     double rssMemory = static_cast<double>(aRSSMemory);
-    buffer->addTag(ProfileBufferEntry::ResidentMemory(rssMemory));
+    buffer->addEntry(ProfileBufferEntry::ResidentMemory(rssMemory));
   }
 
   if (aUSSMemory != 0) {
     double ussMemory = static_cast<double>(aUSSMemory);
-    buffer->addTag(ProfileBufferEntry::UnsharedMemory(ussMemory));
+    buffer->addEntry(ProfileBufferEntry::UnsharedMemory(ussMemory));
   }
 }
 

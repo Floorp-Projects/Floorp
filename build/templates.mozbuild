@@ -21,6 +21,10 @@ def Binary():
     if CONFIG['STLPORT_LIBS']:
         OS_LIBS += [CONFIG['STLPORT_LIBS']]
 
+    # Add -llog by default, since we use it all over the place.
+    if CONFIG['OS_TARGET'] == 'Android':
+        OS_LIBS += ['log']
+
 
 @template
 def Program(name):

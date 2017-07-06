@@ -1629,7 +1629,14 @@ HttpChannelChild::Redirect1Begin(const uint32_t& registrarId,
       }
       mRedirectChannelChild->ConnectParent(registrarId);
     }
-    rv = gHttpHandler->AsyncOnChannelRedirect(this, newChannel, redirectFlags);
+
+    nsCOMPtr<nsIEventTarget> target = GetNeckoTarget();
+    MOZ_ASSERT(target);
+
+    rv = gHttpHandler->AsyncOnChannelRedirect(this,
+                                              newChannel,
+                                              redirectFlags,
+                                              target);
   }
 
   if (NS_FAILED(rv))
@@ -1659,9 +1666,13 @@ HttpChannelChild::BeginNonIPCRedirect(nsIURI* responseURI,
       httpChannelChild->OverrideSecurityInfoForNonIPCRedirect(mSecurityInfo);
     }
 
+    nsCOMPtr<nsIEventTarget> target = GetNeckoTarget();
+    MOZ_ASSERT(target);
+
     rv = gHttpHandler->AsyncOnChannelRedirect(this,
                                               newChannel,
-                                              nsIChannelEventSink::REDIRECT_INTERNAL);
+                                              nsIChannelEventSink::REDIRECT_INTERNAL,
+                                              target);
   }
 
   if (NS_FAILED(rv))

@@ -770,14 +770,19 @@ nsHttpHandler::NotifyObservers(nsIHttpChannel *chan, const char *event)
 }
 
 nsresult
-nsHttpHandler::AsyncOnChannelRedirect(nsIChannel* oldChan, nsIChannel* newChan,
-                                 uint32_t flags)
+nsHttpHandler::AsyncOnChannelRedirect(nsIChannel* oldChan,
+                                      nsIChannel* newChan,
+                                      uint32_t flags,
+                                      nsIEventTarget* mainThreadEventTarget)
 {
     // TODO E10S This helper has to be initialized on the other process
     RefPtr<nsAsyncRedirectVerifyHelper> redirectCallbackHelper =
         new nsAsyncRedirectVerifyHelper();
 
-    return redirectCallbackHelper->Init(oldChan, newChan, flags);
+    return redirectCallbackHelper->Init(oldChan,
+                                        newChan,
+                                        flags,
+                                        mainThreadEventTarget);
 }
 
 /* static */ nsresult

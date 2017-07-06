@@ -1628,16 +1628,16 @@ html .toggle-button-end.vertical svg {
   color: var(--theme-highlight-blue);
   text-decoration: underline;
 }
+
 .popover .preview .header .link:hover {
   cursor: pointer;
 }
 
-.selected-token {
+.selection, .debug-expression.selection {
   background-color: var(--theme-highlight-yellow);
-  color: var(--theme-selection-color);
 }
 
-.selected-token:hover {
+.selection:hover {
   cursor: pointer;
 }
 
@@ -1711,14 +1711,14 @@ html .toggle-button-end.vertical svg {
   cursor: pointer;
 }
 .editor-wrapper {
-  --debug-line-background: rgba(226, 236, 247, 0.5);
   --debug-line-border: rgb(145, 188, 219);
+  --debug-expression-background: rgba(202, 227, 255, 0.5);
   --editor-searchbar-height: 27px;
   --editor-second-searchbar-height: 27px;
 }
 
 .theme-dark .editor-wrapper {
-  --debug-line-background: rgb(73, 82, 103);
+  --debug-expression-background: rgb(73, 82, 103);
   --debug-line-border: rgb(119, 134, 162);
 }
 
@@ -1872,13 +1872,13 @@ html[dir="rtl"] .editor-mount {
   color: var(--theme-content-color3);
 }
 
-.new-debug-line .CodeMirror-line {
-  background-color: var(--debug-line-background) !important;
-  outline: var(--debug-line-border) solid 1px;
+.debug-expression {
+  background-color: var(--debug-expression-background);
 }
 
-.new-debug-line .CodeMirror-linenumber {
+.new-debug-line .CodeMirror-line {
   background-color: transparent !important;
+  outline: var(--debug-line-border) solid 1px;
 }
 
 /* Don't display the highlight color since the debug line

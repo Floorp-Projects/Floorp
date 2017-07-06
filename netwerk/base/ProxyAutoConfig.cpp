@@ -269,8 +269,9 @@ class PACResolver final : public nsIDNSListener
 public:
   NS_DECL_THREADSAFE_ISUPPORTS
 
-  PACResolver()
+  explicit PACResolver(nsIEventTarget *aTarget)
     : mStatus(NS_ERROR_FAILURE)
+    , mMainThreadEventTarget(aTarget)
   {
   }
 
@@ -299,10 +300,11 @@ public:
     return NS_OK;
   }
 
-  nsresult                mStatus;
-  nsCOMPtr<nsICancelable> mRequest;
-  nsCOMPtr<nsIDNSRecord>  mResponse;
-  nsCOMPtr<nsITimer>      mTimer;
+  nsresult                 mStatus;
+  nsCOMPtr<nsICancelable>  mRequest;
+  nsCOMPtr<nsIDNSRecord>   mResponse;
+  nsCOMPtr<nsITimer>       mTimer;
+  nsCOMPtr<nsIEventTarget> mMainThreadEventTarget;
 
 private:
   ~PACResolver() {}
@@ -405,7 +407,7 @@ ProxyAutoConfig::ResolveAddress(const nsCString &aHostName,
   if (!dns)
     return false;
 
-  RefPtr<PACResolver> helper = new PACResolver();
+  RefPtr<PACResolver> helper = new PACResolver(mMainThreadEventTarget);
   OriginAttributes attrs;
 
   if (NS_FAILED(dns->AsyncResolveNative(aHostName,
@@ -420,6 +422,7 @@ ProxyAutoConfig::ResolveAddress(const nsCString &aHostName,
     if (!mTimer)
       mTimer = do_CreateInstance(NS_TIMER_CONTRACTID);
     if (mTimer) {
+      mTimer->SetTarget(mMainThreadEventTarget);
       mTimer->InitWithCallback(helper, aTimeout, nsITimer::TYPE_ONE_SHOT);
       helper->mTimer = mTimer;
     }
@@ -678,13 +681,15 @@ nsresult
 ProxyAutoConfig::Init(const nsCString &aPACURI,
                       const nsCString &aPACScript,
                       bool aIncludePath,
-                      uint32_t aExtraHeapSize)
+                      uint32_t aExtraHeapSize,
+                      nsIEventTarget *aEventTarget)
 {
   mPACURI = aPACURI;
   mPACScript = sPacUtils;
   mPACScript.Append(aPACScript);
   mIncludePath = aIncludePath;
   mExtraHeapSize = aExtraHeapSize;
+  mMainThreadEventTarget = aEventTarget;
 
   if (!GetRunning())
     return SetupJS();

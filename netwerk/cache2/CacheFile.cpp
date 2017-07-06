@@ -900,6 +900,16 @@ CacheFile::OpenOutputStream(CacheOutputCloseListener *aCloseListener, nsIOutputS
     return NS_ERROR_NOT_AVAILABLE;
   }
 
+  if (NS_FAILED(mStatus)) {
+    LOG(("CacheFile::OpenOutputStream() - CacheFile is in a failure state "
+         "[this=%p, status=0x%08" PRIx32 "]", this,
+         static_cast<uint32_t>(mStatus)));
+
+    // The CacheFile is already doomed. It make no sense to allow to write any
+    // data to such entry.
+    return mStatus;
+  }
+
   // Fail if there is any input stream opened for alternative data
   for (uint32_t i = 0; i < mInputs.Length(); ++i) {
     if (mInputs[i]->IsAlternativeData()) {
@@ -956,6 +966,16 @@ CacheFile::OpenAlternativeOutputStream(CacheOutputCloseListener *aCloseListener,
          "stream %p [this=%p]", mOutput, this));
 
     return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  if (NS_FAILED(mStatus)) {
+    LOG(("CacheFile::OpenAlternativeOutputStream() - CacheFile is in a failure "
+         "state [this=%p, status=0x%08" PRIx32 "]", this,
+         static_cast<uint32_t>(mStatus)));
+
+    // The CacheFile is already doomed. It make no sense to allow to write any
+    // data to such entry.
+    return mStatus;
   }
 
   // Fail if there is any input stream opened for alternative data
@@ -1982,9 +2002,9 @@ CacheFile::Truncate(int64_t aOffset)
     MOZ_RELEASE_ASSERT(bytesInNewLastChunk == kChunkSize);
     newLastChunk++;
     bytesInNewLastChunk = 0;
-    LOG(("CacheFileTruncate() - chunk %p is still in use, using newLastChunk=%u"
-         " and bytesInNewLastChunk=%u", mChunks.GetWeak(newLastChunk),
-         newLastChunk, bytesInNewLastChunk));
+    LOG(("CacheFile::Truncate() - chunk %p is still in use, using "
+         "newLastChunk=%u and bytesInNewLastChunk=%u",
+         mChunks.GetWeak(newLastChunk), newLastChunk, bytesInNewLastChunk));
   }
 
   // Discard all truncated chunks in mChunks

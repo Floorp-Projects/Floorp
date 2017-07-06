@@ -115,7 +115,7 @@ const RequestListHeader = createClass({
                 id: `requests-list-${name}-button`,
                 className: `requests-list-header-button`,
                 "data-sorted": sorted,
-                title: sortedTitle,
+                title: sortedTitle ? `${label} (${sortedTitle})` : label,
                 onClick: () => sortBy(name),
               },
                 name === "waterfall"
