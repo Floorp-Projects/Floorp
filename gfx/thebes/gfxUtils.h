@@ -21,6 +21,7 @@
 
 class gfxASurface;
 class gfxDrawable;
+struct gfxQuad;
 class nsIInputStream;
 class nsIGfxInfo;
 class nsIPresShell;
@@ -130,6 +131,18 @@ public:
      * set aOut to that rectangle, otherwise return failure.
     */
     static bool GfxRectToIntRect(const gfxRect& aIn, mozilla::gfx::IntRect* aOut);
+
+    /* Conditions this border to Cairo's max coordinate space.
+     * The caller can check IsEmpty() after Condition() -- if it's TRUE,
+     * the caller can possibly avoid doing any extra rendering.
+     */
+    static void ConditionRect(gfxRect& aRect);
+
+    /*
+     * Transform this rectangle with aMatrix, resulting in a gfxQuad.
+     */
+    static gfxQuad TransformToQuad(const gfxRect& aRect,
+                                   const mozilla::gfx::Matrix4x4& aMatrix);
 
     /**
      * Return the smallest power of kScaleResolution (2) greater than or equal to

@@ -11,6 +11,10 @@
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/Logging.h"
 #include "mozilla/Telemetry.h"
+#include "mozilla/Services.h"
+#include "nsIObserver.h"
+#include "nsIObserverService.h"
+#include "nsWeakReference.h"
 #include "prsystem.h"
 
 namespace mozilla {

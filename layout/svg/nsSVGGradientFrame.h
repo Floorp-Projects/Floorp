@@ -8,6 +8,7 @@
 
 #include "mozilla/Attributes.h"
 #include "gfxMatrix.h"
+#include "gfxRect.h"
 #include "nsCOMPtr.h"
 #include "nsFrame.h"
 #include "nsLiteralString.h"
@@ -19,8 +20,6 @@ class nsIContent;
 class nsIFrame;
 class nsIPresShell;
 class nsStyleContext;
-
-struct gfxRect;
 
 namespace mozilla {
 class nsSVGAnimatedTransformList;

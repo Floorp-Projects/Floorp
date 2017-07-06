@@ -163,6 +163,24 @@ public:
 };
 
 template <typename E,
+          E MinLegal,
+          E MaxLegal>
+class ContiguousEnumValidatorInclusive
+{
+  // Silence overzealous -Wtype-limits bug in GCC fixed in GCC 4.8:
+  // "comparison of unsigned expression >= 0 is always true"
+  // http://gcc.gnu.org/bugzilla/show_bug.cgi?id=11856
+  template <typename T>
+  static bool IsLessThanOrEqual(T a, T b) { return a <= b; }
+
+public:
+  static bool IsLegalValue(E e)
+  {
+    return IsLessThanOrEqual(MinLegal, e) && e <= MaxLegal;
+  }
+};
+
+template <typename E,
           E AllBits>
 struct BitFlagsEnumValidator
 {
@@ -194,6 +212,20 @@ template <typename E,
 struct ContiguousEnumSerializer
   : EnumSerializer<E,
                    ContiguousEnumValidator<E, MinLegal, HighBound>>
+{};
+
+/**
+ * This is similar to ContiguousEnumSerializer, but the last template
+ * parameter is expected to be the highest legal value, rather than a
+ * sentinel value. This is intended to support enumerations that don't
+ * have sentinel values.
+ */
+template <typename E,
+          E MinLegal,
+          E MaxLegal>
+struct ContiguousEnumSerializerInclusive
+  : EnumSerializer<E,
+                   ContiguousEnumValidatorInclusive<E, MinLegal, MaxLegal>>
 {};
 
 /**

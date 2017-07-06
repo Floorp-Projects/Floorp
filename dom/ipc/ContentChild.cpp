@@ -62,7 +62,6 @@
 #include "mozilla/loader/ScriptCacheActors.h"
 #include "mozilla/net/NeckoChild.h"
 #include "mozilla/net/CaptivePortalService.h"
-#include "mozilla/Omnijar.h"
 #include "mozilla/plugins/PluginInstanceParent.h"
 #include "mozilla/plugins/PluginModuleParent.h"
 #include "mozilla/widget/ScreenManager.h"
@@ -1436,18 +1435,6 @@ GetAppPaths(nsCString &aAppPath, nsCString &aAppBinaryPath, nsCString &aAppDir)
   return true;
 }
 
-// Returns whether or not the currently running build is a development build -
-// where development build means "the files in the .app are symlinks to the src
-// directory". This check is implemented by looking for omni.ja in
-// .app/Contents/Resources/.
-static bool
-IsDevelopmentBuild()
-{
-  nsCOMPtr<nsIFile> path = mozilla::Omnijar::GetPath(mozilla::Omnijar::GRE);
-  // If the path doesn't exist, we're a dev build.
-  return path == nullptr;
-}
-
 // This function is only used in an |#ifdef DEBUG| path.
 #ifdef DEBUG
 // Given a path to a file, return the directory which contains it.
@@ -1517,7 +1504,7 @@ StartMacOSContentSandbox()
 
   bool isFileProcess = cc->GetRemoteType().EqualsLiteral(FILE_REMOTE_TYPE);
   char *developer_repo_dir = nullptr;
-  if (IsDevelopmentBuild()) {
+  if (mozilla::IsDevelopmentBuild()) {
     // If this is a developer build the resources in the .app are symlinks to
     // outside of the .app. Therefore in non-release builds we allow reads from
     // the whole repository. MOZ_DEVELOPER_REPO_DIR is set by mach run.

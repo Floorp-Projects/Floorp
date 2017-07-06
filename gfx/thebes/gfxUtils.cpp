@@ -11,6 +11,7 @@
 #include "gfxImageSurface.h"
 #include "gfxPlatform.h"
 #include "gfxDrawable.h"
+#include "gfxQuad.h"
 #include "imgIEncoder.h"
 #include "mozilla/Base64.h"
 #include "mozilla/dom/ImageEncoder.h"
@@ -749,6 +750,71 @@ gfxUtils::GfxRectToIntRect(const gfxRect& aIn, IntRect* aOut)
   *aOut = IntRect(int32_t(aIn.X()), int32_t(aIn.Y()),
   int32_t(aIn.Width()), int32_t(aIn.Height()));
   return gfxRect(aOut->x, aOut->y, aOut->width, aOut->height).IsEqualEdges(aIn);
+}
+
+/* Clamp r to CAIRO_COORD_MIN .. CAIRO_COORD_MAX
+ * these are to be device coordinates.
+ *
+ * Cairo is currently using 24.8 fixed point,
+ * so -2^24 .. 2^24-1 is our valid
+ */
+/*static*/ void
+gfxUtils::ConditionRect(gfxRect& aRect)
+{
+#define CAIRO_COORD_MAX (16777215.0)
+#define CAIRO_COORD_MIN (-16777216.0)
+  // if either x or y is way out of bounds;
+  // note that we don't handle negative w/h here
+  if (aRect.x > CAIRO_COORD_MAX) {
+    aRect.x = CAIRO_COORD_MAX;
+    aRect.width = 0.0;
+  }
+
+  if (aRect.y > CAIRO_COORD_MAX) {
+    aRect.y = CAIRO_COORD_MAX;
+    aRect.height = 0.0;
+  }
+
+  if (aRect.x < CAIRO_COORD_MIN) {
+    aRect.width += aRect.x - CAIRO_COORD_MIN;
+    if (aRect.width < 0.0) {
+      aRect.width = 0.0;
+    }
+    aRect.x = CAIRO_COORD_MIN;
+  }
+
+  if (aRect.y < CAIRO_COORD_MIN) {
+    aRect.height += aRect.y - CAIRO_COORD_MIN;
+    if (aRect.height < 0.0) {
+      aRect.height = 0.0;
+    }
+    aRect.y = CAIRO_COORD_MIN;
+  }
+
+  if (aRect.x + aRect.width > CAIRO_COORD_MAX) {
+    aRect.width = CAIRO_COORD_MAX - aRect.x;
+  }
+
+  if (aRect.y + aRect.height > CAIRO_COORD_MAX) {
+    aRect.height = CAIRO_COORD_MAX - aRect.y;
+  }
+#undef CAIRO_COORD_MAX
+#undef CAIRO_COORD_MIN
+}
+
+/*static*/ gfxQuad
+gfxUtils::TransformToQuad(const gfxRect& aRect,
+                          const mozilla::gfx::Matrix4x4 &aMatrix)
+{
+  gfxPoint points[4];
+
+  points[0] = aMatrix.TransformPoint(aRect.TopLeft());
+  points[1] = aMatrix.TransformPoint(aRect.TopRight());
+  points[2] = aMatrix.TransformPoint(aRect.BottomRight());
+  points[3] = aMatrix.TransformPoint(aRect.BottomLeft());
+
+  // Could this ever result in lines that intersect? I don't think so.
+  return gfxQuad(points[0], points[1], points[2], points[3]);
 }
 
 /* static */ void gfxUtils::ClearThebesSurface(gfxASurface* aSurface)

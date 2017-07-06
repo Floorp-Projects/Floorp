@@ -205,28 +205,28 @@ struct {								\
 #define	rb_first(a_type, a_field, a_tree, r_node) do {			\
     rbp_first(a_type, a_field, a_tree, (a_tree)->rbt_root, (r_node));	\
     if ((r_node) == &(a_tree)->rbt_nil) {				\
-	(r_node) = NULL;						\
+	(r_node) = nullptr;						\
     }									\
 } while (0)
 
 #define	rb_last(a_type, a_field, a_tree, r_node) do {			\
     rbp_last(a_type, a_field, a_tree, (a_tree)->rbt_root, r_node);	\
     if ((r_node) == &(a_tree)->rbt_nil) {				\
-	(r_node) = NULL;						\
+	(r_node) = nullptr;						\
     }									\
 } while (0)
 
 #define	rb_next(a_type, a_field, a_cmp, a_tree, a_node, r_node) do {	\
     rbp_next(a_type, a_field, a_cmp, a_tree, (a_node), (r_node));	\
     if ((r_node) == &(a_tree)->rbt_nil) {				\
-	(r_node) = NULL;						\
+	(r_node) = nullptr;						\
     }									\
 } while (0)
 
 #define	rb_prev(a_type, a_field, a_cmp, a_tree, a_node, r_node) do {	\
     rbp_prev(a_type, a_field, a_cmp, a_tree, (a_node), (r_node));	\
     if ((r_node) == &(a_tree)->rbt_nil) {				\
-	(r_node) = NULL;						\
+	(r_node) = nullptr;						\
     }									\
 } while (0)
 
@@ -242,7 +242,7 @@ struct {								\
 	}								\
     }									\
     if ((r_node) == &(a_tree)->rbt_nil) {				\
-	(r_node) = NULL;						\
+	(r_node) = nullptr;						\
     }									\
 } while (0)
 
@@ -252,7 +252,7 @@ struct {								\
  */
 #define	rb_nsearch(a_type, a_field, a_cmp, a_tree, a_key, r_node) do {	\
     a_type *rbp_ns_t = (a_tree)->rbt_root;				\
-    (r_node) = NULL;							\
+    (r_node) = nullptr;							\
     while (rbp_ns_t != &(a_tree)->rbt_nil) {				\
 	int rbp_ns_cmp = (a_cmp)((a_key), rbp_ns_t);			\
 	if (rbp_ns_cmp < 0) {						\

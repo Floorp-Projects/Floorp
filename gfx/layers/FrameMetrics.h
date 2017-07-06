@@ -8,6 +8,7 @@
 
 #include <stdint.h>                     // for uint32_t, uint64_t
 #include "Units.h"                      // for CSSRect, CSSPixel, etc
+#include "mozilla/DefineEnum.h"         // for MOZ_DEFINE_ENUM
 #include "mozilla/HashFunctions.h"      // for HashGeneric
 #include "mozilla/Maybe.h"
 #include "mozilla/gfx/BasePoint.h"      // for BasePoint
@@ -50,23 +51,22 @@ public:
   static const ViewID START_SCROLL_ID = 2;  // This is the ID that scrolling subframes
                                         // will begin at.
 
-  enum ScrollOffsetUpdateType : uint8_t {
-    eNone,          // The default; the scroll offset was not updated
-    eMainThread,    // The scroll offset was updated by the main thread.
-    ePending,       // The scroll offset was updated on the main thread, but not
-                    // painted, so the layer texture data is still at the old
-                    // offset.
-    eUserAction,    // In an APZ repaint request, this means the APZ generated
-                    // the scroll position based on user action (the alternative
-                    // is eNone which means it's just request a repaint because
-                    // it got a scroll update from the main thread).
-    eRestore,       // The scroll offset was updated by the main thread, but as
-                    // a restore from history or after a frame reconstruction.
-                    // In this case, APZ can ignore the offset change if the
-                    // user has done an APZ scroll already.
-
-    eSentinel       // For IPC use only
-  };
+  MOZ_DEFINE_ENUM_WITH_BASE_AT_CLASS_SCOPE(
+    ScrollOffsetUpdateType, uint8_t, (
+      eNone,          // The default; the scroll offset was not updated
+      eMainThread,    // The scroll offset was updated by the main thread.
+      ePending,       // The scroll offset was updated on the main thread, but not
+                      // painted, so the layer texture data is still at the old
+                      // offset.
+      eUserAction,    // In an APZ repaint request, this means the APZ generated
+                      // the scroll position based on user action (the alternative
+                      // is eNone which means it's just request a repaint because
+                      // it got a scroll update from the main thread).
+      eRestore        // The scroll offset was updated by the main thread, but as
+                      // a restore from history or after a frame reconstruction.
+                      // In this case, APZ can ignore the offset change if the
+                      // user has done an APZ scroll already.
+  ));
 
   FrameMetrics()
     : mScrollId(NULL_SCROLL_ID)

@@ -1369,11 +1369,6 @@ TabChild::RecvHandleTap(const GeckoContentController::TapType& aType,
       mAPZEventState->ProcessLongTapUp(presShell, point, scale, aModifiers);
     }
     break;
-  case GeckoContentController::TapType::eSentinel:
-    // Should never happen, but we need to handle this case to make the compiler
-    // happy.
-    MOZ_ASSERT(false);
-    break;
   }
   return IPC_OK();
 }

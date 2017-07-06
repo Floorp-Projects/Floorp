@@ -1064,10 +1064,10 @@ struct ParamTraits<mozilla::widget::CandidateWindowPosition>
 
 template<>
 struct ParamTraits<mozilla::InputType>
-  : public ContiguousEnumSerializer<
+  : public ContiguousEnumSerializerInclusive<
              mozilla::InputType,
              mozilla::InputType::MULTITOUCH_INPUT,
-             mozilla::InputType::SENTINEL_INPUT>
+             mozilla::kHighestInputType>
 {};
 
 template<>
@@ -1122,10 +1122,10 @@ struct ParamTraits<mozilla::SingleTouchData>
 
 template<>
 struct ParamTraits<mozilla::MultiTouchInput::MultiTouchType>
-  : public ContiguousEnumSerializer<
+  : public ContiguousEnumSerializerInclusive<
              mozilla::MultiTouchInput::MultiTouchType,
              mozilla::MultiTouchInput::MultiTouchType::MULTITOUCH_START,
-             mozilla::MultiTouchInput::MultiTouchType::MULTITOUCH_SENTINEL>
+             mozilla::MultiTouchInput::sHighestMultiTouchType>
 {};
 
 template<>
@@ -1152,18 +1152,18 @@ struct ParamTraits<mozilla::MultiTouchInput>
 
 template<>
 struct ParamTraits<mozilla::MouseInput::MouseType>
-  : public ContiguousEnumSerializer<
+  : public ContiguousEnumSerializerInclusive<
              mozilla::MouseInput::MouseType,
              mozilla::MouseInput::MouseType::MOUSE_NONE,
-             mozilla::MouseInput::MouseType::MOUSE_SENTINEL>
+             mozilla::MouseInput::sHighestMouseType>
 {};
 
 template<>
 struct ParamTraits<mozilla::MouseInput::ButtonType>
-  : public ContiguousEnumSerializer<
+  : public ContiguousEnumSerializerInclusive<
              mozilla::MouseInput::ButtonType,
              mozilla::MouseInput::ButtonType::LEFT_BUTTON,
-             mozilla::MouseInput::ButtonType::BUTTON_SENTINEL>
+             mozilla::MouseInput::sHighestButtonType>
 {};
 
 template<>
@@ -1198,10 +1198,10 @@ struct ParamTraits<mozilla::MouseInput>
 
 template<>
 struct ParamTraits<mozilla::PanGestureInput::PanGestureType>
-  : public ContiguousEnumSerializer<
+  : public ContiguousEnumSerializerInclusive<
              mozilla::PanGestureInput::PanGestureType,
              mozilla::PanGestureInput::PanGestureType::PANGESTURE_MAYSTART,
-             mozilla::PanGestureInput::PanGestureType::PANGESTURE_SENTINEL>
+             mozilla::PanGestureInput::sHighestPanGestureType>
 {};
 
 template<>
@@ -1246,10 +1246,10 @@ struct ParamTraits<mozilla::PanGestureInput>
 
 template<>
 struct ParamTraits<mozilla::PinchGestureInput::PinchGestureType>
-  : public ContiguousEnumSerializer<
+  : public ContiguousEnumSerializerInclusive<
              mozilla::PinchGestureInput::PinchGestureType,
              mozilla::PinchGestureInput::PinchGestureType::PINCHGESTURE_START,
-             mozilla::PinchGestureInput::PinchGestureType::PINCHGESTURE_SENTINEL>
+             mozilla::PinchGestureInput::sHighestPinchGestureType>
 {};
 
 template<>
@@ -1280,10 +1280,10 @@ struct ParamTraits<mozilla::PinchGestureInput>
 
 template<>
 struct ParamTraits<mozilla::TapGestureInput::TapGestureType>
-  : public ContiguousEnumSerializer<
+  : public ContiguousEnumSerializerInclusive<
              mozilla::TapGestureInput::TapGestureType,
              mozilla::TapGestureInput::TapGestureType::TAPGESTURE_LONG,
-             mozilla::TapGestureInput::TapGestureType::TAPGESTURE_SENTINEL>
+             mozilla::TapGestureInput::sHighestTapGestureType>
 {};
 
 template<>
@@ -1310,18 +1310,18 @@ struct ParamTraits<mozilla::TapGestureInput>
 
 template<>
 struct ParamTraits<mozilla::ScrollWheelInput::ScrollDeltaType>
-  : public ContiguousEnumSerializer<
+  : public ContiguousEnumSerializerInclusive<
              mozilla::ScrollWheelInput::ScrollDeltaType,
              mozilla::ScrollWheelInput::ScrollDeltaType::SCROLLDELTA_LINE,
-             mozilla::ScrollWheelInput::ScrollDeltaType::SCROLLDELTA_SENTINEL>
+             mozilla::ScrollWheelInput::sHighestScrollDeltaType>
 {};
 
 template<>
 struct ParamTraits<mozilla::ScrollWheelInput::ScrollMode>
-  : public ContiguousEnumSerializer<
+  : public ContiguousEnumSerializerInclusive<
              mozilla::ScrollWheelInput::ScrollMode,
              mozilla::ScrollWheelInput::ScrollMode::SCROLLMODE_INSTANT,
-             mozilla::ScrollWheelInput::ScrollMode::SCROLLMODE_SENTINEL>
+             mozilla::ScrollWheelInput::sHighestScrollMode>
 {};
 
 template<>

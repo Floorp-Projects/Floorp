@@ -131,8 +131,6 @@ AndroidDynamicToolbarAnimator::ReceiveInputEvent(InputData& aEvent, const Screen
   case MultiTouchInput::MULTITOUCH_CANCEL:
     mControllerTouchCount -= multiTouch.mTouches.Length();
     break;
-  case MultiTouchInput::MULTITOUCH_SENTINEL:
-    MOZ_FALLTHROUGH_ASSERT("Invalid value");
   case MultiTouchInput::MULTITOUCH_MOVE:
     break;
   }
@@ -202,9 +200,6 @@ AndroidDynamicToolbarAnimator::ReceiveInputEvent(InputData& aEvent, const Screen
     if (mControllerTouchCount == 0) {
       HandleTouchEnd(currentToolbarState, currentTouch);
     }
-    break;
-  case MultiTouchInput::MULTITOUCH_SENTINEL:
-    MOZ_ASSERT_UNREACHABLE("Invalid value");
     break;
   }
 

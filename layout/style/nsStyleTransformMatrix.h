@@ -10,9 +10,11 @@
 #ifndef nsStyleTransformMatrix_h_
 #define nsStyleTransformMatrix_h_
 
+#include "gfxPoint.h"
 #include "mozilla/gfx/Matrix.h"
 #include "mozilla/EnumeratedArray.h"
 #include "nsCSSValue.h"
+#include "nsSize.h"
 
 #include <limits>
 

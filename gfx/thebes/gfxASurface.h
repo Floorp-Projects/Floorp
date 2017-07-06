@@ -10,6 +10,7 @@
 #include "mozilla/UniquePtr.h"
 
 #include "gfxPoint.h"
+#include "gfxRect.h"
 #include "gfxTypes.h"
 #include "nscore.h"
 #include "nsSize.h"
@@ -18,7 +19,6 @@
 #include "nsStringFwd.h"
 
 class gfxImageSurface;
-struct gfxRect;
 
 template <typename T>
 struct already_AddRefed;

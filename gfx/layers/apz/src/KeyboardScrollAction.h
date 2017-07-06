@@ -6,6 +6,7 @@
 #ifndef mozilla_layers_KeyboardScrollAction_h
 #define mozilla_layers_KeyboardScrollAction_h
 
+#include "mozilla/DefineEnum.h" // for MOZ_DEFINE_ENUM
 #include "nsIScrollableFrame.h" // for nsIScrollableFrame::ScrollUnit
 
 namespace mozilla {
@@ -17,16 +18,13 @@ namespace layers {
 struct KeyboardScrollAction final
 {
 public:
-  enum KeyboardScrollActionType : uint8_t
-  {
-    eScrollCharacter,
-    eScrollLine,
-    eScrollPage,
-    eScrollComplete,
-
-    // Used as an upper bound for ContiguousEnumSerializer
-    eSentinel,
-  };
+  MOZ_DEFINE_ENUM_WITH_BASE_AT_CLASS_SCOPE(
+    KeyboardScrollActionType, uint8_t, (
+      eScrollCharacter,
+      eScrollLine,
+      eScrollPage,
+      eScrollComplete
+  ));
 
   static nsIScrollableFrame::ScrollUnit
   GetScrollUnit(KeyboardScrollActionType aDeltaType);

@@ -33,6 +33,7 @@ add_task(async function() {
 
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
+      "name": "contextMenus commands",
       "permissions": ["contextMenus", "activeTab", "tabs"],
       "browser_action": {
         "default_title": "Test BrowserAction",
@@ -59,6 +60,7 @@ add_task(async function() {
   async function testContext(id) {
     const menu = await openExtensionContextMenu();
     const items = menu.getElementsByAttribute("label", id);
+    is(items.length, 1, `exactly one menu item found`);
     await closeExtensionContextMenu(items[0]);
     return extension.awaitMessage("test-opened");
   }

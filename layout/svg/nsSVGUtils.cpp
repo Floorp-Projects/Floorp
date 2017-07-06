@@ -471,9 +471,8 @@ public:
       if (userToDeviceSpace.IsSingular()) {
         return;
       }
-      gfxRect dirtyBounds =
-        gfxRect(aDirtyRect->x, aDirtyRect->y, aDirtyRect->width, aDirtyRect->height);
-      dirtyBounds.TransformBoundsBy(userToDeviceSpace);
+      gfxRect dirtyBounds = userToDeviceSpace.TransformBounds(
+        gfxRect(aDirtyRect->x, aDirtyRect->y, aDirtyRect->width, aDirtyRect->height));
       dirtyBounds.RoundOut();
       if (gfxUtils::GfxRectToIntRect(dirtyBounds, &tmpDirtyRect)) {
         dirtyRect = &tmpDirtyRect;
@@ -844,9 +843,9 @@ nsSVGUtils::PaintFrameWithEffects(nsIFrame *aFrame,
       }
       gfxMatrix deviceToUserSpace = userToDeviceSpace;
       deviceToUserSpace.Invert();
-      gfxRect dirtyBounds = gfxRect(aDirtyRect->x, aDirtyRect->y,
-                                    aDirtyRect->width, aDirtyRect->height);
-      dirtyBounds.TransformBoundsBy(deviceToUserSpace);
+      gfxRect dirtyBounds = deviceToUserSpace.TransformBounds(
+                              gfxRect(aDirtyRect->x, aDirtyRect->y,
+                                      aDirtyRect->width, aDirtyRect->height));
       tmpDirtyRegion =
         nsLayoutUtils::RoundGfxRectToAppRect(
           dirtyBounds, aFrame->PresContext()->AppUnitsPerCSSPixel()) -
@@ -969,8 +968,8 @@ nsSVGUtils::TransformFrameRectToOuterSVG(const nsRect& aRect,
 {
   gfxRect r(aRect.x, aRect.y, aRect.width, aRect.height);
   r.Scale(1.0 / nsPresContext::AppUnitsPerCSSPixel());
-  r.TransformBoundsBy(aMatrix);
-  return nsLayoutUtils::RoundGfxRectToAppRect(r, aPresContext->AppUnitsPerDevPixel());
+  return nsLayoutUtils::RoundGfxRectToAppRect(
+    aMatrix.TransformBounds(r), aPresContext->AppUnitsPerDevPixel());
 }
 
 IntSize
@@ -1154,7 +1153,7 @@ nsSVGUtils::GetBBox(nsIFrame* aFrame, uint32_t aFlags,
       clipRect =
         nsSVGUtils::GetClipRectForFrame(aFrame, x, y, width, height);
       if (aFrame->IsSVGForeignObjectFrame() || aFrame->IsSVGUseFrame()) {
-        clipRect.TransformBoundsBy(matrix);
+        clipRect = matrix.TransformBounds(clipRect);
       }
     }
     nsSVGEffects::EffectProperties effectProperties =
@@ -1888,10 +1887,8 @@ nsSVGUtils::ToCanvasBounds(const gfxRect &aUserspaceRect,
                            const gfxMatrix &aToCanvas,
                            const nsPresContext *presContext)
 {
-  gfxRect userspaceRect = aUserspaceRect;
-  userspaceRect.TransformBoundsBy(aToCanvas);
   return nsLayoutUtils::RoundGfxRectToAppRect(
-                          userspaceRect,
+                          aToCanvas.TransformBounds(aUserspaceRect),
                           presContext->AppUnitsPerDevPixel());
 }
 

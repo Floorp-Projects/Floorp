@@ -1,0 +1,57 @@
+<!doctype html>
+<meta charset=utf-8>
+<title>focus move and auto scroll tests caused by a call of Selection.addRange() into a contenteditable element in iframe</title>
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<body>
+<iframe srcdoc="<div style='height: 1000px;'></div><div id='editor' contenteditable>editor</div>" style="height: 500px;"></iframe>
+<script>
+"use strict";
+setup({explicit_done:true});
+
+window.onload = ()=>{
+  test(function() {
+    var subDocument = document.querySelector("iframe").contentDocument;
+    var editorInFrame = subDocument.getElementById("editor");
+    var range = subDocument.createRange();
+    range.setStart(editorInFrame, 0);
+    var selection = subDocument.getSelection();
+    selection.removeAllRanges();
+    selection.addRange(range);
+    assert_equals(document.activeElement, document.body);
+    assert_equals(subDocument.documentElement.scrollTop, 0);
+    assert_equals(subDocument.activeElement, editorInFrame);
+  }, "Moving selection into inactive contenteditable element in non-focused document shouldn't cause scrolling");
+
+  test(function() {
+    var iframe = document.querySelector("iframe");
+    var subDocument = iframe.contentDocument;
+    var selection = subDocument.getSelection();
+
+    // Reset selection in <iframe>
+    var editorInFrame = subDocument.getElementById("editor");
+    editorInFrame.blur();
+    selection.removeAllRanges();
+    var range = document.createRange();
+    range.setStart(subDocument.body, 0);
+    selection.addRange(range);
+    subDocument.documentElement.scrollTop = 0;
+
+    // Move focus to the <iframe>
+    iframe.contentWindow.focus();
+    assert_equals(document.activeElement, iframe);
+    assert_equals(subDocument.activeElement, subDocument.body);
+    assert_equals(subDocument.documentElement.scrollTop, 0);
+
+    range = subDocument.createRange();
+    range.setStart(editorInFrame, 0);
+    selection.removeAllRanges();
+    selection.addRange(range);
+    assert_equals(document.activeElement, iframe);
+    assert_not_equals(subDocument.documentElement.scrollTop, 0);
+    assert_equals(subDocument.activeElement, editorInFrame);
+  }, "Moving selection into inactive contenteditable element in focused document should cause scrolling");
+
+  done();
+};
+</script>
