@@ -116,7 +116,7 @@ pub trait AtRuleParser<'i> {
                      -> Result<AtRuleType<Self::Prelude, Self::AtRule>, ParseError<'i, Self::Error>> {
         let _ = name;
         let _ = input;
-        Err(ParseError::Basic(BasicParseError::AtRuleInvalid))
+        Err(ParseError::Basic(BasicParseError::AtRuleInvalid(name)))
     }
 
     /// Parse the content of a `{ /* ... */ }` block for the body of the at-rule.
@@ -131,7 +131,7 @@ pub trait AtRuleParser<'i> {
                        -> Result<Self::AtRule, ParseError<'i, Self::Error>> {
         let _ = prelude;
         let _ = input;
-        Err(ParseError::Basic(BasicParseError::AtRuleInvalid))
+        Err(ParseError::Basic(BasicParseError::AtRuleBodyInvalid))
     }
 
     /// An `OptionalBlock` prelude was followed by `;`.
@@ -257,9 +257,9 @@ where P: DeclarationParser<'i, Declaration = I, Error = E> +
                 Ok(Token::AtKeyword(name)) => {
                     return Some(parse_at_rule(start_position, name, self.input, &mut self.parser))
                 }
-                Ok(_) => {
+                Ok(t) => {
                     return Some(self.input.parse_until_after(Delimiter::Semicolon,
-                                                             |_| Err(ParseError::Basic(BasicParseError::ExpectedToken(Token::Semicolon))))
+                                                             |_| Err(ParseError::Basic(BasicParseError::UnexpectedToken(t))))
                                 .map_err(|e| PreciseParseError {
                                     error: e,
                                     span: start_position..self.input.position()
@@ -462,16 +462,14 @@ fn parse_at_rule<'i: 't, 't, P, E>(start_position: SourcePosition, name: Compact
                 _ => unreachable!()
             }
         }
-        Err(_) => {
+        Err(error) => {
             let end_position = input.position();
-            let error = match input.next() {
-                Ok(Token::CurlyBracketBlock) => BasicParseError::UnexpectedToken(Token::CurlyBracketBlock),
-                Ok(Token::Semicolon) => BasicParseError::UnexpectedToken(Token::Semicolon),
-                Err(e) => e,
+            match input.next() {
+                Ok(Token::CurlyBracketBlock) | Ok(Token::Semicolon) | Err(_) => {},
                 _ => unreachable!()
             };
             Err(PreciseParseError {
-                error: ParseError::Basic(error),
+                error: error,
                 span: start_position..end_position,
             })
         }
