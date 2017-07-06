@@ -227,6 +227,67 @@ function checkComplexRequest(payRequest) {
   }
 }
 
+function checkDuplicateShippingOptionsRequest(payRequest) {
+  if (payRequest.paymentMethods.length != 1) {
+    emitTestFail("paymentMethods' length should be 1.");
+  }
+
+  const methodData = payRequest.paymentMethods.queryElementAt(0, Ci.nsIPaymentMethodData);
+  if (!methodData) {
+    emitTestFail("Fail to get payment methodData.");
+  }
+  let supportedMethod = methodData.supportedMethods;
+  if (supportedMethod != "basic-card") {
+    emitTestFail("supported method should be 'basic-card'.");
+  }
+  // checking the passed PaymentDetails parameter
+  const details = payRequest.paymentDetails;
+  if (details.id != "duplicate shipping options details" ) {
+    emitTestFail("details.id should be 'duplicate shipping options details'.");
+  }
+  if (details.totalItem.label != "Total") {
+    emitTestFail("total item's label should be 'Total'.");
+  }
+  if (details.totalItem.amount.currency != "USD") {
+    emitTestFail("total item's currency should be 'USD'.");
+  }
+  if (details.totalItem.amount.value != "1.00") {
+    emitTestFail("total item's value should be '1.00'.");
+  }
+
+  if (details.displayItems) {
+    emitTestFail("details.displayItems should be undefined.");
+  }
+  if (details.modifiers) {
+    emitTestFail("details.displayItems should be undefined.");
+  }
+  const shippingOptions = details.shippingOptions;
+  if (!shippingOptions) {
+    emitTestFail("details.shippingOptions should not be undefined.");
+  }
+  if (shippingOptions.length != 0) {
+    emitTestFail("shippingOptions' length should be 0.");
+  }
+
+  // checking the default generated PaymentOptions parameter
+  const paymentOptions = payRequest.paymentOptions;
+  if (paymentOptions.requestPayerName) {
+    emitTestFail("requestPayerName option should be false.");
+  }
+  if (paymentOptions.requestPayerEmail) {
+    emitTestFail("requestPayerEmail option should be false.");
+  }
+  if (paymentOptions.requestPayerPhone) {
+    emitTestFail("requestPayerPhone option should be false.");
+  }
+  if (paymentOptions.requestShipping) {
+    emitTestFail("requestShipping option should be false.");
+  }
+  if (paymentOptions.shippingType != "shipping") {
+    emitTestFail("shippingType option should be 'shipping'.")
+  }
+}
+
 function checkSimplestRequestHandler() {
   const paymentEnum = paymentSrv.enumerate();
   if (!paymentEnum.hasMoreElements()) {
@@ -261,6 +322,23 @@ function checkComplexRequestHandler() {
   sendAsyncMessage("check-complete");
 }
 
+function checkDuplicateShippingOptionsRequestHandler() {
+  const paymentEnum = paymentSrv.enumerate();
+  if (!paymentEnum.hasMoreElements()) {
+    emitTestFail("PaymentRequestService should have at least one payment request.");
+  }
+  while (paymentEnum.hasMoreElements()) {
+    let payRequest = paymentEnum.getNext().QueryInterface(Ci.nsIPaymentRequest);
+    if (!payRequest) {
+      emitTestFail("Fail to get existing payment request.");
+      break;
+    }
+    checkDuplicateShippingOptionsRequest(payRequest);
+  }
+  paymentSrv.cleanup();
+  sendAsyncMessage("check-complete");
+}
+
 function checkMultipleRequestsHandler () {
   const paymentEnum = paymentSrv.enumerate();
   if (!paymentEnum.hasMoreElements()) {
@@ -272,10 +350,12 @@ function checkMultipleRequestsHandler () {
       emitTestFail("Fail to get existing payment request.");
       break;
     }
-    if (payRequest.paymentDetails.id != "payment details") {
-      checkSimplestRequest(payRequest);
-    } else {
+    if (payRequest.paymentDetails.id == "payment details") {
       checkComplexRequest(payRequest);
+    } else if (payRequest.paymentDetails.id == "duplicate shipping options details") {
+      checkDuplicateShippingOptionsRequest(payRequest);
+    } else {
+      checkSimplestRequest(payRequest);
     }
   }
   paymentSrv.cleanup();
@@ -284,6 +364,7 @@ function checkMultipleRequestsHandler () {
 
 addMessageListener("check-simplest-request", checkSimplestRequestHandler);
 addMessageListener("check-complex-request", checkComplexRequestHandler);
+addMessageListener("check-duplicate-shipping-options-request", checkDuplicateShippingOptionsRequestHandler);
 addMessageListener("check-multiple-requests", checkMultipleRequestsHandler);
 
 addMessageListener("teardown", function() {

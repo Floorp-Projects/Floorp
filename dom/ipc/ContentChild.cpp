@@ -72,6 +72,7 @@
 #include "mozilla/WebBrowserPersistDocumentChild.h"
 #include "imgLoader.h"
 #include "GMPServiceChild.h"
+#include "NullPrincipal.h"
 
 #ifdef MOZ_GECKO_PROFILER
 #include "ChildProfilerController.h"
@@ -690,15 +691,19 @@ ContentChild::ProvideWindow(mozIDOMWindowProxy* aParent,
 
 static nsresult
 GetWindowParamsFromParent(mozIDOMWindowProxy* aParent,
-                          nsACString& aBaseURIString, float* aFullZoom)
+                          nsACString& aBaseURIString, float* aFullZoom,
+                          nsIPrincipal** aTriggeringPrincipal)
 {
   *aFullZoom = 1.0f;
   auto* opener = nsPIDOMWindowOuter::From(aParent);
   if (!opener) {
+    nsCOMPtr<nsIPrincipal> nullPrincipal = NullPrincipal::Create();
+    NS_ADDREF(*aTriggeringPrincipal = nullPrincipal);
     return NS_OK;
   }
 
   nsCOMPtr<nsIDocument> doc = opener->GetDoc();
+  NS_ADDREF(*aTriggeringPrincipal = doc->NodePrincipal());
   nsCOMPtr<nsIURI> baseURI = doc->GetDocBaseURI();
   if (!baseURI) {
     NS_ERROR("nsIDocument didn't return a base URI");
@@ -778,7 +783,9 @@ ContentChild::ProvideWindowCommon(TabChild* aTabOpener,
   if (loadInDifferentProcess) {
     nsAutoCString baseURIString;
     float fullZoom;
-    rv = GetWindowParamsFromParent(aParent, baseURIString, &fullZoom);
+    nsCOMPtr<nsIPrincipal> triggeringPrincipal;
+    rv = GetWindowParamsFromParent(aParent, baseURIString, &fullZoom,
+                                   getter_AddRefs(triggeringPrincipal));
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -794,7 +801,8 @@ ContentChild::ProvideWindowCommon(TabChild* aTabOpener,
                                                  features,
                                                  baseURIString,
                                                  fullZoom,
-                                                 name);
+                                                 name,
+                                                 Principal(triggeringPrincipal));
 
     // We return NS_ERROR_ABORT, so that the caller knows that we've abandoned
     // the window open as far as it is concerned.
@@ -890,7 +898,9 @@ ContentChild::ProvideWindowCommon(TabChild* aTabOpener,
   } else {
     nsAutoCString baseURIString;
     float fullZoom;
-    rv = GetWindowParamsFromParent(aParent, baseURIString, &fullZoom);
+    nsCOMPtr<nsIPrincipal> triggeringPrincipal;
+    rv = GetWindowParamsFromParent(aParent, baseURIString, &fullZoom,
+                                   getter_AddRefs(triggeringPrincipal));
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -901,7 +911,8 @@ ContentChild::ProvideWindowCommon(TabChild* aTabOpener,
                        aSizeSpecified,
                        features,
                        baseURIString,
-                       fullZoom);
+                       fullZoom,
+                       Principal(triggeringPrincipal));
   }
 
   // Await the promise being resolved. When the promise is resolved, we'll set
@@ -2746,29 +2757,6 @@ ContentChild::DeallocPOfflineCacheUpdateChild(POfflineCacheUpdateChild* actor)
     static_cast<OfflineCacheUpdateChild*>(actor);
   NS_RELEASE(offlineCacheUpdate);
   return true;
-}
-
-mozilla::ipc::IPCResult
-ContentChild::RecvLoadPluginResult(const uint32_t& aPluginId,
-                                   const bool& aResult)
-{
-  nsresult rv;
-  Endpoint<PPluginModuleParent> endpoint;
-  bool finalResult = aResult &&
-                     SendConnectPluginBridge(aPluginId, &rv, &endpoint) &&
-                     NS_SUCCEEDED(rv);
-  plugins::PluginModuleContentParent::OnLoadPluginResult(aPluginId,
-                                                         finalResult,
-                                                         Move(endpoint));
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult
-ContentChild::RecvAssociatePluginId(const uint32_t& aPluginId,
-                                    const base::ProcessId& aProcessId)
-{
-  plugins::PluginModuleContentParent::AssociatePluginId(aPluginId, aProcessId);
-  return IPC_OK();
 }
 
 mozilla::ipc::IPCResult

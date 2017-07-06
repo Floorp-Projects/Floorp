@@ -9,6 +9,7 @@
 #include "nsCOMPtr.h"
 #include "nsCOMArray.h"
 #include "nsPrintfCString.h"
+#include "nsProxyRelease.h"
 #include "nsServiceManagerUtils.h"
 #include "nsMemoryReporterManager.h"
 #include "nsITimer.h"
@@ -21,6 +22,7 @@
 #if defined(XP_UNIX) || defined(MOZ_DMD)
 #include "nsMemoryInfoDumper.h"
 #endif
+#include "nsNetCID.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/MemoryReportingProcess.h"
 #include "mozilla/PodOperations.h"
@@ -1595,6 +1597,9 @@ nsMemoryReporterManager::nsMemoryReporterManager()
   , mNextGeneration(1)
   , mPendingProcessesState(nullptr)
   , mPendingReportersState(nullptr)
+#ifdef HAVE_JEMALLOC_STATS
+  , mThreadPool(do_GetService(NS_STREAMTRANSPORTSERVICE_CONTRACTID))
+#endif
 {
 }
 
@@ -2369,6 +2374,49 @@ nsMemoryReporterManager::GetHeapAllocated(int64_t* aAmount)
   return NS_OK;
 #else
   *aAmount = 0;
+  return NS_ERROR_NOT_AVAILABLE;
+#endif
+}
+
+NS_IMETHODIMP
+nsMemoryReporterManager::GetHeapAllocatedAsync(nsIHeapAllocatedCallback *aCallback)
+{
+#ifdef HAVE_JEMALLOC_STATS
+  if (!mThreadPool) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  RefPtr<nsIMemoryReporterManager> self{this};
+  nsMainThreadPtrHandle<nsIHeapAllocatedCallback> mainThreadCallback(
+    new nsMainThreadPtrHolder<nsIHeapAllocatedCallback>("HeapAllocatedCallback",
+                                                        aCallback));
+
+  nsCOMPtr<nsIRunnable> getHeapAllocatedRunnable = NS_NewRunnableFunction(
+    "nsMemoryReporterManager::GetHeapAllocatedAsync",
+    [self, mainThreadCallback]() mutable {
+      MOZ_ASSERT(!NS_IsMainThread());
+
+      int64_t heapAllocated = 0;
+      nsresult rv = self->GetHeapAllocated(&heapAllocated);
+
+      nsCOMPtr<nsIRunnable> resultCallbackRunnable = NS_NewRunnableFunction(
+        "nsMemoryReporterManager::GetHeapAllocatedAsync",
+        [mainThreadCallback, heapAllocated, rv]() mutable {
+          MOZ_ASSERT(NS_IsMainThread());
+
+          if (NS_FAILED(rv)) {
+            mainThreadCallback->Callback(0);
+            return;
+          }
+
+          mainThreadCallback->Callback(heapAllocated);
+        });  // resultCallbackRunnable.
+
+      Unused << NS_DispatchToMainThread(resultCallbackRunnable);
+    }); // getHeapAllocatedRunnable.
+
+  return mThreadPool->Dispatch(getHeapAllocatedRunnable, NS_DISPATCH_NORMAL);
+#else
   return NS_ERROR_NOT_AVAILABLE;
 #endif
 }

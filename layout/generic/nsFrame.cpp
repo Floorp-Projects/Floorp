@@ -857,8 +857,10 @@ AddAndRemoveImageAssociations(nsFrame* aFrame,
           continue;
         }
 
-        if (imgRequestProxy* req = oldImage.GetImageData()) {
-          imageLoader->DisassociateRequestFromFrame(req, aFrame);
+        if (aFrame->HasImageRequest()) {
+          if (imgRequestProxy* req = oldImage.GetImageData()) {
+            imageLoader->DisassociateRequestFromFrame(req, aFrame);
+          }
         }
       }
     }
@@ -972,7 +974,7 @@ nsFrame::DidSetStyleContext(nsStyleContext* aOldStyleContext)
   // they won't have the correct size for the border either.
   if (oldBorderImage != newBorderImage) {
     // stop and restart the image loading/notification
-    if (oldBorderImage) {
+    if (oldBorderImage && HasImageRequest()) {
       imageLoader->DisassociateRequestFromFrame(oldBorderImage, this);
     }
     if (newBorderImage) {

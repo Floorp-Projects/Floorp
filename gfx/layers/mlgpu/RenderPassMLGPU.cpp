@@ -348,6 +348,10 @@ ShaderRenderPass::SetupPSBuffer0(float aOpacity)
 void
 ShaderRenderPass::ExecuteRendering()
 {
+  if (mVertices.IsEmpty() && mInstances.IsEmpty()) {
+    return;
+  }
+
   mDevice->SetPSConstantBuffer(0, &mPSBuffer0);
   if (MaskOperation* mask = GetMask()) {
     mDevice->SetPSTexture(kMaskLayerTextureSlot, mask->GetTexture());
@@ -881,6 +885,10 @@ RenderViewPass::AddToPass(LayerMLGPU* aLayer, ItemInfo& aInfo)
   }
 
   mSource = mAssignedLayer->GetRenderTarget();
+  if (!mSource) {
+    return false;
+  }
+
   mParentView = aInfo.view;
 
   Txn txn(this);

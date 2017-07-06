@@ -62,8 +62,6 @@ child:
   intr NP_Initialize(PluginSettings settings)
     returns (NPError rv);
 
-  async AsyncNP_Initialize(PluginSettings settings);
-
   async PPluginInstance(nsCString aMimeType,
                         nsCString[] aNames,
                         nsCString[] aValues);
@@ -72,9 +70,6 @@ child:
   // is preffed off.
   intr SyncNPP_New(PPluginInstance aActor)
     returns (NPError rv);
-
-  // Implements the async plugin init version of NPP_New.
-  async AsyncNPP_New(PPluginInstance aActor);
 
   intr NP_Shutdown()
     returns (NPError rv);
@@ -104,8 +99,6 @@ child:
   async InitPluginModuleChild(Endpoint<PPluginModuleChild> endpoint);
 
 parent:
-  async NP_InitializeResult(NPError aError);
-
   /**
    * This message is only used on X11 platforms.
    *

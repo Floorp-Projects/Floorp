@@ -103,7 +103,8 @@ nsresult
 ConvertDetailsBase(const PaymentDetailsBase& aDetails,
                    nsTArray<IPCPaymentItem>& aDisplayItems,
                    nsTArray<IPCPaymentShippingOption>& aShippingOptions,
-                   nsTArray<IPCPaymentDetailsModifier>& aModifiers)
+                   nsTArray<IPCPaymentDetailsModifier>& aModifiers,
+                   bool aResetShippingOptions)
 {
   if (aDetails.mDisplayItems.WasPassed()) {
     for (const PaymentItem& item : aDetails.mDisplayItems.Value()) {
@@ -112,7 +113,7 @@ ConvertDetailsBase(const PaymentDetailsBase& aDetails,
       aDisplayItems.AppendElement(displayItem);
     }
   }
-  if (aDetails.mShippingOptions.WasPassed()) {
+  if (aDetails.mShippingOptions.WasPassed() && !aResetShippingOptions) {
     for (const PaymentShippingOption& option : aDetails.mShippingOptions.Value()) {
       IPCPaymentShippingOption shippingOption;
       ConvertShippingOption(option, shippingOption);
@@ -134,13 +135,14 @@ ConvertDetailsBase(const PaymentDetailsBase& aDetails,
 
 nsresult
 ConvertDetailsInit(const PaymentDetailsInit& aDetails,
-                   IPCPaymentDetails& aIPCDetails)
+                   IPCPaymentDetails& aIPCDetails,
+                   bool aResetShippingOptions)
 {
   // Convert PaymentDetailsBase members
   nsTArray<IPCPaymentItem> displayItems;
   nsTArray<IPCPaymentShippingOption> shippingOptions;
   nsTArray<IPCPaymentDetailsModifier> modifiers;
-  nsresult rv = ConvertDetailsBase(aDetails, displayItems, shippingOptions, modifiers);
+  nsresult rv = ConvertDetailsBase(aDetails, displayItems, shippingOptions, modifiers, aResetShippingOptions);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -175,7 +177,10 @@ ConvertDetailsUpdate(const PaymentDetailsUpdate& aDetails,
   nsTArray<IPCPaymentItem> displayItems;
   nsTArray<IPCPaymentShippingOption> shippingOptions;
   nsTArray<IPCPaymentDetailsModifier> modifiers;
-  nsresult rv = ConvertDetailsBase(aDetails, displayItems, shippingOptions, modifiers);
+  // [TODO] Populate a boolean flag as aResetShippingOptions based on the
+  // result of processing details.shippingOptions in UpdatePayment method.
+  nsresult rv = ConvertDetailsBase(
+    aDetails, displayItems, shippingOptions, modifiers, false);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -352,6 +357,37 @@ PaymentRequestManager::GetPaymentRequestById(const nsAString& aRequestId)
   return nullptr;
 }
 
+void
+GetSelectedShippingOption(const PaymentDetailsInit& aDetails,
+                          nsAString& aOption,
+                          bool* aResetOptions)
+{
+  SetDOMStringToNull(aOption);
+  if (!aDetails.mShippingOptions.WasPassed()) {
+    return;
+  }
+
+  nsTArray<nsString> seenIDs;
+  const Sequence<PaymentShippingOption>& shippingOptions =
+    aDetails.mShippingOptions.Value();
+  for (const PaymentShippingOption& shippingOption : shippingOptions) {
+    // If there are duplicate IDs present in the shippingOptions, reset aOption
+    // to null and set resetOptions flag to reset details.shippingOptions later
+    // when converting to IPC structure.
+    if (seenIDs.Contains(shippingOption.mId)) {
+      SetDOMStringToNull(aOption);
+      *aResetOptions = true;
+      return;
+    }
+    seenIDs.AppendElement(shippingOption.mId);
+
+    // set aOption to last selected option's ID
+    if (shippingOption.mSelected) {
+      aOption = shippingOption.mId;
+    }
+  }
+}
+
 nsresult
 PaymentRequestManager::CreatePayment(nsPIDOMWindowInner* aWindow,
                                      const Sequence<PaymentMethodData>& aMethodData,
@@ -362,26 +398,7 @@ PaymentRequestManager::CreatePayment(nsPIDOMWindowInner* aWindow,
   MOZ_ASSERT(NS_IsMainThread());
   NS_ENSURE_ARG_POINTER(aRequest);
   *aRequest = nullptr;
-
   nsresult rv;
-  nsTArray<IPCPaymentMethodData> methodData;
-  for (const PaymentMethodData& data : aMethodData) {
-    IPCPaymentMethodData ipcMethodData;
-    rv = ConvertMethodData(data, ipcMethodData);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-    methodData.AppendElement(ipcMethodData);
-  }
-
-  IPCPaymentDetails details;
-  rv = ConvertDetailsInit(aDetails, details);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  IPCPaymentOptions options;
-  ConvertOptions(aOptions, options);
 
   RefPtr<PaymentRequest> request = PaymentRequest::CreatePaymentRequest(aWindow, rv);
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -400,8 +417,48 @@ PaymentRequestManager::CreatePayment(nsPIDOMWindowInner* aWindow,
   }
   request->SetId(requestId);
 
+  /*
+   *  Set request's mShippingOption to last selected option's ID if
+   *  details.shippingOptions exists and IDs of all options are unique.
+   *  Otherwise, set mShippingOption to null and set the resetShippingOptions
+   *  flag to reset details.shippingOptions to an empty array later when
+   *  converting details to IPC structure.
+   */
+  nsAutoString shippingOption;
+  bool resetShippingOptions = false;
+  GetSelectedShippingOption(aDetails, shippingOption, &resetShippingOptions);
+  request->SetShippingOption(shippingOption);
+
+  /*
+   * Set request's |mShippingType| if shipping is required.
+   */
+  if (aOptions.mRequestShipping) {
+    request->SetShippingType(
+        Nullable<PaymentShippingType>(aOptions.mShippingType));
+  }
+
   nsAutoString internalId;
   request->GetInternalId(internalId);
+
+  nsTArray<IPCPaymentMethodData> methodData;
+  for (const PaymentMethodData& data : aMethodData) {
+    IPCPaymentMethodData ipcMethodData;
+    rv = ConvertMethodData(data, ipcMethodData);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+    methodData.AppendElement(ipcMethodData);
+  }
+
+  IPCPaymentDetails details;
+  rv = ConvertDetailsInit(aDetails, details, resetShippingOptions);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  IPCPaymentOptions options;
+  ConvertOptions(aOptions, options);
+
   IPCPaymentCreateActionRequest action(internalId,
                                        methodData,
                                        details,
@@ -488,6 +545,12 @@ PaymentRequestManager::UpdatePayment(const nsAString& aRequestId,
   if (!request) {
     return NS_ERROR_UNEXPECTED;
   }
+
+  // [TODO] Process details.shippingOptions if presented.
+  //        1) Check if there are duplicate IDs in details.shippingOptions,
+  //           if so, reset details.shippingOptions to an empty sequence.
+  //        2) Set request's selectedShippingOption to the ID of last selected
+  //           option.
 
   IPCPaymentDetails details;
   nsresult rv = ConvertDetailsUpdate(aDetails, details);

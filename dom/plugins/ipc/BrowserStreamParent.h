@@ -30,10 +30,6 @@ public:
 
   virtual void ActorDestroy(ActorDestroyReason aWhy) override;
 
-  virtual mozilla::ipc::IPCResult RecvAsyncNPP_NewStreamResult(
-    const NPError& rv,
-    const uint16_t& stype) override;
-
   virtual mozilla::ipc::IPCResult AnswerNPN_RequestRead(const IPCByteRanges& ranges,
                                                         NPError* result) override;
 
@@ -61,7 +57,6 @@ private:
   NPStream* mStream;
   nsCOMPtr<nsISupports> mStreamPeer;
   RefPtr<nsNPAPIPluginStreamListener> mStreamListener;
-  NPReason mDeferredDestroyReason;
 
   enum {
     INITIALIZING,

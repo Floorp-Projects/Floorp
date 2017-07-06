@@ -53,7 +53,6 @@
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/FakePluginTagInitBinding.h"
 #include "mozilla/LoadInfo.h"
-#include "mozilla/plugins/PluginAsyncSurrogate.h"
 #include "mozilla/plugins/PluginBridge.h"
 #include "mozilla/plugins/PluginTypes.h"
 #include "mozilla/Preferences.h"
@@ -119,7 +118,6 @@ using namespace mozilla;
 using mozilla::TimeStamp;
 using mozilla::plugins::FakePluginTag;
 using mozilla::plugins::PluginTag;
-using mozilla::plugins::PluginAsyncSurrogate;
 using mozilla::dom::FakePluginTagInit;
 using mozilla::dom::FakePluginMimeEntry;
 
@@ -758,7 +756,6 @@ nsPluginHost::InstantiatePluginInstance(const nsACString& aMimeType, nsIURI* aUR
     instanceOwner->Destroy();
     return NS_ERROR_FAILURE;
   }
-  const bool isAsyncInit = (rv == NS_PLUGIN_INIT_PENDING);
 
   RefPtr<nsNPAPIPluginInstance> instance;
   rv = instanceOwner->GetInstance(getter_AddRefs(instance));
@@ -767,8 +764,7 @@ nsPluginHost::InstantiatePluginInstance(const nsACString& aMimeType, nsIURI* aUR
     return rv;
   }
 
-  // Async init plugins will initiate their own widget creation.
-  if (!isAsyncInit && instance) {
+  if (instance) {
     CreateWidget(instanceOwner);
   }
 
@@ -2383,7 +2379,6 @@ nsPluginHost::SetPluginsInContent(uint32_t aPluginEpoch,
                                                nsTArray<nsCString>(tag.extensions()),
                                                tag.isJavaPlugin(),
                                                tag.isFlashPlugin(),
-                                               tag.supportsAsyncInit(),
                                                tag.supportsAsyncRender(),
                                                tag.lastModifiedTime(),
                                                tag.isFromExtension(),
@@ -2624,7 +2619,6 @@ nsPluginHost::SendPluginsToContent()
                                        tag->Extensions(),
                                        tag->mIsJavaPlugin,
                                        tag->mIsFlashPlugin,
-                                       tag->mSupportsAsyncInit,
                                        tag->mSupportsAsyncRender,
                                        tag->FileName(),
                                        tag->Version(),
@@ -4021,12 +4015,6 @@ PluginDestructionGuard::PluginDestructionGuard(nsNPAPIPluginInstance *aInstance)
   : mInstance(aInstance)
 {
   Init();
-}
-
-PluginDestructionGuard::PluginDestructionGuard(PluginAsyncSurrogate *aSurrogate)
-  : mInstance(static_cast<nsNPAPIPluginInstance*>(aSurrogate->GetNPP()->ndata))
-{
-  InitAsync();
 }
 
 PluginDestructionGuard::PluginDestructionGuard(NPP npp)
