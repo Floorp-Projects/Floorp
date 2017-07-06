@@ -6,5 +6,5 @@
 <org.mozilla.gecko.tabs.TabStrip
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:background="@color/text_and_tabs_tray_grey"/>
+    android:layout_height="@dimen/tablet_tab_strip_height"
+    android:background="@color/photon_tab_strip_bg"/>

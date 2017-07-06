@@ -4,41 +4,48 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
 <merge xmlns:android="http://schemas.android.com/apk/res/android"
-       xmlns:gecko="http://schemas.android.com/apk/res-auto">
+       xmlns:gecko="http://schemas.android.com/apk/res-auto"
+       xmlns:tools="http://schemas.android.com/tools"
+       tools:layout_height="@dimen/tablet_tab_strip_item_height"
+       tools:layout_width="@dimen/tablet_tab_strip_item_width"
+       tools:orientation="horizontal"
+       tools:parentTag="LinearLayout">
 
-   <ImageView
+    <ImageView
         android:id="@+id/favicon"
         android:layout_width="@dimen/browser_toolbar_favicon_size"
-        android:layout_height="match_parent"
-        android:layout_marginRight="8dp"
+        android:layout_height="@dimen/browser_toolbar_favicon_size"
+        android:layout_gravity="center"
         android:layout_marginEnd="8dp"
+        android:layout_marginLeft="12dp"
+        android:layout_marginRight="8dp"
+        android:layout_marginStart="12dp"
+        android:duplicateParentState="true"
         android:scaleType="centerInside"
-        android:duplicateParentState="true"/>
+        tools:src="@drawable/toolbar_favicon_default"/>
 
     <org.mozilla.gecko.widget.FadedSingleColorTextView
         android:id="@+id/title"
         android:layout_width="0dip"
         android:layout_height="match_parent"
         android:layout_weight="1.0"
-        android:layout_marginRight="-5dp"
-        android:layout_marginEnd="-5dp"
-        android:drawablePadding="6dp"
-        android:gravity="center_vertical"
-        android:textSize="14sp"
+        android:duplicateParentState="true"
         android:ellipsize="end"
-        android:textColor="@color/tab_strip_item_title"
+        android:gravity="center_vertical"
         android:maxLines="1"
+        android:textColor="@color/tab_strip_item_title"
+        android:textSize="14sp"
         gecko:fadeWidth="30dip"
-        android:duplicateParentState="true"/>
+        tools:text="Mozilla"/>
 
     <org.mozilla.gecko.widget.themed.ThemedImageButton
         android:id="@+id/close"
-        android:layout_width="40dip"
+        android:layout_width="35dp"
         android:layout_height="match_parent"
         android:background="@android:color/transparent"
-        android:scaleType="center"
         android:contentDescription="@string/close_tab"
-        android:src="@drawable/tab_close"
-        android:duplicateParentState="true"/>
+        android:duplicateParentState="true"
+        android:scaleType="center"
+        android:src="@drawable/tab_close"/>
 
 </merge>

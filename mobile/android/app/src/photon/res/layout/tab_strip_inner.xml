@@ -4,14 +4,22 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
 <merge xmlns:android="http://schemas.android.com/apk/res/android"
-       xmlns:gecko="http://schemas.android.com/apk/res-auto">
+       xmlns:gecko="http://schemas.android.com/apk/res-auto"
+       xmlns:tools="http://schemas.android.com/tools"
+       tools:background="@color/photon_tabs_tray_bg"
+       tools:layout_height="@dimen/tablet_tab_strip_height"
+       tools:layout_width="match_parent"
+       tools:parentTag="LinearLayout">
 
     <org.mozilla.gecko.tabs.TabStripView
         android:id="@+id/tab_strip"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:layout_marginLeft="16dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="8dp"
         android:layout_weight="1"
-        android:paddingTop="8dp"/>
+        tools:listitem="@layout/tab_strip_item"/>
 
     <!-- The right margin creates a "dead area" on the right side of the button
          which we compensate for with a touch delegate. See TabStrip -->
@@ -19,10 +27,11 @@
         android:id="@+id/tablet_add_tab"
         style="@style/UrlBar.ImageButton"
         android:layout_width="@dimen/tablet_tab_strip_height"
-        android:src="@drawable/tab_new"
-        gecko:drawableTintList="@color/tab_new_tab_strip_colors"
+        android:layout_marginEnd="6dp"
+        android:layout_marginRight="6dp"
+        android:background="@drawable/tab_strip_button"
         android:contentDescription="@string/new_tab"
-        android:layout_marginRight="9dp"
-        android:background="@drawable/tab_strip_button"/>
+        android:src="@drawable/tab_new"
+        gecko:drawableTintList="@color/tab_new_tab_strip_colors"/>
 
 </merge>
