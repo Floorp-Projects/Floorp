@@ -17,10 +17,57 @@
  *  - intermittentShown: An array of platforms where this image is
  *                       intermittently shown, contrary to what our
  *                       whitelist says.
+ *  - photon: If true, this entry only applies for builds with the Photon theme.
+ *            If false, this entry only applies for builds without the Photon theme.
+ *            If undefined, this entry applies for both Photon and non-Photon builds.
  *
  * Please don't add items to this list. Please remove items from this list.
  */
 const whitelist = [
+  // Photon-only entries
+  {
+    file: "chrome://browser/skin/stop.svg",
+    platforms: ["linux", "win", "macosx"],
+    photon: true,
+  },
+  {
+    file: "chrome://browser/skin/sidebars.svg",
+    platforms: ["linux", "win", "macosx"],
+    intermittentNotLoaded: ["macosx"],
+    photon: true,
+  },
+  {
+    file: "chrome://pocket-shared/skin/pocket.svg",
+    platforms: ["linux", "win", "macosx"],
+    intermittentNotLoaded: ["macosx"],
+    photon: true,
+  },
+  {
+    file: "chrome://browser/skin/toolbarbutton-dropdown-arrow.png",
+    platforms: ["win"],
+    photon: true,
+  },
+  {
+    file: "chrome://browser/skin/bookmark-hollow.svg",
+    platforms: ["linux", "win", "macosx"],
+    photon: true,
+  },
+
+  // Non-Photon-only entries
+  {
+    file: "chrome://pocket-shared/skin/pocket.svg",
+    platforms: ["linux", "win", "macosx"],
+    intermittentNotLoaded: ["macosx"],
+    intermittentShown: ["win"],
+    photon: false,
+  },
+  {
+    file: "chrome://browser/skin/toolbarbutton-dropdown-arrow.png",
+    platforms: ["linux", "win", "macosx"],
+    photon: false,
+  },
+
+  // Shared entries
   {
     file: "chrome://browser/skin/fxa/sync-illustration.svg",
     platforms: ["linux", "win", "macosx"],
@@ -29,35 +76,14 @@ const whitelist = [
     file: "chrome://browser/skin/tabbrowser/tab-overflow-indicator.png",
     platforms: ["linux", "win", "macosx"],
   },
-  {
-    file: "chrome://browser/skin/stop.svg",
-    platforms: ["linux", "win", "macosx"],
-  },
-  {
-    file: "chrome://browser/skin/sidebars.svg",
-    platforms: ["linux", "win", "macosx"],
-    intermittentNotLoaded: ["macosx"],
-  },
-  {
-    file: "chrome://pocket-shared/skin/pocket.svg",
-    platforms: ["linux", "win", "macosx"],
-    intermittentNotLoaded: ["macosx"],
-  },
+
   {
     file: "chrome://browser/skin/places/toolbarDropMarker.png",
     platforms: ["linux", "win", "macosx"],
   },
   {
-    file: "chrome://browser/skin/bookmark-hollow.svg",
-    platforms: ["linux", "win", "macosx"],
-  },
-  {
     file: "chrome://browser/skin/tracking-protection-16.svg#enabled",
     platforms: ["linux", "win", "macosx"],
-  },
-  {
-    file: "chrome://browser/skin/toolbarbutton-dropdown-arrow.png",
-    platforms: ["win"],
   },
   {
     file: "chrome://global/skin/icons/autoscroll.png",
@@ -191,13 +217,16 @@ const whitelist = [
 
 function test() {
   let data = Cc["@mozilla.org/test/startuprecorder;1"].getService().wrappedJSObject.data.images;
-  let platformWhitelist = whitelist.filter(el => el.platforms.includes(AppConstants.platform));
+  let filteredWhitelist = whitelist.filter(el => {
+    return el.platforms.includes(AppConstants.platform) &&
+           (el.photon === undefined || el.photon == AppConstants.MOZ_PHOTON_THEME);
+  });
 
   let loadedImages = data["image-loading"];
   let shownImages = data["image-drawing"];
 
   for (let loaded of loadedImages.values()) {
-    let whitelistItem = platformWhitelist.find(el => {
+    let whitelistItem = filteredWhitelist.find(el => {
       if (window.devicePixelRatio >= 2 && el.hidpi && el.hidpi == loaded) {
         return true;
       }
@@ -214,7 +243,7 @@ function test() {
   }
 
   // Check for unneeded whitelist entries.
-  for (let item of platformWhitelist) {
+  for (let item of filteredWhitelist) {
     if (!item.intermittentNotLoaded ||
         !item.intermittentNotLoaded.includes(AppConstants.platform)) {
       if (window.devicePixelRatio >= 2 && item.hidpi) {
