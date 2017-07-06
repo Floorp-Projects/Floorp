@@ -15,7 +15,6 @@
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/Response.h"
 #include "mozilla/dom/workers/bindings/ServiceWorker.h"
-#include "mozilla/dom/workers/Workers.h"
 
 #include "nsProxyRelease.h"
 #include "nsContentUtils.h"
