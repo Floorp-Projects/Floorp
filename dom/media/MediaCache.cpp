@@ -741,11 +741,25 @@ static int32_t GetMaxBlocks()
 {
   // We look up the cache size every time. This means dynamic changes
   // to the pref are applied.
-  // Cache size is in KB
-  int32_t cacheSize = Preferences::GetInt("media.cache_size", 500*1024);
-  int64_t maxBlocks = static_cast<int64_t>(cacheSize)*1024/MediaCache::BLOCK_SIZE;
-  maxBlocks = std::max<int64_t>(maxBlocks, 1);
-  return int32_t(std::min<int64_t>(maxBlocks, INT32_MAX));
+  const uint32_t cacheSizeKb =
+    std::min(MediaPrefs::MediaCacheSizeKb(), uint32_t(INT32_MAX) * 2);
+  // Ensure we can divide BLOCK_SIZE by 1024.
+  static_assert(MediaCache::BLOCK_SIZE % 1024 == 0,
+                "BLOCK_SIZE should be a multiple of 1024");
+  // Ensure BLOCK_SIZE/1024 is at least 2.
+  static_assert(MediaCache::BLOCK_SIZE / 1024 >= 2,
+                "BLOCK_SIZE / 1024 should be at least 2");
+  // Ensure we can convert BLOCK_SIZE/1024 to a uint32_t without truncation.
+  static_assert(MediaCache::BLOCK_SIZE / 1024 <= int64_t(UINT32_MAX),
+                "BLOCK_SIZE / 1024 should be at most UINT32_MAX");
+  // Since BLOCK_SIZE is a strict multiple of 1024,
+  // cacheSizeKb * 1024 / BLOCK_SIZE == cacheSizeKb / (BLOCK_SIZE / 1024),
+  // but the latter formula avoids a potential overflow from `* 1024`.
+  // And because BLOCK_SIZE/1024 is at least 2, the maximum cache size
+  // INT32_MAX*2 will give a maxBlocks that can fit in an int32_t.
+  constexpr uint32_t blockSizeKb = uint32_t(MediaCache::BLOCK_SIZE / 1024);
+  const int32_t maxBlocks = int32_t(cacheSizeKb / blockSizeKb);
+  return std::max(maxBlocks, int32_t(1));
 }
 
 int32_t
