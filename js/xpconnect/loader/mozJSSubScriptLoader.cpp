@@ -594,16 +594,9 @@ mozJSSubScriptLoader::DoLoadSubScriptWithOptions(const nsAString& url,
         MOZ_ASSERT(JS_IsGlobalObject(targetObj));
     }
 
-    // Remember an object out of the calling compartment so that we
-    // can properly wrap the result later.
-    nsCOMPtr<nsIPrincipal> principal = mSystemPrincipal;
-    RootedObject result_obj(cx, targetObj);
     targetObj = JS_FindCompilationScope(cx, targetObj);
     if (!targetObj)
         return NS_ERROR_FAILURE;
-
-    if (targetObj != result_obj)
-        principal = GetObjectPrincipal(targetObj);
 
     /* load up the url.  From here on, failures are reflected as ``custom''
      * js exceptions */
@@ -672,8 +665,9 @@ mozJSSubScriptLoader::DoLoadSubScriptWithOptions(const nsAString& url,
 
     // Suppress caching if we're compiling as content or if we're loading a
     // blob: URI.
-    bool ignoreCache = options.ignoreCache || principal != mSystemPrincipal ||
-                       scheme.EqualsLiteral("blob");
+    bool ignoreCache = options.ignoreCache
+        || !GetObjectPrincipal(targetObj)->GetIsSystemPrincipal()
+        || scheme.EqualsLiteral("blob");
     StartupCache* cache = ignoreCache ? nullptr : StartupCache::GetSingleton();
 
     JSVersion version = JS_GetVersion(cx);
