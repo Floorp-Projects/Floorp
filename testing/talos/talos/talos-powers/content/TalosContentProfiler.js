@@ -7,6 +7,9 @@
  * performance profiles while running within content. If your test
  * is running in the parent process, you should use
  * TalosParentProfiler.js instead to avoid the messaging overhead.
+ *
+ * This file can be loaded directly into a test page, or can be loaded
+ * as a frame script into a browser by the parent process.
  */
 
 var TalosContentProfiler;
@@ -51,6 +54,23 @@ var TalosContentProfiler;
    *        on this document.
    */
   function sendEventAndWait(name, data = {}) {
+    // If we're running as a frame script, we can send messages directly to
+    // the parent, rather than going through the talos-powers-content.js
+    // mediator, which ends up being more complicated.
+    if (typeof(sendAsyncMessage) !== "undefined") {
+      return new Promise(resolve => {
+        sendAsyncMessage("TalosContentProfiler:Command", { name, data });
+        addMessageListener("TalosContentProfiler:Response", function onMsg(msg) {
+          if (msg.data.name != name) {
+            return;
+          }
+
+          removeMessageListener("TalosContentProfiler:Response", onMsg);
+          resolve(msg.data);
+        });
+      });
+    }
+
     return new Promise((resolve) => {
       var event = new CustomEvent("TalosContentProfilerCommand", {
         bubbles: true,
@@ -261,4 +281,11 @@ var TalosContentProfiler;
       Services.profiler.AddMarker(marker);
     },
   };
+
+  // sendAsyncMessage is a hack-y mechanism to determine whether or not
+  // we're running as a frame script. If we are, jam TalosContentProfiler
+  // into the content scope.
+  if (typeof(sendAsyncMessage) !== "undefined") {
+    content.wrappedJSObject.TalosContentProfiler = TalosContentProfiler;
+  }
 })();
