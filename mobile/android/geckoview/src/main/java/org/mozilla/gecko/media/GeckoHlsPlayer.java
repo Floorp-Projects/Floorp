@@ -582,7 +582,7 @@ public class GeckoHlsPlayer implements BaseHlsPlayer, ExoPlayer.EventListener {
     public long getBufferedPosition() {
         assertTrue(mPlayer != null);
         // Value returned by getBufferedPosition() is in milliseconds.
-        long bufferedPos = mPlayer.getBufferedPosition() * 1000;
+        long bufferedPos = Math.max(0L, mPlayer.getBufferedPosition() * 1000L);
         if (DEBUG) { Log.d(LOGTAG, "getBufferedPosition : " + bufferedPos + "(Us)"); }
         return bufferedPos;
     }
