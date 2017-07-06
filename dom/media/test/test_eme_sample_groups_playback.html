@@ -69,29 +69,16 @@
 
           .then((mediaKeys) => {
             video.setMediaKeys(mediaKeys);
+
             var session = mediaKeys.createSession();
             once(session, "message", (ev) => {
               is(ev.messageType, "license-request", "Expected a license-request");
-
-              var keys = [];
-              for (var keyid in test.keys) {
-                keys.push({
-                  "kty":"oct",
-                  "kid":HexToBase64(keyid),
-                  "k":HexToBase64(test.keys[keyid])
-                });
-              }
-
-              var license = new TextEncoder().encode(JSON.stringify({
-                "keys": keys,
-                "type": test.sessionType || "temporary"
-              }));
-              session.update(license);
+              session.update(GenerateClearKeyLicense(ev.message, test.keys));
             });
+
             var json = JSON.stringify({
               "kids":Object.keys(test.keys).map(HexToBase64)
             });
-
             var request = new TextEncoder().encode(json);
             session.generateRequest("keyids", request)
               .then(e => {
