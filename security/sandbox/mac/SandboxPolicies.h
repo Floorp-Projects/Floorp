@@ -54,6 +54,7 @@ static const char contentSandboxRules[] = R"(
   (define sandbox-level-2 (param "SANDBOX_LEVEL_2"))
   (define sandbox-level-3 (param "SANDBOX_LEVEL_3"))
   (define macosMinorVersion-9 (param "MAC_OS_MINOR_9"))
+  (define macosMinorVersion-min13 (param "MAC_OS_MINOR_MIN_13"))
   (define appPath (param "APP_PATH"))
   (define appBinaryPath (param "APP_BINARY_PATH"))
   (define appDir (param "APP_DIR"))
@@ -168,6 +169,10 @@ static const char contentSandboxRules[] = R"(
   ; bug 1312273
     (if (string=? macosMinorVersion-9 "TRUE")
        (allow mach-lookup (global-name "com.apple.xpcd")))
+
+  ; bug 1376163
+    (if (string=? macosMinorVersion-min13 "TRUE")
+       (allow mach-lookup (global-name "com.apple.audio.AudioComponentRegistrar")))
 
     (allow iokit-open
         (iokit-user-client-class "IOHIDParamUserClient")
