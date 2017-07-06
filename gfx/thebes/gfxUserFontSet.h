@@ -99,7 +99,7 @@ class gfxUserFontData {
 public:
     gfxUserFontData()
         : mSrcIndex(0), mFormat(0), mMetaOrigLen(0),
-          mCRC32(0), mLength(0), mCompression(kUnknownCompression),
+          mCompression(kUnknownCompression),
           mPrivate(false), mIsBuffer(false)
     { }
     virtual ~gfxUserFontData() { }
@@ -114,8 +114,6 @@ public:
     uint32_t          mSrcIndex;  // index in the rule's source list
     uint32_t          mFormat;    // format hint for the source used, if any
     uint32_t          mMetaOrigLen; // length needed to decompress metadata
-    uint32_t          mCRC32;     // Checksum
-    uint32_t          mLength;    // Font length
     uint8_t           mCompression; // compression type
     bool              mPrivate;   // whether font belongs to a private window
     bool              mIsBuffer;  // whether the font source was a buffer
@@ -284,21 +282,10 @@ public:
 
     class UserFontCache {
     public:
-        // Flag passed when caching a font entry, to specify whether the entry
-        // should persist in the cache or be discardable.
-        typedef enum {
-            kDiscardable,
-            kPersistent
-        } EntryPersistence;
-
         // Record a loaded user-font in the cache. This requires that the
         // font-entry's userFontData has been set up already, as it relies
         // on the URI and Principal recorded there.
-        // If aPersistence is Persistent, the entry will remain in the cache
-        // across cacheservice:empty-cache notifications. This is used for
-        // "preloaded hidden fonts" on FxOS.
-        static void CacheFont(gfxFontEntry* aFontEntry,
-                              EntryPersistence aPersistence = kDiscardable);
+        static void CacheFont(gfxFontEntry* aFontEntry);
 
         // The given gfxFontEntry is being destroyed, so remove any record that
         // refers to it.
@@ -357,33 +344,14 @@ public:
             // The font entry MUST notify the cache when it is destroyed
             // (by calling ForgetFont()).
             gfxFontEntry* MOZ_NON_OWNING_REF mFontEntry;
-            uint32_t                mCRC32;
-            uint32_t                mLength;
             bool                    mPrivate;
-            EntryPersistence        mPersistence;
 
             Key(nsIURI* aURI, nsIPrincipal* aPrincipal,
-                gfxFontEntry* aFontEntry, bool aPrivate,
-                EntryPersistence aPersistence = kDiscardable)
+                gfxFontEntry* aFontEntry, bool aPrivate)
                 : mURI(aURI),
                   mPrincipal(aPrincipal),
                   mFontEntry(aFontEntry),
-                  mCRC32(0),
-                  mLength(0),
-                  mPrivate(aPrivate),
-                  mPersistence(aPersistence)
-            { }
-
-            Key(uint32_t aCRC32, uint32_t aLength,
-                gfxFontEntry* aFontEntry, bool aPrivate,
-                EntryPersistence aPersistence = kDiscardable)
-                : mURI(nullptr),
-                  mPrincipal(nullptr),
-                  mFontEntry(aFontEntry),
-                  mCRC32(aCRC32),
-                  mLength(aLength),
-                  mPrivate(aPrivate),
-                  mPersistence(aPersistence)
+                  mPrivate(aPrivate)
             { }
         };
 
@@ -395,21 +363,15 @@ public:
             explicit Entry(KeyTypePointer aKey)
                 : mURI(aKey->mURI),
                   mPrincipal(aKey->mPrincipal),
-                  mCRC32(aKey->mCRC32),
-                  mLength(aKey->mLength),
                   mFontEntry(aKey->mFontEntry),
-                  mPrivate(aKey->mPrivate),
-                  mPersistence(aKey->mPersistence)
+                  mPrivate(aKey->mPrivate)
             { }
 
             Entry(const Entry& aOther)
                 : mURI(aOther.mURI),
                   mPrincipal(aOther.mPrincipal),
-                  mCRC32(aOther.mCRC32),
-                  mLength(aOther.mLength),
                   mFontEntry(aOther.mFontEntry),
-                  mPrivate(aOther.mPrivate),
-                  mPersistence(aOther.mPersistence)
+                  mPrivate(aOther.mPrivate)
             { }
 
             ~Entry() { }
@@ -419,9 +381,6 @@ public:
             static KeyTypePointer KeyToPointer(KeyType aKey) { return &aKey; }
 
             static PLDHashNumber HashKey(const KeyTypePointer aKey) {
-                if (aKey->mLength) {
-                    return aKey->mCRC32;
-                }
                 uint32_t principalHash = 0;
                 if (aKey->mPrincipal) {
                     aKey->mPrincipal->GetHashValue(&principalHash);
@@ -440,7 +399,6 @@ public:
 
             gfxFontEntry* GetFontEntry() const { return mFontEntry; }
 
-            bool IsPersistent() const { return mPersistence == kPersistent; }
             bool IsPrivate() const { return mPrivate; }
 
             void ReportMemory(nsIHandleReportCallback* aHandleReport,
@@ -460,9 +418,6 @@ public:
             nsCOMPtr<nsIURI>       mURI;
             nsCOMPtr<nsIPrincipal> mPrincipal; // or nullptr for data: URLs
 
-            uint32_t               mCRC32;
-            uint32_t               mLength;
-
             // The "real" font entry corresponding to this downloaded font.
             // The font entry MUST notify the cache when it is destroyed
             // (by calling ForgetFont()).
@@ -470,9 +425,6 @@ public:
 
             // Whether this font was loaded from a private window.
             bool                   mPrivate;
-
-            // Whether this entry should survive cache-flushing.
-            EntryPersistence       mPersistence;
         };
 
         static nsTHashtable<Entry>* sUserFonts;
