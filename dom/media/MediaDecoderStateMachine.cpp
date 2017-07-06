@@ -957,6 +957,7 @@ public:
                                           EventVisibility aVisibility)
   {
     mSeekJob = Move(aSeekJob);
+    mVisibility = aVisibility;
 
     // Always switch off the blank decoder otherwise we might become visible
     // in the middle of seeking and won't have a valid video frame to show
@@ -973,17 +974,17 @@ public:
       mMaster->mOnPlaybackEvent.Notify(MediaEventType::VideoOnlySeekBegin);
     }
 
-    // Don't stop playback for a video-only seek since audio is playing.
-    if (!mSeekJob.mTarget->IsVideoOnly()) {
+    // Suppressed visibility comes from two cases: (1) leaving dormant state,
+    // and (2) resuming suspended video decoder. We want both cases to be
+    // transparent to the user. So we only notify the change when the seek
+    // request is from the user.
+    if (mVisibility == EventVisibility::Observable) {
+      // Don't stop playback for a video-only seek since we want to keep playing
+      // audio and we don't need to stop playback while leaving dormant for the
+      // playback should has been stopped.
       mMaster->StopPlayback();
-    }
-
-    mMaster->UpdatePlaybackPositionInternal(mSeekJob.mTarget->GetTime());
-
-    if (aVisibility == EventVisibility::Observable) {
+      mMaster->UpdatePlaybackPositionInternal(mSeekJob.mTarget->GetTime());
       mMaster->mOnPlaybackEvent.Notify(MediaEventType::SeekStarted);
-      // We want dormant actions to be transparent to the user.
-      // So we only notify the change when the seek request is from the user.
       mMaster->UpdateNextFrameStatus(
         MediaDecoderOwner::NEXT_FRAME_UNAVAILABLE_SEEKING);
     }
@@ -1021,6 +1022,7 @@ public:
 
 protected:
   SeekJob mSeekJob;
+  EventVisibility mVisibility;
 
   virtual void DoSeek() = 0;
   // Transition to the next state (defined by the subclass) when seek is completed.
@@ -2474,7 +2476,11 @@ SeekingState::SeekCompleted()
   }
 
   // Ensure timestamps are up to date.
-  if (!target.IsVideoOnly()) {
+  // Suppressed visibility comes from two cases: (1) leaving dormant state,
+  // and (2) resuming suspended video decoder. We want both cases to be
+  // transparent to the user. So we only notify the change when the seek
+  // request is from the user.
+  if (mVisibility == EventVisibility::Observable) {
     // Don't update playback position for video-only seek.
     // Otherwise we might have |newCurrentTime > mMediaSink->GetPosition()|
     // and fail the assertion in GetClock() since we didn't stop MediaSink.
