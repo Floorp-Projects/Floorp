@@ -1668,45 +1668,6 @@ void nsPluginInstanceOwner::ExitFullScreen(jobject view) {
 
 #endif
 
-void
-nsPluginInstanceOwner::NotifyHostAsyncInitFailed()
-{
-  nsCOMPtr<nsIObjectLoadingContent> content = do_QueryReferent(mContent);
-  content->StopPluginInstance();
-}
-
-void
-nsPluginInstanceOwner::NotifyHostCreateWidget()
-{
-  mPluginHost->CreateWidget(this);
-#ifdef XP_MACOSX
-  FixUpPluginWindow(ePluginPaintEnable);
-#else
-  if (mPluginFrame) {
-    mPluginFrame->InvalidateFrame();
-  } else {
-    CallSetWindow();
-  }
-#endif
-}
-
-void
-nsPluginInstanceOwner::NotifyDestroyPending()
-{
-  if (!mInstance) {
-    return;
-  }
-  bool isOOP = false;
-  if (NS_FAILED(mInstance->GetIsOOP(&isOOP)) || !isOOP) {
-    return;
-  }
-  NPP npp = nullptr;
-  if (NS_FAILED(mInstance->GetNPP(&npp)) || !npp) {
-    return;
-  }
-  PluginAsyncSurrogate::NotifyDestroyPending(npp);
-}
-
 nsresult nsPluginInstanceOwner::DispatchFocusToPlugin(nsIDOMEvent* aFocusEvent)
 {
 #ifdef MOZ_WIDGET_ANDROID

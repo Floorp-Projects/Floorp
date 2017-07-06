@@ -2508,52 +2508,6 @@ PluginInstanceChild::AnswerNPP_NewStream(PBrowserStreamChild* actor,
     return IPC_OK();
 }
 
-class NewStreamAsyncCall : public ChildAsyncCall
-{
-public:
-    NewStreamAsyncCall(PluginInstanceChild* aInstance,
-                       BrowserStreamChild* aBrowserStreamChild,
-                       const nsCString& aMimeType,
-                       const bool aSeekable)
-        : ChildAsyncCall(aInstance, nullptr, nullptr)
-        , mBrowserStreamChild(aBrowserStreamChild)
-        , mMimeType(aMimeType)
-        , mSeekable(aSeekable)
-    {
-    }
-
-    NS_IMETHOD Run() override
-    {
-        RemoveFromAsyncList();
-
-        uint16_t stype = NP_NORMAL;
-        NPError rv = mInstance->DoNPP_NewStream(mBrowserStreamChild, mMimeType,
-                                                mSeekable, &stype);
-        DebugOnly<bool> sendOk =
-            mBrowserStreamChild->SendAsyncNPP_NewStreamResult(rv, stype);
-        MOZ_ASSERT(sendOk);
-        return NS_OK;
-    }
-
-private:
-    BrowserStreamChild* mBrowserStreamChild;
-    const nsCString     mMimeType;
-    const bool          mSeekable;
-};
-
-mozilla::ipc::IPCResult
-PluginInstanceChild::RecvAsyncNPP_NewStream(PBrowserStreamChild* actor,
-                                            const nsCString& mimeType,
-                                            const bool& seekable)
-{
-    // Reusing ChildAsyncCall so that the task is cancelled properly on Destroy
-    BrowserStreamChild* child = static_cast<BrowserStreamChild*>(actor);
-    RefPtr<NewStreamAsyncCall> task =
-        new NewStreamAsyncCall(this, child, mimeType, seekable);
-    PostChildAsyncCall(task.forget());
-    return IPC_OK();
-}
-
 PBrowserStreamChild*
 PluginInstanceChild::AllocPBrowserStreamChild(const nsCString& url,
                                               const uint32_t& length,

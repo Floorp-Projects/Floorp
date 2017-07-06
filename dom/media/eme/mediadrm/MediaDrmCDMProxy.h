@@ -28,7 +28,7 @@ class MediaDrmCDMCallbackProxy;
 class MediaDrmCDMProxy : public CDMProxy {
 public:
 
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MediaDrmCDMProxy)
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MediaDrmCDMProxy, override)
 
   MediaDrmCDMProxy(dom::MediaKeys* aKeys,
                    const nsAString& aKeySystem,

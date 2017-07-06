@@ -438,12 +438,6 @@ public:
                                                          const nsCString& aTopic,
                                                          const nsString& aData) override;
 
-  virtual mozilla::ipc::IPCResult RecvAssociatePluginId(const uint32_t& aPluginId,
-                                                        const base::ProcessId& aProcessId) override;
-
-  virtual mozilla::ipc::IPCResult RecvLoadPluginResult(const uint32_t& aPluginId,
-                                                       const bool& aResult) override;
-
   virtual mozilla::ipc::IPCResult RecvUpdateWindow(const uintptr_t& aChildId) override;
 
   virtual mozilla::ipc::IPCResult RecvDomainSetChanged(const uint32_t& aSetType,

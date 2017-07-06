@@ -75,7 +75,7 @@ ChildWindowConstructor(nsISupports *aOuter, REFNSIID aIID,
   if (aOuter != nullptr) {
     return NS_ERROR_NO_AGGREGATION;
   }
-  nsCOMPtr<nsIWidget> widget = new ChildWindow;
+  nsCOMPtr<nsIWidget> widget = new nsWindow(true);
   return widget->QueryInterface(aIID, aResult);
 }
 

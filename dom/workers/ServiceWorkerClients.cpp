@@ -754,10 +754,14 @@ private:
       return NS_ERROR_FAILURE;
     }
 
+    nsCOMPtr<nsIPrincipal> triggeringPrincipal = workerPrivate->GetPrincipal();
+    MOZ_DIAGNOSTIC_ASSERT(triggeringPrincipal);
+
     nsCOMPtr<mozIDOMWindowProxy> win;
     rv = bwin->OpenURI(uri, nullptr,
                        nsIBrowserDOMWindow::OPEN_DEFAULTWINDOW,
                        nsIBrowserDOMWindow::OPEN_NEW,
+                       triggeringPrincipal,
                        getter_AddRefs(win));
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;

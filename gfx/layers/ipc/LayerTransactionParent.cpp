@@ -51,9 +51,11 @@ namespace layers {
 // LayerTransactionParent
 LayerTransactionParent::LayerTransactionParent(HostLayerManager* aManager,
                                                CompositorBridgeParentBase* aBridge,
+                                               CompositorAnimationStorage* aAnimStorage,
                                                uint64_t aId)
   : mLayerManager(aManager)
   , mCompositorBridge(aBridge)
+  , mAnimStorage(aAnimStorage)
   , mId(aId)
   , mChildEpoch(0)
   , mParentEpoch(0)
@@ -68,13 +70,21 @@ LayerTransactionParent::~LayerTransactionParent()
 }
 
 void
-LayerTransactionParent::SetLayerManager(HostLayerManager* aLayerManager)
+LayerTransactionParent::SetLayerManager(HostLayerManager* aLayerManager, CompositorAnimationStorage* aAnimStorage)
 {
+  if (mDestroyed) {
+    return;
+  }
   mLayerManager = aLayerManager;
   for (auto iter = mLayerMap.Iter(); !iter.Done(); iter.Next()) {
     auto layer = iter.Data();
+    if (mAnimStorage &&
+        layer->GetCompositorAnimationsId()) {
+      mAnimStorage->ClearById(layer->GetCompositorAnimationsId());
+    }
     layer->AsHostLayer()->SetLayerManager(aLayerManager);
   }
+  mAnimStorage = aAnimStorage;
 }
 
 mozilla::ipc::IPCResult
@@ -101,7 +111,16 @@ LayerTransactionParent::Destroy()
     return;
   }
   mDestroyed = true;
+  if (mAnimStorage) {
+    for (auto iter = mLayerMap.Iter(); !iter.Done(); iter.Next()) {
+      auto layer = iter.Data();
+      if (layer->GetCompositorAnimationsId()) {
+        mAnimStorage->ClearById(layer->GetCompositorAnimationsId());
+      }
+    }
+  }
   mCompositables.clear();
+  mAnimStorage = nullptr;
 }
 
 class MOZ_STACK_CLASS AutoLayerTransactionParentAsyncMessageSender
@@ -535,14 +554,10 @@ LayerTransactionParent::SetLayerAttributes(const OpSetLayerAttributes& aOp)
   layer->SetCompositorAnimations(common.compositorAnimations());
   // Clean up the Animations by id in the CompositorAnimationStorage
   // if there are no active animations on the layer
-  if (layer->GetCompositorAnimationsId() &&
+  if (mAnimStorage &&
+      layer->GetCompositorAnimationsId() &&
       layer->GetAnimations().IsEmpty()) {
-    CompositorAnimationStorage* storage =
-      mCompositorBridge->GetAnimationStorage(GetId());
-
-    if (storage) {
-      storage->ClearById(layer->GetCompositorAnimationsId());
-    }
+    mAnimStorage->ClearById(layer->GetCompositorAnimationsId());
   }
   if (common.scrollMetadata() != layer->GetAllScrollMetadata()) {
     UpdateHitTestingTree(layer, "scroll metadata changed");
@@ -727,14 +742,11 @@ LayerTransactionParent::RecvGetAnimationOpacity(const uint64_t& aCompositorAnima
 
   mCompositorBridge->ApplyAsyncProperties(this);
 
-  CompositorAnimationStorage* storage =
-    mCompositorBridge->GetAnimationStorage(GetId());
-
-  if (!storage) {
+  if (!mAnimStorage) {
     return IPC_FAIL_NO_REASON(this);
   }
 
-  Maybe<float> opacity = storage->GetAnimationOpacity(aCompositorAnimationsId);
+  Maybe<float> opacity = mAnimStorage->GetAnimationOpacity(aCompositorAnimationsId);
   if (opacity) {
     *aOpacity = *opacity;
     *aHasAnimationOpacity = true;
@@ -756,14 +768,11 @@ LayerTransactionParent::RecvGetAnimationTransform(const uint64_t& aCompositorAni
   // the value.
   mCompositorBridge->ApplyAsyncProperties(this);
 
-  CompositorAnimationStorage* storage =
-    mCompositorBridge->GetAnimationStorage(GetId());
-
-  if (!storage) {
+  if (!mAnimStorage) {
     return IPC_FAIL_NO_REASON(this);
   }
 
-  Maybe<Matrix4x4> transform = storage->GetAnimationTransform(aCompositorAnimationsId);
+  Maybe<Matrix4x4> transform = mAnimStorage->GetAnimationTransform(aCompositorAnimationsId);
   if (transform) {
     *aTransform = *transform;
   } else {
@@ -1007,6 +1016,10 @@ LayerTransactionParent::RecvReleaseLayer(const LayerHandle& aHandle)
   RefPtr<Layer> layer;
   if (!aHandle || !mLayerMap.Remove(aHandle.Value(), getter_AddRefs(layer))) {
     return IPC_FAIL_NO_REASON(this);
+  }
+  if (mAnimStorage &&
+      layer->GetCompositorAnimationsId()) {
+    mAnimStorage->ClearById(layer->GetCompositorAnimationsId());
   }
   layer->Disconnect();
   return IPC_OK();

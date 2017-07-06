@@ -25,4 +25,5 @@ private:
 
   mozilla::OriginAttributes mOpenerOriginAttributes;
   nsString mReferrer;
+  nsCOMPtr<nsIPrincipal> mTriggeringPrincipal;
 };
