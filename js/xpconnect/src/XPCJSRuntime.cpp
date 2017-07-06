@@ -1400,6 +1400,10 @@ ReportZoneStats(const JS::ZoneStats& zStats,
         zStats.typePool,
         "Type sets and related data.");
 
+    ZCREPORT_BYTES(pathPrefix + NS_LITERAL_CSTRING("regexp-zone"),
+        zStats.regexpZone,
+        "The regexp zone and regexp data.");
+
     ZCREPORT_BYTES(pathPrefix + NS_LITERAL_CSTRING("jit-zone"),
         zStats.jitZone,
         "The JIT zone.");
@@ -1797,10 +1801,6 @@ ReportCompartmentStats(const JS::CompartmentStats& cStats,
     ZCREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("cross-compartment-wrapper-table"),
         cStats.crossCompartmentWrappersTable,
         "The cross-compartment wrapper table.");
-
-    ZCREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("regexp-compartment"),
-        cStats.regexpCompartment,
-        "The regexp compartment and regexp data.");
 
     ZCREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("saved-stacks-set"),
         cStats.savedStacksSet,

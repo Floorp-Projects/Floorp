@@ -83,7 +83,8 @@ public:
 private:
   friend class RecordedEvent;
 
-  MOZ_IMPLICIT RecordedDrawTargetCreation(std::istream &aStream);
+  template<class S>
+  MOZ_IMPLICIT RecordedDrawTargetCreation(S &aStream);
 };
 
 class RecordedDrawTargetDestruction : public RecordedEventDerived<RecordedDrawTargetDestruction> {
@@ -107,7 +108,8 @@ public:
 private:
   friend class RecordedEvent;
 
-  MOZ_IMPLICIT RecordedDrawTargetDestruction(std::istream &aStream);
+  template<class S>
+  MOZ_IMPLICIT RecordedDrawTargetDestruction(S &aStream);
 };
 
 class RecordedCreateSimilarDrawTarget : public RecordedEventDerived<RecordedCreateSimilarDrawTarget> {
@@ -135,7 +137,8 @@ public:
 private:
   friend class RecordedEvent;
 
-  MOZ_IMPLICIT RecordedCreateSimilarDrawTarget(std::istream &aStream);
+  template<class S>
+  MOZ_IMPLICIT RecordedCreateSimilarDrawTarget(S &aStream);
 };
 
 class RecordedFillRect : public RecordedDrawingEvent<RecordedFillRect> {
@@ -184,7 +187,8 @@ public:
 private:
   friend class RecordedEvent;
 
-  MOZ_IMPLICIT RecordedStrokeRect(std::istream &aStream);
+  template<class S>
+  MOZ_IMPLICIT RecordedStrokeRect(S &aStream);
 
   Rect mRect;
   PatternStorage mPattern;
@@ -213,7 +217,8 @@ public:
 private:
   friend class RecordedEvent;
 
-  MOZ_IMPLICIT RecordedStrokeLine(std::istream &aStream);
+  template<class S>
+  MOZ_IMPLICIT RecordedStrokeLine(S &aStream);
 
   Point mBegin;
   Point mEnd;
@@ -239,7 +244,8 @@ public:
 private:
   friend class RecordedEvent;
 
-  MOZ_IMPLICIT RecordedFill(std::istream &aStream);
+  template<class S>
+  MOZ_IMPLICIT RecordedFill(S &aStream);
 
   ReferencePtr mPath;
   PatternStorage mPattern;
@@ -268,7 +274,8 @@ public:
 private:
   friend class RecordedEvent;
 
-  MOZ_IMPLICIT RecordedFillGlyphs(std::istream &aStream);
+  template<class S>
+  MOZ_IMPLICIT RecordedFillGlyphs(S &aStream);
 
   ReferencePtr mScaledFont;
   PatternStorage mPattern;
@@ -295,7 +302,8 @@ public:
 private:
   friend class RecordedEvent;
 
-  MOZ_IMPLICIT RecordedMask(std::istream &aStream);
+  template<class S>
+  MOZ_IMPLICIT RecordedMask(S &aStream);
 
   PatternStorage mSource;
   PatternStorage mMask;
@@ -321,7 +329,8 @@ public:
 private:
   friend class RecordedEvent;
 
-  MOZ_IMPLICIT RecordedStroke(std::istream &aStream);
+  template<class S>
+  MOZ_IMPLICIT RecordedStroke(S &aStream);
 
   ReferencePtr mPath;
   PatternStorage mPattern;
@@ -345,7 +354,8 @@ public:
 private:
   friend class RecordedEvent;
 
-  MOZ_IMPLICIT RecordedClearRect(std::istream &aStream);
+  template<class S>
+  MOZ_IMPLICIT RecordedClearRect(S &aStream);
 
   Rect mRect;
 };
@@ -368,7 +378,8 @@ public:
 private:
   friend class RecordedEvent;
 
-  MOZ_IMPLICIT RecordedCopySurface(std::istream &aStream);
+  template<class S>
+  MOZ_IMPLICIT RecordedCopySurface(S &aStream);
 
   ReferencePtr mSourceSurface;
   IntRect mSourceRect;
@@ -391,7 +402,8 @@ public:
 private:
   friend class RecordedEvent;
 
-  MOZ_IMPLICIT RecordedPushClip(std::istream &aStream);
+  template<class S>
+  MOZ_IMPLICIT RecordedPushClip(S &aStream);
 
   ReferencePtr mPath;
 };
@@ -412,7 +424,8 @@ public:
 private:
   friend class RecordedEvent;
 
-  MOZ_IMPLICIT RecordedPushClipRect(std::istream &aStream);
+  template<class S>
+  MOZ_IMPLICIT RecordedPushClipRect(S &aStream);
 
   Rect mRect;
 };
@@ -432,7 +445,8 @@ public:
 private:
   friend class RecordedEvent;
 
-  MOZ_IMPLICIT RecordedPopClip(std::istream &aStream);
+  template<class S>
+  MOZ_IMPLICIT RecordedPopClip(S &aStream);
 };
 
 class RecordedPushLayer : public RecordedDrawingEvent<RecordedPushLayer> {
@@ -455,7 +469,8 @@ public:
 private:
   friend class RecordedEvent;
 
-  MOZ_IMPLICIT RecordedPushLayer(std::istream &aStream);
+  template<class S>
+  MOZ_IMPLICIT RecordedPushLayer(S &aStream);
 
   bool mOpaque;
   Float mOpacity;
@@ -481,7 +496,8 @@ public:
 private:
   friend class RecordedEvent;
 
-  MOZ_IMPLICIT RecordedPopLayer(std::istream &aStream);
+  template<class S>
+  MOZ_IMPLICIT RecordedPopLayer(S &aStream);
 };
 
 class RecordedSetTransform : public RecordedDrawingEvent<RecordedSetTransform> {
@@ -502,7 +518,8 @@ public:
 private:
   friend class RecordedEvent;
 
-   MOZ_IMPLICIT RecordedSetTransform(std::istream &aStream);
+   template<class S>
+  MOZ_IMPLICIT RecordedSetTransform(S &aStream);
 };
 
 class RecordedDrawSurface : public RecordedDrawingEvent<RecordedDrawSurface> {
@@ -524,7 +541,8 @@ public:
 private:
   friend class RecordedEvent;
 
-   MOZ_IMPLICIT RecordedDrawSurface(std::istream &aStream);
+   template<class S>
+  MOZ_IMPLICIT RecordedDrawSurface(S &aStream);
 
   ReferencePtr mRefSource;
   Rect mDest;
@@ -552,7 +570,8 @@ public:
 private:
   friend class RecordedEvent;
 
-  MOZ_IMPLICIT RecordedDrawSurfaceWithShadow(std::istream &aStream);
+  template<class S>
+  MOZ_IMPLICIT RecordedDrawSurfaceWithShadow(S &aStream);
 
   ReferencePtr mRefSource;
   Point mDest;
@@ -582,7 +601,8 @@ public:
 private:
   friend class RecordedEvent;
 
-  MOZ_IMPLICIT RecordedDrawFilter(std::istream &aStream);
+  template<class S>
+  MOZ_IMPLICIT RecordedDrawFilter(S &aStream);
 
   ReferencePtr mNode;
   Rect mSourceRect;
@@ -609,7 +629,8 @@ private:
   FillRule mFillRule;
   std::vector<PathOp> mPathOps;
 
-  MOZ_IMPLICIT RecordedPathCreation(std::istream &aStream);
+  template<class S>
+  MOZ_IMPLICIT RecordedPathCreation(S &aStream);
 };
 
 class RecordedPathDestruction : public RecordedEventDerived<RecordedPathDestruction> {
@@ -631,7 +652,8 @@ private:
 
   ReferencePtr mRefPtr;
 
-  MOZ_IMPLICIT RecordedPathDestruction(std::istream &aStream);
+  template<class S>
+  MOZ_IMPLICIT RecordedPathDestruction(S &aStream);
 };
 
 class RecordedSourceSurfaceCreation : public RecordedEventDerived<RecordedSourceSurfaceCreation> {
@@ -662,7 +684,8 @@ private:
   SurfaceFormat mFormat;
   bool mDataOwned;
 
-  MOZ_IMPLICIT RecordedSourceSurfaceCreation(std::istream &aStream);
+  template<class S>
+  MOZ_IMPLICIT RecordedSourceSurfaceCreation(S &aStream);
 };
 
 class RecordedSourceSurfaceDestruction : public RecordedEventDerived<RecordedSourceSurfaceDestruction> {
@@ -684,7 +707,8 @@ private:
 
   ReferencePtr mRefPtr;
 
-  MOZ_IMPLICIT RecordedSourceSurfaceDestruction(std::istream &aStream);
+  template<class S>
+  MOZ_IMPLICIT RecordedSourceSurfaceDestruction(S &aStream);
 };
 
 class RecordedFilterNodeCreation : public RecordedEventDerived<RecordedFilterNodeCreation> {
@@ -709,7 +733,8 @@ private:
   ReferencePtr mRefPtr;
   FilterType mType;
 
-  MOZ_IMPLICIT RecordedFilterNodeCreation(std::istream &aStream);
+  template<class S>
+  MOZ_IMPLICIT RecordedFilterNodeCreation(S &aStream);
 };
 
 class RecordedFilterNodeDestruction : public RecordedEventDerived<RecordedFilterNodeDestruction> {
@@ -731,7 +756,8 @@ private:
 
   ReferencePtr mRefPtr;
 
-  MOZ_IMPLICIT RecordedFilterNodeDestruction(std::istream &aStream);
+  template<class S>
+  MOZ_IMPLICIT RecordedFilterNodeDestruction(S &aStream);
 };
 
 class RecordedGradientStopsCreation : public RecordedEventDerived<RecordedGradientStopsCreation> {
@@ -761,7 +787,8 @@ private:
   ExtendMode mExtendMode;
   bool mDataOwned;
 
-  MOZ_IMPLICIT RecordedGradientStopsCreation(std::istream &aStream);
+  template<class S>
+  MOZ_IMPLICIT RecordedGradientStopsCreation(S &aStream);
 };
 
 class RecordedGradientStopsDestruction : public RecordedEventDerived<RecordedGradientStopsDestruction> {
@@ -783,7 +810,8 @@ private:
 
   ReferencePtr mRefPtr;
 
-  MOZ_IMPLICIT RecordedGradientStopsDestruction(std::istream &aStream);
+  template<class S>
+  MOZ_IMPLICIT RecordedGradientStopsDestruction(S &aStream);
 };
 
 class RecordedSnapshot : public RecordedEventDerived<RecordedSnapshot> {
@@ -806,7 +834,8 @@ private:
   ReferencePtr mRefPtr;
   ReferencePtr mDT;
 
-  MOZ_IMPLICIT RecordedSnapshot(std::istream &aStream);
+  template<class S>
+  MOZ_IMPLICIT RecordedSnapshot(S &aStream);
 };
 
 class RecordedIntoLuminanceSource : public RecordedEventDerived<RecordedIntoLuminanceSource> {
@@ -833,7 +862,8 @@ private:
   LuminanceType mLuminanceType;
   float mOpacity;
 
-  MOZ_IMPLICIT RecordedIntoLuminanceSource(std::istream &aStream);
+  template<class S>
+  MOZ_IMPLICIT RecordedIntoLuminanceSource(S &aStream);
 };
 
 class RecordedFontData : public RecordedEventDerived<RecordedFontData> {
@@ -876,7 +906,8 @@ private:
 
   bool mGetFontFileDataSucceeded;
 
-  MOZ_IMPLICIT RecordedFontData(std::istream &aStream);
+  template<class S>
+  MOZ_IMPLICIT RecordedFontData(S &aStream);
 };
 
 class RecordedFontDescriptor : public RecordedEventDerived<RecordedFontDescriptor> {
@@ -920,7 +951,8 @@ private:
   std::vector<uint8_t> mData;
   ReferencePtr mRefPtr;
 
-  MOZ_IMPLICIT RecordedFontDescriptor(std::istream &aStream);
+  template<class S>
+  MOZ_IMPLICIT RecordedFontDescriptor(S &aStream);
 };
 
 class RecordedUnscaledFontCreation : public RecordedEventDerived<RecordedUnscaledFontCreation> {
@@ -959,7 +991,8 @@ private:
   uint32_t mIndex;
   std::vector<uint8_t> mInstanceData;
 
-  MOZ_IMPLICIT RecordedUnscaledFontCreation(std::istream &aStream);
+  template<class S>
+  MOZ_IMPLICIT RecordedUnscaledFontCreation(S &aStream);
 };
 
 class RecordedUnscaledFontDestruction : public RecordedEventDerived<RecordedUnscaledFontDestruction> {
@@ -980,7 +1013,8 @@ private:
 
   ReferencePtr mRefPtr;
 
-  MOZ_IMPLICIT RecordedUnscaledFontDestruction(std::istream &aStream);
+  template<class S>
+  MOZ_IMPLICIT RecordedUnscaledFontDestruction(S &aStream);
 };
 
 class RecordedScaledFontCreation : public RecordedEventDerived<RecordedScaledFontCreation> {
@@ -1020,7 +1054,8 @@ private:
   Float mGlyphSize;
   std::vector<uint8_t> mInstanceData;
 
-  MOZ_IMPLICIT RecordedScaledFontCreation(std::istream &aStream);
+  template<class S>
+  MOZ_IMPLICIT RecordedScaledFontCreation(S &aStream);
 };
 
 class RecordedScaledFontDestruction : public RecordedEventDerived<RecordedScaledFontDestruction> {
@@ -1043,7 +1078,8 @@ private:
 
   ReferencePtr mRefPtr;
 
-  MOZ_IMPLICIT RecordedScaledFontDestruction(std::istream &aStream);
+  template<class S>
+  MOZ_IMPLICIT RecordedScaledFontDestruction(S &aStream);
 };
 
 class RecordedMaskSurface : public RecordedDrawingEvent<RecordedMaskSurface> {
@@ -1065,7 +1101,8 @@ public:
 private:
   friend class RecordedEvent;
 
-  MOZ_IMPLICIT RecordedMaskSurface(std::istream &aStream);
+  template<class S>
+  MOZ_IMPLICIT RecordedMaskSurface(S &aStream);
 
   PatternStorage mPattern;
   ReferencePtr mRefMask;
@@ -1125,7 +1162,8 @@ private:
   ArgType mArgType;
   std::vector<uint8_t> mPayload;
 
-  MOZ_IMPLICIT RecordedFilterNodeSetAttribute(std::istream &aStream);
+  template<class S>
+  MOZ_IMPLICIT RecordedFilterNodeSetAttribute(S &aStream);
 };
 
 class RecordedFilterNodeSetInput : public RecordedEventDerived<RecordedFilterNodeSetInput>
@@ -1159,7 +1197,8 @@ private:
   ReferencePtr mInputFilter;
   ReferencePtr mInputSurface;
 
-  MOZ_IMPLICIT RecordedFilterNodeSetInput(std::istream &aStream);
+  template<class S>
+  MOZ_IMPLICIT RecordedFilterNodeSetInput(S &aStream);
 };
 
 
@@ -1209,8 +1248,9 @@ RecordedEvent::RecordPatternData(S &aStream, const PatternStorage &aPattern) con
   }
 }
 
-inline void
-RecordedEvent::ReadPatternData(std::istream &aStream, PatternStorage &aPattern) const
+template<class S>
+void
+RecordedEvent::ReadPatternData(S &aStream, PatternStorage &aPattern) const
 {
   ReadElement(aStream, aPattern.mType);
 
@@ -1315,8 +1355,9 @@ RecordedEvent::RecordStrokeOptions(S &aStream, const StrokeOptions &aStrokeOptio
   aStream.write((char*)aStrokeOptions.mDashPattern, sizeof(Float) * aStrokeOptions.mDashLength);
 }
 
-inline void
-RecordedEvent::ReadStrokeOptions(std::istream &aStream, StrokeOptions &aStrokeOptions)
+template<class S>
+void
+RecordedEvent::ReadStrokeOptions(S &aStream, StrokeOptions &aStrokeOptions)
 {
   uint64_t dashLength;
   JoinStyle joinStyle;
@@ -1444,8 +1485,8 @@ RecordedDrawTargetCreation::Record(S &aStream) const
   }
 }
 
-inline
-RecordedDrawTargetCreation::RecordedDrawTargetCreation(istream &aStream)
+template<class S>
+RecordedDrawTargetCreation::RecordedDrawTargetCreation(S &aStream)
   : RecordedEventDerived(DRAWTARGETCREATION)
   , mExistingData(nullptr)
 {
@@ -1492,8 +1533,8 @@ RecordedDrawTargetDestruction::Record(S &aStream) const
   WriteElement(aStream, mRefPtr);
 }
 
-inline
-RecordedDrawTargetDestruction::RecordedDrawTargetDestruction(istream &aStream)
+template<class S>
+RecordedDrawTargetDestruction::RecordedDrawTargetDestruction(S &aStream)
   : RecordedEventDerived(DRAWTARGETDESTRUCTION)
 {
   ReadElement(aStream, mRefPtr);
@@ -1530,8 +1571,8 @@ RecordedCreateSimilarDrawTarget::Record(S &aStream) const
   WriteElement(aStream, mFormat);
 }
 
-inline
-RecordedCreateSimilarDrawTarget::RecordedCreateSimilarDrawTarget(istream &aStream)
+template<class S>
+RecordedCreateSimilarDrawTarget::RecordedCreateSimilarDrawTarget(S &aStream)
   : RecordedEventDerived(CREATESIMILARDRAWTARGET)
 {
   ReadElement(aStream, mRefPtr);
@@ -1663,8 +1704,8 @@ RecordedStrokeRect::Record(S &aStream) const
   RecordStrokeOptions(aStream, mStrokeOptions);
 }
 
-inline
-RecordedStrokeRect::RecordedStrokeRect(istream &aStream)
+template<class S>
+RecordedStrokeRect::RecordedStrokeRect(S &aStream)
   : RecordedDrawingEvent(STROKERECT, aStream)
 {
   ReadElement(aStream, mRect);
@@ -1700,8 +1741,8 @@ RecordedStrokeLine::Record(S &aStream) const
   RecordStrokeOptions(aStream, mStrokeOptions);
 }
 
-inline
-RecordedStrokeLine::RecordedStrokeLine(istream &aStream)
+template<class S>
+RecordedStrokeLine::RecordedStrokeLine(S &aStream)
   : RecordedDrawingEvent(STROKELINE, aStream)
 {
   ReadElement(aStream, mBegin);
@@ -1726,8 +1767,8 @@ RecordedFill::PlayEvent(Translator *aTranslator) const
   return true;
 }
 
-inline
-RecordedFill::RecordedFill(istream &aStream)
+template<class S>
+RecordedFill::RecordedFill(S &aStream)
   : RecordedDrawingEvent(FILL, aStream)
 {
   ReadElement(aStream, mPath);
@@ -1768,8 +1809,8 @@ RecordedFillGlyphs::PlayEvent(Translator *aTranslator) const
   return true;
 }
 
-inline
-RecordedFillGlyphs::RecordedFillGlyphs(istream &aStream)
+template<class S>
+RecordedFillGlyphs::RecordedFillGlyphs(S &aStream)
   : RecordedDrawingEvent(FILLGLYPHS, aStream)
 {
   ReadElement(aStream, mScaledFont);
@@ -1806,8 +1847,8 @@ RecordedMask::PlayEvent(Translator *aTranslator) const
   return true;
 }
 
-inline
-RecordedMask::RecordedMask(istream &aStream)
+template<class S>
+RecordedMask::RecordedMask(S &aStream)
   : RecordedDrawingEvent(MASK, aStream)
 {
   ReadElement(aStream, mOptions);
@@ -1852,8 +1893,8 @@ RecordedStroke::Record(S &aStream) const
   RecordStrokeOptions(aStream, mStrokeOptions);
 }
 
-inline
-RecordedStroke::RecordedStroke(istream &aStream)
+template<class S>
+RecordedStroke::RecordedStroke(S &aStream)
   : RecordedDrawingEvent(STROKE, aStream)
 {
   ReadElement(aStream, mPath);
@@ -1884,8 +1925,8 @@ RecordedClearRect::Record(S &aStream) const
   WriteElement(aStream, mRect);
 }
 
-inline
-RecordedClearRect::RecordedClearRect(istream &aStream)
+template<class S>
+RecordedClearRect::RecordedClearRect(S &aStream)
   : RecordedDrawingEvent(CLEARRECT, aStream)
 {
     ReadElement(aStream, mRect);
@@ -1915,8 +1956,8 @@ RecordedCopySurface::Record(S &aStream) const
   WriteElement(aStream, mDest);
 }
 
-inline
-RecordedCopySurface::RecordedCopySurface(istream &aStream)
+template<class S>
+RecordedCopySurface::RecordedCopySurface(S &aStream)
   : RecordedDrawingEvent(COPYSURFACE, aStream)
 {
   ReadElement(aStream, mSourceSurface);
@@ -1945,8 +1986,8 @@ RecordedPushClip::Record(S &aStream) const
   WriteElement(aStream, mPath);
 }
 
-inline
-RecordedPushClip::RecordedPushClip(istream &aStream)
+template<class S>
+RecordedPushClip::RecordedPushClip(S &aStream)
   : RecordedDrawingEvent(PUSHCLIP, aStream)
 {
   ReadElement(aStream, mPath);
@@ -1973,8 +2014,8 @@ RecordedPushClipRect::Record(S &aStream) const
   WriteElement(aStream, mRect);
 }
 
-inline
-RecordedPushClipRect::RecordedPushClipRect(istream &aStream)
+template<class S>
+RecordedPushClipRect::RecordedPushClipRect(S &aStream)
   : RecordedDrawingEvent(PUSHCLIPRECT, aStream)
 {
   ReadElement(aStream, mRect);
@@ -2000,8 +2041,8 @@ RecordedPopClip::Record(S &aStream) const
   RecordedDrawingEvent::Record(aStream);
 }
 
-inline
-RecordedPopClip::RecordedPopClip(istream &aStream)
+template<class S>
+RecordedPopClip::RecordedPopClip(S &aStream)
   : RecordedDrawingEvent(POPCLIP, aStream)
 {
 }
@@ -2035,8 +2076,8 @@ RecordedPushLayer::Record(S &aStream) const
   WriteElement(aStream, mCopyBackground);
 }
 
-inline
-RecordedPushLayer::RecordedPushLayer(istream &aStream)
+template<class S>
+RecordedPushLayer::RecordedPushLayer(S &aStream)
   : RecordedDrawingEvent(PUSHLAYER, aStream)
 {
   ReadElement(aStream, mOpaque);
@@ -2068,8 +2109,8 @@ RecordedPopLayer::Record(S &aStream) const
   RecordedDrawingEvent::Record(aStream);
 }
 
-inline
-RecordedPopLayer::RecordedPopLayer(istream &aStream)
+template<class S>
+RecordedPopLayer::RecordedPopLayer(S &aStream)
   : RecordedDrawingEvent(POPLAYER, aStream)
 {
 }
@@ -2095,8 +2136,8 @@ RecordedSetTransform::Record(S &aStream) const
   WriteElement(aStream, mTransform);
 }
 
-inline
-RecordedSetTransform::RecordedSetTransform(istream &aStream)
+template<class S>
+RecordedSetTransform::RecordedSetTransform(S &aStream)
   : RecordedDrawingEvent(SETTRANSFORM, aStream)
 {
   ReadElement(aStream, mTransform);
@@ -2130,8 +2171,8 @@ RecordedDrawSurface::Record(S &aStream) const
   WriteElement(aStream, mOptions);
 }
 
-inline
-RecordedDrawSurface::RecordedDrawSurface(istream &aStream)
+template<class S>
+RecordedDrawSurface::RecordedDrawSurface(S &aStream)
   : RecordedDrawingEvent(DRAWSURFACE, aStream)
 {
   ReadElement(aStream, mRefSource);
@@ -2167,8 +2208,8 @@ RecordedDrawFilter::Record(S &aStream) const
   WriteElement(aStream, mOptions);
 }
 
-inline
-RecordedDrawFilter::RecordedDrawFilter(istream &aStream)
+template<class S>
+RecordedDrawFilter::RecordedDrawFilter(S &aStream)
   : RecordedDrawingEvent(DRAWFILTER, aStream)
 {
   ReadElement(aStream, mNode);
@@ -2205,8 +2246,8 @@ RecordedDrawSurfaceWithShadow::Record(S &aStream) const
   WriteElement(aStream, mOp);
 }
 
-inline
-RecordedDrawSurfaceWithShadow::RecordedDrawSurfaceWithShadow(istream &aStream)
+template<class S>
+RecordedDrawSurfaceWithShadow::RecordedDrawSurfaceWithShadow(S &aStream)
   : RecordedDrawingEvent(DRAWSURFACEWITHSHADOW, aStream)
 {
   ReadElement(aStream, mRefSource);
@@ -2290,8 +2331,8 @@ RecordedPathCreation::Record(S &aStream) const
 
 }
 
-inline
-RecordedPathCreation::RecordedPathCreation(istream &aStream)
+template<class S>
+RecordedPathCreation::RecordedPathCreation(S &aStream)
   : RecordedEventDerived(PATHCREATION)
 {
   uint64_t size;
@@ -2337,8 +2378,8 @@ RecordedPathDestruction::Record(S &aStream) const
   WriteElement(aStream, mRefPtr);
 }
 
-inline
-RecordedPathDestruction::RecordedPathDestruction(istream &aStream)
+template<class S>
+RecordedPathDestruction::RecordedPathDestruction(S &aStream)
   : RecordedEventDerived(PATHDESTRUCTION)
 {
   ReadElement(aStream, mRefPtr);
@@ -2384,8 +2425,8 @@ RecordedSourceSurfaceCreation::Record(S &aStream) const
   }
 }
 
-inline
-RecordedSourceSurfaceCreation::RecordedSourceSurfaceCreation(istream &aStream)
+template<class S>
+RecordedSourceSurfaceCreation::RecordedSourceSurfaceCreation(S &aStream)
   : RecordedEventDerived(SOURCESURFACECREATION), mDataOwned(true)
 {
   ReadElement(aStream, mRefPtr);
@@ -2419,8 +2460,8 @@ RecordedSourceSurfaceDestruction::Record(S &aStream) const
   WriteElement(aStream, mRefPtr);
 }
 
-inline
-RecordedSourceSurfaceDestruction::RecordedSourceSurfaceDestruction(istream &aStream)
+template<class S>
+RecordedSourceSurfaceDestruction::RecordedSourceSurfaceDestruction(S &aStream)
   : RecordedEventDerived(SOURCESURFACEDESTRUCTION)
 {
   ReadElement(aStream, mRefPtr);
@@ -2454,8 +2495,8 @@ RecordedFilterNodeCreation::Record(S &aStream) const
   WriteElement(aStream, mType);
 }
 
-inline
-RecordedFilterNodeCreation::RecordedFilterNodeCreation(istream &aStream)
+template<class S>
+RecordedFilterNodeCreation::RecordedFilterNodeCreation(S &aStream)
   : RecordedEventDerived(FILTERNODECREATION)
 {
   ReadElement(aStream, mRefPtr);
@@ -2482,8 +2523,8 @@ RecordedFilterNodeDestruction::Record(S &aStream) const
   WriteElement(aStream, mRefPtr);
 }
 
-inline
-RecordedFilterNodeDestruction::RecordedFilterNodeDestruction(istream &aStream)
+template<class S>
+RecordedFilterNodeDestruction::RecordedFilterNodeDestruction(S &aStream)
   : RecordedEventDerived(FILTERNODEDESTRUCTION)
 {
   ReadElement(aStream, mRefPtr);
@@ -2522,8 +2563,8 @@ RecordedGradientStopsCreation::Record(S &aStream) const
   aStream.write((const char*)mStops, mNumStops * sizeof(GradientStop));
 }
 
-inline
-RecordedGradientStopsCreation::RecordedGradientStopsCreation(istream &aStream)
+template<class S>
+RecordedGradientStopsCreation::RecordedGradientStopsCreation(S &aStream)
   : RecordedEventDerived(GRADIENTSTOPSCREATION), mDataOwned(true)
 {
   ReadElement(aStream, mRefPtr);
@@ -2554,8 +2595,8 @@ RecordedGradientStopsDestruction::Record(S &aStream) const
   WriteElement(aStream, mRefPtr);
 }
 
-inline
-RecordedGradientStopsDestruction::RecordedGradientStopsDestruction(istream &aStream)
+template<class S>
+RecordedGradientStopsDestruction::RecordedGradientStopsDestruction(S &aStream)
   : RecordedEventDerived(GRADIENTSTOPSDESTRUCTION)
 {
   ReadElement(aStream, mRefPtr);
@@ -2585,8 +2626,8 @@ RecordedIntoLuminanceSource::Record(S &aStream) const
   WriteElement(aStream, mOpacity);
 }
 
-inline
-RecordedIntoLuminanceSource::RecordedIntoLuminanceSource(istream &aStream)
+template<class S>
+RecordedIntoLuminanceSource::RecordedIntoLuminanceSource(S &aStream)
   : RecordedEventDerived(SNAPSHOT)
 {
   ReadElement(aStream, mRefPtr);
@@ -2617,8 +2658,8 @@ RecordedSnapshot::Record(S &aStream) const
   WriteElement(aStream, mDT);
 }
 
-inline
-RecordedSnapshot::RecordedSnapshot(istream &aStream)
+template<class S>
+RecordedSnapshot::RecordedSnapshot(S &aStream)
   : RecordedEventDerived(SNAPSHOT)
 {
   ReadElement(aStream, mRefPtr);
@@ -2693,8 +2734,8 @@ RecordedFontData::GetFontDetails(RecordedFontDetails& fontDetails)
   return true;
 }
 
-inline
-RecordedFontData::RecordedFontData(istream &aStream)
+template<class S>
+RecordedFontData::RecordedFontData(S &aStream)
   : RecordedEventDerived(FONTDATA)
   , mData(nullptr)
 {
@@ -2747,8 +2788,8 @@ RecordedFontDescriptor::SetFontDescriptor(const uint8_t* aData, uint32_t aSize)
   mData.assign(aData, aData + aSize);
 }
 
-inline
-RecordedFontDescriptor::RecordedFontDescriptor(istream &aStream)
+template<class S>
+RecordedFontDescriptor::RecordedFontDescriptor(S &aStream)
   : RecordedEventDerived(FONTDESC)
 {
   ReadElement(aStream, mType);
@@ -2799,8 +2840,8 @@ RecordedUnscaledFontCreation::SetFontInstanceData(const uint8_t *aData, uint32_t
   mInstanceData.assign(aData, aData + aSize);
 }
 
-inline
-RecordedUnscaledFontCreation::RecordedUnscaledFontCreation(istream &aStream)
+template<class S>
+RecordedUnscaledFontCreation::RecordedUnscaledFontCreation(S &aStream)
   : RecordedEventDerived(UNSCALEDFONTCREATION)
 {
   ReadElement(aStream, mRefPtr);
@@ -2827,8 +2868,8 @@ RecordedUnscaledFontDestruction::Record(S &aStream) const
   WriteElement(aStream, mRefPtr);
 }
 
-inline
-RecordedUnscaledFontDestruction::RecordedUnscaledFontDestruction(istream &aStream)
+template<class S>
+RecordedUnscaledFontDestruction::RecordedUnscaledFontDestruction(S &aStream)
   : RecordedEventDerived(UNSCALEDFONTDESTRUCTION)
 {
   ReadElement(aStream, mRefPtr);
@@ -2879,8 +2920,8 @@ RecordedScaledFontCreation::SetFontInstanceData(const uint8_t *aData, uint32_t a
   mInstanceData.assign(aData, aData + aSize);
 }
 
-inline
-RecordedScaledFontCreation::RecordedScaledFontCreation(istream &aStream)
+template<class S>
+RecordedScaledFontCreation::RecordedScaledFontCreation(S &aStream)
   : RecordedEventDerived(SCALEDFONTCREATION)
 {
   ReadElement(aStream, mRefPtr);
@@ -2907,8 +2948,8 @@ RecordedScaledFontDestruction::Record(S &aStream) const
   WriteElement(aStream, mRefPtr);
 }
 
-inline
-RecordedScaledFontDestruction::RecordedScaledFontDestruction(istream &aStream)
+template<class S>
+RecordedScaledFontDestruction::RecordedScaledFontDestruction(S &aStream)
   : RecordedEventDerived(SCALEDFONTDESTRUCTION)
 {
   ReadElement(aStream, mRefPtr);
@@ -2941,8 +2982,8 @@ RecordedMaskSurface::Record(S &aStream) const
   WriteElement(aStream, mOptions);
 }
 
-inline
-RecordedMaskSurface::RecordedMaskSurface(istream &aStream)
+template<class S>
+RecordedMaskSurface::RecordedMaskSurface(S &aStream)
   : RecordedDrawingEvent(MASKSURFACE, aStream)
 {
   ReadPatternData(aStream, mPattern);
@@ -3009,8 +3050,8 @@ RecordedFilterNodeSetAttribute::Record(S &aStream) const
   aStream.write((const char*)&mPayload.front(), mPayload.size());
 }
 
-inline
-RecordedFilterNodeSetAttribute::RecordedFilterNodeSetAttribute(istream &aStream)
+template<class S>
+RecordedFilterNodeSetAttribute::RecordedFilterNodeSetAttribute(S &aStream)
   : RecordedEventDerived(FILTERNODESETATTRIBUTE)
 {
   ReadElement(aStream, mNode);
@@ -3052,8 +3093,8 @@ RecordedFilterNodeSetInput::Record(S &aStream) const
   WriteElement(aStream, mInputSurface);
 }
 
-inline
-RecordedFilterNodeSetInput::RecordedFilterNodeSetInput(istream &aStream)
+template<class S>
+RecordedFilterNodeSetInput::RecordedFilterNodeSetInput(S &aStream)
   : RecordedEventDerived(FILTERNODESETINPUT)
 {
   ReadElement(aStream, mNode);
@@ -3075,6 +3116,59 @@ RecordedFilterNodeSetInput::OutputSimpleEventInfo(stringstream &aStringStream) c
 
   aStringStream << ")";
 }
+
+#define LOAD_EVENT_TYPE(_typeenum, _class) \
+  case _typeenum: return new _class(aStream)
+
+template<class S>
+RecordedEvent *
+RecordedEvent::LoadEvent(S &aStream, EventType aType)
+{
+  switch (aType) {
+    LOAD_EVENT_TYPE(DRAWTARGETCREATION, RecordedDrawTargetCreation);
+    LOAD_EVENT_TYPE(DRAWTARGETDESTRUCTION, RecordedDrawTargetDestruction);
+    LOAD_EVENT_TYPE(FILLRECT, RecordedFillRect);
+    LOAD_EVENT_TYPE(STROKERECT, RecordedStrokeRect);
+    LOAD_EVENT_TYPE(STROKELINE, RecordedStrokeLine);
+    LOAD_EVENT_TYPE(CLEARRECT, RecordedClearRect);
+    LOAD_EVENT_TYPE(COPYSURFACE, RecordedCopySurface);
+    LOAD_EVENT_TYPE(SETTRANSFORM, RecordedSetTransform);
+    LOAD_EVENT_TYPE(PUSHCLIPRECT, RecordedPushClipRect);
+    LOAD_EVENT_TYPE(PUSHCLIP, RecordedPushClip);
+    LOAD_EVENT_TYPE(POPCLIP, RecordedPopClip);
+    LOAD_EVENT_TYPE(FILL, RecordedFill);
+    LOAD_EVENT_TYPE(FILLGLYPHS, RecordedFillGlyphs);
+    LOAD_EVENT_TYPE(MASK, RecordedMask);
+    LOAD_EVENT_TYPE(STROKE, RecordedStroke);
+    LOAD_EVENT_TYPE(DRAWSURFACE, RecordedDrawSurface);
+    LOAD_EVENT_TYPE(DRAWSURFACEWITHSHADOW, RecordedDrawSurfaceWithShadow);
+    LOAD_EVENT_TYPE(DRAWFILTER, RecordedDrawFilter);
+    LOAD_EVENT_TYPE(PATHCREATION, RecordedPathCreation);
+    LOAD_EVENT_TYPE(PATHDESTRUCTION, RecordedPathDestruction);
+    LOAD_EVENT_TYPE(SOURCESURFACECREATION, RecordedSourceSurfaceCreation);
+    LOAD_EVENT_TYPE(SOURCESURFACEDESTRUCTION, RecordedSourceSurfaceDestruction);
+    LOAD_EVENT_TYPE(FILTERNODECREATION, RecordedFilterNodeCreation);
+    LOAD_EVENT_TYPE(FILTERNODEDESTRUCTION, RecordedFilterNodeDestruction);
+    LOAD_EVENT_TYPE(GRADIENTSTOPSCREATION, RecordedGradientStopsCreation);
+    LOAD_EVENT_TYPE(GRADIENTSTOPSDESTRUCTION, RecordedGradientStopsDestruction);
+    LOAD_EVENT_TYPE(SNAPSHOT, RecordedSnapshot);
+    LOAD_EVENT_TYPE(SCALEDFONTCREATION, RecordedScaledFontCreation);
+    LOAD_EVENT_TYPE(SCALEDFONTDESTRUCTION, RecordedScaledFontDestruction);
+    LOAD_EVENT_TYPE(MASKSURFACE, RecordedMaskSurface);
+    LOAD_EVENT_TYPE(FILTERNODESETATTRIBUTE, RecordedFilterNodeSetAttribute);
+    LOAD_EVENT_TYPE(FILTERNODESETINPUT, RecordedFilterNodeSetInput);
+    LOAD_EVENT_TYPE(CREATESIMILARDRAWTARGET, RecordedCreateSimilarDrawTarget);
+    LOAD_EVENT_TYPE(FONTDATA, RecordedFontData);
+    LOAD_EVENT_TYPE(FONTDESC, RecordedFontDescriptor);
+    LOAD_EVENT_TYPE(PUSHLAYER, RecordedPushLayer);
+    LOAD_EVENT_TYPE(POPLAYER, RecordedPopLayer);
+    LOAD_EVENT_TYPE(UNSCALEDFONTCREATION, RecordedUnscaledFontCreation);
+    LOAD_EVENT_TYPE(UNSCALEDFONTDESTRUCTION, RecordedUnscaledFontDestruction);
+  default:
+    return nullptr;
+  }
+}
+
 
 } // namespace gfx
 } // namespace mozilla

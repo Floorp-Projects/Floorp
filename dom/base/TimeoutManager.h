@@ -49,8 +49,6 @@ public:
 
   // The timeout implementation functions.
   void RunTimeout(const TimeStamp& aNow, const TimeStamp& aTargetDeadline);
-  // Return true if |aTimeout| needs to be reinserted into the timeout list.
-  bool RescheduleTimeout(mozilla::dom::Timeout* aTimeout, const TimeStamp& now);
 
   void ClearAllTimeouts();
   uint32_t GetTimeoutId(mozilla::dom::Timeout::Reason aReason);
@@ -116,6 +114,11 @@ public:
 
 private:
   void MaybeStartThrottleTimeout();
+
+  // Return true if |aTimeout| needs to be reinserted into the timeout list.
+  bool RescheduleTimeout(mozilla::dom::Timeout* aTimeout,
+                         const TimeStamp& aLastCallbackTime,
+                         const TimeStamp& aCurrentNow);
 
   bool IsBackground() const;
 

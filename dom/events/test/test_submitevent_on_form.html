@@ -1,0 +1,37 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test submit event on form</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+  <form action="javascript:doDefault()" id="form">
+    <input type="submit" value="Do Default Action">
+  </form>
+  <pre id="test">
+  <script type="application/javascript">
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(runTests);
+
+var doDefaultAction = false;
+
+function doDefault()
+{
+  doDefaultAction = true;
+}
+
+function runTests()
+{
+  let form = document.getElementById("form");
+  form.dispatchEvent(new Event('submit'));
+  setTimeout(() => {
+    ok(!doDefaultAction, "untrusted submit event shouldn't trigger form default action");
+    SimpleTest.finish();
+  });
+}
+  </script>
+  </pre>
+</body>
+</html>

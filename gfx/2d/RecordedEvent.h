@@ -274,11 +274,13 @@ public:
 
   template<class S>
   void RecordPatternData(S &aStream, const PatternStorage &aPatternStorage) const;
-  void ReadPatternData(std::istream &aStream, PatternStorage &aPatternStorage) const;
+  template<class S>
+  void ReadPatternData(S &aStream, PatternStorage &aPatternStorage) const;
   void StorePattern(PatternStorage &aDestination, const Pattern &aSource) const;
   template<class S>
   void RecordStrokeOptions(S &aStream, const StrokeOptions &aStrokeOptions) const;
-  void ReadStrokeOptions(std::istream &aStream, StrokeOptions &aStrokeOptions);
+  template<class S>
+  void ReadStrokeOptions(S &aStream, StrokeOptions &aStrokeOptions);
 
   virtual std::string GetName() const = 0;
 
@@ -288,6 +290,8 @@ public:
 
   void OutputSimplePatternInfo(const PatternStorage &aStorage, std::stringstream &aOutput) const;
 
+  template<class S>
+  static RecordedEvent *LoadEvent(S &aStream, EventType aType);
   static RecordedEvent *LoadEventFromStream(std::istream &aStream, EventType aType);
 
   EventType GetType() { return (EventType)mType; }

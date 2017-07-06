@@ -8,6 +8,8 @@
 #include "nsThreadUtils.h"
 
 #include "mozilla/CycleCollectedJSContext.h"
+#include "mozilla/RefPtr.h"
+#include "mozilla/SystemGroup.h"
 #include "mozilla/ThreadLocal.h"
 #include "mozilla/TimeStamp.h"
 
@@ -40,7 +42,8 @@ public:
       return;
     }
     sDispatched.set(true);
-    NS_DispatchToCurrentThread(new FlushRejections());
+    SystemGroup::Dispatch("FlushRejections", TaskCategory::Other,
+                          do_AddRef(new FlushRejections()));
   }
 
   static void FlushSync() {

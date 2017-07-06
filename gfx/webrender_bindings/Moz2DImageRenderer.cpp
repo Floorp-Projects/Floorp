@@ -20,19 +20,6 @@
 namespace mozilla {
 namespace wr {
 
-class InMemoryStreamBuffer: public std::streambuf
-{
-public:
-  explicit InMemoryStreamBuffer(const Range<const uint8_t> aBlob)
-  {
-    // we need to cast away the const because C++ doesn't
-    // have a separate type of streambuf that can only
-    // be read from
-    auto start = const_cast<char*>(reinterpret_cast<const char*>(aBlob.begin().get()));
-    setg(start, start, start + aBlob.length());
-  }
-};
-
 #ifdef MOZ_ENABLE_FREETYPE
 static MOZ_THREAD_LOCAL(FT_Library) sFTLibrary;
 #endif
@@ -84,12 +71,9 @@ static bool Moz2DRenderCallback(const Range<const uint8_t> aBlob,
     return false;
   }
 
-  InMemoryStreamBuffer streamBuffer(aBlob);
-  std::istream stream(&streamBuffer);
-
   gfx::InlineTranslator translator(dt, fontContext);
 
-  auto ret = translator.TranslateRecording(stream);
+  auto ret = translator.TranslateRecording((char*)aBlob.begin().get(), aBlob.length());
 
 #if 0
   static int i = 0;
