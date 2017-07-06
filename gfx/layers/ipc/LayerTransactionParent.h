@@ -33,6 +33,7 @@ class Layer;
 class HostLayerManager;
 class ShadowLayerParent;
 class CompositableParent;
+class CompositorAnimationStorage;
 class CompositorBridgeParentBase;
 
 class LayerTransactionParent final : public PLayerTransactionParent,
@@ -48,6 +49,7 @@ class LayerTransactionParent final : public PLayerTransactionParent,
 public:
   LayerTransactionParent(HostLayerManager* aManager,
                          CompositorBridgeParentBase* aBridge,
+                         CompositorAnimationStorage* aAnimStorage,
                          uint64_t aId);
 
 protected:
@@ -58,7 +60,7 @@ public:
 
   HostLayerManager* layer_manager() const { return mLayerManager; }
 
-  void SetLayerManager(HostLayerManager* aLayerManager);
+  void SetLayerManager(HostLayerManager* aLayerManager, CompositorAnimationStorage* aAnimStorage);
 
   uint64_t GetId() const { return mId; }
   Layer* GetRoot() const { return mRoot; }
@@ -174,6 +176,7 @@ private:
 private:
   RefPtr<HostLayerManager> mLayerManager;
   CompositorBridgeParentBase* mCompositorBridge;
+  RefPtr<CompositorAnimationStorage> mAnimStorage;
 
   // Hold the root because it might be grafted under various
   // containers in the "real" layer tree
