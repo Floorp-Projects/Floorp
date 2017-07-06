@@ -1094,10 +1094,9 @@ MediaFormatReader::DemuxerProxy::NotifyDataArrived()
   });
 }
 
-MediaFormatReader::MediaFormatReader(AbstractMediaDecoder* aDecoder,
-                                     MediaDataDemuxer* aDemuxer,
-                                     VideoFrameContainer* aVideoFrameContainer)
-  : MediaDecoderReader(aDecoder)
+MediaFormatReader::MediaFormatReader(const MediaDecoderReaderInit& aInit,
+                                     MediaDataDemuxer* aDemuxer)
+  : MediaDecoderReader(aInit)
   , mAudio(this, MediaData::AUDIO_DATA,
            MediaPrefs::MaxAudioDecodeError())
   , mVideo(this, MediaData::VIDEO_DATA,
@@ -1110,17 +1109,17 @@ MediaFormatReader::MediaFormatReader(AbstractMediaDecoder* aDecoder,
   , mInitDone(false)
   , mTrackDemuxersMayBlock(false)
   , mSeekScheduled(false)
-  , mVideoFrameContainer(aVideoFrameContainer)
+  , mVideoFrameContainer(aInit.mVideoFrameContainer)
   , mDecoderFactory(new DecoderFactory(this))
   , mShutdownPromisePool(new ShutdownPromisePool())
 {
   MOZ_ASSERT(aDemuxer);
   MOZ_COUNT_CTOR(MediaFormatReader);
 
-  if (aDecoder && aDecoder->CompositorUpdatedEvent()) {
-    mCompositorUpdatedListener =
-      aDecoder->CompositorUpdatedEvent()->Connect(
-        mTaskQueue, this, &MediaFormatReader::NotifyCompositorUpdated);
+  AbstractMediaDecoder* decoder = aInit.mDecoder;
+  if (decoder && decoder->CompositorUpdatedEvent()) {
+    mCompositorUpdatedListener = decoder->CompositorUpdatedEvent()->Connect(
+      mTaskQueue, this, &MediaFormatReader::NotifyCompositorUpdated);
   }
   mOnTrackWaitingForKeyListener = OnTrackWaitingForKey().Connect(
     mTaskQueue, this, &MediaFormatReader::NotifyWaitingForKey);
