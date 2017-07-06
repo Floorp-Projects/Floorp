@@ -7007,6 +7007,7 @@ nsHttpChannel::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
             MOZ_ASSERT(request == mTransactionPump);
             LOG(("  First response from network\n"));
             mFirstResponseSource = RESPONSE_FROM_NETWORK;
+            mAvailableCachedAltDataType.Truncate();
         } else if (WRONG_RACING_RESPONSE_SOURCE(request)) {
             LOG(("  Early return when racing. This response not needed."));
             return NS_OK;

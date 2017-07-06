@@ -15,8 +15,9 @@ import pytest
 import requests
 
 import mozfile
+import mozinfo
 import mozinstall
-from manifestparser import TestManifest
+from manifestparser import TestManifest, expression
 from mozbuild.base import MozbuildObject
 
 here = os.path.abspath(os.path.dirname(__file__))
@@ -28,8 +29,10 @@ environment variable is required.
 """.lstrip()
 
 
-def filter_action(action, lines):
-    return filter(lambda x: x['action'] == action, lines)
+def filter_action(actions, lines):
+    if isinstance(actions, basestring):
+        actions = (actions,)
+    return filter(lambda x: x['action'] in actions, lines)
 
 
 def _get_harness_root():
@@ -176,3 +179,23 @@ def runtests(setup_harness_root, binary, parser, request):
         buf.close()
         return result, out
     return inner
+
+
+@pytest.fixture(autouse=True)
+def skip_using_mozinfo(request, setup_harness_root):
+    """Gives tests the ability to skip based on values from mozinfo.
+
+    Example:
+        @pytest.mark.skip_mozinfo("!e10s || os == 'linux'")
+        def test_foo():
+            pass
+    """
+
+    runtests = pytest.importorskip('runtests')
+    runtests.update_mozinfo()
+
+    skip_mozinfo = request.node.get_marker('skip_mozinfo')
+    if skip_mozinfo:
+        value = skip_mozinfo.args[0]
+        if expression.parse(value, **mozinfo.info):
+            pytest.skip("skipped due to mozinfo match: \n{}".format(value))

@@ -1,4 +1,4 @@
-// |jit-test| allow-oom;
+// |jit-test| allow-oom; allow-unhandlable-oom
 
 gcparam("maxBytes", gcparam("gcBytes") + 4*1024);
 arr = [1e0, 5e1, 9e19, 0.1e20, 1.3e20, 1e20, 9e20, 9.99e20, 

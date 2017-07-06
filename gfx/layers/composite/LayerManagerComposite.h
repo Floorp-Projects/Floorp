@@ -313,7 +313,6 @@ public:
   virtual already_AddRefed<RefLayer> CreateRefLayer() override;
 
   virtual bool AreComponentAlphaLayersEnabled() override;
-  virtual bool SupportsBackdropCopyForComponentAlpha() override { return false; }
 
   virtual already_AddRefed<DrawTarget>
     CreateOptimalMaskDrawTarget(const IntSize &aSize) override;
