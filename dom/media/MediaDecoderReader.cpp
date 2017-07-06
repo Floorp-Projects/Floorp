@@ -68,10 +68,9 @@ public:
   size_t mSize;
 };
 
-MediaDecoderReader::MediaDecoderReader(AbstractMediaDecoder* aDecoder,
-                                       MediaResource* aResource)
+MediaDecoderReader::MediaDecoderReader(const MediaDecoderReaderInit& aInit)
   : mAudioCompactor(mAudioQueue)
-  , mDecoder(aDecoder)
+  , mDecoder(aInit.mDecoder)
   , mTaskQueue(new TaskQueue(
       GetMediaThreadPool(MediaThreadType::PLAYBACK),
       "MediaDecoderReader::mTaskQueue",
@@ -82,7 +81,7 @@ MediaDecoderReader::MediaDecoderReader(AbstractMediaDecoder* aDecoder,
   , mIgnoreAudioOutputFormat(false)
   , mHitAudioDecodeError(false)
   , mShutdown(false)
-  , mResource(aResource)
+  , mResource(aInit.mResource)
 {
   MOZ_COUNT_CTOR(MediaDecoderReader);
   MOZ_ASSERT(NS_IsMainThread());

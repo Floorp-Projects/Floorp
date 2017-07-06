@@ -29,9 +29,7 @@ class MediaFormatReader final : public MediaDecoderReader
   typedef MozPromise<bool, MediaResult, /* IsExclusive = */ true> NotifyDataArrivedPromise;
 
 public:
-  MediaFormatReader(AbstractMediaDecoder* aDecoder,
-                    MediaDataDemuxer* aDemuxer,
-                    VideoFrameContainer* aVideoFrameContainer = nullptr);
+  MediaFormatReader(const MediaDecoderReaderInit& aInit, MediaDataDemuxer* aDemuxer);
 
   virtual ~MediaFormatReader();
 
