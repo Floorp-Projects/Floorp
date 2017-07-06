@@ -34,7 +34,6 @@ toolkit.jar:
   skin/classic/global/icons/input-clear.svg                (../../shared/icons/input-clear.svg)
   skin/classic/global/icons/loading.png                    (../../shared/icons/loading.png)
   skin/classic/global/icons/loading@2x.png                 (../../shared/icons/loading@2x.png)
-  skin/classic/global/icons/search-arrow-indicator.svg     (../../shared/icons/search-arrow-indicator.svg)
   skin/classic/global/icons/spinner-arrow-down.svg         (../../shared/icons/spinner-arrow-down.svg)
   skin/classic/global/icons/spinner-arrow-up.svg           (../../shared/icons/spinner-arrow-up.svg)
   skin/classic/global/icons/menubutton-dropmarker.svg      (../../shared/icons/menubutton-dropmarker.svg)
