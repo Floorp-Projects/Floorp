@@ -427,7 +427,7 @@ StorageDBThread::ThreadFunc()
 NS_IMPL_ISUPPORTS(StorageDBThread::ThreadObserver, nsIThreadObserver)
 
 NS_IMETHODIMP
-StorageDBThread::ThreadObserver::OnDispatchedEvent(nsIThreadInternal* aThread)
+StorageDBThread::ThreadObserver::OnDispatchedEvent()
 {
   MonitorAutoLock lock(mMonitor);
   mHasPendingEvents = true;

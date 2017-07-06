@@ -790,7 +790,7 @@ nsSocketTransportService::CreateUnixDomainTransport(nsIFile *aPath,
 }
 
 NS_IMETHODIMP
-nsSocketTransportService::OnDispatchedEvent(nsIThreadInternal *thread)
+nsSocketTransportService::OnDispatchedEvent()
 {
 #ifndef XP_WIN
     // On windows poll can hang and this became worse when we introduced the

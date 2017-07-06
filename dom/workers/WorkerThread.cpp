@@ -313,7 +313,7 @@ WorkerThread::RecursionDepth(const WorkerThreadFriendKey& /* aKey */) const
 NS_IMPL_ISUPPORTS(WorkerThread::Observer, nsIThreadObserver)
 
 NS_IMETHODIMP
-WorkerThread::Observer::OnDispatchedEvent(nsIThreadInternal* /* aThread */)
+WorkerThread::Observer::OnDispatchedEvent()
 {
   MOZ_CRASH("OnDispatchedEvent() should never be called!");
 }
