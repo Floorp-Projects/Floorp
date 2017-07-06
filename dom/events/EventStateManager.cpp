@@ -186,13 +186,6 @@ PrintDocTreeAll(nsIDocShellTreeItem* aItem)
 }
 #endif
 
-// mask values for ui.key.chromeAccess and ui.key.contentAccess
-#define NS_MODIFIER_SHIFT    1
-#define NS_MODIFIER_CONTROL  2
-#define NS_MODIFIER_ALT      4
-#define NS_MODIFIER_META     8
-#define NS_MODIFIER_OS       16
-
 /******************************************************************/
 /* mozilla::UITimerCallback                                       */
 /******************************************************************/
@@ -768,32 +761,13 @@ EventStateManager::PreHandleEvent(nsPresContext* aPresContext,
   case eKeyPress:
     {
       WidgetKeyboardEvent* keyEvent = aEvent->AsKeyboardEvent();
+      if (keyEvent->ModifiersMatchWithAccessKey(AccessKeyType::eChrome) ||
+          keyEvent->ModifiersMatchWithAccessKey(AccessKeyType::eContent)) {
+        AutoTArray<uint32_t, 10> accessCharCodes;
+        keyEvent->GetAccessKeyCandidates(accessCharCodes);
 
-      int32_t modifierMask = 0;
-      if (keyEvent->IsShift())
-        modifierMask |= NS_MODIFIER_SHIFT;
-      if (keyEvent->IsControl())
-        modifierMask |= NS_MODIFIER_CONTROL;
-      if (keyEvent->IsAlt())
-        modifierMask |= NS_MODIFIER_ALT;
-      if (keyEvent->IsMeta())
-        modifierMask |= NS_MODIFIER_META;
-      if (keyEvent->IsOS())
-        modifierMask |= NS_MODIFIER_OS;
-
-      // Prevent keyboard scrolling while an accesskey modifier is in use.
-      if (modifierMask) {
-        bool matchesContentAccessKey = (modifierMask == Prefs::ContentAccessModifierMask());
-
-        if (modifierMask == Prefs::ChromeAccessModifierMask() ||
-            matchesContentAccessKey) {
-          AutoTArray<uint32_t, 10> accessCharCodes;
-          keyEvent->GetAccessKeyCandidates(accessCharCodes);
-
-          if (HandleAccessKey(keyEvent, aPresContext, accessCharCodes,
-                              modifierMask, matchesContentAccessKey)) {
-            *aStatus = nsEventStatus_eConsumeNoDefault;
-          }
+        if (HandleAccessKey(keyEvent, aPresContext, accessCharCodes)) {
+          *aStatus = nsEventStatus_eConsumeNoDefault;
         }
       }
     }
@@ -924,23 +898,21 @@ EventStateManager::HandleQueryContentEvent(WidgetQueryContentEvent* aEvent)
   handler.HandleQueryContentEvent(aEvent);
 }
 
-// static
-int32_t
-EventStateManager::GetAccessModifierMaskFor(nsISupports* aDocShell)
+static AccessKeyType
+GetAccessKeyTypeFor(nsISupports* aDocShell)
 {
   nsCOMPtr<nsIDocShellTreeItem> treeItem(do_QueryInterface(aDocShell));
-  if (!treeItem)
-    return -1; // invalid modifier
+  if (!treeItem) {
+    return AccessKeyType::eNone;
+  }
 
   switch (treeItem->ItemType()) {
-  case nsIDocShellTreeItem::typeChrome:
-    return Prefs::ChromeAccessModifierMask();
-
-  case nsIDocShellTreeItem::typeContent:
-    return Prefs::ContentAccessModifierMask();
-
-  default:
-    return -1; // invalid modifier
+    case nsIDocShellTreeItem::typeChrome:
+      return AccessKeyType::eChrome;
+    case nsIDocShellTreeItem::typeContent:
+      return AccessKeyType::eContent;
+    default:
+      return AccessKeyType::eNone;
   }
 }
 
@@ -1059,30 +1031,33 @@ EventStateManager::GetAccessKeyLabelPrefix(Element* aElement, nsAString& aPrefix
   nsAutoString separator, modifierText;
   nsContentUtils::GetModifierSeparatorText(separator);
 
-  nsCOMPtr<nsISupports> container = aElement->OwnerDoc()->GetDocShell();
-  int32_t modifierMask = GetAccessModifierMaskFor(container);
-
-  if (modifierMask == -1) {
+  AccessKeyType accessKeyType =
+    GetAccessKeyTypeFor(aElement->OwnerDoc()->GetDocShell());
+  if (accessKeyType == AccessKeyType::eNone) {
+    return;
+  }
+  Modifiers modifiers = WidgetKeyboardEvent::AccessKeyModifiers(accessKeyType);
+  if (modifiers == MODIFIER_NONE) {
     return;
   }
 
-  if (modifierMask & NS_MODIFIER_CONTROL) {
+  if (modifiers & MODIFIER_CONTROL) {
     nsContentUtils::GetControlText(modifierText);
     aPrefix.Append(modifierText + separator);
   }
-  if (modifierMask & NS_MODIFIER_META) {
+  if (modifiers & MODIFIER_META) {
     nsContentUtils::GetMetaText(modifierText);
     aPrefix.Append(modifierText + separator);
   }
-  if (modifierMask & NS_MODIFIER_OS) {
+  if (modifiers & MODIFIER_OS) {
     nsContentUtils::GetOSText(modifierText);
     aPrefix.Append(modifierText + separator);
   }
-  if (modifierMask & NS_MODIFIER_ALT) {
+  if (modifiers & MODIFIER_ALT) {
     nsContentUtils::GetAltText(modifierText);
     aPrefix.Append(modifierText + separator);
   }
-  if (modifierMask & NS_MODIFIER_SHIFT) {
+  if (modifiers & MODIFIER_SHIFT) {
     nsContentUtils::GetShiftText(modifierText);
     aPrefix.Append(modifierText + separator);
   }
@@ -1092,12 +1067,11 @@ struct MOZ_STACK_CLASS AccessKeyInfo
 {
   WidgetKeyboardEvent* event;
   nsTArray<uint32_t>& charCodes;
-  int32_t modifierMask;
 
-  AccessKeyInfo(WidgetKeyboardEvent* aEvent, nsTArray<uint32_t>& aCharCodes, int32_t aModifierMask)
+  AccessKeyInfo(WidgetKeyboardEvent* aEvent,
+                nsTArray<uint32_t>& aCharCodes)
     : event(aEvent)
     , charCodes(aCharCodes)
-    , modifierMask(aModifierMask)
   {
   }
 };
@@ -1113,8 +1087,7 @@ HandleAccessKeyInRemoteChild(TabParent* aTabParent, void* aArg)
   if (active) {
     accessKeyInfo->event->mAccessKeyForwardedToChild = true;
     aTabParent->HandleAccessKey(*accessKeyInfo->event,
-                                accessKeyInfo->charCodes,
-                                accessKeyInfo->modifierMask);
+                                accessKeyInfo->charCodes);
     return true;
   }
 
@@ -1125,20 +1098,21 @@ bool
 EventStateManager::HandleAccessKey(WidgetKeyboardEvent* aEvent,
                                    nsPresContext* aPresContext,
                                    nsTArray<uint32_t>& aAccessCharCodes,
-                                   bool aMatchesContentAccessKey,
                                    nsIDocShellTreeItem* aBubbledFrom,
-                                   ProcessingAccessKeyState aAccessKeyState,
-                                   int32_t aModifierMask)
+                                   ProcessingAccessKeyState aAccessKeyState)
 {
   EnsureDocument(mPresContext);
   nsCOMPtr<nsIDocShell> docShell = aPresContext->GetDocShell();
   if (NS_WARN_IF(!docShell) || NS_WARN_IF(!mDocument)) {
     return false;
   }
-
+  AccessKeyType accessKeyType = GetAccessKeyTypeFor(docShell);
+  if (accessKeyType == AccessKeyType::eNone) {
+    return false;
+  }
   // Alt or other accesskey modifier is down, we may need to do an accesskey.
   if (mAccessKeys.Count() > 0 &&
-      aModifierMask == GetAccessModifierMaskFor(docShell)) {
+      aEvent->ModifiersMatchWithAccessKey(accessKeyType)) {
     // Someone registered an accesskey.  Find and activate it.
     if (ExecuteAccessKey(aAccessCharCodes, aEvent->IsTrusted())) {
       return true;
@@ -1174,8 +1148,7 @@ EventStateManager::HandleAccessKey(WidgetKeyboardEvent* aEvent,
 
       if (esm &&
           esm->HandleAccessKey(aEvent, subPC, aAccessCharCodes,
-                               aMatchesContentAccessKey, nullptr,
-                               eAccessKeyProcessingDown, aModifierMask)) {
+                               nullptr, eAccessKeyProcessingDown)) {
         return true;
       }
     }
@@ -1197,15 +1170,15 @@ EventStateManager::HandleAccessKey(WidgetKeyboardEvent* aEvent,
         static_cast<EventStateManager*>(parentPC->EventStateManager());
       if (esm &&
           esm->HandleAccessKey(aEvent, parentPC, aAccessCharCodes,
-                               aMatchesContentAccessKey, docShell,
-                               eAccessKeyProcessingDown, aModifierMask)) {
+                               docShell, eAccessKeyProcessingDown)) {
         return true;
       }
     }
   }// if end. bubble up process
 
   // If the content access key modifier is pressed, try remote children
-  if (aMatchesContentAccessKey && mDocument && mDocument->GetWindow()) {
+  if (aEvent->ModifiersMatchWithAccessKey(AccessKeyType::eContent) &&
+      mDocument && mDocument->GetWindow()) {
     // If the focus is currently on a node with a TabParent, the key event will
     // get forwarded to the child process and HandleAccessKey called from there.
     // If focus is somewhere else, then we need to check the remote children.
@@ -1216,9 +1189,10 @@ EventStateManager::HandleAccessKey(WidgetKeyboardEvent* aEvent,
       // the child process.
       aEvent->mAccessKeyForwardedToChild = true;
     } else {
-      AccessKeyInfo accessKeyInfo(aEvent, aAccessCharCodes, aModifierMask);
+      AccessKeyInfo accessKeyInfo(aEvent, aAccessCharCodes);
       nsContentUtils::CallOnAllRemoteChildren(mDocument->GetWindow(),
-                                              HandleAccessKeyInRemoteChild, &accessKeyInfo);
+                                              HandleAccessKeyInRemoteChild,
+                                              &accessKeyInfo);
     }
   }
 
@@ -5819,9 +5793,6 @@ EventStateManager::WheelPrefs::IsOverOnePageScrollAllowedY(
 
 bool EventStateManager::Prefs::sKeyCausesActivation = true;
 bool EventStateManager::Prefs::sClickHoldContextMenu = false;
-int32_t EventStateManager::Prefs::sGenericAccessModifierKey = -1;
-int32_t EventStateManager::Prefs::sChromeAccessModifierMask = 0;
-int32_t EventStateManager::Prefs::sContentAccessModifierMask = 0;
 
 // static
 void
@@ -5846,21 +5817,6 @@ EventStateManager::Prefs::Init()
                                     sClickHoldContextMenu);
   MOZ_ASSERT(NS_SUCCEEDED(rv),
              "Failed to observe \"ui.click_hold_context_menus\"");
-  rv = Preferences::AddIntVarCache(&sGenericAccessModifierKey,
-                                   "ui.key.generalAccessKey",
-                                   sGenericAccessModifierKey);
-  MOZ_ASSERT(NS_SUCCEEDED(rv),
-             "Failed to observe \"ui.key.generalAccessKey\"");
-  rv = Preferences::AddIntVarCache(&sChromeAccessModifierMask,
-                                   "ui.key.chromeAccess",
-                                   sChromeAccessModifierMask);
-  MOZ_ASSERT(NS_SUCCEEDED(rv),
-             "Failed to observe \"ui.key.chromeAccess\"");
-  rv = Preferences::AddIntVarCache(&sContentAccessModifierMask,
-                                   "ui.key.contentAccess",
-                                   sContentAccessModifierMask);
-  MOZ_ASSERT(NS_SUCCEEDED(rv),
-             "Failed to observe \"ui.key.contentAccess\"");
   sPrefsAlreadyCached = true;
 }
 
@@ -5879,44 +5835,6 @@ void
 EventStateManager::Prefs::Shutdown()
 {
   Preferences::UnregisterCallback(OnChange, "dom.popup_allowed_events");
-}
-
-// static
-int32_t
-EventStateManager::Prefs::ChromeAccessModifierMask()
-{
-  return GetAccessModifierMask(nsIDocShellTreeItem::typeChrome);
-}
-
-// static
-int32_t
-EventStateManager::Prefs::ContentAccessModifierMask()
-{
-  return GetAccessModifierMask(nsIDocShellTreeItem::typeContent);
-}
-
-// static
-int32_t
-EventStateManager::Prefs::GetAccessModifierMask(int32_t aItemType)
-{
-  switch (sGenericAccessModifierKey) {
-    case -1:                             break; // use the individual prefs
-    case nsIDOMKeyEvent::DOM_VK_SHIFT:   return NS_MODIFIER_SHIFT;
-    case nsIDOMKeyEvent::DOM_VK_CONTROL: return NS_MODIFIER_CONTROL;
-    case nsIDOMKeyEvent::DOM_VK_ALT:     return NS_MODIFIER_ALT;
-    case nsIDOMKeyEvent::DOM_VK_META:    return NS_MODIFIER_META;
-    case nsIDOMKeyEvent::DOM_VK_WIN:     return NS_MODIFIER_OS;
-    default:                             return 0;
-  }
-
-  switch (aItemType) {
-    case nsIDocShellTreeItem::typeChrome:
-      return sChromeAccessModifierMask;
-    case nsIDocShellTreeItem::typeContent:
-      return sContentAccessModifierMask;
-    default:
-      return 0;
-  }
 }
 
 /******************************************************************/
