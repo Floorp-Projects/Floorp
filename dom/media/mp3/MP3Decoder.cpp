@@ -26,7 +26,8 @@ MP3Decoder::Clone(MediaDecoderInit& aInit)
 
 MediaDecoderStateMachine*
 MP3Decoder::CreateStateMachine() {
-  mReader = new MediaFormatReader(this, new MP3Demuxer(mResource));
+  MediaDecoderReaderInit init(this);
+  mReader = new MediaFormatReader(init, new MP3Demuxer(mResource));
   return new MediaDecoderStateMachine(this, mReader);
 }
 

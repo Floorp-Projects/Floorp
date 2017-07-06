@@ -19,7 +19,9 @@ AndroidMediaDecoder::AndroidMediaDecoder(MediaDecoderInit& aInit,
 
 MediaDecoderStateMachine* AndroidMediaDecoder::CreateStateMachine()
 {
-  mReader = new AndroidMediaReader(this, mType, mResource);
+  MediaDecoderReaderInit init(this);
+  init.mResource = mResource;
+  mReader = new AndroidMediaReader(mType, init);
   return new MediaDecoderStateMachine(this, mReader);
 }
 
