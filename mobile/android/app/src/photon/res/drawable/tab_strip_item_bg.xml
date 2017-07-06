@@ -4,44 +4,30 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
 <selector xmlns:android="http://schemas.android.com/apk/res/android"
-	      xmlns:gecko="http://schemas.android.com/apk/res-auto">
+          xmlns:gecko="http://schemas.android.com/apk/res-auto">
 
-    <item android:state_pressed="true"
+    <item android:drawable="@color/photon_tab_strip_item_checked_pressed_private"
           android:state_checked="true"
-          gecko:state_private="true"
-          android:drawable="@color/highlight_nav_pb" />
+          android:state_pressed="true"
+          gecko:state_private="true"/>
 
-    <item android:state_checked="true"
-          gecko:state_private="true"
-          android:drawable="@color/tabs_tray_grey_pressed" />
-
-    <item android:state_pressed="true"
-          gecko:state_private="true"
-          android:drawable="@color/highlight_dark_focused" />
-
-    <item android:state_pressed="true"
+    <item android:drawable="@color/photon_tab_strip_item_checked_private"
           android:state_checked="true"
-          android:drawable="@color/toolbar_grey_pressed" />
+          gecko:state_private="true"/>
 
-    <!-- Lightweight Themes -->
-    <item android:state_checked="true"
-          gecko:state_light="true"
-          android:drawable="@color/background_normal_lwt" />
-    <item android:state_checked="true"
-          gecko:state_dark="true"
-          android:drawable="@color/background_normal_lwt" />
-    <item android:state_pressed="true"
-          gecko:state_light="true"
-          android:drawable="@color/tablet_highlight_lwt" />
-    <item android:state_pressed="true"
-          gecko:state_dark="true"
-          android:drawable="@color/tablet_highlight_dark_lwt" />
+    <item android:drawable="@color/photon_tab_strip_item_checked_pressed_private"
+          android:state_pressed="true"
+          gecko:state_private="true"/>
 
-    <item android:state_checked="true"
-          android:drawable="@color/toolbar_grey" />
+    <item android:drawable="@color/photon_tab_strip_item_checked_pressed"
+          android:state_checked="true"
+          android:state_pressed="true"/>
 
-    <item android:state_pressed="true"
-          android:drawable="@color/tabs_tray_grey_pressed" />
+    <item android:drawable="@color/photon_tab_strip_item_checked"
+          android:state_checked="true"/>
+
+    <item android:drawable="@color/photon_tab_strip_item_checked_pressed"
+          android:state_pressed="true"/>
 
     <item android:drawable="@android:color/transparent"/>
 
