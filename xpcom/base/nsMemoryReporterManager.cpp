@@ -2373,6 +2373,12 @@ nsMemoryReporterManager::GetHeapAllocated(int64_t* aAmount)
 #endif
 }
 
+NS_IMETHODIMP
+nsMemoryReporterManager::GetHeapAllocatedAsync(nsIHeapAllocatedCallback *aCallback)
+{
+  return NS_ERROR_NOT_AVAILABLE;
+}
+
 // This has UNITS_PERCENTAGE, so it is multiplied by 100x.
 NS_IMETHODIMP
 nsMemoryReporterManager::GetHeapOverheadFraction(int64_t* aAmount)
