@@ -290,8 +290,8 @@ class OSXBootstrapper(BaseBootstrapper):
 
         printed = False
 
-        for name, package in packages:
-            if name in installed:
+        for package in packages:
+            if package in installed:
                 continue
 
             if not printed:
@@ -312,21 +312,21 @@ class OSXBootstrapper(BaseBootstrapper):
             # development headers which are missing from OS X (at least on
             # 10.8) and because the build system wants a version newer than
             # what Apple ships.
-            ('python', 'python'),
-            ('mercurial', 'mercurial'),
-            ('git', 'git'),
-            ('autoconf@2.13', 'autoconf@2.13'),
-            ('gnu-tar', 'gnu-tar'),
-            ('watchman', 'watchman',),
-            ('terminal-notifier', 'terminal-notifier')
+            'python',
+            'mercurial',
+            'git',
+            'autoconf@2.13',
+            'gnu-tar',
+            'watchman',
+            'terminal-notifier',
         ]
         self._ensure_homebrew_packages(packages)
 
     def ensure_homebrew_browser_packages(self, artifact_mode=False):
         # TODO: Figure out what not to install for artifact mode
         packages = [
-            ('yasm', 'yasm'),
-            ('llvm', 'llvm'),
+            'llvm',
+            'yasm',
         ]
         self._ensure_homebrew_packages(packages)
 
@@ -337,13 +337,12 @@ class OSXBootstrapper(BaseBootstrapper):
 
         # 1. System packages.
         packages = [
-            ('brew-cask', 'caskroom/cask/brew-cask'),  # For installing Java later.
-            ('wget', 'wget'),
+            'wget',
         ]
         self._ensure_homebrew_packages(packages)
 
         casks = [
-            ('java', 'java'),
+            'java',
         ]
         installed = self._ensure_homebrew_casks(casks)
         if installed:
