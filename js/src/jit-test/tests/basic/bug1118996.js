@@ -1,4 +1,4 @@
-// |jit-test| allow-oom; --fuzzing-safe; --no-threads; --no-ion
+// |jit-test| allow-oom; --fuzzing-safe; --no-threads; --no-ion; allow-unhandlable-oom
 g = newGlobal();
 gcparam('maxBytes', gcparam('gcBytes'));
 try {

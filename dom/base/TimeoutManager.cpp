@@ -916,11 +916,16 @@ TimeoutManager::RunTimeout(const TimeStamp& aNow, const TimeStamp& aTargetDeadli
         return;
       }
 
+      // If we need to reschedule a setInterval() the delay should be
+      // calculated based on when its callback started to execute.  So
+      // save off the last time before updating our "now" timestamp to
+      // account for its callback execution time.
+      TimeStamp lastCallbackTime = now;
       now = TimeStamp::Now();
 
       // If we have a regular interval timer, we re-schedule the
       // timeout, accounting for clock drift.
-      bool needsReinsertion = RescheduleTimeout(timeout, now);
+      bool needsReinsertion = RescheduleTimeout(timeout, lastCallbackTime, now);
 
       // Running a timeout can cause another timeout to be deleted, so
       // we need to reset the pointer to the following timeout.
@@ -971,20 +976,22 @@ TimeoutManager::RunTimeout(const TimeStamp& aNow, const TimeStamp& aTargetDeadli
 }
 
 bool
-TimeoutManager::RescheduleTimeout(Timeout* aTimeout, const TimeStamp& now)
+TimeoutManager::RescheduleTimeout(Timeout* aTimeout,
+                                  const TimeStamp& aLastCallbackTime,
+                                  const TimeStamp& aCurrentNow)
 {
+  MOZ_DIAGNOSTIC_ASSERT(aLastCallbackTime <= aCurrentNow);
+
   if (!aTimeout->mIsInterval) {
     return false;
   }
-
-  TimeStamp currentNow = TimeStamp::Now();
 
   // Compute time to next timeout for interval timer.
   // Make sure nextInterval is at least CalculateDelay().
   TimeDuration nextInterval = CalculateDelay(aTimeout);
 
-  TimeStamp firingTime = now + nextInterval;
-  TimeDuration delay = firingTime - currentNow;
+  TimeStamp firingTime = aLastCallbackTime + nextInterval;
+  TimeDuration delay = firingTime - aCurrentNow;
 
   // And make sure delay is nonnegative; that might happen if the timer
   // thread is firing our timers somewhat early or if they're taking a long
@@ -993,13 +1000,13 @@ TimeoutManager::RescheduleTimeout(Timeout* aTimeout, const TimeStamp& now)
     delay = TimeDuration(0);
   }
 
-  aTimeout->SetWhenOrTimeRemaining(currentNow, delay);
+  aTimeout->SetWhenOrTimeRemaining(aCurrentNow, delay);
 
   if (mWindow.IsSuspended()) {
     return true;
   }
 
-  nsresult rv = MaybeSchedule(aTimeout->When(), currentNow);
+  nsresult rv = MaybeSchedule(aTimeout->When(), aCurrentNow);
   NS_ENSURE_SUCCESS(rv, false);
 
   return true;

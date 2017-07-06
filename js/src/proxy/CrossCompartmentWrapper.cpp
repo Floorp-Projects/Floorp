@@ -477,7 +477,7 @@ CrossCompartmentWrapper::regexp_toShared(JSContext* cx, HandleObject wrapper,
     // Get an equivalent RegExpShared associated with the current compartment.
     RootedAtom source(cx, re->getSource());
     cx->markAtom(source);
-    return cx->compartment()->regExps.get(cx, source, re->getFlags(), shared);
+    return cx->zone()->regExps.get(cx, source, re->getFlags(), shared);
 }
 
 bool

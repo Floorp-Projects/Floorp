@@ -316,7 +316,7 @@ peer about the particular large files you are adding.
 
 The changes from `mach vendor rust` will NOT be added to version control.
 '''.format(files='\n'.join(sorted(large_files)), size=FILESIZE_LIMIT))
-            self.repository.forget_add_remove_files()
+            self.repository.forget_add_remove_files(vendor_dir)
             sys.exit(1)
 
         # Only warn for large imports, since we may just have large code

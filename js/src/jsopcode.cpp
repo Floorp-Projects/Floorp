@@ -2977,18 +2977,8 @@ GenerateLcovInfo(JSContext* cx, JSCompartment* comp, GenericPrinter& out)
         RootedFunction fun(cx);
         do {
             script = queue.popCopy();
-            bool createdScriptName = false;
-            if (!script->hasScriptName()) {
-                createdScriptName = true;
-                if (!script->initScriptName(cx))
-                    return false;
-            }
-
-            compCover.collectCodeCoverageInfo(comp, script);
-
-            // Destroy the script name if we have created it in this function.
-            if (createdScriptName)
-                script->destroyScriptName();
+            if (script->filename())
+                compCover.collectCodeCoverageInfo(comp, script, script->filename());
 
             // Iterate from the last to the first object in order to have
             // the functions them visited in the opposite order when popping

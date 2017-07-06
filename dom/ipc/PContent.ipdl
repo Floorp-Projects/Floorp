@@ -118,7 +118,6 @@ struct FontListEntry {
     int16_t   stretch;
     uint8_t   italic;
     uint8_t   index;
-    bool      isHidden;
 };
 
 // Used on Mac OS X to pass the list of font families (not faces)

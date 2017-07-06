@@ -85,7 +85,7 @@ class LCovCompartment
     LCovCompartment();
 
     // Collect code coverage information for the given source.
-    void collectCodeCoverageInfo(JSCompartment* comp, JSScript* topLevel);
+    void collectCodeCoverageInfo(JSCompartment* comp, JSScript* topLevel, const char* name);
 
     // Write the Lcov output in a buffer, such as the one associated with
     // the runtime code coverage trace file.

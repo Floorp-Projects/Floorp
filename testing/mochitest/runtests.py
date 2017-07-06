@@ -788,6 +788,21 @@ def create_zip(path):
         return shutil.make_archive(f.name, "zip", path)
 
 
+def update_mozinfo():
+    """walk up directories to find mozinfo.json update the info"""
+    # TODO: This should go in a more generic place, e.g. mozinfo
+
+    path = SCRIPT_DIR
+    dirs = set()
+    while path != os.path.expanduser('~'):
+        if path in dirs:
+            break
+        dirs.add(path)
+        path = os.path.split(path)[0]
+
+    mozinfo.find_and_update_from_json(*dirs)
+
+
 class MochitestDesktop(object):
     """
     Mochitest class for desktop firefox.
@@ -812,7 +827,7 @@ class MochitestDesktop(object):
     test_name = 'automation.py'
 
     def __init__(self, flavor, logger_options, quiet=False):
-        self.update_mozinfo()
+        update_mozinfo()
         self.flavor = flavor
         self.server = None
         self.wsserver = None
@@ -857,20 +872,6 @@ class MochitestDesktop(object):
         self.result = {}
 
         self.start_script = os.path.join(here, 'start_desktop.js')
-
-    def update_mozinfo(self):
-        """walk up directories to find mozinfo.json update the info"""
-        # TODO: This should go in a more generic place, e.g. mozinfo
-
-        path = SCRIPT_DIR
-        dirs = set()
-        while path != os.path.expanduser('~'):
-            if path in dirs:
-                break
-            dirs.add(path)
-            path = os.path.split(path)[0]
-
-        mozinfo.find_and_update_from_json(*dirs)
 
     def environment(self, **kwargs):
         kwargs['log'] = self.log

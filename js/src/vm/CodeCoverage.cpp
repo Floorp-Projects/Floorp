@@ -413,7 +413,7 @@ LCovCompartment::LCovCompartment()
 }
 
 void
-LCovCompartment::collectCodeCoverageInfo(JSCompartment* comp, JSScript* script)
+LCovCompartment::collectCodeCoverageInfo(JSCompartment* comp, JSScript* script, const char* name)
 {
     // Skip any operation if we already some out-of memory issues.
     if (outTN_.hadOutOfMemory())
@@ -423,7 +423,7 @@ LCovCompartment::collectCodeCoverageInfo(JSCompartment* comp, JSScript* script)
         return;
 
     // Get the existing source LCov summary, or create a new one.
-    LCovSource* source = lookupOrAdd(comp, script->getScriptName());
+    LCovSource* source = lookupOrAdd(comp, name);
     if (!source)
         return;
 
