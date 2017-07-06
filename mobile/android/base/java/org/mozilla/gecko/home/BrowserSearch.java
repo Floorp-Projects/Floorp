@@ -76,7 +76,8 @@ import android.widget.TextView;
  */
 public class BrowserSearch extends HomeFragment
                            implements BundleEventListener,
-                                      SearchEngineBar.OnSearchBarClickListener {
+                                      SearchEngineBar.OnSearchBarClickListener,
+                                      Tabs.OnTabsChangedListener {
 
     @RobocopTarget
     public interface SuggestClientFactory {
@@ -305,6 +306,7 @@ public class BrowserSearch extends HomeFragment
 
         EventDispatcher.getInstance().unregisterUiThreadListener(this,
             "SearchEngines:Data");
+        Tabs.unregisterOnTabsChangedListener(this);
 
         mSearchEngineBar.setAdapter(null);
         mSearchEngineBar = null;
@@ -402,9 +404,14 @@ public class BrowserSearch extends HomeFragment
             }
         });
 
+        final Tab tab = Tabs.getInstance().getSelectedTab();
+        final boolean isPrivate = (tab != null && tab.isPrivate());
+        mList.setPrivateMode(isPrivate);
+
         registerForContextMenu(mList);
         EventDispatcher.getInstance().registerUiThreadListener(this,
             "SearchEngines:Data");
+        Tabs.registerOnTabsChangedListener(this);
 
         mSearchEngineBar.setOnSearchBarClickListener(this);
     }
@@ -468,6 +475,17 @@ public class BrowserSearch extends HomeFragment
                               final EventCallback callback) {
         if (event.equals("SearchEngines:Data")) {
             setSearchEngines(message);
+        }
+    }
+
+    @Override
+    public void onTabChanged(Tab tab, Tabs.TabEvents msg, String data) {
+        if (tab == null) {
+            return;
+        }
+
+        if (msg == Tabs.TabEvents.SELECTED) {
+            mList.setPrivateMode(tab.isPrivate());
         }
     }
 
@@ -1152,6 +1170,9 @@ public class BrowserSearch extends HomeFragment
         public void bindView(View view, Context context, int position) {
             final int type = getItemViewType(position);
 
+            final Tab tab = Tabs.getInstance().getSelectedTab();
+            final boolean isPrivate = (tab != null && tab.isPrivate());
+
             if (type == ROW_SEARCH || type == ROW_SUGGEST) {
                 final SearchEngineRow row = (SearchEngineRow) view;
                 row.setOnUrlOpenListener(mUrlOpenListener);
@@ -1161,6 +1182,7 @@ public class BrowserSearch extends HomeFragment
 
                 final SearchEngine engine = mSearchEngines.get(position);
                 row.updateSuggestions(mSuggestionsEnabled, engine, mSearchHistorySuggestions);
+                row.setPrivateMode(isPrivate);
             } else {
                 // Account for the search engines
                 position -= getPrimaryEngineCount();
@@ -1168,6 +1190,7 @@ public class BrowserSearch extends HomeFragment
                 final Cursor c = getCursor(position);
                 final TwoLinePageRow row = (TwoLinePageRow) view;
                 row.updateFromCursor(c);
+                row.setPrivateMode(isPrivate);
             }
         }
     }
@@ -1291,6 +1314,10 @@ public class BrowserSearch extends HomeFragment
 
         public HomeSearchListView(Context context, AttributeSet attrs, int defStyle) {
             super(context, attrs, defStyle);
+
+            final Tab tab = Tabs.getInstance().getSelectedTab();
+            final boolean isPrivate = (tab != null && tab.isPrivate());
+            setSelector(isPrivate);
         }
 
         @Override
@@ -1301,6 +1328,20 @@ public class BrowserSearch extends HomeFragment
             }
 
             return super.onTouchEvent(event);
+        }
+
+        @Override
+        public void setPrivateMode(boolean isPrivate) {
+            final boolean modeChanged = isPrivateMode() != isPrivate;
+            if (modeChanged) {
+                setSelector(isPrivate);
+            }
+
+            super.setPrivateMode(isPrivate);
+        }
+
+        private void setSelector(boolean isPrivate) {
+            setSelector(isPrivate ? R.drawable.search_list_selector_private : R.drawable.search_list_selector);
         }
     }
 }
