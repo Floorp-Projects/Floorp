@@ -308,7 +308,7 @@ txFormatNumberFunctionCall::evaluate(txIEvalContext* aContext,
         else {
             digit = buf[i] - '0';
         }
-        
+
         if (carry) {
             digit = (digit + 1) % 10;
             carry = digit == 0;
@@ -341,7 +341,7 @@ txFormatNumberFunctionCall::evaluate(txIEvalContext* aContext,
         else {
             digit = buf[bufIntDigits-i-1] - '0';
         }
-        
+
         if (carry) {
             digit = (digit + 1) % 10;
             carry = digit == 0;

@@ -84,7 +84,7 @@ public:
   void GetCssTextImpl(nsAString& aCssText) const override;
   using CSSMediaRule::SetConditionText;
   dom::MediaList* Media() override;
-  
+
   virtual size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf)
     const override MOZ_MUST_OVERRIDE;
 

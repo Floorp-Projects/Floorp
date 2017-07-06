@@ -3345,7 +3345,7 @@ static void initializeObjectLoadingContentPrefs()
 bool
 nsObjectLoadingContent::ShouldBlockContent()
 {
- 
+
   if (!sPrefsInitialized) {
     initializeObjectLoadingContentPrefs();
   }

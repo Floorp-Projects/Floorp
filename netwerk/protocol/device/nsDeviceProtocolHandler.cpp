@@ -79,12 +79,12 @@ nsDeviceProtocolHandler::NewChannel(nsIURI* aURI, nsIChannel **aResult)
   return NewChannel2(aURI, nullptr, aResult);
 }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsDeviceProtocolHandler::AllowPort(int32_t port,
                                    const char *scheme,
                                    bool *aResult)
 {
-  // don't override anything.  
+  // don't override anything.
   *aResult = false;
   return NS_OK;
 }

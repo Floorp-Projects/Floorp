@@ -127,9 +127,9 @@ DocumentFunctionCall::evaluate(txIEvalContext* aContext,
             }
             retrieveNode(es, uriStr, baseURI, nodeSet);
         }
-        
+
         NS_ADDREF(*aResult = nodeSet);
-        
+
         return NS_OK;
     }
 

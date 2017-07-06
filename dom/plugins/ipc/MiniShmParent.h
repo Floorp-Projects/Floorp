@@ -15,9 +15,9 @@ namespace mozilla {
 namespace plugins {
 
 /**
- * This class provides a lightweight shared memory interface for a parent 
+ * This class provides a lightweight shared memory interface for a parent
  * process in Win32.
- * This code assumes that there is a parent-child relationship between 
+ * This code assumes that there is a parent-child relationship between
  * processes, as it creates inheritable handles.
  * Note that this class is *not* an IPDL actor.
  *
@@ -36,7 +36,7 @@ public:
    *
    * @param aObserver A MiniShmObserver object to receive event notifications.
    * @param aTimeout Timeout in milliseconds.
-   * @param aSectionSize Desired size of the shared memory section. This is 
+   * @param aSectionSize Desired size of the shared memory section. This is
    *                     expected to be a multiple of 0x1000 (4KiB).
    * @return nsresult error code
    */
@@ -45,7 +45,7 @@ public:
        const unsigned int aSectionSize = kDefaultMiniShmSectionSize);
 
   /**
-   * Destroys the shared memory section. Useful to explicitly release 
+   * Destroys the shared memory section. Useful to explicitly release
    * resources if it is known that they won't be needed again.
    */
   void
@@ -85,7 +85,7 @@ private:
   LPVOID mView;
   bool   mIsConnected;
   DWORD  mTimeout;
-  
+
   DISALLOW_COPY_AND_ASSIGN(MiniShmParent);
 };
 

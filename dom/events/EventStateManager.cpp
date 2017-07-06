@@ -784,7 +784,7 @@ EventStateManager::PreHandleEvent(nsPresContext* aPresContext,
       // Prevent keyboard scrolling while an accesskey modifier is in use.
       if (modifierMask) {
         bool matchesContentAccessKey = (modifierMask == Prefs::ContentAccessModifierMask());
-        
+
         if (modifierMask == Prefs::ChromeAccessModifierMask() ||
             matchesContentAccessKey) {
           AutoTArray<uint32_t, 10> accessCharCodes;
@@ -1408,7 +1408,7 @@ EventStateManager::CreateClickHoldTimer(nsPresContext* inPresContext,
     if (nsContentUtils::HasNonEmptyAttr(mGestureDownContent, kNameSpaceID_None,
                                         nsGkAtoms::popup))
       return;
-    
+
     // check for a <menubutton> like bookmarks
     if (mGestureDownContent->IsXULElement(nsGkAtoms::menubutton))
       return;
@@ -1547,13 +1547,13 @@ EventStateManager::FireContextClick()
                              WidgetMouseEvent::eReal);
       event.mClickCount = 1;
       FillInEventFromGestureDown(&event);
-        
+
       // stop selection tracking, we're in control now
       if (mCurrentTarget)
       {
         RefPtr<nsFrameSelection> frameSel =
           mCurrentTarget->GetFrameSelection();
-        
+
         if (frameSel && frameSel->GetDragState()) {
           // note that this can cause selection changed events to fire if we're in
           // a text field, which will null out mCurrentTarget
@@ -2960,7 +2960,7 @@ EventStateManager::PostHandleEvent(nsPresContext* aPresContext,
       // check if the event is DefaultPrevented.
       if (nsEventStatus_eConsumeNoDefault != *aStatus &&
           !aEvent->DefaultPrevented()) {
-        nsCOMPtr<nsIContent> newFocus;      
+        nsCOMPtr<nsIContent> newFocus;
         bool suppressBlur = false;
         if (mCurrentTarget) {
           mCurrentTarget->GetContentForEvent(aEvent, getter_AddRefs(newFocus));
@@ -3547,7 +3547,7 @@ EventStateManager::NotifyDestroyPresContext(nsPresContext* aPresContext)
     // Bug 70855: Presentation is going away, possibly for a reframe.
     // Reset the hover state so that if we're recreating the presentation,
     // we won't have the old hover state still set in the new presentation,
-    // as if the new presentation is resized, a new element may be hovered. 
+    // as if the new presentation is resized, a new element may be hovered.
     SetContentState(nullptr, NS_EVENT_STATE_HOVER);
   }
   mPointersEnterLeaveHelper.Clear();
@@ -4145,7 +4145,7 @@ EventStateManager::NotifyMouseOver(WidgetMouseEvent* aMouseEvent,
   nsCOMPtr<nsIContent> lastOverElement = wrapper->mLastOverElement;
 
   bool isPointer = aMouseEvent->mClass == ePointerEventClass;
-  
+
   EnterLeaveDispatcher enterDispatcher(this, aContent, lastOverElement,
                                        aMouseEvent,
                                        isPointer ? ePointerEnter : eMouseEnter);
@@ -4900,7 +4900,7 @@ EventStateManager::SetContentState(nsIContent* aContent, EventStates aState)
     } else {
       NS_ASSERTION(aState == NS_EVENT_STATE_HOVER, "How did that happen?");
       nsIContent* newHover;
-      
+
       if (mPresContext->IsDynamic()) {
         newHover = aContent;
       } else {

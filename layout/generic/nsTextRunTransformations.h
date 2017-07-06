@@ -80,7 +80,7 @@ public:
   // MakeTextRun (after making it virtual in the superclass) and have it
   // just convert the string to uppercase or lowercase and create the textrun
   // via the fontgroup.
-  
+
   // Takes ownership of aInnerTransformTextRunFactory
   explicit nsCaseTransformTextRunFactory(mozilla::UniquePtr<nsTransformingTextRunFactory> aInnerTransformingTextRunFactory,
                                          bool aAllUppercase = false)
@@ -139,7 +139,7 @@ public:
       delete mFactory;
     }
   }
-  
+
   void SetCapitalization(uint32_t aStart, uint32_t aLength,
                          bool* aCapitalization);
   virtual bool SetPotentialLineBreaks(Range aRange,

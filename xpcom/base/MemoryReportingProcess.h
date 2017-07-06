@@ -36,7 +36,7 @@ public:
     const bool& aAnonymize,
     const bool& aMinimizeMemoryUsage,
     const dom::MaybeFileDesc& aDMDFile) = 0;
-  
+
   virtual int32_t Pid() const = 0;
 };
 

@@ -200,16 +200,16 @@ public:
   {
     mFrame->DeleteProperty(nsIFrame::CachedBackgroundImageDT());
   }
- 
-  // We still need to paint a background color as well as an image for this item, 
+
+  // We still need to paint a background color as well as an image for this item,
   // so we can't support this yet.
   virtual bool SupportsOptimizingToImage() override { return false; }
 
   bool IsSingleFixedPositionImage(nsDisplayListBuilder* aBuilder,
                                   const nsRect& aClipRect,
                                   gfxRect* aDestRect);
-  
-  
+
+
   NS_DISPLAY_DECL_NAME("CanvasBackgroundImage", TYPE_CANVAS_BACKGROUND_IMAGE)
 };
 

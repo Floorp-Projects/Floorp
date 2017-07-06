@@ -93,12 +93,12 @@ invoke_copy_to_stack(uint32_t* d, uint32_t paramCount, nsXPTCVariant* s)
 
 extern "C" {
     struct my_params_struct {
-        nsISupports* that;      
-        uint32_t Index;         
-        uint32_t Count;         
-        nsXPTCVariant* params;  
-        uint32_t fn_count;     
-        uint32_t fn_copy;      
+        nsISupports* that;
+        uint32_t Index;
+        uint32_t Count;
+        nsXPTCVariant* params;
+        uint32_t fn_count;
+        uint32_t fn_copy;
     };
 }
 
@@ -163,7 +163,7 @@ NS_InvokeByIndex(nsISupports* that, uint32_t methodIndex,
     "cmp	r4, #12		\n\t"	/* more than 3 arguments???		*/
     "ldmgtia	sp!, {r1, r2, r3}\n\t"	/* yes: load arguments for r1-r3	*/
     "subgt	r4, r4, #12	\n\t"	/*      and correct the stack pointer	*/
-    "ldmleia	sp, {r1, r2, r3}\n\t"	/* no:  load r1-r3 from stack		*/ 
+    "ldmleia	sp, {r1, r2, r3}\n\t"	/* no:  load r1-r3 from stack		*/
     "addle	sp, sp, r4	\n\t"	/*      and restore stack pointer	*/
     "movle	r4, #0		\n\t"	/*	a mark for restoring sp		*/
     "ldr	r0, [%1, #0]	\n\t"	/* get (self)				*/
@@ -180,4 +180,4 @@ NS_InvokeByIndex(nsISupports* that, uint32_t methodIndex,
 #endif /* G++ >= 2.8 */
 
   return result;
-}    
+}

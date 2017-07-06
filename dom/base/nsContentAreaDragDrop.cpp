@@ -412,7 +412,7 @@ DragDataProducer::Produce(DataTransfer* aDataTransfer,
       findFormParent = findFormParent->GetParent();
     }
   }
-    
+
   // if set, serialize the content under this node
   nsCOMPtr<nsIContent> nodeToSerialize;
 
@@ -596,7 +596,7 @@ DragDataProducer::Produce(DataTransfer* aDataTransfer,
               CopyUTF8toUTF16(spec, mImageSourceString);
 
               bool validExtension;
-              if (extension.IsEmpty() || 
+              if (extension.IsEmpty() ||
                   NS_FAILED(mimeInfo->ExtensionExists(extension,
                                                       &validExtension)) ||
                   !validExtension) {

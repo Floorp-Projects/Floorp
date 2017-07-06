@@ -71,7 +71,7 @@ HTMLPreElement::IsAttributeMapped(const nsIAtom* aAttribute) const
     { &nsGkAtoms::wrap },
     { nullptr },
   };
-  
+
   static const MappedAttributeEntry* const map[] = {
     attributes,
     sCommonAttributeMap,

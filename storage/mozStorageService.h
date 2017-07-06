@@ -136,7 +136,7 @@ private:
    * synchronizing access to mLocaleCollation.
    */
   Mutex mMutex;
-  
+
   sqlite3_vfs *mSqliteVFS;
 
   /**

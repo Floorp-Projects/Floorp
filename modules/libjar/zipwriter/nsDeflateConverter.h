@@ -41,7 +41,7 @@ private:
     ~nsDeflateConverter()
     {
     }
-    
+
     enum WrapMode {
         WRAP_ZLIB,
         WRAP_GZIP,

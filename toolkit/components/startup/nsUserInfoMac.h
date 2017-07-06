@@ -16,7 +16,7 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIUSERINFO
 
-  nsresult GetPrimaryEmailAddress(nsCString &aEmailAddress);  
+  nsresult GetPrimaryEmailAddress(nsCString &aEmailAddress);
 
 protected:
   virtual ~nsUserInfo() {}

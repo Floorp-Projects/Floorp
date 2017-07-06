@@ -256,10 +256,10 @@ PluginHangUIParent::Init(const nsString& aPluginName)
                                   WT_EXECUTEDEFAULT | WT_EXECUTEONLYONCE);
     ::WaitForSingleObject(mShowEvent, ::IsDebuggerPresent() ? INFINITE
                                                             : mIPCTimeoutMs);
-    // Setting this to true even if we time out on mShowEvent. This timeout 
-    // typically occurs when the machine is thrashing so badly that 
-    // plugin-hang-ui.exe is taking a while to start. If we didn't set 
-    // this to true, Firefox would keep spawning additional plugin-hang-ui 
+    // Setting this to true even if we time out on mShowEvent. This timeout
+    // typically occurs when the machine is thrashing so badly that
+    // plugin-hang-ui.exe is taking a while to start. If we didn't set
+    // this to true, Firefox would keep spawning additional plugin-hang-ui
     // processes, which is not what we want.
     mIsShowing = true;
   }
@@ -408,7 +408,7 @@ PluginHangUIParent::GetHangUIOwnerWindowHandle(NativeWindowHandle& windowHandle)
   if (!windowHandle) {
     return NS_ERROR_FAILURE;
   }
-  
+
   return NS_OK;
 }
 
@@ -420,7 +420,7 @@ PluginHangUIParent::OnMiniShmEvent(MiniShmBase *aMiniShmObj)
   NS_ASSERTION(NS_SUCCEEDED(rv),
                "Couldn't obtain read pointer OnMiniShmEvent");
   if (NS_SUCCEEDED(rv)) {
-    // The child process has returned a response so we shouldn't worry about 
+    // The child process has returned a response so we shouldn't worry about
     // its state anymore.
     MutexAutoLock lock(mMutex);
     UnwatchHangUIChildProcess(false);

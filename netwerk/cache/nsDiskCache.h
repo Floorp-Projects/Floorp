@@ -57,14 +57,14 @@ public:
 
     // Parameter initval initializes internal state of hash function. Hash values are different
     // for the same text when different initval is used. It can be any random number.
-    // 
+    //
     // It can be used for generating 64-bit hash value:
     //   (uint64_t(Hash(key, initval1)) << 32) | Hash(key, initval2)
     //
     // It can be also used to hash multiple strings:
     //   h = Hash(string1, 0);
     //   h = Hash(string2, h);
-    //   ... 
+    //   ...
     static PLDHashNumber    Hash(const char* key, PLDHashNumber initval=0);
     static nsresult         Truncate(PRFileDesc *  fd, uint32_t  newEOF);
 };

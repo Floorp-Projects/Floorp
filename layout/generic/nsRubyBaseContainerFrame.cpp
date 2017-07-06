@@ -247,8 +247,8 @@ nsRubyBaseContainerFrame::AddInlinePrefISize(
   aData->mCurrentLine += sum;
 }
 
-/* virtual */ bool 
-nsRubyBaseContainerFrame::IsFrameOfType(uint32_t aFlags) const 
+/* virtual */ bool
+nsRubyBaseContainerFrame::IsFrameOfType(uint32_t aFlags) const
 {
   if (aFlags & eSupportsCSSTransforms) {
     return false;

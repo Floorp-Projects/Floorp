@@ -18,7 +18,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsRelativeFilePref)
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREFSERVICE_CID);
 static NS_DEFINE_CID(kPrefLocalizedStringCID, NS_PREFLOCALIZEDSTRING_CID);
 static NS_DEFINE_CID(kRelativeFilePrefCID, NS_RELATIVEFILEPREF_CID);
- 
+
 static mozilla::Module::CIDEntry kPrefCIDs[] = {
   { &kPrefServiceCID, true, nullptr, PreferencesConstructor },
   { &kPrefLocalizedStringCID, false, nullptr, nsPrefLocalizedStringConstructor },

@@ -89,7 +89,7 @@ enum nsChangeHint : uint32_t {
 
   /**
    * The overflow area of the frame and all of its descendants has changed. This
-   * can happen through a text-decoration change.   
+   * can happen through a text-decoration change.
    */
   nsChangeHint_UpdateSubtreeOverflow = 1 << 12,
 

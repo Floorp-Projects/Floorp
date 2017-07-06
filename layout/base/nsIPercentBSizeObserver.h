@@ -30,4 +30,4 @@ public:
   virtual bool NeedsToObserve(const mozilla::ReflowInput& aReflowInput) = 0;
 };
 
-#endif // nsIPercentBSizeObserver_h___ 
+#endif // nsIPercentBSizeObserver_h___

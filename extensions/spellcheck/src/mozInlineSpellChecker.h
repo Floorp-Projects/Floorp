@@ -132,7 +132,7 @@ private:
                             SpellCheck_Available = 1};
   static SpellCheckingState gCanEnableSpellChecking;
 
-  nsWeakPtr mEditor; 
+  nsWeakPtr mEditor;
   nsCOMPtr<nsIEditorSpellCheck> mSpellCheck;
   nsCOMPtr<nsIEditorSpellCheck> mPendingSpellCheck;
   nsCOMPtr<nsIDOMTreeWalker> mTreeWalker;

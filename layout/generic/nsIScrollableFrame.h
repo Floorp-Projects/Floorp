@@ -133,7 +133,7 @@ public:
    */
   virtual nsPoint GetScrollPosition() const = 0;
   /**
-   * As GetScrollPosition(), but uses the top-right as origin for RTL frames. 
+   * As GetScrollPosition(), but uses the top-right as origin for RTL frames.
    */
   virtual nsPoint GetLogicalScrollPosition() const = 0;
   /**
@@ -166,7 +166,7 @@ public:
    * smooth msd, or normal scrolling.
    *
    * SMOOTH scrolls have a symmetrical acceleration and deceleration curve
-   * modeled with a set of splines that guarantee that the destination will be 
+   * modeled with a set of splines that guarantee that the destination will be
    * reached over a fixed time interval.  SMOOTH will only be smooth if smooth
    * scrolling is actually enabled.  This behavior is utilized by keyboard and
    * mouse wheel scrolling events.

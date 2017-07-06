@@ -213,7 +213,7 @@ MergeCharactersInTextRun(gfxTextRun* aDest, gfxTextRun* aSrc,
       }
     }
     NS_ASSERTION(glyphs.Length() == 0,
-                 "Leftover glyphs, don't request merging of the last character with its next!");  
+                 "Leftover glyphs, don't request merging of the last character with its next!");
   }
   NS_ASSERTION(offset == aDest->GetLength(), "Bad offset calculations");
 }

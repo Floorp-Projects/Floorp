@@ -45,7 +45,7 @@ static unsigned char DIGIT_0 [] =
     ON_4 | ON_1,
     ON_3 | ON_2
   };
-    
+
 /*
   0, 0, 0, 1, 0, 0,
   0, 0, 0, 1, 0, 0,

@@ -83,7 +83,7 @@ TEST(Strings, rfind)
   nsCString src(text);
   int32_t i;
 
-  i = src.RFind(term, true, 3, -1); 
+  i = src.RFind(term, true, 3, -1);
   EXPECT_EQ(i, kNotFound);
 
   i = src.RFind(term, true, -1, -1);
@@ -100,7 +100,7 @@ TEST(Strings, rfind_2)
 {
   const char text[] = "<!DOCTYPE blah blah blah>";
   nsCString src(text);
-  int32_t i = src.RFind("TYPE", false, 5, -1); 
+  int32_t i = src.RFind("TYPE", false, 5, -1);
   EXPECT_EQ(i, 5);
 }
 
@@ -537,7 +537,7 @@ TEST(Strings, substring)
   nsCString super("hello world"), sub("hello");
 
   // this tests that |super| starts with |sub|,
-  
+
   EXPECT_TRUE(sub.Equals(StringHead(super, sub.Length())));
 
   // and verifies that |sub| does not start with |super|.

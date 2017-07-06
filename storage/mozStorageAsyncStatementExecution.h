@@ -238,7 +238,7 @@ private:
    * about the error message, the user gets reliable error messages.
    */
   SQLiteMutex &mDBMutex;
-  
+
   /**
    * The instant at which the request was started.
    *

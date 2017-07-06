@@ -10,7 +10,7 @@
 #include "nsMathMLContainerFrame.h"
 
 //
-// <mmultiscripts> -- attach prescripts and tensor indices to a base 
+// <mmultiscripts> -- attach prescripts and tensor indices to a base
 // <msub> -- attach a subscript to a base
 // <msubsup> -- attach a subscript-superscript pair to a base
 // <msup> -- attach a superscript to a base
@@ -47,7 +47,7 @@ protected:
   explicit nsMathMLmmultiscriptsFrame(nsStyleContext* aContext)
     : nsMathMLContainerFrame(aContext, kClassID) {}
   virtual ~nsMathMLmmultiscriptsFrame();
-  
+
 
 };
 

@@ -216,7 +216,7 @@ txStylesheetCompiler::startElementInternal(int32_t aNamespaceID,
             !attr->mValue.IsEmpty()) {
             rv = ensureNewElementContext();
             NS_ENSURE_SUCCESS(rv, rv);
-            
+
             nsAutoString uri;
             URIUtils::resolveHref(attr->mValue, mElementContext->mBaseURI, uri);
             mElementContext->mBaseURI = uri;
@@ -238,7 +238,7 @@ txStylesheetCompiler::startElementInternal(int32_t aNamespaceID,
             while (tok.hasMoreTokens()) {
                 int32_t namespaceID = mElementContext->mMappings->
                     lookupNamespaceWithDefault(tok.nextToken());
-                
+
                 if (namespaceID == kNameSpaceID_Unknown)
                     return NS_ERROR_XSLT_PARSE_FAILURE;
 
@@ -334,7 +334,7 @@ txStylesheetCompiler::endElement()
             nsAutoPtr<txInstruction> instr(new txRemoveVariable(var->mName));
             rv = addInstruction(Move(instr));
             NS_ENSURE_SUCCESS(rv, rv);
-            
+
             mInScopeVariables.RemoveElementAt(i);
             delete var;
         }
@@ -473,7 +473,7 @@ txStylesheetCompiler::ensureNewElementContext()
     if (!mElementContext->mDepth) {
         return NS_OK;
     }
-    
+
     nsAutoPtr<txElementContext>
         context(new txElementContext(*mElementContext));
     nsresult rv = pushObject(mElementContext);
@@ -491,7 +491,7 @@ txStylesheetCompiler::maybeDoneCompiling()
     if (!mDoneWithThisStylesheet || !mChildCompilerList.IsEmpty()) {
         return NS_OK;
     }
-    
+
     if (mIsTopCompiler) {
         nsresult rv = mStylesheet->doneCompiling();
         if (NS_FAILED(rv)) {
@@ -499,7 +499,7 @@ txStylesheetCompiler::maybeDoneCompiling()
             return rv;
         }
     }
-    
+
     if (mObserver) {
         mObserver->onDoneCompiling(this, mStatus);
         // This will ensure that we don't call onDoneCompiling twice. Also
@@ -566,20 +566,20 @@ txStylesheetCompilerState::init(const nsAString& aStylesheetURI,
         mStylesheet = new txStylesheet;
         rv = mStylesheet->init();
         NS_ENSURE_SUCCESS(rv, rv);
-        
+
         mToplevelIterator =
             txListIterator(&mStylesheet->mRootFrame->mToplevelItems);
         mToplevelIterator.next(); // go to the end of the list
         mIsTopCompiler = true;
     }
-   
+
     mElementContext = new txElementContext(aStylesheetURI);
     NS_ENSURE_TRUE(mElementContext->mMappings, NS_ERROR_OUT_OF_MEMORY);
 
     // Push the "old" txElementContext
     rv = pushObject(0);
     NS_ENSURE_SUCCESS(rv, rv);
-    
+
     return NS_OK;
 }
 
@@ -589,7 +589,7 @@ txStylesheetCompilerState::~txStylesheetCompilerState()
     while (!mObjectStack.isEmpty()) {
         delete popObject();
     }
-    
+
     int32_t i;
     for (i = mInScopeVariables.Length() - 1; i >= 0; --i) {
         delete mInScopeVariables[i];
@@ -682,11 +682,11 @@ txStylesheetCompilerState::popPtr(enumStackType aType)
     enumStackType type = mTypeStack.ElementAt(stacklen - 1);
     mTypeStack.RemoveElementAt(stacklen - 1);
     void* value = mOtherStack.pop();
-    
+
 #ifdef TX_DEBUG_STACK
     MOZ_LOG(txLog::xslt, LogLevel::Debug, ("popPtr: 0x%x type %u requested %u\n", value, type, aType));
 #endif
-    
+
     if (type != aType) {
         MOZ_CRASH("Expected type does not match top element type");
     }
@@ -726,7 +726,7 @@ txStylesheetCompilerState::addInstruction(nsAutoPtr<txInstruction>&& aInstructio
 
     *mNextInstrPtr = aInstruction.forget();
     mNextInstrPtr = newInstr->mNext.StartAssignment();
-    
+
     uint32_t i, count = mGotoTargetPointers.Length();
     for (i = 0; i < count; ++i) {
         *mGotoTargetPointers[i] = newInstr;
@@ -752,12 +752,12 @@ txStylesheetCompilerState::loadIncludedStylesheet(const nsAString& aURI)
 
     nsresult rv = mToplevelIterator.addBefore(item);
     NS_ENSURE_SUCCESS(rv, rv);
-    
+
     item.forget();
 
     // step back to the dummy-item
     mToplevelIterator.previous();
-    
+
     txACompileObserver* observer = static_cast<txStylesheetCompiler*>(this);
 
     RefPtr<txStylesheetCompiler> compiler =
@@ -812,7 +812,7 @@ txStylesheetCompilerState::loadImportedStylesheet(const nsAString& aURI,
         mChildCompilerList.RemoveElement(compiler);
     }
 
-    return rv;  
+    return rv;
 }
 
 nsresult
@@ -821,7 +821,7 @@ txStylesheetCompilerState::addGotoTarget(txInstruction** aTargetPointer)
     if (mGotoTargetPointers.AppendElement(aTargetPointer) == nullptr) {
         return NS_ERROR_OUT_OF_MEMORY;
     }
-    
+
     return NS_OK;
 }
 

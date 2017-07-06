@@ -24,11 +24,11 @@
 
 /**
  * The StartupCache is a persistent cache of simple key-value pairs,
- * where the keys are null-terminated c-strings and the values are 
- * arbitrary data, passed as a (char*, size) tuple. 
+ * where the keys are null-terminated c-strings and the values are
+ * arbitrary data, passed as a (char*, size) tuple.
  *
- * Clients should use the GetSingleton() static method to access the cache. It 
- * will be available from the end of XPCOM init (NS_InitXPCOM3 in XPCOMInit.cpp), 
+ * Clients should use the GetSingleton() static method to access the cache. It
+ * will be available from the end of XPCOM init (NS_InitXPCOM3 in XPCOMInit.cpp),
  * until XPCOM shutdown begins. The GetSingleton() method will return null if the cache
  * is unavailable. The cache is only provided for libxul builds --
  * it will fail to link in non-libxul builds. The XPCOM interface is provided
@@ -41,7 +41,7 @@
  * an existing entry. The cache makes a copy of the passed-in buffer, so client
  * retains ownership.
  *
- * InvalidateCache() may be called if a client suspects data corruption 
+ * InvalidateCache() may be called if a client suspects data corruption
  * or wishes to invalidate for any other reason. This will remove all existing cache data.
  * Additionally, the static method IgnoreDiskCache() can be called if it is
  * believed that the on-disk cache file is itself corrupt. This call implicitly
@@ -51,7 +51,7 @@
  *
  * Finally, getDebugObjectOutputStream() allows debug code to wrap an objectstream
  * with a debug objectstream, to check for multiply-referenced objects. These will
- * generally fail to deserialize correctly, unless they are stateless singletons or the 
+ * generally fail to deserialize correctly, unless they are stateless singletons or the
  * client maintains their own object data map for deserialization.
  *
  * Writes before the final-ui-startup notification are placed in an intermediate
@@ -189,12 +189,12 @@ class StartupCacheDebugOutputStream final
   StartupCacheDebugOutputStream (nsIObjectOutputStream* binaryStream,
                                    nsTHashtable<nsISupportsHashKey>* objectMap)
   : mBinaryStream(binaryStream), mObjectMap(objectMap) { }
-  
+
   NS_FORWARD_SAFE_NSIBINARYOUTPUTSTREAM(mBinaryStream)
   NS_FORWARD_SAFE_NSIOUTPUTSTREAM(mBinaryStream)
-  
+
   bool CheckReferences(nsISupports* aObject);
-  
+
   nsCOMPtr<nsIObjectOutputStream> mBinaryStream;
   nsTHashtable<nsISupportsHashKey> *mObjectMap;
 };

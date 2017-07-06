@@ -59,7 +59,7 @@ SVGPolyElement::IsAttributeMapped(const nsIAtom* name) const
   static const MappedAttributeEntry* const map[] = {
     sMarkersMap
   };
-  
+
   return FindAttributeDependence(name, map) ||
     SVGPolyElementBase::IsAttributeMapped(name);
 }

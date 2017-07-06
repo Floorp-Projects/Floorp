@@ -349,7 +349,7 @@ nsMathMLContainerFrame::Stretch(DrawTarget*          aDrawTarget,
         // store the updated metrics
         SaveReflowAndBoundingMetricsFor(baseFrame, childSize,
                                         childSize.mBoundingMetrics);
-        
+
         // Remember the siblings which were _deferred_.
         // Now that this embellished child may have changed, we need to
         // fire the stretch on its siblings using our updated size
@@ -370,7 +370,7 @@ nsMathMLContainerFrame::Stretch(DrawTarget*          aDrawTarget,
               mathMLFrame = do_QueryFrame(childFrame);
               if (mathMLFrame) {
                 // retrieve the metrics that was stored at the previous pass
-                GetReflowAndBoundingMetricsFor(childFrame, 
+                GetReflowAndBoundingMetricsFor(childFrame,
                   childSize, childSize.mBoundingMetrics);
                 // do the stretching...
                 mathMLFrame->Stretch(aDrawTarget, stretchDir,
@@ -823,7 +823,7 @@ nsMathMLContainerFrame::ReflowChild(nsIFrame*                aChildFrame,
   // Having foreign/hybrid children, e.g., from html markups, is not defined by
   // the MathML spec. But it can happen in practice, e.g., <html:img> allows us
   // to do some cool demos... or we may have a child that is an nsInlineFrame
-  // from a generated content such as :before { content: open-quote } or 
+  // from a generated content such as :before { content: open-quote } or
   // :after { content: close-quote }. Unfortunately, the other frames out-there
   // may expect their own invariants that are not met when we mix things.
   // Hence we do not claim their support, but we will nevertheless attempt to keep
@@ -834,7 +834,7 @@ nsMathMLContainerFrame::ReflowChild(nsIFrame*                aChildFrame,
   nsInlineFrame* inlineFrame = do_QueryFrame(aChildFrame);
   NS_ASSERTION(!inlineFrame, "Inline frames should be wrapped in blocks");
 #endif
-  
+
   nsContainerFrame::
          ReflowChild(aChildFrame, aPresContext, aDesiredSize, aReflowInput,
                      0, 0, NS_FRAME_NO_MOVE_FRAME, aStatus);
@@ -912,8 +912,8 @@ nsMathMLContainerFrame::Reflow(nsPresContext*           aPresContext,
 
     // get the stretchy direction
     nsStretchDirection stretchDir =
-      NS_MATHML_WILL_STRETCH_ALL_CHILDREN_VERTICALLY(mPresentationData.flags) 
-      ? NS_STRETCH_DIRECTION_VERTICAL 
+      NS_MATHML_WILL_STRETCH_ALL_CHILDREN_VERTICALLY(mPresentationData.flags)
+      ? NS_STRETCH_DIRECTION_VERTICAL
       : NS_STRETCH_DIRECTION_HORIZONTAL;
 
     // what size should we use to stretch our stretchy children
@@ -1053,7 +1053,7 @@ nsMathMLContainerFrame::MeasureForWidth(DrawTarget* aDrawTarget,
 
 
 // see spacing table in Chapter 18, TeXBook (p.170)
-// Our table isn't quite identical to TeX because operators have 
+// Our table isn't quite identical to TeX because operators have
 // built-in values for lspace & rspace in the Operator Dictionary.
 static int32_t kInterFrameSpacingTable[eMathMLFrameType_COUNT][eMathMLFrameType_COUNT] =
 {
@@ -1083,7 +1083,7 @@ static int32_t kInterFrameSpacingTable[eMathMLFrameType_COUNT][eMathMLFrameType_
       : space_ & 0x0F;                                                  \
   }                                                                     \
 
-// This function computes the inter-space between two frames. However, 
+// This function computes the inter-space between two frames. However,
 // since invisible operators need special treatment, the inter-space may
 // be delayed when an invisible operator is encountered. In this case,
 // the function will carry the inter-space forward until it is determined
@@ -1252,7 +1252,7 @@ private:
       }
     }
     // add left correction -- this fixes the problem of the italic 'f'
-    // e.g., <mo>q</mo> <mi>f</mi> <mo>I</mo> 
+    // e.g., <mo>q</mo> <mi>f</mi> <mo>I</mo>
     mX += leftCorrection;
     mItalicCorrection = rightCorrection;
   }
@@ -1449,7 +1449,7 @@ nsMathMLContainerFrame::TransmitAutomaticDataForMrowLikeElement()
   nsIFrame *childFrame, *baseFrame;
   bool embellishedOpFound = false;
   nsEmbellishData embellishData;
-  
+
   for (childFrame = PrincipalChildList().FirstChild();
        childFrame;
        childFrame = childFrame->GetNextSibling()) {
@@ -1524,7 +1524,7 @@ nsresult
 nsMathMLContainerFrame::ReportParseError(const char16_t* aAttribute,
                                          const char16_t* aValue)
 {
-  const char16_t* argv[] = 
+  const char16_t* argv[] =
     { aValue, aAttribute, mContent->NodeInfo()->NameAtom()->GetUTF16String() };
   return ReportErrorToConsole("AttributeParsingError", argv, 3);
 }

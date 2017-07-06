@@ -177,7 +177,7 @@ ThirdPartyUtil::IsThirdPartyWindow(mozIDOMWindowProxy* aWindow,
 // Determine if the URI associated with aChannel or any URI of the window
 // hierarchy associated with the channel is foreign with respect to aSecondURI.
 // See docs for mozIThirdPartyUtil.
-NS_IMETHODIMP 
+NS_IMETHODIMP
 ThirdPartyUtil::IsThirdPartyChannel(nsIChannel* aChannel,
                                     nsIURI* aURI,
                                     bool* aResult)

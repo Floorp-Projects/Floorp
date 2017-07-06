@@ -48,7 +48,7 @@ public:
                                             nsIFile **        result);
 
     virtual nsresult        OnDataSizeChange(nsCacheEntry * entry, int32_t deltaSize);
-    
+
     virtual nsresult        Visit(nsICacheVisitor * visitor);
 
     virtual nsresult        EvictEntries(const char * clientID);
@@ -70,10 +70,10 @@ public:
     uint32_t                getCacheCapacity();
     uint32_t                getCacheSize();
     uint32_t                getEntryCount();
-    
+
     nsDiskCacheMap *        CacheMap()    { return &mCacheMap; }
-    
-private:    
+
+private:
     friend class nsDiskCacheDeviceDeactivateEntryEvent;
     friend class nsEvictDiskCacheEntriesEvent;
     friend class nsDiskCacheMap;
@@ -99,7 +99,7 @@ private:
     nsresult                ClearDiskCache();
 
     nsresult                EvictDiskCacheEntries(uint32_t  targetCapacity);
-    
+
     /**
      *  Member variables
      */

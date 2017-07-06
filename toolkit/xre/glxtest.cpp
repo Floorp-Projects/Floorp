@@ -171,10 +171,10 @@ void glxtest()
   void *libgl = dlopen(LIBGL_FILENAME, RTLD_LAZY);
   if (!libgl)
     fatal_error("Unable to load " LIBGL_FILENAME);
-  
+
   typedef void* (* PFNGLXGETPROCADDRESS) (const char *);
   PFNGLXGETPROCADDRESS glXGetProcAddress = cast<PFNGLXGETPROCADDRESS>(dlsym(libgl, "glXGetProcAddress"));
-  
+
   if (!glXGetProcAddress)
     fatal_error("Unable to find glXGetProcAddress in " LIBGL_FILENAME);
 
@@ -213,7 +213,7 @@ void glxtest()
   Display *dpy = XOpenDisplay(nullptr);
   if (!dpy)
     fatal_error("Unable to open a connection to the X server");
-  
+
   ///// Check that the GLX extension is present /////
   if (!glXQueryExtension(dpy, nullptr, nullptr))
     fatal_error("GLX extension missing");
@@ -249,7 +249,7 @@ void glxtest()
   glXMakeCurrent(dpy, window, context);
 
   ///// Look for this symbol to determine texture_from_pixmap support /////
-  void* glXBindTexImageEXT = glXGetProcAddress("glXBindTexImageEXT"); 
+  void* glXBindTexImageEXT = glXGetProcAddress("glXBindTexImageEXT");
 
   ///// Get GL vendor/renderer/versions strings /////
   enum { bufsize = 1024 };
@@ -321,7 +321,7 @@ bool fire_glxtest_process()
 #endif
       return false;
   }
-  // The child exits early to avoid running the full shutdown sequence and avoid conflicting with threads 
+  // The child exits early to avoid running the full shutdown sequence and avoid conflicting with threads
   // we have already spawned (like the profiler).
   if (pid == 0) {
       close(pfd[0]);

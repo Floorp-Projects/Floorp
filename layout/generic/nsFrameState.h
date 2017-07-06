@@ -76,4 +76,4 @@ void PrintFrameState(nsIFrame* aFrame);
 #endif
 } // namespace mozilla
 
-#endif /* nsFrameState_h_ */ 
+#endif /* nsFrameState_h_ */

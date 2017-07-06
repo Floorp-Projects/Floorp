@@ -43,7 +43,7 @@ public:
   struct NodeOffset {
     nsINode* mNode;
     int32_t  mOffset;
-    
+
     NodeOffset(nsINode* aNode, int32_t aOffset) :
       mNode(aNode), mOffset(aOffset) {}
 
@@ -95,7 +95,7 @@ public:
   nsIDOMDocument* GetDOMDocument() const { return mDOMDocument; }
   nsIDocument* GetDocument() const { return mDocument; }
   nsINode* GetRootNode() { return mRootNode; }
-  
+
 private:
 
   // cached stuff for the editor, set by Init
@@ -115,19 +115,19 @@ private:
     NodeOffset mNodeOffset;
     int32_t    mSoftTextOffset;
     int32_t    mLength;
-    
+
     DOMTextMapping(NodeOffset aNodeOffset, int32_t aSoftTextOffset, int32_t aLength)
       : mNodeOffset(aNodeOffset), mSoftTextOffset(aSoftTextOffset),
         mLength(aLength) {}
   };
   nsTArray<DOMTextMapping> mSoftTextDOMMapping;
-  
+
   // A list of the "real words" in mSoftText, ordered by mSoftTextOffset
   struct RealWord {
     int32_t      mSoftTextOffset;
     uint32_t      mLength : 31;
     uint32_t mCheckableWord : 1;
-    
+
     RealWord(int32_t aOffset, uint32_t aLength, bool aCheckable)
       : mSoftTextOffset(aOffset), mLength(aLength), mCheckableWord(aCheckable)
     {
@@ -144,7 +144,7 @@ private:
 
   void InvalidateWords() { mSoftTextValid = false; }
   nsresult EnsureWords();
-  
+
   int32_t MapDOMPositionToSoftTextOffset(NodeOffset aNodeOffset);
   // Map an offset into mSoftText to a DOM position. Note that two DOM positions
   // can map to the same mSoftText offset, e.g. given nodes A=aaaa and B=bbbb
@@ -163,7 +163,7 @@ private:
   // position, search forward until we do find a word and return that (if found).
   int32_t FindRealWordContaining(int32_t aSoftTextOffset, DOMMapHint aHint,
                                  bool aSearchForward);
-    
+
   // build mSoftText and mSoftTextDOMMapping
   void BuildSoftText();
   // Build mRealWords array

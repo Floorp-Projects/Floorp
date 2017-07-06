@@ -91,7 +91,7 @@ nsServerSocket::OnMsgAttach()
     return;
 
   mCondition = TryAttach();
-  
+
   // if we hit an error while trying to attach then bail...
   if (NS_FAILED(mCondition))
   {
@@ -443,7 +443,7 @@ public:
       , mServ(aServ)
       , mTransport(aTransport)
     { }
-    
+
     NS_DECL_NSIRUNNABLE
 
   private:

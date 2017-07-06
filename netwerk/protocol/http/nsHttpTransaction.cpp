@@ -617,7 +617,7 @@ nsHttpTransaction::OnTransportStatus(nsITransport* transport,
             LOG3(("ObserveActivity failed (%08x)", static_cast<uint32_t>(rv)));
         }
     }
-    
+
     // nsHttpChannel synthesizes progress events in OnDataAvailable
     if (status == NS_NET_STATUS_RECEIVING_FROM)
         return;

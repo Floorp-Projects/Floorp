@@ -126,7 +126,7 @@ nsAboutProtocolHandler::NewURI(const nsACString &aSpec,
     // about: modules...  Since those URIs will never open a channel, might as
     // well consider them unsafe for better perf, and just in case.
     bool isSafe = false;
-    
+
     nsCOMPtr<nsIAboutModule> aboutMod;
     rv = NS_GetAboutModule(url, getter_AddRefs(aboutMod));
     if (NS_SUCCEEDED(rv)) {
@@ -141,7 +141,7 @@ nsAboutProtocolHandler::NewURI(const nsACString &aSpec,
         nsAutoCString spec;
         rv = url->GetPath(spec);
         NS_ENSURE_SUCCESS(rv, rv);
-        
+
         spec.Insert("moz-safe-about:", 0);
 
         nsCOMPtr<nsIURI> inner;
@@ -179,7 +179,7 @@ nsAboutProtocolHandler::NewChannel2(nsIURI* uri,
     nsAutoCString path;
     nsresult rv2 = NS_GetAboutModuleName(uri, path);
     if (NS_SUCCEEDED(rv2) && path.EqualsLiteral("srcdoc")) {
-        // about:srcdoc is meant to be unresolvable, yet is included in the 
+        // about:srcdoc is meant to be unresolvable, yet is included in the
         // about lookup tables so that it can pass security checks when used in
         // a srcdoc iframe.  To ensure that it stays unresolvable, we pretend
         // that it doesn't exist.
@@ -256,10 +256,10 @@ nsAboutProtocolHandler::NewChannel(nsIURI* uri, nsIChannel* *result)
     return NewChannel2(uri, nullptr, result);
 }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsAboutProtocolHandler::AllowPort(int32_t port, const char *scheme, bool *_retval)
 {
-    // don't override anything.  
+    // don't override anything.
     *_retval = false;
     return NS_OK;
 }
@@ -309,7 +309,7 @@ nsSafeAboutProtocolHandler::NewURI(const nsACString &aSpec,
     }
 
     NS_TryToSetImmutable(url);
-    
+
     *result = nullptr;
     url.swap(*result);
     return rv;
@@ -331,10 +331,10 @@ nsSafeAboutProtocolHandler::NewChannel(nsIURI* uri, nsIChannel* *result)
     return NS_ERROR_NOT_AVAILABLE;
 }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsSafeAboutProtocolHandler::AllowPort(int32_t port, const char *scheme, bool *_retval)
 {
-    // don't override anything.  
+    // don't override anything.
     *_retval = false;
     return NS_OK;
 }

@@ -70,8 +70,8 @@ PR_END_MACRO
 #define LOG_ERROR(params) \
   _LOG_OUTPUT(LEVEL_ERROR, eprintf, params)
 
-// Same as LOG_ERROR, but when logging is set to LEVEL_DEBUG, the message 
-// will be put to the stdout instead of stderr to keep continuity with other 
+// Same as LOG_ERROR, but when logging is set to LEVEL_DEBUG, the message
+// will be put to the stdout instead of stderr to keep continuity with other
 // LOG_DEBUG message output
 #define LOG_ERRORD(params) \
 PR_BEGIN_MACRO \
@@ -107,25 +107,25 @@ int eprintf(const char* str, ...)
 char* strtok2(char* string, const char* delims, char* *newStr)
 {
   PR_ASSERT(string);
-  
+
   char delimTable[DELIM_TABLE_SIZE];
   uint32_t i;
   char* result;
   char* str = string;
-  
+
   for (i = 0; i < DELIM_TABLE_SIZE; i++)
     delimTable[i] = '\0';
-  
+
   for (i = 0; delims[i]; i++) {
     SET_DELIM(delimTable, static_cast<uint8_t>(delims[i]));
   }
-  
+
   // skip to beginning
   while (*str && IS_DELIM(delimTable, static_cast<uint8_t>(*str))) {
     str++;
   }
   result = str;
-  
+
   // fix up the end of the token
   while (*str) {
     if (IS_DELIM(delimTable, static_cast<uint8_t>(*str))) {
@@ -135,7 +135,7 @@ char* strtok2(char* string, const char* delims, char* *newStr)
     str++;
   }
   *newStr = str;
-  
+
   return str == result ? nullptr : result;
 }
 
@@ -270,7 +270,7 @@ enum {
   USE_TLS1 = 1 << 4
 };
 
-bool ReadConnectRequest(server_info_t* server_info, 
+bool ReadConnectRequest(server_info_t* server_info,
     relayBuffer& buffer, int32_t* result, string& certificate,
     client_auth_option* clientauth, string& host, string& location,
     int32_t* flags)
@@ -280,7 +280,7 @@ bool ReadConnectRequest(server_info_t* server_info,
     return false;
   }
   if (strncmp(buffer.buffertail-4, "\r\n\r\n", 4)) {
-    LOG_ERRORD((" !! request is not tailed with CRLFCRLF but with %x %x %x %x", 
+    LOG_ERRORD((" !! request is not tailed with CRLFCRLF but with %x %x %x %x",
                *(buffer.buffertail-4),
                *(buffer.buffertail-3),
                *(buffer.buffertail-2),
@@ -339,7 +339,7 @@ bool ReadConnectRequest(server_info_t* server_info,
   }
 
   token = strtok2(_caret, "/", &_caret);
-  if (strcmp(token, "HTTP")) {  
+  if (strcmp(token, "HTTP")) {
     LOG_ERRORD((" not tailed with HTTP but with %s", token));
     return true;
   }
@@ -431,7 +431,7 @@ bool ConfigureSSLServerSocket(PRFileDesc* socket, server_info_t* si, const strin
 }
 
 /**
- * This function examines the buffer for a Sec-WebSocket-Location: field, 
+ * This function examines the buffer for a Sec-WebSocket-Location: field,
  * and if it's present, it replaces the hostname in that field with the
  * value in the server's original_host field.  This function works
  * in the reverse direction as AdjustWebSocketHost(), replacing the real
@@ -709,7 +709,7 @@ void HandleConnection(void* data)
         if (out_flags & PR_POLL_READ && buffers[s].areafree())
         {
           LOG_DEBUG((" :reading"));
-          int32_t bytesRead = PR_Recv(sockets[s].fd, buffers[s].buffertail, 
+          int32_t bytesRead = PR_Recv(sockets[s].fd, buffers[s].buffertail,
               buffers[s].areafree(), 0, PR_INTERVAL_NO_TIMEOUT);
 
           if (bytesRead == 0)
@@ -723,7 +723,7 @@ void HandleConnection(void* data)
             if (PR_GetError() != PR_WOULD_BLOCK_ERROR)
             {
               LOG_DEBUG((" error=%d", PR_GetError()));
-              // We are in error state, indicate that the connection was 
+              // We are in error state, indicate that the connection was
               // not closed gracefully
               client_error = true;
               socketErrorState[s] = true;
@@ -760,20 +760,20 @@ void HandleConnection(void* data)
                 server_match_t match;
                 match.fullHost = fullHost;
                 match.matched = false;
-                PL_HashTableEnumerateEntries(ci->server_info->host_cert_table, 
-                                             match_hostname, 
+                PL_HashTableEnumerateEntries(ci->server_info->host_cert_table,
+                                             match_hostname,
                                              &match);
-                PL_HashTableEnumerateEntries(ci->server_info->host_clientauth_table, 
-                                             match_hostname, 
+                PL_HashTableEnumerateEntries(ci->server_info->host_clientauth_table,
+                                             match_hostname,
                                              &match);
-                PL_HashTableEnumerateEntries(ci->server_info->host_ssl3_table, 
-                                             match_hostname, 
+                PL_HashTableEnumerateEntries(ci->server_info->host_ssl3_table,
+                                             match_hostname,
                                              &match);
                 PL_HashTableEnumerateEntries(ci->server_info->host_tls1_table,
                                              match_hostname,
                                              &match);
-                PL_HashTableEnumerateEntries(ci->server_info->host_rc4_table, 
-                                             match_hostname, 
+                PL_HashTableEnumerateEntries(ci->server_info->host_rc4_table,
+                                             match_hostname,
                                              &match);
                 PL_HashTableEnumerateEntries(ci->server_info->host_failhandshake_table,
                                              match_hostname,
@@ -873,7 +873,7 @@ void HandleConnection(void* data)
         if (out_flags & PR_POLL_WRITE)
         {
           LOG_DEBUG((" :writing"));
-          int32_t bytesWrite = PR_Send(sockets[s].fd, buffers[s2].bufferhead, 
+          int32_t bytesWrite = PR_Send(sockets[s].fd, buffers[s2].bufferhead,
               buffers[s2].present(), 0, PR_INTERVAL_NO_TIMEOUT);
 
           if (bytesWrite < 0)
@@ -894,13 +894,13 @@ void HandleConnection(void* data)
             LOG_DEBUG((", written %d bytes", bytesWrite));
             buffers[s2].buffertail[1] = '\0';
             LOG_DEBUG((" dump:\n%.*s\n", bytesWrite, buffers[s2].bufferhead));
-            
+
             buffers[s2].bufferhead += bytesWrite;
             if (buffers[s2].present())
             {
               LOG_DEBUG((" still have to write %d bytes", (int)buffers[s2].present()));
               in_flags |= PR_POLL_WRITE;
-            }              
+            }
             else
             {
               if (!ssl_updated)
@@ -912,7 +912,7 @@ void HandleConnection(void* data)
                 {
                   LOG_DEBUG((" not updating to SSL based on http_proxy_only for this socket"));
                 }
-                else if (!ConfigureSSLServerSocket(ci->client_sock, ci->server_info, 
+                else if (!ConfigureSSLServerSocket(ci->client_sock, ci->server_info,
                                                    certificateToUse, clientAuth, flags))
                 {
                   LOG_ERRORD((" failed to config server socket\n"));
@@ -1250,7 +1250,7 @@ int processConfigLine(char* configLine)
 
     return 0;
   }
-  
+
   if (!strcmp(keyword, "clientauth"))
   {
     char* hostname = strtok2(_caret, ":", &_caret);

@@ -18,8 +18,8 @@
 
 #include "nsDiskCache.h"
 #include "nsDiskCacheBlockFile.h"
- 
- 
+
+
 class nsDiskCacheBinding;
 struct nsDiskCacheEntry;
 
@@ -92,25 +92,25 @@ private:
     uint32_t    mEvictionRank;
     uint32_t    mDataLocation;
     uint32_t    mMetaLocation;
- 
+
     enum {
         eLocationInitializedMask = 0x80000000,
-        
+
         eLocationSelectorMask    = 0x30000000,
         eLocationSelectorOffset  = 28,
-        
+
         eExtraBlocksMask         = 0x03000000,
         eExtraBlocksOffset       = 24,
-        
+
         eReservedMask            = 0x4C000000,
-        
+
         eBlockNumberMask         = 0x00FFFFFF,
 
         eFileSizeMask            = 0x00FFFF00,
         eFileSizeOffset          = 8,
         eFileGenerationMask      = 0x000000FF,
         eFileReservedMask        = 0x4F000000
-        
+
     };
 
 public:
@@ -118,14 +118,14 @@ public:
         :   mHashNumber(0), mEvictionRank(0), mDataLocation(0), mMetaLocation(0)
     {
     }
-    
+
     bool    ValidRecord()
     {
         if ((mDataLocation & eReservedMask) || (mMetaLocation & eReservedMask))
             return false;
         return true;
     }
-    
+
     // HashNumber accessors
     uint32_t  HashNumber() const                  { return mHashNumber; }
     void      SetHashNumber( uint32_t hashNumber) { mHashNumber = hashNumber; }
@@ -137,7 +137,7 @@ public:
     // DataLocation accessors
     bool      DataLocationInitialized() const { return 0 != (mDataLocation & eLocationInitializedMask); }
     void      ClearDataLocation()       { mDataLocation = 0; }
-    
+
     uint32_t  DataFile() const
     {
         return (uint32_t)(mDataLocation & eLocationSelectorMask) >> eLocationSelectorOffset;
@@ -147,7 +147,7 @@ public:
     {
         // clear everything
         mDataLocation = 0;
-        
+
         // set file index
         NS_ASSERTION( index < (kNumBlockFiles + 1), "invalid location index");
         NS_ASSERTION( index > 0,"invalid location index");
@@ -156,12 +156,12 @@ public:
         // set startBlock
         NS_ASSERTION(startBlock == (startBlock & eBlockNumberMask), "invalid block number");
         mDataLocation |= startBlock & eBlockNumberMask;
-        
+
         // set blockCount
         NS_ASSERTION( (blockCount>=1) && (blockCount<=4),"invalid block count");
         --blockCount;
         mDataLocation |= (blockCount << eExtraBlocksOffset) & eExtraBlocksMask;
-        
+
         mDataLocation |= eLocationInitializedMask;
     }
 
@@ -174,12 +174,12 @@ public:
     {
         return (mDataLocation & eBlockNumberMask);
     }
-    
+
     uint32_t   DataBlockSize() const
     {
         return BLOCK_SIZE_FOR_INDEX(DataFile());
     }
-    
+
     uint32_t   DataFileSize() const  { return (mDataLocation & eFileSizeMask) >> eFileSizeOffset; }
     void       SetDataFileSize(uint32_t  size)
     {
@@ -203,9 +203,9 @@ public:
 
     // MetaLocation accessors
     bool      MetaLocationInitialized() const { return 0 != (mMetaLocation & eLocationInitializedMask); }
-    void      ClearMetaLocation()             { mMetaLocation = 0; }   
+    void      ClearMetaLocation()             { mMetaLocation = 0; }
     uint32_t  MetaLocation() const            { return mMetaLocation; }
-    
+
     uint32_t  MetaFile() const
     {
         return (uint32_t)(mMetaLocation & eLocationSelectorMask) >> eLocationSelectorOffset;
@@ -215,7 +215,7 @@ public:
     {
         // clear everything
         mMetaLocation = 0;
-        
+
         // set file index
         NS_ASSERTION( index < (kNumBlockFiles + 1), "invalid location index");
         NS_ASSERTION( index > 0, "invalid location index");
@@ -224,12 +224,12 @@ public:
         // set startBlock
         NS_ASSERTION(startBlock == (startBlock & eBlockNumberMask), "invalid block number");
         mMetaLocation |= startBlock & eBlockNumberMask;
-        
+
         // set blockCount
         NS_ASSERTION( (blockCount>=1) && (blockCount<=4),"invalid block count");
         --blockCount;
         mMetaLocation |= (blockCount << eExtraBlocksOffset) & eExtraBlocksMask;
-        
+
         mMetaLocation |= eLocationInitializedMask;
     }
 
@@ -247,7 +247,7 @@ public:
     {
         return BLOCK_SIZE_FOR_INDEX(MetaFile());
     }
-    
+
     uint32_t   MetaFileSize() const  { return (mMetaLocation & eFileSizeMask) >> eFileSizeOffset; }
     void       SetMetaFileSize(uint32_t  size)
     {
@@ -273,11 +273,11 @@ public:
         if ((mDataLocation & eLocationInitializedMask)  &&
             (DataFile() == 0))
             return DataFileGeneration();
-            
+
         if ((mMetaLocation & eLocationInitializedMask)  &&
             (MetaFile() == 0))
             return MetaFileGeneration();
-        
+
         return 0;  // no generation
     }
 
@@ -290,7 +290,7 @@ public:
         mMetaLocation = htonl(mMetaLocation);
     }
 #endif
-    
+
 #if defined(IS_LITTLE_ENDIAN)
     void        Unswap()
     {
@@ -332,7 +332,7 @@ struct nsDiskCacheHeader {
     int32_t     mRecordCount;                       // Number of records
     uint32_t    mEvictionRank[kBuckets];            // Highest EvictionRank of the bucket
     uint32_t    mBucketUsage[kBuckets];             // Number of used entries in the bucket
-  
+
     nsDiskCacheHeader()
         : mVersion(nsDiskCache::kCurrentVersion)
         , mDataSize(0)
@@ -356,7 +356,7 @@ struct nsDiskCacheHeader {
         }
 #endif
     }
-    
+
     void        Unswap()
     {
 #if defined(IS_LITTLE_ENDIAN)
@@ -382,7 +382,7 @@ struct nsDiskCacheHeader {
 class nsDiskCacheMap {
 public:
 
-     nsDiskCacheMap() : 
+     nsDiskCacheMap() :
         mCacheDirectory(nullptr),
         mMapFD(nullptr),
         mCleanFD(nullptr),
@@ -436,7 +436,7 @@ public:
                                            bool                meta,
                                            bool                createPath,
                                            nsIFile **          result);
-                                          
+
     nsresult    GetLocalFileForDiskCacheRecord( nsDiskCacheRecord *  record,
                                                 bool                 meta,
                                                 bool                 createPath,
@@ -447,11 +447,11 @@ public:
     nsDiskCacheEntry * ReadDiskCacheEntry( nsDiskCacheRecord *  record);
 
     nsresult    WriteDiskCacheEntry( nsDiskCacheBinding *  binding);
-    
+
     nsresult    ReadDataCacheBlocks(nsDiskCacheBinding * binding, char * buffer, uint32_t size);
     nsresult    WriteDataCacheBlocks(nsDiskCacheBinding * binding, char * buffer, uint32_t size);
     nsresult    DeleteStorage( nsDiskCacheRecord * record, bool metaData);
-    
+
     /**
      *  Statistical Operations
      */
@@ -460,14 +460,14 @@ public:
                 mHeader.mDataSize += delta;
                 mHeader.mIsDirty   = true;
              }
-             
+
     void     DecrementTotalSize( uint32_t  delta)
              {
                 NS_ASSERTION(mHeader.mDataSize >= delta, "disk cache size negative?");
-                mHeader.mDataSize  = mHeader.mDataSize > delta ? mHeader.mDataSize - delta : 0;               
+                mHeader.mDataSize  = mHeader.mDataSize > delta ? mHeader.mDataSize - delta : 0;
                 mHeader.mIsDirty   = true;
              }
-    
+
     inline void IncrementTotalSize( uint32_t  blocks, uint32_t blockSize)
              {
                 // Round up to nearest K
@@ -479,9 +479,9 @@ public:
                 // Round up to nearest K
                 DecrementTotalSize(((blocks*blockSize) + 0x03FF) >> 10);
              }
-                 
+
     uint32_t TotalSize()   { return mHeader.mDataSize; }
-    
+
     int32_t  EntryCount()  { return mHeader.mEntryCount; }
 
     size_t  SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf);
@@ -507,12 +507,12 @@ private:
     uint32_t    GetBitMapSizeForIndex( uint32_t index) const {
         return BITMAP_SIZE_FOR_INDEX(index);
     }
-    
-    // returns the bucket number    
+
+    // returns the bucket number
     uint32_t GetBucketIndex( uint32_t hashNumber) const {
         return (hashNumber & (kBuckets - 1));
     }
-    
+
     // Gets the size of the bucket (in number of records)
     uint32_t GetRecordsPerBucket() const {
         return mHeader.mRecordCount / kBuckets;
@@ -534,7 +534,7 @@ private:
 
     nsresult EnsureBuffer(uint32_t bufSize);
 
-    // The returned structure will point to the buffer owned by nsDiskCacheMap, 
+    // The returned structure will point to the buffer owned by nsDiskCacheMap,
     // so it must not be deleted by the caller.
     nsDiskCacheEntry *  CreateDiskCacheEntry(nsDiskCacheBinding *  binding,
                                              uint32_t * size);
@@ -556,7 +556,7 @@ private:
     // Timer which revalidates the cache
     static void RevalidateTimerCallback(nsITimer *aTimer, void *arg);
 
-/** 
+/**
  *  data members
  */
 private:

@@ -93,7 +93,7 @@ mozilla::ipc::IPCResult TestDataStructuresParent::RecvTest3(
         const IntDouble& i2,
         IntDouble* o1,
         IntDouble* o2)
-{   
+{
     test_assert(42 == i1.get_int(), "wrong value");
     test_assert(4.0 == i2.get_double(), "wrong value");
 
@@ -111,7 +111,7 @@ mozilla::ipc::IPCResult TestDataStructuresParent::RecvTest4(
     test_assert(1 == i1[0].get_int(), "wrong value");
     test_assert(2.0 == i1[1].get_double(), "wrong value");
     test_assert(3 == i1[2].get_int(), "wrong value");
-    test_assert(4.0 == i1[3].get_double(), "wrong value");    
+    test_assert(4.0 == i1[3].get_double(), "wrong value");
 
     *o1 = i1;
 
@@ -257,7 +257,7 @@ mozilla::ipc::IPCResult TestDataStructuresParent::RecvTest9(
 
     assert_arrays_equal(mKids, i3.get_ArrayOfPTestDataStructuresSubParent());
 
-    const InfallibleTArray<PTestDataStructuresSubParent*>& i4a = 
+    const InfallibleTArray<PTestDataStructuresSubParent*>& i4a =
         i4.get_ArrayOfActors()[0].get_ArrayOfPTestDataStructuresSubParent();
     assert_arrays_equal(mKids, i4a);
 
@@ -283,7 +283,7 @@ mozilla::ipc::IPCResult TestDataStructuresParent::RecvTest10(
 
     assert_arrays_equal(mKids, i1[2].get_ArrayOfPTestDataStructuresSubParent());
 
-    const InfallibleTArray<PTestDataStructuresSubParent*>& i4a = 
+    const InfallibleTArray<PTestDataStructuresSubParent*>& i4a =
         i1[3].get_ArrayOfActors()[0].get_ArrayOfPTestDataStructuresSubParent();
     assert_arrays_equal(mKids, i4a);
 
@@ -389,7 +389,7 @@ mozilla::ipc::IPCResult TestDataStructuresParent::RecvTest15(
     const Structs& is = i5.get_ArrayOfStructs()[0];
     test_assert(42 == is.i(), "wrong value");
     assert_arrays_equal(ai, is.ai());
-    assert_arrays_equal(mKids, is.apParent());   
+    assert_arrays_equal(mKids, is.apParent());
 
     const SActors& isa = is.aa()[0];
     test_assert(42 == isa.i(), "wrong value");
@@ -879,7 +879,7 @@ TestDataStructuresChild::Test15()
     const Structs& os = o5.get_ArrayOfStructs()[0];
     test_assert(42 == os.i(), "wrong value");
     assert_arrays_equal(ai, os.ai());
-    assert_arrays_equal(mKids, os.apChild());   
+    assert_arrays_equal(mKids, os.apChild());
 
     const SActors& osa = os.aa()[0];
     test_assert(42 == osa.i(), "wrong value");

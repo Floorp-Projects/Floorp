@@ -102,7 +102,7 @@ DocumentType::GetText()
   return nullptr;
 }
 
-NS_IMETHODIMP    
+NS_IMETHODIMP
 DocumentType::GetName(nsAString& aName)
 {
   aName = NodeName();

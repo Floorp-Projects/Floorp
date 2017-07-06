@@ -39,8 +39,8 @@ extern "C" {
  */
 #include <OMX_Core.h>
 
-/** Extensions to the standard IL errors. */ 
-typedef enum OMX_ERROREXTTYPE 
+/** Extensions to the standard IL errors. */
+typedef enum OMX_ERROREXTTYPE
 {
     OMX_ErrorInvalidMode = (OMX_S32) (OMX_ErrorKhronosExtensions + 0x00000001),
     OMX_ErrorExtMax = 0x7FFFFFFF

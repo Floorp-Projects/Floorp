@@ -36,7 +36,7 @@ public:
 
 static CacheIOTelemetry::size_type const kGranularity = 30;
 
-CacheIOTelemetry::size_type 
+CacheIOTelemetry::size_type
 CacheIOTelemetry::mMinLengthToReport[CacheIOThread::LAST_LEVEL] = {
   kGranularity, kGranularity, kGranularity, kGranularity,
   kGranularity, kGranularity, kGranularity, kGranularity

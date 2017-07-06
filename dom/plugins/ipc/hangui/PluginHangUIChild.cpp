@@ -205,7 +205,7 @@ PluginHangUIChild::ResizeButtons()
       needResizing = true;
     }
 
-    // Save the relevant info for the resize, if any. We do this even if 
+    // Save the relevant info for the resize, if any. We do this even if
     // needResizing is false because another button may trigger a resize later.
     winInfo.push_back(WinInfo(wnd, pt, curSize));
   }
@@ -222,7 +222,7 @@ PluginHangUIChild::ResizeButtons()
   }
   for (WinInfoVec::const_iterator itr = winInfo.begin();
        itr != winInfo.end(); ++itr) {
-    // deltaX accumulates the size changes so that each button's x coordinate 
+    // deltaX accumulates the size changes so that each button's x coordinate
     // can compensate for the width increases
     deltaX += idealSize.cx - itr->size.cx;
     hwp = DeferWindowPos(hwp, itr->hwnd, nullptr,

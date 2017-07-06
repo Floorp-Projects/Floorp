@@ -79,7 +79,7 @@ nsGfxRadioControlFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 
   if (!IsVisibleForPainting(aBuilder))
     return;
-  
+
   if (IsThemed())
     return; // The theme will paint the check, if any.
 
@@ -87,7 +87,7 @@ nsGfxRadioControlFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   GetCurrentCheckState(&checked); // Get check state from the content model
   if (!checked)
     return;
-    
+
   aLists.Content()->AppendNewToTop(new (aBuilder)
     nsDisplayGeneric(aBuilder, this, PaintCheckedRadioButton,
                      "CheckedRadioButton",

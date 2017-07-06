@@ -17,11 +17,11 @@ namespace mozilla {
 namespace scache {
 
 nsresult
-NewObjectInputStreamFromBuffer(UniquePtr<char[]> buffer, uint32_t len, 
+NewObjectInputStreamFromBuffer(UniquePtr<char[]> buffer, uint32_t len,
                                nsIObjectInputStream** stream);
 
 // We can't retrieve the wrapped stream from the objectOutputStream later,
-// so we return it here. We give callers in debug builds the option 
+// so we return it here. We give callers in debug builds the option
 // to wrap the outputstream in a debug stream, which will detect if
 // non-singleton objects are written out multiple times during a serialization.
 // This could cause them to be deserialized incorrectly (as multiple copies
@@ -35,7 +35,7 @@ NewObjectOutputWrappedStorageStream(nsIObjectOutputStream **wrapperStream,
 // allocated with 'new []'.  After calling this function, the caller would
 // typically call nsIStartupCache::PutBuffer with the returned buffer.
 nsresult
-NewBufferFromStorageStream(nsIStorageStream *storageStream, 
+NewBufferFromStorageStream(nsIStorageStream *storageStream,
                            UniquePtr<char[]>* buffer, uint32_t* len);
 
 nsresult

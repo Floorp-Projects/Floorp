@@ -756,7 +756,7 @@ public:
   static const KTableEntry kControlCharacterVisibilityKTable[];
   static const KTableEntry kCursorKTable[];
   static const KTableEntry kDirectionKTable[];
-  // Not const because we modify its entries when various 
+  // Not const because we modify its entries when various
   // "layout.css.*.enabled" prefs changes:
   static KTableEntry kDisplayKTable[];
   static const KTableEntry kElevationKTable[];

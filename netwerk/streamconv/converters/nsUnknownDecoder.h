@@ -84,7 +84,7 @@ protected:
   // precation thingy... who knows when we suddenly need to flip this
   // pref?
   bool AllowSniffing(nsIRequest* aRequest);
-  
+
   // Various sniffer functions.  Returning true means that a type
   // was determined; false means no luck.
   bool SniffForHTML(nsIRequest* aRequest);
@@ -110,10 +110,10 @@ protected:
    */
   struct nsSnifferEntry {
     typedef bool (nsUnknownDecoder::*TypeSniffFunc)(nsIRequest* aRequest);
-    
+
     const char* mBytes;
     uint32_t mByteLen;
-    
+
     // Exactly one of mMimeType and mContentTypeSniffer should be set non-null
     const char* mMimeType;
     TypeSniffFunc mContentTypeSniffer;

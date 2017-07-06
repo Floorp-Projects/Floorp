@@ -64,7 +64,7 @@ protected:
   @param pos (in): position of "@" (case 1) or first "." (case 2 and 3)
   @return Completed URL at success and empty string at failure
  */
-  void CompleteAbbreviatedURL(const char16_t * aInString, int32_t aInLength, 
+  void CompleteAbbreviatedURL(const char16_t * aInString, int32_t aInLength,
                               const uint32_t pos, nsString& aOutString);
 
 
@@ -106,7 +106,7 @@ private:
   Currently only changes "<", ">" and "&". All others stay as they are.<p>
   "Char" in function name to avoid side effects with nsString(ch)
   constructors.
-  @param ch (in) 
+  @param ch (in)
   @param aStringToAppendto (out) - the string to append the escaped
                                    string to.
   @param inAttribute (in) - will escape quotes, too (which is
@@ -210,7 +210,7 @@ private:
  *             Should be placed between the <a> and </a> tags.
  * @param replaceBefore(out), replaceAfter (out): see FindURL
  */
-  void CalculateURLBoundaries(const char16_t * aInString, int32_t aInStringLength, 
+  void CalculateURLBoundaries(const char16_t * aInString, int32_t aInStringLength,
      const uint32_t pos, const uint32_t whathasbeendone,
      const modetype check, const uint32_t start, const uint32_t end,
      nsString& txtURL, nsString& desc,
@@ -245,7 +245,7 @@ private:
 */
   bool StructPhraseHit(const char16_t * aInString, int32_t aInStringLength, bool col0,
      const char16_t* tagTXT,
-     int32_t aTagTxtLen, 
+     int32_t aTagTxtLen,
      const char* tagHTML, const char* attributeHTML,
      nsString& aOutputString, uint32_t& openTags);
 

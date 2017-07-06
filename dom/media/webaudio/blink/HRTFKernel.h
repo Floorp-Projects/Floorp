@@ -56,9 +56,9 @@ public:
 
     // Given two HRTFKernels, and an interpolation factor x: 0 -> 1, returns an interpolated HRTFKernel.
     static nsReturnRef<HRTFKernel> createInterpolatedKernel(HRTFKernel* kernel1, HRTFKernel* kernel2, float x);
-  
+
     FFTBlock* fftFrame() { return m_fftFrame.get(); }
-    
+
     size_t fftSize() const { return m_fftFrame->FFTSize(); }
     float frameDelay() const { return m_frameDelay; }
 
@@ -78,14 +78,14 @@ private:
 
     // Note: this is destructive on the passed in |impulseResponse|.
     HRTFKernel(float* impulseResponse, size_t fftSize, float sampleRate);
-    
+
     HRTFKernel(nsAutoPtr<FFTBlock> fftFrame, float frameDelay, float sampleRate)
         : m_fftFrame(fftFrame)
         , m_frameDelay(frameDelay)
         , m_sampleRate(sampleRate)
     {
     }
-    
+
     nsAutoPtr<FFTBlock> m_fftFrame;
     float m_frameDelay;
     float m_sampleRate;

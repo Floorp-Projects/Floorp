@@ -20,7 +20,7 @@ class nsAString;
 
 /**
  * The Name Space Manager tracks the association between a NameSpace
- * URI and the int32_t runtime id. Mappings between NameSpaces and 
+ * URI and the int32_t runtime id. Mappings between NameSpaces and
  * NameSpace prefixes are managed by nsINameSpaces.
  *
  * All NameSpace URIs are stored in a global table so that IDs are
@@ -80,5 +80,5 @@ private:
 
   static mozilla::StaticRefPtr<nsNameSpaceManager> sInstance;
 };
- 
+
 #endif // nsNameSpaceManager_h___

@@ -13,7 +13,7 @@
 
 //return confidence base on received data
 float CharDistributionAnalysis::GetConfidence(void)
-{ 
+{
   //if we didn't receive any character in our consideration range, or the
   // number of frequent characters is below the minimum threshold, return
   // negative answer

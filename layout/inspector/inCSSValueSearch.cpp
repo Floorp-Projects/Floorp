@@ -52,35 +52,35 @@ NS_IMPL_ISUPPORTS(inCSSValueSearch, inISearchProcess, inICSSValueSearch)
 ///////////////////////////////////////////////////////////////////////////////
 // inISearchProcess
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 inCSSValueSearch::GetIsActive(bool *aIsActive)
 {
   *aIsActive = mIsActive;
   return NS_OK;
 }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 inCSSValueSearch::GetResultCount(int32_t *aResultCount)
 {
   *aResultCount = mResultCount;
   return NS_OK;
 }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 inCSSValueSearch::GetHoldResults(bool *aHoldResults)
 {
   *aHoldResults = mHoldResults;
   return NS_OK;
 }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 inCSSValueSearch::SetHoldResults(bool aHoldResults)
 {
   mHoldResults = aHoldResults;
   return NS_OK;
 }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 inCSSValueSearch::SearchSync()
 {
   InitSearch();
@@ -108,7 +108,7 @@ inCSSValueSearch::SearchSync()
   return NS_OK;
 }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 inCSSValueSearch::SearchAsync(inISearchObserver *aObserver)
 {
   InitSearch();
@@ -133,7 +133,7 @@ inCSSValueSearch::SearchStep(bool* _retval)
 }
 
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 inCSSValueSearch::GetStringResultAt(int32_t aIndex, nsAString& _retval)
 {
   if (mHoldResults) {
@@ -147,13 +147,13 @@ inCSSValueSearch::GetStringResultAt(int32_t aIndex, nsAString& _retval)
   return NS_OK;
 }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 inCSSValueSearch::GetIntResultAt(int32_t aIndex, int32_t *_retval)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 inCSSValueSearch::GetUIntResultAt(int32_t aIndex, uint32_t *_retval)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
@@ -162,7 +162,7 @@ inCSSValueSearch::GetUIntResultAt(int32_t aIndex, uint32_t *_retval)
 ///////////////////////////////////////////////////////////////////////////////
 // inICSSValueSearch
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 inCSSValueSearch::GetDocument(nsIDOMDocument** aDocument)
 {
   *aDocument = mDocument;
@@ -170,14 +170,14 @@ inCSSValueSearch::GetDocument(nsIDOMDocument** aDocument)
   return NS_OK;
 }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 inCSSValueSearch::SetDocument(nsIDOMDocument* aDocument)
 {
   mDocument = aDocument;
   return NS_OK;
 }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 inCSSValueSearch::GetBaseURL(char16_t** aBaseURL)
 {
   if (!(*aBaseURL = ToNewUnicode(mBaseURL)))
@@ -185,28 +185,28 @@ inCSSValueSearch::GetBaseURL(char16_t** aBaseURL)
   return NS_OK;
 }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 inCSSValueSearch::SetBaseURL(const char16_t* aBaseURL)
 {
   mBaseURL.Assign(aBaseURL);
   return NS_OK;
 }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 inCSSValueSearch::GetReturnRelativeURLs(bool* aReturnRelativeURLs)
 {
   *aReturnRelativeURLs = mReturnRelativeURLs;
   return NS_OK;
 }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 inCSSValueSearch::SetReturnRelativeURLs(bool aReturnRelativeURLs)
 {
   mReturnRelativeURLs = aReturnRelativeURLs;
   return NS_OK;
 }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 inCSSValueSearch::GetNormalizeChromeURLs(bool *aNormalizeChromeURLs)
 {
   *aNormalizeChromeURLs = mNormalizeChromeURLs;
@@ -220,7 +220,7 @@ inCSSValueSearch::SetNormalizeChromeURLs(bool aNormalizeChromeURLs)
   return NS_OK;
 }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 inCSSValueSearch::AddPropertyCriteria(const char16_t *aPropName)
 {
   nsCSSPropertyID prop =
@@ -231,7 +231,7 @@ inCSSValueSearch::AddPropertyCriteria(const char16_t *aPropName)
   return NS_OK;
 }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 inCSSValueSearch::GetTextCriteria(char16_t** aTextCriteria)
 {
   if (!(*aTextCriteria = ToNewUnicode(mTextCriteria)))
@@ -239,7 +239,7 @@ inCSSValueSearch::GetTextCriteria(char16_t** aTextCriteria)
   return NS_OK;
 }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 inCSSValueSearch::SetTextCriteria(const char16_t* aTextCriteria)
 {
   mTextCriteria.Assign(aTextCriteria);
@@ -255,7 +255,7 @@ inCSSValueSearch::InitSearch()
   if (mHoldResults) {
     mResults = new nsTArray<nsAutoString *>();
   }
-  
+
   mResultCount = 0;
 
   return NS_OK;
@@ -336,7 +336,7 @@ inCSSValueSearch::SearchStyleRule(nsIDOMCSSStyleRule* aStyleRule, nsIURI* aBaseU
   nsCOMPtr<nsIDOMCSSStyleDeclaration> decl;
   nsresult rv = aStyleRule->GetStyle(getter_AddRefs(decl));
   NS_ENSURE_SUCCESS(rv, rv);
-  
+
   uint32_t length;
   decl->GetLength(&length);
   nsAutoString property, value;
@@ -387,7 +387,7 @@ inCSSValueSearch::EqualizeURL(nsAutoString* aURL)
       while (i < len) {
         if (src[i] == '/') {
           milestone += 1;
-        } 
+        }
         if (milestone != 1) {
           result[i-9-s] = src[i];
         } else {

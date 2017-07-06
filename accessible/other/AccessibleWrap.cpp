@@ -8,7 +8,7 @@
 using namespace mozilla::a11y;
 
 //-----------------------------------------------------
-// construction 
+// construction
 //-----------------------------------------------------
 AccessibleWrap::
   AccessibleWrap(nsIContent* aContent, DocAccessible* aDoc) :

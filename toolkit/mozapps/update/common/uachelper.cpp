@@ -8,16 +8,16 @@
 #include "updatecommon.h"
 
 // See the MSDN documentation with title: Privilege Constants
-// At the time of this writing, this documentation is located at: 
+// At the time of this writing, this documentation is located at:
 // http://msdn.microsoft.com/en-us/library/windows/desktop/bb530716%28v=vs.85%29.aspx
-LPCTSTR UACHelper::PrivsToDisable[] = { 
+LPCTSTR UACHelper::PrivsToDisable[] = {
   SE_ASSIGNPRIMARYTOKEN_NAME,
   SE_AUDIT_NAME,
   SE_BACKUP_NAME,
-  // CreateProcess will succeed but the app will fail to launch on some WinXP 
+  // CreateProcess will succeed but the app will fail to launch on some WinXP
   // machines if SE_CHANGE_NOTIFY_NAME is disabled.  In particular this happens
   // for limited user accounts on those machines.  The define is kept here as a
-  // reminder that it should never be re-added.  
+  // reminder that it should never be re-added.
   // This permission is for directory watching but also from MSDN: "This
   // privilege also causes the system to skip all traversal access checks."
   // SE_CHANGE_NOTIFY_NAME,
@@ -66,7 +66,7 @@ UACHelper::OpenUserToken(DWORD sessionID)
 {
   HMODULE module = LoadLibraryW(L"wtsapi32.dll");
   HANDLE token = nullptr;
-  decltype(WTSQueryUserToken)* wtsQueryUserToken = 
+  decltype(WTSQueryUserToken)* wtsQueryUserToken =
     (decltype(WTSQueryUserToken)*) GetProcAddress(module, "WTSQueryUserToken");
   if (wtsQueryUserToken) {
     wtsQueryUserToken(sessionID, &token);
@@ -92,7 +92,7 @@ UACHelper::OpenLinkedToken(HANDLE token)
   TOKEN_LINKED_TOKEN tlt;
   HANDLE hNewLinkedToken = nullptr;
   DWORD len;
-  if (GetTokenInformation(token, (TOKEN_INFORMATION_CLASS)TokenLinkedToken, 
+  if (GetTokenInformation(token, (TOKEN_INFORMATION_CLASS)TokenLinkedToken,
                           &tlt, sizeof(TOKEN_LINKED_TOKEN), &len)) {
     token = tlt.LinkedToken;
     hNewLinkedToken = token;
@@ -109,12 +109,12 @@ UACHelper::OpenLinkedToken(HANDLE token)
  * @param  enable Whether to enable or disable it
  * @return TRUE if the token was adjusted to the specified value.
  */
-BOOL 
+BOOL
 UACHelper::SetPrivilege(HANDLE token, LPCTSTR priv, BOOL enable)
 {
   LUID luidOfPriv;
   if (!LookupPrivilegeValue(nullptr, priv, &luidOfPriv)) {
-    return FALSE; 
+    return FALSE;
   }
 
   TOKEN_PRIVILEGES tokenPriv;
@@ -125,25 +125,25 @@ UACHelper::SetPrivilege(HANDLE token, LPCTSTR priv, BOOL enable)
   SetLastError(ERROR_SUCCESS);
   if (!AdjustTokenPrivileges(token, false, &tokenPriv,
                              sizeof(tokenPriv), nullptr, nullptr)) {
-    return FALSE; 
-  } 
+    return FALSE;
+  }
 
   return GetLastError() == ERROR_SUCCESS;
 }
 
 /**
- * For each privilege that is specified, an attempt will be made to 
- * drop the privilege. 
- * 
- * @param  token         The token to adjust the privilege on. 
+ * For each privilege that is specified, an attempt will be made to
+ * drop the privilege.
+ *
+ * @param  token         The token to adjust the privilege on.
  *         Pass nullptr for current token.
  * @param  unneededPrivs An array of unneeded privileges.
  * @param  count         The size of the array
  * @return TRUE if there were no errors
  */
 BOOL
-UACHelper::DisableUnneededPrivileges(HANDLE token, 
-                                     LPCTSTR *unneededPrivs, 
+UACHelper::DisableUnneededPrivileges(HANDLE token,
+                                     LPCTSTR *unneededPrivs,
                                      size_t count)
 {
   HANDLE obtainedToken = nullptr;
@@ -180,8 +180,8 @@ UACHelper::DisableUnneededPrivileges(HANDLE token,
  * Disables privileges for the specified token.
  * The privileges to disable are in PrivsToDisable.
  * In the future there could be new privs and we are not sure if we should
- * explicitly disable these or not. 
- * 
+ * explicitly disable these or not.
+ *
  * @param  token The token to drop the privilege on.
  *         Pass nullptr for current token.
  * @return TRUE if there were no errors
@@ -189,10 +189,10 @@ UACHelper::DisableUnneededPrivileges(HANDLE token,
 BOOL
 UACHelper::DisablePrivileges(HANDLE token)
 {
-  static const size_t PrivsToDisableSize = 
+  static const size_t PrivsToDisableSize =
     sizeof(UACHelper::PrivsToDisable) / sizeof(UACHelper::PrivsToDisable[0]);
 
-  return DisableUnneededPrivileges(token, UACHelper::PrivsToDisable, 
+  return DisableUnneededPrivileges(token, UACHelper::PrivsToDisable,
                                    PrivsToDisableSize);
 }
 

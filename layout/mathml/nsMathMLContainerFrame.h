@@ -15,15 +15,15 @@
 #include "mozilla/Likely.h"
 
 /*
- * Base class for MathML container frames. It acts like an inferred 
- * mrow. By default, this frame uses its Reflow() method to lay its 
+ * Base class for MathML container frames. It acts like an inferred
+ * mrow. By default, this frame uses its Reflow() method to lay its
  * children horizontally and ensure that their baselines are aligned.
  * The Reflow() method relies upon Place() to position children.
  * By overloading Place() in derived classes, it is therefore possible
  * to position children in various customized ways.
  */
 
-// Options for the preferred size at which to stretch our stretchy children 
+// Options for the preferred size at which to stretch our stretchy children
 #define STRETCH_CONSIDER_ACTUAL_SIZE    0x00000001 // just use our current size
 #define STRETCH_CONSIDER_EMBELLISHMENTS 0x00000002 // size calculations include embellishments
 
@@ -138,7 +138,7 @@ public:
   //    2b. If the automatic data to update affects us in some way, we ask our parent
   //        to re-layout its children using ReLayoutChildren(mParent);
   //        Therefore, there is an overhead here in that our siblings are re-laid
-  //        too (e.g., this happens with <munder>, <mover>, <munderover>). 
+  //        too (e.g., this happens with <munder>, <mover>, <munderover>).
   virtual nsresult
   AttributeChanged(int32_t         aNameSpaceID,
                    nsIAtom*        aAttribute,
@@ -153,7 +153,7 @@ public:
   }
 
   // --------------------------------------------------------------------------
-  // Additional methods 
+  // Additional methods
 
 protected:
   /* Place :
@@ -227,7 +227,7 @@ public:
   nsresult
   ReflowError(DrawTarget* aDrawTarget, ReflowOutput& aDesiredSize);
   /*
-   * Helper to call ReportErrorToConsole for parse errors involving 
+   * Helper to call ReportErrorToConsole for parse errors involving
    * attribute/value pairs.
    * @param aAttribute The attribute for which the parse error occured.
    * @param aValue The value for which the parse error occured.

@@ -9,7 +9,7 @@
 
 #include "nsCOMPtr.h"
 
-#include "nsILayoutRegressionTester.h"  
+#include "nsILayoutRegressionTester.h"
 #include "nsILayoutDebugger.h"
 
 //*****************************************************************************

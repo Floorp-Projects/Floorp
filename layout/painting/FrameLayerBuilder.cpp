@@ -3898,7 +3898,7 @@ ContainerState::SetupMaskLayerForCSSMask(Layer* aLayer,
   maskLayer->SetBaseTransform(matrix);
 
   nsPoint maskLayerOffset = aMaskItem->ToReferenceFrame() - bounds.TopLeft();
-    
+
   CSSMaskLayerUserData newUserData(aMaskItem->Frame(), itemRect, maskLayerOffset);
   nsRect dirtyRect;
   if (!aMaskItem->IsInvalid(dirtyRect) && *oldUserData == newUserData) {

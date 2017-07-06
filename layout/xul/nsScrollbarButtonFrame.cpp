@@ -45,7 +45,7 @@ nsresult
 nsScrollbarButtonFrame::HandleEvent(nsPresContext* aPresContext,
                                     WidgetGUIEvent* aEvent,
                                     nsEventStatus* aEventStatus)
-{  
+{
   NS_ENSURE_ARG_POINTER(aEventStatus);
 
   // If a web page calls event.preventDefault() we still want to
@@ -113,7 +113,7 @@ nsScrollbarButtonFrame::HandleButtonPress(nsPresContext* aPresContext,
 
   if (scrollbar == nullptr)
     return false;
- 
+
   static nsIContent::AttrValuesArray strings[] = { &nsGkAtoms::increment,
                                                    &nsGkAtoms::decrement,
                                                    nullptr };
@@ -187,7 +187,7 @@ nsScrollbarButtonFrame::HandleButtonPress(nsPresContext* aPresContext,
   return true;
 }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsScrollbarButtonFrame::HandleRelease(nsPresContext* aPresContext,
                                       WidgetGUIEvent* aEvent,
                                       nsEventStatus* aEventStatus)
@@ -257,7 +257,7 @@ nsScrollbarButtonFrame::GetChildWithTag(nsIAtom* atom, nsIFrame* start,
 
      // recursive search the child
      GetChildWithTag(atom, childFrame, result);
-     if (result != nullptr) 
+     if (result != nullptr)
        return NS_OK;
   }
 

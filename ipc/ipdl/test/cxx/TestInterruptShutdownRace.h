@@ -33,7 +33,7 @@ protected:
     virtual void ActorDestroy(ActorDestroyReason why) override
     {
         if (AbnormalShutdown != why)
-            fail("unexpected destruction!");  
+            fail("unexpected destruction!");
     }
 };
 

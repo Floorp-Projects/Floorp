@@ -206,7 +206,7 @@ public:
   }
 
 private:
-  NodeInfo() = delete; 
+  NodeInfo() = delete;
   NodeInfo(const NodeInfo& aOther) = delete;
 
   // NodeInfo is only constructed by nsNodeInfoManager which is a friend class.

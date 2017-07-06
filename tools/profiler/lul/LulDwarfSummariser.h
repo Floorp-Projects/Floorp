@@ -32,7 +32,7 @@ public:
 
   // Send output to the logging sink, for debugging.
   virtual void Log(const char* str) { mLog(str); }
-  
+
 private:
   // The SecMap in which we park the finished summaries (RuleSets) and
   // also any PfxInstrs derived from Dwarf expressions.

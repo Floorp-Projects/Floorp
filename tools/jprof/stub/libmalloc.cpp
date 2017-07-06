@@ -311,7 +311,7 @@ public:
             memcpy(buffer,data,size);
             tail = &(((unsigned char *)buffer)[size]);
         }
-            
+
         used++;
         DUMB_UNLOCK();
 
@@ -385,7 +385,7 @@ JprofBufferDump()
     JprofBuffer->lock();
 #if DEBUG_CIRCULAR
     fprintf(stderr,"dumping JP_CIRCULAR buffer, %d of %d bytes\n",
-            JprofBuffer->tail > JprofBuffer->head ? 
+            JprofBuffer->tail > JprofBuffer->head ?
               JprofBuffer->tail - JprofBuffer->head :
               JprofBuffer->buffer_size + JprofBuffer->tail - JprofBuffer->head,
             JprofBuffer->buffer_size);
@@ -499,7 +499,7 @@ static int enableRTCSignals(bool enable)
         return 0;
     }
     enabled = enable;
-    
+
     int flags = fcntl(rtcFD, F_GETFL);
     if (flags < 0) {
         perror("JPROF_RTC setup: fcntl(/dev/rtc, F_GETFL)");
@@ -517,7 +517,7 @@ static int enableRTCSignals(bool enable)
             perror("JPROF_RTC setup: fcntl(/dev/rtc, F_SETFL, flags | FASYNC)");
         } else {
             perror("JPROF_RTC setup: fcntl(/dev/rtc, F_SETFL, flags & ~FASYNC)");
-        }            
+        }
         return 0;
     }
 
@@ -673,7 +673,7 @@ NS_EXPORT_(void) setupProfilingStuff(void)
 #else
                 fputs("JP_RTC_HZ found, but RTC profiling only supported on "
                       "Linux!\n", stderr);
-                  
+
 #endif
             }
             const char *f = strstr(tst,"JP_FILENAME=");
@@ -761,7 +761,7 @@ NS_EXPORT_(void) setupProfilingStuff(void)
                     printf("Jprof: Initialized signal handler and set "
                            "timer for %lu %s, %d s "
                            "initial delay\n",
-                           rtcHz ? rtcHz : timerMilliSec, 
+                           rtcHz ? rtcHz : timerMilliSec,
                            rtcHz ? "Hz" : "ms",
                            firstDelay);
 

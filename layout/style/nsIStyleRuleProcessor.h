@@ -37,8 +37,8 @@ class nsPresContext;
 
 /* The style rule processor interface is a mechanism to separate the matching
  * of style rules from style sheet instances.
- * Simple style sheets can and will act as their own processor. 
- * Sheets where rule ordering interlaces between multiple sheets, will need to 
+ * Simple style sheets can and will act as their own processor.
+ * Sheets where rule ordering interlaces between multiple sheets, will need to
  * share a single rule processor between them (CSS sheets do this for cascading order)
  *
  * @see nsIStyleRule (for significantly more detailed comments)

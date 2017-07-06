@@ -110,9 +110,9 @@ static nsresult
 NewXMLFragmentContentSinkHelper(nsIFragmentContentSink** aResult)
 {
   nsXMLFragmentContentSink* it = new nsXMLFragmentContentSink();
-  
+
   NS_ADDREF(*aResult = it);
-  
+
   return NS_OK;
 }
 
@@ -147,7 +147,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsXMLFragmentContentSink,
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mRoot)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsXMLFragmentContentSink::WillBuildModel(nsDTDMode aDTDMode)
 {
   if (mRoot) {
@@ -159,11 +159,11 @@ nsXMLFragmentContentSink::WillBuildModel(nsDTDMode aDTDMode)
   NS_ASSERTION(mTargetDocument, "Need a document!");
 
   mRoot = new DocumentFragment(mNodeInfoManager);
-  
+
   return NS_OK;
 }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsXMLFragmentContentSink::DidBuildModel(bool aTerminated)
 {
   // Drop our reference to the parser to get rid of a circular
@@ -173,7 +173,7 @@ nsXMLFragmentContentSink::DidBuildModel(bool aTerminated)
   return NS_OK;
 }
 
-void 
+void
 nsXMLFragmentContentSink::SetDocumentCharset(
   NotNull<const Encoding*> aEncoding)
 {
@@ -246,9 +246,9 @@ nsXMLFragmentContentSink::MaybeStartLayout(bool aIgnorePendingSheets)
 ////////////////////////////////////////////////////////////////////////
 
 NS_IMETHODIMP
-nsXMLFragmentContentSink::HandleDoctypeDecl(const nsAString & aSubset, 
-                                            const nsAString & aName, 
-                                            const nsAString & aSystemId, 
+nsXMLFragmentContentSink::HandleDoctypeDecl(const nsAString & aSubset,
+                                            const nsAString & aName,
+                                            const nsAString & aSystemId,
                                             const nsAString & aPublicId,
                                             nsISupports* aCatalogData)
 {
@@ -258,7 +258,7 @@ nsXMLFragmentContentSink::HandleDoctypeDecl(const nsAString & aSubset,
 }
 
 NS_IMETHODIMP
-nsXMLFragmentContentSink::HandleProcessingInstruction(const char16_t *aTarget, 
+nsXMLFragmentContentSink::HandleProcessingInstruction(const char16_t *aTarget,
                                                       const char16_t *aData)
 {
   FlushText();
@@ -283,7 +283,7 @@ nsXMLFragmentContentSink::HandleXMLDeclaration(const char16_t *aVersion,
 }
 
 NS_IMETHODIMP
-nsXMLFragmentContentSink::ReportError(const char16_t* aErrorText, 
+nsXMLFragmentContentSink::ReportError(const char16_t* aErrorText,
                                       const char16_t* aSourceText,
                                       nsIScriptError *aError,
                                       bool *_retval)
@@ -323,7 +323,7 @@ nsXMLFragmentContentSink::ReportError(const char16_t* aErrorText,
   // destructor, so don't mess with it.
   mTextLength = 0;
 
-  return NS_OK; 
+  return NS_OK;
 }
 
 nsresult
@@ -353,7 +353,7 @@ nsXMLFragmentContentSink::StartLayout()
 
 ////////////////////////////////////////////////////////////////////////
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsXMLFragmentContentSink::FinishFragmentParsing(nsIDOMDocumentFragment** aFragment)
 {
   *aFragment = nullptr;

@@ -22,7 +22,7 @@ class TabChild;
 # define NECKO_ERRORS_ARE_FATAL_DEFAULT true
 #else
 # define NECKO_ERRORS_ARE_FATAL_DEFAULT false
-#endif 
+#endif
 
 // TODO: Eventually remove NECKO_MAYBE_ABORT and DROP_DEAD (bug 575494).
 // Still useful for catching listener interfaces we don't yet support across
@@ -83,8 +83,8 @@ class TabChild;
 namespace mozilla {
 namespace net {
 
-inline bool 
-IsNeckoChild() 
+inline bool
+IsNeckoChild()
 {
   static bool didCheck = false;
   static bool amChild = false;

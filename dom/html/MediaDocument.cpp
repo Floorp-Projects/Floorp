@@ -99,8 +99,8 @@ MediaDocumentStreamListener::OnDataAvailable(nsIRequest* request,
   return NS_OK;
 }
 
-// default format names for MediaDocument. 
-const char* const MediaDocument::sFormatNames[4] = 
+// default format names for MediaDocument.
+const char* const MediaDocument::sFormatNames[4] =
 {
   "MediaTitleWithNoInfo",    // eWithNoInfo
   "MediaTitleWithFile",      // eWithFile
@@ -152,24 +152,24 @@ MediaDocument::StartDocumentLoad(const char*         aCommand,
     return rv;
   }
 
-  // We try to set the charset of the current document to that of the 
-  // 'genuine' (as opposed to an intervening 'chrome') parent document 
+  // We try to set the charset of the current document to that of the
+  // 'genuine' (as opposed to an intervening 'chrome') parent document
   // that may be in a different window/tab. Even if we fail here,
-  // we just return NS_OK because another attempt is made in 
-  // |UpdateTitleAndCharset| and the worst thing possible is a mangled 
+  // we just return NS_OK because another attempt is made in
+  // |UpdateTitleAndCharset| and the worst thing possible is a mangled
   // filename in the titlebar and the file picker.
 
   // Note that we
-  // exclude UTF-8 as 'invalid' because UTF-8 is likely to be the charset 
-  // of a chrome document that has nothing to do with the actual content 
-  // whose charset we want to know. Even if "the actual content" is indeed 
-  // in UTF-8, we don't lose anything because the default empty value is 
-  // considered synonymous with UTF-8. 
-    
+  // exclude UTF-8 as 'invalid' because UTF-8 is likely to be the charset
+  // of a chrome document that has nothing to do with the actual content
+  // whose charset we want to know. Even if "the actual content" is indeed
+  // in UTF-8, we don't lose anything because the default empty value is
+  // considered synonymous with UTF-8.
+
   nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(aContainer));
 
   // not being able to set the charset is not critical.
-  NS_ENSURE_TRUE(docShell, NS_OK); 
+  NS_ENSURE_TRUE(docShell, NS_OK);
 
   const Encoding* encoding;
   int32_t source;
@@ -293,13 +293,13 @@ MediaDocument::GetFileName(nsAString& aResult, nsIChannel* aChannel)
   nsAutoCString docCharset;
   // Now that the charset is set in |StartDocumentLoad| to the charset of
   // the document viewer instead of a bogus value ("windows-1252" set in
-  // |nsDocument|'s ctor), the priority is given to the current charset. 
-  // This is necessary to deal with a media document being opened in a new 
-  // window or a new tab, in which case |originCharset| of |nsIURI| is not 
+  // |nsDocument|'s ctor), the priority is given to the current charset.
+  // This is necessary to deal with a media document being opened in a new
+  // window or a new tab, in which case |originCharset| of |nsIURI| is not
   // reliable.
-  if (mCharacterSetSource != kCharsetUninitialized) {  
+  if (mCharacterSetSource != kCharsetUninitialized) {
     mCharacterSet->Name(docCharset);
-  } else {  
+  } else {
     // resort to |originCharset|
     url->GetOriginCharset(docCharset);
     auto encoding = Encoding::ForLabelNoReplacement(docCharset);
@@ -309,7 +309,7 @@ MediaDocument::GetFileName(nsAString& aResult, nsIChannel* aChannel)
   }
 
   nsresult rv;
-  nsCOMPtr<nsITextToSubURI> textToSubURI = 
+  nsCOMPtr<nsITextToSubURI> textToSubURI =
     do_GetService(NS_ITEXTTOSUBURI_CONTRACTID, &rv);
   if (NS_SUCCEEDED(rv)) {
     // UnEscapeURIForUI always succeeds
@@ -330,7 +330,7 @@ MediaDocument::LinkStylesheet(const nsAString& aStylesheet)
   RefPtr<nsGenericHTMLElement> link = NS_NewHTMLLinkElement(nodeInfo.forget());
   NS_ENSURE_TRUE(link, NS_ERROR_OUT_OF_MEMORY);
 
-  link->SetAttr(kNameSpaceID_None, nsGkAtoms::rel, 
+  link->SetAttr(kNameSpaceID_None, nsGkAtoms::rel,
                 NS_LITERAL_STRING("stylesheet"), true);
 
   link->SetAttr(kNameSpaceID_None, nsGkAtoms::href, aStylesheet, true);
@@ -359,7 +359,7 @@ MediaDocument::LinkScript(const nsAString& aScript)
   return head->AppendChildTo(script, false);
 }
 
-void 
+void
 MediaDocument::UpdateTitleAndCharset(const nsACString& aTypeStr,
                                      nsIChannel* aChannel,
                                      const char* const* aFormatNames,
@@ -381,20 +381,20 @@ MediaDocument::UpdateTitleAndCharset(const nsACString& aTypeStr,
       heightStr.AppendInt(aHeight);
       // If we got a filename, display it
       if (!fileStr.IsEmpty()) {
-        const char16_t *formatStrings[4]  = {fileStr.get(), typeStr.get(), 
+        const char16_t *formatStrings[4]  = {fileStr.get(), typeStr.get(),
           widthStr.get(), heightStr.get()};
         NS_ConvertASCIItoUTF16 fmtName(aFormatNames[eWithDimAndFile]);
         mStringBundle->FormatStringFromName(fmtName.get(), formatStrings, 4,
                                             getter_Copies(title));
-      } 
+      }
       else {
-        const char16_t *formatStrings[3]  = {typeStr.get(), widthStr.get(), 
+        const char16_t *formatStrings[3]  = {typeStr.get(), widthStr.get(),
           heightStr.get()};
         NS_ConvertASCIItoUTF16 fmtName(aFormatNames[eWithDim]);
         mStringBundle->FormatStringFromName(fmtName.get(), formatStrings, 3,
                                             getter_Copies(title));
       }
-    } 
+    }
     else {
     // If we got a filename, display it
       if (!fileStr.IsEmpty()) {
@@ -410,7 +410,7 @@ MediaDocument::UpdateTitleAndCharset(const nsACString& aTypeStr,
                                             getter_Copies(title));
       }
     }
-  } 
+  }
 
   // set it on the document
   if (aStatus.IsEmpty()) {
@@ -426,14 +426,14 @@ MediaDocument::UpdateTitleAndCharset(const nsACString& aTypeStr,
   }
 }
 
-void 
+void
 MediaDocument::SetScriptGlobalObject(nsIScriptGlobalObject* aGlobalObject)
 {
     nsHTMLDocument::SetScriptGlobalObject(aGlobalObject);
     if (!mDocumentElementInserted && aGlobalObject) {
         mDocumentElementInserted = true;
         nsContentUtils::AddScriptRunner(
-            new nsDocElementCreatedNotificationRunner(this));        
+            new nsDocElementCreatedNotificationRunner(this));
     }
 }
 

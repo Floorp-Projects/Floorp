@@ -1,6 +1,6 @@
 /* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 
-/* This file is modified from JPNIC's mDNKit, it is under both MPL and 
+/* This file is modified from JPNIC's mDNKit, it is under both MPL and
  * JPNIC's license.
  */
 
@@ -11,33 +11,33 @@
 /*
  * Copyright (c) 2000,2002 Japan Network Information Center.
  * All rights reserved.
- *  
+ *
  * By using this file, you agree to the terms and conditions set forth bellow.
- * 
- * 			LICENSE TERMS AND CONDITIONS 
- * 
+ *
+ * 			LICENSE TERMS AND CONDITIONS
+ *
  * The following License Terms and Conditions apply, unless a different
  * license is obtained from Japan Network Information Center ("JPNIC"),
  * a Japanese association, Kokusai-Kougyou-Kanda Bldg 6F, 2-3-4 Uchi-Kanda,
  * Chiyoda-ku, Tokyo 101-0047, Japan.
- * 
+ *
  * 1. Use, Modification and Redistribution (including distribution of any
  *    modified or derived work) in source and/or binary forms is permitted
  *    under this License Terms and Conditions.
- * 
+ *
  * 2. Redistribution of source code must retain the copyright notices as they
  *    appear in each source code file, this License Terms and Conditions.
- * 
+ *
  * 3. Redistribution in binary form must reproduce the Copyright Notice,
  *    this License Terms and Conditions, in the documentation and/or other
  *    materials provided with the distribution.  For the purposes of binary
  *    distribution the "Copyright Notice" refers to the following language:
  *    "Copyright (c) 2000-2002 Japan Network Information Center.  All rights reserved."
- * 
+ *
  * 4. The name of JPNIC may not be used to endorse or promote products
  *    derived from this Software without specific prior written approval of
  *    JPNIC.
- * 
+ *
  * 5. Disclaimer/Limitation of Liability: THIS SOFTWARE IS PROVIDED BY JPNIC
  *    "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
  *    LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
@@ -76,7 +76,7 @@ nsUnicodeNormalizer::~nsUnicodeNormalizer()
 
 /*
  * Some constants for Hangul decomposition/composition.
- * These things were taken from unicode book. 
+ * These things were taken from unicode book.
  */
 #define SBase		0xac00
 #define LBase		0x1100
@@ -184,7 +184,7 @@ mdn__unicode_decompose(int32_t compat, uint32_t *v, size_t vlen,
 	seqidx = decompose_char(c, &seq);
 	if (seqidx == 0 || (compat == 0 && (seqidx & DECOMP_COMPAT) != 0))
 		return (NS_SUCCESS_UNORM_NOTFOUND);
-	
+
 	/*
 	 * Copy the decomposed sequence.  The end of the sequence are
 	 * marked with END_BIT.
@@ -211,7 +211,7 @@ mdn__unicode_decompose(int32_t compat, uint32_t *v, size_t vlen,
 		}
 
 	} while ((*seq++ & END_BIT) == 0);
-	
+
 	*decomp_lenp = v - vorg;
 
 	return (NS_OK);
@@ -340,8 +340,8 @@ mdn_normalize(bool do_composition, bool compat,
 	workbuf_init(&wb);
 
 	nsAString::const_iterator start, end;
-	aSrcStr.BeginReading(start); 
-	aSrcStr.EndReading(end); 
+	aSrcStr.BeginReading(start);
+	aSrcStr.EndReading(end);
 
 	while (start != end) {
 		uint32_t c;
@@ -467,7 +467,7 @@ again:
 	/* NOTREACHED */
 }
 
-static void		
+static void
 get_class(workbuf_t *wb) {
 	int32_t i;
 
@@ -546,7 +546,7 @@ compose(workbuf_t *wb) {
 }
 
 static nsresult
-flush_before_cur(workbuf_t *wb, nsAString& aToStr) 
+flush_before_cur(workbuf_t *wb, nsAString& aToStr)
 {
 	int32_t i;
 
@@ -651,25 +651,25 @@ workbuf_removevoid(workbuf_t *wb) {
 	wb->last = j;
 }
 
-nsresult  
+nsresult
 nsUnicodeNormalizer::NormalizeUnicodeNFD( const nsAString& aSrc, nsAString& aDest)
 {
   return mdn_normalize(false, false, aSrc, aDest);
 }
 
-nsresult  
+nsresult
 nsUnicodeNormalizer::NormalizeUnicodeNFC( const nsAString& aSrc, nsAString& aDest)
 {
   return mdn_normalize(true, false, aSrc, aDest);
 }
 
-nsresult  
+nsresult
 nsUnicodeNormalizer::NormalizeUnicodeNFKD( const nsAString& aSrc, nsAString& aDest)
 {
   return mdn_normalize(false, true, aSrc, aDest);
 }
 
-nsresult  
+nsresult
 nsUnicodeNormalizer::NormalizeUnicodeNFKC( const nsAString& aSrc, nsAString& aDest)
 {
   return mdn_normalize(true, true, aSrc, aDest);

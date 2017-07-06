@@ -88,7 +88,7 @@ class MiniShmObserver
 public:
   /**
    * This function is called whenever there is a new shared memory request.
-   * @param aMiniShmObj MiniShmBase object that may be used to read and 
+   * @param aMiniShmObj MiniShmBase object that may be used to read and
    *                    write from shared memory.
    */
   virtual void OnMiniShmEvent(MiniShmBase *aMiniShmObj) = 0;
@@ -96,14 +96,14 @@ public:
    * This function is called once when a MiniShmParent and a MiniShmChild
    * object have successfully negotiated a connection.
    *
-   * @param aMiniShmObj MiniShmBase object that may be used to read and 
+   * @param aMiniShmObj MiniShmBase object that may be used to read and
    *                    write from shared memory.
    */
   virtual void OnMiniShmConnect(MiniShmBase *aMiniShmObj) { }
 };
 
 /**
- * Base class for MiniShm connections. This class defines the common 
+ * Base class for MiniShm connections. This class defines the common
  * interfaces and code between parent and child.
  */
 class MiniShmBase
@@ -111,12 +111,12 @@ class MiniShmBase
 public:
   /**
    * Obtains a writable pointer into shared memory of type T.
-   * typename T must be plain-old-data and contain an unsigned integral 
-   * member T::identifier that uniquely identifies T with respect to 
+   * typename T must be plain-old-data and contain an unsigned integral
+   * member T::identifier that uniquely identifies T with respect to
    * other types used by the protocol being implemented.
    *
    * @param aPtr Pointer to receive the shared memory address.
-   *             This value is set if and only if the function 
+   *             This value is set if and only if the function
    *             succeeded.
    * @return NS_OK if and only if aPtr was successfully obtained.
    *         NS_ERROR_ILLEGAL_VALUE if type T is not valid for MiniShm.
@@ -144,12 +144,12 @@ public:
 
   /**
    * Obtains a readable pointer into shared memory of type T.
-   * typename T must be plain-old-data and contain an unsigned integral 
-   * member T::identifier that uniquely identifies T with respect to 
+   * typename T must be plain-old-data and contain an unsigned integral
+   * member T::identifier that uniquely identifies T with respect to
    * other types used by the protocol being implemented.
    *
    * @param aPtr Pointer to receive the shared memory address.
-   *             This value is set if and only if the function 
+   *             This value is set if and only if the function
    *             succeeded.
    * @return NS_OK if and only if aPtr was successfully obtained.
    *         NS_ERROR_ILLEGAL_VALUE if type T is not valid for MiniShm or if
@@ -181,8 +181,8 @@ public:
 
 protected:
   /**
-   * MiniShm reserves some identifier codes for its own use. Any 
-   * identifiers used by MiniShm protocol implementations must be 
+   * MiniShm reserves some identifier codes for its own use. Any
+   * identifiers used by MiniShm protocol implementations must be
    * greater than RESERVED_CODE_LAST.
    */
   enum ReservedCodes
@@ -282,12 +282,12 @@ protected:
   SetObserver(MiniShmObserver *aObserver) { mObserver = aObserver; }
 
   /**
-   * Obtains a writable pointer into shared memory of type T. This version 
-   * differs from GetWritePtr in that it allows typename T to be one of 
+   * Obtains a writable pointer into shared memory of type T. This version
+   * differs from GetWritePtr in that it allows typename T to be one of
    * the private data structures declared in MiniShmBase.
    *
    * @param aPtr Pointer to receive the shared memory address.
-   *             This value is set if and only if the function 
+   *             This value is set if and only if the function
    *             succeeded.
    * @return NS_OK if and only if aPtr was successfully obtained.
    *         NS_ERROR_ILLEGAL_VALUE if type T not an internal MiniShm struct.

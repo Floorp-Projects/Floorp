@@ -59,7 +59,7 @@ public:
     explicit txApplyTemplates(const txExpandedName& aMode);
 
     TX_DECL_TXINSTRUCTION
-    
+
     txExpandedName mMode;
 };
 
@@ -103,7 +103,7 @@ public:
     txConditionalGoto(nsAutoPtr<Expr>&& aCondition, txInstruction* aTarget);
 
     TX_DECL_TXINSTRUCTION
-    
+
     nsAutoPtr<Expr> mCondition;
     txInstruction* mTarget;
 };
@@ -126,7 +126,7 @@ public:
     txCopy();
 
     TX_DECL_TXINSTRUCTION
-    
+
     txInstruction* mBailTarget;
 };
 
@@ -136,7 +136,7 @@ public:
     explicit txCopyOf(nsAutoPtr<Expr>&& aSelect);
 
     TX_DECL_TXINSTRUCTION
-    
+
     nsAutoPtr<Expr> mSelect;
 };
 
@@ -158,7 +158,7 @@ public:
     explicit txGoTo(txInstruction* aTarget);
 
     TX_DECL_TXINSTRUCTION
-    
+
     txInstruction* mTarget;
 };
 
@@ -178,7 +178,7 @@ public:
     explicit txLoopNodeSet(txInstruction* aTarget);
 
     TX_DECL_TXINSTRUCTION
-    
+
     txInstruction* mTarget;
 };
 
@@ -249,8 +249,8 @@ public:
     ~txPushNewContext();
 
     TX_DECL_TXINSTRUCTION
-    
-    
+
+
     nsresult addSort(nsAutoPtr<Expr>&& aSelectExpr,
                      nsAutoPtr<Expr>&& aLangExpr,
                      nsAutoPtr<Expr>&& aDataTypeExpr,
@@ -264,7 +264,7 @@ public:
         nsAutoPtr<Expr> mOrderExpr;
         nsAutoPtr<Expr> mCaseOrderExpr;
     };
-    
+
     nsTArray<SortKey> mSortKeys;
     nsAutoPtr<Expr> mSelect;
     txInstruction* mBailTarget;

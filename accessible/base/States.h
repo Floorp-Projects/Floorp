@@ -73,7 +73,7 @@ namespace states {
 
   /**
    * The expandable object's children are not displayed, the opposite of
-   * expanded, applied to tree lists and other controls, 
+   * expanded, applied to tree lists and other controls,
    * @see EXPANDED state.
    */
   const uint64_t COLLAPSED = ((uint64_t) 0x1) << 10;
@@ -288,4 +288,4 @@ namespace states {
 } // namespace mozilla
 
 #endif
-	
+

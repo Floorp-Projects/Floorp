@@ -222,7 +222,7 @@ public:
   // when there is no manifest attribute!
   void ProcessOfflineManifest(const nsAString& aManifestSpec);
 
-  // Extracts the manifest attribute from the element if it is the root 
+  // Extracts the manifest attribute from the element if it is the root
   // element and calls the above method.
   void ProcessOfflineManifest(nsIContent *aElement);
 
@@ -305,7 +305,7 @@ protected:
   // True if this is parser is a fragment parser or an HTML DOMParser.
   // XML DOMParser leaves this to false for now!
   uint8_t mRunsToCompletion : 1;
-  
+
   //
   // -- Can interrupt parsing members --
   //

@@ -26,7 +26,7 @@ public:
    * if the trees compare favoribly, otherwise the return will indicate
    * NS_ERROR_FAILURE. Other return status's will indicate some other
    * type of failure. The files, aFile1 and aFile2 are closed before
-   * returning. 
+   * returning.
    * aRegressionOutput will vary output, 0 is full output, 1 is brief
    */
   NS_IMETHOD CompareRegressionData(FILE* aFile1, FILE* aFile2,int32_t aRegressionOutput) = 0;

@@ -90,7 +90,7 @@ mozilla::ipc::IPCResult
 TestUrgencyChild::RecvStart()
 {
   uint32_t result;
-  
+
   // Send a synchronous message, expect to get an urgent message while
   // blocked.
   test_ = kFirstTestBegin;
@@ -103,7 +103,7 @@ TestUrgencyChild::RecvStart()
 
   // Initiate the next test by sending an asynchronous message, then becoming
   // blocked. This tests that the urgent message is still delivered properly,
-  // and that the parent does not try to service the sync 
+  // and that the parent does not try to service the sync
   test_ = kSecondTestBegin;
   if (!SendTest2())
     fail("calling SendTest2");

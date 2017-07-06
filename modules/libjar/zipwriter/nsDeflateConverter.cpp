@@ -35,7 +35,7 @@ nsresult nsDeflateConverter::Init()
     mZstream.zalloc = Z_NULL;
     mZstream.zfree = Z_NULL;
     mZstream.opaque = Z_NULL;
-    
+
     int32_t window = MAX_WBITS;
     switch (mWrapMode) {
         case WRAP_NONE:

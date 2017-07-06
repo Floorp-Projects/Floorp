@@ -80,7 +80,7 @@ nsHTMLStyleSheet::HTMLColorRule::List(FILE* out, int32_t aIndent) const
 }
 #endif
 
- 
+
 NS_IMPL_ISUPPORTS(nsHTMLStyleSheet::GenericTableRule, nsIStyleRule)
 
 #ifdef DEBUG
@@ -376,7 +376,7 @@ nsHTMLStyleSheet::HasStateDependentStyle(StateRuleProcessorData* aData)
        (mVisitedRule && aData->mStateMask.HasState(NS_EVENT_STATE_VISITED)))) {
     return eRestyle_Self;
   }
-  
+
   return nsRestyleHint(0);
 }
 

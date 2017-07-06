@@ -50,7 +50,7 @@ nsCacheEntry::nsCacheEntry(const nsACString &   key,
 nsCacheEntry::~nsCacheEntry()
 {
     MOZ_COUNT_DTOR(nsCacheEntry);
-    
+
     if (mData)
         nsCacheService::ReleaseObject_Locked(mData, mEventTarget);
 }
@@ -361,7 +361,7 @@ nsCacheEntryInfo::IsStreamBased(bool * result)
 {
     NS_ENSURE_ARG_POINTER(result);
     if (!mCacheEntry)  return NS_ERROR_NOT_AVAILABLE;
-    
+
     *result = mCacheEntry->IsStreamData();
     return NS_OK;
 }

@@ -30,7 +30,7 @@ public:
      * 1 if val1 > val2 and 0 if val1 == val2.
      */
     virtual int compareValues(txObject* val1, txObject* val2) = 0;
-    
+
     /*
      * Create a sortable value.
      */

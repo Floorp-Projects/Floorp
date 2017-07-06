@@ -40,7 +40,7 @@ nsTLSSocketProvider::NewSocket(int32_t family,
                                       securityInfo,
                                       true,
                                       flags);
-  
+
   return (NS_FAILED(rv)) ? NS_ERROR_SOCKET_CREATE_FAILED : NS_OK;
 }
 
@@ -64,6 +64,6 @@ nsTLSSocketProvider::AddToSocket(int32_t family,
                                         securityInfo,
                                         true,
                                         flags);
-  
+
   return (NS_FAILED(rv)) ? NS_ERROR_SOCKET_CREATE_FAILED : NS_OK;
 }

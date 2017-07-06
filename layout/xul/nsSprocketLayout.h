@@ -90,32 +90,32 @@ protected:
 
 
   void ComputeChildsNextPosition(nsIFrame* aBox,
-                                 const nscoord& aCurX, 
-                                 const nscoord& aCurY, 
-                                 nscoord& aNextX, 
-                                 nscoord& aNextY, 
+                                 const nscoord& aCurX,
+                                 const nscoord& aCurY,
+                                 nscoord& aNextX,
+                                 nscoord& aNextY,
                                  const nsRect& aChildSize);
 
   void ChildResized(nsIFrame* aBox,
-                    nsBoxLayoutState& aState, 
+                    nsBoxLayoutState& aState,
                     nsIFrame* aChild,
-                    nsBoxSize* aChildBoxSize, 
-                    nsComputedBoxSize* aChildComputedBoxSize, 
-                    nsBoxSize* aBoxSizes, 
-                    nsComputedBoxSize* aComputedBoxSizes, 
-                    const nsRect& aChildLayoutRect, 
-                    nsRect& aChildActualRect, 
-                    nsRect& aContainingRect, 
-                    int32_t aFlexes, 
+                    nsBoxSize* aChildBoxSize,
+                    nsComputedBoxSize* aChildComputedBoxSize,
+                    nsBoxSize* aBoxSizes,
+                    nsComputedBoxSize* aComputedBoxSizes,
+                    const nsRect& aChildLayoutRect,
+                    nsRect& aChildActualRect,
+                    nsRect& aContainingRect,
+                    int32_t aFlexes,
                     bool& aFinished);
 
   void AlignChildren(nsIFrame* aBox,
                      nsBoxLayoutState& aState);
 
-  virtual void ComputeChildSizes(nsIFrame* aBox, 
-                         nsBoxLayoutState& aState, 
-                         nscoord& aGivenSize, 
-                         nsBoxSize* aBoxSizes, 
+  virtual void ComputeChildSizes(nsIFrame* aBox,
+                         nsBoxLayoutState& aState,
+                         nscoord& aGivenSize,
+                         nsBoxSize* aBoxSizes,
                          nsComputedBoxSize*& aComputedBoxSizes);
 
 
@@ -132,7 +132,7 @@ protected:
 private:
 
 
-  // because the sprocket layout manager has no instance variables. We 
+  // because the sprocket layout manager has no instance variables. We
   // can make a static one and reuse it everywhere.
   static nsBoxLayout* gInstance;
 

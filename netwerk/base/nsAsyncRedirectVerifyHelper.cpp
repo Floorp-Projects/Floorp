@@ -216,7 +216,7 @@ nsAsyncRedirectVerifyHelper::ExplicitCallback(nsresult result)
         LOG(("nsAsyncRedirectVerifyHelper::ExplicitCallback() "
              "dispatched callback event=%p", event.get()));
     }
-   
+
 }
 
 void

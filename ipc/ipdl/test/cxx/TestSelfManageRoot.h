@@ -28,7 +28,7 @@ public:
 
     ActorDestroyReason mWhy;
 
-protected:    
+protected:
     virtual PTestSelfManageParent* AllocPTestSelfManageParent() override {
         return new TestSelfManageParent();
     }
@@ -58,7 +58,7 @@ public:
 
     void Main();
 
-protected:    
+protected:
     virtual PTestSelfManageParent* AllocPTestSelfManageParent() override {
         return new TestSelfManageParent();
     }
@@ -70,7 +70,7 @@ protected:
     virtual void ActorDestroy(ActorDestroyReason why) override
     {
         if (NormalShutdown != why)
-            fail("unexpected destruction!");  
+            fail("unexpected destruction!");
         passed("ok");
         QuitParent();
     }
@@ -90,7 +90,7 @@ public:
         MOZ_COUNT_DTOR(TestSelfManageChild);
     }
 
-protected:    
+protected:
     virtual PTestSelfManageChild* AllocPTestSelfManageChild() override {
         return new TestSelfManageChild();
     }
@@ -116,7 +116,7 @@ public:
 
     void Main();
 
-protected:    
+protected:
     virtual PTestSelfManageChild* AllocPTestSelfManageChild() override {
         return new TestSelfManageChild();
     }
@@ -129,7 +129,7 @@ protected:
     virtual void ActorDestroy(ActorDestroyReason why) override
     {
         if (NormalShutdown != why)
-            fail("unexpected destruction!");  
+            fail("unexpected destruction!");
         QuitChild();
     }
 };

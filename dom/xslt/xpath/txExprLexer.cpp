@@ -117,8 +117,8 @@ txExprLexer::parse(const nsAString& aPattern)
         return NS_ERROR_XPATH_INVALID_VAR_NAME;
       }
       defType = Token::VAR_REFERENCE;
-    } 
-    // just reuse the QName parsing, which will use defType 
+    }
+    // just reuse the QName parsing, which will use defType
     // the token to construct
 
     if (XMLUtils::isLetter(*mPosition)) {

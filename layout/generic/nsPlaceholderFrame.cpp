@@ -257,7 +257,7 @@ nsPlaceholderFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                      const nsDisplayListSet& aLists)
 {
   DO_GLOBAL_REFLOW_COUNT_DSP("nsPlaceholderFrame");
-  
+
 #ifdef DEBUG
   if (GetShowFrameBorders()) {
     aLists.Outlines()->AppendNewToTop(

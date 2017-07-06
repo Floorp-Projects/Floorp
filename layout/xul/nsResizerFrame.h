@@ -22,7 +22,7 @@ protected:
 public:
   NS_DECL_FRAMEARENA_HELPERS(nsResizerFrame)
 
-  friend nsIFrame* NS_NewResizerFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);  
+  friend nsIFrame* NS_NewResizerFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 
   explicit nsResizerFrame(nsStyleContext* aContext);
 

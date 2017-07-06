@@ -567,7 +567,7 @@ mozInlineSpellChecker::mozInlineSpellChecker() :
 {
   nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
   if (prefs)
-    prefs->GetIntPref(kMaxSpellCheckSelectionSize, &mMaxNumWordsInSpellSelection); 
+    prefs->GetIntPref(kMaxSpellCheckSelectionSize, &mMaxNumWordsInSpellSelection);
   mMaxMisspellingsPerCheck = mMaxNumWordsInSpellSelection * 3 / 4;
 }
 
@@ -946,7 +946,7 @@ mozInlineSpellChecker::GetMisspelledWord(nsIDOMNode *aNode, int32_t aOffset,
   NS_ENSURE_ARG_POINTER(aNode);
   nsCOMPtr<nsISelection> spellCheckSelection;
   nsresult res = GetSpellCheckSelection(getter_AddRefs(spellCheckSelection));
-  NS_ENSURE_SUCCESS(res, res); 
+  NS_ENSURE_SUCCESS(res, res);
 
   return IsPointInSelection(spellCheckSelection, aNode, aOffset, newword);
 }
@@ -963,7 +963,7 @@ mozInlineSpellChecker::ReplaceWord(nsIDOMNode *aNode, int32_t aOffset,
 
   nsCOMPtr<nsIDOMRange> range;
   nsresult res = GetMisspelledWord(aNode, aOffset, getter_AddRefs(range));
-  NS_ENSURE_SUCCESS(res, res); 
+  NS_ENSURE_SUCCESS(res, res);
 
   if (range)
   {
@@ -975,7 +975,7 @@ mozInlineSpellChecker::ReplaceWord(nsIDOMNode *aNode, int32_t aOffset,
     NS_ENSURE_SUCCESS(res, res);
 
     AutoPlaceHolderBatch phb(editor, nullptr);
-  
+
     nsCOMPtr<nsISelection> selection;
     res = editor->GetSelection(getter_AddRefs(selection));
     NS_ENSURE_SUCCESS(res, res);
@@ -999,7 +999,7 @@ mozInlineSpellChecker::AddWordToDictionary(const nsAString &word)
 
   nsAutoString wordstr(word);
   nsresult rv = mSpellCheck->AddWordToDictionary(wordstr.get());
-  NS_ENSURE_SUCCESS(rv, rv); 
+  NS_ENSURE_SUCCESS(rv, rv);
 
   auto status = MakeUnique<mozInlineSpellStatus>(this);
   rv = status->InitForSelection();
@@ -1016,8 +1016,8 @@ mozInlineSpellChecker::RemoveWordFromDictionary(const nsAString &word)
 
   nsAutoString wordstr(word);
   nsresult rv = mSpellCheck->RemoveWordFromDictionary(wordstr.get());
-  NS_ENSURE_SUCCESS(rv, rv); 
-  
+  NS_ENSURE_SUCCESS(rv, rv);
+
   auto status = MakeUnique<mozInlineSpellStatus>(this);
   rv = status->InitForRange(nullptr);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -1033,7 +1033,7 @@ mozInlineSpellChecker::IgnoreWord(const nsAString &word)
 
   nsAutoString wordstr(word);
   nsresult rv = mSpellCheck->IgnoreWordAllOccurrences(wordstr.get());
-  NS_ENSURE_SUCCESS(rv, rv); 
+  NS_ENSURE_SUCCESS(rv, rv);
 
   auto status = MakeUnique<mozInlineSpellStatus>(this);
   rv = status->InitForSelection();
@@ -1111,7 +1111,7 @@ NS_IMETHODIMP mozInlineSpellChecker::WillJoinNodes(nsIDOMNode *aLeftNode, nsIDOM
   return NS_OK;
 }
 
-NS_IMETHODIMP mozInlineSpellChecker::DidJoinNodes(nsIDOMNode *aLeftNode, nsIDOMNode *aRightNode, 
+NS_IMETHODIMP mozInlineSpellChecker::DidJoinNodes(nsIDOMNode *aLeftNode, nsIDOMNode *aRightNode,
                                                   nsIDOMNode *aParent, nsresult aResult)
 {
   return SpellCheckBetweenNodes(aRightNode, 0, aRightNode, 0);
@@ -1818,13 +1818,13 @@ mozInlineSpellChecker::AddRange(nsISelection* aSpellCheckSelection,
 }
 
 nsresult mozInlineSpellChecker::GetSpellCheckSelection(nsISelection ** aSpellCheckSelection)
-{ 
+{
   nsCOMPtr<nsIEditor> editor (do_QueryReferent(mEditor));
   NS_ENSURE_TRUE(editor, NS_ERROR_NULL_POINTER);
 
   nsCOMPtr<nsISelectionController> selcon;
   nsresult rv = editor->GetSelectionController(getter_AddRefs(selcon));
-  NS_ENSURE_SUCCESS(rv, rv); 
+  NS_ENSURE_SUCCESS(rv, rv);
 
   return selcon->GetSelection(nsISelectionController::SELECTION_SPELLCHECK, aSpellCheckSelection);
 }
@@ -1841,7 +1841,7 @@ nsresult mozInlineSpellChecker::SaveCurrentSelectionPosition()
 
   rv = selection->GetFocusNode(getter_AddRefs(mCurrentSelectionAnchorNode));
   NS_ENSURE_SUCCESS(rv, rv);
-  
+
   selection->GetFocusOffset(&mCurrentSelectionOffset);
 
   return NS_OK;
@@ -1944,7 +1944,7 @@ nsresult mozInlineSpellChecker::MouseClick(nsIDOMEvent *aMouseEvent)
   nsCOMPtr<nsIDOMMouseEvent>mouseEvent = do_QueryInterface(aMouseEvent);
   NS_ENSURE_TRUE(mouseEvent, NS_OK);
 
-  // ignore any errors from HandleNavigationEvent as we don't want to prevent 
+  // ignore any errors from HandleNavigationEvent as we don't want to prevent
   // anyone else from seeing this event.
   int16_t button;
   mouseEvent->GetButton(&button);
@@ -1960,7 +1960,7 @@ nsresult mozInlineSpellChecker::KeyPress(nsIDOMEvent* aKeyEvent)
   uint32_t keyCode;
   keyEvent->GetKeyCode(&keyCode);
 
-  // we only care about navigation keys that moved selection 
+  // we only care about navigation keys that moved selection
   switch (keyCode)
   {
     case nsIDOMKeyEvent::DOM_VK_RIGHT:

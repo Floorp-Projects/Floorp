@@ -49,7 +49,7 @@ GetStringsFile(WCHAR filename[MAX_PATH])
 {
   if (!GetModuleFileNameW(nullptr, filename, MAX_PATH))
     return FALSE;
- 
+
   WCHAR *dot = wcsrchr(filename, '.');
   if (!dot || wcsicmp(dot + 1, L"exe"))
     return FALSE;
@@ -73,31 +73,31 @@ CenterDialog(HWND hDlg)
 {
   RECT rc, rcOwner, rcDlg;
 
-  // Get the owner window and dialog box rectangles. 
+  // Get the owner window and dialog box rectangles.
   HWND desktop = GetDesktopWindow();
 
-  GetWindowRect(desktop, &rcOwner); 
-  GetWindowRect(hDlg, &rcDlg); 
-  CopyRect(&rc, &rcOwner); 
+  GetWindowRect(desktop, &rcOwner);
+  GetWindowRect(hDlg, &rcDlg);
+  CopyRect(&rc, &rcOwner);
 
-  // Offset the owner and dialog box rectangles so that 
-  // right and bottom values represent the width and 
-  // height, and then offset the owner again to discard 
-  // space taken up by the dialog box. 
+  // Offset the owner and dialog box rectangles so that
+  // right and bottom values represent the width and
+  // height, and then offset the owner again to discard
+  // space taken up by the dialog box.
 
-  OffsetRect(&rcDlg, -rcDlg.left, -rcDlg.top); 
-  OffsetRect(&rc, -rc.left, -rc.top); 
-  OffsetRect(&rc, -rcDlg.right, -rcDlg.bottom); 
+  OffsetRect(&rcDlg, -rcDlg.left, -rcDlg.top);
+  OffsetRect(&rc, -rc.left, -rc.top);
+  OffsetRect(&rc, -rcDlg.right, -rcDlg.bottom);
 
-  // The new position is the sum of half the remaining 
-  // space and the owner's original position. 
+  // The new position is the sum of half the remaining
+  // space and the owner's original position.
 
-  SetWindowPos(hDlg, 
-               HWND_TOP, 
-               rcOwner.left + (rc.right / 2), 
-               rcOwner.top + (rc.bottom / 2), 
-               0, 0,          // ignores size arguments 
-               SWP_NOSIZE); 
+  SetWindowPos(hDlg,
+               HWND_TOP,
+               rcOwner.left + (rc.right / 2),
+               rcOwner.top + (rc.bottom / 2),
+               0, 0,          // ignores size arguments
+               SWP_NOSIZE);
 }
 
 static void
@@ -124,7 +124,7 @@ InitDialog(HWND hDlg)
   SendMessage(hWndPro, PBM_SETRANGE, 0, MAKELPARAM(0, 100));
   if (sIndeterminate) {
     LONG_PTR val = GetWindowLongPtr(hWndPro, GWL_STYLE);
-    SetWindowLongPtr(hWndPro, GWL_STYLE, val|PBS_MARQUEE); 
+    SetWindowLongPtr(hWndPro, GWL_STYLE, val|PBS_MARQUEE);
     SendMessage(hWndPro,(UINT) PBM_SETMARQUEE,(WPARAM) TRUE,(LPARAM)50 );
   }
 
@@ -207,7 +207,7 @@ InitProgressUI(int *argc, WCHAR ***argv)
 
 /**
  * Initializes the progress UI strings
- * 
+ *
  * @return 0 on success, -1 on error
 */
 int
@@ -221,7 +221,7 @@ InitProgressUIStrings() {
   if (_waccess(filename, 04)) {
     return -1;
   }
-  
+
   // If the updater.ini doesn't have the required strings, then we should not
   // bother showing UI.
   if (ReadStrings(filename, &sUIStrings) != OK) {

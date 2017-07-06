@@ -308,7 +308,7 @@ protected:
      */
     uint32_t mSortHints;
 
-    /** 
+    /**
      * The builder observers.
      */
     nsTArray<nsCOMPtr<nsIXULTreeBuilderObserver>> mObservers;

@@ -43,6 +43,6 @@ gfxMatrix
 nsSVGGenericContainerFrame::GetCanvasTM()
 {
   NS_ASSERTION(GetParent(), "null parent");
-  
+
   return static_cast<nsSVGContainerFrame*>(GetParent())->GetCanvasTM();
 }

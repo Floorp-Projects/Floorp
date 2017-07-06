@@ -150,7 +150,7 @@ nsHyphenator::Hyphenate(const nsAString& aString, nsTArray<bool>& aHyphens)
         }
       }
     }
-    
+
     inWord = false;
   }
 

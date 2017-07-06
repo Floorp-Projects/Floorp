@@ -121,7 +121,7 @@ nsWindowMediator::UnregisterWindow(nsWindowInfo *inInfo)
     iter.GetNext()->OnCloseWindow(window);
   }
 
-  // Remove from the lists and free up 
+  // Remove from the lists and free up
   if (inInfo == mOldestWindow)
     mOldestWindow = inInfo->mYounger;
   if (inInfo == mTopmostWindow)
@@ -131,7 +131,7 @@ nsWindowMediator::UnregisterWindow(nsWindowInfo *inInfo)
     mOldestWindow = nullptr;
   if (inInfo == mTopmostWindow)
     mTopmostWindow = nullptr;
-  delete inInfo;  
+  delete inInfo;
 
   return NS_OK;
 }
@@ -272,7 +272,7 @@ nsWindowMediator::GetMostRecentWindow(const char16_t* inType,
   nsWindowInfo* info = MostRecentWindowInfo(inType, false);
   if (info && info->mWindow) {
     nsCOMPtr<nsPIDOMWindowOuter> DOMWindow;
-    if (NS_SUCCEEDED(GetDOMWindow(info->mWindow, DOMWindow))) {  
+    if (NS_SUCCEEDED(GetDOMWindow(info->mWindow, DOMWindow))) {
       DOMWindow.forget(outWindow);
       return NS_OK;
     }
@@ -392,7 +392,7 @@ nsWindowMediator::UpdateWindowTimeStamp(nsIXULWindow* inWindow)
     info->mTimeStamp = ++mTimeStamp;
     return NS_OK;
   }
-  return NS_ERROR_FAILURE; 
+  return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
@@ -783,9 +783,9 @@ NS_IMETHODIMP
 nsWindowMediator::AddListener(nsIWindowMediatorListener* aListener)
 {
   NS_ENSURE_ARG_POINTER(aListener);
-  
+
   mListeners.AppendElement(aListener);
-  
+
   return NS_OK;
 }
 
@@ -795,7 +795,7 @@ nsWindowMediator::RemoveListener(nsIWindowMediatorListener* aListener)
   NS_ENSURE_ARG_POINTER(aListener);
 
   mListeners.RemoveElement(aListener);
-  
+
   return NS_OK;
 }
 

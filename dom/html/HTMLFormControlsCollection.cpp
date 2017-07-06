@@ -176,7 +176,7 @@ HTMLFormControlsCollection::Item(uint32_t aIndex, nsIDOMNode** aReturn)
   return CallQueryInterface(item, aReturn);
 }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 HTMLFormControlsCollection::NamedItem(const nsAString& aName,
                                       nsIDOMNode** aReturn)
 {
@@ -240,7 +240,7 @@ HTMLFormControlsCollection::IndexOfControl(nsIFormControl* aControl,
                                            int32_t* aIndex)
 {
   // Note -- not a DOM method; callers should handle flushing themselves
-  
+
   NS_ENSURE_ARG_POINTER(aIndex);
 
   *aIndex = mElements.IndexOf(aControl);

@@ -164,7 +164,7 @@ nsReferencedElement::HaveNewDocument(nsIDocument* aDocument, bool aWatch,
     }
     return;
   }
-  
+
   if (!aDocument) {
     return;
   }

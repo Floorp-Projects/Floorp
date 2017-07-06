@@ -162,7 +162,7 @@ nsIncrementalDownload::nsIncrementalDownload()
   , mLastProgressUpdate(0)
   , mRedirectCallback(nullptr)
   , mNewRedirectChannel(nullptr)
-  , mCacheBust(false)  
+  , mCacheBust(false)
 {
 }
 
@@ -246,7 +246,7 @@ nsIncrementalDownload::ProcessTimeout()
   }
 
   // Fetch next chunk
-  
+
   nsCOMPtr<nsIChannel> channel;
   nsresult rv = NS_NewChannel(getter_AddRefs(channel),
                               mFinalURI,
@@ -332,7 +332,7 @@ nsIncrementalDownload::ReadCurrentSize()
   if (NS_FAILED(rv))
     return rv;
 
-  mCurrentSize = size; 
+  mCurrentSize = size;
   return NS_OK;
 }
 
@@ -830,13 +830,13 @@ nsIncrementalDownload::GetInterface(const nsIID &iid, void **result)
   return NS_ERROR_NO_INTERFACE;
 }
 
-nsresult 
+nsresult
 nsIncrementalDownload::ClearRequestHeader(nsIHttpChannel *channel)
 {
   NS_ENSURE_ARG(channel);
-  
+
   // We don't support encodings -- they make the Content-Length not equal
-  // to the actual size of the data. 
+  // to the actual size of the data.
   return channel->SetRequestHeader(NS_LITERAL_CSTRING("Accept-Encoding"),
                                    NS_LITERAL_CSTRING(""), false);
 }
@@ -851,7 +851,7 @@ nsIncrementalDownload::AsyncOnChannelRedirect(nsIChannel *oldChannel,
 {
   // In response to a redirect, we need to propagate the Range header.  See bug
   // 311595.  Any failure code returned from this function aborts the redirect.
- 
+
   nsCOMPtr<nsIHttpChannel> http = do_QueryInterface(oldChannel);
   NS_ENSURE_STATE(http);
 
@@ -933,7 +933,7 @@ net_NewIncrementalDownload(nsISupports *outer, const nsIID &iid, void **result)
   nsIncrementalDownload *d = new nsIncrementalDownload();
   if (!d)
     return NS_ERROR_OUT_OF_MEMORY;
-  
+
   NS_ADDREF(d);
   nsresult rv = d->QueryInterface(iid, result);
   NS_RELEASE(d);

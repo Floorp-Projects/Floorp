@@ -7,7 +7,7 @@
 
   Eric D Vaughan
   This class lays out its children either vertically or horizontally
- 
+
 **/
 
 #ifndef nsScrollbarButtonFrame_h___
@@ -76,7 +76,7 @@ protected:
   static void Notify(void* aData) {
     static_cast<nsScrollbarButtonFrame*>(aData)->Notify();
   }
-  
+
   bool mCursorOnThis;
 };
 

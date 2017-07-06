@@ -111,7 +111,7 @@ ImageAccessible::ActionNameAt(uint8_t aIndex, nsAString& aName)
 {
   aName.Truncate();
   if (IsLongDescIndex(aIndex) && HasLongDesc())
-    aName.AssignLiteral("showlongdesc"); 
+    aName.AssignLiteral("showlongdesc");
   else
     LinkableAccessible::ActionNameAt(aIndex, aName);
 }

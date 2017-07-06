@@ -143,7 +143,7 @@ public:
   RemoveNamedItem(mozilla::dom::NodeInfo* aNodeInfo, ErrorResult& aError);
   already_AddRefed<Attr>
   RemoveNamedItem(const nsAString& aName, ErrorResult& aError);
- 
+
   Attr* Item(uint32_t aIndex);
   Attr* IndexedGetter(uint32_t aIndex, bool& aFound);
   uint32_t Length() const;

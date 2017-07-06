@@ -47,7 +47,7 @@ public:
 
     //
     // called to service a socket
-    // 
+    //
     // params:
     //   socketRef - socket identifier
     //   fd        - socket file descriptor

@@ -226,7 +226,7 @@ nsLoadGroup::Cancel(nsresult status)
         return NS_ERROR_OUT_OF_MEMORY;
     }
 
-    // set the load group status to our cancel status while we cancel 
+    // set the load group status to our cancel status while we cancel
     // all our requests...once the cancel is done, we'll reset it...
     //
     mStatus = status;

@@ -13,7 +13,7 @@
 
 void  nsEUCJPProber::Reset(void)
 {
-  mCodingSM->Reset(); 
+  mCodingSM->Reset();
   mState = eDetecting;
   mContextAnalyser.Reset();
   mDistributionAnalyser.Reset();

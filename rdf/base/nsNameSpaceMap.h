@@ -21,9 +21,9 @@ public:
             MOZ_COUNT_CTOR(nsNameSpaceMap::Entry); }
 
         ~Entry() { MOZ_COUNT_DTOR(nsNameSpaceMap::Entry); }
-        
+
         nsCString mURI;
-        nsCOMPtr<nsIAtom> mPrefix; 
+        nsCOMPtr<nsIAtom> mPrefix;
 
         Entry* mNext;
     };

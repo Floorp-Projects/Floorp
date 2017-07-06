@@ -114,12 +114,12 @@ struct nsCSSRendering {
    * Initialize any static variables used by nsCSSRendering.
    */
   static void Init();
-  
+
   /**
    * Clean up any static variables used by nsCSSRendering.
    */
   static void Shutdown();
-  
+
   static bool GetShadowInnerRadii(nsIFrame* aFrame,
                                   const nsRect& aFrameArea,
                                   RectCornerRadii& aOutInnerRadii);
@@ -747,7 +747,7 @@ public:
    *
    * @param aSkipRect            An area in device pixels (NOT app units!) to avoid
    *                             blurring over, to prevent unnecessary work.
-   *                             
+   *
    * @param aFlags               FORCE_MASK to ensure that the content drawn to the
    *                             returned gfxContext is used as a mask, and not
    *                             drawn directly to aDestinationCtx.

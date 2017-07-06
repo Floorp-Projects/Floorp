@@ -10,7 +10,7 @@
  * It's useful to be able to dynamically check the type of certain items.
  * Every subclass of nsDisplayItem must have a new type added here for the purposes
  * of easy comparison and matching of items in different display lists.
- * 
+ *
  * This is #included inside nsDisplayItem.
  */
 

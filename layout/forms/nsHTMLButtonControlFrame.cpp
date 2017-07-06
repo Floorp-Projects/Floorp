@@ -64,13 +64,13 @@ nsHTMLButtonControlFrame::AccessibleType()
 }
 #endif
 
-void 
+void
 nsHTMLButtonControlFrame::SetFocus(bool aOn, bool aRepaint)
 {
 }
 
 nsresult
-nsHTMLButtonControlFrame::HandleEvent(nsPresContext* aPresContext, 
+nsHTMLButtonControlFrame::HandleEvent(nsPresContext* aPresContext,
                                       WidgetGUIEvent* aEvent,
                                       nsEventStatus* aEventStatus)
 {
@@ -130,11 +130,11 @@ nsHTMLButtonControlFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                              DISPLAY_CHILD_FORCE_PSEUDO_STACKING_CONTEXT);
     // That should put the display items in set.Content()
   }
-  
+
   // Put the foreground outline and focus rects on top of the children
   set.Content()->AppendToTop(&onTop);
   set.MoveTo(aLists);
-  
+
   DisplayOutline(aBuilder, aLists);
 
   // to draw border when selected in editor
@@ -160,7 +160,7 @@ nsHTMLButtonControlFrame::GetPrefISize(gfxContext* aRenderingContext)
 {
   nscoord result;
   DISPLAY_PREF_WIDTH(this, result);
-  
+
   nsIFrame* kid = mFrames.FirstChild();
   result = nsLayoutUtils::IntrinsicForContainer(aRenderingContext,
                                                 kid,
@@ -389,7 +389,7 @@ nsHTMLButtonControlFrame::GetAdditionalStyleContext(int32_t aIndex) const
 }
 
 void
-nsHTMLButtonControlFrame::SetAdditionalStyleContext(int32_t aIndex, 
+nsHTMLButtonControlFrame::SetAdditionalStyleContext(int32_t aIndex,
                                                     nsStyleContext* aStyleContext)
 {
   mRenderer.SetStyleContext(aIndex, aStyleContext);

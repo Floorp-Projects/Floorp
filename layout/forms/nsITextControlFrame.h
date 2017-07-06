@@ -5,7 +5,7 @@
 
 #ifndef nsITextControlFrame_h___
 #define nsITextControlFrame_h___
- 
+
 #include "nsIFormControlFrame.h"
 
 class nsISelectionController;

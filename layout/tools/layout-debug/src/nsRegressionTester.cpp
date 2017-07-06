@@ -33,7 +33,7 @@ nsRegressionTester::nsRegressionTester()
 {
 }
 
-nsRegressionTester::~nsRegressionTester() 
+nsRegressionTester::~nsRegressionTester()
 {
 }
 
@@ -107,9 +107,9 @@ nsRegressionTester::CompareFrameModels(nsIFile *aBaseFile, nsIFile *aVerFile,
   NS_ENSURE_ARG(aBaseFile);
   NS_ENSURE_ARG(aVerFile);
   NS_ENSURE_ARG_POINTER(aResult);
-  
+
   *aResult = false;
-  
+
   nsresult rv;
   FILE* baseFile;
   rv = aBaseFile->OpenANSIFileDesc("r", &baseFile);
@@ -129,7 +129,7 @@ nsRegressionTester::CompareFrameModels(nsIFile *aBaseFile, nsIFile *aVerFile,
     rv = frameUtil->CompareRegressionData(baseFile, verFile, outputLevel);
     // CompareRegressionData closes |baseFile| and |verFile|.
   } else {
-    fclose(verFile);          
+    fclose(verFile);
     fclose(baseFile);
   }
 

@@ -745,7 +745,7 @@ void
 nsAccessibilityService::GetStringStates(uint32_t aState, uint32_t aExtraState,
                                         nsISupports** aStringStates)
 {
-  RefPtr<DOMStringList> stringStates = 
+  RefPtr<DOMStringList> stringStates =
     GetStringStates(nsAccUtils::To64State(aState, aExtraState));
 
   // unknown state

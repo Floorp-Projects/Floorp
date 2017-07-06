@@ -18,15 +18,15 @@ static const int ENCODING = X509_ASN_ENCODING | PKCS_7_ASN_ENCODING;
  *
  * @param  filePath    The PE file path to check
  * @param  infoToMatch The acceptable information to match
- * @return ERROR_SUCCESS if successful, ERROR_NOT_FOUND if the info 
+ * @return ERROR_SUCCESS if successful, ERROR_NOT_FOUND if the info
  *         does not match, or the last error otherwise.
  */
 DWORD
-CheckCertificateForPEFile(LPCWSTR filePath, 
+CheckCertificateForPEFile(LPCWSTR filePath,
                           CertificateCheckInfo &infoToMatch)
 {
   HCERTSTORE certStore = nullptr;
-  HCRYPTMSG cryptMsg = nullptr; 
+  HCRYPTMSG cryptMsg = nullptr;
   PCCERT_CONTEXT certContext = nullptr;
   PCMSG_SIGNER_INFO signerInfo = nullptr;
   DWORD lastError = ERROR_SUCCESS;
@@ -34,9 +34,9 @@ CheckCertificateForPEFile(LPCWSTR filePath,
   // Get the HCERTSTORE and HCRYPTMSG from the signed file.
   DWORD encoding, contentType, formatType;
   BOOL result = CryptQueryObject(CERT_QUERY_OBJECT_FILE,
-                                  filePath, 
+                                  filePath,
                                   CERT_QUERY_CONTENT_FLAG_PKCS7_SIGNED_EMBED,
-                                  CERT_QUERY_CONTENT_FLAG_ALL, 
+                                  CERT_QUERY_CONTENT_FLAG_ALL,
                                   0, &encoding, &contentType,
                                   &formatType, &certStore, &cryptMsg, nullptr);
   if (!result) {
@@ -47,7 +47,7 @@ CheckCertificateForPEFile(LPCWSTR filePath,
 
   // Pass in nullptr to get the needed signer information size.
   DWORD signerInfoSize;
-  result = CryptMsgGetParam(cryptMsg, CMSG_SIGNER_INFO_PARAM, 0, 
+  result = CryptMsgGetParam(cryptMsg, CMSG_SIGNER_INFO_PARAM, 0,
                             nullptr, &signerInfoSize);
   if (!result) {
     lastError = GetLastError();
@@ -65,7 +65,7 @@ CheckCertificateForPEFile(LPCWSTR filePath,
 
   // Get the signer information (PCMSG_SIGNER_INFO).
   // In particular we want the issuer and serial number.
-  result = CryptMsgGetParam(cryptMsg, CMSG_SIGNER_INFO_PARAM, 0, 
+  result = CryptMsgGetParam(cryptMsg, CMSG_SIGNER_INFO_PARAM, 0,
                             (PVOID)signerInfo, &signerInfoSize);
   if (!result) {
     lastError = GetLastError();
@@ -74,10 +74,10 @@ CheckCertificateForPEFile(LPCWSTR filePath,
   }
 
   // Search for the signer certificate in the certificate store.
-  CERT_INFO certInfo;     
+  CERT_INFO certInfo;
   certInfo.Issuer = signerInfo->Issuer;
   certInfo.SerialNumber = signerInfo->SerialNumber;
-  certContext = CertFindCertificateInStore(certStore, ENCODING, 0, 
+  certContext = CertFindCertificateInStore(certStore, ENCODING, 0,
                                            CERT_FIND_SUBJECT_CERT,
                                            (PVOID)&certInfo, nullptr);
   if (!certContext) {
@@ -99,10 +99,10 @@ cleanup:
   if (certContext) {
     CertFreeCertificateContext(certContext);
   }
-  if (certStore) { 
+  if (certStore) {
     CertCloseStore(certStore, 0);
   }
-  if (cryptMsg) { 
+  if (cryptMsg) {
     CryptMsgClose(cryptMsg);
   }
   return lastError;
@@ -115,8 +115,8 @@ cleanup:
  * @param  infoToMatch  The acceptable information to match
  * @return FALSE if the info does not match or if any error occurs in the check
  */
-BOOL 
-DoCertificateAttributesMatch(PCCERT_CONTEXT certContext, 
+BOOL
+DoCertificateAttributesMatch(PCCERT_CONTEXT certContext,
                              CertificateCheckInfo &infoToMatch)
 {
   DWORD dwData;
@@ -124,7 +124,7 @@ DoCertificateAttributesMatch(PCCERT_CONTEXT certContext,
 
   if (infoToMatch.issuer) {
     // Pass in nullptr to get the needed size of the issuer buffer.
-    dwData = CertGetNameString(certContext, 
+    dwData = CertGetNameString(certContext,
                                CERT_NAME_SIMPLE_DISPLAY_TYPE,
                                CERT_NAME_ISSUER_FLAG, nullptr,
                                nullptr, 0);
@@ -187,7 +187,7 @@ DoCertificateAttributesMatch(PCCERT_CONTEXT certContext,
     }
 
     // If the issuer does not match, return a failure.
-    if (!infoToMatch.name || 
+    if (!infoToMatch.name ||
         wcscmp(szName, infoToMatch.name)) {
       LocalFree(szName);
       return FALSE;
@@ -223,7 +223,7 @@ VerifyCertificateTrustForFile(LPCWSTR filePath)
   trustData.pPolicyCallbackData = nullptr;
   trustData.pSIPClientData = nullptr;
   trustData.dwUIChoice = WTD_UI_NONE;
-  trustData.fdwRevocationChecks = WTD_REVOKE_NONE; 
+  trustData.fdwRevocationChecks = WTD_REVOKE_NONE;
   trustData.dwUnionChoice = WTD_CHOICE_FILE;
   trustData.dwStateAction = 0;
   trustData.hWVTStateData = nullptr;

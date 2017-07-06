@@ -12,7 +12,7 @@
 class UpdateLog
 {
 public:
-  static UpdateLog & GetPrimaryLog() 
+  static UpdateLog & GetPrimaryLog()
   {
     static UpdateLog primaryLog;
     return primaryLog;

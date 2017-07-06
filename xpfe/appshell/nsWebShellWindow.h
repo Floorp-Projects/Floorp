@@ -68,7 +68,7 @@ public:
 
 protected:
   friend class mozilla::WebShellWindowTimerCallback;
-  
+
   virtual ~nsWebShellWindow();
 
   bool                     ExecuteCloseHandler();

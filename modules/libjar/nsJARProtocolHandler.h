@@ -29,7 +29,7 @@ public:
 
     nsresult Init();
 
-    // returns non addref'ed pointer.  
+    // returns non addref'ed pointer.
     nsIMIMEService    *MimeService();
     nsIZipReaderCache *JarCache() { return mJARCache; }
 protected:

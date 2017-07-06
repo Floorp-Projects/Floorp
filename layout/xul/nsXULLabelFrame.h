@@ -22,7 +22,7 @@ public:
 
   friend nsIFrame* NS_NewXULLabelFrame(nsIPresShell* aPresShell,
                                        nsStyleContext *aContext);
-  
+
   // nsIFrame
   virtual void Init(nsIContent*       aContent,
                     nsContainerFrame* aParent,

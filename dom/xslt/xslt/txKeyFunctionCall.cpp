@@ -220,7 +220,7 @@ txKeyHash::getKeyNodes(const txExpandedName& aKeyName,
 
     nsresult rv = xslKey->indexSubtreeRoot(aRoot, mKeyValues, aEs);
     NS_ENSURE_SUCCESS(rv, rv);
-    
+
     indexEntry->mIndexed = true;
 
     // Now that the key is indexed we can get its value.
@@ -394,6 +394,6 @@ nsresult txXSLKey::testNode(const txXPathNode& aNode,
             }
         }
     }
-    
+
     return NS_OK;
 }

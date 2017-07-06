@@ -90,7 +90,7 @@ protected:
 // to it's subparts. There was some debate as to whether or not the functionality desired
 // when HTTP confronted this type required a stream converter. After all, this type really
 // prompts various viewer related actions rather than stream conversion. There simply needs
-// to be a piece in place that can strip out the multiple parts of a stream of this type, and 
+// to be a piece in place that can strip out the multiple parts of a stream of this type, and
 // "display" them accordingly.
 //
 // With that said, this "stream converter" spends more time packaging up the sub parts of the
@@ -120,7 +120,7 @@ protected:
 // linebreaks can be either CRLF or LFLF. linebreaks preceding
 // boundary tokens are NOT considered part of the data. BoundaryToken
 // is any opaque string.
-//  
+//
 //
 
 class nsMultiMixedConv : public nsIStreamConverter {

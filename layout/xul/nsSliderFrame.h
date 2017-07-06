@@ -69,7 +69,7 @@ public:
   virtual void BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                 const nsRect&           aDirtyRect,
                                 const nsDisplayListSet& aLists) override;
- 
+
   virtual nsresult AttributeChanged(int32_t aNameSpaceID,
                                     nsIAtom* aAttribute,
                                     int32_t aModType) override;
@@ -178,7 +178,7 @@ private:
     (static_cast<nsSliderFrame*>(aData))->Notify();
   }
   void PageScroll(nscoord aChange);
- 
+
   nsPoint mDestinationPoint;
   RefPtr<nsSliderMediator> mMediator;
 

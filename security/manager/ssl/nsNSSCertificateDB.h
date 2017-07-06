@@ -33,7 +33,7 @@ public:
                        nsCString &nickname,
                        const nsNSSShutDownPreventionLock &proofOfLock);
 
-  static nsresult 
+  static nsresult
   ImportValidCACerts(int numCACerts, SECItem *CACerts, nsIInterfaceRequestor *ctx,
                      const nsNSSShutDownPreventionLock &proofOfLock);
 
@@ -52,7 +52,7 @@ private:
                            nsIInterfaceRequestor* ctx,
                            const nsNSSShutDownPreventionLock& proofOfLock);
 
-  static void DisplayCertificateAlert(nsIInterfaceRequestor *ctx, 
+  static void DisplayCertificateAlert(nsIInterfaceRequestor *ctx,
                                       const char *stringID, nsIX509Cert *certToShow,
                                       const nsNSSShutDownPreventionLock &proofOfLock);
 

@@ -19,7 +19,7 @@ class HTMLCanvasElement;
 } // namespace mozilla
 
 //-----------------------------------------------
-// This class maintains all the data that 
+// This class maintains all the data that
 // is used by all the page frame
 // It lives while the nsSimplePageSequenceFrame lives
 class nsSharedPageData {
@@ -37,7 +37,7 @@ public:
 
   nsSize      mReflowSize;
   nsMargin    mReflowMargin;
-  // Margin for headers and footers; it defaults to 4/100 of an inch on UNIX 
+  // Margin for headers and footers; it defaults to 4/100 of an inch on UNIX
   // and 0 elsewhere; I think it has to do with some inconsistency in page size
   // computations
   nsMargin    mEdgePaperMargin;
@@ -76,7 +76,7 @@ public:
   NS_IMETHOD SetPageNo(int32_t aPageNo) { return NS_OK;}
   NS_IMETHOD SetSelectionHeight(nscoord aYOffset, nscoord aHeight) override { mYSelOffset = aYOffset; mSelectionHeight = aHeight; return NS_OK; }
   NS_IMETHOD SetTotalNumPages(int32_t aTotal) override { mTotalPages = aTotal; return NS_OK; }
-  
+
   // For Shrink To Fit
   NS_IMETHOD GetSTFPercent(float& aSTFPercent) override;
 

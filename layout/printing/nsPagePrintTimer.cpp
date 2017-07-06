@@ -80,7 +80,7 @@ nsPagePrintTimer::StopWatchDogTimer()
 
 //nsRunnable
 NS_IMETHODIMP
-nsPagePrintTimer::Run() 
+nsPagePrintTimer::Run()
 {
   bool initNewTimer = true;
   // Check to see if we are done
@@ -102,7 +102,7 @@ nsPagePrintTimer::Run()
   // Note that the Stop() destroys this after the print job finishes
   // (The PrintEngine stops holding a reference when DonePrintingPages
   // returns true.)
-  Stop(); 
+  Stop();
   if (initNewTimer) {
     ++mFiringCount;
     nsresult result = StartTimer(inRange);

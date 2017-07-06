@@ -224,7 +224,7 @@ protected:
     // the rule filter set by the builder's SetRuleFilter function
     nsCOMPtr<nsIXULTemplateRuleFilter> mRuleFilter;
 
-    // indicates that the rule will only match when generating content 
+    // indicates that the rule will only match when generating content
     // to be inserted into a container with this tag
     nsCOMPtr<nsIAtom> mTag;
 
@@ -300,7 +300,7 @@ public:
         return mRules.AppendElement(nsTemplateRule(aRuleNode, aAction,
                                     aQuerySet));
     }
-    
+
     void RemoveRule(nsTemplateRule *aRule)
     {
         mRules.RemoveElementAt(aRule - mRules.Elements());

@@ -55,7 +55,7 @@ txNamespaceMap::mapNamespace(nsIAtom* aPrefix, const nsAString& aNamespaceURI)
     if (!mPrefixes.AppendObject(prefix)) {
         return NS_ERROR_OUT_OF_MEMORY;
     }
-    
+
     if (mNamespaces.AppendElement(nsId) == nullptr) {
         mPrefixes.RemoveObjectAt(mPrefixes.Count() - 1);
 

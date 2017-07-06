@@ -343,7 +343,7 @@ nsInputStreamPump::AsyncRead(nsIStreamListener *listener, nsISupports *ctxt)
         // to a starting offset, then we must do so here.  in the non-async
         // stream case, the stream transport service will take care of seeking
         // for us.
-        // 
+        //
         if (mAsyncStream && (mStreamOffset != UINT64_MAX)) {
             nsCOMPtr<nsISeekableStream> seekable = do_QueryInterface(mStream);
             if (seekable)
@@ -414,7 +414,7 @@ nsInputStreamPump::OnInputStreamReady(nsIAsyncInputStream *stream)
     // any listener or progress sink methods directly from here.
 
     for (;;) {
-        // There should only be one iteration of this loop happening at a time. 
+        // There should only be one iteration of this loop happening at a time.
         // To prevent AsyncWait() (called during callbacks or on other threads)
         // from creating a parallel OnInputStreamReady(), we use:
         // -- a monitor; and
@@ -467,7 +467,7 @@ nsInputStreamPump::OnInputStreamReady(nsIAsyncInputStream *stream)
         }
 
         // Set mRetargeting so EnsureWaiting will be called. It ensures that
-        // OnStateStop is called on the main thread. 
+        // OnStateStop is called on the main thread.
         if (nextState == STATE_STOP && !NS_IsMainThread()) {
             mRetargeting = true;
         }
@@ -494,7 +494,7 @@ nsInputStreamPump::OnInputStreamReady(nsIAsyncInputStream *stream)
             nsresult rv = EnsureWaiting();
             if (NS_SUCCEEDED(rv))
                 break;
-            
+
             // Failure to start asynchronous wait: stop transfer.
             // Do not set mStatus if it was previously set to report a failure.
             if (NS_SUCCEEDED(mStatus)) {

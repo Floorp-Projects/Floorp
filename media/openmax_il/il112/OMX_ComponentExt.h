@@ -35,7 +35,7 @@ extern "C" {
 
 /* Each OMX header must include all required header files to allow the
  * header to compile without errors.  The includes below are required
- * for this header file to compile successfully 
+ * for this header file to compile successfully
  */
 #include <OMX_Types.h>
 

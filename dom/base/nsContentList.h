@@ -49,7 +49,7 @@ public:
   virtual int32_t IndexOf(nsIContent* aContent) override;
   virtual nsIContent* Item(uint32_t aIndex) override;
 
-  uint32_t Length() const { 
+  uint32_t Length() const {
     return mElements.Length();
   }
 
@@ -176,7 +176,7 @@ struct nsContentListKey
   {
     return mHash;
   }
-  
+
   nsINode* const mRootNode; // Weak ref
   const int32_t mMatchNameSpaceId;
   const nsAString& mTagname;
@@ -230,7 +230,7 @@ public:
    * @param aDeep If false, then look only at children of the root, nothing
    *              deeper.  If true, then look at the whole subtree rooted at
    *              our root.
-   */  
+   */
   nsContentList(nsINode* aRootNode,
                 int32_t aMatchNameSpaceId,
                 nsIAtom* aHTMLMatchAtom,
@@ -252,7 +252,7 @@ public:
    * @param aMatchNameSpaceId a namespace id to be passed back to aFunc
    * @param aFuncMayDependOnAttr a boolean that indicates whether this list is
    *                             sensitive to attribute changes.
-   */  
+   */
   nsContentList(nsINode* aRootNode,
                 nsContentListMatchFunc aFunc,
                 nsContentListDestroyFunc aDestroyFunc,
@@ -313,7 +313,7 @@ public:
   NS_DECL_NSIMUTATIONOBSERVER_CONTENTINSERTED
   NS_DECL_NSIMUTATIONOBSERVER_CONTENTREMOVED
   NS_DECL_NSIMUTATIONOBSERVER_NODEWILLBEDESTROYED
-  
+
   static nsContentList* FromSupports(nsISupports* aSupports)
   {
     nsINodeList* list = static_cast<nsINodeList*>(aSupports);
@@ -446,7 +446,7 @@ protected:
   // pack different typedefs together.  Once we no longer have to worry about
   // flushes in XML documents, we can go back to using bool for the
   // booleans.
-  
+
   /**
    * True if we are looking for elements named "*"
    */

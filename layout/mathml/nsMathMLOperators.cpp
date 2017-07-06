@@ -75,7 +75,7 @@ SetProperty(OperatorData* aOperatorData,
     return;
 
   // XXX These ones are not kept in the dictionary
-  // Support for these requires nsString member variables 
+  // Support for these requires nsString member variables
   // maxsize (default: infinity)
   // minsize (default: 1)
 

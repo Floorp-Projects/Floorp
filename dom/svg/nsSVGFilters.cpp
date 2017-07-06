@@ -145,7 +145,7 @@ nsSVGFE::IsAttributeMapped(const nsIAtom* name) const
   static const MappedAttributeEntry* const map[] = {
     sFiltersMap
   };
-  
+
   return FindAttributeDependence(name, map) ||
     nsSVGFEBase::IsAttributeMapped(name);
 }
@@ -320,7 +320,7 @@ SVGComponentTransferFunctionElement::ComputeAttributes()
   uint32_t type = mEnumAttributes[TYPE].GetAnimValue();
 
   float slope, intercept, amplitude, exponent, offset;
-  GetAnimatedNumberValues(&slope, &intercept, &amplitude, 
+  GetAnimatedNumberValues(&slope, &intercept, &amplitude,
                           &exponent, &offset, nullptr);
 
   const SVGNumberList &tableValues =
@@ -459,7 +459,7 @@ nsSVGElement::StringInfo nsSVGFELightingElement::sStringInfo[2] =
 NS_IMPL_ADDREF_INHERITED(nsSVGFELightingElement,nsSVGFELightingElementBase)
 NS_IMPL_RELEASE_INHERITED(nsSVGFELightingElement,nsSVGFELightingElementBase)
 
-NS_INTERFACE_MAP_BEGIN(nsSVGFELightingElement) 
+NS_INTERFACE_MAP_BEGIN(nsSVGFELightingElement)
 NS_INTERFACE_MAP_END_INHERITING(nsSVGFELightingElementBase)
 
 //----------------------------------------------------------------------

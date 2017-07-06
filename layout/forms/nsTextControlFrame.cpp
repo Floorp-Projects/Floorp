@@ -143,7 +143,7 @@ nsTextControlFrame::CalcIntrinsicSize(gfxContext* aRenderingContext,
                                       float aFontSizeInflation) const
 {
   LogicalSize intrinsicSize(aWM);
-  // Get leading and the Average/MaxAdvance char width 
+  // Get leading and the Average/MaxAdvance char width
   nscoord lineHeight  = 0;
   nscoord charWidth   = 0;
   nscoord charMaxAdvance  = 0;
@@ -167,9 +167,9 @@ nsTextControlFrame::CalcIntrinsicSize(gfxContext* aRenderingContext,
   if (mozilla::Abs(charWidth - charMaxAdvance) > (unsigned)nsPresContext::CSSPixelsToAppUnits(1)) {
     nscoord internalPadding =
       std::max(0, charMaxAdvance - nsPresContext::CSSPixelsToAppUnits(4));
-    nscoord t = nsPresContext::CSSPixelsToAppUnits(1); 
+    nscoord t = nsPresContext::CSSPixelsToAppUnits(1);
    // Round to a multiple of t
-    nscoord rest = internalPadding % t; 
+    nscoord rest = internalPadding % t;
     if (rest < t - rest) {
       internalPadding -= rest;
     } else {
@@ -563,7 +563,7 @@ nsTextControlFrame::ReflowTextControlChild(nsIFrame*                aKid,
   LogicalSize availSize = aReflowInput.ComputedSizeWithPadding(wm);
   availSize.BSize(wm) = NS_UNCONSTRAINEDSIZE;
 
-  ReflowInput kidReflowInput(aPresContext, aReflowInput, 
+  ReflowInput kidReflowInput(aPresContext, aReflowInput,
                                    aKid, availSize, nullptr,
                                    ReflowInput::CALLER_WILL_INIT);
   // Override padding with our computed padding in case we got it from theming or percentage
@@ -581,7 +581,7 @@ nsTextControlFrame::ReflowTextControlChild(nsIFrame*                aKid,
 
   // reflow the child
   ReflowOutput desiredSize(aReflowInput);
-  ReflowChild(aKid, aPresContext, desiredSize, kidReflowInput, 
+  ReflowChild(aKid, aPresContext, desiredSize, kidReflowInput,
               xOffset, yOffset, 0, aStatus);
 
   // place the child
@@ -647,7 +647,7 @@ void nsTextControlFrame::SetFocus(bool aOn, bool aRepaint)
     return;
 
   nsCOMPtr<nsISelection> ourSel;
-  selCon->GetSelection(nsISelectionController::SELECTION_NORMAL, 
+  selCon->GetSelection(nsISelectionController::SELECTION_NORMAL,
     getter_AddRefs(ourSel));
   if (!ourSel) return;
 
@@ -768,7 +768,7 @@ nsTextControlFrame::SetSelectionInternal(nsIDOMNode *aStartNode,
   NS_ENSURE_TRUE(selCon, NS_ERROR_FAILURE);
 
   nsCOMPtr<nsISelection> selection;
-  selCon->GetSelection(nsISelectionController::SELECTION_NORMAL, getter_AddRefs(selection));  
+  selCon->GetSelection(nsISelectionController::SELECTION_NORMAL, getter_AddRefs(selection));
   NS_ENSURE_TRUE(selection, NS_ERROR_FAILURE);
 
   nsCOMPtr<nsISelectionPrivate> selPriv = do_QueryInterface(selection, &rv);

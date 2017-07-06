@@ -291,8 +291,8 @@ nsresult nsIDNService::ACEtoUTF8(const nsACString & input, nsACString & _retval,
   nsAutoCString decodedBuf;
 
   nsACString::const_iterator start, end;
-  input.BeginReading(start); 
-  input.EndReading(end); 
+  input.BeginReading(start);
+  input.EndReading(end);
   _retval.Truncate();
 
   // loop and decode nodes
@@ -362,7 +362,7 @@ NS_IMETHODIMP nsIDNService::Normalize(const nsACString & input,
       rv = stringPrep(Substring(inUTF16, offset, len - 1), outLabel,
                       eStringPrepIgnoreErrors);
       NS_ENSURE_SUCCESS(rv, rv);
-   
+
       outUTF16.Append(outLabel);
       outUTF16.Append(char16_t('.'));
       offset += len;
@@ -458,8 +458,8 @@ static nsresult utf16ToUcs4(const nsAString& in,
 {
   uint32_t i = 0;
   nsAString::const_iterator start, end;
-  in.BeginReading(start); 
-  in.EndReading(end); 
+  in.BeginReading(start);
+  in.EndReading(end);
 
   while (start != end) {
     char16_t curChar;
@@ -467,7 +467,7 @@ static nsresult utf16ToUcs4(const nsAString& in,
     curChar= *start++;
 
     if (start != end &&
-        NS_IS_HIGH_SURROGATE(curChar) && 
+        NS_IS_HIGH_SURROGATE(curChar) &&
         NS_IS_LOW_SURROGATE(*start)) {
       out[i] = SURROGATE_TO_UCS4(curChar, *start);
       ++start;
@@ -508,7 +508,7 @@ static nsresult punycode(const nsAString& in, nsACString& out)
 
   // need maximum 20 bits to encode 16 bit Unicode character
   // (include null terminator)
-  const uint32_t kEncodedBufSize = kMaxDNSNodeLen * 20 / 8 + 1 + 1;  
+  const uint32_t kEncodedBufSize = kMaxDNSNodeLen * 20 / 8 + 1 + 1;
   char encodedBuf[kEncodedBufSize];
   punycode_uint encodedLength = kEncodedBufSize;
 
@@ -677,8 +677,8 @@ nsresult nsIDNService::stringPrepAndACE(const nsAString& in, nsACString& out,
 void nsIDNService::normalizeFullStops(nsAString& s)
 {
   nsAString::const_iterator start, end;
-  s.BeginReading(start); 
-  s.EndReading(end); 
+  s.BeginReading(start);
+  s.EndReading(end);
   int32_t index = 0;
 
   while (start != end) {

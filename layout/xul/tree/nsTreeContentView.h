@@ -146,7 +146,7 @@ class nsTreeContentView final : public nsINativeTreeView,
                             int32_t* aIndex, nsTArray<mozilla::UniquePtr<Row>>& aRows);
 
     void GetIndexInSubtree(nsIContent* aContainer, nsIContent* aContent, int32_t* aResult);
-    
+
     // Helper methods which we use to manage our plain array of rows.
     int32_t EnsureSubtree(int32_t aIndex);
 
@@ -159,7 +159,7 @@ class nsTreeContentView final : public nsINativeTreeView,
     int32_t RemoveRow(int32_t aIndex);
 
     void ClearRows();
-    
+
     void OpenContainer(int32_t aIndex);
 
     void CloseContainer(int32_t aIndex);

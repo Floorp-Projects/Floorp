@@ -142,7 +142,7 @@ nsChromeRegistryContent::RegisterOverride(const OverrideMapping& aOverride)
                  aOverride.overrideURI.charset.get(), nullptr, io);
   if (NS_FAILED(rv))
     return;
-  
+
   mOverrideTable.Put(chromeURI, overrideURI);
 }
 
@@ -235,7 +235,7 @@ nsChromeRegistryContent::GetSelectedLocale(const nsACString& aPackage,
   }
   return NS_OK;
 }
-  
+
 NS_IMETHODIMP
 nsChromeRegistryContent::Observe(nsISupports* aSubject, const char* aTopic,
                                  const char16_t* aData)

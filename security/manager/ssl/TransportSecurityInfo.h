@@ -96,10 +96,10 @@ private:
   PRErrorCode mErrorCode;
   ::mozilla::psm::SSLErrorMessageType mErrorMessageType;
   nsString mErrorMessageCached;
-  nsresult formatErrorMessage(::mozilla::MutexAutoLock const & proofOfLock, 
+  nsresult formatErrorMessage(::mozilla::MutexAutoLock const & proofOfLock,
                               PRErrorCode errorCode,
                               ::mozilla::psm::SSLErrorMessageType errorMessageType,
-                              bool wantsHtml, bool suppressPort443, 
+                              bool wantsHtml, bool suppressPort443,
                               nsString &result);
 
   int32_t mPort;

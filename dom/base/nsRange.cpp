@@ -84,7 +84,7 @@ static void InvalidateAllFrames(nsINode* aNode)
 // If outNodeAfter is returned true, then the node ends after the range does.
 // Note that both of the above might be true.
 // If neither are true, the node is contained inside of the range.
-// XXX - callers responsibility to ensure node in same doc as range! 
+// XXX - callers responsibility to ensure node in same doc as range!
 
 // static
 nsresult
@@ -98,15 +98,15 @@ nsRange::CompareNodeToRange(nsINode* aNode, nsRange* aRange,
   //    {RANGE(start), RANGE(end)}
   // if (RANGE(start) <= NODE(start))  and (RANGE(end) => NODE(end))
   // then the Node is contained (completely) by the Range.
-  
-  if (!aRange || !aRange->IsPositioned()) 
-    return NS_ERROR_UNEXPECTED; 
-  
+
+  if (!aRange || !aRange->IsPositioned())
+    return NS_ERROR_UNEXPECTED;
+
   // gather up the dom point info
   int32_t nodeStart, nodeEnd;
   nsINode* parent = aNode->GetParentNode();
   if (!parent) {
-    // can't make a parent/offset pair to represent start or 
+    // can't make a parent/offset pair to represent start or
     // end of the root node, because it has no parent.
     // so instead represent it by (node,0) and (node,numChildren)
     parent = aNode;
@@ -237,7 +237,7 @@ nsRange::IsNodeSelected(nsINode* aNode, uint32_t aStartOffset,
  * constructor/destructor
  ******************************************************/
 
-nsRange::~nsRange() 
+nsRange::~nsRange()
 {
   NS_ASSERTION(!IsInSelection(), "deleting nsRange that is in use");
 
@@ -849,7 +849,7 @@ nsRange::IntersectsNode(nsINode& aNode, ErrorResult& aRv)
   // Step 3.
   nsINode* parent = aNode.GetParentNode();
   if (!parent) {
-    // Steps 2 and 4. 
+    // Steps 2 and 4.
     // |parent| is null, so |node|'s root is |node| itself.
     return GetRoot() == &aNode;
   }
@@ -878,9 +878,9 @@ nsRange::IntersectsNode(nsINode& aNode, ErrorResult& aRv)
  * Private helper routines
  ******************************************************/
 
-// It's important that all setting of the range start/end points 
+// It's important that all setting of the range start/end points
 // go through this function, which will do all the right voodoo
-// for content notification of range ownership.  
+// for content notification of range ownership.
 // Calling DoSetRange with either parent argument null will collapse
 // the range to have both endpoints point to the other node
 void
@@ -2920,7 +2920,7 @@ nsRange::ToString(nsAString& aReturn)
 
   nsString tempString;
 
-  // loop through the content iterator, which returns nodes in the range in 
+  // loop through the content iterator, which returns nodes in the range in
   // close tag order, and grab the text from any text node
   while (!iter->IsDone())
   {
@@ -3191,7 +3191,7 @@ nsRange::GetBoundingClientRect(bool aClampToEdge, bool aFlushLayout)
   CollectClientRectsAndText(&accumulator, nullptr, this, mStartParent,
     mStartOffset, mEndParent, mEndOffset, aClampToEdge, aFlushLayout);
 
-  nsRect r = accumulator.mResultRect.IsEmpty() ? accumulator.mFirstRect : 
+  nsRect r = accumulator.mResultRect.IsEmpty() ? accumulator.mFirstRect :
     accumulator.mResultRect;
   rect->SetLayoutRect(r);
   return rect.forget();

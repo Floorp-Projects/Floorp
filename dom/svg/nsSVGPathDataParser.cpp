@@ -489,7 +489,7 @@ nsSVGArcConverter::GetNextSegment(Point* cp1, Point* cp2, Point* to)
   if (mSegIndex == mNumSegs) {
     return false;
   }
-  
+
   double cosTheta1 = cos(mTheta);
   double sinTheta1 = sin(mTheta);
   double theta2 = mTheta + mDelta;

@@ -44,7 +44,7 @@ nsIURLParser * net_GetAuthURLParser();
 nsIURLParser * net_GetNoAuthURLParser();
 nsIURLParser * net_GetStdURLParser();
 
-/* convert between nsIFile and file:// URL spec 
+/* convert between nsIFile and file:// URL spec
  * net_GetURLSpecFromFile does an extra stat, so callers should
  * avoid it if possible in favor of net_GetURLSpecFromActualFile
  * and net_GetURLSpecFromDir */
@@ -64,9 +64,9 @@ void net_CoalesceDirs(netCoalesceFlags flags, char* path);
 
 /**
  * Resolves a relative path string containing "." and ".."
- * with respect to a base path (assumed to already be resolved). 
+ * with respect to a base path (assumed to already be resolved).
  * For example, resolving "../../foo/./bar/../baz.html" w.r.t.
- * "/a/b/c/d/e/" yields "/a/b/c/foo/baz.html". Attempting to 
+ * "/a/b/c/d/e/" yields "/a/b/c/foo/baz.html". Attempting to
  * ascend above the base results in the NS_ERROR_MALFORMED_URI
  * exception. If basePath is null, it treats it as "/".
  *
@@ -123,7 +123,7 @@ void net_FilterURIString(const nsACString& input, nsACString& result);
  * @param aURL
  *        The URL string to normalize (UTF-8 encoded).  This can be a
  *        relative URL segment.
- * @param aResultBuf 
+ * @param aResultBuf
  *        The resulting string is appended to this string.  If the input URL
  *        is already normalized, then aResultBuf is unchanged.
  *

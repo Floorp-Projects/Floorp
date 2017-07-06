@@ -183,7 +183,7 @@ public:
   {
     for (uint32_t index = 0; index < aCount; index++) {
       Variant* remoteVariant = mArray.AppendElement();
-      if (!(remoteVariant && 
+      if (!(remoteVariant &&
             ConvertToRemoteVariant(aArgs[index], *remoteVariant, aInstance,
                                    true))) {
         mOk = false;
@@ -200,7 +200,7 @@ public:
   {
     for (uint32_t index = 0; index < aCount; index++) {
       Variant* remoteVariant = mArray.AppendElement();
-      if (!(remoteVariant && 
+      if (!(remoteVariant &&
             ConvertToRemoteVariant(aArgs[index], *remoteVariant, aInstance,
                                    true))) {
         mOk = false;

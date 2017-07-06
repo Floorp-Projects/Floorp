@@ -23,7 +23,7 @@ class nsDiskCacheDevice;
 class nsDiskCacheStreamIO : public nsIOutputStream {
 public:
     explicit nsDiskCacheStreamIO(nsDiskCacheBinding *   binding);
-    
+
     NS_DECL_THREADSAFE_ISUPPORTS
     NS_DECL_NSIOUTPUTSTREAM
 
@@ -31,7 +31,7 @@ public:
     nsresult    GetOutputStream(uint32_t offset, nsIOutputStream ** outputStream);
 
     nsresult    ClearBinding();
-    
+
     void        IncrementInputStreamCount() { mInStreamCount++; }
     void        DecrementInputStreamCount()
                 {

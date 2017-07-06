@@ -84,7 +84,7 @@ public:
 
   nsCertTree();
 
-  enum sortCriterion { sort_IssuerOrg, sort_Org, sort_Token, 
+  enum sortCriterion { sort_IssuerOrg, sort_Org, sort_Token,
     sort_CommonName, sort_IssuedDateDescending, sort_Email, sort_None };
 
 protected:
@@ -98,10 +98,10 @@ protected:
   static CompareCacheHashEntry *getCacheEntry(void *cache, void *aCert);
   static void CmpInitCriterion(nsIX509Cert *cert, CompareCacheHashEntry *entry,
                                sortCriterion crit, int32_t level);
-  static int32_t CmpByCrit(nsIX509Cert *a, CompareCacheHashEntry *ace, 
-                           nsIX509Cert *b, CompareCacheHashEntry *bce, 
+  static int32_t CmpByCrit(nsIX509Cert *a, CompareCacheHashEntry *ace,
+                           nsIX509Cert *b, CompareCacheHashEntry *bce,
                            sortCriterion crit, int32_t level);
-  static int32_t CmpBy(void *cache, nsIX509Cert *a, nsIX509Cert *b, 
+  static int32_t CmpBy(void *cache, nsIX509Cert *a, nsIX509Cert *b,
                        sortCriterion c0, sortCriterion c1, sortCriterion c2);
   static int32_t CmpCACert(void *cache, nsIX509Cert *a, nsIX509Cert *b);
   static int32_t CmpWebSiteCert(void *cache, nsIX509Cert *a, nsIX509Cert *b);
@@ -130,7 +130,7 @@ private:
   RefPtr<nsCertOverrideService> mOriginalOverrideService;
 
   treeArrayEl *GetThreadDescAtIndex(int32_t _index);
-  already_AddRefed<nsIX509Cert> 
+  already_AddRefed<nsIX509Cert>
     GetCertAtIndex(int32_t _index, int32_t *outAbsoluteCertOffset = nullptr);
   already_AddRefed<nsCertTreeDispInfo>
     GetDispInfoAtIndex(int32_t index, int32_t *outAbsoluteCertOffset = nullptr);

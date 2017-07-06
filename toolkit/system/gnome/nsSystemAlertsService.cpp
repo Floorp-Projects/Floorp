@@ -29,7 +29,7 @@ nsSystemAlertsService::Init()
   return NS_OK;
 }
 
-NS_IMETHODIMP nsSystemAlertsService::ShowAlertNotification(const nsAString & aImageUrl, const nsAString & aAlertTitle, 
+NS_IMETHODIMP nsSystemAlertsService::ShowAlertNotification(const nsAString & aImageUrl, const nsAString & aAlertTitle,
                                                            const nsAString & aAlertText, bool aAlertTextClickable,
                                                            const nsAString & aAlertCookie,
                                                            nsIObserver * aAlertListener,

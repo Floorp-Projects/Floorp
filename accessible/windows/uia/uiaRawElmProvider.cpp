@@ -157,7 +157,7 @@ uiaRawElmProvider::GetPropertyValue(PROPERTYID aPropertyId,
 
       break;
     }
-    
+
     //ARIA Role / shortcut
     case UIA_AriaRolePropertyId: {
       nsAutoString xmlRoles;

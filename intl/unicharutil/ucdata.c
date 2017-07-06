@@ -580,7 +580,7 @@ int reload;
     if (hdr.bom == 0xfffe) {
         for (i = 0; i < size; i++)
           _ucdcmp_nodes[i] = endian_long(_ucdcmp_nodes[i]);
-    }        
+    }
 }
 
 static void
@@ -714,7 +714,7 @@ int reload;
     if (hdr.bom == 0xfffe) {
         for (i = 0; i < _uccmcl_size; i++)
           _uccmcl_nodes[i] = endian_long(_uccmcl_nodes[i]);
-    }        
+    }
 }
 
 static void
@@ -829,7 +829,7 @@ int reload;
 
         for (i = 0; i < size; i++)
           _ucnum_vals[i] = endian_short(_ucnum_vals[i]);
-    }        
+    }
 }
 
 static void

@@ -38,7 +38,7 @@ NS_NewStackLayout(nsCOMPtr<nsBoxLayout>& aNewLayout)
   // we have not instance variables so just return our static one.
   aNewLayout = nsStackLayout::gInstance;
   return NS_OK;
-} 
+}
 
 /*static*/ void
 nsStackLayout::Shutdown()
@@ -173,7 +173,7 @@ nsStackLayout::GetAscent(nsIFrame* aBox, nsBoxLayoutState& aState)
   nscoord vAscent = 0;
 
   nsIFrame* child = nsBox::GetChildXULBox(aBox);
-  while (child) {  
+  while (child) {
     nscoord ascent = child->GetXULBoxAscent(aState);
     nsMargin margin;
     child->GetXULMargin(margin);
@@ -290,8 +290,8 @@ nsStackLayout::XULLayout(nsIFrame* aBox, nsBoxLayoutState& aState)
     nsIFrame* child = nsBox::GetChildXULBox(aBox);
     grow = false;
 
-    while (child) 
-    {  
+    while (child)
+    {
       nsMargin margin;
       child->GetXULMargin(margin);
       nsRect childRect(clientRect);

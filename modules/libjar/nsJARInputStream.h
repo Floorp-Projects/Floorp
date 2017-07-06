@@ -1,5 +1,5 @@
 /* nsJARInputStream.h
- * 
+ *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -19,7 +19,7 @@ struct BrotliStateStruct;
 /*-------------------------------------------------------------------------
  * Class nsJARInputStream declaration. This class defines the type of the
  * object returned by calls to nsJAR::GetInputStream(filename) for the
- * purpose of reading a file item out of a JAR file. 
+ * purpose of reading a file item out of a JAR file.
  *------------------------------------------------------------------------*/
 class nsJARInputStream final : public nsIInputStream
 {
@@ -35,25 +35,25 @@ class nsJARInputStream final : public nsIInputStream
     , mCurPos(0)
     , mArrPos(0)
     , mMode(MODE_NOTINITED)
-    { 
+    {
       memset(&mZs, 0, sizeof(z_stream));
     }
 
     NS_DECL_THREADSAFE_ISUPPORTS
     NS_DECL_NSIINPUTSTREAM
-   
+
     // takes ownership of |fd|, even on failure
     nsresult InitFile(nsJAR *aJar, nsZipItem *item);
 
     nsresult InitDirectory(nsJAR *aJar,
                            const nsACString& aJarDirSpec,
                            const char* aDir);
-  
+
   private:
     ~nsJARInputStream() { Close(); }
 
     RefPtr<nsZipHandle>  mFd;         // handle for reading
-    uint32_t               mOutSize;    // inflated size 
+    uint32_t               mOutSize;    // inflated size
     uint32_t               mInCrc;      // CRC as provided by the zipentry
     uint32_t               mOutCrc;     // CRC as calculated by me
     z_stream               mZs;         // zip data structure

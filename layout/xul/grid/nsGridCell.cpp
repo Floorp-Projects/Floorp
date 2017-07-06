@@ -19,8 +19,8 @@
 nsGridCell::nsGridCell():mBoxInColumn(nullptr),mBoxInRow(nullptr)
 {
     MOZ_COUNT_CTOR(nsGridCell);
-}                                               
-        
+}
+
 nsGridCell::~nsGridCell()
 {
     MOZ_COUNT_DTOR(nsGridCell);
@@ -97,7 +97,7 @@ nsGridCell::GetXULMaxSize(nsBoxLayoutState& aState)
 
   if (mBoxInColumn) {
     nsSize max = mBoxInColumn->GetXULMaxSize(aState);
- 
+
     nsBox::AddMargin(mBoxInColumn, max);
     nsGridLayout2::AddOffset(mBoxInColumn, max);
 

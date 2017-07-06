@@ -156,7 +156,7 @@ nsSVGEnum::SMILEnum::ValueFromString(const nsAString& aStr,
       mapping++;
     }
   }
-  
+
   // only a warning since authors may mistype attribute values
   NS_WARNING("unknown enumeration key");
   return NS_ERROR_FAILURE;

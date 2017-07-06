@@ -43,7 +43,7 @@ public:
                              nsCacheStoragePolicy  storagePolicy,
                              nsCacheDevice *       device,
                              nsCacheEntry **       result);
-                                      
+
     nsCString *  Key()  { return &mKey; }
 
     int32_t  FetchCount()                              { return mFetchCount; }
@@ -59,7 +59,7 @@ public:
     uint32_t ExpirationTime()                     { return mExpirationTime; }
     void     SetExpirationTime( uint32_t expires) { mExpirationTime = expires; }
 
-    uint32_t Size()                               
+    uint32_t Size()
         { return mDataSize + mMetaData.Size() + mKey.Length() ; }
 
     nsCacheDevice * CacheDevice()                            { return mCacheDevice; }
@@ -82,7 +82,7 @@ public:
     void     SetDataSize( uint32_t  size)         { mDataSize = size; }
 
     void     TouchData();
-    
+
     /**
      * Meta data accessors
      */
@@ -92,7 +92,7 @@ public:
     nsresult VisitMetaDataElements( nsICacheMetaDataVisitor * visitor) { return mMetaData.VisitElements(visitor); }
     nsresult FlattenMetaData(char * buffer, uint32_t bufSize) { return mMetaData.FlattenMetaData(buffer, bufSize); }
     nsresult UnflattenMetaData(const char * buffer, uint32_t bufSize) { return mMetaData.UnflattenMetaData(buffer, bufSize); }
-    uint32_t MetaDataSize() { return mMetaData.Size(); }  
+    uint32_t MetaDataSize() { return mMetaData.Size(); }
 
     void     TouchMetaData();
 
@@ -120,7 +120,7 @@ public:
         eBindingMask         = 0x00010000,
         ePrivateMask         = 0x00020000
     };
-    
+
     void MarkBinding()         { mFlags |=  eBindingMask; }
     void ClearBinding()        { mFlags &= ~eBindingMask; }
     bool IsBinding()         { return (mFlags & eBindingMask) != 0; }
@@ -221,7 +221,7 @@ private:
     uint32_t                mDataSize;       // 4
     nsCacheDevice *         mCacheDevice;    // 4
     nsCacheDevice *         mCustomDevice;   // 4
-    nsCOMPtr<nsISupports>   mSecurityInfo;   // 
+    nsCOMPtr<nsISupports>   mSecurityInfo;   //
     nsISupports *           mData;           // strong ref
     nsCOMPtr<nsIEventTarget> mEventTarget;
     nsCacheMetaData         mMetaData;       // 4

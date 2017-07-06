@@ -49,7 +49,7 @@ nsSaveAsCharset::Convert(const nsAString& aIn, nsACString& aOut)
   return NS_OK;
 }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsSaveAsCharset::GetCharset(nsACString& aCharset)
 {
   if (!mEncoding) {

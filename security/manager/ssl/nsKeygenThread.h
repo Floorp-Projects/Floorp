@@ -20,7 +20,7 @@ class nsKeygenThread : public nsIKeygenThread
 {
 private:
   mozilla::Mutex mutex;
-  
+
   nsCOMPtr<nsIRunnable> mNotifyObserver;
 
   bool iAmRunning;
@@ -46,7 +46,7 @@ protected:
 
 public:
   nsKeygenThread();
-  
+
   NS_DECL_NSIKEYGENTHREAD
   NS_DECL_THREADSAFE_ISUPPORTS
 
@@ -63,7 +63,7 @@ public:
     PK11SlotInfo **a_used_slot,
     SECKEYPrivateKey **a_privateKey,
     SECKEYPublicKey **a_publicKey);
-  
+
   void Join(void);
 
   void Run(void);

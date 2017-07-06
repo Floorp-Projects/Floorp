@@ -56,21 +56,21 @@ public:
   /**
    * Return the column index of the cell with the given index.
    */
-  virtual int32_t ColIndexAt(uint32_t aCellIdx) 
+  virtual int32_t ColIndexAt(uint32_t aCellIdx)
     { return aCellIdx % ColCount(); }
 
   /**
    * Return the row index of the cell with the given index.
    */
-  virtual int32_t RowIndexAt(uint32_t aCellIdx) 
+  virtual int32_t RowIndexAt(uint32_t aCellIdx)
     { return aCellIdx / ColCount(); }
 
   /**
    * Get the row and column indices for the cell at the given index.
    */
   virtual void RowAndColIndicesAt(uint32_t aCellIdx, int32_t* aRowIdx,
-                                  int32_t* aColIdx) 
-    { 
+                                  int32_t* aColIdx)
+    {
       uint32_t colCount = ColCount();
       *aRowIdx = aCellIdx / colCount;
       *aColIdx = aCellIdx % colCount;

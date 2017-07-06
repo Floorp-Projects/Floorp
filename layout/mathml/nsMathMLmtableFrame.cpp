@@ -284,13 +284,13 @@ public:
   {
     auto geometry =
       static_cast<const nsDisplayItemGenericImageGeometry*>(aGeometry);
-  
+
     if (aBuilder->ShouldSyncDecodeImages() &&
         geometry->ShouldInvalidateToSyncDecodeImages()) {
       bool snap;
       aInvalidRegion->Or(*aInvalidRegion, GetBounds(aBuilder, &snap));
     }
-  
+
     nsDisplayItem::ComputeInvalidationRegion(aBuilder, aGeometry, aInvalidRegion);
   }
 
@@ -612,10 +612,10 @@ MapAllAttributesIntoCSS(nsMathMLmtableFrame* aTableFrame)
 // the top of the 5th row, axis -1 means anchor the table on the axis of
 // the last row
 
-// The REC says that the syntax is 
-// '\s*(top|bottom|center|baseline|axis)(\s+-?[0-9]+)?\s*' 
+// The REC says that the syntax is
+// '\s*(top|bottom|center|baseline|axis)(\s+-?[0-9]+)?\s*'
 // the parsing could have been simpler with that syntax
-// but for backward compatibility we make optional 
+// but for backward compatibility we make optional
 // the whitespaces between the alignment name and the row number
 
 enum eAlign {
@@ -634,7 +634,7 @@ ParseAlignAttribute(nsString& aValue, eAlign& aAlign, int32_t& aRowIndex)
   aAlign = eAlign_axis;
   int32_t len = 0;
 
-  // we only have to remove the leading spaces because 
+  // we only have to remove the leading spaces because
   // ToInteger ignores the whitespaces around the number
   aValue.CompressWhitespace(true, false);
 
@@ -699,7 +699,7 @@ NS_NewMathMLmtableOuterFrame (nsIPresShell* aPresShell, nsStyleContext* aContext
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(nsMathMLmtableWrapperFrame)
- 
+
 nsMathMLmtableWrapperFrame::~nsMathMLmtableWrapperFrame()
 {
 }
@@ -713,15 +713,15 @@ nsMathMLmtableWrapperFrame::AttributeChanged(int32_t  aNameSpaceID,
   // frame         : in mathml.css
   // framespacing  : here
   // groupalign    : not yet supported
-  // equalrows     : not yet supported 
-  // equalcolumns  : not yet supported 
+  // equalrows     : not yet supported
+  // equalcolumns  : not yet supported
   // displaystyle  : here and in mathml.css
-  // align         : in reflow 
+  // align         : in reflow
   // rowalign      : here
-  // rowlines      : here 
+  // rowlines      : here
   // rowspacing    : here
-  // columnalign   : here 
-  // columnlines   : here 
+  // columnalign   : here
+  // columnlines   : here
   // columnspacing : here
 
   // mtable is simple and only has one (pseudo) row-group inside our inner-table
@@ -1185,7 +1185,7 @@ nsMathMLmtdFrame::AttributeChanged(int32_t  aNameSpaceID,
 
   if (aAttribute == nsGkAtoms::rowspan ||
       aAttribute == nsGkAtoms::columnspan_) {
-    // use the naming expected by the base class 
+    // use the naming expected by the base class
     if (aAttribute == nsGkAtoms::columnspan_)
       aAttribute = nsGkAtoms::colspan;
     return nsTableCellFrame::AttributeChanged(aNameSpaceID, aAttribute, aModType);

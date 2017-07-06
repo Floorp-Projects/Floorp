@@ -8,7 +8,7 @@
 
 #include "nsThreadUtils.h"
 #include <algorithm>
-   
+
 namespace mozilla {
 namespace net {
 
@@ -43,7 +43,7 @@ NS_IMETHODIMP
 nsPreloadedStream::Available(uint64_t *_retval)
 {
     uint64_t avail = 0;
-    
+
     nsresult rv = mStream->Available(&avail);
     if (NS_FAILED(rv))
         return rv;
@@ -57,7 +57,7 @@ nsPreloadedStream::Read(char *aBuf, uint32_t aCount,
 {
     if (!mLen)
         return mStream->Read(aBuf, aCount, _retval);
-    
+
     uint32_t toRead = std::min(mLen, aCount);
     memcpy(aBuf, mBuf + mOffset, toRead);
     mOffset += toRead;

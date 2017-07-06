@@ -85,7 +85,7 @@ MBS_ReadHeader(FILE* file, MBSPatchHeader *header)
 
   return OK;
 }
-         
+
 int
 MBS_ApplyPatch(const MBSPatchHeader *header, FILE* patchFile,
                unsigned char *fbuffer, FILE* file)

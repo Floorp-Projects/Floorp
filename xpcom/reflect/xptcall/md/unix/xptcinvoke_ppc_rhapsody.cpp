@@ -102,7 +102,7 @@ invoke_copy_to_stack(uint32_t* d, uint32_t paramCount, nsXPTCVariant* s, double 
 }
 
 extern "C" nsresult _NS_InvokeByIndex(nsISupports* that, uint32_t methodIndex,
-                                      uint32_t paramCount, 
+                                      uint32_t paramCount,
                                       nsXPTCVariant* params);
 
 EXPORT_XPCOM_API(nsresult)
@@ -110,4 +110,4 @@ NS_InvokeByIndex(nsISupports* that, uint32_t methodIndex,
                  uint32_t paramCount, nsXPTCVariant* params)
 {
     return _NS_InvokeByIndex(that, methodIndex, paramCount, params);
-}    
+}

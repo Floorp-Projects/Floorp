@@ -162,7 +162,7 @@ public:
    * Return true if the document has given document state.
    */
   bool HasLoadState(LoadState aState) const
-    { return (mLoadState & static_cast<uint32_t>(aState)) == 
+    { return (mLoadState & static_cast<uint32_t>(aState)) ==
         static_cast<uint32_t>(aState); }
 
   /**

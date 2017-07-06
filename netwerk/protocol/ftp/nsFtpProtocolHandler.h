@@ -24,9 +24,9 @@ public:
     NS_DECL_NSIPROTOCOLHANDLER
     NS_DECL_NSIPROXIEDPROTOCOLHANDLER
     NS_DECL_NSIOBSERVER
-    
+
     nsFtpProtocolHandler();
-    
+
     nsresult Init();
 
     // FTP Connection list access
@@ -45,9 +45,9 @@ private:
         nsCOMPtr<nsITimer> timer;
         RefPtr<nsFtpControlConnection> conn;
         char *key;
-        
+
         timerStruct() : key(nullptr) {}
-        
+
         ~timerStruct() {
             if (timer)
                 timer->Cancel();

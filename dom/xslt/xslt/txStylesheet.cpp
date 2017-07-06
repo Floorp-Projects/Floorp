@@ -28,7 +28,7 @@ nsresult
 txStylesheet::init()
 {
     mRootFrame = new ImportFrame;
-    
+
     // Create default templates
     // element/root template
     mContainerTemplate = new txPushParams;
@@ -79,7 +79,7 @@ txStylesheet::~txStylesheet()
     while (instrIter.hasNext()) {
         delete static_cast<txInstruction*>(instrIter.next());
     }
-    
+
     // We can't make the map own its values because then we wouldn't be able
     // to merge attributesets of the same name
     txExpandedNameMap<txInstruction>::iterator attrSetIter(mAttributeSets);
@@ -163,7 +163,7 @@ txStylesheet::findTemplate(const txXPathNode& aNode,
       }
       else {
           MOZ_LOG(txLog::xslt, LogLevel::Debug,
-                 ("No match, Node %s, Mode %s\n", 
+                 ("No match, Node %s, Mode %s\n",
                   NS_LossyConvertUTF16toASCII(nodeName).get(),
                   NS_LossyConvertUTF16toASCII(mode).get()));
       }
@@ -281,7 +281,7 @@ txStylesheet::doneCompiling()
     txListIterator frameIter(&mImportFrames);
     rv = frameIter.addAfter(mRootFrame);
     NS_ENSURE_SUCCESS(rv, rv);
-    
+
     mRootFrame = nullptr;
     frameIter.next();
     rv = addFrames(frameIter);
@@ -347,7 +347,7 @@ txStylesheet::doneCompiling()
         if (!mStripSpaceTests.AppendElements(frameStripSpaceTests)) {
             return NS_ERROR_OUT_OF_MEMORY;
         }
-        
+
         frameStripSpaceTests.Clear();
     }
 
@@ -355,7 +355,7 @@ txStylesheet::doneCompiling()
         nsAutoPtr<txDecimalFormat> format(new txDecimalFormat);
         rv = mDecimalFormats.add(txExpandedName(), format);
         NS_ENSURE_SUCCESS(rv, rv);
-        
+
         format.forget();
     }
 
@@ -467,7 +467,7 @@ txStylesheet::addFrames(txListIterator& aInsertIter)
             aInsertIter.previous();
         }
     }
-    
+
     return NS_OK;
 }
 
@@ -504,12 +504,12 @@ txStylesheet::addAttributeSet(txAttributeSetItem* aAttributeSetItem)
         rv = mAttributeSets.add(aAttributeSetItem->mName,
                                 aAttributeSetItem->mFirstInstruction);
         NS_ENSURE_SUCCESS(rv, rv);
-        
+
         aAttributeSetItem->mFirstInstruction.forget();
-        
+
         return NS_OK;
     }
-    
+
     // We need to prepend the new instructions before the existing ones.
     txInstruction* instr = aAttributeSetItem->mFirstInstruction;
     txInstruction* lastNonReturn = nullptr;
@@ -517,7 +517,7 @@ txStylesheet::addAttributeSet(txAttributeSetItem* aAttributeSetItem)
         lastNonReturn = instr;
         instr = instr->mNext;
     }
-    
+
     if (!lastNonReturn) {
         // The new attributeset is empty, so lets just ignore it.
         return NS_OK;
@@ -546,11 +546,11 @@ txStylesheet::addGlobalVariable(txVariableItem* aVariable)
                            aVariable->mIsParam));
     nsresult rv = mGlobalVariables.add(aVariable->mName, var);
     NS_ENSURE_SUCCESS(rv, rv);
-    
+
     var.forget();
-    
+
     return NS_OK;
-    
+
 }
 
 nsresult
@@ -588,7 +588,7 @@ txStylesheet::addDecimalFormat(const txExpandedName& aName,
 
     nsresult rv = mDecimalFormats.add(aName, aFormat);
     NS_ENSURE_SUCCESS(rv, rv);
-    
+
     aFormat.forget();
 
     return NS_OK;

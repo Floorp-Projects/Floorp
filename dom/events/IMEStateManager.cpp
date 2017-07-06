@@ -513,7 +513,7 @@ IMEStateManager::OnChangeFocusInternal(nsPresContext* aPresContext,
       // that means that the window is being activated and the child process
       // may have composition.  Then, we shouldn't commit the composition with
       // making IME state disabled.
-      setIMEState = false; 
+      setIMEState = false;
       MOZ_LOG(sISMLog, LogLevel::Debug,
         ("  OnChangeFocusInternal(), doesn't set IME "
          "state because focused element (or document) is already in the child "

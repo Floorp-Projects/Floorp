@@ -117,7 +117,7 @@ EnableSensorNotifications(SensorType aSensor)
   RefPtr<ISensorManager> manager;
   if (FAILED(CoCreateInstance(CLSID_SensorManager, nullptr,
                               CLSCTX_INPROC_SERVER,
-                              IID_ISensorManager, 
+                              IID_ISensorManager,
                               getter_AddRefs(manager)))) {
     return;
   }
@@ -142,7 +142,7 @@ EnableSensorNotifications(SensorType aSensor)
     return;
   }
 
-  // Set report interval to 100ms if possible. 
+  // Set report interval to 100ms if possible.
   // Default value depends on drivers.
   RefPtr<IPortableDeviceValues> values;
   if (SUCCEEDED(CoCreateInstance(CLSID_PortableDeviceValues, nullptr,

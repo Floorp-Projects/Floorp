@@ -33,7 +33,7 @@ protected:
 // specific dialogs.
 //
 
-nsresult 
+nsresult
 getNSSDialogs(void **_result, REFNSIID aIID, const char *contract);
 
 extern "C" {

@@ -51,14 +51,14 @@ NS_IMPL_ISUPPORTS(nsStreamLoader, nsIStreamLoader,
                   nsIRequestObserver, nsIStreamListener,
                   nsIThreadRetargetableStreamListener)
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsStreamLoader::GetNumBytesRead(uint32_t* aNumBytes)
 {
   *aNumBytes = mData.length();
   return NS_OK;
 }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsStreamLoader::GetRequest(nsIRequest **aRequest)
 {
   NS_IF_ADDREF(*aRequest = mRequest);
@@ -143,9 +143,9 @@ nsStreamLoader::WriteSegmentFun(nsIInputStream *inStr,
   return NS_OK;
 }
 
-NS_IMETHODIMP 
-nsStreamLoader::OnDataAvailable(nsIRequest* request, nsISupports *ctxt, 
-                                nsIInputStream *inStr, 
+NS_IMETHODIMP
+nsStreamLoader::OnDataAvailable(nsIRequest* request, nsISupports *ctxt,
+                                nsIInputStream *inStr,
                                 uint64_t sourceOffset, uint32_t count)
 {
   uint32_t countRead;

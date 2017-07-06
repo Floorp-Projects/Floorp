@@ -157,7 +157,7 @@ ContainerEnumeratorImpl::HasMoreElements(bool* aResult)
 
          const char16_t *nextValStr;
          nextValLiteral->GetValueConst(&nextValStr);
-		 
+
          nsresult err;
          int32_t nextVal = nsAutoString(nextValStr).ToInteger(&err);
 

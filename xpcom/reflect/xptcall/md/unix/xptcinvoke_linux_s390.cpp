@@ -63,7 +63,7 @@ invoke_count_words(uint32_t paramCount, nsXPTCVariant* s)
 static void
 invoke_copy_to_stack(uint32_t paramCount, nsXPTCVariant* s, uint32_t* d_ov, uint32_t overflow)
 {
-    uint32_t *d_gpr = d_ov + overflow; 
+    uint32_t *d_gpr = d_ov + overflow;
     uint64_t *d_fpr = (uint64_t *)(d_gpr + 4);
     uint32_t gpr = 1 /*this*/, fpr = 0;
 
@@ -71,7 +71,7 @@ invoke_copy_to_stack(uint32_t paramCount, nsXPTCVariant* s, uint32_t* d_ov, uint
     {
         if(s->IsPtrData())
         {
-            if (gpr < 5) 
+            if (gpr < 5)
                 *((void**)d_gpr) = s->ptr, d_gpr++, gpr++;
             else
                 *((void**)d_ov ) = s->ptr, d_ov++;
@@ -79,79 +79,79 @@ invoke_copy_to_stack(uint32_t paramCount, nsXPTCVariant* s, uint32_t* d_ov, uint
         }
         switch(s->type)
         {
-        case nsXPTType::T_I8     : 
+        case nsXPTType::T_I8     :
             if (gpr < 5)
                 *((int32_t*) d_gpr) = s->val.i8, d_gpr++, gpr++;
             else
                 *((int32_t*) d_ov ) = s->val.i8, d_ov++;
             break;
-        case nsXPTType::T_I16    : 
+        case nsXPTType::T_I16    :
             if (gpr < 5)
                 *((int32_t*) d_gpr) = s->val.i16, d_gpr++, gpr++;
             else
                 *((int32_t*) d_ov ) = s->val.i16, d_ov++;
             break;
-        case nsXPTType::T_I32    : 
+        case nsXPTType::T_I32    :
             if (gpr < 5)
                 *((int32_t*) d_gpr) = s->val.i32, d_gpr++, gpr++;
             else
                 *((int32_t*) d_ov ) = s->val.i32, d_ov++;
             break;
-        case nsXPTType::T_I64    : 
+        case nsXPTType::T_I64    :
             if (gpr < 4)
                 *((int64_t*) d_gpr) = s->val.i64, d_gpr+=2, gpr+=2;
             else
                 *((int64_t*) d_ov ) = s->val.i64, d_ov+=2, gpr=5;
             break;
-        case nsXPTType::T_U8     : 
+        case nsXPTType::T_U8     :
             if (gpr < 5)
                 *((uint32_t*) d_gpr) = s->val.u8, d_gpr++, gpr++;
             else
                 *((uint32_t*) d_ov ) = s->val.u8, d_ov++;
             break;
-        case nsXPTType::T_U16    : 
+        case nsXPTType::T_U16    :
             if (gpr < 5)
                 *((uint32_t*)d_gpr) = s->val.u16, d_gpr++, gpr++;
             else
                 *((uint32_t*)d_ov ) = s->val.u16, d_ov++;
             break;
-        case nsXPTType::T_U32    : 
+        case nsXPTType::T_U32    :
             if (gpr < 5)
                 *((uint32_t*)d_gpr) = s->val.u32, d_gpr++, gpr++;
             else
                 *((uint32_t*)d_ov ) = s->val.u32, d_ov++;
             break;
-        case nsXPTType::T_U64    : 
+        case nsXPTType::T_U64    :
             if (gpr < 4)
                 *((uint64_t*)d_gpr) = s->val.u64, d_gpr+=2, gpr+=2;
             else
                 *((uint64_t*)d_ov ) = s->val.u64, d_ov+=2, gpr=5;
             break;
-        case nsXPTType::T_FLOAT  : 
+        case nsXPTType::T_FLOAT  :
             if (fpr < 2)
                 *((float*)   d_fpr) = s->val.f, d_fpr++, fpr++;
             else
                 *((float*)   d_ov ) = s->val.f, d_ov++;
             break;
-        case nsXPTType::T_DOUBLE : 
+        case nsXPTType::T_DOUBLE :
             if (fpr < 2)
                 *((double*)  d_fpr) = s->val.d, d_fpr++, fpr++;
             else
                 *((double*)  d_ov ) = s->val.d, d_ov+=2;
             break;
-        case nsXPTType::T_BOOL   : 
+        case nsXPTType::T_BOOL   :
             if (gpr < 5)
                 *((uint32_t*)d_gpr) = s->val.b, d_gpr++, gpr++;
             else
                 *((uint32_t*)d_ov ) = s->val.b, d_ov++;
             break;
-        case nsXPTType::T_CHAR   : 
+        case nsXPTType::T_CHAR   :
             if (gpr < 5)
                 *((uint32_t*)d_gpr) = s->val.c, d_gpr++, gpr++;
             else
                 *((uint32_t*)d_ov ) = s->val.c, d_ov++;
             break;
-        case nsXPTType::T_WCHAR  : 
+        case nsXPTType::T_WCHAR  :
             if (gpr < 5)
                 *((uint32_t*)d_gpr) = s->val.wc, d_gpr++, gpr++;
             else
@@ -159,7 +159,7 @@ invoke_copy_to_stack(uint32_t paramCount, nsXPTCVariant* s, uint32_t* d_ov, uint
             break;
         default:
             // all the others are plain pointer types
-            if (gpr < 5) 
+            if (gpr < 5)
                 *((void**)   d_gpr) = s->val.p, d_gpr++, gpr++;
             else
                 *((void**)   d_ov ) = s->val.p, d_ov++;

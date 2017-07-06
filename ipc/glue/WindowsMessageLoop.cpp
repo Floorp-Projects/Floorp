@@ -57,8 +57,8 @@ using namespace mozilla::ipc::windows;
  * messages or risk deadlock. Given our architecture the only way to meet
  * Windows' requirement and allow for synchronous IPC messages is to pump a
  * miniature message loop during a sync IPC call. We avoid processing any
- * queued messages during the loop (with one exception, see below), but 
- * "nonqueued" messages (see 
+ * queued messages during the loop (with one exception, see below), but
+ * "nonqueued" messages (see
  * http://msdn.microsoft.com/en-us/library/ms644927(VS.85).aspx under the
  * section "Nonqueued messages") cannot be avoided. Those messages are trapped
  * in a special window procedure where we can either ignore the message or
@@ -381,8 +381,8 @@ ProcessOrDeferMessage(HWND hwnd,
     }
 
     // Just return, prevents DefWindowProc from messaging the window
-    // syncronously with other events, which may be deferred. Prevents 
-    // random shutdown of aero composition on the window. 
+    // syncronously with other events, which may be deferred. Prevents
+    // random shutdown of aero composition on the window.
     case WM_SYNCPAINT:
       return 0;
 
@@ -789,7 +789,7 @@ MessageChannel::ProcessNativeEventsInInterruptCall()
 // in a child. There are some intricacies in using it however. Spin loop is
 // enabled for a particular Interrupt frame by the client calling
 // MessageChannel::ProcessNativeEventsInInterrupt().
-// This call can be nested for multiple Interrupt frames in a single plugin or 
+// This call can be nested for multiple Interrupt frames in a single plugin or
 // multiple unrelated plugins.
 void
 MessageChannel::SpinInternalEventLoop()
@@ -803,7 +803,7 @@ MessageChannel::SpinInternalEventLoop()
 
   // Nested windows event loop we trigger when the child enters into modal
   // event loops.
-  
+
   // Note, when we return, we always reset the notify worker event. So there's
   // no need to reset it on return here.
 
@@ -1170,7 +1170,7 @@ MessageChannel::WaitForInterruptNotify()
   MOZ_ASSERT(gUIThreadId, "InitUIThread was not called!");
 
   // Re-use sync notification wait code if this channel does not require
-  // Windows message deferral behavior. 
+  // Windows message deferral behavior.
   if (!(mFlags & REQUIRE_DEFERRED_MESSAGE_PROTECTION)) {
     return WaitForSyncNotify(true);
   }
@@ -1449,7 +1449,7 @@ DeferredWindowPosMessage::Run()
   }
 
 #ifdef DEBUG
-  BOOL ret = 
+  BOOL ret =
 #endif
   SetWindowPos(windowPos.hwnd, windowPos.hwndInsertAfter, windowPos.x,
                windowPos.y, windowPos.cx, windowPos.cy, windowPos.flags);

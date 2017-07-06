@@ -1292,7 +1292,7 @@ nsTreeSanitizer::SanitizeURL(mozilla::dom::Element* aElement,
   nsCOMPtr<nsIURI> baseURI = aElement->GetBaseURI();
   nsCOMPtr<nsIURI> attrURI;
   nsresult rv = NS_NewURI(getter_AddRefs(attrURI), v, nullptr, baseURI);
-  if (NS_SUCCEEDED(rv)) { 
+  if (NS_SUCCEEDED(rv)) {
     if (mCidEmbedsOnly &&
         kNameSpaceID_None == aNamespace) {
       if (nsGkAtoms::src == aLocalName || nsGkAtoms::background == aLocalName) {

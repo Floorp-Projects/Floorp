@@ -48,7 +48,7 @@ nsSysNTLMAuthConstructor(nsISupports *outer, REFNSIID iid, void **result)
   nsAuthSSPI *auth = new nsAuthSSPI(PACKAGE_TYPE_NTLM);
   if (!auth)
     return NS_ERROR_OUT_OF_MEMORY;
-  
+
   NS_ADDREF(auth);
   nsresult rv = auth->QueryInterface(iid, result);
   NS_RELEASE(auth);
@@ -64,7 +64,7 @@ nsKerbSSPIAuthConstructor(nsISupports *outer, REFNSIID iid, void **result)
   nsAuthSSPI *auth = new nsAuthSSPI(PACKAGE_TYPE_KERBEROS);
   if (!auth)
     return NS_ERROR_OUT_OF_MEMORY;
-  
+
   NS_ADDREF(auth);
   nsresult rv = auth->QueryInterface(iid, result);
   NS_RELEASE(auth);
@@ -136,7 +136,7 @@ nsKerbGSSAPIAuthConstructor(nsISupports *outer, REFNSIID iid, void **result)
   nsAuthGSSAPI *auth = new nsAuthGSSAPI(PACKAGE_TYPE_KERBEROS);
   if (!auth)
     return NS_ERROR_OUT_OF_MEMORY;
-  
+
   NS_ADDREF(auth);
   nsresult rv = auth->QueryInterface(iid, result);
   NS_RELEASE(auth);
@@ -152,7 +152,7 @@ nsGSSAPIAuthConstructor(nsISupports *outer, REFNSIID iid, void **result)
   nsAuthGSSAPI *auth = new nsAuthGSSAPI(PACKAGE_TYPE_NEGOTIATE);
   if (!auth)
     return NS_ERROR_OUT_OF_MEMORY;
-  
+
   NS_ADDREF(auth);
   nsresult rv = auth->QueryInterface(iid, result);
   NS_RELEASE(auth);

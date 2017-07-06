@@ -364,7 +364,7 @@ private:
    * metadata decode proves to be wrong due to image corruption, the frames we
    * have may violate this class's invariants. Either way, we need to
    * immediately discard the invalid frames and redecode so that callers don't
-   * perceive that we've entered an invalid state. 
+   * perceive that we've entered an invalid state.
    *
    * RecoverFromInvalidFrames discards all existing frames and redecodes using
    * the provided @aSize and @aFlags.

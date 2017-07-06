@@ -29,7 +29,7 @@ class nsXULTemplateQueryProcessorXML;
 #define NS_IXMLQUERY_IID \
   {0x0358d692, 0xccce, 0x4a97, \
     { 0xb2, 0x51, 0xba, 0x8f, 0x17, 0x0f, 0x3b, 0x6f }}
- 
+
 class nsXMLQuery final : public nsISupports
 {
   public:

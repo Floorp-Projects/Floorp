@@ -35,7 +35,7 @@ class nsCopySupport
     // (text/html or text/plain). If aSel is non-null, use it, otherwise get the entire
     // doc.
     static nsresult GetContents(const nsACString& aMimeType, uint32_t aFlags, nsISelection *aSel, nsIDocument *aDoc, nsAString& outdata);
-    
+
     static nsresult ImageCopy(nsIImageLoadingContent* aImageElement,
                               nsILoadContext* aLoadContext,
                               int32_t aCopyFlags);

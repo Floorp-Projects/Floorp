@@ -25,7 +25,7 @@ public:
 #endif
 
 protected:
-  
+
   nsProbingState mState;
   char mLastCharClass;
   uint32_t mFreqCounter[FREQ_CAT_NUM];

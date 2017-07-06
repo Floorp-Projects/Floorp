@@ -98,7 +98,7 @@ nsMacShellService::SetDefaultBrowser(bool aClaimAllTypes, bool aForAllUsers)
 }
 
 NS_IMETHODIMP
-nsMacShellService::SetDesktopBackground(nsIDOMElement* aElement, 
+nsMacShellService::SetDesktopBackground(nsIDOMElement* aElement,
                                         int32_t aPosition)
 {
   // Note: We don't support aPosition on OS X.
@@ -151,7 +151,7 @@ nsMacShellService::SetDesktopBackground(nsIDOMElement* aElement,
     (do_CreateInstance("@mozilla.org/embedding/browser/nsWebBrowserPersist;1", &rv));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  uint32_t flags = nsIWebBrowserPersist::PERSIST_FLAGS_NO_CONVERSION | 
+  uint32_t flags = nsIWebBrowserPersist::PERSIST_FLAGS_NO_CONVERSION |
                    nsIWebBrowserPersist::PERSIST_FLAGS_REPLACE_EXISTING_FILES |
                    nsIWebBrowserPersist::PERSIST_FLAGS_FROM_CACHE;
 
@@ -365,14 +365,14 @@ nsMacShellService::OpenApplicationWithURI(nsIFile* aApplication, const nsACStrin
   nsresult rv = lfm->GetCFURL(&appURL);
   if (NS_FAILED(rv))
     return rv;
-  
+
   const nsCString spec(aURI);
   const UInt8* uriString = (const UInt8*)spec.get();
   CFURLRef uri = ::CFURLCreateWithBytes(nullptr, uriString, aURI.Length(),
                                         kCFStringEncodingUTF8, nullptr);
-  if (!uri) 
+  if (!uri)
     return NS_ERROR_OUT_OF_MEMORY;
-  
+
   CFArrayRef uris = ::CFArrayCreate(nullptr, (const void**)&uri, 1, nullptr);
   if (!uris) {
     ::CFRelease(uri);
@@ -385,12 +385,12 @@ nsMacShellService::OpenApplicationWithURI(nsIFile* aApplication, const nsACStrin
   launchSpec.passThruParams = nullptr;
   launchSpec.launchFlags = kLSLaunchDefaults;
   launchSpec.asyncRefCon = nullptr;
-  
+
   OSErr err = ::LSOpenFromURLSpec(&launchSpec, nullptr);
-  
+
   ::CFRelease(uris);
   ::CFRelease(uri);
-  
+
   return err != noErr ? NS_ERROR_FAILURE : NS_OK;
 }
 

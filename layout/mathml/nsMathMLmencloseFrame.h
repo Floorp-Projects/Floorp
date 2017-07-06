@@ -21,7 +21,7 @@
   The menclose element renders its content inside the enclosing notation
   specified by its notation attribute. menclose accepts any number of arguments;
   if this number is not 1, its contents are treated as a single "inferred mrow"
-  containing its arguments, as described in Section 3.1.3 Required Arguments. 
+  containing its arguments, as described in Section 3.1.3 Required Arguments.
 */
 
 enum nsMencloseNotation
@@ -48,23 +48,23 @@ public:
 
   friend nsIFrame* NS_NewMathMLmencloseFrame(nsIPresShell*   aPresShell,
                                              nsStyleContext* aContext);
-  
+
   virtual nsresult
   Place(DrawTarget*          aDrawTarget,
         bool                 aPlaceOrigin,
         ReflowOutput& aDesiredSize) override;
-  
+
   virtual nsresult
   MeasureForWidth(DrawTarget* aDrawTarget,
                   ReflowOutput& aDesiredSize) override;
-  
+
   virtual nsresult
   AttributeChanged(int32_t         aNameSpaceID,
                    nsIAtom*        aAttribute,
                    int32_t         aModType) override;
-  
+
   virtual void
-  SetAdditionalStyleContext(int32_t          aIndex, 
+  SetAdditionalStyleContext(int32_t          aIndex,
                             nsStyleContext*  aStyleContext) override;
   virtual nsStyleContext*
   GetAdditionalStyleContext(int32_t aIndex) const override;

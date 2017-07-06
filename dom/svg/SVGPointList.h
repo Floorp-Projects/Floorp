@@ -184,7 +184,7 @@ public:
     if (!mElement) {
       MOZ_ASSERT(IsEmpty(), "target element propagation failure");
       return true;
-    } 
+    }
     return false;
   }
 

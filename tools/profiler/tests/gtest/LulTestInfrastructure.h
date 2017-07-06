@@ -42,7 +42,7 @@
 // all combinations of host system and minidump processor
 // architecture, we need to be able to easily generate complex test
 // data like debugging information and minidump files.
-// 
+//
 // For example, if we want our unit tests to provide full code
 // coverage for stack walking, it may be difficult to persuade the
 // compiler to generate every possible sort of stack walking
@@ -79,7 +79,7 @@ namespace test_assembler {
 // - undefined,
 // - defined as the sum of some other label and a constant, or
 // - a constant.
-// 
+//
 // A label's value never changes, but it can accumulate constraints.
 // Adding labels and integers is permitted, and yields a label.
 // Subtracting a constant from a label is permitted, and also yields a
@@ -135,12 +135,12 @@ class Label {
   // subtraction is possible given what we currently know of l and m.
   // It can be possible even if we don't know l and m's values. For
   // example:
-  // 
+  //
   //   Label l, m;
   //   m = l + 10;
   //   l.IsKnownConstant();             // false
   //   m.IsKnownConstant();             // false
-  //   uint64_t d;                     
+  //   uint64_t d;
   //   l.IsKnownOffsetFrom(m, &d);      // true, and sets d to -10.
   //   l-m                              // -10
   //   m-l                              // 10
@@ -229,7 +229,7 @@ enum Endianness {
   kLittleEndian,     // Little-endian: the least significant byte comes first.
   kUnsetEndian,      // used internally
 };
- 
+
 // A section is a sequence of bytes, constructed by appending bytes
 // to the end. Sections have a convenient and flexible set of member
 // functions for appending data in various formats: big-endian and
@@ -251,7 +251,7 @@ enum Endianness {
 // because there are typically several different meanings for "the
 // start of a section": the offset of the section within an object
 // file, the address in memory at which the section's content appear,
-// and so on. It's up to the code that uses the Section class to 
+// and so on. It's up to the code that uses the Section class to
 // keep track of these explicitly, as they depend on the application.
 class Section {
  public:
@@ -278,7 +278,7 @@ class Section {
     contents_.append(size, (char) byte);
     return *this;
   }
-      
+
   // Append NUMBER to this section. ENDIANNESS is the endianness to
   // use to write the number. SIZE is the length of the number in
   // bytes. Return a reference to this section.
@@ -332,13 +332,13 @@ class Section {
           &D32(const Label &label), &D64(const Label &label);
 
   // Append VALUE in a signed LEB128 (Little-Endian Base 128) form.
-  // 
+  //
   // The signed LEB128 representation of an integer N is a variable
   // number of bytes:
   //
   // - If N is between -0x40 and 0x3f, then its signed LEB128
   //   representation is a single byte whose value is N.
-  // 
+  //
   // - Otherwise, its signed LEB128 representation is (N & 0x7f) |
   //   0x80, followed by the signed LEB128 representation of N / 128,
   //   rounded towards negative infinity.
@@ -352,13 +352,13 @@ class Section {
   Section &LEB128(long long value);
 
   // Append VALUE in unsigned LEB128 (Little-Endian Base 128) form.
-  // 
+  //
   // The unsigned LEB128 representation of an integer N is a variable
   // number of bytes:
   //
   // - If N is between 0 and 0x7f, then its unsigned LEB128
   //   representation is a single byte whose value is N.
-  // 
+  //
   // - Otherwise, its unsigned LEB128 representation is (N & 0x7f) |
   //   0x80, followed by the unsigned LEB128 representation of N /
   //   128, rounded towards negative infinity.
@@ -377,7 +377,7 @@ class Section {
   size_t Size() const { return contents_.size(); }
 
   // Return a label representing the start of the section.
-  // 
+  //
   // It is up to the user whether this label represents the section's
   // position in an object file, the section's address in memory, or
   // what have you; some applications may need both, in which case
@@ -414,7 +414,7 @@ class Section {
               const Label &set_label)
         : offset(set_offset), endianness(set_endianness), size(set_size),
           label(set_label) { }
-      
+
     // The offset of the reference within the section.
     size_t offset;
 
@@ -433,7 +433,7 @@ class Section {
 
   // The contents of the section.
   string contents_;
-  
+
   // References to labels within those contents.
   vector<Reference> references_;
 
@@ -583,7 +583,7 @@ class CFISection: public Section {
   // SetEncodedPointerBases. If the DW_EH_PE_indirect bit is set in the
   // encoding, assume that ADDRESS is where the true address is stored.
   // Return a reference to this section.
-  // 
+  //
   // (C++ doesn't let me use default arguments here, because I want to
   // refer to members of *this in the default argument expression.)
   CFISection &EncodedPointer(uint64_t address) {
