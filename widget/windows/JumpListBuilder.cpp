@@ -104,7 +104,8 @@ NS_IMPL_ISUPPORTS(DoneCommitListBuildCallback, nsIRunnable);
 
 JumpListBuilder::JumpListBuilder() :
   mMaxItems(0),
-  mHasCommit(false)
+  mHasCommit(false),
+  mMonitor("JumpListBuilderMonitor")
 {
   ::CoInitialize(nullptr);
 
@@ -136,6 +137,7 @@ NS_IMETHODIMP JumpListBuilder::GetAvailable(int16_t *aAvailable)
 {
   *aAvailable = false;
 
+  ReentrantMonitorAutoEnter lock(mMonitor);
   if (mJumpListMgr)
     *aAvailable = true;
 
@@ -151,6 +153,7 @@ NS_IMETHODIMP JumpListBuilder::GetIsListCommitted(bool *aCommit)
 
 NS_IMETHODIMP JumpListBuilder::GetMaxListItems(int16_t *aMaxItems)
 {
+  ReentrantMonitorAutoEnter lock(mMonitor);
   if (!mJumpListMgr)
     return NS_ERROR_NOT_AVAILABLE;
 
@@ -180,6 +183,7 @@ NS_IMETHODIMP JumpListBuilder::InitListBuild(nsIMutableArray *removedItems, bool
 
   *_retval = false;
 
+  ReentrantMonitorAutoEnter lock(mMonitor);
   if (!mJumpListMgr)
     return NS_ERROR_NOT_AVAILABLE;
 
@@ -310,6 +314,7 @@ NS_IMETHODIMP JumpListBuilder::AddListToBuild(int16_t aCatType, nsIArray *items,
 
   *_retval = false;
 
+  ReentrantMonitorAutoEnter lock(mMonitor);
   if (!mJumpListMgr)
     return NS_ERROR_NOT_AVAILABLE;
 
@@ -457,6 +462,7 @@ NS_IMETHODIMP JumpListBuilder::AddListToBuild(int16_t aCatType, nsIArray *items,
 
 NS_IMETHODIMP JumpListBuilder::AbortListBuild()
 {
+  ReentrantMonitorAutoEnter lock(mMonitor);
   if (!mJumpListMgr)
     return NS_ERROR_NOT_AVAILABLE;
 
@@ -468,6 +474,7 @@ NS_IMETHODIMP JumpListBuilder::AbortListBuild()
 
 NS_IMETHODIMP JumpListBuilder::CommitListBuild(nsIJumpListCommittedCallback* aCallback)
 {
+  ReentrantMonitorAutoEnter lock(mMonitor);
   if (!mJumpListMgr)
     return NS_ERROR_NOT_AVAILABLE;
 
@@ -488,6 +495,7 @@ NS_IMETHODIMP JumpListBuilder::CommitListBuild(nsIJumpListCommittedCallback* aCa
 
 void JumpListBuilder::DoCommitListBuild(RefPtr<detail::DoneCommitListBuildCallback> aCallback)
 {
+  ReentrantMonitorAutoEnter lock(mMonitor);
   MOZ_ASSERT(mJumpListMgr);
   MOZ_ASSERT(aCallback);
 
@@ -507,6 +515,7 @@ NS_IMETHODIMP JumpListBuilder::DeleteActiveList(bool *_retval)
 {
   *_retval = false;
 
+  ReentrantMonitorAutoEnter lock(mMonitor);
   if (!mJumpListMgr)
     return NS_ERROR_NOT_AVAILABLE;
 
