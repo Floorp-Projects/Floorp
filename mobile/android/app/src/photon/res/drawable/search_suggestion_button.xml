@@ -2,10 +2,18 @@
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
-<selector xmlns:android="http://schemas.android.com/apk/res/android">
+<selector xmlns:android="http://schemas.android.com/apk/res/android"
+          xmlns:gecko="http://schemas.android.com/apk/res-auto">
 
-    <item android:state_pressed="true"
-          android:drawable="@color/photon_search_suggestion_box_pressed"/>
+    <item android:drawable="@color/photon_search_suggestion_box_private_pressed"
+          android:state_pressed="true"
+          gecko:state_private="true"/>
+
+    <item android:drawable="@color/photon_search_suggestion_box_private"
+          gecko:state_private="true"/>
+
+    <item android:drawable="@color/photon_search_suggestion_box_pressed"
+          android:state_pressed="true"/>
 
     <item android:drawable="@color/photon_search_suggestion_box"/>
 </selector>
