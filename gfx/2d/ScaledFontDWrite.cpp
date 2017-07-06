@@ -3,11 +3,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "DrawTargetD2D1.h"
 #include "ScaledFontDWrite.h"
 #include "UnscaledFontDWrite.h"
 #include "PathD2D.h"
 #include "gfxFont.h"
-#include "Logging.h"
 
 using namespace std;
 
@@ -108,24 +108,16 @@ ScaledFontDWrite::ScaledFontDWrite(IDWriteFontFace *aFontFace,
                                    Float aSize,
                                    bool aUseEmbeddedBitmap,
                                    bool aForceGDIMode,
-                                   IDWriteRenderingParams* aParams,
-                                   Float aGamma,
-                                   Float aContrast,
                                    const gfxFontStyle* aStyle)
     : ScaledFontBase(aUnscaledFont, aSize)
     , mFontFace(aFontFace)
     , mUseEmbeddedBitmap(aUseEmbeddedBitmap)
     , mForceGDIMode(aForceGDIMode)
-    , mParams(aParams)
-    , mGamma(aGamma)
-    , mContrast(aContrast)
 {
-  if (aStyle) {
-    mStyle = SkFontStyle(aStyle->weight,
-                         DWriteFontStretchFromStretch(aStyle->stretch),
-                         aStyle->style == NS_FONT_STYLE_NORMAL ?
-                         SkFontStyle::kUpright_Slant : SkFontStyle::kItalic_Slant);
-  }
+  mStyle = SkFontStyle(aStyle->weight,
+                       DWriteFontStretchFromStretch(aStyle->stretch),
+                       aStyle->style == NS_FONT_STYLE_NORMAL ?
+                       SkFontStyle::kUpright_Slant : SkFontStyle::kItalic_Slant);
 }
 
 already_AddRefed<Path>
@@ -151,12 +143,12 @@ SkTypeface*
 ScaledFontDWrite::GetSkTypeface()
 {
   if (!mTypeface) {
-    IDWriteFactory *factory = Factory::GetDWriteFactory();
+    IDWriteFactory *factory = DrawTargetD2D1::GetDWriteFactory();
     if (!factory) {
       return nullptr;
     }
 
-    mTypeface = SkCreateTypefaceFromDWriteFont(factory, mFontFace, mStyle, mForceGDIMode, mGamma, mContrast);
+    mTypeface = SkCreateTypefaceFromDWriteFont(factory, mFontFace, mStyle, mForceGDIMode);
   }
   return mTypeface;
 }
@@ -280,34 +272,12 @@ UnscaledFontDWrite::GetFontFileData(FontFileDataOutput aDataCallback, void *aBat
   return true;
 }
 
-bool
-ScaledFontDWrite::GetFontInstanceData(FontInstanceDataOutput aCb, void* aBaton)
-{
-  InstanceData instance(this);
-  aCb(reinterpret_cast<uint8_t*>(&instance), sizeof(instance), aBaton);
-  return true;
-}
-
 already_AddRefed<ScaledFont>
 UnscaledFontDWrite::CreateScaledFont(Float aGlyphSize,
                                      const uint8_t* aInstanceData,
                                      uint32_t aInstanceDataLength)
 {
-  if (aInstanceDataLength < sizeof(ScaledFontDWrite::InstanceData)) {
-    gfxWarning() << "DWrite scaled font instance data is truncated.";
-    return nullptr;
-  }
-
-  const ScaledFontDWrite::InstanceData *instanceData =
-    reinterpret_cast<const ScaledFontDWrite::InstanceData*>(aInstanceData);
-  RefPtr<ScaledFontBase> scaledFont =
-    new ScaledFontDWrite(mFontFace, this, aGlyphSize,
-                         instanceData->mUseEmbeddedBitmap,
-                         instanceData->mForceGDIMode,
-                         nullptr,
-                         instanceData->mGamma,
-                         instanceData->mContrast);
-
+  RefPtr<ScaledFontBase> scaledFont = new ScaledFontDWrite(mFontFace, this, aGlyphSize);
   if (mNeedsCairo && !scaledFont->PopulateCairoScaledFont()) {
     gfxWarning() << "Unable to create cairo scaled font DWrite font.";
     return nullptr;

@@ -80,6 +80,14 @@ using namespace mozilla::layers;
 using namespace mozilla::widget;
 using namespace mozilla::image;
 
+IDWriteRenderingParams* GetDwriteRenderingParams(bool aGDI)
+{
+  gfxWindowsPlatform::TextRenderingMode mode = aGDI ?
+    gfxWindowsPlatform::TEXT_RENDERING_GDI_CLASSIC :
+    gfxWindowsPlatform::TEXT_RENDERING_NORMAL;
+  return gfxWindowsPlatform::GetPlatform()->GetRenderingParams(mode);
+}
+
 DCFromDrawTarget::DCFromDrawTarget(DrawTarget& aDrawTarget)
 {
   mDC = nullptr;
@@ -355,7 +363,7 @@ gfxWindowsPlatform::InitAcceleration()
   UpdateRenderMode();
 
   // If we have Skia and we didn't init dwrite already, do it now.
-  if (!DWriteAvailable() && GetDefaultContentBackend() == BackendType::SKIA) {
+  if (!mDWriteFactory && GetDefaultContentBackend() == BackendType::SKIA) {
     InitDWriteSupport();
   }
 
@@ -381,9 +389,25 @@ bool
 gfxWindowsPlatform::InitDWriteSupport()
 {
   mozilla::ScopedGfxFeatureReporter reporter("DWrite");
-  if (!Factory::EnsureDWriteFactory()) {
+  decltype(DWriteCreateFactory)* createDWriteFactory = (decltype(DWriteCreateFactory)*)
+      GetProcAddress(LoadLibraryW(L"dwrite.dll"), "DWriteCreateFactory");
+  if (!createDWriteFactory) {
     return false;
   }
+
+  // I need a direct pointer to be able to cast to IUnknown**, I also need to
+  // remember to release this because the nsRefPtr will AddRef it.
+  RefPtr<IDWriteFactory> factory;
+  HRESULT hr = createDWriteFactory(
+      DWRITE_FACTORY_TYPE_SHARED,
+      __uuidof(IDWriteFactory),
+      (IUnknown **)((IDWriteFactory **)getter_AddRefs(factory)));
+  if (FAILED(hr) || !factory) {
+    return false;
+  }
+
+  mDWriteFactory = factory;
+  Factory::SetDWriteFactory(mDWriteFactory);
 
   SetupClearTypeParams();
   reporter.SetSuccessful();
@@ -491,7 +515,7 @@ gfxWindowsPlatform::CreatePlatformFontList()
 
     // bug 630201 - older pre-RTM versions of Direct2D/DirectWrite cause odd
     // crashers so blacklist them altogether
-    if (IsNotWin7PreRTM() && DWriteAvailable()) {
+    if (IsNotWin7PreRTM() && GetDWriteFactory()) {
         pfl = new gfxDWriteFontList();
         if (NS_SUCCEEDED(pfl->InitFontList())) {
             return pfl;
@@ -555,7 +579,22 @@ already_AddRefed<ScaledFont>
 gfxWindowsPlatform::GetScaledFontForFont(DrawTarget* aTarget, gfxFont *aFont)
 {
     if (aFont->GetType() == gfxFont::FONT_TYPE_DWRITE) {
-        return aFont->GetScaledFont(aTarget);
+        gfxDWriteFont *font = static_cast<gfxDWriteFont*>(aFont);
+
+        NativeFont nativeFont;
+        nativeFont.mType = NativeFontType::DWRITE_FONT_FACE;
+        nativeFont.mFont = font->GetFontFace();
+
+        if (aTarget->GetBackendType() == BackendType::CAIRO) {
+          return Factory::CreateScaledFontWithCairo(nativeFont,
+                                                    font->GetUnscaledFont(),
+                                                    font->GetAdjustedSize(),
+                                                    font->GetCairoScaledFont());
+        }
+
+        return Factory::CreateScaledFontForNativeFont(nativeFont,
+                                                      font->GetUnscaledFont(),
+                                                      font->GetAdjustedSize());
     }
 
     NS_ASSERTION(aFont->GetType() == gfxFont::FONT_TYPE_GDI,
@@ -1103,7 +1142,7 @@ gfxWindowsPlatform::FontsPrefsChanged(const char *aPref)
 void
 gfxWindowsPlatform::SetupClearTypeParams()
 {
-    if (DWriteAvailable()) {
+    if (GetDWriteFactory()) {
         // any missing prefs will default to invalid (-1) and be ignored;
         // out-of-range values will also be ignored
         FLOAT gamma = -1.0;
@@ -1158,7 +1197,7 @@ gfxWindowsPlatform::SetupClearTypeParams()
         }
 
         RefPtr<IDWriteRenderingParams> defaultRenderingParams;
-        Factory::GetDWriteFactory()->CreateRenderingParams(getter_AddRefs(defaultRenderingParams));
+        GetDWriteFactory()->CreateRenderingParams(getter_AddRefs(defaultRenderingParams));
         // For EnhancedContrast, we override the default if the user has not set it
         // in the registry (by using the ClearType Tuner).
         if (contrast < 0.0 || contrast > 10.0) {
@@ -1214,14 +1253,14 @@ gfxWindowsPlatform::SetupClearTypeParams()
 
         mRenderingParams[TEXT_RENDERING_NO_CLEARTYPE] = defaultRenderingParams;
 
-        HRESULT hr = Factory::GetDWriteFactory()->CreateCustomRenderingParams(
+        HRESULT hr = GetDWriteFactory()->CreateCustomRenderingParams(
             gamma, contrast, level, dwriteGeometry, renderMode,
             getter_AddRefs(mRenderingParams[TEXT_RENDERING_NORMAL]));
         if (FAILED(hr) || !mRenderingParams[TEXT_RENDERING_NORMAL]) {
             mRenderingParams[TEXT_RENDERING_NORMAL] = defaultRenderingParams;
         }
 
-        hr = Factory::GetDWriteFactory()->CreateCustomRenderingParams(
+        hr = GetDWriteFactory()->CreateCustomRenderingParams(
             gamma, contrast, level,
             dwriteGeometry, DWRITE_RENDERING_MODE_CLEARTYPE_GDI_CLASSIC,
             getter_AddRefs(mRenderingParams[TEXT_RENDERING_GDI_CLASSIC]));
@@ -1526,7 +1565,7 @@ gfxWindowsPlatform::InitializeD2D()
   }
 
   // Using Direct2D depends on DWrite support.
-  if (!DWriteAvailable() && !InitDWriteSupport()) {
+  if (!mDWriteFactory && !InitDWriteSupport()) {
     d2d1.SetFailed(FeatureStatus::Failed, "Failed to initialize DirectWrite support",
                    NS_LITERAL_CSTRING("FEATURE_FAILURE_D2D_DWRITE"));
     return;

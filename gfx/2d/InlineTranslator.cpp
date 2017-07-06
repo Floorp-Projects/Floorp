@@ -76,5 +76,20 @@ InlineTranslator::CreateDrawTarget(ReferencePtr aRefPtr,
   return drawTarget.forget();
 }
 
+FontType
+InlineTranslator::GetDesiredFontType()
+{
+  switch (mBaseDT->GetBackendType()) {
+    case BackendType::DIRECT2D:
+      return FontType::DWRITE;
+    case BackendType::CAIRO:
+      return FontType::CAIRO;
+    case BackendType::SKIA:
+      return FontType::SKIA;
+    default:
+      return FontType::CAIRO;
+  }
+}
+
 } // namespace gfx
 } // namespace mozilla

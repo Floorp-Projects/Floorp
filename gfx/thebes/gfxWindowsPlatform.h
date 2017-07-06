@@ -192,7 +192,8 @@ public:
 
     void SetupClearTypeParams();
 
-    inline bool DWriteAvailable() const { return !!mozilla::gfx::Factory::GetDWriteFactory(); }
+    IDWriteFactory *GetDWriteFactory() { return mDWriteFactory; }
+    inline bool DWriteEnabled() { return !!mDWriteFactory; }
     inline DWRITE_MEASURING_MODE DWriteMeasuringMode() { return mMeasuringMode; }
 
     IDWriteRenderingParams *GetRenderingParams(TextRenderingMode aRenderMode)
@@ -258,6 +259,7 @@ private:
     void InitializeD2DConfig();
     void InitializeDirectDrawConfig();
 
+    RefPtr<IDWriteFactory> mDWriteFactory;
     RefPtr<IDWriteRenderingParams> mRenderingParams[TEXT_RENDERING_COUNT];
     DWRITE_MEASURING_MODE mMeasuringMode;
 
