@@ -372,9 +372,17 @@ Scope::clone(JSContext* cx, HandleScope scope, HandleScope enclosing)
     }
 
     switch (scope->kind_) {
-      case ScopeKind::Function:
+      case ScopeKind::Function: {
+        RootedScript script(cx, scope->as<FunctionScope>().script());
+        const char* filename = script->filename();
+        // If the script has an internal URL, include it in the crash reason. If
+        // not, it may be a web URL, and therefore privacy-sensitive.
+        if (!strncmp(filename, "chrome:", 7) || !strncmp(filename, "resource:", 9))
+            MOZ_CRASH_UNSAFE_PRINTF("Use FunctionScope::clone (script URL: %s)", filename);
+
         MOZ_CRASH("Use FunctionScope::clone.");
         break;
+      }
 
       case ScopeKind::FunctionBodyVar:
       case ScopeKind::ParameterExpressionVar: {
