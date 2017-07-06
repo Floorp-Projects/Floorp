@@ -14,6 +14,8 @@ Additionally, the following changes should be propagated:
       or Ubuntu shell builds will randomly crash on startup.
     - With weak attributes removed, DL_SYMBOLS and PTHREAD_SYMBOLS should
       be defined as "(1)" to avoid -Waddress warnings.
+    - Per Bug 1377651, the __itt_null variable in ittnotify.h should be
+      made non-static, so it can be used in a non-static function.
 
 If the license has changed, update the "VTune License" section of
     toolkit/content/license.html

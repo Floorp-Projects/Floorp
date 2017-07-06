@@ -155,7 +155,7 @@ function getRole(aAccOrElmOrID)
   var role = -1;
   try {
     role = acc.role;
-  } catch(e) {
+  } catch (e) {
     ok(false, "Role for " + aAccOrElmOrID + " could not be retrieved!");
   }
 

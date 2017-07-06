@@ -103,6 +103,12 @@ struct gfxRect :
      * Transform this rectangle with aMatrix, resulting in a gfxQuad.
      */
     gfxQuad TransformToQuad(const mozilla::gfx::Matrix4x4 &aMatrix) const;
+
+    // Some temporary functions that we need until gfxRect gets turned into a
+    // typedef for RectDouble. It would be simpler to put these in Matrix.h
+    // but that code shouldn't #include gfxRect.h so we put it here instead.
+    void TransformBy(const mozilla::gfx::MatrixDouble& aMatrix);
+    void TransformBoundsBy(const mozilla::gfx::MatrixDouble& aMatrix);
 };
 
 #endif /* GFX_RECT_H */

@@ -34,9 +34,6 @@ class Element;
 class SVGSVGElement;
 } // namespace dom
 
-namespace gfx {
-class Matrix;
-} // namespace gfx
 } // namespace mozilla
 
 #define SVG_ZERO_LENGTH_PATH_FIX_FACTOR 512

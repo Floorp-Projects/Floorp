@@ -71,6 +71,14 @@ NudgeToInteger(float *aVal, float aErr)
   }
 }
 
+static inline void
+NudgeToInteger(double *aVal)
+{
+  float f = float(*aVal);
+  NudgeToInteger(&f);
+  *aVal = f;
+}
+
 static inline Float
 Distance(Point aA, Point aB)
 {

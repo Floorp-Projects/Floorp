@@ -55,7 +55,7 @@ job-template:
          by-build-platform:
             linux64-l10n: linux64/opt
             linux-l10n: linux32/opt
-            macosx64: osx-10-7/opt
+            macosx64: osx-cross/opt
             android-api-15-l10n: android-4-0-armv7-api15/opt
    mozharness:
       config:

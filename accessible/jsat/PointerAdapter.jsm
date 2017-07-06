@@ -39,18 +39,18 @@ var PointerRelay = { // jshint ignore:line
     switch (Utils.widgetToolkit) {
       case 'android':
         this._eventsOfInterest = {
-          'touchstart' : true,
-          'touchmove' : true,
-          'touchend' : true };
+          'touchstart': true,
+          'touchmove': true,
+          'touchend': true };
         break;
 
       case 'gonk':
         this._eventsOfInterest = {
-          'touchstart' : true,
-          'touchmove' : true,
-          'touchend' : true,
-          'mousedown' : false,
-          'mousemove' : false,
+          'touchstart': true,
+          'touchmove': true,
+          'touchend': true,
+          'mousedown': false,
+          'mousemove': false,
           'mouseup': false,
           'click': false };
         break;
@@ -58,8 +58,8 @@ var PointerRelay = { // jshint ignore:line
       default:
         // Desktop.
         this._eventsOfInterest = {
-          'mousemove' : true,
-          'mousedown' : true,
+          'mousemove': true,
+          'mousedown': true,
           'mouseup': true,
           'click': false
         };
@@ -75,11 +75,11 @@ var PointerRelay = { // jshint ignore:line
   },
 
   _eventMap: {
-    'touchstart' : 'pointerdown',
-    'mousedown' : 'pointerdown',
-    'touchmove' : 'pointermove',
-    'mousemove' : 'pointermove',
-    'touchend' : 'pointerup',
+    'touchstart': 'pointerdown',
+    'mousedown': 'pointerdown',
+    'touchmove': 'pointermove',
+    'mousemove': 'pointermove',
+    'touchend': 'pointerup',
     'mouseup': 'pointerup'
   },
 

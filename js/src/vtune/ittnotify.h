@@ -1812,7 +1812,7 @@ typedef struct ___itt_id
 #pragma pack(pop)
 /** @endcond */
 
-static const __itt_id __itt_null = { 0, 0, 0 };
+const __itt_id __itt_null = { 0, 0, 0 };
 
 /**
  * @ingroup ids
