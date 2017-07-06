@@ -3,8 +3,12 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
-<selector xmlns:android="http://schemas.android.com/apk/res/android">
+<selector xmlns:android="http://schemas.android.com/apk/res/android"
+          xmlns:gecko="http://schemas.android.com/apk/res-auto">
 
-    <item android:color="@color/photon_search_item_text" />
+    <item android:color="@color/photon_search_item_text_private"
+          gecko:state_private="true"/>
+
+    <item android:color="@color/photon_search_item_text"/>
 
 </selector>
