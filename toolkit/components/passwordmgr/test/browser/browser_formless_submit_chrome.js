@@ -105,8 +105,9 @@ add_task(async function test_reloadButton() {
                                                      "https://example.com" + DIRECTORY_PATH +
                                                      "formless_basic.html");
 
-    await BrowserTestUtils.waitForCondition(() =>
-      !reloadButton.disabled && !reloadButton.hasAttribute("temporarily-disabled"));
+    await BrowserTestUtils.waitForCondition(() => {
+      return reloadButton.disabled == false;
+    });
     EventUtils.synthesizeMouseAtCenter(reloadButton, {});
     await loadPromise;
   });
