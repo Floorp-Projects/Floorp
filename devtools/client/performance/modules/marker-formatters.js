@@ -48,10 +48,9 @@ exports.Formatters = {
   /* Group 0 - Reflow and Rendering pipeline */
 
   StylesFields: function (marker) {
-    if ("restyleHint" in marker) {
-      let label = marker.restyleHint.replace(/eRestyle_/g, "");
+    if ("isAnimationOnly" in marker) {
       return {
-        [L10N.getStr("marker.field.restyleHint")]: label
+        [L10N.getStr("marker.field.isAnimationOnly")]: marker.isAnimationOnly
       };
     }
     return null;

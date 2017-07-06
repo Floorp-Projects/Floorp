@@ -49,7 +49,7 @@ to mochitest command.
   * test_grid_container_shorthands.html [65]
   * test_grid_item_shorthands.html [23]
   * test_grid_shorthand_serialization.html [28]
-  * test_value_storage.html `'grid` [53]
+  * test_value_storage.html `'grid` [41]
 * Unsupported values
   * SVG-in-OpenType values not supported servo/servo#15211 bug 1355412
     * test_value_storage.html `context-` [7]
