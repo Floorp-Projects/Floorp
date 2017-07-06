@@ -11,6 +11,7 @@
     <dimen name="autocomplete_row_height">32dp</dimen>
 
     <dimen name="browser_toolbar_height">48dp</dimen>
+    <dimen name="browser_toolbar_image_button_width">@dimen/page_action_button_width</dimen>
     <!-- This value is the height of the Tabs Panel header view
          (browser_toolbar_height) minus the height of the indicator
          (6dp). This value should change when the height of the view changes. -->
