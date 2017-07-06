@@ -66,6 +66,7 @@ private:
 
 WorkerThread::WorkerThread()
   : nsThread(nsThread::NOT_MAIN_THREAD, kWorkerStackSize)
+  , mLock("WorkerThread::mLock")
   , mWorkerPrivateCondVar(mLock, "WorkerThread::mWorkerPrivateCondVar")
   , mWorkerPrivate(nullptr)
   , mOtherThreadsDispatchingViaEventTarget(0)
