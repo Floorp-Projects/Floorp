@@ -1414,6 +1414,22 @@ Accessible::SetCurValue(double aValue)
 role
 Accessible::ARIATransformRole(role aRole)
 {
+  // Beginning with ARIA 1.1, user agents are expected to use the native host
+  // language role of the element when the region role is used without a name.
+  // https://rawgit.com/w3c/aria/master/core-aam/core-aam.html#role-map-region
+  //
+  // XXX: While the name computation algorithm can be non-trivial in the general
+  // case, it should not be especially bad here: If the author hasn't used the
+  // region role, this calculation won't occur. And the region role's name
+  // calculation rule excludes name from content. That said, this use case is
+  // another example of why we should consider caching the accessible name. See:
+  // https://bugzilla.mozilla.org/show_bug.cgi?id=1378235.
+  if (aRole == roles::REGION) {
+    nsAutoString name;
+    Name(name);
+    return name.IsEmpty() ? NativeRole() : aRole;
+  }
+
   // XXX: these unfortunate exceptions don't fit into the ARIA table. This is
   // where the accessible role depends on both the role and ARIA state.
   if (aRole == roles::PUSHBUTTON) {

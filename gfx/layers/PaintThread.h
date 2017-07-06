@@ -9,6 +9,7 @@
 
 #include "base/platform_thread.h"
 #include "mozilla/StaticPtr.h"
+#include "mozilla/UniquePtr.h"
 #include "nsThreadUtils.h"
 
 namespace mozilla {
@@ -19,14 +20,19 @@ class DrawTargetCapture;
 
 namespace layers {
 
+class CompositorBridgeChild;
+
 class PaintThread final
 {
+  friend void DestroyPaintThread(UniquePtr<PaintThread>&& aPaintThread);
+
 public:
   static void Start();
   static void Shutdown();
   static PaintThread* Get();
   void PaintContents(gfx::DrawTargetCapture* aCapture,
                      gfx::DrawTarget* aTarget);
+
   // Sync Runnables need threads to be ref counted,
   // But this thread lives through the whole process.
   // We're only temporarily using sync runnables so
@@ -34,15 +40,20 @@ public:
   void Release();
   void AddRef();
 
+  // Helper for asserts.
+  static bool IsOnPaintThread();
+
 private:
-  bool IsOnPaintThread();
   bool Init();
-  void ShutdownImpl();
+  void ShutdownOnPaintThread();
   void InitOnPaintThread();
+  void PaintContentsAsync(CompositorBridgeChild* aBridge,
+                          gfx::DrawTargetCapture* aCapture,
+                          gfx::DrawTarget* aTarget);
 
   static StaticAutoPtr<PaintThread> sSingleton;
-  RefPtr<nsIThread> mThread;
-  PlatformThreadId mThreadId;
+  static StaticRefPtr<nsIThread> sThread;
+  static PlatformThreadId sThreadId;
 };
 
 } // namespace layers

@@ -165,12 +165,6 @@ protected:
             NPError* rv,
             uint16_t* stype) override;
 
-    virtual mozilla::ipc::IPCResult
-    RecvAsyncNPP_NewStream(
-        PBrowserStreamChild* actor,
-        const nsCString& mimeType,
-        const bool& seekable) override;
-
     virtual PBrowserStreamChild*
     AllocPBrowserStreamChild(const nsCString& url,
                              const uint32_t& length,

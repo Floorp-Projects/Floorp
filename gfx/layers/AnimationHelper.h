@@ -165,7 +165,7 @@ public:
 
   void ClearById(const uint64_t& aId);
 private:
-  ~CompositorAnimationStorage() { Clear(); };
+  ~CompositorAnimationStorage() { };
 
 private:
   AnimatedValueTable mAnimatedValues;

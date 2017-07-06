@@ -47,7 +47,6 @@ namespace plugins {
 //-----------------------------------------------------------------------------
 
 class BrowserStreamParent;
-class PluginAsyncSurrogate;
 class PluginInstanceParent;
 
 #ifdef XP_WIN
@@ -94,16 +93,9 @@ protected:
     DeallocPPluginInstanceParent(PPluginInstanceParent* aActor) override;
 
 public:
-    explicit PluginModuleParent(bool aIsChrome, bool aAllowAsyncInit);
+    explicit PluginModuleParent(bool aIsChrome);
     virtual ~PluginModuleParent();
 
-    bool RemovePendingSurrogate(const RefPtr<PluginAsyncSurrogate>& aSurrogate);
-
-    /** @return the state of the pref that controls async plugin init */
-    bool IsStartingAsync() const { return mIsStartingAsync; }
-    /** @return whether this modules NP_Initialize has successfully completed
-        executing */
-    bool IsInitialized() const { return mNPInitialized; }
     bool IsChrome() const { return mIsChrome; }
 
     virtual void SetPlugin(nsNPAPIPlugin* plugin) override
@@ -122,8 +114,6 @@ public:
     }
 
     void ProcessRemoteNativeEventsInInterruptCall() override;
-
-    virtual bool WaitForIPCConnection() { return true; }
 
     nsCString GetHistogramKey() const {
         return mPluginName + mPluginVersion;
@@ -180,11 +170,7 @@ protected:
     virtual mozilla::ipc::IPCResult
     RecvNPN_ReloadPlugins(const bool& aReloadPages) override;
 
-    virtual mozilla::ipc::IPCResult
-    RecvNP_InitializeResult(const NPError& aError) override;
-
-    static BrowserStreamParent* StreamCast(NPP instance, NPStream* s,
-                                           PluginAsyncSurrogate** aSurrogate = nullptr);
+    static BrowserStreamParent* StreamCast(NPP instance, NPStream* s);
 
     virtual mozilla::ipc::IPCResult
     AnswerNPN_SetValue_NPPVpluginRequiresAudioDeviceChanges(
@@ -315,8 +301,6 @@ public:
     virtual nsresult ContentsScaleFactorChanged(NPP instance, double aContentsScaleFactor) override;
 #endif
 
-    void InitAsyncSurrogates();
-
     layers::TextureClientRecycleAllocator* EnsureTextureAllocatorForDirectBitmap();
     layers::TextureClientRecycleAllocator* EnsureTextureAllocatorForDXGISurface();
 
@@ -324,7 +308,6 @@ protected:
     void NotifyFlashHang();
     void NotifyPluginCrashed();
     void OnInitFailure();
-    bool MaybeRunDeferredShutdown();
     bool DoShutdown(NPError* error);
 
     bool GetSetting(NPNVariable aVariable);
@@ -355,13 +338,6 @@ protected:
     bool
     GetPluginDetails();
 
-    friend class mozilla::plugins::PluginAsyncSurrogate;
-
-    bool              mIsStartingAsync;
-    bool              mNPInitialized;
-    bool              mIsNPShutdownPending;
-    nsTArray<RefPtr<PluginAsyncSurrogate>> mSurrogateInstances;
-    nsresult          mAsyncNewRv;
     uint32_t          mRunID;
 
     RefPtr<layers::TextureClientRecycleAllocator> mTextureAllocatorForDirectBitmap;
@@ -382,15 +358,9 @@ protected:
 class PluginModuleContentParent : public PluginModuleParent
 {
   public:
-    explicit PluginModuleContentParent(bool aAllowAsyncInit);
+    explicit PluginModuleContentParent();
 
     static PluginLibrary* LoadModule(uint32_t aPluginId, nsPluginTag* aPluginTag);
-
-    static void OnLoadPluginResult(const uint32_t& aPluginId,
-                                   const bool& aResult,
-                                   Endpoint<PPluginModuleParent>&& aEndpoint);
-
-    static void AssociatePluginId(uint32_t aPluginId, base::ProcessId aProcessId);
 
     virtual ~PluginModuleContentParent();
 
@@ -431,14 +401,6 @@ class PluginModuleChromeParent
      */
     static PluginLibrary* LoadModule(const char* aFilePath, uint32_t aPluginId,
                                      nsPluginTag* aPluginTag);
-
-    /**
-     * The following two functions are called by SetupBridge to determine
-     * whether an existing plugin module was reused, or whether a new module
-     * was instantiated by the plugin host.
-     */
-    static void ClearInstantiationFlag() { sInstantiated = false; }
-    static bool DidInstantiate() { return sInstantiated; }
 
     virtual ~PluginModuleChromeParent();
 
@@ -535,17 +497,6 @@ class PluginModuleChromeParent
     EvaluateHangUIState(const bool aReset);
 #endif // XP_WIN
 
-    virtual bool WaitForIPCConnection() override;
-
-    virtual mozilla::ipc::IPCResult
-    RecvNP_InitializeResult(const NPError& aError) override;
-
-    void
-    SetContentParent(dom::ContentParent* aContentParent);
-
-    bool
-    SendAssociatePluginId();
-
     void CachedSettingChanged();
 
     virtual mozilla::ipc::IPCResult
@@ -600,8 +551,7 @@ private:
 
     // aFilePath is UTF8, not native!
     explicit PluginModuleChromeParent(const char* aFilePath, uint32_t aPluginId,
-                                      int32_t aSandboxLevel,
-                                      bool aAllowAsyncInit);
+                                      int32_t aSandboxLevel);
 
     void CleanupFromTimeout(const bool aByHangUI);
 
@@ -657,8 +607,6 @@ private:
     FinishHangUI();
 #endif
 
-    friend class mozilla::plugins::PluginAsyncSurrogate;
-
 #ifdef MOZ_CRASHREPORTER_INJECTOR
     friend class mozilla::plugins::FinishInjectorInitTask;
 
@@ -696,17 +644,8 @@ private:
 
     friend class LaunchedTask;
 
-    bool                mInitOnAsyncConnect;
-    nsresult            mAsyncInitRv;
-    NPError             mAsyncInitError;
-    // mContentParent is to be used ONLY during the IPC dance that occurs
-    // when ContentParent::RecvLoadPlugin is called under async plugin init!
-    // In other contexts it is *unsafe*, as there might be multiple content
-    // processes in existence!
-    dom::ContentParent* mContentParent;
     nsCOMPtr<nsIObserver> mPluginOfflineObserver;
     bool mIsBlocklisted;
-    static bool sInstantiated;
 #if defined(XP_WIN) && defined(MOZ_SANDBOX)
     mozilla::SandboxPermissions mSandboxPermissions;
 #endif

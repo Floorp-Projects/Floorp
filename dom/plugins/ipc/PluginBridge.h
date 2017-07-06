@@ -28,7 +28,7 @@ class PPluginModuleParent;
 
 bool
 SetupBridge(uint32_t aPluginId, dom::ContentParent* aContentParent,
-            bool aForceBridgeNow, nsresult* aResult, uint32_t* aRunID,
+            nsresult* aResult, uint32_t* aRunID,
             ipc::Endpoint<PPluginModuleParent>* aEndpoint);
 
 nsresult

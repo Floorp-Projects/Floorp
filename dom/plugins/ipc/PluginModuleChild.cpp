@@ -1842,16 +1842,6 @@ PluginModuleChild::AnswerNP_Initialize(const PluginSettings& aSettings, NPError*
     return IPC_OK();
 }
 
-mozilla::ipc::IPCResult
-PluginModuleChild::RecvAsyncNP_Initialize(const PluginSettings& aSettings)
-{
-    NPError error = DoNP_Initialize(aSettings);
-    if (!SendNP_InitializeResult(error)) {
-        return IPC_FAIL_NO_REASON(this);
-    }
-    return IPC_OK();
-}
-
 NPError
 PluginModuleChild::DoNP_Initialize(const PluginSettings& aSettings)
 {
@@ -2383,51 +2373,6 @@ PluginModuleChild::AnswerSyncNPP_New(PPluginInstanceChild* aActor, NPError* rv)
         reinterpret_cast<PluginInstanceChild*>(aActor);
     AssertPluginThread();
     *rv = childInstance->DoNPP_New();
-    return IPC_OK();
-}
-
-class AsyncNewResultSender : public ChildAsyncCall
-{
-public:
-    AsyncNewResultSender(PluginInstanceChild* aInstance, NPError aResult)
-        : ChildAsyncCall(aInstance, nullptr, nullptr)
-        , mResult(aResult)
-    {
-    }
-
-    NS_IMETHOD Run() override
-    {
-        RemoveFromAsyncList();
-        DebugOnly<bool> sendOk = mInstance->SendAsyncNPP_NewResult(mResult);
-        MOZ_ASSERT(sendOk);
-        return NS_OK;
-    }
-
-private:
-    NPError  mResult;
-};
-
-static void
-RunAsyncNPP_New(void* aChildInstance)
-{
-    MOZ_ASSERT(aChildInstance);
-    PluginInstanceChild* childInstance =
-        static_cast<PluginInstanceChild*>(aChildInstance);
-    NPError rv = childInstance->DoNPP_New();
-    RefPtr<AsyncNewResultSender> task =
-        new AsyncNewResultSender(childInstance, rv);
-    childInstance->PostChildAsyncCall(task.forget());
-}
-
-mozilla::ipc::IPCResult
-PluginModuleChild::RecvAsyncNPP_New(PPluginInstanceChild* aActor)
-{
-    PLUGIN_LOG_DEBUG_METHOD;
-    PluginInstanceChild* childInstance =
-        reinterpret_cast<PluginInstanceChild*>(aActor);
-    AssertPluginThread();
-    // We don't want to run NPP_New async from within nested calls
-    childInstance->AsyncCall(&RunAsyncNPP_New, childInstance);
     return IPC_OK();
 }
 
