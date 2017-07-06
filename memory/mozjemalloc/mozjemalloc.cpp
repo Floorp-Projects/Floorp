@@ -1034,8 +1034,9 @@ static size_t	opt_chunk_2pow = CHUNK_2POW_DEFAULT;
  * Begin forward declarations.
  */
 
-static void	*chunk_alloc(size_t size, size_t alignment, bool base, bool zero);
+static void	*chunk_alloc(size_t size, size_t alignment, bool base, bool *zeroed=nullptr);
 static void	chunk_dealloc(void *chunk, size_t size, ChunkType chunk_type);
+static void	chunk_ensure_zero(void* ptr, size_t size, bool zeroed);
 static arena_t	*arenas_extend();
 static void	*huge_malloc(size_t size, bool zero);
 static void	*huge_palloc(size_t size, size_t alignment, bool zero);
@@ -1381,7 +1382,7 @@ base_pages_alloc(size_t minsize)
 
 	MOZ_ASSERT(minsize != 0);
 	csize = CHUNK_CEILING(minsize);
-	base_pages = chunk_alloc(csize, chunksize, true, false);
+	base_pages = chunk_alloc(csize, chunksize, true);
 	if (!base_pages)
 		return (true);
 	base_next_addr = base_pages;
@@ -1976,7 +1977,7 @@ pages_purge(void *addr, size_t length, bool force_zero)
 
 static void *
 chunk_recycle(extent_tree_t *chunks_szad, extent_tree_t *chunks_ad, size_t size,
-    size_t alignment, bool base, bool *zero)
+    size_t alignment, bool base, bool *zeroed)
 {
 	void *ret;
 	extent_node_t *node;
@@ -2012,8 +2013,9 @@ chunk_recycle(extent_tree_t *chunks_szad, extent_tree_t *chunks_ad, size_t size,
 	trailsize = node->size - leadsize - size;
 	ret = (void *)((uintptr_t)node->addr + leadsize);
 	chunk_type = node->chunk_type;
-	if (chunk_type == ZEROED_CHUNK)
-	    *zero = true;
+	if (zeroed) {
+		*zeroed = (chunk_type == ZEROED_CHUNK);
+	}
 	/* Remove node from the tree. */
 	extent_tree_szad_remove(chunks_szad, node);
 	extent_tree_ad_remove(chunks_ad, node);
@@ -2059,19 +2061,6 @@ chunk_recycle(extent_tree_t *chunks_szad, extent_tree_t *chunks_ad, size_t size,
 #ifdef MALLOC_DECOMMIT
 	pages_commit(ret, size);
 #endif
-	if (*zero) {
-		if (chunk_type != ZEROED_CHUNK)
-			memset(ret, 0, size);
-#ifdef DEBUG
-		else {
-			size_t i;
-			size_t *p = (size_t *)(uintptr_t)ret;
-
-			for (i = 0; i < size / sizeof(size_t); i++)
-				MOZ_ASSERT(p[i] == 0);
-		}
-#endif
-	}
 	return (ret);
 }
 
@@ -2087,8 +2076,15 @@ chunk_recycle(extent_tree_t *chunks_szad, extent_tree_t *chunks_ad, size_t size,
 #define CAN_RECYCLE(size) true
 #endif
 
+/* Allocates `size` bytes of system memory aligned for `alignment`.
+ * `base` indicates whether the memory will be used for the base allocator
+ * (e.g. base_alloc).
+ * `zeroed` is an outvalue that returns whether the allocated memory is
+ * guaranteed to be full of zeroes. It can be omitted when the caller doesn't
+ * care about the result.
+ */
 static void *
-chunk_alloc(size_t size, size_t alignment, bool base, bool zero)
+chunk_alloc(size_t size, size_t alignment, bool base, bool *zeroed)
 {
 	void *ret;
 
@@ -2099,11 +2095,13 @@ chunk_alloc(size_t size, size_t alignment, bool base, bool zero)
 
 	if (CAN_RECYCLE(size)) {
 		ret = chunk_recycle(&chunks_szad_mmap, &chunks_ad_mmap,
-			size, alignment, base, &zero);
+			size, alignment, base, zeroed);
 		if (ret)
 			goto RETURN;
 	}
 	ret = chunk_alloc_mmap(size, alignment);
+	if (zeroed)
+		*zeroed = true;
 	if (ret) {
 		goto RETURN;
 	}
@@ -2121,6 +2119,22 @@ RETURN:
 
 	MOZ_ASSERT(CHUNK_ADDR2BASE(ret) == ret);
 	return (ret);
+}
+
+static void
+chunk_ensure_zero(void* ptr, size_t size, bool zeroed)
+{
+	if (zeroed == false)
+		memset(ptr, 0, size);
+#ifdef MOZ_DEBUG
+	else {
+		size_t i;
+		size_t *p = (size_t *)(uintptr_t)ret;
+
+		for (i = 0; i < size / sizeof(size_t); i++)
+			MOZ_ASSERT(p[i] == 0);
+	}
+#endif
 }
 
 static void
@@ -2787,10 +2801,13 @@ arena_run_alloc(arena_t *arena, arena_bin_t *bin, size_t size, bool large,
 	 * the run.
 	 */
 	{
+		bool zeroed;
 		arena_chunk_t *chunk = (arena_chunk_t *)
-		    chunk_alloc(chunksize, chunksize, false, true);
+		    chunk_alloc(chunksize, chunksize, false, &zeroed);
 		if (!chunk)
 			return nullptr;
+
+		chunk_ensure_zero(chunk, chunksize, zeroed);
 
 		arena_chunk_init(arena, chunk);
 		run = (arena_run_t *)((uintptr_t)chunk +
@@ -4063,6 +4080,7 @@ huge_palloc(size_t size, size_t alignment, bool zero)
 	size_t csize;
 	size_t psize;
 	extent_node_t *node;
+	bool zeroed;
 
 	/* Allocate one or more contiguous chunks for this request. */
 
@@ -4077,10 +4095,13 @@ huge_palloc(size_t size, size_t alignment, bool zero)
 	if (!node)
 		return nullptr;
 
-	ret = chunk_alloc(csize, alignment, false, zero);
+	ret = chunk_alloc(csize, alignment, false, &zeroed);
 	if (!ret) {
 		base_node_dealloc(node);
 		return nullptr;
+	}
+	if (zero) {
+		chunk_ensure_zero(ret, csize, zeroed);
 	}
 
 	/* Insert node into huge. */
