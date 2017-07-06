@@ -18,6 +18,8 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "PrivateBrowsingUtils",
                                   "resource://gre/modules/PrivateBrowsingUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "SessionStore",
+                                  "resource:///modules/sessionstore/SessionStore.jsm");
 
 // The upper bound for the count of the visited unique domain names.
 const MAX_UNIQUE_VISITED_DOMAINS = 100;
@@ -96,6 +98,12 @@ function getOpenTabsAndWinsCounts() {
   }
 
   return { tabCount, winCount };
+}
+
+function getTabCount() {
+  let {windows} = SessionStore.getCurrentState();
+  return windows.map(win => win.isPrivate ? 0 : win.tabs.length)
+                .reduce((tabcount, accumulator) => tabcount + accumulator, 0);
 }
 
 function getSearchEngineId(engine) {
