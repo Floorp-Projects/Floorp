@@ -15,8 +15,8 @@ body {
 }
 
 #categories {
+  min-width: 250px;
   padding-top: 0px;
-  min-width: 300px;
   overflow-y: auto;
 }
 
@@ -275,10 +275,30 @@ body[dir="rtl"] .bar {
   border: 1px solid #0000b0;
 }
 
+th, td, table {
+  text-align: start;
+  border-collapse: collapse;
+}
+
+table {
+  width: 100%;
+  font-size: 15px;
+}
+
+td {
+  padding-bottom: 0.25em;
+  border-bottom: 1px solid var(--in-content-box-border-color);
+}
+
+tr:not(:first-child):hover {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
 th {
+  font-size: larger;
   font-weight: bold;
   white-space: nowrap;
-  text-align: left;
+  padding-bottom: 0.5em;
 }
 
 body[dir="rtl"] th {
