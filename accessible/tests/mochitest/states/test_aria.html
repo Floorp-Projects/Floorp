@@ -94,6 +94,7 @@
       testStates("aria_mixed_checkbox", STATE_MIXED);
       testStates("aria_checked_switch", STATE_CHECKED);
       testStates("aria_mixed_switch", 0, 0, STATE_MIXED); // unsupported
+      testStates("aria_mixed_switch", 0, 0, STATE_CHECKED); // not checked due to being unsupported
 
       // test disabled group and all its descendants to see if they are
       // disabled, too. See bug 429285.
@@ -266,6 +267,13 @@
       testStates("aria_progressbar_valuenow", 0, 0, STATE_MIXED);
       testStates("aria_progressbar_valuetext", 0, 0, STATE_MIXED);
 
+      // aria-current
+      testStates("current_page_1", 0, EXT_STATE_CURRENT);
+      testStates("page_2", 0, 0, EXT_STATE_CURRENT);
+      testStates("page_3", 0, 0, EXT_STATE_CURRENT);
+      testStates("page_4", 0, 0, EXT_STATE_CURRENT);
+      testStates("current_foo", 0, EXT_STATE_CURRENT);
+
       testStates("aria_listbox", STATE_FOCUSABLE);
       testStates("aria_grid", STATE_FOCUSABLE);
       testStates("aria_tree", STATE_FOCUSABLE);
@@ -359,6 +367,11 @@
      href="https://bugzilla.mozilla.org/show_bug.cgi?id=1136563"
      title="Support ARIA 1.1 switch role">
     Mozilla Bug 1136563
+  </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=1355921"
+     title="Elements with a defined, non-false value for aria-current should expose ATK_STATE_ACTIVE">
+    Mozilla Bug 1355921
   </a>
 
   <p id="display"></p>
@@ -631,5 +644,11 @@
   <!-- Test that directory is readonly -->
   <div id="aria_directory" role="directory"></div>
 
+  <!-- aria-current -->
+  <div id="current_page_1" role="link" aria-current="page">1</div>
+  <div id="page_2" role="link" aria-current="false">2</div>
+  <div id="page_3" role="link">3</div>
+  <div id="page_4" role="link" aria-current="">4</div>
+  <div id="current_foo" aria-current="foo">foo</div>
 </body>
 </html>

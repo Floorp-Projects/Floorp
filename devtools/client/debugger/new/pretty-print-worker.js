@@ -5922,6 +5922,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	          }
 
 	          this.worker.removeEventListener("message", listener);
+
 	          if (result.error) {
 	            reject(result.error);
 	          } else {

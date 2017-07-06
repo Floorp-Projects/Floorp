@@ -22,6 +22,8 @@ const gRequestNetworkingData = {
   "sockets": gDashboard.requestSockets,
   "dns": gDashboard.requestDNSInfo,
   "websockets": gDashboard.requestWebsocketConnections,
+  "dnslookuptool": () => {},
+  "logging": () => {},
   "rcwn": gDashboard.requestRcwnStats,
 };
 const gDashboardCallbacks = {
@@ -131,11 +133,37 @@ function displayRcwnStats(data) {
   let cacheWon = data.rcwnCacheWonCount;
   let netWon = data.rcwnNetWonCount;
   let total = data.totalNetworkRequests;
+  let cacheSlow = data.cacheSlowCount;
+  let cacheNotSlow = data.cacheNotSlowCount;
 
   document.getElementById("rcwn_status").innerText = status;
   document.getElementById("total_req_count").innerText = total;
   document.getElementById("rcwn_cache_won_count").innerText = cacheWon;
   document.getElementById("rcwn_cache_net_count").innerText = netWon;
+  document.getElementById("rcwn_cache_slow").innerText = cacheSlow;
+  document.getElementById("rcwn_cache_not_slow").innerText = cacheNotSlow;
+
+  // Keep in sync with CachePerfStats::EDataType in CacheFileUtils.h
+  const perfStatTypes = [
+    "open",
+    "read",
+    "write",
+    "entryopen",
+  ];
+
+  const perfStatFieldNames = [
+    "avgShort",
+    "avgLong",
+    "stddevLong",
+  ]
+
+  for (let typeIndex in perfStatTypes) {
+    for (let statFieldIndex in perfStatFieldNames) {
+      document.getElementById("rcwn_perfstats_" + perfStatTypes[typeIndex] + "_"
+                              + perfStatFieldNames[statFieldIndex]).innerText =
+        data.perfStats[typeIndex][perfStatFieldNames[statFieldIndex]];
+    }
+  }
 }
 
 function requestAllNetworkingData() {

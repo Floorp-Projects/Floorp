@@ -597,6 +597,16 @@ static const nsRoleMapEntry sWAIRoleMaps[] =
     kGenericAccType,
     kNoReqStates
   },
+  { // figure
+    &nsGkAtoms::figure,
+    roles::FIGURE,
+    kUseMapRole,
+    eNoValue,
+    eNoAction,
+    eNoLiveAttr,
+    kGenericAccType,
+    kNoReqStates
+  },
   { // form
     &nsGkAtoms::form,
     roles::FORM,
@@ -902,12 +912,12 @@ static const nsRoleMapEntry sWAIRoleMaps[] =
   },
   { // region
     &nsGkAtoms::region,
-    roles::PANE,
+    roles::REGION,
     kUseMapRole,
     eNoValue,
     eNoAction,
     eNoLiveAttr,
-    kGenericAccType,
+    eLandmark,
     kNoReqStates
   },
   { // row
@@ -1202,6 +1212,7 @@ nsRoleMapEntry aria::gEmptyRoleMap = {
  */
 static const EStateRule sWAIUnivStateMap[] = {
   eARIABusy,
+  eARIACurrent,
   eARIADisabled,
   eARIAExpanded,  // Currently under spec review but precedent exists
   eARIAHasPopup,  // Note this is technically a "property"

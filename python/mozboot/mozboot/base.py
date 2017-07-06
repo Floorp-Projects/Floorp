@@ -133,17 +133,6 @@ but you may be able to get a recent enough version from a software install
 tool or package manager on your system, or directly from https://rust-lang.org/
 '''
 
-STYLO_MOZCONFIG = '''
-To enable Stylo in your builds, paste the lines between the chevrons
-(>>> and <<<) into your mozconfig file:
-
-<<<
-ac_add_options --enable-stylo
-
-export LLVM_CONFIG=%s/clang/bin/llvm-config
->>>
-'''
-
 BROWSER_ARTIFACT_MODE_MOZCONFIG = '''
 Paste the lines between the chevrons (>>> and <<<) into your mozconfig file:
 
@@ -170,7 +159,6 @@ class BaseBootstrapper(object):
     def __init__(self, no_interactive=False):
         self.package_manager_updated = False
         self.no_interactive = no_interactive
-        self.stylo = False
         self.state_dir = None
 
     def install_system_packages(self):
@@ -199,8 +187,7 @@ class BaseBootstrapper(object):
         Firefox for Desktop can in simple cases determine its build environment
         entirely from configure.
         '''
-        if self.stylo:
-            print(STYLO_MOZCONFIG % self.state_dir)
+        pass
 
     def install_browser_artifact_mode_packages(self):
         '''

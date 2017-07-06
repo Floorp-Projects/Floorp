@@ -59,6 +59,8 @@ public:
      *    target of the redirect channel
      * @param flags
      *    redirect flags
+     * @param mainThreadEventTarget
+     *    a labeled event target for dispatching runnables
      * @param synchronize
      *    set to TRUE if you want the Init method wait synchronously for
      *    all redirect callbacks
@@ -66,6 +68,7 @@ public:
     nsresult Init(nsIChannel* oldChan,
                   nsIChannel* newChan,
                   uint32_t flags,
+                  nsIEventTarget* mainThreadEventTarget,
                   bool synchronize = false);
 
 protected:

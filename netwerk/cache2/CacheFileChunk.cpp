@@ -567,7 +567,6 @@ CacheFileChunk::Index() const
 CacheHash::Hash16_t
 CacheFileChunk::Hash() const
 {
-  MOZ_ASSERT(!mListener);
   MOZ_ASSERT(IsReady());
 
   return CacheHash::Hash16(mBuf->Buf(), mBuf->DataSize());

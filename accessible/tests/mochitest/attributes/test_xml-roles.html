@@ -34,6 +34,7 @@
       testAttrs("feed", {"xml-roles": "feed"}, true);
       testAttrs("article", {"xml-roles": "article"}, true);
       testAttrs("main_element", {"xml-roles": "main"}, true);
+      testAttrs("figure", {"xml-roles": "figure"}, true);
 
       testAttrs("search", {"xml-roles": "searchbox"}, true);
 
@@ -140,6 +141,12 @@
      title="ARIA 1.1: Support role 'searchbox'">
     Bug 1121518
   </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=1356049"
+     title="Map ARIA figure role">
+    Bug 1356049
+  </a>
+
   <p id="display"></p>
   <div id="content" style="display: none"></div>
   <pre id="test">
@@ -163,6 +170,7 @@
   <div id="feed" role="feed">a feed</div>
   <article id="article">article</article>
   <main id="main_element">another main area</main>
+  <div id="figure" role="figure">a figure</div>
 
   <input id="search" type="search"/>
 

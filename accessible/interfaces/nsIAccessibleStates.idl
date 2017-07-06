@@ -72,5 +72,6 @@ interface nsIAccessibleStates : nsISupports
   const unsigned long  EXT_STATE_SENSITIVE               = 0x00004000;  // Same as ENABLED for now
   const unsigned long  EXT_STATE_EXPANDABLE              = 0x00008000;  // If COLLAPSED or EXPANDED
   const unsigned long  EXT_STATE_PINNED                  = 0x00010000;  // Indicates object is pinned.
+  const unsigned long  EXT_STATE_CURRENT                 = 0x00020000;  // Indicates object is the current item in its container
 };
 
