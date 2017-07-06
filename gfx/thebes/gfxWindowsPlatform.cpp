@@ -355,7 +355,7 @@ gfxWindowsPlatform::InitAcceleration()
   UpdateRenderMode();
 
   // If we have Skia and we didn't init dwrite already, do it now.
-  if (!DWriteAvailable() && GetDefaultContentBackend() == BackendType::SKIA) {
+  if (!DWriteEnabled() && GetDefaultContentBackend() == BackendType::SKIA) {
     InitDWriteSupport();
   }
 
@@ -491,7 +491,7 @@ gfxWindowsPlatform::CreatePlatformFontList()
 
     // bug 630201 - older pre-RTM versions of Direct2D/DirectWrite cause odd
     // crashers so blacklist them altogether
-    if (IsNotWin7PreRTM() && DWriteAvailable()) {
+    if (IsNotWin7PreRTM() && DWriteEnabled()) {
         pfl = new gfxDWriteFontList();
         if (NS_SUCCEEDED(pfl->InitFontList())) {
             return pfl;
@@ -1103,7 +1103,7 @@ gfxWindowsPlatform::FontsPrefsChanged(const char *aPref)
 void
 gfxWindowsPlatform::SetupClearTypeParams()
 {
-    if (DWriteAvailable()) {
+    if (DWriteEnabled()) {
         // any missing prefs will default to invalid (-1) and be ignored;
         // out-of-range values will also be ignored
         FLOAT gamma = -1.0;
@@ -1526,7 +1526,7 @@ gfxWindowsPlatform::InitializeD2D()
   }
 
   // Using Direct2D depends on DWrite support.
-  if (!DWriteAvailable() && !InitDWriteSupport()) {
+  if (!DWriteEnabled() && !InitDWriteSupport()) {
     d2d1.SetFailed(FeatureStatus::Failed, "Failed to initialize DirectWrite support",
                    NS_LITERAL_CSTRING("FEATURE_FAILURE_D2D_DWRITE"));
     return;
