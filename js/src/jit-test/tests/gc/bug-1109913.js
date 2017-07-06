@@ -1,4 +1,4 @@
-// |jit-test| error: out of memory
+// |jit-test| error: out of memory; allow-unhandlable-oom
 
 gcparam("maxBytes", gcparam("gcBytes"));
 eval(`

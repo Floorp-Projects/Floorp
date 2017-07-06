@@ -1,4 +1,4 @@
-// |jit-test| allow-oom
+// |jit-test| allow-oom; allow-unhandlable-oom
 enableGeckoProfiling();
 loadFile('\
 for (var i = 0; i < 2; i++) {\

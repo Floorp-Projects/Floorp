@@ -1,4 +1,4 @@
-// |jit-test| --no-ggc; allow-oom
+// |jit-test| --no-ggc; allow-oom; allow-unhandlable-oom
 gc();
 dbg1 = new Debugger();
 root2 = newGlobal();
