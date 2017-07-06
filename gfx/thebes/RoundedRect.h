@@ -7,6 +7,7 @@
 #define ROUNDED_RECT_H
 
 #include "gfxRect.h"
+#include "gfxTypes.h"
 #include "mozilla/gfx/PathHelpers.h"
 
 namespace mozilla {

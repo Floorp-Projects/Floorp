@@ -490,11 +490,6 @@ APZEventState::ProcessAPZStateChange(ViewID aViewId,
     mActiveElementManager->HandleTouchEnd();
     break;
   }
-  case APZStateChange::eSentinel:
-    // Should never happen, but we want this case branch to stop the compiler
-    // whining about unhandled values.
-    MOZ_ASSERT(false);
-    break;
   }
 }
 

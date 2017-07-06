@@ -999,9 +999,7 @@ TextRenderedRun::GetFrameUserSpaceRect(nsPresContext* aContext,
     return r;
   }
   gfxMatrix m = GetTransformFromRunUserSpaceToFrameUserSpace(aContext);
-  gfxRect thebesRect = r.ToThebesRect();
-  thebesRect.TransformBoundsBy(m);
-  return thebesRect;
+  return m.TransformBounds(r.ToThebesRect());
 }
 
 SVGBBox
@@ -1017,9 +1015,7 @@ TextRenderedRun::GetUserSpaceRect(nsPresContext* aContext,
   if (aAdditionalTransform) {
     m *= *aAdditionalTransform;
   }
-  gfxRect thebesRect = r.ToThebesRect();
-  thebesRect.TransformBoundsBy(m);
-  return thebesRect;
+  return m.TransformBounds(r.ToThebesRect());
 }
 
 void
@@ -3628,8 +3624,8 @@ SVGTextFrame::PaintSVG(gfxContext& aContext,
                       mRect.width / appUnitsPerDevPixel,
                       mRect.height / appUnitsPerDevPixel);
 
-    frameRect.TransformBoundsBy(GetCanvasTM());
-    nsRect canvasRect = nsLayoutUtils::RoundGfxRectToAppRect(frameRect, 1);
+    nsRect canvasRect = nsLayoutUtils::RoundGfxRectToAppRect(
+        GetCanvasTM().TransformBounds(frameRect), 1);
     if (!canvasRect.Intersects(dirtyRect)) {
       return;
     }
@@ -4301,8 +4297,7 @@ SVGTextFrame::GetExtentOfChar(nsIContent* aContent,
   }
 
   // Transform the glyph's rect into user space.
-  glyphRect.TransformBoundsBy(m);
-  gfxRect r = glyphRect;
+  gfxRect r = m.TransformBounds(glyphRect);
 
   NS_ADDREF(*aResult = new dom::SVGRect(aContent, r.x, r.y, r.width, r.height));
   return NS_OK;
@@ -5570,8 +5565,7 @@ SVGTextFrame::TransformFrameRectFromTextChild(const nsRect& aRect,
       // account the font size scale.
       gfxMatrix m = run.GetTransformFromRunUserSpaceToUserSpace(presContext);
       m.PreScale(mFontSizeScaleFactor, mFontSizeScaleFactor);
-      gfxRect rectInUserSpace = rectInFrameUserSpace;
-      rectInUserSpace.TransformBy(m);
+      gfxRect rectInUserSpace = m.TransformRect(rectInFrameUserSpace);
 
       // Union it into the result.
       result.UnionRect(result, rectInUserSpace);

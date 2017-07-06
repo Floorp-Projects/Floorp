@@ -7,6 +7,8 @@
 #ifndef mozilla_FontRange_h_
 #define mozilla_FontRange_h_
 
+#include "gfxTypes.h" // for gfxFloat
+
 namespace mozilla {
 
 struct FontRange

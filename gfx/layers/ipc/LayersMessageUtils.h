@@ -42,10 +42,10 @@ struct ParamTraits<mozilla::layers::LayersBackend>
 
 template <>
 struct ParamTraits<mozilla::layers::ScaleMode>
-  : public ContiguousEnumSerializer<
+  : public ContiguousEnumSerializerInclusive<
              mozilla::layers::ScaleMode,
              mozilla::layers::ScaleMode::SCALE_NONE,
-             mozilla::layers::ScaleMode::SENTINEL>
+             mozilla::layers::kHighestScaleMode>
 {};
 
 template <>
@@ -64,18 +64,18 @@ struct ParamTraits<mozilla::layers::DiagnosticTypes>
 
 template <>
 struct ParamTraits<mozilla::layers::ScrollDirection>
-  : public ContiguousEnumSerializer<
+  : public ContiguousEnumSerializerInclusive<
             mozilla::layers::ScrollDirection,
             mozilla::layers::ScrollDirection::NONE,
-            mozilla::layers::ScrollDirection::SENTINEL>
+            mozilla::layers::kHighestScrollDirection>
 {};
 
 template<>
 struct ParamTraits<mozilla::layers::FrameMetrics::ScrollOffsetUpdateType>
-  : public ContiguousEnumSerializer<
+  : public ContiguousEnumSerializerInclusive<
              mozilla::layers::FrameMetrics::ScrollOffsetUpdateType,
              mozilla::layers::FrameMetrics::ScrollOffsetUpdateType::eNone,
-             mozilla::layers::FrameMetrics::ScrollOffsetUpdateType::eSentinel>
+             mozilla::layers::FrameMetrics::sHighestScrollOffsetUpdateType>
 {};
 
 template<>
@@ -441,10 +441,10 @@ struct ParamTraits<mozilla::layers::FocusTarget::ScrollTargets>
 
 template <>
 struct ParamTraits<mozilla::layers::FocusTarget::FocusTargetType>
-  : public ContiguousEnumSerializer<
+  : public ContiguousEnumSerializerInclusive<
              mozilla::layers::FocusTarget::FocusTargetType,
              mozilla::layers::FocusTarget::eNone,
-             mozilla::layers::FocusTarget::eSentinel>
+             mozilla::layers::FocusTarget::sHighestFocusTargetType>
 {};
 
 template <>
@@ -484,10 +484,10 @@ struct ParamTraits<mozilla::layers::FocusTarget>
 
 template <>
 struct ParamTraits<mozilla::layers::KeyboardScrollAction::KeyboardScrollActionType>
-  : public ContiguousEnumSerializer<
+  : public ContiguousEnumSerializerInclusive<
              mozilla::layers::KeyboardScrollAction::KeyboardScrollActionType,
              mozilla::layers::KeyboardScrollAction::KeyboardScrollActionType::eScrollCharacter,
-             mozilla::layers::KeyboardScrollAction::KeyboardScrollActionType::eSentinel>
+             mozilla::layers::KeyboardScrollAction::sHighestKeyboardScrollActionType>
 {};
 
 template <>
@@ -557,24 +557,25 @@ struct ParamTraits<mozilla::layers::KeyboardMap>
   }
 };
 
-typedef mozilla::layers::GeckoContentController::TapType TapType;
+typedef mozilla::layers::GeckoContentController GeckoContentController;
+typedef GeckoContentController::TapType TapType;
 
 template <>
 struct ParamTraits<TapType>
-  : public ContiguousEnumSerializer<
+  : public ContiguousEnumSerializerInclusive<
              TapType,
              TapType::eSingleTap,
-             TapType::eSentinel>
+             GeckoContentController::sHighestTapType>
 {};
 
-typedef mozilla::layers::GeckoContentController::APZStateChange APZStateChange;
+typedef GeckoContentController::APZStateChange APZStateChange;
 
 template <>
 struct ParamTraits<APZStateChange>
-  : public ContiguousEnumSerializer<
+  : public ContiguousEnumSerializerInclusive<
              APZStateChange,
              APZStateChange::eTransformBegin,
-             APZStateChange::eSentinel>
+             GeckoContentController::sHighestAPZStateChange>
 {};
 
 template<>

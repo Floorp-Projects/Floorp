@@ -7,6 +7,7 @@
 #ifndef MOZILLA_DOM_OFFSCREENCANVAS_H_
 #define MOZILLA_DOM_OFFSCREENCANVAS_H_
 
+#include "gfxTypes.h"
 #include "mozilla/DOMEventTargetHelper.h"
 #include "mozilla/layers/LayersTypes.h"
 #include "mozilla/RefPtr.h"

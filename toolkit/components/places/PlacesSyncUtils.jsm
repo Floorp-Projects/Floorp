@@ -1361,7 +1361,8 @@ function validateNewBookmark(info) {
       title: { validIf: b => [ BookmarkSyncUtils.KINDS.BOOKMARK,
                                BookmarkSyncUtils.KINDS.QUERY,
                                BookmarkSyncUtils.KINDS.FOLDER,
-                               BookmarkSyncUtils.KINDS.LIVEMARK ].includes(b.kind) },
+                               BookmarkSyncUtils.KINDS.LIVEMARK ].includes(b.kind) ||
+                             b.title === "" },
       query: { validIf: b => b.kind == BookmarkSyncUtils.KINDS.QUERY },
       folder: { validIf: b => b.kind == BookmarkSyncUtils.KINDS.QUERY },
       tags: { validIf: b => [ BookmarkSyncUtils.KINDS.BOOKMARK,

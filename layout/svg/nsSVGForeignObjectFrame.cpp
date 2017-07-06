@@ -234,7 +234,7 @@ nsSVGForeignObjectFrame::PaintSVG(gfxContext& aContext,
 
     gfxRect transDirtyRect = gfxRect(aDirtyRect->x, aDirtyRect->y,
                                      aDirtyRect->width, aDirtyRect->height);
-    transDirtyRect.TransformBoundsBy(invmatrix);
+    transDirtyRect = invmatrix.TransformBounds(transDirtyRect);
 
     kidDirtyRect.IntersectRect(kidDirtyRect,
       nsLayoutUtils::RoundGfxRectToAppRect(transDirtyRect,

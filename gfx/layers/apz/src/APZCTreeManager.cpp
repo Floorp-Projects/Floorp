@@ -1305,10 +1305,6 @@ APZCTreeManager::ReceiveInputEvent(InputData& aEvent,
           targetGuid = mFocusState.GetVerticalTarget();
           break;
         }
-
-        case KeyboardScrollAction::eSentinel: {
-          MOZ_ASSERT_UNREACHABLE("Invalid KeyboardScrollActionType");
-        }
       }
 
       // If we don't have a scroll target then either we have a stale focus target,
@@ -1347,9 +1343,6 @@ APZCTreeManager::ReceiveInputEvent(InputData& aEvent,
       keyInput.mHandledByAPZ = true;
       focusSetter.MarkAsNonFocusChanging();
 
-      break;
-    } case SENTINEL_INPUT: {
-      MOZ_ASSERT_UNREACHABLE("Invalid InputType.");
       break;
     }
   }

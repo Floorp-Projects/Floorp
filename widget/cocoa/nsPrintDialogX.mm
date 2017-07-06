@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/ArrayUtils.h"
+#include "mozilla/Preferences.h"
 
 #include "nsPrintDialogX.h"
 #include "nsIPrintSettings.h"
