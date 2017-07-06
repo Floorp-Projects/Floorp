@@ -198,11 +198,17 @@ var TalosContentProfiler;
     /**
      * Resumes the Gecko Profiler sampler. Can also simultaneously set a marker.
      *
+     * @param marker (string, optional)
+     *        If non-empty, will set a marker immediately after resuming.
+     * @param inittedInParent (bool, optional)
+     *        If true, it is assumed that the parent has already started profiling
+     *        for us, and we can skip the initialization check. This is usually
+     *        true for pageloader tests.
      * @returns Promise
      *          Resolves once the Gecko Profiler has resumed.
      */
-    resume(marker = "") {
-      if (initted) {
+    resume(marker = "", inittedInParent = false) {
+      if (initted || inittedInParent) {
         return sendEventAndWait("Profiler:Resume", { marker });
       }
       return Promise.resolve();
@@ -211,11 +217,17 @@ var TalosContentProfiler;
     /**
      * Pauses the Gecko Profiler sampler. Can also simultaneously set a marker.
      *
+     * @param marker (string, optional)
+     *        If non-empty, will set a marker immediately before pausing.
+     * @param inittedInParent (bool, optional)
+     *        If true, it is assumed that the parent has already started profiling
+     *        for us, and we can skip the initialization check. This is usually
+     *        true for pageloader tests.
      * @returns Promise
      *          Resolves once the Gecko Profiler has paused.
      */
-    pause(marker = "") {
-      if (initted) {
+    pause(marker = "", inittedInParent = false) {
+      if (initted || inittedInParent) {
         return sendEventAndWait("Profiler:Pause", { marker });
       }
 
