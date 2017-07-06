@@ -44,7 +44,13 @@ public:
 
   nsCString PartialHash() {
     MOZ_ASSERT(mPartialHashLength <= COMPLETE_SIZE);
-    return nsCString(reinterpret_cast<char*>(hash.complete.buf), mPartialHashLength);
+    if (mNoise) {
+      return nsCString(reinterpret_cast<char*>(hash.fixedLengthPrefix.buf),
+                       PREFIX_SIZE);
+    } else {
+      return nsCString(reinterpret_cast<char*>(hash.complete.buf),
+                       mPartialHashLength);
+    }
   }
 
   nsCString PartialHashHex() {

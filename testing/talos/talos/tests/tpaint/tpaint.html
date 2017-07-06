@@ -1,13 +1,12 @@
 <html>
 <meta charset='utf-8'>
-<script language="JavaScript" type="text/javascript" src="../scripts/MozillaFileLogger.js"></script>
+<script language="JavaScript" type="text/javascript" src="../../scripts/MozillaFileLogger.js"></script>
 <script language="JavaScript" src="chrome://talos-powers-content/content/TalosContentProfiler.js"></script>
 <script language="JavaScript" type="text/javascript" src="chrome://talos-powers-content/content/TalosPowersContent.js"></script>
-<script language="JavaScript" type="text/javascript" src="../tests/quit.js"></script>
+<script language="JavaScript" type="text/javascript" src="../quit.js"></script>
 <script>
 var OPENER_DELAY = 1000; // ms delay between tests
-var REPEAT_COUNT = 20;
-var kid, kidStartTime, kidEndTime, windowIndex, openTimes;
+var kid, kidStartTime, kidEndTime, openTime;
 var auto = document.location.search.split("=")[1]; // ?auto=1
 
 /*
@@ -21,22 +20,12 @@ var auto = document.location.search.split("=")[1]; // ?auto=1
  */
 
 async function startTest() {
-  // Initialize
-  windowIndex = -1;
-  openTimes = [];
-
   TalosContentProfiler.initFromURLQueryParams(location.search);
   await TalosContentProfiler.beginTest("tpaint");
   scheduleNextWindow();
 }
 
 function scheduleNextWindow() {
-  windowIndex++;
-  if (windowIndex >= REPEAT_COUNT) {
-    window.setTimeout(reportTimes, 0);
-    return;
-  }
-
   TalosPowersContent.forceCCAndGC();
   window.setTimeout(openWindow, OPENER_DELAY);
 }
@@ -55,46 +44,20 @@ function calcMedian( numbers ) {
 async function reportTimes() {
   await TalosContentProfiler.finishTest();
 
-  var min = 99999, max = 0, avg = 0;
-  var count = openTimes.length;
-  for (var i = 0; i < count; i++) {
-    var time = openTimes[i];
-    avg += time;
-    if (time < min)
-      min = time;
-    if (time > max)
-      max = time;
-  }
-  avg = (avg / count).toFixed(2);
-  min = min.toFixed(2);
-  max = max.toFixed(2);
-  var med = calcMedian(openTimes);
+  if (window.tpRecordTime)
+    window.tpRecordTime(openTime);
 
   if (auto) {
-    dumpLog("__start_report" + openTimes.join("|") + "__end_report");
-    var now = (new Date()).getTime();
-    dumpLog("__startTimestamp" + now + "__endTimestamp\n");
-    dumpLog("openingTimes=" + openTimes.slice(1) + "\n");
-    dumpLog("avgOpenTime:" + avg + "\n" );
-    dumpLog("minOpenTime:" + min + "\n" );
-    dumpLog("maxOpenTime:" + max + "\n" );
-    dumpLog("medOpenTime:" + med + "\n" );
-    dumpLog("__xulWinOpenTime:" + med + "\n");
-
-    goQuitApplication();
-    window.close();
-  } else {
-    alert("Average over " + count + " runs: " + avg + "\n" +
-          "(min=" + min + ", max=" + max + ")\n" +
-          "runs=" + openTimes.join(","));
+    dumpLog("openingTime=" + openTime + "\n");
   }
 }
 
 async function childIsOpen() {
   kidEndTime = window.performance.now();
-  await TalosContentProfiler.pause("tpaint " + windowIndex);
-  openTimes[windowIndex] = kidEndTime - kidStartTime;
-  scheduleNextWindow();
+  openTime = kidEndTime - kidStartTime;
+  await TalosContentProfiler.pause("tpaint");
+
+  window.setTimeout(reportTimes, 0);
 }
 
 /* eslint-disable no-useless-concat */
@@ -111,7 +74,7 @@ var kidHTML = "<html><meta charset='utf-8'><script>" +
 var kidURI = "data:text/html," + encodeURI(kidHTML);
 
 async function openWindow() {
-  await TalosContentProfiler.resume("tpaint " + windowIndex);
+  await TalosContentProfiler.resume("tpaint");
   kidStartTime = window.performance.now();
   kid = window.open(kidURI);
 }

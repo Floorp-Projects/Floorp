@@ -97,7 +97,8 @@ public:
 
   // The caller must ensure that Shutdown() is called before aDecoder is
   // destroyed.
-  explicit MediaDecoderReader(AbstractMediaDecoder* aDecoder);
+  explicit MediaDecoderReader(AbstractMediaDecoder* aDecoder,
+                              MediaResource* aResource = nullptr);
 
   // Initializes the reader, returns NS_OK on success, or NS_ERROR_FAILURE
   // on failure.
@@ -320,6 +321,8 @@ protected:
 
   // Notify if we are waiting for a decryption key.
   MediaEventProducer<TrackInfo::TrackType> mOnTrackWaitingForKey;
+
+  RefPtr<MediaResource> mResource;
 
 private:
   virtual nsresult InitInternal() { return NS_OK; }

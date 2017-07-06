@@ -68,7 +68,8 @@ public:
   size_t mSize;
 };
 
-MediaDecoderReader::MediaDecoderReader(AbstractMediaDecoder* aDecoder)
+MediaDecoderReader::MediaDecoderReader(AbstractMediaDecoder* aDecoder,
+                                       MediaResource* aResource)
   : mAudioCompactor(mAudioQueue)
   , mDecoder(aDecoder)
   , mTaskQueue(new TaskQueue(
@@ -81,6 +82,7 @@ MediaDecoderReader::MediaDecoderReader(AbstractMediaDecoder* aDecoder)
   , mIgnoreAudioOutputFormat(false)
   , mHitAudioDecodeError(false)
   , mShutdown(false)
+  , mResource(aResource)
 {
   MOZ_COUNT_CTOR(MediaDecoderReader);
   MOZ_ASSERT(NS_IsMainThread());
@@ -206,7 +208,7 @@ MediaDecoderReader::GetBuffered()
 {
   MOZ_ASSERT(OnTaskQueue());
 
-  AutoPinned<MediaResource> stream(mDecoder->GetResource());
+  AutoPinned<MediaResource> stream(mResource);
 
   if (!mDuration.Ref().isSome()) {
     return TimeIntervals();

@@ -586,13 +586,13 @@ WalkStackThread(void* aData)
       // Suspend the calling thread, dump his stack, and then resume him.
       // He's currently waiting for us to finish so now should be a good time.
       ret = ::SuspendThread(data->thread);
-      if (ret == -1) {
+      if (ret == (DWORD)-1) {
         PrintError("ThreadSuspend");
       } else {
         WalkStackMain64(data);
 
         ret = ::ResumeThread(data->thread);
-        if (ret == -1) {
+        if (ret == (DWORD)-1) {
           PrintError("ThreadResume");
         }
       }

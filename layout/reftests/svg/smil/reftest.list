@@ -162,7 +162,7 @@ skip-if(styloVsGecko) == anim-view-01.svg#view lime.svg # bug 1354406
 == anim-class-04.svg anim-class-04-ref.svg
 
 # animate with some paint server values
-fails-if(styloVsGecko||stylo) == anim-paintserver-1.svg anim-paintserver-1-ref.svg
+== anim-paintserver-1.svg anim-paintserver-1-ref.svg
 
 # animate attributes on text content children
 == anim-text-attr-01.svg anim-text-attr-01-ref.svg

@@ -113,10 +113,6 @@ DEFAULT_FIREFOX_PREFS = {
     'devtools.browsertoolbox.panel': 'jsdebugger',
     'devtools.chrome.enabled' : True,
 
-    # From:
-    # https://hg.mozilla.org/mozilla-central/file/1dd81c324ac7/build/automation.py.in#l388
-    # Make url-classifier updates so rare that they won't affect tests.
-    'urlclassifier.updateinterval' : 172800,
     # Point the url-classifier to a nonexistent local URL for fast failures.
     'browser.safebrowsing.downloads.remote.url': 'http://localhost/safebrowsing-dummy/downloads',
     'browser.safebrowsing.provider.google.gethashURL' : 'http://localhost/safebrowsing-dummy/gethash',
