@@ -344,8 +344,8 @@ MediaEngineTabVideoSource::Draw() {
   if (mWindow) {
     RefPtr<gfxContext> context = gfxContext::CreateOrNull(dt);
     MOZ_ASSERT(context); // already checked the draw target above
-    context->SetMatrix(context->CurrentMatrix().Scale((((float) size.width)/mViewportWidth),
-                                                      (((float) size.height)/mViewportHeight)));
+    context->SetMatrix(context->CurrentMatrix().PreScale((((float) size.width)/mViewportWidth),
+                                                         (((float) size.height)/mViewportHeight)));
 
     nscolor bgColor = NS_RGB(255, 255, 255);
     uint32_t renderDocFlags = mScrollWithPage? 0 :

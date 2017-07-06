@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<!-- Any copyright is dedicated to the Public Domain.
+   - http://creativecommons.org/publicdomain/zero/1.0/ -->
+
+<html class="reftest-wait">
+  <script>
+  function runTest() {
+    var details1 = document.getElementById("details1");
+    var summary2 = document.getElementById("summary2");
+
+    details1.insertBefore(summary2, details1.children[0]);
+
+    document.documentElement.removeAttribute("class");
+  }
+  </script>
+  <body onload="runTest();">
+    <details id="details1">
+      <summary>Summary 1</summary>
+      <p>This is the details 1.</p>
+    </details>
+    <details>
+      <summary id="summary2" style="position: absolute;">Summary 2</summary>
+      <p>This is the details 2.</p>
+    </details>
+  </body>
+</html>

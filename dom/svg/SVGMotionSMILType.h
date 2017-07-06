@@ -17,10 +17,6 @@ class nsSMILValue;
 
 namespace mozilla {
 
-namespace gfx {
-class Matrix;
-} // namespace gfx
-
 /**
  * MotionRotateType: Enum to indicate the type of our "rotate" attribute.
  */
