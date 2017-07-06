@@ -341,11 +341,9 @@ SkTypeface* SkCreateTypefaceFromLOGFONT(const LOGFONT& origLF) {
 SkTypeface* SkCreateTypefaceFromDWriteFont(IDWriteFactory* aFactory,
                                            IDWriteFontFace* aFontFace,
                                            SkFontStyle aStyle,
-                                           bool aForceGDI,
-                                           float aGamma,
-                                           float aContrast)
+                                           bool aForceGDI)
 {
-  return DWriteFontTypeface::Create(aFactory, aFontFace, aStyle, aForceGDI, aGamma, aContrast);
+  return DWriteFontTypeface::Create(aFactory, aFontFace, aStyle, aForceGDI);
 }
 
 /**

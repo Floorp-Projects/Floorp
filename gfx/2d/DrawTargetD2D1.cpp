@@ -17,8 +17,6 @@
 #include "Tools.h"
 #include "nsAppRunner.h"
 
-#include "mozilla/Mutex.h"
-
 using namespace std;
 
 // decltype is not usable for overloaded functions.
@@ -34,6 +32,7 @@ namespace gfx {
 
 uint64_t DrawTargetD2D1::mVRAMUsageDT;
 uint64_t DrawTargetD2D1::mVRAMUsageSS;
+IDWriteFactory *DrawTargetD2D1::mDWriteFactory;
 ID2D1Factory1* DrawTargetD2D1::mFactory = nullptr;
 
 ID2D1Factory1 *D2DFactory1()
@@ -609,7 +608,7 @@ DrawTargetD2D1::FillGlyphs(ScaledFont *aFont,
                            const GlyphBuffer &aBuffer,
                            const Pattern &aPattern,
                            const DrawOptions &aOptions,
-                           const GlyphRenderingOptions*)
+                           const GlyphRenderingOptions *aRenderingOptions)
 {
   if (aFont->GetType() != FontType::DWRITE) {
     gfxDebug() << *this << ": Ignoring drawing call for incompatible font.";
@@ -618,7 +617,16 @@ DrawTargetD2D1::FillGlyphs(ScaledFont *aFont,
 
   ScaledFontDWrite *font = static_cast<ScaledFontDWrite*>(aFont);
 
-  IDWriteRenderingParams *params = font->mParams;
+  IDWriteRenderingParams *params = nullptr;
+  if (aRenderingOptions) {
+    if (aRenderingOptions->GetType() != FontType::DWRITE) {
+      gfxDebug() << *this << ": Ignoring incompatible GlyphRenderingOptions.";
+      // This should never happen.
+      MOZ_ASSERT(false);
+    } else {
+      params = static_cast<const GlyphRenderingOptionsDWrite*>(aRenderingOptions)->mParams;
+    }
+  }
 
   AntialiasMode aaMode = font->GetDefaultAAMode();
 
@@ -1246,6 +1254,33 @@ DrawTargetD2D1::factory()
   RadialGradientEffectD2D1::Register(mFactory);
 
   return mFactory;
+}
+
+IDWriteFactory*
+DrawTargetD2D1::GetDWriteFactory()
+{
+  if (mDWriteFactory) {
+    return mDWriteFactory;
+  }
+
+  decltype(DWriteCreateFactory)* createDWriteFactory;
+  HMODULE dwriteModule = LoadLibraryW(L"dwrite.dll");
+  createDWriteFactory = (decltype(DWriteCreateFactory)*)
+    GetProcAddress(dwriteModule, "DWriteCreateFactory");
+
+  if (!createDWriteFactory) {
+    gfxWarning() << "Failed to locate DWriteCreateFactory function.";
+    return nullptr;
+  }
+
+  HRESULT hr = createDWriteFactory(DWRITE_FACTORY_TYPE_SHARED, __uuidof(IDWriteFactory),
+                                   reinterpret_cast<IUnknown**>(&mDWriteFactory));
+
+  if (FAILED(hr)) {
+    gfxWarning() << "Failed to create DWrite Factory.";
+  }
+
+  return mDWriteFactory;
 }
 
 void

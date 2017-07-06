@@ -173,6 +173,8 @@ public:
 
   mozilla::gfx::DrawTarget* GetReferenceDrawTarget() final { return mBaseDT; }
 
+  mozilla::gfx::FontType GetDesiredFontType() final;
+
   void* GetFontContext() final { return mFontContext; }
 
 private:

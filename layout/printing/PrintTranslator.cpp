@@ -83,5 +83,20 @@ PrintTranslator::CreateDrawTarget(ReferencePtr aRefPtr,
   return drawTarget.forget();
 }
 
+FontType
+PrintTranslator::GetDesiredFontType()
+{
+  switch (mBaseDT->GetBackendType()) {
+    case BackendType::DIRECT2D:
+      return FontType::DWRITE;
+    case BackendType::CAIRO:
+      return FontType::CAIRO;
+    case BackendType::SKIA:
+      return FontType::SKIA;
+    default:
+      return FontType::CAIRO;
+  }
+}
+
 } // namespace layout
 } // namespace mozilla
