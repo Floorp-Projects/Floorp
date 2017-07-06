@@ -1056,15 +1056,6 @@ public:
                "Seek shouldn't be finished");
     MOZ_ASSERT(aAudio);
 
-    // Video-only seek doesn't reset audio decoder. There might be pending audio
-    // requests when AccurateSeekTask::Seek() begins. We will just store the
-    // data without checking |mDiscontinuity| or calling
-    // DropAudioUpToSeekTarget().
-    if (mSeekJob.mTarget->IsVideoOnly()) {
-      mMaster->PushAudio(aAudio);
-      return;
-    }
-
     AdjustFastSeekIfNeeded(aAudio);
 
     if (mSeekJob.mTarget->IsFast()) {
@@ -1786,6 +1777,19 @@ public:
     }
 
     AccurateSeekingState::Exit();
+  }
+
+  void HandleAudioDecoded(AudioData* aAudio) override
+  {
+    MOZ_ASSERT(mDoneAudioSeeking && !mDoneVideoSeeking,
+               "Seek shouldn't be finished");
+    MOZ_ASSERT(aAudio);
+
+    // Video-only seek doesn't reset audio decoder. There might be pending audio
+    // requests when AccurateSeekTask::Seek() begins. We will just store the
+    // data without checking |mDiscontinuity| or calling
+    // DropAudioUpToSeekTarget().
+    mMaster->PushAudio(aAudio);
   }
 };
 
