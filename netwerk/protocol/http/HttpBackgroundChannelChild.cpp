@@ -439,27 +439,14 @@ HttpBackgroundChannelChild::ActorDestroy(ActorDestroyReason aWhy)
   if (!OnSocketThread()) {
     // PBackgroundChild might be destroyed during shutdown and
     // ActorDestroy will be called on main thread directly.
-    // Try disconnect mChannelChild on STS thread.
-    MOZ_ASSERT(NS_IsMainThread());
-
-    if (!gSocketTransportService) {
-      return;
-    }
-
+    // Simply disconnect with HttpChannelChild to release memory.
+    mChannelChild = nullptr;
     RefPtr<HttpBackgroundChannelChild> self = this;
-
-    nsresult rv =
-      gSocketTransportService->Dispatch(NS_NewRunnableFunction(
-        "HttpBackgroundChannelChild::ActorDestroyOnNonSTSThread", [self]() {
-        MOZ_ASSERT(OnSocketThread());
-          self->mChannelChild = nullptr;
-        }), NS_DISPATCH_NORMAL);
-
-    // If failed to do this on STS thread, disconnect mChannelChild immediately.
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      mChannelChild = nullptr;
-    }
-
+    mQueuedRunnables.AppendElement(NS_NewRunnableFunction(
+      "HttpBackgroundChannelChild::ActorDestroyNonSTSThread", [self]() {
+        MOZ_ASSERT(NS_IsMainThread());
+        self->mChannelChild = nullptr;
+      }));
     return;
   }
 
