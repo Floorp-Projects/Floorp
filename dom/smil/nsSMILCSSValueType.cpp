@@ -694,8 +694,7 @@ ValueFromStringHelper(nsCSSPropertyID aPropID,
                         data,
                         ParsingMode::AllowUnitlessLength |
                         ParsingMode::AllowAllNumericValues,
-                        doc->GetCompatibilityMode(),
-                        doc->CSSLoader()).Consume();
+                        doc->GetCompatibilityMode()).Consume();
   if (!servoDeclarationBlock) {
     return result;
   }

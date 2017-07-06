@@ -598,33 +598,6 @@ StyleSheet::InsertRuleIntoGroup(const nsAString& aRule,
   return NS_OK;
 }
 
-uint64_t
-StyleSheet::FindOwningWindowInnerID() const
-{
-  uint64_t windowID = 0;
-  if (mDocument) {
-    windowID = mDocument->InnerWindowID();
-  }
-
-  if (windowID == 0 && mOwningNode) {
-    windowID = mOwningNode->OwnerDoc()->InnerWindowID();
-  }
-
-  RefPtr<css::Rule> ownerRule;
-  if (windowID == 0 && (ownerRule = GetDOMOwnerRule())) {
-    RefPtr<StyleSheet> sheet = ownerRule->GetStyleSheet();
-    if (sheet) {
-      windowID = sheet->FindOwningWindowInnerID();
-    }
-  }
-
-  if (windowID == 0 && mParent) {
-    windowID = mParent->FindOwningWindowInnerID();
-  }
-
-  return windowID;
-}
-
 void
 StyleSheet::EnabledStateChanged()
 {

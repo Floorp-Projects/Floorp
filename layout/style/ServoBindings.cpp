@@ -7,7 +7,6 @@
 #include "mozilla/ServoBindings.h"
 
 #include "ChildIterator.h"
-#include "ErrorReporter.h"
 #include "GeckoProfiler.h"
 #include "gfxFontFamilyList.h"
 #include "nsAnimationManager.h"
@@ -71,7 +70,6 @@
 #endif
 
 using namespace mozilla;
-using namespace mozilla::css;
 using namespace mozilla::dom;
 
 #define SERVO_ARC_TYPE(name_, type_) \
@@ -864,12 +862,6 @@ nsIDocument::DocumentTheme
 Gecko_GetDocumentLWTheme(const nsIDocument* aDocument)
 {
   return aDocument->ThreadSafeGetDocumentLWTheme();
-}
-
-Loader*
-Gecko_GetDocumentLoader(RawGeckoPresContextBorrowed aPresCtx)
-{
-  return aPresCtx->Document()->CSSLoader();
 }
 
 template <typename Implementor>
@@ -2639,34 +2631,3 @@ Gecko_SetJemallocThreadLocalArena(bool enabled)
 #include "ServoBindingList.h"
 #undef SERVO_BINDING_FUNC
 #endif
-
-ErrorReporter*
-Gecko_CreateCSSErrorReporter(ServoStyleSheet* sheet,
-                             Loader* loader)
-{
-  return new ErrorReporter(sheet, loader);
-}
-
-void
-Gecko_DestroyCSSErrorReporter(ErrorReporter* reporter)
-{
-  delete reporter;
-}
-
-void
-Gecko_ReportUnexpectedCSSError(ErrorReporter* reporter,
-                               const char* message,
-                               const char* param,
-                               uint32_t paramLen,
-                               const char* source,
-                               uint32_t sourceLen,
-                               uint32_t lineNumber,
-                               uint32_t colNumber,
-                               nsIURI* uri)
-{
-  nsDependentCSubstring paramValue(param, paramLen);
-  nsAutoString wideParam = NS_ConvertUTF8toUTF16(paramValue);
-  reporter->ReportUnexpectedUnescaped(message, wideParam);
-  nsDependentCSubstring sourceValue(source, sourceLen);
-  reporter->OutputError(lineNumber, colNumber, uri, sourceValue);
-}

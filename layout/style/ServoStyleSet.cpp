@@ -1237,14 +1237,12 @@ ServoStyleSet::CounterStyleRuleForName(nsIAtom* aName)
 already_AddRefed<ServoComputedValues>
 ServoStyleSet::ResolveForDeclarations(
   ServoComputedValuesBorrowedOrNull aParentOrNull,
-  RawServoDeclarationBlockBorrowed aDeclarations,
-  css::Loader* aLoader)
+  RawServoDeclarationBlockBorrowed aDeclarations)
 {
   UpdateStylistIfNeeded();
   return Servo_StyleSet_ResolveForDeclarations(mRawSet.get(),
                                                aParentOrNull,
-                                               aDeclarations,
-                                               aLoader).Consume();
+                                               aDeclarations).Consume();
 }
 
 void
