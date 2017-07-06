@@ -330,9 +330,11 @@ this.PanelMultiView = class {
     } else {
       this._clickCapturer.removeEventListener("click", this);
     }
+    this._panel.removeEventListener("mousemove", this);
     this._panel.removeEventListener("popupshowing", this);
     this._panel.removeEventListener("popupshown", this);
     this._panel.removeEventListener("popuphidden", this);
+    this.window.removeEventListener("keydown", this);
     this.node.dispatchEvent(new this.window.CustomEvent("destructed"));
     this.node = this._clickCapturer = this._viewContainer = this._mainViewContainer =
       this._subViews = this._viewStack = this.__dwu = this._panelViewCache = null;
