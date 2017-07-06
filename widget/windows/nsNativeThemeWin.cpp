@@ -1454,8 +1454,8 @@ nsNativeThemeWin::DrawWidgetBackground(gfxContext* aContext,
   gfxRect tr(aRect.x, aRect.y, aRect.width, aRect.height),
           dr(aDirtyRect.x, aDirtyRect.y, aDirtyRect.width, aDirtyRect.height);
 
-  tr.ScaleInverse(p2a * themeScale);
-  dr.ScaleInverse(p2a * themeScale);
+  tr.Scale(1.0 / (p2a * themeScale));
+  dr.Scale(1.0 / (p2a * themeScale));
 
   gfxWindowsNativeDrawing nativeDrawing(ctx, dr, GetWidgetNativeDrawingFlags(aWidgetType));
 
@@ -3450,8 +3450,8 @@ nsresult nsNativeThemeWin::ClassicDrawWidgetBackground(gfxContext* aContext,
   gfxRect tr(aRect.x, aRect.y, aRect.width, aRect.height),
           dr(aDirtyRect.x, aDirtyRect.y, aDirtyRect.width, aDirtyRect.height);
 
-  tr.ScaleInverse(p2a);
-  dr.ScaleInverse(p2a);
+  tr.Scale(1.0 / p2a);
+  dr.Scale(1.0 / p2a);
 
   RefPtr<gfxContext> ctx = aContext;
 

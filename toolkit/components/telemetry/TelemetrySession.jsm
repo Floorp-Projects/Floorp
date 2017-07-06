@@ -1994,7 +1994,7 @@ var Impl = {
         gLastMemoryPoll = now;
 
         this._log.trace("Dispatching idle gatherMemory task");
-        Services.tm.mainThread.idleDispatch(() => {
+        Services.tm.idleDispatchToMainThread(() => {
           this._log.trace("Running idle gatherMemory task");
           this.gatherMemory();
           return true;

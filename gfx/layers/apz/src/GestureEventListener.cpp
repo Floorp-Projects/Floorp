@@ -146,9 +146,6 @@ nsEventStatus GestureEventListener::HandleInputEvent(const MultiTouchInput& aEve
     mTouches.Clear();
     rv = HandleInputTouchCancel();
     break;
-  case MultiTouchInput::MULTITOUCH_SENTINEL:
-    MOZ_ASSERT_UNREACHABLE("Invalid MultTouchInput.");
-    break;
   }
 
   return rv;

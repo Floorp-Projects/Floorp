@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<head>
+<style>
+  html, body {
+    margin: 0;
+    padding: 0;
+  }
+</style>
+</head>
+<body>
+  <audio id="tweakme" controls></audio>
+
+  <script>
+    function doTest() {
+      setTimeout(() => {
+        let tweakme = document.getElementById("tweakme");
+
+        // Make the audio element extremely skinny, flush layout, and then revert
+        // that change:
+        tweakme.style.width = "1px";
+        tweakme.offsetHeight; // flush layout
+        tweakme.style.width = "";
+        tweakme.offsetHeight; // flush layout
+
+        document.documentElement.removeAttribute("class");
+      }, 300);
+    }
+
+    window.addEventListener("MozReftestInvalidate", doTest);
+  </script>
+</body>

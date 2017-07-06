@@ -11,6 +11,7 @@ add_task(async function() {
 
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
+      "name": "contextMenus icons",
       "permissions": ["contextMenus"],
       "icons": {
         "18": "extension.png",
@@ -38,9 +39,10 @@ add_task(async function() {
     },
   });
 
-  let confirmContextMenuIcon = (rootElement) => {
+  let confirmContextMenuIcon = (rootElements) => {
     let expectedURL = new RegExp(String.raw`^moz-extension://[^/]+/extension\.png$`);
-    let imageUrl = rootElement.getAttribute("image");
+    is(rootElements.length, 1, "Found exactly one menu item");
+    let imageUrl = rootElements[0].getAttribute("image");
     ok(expectedURL.test(imageUrl), "The context menu should display the extension icon next to the root element");
   };
 
@@ -50,17 +52,18 @@ add_task(async function() {
   let extensionMenu = await openExtensionContextMenu();
 
   let contextMenu = document.getElementById("contentAreaContextMenu");
-  let topLevelMenuItem = contextMenu.getElementsByAttribute("ext-type", "top-level-menu")[0];
+  let topLevelMenuItem = contextMenu.getElementsByAttribute("ext-type", "top-level-menu");
   confirmContextMenuIcon(topLevelMenuItem);
 
-  let childToDelete = extensionMenu.getElementsByAttribute("label", "child-to-delete")[0];
-  await closeExtensionContextMenu(childToDelete);
+  let childToDelete = extensionMenu.getElementsByAttribute("label", "child-to-delete");
+  is(childToDelete.length, 1, "Found exactly one child to delete");
+  await closeExtensionContextMenu(childToDelete[0]);
   await extension.awaitMessage("child-deleted");
 
   await openExtensionContextMenu();
 
   contextMenu = document.getElementById("contentAreaContextMenu");
-  topLevelMenuItem = contextMenu.getElementsByAttribute("label", "child")[0];
+  topLevelMenuItem = contextMenu.getElementsByAttribute("label", "child");
 
   confirmContextMenuIcon(topLevelMenuItem);
   await closeContextMenu();

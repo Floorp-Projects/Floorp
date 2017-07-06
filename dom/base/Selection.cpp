@@ -3734,8 +3734,13 @@ Selection::NotifySelectionListeners()
         nsCOMPtr<nsIDOMElement> domElementToFocus =
           do_QueryInterface(newEditingHost->AsDOMNode());
         // Note that don't steal focus from focused window if the window doesn't
-        // have focus.
-        fm->SetFocus(domElementToFocus, nsIFocusManager::FLAG_NOSWITCHFRAME);
+        // have focus and if the window isn't focused window, shouldn't be
+        // scrolled to the new focused element.
+        uint32_t flags = nsIFocusManager::FLAG_NOSWITCHFRAME;
+        if (focusedWindow != fm->GetFocusedWindow()) {
+          flags |= nsIFocusManager::FLAG_NOSCROLL;
+        }
+        fm->SetFocus(domElementToFocus, flags);
       }
     }
   }

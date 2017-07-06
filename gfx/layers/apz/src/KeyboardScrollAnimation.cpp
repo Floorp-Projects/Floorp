@@ -33,9 +33,6 @@ KeyboardScrollAnimation::KeyboardScrollAnimation(AsyncPanZoomController& aApzc,
       mOriginMinMS = clamped(gfxPrefs::OtherSmoothScrollMinDurationMs(), 0, mOriginMaxMS);
       break;
     }
-    case KeyboardScrollAction::eSentinel: {
-      MOZ_ASSERT_UNREACHABLE("Invalid KeyboardScrollActionType.");
-    }
   }
 
   // The pref is 100-based int percentage, while mIntervalRatio is 1-based ratio

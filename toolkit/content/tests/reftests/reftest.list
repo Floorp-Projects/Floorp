@@ -2,3 +2,4 @@ random-if(cocoaWidget||(/^Windows\x20NT\x206\.2/.test(http.oscpu)&&isDebugBuild)
 != textbox-multiline-default-value.xul textbox-multiline-empty.xul
 fails-if(styloVsGecko) == videocontrols-dynamically-add-cc.html videocontrols-dynamically-add-cc-ref.html
 fails-if(styloVsGecko) == audio-with-bogus-url.html audio-with-bogus-url-ref.html
+fails-if(styloVsGecko) == audio-dynamically-change-small-width.html audio-dynamically-change-small-width-ref.html

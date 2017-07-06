@@ -37,9 +37,6 @@ TouchCounter::Update(const MultiTouchInput& aInput)
       break;
     case MultiTouchInput::MULTITOUCH_MOVE:
       break;
-    case MultiTouchInput::MULTITOUCH_SENTINEL:
-      MOZ_ASSERT_UNREACHABLE("Invalid input");
-      break;
   }
 }
 

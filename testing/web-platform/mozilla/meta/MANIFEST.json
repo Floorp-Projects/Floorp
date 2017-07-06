@@ -392,6 +392,12 @@
      {}
     ]
    ],
+   "focus/Selection_addRange_in_iframe.html": [
+    [
+     "/_mozilla/focus/Selection_addRange_in_iframe.html",
+     {}
+    ]
+   ],
    "focus/Selection_addRange_into_iframe.html": [
     [
      "/_mozilla/focus/Selection_addRange_into_iframe.html",
@@ -867,6 +873,10 @@
   ],
   "focus/Selection_addRange.html": [
    "e733930483c74e73210c5a127db1d04f82c966cf",
+   "testharness"
+  ],
+  "focus/Selection_addRange_in_iframe.html": [
+   "7ce21d66cd147f2c0313168f8e4d97628270b67b",
    "testharness"
   ],
   "focus/Selection_addRange_into_iframe.html": [

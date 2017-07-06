@@ -11,6 +11,7 @@ import android.support.annotation.NonNull;
 
 import org.json.simple.JSONArray;
 import org.mozilla.gecko.AppConstants;
+import org.mozilla.gecko.Locales;
 import org.mozilla.gecko.sync.ExtendedJSONObject;
 import org.mozilla.gecko.telemetry.TelemetryOutgoingPing;
 import org.mozilla.gecko.telemetry.TelemetryPing;
@@ -39,7 +40,8 @@ import java.util.TimeZone;
  */
 public class TelemetrySyncPingBundleBuilder extends TelemetryPingBuilder {
     private static final String PING_TYPE = "sync";
-    private static final int PING_VERSION = 4;
+    private static final int PING_BUNDLE_VERSION = 5; // Bug 1374758
+    private static final int PING_SYNC_DATA_FORMAT_VERSION = 1; // Bug 1374758
 
     public static final String UPLOAD_REASON_FIRST = "first";
     public static final String UPLOAD_REASON_CLOCK_DRIFT = "clockdrift";
@@ -71,13 +73,13 @@ public class TelemetrySyncPingBundleBuilder extends TelemetryPingBuilder {
         pingCreationDateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
 
         payload.put("type", PING_TYPE);
-        payload.put("version", PING_VERSION);
+        payload.put("version", PING_BUNDLE_VERSION);
         payload.put("id", docID);
         payload.put("creationDate", pingCreationDateFormat.format(new Date()));
 
         final ExtendedJSONObject application = new ExtendedJSONObject();
         application.put("architecture", Build.CPU_ABI);
-        application.put("buildID", AppConstants.MOZ_APP_BUILDID);
+        application.put("buildId", AppConstants.MOZ_APP_BUILDID);
         application.put("platformVersion", AppConstants.MOZ_APP_VERSION);
         application.put("name", AppConstants.MOZ_APP_BASENAME);
         application.put("version", AppConstants.MOZ_APP_VERSION);
@@ -86,7 +88,17 @@ public class TelemetrySyncPingBundleBuilder extends TelemetryPingBuilder {
         application.put("xpcomAbi", AppConstants.MOZ_APP_ABI);
         application.put("channel", AppConstants.MOZ_UPDATE_CHANNEL);
 
+        // Limited environment object, to help identify platforms easier. See Bug 1374758.
+        final ExtendedJSONObject os = new ExtendedJSONObject();
+        os.put("name", "Android");
+        os.put("version", Integer.toString(Build.VERSION.SDK_INT));
+        os.put("locale", Locales.getLanguageTag(Locale.getDefault()));
+
         payload.put("application", application);
+        payload.put("os", os);
+
+        pingData.put("version", PING_SYNC_DATA_FORMAT_VERSION);
+
         payload.put("payload", pingData);
         return super.build();
     }

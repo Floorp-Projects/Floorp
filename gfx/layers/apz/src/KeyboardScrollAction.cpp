@@ -20,9 +20,6 @@ KeyboardScrollAction::GetScrollUnit(KeyboardScrollAction::KeyboardScrollActionTy
       return nsIScrollableFrame::PAGES;
     case KeyboardScrollAction::eScrollComplete:
       return nsIScrollableFrame::WHOLE;
-    case KeyboardScrollAction::eSentinel:
-      MOZ_ASSERT_UNREACHABLE("Invalid KeyboardScrollActionType.");
-      return nsIScrollableFrame::WHOLE;
   }
 
   // Silence an overzealous warning

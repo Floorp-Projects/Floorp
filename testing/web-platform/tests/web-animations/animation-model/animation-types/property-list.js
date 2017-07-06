@@ -1231,7 +1231,10 @@ var gCSSProperties = {
   },
   'stroke-dasharray': {
     // https://svgwg.org/svg2-draft/painting.html#StrokeDasharrayProperty
-    types: [ 'dasharray' ]
+    types: [
+      'dasharray',
+      { type: 'discrete', options: [ [ 'none', '10, 20' ] ] }
+    ]
   },
   'stroke-dashoffset': {
     // https://svgwg.org/svg2-draft/painting.html#StrokeDashoffsetProperty

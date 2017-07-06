@@ -2294,7 +2294,7 @@ nsNativeThemeCocoa::DrawWidgetBackground(gfxContext* aContext,
 
   gfx::Rect nativeDirtyRect = NSRectToRect(aDirtyRect, p2a);
   gfxRect nativeWidgetRect(aRect.x, aRect.y, aRect.width, aRect.height);
-  nativeWidgetRect.ScaleInverse(gfxFloat(p2a));
+  nativeWidgetRect.Scale(1.0 / gfxFloat(p2a));
   float nativeWidgetHeight = round(nativeWidgetRect.Height());
   nativeWidgetRect.Round();
   if (nativeWidgetRect.IsEmpty())
