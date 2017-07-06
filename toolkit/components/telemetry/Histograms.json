@@ -9326,6 +9326,16 @@
     "n_values": 8,
     "description": "Type of call: (Bitmask) Audio = 1, Video = 2, DataChannels = 4"
   },
+  "DEVTOOLS_ENTRY_POINT": {
+    "record_in_processes": ["main"],
+    "bug_numbers": [1378863],
+    "alert_emails": ["dev-developer-tools@lists.mozilla.org", "apoirot@mozilla.com"],
+    "expires_in_version": "60",
+    "kind": "categorical",
+    "labels": ["KeyShortcut", "SystemMenu", "HamburgerMenu", "ContextMenu", "CommandLine"],
+    "releaseChannelCollection": "opt-out",
+    "description": "Records how the user is triggering Developer Tools startup."
+  },
   "DEVTOOLS_TOOLBOX_OPENED_COUNT": {
     "record_in_processes": ["main", "content"],
     "alert_emails": ["dev-developer-tools@lists.mozilla.org"],
