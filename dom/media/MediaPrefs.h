@@ -87,6 +87,7 @@ private:
   // This is where DECL_MEDIA_PREF for each of the preferences should go.
 
   // Cache sizes.
+  DECL_MEDIA_PREF("media.cache_size",                         MediaCacheSizeKb, uint32_t, 512000);
   DECL_MEDIA_PREF("media.memory_cache_max_size",              MediaMemoryCacheMaxSize, uint32_t, 8192);
   DECL_MEDIA_PREF("media.memory_caches_combined_limit_kb",    MediaMemoryCachesCombinedLimitKb, uint32_t, 524288);
   DECL_MEDIA_PREF("media.memory_caches_combined_limit_pc_sysmem",
