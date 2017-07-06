@@ -595,9 +595,9 @@ public:
   virtual mozilla::ipc::IPCResult
   RecvThemeChanged(nsTArray<LookAndFeelInt>&& aLookAndFeelIntCache) override;
 
-  virtual mozilla::ipc::IPCResult RecvHandleAccessKey(const WidgetKeyboardEvent& aEvent,
-                                                      nsTArray<uint32_t>&& aCharCodes,
-                                                      const int32_t& aModifierMask) override;
+  virtual mozilla::ipc::IPCResult
+  RecvHandleAccessKey(const WidgetKeyboardEvent& aEvent,
+                      nsTArray<uint32_t>&& aCharCodes) override;
 
   virtual mozilla::ipc::IPCResult RecvSetUseGlobalHistory(const bool& aUse) override;
 

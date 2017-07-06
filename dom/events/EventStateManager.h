@@ -186,13 +186,10 @@ public:
 
   bool HandleAccessKey(WidgetKeyboardEvent* aEvent,
                        nsPresContext* aPresContext,
-                       nsTArray<uint32_t>& aAccessCharCodes,
-                       int32_t aModifierMask,
-                       bool aMatchesContentAccessKey)
+                       nsTArray<uint32_t>& aAccessCharCodes)
   {
     return HandleAccessKey(aEvent, aPresContext, aAccessCharCodes,
-                           aMatchesContentAccessKey, nullptr,
-                           eAccessKeyProcessingNormal, aModifierMask);
+                           nullptr, eAccessKeyProcessingNormal);
   }
 
   nsresult SetCursor(int32_t aCursor, imgIContainer* aContainer,
@@ -316,8 +313,6 @@ protected:
   public:
     static bool KeyCausesActivation() { return sKeyCausesActivation; }
     static bool ClickHoldContextMenu() { return sClickHoldContextMenu; }
-    static int32_t ChromeAccessModifierMask();
-    static int32_t ContentAccessModifierMask();
 
     static void Init();
     static void OnChange(const char* aPrefName, void*);
@@ -326,18 +321,9 @@ protected:
   private:
     static bool sKeyCausesActivation;
     static bool sClickHoldContextMenu;
-    static int32_t sGenericAccessModifierKey;
-    static int32_t sChromeAccessModifierMask;
-    static int32_t sContentAccessModifierMask;
 
     static int32_t GetAccessModifierMask(int32_t aItemType);
   };
-
-  /**
-   * Get appropriate access modifier mask for the aDocShell.  Returns -1 if
-   * access key isn't available.
-   */
-  static int32_t GetAccessModifierMaskFor(nsISupports* aDocShell);
 
   /*
    * If aTargetFrame's widget has a cached cursor value, resets the cursor
@@ -449,7 +435,6 @@ protected:
    * @param aEvent the keyboard event triggering the acccess key
    * @param aPresContext the presentation context
    * @param aAccessCharCodes list of charcode candidates
-   * @param aMatchesContentAccessKey true if the content accesskey modifier is pressed
    * @param aBubbledFrom is used by an ancestor to avoid calling HandleAccessKey()
    *        on the child the call originally came from, i.e. this is the child
    *        that recursively called us in its Up phase. The initial caller
@@ -457,15 +442,12 @@ protected:
    * @param aAccessKeyState Normal, Down or Up processing phase (see enums
    *        above). The initial event receiver uses 'normal', then 'down' when
    *        processing children and Up when recursively calling its ancestor.
-   * @param aModifierMask modifier mask for the key event
    */
   bool HandleAccessKey(WidgetKeyboardEvent* aEvent,
                        nsPresContext* aPresContext,
                        nsTArray<uint32_t>& aAccessCharCodes,
-                       bool aMatchesContentAccessKey,
                        nsIDocShellTreeItem* aBubbledFrom,
-                       ProcessingAccessKeyState aAccessKeyState,
-                       int32_t aModifierMask);
+                       ProcessingAccessKeyState aAccessKeyState);
 
   bool ExecuteAccessKey(nsTArray<uint32_t>& aAccessCharCodes,
                         bool aIsTrustedEvent);
