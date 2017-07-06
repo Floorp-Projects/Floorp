@@ -116,7 +116,7 @@ InitListUpdateRequest(ThreatType aThreatType,
   // Only set non-empty state.
   if (aStateBase64[0] != '\0') {
     nsCString stateBinary;
-    nsresult rv = Base64Decode(nsCString(aStateBase64), stateBinary);
+    nsresult rv = Base64Decode(nsDependentCString(aStateBase64), stateBinary);
     if (NS_SUCCEEDED(rv)) {
       aListUpdateRequest->set_state(stateBinary.get(), stateBinary.Length());
     }
@@ -380,7 +380,7 @@ nsUrlClassifierUtils::MakeFindFullHashRequestV4(const char** aListNames,
   // Set up FindFullHashesRequest.client_states.
   for (uint32_t i = 0; i < aListCount; i++) {
     nsCString stateBinary;
-    rv = Base64Decode(nsCString(aListStatesBase64[i]), stateBinary);
+    rv = Base64Decode(nsDependentCString(aListStatesBase64[i]), stateBinary);
     NS_ENSURE_SUCCESS(rv, rv);
     r.add_client_states(stateBinary.get(), stateBinary.Length());
   }
@@ -392,7 +392,7 @@ nsUrlClassifierUtils::MakeFindFullHashRequestV4(const char** aListNames,
   // 1) Set threat types.
   for (uint32_t i = 0; i < aListCount; i++) {
     uint32_t threatType;
-    rv = ConvertListNameToThreatType(nsCString(aListNames[i]), &threatType);
+    rv = ConvertListNameToThreatType(nsDependentCString(aListNames[i]), &threatType);
     NS_ENSURE_SUCCESS(rv, rv);
     threatInfo->add_threat_types((ThreatType)threatType);
   }
@@ -406,7 +406,7 @@ nsUrlClassifierUtils::MakeFindFullHashRequestV4(const char** aListNames,
   // 4) Set threat entries.
   for (uint32_t i = 0; i < aPrefixCount; i++) {
     nsCString prefixBinary;
-    rv = Base64Decode(nsCString(aPrefixesBase64[i]), prefixBinary);
+    rv = Base64Decode(nsDependentCString(aPrefixesBase64[i]), prefixBinary);
     threatInfo->add_threat_entries()->set_hash(prefixBinary.get(),
                                                prefixBinary.Length());
   }
@@ -464,7 +464,7 @@ nsUrlClassifierUtils::ParseFindFullHashResponseV4(const nsACString& aResponse,
     }
     auto& hash = m.threat().hash();
     auto cacheDurationSec = m.cache_duration().seconds();
-    aCallback->OnCompleteHashFound(nsCString(hash.c_str(), hash.length()),
+    aCallback->OnCompleteHashFound(nsDependentCString(hash.c_str(), hash.length()),
                                    tableNames, cacheDurationSec);
 
     Telemetry::Accumulate(Telemetry::URLCLASSIFIER_POSITIVE_CACHE_DURATION,

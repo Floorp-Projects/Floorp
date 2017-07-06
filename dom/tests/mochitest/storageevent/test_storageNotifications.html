@@ -40,19 +40,21 @@ function* Tests()
   is(sessionStorage.length, 0, "Session storage is empty [1]");
   is(localStorage.length, 0, "Local storage is empty [1]");
 
-  var onStorageChanged = {
-    observe: function(subject, topic, type) {
-      if (topic == "dom-storage2-changed") {
-        ok(expectedTypes.length > 0, "Not more then expected events encountered");
-        is(type, expectedTypes.shift(), "Expected type of the storage notification");
-        tests.next();
-      }
-    }
+  function onSessionStorageChanged(e) {
+    ok(expectedTypes.length > 0, "Not more then expected events encountered");
+    is("sessionStorage", expectedTypes.shift(), "Expected session type of the storage notification");
+    tests.next();
   }
 
-  // Listen for dom-storage2-changed notification
-  SpecialPowers.Services.obs.addObserver(onStorageChanged,
-    "dom-storage2-changed");
+  function onLocalStorageChanged(e) {
+    ok(expectedTypes.length > 0, "Not more then expected events encountered");
+    is("localStorage", expectedTypes.shift(), "Expected session type of the storage notification");
+    tests.next();
+  }
+
+  // Listen for storage notifications
+  SpecialPowers.addChromeEventListener("MozSessionStorageChanged", onSessionStorageChanged, true);
+  SpecialPowers.addChromeEventListener("MozLocalStorageChanged", onLocalStorageChanged, true);
 
   // add an empty-value key
   localStorage.setItem("empty", "");
@@ -104,8 +106,9 @@ function* Tests()
   yield undefined;
 
   SimpleTest.executeSoon(function () {
-    SpecialPowers.Services.obs.removeObserver(onStorageChanged,
-      "dom-storage2-changed", false);
+    SpecialPowers.removeChromeEventListener("MozSessionStorageChanged", onSessionStorageChanged, true);
+    SpecialPowers.removeChromeEventListener("MozLocalStorageChanged", onLocalStorageChanged, true);
+
     is(expectedTypes.length, 0, "received the correct number of events");
 
     sessionStorage.clear();

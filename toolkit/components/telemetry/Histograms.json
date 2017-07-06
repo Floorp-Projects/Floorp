@@ -10063,12 +10063,11 @@
   },
   "DEVTOOLS_JAVASCRIPT_ERROR_DISPLAYED": {
     "record_in_processes": ["main", "content"],
-    "alert_emails": ["mphillips@mozilla.com"],
-    "bug_numbers": [1255133],
-    "expires_in_version": "55",
+    "bug_numbers": [1255133, 1378449],
+    "expires_in_version": "never",
     "kind": "boolean",
     "keyed": true,
-    "description": "Measures whether a particular JavaScript error has been displayed in the webconsole."
+    "description": "Records the key-identifiers of error messages when they are displayed in the webconsole of the debugger. Nothing should be recorded unless they are visible on the user screen."
   },
   "DEVTOOLS_TOOLBOX_HOST": {
     "record_in_processes": ["main", "content"],

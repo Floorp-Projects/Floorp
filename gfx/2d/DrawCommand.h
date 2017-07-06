@@ -299,6 +299,14 @@ public:
     , mStrokeOptions(aStrokeOptions)
     , mOptions(aOptions)
   {
+    // Stroke Options dashes are owned by the caller.
+    // Have to copy them here so they don't get freed
+    // between now and replay.
+    if (aStrokeOptions.mDashLength) {
+      mDashes.resize(aStrokeOptions.mDashLength);
+      mStrokeOptions.mDashPattern = &mDashes.front();
+      memcpy(&mDashes.front(), aStrokeOptions.mDashPattern, mStrokeOptions.mDashLength * sizeof(Float));
+    }
   }
 
   virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix*) const
@@ -312,6 +320,7 @@ private:
   StoredPattern mPattern;
   StrokeOptions mStrokeOptions;
   DrawOptions mOptions;
+  std::vector<Float> mDashes;
 };
 
 class FillCommand : public DrawingCommand

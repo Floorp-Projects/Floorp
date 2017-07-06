@@ -1,4 +1,4 @@
-// |jit-test| allow-oom
+// |jit-test| allow-oom; allow-unhandlable-oom
 var size = 1000000;
 var a = [];
 for (var i = 0; i < size; ++i) {

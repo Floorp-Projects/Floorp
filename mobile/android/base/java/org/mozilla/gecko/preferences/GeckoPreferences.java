@@ -189,6 +189,8 @@ public class GeckoPreferences
 
     private static final String PREFS_DYNAMIC_TOOLBAR = "browser.chrome.dynamictoolbar";
 
+    public static final String PREFS_SHUTDOWN_INTENT = "app.shutdownintent.enabled";
+
     // These values are chosen to be distinct from other Activity constants.
     private static final int REQUEST_CODE_PREF_SCREEN = 5;
     private static final int RESULT_CODE_EXIT_SETTINGS = 6;
