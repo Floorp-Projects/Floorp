@@ -611,6 +611,10 @@ public:
   nsresult Observe(nsISupports* aSubject, const char* aTopic,
                    const char16_t* aData);
 
+  void ObserveStorageNotification(mozilla::dom::StorageEvent* aEvent,
+                                  const char16_t* aStorageType,
+                                  bool aPrivateBrowsing);
+
   // Outer windows only.
   void UnblockScriptedClosing();
 
