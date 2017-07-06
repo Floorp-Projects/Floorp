@@ -9,7 +9,6 @@ module.exports = {
     "array-bracket-spacing": ["error", "never"],
     "block-scoped-var": "error",
     "comma-dangle": ["error", "always-multiline"],
-    "comma-style": "error",
     complexity: ["error", {
       max: 20,
     }],
@@ -45,7 +44,6 @@ module.exports = {
     "no-new-wrappers": "error",
     "no-proto": "error",
     "no-throw-literal": "error",
-    "no-unneeded-ternary": "error",
     "no-unused-expressions": "error",
     "no-unused-vars": ["error", {
       args: "none",

@@ -3,7 +3,6 @@
   "startup.homepage_welcome_url": "about:blank",
   "devtools.browsertoolbox.panel": "jsdebugger",
   "devtools.chrome.enabled": true,
-  "urlclassifier.updateinterval": 172800,
   "browser.safebrowsing.provider.google.gethashURL": "http://localhost/safebrowsing-dummy/gethash",
   "browser.safebrowsing.provider.google.updateURL": "http://localhost/safebrowsing-dummy/update",
   "browser.safebrowsing.provider.google4.gethashURL": "http://localhost/safebrowsing4-dummy/gethash",

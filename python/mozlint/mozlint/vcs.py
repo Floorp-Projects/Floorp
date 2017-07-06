@@ -44,7 +44,7 @@ class VCSHelper(object):
             return []
         return [os.path.join(self.root, f) for f in files if f]
 
-    def by_workdir(self, workdir):
+    def by_workdir(self, mode):
         return []
 
     def by_outgoing(self, dest='default'):
@@ -58,7 +58,7 @@ class HgHelper(VCSHelper):
         return self.run(['hg', 'outgoing', '--quiet', '--template',
                          "{file_mods % '\\n{file}'}{file_adds % '\\n{file}'}", '-r', '.', dest])
 
-    def by_workdir(self):
+    def by_workdir(self, mode):
         return self.run(['hg', 'status', '-amn'])
 
 
@@ -95,8 +95,13 @@ class GitHelper(VCSHelper):
         return self.run(['git', 'log', '--name-only', '--diff-filter=AM',
                          '--oneline', '--pretty=format:', comparing])
 
-    def by_workdir(self):
-        return self.run(['git', 'diff', '--name-only', '--diff-filter=AM', 'HEAD'])
+    def by_workdir(self, mode):
+        cmd = ['git', 'diff', '--name-only', '--diff-filter=AM']
+        if mode == 'staged':
+            cmd.append('--cached')
+        else:
+            cmd.append('HEAD')
+        return self.run(cmd)
 
 
 vcs_class = {

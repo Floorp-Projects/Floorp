@@ -41,10 +41,6 @@ typedef nsDataHashtable<nsCStringHashKey, nsCString> MetadataTags;
 class AbstractMediaDecoder : public nsIObserver
 {
 public:
-  // Get the current MediaResource being used. Its URI will be returned
-  // by currentSrc. Returns what was passed to Load(), if Load() has been called.
-  virtual MediaResource* GetResource() const = 0;
-
   // Increments the parsed, decoded and dropped frame counters by the passed in
   // counts.
   // Can be called on any thread.

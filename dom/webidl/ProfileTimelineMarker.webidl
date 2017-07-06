@@ -64,7 +64,7 @@ dictionary ProfileTimelineMarker {
   sequence<ProfileTimelineLayerRect> rectangles;
 
   /* For Style markers. */
-  DOMString restyleHint;
+  boolean isAnimationOnly;
 
   /* For MessagePort markers. */
   ProfileTimelineMessagePortOperationType messagePortOperation;

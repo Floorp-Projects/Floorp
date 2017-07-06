@@ -11,13 +11,6 @@ interface nsIPrincipal;
  * Interface for a class that manages updates of the url classifier database.
  */
 
-// Interface for JS function callbacks
-[scriptable, function, uuid(fa4caf12-d057-4e7e-81e9-ce066ceee90b)]
-interface nsIUrlListManagerCallback : nsISupports {
-  void handleEvent(in ACString value);
-};
-
-
 [scriptable, uuid(d60a08ee-5c83-4eb6-bdfb-79fd0716501e)]
 interface nsIUrlListManager : nsISupports
 {
@@ -61,14 +54,6 @@ interface nsIUrlListManager : nsISupports
      * Toggle update checking, if necessary.
      */
     void maybeToggleUpdateChecking();
-
-    /**
-     * Lookup a key.  Should not raise exceptions.  Calls the callback
-     * function with a comma-separated list of tables to which the key
-     * belongs.
-     */
-    void safeLookup(in nsIPrincipal key,
-                    in nsIUrlListManagerCallback cb);
 
     /**
      * This is currently used by about:url-classifier to force an update

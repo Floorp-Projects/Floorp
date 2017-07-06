@@ -46,9 +46,7 @@ function observeStyling(frameCount, onFrame) {
       var markers = docShell.popProfileTimelineMarkers();
       docShell.recordProfileTimelineMarkers = false;
       var stylingMarkers = markers.filter(function(marker, index) {
-        return marker.name == 'Styles' &&
-               (marker.restyleHint == 'eRestyle_CSSAnimations' ||
-                marker.restyleHint == 'eRestyle_CSSTransitions');
+        return marker.name == 'Styles' && marker.isAnimationOnly;
       });
       resolve(stylingMarkers);
     });

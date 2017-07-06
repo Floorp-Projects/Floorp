@@ -1097,10 +1097,7 @@ nsUrlClassifierLookupCallback::LookupComplete(nsTArray<LookupResult>* results)
 
         // Bug 1323953 - Send the first 4 bytes for completion no matter how
         // long we matched the prefix.
-        nsAutoCString partialHash;
-        partialHash.Assign(reinterpret_cast<char*>(&result.hash.fixedLengthPrefix),
-                           PREFIX_SIZE);
-        nsresult rv = completer->Complete(partialHash,
+        nsresult rv = completer->Complete(result.PartialHash(),
                                           gethashUrl,
                                           result.mTableName,
                                           this);

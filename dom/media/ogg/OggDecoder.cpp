@@ -15,7 +15,7 @@ namespace mozilla {
 
 MediaDecoderStateMachine* OggDecoder::CreateStateMachine()
 {
-  RefPtr<OggDemuxer> demuxer = new OggDemuxer(GetResource());
+  RefPtr<OggDemuxer> demuxer = new OggDemuxer(mResource);
   RefPtr<MediaFormatReader> reader =
     new MediaFormatReader(this, demuxer, GetVideoFrameContainer());
   demuxer->SetChainingEvents(&reader->TimedMetadataProducer(),

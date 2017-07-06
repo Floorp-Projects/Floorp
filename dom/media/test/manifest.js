@@ -22,6 +22,14 @@ function manifestVideo() {
   return gManifestNavigatorSource.contentDocument.createElement('video');
 }
 
+// Need to get the server url composed with ip:port instead of mochi.test.
+// Since we will provide the url to Exoplayer which cannot recognize the domain
+// name "mochi.test".
+let serverUrl = SpecialPowers.Services.prefs.getCharPref("media.hls.server.url");
+var gHLSTests = [
+  { name: serverUrl + "/bipbop_4x3_variant.m3u8", type:"audio/x-mpegurl", duration:19.95334 }
+];
+
 // These are small test files, good for just seeing if something loads. We
 // really only need one test file per backend here.
 var gSmallTests = [

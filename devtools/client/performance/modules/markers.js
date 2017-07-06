@@ -53,6 +53,11 @@ const TIMELINE_BLUEPRINT = {
     label: L10N.getStr("marker.label.styles"),
     fields: Formatters.StylesFields,
   },
+  "StylesApplyChanges": {
+    group: 0,
+    colorName: "graphs-purple",
+    label: L10N.getStr("marker.label.stylesApplyChanges"),
+  },
   "Reflow": {
     group: 0,
     colorName: "graphs-purple",
