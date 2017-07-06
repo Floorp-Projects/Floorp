@@ -1,0 +1,194 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test moz-extension protocol use</title>
+  <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/SpawnTask.js"></script>
+  <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script type="text/javascript" src="chrome_head.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<script type="text/javascript">
+"use strict";
+
+let peakAchu;
+add_task(async function setup() {
+  peakAchu = ExtensionTestUtils.loadExtension({
+    manifest: {
+      permissions: [
+        "webRequest",
+        "<all_urls>",
+      ],
+    },
+    background() {
+      // ID for the extension in the tests.  Try to observe it to ensure we cannot.
+      browser.webRequest.onBeforeRequest.addListener(details => {
+        browser.test.notifyFail(`PeakAchu onBeforeRequest ${details.url}`);
+      }, {urls: ["<all_urls>", "moz-extension://*/*"]});
+
+      browser.test.onMessage.addListener((msg, extensionUrl) => {
+        browser.test.log(`spying for ${extensionUrl}`);
+        browser.webRequest.onBeforeRequest.addListener(details => {
+          browser.test.notifyFail(`PeakAchu onBeforeRequest ${details.url}`);
+        }, {urls: [extensionUrl]});
+      });
+    },
+  });
+  await peakAchu.startup();
+});
+
+add_task(async function test_webRequest_no_mozextension_permission() {
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      permissions: [
+        "webRequest",
+        "tabs",
+        "moz-extension://c9e007e0-e518-ed4c-8202-83849981dd21/*",
+        "moz-extension://*/*",
+      ],
+    },
+    background() {
+      browser.test.notifyPass("loaded");
+    },
+  });
+
+  let messages = [
+    {message: /processing permissions\.2: Value "moz-extension:\/\/c9e007e0-e518-ed4c-8202-83849981dd21\/\*"/},
+    {message: /processing permissions\.3: Value "moz-extension:\/\/\*\/\*"/},
+  ];
+
+  let waitForConsole = new Promise(resolve => {
+    SimpleTest.monitorConsole(resolve, messages);
+  });
+
+  await extension.startup();
+  await extension.awaitFinish("loaded");
+  await extension.unload();
+
+  SimpleTest.endMonitorConsole();
+  await waitForConsole;
+});
+
+add_task(async function test_webRequest_mozextension_fetch() {
+  function background() {
+    let page = browser.extension.getURL("fetched.html");
+    browser.webRequest.onBeforeRequest.addListener(details => {
+      browser.test.assertEq(details.url, page, "got correct url in onBeforeRequest");
+      browser.test.sendMessage("request-started");
+    }, {urls: [browser.extension.getURL("*")]}, ["blocking"]);
+    browser.webRequest.onCompleted.addListener(details => {
+      browser.test.assertEq(details.url, page, "got correct url in onCompleted");
+      browser.test.sendMessage("request-complete");
+    }, {urls: [browser.extension.getURL("*")]});
+
+    browser.test.onMessage.addListener((msg, data) => {
+      fetch(page).then(() => {
+        browser.test.notifyPass("fetch success");
+        browser.test.sendMessage("done");
+      }, () => {
+        browser.test.fail("fetch failed");
+        browser.test.sendMessage("done");
+      });
+    });
+    browser.test.sendMessage("extensionUrl", browser.extension.getURL("*"));
+  }
+
+  // Use webrequest to monitor moz-extension:// requests
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      permissions: [
+        "webRequest",
+        "tabs",
+        "<all_urls>",
+      ],
+    },
+    files: {
+      "fetched.html": `
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <meta charset="utf-8">
+          </head>
+          <body>
+            <h1>moz-extension file</h1>
+          </body>
+        </html>
+      `.trim(),
+    },
+    background,
+  });
+
+  await extension.startup();
+  // send the url for this extension to the monitoring extension
+  peakAchu.sendMessage("extensionUrl", await extension.awaitMessage("extensionUrl"));
+
+  extension.sendMessage("testFetch");
+  await extension.awaitMessage("request-started");
+  await extension.awaitMessage("request-complete");
+  await extension.awaitMessage("done");
+
+  await extension.unload();
+});
+
+add_task(async function test_webRequest_mozextension_tab_query() {
+  function background() {
+    browser.test.sendMessage("extensionUrl", browser.extension.getURL("*"));
+    let page = browser.extension.getURL("tab.html");
+
+    async function onUpdated(tabId, tabInfo, tab) {
+      if (tabInfo.status !== "complete") {
+        return;
+      }
+      browser.test.log(`tab created ${tabId} ${JSON.stringify(tabInfo)} ${tab.url}`);
+      let tabs = await browser.tabs.query({url: browser.extension.getURL("*")});
+      browser.test.assertEq(1, tabs.length, "got one tab");
+      browser.test.assertEq(tabs.length && tabs[0].id, tab.id, "got the correct tab");
+      browser.test.assertEq(tabs.length && tabs[0].url, page, "got correct url in tab");
+      browser.tabs.remove(tabId);
+      browser.tabs.onUpdated.removeListener(onUpdated);
+      browser.test.sendMessage("tabs-done");
+    }
+    browser.tabs.onUpdated.addListener(onUpdated);
+    browser.tabs.create({url: page});
+  }
+
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      permissions: [
+        "webRequest",
+        "tabs",
+        "<all_urls>",
+      ],
+    },
+    files: {
+      "tab.html": `
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <meta charset="utf-8">
+          </head>
+          <body>
+            <h1>moz-extension file</h1>
+          </body>
+        </html>
+      `.trim(),
+    },
+    background,
+  });
+
+  await extension.startup();
+  peakAchu.sendMessage("extensionUrl", await extension.awaitMessage("extensionUrl"));
+  await extension.awaitMessage("tabs-done");
+  await extension.unload();
+});
+
+add_task(async function teardown() {
+  await peakAchu.unload();
+});
+</script>
+
+</body>
+</html>
