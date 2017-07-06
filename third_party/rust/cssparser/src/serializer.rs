@@ -129,8 +129,8 @@ impl<'a> ToCss for Token<'a> {
             Token::SquareBracketBlock => dest.write_str("[")?,
             Token::CurlyBracketBlock => dest.write_str("{")?,
 
-            Token::BadUrl => dest.write_str("url(<bad url>)")?,
-            Token::BadString => dest.write_str("\"<bad string>\n")?,
+            Token::BadUrl(_) => dest.write_str("url(<bad url>)")?,
+            Token::BadString(_) => dest.write_str("\"<bad string>\n")?,
             Token::CloseParenthesis => dest.write_str(")")?,
             Token::CloseSquareBracket => dest.write_str("]")?,
             Token::CloseCurlyBracket => dest.write_str("}")?,
@@ -376,7 +376,7 @@ impl<'a> Token<'a> {
         TokenSerializationType(match *self {
             Token::Ident(_) => Ident,
             Token::AtKeyword(_) | Token::Hash(_) | Token::IDHash(_) => AtKeywordOrHash,
-            Token::UnquotedUrl(_) | Token::BadUrl => UrlOrBadUrl,
+            Token::UnquotedUrl(_) | Token::BadUrl(_) => UrlOrBadUrl,
             Token::Delim('#') => DelimHash,
             Token::Delim('@') => DelimAt,
             Token::Delim('.') | Token::Delim('+') => DelimDotOrPlus,
@@ -400,7 +400,7 @@ impl<'a> Token<'a> {
             Token::ParenthesisBlock => OpenParen,
             Token::SquareBracketBlock | Token::CurlyBracketBlock |
             Token::CloseParenthesis | Token::CloseSquareBracket | Token::CloseCurlyBracket |
-            Token::QuotedString(_) | Token::BadString |
+            Token::QuotedString(_) | Token::BadString(_) |
             Token::Delim(_) | Token::Colon | Token::Semicolon | Token::Comma | Token::CDO |
             Token::IncludeMatch | Token::PrefixMatch | Token::SuffixMatch
             => Other,
