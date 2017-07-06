@@ -2678,6 +2678,42 @@ nsRuleNode::WalkRuleTree(const nsStyleStructID aSID,
              "not forcing detail to eRulePartialMixed just below is no "
              "longer valid");
 
+  if (detail == eRuleNone && isReset) {
+    // We specified absolutely no rule information for a reset struct, and we
+    // may or may not have found a parent rule in the tree that specified all
+    // the rule information.  Regardless, we don't need to use any cache
+    // conditions if we cache this struct in the rule tree.
+    //
+    // Normally ruleData.mConditions would already indicate that the struct
+    // is cacheable without conditions if detail is eRuleNone, but because
+    // of the UnsetPropertiesWithoutFlags call above, we may have encountered
+    // some rules with dependencies, which we then cleared out of ruleData.
+    //
+    // ruleData.mConditions could also indicate we are not cacheable at all,
+    // such as when AnimValuesStyleRule prevents us from caching structs
+    // when attempting to apply animations to pseudos.
+    //
+    // So if we we are uncacheable, we leave it, but if we are cacheable
+    // with dependencies, we convert that to cacheable without dependencies.
+    if (ruleData.mConditions.CacheableWithDependencies()) {
+      MOZ_ASSERT(pseudoRestriction,
+                 "should only be cacheable with dependencies if we had a "
+                 "pseudo restriction");
+      ruleData.mConditions.Clear();
+    } else {
+      // XXXheycam We shouldn't have `|| GetLevel() == SheetType::Transition`
+      // in the assertion condition, but rule nodes created by
+      // ResolveStyleByAddingRules don't call SetIsAnimationRule().
+      MOZ_ASSERT(ruleData.mConditions.CacheableWithoutDependencies() ||
+                 ((HasAnimationData() ||
+                   GetLevel() == SheetType::Transition) &&
+                  aContext->GetParent() &&
+                  aContext->GetParent()->HasPseudoElementData()),
+                 "should only be uncacheable if we had an animation rule "
+                 "and we're inside a pseudo");
+    }
+  }
+
   if (!ruleData.mConditions.CacheableWithoutDependencies() &&
       aSID != eStyleStruct_Variables) {
     // Treat as though some data is specified to avoid the optimizations and
