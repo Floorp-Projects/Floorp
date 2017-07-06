@@ -8,13 +8,7 @@
 #include "gfxUserFontSet.h"
 #include "gfxPlatform.h"
 #include "gfxPrefs.h"
-#include "nsContentPolicyUtils.h"
-#include "nsUnicharUtils.h"
-#include "nsNetUtil.h"
-#include "nsIJARChannel.h"
 #include "nsIProtocolHandler.h"
-#include "nsIPrincipal.h"
-#include "nsIZipReader.h"
 #include "gfxFontConstants.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
@@ -1120,9 +1114,7 @@ gfxUserFontSet::UserFontCache::Flusher::Observe(nsISupports* aSubject,
 
     if (!strcmp(aTopic, "cacheservice:empty-cache")) {
         for (auto i = sUserFonts->Iter(); !i.Done(); i.Next()) {
-            if (!i.Get()->IsPersistent()) {
-                i.Remove();
-            }
+            i.Remove();
         }
     } else if (!strcmp(aTopic, "last-pb-context-exited")) {
         for (auto i = sUserFonts->Iter(); !i.Done(); i.Next()) {
@@ -1156,31 +1148,24 @@ bool
 gfxUserFontSet::UserFontCache::Entry::KeyEquals(const KeyTypePointer aKey) const
 {
     const gfxFontEntry* fe = aKey->mFontEntry;
-    // CRC32 checking mode
-    if (mLength || aKey->mLength) {
-        if (aKey->mLength != mLength ||
-            aKey->mCRC32 != mCRC32) {
-            return false;
-        }
-    } else {
-        bool result;
-        if (NS_FAILED(mURI->Equals(aKey->mURI, &result)) || !result) {
-            return false;
-        }
 
-        // For data: URIs, we don't care about the principal; otherwise, check it.
-        if (!IgnorePrincipal(mURI)) {
-            NS_ASSERTION(mPrincipal && aKey->mPrincipal,
-                         "only data: URIs are allowed to omit the principal");
-            if (NS_FAILED(mPrincipal->Equals(aKey->mPrincipal, &result)) ||
-                !result) {
-                return false;
-            }
-        }
+    bool result;
+    if (NS_FAILED(mURI->Equals(aKey->mURI, &result)) || !result) {
+        return false;
+    }
 
-        if (mPrivate != aKey->mPrivate) {
+    // For data: URIs, we don't care about the principal; otherwise, check it.
+    if (!IgnorePrincipal(mURI)) {
+        NS_ASSERTION(mPrincipal && aKey->mPrincipal,
+                     "only data: URIs are allowed to omit the principal");
+        if (NS_FAILED(mPrincipal->Equals(aKey->mPrincipal, &result)) ||
+            !result) {
             return false;
         }
+    }
+
+    if (mPrivate != aKey->mPrivate) {
+        return false;
     }
 
     if (mFontEntry->mStyle            != fe->mStyle     ||
@@ -1196,8 +1181,7 @@ gfxUserFontSet::UserFontCache::Entry::KeyEquals(const KeyTypePointer aKey) const
 }
 
 void
-gfxUserFontSet::UserFontCache::CacheFont(gfxFontEntry* aFontEntry,
-                                         EntryPersistence aPersistence)
+gfxUserFontSet::UserFontCache::CacheFont(gfxFontEntry* aFontEntry)
 {
     NS_ASSERTION(aFontEntry->mFamilyName.Length() != 0,
                  "caching a font associated with no family yet");
@@ -1237,25 +1221,17 @@ gfxUserFontSet::UserFontCache::CacheFont(gfxFontEntry* aFontEntry,
         RegisterStrongMemoryReporter(new MemoryReporter());
     }
 
-    if (data->mLength) {
-        MOZ_ASSERT(aPersistence == kPersistent);
-        MOZ_ASSERT(!data->mPrivate);
-        sUserFonts->PutEntry(Key(data->mCRC32, data->mLength, aFontEntry,
-                                 data->mPrivate, aPersistence));
+    // For data: URIs, the principal is ignored; anyone who has the same
+    // data: URI is able to load it and get an equivalent font.
+    // Otherwise, the principal is used as part of the cache key.
+    nsIPrincipal* principal;
+    if (IgnorePrincipal(data->mURI)) {
+        principal = nullptr;
     } else {
-        MOZ_ASSERT(aPersistence == kDiscardable);
-        // For data: URIs, the principal is ignored; anyone who has the same
-        // data: URI is able to load it and get an equivalent font.
-        // Otherwise, the principal is used as part of the cache key.
-        nsIPrincipal* principal;
-        if (IgnorePrincipal(data->mURI)) {
-            principal = nullptr;
-        } else {
-            principal = data->mPrincipal;
-        }
-        sUserFonts->PutEntry(Key(data->mURI, principal, aFontEntry,
-                                 data->mPrivate, aPersistence));
+        principal = data->mPrincipal;
     }
+    sUserFonts->PutEntry(Key(data->mURI, principal, aFontEntry,
+                             data->mPrivate));
 
 #ifdef DEBUG_USERFONT_CACHE
     printf("userfontcache added fontentry: %p\n", aFontEntry);
@@ -1315,36 +1291,6 @@ gfxUserFontSet::UserFontCache::GetFont(nsIURI* aSrcURI,
 
     Entry* entry = sUserFonts->GetEntry(Key(aSrcURI, principal, aUserFontEntry,
                                             aPrivate));
-    if (entry) {
-        return entry->GetFontEntry();
-    }
-
-    // The channel is never openend; to be conservative we use the most
-    // restrictive security flag: SEC_REQUIRE_SAME_ORIGIN_DATA_INHERITS.
-    nsCOMPtr<nsIChannel> chan;
-    if (NS_FAILED(NS_NewChannel(getter_AddRefs(chan),
-                                aSrcURI,
-                                aPrincipal,
-                                nsILoadInfo::SEC_REQUIRE_SAME_ORIGIN_DATA_INHERITS,
-                                nsIContentPolicy::TYPE_FONT))) {
-        return nullptr;
-    }
-
-    nsCOMPtr<nsIJARChannel> jarchan = do_QueryInterface(chan);
-    if (!jarchan) {
-        return nullptr;
-    }
-
-    nsCOMPtr<nsIZipEntry> zipentry;
-    if (NS_FAILED(jarchan->GetZipEntry(getter_AddRefs(zipentry)))) {
-        return nullptr;
-    }
-
-    uint32_t crc32, length;
-    zipentry->GetCRC32(&crc32);
-    zipentry->GetRealSize(&length);
-
-    entry = sUserFonts->GetEntry(Key(crc32, length, aUserFontEntry, aPrivate));
     if (entry) {
         return entry->GetFontEntry();
     }

@@ -736,7 +736,6 @@ struct JSCompartment
                                 size_t* lazyArrayBuffers,
                                 size_t* objectMetadataTables,
                                 size_t* crossCompartmentWrappers,
-                                size_t* regexpCompartment,
                                 size_t* savedStacksSet,
                                 size_t* varNamesSet,
                                 size_t* nonSyntacticLexicalScopes,

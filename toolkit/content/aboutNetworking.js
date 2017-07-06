@@ -250,6 +250,13 @@ function init() {
     startLoggingButton.disabled = true;
     stopLoggingButton.disabled = true;
   }
+
+  if (location.hash) {
+    let sectionButton = document.getElementById("category-" + location.hash.substring(1));
+    if (sectionButton) {
+      sectionButton.click();
+    }
+  }
 }
 
 function updateLogFile() {
@@ -394,7 +401,8 @@ function confirm() {
 
 function show(button) {
   let current_tab = document.querySelector(".active");
-  let content = document.getElementById(button.getAttribute("value"));
+  let category = button.getAttribute("id").substring("category-".length);
+  let content = document.getElementById(category);
   if (current_tab == content)
     return;
   current_tab.classList.remove("active");
@@ -414,6 +422,7 @@ function show(button) {
 
   let title = document.getElementById("sectionTitle");
   title.textContent = button.children[0].textContent;
+  location.hash = category;
 }
 
 function setAutoRefreshInterval(checkBox) {

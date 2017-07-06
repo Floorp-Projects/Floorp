@@ -244,6 +244,17 @@ public:
     {
         return RunAndroidUiTasks();
     }
+
+    static void ForceQuit()
+    {
+        nsCOMPtr<nsIAppStartup> appStartup =
+            do_GetService(NS_APPSTARTUP_CONTRACTID);
+
+        if (appStartup) {
+            appStartup->Quit(nsIAppStartup::eForceQuit);
+        }
+
+    }
 };
 
 int32_t GeckoThreadSupport::sPauseCount;

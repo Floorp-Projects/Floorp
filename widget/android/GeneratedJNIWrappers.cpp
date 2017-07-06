@@ -735,6 +735,9 @@ auto GeckoThread::CheckAndSetState(mozilla::jni::Object::Param a0, mozilla::jni:
     return mozilla::jni::Method<CheckAndSetState_t>::Call(GeckoThread::Context(), nullptr, a0, a1);
 }
 
+constexpr char GeckoThread::ForceQuit_t::name[];
+constexpr char GeckoThread::ForceQuit_t::signature[];
+
 constexpr char GeckoThread::IsChildProcess_t::name[];
 constexpr char GeckoThread::IsChildProcess_t::signature[];
 
