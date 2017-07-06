@@ -281,7 +281,7 @@ RegExpObject::createShared(JSContext* cx, Handle<RegExpObject*> regexp,
 {
     MOZ_ASSERT(!regexp->hasShared());
     RootedAtom source(cx, regexp->getSource());
-    if (!cx->compartment()->regExps.get(cx, source, regexp->getFlags(), shared))
+    if (!cx->zone()->regExps.get(cx, source, regexp->getFlags(), shared))
         return false;
 
     regexp->setShared(*shared);
@@ -1194,16 +1194,10 @@ RegExpShared::sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf)
 /* RegExpCompartment */
 
 RegExpCompartment::RegExpCompartment(Zone* zone)
-  : set_(zone, zone->runtimeFromActiveCooperatingThread()),
-    matchResultTemplateObject_(nullptr),
+  : matchResultTemplateObject_(nullptr),
     optimizableRegExpPrototypeShape_(nullptr),
     optimizableRegExpInstanceShape_(nullptr)
 {}
-
-RegExpCompartment::~RegExpCompartment()
-{
-    MOZ_ASSERT_IF(set_.initialized(), set_.empty());
-}
 
 ArrayObject*
 RegExpCompartment::createMatchResultTemplateObject(JSContext* cx)
@@ -1257,13 +1251,10 @@ RegExpCompartment::createMatchResultTemplateObject(JSContext* cx)
 }
 
 bool
-RegExpCompartment::init(JSContext* cx)
+RegExpZone::init()
 {
-    if (!set_.init(0)) {
-        if (cx)
-            ReportOutOfMemory(cx);
+    if (!set_.init(0))
         return false;
-    }
 
     return true;
 }
@@ -1291,8 +1282,8 @@ RegExpCompartment::sweep(JSRuntime* rt)
 }
 
 bool
-RegExpCompartment::get(JSContext* cx, HandleAtom source, RegExpFlag flags,
-                       MutableHandleRegExpShared result)
+RegExpZone::get(JSContext* cx, HandleAtom source, RegExpFlag flags,
+                MutableHandleRegExpShared result)
 {
     DependentAddPtr<Set> p(cx, set_, Key(source, flags));
     if (p) {
@@ -1316,8 +1307,7 @@ RegExpCompartment::get(JSContext* cx, HandleAtom source, RegExpFlag flags,
 }
 
 bool
-RegExpCompartment::get(JSContext* cx, HandleAtom atom, JSString* opt,
-                       MutableHandleRegExpShared shared)
+RegExpZone::get(JSContext* cx, HandleAtom atom, JSString* opt, MutableHandleRegExpShared shared)
 {
     RegExpFlag flags = RegExpFlag(0);
     if (opt && !ParseRegExpFlags(cx, opt, &flags))
@@ -1327,10 +1317,14 @@ RegExpCompartment::get(JSContext* cx, HandleAtom atom, JSString* opt,
 }
 
 size_t
-RegExpCompartment::sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf)
+RegExpZone::sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf)
 {
     return set_.sizeOfExcludingThis(mallocSizeOf);
 }
+
+RegExpZone::RegExpZone(Zone* zone)
+  : set_(zone, zone->runtimeFromActiveCooperatingThread())
+{}
 
 /* Functions */
 

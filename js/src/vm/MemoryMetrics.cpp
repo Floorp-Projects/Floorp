@@ -323,6 +323,7 @@ StatsZoneCallback(JSRuntime* rt, void* data, Zone* zone)
 
     zone->addSizeOfIncludingThis(rtStats->mallocSizeOf_,
                                  &zStats.typePool,
+                                 &zStats.regexpZone,
                                  &zStats.jitZone,
                                  &zStats.baselineStubsOptimized,
                                  &zStats.cachedCFG,
@@ -357,7 +358,6 @@ StatsCompartmentCallback(JSContext* cx, void* data, JSCompartment* compartment)
                                         &cStats.lazyArrayBuffersTable,
                                         &cStats.objectMetadataTable,
                                         &cStats.crossCompartmentWrappersTable,
-                                        &cStats.regexpCompartment,
                                         &cStats.savedStacksSet,
                                         &cStats.varNamesSet,
                                         &cStats.nonSyntacticLexicalScopesTable,
