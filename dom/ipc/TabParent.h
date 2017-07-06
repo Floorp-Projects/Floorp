@@ -361,8 +361,7 @@ public:
   void ThemeChanged();
 
   void HandleAccessKey(const WidgetKeyboardEvent& aEvent,
-                       nsTArray<uint32_t>& aCharCodes,
-                       const int32_t& aModifierMask);
+                       nsTArray<uint32_t>& aCharCodes);
 
   void Activate();
 

@@ -2244,8 +2244,7 @@ TabChild::RecvSwappedWithOtherRemoteLoader(const IPCTabContext& aContext)
 
 mozilla::ipc::IPCResult
 TabChild::RecvHandleAccessKey(const WidgetKeyboardEvent& aEvent,
-                              nsTArray<uint32_t>&& aCharCodes,
-                              const int32_t& aModifierMask)
+                              nsTArray<uint32_t>&& aCharCodes)
 {
   nsCOMPtr<nsIDocument> document(GetDocument());
   nsCOMPtr<nsIPresShell> presShell = document->GetShell();
@@ -2254,8 +2253,7 @@ TabChild::RecvHandleAccessKey(const WidgetKeyboardEvent& aEvent,
     if (pc) {
       if (!pc->EventStateManager()->
                  HandleAccessKey(&(const_cast<WidgetKeyboardEvent&>(aEvent)),
-                                 pc, aCharCodes,
-                                 aModifierMask, true)) {
+                                 pc, aCharCodes)) {
         // If no accesskey was found, inform the parent so that accesskeys on
         // menus can be handled.
         WidgetKeyboardEvent localEvent(aEvent);

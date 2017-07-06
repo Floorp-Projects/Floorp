@@ -59,6 +59,16 @@ namespace plugins {
   class PPluginInstanceChild;
 } // namespace plugins
 
+enum class AccessKeyType
+{
+  // Handle access key for chrome.
+  eChrome,
+  // Handle access key for content.
+  eContent,
+  // Don't handle access key.
+  eNone
+};
+
 /******************************************************************************
  * mozilla::AlternativeCharCode
  *
@@ -431,6 +441,24 @@ public:
    */
   void GetAccessKeyCandidates(nsTArray<uint32_t>& aCandidates) const;
 
+  /**
+   * Check whether the modifiers match with chrome access key or
+   * content access key.
+   */
+  bool ModifiersMatchWithAccessKey(AccessKeyType aType) const;
+
+  /**
+   * Return active modifiers which may match with access key.
+   * For example, even if Alt is access key modifier, then, when Control,
+   * CapseLock and NumLock are active, this returns only MODIFIER_CONTROL.
+   */
+  Modifiers ModifiersForAccessKeyMatching() const;
+
+  /**
+   * Return access key modifiers.
+   */
+  static Modifiers AccessKeyModifiers(AccessKeyType aType);
+
   static void Shutdown();
 
   /**
@@ -565,6 +593,10 @@ private:
           "Invalid native key binding type");
     }
   }
+
+  static int32_t GenericAccessModifierKeyPref();
+  static int32_t ChromeAccessModifierMaskPref();
+  static int32_t ContentAccessModifierMaskPref();
 };
 
 /******************************************************************************
