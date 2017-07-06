@@ -2812,7 +2812,8 @@ CreateDeclarationForServo(nsCSSPropertyID aProperty,
                         &value,
                         data,
                         ParsingMode::Default,
-                        aDocument->GetCompatibilityMode()).Consume();
+                        aDocument->GetCompatibilityMode(),
+                        aDocument->CSSLoader()).Consume();
 
   if (!servoDeclarations) {
     // We got a syntax error.  The spec says this value must be ignored.
@@ -2829,7 +2830,8 @@ CreateDeclarationForServo(nsCSSPropertyID aProperty,
                                            false,
                                            data,
                                            ParsingMode::Default,
-                                           aDocument->GetCompatibilityMode());
+                                           aDocument->GetCompatibilityMode(),
+                                           aDocument->CSSLoader());
   }
 
   return servoDeclarations.forget();
@@ -2850,8 +2852,9 @@ GetFontStyleForServo(Element* aElement, const nsAString& aFont,
 {
   MOZ_ASSERT(aPresShell->StyleSet()->IsServo());
 
+  nsIDocument* document = aPresShell->GetDocument();
   RefPtr<RawServoDeclarationBlock> declarations =
-    CreateFontDeclarationForServo(aFont, aPresShell->GetDocument());
+    CreateFontDeclarationForServo(aFont, document);
   if (!declarations) {
     // We got a syntax error.  The spec says this value must be ignored.
     return nullptr;
@@ -2886,7 +2889,7 @@ GetFontStyleForServo(Element* aElement, const nsAString& aFont,
     MOZ_ASSERT(declarations);
 
     parentStyle = aPresShell->StyleSet()->AsServo()->
-      ResolveForDeclarations(nullptr, declarations);
+      ResolveForDeclarations(nullptr, declarations, document->CSSLoader());
   }
 
   MOZ_RELEASE_ASSERT(parentStyle, "Should have a valid parent style");
@@ -2895,7 +2898,7 @@ GetFontStyleForServo(Element* aElement, const nsAString& aFont,
              "GetFontParentStyleContext should have returned an error if the presshell is being destroyed.");
 
   RefPtr<ServoComputedValues> sc =
-    styleSet->ResolveForDeclarations(parentStyle, declarations);
+    styleSet->ResolveForDeclarations(parentStyle, declarations, document->CSSLoader());
 
   // The font getter is required to be reserialized based on what we
   // parsed (including having line-height removed).  (Older drafts of
@@ -2966,8 +2969,9 @@ ResolveFilterStyleForServo(const nsAString& aFilterString,
 {
   MOZ_ASSERT(aPresShell->StyleSet()->IsServo());
 
+  nsIDocument* document = aPresShell->GetDocument();
   RefPtr<RawServoDeclarationBlock> declarations =
-    CreateFilterDeclarationForServo(aFilterString, aPresShell->GetDocument());
+    CreateFilterDeclarationForServo(aFilterString, document);
   if (!declarations) {
     // Refuse to accept the filter, but do not throw an error.
     return nullptr;
@@ -2982,7 +2986,7 @@ ResolveFilterStyleForServo(const nsAString& aFilterString,
 
   ServoStyleSet* styleSet = aPresShell->StyleSet()->AsServo();
   RefPtr<ServoComputedValues> computedValues =
-    styleSet->ResolveForDeclarations(aParentStyle, declarations);
+    styleSet->ResolveForDeclarations(aParentStyle, declarations, document->CSSLoader());
 
   return computedValues.forget();
 }
