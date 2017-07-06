@@ -1679,7 +1679,7 @@ js::InterruptRunningJitCode(JSContext* cx)
     // thread is in the middle of a syscall. Rather than retrying in a loop,
     // just wait for the next request for interrupt.
     HANDLE thread = (HANDLE)cx->threadNative();
-    if (SuspendThread(thread) != -1) {
+    if (SuspendThread(thread) != (DWORD)-1) {
         CONTEXT context;
         context.ContextFlags = CONTEXT_FULL;
         if (GetThreadContext(thread, &context)) {

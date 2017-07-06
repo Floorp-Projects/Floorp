@@ -18,8 +18,8 @@ namespace mozilla {
 
 MediaDecoderStateMachine* WebMDecoder::CreateStateMachine()
 {
-  mReader =
-    new MediaFormatReader(this, new WebMDemuxer(GetResource()), GetVideoFrameContainer());
+  mReader = new MediaFormatReader(
+    this, new WebMDemuxer(mResource), GetVideoFrameContainer());
   return new MediaDecoderStateMachine(this, mReader);
 }
 

@@ -32,10 +32,8 @@ MP4Decoder::MP4Decoder(MediaDecoderInit& aInit)
 
 MediaDecoderStateMachine* MP4Decoder::CreateStateMachine()
 {
-  mReader =
-    new MediaFormatReader(this,
-                          new MP4Demuxer(GetResource()),
-                          GetVideoFrameContainer());
+  mReader = new MediaFormatReader(
+    this, new MP4Demuxer(mResource), GetVideoFrameContainer());
 
   return new MediaDecoderStateMachine(this, mReader);
 }
