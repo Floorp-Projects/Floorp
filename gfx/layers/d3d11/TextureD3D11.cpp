@@ -11,7 +11,9 @@
 #include "gfx2DGlue.h"
 #include "gfxPrefs.h"
 #include "ReadbackManagerD3D11.h"
+#include "mozilla/gfx/DataSurfaceHelpers.h"
 #include "mozilla/gfx/DeviceManagerDx.h"
+#include "mozilla/gfx/gfxVars.h"
 #include "mozilla/gfx/Logging.h"
 #include "mozilla/layers/CompositorBridgeChild.h"
 #include "mozilla/webrender/WebRenderAPI.h"
@@ -853,6 +855,68 @@ DXGITextureHostD3D11::LockInternal()
   mIsLocked = LockD3DTexture(mTextureSource->GetD3D11Texture());
 
   return mIsLocked;
+}
+
+already_AddRefed<gfx::DataSourceSurface>
+DXGITextureHostD3D11::GetAsSurface()
+{
+  if (!gfxVars::UseWebRender()) {
+    return nullptr;
+  }
+
+  switch (GetFormat()) {
+    case gfx::SurfaceFormat::R8G8B8X8:
+    case gfx::SurfaceFormat::R8G8B8A8:
+    case gfx::SurfaceFormat::B8G8R8A8:
+    case gfx::SurfaceFormat::B8G8R8X8:
+      break;
+    default: {
+      MOZ_ASSERT_UNREACHABLE("DXGITextureHostD3D11: unsupported format!");
+      return nullptr;
+    }
+  }
+
+  AutoLockTextureHostWithoutCompositor autoLock(this);
+  if (autoLock.Failed()) {
+    NS_WARNING("Failed to lock the D3DTexture");
+    return nullptr;
+  }
+
+  RefPtr<ID3D11Device> device;
+  mTexture->GetDevice(getter_AddRefs(device));
+
+  D3D11_TEXTURE2D_DESC textureDesc = {0};
+  mTexture->GetDesc(&textureDesc);
+
+  RefPtr<ID3D11DeviceContext> context;
+  device->GetImmediateContext(getter_AddRefs(context));
+
+  textureDesc.CPUAccessFlags  = D3D11_CPU_ACCESS_READ;
+  textureDesc.Usage           = D3D11_USAGE_STAGING;
+  textureDesc.BindFlags       = 0;
+  textureDesc.MiscFlags       = 0;
+  textureDesc.MipLevels       = 1;
+  RefPtr<ID3D11Texture2D> cpuTexture;
+  HRESULT hr = device->CreateTexture2D(&textureDesc, nullptr, getter_AddRefs(cpuTexture));
+  if (FAILED(hr)) {
+    return nullptr;
+  }
+
+  context->CopyResource(cpuTexture, mTexture);
+
+  D3D11_MAPPED_SUBRESOURCE mappedSubresource;
+  hr = context->Map(cpuTexture, 0, D3D11_MAP_READ, 0, &mappedSubresource);
+  if (FAILED(hr)) {
+    return nullptr;
+  }
+
+  RefPtr<DataSourceSurface> surf =
+    gfx::CreateDataSourceSurfaceFromData(IntSize(textureDesc.Width, textureDesc.Height),
+                                         GetFormat(),
+                                         (uint8_t*)mappedSubresource.pData,
+                                         mappedSubresource.RowPitch);
+  context->Unmap(cpuTexture, 0);
+  return surf.forget();
 }
 
 bool
