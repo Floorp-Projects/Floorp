@@ -2681,9 +2681,21 @@ arena_run_split(arena_t *arena, arena_run_t *run, size_t size, bool large,
 }
 
 static void
-arena_chunk_init(arena_t *arena, arena_chunk_t *chunk)
+arena_chunk_init(arena_t *arena, arena_chunk_t *chunk, bool zeroed)
 {
 	size_t i;
+	/* WARNING: The following relies on !zeroed meaning "used to be an arena
+         * chunk".
+         * When the chunk we're initializating as an arena chunk is zeroed, we
+         * mark all runs are decommitted and zeroed.
+         * When it is not, which we can assume means it's a recycled arena chunk,
+         * all it can contain is an arena chunk header (which we're overwriting),
+         * and zeroed or poisoned memory (because a recycled arena chunk will
+         * have been emptied before being recycled). In that case, we can get
+         * away with reusing the chunk as-is, marking all runs as madvised.
+         */
+	size_t flags = zeroed ? CHUNK_MAP_DECOMMITTED | CHUNK_MAP_ZEROED
+	                      : CHUNK_MAP_MADVISED;
 
 	arena->stats.mapped += chunksize;
 
@@ -2702,11 +2714,11 @@ arena_chunk_init(arena_t *arena, arena_chunk_t *chunk)
 
 	for (i = 0; i < arena_chunk_header_npages; i++)
 		chunk->map[i].bits = 0;
-	chunk->map[i].bits = arena_maxclass | CHUNK_MAP_DECOMMITTED | CHUNK_MAP_ZEROED;
+	chunk->map[i].bits = arena_maxclass | flags;
 	for (i++; i < chunk_npages-1; i++) {
-		chunk->map[i].bits = CHUNK_MAP_DECOMMITTED | CHUNK_MAP_ZEROED;
+		chunk->map[i].bits = flags;
 	}
-	chunk->map[chunk_npages-1].bits = arena_maxclass | CHUNK_MAP_DECOMMITTED | CHUNK_MAP_ZEROED;
+	chunk->map[chunk_npages-1].bits = arena_maxclass | flags;
 
 #ifdef MALLOC_DECOMMIT
 	/*
@@ -2811,9 +2823,7 @@ arena_run_alloc(arena_t *arena, arena_bin_t *bin, size_t size, bool large,
 		if (!chunk)
 			return nullptr;
 
-		chunk_ensure_zero(chunk, chunksize, zeroed);
-
-		arena_chunk_init(arena, chunk);
+		arena_chunk_init(arena, chunk, zeroed);
 		run = (arena_run_t *)((uintptr_t)chunk +
 		    (arena_chunk_header_npages << pagesize_2pow));
 	}
