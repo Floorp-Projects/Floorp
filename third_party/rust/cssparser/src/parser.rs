@@ -25,12 +25,12 @@ pub struct SourcePosition {
 pub enum BasicParseError<'a> {
     /// An unexpected token was encountered.
     UnexpectedToken(Token<'a>),
+    /// A particular token was expected but not found.
+    ExpectedToken(Token<'a>),
     /// The end of the input was encountered unexpectedly.
     EndOfInput,
     /// An `@` rule was encountered that was invalid.
-    AtRuleInvalid(CompactCowStr<'a>),
-    /// The body of an '@' rule was invalid.
-    AtRuleBodyInvalid,
+    AtRuleInvalid,
     /// A qualified rule was encountered that was invalid.
     QualifiedRuleInvalid,
 }
@@ -186,11 +186,6 @@ impl<'i: 't, 't> Parser<'i, 't> {
             at_start_of: None,
             stop_before: Delimiter::None,
         }
-    }
-
-    /// Return the current line that is being parsed.
-    pub fn current_line(&self) -> &'i str {
-        self.tokenizer.0.current_source_line()
     }
 
     /// Check whether the input is exhausted. That is, if `.next()` would return a token.
@@ -362,9 +357,9 @@ impl<'i: 't, 't> Parser<'i, 't> {
     #[inline]
     pub fn parse_entirely<F, T, E>(&mut self, parse: F) -> Result<T, ParseError<'i, E>>
     where F: FnOnce(&mut Parser<'i, 't>) -> Result<T, ParseError<'i, E>> {
-        let result = parse(self)?;
+        let result = parse(self);
         self.expect_exhausted()?;
-        Ok(result)
+        result
     }
 
     /// Parse a list of comma-separated values, all with the same syntax.
@@ -487,7 +482,8 @@ impl<'i: 't, 't> Parser<'i, 't> {
         match self.next()? {
             Token::UnquotedUrl(value) => Ok(value),
             Token::Function(ref name) if name.eq_ignore_ascii_case("url") => {
-                self.parse_nested_block(|input| input.expect_string().map_err(ParseError::Basic))
+                self.parse_nested_block(|input| input.expect_string()
+                                        .map_err(|e| ParseError::Basic(e)))
                     .map_err(ParseError::<()>::basic)
             },
             t => Err(BasicParseError::UnexpectedToken(t))
@@ -501,7 +497,7 @@ impl<'i: 't, 't> Parser<'i, 't> {
             Token::UnquotedUrl(value) => Ok(value),
             Token::QuotedString(value) => Ok(value),
             Token::Function(ref name) if name.eq_ignore_ascii_case("url") => {
-                self.parse_nested_block(|input| input.expect_string().map_err(ParseError::Basic))
+                self.parse_nested_block(|input| input.expect_string().map_err(|e| ParseError::Basic(e)))
                     .map_err(ParseError::<()>::basic)
             },
             t => Err(BasicParseError::UnexpectedToken(t))

@@ -157,12 +157,12 @@ pub enum Token<'a> {
     /// A `<bad-url-token>`
     ///
     /// This token always indicates a parse error.
-    BadUrl(CompactCowStr<'a>),
+    BadUrl,
 
     /// A `<bad-string-token>`
     ///
     /// This token always indicates a parse error.
-    BadString(CompactCowStr<'a>),
+    BadString,
 
     /// A `<)-token>`
     ///
@@ -194,7 +194,7 @@ impl<'a> Token<'a> {
     pub fn is_parse_error(&self) -> bool {
         matches!(
             *self,
-            BadUrl(_) | BadString(_) | CloseParenthesis | CloseSquareBracket | CloseCurlyBracket
+            BadUrl | BadString | CloseParenthesis | CloseSquareBracket | CloseCurlyBracket
         )
     }
 }
@@ -226,7 +226,7 @@ impl<'a> Tokenizer<'a> {
             input: input,
             position: 0,
             last_known_source_location: Cell::new((SourcePosition(0),
-                                                   SourceLocation { line: 0, column: 0 })),
+                                                   SourceLocation { line: 1, column: 1 })),
             var_functions: SeenStatus::DontCare,
             viewport_percentages: SeenStatus::DontCare,
         }
@@ -287,17 +287,6 @@ impl<'a> Tokenizer<'a> {
         self.source_location(position)
     }
 
-    pub fn current_source_line(&self) -> &'a str {
-        let current = self.position;
-        let start = self.input[0..current]
-            .rfind(|c| matches!(c, '\r' | '\n' | '\x0C'))
-            .map_or(0, |start| start + 1);
-        let end = self.input[current..]
-            .find(|c| matches!(c, '\r' | '\n' | '\x0C'))
-            .map_or(self.input.len(), |end| current + end);
-        &self.input[start..end]
-    }
-
     pub fn source_location(&self, position: SourcePosition) -> SourceLocation {
         let target = position.0;
         let mut location;
@@ -312,7 +301,7 @@ impl<'a> Tokenizer<'a> {
             // So if the requested position is before the last known one,
             // start over from the beginning.
             position = 0;
-            location = SourceLocation { line: 0, column: 0 };
+            location = SourceLocation { line: 1, column: 1 };
         }
         let mut source = &self.input[position..target];
         while let Some(newline_position) = source.find(|c| matches!(c, '\n' | '\r' | '\x0C')) {
@@ -321,7 +310,7 @@ impl<'a> Tokenizer<'a> {
             source = &source[offset..];
             position += offset;
             location.line += 1;
-            location.column = 0;
+            location.column = 1;
         }
         debug_assert!(position <= target);
         location.column += (target - position) as u32;
@@ -397,10 +386,10 @@ pub struct SourcePosition(usize);
 /// The line and column number for a given position within the input.
 #[derive(PartialEq, Eq, Debug, Clone, Copy)]
 pub struct SourceLocation {
-    /// The line number, starting at 0 for the first line.
+    /// The line number, starting at 1 for the first line.
     pub line: u32,
 
-    /// The column number within a line, starting at 0 for first the character of the line.
+    /// The column number within a line, starting at 1 for first the character of the line.
     pub column: u32,
 }
 
@@ -567,14 +556,14 @@ fn next_token<'a>(tokenizer: &mut Tokenizer<'a>) -> Result<Token<'a>, ()> {
 fn consume_string<'a>(tokenizer: &mut Tokenizer<'a>, single_quote: bool) -> Token<'a> {
     match consume_quoted_string(tokenizer, single_quote) {
         Ok(value) => QuotedString(value),
-        Err(value) => BadString(value)
+        Err(()) => BadString
     }
 }
 
 
 /// Return `Err(())` on syntax error (ie. unescaped newline)
 fn consume_quoted_string<'a>(tokenizer: &mut Tokenizer<'a>, single_quote: bool)
-                             -> Result<CompactCowStr<'a>, CompactCowStr<'a>> {
+                             -> Result<CompactCowStr<'a>, ()> {
     tokenizer.advance(1);  // Skip the initial quote
     // start_pos is at code point boundary, after " or '
     let start_pos = tokenizer.position();
@@ -607,9 +596,7 @@ fn consume_quoted_string<'a>(tokenizer: &mut Tokenizer<'a>, single_quote: bool)
                 string_bytes = tokenizer.slice_from(start_pos).as_bytes().to_owned();
                 break
             }
-            b'\n' | b'\r' | b'\x0C' => {
-                return Err(tokenizer.slice_from(start_pos).into())
-            },
+            b'\n' | b'\r' | b'\x0C' => { return Err(()) },
             _ => {}
         }
         tokenizer.consume_byte();
@@ -617,12 +604,7 @@ fn consume_quoted_string<'a>(tokenizer: &mut Tokenizer<'a>, single_quote: bool)
 
     while !tokenizer.is_eof() {
         if matches!(tokenizer.next_byte_unchecked(), b'\n' | b'\r' | b'\x0C') {
-            return Err(
-                // string_bytes is well-formed UTF-8, see other comments.
-                unsafe {
-                    from_utf8_release_unchecked(string_bytes)
-                }.into()
-            );
+            return Err(());
         }
         let b = tokenizer.consume_byte();
         match_byte! { b,
@@ -1031,7 +1013,6 @@ fn consume_unquoted_url<'a>(tokenizer: &mut Tokenizer<'a>) -> Result<Token<'a>, 
     }
 
     fn consume_bad_url<'a>(tokenizer: &mut Tokenizer<'a>) -> Token<'a> {
-        let start_pos = tokenizer.position();
         // Consume up to the closing )
         while !tokenizer.is_eof() {
             match_byte! { tokenizer.consume_byte(),
@@ -1042,7 +1023,7 @@ fn consume_unquoted_url<'a>(tokenizer: &mut Tokenizer<'a>) -> Result<Token<'a>, 
                 _ => {},
             }
         }
-        BadUrl(tokenizer.slice_from(start_pos).into())
+        BadUrl
     }
 }
 
