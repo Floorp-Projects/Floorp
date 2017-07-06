@@ -29,6 +29,7 @@
 using namespace mozilla;
 
 #define RESIST_FINGERPRINTING_PREF "privacy.resistFingerprinting"
+#define PROFILE_INITIALIZED_TOPIC "profile-initial-state"
 
 NS_IMPL_ISUPPORTS(nsRFPService, nsIObserver)
 
@@ -108,6 +109,11 @@ nsRFPService::Init()
   rv = obs->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, false);
   NS_ENSURE_SUCCESS(rv, rv);
 
+#if defined(XP_WIN)
+  rv = obs->AddObserver(this, PROFILE_INITIALIZED_TOPIC, false);
+  NS_ENSURE_SUCCESS(rv, rv);
+#endif
+
   nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
   NS_ENSURE_TRUE(prefs, NS_ERROR_NOT_AVAILABLE);
 
@@ -123,18 +129,6 @@ nsRFPService::Init()
   // Call UpdatePref() here to cache the value of 'privacy.resistFingerprinting'
   // and set the timezone.
   UpdatePref();
-
-#if defined(XP_WIN)
-  // If we're e10s, then we don't need to run this, since the child process will
-  // simply inherit the environment variable from the parent process, in which
-  // case it's unnecessary to call _tzset().
-  if (XRE_IsParentProcess() && !XRE_IsE10sParentProcess()) {
-    // Windows does not follow POSIX. Updates to the TZ environment variable
-    // are not reflected immediately on that platform as they are on UNIX
-    // systems without this call.
-    _tzset();
-  }
-#endif
 
   return rv;
 }
@@ -213,6 +207,25 @@ nsRFPService::Observe(nsISupports* aObject, const char* aTopic,
   if (!strcmp(NS_XPCOM_SHUTDOWN_OBSERVER_ID, aTopic)) {
     StartShutdown();
   }
+#if defined(XP_WIN)
+  else if (!strcmp(PROFILE_INITIALIZED_TOPIC, aTopic)) {
+    // If we're e10s, then we don't need to run this, since the child process will
+    // simply inherit the environment variable from the parent process, in which
+    // case it's unnecessary to call _tzset().
+    if (XRE_IsParentProcess() && !XRE_IsE10sParentProcess()) {
+      // Windows does not follow POSIX. Updates to the TZ environment variable
+      // are not reflected immediately on that platform as they are on UNIX
+      // systems without this call.
+      _tzset();
+    }
+
+    nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
+    NS_ENSURE_TRUE(obs, NS_ERROR_NOT_AVAILABLE);
+
+    nsresult rv = obs->RemoveObserver(this, PROFILE_INITIALIZED_TOPIC);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+#endif
 
   return NS_OK;
 }
