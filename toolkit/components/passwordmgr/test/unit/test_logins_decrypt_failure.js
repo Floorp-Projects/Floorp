@@ -75,3 +75,52 @@ add_task(function test_logins_decrypt_failure()
   do_check_eq(Services.logins.getAllLogins().length, 0);
   do_check_eq(Services.logins.countLogins("", "", ""), 0);
 });
+
+// Bug 621846 - If a login has a GUID but can't be decrypted, a search for
+// that GUID will (correctly) fail. Ensure we can add a new login with that
+// same GUID.
+add_task(function test_add_logins_with_decrypt_failure()
+{
+  // a login with a GUID.
+  let login = new LoginInfo("http://www.example2.com", "http://www.example2.com", null,
+                            "the username", "the password for www.example.com",
+                            "form_field_username", "form_field_password");
+
+  login.QueryInterface(Ci.nsILoginMetaInfo);
+  login.guid = "{4bc50d2f-dbb6-4aa3-807c-c4c2065a2c35}";
+
+  // A different login but with the same GUID.
+  let loginDupeGuid = new LoginInfo("http://www.example3.com", "http://www.example3.com", null,
+                                   "the username", "the password",
+                                   "form_field_username", "form_field_password");
+  loginDupeGuid.QueryInterface(Ci.nsILoginMetaInfo);
+  loginDupeGuid.guid = login.guid;
+
+  Services.logins.addLogin(login);
+
+  // We can search for this login by GUID.
+  let searchProp = Cc["@mozilla.org/hash-property-bag;1"]
+                   .createInstance(Ci.nsIWritablePropertyBag2);
+  searchProp.setPropertyAsAUTF8String("guid", login.guid);
+
+  equal(Services.logins.searchLogins({}, searchProp).length, 1);
+
+  // We should fail to re-add it as it remains good.
+  Assert.throws(() => Services.logins.addLogin(login),
+                /This login already exists./);
+  // We should fail to re-add a different login with the same GUID.
+  Assert.throws(() => Services.logins.addLogin(loginDupeGuid),
+                /specified GUID already exists/);
+
+  // This makes the existing login non-decryptable.
+  resetMasterPassword();
+
+  // We can no longer find it in our search.
+  equal(Services.logins.searchLogins({}, searchProp).length, 0);
+
+  // So we should be able to re-add a login with that same GUID.
+  Services.logins.addLogin(login);
+  equal(Services.logins.searchLogins({}, searchProp).length, 1);
+
+  Services.logins.removeAllLogins();
+});
