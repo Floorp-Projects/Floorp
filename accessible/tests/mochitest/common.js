@@ -253,7 +253,7 @@ function getAccessible(aAccOrElmOrID, aInterfaces, aElmObj, aDoNotFailIf)
   var elm = null;
 
   if (aAccOrElmOrID instanceof nsIAccessible) {
-    try { elm = aAccOrElmOrID.DOMNode; } catch(e) { }
+    try { elm = aAccOrElmOrID.DOMNode; } catch (e) { }
 
   } else if (aAccOrElmOrID instanceof nsIDOMNode) {
     elm = aAccOrElmOrID;
@@ -550,7 +550,7 @@ function testAccessibleTree(aAccOrElmOrID, aAccTree, aFlags)
 
         // nsIAccessible::indexInParent
         var indexInParent = -1;
-        try { indexInParent = child.indexInParent; } catch(e) {}
+        try { indexInParent = child.indexInParent; } catch (e) {}
         is(indexInParent, i,
            "Wrong index in parent of " + prettyName(child));
 

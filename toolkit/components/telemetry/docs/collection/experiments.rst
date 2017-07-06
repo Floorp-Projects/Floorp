@@ -37,4 +37,4 @@ Limits and restrictions
 -----------------------
 To prevent abuses, the content of both the experiment ``id`` and ``branch`` is limited to
 100 characters in length.
-``type`` is limited to a lenght of 20 characters.
+``type`` is limited to a length of 20 characters.

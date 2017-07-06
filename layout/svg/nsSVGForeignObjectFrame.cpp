@@ -234,7 +234,7 @@ nsSVGForeignObjectFrame::PaintSVG(gfxContext& aContext,
 
     gfxRect transDirtyRect = gfxRect(aDirtyRect->x, aDirtyRect->y,
                                      aDirtyRect->width, aDirtyRect->height);
-    transDirtyRect = invmatrix.TransformBounds(transDirtyRect);
+    transDirtyRect.TransformBoundsBy(invmatrix);
 
     kidDirtyRect.IntersectRect(kidDirtyRect,
       nsLayoutUtils::RoundGfxRectToAppRect(transDirtyRect,
@@ -266,7 +266,7 @@ nsSVGForeignObjectFrame::PaintSVG(gfxContext& aContext,
   float cssPxPerDevPx = PresContext()->
     AppUnitsToFloatCSSPixels(PresContext()->AppUnitsPerDevPixel());
   gfxMatrix canvasTMForChildren = aTransform;
-  canvasTMForChildren.Scale(cssPxPerDevPx, cssPxPerDevPx);
+  canvasTMForChildren.PreScale(cssPxPerDevPx, cssPxPerDevPx);
 
   aContext.Multiply(canvasTMForChildren);
 

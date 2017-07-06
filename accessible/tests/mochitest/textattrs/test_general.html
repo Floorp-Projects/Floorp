@@ -553,7 +553,7 @@
 
       attrs = {};
       testTextAttrs(ID, 0, attrs, defAttrs, 0, 10);
-      
+    
       tempElem = getNode(ID).firstChild.nextSibling;
       gComputedStyle = document.defaultView.getComputedStyle(tempElem);
       attrs = { "background-color": gComputedStyle.backgroundColor };

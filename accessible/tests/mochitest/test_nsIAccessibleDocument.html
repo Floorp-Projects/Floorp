@@ -61,7 +61,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=441737
         var domDoc = null;
         try {
           domDoc = docAcc.DOMDocument.QueryInterface(nsIDOMDocument);
-        } catch(e) {}
+        } catch (e) {}
         ok(domDoc, "no nsIDOMDocument for this doc accessible!");
         is(domDoc, document, "Document nodes do not match!");
 
@@ -69,7 +69,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=441737
         var domWindow = null;
         try {
           domWindow = docAcc.window.QueryInterface(nsIDOMWindow);
-        } catch(e) {}
+        } catch (e) {}
         ok(domWindow, "no nsIDOMWindow for this doc accessible!");
         is(domWindow, window, "Window nodes do not match!");
       }

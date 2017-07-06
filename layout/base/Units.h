@@ -8,7 +8,6 @@
 #define MOZ_UNITS_H_
 
 #include "mozilla/gfx/Coord.h"
-#include "mozilla/gfx/Matrix.h"
 #include "mozilla/gfx/Point.h"
 #include "mozilla/gfx/Rect.h"
 #include "mozilla/gfx/ScaleFactor.h"

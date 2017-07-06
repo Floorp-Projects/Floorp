@@ -1445,7 +1445,7 @@ nsNativeThemeWin::DrawWidgetBackground(gfxContext* aContext,
 
   double themeScale = GetThemeDpiScaleFactor(aFrame);
   if (themeScale != 1.0) {
-    ctx->SetMatrix(ctx->CurrentMatrix().Scale(themeScale, themeScale));
+    ctx->SetMatrix(ctx->CurrentMatrix().PreScale(themeScale, themeScale));
   }
 
   gfxFloat p2a = gfxFloat(aFrame->PresContext()->AppUnitsPerDevPixel());

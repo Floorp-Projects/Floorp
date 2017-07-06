@@ -198,7 +198,6 @@ UNIFIED_SOURCES += [
     'gfxHarfBuzzShaper.cpp',
     'gfxImageSurface.cpp',
     'gfxMathTable.cpp',
-    'gfxMatrix.cpp',
     'gfxPattern.cpp',
     'gfxPlatformFontList.cpp',
     'gfxRect.cpp',
