@@ -326,15 +326,9 @@ class OSXBootstrapper(BaseBootstrapper):
         # TODO: Figure out what not to install for artifact mode
         packages = [
             ('yasm', 'yasm'),
+            ('llvm', 'llvm'),
         ]
         self._ensure_homebrew_packages(packages)
-
-        installed = self.check_output([self.brew, 'list']).split()
-        if self.os_version < StrictVersion('10.7') and b'llvm' not in installed:
-            print(PACKAGE_MANAGER_OLD_CLANG % ('Homebrew',))
-
-            subprocess.check_call([self.brew, '-v', 'install', 'llvm',
-                                   '--with-clang', '--all-targets'])
 
     def ensure_homebrew_mobile_android_packages(self, artifact_mode=False):
         # Multi-part process:
@@ -413,15 +407,13 @@ class OSXBootstrapper(BaseBootstrapper):
 
     def ensure_macports_browser_packages(self, artifact_mode=False):
         # TODO: Figure out what not to install for artifact mode
-        packages = ['yasm']
+        packages = [
+            'yasm',
+            'llvm-4.0',
+            'clang-4.0',
+        ]
 
         self._ensure_macports_packages(packages)
-
-        installed = set(self.check_output([self.port, 'installed']).split())
-        if self.os_version < StrictVersion('10.7') and MACPORTS_CLANG_PACKAGE not in installed:
-            print(PACKAGE_MANAGER_OLD_CLANG % ('MacPorts',))
-            self.run_as_root([self.port, '-v', 'install', MACPORTS_CLANG_PACKAGE])
-            self.run_as_root([self.port, 'select', '--set', 'clang', 'mp-' + MACPORTS_CLANG_PACKAGE])
 
     def ensure_macports_mobile_android_packages(self, artifact_mode=False):
         # Multi-part process:
@@ -522,8 +514,8 @@ class OSXBootstrapper(BaseBootstrapper):
         return active_name.lower()
 
     def ensure_stylo_packages(self, state_dir, checkout_root):
-        import stylo
-        self.install_tooltool_clang_package(state_dir, checkout_root, stylo.OSX)
+        # We installed these via homebrew earlier.
+        pass
 
     def install_homebrew(self):
         print(PACKAGE_MANAGER_INSTALL % ('Homebrew', 'Homebrew', 'Homebrew', 'brew'))

@@ -21,6 +21,7 @@
 #include "mozilla/TimeStamp.h"
 #include "mozilla/Logging.h"
 #include "mozilla/Atomics.h"
+#include "mozilla/net/NeckoTargetHolder.h"
 
 class nsISystemProxySettings;
 class nsIThread;
@@ -90,11 +91,12 @@ private:
 class nsPACMan final : public nsIStreamLoaderObserver
                      , public nsIInterfaceRequestor
                      , public nsIChannelEventSink
+                     , public NeckoTargetHolder
 {
 public:
   NS_DECL_THREADSAFE_ISUPPORTS
 
-  nsPACMan();
+  explicit nsPACMan(nsIEventTarget *mainThreadEventTarget);
 
   /**
    * This method may be called to shutdown the PAC manager.  Any async queries

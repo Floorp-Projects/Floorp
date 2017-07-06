@@ -4,6 +4,7 @@
 var { classes: Cc, utils: Cu, interfaces: Ci, results: Cr } = Components;
 
 Cu.import("resource://gre/modules/TelemetryController.jsm", this);
+Cu.import("resource://gre/modules/TelemetryUtils.jsm", this);
 Cu.import("resource://gre/modules/Services.jsm", this);
 Cu.import("resource://gre/modules/PromiseUtils.jsm", this);
 Cu.import("resource://gre/modules/FileUtils.jsm", this);
@@ -28,8 +29,6 @@ const Telemetry = Cc["@mozilla.org/base/telemetry;1"].getService(Ci.nsITelemetry
 const MILLISECONDS_PER_MINUTE = 60 * 1000;
 const MILLISECONDS_PER_HOUR = 60 * MILLISECONDS_PER_MINUTE;
 const MILLISECONDS_PER_DAY = 24 * MILLISECONDS_PER_HOUR;
-
-const PREF_TELEMETRY_ENABLED = "toolkit.telemetry.enabled";
 
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -302,15 +301,15 @@ if (runningInParent) {
   // Set logging preferences for all the tests.
   Services.prefs.setCharPref("toolkit.telemetry.log.level", "Trace");
   // Telemetry archiving should be on.
-  Services.prefs.setBoolPref("toolkit.telemetry.archive.enabled", true);
+  Services.prefs.setBoolPref(TelemetryUtils.Preferences.ArchiveEnabled, true);
   // Telemetry xpcshell tests cannot show the infobar.
-  Services.prefs.setBoolPref("datareporting.policy.dataSubmissionPolicyBypassNotification", true);
+  Services.prefs.setBoolPref(TelemetryUtils.Preferences.BypassNotification, true);
   // FHR uploads should be enabled.
-  Services.prefs.setBoolPref("datareporting.healthreport.uploadEnabled", true);
+  Services.prefs.setBoolPref(TelemetryUtils.Preferences.FhrUploadEnabled, true);
   // Many tests expect the shutdown and the new-profile to not be sent on shutdown
   // and will fail if receive an unexpected ping. Let's globally disable these features:
   // the relevant tests will enable these prefs when needed.
-  Services.prefs.setBoolPref("toolkit.telemetry.shutdownPingSender.enabled", false);
+  Services.prefs.setBoolPref(TelemetryUtils.Preferences.ShutdownPingSender, false);
   Services.prefs.setBoolPref("toolkit.telemetry.newProfilePing.enabled", false);
   // Ensure browser experiments are also disabled, to avoid network activity
   // when toggling PREF_ENABLED.

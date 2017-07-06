@@ -29,6 +29,7 @@ enum EStateRule
   eARIACheckableBool,
   eARIACheckableMixed,
   eARIACheckedMixed,
+  eARIACurrent,
   eARIADisabled,
   eARIAExpanded,
   eARIAHasPopup,
