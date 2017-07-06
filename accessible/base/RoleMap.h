@@ -1399,3 +1399,11 @@ ROLE(ARTICLE,
      ROLE_SYSTEM_DOCUMENT,
      ROLE_SYSTEM_DOCUMENT,
      eNoNameRule)
+
+ROLE(REGION,
+     "region",
+     ATK_ROLE_LANDMARK,
+     NSAccessibilityGroupRole,
+     USE_ROLE_STRING,
+     IA2_ROLE_LANDMARK,
+     eNoNameRule)

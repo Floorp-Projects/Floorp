@@ -3,6 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+// This file defines dictionaries used by about:networking page.
+
 dictionary SocketElement {
   DOMString host = "";
   unsigned long port = 0;
@@ -76,8 +78,18 @@ dictionary ConnStatusDict {
   DOMString status = "";
 };
 
+dictionary RcwnPerfStats {
+  unsigned long avgShort = 0;
+  unsigned long avgLong = 0;
+  unsigned long stddevLong = 0;
+};
+
 dictionary RcwnStatus {
   unsigned long totalNetworkRequests = 0;
   unsigned long rcwnCacheWonCount = 0;
   unsigned long rcwnNetWonCount = 0;
+  unsigned long cacheSlowCount = 0;
+  unsigned long cacheNotSlowCount = 0;
+  // Sequence is indexed by CachePerfStats::EDataType
+  sequence<RcwnPerfStats> perfStats;
 };

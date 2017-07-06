@@ -1147,7 +1147,7 @@ nsProtocolProxyService::IsProxyDisabled(nsProxyInfo *pi)
 }
 
 nsresult
-nsProtocolProxyService::SetupPACThread()
+nsProtocolProxyService::SetupPACThread(nsIEventTarget *mainThreadEventTarget)
 {
     if (mIsShutdown) {
         return NS_ERROR_FAILURE;
@@ -1156,7 +1156,7 @@ nsProtocolProxyService::SetupPACThread()
     if (mPACMan)
         return NS_OK;
 
-    mPACMan = new nsPACMan();
+    mPACMan = new nsPACMan(mainThreadEventTarget);
 
     bool mainThreadOnly;
     nsresult rv;
@@ -1319,7 +1319,8 @@ nsresult
 nsProtocolProxyService::AsyncResolveInternal(nsIChannel *channel, uint32_t flags,
                                              nsIProtocolProxyCallback *callback,
                                              nsICancelable **result,
-                                             bool isSyncOK)
+                                             bool isSyncOK,
+                                             nsIEventTarget *mainThreadEventTarget)
 {
     NS_ENSURE_ARG_POINTER(channel);
     NS_ENSURE_ARG_POINTER(callback);
@@ -1348,6 +1349,11 @@ nsProtocolProxyService::AsyncResolveInternal(nsIChannel *channel, uint32_t flags
             mSystemProxySettings = sp2;
             ResetPACThread();
         }
+    }
+
+    rv = SetupPACThread(mainThreadEventTarget);
+    if (NS_FAILED(rv)) {
+        return rv;
     }
 
     // SystemProxySettings and PAC files can block the main thread
@@ -1386,14 +1392,17 @@ nsProtocolProxyService::AsyncResolveInternal(nsIChannel *channel, uint32_t flags
 NS_IMETHODIMP
 nsProtocolProxyService::AsyncResolve2(nsIChannel *channel, uint32_t flags,
                                       nsIProtocolProxyCallback *callback,
+                                      nsIEventTarget *mainThreadEventTarget,
                                       nsICancelable **result)
 {
-    return AsyncResolveInternal(channel, flags, callback, result, true);
+    return AsyncResolveInternal(channel, flags, callback,
+                                result, true, mainThreadEventTarget);
 }
 
 NS_IMETHODIMP
 nsProtocolProxyService::AsyncResolve(nsISupports *channelOrURI, uint32_t flags,
                                      nsIProtocolProxyCallback *callback,
+                                     nsIEventTarget *mainThreadEventTarget,
                                      nsICancelable **result)
 {
 
@@ -1424,7 +1433,8 @@ nsProtocolProxyService::AsyncResolve(nsISupports *channelOrURI, uint32_t flags,
         NS_ENSURE_SUCCESS(rv, rv);
     }
 
-    return AsyncResolveInternal(channel, flags, callback, result, false);
+    return AsyncResolveInternal(channel, flags, callback,
+                                result, false, mainThreadEventTarget);
 }
 
 NS_IMETHODIMP
@@ -1914,9 +1924,6 @@ nsProtocolProxyService::Resolve_Internal(nsIChannel *channel,
                                          nsIProxyInfo **result)
 {
     NS_ENSURE_ARG_POINTER(channel);
-    nsresult rv = SetupPACThread();
-    if (NS_FAILED(rv))
-        return rv;
 
     *usePACThread = false;
     *result = nullptr;
@@ -1925,7 +1932,7 @@ nsProtocolProxyService::Resolve_Internal(nsIChannel *channel,
         return NS_OK;  // Can't proxy this (filters may not override)
 
     nsCOMPtr<nsIURI> uri;
-    rv = GetProxyURI(channel, getter_AddRefs(uri));
+    nsresult rv = GetProxyURI(channel, getter_AddRefs(uri));
     if (NS_FAILED(rv)) return rv;
 
     // See bug #586908.

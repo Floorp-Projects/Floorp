@@ -2389,8 +2389,8 @@
     "alert_emails": ["necko@mozilla.com"],
     "bug_numbers": [1354409],
     "kind": "enumerated",
-    "n_values": 4,
-    "description": "Whether we raced network with the cache. (0=network & no racing, 1=cache & no racing, 2=network & raced, 3=cache & raced)"
+    "n_values": 6,
+    "description": "Whether we raced network with the cache. (0=network & no racing, 1=cache & no racing, 2=network & raced, 3=cache & raced, 4=network & delayed race, 5=cache & delayed race)"
   },
   "NETWORK_RACE_CACHE_WITH_NETWORK_SAVED_TIME": {
     "record_in_processes": ["main", "content"],

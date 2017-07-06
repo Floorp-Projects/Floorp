@@ -27,8 +27,7 @@ function check_event(event, id, data) {
 
 add_task(async function() {
   do_get_profile();
-  // TODO: After Bug 1254550 lands we should not need to set the pref here.
-  Services.prefs.setBoolPref(PREF_TELEMETRY_ENABLED, true);
+  Services.prefs.setBoolPref(TelemetryUtils.Preferences.TelemetryEnabled, true);
   await TelemetryController.testSetup();
 
   TelemetryLog.log(TEST_PREFIX + "1", ["val", 123, undefined]);

@@ -616,10 +616,14 @@ def building_stylo_bindgen(stylo_config, bindgen_enabled, compile_environment):
 # configure options.  The Windows installer of LLVM/Clang doesn't provide
 # llvm-config, so we need both methods to support all of our tier-1
 # platforms.
+@depends(host)
+@imports('which')
 @imports('os')
-def llvm_config_paths():
+@imports('subprocess')
+def llvm_config_paths(host):
     llvm_config_progs = [
         'llvm-config-4.0',
+        'llvm-config-mp-4.0',   # MacPorts's chosen naming scheme
         'llvm-config40',
         'llvm-config-3.9',
         'llvm-config39',
@@ -632,6 +636,24 @@ def llvm_config_paths():
     bootstrap_llvm_config = os.path.join(mozbuild_state_dir, 'clang', 'bin', 'llvm-config')
 
     llvm_config_progs.append(bootstrap_llvm_config)
+
+    # Homebrew on OS X doesn't make clang available on PATH, so we have to
+    # look for it in non-standard places.
+    if host.kernel == 'Darwin':
+        try:
+            brew = which.which('brew')
+            brew_config = subprocess.check_output([brew, 'config']).strip()
+
+            for line in brew_config.splitlines():
+                if line.startswith('HOMEBREW_PREFIX'):
+                    fields = line.split(None, 2)
+                    prefix = fields[1] if len(fields) == 2 else ''
+                    path = ['opt', 'llvm', 'bin', 'llvm-config']
+                    llvm_config_progs.append(os.path.join(prefix, *path))
+                    break
+        except which.WhichError:
+            # Homebrew not installed, which is fine.
+            pass
 
     return llvm_config_progs
 

@@ -298,7 +298,7 @@ protected:
     void MaybeDisableDNSPrefetch(nsIProxyInfo *aProxy);
 
 private:
-    nsresult SetupPACThread();
+    nsresult SetupPACThread(nsIEventTarget *mainThreadEventTarget = nullptr);
     nsresult ResetPACThread();
     nsresult ReloadNetworkPAC();
 
@@ -406,7 +406,8 @@ private:
     nsresult AsyncResolveInternal(nsIChannel *channel, uint32_t flags,
                                   nsIProtocolProxyCallback *callback,
                                   nsICancelable **result,
-                                  bool isSyncOK);
+                                  bool isSyncOK,
+                                  nsIEventTarget *mainThreadEventTarget);
     bool                          mIsShutdown;
     nsCOMPtr<nsIThread>           mProxySettingThread;
 };

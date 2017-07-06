@@ -47,8 +47,14 @@ function testURL() {
   url.searchParams.set('e', 'f');
   ok(url.href.indexOf('e=f') != 1, 'URL right');
 
+
+  url = new URL('mailto:a@b.com?subject=Hi');
+  ok(url.searchParams, "URL searchParams exists!");
+  ok(url.searchParams.has('subject'), "Hi");
+
   runTest();
 }
+
 function testParserURLSearchParams() {
   var checks = [
     { input: '', data: {} },

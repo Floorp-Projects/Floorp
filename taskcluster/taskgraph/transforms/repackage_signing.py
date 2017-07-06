@@ -94,5 +94,11 @@ def make_repackage_signing_description(config, jobs):
             'run-on-projects': dep_job.attributes.get('run_on_projects'),
             'treeherder': treeherder,
         }
+        if 'macosx' in dep_job.attributes.get('build_platform'):
+            route_template = "project.releng.funsize.level-{level}.{project}"
+            task['routes'] = [
+                route_template.format(project=config.params['project'],
+                                      level=config.params['level'])
+            ]
 
         yield task
