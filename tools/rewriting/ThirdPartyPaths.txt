@@ -88,6 +88,7 @@ third_party/python/redo/
 third_party/python/requests/
 third_party/python/rsa/
 third_party/python/which/
+third_party/rust/
 toolkit/components/jsoncpp/
 toolkit/components/protobuf/
 toolkit/crashreporter/google-breakpad/
