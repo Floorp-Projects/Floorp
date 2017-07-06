@@ -3591,18 +3591,18 @@ var _ui_utils = __webpack_require__(0);
 var _pdf_link_service = __webpack_require__(5);
 
 class AnnotationLayerBuilder {
-  constructor(options) {
-    this.pageDiv = options.pageDiv;
-    this.pdfPage = options.pdfPage;
-    this.renderInteractiveForms = options.renderInteractiveForms;
-    this.linkService = options.linkService;
-    this.downloadManager = options.downloadManager;
-    this.l10n = options.l10n || _ui_utils.NullL10n;
+  constructor({ pageDiv, pdfPage, linkService, downloadManager, renderInteractiveForms = false, l10n = _ui_utils.NullL10n }) {
+    this.pageDiv = pageDiv;
+    this.pdfPage = pdfPage;
+    this.linkService = linkService;
+    this.downloadManager = downloadManager;
+    this.renderInteractiveForms = renderInteractiveForms;
+    this.l10n = l10n;
     this.div = null;
   }
   render(viewport, intent = 'display') {
     this.pdfPage.getAnnotations({ intent }).then(annotations => {
-      var parameters = {
+      let parameters = {
         viewport: viewport.clone({ dontFlip: true }),
         div: this.div,
         annotations,
@@ -3945,7 +3945,7 @@ class PasswordPrompt {
     });
   }
   verify() {
-    var password = this.input.value;
+    let password = this.input.value;
     if (password && password.length > 0) {
       this.close();
       return this.updateCallback(password);
@@ -3973,11 +3973,11 @@ exports.PDFAttachmentViewer = undefined;
 var _pdfjsLib = __webpack_require__(1);
 
 class PDFAttachmentViewer {
-  constructor(options) {
+  constructor({ container, eventBus, downloadManager }) {
     this.attachments = null;
-    this.container = options.container;
-    this.eventBus = options.eventBus;
-    this.downloadManager = options.downloadManager;
+    this.container = container;
+    this.eventBus = eventBus;
+    this.downloadManager = downloadManager;
     this._renderedCapability = (0, _pdfjsLib.createPromiseCapability)();
     this.eventBus.on('fileattachmentannotation', this._appendAttachment.bind(this));
   }
@@ -3999,12 +3999,12 @@ class PDFAttachmentViewer {
     if (_pdfjsLib.PDFJS.disableCreateObjectURL) {
       throw new Error('bindPdfLink: ' + 'Unsupported "PDFJS.disableCreateObjectURL" value.');
     }
-    var blobUrl;
+    let blobUrl;
     button.onclick = function () {
       if (!blobUrl) {
         blobUrl = (0, _pdfjsLib.createObjectURL)(content, 'application/pdf');
       }
-      var viewerUrl;
+      let viewerUrl;
       viewerUrl = blobUrl + '?' + encodeURIComponent(filename);
       window.open(viewerUrl);
       return false;
@@ -4016,28 +4016,26 @@ class PDFAttachmentViewer {
       return false;
     };
   }
-  render(params = {}) {
-    var attachments = params.attachments || null;
-    var attachmentsCount = 0;
+  render({ attachments, keepRenderedCapability = false }) {
+    let attachmentsCount = 0;
     if (this.attachments) {
-      var keepRenderedCapability = params.keepRenderedCapability === true;
-      this.reset(keepRenderedCapability);
+      this.reset(keepRenderedCapability === true);
     }
-    this.attachments = attachments;
+    this.attachments = attachments || null;
     if (!attachments) {
       this._dispatchEvent(attachmentsCount);
       return;
     }
-    var names = Object.keys(attachments).sort(function (a, b) {
+    let names = Object.keys(attachments).sort(function (a, b) {
       return a.toLowerCase().localeCompare(b.toLowerCase());
     });
     attachmentsCount = names.length;
-    for (var i = 0; i < attachmentsCount; i++) {
-      var item = attachments[names[i]];
-      var filename = (0, _pdfjsLib.removeNullCharacters)((0, _pdfjsLib.getFilenameFromUrl)(item.filename));
-      var div = document.createElement('div');
+    for (let i = 0; i < attachmentsCount; i++) {
+      let item = attachments[names[i]];
+      let filename = (0, _pdfjsLib.removeNullCharacters)((0, _pdfjsLib.getFilenameFromUrl)(item.filename));
+      let div = document.createElement('div');
       div.className = 'attachmentsItem';
-      var button = document.createElement('button');
+      let button = document.createElement('button');
       button.textContent = filename;
       if (/\.pdf$/i.test(filename) && !_pdfjsLib.PDFJS.disableCreateObjectURL) {
         this._bindPdfLink(button, item.content, filename);
@@ -4051,11 +4049,11 @@ class PDFAttachmentViewer {
   }
   _appendAttachment({ id, filename, content }) {
     this._renderedCapability.promise.then(() => {
-      var attachments = this.attachments;
+      let attachments = this.attachments;
       if (!attachments) {
         attachments = Object.create(null);
       } else {
-        for (var name in attachments) {
+        for (let name in attachments) {
           if (id === name) {
             return;
           }
@@ -4212,15 +4210,15 @@ class PDFDocumentProperties {
     if (dateToParse.substring(0, 2) === 'D:') {
       dateToParse = dateToParse.substring(2);
     }
-    var year = parseInt(dateToParse.substring(0, 4), 10);
-    var month = parseInt(dateToParse.substring(4, 6), 10) - 1;
-    var day = parseInt(dateToParse.substring(6, 8), 10);
-    var hours = parseInt(dateToParse.substring(8, 10), 10);
-    var minutes = parseInt(dateToParse.substring(10, 12), 10);
-    var seconds = parseInt(dateToParse.substring(12, 14), 10);
-    var utRel = dateToParse.substring(14, 15);
-    var offsetHours = parseInt(dateToParse.substring(15, 17), 10);
-    var offsetMinutes = parseInt(dateToParse.substring(18, 20), 10);
+    let year = parseInt(dateToParse.substring(0, 4), 10);
+    let month = parseInt(dateToParse.substring(4, 6), 10) - 1;
+    let day = parseInt(dateToParse.substring(6, 8), 10);
+    let hours = parseInt(dateToParse.substring(8, 10), 10);
+    let minutes = parseInt(dateToParse.substring(10, 12), 10);
+    let seconds = parseInt(dateToParse.substring(12, 14), 10);
+    let utRel = dateToParse.substring(14, 15);
+    let offsetHours = parseInt(dateToParse.substring(15, 17), 10);
+    let offsetMinutes = parseInt(dateToParse.substring(18, 20), 10);
     if (utRel === '-') {
       hours += offsetHours;
       minutes += offsetMinutes;
@@ -4228,9 +4226,9 @@ class PDFDocumentProperties {
       hours -= offsetHours;
       minutes -= offsetMinutes;
     }
-    var date = new Date(Date.UTC(year, month, day, hours, minutes, seconds));
-    var dateString = date.toLocaleDateString();
-    var timeString = date.toLocaleTimeString();
+    let date = new Date(Date.UTC(year, month, day, hours, minutes, seconds));
+    let dateString = date.toLocaleDateString();
+    let timeString = date.toLocaleTimeString();
     return this.l10n.get('document_properties_date_string', {
       date: dateString,
       time: timeString
@@ -4321,9 +4319,9 @@ class PDFFindBar {
     });
   }
   updateUIState(state, previous, matchCount) {
-    var notFound = false;
-    var findMsg = '';
-    var status = '';
+    let notFound = false;
+    let findMsg = '';
+    let status = '';
     switch (state) {
       case _pdf_find_controller.FindState.FOUND:
         break;
@@ -4396,8 +4394,8 @@ class PDFFindBar {
       return;
     }
     this.bar.classList.remove('wrapContainers');
-    var findbarHeight = this.bar.clientHeight;
-    var inputContainerHeight = this.bar.firstElementChild.clientHeight;
+    let findbarHeight = this.bar.clientHeight;
+    let inputContainerHeight = this.bar.firstElementChild.clientHeight;
     if (findbarHeight > inputContainerHeight) {
       this.bar.classList.add('wrapContainers');
     }
@@ -4728,12 +4726,12 @@ var _pdfjsLib = __webpack_require__(1);
 
 const DEFAULT_TITLE = '\u2013';
 class PDFOutlineViewer {
-  constructor(options) {
+  constructor({ container, linkService, eventBus }) {
     this.outline = null;
     this.lastToggleIsShow = true;
-    this.container = options.container;
-    this.linkService = options.linkService;
-    this.eventBus = options.eventBus;
+    this.container = container;
+    this.linkService = linkService;
+    this.eventBus = eventBus;
   }
   reset() {
     this.outline = null;
@@ -4755,7 +4753,7 @@ class PDFOutlineViewer {
       });
       return;
     }
-    var destination = item.dest;
+    let destination = item.dest;
     element.href = this.linkService.getDestinationHash(destination);
     element.onclick = () => {
       if (destination) {
@@ -4765,7 +4763,7 @@ class PDFOutlineViewer {
     };
   }
   _setStyles(element, item) {
-    var styleStr = '';
+    let styleStr = '';
     if (item.bold) {
       styleStr += 'font-weight: bold;';
     }
@@ -4777,13 +4775,13 @@ class PDFOutlineViewer {
     }
   }
   _addToggleButton(div) {
-    var toggler = document.createElement('div');
+    let toggler = document.createElement('div');
     toggler.className = 'outlineItemToggler';
     toggler.onclick = evt => {
       evt.stopPropagation();
       toggler.classList.toggle('outlineItemsHidden');
       if (evt.shiftKey) {
-        var shouldShowAll = !toggler.classList.contains('outlineItemsHidden');
+        let shouldShowAll = !toggler.classList.contains('outlineItemsHidden');
         this._toggleOutlineItem(div, shouldShowAll);
       }
     };
@@ -4791,8 +4789,8 @@ class PDFOutlineViewer {
   }
   _toggleOutlineItem(root, show) {
     this.lastToggleIsShow = show;
-    var togglers = root.querySelectorAll('.outlineItemToggler');
-    for (var i = 0, ii = togglers.length; i < ii; ++i) {
+    let togglers = root.querySelectorAll('.outlineItemToggler');
+    for (let i = 0, ii = togglers.length; i < ii; ++i) {
       togglers[i].classList[show ? 'remove' : 'add']('outlineItemsHidden');
     }
   }
@@ -4802,30 +4800,29 @@ class PDFOutlineViewer {
     }
     this._toggleOutlineItem(this.container, !this.lastToggleIsShow);
   }
-  render(params = {}) {
-    var outline = params.outline || null;
-    var outlineCount = 0;
+  render({ outline }) {
+    let outlineCount = 0;
     if (this.outline) {
       this.reset();
     }
-    this.outline = outline;
+    this.outline = outline || null;
     if (!outline) {
       this._dispatchEvent(outlineCount);
       return;
     }
-    var fragment = document.createDocumentFragment();
-    var queue = [{
+    let fragment = document.createDocumentFragment();
+    let queue = [{
       parent: fragment,
       items: this.outline
     }];
-    var hasAnyNesting = false;
+    let hasAnyNesting = false;
     while (queue.length > 0) {
-      var levelData = queue.shift();
-      for (var i = 0, len = levelData.items.length; i < len; i++) {
-        var item = levelData.items[i];
-        var div = document.createElement('div');
+      let levelData = queue.shift();
+      for (let i = 0, len = levelData.items.length; i < len; i++) {
+        let item = levelData.items[i];
+        let div = document.createElement('div');
         div.className = 'outlineItem';
-        var element = document.createElement('a');
+        let element = document.createElement('a');
         this._bindLink(element, item);
         this._setStyles(element, item);
         element.textContent = (0, _pdfjsLib.removeNullCharacters)(item.title) || DEFAULT_TITLE;
@@ -4833,7 +4830,7 @@ class PDFOutlineViewer {
         if (item.items.length > 0) {
           hasAnyNesting = true;
           this._addToggleButton(div);
-          var itemsDiv = document.createElement('div');
+          let itemsDiv = document.createElement('div');
           itemsDiv.className = 'outlineItems';
           div.appendChild(itemsDiv);
           queue.push({
@@ -5316,12 +5313,11 @@ const PAGE_SWITCH_THRESHOLD = 0.1;
 const SWIPE_MIN_DISTANCE_THRESHOLD = 50;
 const SWIPE_ANGLE_THRESHOLD = Math.PI / 6;
 class PDFPresentationMode {
-  constructor(options) {
-    this.container = options.container;
-    this.viewer = options.viewer || options.container.firstElementChild;
-    this.pdfViewer = options.pdfViewer;
-    this.eventBus = options.eventBus;
-    var contextMenuItems = options.contextMenuItems || null;
+  constructor({ container, viewer = null, pdfViewer, eventBus, contextMenuItems = null }) {
+    this.container = container;
+    this.viewer = viewer || container.firstElementChild;
+    this.pdfViewer = pdfViewer;
+    this.eventBus = eventBus;
     this.active = false;
     this.args = null;
     this.contextMenuOpen = false;
@@ -5376,9 +5372,9 @@ class PDFPresentationMode {
       return;
     }
     evt.preventDefault();
-    var delta = (0, _ui_utils.normalizeWheelEventDelta)(evt);
-    var currentTime = new Date().getTime();
-    var storedTime = this.mouseScrollTimeStamp;
+    let delta = (0, _ui_utils.normalizeWheelEventDelta)(evt);
+    let currentTime = new Date().getTime();
+    let storedTime = this.mouseScrollTimeStamp;
     if (currentTime > storedTime && currentTime - storedTime < MOUSE_SCROLL_COOLDOWN_TIME) {
       return;
     }
@@ -5387,9 +5383,9 @@ class PDFPresentationMode {
     }
     this.mouseScrollDelta += delta;
     if (Math.abs(this.mouseScrollDelta) >= PAGE_SWITCH_THRESHOLD) {
-      var totalDelta = this.mouseScrollDelta;
+      let totalDelta = this.mouseScrollDelta;
       this._resetMouseScrollState();
-      var success = totalDelta > 0 ? this._goToPreviousPage() : this._goToNextPage();
+      let success = totalDelta > 0 ? this._goToPreviousPage() : this._goToNextPage();
       if (success) {
         this.mouseScrollTimeStamp = currentTime;
       }
@@ -5399,7 +5395,7 @@ class PDFPresentationMode {
     return !!(document.fullscreenElement || document.mozFullScreen || document.webkitIsFullScreen || document.msFullscreenElement);
   }
   _goToPreviousPage() {
-    var page = this.pdfViewer.currentPageNumber;
+    let page = this.pdfViewer.currentPageNumber;
     if (page <= 1) {
       return false;
     }
@@ -5407,7 +5403,7 @@ class PDFPresentationMode {
     return true;
   }
   _goToNextPage() {
-    var page = this.pdfViewer.currentPageNumber;
+    let page = this.pdfViewer.currentPageNumber;
     if (page >= this.pdfViewer.pagesCount) {
       return false;
     }
@@ -5453,7 +5449,7 @@ class PDFPresentationMode {
     window.getSelection().removeAllRanges();
   }
   _exit() {
-    var page = this.pdfViewer.currentPageNumber;
+    let page = this.pdfViewer.currentPageNumber;
     this.container.classList.remove(ACTIVE_SELECTOR);
     setTimeout(() => {
       this.active = false;
@@ -5476,7 +5472,7 @@ class PDFPresentationMode {
       return;
     }
     if (evt.button === 0) {
-      var isInternalLink = evt.target.href && evt.target.classList.contains('internalLink');
+      let isInternalLink = evt.target.href && evt.target.classList.contains('internalLink');
       if (!isInternalLink) {
         evt.preventDefault();
         if (evt.shiftKey) {
@@ -5542,10 +5538,10 @@ class PDFPresentationMode {
         if (this.touchSwipeState === null) {
           return;
         }
-        var delta = 0;
-        var dx = this.touchSwipeState.endX - this.touchSwipeState.startX;
-        var dy = this.touchSwipeState.endY - this.touchSwipeState.startY;
-        var absAngle = Math.abs(Math.atan2(dy, dx));
+        let delta = 0;
+        let dx = this.touchSwipeState.endX - this.touchSwipeState.startX;
+        let dy = this.touchSwipeState.endY - this.touchSwipeState.startY;
+        let absAngle = Math.abs(Math.atan2(dy, dx));
         if (Math.abs(dx) > SWIPE_MIN_DISTANCE_THRESHOLD && (absAngle <= SWIPE_ANGLE_THRESHOLD || absAngle >= Math.PI - SWIPE_ANGLE_THRESHOLD)) {
           delta = dx;
         } else if (Math.abs(dy) > SWIPE_MIN_DISTANCE_THRESHOLD && Math.abs(absAngle - Math.PI / 2) <= SWIPE_ANGLE_THRESHOLD) {
@@ -5685,7 +5681,7 @@ class PDFSidebar {
       this._dispatchEvent();
       return;
     }
-    var isViewPreserved = view === this.visibleView;
+    let isViewPreserved = view === this.visibleView;
     this.switchView(view, true);
     if (isViewPreserved) {
       this._dispatchEvent();
@@ -5696,8 +5692,8 @@ class PDFSidebar {
       this.close();
       return;
     }
-    var isViewChanged = view !== this.active;
-    var shouldForceRendering = false;
+    let isViewChanged = view !== this.active;
+    let shouldForceRendering = false;
     switch (view) {
       case SidebarView.THUMBS:
         this.thumbnailButton.classList.add('toggled');
@@ -5798,17 +5794,16 @@ class PDFSidebar {
     }
   }
   _updateThumbnailViewer() {
-    var pdfViewer = this.pdfViewer;
-    var thumbnailViewer = this.pdfThumbnailViewer;
-    var pagesCount = pdfViewer.pagesCount;
-    for (var pageIndex = 0; pageIndex < pagesCount; pageIndex++) {
-      var pageView = pdfViewer.getPageView(pageIndex);
+    let { pdfViewer, pdfThumbnailViewer } = this;
+    let pagesCount = pdfViewer.pagesCount;
+    for (let pageIndex = 0; pageIndex < pagesCount; pageIndex++) {
+      let pageView = pdfViewer.getPageView(pageIndex);
       if (pageView && pageView.renderingState === _pdf_rendering_queue.RenderingStates.FINISHED) {
-        var thumbnailView = thumbnailViewer.getThumbnail(pageIndex);
+        let thumbnailView = pdfThumbnailViewer.getThumbnail(pageIndex);
         thumbnailView.setImage(pageView);
       }
     }
-    thumbnailViewer.scrollThumbnailIntoView(pdfViewer.currentPageNumber);
+    pdfThumbnailViewer.scrollThumbnailIntoView(pdfViewer.currentPageNumber);
   }
   _showUINotification(view) {
     if (this.disableNotification) {
@@ -5835,7 +5830,7 @@ class PDFSidebar {
     if (this.disableNotification) {
       return;
     }
-    var removeNotification = view => {
+    let removeNotification = view => {
       switch (view) {
         case SidebarView.OUTLINE:
           this.outlineButton.classList.remove(UI_NOTIFICATION_CLASS);
@@ -5879,7 +5874,7 @@ class PDFSidebar {
       this.switchView(SidebarView.ATTACHMENTS);
     });
     this.eventBus.on('outlineloaded', evt => {
-      var outlineCount = evt.outlineCount;
+      let outlineCount = evt.outlineCount;
       this.outlineButton.disabled = !outlineCount;
       if (outlineCount) {
         this._showUINotification(SidebarView.OUTLINE);
@@ -5888,7 +5883,7 @@ class PDFSidebar {
       }
     });
     this.eventBus.on('attachmentsloaded', evt => {
-      var attachmentsCount = evt.attachmentsCount;
+      let attachmentsCount = evt.attachmentsCount;
       this.attachmentsButton.disabled = !attachmentsCount;
       if (attachmentsCount) {
         this._showUINotification(SidebarView.ATTACHMENTS);
@@ -6275,8 +6270,14 @@ class PDFThumbnailViewer {
     return this._pagesRotation;
   }
   set pagesRotation(rotation) {
+    if (!(typeof rotation === 'number' && rotation % 90 === 0)) {
+      throw new Error('Invalid thumbnails rotation angle.');
+    }
+    if (!this.pdfDocument) {
+      return;
+    }
     this._pagesRotation = rotation;
-    for (let i = 0, l = this._thumbnails.length; i < l; i++) {
+    for (let i = 0, ii = this._thumbnails.length; i < ii; i++) {
       this._thumbnails[i].update(rotation);
     }
   }
@@ -6481,7 +6482,6 @@ var PDFViewer = function pdfViewer() {
         throw new Error('Invalid page number.');
       }
       if (!this.pdfDocument) {
-        this._currentPageNumber = val;
         return;
       }
       this._setCurrentPageNumber(val, true);
@@ -6513,9 +6513,9 @@ var PDFViewer = function pdfViewer() {
       return this._pageLabels && this._pageLabels[this._currentPageNumber - 1];
     },
     set currentPageLabel(val) {
-      var pageNumber = val | 0;
+      let pageNumber = val | 0;
       if (this._pageLabels) {
-        var i = this._pageLabels.indexOf(val);
+        let i = this._pageLabels.indexOf(val);
         if (i >= 0) {
           pageNumber = i + 1;
         }
@@ -6530,8 +6530,6 @@ var PDFViewer = function pdfViewer() {
         throw new Error('Invalid numeric scale');
       }
       if (!this.pdfDocument) {
-        this._currentScale = val;
-        this._currentScaleValue = val !== _ui_utils.UNKNOWN_SCALE ? val.toString() : null;
         return;
       }
       this._setScale(val, false);
@@ -6541,8 +6539,6 @@ var PDFViewer = function pdfViewer() {
     },
     set currentScaleValue(val) {
       if (!this.pdfDocument) {
-        this._currentScale = isNaN(val) ? _ui_utils.UNKNOWN_SCALE : val;
-        this._currentScaleValue = val.toString();
         return;
       }
       this._setScale(val, false);
@@ -6554,12 +6550,12 @@ var PDFViewer = function pdfViewer() {
       if (!(typeof rotation === 'number' && rotation % 90 === 0)) {
         throw new Error('Invalid pages rotation angle.');
       }
-      this._pagesRotation = rotation;
       if (!this.pdfDocument) {
         return;
       }
-      for (var i = 0, l = this._pages.length; i < l; i++) {
-        var pageView = this._pages[i];
+      this._pagesRotation = rotation;
+      for (let i = 0, ii = this._pages.length; i < ii; i++) {
+        let pageView = this._pages[i];
         pageView.update(pageView.scale, rotation);
       }
       this._setScale(this._currentScaleValue, true);
@@ -7826,16 +7822,16 @@ class ViewHistory {
     this.fingerprint = fingerprint;
     this.cacheSize = cacheSize;
     this._initializedPromise = this._readFromStorage().then(databaseStr => {
-      var database = JSON.parse(databaseStr || '{}');
+      let database = JSON.parse(databaseStr || '{}');
       if (!('files' in database)) {
         database.files = [];
       }
       if (database.files.length >= this.cacheSize) {
         database.files.shift();
       }
-      var index;
-      for (var i = 0, length = database.files.length; i < length; i++) {
-        var branch = database.files[i];
+      let index;
+      for (let i = 0, length = database.files.length; i < length; i++) {
+        let branch = database.files[i];
         if (branch.fingerprint === this.fingerprint) {
           index = i;
           break;
@@ -7850,7 +7846,7 @@ class ViewHistory {
   }
   _writeToStorage() {
     return new Promise(resolve => {
-      var databaseStr = JSON.stringify(this.database);
+      let databaseStr = JSON.stringify(this.database);
       sessionStorage.setItem('pdfjs.history', databaseStr);
       resolve();
     });
@@ -7868,7 +7864,7 @@ class ViewHistory {
   }
   setMultiple(properties) {
     return this._initializedPromise.then(() => {
-      for (var name in properties) {
+      for (let name in properties) {
         this.file[name] = properties[name];
       }
       return this._writeToStorage();
@@ -7876,15 +7872,15 @@ class ViewHistory {
   }
   get(name, defaultValue) {
     return this._initializedPromise.then(() => {
-      var val = this.file[name];
+      let val = this.file[name];
       return val !== undefined ? val : defaultValue;
     });
   }
   getMultiple(properties) {
     return this._initializedPromise.then(() => {
-      var values = Object.create(null);
-      for (var name in properties) {
-        var val = this.file[name];
+      let values = Object.create(null);
+      for (let name in properties) {
+        let val = this.file[name];
         values[name] = val !== undefined ? val : properties[name];
       }
       return values;
