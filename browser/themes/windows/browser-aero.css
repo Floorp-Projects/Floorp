@@ -50,14 +50,23 @@
   @media not all and (-moz-os-version: windows-win7) {
     @media not all and (-moz-os-version: windows-win8) {
       @media (-moz-windows-default-theme) {
-        :root:not(:-moz-lwtheme) {
 %ifdef MOZ_PHOTON_THEME
+        :root:not(:-moz-window-inactive):not(:-moz-lwtheme) {
           background-color: hsl(235,33%,19%);
           --titlebar-text-color: hsl(240,9%,98%);
-%else
-          background-color: hsl(0, 0%, 78%);
-%endif
         }
+
+        @media (-moz-windows-accent-color-applies) {
+          :root:not(:-moz-window-inactive):not(:-moz-lwtheme) {
+            background-color: -moz-win-accentcolor;
+            --titlebar-text-color: -moz-win-accentcolortext;
+          }
+        }
+%else
+        :root:not(:-moz-lwtheme) {
+          background-color: hsl(0, 0%, 78%);
+        }
+%endif
 
         :root[tabsintitlebar] .tab-label:-moz-window-inactive {
           /* Calculated to match the opacity change of Windows Explorer
@@ -83,7 +92,7 @@
         padding: 10px 17px;
         -moz-context-properties: stroke;
 %ifdef MOZ_PHOTON_THEME
-        stroke: white;
+        stroke: var(--titlebar-text-color);
 %else
         stroke: black;
 %endif
