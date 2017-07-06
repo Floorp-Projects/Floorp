@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<!-- This file is used to include the home pager in gecko app
+     layout based on screen size -->
+
+<org.mozilla.gecko.home.HomePager xmlns:android="http://schemas.android.com/apk/res/android"
+                                  xmlns:gecko="http://schemas.android.com/apk/res-auto"
+                                  android:id="@+id/home_pager"
+                                  android:layout_width="match_parent"
+                                  android:layout_height="match_parent"
+                                  android:background="@android:color/white">
+
+    <org.mozilla.gecko.home.TabMenuStrip android:layout_width="match_parent"
+                                         android:layout_height="@dimen/tabs_strip_height"
+                                         android:background="@color/about_page_header_grey"
+                                         android:layout_gravity="top"
+                                         gecko:strip="@drawable/home_tab_menu_strip"
+                                         gecko:activeTextColor="@color/placeholder_grey"
+                                         gecko:inactiveTextColor="@color/tab_text_color"
+                                         gecko:tabsMarginLeft="@dimen/tab_strip_content_start" />
+
+</org.mozilla.gecko.home.HomePager>
