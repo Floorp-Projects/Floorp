@@ -1154,10 +1154,6 @@ public:
     MOZ_ASSERT(!mDoneAudioSeeking || !mDoneVideoSeeking,
                "Seek shouldn't be finished");
 
-    // Ignore pending requests from video-only seek.
-    if (mSeekJob.mTarget->IsVideoOnly()) {
-      return;
-    }
     RequestAudioData();
   }
 
@@ -1791,6 +1787,14 @@ public:
   void HandleAudioCanceled() override { }
 
   void HandleEndOfAudio() override { }
+
+  void HandleAudioWaited(MediaData::Type aType) override
+  {
+    MOZ_ASSERT(!mDoneAudioSeeking || !mDoneVideoSeeking,
+               "Seek shouldn't be finished");
+
+    // Ignore pending requests from video-only seek.
+  }
 };
 
 RefPtr<MediaDecoder::SeekPromise>
