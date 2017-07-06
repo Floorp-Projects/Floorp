@@ -1193,7 +1193,6 @@ private:
   // MEMBER DATA
   // -----------
   nsCSSParser       mParser;
-  css::Loader*      mLoader;
 
   // Arguments for nsCSSParser::ParseProperty
   nsIURI*           mDocURI;
@@ -1213,7 +1212,7 @@ MappedAttrParser::MappedAttrParser(css::Loader* aLoader,
                                    already_AddRefed<nsIURI> aBaseURI,
                                    nsSVGElement* aElement,
                                    StyleBackendType aBackend)
-  : mParser(aLoader), mLoader(aLoader), mDocURI(aDocURI), mBaseURI(aBaseURI),
+  : mParser(aLoader), mDocURI(aDocURI), mBaseURI(aBaseURI),
     mElement(aElement), mBackend(aBackend)
 {
 }
@@ -1254,7 +1253,7 @@ MappedAttrParser::ParseMappedAttrValue(nsIAtom* aMappedAttrName,
                                                    mElement->NodePrincipal());
       changed = Servo_DeclarationBlock_SetPropertyById(
         mDecl->AsServo()->Raw(), propertyID, &value, false, data,
-        ParsingMode::AllowUnitlessLength, mElement->OwnerDoc()->GetCompatibilityMode(), mLoader);
+        ParsingMode::AllowUnitlessLength, mElement->OwnerDoc()->GetCompatibilityMode());
     }
 
     if (changed) {

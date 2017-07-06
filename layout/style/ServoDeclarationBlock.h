@@ -29,7 +29,7 @@ public:
 
   static already_AddRefed<ServoDeclarationBlock>
   FromCssText(const nsAString& aCssText, URLExtraData* aExtraData,
-              nsCompatibility aMode, css::Loader* aLoader);
+              nsCompatibility aMode);
 
   RawServoDeclarationBlock* Raw() const { return mRaw; }
   RawServoDeclarationBlock* const* RefRaw() const {

@@ -14,13 +14,12 @@ namespace mozilla {
 /* static */ already_AddRefed<ServoDeclarationBlock>
 ServoDeclarationBlock::FromCssText(const nsAString& aCssText,
                                    URLExtraData* aExtraData,
-                                   nsCompatibility aMode,
-                                   css::Loader* aLoader)
+                                   nsCompatibility aMode)
 {
   NS_ConvertUTF16toUTF8 value(aCssText);
   // FIXME (bug 1343964): Figure out a better solution for sending the base uri to servo
   RefPtr<RawServoDeclarationBlock>
-      raw = Servo_ParseStyleAttribute(&value, aExtraData, aMode, aLoader).Consume();
+    raw = Servo_ParseStyleAttribute(&value, aExtraData, aMode).Consume();
   RefPtr<ServoDeclarationBlock> decl = new ServoDeclarationBlock(raw.forget());
   return decl.forget();
 }
