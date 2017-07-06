@@ -351,7 +351,7 @@ PSMContentDownloaderChild::OnStopRequest(nsIRequest* request,
 
 NS_IMPL_ISUPPORTS(PSMContentListener,
                   nsIURIContentListener,
-                  nsISupportsWeakReference) 
+                  nsISupportsWeakReference)
 
 PSMContentListener::PSMContentListener()
 {

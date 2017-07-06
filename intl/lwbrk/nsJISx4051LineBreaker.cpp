@@ -14,7 +14,7 @@
 
 using namespace mozilla::unicode;
 
-/* 
+/*
 
    Simplification of Pair Table in JIS X 4051
 
@@ -24,7 +24,7 @@ using namespace mozilla::unicode;
 
    Class of
    Leading    Class of Trailing Char Class
-   Char        
+   Char
 
               1  2  3  4  5  6  7  8  9 10 11 12 13 13 14 14 15 16 17 18 19 20
                                                  *  #  *  #
@@ -89,19 +89,19 @@ using namespace mozilla::unicode;
               1  2  3  4  5  6  7  8  9 10 11 12 15 17 18
 
         1     X  X  X  X  X  X  X  X  X  X  X  X  X  X  X
-        2        X  X  X  X  X                           
-        3        X  X  X  X  X                           
-        4        X  X  X  X  X                           
-        5        X  X  X  X  X                           
-        6        X  X  X  X  X                           
-        7        X  X  X  X  X  X                        
-        8        X  X  X  X  X                    X      
-        9        X  X  X  X  X                           
-       10        X  X  X  X  X                           
-       11        X  X  X  X  X                           
-       12        X  X  X  X  X                           
+        2        X  X  X  X  X
+        3        X  X  X  X  X
+        4        X  X  X  X  X
+        5        X  X  X  X  X
+        6        X  X  X  X  X
+        7        X  X  X  X  X  X
+        8        X  X  X  X  X                    X
+        9        X  X  X  X  X
+       10        X  X  X  X  X
+       11        X  X  X  X  X
+       12        X  X  X  X  X
        15        X  X  X  X  X        X           X     X
-       17        X  X  X  X  X                           
+       17        X  X  X  X  X
        18        X  X  X  X  X                    X     X
 
    3. Simplified by merged classes
@@ -118,11 +118,11 @@ using namespace mozilla::unicode;
               1 [a] 7  8  9 [b]15 18
 
         1     X  X  X  X  X  X  X  X
-      [a]        X                  
-        7        X  X               
-        8        X              X   
-        9        X                  
-      [b]        X                  
+      [a]        X
+        7        X  X
+        8        X              X
+        9        X
+      [b]        X
        15        X        X     X  X
        18        X              X  X
 
@@ -137,13 +137,13 @@ using namespace mozilla::unicode;
               1 [a] 7  8  9 [b]15 18 COMPLEX
 
         1     X  X  X  X  X  X  X  X  X
-      [a]        X                     
-        7        X  X                  
-        8        X              X      
-        9        X                     
-      [b]        X                     
-       15        X        X     X  X   
-       18        X              X  X   
+      [a]        X
+        7        X  X
+        8        X              X
+        9        X
+      [b]        X
+       15        X        X     X  X
+       18        X              X  X
   COMPLEX        X                    T
 
      T : need special handling
@@ -166,13 +166,13 @@ using namespace mozilla::unicode;
 
         1     X  X  X  X  X  X  X  X  X       X    X
       [a]        X                            X    X
-        7        X  X                               
-        8        X              X                   
-        9        X                                  
+        7        X  X
+        8        X              X
+        9        X
       [b]        X                                 X
        15        X        X     X  X          X    X
        18        X              X  X          X    X
-  COMPLEX        X                    T             
+  COMPLEX        X                    T
       [c]     X  X  X  X  X  X  X  X  X       X    X
       [d]        X              X  X               X
 
@@ -299,7 +299,7 @@ static const uint16_t gPairConservative[MAX_CLASSES] = {
 
    9. Now we map the class to number
 
-      0: 1 
+      0: 1
       1: [a]- 2, 3, 4, 5, 6
       2: 7
       3: 8
@@ -465,7 +465,7 @@ GetClass(uint32_t u)
         };
         return GetClass(NarrowFFEx[l - 0x00e0]);
       }
-    } else if (0x3100 == h) { 
+    } else if (0x3100 == h) {
       if (l <= 0xbf) { // Hangul Compatibility Jamo, Bopomofo, Kanbun
                        // XXX: This is per UAX #14, but UAX #14 may change
                        // the line breaking rules about Kanbun and Bopomofo.
@@ -923,7 +923,7 @@ nsJISx4051LineBreaker::WordMove(const char16_t* aText, uint32_t aLen,
 
 int32_t
 nsJISx4051LineBreaker::Next(const char16_t* aText, uint32_t aLen,
-                            uint32_t aPos) 
+                            uint32_t aPos)
 {
   NS_ASSERTION(aText, "aText shouldn't be null");
   NS_ASSERTION(aLen > aPos, "Bad position passed to nsJISx4051LineBreaker::Next");
@@ -934,7 +934,7 @@ nsJISx4051LineBreaker::Next(const char16_t* aText, uint32_t aLen,
 
 int32_t
 nsJISx4051LineBreaker::Prev(const char16_t* aText, uint32_t aLen,
-                            uint32_t aPos) 
+                            uint32_t aPos)
 {
   NS_ASSERTION(aText, "aText shouldn't be null");
   NS_ASSERTION(aLen >= aPos && aPos > 0,
@@ -1017,7 +1017,7 @@ nsJISx4051LineBreaker::GetJISx4051Breaks(const char16_t* aChars, uint32_t aLengt
 
       // We have to consider word-break value again for complex characters
       if (aWordBreak != nsILineBreaker::kWordBreak_Normal) {
-        // Respect word-break property 
+        // Respect word-break property
         for (uint32_t i = cur; i < end; i++)
           aBreakBefore[i] = (aWordBreak == nsILineBreaker::kWordBreak_BreakAll);
       }

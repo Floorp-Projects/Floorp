@@ -21,7 +21,7 @@ public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IATTRIBUTE_IID)
 
   virtual void SetMap(nsDOMAttributeMap *aMap) = 0;
-  
+
   nsDOMAttributeMap *GetMap()
   {
     return mAttrMap;

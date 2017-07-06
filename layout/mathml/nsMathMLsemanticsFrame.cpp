@@ -24,11 +24,11 @@ nsMathMLsemanticsFrame::~nsMathMLsemanticsFrame()
 {
 }
 
-nsIFrame* 
+nsIFrame*
 nsMathMLsemanticsFrame::GetSelectedFrame()
 {
   // By default, we will display the first child of the <semantics> element.
-  nsIFrame* childFrame = mFrames.FirstChild(); 
+  nsIFrame* childFrame = mFrames.FirstChild();
   mSelectedFrame = childFrame;
 
   // An empty <semantics> is invalid

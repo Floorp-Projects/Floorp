@@ -60,7 +60,7 @@ public:
                       ReflowOutput& aDesiredSize,
                       const ReflowInput& aReflowInput,
                       nsReflowStatus&      aStatus) override;
-  
+
   /**
    * This method does most of the work that Reflow() above need done.
    */

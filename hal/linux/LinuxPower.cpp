@@ -148,7 +148,7 @@ StartForceQuitWatchdog(hal::ShutdownMode aMode, int32_t aTimeoutSecs)
 
   // Use a raw pthread here to insulate ourselves from bugs in other
   // Gecko code that we're trying to protect!
-  // 
+  //
   // Note that we let the watchdog in charge of releasing |paramPtr|
   // if the pthread is successfully created.
   watchdogParam_t* paramPtr = new watchdogParam_t(aMode, aTimeoutSecs);

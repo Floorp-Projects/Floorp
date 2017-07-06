@@ -1,4 +1,4 @@
-/* 
+/*
 Copyright (c) 1999 Samphan Raruenrom <samphan@thai.com>
 Permission to use, copy, modify, distribute and sell this software
 and its documentation for any purpose is hereby granted without fee,
@@ -16,7 +16,7 @@ purpose.  It is provided "as is" without express or implied warranty.
 extern "C" {
 #endif
 
-int TrbWordBreakPos(const th_char *pstr, int left, 
+int TrbWordBreakPos(const th_char *pstr, int left,
                     const th_char *rstr, int right);
 int TrbFollowing(const th_char *begin, int length, int offset);
 

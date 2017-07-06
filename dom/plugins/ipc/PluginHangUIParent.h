@@ -23,11 +23,11 @@ namespace plugins {
 class PluginModuleChromeParent;
 
 /**
- * This class is responsible for launching and communicating with the 
+ * This class is responsible for launching and communicating with the
  * plugin-hang-ui process.
  *
- * NOTE: PluginHangUIParent is *not* an IPDL actor! In this case, "Parent" 
- *       is describing the fact that firefox is the parent process to the 
+ * NOTE: PluginHangUIParent is *not* an IPDL actor! In this case, "Parent"
+ *       is describing the fact that firefox is the parent process to the
  *       plugin-hang-ui process, which is the PluginHangUIChild.
  *       PluginHangUIParent and PluginHangUIChild are a matched pair.
  * @see PluginHangUIChild
@@ -41,7 +41,7 @@ public:
   virtual ~PluginHangUIParent();
 
   /**
-   * Spawn the plugin-hang-ui.exe child process and terminate the given 
+   * Spawn the plugin-hang-ui.exe child process and terminate the given
    * plugin container process if the user elects to stop the hung plugin.
    *
    * @param aPluginName Human-readable name of the affected plugin.
@@ -52,7 +52,7 @@ public:
   Init(const nsString& aPluginName);
 
   /**
-   * If the Plugin Hang UI is being shown, send a cancel notification to the 
+   * If the Plugin Hang UI is being shown, send a cancel notification to the
    * Plugin Hang UI child process.
    *
    * @return true if the UI was shown and the cancel command was successfully
@@ -70,7 +70,7 @@ public:
   IsShowing() const { return mIsShowing; }
 
   /**
-   * Returns whether this Plugin Hang UI instance has been shown. Note 
+   * Returns whether this Plugin Hang UI instance has been shown. Note
    * that this does not necessarily mean that the UI is showing right now.
    *
    * @return true if the Plugin Hang UI has shown, otherwise false.
@@ -87,24 +87,24 @@ public:
   DontShowAgain() const;
 
   /**
-   * Returns whether the user clicked stop during the last time that the 
+   * Returns whether the user clicked stop during the last time that the
    * Plugin Hang UI was displayed, if applicable.
    *
-   * @return true if the UI was shown and the user chose to stop the 
+   * @return true if the UI was shown and the user chose to stop the
    *         plugin, otherwise false
    */
   bool
   WasLastHangStopped() const;
 
   /**
-   * @return unsigned int containing the response bits from the last 
+   * @return unsigned int containing the response bits from the last
    * time the Plugin Hang UI ran.
    */
   unsigned int
   LastUserResponse() const { return mLastUserResponse; }
 
   /**
-   * @return unsigned int containing the number of milliseconds that 
+   * @return unsigned int containing the number of milliseconds that
    * the Plugin Hang UI was displayed before the user responded.
    * Returns 0 if the Plugin Hang UI has not been shown or was cancelled.
    */

@@ -49,7 +49,7 @@ using mozilla::dom::Location;
 void
 nsChromeRegistry::LogMessage(const char* aMsg, ...)
 {
-  nsCOMPtr<nsIConsoleService> console 
+  nsCOMPtr<nsIConsoleService> console
     (do_GetService(NS_CONSOLESERVICE_CONTRACTID));
   if (!console)
     return;
@@ -70,7 +70,7 @@ nsChromeRegistry::LogMessageWithContext(nsIURI* aURL, uint32_t aLineNumber, uint
 {
   nsresult rv;
 
-  nsCOMPtr<nsIConsoleService> console 
+  nsCOMPtr<nsIConsoleService> console
     (do_GetService(NS_CONSOLESERVICE_CONTRACTID));
 
   nsCOMPtr<nsIScriptError> error
@@ -249,7 +249,7 @@ nsChromeRegistry::Canonify(nsIURL* aChromeURL)
           // chrome: URIs with double-escapes are trying to trick us.
           // watch for %2e, and %25 in case someone triple unescapes
           if (pos[1] == '2' &&
-               ( pos[2] == 'e' || pos[2] == 'E' || 
+               ( pos[2] == 'e' || pos[2] == 'E' ||
                  pos[2] == '5' ))
             return NS_ERROR_DOM_BAD_URI;
           break;
@@ -355,7 +355,7 @@ NS_IMETHODIMP nsChromeRegistry::RefreshSkins()
     }
     windowEnumerator->HasMoreElements(&more);
   }
-   
+
   return NS_OK;
 }
 
@@ -471,7 +471,7 @@ nsChromeRegistry::FlushAllCaches()
 
   obsSvc->NotifyObservers((nsIChromeRegistry*) this,
                           NS_CHROME_FLUSH_TOPIC, nullptr);
-}  
+}
 
 // xxxbsmedberg Move me to nsIWindowMediator
 NS_IMETHODIMP

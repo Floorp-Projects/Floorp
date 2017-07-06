@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  *
- * This Original Code has been modified by IBM Corporation. Modifications made by IBM 
+ * This Original Code has been modified by IBM Corporation. Modifications made by IBM
  * described herein are Copyright (c) International Business Machines Corporation, 2000.
  * Modifications to Mozilla code or documentation identified per MPL Section 3.3
  *
@@ -62,7 +62,7 @@ public:
   void*              mDtorData;       // pointer to pass to dtor
   bool               mTransfer;       // whether to transfer in
                                       // TransferOrDeleteAllPropertiesFor
-  
+
   PropertyList*      mNext;
 };
 

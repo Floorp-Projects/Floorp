@@ -279,7 +279,7 @@ public:
     NS_FORWARD_NSIINPUTSTREAM(nsFileStreamBase::)
 
     // Can't use NS_FORWARD_NSIOUTPUTSTREAM due to overlapping methods
-    // Close() and IsNonBlocking() 
+    // Close() and IsNonBlocking()
     NS_IMETHOD Flush() override
     {
         return nsFileStreamBase::Flush();

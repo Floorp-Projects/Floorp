@@ -2,13 +2,13 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
- 
+
 /*
  * The sole purpose of the Find service is to store globally the
  * last used Find settings
  *
  */
- 
+
 #include "nsString.h"
 
 #include "nsIFindService.h"
@@ -31,14 +31,14 @@ public:
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIFINDSERVICE
- 
+
 protected:
 
   virtual ~nsFindService();
 
   nsString        mSearchString;
   nsString        mReplaceString;
-  
+
   bool            mFindBackwards;
   bool            mWrapFind;
   bool            mEntireWord;

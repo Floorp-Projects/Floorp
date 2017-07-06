@@ -153,7 +153,7 @@ public:
       InvalidateFrame();
     }
   }
-  
+
   void ClearInvalidRegion() { mInvalidRegion.SetEmpty(); }
 
   const nsRegion& GetInvalidRegion() {
@@ -190,7 +190,7 @@ protected:
 
   nsAutoPtr<gfxMatrix> mCanvasTM;
 
-  nsRegion mInvalidRegion; 
+  nsRegion mInvalidRegion;
 
   float mFullZoom;
 

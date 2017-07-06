@@ -133,7 +133,7 @@ struct nsXPTCVariant : public nsXPTCMiniVariant
               case nsXPTType::T_PSTRING_SIZE_IS:   /* fall through */
               case nsXPTType::T_PWSTRING_SIZE_IS:  /* fall through */
               case nsXPTType::T_UTF8STRING:        /* fall through */
-              case nsXPTType::T_CSTRING:           /* fall through */              
+              case nsXPTType::T_CSTRING:           /* fall through */
               default:                             val.p   = mv.val.p;   break;
             }
         }

@@ -48,7 +48,7 @@ GdkErrorHandler(const gchar *log_domain, GLogLevelFlags log_level,
     if (errno)
       NS_RUNTIMEABORT(message);
 
-    NS_NAMED_LITERAL_CSTRING(errorCodeString, " error_code ");    
+    NS_NAMED_LITERAL_CSTRING(errorCodeString, " error_code ");
     if (!StringBeginsWith(Substring(endptr, buffer.EndReading()), errorCodeString))
       NS_RUNTIMEABORT(message);
 

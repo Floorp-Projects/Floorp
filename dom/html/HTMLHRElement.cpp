@@ -196,7 +196,7 @@ HTMLHRElement::IsAttributeMapped(const nsIAtom* aAttribute) const
     { &nsGkAtoms::noshade },
     { nullptr },
   };
-  
+
   static const MappedAttributeEntry* const map[] = {
     attributes,
     sCommonAttributeMap,

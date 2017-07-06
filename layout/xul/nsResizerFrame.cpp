@@ -104,7 +104,7 @@ nsResizerFrame::HandleEvent(nsPresContext* aPresContext,
           // for native drags, don't set the fields below
           if (rv != NS_ERROR_NOT_IMPLEMENTED)
              break;
-             
+
           // if there's no native resize support, we need to do window
           // resizing ourselves
           window->GetPositionAndSize(&mMouseDownRect.x, &mMouseDownRect.y,

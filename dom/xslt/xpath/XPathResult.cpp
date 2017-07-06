@@ -191,7 +191,7 @@ XPathResult::SetExprResult(txAExprResult* aExprResult, uint16_t aResultType,
         mDocument->RemoveMutationObserver(this);
         mDocument = nullptr;
     }
- 
+
     mResultNodes.Clear();
 
     // XXX This will keep the recycler alive, should we clear it?

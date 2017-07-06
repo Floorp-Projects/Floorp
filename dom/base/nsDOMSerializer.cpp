@@ -44,7 +44,7 @@ SetUpEncoder(nsIDOMNode *aRoot, const nsACString& aCharset,
              nsIDocumentEncoder **aEncoder)
 {
   *aEncoder = nullptr;
-   
+
   nsresult rv;
   nsCOMPtr<nsIDocumentEncoder> encoder =
     do_CreateInstance(NS_DOC_ENCODER_CONTRACTID_BASE "application/xhtml+xml", &rv);
@@ -102,7 +102,7 @@ NS_IMETHODIMP
 nsDOMSerializer::SerializeToString(nsIDOMNode *aRoot, nsAString& _retval)
 {
   NS_ENSURE_ARG_POINTER(aRoot);
-  
+
   _retval.Truncate();
 
   if (!nsContentUtils::CanCallerAccess(aRoot)) {
@@ -126,8 +126,8 @@ nsDOMSerializer::SerializeToStream(nsINode& aRoot, nsIOutputStream* aStream,
 }
 
 NS_IMETHODIMP
-nsDOMSerializer::SerializeToStream(nsIDOMNode *aRoot, 
-                                   nsIOutputStream *aStream, 
+nsDOMSerializer::SerializeToStream(nsIDOMNode *aRoot,
+                                   nsIOutputStream *aStream,
                                    const nsACString& aCharset)
 {
   NS_ENSURE_ARG_POINTER(aRoot);

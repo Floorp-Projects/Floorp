@@ -32,7 +32,7 @@ nsPopupWindowManager::~nsPopupWindowManager()
 {
 }
 
-NS_IMPL_ISUPPORTS(nsPopupWindowManager, 
+NS_IMPL_ISUPPORTS(nsPopupWindowManager,
                   nsIPopupWindowManager,
                   nsIObserver,
                   nsISupportsWeakReference)
@@ -54,7 +54,7 @@ nsPopupWindowManager::Init()
     mPolicy = permission ? (uint32_t) DENY_POPUP : (uint32_t) ALLOW_POPUP;
 
     prefBranch->AddObserver(kPopupDisablePref, this, true);
-  } 
+  }
 
   return NS_OK;
 }
@@ -91,7 +91,7 @@ nsPopupWindowManager::TestPermission(nsIPrincipal* aPrincipal,
 //*** nsPopupWindowManager::nsIObserver
 //*****************************************************************************
 NS_IMETHODIMP
-nsPopupWindowManager::Observe(nsISupports *aSubject, 
+nsPopupWindowManager::Observe(nsISupports *aSubject,
                               const char *aTopic,
                               const char16_t *aData)
 {

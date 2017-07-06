@@ -31,7 +31,7 @@ public:
     NS_DECL_NSIINPUTSTREAMCALLBACK
     NS_DECL_NSITHREADRETARGETABLEREQUEST
 
-    nsInputStreamPump(); 
+    nsInputStreamPump();
 
     static nsresult
                       Create(nsInputStreamPump  **result,

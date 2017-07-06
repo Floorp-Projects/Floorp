@@ -370,7 +370,7 @@ ImageDocument::ShrinkToFit()
   nsCOMPtr<nsIDOMHTMLImageElement> image = do_QueryInterface(imageContent);
   image->SetWidth(std::max(1, NSToCoordFloor(GetRatio() * mImageWidth)));
   image->SetHeight(std::max(1, NSToCoordFloor(GetRatio() * mImageHeight)));
-  
+
   // The view might have been scrolled when zooming in, scroll back to the
   // origin now that we're showing a shrunk-to-window version.
   ScrollImageTo(0, 0, false);
@@ -381,9 +381,9 @@ ImageDocument::ShrinkToFit()
   }
 
   SetModeClass(eShrinkToFit);
-  
+
   mImageIsResized = true;
-  
+
   UpdateTitleAndCharset();
 }
 
@@ -437,7 +437,7 @@ ImageDocument::RestoreImage()
   nsCOMPtr<Element> imageContent = mImageContent;
   imageContent->UnsetAttr(kNameSpaceID_None, nsGkAtoms::width, true);
   imageContent->UnsetAttr(kNameSpaceID_None, nsGkAtoms::height, true);
-  
+
   if (ImageIsOverflowing()) {
     if (!mImageIsOverflowingVertically) {
       SetModeClass(eOverflowingHorizontalOnly);
@@ -448,9 +448,9 @@ ImageDocument::RestoreImage()
   else {
     SetModeClass(eNone);
   }
-  
+
   mImageIsResized = false;
-  
+
   UpdateTitleAndCharset();
 }
 
@@ -758,7 +758,7 @@ ImageDocument::CheckOverflowing(bool changeState)
   return NS_OK;
 }
 
-void 
+void
 ImageDocument::UpdateTitleAndCharset()
 {
   nsAutoCString typeStr;
@@ -768,7 +768,7 @@ ImageDocument::UpdateTitleAndCharset()
     imageLoader->GetRequest(nsIImageLoadingContent::CURRENT_REQUEST,
                             getter_AddRefs(imageRequest));
   }
-    
+
   if (imageRequest) {
     nsXPIDLCString mimeType;
     imageRequest->GetMimeType(getter_Copies(mimeType));
@@ -777,7 +777,7 @@ ImageDocument::UpdateTitleAndCharset()
     mimeType.BeginReading(start);
     mimeType.EndReading(end);
     nsXPIDLCString::const_iterator iter = end;
-    if (FindInReadable(NS_LITERAL_CSTRING("IMAGE/"), start, iter) && 
+    if (FindInReadable(NS_LITERAL_CSTRING("IMAGE/"), start, iter) &&
         iter != end) {
       // strip out "X-" if any
       if (*iter == 'X') {
@@ -809,7 +809,7 @@ ImageDocument::UpdateTitleAndCharset()
                                         getter_Copies(status));
   }
 
-  static const char* const formatNames[4] = 
+  static const char* const formatNames[4] =
   {
     "ImageTitleWithNeitherDimensionsNorFile",
     "ImageTitleWithoutDimensions",

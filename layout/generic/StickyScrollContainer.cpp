@@ -160,7 +160,7 @@ StickyScrollContainer::ComputeStickyLimits(nsIFrame* aFrame, nsRect* aStick,
   aStick->SetRect(nscoord_MIN/2, nscoord_MIN/2, nscoord_MAX, nscoord_MAX);
   aContain->SetRect(nscoord_MIN/2, nscoord_MIN/2, nscoord_MAX, nscoord_MAX);
 
-  const nsMargin* computedOffsets = 
+  const nsMargin* computedOffsets =
     aFrame->GetProperty(nsIFrame::ComputedOffsetProperty());
   if (!computedOffsets) {
     // We haven't reflowed the scroll frame yet, so offsets haven't been

@@ -72,7 +72,7 @@ MediaSystemResourceManagerParent::ActorDestroy(ActorDestroyReason aReason)
   MOZ_ASSERT(!mDestroyed);
 
   // Release all resource requests of the MediaSystemResourceManagerParent.
-  // Clears all remaining pointers to this object. 
+  // Clears all remaining pointers to this object.
   mMediaSystemResourceService->ReleaseResource(this);
 
   mDestroyed = true;

@@ -37,7 +37,7 @@ TEST(storage_true_async, TrueAsyncStatement)
   blocking_async_execute(stmt);
   stmt->Finalize();
   do_check_false(mutex_used_on_watched_thread);
-  
+
   // - statement with something to bind by name
   db->CreateAsyncStatement(
     NS_LITERAL_CSTRING("INSERT INTO test (id) VALUES (:id)"),

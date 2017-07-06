@@ -21,7 +21,7 @@
  * password is not available then this component fails to instantiate so
  * nsHttpNTLMAuth will fall back to a different NTLM implementation.
  * NOTE: at time of writing, this requires patches to be added to the stock
- * Samba winbindd and ntlm_auth!  
+ * Samba winbindd and ntlm_auth!
  */
 class nsAuthSambaNTLM final : public nsIAuthModule
 {

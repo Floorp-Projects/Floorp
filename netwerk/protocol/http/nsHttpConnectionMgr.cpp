@@ -954,7 +954,7 @@ nsHttpConnectionMgr::DispatchPendingQ(nsTArray<RefPtr<nsHttpConnectionMgr::Pendi
             // httpConnection does not have a transaction any more and a
             // ReclaimConnection is dispatched). But if an error occurred the
             // connection will be closed, it will exist but CanReused will be
-            // false. 
+            // false.
             if (activeConn &&
                 ((activeConn->Transaction() &&
                   activeConn->Transaction()->IsNullTransaction()) ||

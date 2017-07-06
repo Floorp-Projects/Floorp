@@ -15,9 +15,9 @@ namespace mozilla {
 namespace plugins {
 
 /**
- * This class provides a lightweight shared memory interface for a child 
+ * This class provides a lightweight shared memory interface for a child
  * process in Win32.
- * This code assumes that there is a parent-child relationship between 
+ * This code assumes that there is a parent-child relationship between
  * processes, as it inherits handles from the parent process.
  * Note that this class is *not* an IPDL actor.
  *

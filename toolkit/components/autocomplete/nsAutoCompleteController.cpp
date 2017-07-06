@@ -756,7 +756,7 @@ nsAutoCompleteController::HandleDelete(bool *_retval)
   return NS_OK;
 }
 
-nsresult 
+nsresult
 nsAutoCompleteController::GetResultAt(int32_t aIndex, nsIAutoCompleteResult** aResult,
                                       int32_t* aRowIndex)
 {

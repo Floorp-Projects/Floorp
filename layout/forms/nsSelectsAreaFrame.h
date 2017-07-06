@@ -31,7 +31,7 @@ public:
                       nsReflowStatus&          aStatus) override;
 
   nscoord BSizeOfARow() const { return mBSizeOfARow; }
-  
+
 protected:
   explicit nsSelectsAreaFrame(nsStyleContext* aContext) :
     nsBlockFrame(aContext, kClassID),

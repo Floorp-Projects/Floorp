@@ -254,12 +254,12 @@ XULMenuitemAccessible::NativeRole()
     return roles::COMBOBOX_OPTION;
 
   if (mContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::type,
-                            nsGkAtoms::radio, eCaseMatters)) 
+                            nsGkAtoms::radio, eCaseMatters))
     return roles::RADIO_MENU_ITEM;
 
   if (mContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::type,
                             nsGkAtoms::checkbox,
-                            eCaseMatters)) 
+                            eCaseMatters))
     return roles::CHECK_MENU_ITEM;
 
   return roles::MENUITEM;

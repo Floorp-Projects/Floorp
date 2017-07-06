@@ -885,7 +885,7 @@ public:
   void Overload19(JSContext*, const Dict&);
   void Overload20(JSContext*, const Dict&);
   void Overload20(const Sequence<int32_t>&);
-  
+
   // Variadic handling
   void PassVariadicThirdArg(const nsAString&, int32_t,
                             const Sequence<OwningNonNull<TestInterface> >&);

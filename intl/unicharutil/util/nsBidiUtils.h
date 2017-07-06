@@ -18,9 +18,9 @@
     *  and must also match the values used by ICU's UCharDirection.
     */
 
-enum nsCharType   { 
-  eCharType_LeftToRight              = 0, 
-  eCharType_RightToLeft              = 1, 
+enum nsCharType   {
+  eCharType_LeftToRight              = 0,
+  eCharType_RightToLeft              = 1,
   eCharType_EuropeanNumber           = 2,
   eCharType_EuropeanNumberSeparator  = 3,
   eCharType_EuropeanNumberTerminator = 4,
@@ -28,8 +28,8 @@ enum nsCharType   {
   eCharType_CommonNumberSeparator    = 6,
   eCharType_BlockSeparator           = 7,
   eCharType_SegmentSeparator         = 8,
-  eCharType_WhiteSpaceNeutral        = 9, 
-  eCharType_OtherNeutral             = 10, 
+  eCharType_WhiteSpaceNeutral        = 9,
+  eCharType_OtherNeutral             = 10,
   eCharType_LeftToRightEmbedding     = 11,
   eCharType_LeftToRightOverride      = 12,
   eCharType_RightToLeftArabic        = 13,

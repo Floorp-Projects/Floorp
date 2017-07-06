@@ -125,6 +125,6 @@ NS_InvokeByIndex(nsISupports* that, uint32_t methodIndex,
       "d" (n)               /* %5 */
     : "a0", "a1", "d0", "d1", "memory"
     );
-  
+
   return result;
 }

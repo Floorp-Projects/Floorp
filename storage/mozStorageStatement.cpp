@@ -856,7 +856,7 @@ Statement::GetIsNull(uint32_t aIndex,
 //// mozIStorageBindingParams
 
 BOILERPLATE_BIND_PROXIES(
-  Statement, 
+  Statement,
   if (!mDBStatement) return NS_ERROR_NOT_INITIALIZED;
 )
 

@@ -68,9 +68,9 @@ VerifyLoadedCert(MarFile *archive, const uint8_t (&certData)[SIZE])
 }
 
 /**
- * Performs a verification on the opened MAR file.  Both the primary and backup 
- * keys stored are stored in the current process and at least the primary key 
- * will be tried.  Success will be returned as long as one of the two 
+ * Performs a verification on the opened MAR file.  Both the primary and backup
+ * keys stored are stored in the current process and at least the primary key
+ * will be tried.  Success will be returned as long as one of the two
  * signatures verify.
  *
  * @return OK on success
@@ -99,7 +99,7 @@ ArchiveReader::VerifySignature()
 
 /**
  * Verifies that the MAR file matches the current product, channel, and version
- * 
+ *
  * @param MARChannelID   The MAR channel name to use, only updates from MARs
  *                       with a matching MAR channel name will succeed.
  *                       If an empty string is passed, no check will be done
@@ -109,17 +109,17 @@ ArchiveReader::VerifySignature()
  * @param appVersion     The application version to use, only MARs with an
  *                       application version >= to appVersion will be applied.
  * @return OK on success
- *         COULD_NOT_READ_PRODUCT_INFO_BLOCK if the product info block 
+ *         COULD_NOT_READ_PRODUCT_INFO_BLOCK if the product info block
  *                                           could not be read.
- *         MARCHANNEL_MISMATCH_ERROR         if update-settings.ini's MAR 
+ *         MARCHANNEL_MISMATCH_ERROR         if update-settings.ini's MAR
  *                                           channel ID doesn't match the MAR
- *                                           file's MAR channel ID. 
+ *                                           file's MAR channel ID.
  *         VERSION_DOWNGRADE_ERROR           if the application version for
  *                                           this updater is newer than the
  *                                           one in the MAR.
  */
 int
-ArchiveReader::VerifyProductInformation(const char *MARChannelID, 
+ArchiveReader::VerifyProductInformation(const char *MARChannelID,
                                         const char *appVersion)
 {
   if (!mArchive) {
@@ -127,7 +127,7 @@ ArchiveReader::VerifyProductInformation(const char *MARChannelID,
   }
 
   ProductInformationBlock productInfoBlock;
-  int rv = mar_read_product_info_block(mArchive, 
+  int rv = mar_read_product_info_block(mArchive,
                                        &productInfoBlock);
   if (rv != OK) {
     return COULD_NOT_READ_PRODUCT_INFO_BLOCK_ERROR;
@@ -138,7 +138,7 @@ ArchiveReader::VerifyProductInformation(const char *MARChannelID,
   if (MARChannelID && strlen(MARChannelID)) {
     // Check for at least one match in the comma separated list of values.
     const char *delimiter = " ,\t";
-    // Make a copy of the string in case a read only memory buffer 
+    // Make a copy of the string in case a read only memory buffer
     // was specified.  strtok modifies the input buffer.
     char channelCopy[512] = { 0 };
     strncpy(channelCopy, MARChannelID, sizeof(channelCopy) - 1);
@@ -163,7 +163,7 @@ ArchiveReader::VerifyProductInformation(const char *MARChannelID,
         - 12.0a2 being older than 12.0b1
         - 12.0a1 being older than 12.0
         - 12.0 being older than 12.1a1 */
-    int versionCompareResult = 
+    int versionCompareResult =
       mozilla::CompareVersions(appVersion, productInfoBlock.productVersion);
     if (1 == versionCompareResult) {
       rv = VERSION_DOWNGRADE_ERROR;

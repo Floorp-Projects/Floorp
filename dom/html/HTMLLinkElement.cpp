@@ -396,7 +396,7 @@ static const DOMTokenListSupportedToken sSupportedRelValues[] = {
   nullptr
 };
 
-nsDOMTokenList* 
+nsDOMTokenList*
 HTMLLinkElement::RelList()
 {
   if (!mRelList) {
@@ -482,7 +482,7 @@ HTMLLinkElement::GetStyleSheetInfo(nsAString& aTitle,
 CORSMode
 HTMLLinkElement::GetCORSMode() const
 {
-  return AttrValueToCORSMode(GetParsedAttr(nsGkAtoms::crossorigin)); 
+  return AttrValueToCORSMode(GetParsedAttr(nsGkAtoms::crossorigin));
 }
 
 EventStates

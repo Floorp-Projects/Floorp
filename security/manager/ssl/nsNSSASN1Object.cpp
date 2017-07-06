@@ -15,7 +15,7 @@ NS_IMPL_ISUPPORTS(nsNSSASN1PrintableItem, nsIASN1PrintableItem, nsIASN1Object)
 
 // This function is used to interpret an integer that
 // was encoded in a DER buffer. This function is used
-// when converting a DER buffer into a nsIASN1Object 
+// when converting a DER buffer into a nsIASN1Object
 // structure.  This interprets the buffer in data
 // as defined by the DER (Distinguised Encoding Rules) of
 // ASN1.
@@ -48,7 +48,7 @@ getInteger256(unsigned char *data, unsigned int nb)
 // item.  It looks to see if this a multibyte length and then
 // interprets the buffer accordingly to get the actual length value.
 // This funciton is used mostly while parsing the DER headers.
-// 
+//
 // A DER encoded item has the following structure:
 //
 //  <tag><length<data consisting of lenght bytes>
@@ -58,7 +58,7 @@ getDERItemLength(unsigned char *data, unsigned char *end,
 {
   unsigned char lbyte = *data++;
   int32_t length = -1;
-  
+
   *indefinite = false;
   if (lbyte >= 0x80) {
     // Multibyte length
@@ -67,7 +67,7 @@ getDERItemLength(unsigned char *data, unsigned char *end,
       return -1;
     }
     if (nb > 0) {
-    
+
       if ((data+nb) > end) {
         return -1;
       }
@@ -81,7 +81,7 @@ getDERItemLength(unsigned char *data, unsigned char *end,
     *bytesUsed = nb+1;
   } else {
     length = lbyte;
-    *bytesUsed = 1; 
+    *bytesUsed = 1;
   }
   return length;
 }
@@ -161,7 +161,7 @@ buildASN1ObjectFromDER(unsigned char *data,
         }
         sequence->SetTag(tagnum);
         sequence->SetType(type);
-        rv = buildASN1ObjectFromDER(data, (len == 0) ? end : data + len, 
+        rv = buildASN1ObjectFromDER(data, (len == 0) ? end : data + len,
                                     sequence);
         asn1Obj = sequence;
       }
@@ -170,7 +170,7 @@ buildASN1ObjectFromDER(unsigned char *data,
 
       asn1Obj = printableItem;
       asn1Obj->SetType(tagnum);
-      asn1Obj->SetTag(tagnum); 
+      asn1Obj->SetTag(tagnum);
       printableItem->SetData((char*)data, len);
     }
     data += len;
@@ -187,7 +187,7 @@ CreateFromDER(unsigned char *data,
 {
   nsCOMPtr<nsIASN1Sequence> sequence = new nsNSSASN1Sequence;
   *retval = nullptr;
-  
+
   nsresult rv =  buildASN1ObjectFromDER(data, data+len, sequence);
 
   if (NS_SUCCEEDED(rv)) {
@@ -203,7 +203,7 @@ CreateFromDER(unsigned char *data,
 
     asn1Obj.forget(retval);
   }
-  return rv; 
+  return rv;
 }
 
 nsNSSASN1Sequence::nsNSSASN1Sequence() : mType(0),
@@ -219,7 +219,7 @@ nsNSSASN1Sequence::~nsNSSASN1Sequence()
   /* destructor code */
 }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsNSSASN1Sequence::GetASN1Objects(nsIMutableArray * *aASN1Objects)
 {
   if (!mASN1Objects) {
@@ -230,70 +230,70 @@ nsNSSASN1Sequence::GetASN1Objects(nsIMutableArray * *aASN1Objects)
   return NS_OK;
 }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsNSSASN1Sequence::SetASN1Objects(nsIMutableArray * aASN1Objects)
 {
   mASN1Objects = aASN1Objects;
   return NS_OK;
 }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsNSSASN1Sequence::GetTag(uint32_t *aTag)
 {
   *aTag = mTag;
   return NS_OK;
 }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsNSSASN1Sequence::SetTag(uint32_t aTag)
 {
   mTag = aTag;
   return NS_OK;
 }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsNSSASN1Sequence::GetType(uint32_t *aType)
 {
   *aType = mType;
   return NS_OK;
 }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsNSSASN1Sequence::SetType(uint32_t aType)
 {
   mType = aType;
   return NS_OK;
 }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsNSSASN1Sequence::GetDisplayName(nsAString &aDisplayName)
 {
   aDisplayName = mDisplayName;
   return NS_OK;
 }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsNSSASN1Sequence::SetDisplayName(const nsAString &aDisplayName)
 {
   mDisplayName = aDisplayName;
   return NS_OK;
 }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsNSSASN1Sequence::GetDisplayValue(nsAString &aDisplayValue)
 {
   aDisplayValue = mDisplayValue;
   return NS_OK;
 }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsNSSASN1Sequence::SetDisplayValue(const nsAString &aDisplayValue)
 {
   mDisplayValue = aDisplayValue;
   return NS_OK;
 }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsNSSASN1Sequence::GetIsValidContainer(bool *aIsValidContainer)
 {
   NS_ENSURE_ARG_POINTER(aIsValidContainer);
@@ -309,7 +309,7 @@ nsNSSASN1Sequence::SetIsValidContainer(bool aIsValidContainer)
   return NS_OK;
 }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsNSSASN1Sequence::GetIsExpanded(bool *aIsExpanded)
 {
   NS_ENSURE_ARG_POINTER(aIsExpanded);
@@ -317,7 +317,7 @@ nsNSSASN1Sequence::GetIsExpanded(bool *aIsExpanded)
   return NS_OK;
 }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsNSSASN1Sequence::SetIsExpanded(bool aIsExpanded)
 {
   mIsExpanded = aIsExpanded;
@@ -339,49 +339,49 @@ nsNSSASN1PrintableItem::~nsNSSASN1PrintableItem()
     free(mData);
 }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsNSSASN1PrintableItem::GetDisplayValue(nsAString &aValue)
 {
   aValue = mValue;
   return NS_OK;
 }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsNSSASN1PrintableItem::SetDisplayValue(const nsAString &aValue)
 {
   mValue = aValue;
   return NS_OK;
 }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsNSSASN1PrintableItem::GetTag(uint32_t *aTag)
 {
   *aTag = mTag;
   return NS_OK;
 }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsNSSASN1PrintableItem::SetTag(uint32_t aTag)
 {
   mTag = aTag;
   return NS_OK;
 }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsNSSASN1PrintableItem::GetType(uint32_t *aType)
 {
   *aType = mType;
   return NS_OK;
 }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsNSSASN1PrintableItem::SetType(uint32_t aType)
 {
   mType = aType;
   return NS_OK;
 }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsNSSASN1PrintableItem::SetData(char *data, uint32_t len)
 {
   if (len > 0) {
@@ -401,7 +401,7 @@ nsNSSASN1PrintableItem::SetData(char *data, uint32_t len)
     }
   }
   mLen = len;
-  return NS_OK;  
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -415,14 +415,14 @@ nsNSSASN1PrintableItem::GetData(char **outData, uint32_t *outLen)
   return NS_OK;
 }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsNSSASN1PrintableItem::GetDisplayName(nsAString &aDisplayName)
 {
   aDisplayName = mDisplayName;
   return NS_OK;
 }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsNSSASN1PrintableItem::SetDisplayName(const nsAString &aDisplayName)
 {
   mDisplayName = aDisplayName;

@@ -45,10 +45,10 @@ nsMathMLmrootFrame::Init(nsIContent*       aContent,
                          nsIFrame*         aPrevInFlow)
 {
   nsMathMLContainerFrame::Init(aContent, aParent, aPrevInFlow);
-  
+
   nsPresContext *presContext = PresContext();
 
-  // No need to track the style context given to our MathML char. 
+  // No need to track the style context given to our MathML char.
   // The Style System will use Get/SetAdditionalStyleContext() to keep it
   // up-to-date if dynamic changes arise.
   nsAutoString sqrChar; sqrChar.Assign(kSqrChar);
@@ -83,7 +83,7 @@ nsMathMLmrootFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   /////////////
   // paint the content we are square-rooting
   nsMathMLContainerFrame::BuildDisplayList(aBuilder, aDirtyRect, aLists);
-  
+
   /////////////
   // paint the sqrt symbol
   if (!NS_MATHML_HAS_ERROR(mPresentationData.flags)) {
@@ -185,7 +185,7 @@ nsMathMLmrootFrame::Reflow(nsPresContext*          aPresContext,
   ReflowOutput indexSize(aReflowInput);
   nsIFrame* childFrame = mFrames.FirstChild();
   while (childFrame) {
-    // ask our children to compute their bounding metrics 
+    // ask our children to compute their bounding metrics
     ReflowOutput childDesiredSize(aReflowInput,
                                          aDesiredSize.mFlags
                                          | NS_REFLOW_CALC_BOUNDING_METRICS);
@@ -198,7 +198,7 @@ nsMathMLmrootFrame::Reflow(nsPresContext*          aPresContext,
                      childDesiredSize, childReflowInput, childStatus);
     //NS_ASSERTION(childStatus.IsComplete(), "bad status");
     if (0 == count) {
-      // base 
+      // base
       baseFrame = childFrame;
       baseSize = childDesiredSize;
       bmBase = childDesiredSize.mBoundingMetrics;
@@ -263,7 +263,7 @@ nsMathMLmrootFrame::Reflow(nsPresContext*          aPresContext,
   nsBoundingMetrics radicalSize;
   mSqrChar.Stretch(aPresContext, drawTarget,
                    fontSizeInflation,
-                   NS_STRETCH_DIRECTION_VERTICAL, 
+                   NS_STRETCH_DIRECTION_VERTICAL,
                    contSize, radicalSize,
                    NS_STRETCH_LARGER,
                    StyleVisibility()->mDirection);
@@ -274,12 +274,12 @@ nsMathMLmrootFrame::Reflow(nsPresContext*          aPresContext,
   // Update the desired size for the container (like msqrt, index is not yet included)
   // the baseline will be that of the base.
   mBoundingMetrics.ascent = bmBase.ascent + psi + ruleThickness;
-  mBoundingMetrics.descent = 
+  mBoundingMetrics.descent =
     std::max(bmBase.descent,
            (bmSqr.ascent + bmSqr.descent - mBoundingMetrics.ascent));
   mBoundingMetrics.width = bmSqr.width + bmBase.width;
   mBoundingMetrics.leftBearing = bmSqr.leftBearing;
-  mBoundingMetrics.rightBearing = bmSqr.width + 
+  mBoundingMetrics.rightBearing = bmSqr.width +
     std::max(bmBase.width, bmBase.rightBearing); // take also care of the rule
 
   aDesiredSize.SetBlockStartAscent(mBoundingMetrics.ascent + leading);
@@ -290,7 +290,7 @@ nsMathMLmrootFrame::Reflow(nsPresContext*          aPresContext,
 
   /////////////
   // Re-adjust the desired size to include the index.
-  
+
   // the index is raised by some fraction of the height
   // of the radical, see \mroot macro in App. B, TexBook
   float raiseIndexPercent = 0.6f;
@@ -301,14 +301,14 @@ nsMathMLmrootFrame::Reflow(nsPresContext*          aPresContext,
   }
   nscoord raiseIndexDelta = NSToCoordRound(raiseIndexPercent *
                                            (bmSqr.ascent + bmSqr.descent));
-  nscoord indexRaisedAscent = mBoundingMetrics.ascent // top of radical 
+  nscoord indexRaisedAscent = mBoundingMetrics.ascent // top of radical
     - (bmSqr.ascent + bmSqr.descent) // to bottom of radical
     + raiseIndexDelta + bmIndex.ascent + bmIndex.descent; // to top of raised index
 
   nscoord indexClearance = 0;
   if (mBoundingMetrics.ascent < indexRaisedAscent) {
-    indexClearance = 
-      indexRaisedAscent - mBoundingMetrics.ascent; // excess gap introduced by a tall index 
+    indexClearance =
+      indexRaisedAscent - mBoundingMetrics.ascent; // excess gap introduced by a tall index
     mBoundingMetrics.ascent = indexRaisedAscent;
     nscoord descent = aDesiredSize.Height() - aDesiredSize.BlockStartAscent();
     aDesiredSize.SetBlockStartAscent(mBoundingMetrics.ascent + leading);
@@ -319,7 +319,7 @@ nsMathMLmrootFrame::Reflow(nsPresContext*          aPresContext,
   GetRadicalXOffsets(bmIndex.width, bmSqr.width, fm, &dxIndex, &dxSqr);
 
   mBoundingMetrics.width = dxSqr + bmSqr.width + bmBase.width;
-  mBoundingMetrics.leftBearing = 
+  mBoundingMetrics.leftBearing =
     std::min(dxIndex + bmIndex.leftBearing, dxSqr + bmSqr.leftBearing);
   mBoundingMetrics.rightBearing = dxSqr + bmSqr.width +
     std::max(bmBase.width, bmBase.rightBearing);
@@ -408,7 +408,7 @@ nsMathMLmrootFrame::GetAdditionalStyleContext(int32_t aIndex) const
 }
 
 void
-nsMathMLmrootFrame::SetAdditionalStyleContext(int32_t          aIndex, 
+nsMathMLmrootFrame::SetAdditionalStyleContext(int32_t          aIndex,
                                               nsStyleContext*  aStyleContext)
 {
   switch (aIndex) {

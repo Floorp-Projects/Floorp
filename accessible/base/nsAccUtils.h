@@ -90,9 +90,9 @@ public:
 
   /**
    * Any ARIA property of type boolean or NMTOKEN is undefined if the ARIA
-   * property is not present, or is "" or "undefined". Do not call 
+   * property is not present, or is "" or "undefined". Do not call
    * this method for properties of type string, decimal, IDREF or IDREFS.
-   * 
+   *
    * Return true if the ARIA property is defined, otherwise false
    */
   static bool HasDefinedARIAToken(nsIContent *aContent, nsIAtom *aAtom);

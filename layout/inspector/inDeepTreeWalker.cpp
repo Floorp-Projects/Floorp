@@ -112,7 +112,7 @@ inDeepTreeWalker::GetRoot(nsIDOMNode** aRoot)
   return NS_OK;
 }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 inDeepTreeWalker::GetWhatToShow(uint32_t* aWhatToShow)
 {
   *aWhatToShow = mWhatToShow;

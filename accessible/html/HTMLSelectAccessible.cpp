@@ -152,7 +152,7 @@ HTMLSelectOptionAccessible::NativeName(nsString& aName)
   if (!aName.IsEmpty())
     return eNameOK;
 
-  // CASE #2 -- no label parameter, get the first child, 
+  // CASE #2 -- no label parameter, get the first child,
   // use it if it is a text node
   nsIContent* text = mContent->GetFirstChild();
   if (text && text->IsNodeOfType(nsINode::eTEXT)) {

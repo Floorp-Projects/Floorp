@@ -106,7 +106,7 @@ SVGMotionSMILPathUtils::PathGenerator::
   }
 
   if (!tokenizer.hasMoreTokens() ||
-      !y.SetValueFromString(tokenizer.nextToken())) { 
+      !y.SetValueFromString(tokenizer.nextToken())) {
     return false;
   }
 

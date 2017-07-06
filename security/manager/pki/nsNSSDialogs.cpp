@@ -52,7 +52,7 @@ nsNSSDialogs::Init()
   nsCOMPtr<nsIStringBundleService> service =
            do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
   if (NS_FAILED(rv)) return rv;
-  
+
   rv = service->CreateBundle(PIPSTRING_BUNDLE_URL,
                              getter_AddRefs(mPIPStringBundle));
   return rv;
@@ -358,7 +358,7 @@ nsNSSDialogs::ViewCert(nsIInterfaceRequestor* ctx, nsIX509Cert* cert)
 }
 
 NS_IMETHODIMP
-nsNSSDialogs::DisplayGeneratingKeypairInfo(nsIInterfaceRequestor *aCtx, nsIKeygenThread *runnable) 
+nsNSSDialogs::DisplayGeneratingKeypairInfo(nsIInterfaceRequestor *aCtx, nsIKeygenThread *runnable)
 {
   nsresult rv;
 
@@ -423,21 +423,21 @@ nsNSSDialogs::DisplayProtectedAuth(nsIInterfaceRequestor *aCtx, nsIProtectedAuth
     // in the window because protected authentication is interruptible
     // from user interface and changing nsNSSDialogHelper's static variable
     // would not be thread-safe
-    
+
     nsresult rv = NS_ERROR_FAILURE;
-    
+
     // Get the parent window for the dialog
     nsCOMPtr<mozIDOMWindowProxy> parent = do_GetInterface(aCtx);
-    
-    nsCOMPtr<nsIWindowWatcher> windowWatcher = 
+
+    nsCOMPtr<nsIWindowWatcher> windowWatcher =
         do_GetService("@mozilla.org/embedcomp/window-watcher;1", &rv);
     if (NS_FAILED(rv))
         return rv;
-    
+
     if (!parent) {
         windowWatcher->GetActiveWindow(getter_AddRefs(parent));
     }
-    
+
     nsCOMPtr<mozIDOMWindowProxy> newWindow;
     rv = windowWatcher->OpenWindow(parent,
         "chrome://pippki/content/protectedAuth.xul",
@@ -445,6 +445,6 @@ nsNSSDialogs::DisplayProtectedAuth(nsIInterfaceRequestor *aCtx, nsIProtectedAuth
         "centerscreen,chrome,modal,titlebar,close=no",
         runnable,
         getter_AddRefs(newWindow));
-    
+
     return rv;
 }

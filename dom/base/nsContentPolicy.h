@@ -11,7 +11,7 @@
 #include "nsISimpleContentPolicy.h"
 #include "nsCategoryCache.h"
 
-/* 
+/*
  * Implementation of the "@mozilla.org/layout/content-policy;1" contract.
  */
 

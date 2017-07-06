@@ -217,7 +217,7 @@ public:
   void SetHasOnly()                     { mHasOnly = true; }
   void SetTypeOmitted()                 { mTypeOmitted = true; }
   void SetHadUnknownExpression()        { mHadUnknownExpression = true; }
-  void SetType(nsIAtom* aMediaType)     { 
+  void SetType(nsIAtom* aMediaType)     {
                                           NS_ASSERTION(aMediaType,
                                                        "expected non-null");
                                           mMediaType = aMediaType;

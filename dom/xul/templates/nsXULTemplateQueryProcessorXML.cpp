@@ -378,7 +378,7 @@ nsXULTemplateQueryProcessorXML::TranslateRef(nsISupports* aDatasource,
     // if no root element, just return. The document may not have loaded yet
     if (!rootElement)
         return NS_OK;
-    
+
     RefPtr<nsXULTemplateResultXML> result = new nsXULTemplateResultXML(nullptr, rootElement, nullptr);
     result.forget(aRef);
 

@@ -17,7 +17,7 @@ nsAuthSASL::nsAuthSASL()
     mSASLReady = false;
 }
 
-void nsAuthSASL::Reset() 
+void nsAuthSASL::Reset()
 {
     mSASLReady = false;
 }
@@ -33,18 +33,18 @@ nsAuthSASL::Init(const char *serviceName,
                  const char16_t *password)
 {
     nsresult rv;
-    
+
     NS_ASSERTION(username, "SASL requires a username");
     NS_ASSERTION(!domain && !password, "unexpected credentials");
 
     mUsername = username;
-    
+
     // If we're doing SASL, we should do mutual auth
     serviceFlags |= REQ_MUTUAL_AUTH;
-   
+
     // Find out whether we should be trying SSPI or not
     const char *contractID = NS_AUTH_MODULE_CONTRACTID_PREFIX "kerb-gss";
-    
+
     nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
     if (prefs) {
         bool val;
@@ -52,7 +52,7 @@ nsAuthSASL::Init(const char *serviceName,
         if (NS_SUCCEEDED(rv) && val)
             contractID = NS_AUTH_MODULE_CONTRACTID_PREFIX "kerb-sspi";
     }
-    
+
     mInnerModule = do_CreateInstance(contractID, &rv);
     // if we can't create the GSSAPI module, then bail
     NS_ENSURE_SUCCESS(rv, rv);
@@ -73,8 +73,8 @@ nsAuthSASL::GetNextToken(const void *inToken,
     char *message;
     uint32_t unwrappedTokenLen, messageLen;
     nsAutoCString userbuf;
-    
-    if (!mInnerModule) 
+
+    if (!mInnerModule)
         return NS_ERROR_NOT_INITIALIZED;
 
     if (mSASLReady) {
@@ -90,18 +90,18 @@ nsAuthSASL::GetNextToken(const void *inToken,
         // now ready to do the SASL security layer and authzid negotiation
 
         // Input packet from the server needs to be unwrapped.
-        rv = mInnerModule->Unwrap(inToken, inTokenLen, &unwrappedToken, 
+        rv = mInnerModule->Unwrap(inToken, inTokenLen, &unwrappedToken,
                                   &unwrappedTokenLen);
         if (NS_FAILED(rv)) {
             Reset();
             return rv;
         }
-        
+
         // If we were doing security layers then we'd care what the
         // server had sent us. We're not, so all we had to do was make
         // sure that the signature was correct with the above unwrap()
         free(unwrappedToken);
-        
+
         NS_CopyUnicodeToNative(mUsername, userbuf);
         messageLen = userbuf.Length() + 4 + 1;
         message = (char *)moz_xmalloc(messageLen);
@@ -116,13 +116,13 @@ nsAuthSASL::GetNextToken(const void *inToken,
         strcpy(message+4, userbuf.get());
         // Userbuf should not be nullptr terminated, so trim the trailing nullptr
         // when wrapping the message
-        rv = mInnerModule->Wrap((void *) message, messageLen-1, false, 
+        rv = mInnerModule->Wrap((void *) message, messageLen-1, false,
                                 outToken, outTokenLen);
         free(message);
         Reset(); // All done
         return NS_SUCCEEDED(rv) ? NS_SUCCESS_AUTH_FINISHED : rv;
     }
-    rv = mInnerModule->GetNextToken(inToken, inTokenLen, outToken, 
+    rv = mInnerModule->GetNextToken(inToken, inTokenLen, outToken,
                                     outTokenLen);
     if (rv == NS_SUCCESS_AUTH_FINISHED) {
         mSASLReady = true;

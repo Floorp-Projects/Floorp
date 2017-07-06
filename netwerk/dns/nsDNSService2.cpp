@@ -625,7 +625,7 @@ nsDNSService::Init()
         mForceResolve = forceResolve;
         mForceResolveOn = !mForceResolve.IsEmpty();
 
-        // Disable prefetching either by explicit preference or if a manual proxy is configured 
+        // Disable prefetching either by explicit preference or if a manual proxy is configured
         mDisablePrefetch = disablePrefetch || (proxyType == nsIProtocolProxyService::PROXYCONFIG_MANUAL);
 
         mLocalDomains.Clear();
@@ -1028,7 +1028,7 @@ nsDNSService::ResolveNative(const nsACString        &aHostname,
     // on the same thread.  so, our mutex needs to be re-entrant.  in other words,
     // we need to use a monitor! ;-)
     //
-    
+
     PRMonitor *mon = PR_NewMonitor();
     if (!mon)
         return NS_ERROR_OUT_OF_MEMORY;
@@ -1128,7 +1128,7 @@ nsDNSService::GetAFForLookup(const nsACString &host, uint32_t flags)
 
         // see if host is in one of the IPv4-only domains
         domain = mIPv4OnlyDomains.BeginReading();
-        domainEnd = mIPv4OnlyDomains.EndReading(); 
+        domainEnd = mIPv4OnlyDomains.EndReading();
 
         nsACString::const_iterator hostStart;
         host.BeginReading(hostStart);

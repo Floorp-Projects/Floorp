@@ -105,7 +105,7 @@ txCoreFunctionCall::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
             NS_ENSURE_SUCCESS(rv, rv);
 
             txXPathTreeWalker walker(aContext->getContextNode());
-            
+
             if (exprResult->getResultType() == txAExprResult::NODESET) {
                 txNodeSet* nodes = static_cast<txNodeSet*>
                                               (static_cast<txAExprResult*>
@@ -386,7 +386,7 @@ txCoreFunctionCall::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
 
                     return NS_OK;
                 }
-                
+
                 if (end > src.Length())
                     end = src.Length();
                 else
@@ -398,10 +398,10 @@ txCoreFunctionCall::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
 
             if (start < 0)
                 start = 0;
- 
+
             if (start > end) {
                 aContext->recycler()->getEmptyStringResult(aResult);
-                
+
                 return NS_OK;
             }
 
@@ -426,7 +426,7 @@ txCoreFunctionCall::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
             int32_t idx = arg1.Find(arg2);
             if (idx == kNotFound) {
                 aContext->recycler()->getEmptyStringResult(aResult);
-                
+
                 return NS_OK;
             }
 
@@ -452,7 +452,7 @@ txCoreFunctionCall::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
             int32_t idx = arg1.Find(arg2);
             if (idx == kNotFound) {
                 aContext->recycler()->getEmptyStringResult(aResult);
-                
+
                 return NS_OK;
             }
 
@@ -470,7 +470,7 @@ txCoreFunctionCall::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
 
                 return NS_OK;
             }
-            
+
             RefPtr<StringResult> strRes;
             rv = aContext->recycler()->getStringResult(getter_AddRefs(strRes));
             NS_ENSURE_SUCCESS(rv, rv);
@@ -501,7 +501,7 @@ txCoreFunctionCall::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
 
             return NS_OK;
         }
-        
+
         // Number functions
 
         case NUMBER:
@@ -578,9 +578,9 @@ txCoreFunctionCall::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
             }
             return aContext->recycler()->getNumberResult(res, aResult);
         }
-        
+
         // Boolean functions
-        
+
         case BOOLEAN:
         {
             bool result;

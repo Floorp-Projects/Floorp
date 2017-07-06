@@ -83,7 +83,7 @@ class SVGBBox {
   typedef mozilla::gfx::Rect Rect;
 
 public:
-  SVGBBox() 
+  SVGBBox()
     : mIsEmpty(true) {}
 
   MOZ_IMPLICIT SVGBBox(const Rect& aRect)

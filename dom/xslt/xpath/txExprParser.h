@@ -75,9 +75,9 @@ protected:
     static nsresult createUnionExpr(txExprLexer& lexer,
                                     txIParseContext* aContext,
                                     Expr** aResult);
-                  
+
     static bool isLocationStepToken(Token* aToken);
-                  
+
     static short precedence(Token* aToken);
 
     /**

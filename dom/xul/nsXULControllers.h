@@ -25,7 +25,7 @@ public:
                             nsXULControllerData(uint32_t inControllerID, nsIController* inController)
                             : mControllerID(inControllerID)
                             , mController(inController)
-                            {                            
+                            {
                             }
 
                             ~nsXULControllerData() {}
@@ -37,7 +37,7 @@ public:
                               NS_IF_ADDREF(*outController = mController);
                               return NS_OK;
                             }
-    
+
     uint32_t                mControllerID;
     nsCOMPtr<nsIController> mController;
 };
@@ -54,7 +54,7 @@ public:
     NS_DECL_CYCLE_COLLECTING_ISUPPORTS
     NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsXULControllers, nsIControllers)
     NS_DECL_NSICONTROLLERS
-  
+
 protected:
     nsXULControllers();
     virtual ~nsXULControllers(void);

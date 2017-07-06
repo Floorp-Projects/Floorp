@@ -64,13 +64,13 @@ void NeckoChild::InitNeckoChild()
   MOZ_ASSERT(IsNeckoChild(), "InitNeckoChild called by non-child!");
 
   if (!gNeckoChild) {
-    mozilla::dom::ContentChild * cpc = 
+    mozilla::dom::ContentChild * cpc =
       mozilla::dom::ContentChild::GetSingleton();
     NS_ASSERTION(cpc, "Content Protocol is NULL!");
     if (NS_WARN_IF(cpc->IsShuttingDown())) {
       return;
     }
-    gNeckoChild = cpc->SendPNeckoConstructor(); 
+    gNeckoChild = cpc->SendPNeckoConstructor();
     NS_ASSERTION(gNeckoChild, "PNecko Protocol init failed!");
   }
 }
@@ -86,7 +86,7 @@ NeckoChild::AllocPHttpChannelChild(const PBrowserOrId& browser,
   return nullptr;
 }
 
-bool 
+bool
 NeckoChild::DeallocPHttpChannelChild(PHttpChannelChild* channel)
 {
   MOZ_ASSERT(IsNeckoChild(), "DeallocPHttpChannelChild called by non-child!");

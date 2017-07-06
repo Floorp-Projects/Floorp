@@ -17,7 +17,7 @@
 nsListItemFrame::nsListItemFrame(nsStyleContext* aContext,
                                  bool aIsRoot,
                                  nsBoxLayout* aLayoutManager)
-  : nsGridRowLeafFrame(aContext, aIsRoot, aLayoutManager, kClassID) 
+  : nsGridRowLeafFrame(aContext, aIsRoot, aLayoutManager, kClassID)
 {
 }
 
@@ -28,7 +28,7 @@ nsListItemFrame::~nsListItemFrame()
 nsSize
 nsListItemFrame::GetXULPrefSize(nsBoxLayoutState& aState)
 {
-  nsSize size = nsBoxFrame::GetXULPrefSize(aState);  
+  nsSize size = nsBoxFrame::GetXULPrefSize(aState);
   DISPLAY_PREF_SIZE(this, size);
 
   // guarantee that our preferred height doesn't exceed the standard
@@ -47,7 +47,7 @@ nsListItemFrame::BuildDisplayListForChildren(nsDisplayListBuilder*   aBuilder,
                                nsGkAtoms::_true, eCaseMatters))
       return;
   }
-  
+
   nsGridRowLeafFrame::BuildDisplayListForChildren(aBuilder, aDirtyRect, aLists);
 }
 
@@ -62,7 +62,7 @@ NS_NewListItemFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
   if (!layout) {
     return nullptr;
   }
-  
+
   return new (aPresShell) nsListItemFrame(aContext, false, layout);
 }
 

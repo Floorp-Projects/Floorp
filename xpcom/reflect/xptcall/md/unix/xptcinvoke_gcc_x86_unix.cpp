@@ -69,9 +69,9 @@ __asm__ (
  * is assumed and required, e.g. by GCC4's -ftree-vectorize option.
  */
 	"andl  $0xfffffff0, %esp\n\t"   /* drop(?) stack ptr to 128-bit align */
-/* $esp should be aligned to a 16-byte boundary here (note we include an 
- * additional 4 bytes in a later push instruction). This will ensure $ebp 
- * in the function called below is aligned to a 0x8 boundary. SSE instructions 
+/* $esp should be aligned to a 16-byte boundary here (note we include an
+ * additional 4 bytes in a later push instruction). This will ensure $ebp
+ * in the function called below is aligned to a 0x8 boundary. SSE instructions
  * like movapd/movdqa expect memory operand to be aligned on a 16-byte
  * boundary. The GCC compiler will generate the memory operand using $ebp
  * with an 8-byte offset.

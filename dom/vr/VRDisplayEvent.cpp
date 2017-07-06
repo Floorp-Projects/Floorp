@@ -87,7 +87,7 @@ VRDisplayEvent::GetReason() const
   } else {
     return nullptr;
   }
-  
+
 }
 
 

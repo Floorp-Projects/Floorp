@@ -43,7 +43,7 @@ public:
 protected:
   explicit nsAutoRepeatBoxFrame(nsStyleContext* aContext):
     nsButtonBoxFrame(aContext, kClassID) {}
-  
+
   void StartRepeat() {
     if (IsActivatedOnHover()) {
       // No initial delay on hover.
@@ -66,7 +66,7 @@ protected:
   }
 
   bool mTrustedEvent;
-  
+
   bool IsActivatedOnHover();
 };
 
@@ -82,7 +82,7 @@ nsresult
 nsAutoRepeatBoxFrame::HandleEvent(nsPresContext* aPresContext,
                                   WidgetGUIEvent* aEvent,
                                   nsEventStatus* aEventStatus)
-{  
+{
   NS_ENSURE_ARG_POINTER(aEventStatus);
   if (nsEventStatus_eConsumeNoDefault == *aEventStatus) {
     return NS_OK;
@@ -120,7 +120,7 @@ nsAutoRepeatBoxFrame::HandleEvent(nsPresContext* aPresContext,
     default:
       break;
   }
-     
+
   return nsButtonBoxFrame::HandleEvent(aPresContext, aEvent, aEventStatus);
 }
 
@@ -138,7 +138,7 @@ nsAutoRepeatBoxFrame::HandlePress(nsPresContext* aPresContext,
   return NS_OK;
 }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsAutoRepeatBoxFrame::HandleRelease(nsPresContext* aPresContext,
                                     WidgetGUIEvent* aEvent,
                                     nsEventStatus* aEventStatus)

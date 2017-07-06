@@ -31,7 +31,7 @@
 
 #define NS_APP_DEFAULTS_50_DIR                  "DefRt"         // The root dir of all defaults dirs
 #define NS_APP_PREF_DEFAULTS_50_DIR             "PrfDef"
-                                                                                                                       
+
 #define NS_APP_USER_PROFILES_ROOT_DIR           "DefProfRt"     // The dir where user profile dirs live.
 #define NS_APP_USER_PROFILES_LOCAL_ROOT_DIR     "DefProfLRt"  // The dir where user profile temp dirs live.
 
@@ -57,7 +57,7 @@
 
 #define NS_SHARED                               "SHARED"
 
-#define NS_APP_PREFS_50_DIR                     "PrefD"         // Directory which contains user prefs       
+#define NS_APP_PREFS_50_DIR                     "PrefD"         // Directory which contains user prefs
 #define NS_APP_PREFS_50_FILE                    "PrefF"
 #define NS_APP_PREFS_DEFAULTS_DIR_LIST          "PrefDL"
 #define NS_EXT_PREFS_DEFAULTS_DIR_LIST          "ExtPrefDL"
@@ -75,7 +75,7 @@
 
 #define NS_APP_SEARCH_50_FILE                   "SrchF"
 
-#define NS_APP_INSTALL_CLEANUP_DIR              "XPIClnupD"  //location of xpicleanup.dat xpicleanup.exe 
+#define NS_APP_INSTALL_CLEANUP_DIR              "XPIClnupD"  //location of xpicleanup.dat xpicleanup.exe
 
 #define NS_APP_INDEXEDDB_PARENT_DIR             "indexedDBPDir"
 

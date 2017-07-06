@@ -1,5 +1,5 @@
 /* ***** BEGIN LICENSE BLOCK *****
- * 
+ *
  * Copyright (C) 2006, 2007, 2008 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -22,10 +22,10 @@
  * OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- * 
+ *
  * Contributor(s):
  *   Josh Aas <josh@mozilla.com>
- * 
+ *
  * ***** END LICENSE BLOCK ***** */
 
 #include "nptest_utils.h"

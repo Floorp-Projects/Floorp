@@ -113,7 +113,7 @@ public:
 
     virtual mozilla::ipc::IPCResult
     AnswerNPN_GetValue_DrawingModelSupport(const NPNVariable& model, bool* value) override;
-  
+
     virtual mozilla::ipc::IPCResult
     AnswerNPN_GetValue_NPNVdocumentOrigin(nsCString* value, NPError* result) override;
 
@@ -413,7 +413,7 @@ private:
 #endif // defined(XP_WIN)
 #if defined(MOZ_WIDGET_COCOA)
 private:
-    Shmem                  mShSurface; 
+    Shmem                  mShSurface;
     uint16_t               mShWidth;
     uint16_t               mShHeight;
     CGColorSpaceRef        mShColorSpace;

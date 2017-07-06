@@ -92,7 +92,7 @@ htmlify(const char *in)
   q = out;
   do
   {
-    if (*p == '<') 
+    if (*p == '<')
     {
       strcpy(q, "&lt;");
       q += 4;
@@ -149,7 +149,7 @@ leaky::~leaky()
 void leaky::usageError()
 {
   fprintf(stderr, "Usage: %s [-v] [-t] [-e exclude] [-i include] [-s stackdepth] [--last] [--all] [--start n [--end m]] [--cleo] [--output-dir dir] prog log [log2 ...]\n", (char*) applicationName);
-  fprintf(stderr, 
+  fprintf(stderr,
           "\t-v: verbose\n"
           "\t-t | --threads: split threads\n"
           "\t--only-thread n: only profile thread N\n"
@@ -409,7 +409,7 @@ void leaky::open(char *logFile)
         }
       }
     }
-  }  
+  }
   if (!quiet)
     fprintf(stderr,"Done collecting: sections %d: first=%p, last=%p, numThreads=%d\n",
             section,(void*)firstLogEntry,(void*)lastLogEntry,numThreads);
@@ -647,11 +647,11 @@ void leaky::generateReportHTML(FILE *fp, int *countArray, int count, int thread)
 
   for(i=0; i<usefulSymbols && countArray[rankingTable[i]]>0; i++) {
     Symbol **sp=&externalSymbols[rankingTable[i]];
-    
+
     (*sp)->cntP.printReport(fp, this, rankingTable[i], totalTimerHits);
 
     char *symname = htmlify((*sp)->name);
-    fprintf(fp, "%6d %6d (%3.1f%%)%s <a name=%d>%8d (%3.1f%%)</a>%s <b>%s</b>\n", 
+    fprintf(fp, "%6d %6d (%3.1f%%)%s <a name=%d>%8d (%3.1f%%)</a>%s <b>%s</b>\n",
             rankingTable[i],
             (*sp)->timerHit, ((*sp)->timerHit*1000/totalTimerHits)/10.0,
             ((*sp)->timerHit*1000/totalTimerHits)/10.0 >= 10.0 ? "" : " ",
@@ -713,7 +713,7 @@ void leaky::generateReportHTML(FILE *fp, int *countArray, int count, int thread)
       i<usefulSymbols && externalSymbols[rankingTable[i]]->timerHit>0; i++) {
 
     Symbol **sp=&externalSymbols[rankingTable[i]];
-    
+
     char *symname = htmlify((*sp)->name);
     fprintf(fp, "<a href=\"#%d\">%3d   %-2.1f     %s</a>\n",
             rankingTable[i], (*sp)->timerHit,
@@ -750,7 +750,7 @@ void leaky::analyze(int thread)
   // This loop walks through all the call stacks we recorded
   // --last, --start and --end can restrict it, as can excludes/includes
   stacks = 0;
-  for(malloc_log_entry* lep=firstLogEntry; 
+  for(malloc_log_entry* lep=firstLogEntry;
     lep < lastLogEntry;
     lep = reinterpret_cast<malloc_log_entry*>(&lep->pcs[lep->numpcs])) {
 
@@ -808,7 +808,7 @@ void leaky::analyze(int thread)
               continue;
             }
           }
-	
+
           // If we have not seen this symbol before count it and mark it as seen
           if(flagArray[idx]!=stacks && ((flagArray[idx]=stacks) || true)) {
             ++countArray[idx];
@@ -841,7 +841,7 @@ void FunctionCount::printReport(FILE *fp, leaky *lk, int parent, int total)
     const char *fmt = "                      <A href=\"#%d\">%8d (%3.1f%%)%s %s</A>%s\n";
 
     int nmax, tmax=((~0U)>>1);
-    
+
     do {
 	nmax=0;
 	for(int j=getSize(); --j>=0;) {

@@ -13,42 +13,42 @@
 static NS_DEFINE_CID(kLocaleServiceCID, NS_LOCALESERVICE_CID);
 
 class nsScriptableDateFormat final : public nsIScriptableDateFormat {
- public: 
-  NS_DECL_ISUPPORTS 
+ public:
+  NS_DECL_ISUPPORTS
 
-  NS_IMETHOD FormatDateTime(const char16_t *locale, 
-                            nsDateFormatSelector dateFormatSelector, 
-                            nsTimeFormatSelector timeFormatSelector, 
-                            int32_t year, 
-                            int32_t month, 
-                            int32_t day, 
-                            int32_t hour, 
-                            int32_t minute, 
-                            int32_t second, 
+  NS_IMETHOD FormatDateTime(const char16_t *locale,
+                            nsDateFormatSelector dateFormatSelector,
+                            nsTimeFormatSelector timeFormatSelector,
+                            int32_t year,
+                            int32_t month,
+                            int32_t day,
+                            int32_t hour,
+                            int32_t minute,
+                            int32_t second,
                             char16_t **dateTimeString) override;
 
-  NS_IMETHOD FormatDate(const char16_t *locale, 
-                        nsDateFormatSelector dateFormatSelector, 
-                        int32_t year, 
-                        int32_t month, 
-                        int32_t day, 
+  NS_IMETHOD FormatDate(const char16_t *locale,
+                        nsDateFormatSelector dateFormatSelector,
+                        int32_t year,
+                        int32_t month,
+                        int32_t day,
                         char16_t **dateString) override
-                        {return FormatDateTime(locale, dateFormatSelector, kTimeFormatNone, 
+                        {return FormatDateTime(locale, dateFormatSelector, kTimeFormatNone,
                                                year, month, day, 0, 0, 0, dateString);}
 
-  NS_IMETHOD FormatTime(const char16_t *locale, 
-                        nsTimeFormatSelector timeFormatSelector, 
-                        int32_t hour, 
-                        int32_t minute, 
-                        int32_t second, 
+  NS_IMETHOD FormatTime(const char16_t *locale,
+                        nsTimeFormatSelector timeFormatSelector,
+                        int32_t hour,
+                        int32_t minute,
+                        int32_t second,
                         char16_t **timeString) override
-                        {return FormatDateTime(locale, kDateFormatNone, timeFormatSelector, 
+                        {return FormatDateTime(locale, kDateFormatNone, timeFormatSelector,
                                                1999, 1, 1, hour, minute, second, timeString);}
 
   nsScriptableDateFormat() {}
 
 private:
-  nsString mStringOut;   
+  nsString mStringOut;
 
   virtual ~nsScriptableDateFormat() {}
 };
@@ -56,15 +56,15 @@ private:
 NS_IMPL_ISUPPORTS(nsScriptableDateFormat, nsIScriptableDateFormat)
 
 NS_IMETHODIMP nsScriptableDateFormat::FormatDateTime(
-                            const char16_t *aLocale, 
-                            nsDateFormatSelector dateFormatSelector, 
-                            nsTimeFormatSelector timeFormatSelector, 
-                            int32_t year, 
-                            int32_t month, 
-                            int32_t day, 
-                            int32_t hour, 
-                            int32_t minute, 
-                            int32_t second, 
+                            const char16_t *aLocale,
+                            nsDateFormatSelector dateFormatSelector,
+                            nsTimeFormatSelector timeFormatSelector,
+                            int32_t year,
+                            int32_t month,
+                            int32_t day,
+                            int32_t hour,
+                            int32_t minute,
+                            int32_t second,
                             char16_t **dateTimeString)
 {
   // We can't have a valid date with the year, month or day

@@ -61,7 +61,7 @@ typedef struct OMX_NALSTREAMFORMATTYPE{
 /** Enum for standard video codingtype extensions */
 typedef enum OMX_VIDEO_CODINGEXTTYPE {
     OMX_VIDEO_ExtCodingUnused = OMX_VIDEO_CodingKhronosExtensions,
-    OMX_VIDEO_CodingVP8,        /**< VP8/WebM */ 
+    OMX_VIDEO_CodingVP8,        /**< VP8/WebM */
 } OMX_VIDEO_CODINGEXTTYPE;
 
 /** VP8 profiles */

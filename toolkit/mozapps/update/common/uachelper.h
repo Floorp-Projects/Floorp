@@ -15,9 +15,9 @@ public:
 
 private:
   static BOOL SetPrivilege(HANDLE token, LPCTSTR privs, BOOL enable);
-  static BOOL DisableUnneededPrivileges(HANDLE token, 
+  static BOOL DisableUnneededPrivileges(HANDLE token,
                                         LPCTSTR *unneededPrivs, size_t count);
-  static LPCTSTR PrivsToDisable[];  
+  static LPCTSTR PrivsToDisable[];
 };
 
 #endif

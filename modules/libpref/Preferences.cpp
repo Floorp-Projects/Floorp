@@ -755,7 +755,7 @@ Preferences::Init()
   if (NS_SUCCEEDED(rv))
     NS_CreateServicesFromCategory("pref-config-startup",
                                   static_cast<nsISupports *>(static_cast<void *>(this)),
-                                  "pref-config-startup");    
+                                  "pref-config-startup");
 
   nsCOMPtr<nsIObserverService> observerService =
     mozilla::services::GetObserverService();
@@ -1061,14 +1061,14 @@ Preferences::GetDirty(bool *_retval) {
 nsresult
 Preferences::NotifyServiceObservers(const char *aTopic)
 {
-  nsCOMPtr<nsIObserverService> observerService = 
-    mozilla::services::GetObserverService();  
+  nsCOMPtr<nsIObserverService> observerService =
+    mozilla::services::GetObserverService();
   if (!observerService)
     return NS_ERROR_FAILURE;
 
   nsISupports *subject = (nsISupports *)((nsIPrefService *)this);
   observerService->NotifyObservers(subject, aTopic, nullptr);
-  
+
   return NS_OK;
 }
 
@@ -1247,7 +1247,7 @@ static nsresult openPrefFile(nsIFile* aFile)
 
   nsresult rv = NS_NewLocalFileInputStream(getter_AddRefs(inStr), aFile);
   if (NS_FAILED(rv))
-    return rv;        
+    return rv;
 
   int64_t fileSize64;
   rv = aFile->GetFileSize(&fileSize64);
@@ -1373,7 +1373,7 @@ pref_LoadPrefsInDir(nsIFile* aDir, char const *const *aSpecialFiles, uint32_t aS
   }
 
   prefFiles.Sort(pref_CompareFileNames, nullptr);
-  
+
   uint32_t arrayCount = prefFiles.Count();
   uint32_t i;
   for (i = 0; i < arrayCount; ++i) {

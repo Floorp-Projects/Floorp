@@ -33,7 +33,7 @@ struct nsRect;
  *                               *** WARNING ***
  *
  * Do *not* blindly cast to SVG element types in this class's methods (see the
- * warning comment for nsSVGDisplayContainerFrame below). 
+ * warning comment for nsSVGDisplayContainerFrame below).
  */
 class nsSVGContainerFrame : public nsContainerFrame
 {

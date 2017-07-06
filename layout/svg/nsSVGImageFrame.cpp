@@ -438,7 +438,7 @@ nsSVGImageFrame::ReflowSVG()
   Rect extent(x, y, width, height);
 
   if (!extent.IsEmpty()) {
-    mRect = nsLayoutUtils::RoundGfxRectToAppRect(extent, 
+    mRect = nsLayoutUtils::RoundGfxRectToAppRect(extent,
               PresContext()->AppUnitsPerCSSPixel());
   } else {
     mRect.SetEmpty();

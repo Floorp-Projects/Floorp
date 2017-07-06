@@ -87,9 +87,9 @@ struct XPTHeader {
 #define XPT_MAJOR_INCOMPATIBLE_VERSION 0x02
 
 /*
- * A contiguous array of fixed-size InterfaceDirectoryEntry records begins at 
- * the byte offset identified by the interface_directory field in the file 
- * header.  The array is used to quickly locate an interface description 
+ * A contiguous array of fixed-size InterfaceDirectoryEntry records begins at
+ * the byte offset identified by the interface_directory field in the file
+ * header.  The array is used to quickly locate an interface description
  * using its IID.  No interface should appear more than once in the array.
  */
 struct XPTInterfaceDirectoryEntry {
@@ -124,15 +124,15 @@ struct XPTInterfaceDescriptor {
     *  XPTTypeDescriptors for a single XPTMethodDescriptor. Since we still
     *  want to have a simple array of XPTMethodDescriptor (each with a single
     *  embedded XPTTypeDescriptor), a XPTTypeDescriptor can have a reference
-    *  to an 'additional_type'. That reference is an index in this 
-    *  "additional_types" array. So a given XPTMethodDescriptor might have 
+    *  to an 'additional_type'. That reference is an index in this
+    *  "additional_types" array. So a given XPTMethodDescriptor might have
     *  a whole chain of these XPTTypeDescriptors to represent, say, a multi
     *  dimensional array.
     *
     *  Note that in the typelib file these additional types are stored 'inline'
-    *  in the MethodDescriptor. But, in the typelib MethodDescriptors can be 
-    *  of varying sizes, where in XPT's in memory mapping of the data we want 
-    *  them to be of fixed size. This additional_types scheme is here to allow 
+    *  in the MethodDescriptor. But, in the typelib MethodDescriptors can be
+    *  of varying sizes, where in XPT's in memory mapping of the data we want
+    *  them to be of fixed size. This additional_types scheme is here to allow
     *  for that.
     */
     uint8_t                 num_additional_types;
@@ -149,9 +149,9 @@ struct XPTInterfaceDescriptor {
 #define XPT_ID_IS_BUILTINCLASS(flags) (!!(flags & XPT_ID_BUILTINCLASS))
 #define XPT_ID_IS_MAIN_PROCESS_SCRIPTABLE_ONLY(flags) (!!(flags & XPT_ID_MAIN_PROCESS_SCRIPTABLE_ONLY))
 
-/* 
- * A TypeDescriptor is a variable-size record used to identify the type of a 
- * method argument or return value. 
+/*
+ * A TypeDescriptor is a variable-size record used to identify the type of a
+ * method argument or return value.
  *
  * There are three types of TypeDescriptors:
  *
@@ -159,10 +159,10 @@ struct XPTInterfaceDescriptor {
  * InterfaceTypeDescriptor
  * InterfaceIsTypeDescriptor
  *
- * The tag field in the prefix indicates which of the variant TypeDescriptor 
- * records is being used, and hence the way any remaining fields should be 
- * parsed. Values from 0 to 17 refer to SimpleTypeDescriptors. The value 18 
- * designates an InterfaceTypeDescriptor, while 19 represents an 
+ * The tag field in the prefix indicates which of the variant TypeDescriptor
+ * records is being used, and hence the way any remaining fields should be
+ * parsed. Values from 0 to 17 refer to SimpleTypeDescriptors. The value 18
+ * designates an InterfaceTypeDescriptor, while 19 represents an
  * InterfaceIsTypeDescriptor.
  */
 
@@ -177,8 +177,8 @@ struct XPTTypeDescriptorPrefix {
 #define XPT_TDP_TAGMASK          (~XPT_TDP_FLAGMASK)
 #define XPT_TDP_TAG(tdp)         ((tdp).flags & XPT_TDP_TAGMASK)
 
-/* 
- * The following enum maps mnemonic names to the different numeric values 
+/*
+ * The following enum maps mnemonic names to the different numeric values
  * of XPTTypeDescriptor->tag.
  */
 enum XPTTypeDescriptorTags {
@@ -190,12 +190,12 @@ enum XPTTypeDescriptorTags {
     TD_UINT16            = 5,
     TD_UINT32            = 6,
     TD_UINT64            = 7,
-    TD_FLOAT             = 8, 
+    TD_FLOAT             = 8,
     TD_DOUBLE            = 9,
-    TD_BOOL              = 10,  
-    TD_CHAR              = 11,  
-    TD_WCHAR             = 12, 
-    TD_VOID              = 13,  
+    TD_BOOL              = 10,
+    TD_CHAR              = 11,
+    TD_WCHAR             = 12,
+    TD_VOID              = 13,
     TD_PNSIID            = 14,
     TD_DOMSTRING         = 15,
     TD_PSTRING           = 16,
@@ -248,30 +248,30 @@ struct XPTTypeDescriptor {
 };
 
 /*
- * A ConstDescriptor is a variable-size record that records the name and 
- * value of a scoped interface constant. 
+ * A ConstDescriptor is a variable-size record that records the name and
+ * value of a scoped interface constant.
  *
- * The types of the method parameter are restricted to the following subset 
- * of TypeDescriptors: 
+ * The types of the method parameter are restricted to the following subset
+ * of TypeDescriptors:
  *
- * int8_t, uint8_t, int16_t, uint16_t, int32_t, uint32_t, 
+ * int8_t, uint8_t, int16_t, uint16_t, int32_t, uint32_t,
  * int64_t, uint64_t, wchar_t, char
- * 
- * The type (and thus the size) of the value record is determined by the 
- * contents of the associated TypeDescriptor record. For instance, if type 
- * corresponds to int16_t, then value is a two-byte record consisting of a 
+ *
+ * The type (and thus the size) of the value record is determined by the
+ * contents of the associated TypeDescriptor record. For instance, if type
+ * corresponds to int16_t, then value is a two-byte record consisting of a
  * 16-bit signed integer.
  */
 union XPTConstValue {
     int8_t    i8;
-    uint8_t   ui8; 
-    int16_t   i16; 
+    uint8_t   ui8;
+    int16_t   i16;
     uint16_t  ui16;
-    int32_t   i32; 
+    int32_t   i32;
     uint32_t  ui32;
-    int64_t   i64; 
-    uint64_t  ui64; 
-    char      ch; 
+    int64_t   i64;
+    uint64_t  ui64;
+    char      ch;
     uint16_t  wch;
 }; /* varies according to type */
 
@@ -282,7 +282,7 @@ struct XPTConstDescriptor {
 };
 
 /*
- * A ParamDescriptor is a variable-size record used to describe either a 
+ * A ParamDescriptor is a variable-size record used to describe either a
  * single argument to a method or a method's result.
  */
 struct XPTParamDescriptor {
@@ -307,7 +307,7 @@ struct XPTParamDescriptor {
 #define XPT_PD_IS_OPTIONAL(flags) (flags & XPT_PD_OPTIONAL)
 
 /*
- * A MethodDescriptor is a variable-size record used to describe a single 
+ * A MethodDescriptor is a variable-size record used to describe a single
  * interface method.
  */
 struct XPTMethodDescriptor {
@@ -335,10 +335,10 @@ struct XPTMethodDescriptor {
 #define XPT_MD_WANTS_CONTEXT(flags)  (flags & XPT_MD_CONTEXT)
 
 /*
- * Annotation records are variable-size records used to store secondary 
- * information about the typelib, e.g. such as the name of the tool that 
- * generated the typelib file, the date it was generated, etc.  The 
- * information is stored with very loose format requirements so as to 
+ * Annotation records are variable-size records used to store secondary
+ * information about the typelib, e.g. such as the name of the tool that
+ * generated the typelib file, the date it was generated, etc.  The
+ * information is stored with very loose format requirements so as to
  * allow virtually any private data to be stored in the typelib.
  *
  * There are two types of Annotations:
@@ -346,11 +346,11 @@ struct XPTMethodDescriptor {
  * EmptyAnnotation
  * PrivateAnnotation
  *
- * The tag field of the prefix discriminates among the variant record 
- * types for Annotation's.  If the tag is 0, this record is an 
- * EmptyAnnotation. EmptyAnnotation's are ignored - they're only used to 
- * indicate an array of Annotation's that's completely empty.  If the tag 
- * is 1, the record is a PrivateAnnotation. 
+ * The tag field of the prefix discriminates among the variant record
+ * types for Annotation's.  If the tag is 0, this record is an
+ * EmptyAnnotation. EmptyAnnotation's are ignored - they're only used to
+ * indicate an array of Annotation's that's completely empty.  If the tag
+ * is 1, the record is a PrivateAnnotation.
  *
  * We don't actually store annotations; we just skip over them if they are
  * present.

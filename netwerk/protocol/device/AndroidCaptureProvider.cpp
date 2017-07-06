@@ -44,7 +44,7 @@ AndroidCameraInputStream::Init(nsACString& aContentType, nsCaptureParams* aParam
   mWidth = aParams->width;
   mHeight = aParams->height;
   mCamera = aParams->camera;
-  
+
   CameraStreamImpl *impl = CameraStreamImpl::GetInstance(0);
   if (!impl)
     return NS_ERROR_OUT_OF_MEMORY;
@@ -64,25 +64,25 @@ void AndroidCameraInputStream::ReceiveFrame(char* frame, uint32_t length) {
       mAvailable -= mFrameSize;
     }
   }
-  
+
   mFrameSize = sizeof(RawPacketHeader) + length;
-  
+
   char* fullFrame = (char*)moz_xmalloc(mFrameSize);
 
   if (!fullFrame)
     return;
-  
+
   RawPacketHeader* header = (RawPacketHeader*) fullFrame;
   header->packetID = 0xFF;
   header->codecID = 0x595556; // "YUV"
-  
+
   // we copy the Y plane, and de-interlace the CrCb
-  
+
   uint32_t yFrameSize = mWidth * mHeight;
   uint32_t uvFrameSize = yFrameSize / 4;
 
   memcpy(fullFrame + sizeof(RawPacketHeader), frame, yFrameSize);
-  
+
   char* uFrame = fullFrame + yFrameSize;
   char* vFrame = fullFrame + yFrameSize + uvFrameSize;
   char* yFrame = frame + yFrameSize;
@@ -90,7 +90,7 @@ void AndroidCameraInputStream::ReceiveFrame(char* frame, uint32_t length) {
     uFrame[i] = yFrame[2 * i + 1];
     vFrame[i] = yFrame[2 * i];
   }
-  
+
   {
     mozilla::ReentrantMonitorAutoEnter autoMonitor(mMonitor);
     mAvailable += mFrameSize;
@@ -121,12 +121,12 @@ NS_IMETHODIMP AndroidCameraInputStream::Read(char *aBuffer, uint32_t aCount, uin
 
 NS_IMETHODIMP AndroidCameraInputStream::ReadSegments(nsWriteSegmentFun aWriter, void *aClosure, uint32_t aCount, uint32_t *aRead) {
   *aRead = 0;
-  
+
   nsresult rv;
 
   if (mAvailable == 0)
     return NS_BASE_STREAM_WOULD_BLOCK;
-  
+
   if (aCount > mAvailable)
     aCount = mAvailable;
 
@@ -153,15 +153,15 @@ NS_IMETHODIMP AndroidCameraInputStream::ReadSegments(nsWriteSegmentFun aWriter, 
     header.framerateDenominator = 1;
 
     rv = aWriter(this, aClosure, (const char*)&header, 0, sizeof(RawVideoHeader), aRead);
-   
+
     if (NS_FAILED(rv))
       return NS_OK;
-    
+
     mHeaderSent = true;
     aCount -= sizeof(RawVideoHeader);
     mAvailable -= sizeof(RawVideoHeader);
   }
-  
+
   {
     mozilla::ReentrantMonitorAutoEnter autoMonitor(mMonitor);
     while ((mAvailable > 0) && (aCount >= mFrameSize)) {
@@ -174,10 +174,10 @@ NS_IMETHODIMP AndroidCameraInputStream::ReadSegments(nsWriteSegmentFun aWriter, 
         mFrameQueue->PushFront((void*)frame);
         return NS_OK;
       }
-  
+
       // RawReader does a copy when calling VideoData::Create()
       free(frame);
-  
+
       if (NS_FAILED(rv))
         return NS_OK;
 
@@ -208,7 +208,7 @@ void AndroidCameraInputStream::doClose() {
 
 void AndroidCameraInputStream::NotifyListeners() {
   mozilla::ReentrantMonitorAutoEnter autoMonitor(mMonitor);
-  
+
   if (mCallback && (mAvailable > sizeof(RawVideoHeader))) {
     nsCOMPtr<nsIInputStreamCallback> callback;
     if (mCallbackTarget) {

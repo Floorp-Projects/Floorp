@@ -1,4 +1,4 @@
-/* vim: et ts=2 sw=2 tw=80 
+/* vim: et ts=2 sw=2 tw=80
  */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -63,7 +63,7 @@ NS_IMETHODIMP nsNetAddr::GetAddress(nsACString & aAddress)
   default:
     return NS_ERROR_UNEXPECTED;
   }
-  
+
   return NS_OK;
 }
 

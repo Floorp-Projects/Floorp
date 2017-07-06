@@ -136,7 +136,7 @@ nsFtpProtocolHandler::Init()
     return NS_OK;
 }
 
-    
+
 //-----------------------------------------------------------------------------
 // nsIProtocolHandler methods:
 
@@ -150,7 +150,7 @@ nsFtpProtocolHandler::GetScheme(nsACString &result)
 NS_IMETHODIMP
 nsFtpProtocolHandler::GetDefaultPort(int32_t *result)
 {
-    *result = 21; 
+    *result = 21;
     return NS_OK;
 }
 
@@ -158,7 +158,7 @@ NS_IMETHODIMP
 nsFtpProtocolHandler::GetProtocolFlags(uint32_t *result)
 {
     *result = URI_STD | ALLOWS_PROXY | ALLOWS_PROXY_HTTP |
-        URI_LOADABLE_BY_ANYONE; 
+        URI_LOADABLE_BY_ANYONE;
     return NS_OK;
 }
 
@@ -249,7 +249,7 @@ nsFtpProtocolHandler::NewProxiedChannel(nsIURI* uri, nsIProxyInfo* proxyInfo,
                             result);
 }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsFtpProtocolHandler::AllowPort(int32_t port, const char *scheme, bool *_retval)
 {
     *_retval = (port == 21 || port == 22);
@@ -278,18 +278,18 @@ nsFtpProtocolHandler::RemoveConnection(nsIURI *aKey, nsFtpControlConnection* *_r
 {
     NS_ASSERTION(_retval, "null pointer");
     NS_ASSERTION(aKey, "null pointer");
-    
+
     *_retval = nullptr;
 
     nsAutoCString spec;
     aKey->GetPrePath(spec);
-    
+
     LOG(("FTP:removing connection for %s\n", spec.get()));
-   
+
     timerStruct* ts = nullptr;
     uint32_t i;
     bool found = false;
-    
+
     for (i=0;i<mRootConnectionList.Length();++i) {
         ts = mRootConnectionList[i];
         if (strcmp(spec.get(), ts->key) == 0) {
@@ -326,7 +326,7 @@ nsFtpProtocolHandler::InsertConnection(nsIURI *aKey, nsFtpControlConnection *aCo
     nsresult rv;
     nsCOMPtr<nsITimer> timer = do_CreateInstance("@mozilla.org/timer;1", &rv);
     if (NS_FAILED(rv)) return rv;
-    
+
     timerStruct* ts = new timerStruct();
     if (!ts)
         return NS_ERROR_OUT_OF_MEMORY;
@@ -341,7 +341,7 @@ nsFtpProtocolHandler::InsertConnection(nsIURI *aKey, nsFtpControlConnection *aCo
         delete ts;
         return rv;
     }
-    
+
     ts->key = ToNewCString(spec);
     if (!ts->key) {
         delete ts;

@@ -83,7 +83,7 @@ nsXULTooltipListener::MouseOut(nsIDOMEvent* aEvent)
   mTooltipShownOnce = false;
 
   // if the timer is running and no tooltip is shown, we
-  // have to cancel the timer here so that it doesn't 
+  // have to cancel the timer here so that it doesn't
   // show the tooltip if we move the mouse out of the window
   nsCOMPtr<nsIContent> currentTooltip = do_QueryReferent(mCurrentTooltip);
   if (mTooltipTimer && !currentTooltip) {
@@ -130,7 +130,7 @@ nsXULTooltipListener::MouseMove(nsIDOMEvent* aEvent)
   if (!sShowTooltips)
     return;
 
-  // stash the coordinates of the event so that we can still get back to it from within the 
+  // stash the coordinates of the event so that we can still get back to it from within the
   // timer callback. On win32, we'll get a MouseMove event even when a popup goes away --
   // even when the mouse doesn't change position! To get around this, we make sure the
   // mouse has really moved before proceeding.
@@ -165,7 +165,7 @@ nsXULTooltipListener::MouseMove(nsIDOMEvent* aEvent)
     CheckTreeBodyMove(mouseEvent);
 #endif
 
-  // as the mouse moves, we want to make sure we reset the timer to show it, 
+  // as the mouse moves, we want to make sure we reset the timer to show it,
   // so that the delay is from when the mouse stops moving, not when it enters
   // the node.
   KillTooltipTimer();
@@ -384,7 +384,7 @@ nsXULTooltipListener::CheckTreeBodyMove(nsIDOMMouseEvent* aMouseEvent)
     nsCOMPtr<nsIContent> currentTooltip = do_QueryReferent(mCurrentTooltip);
     if (currentTooltip && (row != mLastTreeRow || col != mLastTreeCol)) {
       HideTooltip();
-    } 
+    }
 
     mLastTreeRow = row;
     mLastTreeCol = col;
@@ -407,7 +407,7 @@ nsXULTooltipListener::ShowTooltip()
   nsCOMPtr<nsIDOMXULDocument> xulDoc =
     do_QueryInterface(tooltipNode->GetComposedDoc());
   if (xulDoc) {
-    // Make sure the target node is still attached to some document. 
+    // Make sure the target node is still attached to some document.
     // It might have been deleted.
     if (sourceNode->IsInComposedDoc()) {
 #ifdef MOZ_XUL
@@ -427,7 +427,7 @@ nsXULTooltipListener::ShowTooltip()
 
       // listen for popuphidden on the tooltip node, so that we can
       // be sure DestroyPopup is called even if someone else closes the tooltip
-      currentTooltip->AddSystemEventListener(NS_LITERAL_STRING("popuphiding"), 
+      currentTooltip->AddSystemEventListener(NS_LITERAL_STRING("popuphiding"),
                                              this, false, false);
 
       // listen for mousedown, mouseup, keydown, and DOMMouseScroll events at document level
@@ -462,7 +462,7 @@ nsXULTooltipListener::ShowTooltip()
 //       in the future."
 #ifdef DEBUG_crap
 static void
-GetTreeCellCoords(nsITreeBoxObject* aTreeBox, nsIContent* aSourceNode, 
+GetTreeCellCoords(nsITreeBoxObject* aTreeBox, nsIContent* aSourceNode,
                   int32_t aRow, nsITreeColumn* aCol, int32_t* aX, int32_t* aY)
 {
   int32_t junk;
@@ -487,7 +487,7 @@ SetTitletipLabel(nsITreeBoxObject* aTreeBox, nsIContent* aTooltip,
   if (view) {
     nsAutoString label;
 #ifdef DEBUG
-    nsresult rv = 
+    nsresult rv =
 #endif
       view->GetCellText(aRow, aCol, label);
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Couldn't get the cell text!");
@@ -552,7 +552,7 @@ nsXULTooltipListener::HideTooltip()
 }
 
 static void
-GetImmediateChild(nsIContent* aContent, nsIAtom *aTag, nsIContent** aResult) 
+GetImmediateChild(nsIContent* aContent, nsIAtom *aTag, nsIContent** aResult)
 {
   *aResult = nullptr;
   uint32_t childCount = aContent->GetChildCount();

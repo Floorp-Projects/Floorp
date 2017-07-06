@@ -26,7 +26,7 @@ using namespace mozilla::layout;
 
 namespace css = mozilla::css;
 
-#undef  DEBUG_TABLE_STRATEGY 
+#undef  DEBUG_TABLE_STRATEGY
 
 BasicTableLayoutStrategy::BasicTableLayoutStrategy(nsTableFrame *aTableFrame)
   : nsITableLayoutStrategy(nsITableLayoutStrategy::Auto)
@@ -372,9 +372,9 @@ BasicTableLayoutStrategy::ComputeColumnIntrinsicISizes(gfxContext* aRenderingCon
                 DistributePctISizeToColumns(info.prefPercent,
                                             col, colSpan);
             }
-            DistributeISizeToColumns(info.minCoord, col, colSpan, 
+            DistributeISizeToColumns(info.minCoord, col, colSpan,
                                      BTLS_MIN_ISIZE, info.hasSpecifiedISize);
-            DistributeISizeToColumns(info.prefCoord, col, colSpan, 
+            DistributeISizeToColumns(info.prefCoord, col, colSpan,
                                      BTLS_PREF_ISIZE, info.hasSpecifiedISize);
         } while ((item = item->next));
 
@@ -452,7 +452,7 @@ BasicTableLayoutStrategy::ComputeIntrinsicISizes(gfxContext* aRenderingContext)
         float p = colFrame->GetPrefPercent();
         if (p > 0.0f) {
             nscoord colPref = colFrame->GetPrefCoord();
-            nscoord new_small_pct_expand = 
+            nscoord new_small_pct_expand =
                 (colPref == nscoord_MAX ?
                  nscoord_MAX : nscoord(float(colPref) / p));
             if (new_small_pct_expand > max_small_pct_pref) {
@@ -460,7 +460,7 @@ BasicTableLayoutStrategy::ComputeIntrinsicISizes(gfxContext* aRenderingContext)
             }
             pct_total += p;
         } else {
-            nonpct_pref_total = NSCoordSaturatingAdd(nonpct_pref_total, 
+            nonpct_pref_total = NSCoordSaturatingAdd(nonpct_pref_total,
                                                      colFrame->GetPrefCoord());
         }
     }
@@ -629,7 +629,7 @@ BasicTableLayoutStrategy::DistributePctISizeToColumns(float aSpanPrefPct,
 
             if (!aSpanPrefPct) {
                 // No more span-percent-isize to distribute --> we're done.
-                NS_ASSERTION(spanHasNonPctPref ? 
+                NS_ASSERTION(spanHasNonPctPref ?
                              nonPctTotalPrefISize == 0 :
                              nonPctColCount == 0,
                              "No more pct inline-size to distribute, "
@@ -648,7 +648,7 @@ BasicTableLayoutStrategy::DistributeISizeToColumns(nscoord aISize,
                                                    bool aSpanHasSpecifiedISize)
 {
     NS_ASSERTION(aISizeType != BTLS_FINAL_ISIZE ||
-                 (aFirstCol == 0 && 
+                 (aFirstCol == 0 &&
                   aColCount == mTableFrame->GetCellMap()->GetColCount()),
             "Computing final column isizes, but didn't get full column range");
 
@@ -674,9 +674,9 @@ BasicTableLayoutStrategy::DistributeISizeToColumns(nscoord aISize,
     /*
      * The goal of this function is to distribute |aISize| between the
      * columns by making an appropriate AddSpanCoords or SetFinalISize
-     * call for each column.  (We call AddSpanCoords if we're 
+     * call for each column.  (We call AddSpanCoords if we're
      * distributing a column-spanning cell's minimum or preferred isize
-     * to its spanned columns.  We call SetFinalISize if we're 
+     * to its spanned columns.  We call SetFinalISize if we're
      * distributing a table's final isize to its columns.)
      *
      * The idea is to either assign one of the following sets of isizes
@@ -763,10 +763,10 @@ BasicTableLayoutStrategy::DistributeISizeToColumns(nscoord aISize,
             if (colFrame->GetHasSpecifiedCoord()) {
                 // we'll add on the rest of guess_min_spec outside the
                 // loop
-                nscoord delta = NSCoordSaturatingSubtract(pref_iSize, 
+                nscoord delta = NSCoordSaturatingSubtract(pref_iSize,
                                                           min_iSize, 0);
                 guess_min_spec = NSCoordSaturatingAdd(guess_min_spec, delta);
-                total_fixed_pref = NSCoordSaturatingAdd(total_fixed_pref, 
+                total_fixed_pref = NSCoordSaturatingAdd(total_fixed_pref,
                                                         pref_iSize);
             } else if (pref_iSize == 0) {
                 if (cellMap->GetNumCellsOriginatingInCol(col) > 0) {
@@ -913,7 +913,7 @@ BasicTableLayoutStrategy::DistributeISizeToColumns(nscoord aISize,
                     NS_ASSERTION(col_iSize == colFrame->GetPrefCoord(),
                                  "wrong inline-size assigned");
                     nscoord col_min = colFrame->GetMinCoord();
-                    nscoord pref_minus_min = 
+                    nscoord pref_minus_min =
                         NSCoordSaturatingSubtract(col_iSize, col_min, 0);
                     col_iSize = col_iSize_before_adjust = col_min;
                     if (pref_minus_min != 0) {
@@ -934,7 +934,7 @@ BasicTableLayoutStrategy::DistributeISizeToColumns(nscoord aISize,
                                 c = 0.0f;
                             }
                         }
-                        basis.c = NSCoordSaturatingSubtract(basis.c, 
+                        basis.c = NSCoordSaturatingSubtract(basis.c,
                                                             pref_minus_min,
                                                             nscoord_MAX);
                         col_iSize += NSToCoordRound(
@@ -1017,7 +1017,7 @@ BasicTableLayoutStrategy::DistributeISizeToColumns(nscoord aISize,
 
         NS_ASSERTION(col_iSize >= colFrame->GetMinCoord(),
                      "assigned inline-size smaller than min");
-        
+
         // Apply the new isize
         switch (aISizeType) {
             case BTLS_MIN_ISIZE:
@@ -1026,7 +1026,7 @@ BasicTableLayoutStrategy::DistributeISizeToColumns(nscoord aISize,
                     // For the pref isize, we'll just pass in our computed
                     // min isize, because the real pref isize will be at least
                     // as big
-                    colFrame->AddSpanCoords(col_iSize, col_iSize, 
+                    colFrame->AddSpanCoords(col_iSize, col_iSize,
                                             aSpanHasSpecifiedISize);
                 }
                 break;
@@ -1035,7 +1035,7 @@ BasicTableLayoutStrategy::DistributeISizeToColumns(nscoord aISize,
                     // Note: AddSpanCoords requires both a min and pref isize.
                     // For the min isize, we'll just pass in 0, because
                     // the real min isize will be at least 0
-                    colFrame->AddSpanCoords(0, col_iSize, 
+                    colFrame->AddSpanCoords(0, col_iSize,
                                             aSpanHasSpecifiedISize);
                 }
                 break;
@@ -1043,12 +1043,12 @@ BasicTableLayoutStrategy::DistributeISizeToColumns(nscoord aISize,
                 {
                     nscoord old_final = colFrame->GetFinalISize();
                     colFrame->SetFinalISize(col_iSize);
-                    
+
                     if (old_final != col_iSize) {
                         mTableFrame->DidResizeColumns();
                     }
                 }
-                break;                
+                break;
         }
     }
     NS_ASSERTION((space == 0 || space == nscoord_MAX) &&

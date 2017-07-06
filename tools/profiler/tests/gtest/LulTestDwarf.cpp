@@ -101,7 +101,7 @@ struct CFIFixture {
     // - Leave Entry and End without expectations, as it's probably a
     //   good idea to set those explicitly in each test.
     //
-    // - Expect the *Rule functions to not be called, 
+    // - Expect the *Rule functions to not be called,
     //   so that each test can simply list the calls they expect.
     //
     // I gather I could use StrictMock for this, but the manual seems
@@ -557,7 +557,7 @@ struct CFIInsnFixture: public CFIFixture {
     cfa_base_register = 0x383a3aa;
     cfa_offset = 0xf748;
   }
-  
+
   // Prepare SECTION to receive FDE instructions.
   //
   // - Append a stock CIE header that establishes the fixture's
@@ -1145,7 +1145,7 @@ TEST_F(LulDwarfCFIInsn, DW_CFA_restore) {
         .WillOnce(Return(true));
     EXPECT_CALL(handler, End()).WillOnce(Return(true));
   }
-    
+
   ParseSection(&section);
 }
 
@@ -1195,7 +1195,7 @@ TEST_F(LulDwarfCFIInsn, DW_CFA_restoreNoRule) {
         .WillOnce(Return(true));
     EXPECT_CALL(handler, End()).WillOnce(Return(true));
   }
-    
+
   ParseSection(&section);
 }
 
@@ -1255,7 +1255,7 @@ TEST_F(LulDwarfCFIInsn, DW_CFA_restore_extended) {
         .WillOnce(Return(true));
     EXPECT_CALL(handler, End()).WillOnce(Return(true));
   }
-    
+
   ParseSection(&section);
 }
 
@@ -1502,7 +1502,7 @@ TEST_F(LulDwarfCFIInsn, QuitMidentry) {
       .InSequence(s).WillOnce(Return(false));
   EXPECT_CALL(handler, End())
       .InSequence(s).WillOnce(Return(true));
-  
+
   ParseSection(&section, false);
 }
 
@@ -1942,7 +1942,7 @@ TEST_F(LulDwarfCFIRestore, RestoreValExpressionRuleChangedValExpression) {
 }
 
 struct EHFrameFixture: public CFIInsnFixture {
-  EHFrameFixture() 
+  EHFrameFixture()
       : CFIInsnFixture(), section(kBigEndian, 4, true) {
     encoded_pointer_bases.cfi  = 0x7f496cb2;
     encoded_pointer_bases.text = 0x540f67b6;
@@ -2024,7 +2024,7 @@ TEST_F(LulDwarfEHFrame, SimpleFDE) {
   lul::DwarfPointerEncoding fde_encoding =
       lul::DwarfPointerEncoding(lul::DW_EH_PE_textrel
                                 | lul::DW_EH_PE_udata2);
-  
+
   section.SetPointerEncoding(fde_encoding);
   section.SetEncodedPointerBases(encoded_pointer_bases);
   Label cie;
@@ -2034,7 +2034,7 @@ TEST_F(LulDwarfEHFrame, SimpleFDE) {
       .ULEB128(7)                                // Augmentation data length
       .D8(lsda_encoding)                         // LSDA pointer format
       .D8(lul::DW_EH_PE_pcrel)                   // personality pointer format
-      .EncodedPointer(0x97baa00, lul::DW_EH_PE_pcrel) // and value 
+      .EncodedPointer(0x97baa00, lul::DW_EH_PE_pcrel) // and value
       .D8(fde_encoding)                          // FDE pointer format
       .D8(lul::DW_CFA_def_cfa).ULEB128(6706).ULEB128(31)
       .FinishEntry()

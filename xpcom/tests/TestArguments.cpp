@@ -20,6 +20,6 @@ int main(int argc, char* argv[]) {
       return 7;
   if (strcmp(R"("argument with quotes")", argv[8]) != 0)
       return 8;
-  
+
   return 0;
-} 
+}

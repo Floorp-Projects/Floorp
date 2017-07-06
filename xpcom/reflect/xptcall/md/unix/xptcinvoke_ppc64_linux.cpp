@@ -36,7 +36,7 @@ extern "C" void
 invoke_copy_to_stack(uint64_t* gpregs,
                      double* fpregs,
                      uint32_t paramCount,
-                     nsXPTCVariant* s, 
+                     nsXPTCVariant* s,
                      uint64_t* d)
 {
     uint64_t tempu64;

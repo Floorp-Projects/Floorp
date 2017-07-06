@@ -92,7 +92,7 @@ DOMRectList::GetLength(uint32_t* aLength)
   return NS_OK;
 }
 
-NS_IMETHODIMP    
+NS_IMETHODIMP
 DOMRectList::Item(uint32_t aIndex, nsIDOMClientRect** aReturn)
 {
   NS_IF_ADDREF(*aReturn = Item(aIndex));

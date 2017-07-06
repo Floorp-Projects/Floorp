@@ -135,7 +135,7 @@ nsTextEquivUtils::AppendTextEquivFromTextContent(nsIContent *aContent,
         }
       }
     }
-    
+
     if (aContent->TextLength() > 0) {
       nsIFrame *frame = aContent->GetPrimaryFrame();
       if (frame) {
@@ -151,16 +151,16 @@ nsTextEquivUtils::AppendTextEquivFromTextContent(nsIContent *aContent,
         aString->Append(char16_t(' '));
       }
     }
-    
+
     return NS_OK;
   }
-  
+
   if (aContent->IsHTMLElement() &&
       aContent->NodeInfo()->Equals(nsGkAtoms::br)) {
     aString->AppendLiteral("\r\n");
     return NS_OK;
   }
-  
+
   return NS_OK_NO_NAME_CLAUSE_HANDLED;
 }
 

@@ -302,7 +302,7 @@ nsAbsoluteContainingBlock::FrameDependsOnContainer(nsIFrame* f,
         !IsFixedPaddingSize(padding->mPadding.GetBEnd(wm))) {
       return true;
     }
-      
+
     // See if f's position might have changed.
     if (!IsFixedMarginSize(margin->mMargin.GetBStart(wm)) ||
         !IsFixedMarginSize(margin->mMargin.GetBEnd(wm))) {
@@ -616,7 +616,7 @@ nsAbsoluteContainingBlock::ResolveSizeDependentOffsets(
 // positioned child has the exact same size and position and skip the
 // reflow...
 
-// When bug 154892 is checked in, make sure that when 
+// When bug 154892 is checked in, make sure that when
 // mChildListID == kFixedList, the height is unconstrained.
 // since we don't allow replicated frames to split.
 

@@ -15,7 +15,7 @@
 // used to satisfy the nsBaseChannel::OpenContentStream method.
 //
 // The subclass typically overrides the default Available, ReadSegments and
-// CloseWithStatus methods.  By default, Read is implemented in terms of 
+// CloseWithStatus methods.  By default, Read is implemented in terms of
 // ReadSegments, and Close is implemented in terms of CloseWithStatus.  If
 // CloseWithStatus is overriden, then the subclass will usually want to call
 // the base class' CloseWithStatus method before returning.
@@ -35,7 +35,7 @@
 
 class nsBaseContentStream : public nsIAsyncInputStream
 {
-public: 
+public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIINPUTSTREAM
   NS_DECL_NSIASYNCINPUTSTREAM
@@ -57,7 +57,7 @@ public:
 
   // Called to dispatch a pending callback.  If there is no pending callback,
   // then this function does nothing.  Pass true to this function to cause the
-  // callback to occur asynchronously; otherwise, the callback will happen 
+  // callback to occur asynchronously; otherwise, the callback will happen
   // before this function returns.
   void DispatchCallback(bool async = true);
 

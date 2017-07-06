@@ -470,7 +470,7 @@ SVGPathSegListSMILType::Interpolate(const nsSMILValue& aStartVal,
   MOZ_ASSERT(result.IsIdentity(),
              "expecting outparam to start out as identity");
 
-  PathInterpolationResult check = CanInterpolate(start, end); 
+  PathInterpolationResult check = CanInterpolate(start, end);
 
   if (check == eCannotInterpolate) {
     // SVGContentUtils::ReportToConsole - can't interpolate path segment lists with

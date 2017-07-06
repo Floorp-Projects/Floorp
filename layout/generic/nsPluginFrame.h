@@ -105,7 +105,7 @@ public:
 
   virtual void SetIsDocumentActive(bool aIsActive) override;
 
-  virtual nsresult GetCursor(const nsPoint& aPoint, 
+  virtual nsresult GetCursor(const nsPoint& aPoint,
                              nsIFrame::Cursor& aCursor) override;
 
   // APIs used by nsRootPresContext to set up the widget position/size/clip
@@ -232,7 +232,7 @@ protected:
                       const ReflowInput& aReflowInput,
                       ReflowOutput& aDesiredSize);
 
-  bool IsFocusable(int32_t *aTabIndex = nullptr, 
+  bool IsFocusable(int32_t *aTabIndex = nullptr,
                    bool aWithMouse = false) override;
 
   // check attributes and optionally CSS to see if we should display anything
@@ -243,7 +243,7 @@ protected:
   bool IsPaintedByGecko() const;
 
   nsIntPoint GetWindowOriginInPixels(bool aWindowless);
-  
+
   /*
    * If this frame is in a remote tab, return the tab offset to
    * the origin of the chrome window. In non-e10s, this return 0,0.
@@ -366,7 +366,7 @@ public:
                                              const ContainerLayerParameters& aContainerParameters) override
   {
     return static_cast<nsPluginFrame*>(mFrame)->BuildLayer(aBuilder,
-                                                           aManager, 
+                                                           aManager,
                                                            this,
                                                            aContainerParameters);
   }

@@ -48,7 +48,7 @@ IsValidUnitType(uint16_t unit)
   return false;
 }
 
-static void 
+static void
 GetUnitString(nsAString& unit, uint16_t unitType)
 {
   if (IsValidUnitType(unitType)) {
@@ -65,9 +65,9 @@ GetUnitString(nsAString& unit, uint16_t unitType)
 static uint16_t
 GetUnitTypeForString(const nsAString& unitStr)
 {
-  if (unitStr.IsEmpty()) 
+  if (unitStr.IsEmpty())
     return SVG_ANGLETYPE_UNSPECIFIED;
-                   
+
   nsIAtom *unitAtom = NS_GetStaticAtom(unitStr);
 
   if (unitAtom) {
@@ -256,7 +256,7 @@ nsSVGAngle::SetBaseValueString(const nsAString &aValueAsString,
 {
   float value;
   uint16_t unitType;
-  
+
   if (!GetValueFromString(aValueAsString, value, &unitType)) {
      return NS_ERROR_DOM_SYNTAX_ERR;
   }

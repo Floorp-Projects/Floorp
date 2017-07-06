@@ -126,7 +126,7 @@ using namespace mozilla::dom;
 already_AddRefed<DragEvent>
 NS_NewDOMDragEvent(EventTarget* aOwner,
                    nsPresContext* aPresContext,
-                   WidgetDragEvent* aEvent) 
+                   WidgetDragEvent* aEvent)
 {
   RefPtr<DragEvent> event =
     new DragEvent(aOwner, aPresContext, aEvent);

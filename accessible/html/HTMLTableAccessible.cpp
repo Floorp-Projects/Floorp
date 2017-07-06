@@ -976,7 +976,7 @@ HTMLTableAccessible::IsProbablyLayoutTable()
 
   // Check for legitimate data table elements.
   Accessible* caption = FirstChild();
-  if (caption && caption->Role() == roles::CAPTION && caption->HasChildren()) 
+  if (caption && caption->Role() == roles::CAPTION && caption->HasChildren())
     RETURN_LAYOUT_ANSWER(false, "Not empty caption -- legitimate table structures");
 
   for (nsIContent* childElm = mContent->GetFirstChild(); childElm;

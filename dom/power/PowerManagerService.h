@@ -75,7 +75,7 @@ private:
   static StaticRefPtr<PowerManagerService> sSingleton;
 
   nsTArray<nsCOMPtr<nsIDOMMozWakeLockListener>> mWakeLockListeners;
-  
+
   int32_t mWatchdogTimeoutSecs;
 };
 

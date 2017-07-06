@@ -37,7 +37,7 @@ nsSocketProviderService::GetSocketProvider(const char         *type,
           nsDependentCString(type));
 
   rv = CallGetService(contractID.get(), result);
-  if (NS_FAILED(rv)) 
+  if (NS_FAILED(rv))
       rv = NS_ERROR_UNKNOWN_SOCKET_TYPE;
   return rv;
 }

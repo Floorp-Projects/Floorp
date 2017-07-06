@@ -32,7 +32,7 @@ class nsIChannel;
  *
  * XXX This interface does not contain a mechanism for the sink to
  * get specific schema/DTD information from the parser. This information
- * may be necessary for entity expansion. It is also necessary for 
+ * may be necessary for entity expansion. It is also necessary for
  * building the DOM portions that relate to the schema.
  *
  * XXX This interface does not deal with the presence of an external

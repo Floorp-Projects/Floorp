@@ -38,7 +38,7 @@ nsMathMLmpaddedFrame::~nsMathMLmpaddedFrame()
 }
 
 NS_IMETHODIMP
-nsMathMLmpaddedFrame::InheritAutomaticData(nsIFrame* aParent) 
+nsMathMLmpaddedFrame::InheritAutomaticData(nsIFrame* aParent)
 {
   // let the base class get the default from our parent
   nsMathMLContainerFrame::InheritAutomaticData(aParent);
@@ -67,7 +67,7 @@ nsMathMLmpaddedFrame::ProcessAttributes()
   mWidthSign = NS_MATHML_SIGN_INVALID;
   mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::width, value);
   if (!value.IsEmpty()) {
-    if (!ParseAttribute(value, mWidthSign, mWidth, mWidthPseudoUnit)) {      
+    if (!ParseAttribute(value, mWidthSign, mWidth, mWidthPseudoUnit)) {
       ReportParseError(nsGkAtoms::width->GetUTF16String(), value.get());
     }
   }
@@ -94,7 +94,7 @@ nsMathMLmpaddedFrame::ProcessAttributes()
   mLeadingSpaceSign = NS_MATHML_SIGN_INVALID;
   mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::lspace_, value);
   if (!value.IsEmpty()) {
-    if (!ParseAttribute(value, mLeadingSpaceSign, mLeadingSpace, 
+    if (!ParseAttribute(value, mLeadingSpaceSign, mLeadingSpace,
                         mLeadingSpacePseudoUnit)) {
       ReportParseError(nsGkAtoms::lspace_->GetUTF16String(), value.get());
     }
@@ -109,7 +109,7 @@ nsMathMLmpaddedFrame::ProcessAttributes()
       ReportParseError(nsGkAtoms::voffset_->GetUTF16String(), value.get());
     }
   }
-  
+
 }
 
 // parse an input string in the following format (see bug 148326 for testcases):
@@ -191,7 +191,7 @@ nsMathMLmpaddedFrame::ParseAttribute(nsString&   aString,
 
   if (unit.IsEmpty()) {
     if (gotPercent) {
-      // case ["+"|"-"] unsigned-number "%" 
+      // case ["+"|"-"] unsigned-number "%"
       aCSSValue.SetPercentValue(floatValue / 100.0f);
       aPseudoUnit = NS_MATHML_PSEUDO_UNIT_ITSELF;
       return true;
@@ -225,7 +225,7 @@ nsMathMLmpaddedFrame::ParseAttribute(nsString&   aString,
     // We are not supposed to have a unitless, percent, negative or namedspace
     // value here.
     number.Append(unit); // leave the sign out if it was there
-    if (nsMathMLElement::ParseNumericValue(number, aCSSValue, 
+    if (nsMathMLElement::ParseNumericValue(number, aCSSValue,
                                            nsMathMLElement::
                                            PARSE_SUPPRESS_WARNINGS, nullptr))
       return true;
@@ -278,7 +278,7 @@ nsMathMLmpaddedFrame::UpdateValue(int32_t                  aSign,
              break;
 
         default:
-          // if we ever reach here, it would mean something is wrong 
+          // if we ever reach here, it would mean something is wrong
           // somewhere with the setup and/or the caller
           NS_ERROR("Unexpected Pseudo Unit");
           return;
@@ -347,7 +347,7 @@ nsMathMLmpaddedFrame::Place(DrawTarget*          aDrawTarget,
   // linebreaking occurs within the mpadded element."
   //
   // (http://www.w3.org/TR/MathML/chapter3.html#presm.mpadded)
-  // 
+  //
   // "In those discussions, the terms leading and trailing are used to specify
   // a side of an object when which side to use depends on the directionality;
   // ie. leading means left in LTR but right in RTL."
@@ -421,7 +421,7 @@ nsMathMLmpaddedFrame::Place(DrawTarget*          aDrawTarget,
 
   nscoord dx = (StyleVisibility()->mDirection ?
                 width - initialWidth - lspace : lspace);
-    
+
   aDesiredSize.SetBlockStartAscent(height);
   aDesiredSize.Width() = mBoundingMetrics.width;
   aDesiredSize.Height() = depth + aDesiredSize.BlockStartAscent();

@@ -95,7 +95,7 @@
 
 - (BOOL)becomeFirstResponder;
 - (void)drawRect:(NSRect)rect;
-- (BOOL)resignFirstResponder;  
+- (BOOL)resignFirstResponder;
 - (void)setPlaceholder:(NSString*)placeholder;
 - (void)insertTab:(id)sender;
 - (void)insertBacktab:(id)sender;

@@ -43,7 +43,7 @@ NS_IMPL_ISUPPORTS_INHERITED(HTMLBodyElement, nsGenericHTMLElement,
 
 NS_IMPL_ELEMENT_CLONE(HTMLBodyElement)
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 HTMLBodyElement::SetBackground(const nsAString& aBackground)
 {
   ErrorResult rv;
@@ -60,7 +60,7 @@ HTMLBodyElement::GetBackground(nsAString& aBackground)
   return NS_OK;
 }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 HTMLBodyElement::SetVLink(const nsAString& aVLink)
 {
   ErrorResult rv;
@@ -77,7 +77,7 @@ HTMLBodyElement::GetVLink(nsAString& aVLink)
   return NS_OK;
 }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 HTMLBodyElement::SetALink(const nsAString& aALink)
 {
   ErrorResult rv;
@@ -94,7 +94,7 @@ HTMLBodyElement::GetALink(nsAString& aALink)
   return NS_OK;
 }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 HTMLBodyElement::SetLink(const nsAString& aLink)
 {
   ErrorResult rv;
@@ -111,7 +111,7 @@ HTMLBodyElement::GetLink(nsAString& aLink)
   return NS_OK;
 }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 HTMLBodyElement::SetText(const nsAString& aText)
 {
   ErrorResult rv;
@@ -128,7 +128,7 @@ HTMLBodyElement::GetText(nsAString& aText)
   return NS_OK;
 }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 HTMLBodyElement::SetBgColor(const nsAString& aBgColor)
 {
   ErrorResult rv;
