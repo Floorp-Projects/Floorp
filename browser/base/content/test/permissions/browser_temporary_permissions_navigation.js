@@ -24,8 +24,9 @@ add_task(async function testTempPermissionOnReload() {
     await ContentTask.spawn(browser, {}, () => content.document.location.reload());
 
     await reloaded;
-    await BrowserTestUtils.waitForCondition(() =>
-      !reloadButton.disabled && !reloadButton.hasAttribute("temporarily-disabled"));
+    await BrowserTestUtils.waitForCondition(() => {
+      return reloadButton.disabled == false;
+    });
 
     Assert.deepEqual(SitePermissions.get(uri, id, browser), {
       state: SitePermissions.BLOCK,
