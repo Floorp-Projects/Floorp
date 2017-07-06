@@ -52,8 +52,7 @@ private:
   void MaybeAbortTransaction(uint64_t aTransactionId,
                              const nsresult& aError);
   void MaybeConfirmRegister(uint64_t aTransactionId,
-                            const nsTArray<uint8_t>& aRegister,
-                            const nsTArray<uint8_t>& aSignature);
+                            const nsTArray<uint8_t>& aRegister);
   void MaybeConfirmSign(uint64_t aTransactionId,
                         const nsTArray<uint8_t>& aKeyHandle,
                         const nsTArray<uint8_t>& aSignature);
