@@ -13,7 +13,6 @@ EXPORTS.mozilla.dom += [
     'SessionStorageManager.h',
     'Storage.h',
     'StorageIPC.h',
-    'StorageNotifierService.h',
 ]
 
 UNIFIED_SOURCES += [
@@ -27,7 +26,6 @@ UNIFIED_SOURCES += [
     'StorageDBThread.cpp',
     'StorageDBUpdater.cpp',
     'StorageIPC.cpp',
-    'StorageNotifierService.cpp',
     'StorageObserver.cpp',
     'StorageUtils.cpp',
 ]
