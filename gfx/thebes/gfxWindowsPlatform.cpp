@@ -459,7 +459,7 @@ gfxWindowsPlatform::UpdateBackendPrefs()
                         BackendTypeBit(BackendType::SKIA);
   uint32_t contentMask = BackendTypeBit(BackendType::CAIRO) |
                          BackendTypeBit(BackendType::SKIA);
-  BackendType defaultBackend = BackendType::CAIRO;
+  BackendType defaultBackend = BackendType::SKIA;
   if (gfxConfig::IsEnabled(Feature::DIRECT2D) && Factory::GetD2D1Device()) {
     contentMask |= BackendTypeBit(BackendType::DIRECT2D1_1);
     canvasMask |= BackendTypeBit(BackendType::DIRECT2D1_1);
@@ -506,8 +506,8 @@ gfxWindowsPlatform::GetContentBackendFor(mozilla::layers::LayersBackend aLayers)
   }
 
   if (defaultBackend == BackendType::DIRECT2D1_1) {
-    // We can't have D2D without D3D11 layers, so fallback to Cairo.
-    return BackendType::CAIRO;
+    // We can't have D2D without D3D11 layers, so fallback to Skia.
+    return BackendType::SKIA;
   }
 
   // Otherwise we have some non-accelerated backend and that's ok.
