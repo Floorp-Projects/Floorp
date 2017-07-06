@@ -534,9 +534,8 @@ const PanelUI = {
           CustomizableUI.removePanelCloseListeners(tempPanel);
           tempPanel.removeEventListener("popuphidden", panelRemover);
 
-          let currentView = multiView.current;
-          let evt = new CustomEvent("ViewHiding", {detail: currentView});
-          currentView.dispatchEvent(evt);
+          let evt = new CustomEvent("ViewHiding", {detail: viewNode});
+          viewNode.dispatchEvent(evt);
         }
         aAnchor.open = false;
 
