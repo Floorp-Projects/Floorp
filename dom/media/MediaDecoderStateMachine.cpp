@@ -1167,15 +1167,11 @@ public:
 
   void DoSeek() override
   {
-    mDoneAudioSeeking = !Info().HasAudio() || mSeekJob.mTarget->IsVideoOnly();
+    mDoneAudioSeeking = !Info().HasAudio();
     mDoneVideoSeeking = !Info().HasVideo();
 
-    if (mSeekJob.mTarget->IsVideoOnly()) {
-      mMaster->ResetDecode(TrackInfo::kVideoTrack);
-    } else {
-      mMaster->ResetDecode();
-      mMaster->StopMediaSink();
-    }
+    mMaster->ResetDecode();
+    mMaster->StopMediaSink();
 
     DemuxerSeek();
   }
@@ -1794,6 +1790,17 @@ public:
                "Seek shouldn't be finished");
 
     // Ignore pending requests from video-only seek.
+  }
+
+  void DoSeek() override
+  {
+    // TODO: keep decoding audio.
+    mDoneAudioSeeking = true;
+    mDoneVideoSeeking = !Info().HasVideo();
+
+    mMaster->ResetDecode(TrackInfo::kVideoTrack);
+
+    DemuxerSeek();
   }
 };
 
