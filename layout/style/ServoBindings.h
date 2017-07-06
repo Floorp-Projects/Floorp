@@ -166,7 +166,6 @@ bool Gecko_MatchLang(RawGeckoElementBorrowed element,
                      const char16_t* value);
 nsIAtom* Gecko_GetXMLLangValue(RawGeckoElementBorrowed element);
 nsIDocument::DocumentTheme Gecko_GetDocumentLWTheme(const nsIDocument* aDocument);
-mozilla::css::Loader* Gecko_GetDocumentLoader(RawGeckoPresContextBorrowed aPresCtx);
 
 // Attributes.
 #define SERVO_DECLARE_ELEMENT_ATTR_MATCHING_FUNCTIONS(prefix_, implementor_)  \
@@ -639,19 +638,6 @@ void Gecko_SetJemallocThreadLocalArena(bool enabled);
 #define SERVO_BINDING_FUNC(name_, return_, ...) return_ name_(__VA_ARGS__);
 #include "mozilla/ServoBindingList.h"
 #undef SERVO_BINDING_FUNC
-
-mozilla::css::ErrorReporter* Gecko_CreateCSSErrorReporter(mozilla::ServoStyleSheet* sheet,
-                                                          mozilla::css::Loader* loader);
-void Gecko_DestroyCSSErrorReporter(mozilla::css::ErrorReporter* reporter);
-void Gecko_ReportUnexpectedCSSError(mozilla::css::ErrorReporter* reporter,
-                                    const char* message,
-                                    const char* param,
-                                    uint32_t paramLen,
-                                    const char* source,
-                                    uint32_t sourceLen,
-                                    uint32_t lineNumber,
-                                    uint32_t colNumber,
-                                    nsIURI* aURI);
 
 } // extern "C"
 

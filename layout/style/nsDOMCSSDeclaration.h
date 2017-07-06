@@ -153,14 +153,11 @@ protected:
   {
     mozilla::URLExtraData* mUrlExtraData;
     nsCompatibility mCompatMode;
-    mozilla::css::Loader* mLoader;
 
     ServoCSSParsingEnvironment(mozilla::URLExtraData* aUrlData,
-                               nsCompatibility aCompatMode,
-                               mozilla::css::Loader* aLoader)
+                               nsCompatibility aCompatMode)
       : mUrlExtraData(aUrlData)
       , mCompatMode(aCompatMode)
-      , mLoader(aLoader)
     {}
   };
 
