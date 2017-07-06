@@ -109,9 +109,9 @@ public:
    */
 
 #if defined(CharT_is_PRUnichar) && defined(MOZ_USE_CHAR16_WRAPPER)
-  char16ptr_t get() const
+  MOZ_NO_DANGLING_ON_TEMPORARIES char16ptr_t get() const
 #else
-  const char_type* get() const
+  MOZ_NO_DANGLING_ON_TEMPORARIES const char_type* get() const
 #endif
   {
     return mData;
@@ -732,9 +732,9 @@ public:
 
   // return nullptr if we are voided
 #if defined(CharT_is_PRUnichar) && defined(MOZ_USE_CHAR16_WRAPPER)
-  char16ptr_t get() const
+  MOZ_NO_DANGLING_ON_TEMPORARIES char16ptr_t get() const
 #else
-  const char_type* get() const
+  MOZ_NO_DANGLING_ON_TEMPORARIES const char_type* get() const
 #endif
   {
     return (mDataFlags & DataFlags::VOIDED) ? nullptr : mData;
