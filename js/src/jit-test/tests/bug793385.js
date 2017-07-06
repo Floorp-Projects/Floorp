@@ -1,4 +1,4 @@
-// |jit-test| allow-oom; allow-overrecursed
+// |jit-test| allow-oom; allow-unhandlable-oom; allow-overrecursed
 
 gcparam("maxBytes", gcparam("gcBytes") + 4*1024);
 function f() {
