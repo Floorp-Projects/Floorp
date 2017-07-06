@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html class="reftest-wait">
   <body>
-    <iframe srcdoc="<body><div></div></body>"></iframe>
+    <iframe src="data:text/html,<body><div></div></body>"></iframe>
     <script type="text/javascript">
       onload = function() {
         var i = document.querySelector("iframe");
