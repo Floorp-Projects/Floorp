@@ -13,6 +13,10 @@ MediaDecoderReaderWrapper::MediaDecoderReaderWrapper(AbstractThread* aOwnerThrea
                                                      MediaDecoderReader* aReader)
   : mOwnerThread(aOwnerThread)
   , mReader(aReader)
+  , mWatchManager(this, aReader->OwnerThread())
+  , mDuration(aReader->OwnerThread(),
+              NullableTimeUnit(),
+              "MediaDecoderReaderWrapper::mDuration (Mirror)")
 {
   // Must support either heuristic buffering or WaitForData().
   MOZ_ASSERT(mReader->UseBufferingHeuristics() ||
@@ -134,8 +138,12 @@ MediaDecoderReaderWrapper::Shutdown()
 {
   MOZ_ASSERT(mOwnerThread->IsCurrentThreadIn());
   mShutdown = true;
-  return InvokeAsync(mReader->OwnerThread(), mReader.get(), __func__,
-                     &MediaDecoderReader::Shutdown);
+  RefPtr<MediaDecoderReaderWrapper> self = this;
+  return InvokeAsync(mReader->OwnerThread(), __func__, [self]() {
+    self->mDuration.DisconnectIfConnected();
+    self->mWatchManager.Shutdown();
+    return self->mReader->Shutdown();
+  });
 }
 
 RefPtr<MediaDecoderReaderWrapper::MetadataPromise>
@@ -168,6 +176,30 @@ MediaDecoderReaderWrapper::SetVideoBlankDecode(bool aIsBlankDecode)
                             mReader,
                             &MediaDecoderReader::SetVideoNullDecode,
                             aIsBlankDecode);
+  mReader->OwnerThread()->Dispatch(r.forget());
+}
+
+void
+MediaDecoderReaderWrapper::UpdateDuration()
+{
+  MOZ_ASSERT(mReader->OwnerThread()->IsCurrentThreadIn());
+  mReader->UpdateDuration(mDuration.Ref().ref());
+}
+
+void
+MediaDecoderReaderWrapper::SetCanonicalDuration(
+  AbstractCanonical<media::NullableTimeUnit>* aCanonical)
+{
+  using DurationT = AbstractCanonical<media::NullableTimeUnit>;
+  RefPtr<MediaDecoderReaderWrapper> self = this;
+  RefPtr<DurationT> canonical = aCanonical;
+  nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction(
+    "MediaDecoderReaderWrapper::SetCanonicalDuration",
+    [this, self, canonical]() {
+      mDuration.Connect(canonical);
+      mWatchManager.Watch(mDuration,
+                          &MediaDecoderReaderWrapper::UpdateDuration);
+    });
   mReader->OwnerThread()->Dispatch(r.forget());
 }
 
