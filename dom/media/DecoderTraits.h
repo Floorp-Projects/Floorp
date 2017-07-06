@@ -21,6 +21,7 @@ class MediaContainerType;
 struct MediaDecoderInit;
 class MediaDecoderOwner;
 class MediaDecoderReader;
+class MediaResource;
 
 enum CanPlayStatus {
   CANPLAY_NO,
@@ -50,7 +51,8 @@ public:
   // Create a reader for thew given MIME type aType. Returns null
   // if we were unable to create the reader.
   static MediaDecoderReader* CreateReader(const MediaContainerType& aType,
-                                          AbstractMediaDecoder* aDecoder);
+                                          AbstractMediaDecoder* aDecoder,
+                                          MediaResource* aResource);
 
   // Returns true if MIME type aType is supported in video documents,
   // or false otherwise. Not all platforms support all MIME types, and

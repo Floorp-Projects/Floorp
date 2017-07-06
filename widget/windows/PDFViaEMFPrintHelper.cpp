@@ -29,11 +29,9 @@ float ComputeScaleFactor(int aDCWidth, int aDCHeight,
   return scaleFactor;
 }
 
-PDFViaEMFPrintHelper::PDFViaEMFPrintHelper(PRLibrary* aPDFiumLibrary)
-  : mPDFiumLibrary(aPDFiumLibrary)
-  , mPDFDoc(nullptr)
+PDFViaEMFPrintHelper::PDFViaEMFPrintHelper()
+  : mPDFDoc(nullptr)
 {
-  MOZ_ASSERT(mPDFiumLibrary);
 }
 
 PDFViaEMFPrintHelper::~PDFViaEMFPrintHelper()
@@ -51,7 +49,8 @@ PDFViaEMFPrintHelper::OpenDocument(nsIFile *aFile)
   }
 
   if (!mPDFiumEngine) {
-    mPDFiumEngine = MakeUnique<PDFiumEngineShim>(mPDFiumLibrary);
+    mPDFiumEngine = PDFiumEngineShim::GetInstanceOrNull();
+    NS_ENSURE_TRUE(mPDFiumEngine, NS_ERROR_FAILURE);
   }
 
   nsAutoCString nativePath;

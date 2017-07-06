@@ -16,13 +16,13 @@
     "unpack": true
   },
   {
-    "version": "sccache rev 9155425cfc038d6a60deb50816055f4e93b93ad1",
+    "version": "sccache rev 69334a26ba65fc88e3934271a2ce6781c51b445e",
     "algorithm": "sha512",
     "visibility": "public",
     "filename": "sccache2.tar.bz2",
     "unpack": true,
-    "digest": "6e14c9a19ee4178b105ee2d995c647888a162056c61d2bd5d1d9dce0326af5ea45cc7d2f28d0b9a499ab2aa909ed534e6c545c6d27319bdd598b6dbceaca2e22",
-    "size": 1669459
+    "digest": "7ace40311de3d466f20476ce27c24f25208e8dd80151cbff2e72bab75038dee429312703f13a832c9671bb42dc22a00801c5eb5a9e4d807f2723c16e33167d1b",
+    "size": 1658526
   },
   {
     "version": "cctools port from commit hash 8e9c3f2506b51",

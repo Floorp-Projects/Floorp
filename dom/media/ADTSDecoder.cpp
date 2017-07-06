@@ -26,7 +26,7 @@ MediaDecoderStateMachine*
 ADTSDecoder::CreateStateMachine()
 {
   RefPtr<MediaDecoderReader> reader =
-      new MediaFormatReader(this, new ADTSDemuxer(GetResource()));
+    new MediaFormatReader(this, new ADTSDemuxer(mResource));
   return new MediaDecoderStateMachine(this, reader);
 }
 
