@@ -418,6 +418,7 @@ LoadInfo::CloneForNewRequest() const
   copy->mInitialSecurityCheckDone = false;
   copy->mRedirectChainIncludingInternalRedirects.Clear();
   copy->mRedirectChain.Clear();
+  copy->mResultPrincipalURI = nullptr;
   return copy.forget();
 }
 
