@@ -30,8 +30,6 @@ const RECENT_PINGS = 4;
 
 const TOTAL_EXPECTED_PINGS = OVERDUE_PINGS + RECENT_PINGS + OLD_FORMAT_PINGS;
 
-const PREF_FHR_UPLOAD = "datareporting.healthreport.uploadEnabled";
-
 var gCreatedPings = 0;
 var gSeenPings = 0;
 
@@ -149,9 +147,9 @@ add_task(async function test_setup() {
   // Make sure we don't generate unexpected pings due to pref changes.
   await setEmptyPrefWatchlist();
 
-  Services.prefs.setBoolPref(PREF_TELEMETRY_ENABLED, true);
-  Services.prefs.setCharPref(TelemetryController.Constants.PREF_SERVER,
-                             "http://localhost:" + PingServer.port);
+  Services.prefs.setBoolPref(TelemetryUtils.Preferences.TelemetryEnabled, true);
+  Services.prefs.setCharPref(TelemetryUtils.Preferences.Server,
+                              "http://localhost:" + PingServer.port);
 });
 
 /**
@@ -160,7 +158,7 @@ add_task(async function test_setup() {
  */
 add_task(async function setupEnvironment() {
   // The following tests assume this pref to be true by default.
-  Services.prefs.setBoolPref(PREF_FHR_UPLOAD, true);
+  Services.prefs.setBoolPref(TelemetryUtils.Preferences.FhrUploadEnabled, true);
 
   await TelemetryController.testSetup();
 
@@ -385,7 +383,7 @@ add_task(async function test_pendingPingsQuota() {
   const PING_TYPE = "foo";
 
   // Disable upload so pings don't get sent and removed from the pending pings directory.
-  Services.prefs.setBoolPref(PREF_FHR_UPLOAD, false);
+  Services.prefs.setBoolPref(TelemetryUtils.Preferences.FhrUploadEnabled, false);
 
   // Remove all the pending pings then startup and wait for the cleanup task to complete.
   // There should be nothing to remove.
@@ -536,7 +534,7 @@ add_task(async function test_pendingPingsQuota() {
   h = Telemetry.getHistogramById("TELEMETRY_DISCARDED_PENDING_PINGS_SIZE_MB").snapshot();
   Assert.equal(h.counts[2], 2, "Telemetry must report two 2MB, oversized, pings.");
 
-  Services.prefs.setBoolPref(PREF_FHR_UPLOAD, true);
+  Services.prefs.setBoolPref(TelemetryUtils.Preferences.FhrUploadEnabled, true);
 });
 
 add_task(async function teardown() {

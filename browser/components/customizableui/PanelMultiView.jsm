@@ -868,7 +868,23 @@ this.PanelMultiView = class {
         // sense for all platforms. If the arrow visuals change significantly,
         // this value will be easy to adjust.
         const EXTRA_MARGIN_PX = 20;
-        this._viewStack.style.maxHeight = (maxHeight - EXTRA_MARGIN_PX) + "px";
+        maxHeight -= EXTRA_MARGIN_PX;
+        this._viewStack.style.maxHeight = maxHeight + "px";
+
+        // When using block-in-box layout inside a scrollable frame, like in the
+        // main menu contents scroller, if we allow the contents to scroll then
+        // it will not cause its container to expand. Thus, we layout first
+        // without any scrolling (using "display: flex;"), and only if the view
+        // exceeds the available space we set the height explicitly and enable
+        // scrolling.
+        if (this._mainView.hasAttribute("blockinboxworkaround")) {
+          let mainViewHeight =
+              this._dwu.getBoundsWithoutFlushing(this._mainView).height;
+          if (mainViewHeight > maxHeight) {
+            this._mainView.style.height = maxHeight + "px";
+            this._mainView.setAttribute("exceeding", "true");
+          }
+        }
         break;
       case "popupshown":
         // Now that the main view is visible, we can check the height of the
@@ -889,6 +905,12 @@ this.PanelMultiView = class {
           this._panel.removeEventListener("mousemove", this);
           this._resetKeyNavigation();
           this._mainViewHeight = 0;
+        }
+        // Always try to layout the panel normally when reopening it. This is
+        // also the layout that will be used in customize mode.
+        if (this._mainView.hasAttribute("blockinboxworkaround")) {
+          this._mainView.style.removeProperty("height");
+          this._mainView.removeAttribute("exceeding");
         }
         break;
     }

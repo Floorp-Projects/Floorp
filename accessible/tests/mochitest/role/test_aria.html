@@ -31,6 +31,7 @@
       testRole("aria_document", ROLE_DOCUMENT);
       testRole("aria_form", ROLE_FORM);
       testRole("aria_feed", ROLE_GROUPING);
+      testRole("aria_figure", ROLE_FIGURE);
       testRole("aria_grid", ROLE_TABLE);
       testRole("aria_gridcell", ROLE_GRID_CELL);
       testRole("aria_group", ROLE_GROUPING);
@@ -53,7 +54,7 @@
       testRole("aria_progressbar", ROLE_PROGRESSBAR);
       testRole("aria_radio", ROLE_RADIOBUTTON);
       testRole("aria_radiogroup", ROLE_RADIO_GROUP);
-      testRole("aria_region", ROLE_PANE);
+      testRole("aria_region", ROLE_REGION);
       testRole("aria_row", ROLE_ROW);
       testRole("aria_rowheader", ROLE_ROWHEADER);
       testRole("aria_scrollbar", ROLE_SCROLLBAR);
@@ -191,6 +192,11 @@
      title="Support ARIA 1.1 searchbox role">
     Bug 1121518
   </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=1356049"
+     title="Map ARIA figure role">
+    Bug 1356049
+  </a>
   <p id="display"></p>
   <div id="content" style="display: none"></div>
   <pre id="test">
@@ -209,6 +215,7 @@
   <span id="aria_document" role="document"/>
   <span id="aria_form" role="form"/>
   <span id="aria_feed" role="feed"/>
+  <span id="aria_figure" role="figure"/>
   <span id="aria_grid" role="grid"/>
   <span id="aria_gridcell" role="gridcell"/>
   <span id="aria_group" role="group"/>

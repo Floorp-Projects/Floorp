@@ -370,11 +370,14 @@ PeerConnectionMedia::InitProxy()
     return NS_ERROR_FAILURE;
   }
 
+  nsCOMPtr<nsIEventTarget> target = mParent->GetWindow()
+      ? mParent->GetWindow()->EventTargetFor(TaskCategory::Network)
+      : nullptr;
   RefPtr<ProtocolProxyQueryHandler> handler = new ProtocolProxyQueryHandler(this);
   rv = pps->AsyncResolve(channel,
                          nsIProtocolProxyService::RESOLVE_PREFER_HTTPS_PROXY |
                          nsIProtocolProxyService::RESOLVE_ALWAYS_TUNNEL,
-                         handler, getter_AddRefs(mProxyRequest));
+                         handler, target, getter_AddRefs(mProxyRequest));
   if (NS_FAILED(rv)) {
     CSFLogError(logTag, "%s: Failed to resolve protocol proxy: %d", __FUNCTION__, (int)rv);
     return NS_ERROR_FAILURE;

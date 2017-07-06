@@ -13,6 +13,7 @@ interface nsIProtocolProxyChannelFilter;
 interface nsIProxyInfo;
 interface nsIChannel;
 interface nsIURI;
+interface nsIEventTarget;
 
 /**
  * nsIProtocolProxyService provides methods to access information about
@@ -79,6 +80,8 @@ interface nsIProtocolProxyService : nsISupports
      *        not correspond to a RESOLVE_ flag are reserved for future use.
      * @param aCallback
      *        The object to be notified when the result is available.
+     * @param aMainThreadTarget
+     *        A labelled event target for dispatching runnables to main thread.
      *
      * @return An object that can be used to cancel the asychronous operation.
      *         If canceled, the cancelation status (aReason) will be forwarded
@@ -99,7 +102,8 @@ interface nsIProtocolProxyService : nsISupports
      * @see nsIProxiedProtocolHandler::newProxiedChannel 
      */
     nsICancelable asyncResolve(in nsISupports aChannelOrURI, in unsigned long aFlags,
-                               in nsIProtocolProxyCallback aCallback);
+                               in nsIProtocolProxyCallback aCallback,
+                               [optional] in nsIEventTarget aMainThreadTarget);
 
     /**
      * This method may be called to construct a nsIProxyInfo instance from

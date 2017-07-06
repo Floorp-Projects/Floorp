@@ -991,13 +991,18 @@ set_config('COLOR_CFLAGS', color_cflags)
 # we are properly managing visibility ourselves) and avoid this whole mess.
 # Note that we don't need to do this with gcc, as libc++ detects gcc and
 # effectively does the same thing we are doing here.
+#
+# _LIBCPP_ALWAYS_INLINE needs similar workarounds, since it too declares
+# hidden visibility.
 @depends(c_compiler, target)
-def libcxx_inline_visibility(c_compiler, target):
+def libcxx_override_visibility(c_compiler, target):
     if c_compiler.type == 'clang' and target.os == 'Android':
         return ''
 
-set_define('_LIBCPP_INLINE_VISIBILITY', libcxx_inline_visibility)
-set_define('_LIBCPP_INLINE_VISIBILITY_EXCEPT_GCC49', libcxx_inline_visibility)
+set_define('_LIBCPP_INLINE_VISIBILITY', libcxx_override_visibility)
+set_define('_LIBCPP_INLINE_VISIBILITY_EXCEPT_GCC49', libcxx_override_visibility)
+set_define('_LIBCPP_ALWAYS_INLINE', libcxx_override_visibility)
+set_define('_LIBCPP_ALWAYS_INLINE_EXCEPT_GCC49', libcxx_override_visibility)
 
 @depends(target, check_build_environment)
 def visibility_flags(target, env):

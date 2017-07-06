@@ -3091,9 +3091,12 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	// @flow
 
-	var { PrefsHelper } = __webpack_require__(830);
-	const { Services: { pref } } = __webpack_require__(830);
 	const { isDevelopment } = __webpack_require__(828);
+	const { Services, PrefsHelper } = __webpack_require__(830);
+
+	const prefsSchemaVersion = "1.0.1";
+
+	const pref = Services.pref;
 
 	if (isDevelopment()) {
 	  pref("devtools.debugger.client-source-maps-enabled", true);
@@ -3104,9 +3107,14 @@ return /******/ (function(modules) { // webpackBootstrap
 	  pref("devtools.debugger.start-panel-collapsed", false);
 	  pref("devtools.debugger.end-panel-collapsed", false);
 	  pref("devtools.debugger.tabs", "[]");
+	  pref("devtools.debugger.ui.framework-grouping-on", true);
 	  pref("devtools.debugger.pending-selected-location", "{}");
-	  pref("devtools.debugger.pending-breakpoints", "[]");
+	  pref("devtools.debugger.pending-breakpoints", "{}");
 	  pref("devtools.debugger.expressions", "[]");
+	  pref("devtools.debugger.file-search-case-sensitive", false);
+	  pref("devtools.debugger.file-search-whole-word", false);
+	  pref("devtools.debugger.file-search-regex-match", false);
+	  pref("devtools.debugger.prefs-schema-version", "1.0.0");
 	}
 
 	const prefs = new PrefsHelper("devtools", {
@@ -3117,11 +3125,22 @@ return /******/ (function(modules) { // webpackBootstrap
 	  scopesVisible: ["Bool", "debugger.scopes-visible"],
 	  startPanelCollapsed: ["Bool", "debugger.start-panel-collapsed"],
 	  endPanelCollapsed: ["Bool", "debugger.end-panel-collapsed"],
+	  frameworkGroupingOn: ["Bool", "debugger.ui.framework-grouping-on"],
 	  tabs: ["Json", "debugger.tabs"],
 	  pendingSelectedLocation: ["Json", "debugger.pending-selected-location"],
 	  pendingBreakpoints: ["Json", "debugger.pending-breakpoints"],
-	  expressions: ["Json", "debugger.expressions"]
+	  expressions: ["Json", "debugger.expressions"],
+	  fileSearchCaseSensitive: ["Bool", "debugger.file-search-case-sensitive"],
+	  fileSearchWholeWord: ["Bool", "debugger.file-search-whole-word"],
+	  fileSearchRegexMatch: ["Bool", "debugger.file-search-regex-match"],
+	  debuggerPrefsSchemaVersion: ["Char", "debugger.prefs-schema-version"]
 	});
+
+	if (prefs.debuggerPrefsSchemaVersion !== prefsSchemaVersion) {
+	  // clear pending Breakpoints
+	  prefs.pendingBreakpoints = {};
+	  prefs.debuggerPrefsSchemaVersion = prefsSchemaVersion;
+	}
 
 	module.exports = { prefs };
 
@@ -4636,7 +4655,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  expressions: __webpack_require__(773),
 	  debuggerButtons: __webpack_require__(774),
 	  editorSelect: __webpack_require__(775),
-	  editorPreview: __webpack_require__(1013),
+	  editorPreview: __webpack_require__(1020),
 	  editorGutter: __webpack_require__(776),
 	  editorHighlight: __webpack_require__(777),
 	  keyboardNavigation: __webpack_require__(778),
@@ -4648,13 +4667,14 @@ return /******/ (function(modules) { // webpackBootstrap
 	  prettyPrintPaused: __webpack_require__(784),
 	  returnvalues: __webpack_require__(785),
 	  scopes: __webpack_require__(786),
-	  scopesMutations: __webpack_require__(1014),
+	  scopesMutations: __webpack_require__(1021),
 	  searching: __webpack_require__(787),
 	  sources: __webpack_require__(788),
 	  sourceMaps: __webpack_require__(789),
+	  sourceMapsReloading: __webpack_require__(1129),
 	  sourceMaps2: __webpack_require__(790),
 	  sourceMapsBogus: __webpack_require__(791),
-	  tabs: __webpack_require__(1015)
+	  tabs: __webpack_require__(1022)
 	};
 
 /***/ },
@@ -4781,9 +4801,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	      }
 	      // Make sure the source text is completely loaded for the
 	      // source we are paused in.
-	      var sourceId = pause.getIn(["frame", "location", "sourceId"]);
-	      var sourceText = dbg.selectors.getSourceText(dbg.getState(), sourceId);
-	      return sourceText && !sourceText.get("loading");
+	      var sourceId = get(pause, "frame.location.sourceId");
+	      var source = dbg.selectors.getSourc(dbg.getState(), sourceId);
+	      return source && !source.get("loading");
 	    });
 	  });
 
@@ -5016,6 +5036,8 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, arguments); return new Promise(function (resolve, reject) { function step(key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { return Promise.resolve(value).then(function (value) { step("next", value); }, function (err) { step("throw", err); }); } } return step("next"); }); }; }
 
+	var get = __webpack_require__(67);
+
 	var _require = __webpack_require__(762),
 	    findElementWithSelector = _require.findElementWithSelector,
 	    info = _require.info;
@@ -5065,7 +5087,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	  stepIn: ".stepIn.active",
 	  toggleBreakpoints: ".breakpoints-toggle",
 	  prettyPrintButton: ".prettyPrint",
-	  sourceFooter: ".source-footer",
+	  sourcesFooter: ".sources-panel .source-footer",
+	  editorFooter: ".editor-pane .source-footer",
 	  sourceNode: i => `.sources-list .tree-node:nth-child(${i}) .node`,
 	  sourceNodes: ".sources-list .tree-node",
 	  sourceArrow: i => `.sources-list .tree-node:nth-child(${i}) .arrow`,
@@ -5245,6 +5268,8 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	"use strict";
 
+	var get = __webpack_require__(67);
+
 	var _require = __webpack_require__(762),
 	    findSource = _require.findSource,
 	    findElement = _require.findElement,
@@ -5267,9 +5292,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	  is(getSelectedSource(getState()).get("id"), source.id);
 
 	  // Check the pause location
-	  var location = getPause(getState()).getIn(["frame", "location"]);
-	  is(location.get("sourceId"), source.id);
-	  is(location.get("line"), line);
+	  var location = get(getPause(getState()), "frame.location");
+	  is(location.sourceId, source.id);
+	  is(location.line, line);
 
 	  // Check the debug line
 	  ok(dbg.win.cm.lineInfo(line - 1).wrapClass.includes("debug-line"), "Line is highlighted as paused");
@@ -5480,11 +5505,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	  var _ref = _asyncToGenerator(function* (dbg, url, line) {
 	    info("Selecting source: " + url);
 	    var source = findSource(dbg, url);
-	    var hasText = !!dbg.selectors.getSourceText(dbg.getState(), source.id);
-	    yield dbg.actions.selectSource(source.id, { line });
-
-	    if (!hasText) {
-	      yield waitForDispatch(dbg, "LOAD_SOURCE_TEXT");
+	    var hasSource = !!dbg.selectors.getSource(dbg.getState(), source.id);
+	    dbg.actions.selectSource(source.id, { line });
+	    if (!hasSource) {
+	      return waitForDispatch(dbg, "SELECT_SOURCE");
 	    }
 	  });
 
@@ -5686,6 +5710,20 @@ return /******/ (function(modules) { // webpackBootstrap
 	  };
 	})();
 
+	var disableBreakpoint = (() => {
+	  var _ref10 = _asyncToGenerator(function* (dbg, source, line) {
+	    return dbg.actions.disableBreakpoint({
+	      sourceId: source.id,
+	      line,
+	      column: undefined
+	    });
+	  });
+
+	  return function disableBreakpoint(_x19, _x20, _x21) {
+	    return _ref10.apply(this, arguments);
+	  };
+	})();
+
 	/**
 	 * Toggles the Pause on exceptions feature in the debugger.
 	 *
@@ -5699,7 +5737,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 	var togglePauseOnExceptions = (() => {
-	  var _ref10 = _asyncToGenerator(function* (dbg, pauseOnExceptions, ignoreCaughtExceptions) {
+	  var _ref11 = _asyncToGenerator(function* (dbg, pauseOnExceptions, ignoreCaughtExceptions) {
 	    var command = dbg.actions.pauseOnExceptions(pauseOnExceptions, ignoreCaughtExceptions);
 
 	    if (!isPaused(dbg)) {
@@ -5709,13 +5747,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return command;
 	  });
 
-	  return function togglePauseOnExceptions(_x19, _x20, _x21) {
-	    return _ref10.apply(this, arguments);
+	  return function togglePauseOnExceptions(_x22, _x23, _x24) {
+	    return _ref11.apply(this, arguments);
 	  };
 	})();
 
 	var clickElement = (() => {
-	  var _ref11 = _asyncToGenerator(function* (dbg, elementName) {
+	  var _ref12 = _asyncToGenerator(function* (dbg, elementName) {
 	    for (var _len3 = arguments.length, args = Array(_len3 > 2 ? _len3 - 2 : 0), _key3 = 2; _key3 < _len3; _key3++) {
 	      args[_key3 - 2] = arguments[_key3];
 	    }
@@ -5725,13 +5763,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	    clickEl(dbg.win, el);
 	  });
 
-	  return function clickElement(_x22, _x23) {
-	    return _ref11.apply(this, arguments);
+	  return function clickElement(_x25, _x26) {
+	    return _ref12.apply(this, arguments);
 	  };
 	})();
 
 	var dblClickElement = (() => {
-	  var _ref12 = _asyncToGenerator(function* (dbg, elementName) {
+	  var _ref13 = _asyncToGenerator(function* (dbg, elementName) {
 	    for (var _len4 = arguments.length, args = Array(_len4 > 2 ? _len4 - 2 : 0), _key4 = 2; _key4 < _len4; _key4++) {
 	      args[_key4 - 2] = arguments[_key4];
 	    }
@@ -5741,13 +5779,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	    dblClickEl(dbg.win, el);
 	  });
 
-	  return function dblClickElement(_x24, _x25) {
-	    return _ref12.apply(this, arguments);
+	  return function dblClickElement(_x27, _x28) {
+	    return _ref13.apply(this, arguments);
 	  };
 	})();
 
 	var rightClickElement = (() => {
-	  var _ref13 = _asyncToGenerator(function* (dbg, elementName) {
+	  var _ref14 = _asyncToGenerator(function* (dbg, elementName) {
 	    for (var _len5 = arguments.length, args = Array(_len5 > 2 ? _len5 - 2 : 0), _key5 = 2; _key5 < _len5; _key5++) {
 	      args[_key5 - 2] = arguments[_key5];
 	    }
@@ -5758,8 +5796,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	    rightClickEl(dbg.win, el);
 	  });
 
-	  return function rightClickElement(_x26, _x27) {
-	    return _ref13.apply(this, arguments);
+	  return function rightClickElement(_x29, _x30) {
+	    return _ref14.apply(this, arguments);
 	  };
 	})();
 
@@ -5798,7 +5836,23 @@ return /******/ (function(modules) { // webpackBootstrap
 	    waitForPaused = _require4.waitForPaused,
 	    waitForThreadEvents = _require4.waitForThreadEvents;
 
-	var winObj = typeof window == "Object" ? window : {};
+	/**
+	* Closes a tab
+	*
+	* @memberof mochitest/actions
+	* @param {Object} dbg
+	* @param {String} url
+	* @return {Promise}
+	* @static
+	*/
+
+
+	function closeTab(dbg, url) {
+	  info("Closing tab: " + url);
+	  var source = findSource(dbg, url);
+
+	  dbg.actions.closeTab(source.url);
+	}var winObj = typeof window == "Object" ? window : {};
 	winObj.resumeTest = undefined;
 
 	/**
@@ -5814,6 +5868,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 	module.exports = {
+	  closeTab,
 	  selectSource,
 	  stepOver,
 	  stepIn,
@@ -5823,6 +5878,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  navigate,
 	  addBreakpoint,
 	  removeBreakpoint,
+	  disableBreakpoint,
 	  togglePauseOnExceptions,
 	  clickElement,
 	  mouseOverEl,
@@ -6006,7 +6062,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	var disableBreakpoint = (() => {
 	  var _ref2 = _asyncToGenerator(function* (dbg, index) {
 	    toggleBreakpoint(dbg, index);
-	    yield waitForDispatch(dbg, "REMOVE_BREAKPOINT");
+	    yield waitForDispatch(dbg, "DISABLE_BREAKPOINT");
 	  });
 
 	  return function disableBreakpoint(_x3, _x4) {
@@ -6017,7 +6073,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	var enableBreakpoint = (() => {
 	  var _ref3 = _asyncToGenerator(function* (dbg, index) {
 	    toggleBreakpoint(dbg, index);
-	    yield waitForDispatch(dbg, "ADD_BREAKPOINT");
+	    yield waitForDispatch(dbg, "ENABLE_BREAKPOINT");
 	  });
 
 	  return function enableBreakpoint(_x5, _x6) {
@@ -6467,7 +6523,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    yield addExpression(dbg, "f");
 	    is(getLabel(dbg, 1), "f");
-	    is(getValue(dbg, 1), "ReferenceError");
+	    is(getValue(dbg, 1), "(unavailable)");
 
 	    yield editExpression(dbg, "oo");
 	    is(getLabel(dbg, 1), "foo()");
@@ -7219,10 +7275,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    // The pretty-print button should go away in the pretty-printed
 	    // source.
-	    ok(!findElement(dbg, "sourceFooter"), "Footer is hidden");
+	    ok(!findElement(dbg, "editorFooter"), "Footer is hidden");
 
 	    yield selectSource(dbg, "math.min.js");
-	    ok(findElement(dbg, "sourceFooter"), "Footer is hidden");
+	    ok(findElement(dbg, "editorFooter"), "Footer is hidden");
 	  });
 
 	  return function prettyPrint(_x) {
@@ -7432,11 +7488,11 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    toggleNode(dbg, 4);
 	    yield waitForDispatch(dbg, "LOAD_OBJECT_PROPERTIES");
-	    is(getLabel(dbg, 5), "prototype");
+	    is(getLabel(dbg, 5), "length");
 
 	    yield stepOver(dbg);
 	    is(getLabel(dbg, 4), "foo()");
-	    is(getLabel(dbg, 5), "prototype");
+	    is(getLabel(dbg, 5), "Window");
 	  });
 
 	  return function expandingProperties(_x) {
@@ -7750,9 +7806,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	    assertPausedLocation(dbg, ctx, "entry.js", 16);
 	  });
 
-	  return function (_x) {
+	  function sourceMaps(_x) {
 	    return _ref.apply(this, arguments);
-	  };
+	  }
+
+	  return sourceMaps;
 	})();
 
 /***/ },
@@ -7874,23 +7932,31 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	"use strict";
 
+	var _expect = __webpack_require__(800);
+
+	var _expect2 = _interopRequireDefault(_expect);
+
+	var _index = __webpack_require__(758);
+
+	var _index2 = _interopRequireDefault(_index);
+
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
 	function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, arguments); return new Promise(function (resolve, reject) { function step(key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { return Promise.resolve(value).then(function (value) { step("next", value); }, function (err) { step("throw", err); }); } } return step("next"); }); }; }
 
 	__webpack_require__(793);
-	var expect = __webpack_require__(800);
 
 	var _require = __webpack_require__(226),
 	    prefs = _require.prefs;
 
-	var tests = __webpack_require__(758);
-	Object.assign(window, { prefs }, tests);
+	Object.assign(window, { prefs }, _index2.default);
 
 	window.ok = function ok(expected) {
-	  expect(expected).to.be.truthy;
+	  (0, _expect2.default)(expected).to.be.truthy;
 	};
 
 	window.is = function is(expected, actual) {
-	  expect(expected).to.equal(actual);
+	  (0, _expect2.default)(expected).to.equal(actual);
 	};
 
 	window.info = function info(msg) {
@@ -7904,7 +7970,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	mocha.setup({ timeout: 10000, ui: "bdd" });
 
 	describe("Tests", () => {
-	  beforeEach(() => {
+	  beforeEach(function () {
+	    console.log("TEST START", this.currentTest.title);
 	    prefs.pauseOnExceptions = false;
 	    prefs.ignoreCaughtExceptions = false;
 	    prefs.pendingSelectedLocation = {};
@@ -7913,54 +7980,66 @@ return /******/ (function(modules) { // webpackBootstrap
 	    prefs.tabs = [];
 	  });
 
-	  afterEach(() => {
+	  afterEach(function () {
 	    prefs.pauseOnExceptions = false;
 	    prefs.ignoreCaughtExceptions = false;
 	    prefs.pendingSelectedLocation = {};
 	    prefs.expressions = [];
 	    prefs.pendingBreakpoints = [];
 	    prefs.tabs = [];
+
+	    var err = this.currentTest.err;
+	    var msg = err ? "FAILURE" : "SUCCESS";
+	    console.log(`TEST ${msg}`, this.currentTest.title);
+	    if (err) {
+	      console.log(err.message);
+	      console.log(err.stack);
+	    }
 	  });
 
 	  it("asm", _asyncToGenerator(function* () {
 	    return yield asm(ctx);
 	  }));
 
-	  it("breakpoints - toggle", _asyncToGenerator(function* () {
-	    return yield breakpoints.toggle(ctx);
-	  }));
+	  describe("breakpoints", () => {
+	    it("breakpoints - toggle", _asyncToGenerator(function* () {
+	      return yield breakpoints.toggle(ctx);
+	    }));
 
-	  it("breakpoints - toggleAll", _asyncToGenerator(function* () {
-	    return yield breakpoints.toggleAll(ctx);
-	  }));
+	    it("breakpoints - toggleAll", _asyncToGenerator(function* () {
+	      return yield breakpoints.toggleAll(ctx);
+	    }));
 
-	  it("breaking", _asyncToGenerator(function* () {
-	    return yield breaking(ctx);
-	  }));
+	    it("breaking", _asyncToGenerator(function* () {
+	      return yield breaking(ctx);
+	    }));
 
-	  it("conditional breakpoints", _asyncToGenerator(function* () {
-	    return yield breakpointsCond(ctx);
-	  }));
+	    it("conditional breakpoints", _asyncToGenerator(function* () {
+	      return yield breakpointsCond(ctx);
+	    }));
+	  });
 
 	  it("expressions", _asyncToGenerator(function* () {
 	    return yield expressions(ctx);
 	  }));
 
-	  it("editor select", _asyncToGenerator(function* () {
-	    return yield editorSelect(ctx);
-	  }));
+	  describe("editor", () => {
+	    it("editor select", _asyncToGenerator(function* () {
+	      return yield editorSelect(ctx);
+	    }));
 
-	  it("editor gutter", _asyncToGenerator(function* () {
-	    return yield editorGutter(ctx);
-	  }));
+	    it("editor gutter", _asyncToGenerator(function* () {
+	      return yield editorGutter(ctx);
+	    }));
 
-	  xit("editor highlight", _asyncToGenerator(function* () {
-	    return yield editorHighlight(ctx);
-	  }));
+	    xit("editor highlight", _asyncToGenerator(function* () {
+	      return yield editorHighlight(ctx);
+	    }));
 
-	  xit("editor preview", _asyncToGenerator(function* () {
-	    return yield editorPreview(ctx);
-	  }));
+	    xit("editor preview", _asyncToGenerator(function* () {
+	      return yield editorPreview(ctx);
+	    }));
+	  });
 
 	  xit("keyboard navigation", _asyncToGenerator(function* () {
 	    return yield keyboardNavigation(ctx);
@@ -7974,13 +8053,15 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return yield navigation(ctx);
 	  }));
 
-	  it("call stack test 1", _asyncToGenerator(function* () {
-	    return yield callStack.test1(ctx);
-	  }));
+	  describe("call stack", () => {
+	    it("test 1", _asyncToGenerator(function* () {
+	      return yield callStack.test1(ctx);
+	    }));
 
-	  it("call stack test 2", _asyncToGenerator(function* () {
-	    return yield callStack.test2(ctx);
-	  }));
+	    it("test 2", _asyncToGenerator(function* () {
+	      return yield callStack.test2(ctx);
+	    }));
+	  });
 
 	  it("debugger buttons", _asyncToGenerator(function* () {
 	    return yield debuggerButtons(ctx);
@@ -8029,27 +8110,38 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return yield sources(ctx);
 	  }));
 
-	  // timed out
-	  // requires firefox nightly for noSliding
-	  xit("source maps", _asyncToGenerator(function* () {
-	    return yield sourceMaps(ctx);
-	  }));
+	  describe("source maps", () => {
+	    it("stepping", _asyncToGenerator(function* () {
+	      return yield sourceMaps(ctx);
+	    }));
+	    it("reloading", _asyncToGenerator(function* () {
+	      return yield sourceMapsReloading(ctx);
+	    }));
+	    it("source maps 2", _asyncToGenerator(function* () {
+	      return yield sourceMaps2(ctx);
+	    }));
+	    it("source maps bogus", _asyncToGenerator(function* () {
+	      return yield sourceMapsBogus(ctx);
+	    }));
+	  });
 
-	  it("source maps 2", _asyncToGenerator(function* () {
-	    return yield sourceMaps2(ctx);
-	  }));
-
-	  // expected 2 to equal 1
-	  xit("source maps bogus", _asyncToGenerator(function* () {
-	    return yield sourceMapsBogus(ctx);
-	  }));
-
-	  it("tabs", _asyncToGenerator(function* () {
-	    return yield tabs(ctx);
-	  }));
+	  describe("tabs", () => {
+	    // expected 2 to equal 1
+	    it("add tabs", _asyncToGenerator(function* () {
+	      return yield tabs.addTabs(ctx);
+	    }));
+	    it("reload with tabs", _asyncToGenerator(function* () {
+	      return yield tabs.reloadWithTabs(ctx);
+	    }));
+	    it("reload with no tabs", _asyncToGenerator(function* () {
+	      return yield tabs.reloadWithNoTabs(ctx);
+	    }));
+	  });
 	});
 
-	mocha.run();
+	mocha.run(failures => {
+	  console.log("WERE DON", failures);
+	});
 
 /***/ },
 
@@ -8247,7 +8339,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = global;
 
 	}).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-	},{"./lib/mocha":14,"_process":67,"browser-stdout":41}],2:[function(require,module,exports){
+	},{"./lib/mocha":14,"_process":82,"browser-stdout":41}],2:[function(require,module,exports){
 	'use strict';
 
 	function noop () {}
@@ -8705,7 +8797,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }, 2);
 	};
 
-	},{"json3":54}],7:[function(require,module,exports){
+	},{"json3":69}],7:[function(require,module,exports){
 	'use strict';
 
 	/**
@@ -9470,9 +9562,17 @@ return /******/ (function(modules) { // webpackBootstrap
 	      try {
 	        _reporter = require(reporter);
 	      } catch (err) {
-	        err.message.indexOf('Cannot find module') !== -1
-	          ? console.warn('"' + reporter + '" reporter not found')
-	          : console.warn('"' + reporter + '" reporter blew up with error:\n' + err.stack);
+	        if (err.message.indexOf('Cannot find module') !== -1) {
+	          // Try to load reporters from a path (absolute or relative)
+	          try {
+	            _reporter = require(path.resolve(process.cwd(), reporter));
+	          } catch (_err) {
+	            err.message.indexOf('Cannot find module') !== -1 ? console.warn('"' + reporter + '" reporter not found')
+	              : console.warn('"' + reporter + '" reporter blew up with error:\n' + err.stack);
+	          }
+	        } else {
+	          console.warn('"' + reporter + '" reporter blew up with error:\n' + err.stack);
+	        }
 	      }
 	    }
 	    if (!_reporter && reporter === 'teamcity') {
@@ -9840,7 +9940,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	};
 
 	}).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {},"/lib")
-	},{"./context":6,"./hook":7,"./interfaces":11,"./reporters":21,"./runnable":33,"./runner":34,"./suite":35,"./test":36,"./utils":38,"_process":67,"escape-string-regexp":47,"growl":49,"path":42}],15:[function(require,module,exports){
+	},{"./context":6,"./hook":7,"./interfaces":11,"./reporters":21,"./runnable":33,"./runner":34,"./suite":35,"./test":36,"./utils":38,"_process":82,"escape-string-regexp":62,"growl":64,"path":42}],15:[function(require,module,exports){
 	'use strict';
 
 	/**
@@ -10485,7 +10585,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 	}).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-	},{"../ms":15,"../utils":38,"_process":67,"diff":46,"supports-color":42,"tty":5}],18:[function(require,module,exports){
+	},{"../ms":15,"../utils":38,"_process":82,"diff":56,"supports-color":42,"tty":5}],18:[function(require,module,exports){
 	'use strict';
 
 	/**
@@ -10623,7 +10723,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	inherits(Dot, Base);
 
 	}).call(this,require('_process'))
-	},{"../utils":38,"./base":17,"_process":67}],20:[function(require,module,exports){
+	},{"../utils":38,"./base":17,"_process":82}],20:[function(require,module,exports){
 	(function (global){
 	'use strict';
 
@@ -10667,6 +10767,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	  '<li class="failures"><a href="javascript:void(0);">failures:</a> <em>0</em></li>' +
 	  '<li class="duration">duration: <em>0</em>s</li>' +
 	  '</ul>';
+
+	var playIcon = '&#x2023;';
 
 	/**
 	 * Initialize a new `HTML` reporter.
@@ -10763,7 +10865,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  runner.on('pass', function (test) {
 	    var url = self.testURL(test);
 	    var markup = '<li class="test pass %e"><h2>%e<span class="duration">%ems</span> ' +
-	      '<a href="%s" class="replay">&#x2023;</a></h2></li>';
+	      '<a href="%s" class="replay">' + playIcon + '</a></h2></li>';
 	    var el = fragment(markup, test.speed, test.title, test.duration, url);
 	    self.addCodeToggle(el, test.body);
 	    appendToStack(el);
@@ -10771,7 +10873,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  });
 
 	  runner.on('fail', function (test) {
-	    var el = fragment('<li class="test fail"><h2>%e <a href="%e" class="replay">&#x2023;</a></h2></li>',
+	    var el = fragment('<li class="test fail"><h2>%e <a href="%e" class="replay">' + playIcon + '</a></h2></li>',
 	      test.title, self.testURL(test));
 	    var stackString; // Note: Includes leading newline
 	    var message = test.err.toString();
@@ -10973,7 +11075,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 	}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-	},{"../browser/progress":4,"../utils":38,"./base":17,"escape-string-regexp":47}],21:[function(require,module,exports){
+	},{"../browser/progress":4,"../utils":38,"./base":17,"escape-string-regexp":62}],21:[function(require,module,exports){
 	'use strict';
 
 	// Alias exports to a their normalized format Mocha#reporter to prevent a need
@@ -11061,7 +11163,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 	}).call(this,require('_process'))
-	},{"./base":17,"_process":67,"json3":54}],23:[function(require,module,exports){
+	},{"./base":17,"_process":82,"json3":69}],23:[function(require,module,exports){
 	(function (process){
 	'use strict';
 
@@ -11157,7 +11259,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 	}).call(this,require('_process'))
-	},{"./base":17,"_process":67}],24:[function(require,module,exports){
+	},{"./base":17,"_process":82}],24:[function(require,module,exports){
 	(function (process){
 	'use strict';
 
@@ -11255,7 +11357,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	inherits(Landing, Base);
 
 	}).call(this,require('_process'))
-	},{"../utils":38,"./base":17,"_process":67}],25:[function(require,module,exports){
+	},{"../utils":38,"./base":17,"_process":82}],25:[function(require,module,exports){
 	(function (process){
 	'use strict';
 
@@ -11322,7 +11424,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	inherits(List, Base);
 
 	}).call(this,require('_process'))
-	},{"../utils":38,"./base":17,"_process":67}],26:[function(require,module,exports){
+	},{"../utils":38,"./base":17,"_process":82}],26:[function(require,module,exports){
 	(function (process){
 	'use strict';
 
@@ -11425,7 +11527,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 	}).call(this,require('_process'))
-	},{"../utils":38,"./base":17,"_process":67}],27:[function(require,module,exports){
+	},{"../utils":38,"./base":17,"_process":82}],27:[function(require,module,exports){
 	(function (process){
 	'use strict';
 
@@ -11467,7 +11569,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	inherits(Min, Base);
 
 	}).call(this,require('_process'))
-	},{"../utils":38,"./base":17,"_process":67}],28:[function(require,module,exports){
+	},{"../utils":38,"./base":17,"_process":82}],28:[function(require,module,exports){
 	(function (process){
 	'use strict';
 
@@ -11734,7 +11836,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 	}).call(this,require('_process'))
-	},{"../utils":38,"./base":17,"_process":67}],29:[function(require,module,exports){
+	},{"../utils":38,"./base":17,"_process":82}],29:[function(require,module,exports){
 	(function (process){
 	'use strict';
 
@@ -11829,7 +11931,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	inherits(Progress, Base);
 
 	}).call(this,require('_process'))
-	},{"../utils":38,"./base":17,"_process":67}],30:[function(require,module,exports){
+	},{"../utils":38,"./base":17,"_process":82}],30:[function(require,module,exports){
 	'use strict';
 
 	/**
@@ -12156,7 +12258,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 	}).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-	},{"../utils":38,"./base":17,"_process":67,"fs":42,"mkdirp":64,"path":42}],33:[function(require,module,exports){
+	},{"../utils":38,"./base":17,"_process":82,"fs":42,"mkdirp":79,"path":42}],33:[function(require,module,exports){
 	(function (global){
 	'use strict';
 
@@ -12484,8 +12586,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }
 
 	  if (this.allowUncaught) {
-	    callFn(this.fn);
-	    done();
+	    if (this.isPending()) {
+	      done();
+	    } else {
+	      callFn(this.fn);
+	    }
 	    return;
 	  }
 
@@ -12546,7 +12651,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	};
 
 	}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-	},{"./ms":15,"./pending":16,"./utils":38,"debug":2,"events":3,"json3":54,"lodash.create":60}],34:[function(require,module,exports){
+	},{"./ms":15,"./pending":16,"./utils":38,"debug":2,"events":3,"json3":69,"lodash.create":75}],34:[function(require,module,exports){
 	(function (process,global){
 	'use strict';
 
@@ -12982,15 +13087,14 @@ return /******/ (function(modules) { // webpackBootstrap
 	  if (this.asyncOnly) {
 	    test.asyncOnly = true;
 	  }
-
+	  test.on('error', function (err) {
+	    self.fail(test, err);
+	  });
 	  if (this.allowUncaught) {
 	    test.allowUncaught = true;
 	    return test.run(fn);
 	  }
 	  try {
-	    test.on('error', function (err) {
-	      self.fail(test, err);
-	    });
 	    test.run(fn);
 	  } catch (err) {
 	    fn(err);
@@ -13231,9 +13335,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	 */
 	Runner.prototype.uncaught = function (err) {
 	  if (err) {
-	    debug('uncaught exception %s', err !== function () {
+	    debug('uncaught exception %s', err === (function () {
 	      return this;
-	    }.call(err) ? err : (err.message || err));
+	    }.call(err)) ? (err.message || err) : err);
 	  } else {
 	    debug('uncaught undefined exception');
 	    err = undefinedError();
@@ -13513,7 +13617,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 	}).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-	},{"./pending":16,"./runnable":33,"./utils":38,"_process":67,"debug":2,"events":3}],35:[function(require,module,exports){
+	},{"./pending":16,"./runnable":33,"./utils":38,"_process":82,"debug":2,"events":3}],35:[function(require,module,exports){
 	'use strict';
 
 	/**
@@ -13971,7 +14075,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  return test;
 	};
 
-	},{"./runnable":33,"./utils":38,"lodash.create":60}],37:[function(require,module,exports){
+	},{"./runnable":33,"./utils":38,"lodash.create":75}],37:[function(require,module,exports){
 	'use strict';
 
 	/**
@@ -14336,7 +14440,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	    var key = pair.slice(0, i);
 	    var val = pair.slice(++i);
 
-	    obj[key] = decodeURIComponent(val);
+	    // Due to how the URLSearchParams API treats spaces
+	    obj[key] = decodeURIComponent(val.replace(/\+/g, '%20'));
+
 	    return obj;
 	  }, {});
 	};
@@ -14430,7 +14536,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return 'buffer';
 	  }
 	  return Object.prototype.toString.call(value)
-	    .replace(/^\[.+\s(.+?)\]$/, '$1')
+	    .replace(/^\[.+\s(.+?)]$/, '$1')
 	    .toLowerCase();
 	};
 
@@ -14755,7 +14861,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	  if (is.node) {
 	    cwd = process.cwd() + slash;
 	  } else {
-	    cwd = (typeof location === 'undefined' ? window.location : location).href.replace(/\/[^\/]*$/, '/');
+	    cwd = (typeof location === 'undefined'
+	      ? window.location
+	      : location).href.replace(/\/[^/]*$/, '/');
 	    slash = '/';
 	  }
 
@@ -14817,7 +14925,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	exports.noop = function () {};
 
 	}).call(this,require('_process'),require("buffer").Buffer)
-	},{"./to-iso-string":37,"_process":67,"buffer":44,"debug":2,"fs":42,"glob":42,"json3":54,"path":42,"util":84}],39:[function(require,module,exports){
+	},{"./to-iso-string":37,"_process":82,"buffer":44,"debug":2,"fs":42,"glob":42,"json3":69,"path":42,"util":99}],39:[function(require,module,exports){
 	'use strict'
 
 	exports.byteLength = byteLength
@@ -14964,7 +15072,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 	}).call(this,require('_process'))
-	},{"_process":67,"stream":79,"util":84}],42:[function(require,module,exports){
+	},{"_process":82,"stream":94,"util":99}],42:[function(require,module,exports){
 	arguments[4][40][0].apply(exports,arguments)
 	},{"dup":40}],43:[function(require,module,exports){
 	(function (global){
@@ -16871,7 +16979,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 	}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-	},{"base64-js":39,"ieee754":50,"isarray":53}],45:[function(require,module,exports){
+	},{"base64-js":39,"ieee754":65,"isarray":68}],45:[function(require,module,exports){
 	(function (Buffer){
 	// Copyright Joyent, Inc. and other Node contributors.
 	//
@@ -16982,8 +17090,689 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 	}).call(this,{"isBuffer":require("../../is-buffer/index.js")})
-	},{"../../is-buffer/index.js":52}],46:[function(require,module,exports){
-	/* See LICENSE file for terms of use */
+	},{"../../is-buffer/index.js":67}],46:[function(require,module,exports){
+	/*istanbul ignore start*/"use strict";
+
+	exports.__esModule = true;
+	exports. /*istanbul ignore end*/convertChangesToDMP = convertChangesToDMP;
+	// See: http://code.google.com/p/google-diff-match-patch/wiki/API
+	function convertChangesToDMP(changes) {
+	  var ret = [],
+	      change = /*istanbul ignore start*/void 0 /*istanbul ignore end*/,
+	      operation = /*istanbul ignore start*/void 0 /*istanbul ignore end*/;
+	  for (var i = 0; i < changes.length; i++) {
+	    change = changes[i];
+	    if (change.added) {
+	      operation = 1;
+	    } else if (change.removed) {
+	      operation = -1;
+	    } else {
+	      operation = 0;
+	    }
+
+	    ret.push([operation, change.value]);
+	  }
+	  return ret;
+	}
+
+
+	},{}],47:[function(require,module,exports){
+	/*istanbul ignore start*/'use strict';
+
+	exports.__esModule = true;
+	exports. /*istanbul ignore end*/convertChangesToXML = convertChangesToXML;
+	function convertChangesToXML(changes) {
+	  var ret = [];
+	  for (var i = 0; i < changes.length; i++) {
+	    var change = changes[i];
+	    if (change.added) {
+	      ret.push('<ins>');
+	    } else if (change.removed) {
+	      ret.push('<del>');
+	    }
+
+	    ret.push(escapeHTML(change.value));
+
+	    if (change.added) {
+	      ret.push('</ins>');
+	    } else if (change.removed) {
+	      ret.push('</del>');
+	    }
+	  }
+	  return ret.join('');
+	}
+
+	function escapeHTML(s) {
+	  var n = s;
+	  n = n.replace(/&/g, '&amp;');
+	  n = n.replace(/</g, '&lt;');
+	  n = n.replace(/>/g, '&gt;');
+	  n = n.replace(/"/g, '&quot;');
+
+	  return n;
+	}
+
+
+	},{}],48:[function(require,module,exports){
+	/*istanbul ignore start*/'use strict';
+
+	exports.__esModule = true;
+	exports.arrayDiff = undefined;
+	exports. /*istanbul ignore end*/diffArrays = diffArrays;
+
+	var /*istanbul ignore start*/_base = require('./base') /*istanbul ignore end*/;
+
+	/*istanbul ignore start*/
+	var _base2 = _interopRequireDefault(_base);
+
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
+
+	/*istanbul ignore end*/var arrayDiff = /*istanbul ignore start*/exports. /*istanbul ignore end*/arrayDiff = new /*istanbul ignore start*/_base2['default']() /*istanbul ignore end*/;
+	arrayDiff.tokenize = arrayDiff.join = function (value) {
+	  return value.slice();
+	};
+
+	function diffArrays(oldArr, newArr, callback) {
+	  return arrayDiff.diff(oldArr, newArr, callback);
+	}
+
+
+	},{"./base":49}],49:[function(require,module,exports){
+	/*istanbul ignore start*/'use strict';
+
+	exports.__esModule = true;
+	exports['default'] = /*istanbul ignore end*/Diff;
+	function Diff() {}
+
+	Diff.prototype = { /*istanbul ignore start*/
+	  /*istanbul ignore end*/diff: function diff(oldString, newString) {
+	    /*istanbul ignore start*/var /*istanbul ignore end*/options = arguments.length <= 2 || arguments[2] === undefined ? {} : arguments[2];
+
+	    var callback = options.callback;
+	    if (typeof options === 'function') {
+	      callback = options;
+	      options = {};
+	    }
+	    this.options = options;
+
+	    var self = this;
+
+	    function done(value) {
+	      if (callback) {
+	        setTimeout(function () {
+	          callback(undefined, value);
+	        }, 0);
+	        return true;
+	      } else {
+	        return value;
+	      }
+	    }
+
+	    // Allow subclasses to massage the input prior to running
+	    oldString = this.castInput(oldString);
+	    newString = this.castInput(newString);
+
+	    oldString = this.removeEmpty(this.tokenize(oldString));
+	    newString = this.removeEmpty(this.tokenize(newString));
+
+	    var newLen = newString.length,
+	        oldLen = oldString.length;
+	    var editLength = 1;
+	    var maxEditLength = newLen + oldLen;
+	    var bestPath = [{ newPos: -1, components: [] }];
+
+	    // Seed editLength = 0, i.e. the content starts with the same values
+	    var oldPos = this.extractCommon(bestPath[0], newString, oldString, 0);
+	    if (bestPath[0].newPos + 1 >= newLen && oldPos + 1 >= oldLen) {
+	      // Identity per the equality and tokenizer
+	      return done([{ value: this.join(newString), count: newString.length }]);
+	    }
+
+	    // Main worker method. checks all permutations of a given edit length for acceptance.
+	    function execEditLength() {
+	      for (var diagonalPath = -1 * editLength; diagonalPath <= editLength; diagonalPath += 2) {
+	        var basePath = /*istanbul ignore start*/void 0 /*istanbul ignore end*/;
+	        var addPath = bestPath[diagonalPath - 1],
+	            removePath = bestPath[diagonalPath + 1],
+	            _oldPos = (removePath ? removePath.newPos : 0) - diagonalPath;
+	        if (addPath) {
+	          // No one else is going to attempt to use this value, clear it
+	          bestPath[diagonalPath - 1] = undefined;
+	        }
+
+	        var canAdd = addPath && addPath.newPos + 1 < newLen,
+	            canRemove = removePath && 0 <= _oldPos && _oldPos < oldLen;
+	        if (!canAdd && !canRemove) {
+	          // If this path is a terminal then prune
+	          bestPath[diagonalPath] = undefined;
+	          continue;
+	        }
+
+	        // Select the diagonal that we want to branch from. We select the prior
+	        // path whose position in the new string is the farthest from the origin
+	        // and does not pass the bounds of the diff graph
+	        if (!canAdd || canRemove && addPath.newPos < removePath.newPos) {
+	          basePath = clonePath(removePath);
+	          self.pushComponent(basePath.components, undefined, true);
+	        } else {
+	          basePath = addPath; // No need to clone, we've pulled it from the list
+	          basePath.newPos++;
+	          self.pushComponent(basePath.components, true, undefined);
+	        }
+
+	        _oldPos = self.extractCommon(basePath, newString, oldString, diagonalPath);
+
+	        // If we have hit the end of both strings, then we are done
+	        if (basePath.newPos + 1 >= newLen && _oldPos + 1 >= oldLen) {
+	          return done(buildValues(self, basePath.components, newString, oldString, self.useLongestToken));
+	        } else {
+	          // Otherwise track this path as a potential candidate and continue.
+	          bestPath[diagonalPath] = basePath;
+	        }
+	      }
+
+	      editLength++;
+	    }
+
+	    // Performs the length of edit iteration. Is a bit fugly as this has to support the
+	    // sync and async mode which is never fun. Loops over execEditLength until a value
+	    // is produced.
+	    if (callback) {
+	      (function exec() {
+	        setTimeout(function () {
+	          // This should not happen, but we want to be safe.
+	          /* istanbul ignore next */
+	          if (editLength > maxEditLength) {
+	            return callback();
+	          }
+
+	          if (!execEditLength()) {
+	            exec();
+	          }
+	        }, 0);
+	      })();
+	    } else {
+	      while (editLength <= maxEditLength) {
+	        var ret = execEditLength();
+	        if (ret) {
+	          return ret;
+	        }
+	      }
+	    }
+	  },
+	  /*istanbul ignore start*/ /*istanbul ignore end*/pushComponent: function pushComponent(components, added, removed) {
+	    var last = components[components.length - 1];
+	    if (last && last.added === added && last.removed === removed) {
+	      // We need to clone here as the component clone operation is just
+	      // as shallow array clone
+	      components[components.length - 1] = { count: last.count + 1, added: added, removed: removed };
+	    } else {
+	      components.push({ count: 1, added: added, removed: removed });
+	    }
+	  },
+	  /*istanbul ignore start*/ /*istanbul ignore end*/extractCommon: function extractCommon(basePath, newString, oldString, diagonalPath) {
+	    var newLen = newString.length,
+	        oldLen = oldString.length,
+	        newPos = basePath.newPos,
+	        oldPos = newPos - diagonalPath,
+	        commonCount = 0;
+	    while (newPos + 1 < newLen && oldPos + 1 < oldLen && this.equals(newString[newPos + 1], oldString[oldPos + 1])) {
+	      newPos++;
+	      oldPos++;
+	      commonCount++;
+	    }
+
+	    if (commonCount) {
+	      basePath.components.push({ count: commonCount });
+	    }
+
+	    basePath.newPos = newPos;
+	    return oldPos;
+	  },
+	  /*istanbul ignore start*/ /*istanbul ignore end*/equals: function equals(left, right) {
+	    return left === right;
+	  },
+	  /*istanbul ignore start*/ /*istanbul ignore end*/removeEmpty: function removeEmpty(array) {
+	    var ret = [];
+	    for (var i = 0; i < array.length; i++) {
+	      if (array[i]) {
+	        ret.push(array[i]);
+	      }
+	    }
+	    return ret;
+	  },
+	  /*istanbul ignore start*/ /*istanbul ignore end*/castInput: function castInput(value) {
+	    return value;
+	  },
+	  /*istanbul ignore start*/ /*istanbul ignore end*/tokenize: function tokenize(value) {
+	    return value.split('');
+	  },
+	  /*istanbul ignore start*/ /*istanbul ignore end*/join: function join(chars) {
+	    return chars.join('');
+	  }
+	};
+
+	function buildValues(diff, components, newString, oldString, useLongestToken) {
+	  var componentPos = 0,
+	      componentLen = components.length,
+	      newPos = 0,
+	      oldPos = 0;
+
+	  for (; componentPos < componentLen; componentPos++) {
+	    var component = components[componentPos];
+	    if (!component.removed) {
+	      if (!component.added && useLongestToken) {
+	        var value = newString.slice(newPos, newPos + component.count);
+	        value = value.map(function (value, i) {
+	          var oldValue = oldString[oldPos + i];
+	          return oldValue.length > value.length ? oldValue : value;
+	        });
+
+	        component.value = diff.join(value);
+	      } else {
+	        component.value = diff.join(newString.slice(newPos, newPos + component.count));
+	      }
+	      newPos += component.count;
+
+	      // Common case
+	      if (!component.added) {
+	        oldPos += component.count;
+	      }
+	    } else {
+	      component.value = diff.join(oldString.slice(oldPos, oldPos + component.count));
+	      oldPos += component.count;
+
+	      // Reverse add and remove so removes are output first to match common convention
+	      // The diffing algorithm is tied to add then remove output and this is the simplest
+	      // route to get the desired output with minimal overhead.
+	      if (componentPos && components[componentPos - 1].added) {
+	        var tmp = components[componentPos - 1];
+	        components[componentPos - 1] = components[componentPos];
+	        components[componentPos] = tmp;
+	      }
+	    }
+	  }
+
+	  // Special case handle for when one terminal is ignored. For this case we merge the
+	  // terminal into the prior string and drop the change.
+	  var lastComponent = components[componentLen - 1];
+	  if (componentLen > 1 && (lastComponent.added || lastComponent.removed) && diff.equals('', lastComponent.value)) {
+	    components[componentLen - 2].value += lastComponent.value;
+	    components.pop();
+	  }
+
+	  return components;
+	}
+
+	function clonePath(path) {
+	  return { newPos: path.newPos, components: path.components.slice(0) };
+	}
+
+
+	},{}],50:[function(require,module,exports){
+	/*istanbul ignore start*/'use strict';
+
+	exports.__esModule = true;
+	exports.characterDiff = undefined;
+	exports. /*istanbul ignore end*/diffChars = diffChars;
+
+	var /*istanbul ignore start*/_base = require('./base') /*istanbul ignore end*/;
+
+	/*istanbul ignore start*/
+	var _base2 = _interopRequireDefault(_base);
+
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
+
+	/*istanbul ignore end*/var characterDiff = /*istanbul ignore start*/exports. /*istanbul ignore end*/characterDiff = new /*istanbul ignore start*/_base2['default']() /*istanbul ignore end*/;
+	function diffChars(oldStr, newStr, callback) {
+	  return characterDiff.diff(oldStr, newStr, callback);
+	}
+
+
+	},{"./base":49}],51:[function(require,module,exports){
+	/*istanbul ignore start*/'use strict';
+
+	exports.__esModule = true;
+	exports.cssDiff = undefined;
+	exports. /*istanbul ignore end*/diffCss = diffCss;
+
+	var /*istanbul ignore start*/_base = require('./base') /*istanbul ignore end*/;
+
+	/*istanbul ignore start*/
+	var _base2 = _interopRequireDefault(_base);
+
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
+
+	/*istanbul ignore end*/var cssDiff = /*istanbul ignore start*/exports. /*istanbul ignore end*/cssDiff = new /*istanbul ignore start*/_base2['default']() /*istanbul ignore end*/;
+	cssDiff.tokenize = function (value) {
+	  return value.split(/([{}:;,]|\s+)/);
+	};
+
+	function diffCss(oldStr, newStr, callback) {
+	  return cssDiff.diff(oldStr, newStr, callback);
+	}
+
+
+	},{"./base":49}],52:[function(require,module,exports){
+	/*istanbul ignore start*/'use strict';
+
+	exports.__esModule = true;
+	exports.jsonDiff = undefined;
+
+	var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol ? "symbol" : typeof obj; };
+
+	exports. /*istanbul ignore end*/diffJson = diffJson;
+	/*istanbul ignore start*/exports. /*istanbul ignore end*/canonicalize = canonicalize;
+
+	var /*istanbul ignore start*/_base = require('./base') /*istanbul ignore end*/;
+
+	/*istanbul ignore start*/
+	var _base2 = _interopRequireDefault(_base);
+
+	/*istanbul ignore end*/
+	var /*istanbul ignore start*/_line = require('./line') /*istanbul ignore end*/;
+
+	/*istanbul ignore start*/
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
+
+	/*istanbul ignore end*/
+
+	var objectPrototypeToString = Object.prototype.toString;
+
+	var jsonDiff = /*istanbul ignore start*/exports. /*istanbul ignore end*/jsonDiff = new /*istanbul ignore start*/_base2['default']() /*istanbul ignore end*/;
+	// Discriminate between two lines of pretty-printed, serialized JSON where one of them has a
+	// dangling comma and the other doesn't. Turns out including the dangling comma yields the nicest output:
+	jsonDiff.useLongestToken = true;
+
+	jsonDiff.tokenize = /*istanbul ignore start*/_line.lineDiff. /*istanbul ignore end*/tokenize;
+	jsonDiff.castInput = function (value) {
+	  /*istanbul ignore start*/var /*istanbul ignore end*/undefinedReplacement = this.options.undefinedReplacement;
+
+
+	  return typeof value === 'string' ? value : JSON.stringify(canonicalize(value), function (k, v) {
+	    if (typeof v === 'undefined') {
+	      return undefinedReplacement;
+	    }
+
+	    return v;
+	  }, '  ');
+	};
+	jsonDiff.equals = function (left, right) {
+	  return (/*istanbul ignore start*/_base2['default']. /*istanbul ignore end*/prototype.equals(left.replace(/,([\r\n])/g, '$1'), right.replace(/,([\r\n])/g, '$1'))
+	  );
+	};
+
+	function diffJson(oldObj, newObj, options) {
+	  return jsonDiff.diff(oldObj, newObj, options);
+	}
+
+	// This function handles the presence of circular references by bailing out when encountering an
+	// object that is already on the "stack" of items being processed.
+	function canonicalize(obj, stack, replacementStack) {
+	  stack = stack || [];
+	  replacementStack = replacementStack || [];
+
+	  var i = /*istanbul ignore start*/void 0 /*istanbul ignore end*/;
+
+	  for (i = 0; i < stack.length; i += 1) {
+	    if (stack[i] === obj) {
+	      return replacementStack[i];
+	    }
+	  }
+
+	  var canonicalizedObj = /*istanbul ignore start*/void 0 /*istanbul ignore end*/;
+
+	  if ('[object Array]' === objectPrototypeToString.call(obj)) {
+	    stack.push(obj);
+	    canonicalizedObj = new Array(obj.length);
+	    replacementStack.push(canonicalizedObj);
+	    for (i = 0; i < obj.length; i += 1) {
+	      canonicalizedObj[i] = canonicalize(obj[i], stack, replacementStack);
+	    }
+	    stack.pop();
+	    replacementStack.pop();
+	    return canonicalizedObj;
+	  }
+
+	  if (obj && obj.toJSON) {
+	    obj = obj.toJSON();
+	  }
+
+	  if ( /*istanbul ignore start*/(typeof /*istanbul ignore end*/obj === 'undefined' ? 'undefined' : _typeof(obj)) === 'object' && obj !== null) {
+	    stack.push(obj);
+	    canonicalizedObj = {};
+	    replacementStack.push(canonicalizedObj);
+	    var sortedKeys = [],
+	        key = /*istanbul ignore start*/void 0 /*istanbul ignore end*/;
+	    for (key in obj) {
+	      /* istanbul ignore else */
+	      if (obj.hasOwnProperty(key)) {
+	        sortedKeys.push(key);
+	      }
+	    }
+	    sortedKeys.sort();
+	    for (i = 0; i < sortedKeys.length; i += 1) {
+	      key = sortedKeys[i];
+	      canonicalizedObj[key] = canonicalize(obj[key], stack, replacementStack);
+	    }
+	    stack.pop();
+	    replacementStack.pop();
+	  } else {
+	    canonicalizedObj = obj;
+	  }
+	  return canonicalizedObj;
+	}
+
+
+	},{"./base":49,"./line":53}],53:[function(require,module,exports){
+	/*istanbul ignore start*/'use strict';
+
+	exports.__esModule = true;
+	exports.lineDiff = undefined;
+	exports. /*istanbul ignore end*/diffLines = diffLines;
+	/*istanbul ignore start*/exports. /*istanbul ignore end*/diffTrimmedLines = diffTrimmedLines;
+
+	var /*istanbul ignore start*/_base = require('./base') /*istanbul ignore end*/;
+
+	/*istanbul ignore start*/
+	var _base2 = _interopRequireDefault(_base);
+
+	/*istanbul ignore end*/
+	var /*istanbul ignore start*/_params = require('../util/params') /*istanbul ignore end*/;
+
+	/*istanbul ignore start*/
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
+
+	/*istanbul ignore end*/var lineDiff = /*istanbul ignore start*/exports. /*istanbul ignore end*/lineDiff = new /*istanbul ignore start*/_base2['default']() /*istanbul ignore end*/;
+	lineDiff.tokenize = function (value) {
+	  var retLines = [],
+	      linesAndNewlines = value.split(/(\n|\r\n)/);
+
+	  // Ignore the final empty token that occurs if the string ends with a new line
+	  if (!linesAndNewlines[linesAndNewlines.length - 1]) {
+	    linesAndNewlines.pop();
+	  }
+
+	  // Merge the content and line separators into single tokens
+	  for (var i = 0; i < linesAndNewlines.length; i++) {
+	    var line = linesAndNewlines[i];
+
+	    if (i % 2 && !this.options.newlineIsToken) {
+	      retLines[retLines.length - 1] += line;
+	    } else {
+	      if (this.options.ignoreWhitespace) {
+	        line = line.trim();
+	      }
+	      retLines.push(line);
+	    }
+	  }
+
+	  return retLines;
+	};
+
+	function diffLines(oldStr, newStr, callback) {
+	  return lineDiff.diff(oldStr, newStr, callback);
+	}
+	function diffTrimmedLines(oldStr, newStr, callback) {
+	  var options = /*istanbul ignore start*/(0, _params.generateOptions) /*istanbul ignore end*/(callback, { ignoreWhitespace: true });
+	  return lineDiff.diff(oldStr, newStr, options);
+	}
+
+
+	},{"../util/params":61,"./base":49}],54:[function(require,module,exports){
+	/*istanbul ignore start*/'use strict';
+
+	exports.__esModule = true;
+	exports.sentenceDiff = undefined;
+	exports. /*istanbul ignore end*/diffSentences = diffSentences;
+
+	var /*istanbul ignore start*/_base = require('./base') /*istanbul ignore end*/;
+
+	/*istanbul ignore start*/
+	var _base2 = _interopRequireDefault(_base);
+
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
+
+	/*istanbul ignore end*/var sentenceDiff = /*istanbul ignore start*/exports. /*istanbul ignore end*/sentenceDiff = new /*istanbul ignore start*/_base2['default']() /*istanbul ignore end*/;
+	sentenceDiff.tokenize = function (value) {
+	  return value.split(/(\S.+?[.!?])(?=\s+|$)/);
+	};
+
+	function diffSentences(oldStr, newStr, callback) {
+	  return sentenceDiff.diff(oldStr, newStr, callback);
+	}
+
+
+	},{"./base":49}],55:[function(require,module,exports){
+	/*istanbul ignore start*/'use strict';
+
+	exports.__esModule = true;
+	exports.wordDiff = undefined;
+	exports. /*istanbul ignore end*/diffWords = diffWords;
+	/*istanbul ignore start*/exports. /*istanbul ignore end*/diffWordsWithSpace = diffWordsWithSpace;
+
+	var /*istanbul ignore start*/_base = require('./base') /*istanbul ignore end*/;
+
+	/*istanbul ignore start*/
+	var _base2 = _interopRequireDefault(_base);
+
+	/*istanbul ignore end*/
+	var /*istanbul ignore start*/_params = require('../util/params') /*istanbul ignore end*/;
+
+	/*istanbul ignore start*/
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
+
+	/*istanbul ignore end*/
+
+	// Based on https://en.wikipedia.org/wiki/Latin_script_in_Unicode
+	//
+	// Ranges and exceptions:
+	// Latin-1 Supplement, 0080–00FF
+	//  - U+00D7  × Multiplication sign
+	//  - U+00F7  ÷ Division sign
+	// Latin Extended-A, 0100–017F
+	// Latin Extended-B, 0180–024F
+	// IPA Extensions, 0250–02AF
+	// Spacing Modifier Letters, 02B0–02FF
+	//  - U+02C7  ˇ &#711;  Caron
+	//  - U+02D8  ˘ &#728;  Breve
+	//  - U+02D9  ˙ &#729;  Dot Above
+	//  - U+02DA  ˚ &#730;  Ring Above
+	//  - U+02DB  ˛ &#731;  Ogonek
+	//  - U+02DC  ˜ &#732;  Small Tilde
+	//  - U+02DD  ˝ &#733;  Double Acute Accent
+	// Latin Extended Additional, 1E00–1EFF
+	var extendedWordChars = /^[A-Za-z\xC0-\u02C6\u02C8-\u02D7\u02DE-\u02FF\u1E00-\u1EFF]+$/;
+
+	var reWhitespace = /\S/;
+
+	var wordDiff = /*istanbul ignore start*/exports. /*istanbul ignore end*/wordDiff = new /*istanbul ignore start*/_base2['default']() /*istanbul ignore end*/;
+	wordDiff.equals = function (left, right) {
+	  return left === right || this.options.ignoreWhitespace && !reWhitespace.test(left) && !reWhitespace.test(right);
+	};
+	wordDiff.tokenize = function (value) {
+	  var tokens = value.split(/(\s+|\b)/);
+
+	  // Join the boundary splits that we do not consider to be boundaries. This is primarily the extended Latin character set.
+	  for (var i = 0; i < tokens.length - 1; i++) {
+	    // If we have an empty string in the next field and we have only word chars before and after, merge
+	    if (!tokens[i + 1] && tokens[i + 2] && extendedWordChars.test(tokens[i]) && extendedWordChars.test(tokens[i + 2])) {
+	      tokens[i] += tokens[i + 2];
+	      tokens.splice(i + 1, 2);
+	      i--;
+	    }
+	  }
+
+	  return tokens;
+	};
+
+	function diffWords(oldStr, newStr, callback) {
+	  var options = /*istanbul ignore start*/(0, _params.generateOptions) /*istanbul ignore end*/(callback, { ignoreWhitespace: true });
+	  return wordDiff.diff(oldStr, newStr, options);
+	}
+	function diffWordsWithSpace(oldStr, newStr, callback) {
+	  return wordDiff.diff(oldStr, newStr, callback);
+	}
+
+
+	},{"../util/params":61,"./base":49}],56:[function(require,module,exports){
+	/*istanbul ignore start*/'use strict';
+
+	exports.__esModule = true;
+	exports.canonicalize = exports.convertChangesToXML = exports.convertChangesToDMP = exports.parsePatch = exports.applyPatches = exports.applyPatch = exports.createPatch = exports.createTwoFilesPatch = exports.structuredPatch = exports.diffArrays = exports.diffJson = exports.diffCss = exports.diffSentences = exports.diffTrimmedLines = exports.diffLines = exports.diffWordsWithSpace = exports.diffWords = exports.diffChars = exports.Diff = undefined;
+	/*istanbul ignore end*/
+	var /*istanbul ignore start*/_base = require('./diff/base') /*istanbul ignore end*/;
+
+	/*istanbul ignore start*/
+	var _base2 = _interopRequireDefault(_base);
+
+	/*istanbul ignore end*/
+	var /*istanbul ignore start*/_character = require('./diff/character') /*istanbul ignore end*/;
+
+	var /*istanbul ignore start*/_word = require('./diff/word') /*istanbul ignore end*/;
+
+	var /*istanbul ignore start*/_line = require('./diff/line') /*istanbul ignore end*/;
+
+	var /*istanbul ignore start*/_sentence = require('./diff/sentence') /*istanbul ignore end*/;
+
+	var /*istanbul ignore start*/_css = require('./diff/css') /*istanbul ignore end*/;
+
+	var /*istanbul ignore start*/_json = require('./diff/json') /*istanbul ignore end*/;
+
+	var /*istanbul ignore start*/_array = require('./diff/array') /*istanbul ignore end*/;
+
+	var /*istanbul ignore start*/_apply = require('./patch/apply') /*istanbul ignore end*/;
+
+	var /*istanbul ignore start*/_parse = require('./patch/parse') /*istanbul ignore end*/;
+
+	var /*istanbul ignore start*/_create = require('./patch/create') /*istanbul ignore end*/;
+
+	var /*istanbul ignore start*/_dmp = require('./convert/dmp') /*istanbul ignore end*/;
+
+	var /*istanbul ignore start*/_xml = require('./convert/xml') /*istanbul ignore end*/;
+
+	/*istanbul ignore start*/
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
+
+	exports. /*istanbul ignore end*/Diff = _base2['default'];
+	/*istanbul ignore start*/exports. /*istanbul ignore end*/diffChars = _character.diffChars;
+	/*istanbul ignore start*/exports. /*istanbul ignore end*/diffWords = _word.diffWords;
+	/*istanbul ignore start*/exports. /*istanbul ignore end*/diffWordsWithSpace = _word.diffWordsWithSpace;
+	/*istanbul ignore start*/exports. /*istanbul ignore end*/diffLines = _line.diffLines;
+	/*istanbul ignore start*/exports. /*istanbul ignore end*/diffTrimmedLines = _line.diffTrimmedLines;
+	/*istanbul ignore start*/exports. /*istanbul ignore end*/diffSentences = _sentence.diffSentences;
+	/*istanbul ignore start*/exports. /*istanbul ignore end*/diffCss = _css.diffCss;
+	/*istanbul ignore start*/exports. /*istanbul ignore end*/diffJson = _json.diffJson;
+	/*istanbul ignore start*/exports. /*istanbul ignore end*/diffArrays = _array.diffArrays;
+	/*istanbul ignore start*/exports. /*istanbul ignore end*/structuredPatch = _create.structuredPatch;
+	/*istanbul ignore start*/exports. /*istanbul ignore end*/createTwoFilesPatch = _create.createTwoFilesPatch;
+	/*istanbul ignore start*/exports. /*istanbul ignore end*/createPatch = _create.createPatch;
+	/*istanbul ignore start*/exports. /*istanbul ignore end*/applyPatch = _apply.applyPatch;
+	/*istanbul ignore start*/exports. /*istanbul ignore end*/applyPatches = _apply.applyPatches;
+	/*istanbul ignore start*/exports. /*istanbul ignore end*/parsePatch = _parse.parsePatch;
+	/*istanbul ignore start*/exports. /*istanbul ignore end*/convertChangesToDMP = _dmp.convertChangesToDMP;
+	/*istanbul ignore start*/exports. /*istanbul ignore end*/convertChangesToXML = _xml.convertChangesToXML;
+	/*istanbul ignore start*/exports. /*istanbul ignore end*/canonicalize = _json.canonicalize; /* See LICENSE file for terms of use */
 
 	/*
 	 * Text diff implementation.
@@ -16999,611 +17788,560 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * "An O(ND) Difference Algorithm and its Variations" (Myers, 1986).
 	 * http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.4.6927
 	 */
-	(function(global, undefined) {
-	  var objectPrototypeToString = Object.prototype.toString;
 
-	  /*istanbul ignore next*/
-	  function map(arr, mapper, that) {
-	    if (Array.prototype.map) {
-	      return Array.prototype.map.call(arr, mapper, that);
-	    }
 
-	    var other = new Array(arr.length);
+	},{"./convert/dmp":46,"./convert/xml":47,"./diff/array":48,"./diff/base":49,"./diff/character":50,"./diff/css":51,"./diff/json":52,"./diff/line":53,"./diff/sentence":54,"./diff/word":55,"./patch/apply":57,"./patch/create":58,"./patch/parse":59}],57:[function(require,module,exports){
+	/*istanbul ignore start*/'use strict';
 
-	    for (var i = 0, n = arr.length; i < n; i++) {
-	      other[i] = mapper.call(that, arr[i], i, arr);
-	    }
-	    return other;
-	  }
-	  function clonePath(path) {
-	    return { newPos: path.newPos, components: path.components.slice(0) };
-	  }
-	  function removeEmpty(array) {
-	    var ret = [];
-	    for (var i = 0; i < array.length; i++) {
-	      if (array[i]) {
-	        ret.push(array[i]);
-	      }
-	    }
-	    return ret;
-	  }
-	  function escapeHTML(s) {
-	    var n = s;
-	    n = n.replace(/&/g, '&amp;');
-	    n = n.replace(/</g, '&lt;');
-	    n = n.replace(/>/g, '&gt;');
-	    n = n.replace(/"/g, '&quot;');
+	exports.__esModule = true;
+	exports. /*istanbul ignore end*/applyPatch = applyPatch;
+	/*istanbul ignore start*/exports. /*istanbul ignore end*/applyPatches = applyPatches;
 
-	    return n;
+	var /*istanbul ignore start*/_parse = require('./parse') /*istanbul ignore end*/;
+
+	var /*istanbul ignore start*/_distanceIterator = require('../util/distance-iterator') /*istanbul ignore end*/;
+
+	/*istanbul ignore start*/
+	var _distanceIterator2 = _interopRequireDefault(_distanceIterator);
+
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
+
+	/*istanbul ignore end*/function applyPatch(source, uniDiff) {
+	  /*istanbul ignore start*/var /*istanbul ignore end*/options = arguments.length <= 2 || arguments[2] === undefined ? {} : arguments[2];
+
+	  if (typeof uniDiff === 'string') {
+	    uniDiff = /*istanbul ignore start*/(0, _parse.parsePatch) /*istanbul ignore end*/(uniDiff);
 	  }
 
-	  // This function handles the presence of circular references by bailing out when encountering an
-	  // object that is already on the "stack" of items being processed.
-	  function canonicalize(obj, stack, replacementStack) {
-	    stack = stack || [];
-	    replacementStack = replacementStack || [];
-
-	    var i;
-
-	    for (i = 0; i < stack.length; i += 1) {
-	      if (stack[i] === obj) {
-	        return replacementStack[i];
-	      }
+	  if (Array.isArray(uniDiff)) {
+	    if (uniDiff.length > 1) {
+	      throw new Error('applyPatch only works with a single input.');
 	    }
 
-	    var canonicalizedObj;
-
-	    if ('[object Array]' === objectPrototypeToString.call(obj)) {
-	      stack.push(obj);
-	      canonicalizedObj = new Array(obj.length);
-	      replacementStack.push(canonicalizedObj);
-	      for (i = 0; i < obj.length; i += 1) {
-	        canonicalizedObj[i] = canonicalize(obj[i], stack, replacementStack);
-	      }
-	      stack.pop();
-	      replacementStack.pop();
-	    } else if (typeof obj === 'object' && obj !== null) {
-	      stack.push(obj);
-	      canonicalizedObj = {};
-	      replacementStack.push(canonicalizedObj);
-	      var sortedKeys = [],
-	          key;
-	      for (key in obj) {
-	        sortedKeys.push(key);
-	      }
-	      sortedKeys.sort();
-	      for (i = 0; i < sortedKeys.length; i += 1) {
-	        key = sortedKeys[i];
-	        canonicalizedObj[key] = canonicalize(obj[key], stack, replacementStack);
-	      }
-	      stack.pop();
-	      replacementStack.pop();
-	    } else {
-	      canonicalizedObj = obj;
-	    }
-	    return canonicalizedObj;
+	    uniDiff = uniDiff[0];
 	  }
 
-	  function buildValues(components, newString, oldString, useLongestToken) {
-	    var componentPos = 0,
-	        componentLen = components.length,
-	        newPos = 0,
-	        oldPos = 0;
+	  // Apply the diff to the input
+	  var lines = source.split(/\r\n|[\n\v\f\r\x85]/),
+	      delimiters = source.match(/\r\n|[\n\v\f\r\x85]/g) || [],
+	      hunks = uniDiff.hunks,
+	      compareLine = options.compareLine || function (lineNumber, line, operation, patchContent) /*istanbul ignore start*/{
+	    return (/*istanbul ignore end*/line === patchContent
+	    );
+	  },
+	      errorCount = 0,
+	      fuzzFactor = options.fuzzFactor || 0,
+	      minLine = 0,
+	      offset = 0,
+	      removeEOFNL = /*istanbul ignore start*/void 0 /*istanbul ignore end*/,
+	      addEOFNL = /*istanbul ignore start*/void 0 /*istanbul ignore end*/;
 
-	    for (; componentPos < componentLen; componentPos++) {
-	      var component = components[componentPos];
-	      if (!component.removed) {
-	        if (!component.added && useLongestToken) {
-	          var value = newString.slice(newPos, newPos + component.count);
-	          value = map(value, function(value, i) {
-	            var oldValue = oldString[oldPos + i];
-	            return oldValue.length > value.length ? oldValue : value;
-	          });
+	  /**
+	   * Checks if the hunk exactly fits on the provided location
+	   */
+	  function hunkFits(hunk, toPos) {
+	    for (var j = 0; j < hunk.lines.length; j++) {
+	      var line = hunk.lines[j],
+	          operation = line[0],
+	          content = line.substr(1);
 
-	          component.value = value.join('');
-	        } else {
-	          component.value = newString.slice(newPos, newPos + component.count).join('');
-	        }
-	        newPos += component.count;
+	      if (operation === ' ' || operation === '-') {
+	        // Context sanity check
+	        if (!compareLine(toPos + 1, lines[toPos], operation, content)) {
+	          errorCount++;
 
-	        // Common case
-	        if (!component.added) {
-	          oldPos += component.count;
-	        }
-	      } else {
-	        component.value = oldString.slice(oldPos, oldPos + component.count).join('');
-	        oldPos += component.count;
-
-	        // Reverse add and remove so removes are output first to match common convention
-	        // The diffing algorithm is tied to add then remove output and this is the simplest
-	        // route to get the desired output with minimal overhead.
-	        if (componentPos && components[componentPos - 1].added) {
-	          var tmp = components[componentPos - 1];
-	          components[componentPos - 1] = components[componentPos];
-	          components[componentPos] = tmp;
-	        }
-	      }
-	    }
-
-	    return components;
-	  }
-
-	  function Diff(ignoreWhitespace) {
-	    this.ignoreWhitespace = ignoreWhitespace;
-	  }
-	  Diff.prototype = {
-	    diff: function(oldString, newString, callback) {
-	      var self = this;
-
-	      function done(value) {
-	        if (callback) {
-	          setTimeout(function() { callback(undefined, value); }, 0);
-	          return true;
-	        } else {
-	          return value;
-	        }
-	      }
-
-	      // Handle the identity case (this is due to unrolling editLength == 0
-	      if (newString === oldString) {
-	        return done([{ value: newString }]);
-	      }
-	      if (!newString) {
-	        return done([{ value: oldString, removed: true }]);
-	      }
-	      if (!oldString) {
-	        return done([{ value: newString, added: true }]);
-	      }
-
-	      newString = this.tokenize(newString);
-	      oldString = this.tokenize(oldString);
-
-	      var newLen = newString.length, oldLen = oldString.length;
-	      var editLength = 1;
-	      var maxEditLength = newLen + oldLen;
-	      var bestPath = [{ newPos: -1, components: [] }];
-
-	      // Seed editLength = 0, i.e. the content starts with the same values
-	      var oldPos = this.extractCommon(bestPath[0], newString, oldString, 0);
-	      if (bestPath[0].newPos + 1 >= newLen && oldPos + 1 >= oldLen) {
-	        // Identity per the equality and tokenizer
-	        return done([{value: newString.join('')}]);
-	      }
-
-	      // Main worker method. checks all permutations of a given edit length for acceptance.
-	      function execEditLength() {
-	        for (var diagonalPath = -1 * editLength; diagonalPath <= editLength; diagonalPath += 2) {
-	          var basePath;
-	          var addPath = bestPath[diagonalPath - 1],
-	              removePath = bestPath[diagonalPath + 1],
-	              oldPos = (removePath ? removePath.newPos : 0) - diagonalPath;
-	          if (addPath) {
-	            // No one else is going to attempt to use this value, clear it
-	            bestPath[diagonalPath - 1] = undefined;
-	          }
-
-	          var canAdd = addPath && addPath.newPos + 1 < newLen,
-	              canRemove = removePath && 0 <= oldPos && oldPos < oldLen;
-	          if (!canAdd && !canRemove) {
-	            // If this path is a terminal then prune
-	            bestPath[diagonalPath] = undefined;
-	            continue;
-	          }
-
-	          // Select the diagonal that we want to branch from. We select the prior
-	          // path whose position in the new string is the farthest from the origin
-	          // and does not pass the bounds of the diff graph
-	          if (!canAdd || (canRemove && addPath.newPos < removePath.newPos)) {
-	            basePath = clonePath(removePath);
-	            self.pushComponent(basePath.components, undefined, true);
-	          } else {
-	            basePath = addPath;   // No need to clone, we've pulled it from the list
-	            basePath.newPos++;
-	            self.pushComponent(basePath.components, true, undefined);
-	          }
-
-	          oldPos = self.extractCommon(basePath, newString, oldString, diagonalPath);
-
-	          // If we have hit the end of both strings, then we are done
-	          if (basePath.newPos + 1 >= newLen && oldPos + 1 >= oldLen) {
-	            return done(buildValues(basePath.components, newString, oldString, self.useLongestToken));
-	          } else {
-	            // Otherwise track this path as a potential candidate and continue.
-	            bestPath[diagonalPath] = basePath;
-	          }
-	        }
-
-	        editLength++;
-	      }
-
-	      // Performs the length of edit iteration. Is a bit fugly as this has to support the
-	      // sync and async mode which is never fun. Loops over execEditLength until a value
-	      // is produced.
-	      if (callback) {
-	        (function exec() {
-	          setTimeout(function() {
-	            // This should not happen, but we want to be safe.
-	            /*istanbul ignore next */
-	            if (editLength > maxEditLength) {
-	              return callback();
-	            }
-
-	            if (!execEditLength()) {
-	              exec();
-	            }
-	          }, 0);
-	        }());
-	      } else {
-	        while (editLength <= maxEditLength) {
-	          var ret = execEditLength();
-	          if (ret) {
-	            return ret;
-	          }
-	        }
-	      }
-	    },
-
-	    pushComponent: function(components, added, removed) {
-	      var last = components[components.length - 1];
-	      if (last && last.added === added && last.removed === removed) {
-	        // We need to clone here as the component clone operation is just
-	        // as shallow array clone
-	        components[components.length - 1] = {count: last.count + 1, added: added, removed: removed };
-	      } else {
-	        components.push({count: 1, added: added, removed: removed });
-	      }
-	    },
-	    extractCommon: function(basePath, newString, oldString, diagonalPath) {
-	      var newLen = newString.length,
-	          oldLen = oldString.length,
-	          newPos = basePath.newPos,
-	          oldPos = newPos - diagonalPath,
-
-	          commonCount = 0;
-	      while (newPos + 1 < newLen && oldPos + 1 < oldLen && this.equals(newString[newPos + 1], oldString[oldPos + 1])) {
-	        newPos++;
-	        oldPos++;
-	        commonCount++;
-	      }
-
-	      if (commonCount) {
-	        basePath.components.push({count: commonCount});
-	      }
-
-	      basePath.newPos = newPos;
-	      return oldPos;
-	    },
-
-	    equals: function(left, right) {
-	      var reWhitespace = /\S/;
-	      return left === right || (this.ignoreWhitespace && !reWhitespace.test(left) && !reWhitespace.test(right));
-	    },
-	    tokenize: function(value) {
-	      return value.split('');
-	    }
-	  };
-
-	  var CharDiff = new Diff();
-
-	  var WordDiff = new Diff(true);
-	  var WordWithSpaceDiff = new Diff();
-	  WordDiff.tokenize = WordWithSpaceDiff.tokenize = function(value) {
-	    return removeEmpty(value.split(/(\s+|\b)/));
-	  };
-
-	  var CssDiff = new Diff(true);
-	  CssDiff.tokenize = function(value) {
-	    return removeEmpty(value.split(/([{}:;,]|\s+)/));
-	  };
-
-	  var LineDiff = new Diff();
-
-	  var TrimmedLineDiff = new Diff();
-	  TrimmedLineDiff.ignoreTrim = true;
-
-	  LineDiff.tokenize = TrimmedLineDiff.tokenize = function(value) {
-	    var retLines = [],
-	        lines = value.split(/^/m);
-	    for (var i = 0; i < lines.length; i++) {
-	      var line = lines[i],
-	          lastLine = lines[i - 1],
-	          lastLineLastChar = lastLine && lastLine[lastLine.length - 1];
-
-	      // Merge lines that may contain windows new lines
-	      if (line === '\n' && lastLineLastChar === '\r') {
-	          retLines[retLines.length - 1] = retLines[retLines.length - 1].slice(0, -1) + '\r\n';
-	      } else {
-	        if (this.ignoreTrim) {
-	          line = line.trim();
-	          // add a newline unless this is the last line.
-	          if (i < lines.length - 1) {
-	            line += '\n';
-	          }
-	        }
-	        retLines.push(line);
-	      }
-	    }
-
-	    return retLines;
-	  };
-
-	  var PatchDiff = new Diff();
-	  PatchDiff.tokenize = function(value) {
-	    var ret = [],
-	        linesAndNewlines = value.split(/(\n|\r\n)/);
-
-	    // Ignore the final empty token that occurs if the string ends with a new line
-	    if (!linesAndNewlines[linesAndNewlines.length - 1]) {
-	      linesAndNewlines.pop();
-	    }
-
-	    // Merge the content and line separators into single tokens
-	    for (var i = 0; i < linesAndNewlines.length; i++) {
-	      var line = linesAndNewlines[i];
-
-	      if (i % 2) {
-	        ret[ret.length - 1] += line;
-	      } else {
-	        ret.push(line);
-	      }
-	    }
-	    return ret;
-	  };
-
-	  var SentenceDiff = new Diff();
-	  SentenceDiff.tokenize = function(value) {
-	    return removeEmpty(value.split(/(\S.+?[.!?])(?=\s+|$)/));
-	  };
-
-	  var JsonDiff = new Diff();
-	  // Discriminate between two lines of pretty-printed, serialized JSON where one of them has a
-	  // dangling comma and the other doesn't. Turns out including the dangling comma yields the nicest output:
-	  JsonDiff.useLongestToken = true;
-	  JsonDiff.tokenize = LineDiff.tokenize;
-	  JsonDiff.equals = function(left, right) {
-	    return LineDiff.equals(left.replace(/,([\r\n])/g, '$1'), right.replace(/,([\r\n])/g, '$1'));
-	  };
-
-	  var JsDiff = {
-	    Diff: Diff,
-
-	    diffChars: function(oldStr, newStr, callback) { return CharDiff.diff(oldStr, newStr, callback); },
-	    diffWords: function(oldStr, newStr, callback) { return WordDiff.diff(oldStr, newStr, callback); },
-	    diffWordsWithSpace: function(oldStr, newStr, callback) { return WordWithSpaceDiff.diff(oldStr, newStr, callback); },
-	    diffLines: function(oldStr, newStr, callback) { return LineDiff.diff(oldStr, newStr, callback); },
-	    diffTrimmedLines: function(oldStr, newStr, callback) { return TrimmedLineDiff.diff(oldStr, newStr, callback); },
-
-	    diffSentences: function(oldStr, newStr, callback) { return SentenceDiff.diff(oldStr, newStr, callback); },
-
-	    diffCss: function(oldStr, newStr, callback) { return CssDiff.diff(oldStr, newStr, callback); },
-	    diffJson: function(oldObj, newObj, callback) {
-	      return JsonDiff.diff(
-	        typeof oldObj === 'string' ? oldObj : JSON.stringify(canonicalize(oldObj), undefined, '  '),
-	        typeof newObj === 'string' ? newObj : JSON.stringify(canonicalize(newObj), undefined, '  '),
-	        callback
-	      );
-	    },
-
-	    createTwoFilesPatch: function(oldFileName, newFileName, oldStr, newStr, oldHeader, newHeader) {
-	      var ret = [];
-
-	      if (oldFileName == newFileName) {
-	        ret.push('Index: ' + oldFileName);
-	      }
-	      ret.push('===================================================================');
-	      ret.push('--- ' + oldFileName + (typeof oldHeader === 'undefined' ? '' : '\t' + oldHeader));
-	      ret.push('+++ ' + newFileName + (typeof newHeader === 'undefined' ? '' : '\t' + newHeader));
-
-	      var diff = PatchDiff.diff(oldStr, newStr);
-	      diff.push({value: '', lines: []});   // Append an empty value to make cleanup easier
-
-	      // Formats a given set of lines for printing as context lines in a patch
-	      function contextLines(lines) {
-	        return map(lines, function(entry) { return ' ' + entry; });
-	      }
-
-	      // Outputs the no newline at end of file warning if needed
-	      function eofNL(curRange, i, current) {
-	        var last = diff[diff.length - 2],
-	            isLast = i === diff.length - 2,
-	            isLastOfType = i === diff.length - 3 && current.added !== last.added;
-
-	        // Figure out if this is the last line for the given file and missing NL
-	        if (!(/\n$/.test(current.value)) && (isLast || isLastOfType)) {
-	          curRange.push('\\ No newline at end of file');
-	        }
-	      }
-
-	      var oldRangeStart = 0, newRangeStart = 0, curRange = [],
-	          oldLine = 1, newLine = 1;
-	      for (var i = 0; i < diff.length; i++) {
-	        var current = diff[i],
-	            lines = current.lines || current.value.replace(/\n$/, '').split('\n');
-	        current.lines = lines;
-
-	        if (current.added || current.removed) {
-	          // If we have previous context, start with that
-	          if (!oldRangeStart) {
-	            var prev = diff[i - 1];
-	            oldRangeStart = oldLine;
-	            newRangeStart = newLine;
-
-	            if (prev) {
-	              curRange = contextLines(prev.lines.slice(-4));
-	              oldRangeStart -= curRange.length;
-	              newRangeStart -= curRange.length;
-	            }
-	          }
-
-	          // Output our changes
-	          curRange.push.apply(curRange, map(lines, function(entry) {
-	            return (current.added ? '+' : '-') + entry;
-	          }));
-	          eofNL(curRange, i, current);
-
-	          // Track the updated file position
-	          if (current.added) {
-	            newLine += lines.length;
-	          } else {
-	            oldLine += lines.length;
-	          }
-	        } else {
-	          // Identical context lines. Track line changes
-	          if (oldRangeStart) {
-	            // Close out any changes that have been output (or join overlapping)
-	            if (lines.length <= 8 && i < diff.length - 2) {
-	              // Overlapping
-	              curRange.push.apply(curRange, contextLines(lines));
-	            } else {
-	              // end the range and output
-	              var contextSize = Math.min(lines.length, 4);
-	              ret.push(
-	                  '@@ -' + oldRangeStart + ',' + (oldLine - oldRangeStart + contextSize)
-	                  + ' +' + newRangeStart + ',' + (newLine - newRangeStart + contextSize)
-	                  + ' @@');
-	              ret.push.apply(ret, curRange);
-	              ret.push.apply(ret, contextLines(lines.slice(0, contextSize)));
-	              if (lines.length <= 4) {
-	                eofNL(ret, i, current);
-	              }
-
-	              oldRangeStart = 0;
-	              newRangeStart = 0;
-	              curRange = [];
-	            }
-	          }
-	          oldLine += lines.length;
-	          newLine += lines.length;
-	        }
-	      }
-
-	      return ret.join('\n') + '\n';
-	    },
-
-	    createPatch: function(fileName, oldStr, newStr, oldHeader, newHeader) {
-	      return JsDiff.createTwoFilesPatch(fileName, fileName, oldStr, newStr, oldHeader, newHeader);
-	    },
-
-	    applyPatch: function(oldStr, uniDiff) {
-	      var diffstr = uniDiff.split('\n'),
-	          hunks = [],
-	          i = 0,
-	          remEOFNL = false,
-	          addEOFNL = false;
-
-	      // Skip to the first change hunk
-	      while (i < diffstr.length && !(/^@@/.test(diffstr[i]))) {
-	        i++;
-	      }
-
-	      // Parse the unified diff
-	      for (; i < diffstr.length; i++) {
-	        if (diffstr[i][0] === '@') {
-	          var chnukHeader = diffstr[i].split(/@@ -(\d+),(\d+) \+(\d+),(\d+) @@/);
-	          hunks.unshift({
-	            start: chnukHeader[3],
-	            oldlength: +chnukHeader[2],
-	            removed: [],
-	            newlength: chnukHeader[4],
-	            added: []
-	          });
-	        } else if (diffstr[i][0] === '+') {
-	          hunks[0].added.push(diffstr[i].substr(1));
-	        } else if (diffstr[i][0] === '-') {
-	          hunks[0].removed.push(diffstr[i].substr(1));
-	        } else if (diffstr[i][0] === ' ') {
-	          hunks[0].added.push(diffstr[i].substr(1));
-	          hunks[0].removed.push(diffstr[i].substr(1));
-	        } else if (diffstr[i][0] === '\\') {
-	          if (diffstr[i - 1][0] === '+') {
-	            remEOFNL = true;
-	          } else if (diffstr[i - 1][0] === '-') {
-	            addEOFNL = true;
-	          }
-	        }
-	      }
-
-	      // Apply the diff to the input
-	      var lines = oldStr.split('\n');
-	      for (i = hunks.length - 1; i >= 0; i--) {
-	        var hunk = hunks[i];
-	        // Sanity check the input string. Bail if we don't match.
-	        for (var j = 0; j < hunk.oldlength; j++) {
-	          if (lines[hunk.start - 1 + j] !== hunk.removed[j]) {
+	          if (errorCount > fuzzFactor) {
 	            return false;
 	          }
 	        }
-	        Array.prototype.splice.apply(lines, [hunk.start - 1, hunk.oldlength].concat(hunk.added));
+	        toPos++;
+	      }
+	    }
+
+	    return true;
+	  }
+
+	  // Search best fit offsets for each hunk based on the previous ones
+	  for (var i = 0; i < hunks.length; i++) {
+	    var hunk = hunks[i],
+	        maxLine = lines.length - hunk.oldLines,
+	        localOffset = 0,
+	        toPos = offset + hunk.oldStart - 1;
+
+	    var iterator = /*istanbul ignore start*/(0, _distanceIterator2['default']) /*istanbul ignore end*/(toPos, minLine, maxLine);
+
+	    for (; localOffset !== undefined; localOffset = iterator()) {
+	      if (hunkFits(hunk, toPos + localOffset)) {
+	        hunk.offset = offset += localOffset;
+	        break;
+	      }
+	    }
+
+	    if (localOffset === undefined) {
+	      return false;
+	    }
+
+	    // Set lower text limit to end of the current hunk, so next ones don't try
+	    // to fit over already patched text
+	    minLine = hunk.offset + hunk.oldStart + hunk.oldLines;
+	  }
+
+	  // Apply patch hunks
+	  for (var _i = 0; _i < hunks.length; _i++) {
+	    var _hunk = hunks[_i],
+	        _toPos = _hunk.offset + _hunk.newStart - 1;
+	    if (_hunk.newLines == 0) {
+	      _toPos++;
+	    }
+
+	    for (var j = 0; j < _hunk.lines.length; j++) {
+	      var line = _hunk.lines[j],
+	          operation = line[0],
+	          content = line.substr(1),
+	          delimiter = _hunk.linedelimiters[j];
+
+	      if (operation === ' ') {
+	        _toPos++;
+	      } else if (operation === '-') {
+	        lines.splice(_toPos, 1);
+	        delimiters.splice(_toPos, 1);
+	        /* istanbul ignore else */
+	      } else if (operation === '+') {
+	          lines.splice(_toPos, 0, content);
+	          delimiters.splice(_toPos, 0, delimiter);
+	          _toPos++;
+	        } else if (operation === '\\') {
+	          var previousOperation = _hunk.lines[j - 1] ? _hunk.lines[j - 1][0] : null;
+	          if (previousOperation === '+') {
+	            removeEOFNL = true;
+	          } else if (previousOperation === '-') {
+	            addEOFNL = true;
+	          }
+	        }
+	    }
+	  }
+
+	  // Handle EOFNL insertion/removal
+	  if (removeEOFNL) {
+	    while (!lines[lines.length - 1]) {
+	      lines.pop();
+	      delimiters.pop();
+	    }
+	  } else if (addEOFNL) {
+	    lines.push('');
+	    delimiters.push('\n');
+	  }
+	  for (var _k = 0; _k < lines.length - 1; _k++) {
+	    lines[_k] = lines[_k] + delimiters[_k];
+	  }
+	  return lines.join('');
+	}
+
+	// Wrapper that supports multiple file patches via callbacks.
+	function applyPatches(uniDiff, options) {
+	  if (typeof uniDiff === 'string') {
+	    uniDiff = /*istanbul ignore start*/(0, _parse.parsePatch) /*istanbul ignore end*/(uniDiff);
+	  }
+
+	  var currentIndex = 0;
+	  function processIndex() {
+	    var index = uniDiff[currentIndex++];
+	    if (!index) {
+	      return options.complete();
+	    }
+
+	    options.loadFile(index, function (err, data) {
+	      if (err) {
+	        return options.complete(err);
 	      }
 
-	      // Handle EOFNL insertion/removal
-	      if (remEOFNL) {
-	        while (!lines[lines.length - 1]) {
-	          lines.pop();
+	      var updatedContent = applyPatch(data, index, options);
+	      options.patched(index, updatedContent, function (err) {
+	        if (err) {
+	          return options.complete(err);
 	        }
-	      } else if (addEOFNL) {
-	        lines.push('');
+
+	        processIndex();
+	      });
+	    });
+	  }
+	  processIndex();
+	}
+
+
+	},{"../util/distance-iterator":60,"./parse":59}],58:[function(require,module,exports){
+	/*istanbul ignore start*/'use strict';
+
+	exports.__esModule = true;
+	exports. /*istanbul ignore end*/structuredPatch = structuredPatch;
+	/*istanbul ignore start*/exports. /*istanbul ignore end*/createTwoFilesPatch = createTwoFilesPatch;
+	/*istanbul ignore start*/exports. /*istanbul ignore end*/createPatch = createPatch;
+
+	var /*istanbul ignore start*/_line = require('../diff/line') /*istanbul ignore end*/;
+
+	/*istanbul ignore start*/
+	function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
+
+	/*istanbul ignore end*/function structuredPatch(oldFileName, newFileName, oldStr, newStr, oldHeader, newHeader, options) {
+	  if (!options) {
+	    options = {};
+	  }
+	  if (typeof options.context === 'undefined') {
+	    options.context = 4;
+	  }
+
+	  var diff = /*istanbul ignore start*/(0, _line.diffLines) /*istanbul ignore end*/(oldStr, newStr, options);
+	  diff.push({ value: '', lines: [] }); // Append an empty value to make cleanup easier
+
+	  function contextLines(lines) {
+	    return lines.map(function (entry) {
+	      return ' ' + entry;
+	    });
+	  }
+
+	  var hunks = [];
+	  var oldRangeStart = 0,
+	      newRangeStart = 0,
+	      curRange = [],
+	      oldLine = 1,
+	      newLine = 1;
+	  /*istanbul ignore start*/
+	  var _loop = function _loop( /*istanbul ignore end*/i) {
+	    var current = diff[i],
+	        lines = current.lines || current.value.replace(/\n$/, '').split('\n');
+	    current.lines = lines;
+
+	    if (current.added || current.removed) {
+	      /*istanbul ignore start*/
+	      var _curRange;
+
+	      /*istanbul ignore end*/
+	      // If we have previous context, start with that
+	      if (!oldRangeStart) {
+	        var prev = diff[i - 1];
+	        oldRangeStart = oldLine;
+	        newRangeStart = newLine;
+
+	        if (prev) {
+	          curRange = options.context > 0 ? contextLines(prev.lines.slice(-options.context)) : [];
+	          oldRangeStart -= curRange.length;
+	          newRangeStart -= curRange.length;
+	        }
 	      }
-	      return lines.join('\n');
-	    },
 
-	    convertChangesToXML: function(changes) {
-	      var ret = [];
-	      for (var i = 0; i < changes.length; i++) {
-	        var change = changes[i];
-	        if (change.added) {
-	          ret.push('<ins>');
-	        } else if (change.removed) {
-	          ret.push('<del>');
-	        }
+	      // Output our changes
+	      /*istanbul ignore start*/(_curRange = /*istanbul ignore end*/curRange).push. /*istanbul ignore start*/apply /*istanbul ignore end*/( /*istanbul ignore start*/_curRange /*istanbul ignore end*/, /*istanbul ignore start*/_toConsumableArray( /*istanbul ignore end*/lines.map(function (entry) {
+	        return (current.added ? '+' : '-') + entry;
+	      })));
 
-	        ret.push(escapeHTML(change.value));
-
-	        if (change.added) {
-	          ret.push('</ins>');
-	        } else if (change.removed) {
-	          ret.push('</del>');
-	        }
+	      // Track the updated file position
+	      if (current.added) {
+	        newLine += lines.length;
+	      } else {
+	        oldLine += lines.length;
 	      }
-	      return ret.join('');
-	    },
+	    } else {
+	      // Identical context lines. Track line changes
+	      if (oldRangeStart) {
+	        // Close out any changes that have been output (or join overlapping)
+	        if (lines.length <= options.context * 2 && i < diff.length - 2) {
+	          /*istanbul ignore start*/
+	          var _curRange2;
 
-	    // See: http://code.google.com/p/google-diff-match-patch/wiki/API
-	    convertChangesToDMP: function(changes) {
-	      var ret = [],
-	          change,
-	          operation;
-	      for (var i = 0; i < changes.length; i++) {
-	        change = changes[i];
-	        if (change.added) {
-	          operation = 1;
-	        } else if (change.removed) {
-	          operation = -1;
+	          /*istanbul ignore end*/
+	          // Overlapping
+	          /*istanbul ignore start*/(_curRange2 = /*istanbul ignore end*/curRange).push. /*istanbul ignore start*/apply /*istanbul ignore end*/( /*istanbul ignore start*/_curRange2 /*istanbul ignore end*/, /*istanbul ignore start*/_toConsumableArray( /*istanbul ignore end*/contextLines(lines)));
 	        } else {
-	          operation = 0;
+	          /*istanbul ignore start*/
+	          var _curRange3;
+
+	          /*istanbul ignore end*/
+	          // end the range and output
+	          var contextSize = Math.min(lines.length, options.context);
+	          /*istanbul ignore start*/(_curRange3 = /*istanbul ignore end*/curRange).push. /*istanbul ignore start*/apply /*istanbul ignore end*/( /*istanbul ignore start*/_curRange3 /*istanbul ignore end*/, /*istanbul ignore start*/_toConsumableArray( /*istanbul ignore end*/contextLines(lines.slice(0, contextSize))));
+
+	          var hunk = {
+	            oldStart: oldRangeStart,
+	            oldLines: oldLine - oldRangeStart + contextSize,
+	            newStart: newRangeStart,
+	            newLines: newLine - newRangeStart + contextSize,
+	            lines: curRange
+	          };
+	          if (i >= diff.length - 2 && lines.length <= options.context) {
+	            // EOF is inside this hunk
+	            var oldEOFNewline = /\n$/.test(oldStr);
+	            var newEOFNewline = /\n$/.test(newStr);
+	            if (lines.length == 0 && !oldEOFNewline) {
+	              // special case: old has no eol and no trailing context; no-nl can end up before adds
+	              curRange.splice(hunk.oldLines, 0, '\\ No newline at end of file');
+	            } else if (!oldEOFNewline || !newEOFNewline) {
+	              curRange.push('\\ No newline at end of file');
+	            }
+	          }
+	          hunks.push(hunk);
+
+	          oldRangeStart = 0;
+	          newRangeStart = 0;
+	          curRange = [];
 	        }
-
-	        ret.push([operation, change.value]);
 	      }
-	      return ret;
-	    },
-
-	    canonicalize: canonicalize
+	      oldLine += lines.length;
+	      newLine += lines.length;
+	    }
 	  };
 
-	  /*istanbul ignore next */
-	  /*global module */
-	  if (typeof module !== 'undefined' && module.exports) {
-	    module.exports = JsDiff;
-	  } else if (false) {
-	    /*global define */
-	    define([], function() { return JsDiff; });
-	  } else if (typeof global.JsDiff === 'undefined') {
-	    global.JsDiff = JsDiff;
+	  for (var i = 0; i < diff.length; i++) {
+	    /*istanbul ignore start*/
+	    _loop( /*istanbul ignore end*/i);
 	  }
-	}(this));
 
-	},{}],47:[function(require,module,exports){
+	  return {
+	    oldFileName: oldFileName, newFileName: newFileName,
+	    oldHeader: oldHeader, newHeader: newHeader,
+	    hunks: hunks
+	  };
+	}
+
+	function createTwoFilesPatch(oldFileName, newFileName, oldStr, newStr, oldHeader, newHeader, options) {
+	  var diff = structuredPatch(oldFileName, newFileName, oldStr, newStr, oldHeader, newHeader, options);
+
+	  var ret = [];
+	  if (oldFileName == newFileName) {
+	    ret.push('Index: ' + oldFileName);
+	  }
+	  ret.push('===================================================================');
+	  ret.push('--- ' + diff.oldFileName + (typeof diff.oldHeader === 'undefined' ? '' : '\t' + diff.oldHeader));
+	  ret.push('+++ ' + diff.newFileName + (typeof diff.newHeader === 'undefined' ? '' : '\t' + diff.newHeader));
+
+	  for (var i = 0; i < diff.hunks.length; i++) {
+	    var hunk = diff.hunks[i];
+	    ret.push('@@ -' + hunk.oldStart + ',' + hunk.oldLines + ' +' + hunk.newStart + ',' + hunk.newLines + ' @@');
+	    ret.push.apply(ret, hunk.lines);
+	  }
+
+	  return ret.join('\n') + '\n';
+	}
+
+	function createPatch(fileName, oldStr, newStr, oldHeader, newHeader, options) {
+	  return createTwoFilesPatch(fileName, fileName, oldStr, newStr, oldHeader, newHeader, options);
+	}
+
+
+	},{"../diff/line":53}],59:[function(require,module,exports){
+	/*istanbul ignore start*/'use strict';
+
+	exports.__esModule = true;
+	exports. /*istanbul ignore end*/parsePatch = parsePatch;
+	function parsePatch(uniDiff) {
+	  /*istanbul ignore start*/var /*istanbul ignore end*/options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
+
+	  var diffstr = uniDiff.split(/\r\n|[\n\v\f\r\x85]/),
+	      delimiters = uniDiff.match(/\r\n|[\n\v\f\r\x85]/g) || [],
+	      list = [],
+	      i = 0;
+
+	  function parseIndex() {
+	    var index = {};
+	    list.push(index);
+
+	    // Parse diff metadata
+	    while (i < diffstr.length) {
+	      var line = diffstr[i];
+
+	      // File header found, end parsing diff metadata
+	      if (/^(\-\-\-|\+\+\+|@@)\s/.test(line)) {
+	        break;
+	      }
+
+	      // Diff index
+	      var header = /^(?:Index:|diff(?: -r \w+)+)\s+(.+?)\s*$/.exec(line);
+	      if (header) {
+	        index.index = header[1];
+	      }
+
+	      i++;
+	    }
+
+	    // Parse file headers if they are defined. Unified diff requires them, but
+	    // there's no technical issues to have an isolated hunk without file header
+	    parseFileHeader(index);
+	    parseFileHeader(index);
+
+	    // Parse hunks
+	    index.hunks = [];
+
+	    while (i < diffstr.length) {
+	      var _line = diffstr[i];
+
+	      if (/^(Index:|diff|\-\-\-|\+\+\+)\s/.test(_line)) {
+	        break;
+	      } else if (/^@@/.test(_line)) {
+	        index.hunks.push(parseHunk());
+	      } else if (_line && options.strict) {
+	        // Ignore unexpected content unless in strict mode
+	        throw new Error('Unknown line ' + (i + 1) + ' ' + JSON.stringify(_line));
+	      } else {
+	        i++;
+	      }
+	    }
+	  }
+
+	  // Parses the --- and +++ headers, if none are found, no lines
+	  // are consumed.
+	  function parseFileHeader(index) {
+	    var headerPattern = /^(---|\+\+\+)\s+([\S ]*)(?:\t(.*?)\s*)?$/;
+	    var fileHeader = headerPattern.exec(diffstr[i]);
+	    if (fileHeader) {
+	      var keyPrefix = fileHeader[1] === '---' ? 'old' : 'new';
+	      index[keyPrefix + 'FileName'] = fileHeader[2];
+	      index[keyPrefix + 'Header'] = fileHeader[3];
+
+	      i++;
+	    }
+	  }
+
+	  // Parses a hunk
+	  // This assumes that we are at the start of a hunk.
+	  function parseHunk() {
+	    var chunkHeaderIndex = i,
+	        chunkHeaderLine = diffstr[i++],
+	        chunkHeader = chunkHeaderLine.split(/@@ -(\d+)(?:,(\d+))? \+(\d+)(?:,(\d+))? @@/);
+
+	    var hunk = {
+	      oldStart: +chunkHeader[1],
+	      oldLines: +chunkHeader[2] || 1,
+	      newStart: +chunkHeader[3],
+	      newLines: +chunkHeader[4] || 1,
+	      lines: [],
+	      linedelimiters: []
+	    };
+
+	    var addCount = 0,
+	        removeCount = 0;
+	    for (; i < diffstr.length; i++) {
+	      // Lines starting with '---' could be mistaken for the "remove line" operation
+	      // But they could be the header for the next file. Therefore prune such cases out.
+	      if (diffstr[i].indexOf('--- ') === 0 && i + 2 < diffstr.length && diffstr[i + 1].indexOf('+++ ') === 0 && diffstr[i + 2].indexOf('@@') === 0) {
+	        break;
+	      }
+	      var operation = diffstr[i][0];
+
+	      if (operation === '+' || operation === '-' || operation === ' ' || operation === '\\') {
+	        hunk.lines.push(diffstr[i]);
+	        hunk.linedelimiters.push(delimiters[i] || '\n');
+
+	        if (operation === '+') {
+	          addCount++;
+	        } else if (operation === '-') {
+	          removeCount++;
+	        } else if (operation === ' ') {
+	          addCount++;
+	          removeCount++;
+	        }
+	      } else {
+	        break;
+	      }
+	    }
+
+	    // Handle the empty block count case
+	    if (!addCount && hunk.newLines === 1) {
+	      hunk.newLines = 0;
+	    }
+	    if (!removeCount && hunk.oldLines === 1) {
+	      hunk.oldLines = 0;
+	    }
+
+	    // Perform optional sanity checking
+	    if (options.strict) {
+	      if (addCount !== hunk.newLines) {
+	        throw new Error('Added line count did not match for hunk at line ' + (chunkHeaderIndex + 1));
+	      }
+	      if (removeCount !== hunk.oldLines) {
+	        throw new Error('Removed line count did not match for hunk at line ' + (chunkHeaderIndex + 1));
+	      }
+	    }
+
+	    return hunk;
+	  }
+
+	  while (i < diffstr.length) {
+	    parseIndex();
+	  }
+
+	  return list;
+	}
+
+
+	},{}],60:[function(require,module,exports){
+	/*istanbul ignore start*/"use strict";
+
+	exports.__esModule = true;
+
+	exports["default"] = /*istanbul ignore end*/function (start, minLine, maxLine) {
+	  var wantForward = true,
+	      backwardExhausted = false,
+	      forwardExhausted = false,
+	      localOffset = 1;
+
+	  return function iterator() {
+	    if (wantForward && !forwardExhausted) {
+	      if (backwardExhausted) {
+	        localOffset++;
+	      } else {
+	        wantForward = false;
+	      }
+
+	      // Check if trying to fit beyond text length, and if not, check it fits
+	      // after offset location (or desired location on first iteration)
+	      if (start + localOffset <= maxLine) {
+	        return localOffset;
+	      }
+
+	      forwardExhausted = true;
+	    }
+
+	    if (!backwardExhausted) {
+	      if (!forwardExhausted) {
+	        wantForward = true;
+	      }
+
+	      // Check if trying to fit before text beginning, and if not, check it fits
+	      // before offset location
+	      if (minLine <= start - localOffset) {
+	        return -localOffset++;
+	      }
+
+	      backwardExhausted = true;
+	      return iterator();
+	    }
+
+	    // We tried to fit hunk before text beginning and beyond text lenght, then
+	    // hunk can't fit on the text. Return undefined
+	  };
+	};
+
+
+	},{}],61:[function(require,module,exports){
+	/*istanbul ignore start*/'use strict';
+
+	exports.__esModule = true;
+	exports. /*istanbul ignore end*/generateOptions = generateOptions;
+	function generateOptions(options, defaults) {
+	  if (typeof options === 'function') {
+	    defaults.callback = options;
+	  } else if (options) {
+	    for (var name in options) {
+	      /* istanbul ignore else */
+	      if (options.hasOwnProperty(name)) {
+	        defaults[name] = options[name];
+	      }
+	    }
+	  }
+	  return defaults;
+	}
+
+
+	},{}],62:[function(require,module,exports){
 	'use strict';
 
 	var matchOperatorsRe = /[|\\{}()[\]^$+*?.]/g;
@@ -17616,7 +18354,7 @@ return /******/ (function(modules) { // webpackBootstrap
 		return str.replace(matchOperatorsRe, '\\$&');
 	};
 
-	},{}],48:[function(require,module,exports){
+	},{}],63:[function(require,module,exports){
 	// Copyright Joyent, Inc. and other Node contributors.
 	//
 	// Permission is hereby granted, free of charge, to any person obtaining a
@@ -17920,7 +18658,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  return arg === void 0;
 	}
 
-	},{}],49:[function(require,module,exports){
+	},{}],64:[function(require,module,exports){
 	(function (process){
 	// Growl - Copyright TJ Holowaychuk <tj@vision-media.ca> (MIT Licensed)
 
@@ -18214,7 +18952,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	};
 
 	}).call(this,require('_process'))
-	},{"_process":67,"child_process":42,"fs":42,"os":65,"path":42}],50:[function(require,module,exports){
+	},{"_process":82,"child_process":42,"fs":42,"os":80,"path":42}],65:[function(require,module,exports){
 	exports.read = function (buffer, offset, isLE, mLen, nBytes) {
 	  var e, m
 	  var eLen = nBytes * 8 - mLen - 1
@@ -18300,7 +19038,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  buffer[offset + i - d] |= s * 128
 	}
 
-	},{}],51:[function(require,module,exports){
+	},{}],66:[function(require,module,exports){
 	if (typeof Object.create === 'function') {
 	  // implementation from standard node.js 'util' module
 	  module.exports = function inherits(ctor, superCtor) {
@@ -18325,7 +19063,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }
 	}
 
-	},{}],52:[function(require,module,exports){
+	},{}],67:[function(require,module,exports){
 	/*!
 	 * Determine if an object is a Buffer
 	 *
@@ -18348,14 +19086,14 @@ return /******/ (function(modules) { // webpackBootstrap
 	  return typeof obj.readFloatLE === 'function' && typeof obj.slice === 'function' && isBuffer(obj.slice(0, 0))
 	}
 
-	},{}],53:[function(require,module,exports){
+	},{}],68:[function(require,module,exports){
 	var toString = {}.toString;
 
 	module.exports = Array.isArray || function (arr) {
 	  return toString.call(arr) == '[object Array]';
 	};
 
-	},{}],54:[function(require,module,exports){
+	},{}],69:[function(require,module,exports){
 	(function (global){
 	/*! JSON v3.3.2 | http://bestiejs.github.io/json3 | Copyright 2012-2014, Kit Cambridge | http://kit.mit-license.org */
 	;(function () {
@@ -19261,7 +19999,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	}).call(this);
 
 	}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-	},{}],55:[function(require,module,exports){
+	},{}],70:[function(require,module,exports){
 	/**
 	 * lodash 3.2.0 (Custom Build) <https://lodash.com/>
 	 * Build: `lodash modern modularize exports="npm" -o ./`
@@ -19290,7 +20028,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	module.exports = baseAssign;
 
-	},{"lodash._basecopy":56,"lodash.keys":63}],56:[function(require,module,exports){
+	},{"lodash._basecopy":71,"lodash.keys":78}],71:[function(require,module,exports){
 	/**
 	 * lodash 3.0.1 (Custom Build) <https://lodash.com/>
 	 * Build: `lodash modern modularize exports="npm" -o ./`
@@ -19324,7 +20062,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	module.exports = baseCopy;
 
-	},{}],57:[function(require,module,exports){
+	},{}],72:[function(require,module,exports){
 	/**
 	 * lodash 3.0.3 (Custom Build) <https://lodash.com/>
 	 * Build: `lodash modern modularize exports="npm" -o ./`
@@ -19383,7 +20121,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	module.exports = baseCreate;
 
-	},{}],58:[function(require,module,exports){
+	},{}],73:[function(require,module,exports){
 	/**
 	 * lodash 3.9.1 (Custom Build) <https://lodash.com/>
 	 * Build: `lodash modern modularize exports="npm" -o ./`
@@ -19522,7 +20260,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	module.exports = getNative;
 
-	},{}],59:[function(require,module,exports){
+	},{}],74:[function(require,module,exports){
 	/**
 	 * lodash 3.0.9 (Custom Build) <https://lodash.com/>
 	 * Build: `lodash modern modularize exports="npm" -o ./`
@@ -19656,7 +20394,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	module.exports = isIterateeCall;
 
-	},{}],60:[function(require,module,exports){
+	},{}],75:[function(require,module,exports){
 	/**
 	 * lodash 3.1.1 (Custom Build) <https://lodash.com/>
 	 * Build: `lodash modern modularize exports="npm" -o ./`
@@ -19713,7 +20451,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	module.exports = create;
 
-	},{"lodash._baseassign":55,"lodash._basecreate":57,"lodash._isiterateecall":59}],61:[function(require,module,exports){
+	},{"lodash._baseassign":70,"lodash._basecreate":72,"lodash._isiterateecall":74}],76:[function(require,module,exports){
 	/**
 	 * lodash (Custom Build) <https://lodash.com/>
 	 * Build: `lodash modularize exports="npm" -o ./`
@@ -19944,7 +20682,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	module.exports = isArguments;
 
-	},{}],62:[function(require,module,exports){
+	},{}],77:[function(require,module,exports){
 	/**
 	 * lodash 3.0.4 (Custom Build) <https://lodash.com/>
 	 * Build: `lodash modern modularize exports="npm" -o ./`
@@ -20126,7 +20864,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	module.exports = isArray;
 
-	},{}],63:[function(require,module,exports){
+	},{}],78:[function(require,module,exports){
 	/**
 	 * lodash 3.1.2 (Custom Build) <https://lodash.com/>
 	 * Build: `lodash modern modularize exports="npm" -o ./`
@@ -20364,7 +21102,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	module.exports = keys;
 
-	},{"lodash._getnative":58,"lodash.isarguments":61,"lodash.isarray":62}],64:[function(require,module,exports){
+	},{"lodash._getnative":73,"lodash.isarguments":76,"lodash.isarray":77}],79:[function(require,module,exports){
 	(function (process){
 	var path = require('path');
 	var fs = require('fs');
@@ -20466,7 +21204,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	};
 
 	}).call(this,require('_process'))
-	},{"_process":67,"fs":42,"path":42}],65:[function(require,module,exports){
+	},{"_process":82,"fs":42,"path":42}],80:[function(require,module,exports){
 	exports.endianness = function () { return 'LE' };
 
 	exports.hostname = function () {
@@ -20513,7 +21251,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	exports.EOL = '\n';
 
-	},{}],66:[function(require,module,exports){
+	},{}],81:[function(require,module,exports){
 	(function (process){
 	'use strict';
 
@@ -20560,7 +21298,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 	}).call(this,require('_process'))
-	},{"_process":67}],67:[function(require,module,exports){
+	},{"_process":82}],82:[function(require,module,exports){
 	// shim for using process in browser
 	var process = module.exports = {};
 
@@ -20742,10 +21480,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	};
 	process.umask = function() { return 0; };
 
-	},{}],68:[function(require,module,exports){
+	},{}],83:[function(require,module,exports){
 	module.exports = require("./lib/_stream_duplex.js")
 
-	},{"./lib/_stream_duplex.js":69}],69:[function(require,module,exports){
+	},{"./lib/_stream_duplex.js":84}],84:[function(require,module,exports){
 	// a duplex stream is just a stream that is both readable and writable.
 	// Since JS doesn't have multiple prototypal inheritance, this class
 	// prototypally inherits from Readable, and then parasitically from
@@ -20821,7 +21559,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    f(xs[i], i);
 	  }
 	}
-	},{"./_stream_readable":71,"./_stream_writable":73,"core-util-is":45,"inherits":51,"process-nextick-args":66}],70:[function(require,module,exports){
+	},{"./_stream_readable":86,"./_stream_writable":88,"core-util-is":45,"inherits":66,"process-nextick-args":81}],85:[function(require,module,exports){
 	// a passthrough stream.
 	// basically just the most minimal sort of Transform stream.
 	// Every written chunk gets output as-is.
@@ -20848,7 +21586,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	PassThrough.prototype._transform = function (chunk, encoding, cb) {
 	  cb(null, chunk);
 	};
-	},{"./_stream_transform":72,"core-util-is":45,"inherits":51}],71:[function(require,module,exports){
+	},{"./_stream_transform":87,"core-util-is":45,"inherits":66}],86:[function(require,module,exports){
 	(function (process){
 	'use strict';
 
@@ -21788,7 +22526,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  return -1;
 	}
 	}).call(this,require('_process'))
-	},{"./_stream_duplex":69,"./internal/streams/BufferList":74,"_process":67,"buffer":44,"buffer-shims":43,"core-util-is":45,"events":48,"inherits":51,"isarray":53,"process-nextick-args":66,"string_decoder/":80,"util":40}],72:[function(require,module,exports){
+	},{"./_stream_duplex":84,"./internal/streams/BufferList":89,"_process":82,"buffer":44,"buffer-shims":43,"core-util-is":45,"events":63,"inherits":66,"isarray":68,"process-nextick-args":81,"string_decoder/":95,"util":40}],87:[function(require,module,exports){
 	// a transform stream is a readable/writable stream where you do
 	// something with the data.  Sometimes it's called a "filter",
 	// but that's not a great name for it, since that implies a thing where
@@ -21969,7 +22707,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	  return stream.push(null);
 	}
-	},{"./_stream_duplex":69,"core-util-is":45,"inherits":51}],73:[function(require,module,exports){
+	},{"./_stream_duplex":84,"core-util-is":45,"inherits":66}],88:[function(require,module,exports){
 	(function (process){
 	// A bit simpler than readable streams.
 	// Implement an async ._write(chunk, encoding, cb), and it'll handle all
@@ -22498,7 +23236,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  };
 	}
 	}).call(this,require('_process'))
-	},{"./_stream_duplex":69,"_process":67,"buffer":44,"buffer-shims":43,"core-util-is":45,"events":48,"inherits":51,"process-nextick-args":66,"util-deprecate":81}],74:[function(require,module,exports){
+	},{"./_stream_duplex":84,"_process":82,"buffer":44,"buffer-shims":43,"core-util-is":45,"events":63,"inherits":66,"process-nextick-args":81,"util-deprecate":96}],89:[function(require,module,exports){
 	'use strict';
 
 	var Buffer = require('buffer').Buffer;
@@ -22563,10 +23301,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }
 	  return ret;
 	};
-	},{"buffer":44,"buffer-shims":43}],75:[function(require,module,exports){
+	},{"buffer":44,"buffer-shims":43}],90:[function(require,module,exports){
 	module.exports = require("./lib/_stream_passthrough.js")
 
-	},{"./lib/_stream_passthrough.js":70}],76:[function(require,module,exports){
+	},{"./lib/_stream_passthrough.js":85}],91:[function(require,module,exports){
 	(function (process){
 	var Stream = (function (){
 	  try {
@@ -22586,13 +23324,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 	}).call(this,require('_process'))
-	},{"./lib/_stream_duplex.js":69,"./lib/_stream_passthrough.js":70,"./lib/_stream_readable.js":71,"./lib/_stream_transform.js":72,"./lib/_stream_writable.js":73,"_process":67}],77:[function(require,module,exports){
+	},{"./lib/_stream_duplex.js":84,"./lib/_stream_passthrough.js":85,"./lib/_stream_readable.js":86,"./lib/_stream_transform.js":87,"./lib/_stream_writable.js":88,"_process":82}],92:[function(require,module,exports){
 	module.exports = require("./lib/_stream_transform.js")
 
-	},{"./lib/_stream_transform.js":72}],78:[function(require,module,exports){
+	},{"./lib/_stream_transform.js":87}],93:[function(require,module,exports){
 	module.exports = require("./lib/_stream_writable.js")
 
-	},{"./lib/_stream_writable.js":73}],79:[function(require,module,exports){
+	},{"./lib/_stream_writable.js":88}],94:[function(require,module,exports){
 	// Copyright Joyent, Inc. and other Node contributors.
 	//
 	// Permission is hereby granted, free of charge, to any person obtaining a
@@ -22721,7 +23459,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  return dest;
 	};
 
-	},{"events":48,"inherits":51,"readable-stream/duplex.js":68,"readable-stream/passthrough.js":75,"readable-stream/readable.js":76,"readable-stream/transform.js":77,"readable-stream/writable.js":78}],80:[function(require,module,exports){
+	},{"events":63,"inherits":66,"readable-stream/duplex.js":83,"readable-stream/passthrough.js":90,"readable-stream/readable.js":91,"readable-stream/transform.js":92,"readable-stream/writable.js":93}],95:[function(require,module,exports){
 	// Copyright Joyent, Inc. and other Node contributors.
 	//
 	// Permission is hereby granted, free of charge, to any person obtaining a
@@ -22944,7 +23682,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  this.charLength = this.charReceived ? 3 : 0;
 	}
 
-	},{"buffer":44}],81:[function(require,module,exports){
+	},{"buffer":44}],96:[function(require,module,exports){
 	(function (global){
 
 	/**
@@ -23015,16 +23753,16 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 	}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-	},{}],82:[function(require,module,exports){
-	arguments[4][51][0].apply(exports,arguments)
-	},{"dup":51}],83:[function(require,module,exports){
+	},{}],97:[function(require,module,exports){
+	arguments[4][66][0].apply(exports,arguments)
+	},{"dup":66}],98:[function(require,module,exports){
 	module.exports = function isBuffer(arg) {
 	  return arg && typeof arg === 'object'
 	    && typeof arg.copy === 'function'
 	    && typeof arg.fill === 'function'
 	    && typeof arg.readUInt8 === 'function';
 	}
-	},{}],84:[function(require,module,exports){
+	},{}],99:[function(require,module,exports){
 	(function (process,global){
 	// Copyright Joyent, Inc. and other Node contributors.
 	//
@@ -23614,7 +24352,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 	}).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-	},{"./support/isBuffer":83,"_process":67,"inherits":82}]},{},[1]);
+	},{"./support/isBuffer":98,"_process":82,"inherits":97}]},{},[1]);
 
 
 /***/ },
@@ -27046,6 +27784,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	"use strict";
 
+	/* This Source Code Form is subject to the terms of the Mozilla Public
+	 * License, v. 2.0. If a copy of the MPL was not distributed with this
+	 * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 	var Menu = __webpack_require__(967);
 	var MenuItem = __webpack_require__(970);
 
@@ -27072,7 +27814,15 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	"use strict";
 
+	/* This Source Code Form is subject to the terms of the Mozilla Public
+	 * License, v. 2.0. If a copy of the MPL was not distributed with this
+	 * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 	var EventEmitter = __webpack_require__(968);
+
+	function inToolbox() {
+	  return window.parent.document.documentURI == "about:devtools-toolbox";
+	}
 
 	/**
 	 * A partial implementation of the Menu API provided by electron:
@@ -27187,7 +27937,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	      var menuitem = doc.createElement("menuitem");
 	      menuitem.setAttribute("label", item.label);
-	      menuitem.textContent = item.label;
+	      if (!inToolbox()) {
+	        menuitem.textContent = item.label;
+	      }
+
 	      var menu = doc.createElement("menu");
 	      menu.appendChild(menuitem);
 	      menu.appendChild(menupopup);
@@ -27207,7 +27960,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	    } else {
 	      var _menuitem = doc.createElement("menuitem");
 	      _menuitem.setAttribute("label", item.label);
-	      _menuitem.textContent = item.label;
+
+	      if (!inToolbox()) {
+	        _menuitem.textContent = item.label;
+	      }
+
 	      _menuitem.addEventListener("command", () => item.click());
 
 	      if (item.type === "checkbox") {
@@ -27254,6 +28011,10 @@ return /******/ (function(modules) { // webpackBootstrap
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
+
+	/* This Source Code Form is subject to the terms of the Mozilla Public
+	 * License, v. 2.0. If a copy of the MPL was not distributed with this
+	 * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 	var EventEmitter = function EventEmitter() {};
 	module.exports = EventEmitter;
@@ -27398,6 +28159,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	"use strict";
 
+	/* This Source Code Form is subject to the terms of the Mozilla Public
+	 * License, v. 2.0. If a copy of the MPL was not distributed with this
+	 * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 	/*
 	 * A sham for https://dxr.mozilla.org/mozilla-central/source/toolkit/modules/Promise.jsm
 	 */
@@ -27430,6 +28195,10 @@ return /******/ (function(modules) { // webpackBootstrap
 /***/ function(module, exports) {
 
 	"use strict";
+
+	/* This Source Code Form is subject to the terms of the Mozilla Public
+	 * License, v. 2.0. If a copy of the MPL was not distributed with this
+	 * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 	/**
 	 * A partial implementation of the MenuItem API provided by electron:
@@ -27698,6 +28467,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }();
 
+	/* This Source Code Form is subject to the terms of the Mozilla Public
+	 * License, v. 2.0. If a copy of the MPL was not distributed with this
+	 * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 	var _require = __webpack_require__(29),
 	    appinfo = _require.appinfo;
 
@@ -27946,7 +28719,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 /***/ },
 
-/***/ 1013:
+/***/ 1020:
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -27996,7 +28769,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 /***/ },
 
-/***/ 1014:
+/***/ 1021:
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -28073,18 +28846,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	    onPaused = waitForPaused(dbg);
 	    yield resume(dbg);
 	    yield onPaused;
-
-	    is(getScopeNodeLabel(dbg, 6), "lastName", 'The sixth element in the scope panel is still "lastName"');
-	    is(getScopeNodeValue(dbg, 6), '"Doe"', 'The "lastName" property is still "Doe", but it should be "Pierce"' + "since it was changed in the script.");
-
-	    onPaused = waitForPaused(dbg);
-	    yield resume(dbg);
-	    yield onPaused;
-	    is(getScopeNodeLabel(dbg, 6), "lastName", 'The sixth element in the scope panel is still "lastName"');
-	    is(getScopeNodeLabel(dbg, 7), "__proto__", 'The seventh element in the scope panel is still "__proto__", ' + 'but it should be now "timezone", since it was added to the "sarah" object ' + "in the script");
-	    is(getScopeNodeValue(dbg, 7), "Object", 'The seventh element in the scope panel has the value "Object", ' + 'but it should be "PST"');
-
-	    yield resume(dbg);
+	    is(getScopeNodeLabel(dbg, 2), "<this>", 'The second element in the scope panel is "<this>"');
+	    is(getScopeNodeLabel(dbg, 3), "phonebook", 'The third element in the scope panel is "phonebook"');
 	  });
 
 	  return function (_x) {
@@ -28094,25 +28857,16 @@ return /******/ (function(modules) { // webpackBootstrap
 
 /***/ },
 
-/***/ 1015:
+/***/ 1022:
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
 
-	function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, arguments); return new Promise(function (resolve, reject) { function step(key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { return Promise.resolve(value).then(function (value) { step("next", value); }, function (err) { step("throw", err); }); } } return step("next"); }); }; }
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
 
-	var _require = __webpack_require__(760),
-	    initDebugger = _require.initDebugger,
-	    reload = _require.reload,
-	    selectSource = _require.selectSource,
-	    findElement = _require.findElement,
-	    waitForDispatch = _require.waitForDispatch;
-
-	function countTabs(dbg) {
-	  return findElement(dbg, "sourceTabs").children.length;
-	}
-
-	module.exports = (() => {
+	var addTabs = exports.addTabs = (() => {
 	  var _ref = _asyncToGenerator(function* (ctx) {
 	    var ok = ctx.ok,
 	        is = ctx.is,
@@ -28137,9 +28891,155 @@ return /******/ (function(modules) { // webpackBootstrap
 	    expect(countTabs(dbg)).to.equal(2);
 	  });
 
-	  return function (_x) {
+	  return function addTabs(_x) {
 	    return _ref.apply(this, arguments);
 	  };
+	})();
+
+	var reloadWithTabs = exports.reloadWithTabs = (() => {
+	  var _ref2 = _asyncToGenerator(function* (ctx) {
+	    var ok = ctx.ok,
+	        is = ctx.is,
+	        info = ctx.info,
+	        requestLongerTimeout = ctx.requestLongerTimeout;
+
+
+	    var dbg = yield initDebugger("doc-scripts.html", "simple1", "simple2");
+
+	    // debugger
+	    yield selectSource(dbg, "simple1");
+	    yield selectSource(dbg, "simple2");
+	    expect(countTabs(dbg)).to.equal(2);
+
+	    // Test reloading the debugger
+	    yield reload(dbg, "simple1", "simple2");
+	    yield waitForDispatch(dbg, "SELECT_SOURCE");
+	    expect(countTabs(dbg)).to.equal(2);
+	  });
+
+	  return function reloadWithTabs(_x2) {
+	    return _ref2.apply(this, arguments);
+	  };
+	})();
+
+	var reloadWithNoTabs = exports.reloadWithNoTabs = (() => {
+	  var _ref3 = _asyncToGenerator(function* (ctx) {
+	    var ok = ctx.ok,
+	        is = ctx.is,
+	        info = ctx.info,
+	        requestLongerTimeout = ctx.requestLongerTimeout;
+
+
+	    var dbg = yield initDebugger("doc-scripts.html", "simple1", "simple2");
+
+	    yield selectSource(dbg, "simple1");
+	    yield selectSource(dbg, "simple2");
+	    closeTab(dbg, "simple1");
+	    closeTab(dbg, "simple2");
+
+	    // Test reloading the debugger
+	    dbg = yield initDebugger("doc-scripts.html", "simple1", "simple2");
+	    expect(countTabs(dbg)).to.equal(0);
+	  });
+
+	  return function reloadWithNoTabs(_x3) {
+	    return _ref3.apply(this, arguments);
+	  };
+	})();
+
+	function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, arguments); return new Promise(function (resolve, reject) { function step(key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { return Promise.resolve(value).then(function (value) { step("next", value); }, function (err) { step("throw", err); }); } } return step("next"); }); }; }
+
+	var _require = __webpack_require__(760),
+	    initDebugger = _require.initDebugger,
+	    reload = _require.reload,
+	    selectSource = _require.selectSource,
+	    findElement = _require.findElement,
+	    waitForDispatch = _require.waitForDispatch,
+	    closeTab = _require.closeTab;
+
+	function countTabs(dbg) {
+	  return findElement(dbg, "sourceTabs").children.length;
+	}
+
+/***/ },
+
+/***/ 1129:
+/***/ function(module, exports, __webpack_require__) {
+
+	"use strict";
+
+	function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, arguments); return new Promise(function (resolve, reject) { function step(key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { return Promise.resolve(value).then(function (value) { step("next", value); }, function (err) { step("throw", err); }); } } return step("next"); }); }; }
+
+	var _require = __webpack_require__(760),
+	    initDebugger = _require.initDebugger,
+	    reload = _require.reload,
+	    selectSource = _require.selectSource,
+	    findElement = _require.findElement,
+	    waitForDispatch = _require.waitForDispatch,
+	    closeTab = _require.closeTab,
+	    assertPausedLocation = _require.assertPausedLocation,
+	    findSource = _require.findSource,
+	    waitForSources = _require.waitForSources,
+	    disableBreakpoint = _require.disableBreakpoint,
+	    addBreakpoint = _require.addBreakpoint,
+	    waitForPaused = _require.waitForPaused;
+
+	function assertBP(dbg, sourceId, _ref) {
+	  var line = _ref.line,
+	      _ref$disabled = _ref.disabled,
+	      disabled = _ref$disabled === undefined ? false : _ref$disabled;
+	  var _dbg$selectors = dbg.selectors,
+	      getBreakpoint = _dbg$selectors.getBreakpoint,
+	      getBreakpoints = _dbg$selectors.getBreakpoints,
+	      getState = dbg.getState;
+
+	  var bp = getBreakpoint(getState(), { sourceId, line });
+
+	  is(bp.location.line, line, "Breakpoint has correct line");
+
+	  is(bp.disabled, disabled);
+	}
+
+	module.exports = (() => {
+	  var _ref2 = _asyncToGenerator(function* (ctx) {
+	    var ok = ctx.ok,
+	        is = ctx.is,
+	        info = ctx.info,
+	        requestLongerTimeout = ctx.requestLongerTimeout;
+
+
+	    var dbg = yield initDebugger("doc-sourcemaps.html");
+	    var _dbg$selectors2 = dbg.selectors,
+	        getBreakpoint = _dbg$selectors2.getBreakpoint,
+	        getBreakpoints = _dbg$selectors2.getBreakpoints,
+	        getState = dbg.getState;
+
+
+	    yield waitForSources(dbg, "entry.js", "output.js", "times2.js", "opts.js");
+	    var entrySrc = findSource(dbg, "entry.js");
+	    yield selectSource(dbg, entrySrc);
+
+	    yield addBreakpoint(dbg, entrySrc, 13);
+	    is(getBreakpoints(getState()).size, 1, "One breakpoint exists");
+	    assertBP(dbg, entrySrc.id, { line: 13 });
+
+	    yield addBreakpoint(dbg, entrySrc, 15);
+	    yield disableBreakpoint(dbg, entrySrc, 15);
+
+	    // Test reloading the debugger
+	    yield reload(dbg, "times2.js", "opts.js");
+	    yield waitForDispatch(dbg, "LOAD_SOURCE_TEXT");
+
+	    is(getBreakpoints(getState()).size, 2, "One breakpoint exists");
+	    assertBP(dbg, entrySrc.id, { line: 13 });
+	    assertBP(dbg, entrySrc.id, { line: 15, disabled: true });
+	  });
+
+	  function sourceMapsReloading(_x) {
+	    return _ref2.apply(this, arguments);
+	  }
+
+	  return sourceMapsReloading;
 	})();
 
 /***/ }
