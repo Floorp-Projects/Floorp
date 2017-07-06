@@ -560,7 +560,7 @@ LazyIdleThread::GetName(nsACString& aName)
 }
 
 NS_IMETHODIMP
-LazyIdleThread::OnDispatchedEvent(nsIThreadInternal* /*aThread */)
+LazyIdleThread::OnDispatchedEvent()
 {
   MOZ_ASSERT(mOwningEventTarget->IsOnCurrentThread());
   return NS_OK;

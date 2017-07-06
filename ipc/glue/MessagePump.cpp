@@ -438,7 +438,7 @@ MessagePumpForNonMainUIThreads::DoRunLoop()
 }
 
 NS_IMETHODIMP
-MessagePumpForNonMainUIThreads::OnDispatchedEvent(nsIThreadInternal *thread)
+MessagePumpForNonMainUIThreads::OnDispatchedEvent()
 {
   // If our thread is sleeping in DoRunLoop's call to WaitForWork() and an
   // event posts to the nsIThread event queue - break our thread out of
