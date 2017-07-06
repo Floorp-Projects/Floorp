@@ -77,3 +77,85 @@ add_task(async function reselectInternalOptionForFeed() {
                Ci.nsIHandlerInfo.handleInternally,
                "Selected item should still be the same as the previously selected item.");
 });
+
+add_task(async function sortingCheck() {
+  win = gBrowser.selectedBrowser.contentWindow;
+
+  const handlerView = win.document.getElementById("handlersView");
+  const typeColumn = win.document.getElementById("typeColumn");
+  Assert.ok(typeColumn, "typeColumn is present in handlersView.");
+
+  // Test default sorting
+  assertSortByType("ascending");
+
+  const oldDir = typeColumn.getAttribute("sortDirection");
+
+
+  // Test sorting on the type column
+  typeColumn.click();
+  assertSortByType("descending");
+  Assert.notEqual(oldDir,
+               typeColumn.getAttribute("sortDirection"),
+               "Sort direction should change");
+
+  typeColumn.click();
+  assertSortByType("ascending");
+
+  const actionColumn = win.document.getElementById("actionColumn");
+  Assert.ok(actionColumn, "actionColumn is present in handlersView.");
+
+  // Test sorting on the action column
+  const oldActionDir = actionColumn.getAttribute("sortDirection");
+  actionColumn.click();
+  assertSortByAction("ascending");
+  Assert.notEqual(oldActionDir,
+               actionColumn.getAttribute("sortDirection"),
+               "Sort direction should change");
+
+  actionColumn.click();
+  assertSortByAction("descending");
+
+  function assertSortByAction(order) {
+  Assert.equal(actionColumn.getAttribute("sortDirection"),
+               order,
+               `Sort direction should be ${order}`);
+    let siteItems = handlerView.getElementsByTagName("richlistitem");
+    for (let i = 0; i < siteItems.length - 1; ++i) {
+      let aType = siteItems[i].getAttribute("actionDescription").toLowerCase();
+      let bType = siteItems[i + 1].getAttribute("actionDescription").toLowerCase();
+      let result = 0;
+      if (aType > bType) {
+        result = 1;
+      } else if (bType > aType) {
+        result = -1;
+      }
+      if (order == "ascending") {
+        Assert.lessOrEqual(result, 0, "Should sort applications in the ascending order by action");
+      } else {
+        Assert.greaterOrEqual(result, 0, "Should sort applications in the descending order by action");
+      }
+    }
+  }
+
+  function assertSortByType(order) {
+  Assert.equal(typeColumn.getAttribute("sortDirection"),
+               order,
+               `Sort direction should be ${order}`);
+    let siteItems = handlerView.getElementsByTagName("richlistitem");
+    for (let i = 0; i < siteItems.length - 1; ++i) {
+      let aType = siteItems[i].getAttribute("typeDescription").toLowerCase();
+      let bType = siteItems[i + 1].getAttribute("typeDescription").toLowerCase();
+      let result = 0;
+      if (aType > bType) {
+        result = 1;
+      } else if (bType > aType) {
+        result = -1;
+      }
+      if (order == "ascending") {
+        Assert.lessOrEqual(result, 0, "Should sort applications in the ascending order by type");
+      } else {
+        Assert.greaterOrEqual(result, 0, "Should sort applications in the descending order by type");
+      }
+    }
+  }
+});
