@@ -3178,6 +3178,18 @@ XREMain::XRE_mainInit(bool* aExitFlag)
     Output(true, "Error: headless mode is not currently supported on this platform.\n");
     return 1;
 #endif
+
+#ifdef XP_MACOSX
+    // To avoid taking focus when running in headless mode immediately
+    // transition Firefox to a background application.
+    ProcessSerialNumber psn = { 0, kCurrentProcess };
+    OSStatus transformStatus = TransformProcessType(&psn, kProcessTransformToBackgroundApplication);
+    if (transformStatus != noErr) {
+      NS_ERROR("Failed to make process a background application.");
+      return 1;
+    }
+#endif
+
   }
 
   nsresult rv;
