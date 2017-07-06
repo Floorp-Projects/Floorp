@@ -90,7 +90,7 @@ private:
 
   struct InstanceData
   {
-    explicit InstanceData(ScaledFontDWrite* aScaledFont)
+    InstanceData(ScaledFontDWrite* aScaledFont)
       : mUseEmbeddedBitmap(aScaledFont->mUseEmbeddedBitmap)
       , mForceGDIMode(aScaledFont->mForceGDIMode)
       , mGamma(aScaledFont->mGamma)
