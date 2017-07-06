@@ -192,7 +192,7 @@ public:
 
     void SetupClearTypeParams();
 
-    inline bool DWriteAvailable() const { return !!mozilla::gfx::Factory::GetDWriteFactory(); }
+    inline bool DWriteEnabled() const { return !!mozilla::gfx::Factory::GetDWriteFactory(); }
     inline DWRITE_MEASURING_MODE DWriteMeasuringMode() { return mMeasuringMode; }
 
     IDWriteRenderingParams *GetRenderingParams(TextRenderingMode aRenderMode)
