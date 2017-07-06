@@ -127,14 +127,14 @@ public:
     virtual gfxFontEntry* LookupLocalFont(const nsAString& aFontName,
                                           uint16_t aWeight,
                                           int16_t aStretch,
-                                          uint8_t aStyle);
+                                          uint8_t aStyle) override;
 
     virtual gfxFontEntry* MakePlatformFont(const nsAString& aFontName,
                                            uint16_t aWeight,
                                            int16_t aStretch,
                                            uint8_t aStyle,
                                            const uint8_t* aFontData,
-                                           uint32_t aLength);
+                                           uint32_t aLength) override;
 
     void GetSystemFontList(InfallibleTArray<FontListEntry>* retValue);
 
@@ -142,7 +142,7 @@ public:
         return static_cast<gfxFT2FontList*>(gfxPlatformFontList::PlatformFontList());
     }
 
-    virtual void GetFontFamilyList(nsTArray<RefPtr<gfxFontFamily> >& aFamilyArray);
+    virtual void GetFontFamilyList(nsTArray<RefPtr<gfxFontFamily> >& aFamilyArray) override;
 
     void WillShutdown();
 

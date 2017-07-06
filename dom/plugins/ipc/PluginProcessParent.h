@@ -68,7 +68,6 @@ public:
 
     using mozilla::ipc::GeckoChildProcessHost::GetChannel;
 
-    void SetCallRunnableImmediately(bool aCallImmediately);
     virtual bool WaitUntilConnected(int32_t aTimeoutMs = 0) override;
 
     virtual void OnChannelConnected(int32_t peer_pid) override;
@@ -85,7 +84,6 @@ private:
     ipc::TaskFactory<PluginProcessParent> mTaskFactory;
     UniquePtr<LaunchCompleteTask> mLaunchCompleteTask;
     MessageLoop* mMainMsgLoop;
-    bool mRunCompleteTaskImmediately;
 #ifdef XP_WIN
     typedef nsTHashtable<nsUint32HashKey> PidSet;
     // Set of PIDs for all plugin child processes or NULL if empty.

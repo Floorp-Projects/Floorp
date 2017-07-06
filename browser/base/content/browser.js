@@ -5122,7 +5122,7 @@ nsBrowserAccess.prototype = {
     return browser;
   },
 
-  openURI(aURI, aOpener, aWhere, aFlags) {
+  openURI(aURI, aOpener, aWhere, aFlags, aTriggeringPrincipal) {
     // This function should only ever be called if we're opening a URI
     // from a non-remote browser window (via nsContentTreeOwner).
     if (aOpener && Cu.isCrossProcessWrapper(aOpener)) {
@@ -5154,11 +5154,9 @@ nsBrowserAccess.prototype = {
     }
 
     let referrer = aOpener ? makeURI(aOpener.location.href) : null;
-    let triggeringPrincipal = null;
     let referrerPolicy = Ci.nsIHttpChannel.REFERRER_POLICY_UNSET;
     if (aOpener && aOpener.document) {
       referrerPolicy = aOpener.document.referrerPolicy;
-      triggeringPrincipal = aOpener.document.nodePrincipal;
     }
     let isPrivate = aOpener
                   ? PrivateBrowsingUtils.isContentWindowPrivate(aOpener)
@@ -5192,7 +5190,7 @@ nsBrowserAccess.prototype = {
         let browser = this._openURIInNewTab(aURI, referrer, referrerPolicy,
                                             isPrivate, isExternal,
                                             forceNotRemote, userContextId,
-                                            openerWindow, triggeringPrincipal);
+                                            openerWindow, aTriggeringPrincipal);
         if (browser)
           newWindow = browser.contentWindow;
         break;
@@ -5203,7 +5201,7 @@ nsBrowserAccess.prototype = {
                             Ci.nsIWebNavigation.LOAD_FLAGS_FROM_EXTERNAL :
                             Ci.nsIWebNavigation.LOAD_FLAGS_NONE;
           gBrowser.loadURIWithFlags(aURI.spec, {
-                                    triggeringPrincipal,
+                                    aTriggeringPrincipal,
                                     flags: loadflags,
                                     referrerURI: referrer,
                                     referrerPolicy,

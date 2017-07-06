@@ -233,7 +233,6 @@ nsPluginTag::nsPluginTag(nsPluginInfo* aPluginInfo,
     mLibrary(nullptr),
     mIsJavaPlugin(false),
     mIsFlashPlugin(false),
-    mSupportsAsyncInit(false),
     mSupportsAsyncRender(false),
     mFullPath(aPluginInfo->fFullPath),
     mLastModifiedTime(aLastModifiedTime),
@@ -270,7 +269,6 @@ nsPluginTag::nsPluginTag(const char* aName,
     mLibrary(nullptr),
     mIsJavaPlugin(false),
     mIsFlashPlugin(false),
-    mSupportsAsyncInit(false),
     mSupportsAsyncRender(false),
     mFullPath(aFullPath),
     mLastModifiedTime(aLastModifiedTime),
@@ -298,7 +296,6 @@ nsPluginTag::nsPluginTag(uint32_t aId,
                          nsTArray<nsCString> aExtensions,
                          bool aIsJavaPlugin,
                          bool aIsFlashPlugin,
-                         bool aSupportsAsyncInit,
                          bool aSupportsAsyncRender,
                          int64_t aLastModifiedTime,
                          bool aFromExtension,
@@ -310,7 +307,6 @@ nsPluginTag::nsPluginTag(uint32_t aId,
     mLibrary(nullptr),
     mIsJavaPlugin(aIsJavaPlugin),
     mIsFlashPlugin(aIsFlashPlugin),
-    mSupportsAsyncInit(aSupportsAsyncInit),
     mSupportsAsyncRender(aSupportsAsyncRender),
     mLastModifiedTime(aLastModifiedTime),
     mSandboxLevel(aSandboxLevel),
@@ -356,25 +352,17 @@ void nsPluginTag::InitMime(const char* const* aMimeTypes,
     switch (nsPluginHost::GetSpecialType(mimeType)) {
       case nsPluginHost::eSpecialType_Java:
         mIsJavaPlugin = true;
-        mSupportsAsyncInit = true;
         break;
       case nsPluginHost::eSpecialType_Flash:
         // VLC sometimes claims to implement the Flash MIME type, and we want
         // to allow users to control that separately from Adobe Flash.
         if (Name().EqualsLiteral("Shockwave Flash")) {
           mIsFlashPlugin = true;
-          mSupportsAsyncInit = true;
         }
         break;
       case nsPluginHost::eSpecialType_Test:
-        mSupportsAsyncInit = true;
-        break;
       case nsPluginHost::eSpecialType_None:
       default:
-#ifndef RELEASE_OR_BETA
-        // Allow async init for all plugins on Nightly and Aurora
-        mSupportsAsyncInit = true;
-#endif
         break;
     }
 

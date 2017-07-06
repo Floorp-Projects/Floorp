@@ -193,6 +193,7 @@ public:
     MOZ_ASSERT(!(mConditionalBits & GetBitForSID(aSID)),
                "rule node should not have unconditional and conditional style "
                "data for a given struct");
+    mConditionalBits &= ~GetBitForSID(aSID);
     mEntries[aSID] = aStyleStruct;
   }
 
@@ -200,13 +201,17 @@ public:
                     nsPresContext* aPresContext,
                     void* aStyleStruct,
                     const mozilla::RuleNodeCacheConditions& aConditions) {
-    MOZ_ASSERT((mConditionalBits & GetBitForSID(aSID)) ||
-               !mEntries[aSID],
-               "rule node should not have unconditional and conditional style "
-               "data for a given struct");
+    if (!(mConditionalBits & GetBitForSID(aSID))) {
+      MOZ_ASSERT(!mEntries[aSID],
+                 "rule node should not have unconditional and conditional "
+                 "style data for a given struct");
+      mEntries[aSID] = nullptr;
+    }
+
     MOZ_ASSERT(aConditions.CacheableWithDependencies(),
                "don't call SetStyleData with a cache key that has no "
                "conditions or is uncacheable");
+
 #ifdef DEBUG
     for (Entry* e = static_cast<Entry*>(mEntries[aSID]); e; e = e->mNext) {
       NS_WARNING_ASSERTION(e->mConditions != aConditions,

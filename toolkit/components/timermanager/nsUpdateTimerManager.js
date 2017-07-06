@@ -2,11 +2,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-Components.utils.import("resource://gre/modules/XPCOMUtils.jsm", this);
-Components.utils.import("resource://gre/modules/Services.jsm", this);
+const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 
-const Cc = Components.classes;
-const Ci = Components.interfaces;
+Cu.import("resource://gre/modules/XPCOMUtils.jsm", this);
+Cu.import("resource://gre/modules/Services.jsm", this);
 
 const PREF_APP_UPDATE_LASTUPDATETIME_FMT  = "app.update.lastUpdateTime.%ID%";
 const PREF_APP_UPDATE_TIMERMINIMUMDELAY   = "app.update.timerMinimumDelay";
@@ -308,6 +307,14 @@ TimerManager.prototype = {
    */
   registerTimer: function TM_registerTimer(id, callback, interval) {
     LOG("TimerManager:registerTimer - id: " + id);
+    if (this._timers === null) {
+      // Use normal logging since reportError is not available while shutting
+      // down.
+      gLogEnabled = true;
+      LOG("TimerManager:registerTimer called after profile-before-change " +
+          "notification. Ignoring timer registration for id: " + id);
+      return;
+    }
     if (id in this._timers && callback != this._timers[id].callback) {
       LOG("TimerManager:registerTimer - Ignoring second registration for " + id);
       return;
@@ -331,11 +338,12 @@ TimerManager.prototype = {
   },
 
   unregisterTimer: function TM_unregisterTimer(id) {
-    LOG(`TimerManager:unregisterTimer - id: ${id}`);
+    LOG("TimerManager:unregisterTimer - id: " + id);
     if (id in this._timers) {
       delete this._timers[id];
     } else {
-      LOG(`TimerManager:registerTimer - Ignoring unregistration request for unknown id: ${id}`);
+      LOG("TimerManager:unregisterTimer - Ignoring unregistration request for " +
+          "unknown id: " + id);
     }
   },
 

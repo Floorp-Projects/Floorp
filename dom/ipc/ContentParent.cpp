@@ -1104,8 +1104,7 @@ ContentParent::RecvLoadPlugin(const uint32_t& aPluginId,
                               Endpoint<PPluginModuleParent>* aEndpoint)
 {
   *aRv = NS_OK;
-  if (!mozilla::plugins::SetupBridge(aPluginId, this, false, aRv, aRunID,
-                                     aEndpoint)) {
+  if (!mozilla::plugins::SetupBridge(aPluginId, this, aRv, aRunID, aEndpoint)) {
     return IPC_FAIL_NO_REASON(this);
   }
   return IPC_OK();
@@ -1141,7 +1140,7 @@ ContentParent::RecvConnectPluginBridge(const uint32_t& aPluginId,
   // in the first call to SetupBridge in RecvLoadPlugin, so we pass in a dummy
   // pointer and just throw it away.
   uint32_t dummy = 0;
-  if (!mozilla::plugins::SetupBridge(aPluginId, this, true, aRv, &dummy, aEndpoint)) {
+  if (!mozilla::plugins::SetupBridge(aPluginId, this, aRv, &dummy, aEndpoint)) {
     return IPC_FAIL(this, "SetupBridge failed");
   }
   return IPC_OK();
@@ -4504,7 +4503,8 @@ ContentParent::CommonCreateWindow(PBrowserParent* aThisTab,
                                   const nsString& aName,
                                   nsresult& aResult,
                                   nsCOMPtr<nsITabParent>& aNewTabParent,
-                                  bool* aWindowIsNew)
+                                  bool* aWindowIsNew,
+                                  nsIPrincipal* aTriggeringPrincipal)
 
 {
   // The content process should never be in charge of computing whether or
@@ -4582,6 +4582,8 @@ ContentParent::CommonCreateWindow(PBrowserParent* aThisTab,
     nsCOMPtr<nsIOpenURIInFrameParams> params =
       new nsOpenURIInFrameParams(openerOriginAttributes);
     params->SetReferrer(NS_ConvertUTF8toUTF16(aBaseURI));
+    MOZ_ASSERT(aTriggeringPrincipal, "need a valid triggeringPrincipal");
+    params->SetTriggeringPrincipal(aTriggeringPrincipal);
 
     nsCOMPtr<nsIFrameLoaderOwner> frameLoaderOwner;
     aResult = browserDOMWin->OpenURIInFrame(aURIToLoad, params, openLocation,
@@ -4647,6 +4649,7 @@ ContentParent::CommonCreateWindow(PBrowserParent* aThisTab,
     aResult = newBrowserDOMWin->OpenURI(aURIToLoad, openerWindow,
                                         nsIBrowserDOMWindow::OPEN_CURRENTWINDOW,
                                         nsIBrowserDOMWindow::OPEN_NEW,
+                                        aTriggeringPrincipal,
                                         getter_AddRefs(win));
   }
 
@@ -4664,6 +4667,7 @@ ContentParent::RecvCreateWindow(PBrowserParent* aThisTab,
                                 const nsCString& aFeatures,
                                 const nsCString& aBaseURI,
                                 const float& aFullZoom,
+                                const IPC::Principal& aTriggeringPrincipal,
                                 CreateWindowResolver&& aResolve)
 {
   nsresult rv = NS_OK;
@@ -4708,7 +4712,8 @@ ContentParent::RecvCreateWindow(PBrowserParent* aThisTab,
                        aCalledFromJS, aPositionSpecified, aSizeSpecified,
                        nullptr, aFeatures, aBaseURI, aFullZoom,
                        nextTabParentId, NullString(), rv,
-                       newRemoteTab, &cwi.windowOpened());
+                       newRemoteTab, &cwi.windowOpened(),
+                       aTriggeringPrincipal);
   if (!ipcResult) {
     return ipcResult;
   }
@@ -4751,7 +4756,8 @@ ContentParent::RecvCreateWindowInDifferentProcess(
   const nsCString& aFeatures,
   const nsCString& aBaseURI,
   const float& aFullZoom,
-  const nsString& aName)
+  const nsString& aName,
+  const IPC::Principal& aTriggeringPrincipal)
 {
   nsCOMPtr<nsITabParent> newRemoteTab;
   bool windowIsNew;
@@ -4762,7 +4768,7 @@ ContentParent::RecvCreateWindowInDifferentProcess(
                        aCalledFromJS, aPositionSpecified, aSizeSpecified,
                        uriToLoad, aFeatures, aBaseURI, aFullZoom,
                        /* aNextTabParentId = */ 0, aName, rv,
-                       newRemoteTab, &windowIsNew);
+                       newRemoteTab, &windowIsNew, aTriggeringPrincipal);
   if (!ipcResult) {
     return ipcResult;
   }

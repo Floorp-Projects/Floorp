@@ -14,7 +14,6 @@
 #include "mozilla/ipc/MessageChannel.h"
 #include "mozilla/ipc/ProtocolUtils.h"
 #include "mozilla/plugins/BrowserStreamParent.h"
-#include "mozilla/plugins/PluginAsyncSurrogate.h"
 #include "mozilla/plugins/PluginBridge.h"
 #include "mozilla/plugins/PluginInstanceParent.h"
 #include "mozilla/Preferences.h"
@@ -77,7 +76,6 @@ static const char kContentTimeoutPref[] = "dom.ipc.plugins.contentTimeoutSecs";
 static const char kChildTimeoutPref[] = "dom.ipc.plugins.timeoutSecs";
 static const char kParentTimeoutPref[] = "dom.ipc.plugins.parentTimeoutSecs";
 static const char kLaunchTimeoutPref[] = "dom.ipc.plugins.processLaunchTimeoutSecs";
-static const char kAsyncInitPref[] = "dom.ipc.plugins.asyncInit.enabled";
 #ifdef XP_WIN
 static const char kHangUITimeoutPref[] = "dom.ipc.plugins.hangUITimeoutSecs";
 static const char kHangUIMinDisplayPref[] = "dom.ipc.plugins.hangUIMinDisplaySecs";
@@ -89,7 +87,6 @@ static const char kHangUIMinDisplayPref[] = "dom.ipc.plugins.hangUIMinDisplaySec
 bool
 mozilla::plugins::SetupBridge(uint32_t aPluginId,
                               dom::ContentParent* aContentParent,
-                              bool aForceBridgeNow,
                               nsresult* rv,
                               uint32_t* runID,
                               ipc::Endpoint<PPluginModuleParent>* aEndpoint)
@@ -99,7 +96,6 @@ mozilla::plugins::SetupBridge(uint32_t aPluginId,
         return false;
     }
 
-    PluginModuleChromeParent::ClearInstantiationFlag();
     RefPtr<nsPluginHost> host = nsPluginHost::GetInst();
     RefPtr<nsNPAPIPlugin> plugin;
     *rv = host->GetPluginForContentProcess(aPluginId, getter_AddRefs(plugin));
@@ -114,14 +110,6 @@ mozilla::plugins::SetupBridge(uint32_t aPluginId,
     chromeParent->AccumulateModuleInitBlockedTime();
     *rv = chromeParent->GetRunID(runID);
     if (NS_FAILED(*rv)) {
-        return true;
-    }
-    if (chromeParent->IsStartingAsync()) {
-        chromeParent->SetContentParent(aContentParent);
-    }
-    if (!aForceBridgeNow && chromeParent->IsStartingAsync() &&
-        PluginModuleChromeParent::DidInstantiate()) {
-        // We'll handle the bridging asynchronously
         return true;
     }
 
@@ -209,16 +197,14 @@ private:
 namespace {
 
 /**
- * Objects of this class remain linked until either an error occurs in the
- * plugin initialization sequence, or until
- * PluginModuleContentParent::OnLoadPluginResult has completed executing.
+ * Objects of this class remain linked until an error occurs in the
+ * plugin initialization sequence.
  */
 class PluginModuleMapping : public PRCList
 {
 public:
-    explicit PluginModuleMapping(uint32_t aPluginId, bool aAllowAsyncInit)
+    explicit PluginModuleMapping(uint32_t aPluginId)
         : mPluginId(aPluginId)
-        , mAllowAsyncInit(aAllowAsyncInit)
         , mProcessIdValid(false)
         , mModule(nullptr)
         , mChannelOpened(false)
@@ -250,7 +236,7 @@ public:
     GetModule()
     {
         if (!mModule) {
-            mModule = new PluginModuleContentParent(mAllowAsyncInit);
+            mModule = new PluginModuleContentParent();
         }
         return mModule;
     }
@@ -337,7 +323,6 @@ private:
     }
 
     uint32_t mPluginId;
-    bool mAllowAsyncInit;
     bool mProcessIdValid;
     base::ProcessId mProcessId;
     PluginModuleContentParent* mModule;
@@ -418,8 +403,7 @@ PluginModuleContentParent::LoadModule(uint32_t aPluginId,
                                       nsPluginTag* aPluginTag)
 {
     PluginModuleMapping::NotifyLoadingModule loadingModule;
-    nsAutoPtr<PluginModuleMapping> mapping(
-            new PluginModuleMapping(aPluginId, aPluginTag->mSupportsAsyncInit));
+    nsAutoPtr<PluginModuleMapping> mapping(new PluginModuleMapping(aPluginId));
 
     MOZ_ASSERT(XRE_IsContentProcess());
 
@@ -460,15 +444,6 @@ PluginModuleContentParent::LoadModule(uint32_t aPluginId,
 }
 
 /* static */ void
-PluginModuleContentParent::AssociatePluginId(uint32_t aPluginId,
-                                             base::ProcessId aOtherPid)
-{
-    DebugOnly<PluginModuleMapping*> mapping =
-        PluginModuleMapping::AssociateWithProcessId(aPluginId, aOtherPid);
-    MOZ_ASSERT(mapping);
-}
-
-/* static */ void
 PluginModuleContentParent::Initialize(Endpoint<PPluginModuleParent>&& aEndpoint)
 {
     nsAutoPtr<PluginModuleMapping> moduleMapping(
@@ -495,36 +470,6 @@ PluginModuleContentParent::Initialize(Endpoint<PPluginModuleParent>&& aEndpoint)
     moduleMapping.forget();
 }
 
-/* static */ void
-PluginModuleContentParent::OnLoadPluginResult(const uint32_t& aPluginId,
-                                              const bool& aResult,
-                                              Endpoint<PPluginModuleParent>&& aEndpoint)
-{
-    Initialize(Move(aEndpoint));
-    nsAutoPtr<PluginModuleMapping> moduleMapping(
-        PluginModuleMapping::FindModuleByPluginId(aPluginId));
-    MOZ_ASSERT(moduleMapping);
-    PluginModuleContentParent* parent = moduleMapping->GetModule();
-    MOZ_ASSERT(parent);
-    parent->RecvNP_InitializeResult(aResult ? NPERR_NO_ERROR
-                                            : NPERR_GENERIC_ERROR);
-}
-
-void
-PluginModuleChromeParent::SetContentParent(dom::ContentParent* aContentParent)
-{
-    // mContentParent is to be used ONLY during async plugin init!
-    MOZ_ASSERT(aContentParent && mIsStartingAsync);
-    mContentParent = aContentParent;
-}
-
-bool
-PluginModuleChromeParent::SendAssociatePluginId()
-{
-    MOZ_ASSERT(mContentParent);
-    return mContentParent->SendAssociatePluginId(mPluginId, OtherPid());
-}
-
 // static
 PluginLibrary*
 PluginModuleChromeParent::LoadModule(const char* aFilePath, uint32_t aPluginId,
@@ -534,10 +479,8 @@ PluginModuleChromeParent::LoadModule(const char* aFilePath, uint32_t aPluginId,
 
     nsAutoPtr<PluginModuleChromeParent> parent(
             new PluginModuleChromeParent(aFilePath, aPluginId,
-                                         aPluginTag->mSandboxLevel,
-                                         aPluginTag->mSupportsAsyncInit));
+                                         aPluginTag->mSandboxLevel));
     UniquePtr<LaunchCompleteTask> onLaunchedRunnable(new LaunchedTask(parent));
-    parent->mSubprocess->SetCallRunnableImmediately(!parent->mIsStartingAsync);
     TimeStamp launchStart = TimeStamp::Now();
     bool launched = parent->mSubprocess->Launch(Move(onLaunchedRunnable),
                                                 aPluginTag->mSandboxLevel);
@@ -550,12 +493,10 @@ PluginModuleChromeParent::LoadModule(const char* aFilePath, uint32_t aPluginId,
     uint32_t blocklistState;
     nsresult rv = aPluginTag->GetBlocklistState(&blocklistState);
     parent->mIsBlocklisted = NS_FAILED(rv) || blocklistState != 0;
-    if (!parent->mIsStartingAsync) {
-        int32_t launchTimeoutSecs = Preferences::GetInt(kLaunchTimeoutPref, 0);
-        if (!parent->mSubprocess->WaitUntilConnected(launchTimeoutSecs * 1000)) {
-            parent->mShutdown = true;
-            return nullptr;
-        }
+    int32_t launchTimeoutSecs = Preferences::GetInt(kLaunchTimeoutPref, 0);
+    if (!parent->mSubprocess->WaitUntilConnected(launchTimeoutSecs * 1000)) {
+        parent->mShutdown = true;
+        return nullptr;
     }
     TimeStamp launchEnd = TimeStamp::Now();
     parent->mTimeBlocked = (launchEnd - launchStart);
@@ -572,7 +513,7 @@ PluginModuleChromeParent::OnProcessLaunched(const bool aSucceeded)
     }
     // We may have already been initialized by another call that was waiting
     // for process connect. If so, this function doesn't need to run.
-    if (mAsyncInitRv != NS_ERROR_NOT_INITIALIZED || mShutdown) {
+    if (mShutdown) {
         return;
     }
 
@@ -614,47 +555,9 @@ PluginModuleChromeParent::OnProcessLaunched(const bool aSucceeded)
     }
 #endif
 
-    if (mInitOnAsyncConnect) {
-        mInitOnAsyncConnect = false;
-#if defined(XP_WIN)
-        mAsyncInitRv = NP_GetEntryPoints(mNPPIface,
-                                         &mAsyncInitError);
-        if (NS_SUCCEEDED(mAsyncInitRv))
-#endif
-        {
-#if defined(XP_UNIX) && !defined(XP_MACOSX) && !defined(MOZ_WIDGET_GONK)
-            mAsyncInitRv = NP_Initialize(mNPNIface,
-                                         mNPPIface,
-                                         &mAsyncInitError);
-#else
-            mAsyncInitRv = NP_Initialize(mNPNIface,
-                                         &mAsyncInitError);
-#endif
-        }
-
-#if defined(XP_MACOSX)
-        if (NS_SUCCEEDED(mAsyncInitRv)) {
-            mAsyncInitRv = NP_GetEntryPoints(mNPPIface,
-                                             &mAsyncInitError);
-        }
-#endif
-    }
-
 #ifdef MOZ_GECKO_PROFILER
     Unused << SendInitProfiler(ProfilerParent::CreateForProcess(OtherPid()));
 #endif
-}
-
-bool
-PluginModuleChromeParent::WaitForIPCConnection()
-{
-    PluginProcessParent* process = Process();
-    MOZ_ASSERT(process);
-    process->SetCallRunnableImmediately(true);
-    if (!process->WaitUntilConnected()) {
-        return false;
-    }
-    return true;
 }
 
 bool
@@ -677,18 +580,13 @@ PluginModuleChromeParent::InitCrashReporter()
         GeckoProcessType_Plugin,
         shmem,
         threadId);
-
-      mCrashReporter->AddNote(NS_LITERAL_CSTRING("AsyncPluginInit"),
-                              mIsStartingAsync ?
-                                  NS_LITERAL_CSTRING("1") :
-                                  NS_LITERAL_CSTRING("0"));
     }
 #endif
 
     return true;
 }
 
-PluginModuleParent::PluginModuleParent(bool aIsChrome, bool aAllowAsyncInit)
+PluginModuleParent::PluginModuleParent(bool aIsChrome)
     : mQuirks(QUIRKS_NOT_INITIALIZED)
     , mIsChrome(aIsChrome)
     , mShutdown(false)
@@ -701,20 +599,10 @@ PluginModuleParent::PluginModuleParent(bool aIsChrome, bool aAllowAsyncInit)
     , mTaskFactory(this)
     , mSandboxLevel(0)
     , mIsFlashPlugin(false)
-    , mIsStartingAsync(false)
-    , mNPInitialized(false)
-    , mIsNPShutdownPending(false)
-    , mAsyncNewRv(NS_ERROR_NOT_INITIALIZED)
 #ifdef MOZ_CRASHREPORTER
     , mCrashReporterMutex("PluginModuleChromeParent::mCrashReporterMutex")
 #endif
 {
-#if defined(MOZ_CRASHREPORTER)
-    CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("AsyncPluginInit"),
-                                       mIsStartingAsync ?
-                                           NS_LITERAL_CSTRING("1") :
-                                           NS_LITERAL_CSTRING("0"));
-#endif
 }
 
 PluginModuleParent::~PluginModuleParent()
@@ -730,8 +618,8 @@ PluginModuleParent::~PluginModuleParent()
     }
 }
 
-PluginModuleContentParent::PluginModuleContentParent(bool aAllowAsyncInit)
-    : PluginModuleParent(false, aAllowAsyncInit)
+PluginModuleContentParent::PluginModuleContentParent()
+    : PluginModuleParent(false)
 {
     Preferences::RegisterCallback(TimeoutChanged, kContentTimeoutPref, this);
 }
@@ -741,13 +629,10 @@ PluginModuleContentParent::~PluginModuleContentParent()
     Preferences::UnregisterCallback(TimeoutChanged, kContentTimeoutPref, this);
 }
 
-bool PluginModuleChromeParent::sInstantiated = false;
-
 PluginModuleChromeParent::PluginModuleChromeParent(const char* aFilePath,
                                                    uint32_t aPluginId,
-                                                   int32_t aSandboxLevel,
-                                                   bool aAllowAsyncInit)
-    : PluginModuleParent(true, aAllowAsyncInit)
+                                                   int32_t aSandboxLevel)
+    : PluginModuleParent(true)
     , mSubprocess(new PluginProcessParent(aFilePath))
     , mPluginId(aPluginId)
     , mChromeTaskFactory(this)
@@ -763,13 +648,8 @@ PluginModuleChromeParent::PluginModuleChromeParent(const char* aFilePath,
     , mFlashProcess2(0)
     , mFinishInitTask(nullptr)
 #endif
-    , mInitOnAsyncConnect(false)
-    , mAsyncInitRv(NS_ERROR_NOT_INITIALIZED)
-    , mAsyncInitError(NPERR_NO_ERROR)
-    , mContentParent(nullptr)
 {
     NS_ASSERTION(mSubprocess, "Out of memory!");
-    sInstantiated = true;
     mSandboxLevel = aSandboxLevel;
     mRunID = GeckoChildProcessHost::GetUniqueID();
 
@@ -1857,19 +1737,6 @@ PluginModuleParent::SetPluginFuncs(NPPluginFuncs* aFuncs)
     }
 }
 
-#define RESOLVE_AND_CALL(instance, func)                                       \
-NP_BEGIN_MACRO                                                                 \
-    PluginAsyncSurrogate* surrogate = nullptr;                                 \
-    PluginInstanceParent* i = PluginInstanceParent::Cast(instance, &surrogate);\
-    if (surrogate && (!i || i->UseSurrogate())) {                              \
-        return surrogate->func;                                                \
-    }                                                                          \
-    if (!i) {                                                                  \
-        return NPERR_GENERIC_ERROR;                                            \
-    }                                                                          \
-    return i->func;                                                            \
-NP_END_MACRO
-
 NPError
 PluginModuleParent::NPP_Destroy(NPP instance,
                                 NPSavedData** saved)
@@ -1881,20 +1748,14 @@ PluginModuleParent::NPP_Destroy(NPP instance,
     //  (4) free parent
 
     PLUGIN_LOG_DEBUG_FUNCTION;
-    PluginAsyncSurrogate* surrogate = nullptr;
-    PluginInstanceParent* parentInstance =
-        PluginInstanceParent::Cast(instance, &surrogate);
-    if (surrogate && (!parentInstance || parentInstance->UseSurrogate())) {
-        return surrogate->NPP_Destroy(saved);
-    }
-
-    if (!parentInstance)
+    PluginInstanceParent* pip = PluginInstanceParent::Cast(instance);
+    if (!pip)
         return NPERR_NO_ERROR;
 
-    NPError retval = parentInstance->Destroy();
+    NPError retval = pip->Destroy();
     instance->pdata = nullptr;
 
-    Unused << PluginInstanceParent::Call__delete__(parentInstance);
+    Unused << PluginInstanceParent::Call__delete__(pip);
     return retval;
 }
 
@@ -1904,13 +1765,17 @@ PluginModuleParent::NPP_NewStream(NPP instance, NPMIMEType type,
                                   uint16_t* stype)
 {
     AUTO_PROFILER_LABEL("PluginModuleParent::NPP_NewStream", OTHER);
-    RESOLVE_AND_CALL(instance, NPP_NewStream(type, stream, seekable, stype));
+
+    PluginInstanceParent* pip = PluginInstanceParent::Cast(instance);
+    return pip ? pip->NPP_NewStream(type, stream, seekable, stype)
+               : NPERR_GENERIC_ERROR;
 }
 
 NPError
 PluginModuleParent::NPP_SetWindow(NPP instance, NPWindow* window)
 {
-    RESOLVE_AND_CALL(instance, NPP_SetWindow(window));
+    PluginInstanceParent* pip = PluginInstanceParent::Cast(instance);
+    return pip ? pip->NPP_SetWindow(window) : NPERR_GENERIC_ERROR;
 }
 
 NPError
@@ -1918,23 +1783,16 @@ PluginModuleParent::NPP_DestroyStream(NPP instance,
                                       NPStream* stream,
                                       NPReason reason)
 {
-    RESOLVE_AND_CALL(instance, NPP_DestroyStream(stream, reason));
+    PluginInstanceParent* pip = PluginInstanceParent::Cast(instance);
+    return pip ? pip->NPP_DestroyStream(stream, reason) : NPERR_GENERIC_ERROR;
 }
 
 int32_t
 PluginModuleParent::NPP_WriteReady(NPP instance,
                                    NPStream* stream)
 {
-    PluginAsyncSurrogate* surrogate = nullptr;
-    BrowserStreamParent* s = StreamCast(instance, stream, &surrogate);
-    if (!s) {
-        if (surrogate) {
-            return surrogate->NPP_WriteReady(stream);
-        }
-        return -1;
-    }
-
-    return s->WriteReady();
+    BrowserStreamParent* s = StreamCast(instance, stream);
+    return s ? s->WriteReady() : -1;
 }
 
 int32_t
@@ -1967,49 +1825,39 @@ void
 PluginModuleParent::NPP_Print(NPP instance, NPPrint* platformPrint)
 {
 
-    PluginInstanceParent* i = PluginInstanceParent::Cast(instance);
-    i->NPP_Print(platformPrint);
+    PluginInstanceParent* pip = PluginInstanceParent::Cast(instance);
+    return pip ? pip->NPP_Print(platformPrint) : (void)0;
 }
 
 int16_t
 PluginModuleParent::NPP_HandleEvent(NPP instance, void* event)
 {
-    RESOLVE_AND_CALL(instance, NPP_HandleEvent(event));
+    PluginInstanceParent* pip = PluginInstanceParent::Cast(instance);
+    return pip ? pip->NPP_HandleEvent(event) : NPERR_GENERIC_ERROR;
 }
 
 void
 PluginModuleParent::NPP_URLNotify(NPP instance, const char* url,
                                   NPReason reason, void* notifyData)
 {
-    PluginInstanceParent* i = PluginInstanceParent::Cast(instance);
-    if (!i)
-        return;
-
-    i->NPP_URLNotify(url, reason, notifyData);
+    PluginInstanceParent* pip = PluginInstanceParent::Cast(instance);
+    return pip ? pip->NPP_URLNotify(url, reason, notifyData) : (void)0;
 }
 
 NPError
 PluginModuleParent::NPP_GetValue(NPP instance,
                                  NPPVariable variable, void *ret_value)
 {
-    // The rules are slightly different for this function.
-    // If there is a surrogate, we *always* use it.
-    PluginAsyncSurrogate* surrogate = nullptr;
-    PluginInstanceParent* i = PluginInstanceParent::Cast(instance, &surrogate);
-    if (surrogate) {
-        return surrogate->NPP_GetValue(variable, ret_value);
-    }
-    if (!i) {
-        return NPERR_GENERIC_ERROR;
-    }
-    return i->NPP_GetValue(variable, ret_value);
+    PluginInstanceParent* pip = PluginInstanceParent::Cast(instance);
+    return pip ? pip->NPP_GetValue(variable, ret_value) : NPERR_GENERIC_ERROR;
 }
 
 NPError
 PluginModuleParent::NPP_SetValue(NPP instance, NPNVariable variable,
                                  void *value)
 {
-    RESOLVE_AND_CALL(instance, NPP_SetValue(variable, value));
+    PluginInstanceParent* pip = PluginInstanceParent::Cast(instance);
+    return pip ? pip->NPP_SetValue(variable, value) : NPERR_GENERIC_ERROR;
 }
 
 mozilla::ipc::IPCResult
@@ -2052,25 +1900,21 @@ void
 PluginModuleParent::NPP_URLRedirectNotify(NPP instance, const char* url,
                                           int32_t status, void* notifyData)
 {
-  PluginInstanceParent* i = PluginInstanceParent::Cast(instance);
-  if (!i)
-    return;
-
-  i->NPP_URLRedirectNotify(url, status, notifyData);
+  PluginInstanceParent* pip = PluginInstanceParent::Cast(instance);
+  return pip ? pip->NPP_URLRedirectNotify(url, status, notifyData) : (void)0;
 }
 
 BrowserStreamParent*
-PluginModuleParent::StreamCast(NPP instance, NPStream* s,
-                               PluginAsyncSurrogate** aSurrogate)
+PluginModuleParent::StreamCast(NPP instance, NPStream* s)
 {
-    PluginInstanceParent* ip = PluginInstanceParent::Cast(instance, aSurrogate);
-    if (!ip || (aSurrogate && *aSurrogate && ip->UseSurrogate())) {
+    PluginInstanceParent* pip = PluginInstanceParent::Cast(instance);
+    if (!pip) {
         return nullptr;
     }
 
     BrowserStreamParent* sp =
         static_cast<BrowserStreamParent*>(static_cast<AStream*>(s->pdata));
-    if (sp && (sp->mNPP != ip || s != sp->mStream)) {
+    if (sp && (sp->mNPP != pip || s != sp->mStream)) {
         MOZ_CRASH("Corrupted plugin stream data.");
     }
     return sp;
@@ -2085,48 +1929,38 @@ PluginModuleParent::HasRequiredFunctions()
 nsresult
 PluginModuleParent::AsyncSetWindow(NPP instance, NPWindow* window)
 {
-    PluginAsyncSurrogate* surrogate = nullptr;
-    PluginInstanceParent* i = PluginInstanceParent::Cast(instance, &surrogate);
-    if (surrogate && (!i || i->UseSurrogate())) {
-        return surrogate->AsyncSetWindow(window);
-    } else if (!i) {
-        return NS_ERROR_FAILURE;
-    }
-    return i->AsyncSetWindow(window);
+    PluginInstanceParent* pip = PluginInstanceParent::Cast(instance);
+    return pip ? pip->AsyncSetWindow(window) : NS_ERROR_FAILURE;
 }
 
 nsresult
 PluginModuleParent::GetImageContainer(NPP instance,
                              mozilla::layers::ImageContainer** aContainer)
 {
-    PluginInstanceParent* i = PluginInstanceParent::Cast(instance);
-    return !i ? NS_ERROR_FAILURE : i->GetImageContainer(aContainer);
+    PluginInstanceParent* pip = PluginInstanceParent::Cast(instance);
+    return pip ? pip->GetImageContainer(aContainer) : NS_ERROR_FAILURE;
 }
 
 nsresult
 PluginModuleParent::GetImageSize(NPP instance,
                                  nsIntSize* aSize)
 {
-    PluginInstanceParent* i = PluginInstanceParent::Cast(instance);
-    return !i ? NS_ERROR_FAILURE : i->GetImageSize(aSize);
+    PluginInstanceParent* pip = PluginInstanceParent::Cast(instance);
+    return pip ? pip->GetImageSize(aSize) : NS_ERROR_FAILURE;
 }
 
 void
 PluginModuleParent::DidComposite(NPP aInstance)
 {
-    if (PluginInstanceParent* i = PluginInstanceParent::Cast(aInstance)) {
-        i->DidComposite();
-    }
+    PluginInstanceParent* pip = PluginInstanceParent::Cast(aInstance);
+    return pip ? pip->DidComposite() : (void)0;
 }
 
 nsresult
 PluginModuleParent::SetBackgroundUnknown(NPP instance)
 {
-    PluginInstanceParent* i = PluginInstanceParent::Cast(instance);
-    if (!i)
-        return NS_ERROR_FAILURE;
-
-    return i->SetBackgroundUnknown();
+    PluginInstanceParent* pip = PluginInstanceParent::Cast(instance);
+    return pip ? pip->SetBackgroundUnknown() : NS_ERROR_FAILURE;
 }
 
 nsresult
@@ -2134,21 +1968,16 @@ PluginModuleParent::BeginUpdateBackground(NPP instance,
                                           const nsIntRect& aRect,
                                           DrawTarget** aDrawTarget)
 {
-    PluginInstanceParent* i = PluginInstanceParent::Cast(instance);
-    if (!i)
-        return NS_ERROR_FAILURE;
-
-    return i->BeginUpdateBackground(aRect, aDrawTarget);
+    PluginInstanceParent* pip = PluginInstanceParent::Cast(instance);
+    return pip ? pip->BeginUpdateBackground(aRect, aDrawTarget)
+               : NS_ERROR_FAILURE;
 }
 
 nsresult
 PluginModuleParent::EndUpdateBackground(NPP instance, const nsIntRect& aRect)
 {
-    PluginInstanceParent* i = PluginInstanceParent::Cast(instance);
-    if (!i)
-        return NS_ERROR_FAILURE;
-
-    return i->EndUpdateBackground(aRect);
+    PluginInstanceParent* pip = PluginInstanceParent::Cast(instance);
+    return pip ? pip->EndUpdateBackground(aRect) : NS_ERROR_FAILURE;
 }
 
 #if defined(XP_WIN)
@@ -2156,8 +1985,8 @@ nsresult
 PluginModuleParent::GetScrollCaptureContainer(NPP aInstance,
                                               mozilla::layers::ImageContainer** aContainer)
 {
-    PluginInstanceParent* inst = PluginInstanceParent::Cast(aInstance);
-    return !inst ? NS_ERROR_FAILURE : inst->GetScrollCaptureContainer(aContainer);
+    PluginInstanceParent* pip = PluginInstanceParent::Cast(aInstance);
+    return pip ? pip->GetScrollCaptureContainer(aContainer) : NS_ERROR_FAILURE;
 }
 #endif
 
@@ -2167,11 +1996,9 @@ PluginModuleParent::HandledWindowedPluginKeyEvent(
                         const NativeEventData& aNativeKeyData,
                         bool aIsConsumed)
 {
-    PluginInstanceParent* parent = PluginInstanceParent::Cast(aInstance);
-    if (NS_WARN_IF(!parent)) {
-        return NS_ERROR_FAILURE;
-    }
-    return parent->HandledWindowedPluginKeyEvent(aNativeKeyData, aIsConsumed);
+    PluginInstanceParent* pip = PluginInstanceParent::Cast(aInstance);
+    return pip ? pip->HandledWindowedPluginKeyEvent(aNativeKeyData, aIsConsumed)
+               : NS_ERROR_FAILURE;
 }
 
 void
@@ -2182,16 +2009,6 @@ PluginModuleParent::OnInitFailure()
     }
 
     mShutdown = true;
-
-    if (mIsStartingAsync) {
-        /* If we've failed then we need to enumerate any pending NPP_New calls
-           and clean them up. */
-        uint32_t len = mSurrogateInstances.Length();
-        for (uint32_t i = 0; i < len; ++i) {
-            mSurrogateInstances[i]->NotifyAsyncInitFailed();
-        }
-        mSurrogateInstances.Clear();
-    }
 }
 
 class PluginOfflineObserver final : public nsIObserver
@@ -2310,16 +2127,7 @@ PluginModuleParent::NP_Initialize(NPNetscapeFuncs* bFuncs, NPPluginFuncs* pFuncs
     }
 
     *error = NPERR_NO_ERROR;
-    if (mIsStartingAsync) {
-        if (GetIPCChannel()->CanSend()) {
-            // We're already connected, so we may call this immediately.
-            RecvNP_InitializeResult(*error);
-        } else {
-            PluginAsyncSurrogate::NP_GetEntryPoints(pFuncs);
-        }
-    } else {
-        SetPluginFuncs(pFuncs);
-    }
+    SetPluginFuncs(pFuncs);
 
     return NS_OK;
 }
@@ -2339,35 +2147,10 @@ PluginModuleChromeParent::NP_Initialize(NPNetscapeFuncs* bFuncs, NPPluginFuncs* 
     mNPNIface = bFuncs;
     mNPPIface = pFuncs;
 
-    // NB: This *MUST* be set prior to checking whether the subprocess has
-    // been connected!
-    if (mIsStartingAsync) {
-        PluginAsyncSurrogate::NP_GetEntryPoints(pFuncs);
-    }
-
-    if (!mSubprocess->IsConnected()) {
-        // The subprocess isn't connected yet. Defer NP_Initialize until
-        // OnProcessLaunched is invoked.
-        mInitOnAsyncConnect = true;
-        return NS_OK;
-    }
-
     PluginSettings settings;
     GetSettings(&settings);
 
     TimeStamp callNpInitStart = TimeStamp::Now();
-    // Asynchronous case
-    if (mIsStartingAsync) {
-        if (!SendAsyncNP_Initialize(settings)) {
-            Close();
-            return NS_ERROR_FAILURE;
-        }
-        TimeStamp callNpInitEnd = TimeStamp::Now();
-        mTimeBlocked += (callNpInitEnd - callNpInitStart);
-        return NS_OK;
-    }
-
-    // Synchronous case
     if (!CallNP_Initialize(settings, error)) {
         Close();
         return NS_ERROR_FAILURE;
@@ -2379,48 +2162,14 @@ PluginModuleChromeParent::NP_Initialize(NPNetscapeFuncs* bFuncs, NPPluginFuncs* 
     TimeStamp callNpInitEnd = TimeStamp::Now();
     mTimeBlocked += (callNpInitEnd - callNpInitStart);
 
-    RecvNP_InitializeResult(*error);
-
-    return NS_OK;
-}
-
-mozilla::ipc::IPCResult
-PluginModuleParent::RecvNP_InitializeResult(const NPError& aError)
-{
-    if (aError != NPERR_NO_ERROR) {
+    if (*error != NPERR_NO_ERROR) {
         OnInitFailure();
-        return IPC_OK();
+        return NS_OK;
     }
 
     SetPluginFuncs(mNPPIface);
-    if (mIsStartingAsync) {
-        InitAsyncSurrogates();
-    }
 
-    mNPInitialized = true;
-    return IPC_OK();
-}
-
-mozilla::ipc::IPCResult
-PluginModuleChromeParent::RecvNP_InitializeResult(const NPError& aError)
-{
-    if (!mContentParent) {
-        return PluginModuleParent::RecvNP_InitializeResult(aError);
-    }
-    bool initOk = aError == NPERR_NO_ERROR;
-    if (initOk) {
-        SetPluginFuncs(mNPPIface);
-        if (mIsStartingAsync && !SendAssociatePluginId()) {
-            initOk = false;
-        }
-    }
-    mNPInitialized = initOk;
-    bool result = mContentParent->SendLoadPluginResult(mPluginId, initOk);
-    mContentParent = nullptr;
-    if (!result) {
-      return IPC_FAIL_NO_REASON(this);
-    }
-    return IPC_OK();
+    return NS_OK;
 }
 
 #else
@@ -2447,12 +2196,7 @@ nsresult
 PluginModuleContentParent::NP_Initialize(NPNetscapeFuncs* bFuncs, NPError* error)
 {
     PLUGIN_LOG_DEBUG_METHOD;
-    nsresult rv = PluginModuleParent::NP_Initialize(bFuncs, error);
-    if (mIsStartingAsync && GetIPCChannel()->CanSend()) {
-        // We're already connected, so we may call this immediately.
-        RecvNP_InitializeResult(*error);
-    }
-    return rv;
+    return PluginModuleParent::NP_Initialize(bFuncs, error);
 }
 
 #endif
@@ -2464,80 +2208,23 @@ PluginModuleChromeParent::NP_Initialize(NPNetscapeFuncs* bFuncs, NPError* error)
     if (NS_FAILED(rv))
         return rv;
 
-#if defined(XP_MACOSX)
-    if (!mSubprocess->IsConnected()) {
-        // The subprocess isn't connected yet. Defer NP_Initialize until
-        // OnProcessLaunched is invoked.
-        mInitOnAsyncConnect = true;
-        *error = NPERR_NO_ERROR;
-        return NS_OK;
-    }
-#else
-    if (mInitOnAsyncConnect) {
-        *error = NPERR_NO_ERROR;
-        return NS_OK;
-    }
-#endif
-
     PluginSettings settings;
     GetSettings(&settings);
 
     TimeStamp callNpInitStart = TimeStamp::Now();
-    if (mIsStartingAsync) {
-        if (!SendAsyncNP_Initialize(settings)) {
-            return NS_ERROR_FAILURE;
-        }
-        TimeStamp callNpInitEnd = TimeStamp::Now();
-        mTimeBlocked += (callNpInitEnd - callNpInitStart);
-        return NS_OK;
-    }
-
     if (!CallNP_Initialize(settings, error)) {
         Close();
         return NS_ERROR_FAILURE;
     }
     TimeStamp callNpInitEnd = TimeStamp::Now();
     mTimeBlocked += (callNpInitEnd - callNpInitStart);
-    RecvNP_InitializeResult(*error);
-    return NS_OK;
-}
 
-mozilla::ipc::IPCResult
-PluginModuleParent::RecvNP_InitializeResult(const NPError& aError)
-{
-    if (aError != NPERR_NO_ERROR) {
-        OnInitFailure();
-        return IPC_OK();
-    }
-
-    if (mIsStartingAsync && mNPPIface) {
-        SetPluginFuncs(mNPPIface);
-        InitAsyncSurrogates();
-    }
-
-    mNPInitialized = true;
-    return IPC_OK();
-}
-
-mozilla::ipc::IPCResult
-PluginModuleChromeParent::RecvNP_InitializeResult(const NPError& aError)
-{
     bool ok = true;
-    if (mContentParent) {
-        if ((ok = SendAssociatePluginId())) {
-            ok = mContentParent->SendLoadPluginResult(mPluginId,
-                                                      aError == NPERR_NO_ERROR);
-            mContentParent = nullptr;
-        }
-    } else if (aError == NPERR_NO_ERROR) {
+    if (*error == NPERR_NO_ERROR) {
         // Initialization steps for (e10s && !asyncInit) || !e10s
 #if defined XP_WIN
-        if (mIsStartingAsync) {
-            SetPluginFuncs(mNPPIface);
-        }
-
-        // Send the info needed to join the browser process's audio session to the
-        // plugin process.
+        // Send the info needed to join the browser process's audio session to
+        // the plugin process.
         nsID id;
         nsString sessionName;
         nsString iconPath;
@@ -2554,56 +2241,18 @@ PluginModuleChromeParent::RecvNP_InitializeResult(const NPError& aError)
     }
 
     if (!ok) {
-        return IPC_FAIL_NO_REASON(this);
+        return NS_ERROR_FAILURE;
     }
-    return PluginModuleParent::RecvNP_InitializeResult(aError);
+
+    if (*error != NPERR_NO_ERROR) {
+        OnInitFailure();
+        return NS_OK;
+    }
+
+    return NS_OK;
 }
 
 #endif
-
-void
-PluginModuleParent::InitAsyncSurrogates()
-{
-    if (MaybeRunDeferredShutdown()) {
-        // We've shut down, so the surrogates are no longer valid. Clear
-        // mSurrogateInstances to ensure that these aren't used.
-        mSurrogateInstances.Clear();
-        return;
-    }
-
-    uint32_t len = mSurrogateInstances.Length();
-    for (uint32_t i = 0; i < len; ++i) {
-        NPError err;
-        mAsyncNewRv = mSurrogateInstances[i]->NPP_New(&err);
-        if (NS_FAILED(mAsyncNewRv)) {
-            mSurrogateInstances[i]->NotifyAsyncInitFailed();
-            continue;
-        }
-    }
-    mSurrogateInstances.Clear();
-}
-
-bool
-PluginModuleParent::RemovePendingSurrogate(
-                            const RefPtr<PluginAsyncSurrogate>& aSurrogate)
-{
-    return mSurrogateInstances.RemoveElement(aSurrogate);
-}
-
-bool
-PluginModuleParent::MaybeRunDeferredShutdown()
-{
-    if (!mIsStartingAsync || !mIsNPShutdownPending) {
-        return false;
-    }
-    MOZ_ASSERT(!mShutdown);
-    NPError error;
-    if (!DoShutdown(&error)) {
-        return false;
-    }
-    mIsNPShutdownPending = false;
-    return true;
-}
 
 nsresult
 PluginModuleParent::NP_Shutdown(NPError* error)
@@ -2613,14 +2262,6 @@ PluginModuleParent::NP_Shutdown(NPError* error)
     if (mShutdown) {
         *error = NPERR_GENERIC_ERROR;
         return NS_ERROR_FAILURE;
-    }
-
-    /* If we're still running an async NP_Initialize then we need to defer
-       shutdown until we've received the result of the NP_Initialize call. */
-    if (mIsStartingAsync && !mNPInitialized) {
-        mIsNPShutdownPending = true;
-        *error = NPERR_NO_ERROR;
-        return NS_OK;
     }
 
     if (!DoShutdown(error)) {
@@ -2687,21 +2328,7 @@ PluginModuleParent::NP_GetEntryPoints(NPPluginFuncs* pFuncs, NPError* error)
     NS_ASSERTION(pFuncs, "Null pointer!");
 
     *error = NPERR_NO_ERROR;
-    if (mIsStartingAsync && !IsChrome()) {
-        mNPPIface = pFuncs;
-#if defined(XP_MACOSX)
-        if (mNPInitialized) {
-            SetPluginFuncs(pFuncs);
-            InitAsyncSurrogates();
-        } else {
-            PluginAsyncSurrogate::NP_GetEntryPoints(pFuncs);
-        }
-#else
-        PluginAsyncSurrogate::NP_GetEntryPoints(pFuncs);
-#endif
-    } else {
-        SetPluginFuncs(pFuncs);
-    }
+    SetPluginFuncs(pFuncs);
 
     return NS_OK;
 }
@@ -2709,20 +2336,9 @@ PluginModuleParent::NP_GetEntryPoints(NPPluginFuncs* pFuncs, NPError* error)
 nsresult
 PluginModuleChromeParent::NP_GetEntryPoints(NPPluginFuncs* pFuncs, NPError* error)
 {
-#if defined(XP_MACOSX)
-    if (mInitOnAsyncConnect) {
-        PluginAsyncSurrogate::NP_GetEntryPoints(pFuncs);
-        mNPPIface = pFuncs;
-        *error = NPERR_NO_ERROR;
-        return NS_OK;
-    }
-#else
-    if (mIsStartingAsync) {
-        PluginAsyncSurrogate::NP_GetEntryPoints(pFuncs);
-    }
+#if !defined(XP_MACOSX)
     if (!mSubprocess->IsConnected()) {
         mNPPIface = pFuncs;
-        mInitOnAsyncConnect = true;
         *error = NPERR_NO_ERROR;
         return NS_OK;
     }
@@ -2758,22 +2374,6 @@ PluginModuleParent::NPP_New(NPMIMEType pluginType, NPP instance,
         return NS_ERROR_FAILURE;
     }
 
-    if (mIsStartingAsync) {
-        if (!PluginAsyncSurrogate::Create(this, pluginType, instance,
-                                          argc, argn, argv)) {
-            *error = NPERR_GENERIC_ERROR;
-            return NS_ERROR_FAILURE;
-        }
-
-        if (!mNPInitialized) {
-            RefPtr<PluginAsyncSurrogate> surrogate =
-                PluginAsyncSurrogate::Cast(instance);
-            mSurrogateInstances.AppendElement(surrogate);
-            *error = NPERR_NO_ERROR;
-            return NS_PLUGIN_INIT_PENDING;
-        }
-    }
-
     // create the instance on the other side
     InfallibleTArray<nsCString> names;
     InfallibleTArray<nsCString> values;
@@ -2783,12 +2383,7 @@ PluginModuleParent::NPP_New(NPMIMEType pluginType, NPP instance,
         values.AppendElement(NullableString(argv[i]));
     }
 
-    nsresult rv = NPP_NewInternal(pluginType, instance, names, values,
-                                  saved, error);
-    if (NS_FAILED(rv) || !mIsStartingAsync) {
-        return rv;
-    }
-    return NS_PLUGIN_INIT_PENDING;
+    return NPP_NewInternal(pluginType, instance, names, values, saved, error);
 }
 
 class nsCaseInsensitiveUTF8StringArrayComparator
@@ -2922,11 +2517,7 @@ PluginModuleParent::NPP_NewInternal(NPMIMEType pluginType, NPP instance,
 #endif
     }
 
-    // Release the surrogate reference that was in pdata
-    RefPtr<PluginAsyncSurrogate> surrogate(
-        dont_AddRef(PluginAsyncSurrogate::Cast(instance)));
-    // Now replace it with the instance
-    instance->pdata = static_cast<PluginDataResolver*>(parentInstance);
+    instance->pdata = parentInstance;
 
     // Any IPC messages for the PluginInstance actor should be dispatched to the
     // DocGroup for the plugin's document.
@@ -2953,31 +2544,19 @@ PluginModuleParent::NPP_NewInternal(NPMIMEType pluginType, NPP instance,
     {   // Scope for timer
         Telemetry::AutoTimer<Telemetry::BLOCKED_ON_PLUGIN_INSTANCE_INIT_MS>
             timer(GetHistogramKey());
-        if (mIsStartingAsync) {
-            MOZ_ASSERT(surrogate);
-            surrogate->AsyncCallDeparting();
-            if (!SendAsyncNPP_New(parentInstance)) {
+        if (!CallSyncNPP_New(parentInstance, error)) {
+            // if IPC is down, we'll get an immediate "failed" return, but
+            // without *error being set.  So make sure that the error
+            // condition is signaled to nsNPAPIPluginInstance
+            if (NPERR_NO_ERROR == *error) {
                 *error = NPERR_GENERIC_ERROR;
-                return NS_ERROR_FAILURE;
             }
-            *error = NPERR_NO_ERROR;
-        } else {
-            if (!CallSyncNPP_New(parentInstance, error)) {
-                // if IPC is down, we'll get an immediate "failed" return, but
-                // without *error being set.  So make sure that the error
-                // condition is signaled to nsNPAPIPluginInstance
-                if (NPERR_NO_ERROR == *error) {
-                    *error = NPERR_GENERIC_ERROR;
-                }
-                return NS_ERROR_FAILURE;
-            }
+            return NS_ERROR_FAILURE;
         }
     }
 
     if (*error != NPERR_NO_ERROR) {
-        if (!mIsStartingAsync) {
-            NPP_Destroy(instance, 0);
-        }
+        NPP_Destroy(instance, 0);
         return NS_ERROR_FAILURE;
     }
 
@@ -3030,22 +2609,17 @@ PluginModuleParent::NPP_GetSitesWithData(nsCOMPtr<nsIGetSitesWithDataCallback> c
 nsresult
 PluginModuleParent::IsRemoteDrawingCoreAnimation(NPP instance, bool *aDrawing)
 {
-    PluginInstanceParent* i = PluginInstanceParent::Cast(instance);
-    if (!i)
-        return NS_ERROR_FAILURE;
-
-    return i->IsRemoteDrawingCoreAnimation(aDrawing);
+    PluginInstanceParent* pip = PluginInstanceParent::Cast(instance);
+    return pip ? pip->IsRemoteDrawingCoreAnimation(aDrawing) : NS_ERROR_FAILURE;
 }
 #endif
 #if defined(XP_MACOSX) || defined(XP_WIN)
 nsresult
 PluginModuleParent::ContentsScaleFactorChanged(NPP instance, double aContentsScaleFactor)
 {
-    PluginInstanceParent* i = PluginInstanceParent::Cast(instance);
-    if (!i)
-        return NS_ERROR_FAILURE;
-
-    return i->ContentsScaleFactorChanged(aContentsScaleFactor);
+    PluginInstanceParent* pip = PluginInstanceParent::Cast(instance);
+    return pip ? pip->ContentsScaleFactorChanged(aContentsScaleFactor)
+               : NS_ERROR_FAILURE;
 }
 #endif // #if defined(XP_MACOSX)
 

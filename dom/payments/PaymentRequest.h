@@ -106,12 +106,15 @@ public:
                                  const nsAString& aRecipient,
                                  const nsAString& aPhone);
 
+
+  void SetShippingOption(const nsAString& aShippingOption);
   void GetShippingOption(nsAString& aRetVal) const;
   nsresult UpdateShippingOption(const nsAString& aShippingOption);
 
   nsresult UpdatePayment(const PaymentDetailsUpdate& aDetails);
   void AbortUpdate(nsresult aRv);
 
+  void SetShippingType(const Nullable<PaymentShippingType>& aShippingType);
   Nullable<PaymentShippingType> GetShippingType() const;
 
   IMPL_EVENT_HANDLER(shippingaddresschange);
@@ -142,6 +145,8 @@ protected:
   RefPtr<PaymentAddress> mShippingAddress;
   // It is populated when the user chooses a shipping option.
   nsString mShippingOption;
+
+  Nullable<PaymentShippingType> mShippingType;
 
   // "true" when there is a pending updateWith() call to update the payment request
   // and "false" otherwise.

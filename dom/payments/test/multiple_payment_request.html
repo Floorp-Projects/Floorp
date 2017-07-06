@@ -66,6 +66,28 @@
       },
     };
 
+    const dupShippingOptionsDetails = {
+      id: "duplicate shipping options details",
+      total: {
+        label: "Donation",
+        amount: { currency: "USD", value: "55.00" }
+      },
+      shippingOptions: [
+        {
+          id: "dupShipping",
+          label: "NormalShipping",
+          amount: { currency: "USD", value: "10.00", },
+          selected: true,
+        },
+        {
+          id: "dupShipping",
+          label: "FastShipping",
+          amount: { currency: "USD", value: "30.00", },
+          selected: false,
+        },
+      ],
+    };
+
     const options = {
       requestPayerName: true,
       requestPayerEmail: true,
@@ -79,6 +101,9 @@
                                                options);
     const paymentRequest2 = new PaymentRequest(supportedInstruments,
                                                simpleDetails);
+    const paymentRequest3 = new PaymentRequest(supportedInstruments,
+                                               dupShippingOptionsDetails,
+                                               options);
     </script>
   </body>
 </html>

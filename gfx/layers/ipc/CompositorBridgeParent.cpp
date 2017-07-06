@@ -1515,14 +1515,14 @@ CompositorBridgeParent::AllocPLayerTransactionParent(const nsTArray<LayersBacken
 
   if (!mLayerManager) {
     NS_WARNING("Failed to initialise Compositor");
-    LayerTransactionParent* p = new LayerTransactionParent(nullptr, this, 0);
+    LayerTransactionParent* p = new LayerTransactionParent(/* aManager */ nullptr, this, /* aAnimStorage */ nullptr, 0);
     p->AddIPDLReference();
     return p;
   }
 
   mCompositionManager = new AsyncCompositionManager(this, mLayerManager);
 
-  LayerTransactionParent* p = new LayerTransactionParent(mLayerManager, this, 0);
+  LayerTransactionParent* p = new LayerTransactionParent(mLayerManager, this, GetAnimationStorage(0), 0);
   p->AddIPDLReference();
   return p;
 }
@@ -1644,7 +1644,7 @@ CompositorBridgeParent::RecvAdoptChild(const uint64_t& child)
     MOZ_ASSERT(sIndirectLayerTrees[child].mParent->mOptions == mOptions);
     NotifyChildCreated(child);
     if (sIndirectLayerTrees[child].mLayerTree) {
-      sIndirectLayerTrees[child].mLayerTree->SetLayerManager(mLayerManager);
+      sIndirectLayerTrees[child].mLayerTree->SetLayerManager(mLayerManager, GetAnimationStorage(0));
       // Trigger composition to handle a case that mLayerTree was not composited yet
       // by previous CompositorBridgeParent, since nsRefreshDriver might wait composition complete.
       ScheduleComposition();

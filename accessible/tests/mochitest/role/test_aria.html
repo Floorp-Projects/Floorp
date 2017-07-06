@@ -54,7 +54,11 @@
       testRole("aria_progressbar", ROLE_PROGRESSBAR);
       testRole("aria_radio", ROLE_RADIOBUTTON);
       testRole("aria_radiogroup", ROLE_RADIO_GROUP);
-      testRole("aria_region", ROLE_REGION);
+      testRole("aria_region_no_name", ROLE_TEXT);
+      testRole("aria_region_has_label", ROLE_REGION);
+      testRole("aria_region_has_labelledby", ROLE_REGION);
+      testRole("aria_region_has_title", ROLE_REGION);
+      testRole("aria_region_empty_name", ROLE_TEXT);
       testRole("aria_row", ROLE_ROW);
       testRole("aria_rowheader", ROLE_ROWHEADER);
       testRole("aria_scrollbar", ROLE_SCROLLBAR);
@@ -238,7 +242,11 @@
   <span id="aria_progressbar" role="progressbar"/>
   <span id="aria_radio" role="radio"/>
   <span id="aria_radiogroup" role="radiogroup"/>
-  <span id="aria_region" role="region"/>
+  <span id="aria_region_no_name" role="region"/>
+  <span id="aria_region_has_label" role="region" aria-label="label"/>
+  <span id="aria_region_has_labelledby" role="region" aria-labelledby="label"/><span id="label" aria-label="label">
+  <span id="aria_region_has_title" role="region" title="title"/>
+  <span id="aria_region_empty_name" role="region" aria-label="" title="" aria-labelledby="empty"/><span id="empty"/>
   <span id="aria_row" role="row"/>
   <span id="aria_rowheader" role="rowheader"/>
   <span id="aria_scrollbar" role="scrollbar"/>

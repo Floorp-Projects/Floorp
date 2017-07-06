@@ -36,7 +36,6 @@ child:
   async __delete__();
 
 parent:
-  async AsyncNPP_NewStreamResult(NPError rv, uint16_t stype);
   intr NPN_RequestRead(IPCByteRanges ranges)
     returns (NPError result);
   async NPN_DestroyStream(NPReason reason);
