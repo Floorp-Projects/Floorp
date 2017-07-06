@@ -78,8 +78,8 @@ browser.getTabBrowser = function(win) {
 browser.Context = class {
 
   /**
-   * @param {<xul:browser>} win
-   *     Frame that is expected to contain the view of the web document.
+   * @param {ChromeWindow} win
+   *     ChromeWindow that contains the top-level browsing context.
    * @param {GeckoDriver} driver
    *     Reference to driver instance.
    */
@@ -106,7 +106,14 @@ browser.Context = class {
     // browser window, this.tab will still point to tab A, despite tab B
     // being the currently selected tab.
     this.tab = null;
+
+    // Commands which trigger a page load can cause the frame script to be
+    // reloaded. To not loose the currently active command, or any other
+    // already pushed following command, store them as long as they haven't
+    // been fully processed. The commands get flushed after a new browser
+    // has been registered.
     this.pendingCommands = [];
+    this._needsFlushPendingCommands = false;
 
     // We should have one frame.Manager per browser.Context so that we
     // can handle modals in each <xul:browser>.
@@ -117,8 +124,6 @@ browser.Context = class {
     this.frameManager.addMessageManagerListeners(driver.mm);
     this.getIdForBrowser = driver.getIdForBrowser.bind(driver);
     this.updateIdForBrowser = driver.updateIdForBrowser.bind(driver);
-    this._browserWasRemote = null;
-    this._hasRemotenessChange = false;
   }
 
   /**
@@ -286,8 +291,7 @@ browser.Context = class {
   }
 
   /**
-   * Set the current tab and update remoteness tracking if a tabbrowser
-   * is available.
+   * Set the current tab.
    *
    * @param {number=} index
    *     Tab index to switch to. If the parameter is undefined,
@@ -330,11 +334,6 @@ browser.Context = class {
         }
       }
     }
-
-    if (this.driver.appName == "Firefox") {
-      this._browserWasRemote = this.contentBrowser.isRemoteBrowser;
-      this._hasRemotenessChange = false;
-    }
   }
 
   /**
@@ -344,65 +343,38 @@ browser.Context = class {
    *
    * @param {string} uid
    *     Frame uid for use by Marionette.
-   * @param the XUL <browser> that was the target of the originating message.
+   * @param {xul:browser} target
+   *     The <xul:browser> that was the target of the originating message.
    */
   register(uid, target) {
-    let remotenessChange = this.hasRemotenessChange();
-    if (this.curFrameId === null || remotenessChange) {
-      if (this.tabBrowser) {
-        // If we're setting up a new session on Firefox, we only process the
-        // registration for this frame if it belongs to the current tab.
-        if (!this.tab) {
-          this.switchToTab();
-        }
+    if (this.tabBrowser) {
+      // If we're setting up a new session on Firefox, we only process the
+      // registration for this frame if it belongs to the current tab.
+      if (!this.tab) {
+        this.switchToTab();
+      }
 
-        if (target === this.contentBrowser) {
-          this.updateIdForBrowser(this.contentBrowser, uid);
-        }
+      if (target === this.contentBrowser) {
+        this.updateIdForBrowser(this.contentBrowser, uid);
+        this._needsFlushPendingCommands = true;
       }
     }
 
     // used to delete sessions
     this.knownFrames.push(uid);
-    return remotenessChange;
   }
 
   /**
-   * When navigating between pages results in changing a browser's
-   * process, we need to take measures not to lose contact with a listener
-   * script. This function does the necessary bookkeeping.
-   */
-  hasRemotenessChange() {
-    // None of these checks are relevant if we don't have a tab yet,
-    // and may not apply on Fennec.
-    if (this.driver.appName != "Firefox" ||
-        this.tab === null ||
-        this.contentBrowser === null) {
-      return false;
-    }
-
-    if (this._hasRemotenessChange) {
-      return true;
-    }
-
-    let currentIsRemote = this.contentBrowser.isRemoteBrowser;
-    this._hasRemotenessChange = this._browserWasRemote !== currentIsRemote;
-    this._browserWasRemote = currentIsRemote;
-    return this._hasRemotenessChange;
-  }
-
-  /**
-   * Flushes any pending commands queued when a remoteness change is being
-   * processed and mark this remotenessUpdate as complete.
+   * Flushes any queued pending commands after a reload of the frame script.
    */
   flushPendingCommands() {
-    if (!this._hasRemotenessChange) {
+    if (!this._needsFlushPendingCommands) {
       return;
     }
 
-    this._hasRemotenessChange = false;
     this.pendingCommands.forEach(cb => cb());
     this.pendingCommands = [];
+    this._needsFlushPendingCommands = false;
   }
 
   /**
@@ -412,11 +384,11 @@ browser.Context = class {
     * No commands interacting with content are safe to process until
     * the new listener script is loaded and registers itself.
     * This occurs when a command whose effect is asynchronous (such
-    * as goBack) results in a remoteness change and new commands
+    * as goBack) results in a reload of the frame script and new commands
     * are subsequently posted to the server.
     */
   executeWhenReady(cb) {
-    if (this.hasRemotenessChange()) {
+    if (this._needsFlushPendingCommands) {
       this.pendingCommands.push(cb);
     } else {
       cb();
