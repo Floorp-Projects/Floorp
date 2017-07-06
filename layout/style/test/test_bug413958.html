@@ -39,18 +39,19 @@ var tests = [
     s.color = "black";
   },
 ];
+const isStylo = SpecialPowers.getBoolPref('layout.css.servo.enabled', false);
 var results = [
   [ { errorMessage: /Unknown property \u2018nosuchprop\u2019/,
-      lineNumber: 1, columnNumber: 14,
+      lineNumber: 1, columnNumber: isStylo ? 4 : 14,
       sourceLine: "#s1{nosuchprop:auto; color:black}" },
     { errorMessage: /Unknown property \u2018nosuchprop\u2019/,
-      lineNumber: 2, columnNumber: 14, sourceLine:
+      lineNumber: 2, columnNumber: isStylo ? 4 : 14, sourceLine:
       "#s2{nosuchprop:auto; color:black}invalid?sel{}#s3{color:black}" },
     { errorMessage: /Ruleset ignored due to bad selector/,
-      lineNumber: 2, columnNumber: 40, sourceLine:
+      lineNumber: 2, columnNumber: isStylo ? 33 : 40, sourceLine:
       "#s2{nosuchprop:auto; color:black}invalid?sel{}#s3{color:black}" } ],
   [ { errorMessage: /parsing value for \u2018width\u2019/,
-      lineNumber: 0, columnNumber: 6,
+      lineNumber: 0, columnNumber: isStylo ? 0 : 6,
       sourceLine: "width:200;color:black" } ],
   [ { errorMessage: /parsing value for \u2018width\u2019/,
       lineNumber: 0, columnNumber: 0,

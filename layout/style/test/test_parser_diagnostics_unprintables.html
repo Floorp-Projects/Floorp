@@ -23,7 +23,7 @@
 // Each "pattern" is tested once with each of the "substitution"s below:
 // <t>, <i>, and <s> are replaced by the t:, i:, and s: fields of
 // each substitution object in turn.
-const patterns = [
+let patterns = [
   // REPORT_UNEXPECTED_P (only ever used in contexts where identifier-like
   // escaping is appropriate)
   { i: "<t>|x{}",                 o: "prefix \u2018<i>\u2019" },
@@ -42,11 +42,19 @@ const patterns = [
   { i: "x{ '<t>'}" ,       o: "declaration but found \u2018'<s>'\u2019." },
   // _Bad_String
   { i: "x{ '<t>\n}",      o: "declaration but found \u2018'<s>\u2019." },
-  // _URL
-  { i: "x{ url('<t>')}",   o: "declaration but found \u2018url('<s>')\u2019." },
-  // _Bad_URL
-  { i: "x{ url('<t>'.)}" , o: "declaration but found \u2018url('<s>'\u2019." }
 ];
+
+const isStylo = SpecialPowers.getBoolPref('layout.css.servo.enabled', false);
+
+// Stylo's CSS parser only reports the 'url(' token, not the actual bad URL.
+if (!isStylo) {
+  patterns.push(
+    // _URL
+    { i: "x{ url('<t>')}",   o: "declaration but found \u2018url('<s>')\u2019." })
+  patterns.push(
+    // _Bad_URL
+    { i: "x{ url('<t>'.)}" , o: "declaration but found \u2018url('<s>'\u2019." });
+}
 
 // Blocks of characters to test, and how they should be escaped when
 // they appear in identifiers and string constants.
