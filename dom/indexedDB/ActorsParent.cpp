@@ -29271,7 +29271,7 @@ PermissionRequestHelper::ActorDestroy(ActorDestroyReason aWhy)
 NS_IMPL_ISUPPORTS(DEBUGThreadSlower, nsIThreadObserver)
 
 NS_IMETHODIMP
-DEBUGThreadSlower::OnDispatchedEvent(nsIThreadInternal* /* aThread */)
+DEBUGThreadSlower::OnDispatchedEvent()
 {
   MOZ_CRASH("Should never be called!");
 }

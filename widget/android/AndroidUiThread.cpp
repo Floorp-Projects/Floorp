@@ -103,7 +103,7 @@ private:
 NS_IMPL_ISUPPORTS(ThreadObserver, nsIThreadObserver)
 
 NS_IMETHODIMP
-ThreadObserver::OnDispatchedEvent(nsIThreadInternal *thread)
+ThreadObserver::OnDispatchedEvent()
 {
   EnqueueTask(NS_NewRunnableFunction("PumpEvents", &PumpEvents), 0);
   return NS_OK;
