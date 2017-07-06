@@ -38,6 +38,9 @@ to mochitest command.
 * Animation support:
   * SMIL Animation
     * test_restyles_in_smil_animation.html [2]
+* console support bug 1352669
+  * test_bug413958.html `monitorConsole` [3]
+  * test_parser_diagnostics_unprintables.html [550]
 * @namespace support:
   * test_namespace_rule.html: bug 1355715 [6]
 * test_font_feature_values_parsing.html: \@font-feature-values support bug 1355721 [107]
