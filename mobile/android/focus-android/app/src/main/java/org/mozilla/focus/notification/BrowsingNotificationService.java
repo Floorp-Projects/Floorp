@@ -13,6 +13,7 @@ import android.content.Intent;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
 import android.support.v4.app.NotificationCompat;
+import android.support.v4.content.ContextCompat;
 
 import org.mozilla.focus.R;
 import org.mozilla.focus.activity.MainActivity;
@@ -151,7 +152,6 @@ public class BrowsingNotificationService extends Service {
     private Notification buildNotification() {
         final PendingIntent notificationPendingIntent = createNotificationIntent();
         final PendingIntent openPendingIntent = createOpenActionIntent();
-        final PendingIntent erasePendingIntent = createEraseActionIntent();
 
         return new NotificationCompat.Builder(this)
                 .setOngoing(true)
@@ -162,14 +162,11 @@ public class BrowsingNotificationService extends Service {
                 .setVisibility(Notification.VISIBILITY_SECRET)
                 .setShowWhen(false)
                 .setLocalOnly(true)
+                .setColor(ContextCompat.getColor(this, R.color.colorFloatingActionButtonTint))
                 .addAction(new NotificationCompat.Action(
                         R.drawable.ic_notification,
                         getString(R.string.notification_action_open),
                         openPendingIntent))
-                .addAction(new NotificationCompat.Action(
-                        R.drawable.ic_shortcut_erase,
-                        getString(R.string.notification_action_erase),
-                        erasePendingIntent))
                 .build();
     }
 
@@ -185,14 +182,6 @@ public class BrowsingNotificationService extends Service {
         intent.setAction(MainActivity.ACTION_OPEN);
 
         return PendingIntent.getActivity(this, 1, intent, PendingIntent.FLAG_UPDATE_CURRENT);
-    }
-
-    private PendingIntent createEraseActionIntent() {
-        final Intent intent = new Intent(this, BrowsingNotificationService.class);
-        intent.setAction(ACTION_ERASE);
-        intent.putExtra(EXTRA_NOTIFICATION_ACTION, true);
-
-        return PendingIntent.getService(this, 2, intent, PendingIntent.FLAG_ONE_SHOT);
     }
 
     @Nullable
