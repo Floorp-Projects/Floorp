@@ -29,6 +29,7 @@ devtools.jar:
     content/sourceeditor/codemirror/codemirror.bundle.js (sourceeditor/codemirror/codemirror.bundle.js)
     content/sourceeditor/codemirror/lib/codemirror.css (sourceeditor/codemirror/lib/codemirror.css)
     content/sourceeditor/codemirror/mozilla.css (sourceeditor/codemirror/mozilla.css)
+    content/sourceeditor/codemirror/cmiframe.html (sourceeditor/codemirror/cmiframe.html)
     content/sourceeditor/codemirror/old-debugger.css (sourceeditor/codemirror/old-debugger.css)
     content/debugger/new/index.html (debugger/new/index.html)
     content/debugger/debugger.xul (debugger/debugger.xul)

@@ -68,6 +68,25 @@
       };
     }
 
+    function makeCurrent(aID, aIsCurrent, aValue)
+    {
+      this.DOMNode = getNode(aID);
+
+      this.eventSeq = [
+        new stateChangeChecker(EXT_STATE_CURRENT, true, aIsCurrent, this.DOMNode)
+      ];
+
+      this.invoke = function makeCurrent_invoke()
+      {
+        this.DOMNode.setAttribute("aria-current", aValue);
+      };
+
+      this.getID = function makeCurrent_getID()
+      {
+        return prettyName(aID) + " aria-current changed to " + aValue;
+      };
+    }
+
     function setAttrOfMixedType(aID, aAttr, aState, aValue)
     {
       this.DOMNode = getNode(aID);
@@ -148,6 +167,12 @@
       buildQueueForAttrOfMixedType(gQueue, "checkable", setChecked);
       buildQueueForAttrOfBoolType(gQueue, "checkableBool", setChecked);
 
+      gQueue.push(new makeCurrent("current_page_1", false, "false"));
+      gQueue.push(new makeCurrent("current_page_2", true, "page"));
+      gQueue.push(new makeCurrent("current_page_2", false, "false"));
+      gQueue.push(new makeCurrent("current_page_3", true, "true"));
+      gQueue.push(new makeCurrent("current_page_3", false, ""));
+
       gQueue.invoke(); // Will call SimpleTest.finish();
     }
 
@@ -183,6 +208,11 @@
      title="Support ARIA 1.1 switch role">
     Mozilla Bug 1136563
   </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=1355921"
+     title="Elements with a defined, non-false value for aria-current should expose ATK_STATE_ACTIVE">
+    Mozilla Bug 1355921
+  </a>
 
   <p id="display"></p>
   <div id="content" style="display: none"></div>
@@ -204,5 +234,10 @@
   <!-- aria-checked -->
   <div id="checkable" role="checkbox"></div>
   <div id="checkableBool" role="switch"></div>
+
+  <!-- aria-current -->
+  <div id="current_page_1" role="link" aria-current="page">1</div>
+  <div id="current_page_2" role="link" aria-current="false">2</div>
+  <div id="current_page_3" role="link">3</div>
 </body>
 </html>

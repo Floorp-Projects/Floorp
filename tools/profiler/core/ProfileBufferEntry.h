@@ -27,20 +27,20 @@
 
 class ProfilerMarker;
 
-#define PROFILE_BUFFER_ENTRY_KIND_LIST(_) \
-    _(Category,        int)               \
-    _(CodeLocation,    const char *)      \
-    _(EmbeddedString,  void *)            \
-    _(JitReturnAddr,   void *)            \
-    _(LineNumber,      int)               \
-    _(NativeLeafAddr,  void *)            \
-    _(Marker,          ProfilerMarker *)  \
-    _(ResidentMemory,  double)            \
-    _(Responsiveness,  double)            \
-    _(Sample,          const char *)      \
-    _(ThreadId,        int)               \
-    _(Time,            double)            \
-    _(UnsharedMemory,  double)
+#define FOR_EACH_PROFILE_BUFFER_ENTRY_KIND(macro) \
+  macro(Category,        int) \
+  macro(CodeLocation,    const char*) \
+  macro(EmbeddedString,  char*) /* char[kNumChars], really */ \
+  macro(JitReturnAddr,   void*) \
+  macro(LineNumber,      int) \
+  macro(NativeLeafAddr,  void*) \
+  macro(Marker,          ProfilerMarker*) \
+  macro(ResidentMemory,  double) \
+  macro(Responsiveness,  double) \
+  macro(Sample,          const char*) \
+  macro(ThreadId,        int) \
+  macro(Time,            double) \
+  macro(UnsharedMemory,  double)
 
 // NB: Packing this structure has been shown to cause SIGBUS issues on ARM.
 #if !defined(GP_ARCH_arm)
@@ -52,68 +52,64 @@ class ProfileBufferEntry
 public:
   enum class Kind : uint8_t {
     INVALID = 0,
-#   define DEF_ENUM_(k, t) k,
-    PROFILE_BUFFER_ENTRY_KIND_LIST(DEF_ENUM_)
-#   undef DEF_ENUM_
+    #define KIND(k, t) k,
+    FOR_EACH_PROFILE_BUFFER_ENTRY_KIND(KIND)
+    #undef KIND
     LIMIT
   };
 
   ProfileBufferEntry();
 
+  // This is equal to sizeof(double), which is the largest non-char variant in
+  // |u|.
+  static const size_t kNumChars = 8;
+
 private:
-  // aTagData must not need release (i.e. be a string from the text segment)
-  ProfileBufferEntry(Kind aKind, const char *aTagData);
-  ProfileBufferEntry(Kind aKind, void *aTagPtr);
-  ProfileBufferEntry(Kind aKind, ProfilerMarker *aTagMarker);
-  ProfileBufferEntry(Kind aKind, double aTagDouble);
-  ProfileBufferEntry(Kind aKind, uintptr_t aTagOffset);
-  ProfileBufferEntry(Kind aKind, Address aTagAddress);
-  ProfileBufferEntry(Kind aKind, int aTagLine);
-  ProfileBufferEntry(Kind aKind, char aTagChar);
+  // aString must be a static string.
+  ProfileBufferEntry(Kind aKind, const char *aString);
+  ProfileBufferEntry(Kind aKind, char aChars[kNumChars]);
+  ProfileBufferEntry(Kind aKind, void *aPtr);
+  ProfileBufferEntry(Kind aKind, ProfilerMarker *aMarker);
+  ProfileBufferEntry(Kind aKind, double aDouble);
+  ProfileBufferEntry(Kind aKind, int aInt);
 
 public:
-# define DEF_MAKE_(k, t) \
-    static ProfileBufferEntry k(t val) { \
-      return ProfileBufferEntry(Kind::k, val); \
+  #define CTOR(k, t) \
+    static ProfileBufferEntry k(t aVal) { \
+      return ProfileBufferEntry(Kind::k, aVal); \
     }
-  PROFILE_BUFFER_ENTRY_KIND_LIST(DEF_MAKE_)
-# undef DEF_MAKE_
+  FOR_EACH_PROFILE_BUFFER_ENTRY_KIND(CTOR)
+  #undef CTOR
 
   Kind kind() const { return mKind; }
   bool hasKind(Kind k) const { return kind() == k; }
 
-# define DEF_METHODS_(k, t) \
-    bool is##k() const { return hasKind(Kind::k); }
-  PROFILE_BUFFER_ENTRY_KIND_LIST(DEF_METHODS_)
-# undef DEF_METHODS_
-
-  const ProfilerMarker* getMarker() {
-    MOZ_ASSERT(isMarker());
-    return mTagMarker;
-  }
+  #define IS_KIND(k, t) bool is##k() const { return hasKind(Kind::k); }
+  FOR_EACH_PROFILE_BUFFER_ENTRY_KIND(IS_KIND)
+  #undef IS_KIND
 
 private:
-  FRIEND_TEST(ThreadProfile, InsertOneTag);
-  FRIEND_TEST(ThreadProfile, InsertOneTagWithTinyBuffer);
-  FRIEND_TEST(ThreadProfile, InsertTagsNoWrap);
-  FRIEND_TEST(ThreadProfile, InsertTagsWrap);
+  FRIEND_TEST(ThreadProfile, InsertOneEntry);
+  FRIEND_TEST(ThreadProfile, InsertOneEntryWithTinyBuffer);
+  FRIEND_TEST(ThreadProfile, InsertEntriesNoWrap);
+  FRIEND_TEST(ThreadProfile, InsertEntriesWrap);
   FRIEND_TEST(ThreadProfile, MemoryMeasure);
   friend class ProfileBuffer;
-  union {
-    const char* mTagData;
-    char        mTagChars[sizeof(void*)];
-    void*       mTagPtr;
-    ProfilerMarker* mTagMarker;
-    double      mTagDouble;
-    Address     mTagAddress;
-    uintptr_t   mTagOffset;
-    int         mTagInt;
-    char        mTagChar;
-  };
+
   Kind mKind;
+  union {
+    const char*     mString;
+    char            mChars[kNumChars];
+    void*           mPtr;
+    ProfilerMarker* mMarker;
+    double          mDouble;
+    int             mInt;
+  } u;
 };
 
 #if !defined(GP_ARCH_arm)
+// Packed layout: 1 byte for the tag + 8 bytes for the value.
+static_assert(sizeof(ProfileBufferEntry) == 9, "bad ProfileBufferEntry size");
 #pragma pack(pop)
 #endif
 

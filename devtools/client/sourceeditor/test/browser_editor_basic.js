@@ -8,8 +8,9 @@ function test() {
   waitForExplicitFinish();
   setup((ed, win) => {
     // appendTo
-    let src = win.document.querySelector("iframe").getAttribute("src");
-    ok(~src.indexOf(".CodeMirror"), "correct iframe is there");
+    let cmFrame = win.document.querySelector("iframe");
+    let cmStyle = cmFrame.contentDocument.getElementById("cmBaseStyle");
+    ok(~cmStyle.innerHTML.indexOf(".CodeMirror"), "correct iframe is there");
 
     // getOption/setOption
     ok(ed.getOption("styleActiveLine"), "getOption works");

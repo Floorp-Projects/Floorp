@@ -191,6 +191,13 @@ function waitForElement(dbg, selector) {
   return waitUntil(() => findElementWithSelector(dbg, selector));
 }
 
+function waitForSelectedSource(dbg) {
+  return waitForState(dbg, state => {
+    const source = dbg.selectors.getSelectedSource(state);
+    return source && source.has("loading") && !source.get("loading");
+  });
+}
+
 /**
  * Assert that the debugger is paused at the correct location.
  *
@@ -215,10 +222,20 @@ function assertPausedLocation(dbg, source, line) {
   is(location.line, line);
 
   // Check the debug line
+  const lineInfo = getCM(dbg).lineInfo(line - 1);
   ok(
-    getCM(dbg).lineInfo(line - 1).wrapClass.includes("debug-line"),
+    lineInfo.wrapClass.includes("debug-line"),
     "Line is highlighted as paused"
   );
+
+  const markedSpans = lineInfo.handle.markedSpans;
+  if (markedSpans && markedSpans.length > 0) {
+    const marker = markedSpans[0].marker;
+    ok(
+      marker.className.includes("debug-expression"),
+      "expression is highlighted as paused"
+    );
+  }
 }
 
 /**
@@ -381,12 +398,13 @@ function findSource(dbg, url) {
 function selectSource(dbg, url, line) {
   info("Selecting source: " + url);
   const source = findSource(dbg, url);
-  const hasText = !!source.text && !source.loading;
-  dbg.actions.selectSource(source.id, { line });
+  return dbg.actions.selectSource(source.id, { line });
+}
 
-  if (!hasText) {
-    return waitForDispatch(dbg, "LOAD_SOURCE_TEXT");
-  }
+function closeTab(dbg, url) {
+  info("Closing tab: " + url);
+  const source = findSource(dbg, url);
+  return dbg.actions.closeTab(source.url);
 }
 
 /**
@@ -460,7 +478,7 @@ function deleteExpression(dbg, input) {
  * @static
  */
 function reload(dbg, ...sources) {
-  return dbg.client.reload().then(() => waitForSources(...sources));
+  return dbg.client.reload().then(() => waitForSources(dbg, ...sources));
 }
 
 /**
@@ -494,6 +512,13 @@ function addBreakpoint(dbg, source, line, col) {
   const sourceId = source.id;
   dbg.actions.addBreakpoint({ sourceId, line, col });
   return waitForDispatch(dbg, "ADD_BREAKPOINT");
+}
+
+function disableBreakpoint(dbg, source, line, col) {
+  source = findSource(dbg, source);
+  const sourceId = source.id;
+  dbg.actions.disableBreakpoint({ sourceId, line, col });
+  return waitForDispatch(dbg, "DISABLE_BREAKPOINT");
 }
 
 /**
@@ -558,6 +583,10 @@ function invokeInTab(fnc) {
 const isLinux = Services.appinfo.OS === "Linux";
 const isMac = Services.appinfo.OS === "Darwin";
 const cmdOrCtrl = isLinux ? { ctrlKey: true } : { metaKey: true };
+const shiftOrAlt = isMac
+  ? { accelKey: true, shiftKey: true }
+  : { accelKey: true, altKey: true };
+
 // On Mac, going to beginning/end only works with meta+left/right.  On
 // Windows, it only works with home/end.  On Linux, apparently, either
 // ctrl+left/right or home/end work.
@@ -567,7 +596,10 @@ const endKey = isMac
 const startKey = isMac
   ? { code: "VK_LEFT", modifiers: cmdOrCtrl }
   : { code: "VK_HOME" };
+
 const keyMappings = {
+  debugger: { code: "s", modifiers: shiftOrAlt },
+  inspector: { code: "c", modifiers: shiftOrAlt },
   sourceSearch: { code: "p", modifiers: cmdOrCtrl },
   fileSearch: { code: "f", modifiers: cmdOrCtrl },
   Enter: { code: "VK_RETURN" },
@@ -640,6 +672,7 @@ const selectors = {
   highlightLine: ".CodeMirror-code > .highlight-line",
   codeMirror: ".CodeMirror",
   resume: ".resume.active",
+  sourceTabs: `.source-tabs`,
   stepOver: ".stepOver.active",
   stepOut: ".stepOut.active",
   stepIn: ".stepIn.active",
