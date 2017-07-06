@@ -4,7 +4,7 @@
     <em:id>tab-switch-test@lassey.us</em:id>
     <em:type>2</em:type>
     <em:name>Tab Switch Test</em:name>
-    <em:version>1.0.3</em:version>
+    <em:version>1.0.5</em:version>
     <em:optionsType>2</em:optionsType>
     <em:optionsURL>chrome://tabswitch/content/options.xul</em:optionsURL>
     <em:bootstrap>true</em:bootstrap>
