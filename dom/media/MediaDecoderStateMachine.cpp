@@ -2961,6 +2961,8 @@ nsresult MediaDecoderStateMachine::Init(MediaDecoder* aDecoder)
   nsresult rv = mReader->Init();
   NS_ENSURE_SUCCESS(rv, rv);
 
+  mReader->SetCanonicalDuration(&mDuration);
+
   return NS_OK;
 }
 
