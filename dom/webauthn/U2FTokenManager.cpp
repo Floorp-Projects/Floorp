@@ -252,18 +252,16 @@ U2FTokenManager::Register(WebAuthnTransactionParent* aTransactionParent,
   }
 
   nsTArray<uint8_t> reg;
-  nsTArray<uint8_t> sig;
   mResultPromise = mTokenManagerImpl->Register(aTransactionInfo.Descriptors(),
                                                aTransactionInfo.RpIdHash(),
                                                aTransactionInfo.ClientDataHash(),
-                                               reg,
-                                               sig);
+                                               reg);
 
   mResultPromise->Then(GetCurrentThreadSerialEventTarget(), __func__,
-                       [tid, reg, sig](nsresult rv) {
+                       [tid, reg](nsresult rv) {
                          MOZ_ASSERT(NS_SUCCEEDED(rv));
                          U2FTokenManager* mgr = U2FTokenManager::Get();
-                         mgr->MaybeConfirmRegister(tid, reg, sig);
+                         mgr->MaybeConfirmRegister(tid, reg);
                        },
                        [tid](nsresult rv) {
                          MOZ_ASSERT(NS_FAILED(rv));
@@ -274,14 +272,13 @@ U2FTokenManager::Register(WebAuthnTransactionParent* aTransactionParent,
 
 void
 U2FTokenManager::MaybeConfirmRegister(uint64_t aTransactionId,
-                                      const nsTArray<uint8_t>& aRegister,
-                                      const nsTArray<uint8_t>& aSignature)
+                                      const nsTArray<uint8_t>& aRegister)
 {
   if (mTransactionId != aTransactionId) {
     return;
   }
 
-  Unused << mTransactionParent->SendConfirmRegister(aRegister, aSignature);
+  Unused << mTransactionParent->SendConfirmRegister(aRegister);
   ClearTransaction();
 }
 

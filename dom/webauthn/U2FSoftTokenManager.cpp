@@ -637,8 +637,7 @@ RefPtr<ResultPromise>
 U2FSoftTokenManager::Register(const nsTArray<WebAuthnScopedCredentialDescriptor>& aDescriptors,
                               const nsTArray<uint8_t>& aApplication,
                               const nsTArray<uint8_t>& aChallenge,
-                              /* out */ nsTArray<uint8_t>& aRegistration,
-                              /* out */ nsTArray<uint8_t>& aSignature)
+                              /* out */ nsTArray<uint8_t>& aRegistration)
 {
   nsNSSShutDownPreventionLock locker;
   if (NS_WARN_IF(isAlreadyShutDown())) {

@@ -610,8 +610,7 @@ WebAuthnManager::GetAssertion(nsPIDOMWindowInner* aParent,
 }
 
 void
-WebAuthnManager::FinishMakeCredential(nsTArray<uint8_t>& aRegBuffer,
-                                      nsTArray<uint8_t>& aSigBuffer)
+WebAuthnManager::FinishMakeCredential(nsTArray<uint8_t>& aRegBuffer)
 {
   MOZ_ASSERT(mTransactionPromise);
   MOZ_ASSERT(mInfo.isSome());
@@ -635,12 +634,6 @@ WebAuthnManager::FinishMakeCredential(nsTArray<uint8_t>& aRegBuffer,
     return;
   }
 
-  CryptoBuffer signatureData;
-  if (NS_WARN_IF(!signatureData.Assign(aSigBuffer.Elements(), aSigBuffer.Length()))) {
-    Cancel(NS_ERROR_OUT_OF_MEMORY);
-    return;
-  }
-
   CryptoBuffer clientDataBuf;
   if (!clientDataBuf.Assign(mClientData.ref())) {
     Cancel(NS_ERROR_OUT_OF_MEMORY);
@@ -655,7 +648,7 @@ WebAuthnManager::FinishMakeCredential(nsTArray<uint8_t>& aRegBuffer,
 
   CryptoBuffer authenticatorDataBuf;
   rv = U2FAssembleAuthenticatorData(authenticatorDataBuf, rpIdHashBuf,
-                                    signatureData);
+                                    signatureBuf);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     Cancel(NS_ERROR_OUT_OF_MEMORY);
     return;
