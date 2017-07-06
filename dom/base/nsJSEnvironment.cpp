@@ -352,6 +352,7 @@ public:
           if (!mScheduleTimer) {
             return;
           }
+          mScheduleTimer->SetTarget(SystemGroup::EventTargetFor(TaskCategory::GarbageCollection));
         } else {
           mScheduleTimer->Cancel();
         }
