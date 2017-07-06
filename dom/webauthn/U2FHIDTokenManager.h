@@ -26,8 +26,7 @@ public:
   Register(const nsTArray<WebAuthnScopedCredentialDescriptor>& aDescriptors,
            const nsTArray<uint8_t>& aApplication,
            const nsTArray<uint8_t>& aChallenge,
-           /* out */ nsTArray<uint8_t>& aRegistration,
-           /* out */ nsTArray<uint8_t>& aSignature) override;
+           /* out */ nsTArray<uint8_t>& aRegistration) override;
 
   virtual RefPtr<ResultPromise>
   Sign(const nsTArray<WebAuthnScopedCredentialDescriptor>& aDescriptors,

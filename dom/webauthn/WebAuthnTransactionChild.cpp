@@ -19,12 +19,11 @@ WebAuthnTransactionChild::WebAuthnTransactionChild()
 }
 
 mozilla::ipc::IPCResult
-WebAuthnTransactionChild::RecvConfirmRegister(nsTArray<uint8_t>&& aRegBuffer,
-                                              nsTArray<uint8_t>&& aSigBuffer)
+WebAuthnTransactionChild::RecvConfirmRegister(nsTArray<uint8_t>&& aRegBuffer)
 {
   RefPtr<WebAuthnManager> mgr = WebAuthnManager::Get();
   MOZ_ASSERT(mgr);
-  mgr->FinishMakeCredential(aRegBuffer, aSigBuffer);
+  mgr->FinishMakeCredential(aRegBuffer);
   return IPC_OK();
 }
 
