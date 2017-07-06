@@ -87,9 +87,6 @@ function* spawnTest() {
     },
     Styles: function (marker) {
       info("Got `Styles` marker with data: " + JSON.stringify(marker));
-      if (marker.restyleHint) {
-        shouldHaveLabel($, "Restyle Hint:", marker.restyleHint.replace(/eRestyle_/g, ""), marker);
-      }
       if (marker.stack) {
         shouldHaveStack($, "stack", marker);
         return true;
