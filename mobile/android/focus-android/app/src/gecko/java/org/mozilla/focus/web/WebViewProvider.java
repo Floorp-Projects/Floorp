@@ -195,5 +195,10 @@ public class WebViewProvider {
         public Bitmap getIcon() {
             return null;
         }
+
+        @Override
+        public String getTitle() {
+            return "?";
+        }
     }
 }

@@ -115,4 +115,9 @@ public interface IWebView {
      */
     @Nullable
     Bitmap getIcon();
+
+    /**
+     * Get the title of the currently displayed website.
+     */
+    String getTitle();
 }

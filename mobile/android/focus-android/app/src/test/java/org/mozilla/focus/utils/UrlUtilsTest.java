@@ -136,4 +136,13 @@ public class UrlUtilsTest {
         assertTrue(UrlUtils.isHttpOrHttps("http://example.org"));
         assertTrue(UrlUtils.isHttpOrHttps("http://192.168.0.1"));
     }
+
+    @Test
+    public void testStripCommonSubdomains() {
+        assertEquals("mozilla.org", UrlUtils.stripCommonSubdomains("mozilla.org"));
+        assertEquals("mozilla.org", UrlUtils.stripCommonSubdomains("www.mozilla.org"));
+        assertEquals("mozilla.org", UrlUtils.stripCommonSubdomains("m.mozilla.org"));
+        assertEquals("mozilla.org", UrlUtils.stripCommonSubdomains("mobile.mozilla.org"));
+        assertEquals("random.mozilla.org", UrlUtils.stripCommonSubdomains("random.mozilla.org"));
+    }
 }

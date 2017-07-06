@@ -121,4 +121,24 @@ public class UrlUtils {
 
         return false;
     }
+
+    public static String stripCommonSubdomains(@Nullable String host) {
+        if (host == null) {
+            return null;
+        }
+
+        // In contrast to desktop, we also strip mobile subdomains,
+        // since its unlikely users are intentionally typing them
+        int start = 0;
+
+        if (host.startsWith("www.")) {
+            start = 4;
+        } else if (host.startsWith("mobile.")) {
+            start = 7;
+        } else if (host.startsWith("m.")) {
+            start = 2;
+        }
+
+        return host.substring(start);
+    }
 }
