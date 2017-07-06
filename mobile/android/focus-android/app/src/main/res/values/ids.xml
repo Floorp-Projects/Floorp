@@ -11,4 +11,5 @@
     <item name="custom_tab_menu_item" type="id" />
     <item name="finish" type="id" />
     <item name="next" type="id" />
+    <item name="add_to_homescreen" type="id" />
 </resources>
