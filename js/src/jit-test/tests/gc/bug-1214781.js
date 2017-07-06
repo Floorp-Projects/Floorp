@@ -1,3 +1,4 @@
+// |jit-test| allow-unhandlable-oom
 if (!('oomTest' in this))
     quit();
 
