@@ -46,11 +46,6 @@ public:
   // Can be called on any thread.
   virtual void NotifyDecodedFrames(const FrameStatisticsData& aStats) = 0;
 
-  virtual AbstractCanonical<media::NullableTimeUnit>* CanonicalDurationOrNull()
-  {
-    return nullptr;
-  };
-
   // Returns an event that will be notified when the owning document changes state
   // and we might have a new compositor. If this new compositor requires us to
   // recreate our decoders, then we expect the existing decoderis to return an

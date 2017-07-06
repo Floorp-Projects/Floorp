@@ -780,7 +780,6 @@ protected:
   Canonical<int64_t> mDecoderPosition;
 
 public:
-  AbstractCanonical<media::NullableTimeUnit>* CanonicalDurationOrNull() override;
   AbstractCanonical<double>* CanonicalVolume() { return &mVolume; }
   AbstractCanonical<bool>* CanonicalPreservesPitch()
   {

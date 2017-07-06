@@ -197,13 +197,6 @@ MediaDecoder::GetDuration()
   return mDuration;
 }
 
-AbstractCanonical<media::NullableTimeUnit>*
-MediaDecoder::CanonicalDurationOrNull()
-{
-  MOZ_ASSERT(mDecoderStateMachine);
-  return mDecoderStateMachine->CanonicalDuration();
-}
-
 void
 MediaDecoder::SetInfinite(bool aInfinite)
 {
