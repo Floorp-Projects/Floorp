@@ -15,7 +15,7 @@
 %include ../shared/browser.inc.css
 
 :root {
-  --titlebar-text-color: inherit;
+  --titlebar-text-color: currentColor;
 
   --toolbarbutton-vertical-text-padding: calc(var(--toolbarbutton-inner-padding) - 1px);
 
