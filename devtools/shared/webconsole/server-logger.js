@@ -7,9 +7,7 @@
 "use strict";
 
 const {Ci} = require("chrome");
-const {Class} = require("sdk/core/heritage");
 const Services = require("Services");
-
 const {DebuggerServer} = require("devtools/server/main");
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 
@@ -35,32 +33,28 @@ const acceptableHeaders = ["x-chromelogger-data"];
  *
  * A listeners for "http-on-examine-response" is registered when
  * the listener starts and removed when destroy is executed.
+ *
+ * @param {Object} win (nsIDOMWindow):
+ *        filter network requests by the associated window object.
+ *        If null (i.e. in the browser context) log everything
+ * @param {Object} owner
+ *        The {@WebConsoleActor} instance
  */
-var ServerLoggingListener = Class({
-  /**
-   * Initialization of the listener. The main step during the initialization
-   * process is registering a listener for "http-on-examine-response" event.
-   *
-   * @param {Object} win (nsIDOMWindow):
-   *        filter network requests by the associated window object.
-   *        If null (i.e. in the browser context) log everything
-   * @param {Object} owner
-   *        The {@WebConsoleActor} instance
-   */
-  initialize: function (win, owner) {
-    trace.log("ServerLoggingListener.initialize; ", owner.actorID,
-      ", child process: ", DebuggerServer.isInChildProcess);
+function ServerLoggingListener(win, owner) {
+  trace.log("ServerLoggingListener.initialize; ", owner.actorID,
+    ", child process: ", DebuggerServer.isInChildProcess);
 
-    this.owner = owner;
-    this.window = win;
+  this.owner = owner;
+  this.window = win;
 
-    this.onExamineResponse = this.onExamineResponse.bind(this);
-    this.onExamineHeaders = this.onExamineHeaders.bind(this);
-    this.onParentMessage = this.onParentMessage.bind(this);
+  this.onExamineResponse = this.onExamineResponse.bind(this);
+  this.onExamineHeaders = this.onExamineHeaders.bind(this);
+  this.onParentMessage = this.onParentMessage.bind(this);
 
-    this.attach();
-  },
+  this.attach();
+}
 
+ServerLoggingListener.prototype = {
   /**
    * The destroy is called by the parent WebConsoleActor actor.
    */
@@ -377,7 +371,7 @@ var ServerLoggingListener = Class({
 
     this.owner.onServerLogCall(message);
   },
-});
+};
 
 // Helpers
 
