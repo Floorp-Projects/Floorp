@@ -558,19 +558,6 @@ mozJSSubScriptLoader::DoLoadSubScriptWithOptions(const nsAString& url,
                                                  MutableHandleValue retval)
 {
     nsresult rv = NS_OK;
-
-    /* set the system principal if it's not here already */
-    if (!mSystemPrincipal) {
-        nsCOMPtr<nsIScriptSecurityManager> secman =
-            do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID);
-        if (!secman)
-            return NS_OK;
-
-        rv = secman->GetSystemPrincipal(getter_AddRefs(mSystemPrincipal));
-        if (NS_FAILED(rv) || !mSystemPrincipal)
-            return rv;
-    }
-
     RootedObject targetObj(cx);
     if (options.target) {
         targetObj = options.target;

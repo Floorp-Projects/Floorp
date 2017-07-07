@@ -298,16 +298,6 @@ nsresult
 mozJSComponentLoader::ReallyInit()
 {
     nsresult rv;
-
-    nsCOMPtr<nsIScriptSecurityManager> secman =
-        do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID);
-    if (!secman)
-        return NS_ERROR_FAILURE;
-
-    rv = secman->GetSystemPrincipal(getter_AddRefs(mSystemPrincipal));
-    if (NS_FAILED(rv) || !mSystemPrincipal)
-        return NS_ERROR_FAILURE;
-
     nsCOMPtr<nsIObserverService> obsSvc =
         do_GetService(kObserverServiceContractID, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -491,7 +481,7 @@ mozJSComponentLoader::CreateLoaderGlobal(JSContext* aCx,
     rv = nsXPConnect::XPConnect()->
         InitClassesWithNewWrappedGlobal(aCx,
                                         static_cast<nsIGlobalObject*>(backstagePass),
-                                        mSystemPrincipal,
+                                        nsContentUtils::GetSystemPrincipal(),
                                         nsIXPConnect::DONT_FIRE_ONNEWGLOBALHOOK,
                                         options,
                                         getter_AddRefs(holder));
