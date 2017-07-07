@@ -1,11 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
+    <style name="UrlBar.SiteIdentity" parent="UrlBar.V17.SiteIdentity" />
+
+    <style name="UrlBar.V17.SiteIdentity" parent="UrlBar.Base.SiteIdentity">
+        <item name="android:layout_marginStart">5dp</item>
+        <item name="android:paddingStart">5.5dp</item>
+        <item name="android:paddingEnd">5.5dp</item>
+    </style>
+
     <style name="UrlBar.Entry" parent="UrlBar.V17.Entry" />
 
     <style name="UrlBar.V17.Entry" parent="UrlBar.Base.Entry">
-        <item name="android:layout_marginStart">8dp</item>
-        <item name="android:layout_marginEnd">-6dp</item>
+        <item name="android:layout_marginStart">5dp</item>
         <item name="android:layout_toStartOf">@+id/tabs</item>
     </style>
 
@@ -31,7 +38,7 @@
     <style name="UrlBar.TabCounter" parent="UrlBar.V17.TabCounter" />
 
     <style name="UrlBar.V17.TabCounter" parent="UrlBar.Base.TabCounter">
-        <item name="android:layout_marginEnd">8dip</item>
+
         <item name="android:layout_alignEnd">@id/tabs</item>
     </style>
 
@@ -55,8 +62,6 @@
     <style name="UrlBar.V17.DisplayLayout" parent="UrlBar.Base.DisplayLayout">
         <item name="android:layout_alignStart">@id/url_bar_entry</item>
         <item name="android:layout_alignEnd">@id/url_bar_entry</item>
-        <item name="android:paddingStart">1dip</item>
-        <item name="android:paddingEnd">4dip</item>
     </style>
 
 </resources>
