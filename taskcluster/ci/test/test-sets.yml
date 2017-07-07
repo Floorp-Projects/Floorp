@@ -123,7 +123,7 @@ windows-vm-tests:
     - mochitest-media
     - web-platform-tests
     - web-platform-tests-reftests
-    - xpcshell
+    #- xpcshell
 
 windows-gpu-tests:
     - reftest

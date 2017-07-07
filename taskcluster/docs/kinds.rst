@@ -15,8 +15,9 @@ build-signing
 -------------
 
 Many builds must be signed. The build-signing task takes the unsigned `build`
-kind artifacts and passes them through signingscriptworker to a signing server
+kind artifacts and passess them through signingscriptworker to a signing server
 and returns signed results.
+
 
 artifact-build
 --------------

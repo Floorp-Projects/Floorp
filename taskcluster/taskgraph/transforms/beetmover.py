@@ -8,7 +8,6 @@ Transform the beetmover task into an actual task description.
 from __future__ import absolute_import, print_function, unicode_literals
 
 from taskgraph.transforms.base import TransformSequence
-from taskgraph.util.attributes import copy_attributes_from_dependent_job
 from taskgraph.util.schema import validate_schema, Schema
 from taskgraph.util.scriptworker import (get_beetmover_bucket_scope,
                                          get_beetmover_action_scope)
@@ -269,8 +268,12 @@ def make_task_description(config, jobs):
         signing_dependencies = dep_job.dependencies
         dependencies.update(signing_dependencies)
 
-        attributes = copy_attributes_from_dependent_job(dep_job)
-
+        attributes = {
+            'nightly': dep_job.attributes.get('nightly', False),
+            'signed': dep_job.attributes.get('signed', False),
+            'build_platform': dep_job.attributes.get('build_platform'),
+            'build_type': dep_job.attributes.get('build_type'),
+        }
         if job.get('locale'):
             attributes['locale'] = job['locale']
 

@@ -203,8 +203,7 @@ def mozharness_test_on_generic_worker(config, job, taskdesc):
             'type': 'directory'
         })
 
-    upstream_task = '<build-signing>' if mozharness['requires-signed-builds'] else '<build>'
-    installer_url = get_artifact_url(upstream_task, mozharness['build-artifact-name'])
+    installer_url = get_artifact_url('<build>', mozharness['build-artifact-name'])
 
     taskdesc['scopes'].extend(
         ['generic-worker:os-group:{}'.format(group) for group in test['os-groups']])

@@ -21,15 +21,13 @@ def add_signed_routes(config, jobs):
         dep_job = job['dependent-task']
 
         job['routes'] = []
-        if dep_job.attributes.get('nightly'):
-            for dep_route in dep_job.task.get('routes', []):
-                if not dep_route.startswith('index.gecko.v2'):
-                    continue
-                branch = dep_route.split(".")[3]
-                rest = ".".join(dep_route.split(".")[4:])
-                job['routes'].append(
-                    'index.gecko.v2.{}.signed-nightly.{}'.format(branch, rest))
-
+        for dep_route in dep_job.task.get('routes', []):
+            if not dep_route.startswith('index.gecko.v2'):
+                continue
+            branch = dep_route.split(".")[3]
+            rest = ".".join(dep_route.split(".")[4:])
+            job['routes'].append(
+                'index.gecko.v2.{}.signed-nightly.{}'.format(branch, rest))
         yield job
 
 
@@ -38,10 +36,42 @@ def make_signing_description(config, jobs):
     for job in jobs:
         dep_job = job['dependent-task']
 
-        job['upstream-artifacts'] = _generate_upstream_artifacts(
-            dep_job.attributes.get('build_platform'),
-            dep_job.attributes.get('nightly')
-        )
+        if 'android' in dep_job.attributes.get('build_platform'):
+            job_specs = [
+                {
+                    'artifacts': ['public/build/target.apk',
+                                  'public/build/en-US/target.apk'],
+                    'format': 'jar',
+                },
+            ]
+        elif 'macosx' in dep_job.attributes.get('build_platform'):
+            job_specs = [
+                {
+                   'artifacts': ['public/build/target.dmg'],
+                   'format': 'macapp',
+                },
+            ]
+        else:
+            job_specs = [
+                {
+                    'artifacts': ['public/build/target.tar.bz2'],
+                    'format': 'gpg',
+                }, {
+                    'artifacts': ['public/build/update/target.complete.mar'],
+                    'format': 'mar',
+                }
+            ]
+        upstream_artifacts = []
+        for spec in job_specs:
+            fmt = spec["format"]
+            upstream_artifacts.append({
+                "taskId": {"task-reference": "<build>"},
+                "taskType": "build",
+                "paths": spec["artifacts"],
+                "formats": [fmt]
+            })
+
+        job['upstream-artifacts'] = upstream_artifacts
 
         label = dep_job.label.replace("build-", "signing-")
         job['label'] = label
@@ -51,41 +81,3 @@ def make_signing_description(config, jobs):
         job['use-funsize-route'] = True
 
         yield job
-
-
-def _generate_upstream_artifacts(build_platform, is_nightly=False):
-    if 'android' in build_platform:
-        artifacts_specificities = [{
-            'artifacts': [
-                'public/build/target.apk',
-                'public/build/en-US/target.apk'
-            ],
-            'format': 'jar',
-        }]
-    # XXX: Mac and Windows don't sign mars because internal aren't signed at
-    # this stage of the release
-    elif 'macosx' in build_platform:
-        artifacts_specificities = [{
-            'artifacts': ['public/build/target.dmg'],
-            'format': 'macapp',
-        }]
-    elif 'win' in build_platform:
-        artifacts_specificities = [{
-            'artifacts': ['public/build/target.zip'],
-            'format': 'sha2signcode',
-        }]
-    else:
-        artifacts_specificities = [{
-            'artifacts': ['public/build/target.tar.bz2'],
-            'format': 'gpg',
-        }, {
-            'artifacts': ['public/build/update/target.complete.mar'],
-            'format': 'mar',
-        }]
-
-    return [{
-        'taskId': {'task-reference': '<build>'},
-        'taskType': 'build',
-        'paths': specificity['artifacts'],
-        'formats': [specificity['format']],
-    } for specificity in artifacts_specificities]
