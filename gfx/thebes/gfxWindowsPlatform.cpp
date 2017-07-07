@@ -388,6 +388,12 @@ gfxWindowsPlatform::CanUseHardwareVideoDecoding()
 bool
 gfxWindowsPlatform::InitDWriteSupport()
 {
+  // DWrite is only supported on Windows 7 with the platform update and higher.
+  // We check this by seeing if D2D1 support is available.
+  if (!Factory::SupportsD2D1()) {
+    return false;
+  }
+
   mozilla::ScopedGfxFeatureReporter reporter("DWrite");
   decltype(DWriteCreateFactory)* createDWriteFactory = (decltype(DWriteCreateFactory)*)
       GetProcAddress(LoadLibraryW(L"dwrite.dll"), "DWriteCreateFactory");
