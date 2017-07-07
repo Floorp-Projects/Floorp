@@ -841,7 +841,9 @@ public abstract class BrowserToolbar extends ThemedRelativeLayout
         super.setPrivateMode(isPrivate);
 
         tabsButton.setPrivateMode(isPrivate);
+        tabsCounter.setPrivateMode(isPrivate);
         urlEditLayout.setPrivateMode(isPrivate);
+        urlDisplayLayout.setPrivateMode(isPrivate);
 
         // bug 1375351: menuButton is a ThemedImageButton in Photon flavor
         if (SkinConfig.isPhoton()) {
