@@ -24,14 +24,12 @@ const {Task} = require("devtools/shared/task");
 const l10n = require("devtools/client/webconsole/webconsole-l10n");
 const nodeConstants = require("devtools/shared/dom-node-constants");
 const {PluralForm} = require("devtools/shared/plural-form");
+const {extend} = require("devtools/shared/extend");
 
 const MAX_STRING_GRIP_LENGTH = 36;
 const {ELLIPSIS} = require("devtools/shared/l10n");
 
 const validProtocols = /^(http|https|ftp|data|javascript|resource|chrome):/i;
-
-const extend = (prototype, properties) =>
-  Object.create(prototype, Object.getOwnPropertyDescriptors(properties));
 
 // Constants for compatibility with the Web Console output implementation before
 // bug 778766.
