@@ -567,7 +567,7 @@ TokenizerBase::IsCustom(const nsACString::const_char_iterator & caret,
   }
 
   // This is not very likely to happen according to how we call this method
-  // and since it's on a hot path, it's just a diagnostic assert, 
+  // and since it's on a hot path, it's just a diagnostic assert,
   // not a release assert.
   MOZ_DIAGNOSTIC_ASSERT(mEnd >= caret, "Overflow?");
   uint32_t inputLength = mEnd - caret;

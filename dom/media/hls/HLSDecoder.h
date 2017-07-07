@@ -37,9 +37,6 @@ public:
                 bool aIsPrivateBrowsing,
                 nsIStreamListener**) override;
   nsresult Load(MediaResource*) override;
-
-private:
-  RefPtr<MediaFormatReader> mReader;
 };
 
 } // namespace mozilla

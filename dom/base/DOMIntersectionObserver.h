@@ -179,10 +179,10 @@ protected:
   RefPtr<Element>                                 mRoot;
   nsCSSRect                                       mRootMargin;
   nsTArray<double>                                mThresholds;
-  
+
   // Holds raw pointers which are explicitly cleared by UnlinkTarget().
   nsTArray<Element*>                              mObservationTargets;
-  
+
   nsTArray<RefPtr<DOMIntersectionObserverEntry>>  mQueuedEntries;
   bool                                            mConnected;
 };

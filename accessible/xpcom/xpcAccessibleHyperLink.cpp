@@ -137,7 +137,7 @@ xpcAccessibleHyperLink::GetAnchor(int32_t aIndex, nsIAccessible** aAccessible)
 
   if (Intl().IsNull())
     return NS_ERROR_FAILURE;
-  
+
   if (aIndex < 0)
     return NS_ERROR_INVALID_ARG;
 

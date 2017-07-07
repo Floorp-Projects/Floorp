@@ -83,7 +83,7 @@ public:
      * @param aTarget the target of the processing instruction
      * @param aData the data of the processing instruction
      */
-    virtual nsresult processingInstruction(const nsString& aTarget, 
+    virtual nsresult processingInstruction(const nsString& aTarget,
                                            const nsString& aData) = 0;
 
     /**

@@ -501,7 +501,7 @@ nsDisplayXULImage::GetImage()
 
   nsCOMPtr<imgIContainer> imgCon;
   imageFrame->mImageRequest->GetImage(getter_AddRefs(imgCon));
-  
+
   return imgCon.forget();
 }
 
@@ -779,7 +779,7 @@ nsImageBoxFrame::OnFrameUpdate(imgIRequest* aRequest)
   if ((0 == mRect.width) || (0 == mRect.height)) {
     return NS_OK;
   }
- 
+
   InvalidateLayer(nsDisplayItem::TYPE_XUL_IMAGE);
 
   return NS_OK;

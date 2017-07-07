@@ -74,7 +74,7 @@ NS_IMETHODIMP bar::callme3(int i, int j)
 }
 
 void docall(foo* f, int i, int j){
-  f->callme1(i, j); 
+  f->callme1(i, j);
 }
 
 /***************************************************************************/
@@ -84,7 +84,7 @@ static uint32_t __stdcall
 invoke_count_words(uint32_t paramCount, nsXPCVariant* s)
 {
     return paramCount;
-}    
+}
 
 static void __stdcall
 invoke_copy_to_stack(uint32_t* d, uint32_t paramCount, nsXPCVariant* s)
@@ -124,13 +124,13 @@ DoInvoke(void* that, uint32_t index,
 /***************************************************************************/
 // just Linux_x86 now. Add other later...
 
-static uint32_t 
+static uint32_t
 invoke_count_words(uint32_t paramCount, nsXPCVariant* s)
 {
     return paramCount;
-}    
+}
 
-static void 
+static void
 invoke_copy_to_stack(uint32_t* d, uint32_t paramCount, nsXPCVariant* s)
 {
     for(uint32_t i = 0; i < paramCount; i++, d++, s++)
@@ -178,11 +178,11 @@ DoInvoke(void* that, uint32_t index,
       "g" (params),         /* %4 */
       "g" (fn_count),       /* %5 */
       "g" (fn_copy)         /* %6 */
-    : "ax", "cx", "dx", "memory" 
+    : "ax", "cx", "dx", "memory"
     );
-  
+
   return result;
-}    
+}
 
 #endif
 /***************************************************************************/

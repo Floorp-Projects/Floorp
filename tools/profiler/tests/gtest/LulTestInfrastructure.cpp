@@ -164,7 +164,7 @@ void Label::Binding::Set(Binding *binding, uint64_t addend) {
       // We're not going to use base_ any more.
       if (base_->Release()) delete base_;
     }
-    
+
     // Adopt BINDING as our base. Note that it should be correct to
     // acquire here, after the release above, even though the usual
     // reference-counting rules call for acquiring first, and then

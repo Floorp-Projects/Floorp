@@ -44,10 +44,10 @@ nsDataChannel::OpenContentStream(bool async, nsIInputStream **result,
         // NewURI.
         dataBuffer.StripWhitespace();
     }
-    
+
     nsCOMPtr<nsIInputStream> bufInStream;
     nsCOMPtr<nsIOutputStream> bufOutStream;
-    
+
     // create an unbounded pipe.
     rv = NS_NewPipe(getter_AddRefs(bufInStream),
                     getter_AddRefs(bufOutStream),

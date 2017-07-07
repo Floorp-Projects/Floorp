@@ -146,7 +146,7 @@ protected:
     NS_NewRDFXMLDataSource(nsIRDFDataSource** aResult);
 
     inline bool IsLoading() {
-        return (mLoadState == eLoadState_Pending) || 
+        return (mLoadState == eLoadState_Pending) ||
                (mLoadState == eLoadState_Loading);
     }
 
@@ -297,14 +297,14 @@ public:
         nsCOMPtr<rdfIDataSource> rdfds = do_QueryInterface(mInner, &rv);
         if (NS_FAILED(rv)) return rv;
         return rdfds->VisitAllSubjects(aVisitor);
-    } 
+    }
 
     NS_IMETHOD VisitAllTriples(rdfITripleVisitor *aVisitor) override {
         nsresult rv;
         nsCOMPtr<rdfIDataSource> rdfds = do_QueryInterface(mInner, &rv);
         if (NS_FAILED(rv)) return rv;
         return rdfds->VisitAllTriples(aVisitor);
-    } 
+    }
 
     // Implementation methods
     bool
@@ -471,7 +471,7 @@ RDFXMLDataSourceImpl::BlockingParse(nsIURI* aURL, nsIStreamListener* aConsumer)
     // XXX I really hate the way that we're spoon-feeding this stuff
     // to the parser: it seems like this is something that netlib
     // should be able to do by itself.
-    
+
     nsCOMPtr<nsIChannel> channel;
 
     // Null LoadGroup ?
@@ -750,7 +750,7 @@ RDFXMLDataSourceImpl::rdfXMLFlush(nsIURI *aURI)
     // Is it a file? If so, we can write to it. Some day, it'd be nice
     // if we didn't care what kind of stream this was...
     nsCOMPtr<nsIFileURL> fileURL = do_QueryInterface(aURI);
-    
+
     if (fileURL) {
         nsCOMPtr<nsIFile> file;
         fileURL->GetFile(getter_AddRefs(file));
@@ -771,7 +771,7 @@ RDFXMLDataSourceImpl::rdfXMLFlush(nsIURI *aURI)
 
             rv = Serialize(bufferedOut);
             if (NS_FAILED(rv)) return rv;
-            
+
             // All went ok. Maybe except for problems in Write(), but the stream detects
             // that for us
             nsCOMPtr<nsISafeOutputStream> safeStream = do_QueryInterface(bufferedOut, &rv);

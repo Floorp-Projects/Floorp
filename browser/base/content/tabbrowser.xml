@@ -516,6 +516,33 @@
         ]]></body>
       </method>
 
+      <!-- Determine if a URI is an about: page pointing to a local resource. -->
+      <method name="_isLocalAboutURI">
+        <parameter name="aURI"/>
+        <parameter name="aResolvedURI"/>
+        <body><![CDATA[
+          if (!aURI.schemeIs("about")) {
+            return false;
+          }
+
+          // Specially handle about:blank as local
+          if (aURI.path === "blank") {
+            return true;
+          }
+
+          // Use the passed in resolvedURI if we have one
+          const resolvedURI = aResolvedURI || Services.io.newChannelFromURI2(
+            aURI,
+            null, // loadingNode
+            Services.scriptSecurityManager.getSystemPrincipal(), // loadingPrincipal
+            null, // triggeringPrincipal
+            Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL, // securityFlags
+            Ci.nsIContentPolicy.TYPE_OTHER // contentPolicyType
+          ).URI;
+          return resolvedURI.schemeIs("jar") || resolvedURI.schemeIs("file");
+        ]]></body>
+      </method>
+
       <!-- A web progress listener object definition for a given tab. -->
       <method name="mTabProgressListener">
         <parameter name="aTab"/>
@@ -569,9 +596,9 @@
               // Don't show progress indicators in tabs for about: URIs
               // pointing to local resources.
               if ((aRequest instanceof Ci.nsIChannel) &&
-                  aRequest.originalURI.schemeIs("about") &&
-                  (aRequest.URI.schemeIs("jar") || aRequest.URI.schemeIs("file")))
+                  this.mTabBrowser._isLocalAboutURI(aRequest.originalURI, aRequest.URI)) {
                 return false;
+              }
 
               return true;
             },
@@ -4191,13 +4218,14 @@
                 // 1. The tab has just crashed, and we haven't started showing the
                 //    tab crashed page yet (in this case, the TabParent is null)
                 // 2. The tab has never presented, and has not finished loading
-                //    a non-blank page.
+                //    a non-local-about: page.
                 //
-                // For (2), "finished loading a non-blank page" is determined by
-                // looking at the loaded URI and the busy state on the tab element.
+                // For (2), "finished loading a non-local-about: page" is
+                // determined by the busy state on the tab element and checking
+                // if the loaded URI is local.
                 let hasSufficientlyLoaded =
                   !this.requestedTab.hasAttribute("busy") &&
-                  requestedBrowser.currentURI.spec != "about:blank";
+                  !this.tabbrowser._isLocalAboutURI(requestedBrowser.currentURI);
 
                 let fl = requestedBrowser.frameLoader;
                 shouldBeBlank = !this.minimizedOrFullyOccluded &&

@@ -131,7 +131,7 @@ macosx64-nightly/opt:
     treeherder:
         platform: osx-cross/opt
         symbol: tc(N)
-        tier: 2
+        tier: 1
     worker-type: aws-provisioner-v1/gecko-{level}-b-macosx64
     worker:
         max-run-time: 36000

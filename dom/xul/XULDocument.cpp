@@ -1057,7 +1057,7 @@ XULDocument::ContentAppended(nsIDocument* aDocument,
                              int32_t aNewIndexInContainer)
 {
     NS_ASSERTION(aDocument == this, "unexpected doc");
-    
+
     // Might not need this, but be safe for now.
     nsCOMPtr<nsIMutationObserver> kungFuDeathGrip(this);
 
@@ -1144,7 +1144,7 @@ XULDocument::ResolveForwardReferences()
 
     NS_ASSERTION(mResolutionPhase == nsForwardReference::eStart,
                  "nested ResolveForwardReferences()");
-        
+
     // Resolve each outstanding 'forward' reference. We iterate
     // through the list of forward references until no more forward
     // references can be resolved. This annealing process is
@@ -1222,7 +1222,7 @@ XULDocument::GetElementsByAttribute(const nsAString& aAttribute,
                                             true,
                                             attrAtom,
                                             kNameSpaceID_Unknown);
-    
+
     return list.forget();
 }
 
@@ -2001,7 +2001,7 @@ XULDocument::PrepareToLoadPrototype(nsIURI* aURI, const char* aCommand,
     if (NS_FAILED(rv)) {
         mCurrentPrototype = nullptr;
         return rv;
-    }    
+    }
 
     // Bootstrap the master document prototype.
     if (! mMasterPrototype) {
@@ -2326,7 +2326,7 @@ XULDocument::PrepareToWalk()
 
         rv = AppendChildTo(root, false);
         if (NS_FAILED(rv)) return rv;
-        
+
         rv = AddElementToRefMap(root);
         if (NS_FAILED(rv)) return rv;
 
@@ -2414,7 +2414,7 @@ XULDocument::InsertXMLStylesheetPI(const nsXULPrototypePI* aProtoPI,
     if (rv == NS_ERROR_OUT_OF_MEMORY) {
         return rv;
     }
-    
+
     return NS_OK;
 }
 
@@ -2772,7 +2772,7 @@ XULDocument::ResumeWalk()
             // we're in the master document -or- we're in an overlay, and far
             // enough down into the overlay's content that we can simply build
             // the delegates and attach them to the parent node.
-            bool processingOverlayHookupNodes = (mState == eState_Overlay) && 
+            bool processingOverlayHookupNodes = (mState == eState_Overlay) &&
                                                   (mContextStack.Depth() == 1);
 
             NS_ASSERTION(element || processingOverlayHookupNodes,
@@ -3083,14 +3083,14 @@ XULDocument::DoneWalking()
                 mOverlayLoadObservers->Remove(overlayURI);
             }
             else {
-                // If we have not yet displayed the document for the first time 
+                // If we have not yet displayed the document for the first time
                 // (i.e. we came in here as the result of a dynamic overlay load
-                // which was spawned by a binding-attached event caused by 
+                // which was spawned by a binding-attached event caused by
                 // StartLayout() on the master prototype - we must remember that
-                // this overlay has been merged and tell the listeners after 
-                // StartLayout() is completely finished rather than doing so 
+                // this overlay has been merged and tell the listeners after
+                // StartLayout() is completely finished rather than doing so
                 // immediately - otherwise we may be executing code that needs to
-                // access XBL Binding implementations on nodes for which frames 
+                // access XBL Binding implementations on nodes for which frames
                 // have not yet been constructed because their bindings have not
                 // yet been attached. This can be a race condition because dynamic
                 // overlay loading can take varying amounts of time depending on
@@ -3104,7 +3104,7 @@ XULDocument::DoneWalking()
                     mPendingOverlayLoadNotifications =
                         new nsInterfaceHashtable<nsURIHashKey,nsIObserver>;
                 }
-                
+
                 mPendingOverlayLoadNotifications->Get(overlayURI, getter_AddRefs(obs));
                 if (!obs) {
                     mOverlayLoadObservers->Get(overlayURI, getter_AddRefs(obs));
@@ -3837,10 +3837,10 @@ XULDocument::OverlayForwardReference::Merge(nsIContent* aTargetNode,
     // aOverlayNode: the node in the overlay document that matches
     //               a node in the actual document.
     // aNotify:      whether or not content manipulation methods should
-    //               use the aNotify parameter. After the initial 
+    //               use the aNotify parameter. After the initial
     //               reflow (i.e. in the dynamic overlay merge case),
     //               we want all the content manipulation methods we
-    //               call to notify so that frames are constructed 
+    //               call to notify so that frames are constructed
     //               etc. Otherwise do not, since that's during initial
     //               document construction before StartLayout has been
     //               called which will do everything for us.
@@ -4441,7 +4441,7 @@ XULDocument::ParserObserver::OnStartRequest(nsIRequest *request,
         // Make sure to avoid cycles
         mPrototype = nullptr;
     }
-        
+
     return NS_OK;
 }
 

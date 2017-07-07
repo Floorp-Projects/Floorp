@@ -15,11 +15,11 @@ net_GetURLSpecFromActualFile(nsIFile *aFile, nsACString &result)
 {
     nsresult rv;
     nsAutoString path;
-  
+
     // construct URL spec from file path
     rv = aFile->GetPath(path);
     if (NS_FAILED(rv)) return rv;
-  
+
     // Replace \ with / to convert to an url
     path.ReplaceChar(char16_t(0x5Cu), char16_t(0x2Fu));
 
@@ -37,7 +37,7 @@ net_GetURLSpecFromActualFile(nsIFile *aFile, nsACString &result)
     else
         escPath.Assign(prefix + ePath);
 
-    // esc_Directory does not escape the semicolons, so if a filename 
+    // esc_Directory does not escape the semicolons, so if a filename
     // contains semicolons we need to manually escape them.
     // This replacement should be removed in bug #473280
     escPath.ReplaceSubstring(";", "%3b");
@@ -71,9 +71,9 @@ net_GetFileFromURLSpec(const nsACString &aURL, nsIFile **result)
         specPtr = &buf;
     else
         specPtr = &aURL;
-    
+
     nsAutoCString directory, fileBaseName, fileExtension;
-    
+
     rv = net_ParseFileURL(*specPtr, directory, fileBaseName, fileExtension);
     if (NS_FAILED(rv)) return rv;
 
@@ -84,14 +84,14 @@ net_GetFileFromURLSpec(const nsACString &aURL, nsIFile **result)
         if (path.Length() > 2 && path.CharAt(2) == '|')
             path.SetCharAt(':', 2);
         path.ReplaceChar('/', '\\');
-    }    
+    }
     if (!fileBaseName.IsEmpty())
         NS_EscapeURL(fileBaseName, esc_FileBaseName|esc_AlwaysCopy, path);
     if (!fileExtension.IsEmpty()) {
         path += '.';
         NS_EscapeURL(fileExtension, esc_FileExtension|esc_AlwaysCopy, path);
     }
-    
+
     NS_UnescapeURL(path);
     if (path.Length() != strlen(path.get()))
         return NS_ERROR_FILE_INVALID_PATH;
@@ -102,11 +102,11 @@ net_GetFileFromURLSpec(const nsACString &aURL, nsIFile **result)
 
     if (IsUTF8(path))
         rv = localFile->InitWithPath(NS_ConvertUTF8toUTF16(path));
-        // XXX In rare cases, a valid UTF-8 string can be valid as a native 
+        // XXX In rare cases, a valid UTF-8 string can be valid as a native
         // encoding (e.g. 0xC5 0x83 is valid both as UTF-8 and Windows-125x).
         // However, the chance is very low that a meaningful word in a legacy
         // encoding is valid as UTF-8.
-    else 
+    else
         // if path is not in UTF-8, assume it is encoded in the native charset
         rv = localFile->InitWithNativePath(path);
 

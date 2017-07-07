@@ -19,8 +19,8 @@ AndroidMediaDecoder::AndroidMediaDecoder(MediaDecoderInit& aInit,
 
 MediaDecoderStateMachine* AndroidMediaDecoder::CreateStateMachine()
 {
-  return new MediaDecoderStateMachine(
-    this, new AndroidMediaReader(this, mType, mResource));
+  mReader = new AndroidMediaReader(this, mType, mResource);
+  return new MediaDecoderStateMachine(this, mReader);
 }
 
 } // namespace mozilla

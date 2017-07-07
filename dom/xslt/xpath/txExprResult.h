@@ -47,7 +47,7 @@ public:
         ++mRefCnt;
         NS_LOG_ADDREF(this, mRefCnt, "txAExprResult", sizeof(*this));
     }
-    
+
     void Release(); // Implemented in txResultRecycler.cpp
 
     /**

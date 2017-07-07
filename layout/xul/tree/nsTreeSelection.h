@@ -20,7 +20,7 @@ class nsTreeSelection final : public nsINativeTreeSelection
 {
 public:
   explicit nsTreeSelection(nsITreeBoxObject* aTree);
-   
+
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_CLASS(nsTreeSelection)
   NS_DECL_NSITREESELECTION

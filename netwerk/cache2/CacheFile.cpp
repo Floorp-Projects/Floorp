@@ -771,7 +771,7 @@ CacheFile::OpenInputStream(nsICacheEntry *aEntryHandle, nsIInputStream **_retval
     // a failed state.  This is the only way to protect consumers correctly
     // from reading a broken entry.  When the file is in the failed state,
     // it's also doomed, so reopening the entry won't make any difference -
-    // data will still be inaccessible anymore.  Note that for just doomed 
+    // data will still be inaccessible anymore.  Note that for just doomed
     // files, we must allow reading the data.
     return mStatus;
   }
@@ -825,7 +825,7 @@ CacheFile::OpenAlternativeInputStream(nsICacheEntry *aEntryHandle,
     // a failed state.  This is the only way to protect consumers correctly
     // from reading a broken entry.  When the file is in the failed state,
     // it's also doomed, so reopening the entry won't make any difference -
-    // data will still be inaccessible anymore.  Note that for just doomed 
+    // data will still be inaccessible anymore.  Note that for just doomed
     // files, we must allow reading the data.
     return mStatus;
   }

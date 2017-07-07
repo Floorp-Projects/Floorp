@@ -247,7 +247,7 @@ DOMSVGPathSegList::AnimListMirrorsBaseList() const
   return GetDOMWrapperIfExists(InternalAList().GetAnimValKey()) &&
            !AttrIsAnimating();
 }
- 
+
 SVGPathData&
 DOMSVGPathSegList::InternalList() const
 {

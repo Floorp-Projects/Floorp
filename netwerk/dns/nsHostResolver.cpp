@@ -47,18 +47,18 @@ static const unsigned int NEGATIVE_RECORD_LIFETIME = 60;
 //----------------------------------------------------------------------------
 
 // Use a persistent thread pool in order to avoid spinning up new threads all the time.
-// In particular, thread creation results in a res_init() call from libc which is 
+// In particular, thread creation results in a res_init() call from libc which is
 // quite expensive.
 //
 // The pool dynamically grows between 0 and MAX_RESOLVER_THREADS in size. New requests
 // go first to an idle thread. If that cannot be found and there are fewer than MAX_RESOLVER_THREADS
 // currently in the pool a new thread is created for high priority requests. If
-// the new request is at a lower priority a new thread will only be created if 
+// the new request is at a lower priority a new thread will only be created if
 // there are fewer than HighThreadThreshold currently outstanding. If a thread cannot be
 // created or an idle thread located for the request it is queued.
 //
 // When the pool is greater than HighThreadThreshold in size a thread will be destroyed after
-// ShortIdleTimeoutSeconds of idle time. Smaller pools use LongIdleTimeoutSeconds for a 
+// ShortIdleTimeoutSeconds of idle time. Smaller pools use LongIdleTimeoutSeconds for a
 // timeout period.
 
 #define HighThreadThreshold     MAX_RESOLVER_THREADS_FOR_ANY_PRIORITY
@@ -89,7 +89,7 @@ MoveCList(PRCList &from, PRCList &to)
         to.next->prev = &to;
         to.prev->next = &to;
         PR_INIT_CLIST(&from);
-    }             
+    }
 }
 
 //----------------------------------------------------------------------------
@@ -415,7 +415,7 @@ HostDB_MatchEntry(const PLDHashEntryHdr *entry,
                   const void *key)
 {
     const nsHostDBEnt *he = static_cast<const nsHostDBEnt *>(entry);
-    const nsHostKey *hk = static_cast<const nsHostKey *>(key); 
+    const nsHostKey *hk = static_cast<const nsHostKey *>(key);
 
     return !strcmp(he->rec->host ? he->rec->host : "",
                    hk->host ? hk->host : "") &&
@@ -696,12 +696,12 @@ nsHostResolver::Shutdown()
     }
 
 #ifdef NS_BUILD_REFCNT_LOGGING
-    
+
     // Logically join the outstanding worker threads with a timeout.
-    // Use this approach instead of PR_JoinThread() because that does 
-    // not allow a timeout which may be necessary for a semi-responsive 
+    // Use this approach instead of PR_JoinThread() because that does
+    // not allow a timeout which may be necessary for a semi-responsive
     // shutdown if the thread is blocked on a very slow DNS resolution.
-    // mThreadCount is read outside of mLock, but the worst case 
+    // mThreadCount is read outside of mLock, but the worst case
     // scenario for that race is one extra 25ms sleep.
 
     PRIntervalTime delay = PR_MillisecondsToInterval(25);
@@ -717,11 +717,11 @@ nsHostResolver::Shutdown()
     }
 }
 
-void 
+void
 nsHostResolver::MoveQueue(nsHostRecord *aRec, PRCList &aDestQ)
 {
     NS_ASSERTION(aRec->onQueue, "Moving Host Record Not Currently Queued");
-    
+
     PR_REMOVE_LINK(aRec);
     PR_APPEND_LINK(aRec, &aDestQ);
 }
@@ -760,7 +760,7 @@ nsHostResolver::ResolveHost(const char             *host,
             // Unfortunately, PR_StringToNetAddr does not properly initialize
             // the output buffer in the case of IPv6 input. See bug 223145.
             memset(&tempAddr, 0, sizeof(PRNetAddr));
-            
+
             // check to see if there is already an entry for this |host|
             // in the hash table.  if so, then check to see if we can't
             // just reuse the lookup result.  otherwise, if there are
@@ -792,7 +792,7 @@ nsHostResolver::ResolveHost(const char             *host,
                 // or all cached negative entries, use the cache but start a new
                 // lookup in the background
                 ConditionallyRefreshRecord(he->rec, host);
-                
+
                 if (he->rec->negative) {
                     LOG(("  Negative cache entry for host [%s%s%s].\n",
                          LOG_HOST(host, netInterface)));
@@ -1062,7 +1062,7 @@ nsHostResolver::IssueLookup(nsHostRecord *rec)
         PR_REMOVE_LINK(rec);
         mEvictionQSize--;
     }
-    
+
     switch (nsHostRecord::GetPriority(rec->flags)) {
         case nsHostRecord::DNS_PRIORITY_HIGH:
             PR_APPEND_LINK(rec, &mHighQ);
@@ -1077,12 +1077,12 @@ nsHostResolver::IssueLookup(nsHostRecord *rec)
             break;
     }
     mPendingCount++;
-    
+
     rec->resolving = true;
     rec->onQueue = true;
 
     rv = ConditionallyCreateThread(rec);
-    
+
     LOG (("  DNS thread counters: total=%d any-live=%d idle=%d pending=%d\n",
           static_cast<uint32_t>(mThreadCount),
           static_cast<uint32_t>(mActiveAnyThreadCount),
@@ -1133,7 +1133,7 @@ nsHostResolver::GetHostToLookup(nsHostRecord **result)
 
     while (!mShutdown) {
         // remove next record from Q; hand over owning reference. Check high, then med, then low
-        
+
 #if TTL_AVAILABLE
         #define SET_GET_TTL(var, val) \
             (var)->mGetTtl = sGetTtlEnabled && (val)
@@ -1155,7 +1155,7 @@ nsHostResolver::GetHostToLookup(nsHostRecord **result)
                 SET_GET_TTL(*result, true);
                 return true;
             }
-            
+
             if (!PR_CLIST_IS_EMPTY(&mLowQ)) {
                 DeQueue (mLowQ, result);
                 mActiveAnyThreadCount++;
@@ -1164,7 +1164,7 @@ nsHostResolver::GetHostToLookup(nsHostRecord **result)
                 return true;
             }
         }
-        
+
         // Determining timeout is racy, so allow one cycle through checking the queues
         // before exiting.
         if (timedOut)
@@ -1174,13 +1174,13 @@ nsHostResolver::GetHostToLookup(nsHostRecord **result)
         //  (1) the pending queue has a host record to process
         //  (2) the shutdown flag has been set
         //  (3) the thread has been idle for too long
-        
+
         mNumIdleThreads++;
         mIdleThreadCV.Wait(timeout);
         mNumIdleThreads--;
-        
+
         now = PR_IntervalNow();
-        
+
         if ((PRIntervalTime)(now - epoch) >= timeout)
             timedOut = true;
         else {
@@ -1191,7 +1191,7 @@ nsHostResolver::GetHostToLookup(nsHostRecord **result)
             epoch = now;
         }
     }
-    
+
     // tell thread to exit...
     return false;
 }
@@ -1322,7 +1322,7 @@ nsHostResolver::OnLookupComplete(nsHostRecord* rec, nsresult status, AddrInfo* n
         rec->negative = !rec->addr_info;
         PrepareRecordExpiration(rec);
         rec->resolving = false;
-        
+
         if (rec->usingAnyThread) {
             mActiveAnyThreadCount--;
             rec->usingAnyThread = false;

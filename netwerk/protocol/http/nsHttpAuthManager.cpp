@@ -39,7 +39,7 @@ nsresult nsHttpAuthManager::Init()
     // maybe someone is overriding our HTTP handler implementation?
     NS_ENSURE_TRUE(gHttpHandler, NS_ERROR_UNEXPECTED);
   }
-	
+
   mAuthCache = gHttpHandler->AuthCache(false);
   mPrivateAuthCache = gHttpHandler->AuthCache(true);
   NS_ENSURE_TRUE(mAuthCache, NS_ERROR_FAILURE);

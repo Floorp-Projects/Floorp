@@ -377,16 +377,16 @@ NS_IMETHODIMP nsPrefBranch::GetComplexValue(const char *aPrefName, const nsIID &
 
     nsACString::const_iterator keyBegin, strEnd;
     utf8String.BeginReading(keyBegin);
-    utf8String.EndReading(strEnd);    
+    utf8String.EndReading(strEnd);
 
     // The pref has the format: [fromKey]a/b/c
-    if (*keyBegin++ != '[')        
+    if (*keyBegin++ != '[')
       return NS_ERROR_FAILURE;
     nsACString::const_iterator keyEnd(keyBegin);
     if (!FindCharInReadable(']', keyEnd, strEnd))
       return NS_ERROR_FAILURE;
     nsAutoCString key(Substring(keyBegin, keyEnd));
-    
+
     nsCOMPtr<nsIFile> fromFile;
     nsCOMPtr<nsIProperties> directoryService(do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID, &rv));
     if (NS_FAILED(rv))
@@ -394,7 +394,7 @@ NS_IMETHODIMP nsPrefBranch::GetComplexValue(const char *aPrefName, const nsIID &
     rv = directoryService->Get(key.get(), NS_GET_IID(nsIFile), getter_AddRefs(fromFile));
     if (NS_FAILED(rv))
       return rv;
-    
+
     nsCOMPtr<nsIFile> theFile;
     rv = NS_NewNativeLocalFile(EmptyCString(), true, getter_AddRefs(theFile));
     if (NS_FAILED(rv))
@@ -843,7 +843,7 @@ nsresult nsPrefBranch::GetDefaultFromPropertiesFile(const char *aPrefName, char1
   nsresult rv;
 
   // the default value contains a URL to a .properties file
-    
+
   nsXPIDLCString propertyFileURL;
   rv = PREF_CopyCharPref(aPrefName, getter_Copies(propertyFileURL), true);
   if (NS_FAILED(rv))
@@ -921,7 +921,7 @@ nsPrefLocalizedString::GetData(char16_t **_retval)
   nsresult rv = GetData(data);
   if (NS_FAILED(rv))
     return rv;
-  
+
   *_retval = ToNewUnicode(data);
   if (!*_retval)
     return NS_ERROR_OUT_OF_MEMORY;

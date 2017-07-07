@@ -67,7 +67,7 @@ public:
   void EvictStyleAttr(const nsAString& aSerialized, MiscContainer* aValue);
   MiscContainer* LookupStyleAttr(const nsAString& aSerialized);
 
-private: 
+private:
   ~nsHTMLCSSStyleSheet();
 
   nsHTMLCSSStyleSheet(const nsHTMLCSSStyleSheet& aCopy) = delete;

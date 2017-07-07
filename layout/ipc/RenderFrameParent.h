@@ -129,7 +129,7 @@ private:
   // Prefer the extra bit of state to null'ing out mFrameLoader in
   // Destroy() so that less code needs to be special-cased for after
   // Destroy().
-  // 
+  //
   // It's possible for mFrameLoader==null and
   // mFrameLoaderDestroyed==false.
   bool mFrameLoaderDestroyed;

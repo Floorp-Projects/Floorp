@@ -80,12 +80,12 @@ getStyleAttr(txStylesheetAttr* aAttributes,
         }
     }
     *aAttr = nullptr;
-    
+
     if (aRequired) {
         // XXX ErrorReport: missing required attribute
         return NS_ERROR_XSLT_PARSE_FAILURE;
     }
-    
+
     return NS_OK;
 }
 
@@ -450,7 +450,7 @@ txFnStartElementError(int32_t aNamespaceID,
 static nsresult
 txFnEndElementError(txStylesheetCompilerState& aState)
 {
-    NS_ERROR("txFnEndElementError shouldn't be called"); 
+    NS_ERROR("txFnEndElementError shouldn't be called");
     return NS_ERROR_XSLT_PARSE_FAILURE;
 }
 
@@ -531,7 +531,7 @@ txFnStartLREStylesheet(int32_t aNamespaceID,
 
     rv = aState.pushHandlerTable(gTxTemplateHandler);
     NS_ENSURE_SUCCESS(rv, rv);
-    
+
     return txFnStartLRE(aNamespaceID, aLocalName, aPrefix, aAttributes,
                         aAttrCount, aState);
 }
@@ -723,7 +723,7 @@ txFnStartDecimalFormat(int32_t aNamespaceID,
 
     rv = aState.mStylesheet->addDecimalFormat(name, Move(format));
     NS_ENSURE_SUCCESS(rv, rv);
-    
+
     return aState.pushHandlerTable(gTxIgnoreHandler);
 }
 
@@ -748,9 +748,9 @@ txFnStartImport(int32_t aNamespaceID,
     import->mFrame = new txStylesheet::ImportFrame;
     nsresult rv = aState.addToplevelItem(import);
     NS_ENSURE_SUCCESS(rv, rv);
-    
+
     txImportItem* importPtr = import.forget();
-    
+
     txStylesheetAttr* attr = nullptr;
     rv = getStyleAttr(aAttributes, aAttrCount, kNameSpaceID_None,
                       nsGkAtoms::href, true, &attr);
@@ -835,7 +835,7 @@ txFnStartKey(int32_t aNamespaceID,
 
     rv = aState.mStylesheet->addKey(name, Move(match), Move(use));
     NS_ENSURE_SUCCESS(rv, rv);
-    
+
     return aState.pushHandlerTable(gTxIgnoreHandler);
 }
 
@@ -979,7 +979,7 @@ txFnStartOutput(int32_t aNamespaceID,
 
     rv = aState.addToplevelItem(item);
     NS_ENSURE_SUCCESS(rv, rv);
-    
+
     item.forget();
 
     return aState.pushHandlerTable(gTxIgnoreHandler);
@@ -1033,7 +1033,7 @@ txFnStartStripSpace(int32_t aNamespaceID,
                 if (c[length-2] != ':') {
                     return NS_ERROR_XSLT_PARSE_FAILURE;
                 }
-                rv = XMLUtils::splitQName(StringHead(name, length - 2), 
+                rv = XMLUtils::splitQName(StringHead(name, length - 2),
                                           getter_AddRefs(prefix),
                                           getter_AddRefs(localName));
                 if (NS_FAILED(rv) || prefix) {
@@ -1052,7 +1052,7 @@ txFnStartStripSpace(int32_t aNamespaceID,
                                                              ns, strip));
         rv = stripItem->addStripSpaceTest(sst);
         NS_ENSURE_SUCCESS(rv, rv);
-        
+
         sst.forget();
     }
 
@@ -1107,7 +1107,7 @@ txFnStartTemplate(int32_t aNamespaceID,
     aState.openInstructionContainer(templ);
     rv = aState.addToplevelItem(templ);
     NS_ENSURE_SUCCESS(rv, rv);
-    
+
     templ.forget();
 
     return aState.pushHandlerTable(gTxParamHandler);
@@ -1166,7 +1166,7 @@ txFnStartTopVariable(int32_t aNamespaceID,
 
     rv = aState.addToplevelItem(var);
     NS_ENSURE_SUCCESS(rv, rv);
-    
+
     var.forget();
 
     return NS_OK;
@@ -1248,7 +1248,7 @@ txFnStartLRE(int32_t aNamespaceID,
                                                          aLocalName, aPrefix));
     rv = aState.addInstruction(Move(instr));
     NS_ENSURE_SUCCESS(rv, rv);
-    
+
     rv = parseExcludeResultPrefixes(aAttributes, aAttrCount, kNameSpaceID_XSLT);
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -1259,7 +1259,7 @@ txFnStartLRE(int32_t aNamespaceID,
     int32_t i;
     for (i = 0; i < aAttrCount; ++i) {
         attr = aAttributes + i;
-        
+
         if (attr->mNamespaceID == kNameSpaceID_XSLT) {
             if (attr->mLocalName == nsGkAtoms::version) {
                 attr->mLocalName = nullptr;
@@ -1392,7 +1392,7 @@ txFnStartApplyTemplates(int32_t aNamespaceID,
 
     rv = aState.pushObject(pushcontext);
     NS_ENSURE_SUCCESS(rv, rv);
-    
+
     pushcontext.forget();
 
     return aState.pushHandlerTable(gTxApplyTemplatesHandler);
@@ -1513,7 +1513,7 @@ txFnStartCallTemplate(int32_t aNamespaceID,
     instr = new txCallTemplate(name);
     rv = aState.pushObject(instr);
     NS_ENSURE_SUCCESS(rv, rv);
-    
+
     instr.forget();
 
     return aState.pushHandlerTable(gTxCallTemplateHandler);
@@ -1560,7 +1560,7 @@ txFnStartChoose(int32_t aNamespaceID,
 {
     nsresult rv = aState.pushChooseGotoList();
     NS_ENSURE_SUCCESS(rv, rv);
-    
+
     return aState.pushHandlerTable(gTxChooseHandler);
 }
 
@@ -1804,7 +1804,7 @@ txFnStartForEach(int32_t aNamespaceID,
     nsAutoPtr<txInstruction> instr(pushcontext.forget());
     rv = aState.addInstruction(Move(instr));
     NS_ENSURE_SUCCESS(rv, rv);
-    
+
     instr = new txPushNullTemplateRule;
     rv = aState.pushPtr(instr, aState.ePushNullTemplateRule);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -1964,7 +1964,7 @@ txFnStartNumber(int32_t aNamespaceID,
     rv = getAtomAttr(aAttributes, aAttrCount, nsGkAtoms::level, false,
                      aState, getter_AddRefs(levelAtom));
     NS_ENSURE_SUCCESS(rv, rv);
-    
+
     txXSLTNumber::LevelType level = txXSLTNumber::eLevelSingle;
     if (levelAtom == nsGkAtoms::multiple) {
         level = txXSLTNumber::eLevelMultiple;
@@ -1975,12 +1975,12 @@ txFnStartNumber(int32_t aNamespaceID,
     else if (levelAtom && levelAtom != nsGkAtoms::single && !aState.fcp()) {
         return NS_ERROR_XSLT_PARSE_FAILURE;
     }
-    
+
     nsAutoPtr<txPattern> count;
     rv = getPatternAttr(aAttributes, aAttrCount, nsGkAtoms::count, false,
                         aState, count);
     NS_ENSURE_SUCCESS(rv, rv);
-    
+
     nsAutoPtr<txPattern> from;
     rv = getPatternAttr(aAttributes, aAttrCount, nsGkAtoms::from, false,
                         aState, from);
@@ -1995,27 +1995,27 @@ txFnStartNumber(int32_t aNamespaceID,
     rv = getAVTAttr(aAttributes, aAttrCount, nsGkAtoms::format, false,
                     aState, format);
     NS_ENSURE_SUCCESS(rv, rv);
-    
+
     nsAutoPtr<Expr> lang;
     rv = getAVTAttr(aAttributes, aAttrCount, nsGkAtoms::lang, false,
                       aState, lang);
     NS_ENSURE_SUCCESS(rv, rv);
-    
+
     nsAutoPtr<Expr> letterValue;
     rv = getAVTAttr(aAttributes, aAttrCount, nsGkAtoms::letterValue, false,
                     aState, letterValue);
     NS_ENSURE_SUCCESS(rv, rv);
-    
+
     nsAutoPtr<Expr> groupingSeparator;
     rv = getAVTAttr(aAttributes, aAttrCount, nsGkAtoms::groupingSeparator,
                     false, aState, groupingSeparator);
     NS_ENSURE_SUCCESS(rv, rv);
-    
+
     nsAutoPtr<Expr> groupingSize;
     rv = getAVTAttr(aAttributes, aAttrCount, nsGkAtoms::groupingSize,
                     false, aState, groupingSize);
     NS_ENSURE_SUCCESS(rv, rv);
-    
+
     nsAutoPtr<txInstruction> instr(new txNumber(level, Move(count), Move(from),
                                                 Move(value), Move(format),
                                                 Move(groupingSeparator),
@@ -2036,7 +2036,7 @@ txFnEndNumber(txStylesheetCompilerState& aState)
 
 /*
     xsl:otherwise
-    
+
     (see xsl:choose)
 */
 static nsresult
@@ -2061,7 +2061,7 @@ txFnEndOtherwise(txStylesheetCompilerState& aState)
 
 /*
     xsl:param
-    
+
     txCheckParam    --+
     txPushRTFHandler  |  --- (for RTF-parameters)
     [children]        |  /
@@ -2085,7 +2085,7 @@ txFnStartParam(int32_t aNamespaceID,
 
     nsAutoPtr<txCheckParam> checkParam(new txCheckParam(name));
     NS_ENSURE_SUCCESS(rv, rv);
-    
+
     rv = aState.pushPtr(checkParam, aState.eCheckParam);
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -2111,7 +2111,7 @@ txFnStartParam(int32_t aNamespaceID,
 
     rv = aState.pushObject(var);
     NS_ENSURE_SUCCESS(rv, rv);
-    
+
     var.forget();
 
     return NS_OK;
@@ -2192,7 +2192,7 @@ txFnEndPI(txStylesheetCompilerState& aState)
 
 /*
     xsl:sort
-    
+
     (no instructions)
 */
 static nsresult
@@ -2341,10 +2341,10 @@ txFnEndValueOf(txStylesheetCompilerState& aState)
 
 /*
     xsl:variable
-    
+
     txPushRTFHandler     --- (for RTF-parameters)
     [children]           /
-    txSetVariable      
+    txSetVariable
 */
 static nsresult
 txFnStartVariable(int32_t aNamespaceID,
@@ -2444,7 +2444,7 @@ txFnTextStartRTF(const nsAString& aStr, txStylesheetCompilerState& aState)
 
 /*
     xsl:when
-    
+
     (see xsl:choose)
 */
 static nsresult
@@ -2496,7 +2496,7 @@ txFnEndWhen(txStylesheetCompilerState& aState)
 
 /*
     xsl:with-param
-    
+
     txPushRTFHandler   -- for RTF-parameters
     [children]         /
     txSetParam

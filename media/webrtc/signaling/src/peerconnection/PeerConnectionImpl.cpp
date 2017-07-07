@@ -3835,16 +3835,19 @@ PeerConnectionImpl::ExecuteStatsQuery_s(RTCStatsQuery *query) {
           double bitrateMean;
           double bitrateStdDev;
           uint32_t discardedPackets;
+          uint32_t framesDecoded;
           if (mp.Conduit()->GetVideoDecoderStats(&framerateMean,
                                                  &framerateStdDev,
                                                  &bitrateMean,
                                                  &bitrateStdDev,
-                                                 &discardedPackets)) {
+                                                 &discardedPackets,
+                                                 &framesDecoded)) {
             s.mFramerateMean.Construct(framerateMean);
             s.mFramerateStdDev.Construct(framerateStdDev);
             s.mBitrateMean.Construct(bitrateMean);
             s.mBitrateStdDev.Construct(bitrateStdDev);
             s.mDiscardedPackets.Construct(discardedPackets);
+            s.mFramesDecoded.Construct(framesDecoded);
           }
         }
         query->report->mInboundRTPStreamStats.Value().AppendElement(s,

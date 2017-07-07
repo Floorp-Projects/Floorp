@@ -41,9 +41,9 @@ NSSErrorsService::Init()
 {
   nsresult rv;
   nsCOMPtr<nsIStringBundleService> bundleService(do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv));
-  if (NS_FAILED(rv) || !bundleService) 
+  if (NS_FAILED(rv) || !bundleService)
     return NS_ERROR_FAILURE;
-  
+
   bundleService->CreateBundle(PIPNSS_STRBUNDLE_URL,
                               getter_AddRefs(mPIPNSSBundle));
   if (!mPIPNSSBundle)
@@ -124,7 +124,7 @@ NSSErrorsService::GetErrorClass(nsresult aXPCOMErrorCode, uint32_t *aErrorClass)
       NS_ERROR_GET_SEVERITY(aXPCOMErrorCode) != NS_ERROR_SEVERITY_ERROR) {
     return NS_ERROR_FAILURE;
   }
-  
+
   int32_t aNSPRCode = -1 * NS_ERROR_GET_CODE(aXPCOMErrorCode);
 
   if (!mozilla::psm::IsNSSErrorCode(aNSPRCode)) {
@@ -173,7 +173,7 @@ NSSErrorsService::GetErrorMessage(nsresult aXPCOMErrorCode, nsAString &aErrorMes
       NS_ERROR_GET_SEVERITY(aXPCOMErrorCode) != NS_ERROR_SEVERITY_ERROR) {
     return NS_ERROR_FAILURE;
   }
-  
+
   int32_t aNSPRCode = -1 * NS_ERROR_GET_CODE(aXPCOMErrorCode);
 
   if (!mozilla::psm::IsNSSErrorCode(aNSPRCode)) {

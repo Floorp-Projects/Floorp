@@ -325,7 +325,7 @@ SVGMotionSMILType::SandwichAdd(nsSMILValue& aDest,
   if (!dstArr.AppendElement(srcArr[0], fallible)) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  
+
   return NS_OK;
 }
 

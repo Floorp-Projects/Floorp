@@ -131,13 +131,13 @@ nsTextToSubURI::convertURItoUnicode(const nsCString& aCharset,
   return encoding->DecodeWithoutBOMHandlingAndWithoutReplacement(aURI, aOut);
 }
 
-NS_IMETHODIMP  nsTextToSubURI::UnEscapeURIForUI(const nsACString & aCharset, 
-                                                const nsACString &aURIFragment, 
+NS_IMETHODIMP  nsTextToSubURI::UnEscapeURIForUI(const nsACString & aCharset,
+                                                const nsACString &aURIFragment,
                                                 nsAString &_retval)
 {
   nsAutoCString unescapedSpec;
   // skip control octets (0x00 - 0x1f and 0x7f) when unescaping
-  NS_UnescapeURL(PromiseFlatCString(aURIFragment), 
+  NS_UnescapeURL(PromiseFlatCString(aURIFragment),
                  esc_SkipControl | esc_AlwaysCopy, unescapedSpec);
 
   // in case of failure, return escaped URI
@@ -189,7 +189,7 @@ nsTextToSubURI::UnEscapeNonAsciiURI(const nsACString& aCharset,
   // leave the URI as it is if it's not UTF-8 and aCharset is not a ASCII
   // superset since converting "http:" with such an encoding is always a bad
   // idea.
-  if (!IsUTF8(unescapedSpec) && 
+  if (!IsUTF8(unescapedSpec) &&
       (aCharset.LowerCaseEqualsLiteral("utf-16") ||
        aCharset.LowerCaseEqualsLiteral("utf-16be") ||
        aCharset.LowerCaseEqualsLiteral("utf-16le") ||

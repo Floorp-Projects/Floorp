@@ -9,18 +9,18 @@
 #include "nsIObserver.h"
 
 /*
- Some components need to be run at the startup of mozilla or embedding - to 
+ Some components need to be run at the startup of mozilla or embedding - to
  start new services etc.
 
- This interface provides a generic way to start up arbitrary components 
- without requiring them to hack into main1() (or into NS_InitEmbedding) as 
- it's currently being done for services such as wallet, command line handlers 
+ This interface provides a generic way to start up arbitrary components
+ without requiring them to hack into main1() (or into NS_InitEmbedding) as
+ it's currently being done for services such as wallet, command line handlers
  etc.
 
- We will have a category called "app-startup" which components register 
+ We will have a category called "app-startup" which components register
  themselves in using the CategoryManager.
 
- Components can also (optionally) add the word "service," as a prefix 
+ Components can also (optionally) add the word "service," as a prefix
  to the "value" they pass in during a call to AddCategoryEntry() as
  shown below:
 
@@ -29,13 +29,13 @@
                         true, true,
                         getter_Copies(previous));
 
- Presence of the "service" keyword indicates the components desire to 
+ Presence of the "service" keyword indicates the components desire to
  be started as a service. When the "service" keyword is not present
  we just do a do_CreateInstance.
 
  When mozilla starts (and when NS_InitEmbedding()) is invoked
- we create an instance of the AppStartupNotifier component (which 
- implements nsIObserver) and invoke its Observe() method. 
+ we create an instance of the AppStartupNotifier component (which
+ implements nsIObserver) and invoke its Observe() method.
 
  Observe()  will enumerate the components registered into the
  APPSTARTUP_CATEGORY and notify them that startup has begun

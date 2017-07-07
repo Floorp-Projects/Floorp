@@ -123,7 +123,7 @@ Summariser::Rule(uintptr_t aAddress, int aNewReg,
   // having to concatenate two strings to produce a complete error message.
   const char* reason1 = nullptr;
   const char* reason2 = nullptr;
-  
+
   // |offset| needs to be a 32 bit value that sign extends to 64 bits
   // on a 64 bit target.  We will need to incorporate |offset| into
   // any LExpr made here.  So we may as well check it right now.

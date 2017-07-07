@@ -14,7 +14,7 @@ class nsNSSVersion final : public nsINSSVersion
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSINSSVERSION
-  
+
   nsNSSVersion();
 
 private:

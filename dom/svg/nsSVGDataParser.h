@@ -13,7 +13,7 @@
 ////////////////////////////////////////////////////////////////////////
 // nsSVGDataParser: a simple base class for parsing values
 // for path and transform values.
-// 
+//
 class nsSVGDataParser
 {
 public:

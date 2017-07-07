@@ -956,7 +956,7 @@ static NPError
 _popupcontextmenu(NPP instance, NPMenu* menu);
 
 static NPBool
-_convertpoint(NPP instance, 
+_convertpoint(NPP instance,
               double sourceX, double sourceY, NPCoordinateSpace sourceSpace,
               double *destX, double *destY, NPCoordinateSpace destSpace);
 
@@ -1707,7 +1707,7 @@ _popupcontextmenu(NPP instance, NPMenu* menu)
     AssertPluginThread();
 
 #ifdef MOZ_WIDGET_COCOA
-    double pluginX, pluginY; 
+    double pluginX, pluginY;
     double screenX, screenY;
 
     const NPCocoaEvent* currentEvent = InstCast(instance)->getCurrentEvent();
@@ -1731,8 +1731,8 @@ _popupcontextmenu(NPP instance, NPMenu* menu)
     if ((pluginX < 0.0) || (pluginY < 0.0))
         return NPERR_GENERIC_ERROR;
 
-    NPBool success = _convertpoint(instance, 
-                                  pluginX,  pluginY, NPCoordinateSpacePlugin, 
+    NPBool success = _convertpoint(instance,
+                                  pluginX,  pluginY, NPCoordinateSpacePlugin,
                                  &screenX, &screenY, NPCoordinateSpaceScreen);
 
     if (success) {
@@ -1752,7 +1752,7 @@ _popupcontextmenu(NPP instance, NPMenu* menu)
 }
 
 NPBool
-_convertpoint(NPP instance, 
+_convertpoint(NPP instance,
               double sourceX, double sourceY, NPCoordinateSpace sourceSpace,
               double *destX, double *destY, NPCoordinateSpace destSpace)
 {
@@ -2683,7 +2683,7 @@ PluginModuleChild::RecvProcessNativeEventsInInterruptCall()
 #ifdef MOZ_WIDGET_COCOA
 void
 PluginModuleChild::ProcessNativeEvents() {
-    CallProcessSomeEvents();    
+    CallProcessSomeEvents();
 }
 #endif
 

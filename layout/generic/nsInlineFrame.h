@@ -60,7 +60,7 @@ public:
   PeekOffsetCharacter(bool aForward, int32_t* aOffset,
                       PeekOffsetCharacterOptions aOptions =
                         PeekOffsetCharacterOptions()) override;
-  
+
   virtual void DestroyFrom(nsIFrame* aDestructRoot) override;
   virtual nsresult StealFrame(nsIFrame* aChild) override;
 

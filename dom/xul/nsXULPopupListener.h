@@ -52,7 +52,7 @@ private:
     nsCOMPtr<mozilla::dom::Element> mElement;
 
     // The popup that is getting shown on top of mElement.
-    nsCOMPtr<nsIContent> mPopupContent; 
+    nsCOMPtr<nsIContent> mPopupContent;
 
     // true if a context popup
     bool mIsContext;

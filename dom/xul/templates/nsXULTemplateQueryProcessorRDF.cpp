@@ -130,7 +130,7 @@ nsXULTemplateQueryProcessorRDF::InitGlobals()
         if (NS_FAILED(rv))
             return rv;
     }
-  
+
     if (!kNC_BookmarkSeparator) {
         gRDFService->GetResource(
           NS_LITERAL_CSTRING(NC_NAMESPACE_URI "BookmarkSeparator"),
@@ -173,7 +173,7 @@ nsXULTemplateQueryProcessorRDF::GetDatasource(nsIArray* aDataSources,
     NS_ENSURE_SUCCESS(rv, rv);
 
     // create a database for the builder
-    compDB = do_CreateInstance(NS_RDF_DATASOURCE_CONTRACTID_PREFIX 
+    compDB = do_CreateInstance(NS_RDF_DATASOURCE_CONTRACTID_PREFIX
                                "composite-datasource");
     if (!compDB) {
         NS_ERROR("unable to construct new composite data source");
@@ -386,7 +386,7 @@ nsXULTemplateQueryProcessorRDF::CompileQuery(nsIXULTemplateBuilder* aBuilder,
 
     // this and other functions always add nodes to mAllTests first. That
     // way if something fails, the node will just sit harmlessly in mAllTests
-    // where it can be deleted later. 
+    // where it can be deleted later.
     rv = mAllTests.Add(instnode);
     if (NS_FAILED(rv)) {
         delete instnode;
@@ -691,7 +691,7 @@ nsXULTemplateQueryProcessorRDF::CompareResults(nsIXULTemplateResult* aLeft,
                 l->GetLength(&llen);
                 r->GetValue(&rval);
                 r->GetLength(&rlen);
-                
+
                 collation->CompareRawSortKey(lval, llen, rval, rlen, aResult);
             }
         }
@@ -1249,7 +1249,7 @@ nsXULTemplateQueryProcessorRDF::CompileQueryChild(nsIAtom* aTag,
 }
 
 nsresult
-nsXULTemplateQueryProcessorRDF::ParseLiteral(const nsString& aParseType, 
+nsXULTemplateQueryProcessorRDF::ParseLiteral(const nsString& aParseType,
                                              const nsString& aValue,
                                              nsIRDFNode** aResult)
 {
@@ -1263,14 +1263,14 @@ nsXULTemplateQueryProcessorRDF::ParseLiteral(const nsString& aParseType,
         if (NS_FAILED(errorCode))
             return NS_ERROR_FAILURE;
         rv = gRDFService->GetIntLiteral(intValue, getter_AddRefs(intLiteral));
-        if (NS_FAILED(rv)) 
+        if (NS_FAILED(rv))
             return rv;
         intLiteral.forget(aResult);
     }
     else {
         nsCOMPtr<nsIRDFLiteral> literal;
         rv = gRDFService->GetLiteral(aValue.get(), getter_AddRefs(literal));
-        if (NS_FAILED(rv)) 
+        if (NS_FAILED(rv))
             return rv;
         literal.forget(aResult);
     }
@@ -1585,7 +1585,7 @@ nsXULTemplateQueryProcessorRDF::CompileSimpleQuery(nsRDFQuery* aQuery,
 
                 target = do_QueryInterface(resource);
             }
-            else {                
+            else {
               nsAutoString parseType;
               aQueryElement->GetAttr(kNameSpaceID_None, nsGkAtoms::parsetype, parseType);
               rv = ParseLiteral(parseType, value, getter_AddRefs(target));
@@ -1611,7 +1611,7 @@ nsXULTemplateQueryProcessorRDF::CompileSimpleQuery(nsRDFQuery* aQuery,
                 rv = prevnode->AddChild(testnode);
                 if (NS_FAILED(rv))
                     return rv;
-            }                
+            }
             else {
                 aQuery->SetRoot(testnode);
             }
@@ -1802,7 +1802,7 @@ nsXULTemplateQueryProcessorRDF::GetSortValue(nsIXULTemplateResult* aResult,
     nsresult rv = aResult->GetResource(getter_AddRefs(source));
     if (NS_FAILED(rv))
         return rv;
-    
+
     nsCOMPtr<nsIRDFNode> value;
     if (source && mDB) {
         // first check predicate?sort=true so that datasources may use a

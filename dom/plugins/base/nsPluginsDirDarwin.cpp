@@ -5,9 +5,9 @@
 
 /*
   nsPluginsDirDarwin.cpp
-  
+
   Mac OS X implementation of the nsPluginsDir/nsPluginsFile classes.
-  
+
   by Patrick C. Beard.
  */
 
@@ -74,7 +74,7 @@ static nsresult toCFURLRef(nsIFile* file, CFURLRef& outURL)
   nsresult rv = lfm->GetCFURL(&url);
   if (NS_SUCCEEDED(rv))
     outURL = url;
-  
+
   return rv;
 }
 
@@ -138,7 +138,7 @@ static Boolean MimeTypeEnabled(CFDictionaryRef mimeDict) {
   if (!mimeDict) {
     return true;
   }
-  
+
   CFTypeRef value;
   if (::CFDictionaryGetValueIfPresent(mimeDict, CFSTR("WebPluginTypeEnabled"), &value)) {
     if (value && ::CFGetTypeID(value) == ::CFBooleanGetTypeID()) {
@@ -154,29 +154,29 @@ static CFDictionaryRef ParsePlistForMIMETypesFilename(CFBundleRef bundle)
   if (!mimeFileName || ::CFGetTypeID(mimeFileName) != ::CFStringGetTypeID()) {
     return nullptr;
   }
-  
+
   FSRef homeDir;
   if (::FSFindFolder(kUserDomain, kCurrentUserFolderType, kDontCreateFolder, &homeDir) != noErr) {
     return nullptr;
   }
-  
+
   CFURLRef userDirURL = ::CFURLCreateFromFSRef(kCFAllocatorDefault, &homeDir);
   if (!userDirURL) {
     return nullptr;
   }
-  
+
   AutoCFTypeObject userDirURLAutorelease(userDirURL);
   CFStringRef mimeFilePath = ::CFStringCreateWithFormat(kCFAllocatorDefault, nullptr, CFSTR("Library/Preferences/%@"), static_cast<CFStringRef>(mimeFileName));
   if (!mimeFilePath) {
     return nullptr;
   }
-  
+
   AutoCFTypeObject mimeFilePathAutorelease(mimeFilePath);
   CFURLRef mimeFileURL = ::CFURLCreateWithFileSystemPathRelativeToBase(kCFAllocatorDefault, mimeFilePath, kCFURLPOSIXPathStyle, false, userDirURL);
   if (!mimeFileURL) {
     return nullptr;
   }
-  
+
   AutoCFTypeObject mimeFileURLAutorelease(mimeFileURL);
   SInt32 errorCode = 0;
   CFDataRef mimeFileData = nullptr;
@@ -184,17 +184,17 @@ static CFDictionaryRef ParsePlistForMIMETypesFilename(CFBundleRef bundle)
   if (!result) {
     return nullptr;
   }
-  
+
   AutoCFTypeObject mimeFileDataAutorelease(mimeFileData);
   if (errorCode != 0) {
     return nullptr;
   }
-  
+
   CFPropertyListRef propertyList = ::CFPropertyListCreateFromXMLData(kCFAllocatorDefault, mimeFileData, kCFPropertyListImmutable, nullptr);
   if (!propertyList) {
     return nullptr;
   }
-  
+
   AutoCFTypeObject propertyListAutorelease(propertyList);
   if (::CFGetTypeID(propertyList) != ::CFDictionaryGetTypeID()) {
     return nullptr;
@@ -204,21 +204,21 @@ static CFDictionaryRef ParsePlistForMIMETypesFilename(CFBundleRef bundle)
   if (!mimeTypes || ::CFGetTypeID(mimeTypes) != ::CFDictionaryGetTypeID() || ::CFDictionaryGetCount(static_cast<CFDictionaryRef>(mimeTypes)) == 0) {
     return nullptr;
   }
-  
+
   return static_cast<CFDictionaryRef>(::CFRetain(mimeTypes));
 }
 
 static void ParsePlistPluginInfo(nsPluginInfo& info, CFBundleRef bundle)
 {
   CFDictionaryRef mimeDict = ParsePlistForMIMETypesFilename(bundle);
-  
+
   if (!mimeDict) {
     CFTypeRef mimeTypes = ::CFBundleGetValueForInfoDictionaryKey(bundle, CFSTR("WebPluginMIMETypes"));
     if (!mimeTypes || ::CFGetTypeID(mimeTypes) != ::CFDictionaryGetTypeID() || ::CFDictionaryGetCount(static_cast<CFDictionaryRef>(mimeTypes)) == 0)
       return;
     mimeDict = static_cast<CFDictionaryRef>(::CFRetain(mimeTypes));
   }
-  
+
   AutoCFTypeObject mimeDictAutorelease(mimeDict);
   int mimeDictKeyCount = ::CFDictionaryGetCount(mimeDict);
 
@@ -244,7 +244,7 @@ static void ParsePlistPluginInfo(nsPluginInfo& info, CFBundleRef bundle)
   mozilla::UniquePtr<CFTypeRef[]> values(new CFTypeRef[mimeDictKeyCount]);
   if (!values)
     return;
-  
+
   info.fVariantCount = 0;
 
   ::CFDictionaryGetKeysAndValues(mimeDict, keys.get(), values.get());
@@ -328,7 +328,7 @@ nsresult nsPluginFile::LoadPlugin(PRLibrary **outLibrary)
       }
       ::CFRelease(bundleURL);
     }
-    ::CFRelease(pathRef); 
+    ::CFRelease(pathRef);
   }
 #else
   nsAutoCString bundlePath;
@@ -370,7 +370,7 @@ static bool IsCompatibleArch(nsIFile *file)
   CFURLRef pluginURL = nullptr;
   if (NS_FAILED(toCFURLRef(file, pluginURL)))
     return false;
-  
+
   bool isPluginFile = false;
 
   CFBundleRef pluginBundle = ::CFBundleCreate(kCFAllocatorDefault, pluginURL);
@@ -517,7 +517,7 @@ nsresult nsPluginFile::GetPluginInfo(nsPluginInfo& info, PRLibrary **outLibrary)
 
   // Try to get data from NP_GetMIMEDescription
   if (pLibrary) {
-    NP_GETMIMEDESCRIPTION pfnGetMimeDesc = (NP_GETMIMEDESCRIPTION)PR_FindFunctionSymbol(pLibrary, NP_GETMIMEDESCRIPTION_NAME); 
+    NP_GETMIMEDESCRIPTION pfnGetMimeDesc = (NP_GETMIMEDESCRIPTION)PR_FindFunctionSymbol(pLibrary, NP_GETMIMEDESCRIPTION_NAME);
     if (pfnGetMimeDesc)
       ParsePluginMimeDescription(pfnGetMimeDesc(), info);
     if (info.fVariantCount)

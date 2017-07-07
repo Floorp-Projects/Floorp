@@ -69,9 +69,9 @@ GetUnitString(nsAString& unit, uint16_t unitType)
 static uint16_t
 GetUnitTypeForString(const nsAString& unitStr)
 {
-  if (unitStr.IsEmpty()) 
+  if (unitStr.IsEmpty())
     return nsIDOMSVGLength::SVG_LENGTHTYPE_NUMBER;
-                   
+
   nsIAtom *unitAtom = NS_GetStaticAtom(unitStr);
   if (unitAtom) {
     for (uint32_t i = 0 ; i < ArrayLength(unitMap) ; i++) {
@@ -483,7 +483,7 @@ nsSVGLength2::SMILLength::ValueFromString(const nsAString& aStr,
 {
   float value;
   uint16_t unitType;
-  
+
   if (!GetValueFromString(aStr, value, &unitType)) {
     return NS_ERROR_DOM_SYNTAX_ERR;
   }
@@ -514,7 +514,7 @@ nsSVGLength2::SMILLength::ClearAnimValue()
     mVal->mIsAnimated = false;
     mVal->mAnimVal = mVal->mBaseVal;
     mSVGElement->DidAnimateLength(mVal->mAttrEnum);
-  }  
+  }
 }
 
 nsresult

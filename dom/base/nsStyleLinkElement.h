@@ -41,7 +41,7 @@ public:
 
   mozilla::StyleSheet* GetSheet() const { return mStyleSheet; }
 
-  // nsIStyleSheetLinkingElement  
+  // nsIStyleSheetLinkingElement
   NS_IMETHOD SetStyleSheet(mozilla::StyleSheet* aStyleSheet) override;
   NS_IMETHOD_(mozilla::StyleSheet*) GetStyleSheet() override;
   NS_IMETHOD InitStyleLinkElement(bool aDontLoadStyle) override;

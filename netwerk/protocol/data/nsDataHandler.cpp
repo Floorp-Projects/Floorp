@@ -33,7 +33,7 @@ nsDataHandler::Create(nsISupports* aOuter, const nsIID& aIID, void* *aResult) {
     NS_RELEASE(ph);
     return rv;
 }
-    
+
 ////////////////////////////////////////////////////////////////////////////////
 // nsIProtocolHandler methods:
 
@@ -150,9 +150,9 @@ nsDataHandler::NewChannel(nsIURI* uri, nsIChannel* *result)
     return NewChannel2(uri, nullptr, result);
 }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsDataHandler::AllowPort(int32_t port, const char *scheme, bool *_retval) {
-    // don't override anything.  
+    // don't override anything.
     *_retval = false;
     return NS_OK;
 }

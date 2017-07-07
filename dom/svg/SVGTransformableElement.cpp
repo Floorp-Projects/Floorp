@@ -172,7 +172,7 @@ SVGTransformableElement::GetFarthestViewportElement()
 }
 
 already_AddRefed<SVGIRect>
-SVGTransformableElement::GetBBox(const SVGBoundingBoxOptions& aOptions, 
+SVGTransformableElement::GetBBox(const SVGBoundingBoxOptions& aOptions,
                                  ErrorResult& rv)
 {
   nsIFrame* frame = GetPrimaryFrame(FlushType::Layout);

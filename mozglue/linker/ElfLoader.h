@@ -354,7 +354,7 @@ private:
    * SIGSEGV handler registered with __wrap_signal or __wrap_sigaction.
    */
   struct sigaction action;
-  
+
   /**
    * ElfLoader SIGSEGV handler.
    */

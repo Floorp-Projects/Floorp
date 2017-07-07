@@ -23,13 +23,13 @@ The syntax for <msqrt> is:
 Attributes of <msqrt> and <mroot>:
 
 None (except the attributes allowed for all MathML elements, listed in Section
-2.3.4). 
+2.3.4).
 
 The <mroot> element increments scriptlevel by 2, and sets displaystyle to
 "false", within index, but leaves both attributes unchanged within base. The
 <msqrt> element leaves both attributes unchanged within all its arguments.
 These attributes are inherited by every element from its rendering environment,
-but can be set explicitly only on <mstyle>. (See Section 3.3.4.) 
+but can be set explicitly only on <mstyle>. (See Section 3.3.4.)
 */
 
 class nsMathMLmsqrtFrame : public nsMathMLmencloseFrame {

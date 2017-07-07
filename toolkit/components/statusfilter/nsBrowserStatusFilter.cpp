@@ -325,9 +325,9 @@ nsBrowserStatusFilter::ResetMembers()
 }
 
 void
-nsBrowserStatusFilter::MaybeSendProgress() 
+nsBrowserStatusFilter::MaybeSendProgress()
 {
-    if (mCurProgress > mMaxProgress || mCurProgress <= 0) 
+    if (mCurProgress > mMaxProgress || mCurProgress <= 0)
         return;
 
     // check our percentage

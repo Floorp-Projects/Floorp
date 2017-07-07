@@ -17,20 +17,20 @@ nsPlatformCharset::~nsPlatformCharset()
 {
 }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsPlatformCharset::GetCharset(nsPlatformCharsetSel selector, nsACString& oResult)
 {
   oResult.AssignLiteral("UTF-8");
   return NS_OK;
 }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsPlatformCharset::Init()
 {
   return NS_OK;
 }
 
-nsresult 
+nsresult
 nsPlatformCharset::MapToCharset(nsAString& inANSICodePage, nsACString& outCharset)
 {
   return NS_OK;

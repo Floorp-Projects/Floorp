@@ -118,7 +118,7 @@ likeCompare(nsAString::const_iterator aPatternItr,
 
 /**
  * Compute the Levenshtein Edit Distance between two strings.
- * 
+ *
  * @param aStringS
  *        a string
  * @param aStringT
@@ -147,7 +147,7 @@ levenshteinDistance(const nsAString &aStringS,
       return SQLITE_OK;
     }
 
-    // Notionally, Levenshtein Distance is computed in a matrix.  If we 
+    // Notionally, Levenshtein Distance is computed in a matrix.  If we
     // assume s = "span" and t = "spam", the matrix would look like this:
     //    s -->
     //  t          s   p   a   n
@@ -192,7 +192,7 @@ levenshteinDistance(const nsAString &aStringS,
         // Compute the remaining cells in this row, left-to-right,
         // starting at the second column (and first character of "s").
         for (uint32_t si = 1; si <= sLen; si++) {
-            
+
             // Get the character from "s" that corresponds to this column,
             // compare it to the t-character, and compute the "cost".
             const char16_t sch = s[si - 1];
@@ -201,7 +201,7 @@ levenshteinDistance(const nsAString &aStringS,
             // ............ We want to calculate the value of cell "d" from
             // ...ab....... the previously calculated (or initialized) cells
             // ...cd....... "a", "b", and "c", where d = min(a', b', c').
-            // ............ 
+            // ............
             int aPrime = prevRow[si - 1] + cost;
             int bPrime = prevRow[si] + 1;
             int cPrime = currRow[si - 1] + 1;
@@ -242,57 +242,57 @@ int
 registerFunctions(sqlite3 *aDB)
 {
   Functions functions[] = {
-    {"lower",               
-      1, 
-      SQLITE_UTF16, 
-      0,        
+    {"lower",
+      1,
+      SQLITE_UTF16,
+      0,
       caseFunction},
-    {"lower",               
-      1, 
-      SQLITE_UTF8,  
-      0,        
+    {"lower",
+      1,
+      SQLITE_UTF8,
+      0,
       caseFunction},
-    {"upper",               
-      1, 
-      SQLITE_UTF16, 
-      (void*)1, 
+    {"upper",
+      1,
+      SQLITE_UTF16,
+      (void*)1,
       caseFunction},
-    {"upper",               
-      1, 
-      SQLITE_UTF8,  
-      (void*)1, 
+    {"upper",
+      1,
+      SQLITE_UTF8,
+      (void*)1,
       caseFunction},
 
-    {"like",                
-      2, 
-      SQLITE_UTF16, 
-      0,        
+    {"like",
+      2,
+      SQLITE_UTF16,
+      0,
       likeFunction},
-    {"like",                
-      2, 
-      SQLITE_UTF8,  
-      0,        
+    {"like",
+      2,
+      SQLITE_UTF8,
+      0,
       likeFunction},
-    {"like",                
-      3, 
-      SQLITE_UTF16, 
-      0,        
+    {"like",
+      3,
+      SQLITE_UTF16,
+      0,
       likeFunction},
-    {"like",                
-      3, 
-      SQLITE_UTF8,  
-      0,        
+    {"like",
+      3,
+      SQLITE_UTF8,
+      0,
       likeFunction},
 
-    {"levenshteinDistance", 
-      2, 
-      SQLITE_UTF16, 
-      0,        
+    {"levenshteinDistance",
+      2,
+      SQLITE_UTF16,
+      0,
       levenshteinDistanceFunction},
-    {"levenshteinDistance", 
-      2, 
-      SQLITE_UTF8,  
-      0,        
+    {"levenshteinDistance",
+      2,
+      SQLITE_UTF8,
+      0,
       levenshteinDistanceFunction},
   };
 
@@ -392,7 +392,7 @@ void levenshteinDistanceFunction(sqlite3_context *aCtx,
   const nsDependentString B(b, bLen);
   int status = levenshteinDistance(A, B, &distance);
   if (status == SQLITE_OK) {
-    ::sqlite3_result_int(aCtx, distance);    
+    ::sqlite3_result_int(aCtx, distance);
   }
   else if (status == SQLITE_NOMEM) {
     ::sqlite3_result_error_nomem(aCtx);

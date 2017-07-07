@@ -80,7 +80,7 @@ Test02_nsCOMPtr( nsISupports* aDOMNode, nsString* aResult )
 	{
 		nsresult status;
 		nsCOMPtr<nsIDOMNode> node = do_QueryInterface(aDOMNode, &status);
-		
+
 		if ( node )
 			node->GetNodeName(*aResult);
 

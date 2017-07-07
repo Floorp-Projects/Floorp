@@ -591,13 +591,13 @@ static nsresult
 EnumValidate(nsICommandLineValidator* aValidator, nsICommandLine* aThis, void*)
 {
   return aValidator->Validate(aThis);
-}  
+}
 
 static nsresult
 EnumRun(nsICommandLineHandler* aHandler, nsICommandLine* aThis, void*)
 {
   return aHandler->Handle(aThis);
-}  
+}
 
 NS_IMETHODIMP
 nsCommandLine::Run()
@@ -631,7 +631,7 @@ EnumHelp(nsICommandLineHandler* aHandler, nsICommandLine* aThis, void* aClosure)
   }
 
   return NS_OK;
-}  
+}
 
 NS_IMETHODIMP
 nsCommandLine::GetHelpText(nsACString& aResult)

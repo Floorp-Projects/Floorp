@@ -43,10 +43,10 @@ public:
 
   friend nsIFrame* NS_NewListBoxBodyFrame(nsIPresShell* aPresShell,
                                           nsStyleContext* aContext);
-  
+
   // nsIFrame
   virtual void Init(nsIContent*       aContent,
-                    nsContainerFrame* aParent, 
+                    nsContainerFrame* aParent,
                     nsIFrame*         aPrevInFlow) override;
   virtual void DestroyFrom(nsIFrame* aDestructRoot) override;
 
@@ -89,7 +89,7 @@ public:
   virtual nsSize GetXULMinSizeForScrollArea(nsBoxLayoutState& aBoxLayoutState) override;
   virtual nsSize GetXULPrefSize(nsBoxLayoutState& aBoxLayoutState) override;
 
-  // size calculation 
+  // size calculation
   int32_t GetRowCount();
   int32_t GetRowHeightAppUnits() { return mRowHeight; }
   int32_t GetRowHeightPixels() const;
@@ -158,7 +158,7 @@ protected:
       , mUp(aUp)
       , mDelta(aDelta)
     {}
-  
+
     NS_IMETHOD Run() override
     {
       if (!mFrame) {
@@ -203,7 +203,7 @@ protected:
 
   // scrolling
   int32_t mCurrentIndex; // Row-based
-  int32_t mOldIndex; 
+  int32_t mOldIndex;
   int32_t mYPosition;
   int32_t mTimePerRow;
 

@@ -257,7 +257,7 @@ public:
   {
     return mFlags.mMayHaveManager;
   }
-  
+
   EventTarget* CurrentTarget()
   {
     return mTarget;

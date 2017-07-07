@@ -22,7 +22,7 @@
 { 0x12bb8f1c, 0x2389, 0x11d3, { 0xb3, 0xbf, 0x0, 0x80, 0x5f, 0x8a, 0x66, 0x70 } }
 
 //=====================================================================
-class nsXPCOMDetector :  
+class nsXPCOMDetector :
       public nsUniversalDetector,
       public nsICharsetDetector
 {
@@ -41,14 +41,14 @@ class nsXPCOMDetector :
 
 
 //=====================================================================
-class nsXPCOMStringDetector :  
+class nsXPCOMStringDetector :
       public nsUniversalDetector,
       public nsIStringCharsetDetector
 {
   NS_DECL_ISUPPORTS
   public:
     nsXPCOMStringDetector();
-    NS_IMETHOD DoIt(const char* aBuf, uint32_t aLen, 
+    NS_IMETHOD DoIt(const char* aBuf, uint32_t aLen,
                     const char** oCharset, nsDetectionConfident &oConf) override;
   protected:
     virtual ~nsXPCOMStringDetector();
@@ -63,14 +63,14 @@ class nsXPCOMStringDetector :
 class nsJAPSMDetector : public nsXPCOMDetector
 {
 public:
-  nsJAPSMDetector() 
+  nsJAPSMDetector()
     : nsXPCOMDetector() {}
 };
 
 class nsJAStringPSMDetector : public nsXPCOMStringDetector
 {
 public:
-  nsJAStringPSMDetector() 
+  nsJAStringPSMDetector()
     : nsXPCOMStringDetector() {}
 };
 

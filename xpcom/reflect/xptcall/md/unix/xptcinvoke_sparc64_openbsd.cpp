@@ -41,7 +41,7 @@ invoke_copy_to_stack(uint64_t* d, uint32_t paramCount, nsXPTCVariant* s)
       case nsXPTType::T_I16   : *((int64_t*)l_d)     = l_s->val.i16;   break;
       case nsXPTType::T_I32   : *((int64_t*)l_d)     = l_s->val.i32;   break;
       case nsXPTType::T_I64   : *((int64_t*)l_d)     = l_s->val.i64;   break;
-      
+
       case nsXPTType::T_U8    : *((uint64_t*)l_d)    = l_s->val.u8;    break;
       case nsXPTType::T_U16   : *((uint64_t*)l_d)    = l_s->val.u16;   break;
       case nsXPTType::T_U32   : *((uint64_t*)l_d)    = l_s->val.u32;   break;
@@ -64,6 +64,6 @@ invoke_copy_to_stack(uint64_t* d, uint32_t paramCount, nsXPTCVariant* s)
         break;
     }
   }
-  
+
   return regCount;
 }

@@ -62,7 +62,7 @@ bool TestInvariants(testcaseLine* testLine)
   c4 = nsDependentString((char16_t*)testLine->c4);
   c5 = nsDependentString((char16_t*)testLine->c5);
   bool rv = true;
- 
+
   /*
     1. The following invariants must be true for all conformant implementations
 
@@ -70,7 +70,7 @@ bool TestInvariants(testcaseLine* testLine)
       c2 ==  NFC(c1) ==  NFC(c2) ==  NFC(c3)
   */
   DEBUG_TESTCASE(c2);
-  NORMALIZE_AND_COMPARE(c2, c1, NFC, testLine->description);  
+  NORMALIZE_AND_COMPARE(c2, c1, NFC, testLine->description);
   NORMALIZE_AND_COMPARE(c2, c2, NFC, testLine->description);
   NORMALIZE_AND_COMPARE(c2, c3, NFC, testLine->description);
 
@@ -263,13 +263,13 @@ TEST(NormalizationTest, Main) {
     return;
   }
 
-  printf("NormalizationTest: test nsIUnicodeNormalizer. UCD version: %s\n", 
-         versionText); 
+  printf("NormalizationTest: test nsIUnicodeNormalizer. UCD version: %s\n",
+         versionText);
 
   normalizer = nullptr;
   nsresult res;
   res = CallGetService(kUnicodeNormalizerCID, &normalizer);
-  
+
   ASSERT_FALSE(NS_FAILED(res)) << "GetService failed";
   ASSERT_NE(nullptr, normalizer);
 
@@ -277,6 +277,6 @@ TEST(NormalizationTest, Main) {
   TestPart1();
   TestPart2();
   TestPart3();
-  
+
   NS_RELEASE(normalizer);
 }

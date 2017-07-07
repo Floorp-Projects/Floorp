@@ -827,7 +827,7 @@ def webrender(value, milestone):
     if value.origin == 'default':
         # if nothing is specified, default to just building on Nightly
         build_webrender = milestone.is_nightly
-    elif value == 'build':
+    elif len(value) and value[0] == 'build':
         # if explicitly set to 'build', then we build but don't enable
         build_webrender = True
     elif bool(value):

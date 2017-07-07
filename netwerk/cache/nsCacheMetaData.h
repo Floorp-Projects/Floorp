@@ -17,7 +17,7 @@ public:
     nsCacheMetaData() : mBuffer(nullptr), mBufferSize(0), mMetaSize(0) { }
 
     ~nsCacheMetaData() {
-        mBufferSize = mMetaSize = 0;  
+        mBufferSize = mMetaSize = 0;
         free(mBuffer);
         mBuffer = nullptr;
     }

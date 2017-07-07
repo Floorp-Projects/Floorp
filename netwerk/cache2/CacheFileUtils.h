@@ -143,7 +143,7 @@ private:
 
   // Counter of samples that is compared against kTotalSamplesReportLimit.
   static uint32_t sRecordCnt;
- 
+
   // Hit rate statistics for every cache size range.
   static HitRate sHRStats[kNumOfRanges];
 };

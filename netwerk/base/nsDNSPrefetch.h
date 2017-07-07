@@ -24,7 +24,7 @@ class nsDNSPrefetch final : public nsIDNSListener
 public:
     NS_DECL_THREADSAFE_ISUPPORTS
     NS_DECL_NSIDNSLISTENER
-  
+
     nsDNSPrefetch(nsIURI *aURI, mozilla::OriginAttributes& aOriginAttributes,
                   nsIDNSListener *aListener, bool storeTiming);
     bool TimingsValid() const {
@@ -41,7 +41,7 @@ public:
     nsresult PrefetchHigh(bool refreshDNS = false);
     nsresult PrefetchMedium(bool refreshDNS = false);
     nsresult PrefetchLow(bool refreshDNS = false);
-  
+
 private:
     nsCString mHostname;
     mozilla::OriginAttributes mOriginAttributes;
@@ -53,4 +53,4 @@ private:
     nsresult Prefetch(uint16_t flags);
 };
 
-#endif 
+#endif

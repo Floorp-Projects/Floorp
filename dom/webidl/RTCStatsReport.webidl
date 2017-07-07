@@ -59,6 +59,7 @@ dictionary RTCInboundRTPStreamStats : RTCRTPStreamStats {
 
   // Video decoder measurement, not present in RTCP case
   unsigned long discardedPackets;
+  unsigned long framesDecoded;
 };
 
 dictionary RTCOutboundRTPStreamStats : RTCRTPStreamStats {

@@ -10,7 +10,7 @@
 namespace mozilla {
 namespace hal_impl {
 
-void 
+void
 AdjustSystemClock(int64_t aDeltaMilliseconds)
 {}
 

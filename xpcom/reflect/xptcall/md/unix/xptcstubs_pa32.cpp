@@ -8,7 +8,7 @@
 /* Implement shared vtbl methods. */
 
 #include "xptcprivate.h"
-#include "xptiprivate.h" 
+#include "xptiprivate.h"
 
 #if _HPUX
 #error "This code is for HP-PA RISC 32 bit mode only"
@@ -116,7 +116,7 @@ PrepareAndDispatch(nsXPTCStubBase* self, uint32_t methodIndex,
     ++regwords;
   }
 
-  result = self->mOuter->CallMethod((uint16_t) methodIndex, info, dispatchParams); 
+  result = self->mOuter->CallMethod((uint16_t) methodIndex, info, dispatchParams);
 
   if(dispatchParams != paramBuffer)
     delete [] dispatchParams;

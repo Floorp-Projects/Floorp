@@ -101,7 +101,7 @@ nsMenuBarFrame::SetActive(bool aActiveFlag)
 
   NS_NAMED_LITERAL_STRING(active, "DOMMenuBarActive");
   NS_NAMED_LITERAL_STRING(inactive, "DOMMenuBarInactive");
-  
+
   FireDOMEvent(mIsActive ? active : inactive, mContent);
 
   return NS_OK;
@@ -126,14 +126,14 @@ nsMenuBarFrame::ToggleMenuActiveState()
       mCurrentMenu->SelectMenu(false);
 
     // Set the active menu to be the top left item (e.g., the File menu).
-    // We use an attribute called "menuactive" to track the current 
+    // We use an attribute called "menuactive" to track the current
     // active menu.
     nsMenuFrame* firstFrame = nsXULPopupManager::GetNextMenuItem(this, nullptr, false, false);
     if (firstFrame) {
       // Activate the menu bar
       SetActive(true);
       firstFrame->SelectMenu(true);
-      
+
       // Track this item for keyboard navigation.
       mCurrentMenu = firstFrame;
     }
@@ -319,7 +319,7 @@ nsMenuBarFrame::ChangeMenuItem(nsMenuFrame* aMenuItem,
 
   nsIContent* aOldMenu = nullptr;
   nsIContent* aNewMenu = nullptr;
-  
+
   // Unset the current child.
   bool wasOpen = false;
   if (mCurrentMenu) {

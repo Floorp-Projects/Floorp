@@ -680,7 +680,7 @@ NS_InitXPCOM2(nsIServiceManager** aResult,
     NS_RUNTIMEABORT(jsInitFailureReason);
   }
   sInitializedJS = true;
-  
+
   rv = nsComponentManagerImpl::gComponentManager->Init();
   if (NS_FAILED(rv)) {
     NS_RELEASE(nsComponentManagerImpl::gComponentManager);

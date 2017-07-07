@@ -34,7 +34,7 @@ IPDLUnitTestSubprocess* gSubprocess;
 void* gChildActor;
 
 // Note: in threaded mode, this will be non-null (for both parent and
-// child, since they share one set of globals).  
+// child, since they share one set of globals).
 Thread* gChildThread;
 MessageLoop *gParentMessageLoop;
 bool gParentDone;
@@ -78,7 +78,7 @@ enum IPDLUnitTestType {
 //-----------------------------------------------------------------------------
 //===== TEMPLATED =====
 ${ENUM_VALUES}
-    
+
     LastTest = ${LAST_ENUM}
 //-----------------------------------------------------------------------------
 };
@@ -270,11 +270,11 @@ DeferredParentShutdown()
         NewRunnableFunction(DeleteSubprocess, MessageLoop::current()));
 }
 
-void 
+void
 TryThreadedShutdown()
 {
-    // Stop if either: 
-    // - the child has not finished, 
+    // Stop if either:
+    // - the child has not finished,
     // - the parent has not finished,
     // - or this code has already executed.
     // Remember: this TryThreadedShutdown() task is enqueued
@@ -287,7 +287,7 @@ TryThreadedShutdown()
     DeferredParentShutdown();
 }
 
-void 
+void
 ChildCompleted()
 {
     // Executes on the parent message loop once child has completed.

@@ -426,7 +426,7 @@ parsenonanytype(struct tok *tok)
         node = parseprimitiveorstringtype(tok);
         node = parsetypesuffix(tok, node);
         break;
-    }       
+    }
     return node;
 }
 
@@ -452,7 +452,7 @@ parseunionmembertype(struct tok *tok)
     addnode(node, typenode);
     lexnocomment();
     node = parsetypesuffix(tok, node);
-  } else if (tok->type == '(') { 
+  } else if (tok->type == '(') {
     node = parseuniontype(tok);
   } else {
     node = parsenonanytype(tok);
@@ -485,7 +485,7 @@ parseuniontype(struct tok *tok)
     }
   }
   eat(tok, ')');
-  node = parsetypesuffix(tok, node);      
+  node = parsetypesuffix(tok, node);
   return node;
 }
 
@@ -509,7 +509,7 @@ parsetype(struct tok *tok)
       lexnocomment();
       node = parsetypesuffixstartingwitharray(tok, node);
     } else {
-      node = parsenonanytype(tok);	
+      node = parsenonanytype(tok);
     }
     return node;
 }
@@ -694,7 +694,7 @@ parseoperationrest(struct tok *tok, struct node *node)
  *          tok on terminating ';'
  */
 static struct node *
-parsereturntypeandoperationrest(struct tok *tok, struct node *eal, struct node *attrs) 
+parsereturntypeandoperationrest(struct tok *tok, struct node *eal, struct node *attrs)
 {
   struct node *node =  newelement("Operation");
   struct node *nodeType = parsereturntype(tok);
@@ -750,7 +750,7 @@ parseoperationoriteratorrest(struct tok *tok, struct node *eal, struct node *att
       return node;
     } else {
       node = newelement("Iterator");
-      isIterator = 1;    
+      isIterator = 1;
     }
   } else {
     node = newelement("Operation");
@@ -874,7 +874,7 @@ parseserializer (struct tok *tok, struct node *eal) {
 	  lexnocomment();
 	  if (tok->type == ',')
 	    lexnocomment();
-	} while (tok->type != ']');	    
+	} while (tok->type != ']');
 	eat(tok, ']');
       }
       addnode(node, nodeList);
@@ -946,7 +946,7 @@ parseattributeoroperationoriterator(struct tok *tok, struct node *eal)
       addnode(attrs, newattr(s, s));
       lexnocomment();
     }
-    if (!nodeisempty(attrs))    
+    if (!nodeisempty(attrs))
       return parsereturntypeandoperationrest(tok, eal, attrs);
     else
       return parseoperationoriteratorrest(tok, eal, attrs);
@@ -1226,7 +1226,7 @@ parsecallback(struct tok *tok, struct node *eal)
   struct node *node;
   if (tok->type == TOK_interface) {
     node = parseinterface(tok, eal);
-    addnode(node, newattr("callback", "callback"));    
+    addnode(node, newattr("callback", "callback"));
   } else {
     node = newelement("Callback");
     if (eal) addnode(node, eal);
@@ -1307,7 +1307,7 @@ parseenum(struct tok *tok, struct node *eal)
 	const char *start = tok->prestart;
 	struct node *node2 = newelement("EnumValue");
 	setcommentnode(node2);
-	
+
 	s = memalloc(tok->len + 1);
 	memcpy(s, tok->start, tok->len);
 	s[tok->len] = 0;
@@ -1363,10 +1363,10 @@ parsedefinitions(struct tok *tok, struct node *parent)
             break;
 	case TOK_dictionary:
             node = parsedictionary(tok, eal);
-            break;	  
+            break;
 	case TOK_enum:
             node = parseenum(tok, eal);
-            break;	  
+            break;
         case TOK_exception:
             node = parseexception(tok, eal);
             break;
@@ -1401,7 +1401,7 @@ parsedefinitions(struct tok *tok, struct node *parent)
 struct node *
 parse(void)
 {
-	struct tok *tok; 
+	struct tok *tok;
     struct node *root = newelement("Definitions");
     setcommentnode(root);
     tok = lexnocomment();

@@ -15,7 +15,7 @@
  */
 
 class txNodeSetAdaptor : public txXPathObjectAdaptor,
-                         public txINodeSet 
+                         public txINodeSet
 {
 public:
     txNodeSetAdaptor();

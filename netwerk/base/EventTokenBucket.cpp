@@ -284,7 +284,7 @@ EventTokenBucket::DispatchEvents()
     return;
 
   while (mEvents.GetSize() && mUnitCost <= mCredit) {
-    RefPtr<TokenBucketCancelable> cancelable = 
+    RefPtr<TokenBucketCancelable> cancelable =
       dont_AddRef(static_cast<TokenBucketCancelable *>(mEvents.PopFront()));
     if (cancelable->mEvent) {
       SOCKET_LOG(("EventTokenBucket::DispachEvents [%p] "
@@ -294,13 +294,13 @@ EventTokenBucket::DispatchEvents()
       cancelable->Fire();
     }
   }
-  
+
 #ifdef XP_WIN
   if (!mEvents.GetSize())
     WantNormalTimers();
 #endif
 }
- 
+
 void
 EventTokenBucket::UpdateTimer()
 {
@@ -422,7 +422,7 @@ EventTokenBucket::WantNormalTimers()
       NormalTimers();
       return;
     }
-    
+
     if (!mFineGrainResetTimer)
       mFineGrainResetTimer = do_CreateInstance("@mozilla.org/timer;1");
 

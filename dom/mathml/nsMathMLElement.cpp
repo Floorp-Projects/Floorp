@@ -40,10 +40,10 @@ NS_IMPL_ISUPPORTS_INHERITED(nsMathMLElement, nsMathMLElementBase,
                             nsIDOMElement, nsIDOMNode, Link)
 
 static nsresult
-WarnDeprecated(const char16_t* aDeprecatedAttribute, 
+WarnDeprecated(const char16_t* aDeprecatedAttribute,
                const char16_t* aFavoredAttribute, nsIDocument* aDocument)
 {
-  const char16_t *argv[] = 
+  const char16_t *argv[] =
     { aDeprecatedAttribute, aFavoredAttribute };
   return nsContentUtils::
           ReportToConsole(nsIScriptError::warningFlag,
@@ -52,7 +52,7 @@ WarnDeprecated(const char16_t* aDeprecatedAttribute,
                           "DeprecatedSupersededBy", argv, 2);
 }
 
-static nsresult 
+static nsresult
 ReportLengthParseError(const nsString& aValue, nsIDocument* aDocument)
 {
   const char16_t *arg = aValue.get();
@@ -64,11 +64,11 @@ ReportLengthParseError(const nsString& aValue, nsIDocument* aDocument)
 }
 
 static nsresult
-ReportParseErrorNoTag(const nsString& aValue, 
+ReportParseErrorNoTag(const nsString& aValue,
                       nsIAtom*        aAtom,
                       nsIDocument*    aDocument)
 {
-  const char16_t *argv[] = 
+  const char16_t *argv[] =
     { aValue.get(), aAtom->GetUTF16String() };
   return nsContentUtils::
          ReportToConsole(nsIScriptError::errorFlag,
@@ -331,14 +331,14 @@ nsMathMLElement::ParseNamedSpaceValue(const nsString& aString,
        i = -7;
      }
    }
-   if (0 != i) { 
+   if (0 != i) {
      aCSSValue.SetFloatValue(float(i)/float(18), eCSSUnit_EM);
      return true;
    }
-   
+
    return false;
 }
- 
+
 // The REC says:
 //
 // "Most presentation elements have attributes that accept values representing
@@ -348,14 +348,14 @@ nsMathMLElement::ParseNamedSpaceValue(const nsString& aString,
 // number | number unit | namedspace
 //
 // There should be no space between the number and the unit of a length."
-// 
+//
 // "A trailing '%' represents a percent of the default value. The default
 // value, or how it is obtained, is listed in the table of attributes for each
 // element. [...] A number without a unit is intepreted as a multiple of the
 // default value."
 //
 // "The possible units in MathML are:
-//  
+//
 // Unit Description
 // em   an em (font-relative unit traditionally used for horizontal lengths)
 // ex   an ex (font-relative unit traditionally used for vertical lengths)
@@ -559,7 +559,7 @@ nsMathMLElement::MapMathMLAttributesInto(const nsMappedAttributes* aAttributes,
     }
 
     // scriptlevel
-    // 
+    //
     // "Changes the scriptlevel in effect for the children. When the value is
     // given without a sign, it sets scriptlevel to the specified value; when a
     // sign is given, it increments ("+") or decrements ("-") the current
@@ -616,7 +616,7 @@ nsMathMLElement::MapMathMLAttributesInto(const nsMappedAttributes* aAttributes,
     //
     // In both cases, we don't allow negative values.
     // Unitless values give a multiple of the default value.
-    //  
+    //
     bool parseSizeKeywords = true;
     value = aAttributes->GetAttr(nsGkAtoms::mathsize_);
     if (!value) {
@@ -663,7 +663,7 @@ nsMathMLElement::MapMathMLAttributesInto(const nsMappedAttributes* aAttributes,
     // CSS for more information. Deprecated in favor of mathvariant."
     //
     // values: string
-    // 
+    //
     value = aAttributes->GetAttr(nsGkAtoms::fontfamily_);
     if (value) {
       WarnDeprecated(nsGkAtoms::fontfamily_->GetUTF16String(),
@@ -778,13 +778,13 @@ nsMathMLElement::MapMathMLAttributesInto(const nsMappedAttributes* aAttributes,
   }
 
   // mathbackground
-  // 
+  //
   // "Specifies the background color to be used to fill in the bounding box of
   // the element and its children. The default, 'transparent', lets the
   // background color, if any, used in the current rendering context to show
   // through."
-  // 
-  // values: color | "transparent" 
+  //
+  // values: color | "transparent"
   // default: "transparent"
   //
   // background
@@ -825,8 +825,8 @@ nsMathMLElement::MapMathMLAttributesInto(const nsMappedAttributes* aAttributes,
   // default: inherited
   //
   // color
-  // 
-  // "Specified the color for the token. Deprecated in favor of mathcolor." 
+  //
+  // "Specified the color for the token. Deprecated in favor of mathcolor."
   //
   // values: color
   // default: inherited
@@ -883,9 +883,9 @@ nsMathMLElement::MapMathMLAttributesInto(const nsMappedAttributes* aAttributes,
   // "The overall directionality for a formula, basically the direction of the
   // Layout Schemata, is specified by the dir attribute on the containing math
   // element (see Section 2.2 The Top-Level math Element). The default is ltr.
-  // [...] The overall directionality is usually set on the math, but may also 
+  // [...] The overall directionality is usually set on the math, but may also
   // be switched for individual subformula by using the dir attribute on mrow
-  // or mstyle elements." 
+  // or mstyle elements."
   //
   // Bidirectional Layout in Token Elements:
   // "Specifies the initial directionality for text within the token:
@@ -1007,16 +1007,16 @@ nsMathMLElement::IsLink(nsIURI** aURI) const
     //
     // For any other values, we're either not a *clickable* XLink, or the end
     // result is poorly specified. Either way, we return false.
-    
+
     static nsIContent::AttrValuesArray sTypeVals[] =
       { &nsGkAtoms::_empty, &nsGkAtoms::simple, nullptr };
-    
+
     static nsIContent::AttrValuesArray sShowVals[] =
       { &nsGkAtoms::_empty, &nsGkAtoms::_new, &nsGkAtoms::replace, nullptr };
-    
+
     static nsIContent::AttrValuesArray sActuateVals[] =
       { &nsGkAtoms::_empty, &nsGkAtoms::onRequest, nullptr };
-    
+
     // Optimization: check for href first for early return
     href = mAttrsAndChildren.GetAttr(nsGkAtoms::href,
                                      kNameSpaceID_XLink);
@@ -1038,7 +1038,7 @@ nsMathMLElement::IsLink(nsIURI** aURI) const
     nsCOMPtr<nsIURI> baseURI = GetBaseURI();
     // Get absolute URI
     nsAutoString hrefStr;
-    href->ToString(hrefStr); 
+    href->ToString(hrefStr);
     nsContentUtils::NewURIWithDocumentCharset(aURI, hrefStr,
                                               OwnerDoc(), baseURI);
     // must promise out param is non-null if we return true
@@ -1062,7 +1062,7 @@ nsMathMLElement::GetLinkTarget(nsAString& aTarget)
 
     static nsIContent::AttrValuesArray sShowVals[] =
       { &nsGkAtoms::_new, &nsGkAtoms::replace, nullptr };
-    
+
     switch (FindAttrValueIn(kNameSpaceID_XLink, nsGkAtoms::show,
                             sShowVals, eCaseMatters)) {
     case 0:

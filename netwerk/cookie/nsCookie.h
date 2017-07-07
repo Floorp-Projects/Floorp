@@ -16,7 +16,7 @@
 
 using mozilla::OriginAttributes;
 
-/** 
+/**
  * The nsCookie class is the main cookie storage medium for use within cookie
  * code. It implements nsICookie2, which extends nsICookie, a frozen interface
  * for xpcom access of cookie objects.

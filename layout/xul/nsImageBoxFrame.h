@@ -72,7 +72,7 @@ public:
   virtual nsresult GetFrameName(nsAString& aResult) const override;
 #endif
 
-  /** 
+  /**
    * Update mUseSrcAttr from appropriate content attributes or from
    * style, throw away the current image, and load the appropriate
    * image.

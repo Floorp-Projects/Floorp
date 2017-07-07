@@ -208,7 +208,7 @@ PerformBaseRelocation(PMEMORYMODULE module, SIZE_T delta)
         type = *relInfo >> 12;
         // the lower 12 bits define the offset
         offset = *relInfo & 0xfff;
-        
+
         switch (type)
         {
         case IMAGE_REL_BASED_ABSOLUTE:
@@ -220,7 +220,7 @@ PerformBaseRelocation(PMEMORYMODULE module, SIZE_T delta)
           patchAddrHL = (DWORD *) (dest + offset);
           *patchAddrHL += delta;
           break;
-        
+
 #ifdef _WIN64
         case IMAGE_REL_BASED_DIR64:
           patchAddr64 = (ULONGLONG *) (dest + offset);

@@ -218,7 +218,7 @@ void ReverbConvolver::backgroundThreadEntry()
         // Process all of the stages until their read indices reach the input buffer's write index
         int writeIndex = m_inputBuffer.writeIndex();
 
-        // Even though it doesn't seem like every stage needs to maintain its own version of readIndex 
+        // Even though it doesn't seem like every stage needs to maintain its own version of readIndex
         // we do this in case we want to run in more than one background thread.
         int readIndex;
 
@@ -255,7 +255,7 @@ void ReverbConvolver::process(const float* sourceChannelData,
     // Not using a MutexLocker looks strange, but we use a tryLock() instead because this is run on the real-time
     // thread where it is a disaster for the lock to be contended (causes audio glitching).  It's OK if we fail to
     // signal from time to time, since we'll get to it the next time we're called.  We're called repeatedly
-    // and frequently (around every 3ms).  The background thread is processing well into the future and has a considerable amount of 
+    // and frequently (around every 3ms).  The background thread is processing well into the future and has a considerable amount of
     // leeway here...
     if (m_backgroundThreadLock.Try()) {
         m_moreInputBuffered = true;

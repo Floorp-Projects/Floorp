@@ -124,7 +124,7 @@ X11Error(Display *display, XErrorEvent *event) {
   case GeckoProcessType_Content:
     CrashReporter::AppendAppNotesToCrashReport(notes);
     break;
-  default: 
+  default:
     ; // crash report notes not supported.
   }
 #endif

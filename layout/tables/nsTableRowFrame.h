@@ -17,11 +17,11 @@ struct TableCellReflowInput;
 } // namespace mozilla
 
 /**
- * nsTableRowFrame is the frame that maps table rows 
+ * nsTableRowFrame is the frame that maps table rows
  * (HTML tag TR). This class cannot be reused
- * outside of an nsTableRowGroupFrame.  It assumes that its parent is an nsTableRowGroupFrame,  
+ * outside of an nsTableRowGroupFrame.  It assumes that its parent is an nsTableRowGroupFrame,
  * and its children are nsTableCellFrames.
- * 
+ *
  * @see nsTableFrame
  * @see nsTableRowGroupFrame
  * @see nsTableCellFrame
@@ -44,7 +44,7 @@ public:
 
   /** @see nsIFrame::DidSetStyleContext */
   virtual void DidSetStyleContext(nsStyleContext* aOldStyleContext) override;
-  
+
   virtual void AppendFrames(ChildListID     aListID,
                             nsFrameList&    aFrameList) override;
   virtual void InsertFrames(ChildListID     aListID,
@@ -86,10 +86,10 @@ public:
   /** calls Reflow for all of its child cells.
     * Cells with rowspan=1 are all set to the same height and stacked horizontally.
     * <P> Cells are not split unless absolutely necessary.
-    * <P> Cells are resized in nsTableFrame::BalanceColumnWidths 
+    * <P> Cells are resized in nsTableFrame::BalanceColumnWidths
     * and nsTableFrame::ShrinkWrapChildren
     *
-    * @param aDesiredSize width set to width of the sum of the cells, height set to 
+    * @param aDesiredSize width set to width of the sum of the cells, height set to
     *                     height of cells with rowspan=1.
     *
     * @see nsIFrame::Reflow
@@ -115,14 +115,14 @@ public:
 
   void ResetBSize(nscoord aRowStyleBSize);
 
-  // calculate the bsize, considering content bsize of the 
+  // calculate the bsize, considering content bsize of the
   // cells and the style bsize of the row and cells, excluding pct bsizes
   nscoord CalcBSize(const ReflowInput& aReflowInput);
 
   // Support for cells with 'vertical-align: baseline'.
 
   /**
-   * returns the max-ascent amongst all the cells that have 
+   * returns the max-ascent amongst all the cells that have
    * 'vertical-align: baseline', *including* cells with rowspans.
    * returns 0 if we don't have any cell with 'vertical-align: baseline'
    */
@@ -215,7 +215,7 @@ public:
   void SetBStartBCBorderWidth(BCPixelSize aWidth) { mBStartBorderWidth = aWidth; }
   void SetBEndBCBorderWidth(BCPixelSize aWidth) { mBEndBorderWidth = aWidth; }
   mozilla::LogicalMargin GetBCBorderWidth(mozilla::WritingMode aWM);
-                             
+
   /**
    * Gets inner border widths before collapsing with cell borders
    * Caller must get block-end border from next row or from table
@@ -260,7 +260,7 @@ protected:
                             const mozilla::LogicalSize& aAvailSize,
                             bool                        aBorderCollapse,
                             TableCellReflowInput&     aReflowInput);
-  
+
   virtual LogicalSides GetLogicalSkipSides(const ReflowInput* aReflowInput = nullptr) const override;
 
   // row-specific methods
@@ -283,7 +283,7 @@ private:
     unsigned mRowIndex:29;
     unsigned mHasFixedBSize:1; // set if the dominating style bsize on the row or any cell is pixel based
     unsigned mHasPctBSize:1;   // set if the dominating style bsize on the row or any cell is pct based
-    unsigned mFirstInserted:1; // if true, then it was the bstart-most newly inserted row 
+    unsigned mFirstInserted:1; // if true, then it was the bstart-most newly inserted row
   } mBits;
 
   // the desired bsize based on the content of the tallest cell in the row

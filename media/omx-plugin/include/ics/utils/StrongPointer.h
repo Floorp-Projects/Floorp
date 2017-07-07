@@ -101,7 +101,7 @@ public:
     COMPARE(<=)
     COMPARE(>=)
 
-private:    
+private:
     template<typename Y> friend class sp;
     template<typename Y> friend class wp;
     void set_pointer(T* ptr);
@@ -186,7 +186,7 @@ sp<T>& sp<T>::operator = (U* other)
     return *this;
 }
 
-template<typename T>    
+template<typename T>
 void sp<T>::force_set(T* other)
 {
     other->forceIncStrong(this);

@@ -110,7 +110,7 @@ HTMLMetaElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
     // in the <head> element.
     Element* headElt = aDocument->GetHeadElement();
     if (headElt && nsContentUtils::ContentIsDescendantOf(this, headElt)) {
-      
+
       nsAutoString content;
       rv = GetContent(content);
       NS_ENSURE_SUCCESS(rv, rv);

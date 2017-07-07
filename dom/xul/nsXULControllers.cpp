@@ -38,7 +38,7 @@ nsXULControllers::DeleteControllers()
     nsXULControllerData* controllerData = mControllers.ElementAt(i);
     delete controllerData;    // releases the nsIController
   }
-  
+
   mControllers.Clear();
 }
 
@@ -108,7 +108,7 @@ nsXULControllers::GetControllerForCommand(const char *aCommand, nsIController** 
       }
     }
   }
-  
+
   return NS_OK;
 }
 
@@ -137,7 +137,7 @@ nsXULControllers::RemoveControllerAt(uint32_t aIndex, nsIController **_retval)
 
   controllerData->GetController(_retval);
   delete controllerData;
-  
+
   return NS_OK;
 }
 
@@ -151,7 +151,7 @@ nsXULControllers::GetControllerAt(uint32_t aIndex, nsIController **_retval)
   nsXULControllerData* controllerData = mControllers.SafeElementAt(aIndex);
   if (!controllerData) return NS_ERROR_FAILURE;
 
-  return controllerData->GetController(_retval);   // does the addref  
+  return controllerData->GetController(_retval);   // does the addref
 }
 
 NS_IMETHODIMP
@@ -193,7 +193,7 @@ nsXULControllers::RemoveController(nsIController *controller)
   }
   return NS_ERROR_FAILURE;      // right thing to return if no controller found?
 }
-    
+
 NS_IMETHODIMP
 nsXULControllers::GetControllerId(nsIController *controller, uint32_t *_retval)
 {
@@ -221,7 +221,7 @@ NS_IMETHODIMP
 nsXULControllers::GetControllerById(uint32_t controllerID, nsIController **_retval)
 {
   NS_ENSURE_ARG_POINTER(_retval);
-    
+
   uint32_t count = mControllers.Length();
   for (uint32_t i = 0; i < count; i++)
   {

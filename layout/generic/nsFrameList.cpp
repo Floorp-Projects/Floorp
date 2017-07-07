@@ -377,7 +377,7 @@ nsFrameList::GetPrevVisualFor(nsIFrame* aFrame) const
     }
   }
 
-  // Parent is a block frame, so use the LineIterator to find the previous visual 
+  // Parent is a block frame, so use the LineIterator to find the previous visual
   // sibling on this line, or the last one on the previous line.
 
   int32_t thisLine;
@@ -422,7 +422,7 @@ nsFrameList::GetNextVisualFor(nsIFrame* aFrame) const
 {
   if (!mFirstChild)
     return nullptr;
-  
+
   nsIFrame* parent = mFirstChild->GetParent();
   if (!parent)
     return aFrame ? aFrame->GetPrevSibling() : mFirstChild;
@@ -430,7 +430,7 @@ nsFrameList::GetNextVisualFor(nsIFrame* aFrame) const
   nsBidiDirection paraDir = nsBidiPresUtils::ParagraphDirection(mFirstChild);
 
   nsAutoLineIterator iter = parent->GetLineIterator();
-  if (!iter) { 
+  if (!iter) {
     // Parent is not a block Frame
     if (parent->IsLineFrame()) {
       // Line frames are not bidi-splittable, so need to consider bidi reordering
@@ -449,9 +449,9 @@ nsFrameList::GetNextVisualFor(nsIFrame* aFrame) const
     }
   }
 
-  // Parent is a block frame, so use the LineIterator to find the next visual 
+  // Parent is a block frame, so use the LineIterator to find the next visual
   // sibling on this line, or the first one on the next line.
-  
+
   int32_t thisLine;
   if (aFrame) {
     thisLine = iter->FindLineContaining(aFrame);
@@ -519,7 +519,7 @@ nsFrameList::VerifyList() const
       // we would have broken out of the loop long ago.
       NS_ERROR("loop in frame list.  This will probably hang soon.");
       return;
-    }                           
+    }
     if (!second) {
       break;
     }

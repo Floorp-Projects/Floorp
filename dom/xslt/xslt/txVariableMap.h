@@ -15,11 +15,11 @@ class txVariableMap {
 public:
     txVariableMap();
     ~txVariableMap();
-    
+
     nsresult bindVariable(const txExpandedName& aName, txAExprResult* aValue);
 
     void getVariable(const txExpandedName& aName, txAExprResult** aResult);
-    
+
     void removeVariable(const txExpandedName& aName);
 
 private:

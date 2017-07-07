@@ -163,7 +163,7 @@ nsGfxButtonControlFrame::AttributeChanged(int32_t         aNameSpaceID,
       nsXPIDLString label;
       rv = GetLabel(label);
       NS_ENSURE_SUCCESS(rv, rv);
-    
+
       mTextContent->SetText(label, true);
     } else {
       rv = NS_ERROR_UNEXPECTED;
@@ -183,7 +183,7 @@ nsGfxButtonControlFrame::GetContentInsertionFrame()
 }
 
 nsresult
-nsGfxButtonControlFrame::HandleEvent(nsPresContext* aPresContext, 
+nsGfxButtonControlFrame::HandleEvent(nsPresContext* aPresContext,
                                      WidgetGUIEvent* aEvent,
                                      nsEventStatus* aEventStatus)
 {

@@ -54,7 +54,7 @@ public:
 
     // nsIXULTemplateQueryProcessor interface
     NS_DECL_NSIXULTEMPLATEQUERYPROCESSOR
-   
+
     // nsIRDFObserver interface
     NS_DECL_NSIRDFOBSERVER
 
@@ -139,7 +139,7 @@ public:
      * Parse the value of a property test assertion for a condition or a simple
      * rule based on the parseType attribute into the appropriate literal type.
      */
-    nsresult ParseLiteral(const nsString& aParseType, 
+    nsresult ParseLiteral(const nsString& aParseType,
                           const nsString& aValue,
                           nsIRDFNode** aResult);
 

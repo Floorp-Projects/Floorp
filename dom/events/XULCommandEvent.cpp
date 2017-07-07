@@ -134,7 +134,7 @@ using namespace mozilla::dom;
 already_AddRefed<XULCommandEvent>
 NS_NewDOMXULCommandEvent(EventTarget* aOwner,
                          nsPresContext* aPresContext,
-                         WidgetInputEvent* aEvent) 
+                         WidgetInputEvent* aEvent)
 {
   RefPtr<XULCommandEvent> it =
     new XULCommandEvent(aOwner, aPresContext, aEvent);

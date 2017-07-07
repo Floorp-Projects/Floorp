@@ -23,7 +23,7 @@ public:
   virtual eMathMLFrameType GetMathMLFrameType() override;
 
   virtual void
-  SetAdditionalStyleContext(int32_t          aIndex, 
+  SetAdditionalStyleContext(int32_t          aIndex,
                             nsStyleContext*  aStyleContext) override;
   virtual nsStyleContext*
   GetAdditionalStyleContext(int32_t aIndex) const override;
@@ -64,7 +64,7 @@ public:
                    nsIAtom*        aAttribute,
                    int32_t         aModType) override;
 
-  // This method is called by the parent frame to ask <mo> 
+  // This method is called by the parent frame to ask <mo>
   // to stretch itself.
   NS_IMETHOD
   Stretch(DrawTarget*          aDrawTarget,
@@ -83,7 +83,7 @@ protected:
   explicit nsMathMLmoFrame(nsStyleContext* aContext) :
     nsMathMLTokenFrame(aContext, kClassID), mFlags(0), mMinSize(0), mMaxSize(0) {}
   virtual ~nsMathMLmoFrame();
-  
+
   nsMathMLChar     mMathMLChar; // Here is the MathMLChar that will deal with the operator.
   nsOperatorFlags  mFlags;
   float            mMinSize;
@@ -94,7 +94,7 @@ protected:
   // overload the base method so that we can setup our nsMathMLChar
   void ProcessTextData();
 
-  // helper to get our 'form' and lookup in the Operator Dictionary to fetch 
+  // helper to get our 'form' and lookup in the Operator Dictionary to fetch
   // our default data that may come from there, and to complete the setup
   // using attributes that we may have
   void

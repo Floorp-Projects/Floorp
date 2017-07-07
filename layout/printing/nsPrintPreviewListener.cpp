@@ -43,7 +43,7 @@ nsPrintPreviewListener::~nsPrintPreviewListener()
 //
 // AddListeners
 //
-// Subscribe to the events that will allow us to track various events. 
+// Subscribe to the events that will allow us to track various events.
 //
 nsresult
 nsPrintPreviewListener::AddListeners()
@@ -72,9 +72,9 @@ nsPrintPreviewListener::AddListeners()
 //
 // RemoveListeners
 //
-// Unsubscribe from all the various events that we were listening to. 
+// Unsubscribe from all the various events that we were listening to.
 //
-nsresult 
+nsresult
 nsPrintPreviewListener::RemoveListeners()
 {
   if (mEventTarget) {
@@ -132,8 +132,8 @@ GetActionForEvent(nsIDOMEvent* aEvent)
 
   static const uint32_t kOKKeyCodes[] = {
     NS_VK_PAGE_UP, NS_VK_PAGE_DOWN,
-    NS_VK_UP,      NS_VK_DOWN, 
-    NS_VK_HOME,    NS_VK_END 
+    NS_VK_UP,      NS_VK_DOWN,
+    NS_VK_HOME,    NS_VK_END
   };
 
   if (keyEvent->mKeyCode == NS_VK_TAB) {

@@ -129,7 +129,7 @@ PathExpr::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
 
     *aResult = nodes;
     NS_ADDREF(*aResult);
-    
+
     return NS_OK;
 } //-- evaluate
 
@@ -238,7 +238,7 @@ PathExpr::toString(nsAString& dest)
                      "First step should be relative");
         mItems[0].expr->toString(dest);
     }
-    
+
     uint32_t i, len = mItems.Length();
     for (i = 1; i < len; ++i) {
         switch (mItems[i].pathOp) {

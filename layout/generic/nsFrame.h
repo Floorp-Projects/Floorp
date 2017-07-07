@@ -187,9 +187,9 @@ public:
                                          nsIFrame** outChildFrame) override;
 
   static nsresult GetNextPrevLineFromeBlockFrame(nsPresContext* aPresContext,
-                                                 nsPeekOffsetStruct *aPos, 
-                                                 nsIFrame *aBlockFrame, 
-                                                 int32_t aLineStart, 
+                                                 nsPeekOffsetStruct *aPos,
+                                                 nsIFrame *aBlockFrame,
+                                                 int32_t aLineStart,
                                                  int8_t aOutSideLimit);
 
   nsresult CharacterDataChanged(CharacterDataChangeInfo* aInfo) override;
@@ -306,7 +306,7 @@ public:
   // Compute tight bounds assuming this frame honours its border, background
   // and outline, its children's tight bounds, and nothing else.
   nsRect ComputeSimpleTightBounds(mozilla::gfx::DrawTarget* aDrawTarget) const;
-  
+
   /**
    * A helper, used by |nsFrame::ComputeSize| (for frames that need to
    * override only this part of ComputeSize), that computes the size
@@ -506,8 +506,8 @@ public:
    * XML container is dumped.
    */
   virtual void DumpBaseRegressionData(nsPresContext* aPresContext, FILE* out, int32_t aIndent);
-  
-  // Display Reflow Debugging 
+
+  // Display Reflow Debugging
   static void* DisplayReflowEnter(nsPresContext*          aPresContext,
                                   nsIFrame*                aFrame,
                                   const ReflowInput& aReflowInput);
@@ -601,7 +601,7 @@ protected:
       nsDisplayList* aList, uint16_t aContentType = nsISelectionDisplay::DISPLAY_FRAMES);
 
   int16_t DisplaySelection(nsPresContext* aPresContext, bool isOkToTurnOn = false);
-  
+
   // Style post processing hook
   void DidSetStyleContext(nsStyleContext* aOldStyleContext) override;
 
@@ -676,10 +676,10 @@ public:
 protected:
 
   // Test if we are selecting a table object:
-  //  Most table/cell selection requires that Ctrl (Cmd on Mac) key is down 
+  //  Most table/cell selection requires that Ctrl (Cmd on Mac) key is down
   //   during a mouse click or drag. Exception is using Shift+click when
   //   already in "table/cell selection mode" to extend a block selection
-  //  Get the parent content node and offset of the frame 
+  //  Get the parent content node and offset of the frame
   //   of the enclosing cell or table (if not inside a cell)
   //  aTarget tells us what table element to select (currently only cell and table supported)
   //  (enums for this are defined in nsIFrame.h)
@@ -805,10 +805,10 @@ public:
 
   struct DR_cookie {
     DR_cookie(nsPresContext*          aPresContext,
-              nsIFrame*                aFrame, 
+              nsIFrame*                aFrame,
               const mozilla::ReflowInput& aReflowInput,
               mozilla::ReflowOutput&     aMetrics,
-              nsReflowStatus&          aStatus);     
+              nsReflowStatus&          aStatus);
     ~DR_cookie();
     void Change() const;
 
@@ -816,7 +816,7 @@ public:
     nsIFrame*                mFrame;
     const mozilla::ReflowInput& mReflowInput;
     mozilla::ReflowOutput&     mMetrics;
-    nsReflowStatus&          mStatus;    
+    nsReflowStatus&          mStatus;
     void*                    mValue;
   };
 
@@ -827,7 +827,7 @@ public:
     nsIFrame* mFrame;
     void* mValue;
   };
-  
+
   struct DR_intrinsic_width_cookie {
     DR_intrinsic_width_cookie(nsIFrame* aFrame, const char* aType,
                               nscoord& aResult);
@@ -838,7 +838,7 @@ public:
     nscoord& mResult;
     void* mValue;
   };
-  
+
   struct DR_intrinsic_size_cookie {
     DR_intrinsic_size_cookie(nsIFrame* aFrame, const char* aType,
                              nsSize& aResult);
@@ -884,11 +884,11 @@ public:
   };
 
 #define DISPLAY_REFLOW(dr_pres_context, dr_frame, dr_rf_state, dr_rf_metrics, dr_rf_status) \
-  DR_cookie dr_cookie(dr_pres_context, dr_frame, dr_rf_state, dr_rf_metrics, dr_rf_status); 
+  DR_cookie dr_cookie(dr_pres_context, dr_frame, dr_rf_state, dr_rf_metrics, dr_rf_status);
 #define DISPLAY_REFLOW_CHANGE() \
   dr_cookie.Change();
 #define DISPLAY_LAYOUT(dr_frame) \
-  DR_layout_cookie dr_cookie(dr_frame); 
+  DR_layout_cookie dr_cookie(dr_frame);
 #define DISPLAY_MIN_WIDTH(dr_frame, dr_result) \
   DR_intrinsic_width_cookie dr_cookie(dr_frame, "Min", dr_result)
 #define DISPLAY_PREF_WIDTH(dr_frame, dr_result) \
@@ -910,8 +910,8 @@ public:
 
 #else
 
-#define DISPLAY_REFLOW(dr_pres_context, dr_frame, dr_rf_state, dr_rf_metrics, dr_rf_status) 
-#define DISPLAY_REFLOW_CHANGE() 
+#define DISPLAY_REFLOW(dr_pres_context, dr_frame, dr_rf_state, dr_rf_metrics, dr_rf_status)
+#define DISPLAY_REFLOW_CHANGE()
 #define DISPLAY_LAYOUT(dr_frame) PR_BEGIN_MACRO PR_END_MACRO
 #define DISPLAY_MIN_WIDTH(dr_frame, dr_result) PR_BEGIN_MACRO PR_END_MACRO
 #define DISPLAY_PREF_WIDTH(dr_frame, dr_result) PR_BEGIN_MACRO PR_END_MACRO

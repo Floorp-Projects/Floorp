@@ -146,7 +146,7 @@ nsSplittableFrame::SetPrevInFlow(nsIFrame* aFrame)
 
 nsIFrame* nsSplittableFrame::GetNextInFlow() const
 {
-  return mNextContinuation && (mNextContinuation->GetStateBits() & NS_FRAME_IS_FLUID_CONTINUATION) ? 
+  return mNextContinuation && (mNextContinuation->GetStateBits() & NS_FRAME_IS_FLUID_CONTINUATION) ?
     mNextContinuation : nullptr;
 }
 

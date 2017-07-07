@@ -234,13 +234,13 @@ nsNSSCertificateDB::handleCACertDownload(NotNull<nsIArray*> x509Certs,
                                          nsIInterfaceRequestor *ctx,
                                          const nsNSSShutDownPreventionLock &proofOfLock)
 {
-  // First thing we have to do is figure out which certificate we're 
-  // gonna present to the user.  The CA may have sent down a list of 
+  // First thing we have to do is figure out which certificate we're
+  // gonna present to the user.  The CA may have sent down a list of
   // certs which may or may not be a chained list of certs.  Until
   // the day we can design some solid UI for the general case, we'll
   // code to the > 90% case.  That case is where a CA sends down a
-  // list that is a hierarchy whose root is either the first or 
-  // the last cert.  What we're gonna do is compare the first 
+  // list that is a hierarchy whose root is either the first or
+  // the last cert.  What we're gonna do is compare the first
   // 2 entries, if the second was signed by the first, we assume
   // the root cert is the first cert and display it.  Otherwise,
   // we compare the last 2 entries, if the second to last cert was
@@ -283,17 +283,17 @@ nsNSSCertificateDB::handleCACertDownload(NotNull<nsIArray*> x509Certs,
 
     if (cert1IssuerName.Equals(cert0SubjectName)) {
       // In this case, the first cert in the list signed the second,
-      // so the first cert is the root.  Let's display it. 
+      // so the first cert is the root.  Let's display it.
       selCertIndex = 0;
       certToShow = cert0;
-    } else 
-    if (certn_2IssuerName.Equals(certn_1SubjectName)) { 
+    } else
+    if (certn_2IssuerName.Equals(certn_1SubjectName)) {
       // In this case the last cert has signed the second to last cert.
       // The last cert is the root, so let's display it.
       selCertIndex = numCerts-1;
       certToShow = certn_1;
     } else {
-      // It's not a chain, so let's just show the first one in the 
+      // It's not a chain, so let's just show the first one in the
       // downloaded list.
       selCertIndex = 0;
       certToShow = cert0;
@@ -304,7 +304,7 @@ nsNSSCertificateDB::handleCACertDownload(NotNull<nsIArray*> x509Certs,
     return NS_ERROR_FAILURE;
 
   nsCOMPtr<nsICertificateDialogs> dialogs;
-  nsresult rv = ::getNSSDialogs(getter_AddRefs(dialogs), 
+  nsresult rv = ::getNSSDialogs(getter_AddRefs(dialogs),
                                 NS_GET_IID(nsICertificateDialogs),
                                 NS_CERTIFICATEDIALOGS_CONTRACTID);
   if (NS_FAILED(rv)) {
@@ -662,8 +662,8 @@ nsNSSCertificateDB::ImportValidCACertsInList(const UniqueCERTCertList& filteredC
   return NS_OK;
 }
 
-void nsNSSCertificateDB::DisplayCertificateAlert(nsIInterfaceRequestor *ctx, 
-                                                 const char *stringID, 
+void nsNSSCertificateDB::DisplayCertificateAlert(nsIInterfaceRequestor *ctx,
+                                                 const char *stringID,
                                                  nsIX509Cert *certToShow,
                                                  const nsNSSShutDownPreventionLock &/*proofOfLock*/)
 {
@@ -765,7 +765,7 @@ nsNSSCertificateDB::ImportUserCertificate(uint8_t* data, uint32_t length,
   return NS_OK;
 }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsNSSCertificateDB::DeleteCertificate(nsIX509Cert *aCert)
 {
   NS_ENSURE_ARG_POINTER(aCert);
@@ -789,21 +789,21 @@ nsNSSCertificateDB::DeleteCertificate(nsIX509Cert *aCert)
   if (cert->slot && certType != nsIX509Cert::USER_CERT) {
     // To delete a cert of a slot (builtin, most likely), mark it as
     // completely untrusted.  This way we keep a copy cached in the
-    // local database, and next time we try to load it off of the 
-    // external token/slot, we'll know not to trust it.  We don't 
+    // local database, and next time we try to load it off of the
+    // external token/slot, we'll know not to trust it.  We don't
     // want to do that with user certs, because a user may  re-store
-    // the cert onto the card again at which point we *will* want to 
+    // the cert onto the card again at which point we *will* want to
     // trust that cert if it chains up properly.
     nsNSSCertTrust trust(0, 0, 0);
-    srv = CERT_ChangeCertTrust(CERT_GetDefaultCertDB(), 
+    srv = CERT_ChangeCertTrust(CERT_GetDefaultCertDB(),
                                cert.get(), trust.GetTrust());
   }
   MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("cert deleted: %d", srv));
   return (srv) ? NS_ERROR_FAILURE : NS_OK;
 }
 
-NS_IMETHODIMP 
-nsNSSCertificateDB::SetCertTrust(nsIX509Cert *cert, 
+NS_IMETHODIMP
+nsNSSCertificateDB::SetCertTrust(nsIX509Cert *cert,
                                  uint32_t type,
                                  uint32_t trusted)
 {
@@ -828,21 +828,21 @@ nsNSSCertificateDB::SetCertTrust(nsIX509Cert *cert,
     trust.AddCATrust(!!(trusted & nsIX509CertDB::TRUSTED_SSL),
                      !!(trusted & nsIX509CertDB::TRUSTED_EMAIL),
                      !!(trusted & nsIX509CertDB::TRUSTED_OBJSIGN));
-    srv = CERT_ChangeCertTrust(CERT_GetDefaultCertDB(), 
+    srv = CERT_ChangeCertTrust(CERT_GetDefaultCertDB(),
                                nsscert.get(),
                                trust.GetTrust());
   } else if (type == nsIX509Cert::SERVER_CERT) {
     // always start with untrusted and move up
     trust.SetValidPeer();
     trust.AddPeerTrust(trusted & nsIX509CertDB::TRUSTED_SSL, 0, 0);
-    srv = CERT_ChangeCertTrust(CERT_GetDefaultCertDB(), 
+    srv = CERT_ChangeCertTrust(CERT_GetDefaultCertDB(),
                                nsscert.get(),
                                trust.GetTrust());
   } else if (type == nsIX509Cert::EMAIL_CERT) {
     // always start with untrusted and move up
     trust.SetValidPeer();
     trust.AddPeerTrust(0, !!(trusted & nsIX509CertDB::TRUSTED_EMAIL), 0);
-    srv = CERT_ChangeCertTrust(CERT_GetDefaultCertDB(), 
+    srv = CERT_ChangeCertTrust(CERT_GetDefaultCertDB(),
                                nsscert.get(),
                                trust.GetTrust());
   } else {
@@ -852,8 +852,8 @@ nsNSSCertificateDB::SetCertTrust(nsIX509Cert *cert,
   return MapSECStatus(srv);
 }
 
-NS_IMETHODIMP 
-nsNSSCertificateDB::IsCertTrusted(nsIX509Cert *cert, 
+NS_IMETHODIMP
+nsNSSCertificateDB::IsCertTrusted(nsIX509Cert *cert,
                                   uint32_t certType,
                                   uint32_t trustType,
                                   bool *_isTrusted)
@@ -1048,7 +1048,7 @@ nsNSSCertificateDB::FindCertByEmailAddress(const nsACString& aEmailAddress,
     return NS_ERROR_FAILURE;
   }
 
-  // node now contains the first valid certificate with correct usage 
+  // node now contains the first valid certificate with correct usage
   RefPtr<nsNSSCertificate> nssCert = nsNSSCertificate::Create(node->cert);
   if (!nssCert)
     return NS_ERROR_OUT_OF_MEMORY;
@@ -1118,7 +1118,7 @@ nsNSSCertificateDB::ConstructX509(const nsACString& certDER,
 }
 
 void
-nsNSSCertificateDB::get_default_nickname(CERTCertificate *cert, 
+nsNSSCertificateDB::get_default_nickname(CERTCertificate *cert,
                                          nsIInterfaceRequestor* ctx,
                                          nsCString &nickname,
                                          const nsNSSShutDownPreventionLock &/*proofOfLock*/)
@@ -1322,7 +1322,7 @@ nsNSSCertificateDB::SetCertTrustFromString(nsIX509Cert* cert,
   return MapSECStatus(srv);
 }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsNSSCertificateDB::GetCerts(nsIX509CertList **_retval)
 {
   nsNSSShutDownPreventionLock locker;
@@ -1335,7 +1335,7 @@ nsNSSCertificateDB::GetCerts(nsIX509CertList **_retval)
   UniqueCERTCertList certList(PK11_ListCerts(PK11CertListUnique, ctx));
 
   // nsNSSCertList 1) adopts certList, and 2) handles the nullptr case fine.
-  // (returns an empty list) 
+  // (returns an empty list)
   nssCertList = new nsNSSCertList(Move(certList), locker);
 
   nssCertList.forget(_retval);
