@@ -13,13 +13,15 @@
                                   android:layout_height="match_parent"
                                   android:background="@android:color/white">
 
-    <org.mozilla.gecko.home.TabMenuStrip android:layout_width="match_parent"
-                                         android:layout_height="@dimen/tabs_strip_height"
-                                         android:background="@color/about_page_header_grey"
-                                         android:layout_gravity="top"
-                                         gecko:strip="@drawable/home_tab_menu_strip"
-                                         gecko:activeTextColor="@color/placeholder_grey"
-                                         gecko:inactiveTextColor="@color/tab_text_color"
-                                         gecko:tabsMarginLeft="@dimen/tab_strip_content_start" />
+    <org.mozilla.gecko.home.TabMenuStrip
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/tabs_strip_height"
+        android:layout_gravity="top"
+        android:background="@color/about_page_header_grey"
+        gecko:activeTextColor="@color/placeholder_grey"
+        gecko:inactiveTextColor="@color/tab_text_color"
+        gecko:strip="@drawable/home_tab_menu_strip"
+        gecko:stripColor="@color/tab_menu_strip_color"
+        gecko:tabsMarginLeft="@dimen/tab_strip_content_start"/>
 
 </org.mozilla.gecko.home.HomePager>
