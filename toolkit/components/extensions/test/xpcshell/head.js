@@ -5,6 +5,7 @@ const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 /* exported createHttpServer, promiseConsoleOutput, cleanupDir */
 
 Components.utils.import("resource://gre/modules/AppConstants.jsm");
+Components.utils.import("resource://gre/modules/Services.jsm");
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 Components.utils.import("resource://gre/modules/Timer.jsm");
 Components.utils.import("resource://testing-common/AddonTestUtils.jsm");
@@ -25,8 +26,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
                                   "resource://gre/modules/NetUtil.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Schemas",
                                   "resource://gre/modules/Schemas.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "Services",
-                                  "resource://gre/modules/Services.jsm");
+
+Services.prefs.setBoolPref("extensions.webextensions.remote", false);
 
 ExtensionTestUtils.init(this);
 
