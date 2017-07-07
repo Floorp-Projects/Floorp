@@ -6811,11 +6811,11 @@ if (IsCSSPropertyPrefEnabled("layout.css.image-orientation.enabled")) {
       "0turn",
 
       // Rounded initial values.
-      "-90deg",
       "15deg",
       "360deg",
     ],
     other_values: [
+      "-90deg",
       "0deg flip",
       "90deg",
       "90deg flip",
