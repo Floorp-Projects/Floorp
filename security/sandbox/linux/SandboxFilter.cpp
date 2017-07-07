@@ -11,6 +11,9 @@
 #include "SandboxInfo.h"
 #include "SandboxInternal.h"
 #include "SandboxLogging.h"
+#ifdef MOZ_GMP_SANDBOX
+#include "SandboxOpenedFiles.h"
+#endif
 #include "mozilla/PodOperations.h"
 #include "mozilla/UniquePtr.h"
 
@@ -895,7 +898,7 @@ class GMPSandboxPolicy : public SandboxPolicyCommon {
   static intptr_t OpenTrap(const sandbox::arch_seccomp_data& aArgs,
                            void* aux)
   {
-    auto plugin = static_cast<SandboxOpenedFile*>(aux);
+    const auto files = static_cast<const SandboxOpenedFiles*>(aux);
     const char* path;
     int flags;
 
@@ -916,20 +919,15 @@ class GMPSandboxPolicy : public SandboxPolicyCommon {
       MOZ_CRASH("unexpected syscall number");
     }
 
-    if (strcmp(path, plugin->mPath) != 0) {
-      SANDBOX_LOG_ERROR("attempt to open file %s (flags=0%o) which is not the"
-                        " media plugin %s", path, flags, plugin->mPath);
-      return -EPERM;
-    }
     if ((flags & O_ACCMODE) != O_RDONLY) {
       SANDBOX_LOG_ERROR("non-read-only open of file %s attempted (flags=0%o)",
                         path, flags);
-      return -EPERM;
+      return -EROFS;
     }
-    int fd = plugin->mFd.exchange(-1);
+    int fd = files->GetDesc(path);
     if (fd < 0) {
-      SANDBOX_LOG_ERROR("multiple opens of media plugin file unimplemented");
-      return -ENOSYS;
+      // SandboxOpenedFile::GetDesc already logged about this, if appropriate.
+      return -ENOENT;
     }
     return fd;
   }
@@ -979,13 +977,11 @@ class GMPSandboxPolicy : public SandboxPolicyCommon {
     }
   }
 
-  SandboxOpenedFile* mPlugin;
+  const SandboxOpenedFiles* mFiles;
 public:
-  explicit GMPSandboxPolicy(SandboxOpenedFile* aPlugin)
-  : mPlugin(aPlugin)
-  {
-    MOZ_ASSERT(aPlugin->mPath[0] == '/', "plugin path should be absolute");
-  }
+  explicit GMPSandboxPolicy(const SandboxOpenedFiles* aFiles)
+  : mFiles(aFiles)
+  { }
 
   ~GMPSandboxPolicy() override = default;
 
@@ -996,7 +992,7 @@ public:
     case __NR_open:
 #endif
     case __NR_openat:
-      return Trap(OpenTrap, mPlugin);
+      return Trap(OpenTrap, mFiles);
 
       // ipc::Shmem
     case __NR_mprotect:
@@ -1035,6 +1031,9 @@ public:
     CASES_FOR_fcntl:
       return Trap(FcntlTrap, nullptr);
 
+    case __NR_dup:
+      return Allow();
+
     default:
       return SandboxPolicyCommon::EvaluateSyscall(sysno);
     }
@@ -1042,11 +1041,11 @@ public:
 };
 
 UniquePtr<sandbox::bpf_dsl::Policy>
-GetMediaSandboxPolicy(SandboxOpenedFile* aPlugin)
+GetMediaSandboxPolicy(const SandboxOpenedFiles* aFiles)
 {
-  return UniquePtr<sandbox::bpf_dsl::Policy>(new GMPSandboxPolicy(aPlugin));
+  return UniquePtr<sandbox::bpf_dsl::Policy>(new GMPSandboxPolicy(aFiles));
 }
 
 #endif // MOZ_GMP_SANDBOX
 
-}
+} // namespace mozilla
