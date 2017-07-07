@@ -10,7 +10,7 @@
 namespace mozilla {
 namespace widget {
 
-HeadlessCompositorWidget::HeadlessCompositorWidget(const CompositorWidgetInitData& aInitData,
+HeadlessCompositorWidget::HeadlessCompositorWidget(const HeadlessCompositorWidgetInitData& aInitData,
                                                    const layers::CompositorOptions& aOptions,
                                                    HeadlessWidget* aWindow)
       : CompositorWidget(aOptions)

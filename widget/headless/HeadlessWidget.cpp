@@ -37,6 +37,17 @@ NS_IMPL_ISUPPORTS_INHERITED0(HeadlessWidget, nsBaseWidget)
 
 HeadlessWidget* HeadlessWidget::sActiveWindow = nullptr;
 
+HeadlessWidget::HeadlessWidget()
+  : mEnabled(true)
+  , mVisible(false)
+  , mTopLevel(nullptr)
+  , mCompositorWidget(nullptr)
+  , mLastSizeMode(nsSizeMode_Normal)
+  , mEffectiveSizeMode(nsSizeMode_Normal)
+  , mRestoreBounds(0,0,0,0)
+{
+}
+
 HeadlessWidget::~HeadlessWidget()
 {
   if (sActiveWindow == this)
@@ -55,8 +66,6 @@ HeadlessWidget::Create(nsIWidget* aParent,
 
   mBounds = aRect;
   mRestoreBounds = aRect;
-  mVisible = false;
-  mEnabled = true;
 
   if (aParent) {
     mTopLevel = aParent->GetTopLevelWidget();
@@ -84,13 +93,7 @@ HeadlessWidget::CreateChild(const LayoutDeviceIntRect& aRect,
 
 void HeadlessWidget::GetCompositorWidgetInitData(mozilla::widget::CompositorWidgetInitData* aInitData)
 {
-  uintptr_t xWindow(0);
-  nsCString xDisplayString(0);
-
-  *aInitData = mozilla::widget::CompositorWidgetInitData(
-                                  xWindow,
-                                  xDisplayString,
-                                  GetClientSize());
+  *aInitData = mozilla::widget::HeadlessCompositorWidgetInitData(GetClientSize());
 }
 
 nsIWidget*
@@ -208,6 +211,18 @@ HeadlessWidget::GetLayerManager(PLayerTransactionChild* aShadowManager,
 }
 
 void
+HeadlessWidget::SetCompositorWidgetDelegate(CompositorWidgetDelegate* delegate)
+{
+    if (delegate) {
+        mCompositorWidget = delegate->AsHeadlessCompositorWidget();
+        MOZ_ASSERT(mCompositorWidget,
+                   "HeadlessWidget::SetCompositorWidgetDelegate called with a non-HeadlessCompositorWidget");
+    } else {
+        mCompositorWidget = nullptr;
+    }
+}
+
+void
 HeadlessWidget::Resize(double aWidth,
                        double aHeight,
                        bool   aRepaint)
@@ -217,9 +232,8 @@ HeadlessWidget::Resize(double aWidth,
   ConstrainSize(&width, &height);
   mBounds.SizeTo(LayoutDeviceIntSize(width, height));
 
-  if (mCompositorWidgetDelegate) {
-    mCompositorWidgetDelegate->NotifyClientSizeChanged(
-        LayoutDeviceIntSize(mBounds.width, mBounds.height));
+  if (mCompositorWidget) {
+    mCompositorWidget->NotifyClientSizeChanged(LayoutDeviceIntSize(mBounds.width, mBounds.height));
   }
   if (mWidgetListener) {
     mWidgetListener->WindowResized(this, mBounds.width, mBounds.height);
