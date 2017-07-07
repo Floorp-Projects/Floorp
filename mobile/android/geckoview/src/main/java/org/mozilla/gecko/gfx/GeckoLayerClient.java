@@ -215,8 +215,7 @@ class GeckoLayerClient implements LayerView.Listener
       * viewport information provided.
       */
     @WrapForJNI(calledFrom = "ui")
-    public void updateRootFrameMetrics(float scrollX, float scrollY, float zoom,
-            float cssPageLeft, float cssPageTop, float cssPageRight, float cssPageBottom) {
+    public void updateRootFrameMetrics(float scrollX, float scrollY, float zoom) {
         mViewportMetrics = mViewportMetrics.setViewportOrigin(scrollX, scrollY)
             .setZoomFactor(zoom);
 
