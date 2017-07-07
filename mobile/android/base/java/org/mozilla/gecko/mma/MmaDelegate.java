@@ -107,7 +107,7 @@ public class MmaDelegate {
     }
 
 
-    public static boolean isDefaultBrowser(Context context) {
+    private static boolean isDefaultBrowser(Context context) {
         final Intent viewIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("http://www.mozilla.org"));
         final ResolveInfo info = context.getPackageManager().resolveActivity(viewIntent, PackageManager.MATCH_DEFAULT_ONLY);
         if (info == null) {
