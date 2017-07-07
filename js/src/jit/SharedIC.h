@@ -939,7 +939,7 @@ class ICUpdatedStub : public ICStub
     MOZ_MUST_USE bool initUpdatingChain(JSContext* cx, ICStubSpace* space);
 
     MOZ_MUST_USE bool addUpdateStubForValue(JSContext* cx, HandleScript script, HandleObject obj,
-                                            HandleId id, HandleValue val);
+                                            HandleObjectGroup group, HandleId id, HandleValue val);
 
     void addOptimizedUpdateStub(ICStub* stub) {
         if (firstUpdateStub_->isTypeUpdate_Fallback()) {
