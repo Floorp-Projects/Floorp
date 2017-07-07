@@ -10,15 +10,13 @@ const TEST_URI = `
   <style type='text/css'>
     #grid {
       display: grid;
-      grid-template-columns: 2px;
-    }
-    .cell {
-      grid-template-columns: 2px;
+      grid-template-columns: repeat(51, 20px);
+      grid-template-rows: repeat(51, 20px);
     }
   </style>
   <div id="grid">
-    <div id="cellA" className="cell">cell A</div>
-    <div id="cellB" className="cell">cell B</div>
+    <div id="cellA">cell A</div>
+    <div id="cellB">cell B</div>
   </div>
 `;
 
