@@ -290,6 +290,9 @@ CustomizeMode.prototype = {
       let contentContainer = document.getElementById("customization-content-container");
       let footer = document.getElementById("customization-footer");
       let doneButton = document.getElementById("customization-done-button");
+      let panelContextMenu = document.getElementById(kPanelItemContextMenu);
+      this._previousPanelContextMenuParent = panelContextMenu.parentNode;
+      document.getElementById("mainPopupSet").appendChild(panelContextMenu);
       if (gPhotonStructure) {
         if (!customizationContainer.hasAttribute("photon")) {
           contentContainer.appendChild(paletteContainer);
@@ -566,6 +569,8 @@ CustomizeMode.prototype = {
         document.getElementById("PanelUI-quit").removeAttribute("disabled");
         this.panelUIContents.removeAttribute("customize-transitioning");
       }
+      let panelContextMenu = document.getElementById(kPanelItemContextMenu);
+      this._previousPanelContextMenuParent.appendChild(panelContextMenu);
 
       // We need to set this._customizing to false before removing the tab
       // or the TabSelect event handler will think that we are exiting
@@ -2363,6 +2368,14 @@ CustomizeMode.prototype = {
       aReferenceNode = aReferenceNode.previousSibling;
     }
     return aReferenceNode;
+  },
+
+  onPanelContextMenuShowing(event) {
+    let inPermanentArea = !gPhotonStructure ||
+                          !!event.target.triggerNode.closest("#widget-overflow-fixed-list");
+    let doc = event.target.ownerDocument;
+    doc.getElementById("customizationPanelItemContextMenuUnpin").hidden = !inPermanentArea;
+    doc.getElementById("customizationPanelItemContextMenuPin").hidden = inPermanentArea;
   },
 };
 
