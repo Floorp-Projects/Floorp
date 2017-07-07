@@ -3305,14 +3305,10 @@ public:
         typedef mozilla::jni::Args<
                 float,
                 float,
-                float,
-                float,
-                float,
-                float,
                 float> Args;
         static constexpr char name[] = "updateRootFrameMetrics";
         static constexpr char signature[] =
-                "(FFFFFFF)V";
+                "(FFF)V";
         static const bool isStatic = false;
         static const mozilla::jni::ExceptionMode exceptionMode =
                 mozilla::jni::ExceptionMode::ABORT;
@@ -3322,7 +3318,7 @@ public:
                 mozilla::jni::DispatchTarget::CURRENT;
     };
 
-    auto UpdateRootFrameMetrics(float, float, float, float, float, float, float) const -> void;
+    auto UpdateRootFrameMetrics(float, float, float) const -> void;
 
     static const mozilla::jni::CallingThread callingThread =
             mozilla::jni::CallingThread::ANY;
