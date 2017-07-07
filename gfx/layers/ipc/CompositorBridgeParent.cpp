@@ -1428,6 +1428,12 @@ CompositorBridgeParent::InitializeAdvancedLayers(const nsTArray<LayersBackend>& 
     return false;
   }
 
+  // Currently LayerManagerMLGPU hardcodes a D3D11 device, so we reject using
+  // AL if LAYERS_D3D11 isn't in the backend hints.
+  if (!aBackendHints.Contains(LayersBackend::LAYERS_D3D11)) {
+    return false;
+  }
+
   RefPtr<LayerManagerMLGPU> manager = new LayerManagerMLGPU(mWidget);
   if (!manager->Initialize()) {
     return false;

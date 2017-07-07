@@ -183,6 +183,8 @@ public:
     DefaultComputeEffectiveTransforms(aTransformToSurface);
   }
 
+  virtual void Cleanup() override;
+
   virtual void CleanupResources() override;
 
   virtual HostLayer* AsHostLayer() override { return this; }
