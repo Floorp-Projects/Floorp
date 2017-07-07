@@ -680,7 +680,7 @@ mozJSSubScriptLoader::DoLoadSubScriptWithOptions(const nsAString& url,
         if (!options.wantReturnValue)
             script = ScriptPreloader::GetSingleton().GetCachedScript(cx, cachePath);
         if (!script && cache)
-            rv = ReadCachedScript(cache, cachePath, cx, mSystemPrincipal, &script);
+            rv = ReadCachedScript(cache, cachePath, cx, &script);
         if (NS_FAILED(rv) || !script) {
             // ReadCachedScript may have set a pending exception.
             JS_ClearPendingException(cx);
