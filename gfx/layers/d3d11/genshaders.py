@@ -10,7 +10,6 @@ import subprocess
 import sys
 import tempfile
 import yaml
-import buildconfig
 
 def shell_main():
   parser = argparse.ArgumentParser()
@@ -71,10 +70,8 @@ def run_fxc(shader_model,
             shader_file,
             shader_name,
             output_fp):
-  fxc_location = buildconfig.substs['FXC']
-
   argv = [
-    fxc_location,
+    'fxc',
     '-nologo',
     '-T{0}'.format(shader_model),
     shader_file,
@@ -82,8 +79,6 @@ def run_fxc(shader_model,
     '-Vn{0}'.format(shader_name),
     '-Vi',
   ]
-  if 'Linux' in buildconfig.substs['HOST_OS_ARCH']:
-    argv.insert(0, buildconfig.substs['WINE'])
   if shader_model.startswith('vs_'):
     argv += ['-DVERTEX_SHADER']
   elif shader_model.startswith('ps_'):
@@ -97,7 +92,7 @@ def run_fxc(shader_model,
     proc_stdout = subprocess.check_output(argv)
     proc_stdout = decode_console_text(sys.stdout, proc_stdout)
     deps = find_dependencies(proc_stdout)
-    assert 'fxc2' in fxc_location or len(deps) > 0
+    assert len(deps) > 0
 
     with open(temp_filename, 'r') as temp_fp:
       output_fp.write(temp_fp.read())
