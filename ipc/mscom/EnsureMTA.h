@@ -69,7 +69,11 @@ public:
       return;
     }
 
-    static nsAutoHandle event(::CreateEventW(nullptr, FALSE, FALSE, nullptr));
+    // Note that we might reenter the EnsureMTA constructor while we wait on
+    // this event due to APC dispatch, therefore we need a unique event object
+    // for each entry. If perf becomes an issue then we will want to maintain
+    // an array of events where the Nth event is unique to the Nth reentry.
+    nsAutoHandle event(::CreateEventW(nullptr, FALSE, FALSE, nullptr));
     if (!event) {
       return;
     }
