@@ -9,26 +9,35 @@
  * the transaction restores it with the same id (as received by the observers).
  */
 
-var bs = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
-         getService(Ci.nsINavBookmarksService);
-
-function run_test() {
+add_task(async function test_undo_folder_remove_within_transaction() {
   const TITLE = "test folder";
 
   // Create two test folders; remove the first one.  This ensures that undoing
   // the removal will not get the same id by chance (the insert id's can be
   // reused in SQLite).
-  let id = bs.createFolder(bs.placesRoot, TITLE, -1);
-  bs.createFolder(bs.placesRoot, "test folder 2", -1);
-  let transaction = bs.getRemoveFolderTransaction(id);
+  let folder = await PlacesUtils.bookmarks.insert({
+    parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+    title: TITLE,
+    type: PlacesUtils.bookmarks.TYPE_FOLDER,
+  });
+
+  let id = await PlacesUtils.promiseItemId(folder.guid);
+
+  await PlacesUtils.bookmarks.insert({
+    parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+    title: "test folder 2",
+    type: PlacesUtils.bookmarks.TYPE_FOLDER,
+  });
+
+  let transaction = PlacesUtils.bookmarks.getRemoveFolderTransaction(id);
   transaction.doTransaction();
 
   // Now check to make sure it gets added with the right id
-  bs.addObserver({
+  PlacesUtils.bookmarks.addObserver({
     onItemAdded(aItemId, aFolder, aIndex, aItemType, aURI, aTitle) {
       do_check_eq(aItemId, id);
       do_check_eq(aTitle, TITLE);
     }
   });
   transaction.undoTransaction();
-}
+});

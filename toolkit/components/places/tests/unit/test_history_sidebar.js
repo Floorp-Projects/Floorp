@@ -7,8 +7,6 @@
 // Get history service
 var hs = Cc["@mozilla.org/browser/nav-history-service;1"].
          getService(Ci.nsINavHistoryService);
-var bs = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
-         getService(Ci.nsINavBookmarksService);
 
 /**
  * Adds a test URI visit to the database.
@@ -78,7 +76,7 @@ var visibleContainers = containers.filter(
 /**
  * Asynchronous task that fills history and checks containers' labels.
  */
-async function task_fill_history() {
+add_task(async function task_fill_history() {
   print("\n\n*** TEST Fill History\n");
   // We can't use "now" because our hardcoded offsets would be invalid for some
   // date.  So we hardcode a date.
@@ -121,7 +119,7 @@ async function task_fill_history() {
   }
   do_check_eq(cc, visibleContainers.length);
   root.containerOpen = false;
-}
+});
 
 /**
  * Bug 485703 - Hide date containers not containing additional entries compared
@@ -165,7 +163,7 @@ function check_visit(aOffset) {
  * Queries history grouped by date and site, checking containers' labels and
  * children.
  */
-function test_RESULTS_AS_DATE_SITE_QUERY() {
+add_task(async function test_RESULTS_AS_DATE_SITE_QUERY() {
   print("\n\n*** TEST RESULTS_AS_DATE_SITE_QUERY\n");
   var options = hs.getNewQueryOptions();
   options.resultType = options.RESULTS_AS_DATE_SITE_QUERY;
@@ -224,12 +222,12 @@ function test_RESULTS_AS_DATE_SITE_QUERY() {
   site1.containerOpen = false;
   dayNode.containerOpen = false;
   root.containerOpen = false;
-}
+});
 
 /**
  * Queries history grouped by date, checking containers' labels and children.
  */
-function test_RESULTS_AS_DATE_QUERY() {
+add_task(async function test_RESULTS_AS_DATE_QUERY() {
   print("\n\n*** TEST RESULTS_AS_DATE_QUERY\n");
   var options = hs.getNewQueryOptions();
   options.resultType = options.RESULTS_AS_DATE_QUERY;
@@ -280,16 +278,19 @@ function test_RESULTS_AS_DATE_QUERY() {
 
   dayNode.containerOpen = false;
   root.containerOpen = false;
-}
+});
 
 /**
  * Queries history grouped by site, checking containers' labels and children.
  */
-function test_RESULTS_AS_SITE_QUERY() {
+add_task(async function test_RESULTS_AS_SITE_QUERY() {
   print("\n\n*** TEST RESULTS_AS_SITE_QUERY\n");
   // add a bookmark with a domain not in the set of visits in the db
-  var itemId = bs.insertBookmark(bs.toolbarFolder, uri("http://foobar"),
-                                 bs.DEFAULT_INDEX, "");
+  let bookmark = await PlacesUtils.bookmarks.insert({
+    parentGuid: PlacesUtils.bookmarks.toolbarGuid,
+    url: "http://foobar",
+    title: ""
+  });
 
   var options = hs.getNewQueryOptions();
   options.resultType = options.RESULTS_AS_SITE_QUERY;
@@ -345,8 +346,8 @@ function test_RESULTS_AS_SITE_QUERY() {
   root.containerOpen = false;
 
   // Cleanup.
-  bs.removeItem(itemId);
-}
+  await PlacesUtils.bookmarks.remove(bookmark.guid);
+});
 
 /**
  * Checks that queries grouped by date do liveupdate correctly.
@@ -386,14 +387,16 @@ async function task_test_date_liveupdate(aResultType) {
   root.containerOpen = false;
 
   // TEST 2. Test that the query correctly updates even if it is not root.
-  var itemId = bs.insertBookmark(bs.toolbarFolder,
-                                 uri("place:type=" + aResultType),
-                                 bs.DEFAULT_INDEX, "");
+  var bookmark = await PlacesUtils.bookmarks.insert({
+    parentGuid: PlacesUtils.bookmarks.toolbarGuid,
+    url: "place:type=" + aResultType,
+    title: "",
+  });
 
   // Query toolbar and open our query container, then check again liveupdate.
   options = hs.getNewQueryOptions();
   query = hs.getNewQuery();
-  query.setFolders([bs.toolbarFolder], 1);
+  query.setFolders([PlacesUtils.toolbarFolderId], 1);
   result = hs.executeQuery(query, options);
   root = result.root;
   root.containerOpen = true;
@@ -413,24 +416,19 @@ async function task_test_date_liveupdate(aResultType) {
   root.containerOpen = false;
 
   // Cleanup.
-  bs.removeItem(itemId);
+  await PlacesUtils.bookmarks.remove(bookmark.guid);
 }
 
 function run_test() {
-  run_next_test();
-}
-
-add_task(async function test_history_sidebar() {
   // If we're dangerously close to a date change, just bail out.
   if (nowObj.getHours() == 23 && nowObj.getMinutes() >= 50) {
     return;
   }
 
-  await task_fill_history();
-  test_RESULTS_AS_DATE_SITE_QUERY();
-  test_RESULTS_AS_DATE_QUERY();
-  test_RESULTS_AS_SITE_QUERY();
+  run_next_test();
+}
 
+add_task(async function test_history_sidebar() {
   await task_test_date_liveupdate(Ci.nsINavHistoryQueryOptions.RESULTS_AS_DATE_SITE_QUERY);
   await task_test_date_liveupdate(Ci.nsINavHistoryQueryOptions.RESULTS_AS_DATE_QUERY);
 

@@ -36,7 +36,3 @@ add_task(async function() {
 
   root.containerOpen = false;
 });
-
-function run_test() {
-  run_next_test();
-}
