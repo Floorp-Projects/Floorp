@@ -15,7 +15,9 @@ db/**
 docshell/**
 editor/**
 embedding/**
-extensions/**
+extensions/cookie/**
+extensions/spellcheck/**
+extensions/universalchardet/**
 gfx/**
 gradle/**
 hal/**
