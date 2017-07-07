@@ -29,6 +29,7 @@ RemoteCompositorSession::RemoteCompositorSession(nsBaseWidget* aWidget,
    mWidget(aWidget),
    mAPZ(aAPZ)
 {
+  MOZ_ASSERT(!gfxPlatform::IsHeadless());
   GPUProcessManager::Get()->RegisterRemoteProcessSession(this);
   if (mAPZ) {
     mAPZ->SetCompositorSession(this);

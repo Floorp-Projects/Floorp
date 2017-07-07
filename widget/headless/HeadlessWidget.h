@@ -9,6 +9,7 @@
 
 #include "mozilla/widget/InProcessCompositorWidget.h"
 #include "nsBaseWidget.h"
+#include "CompositorWidget.h"
 
 namespace mozilla {
 namespace widget {
@@ -16,7 +17,7 @@ namespace widget {
 class HeadlessWidget : public nsBaseWidget
 {
 public:
-  HeadlessWidget() : mEffectiveSizeMode(nsSizeMode_Normal) {}
+  HeadlessWidget();
 
   NS_DECL_ISUPPORTS_INHERITED
 
@@ -85,6 +86,8 @@ public:
                   LayersBackend aBackendHint = mozilla::layers::LayersBackend::LAYERS_NONE,
                   LayerManagerPersistence aPersistence = LAYER_MANAGER_CURRENT) override;
 
+  void SetCompositorWidgetDelegate(CompositorWidgetDelegate* delegate) override;
+
   virtual nsresult DispatchEvent(WidgetGUIEvent* aEvent,
                                  nsEventStatus& aStatus) override;
 
@@ -93,6 +96,7 @@ private:
   bool mEnabled;
   bool mVisible;
   nsIWidget* mTopLevel;
+  HeadlessCompositorWidget* mCompositorWidget;
   // The size mode before entering fullscreen mode.
   nsSizeMode mLastSizeMode;
   // The last size mode set while the window was visible.
