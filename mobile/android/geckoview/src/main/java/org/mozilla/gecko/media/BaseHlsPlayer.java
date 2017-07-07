@@ -74,8 +74,6 @@ public interface BaseHlsPlayer {
 
     public ConcurrentLinkedQueue<GeckoHLSSample> getSamples(TrackType trackType, int number);
 
-    public long getDuration();
-
     public long getBufferedPosition();
 
     public int getNumberOfTracks(TrackType trackType);
