@@ -41,6 +41,7 @@
 
 #if defined(XP_WIN)
 #include "nsILocalFileWin.h"
+#include "WinUtils.h"
 #endif
 
 #if !defined(XP_WIN) && defined(MOZ_CONTENT_SANDBOX)
@@ -631,6 +632,12 @@ ExtensionProtocolHandler::NewStream(nsIURI* aChildURI,
   // it for reliable subpath checks.
   NS_TRY(extensionDir->Normalize());
   NS_TRY(requestedFile->Normalize());
+#if defined(XP_WIN)
+  if (!widget::WinUtils::ResolveJunctionPointsAndSymLinks(extensionDir) ||
+      !widget::WinUtils::ResolveJunctionPointsAndSymLinks(requestedFile)) {
+    return Err(NS_ERROR_FILE_ACCESS_DENIED);
+  }
+#endif
 
   bool isResourceFromExtensionDir = false;
   NS_TRY(extensionDir->Contains(requestedFile, &isResourceFromExtensionDir));
