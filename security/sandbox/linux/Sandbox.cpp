@@ -13,6 +13,9 @@
 #include "SandboxFilter.h"
 #include "SandboxInternal.h"
 #include "SandboxLogging.h"
+#ifdef MOZ_GMP_SANDBOX
+#include "SandboxOpenedFiles.h"
+#endif
 #include "SandboxReporterClient.h"
 #include "SandboxUtil.h"
 
@@ -34,9 +37,12 @@
 #include <sys/time.h>
 #include <unistd.h>
 
+#include "mozilla/Array.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/Maybe.h"
+#include "mozilla/Range.h"
 #include "mozilla/SandboxInfo.h"
+#include "mozilla/Span.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Unused.h"
 #include "sandbox/linux/bpf_dsl/codegen.h"
@@ -81,13 +87,6 @@ static bool gSandboxCrashOnError = false;
 
 // This is initialized by SandboxSetCrashFunc().
 SandboxCrashFunc gSandboxCrashFunc;
-
-#ifdef MOZ_GMP_SANDBOX
-// For media plugins, we can start the sandbox before we dlopen the
-// module, so we have to pre-open the file and simulate the sandboxed
-// open().
-static SandboxOpenedFile gMediaPluginFile;
-#endif
 
 static Maybe<SandboxReporterClient> gSandboxReporterClient;
 static UniquePtr<SandboxChroot> gChrootHelper;
@@ -713,26 +712,32 @@ SetContentProcessSandbox(int aBrokerFd, std::vector<int>& aSyscallWhitelist)
 void
 SetMediaPluginSandbox(const char *aFilePath)
 {
+  MOZ_RELEASE_ASSERT(aFilePath != nullptr);
   if (!SandboxInfo::Get().Test(SandboxInfo::kEnabledForMedia)) {
     return;
   }
 
   gSandboxReporterClient.emplace(SandboxReport::ProcType::MEDIA_PLUGIN);
 
-  MOZ_ASSERT(!gMediaPluginFile.mPath);
-  if (aFilePath) {
-    gMediaPluginFile.mPath = strdup(aFilePath);
-    gMediaPluginFile.mFd = open(aFilePath, O_RDONLY | O_CLOEXEC);
-    if (gMediaPluginFile.mFd == -1) {
-      SANDBOX_LOG_ERROR("failed to open plugin file %s: %s",
-                        aFilePath, strerror(errno));
-      MOZ_CRASH();
-    }
-  } else {
-    gMediaPluginFile.mFd = -1;
+  SandboxOpenedFile plugin(aFilePath);
+  if (!plugin.IsOpen()) {
+    SANDBOX_LOG_ERROR("failed to open plugin file %s: %s",
+                      aFilePath, strerror(errno));
+    MOZ_CRASH();
   }
+
+  auto files = new SandboxOpenedFiles();
+  files->Add(Move(plugin));
+  files->Add("/dev/urandom", true);
+  files->Add("/sys/devices/system/cpu/cpu0/tsc_freq_khz");
+  files->Add("/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq");
+  files->Add("/proc/cpuinfo"); // Info also available via CPUID instruction.
+#ifdef __i386__
+  files->Add("/proc/self/auxv"); // Info also in process's address space.
+#endif
+
   // Finally, start the sandbox.
-  SetCurrentProcessSandbox(GetMediaSandboxPolicy(&gMediaPluginFile));
+  SetCurrentProcessSandbox(GetMediaSandboxPolicy(files));
 }
 #endif // MOZ_GMP_SANDBOX
 
