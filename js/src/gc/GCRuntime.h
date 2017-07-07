@@ -59,7 +59,9 @@ class ChunkPool
 
   public:
     ChunkPool() : head_(nullptr), count_(0) {}
+    ~ChunkPool() { MOZ_ASSERT(empty()); }
 
+    bool empty() const { return !head_; }
     size_t count() const { return count_; }
 
     Chunk* head() { MOZ_ASSERT(head_); return head_; }
