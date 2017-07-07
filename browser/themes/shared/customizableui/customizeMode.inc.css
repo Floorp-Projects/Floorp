@@ -263,9 +263,11 @@
   background-image: url("chrome://browser/content/default-theme-icon.svg");
 }
 
+%ifdef MOZ_PHOTON_THEME
 #customization-uidensity-button > .box-inherit > .box-inherit > .button-icon {
   background-image: url("chrome://browser/skin/customizableui/density-normal.svg");
 }
+%endif
 
 %ifndef MOZ_PHOTON_THEME
 #main-window[customize-entered] #customization-panel-container {
@@ -462,6 +464,7 @@ toolbarpaletteitem[place="toolbar"]:not([mousedown="true"]):-moz-focusring {
   list-style-image: url(chrome://browser/content/default-theme-icon.svg);
 }
 
+%ifdef MOZ_PHOTON_THEME
 #customization-uidensity-menu-button-normal {
   list-style-image: url("chrome://browser/skin/customizableui/density-normal.svg");
 }
@@ -473,6 +476,7 @@ toolbarpaletteitem[place="toolbar"]:not([mousedown="true"]):-moz-focusring {
 #customization-uidensity-menu-button-touch {
   list-style-image: url("chrome://browser/skin/customizableui/density-touch.svg");
 }
+%endif
 
 .customization-uidensity-menu-button[active="true"],
 .customization-uidensity-menu-button:hover,
