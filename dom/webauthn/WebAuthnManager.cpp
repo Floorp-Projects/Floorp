@@ -5,8 +5,9 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "hasht.h"
-#include "nsNetCID.h"
 #include "nsICryptoHash.h"
+#include "nsNetCID.h"
+#include "nsThreadUtils.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/dom/AuthenticatorAttestationResponse.h"
 #include "mozilla/dom/Promise.h"
@@ -17,7 +18,6 @@
 #include "mozilla/dom/WebCryptoCommon.h"
 #include "mozilla/ipc/PBackgroundChild.h"
 #include "mozilla/ipc/BackgroundChild.h"
-#include "nsThreadUtils.h"
 
 using namespace mozilla::ipc;
 
@@ -117,12 +117,12 @@ AssembleClientData(const nsAString& aOrigin, const CryptoBuffer& aChallenge,
 
 nsresult
 GetOrigin(nsPIDOMWindowInner* aParent,
-          /*out*/ nsAString& aOrigin)
+          /*out*/ nsAString& aOrigin, /*out*/ nsACString& aHost)
 {
   nsCOMPtr<nsIDocument> doc = aParent->GetDoc();
   MOZ_ASSERT(doc);
 
-  nsIPrincipal* principal = doc->NodePrincipal();
+  nsCOMPtr<nsIPrincipal> principal = doc->NodePrincipal();
   nsresult rv = nsContentUtils::GetUTFOrigin(principal, aOrigin);
   if (NS_WARN_IF(NS_FAILED(rv)) ||
       NS_WARN_IF(aOrigin.IsEmpty())) {
@@ -135,6 +135,14 @@ GetOrigin(nsPIDOMWindowInner* aParent,
     // algorithm
     MOZ_LOG(gWebAuthnManagerLog, LogLevel::Debug, ("Rejecting due to opaque origin"));
     return NS_ERROR_DOM_NOT_ALLOWED_ERR;
+  }
+
+  nsCOMPtr<nsIURI> originUri;
+  if (NS_FAILED(principal->GetURI(getter_AddRefs(originUri)))) {
+    return NS_ERROR_FAILURE;
+  }
+  if (NS_FAILED(originUri->GetAsciiHost(aHost))) {
+    return NS_ERROR_FAILURE;
   }
 
   return NS_OK;
@@ -232,7 +240,8 @@ WebAuthnManager::MakeCredential(nsPIDOMWindowInner* aParent,
   }
 
   nsString origin;
-  rv = GetOrigin(aParent, origin);
+  nsCString rpId;
+  rv = GetOrigin(aParent, origin, rpId);
   if (NS_WARN_IF(rv.Failed())) {
     promise->MaybeReject(rv);
     return promise.forget();
@@ -249,12 +258,7 @@ WebAuthnManager::MakeCredential(nsPIDOMWindowInner* aParent,
     adjustedTimeout = std::min(120.0, adjustedTimeout);
   }
 
-  nsCString rpId;
-  if (!aOptions.mRp.mId.WasPassed()) {
-    // If rp.id is not specified, then set rpId to callerOrigin, and rpIdHash to
-    // the SHA-256 hash of rpId.
-    rpId.Assign(NS_ConvertUTF16toUTF8(origin));
-  } else {
+  if (aOptions.mRp.mId.WasPassed()) {
     // If rpId is specified, then invoke the procedure used for relaxing the
     // same-origin restriction by setting the document.domain attribute, using
     // rpId as the given value but without changing the current document’s
@@ -472,7 +476,8 @@ WebAuthnManager::GetAssertion(nsPIDOMWindowInner* aParent,
   }
 
   nsString origin;
-  rv = GetOrigin(aParent, origin);
+  nsCString rpId;
+  rv = GetOrigin(aParent, origin, rpId);
   if (NS_WARN_IF(rv.Failed())) {
     promise->MaybeReject(rv);
     return promise.forget();
@@ -489,12 +494,7 @@ WebAuthnManager::GetAssertion(nsPIDOMWindowInner* aParent,
     adjustedTimeout = std::min(120000u, adjustedTimeout);
   }
 
-  nsCString rpId;
-  if (!aOptions.mRpId.WasPassed()) {
-    // If rpId is not specified, then set rpId to callerOrigin, and rpIdHash to
-    // the SHA-256 hash of rpId.
-    rpId.Assign(NS_ConvertUTF16toUTF8(origin));
-  } else {
+  if (aOptions.mRpId.WasPassed()) {
     // If rpId is specified, then invoke the procedure used for relaxing the
     // same-origin restriction by setting the document.domain attribute, using
     // rpId as the given value but without changing the current document’s
