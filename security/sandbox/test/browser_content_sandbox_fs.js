@@ -215,7 +215,15 @@ async function createTempFile() {
   ok(fileCreated == true, "creating a file in content temp is permitted");
   // now delete the file
   let fileDeleted = await ContentTask.spawn(browser, path, deleteFile);
-  ok(fileDeleted == true, "deleting a file in content temp is permitted");
+  if (isMac()) {
+    // On macOS we do not allow file deletion - it is not needed by the content
+    // process itself, and macOS uses a different permission to control access
+    // to revoking it is easy.
+    ok(fileDeleted == false,
+       "deleting a file in the content temp is not permitted");
+  } else {
+    ok(fileDeleted == true, "deleting a file in content temp is permitted");
+  }
 }
 
 // Test reading files and dirs from web and file content processes.

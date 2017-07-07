@@ -275,7 +275,7 @@ static const char contentSandboxRules[] = R"(
 
 ; bug 1303987
   (if (string? debugWriteDir)
-    (allow file-write* (subpath debugWriteDir)))
+    (allow file-write-create file-write-data (subpath debugWriteDir)))
 
   ; bug 1324610
   (allow network-outbound file-read*
@@ -359,7 +359,7 @@ static const char contentSandboxRules[] = R"(
       (iokit-user-client-class "Gen6DVDContext"))
 
   ; bug 1237847
-  (allow file-read* file-write*
+  (allow file-read* file-write-create file-write-data
       (subpath appTempDir))
 )";
 
