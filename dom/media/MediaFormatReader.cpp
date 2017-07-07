@@ -1117,6 +1117,7 @@ MediaFormatReader::MediaFormatReader(MediaFormatReaderInit& aInit,
   , mBuffered(mTaskQueue,
               TimeIntervals(),
               "MediaFormatReader::mBuffered (Canonical)")
+  , mFrameStats(aInit.mFrameStats)
 {
   MOZ_ASSERT(aDemuxer);
   MOZ_COUNT_CTOR(MediaFormatReader);
@@ -2150,7 +2151,7 @@ MediaFormatReader::Update(TrackType aTrack)
 
   // Record number of frames decoded and parsed. Automatically update the
   // stats counters using the AutoNotifyDecoded stack-based class.
-  AbstractMediaDecoder::AutoNotifyDecoded a(mDecoder);
+  AbstractMediaDecoder::AutoNotifyDecoded a(mFrameStats);
 
   // Drop any frames found prior our internal seek target.
   while (decoder.mTimeThreshold && decoder.mOutput.Length()) {

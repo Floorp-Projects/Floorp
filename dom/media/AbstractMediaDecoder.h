@@ -62,21 +62,21 @@ public:
   class AutoNotifyDecoded
   {
   public:
-    explicit AutoNotifyDecoded(AbstractMediaDecoder* aDecoder)
-      : mDecoder(aDecoder)
+    explicit AutoNotifyDecoded(FrameStatistics* aFrameStats)
+      : mFrameStats(aFrameStats)
     {
     }
     ~AutoNotifyDecoded()
     {
-      if (mDecoder) {
-        mDecoder->NotifyDecodedFrames(mStats);
+      if (mFrameStats) {
+        mFrameStats->NotifyDecodedFrames(mStats);
       }
     }
 
     FrameStatisticsData mStats;
 
   private:
-    AbstractMediaDecoder* mDecoder;
+    FrameStatistics* mFrameStats;
   };
 
   // Classes directly inheriting from AbstractMediaDecoder do not support

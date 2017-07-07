@@ -28,6 +28,7 @@ MediaDecoderStateMachine*
 MP3Decoder::CreateStateMachine() {
   MediaFormatReaderInit init(this);
   init.mCrashHelper = GetOwner()->CreateGMPCrashHelper();
+  init.mFrameStats = mFrameStats;
   mReader = new MediaFormatReader(init, new MP3Demuxer(mResource));
   return new MediaDecoderStateMachine(this, mReader);
 }
