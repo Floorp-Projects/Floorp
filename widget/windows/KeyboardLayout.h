@@ -531,6 +531,10 @@ private:
     return aMSG.message == WM_CHAR &&
            !IsControlChar(static_cast<char16_t>(aMSG.wParam));
   }
+  bool IsEnterKeyPressCharMessage(const MSG& aMSG) const
+  {
+    return aMSG.message == WM_CHAR && aMSG.wParam == '\r';
+  }
   bool IsPrintableCharOrSysCharMessage(const MSG& aMSG) const
   {
     return IsCharOrSysCharMessage(aMSG) &&
