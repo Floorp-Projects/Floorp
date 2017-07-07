@@ -32,6 +32,7 @@ HLSDecoder::CreateStateMachine()
   init.mVideoFrameContainer = GetVideoFrameContainer();
   init.mKnowsCompositor = GetCompositor();
   init.mCrashHelper = GetOwner()->CreateGMPCrashHelper();
+  init.mFrameStats = mFrameStats;
   mReader =
     new MediaFormatReader(init, new HLSDemuxer(resourceWrapper->GetPlayerId()));
 
