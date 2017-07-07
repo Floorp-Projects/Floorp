@@ -127,7 +127,7 @@ public:
     {
         if (!mInstance) {
             mInstance = new gfxDWriteFontFileLoader();
-            mozilla::gfx::Factory::GetDWriteFactory()->
+            gfxWindowsPlatform::GetPlatform()->GetDWriteFactory()->
                 RegisterFontFileLoader(mInstance);
         }
         return mInstance;
