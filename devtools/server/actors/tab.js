@@ -12,7 +12,7 @@
 // document process. For example, it shouldn't be evaluated in the parent
 // process until we try to debug a document living in the parent process.
 
-var { Ci, Cu, Cr } = require("chrome");
+var { Ci, Cu, Cr, Cc } = require("chrome");
 var Services = require("Services");
 var { XPCOMUtils } = require("resource://gre/modules/XPCOMUtils.jsm");
 var promise = require("promise");
@@ -226,7 +226,9 @@ function TabActor(connection) {
     frames: true,
     // Do not require to send reconfigure request to reset the document state
     // to what it was before using the TabActor
-    noTabReconfigureOnClose: true
+    noTabReconfigureOnClose: true,
+    // Supports the logErrorInPage request.
+    logErrorInPage: true,
   };
 
   this._workerActorList = null;
@@ -659,6 +661,17 @@ TabActor.prototype = {
         "workers": actors.map((actor) => actor.form())
       };
     });
+  },
+
+  onLogErrorInPage(request) {
+    let {text, category} = request;
+    let scriptErrorClass = Cc["@mozilla.org/scripterror;1"];
+    let scriptError = scriptErrorClass.createInstance(Ci.nsIScriptError);
+    scriptError.initWithWindowID(text, null, null, 0, 0, 1,
+                                 category, getInnerId(this.window));
+    let console = Cc["@mozilla.org/consoleservice;1"].getService(Ci.nsIConsoleService);
+    console.logMessage(scriptError);
+    return {};
   },
 
   _onWorkerActorListChanged() {
@@ -1426,6 +1439,7 @@ TabActor.prototype.requestTypes = {
   "switchToFrame": TabActor.prototype.onSwitchToFrame,
   "listFrames": TabActor.prototype.onListFrames,
   "listWorkers": TabActor.prototype.onListWorkers,
+  "logErrorInPage": TabActor.prototype.onLogErrorInPage,
 };
 
 exports.TabActor = TabActor;
