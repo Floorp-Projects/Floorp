@@ -286,12 +286,14 @@ GetDirectionFromChar(uint32_t ch)
   }
 }
 
-inline static bool NodeAffectsDirAutoAncestor(nsINode* aTextNode)
+inline static bool
+NodeAffectsDirAutoAncestor(nsINode* aTextNode)
 {
   Element* parent = aTextNode->GetParentElement();
   return (parent &&
           !DoesNotParticipateInAutoDirection(parent) &&
-          parent->NodeOrAncestorHasDirAuto());
+          parent->NodeOrAncestorHasDirAuto() &&
+          !aTextNode->IsInAnonymousSubtree());
 }
 
 Directionality
