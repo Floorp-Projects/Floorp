@@ -29,14 +29,12 @@
     }
 
     function arrivingHereIsBad(aResult) {
-      // TODO: Change to `ok` when Bug 1329764 lands
-      todo(false, "Bad result! Received a: " + aResult);
+      ok(false, "Bad result! Received a: " + aResult);
       return Promise.resolve();
     }
 
     function expectSecurityError(aResult) {
-      // TODO: Change to `ok` when Bug 1329764 lands
-      todo(aResult.toString().startsWith("SecurityError"), "Expecting a SecurityError");
+      ok(aResult.toString().startsWith("SecurityError"), "Expecting a SecurityError");
       return Promise.resolve();
     }
 
@@ -66,7 +64,7 @@
       var testFuncs = [
         function() {
           // Test basic good call
-          let rp = {id: document.origin};
+          let rp = {id: document.domain};
           let makeCredentialOptions = {
             rp: rp, user: user, challenge: chall, parameters: [param]
           };
@@ -87,7 +85,7 @@
         },
         function() {
           // Test this origin with optional fields
-          let rp = {id: "user:pass@" + document.origin + ":8888"};
+          let rp = {id: "user:pass@" + document.domain + ":8888"};
           let makeCredentialOptions = {
             rp: rp, user: user, challenge: chall, parameters: [param]
           };
@@ -107,7 +105,7 @@
         },
         function() {
           // Test subdomain of this origin
-          let rp = {id: "subdomain." + document.origin};
+          let rp = {id: "subdomain." + document.domain};
           let makeCredentialOptions = {
             rp: rp, user: user, challenge: chall, parameters: [param]
           };
@@ -116,8 +114,18 @@
                       .catch(expectSecurityError);
         },
         function() {
-          // Test another origin
+          // Test the same origin
           let rp = {id: "example.com"};
+          let makeCredentialOptions = {
+            rp: rp, user: user, challenge: chall, parameters: [param]
+          };
+          return credm.create({publicKey: makeCredentialOptions})
+                      .then(arrivingHereIsGood)
+                      .catch(arrivingHereIsBad);
+        },
+        function() {
+          // Test the eTLD
+          let rp = {id: "com"};
           let makeCredentialOptions = {
             rp: rp, user: user, challenge: chall, parameters: [param]
           };
@@ -139,7 +147,7 @@
           // Test basic good call
           let publicKeyCredentialRequestOptions = {
             challenge: chall,
-            rpId: document.origin,
+            rpId: document.domain,
             allowList: [gTrackedCredential]
           };
           return credm.get({publicKey: publicKeyCredentialRequestOptions})
@@ -182,7 +190,7 @@
           // Test subdomain of this origin
           let publicKeyCredentialRequestOptions = {
             challenge: chall,
-            rpId: "subdomain." + document.origin,
+            rpId: "subdomain." + document.domain,
             allowList: [gTrackedCredential]
           };
           return credm.get({publicKey: publicKeyCredentialRequestOptions})
@@ -190,10 +198,21 @@
                       .catch(expectSecurityError);
         },
         function () {
-          // Test another origin
+          // Test the same origin
           let publicKeyCredentialRequestOptions = {
             challenge: chall,
             rpId: "example.com",
+            allowList: [gTrackedCredential]
+          };
+          return credm.get({publicKey: publicKeyCredentialRequestOptions})
+                      .then(arrivingHereIsGood)
+                      .catch(arrivingHereIsBad);
+        },
+        function() {
+          // Test the eTLD
+          let publicKeyCredentialRequestOptions = {
+            challenge: chall,
+            rpId: "com",
             allowList: [gTrackedCredential]
           };
           return credm.get({publicKey: publicKeyCredentialRequestOptions})
@@ -209,7 +228,7 @@
           };
           return credm.get({publicKey: publicKeyCredentialRequestOptions})
                       .then(arrivingHereIsBad)
-                      .catch(expectSecurityError)
+                      .catch(expectSecurityError);
         },
         function () {
           SimpleTest.finish();

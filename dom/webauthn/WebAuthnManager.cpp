@@ -154,12 +154,30 @@ RelaxSameOrigin(nsPIDOMWindowInner* aParent,
                 /* out */ nsACString& aRelaxedRpId)
 {
   MOZ_ASSERT(aParent);
+  nsCOMPtr<nsIDocument> doc = aParent->GetDoc();
+  MOZ_ASSERT(doc);
+  nsCOMPtr<nsIPrincipal> principal = doc->NodePrincipal();
+  nsCOMPtr<nsIURI> uri;
+  if (NS_FAILED(principal->GetURI(getter_AddRefs(uri)))) {
+    return NS_ERROR_FAILURE;
+  }
+  nsAutoCString originHost;
+  if (NS_FAILED(uri->GetAsciiHost(originHost))) {
+    return NS_ERROR_FAILURE;
+  }
   nsCOMPtr<nsIDocument> document = aParent->GetDoc();
   if (!document || !document->IsHTMLDocument()) {
     return NS_ERROR_FAILURE;
   }
+  nsHTMLDocument* html = document->AsHTMLDocument();
+  if (NS_WARN_IF(!html)) {
+    return NS_ERROR_FAILURE;
+  }
 
-  // TODO: Bug 1329764: Invoke the Relax Algorithm, once properly defined
+  if (!html->IsRegistrableDomainSuffixOfOrEqualTo(aInputRpId, originHost)) {
+    return NS_ERROR_DOM_SECURITY_ERR;
+  }
+
   aRelaxedRpId.Assign(NS_ConvertUTF16toUTF8(aInputRpId));
   return NS_OK;
 }
