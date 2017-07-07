@@ -20,19 +20,17 @@ add_task(async function() {
   const ABOUT_ROBOTS_URI = "about:robots";
   const ABOUT_ROBOTS_TITLE = "Gort! Klaatu barada nikto!";
 
-  function observeLabelChanges(tab) {
-    info("observing tab label changes. initial label: " + tab.label);
-    let labelChangeCount = 0;
+  function observeLabelChanges(tab, expectedLabels) {
+    let seenLabels = [tab.label];
     function TabAttrModifiedListener(event) {
-      if (event.detail.changed.some(attr => { return attr == "label" })) {
-        info("tab label change: " + tab.label);
-        labelChangeCount++;
+      if (event.detail.changed.some(attr => attr == "label")) {
+        seenLabels.push(tab.label);
       }
     }
     tab.addEventListener("TabAttrModified", TabAttrModifiedListener);
-    return (expectedCount) => {
+    return () => {
       tab.removeEventListener("TabAttrModified", TabAttrModifiedListener);
-      is(labelChangeCount, expectedCount, "observed tab label changes");
+      is(JSON.stringify(seenLabels), JSON.stringify(expectedLabels || []), "observed tab label changes");
     }
   }
 
@@ -59,33 +57,29 @@ add_task(async function() {
   is(firstTab.label, CONTENT_TITLE, "first tab displays content title");
   ok(document.title.startsWith(CONTENT_TITLE), "title bar displays content title");
   ok(secondTab.hasAttribute("pending"), "second tab is pending");
+  ok(thirdTab.hasAttribute("pending"), "third tab is pending");
+
+  info("selecting the second tab");
   // The fix for bug 1364127 caused about: pages' initial tab titles to show
   // their about: URIs until their actual page titles are known, e.g.
   // "about:addons" -> "Add-ons Manager". This is bug 1371896. Previously,
   // about: pages' initial tab titles were blank until the page title was known.
-  is(secondTab.label, ABOUT_ROBOTS_URI, "second tab displays URI as its initial title");
-  ok(thirdTab.hasAttribute("pending"), "third tab is pending");
-  is(thirdTab.label, "example.com", "third tab displays hostname without www as its initial title");
-
-  info("selecting the second tab");
-  let checkLabelChangeCount = observeLabelChanges(secondTab);
+  let finishObservingLabelChanges = observeLabelChanges(secondTab, [ABOUT_ROBOTS_URI, ABOUT_ROBOTS_TITLE]);
   browserLoadedPromise = BrowserTestUtils.browserLoaded(secondTab.linkedBrowser, false, ABOUT_ROBOTS_URI);
   gBrowser.selectedTab = secondTab;
   await browserLoadedPromise;
   ok(!secondTab.hasAttribute("pending"), "second tab isn't pending anymore");
-  is(secondTab.label, ABOUT_ROBOTS_TITLE, "second tab displays content title");
   ok(document.title.startsWith(ABOUT_ROBOTS_TITLE), "title bar displays content title");
-  checkLabelChangeCount(1); // ABOUT_ROBOTS_URI -> ABOUT_ROBOTS_TITLE
+  finishObservingLabelChanges();
 
   info("selecting the third tab");
-  checkLabelChangeCount = observeLabelChanges(thirdTab);
+  finishObservingLabelChanges = observeLabelChanges(thirdTab, ["example.com", CONTENT_TITLE]);
   browserLoadedPromise = BrowserTestUtils.browserLoaded(thirdTab.linkedBrowser, false, TEST_URL);
   gBrowser.selectedTab = thirdTab;
   await browserLoadedPromise;
   ok(!thirdTab.hasAttribute("pending"), "third tab isn't pending anymore");
-  is(thirdTab.label, CONTENT_TITLE, "third tab displays content title");
   ok(document.title.startsWith(CONTENT_TITLE), "title bar displays content title");
-  checkLabelChangeCount(1); // TEST_URL -> CONTENT_TITLE
+  finishObservingLabelChanges();
 
   info("restoring the modified browser state");
   await TabStateFlusher.flushWindow(window);
@@ -94,21 +88,19 @@ add_task(async function() {
   is(thirdTab, gBrowser.selectedTab, "third tab is selected after restoring");
   ok(document.title.startsWith(CONTENT_TITLE), "title bar displays content title");
   ok(firstTab.hasAttribute("pending"), "first tab is pending after restoring");
-  is(firstTab.label, CONTENT_TITLE, "first tab displays content title in pending state");
   ok(secondTab.hasAttribute("pending"), "second tab is pending after restoring");
   is(secondTab.label, ABOUT_ROBOTS_TITLE, "second tab displays content title");
   ok(!thirdTab.hasAttribute("pending"), "third tab is not pending after restoring");
   is(thirdTab.label, CONTENT_TITLE, "third tab displays content title in pending state");
 
   info("selecting the first tab");
-  checkLabelChangeCount = observeLabelChanges(firstTab);
+  finishObservingLabelChanges = observeLabelChanges(firstTab, [CONTENT_TITLE]);
   let tabContentRestored = TestUtils.topicObserved("sessionstore-debug-tab-restored");
   gBrowser.selectedTab = firstTab;
   ok(document.title.startsWith(CONTENT_TITLE), "title bar displays content title");
   await tabContentRestored;
   ok(!firstTab.hasAttribute("pending"), "first tab isn't pending anymore");
-  checkLabelChangeCount(0);
-  is(firstTab.label, CONTENT_TITLE, "first tab displays content title after restoring content");
+  finishObservingLabelChanges();
 
   await promiseBrowserState(BACKUP_STATE);
 });
