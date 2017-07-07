@@ -719,7 +719,9 @@ JSDependentString::dumpRepresentation(FILE* fp, int indent) const
     dumpRepresentationHeader(fp, indent, "JSDependentString");
     indent += 2;
 
-    fprintf(fp, "%*soffset: %" PRIuSIZE "\n", indent, "", baseOffset());
+    if (mozilla::Maybe<size_t> offset = baseOffset())
+        fprintf(fp, "%*soffset: %" PRIuSIZE "\n", indent, "", *offset);
+
     fprintf(fp, "%*sbase: ", indent, "");
     base()->dumpRepresentation(fp, indent);
 }
