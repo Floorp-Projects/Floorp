@@ -197,6 +197,22 @@ class TestNavigate(BaseNavigationTestCase):
         self.assertTrue(self.marionette.execute_script(
             "return window.visited", sandbox=None))
 
+    def test_navigate_hash_argument_identical(self):
+        test_page = "{}#foo".format(inline("<p id=foo>"))
+
+        self.marionette.navigate(test_page)
+        self.marionette.find_element(By.ID, "foo")
+        self.marionette.navigate(test_page)
+        self.marionette.find_element(By.ID, "foo")
+
+    def test_navigate_hash_argument_differnt(self):
+        test_page = "{}#Foo".format(inline("<p id=foo>"))
+
+        self.marionette.navigate(test_page)
+        self.marionette.find_element(By.ID, "foo")
+        self.marionette.navigate(test_page.lower())
+        self.marionette.find_element(By.ID, "foo")
+
     @skip_if_mobile("Test file is only located on host machine")
     def test_navigate_file_url(self):
         self.marionette.navigate(self.test_page_file_url)
