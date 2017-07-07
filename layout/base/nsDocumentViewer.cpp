@@ -326,8 +326,6 @@ protected:
 
   void DetachFromTopLevelWidget();
 
-  void SetPrintRelated();
-
   // IMPORTANT: The ownership implicit in the following member
   // variables has been explicitly checked and set using nsCOMPtr
   // for owning pointers and raw COM interface pointers for weak
@@ -408,7 +406,6 @@ protected:
   bool mIsPageMode;
   bool mInitializedForPrintPreview;
   bool mHidden;
-  bool mPrintRelated; // Only use for asserts.
 };
 
 namespace mozilla {
@@ -542,21 +539,9 @@ nsDocumentViewer::nsDocumentViewer()
     mHintCharsetSource(kCharsetUninitialized),
     mIsPageMode(false),
     mInitializedForPrintPreview(false),
-    mHidden(false),
-    mPrintRelated(false)
+    mHidden(false)
 {
   PrepareToStartLoad();
-}
-
-void
-nsDocumentViewer::SetPrintRelated()
-{
-  if (!mPrintRelated) {
-    if (mViewManager) {
-      mViewManager->SetPrintRelated();
-    }
-  }
-  mPrintRelated = true;
 }
 
 NS_IMPL_ADDREF(nsDocumentViewer)
@@ -2530,10 +2515,6 @@ nsDocumentViewer::MakeWindow(const nsSize& aSize, nsView* aContainerView)
   if (NS_FAILED(rv))
     return rv;
 
-  if (mPrintRelated) {
-    mViewManager->SetPrintRelated();
-  }
-
   // The root view is always at 0,0.
   nsRect tbounds(nsPoint(0, 0), aSize);
   // Create a view
@@ -2856,8 +2837,6 @@ nsDocumentViewer::Print(bool              aSilent,
                           nsIPrintSettings* aPrintSettings)
 {
 #ifdef NS_PRINTING
-  SetPrintRelated();
-
   nsCOMPtr<nsIPrintSettings> printSettings;
 
 #ifdef DEBUG
@@ -3879,8 +3858,6 @@ NS_IMETHODIMP
 nsDocumentViewer::Print(nsIPrintSettings*       aPrintSettings,
                           nsIWebProgressListener* aWebProgressListener)
 {
-  SetPrintRelated();
-
   // Printing XUL documents is not supported.
   nsCOMPtr<nsIXULDocument> xulDoc(do_QueryInterface(mDocument));
   if (xulDoc) {
@@ -3986,8 +3963,6 @@ nsDocumentViewer::PrintPreview(nsIPrintSettings* aPrintSettings,
                                mozIDOMWindowProxy* aChildDOMWin, 
                                nsIWebProgressListener* aWebProgressListener)
 {
-  SetPrintRelated();
-
 #if defined(NS_PRINTING) && defined(NS_PRINT_PREVIEW)
   NS_WARNING_ASSERTION(
     IsInitializedForPrintPreview(),
@@ -4080,8 +4055,6 @@ nsDocumentViewer::PrintPreview(nsIPrintSettings* aPrintSettings,
 NS_IMETHODIMP
 nsDocumentViewer::PrintPreviewNavigate(int16_t aType, int32_t aPageNum)
 {
-  SetPrintRelated();
-
   if (!GetIsPrintPreview() ||
       mPrintEngine->GetIsCreatingPrintPreview())
     return NS_ERROR_FAILURE;
@@ -4424,9 +4397,6 @@ void
 nsDocumentViewer::SetIsPrinting(bool aIsPrinting)
 {
 #ifdef NS_PRINTING
-  if (aIsPrinting) {
-    SetPrintRelated();
-  }
   // Set all the docShells in the docshell tree to be printing.
   // that way if anyone of them tries to "navigate" it can't
   nsCOMPtr<nsIDocShell> docShell(mContainer);
@@ -4464,9 +4434,6 @@ void
 nsDocumentViewer::SetIsPrintPreview(bool aIsPrintPreview)
 {
 #ifdef NS_PRINTING
-  if (aIsPrintPreview) {
-    SetPrintRelated();
-  }
   // Set all the docShells in the docshell tree to be printing.
   // that way if anyone of them tries to "navigate" it can't
   nsCOMPtr<nsIDocShell> docShell(mContainer);
@@ -4501,7 +4468,6 @@ nsDocumentViewer::SetIsPrintPreview(bool aIsPrintPreview)
 void
 nsDocumentViewer::IncrementDestroyRefCount()
 {
-  SetPrintRelated();
   ++mDestroyRefCount;
 }
 
@@ -4538,8 +4504,6 @@ void
 nsDocumentViewer::ReturnToGalleyPresentation()
 {
 #if defined(NS_PRINTING) && defined(NS_PRINT_PREVIEW)
-  SetPrintRelated();
-
   if (!GetIsPrintPreview()) {
     NS_ERROR("Wow, we should never get here!");
     return;
@@ -4579,7 +4543,6 @@ void
 nsDocumentViewer::OnDonePrinting() 
 {
 #if defined(NS_PRINTING) && defined(NS_PRINT_PREVIEW)
-  SetPrintRelated();
   if (mPrintEngine) {
     RefPtr<nsPrintEngine> pe = mPrintEngine;
     if (GetIsPrintPreview()) {
@@ -4610,10 +4573,6 @@ nsDocumentViewer::OnDonePrinting()
 
 NS_IMETHODIMP nsDocumentViewer::SetPageMode(bool aPageMode, nsIPrintSettings* aPrintSettings)
 {
-  if (aPageMode) {
-    SetPrintRelated();
-  }
-
   // XXX Page mode is only partially working; it's currently used for
   // reftests that require a paginated context
   mIsPageMode = aPageMode;
@@ -4726,7 +4685,6 @@ nsDocumentViewer::IsInitializedForPrintPreview()
 void
 nsDocumentViewer::InitializeForPrintPreview()
 {
-  SetPrintRelated();
   mInitializedForPrintPreview = true;
 }
 
