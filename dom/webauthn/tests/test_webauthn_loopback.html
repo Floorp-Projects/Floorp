@@ -104,7 +104,7 @@ function() {
   }
 
   function testMakeCredential() {
-    let rp = {id: document.origin, name: "none", icon: "none"};
+    let rp = {id: document.domain, name: "none", icon: "none"};
     let user = {id: "none", name: "none", icon: "none", displayName: "none"};
     let param = {type: "public-key", algorithm: "P-256"};
     let makeCredentialOptions = {
@@ -123,7 +123,7 @@ function() {
   }
 
   function testMakeDuplicate(aCredInfo) {
-    let rp = {id: document.origin, name: "none", icon: "none"};
+    let rp = {id: document.domain, name: "none", icon: "none"};
     let user = {id: "none", name: "none", icon: "none", displayName: "none"};
     let param = {type: "public-key", algorithm: "P-256"};
     let makeCredentialOptions = {
@@ -156,7 +156,7 @@ function() {
     let publicKeyCredentialRequestOptions = {
       challenge: gAssertionChallenge,
       timeout: 5000, // the minimum timeout is actually 15 seconds
-      rpId: document.origin,
+      rpId: document.domain,
       allowList: [newCredential]
     };
     credm.get({publicKey: publicKeyCredentialRequestOptions})
