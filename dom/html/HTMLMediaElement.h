@@ -65,6 +65,7 @@ class nsIChannel;
 class nsIHttpChannel;
 class nsILoadGroup;
 class nsIRunnable;
+class nsISerialEventTarget;
 class nsITimer;
 class nsRange;
 
@@ -775,6 +776,11 @@ public:
   void AsyncResolveSeekDOMPromiseIfExists() override;
   void AsyncRejectSeekDOMPromiseIfExists() override;
 
+  nsISerialEventTarget* MainThreadEventTarget()
+  {
+    return mMainThreadEventTarget;
+  }
+
 protected:
   virtual ~HTMLMediaElement();
 
@@ -1316,6 +1322,10 @@ protected:
   // The current decoder. Load() has been called on this decoder.
   // At most one of mDecoder and mSrcStream can be non-null.
   RefPtr<MediaDecoder> mDecoder;
+
+  // The DocGroup-specific nsISerialEventTarget of this HTML element on the main
+  // thread.
+  nsCOMPtr<nsISerialEventTarget> mMainThreadEventTarget;
 
   // The DocGroup-specific AbstractThread::MainThread() of this HTML element.
   RefPtr<AbstractThread> mAbstractMainThread;
