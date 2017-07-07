@@ -222,7 +222,7 @@ var loadListener = {
    * Callback for registered DOM events.
    */
   handleEvent(event) {
-    let location = event.target.baseURI || event.target.location.href;
+    let location = event.target.documentURI || event.target.location.href;
     logger.debug(`Received DOM event "${event.type}" for "${location}"`);
 
     switch (event.type) {
@@ -255,21 +255,21 @@ var loadListener = {
         break;
 
       case "DOMContentLoaded":
-        if (event.target.baseURI.startsWith("about:certerror")) {
+        if (event.target.documentURI.startsWith("about:certerror")) {
           this.stop();
           sendError(new InsecureCertificateError(), this.command_id);
 
-        } else if (/about:.*(error)\?/.exec(event.target.baseURI)) {
+        } else if (/about:.*(error)\?/.exec(event.target.documentURI)) {
           this.stop();
           sendError(new UnknownError("Reached error page: " +
-              event.target.baseURI), this.command_id);
+              event.target.documentURI), this.command_id);
 
         // Return early with a page load strategy of eager, and also
         // special-case about:blocked pages which should be treated as
         // non-error pages but do not raise a pageshow event.
         } else if ((capabilities.get("pageLoadStrategy") ===
             session.PageLoadStrategy.Eager) ||
-            /about:blocked\?/.exec(event.target.baseURI)) {
+            /about:blocked\?/.exec(event.target.documentURI)) {
           this.stop();
           sendOk(this.command_id);
         }
