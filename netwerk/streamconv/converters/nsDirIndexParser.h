@@ -25,7 +25,7 @@ public:
     NS_DECL_NSISTREAMLISTENER
     NS_DECL_NSIREQUESTOBSERVER
     NS_DECL_NSIDIRINDEXPARSER
-    
+
     nsDirIndexParser();
     nsresult Init();
 

@@ -22,7 +22,7 @@ public:
 
 protected:
   void      GetDistribution(uint32_t aCharLen, const char* aStr);
-  
+
   nsAutoPtr<nsCodingStateMachine> mCodingSM;
   nsProbingState mState;
   const char *  mDetectedCharset;

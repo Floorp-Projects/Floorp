@@ -12,11 +12,11 @@
  *
  * @param hash      The binary data sequence
  * @param hashSize  The size of the binary data sequence
- * @param hexString A buffer to store the hex string, must be of 
+ * @param hexString A buffer to store the hex string, must be of
  *                  size 2 * @hashSize
 */
 static void
-BinaryDataToHexString(const BYTE *hash, DWORD &hashSize, 
+BinaryDataToHexString(const BYTE *hash, DWORD &hashSize,
                       LPWSTR hexString)
 {
   WCHAR *p = hexString;
@@ -36,7 +36,7 @@ BinaryDataToHexString(const BYTE *hash, DWORD &hashSize,
  * @return TRUE on success
 */
 static BOOL
-CalculateMD5(const char *data, DWORD dataSize, 
+CalculateMD5(const char *data, DWORD dataSize,
              BYTE **hash, DWORD &hashSize)
 {
   HCRYPTPROV hProv = 0;
@@ -47,9 +47,9 @@ CalculateMD5(const char *data, DWORD dataSize,
     if (NTE_BAD_KEYSET != GetLastError()) {
       return FALSE;
     }
- 
+
     // Maybe it doesn't exist, try to create it.
-    if (!CryptAcquireContext(&hProv, nullptr, nullptr, PROV_RSA_FULL, 
+    if (!CryptAcquireContext(&hProv, nullptr, nullptr, PROV_RSA_FULL,
                              CRYPT_VERIFYCONTEXT | CRYPT_NEWKEYSET)) {
       return FALSE;
     }
@@ -59,17 +59,17 @@ CalculateMD5(const char *data, DWORD dataSize,
     return FALSE;
   }
 
-  if (!CryptHashData(hHash, reinterpret_cast<const BYTE*>(data), 
+  if (!CryptHashData(hHash, reinterpret_cast<const BYTE*>(data),
                     dataSize, 0)) {
     return FALSE;
   }
 
   DWORD dwCount = sizeof(DWORD);
-  if (!CryptGetHashParam(hHash, HP_HASHSIZE, (BYTE *)&hashSize, 
+  if (!CryptGetHashParam(hHash, HP_HASHSIZE, (BYTE *)&hashSize,
                         &dwCount, 0)) {
     return FALSE;
   }
-  
+
   *hash = new BYTE[hashSize];
   ZeroMemory(*hash, hashSize);
   if (!CryptGetHashParam(hHash, HP_HASHVAL, *hash, &hashSize, 0)) {
@@ -91,21 +91,21 @@ CalculateMD5(const char *data, DWORD dataSize,
  * Converts a file path into a unique registry location for cert storage
  *
  * @param  filePath     The input file path to get a registry path from
- * @param  registryPath A buffer to write the registry path to, must 
+ * @param  registryPath A buffer to write the registry path to, must
  *                      be of size in WCHARs MAX_PATH + 1
  * @return TRUE if successful
 */
 BOOL
-CalculateRegistryPathFromFilePath(const LPCWSTR filePath, 
+CalculateRegistryPathFromFilePath(const LPCWSTR filePath,
                                   LPWSTR registryPath)
 {
-  size_t filePathLen = wcslen(filePath); 
+  size_t filePathLen = wcslen(filePath);
   if (!filePathLen) {
     return FALSE;
   }
 
   // If the file path ends in a slash, ignore that character
-  if (filePath[filePathLen -1] == L'\\' || 
+  if (filePath[filePathLen -1] == L'\\' ||
       filePath[filePathLen - 1] == L'/') {
     filePathLen--;
   }
@@ -121,8 +121,8 @@ CalculateRegistryPathFromFilePath(const LPCWSTR filePath,
 
   BYTE *hash;
   DWORD hashSize = 0;
-  if (!CalculateMD5(reinterpret_cast<const char*>(lowercasePath), 
-                    filePathLen * 2, 
+  if (!CalculateMD5(reinterpret_cast<const char*>(lowercasePath),
+                    filePathLen * 2,
                     &hash, hashSize)) {
     delete[] lowercasePath;
     return FALSE;
@@ -132,7 +132,7 @@ CalculateRegistryPathFromFilePath(const LPCWSTR filePath,
   LPCWSTR baseRegPath = L"SOFTWARE\\Mozilla\\"
     L"MaintenanceService\\";
   wcsncpy(registryPath, baseRegPath, MAX_PATH);
-  BinaryDataToHexString(hash, hashSize, 
+  BinaryDataToHexString(hash, hashSize,
                         registryPath + wcslen(baseRegPath));
   delete[] hash;
   return TRUE;

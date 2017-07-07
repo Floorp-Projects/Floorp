@@ -322,7 +322,7 @@ ImageLoader::GetPresContext()
   return shell->GetPresContext();
 }
 
-void InvalidateImagesCallback(nsIFrame* aFrame, 
+void InvalidateImagesCallback(nsIFrame* aFrame,
                               DisplayItemData* aItem)
 {
   nsDisplayItem::Type type = nsDisplayItem::GetDisplayItemTypeFromKey(aItem->GetDisplayItemKey());
@@ -416,7 +416,7 @@ ImageLoader::Notify(imgIRequest* aRequest, int32_t aType, const nsIntRect* aData
 
 nsresult
 ImageLoader::OnSizeAvailable(imgIRequest* aRequest, imgIContainer* aImage)
-{ 
+{
   nsPresContext* presContext = GetPresContext();
   if (!presContext) {
     return NS_OK;

@@ -258,7 +258,7 @@ WyciwygChannelChild::OnDataAvailable(const nsCString& data,
   }
 
   AutoEventEnqueuer ensureSerialDispatch(mEventQ);
-  
+
   rv = mListener->OnDataAvailable(this, mListenerContext,
                                   stringStream, offset, data.Length());
   if (NS_FAILED(rv))
@@ -345,13 +345,13 @@ WyciwygChannelChild::RecvCancelEarly(const nsresult& statusCode)
 void WyciwygChannelChild::CancelEarly(const nsresult& statusCode)
 {
   LOG(("WyciwygChannelChild::CancelEarly [this=%p]\n", this));
-  
+
   if (mCanceled)
     return;
 
   mCanceled = true;
   mStatus = statusCode;
-  
+
   mIsPending = false;
   if (mLoadGroup)
     mLoadGroup->RemoveRequest(this, nullptr, mStatus);

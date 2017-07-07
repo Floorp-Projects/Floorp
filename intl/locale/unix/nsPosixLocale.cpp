@@ -13,7 +13,7 @@
 static bool
 ParseLocaleString(const char* locale_string, char* language, char* country, char* extra, char separator);
 
-nsresult 
+nsresult
 nsPosixLocale::GetPlatformLocale(const nsAString& locale, nsACString& posixLocale)
 {
   char  country_code[MAX_COUNTRY_CODE_LEN+1];
@@ -85,7 +85,7 @@ nsPosixLocale::GetXPLocale(const char* posixLocale, nsAString& locale)
 
     if (*country_code) {
       SprintfLiteral(posix_locale,"%s-%s",lang_code,country_code);
-    } 
+    }
     else {
       SprintfLiteral(posix_locale,"%s",lang_code);
     }
@@ -148,7 +148,7 @@ ParseLocaleString(const char* locale_string, char* language, char* country, char
   //
   // parse the country part
   //
-  if ((*src == '_') || (*src == '-')) { 
+  if ((*src == '_') || (*src == '-')) {
     src++;
     dest = country;
     dest_space = MAX_COUNTRY_CODE_LEN;
@@ -181,7 +181,7 @@ ParseLocaleString(const char* locale_string, char* language, char* country, char
   //
   // handle the extra part
   //
-  if (*src == '.') { 
+  if (*src == '.') {
     src++;  // move past the extra part separator
     dest = extra;
     dest_space = MAX_EXTRA_LEN;
@@ -207,8 +207,8 @@ ParseLocaleString(const char* locale_string, char* language, char* country, char
   //
   // handle the modifier part
   //
-  
-  if (*src == '@') { 
+
+  if (*src == '@') {
     src++;  // move past the modifier separator
     NS_ASSERTION(strcmp("euro",src) == 0, "found non euro modifier");
     dest = modifier;

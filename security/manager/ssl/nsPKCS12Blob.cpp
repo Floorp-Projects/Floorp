@@ -61,21 +61,21 @@ nsPKCS12Blob::ImportFromFile(nsIFile *file)
   nsresult rv = NS_OK;
 
   RetryReason wantRetry;
-  
+
   do {
     rv = ImportFromFileHelper(file, im_standard_prompt, wantRetry);
-    
+
     if (NS_SUCCEEDED(rv) && wantRetry == rr_auto_retry_empty_password_flavors) {
       rv = ImportFromFileHelper(file, im_try_zero_length_secitem, wantRetry);
     }
   }
   while (NS_SUCCEEDED(rv) && (wantRetry != rr_do_not_retry));
-  
+
   return rv;
 }
 
 nsresult
-nsPKCS12Blob::ImportFromFileHelper(nsIFile *file, 
+nsPKCS12Blob::ImportFromFileHelper(nsIFile *file,
                                    nsPKCS12Blob::ImportMode aImportMode,
                                    nsPKCS12Blob::RetryReason &aWantRetry)
 {
@@ -139,7 +139,7 @@ finish:
     if (SEC_ERROR_BAD_PASSWORD == PORT_GetError()) {
       if (unicodePw.len == sizeof(char16_t))
       {
-        // no password chars available, 
+        // no password chars available,
         // unicodeToItem allocated space for the trailing zero character only.
         aWantRetry = rr_auto_retry_empty_password_flavors;
       }
@@ -185,7 +185,7 @@ isExtractable(SECKEYPrivateKey *privKey)
 // Having already loaded the certs, form them into a blob (loading the keys
 // also), encode the blob, and stuff it into the file.
 nsresult
-nsPKCS12Blob::ExportToFile(nsIFile *file, 
+nsPKCS12Blob::ExportToFile(nsIFile *file,
                            nsIX509Cert **certs, int numCerts)
 {
   nsNSSShutDownPreventionLock locker;
@@ -228,10 +228,10 @@ nsPKCS12Blob::ExportToFile(nsIFile *file,
       rv = NS_ERROR_FAILURE;
       goto finish;
     }
-    // We can only successfully export certs that are on 
+    // We can only successfully export certs that are on
     // internal token.  Most, if not all, smart card vendors
     // won't let you extract the private key (in any way
-    // shape or form) from the card.  So let's punt if 
+    // shape or form) from the card.  So let's punt if
     // the cert is not in the internal db.
     if (nssCert->slot && !PK11_IsInternal(nssCert->slot)) {
       // we aren't the internal token, see if the key is extractable.
@@ -276,9 +276,9 @@ nsPKCS12Blob::ExportToFile(nsIFile *file,
     // cert was dup'ed, so release it
     ++numCertsExported;
   }
-  
+
   if (!numCertsExported) goto finish;
-  
+
   // prepare the instance to write to an export file
   this->mTmpFile = nullptr;
   file->GetPath(filePath);
@@ -295,7 +295,7 @@ nsPKCS12Blob::ExportToFile(nsIFile *file,
     localFileRef->InitWithPath(filePath);
     file = localFileRef;
   }
-  rv = file->OpenNSPRFileDesc(PR_RDWR|PR_CREATE_FILE|PR_TRUNCATE, 0664, 
+  rv = file->OpenNSPRFileDesc(PR_RDWR|PR_CREATE_FILE|PR_TRUNCATE, 0664,
                               &mTmpFile);
   if (NS_FAILED(rv) || !this->mTmpFile) goto finish;
   // encode and write
@@ -353,7 +353,7 @@ nsPKCS12Blob::newPKCS12FilePassword(SECItem *unicodePw)
   nsresult rv = NS_OK;
   nsAutoString password;
   nsCOMPtr<nsICertificateDialogs> certDialogs;
-  rv = ::getNSSDialogs(getter_AddRefs(certDialogs), 
+  rv = ::getNSSDialogs(getter_AddRefs(certDialogs),
                        NS_GET_IID(nsICertificateDialogs),
                        NS_CERTIFICATEDIALOGS_CONTRACTID);
   if (NS_FAILED(rv)) return rv;
@@ -373,7 +373,7 @@ nsPKCS12Blob::getPKCS12FilePassword(SECItem *unicodePw)
   nsresult rv = NS_OK;
   nsAutoString password;
   nsCOMPtr<nsICertificateDialogs> certDialogs;
-  rv = ::getNSSDialogs(getter_AddRefs(certDialogs), 
+  rv = ::getNSSDialogs(getter_AddRefs(certDialogs),
                        NS_GET_IID(nsICertificateDialogs),
                        NS_CERTIFICATEDIALOGS_CONTRACTID);
   if (NS_FAILED(rv)) return rv;
@@ -397,7 +397,7 @@ nsPKCS12Blob::inputToDecoder(SEC_PKCS12DecoderContext *dcx, nsIFile *file)
 
   nsCOMPtr<nsIInputStream> fileStream;
   rv = NS_NewLocalFileInputStream(getter_AddRefs(fileStream), file);
-  
+
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -408,8 +408,8 @@ nsPKCS12Blob::inputToDecoder(SEC_PKCS12DecoderContext *dcx, nsIFile *file)
       return rv;
     }
     // feed the file data into the decoder
-    srv = SEC_PKCS12DecoderUpdate(dcx, 
-				  (unsigned char*) buf, 
+    srv = SEC_PKCS12DecoderUpdate(dcx,
+				  (unsigned char*) buf,
 				  amount);
     if (srv) {
       // don't allow the close call to overwrite our precious error code
@@ -442,7 +442,7 @@ nsPKCS12Blob::nickname_collision(SECItem *oldNick, PRBool *cancel, void *wincx)
   // The user is trying to import a PKCS#12 file that doesn't have the
   // attribute we use to set the nickname.  So in order to reduce the
   // number of interactions we require with the user, we'll build a nickname
-  // for the user.  The nickname isn't prominently displayed in the UI, 
+  // for the user.  The nickname isn't prominently displayed in the UI,
   // so it's OK if we generate one on our own here.
   //   XXX If the NSS API were smarter and actually passed a pointer to
   //       the CERTCertificate* we're importing we could actually just
@@ -453,12 +453,12 @@ nsPKCS12Blob::nickname_collision(SECItem *oldNick, PRBool *cancel, void *wincx)
   while (1) {
     // If we've gotten this far, that means there isn't a certificate
     // in the database that has the same subject name as the cert we're
-    // trying to import.  So we need to come up with a "nickname" to 
-    // satisfy the NSS requirement or fail in trying to import.  
-    // Basically we use a default nickname from a properties file and 
+    // trying to import.  So we need to come up with a "nickname" to
+    // satisfy the NSS requirement or fail in trying to import.
+    // Basically we use a default nickname from a properties file and
     // see if a certificate exists with that nickname.  If there isn't, then
-    // create update the count by one and append the string '#1' Or 
-    // whatever the count currently is, and look for a cert with 
+    // create update the count by one and append the string '#1' Or
+    // whatever the count currently is, and look for a cert with
     // that nickname.  Keep updating the count until we find a nickname
     // without a corresponding cert.
     //  XXX If a user imports *many* certs without the 'friendly name'

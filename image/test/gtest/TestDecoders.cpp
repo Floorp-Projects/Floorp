@@ -169,7 +169,7 @@ CheckDecoderMultiChunk(const ImageTestCase& aTestCase)
 
   sourceBuffer->Complete(NS_OK);
   task->Run();
-  
+
   CheckDecoderResults(aTestCase, decoder);
 }
 

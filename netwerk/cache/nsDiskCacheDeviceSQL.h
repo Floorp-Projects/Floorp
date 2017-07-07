@@ -98,7 +98,7 @@ public:
                                           nsIFile **        result) override;
 
   virtual nsresult        OnDataSizeChange(nsCacheEntry * entry, int32_t deltaSize) override;
-  
+
   virtual nsresult        Visit(nsICacheVisitor * visitor) override;
 
   virtual nsresult        EvictEntries(const char * clientID) override;

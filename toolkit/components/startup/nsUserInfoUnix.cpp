@@ -52,7 +52,7 @@ nsUserInfo::GetFullname(char16_t **aFullname)
     // Full Name, <other stuff> - eliminate the ", <other stuff>
     // also, sometimes GECOS uses "&" to mean "the user name" so do
     // the appropriate substitution
-    
+
     // truncate at first comma (field delimiter)
     int32_t index;
     if ((index = fullname.Find(",")) != kNotFound)
@@ -63,7 +63,7 @@ nsUserInfo::GetFullname(char16_t **aFullname)
         nsAutoCString username(pw->pw_name);
         if (!username.IsEmpty() && nsCRT::IsLower(username.CharAt(0)))
             username.SetCharAt(nsCRT::ToUpper(username.CharAt(0)), 0);
-            
+
         fullname.ReplaceSubstring("&", username.get());
     }
 
@@ -78,7 +78,7 @@ nsUserInfo::GetFullname(char16_t **aFullname)
     return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsUserInfo::GetUsername(char * *aUsername)
 {
     struct passwd *pw = nullptr;
@@ -97,7 +97,7 @@ nsUserInfo::GetUsername(char * *aUsername)
     return NS_OK;
 }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsUserInfo::GetDomain(char * *aDomain)
 {
     nsresult rv = NS_ERROR_FAILURE;
@@ -105,7 +105,7 @@ nsUserInfo::GetDomain(char * *aDomain)
     struct utsname buf;
     char *domainname = nullptr;
 
-    if (uname(&buf) < 0) { 
+    if (uname(&buf) < 0) {
         return rv;
     }
 
@@ -113,7 +113,7 @@ nsUserInfo::GetDomain(char * *aDomain)
     domainname = buf.domainname;
 #endif
 
-    if (domainname && domainname[0]) {   
+    if (domainname && domainname[0]) {
         *aDomain = strdup(domainname);
         rv = NS_OK;
     }
@@ -130,11 +130,11 @@ nsUserInfo::GetDomain(char * *aDomain)
             }
         }
     }
-    
+
     return rv;
 }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsUserInfo::GetEmailAddress(char * *aEmailAddress)
 {
     // use username + "@" + domain for the email address
@@ -161,7 +161,7 @@ nsUserInfo::GetEmailAddress(char * *aEmailAddress)
     }
 
     *aEmailAddress = ToNewCString(emailAddress);
-    
+
     return NS_OK;
 }
 

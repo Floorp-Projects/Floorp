@@ -57,7 +57,7 @@ using mozilla::MallocSizeOf;
 // RuleSet                                                    //
 ////////////////////////////////////////////////////////////////
 
-static const char* 
+static const char*
 NameOf_DW_REG(int16_t aReg)
 {
   switch (aReg) {
@@ -1143,7 +1143,7 @@ void UseRuleSet(/*MOD*/UnwindRegs* aRegs,
 void
 LUL::Unwind(/*OUT*/uintptr_t* aFramePCs,
             /*OUT*/uintptr_t* aFrameSPs,
-            /*OUT*/size_t* aFramesUsed, 
+            /*OUT*/size_t* aFramesUsed,
             /*OUT*/size_t* aFramePointerFramesAcquired,
             size_t aFramesAvail,
             UnwindRegs* aStartRegs, StackImage* aStackImg)

@@ -50,7 +50,7 @@
 
 // service implementing nsIProxyAutoConfig.
 #define NS_PROXYAUTOCONFIG_CONTRACTID \
-    "@mozilla.org/network/proxy-auto-config;1" 
+    "@mozilla.org/network/proxy-auto-config;1"
 #define NS_PROXYAUTOCONFIG_CID                       \
 { /* 63ac8c66-1dd2-11b2-b070-84d00d3eaece */         \
     0x63ac8c66,                                      \
@@ -840,7 +840,7 @@
  * netwerk/mime classes
  */
 
-// {1F4DBCF7-245C-4c8c-943D-8A1DA0495E8A} 
+// {1F4DBCF7-245C-4c8c-943D-8A1DA0495E8A}
 #define NS_MIMEHEADERPARAM_CID                         \
 {   0x1f4dbcf7,                                        \
     0x245c,                                            \

@@ -364,7 +364,7 @@ nsTreeContentView::CanDrop(int32_t aIndex, int32_t aOrientation,
                      rv);
   return rv.StealNSResult();
 }
- 
+
 void
 nsTreeContentView::Drop(int32_t aRow, int32_t aOrientation,
                         DataTransfer* aDataTransfer, ErrorResult& aError)
@@ -986,7 +986,7 @@ nsTreeContentView::AttributeChanged(nsIDocument*  aDocument,
     bool hidden = aElement->AttrValueIs(kNameSpaceID_None,
                                           nsGkAtoms::hidden,
                                           nsGkAtoms::_true, eCaseMatters);
- 
+
     int32_t index = FindContent(aElement);
     if (hidden && index >= 0) {
       // Hide this row along with its children.
@@ -1311,7 +1311,7 @@ nsTreeContentView::SerializeItem(Element* aContent, int32_t aParentIndex,
                                      nsGkAtoms::_true, eCaseMatters)) {
       row->SetEmpty(true);
     }
-  } 
+  }
 }
 
 void
@@ -1333,7 +1333,7 @@ nsTreeContentView::GetIndexInSubtree(nsIContent* aContainer,
                                      nsIContent* aContent, int32_t* aIndex)
 {
   uint32_t childCount = aContainer->GetChildCount();
-  
+
   if (!aContainer->IsXULElement())
     return;
 

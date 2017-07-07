@@ -65,7 +65,7 @@ enum MaiInterfaceType {
     MAI_INTERFACE_SELECTION,
     MAI_INTERFACE_TABLE,
     MAI_INTERFACE_TEXT,
-    MAI_INTERFACE_DOCUMENT, 
+    MAI_INTERFACE_DOCUMENT,
     MAI_INTERFACE_IMAGE, /* 10 */
     MAI_INTERFACE_TABLE_CELL
 };
@@ -102,13 +102,13 @@ static GType GetAtkTypeForMai(MaiInterfaceType type)
 }
 
 #define NON_USER_EVENT ":system"
-    
+
 // The atk interfaces we can expose without checking what version of ATK we are
 // dealing with.  At the moment AtkTableCell is the only interface we can't
 // always expose.
 static const GInterfaceInfo atk_if_infos[] = {
     {(GInterfaceInitFunc)componentInterfaceInitCB,
-     (GInterfaceFinalizeFunc) nullptr, nullptr}, 
+     (GInterfaceFinalizeFunc) nullptr, nullptr},
     {(GInterfaceInitFunc)actionInterfaceInitCB,
      (GInterfaceFinalizeFunc) nullptr, nullptr},
     {(GInterfaceInitFunc)valueInterfaceInitCB,
@@ -328,7 +328,7 @@ AccessibleWrap::GetAtkObject(Accessible* acc)
 {
     void *atkObjPtr = nullptr;
     acc->GetNativeInterface(&atkObjPtr);
-    return atkObjPtr ? ATK_OBJECT(atkObjPtr) : nullptr;    
+    return atkObjPtr ? ATK_OBJECT(atkObjPtr) : nullptr;
 }
 
 /* private */
@@ -372,7 +372,7 @@ AccessibleWrap::CreateMaiInterfaces(void)
     // Table interface.
     if (AsTable())
       interfacesBits |= 1 << MAI_INTERFACE_TABLE;
- 
+
     if (AsTableCell())
       interfacesBits |= 1 << MAI_INTERFACE_TABLE_CELL;
 

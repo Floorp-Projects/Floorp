@@ -473,8 +473,7 @@ GeckoDriver.prototype.startBrowser = function(win, isNewSession = false) {
   this.curFrame = null;
   this.addBrowser(win);
   this.curBrowser.isNewSession = isNewSession;
-  this.curBrowser.startSession(
-      isNewSession, win, this.whenBrowserStarted.bind(this));
+  this.whenBrowserStarted(win, isNewSession);
 };
 
 /**
@@ -572,8 +571,6 @@ GeckoDriver.prototype.registerBrowser = function(id, be) {
     this.curBrowser.frameManager.currentRemoteFrame.targetFrameId = id;
   }
 
-  let reg = {};
-
   // We want to ignore frames that are XUL browsers that aren't in the "main"
   // tabbrowser, but accept things on Fennec (which doesn't have a
   // xul:tabbrowser), and accept HTML iframes (because tests depend on it),
@@ -582,11 +579,10 @@ GeckoDriver.prototype.registerBrowser = function(id, be) {
   if (this.appName != "Firefox" || be.namespaceURI != XUL_NS ||
       be.nodeName != "browser" || be.getTabBrowser()) {
     // curBrowser holds all the registered frames in knownFrames
-    reg.id = id;
-    reg.remotenessChange = this.curBrowser.register(id, be);
+    this.curBrowser.register(id, be);
   }
 
-  this.wins.set(reg.id, listenerWindow);
+  this.wins.set(id, listenerWindow);
   if (nullPrevious && (this.curBrowser.curFrameId !== null)) {
     this.sendAsync(
         "newSession",
@@ -597,7 +593,7 @@ GeckoDriver.prototype.registerBrowser = function(id, be) {
     }
   }
 
-  return [reg, this.capabilities.toJSON()];
+  return [id, this.capabilities.toJSON()];
 };
 
 GeckoDriver.prototype.registerPromise = function() {
@@ -627,10 +623,13 @@ GeckoDriver.prototype.registerPromise = function() {
 
 GeckoDriver.prototype.listeningPromise = function() {
   const li = "Marionette:listenersAttached";
+
   return new Promise(resolve => {
-    let cb = () => {
-      this.mm.removeMessageListener(li, cb);
-      resolve();
+    let cb = msg => {
+      if (msg.json.listenerId === this.curBrowser.curFrameId) {
+        this.mm.removeMessageListener(li, cb);
+        resolve();
+      }
     };
     this.mm.addMessageListener(li, cb);
   });
@@ -708,8 +707,9 @@ GeckoDriver.prototype.newSession = function* (cmd, resp) {
     waitForWindow.call(this);
   } else if (this.appName != "Firefox" && this.curBrowser === null) {
     // if there is a content listener, then we just wake it up
-    this.addBrowser(this.getCurrentWindow());
-    this.curBrowser.startSession(this.whenBrowserStarted.bind(this));
+    let win = this.getCurrentWindow();
+    this.addBrowser(win);
+    this.whenBrowserStarted(win, false);
     this.mm.broadcastAsyncMessage("Marionette:restart", {});
   } else {
     throw new WebDriverError("Session already running");
@@ -978,9 +978,9 @@ GeckoDriver.prototype.get = function* (cmd, resp) {
 
   let get = this.listener.get({url, pageTimeout: this.timeouts.pageLoad});
 
-  // If a remoteness update interrupts our page load, this will never return
-  // We need to re-issue this request to correctly poll for readyState and
-  // send errors.
+  // If a reload of the frame script interrupts our page load, this will
+  // never return. We need to re-issue this request to correctly poll for
+  // readyState and send errors.
   this.curBrowser.pendingCommands.push(() => {
     let parameters = {
       // TODO(ato): Bug 1242595
@@ -1097,9 +1097,9 @@ GeckoDriver.prototype.goBack = function* (cmd, resp) {
   let lastURL = this.currentURL;
   let goBack = this.listener.goBack({pageTimeout: this.timeouts.pageLoad});
 
-  // If a remoteness update interrupts our page load, this will never return
-  // We need to re-issue this request to correctly poll for readyState and
-  // send errors.
+  // If a reload of the frame script interrupts our page load, this will
+  // never return. We need to re-issue this request to correctly poll for
+  // readyState and send errors.
   this.curBrowser.pendingCommands.push(() => {
     let parameters = {
       // TODO(ato): Bug 1242595
@@ -1141,9 +1141,9 @@ GeckoDriver.prototype.goForward = function* (cmd, resp) {
   let goForward = this.listener.goForward(
       {pageTimeout: this.timeouts.pageLoad});
 
-  // If a remoteness update interrupts our page load, this will never return
-  // We need to re-issue this request to correctly poll for readyState and
-  // send errors.
+  // If a reload of the frame script interrupts our page load, this will
+  // never return. We need to re-issue this request to correctly poll for
+  // readyState and send errors.
   this.curBrowser.pendingCommands.push(() => {
     let parameters = {
       // TODO(ato): Bug 1242595
@@ -1176,7 +1176,25 @@ GeckoDriver.prototype.refresh = function* (cmd, resp) {
   assert.window(this.getCurrentWindow());
   assert.noUserPrompt(this.dialog);
 
-  yield this.listener.refresh({pageTimeout: this.timeouts.pageLoad});
+  let refresh = this.listener.refresh(
+      {pageTimeout: this.timeouts.pageLoad})
+
+  // If a reload of the frame script interrupts our page load, this will
+  // never return. We need to re-issue this request to correctly poll for
+  // readyState and send errors.
+  this.curBrowser.pendingCommands.push(() => {
+    let parameters = {
+      // TODO(ato): Bug 1242595
+      command_id: this.listener.activeMessageId,
+      pageTimeout: this.timeouts.pageLoad,
+      startTime: new Date().getTime(),
+    };
+    this.mm.broadcastAsyncMessage(
+        "Marionette:waitForPageLoaded" + this.curBrowser.curFrameId,
+        parameters);
+  });
+
+  yield refresh;
 };
 
 /**
@@ -2069,9 +2087,9 @@ GeckoDriver.prototype.clickElement = function* (cmd, resp) {
       let click = this.listener.clickElement(
           {id, pageTimeout: this.timeouts.pageLoad});
 
-      // If a remoteness update interrupts our page load, this will
-      // never return We need to re-issue this request to correctly poll
-      // for readyState and send errors.
+      // If a reload of the frame script interrupts our page load, this will
+      // never return. We need to re-issue this request to correctly poll for
+      // readyState and send errors.
       this.curBrowser.pendingCommands.push(() => {
         let parameters = {
           // TODO(ato): Bug 1242595
@@ -3178,9 +3196,9 @@ GeckoDriver.prototype.receiveMessage = function(message) {
 
     case "Marionette:listenersAttached":
       if (message.json.listenerId === this.curBrowser.curFrameId) {
-        // If remoteness gets updated we need to call newSession. In the case
-        // of desktop this just sets up a small amount of state that doesn't
-        // change over the course of a session.
+        // If the frame script gets reloaded we need to call newSession.
+        // In the case of desktop this just sets up a small amount of state
+        // that doesn't change over the course of a session.
         this.sendAsync("newSession", this.capabilities.toJSON());
         this.curBrowser.flushPendingCommands();
       }

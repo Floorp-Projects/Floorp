@@ -31,7 +31,7 @@ The following ATK states are not supported:
   ATK_STATE_ARMED:       No clear use case, used briefly when button is activated
   ATK_STATE_HAS_TOOLTIP: No clear use case, no IA2 equivalent
   ATK_STATE_ICONIFIED:   Mozilla does not have elements which are collapsable into icons
-  ATK_STATE_TRUNCATED:   No clear use case. Indicates that an object's onscreen content is truncated, 
+  ATK_STATE_TRUNCATED:   No clear use case. Indicates that an object's onscreen content is truncated,
                          e.g. a text value in a spreadsheet cell. No IA2 state.
 ******************************************************************************/
 

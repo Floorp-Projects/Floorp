@@ -34,7 +34,7 @@ protected:
     static bool HandleNewProperty(Window aWindowId,Display* aDisplay,
                                     Time aEventTime, Atom aChangedAtom,
                                     nsIWeakReference* aDomWindow);
-    
+
     void XRemoteBaseStartup(const char *aAppName, const char *aProfileName);
 
     void HandleCommandsFor(Window aWindowId);

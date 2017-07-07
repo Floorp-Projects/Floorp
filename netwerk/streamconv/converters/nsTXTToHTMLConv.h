@@ -51,7 +51,7 @@ template<class T> class nsAutoPtr;
  *
  * If the data of one pass contains a part of a token, that part will be stored
  * in mBuffer. The rest of the data will be sent to the next listener.
- * 
+ *
  * XXX this seems suboptimal. this means that this design will only work for
  * links. and it is impossible to append anything to the token. this means that,
  * for example, making *foo* bold is not possible.
@@ -73,7 +73,7 @@ protected:
     // return the token and it's location in the underlying buffer.
     int32_t FindToken(int32_t cursor, convToken* *_retval);
 
-    // return the cursor location after munging HTML into the 
+    // return the cursor location after munging HTML into the
     // underlying buffer, according to mToken
     int32_t CatHTML(int32_t front, int32_t back);
 

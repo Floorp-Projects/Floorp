@@ -32,7 +32,7 @@
  *   The prompt service (which can be gotten by calling getServiceByContractID
  *   on this ContractID) is the way to pose various prompts, alerts,
  *   and confirmation dialogs to the user.
- * 
+ *
  * This contract implements the following interfaces:
  * nsIPromptService
  * nsIPromptService2 (optional)

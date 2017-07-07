@@ -44,8 +44,8 @@ protected:
 
 private:
   nsresult DoDialog(mozIDOMWindowProxy *aParent,
-                    nsIDialogParamBlock *aParamBlock, 
-                    nsIWebBrowserPrint *aWebBrowserPrint, 
+                    nsIDialogParamBlock *aParamBlock,
+                    nsIWebBrowserPrint *aWebBrowserPrint,
                     nsIPrintSettings* aPS,
                     const char *aChromeURL);
 

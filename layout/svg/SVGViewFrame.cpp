@@ -87,7 +87,7 @@ SVGViewFrame::AttributeChanged(int32_t  aNameSpaceID,
                                int32_t  aModType)
 {
   // Ignore zoomAndPan as it does not cause the <svg> element to re-render
-    
+
   if (aNameSpaceID == kNameSpaceID_None &&
       (aAttribute == nsGkAtoms::preserveAspectRatio ||
        aAttribute == nsGkAtoms::viewBox ||

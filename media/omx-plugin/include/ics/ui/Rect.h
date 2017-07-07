@@ -68,7 +68,7 @@ public:
     inline int32_t width() const {
         return right-left;
     }
-    
+
     // rectangle's height
     inline int32_t height() const {
         return bottom-top;
@@ -83,7 +83,7 @@ public:
         right = rb.x;
         bottom  = rb.y;
     }
-    
+
     // the following 4 functions return the 4 corners of the rect as Point
     Point leftTop() const {
         return Point(left, top);
@@ -136,7 +136,7 @@ public:
     void translate(int32_t dx, int32_t dy) { // legacy, don't use.
         offsetBy(dx, dy);
     }
- 
+
     Rect&   offsetTo(int32_t x, int32_t y);
     Rect&   offsetBy(int32_t x, int32_t y);
     bool    intersect(const Rect& with, Rect* result) const;

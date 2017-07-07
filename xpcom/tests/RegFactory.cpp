@@ -35,8 +35,8 @@ void print_err(nsresult err)
   }
 }
 
-nsresult Register(nsIComponentRegistrar* registrar, const char *path) 
-{ 
+nsresult Register(nsIComponentRegistrar* registrar, const char *path)
+{
   nsCOMPtr<nsIFile> file;
   nsresult rv =
     NS_NewLocalFile(
@@ -48,7 +48,7 @@ nsresult Register(nsIComponentRegistrar* registrar, const char *path)
   return rv;
 }
 
-nsresult Unregister(const char *path) 
+nsresult Unregister(const char *path)
 {
   /* NEEDS IMPLEMENTATION */
 #if 0

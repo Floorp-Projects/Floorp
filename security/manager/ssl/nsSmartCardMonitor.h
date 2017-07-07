@@ -38,13 +38,13 @@ class SmartCardMonitoringThread
  public:
   explicit SmartCardMonitoringThread(SECMODModule* module);
   ~SmartCardMonitoringThread();
-  
+
   nsresult Start();
   void Stop();
-  
+
   void Execute();
   void Interrupt();
-  
+
   const SECMODModule* GetModule();
 
  private:
@@ -53,7 +53,7 @@ class SmartCardMonitoringThread
   const char* GetTokenName(CK_SLOT_ID slotid);
   uint32_t GetTokenSeries(CK_SLOT_ID slotid);
   void SendEvent(const char* type, const char* tokenName);
-  
+
   SECMODModule* mModule;
   PLHashTable* mHash;
   PRThread* mThread;

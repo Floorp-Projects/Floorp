@@ -456,7 +456,7 @@ menuitem.bookmark-item {
   border-bottom-right-radius: 1.5px;
 }
 
-#identity-box:-moz-focusring {
+#identity-box:not(:active):-moz-focusring {
   outline: 1px dotted;
   outline-offset: -3px;
 }

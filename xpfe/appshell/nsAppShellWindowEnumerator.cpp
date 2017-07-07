@@ -85,7 +85,7 @@ nsWindowInfo::~nsWindowInfo()
 // return true if the window described by this WindowInfo has a type
 // equal to the given type
 bool nsWindowInfo::TypeEquals(const nsAString &aType)
-{ 
+{
   nsAutoString rtnString;
   GetWindowType(mWindow, rtnString);
   return rtnString == aType;

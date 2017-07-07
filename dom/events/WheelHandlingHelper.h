@@ -132,7 +132,7 @@ public:
    *
    * @return    false if the caller cannot continue to handle the default
    *            action.  Otherwise, true.
-   */ 
+   */
   static bool WillHandleDefaultAction(WidgetWheelEvent* aWheelEvent,
                                       AutoWeakFrame& aTargetWeakFrame);
   static bool WillHandleDefaultAction(WidgetWheelEvent* aWheelEvent,

@@ -75,7 +75,7 @@ SVGPathSegUtils::GetValueAsString(const float* aSeg, nsAString& aValue)
       return;
     }
   }
-  
+
   // nsTextFormatter::ssprintf is one of the nsTextFormatter methods that
   // randomly appends '\0' to its output string, which means that the length
   // of the output string is one too long. We need to manually remove that '\0'

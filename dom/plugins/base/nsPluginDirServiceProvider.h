@@ -16,13 +16,13 @@ class nsISimpleEnumerator;
 
 //*****************************************************************************
 // class nsPluginDirServiceProvider
-//*****************************************************************************   
+//*****************************************************************************
 
 class nsPluginDirServiceProvider : public nsIDirectoryServiceProvider
 {
 public:
    nsPluginDirServiceProvider();
-   
+
    NS_DECL_THREADSAFE_ISUPPORTS
    NS_DECL_NSIDIRECTORYSERVICEPROVIDER
 

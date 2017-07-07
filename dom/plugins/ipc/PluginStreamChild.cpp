@@ -36,7 +36,7 @@ PluginStreamChild::NPN_Write(int32_t length, void* buffer)
                 &written);
   if (written < 0)
     PPluginStreamChild::Call__delete__(this, NPERR_GENERIC_ERROR, true);
-  // careful after here! |this| just got deleted 
+  // careful after here! |this| just got deleted
 
   return written;
 }

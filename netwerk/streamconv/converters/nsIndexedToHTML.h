@@ -35,7 +35,7 @@ public:
     Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
 
 protected:
-    
+
     void FormatSizeString(int64_t inSize, nsCString& outSizeString);
     nsresult SendToListener(nsIRequest* aRequest, nsISupports *aContext, const nsACString &aBuffer);
     // Helper to properly implement OnStartRequest

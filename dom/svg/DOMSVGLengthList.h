@@ -65,7 +65,7 @@ public:
     // InternalList() here. (Because it depends on IsAnimValList, which depends
     // on this object having been assigned to aAList's mBaseVal or mAnimVal,
     // which hasn't happend yet.)
-    
+
     InternalListLengthWillChange(aInternalList.Length()); // Sync mItems
   }
 

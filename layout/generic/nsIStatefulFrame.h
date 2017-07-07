@@ -17,7 +17,7 @@ class nsPresState;
 
 class nsIStatefulFrame
 {
- public: 
+ public:
   NS_DECL_QUERYFRAME_TARGET(nsIStatefulFrame)
 
   // Save the state for this frame.  If this method succeeds, the caller is

@@ -347,7 +347,7 @@ NS_DEFINE_STATIC_IID_ACCESSOR(StorageBaseStatementInternal,
                  uint32_t aValueSize),                   \
                 (aWhere, aValue, aValueSize))
 
-  
+
 
 } // namespace storage
 } // namespace mozilla

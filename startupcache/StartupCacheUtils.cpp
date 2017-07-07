@@ -51,12 +51,12 @@ NewObjectOutputWrappedStorageStream(nsIObjectOutputStream **wrapperStream,
     = do_CreateInstance("@mozilla.org/binaryoutputstream;1");
   nsCOMPtr<nsIOutputStream> outputStream
     = do_QueryInterface(storageStream);
-  
+
   objectOutput->SetOutputStream(outputStream);
-  
+
 #ifdef DEBUG
   if (wantDebugStream) {
-    // Wrap in debug stream to detect unsupported writes of 
+    // Wrap in debug stream to detect unsupported writes of
     // multiply-referenced non-singleton objects
     StartupCache* sc = StartupCache::GetSingleton();
     NS_ENSURE_TRUE(sc, NS_ERROR_UNEXPECTED);
@@ -69,7 +69,7 @@ NewObjectOutputWrappedStorageStream(nsIObjectOutputStream **wrapperStream,
 #else
   objectOutput.forget(wrapperStream);
 #endif
-  
+
   storageStream.forget(stream);
   return NS_OK;
 }
@@ -82,7 +82,7 @@ NewBufferFromStorageStream(nsIStorageStream *storageStream,
   nsCOMPtr<nsIInputStream> inputStream;
   rv = storageStream->NewInputStream(0, getter_AddRefs(inputStream));
   NS_ENSURE_SUCCESS(rv, rv);
-  
+
   uint64_t avail64;
   rv = inputStream->Available(&avail64);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -94,11 +94,11 @@ NewBufferFromStorageStream(nsIStorageStream *storageStream,
   rv = inputStream->Read(temp.get(), avail, &read);
   if (NS_SUCCEEDED(rv) && avail != read)
     rv = NS_ERROR_UNEXPECTED;
-  
+
   if (NS_FAILED(rv)) {
     return rv;
   }
-  
+
   *len = avail;
   *buffer = Move(temp);
   return NS_OK;

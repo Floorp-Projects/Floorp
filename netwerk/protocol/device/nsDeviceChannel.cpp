@@ -54,7 +54,7 @@ nsDeviceChannel::nsDeviceChannel()
   SetContentType(NS_LITERAL_CSTRING("image/png"));
 }
 
-nsDeviceChannel::~nsDeviceChannel() 
+nsDeviceChannel::~nsDeviceChannel()
 {
 }
 

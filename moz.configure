@@ -470,6 +470,9 @@ def nsis_flags(host):
 
 set_config('MAKENSISU_FLAGS', nsis_flags)
 
+fxc = check_prog('FXC', ('fxc.exe', 'fxc2.exe'), when=depends(target)(lambda t: t.kernel == 'WINNT'))
+wine = check_prog('WINE', ['wine'], when=depends(target, host)(lambda t, h: t.kernel == 'WINNT' and h.kernel == 'Linux'))
+
 # Fallthrough to autoconf-based configure
 include('build/moz.configure/old.configure')
 

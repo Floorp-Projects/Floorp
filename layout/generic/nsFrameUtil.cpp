@@ -4,7 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* utilities for regression tests based on frame tree comparison */
- 
+
 #include "nsIFrameUtil.h"
 #include "nsFrame.h"
 #include "nsString.h"

@@ -11008,7 +11008,7 @@ nsDocShell::DoURILoad(nsIURI* aURI,
     if (isDataURI) {
       // In all cases where the toplevel document is navigated to a data: URI
       // the triggeringPrincipal is a CodeBasePrincipal. In all other cases
-      // e.g. typing a data: URL into the URL-Bar or also clicking a bookmark 
+      // e.g. typing a data: URL into the URL-Bar or also clicking a bookmark
       // uses a SystemPrincipal as the triggeringPrincipal.
       if (aTriggeringPrincipal->GetIsCodebasePrincipal()) {
         Telemetry::Accumulate(Telemetry::DOCUMENT_DATA_URI_LOADS, DATA_NAVIGATED);

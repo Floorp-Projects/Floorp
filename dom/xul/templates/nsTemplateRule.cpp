@@ -277,7 +277,7 @@ nsTemplateRule::nsTemplateRule(const nsTemplateRule& aOtherRule)
 nsTemplateRule::~nsTemplateRule()
 {
     MOZ_COUNT_DTOR(nsTemplateRule);
-    
+
     while (mBindings) {
         Binding* doomed = mBindings;
         mBindings = mBindings->mNext;

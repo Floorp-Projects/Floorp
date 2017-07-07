@@ -28,7 +28,7 @@ class nsGeoPositionCoords final : public nsIDOMGeoPositionCoords
 public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIDOMGEOPOSITIONCOORDS
-  
+
   nsGeoPositionCoords(double aLat, double aLong,
                       double aAlt, double aHError,
                       double aVError, double aHeading,
@@ -48,12 +48,12 @@ class nsGeoPosition final : public nsIDOMGeoPosition
 public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIDOMGEOPOSITION
-  
+
   nsGeoPosition(double aLat, double aLong,
                 double aAlt, double aHError,
                 double aVError, double aHeading,
                 double aSpeed, long long aTimestamp);
-  
+
 
   nsGeoPosition(nsIDOMGeoPositionCoords *aCoords,
                 long long aTimestamp);

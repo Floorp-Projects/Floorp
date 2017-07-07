@@ -13,7 +13,7 @@
 /**
  * Creates a new current function call
 **/
-CurrentFunctionCall::CurrentFunctionCall() 
+CurrentFunctionCall::CurrentFunctionCall()
 {
 }
 
@@ -31,7 +31,7 @@ CurrentFunctionCall::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
     if (!requireParams(0, 0, aContext))
         return NS_ERROR_XPATH_BAD_ARGUMENT_COUNT;
 
-    txExecutionState* es = 
+    txExecutionState* es =
         static_cast<txExecutionState*>(aContext->getPrivateContext());
     if (!es) {
         NS_ERROR(

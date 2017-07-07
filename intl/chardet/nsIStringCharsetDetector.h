@@ -17,24 +17,24 @@
 
 /*
   This interface is similar to nsICharsetDetector
-  The difference is it is for line base detection instead of block based 
-  detectection. 
+  The difference is it is for line base detection instead of block based
+  detectection.
  */
 
 
 class nsIStringCharsetDetector : public nsISupports {
-public:  
+public:
 
    NS_DECLARE_STATIC_IID_ACCESSOR(NS_ISTRINGCHARSETDETECTOR_IID)
   /*
      Perform the charset detection
-    
+
      aBytesArray- the bytes
      aLen- the length of the bytes
      oCharset- the charset answer
      oConfident - the confidence of the answer
    */
-  NS_IMETHOD DoIt(const char* aBytesArray, uint32_t aLen, 
+  NS_IMETHOD DoIt(const char* aBytesArray, uint32_t aLen,
                     const char** oCharset, nsDetectionConfident &oConfident) = 0;
 };
 

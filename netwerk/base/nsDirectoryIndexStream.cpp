@@ -305,14 +305,14 @@ nsDirectoryIndexStream::Read(char* aBuf, uint32_t aCount, uint32_t* aReadCount)
             else {
                 bool isDir;
                 rv = current->IsDirectory(&isDir);
-                if (NS_FAILED(rv)) return rv; 
+                if (NS_FAILED(rv)) return rv;
                 if (isDir) {
                     mBuf.AppendLiteral("DIRECTORY ");
                 }
                 else {
                     bool isLink;
                     rv = current->IsSymlink(&isLink);
-                    if (NS_FAILED(rv)) return rv; 
+                    if (NS_FAILED(rv)) return rv;
                     if (isLink) {
                         mBuf.AppendLiteral("SYMBOLIC-LINK ");
                     }

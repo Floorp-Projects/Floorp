@@ -29,7 +29,7 @@ class DOMParser final : public nsIDOMParser,
 
   virtual ~DOMParser();
 
-public: 
+public:
   DOMParser();
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS

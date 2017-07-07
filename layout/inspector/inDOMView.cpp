@@ -456,9 +456,9 @@ inDOMView::GetParentIndex(int32_t rowIndex, int32_t *_retval)
   RowToNode(rowIndex, &node);
   if (!node) return NS_ERROR_FAILURE;
 
-  // GetParentIndex returns -1 if there is no parent  
+  // GetParentIndex returns -1 if there is no parent
   *_retval = -1;
-  
+
   inDOMViewNode* checkNode = nullptr;
   int32_t i = rowIndex - 1;
   do {
@@ -467,7 +467,7 @@ inDOMView::GetParentIndex(int32_t rowIndex, int32_t *_retval)
       // No parent. Just break out.
       break;
     }
-    
+
     if (checkNode == node->parent) {
       *_retval = i;
       return NS_OK;
@@ -643,7 +643,7 @@ inDOMView::AttributeChanged(nsIDocument* aDocument, dom::Element* aElement,
   }
 
   nsCOMPtr<nsIMutationObserver> kungFuDeathGrip(this);
-  
+
   // get the dom attribute node, if there is any
   nsCOMPtr<nsIDOMElement> el(do_QueryInterface(aElement));
   nsCOMPtr<nsIDOMAttr> domAttr;
@@ -804,7 +804,7 @@ inDOMView::ContentInserted(nsIDocument *aDocument, nsIContent* aContainer,
     return;
 
   nsCOMPtr<nsIMutationObserver> kungFuDeathGrip(this);
-  
+
   if (!parentNode->isOpen) {
     // Parent is not open, so don't bother creating tree rows for the
     // kids.  But do indicate that it's now a container, if needed.
@@ -877,16 +877,16 @@ inDOMView::ContentRemoved(nsIDocument *aDocument, nsIContent* aContainer,
     return;
 
   nsCOMPtr<nsIMutationObserver> kungFuDeathGrip(this);
-  
+
   // The parent may no longer be a container.  Note that we don't want
   // to access oldNode after calling RemoveNode, so do this now.
   inDOMViewNode* parentNode = oldNode->parent;
   bool isOnlyChild = oldNode->previous == nullptr && oldNode->next == nullptr;
-  
+
   // Keep track of how many rows we are removing.  It's at least one,
   // but if we're open it's more.
   int32_t oldCount = GetRowCount();
-  
+
   if (oldNode->isOpen)
     CollapseNode(row);
 
@@ -899,7 +899,7 @@ inDOMView::ContentRemoved(nsIDocument *aDocument, nsIContent* aContainer,
     parentNode->isOpen = false;
     mTree->InvalidateRow(NodeToRow(parentNode));
   }
-    
+
   mTree->RowCountChanged(row, GetRowCount() - oldCount);
 }
 

@@ -84,7 +84,7 @@ nsAccUtils::GetDefaultLevel(Accessible* aAccessible)
     Accessible* parent = aAccessible->Parent();
     // It is a row inside flatten treegrid. Group level is always 1 until it
     // is overriden by aria-level attribute.
-    if (parent && parent->Role() == roles::TREE_TABLE) 
+    if (parent && parent->Role() == roles::TREE_TABLE)
       return 1;
   }
 
@@ -415,7 +415,7 @@ nsAccUtils::TextLength(Accessible* aAccessible)
 
   // For list bullets (or anything other accessible which would compute its own
   // text. They don't have their own frame.
-  // XXX In the future, list bullets may have frame and anon content, so 
+  // XXX In the future, list bullets may have frame and anon content, so
   // we should be able to remove this at that point
   nsAutoString text;
   aAccessible->AppendTextTo(text); // Get all the text

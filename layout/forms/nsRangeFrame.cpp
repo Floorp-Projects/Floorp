@@ -497,14 +497,14 @@ nsRangeFrame::GetValueAsFractionOfRange()
 
   MOZ_ASSERT(value.isFinite() && minimum.isFinite() && maximum.isFinite(),
              "type=range should have a default maximum/minimum");
-  
+
   if (maximum <= minimum) {
     MOZ_ASSERT(value == minimum, "Unsanitized value");
     return 0.0;
   }
-  
+
   MOZ_ASSERT(value >= minimum && value <= maximum, "Unsanitized value");
-  
+
   return ((value - minimum) / (maximum - minimum)).toDouble();
 }
 

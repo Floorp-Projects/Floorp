@@ -46,7 +46,7 @@ nsPlatformCharset::MapToCharset(nsAString& inANSICodePage, nsACString& outCharse
   return rv;
 }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsPlatformCharset::GetCharset(nsPlatformCharsetSel selector,
                               nsACString& oResult)
 {
@@ -54,7 +54,7 @@ nsPlatformCharset::GetCharset(nsPlatformCharsetSel selector,
   return NS_OK;
 }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsPlatformCharset::Init()
 {
   return NS_OK;

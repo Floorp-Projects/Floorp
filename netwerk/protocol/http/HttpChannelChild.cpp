@@ -2287,7 +2287,7 @@ HttpChannelChild::AsyncOpen(nsIStreamListener *listener, nsISupports *aContext)
     tasktracer::AddLabel("HttpChannelChild::AsyncOpen %s", urispec.get());
   }
 #endif
-  
+
 
   // Port checked in parent, but duplicate here so we can return with error
   // immediately
@@ -2487,7 +2487,7 @@ HttpChannelChild::ContinueAsyncOpen()
     autoStream.Serialize(mUploadStream, ContentChild::GetSingleton());
     autoStream.TakeOptionalValue();
   }
-  
+
   if (mResponseHead) {
     openArgs.synthesizedResponseHead() = *mResponseHead;
     openArgs.suspendAfterSynthesizeResponse() =

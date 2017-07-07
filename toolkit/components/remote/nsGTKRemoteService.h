@@ -43,7 +43,7 @@ private:
                                               uint32_t aTimestamp) override;
 
   nsInterfaceHashtable<nsPtrHashKey<GtkWidget>, nsIWeakReference> mWindows;
-  GtkWidget* mServerWindow;  
+  GtkWidget* mServerWindow;
 };
 
 #endif // __nsGTKRemoteService_h__

@@ -8,7 +8,7 @@
 
 class nsITreeBoxObject;
 
-nsIFrame* NS_NewTreeColFrame(nsIPresShell* aPresShell, 
+nsIFrame* NS_NewTreeColFrame(nsIPresShell* aPresShell,
                              nsStyleContext* aContext);
 
 class nsTreeColFrame final : public nsBoxFrame

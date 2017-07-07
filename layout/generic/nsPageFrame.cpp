@@ -177,13 +177,13 @@ nsPageFrame::GetFrameName(nsAString& aResult) const
 }
 #endif
 
-void 
+void
 nsPageFrame::ProcessSpecialCodes(const nsString& aStr, nsString& aNewStr)
 {
 
   aNewStr = aStr;
 
-  // Search to see if the &D code is in the string 
+  // Search to see if the &D code is in the string
   // then subst in the current date/time
   NS_NAMED_LITERAL_STRING(kDate, "&D");
   if (aStr.Find(kDate) != kNotFound) {
@@ -233,7 +233,7 @@ nsPageFrame::ProcessSpecialCodes(const nsString& aStr, nsString& aNewStr)
 //------------------------------------------------------------------------------
 nscoord nsPageFrame::GetXPosition(gfxContext&          aRenderingContext,
                                   nsFontMetrics&       aFontMetrics,
-                                  const nsRect&        aRect, 
+                                  const nsRect&        aRect,
                                   int32_t              aJust,
                                   const nsString&      aStr)
 {
@@ -362,10 +362,10 @@ nsPageFrame::DrawHeaderFooter(gfxContext&          aRenderingContext,
           str.Truncate();
         }
       }
-    } else { 
+    } else {
       return; // bail if couldn't find the correct length
     }
-    
+
     if (HasRTLChars(str)) {
       PresContext()->SetBidiEnabled();
     }
@@ -598,9 +598,9 @@ nsPageFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 
 //------------------------------------------------------------------------------
 void
-nsPageFrame::SetPageNumInfo(int32_t aPageNumber, int32_t aTotalPages) 
-{ 
-  mPageNum     = aPageNumber; 
+nsPageFrame::SetPageNumInfo(int32_t aPageNumber, int32_t aTotalPages)
+{
+  mPageNum     = aPageNumber;
   mTotNumPages = aTotalPages;
 }
 
@@ -657,8 +657,8 @@ nsPageFrame::PaintHeaderFooter(gfxContext& aRenderingContext,
 }
 
 void
-nsPageFrame::SetSharedPageData(nsSharedPageData* aPD) 
-{ 
+nsPageFrame::SetSharedPageData(nsSharedPageData* aPD)
+{
   mPD = aPD;
   // Set the shared data into the page frame before reflow
   nsPageContentFrame * pcf = static_cast<nsPageContentFrame*>(mFrames.FirstChild());
@@ -734,7 +734,7 @@ nsPageBreakFrame::Reflow(nsPresContext*           aPresContext,
   // Note: not using NS_FRAME_FIRST_REFLOW here, since it's not clear whether
   // DidReflow will always get called before the next Reflow() call.
   mHaveReflowed = true;
-  aStatus.Reset(); 
+  aStatus.Reset();
 }
 
 #ifdef DEBUG_FRAME_DUMP

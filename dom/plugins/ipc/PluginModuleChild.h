@@ -183,7 +183,7 @@ public:
 
 #ifdef MOZ_WIDGET_COCOA
     void ProcessNativeEvents();
-    
+
     void PluginShowWindow(uint32_t window_id, bool modal, CGRect r) {
         SendPluginShowWindow(window_id, modal, r.origin.x, r.origin.y, r.size.width, r.size.height);
     }

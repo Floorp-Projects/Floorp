@@ -755,7 +755,7 @@ SVGContentUtils::GetEndRangedPtr(const nsAString& aString)
 
 template<class floatType>
 bool
-SVGContentUtils::ParseNumber(const nsAString& aString, 
+SVGContentUtils::ParseNumber(const nsAString& aString,
                              floatType& aValue)
 {
   RangedPtr<const char16_t> iter = GetStartRangedPtr(aString);
@@ -765,10 +765,10 @@ SVGContentUtils::ParseNumber(const nsAString& aString,
 }
 
 template bool
-SVGContentUtils::ParseNumber<float>(const nsAString& aString, 
+SVGContentUtils::ParseNumber<float>(const nsAString& aString,
                                     float& aValue);
 template bool
-SVGContentUtils::ParseNumber<double>(const nsAString& aString, 
+SVGContentUtils::ParseNumber<double>(const nsAString& aString,
                                      double& aValue);
 
 /* static */

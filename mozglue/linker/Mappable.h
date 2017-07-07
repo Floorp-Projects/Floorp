@@ -127,7 +127,7 @@ class _MappableBuffer;
 
 /**
  * Mappable implementation for deflated stream in a Zip archive.
- * Inflates the mapped bits in a temporary buffer. 
+ * Inflates the mapped bits in a temporary buffer.
  */
 class MappableDeflate: public Mappable
 {

@@ -231,7 +231,7 @@ typedef struct _PROCESS_MITIGATION_EXTENSION_POINT_DISABLE_POLICY {
 #define PROCESS_CREATION_CHILD_PROCESS_OVERRIDE                                           0x02
 
 //
-// Define Attribute for Desktop Appx Overide. 
+// Define Attribute for Desktop Appx Overide.
 //
 
 #define PROCESS_CREATION_DESKTOP_APPX_OVERRIDE                                            0x04

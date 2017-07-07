@@ -23,7 +23,7 @@ add_task(async function autoMigrationUndoNotificationShows() {
   };
 
   scope.AutoMigrate.canUndo = () => true;
-  let url = "about:newtab";
+  let url = "about:home";
   Services.prefs.setCharPref("browser.migrate.automigrate.browser", "someunknownbrowser");
   const kSubsets = [
     ["bookmarks", "logins", "visits"],

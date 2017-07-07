@@ -77,9 +77,9 @@ public:
   nsresult OnDataAvailable(nsPluginStreamListenerPeer* streamPeer,
                            nsIInputStream* input,
                            uint32_t length);
-  nsresult OnFileAvailable(nsPluginStreamListenerPeer* streamPeer, 
+  nsresult OnFileAvailable(nsPluginStreamListenerPeer* streamPeer,
                            const char* fileName);
-  nsresult OnStopBinding(nsPluginStreamListenerPeer* streamPeer, 
+  nsresult OnStopBinding(nsPluginStreamListenerPeer* streamPeer,
                          nsresult status);
   nsresult GetStreamType(int32_t *result);
   bool SetStreamType(uint16_t aType, bool aNeedsResume = true);

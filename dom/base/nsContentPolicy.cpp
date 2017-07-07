@@ -122,7 +122,7 @@ nsContentPolicy::CheckPolicy(CPMethod          policyMethod,
     nsContentPolicyType externalType =
         nsContentUtils::InternalContentPolicyTypeToExternal(contentType);
 
-    /* 
+    /*
      * Enumerate mPolicies and ask each of them, taking the logical AND of
      * their permissions.
      */

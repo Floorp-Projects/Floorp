@@ -38,7 +38,7 @@
 typedef struct MBSPatchHeader_ {
   /* "MBDIFF10" */
   char tag[8];
-  
+
   /* Length of the file to be patched */
   uint32_t slen;
 

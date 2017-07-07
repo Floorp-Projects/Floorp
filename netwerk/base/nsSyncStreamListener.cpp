@@ -85,7 +85,7 @@ nsSyncStreamListener::OnDataAvailable(nsIRequest     *request,
 
     // we expect that all data will be written to the pipe because
     // the pipe was created to have "infinite" room.
-    NS_ASSERTION(bytesWritten == count, "did not write all data"); 
+    NS_ASSERTION(bytesWritten == count, "did not write all data");
 
     mKeepWaiting = false; // unblock Read
     return NS_OK;

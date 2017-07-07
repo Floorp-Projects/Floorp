@@ -2501,7 +2501,7 @@ nsCSSProps::ValueToKeywordEnum(int32_t aValue, const KTableEntry aTable[])
   return eCSSKeyword_UNKNOWN;
 }
 
-const nsCString& 
+const nsCString&
 nsCSSProps::ValueToKeyword(int32_t aValue, const KTableEntry aTable[])
 {
   nsCSSKeyword keyword = ValueToKeywordEnum(aValue, aTable);

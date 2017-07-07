@@ -103,7 +103,7 @@ FindNextNode(nsINode* aNode, nsINode* aRoot,
   nsINode* next = aNode->GetFirstChild();
   if (next)
     return next;
-  
+
   // Don't look at siblings or otherwise outside of aRoot
   if (aNode == aRoot)
     return nullptr;
@@ -117,12 +117,12 @@ FindNextNode(nsINode* aNode, nsINode* aRoot,
     if (aOnLeaveNode) {
       aOnLeaveNode(aNode, aClosure);
     }
-    
+
     next = aNode->GetParent();
     if (next == aRoot || ! next)
       return nullptr;
     aNode = next;
-    
+
     next = aNode->GetNextSibling();
     if (next)
       return next;
@@ -144,12 +144,12 @@ FindNextTextNode(nsINode* aNode, int32_t aOffset, nsINode* aRoot)
   if (child) {
     checkNode = child;
   } else {
-    // aOffset was beyond the end of the child list. 
+    // aOffset was beyond the end of the child list.
     // goto next node after the last descendant of aNode in
     // a preorder DOM traversal.
     checkNode = aNode->GetNextNonChildNode(aRoot);
   }
-  
+
   while (checkNode && !IsSpellCheckingTextNode(checkNode)) {
     checkNode = checkNode->GetNextNode(aRoot);
   }
@@ -207,7 +207,7 @@ mozInlineSpellWordUtil::SetPosition(nsINode* aNode, int32_t aOffset)
   if (NS_FAILED(rv)) {
     return rv;
   }
-  
+
   int32_t textOffset = MapDOMPositionToSoftTextOffset(mSoftBegin);
   if (textOffset < 0)
     return NS_OK;
@@ -309,7 +309,7 @@ mozInlineSpellWordUtil::GetNextWord(nsAString& aText, nsRange** aRange,
     *aSkipChecking = true;
     return NS_OK;
   }
-  
+
   const RealWord& word = mRealWords[mNextWordIndex];
   nsresult rv = MakeRangeForWord(word, aRange);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -321,7 +321,7 @@ mozInlineSpellWordUtil::GetNextWord(nsAString& aText, nsRange** aRange,
   printf("GetNextWord returning: %s (skip=%d)\n",
          NS_ConvertUTF16toUTF8(aText).get(), *aSkipChecking);
 #endif
-  
+
   return NS_OK;
 }
 
@@ -706,7 +706,7 @@ IsBreakElement(nsINode* aNode)
   }
 
   dom::Element *element = aNode->AsElement();
-    
+
   if (element->IsHTMLElement(nsGkAtoms::br))
     return true;
 
@@ -866,7 +866,7 @@ mozInlineSpellWordUtil::BuildSoftText()
       mSoftText.Append(' ');
     }
   }
-  
+
 #ifdef DEBUG_SPELLCHECK
   printf("Got DOM string: %s\n", NS_ConvertUTF16toUTF8(mSoftText).get());
 #endif
@@ -915,7 +915,7 @@ mozInlineSpellWordUtil::MapDOMPositionToSoftTextOffset(NodeOffset aNodeOffset)
     NS_ERROR("Soft text must be valid if we're to map into it");
     return -1;
   }
-  
+
   for (int32_t i = 0; i < int32_t(mSoftTextDOMMapping.Length()); ++i) {
     const DOMTextMapping& map = mSoftTextDOMMapping[i];
     if (map.mNodeOffset.mNode == aNodeOffset.mNode) {

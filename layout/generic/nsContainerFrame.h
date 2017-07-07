@@ -74,7 +74,7 @@ public:
 
 #ifdef DEBUG_FRAME_DUMP
   void List(FILE* out = stderr, const char* aPrefix = "", uint32_t aFlags = 0) const override;
-#endif  
+#endif
 
   // nsContainerFrame methods
 
@@ -384,7 +384,7 @@ public:
    */
   virtual bool DrainSelfOverflowList() override;
 
-  
+
   /**
    * Move all frames on our prev-in-flow's and our own ExcessOverflowContainers
    * lists to our OverflowContainers list.  If there are frames on multiple
@@ -616,7 +616,7 @@ protected:
    * into an AutoFrameListPtr.
    */
   inline nsFrameList* StealOverflowFrames();
-  
+
   /**
    * Set the overflow list.  aOverflowFrames must not be an empty list.
    */
@@ -823,7 +823,7 @@ public:
     {
       if (mTracker) mTracker->BeginFinish(mChild);
     }
-    ~AutoFinish() 
+    ~AutoFinish()
     {
       if (mTracker) mTracker->EndFinish(mChild);
     }

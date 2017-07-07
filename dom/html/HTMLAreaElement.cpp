@@ -107,7 +107,7 @@ HTMLAreaElement::GetLinkTarget(nsAString& aTarget)
   }
 }
 
-nsDOMTokenList* 
+nsDOMTokenList*
 HTMLAreaElement::RelList()
 {
   if (!mRelList) {

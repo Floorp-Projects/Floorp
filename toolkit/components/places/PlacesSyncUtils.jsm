@@ -323,8 +323,6 @@ const BookmarkSyncUtils = PlacesSyncUtils.bookmarks = Object.freeze({
 
   /**
    * Returns a changeset containing local bookmark changes since the last sync.
-   * Updates the sync status of all "NEW" bookmarks to "NORMAL", so that Sync
-   * can recover correctly after an interrupted sync.
    *
    * @return {Promise} resolved once all items have been fetched.
    * @resolves to an object containing records for changed bookmarks, keyed by
@@ -332,9 +330,25 @@ const BookmarkSyncUtils = PlacesSyncUtils.bookmarks = Object.freeze({
    * @see pullSyncChanges for the implementation, and markChangesAsSyncing for
    *      an explanation of why we update the sync status.
    */
-  pullChanges() {
-    return PlacesUtils.withConnectionWrapper("BookmarkSyncUtils: pullChanges",
-      db => pullSyncChanges(db));
+  async pullChanges() {
+    let db = await PlacesUtils.promiseDBConnection();
+    return pullSyncChanges(db);
+  },
+
+  /**
+   * Updates the sync status of all "NEW" bookmarks to "NORMAL", so that Sync
+   * can recover correctly after an interrupted sync.
+   *
+   * @param changeRecords
+   *        A changeset containing sync change records, as returned by
+   *        `pullChanges`.
+   * @return {Promise} resolved once all records have been updated.
+   */
+  markChangesAsSyncing(changeRecords) {
+    return PlacesUtils.withConnectionWrapper(
+      "BookmarkSyncUtils: markChangesAsSyncing",
+      db => markChangesAsSyncing(db, changeRecords)
+    );
   },
 
   /**
@@ -344,7 +358,7 @@ const BookmarkSyncUtils = PlacesSyncUtils.bookmarks = Object.freeze({
    *
    * @param changeRecords
    *        A changeset containing sync change records, as returned by
-   *        `pull{All, New}Changes`.
+   *        `pullChanges`.
    * @return {Promise} resolved once all records have been updated.
    */
   pushChanges(changeRecords) {
@@ -469,8 +483,8 @@ const BookmarkSyncUtils = PlacesSyncUtils.bookmarks = Object.freeze({
     // TODO (Bug 1313890): Refactor the bookmarks engine to pull change records
     // before uploading, instead of returning records to merge into the engine's
     // initial changeset.
-    return PlacesUtils.withConnectionWrapper("BookmarkSyncUtils: remove",
-      db => pullSyncChanges(db));
+    let db = await PlacesUtils.promiseDBConnection();
+    return pullSyncChanges(db);
   },
 
   /**
@@ -1747,8 +1761,6 @@ var pullSyncChanges = async function(db) {
     FROM moz_bookmarks_deleted`,
     { deletedSyncStatus: PlacesUtils.bookmarks.SYNC_STATUS.NORMAL },
     row => addRowToChangeRecords(row, changeRecords));
-
-  await markChangesAsSyncing(db, changeRecords);
 
   return changeRecords;
 };

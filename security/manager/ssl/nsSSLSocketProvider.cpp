@@ -63,6 +63,6 @@ nsSSLSocketProvider::AddToSocket(int32_t family,
                                         securityInfo,
                                         false,
                                         flags);
-  
+
   return (NS_FAILED(rv)) ? NS_ERROR_SOCKET_CREATE_FAILED : NS_OK;
 }

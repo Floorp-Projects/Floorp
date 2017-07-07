@@ -115,7 +115,7 @@ private:
   int32_t mRowCount;
   int32_t mColumnCount;
 
-  // number of rows and columns that are implied but not 
+  // number of rows and columns that are implied but not
   // explicitly defined int he XUL
   int32_t mExtraRowCount;
   int32_t mExtraColumnCount;

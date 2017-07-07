@@ -126,7 +126,7 @@ nsListBoxLayout::LayoutInternal(nsIFrame* aBox, nsBoxLayoutState& aState)
   // height.
   nscoord availableHeight = body->GetAvailableHeight();
   nscoord yOffset = body->GetYPosition();
-  
+
   if (availableHeight <= 0) {
     bool fixed = (body->GetFixedRowSize() != -1);
     if (fixed)
@@ -146,7 +146,7 @@ nsListBoxLayout::LayoutInternal(nsIFrame* aBox, nsBoxLayoutState& aState)
     // call layout on it.
     nsRect childRect(box->GetRect());
     box->GetXULMargin(margin);
-    
+
     // relayout if we must or we are dirty or some of our children are dirty
     //   or the client area is wider than us
     // XXXldb There should probably be a resize check here too!
@@ -154,10 +154,10 @@ nsListBoxLayout::LayoutInternal(nsIFrame* aBox, nsBoxLayoutState& aState)
       childRect.x = 0;
       childRect.y = yOffset;
       childRect.width = clientRect.width;
-      
+
       nsSize size = box->GetXULPrefSize(aState);
       body->SetRowHeight(size.height);
-      
+
       childRect.height = rowHeight;
 
       childRect.Deflate(margin);
@@ -169,7 +169,7 @@ nsListBoxLayout::LayoutInternal(nsIFrame* aBox, nsBoxLayoutState& aState)
       int32_t newPos = yOffset+margin.top;
 
       // are we pushing down or pulling up any rows?
-      // Then we may have to redraw everything below the moved 
+      // Then we may have to redraw everything below the moved
       // rows.
       if (redrawStart == -1 && childRect.y != newPos)
         redrawStart = newPos;
@@ -184,15 +184,15 @@ nsListBoxLayout::LayoutInternal(nsIFrame* aBox, nsBoxLayoutState& aState)
 
     yOffset += size;
     availableHeight -= size;
-    
+
     box = nsBox::GetNextXULBox(box);
   }
-  
+
   // We have enough available height left to add some more rows
   // Since we can't do this during layout, we post a callback
   // that will be processed after the reflow completes.
   body->PostReflowCallback();
-    
+
   // if rows were pushed down or pulled up because some rows were added
   // before them then redraw everything under the inserted rows. The inserted
   // rows will automatically be redrawn because the were marked dirty on insertion.
@@ -209,4 +209,4 @@ already_AddRefed<nsBoxLayout> NS_NewListBoxLayout()
 {
   RefPtr<nsBoxLayout> layout = new nsListBoxLayout();
   return layout.forget();
-} 
+}

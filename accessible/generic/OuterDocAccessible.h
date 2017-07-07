@@ -14,7 +14,7 @@ class DocAccessibleParent;
 
 /**
  * Used for <browser>, <frame>, <iframe>, <page> or editor> elements.
- * 
+ *
  * In these variable names, "outer" relates to the OuterDocAccessible as
  * opposed to the DocAccessibleWrap which is "inner". The outer node is
  * a something like tags listed above, whereas the inner node corresponds to

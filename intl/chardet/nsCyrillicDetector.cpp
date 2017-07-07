@@ -23,7 +23,7 @@ void nsCyrillicDetector::HandleData(const char* aBuf, uint32_t aLen)
    uint8_t cls;
    const char* b;
    uint32_t i;
-   if(mDone) 
+   if(mDone)
       return;
    for(i=0, b=aBuf;i<aLen;i++,b++)
    {
@@ -31,12 +31,12 @@ void nsCyrillicDetector::HandleData(const char* aBuf, uint32_t aLen)
      {
         if( 0x80 & *b)
            cls = mCyrillicClass[j][(*b) & 0x7F];
-        else 
+        else
            cls = 0;
         NS_ASSERTION( cls <= 32 , "illegal character class");
         mProb[j] += gCyrillicProb[mLastCls[j]][cls];
         mLastCls[j] = cls;
-     } 
+     }
    }
    // We now only based on the first block we receive
    DataEnd();
@@ -49,7 +49,7 @@ void nsCyrillicDetector::DataEnd()
    uint32_t max=0;
    uint8_t  maxIdx=0;
    uint8_t j;
-   if(mDone) 
+   if(mDone)
       return;
    for(j=0;j<mItems;j++) {
       if(mProb[j] > max)
@@ -59,11 +59,11 @@ void nsCyrillicDetector::DataEnd()
       }
    }
 
-   if( 0 == max ) // if we didn't get any 8 bits data 
+   if( 0 == max ) // if we didn't get any 8 bits data
      return;
 
 #ifdef DEBUG
-   for(j=0;j<mItems;j++) 
+   for(j=0;j<mItems;j++)
       printf("Charset %s->\t%d\n", mCharsets[j], mProb[j]);
 #endif
    this->Report(mCharsets[maxIdx]);
@@ -71,8 +71,8 @@ void nsCyrillicDetector::DataEnd()
 }
 
 //---------------------------------------------------------------------
-nsCyrXPCOMDetector:: nsCyrXPCOMDetector(uint8_t aItems, 
-                      const uint8_t ** aCyrillicClass, 
+nsCyrXPCOMDetector:: nsCyrXPCOMDetector(uint8_t aItems,
+                      const uint8_t ** aCyrillicClass,
                       const char **aCharsets)
 	     : nsCyrillicDetector(aItems, aCyrillicClass, aCharsets)
 {
@@ -80,7 +80,7 @@ nsCyrXPCOMDetector:: nsCyrXPCOMDetector(uint8_t aItems,
 }
 
 //---------------------------------------------------------------------
-nsCyrXPCOMDetector::~nsCyrXPCOMDetector() 
+nsCyrXPCOMDetector::~nsCyrXPCOMDetector()
 {
 }
 
@@ -126,35 +126,35 @@ void nsCyrXPCOMDetector::Report(const char* aCharset)
 }
 
 //---------------------------------------------------------------------
-nsCyrXPCOMStringDetector:: nsCyrXPCOMStringDetector(uint8_t aItems, 
-                      const uint8_t ** aCyrillicClass, 
+nsCyrXPCOMStringDetector:: nsCyrXPCOMStringDetector(uint8_t aItems,
+                      const uint8_t ** aCyrillicClass,
                       const char **aCharsets)
 	     : nsCyrillicDetector(aItems, aCyrillicClass, aCharsets)
 {
 }
 
 //---------------------------------------------------------------------
-nsCyrXPCOMStringDetector::~nsCyrXPCOMStringDetector() 
+nsCyrXPCOMStringDetector::~nsCyrXPCOMStringDetector()
 {
 }
 
 //---------------------------------------------------------------------
-void nsCyrXPCOMStringDetector::Report(const char *aCharset) 
+void nsCyrXPCOMStringDetector::Report(const char *aCharset)
 {
    mResult = aCharset;
 }
 
 //---------------------------------------------------------------------
-NS_IMETHODIMP nsCyrXPCOMStringDetector::DoIt(const char* aBuf, uint32_t aLen, 
+NS_IMETHODIMP nsCyrXPCOMStringDetector::DoIt(const char* aBuf, uint32_t aLen,
                      const char** oCharset, nsDetectionConfident &oConf)
 {
    mResult = nullptr;
    mDone = false;
-   this->HandleData(aBuf, aLen); 
+   this->HandleData(aBuf, aLen);
    this->DataEnd();
    *oCharset=mResult;
    oConf = eBestAnswer;
    return NS_OK;
 }
-       
+
 

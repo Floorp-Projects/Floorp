@@ -39,7 +39,7 @@ using namespace mozilla::dom;
 already_AddRefed<BeforeUnloadEvent>
 NS_NewDOMBeforeUnloadEvent(EventTarget* aOwner,
                            nsPresContext* aPresContext,
-                           WidgetEvent* aEvent) 
+                           WidgetEvent* aEvent)
 {
   RefPtr<BeforeUnloadEvent> it =
     new BeforeUnloadEvent(aOwner, aPresContext, aEvent);

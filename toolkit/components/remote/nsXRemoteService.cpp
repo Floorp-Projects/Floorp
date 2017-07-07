@@ -128,7 +128,7 @@ nsXRemoteService::XRemoteBaseStartup(const char *aAppName, const char *aProfileN
     }
 }
 
-void 
+void
 nsXRemoteService::HandleCommandsFor(Window aWindowId)
 {
   // set our version

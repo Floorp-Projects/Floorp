@@ -2,7 +2,7 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
- 
+
 #ifndef nsProtocolProxyService_h__
 #define nsProtocolProxyService_h__
 
@@ -75,11 +75,11 @@ protected:
      * This method is called to create a nsProxyInfo instance from the given
      * PAC-style proxy string.  It parses up to the end of the string, or to
      * the next ';' character.
-     * 
+     *
      * @param proxy
      *        The PAC-style proxy string to parse.  This must not be null.
      * @param aResolveFlags
-     *        The flags passed to Resolve or AsyncResolve that are stored in 
+     *        The flags passed to Resolve or AsyncResolve that are stored in
      *        proxyInfo.
      * @param result
      *        Upon return this points to a newly allocated nsProxyInfo or null
@@ -93,7 +93,7 @@ protected:
 
     /**
      * Load the specified PAC file.
-     * 
+     *
      * @param pacURI
      *        The URI spec of the PAC file to load.
      */
@@ -106,7 +106,7 @@ protected:
      * @param pacString
      *        The PAC-style proxy string to parse.  This may be empty.
      * @param aResolveFlags
-     *        The flags passed to Resolve or AsyncResolve that are stored in 
+     *        The flags passed to Resolve or AsyncResolve that are stored in
      *        proxyInfo.
      * @param result
      *        The resulting list of proxy info objects.

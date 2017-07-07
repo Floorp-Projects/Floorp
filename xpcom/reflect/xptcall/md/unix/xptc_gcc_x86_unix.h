@@ -5,7 +5,7 @@
 
 /* Special include file for xptc*_gcc_x86_unix.cpp */
 
-// 
+//
 // this may improve the static function calls, but may not.
 //
 

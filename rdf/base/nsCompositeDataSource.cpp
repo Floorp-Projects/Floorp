@@ -16,7 +16,7 @@
      later.
 
   2) The aggregation mechanism is based on simple super-positioning of
-     the graphs from the datasources. If there is a conflict (i.e., 
+     the graphs from the datasources. If there is a conflict (i.e.,
      data source A has a true arc from foo to bar while data source B
      has a false arc from foo to bar), the data source that it earlier
      in the sequence wins.
@@ -558,7 +558,7 @@ CompositeDataSourceImpl::GetSource(nsIRDFResource* property,
 
         // okay, found it. make sure we don't have the opposite
         // asserted in a more local data source
-        if (!HasAssertionN(count-1, *source, property, target, !tv)) 
+        if (!HasAssertionN(count-1, *source, property, target, !tv))
             return NS_OK;
 
         NS_RELEASE(*source);
@@ -669,7 +669,7 @@ CompositeDataSourceImpl::HasAssertionN(int n,
     }
     return false;
 }
-    
+
 
 
 NS_IMETHODIMP
@@ -708,8 +708,8 @@ CompositeDataSourceImpl::GetTargets(nsIRDFResource* aSource,
 }
 
 NS_IMETHODIMP
-CompositeDataSourceImpl::Assert(nsIRDFResource* aSource, 
-                                nsIRDFResource* aProperty, 
+CompositeDataSourceImpl::Assert(nsIRDFResource* aSource,
+                                nsIRDFResource* aProperty,
                                 nsIRDFNode* aTarget,
                                 bool aTruthValue)
 {
@@ -984,7 +984,7 @@ CompositeDataSourceImpl::RemoveObserver(nsIRDFObserver* aObserver)
     return NS_OK;
 }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 CompositeDataSourceImpl::HasArcIn(nsIRDFNode *aNode, nsIRDFResource *aArc, bool *result)
 {
     nsresult rv;
@@ -999,7 +999,7 @@ CompositeDataSourceImpl::HasArcIn(nsIRDFNode *aNode, nsIRDFResource *aArc, bool 
     return NS_OK;
 }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 CompositeDataSourceImpl::HasArcOut(nsIRDFResource *aSource, nsIRDFResource *aArc, bool *result)
 {
     nsresult rv;
@@ -1243,7 +1243,7 @@ CompositeDataSourceImpl::OnAssert(nsIRDFDataSource* aDataSource,
 	nsresult	rv = NS_OK;
 
 	if (mAllowNegativeAssertions)
-	{   
+	{
 		bool hasAssertion;
 		rv = HasAssertion(aSource, aProperty, aTarget, true, &hasAssertion);
 		if (NS_FAILED(rv)) return rv;
@@ -1274,7 +1274,7 @@ CompositeDataSourceImpl::OnUnassert(nsIRDFDataSource* aDataSource,
     nsresult rv;
 
 	if (mAllowNegativeAssertions)
-	{   
+	{
 		bool hasAssertion;
 		rv = HasAssertion(aSource, aProperty, aTarget, true, &hasAssertion);
 		if (NS_FAILED(rv)) return rv;

@@ -20,7 +20,7 @@ static bool pathBeginsWithVolName(const nsACString& path, nsACString& firstPathC
   // of a mounted volume. Return the 1st path component (unescaped) in any case.
   // This needs to be done as quickly as possible, so we cache a list of volume names.
   // XXX Register an event handler to detect drives being mounted/unmounted?
-  
+
   if (!gVolumeList) {
     gVolumeList = new nsTArray<nsCString>;
     if (!gVolumeList) {
@@ -32,7 +32,7 @@ static bool pathBeginsWithVolName(const nsACString& path, nsACString& firstPathC
   if (!gVolumeList->Length()) {
     OSErr err;
     ItemCount volumeIndex = 1;
-    
+
     do {
       HFSUniStr255 volName;
       FSRef rootDirectory;
@@ -46,7 +46,7 @@ static bool pathBeginsWithVolName(const nsACString& path, nsACString& firstPathC
       }
     } while (err == noErr);
   }
-  
+
   // Extract the first component of the path
   nsACString::const_iterator start;
   path.BeginReading(start);
@@ -55,7 +55,7 @@ static bool pathBeginsWithVolName(const nsACString& path, nsACString& firstPathC
   path.EndReading(directory_end);
   nsACString::const_iterator component_end(start);
   FindCharInReadable('/', component_end, directory_end);
-  
+
   nsAutoCString flatComponent((Substring(start, component_end)));
   NS_UnescapeURL(flatComponent);
   int32_t foundIndex = gVolumeList->IndexOf(flatComponent);
@@ -108,13 +108,13 @@ static void SwapSlashColon(char *s)
       *s = '/';
     s++;
   }
-} 
+}
 
 nsresult
 net_GetURLSpecFromActualFile(nsIFile *aFile, nsACString &result)
 {
   // NOTE: This is identical to the implementation in nsURLHelperUnix.cpp
-  
+
   nsresult rv;
   nsAutoCString ePath;
 
@@ -125,14 +125,14 @@ net_GetURLSpecFromActualFile(nsIFile *aFile, nsACString &result)
 
   nsAutoCString escPath;
   NS_NAMED_LITERAL_CSTRING(prefix, "file://");
-      
+
   // Escape the path with the directory mask
   if (NS_EscapeURL(ePath.get(), ePath.Length(), esc_Directory+esc_Forced, escPath))
     escPath.Insert(prefix, 0);
   else
     escPath.Assign(prefix + ePath);
 
-  // esc_Directory does not escape the semicolons, so if a filename 
+  // esc_Directory does not escape the semicolons, so if a filename
   // contains semicolons we need to manually escape them.
   // This replacement should be removed in bug #473280
   escPath.ReplaceSubstring(";", "%3b");
@@ -153,7 +153,7 @@ net_GetFileFromURLSpec(const nsACString &aURL, nsIFile **result)
   rv = NS_NewNativeLocalFile(EmptyCString(), true, getter_AddRefs(localFile));
   if (NS_FAILED(rv))
     return rv;
-  
+
   nsAutoCString directory, fileBaseName, fileExtension, path;
   bool bHFSPath = false;
 
@@ -170,7 +170,7 @@ net_GetFileFromURLSpec(const nsACString &aURL, nsIFile **result)
     //   file:///volume-name/path-name
     // Determine that here and normalize HFS paths to POSIX.
     nsAutoCString possibleVolName;
-    if (pathBeginsWithVolName(directory, possibleVolName)) {        
+    if (pathBeginsWithVolName(directory, possibleVolName)) {
       // Though we know it begins with a volume name, it could still
       // be a valid POSIX path if the boot drive is named "Mac HD"
       // and there is a directory "Mac HD" at its root. If such a

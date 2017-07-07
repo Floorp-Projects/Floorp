@@ -120,7 +120,7 @@ TEST(Threads, Stress)
 
         for (k = threads-1; k >= 0; k--) {
             array[k]->Shutdown();
-            NS_RELEASE(array[k]);    
+            NS_RELEASE(array[k]);
         }
         delete [] array;
     }

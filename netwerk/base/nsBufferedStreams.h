@@ -81,7 +81,7 @@ public:
     static nsresult
     Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
 
-    nsIInputStream* Source() { 
+    nsIInputStream* Source() {
         return (nsIInputStream*)mStream;
     }
 
@@ -116,7 +116,7 @@ public:
     static nsresult
     Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
 
-    nsIOutputStream* Sink() { 
+    nsIOutputStream* Sink() {
         return (nsIOutputStream*)mStream;
     }
 

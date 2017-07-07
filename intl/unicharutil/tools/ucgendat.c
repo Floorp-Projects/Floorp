@@ -907,7 +907,7 @@ FILE *in;
               i++;
         }
         for (e = s; *e && *e != ';'; e++) ;
-    
+
         ordered_range_insert(code, s, e - s);
 
         /*
@@ -1184,7 +1184,7 @@ char *opath;
       bytes += 4 - (bytes & 3);
     nprops = bytes / sizeof(unsigned short);
     bytes += sizeof(unsigned long) * idx;
-        
+
     /*
      * Write the header.
      */

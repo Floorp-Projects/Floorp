@@ -18,7 +18,7 @@ template <typename T>
 class AutoClose
 {
 public:
-  AutoClose() { } 
+  AutoClose() { }
   ~AutoClose(){
     Close();
   }

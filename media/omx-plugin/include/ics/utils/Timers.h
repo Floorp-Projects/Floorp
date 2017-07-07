@@ -80,7 +80,7 @@ enum {
     SYSTEM_TIME_PROCESS = 2,   // high-resolution per-process clock
     SYSTEM_TIME_THREAD = 3     // high-resolution per-thread clock
 };
-    
+
 // return the system-time according to the specified clock
 #ifdef __cplusplus
 nsecs_t systemTime(int clock = SYSTEM_TIME_MONOTONIC);

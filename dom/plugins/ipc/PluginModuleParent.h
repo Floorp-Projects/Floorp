@@ -214,7 +214,7 @@ protected:
                              InfallibleTArray<nsCString>& values,
                              NPSavedData* saved, NPError* error);
 
-    // NPP-like API that Gecko calls are trampolined into.  These 
+    // NPP-like API that Gecko calls are trampolined into.  These
     // messages then get forwarded along to the plugin instance,
     // and then eventually the child process.
 

@@ -105,7 +105,7 @@ MakeSN(const char *principal, nsCString &result)
     int32_t index = buf.FindChar('@');
     if (index == kNotFound)
         return NS_ERROR_UNEXPECTED;
-    
+
     nsCOMPtr<nsIDNSService> dns = do_GetService(NS_DNSSERVICE_CONTRACTID, &rv);
     if (NS_FAILED(rv))
         return rv;
@@ -171,7 +171,7 @@ nsAuthSSPI::Reset()
     if (mCertDERData){
         free(mCertDERData);
         mCertDERData = nullptr;
-        mCertDERLength = 0;   
+        mCertDERLength = 0;
     }
 
     if (mCtxt.dwLower || mCtxt.dwUpper) {
@@ -246,7 +246,7 @@ nsAuthSSPI::Init(const char *serviceName,
 
     SEC_WINNT_AUTH_IDENTITY_W ai;
     SEC_WINNT_AUTH_IDENTITY_W *pai = nullptr;
-    
+
     // domain, username, and password will be null if nsHttpNTLMAuth's ChallengeReceived
     // returns false for identityInvalid. Use default credentials in this case by passing
     // null for pai.
@@ -293,7 +293,7 @@ nsAuthSSPI::Init(const char *serviceName,
 
 // The arguments inToken and inTokenLen are used to pass in the server
 // certificate (when available) in the first call of the function. The
-// second time these arguments hold an input token. 
+// second time these arguments hold an input token.
 NS_IMETHODIMP
 nsAuthSSPI::GetNextToken(const void *inToken,
                          uint32_t    inTokenLen,
@@ -301,11 +301,11 @@ nsAuthSSPI::GetNextToken(const void *inToken,
                          uint32_t   *outTokenLen)
 {
     // String for end-point bindings.
-    const char end_point[] = "tls-server-end-point:"; 
+    const char end_point[] = "tls-server-end-point:";
     const int end_point_length = sizeof(end_point) - 1;
     const int hash_size = 32;  // Size of a SHA256 hash.
     const int cbt_size = hash_size + end_point_length;
-	
+
     SECURITY_STATUS rc;
     MS_TimeStamp ignored;
 
@@ -341,7 +341,7 @@ nsAuthSSPI::GetNextToken(const void *inToken,
                 return NS_ERROR_OUT_OF_MEMORY;
             memcpy(mCertDERData, inToken, inTokenLen);
 
-            // We are starting a new authentication sequence.  
+            // We are starting a new authentication sequence.
             // If we have already initialized our
             // security context, then we're in trouble because it means that the
             // first sequence failed.  We need to bail or else we might end up in
@@ -351,7 +351,7 @@ nsAuthSSPI::GetNextToken(const void *inToken,
                 return NS_ERROR_UNEXPECTED;
             }
             ctxIn = nullptr;
-            // The certificate needs to be erased before being passed 
+            // The certificate needs to be erased before being passed
             // to InitializeSecurityContextW().
             inToken = nullptr;
             inTokenLen = 0;
@@ -359,11 +359,11 @@ nsAuthSSPI::GetNextToken(const void *inToken,
             ibd.ulVersion = SECBUFFER_VERSION;
             ibd.cBuffers = 0;
             ibd.pBuffers = ib;
-            
+
             // If we have stored a certificate, the Channel Binding Token
             // needs to be generated and sent in the first input buffer.
             if (mCertDERLength > 0) {
-                // First we create a proper Endpoint Binding structure. 
+                // First we create a proper Endpoint Binding structure.
                 pendpoint_binding.dwInitiatorAddrType = 0;
                 pendpoint_binding.cbInitiatorLength = 0;
                 pendpoint_binding.dwInitiatorOffset = 0;
@@ -371,7 +371,7 @@ nsAuthSSPI::GetNextToken(const void *inToken,
                 pendpoint_binding.cbAcceptorLength = 0;
                 pendpoint_binding.dwAcceptorOffset = 0;
                 pendpoint_binding.cbApplicationDataLength = cbt_size;
-                pendpoint_binding.dwApplicationDataOffset = 
+                pendpoint_binding.dwApplicationDataOffset =
                                             sizeof(SEC_CHANNEL_BINDINGS);
 
                 // Then add it to the array of sec buffers accordingly.
@@ -379,7 +379,7 @@ nsAuthSSPI::GetNextToken(const void *inToken,
                 ib[ibd.cBuffers].cbBuffer =
                         pendpoint_binding.cbApplicationDataLength
                         + pendpoint_binding.dwApplicationDataOffset;
-          
+
                 sspi_cbt = (char *) moz_xmalloc(ib[ibd.cBuffers].cbBuffer);
                 if (!sspi_cbt){
                     return NS_ERROR_OUT_OF_MEMORY;
@@ -387,7 +387,7 @@ nsAuthSSPI::GetNextToken(const void *inToken,
 
                 // Helper to write in the memory block that stores the CBT
                 char* sspi_cbt_ptr = sspi_cbt;
-          
+
                 ib[ibd.cBuffers].pvBuffer = sspi_cbt;
                 ibd.cBuffers++;
 
@@ -397,7 +397,7 @@ nsAuthSSPI::GetNextToken(const void *inToken,
 
                 memcpy(sspi_cbt_ptr, end_point, end_point_length);
                 sspi_cbt_ptr += end_point_length;
-          
+
                 // Start hashing. We are always doing SHA256, but depending
                 // on the certificate, a different alogirthm might be needed.
                 nsAutoCString hashString;
@@ -418,12 +418,12 @@ nsAuthSSPI::GetNextToken(const void *inToken,
                     free(sspi_cbt);
                     return rv;
                 }
-          
+
                 // Once the hash has been computed, we store it in memory right
                 // after the Endpoint structure and the "tls-server-end-point:"
                 // char array.
                 memcpy(sspi_cbt_ptr, hashString.get(), hash_size);
-          
+
                 // Free memory used to store the server certificate
                 free(mCertDERData);
                 mCertDERData = nullptr;
@@ -438,9 +438,9 @@ nsAuthSSPI::GetNextToken(const void *inToken,
             ctxIn = &mCtxt;
         }
     } else { // First time and without a token (no server certificate)
-        // We are starting a new authentication sequence.  If we have already 
-        // initialized our security context, then we're in trouble because it 
-        // means that the first sequence failed.  We need to bail or else we 
+        // We are starting a new authentication sequence.  If we have already
+        // initialized our security context, then we're in trouble because it
+        // means that the first sequence failed.  We need to bail or else we
         // might end up in an infinite loop.
         if (mCtxt.dwLower || mCtxt.dwUpper || mCertDERData || mCertDERLength) {
             LOG(("Cannot restart authentication sequence!"));
@@ -487,7 +487,7 @@ nsAuthSSPI::GetNextToken(const void *inToken,
 
         if (sspi_cbt)
             free(sspi_cbt);
-            
+
         if (!ob.cbBuffer) {
             free(ob.pvBuffer);
             ob.pvBuffer = nullptr;
@@ -519,7 +519,7 @@ nsAuthSSPI::Unwrap(const void *inToken,
 
     ibd.cBuffers = 2;
     ibd.pBuffers = ib;
-    ibd.ulVersion = SECBUFFER_VERSION; 
+    ibd.ulVersion = SECBUFFER_VERSION;
 
     // SSPI Buf
     ib[0].BufferType = SECBUFFER_STREAM;
@@ -527,7 +527,7 @@ nsAuthSSPI::Unwrap(const void *inToken,
     ib[0].pvBuffer = moz_xmalloc(ib[0].cbBuffer);
     if (!ib[0].pvBuffer)
         return NS_ERROR_OUT_OF_MEMORY;
-    
+
     memcpy(ib[0].pvBuffer, inToken, inTokenLen);
 
     // app data
@@ -575,7 +575,7 @@ public:
 
     secBuffers() { memset(&ib, 0, sizeof(ib)); }
 
-    ~secBuffers() 
+    ~secBuffers()
     {
         if (ib[0].pvBuffer)
             free(ib[0].pvBuffer);
@@ -606,13 +606,13 @@ nsAuthSSPI::Wrap(const void *inToken,
          SECPKG_ATTR_SIZES,
          &sizes);
 
-    if (!SEC_SUCCESS(rc))  
+    if (!SEC_SUCCESS(rc))
         return NS_ERROR_FAILURE;
-    
+
     ibd.cBuffers = 3;
     ibd.pBuffers = bufs.ib;
     ibd.ulVersion = SECBUFFER_VERSION;
-    
+
     // SSPI
     bufs.ib[0].cbBuffer = sizes.cbSecurityTrailer;
     bufs.ib[0].BufferType = SECBUFFER_TOKEN;
@@ -625,7 +625,7 @@ nsAuthSSPI::Wrap(const void *inToken,
     bufs.ib[1].BufferType = SECBUFFER_DATA;
     bufs.ib[1].pvBuffer = moz_xmalloc(inTokenLen);
     bufs.ib[1].cbBuffer = inTokenLen;
-    
+
     if (!bufs.ib[1].pvBuffer)
         return NS_ERROR_OUT_OF_MEMORY;
 
@@ -649,7 +649,7 @@ nsAuthSSPI::Wrap(const void *inToken,
 
         if (!p)
             return NS_ERROR_OUT_OF_MEMORY;
-				
+
         *outToken = (void *) p;
         *outTokenLen = len;
 
@@ -660,7 +660,7 @@ nsAuthSSPI::Wrap(const void *inToken,
         p += bufs.ib[1].cbBuffer;
 
         memcpy(p,bufs.ib[2].pvBuffer, bufs.ib[2].cbBuffer);
-        
+
         return NS_OK;
     }
 

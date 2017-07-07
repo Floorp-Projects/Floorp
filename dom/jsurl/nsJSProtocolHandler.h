@@ -54,7 +54,7 @@ public:
 protected:
     virtual ~nsJSProtocolHandler();
 
-    nsresult EnsureUTF8Spec(const nsCString& aSpec, const char *aCharset, 
+    nsresult EnsureUTF8Spec(const nsCString& aSpec, const char *aCharset,
                             nsACString &aUTF8Spec);
 
     nsCOMPtr<nsITextToSubURI>  mTextToSubURI;

@@ -19,7 +19,7 @@ public:
     nsResourceSet(const nsResourceSet& aResourceSet);
 
     nsResourceSet& operator=(const nsResourceSet& aResourceSet);
-    
+
     ~nsResourceSet();
 
     nsresult Clear();

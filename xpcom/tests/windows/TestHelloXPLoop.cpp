@@ -24,8 +24,8 @@ void InfoBox(LPSTR text)
 	MessageBox(nullptr, text, "XP Event Loop", MB_OK | MB_ICONINFORMATION);
 }
 
-int WINAPI WinMain(HINSTANCE inst, 
-                   HINSTANCE prevInstance, 
+int WINAPI WinMain(HINSTANCE inst,
+                   HINSTANCE prevInstance,
                    LPSTR lpszCmdLine,
                    int nShowCmd)
 {
@@ -43,11 +43,11 @@ int WINAPI WinMain(HINSTANCE inst,
         ErrorBox("Failed to initialize xpcom.");
         return -1;
       }
-      
+
       nsCOMPtr<nsIComponentRegistrar> registrar = do_QueryInterface(servMan);
       NS_ASSERTION(registrar, "Null nsIComponentRegistrar");
       registrar->AutoRegister(nullptr);
-      
+
       nsCOMPtr<nsINativeApp> nativeAppService(do_GetService(kNativeAppCID, &rv));
 
       if(NS_FAILED(rv))
@@ -69,28 +69,28 @@ int WINAPI WinMain(HINSTANCE inst,
       wndclass.hIconSm       = LoadIcon(nullptr, IDI_APPLICATION);
 
       RegisterClassEx(&wndclass) ;
-      
+
       wnd = CreateWindow(lpszAppName, "The Hello World",
                          WS_OVERLAPPEDWINDOW,
                          CW_USEDEFAULT, CW_USEDEFAULT,
                          CW_USEDEFAULT, CW_USEDEFAULT,
-                         nullptr, nullptr, inst, nullptr);		     
-      
+                         nullptr, nullptr, inst, nullptr);
+
       ShowWindow(wnd, nShowCmd);
       UpdateWindow(wnd);
-      
+
       nsCOMPtr<nsIEventLoop> eventLoop;
-      
-      if(NS_FAILED(nativeAppService->CreateEventLoop(L"_MainLoop", 
+
+      if(NS_FAILED(nativeAppService->CreateEventLoop(L"_MainLoop",
                                                      nsEventLoopTypes::MainAppLoop, getter_AddRefs(eventLoop))))
         {
           ErrorBox("Failed to create event Loop");
           return 0;
-        } 
-      
+        }
+
       eventLoop->Run(nullptr, nullptr, nullptr, &retCode);
       eventLoop = nullptr; // Clear out before Shutting down XPCOM
-      
+
       InfoBox("Hello World app is out of loop");
     }
 	NS_ShutdownXPCOM(nullptr);
@@ -120,7 +120,7 @@ LRESULT CALLBACK WndProc(HWND wnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		case WM_DESTROY:
 			{
 			nsresult rv;
-			nsCOMPtr<nsINativeApp> nativeAppService = 
+			nsCOMPtr<nsINativeApp> nativeAppService =
 			         do_GetService(kNativeAppCID, &rv);
 			if(NS_FAILED(rv))
 				{
@@ -129,7 +129,7 @@ LRESULT CALLBACK WndProc(HWND wnd, UINT msg, WPARAM wParam, LPARAM lParam)
 				}
 			nsCOMPtr<nsIEventLoop> eventLoop;
 
-			if(NS_FAILED(nativeAppService->FindEventLoop(L"_MainLoop", 
+			if(NS_FAILED(nativeAppService->FindEventLoop(L"_MainLoop",
 				getter_AddRefs(eventLoop))))
 				{
 				ErrorBox("Failed to find event Loop");

@@ -33,7 +33,7 @@ nsInputStreamChannel::OpenContentStream(bool async, nsIInputStream **result,
   }
 
   EnableSynthesizedProgressEvents(true);
-  
+
   NS_ADDREF(*result = mContentStream);
   return NS_OK;
 }

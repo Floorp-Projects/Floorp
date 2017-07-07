@@ -41,11 +41,11 @@ nsGridRowLeafFrame::GetXULBorderAndPadding(nsMargin& aBorderAndPadding)
   nsIGridPart* part = nsGrid::GetPartFromBox(this);
   if (!part)
     return rv;
-    
+
   int32_t index = 0;
   nsGrid* grid = part->GetGrid(this, &index);
 
-  if (!grid) 
+  if (!grid)
     return rv;
 
   bool isHorizontal = IsXULHorizontal();
@@ -58,7 +58,7 @@ nsGridRowLeafFrame::GetXULBorderAndPadding(nsMargin& aBorderAndPadding)
 
   // only the first and last rows can be affected.
   if (firstRow && firstRow->GetBox() == this) {
-    
+
     nscoord top = 0;
     nscoord bottom = 0;
     grid->GetRowOffsets(firstIndex, top, bottom, isHorizontal);
@@ -69,11 +69,11 @@ nsGridRowLeafFrame::GetXULBorderAndPadding(nsMargin& aBorderAndPadding)
     } else {
       if (top > aBorderAndPadding.left)
         aBorderAndPadding.left = top;
-    } 
+    }
   }
 
   if (lastRow && lastRow->GetBox() == this) {
-    
+
     nscoord top = 0;
     nscoord bottom = 0;
     grid->GetRowOffsets(lastIndex, top, bottom, isHorizontal);
@@ -85,9 +85,9 @@ nsGridRowLeafFrame::GetXULBorderAndPadding(nsMargin& aBorderAndPadding)
       if (bottom > aBorderAndPadding.right)
         aBorderAndPadding.right = bottom;
     }
-    
-  }  
-  
+
+  }
+
   return rv;
 }
 

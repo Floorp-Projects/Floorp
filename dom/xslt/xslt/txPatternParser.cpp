@@ -120,7 +120,7 @@ nsresult txPatternParser::createLocPathPattern(txExprLexer& aLexer,
         case Token::PARENT_OP:
             aLexer.nextToken();
             isAbsolute = true;
-            if (aLexer.peek()->mType == Token::END || 
+            if (aLexer.peek()->mType == Token::END ||
                 aLexer.peek()->mType == Token::UNION_OP) {
                 aPattern = new txRootPattern();
                 return NS_OK;
@@ -225,7 +225,7 @@ nsresult txPatternParser::createKeyPattern(txExprLexer& aLexer,
         return NS_ERROR_XPATH_PARSE_FAILURE;
     const nsDependentSubstring& key =
         aLexer.nextToken()->Value();
-    if (aLexer.nextToken()->mType != Token::COMMA && 
+    if (aLexer.nextToken()->mType != Token::COMMA &&
         aLexer.peek()->mType != Token::LITERAL)
         return NS_ERROR_XPATH_PARSE_FAILURE;
     const nsDependentSubstring& value =

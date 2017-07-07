@@ -37,28 +37,28 @@ static const uint8_t *gCyrillicCls[5] =
 };
 
 static const char * gRussian[5] = {
-  "windows-1251", 
-  "KOI8-R", 
-  "ISO-8859-5", 
+  "windows-1251",
+  "KOI8-R",
+  "ISO-8859-5",
   "x-mac-cyrillic",
   "IBM866"
 };
 
 static const char * gUkrainian[5] = {
-  "windows-1251", 
-  "KOI8-U", 
-  "ISO-8859-5", 
+  "windows-1251",
+  "KOI8-U",
+  "ISO-8859-5",
   "x-mac-cyrillic",
   "IBM866"
 };
 
 #define NUM_CYR_CHARSET 5
 
-class nsCyrillicDetector 
+class nsCyrillicDetector
 {
   public:
-    nsCyrillicDetector(uint8_t aItems, 
-                      const uint8_t ** aCyrillicClass, 
+    nsCyrillicDetector(uint8_t aItems,
+                      const uint8_t ** aCyrillicClass,
                       const char **aCharsets) {
       mItems = aItems;
       mCyrillicClass = aCyrillicClass;
@@ -82,15 +82,15 @@ class nsCyrillicDetector
     uint8_t mLastCls[NUM_CYR_CHARSET];
 };
 
-class nsCyrXPCOMDetector :  
+class nsCyrXPCOMDetector :
       public nsCyrillicDetector,
       public nsICharsetDetector
 {
   public:
     // nsISupports interface
     NS_DECL_ISUPPORTS
-    nsCyrXPCOMDetector(uint8_t aItems, 
-                      const uint8_t ** aCyrillicClass, 
+    nsCyrXPCOMDetector(uint8_t aItems,
+                      const uint8_t ** aCyrillicClass,
                       const char **aCharsets);
     NS_IMETHOD Init(nsICharsetDetectionObserver* aObserver) override;
     NS_IMETHOD DoIt(const char* aBuf, uint32_t aLen, bool *oDontFeedMe) override;
@@ -102,17 +102,17 @@ class nsCyrXPCOMDetector :
     nsCOMPtr<nsICharsetDetectionObserver> mObserver;
 };
 
-class nsCyrXPCOMStringDetector :  
+class nsCyrXPCOMStringDetector :
       public nsCyrillicDetector,
       public nsIStringCharsetDetector
 {
   public:
     // nsISupports interface
     NS_DECL_ISUPPORTS
-    nsCyrXPCOMStringDetector(uint8_t aItems, 
-                      const uint8_t ** aCyrillicClass, 
+    nsCyrXPCOMStringDetector(uint8_t aItems,
+                      const uint8_t ** aCyrillicClass,
                       const char **aCharsets);
-    NS_IMETHOD DoIt(const char* aBuf, uint32_t aLen, 
+    NS_IMETHOD DoIt(const char* aBuf, uint32_t aLen,
                      const char** oCharset, nsDetectionConfident &oConf) override;
   protected:
     virtual ~nsCyrXPCOMStringDetector();
@@ -125,28 +125,28 @@ class nsCyrXPCOMStringDetector :
 class nsRUProbDetector : public nsCyrXPCOMDetector
 {
   public:
-    nsRUProbDetector() 
+    nsRUProbDetector()
       : nsCyrXPCOMDetector(5, gCyrillicCls, gRussian) {}
 };
 
 class nsRUStringProbDetector : public nsCyrXPCOMStringDetector
 {
   public:
-    nsRUStringProbDetector() 
+    nsRUStringProbDetector()
       : nsCyrXPCOMStringDetector(5, gCyrillicCls, gRussian) {}
 };
 
 class nsUKProbDetector : public nsCyrXPCOMDetector
 {
   public:
-    nsUKProbDetector() 
+    nsUKProbDetector()
       : nsCyrXPCOMDetector(5, gCyrillicCls, gUkrainian) {}
 };
 
 class nsUKStringProbDetector : public nsCyrXPCOMStringDetector
 {
   public:
-    nsUKStringProbDetector() 
+    nsUKStringProbDetector()
       : nsCyrXPCOMStringDetector(5, gCyrillicCls, gUkrainian) {}
 };
 

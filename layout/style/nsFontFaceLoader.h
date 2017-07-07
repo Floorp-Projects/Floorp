@@ -29,7 +29,7 @@ public:
                    nsIChannel* aChannel);
 
   NS_DECL_ISUPPORTS
-  NS_DECL_NSISTREAMLOADEROBSERVER 
+  NS_DECL_NSISTREAMLOADEROBSERVER
 
   // initiate the load
   nsresult Init();

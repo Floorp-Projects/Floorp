@@ -152,11 +152,14 @@ protected:
   nsTObserverArray<PerformanceObserver*> mObservers;
 
 private:
-  nsTArray<RefPtr<PerformanceEntry>> mUserEntries;
-  nsTArray<RefPtr<PerformanceEntry>> mResourceEntries;
+  static const uint64_t kDefaultResourceTimingBufferSize = 150;
+
+  // When kDefaultResourceTimingBufferSize is increased or removed, these should
+  // be changed to use SegmentedVector
+  AutoTArray<RefPtr<PerformanceEntry>, kDefaultResourceTimingBufferSize> mUserEntries;
+  AutoTArray<RefPtr<PerformanceEntry>, kDefaultResourceTimingBufferSize> mResourceEntries;
 
   uint64_t mResourceTimingBufferSize;
-  static const uint64_t kDefaultResourceTimingBufferSize = 150;
   bool mPendingNotificationObserversTask;
 
   RefPtr<PerformanceService> mPerformanceService;

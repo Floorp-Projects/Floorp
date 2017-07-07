@@ -18,7 +18,7 @@
  */
 class nsPluginNativeWindow : public NPWindow
 {
-public: 
+public:
   nsPluginNativeWindow() : NPWindow() {
     MOZ_COUNT_CTOR(nsPluginNativeWindow);
   }
@@ -38,11 +38,11 @@ public:
    */
 
 public:
-  nsresult GetPluginInstance(RefPtr<nsNPAPIPluginInstance> &aPluginInstance) { 
+  nsresult GetPluginInstance(RefPtr<nsNPAPIPluginInstance> &aPluginInstance) {
     aPluginInstance = mPluginInstance;
     return NS_OK;
   }
-  nsresult SetPluginInstance(nsNPAPIPluginInstance *aPluginInstance) { 
+  nsresult SetPluginInstance(nsNPAPIPluginInstance *aPluginInstance) {
     if (mPluginInstance != aPluginInstance)
       mPluginInstance = aPluginInstance;
     return NS_OK;
@@ -52,7 +52,7 @@ public:
     NS_IF_ADDREF(*aWidget = mWidget);
     return NS_OK;
   }
-  nsresult SetPluginWidget(nsIWidget *aWidget) { 
+  nsresult SetPluginWidget(nsIWidget *aWidget) {
     mWidget = aWidget;
     return NS_OK;
   }

@@ -44,7 +44,7 @@ WIN_LIBS=                                       \
 #include "prenv.h" /* for PR_GetEnv */
 
 #include <windows.h>
-#include <winspool.h> 
+#include <winspool.h>
 
 // For Localization
 #include "nsIStringBundle.h"
@@ -87,20 +87,20 @@ GetLocalizedBundle(const char * aPropFileName, nsIStringBundle** aStrBundle)
 
   nsresult rv;
   nsCOMPtr<nsIStringBundle> bundle;
-  
+
 
   // Create bundle
-  nsCOMPtr<nsIStringBundleService> stringService = 
+  nsCOMPtr<nsIStringBundleService> stringService =
     do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
   if (NS_SUCCEEDED(rv) && stringService) {
     rv = stringService->CreateBundle(aPropFileName, aStrBundle);
   }
-  
+
   return rv;
 }
 
 //--------------------------------------------------------
-// Return localized string 
+// Return localized string
 static nsresult
 GetLocalizedString(nsIStringBundle* aStrBundle, const char* aKey, nsString& oVal)
 {
@@ -109,7 +109,7 @@ GetLocalizedString(nsIStringBundle* aStrBundle, const char* aKey, nsString& oVal
 
   // Determine default label from string bundle
   nsXPIDLString valUni;
-  nsAutoString key; 
+  nsAutoString key;
   key.AssignWithConversion(aKey);
   nsresult rv = aStrBundle->GetStringFromName(key.get(), getter_Copies(valUni));
   if (NS_SUCCEEDED(rv) && valUni) {
@@ -132,10 +132,10 @@ static void SetTextOnWnd(HWND aControl, const nsString& aStr)
 
 //--------------------------------------------------------
 // Will get the control and localized string by "key"
-static void SetText(HWND             aParent, 
-                    UINT             aId, 
+static void SetText(HWND             aParent,
+                    UINT             aId,
                     nsIStringBundle* aStrBundle,
-                    const char*      aKey) 
+                    const char*      aKey)
 {
   HWND wnd = GetDlgItem (aParent, aId);
   if (!wnd) {
@@ -149,10 +149,10 @@ static void SetText(HWND             aParent,
 }
 
 //--------------------------------------------------------
-static void SetRadio(HWND         aParent, 
-                     UINT         aId, 
+static void SetRadio(HWND         aParent,
+                     UINT         aId,
                      bool         aIsSet,
-                     bool         isEnabled = true) 
+                     bool         isEnabled = true)
 {
   HWND wnd = ::GetDlgItem (aParent, aId);
   if (!wnd) {
@@ -186,7 +186,7 @@ typedef struct {
   long   mKeyId;
 } PropKeyInfo;
 
-// These are the control ids used in the dialog and 
+// These are the control ids used in the dialog and
 // defined by MS-Windows in commdlg.h
 static PropKeyInfo gAllPropKeys[] = {
     {"printFramesTitleWindows", grp3},
@@ -223,10 +223,10 @@ static void Show(HWND aWnd, bool bState)
 // Create a child window "control"
 static HWND CreateControl(LPCTSTR          aType,
                           DWORD            aStyle,
-                          HINSTANCE        aHInst, 
-                          HWND             aHdlg, 
-                          int              aId, 
-                          const nsAString& aStr, 
+                          HINSTANCE        aHInst,
+                          HWND             aHdlg,
+                          int              aId,
+                          const nsAString& aStr,
                           const nsIntRect& aRect)
 {
   nsAutoCString str;
@@ -240,7 +240,7 @@ static HWND CreateControl(LPCTSTR          aType,
                               aHInst, nullptr);
   if (hWnd == nullptr) return nullptr;
 
-  // get the native font for the dialog and 
+  // get the native font for the dialog and
   // set it into the new control
   HFONT hFont = (HFONT)::SendMessage(aHdlg, WM_GETFONT, (WPARAM)0, (LPARAM)0);
   if (hFont != nullptr) {
@@ -251,10 +251,10 @@ static HWND CreateControl(LPCTSTR          aType,
 
 //--------------------------------------------------------
 // Create a Radio Button
-static HWND CreateRadioBtn(HINSTANCE        aHInst, 
-                           HWND             aHdlg, 
-                           int              aId, 
-                           const char*      aStr, 
+static HWND CreateRadioBtn(HINSTANCE        aHInst,
+                           HWND             aHdlg,
+                           int              aId,
+                           const char*      aStr,
                            const nsIntRect& aRect)
 {
   nsString cStr;
@@ -264,10 +264,10 @@ static HWND CreateRadioBtn(HINSTANCE        aHInst,
 
 //--------------------------------------------------------
 // Create a Group Box
-static HWND CreateGroupBox(HINSTANCE        aHInst, 
-                           HWND             aHdlg, 
-                           int              aId, 
-                           const nsAString& aStr, 
+static HWND CreateGroupBox(HINSTANCE        aHInst,
+                           HWND             aHdlg,
+                           int              aId,
+                           const nsAString& aStr,
                            const nsIntRect& aRect)
 {
   return CreateControl("BUTTON", BS_GROUPBOX, aHInst, aHdlg, aId, aStr, aRect);
@@ -275,7 +275,7 @@ static HWND CreateGroupBox(HINSTANCE        aHInst,
 
 //--------------------------------------------------------
 // Localizes and initializes the radio buttons and group
-static void InitializeExtendedDialog(HWND hdlg, int16_t aHowToEnableFrameUI) 
+static void InitializeExtendedDialog(HWND hdlg, int16_t aHowToEnableFrameUI)
 {
   MOZ_ASSERT(aHowToEnableFrameUI != nsIPrintSettings::kFrameEnableNone,
              "should not be called");
@@ -292,15 +292,15 @@ static void InitializeExtendedDialog(HWND hdlg, int16_t aHowToEnableFrameUI)
 
   // Set up radio buttons
   if (aHowToEnableFrameUI == nsIPrintSettings::kFrameEnableAll) {
-    SetRadio(hdlg, rad4, false);  
-    SetRadio(hdlg, rad5, true); 
+    SetRadio(hdlg, rad4, false);
+    SetRadio(hdlg, rad5, true);
     SetRadio(hdlg, rad6, false);
     // set default so user doesn't have to actually press on it
     gFrameSelectedRadioBtn = rad5;
 
   } else { // nsIPrintSettings::kFrameEnableAsIsAndEach
-    SetRadio(hdlg, rad4, false);  
-    SetRadio(hdlg, rad5, false, false); 
+    SetRadio(hdlg, rad4, false);
+    SetRadio(hdlg, rad5, false, false);
     SetRadio(hdlg, rad6, true);
     // set default so user doesn't have to actually press on it
     gFrameSelectedRadioBtn = rad6;
@@ -310,7 +310,7 @@ static void InitializeExtendedDialog(HWND hdlg, int16_t aHowToEnableFrameUI)
 
 //--------------------------------------------------------
 // Special Hook Procedure for handling the print dialog messages
-static UINT CALLBACK PrintHookProc(HWND hdlg, UINT uiMsg, WPARAM wParam, LPARAM lParam) 
+static UINT CALLBACK PrintHookProc(HWND hdlg, UINT uiMsg, WPARAM wParam, LPARAM lParam)
 {
 
   if (uiMsg == WM_COMMAND) {
@@ -371,7 +371,7 @@ static UINT CALLBACK PrintHookProc(HWND hdlg, UINT uiMsg, WPARAM wParam, LPARAM 
     int rbGap     = rad3Rect.top - rad1Rect.bottom;     // gap between radiobtns
     int grpBotGap = dlgRect.bottom - rad2Rect.bottom;   // gap from bottom rb to bottom of grpbox
     int grpGap    = dlgRect.top - prtRect.bottom ;      // gap between group boxes
-    int top       = dlgRect.bottom + grpGap;            
+    int top       = dlgRect.bottom + grpGap;
     int radHgt    = rad1Rect.bottom - rad1Rect.top + 1; // top of new group box
     int y         = top+(rad1Rect.top-dlgRect.top);     // starting pos of first radio
     int rbWidth   = dlgRect.right - rad1Rect.left - 5;  // measure from rb left to the edge of the groupbox
@@ -380,7 +380,7 @@ static UINT CALLBACK PrintHookProc(HWND hdlg, UINT uiMsg, WPARAM wParam, LPARAM 
 
     // Create and position the radio buttons
     //
-    // If any one control cannot be created then 
+    // If any one control cannot be created then
     // hide the others and bail out
     //
     rect.SetRect(rad1Rect.left, y, rbWidth,radHgt);
@@ -418,7 +418,7 @@ static UINT CALLBACK PrintHookProc(HWND hdlg, UINT uiMsg, WPARAM wParam, LPARAM 
     // Here we figure out the old height of the dlg
     // then figure its gap from the old grpbx to the bottom
     // then size the dlg
-    RECT pr, cr; 
+    RECT pr, cr;
     ::GetWindowRect(hdlg, &pr);
     ::GetClientRect(hdlg, &cr);
 
@@ -426,16 +426,16 @@ static UINT CALLBACK PrintHookProc(HWND hdlg, UINT uiMsg, WPARAM wParam, LPARAM 
     int bottomGap = dlgHgt - okRect.bottom;
     pr.bottom += (dlgRect.bottom-dlgRect.top) + grpGap + 1 - (dlgHgt-dlgRect.bottom) + bottomGap;
 
-    ::SetWindowPos(hdlg, nullptr, pr.left, pr.top, pr.right-pr.left+1, pr.bottom-pr.top+1, 
+    ::SetWindowPos(hdlg, nullptr, pr.left, pr.top, pr.right-pr.left+1, pr.bottom-pr.top+1,
                    SWP_NOMOVE|SWP_NOREDRAW|SWP_NOZORDER);
 
     // figure out the new height of the dialog
     ::GetClientRect(hdlg, &cr);
     dlgHgt = (cr.bottom - cr.top) + 1;
- 
+
     // Reposition the OK and Cancel btns
     int okHgt = okRect.bottom - okRect.top + 1;
-    ::SetWindowPos(okWnd, nullptr, okRect.left, dlgHgt-bottomGap-okHgt, 0, 0, 
+    ::SetWindowPos(okWnd, nullptr, okRect.left, dlgHgt-bottomGap-okHgt, 0, 0,
                    SWP_NOSIZE|SWP_NOREDRAW|SWP_NOZORDER);
 
     HWND cancelWnd = ::GetDlgItem(hdlg, IDCANCEL);
@@ -444,7 +444,7 @@ static UINT CALLBACK PrintHookProc(HWND hdlg, UINT uiMsg, WPARAM wParam, LPARAM 
     RECT cancelRect;
     GetLocalRect(cancelWnd, cancelRect, hdlg);
     int cancelHgt = cancelRect.bottom - cancelRect.top + 1;
-    ::SetWindowPos(cancelWnd, nullptr, cancelRect.left, dlgHgt-bottomGap-cancelHgt, 0, 0, 
+    ::SetWindowPos(cancelWnd, nullptr, cancelRect.left, dlgHgt-bottomGap-cancelHgt, 0, 0,
                    SWP_NOSIZE|SWP_NOREDRAW|SWP_NOZORDER);
 
     // localize and initialize the groupbox and radiobuttons
@@ -462,7 +462,7 @@ static UINT CALLBACK PrintHookProc(HWND hdlg, UINT uiMsg, WPARAM wParam, LPARAM 
 // from the Printer by the name of aPrintName
 //
 // NOTE:
-//   This function assumes that aPrintName has already been converted from 
+//   This function assumes that aPrintName has already been converted from
 //   unicode
 //
 static nsReturnRef<nsHGLOBAL>
@@ -562,7 +562,7 @@ static bool ShouldExtendPrintDialog()
 
 //------------------------------------------------------------------
 // Displays the native Print Dialog
-static nsresult 
+static nsresult
 ShowNativePrintDialog(HWND              aHWnd,
                       nsIPrintSettings* aPrintSettings)
 {
@@ -626,7 +626,7 @@ ShowNativePrintDialog(HWND              aHWnd,
   prntdlg.hDevMode    = autoDevMode.get();
   prntdlg.hDevNames   = hDevNames;
   prntdlg.hDC         = nullptr;
-  prntdlg.Flags       = PD_ALLPAGES | PD_RETURNIC | 
+  prntdlg.Flags       = PD_ALLPAGES | PD_RETURNIC |
                         PD_USEDEVMODECOPIESANDCOLLATE | PD_COLLATE;
 
   // if there is a current selection then enable the "Selection" radio button
@@ -641,7 +641,7 @@ ShowNativePrintDialog(HWND              aHWnd,
   int32_t pg = 1;
   aPrintSettings->GetStartPageRange(&pg);
   prntdlg.nFromPage           = pg;
-  
+
   aPrintSettings->GetEndPageRange(&pg);
   prntdlg.nToPage             = pg;
 
@@ -740,13 +740,13 @@ ShowNativePrintDialog(HWND              aHWnd,
       if (gDialogWasExtended) {
         // check to see about the frame radio buttons
         switch (gFrameSelectedRadioBtn) {
-          case rad4: 
+          case rad4:
             aPrintSettings->SetPrintFrameType(nsIPrintSettings::kFramesAsIs);
             break;
-          case rad5: 
+          case rad5:
             aPrintSettings->SetPrintFrameType(nsIPrintSettings::kSelectedFrame);
             break;
-          case rad6: 
+          case rad6:
             aPrintSettings->SetPrintFrameType(nsIPrintSettings::kEachFrameSep);
             break;
         } // switch
@@ -781,7 +781,7 @@ ShowNativePrintDialog(HWND              aHWnd,
     if (printNumPages) {
       fromPageNum = prntdlg.nFromPage;
       toPageNum   = prntdlg.nToPage;
-    } 
+    }
     if (printSelection) {
       printf("Printing the selection\n");
 
@@ -792,7 +792,7 @@ ShowNativePrintDialog(HWND              aHWnd,
       printf("Printing from page no. %d to %d\n", fromPageNum, toPageNum);
     }
 #endif
-    
+
   } else {
     ::SetFocus(aHWnd);
     aPrintSettings->SetIsCancelled(true);
@@ -803,7 +803,7 @@ ShowNativePrintDialog(HWND              aHWnd,
 }
 
 //------------------------------------------------------------------
-static void 
+static void
 PrepareForPrintDialog(nsIWebBrowserPrint* aWebBrowserPrint, nsIPrintSettings* aPS)
 {
   NS_ASSERTION(aWebBrowserPrint, "Can't be null");

@@ -62,7 +62,7 @@ public:
   NS_DECL_NSITHREADRETARGETABLEREQUEST
   NS_DECL_NSITHREADRETARGETABLESTREAMLISTENER
 
-  nsBaseChannel(); 
+  nsBaseChannel();
 
   // This method must be called to initialize the basechannel instance.
   nsresult Init() {
@@ -166,7 +166,7 @@ public:
   // The security info is a property of the transport-layer, which should be
   // assigned by the subclass.
   nsISupports *SecurityInfo() {
-    return mSecurityInfo; 
+    return mSecurityInfo;
   }
   void SetSecurityInfo(nsISupports *info) {
     mSecurityInfo = info;

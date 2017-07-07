@@ -53,7 +53,7 @@ SVGFEPointLightElement::ComputeLightAttributes(nsSVGFilterInstance* aInstance)
 {
   Point3D lightPos;
   GetAnimatedNumberValues(&lightPos.x, &lightPos.y, &lightPos.z, nullptr);
-  
+
   AttributeMap map;
   map.Set(eLightType, (uint32_t)eLightTypePoint);
   map.Set(ePointLightPosition, aInstance->ConvertLocation(lightPos));

@@ -8,7 +8,7 @@
 #define nsJSUtils_h__
 
 /**
- * This is not a generated file. It contains common utility functions 
+ * This is not a generated file. It contains common utility functions
  * invoked from the JavaScript code generated from IDL interfaces.
  * The goal of the utility functions is to cut down on the size of
  * the generated code itself.

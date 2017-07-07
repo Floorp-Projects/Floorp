@@ -607,7 +607,7 @@ static bool is_heap(const Array& ary, size_t len) {
     index++;
   }
   return true;
-} 
+}
 
 //----
 

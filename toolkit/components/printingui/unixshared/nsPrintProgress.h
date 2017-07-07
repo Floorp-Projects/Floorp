@@ -18,7 +18,7 @@
 
 class nsPrintProgress : public nsIPrintProgress, public nsIPrintStatusFeedback
 {
-public: 
+public:
 	NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIPRINTPROGRESS
   NS_DECL_NSIWEBPROGRESSLISTENER

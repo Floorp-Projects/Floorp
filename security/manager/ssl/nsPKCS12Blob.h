@@ -58,10 +58,10 @@ private:
   //   zero length SECItem.
   //   We try both variations, zero length item and empty string,
   //   without giving a user prompt when trying the different empty password flavors.
-  
+
   enum RetryReason { rr_do_not_retry, rr_bad_password, rr_auto_retry_empty_password_flavors };
   enum ImportMode { im_standard_prompt, im_try_zero_length_secitem };
-  
+
   nsresult ImportFromFileHelper(nsIFile *file, ImportMode aImportMode, RetryReason &aWantRetry);
 
   // NSPR file I/O for export file

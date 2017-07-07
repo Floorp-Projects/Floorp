@@ -22,7 +22,7 @@ public:
 
     void Main();
 
-protected:    
+protected:
     virtual mozilla::ipc::IPCResult RecvNonce() override;
 
     void BreakNestedLoop();
@@ -30,7 +30,7 @@ protected:
     virtual void ActorDestroy(ActorDestroyReason why) override
     {
         if (NormalShutdown != why)
-            fail("unexpected destruction!");  
+            fail("unexpected destruction!");
         passed("ok");
         QuitParent();
     }

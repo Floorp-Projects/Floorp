@@ -81,7 +81,7 @@ XMLHttpRequestWorker::StateData::trace(JSTracer *aTrc)
  *  reuse.  We maintain a counter on the main thread of how many times Send was
  *  called on this XHR, and we decrement the counter every time we receive a
  *  loadend event.  When the counter reaches zero we dispatch a runnable to the
- *  worker thread to unpin the XHR.  We only decrement the counter if the 
+ *  worker thread to unpin the XHR.  We only decrement the counter if the
  *  dispatch was successful, because the worker may no longer be accepting
  *  regular runnables.  In the event that we reach Proxy::Teardown and there
  *  the outstanding Send count is still non-zero, we dispatch a control

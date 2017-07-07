@@ -266,7 +266,7 @@ AddNamespaceRuleToMap(css::Rule* aRule, nsXMLNameSpaceMap* aMap)
   aMap->AddPrefix(nameSpaceRule->GetPrefix(), urlSpec);
 }
 
-void 
+void
 CSSStyleSheetInner::RebuildNameSpaces()
 {
   // Just nuke our existing namespace map, if any

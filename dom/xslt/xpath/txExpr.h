@@ -391,7 +391,7 @@ public:
 
     /*
      * Virtual methods
-     * pretty much a txPattern, but not supposed to be used 
+     * pretty much a txPattern, but not supposed to be used
      * standalone. The NodeTest node() is different to the
      * Pattern "node()" (document node isn't matched)
      */

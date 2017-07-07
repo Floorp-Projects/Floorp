@@ -94,7 +94,7 @@ nsresult txList::insertBefore(void* objPtr, ListItem* refItem)
 
     // increase the item count
     ++itemCount;
-    
+
     return NS_OK;
 } //-- insertBefore
 
@@ -224,7 +224,7 @@ void* txListIterator::previous() {
         currentItem = currentItem->prevItem;
     else if (atEndOfList)
         currentItem = list->lastItem;
-    
+
     if (currentItem)
         obj = currentItem->objPtr;
 

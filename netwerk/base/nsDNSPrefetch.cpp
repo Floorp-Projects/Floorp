@@ -42,16 +42,16 @@ nsDNSPrefetch::nsDNSPrefetch(nsIURI *aURI,
     aURI->GetAsciiHost(mHostname);
 }
 
-nsresult 
+nsresult
 nsDNSPrefetch::Prefetch(uint16_t flags)
 {
     if (mHostname.IsEmpty())
         return NS_ERROR_NOT_AVAILABLE;
-  
+
     if (!sDNSService)
         return NS_ERROR_NOT_AVAILABLE;
-    
-    nsCOMPtr<nsICancelable> tmpOutstanding;  
+
+    nsCOMPtr<nsICancelable> tmpOutstanding;
 
     if (mStoreTiming)
         mStartTimestamp = mozilla::TimeStamp::Now();

@@ -15,13 +15,13 @@
 #include "nsIFrame.h"
 
 nsGridRow::nsGridRow():mIsBogus(false),
-                       mBox(nullptr), 
+                       mBox(nullptr),
                        mFlex(-1),
                        mPref(-1),
                        mMin(-1),
                        mMax(-1),
                        mTop(-1),
-                       mBottom(-1), 
+                       mBottom(-1),
                        mTopMargin(0),
                        mBottomMargin(0)
 
@@ -49,7 +49,7 @@ nsGridRow::~nsGridRow()
    MOZ_COUNT_DTOR(nsGridRow);
 }
 
-bool 
+bool
 nsGridRow::IsXULCollapsed()
 {
   return mBox && mBox->IsXULCollapsed();

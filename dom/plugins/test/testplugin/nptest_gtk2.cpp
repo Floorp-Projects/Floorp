@@ -1,12 +1,12 @@
 /* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
- * 
+ *
  * Copyright (c) 2008, Mozilla Corporation
  * All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
- * 
+ *
  * * Redistributions of source code must retain the above copyright notice, this
  *   list of conditions and the following disclaimer.
  * * Redistributions in binary form must reproduce the above copyright notice,
@@ -15,7 +15,7 @@
  * * Neither the name of the Mozilla Corporation nor the names of its
  *   contributors may be used to endorse or promote products derived from this
  *   software without specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
  * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
  * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -26,11 +26,11 @@
  * ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- * 
+ *
  * Contributor(s):
  *   Josh Aas <josh@mozilla.com>
  *   Michael Ventnor <mventnor@mozilla.com>
- * 
+ *
  * ***** END LICENSE BLOCK ***** */
 
 #include "nptest_platform.h"
@@ -124,7 +124,7 @@ pluginInstanceShutdown(InstanceData* instanceData)
   instanceData->platformData = 0;
 }
 
-static void 
+static void
 SetCairoRGBA(cairo_t* cairoWindow, uint32_t rgba)
 {
   float b = (rgba & 0xFF) / 255.0;
@@ -394,7 +394,7 @@ pluginHandleEvent(InstanceData* instanceData, void* event)
                 expose.x, expose.y, expose.width, expose.height,
                 window.x, window.y, window.width, window.height);
       return 0;
-    }      
+    }
 
     GdkRectangle invalidRect =
       { expose.x, expose.y, expose.width, expose.height };
@@ -612,7 +612,7 @@ int32_t pluginGetClipRegionRectCount(InstanceData* instanceData)
   return nrects;
 }
 
-int32_t pluginGetClipRegionRectEdge(InstanceData* instanceData, 
+int32_t pluginGetClipRegionRectEdge(InstanceData* instanceData,
     int32_t rectIndex, RectEdge edge)
 {
   GdkRegion* region = computeClipRegion(instanceData);

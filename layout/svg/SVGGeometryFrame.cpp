@@ -410,7 +410,7 @@ SVGGeometryFrame::ReflowSVG()
   if ((hitTestFlags & SVG_HIT_TEST_STROKE)) {
    flags |= nsSVGUtils::eBBoxIncludeStrokeGeometry;
   }
- 
+
   gfxRect extent = GetBBoxContribution(Matrix(), flags).ToThebesRect();
   mRect = nsLayoutUtils::RoundGfxRectToAppRect(extent,
             PresContext()->AppUnitsPerCSSPixel());
@@ -472,7 +472,7 @@ SVGGeometryFrame::NotifySVGChanged(uint32_t aFlags)
     // Stroke currently contributes to our mRect, and our stroke depends on
     // the transform to our outer-<svg> if |vector-effect:non-scaling-stroke|.
     nsSVGUtils::ScheduleReflowSVG(this);
-  } 
+  }
 }
 
 SVGBBox

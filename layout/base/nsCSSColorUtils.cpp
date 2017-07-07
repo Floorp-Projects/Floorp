@@ -49,14 +49,14 @@ void NS_GetSpecial3DColors(nscolor aResult[2],
   uint8_t a = NS_GET_A(aBorderColor);
 
   // This needs to be optimized.
-  // Calculating background brightness again and again is 
+  // Calculating background brightness again and again is
   // a waste of time!!!. Just calculate it only once.
   // .....somehow!!!
 
   uint8_t red = NS_GET_R(aBackgroundColor);
   uint8_t green = NS_GET_G(aBackgroundColor);
   uint8_t blue = NS_GET_B(aBackgroundColor);
-  
+
   uint8_t elementBrightness = NS_GetBrightness(rb,gb,bb);
   uint8_t backgroundBrightness = NS_GetBrightness(red, green, blue);
 
@@ -87,8 +87,8 @@ void NS_GetSpecial3DColors(nscolor aResult[2],
       (backgroundBrightness *
        (COLOR_LITE_TS_FACTOR - COLOR_DARK_TS_FACTOR) / MAX_COLOR);
   }
-  
-  
+
+
   r = rb - (f0 * rb / 100);
   g = gb - (f0 * gb / 100);
   b = bb - (f0 * bb / 100);
@@ -106,7 +106,7 @@ int NS_GetBrightness(uint8_t aRed, uint8_t aGreen, uint8_t aBlue)
   uint8_t intensity = (aRed + aGreen + aBlue) / 3;
 
   uint8_t luminosity = NS_GetLuminosity(NS_RGB(aRed, aGreen, aBlue)) / 1000;
- 
+
   return ((intensity * INTENSITY_FACTOR) +
           (luminosity * LUMINOSITY_FACTOR)) / 100;
 }
@@ -118,7 +118,7 @@ int32_t NS_GetLuminosity(nscolor aColor)
   // do not know.
   NS_ASSERTION(NS_GET_A(aColor) == 255,
                "impossible to compute luminosity of a non-opaque color");
-  
+
   return (NS_GET_R(aColor) * RED_LUMINOSITY +
           NS_GET_G(aColor) * GREEN_LUMINOSITY +
           NS_GET_B(aColor) * BLUE_LUMINOSITY);
@@ -155,7 +155,7 @@ void NS_RGB2HSV(nscolor aColor, uint16_t &aHue, uint16_t &aSat,
   }
 
   // value or brightness will always be the max of all the colors(RGB)
-  aValue = max;   
+  aValue = max;
   delta = max-min;
   aSat = (max!=0)?((delta*255)/max):0;
   r1 = r;
@@ -169,7 +169,7 @@ void NS_RGB2HSV(nscolor aColor, uint16_t &aHue, uint16_t &aSat,
       hue=(float)(g1-b1)/(float)delta;
     } else if (g1==max) {
       hue= 2.0f+(float)(b1-r1)/(float)delta;
-    } else { 
+    } else {
       hue = 4.0f+(float)(r1-g1)/(float)delta;
     }
   }
@@ -206,7 +206,7 @@ void NS_HSV2RGB(nscolor &aColor, uint16_t aHue, uint16_t aSat, uint16_t aValue,
     b = aValue;
   } else {
     // hue in in degrees around the color wheel defined from
-    // 0 to 360 degrees.  
+    // 0 to 360 degrees.
     if (aHue >= 360) {
       aHue = 0;
     }

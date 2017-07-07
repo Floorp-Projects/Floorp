@@ -38,7 +38,7 @@ public:
                             bool aSelectFirstItem,
                             bool aFromKey) override;
 
-  NS_IMETHOD SetActive(bool aActiveFlag) override; 
+  NS_IMETHOD SetActive(bool aActiveFlag) override;
 
   virtual bool IsMenuBar() override { return true; }
   virtual bool IsContextMenu() override { return false; }

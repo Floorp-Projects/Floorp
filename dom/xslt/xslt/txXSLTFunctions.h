@@ -75,7 +75,7 @@ private:
         Suffix,
         Finished
     };
-    
+
     txStylesheet* mStylesheet;
     RefPtr<txNamespaceMap> mMappings;
 };
@@ -93,7 +93,7 @@ public:
      */
     txDecimalFormat();
     bool isEqual(txDecimalFormat* other);
-    
+
     char16_t       mDecimalSeparator;
     char16_t       mGroupingSeparator;
     nsString        mInfinity;

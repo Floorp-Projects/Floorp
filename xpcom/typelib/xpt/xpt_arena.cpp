@@ -7,7 +7,7 @@
 
 /* XXX This exists because we don't want to drag in NSPR. It *seemed*
 *  to make more sense to write a quick and dirty arena than to clone
-*  plarena (like js/src did). This is not optimal, but it works. 
+*  plarena (like js/src did). This is not optimal, but it works.
 */
 
 #include "xpt_arena.h"
@@ -81,8 +81,8 @@ XPT_DestroyArena(XPTArena *arena)
     free(arena);
 }
 
-/* 
-* Our alignment rule is that we always round up the size of each allocation 
+/*
+* Our alignment rule is that we always round up the size of each allocation
 * so that the 'arena->next' pointer one will point to properly aligned space.
 */
 
@@ -168,7 +168,7 @@ XPT_AssertFailed(const char *s, const char *file, uint32_t lineno)
     fprintf(stderr, "Assertion failed: %s, file %s, line %d\n",
             s, file, lineno);
     abort();
-}        
+}
 #endif
 
 static size_t

@@ -68,8 +68,10 @@ WebMDecoder::IsSupportedType(const MediaContainerType& aContainerType)
 void
 WebMDecoder::GetMozDebugReaderData(nsACString& aString)
 {
-  if (mReader) {
-    mReader->GetMozDebugReaderData(aString);
+  // This is definitely a MediaFormatReader. See CreateStateMachine() above.
+  auto reader = static_cast<MediaFormatReader*>(mReader.get());
+  if (reader) {
+    reader->GetMozDebugReaderData(aString);
   }
 }
 

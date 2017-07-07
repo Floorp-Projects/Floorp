@@ -764,7 +764,7 @@ IsPercentageAware(const nsIFrame* aFrame)
     //   width and the containing block's width does not itself depend
     //   on the replaced element's width, then the used value of 'width'
     //   is calculated from the constraint equation used for
-    //   block-level, non-replaced elements in normal flow. 
+    //   block-level, non-replaced elements in normal flow.
     nsIFrame *f = const_cast<nsIFrame*>(aFrame);
     if (f->GetIntrinsicRatio() != nsSize(0, 0) &&
         // Some percents are treated like 'auto', so check != coord
@@ -1067,7 +1067,7 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
     // Check whether this frame breaks up text runs. All frames break up text
     // runs (hence return false here) except for text frames and inline containers.
     bool continuingTextRun = aFrame->CanContinueTextRun();
-    
+
     // Clear any residual mTrimmableISize if this isn't a text frame
     if (!continuingTextRun && !pfd->mSkipWhenTrimmingWhitespace) {
       mTrimmableISize = 0;
@@ -1107,7 +1107,7 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
         // so do most of it now.
         VerticalAlignFrames(span);
       }
-      
+
       if (!continuingTextRun) {
         if (!psd->mNoWrap && (!LineIsEmpty() || placedFloat)) {
           // record soft break opportunity after this content that can't be
@@ -1136,7 +1136,7 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
     PushFrame(aFrame);
     aPushedFrame = true;
   }
-  
+
 #ifdef REALLY_NOISY_REFLOW
   nsFrame::IndentBy(stdout, mSpanDepth);
   printf("End ReflowFrame ");
@@ -1353,7 +1353,7 @@ nsLineLayout::CanPlaceFrame(PerFrameData* pfd,
 #endif
     return true;
   }
- 
+
   // Special check for span frames
   if (pfd->mSpan && pfd->mSpan->mContainsFloat) {
     // If the span either directly or indirectly contains a float then
@@ -2879,7 +2879,7 @@ nsLineLayout::ApplyLineJustificationToAnnotations(PerFrameData* aPFD,
   }
 }
 
-nscoord 
+nscoord
 nsLineLayout::ApplyFrameJustification(PerSpanData* aPSD,
                                       JustificationApplicationState& aState)
 {

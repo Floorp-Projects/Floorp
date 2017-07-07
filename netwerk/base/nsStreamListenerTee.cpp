@@ -23,7 +23,7 @@ nsStreamListenerTee::OnStartRequest(nsIRequest *request,
     nsresult rv2 = NS_OK;
     if (mObserver)
         rv2 = mObserver->OnStartRequest(request, context);
-  
+
     // Preserve NS_SUCCESS_XXX in rv1 in case mObserver didn't throw
     return (NS_FAILED(rv2) && NS_SUCCEEDED(rv1)) ? rv2 : rv1;
 }

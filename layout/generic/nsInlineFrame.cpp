@@ -467,7 +467,7 @@ nsInlineFrame::Reflow(nsPresContext*          aPresContext,
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowInput, aMetrics);
 }
 
-nsresult 
+nsresult
 nsInlineFrame::AttributeChanged(int32_t aNameSpaceID,
                                 nsIAtom* aAttribute,
                                 int32_t aModType)
@@ -660,7 +660,7 @@ nsInlineFrame::ReflowFrames(nsPresContext* aPresContext,
               }
             }
             else {
-#ifdef DEBUG              
+#ifdef DEBUG
               // Once we find a next-in-flow that isn't ours none of the
               // remaining next-in-flows should be either.
               for ( ; nextInFlow; nextInFlow = nextInFlow->GetNextInFlow()) {
@@ -919,7 +919,7 @@ nsInlineFrame::PushFrames(nsPresContext* aPresContext,
   NS_PRECONDITION(aPrevSibling->GetNextSibling() == aFromChild, "bad prev sibling");
 
 #ifdef NOISY_PUSHING
-  printf("%p pushing aFromChild %p, disconnecting from prev sib %p\n", 
+  printf("%p pushing aFromChild %p, disconnecting from prev sib %p\n",
          this, aFromChild, aPrevSibling);
 #endif
 

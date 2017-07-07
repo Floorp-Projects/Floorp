@@ -4,11 +4,11 @@
  * SMSLib Sudden Motion Sensor Access Library
  * Copyright (c) 2010 Suitable Systems
  * All rights reserved.
- * 
+ *
  * Developed by: Daniel Griscom
  *               Suitable Systems
  *               http://www.suitable.com
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the
  * "Software"), to deal with the Software without restriction, including
@@ -16,18 +16,18 @@
  * distribute, sublicense, and/or sell copies of the Software, and to
  * permit persons to whom the Software is furnished to do so, subject to
  * the following conditions:
- * 
+ *
  * - Redistributions of source code must retain the above copyright notice,
  * this list of conditions and the following disclaimers.
- * 
+ *
  * - Redistributions in binary form must reproduce the above copyright
  * notice, this list of conditions and the following disclaimers in the
  * documentation and/or other materials provided with the distribution.
- * 
+ *
  * - Neither the names of Suitable Systems nor the names of its
  * contributors may be used to endorse or promote products derived from
  * this Software without specific prior written permission.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
  * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
  * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
@@ -113,7 +113,7 @@ int smsStartup(id logObject, SEL logSelector);
 // Returned data is in the form of 1Hz sine waves, with the X, Y and Z
 // axes 120 degrees out of phase; "calibrated" data has range +/- (1.0/5);
 // "uncalibrated" data has range +/- (256/5). X and Y axes centered on 0.0,
-// Z axes centered on 1 (calibrated) or 256 (uncalibrated). 
+// Z axes centered on 1 (calibrated) or 256 (uncalibrated).
 // Don't use smsGetBufferLength or smsGetBufferData. Always returns SMS_SUCCESS.
 int smsDebugStartup(id logObject, SEL logSelector);
 

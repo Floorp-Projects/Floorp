@@ -16,7 +16,7 @@
 // Thai character type array
 */
 
-typedef unsigned short twb_t; 
+typedef unsigned short twb_t;
 extern const twb_t _TwbType[0x100-0xa0];
 
 /*
@@ -72,7 +72,7 @@ extern const twb_t _TwbType[0x100-0xa0];
 /////////////////////////////////////////////////
 */
 
-int TrbWordBreakPos(const th_char *pstr, int left, 
+int TrbWordBreakPos(const th_char *pstr, int left,
                     const th_char *rstr, int right)
 /*                 const ThBreakIterator *it, const th_char **p)*/
 {
@@ -88,7 +88,7 @@ int TrbWordBreakPos(const th_char *pstr, int left,
 	int i, j;
 
 	/*
-	//left = s - it->begin; 
+	//left = s - it->begin;
 	*/
 	if(left < 0) return -1;
 	/*
@@ -107,10 +107,10 @@ int TrbWordBreakPos(const th_char *pstr, int left,
         /*
 	// get c(-1), t(-1)
         */
-	if(left >= 1) { 
-		c(-1) = lstr[-1]; 
+	if(left >= 1) {
+		c(-1) = lstr[-1];
 		if(!th_isthai(c(-1))) return 0;
-		t(-1) = twbtype(c(-1)); 
+		t(-1) = twbtype(c(-1));
 		if(!(t(-1) & A)) return 0;	/* handle punctuation marks here */
 	} else { c(-1) = 0; t(-1) = 0; }
 
@@ -134,7 +134,7 @@ int TrbWordBreakPos(const th_char *pstr, int left,
 	for(i = -2, j = -2; i >= -3 ; j--) {
 		if(j < -left) { c(i) = 0; t(i) = 0; i--; }
 		else {
-			c(i) = lstr[j]; 
+			c(i) = lstr[j];
 			if(!th_isthai(c(i))) left = 0;
 			else {
 				t(i) = (twb_t)(th_isthai(c(i)) ? twbtype(c(i)) : 0);
@@ -163,7 +163,7 @@ int TrbWordBreakPos(const th_char *pstr, int left,
 	/*
 	// prohibit break
 	*/
-	if(t(0) & NB) return -1; 
+	if(t(0) & NB) return -1;
 	if(t(-1) & NE) return -1;
 
 
@@ -189,7 +189,7 @@ int TrbWordBreakPos(const th_char *pstr, int left,
 	if((t(-1) & VRX) && (t(0) & CC)) return 0;				/* VRX/ CC */
 	if((t(-2) & VRS) && (t(-1) & C) && (t(0) & (V|M))) return 0;/* VRS, C/ !C */
 
-	
+
 	if((t(0) & CX) && (t(1) & C2) && (c(2) != TH_THANTHAKHAT)) {
 		if((t(-2) & A) && (t(-1) & CX)) return 0; /* A, CX / CX, C2 */
 		if((t(-2) & CX) && (t(-1) & MT)) return 0; /* CX, MT / CX, C2 */
@@ -214,7 +214,7 @@ int TrbWordBreakPos(const th_char *pstr, int left,
 		if((t(0) & C) && (t(1) & VR)) return 0;	/* CHB/ CC, VR */
 		if(t(0) & VC) return 0;					/* CHB/ VC */
 	}
-	
+
 	if((t(-2) & VL) && (t(1) & VR)) { /* VL, C? C, VR */
 		if(t(-2) & VLI) return 0;  /* VLI,C/C,VR .*/
 		else { /* vlao, C ? C , VR */
@@ -223,7 +223,7 @@ int TrbWordBreakPos(const th_char *pstr, int left,
 			if(!(t(1) & VRA)) return 0;	/* VLA, C/ C, !vca */
 		}
 	}
-	/* C,MT,C */ 
+	/* C,MT,C */
 	if((t(-2) & C) && (t(-1) & MT) && (t(0) & CX)) return 1;
 
 	return -1;
@@ -243,11 +243,11 @@ int TrbFollowing(const th_char *begin, int length, int offset)
 		int english = FALSE;
 		while(w < end && *w && !th_isthai(*w) && !th_isspace(*w)) {
 			if(th_isalpha(*w)) english = TRUE;
-			w++; 
+			w++;
 		}
-		if(english || w == end || 
+		if(english || w == end ||
             (!th_isthai(*w) && th_isspace(*w))) return w - begin;
-	} 
+	}
 	if(w == end || *w == 0 || !th_isthai(*w)) return w - begin;
 	w++;
 	if(w < end && *w && th_isthai(*w)) {
@@ -260,7 +260,7 @@ int TrbFollowing(const th_char *begin, int length, int offset)
         if (brk > 0) w += brk;
 	}
 	if(w < end && *w && !th_isthai(*w)) {
-		while(w < end && *w && !th_isthai(*w) && 
+		while(w < end && *w && !th_isthai(*w) &&
             !th_isalpha(*w) && !th_isspace(*w)) w++;
 	}
 	return w - begin;

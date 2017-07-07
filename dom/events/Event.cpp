@@ -83,10 +83,10 @@ Event::ConstructorInit(EventTarget* aOwner,
       A derived class might want to allocate its own type of aEvent
       (derived from WidgetEvent). To do this, it should take care to pass
       a non-nullptr aEvent to this ctor, e.g.:
-      
+
         FooEvent::FooEvent(..., WidgetEvent* aEvent)
           : Event(..., aEvent ? aEvent : new WidgetEvent())
-      
+
       Then, to override the mEventIsInternal assignments done by the
       base ctor, it should do this in its own ctor:
 
@@ -124,7 +124,7 @@ Event::InitPresContextData(nsPresContext* aPresContext)
   }
 }
 
-Event::~Event() 
+Event::~Event()
 {
   NS_ASSERT_OWNINGTHREAD(Event);
 
@@ -1335,7 +1335,7 @@ using namespace mozilla::dom;
 already_AddRefed<Event>
 NS_NewDOMEvent(EventTarget* aOwner,
                nsPresContext* aPresContext,
-               WidgetEvent* aEvent) 
+               WidgetEvent* aEvent)
 {
   RefPtr<Event> it = new Event(aOwner, aPresContext, aEvent);
   return it.forget();

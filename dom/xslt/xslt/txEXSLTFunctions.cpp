@@ -24,7 +24,7 @@
 #include "txMozillaXMLOutput.h"
 #include "nsTextNode.h"
 #include "mozilla/dom/DocumentFragment.h"
-#include "prtime.h" 
+#include "prtime.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -38,7 +38,7 @@ class txStylesheetCompilerState;
 static nsresult
 convertRtfToNode(txIEvalContext *aContext, txResultTreeFragment *aRtf)
 {
-    txExecutionState* es = 
+    txExecutionState* es =
         static_cast<txExecutionState*>(aContext->getPrivateContext());
     if (!es) {
         NS_ERROR("Need txExecutionState!");
@@ -75,7 +75,7 @@ static nsresult
 createTextNode(txIEvalContext *aContext, nsString& aValue,
                txXPathNode* *aResult)
 {
-    txExecutionState* es = 
+    txExecutionState* es =
         static_cast<txExecutionState*>(aContext->getPrivateContext());
     if (!es) {
         NS_ERROR("Need txExecutionState!");
@@ -100,7 +100,7 @@ createTextNode(txIEvalContext *aContext, nsString& aValue,
 static already_AddRefed<DocumentFragment>
 createDocFragment(txIEvalContext *aContext)
 {
-    txExecutionState* es = 
+    txExecutionState* es =
         static_cast<txExecutionState*>(aContext->getPrivateContext());
     if (!es) {
         NS_ERROR("Need txExecutionState!");
@@ -639,20 +639,20 @@ txEXSLTFunctionCall::evaluate(txIEvalContext *aContext,
         case DATE_TIME:
         {
             // http://exslt.org/date/functions/date-time/
-            
+
             PRExplodedTime prtime;
             PR_ExplodeTime(PR_Now(), PR_LocalTimeParameters, &prtime);
-            
+
             int32_t offset = (prtime.tm_params.tp_gmt_offset +
               prtime.tm_params.tp_dst_offset) / 60;
-              
+
             bool isneg = offset < 0;
             if (isneg) offset = -offset;
-            
+
             StringResult* strRes;
             rv = aContext->recycler()->getStringResult(&strRes);
             NS_ENSURE_SUCCESS(rv, rv);
-            
+
             // format: YYYY-MM-DDTTHH:MM:SS.sss+00:00
             CopyASCIItoUTF16(nsPrintfCString("%04hd-%02" PRId32 "-%02" PRId32
                                              "T%02" PRId32 ":%02" PRId32 ":%02" PRId32
@@ -661,7 +661,7 @@ txEXSLTFunctionCall::evaluate(txIEvalContext *aContext,
               prtime.tm_hour, prtime.tm_min, prtime.tm_sec,
               prtime.tm_usec / 10000,
               isneg ? '-' : '+', offset / 60, offset % 60), strRes->mValue);
-              
+
             *aResult = strRes;
 
             return NS_OK;

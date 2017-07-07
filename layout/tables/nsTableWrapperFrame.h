@@ -212,7 +212,7 @@ protected:
     return captionSide == NS_STYLE_CAPTION_SIDE_LEFT ||
            captionSide == NS_STYLE_CAPTION_SIDE_RIGHT;
   }
-  
+
   uint8_t GetCaptionVerticalAlign();
 
   void SetDesiredSize(uint8_t                       aCaptionSide,
@@ -226,7 +226,7 @@ protected:
 
   nsresult   GetCaptionOrigin(uint32_t         aCaptionSide,
                               const mozilla::LogicalSize&    aContainBlockSize,
-                              const mozilla::LogicalSize&    aInnerSize, 
+                              const mozilla::LogicalSize&    aInnerSize,
                               const mozilla::LogicalMargin&  aInnerMargin,
                               const mozilla::LogicalSize&    aCaptionSize,
                               mozilla::LogicalMargin&        aCaptionMargin,
@@ -235,13 +235,13 @@ protected:
 
   nsresult   GetInnerOrigin(uint32_t         aCaptionSide,
                             const mozilla::LogicalSize&    aContainBlockSize,
-                            const mozilla::LogicalSize&    aCaptionSize, 
+                            const mozilla::LogicalSize&    aCaptionSize,
                             const mozilla::LogicalMargin&  aCaptionMargin,
                             const mozilla::LogicalSize&    aInnerSize,
                             mozilla::LogicalMargin&        aInnerMargin,
                             mozilla::LogicalPoint&         aOrigin,
                             mozilla::WritingMode           aWM);
-  
+
   // reflow the child (caption or innertable frame)
   void OuterBeginReflowChild(nsPresContext*                     aPresContext,
                              nsIFrame*                          aChildFrame,

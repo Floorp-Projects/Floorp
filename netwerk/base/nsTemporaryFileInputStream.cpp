@@ -25,7 +25,7 @@ nsTemporaryFileInputStream::nsTemporaryFileInputStream(FileDescOwner* aFileDescO
     mCurPos(aStartPos),
     mEndPos(aEndPos),
     mClosed(false)
-{ 
+{
   NS_ASSERTION(aStartPos <= aEndPos, "StartPos should less equal than EndPos!");
 }
 

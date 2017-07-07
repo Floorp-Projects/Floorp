@@ -25,8 +25,8 @@ NS_NewGridLayout2( nsIPresShell* aPresShell, nsBoxLayout** aNewLayout)
   NS_IF_ADDREF(*aNewLayout);
 
   return NS_OK;
-  
-} 
+
+}
 
 nsGridLayout2::nsGridLayout2(nsIPresShell* aPresShell):nsStackLayout()
 {
@@ -95,7 +95,7 @@ nsGridLayout2::AddWidth(nsSize& aSize, nscoord aSize2, bool aIsHorizontal)
 nsSize
 nsGridLayout2::GetXULMinSize(nsIFrame* aBox, nsBoxLayoutState& aState)
 {
-  nsSize minSize = nsStackLayout::GetXULMinSize(aBox, aState); 
+  nsSize minSize = nsStackLayout::GetXULMinSize(aBox, aState);
 
   // if there are no <rows> tags that will sum up our columns,
   // sum up our columns here.
@@ -108,7 +108,7 @@ nsGridLayout2::GetXULMinSize(nsIFrame* aBox, nsBoxLayoutState& aState)
       int32_t rows = mGrid.GetRowCount();
       for (int32_t i=0; i < rows; i++)
       {
-        nscoord height = mGrid.GetMinRowHeight(aState, i, true); 
+        nscoord height = mGrid.GetMinRowHeight(aState, i, true);
         AddWidth(total, height, false); // AddHeight
       }
     }
@@ -118,7 +118,7 @@ nsGridLayout2::GetXULMinSize(nsIFrame* aBox, nsBoxLayoutState& aState)
       int32_t columns = mGrid.GetColumnCount();
       for (int32_t i=0; i < columns; i++)
       {
-        nscoord width = mGrid.GetMinRowHeight(aState, i, false); 
+        nscoord width = mGrid.GetMinRowHeight(aState, i, false);
         AddWidth(total, width, true); // AddWidth
       }
     }
@@ -127,14 +127,14 @@ nsGridLayout2::GetXULMinSize(nsIFrame* aBox, nsBoxLayoutState& aState)
     AddOffset(aBox, total);
     AddLargestSize(minSize, total);
   }
-  
+
   return minSize;
 }
 
 nsSize
 nsGridLayout2::GetXULPrefSize(nsIFrame* aBox, nsBoxLayoutState& aState)
 {
-  nsSize pref = nsStackLayout::GetXULPrefSize(aBox, aState); 
+  nsSize pref = nsStackLayout::GetXULPrefSize(aBox, aState);
 
   // if there are no <rows> tags that will sum up our columns,
   // sum up our columns here.
@@ -147,7 +147,7 @@ nsGridLayout2::GetXULPrefSize(nsIFrame* aBox, nsBoxLayoutState& aState)
       int32_t rows = mGrid.GetRowCount();
       for (int32_t i=0; i < rows; i++)
       {
-        nscoord height = mGrid.GetPrefRowHeight(aState, i, true); 
+        nscoord height = mGrid.GetPrefRowHeight(aState, i, true);
         AddWidth(total, height, false); // AddHeight
       }
     }
@@ -173,7 +173,7 @@ nsGridLayout2::GetXULPrefSize(nsIFrame* aBox, nsBoxLayoutState& aState)
 nsSize
 nsGridLayout2::GetXULMaxSize(nsIFrame* aBox, nsBoxLayoutState& aState)
 {
-  nsSize maxSize = nsStackLayout::GetXULMaxSize(aBox, aState); 
+  nsSize maxSize = nsStackLayout::GetXULMaxSize(aBox, aState);
 
   // if there are no <rows> tags that will sum up our columns,
   // sum up our columns here.
@@ -187,7 +187,7 @@ nsGridLayout2::GetXULMaxSize(nsIFrame* aBox, nsBoxLayoutState& aState)
       int32_t rows = mGrid.GetRowCount();
       for (int32_t i=0; i < rows; i++)
       {
-        nscoord height = mGrid.GetMaxRowHeight(aState, i, true); 
+        nscoord height = mGrid.GetMaxRowHeight(aState, i, true);
         AddWidth(total, height, false); // AddHeight
       }
     }

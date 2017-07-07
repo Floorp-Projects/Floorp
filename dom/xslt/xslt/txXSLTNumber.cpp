@@ -32,7 +32,7 @@ nsresult txXSLTNumber::createNumber(Expr* aValueExpr, txPattern* aCountPattern,
     rv = getCounters(aGroupSize, aGroupSeparator, aFormat, aContext, counters,
                      head, tail);
     NS_ENSURE_SUCCESS(rv, rv);
-    
+
     // Create list of values to format
     txList values;
     nsAutoString valueString;
@@ -66,9 +66,9 @@ nsresult txXSLTNumber::createNumber(Expr* aValueExpr, txPattern* aCountPattern,
         counter->appendNumber(value, aResult);
         first = false;
     }
-    
+
     aResult.Append(tail);
-    
+
     txListIterator iter(&counters);
     while (iter.hasNext()) {
         delete (txFormattedCounter*)iter.next();
@@ -99,7 +99,7 @@ txXSLTNumber::getValueList(Expr* aValueExpr, txPattern* aCountPattern,
             txDouble::toString(value, aValueString);
             return NS_OK;
         }
-        
+
         aValues.add(NS_INT32_TO_PTR((int32_t)floor(value + 0.5)));
         return NS_OK;
     }
@@ -393,7 +393,7 @@ txXSLTNumber::getCounters(Expr* aGroupSize, Expr* aGroupSeparator,
             numToken.Append(ch);
             ++formatPos;
         }
-        
+
         txFormattedCounter* counter = 0;
         rv = txFormattedCounter::getCounterFor(numToken, groupSize,
                                                groupSeparator, counter);
@@ -419,7 +419,7 @@ txXSLTNumber::getCounters(Expr* aGroupSize, Expr* aGroupSeparator,
             return rv;
         }
     }
-    
+
     return NS_OK;
 }
 

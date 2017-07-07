@@ -76,7 +76,7 @@ NS_IMETHODIMP nsCacheSession::SetDoomEntriesIfExpired(bool doomEntriesIfExpired)
 
 
 NS_IMETHODIMP
-nsCacheSession::OpenCacheEntry(const nsACString &         key, 
+nsCacheSession::OpenCacheEntry(const nsACString &         key,
                                nsCacheAccessMode          accessRequested,
                                bool                       blockingMode,
                                nsICacheEntryDescriptor ** result)
