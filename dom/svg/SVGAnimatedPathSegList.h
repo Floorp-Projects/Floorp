@@ -83,7 +83,7 @@ public:
   void *GetAnimValKey() const {
     return (void*)&mAnimVal;
   }
-  
+
   bool IsAnimating() const {
     return !!mAnimVal;
   }

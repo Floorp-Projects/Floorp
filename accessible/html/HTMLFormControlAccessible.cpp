@@ -89,7 +89,7 @@ HTMLCheckboxAccessible::NativeState()
 
   if (input->Checked())
     return state | states::CHECKED;
- 
+
   return state;
 }
 

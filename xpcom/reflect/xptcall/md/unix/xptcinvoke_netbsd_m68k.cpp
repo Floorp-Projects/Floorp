@@ -138,6 +138,6 @@ XPTC_InvokeByIndex(nsISupports* that, uint32_t methodIndex,
       "g" (params)          /* %4 */
     : "a0", "a1", "a2", "d0", "d1", "memory"
     );
-  
+
   return result;
 }

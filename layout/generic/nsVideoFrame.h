@@ -84,7 +84,7 @@ public:
     return nsSplittableFrame::IsFrameOfType(aFlags &
       ~(nsIFrame::eReplaced | nsIFrame::eReplacedSizing));
   }
-  
+
   nsresult CreateAnonymousContent(nsTArray<ContentInfo>& aElements) override;
   void AppendAnonymousContentTo(nsTArray<nsIContent*>& aElements,
                                 uint32_t aFilters) override;

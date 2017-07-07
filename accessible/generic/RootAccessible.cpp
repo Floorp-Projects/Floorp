@@ -104,7 +104,7 @@ RootAccessible::NativeRole()
 uint32_t
 RootAccessible::GetChromeFlags()
 {
-  // Return the flag set for the top level window as defined 
+  // Return the flag set for the top level window as defined
   // by nsIWebBrowserChrome::CHROME_WINDOW_[FLAGNAME]
   // Not simple: nsIXULWindow is not just a QI from nsIDOMWindow
   nsCOMPtr<nsIDocShell> docShell = nsCoreUtils::GetDocShellFor(mDocumentNode);
@@ -203,7 +203,7 @@ nsresult
 RootAccessible::RemoveEventListeners()
 {
   nsCOMPtr<EventTarget> target = mDocumentNode;
-  if (target) { 
+  if (target) {
     for (const char* const* e = kEventTypes,
                    * const* e_end = ArrayEnd(kEventTypes);
          e < e_end; ++e) {
@@ -285,7 +285,7 @@ RootAccessible::ProcessDOMEvent(nsIDOMEvent* aDOMEvent)
     GetDocAccessible(origTargetNode->OwnerDoc());
   NS_ASSERTION(targetDocument, "No document while accessible is in document?!");
 
-  Accessible* accessible = 
+  Accessible* accessible =
     targetDocument->GetAccessibleOrContainer(origTargetNode);
   if (!accessible)
     return;
@@ -517,8 +517,8 @@ RootAccessible::HandlePopupShownEvent(Accessible* aAccessible)
 
   if (role == roles::TOOLTIP) {
     // There is a single <xul:tooltip> node which Mozilla moves around.
-    // The accessible for it stays the same no matter where it moves. 
-    // AT's expect to get an EVENT_SHOW for the tooltip. 
+    // The accessible for it stays the same no matter where it moves.
+    // AT's expect to get an EVENT_SHOW for the tooltip.
     // In event callback the tooltip's accessible will be ready.
     nsEventShell::FireEvent(nsIAccessibleEvent::EVENT_SHOW, aAccessible);
     return;
@@ -531,7 +531,7 @@ RootAccessible::HandlePopupShownEvent(Accessible* aAccessible)
       return;
 
     roles::Role comboboxRole = combobox->Role();
-    if (comboboxRole == roles::COMBOBOX || 
+    if (comboboxRole == roles::COMBOBOX ||
 	comboboxRole == roles::AUTOCOMPLETE) {
       RefPtr<AccEvent> event =
         new AccStateChangeEvent(combobox, states::EXPANDED, true);

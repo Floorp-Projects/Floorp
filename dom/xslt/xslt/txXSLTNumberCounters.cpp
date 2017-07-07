@@ -12,10 +12,10 @@ public:
     txDecimalCounter() : mMinLength(1), mGroupSize(50)
     {
     }
-    
+
     txDecimalCounter(int32_t aMinLength, int32_t aGroupSize,
                      const nsAString& mGroupSeparator);
-    
+
     virtual void appendNumber(int32_t aNumber, nsAString& aDest);
 
 private:
@@ -31,7 +31,7 @@ public:
     }
 
     virtual void appendNumber(int32_t aNumber, nsAString& aDest);
-    
+
 private:
     char16_t mOffset;
 };
@@ -58,7 +58,7 @@ txFormattedCounter::getCounterFor(const nsString& aToken,
     int32_t length = aToken.Length();
     NS_ASSERTION(length, "getting counter for empty token");
     aCounter = 0;
-    
+
     if (length == 1) {
         char16_t ch = aToken.CharAt(0);
         switch (ch) {
@@ -67,12 +67,12 @@ txFormattedCounter::getCounterFor(const nsString& aToken,
             case 'I':
                 aCounter = new txRomanCounter(ch == 'I');
                 break;
-            
+
             case 'a':
             case 'A':
                 aCounter = new txAlphaCounter(ch);
                 break;
-            
+
             case '1':
             default:
                 // if we don't recognize the token then use "1"
@@ -83,7 +83,7 @@ txFormattedCounter::getCounterFor(const nsString& aToken,
         MOZ_ASSERT(aCounter);
         return NS_OK;
     }
-    
+
     // for now, the only multi-char token we support are decimals
     int32_t i;
     for (i = 0; i < length-1; ++i) {
@@ -128,11 +128,11 @@ void txDecimalCounter::appendNumber(int32_t aNumber, nsAString& aDest)
     while (pos > end) {
         buf[--pos] = '0';
     }
-    
+
     // in case we *still* didn't get a long enough string.
     // this should be very rare since it only happens if mMinLength is bigger
     // then the length of any int32_t.
-    // pos will always be zero 
+    // pos will always be zero
     int32_t extraPos = mMinLength;
     while (extraPos > bufsize) {
         aDest.Append(char16_t('0'));
@@ -173,7 +173,7 @@ void txAlphaCounter::appendNumber(int32_t aNumber, nsAString& aDest)
         aNumber /= 26;
         buf[--pos] = ch + mOffset;
     }
-    
+
     aDest.Append(buf + pos, (uint32_t)(11 - pos));
 }
 
@@ -200,7 +200,7 @@ void txRomanCounter::appendNumber(int32_t aNumber, nsAString& aDest)
     }
 
     int32_t posValue;
-    
+
     // Hundreds
     posValue = aNumber / 100;
     aNumber %= 100;

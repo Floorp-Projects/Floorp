@@ -280,7 +280,17 @@ BrowserToolboxProcess.prototype = {
       this.emit("run", this);
 
       proc.stdin.close();
+      let dumpPipe = async pipe => {
+        let data = await pipe.readString();
+        while (data) {
+          dump(data);
+          data = await pipe.readString();
+        }
+      };
+      dumpPipe(proc.stdout);
+
       proc.wait().then(() => this.close());
+
       return proc;
     });
   },

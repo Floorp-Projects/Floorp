@@ -21,12 +21,12 @@ using namespace mozilla::net;
 
 ////////////////////////////////////////////////////////////////////////////////
 
-nsWyciwygProtocolHandler::nsWyciwygProtocolHandler() 
+nsWyciwygProtocolHandler::nsWyciwygProtocolHandler()
 {
   LOG(("Creating nsWyciwygProtocolHandler [this=%p].\n", this));
 }
 
-nsWyciwygProtocolHandler::~nsWyciwygProtocolHandler() 
+nsWyciwygProtocolHandler::~nsWyciwygProtocolHandler()
 {
   LOG(("Deleting nsWyciwygProtocolHandler [this=%p]\n", this));
 }
@@ -46,15 +46,15 @@ nsWyciwygProtocolHandler::GetScheme(nsACString &result)
 }
 
 NS_IMETHODIMP
-nsWyciwygProtocolHandler::GetDefaultPort(int32_t *result) 
+nsWyciwygProtocolHandler::GetDefaultPort(int32_t *result)
 {
   return NS_ERROR_NOT_AVAILABLE;
 }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsWyciwygProtocolHandler::AllowPort(int32_t port, const char *scheme, bool *_retval)
 {
-  // don't override anything.  
+  // don't override anything.
   *_retval = false;
   return NS_OK;
 }
@@ -63,7 +63,7 @@ NS_IMETHODIMP
 nsWyciwygProtocolHandler::NewURI(const nsACString &aSpec,
                                  const char *aCharset, // ignored
                                  nsIURI *aBaseURI,
-                                 nsIURI **result) 
+                                 nsIURI **result)
 {
   nsresult rv;
 
@@ -150,7 +150,7 @@ nsWyciwygProtocolHandler::NewChannel(nsIURI* url, nsIChannel* *result)
 }
 
 NS_IMETHODIMP
-nsWyciwygProtocolHandler::GetProtocolFlags(uint32_t *result) 
+nsWyciwygProtocolHandler::GetProtocolFlags(uint32_t *result)
 {
   // Should this be an an nsINestedURI?  We don't really want random webpages
   // loading these URIs...

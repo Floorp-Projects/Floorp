@@ -53,12 +53,12 @@ protected:
     mSelectedFrame(nullptr),
     mInvalidMarkup(false) {}
   virtual ~nsMathMLSelectedFrame();
-  
+
   virtual nsIFrame* GetSelectedFrame() = 0;
   nsIFrame*       mSelectedFrame;
 
   bool            mInvalidMarkup;
-  
+
 private:
   void* operator new(size_t, nsIPresShell*) MOZ_MUST_OVERRIDE = delete;
 };

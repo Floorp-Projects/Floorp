@@ -43,7 +43,7 @@ URLPropertyElement::GetKey(nsACString& aKey)
 
     // chop off the url
     aKey.Cut(0, mURLLength);
-    
+
     return NS_OK;
 }
 
@@ -144,7 +144,7 @@ nsStringBundleTextOverride::Init()
     nsAutoCString customStringsURLSpec;
     rv = NS_GetURLSpecFromFile(customStringsFile, customStringsURLSpec);
     if (NS_FAILED(rv)) return rv;
-    
+
     nsCOMPtr<nsIURI> uri;
     rv = NS_NewURI(getter_AddRefs(uri), customStringsURLSpec);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -172,7 +172,7 @@ nsStringBundleTextOverride::Init()
     nsCOMPtr<nsISimpleEnumerator> enumerator;
     mValues->Enumerate(getter_AddRefs(enumerator));
     NS_ASSERTION(enumerator, "no enumerator!\n");
-    
+
     printf("custom-strings.txt contains:\n");
     printf("----------------------------\n");
 
@@ -194,7 +194,7 @@ nsStringBundleTextOverride::Init()
         enumerator->HasMoreElements(&hasMore);
     } while (hasMore);
 #endif
-    
+
     return rv;
 }
 
@@ -225,9 +225,9 @@ nsStringBundleTextOverride::EnumerateKeysInBundle(const nsACString& aURL,
         new nsPropertyEnumeratorByURL(aURL, enumerator);
 
     if (!propEnum) return NS_ERROR_OUT_OF_MEMORY;
-    
+
     NS_ADDREF(*aResult = propEnum);
-    
+
     return NS_OK;
 }
 
@@ -250,7 +250,7 @@ nsPropertyEnumeratorByURL::GetNext(nsISupports **aResult)
 
     // release it so we don't return it twice
     mCurrent = nullptr;
-    
+
     return NS_OK;
 }
 
@@ -269,18 +269,18 @@ nsPropertyEnumeratorByURL::HasMoreElements(bool * aResult)
         if (mCurrent) {
             nsAutoCString curKey;
             mCurrent->GetKey(curKey);
-        
+
             if (StringBeginsWith(curKey, mURL))
                 break;
         }
-        
+
         mOuter->HasMoreElements(&hasMore);
     }
 
     if (!hasMore)
         mCurrent = nullptr;
-    
+
     *aResult = mCurrent ? true : false;
-    
+
     return NS_OK;
 }

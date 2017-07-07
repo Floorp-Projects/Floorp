@@ -71,7 +71,7 @@ private:
 
     // Interpolates by this factor to get the total number of elevations from every elevation loaded from resource.
     static const unsigned InterpolationFactor;
-    
+
     // Total number of elevations after interpolation.
     static const unsigned NumberOfTotalElevations;
 

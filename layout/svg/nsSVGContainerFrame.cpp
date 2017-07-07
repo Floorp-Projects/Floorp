@@ -48,7 +48,7 @@ void
 nsSVGContainerFrame::AppendFrames(ChildListID  aListID,
                                   nsFrameList& aFrameList)
 {
-  InsertFrames(aListID, mFrames.LastChild(), aFrameList);  
+  InsertFrames(aListID, mFrames.LastChild(), aFrameList);
 }
 
 void
@@ -166,7 +166,7 @@ nsSVGDisplayContainerFrame::InsertFrames(ChildListID aListID,
   nsIFrame* nextFrame = aPrevFrame ?
     aPrevFrame->GetNextSibling() : GetChildList(aListID).FirstChild();
   nsIFrame* firstNewFrame = aFrameList.FirstChild();
-  
+
   // Insert the new frames
   nsSVGContainerFrame::InsertFrames(aListID, aPrevFrame, aFrameList);
 
@@ -394,7 +394,7 @@ nsSVGDisplayContainerFrame::ReflowSVG()
   // invalidate on first reflow:
   mState &= ~(NS_FRAME_FIRST_REFLOW | NS_FRAME_IS_DIRTY |
               NS_FRAME_HAS_DIRTY_CHILDREN);
-}  
+}
 
 void
 nsSVGDisplayContainerFrame::NotifySVGChanged(uint32_t aFlags)

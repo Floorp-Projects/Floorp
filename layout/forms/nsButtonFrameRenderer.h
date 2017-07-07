@@ -57,7 +57,7 @@ public:
                          const nsRect& aRect);
 
   void SetFrame(nsFrame* aFrame, nsPresContext* aPresContext);
- 
+
   void SetDisabled(bool aDisabled, bool notify);
 
   bool isActive();

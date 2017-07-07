@@ -516,7 +516,7 @@ protected:
   /**
    * Retreives a focusable element within the current selection of aWindow.
    * Currently, this only detects links.
-   *  
+   *
    * This is used when MoveFocus is called with a type of MOVEFOCUS_CARET,
    * which is used, for example, to focus links as the caret is moved over
    * them.

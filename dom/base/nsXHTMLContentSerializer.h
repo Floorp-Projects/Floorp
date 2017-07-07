@@ -129,7 +129,7 @@ protected:
   // whole documents.
   bool          mRewriteEncodingDeclaration;
 
-  // To keep track of First LI child of OL in selected range 
+  // To keep track of First LI child of OL in selected range
   bool          mIsFirstChildOfOL;
 
   // To keep track of startvalue of OL and first list item for nested lists

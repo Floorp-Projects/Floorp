@@ -31,7 +31,7 @@ class nsReadConfig : public nsIReadConfig,
         virtual ~nsReadConfig();
 
         nsresult readConfigFile();
-        nsresult openAndEvaluateJSFile(const char *aFileName, int32_t obscureValue, 
+        nsresult openAndEvaluateJSFile(const char *aFileName, int32_t obscureValue,
                                         bool isEncoded, bool isBinDir);
         bool mRead;
 private:

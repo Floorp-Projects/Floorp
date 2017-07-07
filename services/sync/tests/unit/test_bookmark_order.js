@@ -282,15 +282,15 @@ add_task(async function test_bookmark_order() {
     return bmFolder;
   }
 
-  function apply(record) {
+  async function apply(record) {
     store._childrenToOrder = {};
     store.applyIncoming(record);
-    store._orderChildren();
+    await store._orderChildren();
     delete store._childrenToOrder;
   }
   let id10 = "10_aaaaaaaaa";
   _("basic add first bookmark");
-  apply(bookmark(id10, ""));
+  await apply(bookmark(id10, ""));
   await assertBookmarksTreeMatches("", [{
     guid: PlacesUtils.bookmarks.menuGuid,
     index: 0,
@@ -310,7 +310,7 @@ add_task(async function test_bookmark_order() {
   }], "basic add first bookmark");
   let id20 = "20_aaaaaaaaa";
   _("basic append behind 10");
-  apply(bookmark(id20, ""));
+  await apply(bookmark(id20, ""));
   await assertBookmarksTreeMatches("", [{
     guid: PlacesUtils.bookmarks.menuGuid,
     index: 0,
@@ -335,9 +335,9 @@ add_task(async function test_bookmark_order() {
   let id31 = "31_aaaaaaaaa";
   let id30 = "f30_aaaaaaaa";
   _("basic create in folder");
-  apply(bookmark(id31, id30));
+  await apply(bookmark(id31, id30));
   let f30 = folder(id30, "", [id31]);
-  apply(f30);
+  await apply(f30);
   await assertBookmarksTreeMatches("", [{
     guid: PlacesUtils.bookmarks.menuGuid,
     index: 0,
@@ -369,7 +369,7 @@ add_task(async function test_bookmark_order() {
   let id41 = "41_aaaaaaaaa";
   let id40 = "f40_aaaaaaaa";
   _("insert missing parent -> append to unfiled");
-  apply(bookmark(id41, id40));
+  await apply(bookmark(id41, id40));
   await assertBookmarksTreeMatches("", [{
     guid: PlacesUtils.bookmarks.menuGuid,
     index: 0,
@@ -405,7 +405,7 @@ add_task(async function test_bookmark_order() {
   let id42 = "42_aaaaaaaaa";
 
   _("insert another missing parent -> append");
-  apply(bookmark(id42, id40));
+  await apply(bookmark(id42, id40));
   await assertBookmarksTreeMatches("", [{
     guid: PlacesUtils.bookmarks.menuGuid,
     index: 0,
@@ -444,7 +444,7 @@ add_task(async function test_bookmark_order() {
 
   _("insert folder -> move children and followers");
   let f40 = folder(id40, "", [id41, id42]);
-  apply(f40);
+  await apply(f40);
   await assertBookmarksTreeMatches("", [{
     guid: PlacesUtils.bookmarks.menuGuid,
     index: 0,
@@ -485,7 +485,7 @@ add_task(async function test_bookmark_order() {
 
   _("Moving 41 behind 42 -> update f40");
   f40.children = [id42, id41];
-  apply(f40);
+  await apply(f40);
   await assertBookmarksTreeMatches("", [{
     guid: PlacesUtils.bookmarks.menuGuid,
     index: 0,
@@ -526,7 +526,7 @@ add_task(async function test_bookmark_order() {
 
   _("Moving 10 back to front -> update 10, 20");
   f40.children = [id41, id42];
-  apply(f40);
+  await apply(f40);
   await assertBookmarksTreeMatches("", [{
     guid: PlacesUtils.bookmarks.menuGuid,
     index: 0,
@@ -566,7 +566,7 @@ add_task(async function test_bookmark_order() {
   }], "Moving 10 back to front -> update 10, 20");
 
   _("Moving 20 behind 42 in f40 -> update 50");
-  apply(bookmark(id20, id40));
+  await apply(bookmark(id20, id40));
   await assertBookmarksTreeMatches("", [{
     guid: PlacesUtils.bookmarks.menuGuid,
     index: 0,
@@ -606,9 +606,9 @@ add_task(async function test_bookmark_order() {
   }], "Moving 20 behind 42 in f40 -> update 50");
 
   _("Moving 10 in front of 31 in f30 -> update 10, f30");
-  apply(bookmark(id10, id30));
+  await apply(bookmark(id10, id30));
   f30.children = [id10, id31];
-  apply(f30);
+  await apply(f30);
   await assertBookmarksTreeMatches("", [{
     guid: PlacesUtils.bookmarks.menuGuid,
     index: 0,
@@ -648,9 +648,9 @@ add_task(async function test_bookmark_order() {
   }], "Moving 10 in front of 31 in f30 -> update 10, f30");
 
   _("Moving 20 from f40 to f30 -> update 20, f30");
-  apply(bookmark(id20, id30));
+  await apply(bookmark(id20, id30));
   f30.children = [id10, id20, id31];
-  apply(f30);
+  await apply(f30);
   await assertBookmarksTreeMatches("", [{
     guid: PlacesUtils.bookmarks.menuGuid,
     index: 0,
@@ -690,9 +690,9 @@ add_task(async function test_bookmark_order() {
   }], "Moving 20 from f40 to f30 -> update 20, f30");
 
   _("Move 20 back to front -> update 20, f30");
-  apply(bookmark(id20, ""));
+  await apply(bookmark(id20, ""));
   f30.children = [id10, id31];
-  apply(f30);
+  await apply(f30);
   await assertBookmarksTreeMatches("", [{
     guid: PlacesUtils.bookmarks.menuGuid,
     index: 0,

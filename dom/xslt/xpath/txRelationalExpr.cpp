@@ -154,7 +154,7 @@ RelationalExpr::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
     RefPtr<txAExprResult> rResult;
     rv = mRightExpr->evaluate(aContext, getter_AddRefs(rResult));
     NS_ENSURE_SUCCESS(rv, rv);
-    
+
     aContext->recycler()->
         getBoolResult(compareResults(aContext, lResult, rResult), aResult);
 

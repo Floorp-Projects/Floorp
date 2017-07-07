@@ -50,7 +50,7 @@ private:
                                     txPattern* aCountPattern,
                                     txIMatchContext* aContext,
                                     int32_t* aCount);
-    
+
     static bool getPrevInDocumentOrder(txXPathTreeWalker& aWalker);
 
     static bool isAlphaNumeric(char16_t ch);
@@ -61,13 +61,13 @@ public:
     virtual ~txFormattedCounter()
     {
     }
-    
+
     virtual void appendNumber(int32_t aNumber, nsAString& aDest) = 0;
 
     static nsresult getCounterFor(const nsString& aToken, int aGroupSize,
                                   const nsAString& aGroupSeparator,
                                   txFormattedCounter*& aCounter);
-    
+
     nsString mSeparator;
 };
 

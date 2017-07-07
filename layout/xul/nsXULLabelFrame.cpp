@@ -22,7 +22,7 @@ NS_NewXULLabelFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 
 NS_IMPL_FRAMEARENA_HELPERS(nsXULLabelFrame)
 
-// If you make changes to this function, check its counterparts 
+// If you make changes to this function, check its counterparts
 // in nsBoxFrame and nsTextBoxFrame
 nsresult
 nsXULLabelFrame::RegUnregAccessKey(bool aDoReg)
@@ -45,7 +45,7 @@ nsXULLabelFrame::RegUnregAccessKey(bool aDoReg)
   if (accessKey.IsEmpty())
     return NS_OK;
 
-  // With a valid PresContext we can get the ESM 
+  // With a valid PresContext we can get the ESM
   // and register the access key
   EventStateManager* esm = PresContext()->EventStateManager();
 
@@ -78,14 +78,14 @@ nsXULLabelFrame::DestroyFrom(nsIFrame* aDestructRoot)
   // unregister access key
   RegUnregAccessKey(false);
   nsBlockFrame::DestroyFrom(aDestructRoot);
-} 
+}
 
 nsresult
 nsXULLabelFrame::AttributeChanged(int32_t aNameSpaceID,
                                   nsIAtom* aAttribute,
                                   int32_t aModType)
 {
-  nsresult rv = nsBlockFrame::AttributeChanged(aNameSpaceID, 
+  nsresult rv = nsBlockFrame::AttributeChanged(aNameSpaceID,
                                                aAttribute, aModType);
 
   // If the accesskey changed, register for the new value

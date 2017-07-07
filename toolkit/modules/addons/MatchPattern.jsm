@@ -19,7 +19,7 @@ this.EXPORTED_SYMBOLS = ["MatchPattern", "MatchGlobs", "MatchURLFilters"];
 /* globals MatchPattern, MatchGlobs */
 
 const PERMITTED_SCHEMES = ["http", "https", "file", "ftp", "data"];
-const PERMITTED_SCHEMES_REGEXP = PERMITTED_SCHEMES.join("|");
+const PERMITTED_SCHEMES_REGEXP = [...PERMITTED_SCHEMES, "moz-extension"].join("|");
 
 // The basic RE for matching patterns
 const PATTERN_REGEXP = new RegExp(`^(${PERMITTED_SCHEMES_REGEXP}|\\*)://(\\*|\\*\\.[^*/]+|[^*/]+|)(/.*)$`);
@@ -68,6 +68,13 @@ function SingleMatchPattern(pat) {
 
     // We allow the host to be empty for file URLs.
     if (match[2] == "" && this.schemes[0] != "file") {
+      Cu.reportError(`Invalid match pattern: '${pat}'`);
+      this.schemes = [];
+      return;
+    }
+
+    // We disallow the host to be * for moz-extension URLs.
+    if (match[2] == "*" && this.schemes[0] == "moz-extension") {
       Cu.reportError(`Invalid match pattern: '${pat}'`);
       this.schemes = [];
       return;

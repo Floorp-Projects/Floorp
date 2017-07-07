@@ -24,13 +24,13 @@ public:
   enum {
     kWordBreak_Normal   = 0, // default
     kWordBreak_BreakAll = 1, // break all
-    kWordBreak_KeepAll  = 2  // always keep 
+    kWordBreak_KeepAll  = 2  // always keep
   };
 
-  virtual int32_t Next( const char16_t* aText, uint32_t aLen, 
+  virtual int32_t Next( const char16_t* aText, uint32_t aLen,
                         uint32_t aPos) = 0;
 
-  virtual int32_t Prev( const char16_t* aText, uint32_t aLen, 
+  virtual int32_t Prev( const char16_t* aText, uint32_t aLen,
                         uint32_t aPos) = 0;
 
   // Call this on a word with whitespace at either end. We will apply JISx4051
@@ -61,7 +61,7 @@ NS_IsSpace(char16_t u)
                                          // FOUR-PER-SPACE, SIX-PER-EM SPACE,
          (0x2008 <= u && u <= 0x200B) || // PUNCTUATION SPACE, THIN SPACE,
                                          // HAIR SPACE, ZERO WIDTH SPACE
-         u == 0x205F;                    // MEDIUM MATHEMATICAL SPACE 
+         u == 0x205F;                    // MEDIUM MATHEMATICAL SPACE
 }
 
 static inline bool

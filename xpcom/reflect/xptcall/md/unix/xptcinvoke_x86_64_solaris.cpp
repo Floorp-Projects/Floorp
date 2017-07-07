@@ -112,7 +112,7 @@ NS_InvokeByIndex(nsISupports * that, uint32_t methodIndex,
 {
     uint32_t nr_gpr, nr_fpr, nr_stack;
     invoke_count_words(paramCount, params, nr_gpr, nr_fpr, nr_stack);
-    
+
     // Stack, if used, must be 16-bytes aligned
     if (nr_stack)
         nr_stack = (nr_stack + 1) & ~1;
@@ -134,15 +134,15 @@ NS_InvokeByIndex(nsISupports * that, uint32_t methodIndex,
       case 1: asm("movupd %0, %xmm0" : : "xmm0" (fpregs[0]));
       case 0:;
     }
-    
+
     // Ensure that assignments to SSE registers won't be optimized away
     asm("" ::: "xmm0", "xmm1", "xmm2", "xmm3", "xmm4", "xmm5", "xmm6", "xmm7");
-    
+
     // Get pointer to method
     uint64_t methodAddress = *((uint64_t *)that);
     methodAddress += 16 + 8 * methodIndex;
     methodAddress = *((uint64_t *)methodAddress);
-    
+
     typedef uint32_t (*Method)(uint64_t, uint64_t, uint64_t, uint64_t, uint64_t, uint64_t);
     uint32_t result = ((Method)methodAddress)((uint64_t)that, gpregs[1], gpregs[2], gpregs[3], gpregs[4], gpregs[5]);
     return result;

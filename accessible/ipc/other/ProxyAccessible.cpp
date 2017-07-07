@@ -839,7 +839,7 @@ ProxyAccessible::IsItemSelected(uint32_t aIndex)
   Unused << mDoc->SendIsItemSelected(mID, aIndex, &selected);
   return selected;
 }
- 
+
 bool
 ProxyAccessible::AddItemToSelection(uint32_t aIndex)
 {

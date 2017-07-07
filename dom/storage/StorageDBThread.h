@@ -107,8 +107,8 @@ public:
 
 // The implementation of the the database engine, this directly works
 // with the sqlite or any other db API we are based on
-// This class is resposible for collecting and processing asynchronous 
-// DB operations over caches (LocalStorageCache) communicating though 
+// This class is resposible for collecting and processing asynchronous
+// DB operations over caches (LocalStorageCache) communicating though
 // LocalStorageCacheBridge interface class
 class StorageDBThread final : public StorageDBBridge
 {
@@ -240,7 +240,7 @@ public:
                                const nsACString& aOriginNoSuffix) const;
 
   private:
-    // Returns true iff new operation is of type newType and there is a pending 
+    // Returns true iff new operation is of type newType and there is a pending
     // operation of type pendingType for the same key (target).
     bool CheckForCoalesceOpportunity(DBOperation* aNewOp,
                                      DBOperation::OperationType aPendingType,

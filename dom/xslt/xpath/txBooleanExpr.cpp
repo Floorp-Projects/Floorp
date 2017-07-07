@@ -27,11 +27,11 @@ BooleanExpr::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
     bool lval;
     nsresult rv = leftExpr->evaluateToBool(aContext, lval);
     NS_ENSURE_SUCCESS(rv, rv);
-    
+
     // check for early decision
     if (op == OR && lval) {
         aContext->recycler()->getBoolResult(true, aResult);
-        
+
         return NS_OK;
     }
     if (op == AND && !lval) {

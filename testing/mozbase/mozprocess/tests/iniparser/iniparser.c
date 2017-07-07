@@ -82,9 +82,9 @@ static char * strstrip(char * s)
 {
     static char l[ASCIILINESZ+1];
 	char * last ;
-	
+
     if (s==NULL) return NULL ;
-    
+
 	while (isspace((int)*s) && *s) s++;
 	memset(l, 0, ASCIILINESZ+1);
 	strcpy(l, s);
@@ -457,7 +457,7 @@ static line_status iniparser_line(
     char * section,
     char * key,
     char * value)
-{   
+{
     line_status sta ;
     char        line[ASCIILINESZ+1];
     int         len ;
@@ -471,7 +471,7 @@ static line_status iniparser_line(
         sta = LINE_EMPTY ;
     } else if (line[0]=='#' || line[0]==';') {
         /* Comment line */
-        sta = LINE_COMMENT ; 
+        sta = LINE_COMMENT ;
     } else if (line[0]=='[' && line[len-1]==']') {
         /* Section name */
         sscanf(line, "[%[^]]", section);

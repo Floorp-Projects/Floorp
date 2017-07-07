@@ -25,7 +25,7 @@
 using mozilla::Encoding;
 
 // static functions declared below are moved from mailnews/mime/src/comi18n.cpp
-  
+
 static char *DecodeQ(const char *, uint32_t);
 static bool Is7bitNonAsciiString(const char *, uint32_t);
 static void CopyRawHeader(const char *, uint32_t, const char *, nsACString &);
@@ -34,30 +34,30 @@ static nsresult internalDecodeParameter(const nsACString&, const char*,
                                         const char*, bool, bool, nsACString&);
 
 // XXX The chance of UTF-7 being used in the message header is really
-// low, but in theory it's possible. 
+// low, but in theory it's possible.
 #define IS_7BIT_NON_ASCII_CHARSET(cset)            \
     (!nsCRT::strncasecmp((cset), "ISO-2022", 8) || \
      !nsCRT::strncasecmp((cset), "HZ-GB", 5)    || \
-     !nsCRT::strncasecmp((cset), "UTF-7", 5))   
+     !nsCRT::strncasecmp((cset), "UTF-7", 5))
 
 NS_IMPL_ISUPPORTS(nsMIMEHeaderParamImpl, nsIMIMEHeaderParam)
 
-NS_IMETHODIMP 
-nsMIMEHeaderParamImpl::GetParameter(const nsACString& aHeaderVal, 
+NS_IMETHODIMP
+nsMIMEHeaderParamImpl::GetParameter(const nsACString& aHeaderVal,
                                     const char *aParamName,
-                                    const nsACString& aFallbackCharset, 
-                                    bool aTryLocaleCharset, 
+                                    const nsACString& aFallbackCharset,
+                                    bool aTryLocaleCharset,
                                     char **aLang, nsAString& aResult)
 {
   return DoGetParameter(aHeaderVal, aParamName, MIME_FIELD_ENCODING,
                         aFallbackCharset, aTryLocaleCharset, aLang, aResult);
 }
 
-NS_IMETHODIMP 
-nsMIMEHeaderParamImpl::GetParameterHTTP(const nsACString& aHeaderVal, 
+NS_IMETHODIMP
+nsMIMEHeaderParamImpl::GetParameterHTTP(const nsACString& aHeaderVal,
                                         const char *aParamName,
-                                        const nsACString& aFallbackCharset, 
-                                        bool aTryLocaleCharset, 
+                                        const nsACString& aFallbackCharset,
+                                        bool aTryLocaleCharset,
                                         char **aLang, nsAString& aResult)
 {
   return DoGetParameter(aHeaderVal, aParamName, HTTP_FIELD_ENCODING,
@@ -65,12 +65,12 @@ nsMIMEHeaderParamImpl::GetParameterHTTP(const nsACString& aHeaderVal,
 }
 
 // XXX : aTryLocaleCharset is not yet effective.
-nsresult 
-nsMIMEHeaderParamImpl::DoGetParameter(const nsACString& aHeaderVal, 
+nsresult
+nsMIMEHeaderParamImpl::DoGetParameter(const nsACString& aHeaderVal,
                                       const char *aParamName,
                                       ParamDecoding aDecoding,
-                                      const nsACString& aFallbackCharset, 
-                                      bool aTryLocaleCharset, 
+                                      const nsACString& aFallbackCharset,
+                                      bool aTryLocaleCharset,
                                       char **aLang, nsAString& aResult)
 {
     aResult.Truncate();
@@ -80,15 +80,15 @@ nsMIMEHeaderParamImpl::DoGetParameter(const nsACString& aHeaderVal,
     // aDecoding (5987 being a subset of 2231) and return charset.)
     nsXPIDLCString med;
     nsXPIDLCString charset;
-    rv = DoParameterInternal(PromiseFlatCString(aHeaderVal).get(), aParamName, 
-                             aDecoding, getter_Copies(charset), aLang, 
+    rv = DoParameterInternal(PromiseFlatCString(aHeaderVal).get(), aParamName,
+                             aDecoding, getter_Copies(charset), aLang,
                              getter_Copies(med));
     if (NS_FAILED(rv))
-        return rv; 
+        return rv;
 
-    // convert to UTF-8 after charset conversion and RFC 2047 decoding 
+    // convert to UTF-8 after charset conversion and RFC 2047 decoding
     // if necessary.
-    
+
     nsAutoCString str1;
     rv = internalDecodeParameter(med, charset.get(), nullptr, false,
                                  // was aDecoding == MIME_FIELD_ENCODING
@@ -101,10 +101,10 @@ nsMIMEHeaderParamImpl::DoGetParameter(const nsACString& aHeaderVal,
     {
         const Encoding* encoding = Encoding::ForLabel(aFallbackCharset);
         nsAutoCString str2;
-        nsCOMPtr<nsIUTF8ConverterService> 
+        nsCOMPtr<nsIUTF8ConverterService>
           cvtUTF8(do_GetService(NS_UTF8CONVERTERSERVICE_CONTRACTID));
         if (cvtUTF8 &&
-            NS_SUCCEEDED(cvtUTF8->ConvertStringToUTF8(str1, 
+            NS_SUCCEEDED(cvtUTF8->ConvertStringToUTF8(str1,
                 PromiseFlatCString(aFallbackCharset).get(), false,
                                    encoding != UTF_8_ENCODING,
                                    1, str2))) {
@@ -118,7 +118,7 @@ nsMIMEHeaderParamImpl::DoGetParameter(const nsACString& aHeaderVal,
       return NS_OK;
     }
 
-    if (aTryLocaleCharset && !NS_IsNativeUTF8()) 
+    if (aTryLocaleCharset && !NS_IsNativeUTF8())
       return NS_CopyNativeToUnicode(str1, aResult);
 
     CopyASCIItoUTF16(str1, aResult);
@@ -198,7 +198,7 @@ class Continuation {
 };
 
 // combine segments into a single string, returning the allocated string
-// (or nullptr) while emptying the list 
+// (or nullptr) while emptying the list
 char *combineContinuations(nsTArray<Continuation>& aArray)
 {
   // Sanity check
@@ -343,8 +343,8 @@ bool IsValidOctetSequenceForCharset(nsACString& aCharset, const char *aOctets)
 //
 // The format of these header lines  is
 // <token> [ ';' <token> '=' <token-or-quoted-string> ]*
-NS_IMETHODIMP 
-nsMIMEHeaderParamImpl::GetParameterInternal(const char *aHeaderValue, 
+NS_IMETHODIMP
+nsMIMEHeaderParamImpl::GetParameterInternal(const char *aHeaderValue,
                                             const char *aParamName,
                                             char **aCharset,
                                             char **aLang,
@@ -355,8 +355,8 @@ nsMIMEHeaderParamImpl::GetParameterInternal(const char *aHeaderValue,
 }
 
 
-nsresult 
-nsMIMEHeaderParamImpl::DoParameterInternal(const char *aHeaderValue, 
+nsresult
+nsMIMEHeaderParamImpl::DoParameterInternal(const char *aHeaderValue,
                                            const char *aParamName,
                                            ParamDecoding aDecoding,
                                            char **aCharset,
@@ -384,11 +384,11 @@ nsMIMEHeaderParamImpl::DoParameterInternal(const char *aHeaderValue,
   for (; *str &&  nsCRT::IsAsciiSpace(*str); ++str)
     ;
   const char *start = str;
-  
+
   // aParamName is empty. return the first (possibly) _unnamed_ 'parameter'
   // For instance, return 'inline' in the following case:
   // Content-Disposition: inline; filename=.....
-  if (!aParamName || !*aParamName) 
+  if (!aParamName || !*aParamName)
     {
       for (; *str && *str != ';' && !nsCRT::IsAsciiSpace(*str); ++str)
         ;
@@ -414,12 +414,12 @@ nsMIMEHeaderParamImpl::DoParameterInternal(const char *aHeaderValue,
   // like 'filename' without specifying disposition
   // method. Rewind to the first non-white-space
   // character.
-  
+
   if (!*str)
     str = start;
 
   // RFC2231 - The legitimate parm format can be:
-  // A. title=ThisIsTitle 
+  // A. title=ThisIsTitle
   // B. title*=us-ascii'en-us'This%20is%20wierd.
   // C. title*0*=us-ascii'en'This%20is%20wierd.%20We
   //    title*1*=have%20to%20support%20this.
@@ -427,7 +427,7 @@ nsMIMEHeaderParamImpl::DoParameterInternal(const char *aHeaderValue,
   // D. title*0="Hey, what you think you are doing?"
   //    title*1="There is no charset and lang info."
   // RFC5987: only A and B
-  
+
   // collect results for the different algorithms (plain filename,
   // RFC5987/2231-encoded filename, + continuations) separately and decide
   // which to use at the end
@@ -458,7 +458,7 @@ nsMIMEHeaderParamImpl::DoParameterInternal(const char *aHeaderValue,
 
     NS_ASSERTION(!nsCRT::IsAsciiSpace(*str), "should be after whitespace.");
 
-    // Skip forward to the end of this token. 
+    // Skip forward to the end of this token.
     for (; *str && !nsCRT::IsAsciiSpace(*str) && *str != '=' && *str != ';'; str++)
       ;
     nameEnd = str;
@@ -486,7 +486,7 @@ nsMIMEHeaderParamImpl::DoParameterInternal(const char *aHeaderValue,
       str = valueEnd;
     } else {
       isQuotedString = true;
-      
+
       ++str;
       valueStart = str;
       for (valueEnd = str; *valueEnd; ++valueEnd) {
@@ -513,12 +513,12 @@ nsMIMEHeaderParamImpl::DoParameterInternal(const char *aHeaderValue,
       }
 
       // if the parameter spans across multiple lines we have to strip out the
-      //     line continuation -- jht 4/29/98 
+      //     line continuation -- jht 4/29/98
       nsAutoCString tempStr(valueStart, valueEnd - valueStart);
       tempStr.StripCRLF();
       char *res = ToNewCString(tempStr);
       NS_ENSURE_TRUE(res, NS_ERROR_OUT_OF_MEMORY);
-      
+
       if (isQuotedString)
         RemoveQuotedStringEscapes(res);
 
@@ -530,11 +530,11 @@ nsMIMEHeaderParamImpl::DoParameterInternal(const char *aHeaderValue,
              !nsCRT::strncasecmp(nameStart, aParamName, paramLen) &&
              *(nameStart + paramLen) == '*') {
 
-      // 1st char past '*'       
-      const char *cp = nameStart + paramLen + 1; 
+      // 1st char past '*'
+      const char *cp = nameStart + paramLen + 1;
 
       // if param name ends in "*" we need do to RFC5987 "ext-value" decoding
-      bool needExtDecoding = *(nameEnd - 1) == '*';      
+      bool needExtDecoding = *(nameEnd - 1) == '*';
 
       bool caseB = nameLen == paramLen + 1;
       bool caseCStart = (*cp == '0') && needExtDecoding;
@@ -559,7 +559,7 @@ nsMIMEHeaderParamImpl::DoParameterInternal(const char *aHeaderValue,
         const char *sQuote2 = sQuote1 ? PL_strchr(sQuote1 + 1, 0x27) : nullptr;
 
         // Two single quotation marks must be present even in
-        // absence of charset and lang. 
+        // absence of charset and lang.
         if (!sQuote1 || !sQuote2) {
           NS_WARNING("Mandatory two single quotes are missing in header parameter\n");
         }
@@ -636,9 +636,9 @@ nsMIMEHeaderParamImpl::DoParameterInternal(const char *aHeaderValue,
             }
           }
         }
-      }  // end of if-block :  title*0*=  or  title*= 
+      }  // end of if-block :  title*0*=  or  title*=
       // caseD: a line of multiline param with no need for unescaping : title*[0-9]=
-      // or 2nd or later lines of a caseC param : title*[1-9]*= 
+      // or 2nd or later lines of a caseC param : title*[1-9]*=
       else if (acceptContinuations && segmentNumber != -1) {
         uint32_t valueLength = valueEnd - valueStart;
 
@@ -655,7 +655,7 @@ nsMIMEHeaderParamImpl::DoParameterInternal(const char *aHeaderValue,
 
     // str now points after the end of the value.
     //   skip over whitespace, ';', whitespace.
-increment_str:      
+increment_str:
     while (nsCRT::IsAsciiSpace(*str)) ++str;
     if (*str == ';') {
       ++str;
@@ -741,12 +741,12 @@ internalDecodeRFC2047Header(const char* aHeaderVal, const char* aDefaultCharset,
 
   // If aHeaderVal is RFC 2047 encoded or is not a UTF-8 string  but
   // aDefaultCharset is specified, decodes RFC 2047 encoding and converts
-  // to UTF-8. Otherwise, just strips away CRLF. 
-  if (PL_strstr(aHeaderVal, "=?") || 
-      (aDefaultCharset && (!IsUTF8(nsDependentCString(aHeaderVal)) || 
+  // to UTF-8. Otherwise, just strips away CRLF.
+  if (PL_strstr(aHeaderVal, "=?") ||
+      (aDefaultCharset && (!IsUTF8(nsDependentCString(aHeaderVal)) ||
       Is7bitNonAsciiString(aHeaderVal, strlen(aHeaderVal))))) {
     DecodeRFC2047Str(aHeaderVal, aDefaultCharset, aOverrideCharset, aResult);
-  } else if (aEatContinuations && 
+  } else if (aEatContinuations &&
              (PL_strchr(aHeaderVal, '\n') || PL_strchr(aHeaderVal, '\r'))) {
     aResult = aHeaderVal;
   } else {
@@ -766,9 +766,9 @@ internalDecodeRFC2047Header(const char* aHeaderVal, const char* aDefaultCharset,
 }
 
 NS_IMETHODIMP
-nsMIMEHeaderParamImpl::DecodeRFC2047Header(const char* aHeaderVal, 
-                                           const char* aDefaultCharset, 
-                                           bool aOverrideCharset, 
+nsMIMEHeaderParamImpl::DecodeRFC2047Header(const char* aHeaderVal,
+                                           const char* aDefaultCharset,
+                                           bool aOverrideCharset,
                                            bool aEatContinuations,
                                            nsACString& aResult)
 {
@@ -809,9 +809,9 @@ bool PercentDecode(nsACString& aValue)
 }
 
 // Decode a parameter value using the encoding defined in RFC 5987
-// 
+//
 // charset  "'" [ language ] "'" value-chars
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsMIMEHeaderParamImpl::DecodeRFC5987Param(const nsACString& aParamVal,
                                           nsACString& aLang,
                                           nsAString& aResult)
@@ -858,7 +858,7 @@ nsMIMEHeaderParamImpl::DecodeRFC5987Param(const nsACString& aParamVal,
           // character not allowed here
           NS_WARNING("invalid character in RFC5987-encoded param");
           return NS_ERROR_INVALID_ARG;
-        }      
+        }
       }
     }
   }
@@ -896,13 +896,13 @@ nsMIMEHeaderParamImpl::DecodeRFC5987Param(const nsACString& aParamVal,
   return NS_OK;
 }
 
-nsresult 
+nsresult
 internalDecodeParameter(const nsACString& aParamValue, const char* aCharset,
                         const char* aDefaultCharset, bool aOverrideCharset,
                         bool aDecode2047, nsACString& aResult)
 {
   aResult.Truncate();
-  // If aCharset is given, aParamValue was obtained from RFC2231/5987 
+  // If aCharset is given, aParamValue was obtained from RFC2231/5987
   // encoding and we're pretty sure that it's in aCharset.
   if (aCharset && *aCharset)
   {
@@ -934,7 +934,7 @@ internalDecodeParameter(const nsACString& aParamValue, const char* aCharset,
 
   aResult = unQuoted;
   nsresult rv = NS_OK;
-  
+
   if (aDecode2047) {
     nsAutoCString decoded;
 
@@ -945,7 +945,7 @@ internalDecodeParameter(const nsACString& aParamValue, const char* aCharset,
     if (NS_SUCCEEDED(rv) && !decoded.IsEmpty())
       aResult = decoded;
   }
-    
+
   return rv;
 }
 
@@ -1013,8 +1013,8 @@ char *DecodeQ(const char *in, uint32_t length)
   return nullptr;
 }
 
-// check if input is HZ (a 7bit encoding for simplified Chinese : RFC 1842)) 
-// or has  ESC which may be an  indication that  it's in one of many ISO 
+// check if input is HZ (a 7bit encoding for simplified Chinese : RFC 1842))
+// or has  ESC which may be an  indication that  it's in one of many ISO
 // 2022 7bit  encodings (e.g. ISO-2022-JP(-2)/CN : see RFC 1468, 1922, 1554).
 // static
 bool Is7bitNonAsciiString(const char *input, uint32_t len)
@@ -1022,8 +1022,8 @@ bool Is7bitNonAsciiString(const char *input, uint32_t len)
   int32_t c;
 
   enum { hz_initial, // No HZ seen yet
-         hz_escaped, // Inside an HZ ~{ escape sequence 
-         hz_seen, // Have seen at least one complete HZ sequence 
+         hz_escaped, // Inside an HZ ~{ escape sequence
+         hz_seen, // Have seen at least one complete HZ sequence
          hz_notpresent // Have seen something that is not legal HZ
   } hz_state;
 
@@ -1069,7 +1069,7 @@ bool Is7bitNonAsciiString(const char *input, uint32_t len)
 // is not successful, each octet is replaced by Unicode replacement
 // chars. *aOutput is advanced by the number of output octets.
 // static
-void CopyRawHeader(const char *aInput, uint32_t aLen, 
+void CopyRawHeader(const char *aInput, uint32_t aLen,
                    const char *aDefaultCharset, nsACString &aOutput)
 {
   int32_t c;
@@ -1093,16 +1093,16 @@ void CopyRawHeader(const char *aInput, uint32_t aLen,
 
   // skip ASCIIness/UTF8ness test if aInput is supected to be a 7bit non-ascii
   // string and aDefaultCharset is a 7bit non-ascii charset.
-  bool skipCheck = (c == 0x1B || c == '~') && 
+  bool skipCheck = (c == 0x1B || c == '~') &&
                      IS_7BIT_NON_ASCII_CHARSET(aDefaultCharset);
 
   // If not UTF-8, treat as default charset
-  nsCOMPtr<nsIUTF8ConverterService> 
+  nsCOMPtr<nsIUTF8ConverterService>
     cvtUTF8(do_GetService(NS_UTF8CONVERTERSERVICE_CONTRACTID));
   nsAutoCString utf8Text;
   if (cvtUTF8 &&
       NS_SUCCEEDED(
-      cvtUTF8->ConvertStringToUTF8(Substring(aInput, aInput + aLen), 
+      cvtUTF8->ConvertStringToUTF8(Substring(aInput, aInput + aLen),
                                    aDefaultCharset, skipCheck, true, 1,
                                    utf8Text))) {
     aOutput.Append(utf8Text);
@@ -1158,11 +1158,11 @@ static const char especials[] = R"(()<>@,;:\"/[]?.=)";
 
 // |decode_mime_part2_str| taken from comi18n.c
 // Decode RFC2047-encoded words in the input and convert the result to UTF-8.
-// If aOverrideCharset is true, charset in RFC2047-encoded words is 
+// If aOverrideCharset is true, charset in RFC2047-encoded words is
 // ignored and aDefaultCharset is assumed, instead. aDefaultCharset
 // is also used to convert raw octets (without RFC 2047 encoding) to UTF-8.
 //static
-nsresult DecodeRFC2047Str(const char *aHeader, const char *aDefaultCharset, 
+nsresult DecodeRFC2047Str(const char *aHeader, const char *aDefaultCharset,
                           bool aOverrideCharset, nsACString &aResult)
 {
   const char *p, *q = nullptr, *r;
@@ -1176,10 +1176,10 @@ nsresult DecodeRFC2047Str(const char *aHeader, const char *aDefaultCharset,
 
   begin = aHeader;
 
-  // To avoid buffer realloc, if possible, set capacity in advance. No 
+  // To avoid buffer realloc, if possible, set capacity in advance. No
   // matter what,  more than 3x expansion can never happen for all charsets
   // supported by Mozilla. SCSU/BCSU with the sliding window set to a
-  // non-BMP block may be exceptions, but Mozilla does not support them. 
+  // non-BMP block may be exceptions, but Mozilla does not support them.
   // Neither any known mail/news program use them. Even if there's, we're
   // safe because we don't use a raw *char any more.
   aResult.SetCapacity(3 * strlen(aHeader));
@@ -1220,7 +1220,7 @@ nsresult DecodeRFC2047Str(const char *aHeader, const char *aDefaultCharset,
 
       // RFC 2231 section 5
       if (!charsetEnd && *q == '*') {
-        charsetEnd = q; 
+        charsetEnd = q;
       }
     }
     if (!charsetEnd) {

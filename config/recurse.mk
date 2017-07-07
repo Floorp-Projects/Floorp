@@ -185,9 +185,6 @@ ifdef MOZ_LDAP_XPCOM
 ldap/target: security/target mozglue/build/target
 toolkit/library/target: ldap/target
 endif
-ifeq ($(MOZ_REPLACE_MALLOC_LINKAGE),dummy library)
-mozglue/build/target memory/replace/logalloc/replay/target: memory/replace/dummy/target
-endif
 endif
 # Most things are built during compile (target/host), but some things happen during export
 # Those need to depend on config/export for system wrappers.

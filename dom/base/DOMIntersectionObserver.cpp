@@ -165,7 +165,7 @@ DOMIntersectionObserver::Unobserve(Element& aTarget)
     Disconnect();
     return;
   }
- 
+
   mObservationTargets.RemoveElement(&aTarget);
   aTarget.UnregisterIntersectionObserver(this);
 }
@@ -425,7 +425,7 @@ DOMIntersectionObserver::Update(nsIDocument* aDocument, DOMHighResTimeStamp time
     double targetArea = targetRect.width * targetRect.height;
     double intersectionArea = !intersectionRect ?
       0 : intersectionRect->width * intersectionRect->height;
-    
+
     double intersectionRatio;
     if (targetArea > 0.0) {
       intersectionRatio = intersectionArea / targetArea;

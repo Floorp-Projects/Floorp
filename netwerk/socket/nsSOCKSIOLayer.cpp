@@ -371,42 +371,42 @@ nsSOCKSSocketInfo::Init(int32_t version, int32_t family, nsIProxyInfo *proxy, co
 
 NS_IMPL_ISUPPORTS(nsSOCKSSocketInfo, nsISOCKSSocketInfo, nsIDNSListener)
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsSOCKSSocketInfo::GetExternalProxyAddr(NetAddr * *aExternalProxyAddr)
 {
     memcpy(*aExternalProxyAddr, &mExternalProxyAddr, sizeof(NetAddr));
     return NS_OK;
 }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsSOCKSSocketInfo::SetExternalProxyAddr(NetAddr *aExternalProxyAddr)
 {
     memcpy(&mExternalProxyAddr, aExternalProxyAddr, sizeof(NetAddr));
     return NS_OK;
 }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsSOCKSSocketInfo::GetDestinationAddr(NetAddr * *aDestinationAddr)
 {
     memcpy(*aDestinationAddr, &mDestinationAddr, sizeof(NetAddr));
     return NS_OK;
 }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsSOCKSSocketInfo::SetDestinationAddr(NetAddr *aDestinationAddr)
 {
     memcpy(&mDestinationAddr, aDestinationAddr, sizeof(NetAddr));
     return NS_OK;
 }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsSOCKSSocketInfo::GetInternalProxyAddr(NetAddr * *aInternalProxyAddr)
 {
     memcpy(*aInternalProxyAddr, &mInternalProxyAddr, sizeof(NetAddr));
     return NS_OK;
 }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsSOCKSSocketInfo::SetInternalProxyAddr(NetAddr *aInternalProxyAddr)
 {
     memcpy(&mInternalProxyAddr, aInternalProxyAddr, sizeof(NetAddr));
@@ -696,7 +696,7 @@ nsSOCKSSocketInfo::WriteV4ConnectRequest()
 
     MOZ_ASSERT(mState == SOCKS_CONNECTING_TO_PROXY,
                "Invalid state!");
-    
+
     proxy_resolve = mFlags & nsISocketProvider::PROXY_RESOLVES_HOST;
 
     mDataLength = 0;
@@ -908,7 +908,7 @@ nsSOCKSSocketInfo::WriteV5ConnectRequest()
                .WriteUint8(0x05) // version -- 5
                .WriteUint8(0x01) // command -- connect
                .WriteUint8(0x00); // reserved
-   
+
     // We're writing a net port after the if, so we need a buffer allowing
     // to write that much.
     Buffer<sizeof(uint16_t)> buf2;
@@ -951,10 +951,10 @@ nsSOCKSSocketInfo::ReadV5AddrTypeAndLength(uint8_t *type, uint32_t *len)
                "Invalid state!");
     MOZ_ASSERT(mDataLength >= 5,
                "SOCKS 5 connection reply must be at least 5 bytes!");
- 
-    // Seek to the address location 
+
+    // Seek to the address location
     mReadOffset = 3;
-   
+
     *type = ReadUint8();
 
     switch (*type) {
@@ -1020,7 +1020,7 @@ nsSOCKSSocketInfo::ReadV5ConnectResponseTop()
             case 0x05:
                 LOGERROR(("socks5: connect failed: 05, Connection refused."));
                 break;
-            case 0x06:  
+            case 0x06:
                 LOGERROR(("socks5: connect failed: 06, TTL expired."));
                 c = PR_CONNECT_TIMEOUT_ERROR;
                 break;
@@ -1352,7 +1352,7 @@ nsSOCKSSocketInfo::WriteToSocket(PRFileDesc *fd)
             }
             break;
         }
-        
+
         mDataIoPtr += rc;
     }
 
@@ -1362,7 +1362,7 @@ nsSOCKSSocketInfo::WriteToSocket(PRFileDesc *fd)
         mReadOffset = 0;
         return PR_SUCCESS;
     }
-    
+
     return PR_FAILURE;
 }
 
@@ -1411,7 +1411,7 @@ nsSOCKSIOLayerConnectContinue(PRFileDesc *fd, int16_t oflags)
     nsSOCKSSocketInfo * info = (nsSOCKSSocketInfo*) fd->secret;
     if (info == nullptr) return PR_FAILURE;
 
-    do { 
+    do {
         status = info->DoHandshake(fd, oflags);
     } while (status == PR_SUCCESS && !info->IsConnected());
 
@@ -1473,7 +1473,7 @@ static PRStatus
 nsSOCKSIOLayerGetName(PRFileDesc *fd, PRNetAddr *addr)
 {
     nsSOCKSSocketInfo * info = (nsSOCKSSocketInfo*) fd->secret;
-    
+
     if (info != nullptr && addr != nullptr) {
         NetAddr temp;
         NetAddr *tempPtr = &temp;
@@ -1513,12 +1513,12 @@ nsSOCKSIOLayerListen(PRFileDesc *fd, int backlog)
 // add SOCKS IO layer to an existing socket
 nsresult
 nsSOCKSIOLayerAddToSocket(int32_t family,
-                          const char *host, 
+                          const char *host,
                           int32_t port,
                           nsIProxyInfo *proxy,
                           int32_t socksVersion,
                           uint32_t flags,
-                          PRFileDesc *fd, 
+                          PRFileDesc *fd,
                           nsISupports** info)
 {
     NS_ENSURE_TRUE((socksVersion == 4) || (socksVersion == 5), NS_ERROR_NOT_INITIALIZED);

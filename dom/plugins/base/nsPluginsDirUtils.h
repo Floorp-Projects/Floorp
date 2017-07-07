@@ -11,10 +11,10 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 // Output format from NPP_GetMIMEDescription: "...mime type[;version]:[extension]:[desecription];..."
-// The ambiguity of mime description could cause the browser fail to parse the MIME types 
+// The ambiguity of mime description could cause the browser fail to parse the MIME types
 // correctly.
-// E.g. "mime type::desecription;" // correct w/o ext 
-//      "mime type:desecription;"  // wrong w/o ext 
+// E.g. "mime type::desecription;" // correct w/o ext
+//      "mime type:desecription;"  // wrong w/o ext
 //
 static nsresult
 ParsePluginMimeDescription(const char *mdesc, nsPluginInfo &info)
@@ -37,7 +37,7 @@ ParsePluginMimeDescription(const char *mdesc, nsPluginInfo &info)
         // and show this on "about:plugins" page, but we have to mark this particular
         // mime type of given plugin as disable on "about:plugins" page,
         // which feature is not implemented yet.
-        // So we'll ignore, without any warnings, an empty description strings, 
+        // So we'll ignore, without any warnings, an empty description strings,
         // in other words, if after parsing ptrMimeArray[0] == anEmptyString is true.
         // It is possible do not to registry a plugin at all if it returns
         // an empty string on GetMIMEDescription() call,
@@ -52,8 +52,8 @@ ParsePluginMimeDescription(const char *mdesc, nsPluginInfo &info)
         }
         if (i == 2)
            ptrMimeArray[i] = s;
-        // fill out the temp array 
-        // the order is important, it should be the same in for loop below 
+        // fill out the temp array
+        // the order is important, it should be the same in for loop below
         if (ptrMimeArray[0] != anEmptyString) {
             tmpMimeTypeArr.AppendElement(ptrMimeArray[0]);
             tmpMimeTypeArr.AppendElement(ptrMimeArray[1]);

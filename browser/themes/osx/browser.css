@@ -667,7 +667,7 @@ toolbarpaletteitem[place="palette"] > #personal-bookmarks > #bookmarks-toolbar-p
   border-bottom-right-radius: 2px;
 }
 
-#identity-box:-moz-focusring {
+#identity-box:not(:active):-moz-focusring {
   box-shadow: var(--focus-ring-box-shadow);
   border-inline-end-style: none;
   padding-inline-end: 5px;

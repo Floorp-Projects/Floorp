@@ -8,7 +8,7 @@
   Eric D Vaughan
   nsBoxFrame is a frame that can lay its children out either vertically or horizontally.
   It lays them out according to a min max or preferred size.
- 
+
 **/
 
 #ifndef nsBoxFrame_h___
@@ -45,7 +45,7 @@ public:
   NS_DECL_QUERYFRAME
 #endif
 
-  friend nsIFrame* NS_NewBoxFrame(nsIPresShell* aPresShell, 
+  friend nsIFrame* NS_NewBoxFrame(nsIPresShell* aPresShell,
                                   nsStyleContext* aContext,
                                   bool aIsRoot,
                                   nsBoxLayout* aLayoutManager);
@@ -78,12 +78,12 @@ public:
   // ----- child and sibling operations ---
 
   // ----- public methods -------
-  
+
   virtual void Init(nsIContent*       aContent,
                     nsContainerFrame* aParent,
                     nsIFrame*         aPrevInFlow) override;
 
- 
+
   virtual nsresult AttributeChanged(int32_t         aNameSpaceID,
                                     nsIAtom*        aAttribute,
                                     int32_t         aModType) override;
@@ -113,7 +113,7 @@ public:
 
   virtual bool IsFrameOfType(uint32_t aFlags) const override
   {
-    // record that children that are ignorable whitespace should be excluded 
+    // record that children that are ignorable whitespace should be excluded
     // (When content was loaded via the XUL content sink, it's already
     // been excluded, but we need this for when the XUL namespace is used
     // in other MIME types or when the XUL CSS display types are used with
@@ -147,10 +147,10 @@ public:
   virtual void BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                 const nsRect&           aDirtyRect,
                                 const nsDisplayListSet& aLists) override;
-  
+
 #ifdef DEBUG_LAYOUT
     virtual void SetDebugOnChildList(nsBoxLayoutState& aState, nsIFrame* aChild, bool aDebug);
-    nsresult DisplayDebugInfoFor(nsIFrame*  aBox, 
+    nsresult DisplayDebugInfoFor(nsIFrame*  aBox,
                                  nsPoint& aPoint);
 #endif
 
@@ -187,13 +187,13 @@ protected:
                               nsPoint aPt);
 #endif
 
-    virtual bool GetInitialEqualSize(bool& aEqualSize); 
+    virtual bool GetInitialEqualSize(bool& aEqualSize);
     virtual void GetInitialOrientation(bool& aIsHorizontal);
     virtual void GetInitialDirection(bool& aIsNormal);
-    virtual bool GetInitialHAlignment(Halignment& aHalign); 
-    virtual bool GetInitialVAlignment(Valignment& aValign); 
-    virtual bool GetInitialAutoStretch(bool& aStretch); 
-  
+    virtual bool GetInitialHAlignment(Halignment& aHalign);
+    virtual bool GetInitialVAlignment(Valignment& aValign);
+    virtual bool GetInitialAutoStretch(bool& aStretch);
+
     virtual void DestroyFrom(nsIFrame* aDestructRoot) override;
 
     nsSize mPrefSize;
@@ -217,7 +217,7 @@ protected:
 
   void CheckBoxOrder();
 
-private: 
+private:
 
 #ifdef DEBUG_LAYOUT
     nsresult SetXULDebug(nsPresContext* aPresContext, bool aDebug);

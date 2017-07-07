@@ -30,7 +30,7 @@ void die(char *x) {
       exit(1);
 }
 
-int 
+int
 main()
 {
       int             i;

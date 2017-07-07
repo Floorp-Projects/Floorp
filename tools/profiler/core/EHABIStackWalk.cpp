@@ -181,7 +181,7 @@ size_t EHABIStackWalk(const mcontext_t &aContext, void *stackBase,
     if (!state.unwind(entry, stackBase))
       break;
   }
-  
+
   return count;
 }
 

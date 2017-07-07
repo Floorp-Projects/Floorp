@@ -102,7 +102,7 @@ nsButtonBoxFrame::BuildDisplayListForChildren(nsDisplayListBuilder*   aBuilder,
 }
 
 nsresult
-nsButtonBoxFrame::HandleEvent(nsPresContext* aPresContext, 
+nsButtonBoxFrame::HandleEvent(nsPresContext* aPresContext,
                               WidgetGUIEvent* aEvent,
                               nsEventStatus* aEventStatus)
 {

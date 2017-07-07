@@ -51,15 +51,6 @@ public:
     return nullptr;
   };
 
-  // Return an event that will be notified when data arrives in MediaResource.
-  // MediaDecoderReader will register with this event to receive notifications
-  // in order to update buffer ranges.
-  // Return null if this decoder doesn't support the event.
-  virtual MediaEventSource<void>* DataArrivedEvent()
-  {
-    return nullptr;
-  }
-
   // Returns an event that will be notified when the owning document changes state
   // and we might have a new compositor. If this new compositor requires us to
   // recreate our decoders, then we expect the existing decoderis to return an

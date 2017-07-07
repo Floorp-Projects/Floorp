@@ -52,7 +52,7 @@ struct BrotliStateStruct;
  * nsZipFind      represents the metadata involved in doing a search,
  *                and current state of the iteration of found objects.
  * 'MT''safe' reading from the zipfile is performed through JARInputStream,
- * which maintains its own file descriptor, allowing for multiple reads 
+ * which maintains its own file descriptor, allowing for multiple reads
  * concurrently from the same zip file.
  */
 
@@ -93,7 +93,7 @@ public:
 
 class nsZipHandle;
 
-/** 
+/**
  * nsZipArchive -- a class for reading the PKZIP file format.
  *
  */
@@ -110,12 +110,12 @@ public:
   /** constructing does not open the archive. See OpenArchive() */
   nsZipArchive();
 
-  /** 
-   * OpenArchive 
-   * 
+  /**
+   * OpenArchive
+   *
    * It's an error to call this more than once on the same nsZipArchive
-   * object. If we were allowed to use exceptions this would have been 
-   * part of the constructor 
+   * object. If we were allowed to use exceptions this would have been
+   * part of the constructor
    *
    * @param   aZipHandle  The nsZipHandle used to access the zip
    * @param   aFd         Optional PRFileDesc for Windows readahead optimization
@@ -123,9 +123,9 @@ public:
    */
   nsresult OpenArchive(nsZipHandle *aZipHandle, PRFileDesc *aFd = nullptr);
 
-  /** 
-   * OpenArchive 
-   * 
+  /**
+   * OpenArchive
+   *
    * Convenience function that generates nsZipHandle
    *
    * @param   aFile         The file used to access the zip
@@ -135,12 +135,12 @@ public:
 
   /**
    * Test the integrity of items in this archive by running
-   * a CRC check after extracting each item into a memory 
-   * buffer.  If an entry name is supplied only the 
+   * a CRC check after extracting each item into a memory
+   * buffer.  If an entry name is supplied only the
    * specified item is tested.  Else, if null is supplied
    * then all the items in the archive are tested.
    *
-   * @return  status code       
+   * @return  status code
    */
   nsresult Test(const char *aEntryName);
 
@@ -149,14 +149,14 @@ public:
    */
   nsresult CloseArchive();
 
-  /** 
+  /**
    * GetItem
    * @param   aEntryName Name of file in the archive
    * @return  pointer to nsZipItem
-   */  
+   */
   nsZipItem* GetItem(const char * aEntryName);
-  
-  /** 
+
+  /**
    * ExtractFile
    *
    * @param   zipEntry   Name of file in archive to extract
@@ -244,8 +244,8 @@ private:
   nsZipArchive(const nsZipArchive& rhs) = delete;
 };
 
-/** 
- * nsZipFind 
+/**
+ * nsZipFind
  *
  * a helper class for nsZipArchive, representing a search
  */
@@ -268,7 +268,7 @@ private:
   nsZipFind(const nsZipFind& rhs) = delete;
 };
 
-/** 
+/**
  * nsZipCursor -- a low-level class for reading the individual items in a zip.
  */
 class nsZipCursor final
@@ -313,9 +313,9 @@ private:
   /* Actual implementation for both Read and Copy above */
   uint8_t* ReadOrCopy(uint32_t *aBytesRead, bool aCopy);
 
-  nsZipItem *mItem; 
-  uint8_t  *mBuf; 
-  uint32_t  mBufSize; 
+  nsZipItem *mItem;
+  uint8_t  *mBuf;
+  uint32_t  mBufSize;
   z_stream  mZs;
 #ifdef MOZ_JAR_BROTLI
   BrotliStateStruct* mBrotliState;

@@ -19,7 +19,7 @@ class txXPathNode;
  *
  * This interface describes the context needed to create
  * XPath Expressions and XSLT Patters.
- * (not completely though. key() requires the ProcessorState, which is 
+ * (not completely though. key() requires the ProcessorState, which is
  * not part of this interface.)
  */
 
@@ -78,7 +78,7 @@ public:
     }
 
     /*
-     * Return the ExprResult associated with the variable with the 
+     * Return the ExprResult associated with the variable with the
      * given namespace and local name.
      */
     virtual nsresult getVariable(int32_t aNamespace, nsIAtom* aLName,

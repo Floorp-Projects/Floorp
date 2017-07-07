@@ -1,4 +1,4 @@
-/* 
+/*
 Copyright (c) 1999 Samphan Raruenrom <samphan@thai.com>
 Permission to use, copy, modify, distribute and sell this software
 and its documentation for any purpose is hereby granted without fee,
@@ -51,4 +51,4 @@ TH_THAIZERO,TH_THAIONE,TH_THAITWO,TH_THAITHREE,TH_THAIFOUR,TH_THAIFIVE,
 TH_THAISIX,TH_THAISEVEN,TH_THAIEIGHT,TH_THAININE,TH_ANGKHANKHU,TH_KHOMUT,
 TH_UNDEF_FC,TH_UNDEF_FD,TH_UNDEF_FE,TH_THAIEND
 };
-#endif 
+#endif

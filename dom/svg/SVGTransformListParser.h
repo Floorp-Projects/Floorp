@@ -26,7 +26,7 @@ class SVGTransformListParser : public nsSVGDataParser
 public:
   explicit SVGTransformListParser(const nsAString& aValue)
     : nsSVGDataParser(aValue) {}
-  
+
   bool Parse();
 
   const nsTArray<nsSVGTransform>& GetTransformList() const {

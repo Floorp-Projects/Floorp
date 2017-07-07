@@ -289,7 +289,7 @@ NS_IMETHODIMP
 nsLayoutDebuggingTools::SetReflowCounts(bool aShow)
 {
     NS_ENSURE_TRUE(mDocShell, NS_ERROR_NOT_INITIALIZED);
-    nsCOMPtr<nsIPresShell> shell(pres_shell(mDocShell)); 
+    nsCOMPtr<nsIPresShell> shell(pres_shell(mDocShell));
     if (shell) {
 #ifdef MOZ_REFLOW_PERF
         shell->SetPaintFrameCount(aShow);
@@ -465,7 +465,7 @@ nsLayoutDebuggingTools::DumpStyleSheets()
     NS_ENSURE_TRUE(mDocShell, NS_ERROR_NOT_INITIALIZED);
 #ifdef DEBUG
     FILE *out = stdout;
-    nsCOMPtr<nsIPresShell> shell(pres_shell(mDocShell)); 
+    nsCOMPtr<nsIPresShell> shell(pres_shell(mDocShell));
     if (shell)
         shell->ListStyleSheets(out);
     else
@@ -480,7 +480,7 @@ nsLayoutDebuggingTools::DumpStyleContexts()
     NS_ENSURE_TRUE(mDocShell, NS_ERROR_NOT_INITIALIZED);
 #ifdef DEBUG
     FILE *out = stdout;
-    nsCOMPtr<nsIPresShell> shell(pres_shell(mDocShell)); 
+    nsCOMPtr<nsIPresShell> shell(pres_shell(mDocShell));
     if (shell) {
         shell->ListStyleContexts(out);
     } else {
@@ -495,7 +495,7 @@ nsLayoutDebuggingTools::DumpReflowStats()
 {
     NS_ENSURE_TRUE(mDocShell, NS_ERROR_NOT_INITIALIZED);
 #ifdef DEBUG
-    nsCOMPtr<nsIPresShell> shell(pres_shell(mDocShell)); 
+    nsCOMPtr<nsIPresShell> shell(pres_shell(mDocShell));
     if (shell) {
 #ifdef MOZ_REFLOW_PERF
         shell->DumpReflows();

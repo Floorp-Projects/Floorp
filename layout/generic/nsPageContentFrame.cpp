@@ -44,7 +44,7 @@ nsPageContentFrame::Reflow(nsPresContext*           aPresContext,
   nsSize  maxSize(aReflowInput.ComputedWidth(),
                   aReflowInput.ComputedHeight());
   SetSize(maxSize);
- 
+
   // A PageContentFrame must always have one child: the canvas frame.
   // Resize our frame allowing it only to be as big as we are
   // XXX Pay attention to the page's border and padding...

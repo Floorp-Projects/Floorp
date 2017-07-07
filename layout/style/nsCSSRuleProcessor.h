@@ -255,7 +255,7 @@ public:
 #ifdef XP_WIN
   // Cached theme identifier for the moz-windows-theme media query.
   static uint8_t GetWindowsThemeIdentifier();
-  static void SetWindowsThemeIdentifier(uint8_t aId) { 
+  static void SetWindowsThemeIdentifier(uint8_t aId) {
     sWinThemeId = aId;
   }
 #endif

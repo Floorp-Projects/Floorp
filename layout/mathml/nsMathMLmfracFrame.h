@@ -10,22 +10,22 @@
 #include "nsMathMLContainerFrame.h"
 
 //
-// <mfrac> -- form a fraction from two subexpressions 
+// <mfrac> -- form a fraction from two subexpressions
 //
 
 /*
 The MathML REC describes:
 
-The <mfrac> element is used for fractions. It can also be used to mark up 
-fraction-like objects such as binomial coefficients and Legendre symbols. 
+The <mfrac> element is used for fractions. It can also be used to mark up
+fraction-like objects such as binomial coefficients and Legendre symbols.
 The syntax for <mfrac> is:
   <mfrac> numerator denominator </mfrac>
 
 Attributes of <mfrac>:
-     Name                      values                     default 
-  linethickness  number [ v-unit ] | thin | medium | thick  1 
+     Name                      values                     default
+  linethickness  number [ v-unit ] | thin | medium | thick  1
 
-E.g., 
+E.g.,
 linethickness=2 actually means that linethickness=2*DEFAULT_THICKNESS
 (DEFAULT_THICKNESS is not specified by MathML, see below.)
 
@@ -33,20 +33,20 @@ The linethickness attribute indicates the thickness of the horizontal
 "fraction bar", or "rule", typically used to render fractions. A fraction
 with linethickness="0" renders without the bar, and might be used within
 binomial coefficients. A linethickness greater than one might be used with
-nested fractions. 
+nested fractions.
 
 In general, the value of linethickness can be a number, as a multiplier
 of the default thickness of the fraction bar (the default thickness is
 not specified by MathML), or a number with a unit of vertical length (see
 Section 2.3.3), or one of the keywords medium (same as 1), thin (thinner
 than 1, otherwise up to the renderer), or thick (thicker than 1, otherwise
-up to the renderer). 
+up to the renderer).
 
 The <mfrac> element sets displaystyle to "false", or if it was already
 false increments scriptlevel by 1, within numerator and denominator.
-These attributes are inherited by every element from its rendering 
-environment, but can be set explicitly only on the <mstyle> 
-element. 
+These attributes are inherited by every element from its rendering
+environment, but can be set explicitly only on the <mstyle>
+element.
 */
 
 class nsMathMLmfracFrame : public nsMathMLContainerFrame {
@@ -83,7 +83,7 @@ public:
   FixInterFrameSpacing(ReflowOutput& aDesiredSize) override;
 
   // helper to translate the thickness attribute into a usable form
-  static nscoord 
+  static nscoord
   CalcLineThickness(nsPresContext*  aPresContext,
                     nsStyleContext*  aStyleContext,
                     nsString&        aThicknessAttribute,

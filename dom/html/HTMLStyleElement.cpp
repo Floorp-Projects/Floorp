@@ -149,7 +149,7 @@ HTMLStyleElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
   nsContentUtils::AddScriptRunner(
     NewRunnableMethod("dom::HTMLStyleElement::BindToTree", this, update));
 
-  return rv;  
+  return rv;
 }
 
 void

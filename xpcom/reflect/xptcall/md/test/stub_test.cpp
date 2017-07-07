@@ -71,7 +71,7 @@ NS_IMETHODIMP bar::callme3(int i, int j)
 }
 
 void docall(foo* f, int i, int j){
-  f->callme1(i, j); 
+  f->callme1(i, j);
 }
 
 /***************************************************************************/
@@ -201,7 +201,7 @@ int main()
   /* here we make the global 'check for alloc failure' checker happy */
   if(!a || !b)
     return 1;
-  
+
   foo* c = (foo*)b;
 
   b->setfoo(a);

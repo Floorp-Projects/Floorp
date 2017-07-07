@@ -32,7 +32,7 @@ nsDiskCacheEntry::CreateCacheEntry(nsCacheDevice *  device)
                                              device,
                                              &entry);
     if (NS_FAILED(rv) || !entry) return nullptr;
-    
+
     entry->SetFetchCount(mFetchCount);
     entry->SetLastFetched(mLastFetched);
     entry->SetLastModified(mLastModified);
@@ -40,7 +40,7 @@ nsDiskCacheEntry::CreateCacheEntry(nsCacheDevice *  device)
     entry->SetCacheDevice(device);
     // XXX why does nsCacheService have to fill out device in BindEntry()?
     entry->SetDataSize(mDataSize);
-    
+
     rv = entry->UnflattenMetaData(MetaData(), mMetaDataSize);
     if (NS_FAILED(rv)) {
         delete entry;
@@ -60,7 +60,7 @@ nsDiskCacheEntry::CreateCacheEntry(nsCacheDevice *  device)
         entry->SetSecurityInfo(infoObj);
     }
 
-    return entry;                      
+    return entry;
 }
 
 

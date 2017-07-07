@@ -64,7 +64,7 @@ public:
                            nsAString& aStr) override  { return NS_OK; }
   NS_IMETHOD AppendElementStart(mozilla::dom::Element* aElement,
                                 mozilla::dom::Element* aOriginalElement,
-                                nsAString& aStr) override; 
+                                nsAString& aStr) override;
   NS_IMETHOD AppendElementEnd(mozilla::dom::Element* aElement,
                               nsAString& aStr) override;
   NS_IMETHOD Flush(nsAString& aStr) override;
@@ -160,8 +160,8 @@ private:
   // are wider than latin chars of more if the chars are more narrow.
   uint32_t         mWrapColumn;
 
-  // The width of the line as it will appear on the screen (approx.) 
-  uint32_t         mCurrentLineWidth; 
+  // The width of the line as it will appear on the screen (approx.)
+  uint32_t         mCurrentLineWidth;
 
   // Treat quoted text as though it's preformatted -- don't wrap it.
   // Having it on a pref is a temporary measure, See bug 69638.
@@ -203,7 +203,7 @@ private:
 
   // For handling table rows
   AutoTArray<bool, 8> mHasWrittenCellsForRow;
-  
+
   // Values gotten in OpenContainer that is (also) needed in CloseContainer
   AutoTArray<bool, 8> mIsInCiteBlockquote;
 

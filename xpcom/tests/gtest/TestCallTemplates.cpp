@@ -27,7 +27,7 @@
     { 0x96, 0x2b, 0xab, 0xf1, 0x2d, 0x22, 0x56, 0xae }}
 
 class NS_NO_VTABLE nsITestService : public nsISupports {
-  public: 
+  public:
     NS_DECLARE_STATIC_IID_ACCESSOR(NS_ITESTSERVICE_IID)
 };
 

@@ -21,9 +21,9 @@ class nsCacheSession : public nsICacheSession
 public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSICACHESESSION
-    
+
     nsCacheSession(const char * clientID, nsCacheStoragePolicy storagePolicy, bool streamBased);
-    
+
     nsCString *           ClientID()      { return &mClientID; }
 
     enum SessionInfo {

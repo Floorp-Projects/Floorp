@@ -10,7 +10,7 @@
 
 namespace mozilla {
 namespace a11y {
- 
+
 /**
  * Generic class used for text nodes.
  */

@@ -44,7 +44,7 @@ txNameTest::matches(const txXPathNode& aNode, txIMatchContext* aContext,
     }
 
     // Compare namespaces
-    if (mNamespace != txXPathNodeUtils::getNamespaceID(aNode) 
+    if (mNamespace != txXPathNodeUtils::getNamespaceID(aNode)
         && !(mNamespace == kNameSpaceID_None &&
              txXPathNodeUtils::isHTMLElementInHTMLDocument(aNode))
        ) {

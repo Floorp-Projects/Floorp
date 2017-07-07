@@ -274,7 +274,7 @@ protected:
                        nscoord&            aCurrX);
 
   // This method paints the checkbox inside a particular cell of the tree.
-  DrawResult PaintCheckbox(int32_t              aRowIndex, 
+  DrawResult PaintCheckbox(int32_t              aRowIndex,
                            nsTreeColumn*        aColumn,
                            const nsRect&        aCheckboxRect,
                            nsPresContext*       aPresContext,
@@ -291,7 +291,7 @@ protected:
                                 nsDisplayListBuilder* aBuilder);
 
   // This method paints a drop feedback of the tree.
-  DrawResult PaintDropFeedback(const nsRect&        aDropFeedbackRect, 
+  DrawResult PaintDropFeedback(const nsRect&        aDropFeedbackRect,
                                nsPresContext*       aPresContext,
                                gfxContext&          aRenderingContext,
                                const nsRect&        aDirtyRect,
@@ -300,7 +300,7 @@ protected:
   // This method is called with a specific style context and rect to
   // paint the background rect as if it were a full-blown frame.
   DrawResult PaintBackgroundLayer(nsStyleContext*      aStyleContext,
-                                  nsPresContext*       aPresContext, 
+                                  nsPresContext*       aPresContext,
                                   gfxContext&          aRenderingContext,
                                   const nsRect&        aRect,
                                   const nsRect&        aDirtyRect);
@@ -602,7 +602,7 @@ protected: // Data Members
   // A scratch array used when looking up cached style contexts.
   AtomArray mScratchArray;
 
-  // The index of the first visible row and the # of rows visible onscreen.  
+  // The index of the first visible row and the # of rows visible onscreen.
   // The tree only examines onscreen rows, starting from
   // this index and going up to index+pageLength.
   int32_t mTopRowIndex;

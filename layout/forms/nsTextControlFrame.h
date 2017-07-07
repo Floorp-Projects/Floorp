@@ -87,7 +87,7 @@ public:
 
   virtual nsSize GetXULMinSize(nsBoxLayoutState& aBoxLayoutState) override;
   virtual bool IsXULCollapsed() override;
-  
+
 #ifdef ACCESSIBILITY
   virtual mozilla::a11y::AccType AccessibleType() override;
 #endif
@@ -187,7 +187,7 @@ protected:
 
 public: //for methods who access nsTextControlFrame directly
   void SetValueChanged(bool aValueChanged);
-  
+
   // called by the focus listener
   nsresult MaybeBeginSecureKeyboardInput();
   void MaybeEndSecureKeyboardInput();
@@ -340,7 +340,7 @@ private:
   // Reflow.
   nscoord mFirstBaseline;
 
-  // these packed bools could instead use the high order bits on mState, saving 4 bytes 
+  // these packed bools could instead use the high order bits on mState, saving 4 bytes
   bool mEditorHasBeenInitialized;
   bool mIsProcessing;
   // Keep track if we have asked a placeholder node creation.

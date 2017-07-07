@@ -14,6 +14,7 @@ from mozbuild.configure.options import (
     InvalidOptionError,
     NegativeOptionValue,
     Option,
+    OptionValue,
     PositiveOptionValue,
 )
 
@@ -275,6 +276,26 @@ class TestOption(unittest.TestCase):
             option.get_value('--with-option=e')
         self.assertEquals(e.exception.message,
                           "'e' is not one of 'a', 'b', 'c', 'd'")
+
+    def test_option_value_compare(self):
+        # OptionValue are tuple and equivalence should compare as tuples.
+        val = PositiveOptionValue(('foo',))
+
+        self.assertEqual(val[0], 'foo')
+        self.assertEqual(val, PositiveOptionValue(('foo',)))
+        self.assertNotEqual(val, PositiveOptionValue(('foo', 'bar')))
+
+        # Can compare a tuple to an OptionValue.
+        self.assertEqual(val, ('foo',))
+        self.assertNotEqual(val, ('foo', 'bar'))
+
+        # Different OptionValue types are never equal.
+        self.assertNotEqual(val, OptionValue(('foo',)))
+
+        # For usability reasons, we raise TypeError when attempting to compare
+        # against a non-tuple.
+        with self.assertRaisesRegexp(TypeError, 'cannot compare a'):
+            val == 'foo'
 
     def test_option_value_format(self):
         val = PositiveOptionValue()

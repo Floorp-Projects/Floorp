@@ -23,11 +23,11 @@ nsNSSErrors::getOverrideErrorStringName(PRErrorCode aErrorCode)
     case SSL_ERROR_SSL_DISABLED:
       id_str = "PSMERR_SSL_Disabled";
       break;
-  
+
     case SSL_ERROR_SSL2_DISABLED:
       id_str = "PSMERR_SSL2_Disabled";
       break;
-  
+
     case SEC_ERROR_REUSED_ISSUER_AND_SERIAL:
       id_str = "PSMERR_HostReusedIssuerSerial";
       break;
@@ -66,14 +66,14 @@ nsNSSErrors::getErrorMessageFromCode(PRErrorCode err,
       returnedMessage.Append('\n');
     }
   }
-  
+
   if (returnedMessage.IsEmpty())
   {
     // no localized string available, use NSS' internal
     returnedMessage.AppendASCII(PR_ErrorToString(err, PR_LANGUAGE_EN));
     returnedMessage.Append('\n');
   }
-  
+
   if (nss_error_id_str)
   {
     nsresult rv;
@@ -85,7 +85,7 @@ nsNSSErrors::getErrorMessageFromCode(PRErrorCode err,
 
     nsString formattedString;
     rv = component->PIPBundleFormatStringFromName("certErrorCodePrefix2",
-                                                  params, 1, 
+                                                  params, 1,
                                                   formattedString);
     if (NS_SUCCEEDED(rv)) {
       returnedMessage.Append('\n');

@@ -85,7 +85,7 @@ HTMLDivElement::IsAttributeMapped(const nsIAtom* aAttribute) const
     };
     return FindAttributeDependence(aAttribute, map);
   }
-  if (mNodeInfo->Equals(nsGkAtoms::marquee)) {  
+  if (mNodeInfo->Equals(nsGkAtoms::marquee)) {
     static const MappedAttributeEntry* const map[] = {
       sImageMarginSizeAttributeMap,
       sBackgroundColorAttributeMap,
@@ -105,7 +105,7 @@ HTMLDivElement::GetAttributeMappingFunction() const
   }
   if (mNodeInfo->Equals(nsGkAtoms::marquee)) {
     return &MapMarqueeAttributesIntoRule;
-  }  
+  }
   return nsGenericHTMLElement::GetAttributeMappingFunction();
 }
 

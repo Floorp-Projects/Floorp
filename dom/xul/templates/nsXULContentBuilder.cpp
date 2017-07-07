@@ -1128,7 +1128,7 @@ nsXULContentBuilder::CreateContainerContentsForQuerySet(nsIContent* aElement,
                 if (priority > aQuerySet->Priority())
                     break;
 
-                // skip over non-matching containers 
+                // skip over non-matching containers
                 if (existingmatch->GetContainer() == aElement) {
                     // if the same priority is already found, replace it. This can happen
                     // when a container is removed and readded
@@ -1758,7 +1758,7 @@ nsXULContentBuilder::CompareResultToNode(nsIXULTemplateResult* aResult,
                                          int32_t* aSortOrder)
 {
     NS_ASSERTION(aSortOrder, "CompareResultToNode: null out param aSortOrder");
-  
+
     *aSortOrder = 0;
 
     nsTemplateMatch *match = nullptr;
@@ -1864,7 +1864,7 @@ nsXULContentBuilder::InsertSortedNode(nsIContent* aContainer,
             for (nsIContent* child = aContainer->GetFirstChild();
                  child;
                  child = child->GetNextSibling()) {
-                 
+
                 if (nsContentUtils::HasNonEmptyAttr(child, kNameSpaceID_None,
                                                     nsGkAtoms::_template))
                     break;

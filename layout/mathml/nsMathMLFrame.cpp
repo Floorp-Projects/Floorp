@@ -35,11 +35,11 @@ nsMathMLFrame::GetMathMLFrameType()
     return GetMathMLFrameTypeFor(mPresentationData.baseFrame);
 
   // everything else is treated as ordinary (mapped to 'Ord' in TeX)
-  return eMathMLFrameType_Ordinary;  
+  return eMathMLFrameType_Ordinary;
 }
 
 NS_IMETHODIMP
-nsMathMLFrame::InheritAutomaticData(nsIFrame* aParent) 
+nsMathMLFrame::InheritAutomaticData(nsIFrame* aParent)
 {
   mEmbellishData.flags = 0;
   mEmbellishData.coreFrame = nullptr;
@@ -90,7 +90,7 @@ nsMathMLFrame::UpdatePresentationData(uint32_t        aFlagsValues,
 }
 
 // Helper to give a style context suitable for doing the stretching of
-// a MathMLChar. Frame classes that use this should ensure that the 
+// a MathMLChar. Frame classes that use this should ensure that the
 // extra leaf style contexts given to the MathMLChars are accessible to
 // the Style System via the Get/Set AdditionalStyleContext() APIs.
 /* static */ void
@@ -155,7 +155,7 @@ nsMathMLFrame::GetPresentationDataFrom(nsIFrame*           aFrame,
     // stop if we reach the root <math> tag
     nsIContent* content = frame->GetContent();
     NS_ASSERTION(content || !frame->GetParent(), // no assert for the root
-                 "dangling frame without a content node"); 
+                 "dangling frame without a content node");
     if (!content)
       break;
 
@@ -270,7 +270,7 @@ nsMathMLFrame::ParseNumericValue(const nsString&   aString,
                                                     cssValue.GetFloatValue()));
     return;
   }
-  
+
   // Absolute units.
   *aLengthValue = CalcLength(aPresContext, aStyleContext, cssValue,
                              aFontSizeInflation);
@@ -314,7 +314,7 @@ nsMathMLFrame::DisplayBoundingMetrics(nsDisplayListBuilder* aBuilder,
                                       const nsDisplayListSet& aLists) {
   if (!NS_MATHML_PAINT_BOUNDING_METRICS(mPresentationData.flags))
     return;
-    
+
   nscoord x = aPt.x + aMetrics.leftBearing;
   nscoord y = aPt.y - aMetrics.ascent;
   nscoord w = aMetrics.rightBearing - aMetrics.leftBearing;

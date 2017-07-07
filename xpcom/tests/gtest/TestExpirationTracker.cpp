@@ -107,7 +107,7 @@ public:
     }
     }
   }
-  
+
 protected:
   void NotifyExpired(Object* aObj) {
     LogAction(aObj, "Expired");
@@ -135,7 +135,7 @@ protected:
 template <uint32_t K> static bool test_random() {
   srand(K);
   error = false;
- 
+
   for (uint32_t j = 0; j < iterations; ++j) {
     Tracker<K> tracker;
 
@@ -153,7 +153,7 @@ template <uint32_t K> static bool test_random() {
       tracker.DoRandomOperation();
     }
   }
-  
+
   return !error;
 }
 

@@ -8,7 +8,7 @@
 
 #include "nsQueryFrame.h"
 
-/** 
+/**
   * nsIComboboxControlFrame is the interface for comboboxes.
   */
 class nsIComboboxControlFrame : public nsQueryFrame
@@ -72,21 +72,21 @@ public:
    * Notification that the content has been reset
    */
   virtual void OnContentReset() = 0;
-  
+
   /**
    * This returns the index of the item that is currently being displayed
    * in the display area. It may differ from what the currently Selected index
    * is in in the dropdown.
    *
-   * Detailed explanation: 
-   * When the dropdown is dropped down via a mouse click and the user moves the mouse 
-   * up and down without clicking, the currently selected item is being tracking inside 
+   * Detailed explanation:
+   * When the dropdown is dropped down via a mouse click and the user moves the mouse
+   * up and down without clicking, the currently selected item is being tracking inside
    * the dropdown, but the combobox is not being updated. When the user selects items
    * with the arrow keys, the combobox is being updated. So when the user clicks outside
-   * the dropdown and it needs to roll up it has to decide whether to keep the current 
+   * the dropdown and it needs to roll up it has to decide whether to keep the current
    * selection or not. This method is used to get the current index in the combobox to
    * compare it to the current index in the dropdown to see if the combox has been updated
-   * and that way it knows whether to "cancel" the current selection residing in the 
+   * and that way it knows whether to "cancel" the current selection residing in the
    * dropdown. Or whether to leave the selection alone.
    */
   virtual int32_t GetIndexOfDisplayArea() = 0;

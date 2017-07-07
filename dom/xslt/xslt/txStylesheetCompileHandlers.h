@@ -38,7 +38,7 @@ public:
                    const txElementHandler* aOtherHandler);
     nsresult init(const txElementHandler* aHandlers, uint32_t aCount);
     const txElementHandler* find(int32_t aNamespaceID, nsIAtom* aLocalName);
-    
+
     const HandleTextFn mTextHandler;
     const txElementHandler* const mLREHandler;
 

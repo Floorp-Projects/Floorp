@@ -176,8 +176,8 @@ nsSyncLoader::LoadDocument(nsIChannel* aChannel,
     // Start the document load. Do this before we attach the load listener
     // since we reset the document which drops all observers.
     nsCOMPtr<nsIStreamListener> listener;
-    rv = document->StartDocumentLoad(kLoadAsData, mChannel, 
-                                     loadGroup, nullptr, 
+    rv = document->StartDocumentLoad(kLoadAsData, mChannel,
+                                     loadGroup, nullptr,
                                      getter_AddRefs(listener),
                                      true);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -227,7 +227,7 @@ nsSyncLoader::PushAsyncStream(nsIStreamListener* aListener)
         mLoading = true;
         nsIThread *thread = NS_GetCurrentThread();
         while (mLoading && NS_SUCCEEDED(rv)) {
-            bool processedEvent; 
+            bool processedEvent;
             rv = thread->ProcessNextEvent(true, &processedEvent);
             if (NS_SUCCEEDED(rv) && !processedEvent)
                 rv = NS_ERROR_UNEXPECTED;
@@ -254,7 +254,7 @@ nsSyncLoader::PushSyncStream(nsIStreamListener* aListener)
     mLoading = true;
     rv = nsSyncLoadService::PushSyncStreamToListener(in, aListener, mChannel);
     mLoading = false;
-    
+
     return rv;
 }
 

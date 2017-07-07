@@ -33,9 +33,9 @@ public:
   NS_DECL_NSIAUTOCOMPLETEOBSERVER
   NS_DECL_NSITREEVIEW
   NS_DECL_NSITIMERCALLBACK
-   
+
   nsAutoCompleteController();
-  
+
 protected:
   virtual ~nsAutoCompleteController();
 
@@ -115,12 +115,12 @@ protected:
   nsresult GetFinalDefaultCompleteValue(nsAString &_retval);
 
   nsresult ClearResults();
-  
+
   nsresult RowIndexToSearch(int32_t aRowIndex,
                             int32_t *aSearchIndex, int32_t *aItemIndex);
 
   // members //////////////////////////////////////////
-  
+
   nsCOMPtr<nsIAutoCompleteInput> mInput;
 
   nsCOMArray<nsIAutoCompleteSearch> mSearches;

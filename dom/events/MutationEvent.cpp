@@ -110,7 +110,7 @@ MutationEvent::InitMutationEvent(const nsAString& aTypeArg,
     mutation->mAttrName = NS_Atomize(aAttrNameArg);
   }
   mutation->mAttrChange = aAttrChangeArg;
-    
+
   return NS_OK;
 }
 
@@ -123,7 +123,7 @@ using namespace mozilla::dom;
 already_AddRefed<MutationEvent>
 NS_NewDOMMutationEvent(EventTarget* aOwner,
                        nsPresContext* aPresContext,
-                       InternalMutationEvent* aEvent) 
+                       InternalMutationEvent* aEvent)
 {
   RefPtr<MutationEvent> it = new MutationEvent(aOwner, aPresContext, aEvent);
   return it.forget();

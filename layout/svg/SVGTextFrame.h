@@ -260,7 +260,7 @@ public:
 
   // nsSVGContainerFrame methods:
   virtual gfxMatrix GetCanvasTM() override;
-  
+
   // SVG DOM text methods:
   uint32_t GetNumberOfChars(nsIContent* aContent);
   float GetComputedTextLength(nsIContent* aContent);

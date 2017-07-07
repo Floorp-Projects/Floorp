@@ -10,7 +10,7 @@
 #include "xptiprivate.h"
 
 static nsresult ATTRIBUTE_USED
-PrepareAndDispatch(nsXPTCStubBase* self, uint32_t methodIndex, 
+PrepareAndDispatch(nsXPTCStubBase* self, uint32_t methodIndex,
                    uint64_t* a_gpr, uint64_t *a_fpr, uint64_t *a_ov)
 {
 #define PARAM_BUFFER_COUNT     16
@@ -55,79 +55,79 @@ PrepareAndDispatch(nsXPTCStubBase* self, uint32_t methodIndex,
         // else
         switch(type)
         {
-        case nsXPTType::T_I8     : 
+        case nsXPTType::T_I8     :
             if (gpr < 5)
                 dp->val.i8  = *((int64_t*) a_gpr), a_gpr++, gpr++;
             else
                 dp->val.i8  = *((int64_t*) a_ov ), a_ov++;
             break;
-        case nsXPTType::T_I16    : 
+        case nsXPTType::T_I16    :
             if (gpr < 5)
                 dp->val.i16 = *((int64_t*) a_gpr), a_gpr++, gpr++;
             else
                 dp->val.i16 = *((int64_t*) a_ov ), a_ov++;
             break;
-        case nsXPTType::T_I32    : 
+        case nsXPTType::T_I32    :
             if (gpr < 5)
                 dp->val.i32 = *((int64_t*) a_gpr), a_gpr++, gpr++;
             else
                 dp->val.i32 = *((int64_t*) a_ov ), a_ov++;
             break;
-        case nsXPTType::T_I64    : 
+        case nsXPTType::T_I64    :
             if (gpr < 5)
                 dp->val.i64 = *((int64_t*) a_gpr), a_gpr++, gpr++;
             else
                 dp->val.i64 = *((int64_t*) a_ov ), a_ov++;
             break;
-        case nsXPTType::T_U8     : 
+        case nsXPTType::T_U8     :
             if (gpr < 5)
                 dp->val.u8  = *((uint64_t*)a_gpr), a_gpr++, gpr++;
             else
                 dp->val.u8  = *((uint64_t*)a_ov ), a_ov++;
             break;
-        case nsXPTType::T_U16    : 
+        case nsXPTType::T_U16    :
             if (gpr < 5)
                 dp->val.u16 = *((uint64_t*)a_gpr), a_gpr++, gpr++;
             else
                 dp->val.u16 = *((uint64_t*)a_ov ), a_ov++;
             break;
-        case nsXPTType::T_U32    : 
+        case nsXPTType::T_U32    :
             if (gpr < 5)
                 dp->val.u32 = *((uint64_t*)a_gpr), a_gpr++, gpr++;
             else
                 dp->val.u32 = *((uint64_t*)a_ov ), a_ov++;
             break;
-        case nsXPTType::T_U64    : 
+        case nsXPTType::T_U64    :
             if (gpr < 5)
                 dp->val.u64 = *((uint64_t*)a_gpr), a_gpr++, gpr++;
             else
                 dp->val.u64 = *((uint64_t*)a_ov ), a_ov++;
             break;
-        case nsXPTType::T_FLOAT  : 
+        case nsXPTType::T_FLOAT  :
             if (fpr < 4)
                 dp->val.f   = *((float*)   a_fpr), a_fpr++, fpr++;
             else
                 dp->val.f   = *(((float*)  a_ov )+1), a_ov++;
             break;
-        case nsXPTType::T_DOUBLE : 
+        case nsXPTType::T_DOUBLE :
             if (fpr < 4)
                 dp->val.d   = *((double*)  a_fpr), a_fpr++, fpr++;
             else
                 dp->val.d   = *((double*)  a_ov ), a_ov++;
             break;
-        case nsXPTType::T_BOOL   : 
+        case nsXPTType::T_BOOL   :
             if (gpr < 5)
                 dp->val.b   = *((uint64_t*)a_gpr), a_gpr++, gpr++;
             else
                 dp->val.b   = *((uint64_t*)a_ov ), a_ov++;
             break;
-        case nsXPTType::T_CHAR   : 
+        case nsXPTType::T_CHAR   :
             if (gpr < 5)
                 dp->val.c   = *((uint64_t*)a_gpr), a_gpr++, gpr++;
             else
                 dp->val.c   = *((uint64_t*)a_ov ), a_ov++;
             break;
-        case nsXPTType::T_WCHAR  : 
+        case nsXPTType::T_WCHAR  :
             if (gpr < 5)
                 dp->val.wc  = *((uint64_t*)a_gpr), a_gpr++, gpr++;
             else

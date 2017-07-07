@@ -50,7 +50,7 @@ public:
   } IterableIteratorType;
 
   IterableIteratorBase() {}
-  
+
 protected:
   virtual ~IterableIteratorBase() {}
   virtual void UnlinkHelper() = 0;

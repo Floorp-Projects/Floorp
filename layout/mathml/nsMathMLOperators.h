@@ -68,7 +68,7 @@ public:
   // Given the string value of an operator and its form (last two bits of flags),
   // this method returns true if the operator is found in the Operator Dictionary.
   // Attributes of the operator are returned in the output parameters.
-  // If the operator is not found under the supplied form but is found under a 
+  // If the operator is not found under the supplied form but is found under a
   // different form, the method returns true as well. The caller can test the
   // output parameter aFlags to know exactly under which form the operator was
   // found in the Operator Dictionary.
@@ -81,7 +81,7 @@ public:
 
    // LookupOperators:
    // Helper to return all the forms under which an operator is listed in the
-   // Operator Dictionary. The caller must pass arrays of size 4, and use 
+   // Operator Dictionary. The caller must pass arrays of size 4, and use
    // aFlags[NS_MATHML_OPERATOR_FORM_{INFIX|POSTFIX|PREFIX}],
    // aLeadingSpace[], etc, to access the attributes of the operator under a
    // particular form. If the operator wasn't found under a form, its entry

@@ -74,7 +74,7 @@ SVGGeometryElement::GeometryDependsOnCoordCtx()
   for (uint32_t i = 0; i < info.mLengthCount; i++) {
     if (info.mLengths[i].GetSpecifiedUnitType() == nsIDOMSVGLength::SVG_LENGTHTYPE_PERCENTAGE) {
       return true;
-    }   
+    }
   }
   return false;
 }

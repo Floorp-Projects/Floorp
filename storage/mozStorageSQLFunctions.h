@@ -58,7 +58,7 @@ void likeFunction(sqlite3_context *aCtx,
 /**
  * An implementation of the Levenshtein Edit Distance algorithm for use in
  * Sqlite queries.
- * 
+ *
  * @param aCtx
  *        The sqlite_context that this function is being called on.
  * @param aArgc

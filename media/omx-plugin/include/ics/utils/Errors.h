@@ -32,7 +32,7 @@ typedef int32_t     status_t;
 /* the MS C runtime lacks a few error codes */
 
 /*
- * Error codes. 
+ * Error codes.
  * All error codes are negative values.
  */
 
@@ -41,11 +41,11 @@ typedef int32_t     status_t;
 #ifdef _WIN32
 # undef NO_ERROR
 #endif
- 
+
 enum {
     OK                = 0,    // Everything's swell.
     NO_ERROR          = 0,    // No errors.
-    
+
     UNKNOWN_ERROR       = 0x80000000,
 
     NO_MEMORY           = -ENOMEM,
@@ -62,16 +62,16 @@ enum {
 #if !defined(HAVE_MS_C_RUNTIME)
     BAD_INDEX           = -EOVERFLOW,
     NOT_ENOUGH_DATA     = -ENODATA,
-    WOULD_BLOCK         = -EWOULDBLOCK, 
+    WOULD_BLOCK         = -EWOULDBLOCK,
     TIMED_OUT           = -ETIMEDOUT,
     UNKNOWN_TRANSACTION = -EBADMSG,
-#else    
+#else
     BAD_INDEX           = -E2BIG,
     NOT_ENOUGH_DATA     = 0x80000003,
     WOULD_BLOCK         = 0x80000004,
     TIMED_OUT           = 0x80000005,
     UNKNOWN_TRANSACTION = 0x80000006,
-#endif    
+#endif
     FDS_NOT_ALLOWED     = 0x80000007,
 };
 
@@ -82,7 +82,7 @@ enum {
 #endif
 
 }; // namespace android
-    
+
 // ---------------------------------------------------------------------------
-    
+
 #endif // ANDROID_ERRORS_H

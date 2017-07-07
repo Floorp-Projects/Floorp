@@ -42,14 +42,14 @@ TEST(UrlClassifierUtils, Unescape)
     allCharsEncoded.Append('%');
     allCharsEncoded.Append(int_to_hex_digit(i / 16));
     allCharsEncoded.Append((int_to_hex_digit(i % 16)));
-    
+
     allCharsEncodedLowercase.Append('%');
     allCharsEncodedLowercase.Append(tolower(int_to_hex_digit(i / 16)));
     allCharsEncodedLowercase.Append(tolower(int_to_hex_digit(i % 16)));
-    
+
     allCharsAsString.Append(static_cast<char>(i));
   }
-  
+
   nsCString out;
   NS_UnescapeURL(allCharsEncoded.get(),
                  allCharsEncoded.Length(),
@@ -57,7 +57,7 @@ TEST(UrlClassifierUtils, Unescape)
                  out);
 
   CheckEquals(allCharsAsString, out);
-  
+
   out.Truncate();
   NS_UnescapeURL(allCharsEncodedLowercase.get(),
                  allCharsEncodedLowercase.Length(),
@@ -119,7 +119,7 @@ TEST(UrlClassifierUtils, Enc)
       yesExpectedString.Append(int_to_hex_digit(i % 16));
     }
   }
-  
+
   out.Truncate();
   utils->SpecialEncode(yesAsString, false, out);
   CheckEquals(yesExpectedString, out);

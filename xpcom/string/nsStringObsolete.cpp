@@ -392,7 +392,7 @@ Compare1To2(const char* aStr1,const char16_t* aStr2,uint32_t aCount,bool aIgnore
  * @return  the new length of the given buffer
  */
 static int32_t
-CompressChars1(char* aString,uint32_t aLength,const char* aSet){ 
+CompressChars1(char* aString,uint32_t aLength,const char* aSet){
 
   char*  from = aString;
   char*  end =  aString + aLength;

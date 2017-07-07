@@ -119,7 +119,7 @@ protected:
    nsresult SetRootShellSize(int32_t aWidth,
                              int32_t aHeight);
 
-   NS_IMETHOD SizeShellTo(nsIDocShellTreeItem* aShellItem, int32_t aCX, 
+   NS_IMETHOD SizeShellTo(nsIDocShellTreeItem* aShellItem, int32_t aCX,
       int32_t aCY);
    NS_IMETHOD ExitModalLoop(nsresult aStatus);
    NS_IMETHOD CreateNewChromeWindow(int32_t aChromeFlags, nsITabParent* aOpeningTab, mozIDOMWindowProxy* aOpenerWindow, nsIXULWindow **_retval);
@@ -156,7 +156,7 @@ protected:
    bool                    mDebuting;       // being made visible right now
    bool                    mChromeLoaded; // True when chrome has loaded
    bool                    mShowAfterLoad;
-   bool                    mIntrinsicallySized; 
+   bool                    mIntrinsicallySized;
    bool                    mCenterAfterLoad;
    bool                    mIsHiddenWindow;
    bool                    mLockedUntilChromeLoad;

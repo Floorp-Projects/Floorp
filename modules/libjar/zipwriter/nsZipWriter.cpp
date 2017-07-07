@@ -33,14 +33,14 @@ using namespace mozilla;
  * nsZipWriter is used to create and add to zip files.
  * It is based on the spec available at
  * http://www.pkware.com/documents/casestudies/APPNOTE.TXT.
- * 
+ *
  * The basic structure of a zip file created is slightly simpler than that
  * illustrated in the spec because certain features of the zip format are
  * unsupported:
- * 
+ *
  * [local file header 1]
  * [file data 1]
- * . 
+ * .
  * .
  * .
  * [local file header n]
@@ -238,7 +238,7 @@ NS_IMETHODIMP nsZipWriter::Open(nsIFile *aFile, int32_t aIoFlags)
     // Need to be able to write to the file
     if (aIoFlags & PR_RDONLY)
         return NS_ERROR_FAILURE;
-    
+
     nsresult rv = aFile->Clone(getter_AddRefs(mFile));
     NS_ENSURE_SUCCESS(rv, rv);
 

@@ -54,7 +54,6 @@ var winUtil = content.QueryInterface(Ci.nsIInterfaceRequestor)
     .getInterface(Ci.nsIDOMWindowUtils);
 var listenerId = null; // unique ID of this listener
 var curContainer = {frame: content, shadowRoot: null};
-var isRemoteBrowser = () => curContainer.frame.contentWindow !== null;
 var previousContainer = null;
 
 var seenEls = new element.Store();
@@ -118,10 +117,10 @@ var sandboxes = new Sandboxes(() => curContainer.frame);
 var sandboxName = "default";
 
 /**
- * The load listener singleton helps to keep track of active page
- * load activities, and can be used by any command which might cause a
- * navigation to happen.  In the specific case of remoteness changes it
- * allows to continue observing the current page load.
+ * The load listener singleton helps to keep track of active page load
+ * activities, and can be used by any command which might cause a navigation
+ * to happen. In the specific case of a reload of the frame script it allows
+ * to continue observing the current page load.
  */
 var loadListener = {
   command_id: null,
@@ -157,7 +156,7 @@ var loadListener = {
         .createInstance(Ci.nsITimer);
     this.timerPageUnload = null;
 
-    // In case of a remoteness change, only wait the remaining time
+    // In case the frame script has been reloaded, wait the remaining time
     timeout = startTime + timeout - new Date().getTime();
 
     if (timeout <= 0) {
@@ -212,8 +211,8 @@ var loadListener = {
       }
     }
 
-    // In the case when the observer was added before a remoteness change,
-    // it will no longer be available. Exceptions can be silently ignored.
+    // In case the observer was added before the frame script has been
+    // reloaded, it will no longer be available. Exceptions can be ignored.
     try {
       Services.obs.removeObserver(this, "outer-window-destroyed");
     } catch (e) {}
@@ -344,8 +343,8 @@ var loadListener = {
   },
 
   /**
-   * Continue to listen for page load events after a remoteness change
-   * happened.
+   * Continue to listen for page load events after the frame script has been
+   * reloaded.
    *
    * @param {number} command_id
    *     ID of the currently handled message between the driver and
@@ -356,7 +355,7 @@ var loadListener = {
    * @param {number} startTime
    *     Unix timestap when the navitation request got triggered.
    */
-  waitForLoadAfterRemotenessChange(command_id, timeout, startTime) {
+  waitForLoadAfterFramescriptReload(command_id, timeout, startTime) {
     this.start(command_id, timeout, startTime, false);
   },
 
@@ -430,18 +429,13 @@ function registerSelf() {
   // register will have the ID and a boolean describing if this is the
   // main process or not
   let register = sendSyncMessage("Marionette:register", msg);
-
   if (register[0]) {
-    let {id, remotenessChange} = register[0][0];
+    listenerId = register[0][0];
     capabilities = session.Capabilities.fromJSON(register[0][1]);
-    listenerId = id;
-    if (typeof id != "undefined") {
+    if (typeof listenerId != "undefined") {
       startListeners();
-      let rv = {};
-      if (remotenessChange) {
-        rv.listenerId = id;
-      }
-      sendAsyncMessage("Marionette:listenersAttached", rv);
+      sendAsyncMessage("Marionette:listenersAttached",
+          {"listenerId": listenerId});
     }
   }
 }
@@ -1105,8 +1099,8 @@ function cancelRequest() {
 }
 
 /**
- * This implements the latter part of a get request (for the case we
- * need to resume one when a remoteness update happens in the middle of a
+ * This implements the latter part of a get request (for the case we need
+ * to resume one when the frame script has been reloaded in the middle of a
  * navigate request). This is most of of the work of a navigate request,
  * but doesn't assume DOMContentLoaded is yet to fire.
  *
@@ -1122,7 +1116,7 @@ function cancelRequest() {
 function waitForPageLoaded(msg) {
   let {command_id, pageTimeout, startTime} = msg.json;
 
-  loadListener.waitForLoadAfterRemotenessChange(
+  loadListener.waitForLoadAfterFramescriptReload(
       command_id, pageTimeout, startTime);
 }
 

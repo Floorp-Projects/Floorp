@@ -42,7 +42,7 @@ public:
       /* [in] */ long column,
       /* [retval][out] */ BSTR *description);
 
-  virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_columnExtentAt( 
+  virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_columnExtentAt(
       /* [in] */ long row,
       /* [in] */ long column,
       /* [retval][out] */ long *nColumnsSpanned);
@@ -161,7 +161,7 @@ public:
       /* [out, retval] */ long *nColumns);
 
   virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_selectedRows(
-      /* [out, size_is(,*nRows)] */ long **selectedRows, 
+      /* [out, size_is(,*nRows)] */ long **selectedRows,
       /* [out, retval] */ long *nRows);
 
 protected:

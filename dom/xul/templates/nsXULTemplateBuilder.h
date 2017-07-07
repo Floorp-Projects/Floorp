@@ -213,7 +213,7 @@ public:
      *
      * @param aTemplate <template> to compile
      * @param aQuerySet first queryset
-     * @param aIsQuerySet true if 
+     * @param aIsQuerySet true if
      * @param aPriority the queryset index, incremented when a new one is added
      * @param aCanUseTemplate true if template is valid
      */
@@ -233,7 +233,7 @@ public:
      * @param aMemberVariable member variable for the query
      * @param aQuerySet the queryset
      */
-    nsresult 
+    nsresult
     CompileExtendedQuery(nsIContent* aRuleElement,
                          nsIContent* aActionElement,
                          nsIAtom* aMemberVariable,
@@ -259,7 +259,7 @@ public:
      * @param aQuerySet the query set
      * @param aCanUseTemplate true if the query is valid
      */
-    nsresult 
+    nsresult
     CompileSimpleQuery(nsIContent* aRuleElement,
                        nsTemplateQuerySet* aQuerySet,
                        bool* aCanUseTemplate);
@@ -376,9 +376,9 @@ public:
     SubstituteTextAppendText(nsXULTemplateBuilder* aThis, const nsAString& aText, void* aClosure);
 
     static void
-    SubstituteTextReplaceVariable(nsXULTemplateBuilder* aThis, const nsAString& aVariable, void* aClosure);    
+    SubstituteTextReplaceVariable(nsXULTemplateBuilder* aThis, const nsAString& aVariable, void* aClosure);
 
-    nsresult 
+    nsresult
     IsSystemPrincipal(nsIPrincipal *principal, bool *result);
 
     /**
@@ -490,7 +490,7 @@ protected:
      * Returns true if content may be generated for a result, or false if it
      * cannot, for example, if it would be created inside a closed container.
      * Those results will be generated when the container is opened.
-     * If false is returned, no content should be generated. Possible 
+     * If false is returned, no content should be generated. Possible
      * insertion locations may optionally be set for new content, depending on
      * the builder being used. Note that *aLocations or some items within
      * aLocations may be null.

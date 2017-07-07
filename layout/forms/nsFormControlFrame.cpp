@@ -159,9 +159,9 @@ nsresult
 nsFormControlFrame::RegUnRegAccessKey(nsIFrame * aFrame, bool aDoReg)
 {
   NS_ENSURE_ARG_POINTER(aFrame);
-  
+
   nsPresContext* presContext = aFrame->PresContext();
-  
+
   NS_ASSERTION(presContext, "aPresContext is NULL in RegUnRegAccessKey!");
 
   nsAutoString accessKey;
@@ -180,13 +180,13 @@ nsFormControlFrame::RegUnRegAccessKey(nsIFrame * aFrame, bool aDoReg)
   return NS_ERROR_FAILURE;
 }
 
-void 
+void
 nsFormControlFrame::SetFocus(bool aOn, bool aRepaint)
 {
 }
 
 nsresult
-nsFormControlFrame::HandleEvent(nsPresContext* aPresContext, 
+nsFormControlFrame::HandleEvent(nsPresContext* aPresContext,
                                 WidgetGUIEvent* aEvent,
                                 nsEventStatus* aEventStatus)
 {

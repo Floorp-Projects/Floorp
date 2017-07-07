@@ -42,7 +42,7 @@ invoke_copy_to_stack(uint32_t* d, uint32_t paramCount, nsXPTCVariant* s, double 
         case nsXPTType::T_I8     : *((int32_t*)  l_d) = l_s->val.i8;          break;
         case nsXPTType::T_I16    : *((int32_t*)  l_d) = l_s->val.i16;         break;
         case nsXPTType::T_I32    : *((int32_t*)  l_d) = l_s->val.i32;         break;
-        case nsXPTType::T_I64    : 
+        case nsXPTType::T_I64    :
         case nsXPTType::T_U64    :
             *((uint32_t*) l_d++) = ((DU *)l_s)->hi;
             *((uint32_t*) l_d) = ((DU *)l_s)->lo;

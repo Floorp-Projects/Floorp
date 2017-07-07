@@ -149,7 +149,7 @@ AudioRunnable::Run()
   {
     // reset the buffer size
     buffer.size = mTrack->bufferSize;
-    
+
     {
       mozilla::MutexAutoLock lock(mTrack->lock);
 
@@ -189,7 +189,7 @@ AudioRunnable::Run()
   jenv->DeleteGlobalRef(mTrack->at_class);
 
   delete mTrack;
-  
+
   jenv->ReleaseByteArrayElements(bytearray, byte, 0);
 
   return NS_OK;

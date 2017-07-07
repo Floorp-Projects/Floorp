@@ -106,7 +106,7 @@ nsRubyFrame::Reflow(nsPresContext* aPresContext,
   MarkInReflow();
   DO_GLOBAL_REFLOW_COUNT("nsRubyFrame");
   DISPLAY_REFLOW(aPresContext, this, aReflowInput, aDesiredSize, aStatus);
-  
+
   if (!aReflowInput.mLineLayout) {
     NS_ASSERTION(aReflowInput.mLineLayout,
                  "No line layout provided to RubyFrame reflow method.");

@@ -274,7 +274,7 @@ private:
    */
   bool ComputeMargin(mozilla::WritingMode aWM,
                      const mozilla::LogicalSize& aPercentBasis);
-  
+
   /**
    * Computes padding values from the specified padding style information, and
    * fills in the mComputedPadding member.
@@ -560,7 +560,7 @@ private:
   // For block-level frames, the computed width is based on the width of the
   // containing block, the margin/border/padding areas, and the min/max width.
   MOZ_INIT_OUTSIDE_CTOR
-  nscoord          mComputedWidth; 
+  nscoord          mComputedWidth;
 
   // The computed height specifies the frame's content height, and it does
   // not apply to inline non-replaced elements
@@ -611,7 +611,7 @@ public:
 
   mozilla::StyleDisplay GetDisplay() const;
 
-  // a frame (e.g. nsTableCellFrame) which may need to generate a special 
+  // a frame (e.g. nsTableCellFrame) which may need to generate a special
   // reflow for percent bsize calculations
   nsIPercentBSizeObserver* mPercentBSizeObserver;
 
@@ -864,7 +864,7 @@ public:
     // frames NS_FRAME_CONTAINS_RELATIVE_BSIZE is marked on.
     return (mFrame->GetStateBits() & NS_FRAME_IS_DIRTY) ||
            IsIResize() ||
-           (IsBResize() && 
+           (IsBResize() &&
             (mFrame->GetStateBits() & NS_FRAME_CONTAINS_RELATIVE_BSIZE));
   }
 

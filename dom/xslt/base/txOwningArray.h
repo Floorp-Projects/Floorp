@@ -26,7 +26,7 @@ public:
             delete *iter;
         }
     }
-  
+
 };
 
 #endif // txOwningArray_h__

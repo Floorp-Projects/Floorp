@@ -192,7 +192,7 @@ nsresult nsZipHandle::Init(nsIFile *file, nsZipHandle **ret,
   PRFileMap *map = PR_CreateFileMap(fd, size, PR_PROT_READONLY);
   if (!map)
     return NS_ERROR_FAILURE;
-  
+
   uint8_t *buf = (uint8_t*) PR_MemMap(map, 0, (uint32_t) size);
   // Bug 525755: PR_MemMap fails when fd points at something other than a normal file.
   if (!buf) {
@@ -445,7 +445,7 @@ nsZipItem*  nsZipArchive::GetItem(const char * aEntryName)
 {
   if (aEntryName) {
     uint32_t len = strlen(aEntryName);
-    //-- If the request is for a directory, make sure that synthetic entries 
+    //-- If the request is for a directory, make sure that synthetic entries
     //-- are created for the directories without their own entry.
     if (!mBuiltSynthetics) {
         if ((len > 0) && (aEntryName[len-1] == '/')) {
@@ -456,9 +456,9 @@ nsZipItem*  nsZipArchive::GetItem(const char * aEntryName)
 MOZ_WIN_MEM_TRY_BEGIN
     nsZipItem* item = mFiles[ HashName(aEntryName, len) ];
     while (item) {
-      if ((len == item->nameLength) && 
+      if ((len == item->nameLength) &&
           (!memcmp(aEntryName, item->Name(), len))) {
-        
+
         // Successful GetItem() is a good indicator that the file is about to be read
         zipLog.Write(mURI, aEntryName);
         return item; //-- found it
@@ -993,10 +993,10 @@ nsZipFind::~nsZipFind()
 // helper functions
 //------------------------------------------
 
-/* 
- * HashName 
+/*
+ * HashName
  *
- * returns a hash key for the entry name 
+ * returns a hash key for the entry name
  */
 static uint32_t HashName(const char* aName, uint16_t len)
 {
@@ -1190,7 +1190,7 @@ nsZipCursor::nsZipCursor(nsZipItem *item, nsZipArchive *aZip, uint8_t* aBuf,
     NS_ASSERTION(status == NS_OK, "Zlib failed to initialize");
     NS_ASSERTION(aBuf, "Must pass in a buffer for DEFLATED nsZipItem");
   }
-  
+
   mZs.avail_in = item->Size();
   mZs.next_in = (Bytef*)aZip->GetData(item);
 
@@ -1199,7 +1199,7 @@ nsZipCursor::nsZipCursor(nsZipItem *item, nsZipArchive *aZip, uint8_t* aBuf,
     mBrotliState = BrotliCreateState(nullptr, nullptr, nullptr);
   }
 #endif
-  
+
   if (doCRC)
     mCRC = crc32(0L, Z_NULL, 0);
 }
@@ -1242,11 +1242,11 @@ MOZ_WIN_MEM_TRY_BEGIN
     buf = mBuf;
     mZs.next_out = buf;
     mZs.avail_out = mBufSize;
-    
+
     zerr = inflate(&mZs, Z_PARTIAL_FLUSH);
     if (zerr != Z_OK && zerr != Z_STREAM_END)
       return nullptr;
-    
+
     *aBytesRead = mZs.next_out - buf;
     verifyCRC = (zerr == Z_STREAM_END);
     break;

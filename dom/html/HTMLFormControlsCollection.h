@@ -65,7 +65,7 @@ public:
                           int32_t* aIndex);
 
   nsISupports* NamedItemInternal(const nsAString& aName, bool aFlushContent);
-  
+
   /**
    * Create a sorted list of form control elements. This list is sorted
    * in document order and contains the controls in the mElements and
@@ -114,7 +114,7 @@ protected:
 
   // Flush out the content model so it's up to date.
   void FlushPendingNotifications();
-  
+
   // A map from an ID or NAME attribute to the form control(s), this
   // hash holds strong references either to the named form control, or
   // to a list of named form controls, in the case where this hash

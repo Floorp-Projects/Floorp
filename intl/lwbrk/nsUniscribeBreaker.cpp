@@ -17,7 +17,7 @@ void
 NS_GetComplexLineBreaks(const char16_t* aText, uint32_t aLength,
                         uint8_t* aBreakBefore)
 {
-  NS_ASSERTION(aText, "aText shouldn't be null"); 
+  NS_ASSERTION(aText, "aText shouldn't be null");
 
   int outItems = 0;
   HRESULT result;
@@ -43,12 +43,12 @@ NS_GetComplexLineBreaks(const char16_t* aText, uint32_t aLength,
     uint32_t endOffset = (iItem + 1 == outItems ? aLength : items[iItem + 1].iCharPos);
     uint32_t startOffset = items[iItem].iCharPos;
     AutoTArray<SCRIPT_LOGATTR, 64> sla;
-    
+
     if (!sla.AppendElements(endOffset - startOffset))
       return;
 
     if (ScriptBreak(text + startOffset, endOffset - startOffset,
-                    &items[iItem].a,  sla.Elements()) < 0) 
+                    &items[iItem].a,  sla.Elements()) < 0)
       return;
 
     for (uint32_t j=0; j+startOffset < endOffset; ++j) {

@@ -427,7 +427,7 @@ VectorImage::OnImageDataComplete(nsIRequest* aRequest,
   if (NS_FAILED(aStatus)) {
     finalStatus = aStatus;
   }
-  
+
   Progress loadProgress = LoadCompleteProgress(aLastPart, mError, finalStatus);
 
   if (mIsFullyLoaded || mError) {

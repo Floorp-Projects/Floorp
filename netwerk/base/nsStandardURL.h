@@ -93,7 +93,7 @@ public: /* internal -- HPUX compiler can't handle this being private */
         // Assumes we have something like "foo;bar" where this object is 'foo' and right
         // is 'bar'.
         void Merge(const nsCString &spec, const char separator, const URLSegment &right) {
-            if (mLen >= 0 && 
+            if (mLen >= 0 &&
                 *(spec.get() + mPos + mLen) == separator &&
                 mPos + mLen + 1 == right.mPos) {
                 mLen += 1 + right.mLen;
@@ -133,7 +133,7 @@ public: /* internal -- HPUX compiler can't handle this being private */
                                    nsCString& buf,
                                    bool& appended,
                                    uint32_t extraLen = 0);
-         
+
         // Encode the given string if necessary, and return a reference to
         // the encoded string.  Returns a reference to |buf| if encoding
         // is required.  Otherwise, a reference to |str| is returned.
@@ -279,7 +279,7 @@ private:
     // mFile is protected so subclasses can access it directly
 protected:
     nsCOMPtr<nsIFile>      mFile;  // cached result for nsIFileURL::GetFile
-    
+
 private:
     char                  *mHostA; // cached result for nsIURI::GetHostA
 

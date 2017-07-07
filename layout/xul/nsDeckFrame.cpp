@@ -138,10 +138,10 @@ nsDeckFrame::GetSelectedIndex()
   return index;
 }
 
-nsIFrame* 
+nsIFrame*
 nsDeckFrame::GetSelectedBox()
 {
-  return (mIndex >= 0) ? mFrames.FrameAt(mIndex) : nullptr; 
+  return (mIndex >= 0) ? mFrames.FrameAt(mIndex) : nullptr;
 }
 
 void
@@ -152,7 +152,7 @@ nsDeckFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   // if a tab is hidden all its children are too.
   if (!StyleVisibility()->mVisible)
     return;
-    
+
   nsBoxFrame::BuildDisplayList(aBuilder, aDirtyRect, aLists);
 }
 
@@ -215,10 +215,10 @@ nsDeckFrame::DoXULLayout(nsBoxLayoutState& aState)
   nsIFrame* box = nsBox::GetChildXULBox(this);
 
   nscoord count = 0;
-  while (box) 
+  while (box)
   {
     // make collapsed children not show up
-    if (count != mIndex) 
+    if (count != mIndex)
       HideBox(box);
 
     box = GetNextXULBox(box);

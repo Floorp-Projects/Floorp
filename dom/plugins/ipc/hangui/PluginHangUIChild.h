@@ -19,8 +19,8 @@ namespace plugins {
 /**
  * This class implements the plugin-hang-ui.
  *
- * NOTE: PluginHangUIChild is *not* an IPDL actor! In this case, "Child" 
- *       is describing the fact that plugin-hang-ui is a child process to the 
+ * NOTE: PluginHangUIChild is *not* an IPDL actor! In this case, "Child"
+ *       is describing the fact that plugin-hang-ui is a child process to the
  *       firefox process, which is the PluginHangUIParent.
  *       PluginHangUIParent and PluginHangUIChild are a matched pair.
  * @see PluginHangUIParent
@@ -35,18 +35,18 @@ public:
   Init(int aArgc, wchar_t* aArgv[]);
 
   /**
-   * Displays the Plugin Hang UI and does not return until the UI has 
+   * Displays the Plugin Hang UI and does not return until the UI has
    * been dismissed.
    *
-   * @return true if the UI was displayed and the user response was 
+   * @return true if the UI was displayed and the user response was
    *         successfully sent back to the parent. Otherwise false.
    */
   bool
   Show();
 
   /**
-   * Causes the calling thread to wait either for the Hang UI to be 
-   * dismissed or for the parent process to terminate. This should 
+   * Causes the calling thread to wait either for the Hang UI to be
+   * dismissed or for the parent process to terminate. This should
    * be called by the main thread.
    *
    * @return true unless there was an error initiating the wait

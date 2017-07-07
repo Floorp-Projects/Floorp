@@ -26,7 +26,7 @@ public:
 
   NS_IMETHOD Run() override;
   nsresult Cancel() override;
-  
+
 protected:
   PluginInstanceChild* mInstance;
   PluginThreadCallback mFunc;

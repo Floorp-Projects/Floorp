@@ -506,7 +506,7 @@ outputwidl(struct node *node)
                     /* Block comment. */
                     comment = p;
                     p++;
-                    do 
+                    do
                         p = memchr(p + 1, '*', thisend - p - 1);
                     while (p[1] != '/');
                     endcomment = p + 2;

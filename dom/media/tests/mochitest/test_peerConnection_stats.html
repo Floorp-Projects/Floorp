@@ -16,8 +16,8 @@ var statsExpectedByType = {
       "packetsReceived", "packetsLost", "bytesReceived", "jitter",],
     optional: ["roundTripTime", "remoteId", "nackCount",],
     localVideoOnly: ["discardedPackets", "framerateStdDev", "framerateMean",
-      "bitrateMean", "bitrateStdDev", "firCount", "pliCount",],
-    unimplemented: ["mediaTrackId", "transportId", "codecId", "framesDecoded",
+      "bitrateMean", "bitrateStdDev", "firCount", "pliCount", "framesDecoded",],
+    unimplemented: ["mediaTrackId", "transportId", "codecId",
       "packetsDiscarded", "associateStatsId",
       "sliCount", "qpSum", "packetsRepaired", "fractionLost",
       "burstPacketsLost", "burstLossCount", "burstDiscardCount",
@@ -258,7 +258,10 @@ var pedanticChecks = report => {
         ok(stat.discardedPackets < 100, stat.type
           + ".discardedPackets is a sane number for a short test. value="
           + stat.discardedPackets);
-
+        // framesDecoded
+        ok(stat.framesDecoded > 0 && stat.framesDecoded < 1000000, stat.type
+          + ".framesDecoded is a sane number for a short test. value="
+          + stat.framesDecoded);
         // bitrateMean
         // special exception, TODO: Bug 1341533
         if (stat.bitrateMean !== undefined) {

@@ -44,7 +44,7 @@ public:
 private:
     HWND GetHWNDForDOMWindow(mozIDOMWindowProxy *parent);
     nsresult DoDialog(mozIDOMWindowProxy *aParent,
-                      nsIDialogParamBlock *aParamBlock, 
+                      nsIDialogParamBlock *aParamBlock,
                       nsIPrintSettings* aPS,
                       const char *aChromeURL);
 

@@ -71,7 +71,7 @@ class txStylesheetCompilerState : public txIParseContext
 public:
     explicit txStylesheetCompilerState(txACompileObserver* aObserver);
     ~txStylesheetCompilerState();
-    
+
     nsresult init(const nsAString& aStylesheetURI,
                   mozilla::net::ReferrerPolicy aReferrerPolicy,
                   txStylesheet* aStylesheet, txListIterator* aInsertPosition);
@@ -109,7 +109,7 @@ public:
     txObject* popObject();
     nsresult pushPtr(void* aPtr, enumStackType aType);
     void* popPtr(enumStackType aType);
-    
+
     // stylesheet functions
     nsresult addToplevelItem(txToplevelItem* aItem);
     nsresult openInstructionContainer(txInstructionContainer* aContainer);
@@ -118,7 +118,7 @@ public:
     nsresult loadIncludedStylesheet(const nsAString& aURI);
     nsresult loadImportedStylesheet(const nsAString& aURI,
                                     txStylesheet::ImportFrame* aFrame);
-    
+
     // misc
     nsresult addGotoTarget(txInstruction** aTargetPointer);
     nsresult addVariable(const txExpandedName& aName);
@@ -170,7 +170,7 @@ protected:
     nsTArray<txStylesheetCompiler*> mChildCompilerList;
     // embed info, target information is the ID
     nsString mTarget;
-    enum 
+    enum
     {
         eNoEmbed,
         eNeedEmbed,

@@ -20,7 +20,7 @@
 #define NULL 0
 #endif
 
-struct StringTable 
+struct StringTable
 {
   char title[MAX_TEXT_LEN];
   char info[MAX_TEXT_LEN];

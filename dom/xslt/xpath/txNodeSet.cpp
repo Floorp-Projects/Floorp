@@ -152,12 +152,12 @@ nsresult txNodeSet::addAndTransfer(txNodeSet* aNodes)
  * The code is optimized to make a minimum number of calls to
  * Node::compareDocumentPosition. The idea is this:
  * We have the two nodesets (number indicate "document position")
- * 
+ *
  * 1 3 7             <- source 1
  * 2 3 6 8 9         <- source 2
  * _ _ _ _ _ _ _ _   <- result
- * 
- * 
+ *
+ *
  * When merging these nodesets into the result, the nodes are transfered
  * in chunks to the end of the buffer so that each chunk does not contain
  * a node from the other nodeset, in document order.
@@ -168,7 +168,7 @@ nsresult txNodeSet::addAndTransfer(txNodeSet* aNodes)
  * 6 and 8 in the second. We then take the nodes after the insert-position
  * and transfer them to the end of the resulting nodeset. Which in this case
  * means that we first transfered the 8 and 9 nodes, giving us the following:
- * 
+ *
  * 1 3 7             <- source 1
  * 2 3 6             <- source 2
  * _ _ _ _ _ _ 8 9   <- result
@@ -180,7 +180,7 @@ nsresult txNodeSet::addAndTransfer(txNodeSet* aNodes)
  *
  * As the result buffer is filled from the end, it is safe to share the
  * buffer between this nodeset and the result.
- * 
+ *
  * This is repeated until both of the nodesets are empty.
  *
  * If we find a duplicate node when searching for where insertposition we
@@ -291,7 +291,7 @@ nsresult txNodeSet::add(const txNodeSet& aNodes, transferOp aTransfer,
     }
     mStart = insertPos;
     mEnd = mEndBuffer;
-    
+
     return NS_OK;
 }
 
@@ -513,7 +513,7 @@ bool txNodeSet::ensureGrowSize(int32_t aSize)
         memmove(dest, mStart, oldSize * sizeof(txXPathNode));
         mStart = dest;
         mEnd = dest + oldSize;
-            
+
         return true;
     }
 

@@ -278,7 +278,7 @@ HTMLTableRowElement::IsAttributeMapped(const nsIAtom* aAttribute) const
 {
   static const MappedAttributeEntry attributes[] = {
     { &nsGkAtoms::align },
-    { &nsGkAtoms::valign }, 
+    { &nsGkAtoms::valign },
     { &nsGkAtoms::height },
     { nullptr }
   };

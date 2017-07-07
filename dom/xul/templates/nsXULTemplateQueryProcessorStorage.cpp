@@ -143,7 +143,7 @@ NS_IMPL_ISUPPORTS(nsXULTemplateQueryProcessorStorage,
                   nsIXULTemplateQueryProcessor)
 
 
-nsXULTemplateQueryProcessorStorage::nsXULTemplateQueryProcessorStorage() 
+nsXULTemplateQueryProcessorStorage::nsXULTemplateQueryProcessorStorage()
     : mGenerationStarted(false)
 {
 }
@@ -287,7 +287,7 @@ nsXULTemplateQueryProcessorStorage::CompileQuery(nsIXULTemplateBuilder* aBuilder
     nsCOMPtr<nsIContent> queryContent = do_QueryInterface(aQueryNode);
     nsAutoString sqlQuery;
 
-    // Let's get all text nodes (which should be the query) 
+    // Let's get all text nodes (which should be the query)
     if (!nsContentUtils::GetNodeTextContent(queryContent, false, sqlQuery, fallible)) {
       return NS_ERROR_OUT_OF_MEMORY;
     }

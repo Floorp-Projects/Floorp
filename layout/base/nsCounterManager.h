@@ -120,7 +120,7 @@ struct nsCounterChangeNode : public nsCounterNode {
                         // that comes before all the real content, with
                         // the resets first, in order, and then the increments.
                         aPropIndex + (aChangeType == RESET
-                                        ? (INT32_MIN) 
+                                        ? (INT32_MIN)
                                         : (INT32_MIN / 2)),
                         aChangeType)
         , mChangeValue(aChangeValue)

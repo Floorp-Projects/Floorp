@@ -30,7 +30,7 @@ public:
            , mBitMapDirty(false)
             {}
     ~nsDiskCacheBlockFile() { (void) Close(true); }
-    
+
     nsresult  Open( nsIFile *  blockFile, uint32_t  blockSize,
                     uint32_t  bitMapSize, nsDiskCache::CorruptCacheInfo *  corruptInfo);
     nsresult  Close(bool flush);
@@ -41,9 +41,9 @@ public:
      */
     nsresult  Trim() { return nsDiskCache::Truncate(mFD, CalcBlockFileSize()); }
     nsresult  DeallocateBlocks( int32_t  startBlock, int32_t  numBlocks);
-    nsresult  WriteBlocks( void * buffer, uint32_t size, int32_t  numBlocks, 
+    nsresult  WriteBlocks( void * buffer, uint32_t size, int32_t  numBlocks,
                            int32_t * startBlock);
-    nsresult  ReadBlocks( void * buffer, int32_t  startBlock, int32_t  numBlocks, 
+    nsresult  ReadBlocks( void * buffer, int32_t  startBlock, int32_t  numBlocks,
                           int32_t * bytesRead);
 
     size_t   SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf);

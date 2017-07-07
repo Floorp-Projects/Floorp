@@ -124,7 +124,7 @@ class txVariableItem : public txInstructionContainer
 public:
     txVariableItem(const txExpandedName& aName, nsAutoPtr<Expr>&& aValue,
                    bool aIsParam);
-    
+
     TX_DECL_TOPLEVELITEM
 
     txExpandedName mName;

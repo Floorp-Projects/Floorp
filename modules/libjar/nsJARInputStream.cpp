@@ -1,6 +1,6 @@
 /* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /* nsJARInputStream.cpp
- * 
+ *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -41,14 +41,14 @@ nsJARInputStream::InitFile(nsJAR *aJar, nsZipItem *item)
     mMode = MODE_CLOSED;
     //-- prepare for the compression type
     switch (item->Compression()) {
-       case STORED: 
+       case STORED:
            mMode = MODE_COPY;
            break;
 
        case DEFLATED:
            rv = gZlibInit(&mZs);
            NS_ENSURE_SUCCESS(rv, rv);
-    
+
            mMode = MODE_INFLATE;
            mInCrc = item->CRC32();
            mOutCrc = crc32(0L, Z_NULL, 0);
@@ -66,7 +66,7 @@ nsJARInputStream::InitFile(nsJAR *aJar, nsZipItem *item)
        default:
            return NS_ERROR_NOT_IMPLEMENTED;
     }
-   
+
     // Must keep handle to filepointer and mmap structure as long as we need access to the mmapped data
     mFd = aJar->mZip->GetFD();
     mZs.next_in = (Bytef *)aJar->mZip->GetData(item);
@@ -90,7 +90,7 @@ nsJARInputStream::InitDirectory(nsJAR* aJar,
 
     // Mark it as closed, in case something fails in initialisation
     mMode = MODE_CLOSED;
-    
+
     // Keep the zipReader for getting the actual zipItems
     mJar = aJar;
     nsZipFind *find;
@@ -159,7 +159,7 @@ nsJARInputStream::InitDirectory(nsJAR* aJar,
     return NS_OK;
 }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsJARInputStream::Available(uint64_t *_retval)
 {
     // A lot of callers don't check the error code.
@@ -274,7 +274,7 @@ nsJARInputStream::Close()
     return NS_OK;
 }
 
-nsresult 
+nsresult
 nsJARInputStream::ContinueInflate(char* aBuffer, uint32_t aCount,
                                   uint32_t* aBytesRead)
 {
@@ -286,7 +286,7 @@ nsJARInputStream::ContinueInflate(char* aBuffer, uint32_t aCount,
 
     // Keep old total_out count
     const uint32_t oldTotalOut = mZs.total_out;
-    
+
     // make sure we aren't reading too much
     mZs.avail_out = std::min(aCount, (mOutSize-oldTotalOut));
     mZs.next_out = (unsigned char*)aBuffer;
@@ -391,14 +391,14 @@ nsJARInputStream::ReadDirectory(char* aBuffer, uint32_t aCount, uint32_t *aBytes
             // of the directory name as the offset into the string
             // NS_EscapeURL adds the escaped URL to the give string buffer
             NS_EscapeURL(entryName + mNameLen,
-                         entryNameLen - mNameLen, 
+                         entryNameLen - mNameLen,
                          esc_Minimal | esc_AlwaysCopy,
                          mBuffer);
 
             mBuffer.Append(' ');
             mBuffer.AppendInt(ze->RealSize(), 10);
             mBuffer.Append(itemLastModTime); // starts/ends with ' '
-            if (ze->IsDirectory()) 
+            if (ze->IsDirectory())
                 mBuffer.AppendLiteral("DIRECTORY\n");
             else
                 mBuffer.AppendLiteral("FILE\n");

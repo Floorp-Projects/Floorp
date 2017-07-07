@@ -273,7 +273,7 @@ nsSVGAnimatedTransformList::SMILAnimatedTransformList::ParseParameterList(
   while (tokenizer.hasMoreTokens()) {
     float f;
     if (!SVGContentUtils::ParseNumber(tokenizer.nextToken(), f)) {
-      return -1;    
+      return -1;
     }
     if (numArgsFound < aNVars) {
       aVars[numArgsFound] = f;

@@ -272,7 +272,7 @@ nsSocketTransportService::DetachSocket(SocketContext *listHead, SocketContext *s
         RemoveFromIdleList(sock);
 
     // NOTE: sock is now an invalid pointer
-    
+
     //
     // notify the first element on the pending socket queue...
     //
@@ -304,7 +304,7 @@ nsSocketTransportService::AddToPollList(SocketContext *sock)
             return NS_ERROR_OUT_OF_MEMORY;
         }
     }
-    
+
     uint32_t newSocketIndex = mActiveCount;
     if (ChaosMode::isActive(ChaosFeature::NetworkScheduling)) {
       newSocketIndex = ChaosMode::randomUint32LessThan(mActiveCount + 1);
@@ -512,7 +512,7 @@ nsSocketTransportService::Poll(uint32_t *interval,
     }
 
     SOCKET_LOG(("    ...returned after %i milliseconds\n",
-         PR_IntervalToMilliseconds(passedInterval))); 
+         PR_IntervalToMilliseconds(passedInterval)));
 
     *interval = PR_IntervalToSeconds(passedInterval);
     return rv;
@@ -548,7 +548,7 @@ nsSocketTransportService::Init()
     nsCOMPtr<nsIThread> thread;
     nsresult rv = NS_NewNamedThread("Socket Thread", getter_AddRefs(thread), this);
     if (NS_FAILED(rv)) return rv;
-    
+
     {
         MutexAutoLock lock(mLock);
         // Install our mThread, protecting against concurrent readers
@@ -633,7 +633,7 @@ nsSocketTransportService::ShutdownThread()
     }
 
     nsCOMPtr<nsIPrefBranch> tmpPrefService = do_GetService(NS_PREFSERVICE_CONTRACTID);
-    if (tmpPrefService) 
+    if (tmpPrefService)
         tmpPrefService->RemoveObserver(SEND_BUFFER_PREF, this);
 
     nsCOMPtr<nsIObserverService> obsSvc = services::GetObserverService();
@@ -1179,7 +1179,7 @@ nsSocketTransportService::DoPollIteration(TimeDuration *pollDuration)
                     s.mElapsedTime = UINT16_MAX;
                 else
                     s.mElapsedTime += uint16_t(pollInterval);
-                // check for timeout expiration 
+                // check for timeout expiration
                 if (s.mElapsedTime >= s.mHandler->mPollTimeout) {
 #ifdef MOZ_TASK_TRACER
 		    tasktracer::AutoSourceEvent taskTracerEvent(tasktracer::SourceEventType::SocketIO);
@@ -1497,7 +1497,7 @@ nsSocketTransportService::ProbeMaxCount()
     static_assert(SOCKET_LIMIT_MIN >= 32U, "Minimum Socket Limit is >= 32");
     while (gMaxCount <= numAllocated) {
         int32_t rv = PR_Poll(pfd, gMaxCount, PR_MillisecondsToInterval(0));
-        
+
         SOCKET_LOG(("Socket Limit Test poll() size=%d rv=%d\n",
                     gMaxCount, rv));
 

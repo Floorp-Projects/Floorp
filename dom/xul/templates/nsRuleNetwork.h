@@ -118,7 +118,7 @@ public:
         mElements = aSet.mElements;
         NS_IF_ADDREF(mElements);
         return *this; }
-        
+
     ~MemoryElementSet() {
         MOZ_COUNT_DTOR(MemoryElementSet);
         NS_IF_RELEASE(mElements); }
@@ -816,7 +816,7 @@ public:
      * The node must then pass the resulting set of instantiations up
      * to its parent (by recursive call; we should make this iterative
      * & interruptable at some point.)
-     * 
+     *
      * @param aInstantiations the set of instantiations that must
      *   be constrained
      * @return NS_OK if no errors occurred

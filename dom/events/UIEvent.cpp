@@ -44,7 +44,7 @@ UIEvent::UIEvent(EventTarget* aOwner,
     mEventIsInternal = true;
     mEvent->mTime = PR_Now();
   }
-  
+
   // Fill mDetail and mView according to the mEvent (widget-generated
   // event) we've got
   switch(mEvent->mClass) {
@@ -518,7 +518,7 @@ using namespace mozilla::dom;
 already_AddRefed<UIEvent>
 NS_NewDOMUIEvent(EventTarget* aOwner,
                  nsPresContext* aPresContext,
-                 WidgetGUIEvent* aEvent) 
+                 WidgetGUIEvent* aEvent)
 {
   RefPtr<UIEvent> it = new UIEvent(aOwner, aPresContext, aEvent);
   return it.forget();

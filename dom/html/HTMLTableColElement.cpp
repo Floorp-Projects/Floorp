@@ -15,7 +15,7 @@ NS_IMPL_NS_NEW_HTML_ELEMENT(TableCol)
 namespace mozilla {
 namespace dom {
 
-// use the same protection as ancient code did 
+// use the same protection as ancient code did
 // http://lxr.mozilla.org/classic/source/lib/layout/laytable.c#46
 #define MAX_COLSPAN 1000
 

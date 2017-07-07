@@ -33,7 +33,7 @@ public:
 
     NS_DECL_ISUPPORTS
     NS_DECL_NSISCRIPTLOADEROBSERVER
-    
+
     // nsICSSLoaderObserver
     NS_IMETHOD StyleSheetLoaded(mozilla::StyleSheet* aSheet,
                                 bool aWasAlternate,

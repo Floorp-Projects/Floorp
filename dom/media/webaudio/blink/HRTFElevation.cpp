@@ -36,7 +36,7 @@
 
 using namespace std;
 using namespace mozilla;
- 
+
 namespace WebCore {
 
 const int elevationSpacing = irc_composite_c_r0195_elevation_interval;
@@ -182,30 +182,30 @@ nsReturnRef<HRTFKernel> HRTFElevation::calculateKernelForAzimuthElevation(int az
 static int maxElevations[] = {
         //  Azimuth
         //
-    90, // 0  
-    45, // 15 
-    60, // 30 
-    45, // 45 
-    75, // 60 
-    45, // 75 
-    60, // 90 
-    45, // 105 
-    75, // 120 
-    45, // 135 
-    60, // 150 
-    45, // 165 
-    75, // 180 
-    45, // 195 
-    60, // 210 
-    45, // 225 
-    75, // 240 
-    45, // 255 
-    60, // 270 
-    45, // 285 
-    75, // 300 
-    45, // 315 
-    60, // 330 
-    45 //  345 
+    90, // 0
+    45, // 15
+    60, // 30
+    45, // 45
+    75, // 60
+    45, // 75
+    60, // 90
+    45, // 105
+    75, // 120
+    45, // 135
+    60, // 150
+    45, // 165
+    75, // 180
+    45, // 195
+    60, // 210
+    45, // 225
+    75, // 240
+    45, // 255
+    60, // 270
+    45, // 285
+    75, // 300
+    45, // 315
+    60, // 330
+    45 //  345
 };
 
 nsReturnRef<HRTFElevation> HRTFElevation::createBuiltin(int elevation, float sampleRate)
@@ -214,7 +214,7 @@ nsReturnRef<HRTFElevation> HRTFElevation::createBuiltin(int elevation, float sam
         elevation > firstElevation + numberOfElevations * elevationSpacing ||
         (elevation / elevationSpacing) * elevationSpacing != elevation)
         return nsReturnRef<HRTFElevation>();
-        
+
     // Spacing, in degrees, between every azimuth loaded from resource.
     // Some elevations do not have data for all these intervals.
     // See maxElevations.
@@ -242,7 +242,7 @@ nsReturnRef<HRTFElevation> HRTFElevation::createBuiltin(int elevation, float sam
         int actualElevation = min(elevation, maxElevation);
 
         kernelListL[interpolatedIndex] = calculateKernelForAzimuthElevation(rawIndex * AzimuthSpacing, actualElevation, resampler, sampleRate);
-            
+
         interpolatedIndex += InterpolationFactor;
     }
 
@@ -260,7 +260,7 @@ nsReturnRef<HRTFElevation> HRTFElevation::createBuiltin(int elevation, float sam
             kernelListL[i + jj] = HRTFKernel::createInterpolatedKernel(kernelListL[i], kernelListL[j], x);
         }
     }
-    
+
     return nsReturnRef<HRTFElevation>(new HRTFElevation(&kernelListL, elevation, sampleRate));
 }
 
@@ -269,15 +269,15 @@ nsReturnRef<HRTFElevation> HRTFElevation::createByInterpolatingSlices(HRTFElevat
     MOZ_ASSERT(hrtfElevation1 && hrtfElevation2);
     if (!hrtfElevation1 || !hrtfElevation2)
         return nsReturnRef<HRTFElevation>();
-        
+
     MOZ_ASSERT(x >= 0.0 && x < 1.0);
-    
+
     HRTFKernelList kernelListL;
     kernelListL.SetLength(NumberOfTotalAzimuths);
 
     const HRTFKernelList& kernelListL1 = hrtfElevation1->kernelListL();
     const HRTFKernelList& kernelListL2 = hrtfElevation2->kernelListL();
-    
+
     // Interpolate kernels of corresponding azimuths of the two elevations.
     for (unsigned i = 0; i < NumberOfTotalAzimuths; ++i) {
         kernelListL[i] = HRTFKernel::createInterpolatedKernel(kernelListL1[i], kernelListL2[i], x);
@@ -285,7 +285,7 @@ nsReturnRef<HRTFElevation> HRTFElevation::createByInterpolatingSlices(HRTFElevat
 
     // Interpolate elevation angle.
     double angle = (1.0 - x) * hrtfElevation1->elevationAngle() + x * hrtfElevation2->elevationAngle();
-    
+
     return nsReturnRef<HRTFElevation>(new HRTFElevation(&kernelListL, static_cast<int>(angle), sampleRate));
 }
 
@@ -295,7 +295,7 @@ void HRTFElevation::getKernelsFromAzimuth(double azimuthBlend, unsigned azimuthI
     MOZ_ASSERT(checkAzimuthBlend);
     if (!checkAzimuthBlend)
         azimuthBlend = 0.0;
-    
+
     unsigned numKernels = m_kernelListL.Length();
 
     bool isIndexGood = azimuthIndex < numKernels;
@@ -305,7 +305,7 @@ void HRTFElevation::getKernelsFromAzimuth(double azimuthBlend, unsigned azimuthI
         kernelR = 0;
         return;
     }
-    
+
     // Return the left and right kernels,
     // using symmetry to produce the right kernel.
     kernelL = m_kernelListL[azimuthIndex];

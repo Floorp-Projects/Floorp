@@ -238,7 +238,7 @@ CookieServiceChild::SetCookieStringFromHttp(nsIURI     *aHostURI,
                                             nsIPrompt  *aPrompt,
                                             const char *aCookieString,
                                             const char *aServerTime,
-                                            nsIChannel *aChannel) 
+                                            nsIChannel *aChannel)
 {
   return SetCookieStringInternal(aHostURI, aChannel, aCookieString,
                                  aServerTime, true);

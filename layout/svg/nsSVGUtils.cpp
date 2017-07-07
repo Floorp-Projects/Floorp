@@ -1044,7 +1044,7 @@ nsSVGUtils::GetClipRectForFrame(nsIFrame *aFrame,
       clipRect.y = aY;
       clipRect.height = aHeight;
     }
-     
+
     return clipRect;
   }
   return gfxRect(aX, aY, aWidth, aHeight);
@@ -1742,7 +1742,7 @@ nsSVGUtils::SetupCairoStrokeGeometry(nsIFrame* aFrame,
   }
 
   const nsStyleSVG* style = aFrame->StyleSVG();
-  
+
   switch (style->mStrokeLinecap) {
   case NS_STYLE_STROKE_LINECAP_BUTT:
     aContext->SetLineCap(CapStyle::BUTT);

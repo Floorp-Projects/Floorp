@@ -22,7 +22,7 @@ public:
 
     void Main();
 
-protected:    
+protected:
     virtual mozilla::ipc::IPCResult RecvError() override;
 
     virtual void ProcessingError(Result aCode, const char* aReason) override
@@ -33,7 +33,7 @@ protected:
     virtual void ActorDestroy(ActorDestroyReason why) override
     {
         if (NormalShutdown != why)
-            fail("unexpected destruction!");  
+            fail("unexpected destruction!");
         passed("ok");
         QuitParent();
     }

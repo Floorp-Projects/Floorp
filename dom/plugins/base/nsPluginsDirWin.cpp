@@ -5,9 +5,9 @@
 
 /*
   nsPluginsDirWin.cpp
-  
+
   Windows implementation of the nsPluginsDir/nsPluginsFile classes.
-  
+
   by Alex Musil
  */
 
@@ -144,7 +144,7 @@ static char** MakeStringArray(uint32_t variants, char* data)
   // The number of variants has been calculated based on the mime
   // type array. Plugins are not explicitely required to match
   // this number in two other arrays: file extention array and mime
-  // description array, and some of them actually don't. 
+  // description array, and some of them actually don't.
   // We should handle such situations gracefully
 
   if ((variants <= 0) || !data)
@@ -164,7 +164,7 @@ static char** MakeStringArray(uint32_t variants, char* data)
     array[i] = PL_strdup(start);
 
     if (!p) {
-      // nothing more to look for, fill everything left 
+      // nothing more to look for, fill everything left
       // with empty strings and break
       while(++i < variants)
         array[i] = PL_strdup("");

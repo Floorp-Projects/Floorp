@@ -9,12 +9,12 @@
 #include "mozilla/EventForwards.h"
 #include "nsBoxFrame.h"
 
-class nsTitleBarFrame : public nsBoxFrame  
+class nsTitleBarFrame : public nsBoxFrame
 {
 public:
   NS_DECL_FRAMEARENA_HELPERS(nsTitleBarFrame)
 
-  friend nsIFrame* NS_NewTitleBarFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);  
+  friend nsIFrame* NS_NewTitleBarFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 
   explicit nsTitleBarFrame(nsStyleContext* aContext, ClassID = kClassID);
 

@@ -19,10 +19,13 @@
 }
 
 %ifdef MOZ_PHOTON_THEME
-#identity-box:hover:not(.no-hover),
-#identity-box[open=true],
-#identity-box.grantedPermissions[open=true] {
-  background-color: hsla(240, 5%, 5%, .05);
+#identity-box:hover:not(.no-hover):not([open=true]) {
+  background-color: hsla(240,5%,5%,.05);
+}
+
+#identity-box:hover:active:not(.no-hover),
+#identity-box[open=true] {
+  background-color: hsla(240,5%,5%,.1);
 }
 %endif
 

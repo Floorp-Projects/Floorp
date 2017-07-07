@@ -15,7 +15,7 @@
 using namespace mozilla;
 
 /******************************************************************************
- * nsDiskCacheBlockFile - 
+ * nsDiskCacheBlockFile -
  *****************************************************************************/
 
 /******************************************************************************
@@ -38,7 +38,7 @@ nsDiskCacheBlockFile::Open(nsIFile * blockFile,
     mBlockSize = blockSize;
     mBitMapWords = bitMapSize / 32;
     uint32_t bitMapBytes = mBitMapWords * 4;
-    
+
     // open the file - restricted to user, the data could be confidential
     nsresult rv = blockFile->OpenNSPRFileDesc(PR_RDWR | PR_CREATE_FILE, 00600, &mFD);
     if (NS_FAILED(rv)) {
@@ -48,10 +48,10 @@ nsDiskCacheBlockFile::Open(nsIFile * blockFile,
                          this, static_cast<uint32_t>(rv)));
         return rv;  // unable to open or create file
     }
-    
+
     // allocate bit map buffer
     mBitMap = new uint32_t[mBitMapWords];
-    
+
     // check if we just creating the file
     mFileSize = PR_Available(mFD);
     if (mFileSize < 0) {
@@ -67,12 +67,12 @@ nsDiskCacheBlockFile::Open(nsIFile * blockFile,
             *corruptInfo = nsDiskCache::kBlockFileBitMapWriteError;
             goto error_exit;
         }
-        
+
     } else if ((uint32_t)mFileSize < bitMapBytes) {
         *corruptInfo = nsDiskCache::kBlockFileSizeLessThanBitMap;
         rv = NS_ERROR_UNEXPECTED;  // XXX NS_ERROR_CACHE_INVALID;
         goto error_exit;
-        
+
     } else {
         // read the bit map
         const int32_t bytesRead = PR_Read(mFD, mBitMap, bitMapBytes);
@@ -87,7 +87,7 @@ nsDiskCacheBlockFile::Open(nsIFile * blockFile,
             mBitMap[i] = ntohl(mBitMap[i]);
 #endif
         // validate block file size
-        // Because not whole blocks are written, the size may be a 
+        // Because not whole blocks are written, the size may be a
         // little bit smaller than used blocks times blocksize,
         // because the last block will generally not be 'whole'.
         const uint32_t  estimatedSize = CalcBlockFileSize();
@@ -130,7 +130,7 @@ nsDiskCacheBlockFile::Close(bool flush)
          delete [] mBitMap;
          mBitMap = nullptr;
      }
-        
+
     return rv;
 }
 
@@ -163,14 +163,14 @@ nsDiskCacheBlockFile::AllocateBlocks(int32_t numBlocks)
             for (; bit <= maxPos; ++bit) {
                 // all bits selected by mask are 1, so free
                 if ((mask & mapWord) == mask) {
-                    mBitMap[i] |= mask << bit; 
+                    mBitMap[i] |= mask << bit;
                     mBitMapDirty = true;
                     return (int32_t)i * 32 + bit;
                 }
             }
         }
     }
-    
+
     return -1;
 }
 
@@ -186,14 +186,14 @@ nsDiskCacheBlockFile::DeallocateBlocks( int32_t  startBlock, int32_t  numBlocks)
     if ((startBlock < 0) || ((uint32_t)startBlock > mBitMapWords * 32 - 1) ||
         (numBlocks < 1)  || (numBlocks > 4))
        return NS_ERROR_ILLEGAL_VALUE;
-           
+
     const int32_t startWord = startBlock >> 5;      // Divide by 32
-    const uint32_t startBit = startBlock & 31;      // Modulo by 32 
-      
+    const uint32_t startBit = startBlock & 31;      // Modulo by 32
+
     // make sure requested deallocation doesn't span a word boundary
     if (startBit + numBlocks > 32)  return NS_ERROR_UNEXPECTED;
     uint32_t mask = ((0x01 << numBlocks) - 1) << startBit;
-    
+
     // make sure requested deallocation is currently allocated
     if ((mBitMap[startWord] & mask) != mask)    return NS_ERROR_ABORT;
 
@@ -223,7 +223,7 @@ nsDiskCacheBlockFile::WriteBlocks( void *   buffer,
 
     // seek to block position
     int32_t blockPos = mBitMapWords * 4 + *startBlock * mBlockSize;
-    
+
     // write the blocks
     return Write(blockPos, buffer, size) ? NS_OK : NS_ERROR_FAILURE;
 }
@@ -243,7 +243,7 @@ nsDiskCacheBlockFile::ReadBlocks( void *    buffer,
     if (!mFD)  return NS_ERROR_NOT_AVAILABLE;
     nsresult rv = VerifyAllocation(startBlock, numBlocks);
     if (NS_FAILED(rv))  return rv;
-    
+
     // seek to block position
     int32_t blockPos = mBitMapWords * 4 + startBlock * mBlockSize;
     int32_t filePos = PR_Seek(mFD, blockPos, PR_SEEK_SET);
@@ -255,7 +255,7 @@ nsDiskCacheBlockFile::ReadBlocks( void *    buffer,
         bytesToRead = mBlockSize * numBlocks;
     }
     *bytesRead = PR_Read(mFD, buffer, bytesToRead);
-    
+
     CACHE_LOG_DEBUG(("CACHE: nsDiskCacheBlockFile::Read [this=%p] "
                      "returned %d / %d bytes", this, *bytesRead, bytesToRead));
 
@@ -270,7 +270,7 @@ nsresult
 nsDiskCacheBlockFile::FlushBitMap()
 {
     if (!mBitMapDirty)  return NS_OK;
-    
+
 #if defined(IS_LITTLE_ENDIAN)
     uint32_t *bitmap = new uint32_t[mBitMapWords];
     // Copy and swap to network format
@@ -312,17 +312,17 @@ nsDiskCacheBlockFile::VerifyAllocation( int32_t  startBlock, int32_t  numBlocks)
     if ((startBlock < 0) || ((uint32_t)startBlock > mBitMapWords * 32 - 1) ||
         (numBlocks < 1)  || (numBlocks > 4))
        return NS_ERROR_ILLEGAL_VALUE;
-    
+
     const int32_t startWord = startBlock >> 5;      // Divide by 32
-    const uint32_t startBit = startBlock & 31;      // Modulo by 32 
-      
+    const uint32_t startBit = startBlock & 31;      // Modulo by 32
+
     // make sure requested deallocation doesn't span a word boundary
     if (startBit + numBlocks > 32)  return NS_ERROR_ILLEGAL_VALUE;
     uint32_t mask = ((0x01 << numBlocks) - 1) << startBit;
-    
+
     // check if all specified blocks are currently allocated
     if ((mBitMap[startWord] & mask) != mask)    return NS_ERROR_FAILURE;
-    
+
     return NS_OK;
 }
 

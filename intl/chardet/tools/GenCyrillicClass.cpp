@@ -123,7 +123,7 @@ int main(int argc, char** argv) {
 
    npl();
    header();
-   
+
      genCyrillicClass("KOI8", "KOI8-R");
      genCyrillicClass("CP1251", "windows-1251");
      genCyrillicClass("IBM866", "IBM866");

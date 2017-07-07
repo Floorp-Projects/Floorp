@@ -811,12 +811,12 @@ PluginModuleChromeParent::CleanupFromTimeout(const bool aFromHangUI)
         return;
     }
 
-    /* If the plugin container was terminated by the Plugin Hang UI, 
-       then either the I/O thread detects a channel error, or the 
+    /* If the plugin container was terminated by the Plugin Hang UI,
+       then either the I/O thread detects a channel error, or the
        main thread must set the error (whomever gets there first).
-       OTOH, if we terminate and return false from 
-       ShouldContinueFromReplyTimeout, then the channel state has 
-       already been set to ChannelTimeout and we should call the 
+       OTOH, if we terminate and return false from
+       ShouldContinueFromReplyTimeout, then the channel state has
+       already been set to ChannelTimeout and we should call the
        regular Close function. */
     if (aFromHangUI) {
         GetIPCChannel()->CloseWithError();
@@ -829,7 +829,7 @@ PluginModuleChromeParent::CleanupFromTimeout(const bool aFromHangUI)
 namespace {
 
 uint64_t
-FileTimeToUTC(const FILETIME& ftime) 
+FileTimeToUTC(const FILETIME& ftime)
 {
   ULARGE_INTEGER li;
   li.LowPart = ftime.dwLowDateTime;
@@ -843,7 +843,7 @@ struct CpuUsageSamples
   uint64_t cpuTimes[2];
 };
 
-bool 
+bool
 GetProcessCpuUsage(const InfallibleTArray<base::ProcessHandle>& processHandles, InfallibleTArray<float>& cpuUsage)
 {
   InfallibleTArray<CpuUsageSamples> samples(processHandles.Length());
@@ -857,7 +857,7 @@ GetProcessCpuUsage(const InfallibleTArray<base::ProcessHandle>& processHandles, 
       NS_WARNING("failed to get process times");
       return false;
     }
-  
+
     CpuUsageSamples s;
     s.sampleTimes[0] = FileTimeToUTC(currentTime);
     s.cpuTimes[0]    = FileTimeToUTC(kernelTime) + FileTimeToUTC(userTime);
@@ -878,7 +878,7 @@ GetProcessCpuUsage(const InfallibleTArray<base::ProcessHandle>& processHandles, 
     }
 
     samples[i].sampleTimes[1] = FileTimeToUTC(currentTime);
-    samples[i].cpuTimes[1]    = FileTimeToUTC(kernelTime) + FileTimeToUTC(userTime);    
+    samples[i].cpuTimes[1]    = FileTimeToUTC(kernelTime) + FileTimeToUTC(userTime);
 
     const uint64_t deltaSampleTime = samples[i].sampleTimes[1] - samples[i].sampleTimes[0];
     const uint64_t deltaCpuTime    = samples[i].cpuTimes[1]    - samples[i].cpuTimes[0];
@@ -1043,7 +1043,7 @@ PluginModuleChromeParent::ShouldContinueFromReplyTimeout()
     if (LaunchHangUI()) {
         return true;
     }
-    // If LaunchHangUI returned false then we should proceed with the 
+    // If LaunchHangUI returned false then we should proceed with the
     // original plugin hang behaviour and kill the plugin container.
     FinishHangUI();
 #endif // XP_WIN
@@ -1410,8 +1410,8 @@ PluginModuleChromeParent::EvaluateHangUIState(const bool aReset)
     int32_t autoStopSecs = Preferences::GetInt(kChildTimeoutPref, 0);
     int32_t timeoutSecs = 0;
     if (autoStopSecs > 0 && autoStopSecs < minDispSecs) {
-        /* If we're going to automatically terminate the plugin within a 
-           time frame shorter than minDispSecs, there's no point in 
+        /* If we're going to automatically terminate the plugin within a
+           time frame shorter than minDispSecs, there's no point in
            showing the hang UI; it would just flash briefly on the screen. */
         mHangUIEnabled = false;
     } else {
@@ -1424,11 +1424,11 @@ PluginModuleChromeParent::EvaluateHangUIState(const bool aReset)
             SetChildTimeout(timeoutSecs);
             return;
         } else if (mIsTimerReset) {
-            /* The Hang UI is being shown, so now we're setting the 
-               timeout to kChildTimeoutPref while we wait for a user 
-               response. ShouldContinueFromReplyTimeout will fire 
-               after (reply timeout / 2) seconds, which is not what 
-               we want. Doubling the timeout value here so that we get 
+            /* The Hang UI is being shown, so now we're setting the
+               timeout to kChildTimeoutPref while we wait for a user
+               response. ShouldContinueFromReplyTimeout will fire
+               after (reply timeout / 2) seconds, which is not what
+               we want. Doubling the timeout value here so that we get
                the right result. */
             autoStopSecs *= 2;
         }
@@ -1459,15 +1459,15 @@ PluginModuleChromeParent::LaunchHangUI()
         delete mHangUIParent;
         mHangUIParent = nullptr;
     }
-    mHangUIParent = new PluginHangUIParent(this, 
+    mHangUIParent = new PluginHangUIParent(this,
             Preferences::GetInt(kHangUITimeoutPref, 0),
             Preferences::GetInt(kChildTimeoutPref, 0));
     bool retval = mHangUIParent->Init(NS_ConvertUTF8toUTF16(mPluginName));
     if (retval) {
         mHangAnnotationFlags |= kHangUIShown;
-        /* Once the UI is shown we switch the timeout over to use 
-           kChildTimeoutPref, allowing us to terminate a hung plugin 
-           after kChildTimeoutPref seconds if the user doesn't respond to 
+        /* Once the UI is shown we switch the timeout over to use
+           kChildTimeoutPref, allowing us to terminate a hung plugin
+           after kChildTimeoutPref seconds if the user doesn't respond to
            the hang UI. */
         EvaluateHangUIState(false);
     }
@@ -1488,7 +1488,7 @@ PluginModuleChromeParent::FinishHangUI()
         if (needsCancel ||
             (!mIsTimerReset && mHangUIParent->WasShown())) {
             /* We changed the timeout to kChildTimeoutPref when the plugin hang
-               UI was displayed. Now that we're finishing the UI, we need to 
+               UI was displayed. Now that we're finishing the UI, we need to
                switch it back to kHangUITimeoutPref. */
             EvaluateHangUIState(true);
         }

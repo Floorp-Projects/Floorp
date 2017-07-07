@@ -117,7 +117,7 @@ nsDOMStringMap::NamedDeleter(const nsAString& aProp, bool& found)
     found = false;
     return;
   }
-  
+
   nsAutoString attr;
   if (!DataPropToAttr(aProp, attr)) {
     found = false;
@@ -229,7 +229,7 @@ bool nsDOMStringMap::AttrToDataProp(const nsAString& aAttr,
   // Otherwise append character to property name.
   for (; cur < end; ++cur) {
     const char16_t* next = cur + 1;
-    if (char16_t('-') == *cur && next < end && 
+    if (char16_t('-') == *cur && next < end &&
         char16_t('a') <= *next && *next <= char16_t('z')) {
       // Upper case the lower case letters that follow a "-".
       aResult.Append(*next - 'a' + 'A');

@@ -51,8 +51,8 @@ private:
     nsString     mDomain;
     nsString     mUsername;
     nsString     mPassword;
-    bool         mIsFirst;	
-    void*        mCertDERData; 
+    bool         mIsFirst;
+    void*        mCertDERData;
     uint32_t     mCertDERLength;
 };
 

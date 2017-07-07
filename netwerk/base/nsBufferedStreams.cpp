@@ -48,7 +48,7 @@ using mozilla::Some;
 nsBufferedStream::nsBufferedStream()
     : mBuffer(nullptr),
       mBufferStartOffset(0),
-      mCursor(0), 
+      mCursor(0),
       mFillPoint(0),
       mStream(nullptr),
       mBufferDisabled(false),
@@ -460,7 +460,7 @@ nsBufferedInputStream::Fill()
     if (amt == 0) {
         mEOF = true;
     }
-    
+
     mFillPoint += amt;
     return NS_OK;
 }
@@ -896,7 +896,7 @@ nsBufferedOutputStream::Finish()
 static nsresult
 nsReadFromInputStream(nsIOutputStream* outStr,
                       void* closure,
-                      char* toRawSegment, 
+                      char* toRawSegment,
                       uint32_t offset,
                       uint32_t count,
                       uint32_t *readCount)

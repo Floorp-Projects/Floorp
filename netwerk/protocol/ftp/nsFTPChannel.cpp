@@ -14,7 +14,7 @@ using namespace mozilla;
 using namespace mozilla::net;
 extern LazyLogModule gFTPLog;
 
-// There are two transport connections established for an 
+// There are two transport connections established for an
 // ftp connection. One is used for the command channel , and
 // the other for the data channel. The command channel is the first
 // connection made and is used to negotiate the second, data, channel.
@@ -45,7 +45,7 @@ nsFtpChannel::SetUploadStream(nsIInputStream *stream,
     mUploadStream = stream;
 
     // NOTE: contentLength is intentionally ignored here.
- 
+
     return NS_OK;
 }
 
@@ -141,7 +141,7 @@ public:
         : mTarget(aTarget)
         , mEventTarget(GetCurrentThreadEventTarget())
     { }
-        
+
     NS_DECL_THREADSAFE_ISUPPORTS
     NS_DECL_NSIFTPEVENTSINK
 

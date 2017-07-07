@@ -20,7 +20,7 @@ anp_event_postEvent(NPP instance, const ANPEvent* event)
 
   nsNPAPIPluginInstance* pinst = static_cast<nsNPAPIPluginInstance*>(instance->ndata);
   pinst->PostEvent((void*) event);
-  
+
   LOG("returning from %s", __PRETTY_FUNCTION__);
 }
 

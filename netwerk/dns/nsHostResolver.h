@@ -170,11 +170,11 @@ class NS_NO_VTABLE nsResolveHostCallback : public PRCList
 public:
     /**
      * OnLookupComplete
-     * 
+     *
      * this function is called to complete a host lookup initiated by
      * nsHostResolver::ResolveHost.  it may be invoked recursively from
      * ResolveHost or on an unspecified background thread.
-     * 
+     *
      * NOTE: it is the responsibility of the implementor of this method
      * to handle the callback in a thread safe manner.
      *
@@ -227,7 +227,7 @@ public:
                            uint32_t defaultCacheEntryLifetime, // seconds
                            uint32_t defaultGracePeriod, // seconds
                            nsHostResolver **resolver);
-    
+
     /**
      * puts the resolver in the shutdown state, which will cause any pending
      * callbacks to be detached.  any future calls to ResolveHost will fail.
@@ -267,7 +267,7 @@ public:
      * address family and listener.  Cancels first callback found which matches
      * these criteria.  These parameters should correspond to the parameters
      * passed to ResolveHost.  If this is the last callback associated with the
-     * host record, it is removed from any request queues it might be on. 
+     * host record, it is removed from any request queues it might be on.
      */
     void CancelAsyncRequest(const char                      *host,
                             const mozilla::OriginAttributes &aOriginAttributes,
@@ -329,7 +329,7 @@ private:
     nsresult ConditionallyRefreshRecord(nsHostRecord *rec, const char *host);
 
     static void  MoveQueue(nsHostRecord *aRec, PRCList &aDestQ);
-    
+
     static void ThreadFunc(void *);
 
     enum {

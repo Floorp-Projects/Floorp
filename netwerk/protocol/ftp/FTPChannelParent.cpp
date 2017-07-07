@@ -714,7 +714,7 @@ FTPChannelParent::ResumeForDiversion()
   // keep us alive if there's more data to be delivered to listener.
   if (NS_WARN_IF(NS_FAILED(Delete()))) {
     FailDiversion(NS_ERROR_UNEXPECTED);
-    return NS_ERROR_UNEXPECTED;   
+    return NS_ERROR_UNEXPECTED;
   }
   return NS_OK;
 }
@@ -902,11 +902,11 @@ FTPChannelParent::AsyncOnChannelRedirect(
     // when FTP is set to use HTTP proxying, we wind up getting redirected to an HTTP channel.
     nsCOMPtr<nsIHttpChannel> httpChan = do_QueryInterface(newChannel);
     if (!httpChan)
-      return NS_ERROR_UNEXPECTED; 
+      return NS_ERROR_UNEXPECTED;
   }
   mChannel = newChannel;
   callback->OnRedirectVerifyCallback(NS_OK);
-  return NS_OK; 
+  return NS_OK;
 }
 
 NS_IMETHODIMP

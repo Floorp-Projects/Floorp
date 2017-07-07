@@ -11,7 +11,7 @@ namespace mozilla {
 namespace net {
 
 // Yes, we support QI to nsProxyInfo
-NS_IMPL_ISUPPORTS(nsProxyInfo, nsProxyInfo, nsIProxyInfo) 
+NS_IMPL_ISUPPORTS(nsProxyInfo, nsProxyInfo, nsIProxyInfo)
 
 NS_IMETHODIMP
 nsProxyInfo::GetHost(nsACString &result)

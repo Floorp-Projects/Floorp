@@ -282,7 +282,7 @@ NS_CheckContentProcessPolicy(uint32_t          contentType,
  *
  * @return a WEAK pointer to the docshell, or nullptr if it could
  *     not be obtained
- *     
+ *
  * @note  As of this writing, calls to nsIContentPolicy::Should{Load,Process}
  * for TYPE_DOCUMENT and TYPE_SUBDOCUMENT pass in an aContext that either
  * points to the frameElement of the window the load is happening in
@@ -320,7 +320,7 @@ NS_CP_GetDocShellFromContext(nsISupports *aContext)
             if (doc->GetDisplayDocument()) {
                 doc = doc->GetDisplayDocument();
             }
-            
+
             window = doc->GetWindow();
         }
     }

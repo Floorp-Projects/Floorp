@@ -26,7 +26,7 @@ nsNSSDialogHelper::openDialog(mozIDOMWindowProxy* window, const char* url,
 #endif
 
   nsresult rv;
-  nsCOMPtr<nsIWindowWatcher> windowWatcher = 
+  nsCOMPtr<nsIWindowWatcher> windowWatcher =
            do_GetService(NS_WINDOWWATCHER_CONTRACTID, &rv);
   if (NS_FAILED(rv)) return rv;
 

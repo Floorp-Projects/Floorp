@@ -80,7 +80,7 @@ Test06_nsCOMPtr_as_found(nsIDOMWindow* aDOMWindow, nsCOMPtr<nsIBaseWindow>* aBas
   nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(aDOMWindow);
   nsCOMPtr<nsIDocShell> docShell;
   if (window)
-    window->GetDocShell(getter_AddRefs(docShell));  
+    window->GetDocShell(getter_AddRefs(docShell));
 }
 
 void // nsresult

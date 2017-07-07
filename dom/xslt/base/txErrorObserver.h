@@ -34,7 +34,7 @@ public:
         receiveError(errorMessage, NS_ERROR_FAILURE);
     }
 
-        
+
 
 }; //-- ErrorObserver
 

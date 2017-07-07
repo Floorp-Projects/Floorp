@@ -544,7 +544,7 @@ nsBaseChannel::SetNotificationCallbacks(nsIInterfaceRequestor *aCallbacks)
   return NS_OK;
 }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsBaseChannel::GetSecurityInfo(nsISupports **aSecurityInfo)
 {
   NS_IF_ADDREF(*aSecurityInfo = mSecurityInfo);
@@ -798,7 +798,7 @@ NS_IMETHODIMP
 nsBaseChannel::GetInterface(const nsIID &iid, void **result)
 {
   NS_QueryNotificationCallbacks(mCallbacks, mLoadGroup, iid, result);
-  return *result ? NS_OK : NS_ERROR_NO_INTERFACE; 
+  return *result ? NS_OK : NS_ERROR_NO_INTERFACE;
 }
 
 //-----------------------------------------------------------------------------

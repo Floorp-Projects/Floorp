@@ -51,7 +51,7 @@ typedef struct ANativeWindow_Buffer {
 
     // The actual bits.
     void* bits;
-    
+
     // Do not touch.
     uint32_t reserved[6];
 } ANativeWindow_Buffer;

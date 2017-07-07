@@ -54,14 +54,14 @@ nsBlockFrame*
 NS_NewBlockFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 
 // Special Generated Content Node. It contains text taken from an
-// attribute of its *grandparent* content node. 
+// attribute of its *grandparent* content node.
 nsresult
 NS_NewAttributeContent(nsNodeInfoManager *aNodeInfoManager,
                        int32_t aNameSpaceID, nsIAtom* aAttrName,
                        nsIContent** aResult);
 
 // Create a basic area frame but the GetFrameForPoint is overridden to always
-// return the option frame 
+// return the option frame
 // By default, area frames will extend
 // their height to cover any children that "stick out".
 nsContainerFrame*
@@ -77,7 +77,7 @@ NS_NewBRFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 nsIFrame*
 NS_NewCommentFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 
-// <frame> and <iframe> 
+// <frame> and <iframe>
 nsIFrame*
 NS_NewSubDocumentFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 // <frameset>

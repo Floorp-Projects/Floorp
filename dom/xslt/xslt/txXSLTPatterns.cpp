@@ -366,7 +366,7 @@ txIdPattern::toString(nsAString& aDest)
 /*
  * txKeyPattern
  *
- * txKeyPattern matches if the given node is in the evalation of 
+ * txKeyPattern matches if the given node is in the evalation of
  * the key() function
  * This resembles the key() function, but may only have LITERALs as
  * argument.

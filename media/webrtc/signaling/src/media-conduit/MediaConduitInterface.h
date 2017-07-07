@@ -278,7 +278,8 @@ public:
                                     double* framerateStdDev,
                                     double* bitrateMean,
                                     double* bitrateStdDev,
-                                    uint32_t* discardedPackets) = 0;
+                                    uint32_t* discardedPackets,
+                                    uint32_t* framesDecoded) = 0;
   virtual bool GetAVStats(int32_t* jitterBufferDelayMs,
                           int32_t* playoutBufferDelayMs,
                           int32_t* avSyncOffsetMs) = 0;

@@ -6,8 +6,8 @@
 #define fopen_hooks_h__
 
 /**
- * This file is force-included in hunspell code. Its purpose is to add 
- * readahead to fopen() calls in hunspell without modifying its code, in order 
+ * This file is force-included in hunspell code. Its purpose is to add
+ * readahead to fopen() calls in hunspell without modifying its code, in order
  * to ease future upgrades.
  *
  * This file is force-included through mozilla-config.h which is generated
@@ -42,7 +42,7 @@ hunspell_fopen_readahead(const char* filename, const char* mode)
   }
   int fd = -1;
 #if defined(XP_WIN)
-  // filename is obtained via the nsIFile::nativePath attribute, so 
+  // filename is obtained via the nsIFile::nativePath attribute, so
   // it is using the Windows ANSI code page, NOT UTF-8!
   nsAutoString utf16Filename;
   nsresult rv = NS_CopyNativeToUnicode(nsDependentCString(filename),

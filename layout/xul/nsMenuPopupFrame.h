@@ -187,17 +187,17 @@ public:
 
   /*
    * When this popup is open, should clicks outside of it be consumed?
-   * Return true if the popup should rollup on an outside click, 
+   * Return true if the popup should rollup on an outside click,
    * but consume that click so it can't be used for anything else.
-   * Return false to allow clicks outside the popup to activate content 
+   * Return false to allow clicks outside the popup to activate content
    * even when the popup is open.
    * ---------------------------------------------------------------------
-   * 
+   *
    * Should clicks outside of a popup be eaten?
    *
    *       Menus     Autocomplete     Comboboxes
    * Mac     Eat           No              Eat
-   * Win     No            No              Eat     
+   * Win     No            No              Eat
    * Unix    Eat           No              Eat
    *
    */
@@ -234,7 +234,7 @@ public:
 
   nsPopupLevel PopupLevel() const
   {
-    return PopupLevel(IsNoAutoHide()); 
+    return PopupLevel(IsNoAutoHide());
   }
 
   // Ensure that a widget has already been created for this view, and create
@@ -490,7 +490,7 @@ protected:
   //   aOffsetForContextMenu - the additional offset to add for context menus
   //   aFlip - how to flip or resize the popup when there isn't space
   //   aFlipSide - pointer to where current flip mode is stored
-  nscoord FlipOrResize(nscoord& aScreenPoint, nscoord aSize, 
+  nscoord FlipOrResize(nscoord& aScreenPoint, nscoord aSize,
                        nscoord aScreenBegin, nscoord aScreenEnd,
                        nscoord aAnchorBegin, nscoord aAnchorEnd,
                        nscoord aMarginBegin, nscoord aMarginEnd,

@@ -948,7 +948,7 @@ nsCSPParser::requireSRIForDirectiveValue(nsRequireSRIForDirective* aDir)
     delete aDir;
     return;
   }
-  
+
   mPolicy->addDirective(aDir);
 }
 

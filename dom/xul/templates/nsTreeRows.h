@@ -57,7 +57,7 @@ public:
         ContainerType    mContainerType  : 4;
         ContainerState   mContainerState : 4;
         ContainerFill    mContainerFill  : 4;
-        
+
         Subtree*         mSubtree; // XXX eventually move to hashtable
     };
 

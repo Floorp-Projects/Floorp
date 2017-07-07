@@ -1558,7 +1558,7 @@ AccessibleWrap::GetRemoteIAccessibleFor(const VARIANT& aVarChild)
 void
 AccessibleWrap::UpdateSystemCaretFor(Accessible* aAccessible)
 {
-  // Move the system caret so that Windows Tablet Edition and tradional ATs with 
+  // Move the system caret so that Windows Tablet Edition and tradional ATs with
   // off-screen model can follow the caret
   ::DestroyCaret();
 

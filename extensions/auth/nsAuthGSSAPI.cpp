@@ -55,12 +55,12 @@ using namespace mozilla;
 // by by a different name depending on the implementation of gss but always
 // has the same value
 
-static gss_OID_desc gss_c_nt_hostbased_service = 
+static gss_OID_desc gss_c_nt_hostbased_service =
     { 10, (void *) "\x2a\x86\x48\x86\xf7\x12\x01\x02\x01\x04" };
 
 static const char kNegotiateAuthGssLib[] =
     "network.negotiate-auth.gsslib";
-static const char kNegotiateAuthNativeImp[] = 
+static const char kNegotiateAuthNativeImp[] =
    "network.negotiate-auth.using-native-gsslib";
 
 static struct GSSFunction {
@@ -105,8 +105,8 @@ gssInit()
     nsXPIDLCString libPath;
     nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
     if (prefs) {
-        prefs->GetCharPref(kNegotiateAuthGssLib, getter_Copies(libPath)); 
-        prefs->GetBoolPref(kNegotiateAuthNativeImp, &gssNativeImp); 
+        prefs->GetCharPref(kNegotiateAuthGssLib, getter_Copies(libPath));
+        prefs->GetBoolPref(kNegotiateAuthNativeImp, &gssNativeImp);
     }
 
     PRLibrary *lib = nullptr;
@@ -148,13 +148,13 @@ gssInit()
         }
 
 #else
-        
+
         const char *const libNames[] = {
             "gss",
             "gssapi_krb5",
             "gssapi"
         };
-        
+
         const char *const verLibNames[] = {
             "libgssapi_krb5.so.2", /* MIT - FC, Suse10, Debian */
             "libgssapi.so.4",      /* Heimdal - Suse10, MDK */
@@ -163,7 +163,7 @@ gssInit()
 
         for (size_t i = 0; i < ArrayLength(verLibNames) && !lib; ++i) {
             lib = PR_LoadLibrary(verLibNames[i]);
- 
+
             /* The CITI libgssapi library calls exit() during
              * initialization if it's not correctly configured. Try to
              * ensure that we never use this library for our GSSAPI
@@ -171,7 +171,7 @@ gssInit()
              * See Bugzilla #325433
              */
             if (lib &&
-                PR_FindFunctionSymbol(lib, 
+                PR_FindFunctionSymbol(lib,
                                       "internal_krb5_gss_initialize") &&
                 PR_FindFunctionSymbol(lib, "gssd_pname_to_uid")) {
                 LOG(("CITI libgssapi found, which calls exit(). Skipping\n"));
@@ -187,18 +187,18 @@ gssInit()
                 PR_FreeLibraryName(libName);
 
                 if (lib &&
-                    PR_FindFunctionSymbol(lib, 
+                    PR_FindFunctionSymbol(lib,
                                           "internal_krb5_gss_initialize") &&
                     PR_FindFunctionSymbol(lib, "gssd_pname_to_uid")) {
                     LOG(("CITI libgssapi found, which calls exit(). Skipping\n"));
                     PR_UnloadLibrary(lib);
                     lib = nullptr;
-                } 
+                }
             }
         }
 #endif
     }
-    
+
     if (!lib) {
         LOG(("Fail to load gssapi library\n"));
         return NS_ERROR_FAILURE;
@@ -300,7 +300,7 @@ nsAuthGSSAPI::nsAuthGSSAPI(pType package)
     mMechOID = &gss_krb5_mech_oid_desc;
 
     // if the type is kerberos we accept it as default
-    // and exit 
+    // and exit
 
     if (package == PACKAGE_TYPE_KERBEROS)
         return;
@@ -314,14 +314,14 @@ nsAuthGSSAPI::nsAuthGSSAPI(pType package)
     // Using Kerberos directly (instead of negotiating
     // with SPNEGO) may work in some cases depending
     // on how smart the server side is.
-    
+
     majstat = gss_indicate_mechs_ptr(&minstat, &mech_set);
     if (GSS_ERROR(majstat))
         return;
 
     if (mech_set) {
         for (i=0; i<mech_set->count; i++) {
-            item = &mech_set->elements[i];    
+            item = &mech_set->elements[i];
             if (item->length == gss_spnego_mech_oid_desc.length &&
                 !memcmp(item->elements, gss_spnego_mech_oid_desc.elements,
                 item->length)) {
@@ -414,7 +414,7 @@ nsAuthGSSAPI::GetNextToken(const void *inToken,
     // If they've called us again after we're complete, reset to start afresh.
     if (mComplete)
         Reset();
-    
+
     if (mServiceFlags & REQ_DELEGATE)
         req_flags |= GSS_C_DELEG_FLAG;
 
@@ -450,19 +450,19 @@ nsAuthGSSAPI::GetNextToken(const void *inToken,
         // first sequence failed.  We need to bail or else we might end up in
         // an infinite loop.
         LOG(("Cannot restart authentication sequence!"));
-        return NS_ERROR_UNEXPECTED; 
+        return NS_ERROR_UNEXPECTED;
     }
 
 #if defined(XP_MACOSX)
     // Suppress Kerberos prompts to get credentials.  See bug 240643.
-    // We can only use Mac OS X specific kerb functions if we are using 
+    // We can only use Mac OS X specific kerb functions if we are using
     // the native lib
-    KLBoolean found;    
+    KLBoolean found;
     bool doingMailTask = mServiceName.Find("imap@") ||
                            mServiceName.Find("pop@") ||
                            mServiceName.Find("smtp@") ||
                            mServiceName.Find("ldap@");
-    
+
     if (!doingMailTask && (gssNativeImp &&
          (KLCacheHasValidTickets_ptr(nullptr, kerberosVersion_V5, &found, nullptr, nullptr) != klNoErr || !found)))
     {
@@ -502,14 +502,14 @@ nsAuthGSSAPI::GetNextToken(const void *inToken,
         // context here because it will be needed on the
         // next call.
         //
-    } 
-    
+    }
+
     *outTokenLen = output_token.length;
     if (output_token.length != 0)
         *outToken = nsMemory::Clone(output_token.value, output_token.length);
     else
         *outToken = nullptr;
-    
+
     gss_release_buffer_ptr(&minor_status, &output_token);
 
     if (major_status == GSS_S_COMPLETE)
@@ -563,7 +563,7 @@ nsAuthGSSAPI::Unwrap(const void *inToken,
 
     return NS_OK;
 }
- 
+
 NS_IMETHODIMP
 nsAuthGSSAPI::Wrap(const void *inToken,
                    uint32_t    inTokenLen,
@@ -586,7 +586,7 @@ nsAuthGSSAPI::Wrap(const void *inToken,
                                 &input_token,
                                 nullptr,
                                 &output_token);
-    
+
     if (GSS_ERROR(major_status)) {
         LogGssError(major_status, minor_status, "gss_wrap() failed");
         Reset();

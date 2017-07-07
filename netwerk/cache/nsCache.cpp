@@ -56,13 +56,13 @@ ClientIDFromCacheKey(const nsACString&  key, char ** result)
 
     nsReadingIterator<char> colon;
     key.BeginReading(colon);
-        
+
     nsReadingIterator<char> start;
     key.BeginReading(start);
-        
+
     nsReadingIterator<char> end;
     key.EndReading(end);
-        
+
     if (FindCharInReadable(':', colon, end)) {
         *result = ToNewCString( Substring(start, colon));
         if (!*result) rv = NS_ERROR_OUT_OF_MEMORY;
@@ -81,10 +81,10 @@ ClientKeyFromCacheKey(const nsCString& key, nsACString &result)
 
     nsReadingIterator<char> start;
     key.BeginReading(start);
-        
+
     nsReadingIterator<char> end;
     key.EndReading(end);
-        
+
     if (FindCharInReadable(':', start, end)) {
         ++start;  // advance past clientID ':' delimiter
         result.Assign(Substring(start, end));

@@ -13,7 +13,7 @@
 /**
  * A Token class for the ExprLexer.
  *
- * This class was ported from XSL:P, an open source Java based 
+ * This class was ported from XSL:P, an open source Java based
  * XSLT processor, written by yours truly.
  */
 class Token

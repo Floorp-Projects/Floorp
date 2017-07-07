@@ -132,7 +132,7 @@ class txUnionPattern : public txPattern
 public:
     nsresult addPattern(txPattern* aPattern)
     {
-        return mLocPathPatterns.AppendElement(aPattern) ? 
+        return mLocPathPatterns.AppendElement(aPattern) ?
             NS_OK : NS_ERROR_OUT_OF_MEMORY;
     }
 

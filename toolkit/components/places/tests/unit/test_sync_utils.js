@@ -1919,19 +1919,25 @@ add_task(async function test_pullChanges_import_html() {
   ), "Sync statuses should match for HTML imports");
 
   do_print("Fetch new HTML imports");
-  {
-    let changes = await PlacesSyncUtils.bookmarks.pullChanges();
-    deepEqual(Object.keys(changes).sort(), [mozBmk.guid, fxBmk.guid,
-      toolbarSubfolder.guid, "menu",
-      unsyncedBmk.guid].sort(),
-      "Should return new GUIDs imported from HTML file"
-    );
-    let fields = await PlacesTestUtils.fetchBookmarkSyncFields(
-      unsyncedBmk.guid, mozBmk.guid, fxBmk.guid, toolbarSubfolder.guid);
-    ok(fields.every(field =>
-      field.syncStatus == PlacesUtils.bookmarks.SYNC_STATUS.NORMAL
-    ), "Pulling new imports should update sync statuses");
-  }
+  let newChanges = await PlacesSyncUtils.bookmarks.pullChanges();
+  deepEqual(Object.keys(newChanges).sort(), [mozBmk.guid, fxBmk.guid,
+    toolbarSubfolder.guid, "menu",
+    unsyncedBmk.guid].sort(),
+    "Should return new GUIDs imported from HTML file"
+  );
+  let newFields = await PlacesTestUtils.fetchBookmarkSyncFields(
+    unsyncedBmk.guid, mozBmk.guid, fxBmk.guid, toolbarSubfolder.guid);
+  ok(newFields.every(field =>
+    field.syncStatus == PlacesUtils.bookmarks.SYNC_STATUS.NEW
+  ), "Pulling new HTML imports should not mark them as syncing");
+
+  do_print("Mark new HTML imports as syncing");
+  await PlacesSyncUtils.bookmarks.markChangesAsSyncing(newChanges);
+  let normalFields = await PlacesTestUtils.fetchBookmarkSyncFields(
+    unsyncedBmk.guid, mozBmk.guid, fxBmk.guid, toolbarSubfolder.guid);
+  ok(normalFields.every(field =>
+    field.syncStatus == PlacesUtils.bookmarks.SYNC_STATUS.NORMAL
+  ), "Marking new HTML imports as syncing should update their statuses");
 
   await PlacesUtils.bookmarks.eraseEverything();
   await PlacesSyncUtils.bookmarks.reset();
@@ -1965,18 +1971,26 @@ add_task(async function test_pullChanges_import_json() {
   }
 
   do_print("Fetch new JSON imports");
-  {
-    let changes = await PlacesSyncUtils.bookmarks.pullChanges();
-    deepEqual(Object.keys(changes).sort(), ["NnvGl3CRA4hC", "APzP8MupzA8l",
-      "menu", "toolbar", syncedFolder.guid].sort(),
-      "Should return items imported from JSON backup"
-    );
-    let fields = await PlacesTestUtils.fetchBookmarkSyncFields(
-      syncedFolder.guid, "NnvGl3CRA4hC", "APzP8MupzA8l");
-    ok(fields.every(field =>
-      field.syncStatus == PlacesUtils.bookmarks.SYNC_STATUS.NORMAL
-    ), "Pulling new imports should update sync statuses");
-  }
+  let newChanges = await PlacesSyncUtils.bookmarks.pullChanges();
+  deepEqual(Object.keys(newChanges).sort(), ["NnvGl3CRA4hC", "APzP8MupzA8l",
+    "menu", "toolbar", syncedFolder.guid].sort(),
+    "Should return items imported from JSON backup"
+  );
+  let existingFields = await PlacesTestUtils.fetchBookmarkSyncFields(
+    syncedFolder.guid, "NnvGl3CRA4hC", "APzP8MupzA8l");
+  deepEqual(existingFields.map(field => field.syncStatus), [
+    PlacesUtils.bookmarks.SYNC_STATUS.NORMAL,
+    PlacesUtils.bookmarks.SYNC_STATUS.NEW,
+    PlacesUtils.bookmarks.SYNC_STATUS.NEW,
+  ], "Pulling new JSON imports should not mark them as syncing");
+
+  do_print("Mark new JSON imports as syncing");
+  await PlacesSyncUtils.bookmarks.markChangesAsSyncing(newChanges);
+  let normalFields = await PlacesTestUtils.fetchBookmarkSyncFields(
+    syncedFolder.guid, "NnvGl3CRA4hC", "APzP8MupzA8l");
+  ok(normalFields.every(field =>
+    field.syncStatus == PlacesUtils.bookmarks.SYNC_STATUS.NORMAL
+  ), "Marking new JSON imports as syncing should update their statuses");
 
   await PlacesUtils.bookmarks.eraseEverything();
   await PlacesSyncUtils.bookmarks.reset();
@@ -2034,12 +2048,30 @@ add_task(async function test_pullChanges_restore_json_tracked() {
       "APzP8MupzA8l",
     ].sort(), "Should restore items from JSON backup");
 
-    let fields = await PlacesTestUtils.fetchBookmarkSyncFields(
+    let existingFields = await PlacesTestUtils.fetchBookmarkSyncFields(
+      PlacesUtils.bookmarks.menuGuid, PlacesUtils.bookmarks.toolbarGuid,
+      PlacesUtils.bookmarks.unfiledGuid, PlacesUtils.bookmarks.mobileGuid,
+      "NnvGl3CRA4hC", "APzP8MupzA8l");
+    deepEqual(existingFields.map(field => field.syncStatus), [
+      PlacesUtils.bookmarks.SYNC_STATUS.NORMAL,
+      PlacesUtils.bookmarks.SYNC_STATUS.NORMAL,
+      PlacesUtils.bookmarks.SYNC_STATUS.NORMAL,
+      PlacesUtils.bookmarks.SYNC_STATUS.NORMAL,
+      PlacesUtils.bookmarks.SYNC_STATUS.UNKNOWN,
+      PlacesUtils.bookmarks.SYNC_STATUS.UNKNOWN,
+    ], "Pulling items restored from JSON backup should not mark them as syncing");
+
+    let tombstones = await PlacesTestUtils.fetchSyncTombstones();
+    ok(tombstones.map(({ guid }) => guid), [syncedFolder.guid],
+      "Tombstones should exist after restoring from JSON backup");
+
+    await PlacesSyncUtils.bookmarks.markChangesAsSyncing(changes);
+    let normalFields = await PlacesTestUtils.fetchBookmarkSyncFields(
       PlacesUtils.bookmarks.menuGuid, PlacesUtils.bookmarks.toolbarGuid,
       PlacesUtils.bookmarks.unfiledGuid, "NnvGl3CRA4hC", "APzP8MupzA8l");
-    ok(fields.every(field =>
+    ok(normalFields.every(field =>
       field.syncStatus == PlacesUtils.bookmarks.SYNC_STATUS.NORMAL
-    ), "NEW and UNKNOWN roots should be NORMAL after pulling restored JSON backup");
+    ), "NEW and UNKNOWN roots restored from JSON backup should be marked as NORMAL");
 
     strictEqual(changes[syncedFolder.guid].tombstone, true,
       `Should include tombstone for overwritten synced bookmark ${

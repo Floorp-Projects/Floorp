@@ -56,7 +56,7 @@ nsLayoutDebugCLH::Handle(nsICommandLine* aCmdLine)
         nsCOMPtr<nsISupportsString> scriptableURL =
             do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID);
         NS_ENSURE_TRUE(scriptableURL, NS_ERROR_FAILURE);
-  
+
         scriptableURL->SetData(url);
         argsArray->AppendElement(scriptableURL, /*weak =*/ false);
     }

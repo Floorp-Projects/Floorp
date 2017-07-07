@@ -28,11 +28,11 @@ struct nsDiskCacheEntry {
     // followed by key data (mKeySize bytes)
     // followed by meta data (mMetaDataSize bytes)
 
-    uint32_t        Size()    { return sizeof(nsDiskCacheEntry) + 
+    uint32_t        Size()    { return sizeof(nsDiskCacheEntry) +
                                     mKeySize + mMetaDataSize;
                               }
 
-    char*           Key()     { return reinterpret_cast<char*const>(this) + 
+    char*           Key()     { return reinterpret_cast<char*const>(this) +
                                     sizeof(nsDiskCacheEntry);
                               }
 
@@ -43,7 +43,7 @@ struct nsDiskCacheEntry {
 
     void Swap()         // host to network (memory to disk)
     {
-#if defined(IS_LITTLE_ENDIAN)   
+#if defined(IS_LITTLE_ENDIAN)
         mHeaderVersion      = htonl(mHeaderVersion);
         mMetaLocation       = htonl(mMetaLocation);
         mFetchCount         = htonl(mFetchCount);
@@ -55,7 +55,7 @@ struct nsDiskCacheEntry {
         mMetaDataSize       = htonl(mMetaDataSize);
 #endif
     }
-    
+
     void Unswap()       // network to host (disk to memory)
     {
 #if defined(IS_LITTLE_ENDIAN)
@@ -86,9 +86,9 @@ public:
         , mDiskEntry(diskEntry)
     {
     }
-    
+
     const char* Key() { return mDiskEntry->Key(); }
-    
+
 private:
     virtual ~nsDiskCacheEntryInfo() {}
 

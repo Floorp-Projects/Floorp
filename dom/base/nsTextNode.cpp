@@ -33,7 +33,7 @@ class nsAttributeTextNode final : public nsTextNode,
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED
-  
+
   nsAttributeTextNode(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo,
                       int32_t aNameSpaceID,
                       nsIAtom* aAttrName) :
@@ -206,7 +206,7 @@ NS_NewAttributeContent(nsNodeInfoManager *aNodeInfoManager,
   NS_PRECONDITION(aNodeInfoManager, "Missing nodeInfoManager");
   NS_PRECONDITION(aAttrName, "Must have an attr name");
   NS_PRECONDITION(aNameSpaceID != kNameSpaceID_Unknown, "Must know namespace");
-  
+
   *aResult = nullptr;
 
   already_AddRefed<mozilla::dom::NodeInfo> ni = aNodeInfoManager->GetTextNodeInfo();
@@ -292,6 +292,6 @@ nsAttributeTextNode::UpdateText(bool aNotify)
     nsAutoString attrValue;
     mGrandparent->GetAttr(mNameSpaceID, mAttrName, attrValue);
     SetText(attrValue, aNotify);
-  }  
+  }
 }
 

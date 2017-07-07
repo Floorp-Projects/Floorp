@@ -175,7 +175,7 @@ public:
   FSMultipartFormData(mozilla::NotNull<const mozilla::Encoding*> aEncoding,
                       nsIContent* aOriginatingElement);
   ~FSMultipartFormData();
- 
+
   virtual nsresult
   AddNameValuePair(const nsAString& aName, const nsAString& aValue) override;
 

@@ -39,7 +39,7 @@ nsLocale::~nsLocale(void)
 NS_IMETHODIMP
 nsLocale::GetCategory(const nsAString& category, nsAString& result)
 {
-  const char16_t *value = (const char16_t*) 
+  const char16_t *value = (const char16_t*)
     PL_HashTableLookup(fHashtable, PromiseFlatString(category).get());
 
   if (value)

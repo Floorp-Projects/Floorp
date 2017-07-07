@@ -25,7 +25,7 @@
 #include "pkix/pkixtypes.h"
 #include "secerr.h"
 
-//#define DEBUG_SSL_VERBOSE //Enable this define to get minimal 
+//#define DEBUG_SSL_VERBOSE //Enable this define to get minimal
                             //reports when doing SSL read/write
 
 //#define DUMP_BUFFER  //Enable this define along with
@@ -173,7 +173,7 @@ TransportSecurityInfo::GetErrorMessage(char16_t** aText)
   MutexAutoLock lock(mMutex);
 
   if (mErrorMessageCached.IsEmpty()) {
-    nsresult rv = formatErrorMessage(lock, 
+    nsresult rv = formatErrorMessage(lock,
                                      mErrorCode, mErrorMessageType,
                                      true, true, mErrorMessageCached);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -243,7 +243,7 @@ TransportSecurityInfo::formatErrorMessage(const MutexAutoLock& /*proofOfLock*/,
                                            wantsHtml,
                                            result);
   } else {
-    rv = formatPlainErrorMessage(mHostName, mPort, 
+    rv = formatPlainErrorMessage(mHostName, mPort,
                                  errorCode,
                                  suppressPort443,
                                  result);
@@ -790,16 +790,16 @@ AppendErrorTextTime(nsIX509Cert* ix509,
   GetDateBoundary(ix509, formattedDate, nowDate, trueExpired_falseNotYetValid);
 
   const char16_t *params[2];
-  params[0] = formattedDate.get(); // might be empty, if helper function had a problem 
+  params[0] = formattedDate.get(); // might be empty, if helper function had a problem
   params[1] = nowDate.get();
 
-  const char *key = trueExpired_falseNotYetValid ? 
+  const char *key = trueExpired_falseNotYetValid ?
                     "certErrorExpiredNow" : "certErrorNotYetValidNow";
   nsresult rv;
   nsString formattedString;
   rv = component->PIPBundleFormatStringFromName(
            key,
-           params, 
+           params,
            ArrayLength(params),
            formattedString);
   if (NS_SUCCEEDED(rv))
@@ -826,7 +826,7 @@ AppendErrorTextCode(PRErrorCode errorCodeToReport,
     nsString formattedString;
     nsresult rv;
     rv = component->PIPBundleFormatStringFromName("certErrorCodePrefix2",
-                                                  params, 1, 
+                                                  params, 1,
                                                   formattedString);
     if (NS_SUCCEEDED(rv)) {
       returnedMessage.Append('\n');
@@ -892,7 +892,7 @@ formatOverridableCertErrorMessage(nsISSLStatus& sslStatus,
   rv = sslStatus.GetIsUntrusted(&isUntrusted);
   NS_ENSURE_SUCCESS(rv, rv);
   if (isUntrusted) {
-    AppendErrorTextUntrusted(errorCodeToReport, hostWithoutPort, ix509, 
+    AppendErrorTextUntrusted(errorCodeToReport, hostWithoutPort, ix509,
                              component, returnedMessage);
   }
 
@@ -1020,11 +1020,11 @@ TransportSecurityInfo::SetStatusErrorBits(nsNSSCertificate* cert,
   mSSLStatus->SetServerCert(cert, EVStatus::NotEV);
 
   mSSLStatus->mHaveCertErrorBits = true;
-  mSSLStatus->mIsDomainMismatch = 
+  mSSLStatus->mIsDomainMismatch =
     collected_errors & nsICertOverrideService::ERROR_MISMATCH;
-  mSSLStatus->mIsNotValidAtThisTime = 
+  mSSLStatus->mIsNotValidAtThisTime =
     collected_errors & nsICertOverrideService::ERROR_TIME;
-  mSSLStatus->mIsUntrusted = 
+  mSSLStatus->mIsUntrusted =
     collected_errors & nsICertOverrideService::ERROR_UNTRUSTED;
 
   RememberCertErrorsTable::GetInstance().RememberCertHasError(this,

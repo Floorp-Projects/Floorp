@@ -37,8 +37,8 @@ nsNSSCertTrust::nsNSSCertTrust()
   memset(&mTrust, 0, sizeof(CERTCertTrust));
 }
 
-nsNSSCertTrust::nsNSSCertTrust(unsigned int ssl, 
-                               unsigned int email, 
+nsNSSCertTrust::nsNSSCertTrust(unsigned int ssl,
+                               unsigned int email,
                                unsigned int objsign)
 {
   memset(&mTrust, 0, sizeof(CERTCertTrust));
@@ -52,7 +52,7 @@ nsNSSCertTrust::nsNSSCertTrust(CERTCertTrust *t)
   if (t)
     memcpy(&mTrust, t, sizeof(CERTCertTrust));
   else
-    memset(&mTrust, 0, sizeof(CERTCertTrust)); 
+    memset(&mTrust, 0, sizeof(CERTCertTrust));
 }
 
 nsNSSCertTrust::~nsNSSCertTrust()
@@ -139,7 +139,7 @@ nsNSSCertTrust::SetValidCA()
                   false, false);
 }
 
-void 
+void
 nsNSSCertTrust::SetValidPeer()
 {
   SetSSLTrust(true, false,
@@ -164,8 +164,8 @@ nsNSSCertTrust::HasAnyCA()
 }
 
 bool
-nsNSSCertTrust::HasPeer(bool checkSSL, 
-                        bool checkEmail,  
+nsNSSCertTrust::HasPeer(bool checkSSL,
+                        bool checkEmail,
                         bool checkObjSign)
 {
   if (checkSSL && !hasTrust(mTrust.sslFlags, CERTDB_TERMINAL_RECORD))
@@ -188,8 +188,8 @@ nsNSSCertTrust::HasAnyUser()
 }
 
 bool
-nsNSSCertTrust::HasTrustedCA(bool checkSSL, 
-                             bool checkEmail,  
+nsNSSCertTrust::HasTrustedCA(bool checkSSL,
+                             bool checkEmail,
                              bool checkObjSign)
 {
   if (checkSSL && !(hasTrust(mTrust.sslFlags, CERTDB_TRUSTED_CA) ||
@@ -198,7 +198,7 @@ nsNSSCertTrust::HasTrustedCA(bool checkSSL,
   if (checkEmail && !(hasTrust(mTrust.emailFlags, CERTDB_TRUSTED_CA) ||
                       hasTrust(mTrust.emailFlags, CERTDB_TRUSTED_CLIENT_CA)))
     return false;
-  if (checkObjSign && 
+  if (checkObjSign &&
        !(hasTrust(mTrust.objectSigningFlags, CERTDB_TRUSTED_CA) ||
          hasTrust(mTrust.objectSigningFlags, CERTDB_TRUSTED_CLIENT_CA)))
     return false;
@@ -206,15 +206,15 @@ nsNSSCertTrust::HasTrustedCA(bool checkSSL,
 }
 
 bool
-nsNSSCertTrust::HasTrustedPeer(bool checkSSL, 
-                               bool checkEmail,  
+nsNSSCertTrust::HasTrustedPeer(bool checkSSL,
+                               bool checkEmail,
                                bool checkObjSign)
 {
   if (checkSSL && !(hasTrust(mTrust.sslFlags, CERTDB_TRUSTED)))
     return false;
   if (checkEmail && !(hasTrust(mTrust.emailFlags, CERTDB_TRUSTED)))
     return false;
-  if (checkObjSign && 
+  if (checkObjSign &&
        !(hasTrust(mTrust.objectSigningFlags, CERTDB_TRUSTED)))
     return false;
   return true;

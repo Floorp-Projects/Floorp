@@ -34,9 +34,9 @@ class nsAutoConfig : public nsIAutoConfig,
 
         nsAutoConfig();
         nsresult Init();
-  
+
     protected:
-  
+
         virtual ~nsAutoConfig();
         nsresult downloadAutoConfig();
         nsresult readOfflineFile();

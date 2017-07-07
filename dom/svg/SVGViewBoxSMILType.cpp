@@ -11,7 +11,7 @@
 #include <math.h>
 
 namespace mozilla {
-  
+
 /*static*/ SVGViewBoxSMILType SVGViewBoxSMILType::sSingleton;
 
 void
@@ -131,7 +131,7 @@ SVGViewBoxSMILType::Interpolate(const nsSMILValue& aStartVal,
   float height = (start->height + (end->height - start->height) * aUnitDistance);
 
   *current = nsSVGViewBoxRect(x, y, width, height);
-  
+
   return NS_OK;
 }
 

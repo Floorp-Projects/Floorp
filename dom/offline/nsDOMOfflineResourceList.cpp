@@ -237,7 +237,7 @@ nsDOMOfflineResourceList::GetMozItems(nsISupports** aItems)
 NS_IMETHODIMP
 nsDOMOfflineResourceList::MozHasItem(const nsAString& aURI, bool* aExists)
 {
-  if (IS_CHILD_PROCESS()) 
+  if (IS_CHILD_PROCESS())
     return NS_ERROR_NOT_IMPLEMENTED;
 
   nsresult rv = Init();
@@ -267,7 +267,7 @@ nsDOMOfflineResourceList::MozHasItem(const nsAString& aURI, bool* aExists)
 NS_IMETHODIMP
 nsDOMOfflineResourceList::GetMozLength(uint32_t *aLength)
 {
-  if (IS_CHILD_PROCESS()) 
+  if (IS_CHILD_PROCESS())
     return NS_ERROR_NOT_IMPLEMENTED;
 
   if (!mManifestURI) {
@@ -288,7 +288,7 @@ nsDOMOfflineResourceList::GetMozLength(uint32_t *aLength)
 NS_IMETHODIMP
 nsDOMOfflineResourceList::MozItem(uint32_t aIndex, nsAString& aURI)
 {
-  if (IS_CHILD_PROCESS()) 
+  if (IS_CHILD_PROCESS())
     return NS_ERROR_NOT_IMPLEMENTED;
 
   nsresult rv = Init();
@@ -310,7 +310,7 @@ nsDOMOfflineResourceList::MozItem(uint32_t aIndex, nsAString& aURI)
 NS_IMETHODIMP
 nsDOMOfflineResourceList::MozAdd(const nsAString& aURI)
 {
-  if (IS_CHILD_PROCESS()) 
+  if (IS_CHILD_PROCESS())
     return NS_ERROR_NOT_IMPLEMENTED;
 
   nsresult rv = Init();
@@ -378,7 +378,7 @@ nsDOMOfflineResourceList::MozAdd(const nsAString& aURI)
 NS_IMETHODIMP
 nsDOMOfflineResourceList::MozRemove(const nsAString& aURI)
 {
-  if (IS_CHILD_PROCESS()) 
+  if (IS_CHILD_PROCESS())
     return NS_ERROR_NOT_IMPLEMENTED;
 
   nsresult rv = Init();
@@ -601,7 +601,7 @@ NS_IMETHODIMP
 nsDOMOfflineResourceList::UpdateStateChanged(nsIOfflineCacheUpdate *aUpdate,
                                      uint32_t event)
 {
-  mExposeCacheUpdateStatus = 
+  mExposeCacheUpdateStatus =
       (event == STATE_CHECKING) ||
       (event == STATE_DOWNLOADING) ||
       (event == STATE_ITEMSTARTED) ||
@@ -803,7 +803,7 @@ nsDOMOfflineResourceList::GetCacheKey(nsIURI *aURI, nsCString &aKey)
 nsresult
 nsDOMOfflineResourceList::CacheKeys()
 {
-  if (IS_CHILD_PROCESS()) 
+  if (IS_CHILD_PROCESS())
     return NS_ERROR_NOT_IMPLEMENTED;
 
   if (mCachedKeys)

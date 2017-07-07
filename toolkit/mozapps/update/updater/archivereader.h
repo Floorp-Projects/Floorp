@@ -25,7 +25,7 @@ public:
 
   int Open(const NS_tchar *path);
   int VerifySignature();
-  int VerifyProductInformation(const char *MARChannelID, 
+  int VerifyProductInformation(const char *MARChannelID,
                                const char *appVersion);
   void Close();
 

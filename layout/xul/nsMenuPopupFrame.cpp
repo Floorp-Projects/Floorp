@@ -388,7 +388,7 @@ NS_IMETHODIMP nsXULPopupShownEvent::Run()
 
   WidgetMouseEvent event(true, eXULPopupShown, nullptr,
                          WidgetMouseEvent::eReal);
-  return EventDispatcher::Dispatch(mPopup, mPresContext, &event);                 
+  return EventDispatcher::Dispatch(mPopup, mPresContext, &event);
 }
 
 NS_IMETHODIMP nsXULPopupShownEvent::HandleEvent(nsIDOMEvent* aEvent)
@@ -502,7 +502,7 @@ nsMenuPopupFrame::LayoutPopup(nsBoxLayoutState& aState, nsIFrame* aParentMenu,
   // get the preferred, minimum and maximum size. If the menu is sized to the
   // popup, then the popup's width is the menu's width.
   nsSize prefSize = GetXULPrefSize(aState);
-  nsSize minSize = GetXULMinSize(aState); 
+  nsSize minSize = GetXULMinSize(aState);
   nsSize maxSize = GetXULMaxSize(aState);
 
   if (aSizedToPopup) {
@@ -823,7 +823,7 @@ nsMenuPopupFrame::InitializePopup(nsIContent* aAnchorContent,
 
   if (aAttributesOverride) {
     // Use |left| and |top| dimension attributes to position the popup if
-    // present, as they may have been persisted. 
+    // present, as they may have been persisted.
     nsAutoString left, top;
     mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::left, left);
     mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::top, top);
@@ -1042,7 +1042,7 @@ nsMenuPopupFrame::GetXULLayoutFlags()
 
 ///////////////////////////////////////////////////////////////////////////////
 // GetRootViewForPopup
-//   Retrieves the view for the popup widget that contains the given frame. 
+//   Retrieves the view for the popup widget that contains the given frame.
 //   If the given frame is not contained by a popup widget, return the
 //   root view of the root viewmanager.
 nsView*
@@ -1051,9 +1051,9 @@ nsMenuPopupFrame::GetRootViewForPopup(nsIFrame* aStartFrame)
   nsView* view = aStartFrame->GetClosestView();
   NS_ASSERTION(view, "frame must have a closest view!");
   while (view) {
-    // Walk up the view hierarchy looking for a view whose widget has a 
+    // Walk up the view hierarchy looking for a view whose widget has a
     // window type of eWindowType_popup - in other words a popup window
-    // widget. If we find one, this is the view we want. 
+    // widget. If we find one, this is the view we want.
     nsIWidget* widget = view->GetWidget();
     if (widget && widget->WindowType() == eWindowType_popup) {
       return view;
@@ -1245,7 +1245,7 @@ nsMenuPopupFrame::SlideOrResize(nscoord& aScreenPoint, nscoord aSize,
 }
 
 nscoord
-nsMenuPopupFrame::FlipOrResize(nscoord& aScreenPoint, nscoord aSize, 
+nsMenuPopupFrame::FlipOrResize(nscoord& aScreenPoint, nscoord aSize,
                                nscoord aScreenBegin, nscoord aScreenEnd,
                                nscoord aAnchorBegin, nscoord aAnchorEnd,
                                nscoord aMarginBegin, nscoord aMarginEnd,
@@ -1480,7 +1480,7 @@ nsMenuPopupFrame::SetPopupPosition(nsIFrame* aAnchorFrame, bool aIsMove, bool aS
     // repositioning the popup to fit on the screen, such as end up positioned
     // over the anchor, for instance a popup appearing over the menu label.
     // When doing this reposition, we want to move the popup to the side with
-    // the most room. The combination of anchor and alignment dictate if we 
+    // the most room. The combination of anchor and alignment dictate if we
     // readjust above/below or to the left/right.
     if (mAnchorContent || mAnchorType == MenuPopupAnchorType_Rect) {
       // move the popup according to the anchor and alignment. This will also
@@ -1850,7 +1850,7 @@ ConsumeOutsideClicksResult nsMenuPopupFrame::ConsumeOutsideClicks()
 nsIScrollableFrame* nsMenuPopupFrame::GetScrollFrame(nsIFrame* aStart)
 {
   if (!aStart)
-    return nullptr;  
+    return nullptr;
 
   // try start frame and siblings
   nsIFrame* currFrame = aStart;
@@ -1945,7 +1945,7 @@ void nsMenuPopupFrame::ChangeByPage(bool aIsUp)
         }
 
         // Assign this item to newMenu. This item will be selected in case we
-        // don't find any more. 
+        // don't find any more.
         lastWasValid = true;
         newMenu = menuFrame;
       }
@@ -2124,9 +2124,9 @@ nsMenuPopupFrame::FindMenuWithShortcut(nsIDOMKeyEvent* aKeyEvent, bool& doAction
 
   sLastKeyTime = keyTime;
 
-  // NOTE: If you crashed here due to a bogus |immediateParent| it is 
-  //       possible that the menu whose shortcut is being looked up has 
-  //       been destroyed already.  One strategy would be to 
+  // NOTE: If you crashed here due to a bogus |immediateParent| it is
+  //       possible that the menu whose shortcut is being looked up has
+  //       been destroyed already.  One strategy would be to
   //       setTimeout(<func>,0) as detailed in:
   //       <http://bugzilla.mozilla.org/show_bug.cgi?id=126675#c32>
   nsIFrame* firstMenuItem = nsXULPopupManager::GetNextMenuItem(immediateParent, nullptr, true, false);
@@ -2258,7 +2258,7 @@ nsMenuPopupFrame::AttachedDismissalListener()
 
 // helpers /////////////////////////////////////////////////////////////
 
-nsresult 
+nsresult
 nsMenuPopupFrame::AttributeChanged(int32_t aNameSpaceID,
                                    nsIAtom* aAttribute,
                                    int32_t aModType)
@@ -2266,7 +2266,7 @@ nsMenuPopupFrame::AttributeChanged(int32_t aNameSpaceID,
 {
   nsresult rv = nsBoxFrame::AttributeChanged(aNameSpaceID, aAttribute,
                                              aModType);
-  
+
   if (aAttribute == nsGkAtoms::left || aAttribute == nsGkAtoms::top)
     MoveToAttributePosition();
 
@@ -2320,7 +2320,7 @@ nsMenuPopupFrame::AttributeChanged(int32_t aNameSpaceID,
 void
 nsMenuPopupFrame::MoveToAttributePosition()
 {
-  // Move the widget around when the user sets the |left| and |top| attributes. 
+  // Move the widget around when the user sets the |left| and |top| attributes.
   // Note that this is not the best way to move the widget, as it results in lots
   // of FE notifications and is likely to be slow as molasses. Use |moveTo| on
   // PopupBoxObject if possible.

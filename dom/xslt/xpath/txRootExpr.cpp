@@ -20,7 +20,7 @@ RootExpr::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
 {
     txXPathTreeWalker walker(aContext->getContextNode());
     walker.moveToRoot();
-    
+
     return aContext->recycler()->getNodeSet(walker.getCurrentPosition(),
                                             aResult);
 }

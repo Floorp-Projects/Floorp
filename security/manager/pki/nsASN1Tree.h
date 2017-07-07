@@ -21,7 +21,7 @@
    0x11b2,                                   \
    {0xaf,0xae,0xa8,0x2c,0xba,0xa0,0xb6,0x06} \
   }
-  
+
 
 class nsNSSASN1Tree : public nsIASN1Tree
 {
@@ -29,7 +29,7 @@ public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIASN1TREE
   NS_DECL_NSITREEVIEW
-  
+
   nsNSSASN1Tree();
 protected:
   virtual ~nsNSSASN1Tree();
@@ -42,7 +42,7 @@ protected:
     myNode *child;
     myNode *next;
     myNode *parent;
-    
+
     myNode() {
       child = next = parent = nullptr;
     }
@@ -64,8 +64,8 @@ protected:
   myNode *FindNodeFromIndex(myNode *n, int32_t wantedIndex,
                             int32_t &index_counter, int32_t &level_counter,
                             int32_t *optionalOutParentIndex, int32_t *optionalOutLevel);
-  myNode *FindNodeFromIndex(int32_t wantedIndex, 
-                            int32_t *optionalOutParentIndex = nullptr, 
+  myNode *FindNodeFromIndex(int32_t wantedIndex,
+                            int32_t *optionalOutParentIndex = nullptr,
                             int32_t *optionalOutLevel = nullptr);
 
 };

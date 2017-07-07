@@ -73,7 +73,7 @@ nsLineBox::~nsLineBox()
   MOZ_COUNT_DTOR(nsLineBox);
   if (MOZ_UNLIKELY(mFlags.mHasHashedFrames)) {
     delete mFrames;
-  }  
+  }
   Cleanup();
 }
 
@@ -348,7 +348,7 @@ nsLineBox::CachedIsEmpty()
   if (mFlags.mDirty) {
     return IsEmpty();
   }
-  
+
   if (mFlags.mEmptyCacheValid) {
     return mFlags.mEmptyCacheState;
   }
@@ -514,7 +514,7 @@ nsLineBox::FreeFloats(nsFloatCacheFreeList& aFreeList)
 
 void
 nsLineBox::AppendFloats(nsFloatCacheFreeList& aFreeList)
-{ 
+{
   MOZ_ASSERT(IsInline(), "block line can't have floats");
   if (IsInline()) {
     if (aFreeList.NotEmpty()) {
@@ -777,7 +777,7 @@ nsLineIterator::FindFrameAt(int32_t aLineNumber,
         break;
       }
       if (rect.IStart(wm) < pos.I(wm)) {
-        if (!closestFromStart || 
+        if (!closestFromStart ||
             rect.IEnd(wm) > closestFromStart->
                               GetLogicalRect(wm, containerSize).IEnd(wm))
           closestFromStart = frame;
@@ -872,7 +872,7 @@ void
 nsFloatCacheList::Append(nsFloatCacheFreeList& aList)
 {
   NS_PRECONDITION(aList.NotEmpty(), "Appending empty list will fail");
-  
+
   nsFloatCache* tail = Tail();
   if (tail) {
     NS_ASSERTION(!tail->mNext, "Bogus!");
@@ -933,12 +933,12 @@ nsFloatCacheFreeList::~nsFloatCacheFreeList()
   MOZ_COUNT_DTOR(nsFloatCacheFreeList);
 }
 #endif
-  
+
 void
 nsFloatCacheFreeList::Append(nsFloatCacheList& aList)
 {
   NS_PRECONDITION(aList.NotEmpty(), "Appending empty list will fail");
-  
+
   if (mTail) {
     NS_ASSERTION(!mTail->mNext, "Bogus");
     mTail->mNext = aList.mHead;

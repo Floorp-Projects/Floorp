@@ -353,7 +353,7 @@ ConvertUnescapedTokenToAtom(const nsAString& aToken)
     return nullptr;
   return NS_Atomize(aToken);
 }
-    
+
 already_AddRefed<nsIAtom>
 ConvertTokenToAtom(const nsAString& aToken,
                    bool aUnescapeToken)
@@ -518,7 +518,7 @@ nsSMILParserUtils::ParseKeySplines(const nsAString& aSpec,
   nsCharSeparatedTokenizerTemplate<IsSVGWhitespace> controlPointTokenizer(aSpec, ';');
   while (controlPointTokenizer.hasMoreTokens()) {
 
-    nsCharSeparatedTokenizerTemplate<IsSVGWhitespace> 
+    nsCharSeparatedTokenizerTemplate<IsSVGWhitespace>
       tokenizer(controlPointTokenizer.nextToken(), ',',
                 nsCharSeparatedTokenizer::SEPARATOR_OPTIONAL);
 
@@ -672,7 +672,7 @@ nsSMILParserUtils::ParseTimeValueSpecParams(const nsAString& aSpec,
      aResult.mType = nsSMILTimeValueSpecParams::INDEFINITE;
      return true;
   }
-  
+
   // offset type
   if (ParseOffsetValue(spec, &aResult.mOffset)) {
     aResult.mType = nsSMILTimeValueSpecParams::OFFSET;

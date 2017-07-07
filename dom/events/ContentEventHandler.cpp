@@ -1696,7 +1696,7 @@ ContentEventHandler::GetLineBreakerRectBefore(nsIFrame* aFrame)
   // the line break is before its open tag.  For example, case of
   // |<div><p>some text</p></div>|, caret is before <p> element and in <div>
   // element, the caret should be left of top-left corner of <p> element like:
-  // 
+  //
   // +-<div>-------------------  <div>'s border box
   // | I +-<p>-----------------  <p>'s border box
   // | I |

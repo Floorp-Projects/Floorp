@@ -32,12 +32,12 @@ public:
     friend class nsCacheService;
 
     nsCacheEntryDescriptor(nsCacheEntry * entry, nsCacheAccessMode  mode);
-    
+
     /**
      * utility method to attempt changing data size of associated entry
      */
     nsresult  RequestDataSizeChange(int32_t deltaSize);
-    
+
     /**
      * methods callbacks for nsCacheService
      */
@@ -198,7 +198,7 @@ private:
      public:
          NS_DECL_ISUPPORTS_INHERITED
 
-         nsCompressOutputStreamWrapper(nsCacheEntryDescriptor * desc, 
+         nsCompressOutputStreamWrapper(nsCacheEntryDescriptor * desc,
                                        uint32_t off)
           : nsOutputStreamWrapper(desc, off)
           , mWriteBuffer(0)
@@ -212,7 +212,7 @@ private:
          NS_IMETHOD Close() override;
      private:
          virtual ~nsCompressOutputStreamWrapper()
-         { 
+         {
              Close();
          }
          nsresult InitZstream();

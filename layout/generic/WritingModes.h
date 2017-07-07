@@ -300,7 +300,7 @@ public:
                   NS_STYLE_WRITING_MODE_VERTICAL_LR == 3 &&
                   eLogicalAxisBlock == 0 &&
                   eLogicalAxisInline == 1 &&
-                  eAxisVertical == 0 && 
+                  eAxisVertical == 0 &&
                   eAxisHorizontal == 1,
                   "unexpected writing-mode, logical axis or physical axis "
                   "constant values");
@@ -1504,7 +1504,7 @@ public:
   LogicalRect(WritingMode aWritingMode,
               const LogicalPoint& aOrigin,
               const LogicalSize& aSize)
-    : 
+    :
 #ifdef DEBUG
       mWritingMode(aWritingMode),
 #endif

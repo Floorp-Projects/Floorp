@@ -229,13 +229,13 @@ nsDeque::Push(void* aItem, const fallible_t&)
 bool
 nsDeque::PushFront(void* aItem, const fallible_t&)
 {
-  
+
   if (mOrigin == 0) {
     mOrigin = mCapacity - 1;
   } else {
     mOrigin--;
   }
-  
+
   if (mSize == mCapacity) {
     if (!GrowCapacity()) {
       return false;

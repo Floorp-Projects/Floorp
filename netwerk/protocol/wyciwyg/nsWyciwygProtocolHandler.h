@@ -8,7 +8,7 @@
 #define nsWyciwygProtocolHandler_h___
 
 #include "nsIProtocolHandler.h"
-            
+
 class nsWyciwygProtocolHandler : public nsIProtocolHandler
 {
     virtual ~nsWyciwygProtocolHandler();

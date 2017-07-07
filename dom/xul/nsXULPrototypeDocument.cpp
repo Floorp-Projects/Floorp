@@ -278,7 +278,7 @@ nsXULPrototypeDocument::Write(nsIObjectOutputStream* aStream)
     nsresult rv;
 
     rv = aStream->WriteCompoundObject(mURI, NS_GET_IID(nsIURI), true);
-    
+
     uint32_t count;
 
     count = mStyleSheetReferences.Count();
@@ -302,7 +302,7 @@ nsXULPrototypeDocument::Write(nsIObjectOutputStream* aStream)
     if (NS_FAILED(tmp)) {
       rv = tmp;
     }
-    
+
 #ifdef DEBUG
     // XXX Worrisome if we're caching things without system principal.
     if (!nsContentUtils::IsSystemPrincipal(mNodeInfoManager->DocumentPrincipal())) {
@@ -373,7 +373,7 @@ nsXULPrototypeDocument::Write(nsIObjectOutputStream* aStream)
         rv = tmp;
       }
     }
- 
+
     return rv;
 }
 
@@ -390,7 +390,7 @@ nsXULPrototypeDocument::InitPrincipal(nsIURI* aURI, nsIPrincipal* aPrincipal)
     mNodeInfoManager->SetDocumentPrincipal(aPrincipal);
     return NS_OK;
 }
-    
+
 
 nsIURI*
 nsXULPrototypeDocument::GetURI()

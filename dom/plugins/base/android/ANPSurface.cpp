@@ -86,7 +86,7 @@ static inline void* getSurface(JNIEnv* env, jobject view) {
         // And something else in 2.3+
         gSurfaceJavaGlue.surfacePointer = env->GetFieldID(surfaceClass,
             "mNativeSurface", "I");
-        
+
         CLEAR_EXCEPTION(env);
       }
     }

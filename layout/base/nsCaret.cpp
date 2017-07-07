@@ -42,7 +42,7 @@ using namespace mozilla::dom;
 using namespace mozilla::gfx;
 
 // The bidi indicator hangs off the caret to one side, to show which
-// direction the typing is in. It needs to be at least 2x2 to avoid looking like 
+// direction the typing is in. It needs to be at least 2x2 to avoid looking like
 // an insignificant dot
 static const int32_t kMinBidiIndicatorPixels = 2;
 
@@ -168,7 +168,7 @@ nsresult nsCaret::Init(nsIPresShell *inPresShell)
   if (privateSelection)
     privateSelection->AddSelectionListener(this);
   mDomSelectionWeak = do_GetWeakReference(domSelection);
-  
+
   return NS_OK;
 }
 
@@ -213,7 +213,7 @@ void nsCaret::Terminate()
 {
   // this doesn't erase the caret if it's drawn. Should it? We might not have
   // a good drawing environment during teardown.
-  
+
   StopBlinking();
   mBlinkTimer = nullptr;
 
@@ -487,7 +487,7 @@ void nsCaret::SchedulePaint()
   f->SchedulePaint();
 }
 
-void nsCaret::SetVisibilityDuringSelection(bool aVisibility) 
+void nsCaret::SetVisibilityDuringSelection(bool aVisibility)
 {
   mShowDuringSelection = aVisibility;
   SchedulePaint();
@@ -707,7 +707,7 @@ nsCaret::GetCaretFrameForNodeOffset(nsFrameSelection*    aFrameSelection,
   // that text frame instead. This way, the caret will be positioned as if
   // trailing whitespace was not trimmed.
   AdjustCaretFrameForLineEnd(&theFrame, &theFrameOffset);
-  
+
   // Mamdouh : modification of the caret to work at rtl and ltr with Bidi
   //
   // Direction Style from visibility->mDirection
@@ -733,7 +733,7 @@ nsCaret::GetCaretFrameForNodeOffset(nsFrameSelection*    aFrameSelection,
     {
       nsPrevNextBidiLevels levels = aFrameSelection->
         GetPrevNextBidiLevels(aContentNode, aOffset, false);
-    
+
       /* Boundary condition, we need to know the Bidi levels of the characters before and after the caret */
       if (levels.mFrameBefore || levels.mFrameAfter)
       {
@@ -760,7 +760,7 @@ nsCaret::GetCaretFrameForNodeOffset(nsFrameSelection*    aFrameSelection,
                 theFrame->GetOffsets(start, end);
                 theFrameOffset = end;
               }
-              else 
+              else
               {
                 // if there is no frameBefore, we must be at the beginning of the line
                 // so we stay with the current frame.
@@ -795,7 +795,7 @@ nsCaret::GetCaretFrameForNodeOffset(nsFrameSelection*    aFrameSelection,
                 theFrame->GetOffsets(start, end);
                 theFrameOffset = start;
               }
-              else 
+              else
               {
                 // if there is no frameAfter, we must be at the end of the line
                 // so we stay with the current frame.
@@ -883,7 +883,7 @@ bool nsCaret::IsMenuPopupHidingCaret()
   if (popups.Length() == 0)
     return false; // No popups, so caret can't be hidden by them.
 
-  // Get the selection focus content, that's where the caret would 
+  // Get the selection focus content, that's where the caret would
   // go if it was drawn.
   nsCOMPtr<nsIDOMNode> node;
   nsCOMPtr<nsISelection> domSelection = do_QueryReferent(mDomSelectionWeak);

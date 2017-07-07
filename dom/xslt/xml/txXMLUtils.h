@@ -61,7 +61,7 @@ public:
     static bool isLetter(char16_t aChar)
     {
         return !!MOZ_XMLIsLetter(reinterpret_cast<const char*>(&aChar));
-    }   
+    }
 
     /**
      * Returns true if the given character is an allowable NCName character

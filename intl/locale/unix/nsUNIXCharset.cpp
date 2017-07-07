@@ -56,10 +56,10 @@ nsPlatformCharset::~nsPlatformCharset()
 {
 }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsPlatformCharset::GetCharset(nsPlatformCharsetSel selector, nsACString& oResult)
 {
-  oResult = mCharset; 
+  oResult = mCharset;
   return NS_OK;
 }
 
@@ -98,7 +98,7 @@ nsPlatformCharset::InitGetCharset(nsACString &oString)
   return ConvertLocaleToCharsetUsingDeprecatedConfig(localeStr, oString);
 }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsPlatformCharset::Init()
 {
   //
@@ -108,7 +108,7 @@ nsPlatformCharset::Init()
   char* locale = setlocale(LC_CTYPE, nullptr);
   NS_ASSERTION(locale, "cannot setlocale");
   if (locale) {
-    CopyASCIItoUTF16(locale, mLocale); 
+    CopyASCIItoUTF16(locale, mLocale);
   } else {
     mLocale.AssignLiteral("en_US");
   }

@@ -14,7 +14,7 @@
 
 namespace mozilla {
 namespace a11y {
- 
+
 class ApplicationAccessibleWrap: public ApplicationAccessible,
                                  public IAccessibleApplication
 {

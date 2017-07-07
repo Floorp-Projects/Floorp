@@ -14,7 +14,7 @@ BOOL VerifySameFiles(LPCWSTR file1Path, LPCWSTR file2Path, BOOL &sameContent);
 #define COMPARE_BLOCKSIZE 32768
 
 // The following string resource value is used to uniquely identify the signed
-// Mozilla application as an updater.  Before the maintenance service will 
+// Mozilla application as an updater.  Before the maintenance service will
 // execute the updater it must have this updater identity string in its string
 // table.  No other signed Mozilla product will have this string table value.
 #define UPDATER_IDENTITY_STRING \

@@ -157,9 +157,9 @@ private:
     int32_t             mResponseCode;      // the last command response code
     nsCString           mResponseMsg;       // the last command response text
 
-        // ****** channel/transport/stream vars 
+        // ****** channel/transport/stream vars
     RefPtr<nsFtpControlConnection> mControlConnection;       // cacheable control connection (owns mCPipe)
-    bool                            mReceivedControlData;  
+    bool                            mReceivedControlData;
     bool                            mTryingCachedControl;     // retrying the password
     bool                            mRETRFailed;              // Did we already try a RETR and it failed?
     uint64_t                        mFileSize;

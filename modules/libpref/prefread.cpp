@@ -50,20 +50,20 @@ static const char kFalse[] = "false";
 
 /**
  * pref_GrowBuf
- * 
+ *
  * this function will increase the size of the buffer owned
  * by the given pref parse state.  We currently use a simple
  * doubling algorithm, but the only hard requirement is that
  * it increase the buffer by at least the size of the ps->esctmp
  * buffer used for escape processing (currently 6 bytes).
- * 
+ *
  * this buffer is used to store partial pref lines.  it is
  * freed when the parse state is destroyed.
  *
  * @param ps
  *        parse state instance
  *
- * this function updates all pointers that reference an 
+ * this function updates all pointers that reference an
  * address within lb since realloc may relocate the buffer.
  *
  * @return false if insufficient memory.
@@ -604,7 +604,7 @@ PREF_ParseBuf(PrefParseState *ps, const char *buf, int bufLen)
 #ifdef TEST_PREFREAD
 
 static void
-pref_reader(void       *closure, 
+pref_reader(void       *closure,
             const char *pref,
             PrefValue   val,
             PrefType    type,

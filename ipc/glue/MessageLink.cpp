@@ -69,7 +69,7 @@ ProcessLink::~ProcessLink()
 #endif
 }
 
-void 
+void
 ProcessLink::Open(mozilla::ipc::Transport* aTransport, MessageLoop *aIOLoop, Side aSide)
 {
     NS_PRECONDITION(aTransport, "need transport layer");

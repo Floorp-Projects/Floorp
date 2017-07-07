@@ -249,7 +249,7 @@ WriteBytes(void *buf, const void *data, uint32_t dataLen)
 static void *
 WriteDWORD(void *buf, uint32_t dword)
 {
-#ifdef IS_BIG_ENDIAN 
+#ifdef IS_BIG_ENDIAN
   // NTLM uses little endian on the wire
   dword = SWAP32(dword);
 #endif
@@ -340,7 +340,7 @@ NTLM_Hash(const nsString &password, unsigned char *hash)
 {
   uint32_t len = password.Length();
   uint8_t *passbuf;
-  
+
 #ifdef IS_BIG_ENDIAN
   passbuf = (uint8_t *) malloc(len * 2);
   WriteUnicodeLE(passbuf, password.get(), len);
@@ -358,7 +358,7 @@ NTLM_Hash(const nsString &password, unsigned char *hash)
 
 //-----------------------------------------------------------------------------
 
-/** 
+/**
  * LM_Response generates the LM response given a 16-byte password hash and the
  * challenge from the Type-2 message.
  *
@@ -558,7 +558,7 @@ GenerateType3Msg(const nsString &domain,
   nsAutoString ucsDomainBuf, ucsUserBuf;
 #endif
   nsAutoCString hostBuf;
-  nsAutoString ucsHostBuf; 
+  nsAutoString ucsHostBuf;
   // temporary buffers for oem strings
   nsAutoCString oemDomainBuf, oemUserBuf, oemHostBuf;
   // pointers and lengths for the string buffers; encoding is unicode if

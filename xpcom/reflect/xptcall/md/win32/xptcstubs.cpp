@@ -94,7 +94,7 @@ PrepareAndDispatch(nsXPTCStubBase* self, uint32_t methodIndex,
 
 // declspec(naked) is broken in gcc and clang-cl
 #if !defined(__GNUC__) && !defined(__clang__)
-static 
+static
 __declspec(naked)
 void SharedStub(void)
 {

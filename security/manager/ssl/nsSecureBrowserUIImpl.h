@@ -84,7 +84,7 @@ protected:
                                       bool withNewLocation, bool withNewSink);
   void UpdateSubrequestMembers(nsISupports* securityInfo, nsIRequest* request);
 
-  void ObtainEventSink(nsIChannel *channel, 
+  void ObtainEventSink(nsIChannel *channel,
                        nsCOMPtr<nsISecurityEventSink> &sink);
 
   nsCOMPtr<nsISSLStatus> mSSLStatus;

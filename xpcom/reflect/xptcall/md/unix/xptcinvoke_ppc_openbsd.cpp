@@ -31,7 +31,7 @@ invoke_count_words(uint32_t paramCount, nsXPTCVariant* s)
 extern "C" void
 invoke_copy_to_stack(uint32_t* d,
                      uint32_t paramCount,
-                     nsXPTCVariant* s, 
+                     nsXPTCVariant* s,
                      uint32_t* gpregs,
                      double* fpregs)
 {
@@ -39,7 +39,7 @@ invoke_copy_to_stack(uint32_t* d,
     uint32_t fpr = 0;
     uint32_t tempu32;
     uint64_t tempu64;
-    
+
     for(uint32_t i = 0; i < paramCount; i++, s++) {
         if(s->IsPtrData()) {
             if(s->type == nsXPTType::T_JSVAL)
@@ -99,7 +99,7 @@ invoke_copy_to_stack(uint32_t* d,
             else
                 *d++          = tempu32;
         }
-        
+
     }
 }
 

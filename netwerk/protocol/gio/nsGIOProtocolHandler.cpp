@@ -43,7 +43,7 @@ static mozilla::LazyLogModule sGIOLog("gio");
 
 //-----------------------------------------------------------------------------
 static nsresult
-MapGIOResult(gint code) 
+MapGIOResult(gint code)
 {
   switch (code)
   {
@@ -185,7 +185,7 @@ class nsGIOInputStream final : public nsIInputStream
     nsresult       SetContentTypeOfChannel(const char *contentType);
     nsresult       MountVolume();
     nsresult       DoOpenDirectory();
-    nsresult       DoOpenFile(GFileInfo *info);        
+    nsresult       DoOpenFile(GFileInfo *info);
     nsCString             mSpec;
     nsIChannel           *mChannel; // manually refcounted
     GFile                *mHandle;
@@ -203,10 +203,10 @@ class nsGIOInputStream final : public nsIInputStream
 };
 /**
  * Set result of mount operation and notify monitor waiting for results.
- * This method is called in main thread as long as it is used only 
+ * This method is called in main thread as long as it is used only
  * in mount_enclosing_volume_finished function.
  * @param result Result of mount operation
- */ 
+ */
 void
 nsGIOInputStream::SetMountResult(MountOperationResult result, gint error_code)
 {
@@ -217,7 +217,7 @@ nsGIOInputStream::SetMountResult(MountOperationResult result, gint error_code)
 }
 
 /**
- * Start mount operation and wait in loop until it is finished. This method is 
+ * Start mount operation and wait in loop until it is finished. This method is
  * called from thread which is trying to read from location.
  */
 nsresult
@@ -227,7 +227,7 @@ nsGIOInputStream::MountVolume() {
                     G_CALLBACK (mount_operation_ask_password), mChannel);
   mMountRes = MOUNT_OPERATION_IN_PROGRESS;
   /* g_file_mount_enclosing_volume uses a dbus request to mount the volume.
-     Callback mount_enclosing_volume_finished is called in main thread 
+     Callback mount_enclosing_volume_finished is called in main thread
      (not this thread on which this method is called). */
   g_file_mount_enclosing_volume(mHandle,
                                 G_MOUNT_MOUNT_NONE,
@@ -369,7 +369,7 @@ nsGIOInputStream::DoOpen()
     if (error->domain == G_IO_ERROR && error->code == G_IO_ERROR_NOT_MOUNTED) {
       // location is not yet mounted, try to mount
       g_error_free(error);
-      if (NS_IsMainThread()) 
+      if (NS_IsMainThread())
         return NS_ERROR_NOT_CONNECTED;
       error = nullptr;
       rv = MountVolume();
@@ -427,7 +427,7 @@ nsGIOInputStream::DoRead(char *aBuf, uint32_t aCount, uint32_t *aCountRead)
   nsresult rv = NS_ERROR_NOT_AVAILABLE;
   if (mStream) {
     // file read
-    GError *error = nullptr;    
+    GError *error = nullptr;
     uint32_t bytes_read = g_input_stream_read(G_INPUT_STREAM(mStream),
                                               aBuf,
                                               aCount,
@@ -470,7 +470,7 @@ nsGIOInputStream::DoRead(char *aBuf, uint32_t aCount, uint32_t *aCountRead)
 
         // Prune '.' and '..' from directory listing.
         const char * fname = g_file_info_get_name(info);
-        if (fname && fname[0] == '.' && 
+        if (fname && fname[0] == '.' &&
             (fname[1] == '\0' || (fname[1] == '.' && fname[2] == '\0')))
         {
           mDirListPtr = mDirListPtr->next;
@@ -698,8 +698,8 @@ nsGIOInputStream::IsNonBlocking(bool *aResult)
 //-----------------------------------------------------------------------------
 
 /**
- * Called when finishing mount operation. Result of operation is set in 
- * nsGIOInputStream. This function is called in main thread as an async request 
+ * Called when finishing mount operation. Result of operation is set in
+ * nsGIOInputStream. This function is called in main thread as an async request
  * typically from dbus.
  * @param source_object GFile object which requested the mount
  * @param res result object
@@ -713,9 +713,9 @@ mount_enclosing_volume_finished (GObject *source_object,
   GError *error = nullptr;
 
   nsGIOInputStream* istream = static_cast<nsGIOInputStream*>(user_data);
-  
+
   g_file_mount_enclosing_volume_finish(G_FILE (source_object), res, &error);
-  
+
   if (error) {
     g_warning("Mount failed: %s %d", error->message, error->code);
     istream->SetMountResult(MOUNT_OPERATION_FAILED, error->code);

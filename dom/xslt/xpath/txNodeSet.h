@@ -184,7 +184,7 @@ private:
      *         before the given node. This value is always set, even if aNode
      *         already exists in the NodeSet
      */
-    txXPathNode* findPosition(const txXPathNode& aNode, 
+    txXPathNode* findPosition(const txXPathNode& aNode,
                               txXPathNode* aFirst,
                               txXPathNode* aLast, bool& aDupe) const;
 

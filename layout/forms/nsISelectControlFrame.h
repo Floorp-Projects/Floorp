@@ -8,7 +8,7 @@
 
 #include "nsQueryFrame.h"
 
-/** 
+/**
   * nsISelectControlFrame is the interface for combo boxes and listboxes
   */
 class nsISelectControlFrame : public nsQueryFrame
@@ -26,7 +26,7 @@ public:
    * Removes the option at index.  The caller must have a live script
    * blocker while calling this method.
    */
-  NS_IMETHOD RemoveOption(int32_t index) = 0; 
+  NS_IMETHOD RemoveOption(int32_t index) = 0;
 
   /**
    * Sets whether the parser is done adding children

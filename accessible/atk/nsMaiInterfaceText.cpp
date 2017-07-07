@@ -126,7 +126,7 @@ ConvertToAtkTextAttributeSet(nsIPersistentProperties* aAttributes)
 static void
 ConvertTexttoAsterisks(AccessibleWrap* accWrap, nsAString& aString)
 {
-  // convert each char to "*" when it's "password text" 
+  // convert each char to "*" when it's "password text"
   if (accWrap->NativeRole() == roles::PASSWORD_TEXT) {
     for (uint32_t i = 0; i < aString.Length(); i++)
       aString.Replace(i, 1, NS_LITERAL_STRING("*"));

@@ -38,7 +38,7 @@
    A note about platform assumptions:
 
    We assume that a widget is z-ordered on top of its parent.
-   
+
    We do NOT assume anything about the relative z-ordering of sibling widgets. Even though
    we ask for a specific z-order, we don't assume that widget z-ordering actually works.
 */
@@ -69,7 +69,7 @@ nsViewManager::nsViewManager()
     // Create an array to hold a list of view managers
     gViewManagers = new nsTArray<nsViewManager*>;
   }
- 
+
   gViewManagers->AppendElement(this);
 }
 
@@ -140,7 +140,7 @@ nsViewManager::SetRootView(nsView *aView)
 {
   NS_PRECONDITION(!aView || aView->GetViewManager() == this,
                   "Unexpected viewmanager on root view");
-  
+
   // Do NOT destroy the current root view. It's the caller's responsibility
   // to destroy it
   mRootView = aView;
@@ -321,7 +321,7 @@ void nsViewManager::Refresh(nsView* aView, const LayoutDeviceIntRegion& aRegion)
 #endif
     return;
   }
-  
+
   nsIWidget *widget = aView->GetWidget();
   if (!widget) {
     return;
@@ -331,7 +331,7 @@ void nsViewManager::Refresh(nsView* aView, const LayoutDeviceIntRegion& aRegion)
   if (IsPainting()) {
     RootViewManager()->mRecursiveRefreshPending = true;
     return;
-  }  
+  }
 
   {
     nsAutoScriptBlocker scriptBlocker;
@@ -680,7 +680,7 @@ nsViewManager::InvalidateAllViews()
   if (RootViewManager() != this) {
     return RootViewManager()->InvalidateAllViews();
   }
-  
+
   InvalidateViews(mRootView);
 }
 
@@ -809,7 +809,7 @@ nsViewManager::DispatchEvent(WidgetGUIEvent *aEvent,
   *aStatus = nsEventStatus_eIgnore;
 }
 
-// Recursively reparent widgets if necessary 
+// Recursively reparent widgets if necessary
 
 void nsViewManager::ReparentChildWidgets(nsView* aView, nsIWidget *aNewWidget)
 {
@@ -848,9 +848,9 @@ void nsViewManager::ReparentWidgets(nsView* aView, nsView *aParent)
 {
   NS_PRECONDITION(aParent, "Must have a parent");
   NS_PRECONDITION(aView, "Must have a view");
-  
+
   // Quickly determine whether the view has pre-existing children or a
-  // widget. In most cases the view will not have any pre-existing 
+  // widget. In most cases the view will not have any pre-existing
   // children when this is called.  Only in the case
   // where a view has been reparented by removing it from
   // a reinserting it into a new location in the view hierarchy do we

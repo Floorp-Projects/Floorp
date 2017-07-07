@@ -174,7 +174,7 @@ public:
 
   /**
    * Returns the current computed value of the CSS property 'stroke-width' for
-   * the given element. aStyleContext may be provided as an optimization. 
+   * the given element. aStyleContext may be provided as an optimization.
    * aContextPaint is also optional.
    *
    * Note that this function does NOT take account of the value of the 'stroke'

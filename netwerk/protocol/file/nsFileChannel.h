@@ -15,7 +15,7 @@ class nsFileChannel : public nsBaseChannel
                     , public nsIFileChannel
                     , public nsIUploadChannel
 {
-public: 
+public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIFILECHANNEL
   NS_DECL_NSIUPLOADCHANNEL

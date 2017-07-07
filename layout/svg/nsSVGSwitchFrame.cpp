@@ -61,7 +61,7 @@ private:
 
 nsIFrame*
 NS_NewSVGSwitchFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
-{  
+{
   return new (aPresShell) nsSVGSwitchFrame(aContext);
 }
 

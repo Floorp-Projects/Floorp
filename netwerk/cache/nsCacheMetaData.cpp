@@ -107,7 +107,7 @@ nsCacheMetaData::UnflattenMetaData(const char * data, uint32_t size)
         // to match the pattern { key \0 value \0 }
         bool odd = false;
         for (uint32_t i = 0; i < size; i++) {
-            if (data[i] == '\0') 
+            if (data[i] == '\0')
                 odd = !odd;
         }
         if (odd) {
@@ -159,4 +159,4 @@ nsCacheMetaData::EnsureBuffer(uint32_t bufSize)
         mBufferSize = bufSize;
     }
     return NS_OK;
-}        
+}

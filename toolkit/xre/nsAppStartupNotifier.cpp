@@ -45,7 +45,7 @@ NS_IMETHODIMP nsAppStartupNotifier::Observe(nsISupports *aSubject, const char *a
             rv = category->GetData(categoryEntry);
 
             nsXPIDLCString contractId;
-            categoryManager->GetCategoryEntry(aTopic, 
+            categoryManager->GetCategoryEntry(aTopic,
                                               categoryEntry.get(),
                                               getter_Copies(contractId));
 
@@ -67,7 +67,7 @@ NS_IMETHODIMP nsAppStartupNotifier::Observe(nsISupports *aSubject, const char *a
                         do_QueryInterface(startupInstance, &rv);
                     if (NS_SUCCEEDED(rv)) {
                         rv = startupObserver->Observe(nullptr, aTopic, nullptr);
-     
+
                         // mainly for debugging if you want to know if your observer worked.
                         NS_ASSERTION(NS_SUCCEEDED(rv), "Startup Observer failed!\n");
                     }

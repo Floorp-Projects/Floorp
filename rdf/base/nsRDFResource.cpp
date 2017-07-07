@@ -95,7 +95,7 @@ NS_IMETHODIMP
 nsRDFResource::GetValue(char* *aURI)
 {
     NS_ASSERTION(aURI, "Null out param.");
-    
+
     *aURI = ToNewCString(mURI);
 
     if (!*aURI)
@@ -172,7 +172,7 @@ nsRDFResource::GetDelegate(const char* aKey, REFNSIID aIID, void** aResult)
         NS_RELEASE(*reinterpret_cast<nsISupports**>(aResult));
         return NS_ERROR_OUT_OF_MEMORY;
     }
-    
+
     entry->mKey      = aKey;
     entry->mDelegate = do_QueryInterface(*reinterpret_cast<nsISupports**>(aResult), &rv);
     if (NS_FAILED(rv)) {

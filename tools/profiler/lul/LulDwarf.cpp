@@ -1870,7 +1870,7 @@ int32_t parseDwarfExpr(Summariser* summ, const ByteReader* reader,
                    (int)(end1 - cursor));
     summ->Log(buf);
   }
-  
+
   // Add a marker for the start of this expression.  In it, indicate
   // whether or not the CFA should be pushed onto the stack prior to
   // evaluation.
@@ -1885,7 +1885,7 @@ int32_t parseDwarfExpr(Summariser* summ, const ByteReader* reader,
 
     const char* nm   = nullptr;
     PfxExprOp   pxop = PX_End;
-    
+
     switch (opc) {
 
       case DW_OP_lit0 ... DW_OP_lit31: {
@@ -1932,7 +1932,7 @@ int32_t parseDwarfExpr(Summariser* summ, const ByteReader* reader,
         (void) summ->AddPfxInstr(PfxInstr(PX_SImm32, s32));
         break;
       }
-      
+
       case DW_OP_deref: nm = "deref"; pxop = PX_Deref;  goto no_operands;
       case DW_OP_and:   nm = "and";   pxop = PX_And;    goto no_operands;
       case DW_OP_plus:  nm = "plus";  pxop = PX_Add;    goto no_operands;
@@ -1958,9 +1958,9 @@ int32_t parseDwarfExpr(Summariser* summ, const ByteReader* reader,
     } // switch (opc)
 
   } // while (cursor < end1)
-  
+
   MOZ_ASSERT(cursor >= end1);
-  
+
   if (cursor > end1) {
     // We overran the Dwarf expression.  Give up.
     goto fail;
@@ -1983,7 +1983,7 @@ int32_t parseDwarfExpr(Summariser* summ, const ByteReader* reader,
     summ->Log("LUL.DW  >>\n");
   }
   return start_ix;
-      
+
  fail:
   if (debug) {
     summ->Log("LUL.DW   conversion of dwarf expression failed\n");
@@ -2002,7 +2002,7 @@ bool DwarfCFIToModule::Entry(size_t offset, uint64 address, uint64 length,
                    address, length);
     summ_->Log(buf);
   }
-  
+
   summ_->Entry(address, length);
 
   // If dwarf2reader::CallFrameInfo can handle this version and

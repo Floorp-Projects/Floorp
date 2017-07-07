@@ -294,7 +294,7 @@ public:
   enum { ASK_FOR_BASELINE = nscoord_MAX };
 
   // Metrics that _exactly_ enclose the text to allow precise MathML placements.
-  // If the NS_REFLOW_CALC_BOUNDING_METRICS flag is set, then the caller is 
+  // If the NS_REFLOW_CALC_BOUNDING_METRICS flag is set, then the caller is
   // requesting that you also compute additional details about your inner
   // bounding box and italic correction. For example, the bounding box of
   // msup is the smallest rectangle that _exactly_ encloses both the text

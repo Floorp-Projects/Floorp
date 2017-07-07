@@ -19,7 +19,7 @@ extern "C" BOOL WINAPI DummyEntryPoint(HINSTANCE instance,
 }
 
 // support.microsoft.com/kb/94248
-extern "C" BOOL WINAPI _CRT_INIT(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpReserved); 
+extern "C" BOOL WINAPI _CRT_INIT(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpReserved);
 
 extern "C"
 __declspec(dllexport) DWORD Start(void* context)

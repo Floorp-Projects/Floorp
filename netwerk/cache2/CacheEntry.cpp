@@ -1784,7 +1784,7 @@ void CacheEntry::DoomFile()
       LOG(("  file doomed"));
       return;
     }
-    
+
     if (NS_ERROR_FILE_NOT_FOUND == rv) {
       // File is set to be just memory-only, notify the callbacks
       // and pretend dooming has succeeded.  From point of view of

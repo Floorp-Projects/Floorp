@@ -479,9 +479,9 @@ BookmarksEngine.prototype = {
     this._store.clearPendingDeletions();
   },
 
-  _deletePending() {
+  async _deletePending() {
     // Delete pending items -- See the comment above BookmarkStore's deletePending
-    let newlyModified = Async.promiseSpinningly(this._store.deletePending());
+    let newlyModified = await this._store.deletePending();
     if (newlyModified) {
       this._log.debug("Deleted pending items", newlyModified);
       this._modified.insert(newlyModified);
@@ -513,14 +513,22 @@ BookmarksEngine.prototype = {
     try {
       SyncEngine.prototype._processIncoming.call(this, newitems);
     } finally {
-      try {
-        this._deletePending();
-      } finally {
-        // Reorder children.
-        this._store._orderChildren();
-        delete this._store._childrenToOrder;
-      }
+      Async.promiseSpinningly(this._postProcessIncoming());
     }
+  },
+
+  // Applies pending tombstones, sets folder child order, and updates the sync
+  // status of all `NEW` bookmarks to `NORMAL`.
+  async _postProcessIncoming() {
+    await this._deletePending();
+    await this._orderChildren();
+    let changes = this._modified.changes;
+    await PlacesSyncUtils.bookmarks.markChangesAsSyncing(changes);
+  },
+
+  async _orderChildren() {
+    await this._store._orderChildren();
+    this._store._childrenToOrder = {};
   },
 
   _syncFinish: function _syncFinish() {
@@ -750,14 +758,15 @@ BookmarksStore.prototype = {
     }
   },
 
-  _orderChildren: function _orderChildren() {
-    let promises = Object.keys(this._childrenToOrder).map(syncID => {
+  async _orderChildren() {
+    for (let syncID in this._childrenToOrder) {
       let children = this._childrenToOrder[syncID];
-      return PlacesSyncUtils.bookmarks.order(syncID, children).catch(ex => {
+      try {
+        await PlacesSyncUtils.bookmarks.order(syncID, children);
+      } catch (ex) {
         this._log.debug(`Could not order children for ${syncID}`, ex);
-      });
-    });
-    Async.promiseSpinningly(Promise.all(promises));
+      }
+    }
   },
 
   // There's some complexity here around pending deletions. Our goals:
@@ -1216,7 +1225,9 @@ class BookmarksChangeset extends Changeset {
   ids() {
     let results = new Set();
     for (let id in this.changes) {
-      results.add(id);
+      if (!this.changes[id].synced) {
+        results.add(id);
+      }
     }
     for (let id in this.weakChanges) {
       results.add(id);

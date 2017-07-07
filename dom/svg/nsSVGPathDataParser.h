@@ -41,7 +41,7 @@ private:
   bool ParsePath();
   bool IsStartOfSubPath() const;
   bool ParseSubPath();
-  
+
   bool ParseSubPathElements();
   bool ParseSubPathElement(char16_t aCommandType,
                            bool aAbsCoords);
@@ -54,8 +54,8 @@ private:
   bool ParseCurveto(bool aAbsCoords);
   bool ParseSmoothCurveto(bool aAbsCoords);
   bool ParseQuadBezierCurveto(bool aAbsCoords);
-  bool ParseSmoothQuadBezierCurveto(bool aAbsCoords);  
-  bool ParseEllipticalArc(bool aAbsCoords);  
+  bool ParseSmoothQuadBezierCurveto(bool aAbsCoords);
+  bool ParseEllipticalArc(bool aAbsCoords);
 
   mozilla::SVGPathData * const mPathSegList;
 };

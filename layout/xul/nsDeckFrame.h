@@ -8,7 +8,7 @@
   Eric D Vaughan
   A frame that can have multiple children. Only one child may be displayed at one time. So the
   can be flipped though like a deck of cards.
- 
+
 **/
 
 #ifndef nsDeckFrame_h___

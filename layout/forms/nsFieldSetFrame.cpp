@@ -168,7 +168,7 @@ nsFieldSetFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 
     aLists.BorderBackground()->AppendNewToTop(new (aBuilder)
       nsDisplayFieldSetBorder(aBuilder, this));
-  
+
     DisplayOutlineUnconditional(aBuilder, aLists);
 
     DO_GLOBAL_REFLOW_COUNT_DSP("nsFieldSetFrame");

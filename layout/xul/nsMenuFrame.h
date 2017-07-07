@@ -167,7 +167,7 @@ public:
   }
 
 
-  // nsMenuFrame methods 
+  // nsMenuFrame methods
 
   bool IsOnMenuBar() const
   {

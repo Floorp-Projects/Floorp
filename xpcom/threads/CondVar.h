@@ -133,4 +133,4 @@ private:
 } // namespace mozilla
 
 
-#endif  // ifndef mozilla_CondVar_h  
+#endif  // ifndef mozilla_CondVar_h

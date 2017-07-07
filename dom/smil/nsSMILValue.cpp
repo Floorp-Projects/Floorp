@@ -144,7 +144,7 @@ nsSMILValue::InitAndCheckPostcondition(const nsISMILType* aNewType)
   MOZ_ASSERT(mType == aNewType,
              "Post-condition of Init failed. nsSMILValue is invalid");
 }
-                
+
 void
 nsSMILValue::DestroyAndCheckPostcondition()
 {

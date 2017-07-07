@@ -21,7 +21,7 @@ nsXPCOMDetector:: nsXPCOMDetector()
 {
 }
 //---------------------------------------------------------------------
-nsXPCOMDetector::~nsXPCOMDetector() 
+nsXPCOMDetector::~nsXPCOMDetector()
 {
 }
 //---------------------------------------------------------------------
@@ -97,13 +97,13 @@ nsXPCOMStringDetector:: nsXPCOMStringDetector()
 {
 }
 //---------------------------------------------------------------------
-nsXPCOMStringDetector::~nsXPCOMStringDetector() 
+nsXPCOMStringDetector::~nsXPCOMStringDetector()
 {
 }
 //---------------------------------------------------------------------
 NS_IMPL_ISUPPORTS(nsXPCOMStringDetector, nsIStringCharsetDetector)
 //---------------------------------------------------------------------
-void nsXPCOMStringDetector::Report(const char *aCharset) 
+void nsXPCOMStringDetector::Report(const char *aCharset)
 {
   mResult = aCharset;
 #ifdef DEBUG_chardet
@@ -117,7 +117,7 @@ NS_IMETHODIMP nsXPCOMStringDetector::DoIt(const char* aBuf,
 {
   mResult = nullptr;
   this->Reset();
-  nsresult rv = this->HandleData(aBuf, aLen); 
+  nsresult rv = this->HandleData(aBuf, aLen);
   if (NS_FAILED(rv))
     return rv;
   this->DataEnd();

@@ -11,8 +11,8 @@
 
 
 class nsWin32Locale final {
-public: 
-  static nsresult    GetPlatformLocale(const nsAString& locale, LCID* winLCID); 
+public:
+  static nsresult    GetPlatformLocale(const nsAString& locale, LCID* winLCID);
   static void        GetXPLocale(LCID winLCID, nsAString& locale);
 
 private:

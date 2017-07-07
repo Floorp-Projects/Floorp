@@ -53,7 +53,7 @@ protected:
   nsresult LinkStylesheet(const nsAString& aStylesheet);
   nsresult LinkScript(const nsAString& aScript);
 
-  // |aFormatNames[]| needs to have four elements in the following order: 
+  // |aFormatNames[]| needs to have four elements in the following order:
   // a format name with neither dimension nor file, a format name with
   // filename but w/o dimension, a format name with dimension but w/o filename,
   // a format name with both of them.  For instance, it can have
@@ -62,8 +62,8 @@ protected:
   //
   // Also see MediaDocument.properties if you want to define format names
   // for a new subclass. aWidth and aHeight are pixels for |ImageDocument|,
-  // but could be in other units for other 'media', in which case you have to 
-  // define format names accordingly. 
+  // but could be in other units for other 'media', in which case you have to
+  // define format names accordingly.
   void UpdateTitleAndCharset(const nsACString&  aTypeStr,
                              nsIChannel* aChannel,
                              const char* const* aFormatNames = sFormatNames,
@@ -73,10 +73,10 @@ protected:
 
   nsCOMPtr<nsIStringBundle>     mStringBundle;
   static const char* const      sFormatNames[4];
-  
+
 private:
   enum                          {eWithNoInfo, eWithFile, eWithDim, eWithDimAndFile};
-  bool                          mDocumentElementInserted;   
+  bool                          mDocumentElementInserted;
 };
 
 

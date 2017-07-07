@@ -83,7 +83,7 @@ public:
                                        const TabId& aTabId);
 
   static nsresult
-  AskPermission(nsIContentPermissionRequest* aRequest, 
+  AskPermission(nsIContentPermissionRequest* aRequest,
                 nsPIDOMWindowInner* aWindow);
 
   static nsTArray<PContentPermissionRequestParent*>

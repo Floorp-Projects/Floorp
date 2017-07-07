@@ -60,7 +60,7 @@ nsEventShell::FireEvent(uint32_t aEventType, Accessible* aAccessible,
   FireEvent(event);
 }
 
-void 
+void
 nsEventShell::GetEventAttributes(nsINode *aNode,
                                  nsIPersistentProperties *aAttributes)
 {

@@ -11,7 +11,7 @@
 class nsAString;
 class nsIAtom;
 
-/** 
+/**
   * nsIFormControlFrame is the common interface for frames of form controls. It
   * provides a uniform way of creating widgets, resizing, and painting.
   * @see nsLeafFrame and its base classes for more info
@@ -22,7 +22,7 @@ public:
   NS_DECL_QUERYFRAME_TARGET(nsIFormControlFrame)
 
   /**
-   * 
+   *
    * @param aOn
    * @param aRepaint
    */

@@ -303,7 +303,7 @@ add_test(function test_move_folder() {
   }
 });
 
-add_test(function test_move_order() {
+add_task(async function test_move_order() {
   // Make sure the tracker is turned on.
   Svc.Obs.notify("weave:engine:start-tracking");
   try {
@@ -331,7 +331,7 @@ add_test(function test_move_order() {
     store.applyIncoming(toolbar);
     // Bookmarks engine does this at the end of _processIncoming
     tracker.ignoreAll = true;
-    store._orderChildren();
+    await store._orderChildren();
     tracker.ignoreAll = false;
     delete store._childrenToOrder;
 
@@ -343,7 +343,6 @@ add_test(function test_move_order() {
     Svc.Obs.notify("weave:engine:stop-tracking");
     _("Clean up.");
     store.wipe();
-    run_next_test();
   }
 });
 

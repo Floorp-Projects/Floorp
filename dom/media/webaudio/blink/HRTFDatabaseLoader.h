@@ -84,13 +84,13 @@ public:
     // waitForLoaderThreadCompletion() may be called more than once,
     // on any thread except m_databaseLoaderThread.
     void waitForLoaderThreadCompletion();
-    
+
     HRTFDatabase* database() { return m_hrtfDatabase.get(); }
 
     float databaseSampleRate() const { return m_databaseSampleRate; }
 
     static void shutdown();
-    
+
     // Called in asynchronous loading thread.
     void load();
 

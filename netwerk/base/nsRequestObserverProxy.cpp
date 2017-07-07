@@ -124,14 +124,14 @@ NS_IMPL_ISUPPORTS(nsRequestObserverProxy,
 // nsRequestObserverProxy::nsIRequestObserver implementation...
 //-----------------------------------------------------------------------------
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsRequestObserverProxy::OnStartRequest(nsIRequest *request,
                                        nsISupports *context)
 {
     MOZ_ASSERT(!context || context == mContext);
     LOG(("nsRequestObserverProxy::OnStartRequest [this=%p req=%p]\n", this, request));
 
-    nsOnStartRequestEvent *ev = 
+    nsOnStartRequestEvent *ev =
         new nsOnStartRequestEvent(this, request);
     if (!ev)
         return NS_ERROR_OUT_OF_MEMORY;
@@ -143,7 +143,7 @@ nsRequestObserverProxy::OnStartRequest(nsIRequest *request,
     return rv;
 }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsRequestObserverProxy::OnStopRequest(nsIRequest *request,
                                       nsISupports *context,
                                       nsresult status)
@@ -153,11 +153,11 @@ nsRequestObserverProxy::OnStopRequest(nsIRequest *request,
          this, request, static_cast<uint32_t>(status)));
 
     // The status argument is ignored because, by the time the OnStopRequestEvent
-    // is actually processed, the status of the request may have changed :-( 
+    // is actually processed, the status of the request may have changed :-(
     // To make sure that an accurate status code is always used, GetStatus() is
     // called when the OnStopRequestEvent is actually processed (see above).
 
-    nsOnStopRequestEvent *ev = 
+    nsOnStopRequestEvent *ev =
         new nsOnStopRequestEvent(this, request);
     if (!ev)
         return NS_ERROR_OUT_OF_MEMORY;

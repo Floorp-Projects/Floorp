@@ -141,7 +141,7 @@ HTMLIFrameElement::IsAttributeMapped(const nsIAtom* aAttribute) const
     sImageAlignAttributeMap,
     sCommonAttributeMap,
   };
-  
+
   return FindAttributeDependence(aAttribute, map);
 }
 

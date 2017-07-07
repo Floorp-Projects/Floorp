@@ -4,7 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* enum types for CSS properties and their values */
- 
+
 #ifndef nsCSSPropertyID_h___
 #define nsCSSPropertyID_h___
 
