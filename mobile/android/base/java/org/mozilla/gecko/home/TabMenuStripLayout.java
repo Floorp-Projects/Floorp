@@ -5,12 +5,18 @@
 
 package org.mozilla.gecko.home;
 
+import android.graphics.Color;
+import android.support.v4.content.res.ResourcesCompat;
+import android.support.v4.graphics.drawable.DrawableCompat;
 import android.support.v4.view.ViewCompat;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
 
 import android.content.res.ColorStateList;
 import org.mozilla.gecko.R;
+import org.mozilla.gecko.Tab;
+import org.mozilla.gecko.Tabs;
+import org.mozilla.gecko.widget.themed.ThemedLinearLayout;
 
 import android.content.Context;
 import android.content.res.TypedArray;
@@ -27,8 +33,8 @@ import android.widget.TextView;
  * {@code TabMenuStripLayout} is the view that draws the {@code HomePager}
  * tabs that are displayed in {@code TabMenuStrip}.
  */
-class TabMenuStripLayout extends LinearLayout
-                         implements View.OnFocusChangeListener {
+class TabMenuStripLayout extends ThemedLinearLayout
+                         implements View.OnFocusChangeListener, Tabs.OnTabsChangedListener {
 
     private TabMenuStrip.OnTitleClickListener onTitleClickListener;
     private Drawable strip;
@@ -43,28 +49,50 @@ class TabMenuStripLayout extends LinearLayout
 
     // This variable is used to predict the direction of scroll.
     private float prevProgress;
-    private int tabContentStart;
-    private boolean titlebarFill;
-    private int activeTextColor;
-    private ColorStateList inactiveTextColor;
+    private final int tabContentStart;
+    private final boolean titlebarFill;
+    private final int activeTextColor;
+    private final ColorStateList inactiveTextColor;
+    private final ColorStateList stripColor;
 
     TabMenuStripLayout(Context context, AttributeSet attrs) {
         super(context, attrs);
 
-        TypedArray a = context.obtainStyledAttributes(attrs, R.styleable.TabMenuStrip);
+        final TypedArray a = context.obtainStyledAttributes(attrs, R.styleable.TabMenuStrip);
         final int stripResId = a.getResourceId(R.styleable.TabMenuStrip_strip, -1);
 
         titlebarFill = a.getBoolean(R.styleable.TabMenuStrip_titlebarFill, false);
         tabContentStart = a.getDimensionPixelSize(R.styleable.TabMenuStrip_tabsMarginLeft, 0);
-        activeTextColor = a.getColor(R.styleable.TabMenuStrip_activeTextColor, R.color.text_and_tabs_tray_grey);
+        activeTextColor = a.getColor(R.styleable.TabMenuStrip_activeTextColor,
+                                     ResourcesCompat.getColor(getResources(), R.color.text_and_tabs_tray_grey, null));
         inactiveTextColor = a.getColorStateList(R.styleable.TabMenuStrip_inactiveTextColor);
+        stripColor = a.getColorStateList(R.styleable.TabMenuStrip_stripColor);
         a.recycle();
 
         if (stripResId != -1) {
             strip = getResources().getDrawable(stripResId);
+
+            if (stripColor != null) {
+                final int backgroundTintColor = stripColor.getColorForState(getDrawableState(), Color.TRANSPARENT);
+                DrawableCompat.setTint(strip, backgroundTintColor);
+            }
         }
 
         setWillNotDraw(false);
+    }
+
+    @Override
+    public void onAttachedToWindow() {
+        super.onAttachedToWindow();
+
+        Tabs.registerOnTabsChangedListener(this);
+    }
+
+    @Override
+    public void onDetachedFromWindow() {
+        super.onDetachedFromWindow();
+
+        Tabs.unregisterOnTabsChangedListener(this);
     }
 
     void onAddPagerView(String title) {
@@ -249,6 +277,29 @@ class TabMenuStripLayout extends LinearLayout
 
     void setOnTitleClickListener(TabMenuStrip.OnTitleClickListener onTitleClickListener) {
         this.onTitleClickListener = onTitleClickListener;
+    }
+
+    @Override
+    public void onTabChanged(Tab tab, Tabs.TabEvents msg, String data) {
+        if (tab == null) {
+            return;
+        }
+
+        if (msg == Tabs.TabEvents.SELECTED) {
+            setPrivateMode(tab.isPrivate());
+        }
+    }
+
+    @Override
+    public void setPrivateMode(boolean isPrivate) {
+        final boolean modeChanged = (isPrivateMode() != isPrivate);
+
+        super.setPrivateMode(isPrivate);
+
+        if (modeChanged && stripColor != null) {
+            final int backgroundTintColor = stripColor.getColorForState(getDrawableState(), Color.TRANSPARENT);
+            DrawableCompat.setTint(strip, backgroundTintColor);
+        }
     }
 
     private class ViewClickListener implements OnClickListener {
