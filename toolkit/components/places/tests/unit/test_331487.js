@@ -11,30 +11,36 @@ try {
   do_throw("Could not get history service\n");
 }
 
-var bmsvc = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
-            getService(Ci.nsINavBookmarksService);
+add_task(async function test_hierarchical_query() {
+  let bookmarks = await PlacesUtils.bookmarks.insertTree({
+    guid: PlacesUtils.bookmarks.unfiledGuid,
+    children: [{
+      title: "test folder",
+      type: PlacesUtils.bookmarks.TYPE_FOLDER,
+      children: [{
+        title: "1 title",
+        url: "http://a1.com/",
+      }, {
+        title: "subfolder 1",
+        type: PlacesUtils.bookmarks.TYPE_FOLDER,
+        children: [{
+          title: "2 title",
+          url: "http://a2.com/",
+        }, {
+          title: "subfolder 2",
+          type: PlacesUtils.bookmarks.TYPE_FOLDER,
+          children: [{
+            title: "3 title",
+            url: "http://a3.com/",
+          }]
+        }]
+      }]
+    }]
+  });
 
-// main
-function run_test() {
-  // add a folder
-  var folder = bmsvc.createFolder(bmsvc.placesRoot, "test folder", bmsvc.DEFAULT_INDEX);
+  let [folderGuid, b1, sf1, b2, sf2, b3] = bookmarks.map((bookmark) => bookmark.guid);
 
-  // add a bookmark to the folder
-  var b1 = bmsvc.insertBookmark(folder, uri("http://a1.com/"),
-                                bmsvc.DEFAULT_INDEX, "1 title");
-  // add a subfolder
-  var sf1 = bmsvc.createFolder(folder, "subfolder 1", bmsvc.DEFAULT_INDEX);
-
-  // add a bookmark to the subfolder
-  var b2 = bmsvc.insertBookmark(sf1, uri("http://a2.com/"),
-                                bmsvc.DEFAULT_INDEX, "2 title");
-
-  // add a subfolder to the subfolder
-  var sf2 = bmsvc.createFolder(sf1, "subfolder 2", bmsvc.DEFAULT_INDEX);
-
-  // add a bookmark to the subfolder of the subfolder
-  var b3 = bmsvc.insertBookmark(sf2, uri("http://a3.com/"),
-                                bmsvc.DEFAULT_INDEX, "3 title");
+  let testFolderId = await PlacesUtils.promiseItemId(folderGuid);
 
   // bookmark query that should result in the "hierarchical" result
   // because there is one query, one folder,
@@ -44,28 +50,28 @@ function run_test() {
   var options = histsvc.getNewQueryOptions();
   options.queryType = Ci.nsINavHistoryQueryOptions.QUERY_TYPE_BOOKMARKS;
   var query = histsvc.getNewQuery();
-  query.setFolders([folder], 1);
+  query.setFolders([testFolderId], 1);
   var result = histsvc.executeQuery(query, options);
   var root = result.root;
   root.containerOpen = true;
   do_check_eq(root.childCount, 2);
-  do_check_eq(root.getChild(0).itemId, b1);
-  do_check_eq(root.getChild(1).itemId, sf1);
+  do_check_eq(root.getChild(0).bookmarkGuid, b1);
+  do_check_eq(root.getChild(1).bookmarkGuid, sf1);
 
   // check the contents of the subfolder
   var sf1Node = root.getChild(1);
   sf1Node = sf1Node.QueryInterface(Ci.nsINavHistoryContainerResultNode);
   sf1Node.containerOpen = true;
   do_check_eq(sf1Node.childCount, 2);
-  do_check_eq(sf1Node.getChild(0).itemId, b2);
-  do_check_eq(sf1Node.getChild(1).itemId, sf2);
+  do_check_eq(sf1Node.getChild(0).bookmarkGuid, b2);
+  do_check_eq(sf1Node.getChild(1).bookmarkGuid, sf2);
 
   // check the contents of the subfolder's subfolder
   var sf2Node = sf1Node.getChild(1);
   sf2Node = sf2Node.QueryInterface(Ci.nsINavHistoryContainerResultNode);
   sf2Node.containerOpen = true;
   do_check_eq(sf2Node.childCount, 1);
-  do_check_eq(sf2Node.getChild(0).itemId, b3);
+  do_check_eq(sf2Node.getChild(0).bookmarkGuid, b3);
 
   sf2Node.containerOpen = false;
   sf1Node.containerOpen = false;
@@ -77,14 +83,14 @@ function run_test() {
   options.queryType = Ci.nsINavHistoryQueryOptions.QUERY_TYPE_BOOKMARKS;
   options.maxResults = 10;
   query = histsvc.getNewQuery();
-  query.setFolders([folder], 1);
+  query.setFolders([testFolderId], 1);
   result = histsvc.executeQuery(query, options);
   root = result.root;
   root.containerOpen = true;
   do_check_eq(root.childCount, 3);
-  do_check_eq(root.getChild(0).itemId, b1);
-  do_check_eq(root.getChild(1).itemId, b2);
-  do_check_eq(root.getChild(2).itemId, b3);
+  do_check_eq(root.getChild(0).bookmarkGuid, b1);
+  do_check_eq(root.getChild(1).bookmarkGuid, b2);
+  do_check_eq(root.getChild(2).bookmarkGuid, b3);
   root.containerOpen = false;
 
   // XXX TODO
@@ -92,4 +98,4 @@ function run_test() {
   // multiple folders, a begin time, an end time, a domain, a uri
   // or a search term, that we get the (correct) flat list results
   // (like we do when specified maxResults)
-}
+});

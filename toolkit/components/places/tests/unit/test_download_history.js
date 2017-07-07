@@ -64,10 +64,6 @@ function waitForOnDeleteVisits(aCallback) {
   PlacesUtils.history.addObserver(historyObserver);
 }
 
-function run_test() {
-  run_next_test();
-}
-
 add_test(function test_dh_is_from_places() {
   // Test that this nsIDownloadHistory is the one places implements.
   do_check_true(gDownloadHistory instanceof Ci.mozIAsyncHistory);
@@ -118,25 +114,29 @@ add_test(function test_dh_addMultiRemoveDownload() {
   });
 });
 
-add_test(function test_dh_addBookmarkRemoveDownload() {
-  PlacesUtils.bookmarks.insertBookmark(PlacesUtils.unfiledBookmarksFolderId,
-                                       DOWNLOAD_URI,
-                                       PlacesUtils.bookmarks.DEFAULT_INDEX,
-                                       "A bookmark");
-  waitForOnVisit(function DHAD_onVisit(aURI) {
-    do_check_true(aURI.equals(DOWNLOAD_URI));
-    do_check_true(!!page_in_database(DOWNLOAD_URI));
-
-    waitForOnDeleteVisits(function DHRAD_onDeleteVisits(aDeletedURI) {
-      do_check_true(aDeletedURI.equals(DOWNLOAD_URI));
-      do_check_true(!!page_in_database(DOWNLOAD_URI));
-
-      PlacesTestUtils.clearHistory().then(run_next_test);
-    });
-    gDownloadHistory.removeAllDownloads();
+add_task(async function test_dh_addBookmarkRemoveDownload() {
+  await PlacesUtils.bookmarks.insert({
+    parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+    url: DOWNLOAD_URI,
+    title: "A bookmark"
   });
 
-  gDownloadHistory.addDownload(DOWNLOAD_URI, null, Date.now() * 1000);
+  await new Promise(resolve => {
+    waitForOnVisit(function DHAD_onVisit(aURI) {
+      do_check_true(aURI.equals(DOWNLOAD_URI));
+      do_check_true(!!page_in_database(DOWNLOAD_URI));
+
+      waitForOnDeleteVisits(function DHRAD_onDeleteVisits(aDeletedURI) {
+        do_check_true(aDeletedURI.equals(DOWNLOAD_URI));
+        do_check_true(!!page_in_database(DOWNLOAD_URI));
+
+        PlacesTestUtils.clearHistory().then(resolve);
+      });
+      gDownloadHistory.removeAllDownloads();
+    });
+
+    gDownloadHistory.addDownload(DOWNLOAD_URI, null, Date.now() * 1000);
+  });
 });
 
 add_test(function test_dh_addDownload_referrer() {
