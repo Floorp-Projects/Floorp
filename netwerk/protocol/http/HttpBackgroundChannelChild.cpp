@@ -435,27 +435,19 @@ void
 HttpBackgroundChannelChild::ActorDestroy(ActorDestroyReason aWhy)
 {
   LOG(("HttpBackgroundChannelChild::ActorDestroy[this=%p]\n", this));
-
-  if (!OnSocketThread()) {
-    // PBackgroundChild might be destroyed during shutdown and
-    // ActorDestroy will be called on main thread directly.
-    // Simply disconnect with HttpChannelChild to release memory.
-    mChannelChild = nullptr;
-    RefPtr<HttpBackgroundChannelChild> self = this;
-    mQueuedRunnables.AppendElement(NS_NewRunnableFunction(
-      "HttpBackgroundChannelChild::ActorDestroyNonSTSThread", [self]() {
-        MOZ_ASSERT(NS_IsMainThread());
-        self->mChannelChild = nullptr;
-      }));
-    return;
-  }
-
-  MOZ_ASSERT(OnSocketThread());
+  // This function might be called during shutdown phase, so OnSocketThread()
+  // might return false even on STS thread. Use IsOnCurrentThreadInfallible()
+  // to get correct information.
+  MOZ_ASSERT(gSocketTransportService);
+  MOZ_ASSERT(gSocketTransportService->IsOnCurrentThreadInfallible());
 
   // Ensure all IPC messages received before ActorDestroy can be
   // handled correctly. If there is any pending IPC message, destroyed
   // mChannelChild until those messages are flushed.
-  if (!mQueuedRunnables.IsEmpty()) {
+  // If background channel is not closed by normal IPDL actor deletion,
+  // remove the HttpChannelChild reference and notify background channel
+  // destroyed immediately.
+  if (aWhy == Deletion && !mQueuedRunnables.IsEmpty()) {
     LOG(("  > pending until queued messages are flushed\n"));
     RefPtr<HttpBackgroundChannelChild> self = this;
     mQueuedRunnables.AppendElement(NS_NewRunnableFunction(
