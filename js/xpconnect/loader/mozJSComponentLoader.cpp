@@ -629,7 +629,7 @@ mozJSComponentLoader::ObjectForLocation(ComponentLoaderInfo& aInfo,
 
     script = ScriptPreloader::GetSingleton().GetCachedScript(cx, cachePath);
     if (!script && cache) {
-        ReadCachedScript(cache, cachePath, cx, mSystemPrincipal, &script);
+        ReadCachedScript(cache, cachePath, cx, &script);
     }
 
     if (script) {

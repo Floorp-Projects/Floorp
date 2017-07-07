@@ -17,8 +17,7 @@ class StartupCache;
 
 nsresult
 ReadCachedScript(mozilla::scache::StartupCache* cache, nsACString& uri,
-                 JSContext* cx, nsIPrincipal* systemPrincipal,
-                 JS::MutableHandleScript scriptp);
+                 JSContext* cx, JS::MutableHandleScript scriptp);
 
 nsresult
 WriteCachedScript(mozilla::scache::StartupCache* cache, nsACString& uri,
