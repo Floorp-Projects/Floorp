@@ -585,7 +585,6 @@ ContainerRender(ContainerT* aContainer,
     }
 
     if (!surface) {
-      aContainer->mPrepared = nullptr;
       return;
     }
 
