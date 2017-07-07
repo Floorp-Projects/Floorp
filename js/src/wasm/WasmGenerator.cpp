@@ -61,7 +61,6 @@ ModuleGenerator::ModuleGenerator(UniqueChars* error)
     outstanding_(0),
     currentTask_(nullptr),
     batchedBytecode_(0),
-    maybeHelperThread_(CurrentHelperThread()),
     activeFuncDef_(nullptr),
     startedFuncDefs_(false),
     finishedFuncDefs_(false),
@@ -298,17 +297,7 @@ ModuleGenerator::finishOutstandingTask()
                 break;
             }
 
-            // If we're on a helper thread then attempt to do some work.  This
-            // avoids a source of deadlocks, as putting all threads to work
-            // guarantees forward progress for compilation.
-
-            if (!maybeHelperThread_ || !maybeHelperThread_->handleWasmIdleWorkload(lock)) {
-                // Other threads are working on the remaining task(s) and will
-                // notify us when that work is complete.
-                MOZ_ASSERT(outstanding_ > 0);
-                MOZ_ASSERT_IF(maybeHelperThread_, HelperThreadState().wasmWorklist(lock).empty());
-                HelperThreadState().wait(lock, GlobalHelperThreadState::CONSUMER);
-            }
+            HelperThreadState().wait(lock, GlobalHelperThreadState::CONSUMER);
         }
     }
 
@@ -883,17 +872,18 @@ ModuleGenerator::startFuncDefs()
     MOZ_ASSERT(!finishedFuncDefs_);
 
     // The wasmCompilationInProgress atomic ensures that there is only one
-    // parallel compilation in progress at a time.  This restriction can be
-    // lifted, but it will be somewhat desirable to keep it when tiered
-    // compilation is introduced (and tier-2 code for one module can be compiled
-    // in parallel with the tier-1 code for the next module).
-    //
-    // Deadlocks are avoided by guaranteeing the forward progress of
-    // compilation, in particular, by having the ModuleGenerator thread (in the
-    // case of asm.js and future tiered compilation) make progress on
-    // compilation and not simply wait for other helper threads to finish.
+    // parallel compilation in progress at a time. In the special case of
+    // asm.js, where the ModuleGenerator itself can be on a helper thread, this
+    // avoids the possibility of deadlock since at most 1 helper thread will be
+    // blocking on other helper threads and there are always >1 helper threads.
+    // With wasm, this restriction could be relaxed by moving the worklist state
+    // out of HelperThreadState since each independent compilation needs its own
+    // worklist pair. Alternatively, the deadlock could be avoided by having the
+    // ModuleGenerator thread make progress (on compile tasks) instead of
+    // blocking.
 
     GlobalHelperThreadState& threads = HelperThreadState();
+    MOZ_ASSERT(threads.threadCount > 1);
 
     uint32_t numTasks;
     if (CanUseExtraThreads() &&
