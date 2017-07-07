@@ -1415,6 +1415,27 @@ talos-perf-reftest:
         extra-options:
             - --suite=perf-reftest
 
+talos-perf-reftest-singletons:
+    description: "Talos perf-reftest singletons"
+    suite: talos
+    try-name: perf-reftest-singletons
+    treeherder-symbol: tc-T(ps)
+    run-on-projects:
+        by-test-platform:
+            linux64-stylo-sequential/.*: ['mozilla-central', 'try']
+            linux64-stylo/.*: ['mozilla-central', 'try']
+    max-run-time: 3600
+    e10s: true
+    mozharness:
+        script: talos_script.py
+        no-read-buildbot-config: true
+        config:
+            by-test-platform:
+                default:
+                    - talos/linux_config.py
+        extra-options:
+            - --suite=perf-reftest-singletons
+
 talos-svgr:
     description: "Talos svgr"
     suite: talos
