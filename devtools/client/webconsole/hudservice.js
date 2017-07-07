@@ -4,10 +4,8 @@
 
 "use strict";
 
-const {Cc, Ci, Cu} = require("chrome");
-
 var WebConsoleUtils = require("devtools/client/webconsole/utils").Utils;
-var { extend } = require("sdk/core/heritage");
+const {extend} = require("devtools/shared/extend");
 var {TargetFactory} = require("devtools/client/framework/target");
 var {Tools} = require("devtools/client/definitions");
 const { Task } = require("devtools/shared/task");

@@ -23,15 +23,6 @@ function getOwnPropertyDescriptors(...objects) {
 }
 
 /**
- * Returns a frozen object with that inherits from the given `prototype` and
- * implements all own properties of the given `properties` object.
- */
-function extend(prototype, properties) {
-  return Object.create(prototype,
-                       getOwnPropertyDescriptors(properties));
-}
-
-/**
  * Apply a 'flashed' background and foreground color to elements. Intended
  * to be used with flashElementOff as a way of drawing attention to an element.
  *
@@ -154,7 +145,6 @@ function truncateString(str, maxLength) {
 }
 
 module.exports = {
-  extend,
   flashElementOn,
   flashElementOff,
   getAutocompleteMaxWidth,
