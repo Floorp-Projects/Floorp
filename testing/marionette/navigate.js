@@ -14,29 +14,45 @@ this.navigate = {};
 
 /**
  * Determines if we expect to get a DOM load event (DOMContentLoaded)
- * on navigating to the |url|.
+ * on navigating to the |future| URL.
  *
- * @param {string} url
- *     Destination URL
+ * @param {string} current
+ *     URL the browser is currently visiting.
+ * @param {string=} future
+ *     Destination URL, if known.
  *
  * @return {boolean}
- *     Full page load would be expected if url gets loaded.
+ *     Full page load would be expected if future is followed.
  *
  * @throws TypeError
- *     If |url| is an invalid URL.
+ *     If |current| is not defined, or any of |current| or |future|
+ *     are invalid URLs.
  */
-navigate.isLoadEventExpected = function(url) {
+navigate.isLoadEventExpected = function(current, future = undefined) {
   // assume we will go somewhere exciting
-  if (typeof url == "undefined") {
-    throw TypeError("Expected destination URL");
+  if (typeof current == "undefined") {
+    throw TypeError("Expected at least one URL");
   }
 
-  switch (new URL(url).protocol) {
-    // assume javascript:<whatever> will modify current document
-    // but this is not an entirely safe assumption to make,
-    // considering it could be used to set window.location
-    case "javascript:":
-      return false;
+  // Assume we will go somewhere exciting
+  if (typeof future == "undefined") {
+    return true;
+  }
+
+  let cur = new URL(current);
+  let fut = new URL(future);
+
+  // Assume javascript:<whatever> will modify the current document
+  // but this is not an entirely safe assumption to make,
+  // considering it could be used to set window.location
+  if (fut.protocol == "javascript:") {
+    return false;
+  }
+
+  // If hashes are present and identical
+  if (cur.href.includes("#") && fut.href.includes("#") &&
+      cur.hash === fut.hash) {
+    return false;
   }
 
   return true;
