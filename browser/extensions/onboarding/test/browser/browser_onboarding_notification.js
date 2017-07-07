@@ -5,7 +5,6 @@
 
 add_task(async function test_show_tour_notifications_in_order() {
   resetOnboardingDefaultState();
-  await SpecialPowers.pushPrefEnv({set: [["browser.onboarding.enabled", true]]});
 
   let tourIds = TOUR_IDs;
   let tab = null;
@@ -43,7 +42,6 @@ add_task(async function test_show_tour_notifications_in_order() {
 
 add_task(async function test_open_target_tour_from_notification() {
   resetOnboardingDefaultState();
-  await SpecialPowers.pushPrefEnv({set: [["browser.onboarding.enabled", true]]});
 
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser);
   await BrowserTestUtils.loadURI(tab.linkedBrowser, ABOUT_NEWTAB_URL);
@@ -61,7 +59,6 @@ add_task(async function test_open_target_tour_from_notification() {
 
 add_task(async function test_not_show_notification_for_completed_tour() {
   resetOnboardingDefaultState();
-  await SpecialPowers.pushPrefEnv({set: [["browser.onboarding.enabled", true]]});
 
   let tourIds = TOUR_IDs;
   // Make only the last tour uncompleted
