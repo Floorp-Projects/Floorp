@@ -160,3 +160,8 @@ specific locale involved. Currently this is only in l10n versions of the
 signed
 ======
 Signals that the output of this task contains signed artifacts.
+
+repackage_type
+==============
+This is the type of repackage. Can be ``repackage`` or 
+``repacakge_signing``.
