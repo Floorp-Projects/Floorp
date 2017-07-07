@@ -2518,7 +2518,8 @@ NativeKey::HandleCharMessage(const MSG& aCharMsg,
     *aEventDispatched = false;
   }
 
-  if (IsCharOrSysCharMessage(mMsg) && IsAnotherInstanceRemovingCharMessage()) {
+  if ((IsCharOrSysCharMessage(mMsg) || IsEnterKeyPressCharMessage(mMsg)) &&
+      IsAnotherInstanceRemovingCharMessage()) {
     MOZ_LOG(sNativeKeyLogger, LogLevel::Warning,
       ("%p   NativeKey::HandleCharMessage(), WARNING, does nothing because "
        "the message should be handled in another instance removing this "
@@ -2547,7 +2548,9 @@ NativeKey::HandleCharMessage(const MSG& aCharMsg,
   // When a control key is inputted by a key, it should be handled without
   // WM_*CHAR messages at receiving WM_*KEYDOWN message.  So, when we receive
   // WM_*CHAR message directly, we see a control character here.
-  if (IsControlCharMessage(aCharMsg)) {
+  // Note that when the char is '\r', it means that the char message should
+  // cause "Enter" keypress event for inserting a line break.
+  if (IsControlCharMessage(aCharMsg) && !IsEnterKeyPressCharMessage(aCharMsg)) {
     // In this case, we don't need to dispatch eKeyPress event because:
     // 1. We're the only browser which dispatches "keypress" event for
     //    non-printable characters (Although, both Chrome and Edge dispatch
@@ -2574,7 +2577,11 @@ NativeKey::HandleCharMessage(const MSG& aCharMsg,
 
   // First, handle normal text input or non-printable key case here.
   WidgetKeyboardEvent keypressEvent(true, eKeyPress, mWidget);
-  keypressEvent.mCharCode = static_cast<uint32_t>(aCharMsg.wParam);
+  if (IsEnterKeyPressCharMessage(aCharMsg)) {
+    keypressEvent.mKeyCode = NS_VK_RETURN;
+  } else {
+    keypressEvent.mCharCode = static_cast<uint32_t>(aCharMsg.wParam);
+  }
   nsresult rv = mDispatcher->BeginNativeInputTransaction();
   if (NS_WARN_IF(NS_FAILED(rv))) {
     MOZ_LOG(sNativeKeyLogger, LogLevel::Error,
