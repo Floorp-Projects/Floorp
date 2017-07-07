@@ -10071,6 +10071,7 @@
     "description": "The amount of time spent in a specific performance tool view, keyed by view name (waterfall, js-calltree, js-flamegraph, etc)."
   },
   "DEVTOOLS_JAVASCRIPT_ERROR_DISPLAYED": {
+    "alert_emails": ["nicolas.b.pierron@mozilla.com"],
     "record_in_processes": ["main", "content"],
     "bug_numbers": [1255133, 1378449],
     "expires_in_version": "never",

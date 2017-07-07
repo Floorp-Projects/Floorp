@@ -328,7 +328,7 @@ DoTypeUpdateFallback(JSContext* cx, BaselineFrame* frame, ICUpdatedStub* stub, H
         AddTypePropertyId(cx, group, maybeSingleton, id, value);
     }
 
-    if (MOZ_UNLIKELY(!stub->addUpdateStubForValue(cx, script, obj, id, value))) {
+    if (MOZ_UNLIKELY(!stub->addUpdateStubForValue(cx, script, obj, group, id, value))) {
         // The calling JIT code assumes this function is infallible (for
         // instance we may reallocate dynamic slots before calling this),
         // so ignore OOMs if we failed to attach a stub.

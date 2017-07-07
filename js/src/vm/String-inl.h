@@ -160,8 +160,10 @@ JSDependentString::new_(JSContext* cx, JSLinearString* baseArg, size_t start,
      * entirely, however, due to how ropes are flattened.
      */
     if (baseArg->isDependent()) {
-        start += baseArg->asDependent().baseOffset();
-        baseArg = baseArg->asDependent().base();
+        if (mozilla::Maybe<size_t> offset = baseArg->asDependent().baseOffset()) {
+            start += *offset;
+            baseArg = baseArg->asDependent().base();
+        }
     }
 
     MOZ_ASSERT(start + length <= baseArg->length());
