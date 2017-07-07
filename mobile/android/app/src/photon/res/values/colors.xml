@@ -189,13 +189,14 @@
     <color name="doorhanger_link">#FF2AA1FE</color>
 
     <color name="validation_message_text">#ffffff</color>
-    <color name="url_bar_text_highlight_pb">#FFD06BFF</color>
+    <color name="url_bar_text_highlight">@color/photon_text_selected_highlight</color>
+    <color name="url_bar_text_highlight_private">@color/photon_text_selected_highlight_private</color>
     <color name="tab_row_pressed">#4D000000</color>
 
-    <color name="url_bar_urltext">#AFB1B3</color>
-    <color name="url_bar_urltext_private">#777777</color>
-    <color name="url_bar_domaintext">#363B40</color>
-    <color name="url_bar_domaintext_private">#FFFFFF</color>
+    <color name="url_bar_urltext">@color/photon_text_placeholder</color>
+    <color name="url_bar_urltext_private">@color/photon_text_placeholder_private</color>
+    <color name="url_bar_domaintext">@color/photon_url_bar_domain</color>
+    <color name="url_bar_domaintext_private">@color/photon_url_bar_domain_private</color>
     <color name="url_bar_blockedtext">@color/photon_url_bar_blocked</color>
     <color name="url_bar_blockedtext_private">@color/photon_url_bar_blocked_private</color>
     <color name="url_bar_certificate_owner">@color/photon_url_bar_certificate_owner</color>
