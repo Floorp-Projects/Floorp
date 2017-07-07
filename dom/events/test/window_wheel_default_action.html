@@ -1141,27 +1141,51 @@ function doTestZoom(aSettings, aCallback)
     var scrollTop = gScrollableElement.scrollTop;
     var scrollLeft = gScrollableElement.scrollLeft;
 
+    fullZoomChangePromise = new Promise(resolve => {
+      if (currentTest.expected & (kNegative | kPositive)) {
+        SpecialPowers.addChromeEventListener("FullZoomChange", function onFullZoomChange() {
+          if (SpecialPowers.getFullZoom(window) != 1) {
+            SpecialPowers.removeChromeEventListener("FullZoomChange", onFullZoomChange)
+            setTimeout(() => resolve(), 0);
+          }
+        });
+      } else {
+        resolve();
+      }
+    });
+
     sendWheelAndWait(10, 10, event, function () {
       is(gScrollableElement.scrollTop, scrollTop, description + "scrolled vertical");
       is(gScrollableElement.scrollLeft, scrollLeft, description + "scrolled horizontal");
-      if (!(currentTest.expected & (kNegative | kPositive))) {
-        is(SpecialPowers.getFullZoom(window), 1.0, description + "zoomed");
-      } else {
-        var isReverted = (currentTest.expected & kUseX) ? isXReverted :
-                         (currentTest.expected & kUseY) ? isYReverted : false;
-        if ((!isReverted && (currentTest.expected & kNegative)) ||
-            (isReverted && (currentTest.expected & kPositive))) {
-          ok(SpecialPowers.getFullZoom(window) > 1.0,
-             description + "not zoomed in, got " + SpecialPowers.getFullZoom(window));
-        } else {
-          ok(SpecialPowers.getFullZoom(window) < 1.0,
-             description + "not zoomed out, got " + SpecialPowers.getFullZoom(window));
-        }
-      }
 
-      synthesizeKey("0", { accelKey: true });
-      onZoomReset(function () {
-        hitEventLoop(doNextTest, 20);
+      fullZoomChangePromise.then(() => {
+        // When input event prioritization is enabled, the wheel event may be
+        // dispatched to the content process before the message 'FullZoom' to
+        // zoom in/out. Waiting for the event 'FullZoomChange' and then check
+        // the result.
+        if (!(currentTest.expected & (kNegative | kPositive))) {
+          is(SpecialPowers.getFullZoom(window), 1.0, description + "zoomed");
+        } else {
+          var isReverted = (currentTest.expected & kUseX) ? isXReverted :
+                           (currentTest.expected & kUseY) ? isYReverted : false;
+          if ((!isReverted && (currentTest.expected & kNegative)) ||
+              (isReverted && (currentTest.expected & kPositive))) {
+            ok(SpecialPowers.getFullZoom(window) > 1.0,
+               description + "not zoomed in, got " + SpecialPowers.getFullZoom(window));
+          } else {
+            ok(SpecialPowers.getFullZoom(window) < 1.0,
+               description + "not zoomed out, got " + SpecialPowers.getFullZoom(window));
+          }
+        }
+        if (SpecialPowers.getFullZoom(window) != 1) {
+          // Only synthesizes key event to reset zoom when necessary to avoid
+          // triggering the next test before the key event is handled. In that
+          // case, the key event may break the next test.
+          synthesizeKey("0", { accelKey: true });
+        }
+        onZoomReset(function () {
+          hitEventLoop(doNextTest, 20);
+        });
       });
     });
   }
