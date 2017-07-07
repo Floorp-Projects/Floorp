@@ -87,6 +87,7 @@ NS_IMPL_ISUPPORTS(nsAboutCacheEntry::Channel,
                   nsICacheEntryOpenCallback,
                   nsICacheEntryMetaDataVisitor,
                   nsIStreamListener,
+                  nsIRequest,
                   nsIChannel)
 
 //-----------------------------------------------------------------------------
