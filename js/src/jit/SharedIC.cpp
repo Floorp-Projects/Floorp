@@ -2637,20 +2637,22 @@ ICTypeMonitor_AnyValue::Compiler::generateStubCode(MacroAssembler& masm)
 
 bool
 ICUpdatedStub::addUpdateStubForValue(JSContext* cx, HandleScript outerScript, HandleObject obj,
-                                     HandleId id, HandleValue val)
+                                     HandleObjectGroup group, HandleId id, HandleValue val)
 {
     EnsureTrackPropertyTypes(cx, obj, id);
 
     // Make sure that undefined values are explicitly included in the property
     // types for an object if generating a stub to write an undefined value.
-    if (val.isUndefined() && CanHaveEmptyPropertyTypesForOwnProperty(obj))
+    if (val.isUndefined() && CanHaveEmptyPropertyTypesForOwnProperty(obj)) {
+        MOZ_ASSERT(obj->group() == group);
         AddTypePropertyId(cx, obj, id, val);
+    }
 
     bool unknown = false, unknownObject = false;
-    if (obj->group()->unknownProperties()) {
+    if (group->unknownProperties()) {
         unknown = unknownObject = true;
     } else {
-        if (HeapTypeSet* types = obj->group()->maybeGetProperty(id)) {
+        if (HeapTypeSet* types = group->maybeGetProperty(id)) {
             unknown = types->unknown();
             unknownObject = types->unknownObject();
         } else {
