@@ -2034,3 +2034,4 @@ fails-if(!stylo||styloVsGecko) == 1365162-1.html 1365162-1-ref.html
 == 1376092.html 1376092-ref.html
 needs-focus == 1377447-1.html 1377447-1-ref.html
 needs-focus != 1377447-1.html 1377447-2.html
+== 1379041.html 1379041-ref.html
