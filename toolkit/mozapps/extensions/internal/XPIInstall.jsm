@@ -71,7 +71,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "XPIInternal",
 XPCOMUtils.defineLazyModuleGetter(this, "XPIProvider",
                                   "resource://gre/modules/addons/XPIProvider.jsm");
 
-/* globals AddonInternal, BOOTSTRAP_REASONS, KEY_APP_SYSTEM_ADDONS, KEY_APP_SYSTEM_DEFAULTS, KEY_APP_TEMPORARY, TEMPORARY_ADDON_SUFFIX, TOOLKIT_ID, XPIDatabase, XPIStates, applyBlocklistChanges, getExternalType, isTheme, isUsableAddon, isWebExtension, recordAddonTelemetry */
+/* globals AddonInternal, BOOTSTRAP_REASONS, KEY_APP_SYSTEM_ADDONS, KEY_APP_SYSTEM_DEFAULTS, KEY_APP_TEMPORARY, TEMPORARY_ADDON_SUFFIX, TOOLKIT_ID, XPIDatabase, XPIStates, getExternalType, isTheme, isUsableAddon, isWebExtension, recordAddonTelemetry */
 const XPI_INTERNAL_SYMBOLS = [
   "AddonInternal",
   "BOOTSTRAP_REASONS",
@@ -82,7 +82,6 @@ const XPI_INTERNAL_SYMBOLS = [
   "TOOLKIT_ID",
   "XPIDatabase",
   "XPIStates",
-  "applyBlocklistChanges",
   "getExternalType",
   "isTheme",
   "isUsableAddon",
@@ -855,6 +854,7 @@ var loadManifestFromDir = async function(aDir, aInstallLocation) {
   addon.size = getFileSize(aDir);
   addon.signedState = await verifyDirSignedState(aDir, addon)
     .then(({signedState}) => signedState);
+  addon.updateBlocklistState();
   addon.appDisabled = !isUsableAddon(addon);
 
   defineSyncGUID(addon);
@@ -940,6 +940,7 @@ var loadManifestFromZipReader = async function(aZipReader, aInstallLocation) {
       addon.id = generateTemporaryInstallID(aZipReader.file);
     }
   }
+  addon.updateBlocklistState();
   addon.appDisabled = !isUsableAddon(addon);
 
   defineSyncGUID(addon);
@@ -2137,8 +2138,7 @@ this.LocalAddonInstall = class extends AddonInstall {
     });
 
     this.existingAddon = addon;
-    if (addon)
-      applyBlocklistChanges(addon, this.addon);
+    this.addon.updateBlocklistState({oldAddon: this.existingAddon});
     this.addon.updateDate = Date.now();
     this.addon.installDate = addon ? addon.installDate : this.addon.updateDate;
 
@@ -2543,10 +2543,10 @@ this.DownloadAddonInstall = class extends AddonInstall {
       if (this.existingAddon) {
         this.addon.existingAddonID = this.existingAddon.id;
         this.addon.installDate = this.existingAddon.installDate;
-        applyBlocklistChanges(this.existingAddon, this.addon);
       } else {
         this.addon.installDate = this.addon.updateDate;
       }
+      this.addon.updateBlocklistState({oldAddon: this.existingAddon});
 
       if (AddonManagerPrivate.callInstallListeners("onDownloadEnded",
                                                    this.listeners,

@@ -11,11 +11,7 @@
 #include <ostream>
 #include <fstream>
 
-#if defined(_MSC_VER)
 #include <unordered_set>
-#else
-#include <set>
-#endif
 
 namespace mozilla {
 namespace gfx {
@@ -87,22 +83,10 @@ public:
 protected:
   virtual void Flush() = 0;
 
-#if defined(_MSC_VER)
-  typedef std::unordered_set<const void*> ObjectSet;
-  typedef std::unordered_set<uint64_t> Uint64Set;
-  typedef std::unordered_set<ScaledFont*> FontSet;
-  typedef std::unordered_set<SourceSurface*> SurfaceSet;
-#else
-  typedef std::set<const void*> ObjectSet;
-  typedef std::set<uint64_t> Uint64Set;
-  typedef std::set<ScaledFont*> FontSet;
-  typedef std::set<SourceSurface*> SurfaceSet;
-#endif
-
-  ObjectSet mStoredObjects;
-  Uint64Set mStoredFontData;
-  FontSet mStoredFonts;
-  SurfaceSet mStoredSurfaces;
+  std::unordered_set<const void*> mStoredObjects;
+  std::unordered_set<uint64_t> mStoredFontData;
+  std::unordered_set<ScaledFont*> mStoredFonts;
+  std::unordered_set<SourceSurface*> mStoredSurfaces;
 };
 
 class DrawEventRecorderFile : public DrawEventRecorderPrivate

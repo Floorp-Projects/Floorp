@@ -7,7 +7,9 @@
 #include "Compatibility.h"
 
 #include "mozilla/WindowsVersion.h"
+#if defined(MOZ_CRASHREPORTER)
 #include "nsExceptionHandler.h"
+#endif // defined(MOZ_CRASHREPORTER)
 #include "nsUnicharUtils.h"
 #include "nsWindowsDllInterceptor.h"
 #include "nsWinUtils.h"
@@ -353,11 +355,13 @@ UseIAccessibleProxyStub()
     return true;
   }
 
+#if defined(MOZ_CRASHREPORTER)
   // If we reach this point then something is seriously wrong with the
   // IAccessible configuration in the computer's registry. Let's annotate this
   // so that we can easily determine this condition during crash analysis.
   CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("IAccessibleConfig"),
                                      NS_LITERAL_CSTRING("NoSystemTypeLibOrPS"));
+#endif // defined(MOZ_CRASHREPORTER)
   return false;
 }
 
