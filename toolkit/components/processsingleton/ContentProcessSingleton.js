@@ -62,6 +62,7 @@ ContentProcessSingleton.prototype = {
         functionName: consoleMsg.functionName.substring(0,
           MSG_MGR_CONSOLE_INFO_MAX),
         timeStamp: consoleMsg.timeStamp,
+        addonId: consoleMsg.addonId,
         arguments: [],
       };
 
