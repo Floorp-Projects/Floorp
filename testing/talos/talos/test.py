@@ -164,7 +164,7 @@ class sessionrestore(TsBase):
     extensions = \
         '${talos}/startup_test/sessionrestore/addon/sessionrestore-signed.xpi'
     cycles = 10
-    timeout = 1000000
+    timeout = 900
     gecko_profile_startup = True
     gecko_profile_entries = 10000000
     profile_path = '${talos}/startup_test/sessionrestore/profile'
