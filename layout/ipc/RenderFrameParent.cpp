@@ -76,8 +76,15 @@ IsTempLayerManager(LayerManager* aManager)
 }
 
 already_AddRefed<LayerManager>
-GetFrom(nsFrameLoader* aFrameLoader)
+GetLayerManager(nsFrameLoader* aFrameLoader)
 {
+  if (nsIContent* content = aFrameLoader->GetOwnerContent()) {
+    RefPtr<LayerManager> lm = nsContentUtils::LayerManagerForContent(content);
+    if (lm) {
+      return lm.forget();
+    }
+  }
+
   nsIDocument* doc = aFrameLoader->GetOwnerDoc();
   if (!doc) {
     return nullptr;
@@ -108,7 +115,7 @@ RenderFrameParent::Init(nsFrameLoader* aFrameLoader)
 
   mFrameLoader = aFrameLoader;
 
-  RefPtr<LayerManager> lm = GetFrom(mFrameLoader);
+  RefPtr<LayerManager> lm = GetLayerManager(mFrameLoader);
 
   mAsyncPanZoomEnabled = lm && lm->AsyncPanZoomEnabled();
 
@@ -211,15 +218,8 @@ LayerManager*
 RenderFrameParent::AttachLayerManager()
 {
   RefPtr<LayerManager> lm;
-
   if (mFrameLoader) {
-    nsIContent* content = mFrameLoader->GetOwnerContent();
-    if (content) {
-      lm = nsContentUtils::LayerManagerForContent(content);
-    }
-    if (!lm) {
-      lm = GetFrom(mFrameLoader);
-    }
+    lm = GetLayerManager(mFrameLoader);
   }
 
   // Perhaps the document containing this frame currently has no presentation?
@@ -301,7 +301,7 @@ RenderFrameParent::BuildDisplayList(nsDisplayListBuilder* aBuilder,
 void
 RenderFrameParent::GetTextureFactoryIdentifier(TextureFactoryIdentifier* aTextureFactoryIdentifier)
 {
-  RefPtr<LayerManager> lm = mFrameLoader ? GetFrom(mFrameLoader) : nullptr;
+  RefPtr<LayerManager> lm = mFrameLoader ? GetLayerManager(mFrameLoader) : nullptr;
   // Perhaps the document containing this frame currently has no presentation?
   if (lm) {
     *aTextureFactoryIdentifier = lm->GetTextureFactoryIdentifier();
@@ -333,7 +333,7 @@ RenderFrameParent::TakeFocusForClickFromTap()
 void
 RenderFrameParent::EnsureLayersConnected(CompositorOptions* aCompositorOptions)
 {
-  RefPtr<LayerManager> lm = GetFrom(mFrameLoader);
+  RefPtr<LayerManager> lm = GetLayerManager(mFrameLoader);
   if (!lm) {
     return;
   }
