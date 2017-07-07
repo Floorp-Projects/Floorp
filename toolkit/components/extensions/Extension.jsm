@@ -1194,7 +1194,7 @@ this.Extension = class extends ExtensionData {
 
     await this.broadcast("Extension:Shutdown", {id: this.id});
 
-    if (this.rootURI instanceof Ci.nsIJARURI) {
+    if (this.rootURI.QueryInterface(Ci.nsIJARURI)) {
       let file = this.rootURI.JARFile.QueryInterface(Ci.nsIFileURL).file;
       Services.ppmm.broadcastAsyncMessage("Extension:FlushJarCache", {path: file.path});
     }
