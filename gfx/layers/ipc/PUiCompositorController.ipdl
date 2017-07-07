@@ -40,7 +40,7 @@ parent:
   async ToolbarPixelsToCompositor(Shmem aMem, ScreenIntSize aSize);
 child:
   async ToolbarAnimatorMessageFromCompositor(int32_t aMessage);
-  async RootFrameMetrics(ScreenPoint aScrollOffset, CSSToScreenScale aZoom, CSSRect aPage);
+  async RootFrameMetrics(ScreenPoint aScrollOffset, CSSToScreenScale aZoom);
   async ScreenPixels(Shmem aMem, ScreenIntSize aSize);
 };
 
