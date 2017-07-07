@@ -4,22 +4,22 @@
 
 // This is a test for asyncExecuteLegacyQueries API.
 
-var tests = [
-
-function test_history_query() {
-  let uri = NetUtil.newURI("http://test.visit.mozilla.com/");
+add_task(async function test_history_query() {
+  let uri = "http://test.visit.mozilla.com/";
   let title = "Test visit";
-  PlacesTestUtils.addVisits({ uri, title }).then(function() {
-    let options = PlacesUtils.history.getNewQueryOptions();
-    options.sortingMode = Ci.nsINavHistoryQueryOptions.SORT_BY_DATE_DESCENDING;
-    let query = PlacesUtils.history.getNewQuery();
+  await PlacesTestUtils.addVisits({ uri, title });
 
+  let options = PlacesUtils.history.getNewQueryOptions();
+  options.sortingMode = Ci.nsINavHistoryQueryOptions.SORT_BY_DATE_DESCENDING;
+  let query = PlacesUtils.history.getNewQuery();
+
+  return new Promise(resolve => {
     PlacesUtils.history.QueryInterface(Ci.nsPIPlacesDatabase)
                        .asyncExecuteLegacyQueries([query], 1, options, {
       handleResult(aResultSet) {
         for (let row; (row = aResultSet.getNextRow());) {
           try {
-            do_check_eq(row.getResultByIndex(1), uri.spec);
+            do_check_eq(row.getResultByIndex(1), uri);
             do_check_eq(row.getResultByIndex(2), title);
           } catch (e) {
             do_throw("Error while fetching page data.");
@@ -30,64 +30,52 @@ function test_history_query() {
         do_throw("Async execution error (" + aError.result + "): " + aError.message);
       },
       handleCompletion(aReason) {
-        run_next_test();
+        cleanupTest().then(resolve);
       },
     });
   });
-},
+});
 
-function test_bookmarks_query() {
-  let uri = NetUtil.newURI("http://test.bookmark.mozilla.com/");
+add_task(async function test_bookmarks_query() {
+  let url = "http://test.bookmark.mozilla.com/";
   let title = "Test bookmark";
-  bookmark(uri, title);
+  await PlacesUtils.bookmarks.insert({
+    parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+    title,
+    url,
+  });
+
   let options = PlacesUtils.history.getNewQueryOptions();
   options.sortingMode = Ci.nsINavHistoryQueryOptions.SORT_BY_LASMODIFIED_DESCENDING;
   options.queryType = options.QUERY_TYPE_BOOKMARKS;
   let query = PlacesUtils.history.getNewQuery();
 
-  PlacesUtils.history.QueryInterface(Ci.nsPIPlacesDatabase)
-                     .asyncExecuteLegacyQueries([query], 1, options, {
-    handleResult(aResultSet) {
-      for (let row; (row = aResultSet.getNextRow());) {
-        try {
-          do_check_eq(row.getResultByIndex(1), uri.spec);
-          do_check_eq(row.getResultByIndex(2), title);
-        } catch (e) {
-          do_throw("Error while fetching page data.");
+  return new Promise(resolve => {
+    PlacesUtils.history.QueryInterface(Ci.nsPIPlacesDatabase)
+                       .asyncExecuteLegacyQueries([query], 1, options, {
+      handleResult(aResultSet) {
+        for (let row; (row = aResultSet.getNextRow());) {
+          try {
+            do_check_eq(row.getResultByIndex(1), url);
+            do_check_eq(row.getResultByIndex(2), title);
+          } catch (e) {
+            do_throw("Error while fetching page data.");
+          }
         }
-      }
-    },
-    handleError(aError) {
-      do_throw("Async execution error (" + aError.result + "): " + aError.message);
-    },
-    handleCompletion(aReason) {
-      run_next_test();
-    },
+      },
+      handleError(aError) {
+        do_throw("Async execution error (" + aError.result + "): " + aError.message);
+      },
+      handleCompletion(aReason) {
+        cleanupTest().then(resolve);
+      },
+    });
   });
-},
+});
 
-];
-
-function bookmark(aURI, aTitle) {
-  PlacesUtils.bookmarks.insertBookmark(PlacesUtils.unfiledBookmarksFolderId,
-                                       aURI,
-                                       PlacesUtils.bookmarks.DEFAULT_INDEX,
-                                       aTitle);
-}
-
-function run_test() {
-  do_test_pending();
-  run_next_test();
-}
-
-function run_next_test() {
-  if (tests.length == 0) {
-    do_test_finished();
-    return;
-  }
-
-  Promise.all([
+function cleanupTest() {
+  return Promise.all([
     PlacesTestUtils.clearHistory(),
     PlacesUtils.bookmarks.eraseEverything()
-  ]).then(tests.shift());
+  ]);
 }
