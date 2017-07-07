@@ -4,7 +4,11 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
-<merge xmlns:android="http://schemas.android.com/apk/res/android">
+<merge xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:layout_height="wrap_content"
+    tools:layout_width="match_parent"
+    tools:parentTag="RelativeLayout">
 
     <!-- Note: any layout parameters setting the right edge of
          this View should be matched in the url_bar_translating_edge. -->
@@ -17,7 +21,7 @@
         android:duplicateParentState="true"
         android:focusable="false"
         android:scaleType="fitXY"
-        android:src="@drawable/url_bar_entry" />
+        android:src="@android:color/transparent" />
 
     <!-- A View that clips with url_bar_entry and translates
          around it to animate growing the url bar,
@@ -31,7 +35,7 @@
         android:duplicateParentState="true"
         android:focusable="false"
         android:scaleType="fitXY"
-        android:src="@drawable/url_bar_translating_edge"
+        android:src="@android:color/transparent"
         android:visibility="invisible" />
 
     <org.mozilla.gecko.widget.themed.ThemedImageButton
@@ -39,31 +43,26 @@
         style="@style/UrlBar.Menu"
         android:background="@drawable/action_bar_button"
         android:contentDescription="@string/menu"
-        android:src="@drawable/menu" />
+        android:src="@drawable/ic_overflow"
+        tools:background="#880000FF" />
 
     <org.mozilla.gecko.widget.themed.ThemedImageButton
         android:id="@+id/tabs"
         style="@style/UrlBar.Tabs"
-        android:layout_width="64dip"
         android:layout_alignWithParentIfMissing="true"
-        android:background="@drawable/shaped_button" />
+        android:layout_marginRight="-2dp"
+        android:background="@drawable/action_bar_button"
+        tools:background="#88FF0000" />
 
-    <!-- The TextSwitcher should be shifted 24dp on the left, to avoid
-         the curve. On a 48dp space, centering 24dp image will leave
-         12dp on all sides. However this image has a perception of
-         2 layers. Hence to center this, an additional 4dp is added to the left.
-         The margins will be 40dp on left, 8dp on right, instead of ideal 30dp
-         and 12dp. -->
     <org.mozilla.gecko.toolbar.TabCounter
         android:id="@+id/tabs_counter"
         style="@style/UrlBar.TabCounter"
-        android:layout_width="24dip"
         android:layout_height="24dip"
         android:layout_centerVertical="true"
-        android:background="@drawable/tabs_count"
         android:clipChildren="false"
         android:clipToPadding="false"
-        android:gravity="center_horizontal" />
+        android:gravity="center_horizontal"
+        tools:background="#8800FF00" />
 
     <!-- Note that the edit components are invisible so that the views
          depending on their location can properly layout. -->
@@ -72,7 +71,7 @@
         style="@style/UrlBar.EditCancel"
         android:background="@drawable/action_bar_button"
         android:contentDescription="@string/edit_mode_cancel"
-        android:src="@drawable/close_edit_mode_selector"
+        android:src="@drawable/ic_cancel"
         android:visibility="invisible" />
 
     <!-- The space to the left of the cancel button would be larger than the right because
@@ -81,6 +80,8 @@
     <org.mozilla.gecko.toolbar.ToolbarEditLayout
         android:id="@+id/edit_layout"
         style="@style/UrlBar.EditLayout"
+        android:paddingEnd="0dp"
+        android:paddingRight="0dp"
         android:visibility="invisible" />
 
     <org.mozilla.gecko.toolbar.ToolbarDisplayLayout
