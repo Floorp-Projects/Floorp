@@ -317,7 +317,11 @@ void
 HttpChannelChild::OnBackgroundChildDestroyed(HttpBackgroundChannelChild* aBgChild)
 {
   LOG(("HttpChannelChild::OnBackgroundChildDestroyed [this=%p]\n", this));
-  MOZ_ASSERT(OnSocketThread());
+  // This function might be called during shutdown phase, so OnSocketThread()
+  // might return false even on STS thread. Use IsOnCurrentThreadInfallible()
+  // to get correct information.
+  MOZ_ASSERT(gSocketTransportService);
+  MOZ_ASSERT(gSocketTransportService->IsOnCurrentThreadInfallible());
 
   nsCOMPtr<nsIRunnable> callback;
   {
