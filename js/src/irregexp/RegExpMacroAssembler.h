@@ -41,14 +41,12 @@ namespace irregexp {
 class MOZ_STACK_CLASS RegExpMacroAssembler
 {
   public:
-    RegExpMacroAssembler(JSContext* cx, LifoAlloc& alloc, RegExpShared* shared,
-                         size_t numSavedRegisters)
+    RegExpMacroAssembler(JSContext* cx, LifoAlloc& alloc, size_t numSavedRegisters)
       : slow_safe_compiler_(false),
         global_mode_(NOT_GLOBAL),
         alloc_(alloc),
         num_registers_(numSavedRegisters),
-        num_saved_registers_(numSavedRegisters),
-        shared(cx, shared)
+        num_saved_registers_(numSavedRegisters)
     {}
 
     enum StackCheckFlag {
@@ -138,7 +136,7 @@ class MOZ_STACK_CLASS RegExpMacroAssembler
 
     // The current character (modulus the kTableSize) is looked up in the byte
     // array, and if the found byte is non-zero, we jump to the on_bit_set label.
-    virtual void CheckBitInTable(uint8_t* table, jit::Label* on_bit_set) = 0;
+    virtual void CheckBitInTable(RegExpShared::JitCodeTable table, jit::Label* on_bit_set) = 0;
 
     // Checks whether the given offset from the current position is before
     // the end of the string. May overwrite the current character.
@@ -214,9 +212,6 @@ class MOZ_STACK_CLASS RegExpMacroAssembler
         if (num_registers_ <= reg)
             num_registers_ = reg + 1;
     }
-
-  public:
-    RootedRegExpShared shared;
 };
 
 template <typename CharT>
@@ -231,8 +226,7 @@ CaseInsensitiveCompareUCStrings(const CharT* substring1, const CharT* substring2
 class MOZ_STACK_CLASS InterpretedRegExpMacroAssembler final : public RegExpMacroAssembler
 {
   public:
-    InterpretedRegExpMacroAssembler(JSContext* cx, LifoAlloc* alloc, RegExpShared* shared,
-                                    size_t numSavedRegisters);
+    InterpretedRegExpMacroAssembler(JSContext* cx, LifoAlloc* alloc, size_t numSavedRegisters);
     ~InterpretedRegExpMacroAssembler();
 
     // Inherited virtual methods.
@@ -258,7 +252,7 @@ class MOZ_STACK_CLASS InterpretedRegExpMacroAssembler final : public RegExpMacro
                                jit::Label* on_in_range);
     void CheckCharacterNotInRange(char16_t from, char16_t to,
                                   jit::Label* on_not_in_range);
-    void CheckBitInTable(uint8_t* table, jit::Label* on_bit_set);
+    void CheckBitInTable(RegExpShared::JitCodeTable table, jit::Label* on_bit_set);
     void JumpOrBacktrack(jit::Label* to);
     void Fail();
     void IfRegisterGE(int reg, int comparand, jit::Label* if_ge);

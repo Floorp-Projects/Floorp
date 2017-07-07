@@ -1734,7 +1734,7 @@ RegExpCode
 irregexp::CompilePattern(JSContext* cx, HandleRegExpShared shared, RegExpCompileData* data,
                          HandleLinearString sample, bool is_global, bool ignore_case,
                          bool is_latin1, bool match_only, bool force_bytecode, bool sticky,
-                         bool unicode)
+                         bool unicode, RegExpShared::JitCodeTables& tables)
 {
     if ((data->capture_count + 1) * 2 - 1 > RegExpMacroAssembler::kMaxRegister) {
         JS_ReportErrorASCII(cx, "regexp too big");
@@ -1829,10 +1829,10 @@ irregexp::CompilePattern(JSContext* cx, HandleRegExpShared shared, RegExpCompile
                       : NativeRegExpMacroAssembler::CHAR16;
 
         ctx.emplace(cx, (jit::TempAllocator*) nullptr);
-        native_assembler.emplace(cx, &alloc, shared, mode, (data->capture_count + 1) * 2);
+        native_assembler.emplace(cx, &alloc, mode, (data->capture_count + 1) * 2, tables);
         assembler = native_assembler.ptr();
     } else {
-        interpreted_assembler.emplace(cx, &alloc, shared, (data->capture_count + 1) * 2);
+        interpreted_assembler.emplace(cx, &alloc, (data->capture_count + 1) * 2);
         assembler = interpreted_assembler.ptr();
     }
 
@@ -2513,21 +2513,21 @@ BoyerMooreLookahead::EmitSkipInstructions(RegExpMacroAssembler* masm)
         return true;
     }
 
-    uint8_t* boolean_skip_table;
+    RegExpShared::JitCodeTable boolean_skip_table;
     {
         AutoEnterOOMUnsafeRegion oomUnsafe;
-        boolean_skip_table = static_cast<uint8_t*>(js_malloc(kSize));
-        if (!boolean_skip_table || !masm->shared->addTable(boolean_skip_table))
+        boolean_skip_table.reset(static_cast<uint8_t*>(js_malloc(kSize)));
+        if (!boolean_skip_table)
             oomUnsafe.crash("Table malloc");
     }
 
-    int skip_distance = GetSkipTable(min_lookahead, max_lookahead, boolean_skip_table);
+    int skip_distance = GetSkipTable(min_lookahead, max_lookahead, boolean_skip_table.get());
     MOZ_ASSERT(skip_distance != 0);
 
     jit::Label cont, again;
     masm->Bind(&again);
     masm->LoadCurrentCharacter(max_lookahead, &cont, true);
-    masm->CheckBitInTable(boolean_skip_table, &cont);
+    masm->CheckBitInTable(Move(boolean_skip_table), &cont);
     masm->AdvanceCurrentPosition(skip_distance);
     masm->JumpOrBacktrack(&again);
     masm->Bind(&cont);
@@ -3308,18 +3308,18 @@ EmitUseLookupTable(RegExpMacroAssembler* masm,
     }
 
     // TODO(erikcorry): Cache these.
-    uint8_t* ba;
+    RegExpShared::JitCodeTable ba;
     {
         AutoEnterOOMUnsafeRegion oomUnsafe;
-        ba = static_cast<uint8_t*>(js_malloc(kSize));
-        if (!ba || !masm->shared->addTable(ba))
+        ba.reset(static_cast<uint8_t*>(js_malloc(kSize)));
+        if (!ba)
             oomUnsafe.crash("Table malloc");
     }
 
     for (int i = 0; i < kSize; i++)
         ba[i] = templ[i];
 
-    masm->CheckBitInTable(ba, on_bit_set);
+    masm->CheckBitInTable(Move(ba), on_bit_set);
     if (on_bit_clear != fall_through)
         masm->JumpOrBacktrack(on_bit_clear);
 }
