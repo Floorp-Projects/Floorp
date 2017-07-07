@@ -8,7 +8,6 @@ Transform the checksums signing task into an actual task description.
 from __future__ import absolute_import, print_function, unicode_literals
 
 from taskgraph.transforms.base import TransformSequence
-from taskgraph.util.attributes import copy_attributes_from_dependent_job
 from taskgraph.util.schema import validate_schema, Schema
 from taskgraph.util.scriptworker import get_signing_cert_scope
 from taskgraph.transforms.task import task_description_schema
@@ -58,8 +57,11 @@ def make_checksums_signing_description(config, jobs):
         label = job.get('label', "checksumssigning-{}".format(dep_job.label))
         dependencies = {"beetmover": dep_job.label}
 
-        attributes = copy_attributes_from_dependent_job(dep_job)
-
+        attributes = {
+            'nightly': dep_job.attributes.get('nightly', False),
+            'build_platform': dep_job.attributes.get('build_platform'),
+            'build_type': dep_job.attributes.get('build_type'),
+        }
         if dep_job.attributes.get('locale'):
             treeherder['symbol'] = 'tc-cs({})'.format(dep_job.attributes.get('locale'))
             attributes['locale'] = dep_job.attributes.get('locale')

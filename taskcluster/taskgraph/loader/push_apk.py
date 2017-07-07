@@ -14,13 +14,7 @@ def loader(kind, path, config, params, loaded_tasks):
     jobs = base_loader(kind, path, config, params, loaded_tasks)
 
     for job in jobs:
-        dependent_tasks = get_dependent_loaded_tasks(config, loaded_tasks)
-        if not dependent_tasks:
-            # PushApk must depend on signed APK. If no dependent task was found,
-            # this means another plaform (like windows) is being processed
-            continue
-
-        job['dependent-tasks'] = dependent_tasks
+        job['dependent-tasks'] = get_dependent_loaded_tasks(config, loaded_tasks)
         yield job
 
 
