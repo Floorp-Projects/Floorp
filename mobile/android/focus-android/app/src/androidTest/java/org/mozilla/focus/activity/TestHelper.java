@@ -104,6 +104,10 @@ public final class TestHelper {
             .text("Erase browsing history")
             .resourceId("android:id/text")
             .enabled(true));
+    static UiObject notificationOpenItem = TestHelper.mDevice.findObject(new UiSelector()
+            .resourceId("android:id/action0")
+            .descriptionContains("Open")
+            .enabled(true));
     static UiObject FocusInRecentApps = TestHelper.mDevice.findObject(new UiSelector()
             .text("Focus (Dev)")
             .resourceId("com.android.systemui:id/title")
