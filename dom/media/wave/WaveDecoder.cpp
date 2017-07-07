@@ -24,6 +24,7 @@ WaveDecoder::CreateStateMachine()
 {
   MediaFormatReaderInit init(this);
   init.mCrashHelper = GetOwner()->CreateGMPCrashHelper();
+  init.mFrameStats = mFrameStats;
   mReader = new MediaFormatReader(init, new WAVDemuxer(mResource));
   return new MediaDecoderStateMachine(this, mReader);
 }

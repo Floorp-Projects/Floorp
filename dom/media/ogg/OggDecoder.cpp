@@ -20,6 +20,7 @@ MediaDecoderStateMachine* OggDecoder::CreateStateMachine()
   init.mVideoFrameContainer = GetVideoFrameContainer();
   init.mKnowsCompositor = GetCompositor();
   init.mCrashHelper = GetOwner()->CreateGMPCrashHelper();
+  init.mFrameStats = mFrameStats;
   mReader = new MediaFormatReader(init, demuxer);
   demuxer->SetChainingEvents(&mReader->TimedMetadataProducer(),
                              &mReader->MediaNotSeekableProducer());

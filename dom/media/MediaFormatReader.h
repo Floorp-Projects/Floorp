@@ -24,6 +24,7 @@ namespace mozilla {
 
 class AbstractMediaDecoder;
 class CDMProxy;
+class FrameStatistics;
 class GMPCrashHelper;
 class MediaResource;
 class VideoFrameContainer;
@@ -77,6 +78,7 @@ struct MOZ_STACK_CLASS MediaFormatReaderInit
   AbstractMediaDecoder* const mDecoder;
   MediaResource* mResource = nullptr;
   VideoFrameContainer* mVideoFrameContainer = nullptr;
+  FrameStatistics* mFrameStats = nullptr;
   already_AddRefed<layers::KnowsCompositor> mKnowsCompositor;
   already_AddRefed<GMPCrashHelper> mCrashHelper;
 
@@ -767,6 +769,8 @@ private:
   MediaEventProducer<void> mOnWaitingForKey;
 
   MediaEventProducer<MediaResult> mOnDecodeWarning;
+
+  RefPtr<FrameStatistics> mFrameStats;
 };
 
 } // namespace mozilla
