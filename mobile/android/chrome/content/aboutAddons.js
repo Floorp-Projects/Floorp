@@ -103,7 +103,7 @@ function init() {
   AddonManager.addInstallListener(Addons);
   AddonManager.addAddonListener(Addons);
   Addons.init();
-  showList();
+  showAddons();
   ContextMenus.init();
 }
 
@@ -128,17 +128,26 @@ function onPopState(aEvent) {
     let detailItem = document.querySelector("#addons-details > .addon-item");
     detailItem.addon = null;
 
-    showList();
+    showAddons();
   }
 }
 
-function showList() {
-  // Hide the detail page and show the list
+function showAddons() {
+  // Hide the addon options and show the addons list
   let details = document.querySelector("#addons-details");
-  details.style.display = "none";
+  details.classList.add("hidden");
   let list = document.querySelector("#addons-list");
-  list.style.display = "block";
+  list.classList.remove("hidden");
   document.documentElement.removeAttribute("details");
+}
+
+function showAddonOptions() {
+  // Hide the addon list and show the addon options
+  let list = document.querySelector("#addons-list");
+  list.classList.add("hidden");
+  let details = document.querySelector("#addons-details");
+  details.classList.remove("hidden");
+  document.documentElement.setAttribute("details", "true");
 }
 
 var Addons = {
@@ -227,11 +236,6 @@ var Addons = {
 
     let optionsURL = aAddon.optionsURL || "";
 
-    if (aAddon.optionsType == AddonManager.OPTIONS_TYPE_INLINE_BROWSER) {
-      // Ignore OPTIONS_TYPE_INLINE_BROWSER until support is added in bug 1302504.
-      optionsURL = "";
-    }
-
     let blocked = "";
     switch(aAddon.blocklistState) {
       case Ci.nsIBlocklistService.STATE_BLOCKED:
@@ -309,22 +313,6 @@ var Addons = {
   },
 
   showDetails: function showDetails(aListItem) {
-    // This function removes and returns the text content of aNode without
-    // removing any child elements. Removing the text nodes ensures any XBL
-    // bindings apply properly.
-    function stripTextNodes(aNode) {
-      var text = "";
-      for (var i = 0; i < aNode.childNodes.length; i++) {
-        if (aNode.childNodes[i].nodeType != document.ELEMENT_NODE) {
-          text += aNode.childNodes[i].textContent;
-          aNode.removeChild(aNode.childNodes[i--]);
-        } else {
-          text += stripTextNodes(aNode.childNodes[i]);
-        }
-      }
-      return text;
-    }
-
     let detailItem = document.querySelector("#addons-details > .addon-item");
     detailItem.setAttribute("isDisabled", aListItem.getAttribute("isDisabled"));
     detailItem.setAttribute("isUnsigned", aListItem.getAttribute("isUnsigned"));
@@ -355,12 +343,53 @@ var Addons = {
       uninstallBtn.removeAttribute("disabled");
     }
 
-    let box = document.querySelector("#addons-details > .addon-item .options-box");
-    box.innerHTML = "";
+    let addonItem = document.querySelector("#addons-details > .addon-item");
+    let optionsBox = addonItem.querySelector(".options-box");
+    let optionsURL = aListItem.getAttribute("optionsURL");
+    switch (parseInt(addon.optionsType)) {
+      case AddonManager.OPTIONS_TYPE_INLINE_BROWSER:
+        this.createWebExtensionOptions(optionsBox, optionsURL, addon.optionsBrowserStyle);
+        break;
+      case AddonManager.OPTIONS_TYPE_INLINE:
+        this.createInlineOptions(optionsBox, optionsURL);
+        break;
+    }
 
-    // Retrieve the extensions preferences
+    showAddonOptions();
+  },
+
+  createWebExtensionOptions: async function(destination, optionsURL, browserStyle) {
+    destination.innerHTML = "";
+
+    let frame = document.createElement("iframe");
+    frame.setAttribute("id", "addon-options");
+    frame.setAttribute("mozbrowser", "true");
+    destination.appendChild(frame);
+    // Loading the URL this way prevents the native back
+    // button from applying to the iframe.
+    frame.contentWindow.location.replace(optionsURL);
+  },
+
+  createInlineOptions(destination, optionsURL) {
+    destination.innerHTML = "";
+
+    // This function removes and returns the text content of aNode without
+    // removing any child elements. Removing the text nodes ensures any XBL
+    // bindings apply properly.
+    function stripTextNodes(aNode) {
+      var text = "";
+      for (var i = 0; i < aNode.childNodes.length; i++) {
+        if (aNode.childNodes[i].nodeType != document.ELEMENT_NODE) {
+          text += aNode.childNodes[i].textContent;
+          aNode.removeChild(aNode.childNodes[i--]);
+        } else {
+          text += stripTextNodes(aNode.childNodes[i]);
+        }
+      }
+      return text;
+    }
+
     try {
-      let optionsURL = aListItem.getAttribute("optionsURL");
       let xhr = new XMLHttpRequest();
       xhr.open("GET", optionsURL, true);
       xhr.onload = function(e) {
@@ -374,7 +403,7 @@ var Addons = {
               if (!setting.hasAttribute("desc")) {
                 setting.setAttribute("desc", desc);
               }
-              box.appendChild(setting);
+              destination.appendChild(setting);
             }
             // Send an event so add-ons can prepopulate any non-preference based
             // settings
@@ -384,6 +413,7 @@ var Addons = {
           } else {
             // Reset the options URL to hide the options header if there are no
             // valid settings to show.
+            let detailItem = document.querySelector("#addons-details > .addon-item");
             detailItem.setAttribute("optionsURL", "");
           }
 
@@ -393,13 +423,9 @@ var Addons = {
         }
       }
       xhr.send(null);
-    } catch (e) { }
-
-    let list = document.querySelector("#addons-list");
-    list.style.display = "none";
-    let details = document.querySelector("#addons-details");
-    details.style.display = "block";
-    document.documentElement.setAttribute("details", "true");
+    } catch (e) {
+      Cu.reportError(e);
+    }
   },
 
   setEnabled: function setEnabled(aValue, aAddon) {
