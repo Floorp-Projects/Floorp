@@ -865,7 +865,6 @@ public:
   struct DR_init_offsets_cookie {
     DR_init_offsets_cookie(nsIFrame* aFrame, mozilla::SizeComputationInput* aState,
                            const mozilla::LogicalSize& aPercentBasis,
-                           mozilla::WritingMode aCBWritingMode,
                            const nsMargin* aBorder,
                            const nsMargin* aPadding);
     ~DR_init_offsets_cookie();
@@ -904,10 +903,8 @@ public:
                                  dr_bdr, dr_pad)                           \
   DR_init_constraints_cookie dr_cookie(dr_frame, dr_state, dr_cbw, dr_cbh, \
                                        dr_bdr, dr_pad)
-#define DISPLAY_INIT_OFFSETS(dr_frame, dr_state, dr_pb, dr_cbwm, dr_bdr,      \
-                             dr_pad)                                          \
-  DR_init_offsets_cookie dr_cookie(dr_frame, dr_state, dr_pb, dr_cbwm,        \
-                             dr_bdr, dr_pad)
+#define DISPLAY_INIT_OFFSETS(dr_frame, dr_state, dr_pb, dr_bdr, dr_pad)  \
+  DR_init_offsets_cookie dr_cookie(dr_frame, dr_state, dr_pb, dr_bdr, dr_pad)
 #define DISPLAY_INIT_TYPE(dr_frame, dr_result) \
   DR_init_type_cookie dr_cookie(dr_frame, dr_result)
 
