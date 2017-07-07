@@ -158,7 +158,7 @@ gfxDWriteFontFileLoader::CreateCustomFontFile(FallibleTArray<uint8_t>& aFontData
   MOZ_ASSERT(aFontFile);
   MOZ_ASSERT(aFontFileStream);
 
-  IDWriteFactory *factory = mozilla::gfx::Factory::GetDWriteFactory();
+  IDWriteFactory *factory = gfxWindowsPlatform::GetPlatform()->GetDWriteFactory();
   if (!factory) {
     gfxCriticalError() << "Failed to get DWrite Factory in CreateCustomFontFile.";
     return E_FAIL;

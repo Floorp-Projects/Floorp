@@ -9,6 +9,7 @@
 
 #include <unordered_map>
 
+#include "DrawTargetD2D1.h"
 #include "Logging.h"
 #include "mozilla/RefPtr.h"
 
@@ -69,7 +70,7 @@ public:
   {
     if (!mInstance) {
       mInstance = new DWriteFontFileLoader();
-      Factory::GetDWriteFactory()->
+      DrawTargetD2D1::GetDWriteFactory()->
           RegisterFontFileLoader(mInstance);
     }
     return mInstance;
@@ -221,7 +222,7 @@ already_AddRefed<NativeFontResourceDWrite>
 NativeFontResourceDWrite::Create(uint8_t *aFontData, uint32_t aDataLength,
                                  bool aNeedsCairo)
 {
-  IDWriteFactory *factory = Factory::EnsureDWriteFactory();
+  IDWriteFactory *factory = DrawTargetD2D1::GetDWriteFactory();
   if (!factory) {
     gfxWarning() << "Failed to get DWrite Factory.";
     return nullptr;

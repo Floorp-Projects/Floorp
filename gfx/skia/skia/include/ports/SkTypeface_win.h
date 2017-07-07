@@ -53,9 +53,7 @@ struct IDWriteFontFallback;
 SK_API SkTypeface* SkCreateTypefaceFromDWriteFont(IDWriteFactory* aFactory,
                                                   IDWriteFontFace* aFontFace,
                                                   SkFontStyle aStyle,
-                                                  bool aForceGDI,
-                                                  float aGamma,
-                                                  float aContrast);
+                                                  bool aForceGDI);
 
 SK_API sk_sp<SkFontMgr> SkFontMgr_New_GDI();
 SK_API sk_sp<SkFontMgr> SkFontMgr_New_DirectWrite(IDWriteFactory* factory = NULL,
