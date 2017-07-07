@@ -5,7 +5,13 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
 <merge xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:gecko="http://schemas.android.com/apk/res-auto">
+    xmlns:gecko="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:background="@android:color/holo_green_light"
+    tools:layout_height="wrap_content"
+    tools:layout_width="match_parent"
+    tools:orientation="horizontal"
+    tools:parentTag="LinearLayout">
 
     <!-- Search icon must have exact position and size as site security in
          display layout -->
@@ -26,7 +32,8 @@
         android:paddingTop="@dimen/browser_toolbar_site_security_padding_vertical"
         android:scaleType="fitCenter"
         android:src="@drawable/search_icon_inactive"
-        android:visibility="gone" />
+        android:visibility="gone"
+        tools:visibility="visible" />
 
     <org.mozilla.gecko.toolbar.ToolbarEditText
         android:id="@+id/url_edit_text"
@@ -44,18 +51,14 @@
 
     <org.mozilla.gecko.widget.themed.ThemedImageButton
         android:id="@+id/qrcode"
-        style="@style/UrlBar.ImageButtonBase"
-        android:layout_width="@dimen/browser_toolbar_height"
-        android:layout_height="match_parent"
+        style="@style/UrlBar.ImageButton"
         android:background="@drawable/action_bar_button"
-        android:src="@drawable/ab_qrcode" />
+        android:src="@drawable/ic_qrcode" />
 
     <org.mozilla.gecko.widget.themed.ThemedImageButton
         android:id="@+id/mic"
-        style="@style/UrlBar.ImageButtonBase"
-        android:layout_width="@dimen/browser_toolbar_height"
-        android:layout_height="match_parent"
+        style="@style/UrlBar.ImageButton"
         android:background="@drawable/action_bar_button"
-        android:src="@drawable/ab_mic" />
+        android:src="@drawable/ic_mic" />
 
 </merge>
