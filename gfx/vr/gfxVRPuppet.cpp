@@ -622,14 +622,13 @@ VRSystemManagerPuppet::Shutdown()
   mPuppetHMD = nullptr;
 }
 
-bool
+void
 VRSystemManagerPuppet::GetHMDs(nsTArray<RefPtr<VRDisplayHost>>& aHMDResult)
 {
   if (mPuppetHMD == nullptr) {
     mPuppetHMD = new VRDisplayPuppet();
   }
   aHMDResult.AppendElement(mPuppetHMD);
-  return true;
 }
 
 bool
