@@ -324,7 +324,7 @@ RuleHash_TagTable_MoveEntry(PLDHashTable *table, const PLDHashEntryHdr *from,
 static PLDHashNumber
 RuleHash_NameSpaceTable_HashKey(const void *key)
 {
-  return NS_PTR_TO_INT32(key);
+  return HashGeneric(key);
 }
 
 static bool
@@ -3503,7 +3503,7 @@ struct RuleByWeightEntry : public PLDHashEntryHdr {
 static PLDHashNumber
 HashIntKey(const void *key)
 {
-  return PLDHashNumber(NS_PTR_TO_INT32(key));
+  return HashGeneric(key);
 }
 
 static bool
