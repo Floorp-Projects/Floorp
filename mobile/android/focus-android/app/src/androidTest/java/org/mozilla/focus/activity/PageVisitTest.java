@@ -59,7 +59,7 @@ public class PageVisitTest {
                 .text("Your Rights"));
         UiObject aboutPartialText = TestHelper.mDevice.findObject(new UiSelector()
                 .className("android.view.View")
-                .description("Firefox Focus (Dev) puts you in control."));
+                .description("Firefox Focus puts you in control."));
         UiObject aboutHeading = TestHelper.mDevice.findObject(new UiSelector()
                 .className("android.widget.TextView")
                 .text("About"));
