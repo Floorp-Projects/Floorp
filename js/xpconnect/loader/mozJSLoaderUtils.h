@@ -21,7 +21,6 @@ ReadCachedScript(mozilla::scache::StartupCache* cache, nsACString& uri,
 
 nsresult
 WriteCachedScript(mozilla::scache::StartupCache* cache, nsACString& uri,
-                  JSContext* cx, nsIPrincipal* systemPrincipal,
-                  JS::HandleScript script);
+                  JSContext* cx, JS::HandleScript script);
 
 #endif /* mozJSLoaderUtils_h */
