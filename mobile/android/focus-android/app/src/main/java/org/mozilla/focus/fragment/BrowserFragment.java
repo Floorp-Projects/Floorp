@@ -396,6 +396,8 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
                 // Show browser UI and web content again
                 browserContainer.setVisibility(View.VISIBLE);
 
+                exitImmersiveMode();
+
                 // Notify renderer that we left fullscreen mode.
                 if (fullscreenCallback != null) {
                     fullscreenCallback.fullScreenExited();
@@ -442,6 +444,20 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
                         | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
                         | View.SYSTEM_UI_FLAG_FULLSCREEN
                         | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
+    }
+
+    /**
+     * Show the system bars again.
+     */
+    private void exitImmersiveMode() {
+        final Activity activity = getActivity();
+        if (activity == null) {
+            return;
+        }
+
+        activity.getWindow().getDecorView().setSystemUiVisibility(
+                View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                        | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN);
     }
 
     @Override
