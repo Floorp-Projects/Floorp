@@ -882,23 +882,15 @@ Statistics::endGC()
     runtime->addTelemetry(JS_TELEMETRY_GC_SCC_SWEEP_TOTAL_MS, t(sccTotal));
     runtime->addTelemetry(JS_TELEMETRY_GC_SCC_SWEEP_MAX_PAUSE_MS, t(sccLongest));
 
-    if (!aborted) {
-        TimeDuration total, longest;
-        gcDuration(&total, &longest);
+    TimeDuration total, longest;
+    gcDuration(&total, &longest);
 
-        runtime->addTelemetry(JS_TELEMETRY_GC_MS, t(total));
-        runtime->addTelemetry(JS_TELEMETRY_GC_MAX_PAUSE_MS, t(longest));
-        runtime->addTelemetry(JS_TELEMETRY_GC_MAX_PAUSE_MS_2, t(longest));
+    runtime->addTelemetry(JS_TELEMETRY_GC_MS, t(total));
+    runtime->addTelemetry(JS_TELEMETRY_GC_MAX_PAUSE_MS, t(longest));
+    runtime->addTelemetry(JS_TELEMETRY_GC_MAX_PAUSE_MS_2, t(longest));
 
-        const double mmu50 = computeMMU(TimeDuration::FromMilliseconds(50));
-        runtime->addTelemetry(JS_TELEMETRY_GC_MMU_50, mmu50 * 100);
-    }
-
-    if (fp)
-        printStats();
-
-    // Clear the OOM flag.
-    aborted = false;
+    const double mmu50 = computeMMU(TimeDuration::FromMilliseconds(50));
+    runtime->addTelemetry(JS_TELEMETRY_GC_MMU_50, mmu50 * 100);
     thresholdTriggered = false;
 }
 
@@ -994,8 +986,13 @@ Statistics::endSlice()
     }
 
     bool last = !runtime->gc.isIncrementalGCInProgress();
-    if (last)
-        endGC();
+    if (last) {
+        if (fp)
+            printStats();
+
+        if (!aborted)
+            endGC();
+    }
 
     if (enableProfiling_ && !aborted && slices_.back().duration() >= profileThreshold_)
         printSliceProfile();
@@ -1025,6 +1022,8 @@ Statistics::endSlice()
         phaseStartTimes[Phase::MUTATOR] = mutatorStartTime;
         phaseTimes[Phase::MUTATOR] = mutatorTime;
     }
+
+    aborted = false;
 }
 
 void
@@ -1132,8 +1131,18 @@ Statistics::recordPhaseBegin(Phase phase)
     MOZ_ASSERT(phases[phase].parent == current);
 
     TimeStamp now = TimeStamp::Now();
-    if (current != Phase::NONE)
+
+    if (current != Phase::NONE) {
+#ifdef ANDROID
+        // Sadly this happens sometimes.
+        if (now < phaseStartTimes[currentPhase()]) {
+            now = phaseStartTimes[currentPhase()];
+            aborted = true;
+        }
+#endif
+
         MOZ_RELEASE_ASSERT(now >= phaseStartTimes[currentPhase()]);
+    }
 
     phaseStack.infallibleAppend(phase);
     phaseStartTimes[phase] = now;
@@ -1147,6 +1156,15 @@ Statistics::recordPhaseEnd(Phase phase)
     MOZ_ASSERT(phaseStartTimes[phase]);
 
     TimeStamp now = TimeStamp::Now();
+
+#ifdef ANDROID
+    // Sadly this happens sometimes.
+    if (now < phaseStartTimes[phase]) {
+        now = phaseStartTimes[phase];
+        aborted = true;
+    }
+#endif
+
     MOZ_RELEASE_ASSERT(now >= phaseStartTimes[phase]);
 
     if (phase == Phase::MUTATOR)

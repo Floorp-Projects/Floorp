@@ -40,8 +40,7 @@ RefPtr<ResultPromise>
 U2FHIDTokenManager::Register(const nsTArray<WebAuthnScopedCredentialDescriptor>& aDescriptors,
                              const nsTArray<uint8_t>& aApplication,
                              const nsTArray<uint8_t>& aChallenge,
-                             /* out */ nsTArray<uint8_t>& aRegistration,
-                             /* out */ nsTArray<uint8_t>& aSignature)
+                             /* out */ nsTArray<uint8_t>& aRegistration)
 {
   return ResultPromise::CreateAndReject(NS_ERROR_NOT_IMPLEMENTED, __func__);
 }

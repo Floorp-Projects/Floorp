@@ -24,8 +24,7 @@ class WebAuthnTransactionChild final : public PWebAuthnTransactionChild
 public:
   NS_INLINE_DECL_REFCOUNTING(WebAuthnTransactionChild);
   WebAuthnTransactionChild();
-  mozilla::ipc::IPCResult RecvConfirmRegister(nsTArray<uint8_t>&& aRegBuffer,
-                                              nsTArray<uint8_t>&& aSigBuffer) override;
+  mozilla::ipc::IPCResult RecvConfirmRegister(nsTArray<uint8_t>&& aRegBuffer) override;
   mozilla::ipc::IPCResult RecvConfirmSign(nsTArray<uint8_t>&& aCredentialId,
                                           nsTArray<uint8_t>&& aBuffer) override;
   mozilla::ipc::IPCResult RecvCancel(const nsresult& aError) override;

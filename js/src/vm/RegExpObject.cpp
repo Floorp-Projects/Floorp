@@ -178,11 +178,6 @@ IsMarkingTrace(JSTracer* trc)
 void
 RegExpObject::trace(JSTracer* trc)
 {
-    // When marking the object normally we have the option of unlinking the
-    // object from its RegExpShared so that the RegExpShared may be collected.
-    if (IsMarkingTrace(trc) && !zone()->isPreservingCode())
-        sharedRef() = nullptr;
-
     TraceNullableEdge(trc, &sharedRef(), "RegExpObject shared");
 }
 
@@ -966,6 +961,9 @@ RegExpShared::discardJitCode()
 {
     for (auto& comp : compilationArray)
         comp.jitCode = nullptr;
+
+    // We can also purge the tables used by JIT code.
+    tables.clearAndFree();
 }
 
 void
@@ -973,8 +971,6 @@ RegExpShared::finalize(FreeOp* fop)
 {
     for (auto& comp : compilationArray)
         js_free(comp.byteCode);
-    for (size_t i = 0; i < tables.length(); i++)
-        js_free(tables[i]);
     tables.~JitCodeTables();
 }
 
@@ -1012,6 +1008,7 @@ RegExpShared::compile(JSContext* cx, MutableHandleRegExpShared re, HandleAtom pa
 
     re->parenCount = data.capture_count;
 
+    JitCodeTables tables;
     irregexp::RegExpCode code = irregexp::CompilePattern(cx, re, &data, input,
                                                          false /* global() */,
                                                          re->ignoreCase(),
@@ -1019,7 +1016,8 @@ RegExpShared::compile(JSContext* cx, MutableHandleRegExpShared re, HandleAtom pa
                                                          mode == MatchOnly,
                                                          force == ForceByteCode,
                                                          re->sticky(),
-                                                         re->unicode());
+                                                         re->unicode(),
+                                                         tables);
     if (code.empty())
         return false;
 
@@ -1027,10 +1025,20 @@ RegExpShared::compile(JSContext* cx, MutableHandleRegExpShared re, HandleAtom pa
     MOZ_ASSERT_IF(force == ForceByteCode, code.byteCode);
 
     RegExpCompilation& compilation = re->compilation(mode, input->hasLatin1Chars());
-    if (code.jitCode)
+    if (code.jitCode) {
+        // First copy the tables. GC can purge the tables if the RegExpShared
+        // has no JIT code, so it's important to do this right before setting
+        // compilation.jitCode (to ensure no purging happens between adding the
+        // tables and setting the JIT code).
+        for (size_t i = 0; i < tables.length(); i++) {
+            if (!re->addTable(Move(tables[i])))
+                return false;
+        }
         compilation.jitCode = code.jitCode;
-    else if (code.byteCode)
+    } else if (code.byteCode) {
+        MOZ_ASSERT(tables.empty(), "RegExpInterpreter does not use data tables");
         compilation.byteCode = code.byteCode;
+    }
 
     return true;
 }
@@ -1186,7 +1194,7 @@ RegExpShared::sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf)
 
     n += tables.sizeOfExcludingThis(mallocSizeOf);
     for (size_t i = 0; i < tables.length(); i++)
-        n += mallocSizeOf(tables[i]);
+        n += mallocSizeOf(tables[i].get());
 
     return n;
 }

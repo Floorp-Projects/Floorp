@@ -6,7 +6,6 @@
 
 DIRS += [
     'content',
-    'components',
     'modules',
     'themes',
 ]

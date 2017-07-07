@@ -1193,10 +1193,10 @@ GCRuntime::init(uint32_t maxbytes, uint32_t maxNurseryBytes)
 void
 GCRuntime::finish()
 {
-    /* Wait for the nursery sweeping to end. */
-    for (ZoneGroupsIter group(rt); !group.done(); group.next()) {
-        if (group->nursery().isEnabled())
-            group->nursery().waitBackgroundFreeEnd();
+    /* Wait for nursery background free to end and disable it to release memory. */
+    if (nursery().isEnabled()) {
+        nursery().waitBackgroundFreeEnd();
+        nursery().disable();
     }
 
     /*

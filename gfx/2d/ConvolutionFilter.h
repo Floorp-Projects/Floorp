@@ -37,6 +37,10 @@ public:
 
   bool ComputeResizeFilter(ResizeMethod aResizeMethod, int32_t aSrcSize, int32_t aDstSize);
 
+  static inline size_t PadBytesForSIMD(size_t aBytes) {
+    return (aBytes + 31) & ~31;
+  }
+
 private:
   UniquePtr<SkConvolutionFilter1D> mFilter;
 };

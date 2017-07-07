@@ -197,7 +197,8 @@ Link::LinkState() const
 
   // If we have not yet registered for notifications and need to,
   // due to our href changing, register now!
-  if (!mRegistered && mNeedsRegistration && element->IsInComposedDoc()) {
+  if (!mRegistered && mNeedsRegistration && element->IsInComposedDoc() &&
+      !HasPendingLinkUpdate()) {
     // Only try and register once.
     self->mNeedsRegistration = false;
 

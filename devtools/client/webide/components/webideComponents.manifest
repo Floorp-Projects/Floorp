@@ -1,4 +1,0 @@
-# webide components
-component {79b7b44e-de5e-4e4c-b7a2-044003c615d9} webideCli.js
-contract @mozilla.org/browser/webide-clh;1 {79b7b44e-de5e-4e4c-b7a2-044003c615d9}
-category command-line-handler a-webide @mozilla.org/browser/webide-clh;1

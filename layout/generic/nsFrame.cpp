@@ -10918,8 +10918,9 @@ DR_init_constraints_cookie::~DR_init_constraints_cookie()
 
 DR_init_offsets_cookie::DR_init_offsets_cookie(
                      nsIFrame*                aFrame,
-                     SizeComputationInput*        aState,
+                     SizeComputationInput*    aState,
                      const LogicalSize&       aPercentBasis,
+                     WritingMode              aCBWritingMode,
                      const nsMargin*          aMargin,
                      const nsMargin*          aPadding)
   : mFrame(aFrame)
@@ -10927,8 +10928,9 @@ DR_init_offsets_cookie::DR_init_offsets_cookie(
 {
   MOZ_COUNT_CTOR(DR_init_offsets_cookie);
   mValue = SizeComputationInput::DisplayInitOffsetsEnter(mFrame, mState,
-                                                     aPercentBasis,
-                                                     aMargin, aPadding);
+                                                         aPercentBasis,
+                                                         aCBWritingMode,
+                                                         aMargin, aPadding);
 }
 
 DR_init_offsets_cookie::~DR_init_offsets_cookie()
@@ -11878,6 +11880,7 @@ ReflowInput::DisplayInitConstraintsExit(nsIFrame* aFrame,
 SizeComputationInput::DisplayInitOffsetsEnter(nsIFrame* aFrame,
                                           SizeComputationInput* aState,
                                           const LogicalSize& aPercentBasis,
+                                          WritingMode aCBWritingMode,
                                           const nsMargin* aBorder,
                                           const nsMargin* aPadding)
 {
@@ -11894,9 +11897,10 @@ SizeComputationInput::DisplayInitOffsetsEnter(nsIFrame* aFrame,
 
     char horizPctBasisStr[16];
     char vertPctBasisStr[16];
-    WritingMode wm = aState->GetWritingMode();
-    DR_state->PrettyUC(aPercentBasis.ISize(wm), horizPctBasisStr, 16);
-    DR_state->PrettyUC(aPercentBasis.BSize(wm), vertPctBasisStr, 16);
+    DR_state->PrettyUC(aPercentBasis.ISize(aCBWritingMode),
+                       horizPctBasisStr, 16);
+    DR_state->PrettyUC(aPercentBasis.BSize(aCBWritingMode),
+                       vertPctBasisStr, 16);
     printf("InitOffsets pct_basis=%s,%s", horizPctBasisStr, vertPctBasisStr);
 
     DR_state->PrintMargin("b", aBorder);
