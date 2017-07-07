@@ -804,10 +804,6 @@ nsWindowWatcher::OpenWindowInternal(mozIDOMWindowProxy* aParent,
   SizeSpec sizeSpec;
   CalcSizeSpec(features, sizeSpec);
 
-  nsCOMPtr<nsIScriptSecurityManager> sm(
-    do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID));
-
-
   // XXXbz Why is an AutoJSAPI good enough here?  Wouldn't AutoEntryScript (so
   // we affect the entry global) make more sense?  Or do we just want to affect
   // GetSubjectPrincipal()?
