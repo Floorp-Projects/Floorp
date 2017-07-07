@@ -177,7 +177,7 @@ ProxyMessenger = {
     MessageChannel.addListener(messageManagers, "Extension:Port:PostMessage", this);
   },
 
-  receiveMessage({target, messageName, channelId, sender, recipient, data, responseType}) {
+  async receiveMessage({target, messageName, channelId, sender, recipient, data, responseType}) {
     if (recipient.toNativeApp) {
       let {childId, toNativeApp} = recipient;
       if (messageName == "Extension:Message") {
@@ -194,13 +194,15 @@ ProxyMessenger = {
       return;
     }
 
+    const noHandlerError = {
+      result: MessageChannel.RESULT_NO_HANDLER,
+      message: "No matching message handler for the given recipient.",
+    };
+
     let extension = GlobalManager.extensionMap.get(sender.extensionId);
     let receiverMM = this.getMessageManagerForRecipient(recipient);
     if (!extension || !receiverMM) {
-      return Promise.reject({
-        result: MessageChannel.RESULT_NO_HANDLER,
-        message: "No matching message handler for the given recipient.",
-      });
+      return Promise.reject(noHandlerError);
     }
 
     if ((messageName == "Extension:Message" ||
@@ -209,11 +211,48 @@ ProxyMessenger = {
       // From ext-tabs.js, undefined on Android.
       apiManager.global.tabGetSender(extension, target, sender);
     }
-    return MessageChannel.sendMessage(receiverMM, messageName, data, {
+
+    let promise1 = MessageChannel.sendMessage(receiverMM, messageName, data, {
       sender,
       recipient,
       responseType,
     });
+
+    if (!extension.isEmbedded || !extension.remote) {
+      return promise1;
+    }
+
+    // If we have a remote, embedded extension, the legacy side is
+    // running in a different process than the WebExtension side.
+    // As a result, we need to dispatch the message to both the parent
+    // and extension processes, and manually merge the results.
+    let promise2 = MessageChannel.sendMessage(Services.ppmm.getChildAt(0), messageName, data, {
+      sender,
+      recipient,
+      responseType,
+    });
+
+    let result = undefined;
+    let failures = 0;
+    let tryPromise = async promise => {
+      try {
+        let res = await promise;
+        if (result === undefined) {
+          result = res;
+        }
+      } catch (e) {
+        if (e.result != MessageChannel.RESULT_NO_HANDLER) {
+          throw e;
+        }
+        failures++;
+      }
+    };
+
+    await Promise.all([tryPromise(promise1), tryPromise(promise2)]);
+    if (failures == 2) {
+      return Promise.reject(noHandlerError);
+    }
+    return result;
   },
 
   /**
