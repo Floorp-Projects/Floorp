@@ -5,6 +5,7 @@
 /* import-globals-from preferences.js */
 /* import-globals-from ../../../../toolkit/mozapps/preferences/fontbuilder.js */
 
+Components.utils.import("resource://gre/modules/Services.jsm");
 Components.utils.import("resource://gre/modules/Downloads.jsm");
 Components.utils.import("resource://gre/modules/FileUtils.jsm");
 Components.utils.import("resource:///modules/ShellService.jsm");
@@ -56,7 +57,25 @@ var gMainPane = {
         // when the user will select the default.  We refresh here periodically
         // in case the default changes. On other Windows OS's defaults can also
         // be set while the prefs are open.
-        window.setInterval(this.updateSetDefaultBrowser.bind(this), 1000);
+        let win = Services.wm.getMostRecentWindow("navigator:browser");
+
+        let pollForDefaultBrowser = () => {
+          let uri = win.gBrowser.currentURI.spec;
+
+          if ((uri == "about:preferences" || uri == "about:preferences#general") &&
+              document.visibilityState == "visible") {
+            this.updateSetDefaultBrowser();
+          }
+
+          // approximately a "requestIdleInterval"
+          window.setTimeout(() => {
+            window.requestIdleCallback(pollForDefaultBrowser);
+          }, 1000);
+        };
+
+        window.setTimeout(() => {
+          window.requestIdleCallback(pollForDefaultBrowser);
+        }, 1000);
       }
     }
 

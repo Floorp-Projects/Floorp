@@ -2647,6 +2647,7 @@ function waitForHelperExit() {
  */
 function setupUpdaterTest(aMarFile, aPostUpdateAsync,
                           aPostUpdateExeRelPathPrefix = "") {
+  debugDump("start - updater test setup");
   let updatesPatchDir = getUpdatesPatchDir();
   if (!updatesPatchDir.exists()) {
     updatesPatchDir.create(Ci.nsIFile.DIRECTORY_TYPE, PERMS_DIRECTORY);
@@ -2662,6 +2663,7 @@ function setupUpdaterTest(aMarFile, aPostUpdateAsync,
   helperBin.copyToFollowingLinks(afterApplyBinDir, gPostUpdateBinFile);
 
   gTestFiles.forEach(function SUT_TF_FE(aTestFile) {
+    debugDump("start - setup test file: " + aTestFile.fileName);
     if (aTestFile.originalFile || aTestFile.originalContents) {
       let testDir = getApplyDirFile(aTestFile.relPathDir, true);
       if (!testDir.exists()) {
@@ -2690,11 +2692,13 @@ function setupUpdaterTest(aMarFile, aPostUpdateAsync,
         }
       }
     }
+    debugDump("finish - setup test file: " + aTestFile.fileName);
   });
 
   // Add the test directory that will be updated for a successful update or left
   // in the initial state for a failed update.
   gTestDirs.forEach(function SUT_TD_FE(aTestDir) {
+    debugDump("start - setup test directory: " + aTestDir.relPathDir);
     let testDir = getApplyDirFile(aTestDir.relPathDir, true);
     if (!testDir.exists()) {
       testDir.create(Ci.nsIFile.DIRECTORY_TYPE, PERMS_DIRECTORY);
@@ -2726,6 +2730,7 @@ function setupUpdaterTest(aMarFile, aPostUpdateAsync,
         }
       });
     }
+    debugDump("finish - setup test directory: " + aTestDir.relPathDir);
   });
 
   setupActiveUpdate();
@@ -2734,6 +2739,7 @@ function setupUpdaterTest(aMarFile, aPostUpdateAsync,
     createUpdaterINI(aPostUpdateAsync, aPostUpdateExeRelPathPrefix);
   }
 
+  debugDump("finish - updater test setup");
   setupAppFilesAsync();
 }
 

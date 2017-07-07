@@ -688,7 +688,8 @@ class GCRuntime
     MOZ_MUST_USE bool triggerGC(JS::gcreason::Reason reason);
     void maybeAllocTriggerZoneGC(Zone* zone, const AutoLockGC& lock);
     // The return value indicates if we were able to do the GC.
-    bool triggerZoneGC(Zone* zone, JS::gcreason::Reason reason);
+    bool triggerZoneGC(Zone* zone, JS::gcreason::Reason reason,
+                       size_t usedBytes, size_t thresholdBytes);
     void maybeGC(Zone* zone);
     // The return value indicates whether a major GC was performed.
     bool gcIfRequested();
@@ -796,7 +797,10 @@ class GCRuntime
     MOZ_MUST_USE bool addBlackRootsTracer(JSTraceDataOp traceOp, void* data);
     void removeBlackRootsTracer(JSTraceDataOp traceOp, void* data);
 
-    bool triggerGCForTooMuchMalloc() { return triggerGC(JS::gcreason::TOO_MUCH_MALLOC); }
+    bool triggerGCForTooMuchMalloc() {
+        stats().recordTrigger(mallocCounter.bytes(), mallocCounter.maxBytes());
+        return triggerGC(JS::gcreason::TOO_MUCH_MALLOC);
+    }
     int32_t getMallocBytes() const { return mallocCounter.bytes(); }
     size_t maxMallocBytesAllocated() const { return mallocCounter.maxBytes(); }
     bool isTooMuchMalloc() const { return mallocCounter.isTooMuchMalloc(); }

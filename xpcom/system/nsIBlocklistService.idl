@@ -93,6 +93,26 @@ interface nsIBlocklistService : nsISupports
                               [optional] in AString toolkitVersion);
 
   /**
+   * Returns the blocklist entry, as an object with `state` and `url`
+   * properties, if a blocklist entry for the add-on exists, or null
+   * othereise.
+
+   * @param   addon
+   *          The addon object to match.
+   * @param   appVersion
+   *          The version of the application we are checking in the blocklist.
+   *          If this parameter is null, the version of the running application
+   *          is used.
+   * @param   toolkitVersion
+   *          The version of the toolkit we are checking in the blocklist.
+   *          If this parameter is null, the version of the running toolkit
+   *          is used.
+   */
+  jsval getAddonBlocklistEntry(in jsval addon,
+                               [optional] in AString appVersion,
+                               [optional] in AString toolkitVersion);
+
+  /**
    * Determine the blocklist web page of a plugin.
    * @param   plugin
    *          The blocked plugin that we are determining the web page for.
