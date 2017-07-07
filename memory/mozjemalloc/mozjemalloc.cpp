@@ -1923,14 +1923,19 @@ chunk_alloc_mmap(size_t size, size_t alignment)
         return (ret);
 }
 
-bool
+/* Purge and release the pages in the chunk of length `length` at `addr` to
+ * the OS.
+ * Returns whether the pages are guaranteed to be full of zeroes when the
+ * function returns.
+ * The force_zero argument explicitly requests that the memory is guaranteed
+ * to be full of zeroes when the function returns.
+ */
+static bool
 pages_purge(void *addr, size_t length, bool force_zero)
 {
-	bool unzeroed;
-
 #ifdef MALLOC_DECOMMIT
 	pages_decommit(addr, length);
-	unzeroed = false;
+	return true;
 #else
 #  ifndef MOZ_MEMORY_LINUX
 	if (force_zero)
@@ -1951,7 +1956,7 @@ pages_purge(void *addr, size_t length, bool force_zero)
 		length -= pages_size;
 		pages_size = std::min(length, chunksize);
 	}
-	unzeroed = !force_zero;
+	return force_zero;
 #  else
 #    ifdef MOZ_MEMORY_LINUX
 #      define JEMALLOC_MADV_PURGE MADV_DONTNEED
@@ -1961,12 +1966,11 @@ pages_purge(void *addr, size_t length, bool force_zero)
 #      define JEMALLOC_MADV_ZEROS force_zero
 #    endif
 	int err = madvise(addr, length, JEMALLOC_MADV_PURGE);
-	unzeroed = (JEMALLOC_MADV_ZEROS == false || err != 0);
+	return JEMALLOC_MADV_ZEROS && err == 0;
 #    undef JEMALLOC_MADV_PURGE
 #    undef JEMALLOC_MADV_ZEROS
 #  endif
 #endif
-	return (unzeroed);
 }
 
 static void *
@@ -2122,10 +2126,10 @@ static void
 chunk_record(extent_tree_t *chunks_szad, extent_tree_t *chunks_ad, void *chunk,
     size_t size, enum ChunkType type)
 {
-	bool unzeroed;
+	bool zeroed;
 	extent_node_t *xnode, *node, *prev, *xprev, key;
 
-	unzeroed = pages_purge(chunk, size, type == HUGE_CHUNK);
+	zeroed = pages_purge(chunk, size, type == HUGE_CHUNK);
 
 	/*
 	 * Allocate a node before acquiring chunks_mtx even though it might not
@@ -2150,7 +2154,7 @@ chunk_record(extent_tree_t *chunks_szad, extent_tree_t *chunks_ad, void *chunk,
 		extent_tree_szad_remove(chunks_szad, node);
 		node->addr = chunk;
 		node->size += size;
-		node->zeroed = (node->zeroed && (unzeroed == false));
+		node->zeroed = node->zeroed && zeroed;
 		extent_tree_szad_insert(chunks_szad, node);
 	} else {
 		/* Coalescing forward failed, so insert a new node. */
@@ -2167,7 +2171,7 @@ chunk_record(extent_tree_t *chunks_szad, extent_tree_t *chunks_ad, void *chunk,
 		xnode = nullptr; /* Prevent deallocation below. */
 		node->addr = chunk;
 		node->size = size;
-		node->zeroed = (unzeroed == false);
+		node->zeroed = zeroed;
 		extent_tree_ad_insert(chunks_ad, node);
 		extent_tree_szad_insert(chunks_szad, node);
 	}
