@@ -9,8 +9,10 @@ import android.Manifest;
 import android.app.Activity;
 import android.app.DownloadManager;
 import android.app.PendingIntent;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
@@ -18,9 +20,11 @@ import android.graphics.drawable.Drawable;
 import android.graphics.drawable.TransitionDrawable;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.AppBarLayout;
+import android.support.v4.app.DialogFragment;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
 import android.view.LayoutInflater;
@@ -39,6 +43,7 @@ import android.widget.Toast;
 import org.mozilla.focus.R;
 import org.mozilla.focus.activity.InfoActivity;
 import org.mozilla.focus.activity.InstallFirefoxActivity;
+import org.mozilla.focus.broadcastreceiver.DownloadBroadcastReceiver;
 import org.mozilla.focus.locale.LocaleAwareAppCompatActivity;
 import org.mozilla.focus.menu.BrowserMenu;
 import org.mozilla.focus.menu.WebContextMenu;
@@ -62,13 +67,14 @@ import java.lang.ref.WeakReference;
 /**
  * Fragment for displaying the browser UI.
  */
-public class BrowserFragment extends WebFragment implements View.OnClickListener {
+public class BrowserFragment extends WebFragment implements View.OnClickListener, DownloadDialogFragment.DownloadDialogListener {
     public static final String FRAGMENT_TAG = "browser";
 
     private static int REQUEST_CODE_STORAGE_PERMISSION = 101;
     private static final int ANIMATION_DURATION = 300;
     private static final String ARGUMENT_URL = "url";
     private static final String RESTORE_KEY_DOWNLOAD = "download";
+    private static final String DOWNLOAD_DIALOG_TAG = "should-download-prompt-dialog";
 
     public static BrowserFragment create(String url) {
         Bundle arguments = new Bundle();
@@ -108,6 +114,10 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
 
     private boolean isLoading = false;
 
+    private DownloadManager manager;
+
+    private DownloadBroadcastReceiver downloadBroadcastReceiver;
+
     // Set an initial WeakReference so we never have to handle loadStateListenerWeakReference being null
     // (i.e. so we can always just .get()).
     private WeakReference<LoadStateListener> loadStateListenerWeakReference = new WeakReference<>(null);
@@ -122,6 +132,7 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
     @Override
     public void onPause() {
         super.onPause();
+        getContext().unregisterReceiver(downloadBroadcastReceiver);
 
         final BrowserMenu menu = menuWeakReference.get();
         if (menu != null) {
@@ -411,8 +422,13 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
             @Override
             public void onDownloadStart(Download download) {
                 if (PackageManager.PERMISSION_GRANTED == ContextCompat.checkSelfPermission(getContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
-                    // We do have the permission to write to the external storage. Proceed with the download.
-                    queueDownload(download);
+                    // Long press image displays its own dialog and we handle other download cases here
+                    if (!isDownloadFromLongPressImage(download)) {
+                        showDownloadPromptDialog(download);
+                    } else {
+                        // Download dialog has already been shown from long press on image. Proceed with download.
+                        queueDownload(download);
+                    }
                 } else {
                     // We do not have the permission to write to the external storage. Request the permission and start the
                     // download from onRequestPermissionsResult().
@@ -423,10 +439,18 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
 
                     pendingDownload = download;
 
-                    requestPermissions(new String[] { Manifest.permission.WRITE_EXTERNAL_STORAGE }, REQUEST_CODE_STORAGE_PERMISSION);
+                    requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, REQUEST_CODE_STORAGE_PERMISSION);
                 }
             }
         };
+    }
+
+    /**
+     * Checks a download's destination directory to determine if it is being called from
+     * a long press on an image or otherwise.
+     */
+    private boolean isDownloadFromLongPressImage(Download download) {
+        return download.getDestinationDirectory().equals(Environment.DIRECTORY_PICTURES);
     }
 
     /**
@@ -474,10 +498,36 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
         }
 
         if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-            queueDownload(pendingDownload);
+            showDownloadPromptDialog(pendingDownload);
         }
 
         pendingDownload = null;
+    }
+
+    void showDownloadPromptDialog(Download download) {
+        final DialogFragment newFragment = DownloadDialogFragment.newInstance(download);
+        newFragment.setTargetFragment(BrowserFragment.this, 300);
+        newFragment.show(getFragmentManager(), DOWNLOAD_DIALOG_TAG);
+    }
+
+    @Override
+    public void onFinishDownloadDialog(Download download, boolean shouldDownload) {
+        if (shouldDownload) {
+            queueDownload(download);
+        }
+    }
+
+    @Override
+    public void onCreateViewCalled() {
+        manager = (DownloadManager) getContext().getSystemService(Context.DOWNLOAD_SERVICE);
+        downloadBroadcastReceiver = new DownloadBroadcastReceiver(browserContainer, manager);
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        final IntentFilter filter = new IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE);
+        getContext().registerReceiver(downloadBroadcastReceiver, filter);
     }
 
     /**
@@ -507,8 +557,8 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
 
         request.allowScanningByMediaScanner();
 
-        final DownloadManager manager = (DownloadManager) context.getSystemService(Context.DOWNLOAD_SERVICE);
-        manager.enqueue(request);
+        long downloadReference = manager.enqueue(request);
+        downloadBroadcastReceiver.addQueuedDownload(downloadReference);
     }
 
     private boolean isStartedFromExternalApp() {

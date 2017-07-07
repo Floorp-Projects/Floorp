@@ -39,6 +39,11 @@ public abstract class WebFragment extends LocaleAwareFragment {
     @Nullable
     public abstract String getInitialUrl();
 
+    /**
+     * Adds ability to add methods to onCreateView without override because onCreateView is final.
+     */
+    public abstract void onCreateViewCalled();
+
     @Override
     public final View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         final View view = inflateLayout(inflater, container, savedInstanceState);
@@ -56,6 +61,7 @@ public abstract class WebFragment extends LocaleAwareFragment {
             webView.restoreWebviewState(savedInstanceState);
         }
 
+        onCreateViewCalled();
         return view;
     }
 

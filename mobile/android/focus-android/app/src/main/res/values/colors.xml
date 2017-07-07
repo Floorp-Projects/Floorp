@@ -35,4 +35,6 @@
 
     <color name="onboarding_indicator_default">#7FFFFFFF</color>
     <color name="onboarding_indicator_selected">#FFFFFFFF</color>
+
+    <color name="download_dialog_text">#FF00A4DC</color>
 </resources>

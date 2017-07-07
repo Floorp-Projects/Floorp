@@ -158,4 +158,23 @@ public class IntentUtils {
 
         builder.show();
     }
+
+    public static boolean activitiesFoundForIntent(Context context, Intent intent) {
+        if (intent == null) {
+            return false;
+        }
+        final PackageManager packageManager = context.getPackageManager();
+        final List<ResolveInfo> resolveInfoList = packageManager.queryIntentActivities(intent, 0);
+        return (resolveInfoList.size() > 0);
+    }
+
+    public static Intent createOpenFileIntent(Uri uriFile, String mimeType) {
+        if (uriFile == null || mimeType == null) {
+            return null;
+        }
+        final Intent openFileIntent = new Intent(Intent.ACTION_VIEW);
+        openFileIntent.setDataAndType(uriFile, mimeType);
+        openFileIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+        return openFileIntent;
+    }
 }

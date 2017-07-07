@@ -54,6 +54,9 @@ public class InfoFragment extends WebFragment {
     }
 
     @Override
+    public void onCreateViewCalled() {}
+
+    @Override
     public IWebView.Callback createCallback() {
         return new IWebView.Callback() {
             @Override
