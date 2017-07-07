@@ -617,6 +617,11 @@ Statistics::formatJsonSliceDescription(unsigned i, const SliceData& slice, JSONP
     json.property("initial_state", gc::StateName(slice.initialState));
     json.property("final_state", gc::StateName(slice.finalState));
     json.property("budget", budgetDescription);
+    json.property("major_gc_number", startingMajorGCNumber);
+    if (thresholdTriggered) {
+        json.floatProperty("trigger_amount", triggerAmount, 0);
+        json.floatProperty("trigger_threshold", triggerThreshold, 0);
+    }
     json.property("page_faults", int64_t(slice.endFaults - slice.startFaults));
     json.property("start_timestamp", slice.start - originTime, JSONPrinter::SECONDS);
     json.property("end_timestamp", slice.end - originTime, JSONPrinter::SECONDS);
@@ -637,6 +642,9 @@ Statistics::Statistics(JSRuntime* rt)
     fp(nullptr),
     nonincrementalReason_(gc::AbortReason::None),
     preBytes(0),
+    thresholdTriggered(false),
+    triggerAmount(0.0),
+    triggerThreshold(0.0),
     maxPauseInInterval(0),
     sliceCallback(nullptr),
     nurseryCollectionCallback(nullptr),
@@ -891,6 +899,7 @@ Statistics::endGC()
 
     // Clear the OOM flag.
     aborted = false;
+    thresholdTriggered = false;
 }
 
 void
