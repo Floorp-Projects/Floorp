@@ -29,6 +29,7 @@
 #define nsRuleNetwork_h__
 
 #include "mozilla/Attributes.h"
+#include "mozilla/HashFunctions.h"
 #include "nsCOMPtr.h"
 #include "nsCOMArray.h"
 #include "nsIAtom.h"
@@ -208,9 +209,8 @@ public:
         return mVariable != aAssignment.mVariable || mValue != aAssignment.mValue; }
 
     PLHashNumber Hash() const {
-        // XXX I have no idea if this hashing function is good or not // XXX change this
-        PLHashNumber temp = PLHashNumber(NS_PTR_TO_INT32(mValue.get())) >> 2; // strip alignment bits
-        return (temp & 0xffff) | NS_PTR_TO_INT32(mVariable.get()); }
+        using mozilla::HashGeneric;
+        return HashGeneric(mVariable.get()) ^ HashGeneric(mValue.get()); }
 };
 
 
