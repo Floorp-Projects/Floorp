@@ -79,7 +79,13 @@ ContentProcessSingleton.prototype = {
       for (let arg of consoleMsg.arguments) {
         if ((typeof arg == "object" || typeof arg == "function") &&
             arg !== null) {
-          arg = unavailString;
+          try {
+            // If the argument is clonable, then send it as-is. If
+            // cloning fails, fall back to the unavailable string.
+            arg = Cu.cloneInto(arg, {});
+          } catch (e) {
+            arg = unavailString;
+          }
           totalArgLength += unavailStringLength;
         } else if (typeof arg == "string") {
           totalArgLength += arg.length * 2; // 2-bytes per char
