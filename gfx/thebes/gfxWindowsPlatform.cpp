@@ -1415,6 +1415,11 @@ gfxWindowsPlatform::InitializeAdvancedLayersConfig()
                  NS_LITERAL_CSTRING("FEATURE_FAILURE_DISABLED_ON_WIN7"));
     }
   }
+
+  nsCString message, failureId;
+  if (!IsGfxInfoStatusOkay(nsIGfxInfo::FEATURE_ADVANCED_LAYERS, &message, failureId)) {
+    al.Disable(FeatureStatus::Blacklisted, message.get(), failureId);
+  }
 }
 
 /* static */ void
