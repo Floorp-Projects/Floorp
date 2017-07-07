@@ -260,6 +260,17 @@ public class GeckoHlsPlayer implements BaseHlsPlayer, ExoPlayer.EventListener {
         );
     }
 
+    private long getDuration() {
+        assertTrue(mPlayer != null);
+        if (isLiveStream()) {
+            return 0L;
+        }
+        // Value returned by getDuration() is in milliseconds.
+        long duration = Math.max(0L, mPlayer.getDuration() * 1000L);
+        if (DEBUG) { Log.d(LOGTAG, "getDuration : " + duration  + "(Us)"); }
+        return duration;
+    }
+
     // To make sure that each player has a unique id, GeckoHlsPlayer should be
     // created only from synchronized APIs in GeckoPlayerFactory.
     public GeckoHlsPlayer() {
@@ -564,18 +575,6 @@ public class GeckoHlsPlayer implements BaseHlsPlayer, ExoPlayer.EventListener {
         } else {
             return new ConcurrentLinkedQueue<GeckoHLSSample>();
         }
-    }
-
-    @Override
-    public long getDuration() {
-        assertTrue(mPlayer != null);
-        if (isLiveStream()) {
-            return 0L;
-        }
-        // Value returned by getDuration() is in milliseconds.
-        long duration = mPlayer.getDuration() * 1000;
-        if (DEBUG) { Log.d(LOGTAG, "getDuration : " + duration  + "(Us)"); }
-        return duration;
     }
 
     @Override
