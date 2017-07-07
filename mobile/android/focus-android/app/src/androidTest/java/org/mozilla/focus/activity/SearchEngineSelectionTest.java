@@ -84,9 +84,15 @@ public class SearchEngineSelectionTest {
         TestHelper.settingsHeading.waitForExists(waitingTime);
         TestHelper.pressBackKey();
 
-        /* Now do some search */
+        /* load blank spaces and press enter key for search, it should not do anything */
         TestHelper.urlBar.click();
         TestHelper.inlineAutocompleteEditText.waitForExists(waitingTime);
+        TestHelper.inlineAutocompleteEditText.clearTextField();
+        TestHelper.inlineAutocompleteEditText.setText("   ");
+        TestHelper.pressEnterKey();
+        assertTrue(TestHelper.inlineAutocompleteEditText.exists());
+
+        /* Now do some search */
         TestHelper.inlineAutocompleteEditText.clearTextField();
         TestHelper.inlineAutocompleteEditText.setText("mozilla focus");
         TestHelper.hint.waitForExists(waitingTime);
