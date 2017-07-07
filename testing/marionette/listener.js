@@ -1137,9 +1137,9 @@ function get(msg) {
   try {
     if (typeof url == "string") {
       try {
-        let requestedURL = new URL(url).toString();
         if (loadEventExpected === null) {
-          loadEventExpected = navigate.isLoadEventExpected(requestedURL);
+          loadEventExpected = navigate.isLoadEventExpected(
+              curContainer.frame.location, url);
         }
       } catch (e) {
         let err = new InvalidArgumentError("Malformed URL: " + e.message);
