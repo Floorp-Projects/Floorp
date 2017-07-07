@@ -5,6 +5,7 @@ let { Preferences } = Cu.import("resource://gre/modules/Preferences.jsm", {});
 
 const ABOUT_HOME_URL = "about:home";
 const ABOUT_NEWTAB_URL = "about:newtab";
+const URLs = [ABOUT_HOME_URL, ABOUT_NEWTAB_URL];
 const TOUR_IDs = [
   "onboarding-tour-private-browsing",
   "onboarding-tour-addons",
@@ -13,10 +14,12 @@ const TOUR_IDs = [
   "onboarding-tour-default-browser",
   "onboarding-tour-sync",
 ];
+const UPDATE_TOUR_IDs = [];
 
 function resetOnboardingDefaultState() {
   // All the prefs should be reset to the default states
   // and no need to revert back so we don't use `SpecialPowers.pushPrefEnv` here.
+  Preferences.set("browser.onboarding.enabled", true);
   Preferences.set("browser.onboarding.hidden", false);
   Preferences.set("browser.onboarding.notification.finished", false);
   Preferences.set("browser.onboarding.notification.lastPrompted", "");
