@@ -1387,25 +1387,32 @@ gfxWindowsPlatform::InitializeD3D11Config()
     d3d11.UserForceEnable("User force-enabled WARP");
   }
 
+  InitializeAdvancedLayersConfig();
+}
+
+/* static */ void
+gfxWindowsPlatform::InitializeAdvancedLayersConfig()
+{
   // Only enable Advanced Layers if D3D11 succeeded.
-  if (d3d11.IsEnabled()) {
-    FeatureState& al = gfxConfig::GetFeature(Feature::ADVANCED_LAYERS);
+  if (!gfxConfig::IsEnabled(Feature::D3D11_COMPOSITING)) {
+    return;
+  }
 
-    al.SetDefaultFromPref(
-      gfxPrefs::GetAdvancedLayersEnabledDoNotUseDirectlyPrefName(),
-      true /* aIsEnablePref */,
-      gfxPrefs::GetAdvancedLayersEnabledDoNotUseDirectlyPrefDefault());
+  FeatureState& al = gfxConfig::GetFeature(Feature::ADVANCED_LAYERS);
+  al.SetDefaultFromPref(
+    gfxPrefs::GetAdvancedLayersEnabledDoNotUseDirectlyPrefName(),
+    true /* aIsEnablePref */,
+    gfxPrefs::GetAdvancedLayersEnabledDoNotUseDirectlyPrefDefault());
 
-    // Windows 7 has an extra pref since it uses totally different buffer paths
-    // that haven't been performance tested yet.
-    if (al.IsEnabled() && !IsWin8OrLater()) {
-      if (gfxPrefs::AdvancedLayersEnableOnWindows7()) {
-        al.UserEnable("Enabled for Windows 7 via user-preference");
-      } else {
-        al.Disable(FeatureStatus::Disabled,
-                   "Advanced Layers is disabled on Windows 7 by default",
-                   NS_LITERAL_CSTRING("FEATURE_FAILURE_DISABLED_ON_WIN7"));
-      }
+  // Windows 7 has an extra pref since it uses totally different buffer paths
+  // that haven't been performance tested yet.
+  if (al.IsEnabled() && !IsWin8OrLater()) {
+    if (gfxPrefs::AdvancedLayersEnableOnWindows7()) {
+      al.UserEnable("Enabled for Windows 7 via user-preference");
+    } else {
+      al.Disable(FeatureStatus::Disabled,
+                 "Advanced Layers is disabled on Windows 7 by default",
+                 NS_LITERAL_CSTRING("FEATURE_FAILURE_DISABLED_ON_WIN7"));
     }
   }
 }

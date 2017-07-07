@@ -258,6 +258,7 @@ private:
     void InitializeD3D11Config();
     void InitializeD2DConfig();
     void InitializeDirectDrawConfig();
+    void InitializeAdvancedLayersConfig();
 
     RefPtr<IDWriteFactory> mDWriteFactory;
     RefPtr<IDWriteRenderingParams> mRenderingParams[TEXT_RENDERING_COUNT];
