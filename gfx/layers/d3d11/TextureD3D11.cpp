@@ -932,7 +932,9 @@ DXGITextureHostD3D11::EnsureTextureSource()
   }
 
   if (mProvider) {
-    MOZ_RELEASE_ASSERT(mProvider->IsValid());
+    if (!mProvider->IsValid()) {
+      return false;
+    }
     mTextureSource = new DataTextureSourceD3D11(mFormat, mProvider, mTexture);
   } else {
     mTextureSource = new DataTextureSourceD3D11(mDevice, mFormat, mTexture);
