@@ -645,6 +645,8 @@ nsWindow::nsWindow(bool aIsChildWindow)
 
   mTaskbarPreview = nullptr;
 
+  mCompositorWidgetDelegate = nullptr;
+
   // Global initialization
   if (!sInstanceCount) {
     // Global app registration id for Win7 and up. See
@@ -3948,7 +3950,7 @@ nsWindow::GetLayerManager(PLayerTransactionChild* aShadowManager,
 
     // Ensure we have a widget proxy even if we're not using the compositor,
     // since all our transparent window handling lives there.
-    CompositorWidgetInitData initData(
+    WinCompositorWidgetInitData initData(
       reinterpret_cast<uintptr_t>(mWnd),
       reinterpret_cast<uintptr_t>(static_cast<nsIWidget*>(this)),
       mTransparencyMode);
@@ -3962,6 +3964,27 @@ nsWindow::GetLayerManager(PLayerTransactionChild* aShadowManager,
   NS_ASSERTION(mLayerManager, "Couldn't provide a valid layer manager.");
 
   return mLayerManager;
+}
+
+/**************************************************************
+ *
+ * SECTION: nsBaseWidget::SetCompositorWidgetDelegate
+ *
+ * Called to connect the nsWindow to the delegate providing
+ * platform compositing API access.
+ *
+ **************************************************************/
+
+void
+nsWindow::SetCompositorWidgetDelegate(CompositorWidgetDelegate* delegate)
+{
+    if (delegate) {
+        mCompositorWidgetDelegate = delegate->AsPlatformSpecificDelegate();
+        MOZ_ASSERT(mCompositorWidgetDelegate,
+                   "nsWindow::SetCompositorWidgetDelegate called with a non-PlatformCompositorWidgetDelegate");
+    } else {
+        mCompositorWidgetDelegate = nullptr;
+    }
 }
 
 /**************************************************************
@@ -8379,9 +8402,10 @@ bool nsWindow::OnPointerEvents(UINT msg, WPARAM aWParam, LPARAM aLParam)
 void
 nsWindow::GetCompositorWidgetInitData(mozilla::widget::CompositorWidgetInitData* aInitData)
 {
-  aInitData->hWnd() = reinterpret_cast<uintptr_t>(mWnd);
-  aInitData->widgetKey() = reinterpret_cast<uintptr_t>(static_cast<nsIWidget*>(this));
-  aInitData->transparencyMode() = mTransparencyMode;
+  *aInitData = WinCompositorWidgetInitData(
+      reinterpret_cast<uintptr_t>(mWnd),
+      reinterpret_cast<uintptr_t>(static_cast<nsIWidget*>(this)),
+      mTransparencyMode);
 }
 
 bool

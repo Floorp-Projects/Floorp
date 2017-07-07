@@ -16,7 +16,7 @@ namespace widget {
 class InProcessX11CompositorWidget final : public X11CompositorWidget
 {
 public:
-  InProcessX11CompositorWidget(const CompositorWidgetInitData& aInitData,
+  InProcessX11CompositorWidget(const X11CompositorWidgetInitData& aInitData,
                                const layers::CompositorOptions& aOptions,
                                nsWindow* aWindow);
 

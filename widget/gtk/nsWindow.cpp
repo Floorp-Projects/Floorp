@@ -437,6 +437,7 @@ nsWindow::nsWindow()
     mContainer           = nullptr;
     mGdkWindow           = nullptr;
     mShell               = nullptr;
+    mCompositorWidgetDelegate = nullptr;
     mHasMappedToplevel   = false;
     mIsFullyObscured     = false;
     mRetryPointerGrab    = false;
@@ -6530,6 +6531,18 @@ nsWindow::GetLayerManager(PLayerTransactionChild* aShadowManager,
 }
 
 void
+nsWindow::SetCompositorWidgetDelegate(CompositorWidgetDelegate* delegate)
+{
+    if (delegate) {
+        mCompositorWidgetDelegate = delegate->AsPlatformSpecificDelegate();
+        MOZ_ASSERT(mCompositorWidgetDelegate,
+                   "nsWindow::SetCompositorWidgetDelegate called with a non-PlatformCompositorWidgetDelegate");
+    } else {
+        mCompositorWidgetDelegate = nullptr;
+    }
+}
+
+void
 nsWindow::ClearCachedResources()
 {
     if (mLayerManager &&
@@ -6825,7 +6838,7 @@ nsWindow::RoundsWidgetCoordinatesTo()
 void nsWindow::GetCompositorWidgetInitData(mozilla::widget::CompositorWidgetInitData* aInitData)
 {
   #ifdef MOZ_X11
-  *aInitData = mozilla::widget::CompositorWidgetInitData(
+  *aInitData = mozilla::widget::X11CompositorWidgetInitData(
                                   mXWindow,
                                   nsCString(XDisplayString(mXDisplay)),
                                   GetClientSize());

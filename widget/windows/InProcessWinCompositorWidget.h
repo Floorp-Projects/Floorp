@@ -20,7 +20,7 @@ namespace widget {
 class InProcessWinCompositorWidget final : public WinCompositorWidget
 {
 public:
-  InProcessWinCompositorWidget(const CompositorWidgetInitData& aInitData,
+  InProcessWinCompositorWidget(const WinCompositorWidgetInitData& aInitData,
                                const layers::CompositorOptions& aOptions,
                                nsWindow* aWindow);
 

@@ -7,33 +7,41 @@
 #define widget_headless_HeadlessCompositorWidget_h
 
 #include "mozilla/widget/CompositorWidget.h"
-#include "InProcessX11CompositorWidget.h"
 
 #include "HeadlessWidget.h"
 
 namespace mozilla {
 namespace widget {
 
+class HeadlessCompositorWidgetInitData;
+
 class HeadlessCompositorWidget final
   : public CompositorWidget
   , public CompositorWidgetDelegate
 {
 public:
-  HeadlessCompositorWidget(const CompositorWidgetInitData& aInitData,
+  HeadlessCompositorWidget(const HeadlessCompositorWidgetInitData& aInitData,
                            const layers::CompositorOptions& aOptions,
                            HeadlessWidget* aWindow);
+
+  void NotifyClientSizeChanged(const LayoutDeviceIntSize& aClientSize);
 
   // CompositorWidget Overrides
 
   uintptr_t GetWidgetKey() override;
 
-  void NotifyClientSizeChanged(const LayoutDeviceIntSize& aClientSize) override;
   LayoutDeviceIntSize GetClientSize() override;
 
   nsIWidget* RealWidget() override;
   CompositorWidgetDelegate* AsDelegate() override { return this; }
 
   void ObserveVsync(VsyncObserver* aObserver) override;
+
+  // CompositorWidgetDelegate Overrides
+
+  HeadlessCompositorWidget* AsHeadlessCompositorWidget() override {
+    return this;
+  }
 
 private:
   HeadlessWidget* mWidget;
