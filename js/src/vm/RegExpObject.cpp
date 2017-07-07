@@ -178,11 +178,6 @@ IsMarkingTrace(JSTracer* trc)
 void
 RegExpObject::trace(JSTracer* trc)
 {
-    // When marking the object normally we have the option of unlinking the
-    // object from its RegExpShared so that the RegExpShared may be collected.
-    if (IsMarkingTrace(trc) && !zone()->isPreservingCode())
-        sharedRef() = nullptr;
-
     TraceNullableEdge(trc, &sharedRef(), "RegExpObject shared");
 }
 
