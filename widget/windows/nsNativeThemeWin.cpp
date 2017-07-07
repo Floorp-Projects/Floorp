@@ -637,8 +637,18 @@ nsresult nsNativeThemeWin::GetCachedMinimumWidgetSize(nsIFrame * aFrame, HANDLE 
                                                       int32_t aPart, int32_t aState, THEMESIZE aSizeReq,
                                                       mozilla::LayoutDeviceIntSize * aResult)
 {
+  int32_t cachePart = aPart;
+
+  if (aWidgetType == NS_THEME_BUTTON && aSizeReq == TS_MIN) {
+    // In practice, NS_THEME_BUTTON is the only widget type which has an aSizeReq
+    // that varies for us, and it can only be TS_MIN or TS_TRUE. Just stuff that
+    // extra bit into the aPart part of the cache, since BP_Count is well below
+    // THEME_PART_DISTINCT_VALUE_COUNT anyway.
+    cachePart = BP_Count;
+  }
+
   MOZ_ASSERT(aPart < THEME_PART_DISTINCT_VALUE_COUNT);
-  int32_t cacheIndex = aThemeClass * THEME_PART_DISTINCT_VALUE_COUNT + aPart;
+  int32_t cacheIndex = aThemeClass * THEME_PART_DISTINCT_VALUE_COUNT + cachePart;
   int32_t cacheBitIndex = cacheIndex / 8;
   uint8_t cacheBit = 1u << (cacheIndex % 8);
 

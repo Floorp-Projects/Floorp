@@ -40,6 +40,7 @@
 #define BP_RADIO     2
 #define BP_CHECKBOX  3
 #define BP_GROUPBOX  4
+#define BP_Count     5
 
 // Textfield constants
 /* This is the EP_EDITTEXT part */
