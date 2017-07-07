@@ -43,7 +43,7 @@ public class ReferrerReceiver extends BroadcastReceiver {
      * Adjust ID. It's treated as OTA and tracked using Adjust and
      * Mozilla's metrics systems.
      */
-    private static final String MOZILLA_ADJUST_SOURCE = "xodfft";
+    private static final String MOZILLA_ADJUST_SOURCE = "adjust_store";
 
     /**
      * If the install intent has this campaign, we'll load the specified distribution.
