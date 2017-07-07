@@ -334,8 +334,8 @@ struct Statistics
     JS::GCNurseryCollectionCallback nurseryCollectionCallback;
 
     /*
-     * True if we saw an OOM while allocating slices. The statistics for this
-     * GC will be invalid.
+     * True if we saw an OOM while allocating slices or we saw an impossible
+     * timestamp. The statistics for this GC will be invalid.
      */
     bool aborted;
 
