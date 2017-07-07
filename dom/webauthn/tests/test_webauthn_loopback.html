@@ -90,7 +90,7 @@ function() {
     let rpIdHash = aAssertion.response.authenticatorData.slice(0,32);
 
     // Assemble the signed data and verify the signature
-    return deriveAppAndChallengeParam(clientData.origin, aAssertion.response.clientDataJSON)
+    return deriveAppAndChallengeParam(window.location.host, aAssertion.response.clientDataJSON)
     .then(function(aParams) {
       console.log(aParams.appParam, rpIdHash, presenceAndCounter, aParams.challengeParam);
       console.log("ClientData buffer: ", hexEncode(aAssertion.response.clientDataJSON));
