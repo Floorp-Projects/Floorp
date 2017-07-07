@@ -84,6 +84,14 @@ VRManagerParent::AllocPVRLayerParent(const uint32_t& aDisplayID,
 bool
 VRManagerParent::DeallocPVRLayerParent(PVRLayerParent* actor)
 {
+  gfx::VRLayerParent* layer = static_cast<gfx::VRLayerParent*>(actor);
+
+  VRManager* vm = VRManager::Get();
+  RefPtr<gfx::VRDisplayHost> display = vm->GetDisplay(layer->GetDisplayID());
+  if (display) {
+    display->RemoveLayer(layer);
+  }
+
   delete actor;
   return true;
 }

@@ -514,23 +514,21 @@ VRSystemManagerOSVR::Shutdown()
   osvr_ClientShutdown(m_ctx);
 }
 
-bool
+void
 VRSystemManagerOSVR::GetHMDs(nsTArray<RefPtr<VRDisplayHost>>& aHMDResult)
 {
   // make sure context, interface and display are initialized
   CheckOSVRStatus();
 
   if (!Init()) {
-    return false;
+    return;
   }
 
   mHMDInfo = new VRDisplayOSVR(&m_ctx, &m_iface, &m_display);
 
   if (mHMDInfo) {
     aHMDResult.AppendElement(mHMDInfo);
-    return true;
   }
-  return false;
 }
 
 bool
