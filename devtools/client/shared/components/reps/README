@@ -1,7 +1,7 @@
-Reps are now maintained on GitHub at: https://github.com/devtools-html/devtools-reps
+Reps are now maintained on GitHub at: https://github.com/devtools-html/devtools-core/tree/master/packages/devtools-reps
 
-All the files in this folder are copied from the devtools-reps github repository and
-should not be modified here. This also applies to the tests found in the test folder.
+All the files in this folder are copied from the devtools-core github repository and
+should not be modified here.
 
 For any issue or feature request on Reps, please log an issue at
-https://github.com/devtools-html/devtools-reps/issues
+https://github.com/devtools-html/devtools-core/issues with the label "Reps".
