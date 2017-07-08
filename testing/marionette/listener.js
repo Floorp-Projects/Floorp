@@ -222,13 +222,6 @@ var loadListener = {
    * Callback for registered DOM events.
    */
   handleEvent(event) {
-    // Only care about events from the currently selected browsing context,
-    // whereby some of those do not bubble up to the window.
-    if (event.target != curContainer.frame &&
-        event.target != curContainer.frame.document) {
-      return;
-    }
-
     let location = event.target.documentURI || event.target.location.href;
     logger.debug(`Received DOM event "${event.type}" for "${location}"`);
 
@@ -242,21 +235,23 @@ var loadListener = {
         break;
 
       case "pagehide":
-        this.seenUnload = true;
+        if (event.target === curContainer.frame.document) {
+          this.seenUnload = true;
 
-        removeEventListener("hashchange", this);
-        removeEventListener("pagehide", this);
+          removeEventListener("hashchange", this);
+          removeEventListener("pagehide", this);
 
-        // Now wait until the target page has been loaded
-        addEventListener("DOMContentLoaded", this, false);
-        addEventListener("pageshow", this, false);
-
+          // Now wait until the target page has been loaded
+          addEventListener("DOMContentLoaded", this, false);
+          addEventListener("pageshow", this, false);
+        }
         break;
 
       case "hashchange":
-        this.stop();
-        sendOk(this.command_id);
-
+        if (event.target === curContainer.frame) {
+          this.stop();
+          sendOk(this.command_id);
+        }
         break;
 
       case "DOMContentLoaded":
@@ -278,13 +273,13 @@ var loadListener = {
           this.stop();
           sendOk(this.command_id);
         }
-
         break;
 
       case "pageshow":
-        this.stop();
-        sendOk(this.command_id);
-
+        if (event.target === curContainer.frame.document) {
+          this.stop();
+          sendOk(this.command_id);
+        }
         break;
     }
   },
