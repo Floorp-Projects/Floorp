@@ -2070,10 +2070,12 @@ gfxFont::Draw(const gfxTextRun *aTextRun, uint32_t aStart, uint32_t aEnd,
         aOrientation == gfx::ShapedTextFlags::TEXT_ORIENT_VERTICAL_UPRIGHT;
 
     bool sideways = false;
+    gfxContextMatrixAutoSaveRestore matrixRestore;
+
     gfxPoint origPt = *aPt;
     if (aRunParams.isVerticalRun && !fontParams.isVerticalFont) {
         sideways = true;
-        aRunParams.context->Save();
+        matrixRestore.SetContext(aRunParams.context);
         gfxPoint p(aPt->x * aRunParams.devPerApp,
                    aPt->y * aRunParams.devPerApp);
         const Metrics& metrics = GetMetrics(eHorizontal);
@@ -2198,7 +2200,6 @@ gfxFont::Draw(const gfxTextRun *aTextRun, uint32_t aStart, uint32_t aEnd,
     aRunParams.dt->SetPermitSubpixelAA(oldSubpixelAA);
 
     if (sideways) {
-        aRunParams.context->Restore();
         // adjust updated aPt to account for the transform we were using
         gfxFloat advance = aPt->x - origPt.x;
         if (aOrientation ==
@@ -2222,7 +2223,6 @@ gfxFont::RenderSVGGlyph(gfxContext *aContext, gfxPoint aPoint,
         GetAdjustedSize() / GetFontEntry()->UnitsPerEm();
     gfxContextMatrixAutoSaveRestore matrixRestore(aContext);
 
-    aContext->Save();
     aContext->SetMatrix(
       aContext->CurrentMatrix().PreTranslate(aPoint.x, aPoint.y).
                                 PreScale(devUnitsPerSVGUnit, devUnitsPerSVGUnit));
@@ -2230,7 +2230,6 @@ gfxFont::RenderSVGGlyph(gfxContext *aContext, gfxPoint aPoint,
     aContextPaint->InitStrokeGeometry(aContext, devUnitsPerSVGUnit);
 
     GetFontEntry()->RenderSVGGlyph(aContext, aGlyphId, aContextPaint);
-    aContext->Restore();
     aContext->NewPath();
     return true;
 }
