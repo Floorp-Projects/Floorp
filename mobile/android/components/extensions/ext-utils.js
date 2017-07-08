@@ -398,6 +398,10 @@ class Tab extends TabBase {
     return {muted: false};
   }
 
+  get lastAccessed() {
+    return this.nativeTab.lastTouchedAt;
+  }
+
   get pinned() {
     return false;
   }
