@@ -82,10 +82,6 @@ public:
   {
     return mLoadEventEnd;
   }
-  DOMTimeMilliSec GetTimeToNonBlankPaint() const
-  {
-    return TimeStampToDOMHighRes(mNonBlankPaintTimeStamp);
-  }
 
   enum class DocShellState : uint8_t {
     eActive,
@@ -114,7 +110,7 @@ public:
 
   DOMTimeMilliSec TimeStampToDOM(mozilla::TimeStamp aStamp) const;
 
-  inline DOMHighResTimeStamp TimeStampToDOMHighRes(mozilla::TimeStamp aStamp) const
+  inline DOMHighResTimeStamp TimeStampToDOMHighRes(mozilla::TimeStamp aStamp)
   {
     mozilla::TimeDuration duration = aStamp - mNavigationStartTimeStamp;
     return duration.ToMilliseconds();
