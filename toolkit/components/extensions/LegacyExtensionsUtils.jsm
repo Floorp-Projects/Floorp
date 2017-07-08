@@ -145,8 +145,6 @@ class EmbeddedExtension {
         version: this.version,
       });
 
-      this.extension.isEmbedded = true;
-
       // This callback is register to the "startup" event, emitted by the Extension instance
       // after the extension manifest.json has been loaded without any errors, but before
       // starting any of the defined contexts (which give the legacy part a chance to subscribe
