@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html class="reftest-wait">
   <body>
-    <iframe id="foo" src="data:text/html,<body bgcolor='red'>FAIL</body>"></iframe> 
+    <iframe id="foo" srcdoc="<body bgcolor='red'>FAIL</body>"></iframe> 
     <script type="text/javascript">
       // Globals
       var foo = document.getElementById('foo');

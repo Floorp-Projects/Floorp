@@ -247,6 +247,7 @@ public:
                                      nsIFrame* aFrame,
                                      SizeComputationInput* aState,
                                      const mozilla::LogicalSize& aPercentBasis,
+                                     WritingMode aCBWritingMode,
                                      const nsMargin* aBorder,
                                      const nsMargin* aPadding);
   static void DisplayInitOffsetsExit(nsIFrame* aFrame,
