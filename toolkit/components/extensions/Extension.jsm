@@ -722,6 +722,8 @@ this.ExtensionData = class {
 
 const PROXIED_EVENTS = new Set(["test-harness-message", "add-permissions", "remove-permissions"]);
 
+const shutdownPromises = new Map();
+
 // We create one instance of this class per extension. |addonData|
 // comes directly from bootstrap.js when initializing.
 this.Extension = class extends ExtensionData {
@@ -1040,6 +1042,10 @@ this.Extension = class extends ExtensionData {
   }
 
   async _startup() {
+    if (shutdownPromises.has(this.id)) {
+      await shutdownPromises.get(this.id);
+    }
+
     // Create a temporary policy object for the devtools and add-on
     // manager callers that depend on it being available early.
     this.policy = new WebExtensionPolicy({
@@ -1146,6 +1152,17 @@ this.Extension = class extends ExtensionData {
   }
 
   async shutdown(reason) {
+    let promise = this._shutdown(reason);
+
+    let cleanup = () => {
+      shutdownPromises.delete(this.id);
+    };
+    shutdownPromises.set(this.id, promise.then(cleanup, cleanup));
+
+    return Promise.resolve(promise);
+  }
+
+  async _shutdown(reason) {
     try {
       if (this.startupPromise) {
         await this.startupPromise;
