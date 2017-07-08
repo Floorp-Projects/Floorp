@@ -55,6 +55,7 @@ namespace jit {
     _(LoadTypedElementResult)             \
     _(LoadObjectResult)                   \
     _(LoadTypeOfObjectResult)             \
+    _(CompareStringResult)                \
     _(CallPrintString)                    \
     _(Breakpoint)                         \
     _(MegamorphicLoadSlotByValueResult)   \
