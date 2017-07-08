@@ -1161,11 +1161,6 @@ this.Extension = class extends ExtensionData {
       return;
     }
 
-    if (this.rootURI instanceof Ci.nsIJARURI) {
-      let file = this.rootURI.JARFile.QueryInterface(Ci.nsIFileURL).file;
-      Services.ppmm.broadcastAsyncMessage("Extension:FlushJarCache", {path: file.path});
-    }
-
     if (this.cleanupFile ||
         ["ADDON_INSTALL", "ADDON_UNINSTALL", "ADDON_UPGRADE", "ADDON_DOWNGRADE"].includes(reason)) {
       StartupCache.clearAddonData(this.id);
