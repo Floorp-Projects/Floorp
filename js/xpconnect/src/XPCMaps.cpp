@@ -17,13 +17,13 @@ using namespace mozilla;
 /***************************************************************************/
 // static shared...
 
-// Note this is returning the bit pattern of the first part of the nsID, not
-// the pointer to the nsID.
+// Note this is returning the hash of the bit pattern of the first part of the nsID, not
+// the hash of the pointer to the nsID.
 
 static PLDHashNumber
 HashIIDPtrKey(const void* key)
 {
-    return *((js::HashNumber*)key);
+    return HashGeneric(*((uintptr_t*)key));
 }
 
 static bool
