@@ -523,13 +523,6 @@ class AOMExtensionWrapper extends ExtensionWrapper {
     }
   }
 
-  async _flushCache() {
-    if (this.extension && this.extension.rootURI instanceof Ci.nsIJARURI) {
-      let file = this.extension.rootURI.JARFile.QueryInterface(Ci.nsIFileURL).file;
-      await Services.ppmm.broadcastAsyncMessage("Extension:FlushJarCache", {path: file.path});
-    }
-  }
-
   get version() {
     return this.addon && this.addon.version;
   }
@@ -547,18 +540,11 @@ class AOMExtensionWrapper extends ExtensionWrapper {
     return this._install(this.file);
   }
 
-  async unload() {
-    await this._flushCache();
-    return super.unload();
-  }
-
-  async upgrade(data) {
+  upgrade(data) {
     this.startupPromise = new Promise(resolve => {
       this.resolveStartup = resolve;
     });
     this.state = "restarting";
-
-    await this._flushCache();
 
     let xpiFile = Extension.generateXPI(data);
 
