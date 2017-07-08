@@ -472,7 +472,7 @@ public:
     bool UseGraphiteShaping();
 
     // check whether format is supported on a platform or not (if unclear, returns true)
-    virtual bool IsFontFormatSupported(nsIURI *aFontURI, uint32_t aFormatFlags) { return false; }
+    virtual bool IsFontFormatSupported(uint32_t aFormatFlags) { return false; }
 
     virtual bool DidRenderingDeviceReset(DeviceResetReason* aResetReason = nullptr) { return false; }
 
