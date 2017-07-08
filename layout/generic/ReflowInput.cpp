@@ -2540,7 +2540,7 @@ SizeComputationInput::InitOffsets(WritingMode aWM,
                                   const nsMargin* aPadding,
                                   const nsStyleDisplay* aDisplay)
 {
-  DISPLAY_INIT_OFFSETS(mFrame, this, aPercentBasis, aBorder, aPadding);
+  DISPLAY_INIT_OFFSETS(mFrame, this, aPercentBasis, aWM, aBorder, aPadding);
 
   // Since we are in reflow, we don't need to store these properties anymore
   // unless they are dependent on width, in which case we store the new value.

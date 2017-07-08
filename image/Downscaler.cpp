@@ -105,8 +105,8 @@ Downscaler::BeginFrame(const nsIntSize& aOriginalSize,
   }
 
   // Allocate the buffer, which contains scanlines of the original image.
-  // pad by 15 to handle overreads by the simd code
-  size_t bufferLen = mOriginalSize.width * sizeof(uint32_t) + 15;
+  // pad to handle overreads by the simd code
+  size_t bufferLen = gfx::ConvolutionFilter::PadBytesForSIMD(mOriginalSize.width * sizeof(uint32_t));
   mRowBuffer.reset(new (fallible) uint8_t[bufferLen]);
   if (MOZ_UNLIKELY(!mRowBuffer)) {
     return NS_ERROR_OUT_OF_MEMORY;
@@ -125,8 +125,8 @@ Downscaler::BeginFrame(const nsIntSize& aOriginalSize,
   }
 
   bool anyAllocationFailed = false;
-  // pad by 15 to handle overreads by the simd code
-  const int rowSize = mTargetSize.width * sizeof(uint32_t) + 15;
+  // pad to handle overreads by the simd code
+  const size_t rowSize = gfx::ConvolutionFilter::PadBytesForSIMD(mTargetSize.width * sizeof(uint32_t));
   for (int32_t i = 0; i < mWindowCapacity; ++i) {
     mWindow[i] = new (fallible) uint8_t[rowSize];
     anyAllocationFailed = anyAllocationFailed || mWindow[i] == nullptr;
