@@ -44,6 +44,18 @@ body {
   border-bottom: 1px solid var(--in-content-header-border-color);
 }
 
+.header {
+  display: flex;
+}
+
+.header select {
+  margin-left: 4px;
+}
+
+#sectionTitle {
+  flex-grow: 1;
+}
+
 .heading > h3 {
   margin: 0;
   padding-bottom: 12px;
@@ -59,6 +71,7 @@ body {
   pointer-events: all;
   -moz-user-select: none;
   cursor: pointer;
+  text-align: center;
 }
 
 .controls {
@@ -245,7 +258,6 @@ body[dir="rtl"] .histogram {
   white-space: nowrap;
   padding: 15px;
   position: relative; /* required for position:absolute of the contained .copy-node */
-  display: block;
   overflow: hidden;
 }
 
@@ -363,6 +375,7 @@ body[dir="rtl"] .copy-node {
 
 #raw-ping-data {
   margin: 0px;
+  font-size: 15px;
 }
 
 #hide-raw-ping {
@@ -376,8 +389,4 @@ body[dir="rtl"] .copy-node {
 caption {
   font-size: larger;
   margin: 5px 0;
-}
-
-.process-picker {
-  margin: 0 0.5em;
 }
