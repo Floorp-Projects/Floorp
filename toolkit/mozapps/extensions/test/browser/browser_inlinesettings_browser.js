@@ -6,8 +6,6 @@
 
 var {Extension} = Components.utils.import("resource://gre/modules/Extension.jsm", {});
 
-Components.utils.import("resource://testing-common/ContentTask.jsm", {});
-
 var gAddon;
 var gOtherAddon;
 var gManagerWindow;
@@ -98,11 +96,9 @@ async function openDetailsBrowser(addonId) {
     "#detail-grid > rows > .inline-options-browser");
   var rows = browser.parentNode;
 
-  let url = await ContentTask.spawn(browser, {}, () => content.location.href);
-
   ok(browser, "Grid should have a browser child");
   is(browser.localName, "browser", "Grid should have a browser child");
-  is(url, addon.mAddon.optionsURL, "Browser has the expected options URL loaded")
+  is(browser.currentURI.spec, addon.mAddon.optionsURL, "Browser has the expected options URL loaded")
 
   is(browser.clientWidth, rows.clientWidth,
      "Browser should be the same width as its parent node");
@@ -117,19 +113,16 @@ async function openDetailsBrowser(addonId) {
 add_task(async function test_inline_browser_addon() {
   let browser = await openDetailsBrowser(gAddon.id);
 
+  let body = browser.contentDocument.body;
+
   function checkHeights(expected) {
-    let {clientHeight} = browser;
-    return ContentTask.spawn(browser, {expected, clientHeight}, ({expected, clientHeight}) => {
-      let {body} = content.document;
+    is(body.clientHeight, expected, `Document body should be ${expected}px tall`);
+    is(body.clientHeight, body.scrollHeight,
+       "Document body should be tall enough to fit its contents");
 
-      is(body.clientHeight, expected, `Document body should be ${expected}px tall`);
-      is(body.clientHeight, body.scrollHeight,
-         "Document body should be tall enough to fit its contents");
-
-      let heightDiff = clientHeight - expected;
-      ok(heightDiff >= 0 && heightDiff < 50,
-         `Browser should be slightly taller than the document body (${clientHeight} vs. ${expected})`);
-    });
+    let heightDiff = browser.clientHeight - expected;
+    ok(heightDiff >= 0 && heightDiff < 50,
+       `Browser should be slightly taller than the document body (${browser.clientHeight} vs. ${expected})`);
   }
 
   // Delay long enough to avoid hitting our resize rate limit.
@@ -137,25 +130,21 @@ add_task(async function test_inline_browser_addon() {
 
   await delay();
 
-  await checkHeights(300);
+  checkHeights(300);
 
   info("Increase the document height, and expect the browser to grow correspondingly");
-  await ContentTask.spawn(browser, null, () => {
-    content.document.body.classList.toggle("bigger");
-  });
+  body.classList.toggle("bigger");
 
   await delay();
 
-  await checkHeights(600);
+  checkHeights(600);
 
   info("Decrease the document height, and expect the browser to shrink correspondingly");
-  await ContentTask.spawn(browser, null, () => {
-    content.document.body.classList.toggle("bigger");
-  });
+  body.classList.toggle("bigger");
 
   await delay();
 
-  await checkHeights(300);
+  checkHeights(300);
 
   await new Promise(resolve =>
     gCategoryUtilities.openType("extension", resolve));
