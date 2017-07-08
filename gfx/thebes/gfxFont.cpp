@@ -1645,7 +1645,7 @@ private:
         buf.mGlyphs = mGlyphBuffer;
         buf.mNumGlyphs = mNumGlyphs;
 
-        gfxContext::AzureState state = mRunParams.context->CurrentState();
+        const gfxContext::AzureState &state = mRunParams.context->CurrentState();
         if (mRunParams.drawMode & DrawMode::GLYPH_FILL) {
             if (state.pattern || mFontParams.contextPaint) {
                 Pattern *pat;
@@ -1661,7 +1661,9 @@ private:
                 }
                 if (!fillPattern) {
                     if (state.pattern) {
-                        pat = state.pattern->GetPattern(mRunParams.dt,
+                        RefPtr<gfxPattern> statePattern =
+                          mRunParams.context->CurrentState().pattern;
+                        pat = statePattern->GetPattern(mRunParams.dt,
                                       state.patternTransformChanged ?
                                           &state.patternTransform : nullptr);
                     } else {
