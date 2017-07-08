@@ -428,7 +428,7 @@ function openTabPrompt(domWin, tabPrompt, args) {
         // there's other stuff in nsWindowWatcher::OpenWindowInternal
         // that we might need to do here as well.
 
-	Services.tm.spinEventLoopUntil(() => !args.promptActive);
+        Services.tm.spinEventLoopUntil(() => !args.promptActive);
         delete args.promptActive;
 
         if (args.promptAborted)

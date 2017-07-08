@@ -183,6 +183,15 @@ function yesterday(date) {
 }
 
 /**
+ * Return tomorrow's date with the same time.
+ */
+function tomorrow(date) {
+  let d = new Date(date);
+  d.setDate(d.getDate() + 1);
+  return d;
+}
+
+/**
  * This returns a short date string of the form YYYY/MM/DD.
  */
 function shortDateString(date) {
@@ -280,10 +289,11 @@ var Settings = {
 var PingPicker = {
   viewCurrentPingData: null,
   _archivedPings: null,
+  TYPE_ALL: bundle.GetStringFromName("telemetryPingTypeAll"),
 
   attachObservers() {
-    let elements = document.getElementsByName("choose-ping-source");
-    for (let el of elements) {
+    let pingSourceElements = document.getElementsByName("choose-ping-source");
+    for (let el of pingSourceElements) {
       el.addEventListener("change", () => this.onPingSourceChanged());
     }
 
@@ -296,18 +306,24 @@ var PingPicker = {
       this._updateCurrentPingData();
     });
 
-    document.getElementById("choose-ping-week").addEventListener("change", () => {
-      this._renderPingList();
+    document.getElementById("choose-ping-id").addEventListener("change", () => {
       this._updateArchivedPingData();
     });
-    document.getElementById("choose-ping-id").addEventListener("change", () => {
-      this._updateArchivedPingData()
+    document.getElementById("choose-ping-type").addEventListener("change", () => {
+      this.filterDisplayedPings();
     });
+
 
     document.getElementById("newer-ping")
             .addEventListener("click", () => this._movePingIndex(-1));
     document.getElementById("older-ping")
             .addEventListener("click", () => this._movePingIndex(1));
+
+    document.addEventListener("click", (ev) => {
+      if (ev.target.querySelector("#ping-picker")) {
+        document.getElementById("ping-picker").classList.add("hidden");
+      }
+    });
     document.getElementById("choose-payload")
             .addEventListener("change", () => displayPingData(gPingData));
     document.getElementById("scalars-processes")
@@ -320,6 +336,10 @@ var PingPicker = {
             .addEventListener("change", () => displayPingData(gPingData));
     document.getElementById("events-processes")
             .addEventListener("change", () => displayPingData(gPingData));
+    Array.from(document.querySelectorAll(".change-ping")).forEach(el =>
+      el.addEventListener("click", () =>
+        document.getElementById("ping-picker").classList.remove("hidden"))
+    );
   },
 
   onPingSourceChanged() {
@@ -333,13 +353,41 @@ var PingPicker = {
   render() {
     let pings = bundle.GetStringFromName("pingExplanationLink");
     let pingLink = "<a href=\"http://gecko.readthedocs.io/en/latest/toolkit/components/telemetry/telemetry/concepts/pings.html\">&quot;" + pings + "&quot;</a>";
-    let pingName = "<span class=\"change-ping\">" + this._getSelectedPingName() + "</span>";
+    let pingName = this._getSelectedPingName();
 
-    let explanation = bundle.formatStringFromName("pingExplanation", [pingLink, pingName], 2);
+    let pingDate = document.getElementById("ping-date");
+    pingDate.textContent = pingName;
+    pingDate.setAttribute("title", pingName);
+
+    // Display the type and controls if the ping is not current
+    let pingType = document.getElementById("ping-type");
+    let older = document.getElementById("older-ping");
+    let newer = document.getElementById("newer-ping");
+    if (pingName !== "current") {
+      pingType.hidden = false;
+      older.hidden = false;
+      newer.hidden = false;
+      pingType.textContent = this._getSelectedPingType();
+    } else {
+      pingType.hidden = true;
+      older.hidden = true;
+      newer.hidden = true;
+    }
+
+    if (pingName !== "current") {
+      pingName += ", " + this._getSelectedPingType();
+    }
+    let pingNameHtml = "<span class=\"change-ping\">" + pingName + "</span>";
+
+    let explanation = bundle.formatStringFromName("pingExplanation", [pingLink, pingNameHtml], 2);
     let pingExplanation = document.getElementById("ping-explanation");
 
     // eslint-disable-next-line no-unsanitized/property
     pingExplanation.innerHTML = explanation;
+    pingExplanation.querySelector(".change-ping").addEventListener("click", () =>
+      document.getElementById("ping-picker").classList.remove("hidden")
+    );
+
     GenericSubsection.deleteAllSubSections();
   },
 
@@ -378,94 +426,126 @@ var PingPicker = {
 
   _updateArchivedPingData() {
     let id = this._getSelectedPingId();
-    return TelemetryArchive.promiseArchivedPingById(id)
-                           .then((ping) => displayPingData(ping, true));
+    let res = Promise.resolve();
+    if (id) {
+      res = TelemetryArchive.promiseArchivedPingById(id)
+                            .then((ping) => displayPingData(ping, true));
+    }
+    return res;
   },
 
   async _updateArchivedPingList(pingList) {
     // The archived ping list is sorted in ascending timestamp order,
     // but descending is more practical for the operations we do here.
     pingList.reverse();
-
     this._archivedPings = pingList;
-
-    // Collect the start dates for all the weeks we have pings for.
-    let weekStart = (date) => {
-      let weekDay = (date.getDay() + 6) % 7;
-      let monday = new Date(date);
-      monday.setDate(date.getDate() - weekDay);
-      return TelemetryUtils.truncateToDays(monday);
-    };
-
-    let weekStartDates = new Set();
-    for (let p of pingList) {
-      weekStartDates.add(weekStart(new Date(p.timestampCreated)).getTime());
-    }
-
-    // Build a list of the week date ranges we have ping data for.
-    let plusOneWeek = (date) => {
-      let d = date;
-      d.setDate(d.getDate() + 7);
-      return d;
-    };
-
-    this._weeks = Array.from(weekStartDates.values(), startTime => ({
-      startDate: new Date(startTime),
-      endDate: plusOneWeek(new Date(startTime)),
-    }));
-
     // Render the archive data.
-    this._renderWeeks();
     this._renderPingList();
-
     // Update the displayed ping.
     await this._updateArchivedPingData();
   },
 
-  _renderWeeks() {
-    let weekSelector = document.getElementById("choose-ping-week");
-    removeAllChildNodes(weekSelector);
-
-    for (let week of this._weeks) {
-      let text = shortDateString(week.startDate)
-                 + " - " + shortDateString(yesterday(week.endDate));
-
-      let option = document.createElement("option");
-      let content = document.createTextNode(text);
-      option.appendChild(content);
-      weekSelector.appendChild(option);
-    }
-  },
-
-  _getSelectedWeek() {
-    let weekSelector = document.getElementById("choose-ping-week");
-    return this._weeks[weekSelector.selectedIndex];
-  },
-
-  _renderPingList(id = null) {
+  _renderPingList() {
     let pingSelector = document.getElementById("choose-ping-id");
-    removeAllChildNodes(pingSelector);
+    Array.from(pingSelector.children).forEach((child) => removeAllChildNodes(child));
 
-    let weekRange = this._getSelectedWeek();
-    let pings = this._archivedPings.filter(
-      (p) => p.timestampCreated >= weekRange.startDate.getTime() &&
-             p.timestampCreated < weekRange.endDate.getTime());
-
-    for (let p of pings) {
+    let pingTypes = new Set();
+    pingTypes.add(this.TYPE_ALL);
+    let todayString =  (new Date()).toDateString();
+    let yesterdayString = yesterday(new Date()).toDateString();
+    for (let p of this._archivedPings) {
+      pingTypes.add(p.type);
       let date = new Date(p.timestampCreated);
-      let text = shortDateString(date)
-                 + " " + shortTimeString(date)
-                 + " - " + p.type;
+      let datetext = date.toLocaleDateString() + " " + shortTimeString(date);
+      let text = datetext + ", " + p.type;
 
       let option = document.createElement("option");
       let content = document.createTextNode(text);
       option.appendChild(content);
       option.setAttribute("value", p.id);
-      if (id && p.id == id) {
-        option.selected = true;
+      option.dataset.type = p.type;
+      option.dataset.date = datetext;
+
+      if (date.toDateString() == todayString) {
+        pingSelector.children[0].appendChild(option);
+      } else if (date.toDateString() == yesterdayString) {
+        pingSelector.children[1].appendChild(option);
+      } else {
+        pingSelector.children[2].appendChild(option);
       }
-      pingSelector.appendChild(option);
     }
+    this._renderPingTypes(pingTypes);
+  },
+
+  _renderPingTypes(pingTypes) {
+    let pingTypeSelector = document.getElementById("choose-ping-type");
+    removeAllChildNodes(pingTypeSelector);
+    pingTypes.forEach((type) => {
+      let option = document.createElement("option");
+      option.appendChild(document.createTextNode(type));
+      option.setAttribute("value", type);
+      pingTypeSelector.appendChild(option);
+    });
+  },
+
+  _movePingIndex(offset) {
+    if (this.viewCurrentPingData) {
+      return;
+    }
+    let typeSelector = document.getElementById("choose-ping-type");
+    let type = typeSelector.selectedOptions.item(0).value;
+
+    let id = this._getSelectedPingId();
+    let index = this._archivedPings.findIndex((p) => p.id == id);
+    let newIndex = Math.min(Math.max(0, index + offset), this._archivedPings.length - 1);
+
+    let pingList;
+    if (offset > 0) {
+      pingList = this._archivedPings.slice(newIndex);
+    } else {
+      pingList = this._archivedPings.slice(0, newIndex);
+      pingList.reverse();
+    }
+
+    let ping = pingList.find((p) => {
+      return type == this.TYPE_ALL || p.type == type;
+    });
+
+    if (ping) {
+      this.selectPing(ping);
+      this._updateArchivedPingData();
+    }
+  },
+
+  selectPing(ping) {
+    let pingSelector = document.getElementById("choose-ping-id");
+    // Use some() to break if we find the ping.
+    Array.from(pingSelector.children).some((group) => {
+      return Array.from(group.children).some((option) => {
+        if (option.value == ping.id) {
+          option.selected = true;
+          return true;
+        }
+        return false;
+      });
+    });
+  },
+
+  filterDisplayedPings() {
+    let pingSelector = document.getElementById("choose-ping-id");
+    let typeSelector = document.getElementById("choose-ping-type");
+    let type = typeSelector.selectedOptions.item(0).value;
+    let first = true;
+    Array.from(pingSelector.children).forEach((group) => {
+      Array.from(group.children).forEach((option) => {
+        if (first && option.dataset.type == type) {
+          option.selected = true;
+          first = false;
+        }
+        option.hidden = (type != this.TYPE_ALL) && (option.dataset.type != type);
+      });
+    });
+    this._updateArchivedPingData();
   },
 
   _getSelectedPingName() {
@@ -473,29 +553,19 @@ var PingPicker = {
 
     let pingSelector = document.getElementById("choose-ping-id");
     let selected = pingSelector.selectedOptions.item(0);
-    return selected.textContent;
+    return selected.dataset.date;
+  },
+
+  _getSelectedPingType() {
+    let pingSelector = document.getElementById("choose-ping-id");
+    let selected = pingSelector.selectedOptions.item(0);
+    return selected.dataset.type;
   },
 
   _getSelectedPingId() {
     let pingSelector = document.getElementById("choose-ping-id");
     let selected = pingSelector.selectedOptions.item(0);
     return selected.getAttribute("value");
-  },
-
-  _movePingIndex(offset) {
-    const id = this._getSelectedPingId();
-    const index = this._archivedPings.findIndex((p) => p.id == id);
-    const newIndex = Math.min(Math.max(index + offset, 0), this._archivedPings.length - 1);
-    const ping = this._archivedPings[newIndex];
-
-    const weekIndex = this._weeks.findIndex(
-      (week) => ping.timestampCreated >= week.startDate.getTime() &&
-                ping.timestampCreated < week.endDate.getTime());
-    const options = document.getElementById("choose-ping-week").options;
-    options.item(weekIndex).selected = true;
-
-    this._renderPingList(ping.id);
-    this._updateArchivedPingData();
   },
 
   _showRawPingData() {

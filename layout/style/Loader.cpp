@@ -891,6 +891,11 @@ SheetLoadData::OnStreamComplete(nsIUnicharStreamLoader* aLoader,
       mLoader->SheetComplete(this, NS_ERROR_NOT_AVAILABLE);
       return NS_OK;
     }
+
+    nsAutoCString sourceMapURL;
+    if (nsContentUtils::GetSourceMapURL(httpChannel, sourceMapURL)) {
+      mSheet->SetSourceMapURL(NS_ConvertUTF8toUTF16(sourceMapURL));
+    }
   }
 
   nsAutoCString contentType;

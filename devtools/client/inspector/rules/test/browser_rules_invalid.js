@@ -10,10 +10,10 @@
 const TEST_URI = `
   <style>
     div {
-	background: #fff;
-	font-family: sans-serif;
-	url(display-table.min.htc);
-   }
+        background: #fff;
+        font-family: sans-serif;
+        url(display-table.min.htc);
+    }
  </style>
  <body>
     <div id="testid" class="testclass">Styled Node</div>

@@ -162,6 +162,8 @@ bool StartMacSandbox(MacSandboxInfo aInfo, std::string &aErrorMessage)
       params.push_back(aInfo.level == 3 ? "TRUE" : "FALSE");
       params.push_back("MAC_OS_MINOR_9");
       params.push_back(OSXVersion::OSXVersionMinor() == 9 ? "TRUE" : "FALSE");
+      params.push_back("MAC_OS_MINOR_MIN_13");
+      params.push_back(OSXVersion::OSXVersionMinor() >= 13 ? "TRUE" : "FALSE");
       params.push_back("APP_PATH");
       params.push_back(aInfo.appPath.c_str());
       params.push_back("APP_BINARY_PATH");
