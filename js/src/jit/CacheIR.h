@@ -145,6 +145,7 @@ class TypedOperandId : public OperandId
     _(In)                   \
     _(HasOwn)               \
     _(TypeOf)               \
+    _(Compare)              \
     _(Call)
 
 enum class CacheKind : uint8_t
@@ -1411,6 +1412,19 @@ class MOZ_RAII CallIRGenerator : public IRGenerator
                     HandleValueArray args);
 
     OptStrategy getOptStrategy(bool* optimizeAfterCall = nullptr);
+    bool tryAttachStub();
+};
+
+class MOZ_RAII CompareIRGenerator : public IRGenerator
+{
+    JSOp op_;
+    HandleValue lhsVal_;
+    HandleValue rhsVal_;
+
+  public:
+    CompareIRGenerator(JSContext* cx, HandleScript, jsbytecode* pc, ICState::Mode mode,
+                       JSOp op, HandleValue lhsVal, HandleValue rhsVal);
+
     bool tryAttachStub();
 };
 
