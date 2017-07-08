@@ -1629,11 +1629,11 @@ GeckoDriver.prototype.switchToFrame = function* (cmd, resp) {
     if (win.document.readyState == "complete") {
       return;
     } else if (win.document.readyState == "interactive") {
-      let documentURI = win.document.documentURI;
-      if (documentURI.startsWith("about:certerror")) {
+      let baseURI = win.document.baseURI;
+      if (baseURI.startsWith("about:certerror")) {
         throw new InsecureCertificateError();
-      } else if (otherErrorsExpr.exec(documentURI)) {
-        throw new UnknownError("Reached error page: " + documentURI);
+      } else if (otherErrorsExpr.exec(win.document.baseURI)) {
+        throw new UnknownError("Error loading page");
       }
     }
 
