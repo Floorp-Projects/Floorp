@@ -112,6 +112,81 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "legacyExtensionsEnabled",
 document.addEventListener("load", initialize, true);
 window.addEventListener("unload", shutdown);
 
+class MessageDispatcher {
+  constructor(target) {
+    this.listeners = new Map();
+    this.target = target;
+  }
+
+  addMessageListener(name, handler) {
+    if (!this.listeners.has(name)) {
+      this.listeners.set(name, new Set());
+    }
+
+    this.listeners.get(name).add(handler);
+  }
+
+  removeMessageListener(name, handler) {
+    if (this.listeners.has(name)) {
+      this.listeners.get(name).delete(handler);
+    }
+  }
+
+  sendAsyncMessage(name, data) {
+    for (let handler of this.listeners.get(name) || new Set()) {
+      Promise.resolve().then(() => {
+        handler.receiveMessage({
+          name,
+          data,
+          target: this.target,
+        });
+      });
+    }
+  }
+}
+
+/**
+ * A mock FrameMessageManager global to allow frame scripts to run in
+ * non-top-level, non-remote <browser>s as if they were top-level or
+ * remote.
+ *
+ * @param {Element} browser
+ *        A XUL <browser> element.
+ */
+class FakeFrameMessageManager {
+  constructor(browser) {
+    let dispatcher = new MessageDispatcher(browser);
+    let frameDispatcher = new MessageDispatcher(null);
+
+    let bind = (object, method) => object[method].bind(object);
+
+    this.sendAsyncMessage = bind(frameDispatcher, "sendAsyncMessage");
+    this.addMessageListener = bind(dispatcher, "addMessageListener");
+    this.removeMessageListener = bind(dispatcher, "removeMessageListener");
+
+    this.frame = {
+      get content() {
+        return browser.contentWindow;
+      },
+
+      get docShell() {
+        return browser.docShell;
+      },
+
+      addEventListener: bind(browser, "addEventListener"),
+      removeEventListener: bind(browser, "removeEventListener"),
+
+      sendAsyncMessage: bind(dispatcher, "sendAsyncMessage"),
+      addMessageListener: bind(frameDispatcher, "addMessageListener"),
+      removeMessageListener: bind(frameDispatcher, "removeMessageListener"),
+    }
+  }
+
+  loadFrameScript(url) {
+    Services.scriptloader.loadSubScript(url, Object.create(this.frame));
+  }
+}
+
 function promiseEvent(event, target, capture = false) {
   return new Promise(resolve => {
     target.addEventListener(event, resolve, {capture, once: true});
@@ -3712,7 +3787,6 @@ var gDetailView = {
     browser.setAttribute("type", "content");
     browser.setAttribute("disableglobalhistory", "true");
     browser.setAttribute("class", "inline-options-browser");
-    browser.setAttribute("forcemessagemanager", "true");
 
     let {optionsURL} = this._addon;
     let remote = !E10SUtils.canLoadURIInProcess(optionsURL, Services.appinfo.PROCESS_TYPE_DEFAULT);
@@ -3732,7 +3806,9 @@ var gDetailView = {
     browser.clientTop;
 
     await readyPromise;
-    ExtensionParent.apiManager.emit("extension-browser-inserted", browser);
+    if (remote) {
+      ExtensionParent.apiManager.emit("extension-browser-inserted", browser);
+    }
 
     return new Promise(resolve => {
       let messageListener = {
@@ -3744,7 +3820,7 @@ var gDetailView = {
         },
       };
 
-      let mm = browser.messageManager;
+      let mm = browser.messageManager || new FakeFrameMessageManager(browser);
       mm.loadFrameScript("chrome://extensions/content/ext-browser-content.js",
                          false);
       mm.addMessageListener("Extension:BrowserContentLoaded", messageListener);
