@@ -33,7 +33,7 @@ static bool matchNodeUnicode(const PLDHashEntryHdr* aHdr, const void* key)
 static PLDHashNumber hashUnicodeValue(const void* key)
 {
   // key is actually the unicode value
-  return PLDHashNumber(NS_PTR_TO_INT32(key));
+  return HashGeneric(key);
 }
 
 static const PLDHashTableOps UnicodeToEntityOps = {
