@@ -752,6 +752,10 @@ this.Extension = class extends ExtensionData {
     if (this.remote && processCount !== 1) {
       throw new Error("Out-of-process WebExtensions are not supported with multiple child processes");
     }
+    if (this.remote && !Services.prefs.getBoolPref("layers.popups.compositing.enabled", false)) {
+      Cu.reportError(new Error("Remote extensions should not be enabled without also setting " +
+                               "the layers.popups.compositing.enabled preference to true"));
+    }
 
     // This is filled in the first time an extension child is created.
     this.parentMessageManager = null;
