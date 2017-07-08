@@ -244,15 +244,6 @@ public:
     return GetDOMTiming()->GetLoadEventEnd();
   }
 
-  DOMTimeMilliSec TimeToNonBlankPaint() const
-  {
-    if (!nsContentUtils::IsPerformanceTimingEnabled() ||
-        nsContentUtils::ShouldResistFingerprinting()) {
-      return 0;
-    }
-    return GetDOMTiming()->GetTimeToNonBlankPaint();
-  }
-
 private:
   ~PerformanceTiming();
 
