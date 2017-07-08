@@ -2,6 +2,8 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
+Components.utils.import("resource://testing-common/ContentTask.jsm", {});
+
 // Wrapper to run a test that consists of:
 //  1. opening the add-ons manager viewing the list of extensions
 //  2. installing an extension (using the provider installer callable)
@@ -31,9 +33,11 @@ async function runTest(installer) {
   var browser = mgrWindow.document.querySelector("#detail-grid > rows > .inline-options-browser");
   var rows = browser.parentNode;
 
+  let url = await ContentTask.spawn(browser, {}, () => content.location.href);
+
   ok(browser, "Grid should have a browser child");
   is(browser.localName, "browser", "Grid should have a browser child");
-  is(browser.currentURI.spec, element.mAddon.optionsURL, "Browser has the expected options URL loaded")
+  is(url, element.mAddon.optionsURL, "Browser has the expected options URL loaded")
 
   is(browser.clientWidth, rows.clientWidth,
      "Browser should be the same width as its parent node");
