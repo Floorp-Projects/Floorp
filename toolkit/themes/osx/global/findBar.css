@@ -148,6 +148,7 @@ label.findbar-find-fast:-moz-lwtheme,
 
 .findbar-textbox:-moz-locale-dir(rtl) {
   border-radius: 0 10000px 10000px 0;
+  background-position-x: calc(100% - 5px);
 }
 
 @media (-moz-mac-yosemite-theme) {

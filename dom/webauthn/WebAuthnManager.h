@@ -62,8 +62,7 @@ public:
   static WebAuthnManager* Get();
 
   void
-  FinishMakeCredential(nsTArray<uint8_t>& aRegBuffer,
-                       nsTArray<uint8_t>& aSigBuffer);
+  FinishMakeCredential(nsTArray<uint8_t>& aRegBuffer);
 
   void
   FinishGetAssertion(nsTArray<uint8_t>& aCredentialId,
