@@ -5245,16 +5245,15 @@ nsDisplayText::RenderToContext(gfxContext* aCtx, nsDisplayListBuilder* aBuilder,
     LayoutDeviceRect::FromAppUnits(mVisibleRect, A2D);
   extraVisible.Inflate(1);
 
-  gfxContextAutoSaveRestore save(aCtx);
-
   gfxRect pixelVisible(extraVisible.x, extraVisible.y,
                        extraVisible.width, extraVisible.height);
   pixelVisible.Inflate(2);
   pixelVisible.RoundOut();
 
-  if (!aBuilder->IsForGenerateGlyphMask() &&
-      !aBuilder->IsForPaintingSelectionBG() &&
-      !aIsRecording) {
+  bool willClip = !aBuilder->IsForGenerateGlyphMask() &&
+                  !aBuilder->IsForPaintingSelectionBG() &&
+                  !aIsRecording;
+  if (willClip) {
     aCtx->NewPath();
     aCtx->Rectangle(pixelVisible);
     aCtx->Clip();
@@ -5263,17 +5262,20 @@ nsDisplayText::RenderToContext(gfxContext* aCtx, nsDisplayListBuilder* aBuilder,
   NS_ASSERTION(mVisIStartEdge >= 0, "illegal start edge");
   NS_ASSERTION(mVisIEndEdge >= 0, "illegal end edge");
 
+  gfxContextMatrixAutoSaveRestore matrixSR;
+
   nsPoint framePt = ToReferenceFrame();
   if (f->StyleContext()->IsTextCombined()) {
     float scaleFactor = GetTextCombineScaleFactor(f);
     if (scaleFactor != 1.0f) {
+      matrixSR.SetContext(aCtx);
       // Setup matrix to compress text for text-combine-upright if
       // necessary. This is done here because we want selection be
       // compressed at the same time as text.
       gfxPoint pt = nsLayoutUtils::PointToGfxPoint(framePt, A2D);
       gfxMatrix mat = aCtx->CurrentMatrix()
         .PreTranslate(pt).PreScale(scaleFactor, 1.0).PreTranslate(-pt);
-      aCtx->SetMatrix(mat);
+      aCtx->SetMatrix (mat);
     }
   }
   nsTextFrame::PaintTextParams params(aCtx);
@@ -5290,6 +5292,10 @@ nsDisplayText::RenderToContext(gfxContext* aCtx, nsDisplayListBuilder* aBuilder,
   }
 
   f->PaintText(params, *this, mOpacity);
+
+  if (willClip) {
+    aCtx->PopClip();
+  }
 }
 
 void
