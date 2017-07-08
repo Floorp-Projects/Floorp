@@ -41,9 +41,10 @@
     <dimen name="tab_panel_divider_vertical_padding">12dp</dimen>
 
     <dimen name="tablet_tab_strip_height">48dp</dimen>
-    <dimen name="tablet_tab_strip_item_width">208dp</dimen>
-    <dimen name="tablet_tab_strip_fading_edge_size">15dp</dimen>
-    <dimen name="tablet_tab_strip_item_margin">-14dp</dimen>
+    <dimen name="tablet_tab_strip_item_width">178dp</dimen>
+    <dimen name="tablet_tab_strip_item_height">40dp</dimen>
+    <dimen name="tablet_tab_strip_fading_edge_size">0dp</dimen>
+    <dimen name="tablet_tab_strip_item_margin">0dp</dimen>
     <dimen name="tablet_tab_strip_divider_width">1dp</dimen>
     <dimen name="tablet_tab_strip_divider_height">30dp</dimen>
     <dimen name="tablet_tab_strip_divider_padding_bottom">6dp</dimen>

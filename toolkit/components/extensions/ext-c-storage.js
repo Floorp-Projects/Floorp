@@ -2,7 +2,12 @@
 
 XPCOMUtils.defineLazyModuleGetter(this, "ExtensionStorage",
                                   "resource://gre/modules/ExtensionStorage.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "TelemetryStopwatch",
+                                  "resource://gre/modules/TelemetryStopwatch.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
+
+const storageGetHistogram = "WEBEXT_STORAGE_LOCAL_GET_MS";
+const storageSetHistogram = "WEBEXT_STORAGE_LOCAL_SET_MS";
 
 this.storage = class extends ExtensionAPI {
   getAPI(context) {
@@ -28,17 +33,35 @@ this.storage = class extends ExtensionAPI {
     return {
       storage: {
         local: {
-          get: function(keys) {
-            keys = sanitize(keys);
-            return context.childManager.callParentAsyncFunction("storage.local.get", [
-              keys,
-            ]);
+          get: async function(keys) {
+            const stopwatchKey = {};
+            TelemetryStopwatch.start(storageGetHistogram, stopwatchKey);
+            try {
+              keys = sanitize(keys);
+              let result = await context.childManager.callParentAsyncFunction("storage.local.get", [
+                keys,
+              ]);
+              TelemetryStopwatch.finish(storageGetHistogram, stopwatchKey);
+              return result;
+            } catch (e) {
+              TelemetryStopwatch.cancel(storageGetHistogram, stopwatchKey);
+              throw e;
+            }
           },
-          set: function(items) {
-            items = sanitize(items);
-            return context.childManager.callParentAsyncFunction("storage.local.set", [
-              items,
-            ]);
+          set: async function(items) {
+            const stopwatchKey = {};
+            TelemetryStopwatch.start(storageSetHistogram, stopwatchKey);
+            try {
+              items = sanitize(items);
+              let result = await context.childManager.callParentAsyncFunction("storage.local.set", [
+                items,
+              ]);
+              TelemetryStopwatch.finish(storageSetHistogram, stopwatchKey);
+              return result;
+            } catch (e) {
+              TelemetryStopwatch.cancel(storageSetHistogram, stopwatchKey);
+              throw e;
+            }
           },
         },
 

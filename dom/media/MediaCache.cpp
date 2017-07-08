@@ -741,11 +741,63 @@ static int32_t GetMaxBlocks()
 {
   // We look up the cache size every time. This means dynamic changes
   // to the pref are applied.
-  // Cache size is in KB
-  int32_t cacheSize = Preferences::GetInt("media.cache_size", 500*1024);
-  int64_t maxBlocks = static_cast<int64_t>(cacheSize)*1024/MediaCache::BLOCK_SIZE;
-  maxBlocks = std::max<int64_t>(maxBlocks, 1);
-  return int32_t(std::min<int64_t>(maxBlocks, INT32_MAX));
+  const uint32_t cacheSizeKb =
+    std::min(MediaPrefs::MediaCacheSizeKb(), uint32_t(INT32_MAX) * 2);
+  // Ensure we can divide BLOCK_SIZE by 1024.
+  static_assert(MediaCache::BLOCK_SIZE % 1024 == 0,
+                "BLOCK_SIZE should be a multiple of 1024");
+  // Ensure BLOCK_SIZE/1024 is at least 2.
+  static_assert(MediaCache::BLOCK_SIZE / 1024 >= 2,
+                "BLOCK_SIZE / 1024 should be at least 2");
+  // Ensure we can convert BLOCK_SIZE/1024 to a uint32_t without truncation.
+  static_assert(MediaCache::BLOCK_SIZE / 1024 <= int64_t(UINT32_MAX),
+                "BLOCK_SIZE / 1024 should be at most UINT32_MAX");
+  // Since BLOCK_SIZE is a strict multiple of 1024,
+  // cacheSizeKb * 1024 / BLOCK_SIZE == cacheSizeKb / (BLOCK_SIZE / 1024),
+  // but the latter formula avoids a potential overflow from `* 1024`.
+  // And because BLOCK_SIZE/1024 is at least 2, the maximum cache size
+  // INT32_MAX*2 will give a maxBlocks that can fit in an int32_t.
+  constexpr uint32_t blockSizeKb = uint32_t(MediaCache::BLOCK_SIZE / 1024);
+  const int32_t maxBlocks = int32_t(cacheSizeKb / blockSizeKb);
+  return std::max(maxBlocks, int32_t(1));
+}
+
+// Allowed range is whatever can be accessed with an int32_t block index.
+static bool
+IsOffsetAllowed(int64_t aOffset)
+{
+  return aOffset < (int64_t(INT32_MAX) + 1) * MediaCache::BLOCK_SIZE &&
+         aOffset >= 0;
+}
+
+// Convert 64-bit offset to 32-bit block index.
+// Assumes offset range-check was already done.
+static int32_t
+OffsetToBlockIndexUnchecked(int64_t aOffset)
+{
+  // Still check for allowed range in debug builds, to catch out-of-range
+  // issues early during development.
+  MOZ_ASSERT(IsOffsetAllowed(aOffset));
+  return int32_t(aOffset / MediaCache::BLOCK_SIZE);
+}
+
+// Convert 64-bit offset to 32-bit block index. -1 if out of allowed range.
+static int32_t
+OffsetToBlockIndex(int64_t aOffset)
+{
+  return IsOffsetAllowed(aOffset) ? OffsetToBlockIndexUnchecked(aOffset) : -1;
+}
+
+// Convert 64-bit offset to 32-bit offset inside a block.
+// Will not fail (even if offset is outside allowed range), so there is no
+// need to check for errors.
+static int32_t
+OffsetInBlock(int64_t aOffset)
+{
+  // Still check for allowed range in debug builds, to catch out-of-range
+  // issues early during development.
+  MOZ_ASSERT(IsOffsetAllowed(aOffset));
+  return int32_t(aOffset % MediaCache::BLOCK_SIZE);
 }
 
 int32_t
@@ -754,8 +806,11 @@ MediaCache::FindBlockForIncomingData(TimeStamp aNow,
 {
   mReentrantMonitor.AssertCurrentThreadIn();
 
-  int32_t blockIndex = FindReusableBlock(aNow, aStream,
-      aStream->mChannelOffset/BLOCK_SIZE, INT32_MAX);
+  int32_t blockIndex =
+    FindReusableBlock(aNow,
+                      aStream,
+                      OffsetToBlockIndexUnchecked(aStream->mChannelOffset),
+                      INT32_MAX);
 
   if (blockIndex < 0 || !IsBlockFree(blockIndex)) {
     // The block returned is already allocated.
@@ -784,7 +839,8 @@ MediaCache::BlockIsReusable(int32_t aBlockIndex)
   for (uint32_t i = 0; i < block->mOwners.Length(); ++i) {
     MediaCacheStream* stream = block->mOwners[i].mStream;
     if (stream->mPinCount > 0 ||
-        stream->mStreamOffset/BLOCK_SIZE == block->mOwners[i].mStreamBlock) {
+        uint32_t(OffsetToBlockIndex(stream->mStreamOffset)) ==
+          block->mOwners[i].mStreamBlock) {
       return false;
     }
   }
@@ -1327,14 +1383,17 @@ MediaCache::Update()
       if (enableReading) {
         for (uint32_t j = 0; j < i; ++j) {
           MediaCacheStream* other = mStreams[j];
-          if (other->mResourceID == stream->mResourceID &&
-              !other->mClosed && !other->mClient->IsSuspended() &&
-              other->mChannelOffset/BLOCK_SIZE == desiredOffset/BLOCK_SIZE) {
+          if (other->mResourceID == stream->mResourceID && !other->mClosed &&
+              !other->mClient->IsSuspended() &&
+              OffsetToBlockIndexUnchecked(other->mChannelOffset) ==
+                OffsetToBlockIndexUnchecked(desiredOffset)) {
             // This block is already going to be read by the other stream.
             // So don't try to read it from this stream as well.
             enableReading = false;
-            LOG("Stream %p waiting on same block (%" PRId64 ") from stream %p",
-                stream, desiredOffset/BLOCK_SIZE, other);
+            LOG("Stream %p waiting on same block (%" PRId32 ") from stream %p",
+                stream,
+                OffsetToBlockIndexUnchecked(desiredOffset),
+                other);
             break;
           }
         }
@@ -1347,7 +1406,8 @@ MediaCache::Update()
         // Round seek offset down to the start of the block. This is essential
         // because we don't want to think we have part of a block already
         // in mPartialBlockBuffer.
-        stream->mChannelOffset = (desiredOffset/BLOCK_SIZE)*BLOCK_SIZE;
+        stream->mChannelOffset =
+          OffsetToBlockIndexUnchecked(desiredOffset) * BLOCK_SIZE;
         actions[i] = stream->mCacheSuspended ? SEEK_AND_RESUME : SEEK;
       } else if (enableReading && stream->mCacheSuspended) {
         actions[i] = RESUME;
@@ -1550,7 +1610,8 @@ MediaCache::AllocateAndWriteBlock(
 {
   mReentrantMonitor.AssertCurrentThreadIn();
 
-  int32_t streamBlockIndex = aStream->mChannelOffset/BLOCK_SIZE;
+  int32_t streamBlockIndex =
+    OffsetToBlockIndexUnchecked(aStream->mChannelOffset);
 
   // Remove all cached copies of this block
   ResourceStreamIterator iter(this, aStream->mResourceID);
@@ -1749,10 +1810,16 @@ MediaCache::NoteSeek(MediaCacheStream* aStream, int64_t aOldOffset)
     // We seeked forward. Convert blocks from readahead to played.
     // Any readahead block that intersects the seeked-over range must
     // be converted.
-    int32_t blockIndex = aOldOffset/BLOCK_SIZE;
+    int32_t blockIndex = OffsetToBlockIndex(aOldOffset);
+    if (blockIndex < 0) {
+      return;
+    }
     int32_t endIndex =
-      std::min<int64_t>((aStream->mStreamOffset + BLOCK_SIZE - 1)/BLOCK_SIZE,
-             aStream->mBlocks.Length());
+      std::min(OffsetToBlockIndex(aStream->mStreamOffset + (BLOCK_SIZE - 1)),
+               int32_t(aStream->mBlocks.Length()));
+    if (endIndex < 0) {
+      return;
+    }
     TimeStamp now = TimeStamp::Now();
     while (blockIndex < endIndex) {
       int32_t cacheBlockIndex = aStream->mBlocks[blockIndex];
@@ -1769,10 +1836,16 @@ MediaCache::NoteSeek(MediaCacheStream* aStream, int64_t aOldOffset)
     // Any played block that is entirely after the start of the seeked-over
     // range must be converted.
     int32_t blockIndex =
-      (aStream->mStreamOffset + BLOCK_SIZE - 1)/BLOCK_SIZE;
+      OffsetToBlockIndex(aStream->mStreamOffset + (BLOCK_SIZE - 1));
+    if (blockIndex < 0) {
+      return;
+    }
     int32_t endIndex =
-      std::min<int64_t>((aOldOffset + BLOCK_SIZE - 1)/BLOCK_SIZE,
-             aStream->mBlocks.Length());
+      std::min(OffsetToBlockIndex(aOldOffset + (BLOCK_SIZE - 1)),
+               int32_t(aStream->mBlocks.Length()));
+    if (endIndex < 0) {
+      return;
+    }
     while (blockIndex < endIndex) {
       MOZ_ASSERT(endIndex > 0);
       int32_t cacheBlockIndex = aStream->mBlocks[endIndex - 1];
@@ -1860,7 +1933,7 @@ MediaCacheStream::NotifyDataReceived(int64_t aSize, const char* aData,
 
   // We process the data one block (or part of a block) at a time
   while (size > 0) {
-    uint32_t blockIndex = mChannelOffset/BLOCK_SIZE;
+    uint32_t blockIndex = OffsetToBlockIndexUnchecked(mChannelOffset);
     int32_t blockOffset = int32_t(mChannelOffset - blockIndex*BLOCK_SIZE);
     int32_t chunkSize = std::min<int64_t>(BLOCK_SIZE - blockOffset, size);
 
@@ -1910,7 +1983,7 @@ MediaCacheStream::FlushPartialBlockInternal(bool aNotifyAll,
 {
   NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
 
-  int32_t blockOffset = int32_t(mChannelOffset%BLOCK_SIZE);
+  int32_t blockOffset = OffsetInBlock(mChannelOffset);
   if (blockOffset > 0) {
     LOG("Stream %p writing partial block: [%d] bytes; "
         "mStreamOffset [%" PRId64 "] mChannelOffset[%"
@@ -2155,13 +2228,15 @@ int64_t
 MediaCacheStream::GetCachedDataEndInternal(int64_t aOffset)
 {
   mMediaCache->GetReentrantMonitor().AssertCurrentThreadIn();
-  uint32_t startBlockIndex = aOffset/BLOCK_SIZE;
-  uint32_t blockIndex = startBlockIndex;
-  while (blockIndex < mBlocks.Length() && mBlocks[blockIndex] != -1) {
+  int32_t blockIndex = OffsetToBlockIndex(aOffset);
+  if (blockIndex < 0) {
+    return aOffset;
+  }
+  while (size_t(blockIndex) < mBlocks.Length() && mBlocks[blockIndex] != -1) {
     ++blockIndex;
   }
   int64_t result = blockIndex*BLOCK_SIZE;
-  if (blockIndex == mChannelOffset/BLOCK_SIZE) {
+  if (blockIndex == OffsetToBlockIndexUnchecked(mChannelOffset)) {
     // The block containing mChannelOffset may be partially read but not
     // yet committed to the main cache
     result = mChannelOffset;
@@ -2181,8 +2256,11 @@ MediaCacheStream::GetNextCachedDataInternal(int64_t aOffset)
   if (aOffset == mStreamLength)
     return -1;
 
-  uint32_t startBlockIndex = aOffset/BLOCK_SIZE;
-  uint32_t channelBlockIndex = mChannelOffset/BLOCK_SIZE;
+  int32_t startBlockIndex = OffsetToBlockIndex(aOffset);
+  if (startBlockIndex < 0) {
+    return -1;
+  }
+  int32_t channelBlockIndex = OffsetToBlockIndexUnchecked(mChannelOffset);
 
   if (startBlockIndex == channelBlockIndex &&
       aOffset < mChannelOffset) {
@@ -2192,7 +2270,7 @@ MediaCacheStream::GetNextCachedDataInternal(int64_t aOffset)
     return aOffset;
   }
 
-  if (startBlockIndex >= mBlocks.Length())
+  if (size_t(startBlockIndex) >= mBlocks.Length())
     return -1;
 
   // Is the current block cached?
@@ -2200,18 +2278,18 @@ MediaCacheStream::GetNextCachedDataInternal(int64_t aOffset)
     return aOffset;
 
   // Count the number of uncached blocks
-  bool hasPartialBlock = (mChannelOffset % BLOCK_SIZE) != 0;
-  uint32_t blockIndex = startBlockIndex + 1;
+  bool hasPartialBlock = OffsetInBlock(mChannelOffset) != 0;
+  int32_t blockIndex = startBlockIndex + 1;
   while (true) {
     if ((hasPartialBlock && blockIndex == channelBlockIndex) ||
-        (blockIndex < mBlocks.Length() && mBlocks[blockIndex] != -1)) {
+        (size_t(blockIndex) < mBlocks.Length() && mBlocks[blockIndex] != -1)) {
       // We at the incoming channel block, which has has data in it,
       // or are we at a cached block. Return index of block start.
       return blockIndex * BLOCK_SIZE;
     }
 
     // No more cached blocks?
-    if (blockIndex >= mBlocks.Length())
+    if (size_t(blockIndex) >= mBlocks.Length())
       return -1;
 
     ++blockIndex;
@@ -2270,8 +2348,9 @@ MediaCacheStream::Seek(int32_t aWhence, int64_t aOffset)
     return NS_ERROR_FAILURE;
   }
 
-  if (newOffset < 0)
+  if (!IsOffsetAllowed(newOffset)) {
     return NS_ERROR_FAILURE;
+  }
   mStreamOffset = newOffset;
 
   LOG("Stream %p Seek to %" PRId64, this, mStreamOffset);
@@ -2316,7 +2395,10 @@ MediaCacheStream::Read(char* aBuffer, uint32_t aCount, uint32_t* aBytes)
   uint32_t count = 0;
   // Read one block (or part of a block) at a time
   while (count < aCount) {
-    uint32_t streamBlock = uint32_t(streamOffset/BLOCK_SIZE);
+    int32_t streamBlock = OffsetToBlockIndex(streamOffset);
+    if (streamBlock < 0) {
+      break;
+    }
     uint32_t offsetInStreamBlock = uint32_t(streamOffset - streamBlock*BLOCK_SIZE);
     int64_t size = std::min<int64_t>(aCount - count, BLOCK_SIZE - offsetInStreamBlock);
 
@@ -2332,7 +2414,8 @@ MediaCacheStream::Read(char* aBuffer, uint32_t aCount, uint32_t* aBytes)
       size = std::min(size, int64_t(INT32_MAX));
     }
 
-    int32_t cacheBlock = streamBlock < mBlocks.Length() ? mBlocks[streamBlock] : -1;
+    int32_t cacheBlock =
+      size_t(streamBlock) < mBlocks.Length() ? mBlocks[streamBlock] : -1;
     if (cacheBlock < 0) {
       // We don't have a complete cached block here.
 
@@ -2349,7 +2432,8 @@ MediaCacheStream::Read(char* aBuffer, uint32_t aCount, uint32_t* aBytes)
       MediaCacheStream* streamWithPartialBlock = nullptr;
       MediaCache::ResourceStreamIterator iter(mMediaCache, mResourceID);
       while (MediaCacheStream* stream = iter.Next()) {
-        if (uint32_t(stream->mChannelOffset/BLOCK_SIZE) == streamBlock &&
+        if (OffsetToBlockIndexUnchecked(stream->mChannelOffset) ==
+              streamBlock &&
             streamOffset < stream->mChannelOffset) {
           streamWithPartialBlock = stream;
           break;
@@ -2438,7 +2522,10 @@ MediaCacheStream::ReadFromCache(char* aBuffer, int64_t aOffset, int64_t aCount)
       // after calling |mMediaCache->ReadCacheFile|.
       return NS_ERROR_FAILURE;
     }
-    uint32_t streamBlock = uint32_t(streamOffset/BLOCK_SIZE);
+    int32_t streamBlock = OffsetToBlockIndex(streamOffset);
+    if (streamBlock < 0) {
+      break;
+    }
     uint32_t offsetInStreamBlock =
       uint32_t(streamOffset - streamBlock*BLOCK_SIZE);
     int64_t size = std::min<int64_t>(aCount - count, BLOCK_SIZE - offsetInStreamBlock);
@@ -2455,8 +2542,9 @@ MediaCacheStream::ReadFromCache(char* aBuffer, int64_t aOffset, int64_t aCount)
     }
 
     int32_t bytes;
-    uint32_t channelBlock = uint32_t(mChannelOffset/BLOCK_SIZE);
-    int32_t cacheBlock = streamBlock < mBlocks.Length() ? mBlocks[streamBlock] : -1;
+    int32_t channelBlock = OffsetToBlockIndexUnchecked(mChannelOffset);
+    int32_t cacheBlock =
+      size_t(streamBlock) < mBlocks.Length() ? mBlocks[streamBlock] : -1;
     if (channelBlock == streamBlock && streamOffset < mChannelOffset) {
       // We can just use the data in mPartialBlockBuffer. In fact we should
       // use it rather than waiting for the block to fill and land in

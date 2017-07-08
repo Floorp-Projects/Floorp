@@ -25,10 +25,9 @@ using namespace mozilla::media;
 typedef mozilla::layers::Image Image;
 typedef mozilla::layers::PlanarYCbCrImage PlanarYCbCrImage;
 
-AndroidMediaReader::AndroidMediaReader(AbstractMediaDecoder *aDecoder,
-                                       const MediaContainerType& aContainerType,
-                                       MediaResource* aResource) :
-  MediaDecoderReader(aDecoder, aResource),
+AndroidMediaReader::AndroidMediaReader(const MediaContainerType& aContainerType,
+                                       const MediaDecoderReaderInit& aInit) :
+  MediaDecoderReader(aInit),
   mType(aContainerType),
   mPlugin(nullptr),
   mHasAudio(false),

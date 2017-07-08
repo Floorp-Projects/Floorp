@@ -43,7 +43,6 @@ public class TelemetrySyncPingBuilderTest {
         assertEquals("uid", payload.getString("uid"));
         assertEquals(Long.valueOf(123L), payload.getLong("took"));
         assertEquals("device-id", payload.getString("deviceID"));
-        assertEquals(Integer.valueOf(1), payload.getIntegerSafely("version"));
         assertFalse(payload.containsKey("restarted"));
 
         localPing = builder
@@ -56,7 +55,7 @@ public class TelemetrySyncPingBuilderTest {
         assertEquals("uid", payload.getString("uid"));
         assertEquals(Long.valueOf(123L), payload.getLong("took"));
         assertEquals("device-id", payload.getString("deviceID"));
-        assertEquals(Integer.valueOf(1), payload.getIntegerSafely("version"));
+        assertTrue(payload.getLong("when") != null);
         assertEquals(true, payload.getBoolean("restarted"));
     }
 
@@ -70,10 +69,8 @@ public class TelemetrySyncPingBuilderTest {
         ExtendedJSONObject payload = localPing.getPayload();
 
         // Empty list isn't part of the JSON.
-        assertEquals(
-                "{\"version\":1}",
-                payload.toString()
-        );
+        assertTrue(payload.containsKey("when"));
+        assertEquals(1, payload.keySet().size());
 
         Bundle device = new Bundle();
         device.putString("os", "Android");

@@ -1183,9 +1183,9 @@ const CustomizableWidgets = [
     observe(aSubject, aTopic, aData) {
       let {instances} = CustomizableUI.getWidget("containers-panelmenu");
       for (let {node} of instances) {
-	if (node) {
-	  this.updateVisibility(node);
-	}
+        if (node) {
+          this.updateVisibility(node);
+        }
       }
     },
 

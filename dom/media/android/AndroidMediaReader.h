@@ -37,9 +37,8 @@ class AndroidMediaReader : public MediaDecoderReader
   MozPromiseHolder<MediaDecoderReader::SeekPromise> mSeekPromise;
   MozPromiseRequestHolder<MediaDecoderReader::VideoDataPromise> mSeekRequest;
 public:
-  AndroidMediaReader(AbstractMediaDecoder* aDecoder,
-                     const MediaContainerType& aContainerType,
-                     MediaResource* aResource);
+  AndroidMediaReader(const MediaContainerType& aContainerType,
+                     const MediaDecoderReaderInit& aInit);
 
   nsresult ResetDecode(TrackSet aTracks = TrackSet(TrackInfo::kAudioTrack,
                                                    TrackInfo::kVideoTrack)) override;

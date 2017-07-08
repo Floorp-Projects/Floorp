@@ -6,19 +6,16 @@
 package org.mozilla.gecko.tabs;
 
 import org.mozilla.gecko.AboutPages;
-import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.Tab;
 import org.mozilla.gecko.Tabs;
 import org.mozilla.gecko.annotation.RobocopTarget;
+import org.mozilla.gecko.skin.SkinConfig;
 import org.mozilla.gecko.widget.ResizablePathDrawable;
 import org.mozilla.gecko.widget.ResizablePathDrawable.NonScaledPathShape;
 import org.mozilla.gecko.widget.themed.ThemedImageButton;
 import org.mozilla.gecko.widget.themed.ThemedLinearLayout;
 import org.mozilla.gecko.widget.themed.ThemedTextView;
-
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import android.content.Context;
 import android.content.res.ColorStateList;
@@ -27,10 +24,9 @@ import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Path;
 import android.graphics.Region;
-import android.support.v4.view.ViewCompat;
+import android.support.v4.content.res.ResourcesCompat;
 import android.support.v4.widget.TextViewCompat;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
@@ -52,7 +48,7 @@ public class TabStripItemView extends ThemedLinearLayout
     private final ThemedTextView titleView;
     private final ThemedImageButton closeView;
 
-    private final ResizablePathDrawable backgroundDrawable;
+    private ResizablePathDrawable backgroundDrawable;
     private final Region tabRegion;
     private final Region tabClipRegion;
     private boolean tabRegionNeedsUpdate;
@@ -73,10 +69,12 @@ public class TabStripItemView extends ThemedLinearLayout
 
         final Resources res = context.getResources();
 
-        final ColorStateList tabColors =
-                res.getColorStateList(R.color.tab_strip_item_bg);
-        backgroundDrawable = new ResizablePathDrawable(new TabCurveShape(), tabColors);
-        setBackgroundDrawable(backgroundDrawable);
+        if (SkinConfig.isAustralis()) {
+            final ColorStateList tabColors =
+                    ResourcesCompat.getColorStateList(res, R.color.tab_strip_item_bg, null);
+            backgroundDrawable = new ResizablePathDrawable(new TabCurveShape(), tabColors);
+            setBackgroundDrawable(backgroundDrawable);
+        }
 
         faviconSize = res.getDimensionPixelSize(R.dimen.browser_toolbar_favicon_size);
 
@@ -126,13 +124,15 @@ public class TabStripItemView extends ThemedLinearLayout
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
-        final int action = event.getActionMasked();
-        final int x = (int) event.getX();
-        final int y = (int) event.getY();
+        if (SkinConfig.isAustralis()) {
+            final int action = event.getActionMasked();
+            final int x = (int) event.getX();
+            final int y = (int) event.getY();
 
-        // Let motion events through if they're off the tab shape bounds.
-        if (action == MotionEvent.ACTION_DOWN && !tabRegion.contains(x, y)) {
-            return false;
+            // Let motion events through if they're off the tab shape bounds.
+            if (action == MotionEvent.ACTION_DOWN && !tabRegion.contains(x, y)) {
+                return false;
+            }
         }
 
         return super.onTouchEvent(event);
@@ -142,7 +142,7 @@ public class TabStripItemView extends ThemedLinearLayout
     public void draw(Canvas canvas) {
         super.draw(canvas);
 
-        if (tabRegionNeedsUpdate) {
+        if (SkinConfig.isAustralis() && tabRegionNeedsUpdate) {
             final Path path = backgroundDrawable.getPath();
             tabClipRegion.set(0, 0, getWidth(), getHeight());
             tabRegion.setPath(path, tabClipRegion);

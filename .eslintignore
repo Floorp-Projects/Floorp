@@ -8,60 +8,58 @@ obj*/**
 # If you are enabling a directory, please add directory specific exclusions
 # below.
 addon-sdk/**
-build/**
 chrome/**
 config/**
-db/**
 docshell/**
 editor/**
 embedding/**
-extensions/**
+extensions/cookie/**
+extensions/spellcheck/**
+extensions/universalchardet/**
 gfx/**
-gradle/**
-hal/**
 image/**
 intl/**
 ipc/**
 layout/**
 media/**
 memory/**
-mfbt/**
 modules/**
-mozglue/**
 netwerk/**
-nsprpub/**
-other-licenses/**
 parser/**
-probes/**
 python/**
 rdf/**
 servo/**
-startupcache/**
 tools/update-packaging/**
 uriloader/**
 view/**
 widget/**
 xpcom/**
-xpfe/**
-xulrunner/**
 
-# b2g exclusions (pref files).
-b2g/app/b2g.js
-b2g/graphene/graphene.js
-b2g/locales/en-US/b2g-l10n.js
+# We currently have no js files in these directories, so we ignore them by
+# default to aid ESLint's performance.
+build/**
+db/**
+gradle/**
+hal/**
+mfbt/**
+mozglue/**
+nsprpub/**
+other-licenses/**
+probes/**
+startupcache/**
+xpfe/**
 
 # browser/ exclusions
 browser/app/**
 browser/branding/**/firefox-branding.js
-browser/base/content/test/general/file_csp_block_all_mixedcontent.html
 # Gzipped test file.
 browser/base/content/test/general/gZipOfflineChild.html
 browser/base/content/test/urlbar/file_blank_but_not_blank.html
+# New tab is likely to be replaced soon.
 browser/base/content/newtab/**
 # Test files that are really json not js, and don't need to be linted.
 browser/components/sessionstore/test/unit/data/sessionstore_valid.js
 browser/components/sessionstore/test/unit/data/sessionstore_invalid.js
-browser/components/tabview/**
 # generated & special files in cld2
 browser/components/translation/cld2/**
 # Screenshots and Follow-on search are imported as a system add-on and have
@@ -73,10 +71,11 @@ browser/extensions/pdfjs/content/web**
 # generated or library files in pocket
 browser/extensions/pocket/content/panels/js/tmpl.js
 browser/extensions/pocket/content/panels/js/vendor/**
-browser/locales/**
 # generated or library files in activity-stream
 browser/extensions/activity-stream/data/content/activity-stream.bundle.js
 browser/extensions/activity-stream/vendor/**
+# The only file in browser/locales/ is pre-processed.
+browser/locales/**
 # imported from chromium
 browser/extensions/mortar/**
 
@@ -268,7 +267,6 @@ js/src/Y.js
 mobile/android/tests/browser/chrome/tp5/**
 
 # Uses `#filter substitution`
-mobile/android/b2gdroid/app/b2gdroid.js
 mobile/android/app/mobile.js
 mobile/android/chrome/content/healthreport-prefs.js
 
@@ -283,13 +281,10 @@ mobile/android/locales/
 mobile/android/chrome/content/browser.js
 mobile/android/components/Snippets.js
 
-# Bug 1178739: Ignore this file as a quick fix for "Illegal yield expression"
-mobile/android/modules/HomeProvider.jsm
-
 # security/ exclusions (pref files).
 security/manager/ssl/security-prefs.js
 
-#NSS
+# NSS / taskcluster only.
 security/nss/**
 
 # services/ exclusions
@@ -342,6 +337,7 @@ toolkit/modules/tests/xpcshell/test_task.js
 
 # Not yet updated
 toolkit/components/osfile/**
+toolkit/components/url-classifier/**
 
 # External code:
 toolkit/components/microformats/test/**
@@ -352,13 +348,10 @@ toolkit/components/reader/JSDOMParser.js
 # Uses preprocessing
 toolkit/content/widgets/wizard.xml
 toolkit/components/jsdownloads/src/DownloadIntegration.jsm
-toolkit/components/url-classifier/**
 toolkit/components/urlformatter/nsURLFormatter.js
 toolkit/modules/AppConstants.jsm
 toolkit/mozapps/downloads/nsHelperAppDlg.js
-toolkit/mozapps/extensions/internal/AddonConstants.jsm
 toolkit/mozapps/update/tests/data/xpcshellConstantsPP.js
-toolkit/webapps/**
 
 # Third party
 toolkit/modules/third_party/**

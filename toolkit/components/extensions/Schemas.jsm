@@ -25,9 +25,9 @@ var {
 } = ExtensionUtils;
 
 XPCOMUtils.defineLazyModuleGetter(this, "ExtensionParent",
-				  "resource://gre/modules/ExtensionParent.jsm");
+                                  "resource://gre/modules/ExtensionParent.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
-				  "resource://gre/modules/NetUtil.jsm");
+                                  "resource://gre/modules/NetUtil.jsm");
 XPCOMUtils.defineLazyServiceGetter(this, "contentPolicyService",
                                    "@mozilla.org/addons/content-policy;1",
                                    "nsIAddonContentPolicy");

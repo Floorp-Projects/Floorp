@@ -616,7 +616,7 @@ nsresult
 TextComposition::NotifyIME(IMEMessage aMessage)
 {
   NS_ENSURE_TRUE(mPresContext, NS_ERROR_NOT_AVAILABLE);
-  return IMEStateManager::NotifyIME(aMessage, mPresContext);
+  return IMEStateManager::NotifyIME(aMessage, mPresContext, mTabParent);
 }
 
 void

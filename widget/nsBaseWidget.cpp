@@ -2328,6 +2328,19 @@ namespace mozilla {
 namespace widget {
 
 const char*
+ToChar(InputContext::Origin aOrigin)
+{
+  switch (aOrigin) {
+    case InputContext::ORIGIN_MAIN:
+      return "ORIGIN_MAIN";
+    case InputContext::ORIGIN_CONTENT:
+      return "ORIGIN_CONTENT";
+    default:
+      return "Unexpected value";
+  }
+}
+
+const char*
 ToChar(IMEMessage aIMEMessage)
 {
   switch (aIMEMessage) {

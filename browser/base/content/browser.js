@@ -5785,8 +5785,8 @@ function contentAreaClick(event, isPanelClick) {
                                          title: linkNode.getAttribute("title"),
                                          loadBookmarkInSidebar: true,
                                          hiddenRows: [ "description",
-																																																							"location",
-																																																							"keyword" ]
+                                                       "location",
+                                                       "keyword" ]
                                        }, window);
       event.preventDefault();
       return;

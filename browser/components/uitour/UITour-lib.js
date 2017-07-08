@@ -59,9 +59,9 @@ if (typeof Mozilla == "undefined") {
 
     function listener(event) {
       if (typeof event.detail != "object")
-	return;
+        return;
       if (event.detail.callbackID != id)
-	return;
+        return;
 
       document.removeEventListener("mozUITourResponse", listener);
       callback(event.detail.data);
@@ -266,12 +266,12 @@ if (typeof Mozilla == "undefined") {
     var buttonData = [];
     if (Array.isArray(buttons)) {
       for (var i = 0; i < buttons.length; i++) {
-	buttonData.push({
-	  label: buttons[i].label,
-	  icon: buttons[i].icon,
-	  style: buttons[i].style,
-	  callbackID: _waitForCallback(buttons[i].callback)
-	});
+        buttonData.push({
+          label: buttons[i].label,
+          icon: buttons[i].icon,
+          style: buttons[i].style,
+          callbackID: _waitForCallback(buttons[i].callback)
+        });
       }
     }
 
@@ -371,8 +371,8 @@ if (typeof Mozilla == "undefined") {
       themes.push(theme);
 
       _sendEvent("previewTheme", {
-	theme: JSON.stringify(theme),
-	state: true
+        theme: JSON.stringify(theme),
+        state: true
       });
 
       callback(theme);

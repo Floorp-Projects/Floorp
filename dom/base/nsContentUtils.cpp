@@ -10610,6 +10610,16 @@ nsContentUtils::GetUserIsInteracting()
   return UserInteractionObserver::sUserActive;
 }
 
+/* static */ bool
+nsContentUtils::GetSourceMapURL(nsIHttpChannel* aChannel, nsACString& aResult)
+{
+  nsresult rv = aChannel->GetResponseHeader(NS_LITERAL_CSTRING("SourceMap"), aResult);
+  if (NS_FAILED(rv)) {
+    rv = aChannel->GetResponseHeader(NS_LITERAL_CSTRING("X-SourceMap"), aResult);
+  }
+  return NS_SUCCEEDED(rv);
+}
+
 static const char* kUserInteractionInactive = "user-interaction-inactive";
 static const char* kUserInteractionActive = "user-interaction-active";
 

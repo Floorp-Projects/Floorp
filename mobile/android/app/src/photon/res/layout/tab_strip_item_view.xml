@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<merge xmlns:android="http://schemas.android.com/apk/res/android"
+       xmlns:gecko="http://schemas.android.com/apk/res-auto"
+       xmlns:tools="http://schemas.android.com/tools"
+       tools:layout_height="@dimen/tablet_tab_strip_item_height"
+       tools:layout_width="@dimen/tablet_tab_strip_item_width"
+       tools:orientation="horizontal"
+       tools:parentTag="LinearLayout">
+
+    <ImageView
+        android:id="@+id/favicon"
+        android:layout_width="@dimen/browser_toolbar_favicon_size"
+        android:layout_height="@dimen/browser_toolbar_favicon_size"
+        android:layout_gravity="center"
+        android:layout_marginEnd="8dp"
+        android:layout_marginLeft="12dp"
+        android:layout_marginRight="8dp"
+        android:layout_marginStart="12dp"
+        android:duplicateParentState="true"
+        android:scaleType="centerInside"
+        tools:src="@drawable/toolbar_favicon_default"/>
+
+    <org.mozilla.gecko.widget.FadedSingleColorTextView
+        android:id="@+id/title"
+        android:layout_width="0dip"
+        android:layout_height="match_parent"
+        android:layout_weight="1.0"
+        android:duplicateParentState="true"
+        android:ellipsize="end"
+        android:gravity="center_vertical"
+        android:maxLines="1"
+        android:textColor="@color/tab_strip_item_title"
+        android:textSize="14sp"
+        gecko:fadeWidth="30dip"
+        tools:text="Mozilla"/>
+
+    <org.mozilla.gecko.widget.themed.ThemedImageButton
+        android:id="@+id/close"
+        android:layout_width="35dp"
+        android:layout_height="match_parent"
+        android:background="@android:color/transparent"
+        android:contentDescription="@string/close_tab"
+        android:duplicateParentState="true"
+        android:scaleType="center"
+        android:src="@drawable/tab_close"/>
+
+</merge>
