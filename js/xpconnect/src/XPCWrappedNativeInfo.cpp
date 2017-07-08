@@ -13,6 +13,7 @@
 #include "mozilla/XPTInterfaceInfoManager.h"
 #include "nsIScriptError.h"
 #include "nsPrintfCString.h"
+#include "nsPointerHashKeys.h"
 
 using namespace JS;
 using namespace mozilla;
@@ -429,7 +430,7 @@ XPCNativeInterface::DebugDump(int16_t depth)
 static PLDHashNumber
 HashPointer(const void* ptr)
 {
-    return NS_PTR_TO_UINT32(ptr) >> 2;
+    return nsPtrHashKey<const void>::HashKey(ptr);
 }
 
 PLDHashNumber
