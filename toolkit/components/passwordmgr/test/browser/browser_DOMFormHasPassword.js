@@ -82,11 +82,11 @@ add_task(async function() {
 
   let promise = ContentTask.spawn(tab.linkedBrowser, ids, task);
   tab.linkedBrowser.loadURI("data:text/html;charset=utf-8," +
-			    "<html><body>" +
-			    "<form id='" + ids.FORM1_ID + "'>" +
+                            "<html><body>" +
+                            "<form id='" + ids.FORM1_ID + "'>" +
                             "<input id='" + ids.CHANGE_INPUT_ID + "'></form>" +
-			    "<form id='" + ids.FORM2_ID + "'></form>" +
-			    "</body></html>");
+                            "<form id='" + ids.FORM2_ID + "'></form>" +
+                            "</body></html>");
   await promise;
 
   ok(true, "Test completed");

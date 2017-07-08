@@ -4,12 +4,12 @@
   --toolbarbutton-icon-fill-attention: #177ee5;
 }
 
-:-moz-any(@primaryToolbarButtons@) {
+.toolbarbutton-1 {
   -moz-context-properties: fill;
   fill: var(--toolbarbutton-icon-fill);
 }
 
-toolbar[brighttext] :-moz-any(@primaryToolbarButtons@) {
+toolbar[brighttext] .toolbarbutton-1 {
   fill: var(--toolbarbutton-icon-fill-inverted);
 }
 

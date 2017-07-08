@@ -5,6 +5,7 @@
 import sys
 import hashlib
 import re
+import os
 from mozbuild.preprocessor import Preprocessor
 from mozbuild.util import DefinesAction
 from mozpack.packager.unpack import UnpackFinder
@@ -32,29 +33,11 @@ def normalize_osx_path(p):
         return '/'.join(bits[3:])
     return p
 
-
-def normalize_l10n_path(p):
-    '''
-    Normalizes localized paths to en-US
-
-    >>> normalize_l10n_path('chrome/es-ES/locale/branding/brand.properties')
-    'chrome/en-US/locale/branding/brand.properties'
-    >>> normalize_l10n_path('chrome/fr/locale/fr/browser/aboutHome.dtd')
-    'chrome/en-US/locale/en-US/browser/aboutHome.dtd'
-    '''
-    # Keep a trailing slash here! e.g. locales like 'br' can transform
-    # 'chrome/br/locale/branding/' into 'chrome/en-US/locale/en-USanding/'
-    p = re.sub(r'chrome/(\S+)/locale/\1/',
-               'chrome/en-US/locale/en-US/',
-               p)
-    p = re.sub(r'chrome/(\S+)/locale/',
-               'chrome/en-US/locale/',
-               p)
-    return p
-
+def is_l10n_file(path):
+    return os.path.splitext(path)[1] in ['.properties', '.dtd', '.ftl']
 
 def normalize_path(p):
-    return normalize_osx_path(normalize_l10n_path(p))
+    return normalize_osx_path(p)
 
 
 def find_dupes(source, allowed_dupes, bail=True):
@@ -85,7 +68,9 @@ def find_dupes(source, allowed_dupes, bail=True):
             total_compressed += (len(paths) - 1) * compressed
             num_dupes += 1
 
-            unexpected_dupes.extend([p for p in paths if normalize_path(p) not in allowed_dupes])
+            for p in paths:
+                if not is_l10n_file(p) and normalize_path(p) not in allowed_dupes:
+                    unexpected_dupes.append(p)
 
     if num_dupes:
         print "WARNING: Found %d duplicated files taking %d bytes (%s)" % \

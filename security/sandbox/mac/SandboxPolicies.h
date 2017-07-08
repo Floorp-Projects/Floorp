@@ -55,6 +55,7 @@ static const char contentSandboxRules[] = R"(
   (define sandbox-level-2 (param "SANDBOX_LEVEL_2"))
   (define sandbox-level-3 (param "SANDBOX_LEVEL_3"))
   (define macosMinorVersion-9 (param "MAC_OS_MINOR_9"))
+  (define macosMinorVersion-min13 (param "MAC_OS_MINOR_MIN_13"))
   (define appPath (param "APP_PATH"))
   (define appBinaryPath (param "APP_BINARY_PATH"))
   (define appdir-path (param "APP_DIR"))
@@ -160,6 +161,10 @@ static const char contentSandboxRules[] = R"(
       (global-name "com.apple.ocspd")
       (global-name "com.apple.cmio.AppleCameraAssistant")
       (global-name "com.apple.DesktopServicesHelper"))
+
+; bug 1376163
+  (if (string=? macosMinorVersion-min13 "TRUE")
+    (allow mach-lookup (global-name "com.apple.audio.AudioComponentRegistrar")))
 
 ; bug 1312273
   (if (string=? macosMinorVersion-9 "TRUE")

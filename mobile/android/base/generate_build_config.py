@@ -47,6 +47,7 @@ def _defines():
                 'MOZ_ANDROID_MLS_STUMBLER',
                 'MOZ_ANDROID_MMA',
                 'MOZ_ANDROID_MOZILLA_ONLINE',
+                'MOZ_ANDROID_PWA',
                 'MOZ_LEANPLUM_SDK_KEY',
                 'MOZ_LEANPLUM_SDK_CLIENTID',
                 'MOZ_ANDROID_SEARCH_ACTIVITY',

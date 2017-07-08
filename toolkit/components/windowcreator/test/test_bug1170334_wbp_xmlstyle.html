@@ -47,18 +47,18 @@ iframe.onload = function iframe_onload1() {
     onSecurityChange() {},
     onStateChange: function wbp_stateChange(_wbp, _req, state, status) {
       if ((state & Ci.nsIWebProgressListener.STATE_STOP) == 0) {
-	return;
+        return;
       }
       is(status, Cr.NS_OK, "nsWebBrowserPersist status");
       iframe.onload = function iframe_onload2() {
-	let elem = iframe.contentDocument.documentElement;
-	is(elem && elem.tagName, "thing", "document element tag");
-	if (elem && elem.tagName == "parsererror") {
-	  ok(false, "Parser error: " + elem.textContent);
-	}
+        let elem = iframe.contentDocument.documentElement;
+        is(elem && elem.tagName, "thing", "document element tag");
+        if (elem && elem.tagName == "parsererror") {
+          ok(false, "Parser error: " + elem.textContent);
+        }
 
-	cleanUp();
-	SimpleTest.finish();
+        cleanUp();
+        SimpleTest.finish();
       };
       iframe.src = ios.newFileURI(tmpFile).spec;
     }
