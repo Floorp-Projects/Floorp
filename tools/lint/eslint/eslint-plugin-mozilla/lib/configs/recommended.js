@@ -279,6 +279,9 @@ module.exports = {
     // Disallow sparse arrays
     "no-sparse-arrays": "error",
 
+    // Disallow tabs.
+    "no-tabs": "error",
+
     // No trailing whitespace
     "no-trailing-spaces": "error",
 

@@ -112,7 +112,7 @@ public class TelemetrySyncPingBundleBuilderTest {
         assertTrue(outgoingPing.getPayload().containsKey("payload"));
         assertTrue(outgoingPing.getPayload().containsKey("id"));
         assertEquals("sync", outgoingPing.getPayload().getString("type"));
-        assertEquals(Integer.valueOf(4), outgoingPing.getPayload().getIntegerSafely("version"));
+        assertEquals(Integer.valueOf(5), outgoingPing.getPayload().getIntegerSafely("version"));
 
         // Test application key.
         ExtendedJSONObject application = outgoingPing.getPayload().getObject("application");
@@ -123,14 +123,27 @@ public class TelemetrySyncPingBundleBuilderTest {
         assertTrue(application.containsKey("version"));
         assertTrue(application.containsKey("name"));
         assertTrue(application.containsKey("channel"));
-        assertTrue(application.containsKey("buildID"));
+        assertTrue(application.containsKey("buildId"));
         assertTrue(application.containsKey("xpcomAbi"));
 
-        // Test general shape of payload.
+        // Test os key.
+        ExtendedJSONObject os = outgoingPing.getPayload().getObject("os");
+        assertEquals(3, os.keySet().size());
+        assertEquals("Android", os.getString("name"));
+        // Going to be different depending on the test environment.
+        // Test for presence and type to void random failures.
+        assertTrue(os.getIntegerSafely("version") != null);
+        // Likely "en-US" in tests, but let's test for presence and type to avoid random failures.
+        assertTrue(os.getString("locale") != null);
+
+        // Test general shape of payload. Expecting {"syncs":[],"why":"schedule", "version": 1}.
         // NB that even though we set an empty sync event store, it's not in the json string.
         // That's because sync events are not yet instrumented.
         ExtendedJSONObject payload = outgoingPing.getPayload().getObject("payload");
-        assertEquals("{\"syncs\":[],\"why\":\"schedule\"}", payload.toJSONString());
+        assertEquals(3, payload.keySet().size());
+        assertEquals("schedule", payload.getString("why"));
+        assertEquals(Integer.valueOf(1), payload.getIntegerSafely("version"));
+        assertEquals(0, payload.getArray("syncs").size());
     }
 
     @Test
@@ -152,7 +165,7 @@ public class TelemetrySyncPingBundleBuilderTest {
         assertEquals("schedule", payload.getString("why"));
         JSONArray syncs = payload.getArray("syncs");
         assertEquals(1, syncs.size());
-        assertSync((ExtendedJSONObject) syncs.get(0), "test-uid", 123L, "test-device-id", 1, true);
+        assertSync((ExtendedJSONObject) syncs.get(0), "test-uid", 123L, "test-device-id", true);
 
         // Add another ping.
         syncPings.storePing(new TelemetrySyncPingBuilder()
@@ -170,15 +183,21 @@ public class TelemetrySyncPingBundleBuilderTest {
                 .getObject("payload")
                 .getArray("syncs");
         assertEquals(2, syncs.size());
-        assertSync((ExtendedJSONObject) syncs.get(0), "test-uid", 123L, "test-device-id", 1, true);
-        assertSync((ExtendedJSONObject) syncs.get(1), "test-uid", 321L, "test-device-id", 1, false);
+        assertSync((ExtendedJSONObject) syncs.get(0), "test-uid", 123L, "test-device-id", true);
+        assertSync((ExtendedJSONObject) syncs.get(1), "test-uid", 321L, "test-device-id", false);
     }
 
-    private void assertSync(ExtendedJSONObject sync, String uid, long took, String deviceID, int version, boolean restarted) throws JSONException {
+    private void assertSync(ExtendedJSONObject sync, String uid, long took, String deviceID, boolean restarted) throws JSONException {
         assertEquals(uid, sync.getString("uid"));
         assertEquals(Long.valueOf(took), sync.getLong("took"));
         assertEquals(deviceID, sync.getString("deviceID"));
-        assertEquals(Integer.valueOf(version), sync.getIntegerSafely("version"));
+
+        // Test that 'when' timestamp looks generally sane.
+        final long now = System.currentTimeMillis();
+        final long yearAgo = now - 1000L * 60 * 60 * 24 * 365;
+        assertTrue(sync.getLong("when") > yearAgo);
+        assertTrue(sync.getLong("when") <= now);
+
         if (restarted) {
             assertEquals(true, sync.getBoolean("restarted"));
         } else {

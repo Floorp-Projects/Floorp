@@ -398,8 +398,9 @@ IMEHandler::OnDestroyWindow(nsWindow* aWindow)
   // here because TabParent already lost the reference to the nsWindow when
   // it receives from the remote process.
   if (sFocusedWindow == aWindow) {
-    NS_ASSERTION(aWindow->GetInputContext().IsOriginContentProcess(),
-      "input context of focused widget should be set from a remote process");
+    MOZ_ASSERT(aWindow->GetInputContext().IsOriginContentProcess(),
+      "input context of focused widget should've been set by a remote process "
+      "if IME focus isn't cleared before destroying the widget");
     NotifyIME(aWindow, IMENotification(NOTIFY_IME_OF_BLUR));
   }
 

@@ -40,8 +40,24 @@ Older ping &gt;&gt;
 Week
 ">
 
+<!ENTITY aboutTelemetry.archivePingType "
+Ping Type
+">
+
 <!ENTITY aboutTelemetry.archivePingHeader "
 Ping
+">
+
+<!ENTITY aboutTelemetry.optionGroupToday "
+Today
+">
+
+<!ENTITY aboutTelemetry.optionGroupYesterday "
+Yesterday
+">
+
+<!ENTITY aboutTelemetry.optionGroupOlder "
+Older
 ">
 
 <!ENTITY aboutTelemetry.generalDataSection "

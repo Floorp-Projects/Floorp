@@ -1675,7 +1675,10 @@ fn read_video_sample_entry<T: Read>(src: &mut BMFFBox<T>) -> Result<(CodecType, 
         BoxType::VP9SampleEntry => CodecType::VP9,
         BoxType::ProtectedVisualSampleEntry => CodecType::EncryptedVideo,
         BoxType::JPEGAtom => CodecType::JPEG,
-        _ => CodecType::Unknown,
+        _ => {
+            log!("Unsupported video codec, box {:?} found", name);
+            CodecType::Unknown
+        }
     };
 
     // Skip uninteresting fields.
@@ -1747,20 +1750,23 @@ fn read_video_sample_entry<T: Read>(src: &mut BMFFBox<T>) -> Result<(CodecType, 
                 log!("{:?} (sinf)", sinf);
                 protection_info.push(sinf);
             }
-            _ => skip_box_content(&mut b)?,
+            _ => {
+                log!("Unsupported video codec, box {:?} found", b.head.name);
+                skip_box_content(&mut b)?;
+            }
         }
         check_parser_state!(b.content);
     }
 
-    codec_specific
-        .map(|codec_specific| (codec_type, SampleEntry::Video(VideoSampleEntry {
+    Ok(codec_specific.map_or((CodecType::Unknown, SampleEntry::Unknown),
+        |codec_specific| (codec_type, SampleEntry::Video(VideoSampleEntry {
             data_reference_index: data_reference_index,
             width: width,
             height: height,
             codec_specific: codec_specific,
             protection_info: protection_info,
         })))
-        .ok_or_else(|| Error::InvalidData("malformed video sample entry"))
+    )
 }
 
 fn read_qt_wave_atom<T: Read>(src: &mut BMFFBox<T>) -> Result<ES_Descriptor> {
@@ -1889,13 +1895,16 @@ fn read_audio_sample_entry<T: Read>(src: &mut BMFFBox<T>) -> Result<(CodecType, 
                 codec_type = CodecType::EC3;
                 codec_specific = Some(AudioCodecSpecific::EC3SpecificBox);
             }
-            _ => skip_box_content(&mut b)?,
+            _ => {
+                log!("Unsupported audio codec, box {:?} found", b.head.name);
+                skip_box_content(&mut b)?;
+            }
         }
         check_parser_state!(b.content);
     }
 
-    codec_specific
-        .map(|codec_specific| (codec_type, SampleEntry::Audio(AudioSampleEntry {
+    Ok(codec_specific.map_or((CodecType::Unknown, SampleEntry::Unknown),
+        |codec_specific| (codec_type, SampleEntry::Audio(AudioSampleEntry {
             data_reference_index: data_reference_index,
             channelcount: channelcount,
             samplesize: samplesize,
@@ -1903,7 +1912,7 @@ fn read_audio_sample_entry<T: Read>(src: &mut BMFFBox<T>) -> Result<(CodecType, 
             codec_specific: codec_specific,
             protection_info: protection_info,
         })))
-        .ok_or_else(|| Error::InvalidData("malformed audio sample entry"))
+    )
 }
 
 /// Parse a stsd box.

@@ -19,31 +19,31 @@
 
 <script>
 function dumpAccessibleNode(aNode, level) {
-	var msg = "";
+  var msg = "";
 
-	try {
-		msg += "name=\"" + aNode.name + "\" ";
-	} catch (e) {
-		msg += " noName ";
-	}
+  try {
+    msg += "name=\"" + aNode.name + "\" ";
+  } catch (e) {
+    msg += " noName ";
+  }
 
-	dump(msg + '\n');
+  dump(msg + '\n');
 }
 
 
 function dumpAccessibleTree(aNode, level) {
-	level = level || 0;
+  level = level || 0;
 
-	dumpAccessibleNode(aNode, level);
-	try {
-		var child = aNode.firstChild;
-		while (child) {
-			dumpAccessibleTree(child, level + 1);
-			child = child.nextSibling;
-		}
-	} catch (e) {
-		dump("Error visiting child nodes: " + e + '\n');
-	}
+  dumpAccessibleNode(aNode, level);
+  try {
+    var child = aNode.firstChild;
+    while (child) {
+      dumpAccessibleTree(child, level + 1);
+      child = child.nextSibling;
+    }
+  } catch (e) {
+    dump("Error visiting child nodes: " + e + '\n');
+  }
 }
 
 function A(o) {

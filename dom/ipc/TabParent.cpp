@@ -143,6 +143,7 @@ TabParent::TabParent(nsIContentParent* aManager,
                      uint32_t aChromeFlags)
   : TabContext(aContext)
   , mFrameElement(nullptr)
+  , mContentCache(*this)
   , mRect(0, 0, 0, 0)
   , mDimensions(0, 0)
   , mOrientation(0)
@@ -1745,7 +1746,7 @@ TabParent::RecvNotifyIMEFocus(const ContentCache& aContentCache,
   }
 
   mContentCache.AssignContent(aContentCache, widget, &aIMENotification);
-  IMEStateManager::NotifyIME(aIMENotification, widget, true);
+  IMEStateManager::NotifyIME(aIMENotification, widget, this);
 
   if (aIMENotification.mMessage == NOTIFY_IME_OF_FOCUS) {
     *aRequests = widget->IMENotificationRequestsRef();
@@ -1824,7 +1825,7 @@ TabParent::RecvNotifyIMEMouseButtonEvent(
     *aConsumedByIME = false;
     return IPC_OK();
   }
-  nsresult rv = IMEStateManager::NotifyIME(aIMENotification, widget, true);
+  nsresult rv = IMEStateManager::NotifyIME(aIMENotification, widget, this);
   *aConsumedByIME = rv == NS_SUCCESS_EVENT_CONSUMED;
   return IPC_OK();
 }

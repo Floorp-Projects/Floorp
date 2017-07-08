@@ -19,6 +19,7 @@ class ChannelMediaDecoder;
 class DecoderDoctorDiagnostics;
 class MediaContainerType;
 struct MediaDecoderInit;
+struct MediaDecoderReaderInit;
 class MediaDecoderOwner;
 class MediaDecoderReader;
 class MediaResource;
@@ -51,8 +52,7 @@ public:
   // Create a reader for thew given MIME type aType. Returns null
   // if we were unable to create the reader.
   static MediaDecoderReader* CreateReader(const MediaContainerType& aType,
-                                          AbstractMediaDecoder* aDecoder,
-                                          MediaResource* aResource);
+                                          const MediaDecoderReaderInit& aInit);
 
   // Returns true if MIME type aType is supported in video documents,
   // or false otherwise. Not all platforms support all MIME types, and

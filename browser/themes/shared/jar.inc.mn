@@ -94,6 +94,7 @@
   skin/classic/browser/panel-icon-retry.svg                    (../shared/panel-icon-retry.svg)
   skin/classic/browser/preferences/in-content-new/favicon.ico      (../shared/incontentprefs/favicon.ico)
   skin/classic/browser/preferences/in-content-new/icons.svg        (../shared/incontentprefs/icons.svg)
+  skin/classic/browser/preferences/in-content-new/search-arrow-indicator.svg  (../shared/incontentprefs/search-arrow-indicator.svg)
   skin/classic/browser/preferences/in-content-new/search.css       (../shared/incontentprefs/search.css)
   skin/classic/browser/preferences/in-content-new/siteDataSettings.css (../shared/incontentprefs/siteDataSettings.css)
 * skin/classic/browser/preferences/in-content-new/containers.css   (../shared/incontentprefs/containers.css)

@@ -259,6 +259,7 @@ StyleSheetInfo::StyleSheetInfo(StyleSheetInfo& aCopy,
   , mComplete(aCopy.mComplete)
   , mFirstChild()  // We don't rebuild the child because we're making a copy
                    // without children.
+  , mSourceMapURL(aCopy.mSourceMapURL)
 #ifdef DEBUG
   , mPrincipalSet(aCopy.mPrincipalSet)
 #endif
@@ -504,6 +505,18 @@ StyleSheet::GetCssRules(nsIPrincipal& aSubjectPrincipal,
     return nullptr;
   }
   FORWARD_INTERNAL(GetCssRulesInternal, ())
+}
+
+void
+StyleSheet::GetSourceMapURL(nsAString& aSourceMapURL)
+{
+  aSourceMapURL = mInner->mSourceMapURL;
+}
+
+void
+StyleSheet::SetSourceMapURL(const nsAString& aSourceMapURL)
+{
+  mInner->mSourceMapURL = aSourceMapURL;
 }
 
 css::Rule*

@@ -70,7 +70,7 @@ class MockRegistry {
       getValueName(index) {
         if (!this.values || index >= this.values.size)
           throw Components.results.NS_ERROR_FAILURE;
-	let names = Array.from(this.values.keys());
+        let names = Array.from(this.values.keys());
         return names[index];
       },
 
