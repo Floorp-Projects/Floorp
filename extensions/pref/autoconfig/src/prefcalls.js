@@ -1,3 +1,4 @@
+/* global processLDAPValues */
 /* -*- tab-width: 4; indent-tabs-mode: nil; js-indent-level: 4 -*-
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -14,15 +15,15 @@ var gVersion;
 var gIsUTF8;
 
 function getPrefBranch() {
-    
+
     var prefService = Components.classes[PrefServiceContractID]
-                                .getService(nsIPrefService);    
+                                .getService(nsIPrefService);
     return prefService.getBranch(null);
 }
 
 function pref(prefName, value) {
 
-    try { 
+    try {
         var prefBranch = getPrefBranch();
 
         if (typeof value == "string") {
@@ -31,24 +32,21 @@ function pref(prefName, value) {
                 return;
             }
             prefBranch.setCharPref(prefName, value);
-        }
-        else if (typeof value == "number") {
+        } else if (typeof value == "number") {
             prefBranch.setIntPref(prefName, value);
-        }
-        else if (typeof value == "boolean") {
+        } else if (typeof value == "boolean") {
             prefBranch.setBoolPref(prefName, value);
         }
-    }
-    catch(e) {
+    } catch (e) {
         displayError("pref", e);
     }
 }
 
 function defaultPref(prefName, value) {
-    
+
     try {
         var prefService = Components.classes[PrefServiceContractID]
-                                    .getService(nsIPrefService);        
+                                    .getService(nsIPrefService);
         var prefBranch = prefService.getDefaultBranch(null);
         if (typeof value == "string") {
             if (gIsUTF8) {
@@ -56,32 +54,28 @@ function defaultPref(prefName, value) {
                 return;
             }
             prefBranch.setCharPref(prefName, value);
-        }
-        else if (typeof value == "number") {
+        } else if (typeof value == "number") {
             prefBranch.setIntPref(prefName, value);
-        }
-        else if (typeof value == "boolean") {
+        } else if (typeof value == "boolean") {
             prefBranch.setBoolPref(prefName, value);
         }
-    }
-    catch(e) {
+    } catch (e) {
         displayError("defaultPref", e);
     }
 }
 
 function lockPref(prefName, value) {
-    
+
     try {
         var prefBranch = getPrefBranch();
-        
+
         if (prefBranch.prefIsLocked(prefName))
             prefBranch.unlockPref(prefName);
-        
+
         defaultPref(prefName, value);
-        
+
         prefBranch.lockPref(prefName);
-    }
-    catch(e) {
+    } catch (e) {
         displayError("lockPref", e);
     }
 }
@@ -92,37 +86,36 @@ function unlockPref(prefName) {
 
         var prefBranch = getPrefBranch();
         prefBranch.unlockPref(prefName);
-    }
-    catch(e) {
+    } catch (e) {
         displayError("unlockPref", e);
     }
 }
 
 function getPref(prefName) {
-    
+
     try {
         var prefBranch = getPrefBranch();
-        
+
         switch (prefBranch.getPrefType(prefName)) {
-            
+
         case prefBranch.PREF_STRING:
             if (gIsUTF8) {
                 return prefBranch.getStringPref(prefName);
             }
             return prefBranch.getCharPref(prefName);
-            
+
         case prefBranch.PREF_INT:
             return prefBranch.getIntPref(prefName);
-            
+
         case prefBranch.PREF_BOOL:
             return prefBranch.getBoolPref(prefName);
         default:
             return null;
         }
-    }
-    catch(e) {
+    } catch (e) {
         displayError("getPref", e);
     }
+    return undefined;
 }
 
 function clearPref(prefName) {
@@ -130,10 +123,9 @@ function clearPref(prefName) {
     try {
         var prefBranch = getPrefBranch();
             prefBranch.clearUserPref(prefName);
+    } catch (e) {
     }
-    catch(e) {
-    }
-        
+
 }
 
 function setLDAPVersion(version) {
@@ -142,7 +134,7 @@ function setLDAPVersion(version) {
 
 
 function getLDAPAttributes(host, base, filter, attribs, isSecure) {
-    
+
     try {
         var urlSpec = "ldap" + (isSecure ? "s" : "") + "://" + host + (isSecure ? ":636" : "") + "/" + base + "?" + attribs + "?sub?" +
                       filter;
@@ -157,10 +149,9 @@ function getLDAPAttributes(host, base, filter, attribs, isSecure) {
         // default to LDAP v3
         if (!gVersion)
           gVersion = Components.interfaces.nsILDAPConnection.VERSION3
- 	// user supplied method
+        // user supplied method
         processLDAPValues(ldapquery.getQueryResults(url, gVersion));
-    }
-    catch(e) {
+    } catch (e) {
         displayError("getLDAPAttibutes", e);
     }
 }
@@ -170,24 +161,24 @@ function getLDAPValue(str, key) {
     try {
         if (str == null || key == null)
             return null;
-        
+
         var search_key = "\n" + key + "=";
-        
+
         var start_pos = str.indexOf(search_key);
         if (start_pos == -1)
             return null;
-        
+
         start_pos += search_key.length;
-        
+
         var end_pos = str.indexOf("\n", start_pos);
         if (end_pos == -1)
             end_pos = str.length;
-        
+
         return str.substring(start_pos, end_pos);
-    }
-    catch(e) {
+    } catch (e) {
         displayError("getLDAPValue", e);
     }
+    return undefined;
 }
 
 function displayError(funcname, message) {
@@ -202,8 +193,7 @@ function displayError(funcname, message) {
          var title = bundle.GetStringFromName("autoConfigTitle");
          var msg = bundle.formatStringFromName("autoConfigMsg", [funcname], 1);
          promptService.alert(null, title, msg + " " + message);
-    }
-    catch(e) { }
+    } catch (e) { }
 }
 
 function getenv(name) {
@@ -211,9 +201,8 @@ function getenv(name) {
         var environment = Components.classes["@mozilla.org/process/environment;1"].
             getService(Components.interfaces.nsIEnvironment);
         return environment.get(name);
-    }
-    catch(e) {
+    } catch (e) {
         displayError("getEnvironment", e);
     }
+    return undefined;
 }
-

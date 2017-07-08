@@ -136,19 +136,32 @@ GetIMEStateSetOpenName(IMEState::Open aOpen)
   }
 }
 
+static bool
+IsSameProcess(const TabParent* aTabParent1, const TabParent* aTabParent2)
+{
+  if (aTabParent1 == aTabParent2) {
+    return true;
+  }
+  if (!aTabParent1 != !aTabParent2) {
+    return false;
+  }
+  return aTabParent1->Manager() == aTabParent2->Manager();
+}
+
 StaticRefPtr<nsIContent> IMEStateManager::sContent;
 StaticRefPtr<nsPresContext> IMEStateManager::sPresContext;
 nsIWidget* IMEStateManager::sWidget = nullptr;
 nsIWidget* IMEStateManager::sFocusedIMEWidget = nullptr;
+StaticRefPtr<TabParent> IMEStateManager::sFocusedIMETabParent;
 nsIWidget* IMEStateManager::sActiveInputContextWidget = nullptr;
 StaticRefPtr<TabParent> IMEStateManager::sActiveTabParent;
 StaticRefPtr<IMEContentObserver> IMEStateManager::sActiveIMEContentObserver;
 TextCompositionArray* IMEStateManager::sTextCompositions = nullptr;
+InputContext::Origin IMEStateManager::sOrigin = InputContext::ORIGIN_MAIN;
 bool IMEStateManager::sInstalledMenuKeyboardListener = false;
 bool IMEStateManager::sIsGettingNewIMEState = false;
 bool IMEStateManager::sCheckForIMEUnawareWebApps = false;
 bool IMEStateManager::sInputModeSupported = false;
-bool IMEStateManager::sRemoteHasFocus = false;
 
 // static
 void
@@ -163,6 +176,9 @@ IMEStateManager::Init()
     &sInputModeSupported,
     "dom.forms.inputmode",
     false);
+
+  sOrigin = XRE_IsParentProcess() ? InputContext::ORIGIN_MAIN :
+                                    InputContext::ORIGIN_CONTENT;
 }
 
 // static
@@ -222,7 +238,7 @@ IMEStateManager::StopIMEStateManagement()
   //       the rights to change input context.
 
   if (sTextCompositions && sPresContext) {
-    NotifyIME(REQUEST_TO_COMMIT_COMPOSITION, sPresContext);
+    NotifyIME(REQUEST_TO_COMMIT_COMPOSITION, sPresContext, sActiveTabParent);
   }
   sActiveInputContextWidget = nullptr;
   sPresContext = nullptr;
@@ -304,7 +320,9 @@ IMEStateManager::OnDestroyPresContext(nsPresContext* aPresContext)
     IMEState newState = GetNewIMEState(sPresContext, nullptr);
     InputContextAction action(InputContextAction::CAUSE_UNKNOWN,
                               InputContextAction::LOST_FOCUS);
-    SetIMEState(newState, nullptr, sWidget, action);
+    InputContext::Origin origin =
+      sActiveTabParent ? InputContext::ORIGIN_CONTENT : sOrigin;
+    SetIMEState(newState, nullptr, sWidget, action, origin);
   }
   sWidget = nullptr;
   sContent = nullptr;
@@ -359,7 +377,9 @@ IMEStateManager::OnRemoveContent(nsPresContext* aPresContext,
     IMEState newState = GetNewIMEState(sPresContext, nullptr);
     InputContextAction action(InputContextAction::CAUSE_UNKNOWN,
                               InputContextAction::LOST_FOCUS);
-    SetIMEState(newState, nullptr, sWidget, action);
+    InputContext::Origin origin =
+      sActiveTabParent ? InputContext::ORIGIN_CONTENT : sOrigin;
+    SetIMEState(newState, nullptr, sWidget, action, origin);
   }
 
   sWidget = nullptr;
@@ -436,14 +456,47 @@ IMEStateManager::OnChangeFocusInternal(nsPresContext* aPresContext,
     // If we're deactivating, we shouldn't commit composition forcibly because
     // the user may want to continue the composition.
     if (aPresContext) {
-      NotifyIME(REQUEST_TO_COMMIT_COMPOSITION, oldWidget);
+      NotifyIME(REQUEST_TO_COMMIT_COMPOSITION, oldWidget, sFocusedIMETabParent);
     }
   }
 
-  if (sActiveIMEContentObserver &&
-      (aPresContext || !sActiveIMEContentObserver->KeepAliveDuringDeactive()) &&
-      !sActiveIMEContentObserver->IsManaging(aPresContext, aContent)) {
-    DestroyIMEContentObserver();
+  if (sActiveIMEContentObserver) {
+    // If there is active IMEContentObserver, it means that focused content was
+    // in this process.  So, if a tab parent gets focus, it means that the
+    // focused editor in this process is being blurred.
+    if (newTabParent) {
+      DestroyIMEContentObserver();
+    }
+    // If the process is being inactivated, then, IMEContentObserver should
+    // stop observing the contents unless native IME requests to keep
+    // composition even during deactivated.
+    else if (!aPresContext) {
+      if (!sActiveIMEContentObserver->KeepAliveDuringDeactive()) {
+        DestroyIMEContentObserver();
+      }
+    }
+    // Otherwise, i.e., new focused content is in this process, let's check
+    // whether the new focused content is already being managed by the
+    // active IME content observer.
+    else if (!sActiveIMEContentObserver->IsManaging(aPresContext, aContent)) {
+      DestroyIMEContentObserver();
+    }
+  } else {
+    // If there is no active IMEContentObserver, it means that focused content
+    // may be in another process.
+
+    // If focus is moving from current focused remote process to different
+    // process while the process has IME focus too, we need to notify IME of
+    // blur here because it may be too late the blur notification to reach
+    // this process especially when closing active window.
+    if (sFocusedIMETabParent &&
+        !IsSameProcess(sFocusedIMETabParent, newTabParent)) {
+      MOZ_LOG(sISMLog, LogLevel::Info,
+        ("  OnChangeFocusInternal(), notifying IME of blur of previous focused "
+         "remote process because it may be too late actual notification to "
+         "reach this process"));
+      NotifyIME(NOTIFY_IME_OF_BLUR, sFocusedIMEWidget, sFocusedIMETabParent);
+    }
   }
 
   if (!aPresContext) {
@@ -453,11 +506,7 @@ IMEStateManager::OnChangeFocusInternal(nsPresContext* aPresContext,
     return NS_OK;
   }
 
-  nsIContentParent* currentContentParent =
-    sActiveTabParent ? sActiveTabParent->Manager() : nullptr;
-  nsIContentParent* newContentParent =
-    newTabParent ? newTabParent->Manager() : nullptr;
-  if (sActiveTabParent && currentContentParent != newContentParent) {
+  if (sActiveTabParent && !IsSameProcess(sActiveTabParent, newTabParent)) {
     MOZ_LOG(sISMLog, LogLevel::Debug,
       ("  OnChangeFocusInternal(), notifying previous "
        "focused child process of parent process or another child process "
@@ -496,23 +545,26 @@ IMEStateManager::OnChangeFocusInternal(nsPresContext* aPresContext,
       setIMEState = sInstalledMenuKeyboardListener;
     } else if (focusActuallyChanging) {
       InputContext context = newWidget->GetInputContext();
-      if (context.mIMEState.mEnabled == IMEState::DISABLED) {
+      if (context.mIMEState.mEnabled == IMEState::DISABLED &&
+          context.mOrigin == InputContext::ORIGIN_CONTENT) {
         setIMEState = false;
         MOZ_LOG(sISMLog, LogLevel::Debug,
           ("  OnChangeFocusInternal(), doesn't set IME "
            "state because focused element (or document) is in a child process "
-           "and the IME state is already disabled"));
+           "and the IME state is already disabled by a remote process"));
       } else {
         MOZ_LOG(sISMLog, LogLevel::Debug,
           ("  OnChangeFocusInternal(), will disable IME "
            "until new focused element (or document) in the child process "
            "will get focus actually"));
       }
-    } else {
-      // When focus is NOT changed actually, we shouldn't set IME state since
-      // that means that the window is being activated and the child process
-      // may have composition.  Then, we shouldn't commit the composition with
-      // making IME state disabled.
+    } else if (newWidget->GetInputContext().mOrigin !=
+                 InputContext::ORIGIN_CONTENT) {
+      // When focus is NOT changed actually, we shouldn't set IME state if
+      // current input context was set by a remote process since that means
+      // that the window is being activated and the child process may have
+      // composition.  Then, we shouldn't commit the composition with making
+      // IME state disabled.
       setIMEState = false;
       MOZ_LOG(sISMLog, LogLevel::Debug,
         ("  OnChangeFocusInternal(), doesn't set IME "
@@ -537,7 +589,8 @@ IMEStateManager::OnChangeFocusInternal(nsPresContext* aPresContext,
       // Even if focus isn't changing actually, we should commit current
       // composition here since the IME state is changing.
       if (sPresContext && oldWidget && !focusActuallyChanging) {
-        NotifyIME(REQUEST_TO_COMMIT_COMPOSITION, oldWidget);
+        NotifyIME(REQUEST_TO_COMMIT_COMPOSITION, oldWidget,
+                  sFocusedIMETabParent);
       }
     } else if (aAction.mFocusChange == InputContextAction::FOCUS_NOT_CHANGED) {
       // If aContent isn't null or aContent is null but editable, somebody gets
@@ -549,7 +602,8 @@ IMEStateManager::OnChangeFocusInternal(nsPresContext* aPresContext,
     }
 
     // Update IME state for new focus widget
-    SetIMEState(newState, aContent, newWidget, aAction);
+    SetIMEState(newState, aContent, newWidget, aAction,
+                newTabParent ? InputContext::ORIGIN_CONTENT : sOrigin);
   }
 
   sActiveTabParent = newTabParent;
@@ -700,7 +754,7 @@ IMEStateManager::OnClickInEditor(nsPresContext* aPresContext,
 
   InputContextAction action(cause, InputContextAction::FOCUS_NOT_CHANGED);
   IMEState newState = GetNewIMEState(aPresContext, aContent);
-  SetIMEState(newState, aContent, widget, action);
+  SetIMEState(newState, aContent, widget, action, sOrigin);
 }
 
 // static
@@ -894,7 +948,7 @@ IMEStateManager::UpdateIMEState(const IMEState& aNewIMEState,
 
   if (updateIMEState) {
     // commit current composition before modifying IME state.
-    NotifyIME(REQUEST_TO_COMMIT_COMPOSITION, widget);
+    NotifyIME(REQUEST_TO_COMMIT_COMPOSITION, widget, sFocusedIMETabParent);
     if (NS_WARN_IF(widget->Destroyed())) {
       MOZ_LOG(sISMLog, LogLevel::Error,
         ("  UpdateIMEState(), widget has gone during committing composition"));
@@ -909,7 +963,7 @@ IMEStateManager::UpdateIMEState(const IMEState& aNewIMEState,
   if (updateIMEState) {
     InputContextAction action(InputContextAction::CAUSE_UNKNOWN,
                               InputContextAction::FOCUS_NOT_CHANGED);
-    SetIMEState(aNewIMEState, aContent, widget, action);
+    SetIMEState(aNewIMEState, aContent, widget, action, sOrigin);
     if (NS_WARN_IF(widget->Destroyed())) {
       MOZ_LOG(sISMLog, LogLevel::Error,
         ("  UpdateIMEState(), widget has gone during setting input context"));
@@ -1069,22 +1123,25 @@ void
 IMEStateManager::SetIMEState(const IMEState& aState,
                              nsIContent* aContent,
                              nsIWidget* aWidget,
-                             InputContextAction aAction)
+                             InputContextAction aAction,
+                             InputContext::Origin aOrigin)
 {
   MOZ_LOG(sISMLog, LogLevel::Info,
     ("SetIMEState(aState={ mEnabled=%s, mOpen=%s }, "
      "aContent=0x%p (TabParent=0x%p), aWidget=0x%p, aAction={ mCause=%s, "
-     "mFocusChange=%s })",
+     "mFocusChange=%s }, aOrigin=%s)",
      GetIMEStateEnabledName(aState.mEnabled),
      GetIMEStateSetOpenName(aState.mOpen), aContent,
      TabParent::GetFrom(aContent), aWidget,
      GetActionCauseName(aAction.mCause),
-     GetActionFocusChangeName(aAction.mFocusChange)));
+     GetActionFocusChangeName(aAction.mFocusChange),
+     ToChar(aOrigin)));
 
   NS_ENSURE_TRUE_VOID(aWidget);
 
   InputContext context;
   context.mIMEState = aState;
+  context.mOrigin = aOrigin;
   context.mMayBeIMEUnaware = context.mIMEState.IsEditable() &&
     sCheckForIMEUnawareWebApps && MayBeIMEUnawareWebApp(aContent);
 
@@ -1411,25 +1468,29 @@ IMEStateManager::OnCompositionEventDiscarded(
 nsresult
 IMEStateManager::NotifyIME(IMEMessage aMessage,
                            nsIWidget* aWidget,
-                           bool aOriginIsRemote)
+                           TabParent* aTabParent)
 {
   return IMEStateManager::NotifyIME(IMENotification(aMessage), aWidget,
-                                    aOriginIsRemote);
+                                    aTabParent);
 }
 
 // static
 nsresult
 IMEStateManager::NotifyIME(const IMENotification& aNotification,
                            nsIWidget* aWidget,
-                           bool aOriginIsRemote)
+                           TabParent* aTabParent)
 {
   MOZ_LOG(sISMLog, LogLevel::Info,
     ("NotifyIME(aNotification={ mMessage=%s }, "
-     "aWidget=0x%p, aOriginIsRemote=%s), sFocusedIMEWidget=0x%p, "
-     "sRemoteHasFocus=%s",
+     "aWidget=0x%p, aTabParent=0x%p), sFocusedIMEWidget=0x%p, "
+     "sActiveTabParent=0x%p, sFocusedIMETabParent=0x%p, "
+     "IsSameProcess(aTabParent, sActiveTabParent)=%s, "
+     "IsSameProcess(aTabParent, sFocusedIMETabParent)=%s",
      ToChar(aNotification.mMessage), aWidget,
-     GetBoolName(aOriginIsRemote), sFocusedIMEWidget,
-     GetBoolName(sRemoteHasFocus)));
+     aTabParent, sFocusedIMEWidget, sActiveTabParent.get(),
+     sFocusedIMETabParent.get(),
+     GetBoolName(IsSameProcess(aTabParent, sActiveTabParent)),
+     GetBoolName(IsSameProcess(aTabParent, sFocusedIMETabParent))));
 
   if (NS_WARN_IF(!aWidget)) {
     MOZ_LOG(sISMLog, LogLevel::Error,
@@ -1439,61 +1500,58 @@ IMEStateManager::NotifyIME(const IMENotification& aNotification,
 
   switch (aNotification.mMessage) {
     case NOTIFY_IME_OF_FOCUS: {
+      // If focus notification comes from a remote process which already lost
+      // focus, we shouldn't accept the focus notification.  Then, following
+      // notifications from the process will be ignored.
+      if (NS_WARN_IF(!IsSameProcess(aTabParent, sActiveTabParent))) {
+        MOZ_ASSERT(aTabParent,
+          "Why was the input context initialized for a remote process but "
+          "does this process get IME focus?");
+        MOZ_LOG(sISMLog, LogLevel::Warning,
+          ("  NotifyIME(), WARNING, the received focus notification is ignored "
+           "because input context was initialized for %s, perhaps, it came "
+           "from a busy remote process",
+           sActiveTabParent ? "another remote process" : "current process"));
+        return NS_OK;
+      }
+      // If there is pending blur notification for current focused IME,
+      // we should notify IME of blur by ourselves.  Then, we should ignore
+      // following notifications coming from the process.
       if (sFocusedIMEWidget) {
-        if (NS_WARN_IF(!sRemoteHasFocus && !aOriginIsRemote)) {
-          MOZ_LOG(sISMLog, LogLevel::Error,
-            ("  NotifyIME(), although, this process is "
-             "getting IME focus but there was focused IME widget"));
-        } else {
-          MOZ_LOG(sISMLog, LogLevel::Info,
-            ("  NotifyIME(), tries to notify IME of "
-             "blur first because remote process's blur notification hasn't "
-             "been received yet..."));
-        }
+        MOZ_ASSERT(sFocusedIMETabParent || aTabParent,
+          "This case shouldn't be caused by focus move in this process");
         nsCOMPtr<nsIWidget> focusedIMEWidget(sFocusedIMEWidget);
         sFocusedIMEWidget = nullptr;
-        sRemoteHasFocus = false;
+        sFocusedIMETabParent = nullptr;
         focusedIMEWidget->NotifyIME(IMENotification(NOTIFY_IME_OF_BLUR));
       }
-      sRemoteHasFocus = aOriginIsRemote;
+      sFocusedIMETabParent = aTabParent;
       sFocusedIMEWidget = aWidget;
       nsCOMPtr<nsIWidget> widget(aWidget);
       return widget->NotifyIME(aNotification);
     }
     case NOTIFY_IME_OF_BLUR: {
-      if (!sRemoteHasFocus && aOriginIsRemote) {
-        MOZ_LOG(sISMLog, LogLevel::Info,
-          ("  NotifyIME(), received blur notification "
-           "after another one has focus, nothing to do..."));
+      if (!IsSameProcess(aTabParent, sFocusedIMETabParent)) {
+        MOZ_LOG(sISMLog, LogLevel::Warning,
+          ("  NotifyIME(), WARNING, the received blur notification is ignored "
+           "because it's not from current focused IME process"));
         return NS_OK;
       }
-      if (NS_WARN_IF(sRemoteHasFocus && !aOriginIsRemote)) {
+      if (!sFocusedIMEWidget) {
         MOZ_LOG(sISMLog, LogLevel::Error,
-          ("  NotifyIME(), FAILED, received blur "
-           "notification from this process but the remote has focus"));
-        return NS_OK;
-      }
-      if (!sFocusedIMEWidget && aOriginIsRemote) {
-        MOZ_LOG(sISMLog, LogLevel::Info,
-          ("  NotifyIME(), received blur notification "
-           "but the remote has already lost focus"));
-        return NS_OK;
-      }
-      if (NS_WARN_IF(!sFocusedIMEWidget)) {
-        MOZ_LOG(sISMLog, LogLevel::Error,
-          ("  NotifyIME(), FAILED, received blur "
-           "notification but there is no focused IME widget"));
+          ("  NotifyIME(), WARNING, received blur notification but there is "
+           "no focused IME widget"));
         return NS_OK;
       }
       if (NS_WARN_IF(sFocusedIMEWidget != aWidget)) {
-        MOZ_LOG(sISMLog, LogLevel::Error,
-          ("  NotifyIME(), FAILED, received blur "
-           "notification but there is no focused IME widget"));
+        MOZ_LOG(sISMLog, LogLevel::Warning,
+          ("  NotifyIME(), WARNING, the received blur notification is ignored "
+           "because it's not for current focused IME widget"));
         return NS_OK;
       }
       nsCOMPtr<nsIWidget> focusedIMEWidget(sFocusedIMEWidget);
       sFocusedIMEWidget = nullptr;
-      sRemoteHasFocus = false;
+      sFocusedIMETabParent = nullptr;
       return focusedIMEWidget->NotifyIME(IMENotification(NOTIFY_IME_OF_BLUR));
     }
     case NOTIFY_IME_OF_SELECTION_CHANGE:
@@ -1501,30 +1559,22 @@ IMEStateManager::NotifyIME(const IMENotification& aNotification,
     case NOTIFY_IME_OF_POSITION_CHANGE:
     case NOTIFY_IME_OF_MOUSE_BUTTON_EVENT:
     case NOTIFY_IME_OF_COMPOSITION_EVENT_HANDLED: {
-      if (!sRemoteHasFocus && aOriginIsRemote) {
-        MOZ_LOG(sISMLog, LogLevel::Info,
-          ("  NotifyIME(), received content change "
-           "notification from the remote but it's already lost focus"));
-        return NS_OK;
-      }
-      if (NS_WARN_IF(sRemoteHasFocus && !aOriginIsRemote)) {
-        MOZ_LOG(sISMLog, LogLevel::Error,
-          ("  NotifyIME(), FAILED, received content "
-           "change notification from this process but the remote has already "
-           "gotten focus"));
+      if (!IsSameProcess(aTabParent, sFocusedIMETabParent)) {
+        MOZ_LOG(sISMLog, LogLevel::Warning,
+          ("  NotifyIME(), WARNING, the received content change notification "
+           "is ignored because it's not from current focused IME process"));
         return NS_OK;
       }
       if (!sFocusedIMEWidget) {
-        MOZ_LOG(sISMLog, LogLevel::Info,
-          ("  NotifyIME(), received content change "
-           "notification but there is no focused IME widget"));
+        MOZ_LOG(sISMLog, LogLevel::Warning,
+          ("  NotifyIME(), WARNING, the received content change notification "
+           "is ignored because there is no focused IME widget"));
         return NS_OK;
       }
       if (NS_WARN_IF(sFocusedIMEWidget != aWidget)) {
-        MOZ_LOG(sISMLog, LogLevel::Error,
-          ("  NotifyIME(), FAILED, received content "
-           "change notification for IME which has already lost focus, so, "
-           "nothing to do..."));
+        MOZ_LOG(sISMLog, LogLevel::Warning,
+          ("  NotifyIME(), WARNING, the received content change notification "
+           "is ignored because it's not for current focused IME widget"));
         return NS_OK;
       }
       nsCOMPtr<nsIWidget> widget(aWidget);
@@ -1536,26 +1586,35 @@ IMEStateManager::NotifyIME(const IMENotification& aNotification,
       break;
   }
 
-  RefPtr<TextComposition> composition;
-  if (sTextCompositions) {
-    composition = sTextCompositions->GetCompositionFor(aWidget);
+  if (!sTextCompositions) {
+    MOZ_LOG(sISMLog, LogLevel::Info,
+      ("  NotifyIME(), the request to IME is ignored because "
+       "there have been no compositions yet"));
+    return NS_OK;
   }
 
-  bool isSynthesizedForTests =
-    composition && composition->IsSynthesizedForTests();
+  RefPtr<TextComposition> composition =
+    sTextCompositions->GetCompositionFor(aWidget);
+  if (!composition) {
+    MOZ_LOG(sISMLog, LogLevel::Info,
+      ("  NotifyIME(), the request to IME is ignored because "
+       "there is no active composition"));
+    return NS_OK;
+  }
 
-  MOZ_LOG(sISMLog, LogLevel::Info,
-    ("  NotifyIME(), composition=0x%p, "
-     "composition->IsSynthesizedForTests()=%s",
-     composition.get(), GetBoolName(isSynthesizedForTests)));
+  if (!IsSameProcess(aTabParent, composition->GetTabParent())) {
+    MOZ_LOG(sISMLog, LogLevel::Warning,
+      ("  NotifyIME(), WARNING, the request to IME is ignored because "
+       "it does not come from the remote process which has the composition "
+       "on aWidget"));
+    return NS_OK;
+  }
 
   switch (aNotification.mMessage) {
     case REQUEST_TO_COMMIT_COMPOSITION:
-      return composition ?
-        composition->RequestToCommit(aWidget, false) : NS_OK;
+      return composition->RequestToCommit(aWidget, false);
     case REQUEST_TO_CANCEL_COMPOSITION:
-      return composition ?
-        composition->RequestToCommit(aWidget, true) : NS_OK;
+      return composition->RequestToCommit(aWidget, true);
     default:
       MOZ_CRASH("Unsupported notification");
   }
@@ -1568,11 +1627,11 @@ IMEStateManager::NotifyIME(const IMENotification& aNotification,
 nsresult
 IMEStateManager::NotifyIME(IMEMessage aMessage,
                            nsPresContext* aPresContext,
-                           bool aOriginIsRemote)
+                           TabParent* aTabParent)
 {
   MOZ_LOG(sISMLog, LogLevel::Info,
-    ("NotifyIME(aMessage=%s, aPresContext=0x%p, aOriginIsRemote=%s)",
-     ToChar(aMessage), aPresContext, GetBoolName(aOriginIsRemote)));
+    ("NotifyIME(aMessage=%s, aPresContext=0x%p, aTabParent=0x%p)",
+     ToChar(aMessage), aPresContext, aTabParent));
 
   if (NS_WARN_IF(!CanHandleWith(aPresContext))) {
     return NS_ERROR_INVALID_ARG;
@@ -1585,7 +1644,7 @@ IMEStateManager::NotifyIME(IMEMessage aMessage,
        "nsPresContext"));
     return NS_ERROR_NOT_AVAILABLE;
   }
-  return NotifyIME(aMessage, widget, aOriginIsRemote);
+  return NotifyIME(aMessage, widget, aTabParent);
 }
 
 // static

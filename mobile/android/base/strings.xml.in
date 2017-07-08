@@ -247,6 +247,9 @@
   <string name="custom_tabs_menu_footer">&custom_tabs_menu_footer;</string>
   <string name="custom_tabs_hint_url_copy">&custom_tabs_hint_url_copy;</string>
 
+  <string name="pref_pwa">&pref_pwa;</string>
+  <string name="pref_pwa_summary">&pref_pwa_summary;</string>
+
   <string name="pref_activity_stream">&pref_activity_stream;</string>
   <string name="pref_activity_stream_summary">&pref_activity_stream_summary;</string>
 

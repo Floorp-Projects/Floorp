@@ -372,7 +372,7 @@ SpecialPowersObserverAPI.prototype = {
               return undefined;
             }
         }
-        return undefined;	// See comment at the beginning of this function.
+        return undefined; // See comment at the beginning of this function.
       }
 
       case "SPProcessCrashService": {
@@ -392,7 +392,7 @@ SpecialPowersObserverAPI.prototype = {
           default:
             throw new SpecialPowersError("Invalid operation for SPProcessCrashService");
         }
-        return undefined;	// See comment at the beginning of this function.
+        return undefined; // See comment at the beginning of this function.
       }
 
       case "SPPermissionManager": {
@@ -416,7 +416,7 @@ SpecialPowersObserverAPI.prototype = {
             throw new SpecialPowersError(
               "Invalid operation for SPPermissionManager");
         }
-        return undefined;	// See comment at the beginning of this function.
+        return undefined; // See comment at the beginning of this function.
       }
 
       case "SPSetTestPluginEnabledState": {
@@ -513,7 +513,7 @@ SpecialPowersObserverAPI.prototype = {
             e + "\n" +
             e.fileName + ":" + e.lineNumber);
         }
-        return undefined;	// See comment at the beginning of this function.
+        return undefined; // See comment at the beginning of this function.
       }
 
       case "SPChromeScriptMessage": {

@@ -664,8 +664,12 @@ menulist[indicator=true] > menupopup menuitem:not([image]) > .menu-iconic-left {
 }
 
 menulist[indicator=true] > menupopup menuitem[indicator=true]:not([image]) > .menu-iconic-left > .menu-iconic-icon {
-  list-style-image: url(chrome://global/skin/icons/search-arrow-indicator.svg);
+  list-style-image: url(chrome://browser/skin/preferences/in-content-new/search-arrow-indicator.svg);
   width: 8px;
   height: 10px;
   margin: 0;
+}
+
+menulist[indicator=true] > menupopup menuitem[indicator=true]:not([image]) > .menu-iconic-left > .menu-iconic-icon:-moz-locale-dir(rtl) {
+  transform: scaleX(-1);
 }

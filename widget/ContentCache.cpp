@@ -6,18 +6,21 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/ContentCache.h"
+
 #include "mozilla/IMEStateManager.h"
+#include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/Logging.h"
+#include "mozilla/Move.h"
+#include "mozilla/RefPtr.h"
+#include "mozilla/SizePrintfMacros.h"
 #include "mozilla/TextComposition.h"
 #include "mozilla/TextEvents.h"
+#include "mozilla/dom/TabParent.h"
 #include "nsIWidget.h"
-#include "mozilla/RefPtr.h"
-#include "mozilla/Move.h"
-#include "mozilla/IntegerPrintfMacros.h"
-#include "mozilla/SizePrintfMacros.h"
 
 namespace mozilla {
 
+using namespace dom;
 using namespace widget;
 
 static const char*
@@ -511,13 +514,15 @@ ContentCacheInChild::SetSelection(nsIWidget* aWidget,
  * mozilla::ContentCacheInParent
  *****************************************************************************/
 
-ContentCacheInParent::ContentCacheInParent()
+ContentCacheInParent::ContentCacheInParent(TabParent& aTabParent)
   : ContentCache()
+  , mTabParent(aTabParent)
   , mCommitStringByRequest(nullptr)
   , mPendingEventsNeedingAck(0)
   , mCompositionStartInChild(UINT32_MAX)
   , mPendingCompositionCount(0)
   , mWidgetHasComposition(false)
+  , mIsPendingLastCommitEvent(false)
 {
 }
 
@@ -1133,6 +1138,9 @@ ContentCacheInParent::OnCompositionEvent(const WidgetCompositionEvent& aEvent)
     if (mPendingCompositionCount == 1) {
       mPendingCommitLength = aEvent.mData.Length();
     }
+    mIsPendingLastCommitEvent = true;
+  } else if (aEvent.mMessage != eCompositionStart) {
+    mCompositionString = aEvent.mData;
   }
 
   // During REQUEST_TO_COMMIT_COMPOSITION or REQUEST_TO_CANCEL_COMPOSITION,
@@ -1152,6 +1160,9 @@ ContentCacheInParent::OnCompositionEvent(const WidgetCompositionEvent& aEvent)
     if (!mWidgetHasComposition) {
       mPendingEventsNeedingAck++;
     }
+    // Cancel mIsPendingLastCommitEvent because we won't send the commit event
+    // to the remote process.
+    mIsPendingLastCommitEvent = false;
     return false;
   }
 
@@ -1195,6 +1206,13 @@ ContentCacheInParent::OnEventNeedingAckHandled(nsIWidget* aWidget,
       aMessage == eCompositionCommitRequestHandled) {
     MOZ_RELEASE_ASSERT(mPendingCompositionCount > 0);
     mPendingCompositionCount--;
+    // Forget composition string only when the latest composition string is
+    // handled in the remote process because if there is 2 or more pending
+    // composition, this value shouldn't be referred.
+    if (!mPendingCompositionCount) {
+      mCompositionString.Truncate();
+      mIsPendingLastCommitEvent = false;
+    }
     // Forget pending commit string length if it's handled in the remote
     // process.  Note that this doesn't care too old composition's commit
     // string because in such case, we cannot return proper information
@@ -1217,11 +1235,42 @@ ContentCacheInParent::RequestIMEToCommitComposition(nsIWidget* aWidget,
 {
   MOZ_LOG(sContentCacheLog, LogLevel::Info,
     ("0x%p RequestToCommitComposition(aWidget=%p, "
-     "aCancel=%s), mWidgetHasComposition=%s, mCommitStringByRequest=%p",
-     this, aWidget, GetBoolName(aCancel), GetBoolName(mWidgetHasComposition),
-     mCommitStringByRequest));
+     "aCancel=%s), mPendingCompositionCount=%u, "
+     "IMEStateManager::DoesTabParentHaveIMEFocus(&mTabParent)=%s, "
+     "mWidgetHasComposition=%s, mCommitStringByRequest=%p",
+     this, aWidget, GetBoolName(aCancel), mPendingCompositionCount,
+     GetBoolName(IMEStateManager::DoesTabParentHaveIMEFocus(&mTabParent)),
+     GetBoolName(mWidgetHasComposition), mCommitStringByRequest));
 
   MOZ_ASSERT(!mCommitStringByRequest);
+
+  // If there are 2 or more pending compositions, we already sent
+  // eCompositionCommit(AsIs) to the remote process.  So, this request is
+  // too late for IME.  The remote process should wait following
+  // composition events for cleaning up TextComposition and handle the
+  // request as it's handled asynchronously.
+  if (mPendingCompositionCount > 1) {
+    return false;
+  }
+
+  // If TabParent which has IME focus was already changed to different one, the
+  // request shouldn't be sent to IME because it's too late.
+  if (!IMEStateManager::DoesTabParentHaveIMEFocus(&mTabParent)) {
+    // Use the latest composition string which may not be handled in the
+    // remote process for avoiding data loss.
+    aCommittedString = mCompositionString;
+    return true;
+  }
+
+  // Even if the remote process has IME focus and there is no pending
+  // composition, we may have already sent eCompositionCommit(AsIs) event
+  // to it.  If so, the remote process will receive composition events
+  // which causes cleaning up TextComposition.  So, this shouldn't do nothing
+  // and TextComposition should handle the request as it's handled
+  // asynchronously.
+  if (mIsPendingLastCommitEvent) {
+    return false;
+  }
 
   RefPtr<TextComposition> composition =
     IMEStateManager::GetTextCompositionFor(aWidget);
@@ -1274,7 +1323,7 @@ ContentCacheInParent::MaybeNotifyIME(nsIWidget* aWidget,
                                      const IMENotification& aNotification)
 {
   if (!mPendingEventsNeedingAck) {
-    IMEStateManager::NotifyIME(aNotification, aWidget, true);
+    IMEStateManager::NotifyIME(aNotification, aWidget, &mTabParent);
     return;
   }
 
@@ -1315,7 +1364,7 @@ ContentCacheInParent::FlushPendingNotifications(nsIWidget* aWidget)
     IMENotification notification(mPendingTextChange);
     if (!aWidget->Destroyed()) {
       mPendingTextChange.Clear();
-      IMEStateManager::NotifyIME(notification, aWidget, true);
+      IMEStateManager::NotifyIME(notification, aWidget, &mTabParent);
     }
   }
 
@@ -1323,7 +1372,7 @@ ContentCacheInParent::FlushPendingNotifications(nsIWidget* aWidget)
     IMENotification notification(mPendingSelectionChange);
     if (!aWidget->Destroyed()) {
       mPendingSelectionChange.Clear();
-      IMEStateManager::NotifyIME(notification, aWidget, true);
+      IMEStateManager::NotifyIME(notification, aWidget, &mTabParent);
     }
   }
 
@@ -1333,7 +1382,7 @@ ContentCacheInParent::FlushPendingNotifications(nsIWidget* aWidget)
     IMENotification notification(mPendingLayoutChange);
     if (!aWidget->Destroyed()) {
       mPendingLayoutChange.Clear();
-      IMEStateManager::NotifyIME(notification, aWidget, true);
+      IMEStateManager::NotifyIME(notification, aWidget, &mTabParent);
     }
   }
 
@@ -1343,7 +1392,7 @@ ContentCacheInParent::FlushPendingNotifications(nsIWidget* aWidget)
     IMENotification notification(mPendingCompositionUpdate);
     if (!aWidget->Destroyed()) {
       mPendingCompositionUpdate.Clear();
-      IMEStateManager::NotifyIME(notification, aWidget, true);
+      IMEStateManager::NotifyIME(notification, aWidget, &mTabParent);
     }
   }
 

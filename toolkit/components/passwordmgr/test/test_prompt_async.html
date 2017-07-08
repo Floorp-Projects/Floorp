@@ -126,22 +126,22 @@
             SimpleTest.finish();
         }
 
-	var resolveCallback = SpecialPowers.wrapCallbackObject({
-	QueryInterface(iid) {
-	const interfaces = [Ci.nsIProtocolProxyCallback, Ci.nsISupports];
+        var resolveCallback = SpecialPowers.wrapCallbackObject({
+        QueryInterface(iid) {
+        const interfaces = [Ci.nsIProtocolProxyCallback, Ci.nsISupports];
 
         if (!interfaces.some( function(v) { return iid.equals(v); } ))
           throw SpecialPowers.Cr.NS_ERROR_NO_INTERFACE;
-	  return this;
-	},
+          return this;
+        },
 
-	onProxyAvailable(req, uri, pi, status) {
+        onProxyAvailable(req, uri, pi, status) {
           initLogins(pi);
           doTest(testNum);
-	}
-	});
+        }
+        });
 
-	function startup() {
+        function startup() {
             // Need to allow for arbitrary network servers defined in PAC instead of a hardcoded moz-proxy.
             var channel = NetUtil.newChannel({
                 uri: "http://example.com",
@@ -152,7 +152,7 @@
                                    .getService();
 
             pps.asyncResolve(channel, 0, resolveCallback);
-	}
+        }
 
         // --------------- Test loop spin ----------------
         var testNum = 1;
@@ -167,7 +167,7 @@
             iframe2a.onload = onFrameLoad;
             iframe2b.onload = onFrameLoad;
 
-	    startup();
+            startup();
         };
 
         var expectedLoads;

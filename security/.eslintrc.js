@@ -62,9 +62,6 @@ module.exports = {
     // Disallow use of the comma operator.
     "no-sequences": "error",
 
-    // Disallow tabs.
-    "no-tabs": "error",
-
     // Disallow template literal placeholder syntax in regular strings.
     "no-template-curly-in-string": "error",
 

@@ -99,10 +99,10 @@ public:
 
   bool CreateContentBridges(
     base::ProcessId aOtherProcess,
-    ipc::Endpoint<PCompositorManagerChild>* aOutCompositor,
-    ipc::Endpoint<PImageBridgeChild>* aOutImageBridge,
-    ipc::Endpoint<PVRManagerChild>* aOutVRBridge,
-    ipc::Endpoint<dom::PVideoDecoderManagerChild>* aOutVideoManager,
+    mozilla::ipc::Endpoint<PCompositorManagerChild>* aOutCompositor,
+    mozilla::ipc::Endpoint<PImageBridgeChild>* aOutImageBridge,
+    mozilla::ipc::Endpoint<PVRManagerChild>* aOutVRBridge,
+    mozilla::ipc::Endpoint<dom::PVideoDecoderManagerChild>* aOutVideoManager,
     nsTArray<uint32_t>* aNamespaces);
 
   // This returns a reference to the APZCTreeManager to which
@@ -185,13 +185,13 @@ private:
   void OnXPCOMShutdown();
 
   bool CreateContentCompositorManager(base::ProcessId aOtherProcess,
-                                      ipc::Endpoint<PCompositorManagerChild>* aOutEndpoint);
+                                      mozilla::ipc::Endpoint<PCompositorManagerChild>* aOutEndpoint);
   bool CreateContentImageBridge(base::ProcessId aOtherProcess,
-                                ipc::Endpoint<PImageBridgeChild>* aOutEndpoint);
+                                mozilla::ipc::Endpoint<PImageBridgeChild>* aOutEndpoint);
   bool CreateContentVRManager(base::ProcessId aOtherProcess,
-                              ipc::Endpoint<PVRManagerChild>* aOutEndpoint);
+                              mozilla::ipc::Endpoint<PVRManagerChild>* aOutEndpoint);
   void CreateContentVideoDecoderManager(base::ProcessId aOtherProcess,
-                                        ipc::Endpoint<dom::PVideoDecoderManagerChild>* aOutEndPoint);
+                                        mozilla::ipc::Endpoint<dom::PVideoDecoderManagerChild>* aOutEndPoint);
 
   // Called from RemoteCompositorSession. We track remote sessions so we can
   // notify their owning widgets that the session must be restarted.
@@ -258,7 +258,7 @@ private:
   bool mDecodeVideoOnGpuProcess = true;
 
   RefPtr<Observer> mObserver;
-  ipc::TaskFactory<GPUProcessManager> mTaskFactory;
+  mozilla::ipc::TaskFactory<GPUProcessManager> mTaskFactory;
   RefPtr<VsyncIOThreadHolder> mVsyncIOThread;
   uint32_t mNextNamespace;
   uint32_t mIdNamespace;

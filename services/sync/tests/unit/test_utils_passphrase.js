@@ -1,3 +1,4 @@
+/* eslint no-tabs:"off" */
 Cu.import("resource://services-sync/util.js");
 
 function run_test() {

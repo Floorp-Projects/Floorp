@@ -830,7 +830,8 @@ MP4MetadataRust::GetNumberTracks(mozilla::TrackInfo::TrackType aType) const
       continue;
     }
     // JPEG 'video' decoder is not supported in media stack yet.
-    if (track_info.codec == mp4parse_codec::mp4parse_codec_JPEG) {
+    if (track_info.codec == mp4parse_codec::mp4parse_codec_JPEG ||
+        track_info.codec == mp4parse_codec::mp4parse_codec_UNKNOWN) {
       continue;
     }
     if (TrackTypeEqual(aType, track_info.track_type)) {

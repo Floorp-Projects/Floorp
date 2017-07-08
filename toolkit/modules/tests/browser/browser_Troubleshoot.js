@@ -539,42 +539,42 @@ const SNAPSHOT_SCHEMA = {
           required: AppConstants.MOZ_CONTENT_SANDBOX,
           type: "number"
         },
-	syscallLog: {
-	  required: AppConstants.platform == "linux",
-	  type: "array",
-	  items: {
-	    type: "object",
-	    properties: {
-	      index: {
-		required: true,
-		type: "number",
-	      },
-	      pid: {
-		required: true,
-		type: "number",
-	      },
-	      tid: {
-		required: true,
-		type: "number",
-	      },
-	      procType: {
-		required: true,
-		type: "string",
-	      },
-	      syscall: {
-		required: true,
-		type: "number",
-	      },
-	      args: {
-		required: true,
-		type: "array",
-		items: {
-		  type: "string",
-		},
-	      },
-	    },
-	  },
-	},
+        syscallLog: {
+          required: AppConstants.platform == "linux",
+          type: "array",
+          items: {
+            type: "object",
+            properties: {
+              index: {
+                required: true,
+                type: "number",
+              },
+              pid: {
+                required: true,
+                type: "number",
+              },
+              tid: {
+                required: true,
+                type: "number",
+              },
+              procType: {
+                required: true,
+                type: "string",
+              },
+              syscall: {
+                required: true,
+                type: "number",
+              },
+              args: {
+                required: true,
+                type: "array",
+                items: {
+                  type: "string",
+                },
+              },
+            },
+          },
+        },
       },
     },
   },
