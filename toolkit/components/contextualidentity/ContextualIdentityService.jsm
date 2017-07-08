@@ -320,17 +320,17 @@ _ContextualIdentityService.prototype = {
       let win = windowList.getNext();
 
       if (win.closed || !win.gBrowser) {
-	continue;
+        continue;
       }
 
       let tabbrowser = win.gBrowser;
       for (let i = tabbrowser.tabContainer.childNodes.length - 1; i >= 0; --i) {
         let tab = tabbrowser.tabContainer.childNodes[i];
-	if (tab.hasAttribute("usercontextid") &&
-            (!userContextId ||
-             parseInt(tab.getAttribute("usercontextid"), 10) == userContextId)) {
-	  callback(tab, tabbrowser);
-	}
+        if (tab.hasAttribute("usercontextid") &&
+                  (!userContextId ||
+                   parseInt(tab.getAttribute("usercontextid"), 10) == userContextId)) {
+          callback(tab, tabbrowser);
+        }
       }
     }
   },

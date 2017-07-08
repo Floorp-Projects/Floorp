@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<selector xmlns:android="http://schemas.android.com/apk/res/android"
+          xmlns:gecko="http://schemas.android.com/apk/res-auto">
+
+    <item android:color="@color/photon_text_main_private"
+          android:state_checked="true"
+          gecko:state_private="true"/>
+
+    <item android:color="@color/photon_text_secondary_private"
+          gecko:state_private="true"/>
+
+    <item android:color="@color/photon_text_main_private"
+          android:state_checked="true"
+          gecko:state_dark="true"/>
+
+    <item android:color="@color/photon_text_secondary_private"
+          gecko:state_dark="true"/>
+
+    <item android:color="@color/photon_text_main"
+          android:state_checked="true"/>
+
+    <item android:color="@color/photon_text_secondary"/>
+
+</selector>

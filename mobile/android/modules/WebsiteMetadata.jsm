@@ -48,7 +48,7 @@ var WebsiteMetadata = {
 // #################################################################################################
 
 function makeUrlAbsolute(context, relative) {
-	var a = context.doc.createElement('a');
+    var a = context.doc.createElement('a');
     a.href = relative;
     return a.href;
 }

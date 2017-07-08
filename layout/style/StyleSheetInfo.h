@@ -61,6 +61,11 @@ struct StyleSheetInfo
   RefPtr<StyleSheet>     mFirstChild;
   AutoTArray<StyleSheet*, 8> mSheets;
 
+  // If a SourceMap or X-SourceMap response header is seen, this is
+  // the value.  If both are seen, SourceMap is preferred.  If neither
+  // is seen, this will be an empty string.
+  nsString mSourceMapURL;
+
 #ifdef DEBUG
   bool                   mPrincipalSet;
 #endif

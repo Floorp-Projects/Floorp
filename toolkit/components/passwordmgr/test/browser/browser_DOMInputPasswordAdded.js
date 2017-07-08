@@ -88,11 +88,11 @@ add_task(async function() {
   let tab = gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
   let promise = ContentTask.spawn(tab.linkedBrowser, consts, task);
   tab.linkedBrowser.loadURI("data:text/html;charset=utf-8," +
-			    "<html><body>" +
-			    "<form id='" + consts.FORM1_ID + "'>" +
+                            "<html><body>" +
+                            "<form id='" + consts.FORM1_ID + "'>" +
                             "<input id='" + consts.CHANGE_INPUT_ID + "'></form>" +
-			    "<form id='" + consts.FORM2_ID + "'></form>" +
-			    "</body></html>");
+                            "<form id='" + consts.FORM2_ID + "'></form>" +
+                            "</body></html>");
   await promise;
   gBrowser.removeCurrentTab();
 });

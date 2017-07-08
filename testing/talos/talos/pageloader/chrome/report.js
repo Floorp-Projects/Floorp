@@ -19,16 +19,16 @@ function findCommonPrefixLength(strs) {
     var failed = false;
     for (var i = 0; i < strs.length; i++) {
       if (newlen > strs[i].length) {
-	failed = true;
-	break;
+        failed = true;
+        break;
       }
 
       var s = strs[i].substr(0, newlen);
       if (newprefix == null) {
-	newprefix = s;
+        newprefix = s;
       } else if (newprefix != s) {
-	failed = true;
-	break;
+        failed = true;
+        break;
       }
     }
 

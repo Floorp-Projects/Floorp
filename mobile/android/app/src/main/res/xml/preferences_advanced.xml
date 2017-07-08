@@ -95,6 +95,11 @@
             android:summary="@string/pref_custom_tabs_summary"
             android:defaultValue="false" />
 
+        <SwitchPreference android:key="android.not_a_preference.pwa"
+            android:title="@string/pref_pwa"
+            android:summary="@string/pref_pwa_summary"
+            android:defaultValue="false" />
+
     </PreferenceCategory>
 
 </PreferenceScreen>

@@ -99,7 +99,7 @@ var InputWidgetHelper = {
     let currentElement = aElement;
     while (currentElement) {
       if (currentElement.disabled)
-	return true;
+        return true;
 
       currentElement = currentElement.parentElement;
     }
