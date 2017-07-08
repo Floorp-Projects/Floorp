@@ -766,6 +766,8 @@ this.Extension = class extends ExtensionData {
     this.version = addonData.version;
     this.baseURI = NetUtil.newURI(this.getURL("")).QueryInterface(Ci.nsIURL);
     this.principal = this.createPrincipal();
+    this.views = new Set();
+    this._backgroundPageFrameLoader = null;
 
     this.onStartup = null;
 
@@ -814,6 +816,19 @@ this.Extension = class extends ExtensionData {
       this.policy.allowedOrigins = this.whiteListedHosts;
     });
     /* eslint-enable mozilla/balanced-listeners */
+  }
+
+  get groupFrameLoader() {
+    let frameLoader = this._backgroundPageFrameLoader;
+    for (let view of this.views) {
+      if (view.viewType === "background" && view.xulBrowser) {
+        return view.xulBrowser.frameLoader;
+      }
+      if (!frameLoader && view.xulBrowser) {
+        frameLoader = view.xulBrowser.frameLoader;
+      }
+    }
+    return frameLoader || ExtensionParent.DebugUtils.getFrameLoader(this.id);
   }
 
   static generateXPI(data) {
