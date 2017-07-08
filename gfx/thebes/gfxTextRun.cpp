@@ -499,7 +499,6 @@ gfxTextRun::DrawPartialLigature(gfxFont *aFont, Range aRange,
                (end - start) / mAppUnitsPerDevUnit, clipExtents.Height());
       MaybeSnapToDevicePixels(clipRect, *aParams.dt, true);
 
-      aParams.context->Save();
       aParams.context->Clip(clipRect);
     }
 
@@ -512,7 +511,7 @@ gfxTextRun::DrawPartialLigature(gfxFont *aFont, Range aRange,
 
     DrawGlyphs(aFont, data.mRange, &pt,
                aProvider, aRange, aParams, aOrientation);
-    aParams.context->Restore();
+    aParams.context->PopClip();
 
     if (aParams.isVerticalRun) {
         aPt->y += aParams.direction * data.mPartWidth;
