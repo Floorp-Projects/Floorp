@@ -522,6 +522,10 @@ class Tab extends TabBase {
     return mutedInfo;
   }
 
+  get lastAccessed() {
+    return this.nativeTab.lastAccessed;
+  }
+
   get pinned() {
     return this.nativeTab.pinned;
   }
@@ -578,6 +582,7 @@ class Tab extends TabBase {
       active: false,
       pinned: false,
       incognito: Boolean(tabData.state && tabData.state.isPrivate),
+      lastAccessed: tabData.state ? tabData.state.lastAccessed : tabData.lastAccessed,
     };
 
     if (extension.tabManager.hasTabPermission(tabData)) {
