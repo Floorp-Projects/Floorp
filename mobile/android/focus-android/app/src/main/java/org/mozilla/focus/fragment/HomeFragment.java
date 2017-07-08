@@ -29,7 +29,7 @@ import org.mozilla.focus.locale.LocaleAwareFragment;
  */
 public class HomeFragment
         extends LocaleAwareFragment
-        implements View.OnClickListener, PopupMenu.OnMenuItemClickListener {
+        implements View.OnClickListener, PopupMenu.OnMenuItemClickListener, PopupMenu.OnDismissListener {
     public static final String FRAGMENT_TAG = "home";
 
     public static HomeFragment create() {
@@ -37,6 +37,8 @@ public class HomeFragment
     }
 
     private View fakeUrlBarView;
+
+    @Nullable private PopupMenu displayedPopupMenu = null;
 
     @Override
     public void applyLocale() {
@@ -65,6 +67,18 @@ public class HomeFragment
     }
 
     @Override
+    public void onDetach() {
+        super.onDetach();
+
+        // On detach, the PopupMenu is no longer relevant to other content (e.g. BrowserFragment) so dismiss it.
+        // Note: if we don't dismiss the PopupMenu, its onMenuItemClick method references the old Fragment, which now
+        // has a null Context and will cause crashes.
+        if (displayedPopupMenu != null) {
+            displayedPopupMenu.dismiss();
+        }
+    }
+
+    @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         final View view = inflater.inflate(R.layout.fragment_home, container, false);
 
@@ -89,6 +103,7 @@ public class HomeFragment
                 popupMenu.setOnMenuItemClickListener(this);
                 popupMenu.setGravity(Gravity.TOP);
                 popupMenu.show();
+                displayedPopupMenu = popupMenu;
                 break;
 
             default:
@@ -140,5 +155,10 @@ public class HomeFragment
             default:
                 throw new IllegalStateException("Unhandled view ID in onMenuItemClick()");
         }
+    }
+
+    @Override
+    public void onDismiss(final PopupMenu menu) {
+        displayedPopupMenu = null;
     }
 }
