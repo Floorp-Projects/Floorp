@@ -133,6 +133,8 @@
           <div id="sectionTitle" class="header-name">
               &aboutTelemetry.pageTitle;
           </div>
+          <input type="text" id="search" placeholder="" hidden="true"/>
+          <select id="processes" hidden="true"></select>
       </div>
 
       <div id="home" class="tab active">
@@ -165,48 +167,30 @@
 
       <section id="scalars-section" class="tab data-section expanded" hidden="true">
         <input type="checkbox" class="statebox"/>
-        <div class="processes-ui">
-          <select id="scalars-processes" class="process-picker"></select>
-        </div>
         <div id="scalars" class="data">
         </div>
       </section>
 
       <section id="keyed-scalars-section" class="tab data-section expanded" hidden="true">
         <input type="checkbox" class="statebox"/>
-        <div class="processes-ui">
-          <select id="keyed-scalars-processes" class="process-picker"></select>
-        </div>
         <div id="keyed-scalars" class="data">
         </div>
       </section>
 
       <section id="histograms-section" class="tab data-section expanded" hidden="true">
         <input type="checkbox" class="statebox"/>
-        <span class="filter-ui">
-          &aboutTelemetry.filterText; <input type="text" class="filter" id="histograms-filter" target_id="histograms"/>
-        </span>
-        <div class="processes-ui">
-          <select id="histograms-processes" class="process-picker"></select>
-        </div>
         <div id="histograms" class="data">
         </div>
       </section>
 
       <section id="keyed-histograms-section" class="tab data-section expanded" hidden="true">
         <input type="checkbox" class="statebox"/>
-        <div class="processes-ui">
-          <select id="keyed-histograms-processes" class="process-picker"></select>
-        </div>
         <div id="keyed-histograms" class="data">
         </div>
       </section>
 
       <section id="events-section" class="tab data-section expanded" hidden="true">
         <input type="checkbox" class="statebox"/>
-        <div class="processes-ui">
-          <select id="events-processes" class="process-picker"></select>
-        </div>
         <div id="events" class="data">
         </div>
       </section>
