@@ -10,6 +10,8 @@ gyp_vars.update({
     'lsan': 0,
     'asan': 0,
     'ubsan' : 0,
+    'fuzzing' : 1 if CONFIG['FUZZING'] else 0,
+    'libfuzzer' : 1 if CONFIG['LIBFUZZER'] else 0,
     'build_with_mozilla': 1,
     'build_with_chromium': 0,
     # 10.9 once we move to TC cross-compiles - bug 1270217

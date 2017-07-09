@@ -315,3 +315,7 @@ if CONFIG['COMPILE_ENVIRONMENT']:
         'nsCSSPropsGenerated.inc.in',
         'PythonCSSProps.h',
     ]
+
+    CONFIGURE_SUBST_FILES += [
+        'bindgen.toml',
+    ]

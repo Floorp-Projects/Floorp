@@ -1051,9 +1051,9 @@ auto GeckoLayerClient::SynthesizeNativeTouchPoint(int32_t a0, int32_t a1, int32_
 constexpr char GeckoLayerClient::UpdateRootFrameMetrics_t::name[];
 constexpr char GeckoLayerClient::UpdateRootFrameMetrics_t::signature[];
 
-auto GeckoLayerClient::UpdateRootFrameMetrics(float a0, float a1, float a2, float a3, float a4, float a5, float a6) const -> void
+auto GeckoLayerClient::UpdateRootFrameMetrics(float a0, float a1, float a2) const -> void
 {
-    return mozilla::jni::Method<UpdateRootFrameMetrics_t>::Call(GeckoLayerClient::mCtx, nullptr, a0, a1, a2, a3, a4, a5, a6);
+    return mozilla::jni::Method<UpdateRootFrameMetrics_t>::Call(GeckoLayerClient::mCtx, nullptr, a0, a1, a2);
 }
 
 const char GeckoSurface::name[] =
@@ -1170,17 +1170,6 @@ constexpr char GeckoSurfaceTexture::UpdateTexImage_t::signature[];
 auto GeckoSurfaceTexture::UpdateTexImage() const -> void
 {
     return mozilla::jni::Method<UpdateTexImage_t>::Call(GeckoSurfaceTexture::mCtx, nullptr);
-}
-
-const char ImmutableViewportMetrics::name[] =
-        "org/mozilla/gecko/gfx/ImmutableViewportMetrics";
-
-constexpr char ImmutableViewportMetrics::New_t::name[];
-constexpr char ImmutableViewportMetrics::New_t::signature[];
-
-auto ImmutableViewportMetrics::New(float a0, float a1, float a2, float a3, float a4, float a5, float a6, float a7, float a8, float a9, int32_t a10, int32_t a11, float a12) -> ImmutableViewportMetrics::LocalRef
-{
-    return mozilla::jni::Constructor<New_t>::Call(ImmutableViewportMetrics::Context(), nullptr, a0, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12);
 }
 
 const char LayerView::name[] =

@@ -21,24 +21,6 @@
 
 namespace mozilla {
 
-MozExternalRefCountType
-RestyleManagerHandle::Ptr::AddRef()
-{
-  FORWARD(AddRef, ());
-}
-
-MozExternalRefCountType
-RestyleManagerHandle::Ptr::Release()
-{
-  FORWARD(Release, ());
-}
-
-void
-RestyleManagerHandle::Ptr::Disconnect()
-{
-  FORWARD(Disconnect, ());
-}
-
 void
 RestyleManagerHandle::Ptr::PostRestyleEvent(dom::Element* aElement,
                                             nsRestyleHint aRestyleHint,
@@ -75,54 +57,6 @@ RestyleManagerHandle::Ptr::ProcessPendingRestyles()
 }
 
 nsresult
-RestyleManagerHandle::Ptr::ProcessRestyledFrames(nsStyleChangeList& aChangeList)
-{
-  FORWARD(ProcessRestyledFrames, (aChangeList));
-}
-
-void
-RestyleManagerHandle::Ptr::FlushOverflowChangedTracker()
-{
-  FORWARD(FlushOverflowChangedTracker, ());
-}
-
-void
-RestyleManagerHandle::Ptr::ContentInserted(nsINode* aContainer,
-                                           nsIContent* aChild)
-{
-  FORWARD(ContentInserted, (aContainer, aChild));
-}
-
-void
-RestyleManagerHandle::Ptr::ContentAppended(nsIContent* aContainer,
-                                           nsIContent* aFirstNewContent)
-{
-  FORWARD(ContentAppended, (aContainer, aFirstNewContent));
-}
-
-void
-RestyleManagerHandle::Ptr::ContentRemoved(nsINode* aContainer,
-                                          nsIContent* aOldChild,
-                                          nsIContent* aFollowingSibling)
-{
-  FORWARD(ContentRemoved, (aContainer, aOldChild, aFollowingSibling));
-}
-
-void
-RestyleManagerHandle::Ptr::RestyleForInsertOrChange(nsINode* aContainer,
-                                                    nsIContent* aChild)
-{
-  FORWARD(RestyleForInsertOrChange, (aContainer, aChild));
-}
-
-void
-RestyleManagerHandle::Ptr::RestyleForAppend(nsIContent* aContainer,
-                                            nsIContent* aFirstNewContent)
-{
-  FORWARD(RestyleForAppend, (aContainer, aFirstNewContent));
-}
-
-nsresult
 RestyleManagerHandle::Ptr::ContentStateChanged(nsIContent* aContent,
                                           EventStates aStateMask)
 {
@@ -155,30 +89,6 @@ nsresult
 RestyleManagerHandle::Ptr::ReparentStyleContext(nsIFrame* aFrame)
 {
   FORWARD(ReparentStyleContext, (aFrame));
-}
-
-uint64_t
-RestyleManagerHandle::Ptr::GetRestyleGeneration() const
-{
-  FORWARD(GetRestyleGeneration, ());
-}
-
-uint32_t
-RestyleManagerHandle::Ptr::GetHoverGeneration() const
-{
-  FORWARD(GetHoverGeneration, ());
-}
-
-void
-RestyleManagerHandle::Ptr::SetObservingRefreshDriver(bool aObserving)
-{
-  FORWARD(SetObservingRefreshDriver, (aObserving));
-}
-
-void
-RestyleManagerHandle::Ptr::NotifyDestroyingFrame(nsIFrame* aFrame)
-{
-  FORWARD(NotifyDestroyingFrame, (aFrame));
 }
 
 } // namespace mozilla

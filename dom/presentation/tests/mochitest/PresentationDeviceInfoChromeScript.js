@@ -5,8 +5,6 @@
 
 const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 
-Cu.import('resource://gre/modules/PresentationDeviceInfoManager.jsm');
-
 const { XPCOMUtils } = Cu.import('resource://gre/modules/XPCOMUtils.jsm');
 
 const manager = Cc['@mozilla.org/presentation-device/manager;1']

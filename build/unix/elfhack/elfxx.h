@@ -558,6 +558,9 @@ public:
 
 class Elf_Rel: public serializable<Elf_Rel_Traits> {
 public:
+    Elf_Rel()
+    : serializable<Elf_Rel_Traits>() {};
+
     Elf_Rel(std::ifstream &file, char ei_class, char ei_data)
     : serializable<Elf_Rel_Traits>(file, ei_class, ei_data) {};
 
@@ -568,6 +571,9 @@ public:
 
 class Elf_Rela: public serializable<Elf_Rela_Traits> {
 public:
+    Elf_Rela()
+    : serializable<Elf_Rela_Traits>() {};
+
     Elf_Rela(std::ifstream &file, char ei_class, char ei_data)
     : serializable<Elf_Rela_Traits>(file, ei_class, ei_data) {};
 

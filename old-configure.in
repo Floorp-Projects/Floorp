@@ -867,9 +867,12 @@ case "$target" in
     fi
 
     MOZ_GFX_OPTIMIZE_MOBILE=1
-    MOZ_OPTIMIZE_FLAGS="-Os"
     if test -z "$CLANG_CC"; then
-       MOZ_OPTIMIZE_FLAGS="-freorder-blocks -fno-reorder-functions $MOZ_OPTIMIZE_FLAGS"
+        MOZ_OPTIMIZE_FLAGS="-freorder-blocks -fno-reorder-functions -Os"
+    else
+        # From https://github.com/android-ndk/ndk/issues/133#issuecomment-308549264
+        # -Oz is smaller than -Os on clang.
+        MOZ_OPTIMIZE_FLAGS="-Oz"
     fi
     ;;
 

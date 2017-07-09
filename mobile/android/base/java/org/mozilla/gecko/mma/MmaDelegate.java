@@ -35,6 +35,7 @@ public class MmaDelegate {
     public static final String SCREENSHOT = "E_Screenshot";
     public static final String SAVED_LOGIN_AND_PASSWORD = "E_Saved_Login_And_Password";
     public static final String LAUNCH_BUT_NOT_DEFAULT_BROWSER = "E_Launch_But_Not_Default_Browser";
+    public static final String NEW_TAB = "E_Opened_New_Tab";
 
 
     private static final String TAG = "MmaDelegate";

@@ -204,19 +204,6 @@ EvalScript(JSContext* cx,
         cachePath.AppendPrintf("jssubloader/%d", version);
         PathifyURI(uri, cachePath);
 
-        nsCOMPtr<nsIScriptSecurityManager> secman =
-            do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID);
-        if (!secman) {
-            return false;
-        }
-
-        nsCOMPtr<nsIPrincipal> principal;
-        nsresult rv = secman->GetSystemPrincipal(getter_AddRefs(principal));
-        if (NS_FAILED(rv) || !principal) {
-            ReportError(cx, LOAD_ERROR_NOPRINCIPALS, uri);
-            return false;
-        }
-
         nsCString uriStr;
         if (preloadCache && NS_SUCCEEDED(uri->GetSpec(uriStr))) {
             // Note that, when called during startup, this will keep the
@@ -244,8 +231,7 @@ EvalScript(JSContext* cx,
 
         if (startupCache) {
             JSAutoCompartment ac(cx, script);
-            WriteCachedScript(StartupCache::GetSingleton(),
-                              cachePath, cx, principal, script);
+            WriteCachedScript(StartupCache::GetSingleton(), cachePath, cx, script);
         }
     }
 
@@ -572,19 +558,6 @@ mozJSSubScriptLoader::DoLoadSubScriptWithOptions(const nsAString& url,
                                                  MutableHandleValue retval)
 {
     nsresult rv = NS_OK;
-
-    /* set the system principal if it's not here already */
-    if (!mSystemPrincipal) {
-        nsCOMPtr<nsIScriptSecurityManager> secman =
-            do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID);
-        if (!secman)
-            return NS_OK;
-
-        rv = secman->GetSystemPrincipal(getter_AddRefs(mSystemPrincipal));
-        if (NS_FAILED(rv) || !mSystemPrincipal)
-            return rv;
-    }
-
     RootedObject targetObj(cx);
     if (options.target) {
         targetObj = options.target;
@@ -594,16 +567,9 @@ mozJSSubScriptLoader::DoLoadSubScriptWithOptions(const nsAString& url,
         MOZ_ASSERT(JS_IsGlobalObject(targetObj));
     }
 
-    // Remember an object out of the calling compartment so that we
-    // can properly wrap the result later.
-    nsCOMPtr<nsIPrincipal> principal = mSystemPrincipal;
-    RootedObject result_obj(cx, targetObj);
     targetObj = JS_FindCompilationScope(cx, targetObj);
     if (!targetObj)
         return NS_ERROR_FAILURE;
-
-    if (targetObj != result_obj)
-        principal = GetObjectPrincipal(targetObj);
 
     /* load up the url.  From here on, failures are reflected as ``custom''
      * js exceptions */
@@ -672,8 +638,9 @@ mozJSSubScriptLoader::DoLoadSubScriptWithOptions(const nsAString& url,
 
     // Suppress caching if we're compiling as content or if we're loading a
     // blob: URI.
-    bool ignoreCache = options.ignoreCache || principal != mSystemPrincipal ||
-                       scheme.EqualsLiteral("blob");
+    bool ignoreCache = options.ignoreCache
+        || !GetObjectPrincipal(targetObj)->GetIsSystemPrincipal()
+        || scheme.EqualsLiteral("blob");
     StartupCache* cache = ignoreCache ? nullptr : StartupCache::GetSingleton();
 
     JSVersion version = JS_GetVersion(cx);
@@ -686,7 +653,7 @@ mozJSSubScriptLoader::DoLoadSubScriptWithOptions(const nsAString& url,
         if (!options.wantReturnValue)
             script = ScriptPreloader::GetSingleton().GetCachedScript(cx, cachePath);
         if (!script && cache)
-            rv = ReadCachedScript(cache, cachePath, cx, mSystemPrincipal, &script);
+            rv = ReadCachedScript(cache, cachePath, cx, &script);
         if (NS_FAILED(rv) || !script) {
             // ReadCachedScript may have set a pending exception.
             JS_ClearPendingException(cx);

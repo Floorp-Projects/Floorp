@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script>
+    /* globals build_rule build_dom flush_style perf_start perf_finish */
+    /* eslint no-undef: "error" */
+    </script>
+    <script src="util.js"></script>
+    <script>
+window.onload = function() {
+  document.head.appendChild(build_rule("caption div, caption span", 20000, "{ color: blue; } "));
+  let dom = build_dom(5000, "div");
+
+  flush_style();
+  perf_start();
+  document.body.appendChild(dom);
+  flush_style(dom);
+  perf_finish();
+}
+    </script>
+  </head>
+  <body>
+  </body>
+</html>

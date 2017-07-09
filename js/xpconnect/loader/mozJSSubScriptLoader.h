@@ -51,6 +51,4 @@ private:
                                         LoadSubScriptOptions& options,
                                         JSContext* cx,
                                         JS::MutableHandleValue retval);
-
-    nsCOMPtr<nsIPrincipal> mSystemPrincipal;
 };

@@ -125,17 +125,6 @@ public:
 
   void UpdateOnlyAnimationStyles();
 
-  void ContentInserted(nsINode* aContainer, nsIContent* aChild);
-  void ContentAppended(nsIContent* aContainer,
-                       nsIContent* aFirstNewContent);
-  void ContentRemoved(nsINode* aContainer,
-                      nsIContent* aOldChild,
-                      nsIContent* aFollowingSibling);
-
-  void RestyleForInsertOrChange(nsINode* aContainer,
-                                nsIContent* aChild);
-  void RestyleForAppend(nsIContent* aContainer,
-                        nsIContent* aFirstNewContent);
   void ContentStateChanged(nsIContent* aContent, EventStates aStateMask);
   void AttributeWillChange(dom::Element* aElement,
                            int32_t aNameSpaceID,

@@ -3305,14 +3305,10 @@ public:
         typedef mozilla::jni::Args<
                 float,
                 float,
-                float,
-                float,
-                float,
-                float,
                 float> Args;
         static constexpr char name[] = "updateRootFrameMetrics";
         static constexpr char signature[] =
-                "(FFFFFFF)V";
+                "(FFF)V";
         static const bool isStatic = false;
         static const mozilla::jni::ExceptionMode exceptionMode =
                 mozilla::jni::ExceptionMode::ABORT;
@@ -3322,7 +3318,7 @@ public:
                 mozilla::jni::DispatchTarget::CURRENT;
     };
 
-    auto UpdateRootFrameMetrics(float, float, float, float, float, float, float) const -> void;
+    auto UpdateRootFrameMetrics(float, float, float) const -> void;
 
     static const mozilla::jni::CallingThread callingThread =
             mozilla::jni::CallingThread::ANY;
@@ -3619,50 +3615,6 @@ public:
             mozilla::jni::CallingThread::ANY;
 
     template<class Impl> class Natives;
-};
-
-class ImmutableViewportMetrics : public mozilla::jni::ObjectBase<ImmutableViewportMetrics>
-{
-public:
-    static const char name[];
-
-    explicit ImmutableViewportMetrics(const Context& ctx) : ObjectBase<ImmutableViewportMetrics>(ctx) {}
-
-    struct New_t {
-        typedef ImmutableViewportMetrics Owner;
-        typedef ImmutableViewportMetrics::LocalRef ReturnType;
-        typedef ImmutableViewportMetrics::Param SetterType;
-        typedef mozilla::jni::Args<
-                float,
-                float,
-                float,
-                float,
-                float,
-                float,
-                float,
-                float,
-                float,
-                float,
-                int32_t,
-                int32_t,
-                float> Args;
-        static constexpr char name[] = "<init>";
-        static constexpr char signature[] =
-                "(FFFFFFFFFFIIF)V";
-        static const bool isStatic = false;
-        static const mozilla::jni::ExceptionMode exceptionMode =
-                mozilla::jni::ExceptionMode::ABORT;
-        static const mozilla::jni::CallingThread callingThread =
-                mozilla::jni::CallingThread::GECKO;
-        static const mozilla::jni::DispatchTarget dispatchTarget =
-                mozilla::jni::DispatchTarget::CURRENT;
-    };
-
-    static auto New(float, float, float, float, float, float, float, float, float, float, int32_t, int32_t, float) -> ImmutableViewportMetrics::LocalRef;
-
-    static const mozilla::jni::CallingThread callingThread =
-            mozilla::jni::CallingThread::GECKO;
-
 };
 
 class LayerView : public mozilla::jni::ObjectBase<LayerView>
