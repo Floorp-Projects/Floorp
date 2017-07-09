@@ -53,7 +53,6 @@ IonIC::scratchRegisterForEntryJump()
       case CacheKind::HasOwn:
         return asHasOwnIC()->output();
       case CacheKind::Call:
-      case CacheKind::Compare:
       case CacheKind::TypeOf:
       case CacheKind::GetPropSuper:
       case CacheKind::GetElemSuper:
