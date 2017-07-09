@@ -3705,23 +3705,6 @@ CompareIRGenerator::CompareIRGenerator(JSContext* cx, HandleScript script, jsbyt
 { }
 
 bool
-CompareIRGenerator::tryAttachString(ValOperandId lhsId, ValOperandId rhsId)
-{
-    MOZ_ASSERT(IsEqualityOp(op_));
-
-    if (!lhsVal_.isString() || !rhsVal_.isString())
-        return false;
-
-    StringOperandId lhsStrId = writer.guardIsString(lhsId);
-    StringOperandId rhsStrId = writer.guardIsString(rhsId);
-    writer.compareStringResult(op_, lhsStrId, rhsStrId);
-    writer.returnFromIC();
-
-    trackAttached("String");
-    return true;
-}
-
-bool
 CompareIRGenerator::tryAttachStub()
 {
     MOZ_ASSERT(cacheKind_ == CacheKind::Compare);
@@ -3733,14 +3716,6 @@ CompareIRGenerator::tryAttachStub()
 
     ValOperandId lhsId(writer.setInputOperandId(0));
     ValOperandId rhsId(writer.setInputOperandId(1));
-
-    if (IsEqualityOp(op_)) {
-        if (tryAttachString(lhsId, rhsId))
-            return true;
-
-        trackNotAttached();
-        return false;
-    }
 
     trackNotAttached();
     return false;
