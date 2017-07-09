@@ -5,6 +5,8 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "FileBlockCache.h"
+#include "MediaCache.h"
+#include "MediaPrefs.h"
 #include "mozilla/SharedThreadPool.h"
 #include "VideoUtils.h"
 #include "prio.h"
@@ -119,6 +121,33 @@ FileBlockCache::Init()
   }
 
   return rv;
+}
+
+int32_t
+FileBlockCache::GetMaxBlocks() const
+{
+  // We look up the cache size every time. This means dynamic changes
+  // to the pref are applied.
+  const uint32_t cacheSizeKb =
+    std::min(MediaPrefs::MediaCacheSizeKb(), uint32_t(INT32_MAX) * 2);
+  // Ensure we can divide BLOCK_SIZE by 1024.
+  static_assert(MediaCacheStream::BLOCK_SIZE % 1024 == 0,
+                "BLOCK_SIZE should be a multiple of 1024");
+  // Ensure BLOCK_SIZE/1024 is at least 2.
+  static_assert(MediaCacheStream::BLOCK_SIZE / 1024 >= 2,
+                "BLOCK_SIZE / 1024 should be at least 2");
+  // Ensure we can convert BLOCK_SIZE/1024 to a uint32_t without truncation.
+  static_assert(MediaCacheStream::BLOCK_SIZE / 1024 <= int64_t(UINT32_MAX),
+                "BLOCK_SIZE / 1024 should be at most UINT32_MAX");
+  // Since BLOCK_SIZE is a strict multiple of 1024,
+  // cacheSizeKb * 1024 / BLOCK_SIZE == cacheSizeKb / (BLOCK_SIZE / 1024),
+  // but the latter formula avoids a potential overflow from `* 1024`.
+  // And because BLOCK_SIZE/1024 is at least 2, the maximum cache size
+  // INT32_MAX*2 will give a maxBlocks that can fit in an int32_t.
+  constexpr uint32_t blockSizeKb =
+    uint32_t(MediaCacheStream::BLOCK_SIZE / 1024);
+  const int32_t maxBlocks = int32_t(cacheSizeKb / blockSizeKb);
+  return std::max(maxBlocks, int32_t(1));
 }
 
 FileBlockCache::FileBlockCache()

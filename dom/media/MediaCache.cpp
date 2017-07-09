@@ -8,6 +8,7 @@
 
 #include "FileBlockCache.h"
 #include "MediaBlockCacheBase.h"
+#include "MediaPrefs.h"
 #include "MediaResource.h"
 #include "MemoryBlockCache.h"
 #include "mozilla/Attributes.h"
@@ -737,31 +738,6 @@ MediaCache::ReadCacheFile(
   }
 }
 
-static int32_t GetMaxBlocks()
-{
-  // We look up the cache size every time. This means dynamic changes
-  // to the pref are applied.
-  const uint32_t cacheSizeKb =
-    std::min(MediaPrefs::MediaCacheSizeKb(), uint32_t(INT32_MAX) * 2);
-  // Ensure we can divide BLOCK_SIZE by 1024.
-  static_assert(MediaCache::BLOCK_SIZE % 1024 == 0,
-                "BLOCK_SIZE should be a multiple of 1024");
-  // Ensure BLOCK_SIZE/1024 is at least 2.
-  static_assert(MediaCache::BLOCK_SIZE / 1024 >= 2,
-                "BLOCK_SIZE / 1024 should be at least 2");
-  // Ensure we can convert BLOCK_SIZE/1024 to a uint32_t without truncation.
-  static_assert(MediaCache::BLOCK_SIZE / 1024 <= int64_t(UINT32_MAX),
-                "BLOCK_SIZE / 1024 should be at most UINT32_MAX");
-  // Since BLOCK_SIZE is a strict multiple of 1024,
-  // cacheSizeKb * 1024 / BLOCK_SIZE == cacheSizeKb / (BLOCK_SIZE / 1024),
-  // but the latter formula avoids a potential overflow from `* 1024`.
-  // And because BLOCK_SIZE/1024 is at least 2, the maximum cache size
-  // INT32_MAX*2 will give a maxBlocks that can fit in an int32_t.
-  constexpr uint32_t blockSizeKb = uint32_t(MediaCache::BLOCK_SIZE / 1024);
-  const int32_t maxBlocks = int32_t(cacheSizeKb / blockSizeKb);
-  return std::max(maxBlocks, int32_t(1));
-}
-
 // Allowed range is whatever can be accessed with an int32_t block index.
 static bool
 IsOffsetAllowed(int64_t aOffset)
@@ -818,8 +794,10 @@ MediaCache::FindBlockForIncomingData(TimeStamp aNow,
     // b) the data we're going to store in the free block is not higher
     // priority than the data already stored in the free block.
     // The latter can lead us to go over the cache limit a bit.
-    if ((mIndex.Length() < uint32_t(GetMaxBlocks()) || blockIndex < 0 ||
-         PredictNextUseForIncomingData(aStream) >= PredictNextUse(aNow, blockIndex))) {
+    if ((mIndex.Length() < uint32_t(mBlockCache->GetMaxBlocks()) ||
+         blockIndex < 0 ||
+         PredictNextUseForIncomingData(aStream) >=
+           PredictNextUse(aNow, blockIndex))) {
       blockIndex = mIndex.Length();
       if (!mIndex.AppendElement())
         return -1;
@@ -1163,7 +1141,7 @@ MediaCache::Update()
     mInUpdate = true;
 #endif
 
-    int32_t maxBlocks = GetMaxBlocks();
+    int32_t maxBlocks = mBlockCache->GetMaxBlocks();
     TimeStamp now = TimeStamp::Now();
 
     int32_t freeBlockCount = mFreeBlocks.GetCount();

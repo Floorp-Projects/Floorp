@@ -137,9 +137,23 @@ enum MemoryBlockCacheTelemetryErrors
   MoveBlockCannotGrow = 7,
 };
 
+static int32_t
+CalculateMaxBlocks(int64_t aContentLength)
+{
+  // Note: It doesn't matter if calculations overflow, Init() would later fail.
+  // We want at least enough blocks to contain the original content length.
+  const int32_t requiredBlocks =
+    int32_t((aContentLength - 1) / MediaBlockCacheBase::BLOCK_SIZE + 1);
+  // Allow at least 1s of ultra HD (25Mbps).
+  const int32_t workableBlocks =
+    25 * 1024 * 1024 / 8 / MediaBlockCacheBase::BLOCK_SIZE;
+  return std::max(requiredBlocks, workableBlocks);
+}
+
 MemoryBlockCache::MemoryBlockCache(int64_t aContentLength)
   // Buffer whole blocks.
   : mInitialContentLength((aContentLength >= 0) ? size_t(aContentLength) : 0)
+  , mMaxBlocks(CalculateMaxBlocks(aContentLength))
   , mMutex("MemoryBlockCache")
   , mHasGrown(false)
 {
