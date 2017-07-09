@@ -7444,7 +7444,7 @@ nsHttpChannel::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult st
         }
     }
 
-    ReportRcwnStats(request, isFromNet);
+    ReportRcwnStats(isFromNet);
 
     // Register entry to the Performance resource timing
     mozilla::dom::Performance* documentPerformance = GetPerformance();
@@ -8974,49 +8974,41 @@ nsHttpChannel::SetDoNotTrack()
 }
 
 void
-nsHttpChannel::ReportRcwnStats(nsIRequest* firstResponseRequest, bool isFromNet)
+nsHttpChannel::ReportRcwnStats(bool isFromNet)
 {
     if (!sRCWNEnabled) {
         return;
     }
-    enum RaceCacheAndNetStatus
-    {
-        kDidNotRaceUsedNetwork = 0,
-        kDidNotRaceUsedCache = 1,
-        kRaceUsedNetwork = 2,
-        kRaceUsedCache = 3,
-        kDelayedRaceUsedNetwork = 4,
-        kDelayedRaceUsedCache = 5
-    };
-    static const Telemetry::HistogramID kRcwnTelemetry[6] = {
-        Telemetry::NETWORK_RACE_CACHE_BANDWIDTH_NOT_RACE,
-        Telemetry::NETWORK_RACE_CACHE_BANDWIDTH_NOT_RACE,
-        Telemetry::NETWORK_RACE_CACHE_BANDWIDTH_RACE_NETWORK_WIN,
-        Telemetry::NETWORK_RACE_CACHE_BANDWIDTH_RACE_CACHE_WIN,
-        Telemetry::NETWORK_RACE_CACHE_BANDWIDTH_RACE_NETWORK_WIN,
-        Telemetry::NETWORK_RACE_CACHE_BANDWIDTH_RACE_CACHE_WIN
-    };
 
-    RaceCacheAndNetStatus rcwnStatus = kDidNotRaceUsedNetwork;
     if (isFromNet) {
-        rcwnStatus = mRaceCacheWithNetwork ?
-            (mRaceDelay ? kDelayedRaceUsedNetwork : kRaceUsedNetwork) :
-            kDidNotRaceUsedNetwork;
-    } else if (firstResponseRequest == mCachePump) {
-        rcwnStatus = mRaceCacheWithNetwork ?
-            (mRaceDelay ? kDelayedRaceUsedCache : kRaceUsedCache) :
-            kDidNotRaceUsedCache;
+        if (mRaceCacheWithNetwork) {
+            gIOService->IncrementNetWonRequestNumber();
+            Telemetry::Accumulate(Telemetry::NETWORK_RACE_CACHE_BANDWIDTH_RACE_NETWORK_WIN, mTransferSize);
+            if (mRaceDelay) {
+                AccumulateCategorical(Telemetry::LABELS_NETWORK_RACE_CACHE_WITH_NETWORK_USAGE_2::NetworkDelayedRace);
+            } else {
+                AccumulateCategorical(Telemetry::LABELS_NETWORK_RACE_CACHE_WITH_NETWORK_USAGE_2::NetworkRace);
+            }
+        } else {
+            Telemetry::Accumulate(Telemetry::NETWORK_RACE_CACHE_BANDWIDTH_NOT_RACE, mTransferSize);
+            AccumulateCategorical(Telemetry::LABELS_NETWORK_RACE_CACHE_WITH_NETWORK_USAGE_2::NetworkNoRace);
+        }
+    } else {
+        if (mRaceCacheWithNetwork) {
+            gIOService->IncrementCacheWonRequestNumber();
+            Telemetry::Accumulate(Telemetry::NETWORK_RACE_CACHE_BANDWIDTH_RACE_CACHE_WIN, mTransferSize);
+            if (mRaceDelay) {
+                AccumulateCategorical(Telemetry::LABELS_NETWORK_RACE_CACHE_WITH_NETWORK_USAGE_2::CacheDelayedRace);
+            } else {
+                AccumulateCategorical(Telemetry::LABELS_NETWORK_RACE_CACHE_WITH_NETWORK_USAGE_2::CacheRace);
+            }
+        } else {
+            Telemetry::Accumulate(Telemetry::NETWORK_RACE_CACHE_BANDWIDTH_NOT_RACE, mTransferSize);
+            AccumulateCategorical(Telemetry::LABELS_NETWORK_RACE_CACHE_WITH_NETWORK_USAGE_2::CacheNoRace);
+        }
     }
-    Telemetry::Accumulate(Telemetry::NETWORK_RACE_CACHE_WITH_NETWORK_USAGE,
-                          rcwnStatus);
-    Telemetry::Accumulate(kRcwnTelemetry[rcwnStatus], mTransferSize);
 
     gIOService->IncrementRequestNumber();
-    if (rcwnStatus == kRaceUsedCache || rcwnStatus == kDelayedRaceUsedCache) {
-        gIOService->IncrementCacheWonRequestNumber();
-    } else if (rcwnStatus == kRaceUsedNetwork || rcwnStatus == kDelayedRaceUsedNetwork) {
-        gIOService->IncrementNetWonRequestNumber();
-    }
 }
 
 static const size_t kPositiveBucketNumbers = 34;

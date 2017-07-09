@@ -113,6 +113,7 @@ def make_job_description(config, jobs):
             'nightly': dep_job.attributes.get('nightly', False),
             'build_platform': dep_job.attributes.get('build_platform'),
             'build_type': dep_job.attributes.get('build_type'),
+            'repackage_type': 'repackage',
         }
         if job.get('locale'):
             attributes['locale'] = job['locale']
