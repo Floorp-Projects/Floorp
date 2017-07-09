@@ -9,6 +9,8 @@ this.EXPORTED_SYMBOLS = ["PanelMultiView"];
 const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "AppConstants",
+  "resource://gre/modules/AppConstants.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "CustomizableWidgets",
   "resource:///modules/CustomizableWidgets.jsm");
 
@@ -880,11 +882,24 @@ this.PanelMultiView = class {
         // exceeds the available space we set the height explicitly and enable
         // scrolling.
         if (this._mainView.hasAttribute("blockinboxworkaround")) {
-          let mainViewHeight =
-              this._dwu.getBoundsWithoutFlushing(this._mainView).height;
-          if (mainViewHeight > maxHeight) {
-            this._mainView.style.height = maxHeight + "px";
-            this._mainView.setAttribute("exceeding", "true");
+          let blockInBoxWorkaround = () => {
+            let mainViewHeight =
+                this._dwu.getBoundsWithoutFlushing(this._mainView).height;
+            if (mainViewHeight > maxHeight) {
+              this._mainView.style.height = maxHeight + "px";
+              this._mainView.setAttribute("exceeding", "true");
+            }
+          };
+          // On Windows, we cannot measure the full height of the main view
+          // until it is visible. Unfortunately, this causes a visible jump when
+          // the view needs to scroll, but there is no easy way around this.
+          if (AppConstants.platform == "win") {
+            // We register a "once" listener so we don't need to store the value
+            // of maxHeight elsewhere on the object.
+            this._panel.addEventListener("popupshown", blockInBoxWorkaround,
+                                         { once: true });
+          } else {
+            blockInBoxWorkaround();
           }
         }
         break;
