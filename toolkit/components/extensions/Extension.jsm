@@ -49,6 +49,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "AddonManager",
                                   "resource://gre/modules/AddonManager.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "AppConstants",
                                   "resource://gre/modules/AppConstants.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "AsyncShutdown",
+                                  "resource://gre/modules/AsyncShutdown.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "ExtensionAPIs",
                                   "resource://gre/modules/ExtensionAPI.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "ExtensionCommon",
@@ -1164,6 +1166,10 @@ this.Extension = class extends ExtensionData {
 
   async shutdown(reason) {
     let promise = this._shutdown(reason);
+
+    AsyncShutdown.profileChangeTeardown.addBlocker(
+      `Extension Shutdown: ${this.id} (${this.name})`,
+      promise);
 
     let cleanup = () => {
       shutdownPromises.delete(this.id);
