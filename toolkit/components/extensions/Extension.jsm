@@ -1168,7 +1168,7 @@ this.Extension = class extends ExtensionData {
     let promise = this._shutdown(reason);
 
     AsyncShutdown.profileChangeTeardown.addBlocker(
-      `Extension Shutdown: ${this.id} (${this.name})`,
+      `Extension Shutdown: ${this.id} (${this.manifest && this.name})`,
       promise.catch(() => {}));
 
     let cleanup = () => {
