@@ -4,7 +4,6 @@
 
 <!ENTITY aboutAddons.title2                     "Add-ons">
 <!ENTITY aboutAddons.header2                    "Your Add-ons">
-<!ENTITY aboutAddons.options                    "Options">
 
 <!ENTITY addonAction.enable                     "Enable">
 <!ENTITY addonAction.disable                    "Disable">

@@ -123,6 +123,7 @@
 #include "SVGSVGElement.h"
 #include "DisplayItemClip.h"
 #include "mozilla/layers/WebRenderLayerManager.h"
+#include "prenv.h"
 
 #ifdef MOZ_XUL
 #include "nsXULPopupManager.h"
@@ -7796,8 +7797,12 @@ nsLayoutUtils::Initialize()
   Preferences::AddBoolVarCache(&sTextCombineUprightDigitsEnabled,
                                "layout.css.text-combine-upright-digits.enabled");
 #ifdef MOZ_STYLO
-  Preferences::AddBoolVarCache(&sStyloEnabled,
-                               "layout.css.servo.enabled");
+  if (PR_GetEnv("STYLO_FORCE_ENABLED")) {
+    sStyloEnabled = true;
+  } else {
+    Preferences::AddBoolVarCache(&sStyloEnabled,
+                                 "layout.css.servo.enabled");
+  }
 #endif
   Preferences::AddBoolVarCache(&sStyleAttrWithXMLBaseDisabled,
                                "layout.css.style-attr-with-xml-base.disabled");

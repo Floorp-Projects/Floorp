@@ -372,6 +372,11 @@
             '-Wno-macro-redefined',
          ],
         }],
+        ['libfuzzer == 1', {
+          'cflags_mozilla': [
+            '-fsanitize-coverage=trace-pc-guard',
+         ],
+        }],
       ],
     },
   ],

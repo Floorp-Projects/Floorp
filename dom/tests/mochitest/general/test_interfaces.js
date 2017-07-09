@@ -756,9 +756,6 @@ var interfaceNamesInGlobalScope =
 // IMPORTANT: Do not change this list without review from a DOM peer!
     {name: "PopupBoxObject", xbl: true},
 // IMPORTANT: Do not change this list without review from a DOM peer!
-    {name: "PresentationDeviceInfoManager",
-     disabled: true},
-// IMPORTANT: Do not change this list without review from a DOM peer!
     {name: "Presentation", desktop: false, release: false },
 // IMPORTANT: Do not change this list without review from a DOM peer!
     {name: "PresentationAvailability", desktop: false, release: false },

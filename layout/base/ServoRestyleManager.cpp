@@ -881,40 +881,6 @@ ServoRestyleManager::UpdateOnlyAnimationStyles()
 }
 
 void
-ServoRestyleManager::RestyleForInsertOrChange(nsINode* aContainer,
-                                              nsIContent* aChild)
-{
-  //
-  // XXXbholley: We need the Gecko logic here to correctly restyle for things
-  // like :empty and positional selectors (though we may not need to post
-  // restyle events as agressively as the Gecko path does).
-  //
-  // Bug 1297899 tracks this work.
-  //
-}
-
-void
-ServoRestyleManager::RestyleForAppend(nsIContent* aContainer,
-                                      nsIContent* aFirstNewContent)
-{
-  //
-  // XXXbholley: We need the Gecko logic here to correctly restyle for things
-  // like :empty and positional selectors (though we may not need to post
-  // restyle events as agressively as the Gecko path does).
-  //
-  // Bug 1297899 tracks this work.
-  //
-}
-
-void
-ServoRestyleManager::ContentRemoved(nsINode* aContainer,
-                                    nsIContent* aOldChild,
-                                    nsIContent* aFollowingSibling)
-{
-  NS_WARNING("stylo: ServoRestyleManager::ContentRemoved not implemented");
-}
-
-void
 ServoRestyleManager::ContentStateChanged(nsIContent* aContent,
                                          EventStates aChangedBits)
 {

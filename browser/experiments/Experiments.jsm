@@ -164,14 +164,30 @@ function addonInstallForURL(url, hash) {
 // Returns a promise that is resolved with an Array<Addon> of the installed
 // experiment addons.
 function installedExperimentAddons() {
-  return AddonManager.getAddonsByTypes(["experiment"]).then(addons => {
+  return AddonManager.getActiveAddons(["experiment"]).then(addons => {
     return addons.filter(a => !a.appDisabled);
   });
 }
 
 // Takes an Array<Addon> and returns a promise that is resolved when the
 // addons are uninstalled.
-function uninstallAddons(addons) {
+async function uninstallAddons(addons) {
+  if (!AddonManagerPrivate.isDBLoaded()) {
+    await new Promise(resolve => {
+      Services.obs.addObserver({
+        observe(subject, topic, data) {
+          Services.obs.removeObserver(this, "xpi-database-loaded");
+          resolve();
+        },
+      }, "xpi-database-loaded");
+    });
+
+    // This function was called during startup so the addons that were
+    // passed in were partial addon objects.  Now that the full addons
+    // database is loaded, get proper Addon objects.
+    addons = await AddonManager.getAddonsByIDs(addons.map(a => a.id));
+  }
+
   let ids = new Set(addons.map(addon => addon.id));
   return new Promise(resolve => {
 
@@ -191,10 +207,6 @@ function uninstallAddons(addons) {
     AddonManager.addAddonListener(listener);
 
     for (let addon of addons) {
-      // Disabling the add-on before uninstalling is necessary to cause tests to
-      // pass. This might be indicative of a bug in XPIProvider.
-      // TODO follow up in bug 992396.
-      addon.userDisabled = true;
       addon.uninstall();
     }
 

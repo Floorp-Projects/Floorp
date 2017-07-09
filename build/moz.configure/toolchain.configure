@@ -897,6 +897,20 @@ def check_have_64_bit(have_64_bit, compiler_have_64_bit):
         configure_error('The target compiler does not agree with configure '
                         'about the target bitness.')
 
+option(env='BINDGEN_CFLAGS',
+       nargs=1,
+       help='Options bindgen should pass to the C/C++ parser')
+
+@depends('BINDGEN_CFLAGS')
+@checking('bindgen cflags', lambda s: s if s and s.strip() else 'no')
+def bindgen_cflags(value):
+    if value and len(value):
+        # Reformat the env value for substitution into a toml list.
+        flags = value[0].split()
+        return ', '.join('"' + flag + '"' for flag in flags)
+    return ''
+
+set_config('BINDGEN_CFLAGS', bindgen_cflags)
 
 @depends(c_compiler)
 def default_debug_flags(compiler_info):

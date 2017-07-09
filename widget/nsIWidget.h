@@ -2072,9 +2072,8 @@ public:
      *
      * @param aScrollOffset  page scroll offset value in screen pixels.
      * @param aZoom          current page zoom.
-     * @param aPage          bounds of the page in CSS coordinates.
      */
-    virtual void UpdateRootFrameMetrics(const ScreenPoint& aScrollOffset, const CSSToScreenScale& aZoom, const CSSRect& aPage) = 0;
+    virtual void UpdateRootFrameMetrics(const ScreenPoint& aScrollOffset, const CSSToScreenScale& aZoom) = 0;
 
     /**
      * RecvScreenPixels Buffer containing the pixel from the frame buffer. Used for android robocop tests.

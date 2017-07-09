@@ -104,16 +104,11 @@ public:
       return reinterpret_cast<RestyleManager*>(mValue & ~SERVO_BIT);
     }
 
-    // These inline methods are defined in RestyleManagerHandleInlines.h.
-    inline MozExternalRefCountType AddRef();
-    inline MozExternalRefCountType Release();
-
     // Restyle manager interface.  These inline methods are defined in
     // RestyleManagerHandleInlines.h and just forward to the underlying
     // GeckoRestyleManager or ServoRestyleManager.  See corresponding comments
     // in GeckoRestyleManager.h for descriptions of these methods.
 
-    inline void Disconnect();
     inline void PostRestyleEvent(dom::Element* aElement,
                                  nsRestyleHint aRestyleHint,
                                  nsChangeHint aMinChangeHint);
@@ -123,17 +118,6 @@ public:
     inline void PostRebuildAllStyleDataEvent(nsChangeHint aExtraHint,
                                              nsRestyleHint aRestyleHint);
     inline void ProcessPendingRestyles();
-    inline void ContentInserted(nsINode* aContainer,
-                                nsIContent* aChild);
-    inline void ContentAppended(nsIContent* aContainer,
-                                nsIContent* aFirstNewContent);
-    inline void ContentRemoved(nsINode* aContainer,
-                               nsIContent* aOldChild,
-                               nsIContent* aFollowingSibling);
-    inline void RestyleForInsertOrChange(nsINode* aContainer,
-                                         nsIContent* aChild);
-    inline void RestyleForAppend(nsIContent* aContainer,
-                                 nsIContent* aFirstNewContent);
     inline nsresult ContentStateChanged(nsIContent* aContent,
                                         EventStates aStateMask);
     inline void AttributeWillChange(dom::Element* aElement,
@@ -147,12 +131,6 @@ public:
                                  int32_t aModType,
                                  const nsAttrValue* aOldValue);
     inline nsresult ReparentStyleContext(nsIFrame* aFrame);
-    inline uint64_t GetRestyleGeneration() const;
-    inline uint32_t GetHoverGeneration() const;
-    inline void SetObservingRefreshDriver(bool aObserving);
-    inline nsresult ProcessRestyledFrames(nsStyleChangeList& aChangeList);
-    inline void FlushOverflowChangedTracker();
-    inline void NotifyDestroyingFrame(nsIFrame* aFrame);
 
   private:
     // Stores a pointer to a GeckoRestyleManager or a ServoRestyleManager.

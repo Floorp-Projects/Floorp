@@ -1,0 +1,11 @@
+<!doctype html>
+<html style="font-size: 8px">
+<div style="font-size: 2rem">Should be 16px black text.</div>
+<script>
+window.onload = function() {
+  let div = document.querySelector('div');
+  window.getDefaultComputedStyle(div).color;
+  div.style.color = "black";
+}
+</script>
+</html>

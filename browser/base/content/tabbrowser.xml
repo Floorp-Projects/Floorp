@@ -1152,12 +1152,10 @@
             this.showTab(this.mCurrentTab);
 
             var forwardButtonContainer = document.getElementById("urlbar-wrapper");
-            if (forwardButtonContainer) {
-              forwardButtonContainer.setAttribute("switchingtabs", "true");
-              window.addEventListener("MozAfterPaint", function() {
-                forwardButtonContainer.removeAttribute("switchingtabs");
-              }, {once: true});
-            }
+            forwardButtonContainer.setAttribute("switchingtabs", "true");
+            window.addEventListener("MozAfterPaint", function() {
+              forwardButtonContainer.removeAttribute("switchingtabs");
+            }, {once: true});
 
             this._appendStatusPanel();
 

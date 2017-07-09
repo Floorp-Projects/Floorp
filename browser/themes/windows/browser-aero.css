@@ -51,9 +51,11 @@
     @media not all and (-moz-os-version: windows-win8) {
       @media (-moz-windows-default-theme) {
 %ifdef MOZ_PHOTON_THEME
-        :root:not(:-moz-window-inactive):not(:-moz-lwtheme) {
-          background-color: hsl(235,33%,19%);
-          --titlebar-text-color: hsl(240,9%,98%);
+        @media (-moz-windows-accent-color-applies: 0) {
+          :root:not(:-moz-lwtheme) {
+            background-color: hsl(235,33%,19%);
+            --titlebar-text-color: hsl(240,9%,98%);
+          }
         }
 
         @media (-moz-windows-accent-color-applies) {
