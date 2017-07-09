@@ -874,6 +874,9 @@ def add_l10n_index_routes(config, task, force_locale=None):
 
     locales = task['attributes'].get('chunk_locales',
                                      task['attributes'].get('all_locales'))
+    # Some tasks has only one locale set
+    if task['attributes'].get('locale'):
+        locales = [task['attributes']['locale']]
 
     if force_locale:
         # Used for en-US and multi-locale

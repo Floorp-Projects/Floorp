@@ -44,12 +44,12 @@ SimpleTest.waitForFocus(function() {
         // page to scroll down
         synthesizeKey("a", {}, win);
         requestAnimationFrame(function() {
-          setTimeout(function() {
+          requestAnimationFrame(function() {
             isnot(win.scrollY, 0, "Page is scrolled down again");
 
             win.close();
             SimpleTest.finish();
-          }, 0);
+          });
         });
       }, 0);
     }, 0);

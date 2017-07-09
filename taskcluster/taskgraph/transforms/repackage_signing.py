@@ -61,6 +61,7 @@ def make_repackage_signing_description(config, jobs):
             'nightly': dep_job.attributes.get('nightly', False),
             'build_platform': dep_job.attributes.get('build_platform'),
             'build_type': dep_job.attributes.get('build_type'),
+            'repackage_type': 'repackage-signing',
         }
         locale_str = ""
         if dep_job.attributes.get('locale'):
