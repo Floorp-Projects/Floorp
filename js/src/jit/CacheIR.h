@@ -1421,9 +1421,6 @@ class MOZ_RAII CompareIRGenerator : public IRGenerator
     HandleValue lhsVal_;
     HandleValue rhsVal_;
 
-    void trackAttached(const char* name);
-    void trackNotAttached();
-
   public:
     CompareIRGenerator(JSContext* cx, HandleScript, jsbytecode* pc, ICState::Mode mode,
                        JSOp op, HandleValue lhsVal, HandleValue rhsVal);

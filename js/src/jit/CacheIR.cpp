@@ -3717,37 +3717,5 @@ CompareIRGenerator::tryAttachStub()
     ValOperandId lhsId(writer.setInputOperandId(0));
     ValOperandId rhsId(writer.setInputOperandId(1));
 
-    trackNotAttached();
     return false;
-}
-
-void
-CompareIRGenerator::trackAttached(const char* name)
-{
-#ifdef JS_CACHEIR_SPEW
-    CacheIRSpewer& sp = CacheIRSpewer::singleton();
-    if (sp.enabled()) {
-        LockGuard<Mutex> guard(sp.lock());
-        sp.beginCache(guard, *this);
-        sp.valueProperty(guard, "lhs", lhsVal_);
-        sp.valueProperty(guard, "rhs", rhsVal_);
-        sp.attached(guard, name);
-        sp.endCache(guard);
-    }
-#endif
-}
-
-void
-CompareIRGenerator::trackNotAttached()
-{
-#ifdef JS_CACHEIR_SPEW
-    CacheIRSpewer& sp = CacheIRSpewer::singleton();
-    if (sp.enabled()) {
-        LockGuard<Mutex> guard(sp.lock());
-        sp.beginCache(guard, *this);
-        sp.valueProperty(guard, "lhs", lhsVal_);
-        sp.valueProperty(guard, "rhs", rhsVal_);
-        sp.endCache(guard);
-    }
-#endif
 }
