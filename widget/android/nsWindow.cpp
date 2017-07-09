@@ -2351,15 +2351,12 @@ nsWindow::RecvToolbarAnimatorMessageFromCompositor(int32_t aMessage)
 }
 
 void
-nsWindow::UpdateRootFrameMetrics(const ScreenPoint& aScrollOffset, const CSSToScreenScale& aZoom, const CSSRect& aPage)
+nsWindow::UpdateRootFrameMetrics(const ScreenPoint& aScrollOffset, const CSSToScreenScale& aZoom)
 {
-
   MOZ_ASSERT(AndroidBridge::IsJavaUiThread());
   if (NativePtr<LayerViewSupport>::Locked lvs{mLayerViewSupport}) {
     GeckoLayerClient::LocalRef client = lvs->GetLayerClient();
-    client->UpdateRootFrameMetrics(aScrollOffset.x, aScrollOffset.y, aZoom.scale,
-                                   aPage.x, aPage.y,
-                                   aPage.XMost(), aPage.YMost());
+    client->UpdateRootFrameMetrics(aScrollOffset.x, aScrollOffset.y, aZoom.scale);
   }
 }
 

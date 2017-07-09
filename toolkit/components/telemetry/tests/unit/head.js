@@ -178,6 +178,10 @@ function loadAddonManager(...args) {
   return AddonTestUtils.promiseStartupManager();
 }
 
+function finishAddonManagerStartup() {
+  Services.obs.notifyObservers(null, "test-load-xpi-database");
+}
+
 var gAppInfo = null;
 
 function createAppInfo(ID = "xpcshell@tests.mozilla.org", name = "XPCShell",

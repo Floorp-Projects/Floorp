@@ -659,7 +659,7 @@ this.XPIDatabase = {
    *                          flush after the database is flushed and
    *                          all cleanup is done
    */
-  shutdown() {
+  async shutdown() {
     logger.debug("shutdown");
     if (this.initialized) {
       // If our last database I/O had an error, try one last time to save.
@@ -677,28 +677,33 @@ this.XPIDatabase = {
             "XPIDB_saves_late", this._deferredSave.dirty ? 1 : 0);
       }
 
-      // Return a promise that any pending writes of the DB are complete and we
-      // are finished cleaning up
-      let flushPromise = this.flush();
-      flushPromise.catch(error => {
-          logger.error("Flush of XPI database failed", error);
-          AddonManagerPrivate.recordSimpleMeasure("XPIDB_shutdownFlush_failed", 1);
-          // If our last attempt to read or write the DB failed, force a new
-          // extensions.ini to be written to disk on the next startup
-          Services.prefs.setBoolPref(PREF_PENDING_OPERATIONS, true);
-        })
-        .then(count => {
-          // Clear out the cached addons data loaded from JSON
-          delete this.addonDB;
-          delete this._dbPromise;
-          // same for the deferred save
-          delete this._deferredSave;
-          // re-enable the schema version setter
-          delete this._schemaVersionSet;
-        });
-      return flushPromise;
+      // If we're shutting down while still loading, finish loading
+      // before everything else!
+      if (this._dbPromise) {
+        await this._dbPromise;
+      }
+
+      // Await and pending DB writes and finish cleaning up.
+      try {
+        await this.flush();
+      } catch (error) {
+        logger.error("Flush of XPI database failed", error);
+        AddonManagerPrivate.recordSimpleMeasure("XPIDB_shutdownFlush_failed", 1);
+        // If our last attempt to read or write the DB failed, force a new
+        // extensions.ini to be written to disk on the next startup
+        Services.prefs.setBoolPref(PREF_PENDING_OPERATIONS, true);
+
+        throw error;
+      }
+
+      // Clear out the cached addons data loaded from JSON
+      delete this.addonDB;
+      delete this._dbPromise;
+      // same for the deferred save
+      delete this._deferredSave;
+      // re-enable the schema version setter
+      delete this._schemaVersionSet;
     }
-    return Promise.resolve(0);
   },
 
   /**

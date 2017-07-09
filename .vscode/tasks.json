@@ -2,7 +2,15 @@
     // See https://go.microsoft.com/fwlink/?LinkId=733558
     // for the documentation about the tasks.json format
     "version": "2.0.0",
-    "command": "${workspaceRoot}/mach",
+    "windows": {
+      "command": "\"\\mozilla-build\\start-shell.bat mach\""
+    },
+    "osx": {
+      "command": "${workspaceRoot}/mach"
+    },
+    "linux": {
+      "command": "${workspaceRoot}/mach"
+    },
     "isShellCommand": true,
     "args": ["--log-no-times"],
     "showOutput": "silent",
@@ -11,6 +19,11 @@
     "tasks": [
       {
         "taskName": "clobber"
+      },
+      {
+        "taskName": "clobber-python",
+        "suppressTaskName": true,
+        "args": ["clobber", "python"]
       },
       {
         "taskName": "configure"
@@ -32,7 +45,9 @@
         }
       },
       {
-        "taskName": "build binaries",
+        "taskName": "build-binaries",
+        "suppressTaskName": true,
+        "args": ["build", "binaries"],
         "problemMatcher": {
           "owner": "cpp",
           "fileLocation": "absolute",
@@ -47,7 +62,9 @@
         }
       },
       {
-        "taskName": "build faster",
+        "taskName": "build-faster",
+        "suppressTaskName": true,
+        "args": ["build", "faster"],
         "problemMatcher": {
           "owner": "cpp",
           "fileLocation": "absolute",
@@ -67,11 +84,17 @@
         "showOutput": "always"
       },
       {
+        "taskName": "lint-wo",
+        "suppressTaskName": true,
+        "args": ["lint", "-wo"],
+        "problemMatcher": ["$eslint-stylish"]
+      },
+      {
         "taskName": "eslint",
         "problemMatcher": ["$eslint-stylish"]
       },
       {
-        "taskName": "eslint fix",
+        "taskName": "eslint-fix",
         "suppressTaskName": true,
         "args": ["eslint", "--fix", "${file}"],
         "problemMatcher": ["$eslint-stylish"]
