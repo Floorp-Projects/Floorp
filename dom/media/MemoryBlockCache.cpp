@@ -189,31 +189,36 @@ MemoryBlockCache::EnsureBufferCanContain(size_t aContentLength)
   }
   // Need larger buffer. If we are allowed more memory, attempt to re-allocate.
   const size_t extra = desiredLength - initialLength;
-  // Note: There is a small race between testing `atomic + extra > limit` and
-  // committing to it with `atomic += extra` below; but this is acceptable, as
-  // in the worst case it may allow a small number of buffers to go past the
-  // limit.
-  // The alternative would have been to reserve the space first with
-  // `atomic += extra` and then undo it with `atomic -= extra` in case of
-  // failure; but this would have meant potentially preventing other (small but
-  // successful) allocations.
-  static const size_t sysmem =
-    std::max<size_t>(PR_GetPhysicalMemorySize(), 32 * 1024 * 1024);
-  const size_t limit = std::min(
-    size_t(MediaPrefs::MediaMemoryCachesCombinedLimitKb()) * 1024,
-    sysmem * MediaPrefs::MediaMemoryCachesCombinedLimitPcSysmem() / 100);
-  const size_t currentSizes = static_cast<size_t>(gCombinedSizes);
-  if (currentSizes + extra > limit) {
-    LOG("EnsureBufferCanContain(%zu) - buffer size %zu, wanted + %zu = %zu;"
-        " combined sizes %zu + %zu > limit %zu",
-        aContentLength,
-        initialLength,
-        extra,
-        desiredLength,
-        currentSizes,
-        extra,
-        limit);
-    return false;
+  // Only check the very first allocation against the combined MemoryBlockCache
+  // limit. Further growths will always be allowed, assuming MediaCache won't
+  // go over GetMaxBlocks() by too much.
+  if (initialLength == 0) {
+    // Note: There is a small race between testing `atomic + extra > limit` and
+    // committing to it with `atomic += extra` below; but this is acceptable, as
+    // in the worst case it may allow a small number of buffers to go past the
+    // limit.
+    // The alternative would have been to reserve the space first with
+    // `atomic += extra` and then undo it with `atomic -= extra` in case of
+    // failure; but this would have meant potentially preventing other (small
+    // but successful) allocations.
+    static const size_t sysmem =
+      std::max<size_t>(PR_GetPhysicalMemorySize(), 32 * 1024 * 1024);
+    const size_t limit = std::min(
+      size_t(MediaPrefs::MediaMemoryCachesCombinedLimitKb()) * 1024,
+      sysmem * MediaPrefs::MediaMemoryCachesCombinedLimitPcSysmem() / 100);
+    const size_t currentSizes = static_cast<size_t>(gCombinedSizes);
+    if (currentSizes + extra > limit) {
+      LOG("EnsureBufferCanContain(%zu) - buffer size %zu, wanted + %zu = %zu;"
+          " combined sizes %zu + %zu > limit %zu",
+          aContentLength,
+          initialLength,
+          extra,
+          desiredLength,
+          currentSizes,
+          extra,
+          limit);
+      return false;
+    }
   }
   if (!mBuffer.SetLength(desiredLength, mozilla::fallible)) {
     LOG("EnsureBufferCanContain(%zu) - buffer size %zu, wanted + %zu = %zu, "
