@@ -470,7 +470,6 @@ IonCacheIRCompiler::init()
         break;
       }
       case CacheKind::Call:
-      case CacheKind::Compare:
       case CacheKind::TypeOf:
       case CacheKind::GetPropSuper:
       case CacheKind::GetElemSuper:
