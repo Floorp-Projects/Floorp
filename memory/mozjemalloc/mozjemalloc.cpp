@@ -1924,7 +1924,7 @@ chunk_alloc_mmap(size_t size, size_t alignment)
 }
 
 bool
-pages_purge(void *addr, size_t length)
+pages_purge(void *addr, size_t length, bool force_zero)
 {
 	bool unzeroed;
 
@@ -1932,6 +1932,10 @@ pages_purge(void *addr, size_t length)
 	pages_decommit(addr, length);
 	unzeroed = false;
 #else
+#  ifndef MOZ_MEMORY_LINUX
+	if (force_zero)
+		memset(addr, 0, length);
+#  endif
 #  ifdef MOZ_MEMORY_WINDOWS
 	/*
 	* The region starting at addr may have been allocated in multiple calls
@@ -1947,14 +1951,14 @@ pages_purge(void *addr, size_t length)
 		length -= pages_size;
 		pages_size = std::min(length, chunksize);
 	}
-	unzeroed = true;
+	unzeroed = !force_zero;
 #  else
 #    ifdef MOZ_MEMORY_LINUX
 #      define JEMALLOC_MADV_PURGE MADV_DONTNEED
 #      define JEMALLOC_MADV_ZEROS true
 #    else /* FreeBSD and Darwin. */
 #      define JEMALLOC_MADV_PURGE MADV_FREE
-#      define JEMALLOC_MADV_ZEROS false
+#      define JEMALLOC_MADV_ZEROS force_zero
 #    endif
 	int err = madvise(addr, length, JEMALLOC_MADV_PURGE);
 	unzeroed = (JEMALLOC_MADV_ZEROS == false || err != 0);
@@ -2121,13 +2125,7 @@ chunk_record(extent_tree_t *chunks_szad, extent_tree_t *chunks_ad, void *chunk,
 	bool unzeroed;
 	extent_node_t *xnode, *node, *prev, *xprev, key;
 
-	unzeroed = pages_purge(chunk, size);
-
-	/* If purge doesn't zero the chunk, only record arena chunks or
-	 * previously recycled chunks. */
-	if (unzeroed && type != ARENA_CHUNK && type != RECYCLED_CHUNK) {
-		return;
-	}
+	unzeroed = pages_purge(chunk, size, type == HUGE_CHUNK);
 
 	/*
 	 * Allocate a node before acquiring chunks_mtx even though it might not
