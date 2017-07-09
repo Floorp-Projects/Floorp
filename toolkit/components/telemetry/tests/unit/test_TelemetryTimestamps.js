@@ -24,6 +24,7 @@ function getSimpleMeasurementsFromTelemetryController() {
 add_task(async function test_setup() {
   // Telemetry needs the AddonManager.
   loadAddonManager();
+  finishAddonManagerStartup();
   // Make profile available for |TelemetryController.testShutdown()|.
   do_get_profile();
 

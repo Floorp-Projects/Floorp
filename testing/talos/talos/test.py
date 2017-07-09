@@ -818,6 +818,22 @@ class bloom_basic(PageloaderTest):
 
 
 @register_test()
+class bloom_basic_singleton(PageloaderTest):
+    """
+    Stylo bloom_basic: runs bloom_basic and bloom_basic_ref and reports difference
+    """
+    tpmanifest = '${talos}/tests/perf-reftest-singletons/bloom_basic_singleton.manifest'
+    tpcycles = 1
+    tppagecycles = 25
+    gecko_profile_interval = 1
+    gecko_profile_entries = 2000000
+    filters = filter.ignore_first.prepare(5) + filter.median.prepare()
+    unit = 'ms'
+    lower_is_better = True
+    alert_threshold = 5.0
+
+
+@register_test()
 class quantum_pageload_google(QuantumPageloadTest):
     """
     Quantum Pageload Test - Google

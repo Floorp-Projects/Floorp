@@ -28,8 +28,10 @@ import static org.mozilla.gecko.deeplink.DeepLinkContract.DEEP_LINK_SCHEME;
 import static org.mozilla.gecko.deeplink.DeepLinkContract.LINK_BOOKMARK_LIST;
 import static org.mozilla.gecko.deeplink.DeepLinkContract.LINK_DEFAULT_BROWSER;
 import static org.mozilla.gecko.deeplink.DeepLinkContract.LINK_HISTORY_LIST;
+import static org.mozilla.gecko.deeplink.DeepLinkContract.LINK_PREFERENCES_HOME;
 import static org.mozilla.gecko.deeplink.DeepLinkContract.LINK_PREFERENCES;
 import static org.mozilla.gecko.deeplink.DeepLinkContract.LINK_PREFERENCES_ACCESSIBILITY;
+import static org.mozilla.gecko.deeplink.DeepLinkContract.LINK_PREFERENCES_GENERAL;
 import static org.mozilla.gecko.deeplink.DeepLinkContract.LINK_PREFERENCES_NOTIFICATIONS;
 import static org.mozilla.gecko.deeplink.DeepLinkContract.LINK_PREFERENCES_PRIAVACY;
 import static org.mozilla.gecko.deeplink.DeepLinkContract.LINK_PREFERENCES_SEARCH;
@@ -37,6 +39,7 @@ import static org.mozilla.gecko.deeplink.DeepLinkContract.LINK_SAVE_AS_PDF;
 import static org.mozilla.gecko.deeplink.DeepLinkContract.LINK_SIGN_UP;
 import static org.mozilla.gecko.deeplink.DeepLinkContract.SUMO_DEFAULT_BROWSER;
 import static org.mozilla.gecko.deeplink.DeepLinkContract.LINK_FXA_SIGNIN;
+
 import org.mozilla.gecko.deeplink.DeepLinkContract;
 
 /**
@@ -226,6 +229,8 @@ public class LauncherActivity extends Activity {
                 // we might need to redisplay based on a locale change.
                 startActivityForResult(settingsIntent, ACTIVITY_REQUEST_PREFERENCES);
                 break;
+            case LINK_PREFERENCES_GENERAL:
+            case LINK_PREFERENCES_HOME:
             case LINK_PREFERENCES_PRIAVACY:
             case LINK_PREFERENCES_SEARCH:
             case LINK_PREFERENCES_NOTIFICATIONS:

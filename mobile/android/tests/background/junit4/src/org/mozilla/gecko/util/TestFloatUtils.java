@@ -51,26 +51,4 @@ public class TestFloatUtils {
     public void testEqualSuccessIfUnPromoted() {
         assertTrue(FloatUtils.fuzzyEquals(5.6f, 5.6f));
     }
-
-    @Test
-    public void testClampSuccess() {
-        assertEquals(3, FloatUtils.clamp(3, 1, 5), 0);
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void testClampFail() {
-        FloatUtils.clamp(3, 5, 1);
-    }
-
-    @Test
-    public void testInterpolateSuccess() {
-        assertEquals(4f ,FloatUtils.interpolate(1, 2, 3), 0f);
-    }
-
-    @Test
-    public void testInterpolateFail() {
-        assertNotEquals(3f ,FloatUtils.interpolate(1, 2, 3), 0f);
-    }
-
-
 }

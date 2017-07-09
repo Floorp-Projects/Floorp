@@ -17,12 +17,10 @@ class StartupCache;
 
 nsresult
 ReadCachedScript(mozilla::scache::StartupCache* cache, nsACString& uri,
-                 JSContext* cx, nsIPrincipal* systemPrincipal,
-                 JS::MutableHandleScript scriptp);
+                 JSContext* cx, JS::MutableHandleScript scriptp);
 
 nsresult
 WriteCachedScript(mozilla::scache::StartupCache* cache, nsACString& uri,
-                  JSContext* cx, nsIPrincipal* systemPrincipal,
-                  JS::HandleScript script);
+                  JSContext* cx, JS::HandleScript script);
 
 #endif /* mozJSLoaderUtils_h */

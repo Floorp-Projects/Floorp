@@ -2270,20 +2270,41 @@ this.XPIProvider = {
         }
       }, "final-ui-startup");
 
-      // Once other important startup work is finished, try to load the
-      // XPI database so that the telemetry environment can be populated
-      // with detailed addon information.
+      // If we haven't yet loaded the XPI database, schedule loading it
+      // to occur once other important startup work is finished.  We want
+      // this to happen relatively quickly after startup so the telemetry
+      // environment has complete addon information.
+      //
+      // Unfortunately we have to use a variety of ways do detect when it
+      // is time to load.  In a regular browser process we just wait for
+      // sessionstore-windows-restored.  In a browser toolbox process
+      // we wait for the toolbox to show up, based on xul-window-visible
+      // and a visible toolbox window.
+      // Finally, we have a test-only event called test-load-xpi-database
+      // as a temporary workaround for bug 1372845.  The latter can be
+      // cleaned up when that bug is resolved.
       if (!this.isDBLoaded) {
-        Services.obs.addObserver({
+        const EVENTS = [ "sessionstore-windows-restored", "xul-window-visible", "test-load-xpi-database" ];
+        let observer = {
           observe(subject, topic, data) {
-            Services.obs.removeObserver(this, "sessionstore-windows-restored");
+            if (topic == "xul-window-visible" &&
+                !Services.wm.getMostRecentWindow("devtools:toolbox")) {
+              return;
+            }
+
+            for (let event of EVENTS) {
+              Services.obs.removeObserver(observer, event);
+            }
 
             // It would be nice to defer some of the work here until we
             // have idle time but we can't yet use requestIdleCallback()
             // from chrome.  See bug 1358476.
             XPIDatabase.asyncLoadDB();
           },
-        }, "sessionstore-windows-restored");
+        };
+        for (let event of EVENTS) {
+          Services.obs.addObserver(observer, event);
+        }
       }
 
       AddonManagerPrivate.recordTimestamp("XPI_startup_end");
@@ -3612,6 +3633,9 @@ this.XPIProvider = {
 
     let result = [];
     for (let addon of XPIStates.enabledAddons()) {
+      if (aTypes && !aTypes.includes(addon.type)) {
+        continue;
+      }
       let location = this.installLocationsByName[addon.location.name];
       let scope, isSystem;
       if (location) {
