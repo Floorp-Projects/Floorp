@@ -1,2 +1,3 @@
 == background-image-gradient-1.html background-image-gradient-1-ref.html
 == line-height-1.html line-height-1-ref.html
+fails-if(!isDebugBuild&&(!stylo||styloVsGecko)) skip-if(isDebugBuild&&(!stylo||styloVsGecko)) == line-height-2.html line-height-2-ref.html
