@@ -264,16 +264,16 @@ inDOMUtils::GetCSSStyleRules(nsIDOMElement *aElement,
       }
     }
   } else {
-    // It's a Servo source, so use some servo methods on the element to get
-    // the rule list.
-    nsTArray<const RawServoStyleRule*> rawRuleList;
-    Servo_Element_GetStyleRuleList(element, &rawRuleList);
-
     nsIDocument* doc = element->GetOwnerDocument();
     nsIPresShell* shell = doc->GetShell();
     if (!shell) {
       return NS_OK;
     }
+
+    ServoStyleContext* servo = styleContext->AsServo();
+    nsTArray<const RawServoStyleRule*> rawRuleList;
+    Servo_ComputedValues_GetStyleRuleList(servo->ComputedValues(),
+                                          &rawRuleList);
 
     ServoStyleSet* styleSet = shell->StyleSet()->AsServo();
     ServoStyleRuleMap* map = styleSet->StyleRuleMap();
