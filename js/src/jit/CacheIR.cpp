@@ -3696,26 +3696,3 @@ CallIRGenerator::tryAttachStub()
     MOZ_ASSERT(strategy == OptStrategy::None);
     return false;
 }
-
-CompareIRGenerator::CompareIRGenerator(JSContext* cx, HandleScript script, jsbytecode* pc,
-                                       ICState::Mode mode, JSOp op,
-                                       HandleValue lhsVal, HandleValue rhsVal)
-  : IRGenerator(cx, script, pc, CacheKind::Compare, mode),
-    op_(op), lhsVal_(lhsVal), rhsVal_(rhsVal)
-{ }
-
-bool
-CompareIRGenerator::tryAttachStub()
-{
-    MOZ_ASSERT(cacheKind_ == CacheKind::Compare);
-    MOZ_ASSERT(IsEqualityOp(op_) ||
-               op_ == JSOP_LE || op_ == JSOP_LT ||
-               op_ == JSOP_GE || op_ == JSOP_GT);
-
-    AutoAssertNoPendingException aanpe(cx_);
-
-    ValOperandId lhsId(writer.setInputOperandId(0));
-    ValOperandId rhsId(writer.setInputOperandId(1));
-
-    return false;
-}
