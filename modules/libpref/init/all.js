@@ -703,6 +703,7 @@ pref("apz.max_velocity_queue_size", 5);
 pref("apz.min_skate_speed", "1.0");
 pref("apz.minimap.enabled", false);
 pref("apz.minimap.visibility.enabled", false);
+pref("apz.one_touch_pinch.enabled", true);
 pref("apz.overscroll.enabled", false);
 pref("apz.overscroll.min_pan_distance_ratio", "1.0");
 pref("apz.overscroll.spring_friction", "0.015");

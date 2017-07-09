@@ -295,6 +295,10 @@ typedef GenericFlingAnimation FlingAnimation;
  * rather than using the "stationary" multipliers.\n
  * Units: CSS pixels per millisecond
  *
+ * \li\b apz.one_touch_pinch.enabled
+ * Whether or not the "one-touch-pinch" gesture (for zooming with one finger)
+ * is enabled or not.
+ *
  * \li\b apz.overscroll.enabled
  * Pref that enables overscrolling. If this is disabled, excess scroll that
  * cannot be handed off is discarded.
