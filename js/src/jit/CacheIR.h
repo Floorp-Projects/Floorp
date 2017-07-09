@@ -257,9 +257,6 @@ extern const char* CacheKindNames[];
     _(LoadTypeOfObjectResult)             \
                                           \
     _(CallStringSplitResult)              \
-                                          \
-    _(CompareStringResult)                \
-                                          \
     _(CallPrintString)                    \
     _(Breakpoint)                         \
                                           \
@@ -958,12 +955,6 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter
         addStubField(uintptr_t(group), StubField::Type::ObjectGroup);
     }
 
-    void compareStringResult(uint32_t op, StringOperandId lhs, StringOperandId rhs) {
-        writeOpWithOperandId(CacheOp::CompareStringResult, lhs);
-        writeOperandId(rhs);
-        buffer_.writeByte(uint32_t(op));
-    }
-
     void callPrintString(const char* str) {
         writeOp(CacheOp::CallPrintString);
         writePointer(const_cast<char*>(str));
@@ -1021,7 +1012,6 @@ class MOZ_RAII CacheIRReader
     Scalar::Type scalarType() { return Scalar::Type(buffer_.readByte()); }
     uint32_t typeDescrKey() { return buffer_.readByte(); }
     JSWhyMagic whyMagic() { return JSWhyMagic(buffer_.readByte()); }
-    JSOp jsop() { return JSOp(buffer_.readByte()); }
     int32_t int32Immediate() { return buffer_.readSigned(); }
     uint32_t uint32Immediate() { return buffer_.readUnsigned(); }
     void* pointer() { return buffer_.readRawPointer(); }
@@ -1430,8 +1420,6 @@ class MOZ_RAII CompareIRGenerator : public IRGenerator
     JSOp op_;
     HandleValue lhsVal_;
     HandleValue rhsVal_;
-
-    bool tryAttachString(ValOperandId lhsId, ValOperandId rhsId);
 
     void trackAttached(const char* name);
     void trackNotAttached();
