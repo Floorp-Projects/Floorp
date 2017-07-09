@@ -1017,10 +1017,10 @@ AndroidDynamicToolbarAnimator::UpdateFrameMetrics(ScreenPoint aScrollOffset,
     }
     RefPtr<UiCompositorControllerParent> uiController = UiCompositorControllerParent::GetFromRootLayerTreeId(mRootLayerTreeId);
     MOZ_ASSERT(uiController);
-    CompositorThreadHolder::Loop()->PostTask(NewRunnableMethod<ScreenPoint, CSSToScreenScale, CSSRect>(
+    CompositorThreadHolder::Loop()->PostTask(NewRunnableMethod<ScreenPoint, CSSToScreenScale>(
                                                "UiCompositorControllerParent::SendRootFrameMetrics",
                                                uiController, &UiCompositorControllerParent::SendRootFrameMetrics,
-                                               aScrollOffset, aScale, aCssPageRect));
+                                               aScrollOffset, aScale));
   }
 }
 

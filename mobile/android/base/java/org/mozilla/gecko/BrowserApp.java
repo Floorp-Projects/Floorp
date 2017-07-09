@@ -183,6 +183,7 @@ import java.util.regex.Pattern;
 
 import static org.mozilla.gecko.Tab.TabType;
 import static org.mozilla.gecko.Tabs.INVALID_TAB_ID;
+import static org.mozilla.gecko.mma.MmaDelegate.NEW_TAB;
 
 public class BrowserApp extends GeckoApp
                         implements ActionModePresenter,
@@ -3755,6 +3756,9 @@ public class BrowserApp extends GeckoApp
         if (TextUtils.equals(extras, "new_private_tab")) {
             // Mask private browsing
             extras = "new_tab";
+        } else {
+            // We only track opening normal tab
+            MmaDelegate.track(NEW_TAB);
         }
         Telemetry.sendUIEvent(TelemetryContract.Event.ACTION, TelemetryContract.Method.MENU, extras);
 

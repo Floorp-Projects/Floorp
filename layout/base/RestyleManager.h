@@ -256,9 +256,9 @@ private:
   // they're referenced again later in the changelist.
   mozilla::UniquePtr<nsTHashtable<nsPtrHashKey<const nsIFrame>>> mDestroyedFrames;
 
+protected:
   const StyleBackendType mType;
 
-protected:
   // True if we're in the middle of a nsRefreshDriver refresh
   bool mInStyleRefresh;
 

@@ -1,0 +1,1550 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="756" height="20" fill="context-fill">
+  <svg width="18" height="20" x="0" y="0">
+    <defs>
+      <clipPath id="b">
+        <path d="M0 0h18v20H0z"/>
+      </clipPath>
+      <mask id="e" mask-type="alpha">
+        <path fill="#0005FF" d="M0-2.906A2.907 2.907 0 0 1 2.906 0 2.907 2.907 0 0 1 0 2.906 2.907 2.907 0 0 1-2.906 0 2.907 2.907 0 0 1 0-2.906z" transform="translate(1.27 18.622) scale(7.36622)"/>
+      </mask>
+      <mask id="d" mask-type="alpha">
+        <path fill="#0005FF" d="M0-2.906A2.907 2.907 0 0 1 2.906 0 2.907 2.907 0 0 1 0 2.906 2.907 2.907 0 0 1-2.906 0 2.907 2.907 0 0 1 0-2.906z" transform="translate(1.151 1.705) scale(7.47609)"/>
+      </mask>
+      <filter id="a" filterUnits="objectBoundingBox" x="0%" y="0%" width="100%" height="100%">
+        <feColorMatrix type="matrix" color-interpolation-filters="sRGB" values="1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 -1 1"/>
+      </filter>
+      <mask id="c" mask-type="alpha">
+        <g filter="url(#a)">
+          <path fill="#fff" opacity="0" d="M0 0h18v20H0z"/>
+          <path display="none"/>
+        </g>
+      </mask>
+    </defs>
+    <g clip-path="url(#b)">
+      <path d="M9.978 15.616" opacity="0"/>
+      <g opacity="0" mask="url(#c)">
+        <path d="M9.346 16.98a6.994 6.994 0 0 0 6.638-7.335A6.994 6.994 0 0 0 2.819 6.714a6.954 6.954 0 0 0-.513 5.333 1 1 0 0 0 1.912-.585 5.02 5.02 0 1 1 4.412 3.493"/>
+      </g>
+      <g mask="url(#d)">
+        <path d="M9 11.413l5.293 5.293a.999.999 0 0 0 1.414-1.414l-5.293-5.293"/>
+        <path d="M10.973 10.558L3.707 3.293a1 1 0 0 0-1.414 1.414l7.266 7.265"/>
+      </g>
+      <g mask="url(#e)">
+        <path d="M9.285 8.301l-6.992 6.992a1 1 0 1 0 1.414 1.414l6.992-6.992"/>
+        <path d="M10.413 10l5.293-5.293a.999.999 0 0 0-1.414-1.414L8.999 8.586"/>
+      </g>
+    </g>
+  </svg>
+  <svg width="18" height="20" x="18" y="0">
+    <defs>
+      <clipPath id="g">
+        <path d="M0 0h18v20H0z"/>
+      </clipPath>
+      <mask id="j" mask-type="alpha">
+        <path fill="#0005FF" d="M0-2.906A2.907 2.907 0 0 1 2.906 0 2.907 2.907 0 0 1 0 2.906 2.907 2.907 0 0 1-2.906 0 2.907 2.907 0 0 1 0-2.906z" transform="translate(1.26 18.622) scale(7.3132)"/>
+      </mask>
+      <mask id="i" mask-type="alpha">
+        <path fill="#0005FF" d="M0-2.906A2.907 2.907 0 0 1 2.906 0 2.907 2.907 0 0 1 0 2.906 2.907 2.907 0 0 1-2.906 0 2.907 2.907 0 0 1 0-2.906z" transform="translate(1.151 1.705) scale(7.47609)"/>
+      </mask>
+      <filter id="f" filterUnits="objectBoundingBox" x="0%" y="0%" width="100%" height="100%">
+        <feColorMatrix type="matrix" color-interpolation-filters="sRGB" values="1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 -1 1"/>
+      </filter>
+      <mask id="h" mask-type="alpha">
+        <g filter="url(#f)">
+          <path fill="#fff" opacity="0" d="M0 0h18v20H0z"/>
+          <path display="none"/>
+        </g>
+      </mask>
+    </defs>
+    <g clip-path="url(#g)">
+      <path d="M9.978 15.616" opacity="0"/>
+      <g opacity="0" mask="url(#h)">
+        <path d="M9.346 16.98a6.994 6.994 0 0 0 6.638-7.335A6.994 6.994 0 0 0 2.819 6.714a6.954 6.954 0 0 0-.513 5.333 1 1 0 0 0 1.912-.585 5.02 5.02 0 1 1 4.412 3.493"/>
+      </g>
+      <g mask="url(#i)">
+        <path d="M9 11.413l5.293 5.293a.999.999 0 0 0 1.414-1.414l-5.293-5.293"/>
+        <path d="M10.973 10.558L3.707 3.293a1 1 0 0 0-1.414 1.414l7.266 7.265"/>
+      </g>
+      <g mask="url(#j)">
+        <path d="M9.285 8.301l-6.992 6.992a1 1 0 1 0 1.414 1.414l6.992-6.992"/>
+        <path d="M10.413 10l5.293-5.293a.999.999 0 0 0-1.414-1.414L8.999 8.586"/>
+      </g>
+    </g>
+  </svg>
+  <svg width="18" height="20" x="36" y="0">
+    <defs>
+      <clipPath id="l">
+        <path d="M0 0h18v20H0z"/>
+      </clipPath>
+      <mask id="o" mask-type="alpha">
+        <path fill="#0005FF" d="M0-2.906A2.907 2.907 0 0 1 2.906 0 2.907 2.907 0 0 1 0 2.906 2.907 2.907 0 0 1-2.906 0 2.907 2.907 0 0 1 0-2.906z" transform="translate(1.25 18.622) scale(7.2471)"/>
+      </mask>
+      <mask id="n" mask-type="alpha">
+        <path fill="#0005FF" d="M0-2.906A2.907 2.907 0 0 1 2.906 0 2.907 2.907 0 0 1 0 2.906 2.907 2.907 0 0 1-2.906 0 2.907 2.907 0 0 1 0-2.906z" transform="translate(1.151 1.705) scale(7.47609)"/>
+      </mask>
+      <filter id="k" filterUnits="objectBoundingBox" x="0%" y="0%" width="100%" height="100%">
+        <feColorMatrix type="matrix" color-interpolation-filters="sRGB" values="1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 -1 1"/>
+      </filter>
+      <mask id="m" mask-type="alpha">
+        <g filter="url(#k)">
+          <path fill="#fff" opacity="0" d="M0 0h18v20H0z"/>
+          <path display="none"/>
+        </g>
+      </mask>
+    </defs>
+    <g clip-path="url(#l)">
+      <path d="M9.978 15.616" opacity="0"/>
+      <g opacity="0" mask="url(#m)">
+        <path d="M9.346 16.98a6.994 6.994 0 0 0 6.638-7.335A6.994 6.994 0 0 0 2.819 6.714a6.954 6.954 0 0 0-.513 5.333 1 1 0 0 0 1.912-.585 5.02 5.02 0 1 1 4.412 3.493"/>
+      </g>
+      <g mask="url(#n)">
+        <path d="M9 11.413l5.293 5.293a.999.999 0 0 0 1.414-1.414l-5.293-5.293"/>
+        <path d="M10.973 10.558L3.707 3.293a1 1 0 0 0-1.414 1.414l7.266 7.265"/>
+      </g>
+      <g mask="url(#o)">
+        <path d="M9.285 8.301l-6.992 6.992a1 1 0 1 0 1.414 1.414l6.992-6.992"/>
+        <path d="M10.413 10l5.293-5.293a.999.999 0 0 0-1.414-1.414L8.999 8.586"/>
+      </g>
+    </g>
+  </svg>
+  <svg width="18" height="20" x="54" y="0">
+    <defs>
+      <clipPath id="q">
+        <path d="M0 0h18v20H0z"/>
+      </clipPath>
+      <mask id="t" mask-type="alpha">
+        <path fill="#0005FF" d="M0-2.906A2.907 2.907 0 0 1 2.906 0 2.907 2.907 0 0 1 0 2.906 2.907 2.907 0 0 1-2.906 0 2.907 2.907 0 0 1 0-2.906z" transform="translate(1.238 18.622) scale(7.16624)"/>
+      </mask>
+      <mask id="s" mask-type="alpha">
+        <path fill="#0005FF" d="M0-2.906A2.907 2.907 0 0 1 2.906 0 2.907 2.907 0 0 1 0 2.906 2.907 2.907 0 0 1-2.906 0 2.907 2.907 0 0 1 0-2.906z" transform="translate(1.151 1.705) scale(7.47609)"/>
+      </mask>
+      <filter id="p" filterUnits="objectBoundingBox" x="0%" y="0%" width="100%" height="100%">
+        <feColorMatrix type="matrix" color-interpolation-filters="sRGB" values="1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 -1 1"/>
+      </filter>
+      <mask id="r" mask-type="alpha">
+        <g filter="url(#p)">
+          <path fill="#fff" opacity="0" d="M0 0h18v20H0z"/>
+          <path display="none"/>
+        </g>
+      </mask>
+    </defs>
+    <g clip-path="url(#q)">
+      <path d="M9.978 15.616" opacity="0"/>
+      <g opacity="0" mask="url(#r)">
+        <path d="M9.346 16.98a6.994 6.994 0 0 0 6.638-7.335A6.994 6.994 0 0 0 2.819 6.714a6.954 6.954 0 0 0-.513 5.333 1 1 0 0 0 1.912-.585 5.02 5.02 0 1 1 4.412 3.493"/>
+      </g>
+      <g mask="url(#s)">
+        <path d="M9 11.413l5.293 5.293a.999.999 0 0 0 1.414-1.414l-5.293-5.293"/>
+        <path d="M10.973 10.558L3.707 3.293a1 1 0 0 0-1.414 1.414l7.266 7.265"/>
+      </g>
+      <g mask="url(#t)">
+        <path d="M9.285 8.301l-6.992 6.992a1 1 0 1 0 1.414 1.414l6.992-6.992"/>
+        <path d="M10.413 10l5.293-5.293a.999.999 0 0 0-1.414-1.414L8.999 8.586"/>
+      </g>
+    </g>
+  </svg>
+  <svg width="18" height="20" x="72" y="0">
+    <defs>
+      <clipPath id="v">
+        <path d="M0 0h18v20H0z"/>
+      </clipPath>
+      <mask id="y" mask-type="alpha">
+        <path fill="#0005FF" d="M0-2.906A2.907 2.907 0 0 1 2.906 0 2.907 2.907 0 0 1 0 2.906 2.907 2.907 0 0 1-2.906 0 2.907 2.907 0 0 1 0-2.906z" transform="translate(1.223 18.622) scale(7.06864)"/>
+      </mask>
+      <mask id="x" mask-type="alpha">
+        <path fill="#0005FF" d="M0-2.906A2.907 2.907 0 0 1 2.906 0 2.907 2.907 0 0 1 0 2.906 2.907 2.907 0 0 1-2.906 0 2.907 2.907 0 0 1 0-2.906z" transform="translate(1.151 1.705) scale(7.47609)"/>
+      </mask>
+      <filter id="u" filterUnits="objectBoundingBox" x="0%" y="0%" width="100%" height="100%">
+        <feColorMatrix type="matrix" color-interpolation-filters="sRGB" values="1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 -1 1"/>
+      </filter>
+      <mask id="w" mask-type="alpha">
+        <g filter="url(#u)">
+          <path fill="#fff" opacity="0" d="M0 0h18v20H0z"/>
+          <path display="none"/>
+        </g>
+      </mask>
+    </defs>
+    <g clip-path="url(#v)">
+      <path d="M9.978 15.616" opacity="0"/>
+      <g opacity="0" mask="url(#w)">
+        <path d="M9.346 16.98a6.994 6.994 0 0 0 6.638-7.335A6.994 6.994 0 0 0 2.819 6.714a6.954 6.954 0 0 0-.513 5.333 1 1 0 0 0 1.912-.585 5.02 5.02 0 1 1 4.412 3.493"/>
+      </g>
+      <g mask="url(#x)">
+        <path d="M9 11.413l5.293 5.293a.999.999 0 0 0 1.414-1.414l-5.293-5.293"/>
+        <path d="M10.973 10.558L3.707 3.293a1 1 0 0 0-1.414 1.414l7.266 7.265"/>
+      </g>
+      <g mask="url(#y)">
+        <path d="M9.285 8.301l-6.992 6.992a1 1 0 1 0 1.414 1.414l6.992-6.992"/>
+        <path d="M10.413 10l5.293-5.293a.999.999 0 0 0-1.414-1.414L8.999 8.586"/>
+      </g>
+    </g>
+  </svg>
+  <svg width="18" height="20" x="90" y="0">
+    <defs>
+      <clipPath id="A">
+        <path d="M0 0h18v20H0z"/>
+      </clipPath>
+      <mask id="D" mask-type="alpha">
+        <path fill="#0005FF" d="M0-2.906A2.907 2.907 0 0 1 2.906 0 2.907 2.907 0 0 1 0 2.906 2.907 2.907 0 0 1-2.906 0 2.907 2.907 0 0 1 0-2.906z" transform="translate(1.204 18.622) scale(6.95179)"/>
+      </mask>
+      <mask id="C" mask-type="alpha">
+        <path fill="#0005FF" d="M0-2.906A2.907 2.907 0 0 1 2.906 0 2.907 2.907 0 0 1 0 2.906 2.907 2.907 0 0 1-2.906 0 2.907 2.907 0 0 1 0-2.906z" transform="translate(1.15 1.705) scale(7.47174)"/>
+      </mask>
+      <filter id="z" filterUnits="objectBoundingBox" x="0%" y="0%" width="100%" height="100%">
+        <feColorMatrix type="matrix" color-interpolation-filters="sRGB" values="1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 -1 1"/>
+      </filter>
+      <mask id="B" mask-type="alpha">
+        <g filter="url(#z)">
+          <path fill="#fff" opacity="0" d="M0 0h18v20H0z"/>
+          <path display="none"/>
+        </g>
+      </mask>
+    </defs>
+    <g clip-path="url(#A)">
+      <path d="M9.978 15.616" opacity="0"/>
+      <g opacity="0" mask="url(#B)">
+        <path d="M9.346 16.98a6.994 6.994 0 0 0 6.638-7.335A6.994 6.994 0 0 0 2.819 6.714a6.954 6.954 0 0 0-.513 5.333 1 1 0 0 0 1.912-.585 5.02 5.02 0 1 1 4.412 3.493"/>
+      </g>
+      <g mask="url(#C)">
+        <path d="M9 11.413l5.293 5.293a.999.999 0 0 0 1.414-1.414l-5.293-5.293"/>
+        <path d="M10.973 10.558L3.707 3.293a1 1 0 0 0-1.414 1.414l7.266 7.265"/>
+      </g>
+      <g mask="url(#D)">
+        <path d="M9.285 8.301l-6.992 6.992a1 1 0 1 0 1.414 1.414l6.992-6.992"/>
+        <path d="M10.413 10l5.293-5.293a.999.999 0 0 0-1.414-1.414L8.999 8.586"/>
+      </g>
+    </g>
+  </svg>
+  <svg width="18" height="20" x="108" y="0">
+    <defs>
+      <clipPath id="F">
+        <path d="M0 0h18v20H0z"/>
+      </clipPath>
+      <mask id="I" mask-type="alpha">
+        <path fill="#0005FF" d="M0-2.906A2.907 2.907 0 0 1 2.906 0 2.907 2.907 0 0 1 0 2.906 2.907 2.907 0 0 1-2.906 0 2.907 2.907 0 0 1 0-2.906z" transform="translate(1.183 18.622) scale(6.81253)"/>
+      </mask>
+      <mask id="H" mask-type="alpha">
+        <path fill="#0005FF" d="M0-2.906A2.907 2.907 0 0 1 2.906 0 2.907 2.907 0 0 1 0 2.906 2.907 2.907 0 0 1-2.906 0 2.907 2.907 0 0 1 0-2.906z" transform="translate(1.149 1.705) scale(7.45936)"/>
+      </mask>
+      <filter id="E" filterUnits="objectBoundingBox" x="0%" y="0%" width="100%" height="100%">
+        <feColorMatrix type="matrix" color-interpolation-filters="sRGB" values="1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 -1 1"/>
+      </filter>
+      <mask id="G" mask-type="alpha">
+        <g filter="url(#E)">
+          <path fill="#fff" opacity="0" d="M0 0h18v20H0z"/>
+          <path display="none"/>
+        </g>
+      </mask>
+    </defs>
+    <g clip-path="url(#F)">
+      <path d="M9.978 15.616" opacity="0"/>
+      <g opacity="0" mask="url(#G)">
+        <path d="M9.346 16.98a6.994 6.994 0 0 0 6.638-7.335A6.994 6.994 0 0 0 2.819 6.714a6.954 6.954 0 0 0-.513 5.333 1 1 0 0 0 1.912-.585 5.02 5.02 0 1 1 4.412 3.493"/>
+      </g>
+      <g mask="url(#H)">
+        <path d="M9 11.413l5.293 5.293a.999.999 0 0 0 1.414-1.414l-5.293-5.293"/>
+        <path d="M10.973 10.558L3.707 3.293a1 1 0 0 0-1.414 1.414l7.266 7.265"/>
+      </g>
+      <g mask="url(#I)">
+        <path d="M9.285 8.301l-6.992 6.992a1 1 0 1 0 1.414 1.414l6.992-6.992"/>
+        <path d="M10.413 10l5.293-5.293a.999.999 0 0 0-1.414-1.414L8.999 8.586"/>
+      </g>
+    </g>
+  </svg>
+  <svg width="18" height="20" x="126" y="0">
+    <defs>
+      <clipPath id="K">
+        <path d="M0 0h18v20H0z"/>
+      </clipPath>
+      <mask id="N" mask-type="alpha">
+        <path fill="#0005FF" d="M0-2.906A2.907 2.907 0 0 1 2.906 0 2.907 2.907 0 0 1 0 2.906 2.907 2.907 0 0 1-2.906 0 2.907 2.907 0 0 1 0-2.906z" transform="translate(1.157 18.622) scale(6.6468)"/>
+      </mask>
+      <mask id="M" mask-type="alpha">
+        <path fill="#0005FF" d="M0-2.906A2.907 2.907 0 0 1 2.906 0 2.907 2.907 0 0 1 0 2.906 2.907 2.907 0 0 1-2.906 0 2.907 2.907 0 0 1 0-2.906z" transform="translate(1.145 1.705) scale(7.43823)"/>
+      </mask>
+      <filter id="J" filterUnits="objectBoundingBox" x="0%" y="0%" width="100%" height="100%">
+        <feColorMatrix type="matrix" color-interpolation-filters="sRGB" values="1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 -1 1"/>
+      </filter>
+      <mask id="L" mask-type="alpha">
+        <g filter="url(#J)">
+          <path fill="#fff" opacity="0" d="M0 0h18v20H0z"/>
+          <path display="none"/>
+        </g>
+      </mask>
+    </defs>
+    <g clip-path="url(#K)">
+      <path d="M9.978 15.616" opacity="0"/>
+      <g opacity="0" mask="url(#L)">
+        <path d="M9.346 16.98a6.994 6.994 0 0 0 6.638-7.335A6.994 6.994 0 0 0 2.819 6.714a6.954 6.954 0 0 0-.513 5.333 1 1 0 0 0 1.912-.585 5.02 5.02 0 1 1 4.412 3.493"/>
+      </g>
+      <g mask="url(#M)">
+        <path d="M9 11.413l5.293 5.293a.999.999 0 0 0 1.414-1.414l-5.293-5.293"/>
+        <path d="M10.973 10.558L3.707 3.293a1 1 0 0 0-1.414 1.414l7.266 7.265"/>
+      </g>
+      <g mask="url(#N)">
+        <path d="M9.285 8.301l-6.992 6.992a1 1 0 1 0 1.414 1.414l6.992-6.992"/>
+        <path d="M10.413 10l5.293-5.293a.999.999 0 0 0-1.414-1.414L8.999 8.586"/>
+      </g>
+    </g>
+  </svg>
+  <svg width="18" height="20" x="144" y="0">
+    <defs>
+      <clipPath id="P">
+        <path d="M0 0h18v20H0z"/>
+      </clipPath>
+      <mask id="S" mask-type="alpha">
+        <path fill="#0005FF" d="M0-2.906A2.907 2.907 0 0 1 2.906 0 2.907 2.907 0 0 1 0 2.906 2.907 2.907 0 0 1-2.906 0 2.907 2.907 0 0 1 0-2.906z" transform="translate(1.126 18.622) scale(6.44921)"/>
+      </mask>
+      <mask id="R" mask-type="alpha">
+        <path fill="#0005FF" d="M0-2.906A2.907 2.907 0 0 1 2.906 0 2.907 2.907 0 0 1 0 2.906 2.907 2.907 0 0 1-2.906 0 2.907 2.907 0 0 1 0-2.906z" transform="translate(1.14 1.705) scale(7.40751)"/>
+      </mask>
+      <filter id="O" filterUnits="objectBoundingBox" x="0%" y="0%" width="100%" height="100%">
+        <feColorMatrix type="matrix" color-interpolation-filters="sRGB" values="1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 -1 1"/>
+      </filter>
+      <mask id="Q" mask-type="alpha">
+        <g filter="url(#O)">
+          <path fill="#fff" opacity="0" d="M0 0h18v20H0z"/>
+          <path display="none"/>
+        </g>
+      </mask>
+    </defs>
+    <g clip-path="url(#P)">
+      <path d="M9.978 15.616" opacity="0"/>
+      <g opacity="0" mask="url(#Q)">
+        <path d="M9.346 16.98a6.994 6.994 0 0 0 6.638-7.335A6.994 6.994 0 0 0 2.819 6.714a6.954 6.954 0 0 0-.513 5.333 1 1 0 0 0 1.912-.585 5.02 5.02 0 1 1 4.412 3.493"/>
+      </g>
+      <g mask="url(#R)">
+        <path d="M9 11.413l5.293 5.293a.999.999 0 0 0 1.414-1.414l-5.293-5.293"/>
+        <path d="M10.973 10.558L3.707 3.293a1 1 0 0 0-1.414 1.414l7.266 7.265"/>
+      </g>
+      <g mask="url(#S)">
+        <path d="M9.285 8.301l-6.992 6.992a1 1 0 1 0 1.414 1.414l6.992-6.992"/>
+        <path d="M10.413 10l5.293-5.293a.999.999 0 0 0-1.414-1.414L8.999 8.586"/>
+      </g>
+    </g>
+  </svg>
+  <svg width="18" height="20" x="162" y="0">
+    <defs>
+      <clipPath id="U">
+        <path d="M0 0h18v20H0z"/>
+      </clipPath>
+      <mask id="X" mask-type="alpha">
+        <path fill="#0005FF" d="M0-2.906A2.907 2.907 0 0 1 2.906 0 2.907 2.907 0 0 1 0 2.906 2.907 2.907 0 0 1-2.906 0 2.907 2.907 0 0 1 0-2.906z" transform="translate(1.09 18.622) scale(6.21239)"/>
+      </mask>
+      <mask id="W" mask-type="alpha">
+        <path fill="#0005FF" d="M0-2.906A2.907 2.907 0 0 1 2.906 0 2.907 2.907 0 0 1 0 2.906 2.907 2.907 0 0 1-2.906 0 2.907 2.907 0 0 1 0-2.906z" transform="translate(1.134 1.705) scale(7.36622)"/>
+      </mask>
+      <filter id="T" filterUnits="objectBoundingBox" x="0%" y="0%" width="100%" height="100%">
+        <feColorMatrix type="matrix" color-interpolation-filters="sRGB" values="1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 -1 1"/>
+      </filter>
+      <mask id="V" mask-type="alpha">
+        <g filter="url(#T)">
+          <path fill="#fff" opacity="0" d="M0 0h18v20H0z"/>
+          <path display="none"/>
+        </g>
+      </mask>
+    </defs>
+    <g clip-path="url(#U)">
+      <path d="M9.978 15.616" opacity="0"/>
+      <g opacity="0" mask="url(#V)">
+        <path d="M9.346 16.98a6.994 6.994 0 0 0 6.638-7.335A6.994 6.994 0 0 0 2.819 6.714a6.954 6.954 0 0 0-.513 5.333 1 1 0 0 0 1.912-.585 5.02 5.02 0 1 1 4.412 3.493"/>
+      </g>
+      <g mask="url(#W)">
+        <path d="M9 11.413l5.293 5.293a.999.999 0 0 0 1.414-1.414l-5.293-5.293"/>
+        <path d="M10.973 10.558L3.707 3.293a1 1 0 0 0-1.414 1.414l7.266 7.265"/>
+      </g>
+      <g mask="url(#X)">
+        <path d="M9.285 8.301l-6.992 6.992a1 1 0 1 0 1.414 1.414l6.992-6.992"/>
+        <path d="M10.413 10l5.293-5.293a.999.999 0 0 0-1.414-1.414L8.999 8.586"/>
+      </g>
+    </g>
+  </svg>
+  <svg width="18" height="20" x="180" y="0">
+    <defs>
+      <clipPath id="Z">
+        <path d="M0 0h18v20H0z"/>
+      </clipPath>
+      <mask id="ac" mask-type="alpha">
+        <path fill="#0005FF" d="M0-2.906A2.907 2.907 0 0 1 2.906 0 2.907 2.907 0 0 1 0 2.906 2.907 2.907 0 0 1-2.906 0 2.907 2.907 0 0 1 0-2.906z" transform="translate(1.044 18.622) scale(5.92587)"/>
+      </mask>
+      <mask id="ab" mask-type="alpha">
+        <path fill="#0005FF" d="M0-2.906A2.907 2.907 0 0 1 2.906 0 2.907 2.907 0 0 1 0 2.906 2.907 2.907 0 0 1-2.906 0 2.907 2.907 0 0 1 0-2.906z" transform="translate(1.126 1.705) scale(7.3132)"/>
+      </mask>
+      <filter id="Y" filterUnits="objectBoundingBox" x="0%" y="0%" width="100%" height="100%">
+        <feColorMatrix type="matrix" color-interpolation-filters="sRGB" values="1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 -1 1"/>
+      </filter>
+      <mask id="aa" mask-type="alpha">
+        <g filter="url(#Y)">
+          <path fill="#fff" opacity="0" d="M0 0h18v20H0z"/>
+          <path display="none"/>
+        </g>
+      </mask>
+    </defs>
+    <g clip-path="url(#Z)">
+      <path d="M9.978 15.616" opacity="0"/>
+      <g opacity="0" mask="url(#aa)">
+        <path d="M9.346 16.98a6.994 6.994 0 0 0 6.638-7.335A6.994 6.994 0 0 0 2.819 6.714a6.954 6.954 0 0 0-.513 5.333 1 1 0 0 0 1.912-.585 5.02 5.02 0 1 1 4.412 3.493"/>
+      </g>
+      <g mask="url(#ab)">
+        <path d="M9 11.413l5.293 5.293a.999.999 0 0 0 1.414-1.414l-5.293-5.293"/>
+        <path d="M10.973 10.558L3.707 3.293a1 1 0 0 0-1.414 1.414l7.266 7.265"/>
+      </g>
+      <g mask="url(#ac)">
+        <path d="M9.285 8.301l-6.992 6.992a1 1 0 1 0 1.414 1.414l6.992-6.992"/>
+        <path d="M10.413 10l5.293-5.293a.999.999 0 0 0-1.414-1.414L8.999 8.586"/>
+      </g>
+    </g>
+  </svg>
+  <svg width="18" height="20" x="198" y="0">
+    <defs>
+      <clipPath id="ae">
+        <path d="M0 0h18v20H0z"/>
+      </clipPath>
+      <mask id="ah" mask-type="alpha">
+        <path fill="#0005FF" d="M0-2.906A2.907 2.907 0 0 1 2.906 0 2.907 2.907 0 0 1 0 2.906 2.907 2.907 0 0 1-2.906 0 2.907 2.907 0 0 1 0-2.906z" transform="translate(.99 18.622) scale(5.57409)"/>
+      </mask>
+      <mask id="ag" mask-type="alpha">
+        <path fill="#0005FF" d="M0-2.906A2.907 2.907 0 0 1 2.906 0 2.907 2.907 0 0 1 0 2.906 2.907 2.907 0 0 1-2.906 0 2.907 2.907 0 0 1 0-2.906z" transform="translate(1.116 1.705) scale(7.2471)"/>
+      </mask>
+      <filter id="ad" filterUnits="objectBoundingBox" x="0%" y="0%" width="100%" height="100%">
+        <feColorMatrix type="matrix" color-interpolation-filters="sRGB" values="1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 -1 1"/>
+      </filter>
+      <mask id="af" mask-type="alpha">
+        <g filter="url(#ad)">
+          <path fill="#fff" opacity="0" d="M0 0h18v20H0z"/>
+          <path display="none"/>
+        </g>
+      </mask>
+    </defs>
+    <g clip-path="url(#ae)">
+      <path d="M9.978 15.616" opacity="0"/>
+      <g opacity="0" mask="url(#af)">
+        <path d="M9.346 16.98a6.994 6.994 0 0 0 6.638-7.335A6.994 6.994 0 0 0 2.819 6.714a6.954 6.954 0 0 0-.513 5.333 1 1 0 0 0 1.912-.585 5.02 5.02 0 1 1 4.412 3.493"/>
+      </g>
+      <g mask="url(#ag)">
+        <path d="M9 11.413l5.293 5.293a.999.999 0 0 0 1.414-1.414l-5.293-5.293"/>
+        <path d="M10.973 10.558L3.707 3.293a1 1 0 0 0-1.414 1.414l7.266 7.265"/>
+      </g>
+      <g mask="url(#ah)">
+        <path d="M9.285 8.301l-6.992 6.992a1 1 0 1 0 1.414 1.414l6.992-6.992"/>
+        <path d="M10.413 10l5.293-5.293a.999.999 0 0 0-1.414-1.414L8.999 8.586"/>
+      </g>
+    </g>
+  </svg>
+  <svg width="18" height="20" x="216" y="0">
+    <defs>
+      <clipPath id="aj">
+        <path d="M0 0h18v20H0z"/>
+      </clipPath>
+      <mask id="am" mask-type="alpha">
+        <path fill="#0005FF" d="M0-2.906A2.907 2.907 0 0 1 2.906 0 2.907 2.907 0 0 1 0 2.906 2.907 2.907 0 0 1-2.906 0 2.907 2.907 0 0 1 0-2.906z" transform="translate(.92 18.622) scale(5.13258)"/>
+      </mask>
+      <mask id="al" mask-type="alpha">
+        <path fill="#0005FF" d="M0-2.906A2.907 2.907 0 0 1 2.906 0 2.907 2.907 0 0 1 0 2.906 2.907 2.907 0 0 1-2.906 0 2.907 2.907 0 0 1 0-2.906z" transform="translate(1.103 1.705) scale(7.16624)"/>
+      </mask>
+      <filter id="ai" filterUnits="objectBoundingBox" x="0%" y="0%" width="100%" height="100%">
+        <feColorMatrix type="matrix" color-interpolation-filters="sRGB" values="1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 -1 1"/>
+      </filter>
+      <mask id="ak" mask-type="alpha">
+        <g filter="url(#ai)">
+          <path fill="#fff" opacity="0" d="M0 0h18v20H0z"/>
+          <path display="none"/>
+        </g>
+      </mask>
+    </defs>
+    <g clip-path="url(#aj)">
+      <path d="M9.978 15.616" opacity="0"/>
+      <g opacity="0" mask="url(#ak)">
+        <path d="M9.346 16.98a6.994 6.994 0 0 0 6.638-7.335A6.994 6.994 0 0 0 2.819 6.714a6.954 6.954 0 0 0-.513 5.333 1 1 0 0 0 1.912-.585 5.02 5.02 0 1 1 4.412 3.493"/>
+      </g>
+      <g mask="url(#al)">
+        <path d="M9 11.413l5.293 5.293a.999.999 0 0 0 1.414-1.414l-5.293-5.293"/>
+        <path d="M10.973 10.558L3.707 3.293a1 1 0 0 0-1.414 1.414l7.266 7.265"/>
+      </g>
+      <g mask="url(#am)">
+        <path d="M9.285 8.301l-6.992 6.992a1 1 0 1 0 1.414 1.414l6.992-6.992"/>
+        <path d="M10.413 10l5.293-5.293a.999.999 0 0 0-1.414-1.414L8.999 8.586"/>
+      </g>
+    </g>
+  </svg>
+  <svg width="18" height="20" x="234" y="0">
+    <defs>
+      <clipPath id="ao">
+        <path d="M0 0h18v20H0z"/>
+      </clipPath>
+      <mask id="ar" mask-type="alpha">
+        <path fill="#0005FF" d="M0-2.906A2.907 2.907 0 0 1 2.906 0 2.907 2.907 0 0 1 0 2.906 2.907 2.907 0 0 1-2.906 0 2.907 2.907 0 0 1 0-2.906z" transform="translate(.831 18.622) scale(4.56057)"/>
+      </mask>
+      <mask id="aq" mask-type="alpha">
+        <path fill="#0005FF" d="M0-2.906A2.907 2.907 0 0 1 2.906 0 2.907 2.907 0 0 1 0 2.906 2.907 2.907 0 0 1-2.906 0 2.907 2.907 0 0 1 0-2.906z" transform="translate(1.088 1.705) scale(7.06864)"/>
+      </mask>
+      <filter id="an" filterUnits="objectBoundingBox" x="0%" y="0%" width="100%" height="100%">
+        <feColorMatrix type="matrix" color-interpolation-filters="sRGB" values="1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 -1 1"/>
+      </filter>
+      <mask id="ap" mask-type="alpha">
+        <g filter="url(#an)">
+          <path fill="#fff" opacity="0" d="M0 0h18v20H0z"/>
+          <path display="none"/>
+        </g>
+      </mask>
+    </defs>
+    <g clip-path="url(#ao)">
+      <path d="M9.978 15.616" opacity="0"/>
+      <g opacity="0" mask="url(#ap)">
+        <path d="M9.346 16.98a6.994 6.994 0 0 0 6.638-7.335A6.994 6.994 0 0 0 2.819 6.714a6.954 6.954 0 0 0-.513 5.333 1 1 0 0 0 1.912-.585 5.02 5.02 0 1 1 4.412 3.493"/>
+      </g>
+      <g mask="url(#aq)">
+        <path d="M9 11.413l5.293 5.293a.999.999 0 0 0 1.414-1.414l-5.293-5.293"/>
+        <path d="M10.973 10.558L3.707 3.293a1 1 0 0 0-1.414 1.414l7.266 7.265"/>
+      </g>
+      <g mask="url(#ar)">
+        <path d="M9.285 8.301l-6.992 6.992a1 1 0 1 0 1.414 1.414l6.992-6.992"/>
+        <path d="M10.413 10l5.293-5.293a.999.999 0 0 0-1.414-1.414L8.999 8.586"/>
+      </g>
+    </g>
+  </svg>
+  <svg width="18" height="20" x="252" y="0">
+    <defs>
+      <clipPath id="at">
+        <path d="M0 0h18v20H0z"/>
+      </clipPath>
+      <mask id="aw" mask-type="alpha">
+        <path fill="#0005FF" d="M0-2.906A2.907 2.907 0 0 1 2.906 0 2.907 2.907 0 0 1 0 2.906 2.907 2.907 0 0 1-2.906 0 2.907 2.907 0 0 1 0-2.906z" transform="translate(.711 18.622) scale(3.7901)"/>
+      </mask>
+      <mask id="av" mask-type="alpha">
+        <path fill="#0005FF" d="M0-2.906A2.907 2.907 0 0 1 2.906 0 2.907 2.907 0 0 1 0 2.906 2.907 2.907 0 0 1-2.906 0 2.907 2.907 0 0 1 0-2.906z" transform="translate(1.07 1.705) scale(6.95179)"/>
+      </mask>
+      <filter id="as" filterUnits="objectBoundingBox" x="0%" y="0%" width="100%" height="100%">
+        <feColorMatrix type="matrix" color-interpolation-filters="sRGB" values="1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 -1 1"/>
+      </filter>
+      <mask id="au" mask-type="alpha">
+        <g filter="url(#as)">
+          <path fill="#fff" opacity="0" d="M0 0h18v20H0z"/>
+          <path display="none"/>
+        </g>
+      </mask>
+    </defs>
+    <g clip-path="url(#at)">
+      <path d="M9.978 15.616" opacity="0"/>
+      <g opacity="0" mask="url(#au)">
+        <path d="M9.346 16.98a6.994 6.994 0 0 0 6.638-7.335A6.994 6.994 0 0 0 2.819 6.714a6.954 6.954 0 0 0-.513 5.333 1 1 0 0 0 1.912-.585 5.02 5.02 0 1 1 4.412 3.493"/>
+      </g>
+      <g mask="url(#av)">
+        <path d="M9 11.413l5.293 5.293a.999.999 0 0 0 1.414-1.414l-5.293-5.293"/>
+        <path d="M10.973 10.558L3.707 3.293a1 1 0 0 0-1.414 1.414l7.266 7.265"/>
+      </g>
+      <g mask="url(#aw)">
+        <path d="M9.285 8.301l-6.992 6.992a1 1 0 1 0 1.414 1.414l6.992-6.992"/>
+        <path d="M10.413 10l5.293-5.293a.999.999 0 0 0-1.414-1.414L8.999 8.586"/>
+      </g>
+    </g>
+  </svg>
+  <svg width="18" height="20" x="270" y="0">
+    <defs>
+      <clipPath id="ay">
+        <path d="M0 0h18v20H0z"/>
+      </clipPath>
+      <mask id="aB" mask-type="alpha">
+        <path fill="#0005FF" d="M0-2.906A2.907 2.907 0 0 1 2.906 0 2.907 2.907 0 0 1 0 2.906 2.907 2.907 0 0 1-2.906 0 2.907 2.907 0 0 1 0-2.906z" transform="translate(.55 18.622) scale(2.75815)"/>
+      </mask>
+      <mask id="aA" mask-type="alpha">
+        <path fill="#0005FF" d="M0-2.906A2.907 2.907 0 0 1 2.906 0 2.907 2.907 0 0 1 0 2.906 2.907 2.907 0 0 1-2.906 0 2.907 2.907 0 0 1 0-2.906z" transform="translate(1.048 1.705) scale(6.81253)"/>
+      </mask>
+      <filter id="ax" filterUnits="objectBoundingBox" x="0%" y="0%" width="100%" height="100%">
+        <feColorMatrix type="matrix" color-interpolation-filters="sRGB" values="1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 -1 1"/>
+      </filter>
+      <mask id="az" mask-type="alpha">
+        <g filter="url(#ax)">
+          <path fill="#fff" opacity="0" d="M0 0h18v20H0z"/>
+          <path display="none"/>
+        </g>
+      </mask>
+    </defs>
+    <g clip-path="url(#ay)">
+      <path d="M9.978 15.616" opacity="0"/>
+      <g opacity="0" mask="url(#az)">
+        <path d="M9.346 16.98a6.994 6.994 0 0 0 6.638-7.335A6.994 6.994 0 0 0 2.819 6.714a6.954 6.954 0 0 0-.513 5.333 1 1 0 0 0 1.912-.585 5.02 5.02 0 1 1 4.412 3.493"/>
+      </g>
+      <g mask="url(#aA)">
+        <path d="M9 11.413l5.293 5.293a.999.999 0 0 0 1.414-1.414l-5.293-5.293"/>
+        <path d="M10.973 10.558L3.707 3.293a1 1 0 0 0-1.414 1.414l7.266 7.265"/>
+      </g>
+      <g mask="url(#aB)">
+        <path d="M9.285 8.301l-6.992 6.992a1 1 0 1 0 1.414 1.414l6.992-6.992"/>
+        <path d="M10.413 10l5.293-5.293a.999.999 0 0 0-1.414-1.414L8.999 8.586"/>
+      </g>
+    </g>
+  </svg>
+  <svg width="18" height="20" x="288" y="0">
+    <defs>
+      <clipPath id="aD">
+        <path d="M0 0h18v20H0z"/>
+      </clipPath>
+      <mask id="aG" mask-type="alpha">
+        <path fill="#0005FF" d="M0-2.906A2.907 2.907 0 0 1 2.906 0 2.907 2.907 0 0 1 0 2.906 2.907 2.907 0 0 1-2.906 0 2.907 2.907 0 0 1 0-2.906z" transform="translate(.386 18.622) scale(1.70603)"/>
+      </mask>
+      <mask id="aF" mask-type="alpha">
+        <path fill="#0005FF" d="M0-2.906A2.907 2.907 0 0 1 2.906 0 2.907 2.907 0 0 1 0 2.906 2.907 2.907 0 0 1-2.906 0 2.907 2.907 0 0 1 0-2.906z" transform="translate(1.022 1.705) scale(6.6468)"/>
+      </mask>
+      <filter id="aC" filterUnits="objectBoundingBox" x="0%" y="0%" width="100%" height="100%">
+        <feColorMatrix type="matrix" color-interpolation-filters="sRGB" values="1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 -1 1"/>
+      </filter>
+      <mask id="aE" mask-type="alpha">
+        <g filter="url(#aC)">
+          <path fill="#fff" opacity="0" d="M0 0h18v20H0z"/>
+          <path display="none"/>
+        </g>
+      </mask>
+    </defs>
+    <g clip-path="url(#aD)">
+      <path d="M9.978 15.616" opacity="0"/>
+      <g opacity="0" mask="url(#aE)">
+        <path d="M9.346 16.98a6.994 6.994 0 0 0 6.638-7.335A6.994 6.994 0 0 0 2.819 6.714a6.954 6.954 0 0 0-.513 5.333 1 1 0 0 0 1.912-.585 5.02 5.02 0 1 1 4.412 3.493"/>
+      </g>
+      <g mask="url(#aF)">
+        <path d="M9 11.413l5.293 5.293a.999.999 0 0 0 1.414-1.414l-5.293-5.293"/>
+        <path d="M10.973 10.558L3.707 3.293a1 1 0 0 0-1.414 1.414l7.266 7.265"/>
+      </g>
+      <g mask="url(#aG)">
+        <path d="M9.285 8.301l-6.992 6.992a1 1 0 1 0 1.414 1.414l6.992-6.992"/>
+        <path d="M10.413 10l5.293-5.293a.999.999 0 0 0-1.414-1.414L8.999 8.586"/>
+      </g>
+    </g>
+  </svg>
+  <svg width="18" height="20" x="306" y="0">
+    <defs>
+      <clipPath id="aI">
+        <path d="M0 0h18v20H0z"/>
+      </clipPath>
+      <mask id="aL" mask-type="alpha">
+        <path fill="#0005FF" d="M0-2.906A2.907 2.907 0 0 1 2.906 0 2.907 2.907 0 0 1 0 2.906 2.907 2.907 0 0 1-2.906 0 2.907 2.907 0 0 1 0-2.906z" transform="translate(.284 18.622) scale(1.05114)"/>
+      </mask>
+      <mask id="aK" mask-type="alpha">
+        <path fill="#0005FF" d="M0-2.906A2.907 2.907 0 0 1 2.906 0 2.907 2.907 0 0 1 0 2.906 2.907 2.907 0 0 1-2.906 0 2.907 2.907 0 0 1 0-2.906z" transform="translate(.991 1.705) scale(6.44921)"/>
+      </mask>
+      <filter id="aH" filterUnits="objectBoundingBox" x="0%" y="0%" width="100%" height="100%">
+        <feColorMatrix type="matrix" color-interpolation-filters="sRGB" values="1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 -1 1"/>
+      </filter>
+      <mask id="aJ" mask-type="alpha">
+        <g filter="url(#aH)">
+          <path fill="#fff" opacity="0" d="M0 0h18v20H0z"/>
+          <path display="none"/>
+        </g>
+      </mask>
+    </defs>
+    <g clip-path="url(#aI)">
+      <path d="M9.978 15.616" opacity="0"/>
+      <g opacity="0" mask="url(#aJ)">
+        <path d="M9.346 16.98a6.994 6.994 0 0 0 6.638-7.335A6.994 6.994 0 0 0 2.819 6.714a6.954 6.954 0 0 0-.513 5.333 1 1 0 0 0 1.912-.585 5.02 5.02 0 1 1 4.412 3.493"/>
+      </g>
+      <g mask="url(#aK)">
+        <path d="M9 11.413l5.293 5.293a.999.999 0 0 0 1.414-1.414l-5.293-5.293"/>
+        <path d="M10.973 10.558L3.707 3.293a1 1 0 0 0-1.414 1.414l7.266 7.265"/>
+      </g>
+      <g mask="url(#aL)">
+        <path d="M9.285 8.301l-6.992 6.992a1 1 0 1 0 1.414 1.414l6.992-6.992"/>
+        <path d="M10.413 10l5.293-5.293a.999.999 0 0 0-1.414-1.414L8.999 8.586"/>
+      </g>
+    </g>
+  </svg>
+  <svg width="18" height="20" x="324" y="0">
+    <defs>
+      <clipPath id="aN">
+        <path d="M0 0h18v20H0z"/>
+      </clipPath>
+      <mask id="aQ" mask-type="alpha">
+        <path fill="#0005FF" d="M0-2.906A2.907 2.907 0 0 1 2.906 0 2.907 2.907 0 0 1 0 2.906 2.907 2.907 0 0 1-2.906 0 2.907 2.907 0 0 1 0-2.906z" transform="translate(.233 18.622) scale(.72448)"/>
+      </mask>
+      <mask id="aP" mask-type="alpha">
+        <path fill="#0005FF" d="M0-2.906A2.907 2.907 0 0 1 2.906 0 2.907 2.907 0 0 1 0 2.906 2.907 2.907 0 0 1-2.906 0 2.907 2.907 0 0 1 0-2.906z" transform="translate(.954 1.705) scale(6.21239)"/>
+      </mask>
+      <filter id="aM" filterUnits="objectBoundingBox" x="0%" y="0%" width="100%" height="100%">
+        <feColorMatrix type="matrix" color-interpolation-filters="sRGB" values="1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 -1 1"/>
+      </filter>
+      <mask id="aO" mask-type="alpha">
+        <g filter="url(#aM)">
+          <path fill="#fff" opacity="0" d="M0 0h18v20H0z"/>
+          <path display="none"/>
+        </g>
+      </mask>
+    </defs>
+    <g clip-path="url(#aN)">
+      <path d="M9.978 15.616" opacity="0"/>
+      <g opacity="0" mask="url(#aO)">
+        <path d="M9.346 16.98a6.994 6.994 0 0 0 6.638-7.335A6.994 6.994 0 0 0 2.819 6.714a6.954 6.954 0 0 0-.513 5.333 1 1 0 0 0 1.912-.585 5.02 5.02 0 1 1 4.412 3.493"/>
+      </g>
+      <g mask="url(#aP)">
+        <path d="M9 11.413l5.293 5.293a.999.999 0 0 0 1.414-1.414l-5.293-5.293"/>
+        <path d="M10.973 10.558L3.707 3.293a1 1 0 0 0-1.414 1.414l7.266 7.265"/>
+      </g>
+      <g mask="url(#aQ)">
+        <path d="M9.285 8.301l-6.992 6.992a1 1 0 1 0 1.414 1.414l6.992-6.992"/>
+        <path d="M10.413 10l5.293-5.293a.999.999 0 0 0-1.414-1.414L8.999 8.586"/>
+      </g>
+    </g>
+  </svg>
+  <svg width="18" height="20" x="342" y="0">
+    <defs>
+      <clipPath id="aS">
+        <path d="M0 0h18v20H0z"/>
+      </clipPath>
+      <mask id="aV" mask-type="alpha">
+        <path fill="#0005FF" d="M0-2.906A2.907 2.907 0 0 1 2.906 0 2.907 2.907 0 0 1 0 2.906 2.907 2.907 0 0 1-2.906 0 2.907 2.907 0 0 1 0-2.906z" transform="translate(.21 18.622) scale(.57983)"/>
+      </mask>
+      <mask id="aU" mask-type="alpha">
+        <path fill="#0005FF" d="M0-2.906A2.907 2.907 0 0 1 2.906 0 2.907 2.907 0 0 1 0 2.906 2.907 2.907 0 0 1-2.906 0 2.907 2.907 0 0 1 0-2.906z" transform="translate(.91 1.705) scale(5.92587)"/>
+      </mask>
+      <filter id="aR" filterUnits="objectBoundingBox" x="0%" y="0%" width="100%" height="100%">
+        <feColorMatrix type="matrix" color-interpolation-filters="sRGB" values="1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 -1 1"/>
+      </filter>
+      <mask id="aT" mask-type="alpha">
+        <g filter="url(#aR)">
+          <path fill="#fff" opacity="0" d="M0 0h18v20H0z"/>
+          <path display="none"/>
+        </g>
+      </mask>
+    </defs>
+    <g clip-path="url(#aS)">
+      <path d="M9.978 15.616" opacity="0"/>
+      <g opacity="0" mask="url(#aT)">
+        <path d="M9.346 16.98a6.994 6.994 0 0 0 6.638-7.335A6.994 6.994 0 0 0 2.819 6.714a6.954 6.954 0 0 0-.513 5.333 1 1 0 0 0 1.912-.585 5.02 5.02 0 1 1 4.412 3.493"/>
+      </g>
+      <g mask="url(#aU)">
+        <path d="M9 11.413l5.293 5.293a.999.999 0 0 0 1.414-1.414l-5.293-5.293"/>
+        <path d="M10.973 10.558L3.707 3.293a1 1 0 0 0-1.414 1.414l7.266 7.265"/>
+      </g>
+      <g mask="url(#aV)">
+        <path d="M9.285 8.301l-6.992 6.992a1 1 0 1 0 1.414 1.414l6.992-6.992"/>
+        <path d="M10.413 10l5.293-5.293a.999.999 0 0 0-1.414-1.414L8.999 8.586"/>
+      </g>
+    </g>
+  </svg>
+  <svg width="18" height="20" x="360" y="0">
+    <defs>
+      <clipPath id="aX">
+        <path d="M0 0h18v20H0z"/>
+      </clipPath>
+      <mask id="ba" mask-type="alpha">
+        <path fill="#0005FF" d="M0-2.906A2.907 2.907 0 0 1 2.906 0 2.907 2.907 0 0 1 0 2.906 2.907 2.907 0 0 1-2.906 0 2.907 2.907 0 0 1 0-2.906z" transform="translate(.204 18.622) scale(.54135)"/>
+      </mask>
+      <mask id="aZ" mask-type="alpha">
+        <path fill="#0005FF" d="M0-2.906A2.907 2.907 0 0 1 2.906 0 2.907 2.907 0 0 1 0 2.906 2.907 2.907 0 0 1-2.906 0 2.907 2.907 0 0 1 0-2.906z" transform="translate(.855 1.705) scale(5.57409)"/>
+      </mask>
+      <filter id="aW" filterUnits="objectBoundingBox" x="0%" y="0%" width="100%" height="100%">
+        <feColorMatrix type="matrix" color-interpolation-filters="sRGB" values="1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 -1 1"/>
+      </filter>
+      <mask id="aY" mask-type="alpha">
+        <g filter="url(#aW)">
+          <path fill="#fff" opacity="0" d="M0 0h18v20H0z"/>
+          <path display="none"/>
+        </g>
+      </mask>
+    </defs>
+    <g clip-path="url(#aX)">
+      <path d="M9.978 15.616" opacity="0"/>
+      <g opacity="0" mask="url(#aY)">
+        <path d="M9.346 16.98a6.994 6.994 0 0 0 6.638-7.335A6.994 6.994 0 0 0 2.819 6.714a6.954 6.954 0 0 0-.513 5.333 1 1 0 0 0 1.912-.585 5.02 5.02 0 1 1 4.412 3.493"/>
+      </g>
+      <g mask="url(#aZ)">
+        <path d="M9 11.413l5.293 5.293a.999.999 0 0 0 1.414-1.414l-5.293-5.293"/>
+        <path d="M10.973 10.558L3.707 3.293a1 1 0 0 0-1.414 1.414l7.266 7.265"/>
+      </g>
+      <g mask="url(#ba)">
+        <path d="M9.285 8.301l-6.992 6.992a1 1 0 1 0 1.414 1.414l6.992-6.992"/>
+        <path d="M10.413 10l5.293-5.293a.999.999 0 0 0-1.414-1.414L8.999 8.586"/>
+      </g>
+    </g>
+  </svg>
+  <svg width="18" height="20" x="378" y="0">
+    <defs>
+      <clipPath id="bc">
+        <path d="M0 0h18v20H0z"/>
+      </clipPath>
+      <mask id="bf" mask-type="alpha">
+        <path fill="#0005FF" d="M0-2.906A2.907 2.907 0 0 1 2.906 0 2.907 2.907 0 0 1 0 2.906 2.907 2.907 0 0 1-2.906 0 2.907 2.907 0 0 1 0-2.906z" transform="translate(.204 18.622) scale(.54135)"/>
+      </mask>
+      <mask id="be" mask-type="alpha">
+        <path fill="#0005FF" d="M0-2.906A2.907 2.907 0 0 1 2.906 0 2.907 2.907 0 0 1 0 2.906 2.907 2.907 0 0 1-2.906 0 2.907 2.907 0 0 1 0-2.906z" transform="translate(.786 1.705) scale(5.13258)"/>
+      </mask>
+      <filter id="bb" filterUnits="objectBoundingBox" x="0%" y="0%" width="100%" height="100%">
+        <feColorMatrix type="matrix" color-interpolation-filters="sRGB" values="1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 -1 1"/>
+      </filter>
+      <mask id="bd" mask-type="alpha">
+        <g filter="url(#bb)">
+          <path fill="#fff" opacity="0" d="M0 0h18v20H0z"/>
+          <path display="none"/>
+        </g>
+      </mask>
+    </defs>
+    <g clip-path="url(#bc)">
+      <path d="M9.978 15.616" opacity="0"/>
+      <g opacity="0" mask="url(#bd)">
+        <path d="M9.346 16.98a6.994 6.994 0 0 0 6.638-7.335A6.994 6.994 0 0 0 2.819 6.714a6.954 6.954 0 0 0-.513 5.333 1 1 0 0 0 1.912-.585 5.02 5.02 0 1 1 4.412 3.493"/>
+      </g>
+      <g mask="url(#be)">
+        <path d="M9 11.413l5.293 5.293a.999.999 0 0 0 1.414-1.414l-5.293-5.293"/>
+        <path d="M10.973 10.558L3.707 3.293a1 1 0 0 0-1.414 1.414l7.266 7.265"/>
+      </g>
+      <g mask="url(#bf)">
+        <path d="M9.285 8.301l-6.992 6.992a1 1 0 1 0 1.414 1.414l6.992-6.992"/>
+        <path d="M10.413 10l5.293-5.293a.999.999 0 0 0-1.414-1.414L8.999 8.586"/>
+      </g>
+    </g>
+  </svg>
+  <svg width="18" height="20" x="396" y="0">
+    <defs>
+      <clipPath id="bh">
+        <path d="M0 0h18v20H0z"/>
+      </clipPath>
+      <mask id="bk" mask-type="alpha">
+        <path fill="#0005FF" d="M0-2.906A2.907 2.907 0 0 1 2.906 0 2.907 2.907 0 0 1 0 2.906 2.907 2.907 0 0 1-2.906 0 2.907 2.907 0 0 1 0-2.906z" transform="translate(.204 18.622) scale(.54135)"/>
+      </mask>
+      <mask id="bj" mask-type="alpha">
+        <path fill="#0005FF" d="M0-2.906A2.907 2.907 0 0 1 2.906 0 2.907 2.907 0 0 1 0 2.906 2.907 2.907 0 0 1-2.906 0 2.907 2.907 0 0 1 0-2.906z" transform="translate(.696 1.705) scale(4.56057)"/>
+      </mask>
+      <filter id="bg" filterUnits="objectBoundingBox" x="0%" y="0%" width="100%" height="100%">
+        <feColorMatrix type="matrix" color-interpolation-filters="sRGB" values="1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 -1 1"/>
+      </filter>
+      <mask id="bi" mask-type="alpha">
+        <g filter="url(#bg)">
+          <path fill="#fff" opacity="0" d="M0 0h18v20H0z"/>
+          <path display="none"/>
+        </g>
+      </mask>
+    </defs>
+    <g clip-path="url(#bh)">
+      <path d="M9.978 15.616" opacity="0"/>
+      <g opacity="0" mask="url(#bi)">
+        <path d="M9.346 16.98a6.994 6.994 0 0 0 6.638-7.335A6.994 6.994 0 0 0 2.819 6.714a6.954 6.954 0 0 0-.513 5.333 1 1 0 0 0 1.912-.585 5.02 5.02 0 1 1 4.412 3.493"/>
+      </g>
+      <g mask="url(#bj)">
+        <path d="M9 11.413l5.293 5.293a.999.999 0 0 0 1.414-1.414l-5.293-5.293"/>
+        <path d="M10.973 10.558L3.707 3.293a1 1 0 0 0-1.414 1.414l7.266 7.265"/>
+      </g>
+      <g mask="url(#bk)">
+        <path d="M9.285 8.301l-6.992 6.992a1 1 0 1 0 1.414 1.414l6.992-6.992"/>
+        <path d="M10.413 10l5.293-5.293a.999.999 0 0 0-1.414-1.414L8.999 8.586"/>
+      </g>
+    </g>
+  </svg>
+  <svg width="18" height="20" x="414" y="0">
+    <defs>
+      <clipPath id="bm">
+        <path d="M0 0h18v20H0z"/>
+      </clipPath>
+      <mask id="bp" mask-type="alpha">
+        <path fill="#0005FF" d="M0-2.906A2.907 2.907 0 0 1 2.906 0 2.907 2.907 0 0 1 0 2.906 2.907 2.907 0 0 1-2.906 0 2.907 2.907 0 0 1 0-2.906z" transform="translate(.204 18.622) scale(.54135)"/>
+      </mask>
+      <mask id="bo" mask-type="alpha">
+        <path fill="#0005FF" d="M0-2.906A2.907 2.907 0 0 1 2.906 0 2.907 2.907 0 0 1 0 2.906 2.907 2.907 0 0 1-2.906 0 2.907 2.907 0 0 1 0-2.906z" transform="translate(.576 1.705) scale(3.7901)"/>
+      </mask>
+      <filter id="bl" filterUnits="objectBoundingBox" x="0%" y="0%" width="100%" height="100%">
+        <feColorMatrix type="matrix" color-interpolation-filters="sRGB" values="1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 -1 1"/>
+      </filter>
+      <mask id="bn" mask-type="alpha">
+        <g filter="url(#bl)">
+          <path fill="#fff" opacity="0" d="M0 0h18v20H0z"/>
+          <path display="none"/>
+        </g>
+      </mask>
+    </defs>
+    <g clip-path="url(#bm)">
+      <path d="M9.978 15.616" opacity="0"/>
+      <g opacity="0" mask="url(#bn)">
+        <path d="M9.346 16.98a6.994 6.994 0 0 0 6.638-7.335A6.994 6.994 0 0 0 2.819 6.714a6.954 6.954 0 0 0-.513 5.333 1 1 0 0 0 1.912-.585 5.02 5.02 0 1 1 4.412 3.493"/>
+      </g>
+      <g mask="url(#bo)">
+        <path d="M9 11.413l5.293 5.293a.999.999 0 0 0 1.414-1.414l-5.293-5.293"/>
+        <path d="M10.973 10.558L3.707 3.293a1 1 0 0 0-1.414 1.414l7.266 7.265"/>
+      </g>
+      <g mask="url(#bp)">
+        <path d="M9.285 8.301l-6.992 6.992a1 1 0 1 0 1.414 1.414l6.992-6.992"/>
+        <path d="M10.413 10l5.293-5.293a.999.999 0 0 0-1.414-1.414L8.999 8.586"/>
+      </g>
+    </g>
+  </svg>
+  <svg width="18" height="20" x="432" y="0">
+    <defs>
+      <clipPath id="br">
+        <path d="M0 0h18v20H0z"/>
+      </clipPath>
+      <mask id="bu" mask-type="alpha">
+        <path fill="#0005FF" d="M0-2.906A2.907 2.907 0 0 1 2.906 0 2.907 2.907 0 0 1 0 2.906 2.907 2.907 0 0 1-2.906 0 2.907 2.907 0 0 1 0-2.906z" transform="translate(.204 18.622) scale(.54135)"/>
+      </mask>
+      <mask id="bt" mask-type="alpha">
+        <path fill="#0005FF" d="M0-2.906A2.907 2.907 0 0 1 2.906 0 2.907 2.907 0 0 1 0 2.906 2.907 2.907 0 0 1-2.906 0 2.907 2.907 0 0 1 0-2.906z" transform="translate(.415 1.705) scale(2.75815)"/>
+      </mask>
+      <filter id="bq" filterUnits="objectBoundingBox" x="0%" y="0%" width="100%" height="100%">
+        <feColorMatrix type="matrix" color-interpolation-filters="sRGB" values="1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 -1 1"/>
+      </filter>
+      <mask id="bs" mask-type="alpha">
+        <g filter="url(#bq)">
+          <path fill="#fff" opacity="0" d="M0 0h18v20H0z"/>
+          <path display="none"/>
+        </g>
+      </mask>
+    </defs>
+    <g clip-path="url(#br)">
+      <path d="M9.978 15.616" opacity="0"/>
+      <g opacity="0" mask="url(#bs)">
+        <path d="M9.346 16.98a6.994 6.994 0 0 0 6.638-7.335A6.994 6.994 0 0 0 2.819 6.714a6.954 6.954 0 0 0-.513 5.333 1 1 0 0 0 1.912-.585 5.02 5.02 0 1 1 4.412 3.493"/>
+      </g>
+      <g mask="url(#bt)">
+        <path d="M9 11.413l5.293 5.293a.999.999 0 0 0 1.414-1.414l-5.293-5.293"/>
+        <path d="M10.973 10.558L3.707 3.293a1 1 0 0 0-1.414 1.414l7.266 7.265"/>
+      </g>
+      <g mask="url(#bu)">
+        <path d="M9.285 8.301l-6.992 6.992a1 1 0 1 0 1.414 1.414l6.992-6.992"/>
+        <path d="M10.413 10l5.293-5.293a.999.999 0 0 0-1.414-1.414L8.999 8.586"/>
+      </g>
+    </g>
+  </svg>
+  <svg width="18" height="20" x="450" y="0">
+    <defs>
+      <clipPath id="bw">
+        <path d="M0 0h18v20H0z"/>
+      </clipPath>
+      <mask id="bz" mask-type="alpha">
+        <path fill="#0005FF" d="M0-2.906A2.907 2.907 0 0 1 2.906 0 2.907 2.907 0 0 1 0 2.906 2.907 2.907 0 0 1-2.906 0 2.907 2.907 0 0 1 0-2.906z" transform="translate(.204 18.622) scale(.54135)"/>
+      </mask>
+      <mask id="by" mask-type="alpha">
+        <path fill="#0005FF" d="M0-2.906A2.907 2.907 0 0 1 2.906 0 2.907 2.907 0 0 1 0 2.906 2.907 2.907 0 0 1-2.906 0 2.907 2.907 0 0 1 0-2.906z" transform="translate(.251 1.705) scale(1.70603)"/>
+      </mask>
+      <filter id="bv" filterUnits="objectBoundingBox" x="0%" y="0%" width="100%" height="100%">
+        <feColorMatrix type="matrix" color-interpolation-filters="sRGB" values="1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 -1 1"/>
+      </filter>
+      <mask id="bx" mask-type="alpha">
+        <g filter="url(#bv)">
+          <path fill="#fff" opacity="0" d="M0 0h18v20H0z"/>
+          <path display="none"/>
+        </g>
+      </mask>
+    </defs>
+    <g clip-path="url(#bw)">
+      <path d="M9.978 15.616" opacity="0"/>
+      <g opacity="0" mask="url(#bx)">
+        <path d="M9.346 16.98a6.994 6.994 0 0 0 6.638-7.335A6.994 6.994 0 0 0 2.819 6.714a6.954 6.954 0 0 0-.513 5.333 1 1 0 0 0 1.912-.585 5.02 5.02 0 1 1 4.412 3.493"/>
+      </g>
+      <g mask="url(#by)">
+        <path d="M9 11.413l5.293 5.293a.999.999 0 0 0 1.414-1.414l-5.293-5.293"/>
+        <path d="M10.973 10.558L3.707 3.293a1 1 0 0 0-1.414 1.414l7.266 7.265"/>
+      </g>
+      <g mask="url(#bz)">
+        <path d="M9.285 8.301l-6.992 6.992a1 1 0 1 0 1.414 1.414l6.992-6.992"/>
+        <path d="M10.413 10l5.293-5.293a.999.999 0 0 0-1.414-1.414L8.999 8.586"/>
+      </g>
+    </g>
+  </svg>
+  <svg width="18" height="20" x="468" y="0">
+    <defs>
+      <clipPath id="bB">
+        <path d="M0 0h18v20H0z"/>
+      </clipPath>
+      <mask id="bE" mask-type="alpha">
+        <path fill="#0005FF" d="M0-2.906A2.907 2.907 0 0 1 2.906 0 2.907 2.907 0 0 1 0 2.906 2.907 2.907 0 0 1-2.906 0 2.907 2.907 0 0 1 0-2.906z" transform="translate(.204 18.622) scale(.54135)"/>
+      </mask>
+      <mask id="bD" mask-type="alpha">
+        <path fill="#0005FF" d="M0-2.906A2.907 2.907 0 0 1 2.906 0 2.907 2.907 0 0 1 0 2.906 2.907 2.907 0 0 1-2.906 0 2.907 2.907 0 0 1 0-2.906z" transform="translate(.149 1.705) scale(1.05114)"/>
+      </mask>
+      <filter id="bA" filterUnits="objectBoundingBox" x="0%" y="0%" width="100%" height="100%">
+        <feColorMatrix type="matrix" color-interpolation-filters="sRGB" values="1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 -1 1"/>
+      </filter>
+      <mask id="bC" mask-type="alpha">
+        <g filter="url(#bA)">
+          <path fill="#fff" opacity="0" d="M0 0h18v20H0z"/>
+          <path display="none"/>
+        </g>
+      </mask>
+    </defs>
+    <g clip-path="url(#bB)">
+      <path d="M8.078 15.533l.175-.088a.077.077 0 0 0-.069-.137l-.343.173a.077.077 0 0 0-.034.103l.173.344a.077.077 0 0 0 .137-.07l-.083-.166" opacity=".077"/>
+      <g opacity=".037" mask="url(#bC)">
+        <path d="M7.1 16.725a6.994 6.994 0 0 0 8.632-4.832 6.994 6.994 0 0 0-11.54-6.98 6.954 6.954 0 0 0-2.19 4.89 1 1 0 0 0 2 .056 5.02 5.02 0 1 1 3.066 4.72"/>
+      </g>
+      <g mask="url(#bD)">
+        <path d="M9 11.413l5.293 5.293a.999.999 0 0 0 1.414-1.414l-5.293-5.293"/>
+        <path d="M10.973 10.558L3.707 3.293a1 1 0 0 0-1.414 1.414l7.266 7.265"/>
+      </g>
+      <g mask="url(#bE)">
+        <path d="M9.285 8.301l-6.992 6.992a1 1 0 1 0 1.414 1.414l6.992-6.992"/>
+        <path d="M10.413 10l5.293-5.293a.999.999 0 0 0-1.414-1.414L8.999 8.586"/>
+      </g>
+    </g>
+  </svg>
+  <svg width="18" height="20" x="486" y="0">
+    <defs>
+      <clipPath id="bG">
+        <path d="M0 0h18v20H0z"/>
+      </clipPath>
+      <mask id="bJ" mask-type="alpha">
+        <path fill="#0005FF" d="M0-2.906A2.907 2.907 0 0 1 2.906 0 2.907 2.907 0 0 1 0 2.906 2.907 2.907 0 0 1-2.906 0 2.907 2.907 0 0 1 0-2.906z" transform="translate(.204 18.622) scale(.54135)"/>
+      </mask>
+      <mask id="bI" mask-type="alpha">
+        <path fill="#0005FF" d="M0-2.906A2.907 2.907 0 0 1 2.906 0 2.907 2.907 0 0 1 0 2.906 2.907 2.907 0 0 1-2.906 0 2.907 2.907 0 0 1 0-2.906z" transform="translate(.098 1.705) scale(.72448)"/>
+      </mask>
+      <filter id="bF" filterUnits="objectBoundingBox" x="0%" y="0%" width="100%" height="100%">
+        <feColorMatrix type="matrix" color-interpolation-filters="sRGB" values="1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 -1 1"/>
+      </filter>
+      <mask id="bH" mask-type="alpha">
+        <g filter="url(#bF)">
+          <path fill="#fff" opacity="0" d="M0 0h18v20H0z"/>
+          <path display="none"/>
+        </g>
+      </mask>
+    </defs>
+    <g clip-path="url(#bG)">
+      <path d="M6.335 14.837l.386-.065a.154.154 0 0 0-.05-.303l-.76.127a.154.154 0 0 0-.125.177l.127.759a.154.154 0 0 0 .304-.051l-.062-.367" opacity=".154"/>
+      <g opacity=".106" mask="url(#bH)">
+        <path d="M5.053 15.766a6.994 6.994 0 0 0 9.722-1.823A6.994 6.994 0 0 0 6.067 3.644a6.954 6.954 0 0 0-3.635 3.935 1 1 0 0 0 1.876.692 5.02 5.02 0 1 1 1.4 5.451"/>
+      </g>
+      <g mask="url(#bI)">
+        <path d="M9 11.413l5.293 5.293a.999.999 0 0 0 1.414-1.414l-5.293-5.293"/>
+        <path d="M10.973 10.558L3.707 3.293a1 1 0 0 0-1.414 1.414l7.266 7.265"/>
+      </g>
+      <g mask="url(#bJ)">
+        <path d="M9.285 8.301l-6.992 6.992a1 1 0 1 0 1.414 1.414l6.992-6.992"/>
+        <path d="M10.413 10l5.293-5.293a.999.999 0 0 0-1.414-1.414L8.999 8.586"/>
+      </g>
+    </g>
+  </svg>
+  <svg width="18" height="20" x="504" y="0">
+    <defs>
+      <clipPath id="bL">
+        <path d="M0 0h18v20H0z"/>
+      </clipPath>
+      <mask id="bO" mask-type="alpha">
+        <path fill="#0005FF" d="M0-2.906A2.907 2.907 0 0 1 2.906 0 2.907 2.907 0 0 1 0 2.906 2.907 2.907 0 0 1-2.906 0 2.907 2.907 0 0 1 0-2.906z" transform="translate(.204 18.622) scale(.54135)"/>
+      </mask>
+      <mask id="bN" mask-type="alpha">
+        <path fill="#0005FF" d="M0-2.906A2.907 2.907 0 0 1 2.906 0 2.907 2.907 0 0 1 0 2.906 2.907 2.907 0 0 1-2.906 0 2.907 2.907 0 0 1 0-2.906z" transform="translate(.075 1.705) scale(.57983)"/>
+      </mask>
+      <filter id="bK" filterUnits="objectBoundingBox" x="0%" y="0%" width="100%" height="100%">
+        <feColorMatrix type="matrix" color-interpolation-filters="sRGB" values="1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 -1 1"/>
+      </filter>
+      <mask id="bM" mask-type="alpha">
+        <g filter="url(#bK)">
+          <path fill="#fff" opacity="0" d="M0 0h18v20H0z"/>
+          <path display="none"/>
+        </g>
+      </mask>
+    </defs>
+    <g clip-path="url(#bL)">
+      <path d="M4.936 13.618l.583.078a.23.23 0 0 0 .062-.457l-1.143-.154a.23.23 0 0 0-.26.197l-.155 1.144a.23.23 0 0 0 .458.062l.075-.553" opacity=".231"/>
+      <g opacity=".186" mask="url(#bM)">
+        <path d="M3.419 14.205a6.994 6.994 0 0 0 9.795 1.375A6.994 6.994 0 0 0 8.25 3.04a6.954 6.954 0 0 0-4.702 2.57 1 1 0 0 0 1.557 1.253 5.02 5.02 0 1 1-.414 5.613"/>
+      </g>
+      <g mask="url(#bN)">
+        <path d="M9 11.413l5.293 5.293a.999.999 0 0 0 1.414-1.414l-5.293-5.293"/>
+        <path d="M10.973 10.558L3.707 3.293a1 1 0 0 0-1.414 1.414l7.266 7.265"/>
+      </g>
+      <g mask="url(#bO)">
+        <path d="M9.285 8.301l-6.992 6.992a1 1 0 1 0 1.414 1.414l6.992-6.992"/>
+        <path d="M10.413 10l5.293-5.293a.999.999 0 0 0-1.414-1.414L8.999 8.586"/>
+      </g>
+    </g>
+  </svg>
+  <svg width="18" height="20" x="522" y="0">
+    <defs>
+      <clipPath id="bQ">
+        <path d="M0 0h18v20H0z"/>
+      </clipPath>
+      <mask id="bT" mask-type="alpha">
+        <path fill="#0005FF" d="M0-2.906A2.907 2.907 0 0 1 2.906 0 2.907 2.907 0 0 1 0 2.906 2.907 2.907 0 0 1-2.906 0 2.907 2.907 0 0 1 0-2.906z" transform="translate(.204 18.622) scale(.54135)"/>
+      </mask>
+      <mask id="bS" mask-type="alpha">
+        <path fill="#0005FF" d="M0-2.906A2.907 2.907 0 0 1 2.906 0 2.907 2.907 0 0 1 0 2.906 2.907 2.907 0 0 1-2.906 0 2.907 2.907 0 0 1 0-2.906z" transform="translate(.07 1.705) scale(.54135)"/>
+      </mask>
+      <filter id="bP" filterUnits="objectBoundingBox" x="0%" y="0%" width="100%" height="100%">
+        <feColorMatrix type="matrix" color-interpolation-filters="sRGB" values="1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 -1 1"/>
+      </filter>
+      <mask id="bR" mask-type="alpha">
+        <g filter="url(#bP)">
+          <path fill="#fff" opacity="0" d="M0 0h18v20H0z"/>
+          <path display="none"/>
+        </g>
+      </mask>
+    </defs>
+    <g clip-path="url(#bQ)">
+      <path d="M4.032 12.022l.71.33a.308.308 0 0 0 .26-.558l-1.395-.648a.308.308 0 0 0-.409.15L2.55 12.69a.308.308 0 0 0 .558.26l.314-.675" opacity=".308"/>
+      <g opacity=".272" mask="url(#bR)">
+        <path d="M2.368 12.203a6.994 6.994 0 0 0 8.845 4.43 6.994 6.994 0 0 0-.703-13.468 6.954 6.954 0 0 0-5.275.933A1 1 0 0 0 6.31 5.784a5.02 5.02 0 1 1-2.184 5.187"/>
+      </g>
+      <g mask="url(#bS)">
+        <path d="M9 11.413l5.293 5.293a.999.999 0 0 0 1.414-1.414l-5.293-5.293"/>
+        <path d="M10.973 10.558L3.707 3.293a1 1 0 0 0-1.414 1.414l7.266 7.265"/>
+      </g>
+      <g mask="url(#bT)">
+        <path d="M9.285 8.301l-6.992 6.992a1 1 0 1 0 1.414 1.414l6.992-6.992"/>
+        <path d="M10.413 10l5.293-5.293a.999.999 0 0 0-1.414-1.414L8.999 8.586"/>
+      </g>
+    </g>
+  </svg>
+  <svg width="18" height="20" x="540" y="0">
+    <defs>
+      <clipPath id="bV">
+        <path d="M0 0h18v20H0z"/>
+      </clipPath>
+      <mask id="bY" mask-type="alpha">
+        <path fill="#0005FF" d="M0-2.906A2.907 2.907 0 0 1 2.906 0 2.907 2.907 0 0 1 0 2.906 2.907 2.907 0 0 1-2.906 0 2.907 2.907 0 0 1 0-2.906z" transform="translate(.204 18.622) scale(.54135)"/>
+      </mask>
+      <mask id="bX" mask-type="alpha">
+        <path fill="#0005FF" d="M0-2.906A2.907 2.907 0 0 1 2.906 0 2.907 2.907 0 0 1 0 2.906 2.907 2.907 0 0 1-2.906 0 2.907 2.907 0 0 1 0-2.906z" transform="translate(.07 1.705) scale(.54135)"/>
+      </mask>
+      <filter id="bU" filterUnits="objectBoundingBox" x="0%" y="0%" width="100%" height="100%">
+        <feColorMatrix type="matrix" color-interpolation-filters="sRGB" values="1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 -1 1"/>
+      </filter>
+      <mask id="bW" mask-type="alpha">
+        <g filter="url(#bU)">
+          <path fill="#fff" opacity="0" d="M0 0h18v20H0z"/>
+          <path display="none"/>
+        </g>
+      </mask>
+    </defs>
+    <g clip-path="url(#bV)">
+      <path d="M3.712 10.234l.727.658a.385.385 0 0 0 .516-.57L3.53 9.032a.385.385 0 0 0-.543.027l-1.291 1.425a.385.385 0 0 0 .57.516l.624-.689" opacity=".385"/>
+      <g opacity=".362" mask="url(#bW)">
+        <path d="M2.012 9.97a6.994 6.994 0 0 0 6.967 7.023 6.994 6.994 0 0 0 3.634-12.988 6.954 6.954 0 0 0-5.297-.8 1 1 0 0 0 .48 1.941 5.02 5.02 0 1 1-3.725 4.219"/>
+      </g>
+      <g mask="url(#bX)">
+        <path d="M9 11.413l5.293 5.293a.999.999 0 0 0 1.414-1.414l-5.293-5.293"/>
+        <path d="M10.973 10.558L3.707 3.293a1 1 0 0 0-1.414 1.414l7.266 7.265"/>
+      </g>
+      <g mask="url(#bY)">
+        <path d="M9.285 8.301l-6.992 6.992a1 1 0 1 0 1.414 1.414l6.992-6.992"/>
+        <path d="M10.413 10l5.293-5.293a.999.999 0 0 0-1.414-1.414L8.999 8.586"/>
+      </g>
+    </g>
+  </svg>
+  <svg width="18" height="20" x="558" y="0">
+    <defs>
+      <clipPath id="ca">
+        <path d="M0 0h18v20H0z"/>
+      </clipPath>
+      <mask id="cd" mask-type="alpha">
+        <path fill="#0005FF" d="M0-2.906A2.907 2.907 0 0 1 2.906 0 2.907 2.907 0 0 1 0 2.906 2.907 2.907 0 0 1-2.906 0 2.907 2.907 0 0 1 0-2.906z" transform="translate(.204 18.622) scale(.54135)"/>
+      </mask>
+      <mask id="cc" mask-type="alpha">
+        <path fill="#0005FF" d="M0-2.906A2.907 2.907 0 0 1 2.906 0 2.907 2.907 0 0 1 0 2.906 2.907 2.907 0 0 1-2.906 0 2.907 2.907 0 0 1 0-2.906z" transform="translate(.07 1.705) scale(.54135)"/>
+      </mask>
+      <filter id="bZ" filterUnits="objectBoundingBox" x="0%" y="0%" width="100%" height="100%">
+        <feColorMatrix type="matrix" color-interpolation-filters="sRGB" values="1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 -1 1"/>
+      </filter>
+      <mask id="cb" mask-type="alpha">
+        <g filter="url(#bZ)">
+          <path fill="#fff" opacity="0" d="M0 0h18v20H0z"/>
+          <path display="none"/>
+        </g>
+      </mask>
+    </defs>
+    <g clip-path="url(#ca)">
+      <path d="M4.004 8.46l.6 1.013a.462.462 0 0 0 .794-.47L4.223 7.017a.462.462 0 0 0-.633-.162L1.604 8.03a.462.462 0 0 0 .47.794l.96-.568" opacity=".462"/>
+      <g opacity=".454" mask="url(#cb)">
+        <path d="M2.387 7.742a6.994 6.994 0 0 0 4.361 8.879 6.994 6.994 0 0 0 7.59-11.15 6.954 6.954 0 0 0-4.765-2.448 1 1 0 0 0-.164 1.993 5.02 5.02 0 1 1-4.877 2.809"/>
+      </g>
+      <g mask="url(#cc)">
+        <path d="M9 11.413l5.293 5.293a.999.999 0 0 0 1.414-1.414l-5.293-5.293"/>
+        <path d="M10.973 10.558L3.707 3.293a1 1 0 0 0-1.414 1.414l7.266 7.265"/>
+      </g>
+      <g mask="url(#cd)">
+        <path d="M9.285 8.301l-6.992 6.992a1 1 0 1 0 1.414 1.414l6.992-6.992"/>
+        <path d="M10.413 10l5.293-5.293a.999.999 0 0 0-1.414-1.414L8.999 8.586"/>
+      </g>
+    </g>
+  </svg>
+  <svg width="18" height="20" x="576" y="0">
+    <defs>
+      <clipPath id="cf">
+        <path d="M0 0h18v20H0z"/>
+      </clipPath>
+      <mask id="ci" mask-type="alpha">
+        <path fill="#0005FF" d="M0-2.906A2.907 2.907 0 0 1 2.906 0 2.907 2.907 0 0 1 0 2.906 2.907 2.907 0 0 1-2.906 0 2.907 2.907 0 0 1 0-2.906z" transform="translate(.204 18.622) scale(.54135)"/>
+      </mask>
+      <mask id="ch" mask-type="alpha">
+        <path fill="#0005FF" d="M0-2.906A2.907 2.907 0 0 1 2.906 0 2.907 2.907 0 0 1 0 2.906 2.907 2.907 0 0 1-2.906 0 2.907 2.907 0 0 1 0-2.906z" transform="translate(.07 1.705) scale(.54135)"/>
+      </mask>
+      <filter id="ce" filterUnits="objectBoundingBox" x="0%" y="0%" width="100%" height="100%">
+        <feColorMatrix type="matrix" color-interpolation-filters="sRGB" values="1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 -1 1"/>
+      </filter>
+      <mask id="cg" mask-type="alpha">
+        <g filter="url(#ce)">
+          <path fill="#fff" opacity="0" d="M0 0h18v20H0z"/>
+          <path display="none"/>
+        </g>
+      </mask>
+    </defs>
+    <g clip-path="url(#cf)">
+      <path d="M4.864 6.9l.318 1.335a.539.539 0 0 0 1.048-.25l-.624-2.618a.539.539 0 0 0-.648-.4l-2.62.624a.539.539 0 0 0 .25 1.047l1.267-.301" opacity=".538"/>
+      <g opacity=".546" mask="url(#cg)">
+        <path d="M3.454 5.749a6.994 6.994 0 0 0 1.299 9.806 6.994 6.994 0 0 0 10.751-8.142A6.954 6.954 0 0 0 11.77 3.57a1 1 0 0 0-.791 1.836A5.02 5.02 0 1 1 5.46 6.512"/>
+      </g>
+      <g mask="url(#ch)">
+        <path d="M9 11.413l5.293 5.293a.999.999 0 0 0 1.414-1.414l-5.293-5.293"/>
+        <path d="M10.973 10.558L3.707 3.293a1 1 0 0 0-1.414 1.414l7.266 7.265"/>
+      </g>
+      <g mask="url(#ci)">
+        <path d="M9.285 8.301l-6.992 6.992a1 1 0 1 0 1.414 1.414l6.992-6.992"/>
+        <path d="M10.413 10l5.293-5.293a.999.999 0 0 0-1.414-1.414L8.999 8.586"/>
+      </g>
+    </g>
+  </svg>
+  <svg width="18" height="20" x="594" y="0">
+    <defs>
+      <clipPath id="ck">
+        <path d="M0 0h18v20H0z"/>
+      </clipPath>
+      <mask id="cn" mask-type="alpha">
+        <path fill="#0005FF" d="M0-2.906A2.907 2.907 0 0 1 2.906 0 2.907 2.907 0 0 1 0 2.906 2.907 2.907 0 0 1-2.906 0 2.907 2.907 0 0 1 0-2.906z" transform="translate(.204 18.622) scale(.54135)"/>
+      </mask>
+      <mask id="cm" mask-type="alpha">
+        <path fill="#0005FF" d="M0-2.906A2.907 2.907 0 0 1 2.906 0 2.907 2.907 0 0 1 0 2.906 2.907 2.907 0 0 1-2.906 0 2.907 2.907 0 0 1 0-2.906z" transform="translate(.07 1.705) scale(.54135)"/>
+      </mask>
+      <filter id="cj" filterUnits="objectBoundingBox" x="0%" y="0%" width="100%" height="100%">
+        <feColorMatrix type="matrix" color-interpolation-filters="sRGB" values="1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 -1 1"/>
+      </filter>
+      <mask id="cl" mask-type="alpha">
+        <g filter="url(#cj)">
+          <path fill="#fff" opacity="0" d="M0 0h18v20H0z"/>
+          <path display="none"/>
+        </g>
+      </mask>
+    </defs>
+    <g clip-path="url(#ck)">
+      <path d="M6.187 5.726L6.08 7.291a.616.616 0 0 0 1.228.083l.207-3.07a.616.616 0 0 0-.573-.655l-3.07-.207A.616.616 0 0 0 3.79 4.67l1.485.1" opacity=".615"/>
+      <g opacity=".638" mask="url(#cl)">
+        <path d="M5.101 4.2a6.994 6.994 0 0 0-1.9 9.709A6.994 6.994 0 0 0 15.99 9.624a6.954 6.954 0 0 0-2.313-4.833 1 1 0 0 0-1.336 1.488 5.02 5.02 0 1 1-5.582-.714"/>
+      </g>
+      <g mask="url(#cm)">
+        <path d="M9 11.413l5.293 5.293a.999.999 0 0 0 1.414-1.414l-5.293-5.293"/>
+        <path d="M10.973 10.558L3.707 3.293a1 1 0 0 0-1.414 1.414l7.266 7.265"/>
+      </g>
+      <g mask="url(#cn)">
+        <path d="M9.285 8.301l-6.992 6.992a1 1 0 1 0 1.414 1.414l6.992-6.992"/>
+        <path d="M10.413 10l5.293-5.293a.999.999 0 0 0-1.414-1.414L8.999 8.586"/>
+      </g>
+    </g>
+  </svg>
+  <svg width="18" height="20" x="612" y="0">
+    <defs>
+      <clipPath id="cp">
+        <path d="M0 0h18v20H0z"/>
+      </clipPath>
+      <mask id="cs" mask-type="alpha">
+        <path fill="#0005FF" d="M0-2.906A2.907 2.907 0 0 1 2.906 0 2.907 2.907 0 0 1 0 2.906 2.907 2.907 0 0 1-2.906 0 2.907 2.907 0 0 1 0-2.906z" transform="translate(.204 18.622) scale(.54135)"/>
+      </mask>
+      <mask id="cr" mask-type="alpha">
+        <path fill="#0005FF" d="M0-2.906A2.907 2.907 0 0 1 2.906 0 2.907 2.907 0 0 1 0 2.906 2.907 2.907 0 0 1-2.906 0 2.907 2.907 0 0 1 0-2.906z" transform="translate(.07 1.705) scale(.54135)"/>
+      </mask>
+      <filter id="co" filterUnits="objectBoundingBox" x="0%" y="0%" width="100%" height="100%">
+        <feColorMatrix type="matrix" color-interpolation-filters="sRGB" values="1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 -1 1"/>
+      </filter>
+      <mask id="cq" mask-type="alpha">
+        <g filter="url(#co)">
+          <path fill="#fff" opacity="0" d="M0 0h18v20H0z"/>
+          <path display="none"/>
+        </g>
+      </mask>
+    </defs>
+    <g clip-path="url(#cp)">
+      <path d="M7.815 5.069L7.18 6.715a.693.693 0 0 0 1.292.498l1.245-3.23a.693.693 0 0 0-.397-.895L6.09 1.843a.693.693 0 0 0-.498 1.292l1.562.602" opacity=".692"/>
+      <g opacity=".728" mask="url(#cq)">
+        <path d="M7.156 3.26a6.994 6.994 0 0 0-4.899 8.593 6.994 6.994 0 0 0 13.487.022 6.954 6.954 0 0 0-.649-5.318 1 1 0 0 0-1.741.983 5.02 5.02 0 1 1-5.062-2.459"/>
+      </g>
+      <g mask="url(#cr)">
+        <path d="M9 11.413l5.293 5.293a.999.999 0 0 0 1.414-1.414l-5.293-5.293"/>
+        <path d="M10.973 10.558L3.707 3.293a1 1 0 0 0-1.414 1.414l7.266 7.265"/>
+      </g>
+      <g mask="url(#cs)">
+        <path d="M9.285 8.301l-6.992 6.992a1 1 0 1 0 1.414 1.414l6.992-6.992"/>
+        <path d="M10.413 10l5.293-5.293a.999.999 0 0 0-1.414-1.414L8.999 8.586"/>
+      </g>
+    </g>
+  </svg>
+  <svg width="18" height="20" x="630" y="0">
+    <defs>
+      <clipPath id="cu">
+        <path d="M0 0h18v20H0z"/>
+      </clipPath>
+      <mask id="cx" mask-type="alpha">
+        <path fill="#0005FF" d="M0-2.906A2.907 2.907 0 0 1 2.906 0 2.907 2.907 0 0 1 0 2.906 2.907 2.907 0 0 1-2.906 0 2.907 2.907 0 0 1 0-2.906z" transform="translate(.204 18.622) scale(.54135)"/>
+      </mask>
+      <mask id="cw" mask-type="alpha">
+        <path fill="#0005FF" d="M0-2.906A2.907 2.907 0 0 1 2.906 0 2.907 2.907 0 0 1 0 2.906 2.907 2.907 0 0 1-2.906 0 2.907 2.907 0 0 1 0-2.906z" transform="translate(.07 1.705) scale(.54135)"/>
+      </mask>
+      <filter id="ct" filterUnits="objectBoundingBox" x="0%" y="0%" width="100%" height="100%">
+        <feColorMatrix type="matrix" color-interpolation-filters="sRGB" values="1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 -1 1"/>
+      </filter>
+      <mask id="cv" mask-type="alpha">
+        <g filter="url(#ct)">
+          <path fill="#fff" opacity="0" d="M0 0h18v20H0z"/>
+          <path display="none"/>
+        </g>
+      </mask>
+    </defs>
+    <g clip-path="url(#cu)">
+      <path d="M9.559 4.997L8.343 6.535a.77.77 0 0 0 1.208.954l2.384-3.018a.77.77 0 0 0-.127-1.08L8.79 1.006a.77.77 0 0 0-.954 1.208l1.46 1.153" opacity=".769"/>
+      <g opacity=".814" mask="url(#cv)">
+        <path d="M9.404 3.024a6.994 6.994 0 0 0-7.386 6.58 6.994 6.994 0 0 0 12.775 4.326 6.954 6.954 0 0 0 1.082-5.247 1 1 0 0 0-1.964.376 5.02 5.02 0 1 1-4.013-3.946"/>
+      </g>
+      <g mask="url(#cw)">
+        <path d="M9 11.413l5.293 5.293a.999.999 0 0 0 1.414-1.414l-5.293-5.293"/>
+        <path d="M10.973 10.558L3.707 3.293a1 1 0 0 0-1.414 1.414l7.266 7.265"/>
+      </g>
+      <g mask="url(#cx)">
+        <path d="M9.285 8.301l-6.992 6.992a1 1 0 1 0 1.414 1.414l6.992-6.992"/>
+        <path d="M10.413 10l5.293-5.293a.999.999 0 0 0-1.414-1.414L8.999 8.586"/>
+      </g>
+    </g>
+  </svg>
+  <svg width="18" height="20" x="648" y="0">
+    <defs>
+      <clipPath id="cz">
+        <path d="M0 0h18v20H0z"/>
+      </clipPath>
+      <mask id="cC" mask-type="alpha">
+        <path fill="#0005FF" d="M0-2.906A2.907 2.907 0 0 1 2.906 0 2.907 2.907 0 0 1 0 2.906 2.907 2.907 0 0 1-2.906 0 2.907 2.907 0 0 1 0-2.906z" transform="translate(.204 18.622) scale(.54135)"/>
+      </mask>
+      <mask id="cB" mask-type="alpha">
+        <path fill="#0005FF" d="M0-2.906A2.907 2.907 0 0 1 2.906 0 2.907 2.907 0 0 1 0 2.906 2.907 2.907 0 0 1-2.906 0 2.907 2.907 0 0 1 0-2.906z" transform="translate(.07 1.705) scale(.54135)"/>
+      </mask>
+      <filter id="cy" filterUnits="objectBoundingBox" x="0%" y="0%" width="100%" height="100%">
+        <feColorMatrix type="matrix" color-interpolation-filters="sRGB" values="1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 -1 1"/>
+      </filter>
+      <mask id="cA" mask-type="alpha">
+        <g filter="url(#cy)">
+          <path fill="#fff" opacity="0" d="M0 0h18v20H0z"/>
+          <path display="none"/>
+        </g>
+      </mask>
+    </defs>
+    <g clip-path="url(#cz)">
+      <path d="M11.218 5.514l-1.779 1.22a.846.846 0 0 0 .958 1.395l3.488-2.394a.846.846 0 0 0 .22-1.176L11.71 1.071a.846.846 0 0 0-1.395.957l1.158 1.687" opacity=".846"/>
+      <g opacity=".894" mask="url(#cA)">
+        <path d="M11.61 3.518a6.994 6.994 0 0 0-9.1 3.878 6.994 6.994 0 0 0 10.725 8.177 6.954 6.954 0 0 0 2.701-4.627 1 1 0 0 0-1.981-.27 5.02 5.02 0 1 1-2.543-5.02"/>
+      </g>
+      <g mask="url(#cB)">
+        <path d="M9 11.413l5.293 5.293a.999.999 0 0 0 1.414-1.414l-5.293-5.293"/>
+        <path d="M10.973 10.558L3.707 3.293a1 1 0 0 0-1.414 1.414l7.266 7.265"/>
+      </g>
+      <g mask="url(#cC)">
+        <path d="M9.285 8.301l-6.992 6.992a1 1 0 1 0 1.414 1.414l6.992-6.992"/>
+        <path d="M10.413 10l5.293-5.293a.999.999 0 0 0-1.414-1.414L8.999 8.586"/>
+      </g>
+    </g>
+  </svg>
+  <svg width="18" height="20" x="666" y="0">
+    <defs>
+      <clipPath id="cE">
+        <path d="M0 0h18v20H0z"/>
+      </clipPath>
+      <mask id="cH" mask-type="alpha">
+        <path fill="#0005FF" d="M0-2.906A2.907 2.907 0 0 1 2.906 0 2.907 2.907 0 0 1 0 2.906 2.907 2.907 0 0 1-2.906 0 2.907 2.907 0 0 1 0-2.906z" transform="translate(.204 18.622) scale(.54135)"/>
+      </mask>
+      <mask id="cG" mask-type="alpha">
+        <path fill="#0005FF" d="M0-2.906A2.907 2.907 0 0 1 2.906 0 2.907 2.907 0 0 1 0 2.906 2.907 2.907 0 0 1-2.906 0 2.907 2.907 0 0 1 0-2.906z" transform="translate(.07 1.705) scale(.54135)"/>
+      </mask>
+      <filter id="cD" filterUnits="objectBoundingBox" x="0%" y="0%" width="100%" height="100%">
+        <feColorMatrix type="matrix" color-interpolation-filters="sRGB" values="1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 -1 1"/>
+      </filter>
+      <mask id="cF" mask-type="alpha">
+        <g filter="url(#cD)">
+          <path fill="#fff" opacity="0" d="M0 0h18v20H0z"/>
+          <path display="none"/>
+        </g>
+      </mask>
+    </defs>
+    <g clip-path="url(#cE)">
+      <path d="M12.6 6.556l-2.247.697a.923.923 0 0 0 .547 1.763l4.408-1.367a.923.923 0 0 0 .609-1.155L14.55 2.086a.923.923 0 0 0-1.764.546l.661 2.132" opacity=".923"/>
+      <g opacity=".963" mask="url(#cF)">
+        <path d="M13.543 4.69a6.994 6.994 0 0 0-9.862.77 6.994 6.994 0 0 0 7.553 11.174 6.954 6.954 0 0 0 4.037-3.523 1 1 0 0 0-1.791-.889 5.02 5.02 0 1 1-.807-5.57"/>
+      </g>
+      <g mask="url(#cG)">
+        <path d="M9 11.413l5.293 5.293a.999.999 0 0 0 1.414-1.414l-5.293-5.293"/>
+        <path d="M10.973 10.558L3.707 3.293a1 1 0 0 0-1.414 1.414l7.266 7.265"/>
+      </g>
+      <g mask="url(#cH)">
+        <path d="M9.285 8.301l-6.992 6.992a1 1 0 1 0 1.414 1.414l6.992-6.992"/>
+        <path d="M10.413 10l5.293-5.293a.999.999 0 0 0-1.414-1.414L8.999 8.586"/>
+      </g>
+    </g>
+  </svg>
+  <svg width="18" height="20" x="684" y="0">
+    <defs>
+      <clipPath id="cJ">
+        <path d="M0 0h18v20H0z"/>
+      </clipPath>
+      <mask id="cM" mask-type="alpha">
+        <path fill="#0005FF" d="M0-2.906A2.907 2.907 0 0 1 2.906 0 2.907 2.907 0 0 1 0 2.906 2.907 2.907 0 0 1-2.906 0 2.907 2.907 0 0 1 0-2.906z" transform="translate(.204 18.622) scale(.54135)"/>
+      </mask>
+      <mask id="cL" mask-type="alpha">
+        <path fill="#0005FF" d="M0-2.906A2.907 2.907 0 0 1 2.906 0 2.907 2.907 0 0 1 0 2.906 2.907 2.907 0 0 1-2.906 0 2.907 2.907 0 0 1 0-2.906z" transform="translate(.07 1.705) scale(.54135)"/>
+      </mask>
+      <filter id="cI" filterUnits="objectBoundingBox" x="0%" y="0%" width="100%" height="100%">
+        <feColorMatrix type="matrix" color-interpolation-filters="sRGB" values="1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 -1 1"/>
+      </filter>
+      <mask id="cK" mask-type="alpha">
+        <g filter="url(#cI)">
+          <path fill="#fff" opacity="0" d="M0 0h18v20H0z"/>
+          <path display="none"/>
+        </g>
+      </mask>
+    </defs>
+    <g clip-path="url(#cJ)">
+      <path d="M13.549 8H11a1 1 0 0 0 0 2h5a1 1 0 0 0 1-1V4a1 1 0 0 0-2 0v2.418"/>
+      <g mask="url(#cK)">
+        <path d="M15 6.418A6.994 6.994 0 0 0 5.408 4 6.994 6.994 0 0 0 9 17a6.954 6.954 0 0 0 4.95-2.05 1 1 0 0 0-1.414-1.414A5.02 5.02 0 1 1 13.549 8"/>
+      </g>
+      <g mask="url(#cL)">
+        <path d="M9 11.413l5.293 5.293a.999.999 0 0 0 1.414-1.414l-5.293-5.293"/>
+        <path d="M10.973 10.558L3.707 3.293a1 1 0 0 0-1.414 1.414l7.266 7.265"/>
+      </g>
+      <g mask="url(#cM)">
+        <path d="M9.285 8.301l-6.992 6.992a1 1 0 1 0 1.414 1.414l6.992-6.992"/>
+        <path d="M10.413 10l5.293-5.293a.999.999 0 0 0-1.414-1.414L8.999 8.586"/>
+      </g>
+    </g>
+  </svg>
+  <svg width="18" height="20" x="702" y="0">
+    <defs>
+      <clipPath id="cO">
+        <path d="M0 0h18v20H0z"/>
+      </clipPath>
+      <mask id="cR" mask-type="alpha">
+        <path fill="#0005FF" d="M0-2.906A2.907 2.907 0 0 1 2.906 0 2.907 2.907 0 0 1 0 2.906 2.907 2.907 0 0 1-2.906 0 2.907 2.907 0 0 1 0-2.906z" transform="translate(.204 18.622) scale(.54135)"/>
+      </mask>
+      <mask id="cQ" mask-type="alpha">
+        <path fill="#0005FF" d="M0-2.906A2.907 2.907 0 0 1 2.906 0 2.907 2.907 0 0 1 0 2.906 2.907 2.907 0 0 1-2.906 0 2.907 2.907 0 0 1 0-2.906z" transform="translate(.07 1.705) scale(.54135)"/>
+      </mask>
+      <filter id="cN" filterUnits="objectBoundingBox" x="0%" y="0%" width="100%" height="100%">
+        <feColorMatrix type="matrix" color-interpolation-filters="sRGB" values="1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 -1 1"/>
+      </filter>
+      <mask id="cP" mask-type="alpha">
+        <g filter="url(#cN)">
+          <path fill="#fff" opacity="0" d="M0 0h18v20H0z"/>
+          <path display="none"/>
+        </g>
+      </mask>
+    </defs>
+    <g clip-path="url(#cO)">
+      <path d="M13.549 8H11a1 1 0 0 0 0 2h5a1 1 0 0 0 1-1V4a1 1 0 0 0-2 0v2.418"/>
+      <g mask="url(#cP)">
+        <path d="M15 6.418A6.994 6.994 0 0 0 5.408 4 6.994 6.994 0 0 0 9 17a6.954 6.954 0 0 0 4.95-2.05 1 1 0 0 0-1.414-1.414A5.02 5.02 0 1 1 13.549 8"/>
+      </g>
+      <g mask="url(#cQ)">
+        <path d="M9 11.413l5.293 5.293a.999.999 0 0 0 1.414-1.414l-5.293-5.293"/>
+        <path d="M10.973 10.558L3.707 3.293a1 1 0 0 0-1.414 1.414l7.266 7.265"/>
+      </g>
+      <g mask="url(#cR)">
+        <path d="M9.285 8.301l-6.992 6.992a1 1 0 1 0 1.414 1.414l6.992-6.992"/>
+        <path d="M10.413 10l5.293-5.293a.999.999 0 0 0-1.414-1.414L8.999 8.586"/>
+      </g>
+    </g>
+  </svg>
+  <svg width="18" height="20" x="720" y="0">
+    <defs>
+      <clipPath id="cT">
+        <path d="M0 0h18v20H0z"/>
+      </clipPath>
+      <mask id="cW" mask-type="alpha">
+        <path fill="#0005FF" d="M0-2.906A2.907 2.907 0 0 1 2.906 0 2.907 2.907 0 0 1 0 2.906 2.907 2.907 0 0 1-2.906 0 2.907 2.907 0 0 1 0-2.906z" transform="translate(.204 18.622) scale(.54135)"/>
+      </mask>
+      <mask id="cV" mask-type="alpha">
+        <path fill="#0005FF" d="M0-2.906A2.907 2.907 0 0 1 2.906 0 2.907 2.907 0 0 1 0 2.906 2.907 2.907 0 0 1-2.906 0 2.907 2.907 0 0 1 0-2.906z" transform="translate(.07 1.705) scale(.54135)"/>
+      </mask>
+      <filter id="cS" filterUnits="objectBoundingBox" x="0%" y="0%" width="100%" height="100%">
+        <feColorMatrix type="matrix" color-interpolation-filters="sRGB" values="1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 -1 1"/>
+      </filter>
+      <mask id="cU" mask-type="alpha">
+        <g filter="url(#cS)">
+          <path fill="#fff" opacity="0" d="M0 0h18v20H0z"/>
+          <path display="none"/>
+        </g>
+      </mask>
+    </defs>
+    <g clip-path="url(#cT)">
+      <path d="M13.549 8H11a1 1 0 0 0 0 2h5a1 1 0 0 0 1-1V4a1 1 0 0 0-2 0v2.418"/>
+      <g mask="url(#cU)">
+        <path d="M15 6.418A6.994 6.994 0 0 0 5.408 4 6.994 6.994 0 0 0 9 17a6.954 6.954 0 0 0 4.95-2.05 1 1 0 0 0-1.414-1.414A5.02 5.02 0 1 1 13.549 8"/>
+      </g>
+      <g mask="url(#cV)">
+        <path d="M9 11.413l5.293 5.293a.999.999 0 0 0 1.414-1.414l-5.293-5.293"/>
+        <path d="M10.973 10.558L3.707 3.293a1 1 0 0 0-1.414 1.414l7.266 7.265"/>
+      </g>
+      <g mask="url(#cW)">
+        <path d="M9.285 8.301l-6.992 6.992a1 1 0 1 0 1.414 1.414l6.992-6.992"/>
+        <path d="M10.413 10l5.293-5.293a.999.999 0 0 0-1.414-1.414L8.999 8.586"/>
+      </g>
+    </g>
+  </svg>
+  <svg width="18" height="20" x="738" y="0">
+    <defs>
+      <clipPath id="cY">
+        <path d="M0 0h18v20H0z"/>
+      </clipPath>
+      <mask id="db" mask-type="alpha">
+        <path fill="#0005FF" d="M0-2.906A2.907 2.907 0 0 1 2.906 0 2.907 2.907 0 0 1 0 2.906 2.907 2.907 0 0 1-2.906 0 2.907 2.907 0 0 1 0-2.906z" transform="translate(.204 18.622) scale(.54135)"/>
+      </mask>
+      <mask id="da" mask-type="alpha">
+        <path fill="#0005FF" d="M0-2.906A2.907 2.907 0 0 1 2.906 0 2.907 2.907 0 0 1 0 2.906 2.907 2.907 0 0 1-2.906 0 2.907 2.907 0 0 1 0-2.906z" transform="translate(.07 1.705) scale(.54135)"/>
+      </mask>
+      <filter id="cX" filterUnits="objectBoundingBox" x="0%" y="0%" width="100%" height="100%">
+        <feColorMatrix type="matrix" color-interpolation-filters="sRGB" values="1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 -1 1"/>
+      </filter>
+      <mask id="cZ" mask-type="alpha">
+        <g filter="url(#cX)">
+          <path fill="#fff" opacity="0" d="M0 0h18v20H0z"/>
+          <path display="none"/>
+        </g>
+      </mask>
+    </defs>
+    <g clip-path="url(#cY)">
+      <path d="M13.549 8H11a1 1 0 0 0 0 2h5a1 1 0 0 0 1-1V4a1 1 0 0 0-2 0v2.418"/>
+      <g mask="url(#cZ)">
+        <path d="M15 6.418A6.994 6.994 0 0 0 5.408 4 6.994 6.994 0 0 0 9 17a6.954 6.954 0 0 0 4.95-2.05 1 1 0 0 0-1.414-1.414A5.02 5.02 0 1 1 13.549 8"/>
+      </g>
+      <g mask="url(#da)">
+        <path d="M9 11.413l5.293 5.293a.999.999 0 0 0 1.414-1.414l-5.293-5.293"/>
+        <path d="M10.973 10.558L3.707 3.293a1 1 0 0 0-1.414 1.414l7.266 7.265"/>
+      </g>
+      <g mask="url(#db)">
+        <path d="M9.285 8.301l-6.992 6.992a1 1 0 1 0 1.414 1.414l6.992-6.992"/>
+        <path d="M10.413 10l5.293-5.293a.999.999 0 0 0-1.414-1.414L8.999 8.586"/>
+      </g>
+    </g>
+  </svg>
+  <svg width="18" height="20" x="756" y="0">
+    <defs>
+      <clipPath id="dd">
+        <path d="M0 0h18v20H0z"/>
+      </clipPath>
+      <mask id="dg" mask-type="alpha">
+        <path fill="#0005FF" d="M0-2.906A2.907 2.907 0 0 1 2.906 0 2.907 2.907 0 0 1 0 2.906 2.907 2.907 0 0 1-2.906 0 2.907 2.907 0 0 1 0-2.906z" transform="translate(1.27 18.622) scale(7.36622)"/>
+      </mask>
+      <mask id="df" mask-type="alpha">
+        <path fill="#0005FF" d="M0-2.906A2.907 2.907 0 0 1 2.906 0 2.907 2.907 0 0 1 0 2.906 2.907 2.907 0 0 1-2.906 0 2.907 2.907 0 0 1 0-2.906z" transform="translate(1.151 1.705) scale(7.47609)"/>
+      </mask>
+      <filter id="dc" filterUnits="objectBoundingBox" x="0%" y="0%" width="100%" height="100%">
+        <feColorMatrix type="matrix" color-interpolation-filters="sRGB" values="1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 -1 1"/>
+      </filter>
+      <mask id="de" mask-type="alpha">
+        <g filter="url(#dc)">
+          <path fill="#fff" opacity="0" d="M0 0h18v20H0z"/>
+          <path display="none"/>
+        </g>
+      </mask>
+    </defs>
+    <g clip-path="url(#dd)">
+      <path d="M9.978 15.616" opacity="0"/>
+      <g opacity="0" mask="url(#de)">
+        <path d="M9.346 16.98a6.994 6.994 0 0 0 6.638-7.335A6.994 6.994 0 0 0 2.819 6.714a6.954 6.954 0 0 0-.513 5.333 1 1 0 0 0 1.912-.585 5.02 5.02 0 1 1 4.412 3.493"/>
+      </g>
+      <g mask="url(#df)">
+        <path d="M9 11.413l5.293 5.293a.999.999 0 0 0 1.414-1.414l-5.293-5.293"/>
+        <path d="M10.973 10.558L3.707 3.293a1 1 0 0 0-1.414 1.414l7.266 7.265"/>
+      </g>
+      <g mask="url(#dg)">
+        <path d="M9.285 8.301l-6.992 6.992a1 1 0 1 0 1.414 1.414l6.992-6.992"/>
+        <path d="M10.413 10l5.293-5.293a.999.999 0 0 0-1.414-1.414L8.999 8.586"/>
+      </g>
+    </g>
+  </svg>
+</svg>

@@ -141,6 +141,7 @@ add_task(async function() {
   do_get_profile(true);
   loadAddonManager(APP_ID, APP_NAME, APP_VERSION, PLATFORM_VERSION);
   Services.prefs.setBoolPref(TelemetryUtils.Preferences.TelemetryEnabled, true);
+  finishAddonManagerStartup();
   await TelemetryController.testSetup();
   if (runningInParent) {
     setParentScalars();

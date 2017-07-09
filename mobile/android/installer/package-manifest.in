@@ -395,8 +395,6 @@
 @BINPATH@/components/DownloadLegacy.js
 
 #ifndef MOZ_GECKOVIEW_JAR
-@BINPATH@/components/PresentationDeviceInfoManager.manifest
-@BINPATH@/components/PresentationDeviceInfoManager.js
 @BINPATH@/components/BuiltinProviders.manifest
 @BINPATH@/components/PresentationControlService.js
 @BINPATH@/components/PresentationNetworkHelper.js

@@ -293,7 +293,7 @@ RenderMinimap(ContainerT* aContainer, LayerManagerComposite* aManager,
     return;
   }
 
-  ParentLayerPoint scrollOffset = controller->GetCurrentAsyncScrollOffset(AsyncPanZoomController::RESPECT_FORCE_DISABLE);
+  ParentLayerPoint scrollOffset = controller->GetCurrentAsyncScrollOffset(AsyncPanZoomController::eForCompositing);
 
   // Options
   const int verticalPadding = 10;
@@ -483,7 +483,7 @@ RenderLayers(ContainerT* aContainer, LayerManagerComposite* aManager,
                                                    asyncTransform * aContainer->GetEffectiveTransform());
         if (AsyncPanZoomController* apzc = layer->GetAsyncPanZoomController(i - 1)) {
           asyncTransform =
-              apzc->GetCurrentAsyncTransformWithOverscroll(AsyncPanZoomController::RESPECT_FORCE_DISABLE).ToUnknownMatrix()
+              apzc->GetCurrentAsyncTransformWithOverscroll(AsyncPanZoomController::eForCompositing).ToUnknownMatrix()
             * asyncTransform;
         }
       }
@@ -633,7 +633,7 @@ ContainerRender(ContainerT* aContainer,
     for (LayerMetricsWrapper i(aContainer); i; i = i.GetFirstChild()) {
       if (AsyncPanZoomController* apzc = i.GetApzc()) {
         if (!apzc->GetAsyncTransformAppliedToContent()
-            && !AsyncTransformComponentMatrix(apzc->GetCurrentAsyncTransform(AsyncPanZoomController::NORMAL)).IsIdentity()) {
+            && !AsyncTransformComponentMatrix(apzc->GetCurrentAsyncTransform(AsyncPanZoomController::eForHitTesting)).IsIdentity()) {
           aManager->UnusedApzTransformWarning();
           break;
         }

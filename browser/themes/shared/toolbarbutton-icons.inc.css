@@ -36,6 +36,126 @@ toolbar[brighttext] .toolbarbutton-1 {
 }
 
 %ifdef MOZ_PHOTON_THEME
+%ifdef MOZ_PHOTON_ANIMATIONS
+#stop-reload-button[animate] > #reload-button > .toolbarbutton-icon,
+#stop-reload-button[animate] > #reload-button[displaystop] + #stop-button > .toolbarbutton-icon {
+  fill: transparent;
+}
+
+@keyframes reload-to-stop {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-738px);
+  }
+}
+
+@keyframes reload-to-stop-rtl {
+  from {
+    transform: scaleX(-1) translateX(0);
+  }
+  to {
+    transform: scaleX(-1) translateX(-738px);
+  }
+}
+
+@keyframes stop-to-reload {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-612px);
+  }
+}
+
+@keyframes stop-to-reload-rtl {
+  from {
+    transform: scaleX(-1) translateX(0);
+  }
+  to {
+    transform: scaleX(-1) translateX(-612px);
+  }
+}
+
+#reload-button > .toolbarbutton-animatable-box,
+#stop-button > .toolbarbutton-animatable-box {
+  position: fixed;
+  overflow: hidden;
+  margin-top: -10px; /* Vertically center the 20px tall animatable image */
+  /* Since .toolbarbutton-icon uses a different width than the animatable-box,
+     we need to set a padding relative to the difference in widths. */
+  margin-inline-start: calc((16px + 2 * var(--toolbarbutton-inner-padding) - 18px) / 2);
+  /* Set the min- and max- width and height of the box equal to that
+     of each frame of the SVG sprite. Setting the width and height via
+     the `width` and `height` CSS properties causes an assertion for
+     `inline-size less than zero: 'aContainingBlockISize >= 0'` (bug 1379332). */
+  min-width: 18px;
+  max-width: 18px;
+  min-height: 20px;
+  max-height: 20px;
+}
+
+#reload-button > .toolbarbutton-animatable-box > .toolbarbutton-animatable-image,
+#stop-button > .toolbarbutton-animatable-box > .toolbarbutton-animatable-image {
+  height: 20px; /* Height of each frame within the SVG sprite */
+  animation-fill-mode: forwards;
+  animation-iteration-count: 1;
+  list-style-image: none;
+}
+
+#stop-reload-button[animate] > #reload-button > .toolbarbutton-animatable-box > .toolbarbutton-animatable-image {
+  background-image: url("chrome://browser/skin/reload-to-stop.svg");
+  width: 756px;
+}
+
+#stop-reload-button[animate] > #reload-button:not([displaystop]) > .toolbarbutton-animatable-box > .toolbarbutton-animatable-image {
+  animation-name: reload-to-stop;
+}
+
+#stop-reload-button[animate] > #reload-button:not([displaystop]):-moz-locale-dir(rtl) > .toolbarbutton-animatable-box > .toolbarbutton-animatable-image {
+  animation-name: reload-to-stop-rtl;
+}
+
+#reload-button:not([displaystop]) > .toolbarbutton-animatable-box > .toolbarbutton-animatable-image {
+  animation-timing-function: steps(41);
+  animation-duration: 684ms;
+}
+
+#stop-reload-button[animate] > #reload-button[displaystop] + #stop-button > .toolbarbutton-animatable-box > .toolbarbutton-animatable-image {
+  background-image: url("chrome://browser/skin/stop-to-reload.svg");
+  width: 630px;
+}
+
+#stop-reload-button[animate] > #reload-button[displaystop] + #stop-button > .toolbarbutton-animatable-box > .toolbarbutton-animatable-image {
+  animation-name: stop-to-reload;
+}
+
+#stop-reload-button[animate] > #reload-button[displaystop] + #stop-button:-moz-locale-dir(rtl) > .toolbarbutton-animatable-box > .toolbarbutton-animatable-image {
+  animation-name: stop-to-reload-rtl;
+}
+
+#reload-button[displaystop] + #stop-button > .toolbarbutton-animatable-box > .toolbarbutton-animatable-image {
+  animation-timing-function: steps(34);
+  animation-duration: 600ms;
+}
+
+#reload-button > .toolbarbutton-animatable-box > .toolbarbutton-animatable-image {
+  transform: translateX(-738px);
+}
+
+#reload-button:-moz-locale-dir(rtl) > .toolbarbutton-animatable-box > .toolbarbutton-animatable-image {
+  transform: scaleX(-1) translateX(-738px);
+}
+
+#reload-button[displaystop] + #stop-button > .toolbarbutton-animatable-box > .toolbarbutton-animatable-image {
+  transform: translateX(-612px);
+}
+
+#reload-button[displaystop] + #stop-button:-moz-locale-dir(rtl) > .toolbarbutton-animatable-box > .toolbarbutton-animatable-image {
+  transform: scaleX(-1) translateX(-612px);
+}
+%endif
 #reload-button {
   list-style-image: url("chrome://browser/skin/reload.svg");
 }

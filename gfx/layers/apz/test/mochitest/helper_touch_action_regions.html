@@ -71,7 +71,7 @@ function chromeTouchEventCounter(operation) {
   }
 
   if (typeof chromeTouchEventCounter.chromeHelper == 'undefined') {
-    // This is the first time getSnapshot is being called; do initialization
+    // This is the first time chromeTouchEventCounter is being called; do initialization
     chromeTouchEventCounter.chromeHelper = SpecialPowers.loadChromeScript(chromeProcessCounter);
     SimpleTest.registerCleanupFunction(function() { chromeTouchEventCounter.chromeHelper.destroy() });
   }
@@ -182,6 +182,7 @@ function* test(testDriver) {
   var rect = rectRelativeToScreen(scroller);
   var lastSnapshot = getSnapshot(rect);
   ok(true, "Got baseline snapshot");
+  var numDifferentSnapshotPairs = 0;
 
   yield; // this will tell the chrome process to synthesize the touchstart event
          // and then we wait to make sure it got processed:
@@ -192,16 +193,24 @@ function* test(testDriver) {
     yield;
     ok(waitFor('touchmove', i), "Touchmove processed in chrome process");
 
+    // Take a snapshot after each touch move event. This forces
+    // a composite each time, even we don't get a vsync in this
+    // interval.
     var snapshot = getSnapshot(rect);
-    if (i == 1) {
-      // The first touchmove is consumed to get us into the panning state, so
-      // no actual panning occurs
-      ok(lastSnapshot == snapshot, "Snapshot 1 was the same as baseline");
-    } else {
-      ok(lastSnapshot != snapshot, "Snapshot " + i + " was different from the previous one");
+    if (lastSnapshot != snapshot) {
+      numDifferentSnapshotPairs += 1;
     }
     lastSnapshot = snapshot;
   }
+
+  // Check that the snapshot has changed since the baseline, indicating
+  // that the touch events caused async scrolling. Note that, since we
+  // orce a composite after each touch event, even if there is a frame
+  // of delay between APZ processing a touch event and the compositor
+  // applying the async scroll (bug 1375949), by the end of the gesture
+  // the snapshot should have changed.
+  ok(numDifferentSnapshotPairs > 0,
+     "The number of different snapshot pairs was " + numDifferentSnapshotPairs);
 
   // Wait for the touchend as well, just for good form
   yield;
