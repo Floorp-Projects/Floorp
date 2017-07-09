@@ -8,6 +8,12 @@ html[details] {
   background-color: var(--color_about_item);
 }
 
+iframe {
+  padding: 0;
+  margin: 0;
+  border:none;
+}
+
 a {
   text-decoration: none;
   color: #0096DD;
@@ -23,6 +29,10 @@ a:active {
 
 .details > div {
   display: inline;
+}
+
+.hidden {
+  display: none;
 }
 
 .version {
@@ -57,12 +67,6 @@ a:active {
   font-weight: bold;
   padding: 0.5em;
   width: 100%;
-}
-
-.options-header {
-  font-weight: bold;
-  text-transform: uppercase;
-  margin-top: 1em;
 }
 
 .addon-item[isDisabled="true"] .options-header,
@@ -324,10 +328,6 @@ div[isDisabled="true"][opType="needs-uninstall"],
 div[opType="needs-install"] .hide-on-install,
 div[opType="needs-enable"] .hide-on-enable,
 div[opType="needs-disable"] .hide-on-disable {
-  display: none;
-}
-
-#addons-list, #addons-details {
   display: none;
 }
 

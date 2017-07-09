@@ -1,0 +1,4 @@
+[build]
+args = [
+    @BINDGEN_CFLAGS@
+]

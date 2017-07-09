@@ -87,6 +87,9 @@
         "perf-reftest-e10s": {
             "tests": ["bloom_basic"]
         },
+        "perf-reftest-singletons-e10s": {
+            "tests": ["bloom_basic_singleton"]
+        },
         "tp5o": {
             "tests": ["tp5o"],
             "pagesets_name": "tp5n.zip",

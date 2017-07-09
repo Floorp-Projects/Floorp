@@ -135,8 +135,9 @@
 #onboarding-tour-list > li.onboarding-complete::before {
   content: url("img/icons_tour-complete.svg");
   position: relative;
-  left: 6px;
+  offset-inline-start: 3px;
   top: -10px;
+  float: inline-start;
 }
 
 #onboarding-tour-list > li.onboarding-complete {

@@ -50,7 +50,8 @@ static mut PANIC_REASON: Option<(*const str, usize)> = None;
 ///    overwrite `gMozCrashReason` with an unhelpful string.
 #[no_mangle]
 pub extern "C" fn install_rust_panic_hook() {
-    panic::set_hook(Box::new(|info| {
+    let default_hook = panic::take_hook();
+    panic::set_hook(Box::new(move |info| {
         // Try to handle &str/String payloads, which should handle 99% of cases.
         let payload = info.payload();
         // We'll hold a raw *const str here, but it will be OK because
@@ -65,6 +66,9 @@ pub extern "C" fn install_rust_panic_hook() {
             // in practice.
             println!("Unhandled panic payload!");
         }
+        // Fall through to the default hook so we still print the reason and
+        // backtrace to the console.
+        default_hook(info);
     }));
 }
 

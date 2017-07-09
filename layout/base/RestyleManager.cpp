@@ -155,8 +155,7 @@ RestyleManager::RestyleForInsertOrChange(nsINode* aContainer,
 
   NS_ASSERTION(!aChild->IsRootOfAnonymousSubtree(),
                "anonymous nodes should not be in child lists");
-  uint32_t selectorFlags =
-    container ? (container->GetFlags() & NODE_ALL_SELECTOR_FLAGS) : 0;
+  uint32_t selectorFlags = container->GetFlags() & NODE_ALL_SELECTOR_FLAGS;
   if (selectorFlags == 0)
     return;
 
@@ -250,8 +249,7 @@ RestyleManager::ContentRemoved(nsINode* aContainer,
     MOZ_ASSERT(aOldChild->GetProperty(nsGkAtoms::restylableAnonymousNode),
                "anonymous nodes should not be in child lists (bug 439258)");
   }
-  uint32_t selectorFlags =
-    container ? (container->GetFlags() & NODE_ALL_SELECTOR_FLAGS) : 0;
+  uint32_t selectorFlags = container->GetFlags() & NODE_ALL_SELECTOR_FLAGS;
   if (selectorFlags == 0)
     return;
 

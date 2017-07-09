@@ -273,6 +273,13 @@ typedef GenericFlingAnimation FlingAnimation;
  * NOTE: Should not be set to anything
  * other than 0.0 for Android except for tests to disable flings.
  *
+ * \li\b apz.frame_delay.enabled
+ * If this is set to true, changes to the async scroll offset and async zoom
+ * will not be immediately reflected in GetCurrentAsyncTransform() when called
+ * with |AsyncTransformConsumer::eForCompositing|. Rather, the transform will
+ * reflect the value of the async scroll offset and async zoom at the last time
+ * SampleCompositedAsyncTransform() was called.
+ *
  * \li\b apz.max_velocity_inches_per_ms
  * Maximum velocity.  Velocity will be capped at this value if a faster fling
  * occurs.  Negative values indicate unlimited velocity.\n
@@ -287,6 +294,10 @@ typedef GenericFlingAnimation FlingAnimation;
  * Minimum amount of speed along an axis before we switch to "skate" multipliers
  * rather than using the "stationary" multipliers.\n
  * Units: CSS pixels per millisecond
+ *
+ * \li\b apz.one_touch_pinch.enabled
+ * Whether or not the "one-touch-pinch" gesture (for zooming with one finger)
+ * is enabled or not.
  *
  * \li\b apz.overscroll.enabled
  * Pref that enables overscrolling. If this is disabled, excess scroll that
@@ -3218,6 +3229,12 @@ bool AsyncPanZoomController::UpdateAnimation(const TimeStamp& aSampleTime,
   if (mLastSampleTime == aSampleTime) {
     return false;
   }
+
+  // Sample the composited async transform once per composite. Note that we
+  // call this after the |mLastSampleTime == aSampleTime| check, to ensure
+  // it's only called once per APZC on each composite.
+  SampleCompositedAsyncTransform();
+
   TimeDuration sampleTimeDelta = aSampleTime - mLastSampleTime;
   mLastSampleTime = aSampleTime;
 
@@ -3242,11 +3259,11 @@ bool AsyncPanZoomController::UpdateAnimation(const TimeStamp& aSampleTime,
 }
 
 AsyncTransformComponentMatrix
-AsyncPanZoomController::GetOverscrollTransform(AsyncMode aMode) const
+AsyncPanZoomController::GetOverscrollTransform(AsyncTransformConsumer aMode) const
 {
   ReentrantMonitorAutoEnter lock(mMonitor);
 
-  if (aMode == RESPECT_FORCE_DISABLE && mScrollMetadata.IsApzForceDisabled()) {
+  if (aMode == eForCompositing && mScrollMetadata.IsApzForceDisabled()) {
     return AsyncTransformComponentMatrix();
   }
 
@@ -3311,35 +3328,35 @@ bool AsyncPanZoomController::AdvanceAnimations(const TimeStamp& aSampleTime)
 }
 
 ParentLayerPoint
-AsyncPanZoomController::GetCurrentAsyncScrollOffset(AsyncMode aMode) const
+AsyncPanZoomController::GetCurrentAsyncScrollOffset(AsyncTransformConsumer aMode) const
 {
   ReentrantMonitorAutoEnter lock(mMonitor);
 
-  if (aMode == RESPECT_FORCE_DISABLE && mScrollMetadata.IsApzForceDisabled()) {
+  if (aMode == eForCompositing && mScrollMetadata.IsApzForceDisabled()) {
     return mLastContentPaintMetrics.GetScrollOffset() * mLastContentPaintMetrics.GetZoom();
   }
 
-  return (mFrameMetrics.GetScrollOffset() + mTestAsyncScrollOffset)
-      * mFrameMetrics.GetZoom() * mTestAsyncZoom.scale;
+  return (GetEffectiveScrollOffset(aMode) + mTestAsyncScrollOffset)
+      * GetEffectiveZoom(aMode) * mTestAsyncZoom.scale;
 }
 
 CSSPoint
-AsyncPanZoomController::GetCurrentAsyncScrollOffsetInCssPixels(AsyncMode aMode) const {
+AsyncPanZoomController::GetCurrentAsyncScrollOffsetInCssPixels(AsyncTransformConsumer aMode) const {
   ReentrantMonitorAutoEnter lock(mMonitor);
 
-  if (aMode == RESPECT_FORCE_DISABLE && mScrollMetadata.IsApzForceDisabled()) {
+  if (aMode == eForCompositing && mScrollMetadata.IsApzForceDisabled()) {
     return mLastContentPaintMetrics.GetScrollOffset();
   }
 
-  return mFrameMetrics.GetScrollOffset() + mTestAsyncScrollOffset;
+  return GetEffectiveScrollOffset(aMode) + mTestAsyncScrollOffset;
 }
 
 AsyncTransform
-AsyncPanZoomController::GetCurrentAsyncTransform(AsyncMode aMode) const
+AsyncPanZoomController::GetCurrentAsyncTransform(AsyncTransformConsumer aMode) const
 {
   ReentrantMonitorAutoEnter lock(mMonitor);
 
-  if (aMode == RESPECT_FORCE_DISABLE && mScrollMetadata.IsApzForceDisabled()) {
+  if (aMode == eForCompositing && mScrollMetadata.IsApzForceDisabled()) {
     return AsyncTransform();
   }
 
@@ -3348,7 +3365,7 @@ AsyncPanZoomController::GetCurrentAsyncTransform(AsyncMode aMode) const
     lastPaintScrollOffset = mLastContentPaintMetrics.GetScrollOffset();
   }
 
-  CSSPoint currentScrollOffset = mFrameMetrics.GetScrollOffset() +
+  CSSPoint currentScrollOffset = GetEffectiveScrollOffset(aMode) +
     mTestAsyncScrollOffset;
 
   // If checkerboarding has been disallowed, clamp the scroll position to stay
@@ -3369,16 +3386,46 @@ AsyncPanZoomController::GetCurrentAsyncTransform(AsyncMode aMode) const
     }
   }
 
-  ParentLayerPoint translation = (currentScrollOffset - lastPaintScrollOffset)
-                               * mFrameMetrics.GetZoom() * mTestAsyncZoom.scale;
+  CSSToParentLayerScale2D effectiveZoom = GetEffectiveZoom(aMode);
 
+  ParentLayerPoint translation = (currentScrollOffset - lastPaintScrollOffset)
+                               * effectiveZoom * mTestAsyncZoom.scale;
+
+  LayerToParentLayerScale compositedAsyncZoom =
+      (effectiveZoom / mFrameMetrics.LayersPixelsPerCSSPixel()).ToScaleFactor();
   return AsyncTransform(
-    LayerToParentLayerScale(mFrameMetrics.GetAsyncZoom().scale * mTestAsyncZoom.scale),
+    LayerToParentLayerScale(compositedAsyncZoom.scale * mTestAsyncZoom.scale),
     -translation);
 }
 
+CSSPoint
+AsyncPanZoomController::GetEffectiveScrollOffset(AsyncTransformConsumer aMode) const
+{
+  if (gfxPrefs::APZFrameDelayEnabled() && aMode == eForCompositing) {
+    return mCompositedScrollOffset;
+  }
+  return mFrameMetrics.GetScrollOffset();
+}
+
+CSSToParentLayerScale2D
+AsyncPanZoomController::GetEffectiveZoom(AsyncTransformConsumer aMode) const
+{
+  if (gfxPrefs::APZFrameDelayEnabled() && aMode == eForCompositing) {
+    return mCompositedZoom;
+  }
+  return mFrameMetrics.GetZoom();
+}
+
+void
+AsyncPanZoomController::SampleCompositedAsyncTransform()
+{
+  ReentrantMonitorAutoEnter lock(mMonitor);
+  mCompositedScrollOffset = mFrameMetrics.GetScrollOffset();
+  mCompositedZoom = mFrameMetrics.GetZoom();
+}
+
 AsyncTransformComponentMatrix
-AsyncPanZoomController::GetCurrentAsyncTransformWithOverscroll(AsyncMode aMode) const
+AsyncPanZoomController::GetCurrentAsyncTransformWithOverscroll(AsyncTransformConsumer aMode) const
 {
   return AsyncTransformComponentMatrix(GetCurrentAsyncTransform(aMode))
        * GetOverscrollTransform(aMode);
@@ -3628,6 +3675,9 @@ void AsyncPanZoomController::NotifyLayersUpdated(const ScrollMetadata& aScrollMe
     mExpectedGeckoMetrics = aLayerMetrics;
     ShareCompositorFrameMetrics();
 
+    mCompositedScrollOffset = mFrameMetrics.GetScrollOffset();
+    mCompositedZoom = mFrameMetrics.GetZoom();
+
     if (mFrameMetrics.GetDisplayPortMargins() != ScreenMargin()) {
       // A non-zero display port margin here indicates a displayport has
       // been set by a previous APZC for the content at this guid. The
@@ -3659,11 +3709,14 @@ void AsyncPanZoomController::NotifyLayersUpdated(const ScrollMetadata& aScrollMe
         needContentRepaint = true;
       }
       mFrameMetrics.ZoomBy(totalResolutionChange / presShellResolutionChange);
+      mCompositedZoom.xScale *= (totalResolutionChange / presShellResolutionChange).width;
+      mCompositedZoom.yScale *= (totalResolutionChange / presShellResolutionChange).height;
     } else {
       // Take the new zoom as either device scale or composition width or
       // viewport size got changed (e.g. due to orientation change, or content
       // changing the meta-viewport tag).
       mFrameMetrics.SetZoom(aLayerMetrics.GetZoom());
+      mCompositedZoom = aLayerMetrics.GetZoom();
       mFrameMetrics.SetDevPixelsPerCSSPixel(aLayerMetrics.GetDevPixelsPerCSSPixel());
     }
     bool scrollableRectChanged = false;
@@ -3702,6 +3755,7 @@ void AsyncPanZoomController::NotifyLayersUpdated(const ScrollMetadata& aScrollMe
       // correct this we need to update mExpectedGeckoMetrics to be the
       // last thing we know was painted by Gecko.
       mFrameMetrics.CopyScrollInfoFrom(aLayerMetrics);
+      mCompositedScrollOffset = mFrameMetrics.GetScrollOffset();
       mExpectedGeckoMetrics = aLayerMetrics;
 
       // Cancel the animation (which might also trigger a repaint request)

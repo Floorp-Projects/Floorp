@@ -21,7 +21,7 @@ using mozilla::UniquePtr;
 // principals to the system principals.
 nsresult
 ReadCachedScript(StartupCache* cache, nsACString& uri, JSContext* cx,
-                 nsIPrincipal* systemPrincipal, MutableHandleScript scriptp)
+                 MutableHandleScript scriptp)
 {
     UniquePtr<char[]> buf;
     uint32_t len;
@@ -45,9 +45,9 @@ ReadCachedScript(StartupCache* cache, nsACString& uri, JSContext* cx,
 
 nsresult
 WriteCachedScript(StartupCache* cache, nsACString& uri, JSContext* cx,
-                  nsIPrincipal* systemPrincipal, HandleScript script)
+                  HandleScript script)
 {
-    MOZ_ASSERT(JS_GetScriptPrincipals(script) == nsJSPrincipals::get(systemPrincipal));
+    MOZ_ASSERT(nsJSPrincipals::get(JS_GetScriptPrincipals(script))->GetIsSystemPrincipal());
 
     JS::TranscodeBuffer buffer;
     JS::TranscodeResult code = JS::EncodeScript(cx, buffer, script);

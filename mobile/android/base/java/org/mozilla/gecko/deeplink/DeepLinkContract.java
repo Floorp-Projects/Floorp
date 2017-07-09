@@ -19,11 +19,13 @@ public class DeepLinkContract {
     public static final String LINK_BOOKMARK_LIST = "bookmark_list";
     public static final String LINK_HISTORY_LIST = "history_list";
     public static final String LINK_SIGN_UP = "sign_up";
+    public static final String LINK_PREFERENCES_GENERAL = "preferences_general";
     public static final String LINK_PREFERENCES = "preferences";
     public static final String LINK_PREFERENCES_PRIAVACY = "preferences_privacy";
     public static final String LINK_PREFERENCES_SEARCH = "preferences_search";
     public static final String LINK_PREFERENCES_NOTIFICATIONS = "preferences_notifications";
     public static final String LINK_PREFERENCES_ACCESSIBILITY = "preferences_accessibility";
+    public static final String LINK_PREFERENCES_HOME = "preferences_home";
 
     public static final String ACCOUNTS_TOKEN_PARAM = "signin";
     public static final String ACCOUNTS_ENTRYPOINT_PARAM = "entrypoint";

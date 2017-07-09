@@ -108,6 +108,14 @@ public class GeckoPreferenceFragment extends PreferenceFragment {
             return getString(R.string.settings_title);
         }
 
+        if (res == R.xml.preferences_general) {
+            return getString(R.string.pref_category_general);
+        }
+
+        if (res == R.xml.preferences_home) {
+            return getString((R.string.pref_category_home));
+        }
+
         // We can launch this category from the Data Reporting notification.
         if (res == R.xml.preferences_privacy) {
             return getString(R.string.pref_category_privacy_short);
