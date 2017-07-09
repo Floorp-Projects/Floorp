@@ -33,13 +33,19 @@ const TESTS = [
 ];
 
 for (const test of TESTS) {
-  // TODO(emilio): We don't as of right now, but we could also scan the
-  // stylesheet when removed if needed and test this too.
   target.innerHTML = test.selector + " { color: green; }";
-  target.disabled = true;
+
   document.body.offsetWidth;
   const prevGeneration = utils.restyleGeneration;
+
+  target.disabled = true;
+
+  document.body.offsetWidth;
+  (test.restyle ? isnot : is)(utils.restyleGeneration, prevGeneration,
+     `Stylesheet removal with ${test.selector} should ${test.restyle ? "have" : "not have"} caused a restyle`);
+
   target.disabled = false; // Make the stylesheet effective.
+
   let element = document.querySelector(test.selector);
   if (element) {
     is(test.restyle, true, "How could we not expect a restyle?");
@@ -47,7 +53,7 @@ for (const test of TESTS) {
        "Element style should've changed appropriately");
   }
   document.body.offsetWidth;
-  is(test.restyle, utils.restyleGeneration != prevGeneration,
+  (test.restyle ? isnot : is)(utils.restyleGeneration, prevGeneration,
      `Stylesheet addition with ${test.selector} should ${test.restyle ? "have" : "not have"} caused a restyle`);
 }
 
