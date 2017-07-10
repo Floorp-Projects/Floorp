@@ -233,6 +233,12 @@ public:
     mBodySize = aBodySize;
   }
 
+  int64_t
+  GetPaddingSize();
+
+  void
+  SetPaddingSize(int64_t aPaddingSize);
+
   void
   InitChannelInfo(nsIChannel* aChannel)
   {
@@ -301,8 +307,10 @@ private:
   RefPtr<InternalHeaders> mHeaders;
   nsCOMPtr<nsIInputStream> mBody;
   int64_t mBodySize;
+  int64_t mPaddingSize;
 public:
   static const int64_t UNKNOWN_BODY_SIZE = -1;
+  static const int64_t UNKNOWN_PADDING_SIZE = -1;
 private:
   ChannelInfo mChannelInfo;
   UniquePtr<mozilla::ipc::PrincipalInfo> mPrincipalInfo;
