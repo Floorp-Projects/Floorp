@@ -28,15 +28,7 @@ TEST(NativeXMLHttpRequest, Test)
   NS_NAMED_LITERAL_CSTRING(testURL, TEST_URL);
   const nsAString& empty = EmptyString();
 
-  nsCOMPtr<nsIScriptSecurityManager> secman =
-    do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
-  ASSERT_TRUE(NS_SUCCEEDED(rv)) << "Couldn't get script security manager";
-
-  nsCOMPtr<nsIPrincipal> systemPrincipal;
-  rv = secman->GetSystemPrincipal(getter_AddRefs(systemPrincipal));
-  ASSERT_TRUE(NS_SUCCEEDED(rv)) << "Couldn't get system principal";
-
-  rv = xhr->Init(systemPrincipal, nullptr, nullptr, nullptr);
+  rv = xhr->Init(nsContentUtils::GetSystemPrincipal(), nullptr, nullptr, nullptr);
   ASSERT_TRUE(NS_SUCCEEDED(rv)) << "Couldn't initialize the XHR";
 
   rv = xhr->Open(getString, testURL, false, empty, empty);
