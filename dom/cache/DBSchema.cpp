@@ -35,7 +35,7 @@ namespace db {
 const int32_t kFirstShippedSchemaVersion = 15;
 namespace {
 // Update this whenever the DB schema is changed.
-const int32_t kLatestSchemaVersion = 25;
+const int32_t kLatestSchemaVersion = 26;
 // ---------
 // The following constants define the SQL schema.  These are defined in the
 // same order the SQL should be executed in CreateOrMigrateSchema().  They are
@@ -101,7 +101,8 @@ const char* const kTableEntries =
     "request_redirect INTEGER NOT NULL, "
     "request_referrer_policy INTEGER NOT NULL, "
     "request_integrity TEXT NOT NULL, "
-    "request_url_fragment TEXT NOT NULL"
+    "request_url_fragment TEXT NOT NULL, "
+    "response_padding_size INTEGER NULL "
     // New columns must be added at the end of table to migrate and
     // validate properly.
   ")";
@@ -2482,6 +2483,7 @@ nsresult MigrateFrom21To22(mozIStorageConnection* aConn, bool& aRewriteSchema);
 nsresult MigrateFrom22To23(mozIStorageConnection* aConn, bool& aRewriteSchema);
 nsresult MigrateFrom23To24(mozIStorageConnection* aConn, bool& aRewriteSchema);
 nsresult MigrateFrom24To25(mozIStorageConnection* aConn, bool& aRewriteSchema);
+nsresult MigrateFrom25To26(mozIStorageConnection* aConn, bool& aRewriteSchema);
 // Configure migration functions to run for the given starting version.
 Migration sMigrationList[] = {
   Migration(15, MigrateFrom15To16),
@@ -2494,6 +2496,7 @@ Migration sMigrationList[] = {
   Migration(22, MigrateFrom22To23),
   Migration(23, MigrateFrom23To24),
   Migration(24, MigrateFrom24To25),
+  Migration(25, MigrateFrom25To26),
 };
 uint32_t sMigrationListLength = sizeof(sMigrationList) / sizeof(Migration);
 nsresult
@@ -3027,6 +3030,33 @@ nsresult MigrateFrom24To25(mozIStorageConnection* aConn, bool& aRewriteSchema)
   // The only change between 24 and 25 was a new nsIContentPolicy type.
   nsresult rv = aConn->SetSchemaVersion(25);
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+  return rv;
+}
+
+nsresult MigrateFrom25To26(mozIStorageConnection* aConn, bool& aRewriteSchema)
+{
+  MOZ_ASSERT(!NS_IsMainThread());
+  MOZ_DIAGNOSTIC_ASSERT(aConn);
+
+  // Add the response_padding_size column.
+  // Note: only opaque repsonse should be non-null interger.
+  nsresult rv = aConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "ALTER TABLE entries "
+    "ADD COLUMN response_padding_size INTEGER NULL "
+  ));
+  if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+
+  aConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "UPDATE entries SET response_padding_size = 0"
+    "WHERE response_type = 4" // opaque response
+  ));
+  if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+
+  rv = aConn->SetSchemaVersion(26);
+  if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+
+  aRewriteSchema = true;
+
   return rv;
 }
 
