@@ -914,7 +914,11 @@ XPCConvert::JSObject2NativeInterface(void** dest, HandleObject src,
         // because the caller may explicitly want to create the XPCWrappedJS
         // around a security wrapper. XBL does this with Xrays from the XBL
         // scope - see nsBindingManager::GetBindingImplementation.
-        JSObject* inner = js::CheckedUnwrap(src, /* stopAtWindowProxy = */ false);
+        //
+        // It's also very important that "inner" be rooted here.
+        RootedObject inner(cx,
+                           js::CheckedUnwrap(src,
+                                             /* stopAtWindowProxy = */ false));
         if (!inner) {
             if (pErr)
                 *pErr = NS_ERROR_XPC_SECURITY_MANAGER_VETO;
