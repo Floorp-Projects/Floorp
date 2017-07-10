@@ -7,6 +7,15 @@
 // The test extension uses an insecure update url.
 Services.prefs.setBoolPref(PREF_EM_CHECK_UPDATE_SECURITY, false);
 
+Components.utils.import("resource://gre/modules/AppConstants.jsm");
+
+if (AppConstants.platform == "win" && AppConstants.DEBUG) {
+  // Shutdown timing is flaky in this test, and remote extensions
+  // sometimes wind up leaving the XPI locked at the point when we try
+  // to remove it.
+  Services.prefs.setBoolPref("extensions.webextensions.remote", false);
+}
+
 /* globals browser*/
 
 const profileDir = gProfD.clone();

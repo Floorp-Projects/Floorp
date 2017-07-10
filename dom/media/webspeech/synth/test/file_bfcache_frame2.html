@@ -1,0 +1,14 @@
+<html>
+<script>
+var frameUnloaded = function() {
+  var u = new SpeechSynthesisUtterance('hi');
+  u.addEventListener('end', function () {
+    parent.ok(true, 'Successfully spoke utterance from new frame.');
+    parent.onDone();
+  });
+  speechSynthesis.speak(u);
+};
+</script>
+
+<body onpageshow="frameUnloaded()"></body></html>
+
