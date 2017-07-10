@@ -237,11 +237,5 @@ FixedSizeSmallShmemSectionAllocator::ShrinkShmemSectionHeap()
   }
 }
 
-int32_t
-ClientIPCAllocator::GetMaxTextureSize() const
-{
-  return gfxPrefs::MaxTextureSize();
-}
-
 } // namespace layers
 } // namespace mozilla
