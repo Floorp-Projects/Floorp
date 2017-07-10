@@ -642,7 +642,8 @@ nsComputedDOMStyle::DoGetStyleContextNoFlush(Element* aElement,
           } else {
             RefPtr<ServoComputedValues> baseComputedValues =
               presContext->StyleSet()->AsServo()->
-                GetBaseComputedValuesForElement(aElement, pseudoType);
+                GetBaseComputedValuesForElement(
+                    aElement, pseudoType, result->ComputedValues());
             return ServoStyleContext::Create(nullptr, presContext, aPseudo,
                                              pseudoType, baseComputedValues.forget());
           }
@@ -677,7 +678,8 @@ nsComputedDOMStyle::DoGetStyleContextNoFlush(Element* aElement,
     }
 
     RefPtr<ServoComputedValues> baseComputedValues =
-      servoSet->GetBaseComputedValuesForElement(aElement, pseudoType);
+      servoSet->GetBaseComputedValuesForElement(
+          aElement, pseudoType, result->ComputedValues());
     return ServoStyleContext::Create(nullptr, presContext, aPseudo,
                                      pseudoType, baseComputedValues.forget());
   }
