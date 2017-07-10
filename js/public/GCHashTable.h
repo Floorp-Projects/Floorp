@@ -7,6 +7,8 @@
 #ifndef GCHashTable_h
 #define GCHashTable_h
 
+#include "mozilla/Maybe.h"
+
 #include "js/GCPolicyAPI.h"
 #include "js/HashTable.h"
 #include "js/RootingAPI.h"
@@ -388,8 +390,13 @@ class WeakCache<GCHashMap<Key, Value, HashPolicy, AllocPolicy, MapSweepPolicy>>
         return map.needsSweep();
     }
 
-    void sweep() override {
-        return map.sweep();
+    size_t sweep() override {
+        if (!this->initialized())
+            return 0;
+
+        size_t steps = map.count();
+        map.sweep();
+        return steps;
     }
 
     using Lookup = typename MainMap::Lookup;
@@ -456,41 +463,143 @@ class WeakCache<GCHashSet<T, HashPolicy, AllocPolicy>>
     using Self = WeakCache<Set>;
 
     Set set;
+    bool needsBarrier;
 
   public:
+    using Entry = typename Set::Entry;
+
     template <typename... Args>
     explicit WeakCache(Zone* zone, Args&&... args)
-      : WeakCacheBase(zone), set(mozilla::Forward<Args>(args)...)
+      : WeakCacheBase(zone), set(mozilla::Forward<Args>(args)...), needsBarrier(false)
     {}
     template <typename... Args>
     explicit WeakCache(JSRuntime* rt, Args&&... args)
-      : WeakCacheBase(rt), set(mozilla::Forward<Args>(args)...)
+      : WeakCacheBase(rt), set(mozilla::Forward<Args>(args)...), needsBarrier(false)
     {}
 
-    void sweep() override {
+    size_t sweep() override {
+        if (!this->initialized())
+            return 0;
+
+        size_t steps = set.count();
         set.sweep();
+        return steps;
     }
 
     bool needsSweep() override {
         return set.needsSweep();
     }
 
-    // Const interface.
+    bool setNeedsIncrementalBarrier(bool needs) override {
+        MOZ_ASSERT(needsBarrier != needs);
+        needsBarrier = needs;
+        return true;
+    }
 
+    bool needsIncrementalBarrier() const override {
+        return needsBarrier;
+    }
+
+  private:
+   static bool entryNeedsSweep(const Entry& prior) {
+        Entry entry(prior);
+        bool result = GCPolicy<T>::needsSweep(&entry);
+        MOZ_ASSERT(prior == entry); // We shouldn't update here.
+        return result;
+    }
+
+  public:
     using Lookup = typename Set::Lookup;
-    using AddPtr = typename Set::AddPtr;
-    using Entry = typename Set::Entry;
     using Ptr = typename Set::Ptr;
-    using Range = typename Set::Range;
+    using AddPtr = typename Set::AddPtr;
 
-    bool initialized() const                   { return set.initialized(); }
-    Ptr lookup(const Lookup& l) const          { return set.lookup(l); }
-    AddPtr lookupForAdd(const Lookup& l) const { return set.lookupForAdd(l); }
-    Range all() const                          { return set.all(); }
-    bool empty() const                         { return set.empty(); }
-    uint32_t count() const                     { return set.count(); }
-    size_t capacity() const                    { return set.capacity(); }
-    bool has(const Lookup& l) const            { return set.lookup(l).found(); }
+    struct Range
+    {
+        explicit Range(const typename Set::Range& r)
+          : range(r)
+        {
+            settle();
+        }
+        Range() {}
+
+        bool empty() const { return range.empty(); }
+        const Entry& front() const { return range.front(); }
+
+        void popFront() {
+            range.popFront();
+            settle();
+        }
+
+      private:
+        typename Set::Range range;
+
+        void settle() {
+            while (!empty() && entryNeedsSweep(front()))
+                popFront();
+        }
+    };
+
+    struct Enum : public Set::Enum
+    {
+        explicit Enum(Self& cache)
+          : Set::Enum(cache.set)
+        {
+            // This operation is not allowed while barriers are in place as we
+            // may also need to enumerate the set for sweeping.
+            MOZ_ASSERT(!cache.needsBarrier);
+        }
+    };
+
+    bool initialized() const {
+        return set.initialized();
+    }
+
+    Ptr lookup(const Lookup& l) const {
+        Ptr ptr = set.lookup(l);
+        if (needsBarrier && ptr && entryNeedsSweep(*ptr)) {
+            const_cast<Set&>(set).remove(ptr);
+            return Ptr();
+        }
+        return ptr;
+    }
+
+    AddPtr lookupForAdd(const Lookup& l) const {
+        AddPtr ptr = set.lookupForAdd(l);
+        if (needsBarrier && ptr && entryNeedsSweep(*ptr)) {
+            const_cast<Set&>(set).remove(ptr);
+            return set.lookupForAdd(l);
+        }
+        return ptr;
+    }
+
+    Range all() const {
+        return Range(set.all());
+    }
+
+    bool empty() const {
+        // This operation is not currently allowed while barriers are in place
+        // as it would require iterating the set and the caller expects a
+        // constant time operation.
+        MOZ_ASSERT(!needsBarrier);
+        return set.empty();
+    }
+
+    uint32_t count() const {
+        // This operation is not currently allowed while barriers are in place
+        // as it would require iterating the set and the caller expects a
+        // constant time operation.
+        MOZ_ASSERT(!needsBarrier);
+        return set.count();
+    }
+
+    size_t capacity() const {
+        return set.capacity();
+    }
+
+    bool has(const Lookup& l) const {
+        return lookup(l).found();
+    }
+
     size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const {
         return set.sizeOfExcludingThis(mallocSizeOf);
     }
@@ -498,15 +607,37 @@ class WeakCache<GCHashSet<T, HashPolicy, AllocPolicy>>
         return mallocSizeOf(this) + set.sizeOfExcludingThis(mallocSizeOf);
     }
 
-    // Non-const interface.
+    bool init(uint32_t len = 16) {
+        MOZ_ASSERT(!needsBarrier);
+        return set.init(len);
+    }
 
-    struct Enum : public Set::Enum { explicit Enum(Self& o) : Set::Enum(o.set) {} };
+    void clear() {
+        // This operation is not currently allowed while barriers are in place
+        // since it doesn't make sense to clear a cache while it is being swept.
+        MOZ_ASSERT(!needsBarrier);
+        set.clear();
+    }
 
-    bool init(uint32_t len = 16) { return set.init(len); }
-    void clear()                 { set.clear(); }
-    void finish()                { set.finish(); }
-    void remove(Ptr p)           { set.remove(p); }
-    void remove(const Lookup& l) { set.remove(l); }
+    void finish() {
+        // This operation is not currently allowed while barriers are in place
+        // since it doesn't make sense to destroy a cache while it is being swept.
+        MOZ_ASSERT(!needsBarrier);
+        set.finish();
+    }
+
+    void remove(Ptr p) {
+        // This currently supports removing entries during incremental
+        // sweeping. If we allow these tables to be swept incrementally this may
+        // no longer be possible.
+        set.remove(p);
+    }
+
+    void remove(const Lookup& l) {
+        Ptr p = lookup(l);
+        if (p)
+            remove(p);
+    }
 
     template<typename TInput>
     bool add(AddPtr& p, TInput&& t) {
