@@ -15,7 +15,7 @@ template<class T> struct already_AddRefed;
 /**
  * This structure precedes the string buffers "we" allocate.  It may be the
  * case that nsTAString::mData does not point to one of these special
- * buffers.  The mFlags member variable distinguishes the buffer type.
+ * buffers.  The mDataFlags member variable distinguishes the buffer type.
  *
  * When this header is in use, it enables reference counting, and capacity
  * tracking.  NOTE: A string buffer can be modified only if its reference

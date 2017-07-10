@@ -19,18 +19,19 @@ namespace binding_detail {
 // for small strings and a nsStringBuffer for longer strings.
 struct FakeString {
   FakeString() :
-    mFlags(nsString::F_TERMINATED)
+    mDataFlags(nsString::DataFlags::TERMINATED),
+    mClassFlags(nsString::ClassFlags(0))
   {
   }
 
   ~FakeString() {
-    if (mFlags & nsString::F_SHARED) {
+    if (mDataFlags & nsString::DataFlags::SHARED) {
       nsStringBuffer::FromData(mData)->Release();
     }
   }
 
   void Rebind(const nsString::char_type* aData, nsString::size_type aLength) {
-    MOZ_ASSERT(mFlags == nsString::F_TERMINATED);
+    MOZ_ASSERT(mDataFlags == nsString::DataFlags::TERMINATED);
     mData = const_cast<nsString::char_type*>(aData);
     mLength = aLength;
   }
@@ -49,7 +50,7 @@ struct FakeString {
   }
 
   void Truncate() {
-    MOZ_ASSERT(mFlags == nsString::F_TERMINATED);
+    MOZ_ASSERT(mDataFlags == nsString::DataFlags::TERMINATED);
     mData = nsString::char_traits::sEmptyBuffer;
     mLength = 0;
   }
@@ -58,7 +59,7 @@ struct FakeString {
     MOZ_ASSERT(aValue,
                "We don't support SetIsVoid(false) on FakeString!");
     Truncate();
-    mFlags |= nsString::F_VOIDED;
+    mDataFlags |= nsString::DataFlags::VOIDED;
   }
 
   const nsString::char_type* Data() const
@@ -111,7 +112,8 @@ private:
 
   nsString::char_type* mData;
   nsString::size_type mLength;
-  uint32_t mFlags;
+  nsString::DataFlags mDataFlags;
+  nsString::ClassFlags mClassFlags;
 
   static const size_t sInlineCapacity = 64;
   nsString::char_type mInlineStorage[sInlineCapacity];
@@ -120,12 +122,12 @@ private:
   void operator=(const FakeString& other) = delete;
 
   void SetData(nsString::char_type* aData) {
-    MOZ_ASSERT(mFlags == nsString::F_TERMINATED);
+    MOZ_ASSERT(mDataFlags == nsString::DataFlags::TERMINATED);
     mData = const_cast<nsString::char_type*>(aData);
   }
   void AssignFromStringBuffer(already_AddRefed<nsStringBuffer> aBuffer) {
     SetData(static_cast<nsString::char_type*>(aBuffer.take()->Data()));
-    mFlags = nsString::F_SHARED | nsString::F_TERMINATED;
+    mDataFlags = nsString::DataFlags::SHARED | nsString::DataFlags::TERMINATED;
   }
 
   friend class NonNull<nsAString>;
@@ -147,9 +149,12 @@ private:
       static_assert(offsetof(FakeString, mLength) ==
                       offsetof(StringAsserter, mLength),
                     "Offset of mLength should match");
-      static_assert(offsetof(FakeString, mFlags) ==
-                      offsetof(StringAsserter, mFlags),
-                    "Offset of mFlags should match");
+      static_assert(offsetof(FakeString, mDataFlags) ==
+                      offsetof(StringAsserter, mDataFlags),
+                    "Offset of mDataFlags should match");
+      static_assert(offsetof(FakeString, mClassFlags) ==
+                      offsetof(StringAsserter, mClassFlags),
+                    "Offset of mClassFlags should match");
     }
   };
 };
