@@ -486,6 +486,21 @@ impl Gl for GlesFns {
         }
     }
 
+    fn tex_sub_image_2d_pbo(&self,
+                            target: GLenum,
+                            level: GLint,
+                            xoffset: GLint,
+                            yoffset: GLint,
+                            width: GLsizei,
+                            height: GLsizei,
+                            format: GLenum,
+                            ty: GLenum,
+                            offset: usize) {
+        unsafe {
+            self.ffi_gl_.TexSubImage2D(target, level, xoffset, yoffset, width, height, format, ty, offset as *const c_void);
+        }
+    }
+
     fn tex_sub_image_3d(&self,
                         target: GLenum,
                         level: GLint,
@@ -1314,6 +1329,30 @@ impl Gl for GlesFns {
 
     #[allow(unused_variables)]
     fn pop_group_marker_ext(&self) {
+    }
+
+    fn fence_sync(&self, condition: GLenum, flags: GLbitfield) -> GLsync {
+        unsafe {
+           self.ffi_gl_.FenceSync(condition, flags) as *const _
+        }
+    }
+
+    fn client_wait_sync(&self, sync: GLsync, flags: GLbitfield, timeout: GLuint64) {
+        unsafe {
+            self.ffi_gl_.ClientWaitSync(sync as *const _, flags, timeout);
+        }
+    }
+
+    fn wait_sync(&self, sync: GLsync, flags: GLbitfield, timeout: GLuint64) {
+        unsafe {
+            self.ffi_gl_.WaitSync(sync as *const _, flags, timeout);
+        }
+    }
+
+    fn delete_sync(&self, sync: GLsync) {
+        unsafe {
+            self.ffi_gl_.DeleteSync(sync as *const _);
+        }
     }
 }
 

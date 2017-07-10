@@ -214,6 +214,16 @@ pub trait Gl {
                         format: GLenum,
                         ty: GLenum,
                         data: &[u8]);
+    fn tex_sub_image_2d_pbo(&self,
+                            target: GLenum,
+                            level: GLint,
+                            xoffset: GLint,
+                            yoffset: GLint,
+                            width: GLsizei,
+                            height: GLsizei,
+                            format: GLenum,
+                            ty: GLenum,
+                            offset: usize);
     fn tex_sub_image_3d(&self,
                         target: GLenum,
                         level: GLint,
@@ -388,6 +398,10 @@ pub trait Gl {
     fn insert_event_marker_ext(&self, message: &str);
     fn push_group_marker_ext(&self, message: &str);
     fn pop_group_marker_ext(&self);
+    fn fence_sync(&self, condition: GLenum, flags: GLbitfield) -> GLsync;
+    fn client_wait_sync(&self, sync: GLsync, flags: GLbitfield, timeout: GLuint64);
+    fn wait_sync(&self, sync: GLsync, flags: GLbitfield, timeout: GLuint64);
+    fn delete_sync(&self, sync: GLsync);
 }
 
 #[inline]
