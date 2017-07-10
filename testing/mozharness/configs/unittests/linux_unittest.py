@@ -117,6 +117,7 @@ config = {
                 "--screenshot-on-fail",
                 "--cleanup-crashes",
                 "--marionette-startup-timeout=180",
+                "--work-path=%(abs_work_dir)s",
             ],
             "run_filename": "runtests.py",
             "testsdir": "mochitest"
@@ -148,6 +149,7 @@ config = {
                 "--log-raw=%(raw_log_file)s",
                 "--log-errorsummary=%(error_summary_file)s",
                 "--cleanup-crashes",
+                "--work-path=%(abs_work_dir)s",
             ],
             "run_filename": "runreftest.py",
             "testsdir": "reftest"
