@@ -37,16 +37,16 @@ Other clients that follow the [W3C WebDriver specification](https://w3c.github.i
 
 ## Supported Firefoxen
 
-Marionette and geckodriver are not yet feature complete.
-This means that they do not yet offer full conformance
+geckodriver is not yet feature complete.
+This means that it does not yet offer full conformance
 with the [WebDriver standard](https://w3c.github.io/webdriver/webdriver-spec.html)
 or complete compatibility with [Selenium](http://www.seleniumhq.org/).
 You can track the [implementation status](https://developer.mozilla.org/en-US/docs/Mozilla/QA/Marionette/WebDriver/status)
 of the latest [Firefox Nightly](http://whattrainisitnow.com/) on
 [MDN](https://developer.mozilla.org/).
 We also keep track of known
-[Marionette](https://github.com/mozilla/geckodriver/issues?q=is%3Aissue+is%3Aopen+label%3Amarionette),
 [Selenium](https://github.com/mozilla/geckodriver/issues?q=is%3Aissue+is%3Aopen+label%3Aselenium),
+[remote protocol](https://github.com/mozilla/geckodriver/issues?q=is%3Aissue+is%3Aopen+label%3Amarionette),
 and [specification](https://github.com/mozilla/geckodriver/issues?q=is%3Aissue+is%3Aopen+label%3Aspec)
 problems in our
 [issue tracker](https://github.com/mozilla/geckodriver/issues).
@@ -56,7 +56,7 @@ although generally the more recent the Firefox version,
 the better the experience as they have more bug fixes and features.
 Some features will only be available in the most recent Firefox versions,
 and we strongly advise using the [latest Firefox Nightly](https://nightly.mozilla.org/) with geckodriver.
-Since Windows XP support in Firefox will be dropped with Firefox 53,
+Since Windows XP support in Firefox was dropped with Firefox 53,
 we do not support this platform.
 
 ## WebDriver capabilities
@@ -75,7 +75,7 @@ geckodriver supports a number of
 
  <tr>
   <td><code>proxy</code>
-  <td><a href=#proxy-object><code>proxy</code></a> object
+  <td><a href=#proxy-object><code>proxy</code></a>&nbsp;object
   <td>Sets browser proxy settings.
  </tr>
 
@@ -227,7 +227,7 @@ and may contain any of the following fields:
   </tr>
  </thead>
 
- <tr>
+ <tr id=capability-binary>
   <td><code>binary</code>
   <td>string
   <td>Absolute path of the Firefox binary,
@@ -239,33 +239,50 @@ and may contain any of the following fields:
    on the current system.
  </tr>
 
- <tr>
+ <tr id=capability-args>
   <td><code>args</code>
   <td>array&nbsp;of&nbsp;strings
-  <td>Command line arguments to pass to the Firefox binary.
-   These must include the leading <code>--</code> where required
-   e.g. <code>["--devtools"]</code>.
+  <td><p>Command line arguments to pass to the Firefox binary.
+   These must include the leading dash (<code>-</code>) where required,
+   e.g. <code>["-devtools"]</code>.
+
+   <p>To have geckodriver pick up an existing profile on the filesystem,
+    you may pass <code>["-profile", "/path/to/profile"]</code>.
  </tr>
 
- <tr>
+ <tr id=capability-profile>
   <td><code>profile</code>
   <td>string
-  <td>Base64-encoded zip of a profile directory
-   to use as the profile for the Firefox instance.
-   This may be used to e.g. install extensions
-   or custom certificates.
-   By default, a new profile will be created in the system’s temporary folder.
-   The effective profile in use by the WebDriver session
-   is returned to the user in the `moz:profile` capability.
+  <td><p>Base64-encoded ZIP of a profile directory to use for the Firefox instance.
+   This may be used to e.g. install extensions or custom certificates,
+   but for setting custom preferences
+   we recommend using the <a href=#capability-prefs><code>prefs</code></a> entry
+   instead of passing a profile.
+
+   <p>Profiles are created in the system’s temporary folder.
+    This is also where the encoded profile is extracted
+    when <code>profile</code> is provided.
+    By default, geckodriver will create a new profile in this location.
+
+   <p>The effective profile in use by the WebDriver session
+    is returned to the user in the <code>moz:profile</code> capability
+    in the new session response.
+
+   <p>To have geckodriver pick up an <em>existing profile</em> on the filesystem,
+    please set the <a href=#capability-args><code>args</code></a> field
+    to <code>{"args": ["-profile", "/path/to/your/profile"]}</code>.
  </tr>
 
- <tr>
+ <tr id=capability-log>
   <td><code>log</code>
   <td><a href=#log-object><code>log</code></a>&nbsp;object
-  <td>Logging options for Gecko.
+  <td>To increase the logging verbosity of geckodriver and Firefox,
+   you may pass a <a href=#log-object><code>log</code> object</a>
+   that may look like <code>{"log": {"level": "trace"}}</code>
+   to include all trace-level logs and above.
  </tr>
 
- <tr>
+ <tr id=capability-prefs>
   <td><code>prefs</code>
   <td><a href=#prefs-object><code>prefs</code></a>&nbsp;object
   <td>Map of preference name to preference value, which can be a
@@ -287,7 +304,7 @@ and may contain any of the following fields:
  <tr>
   <td><code>level</code>
   <td>string
-  <td>Set the level of verbosity in Gecko.
+  <td>Set the level of verbosity of geckodriver and Firefox.
    Available levels are <code>trace</code>,
    <code>debug</code>, <code>config</code>,
    <code>info</code>, <code>warn</code>,
@@ -314,12 +331,13 @@ and may contain any of the following fields:
  </tr>
 </table>
 
-## Capabilities examples
+## Capabilities example
 
-To select a specific Firefox binary
-and run it with a specific command-line flag,
-set a preference,
-and enable verbose logging:
+The following example selects a specific Firefox binary
+to run with a prepared profile from the filesystem
+in headless mode (available on certain systems and recent Firefoxen).
+It also increases the number of IPC processes through a preference
+and enables more verbose logging.
 
 ```js
 {
@@ -327,7 +345,7 @@ and enable verbose logging:
 		"alwaysMatch": {
 			"moz:firefoxOptions": {
 				"binary": "/usr/local/firefox/bin/firefox",
-				"args": ["--no-remote"],
+				"args": ["-headless", "-profile", "/path/to/my/profile"],
 				"prefs": {
 					"dom.ipc.processCount": 8
 				},
@@ -348,7 +366,7 @@ but how you invoke geckodriver largely depends on your use case.
 ### Selenium
 
 If you are using geckodriver through [Selenium](http://seleniumhq.org/),
-you must ensure that you have version 3.3.1 or greater.
+you must ensure that you have version 3.4 and greater.
 Because geckodriver implements the [W3C WebDriver standard](https://w3c.github.io/webdriver/webdriver-spec.html)
 and not the same Selenium wire protocol older drivers are using,
 you may experience incompatibilities and migration problems
@@ -506,7 +524,7 @@ Port to use for the WebDriver server.
 Defaults to 4444.
 
 A helpful trick is that it is possible to bind to 0
-to get the system to assign a free port.
+to get the system to atomically assign a free port.
 
 #### <code>-v<var>[v]</var></code>
 
@@ -523,17 +541,15 @@ geckodriver translates WebDriver [commands], [responses], and [errors]
 to the [Marionette protocol],
 and acts as a proxy between [WebDriver] and [Marionette].
 
-In order to build this program, you will need the [Rust compiler toolchain].
+geckodriver is built in the [Firefox CI] by default
+but _not_ if you build Firefox locally.
+To enable building of geckodriver locally,
+ensure you put this in your [mozconfig]:
 
-To build the project for release,
-ensure you compile with optimisations
-to get the best performance:
+	ac_add_options --enable-geckodriver
 
-	% cargo build --release
-
-Or if you want a non-optimised binary for debugging:
-
-	% cargo build
+The _geckodriver_ binary will appear in `${objdir}/dist/bin/geckodriver`
+alongside _firefox-bin_.
 
 [Rust]: https://www.rust-lang.org/
 [Mozilla]: https://www.mozilla.org/en-US/
@@ -544,5 +560,5 @@ Or if you want a non-optimised binary for debugging:
 [Marionette protocol]: https://developer.mozilla.org/en-US/docs/Mozilla/QA/Marionette/Protocol
 [WebDriver]: https://w3c.github.io/webdriver/webdriver-spec.html
 [Marionette]: http://searchfox.org/mozilla-central/source/testing/marionette/README
-[Rust compiler toolchain]: https://rustup.rs/
-
+[Firefox CI]: https://treeherder.mozilla.org/
+[mozconfig]: https://developer.mozilla.org/en-US/docs/Mozilla/Developer_guide/Build_Instructions/Configuring_Build_Options
