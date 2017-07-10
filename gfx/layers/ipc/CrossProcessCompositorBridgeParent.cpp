@@ -88,7 +88,7 @@ CrossProcessCompositorBridgeParent::AllocPLayerTransactionParent(
   if (state && state->mLayerManager) {
     state->mCrossProcessParent = this;
     HostLayerManager* lm = state->mLayerManager;
-    CompositorAnimationStorage* animStorage = state->mParent ? state->mParent->GetAnimationStorage(0) : nullptr;
+    CompositorAnimationStorage* animStorage = state->mParent ? state->mParent->GetAnimationStorage() : nullptr;
     LayerTransactionParent* p = new LayerTransactionParent(lm, this, animStorage, aId);
     p->AddIPDLReference();
     sIndirectLayerTrees[aId].mLayerTree = p;
@@ -223,7 +223,7 @@ CrossProcessCompositorBridgeParent::AllocPWebRenderBridgeParent(const wr::Pipeli
 
   RefPtr<wr::WebRenderAPI> api = root->GetWebRenderAPI();
   RefPtr<WebRenderCompositableHolder> holder = root->CompositableHolder();
-  RefPtr<CompositorAnimationStorage> animStorage = cbp->GetAnimationStorage(0);
+  RefPtr<CompositorAnimationStorage> animStorage = cbp->GetAnimationStorage();
   parent = new WebRenderBridgeParent(this, aPipelineId, nullptr, root->CompositorScheduler(), Move(api), Move(holder), Move(animStorage));
 
   parent->AddRef(); // IPDL reference
@@ -418,22 +418,6 @@ CrossProcessCompositorBridgeParent::ApplyAsyncProperties(
 
   MOZ_ASSERT(state->mParent);
   state->mParent->ApplyAsyncProperties(aLayerTree);
-}
-
-CompositorAnimationStorage*
-CrossProcessCompositorBridgeParent::GetAnimationStorage(
-    const uint64_t& aId)
-{
-  MOZ_ASSERT(aId != 0);
-  const CompositorBridgeParent::LayerTreeState* state =
-    CompositorBridgeParent::GetIndirectShadowTree(aId);
-  if (!state) {
-    return nullptr;
-  }
-
-  MOZ_ASSERT(state->mParent);
-  // GetAnimationStorage in CompositorBridgeParent expects id as 0
-  return state->mParent->GetAnimationStorage(0);
 }
 
 void
