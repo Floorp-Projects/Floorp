@@ -2929,6 +2929,55 @@ QuotaObject::MaybeUpdateSize(int64_t aSize, bool aTruncate)
 
   MutexAutoLock lock(quotaManager->mQuotaMutex);
 
+  return LockedMaybeUpdateSize(aSize, aTruncate);
+}
+
+bool
+QuotaObject::IncreaseSize(int64_t aDelta)
+{
+  MOZ_ASSERT(aDelta >= 0);
+
+  QuotaManager* quotaManager = QuotaManager::Get();
+  MOZ_ASSERT(quotaManager);
+
+  MutexAutoLock lock(quotaManager->mQuotaMutex);
+
+  AssertNoOverflow(mSize, aDelta);
+  int64_t size = mSize + aDelta;
+
+  return LockedMaybeUpdateSize(size, /* aTruncate */ false);
+}
+
+void
+QuotaObject::DisableQuotaCheck()
+{
+  QuotaManager* quotaManager = QuotaManager::Get();
+  MOZ_ASSERT(quotaManager);
+
+  MutexAutoLock lock(quotaManager->mQuotaMutex);
+
+  mQuotaCheckDisabled = true;
+}
+
+void
+QuotaObject::EnableQuotaCheck()
+{
+  QuotaManager* quotaManager = QuotaManager::Get();
+  MOZ_ASSERT(quotaManager);
+
+  MutexAutoLock lock(quotaManager->mQuotaMutex);
+
+  mQuotaCheckDisabled = false;
+}
+
+bool
+QuotaObject::LockedMaybeUpdateSize(int64_t aSize, bool aTruncate)
+{
+  QuotaManager* quotaManager = QuotaManager::Get();
+  MOZ_ASSERT(quotaManager);
+
+  quotaManager->mQuotaMutex.AssertCurrentThreadOwns();
+
   if (mQuotaCheckDisabled) {
     return true;
   }
@@ -3125,28 +3174,6 @@ QuotaObject::MaybeUpdateSize(int64_t aSize, bool aTruncate)
   mSize = aSize;
 
   return true;
-}
-
-void
-QuotaObject::DisableQuotaCheck()
-{
-  QuotaManager* quotaManager = QuotaManager::Get();
-  MOZ_ASSERT(quotaManager);
-
-  MutexAutoLock lock(quotaManager->mQuotaMutex);
-
-  mQuotaCheckDisabled = true;
-}
-
-void
-QuotaObject::EnableQuotaCheck()
-{
-  QuotaManager* quotaManager = QuotaManager::Get();
-  MOZ_ASSERT(quotaManager);
-
-  MutexAutoLock lock(quotaManager->mQuotaMutex);
-
-  mQuotaCheckDisabled = false;
 }
 
 /*******************************************************************************
@@ -3774,9 +3801,14 @@ already_AddRefed<QuotaObject>
 QuotaManager::GetQuotaObject(PersistenceType aPersistenceType,
                              const nsACString& aGroup,
                              const nsACString& aOrigin,
-                             nsIFile* aFile)
+                             nsIFile* aFile,
+                             int64_t* aFileSizeOut /* = nullptr */)
 {
   NS_ASSERTION(!NS_IsMainThread(), "Wrong thread!");
+
+  if (aFileSizeOut) {
+    *aFileSizeOut = 0;
+  }
 
   if (aPersistenceType == PERSISTENCE_TYPE_PERSISTENT) {
     return nullptr;
@@ -3849,6 +3881,10 @@ QuotaManager::GetQuotaObject(PersistenceType aPersistenceType,
     result = quotaObject->LockedAddRef();
   }
 
+  if (aFileSizeOut) {
+    *aFileSizeOut = fileSize;
+  }
+
   // The caller becomes the owner of the QuotaObject, that is, the caller is
   // is responsible to delete it when the last reference is removed.
   return result.forget();
@@ -3858,8 +3894,15 @@ already_AddRefed<QuotaObject>
 QuotaManager::GetQuotaObject(PersistenceType aPersistenceType,
                              const nsACString& aGroup,
                              const nsACString& aOrigin,
-                             const nsAString& aPath)
+                             const nsAString& aPath,
+                             int64_t* aFileSizeOut /* = nullptr */)
 {
+  NS_ASSERTION(!NS_IsMainThread(), "Wrong thread!");
+
+  if (aFileSizeOut) {
+    *aFileSizeOut = 0;
+  }
+
   nsresult rv;
   nsCOMPtr<nsIFile> file = do_CreateInstance(NS_LOCAL_FILE_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, nullptr);
@@ -3867,7 +3910,7 @@ QuotaManager::GetQuotaObject(PersistenceType aPersistenceType,
   rv = file->InitWithPath(aPath);
   NS_ENSURE_SUCCESS(rv, nullptr);
 
-  return GetQuotaObject(aPersistenceType, aGroup, aOrigin, file);
+  return GetQuotaObject(aPersistenceType, aGroup, aOrigin, file, aFileSizeOut);
 }
 
 Nullable<bool>
