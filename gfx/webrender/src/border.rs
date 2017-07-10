@@ -2,14 +2,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+use api::{BorderSide, BorderStyle, BorderWidths, ClipAndScrollInfo, ColorF, LayerPoint, LayerRect};
+use api::{LayerSize, LocalClip, NormalBorder};
 use ellipse::Ellipse;
+use gpu_cache::GpuDataRequest;
 use frame_builder::FrameBuilder;
-use mask_cache::{ClipSource};
-use prim_store::{BorderPrimitiveCpu, GpuBlock32, PrimitiveContainer};
+use mask_cache::ClipSource;
+use prim_store::{BorderPrimitiveCpu, PrimitiveContainer};
 use tiling::PrimitiveFlags;
 use util::{lerp, pack_as_float};
-use webrender_traits::{BorderSide, BorderStyle, BorderWidths, ClipAndScrollInfo, ClipRegion};
-use webrender_traits::{ColorF, LayerPoint, LayerRect, LayerSize, NormalBorder};
 
 #[repr(u8)]
 #[derive(Debug, Copy, Clone, PartialEq)]
@@ -79,7 +80,7 @@ impl BorderCornerKind {
         };
         let clip_data = BorderCornerClipData {
             corner_rect: LayerRect::new(origin, size),
-            clip_center: clip_center,
+            clip_center,
             corner: pack_as_float(corner as u32),
             kind: pack_as_float(kind as u32),
         };
@@ -225,7 +226,7 @@ impl FrameBuilder {
                                    border: &NormalBorder,
                                    widths: &BorderWidths,
                                    clip_and_scroll: ClipAndScrollInfo,
-                                   clip_region: &ClipRegion,
+                                   local_clip: &LocalClip,
                                    corner_instances: [BorderCornerInstance; 4],
                                    extra_clips: &[ClipSource]) {
         let radius = &border.radius;
@@ -241,7 +242,7 @@ impl FrameBuilder {
         let bottom_color    = bottom.border_color(2.0/3.0, 1.0, 0.7, 0.3);
 
         let prim_cpu = BorderPrimitiveCpu {
-            corner_instances: corner_instances,
+            corner_instances,
 
             // TODO(gw): In the future, we will build these on demand
             //           from the deserialized display list, rather
@@ -272,7 +273,7 @@ impl FrameBuilder {
 
         self.add_primitive(clip_and_scroll,
                            &rect,
-                           clip_region,
+                           local_clip,
                            extra_clips,
                            PrimitiveContainer::Border(prim_cpu));
     }
@@ -286,7 +287,7 @@ impl FrameBuilder {
                              border: &NormalBorder,
                              widths: &BorderWidths,
                              clip_and_scroll: ClipAndScrollInfo,
-                             clip_region: &ClipRegion) {
+                             local_clip: &LocalClip) {
         // The border shader is quite expensive. For simple borders, we can just draw
         // the border with a few rectangles. This generally gives better batching, and
         // a GPU win in fragment shader time.
@@ -366,7 +367,7 @@ impl FrameBuilder {
             if top_edge == BorderEdgeKind::Solid {
                 self.add_solid_rectangle(clip_and_scroll,
                                          &LayerRect::new(p0, LayerSize::new(rect_width, top_len)),
-                                         clip_region,
+                                         local_clip,
                                          &border.top.color,
                                          PrimitiveFlags::None);
             }
@@ -375,7 +376,7 @@ impl FrameBuilder {
                                          &LayerRect::new(LayerPoint::new(p0.x, p0.y + top_len),
                                                          LayerSize::new(left_len,
                                                                         rect_height - top_len - bottom_len)),
-                                         clip_region,
+                                         local_clip,
                                          &border.left.color,
                                          PrimitiveFlags::None);
             }
@@ -385,7 +386,7 @@ impl FrameBuilder {
                                                                          p0.y + top_len),
                                                          LayerSize::new(right_len,
                                                                         rect_height - top_len - bottom_len)),
-                                         clip_region,
+                                         local_clip,
                                          &border.right.color,
                                          PrimitiveFlags::None);
             }
@@ -393,7 +394,7 @@ impl FrameBuilder {
                 self.add_solid_rectangle(clip_and_scroll,
                                          &LayerRect::new(LayerPoint::new(p0.x, p1.y - bottom_len),
                                                          LayerSize::new(rect_width, bottom_len)),
-                                         clip_region,
+                                         local_clip,
                                          &border.bottom.color,
                                          PrimitiveFlags::None);
             }
@@ -422,7 +423,7 @@ impl FrameBuilder {
                                              border,
                                              widths,
                                              clip_and_scroll,
-                                             clip_region,
+                                             local_clip,
                                              corner_instances,
                                              &extra_clips);
         }
@@ -535,18 +536,17 @@ impl BorderCornerClipSource {
         };
 
         BorderCornerClipSource {
-            kind: kind,
-            corner_data: corner_data,
-            max_clip_count: max_clip_count,
+            kind,
+            corner_data,
+            max_clip_count,
             actual_clip_count: 0,
-            ellipse: ellipse,
-            widths: widths,
+            ellipse,
+            widths,
         }
     }
 
-    pub fn populate_gpu_data(&mut self, slice: &mut [GpuBlock32]) {
-        let (header, clips) = slice.split_first_mut().unwrap();
-        *header = self.corner_data.into();
+    pub fn write(&mut self, mut request: GpuDataRequest) {
+        self.corner_data.write(&mut request);
 
         match self.kind {
             BorderCornerClipKind::Dash => {
@@ -554,7 +554,7 @@ impl BorderCornerClipSource {
                 self.actual_clip_count = self.max_clip_count;
                 let dash_arc_length = 0.5 * self.ellipse.total_arc_length / (self.actual_clip_count - 1) as f32;
                 let mut current_arc_length = -0.5 * dash_arc_length;
-                for dash_index in 0..self.actual_clip_count {
+                for _ in 0..self.actual_clip_count {
                     let arc_length0 = current_arc_length;
                     current_arc_length += dash_arc_length;
 
@@ -564,9 +564,10 @@ impl BorderCornerClipSource {
                     let dash_data = BorderCornerDashClipData::new(arc_length0,
                                                                   arc_length1,
                                                                   &self.ellipse);
-
-                    clips[dash_index] = dash_data.into();
+                    dash_data.write(&mut request);
                 }
+
+                assert_eq!(request.close(), 2 + 2 * self.actual_clip_count);
             }
             BorderCornerClipKind::Dot => {
                 let mut forward_dots = Vec::new();
@@ -623,17 +624,15 @@ impl BorderCornerClipSource {
                 // leftover space on the arc between them evenly. Once
                 // the final arc position is determined, generate the correct
                 // arc positions and angles that get passed to the clip shader.
-                self.actual_clip_count = 0;
-                let dot_count = forward_dots.len() + back_dots.len();
-                let extra_space_per_dot = leftover_arc_length / (dot_count - 1) as f32;
+                self.actual_clip_count = forward_dots.len() + back_dots.len();
+                let extra_space_per_dot = leftover_arc_length / (self.actual_clip_count - 1) as f32;
 
                 for (i, dot) in forward_dots.iter().enumerate() {
                     let extra_dist = i as f32 * extra_space_per_dot;
                     let dot = BorderCornerDotClipData::new(dot.arc_pos + extra_dist,
                                                            0.5 * dot.diameter,
                                                            &self.ellipse);
-                    clips[self.actual_clip_count] = dot.into();
-                    self.actual_clip_count += 1;
+                    dot.write(&mut request);
                 }
 
                 for (i, dot) in back_dots.iter().enumerate() {
@@ -641,9 +640,10 @@ impl BorderCornerClipSource {
                     let dot = BorderCornerDotClipData::new(dot.arc_pos - extra_dist,
                                                            0.5 * dot.diameter,
                                                            &self.ellipse);
-                    clips[self.actual_clip_count] = dot.into();
-                    self.actual_clip_count += 1;
+                    dot.write(&mut request);
                 }
+
+                assert_eq!(request.close(), 2 + self.actual_clip_count);
             }
         }
     }
@@ -664,6 +664,13 @@ pub struct BorderCornerClipData {
     /// right orientation.
     corner: f32,        // Of type BorderCorner enum
     kind: f32,          // Of type BorderCornerClipKind enum
+}
+
+impl BorderCornerClipData {
+    fn write(&self, request: &mut GpuDataRequest) {
+        request.push(self.corner_rect);
+        request.push([self.clip_center.x, self.clip_center.y, self.corner, self.kind]);
+    }
 }
 
 /// Represents the GPU data for drawing a single dash
@@ -697,6 +704,13 @@ impl BorderCornerDashClipData {
             tangent1: t1,
         }
     }
+
+    fn write(&self, request: &mut GpuDataRequest) {
+        request.push([self.point0.x, self.point0.y,
+                      self.tangent0.x, self.tangent0.y]);
+        request.push([self.point1.x, self.point1.y,
+                      self.tangent1.x, self.tangent1.y]);
+    }
 }
 
 /// Represents the GPU data for drawing a single dot
@@ -706,7 +720,6 @@ impl BorderCornerDashClipData {
 pub struct BorderCornerDotClipData {
     pub center: LayerPoint,
     pub radius: f32,
-    pub padding: [f32; 5],
 }
 
 impl BorderCornerDotClipData {
@@ -717,10 +730,13 @@ impl BorderCornerDotClipData {
         let (center, _) = ellipse.get_point_and_tangent(theta);
 
         BorderCornerDotClipData {
-            center: center,
-            radius: radius,
-            padding: [0.0; 5],
+            center,
+            radius,
         }
+    }
+
+    fn write(&self, request: &mut GpuDataRequest) {
+        request.push([self.center.x, self.center.y, self.radius, 0.0]);
     }
 }
 
@@ -733,8 +749,8 @@ struct DotInfo {
 impl DotInfo {
     fn new(arc_pos: f32, diameter: f32) -> DotInfo {
         DotInfo {
-            arc_pos: arc_pos,
-            diameter: diameter,
+            arc_pos,
+            diameter,
         }
     }
 }

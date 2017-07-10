@@ -4,13 +4,13 @@
 
 use gpu_cache::GpuCacheHandle;
 use internal_types::{HardwareCompositeOp, LowLevelFilterOp};
-use mask_cache::{MaskBounds, MaskCacheInfo};
+use mask_cache::MaskCacheInfo;
 use prim_store::{PrimitiveCacheKey, PrimitiveIndex};
 use std::{cmp, f32, i32, mem, usize};
 use tiling::{ClipScrollGroupIndex, PackedLayerIndex, RenderPass, RenderTargetIndex};
 use tiling::{RenderTargetKind, StackingContextIndex};
-use webrender_traits::{ClipId, DeviceIntLength, DeviceIntPoint, DeviceIntRect, DeviceIntSize};
-use webrender_traits::{MixBlendMode};
+use api::{ClipId, DeviceIntLength, DeviceIntPoint, DeviceIntRect, DeviceIntSize};
+use api::{MixBlendMode};
 
 const FLOATS_PER_RENDER_TASK_INFO: usize = 12;
 
@@ -84,20 +84,14 @@ pub enum MaskGeometryKind {
     // TODO(gw): Add more types here (e.g. 4 rectangles outside the inner rect)
 }
 
+pub type ClipWorkItem = (PackedLayerIndex, MaskCacheInfo);
+
 #[derive(Debug, Clone)]
 pub struct CacheMaskTask {
     actual_rect: DeviceIntRect,
     inner_rect: DeviceIntRect,
-    pub clips: Vec<(PackedLayerIndex, MaskCacheInfo)>,
+    pub clips: Vec<ClipWorkItem>,
     pub geometry_kind: MaskGeometryKind,
-}
-
-#[derive(Debug)]
-pub enum MaskResult {
-    /// The mask is completely outside the region
-    Outside,
-    /// The mask is inside and needs to be processed
-    Inside(RenderTask),
 }
 
 #[derive(Debug, Clone)]
@@ -149,9 +143,9 @@ impl RenderTask {
         RenderTask {
             id: RenderTaskId::Static(task_index),
             children: Vec::new(),
-            location: location,
+            location,
             kind: RenderTaskKind::Alpha(AlphaRenderTask {
-                screen_origin: screen_origin,
+                screen_origin,
                 items: Vec::new(),
             }),
         }
@@ -184,56 +178,32 @@ impl RenderTask {
         }
     }
 
-    pub fn new_mask(actual_rect: DeviceIntRect,
+    pub fn new_mask(task_rect: DeviceIntRect,
                     mask_key: MaskCacheKey,
-                    clips: &[(PackedLayerIndex, MaskCacheInfo)])
-                    -> MaskResult {
-        if clips.is_empty() {
-            return MaskResult::Outside;
-        }
-
-        // We scan through the clip stack and detect if our actual rectangle
-        // is in the intersection of all of all the outer bounds,
-        // and if it's completely inside the intersection of all of the inner bounds.
-
-        // TODO(gw): If we encounter a clip with unknown bounds, we'll just use
-        // the original rect. This is overly conservative, but can
-        // be optimized later.
-        let mut result = Some(actual_rect);
-        for &(_, ref clip) in clips {
-            match *clip.bounds.as_ref().unwrap() {
-                MaskBounds::OuterInner(ref outer, _) |
-                MaskBounds::Outer(ref outer) => {
-                    result = result.and_then(|rect| {
-                        rect.intersection(&outer.bounding_rect)
-                    });
+                    raw_clips: &[ClipWorkItem],
+                    extra_clip: Option<ClipWorkItem>)
+                    -> Option<RenderTask> {
+        /// Filter out all the clip instances that don't contribute to the result
+        let mut inner_rect = Some(task_rect);
+        let clips: Vec<_> = raw_clips.iter()
+                                     .chain(extra_clip.iter())
+                                     .filter(|&&(_, ref clip_info)| {
+            match clip_info.bounds.inner {
+                Some(ref inner) if !inner.device_rect.is_empty() => {
+                    inner_rect = inner_rect.and_then(|r| r.intersection(&inner.device_rect));
+                    !inner.device_rect.contains_rect(&task_rect)
                 }
-                MaskBounds::None => {
-                    result = Some(actual_rect);
-                    break;
+                _ => {
+                    inner_rect = None;
+                    true
                 }
             }
+        }).cloned().collect();
+
+        // Nothing to do, all clips are irrelevant for this case
+        if clips.is_empty() {
+            return None
         }
-
-        let task_rect = match result {
-            None => return MaskResult::Outside,
-            Some(rect) => rect,
-        };
-
-        // Accumulate inner rects. As soon as we encounter
-        // a clip mask where we don't have or don't know
-        // the inner rect, this will become None.
-        let inner_rect = clips.iter()
-                              .fold(Some(task_rect), |current, clip| {
-            current.and_then(|rect| {
-                let inner_rect = match *clip.1.bounds.as_ref().unwrap() {
-                    MaskBounds::Outer(..) |
-                    MaskBounds::None => DeviceIntRect::zero(),
-                    MaskBounds::OuterInner(_, ref inner) => inner.bounding_rect
-                };
-                rect.intersection(&inner_rect)
-            })
-        });
 
         // TODO(gw): This optimization is very conservative for now.
         //           For now, only draw optimized geometry if it is
@@ -242,25 +212,24 @@ impl RenderTask {
         //           more complex types of clip mask geometry.
         let mut geometry_kind = MaskGeometryKind::Default;
         if inner_rect.is_some() && clips.len() == 1 {
-            let (_, ref clip_info) = clips[0];
-            if clip_info.image.is_none() &&
-               clip_info.effective_complex_clip_count == 1 &&
-               clip_info.is_aligned {
+            let (_, ref info) = clips[0];
+            if info.border_corners.is_empty() &&
+               info.image.is_none() &&
+               info.complex_clip_range.get_count() == 1 &&
+               info.layer_clip_range.get_count() == 0 {
                 geometry_kind = MaskGeometryKind::CornersOnly;
             }
         }
 
-        let inner_rect = inner_rect.unwrap_or(DeviceIntRect::zero());
-
-        MaskResult::Inside(RenderTask {
+        Some(RenderTask {
             id: RenderTaskId::Dynamic(RenderTaskKey::CacheMask(mask_key)),
             children: Vec::new(),
             location: RenderTaskLocation::Dynamic(None, task_rect.size),
             kind: RenderTaskKind::CacheMask(CacheMaskTask {
                 actual_rect: task_rect,
-                inner_rect: inner_rect,
-                clips: clips.to_vec(),
-                geometry_kind: geometry_kind,
+                inner_rect: inner_rect.unwrap_or(DeviceIntRect::zero()),
+                clips,
+                geometry_kind,
             }),
         })
     }

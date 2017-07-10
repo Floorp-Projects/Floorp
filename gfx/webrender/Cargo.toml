@@ -1,6 +1,6 @@
 [package]
 name = "webrender"
-version = "0.43.0"
+version = "0.47.0"
 authors = ["Glenn Watson <gw@intuitionlibrary.com>"]
 license = "MPL-2.0"
 repository = "https://github.com/servo/webrender"
@@ -10,24 +10,24 @@ build = "build.rs"
 default = ["freetype-lib", "webgl"]
 freetype-lib = ["freetype/servo-freetype-sys"]
 profiler = ["thread_profiler/thread_profiler"]
-webgl = ["offscreen_gl_context", "webrender_traits/webgl"]
+webgl = ["offscreen_gl_context", "webrender_api/webgl"]
 
 [dependencies]
 app_units = "0.5"
 bincode = "0.8"
 bit-set = "0.4"
 byteorder = "1.0"
-euclid = "0.15"
+euclid = "0.15.1"
 fnv = "1.0"
-gleam = "0.4.3"
+gleam = "0.4.7"
 lazy_static = "0.2"
 log = "0.3"
 num-traits = "0.1.32"
 offscreen_gl_context = {version = "0.11", features = ["serde", "osmesa"], optional = true}
 time = "0.1"
 rayon = "0.8"
-webrender_traits = {path = "../webrender_traits"}
-bitflags = "0.7"
+webrender_api = {path = "../webrender_api"}
+bitflags = "0.9"
 gamma-lut = "0.2"
 thread_profiler = "0.1.1"
 plane-split = "0.6"
@@ -45,4 +45,4 @@ dwrote = "0.4"
 
 [target.'cfg(target_os = "macos")'.dependencies]
 core-graphics = "0.8.0"
-core-text = { version = "5.0.1", features = ["lion"] }
+core-text = { version = "6.1", default-features = false }

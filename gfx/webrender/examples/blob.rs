@@ -7,7 +7,6 @@ extern crate euclid;
 extern crate gleam;
 extern crate glutin;
 extern crate webrender;
-extern crate webrender_traits;
 extern crate rayon;
 
 #[path="common/boilerplate.rs"]
@@ -20,26 +19,26 @@ use std::collections::HashMap;
 use std::collections::hash_map::Entry;
 use std::sync::Arc;
 use std::sync::mpsc::{channel, Sender, Receiver};
-use webrender_traits as wt;
+use webrender::api;
 
 // This example shows how to implement a very basic BlobImageRenderer that can only render
 // a checkerboard pattern.
 
 // The deserialized command list internally used by this example is just a color.
-type ImageRenderingCommands = wt::ColorU;
+type ImageRenderingCommands = api::ColorU;
 
 // Serialize/deserialze the blob.
 // Ror real usecases you should probably use serde rather than doing it by hand.
 
-fn serialize_blob(color: wt::ColorU) -> Vec<u8> {
+fn serialize_blob(color: api::ColorU) -> Vec<u8> {
     vec![color.r, color.g, color.b, color.a]
 }
 
 fn deserialize_blob(blob: &[u8]) -> Result<ImageRenderingCommands, ()> {
     let mut iter = blob.iter();
     return match (iter.next(), iter.next(), iter.next(), iter.next()) {
-        (Some(&r), Some(&g), Some(&b), Some(&a)) => Ok(wt::ColorU::new(r, g, b, a)),
-        (Some(&a), None, None, None) => Ok(wt::ColorU::new(a, a, a, a)),
+        (Some(&r), Some(&g), Some(&b), Some(&a)) => Ok(api::ColorU::new(r, g, b, a)),
+        (Some(&a), None, None, None) => Ok(api::ColorU::new(a, a, a, a)),
         _ => Err(()),
     }
 }
@@ -48,9 +47,9 @@ fn deserialize_blob(blob: &[u8]) -> Result<ImageRenderingCommands, ()> {
 // actual image data.
 fn render_blob(
     commands: Arc<ImageRenderingCommands>,
-    descriptor: &wt::BlobImageDescriptor,
-    tile: Option<wt::TileOffset>,
-) -> wt::BlobImageResult {
+   descriptor: &api::BlobImageDescriptor,
+   tile: Option<api::TileOffset>
+) -> api::BlobImageResult {
     let color = *commands;
 
     // Allocate storage for the result. Right now the resource cache expects the
@@ -77,17 +76,17 @@ fn render_blob(
             let tc = if tile_checker { 0 } else { (1 - checker) * 40 };
 
             match descriptor.format {
-                wt::ImageFormat::BGRA8 => {
+                api::ImageFormat::BGRA8 => {
                     texels.push(color.b * checker + tc);
                     texels.push(color.g * checker + tc);
                     texels.push(color.r * checker + tc);
                     texels.push(color.a * checker + tc);
                 }
-                wt::ImageFormat::A8 => {
+                api::ImageFormat::A8 => {
                     texels.push(color.a * checker + tc);
                 }
                 _ => {
-                    return Err(wt::BlobImageError::Other(format!(
+                    return Err(api::BlobImageError::Other(format!(
                         "Usupported image format {:?}",
                         descriptor.format
                     )));
@@ -96,7 +95,7 @@ fn render_blob(
         }
     }
 
-    Ok(wt::RasterizedBlobImage {
+    Ok(api::RasterizedBlobImage {
         data: texels,
         width: descriptor.width,
         height: descriptor.height,
@@ -111,18 +110,18 @@ struct CheckerboardRenderer {
     workers: Arc<ThreadPool>,
 
     // the workers will use an mpsc channel to communicate the result.
-    tx: Sender<(wt::BlobImageRequest, wt::BlobImageResult)>,
-    rx: Receiver<(wt::BlobImageRequest, wt::BlobImageResult)>,
+    tx: Sender<(api::BlobImageRequest, api::BlobImageResult)>,
+    rx: Receiver<(api::BlobImageRequest, api::BlobImageResult)>,
 
     // The deserialized drawing commands.
     // In this example we store them in Arcs. This isn't necessary since in this simplified
     // case the command list is a simple 32 bits value and would be cheap to clone before sending
     // to the workers. But in a more realistic scenario the commands would typically be bigger
     // and more expensive to clone, so let's pretend it is also the case here.
-    image_cmds: HashMap<wt::ImageKey, Arc<ImageRenderingCommands>>,
+    image_cmds: HashMap<api::ImageKey, Arc<ImageRenderingCommands>>,
 
     // The images rendered in the current frame (not kept here between frames).
-    rendered_images: HashMap<wt::BlobImageRequest, Option<wt::BlobImageResult>>,
+    rendered_images: HashMap<api::BlobImageRequest, Option<api::BlobImageResult>>,
 }
 
 impl CheckerboardRenderer {
@@ -131,33 +130,33 @@ impl CheckerboardRenderer {
         CheckerboardRenderer {
             image_cmds: HashMap::new(),
             rendered_images: HashMap::new(),
-            workers: workers,
-            tx: tx,
-            rx: rx,
+            workers,
+            tx,
+            rx,
         }
     }
 }
 
-impl wt::BlobImageRenderer for CheckerboardRenderer {
-    fn add(&mut self, key: wt::ImageKey, cmds: wt::BlobImageData, _: Option<wt::TileSize>) {
+impl api::BlobImageRenderer for CheckerboardRenderer {
+    fn add(&mut self, key: api::ImageKey, cmds: api::BlobImageData, _: Option<api::TileSize>) {
         self.image_cmds.insert(key, Arc::new(deserialize_blob(&cmds[..]).unwrap()));
     }
 
-    fn update(&mut self, key: wt::ImageKey, cmds: wt::BlobImageData) {
+    fn update(&mut self, key: api::ImageKey, cmds: api::BlobImageData) {
         // Here, updating is just replacing the current version of the commands with
         // the new one (no incremental updates).
         self.image_cmds.insert(key, Arc::new(deserialize_blob(&cmds[..]).unwrap()));
     }
 
-    fn delete(&mut self, key: wt::ImageKey) {
+    fn delete(&mut self, key: api::ImageKey) {
         self.image_cmds.remove(&key);
     }
 
     fn request(&mut self,
-               resources: &wt::BlobImageResources,
-               request: wt::BlobImageRequest,
-               descriptor: &wt::BlobImageDescriptor,
-               _dirty_rect: Option<wt::DeviceUintRect>) {
+               _resources: &api::BlobImageResources,
+               request: api::BlobImageRequest,
+               descriptor: &api::BlobImageDescriptor,
+               _dirty_rect: Option<api::DeviceUintRect>) {
         // This method is where we kick off our rendering jobs.
         // It should avoid doing work on the calling thread as much as possible.
         // In this example we will use the thread pool to render individual tiles.
@@ -179,7 +178,7 @@ impl wt::BlobImageRenderer for CheckerboardRenderer {
         self.rendered_images.insert(request, None);
     }
 
-    fn resolve(&mut self, request: wt::BlobImageRequest) -> wt::BlobImageResult {
+    fn resolve(&mut self, request: api::BlobImageRequest) -> api::BlobImageResult {
         // In this method we wait until the work is complete on the worker threads and
         // gather the results.
 
@@ -187,7 +186,7 @@ impl wt::BlobImageRenderer for CheckerboardRenderer {
         // that we are looking for.
         match self.rendered_images.entry(request) {
             Entry::Vacant(_) => {
-                return Err(wt::BlobImageError::InvalidKey);
+                return Err(api::BlobImageError::InvalidKey);
             }
             Entry::Occupied(entry) => {
                 // None means we haven't yet received the result.
@@ -208,58 +207,55 @@ impl wt::BlobImageRenderer for CheckerboardRenderer {
         }
 
         // If we break out of the loop above it means the channel closed unexpectedly.
-        Err(wt::BlobImageError::Other("Channel closed".into()))
+        Err(api::BlobImageError::Other("Channel closed".into()))
     }
-    fn delete_font(&mut self, font: wt::FontKey) {}
+    fn delete_font(&mut self, _font: api::FontKey) { }
 }
 
-fn body(api: &wt::RenderApi,
-        builder: &mut wt::DisplayListBuilder,
-        _pipeline_id: &wt::PipelineId,
-        layout_size: &wt::LayoutSize)
-{
+fn body(api: &api::RenderApi,
+        builder: &mut api::DisplayListBuilder,
+        _pipeline_id: &api::PipelineId,
+        layout_size: &api::LayoutSize) {
     let blob_img1 = api.generate_image_key();
     api.add_image(
         blob_img1,
-        wt::ImageDescriptor::new(500, 500, wt::ImageFormat::BGRA8, true),
-        wt::ImageData::new_blob_image(serialize_blob(wt::ColorU::new(50, 50, 150, 255))),
+        api::ImageDescriptor::new(500, 500, api::ImageFormat::BGRA8, true),
+        api::ImageData::new_blob_image(serialize_blob(api::ColorU::new(50, 50, 150, 255))),
         Some(128),
     );
 
     let blob_img2 = api.generate_image_key();
     api.add_image(
         blob_img2,
-        wt::ImageDescriptor::new(200, 200, wt::ImageFormat::BGRA8, true),
-        wt::ImageData::new_blob_image(serialize_blob(wt::ColorU::new(50, 150, 50, 255))),
+        api::ImageDescriptor::new(200, 200, api::ImageFormat::BGRA8, true),
+        api::ImageData::new_blob_image(serialize_blob(api::ColorU::new(50, 150, 50, 255))),
         None,
     );
 
-    let bounds = wt::LayoutRect::new(wt::LayoutPoint::zero(), *layout_size);
-    builder.push_stacking_context(wt::ScrollPolicy::Scrollable,
+    let bounds = api::LayoutRect::new(api::LayoutPoint::zero(), *layout_size);
+    builder.push_stacking_context(api::ScrollPolicy::Scrollable,
                                   bounds,
                                   None,
-                                  wt::TransformStyle::Flat,
+                                  api::TransformStyle::Flat,
                                   None,
-                                  wt::MixBlendMode::Normal,
+                                  api::MixBlendMode::Normal,
                                   Vec::new());
 
-    let clip = builder.push_clip_region(&bounds, vec![], None);
     builder.push_image(
         (30, 30).by(500, 500),
-        clip,
-        wt::LayoutSize::new(500.0, 500.0),
-        wt::LayoutSize::new(0.0, 0.0),
-        wt::ImageRendering::Auto,
+        Some(api::LocalClip::from(bounds)),
+        api::LayoutSize::new(500.0, 500.0),
+        api::LayoutSize::new(0.0, 0.0),
+        api::ImageRendering::Auto,
         blob_img1,
     );
 
-    let clip = builder.push_clip_region(&bounds, vec![], None);
     builder.push_image(
         (600, 600).by(200, 200),
-        clip,
-        wt::LayoutSize::new(200.0, 200.0),
-        wt::LayoutSize::new(0.0, 0.0),
-        wt::ImageRendering::Auto,
+        Some(api::LocalClip::from(bounds)),
+        api::LayoutSize::new(200.0, 200.0),
+        api::LayoutSize::new(0.0, 0.0),
+        api::ImageRendering::Auto,
         blob_img2,
     );
 
@@ -267,7 +263,7 @@ fn body(api: &wt::RenderApi,
 }
 
 fn event_handler(_event: &glutin::Event,
-                 _api: &wt::RenderApi)
+                 _api: &api::RenderApi)
 {
 }
 

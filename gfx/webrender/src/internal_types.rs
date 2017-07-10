@@ -14,8 +14,8 @@ use std::path::PathBuf;
 use std::sync::Arc;
 use tiling;
 use renderer::BlendMode;
-use webrender_traits::{ClipId, ColorF, DeviceUintRect, Epoch, ExternalImageData, ExternalImageId};
-use webrender_traits::{DevicePoint, ImageData, ImageFormat, PipelineId};
+use api::{ClipId, ColorF, DeviceUintRect, Epoch, ExternalImageData, ExternalImageId};
+use api::{DevicePoint, ImageData, ImageFormat, PipelineId};
 
 // An ID for a texture that is owned by the
 // texture cache module. This can include atlases
@@ -59,7 +59,6 @@ pub enum TextureSampler {
     Color2,
     CacheA8,
     CacheRGBA8,
-    Data32,
     ResourceCache,
     Layers,
     RenderTasks,
@@ -171,11 +170,11 @@ pub struct DebugFontVertex {
 impl DebugFontVertex {
     pub fn new(x: f32, y: f32, u: f32, v: f32, color: PackedColor) -> DebugFontVertex {
         DebugFontVertex {
-            x: x,
-            y: y,
-            color: color,
-            u: u,
-            v: v,
+            x,
+            y,
+            color,
+            u,
+            v,
         }
     }
 }
@@ -190,9 +189,9 @@ pub struct DebugColorVertex {
 impl DebugColorVertex {
     pub fn new(x: f32, y: f32, color: PackedColor) -> DebugColorVertex {
         DebugColorVertex {
-            x: x,
-            y: y,
-            color: color,
+            x,
+            y,
+            color,
         }
     }
 }
@@ -279,9 +278,9 @@ impl RendererFrame {
                frame: Option<tiling::Frame>)
                -> RendererFrame {
         RendererFrame {
-            pipeline_epoch_map: pipeline_epoch_map,
-            layers_bouncing_back: layers_bouncing_back,
-            frame: frame,
+            pipeline_epoch_map,
+            layers_bouncing_back,
+            frame,
         }
     }
 }

@@ -178,10 +178,10 @@ impl GlyphKey {
                point: LayoutPoint,
                render_mode: FontRenderMode) -> GlyphKey {
         GlyphKey {
-            font_key: font_key,
-            size: size,
+            font_key,
+            size,
             color: ColorU::from(color),
-            index: index,
+            index,
             subpixel_point: SubpixelPoint::new(point, render_mode),
         }
     }
