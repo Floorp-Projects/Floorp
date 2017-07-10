@@ -170,6 +170,30 @@ void
 NullHttpTransaction::OnTransportStatus(nsITransport* transport,
                                        nsresult status, int64_t progress)
 {
+  if (status == NS_NET_STATUS_RESOLVING_HOST) {
+    if (mTimings.domainLookupStart.IsNull()) {
+      mTimings.domainLookupStart = TimeStamp::Now();
+    }
+  } else if (status == NS_NET_STATUS_RESOLVED_HOST) {
+    if (mTimings.domainLookupEnd.IsNull()) {
+      mTimings.domainLookupEnd = TimeStamp::Now();
+    }
+  } else if (status == NS_NET_STATUS_CONNECTING_TO) {
+    if (mTimings.connectStart.IsNull()) {
+      mTimings.connectStart = TimeStamp::Now();
+    }
+  } else if (status == NS_NET_STATUS_CONNECTED_TO) {
+    if (mTimings.connectEnd.IsNull()) {
+      mTimings.connectEnd = TimeStamp::Now();
+    }
+  } else if (status == NS_NET_STATUS_TLS_HANDSHAKE_ENDED) {
+    if (mTimings.secureConnectionStart.IsNull() &&
+        !mTimings.connectEnd.IsNull()) {
+      mTimings.secureConnectionStart = mTimings.connectEnd;
+    }
+    mTimings.connectEnd = TimeStamp::Now();;
+  }
+
   if (mActivityDistributor) {
     NS_DispatchToMainThread(new CallObserveActivity(mActivityDistributor,
                                   mConnectionInfo->GetOrigin(),

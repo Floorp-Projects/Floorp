@@ -21,8 +21,7 @@ interface PerformanceTiming {
   readonly attribute unsigned long long domainLookupEnd;
   readonly attribute unsigned long long connectStart;
   readonly attribute unsigned long long connectEnd;
-  // secureConnectionStart will be implemneted in bug 772589
-  // readonly attribute unsigned long long secureConnectionStart;
+  readonly attribute unsigned long long secureConnectionStart;
   readonly attribute unsigned long long requestStart;
   readonly attribute unsigned long long responseStart;
   readonly attribute unsigned long long responseEnd;

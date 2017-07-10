@@ -12,7 +12,7 @@ const { getNetMonitorTimingsURL } = require("../utils/mdn-utils");
 const MDNLink = require("./mdn-link");
 
 const { div, span } = DOM;
-const types = ["blocked", "dns", "connect", "send", "wait", "receive"];
+const types = ["blocked", "dns", "connect", "ssl", "send", "wait", "receive"];
 const TIMINGS_END_PADDING = "80px";
 
 /*

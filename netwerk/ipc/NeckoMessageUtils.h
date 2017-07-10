@@ -147,6 +147,7 @@ struct ParamTraits<mozilla::net::ResourceTimingStruct>
     WriteParam(aMsg, aParam.domainLookupStart);
     WriteParam(aMsg, aParam.domainLookupEnd);
     WriteParam(aMsg, aParam.connectStart);
+    WriteParam(aMsg, aParam.secureConnectionStart);
     WriteParam(aMsg, aParam.connectEnd);
     WriteParam(aMsg, aParam.requestStart);
     WriteParam(aMsg, aParam.responseStart);
@@ -169,6 +170,7 @@ struct ParamTraits<mozilla::net::ResourceTimingStruct>
     return ReadParam(aMsg, aIter, &aResult->domainLookupStart) &&
            ReadParam(aMsg, aIter, &aResult->domainLookupEnd) &&
            ReadParam(aMsg, aIter, &aResult->connectStart) &&
+           ReadParam(aMsg, aIter, &aResult->secureConnectionStart) &&
            ReadParam(aMsg, aIter, &aResult->connectEnd) &&
            ReadParam(aMsg, aIter, &aResult->requestStart) &&
            ReadParam(aMsg, aIter, &aResult->responseStart) &&

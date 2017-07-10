@@ -169,6 +169,8 @@ interface nsISocketTransport : nsITransport
     const unsigned long STATUS_SENDING_TO     = 0x804b0005;
     const unsigned long STATUS_WAITING_FOR    = 0x804b000a;
     const unsigned long STATUS_RECEIVING_FROM = 0x804b0006;
+    const unsigned long STATUS_TLS_HANDSHAKE_STARTING = 0x804b000c;
+    const unsigned long STATUS_TLS_HANDSHAKE_ENDED    = 0x804b000d;
 
     /**
      * connectionFlags is a bitmask that can be used to modify underlying 

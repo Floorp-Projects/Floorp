@@ -202,7 +202,7 @@ PerformanceMainThread::IsPerformanceTimingAttribute(const nsAString& aName)
   static const char* attributes[] =
     {"navigationStart", "unloadEventStart", "unloadEventEnd", "redirectStart",
      "redirectEnd", "fetchStart", "domainLookupStart", "domainLookupEnd",
-     "connectStart", "connectEnd", "requestStart", "responseStart",
+     "connectStart", "secureConnectionStart", "connectEnd", "requestStart", "responseStart",
      "responseEnd", "domLoading", "domInteractive",
      "domContentLoadedEventStart", "domContentLoadedEventEnd", "domComplete",
      "loadEventStart", "loadEventEnd", nullptr};
@@ -250,6 +250,9 @@ PerformanceMainThread::GetPerformanceTimingFromString(const nsAString& aProperty
   }
   if (aProperty.EqualsLiteral("connectStart")) {
     return Timing()->ConnectStart();
+  }
+  if (aProperty.EqualsLiteral("secureConnectionStart")) {
+    return Timing()->SecureConnectionStart();
   }
   if (aProperty.EqualsLiteral("connectEnd")) {
     return Timing()->ConnectEnd();
