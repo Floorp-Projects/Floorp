@@ -541,6 +541,7 @@ SERVO_BINDING_FUNC(Servo_StyleSet_GetBaseComputedValuesForElement,
                    ServoComputedValuesStrong,
                    RawServoStyleSetBorrowed set,
                    RawGeckoElementBorrowed element,
+                   ServoComputedValuesBorrowed existing_style,
                    const mozilla::ServoElementSnapshotTable* snapshots,
                    mozilla::CSSPseudoElementType pseudo_type)
 
