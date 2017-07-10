@@ -1592,8 +1592,7 @@ WebSocketImpl::Init(JSContext* aCx,
                                    EmptyCString(),
                                    nullptr,
                                    &shouldLoad,
-                                   nsContentUtils::GetContentPolicy(),
-                                   nsContentUtils::GetSecurityManager());
+                                   nsContentUtils::GetContentPolicy());
     NS_ENSURE_SUCCESS(rv, rv);
 
     if (NS_CP_REJECTED(shouldLoad)) {
