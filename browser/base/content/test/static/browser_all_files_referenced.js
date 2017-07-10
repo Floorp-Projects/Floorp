@@ -130,8 +130,6 @@ var whitelist = [
   {file: "chrome://global/content/findUtils.js"},
   // Bug 1343843
   {file: "chrome://global/content/url-classifier/unittests.xul"},
-  // Bug 1343839
-  {file: "chrome://global/locale/headsUpDisplay.properties"},
   // Bug 1348362
   {file: "chrome://global/skin/icons/warning-64.png", platforms: ["linux", "win"]},
   // Bug 1348525
