@@ -36,11 +36,11 @@ const tabTransitions = {
   },
 };
 
-function isTopLevelFrame({frameId, parentFrameId}) {
+const isTopLevelFrame = ({frameId, parentFrameId}) => {
   return frameId == 0 && parentFrameId == -1;
-}
+};
 
-function fillTransitionProperties(eventName, src, dst) {
+const fillTransitionProperties = (eventName, src, dst) => {
   if (eventName == "onCommitted" ||
       eventName == "onHistoryStateUpdated" ||
       eventName == "onReferenceFragmentUpdated") {
@@ -90,7 +90,7 @@ function fillTransitionProperties(eventName, src, dst) {
     dst.transitionType = transitionType;
     dst.transitionQualifiers = transitionQualifiers;
   }
-}
+};
 
 // Similar to WebRequestEventManager but for WebNavigation.
 function WebNavigationEventManager(context, eventName) {
@@ -149,7 +149,7 @@ function WebNavigationEventManager(context, eventName) {
 
 WebNavigationEventManager.prototype = Object.create(SingletonEventManager.prototype);
 
-function convertGetFrameResult(tabId, data) {
+const convertGetFrameResult = (tabId, data) => {
   return {
     errorOccurred: data.errorOccurred,
     url: data.url,
@@ -157,7 +157,7 @@ function convertGetFrameResult(tabId, data) {
     frameId: data.frameId,
     parentFrameId: data.parentFrameId,
   };
-}
+};
 
 this.webNavigation = class extends ExtensionAPI {
   getAPI(context) {
