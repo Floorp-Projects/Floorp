@@ -29,7 +29,7 @@ use internal_types::UvRect;
 use profiler::GpuCacheProfileCounters;
 use renderer::MAX_VERTEX_TEXTURE_WIDTH;
 use std::{mem, u32};
-use webrender_traits::{ColorF, LayerRect};
+use api::{ColorF, LayerRect};
 
 pub const GPU_CACHE_INITIAL_HEIGHT: u32 = 512;
 const FRAMES_BEFORE_EVICTION: usize = 10;
@@ -54,6 +54,14 @@ struct CacheLocation {
 #[derive(Copy, Clone, Debug)]
 pub struct GpuBlockData {
     pub data: [f32; 4],
+}
+
+impl GpuBlockData {
+    pub fn empty() -> GpuBlockData {
+        GpuBlockData {
+            data: [0.0; 4],
+        }
+    }
 }
 
 /// Conversion helpers for GpuBlockData
@@ -154,8 +162,8 @@ impl Block {
            next: Option<BlockIndex>,
            frame_id: FrameId) -> Block {
         Block {
-            address: address,
-            next: next,
+            address,
+            next,
             last_access_time: frame_id,
             epoch: Epoch(0),
         }
@@ -177,7 +185,7 @@ struct Row {
 impl Row {
     fn new(block_count_per_item: usize) -> Row {
         Row {
-            block_count_per_item: block_count_per_item,
+            block_count_per_item,
         }
     }
 }
@@ -348,7 +356,7 @@ impl Texture {
             // to be updated on the GPU.
             self.updates.push(GpuCacheUpdate::Copy {
                 block_index: pending_block_index,
-                block_count: block_count,
+                block_count,
                 address: block.address,
             });
         }
@@ -431,12 +439,19 @@ pub struct GpuDataRequest<'a> {
 }
 
 impl<'a> GpuDataRequest<'a> {
-    pub fn push(&mut self, block: GpuBlockData) {
-        self.texture.pending_blocks.push(block);
+    pub fn push<B>(&mut self, block: B)
+    where B: Into<GpuBlockData>
+    {
+        self.texture.pending_blocks.push(block.into());
     }
 
     pub fn extend_from_slice(&mut self, blocks: &[GpuBlockData]) {
         self.texture.pending_blocks.extend_from_slice(blocks);
+    }
+
+    /// Consume the request and return the number of blocks written
+    pub fn close(self) -> usize {
+        self.texture.pending_blocks.len() - self.start_index
     }
 }
 
@@ -499,7 +514,7 @@ impl GpuCache {
         }
 
         Some(GpuDataRequest {
-            handle: handle,
+            handle,
             frame_id: self.frame_id,
             start_index: self.texture.pending_blocks.len(),
             texture: &mut self.texture,

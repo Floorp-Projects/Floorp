@@ -53,8 +53,8 @@ impl Payload {
         assert_eq!(payload_reader.position(), data.len() as u64);
 
         Payload {
-            epoch: epoch,
-            pipeline_id: pipeline_id,
+            epoch,
+            pipeline_id,
             display_list_data: built_display_list_data,
         }
     }
