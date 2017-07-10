@@ -788,13 +788,6 @@ xpc::UnwrapReflectorToISupports(JSObject* reflector)
     return canonical;
 }
 
-NS_IMETHODIMP_(nsISupports*)
-nsXPConnect::GetNativeOfWrapper(JSContext* aJSContext,
-                                JSObject* aJSObj)
-{
-    return UnwrapReflectorToISupports(aJSObj);
-}
-
 NS_IMETHODIMP
 nsXPConnect::GetWrappedNativeOfNativeObject(JSContext * aJSContext,
                                             JSObject * aScopeArg,
