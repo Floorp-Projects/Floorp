@@ -8,7 +8,6 @@ const Services = require("Services");
 const { DOMHelpers } = require("resource://devtools/client/shared/DOMHelpers.jsm");
 const { Task } = require("devtools/shared/task");
 const defer = require("devtools/shared/defer");
-const { getMostRecentBrowserWindow } = require("sdk/window/utils");
 
 const XULNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 const DEV_EDITION_PROMO_URL = "chrome://devtools/content/framework/dev-edition-promo/dev-edition-promo.xul";
@@ -150,7 +149,7 @@ function onFrameLoad(frame) {
 }
 
 function getGBrowser() {
-  return getMostRecentBrowserWindow().gBrowser;
+  return Services.wm.getMostRecentWindow("navigator:browser").gBrowser;
 }
 
 function wait(n) {

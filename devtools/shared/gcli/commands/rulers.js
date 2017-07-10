@@ -6,7 +6,6 @@
 
 const events = require("sdk/event/core");
 
-loader.lazyRequireGetter(this, "getOuterId", "sdk/window/utils", true);
 loader.lazyRequireGetter(this, "CommandState",
   "devtools/shared/gcli/command-state", true);
 
