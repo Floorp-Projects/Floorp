@@ -48,7 +48,6 @@
 #include "mozilla/dom/HTMLSharedObjectElement.h"
 #include "mozilla/dom/HTMLElementBinding.h"
 #include "mozilla/dom/HTMLEmbedElementBinding.h"
-#include "mozilla/dom/HTMLAppletElementBinding.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/ResolveSystemBinding.h"
 #include "mozilla/dom/WebIDLGlobalNameHash.h"
@@ -2313,11 +2312,7 @@ ReparentWrapper(JSContext* aCx, JS::Handle<JSObject*> aObjArg)
     rv = UnwrapObject<prototypes::id::HTMLEmbedElement,
                       HTMLSharedObjectElement>(&maybeObjLC, htmlobject);
     if (NS_FAILED(rv)) {
-      rv = UnwrapObject<prototypes::id::HTMLAppletElement,
-                        HTMLSharedObjectElement>(&maybeObjLC, htmlobject);
-      if (NS_FAILED(rv)) {
-        htmlobject = nullptr;
-      }
+      htmlobject = nullptr;
     }
   }
   if (htmlobject) {

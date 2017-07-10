@@ -12,7 +12,6 @@
 #include "nsObjectLoadingContent.h"
 #include "nsGkAtoms.h"
 #include "nsError.h"
-#include "nsIDOMHTMLAppletElement.h"
 #include "nsIDOMHTMLEmbedElement.h"
 
 namespace mozilla {
@@ -20,13 +19,13 @@ namespace dom {
 
 class HTMLSharedObjectElement final : public nsGenericHTMLElement
                                     , public nsObjectLoadingContent
-                                    , public nsIDOMHTMLAppletElement
                                     , public nsIDOMHTMLEmbedElement
 {
 public:
   explicit HTMLSharedObjectElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo,
                                    mozilla::dom::FromParser aFromParser = mozilla::dom::NOT_FROM_PARSER);
 
+  NS_DECL_NSIDOMHTMLEMBEDELEMENT
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
 
@@ -37,20 +36,8 @@ public:
   NS_IMETHOD PostHandleEvent(EventChainPostVisitor& aVisitor) override;
 #endif
 
-  // nsIDOMHTMLAppletElement
-  NS_DECL_NSIDOMHTMLAPPLETELEMENT
-
-  // Can't use macro for nsIDOMHTMLEmbedElement because it has conflicts with
-  // NS_DECL_NSIDOMHTMLAPPLETELEMENT.
-
   // EventTarget
   virtual void AsyncEventRunning(AsyncEventDispatcher* aEvent) override;
-
-  // nsIDOMHTMLEmbedElement
-  NS_IMETHOD GetSrc(nsAString &aSrc) override;
-  NS_IMETHOD SetSrc(const nsAString &aSrc) override;
-  NS_IMETHOD GetType(nsAString &aType) override;
-  NS_IMETHOD SetType(const nsAString &aType) override;
 
   virtual nsresult BindToTree(nsIDocument *aDocument, nsIContent *aParent,
                               nsIContent *aBindingParent,
@@ -86,7 +73,7 @@ public:
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED_NO_UNLINK(HTMLSharedObjectElement,
                                                      nsGenericHTMLElement)
 
-  // WebIDL API for <applet>
+  // WebIDL <embed> api
   void GetAlign(DOMString& aValue)
   {
     GetHTMLAttr(nsGkAtoms::align, aValue);
@@ -94,35 +81,6 @@ public:
   void SetAlign(const nsAString& aValue, ErrorResult& aRv)
   {
     SetHTMLAttr(nsGkAtoms::align, aValue, aRv);
-  }
-  void GetAlt(DOMString& aValue)
-  {
-    GetHTMLAttr(nsGkAtoms::alt, aValue);
-  }
-  void SetAlt(const nsAString& aValue, ErrorResult& aRv)
-  {
-    SetHTMLAttr(nsGkAtoms::alt, aValue, aRv);
-  }
-  void GetArchive(DOMString& aValue)
-  {
-    GetHTMLAttr(nsGkAtoms::archive, aValue);
-  }
-  void SetArchive(const nsAString& aValue, ErrorResult& aRv)
-  {
-    SetHTMLAttr(nsGkAtoms::archive, aValue, aRv);
-  }
-  void GetCode(DOMString& aValue)
-  {
-    GetHTMLAttr(nsGkAtoms::code, aValue);
-  }
-  void SetCode(const nsAString& aValue, ErrorResult& aRv)
-  {
-    SetHTMLAttr(nsGkAtoms::code, aValue, aRv);
-  }
-  // XPCOM GetCodebase is ok; note that it's a URI attribute
-  void SetCodeBase(const nsAString& aValue, ErrorResult& aRv)
-  {
-    SetHTMLAttr(nsGkAtoms::codebase, aValue, aRv);
   }
   void GetHeight(DOMString& aValue)
   {
@@ -132,14 +90,6 @@ public:
   {
     SetHTMLAttr(nsGkAtoms::height, aValue, aRv);
   }
-  uint32_t Hspace()
-  {
-    return GetUnsignedIntAttr(nsGkAtoms::hspace, 0);
-  }
-  void SetHspace(uint32_t aValue, ErrorResult& aRv)
-  {
-    SetUnsignedIntAttr(nsGkAtoms::hspace, aValue, 0, aRv);
-  }
   void GetName(DOMString& aValue)
   {
     GetHTMLAttr(nsGkAtoms::name, aValue);
@@ -147,19 +97,6 @@ public:
   void SetName(const nsAString& aValue, ErrorResult& aRv)
   {
     SetHTMLAttr(nsGkAtoms::name, aValue, aRv);
-  }
-  // XPCOM GetObject is ok; note that it's a URI attribute with a weird base URI
-  void SetObject(const nsAString& aValue, ErrorResult& aRv)
-  {
-    SetHTMLAttr(nsGkAtoms::object, aValue, aRv);
-  }
-  uint32_t Vspace()
-  {
-    return GetUnsignedIntAttr(nsGkAtoms::vspace, 0);
-  }
-  void SetVspace(uint32_t aValue, ErrorResult& aRv)
-  {
-    SetUnsignedIntAttr(nsGkAtoms::vspace, aValue, 0, aRv);
   }
   void GetWidth(DOMString& aValue)
   {
@@ -169,7 +106,6 @@ public:
   {
     SetHTMLAttr(nsGkAtoms::width, aValue, aRv);
   }
-
   // WebIDL <embed> api
   // XPCOM GetSrc is ok; note that it's a URI attribute
   void SetSrc(const nsAString& aValue, ErrorResult& aRv)
@@ -184,10 +120,6 @@ public:
   {
     SetHTMLAttr(nsGkAtoms::type, aValue, aRv);
   }
-  // width covered by <applet>
-  // height covered by <applet>
-  // align covered by <applet>
-  // name covered by <applet>
   nsIDocument*
   GetSVGDocument(nsIPrincipal& aSubjectPrincipal)
   {
@@ -212,14 +144,7 @@ protected:
                                           bool aNotify) override;
 
 private:
-  virtual ~HTMLSharedObjectElement();
-
-  nsIAtom *URIAttrName() const
-  {
-    return mNodeInfo->Equals(nsGkAtoms::applet) ?
-           nsGkAtoms::code :
-           nsGkAtoms::src;
-  }
+  ~HTMLSharedObjectElement();
 
   nsContentPolicyType GetContentPolicyType() const override;
 
