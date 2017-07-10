@@ -7,13 +7,6 @@ function test() {
   const Cu = Components.utils;
   const { ToolSidebar } = require("devtools/client/framework/sidebar");
 
-  const toolURL = "data:text/xml;charset=utf8,<?xml version='1.0'?>" +
-                  "<window xmlns='http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul'>" +
-                  "<hbox flex='1'><description flex='1'>foo</description><splitter class='devtools-side-splitter'/>" +
-                  "<tabbox flex='1' id='sidebar' class='devtools-sidebar-tabs'><tabs/><tabpanels flex='1'/></tabbox>" +
-                  "</hbox>" +
-                  "</window>";
-
   const tab1URL = "data:text/html;charset=utf8,<title>1</title><p>1</p>";
 
   let collectedEvents = [];
@@ -21,7 +14,7 @@ function test() {
   let toolDefinition = {
     id: "testTool1072208",
     visibilityswitch: "devtools.testTool1072208.enabled",
-    url: toolURL,
+    url: CHROME_URL_ROOT + "browser_toolbox_sidebar_events.xul",
     label: "Test tool",
     isTargetSupported: () => true,
     build: function (iframeWindow, toolbox) {
