@@ -7,15 +7,9 @@
 <selector xmlns:android="http://schemas.android.com/apk/res/android" xmlns:gecko="http://schemas.android.com/apk/res-auto">
 
     <!-- private browsing mode -->
-    <item android:color="@color/photon_text_placeholder_private" gecko:state_private="true" />
-
-    <!-- dark theme -->
-    <item android:color="@color/photon_text_placeholder_private" gecko:state_dark="true" />
-
-    <!-- light theme -->
-    <item android:color="@color/photon_text_placeholder" gecko:state_light="true" />
+    <item android:color="#FF7F828A" gecko:state_private="true" />
 
     <!-- normal mode -->
-    <item android:color="@color/photon_text_placeholder" />
+    <item android:color="#FF666666" />
 
 </selector>

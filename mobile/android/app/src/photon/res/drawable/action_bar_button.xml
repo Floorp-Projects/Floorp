@@ -7,22 +7,17 @@
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
 
     <item android:state_enabled="true" android:state_pressed="true">
-        <inset android:insetBottom="@dimen/browser_toolbar_image_button_v_spacing" android:insetTop="@dimen/browser_toolbar_image_button_v_spacing">
-            <shape>
-                <solid android:color="@color/highlight" />
-                <corners android:radius="2dp" />
-            </shape>
-        </inset>
+        <shape>
+            <solid android:color="@color/highlight" />
+        </shape>
     </item>
 
     <item android:state_focused="true" android:state_pressed="false">
-        <inset android:insetBottom="@dimen/browser_toolbar_image_button_v_spacing" android:insetTop="@dimen/browser_toolbar_image_button_v_spacing">
-            <shape>
-                <solid android:color="@color/highlight_focused" />
-                <corners android:radius="2dp" />
-            </shape>
-        </inset>
+        <shape>
+            <solid android:color="@color/highlight_focused" />
+        </shape>
     </item>
 
     <item android:drawable="@android:color/transparent" />
+
 </selector>
