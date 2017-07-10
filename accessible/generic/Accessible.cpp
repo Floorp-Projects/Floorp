@@ -1450,14 +1450,14 @@ Accessible::ARIATransformRole(role aRole)
   } else if (aRole == roles::LISTBOX) {
     // A listbox inside of a combobox needs a special role because of ATK
     // mapping to menu.
-    if (mParent && mParent->Role() == roles::COMBOBOX) {
+    if (mParent && mParent->IsCombobox()) {
       return roles::COMBOBOX_LIST;
     } else {
       // Listbox is owned by a combobox
       Relation rel = RelationByType(RelationType::NODE_CHILD_OF);
       Accessible* targetAcc = nullptr;
       while ((targetAcc = rel.Next()))
-        if (targetAcc->Role() == roles::COMBOBOX)
+        if (targetAcc->IsCombobox())
           return roles::COMBOBOX_LIST;
     }
 
