@@ -13,114 +13,94 @@
  * for tips on how to do that.
  */
 const EXPECTED_REFLOWS = [
-  [
-    "select@chrome://global/content/bindings/textbox.xml",
-    "focusAndSelectUrlBar@chrome://browser/content/browser.js",
-    "_delayedStartup@chrome://browser/content/browser.js",
-  ],
+  {
+    stack: [
+      "select@chrome://global/content/bindings/textbox.xml",
+      "focusAndSelectUrlBar@chrome://browser/content/browser.js",
+      "_delayedStartup@chrome://browser/content/browser.js",
+    ],
+  },
 ];
 
 if (Services.appinfo.OS == "Linux") {
   if (gMultiProcessBrowser) {
-    EXPECTED_REFLOWS.push(
-      [
+    EXPECTED_REFLOWS.push({
+      stack: [
         "handleEvent@chrome://browser/content/tabbrowser.xml",
         "EventListener.handleEvent*tabbrowser-tabs_XBL_Constructor@chrome://browser/content/tabbrowser.xml",
       ],
-    );
+    });
   } else {
-    EXPECTED_REFLOWS.push(
-      [
+    EXPECTED_REFLOWS.push({
+      stack: [
         "handleEvent@chrome://browser/content/tabbrowser.xml",
         "inferFromText@chrome://browser/content/browser.js",
         "handleEvent@chrome://browser/content/browser.js",
       ],
-    );
+    });
   }
 }
 
 if (Services.appinfo.OS == "Darwin") {
-  EXPECTED_REFLOWS.push(
-    [
+  EXPECTED_REFLOWS.push({
+    stack: [
       "handleEvent@chrome://browser/content/tabbrowser.xml",
       "inferFromText@chrome://browser/content/browser.js",
       "handleEvent@chrome://browser/content/browser.js",
     ],
-  );
+  });
 }
 
 if (Services.appinfo.OS == "WINNT") {
   EXPECTED_REFLOWS.push(
-    [
-      "verticalMargins@chrome://browser/content/browser-tabsintitlebar.js",
-      "_update@chrome://browser/content/browser-tabsintitlebar.js",
-      "updateAppearance@chrome://browser/content/browser-tabsintitlebar.js",
-      "handleEvent@chrome://browser/content/tabbrowser.xml",
-    ],
+    {
+      stack: [
+        "verticalMargins@chrome://browser/content/browser-tabsintitlebar.js",
+        "_update@chrome://browser/content/browser-tabsintitlebar.js",
+        "updateAppearance@chrome://browser/content/browser-tabsintitlebar.js",
+        "handleEvent@chrome://browser/content/tabbrowser.xml",
+      ],
+      times: 2, // This number should only ever go down - never up.
+    },
 
-    [
-      "verticalMargins@chrome://browser/content/browser-tabsintitlebar.js",
-      "_update@chrome://browser/content/browser-tabsintitlebar.js",
-      "updateAppearance@chrome://browser/content/browser-tabsintitlebar.js",
-      "handleEvent@chrome://browser/content/tabbrowser.xml",
-    ],
+    {
+      stack: [
+        "handleEvent@chrome://browser/content/tabbrowser.xml",
+        "inferFromText@chrome://browser/content/browser.js",
+        "handleEvent@chrome://browser/content/browser.js",
+      ],
+    },
 
-    [
-      "handleEvent@chrome://browser/content/tabbrowser.xml",
-      "inferFromText@chrome://browser/content/browser.js",
-      "handleEvent@chrome://browser/content/browser.js",
-    ],
-
-    [
-      "handleEvent@chrome://browser/content/tabbrowser.xml",
-      "EventListener.handleEvent*tabbrowser-tabs_XBL_Constructor@chrome://browser/content/tabbrowser.xml",
-    ],
+    {
+      stack: [
+        "handleEvent@chrome://browser/content/tabbrowser.xml",
+        "EventListener.handleEvent*tabbrowser-tabs_XBL_Constructor@chrome://browser/content/tabbrowser.xml",
+      ],
+    }
   );
 }
 
 if (Services.appinfo.OS == "WINNT" || Services.appinfo.OS == "Darwin") {
   EXPECTED_REFLOWS.push(
-    [
-      "rect@chrome://browser/content/browser-tabsintitlebar.js",
-      "_update@chrome://browser/content/browser-tabsintitlebar.js",
-      "updateAppearance@chrome://browser/content/browser-tabsintitlebar.js",
-      "handleEvent@chrome://browser/content/tabbrowser.xml",
-    ],
+    {
+      stack: [
+        "rect@chrome://browser/content/browser-tabsintitlebar.js",
+        "_update@chrome://browser/content/browser-tabsintitlebar.js",
+        "updateAppearance@chrome://browser/content/browser-tabsintitlebar.js",
+        "handleEvent@chrome://browser/content/tabbrowser.xml",
+      ],
+      times: 4, // This number should only ever go down - never up.
+    },
 
-    [
-      "rect@chrome://browser/content/browser-tabsintitlebar.js",
-      "_update@chrome://browser/content/browser-tabsintitlebar.js",
-      "updateAppearance@chrome://browser/content/browser-tabsintitlebar.js",
-      "handleEvent@chrome://browser/content/tabbrowser.xml",
-    ],
-
-    [
-      "rect@chrome://browser/content/browser-tabsintitlebar.js",
-      "_update@chrome://browser/content/browser-tabsintitlebar.js",
-      "updateAppearance@chrome://browser/content/browser-tabsintitlebar.js",
-      "handleEvent@chrome://browser/content/tabbrowser.xml",
-    ],
-
-    [
-      "rect@chrome://browser/content/browser-tabsintitlebar.js",
-      "_update@chrome://browser/content/browser-tabsintitlebar.js",
-      "updateAppearance@chrome://browser/content/browser-tabsintitlebar.js",
-      "handleEvent@chrome://browser/content/tabbrowser.xml",
-    ],
-
-    [
-      "verticalMargins@chrome://browser/content/browser-tabsintitlebar.js",
-      "_update@chrome://browser/content/browser-tabsintitlebar.js",
-      "updateAppearance@chrome://browser/content/browser-tabsintitlebar.js",
-      "handleEvent@chrome://browser/content/tabbrowser.xml",
-    ],
-
-    [
-      "verticalMargins@chrome://browser/content/browser-tabsintitlebar.js",
-      "_update@chrome://browser/content/browser-tabsintitlebar.js",
-      "updateAppearance@chrome://browser/content/browser-tabsintitlebar.js",
-      "handleEvent@chrome://browser/content/tabbrowser.xml",
-    ],
+    {
+      stack: [
+        "verticalMargins@chrome://browser/content/browser-tabsintitlebar.js",
+        "_update@chrome://browser/content/browser-tabsintitlebar.js",
+        "updateAppearance@chrome://browser/content/browser-tabsintitlebar.js",
+        "handleEvent@chrome://browser/content/tabbrowser.xml",
+      ],
+      times: 2, // This number should only ever go down - never up.
+    }
   );
 }
 
