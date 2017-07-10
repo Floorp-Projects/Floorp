@@ -7,7 +7,6 @@
 #include "mozilla/EventStates.h"
 #include "mozilla/dom/HTMLSharedObjectElement.h"
 #include "mozilla/dom/HTMLEmbedElementBinding.h"
-#include "mozilla/dom/HTMLAppletElementBinding.h"
 #include "mozilla/dom/ElementInlines.h"
 
 #include "nsIDocument.h"
@@ -91,8 +90,7 @@ NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(HTMLSharedObjectElement)
                                imgIOnloadBlocker,
                                nsIChannelEventSink)
   NS_INTERFACE_TABLE_TO_MAP_SEGUE
-  NS_INTERFACE_MAP_ENTRY_IF_TAG(nsIDOMHTMLAppletElement, applet)
-  NS_INTERFACE_MAP_ENTRY_IF_TAG(nsIDOMHTMLEmbedElement, embed)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMHTMLEmbedElement)
 NS_INTERFACE_MAP_END_INHERITING(nsGenericHTMLElement)
 
 NS_IMPL_ELEMENT_CLONE(HTMLSharedObjectElement)
@@ -196,7 +194,7 @@ HTMLSharedObjectElement::AfterMaybeChangeAttr(int32_t aNamespaceID,
                                               bool aNotify)
 {
   if (aNamespaceID == kNameSpaceID_None) {
-    if (aName == URIAttrName()) {
+    if (aName == nsGkAtoms::src) {
       // If aNotify is false, we are coming from the parser or some such place;
       // we'll get bound after all the attributes have been set, so we'll do the
       // object load from BindToTree/DoneAddingChildren.
@@ -245,20 +243,6 @@ HTMLSharedObjectElement::GetDesiredIMEState()
 
   return nsGenericHTMLElement::GetDesiredIMEState();
 }
-
-NS_IMPL_STRING_ATTR(HTMLSharedObjectElement, Align, align)
-NS_IMPL_STRING_ATTR(HTMLSharedObjectElement, Alt, alt)
-NS_IMPL_STRING_ATTR(HTMLSharedObjectElement, Archive, archive)
-NS_IMPL_STRING_ATTR(HTMLSharedObjectElement, Code, code)
-NS_IMPL_URI_ATTR(HTMLSharedObjectElement, CodeBase, codebase)
-NS_IMPL_STRING_ATTR(HTMLSharedObjectElement, Height, height)
-NS_IMPL_INT_ATTR(HTMLSharedObjectElement, Hspace, hspace)
-NS_IMPL_STRING_ATTR(HTMLSharedObjectElement, Name, name)
-NS_IMPL_URI_ATTR_WITH_BASE(HTMLSharedObjectElement, Object, object, codebase)
-NS_IMPL_URI_ATTR(HTMLSharedObjectElement, Src, src)
-NS_IMPL_STRING_ATTR(HTMLSharedObjectElement, Type, type)
-NS_IMPL_INT_ATTR(HTMLSharedObjectElement, Vspace, vspace)
-NS_IMPL_STRING_ATTR(HTMLSharedObjectElement, Width, width)
 
 int32_t
 HTMLSharedObjectElement::TabIndexDefault()
@@ -390,12 +374,9 @@ JSObject*
 HTMLSharedObjectElement::WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
   JSObject* obj;
-  if (mNodeInfo->Equals(nsGkAtoms::applet)) {
-    obj = HTMLAppletElementBinding::Wrap(aCx, this, aGivenProto);
-  } else {
-    MOZ_ASSERT(mNodeInfo->Equals(nsGkAtoms::embed));
-    obj = HTMLEmbedElementBinding::Wrap(aCx, this, aGivenProto);
-  }
+  MOZ_ASSERT(mNodeInfo->Equals(nsGkAtoms::embed));
+  obj = HTMLEmbedElementBinding::Wrap(aCx, this, aGivenProto);
+
   if (!obj) {
     return nullptr;
   }
@@ -416,6 +397,13 @@ HTMLSharedObjectElement::GetContentPolicyType() const
     return nsIContentPolicy::TYPE_INTERNAL_EMBED;
   }
 }
+
+NS_IMPL_STRING_ATTR(HTMLSharedObjectElement, Align, align)
+NS_IMPL_STRING_ATTR(HTMLSharedObjectElement, Width, width)
+NS_IMPL_STRING_ATTR(HTMLSharedObjectElement, Height, height)
+NS_IMPL_STRING_ATTR(HTMLSharedObjectElement, Name, name)
+NS_IMPL_URI_ATTR(HTMLSharedObjectElement, Src, src)
+NS_IMPL_STRING_ATTR(HTMLSharedObjectElement, Type, type)
 
 } // namespace dom
 } // namespace mozilla
