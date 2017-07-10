@@ -495,7 +495,7 @@ xpc::HasInstance(JSContext* cx, HandleObject objArg, const nsID* iid, bool* bp)
     if (mozilla::jsipc::IsCPOW(obj))
         return mozilla::jsipc::InstanceOf(obj, iid, bp);
 
-    nsISupports* identity = UnwrapReflectorToISupports(obj);
+    nsCOMPtr<nsISupports> identity = UnwrapReflectorToISupports(obj);
     if (!identity)
         return NS_OK;
 

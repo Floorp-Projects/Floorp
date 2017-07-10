@@ -155,8 +155,7 @@ InstallXBLField(JSContext* cx,
   // But there are some cases where we must accept |thisObj| but not install a
   // property on it, or otherwise touch it.  Hence this split of |this|-vetting
   // duties.
-  nsISupports* native =
-    nsContentUtils::XPConnect()->GetNativeOfWrapper(cx, thisObj);
+  nsCOMPtr<nsISupports> native = xpc::UnwrapReflectorToISupports(thisObj);
   if (!native) {
     // Looks like whatever |thisObj| is it's not our nsIContent.  It might well
     // be the proto our binding installed, however, where the private is the
@@ -415,8 +414,10 @@ nsXBLProtoImplField::InstallField(JS::Handle<JSObject*> aBoundNode,
 
   JSAddonId* addonId = MapURIToAddonID(aBindingDocURI);
 
+  // Note: the UNWRAP_OBJECT may mutate boundNode; don't use it after that call.
+  JS::Rooted<JSObject*> boundNode(jsapi.cx(), aBoundNode);
   Element* boundElement = nullptr;
-  rv = UNWRAP_OBJECT(Element, aBoundNode, boundElement);
+  rv = UNWRAP_OBJECT(Element, &boundNode, boundElement);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }

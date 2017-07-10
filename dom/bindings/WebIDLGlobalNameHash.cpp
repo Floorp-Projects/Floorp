@@ -219,8 +219,14 @@ WebIDLGlobalNameHash::DefineIfEnabled(JSContext* aCx,
   }
 
   {
+    // It's safe to pass "&global" here, because we've already unwrapped it, but
+    // for general sanity better to not have debug code even having the
+    // appearance of mutating things that opt code uses.
+#ifdef DEBUG
+    JS::Rooted<JSObject*> temp(aCx, global);
     DebugOnly<nsGlobalWindow*> win;
-    MOZ_ASSERT(NS_SUCCEEDED(UNWRAP_OBJECT(Window, global, win)));
+    MOZ_ASSERT(NS_SUCCEEDED(UNWRAP_OBJECT(Window, &temp, win)));
+#endif
   }
 
   if (checkEnabledForScope && !checkEnabledForScope(aCx, global)) {
