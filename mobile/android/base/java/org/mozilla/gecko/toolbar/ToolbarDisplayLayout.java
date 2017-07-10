@@ -170,7 +170,6 @@ public class ToolbarDisplayLayout extends ThemedLinearLayout {
     public void setPrivateMode(boolean isPrivate) {
         super.setPrivateMode(isPrivate);
         mSiteSecurity.setPrivateMode(isPrivate);
-        mPageActionLayout.setPrivateMode(isPrivate);
     }
 
 
