@@ -18,7 +18,7 @@ async function runTests(browser, accDoc) {
   testStates(button, STATE_FOCUSED);
 
   // Bug 1377942 - The target of the focus event changes under different
-  // circumstances. 
+  // circumstances.
   // In e10s the focus event is the new window, in non-e10s it's the doc.
   onFocus = waitForEvent(EVENT_FOCUS, () => true);
   let newWin = await BrowserTestUtils.openNewBrowserWindow();
