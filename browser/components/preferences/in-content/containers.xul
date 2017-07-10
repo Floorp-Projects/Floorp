@@ -36,6 +36,14 @@
 
     <richlistbox id="containersView" orient="vertical" persist="lastSelectedType"
                  flex="1">
+      <listheader equalsize="always">
+          <treecol id="typeColumn" value="type"
+                   persist="sortDirection"
+                   flex="1" sortDirection="ascending"/>
+          <treecol id="actionColumn" value="action"
+                   persist="sortDirection"
+                   flex="1"/>
+      </listheader>
     </richlistbox>
   </vbox>
   <vbox>
