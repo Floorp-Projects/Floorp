@@ -7,137 +7,111 @@
  *  additionalInfoFields in infoBox section of library
  */
 
-const TEST_URI = "http://www.mozilla.org/";
-
-var gTests = [];
-var gLibrary;
-
-// ------------------------------------------------------------------------------
-
-gTests.push({
-  desc: "Bug 430148 - Remove or hide the more/less button in details pane...",
-  run() {
-    var PO = gLibrary.PlacesOrganizer;
-    let ContentTree = gLibrary.ContentTree;
-    var infoBoxExpanderWrapper = getAndCheckElmtById("infoBoxExpanderWrapper");
-
-    function addVisitsCallback() {
-      // open all bookmarks node
-      PO.selectLeftPaneQuery("AllBookmarks");
-      isnot(PO._places.selectedNode, null,
-            "Correctly selected all bookmarks node.");
-      checkInfoBoxSelected(PO);
-      ok(infoBoxExpanderWrapper.hidden,
-         "Expander button is hidden for all bookmarks node.");
-      checkAddInfoFieldsCollapsed(PO);
-
-      // open history node
-      PO.selectLeftPaneQuery("History");
-      isnot(PO._places.selectedNode, null, "Correctly selected history node.");
-      checkInfoBoxSelected(PO);
-      ok(infoBoxExpanderWrapper.hidden,
-         "Expander button is hidden for history node.");
-      checkAddInfoFieldsCollapsed(PO);
-
-      // open history child node
-      var historyNode = PO._places.selectedNode.
-                        QueryInterface(Ci.nsINavHistoryContainerResultNode);
-      historyNode.containerOpen = true;
-      var childNode = historyNode.getChild(0);
-      isnot(childNode, null, "History node first child is not null.");
-      PO._places.selectNode(childNode);
-      checkInfoBoxSelected(PO);
-      ok(infoBoxExpanderWrapper.hidden,
-         "Expander button is hidden for history child node.");
-      checkAddInfoFieldsCollapsed(PO);
-
-      // open history item
-      var view = ContentTree.view.view;
-      ok(view.rowCount > 0, "History item exists.");
-      view.selection.select(0);
-      ok(infoBoxExpanderWrapper.hidden,
-         "Expander button is hidden for history item.");
-      checkAddInfoFieldsCollapsed(PO);
-
-      historyNode.containerOpen = false;
-
-      // open bookmarks menu node
-      PO.selectLeftPaneQuery("BookmarksMenu");
-      isnot(PO._places.selectedNode, null,
-            "Correctly selected bookmarks menu node.");
-      checkInfoBoxSelected(PO);
-      ok(infoBoxExpanderWrapper.hidden,
-         "Expander button is hidden for bookmarks menu node.");
-      checkAddInfoFieldsCollapsed(PO);
-
-      // open recently bookmarked node
-      PlacesUtils.bookmarks.insertBookmark(PlacesUtils.bookmarksMenuFolderId,
-                                           NetUtil.newURI("place:folder=BOOKMARKS_MENU" +
-                                                          "&folder=UNFILED_BOOKMARKS" +
-                                                          "&folder=TOOLBAR" +
-                                                          "&queryType=" + Ci.nsINavHistoryQueryOptions.QUERY_TYPE_BOOKMARKS +
-                                                          "&sort=" + Ci.nsINavHistoryQueryOptions.SORT_BY_DATEADDED_DESCENDING +
-                                                          "&maxResults=10" +
-                                                          "&excludeQueries=1"),
-                                           0, "Recent Bookmarks");
-      PlacesUtils.bookmarks.insertBookmark(PlacesUtils.bookmarksMenuFolderId,
-                                           NetUtil.newURI("http://mozilla.org/"),
-                                           1, "Mozilla");
-      var menuNode = PO._places.selectedNode.
-                     QueryInterface(Ci.nsINavHistoryContainerResultNode);
-      menuNode.containerOpen = true;
-      childNode = menuNode.getChild(0);
-      isnot(childNode, null, "Bookmarks menu child node exists.");
-      is(childNode.title, "Recent Bookmarks",
-         "Correctly selected recently bookmarked node.");
-      PO._places.selectNode(childNode);
-      checkInfoBoxSelected(PO);
-      ok(!infoBoxExpanderWrapper.hidden,
-         "Expander button is not hidden for recently bookmarked node.");
-      checkAddInfoFieldsNotCollapsed(PO);
-
-      // open first bookmark
-      view = ContentTree.view.view;
-      ok(view.rowCount > 0, "Bookmark item exists.");
-      view.selection.select(0);
-      checkInfoBoxSelected(PO);
-      ok(!infoBoxExpanderWrapper.hidden,
-         "Expander button is not hidden for bookmark item.");
-      checkAddInfoFieldsNotCollapsed(PO);
-      checkAddInfoFields(PO, "bookmark item");
-
-      menuNode.containerOpen = false;
-
-      PlacesTestUtils.clearHistory().then(nextTest);
-    }
-    // add a visit to browser history
-    PlacesTestUtils.addVisits(
-      { uri: PlacesUtils._uri(TEST_URI), visitDate: Date.now() * 1000,
-        transition: PlacesUtils.history.TRANSITION_TYPED }
-      ).then(addVisitsCallback);
-  }
-});
-
-function checkInfoBoxSelected(PO) {
-  is(getAndCheckElmtById("detailsDeck").selectedIndex, 1,
-     "Selected element in detailsDeck is infoBox.");
-}
-
-function checkAddInfoFieldsCollapsed(PO) {
-  PO._additionalInfoFields.forEach(function(id) {
-    ok(getAndCheckElmtById(id).collapsed,
-       "Additional info field correctly collapsed: #" + id);
+let gLibrary;
+add_task(async function() {
+  // Open Library.
+  gLibrary = await promiseLibrary();
+  registerCleanupFunction(async () => {
+    gLibrary.close();
+    await PlacesTestUtils.clearHistory();
   });
-}
+  gLibrary.PlacesOrganizer._places.focus();
 
-function checkAddInfoFieldsNotCollapsed(PO) {
-  ok(PO._additionalInfoFields.some(function(id) {
-      return !getAndCheckElmtById(id).collapsed;
-     }), "Some additional info field correctly not collapsed");
-}
+  info("Bug 430148 - Remove or hide the more/less button in details pane...");
+  let PO = gLibrary.PlacesOrganizer;
+  let ContentTree = gLibrary.ContentTree;
+  let infoBoxExpanderWrapper = getAndCheckElmtById("infoBoxExpanderWrapper");
 
-function checkAddInfoFields(PO, nodeName) {
-  ok(true, "Checking additional info fields visibiity for node: " + nodeName);
+  await PlacesTestUtils.addVisits("http://www.mozilla.org/");
+
+  // open all bookmarks node
+  PO.selectLeftPaneQuery("AllBookmarks");
+  isnot(PO._places.selectedNode, null,
+        "Correctly selected all bookmarks node.");
+  checkInfoBoxSelected();
+  ok(infoBoxExpanderWrapper.hidden,
+      "Expander button is hidden for all bookmarks node.");
+  checkAddInfoFieldsCollapsed(PO);
+
+  // open history node
+  PO.selectLeftPaneQuery("History");
+  isnot(PO._places.selectedNode, null, "Correctly selected history node.");
+  checkInfoBoxSelected();
+  ok(infoBoxExpanderWrapper.hidden,
+      "Expander button is hidden for history node.");
+  checkAddInfoFieldsCollapsed(PO);
+
+  // open history child node
+  var historyNode = PO._places.selectedNode.
+                    QueryInterface(Ci.nsINavHistoryContainerResultNode);
+  historyNode.containerOpen = true;
+  var childNode = historyNode.getChild(0);
+  isnot(childNode, null, "History node first child is not null.");
+  PO._places.selectNode(childNode);
+  checkInfoBoxSelected();
+  ok(infoBoxExpanderWrapper.hidden,
+      "Expander button is hidden for history child node.");
+  checkAddInfoFieldsCollapsed(PO);
+
+  // open history item
+  var view = ContentTree.view.view;
+  ok(view.rowCount > 0, "History item exists.");
+  view.selection.select(0);
+  ok(infoBoxExpanderWrapper.hidden,
+      "Expander button is hidden for history item.");
+  checkAddInfoFieldsCollapsed(PO);
+
+  historyNode.containerOpen = false;
+
+  // open bookmarks menu node
+  PO.selectLeftPaneQuery("BookmarksMenu");
+  isnot(PO._places.selectedNode, null,
+        "Correctly selected bookmarks menu node.");
+  checkInfoBoxSelected();
+  ok(infoBoxExpanderWrapper.hidden,
+      "Expander button is hidden for bookmarks menu node.");
+  checkAddInfoFieldsCollapsed(PO);
+
+  // open recently bookmarked node
+  await PlacesUtils.bookmarks.insert({
+    parentGuid: PlacesUtils.bookmarks.menuGuid,
+    url: "place:folder=BOOKMARKS_MENU&folder=UNFILED_BOOKMARKS&folder=TOOLBAR" +
+         "&queryType=" + Ci.nsINavHistoryQueryOptions.QUERY_TYPE_BOOKMARKS +
+         "&sort=" + Ci.nsINavHistoryQueryOptions.SORT_BY_DATEADDED_DESCENDING +
+         "&maxResults=10" +
+         "&excludeQueries=1",
+    title: "Recent Bookmarks",
+    index: 0
+  });
+  await PlacesUtils.bookmarks.insert({
+    parentGuid: PlacesUtils.bookmarks.menuGuid,
+    url: "http://mozilla.org/",
+    title: "Mozilla",
+    index: 1
+  });
+  var menuNode = PO._places.selectedNode.
+                  QueryInterface(Ci.nsINavHistoryContainerResultNode);
+  menuNode.containerOpen = true;
+  childNode = menuNode.getChild(0);
+  isnot(childNode, null, "Bookmarks menu child node exists.");
+  is(childNode.title, "Recent Bookmarks",
+      "Correctly selected recently bookmarked node.");
+  PO._places.selectNode(childNode);
+  checkInfoBoxSelected();
+  ok(!infoBoxExpanderWrapper.hidden,
+      "Expander button is not hidden for recently bookmarked node.");
+  checkAddInfoFieldsNotCollapsed(PO);
+
+  // open first bookmark
+  view = ContentTree.view.view;
+  ok(view.rowCount > 0, "Bookmark item exists.");
+  view.selection.select(0);
+  checkInfoBoxSelected();
+  ok(!infoBoxExpanderWrapper.hidden,
+      "Expander button is not hidden for bookmark item.");
+  checkAddInfoFieldsNotCollapsed(PO);
+
+  ok(true, "Checking additional info fields visibiity for bookmark item");
   var expanderButton = getAndCheckElmtById("infoBoxExpander");
 
   // make sure additional fields are hidden by default
@@ -157,6 +131,25 @@ function checkAddInfoFields(PO, nodeName) {
     ok(getAndCheckElmtById(id).hidden,
        "Additional info field correctly hidden after toggle: #" + id);
   });
+
+  menuNode.containerOpen = false;
+});
+
+function checkInfoBoxSelected() {
+  is(getAndCheckElmtById("detailsDeck").selectedIndex, 1,
+     "Selected element in detailsDeck is infoBox.");
+}
+
+function checkAddInfoFieldsCollapsed(PO) {
+  PO._additionalInfoFields.forEach(id => {
+    ok(getAndCheckElmtById(id).collapsed,
+       `Additional info field should be collapsed: #${id}`);
+  });
+}
+
+function checkAddInfoFieldsNotCollapsed(PO) {
+  ok(PO._additionalInfoFields.some(id => !getAndCheckElmtById(id).collapsed),
+     `Some additional info field should not be collapsed.`);
 }
 
 function getAndCheckElmtById(id) {
@@ -165,32 +158,3 @@ function getAndCheckElmtById(id) {
   return elmt;
 }
 
-// ------------------------------------------------------------------------------
-
-function nextTest() {
-  if (gTests.length) {
-    var testCase = gTests.shift();
-    ok(true, "TEST: " + testCase.desc);
-    dump("TEST: " + testCase.desc + "\n");
-    testCase.run();
-  } else {
-    // Close Library window.
-    gLibrary.close();
-    // No need to cleanup anything, we have a correct left pane now.
-    finish();
-  }
-}
-
-function test() {
-  waitForExplicitFinish();
-  // Sanity checks.
-  ok(PlacesUtils, "PlacesUtils is running in chrome context");
-  ok(PlacesUIUtils, "PlacesUIUtils is running in chrome context");
-
-  // Open Library.
-  openLibrary(function(library) {
-    gLibrary = library;
-    gLibrary.PlacesOrganizer._places.focus();
-    nextTest(gLibrary);
-  });
-}
