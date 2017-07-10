@@ -584,7 +584,7 @@ void
 DisplayListBuilder::PushClip(const WrRect& aClipRect,
                              const WrImageMask* aMask)
 {
-  uint64_t clip_id = wr_dp_push_clip(mWrState, aClipRect, aMask);
+  uint64_t clip_id = wr_dp_push_clip(mWrState, aClipRect, nullptr, 0, aMask);
   WRDL_LOG("PushClip id=%" PRIu64 " r=%s m=%p b=%s\n", clip_id,
       Stringify(aClipRect).c_str(), aMask,
       aMask ? Stringify(aMask->rect).c_str() : "none");
@@ -659,8 +659,7 @@ DisplayListBuilder::PushRect(const WrRect& aBounds,
       Stringify(aBounds).c_str(),
       Stringify(aClip).c_str(),
       Stringify(aColor).c_str());
-  WrClipRegionToken tok = wr_dp_push_clip_region(mWrState, aClip, nullptr, 0, nullptr);
-  wr_dp_push_rect(mWrState, aBounds, tok, aColor);
+  wr_dp_push_rect(mWrState, aBounds, aClip, aColor);
 }
 
 void
@@ -673,9 +672,8 @@ DisplayListBuilder::PushLinearGradient(const WrRect& aBounds,
                                        const WrSize aTileSize,
                                        const WrSize aTileSpacing)
 {
-  WrClipRegionToken tok = wr_dp_push_clip_region(mWrState, aClip, nullptr, 0, nullptr);
   wr_dp_push_linear_gradient(mWrState,
-                             aBounds, tok,
+                             aBounds, aClip,
                              aStartPoint, aEndPoint,
                              aStops.Elements(), aStops.Length(),
                              aExtendMode,
@@ -692,9 +690,8 @@ DisplayListBuilder::PushRadialGradient(const WrRect& aBounds,
                                        const WrSize aTileSize,
                                        const WrSize aTileSpacing)
 {
-  WrClipRegionToken tok = wr_dp_push_clip_region(mWrState, aClip, nullptr, 0, nullptr);
   wr_dp_push_radial_gradient(mWrState,
-                             aBounds, tok,
+                             aBounds, aClip,
                              aCenter, aRadius,
                              aStops.Elements(), aStops.Length(),
                              aExtendMode,
@@ -721,11 +718,10 @@ DisplayListBuilder::PushImage(const WrRect& aBounds,
                               wr::ImageRendering aFilter,
                               wr::ImageKey aImage)
 {
-  WrClipRegionToken tok = wr_dp_push_clip_region(mWrState, aClip, nullptr, 0, nullptr);
   WRDL_LOG("PushImage b=%s cl=%s s=%s t=%s\n", Stringify(aBounds).c_str(),
       Stringify(aClip).c_str(), Stringify(aStretchSize).c_str(),
       Stringify(aTileSpacing).c_str());
-  wr_dp_push_image(mWrState, aBounds, tok, aStretchSize, aTileSpacing, aFilter, aImage);
+  wr_dp_push_image(mWrState, aBounds, aClip, aStretchSize, aTileSpacing, aFilter, aImage);
 }
 
 void
@@ -737,10 +733,9 @@ DisplayListBuilder::PushYCbCrPlanarImage(const WrRect& aBounds,
                                          WrYuvColorSpace aColorSpace,
                                          wr::ImageRendering aRendering)
 {
-  WrClipRegionToken tok = wr_dp_push_clip_region(mWrState, aClip, nullptr, 0, nullptr);
   wr_dp_push_yuv_planar_image(mWrState,
                               aBounds,
-                              tok,
+                              aClip,
                               aImageChannel0,
                               aImageChannel1,
                               aImageChannel2,
@@ -756,10 +751,9 @@ DisplayListBuilder::PushNV12Image(const WrRect& aBounds,
                                   WrYuvColorSpace aColorSpace,
                                   wr::ImageRendering aRendering)
 {
-  WrClipRegionToken tok = wr_dp_push_clip_region(mWrState, aClip, nullptr, 0, nullptr);
   wr_dp_push_yuv_NV12_image(mWrState,
                             aBounds,
-                            tok,
+                            aClip,
                             aImageChannel0,
                             aImageChannel1,
                             aColorSpace,
@@ -773,10 +767,9 @@ DisplayListBuilder::PushYCbCrInterleavedImage(const WrRect& aBounds,
                                               WrYuvColorSpace aColorSpace,
                                               wr::ImageRendering aRendering)
 {
-  WrClipRegionToken tok = wr_dp_push_clip_region(mWrState, aClip, nullptr, 0, nullptr);
   wr_dp_push_yuv_interleaved_image(mWrState,
                                    aBounds,
-                                   tok,
+                                   aClip,
                                    aImageChannel0,
                                    aColorSpace,
                                    aRendering);
@@ -784,11 +777,9 @@ DisplayListBuilder::PushYCbCrInterleavedImage(const WrRect& aBounds,
 
 void
 DisplayListBuilder::PushIFrame(const WrRect& aBounds,
-                               const WrRect& aClip,
                                PipelineId aPipeline)
 {
-  WrClipRegionToken tok = wr_dp_push_clip_region(mWrState, aClip, nullptr, 0, nullptr);
-  wr_dp_push_iframe(mWrState, aBounds, tok, aPipeline);
+  wr_dp_push_iframe(mWrState, aBounds, aPipeline);
 }
 
 void
@@ -802,8 +793,7 @@ DisplayListBuilder::PushBorder(const WrRect& aBounds,
   if (aSides.length() != 4) {
     return;
   }
-  WrClipRegionToken tok = wr_dp_push_clip_region(mWrState, aClip, nullptr, 0, nullptr);
-  wr_dp_push_border(mWrState, aBounds, tok,
+  wr_dp_push_border(mWrState, aBounds, aClip,
                     aWidths, aSides[0], aSides[1], aSides[2], aSides[3], aRadius);
 }
 
@@ -817,8 +807,7 @@ DisplayListBuilder::PushBorderImage(const WrRect& aBounds,
                                     const WrRepeatMode& aRepeatHorizontal,
                                     const WrRepeatMode& aRepeatVertical)
 {
-  WrClipRegionToken tok = wr_dp_push_clip_region(mWrState, aClip, nullptr, 0, nullptr);
-  wr_dp_push_border_image(mWrState, aBounds, tok,
+  wr_dp_push_border_image(mWrState, aBounds, aClip,
                           aWidths, aImage, aPatch, aOutset,
                           aRepeatHorizontal, aRepeatVertical);
 }
@@ -833,8 +822,7 @@ DisplayListBuilder::PushBorderGradient(const WrRect& aBounds,
                                        wr::GradientExtendMode aExtendMode,
                                        const WrSideOffsets2Df32& aOutset)
 {
-  WrClipRegionToken tok = wr_dp_push_clip_region(mWrState, aClip, nullptr, 0, nullptr);
-  wr_dp_push_border_gradient(mWrState, aBounds, tok,
+  wr_dp_push_border_gradient(mWrState, aBounds, aClip,
                              aWidths, aStartPoint, aEndPoint,
                              aStops.Elements(), aStops.Length(),
                              aExtendMode, aOutset);
@@ -850,9 +838,8 @@ DisplayListBuilder::PushBorderRadialGradient(const WrRect& aBounds,
                                              wr::GradientExtendMode aExtendMode,
                                              const WrSideOffsets2Df32& aOutset)
 {
-  WrClipRegionToken tok = wr_dp_push_clip_region(mWrState, aClip, nullptr, 0, nullptr);
   wr_dp_push_border_radial_gradient(
-    mWrState, aBounds, tok, aWidths, aCenter,
+    mWrState, aBounds, aClip, aWidths, aCenter,
     aRadius, aStops.Elements(), aStops.Length(),
     aExtendMode, aOutset);
 }
@@ -865,8 +852,7 @@ DisplayListBuilder::PushText(const WrRect& aBounds,
                              Range<const WrGlyphInstance> aGlyphBuffer,
                              float aGlyphSize)
 {
-  WrClipRegionToken tok = wr_dp_push_clip_region(mWrState, aClip, nullptr, 0, nullptr);
-  wr_dp_push_text(mWrState, aBounds, tok,
+  wr_dp_push_text(mWrState, aBounds, aClip,
                   ToWrColor(aColor),
                   aFontKey,
                   &aGlyphBuffer[0], aGlyphBuffer.length(),
@@ -884,8 +870,7 @@ DisplayListBuilder::PushBoxShadow(const WrRect& aRect,
                                   const float& aBorderRadius,
                                   const WrBoxShadowClipMode& aClipMode)
 {
-  WrClipRegionToken tok = wr_dp_push_clip_region(mWrState, aClip, nullptr, 0, nullptr);
-  wr_dp_push_box_shadow(mWrState, aRect, tok,
+  wr_dp_push_box_shadow(mWrState, aRect, aClip,
                         aBoxBounds, aOffset, aColor,
                         aBlurRadius, aSpreadRadius, aBorderRadius,
                         aClipMode);
