@@ -10,11 +10,13 @@
  * for tips on how to do that.
  */
 const EXPECTED_REFLOWS = [
-  [
-    "select@chrome://global/content/bindings/textbox.xml",
-    "focusAndSelectUrlBar@chrome://browser/content/browser.js",
-    "_adjustFocusAfterTabSwitch@chrome://browser/content/tabbrowser.xml",
-  ],
+  {
+    stack: [
+      "select@chrome://global/content/bindings/textbox.xml",
+      "focusAndSelectUrlBar@chrome://browser/content/browser.js",
+      "_adjustFocusAfterTabSwitch@chrome://browser/content/tabbrowser.xml",
+    ],
+  }
 ];
 
 /*
