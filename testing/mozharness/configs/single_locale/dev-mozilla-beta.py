@@ -1,5 +1,5 @@
 config = {
-    "branch": "date",
+    "branch": "jamun",
     "nightly_build": True,
     "update_channel": "beta-dev",
 
@@ -7,8 +7,8 @@ config = {
     "hg_l10n_base": "https://hg.mozilla.org/releases/l10n/mozilla-beta",
 
     # repositories
-    # staging beta dev releases use date repo for now
-    "mozilla_dir": "date",
+    # staging beta dev releases use jamun repo for now
+    "mozilla_dir": "jamun",
     "repos": [{
         "vcs": "hg",
         "repo": "https://hg.mozilla.org/build/tools",
@@ -16,10 +16,10 @@ config = {
         "dest": "tools",
     }, {
         "vcs": "hg",
-        "repo": "https://hg.mozilla.org/projects/date",
+        "repo": "https://hg.mozilla.org/projects/jamun",
         "branch": "%(revision)s",
-        "dest": "date",
-        "clone_upstream_url": "https://hg.mozilla.org/mozilla-unified",
+        "dest": "jamun",
+        "clone_upstream_url": "https://hg.mozilla.org/projects/jamun",
     }],
     # purge options
     'is_automation': True,
