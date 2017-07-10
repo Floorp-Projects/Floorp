@@ -69,7 +69,7 @@ BEGIN_TEST(testWeakCacheMap)
     using ObjectMap = js::GCHashMap<JS::Heap<JSObject*>, uint32_t,
                                     js::MovableCellHasher<JS::Heap<JSObject*>>>;
     using Cache = JS::WeakCache<ObjectMap>;
-    auto cache = Cache(JS::GetObjectZone(tenured1), ObjectMap(cx));
+    Cache cache(JS::GetObjectZone(tenured1), cx);
     CHECK(cache.init());
 
     cache.put(tenured1, 1);
