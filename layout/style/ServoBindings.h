@@ -639,6 +639,20 @@ void Gecko_SetJemallocThreadLocalArena(bool enabled);
 #include "mozilla/ServoBindingList.h"
 #undef SERVO_BINDING_FUNC
 
+mozilla::css::ErrorReporter* Gecko_CreateCSSErrorReporter(mozilla::ServoStyleSheet* sheet,
+                                                          mozilla::css::Loader* loader,
+                                                          nsIURI* uri);
+void Gecko_DestroyCSSErrorReporter(mozilla::css::ErrorReporter* reporter);
+void Gecko_ReportUnexpectedCSSError(mozilla::css::ErrorReporter* reporter,
+                                    const char* message,
+                                    const char* param,
+                                    uint32_t paramLen,
+                                    const char* source,
+                                    uint32_t sourceLen,
+                                    uint32_t lineNumber,
+                                    uint32_t colNumber,
+                                    nsIURI* aURI);
+
 } // extern "C"
 
 #endif // mozilla_ServoBindings_h

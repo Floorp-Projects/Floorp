@@ -215,7 +215,8 @@ SERVO_BINDING_FUNC(Servo_ParseProperty,
                    nsCSSPropertyID property, const nsACString* value,
                    RawGeckoURLExtraData* data,
                    mozilla::ParsingMode parsing_mode,
-                   nsCompatibility quirks_mode)
+                   nsCompatibility quirks_mode,
+                   mozilla::css::Loader* loader)
 SERVO_BINDING_FUNC(Servo_ParseEasing, bool,
                    const nsAString* easing,
                    RawGeckoURLExtraData* data,
@@ -310,7 +311,8 @@ SERVO_BINDING_FUNC(Servo_AnimationValue_Compute,
 SERVO_BINDING_FUNC(Servo_ParseStyleAttribute, RawServoDeclarationBlockStrong,
                    const nsACString* data,
                    RawGeckoURLExtraData* extra_data,
-                   nsCompatibility quirks_mode)
+                   nsCompatibility quirks_mode,
+                   mozilla::css::Loader* loader)
 SERVO_BINDING_FUNC(Servo_DeclarationBlock_CreateEmpty,
                    RawServoDeclarationBlockStrong)
 SERVO_BINDING_FUNC(Servo_DeclarationBlock_Clone, RawServoDeclarationBlockStrong,
@@ -344,14 +346,16 @@ SERVO_BINDING_FUNC(Servo_DeclarationBlock_SetProperty, bool,
                    const nsACString* value, bool is_important,
                    RawGeckoURLExtraData* data,
                    mozilla::ParsingMode parsing_mode,
-                   nsCompatibility quirks_mode)
+                   nsCompatibility quirks_mode,
+                   mozilla::css::Loader* loader)
 SERVO_BINDING_FUNC(Servo_DeclarationBlock_SetPropertyById, bool,
                    RawServoDeclarationBlockBorrowed declarations,
                    nsCSSPropertyID property,
                    const nsACString* value, bool is_important,
                    RawGeckoURLExtraData* data,
                    mozilla::ParsingMode parsing_mode,
-                   nsCompatibility quirks_mode)
+                   nsCompatibility quirks_mode,
+                   mozilla::css::Loader* loader)
 SERVO_BINDING_FUNC(Servo_DeclarationBlock_RemoveProperty, void,
                    RawServoDeclarationBlockBorrowed declarations,
                    const nsACString* property)
