@@ -935,29 +935,35 @@ nsLayoutUtils::GetCurrentAPZResolutionScale(nsIPresShell* aShell) {
 // Return the maximum displayport size, based on the LayerManager's maximum
 // supported texture size. The result is in app units.
 static nscoord
-GetMaxDisplayPortSize(nsIContent* aContent)
+GetMaxDisplayPortSize(nsIContent* aContent, nsPresContext* aFallbackPrescontext)
 {
   MOZ_ASSERT(!gfxPrefs::LayersTilesEnabled(), "Do not clamp displayports if tiling is enabled");
 
+  // Pick a safe maximum displayport size for sanity purposes. This is the
+  // lowest maximum texture size on tileless-platforms (Windows, D3D10).
+  nscoord safeMaximum = aFallbackPrescontext
+      ? aFallbackPrescontext->DevPixelsToAppUnits(8192);
+      : nscoord_MAX;
+
   nsIFrame* frame = aContent->GetPrimaryFrame();
   if (!frame) {
-    return nscoord_MAX;
+    return safeMaximum;
   }
   frame = nsLayoutUtils::GetDisplayRootFrame(frame);
 
   nsIWidget* widget = frame->GetNearestWidget();
   if (!widget) {
-    return nscoord_MAX;
+    return safeMaximum;
   }
   LayerManager* lm = widget->GetLayerManager();
   if (!lm) {
-    return nscoord_MAX;
+    return safeMaximum;
   }
   nsPresContext* presContext = frame->PresContext();
 
   int32_t maxSizeInDevPixels = lm->GetMaxTextureSize();
   if (maxSizeInDevPixels < 0 || maxSizeInDevPixels == INT_MAX) {
-    return nscoord_MAX;
+    return safeMaximum;
   }
   return presContext->DevPixelsToAppUnits(maxSizeInDevPixels);
 }
@@ -1085,12 +1091,8 @@ GetDisplayPortFromMarginsData(nsIContent* aContent,
   } else {
     // Calculate the displayport to make sure we fit within the max texture size
     // when not tiling.
-    nscoord maxSizeAppUnits = GetMaxDisplayPortSize(aContent);
-    if (maxSizeAppUnits == nscoord_MAX) {
-      // Pick a safe maximum displayport size for sanity purposes. This is the
-      // lowest maximum texture size on tileless-platforms (Windows, D3D10).
-      maxSizeAppUnits = presContext->DevPixelsToAppUnits(8192);
-    }
+    nscoord maxSizeAppUnits = GetMaxDisplayPortSize(aContent, presContext);
+    MOZ_ASSERT(maxSizeAppUnits < nscoord_MAX);
 
     // The alignment code can round up to 3 tiles, we want to make sure
     // that the displayport can grow by up to 3 tiles without going
@@ -1279,9 +1281,9 @@ GetDisplayPortImpl(nsIContent* aContent, nsRect* aResult, float aMultiplier)
   if (!gfxPrefs::LayersTilesEnabled()) {
     // Either we should have gotten a valid rect directly from the displayport
     // base, or we should have computed a valid rect from the margins.
-    NS_ASSERTION(result.width <= GetMaxDisplayPortSize(aContent),
+    NS_ASSERTION(result.width <= GetMaxDisplayPortSize(aContent, nullptr),
                  "Displayport must be a valid texture size");
-    NS_ASSERTION(result.height <= GetMaxDisplayPortSize(aContent),
+    NS_ASSERTION(result.height <= GetMaxDisplayPortSize(aContent, nullptr),
                  "Displayport must be a valid texture size");
   }
 
