@@ -413,10 +413,6 @@ interface nsIXPConnect : nsISupports
     getWrappedNativeOfJSObject(in JSContextPtr aJSContext,
                                in JSObjectPtr  aJSObj);
 
-    [noscript, notxpcom] nsISupports
-    getNativeOfWrapper(in JSContextPtr aJSContext,
-                       in JSObjectPtr  aJSObj);
-
     // Will return null if there is no JS stack right now.
     readonly attribute nsIStackFrame                CurrentJSStack;
     readonly attribute nsAXPCNativeCallContextPtr   CurrentNativeCallContext;
