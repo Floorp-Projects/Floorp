@@ -5768,19 +5768,29 @@ GCRuntime::sweepWeakCaches(GCRuntime* gc, SliceBudget& budget)
     return gc->sweepWeakCaches(budget);
 }
 
+static const size_t MaxWeakCacheSweepTasks = 8;
+
+static size_t
+WeakCacheSweepTaskCount()
+{
+    size_t targetTaskCount = HelperThreadState().cpuCount;
+    return Min(targetTaskCount, MaxWeakCacheSweepTasks);
+}
+
 IncrementalProgress
 GCRuntime::sweepWeakCaches(SliceBudget& budget)
 {
     WeakCacheSweepIterator work(this);
 
     {
-        gcstats::AutoPhase ap(stats(), gcstats::PhaseKind::SWEEP_COMPARTMENTS);
         AutoLockHelperThreadState lock;
-        Maybe<IncrementalSweepWeakCacheTask> task;
-        if (!work.empty(lock))
-            task.emplace(rt, work, budget, lock);
+        gcstats::AutoPhase ap(stats(), gcstats::PhaseKind::SWEEP_COMPARTMENTS);
 
-        // Runs until budget or work is exhausted.
+        Maybe<IncrementalSweepWeakCacheTask> tasks[MaxWeakCacheSweepTasks];
+        for (size_t i = 0; !work.empty(lock) && i < WeakCacheSweepTaskCount(); i++)
+            tasks[i].emplace(rt, work, budget, lock);
+
+        // Tasks run until budget or work is exhausted.
     }
 
     AutoLockHelperThreadState lock;
