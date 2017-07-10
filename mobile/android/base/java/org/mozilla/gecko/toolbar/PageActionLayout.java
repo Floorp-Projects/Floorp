@@ -8,15 +8,12 @@ package org.mozilla.gecko.toolbar;
 import org.mozilla.gecko.EventDispatcher;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.R;
-import org.mozilla.gecko.skin.SkinConfig;
 import org.mozilla.gecko.util.ResourceDrawableUtils;
 import org.mozilla.gecko.util.BundleEventListener;
 import org.mozilla.gecko.util.EventCallback;
 import org.mozilla.gecko.util.GeckoBundle;
 import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.gecko.widget.GeckoPopupMenu;
-import org.mozilla.gecko.widget.themed.ThemedImageButton;
-import org.mozilla.gecko.widget.themed.ThemedLinearLayout;
 
 import android.content.Context;
 import android.content.res.Resources;
@@ -35,7 +32,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.ArrayList;
 
-public class PageActionLayout extends ThemedLinearLayout implements BundleEventListener,
+public class PageActionLayout extends LinearLayout implements BundleEventListener,
                                                               View.OnClickListener,
                                                               View.OnLongClickListener {
     private static final String MENU_BUTTON_KEY = "MENU_BUTTON_KEY";
@@ -60,9 +57,8 @@ public class PageActionLayout extends ThemedLinearLayout implements BundleEventL
         refreshPageActionIcons();
     }
 
-    // Bug 1375351 - should change to protected after bug 1366704 land
     @Override
-    public void onAttachedToWindow() {
+    protected void onAttachedToWindow() {
         super.onAttachedToWindow();
 
         EventDispatcher.getInstance().registerUiThreadListener(this,
@@ -70,25 +66,13 @@ public class PageActionLayout extends ThemedLinearLayout implements BundleEventL
             "PageActions:Remove");
     }
 
-    // Bug 1375351 - should change to protected after bug 1366704 land
     @Override
-    public void onDetachedFromWindow() {
+    protected void onDetachedFromWindow() {
         EventDispatcher.getInstance().unregisterUiThreadListener(this,
             "PageActions:Add",
             "PageActions:Remove");
 
         super.onDetachedFromWindow();
-    }
-
-    @Override
-    public void setPrivateMode(boolean isPrivate) {
-        super.setPrivateMode(isPrivate);
-        for (int i = 0; i < getChildCount(); i++) {
-            View child = getChildAt(i);
-            if (child instanceof ThemedImageButton) {
-                ((ThemedImageButton) child).setPrivateMode(true);
-            }
-        }
     }
 
     private void setNumberShown(int count) {
@@ -173,21 +157,13 @@ public class PageActionLayout extends ThemedLinearLayout implements BundleEventL
         }
     }
 
-    private ThemedImageButton createImageButton() {
+    private ImageButton createImageButton() {
         ThreadUtils.assertOnUiThread();
 
-        ThemedImageButton imageButton = new ThemedImageButton(mContext, null, R.style.UrlBar_ImageButton);
-        // bug 1375351: different appearance in two skin
-        if (SkinConfig.isAustralis()) {
-            final int width = mContext.getResources().getDimensionPixelSize(R.dimen.page_action_button_width);
-            imageButton.setLayoutParams(new LayoutParams(width, LayoutParams.MATCH_PARENT));
-            imageButton.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
-        } else {
-            final int width = mContext.getResources().getDimensionPixelSize(R.dimen.browser_toolbar_image_button_width);
-            imageButton.setLayoutParams(new LayoutParams(width, LayoutParams.MATCH_PARENT));
-            imageButton.setBackgroundResource(R.drawable.action_bar_button);
-            imageButton.setScaleType(ImageView.ScaleType.CENTER);
-        }
+        final int width = mContext.getResources().getDimensionPixelSize(R.dimen.page_action_button_width);
+        ImageButton imageButton = new ImageButton(mContext, null, R.style.UrlBar_ImageButton);
+        imageButton.setLayoutParams(new LayoutParams(width, LayoutParams.MATCH_PARENT));
+        imageButton.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
         imageButton.setOnClickListener(this);
         imageButton.setOnLongClickListener(this);
         return imageButton;
@@ -250,10 +226,6 @@ public class PageActionLayout extends ThemedLinearLayout implements BundleEventL
                 v.setContentDescription(resources.getString(R.string.page_action_dropmarker_description));
             } else {
                 setActionForView(v, pageAction);
-            }
-
-            if (v instanceof ThemedImageButton) {
-                ((ThemedImageButton) v).setPrivateMode(isPrivateMode());
             }
         }
     }
