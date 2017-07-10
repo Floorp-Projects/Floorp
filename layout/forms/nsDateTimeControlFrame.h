@@ -62,7 +62,7 @@ public:
 
   void Reflow(nsPresContext* aPresContext,
               ReflowOutput& aDesiredSize,
-              const ReflowInput& aReflowInput,
+              const ReflowInput& aReflowState,
               nsReflowStatus& aStatus) override;
 
   // nsIAnonymousContentCreator
