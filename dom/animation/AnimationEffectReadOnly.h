@@ -53,7 +53,7 @@ public:
   bool IsInEffect() const;
   bool IsActiveDurationZero() const
   {
-    return SpecifiedTiming().ActiveDuration() == StickyTimeDuration();
+    return !SpecifiedTiming().ActiveDuration();
   }
 
   already_AddRefed<AnimationEffectTimingReadOnly> Timing();
