@@ -7,12 +7,10 @@ use border::{BorderCornerInstance, BorderCornerSide};
 use device::TextureId;
 use fnv::FnvHasher;
 use gpu_cache::{GpuCache, GpuCacheHandle, GpuCacheUpdateList};
-use gpu_store::GpuStoreAddress;
 use internal_types::{ANGLE_FLOAT_TO_FIXED, BatchTextures, CacheTextureId, LowLevelFilterOp};
 use internal_types::SourceTexture;
 use mask_cache::MaskCacheInfo;
-use prim_store::{CLIP_DATA_GPU_SIZE, DeferredResolve, GpuBlock32};
-use prim_store::{ImagePrimitiveKind, PrimitiveCacheKey};
+use prim_store::{CLIP_DATA_GPU_BLOCKS, DeferredResolve, ImagePrimitiveKind, PrimitiveCacheKey};
 use prim_store::{PrimitiveIndex, PrimitiveKind, PrimitiveMetadata, PrimitiveStore};
 use profiler::FrameProfileCounters;
 use render_task::{AlphaRenderItem, MaskGeometryKind, MaskSegment, RenderTask, RenderTaskData};
@@ -26,11 +24,11 @@ use std::collections::HashMap;
 use std::hash::BuildHasherDefault;
 use texture_cache::TexturePage;
 use util::{TransformedRect, TransformedRectKind};
-use webrender_traits::{BuiltDisplayList, ClipAndScrollInfo, ClipId, ColorF, DeviceIntPoint, ImageKey};
-use webrender_traits::{DeviceIntRect, DeviceIntSize, DeviceUintPoint, DeviceUintSize};
-use webrender_traits::{ExternalImageType, FontRenderMode, ImageRendering, LayerRect};
-use webrender_traits::{LayerToWorldTransform, MixBlendMode, PipelineId, TransformStyle};
-use webrender_traits::{TileOffset, WorldToLayerTransform, YuvColorSpace, YuvFormat, LayerVector2D};
+use api::{BuiltDisplayList, ClipAndScrollInfo, ClipId, ColorF, DeviceIntPoint, ImageKey};
+use api::{DeviceIntRect, DeviceIntSize, DeviceUintPoint, DeviceUintSize};
+use api::{ExternalImageType, FontRenderMode, ImageRendering, LayerRect};
+use api::{LayerToWorldTransform, MixBlendMode, PipelineId, TransformStyle};
+use api::{TileOffset, WorldToLayerTransform, YuvColorSpace, YuvFormat, LayerVector2D};
 
 // Special sentinel value recognized by the shader. It is considered to be
 // a dummy task that doesn't mask out anything.
@@ -109,11 +107,13 @@ pub struct RenderTargetIndex(pub usize);
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Hash)]
 pub struct RenderPassIndex(isize);
 
+#[derive(Debug)]
 struct DynamicTaskInfo {
     index: RenderTaskIndex,
     rect: DeviceIntRect,
 }
 
+#[derive(Debug)]
 pub struct RenderTaskCollection {
     pub render_task_data: Vec<RenderTaskData>,
     dynamic_tasks: HashMap<(RenderTaskKey, RenderPassIndex), DynamicTaskInfo, BuildHasherDefault<FnvHasher>>,
@@ -136,9 +136,9 @@ impl RenderTaskCollection {
             RenderTaskId::Dynamic(key) => {
                 let index = RenderTaskIndex(self.render_task_data.len());
                 let key = (key, pass);
-                debug_assert!(self.dynamic_tasks.contains_key(&key) == false);
+                debug_assert!(!self.dynamic_tasks.contains_key(&key));
                 self.dynamic_tasks.insert(key, DynamicTaskInfo {
-                    index: index,
+                    index,
                     rect: match task.location {
                         RenderTaskLocation::Fixed => panic!("Dynamic tasks should not have fixed locations!"),
                         RenderTaskLocation::Dynamic(Some((origin, _)), size) => DeviceIntRect::new(origin, size),
@@ -249,6 +249,18 @@ impl BatchList {
         batch.item_rects.push(*item_bounding_rect);
 
         batch
+    }
+
+    fn finalize(&mut self) {
+        // Reverse the instance arrays in the opaque batches
+        // to get maximum z-buffer efficiency by drawing
+        // front-to-back.
+        // TODO(gw): Maybe we can change the batch code to
+        //           build these in reverse and avoid having
+        //           to reverse the instance array here.
+        for batch in &mut self.opaque_batches {
+            batch.instances.reverse();
+        }
     }
 }
 
@@ -368,7 +380,7 @@ impl AlphaRenderItem {
                         OPAQUE_TASK_INDEX
                     }
                 };
-                let needs_blending = !prim_metadata.is_opaque ||
+                let needs_blending = !prim_metadata.opacity.is_opaque ||
                                      needs_clipping ||
                                      transform_kind == TransformedRectKind::Complex;
                 let blend_mode = ctx.prim_store.get_blend_mode(needs_blending, prim_metadata);
@@ -660,6 +672,13 @@ impl AlphaBatcher {
                                   deferred_resolves);
             }
         }
+
+        self.batch_list.finalize();
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.batch_list.opaque_batches.is_empty() &&
+        self.batch_list.alpha_batches.is_empty()
     }
 }
 
@@ -695,40 +714,41 @@ impl ClipBatcher {
             let instance = CacheClipInstance {
                 task_id: task_index.0 as i32,
                 layer_index: packed_layer_index.0 as i32,
-                address: GpuStoreAddress(0),
+                address: 0,
                 segment: 0,
                 resource_address: 0,
             };
 
-            for clip_index in 0..info.effective_complex_clip_count as usize {
-                let offset = info.complex_clip_range.start.0 + ((CLIP_DATA_GPU_SIZE * clip_index) as i32);
+            for clip_index in 0 .. info.complex_clip_range.get_count() {
+                let gpu_address = info.complex_clip_range.location.as_int(gpu_cache) +
+                                  (CLIP_DATA_GPU_BLOCKS * clip_index) as i32;
                 match geometry_kind {
                     MaskGeometryKind::Default => {
                         self.rectangles.push(CacheClipInstance {
-                            address: GpuStoreAddress(offset),
+                            address: gpu_address,
                             segment: MaskSegment::All as i32,
                             ..instance
                         });
                     }
                     MaskGeometryKind::CornersOnly => {
-                        self.rectangles.extend(&[
+                        self.rectangles.extend_from_slice(&[
                             CacheClipInstance {
-                                address: GpuStoreAddress(offset),
+                                address: gpu_address,
                                 segment: MaskSegment::TopLeftCorner as i32,
                                 ..instance
                             },
                             CacheClipInstance {
-                                address: GpuStoreAddress(offset),
+                                address: gpu_address,
                                 segment: MaskSegment::TopRightCorner as i32,
                                 ..instance
                             },
                             CacheClipInstance {
-                                address: GpuStoreAddress(offset),
+                                address: gpu_address,
                                 segment: MaskSegment::BottomLeftCorner as i32,
                                 ..instance
                             },
                             CacheClipInstance {
-                                address: GpuStoreAddress(offset),
+                                address: gpu_address,
                                 segment: MaskSegment::BottomRightCorner as i32,
                                 ..instance
                             },
@@ -737,24 +757,34 @@ impl ClipBatcher {
                 }
             }
 
-            if let Some((ref mask, address)) = info.image {
+            for clip_index in 0 .. info.layer_clip_range.get_count() {
+                let gpu_address = info.layer_clip_range.location.as_int(gpu_cache) +
+                                  (CLIP_DATA_GPU_BLOCKS * clip_index) as i32;
+                self.rectangles.push(CacheClipInstance {
+                    address: gpu_address,
+                    segment: MaskSegment::All as i32,
+                    ..instance
+                });
+            }
+
+            if let Some((ref mask, gpu_location)) = info.image {
                 let cache_item = resource_cache.get_cached_image(mask.image, ImageRendering::Auto, None);
                 self.images.entry(cache_item.texture_id)
                            .or_insert(Vec::new())
                            .push(CacheClipInstance {
-                    address: address,
+                    address: gpu_location.as_int(gpu_cache),
                     resource_address: cache_item.uv_rect_handle.as_int(gpu_cache),
                     ..instance
                 })
             }
 
-            for &(ref source, gpu_address) in &info.border_corners {
+            for &(ref source, gpu_location) in &info.border_corners {
+                let gpu_address = gpu_location.as_int(gpu_cache);
                 self.border_clears.push(CacheClipInstance {
                     address: gpu_address,
                     segment: 0,
                     ..instance
                 });
-
                 for clip_index in 0..source.actual_clip_count {
                     self.borders.push(CacheClipInstance {
                         address: gpu_address,
@@ -852,8 +882,8 @@ impl<T: RenderTarget> RenderTargetList<T> {
         }
 
         RenderTargetList {
-            targets: targets,
-            target_size: target_size,
+            targets,
+            target_size,
         }
     }
 
@@ -1134,7 +1164,7 @@ impl RenderPass {
     pub fn new(pass_index: isize, is_framebuffer: bool, size: DeviceUintSize) -> RenderPass {
         RenderPass {
             pass_index: RenderPassIndex(pass_index),
-            is_framebuffer: is_framebuffer,
+            is_framebuffer,
             color_targets: RenderTargetList::new(size, is_framebuffer),
             alpha_targets: RenderTargetList::new(size, false),
             tasks: vec![],
@@ -1254,9 +1284,9 @@ pub enum AlphaBatchKind {
 }
 
 bitflags! {
-    pub flags AlphaBatchKeyFlags: u8 {
-        const NEEDS_CLIPPING  = 0b00000001,
-        const AXIS_ALIGNED    = 0b00000010,
+    pub struct AlphaBatchKeyFlags: u8 {
+        const NEEDS_CLIPPING  = 0b00000001;
+        const AXIS_ALIGNED    = 0b00000010;
     }
 }
 
@@ -1288,10 +1318,10 @@ impl AlphaBatchKey {
            blend_mode: BlendMode,
            textures: BatchTextures) -> AlphaBatchKey {
         AlphaBatchKey {
-            kind: kind,
-            flags: flags,
-            blend_mode: blend_mode,
-            textures: textures,
+            kind,
+            flags,
+            blend_mode,
+            textures,
         }
     }
 
@@ -1333,7 +1363,7 @@ pub struct BlurCommand {
 pub struct CacheClipInstance {
     task_id: i32,
     layer_index: i32,
-    address: GpuStoreAddress,
+    address: i32,
     segment: i32,
     resource_address: i32,
 }
@@ -1365,11 +1395,11 @@ impl SimplePrimitiveInstance {
            layer_index: PackedLayerIndex,
            z_sort_index: i32) -> SimplePrimitiveInstance {
         SimplePrimitiveInstance {
-            specific_prim_address: specific_prim_address,
+            specific_prim_address,
             task_index: task_index.0 as i32,
             clip_task_index: clip_task_index.0 as i32,
             layer_index: layer_index.0 as i32,
-            z_sort_index: z_sort_index,
+            z_sort_index,
         }
     }
 
@@ -1406,12 +1436,12 @@ impl CompositePrimitiveInstance {
            data1: i32,
            z: i32) -> CompositePrimitiveInstance {
         CompositePrimitiveInstance {
-            task_index: task_index,
-            src_task_index: src_task_index,
-            backdrop_task_index: backdrop_task_index,
-            data0: data0,
-            data1: data1,
-            z: z,
+            task_index,
+            src_task_index,
+            backdrop_task_index,
+            data0,
+            data1,
+            z,
         }
     }
 }
@@ -1456,7 +1486,7 @@ pub struct PrimitiveBatch {
 impl PrimitiveBatch {
     fn new(key: AlphaBatchKey) -> PrimitiveBatch {
         PrimitiveBatch {
-            key: key,
+            key,
             instances: Vec::new(),
             item_rects: Vec::new(),
         }
@@ -1499,12 +1529,14 @@ pub struct StackingContext {
     /// The `ClipId` of the owning reference frame.
     pub reference_frame_id: ClipId,
 
-    /// Local bounding rectangle for this stacking context.
-    pub local_bounds: LayerRect,
-
     /// Screen space bounding rectangle for this stacking context,
     /// calculated based on the size and position of all its children.
     pub screen_bounds: DeviceIntRect,
+
+    /// Local bounding rectangle of this stacking context,
+    /// computed as the union of all contained items that are not
+    /// `ContextIsolation::Items` on their own
+    pub isolated_items_bounds: LayerRect,
 
     pub composite_ops: CompositeOps,
     pub clip_scroll_groups: Vec<ClipScrollGroupIndex>,
@@ -1526,7 +1558,6 @@ impl StackingContext {
                reference_frame_offset: LayerVector2D,
                is_page_root: bool,
                reference_frame_id: ClipId,
-               local_bounds: LayerRect,
                transform_style: TransformStyle,
                composite_ops: CompositeOps)
                -> StackingContext {
@@ -1535,15 +1566,15 @@ impl StackingContext {
             TransformStyle::Preserve3D => ContextIsolation::Items,
         };
         StackingContext {
-            pipeline_id: pipeline_id,
-            reference_frame_offset: reference_frame_offset,
-            reference_frame_id: reference_frame_id,
-            local_bounds: local_bounds,
+            pipeline_id,
+            reference_frame_offset,
+            reference_frame_id,
             screen_bounds: DeviceIntRect::zero(),
-            composite_ops: composite_ops,
+            isolated_items_bounds: LayerRect::zero(),
+            composite_ops,
             clip_scroll_groups: Vec::new(),
-            isolation: isolation,
-            is_page_root: is_page_root,
+            isolation,
+            is_page_root,
             is_visible: false,
         }
     }
@@ -1610,9 +1641,15 @@ impl PackedLayer {
         Default::default()
     }
 
-    pub fn set_transform(&mut self, transform: LayerToWorldTransform) {
+    pub fn set_transform(&mut self, transform: LayerToWorldTransform) -> bool {
         self.transform = transform;
-        self.inv_transform = self.transform.inverse().unwrap();
+        match self.transform.inverse() {
+            Some(inv) => {
+                self.inv_transform = inv;
+                true
+            }
+            None => false,
+        }
     }
 
     pub fn set_rect(&mut self,
@@ -1620,11 +1657,10 @@ impl PackedLayer {
                     screen_rect: &DeviceIntRect,
                     device_pixel_ratio: f32)
                     -> Option<(TransformedRectKind, DeviceIntRect)> {
-        let xf_rect = TransformedRect::new(&local_rect, &self.transform, device_pixel_ratio);
-        xf_rect.bounding_rect.intersection(screen_rect).map(|rect| {
-            self.local_clip_rect = *local_rect;
-            (xf_rect.kind, rect)
-        })
+        self.local_clip_rect = *local_rect;
+        let xf_rect = TransformedRect::new(local_rect, &self.transform, device_pixel_ratio);
+        xf_rect.bounding_rect.intersection(screen_rect)
+                             .map(|rect| (xf_rect.kind, rect))
     }
 }
 
@@ -1640,7 +1676,7 @@ pub struct CompositeOps {
 impl CompositeOps {
     pub fn new(filters: Vec<LowLevelFilterOp>, mix_blend_mode: Option<MixBlendMode>) -> CompositeOps {
         CompositeOps {
-            filters: filters,
+            filters,
             mix_blend_mode: mix_blend_mode
         }
     }
@@ -1680,7 +1716,6 @@ pub struct Frame {
 
     pub layer_texture_data: Vec<PackedLayer>,
     pub render_task_data: Vec<RenderTaskData>,
-    pub gpu_data32: Vec<GpuBlock32>,
 
     // List of updates that need to be pushed to the
     // gpu resource cache.
@@ -1710,7 +1745,7 @@ fn resolve_image(image_key: ImageKey,
             // the render thread...
             let cache_handle = gpu_cache.push_deferred_per_frame_blocks(1);
             deferred_resolves.push(DeferredResolve {
-                image_properties: image_properties,
+                image_properties,
                 address: gpu_cache.get_address(&cache_handle),
             });
 

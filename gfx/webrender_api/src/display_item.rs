@@ -4,9 +4,8 @@
 
 use app_units::Au;
 use euclid::SideOffsets2D;
-use {ColorF, FontKey, ImageKey, ItemRange, PipelineId, WebGLContextId};
-use {LayoutPoint, LayoutRect, LayoutSize, LayoutTransform, LayoutVector2D};
-use {PropertyBinding};
+use {ColorF, FontKey, ImageKey, LayoutPoint, LayoutRect, LayoutSize, LayoutTransform};
+use {LayoutVector2D, PipelineId, PropertyBinding, WebGLContextId};
 
 // NOTE: some of these structs have an "IMPLICIT" comment.
 // This indicates that the BuiltDisplayList will have serialized
@@ -29,7 +28,7 @@ impl ClipAndScrollInfo {
 
     pub fn new(scroll_node_id: ClipId, clip_node_id: ClipId) -> ClipAndScrollInfo {
         ClipAndScrollInfo {
-            scroll_node_id: scroll_node_id,
+            scroll_node_id,
             clip_node_id: Some(clip_node_id),
         }
     }
@@ -43,12 +42,14 @@ impl ClipAndScrollInfo {
 pub struct DisplayItem {
     pub item: SpecificDisplayItem,
     pub rect: LayoutRect,
+    pub local_clip: LocalClip,
     pub clip_and_scroll: ClipAndScrollInfo,
 }
 
 #[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
 pub enum SpecificDisplayItem {
     Clip(ClipDisplayItem),
+    ScrollFrame(ClipDisplayItem),
     Rectangle(RectangleDisplayItem),
     Text(TextDisplayItem),
     Image(ImageDisplayItem),
@@ -62,7 +63,6 @@ pub enum SpecificDisplayItem {
     PushStackingContext(PushStackingContextDisplayItem),
     PopStackingContext,
     SetGradientStops,
-    SetClipRegion(ClipRegion),
     PushNestedDisplayList,
     PopNestedDisplayList,
 }
@@ -71,6 +71,7 @@ pub enum SpecificDisplayItem {
 pub struct ClipDisplayItem {
     pub id: ClipId,
     pub parent_id: ClipId,
+    pub image_mask: Option<ImageMask>,
 }
 
 #[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
@@ -118,6 +119,7 @@ pub enum RepeatMode {
     Space,
 }
 
+#[repr(C)]
 #[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
 pub struct NinePatchDescriptor {
     pub width: u32,
@@ -129,6 +131,9 @@ pub struct NinePatchDescriptor {
 pub struct ImageBorder {
     pub image_key: ImageKey,
     pub patch: NinePatchDescriptor,
+    /// Controls whether the center of the 9 patch image is
+    /// rendered or ignored.
+    pub fill: bool,
     pub outset: SideOffsets2D<f32>,
     pub repeat_horizontal: RepeatMode,
     pub repeat_vertical: RepeatMode,
@@ -160,6 +165,7 @@ pub struct BorderDisplayItem {
     pub details: BorderDetails,
 }
 
+#[repr(C)]
 #[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
 pub struct BorderRadius {
     pub top_left: LayoutSize,
@@ -168,6 +174,7 @@ pub struct BorderRadius {
     pub bottom_right: LayoutSize,
 }
 
+#[repr(C)]
 #[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
 pub struct BorderWidths {
     pub left: f32,
@@ -432,6 +439,7 @@ impl YuvFormat {
     }
 }
 
+#[repr(C)]
 #[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
 pub struct ImageMask {
     pub image: ImageKey,
@@ -440,13 +448,24 @@ pub struct ImageMask {
 }
 
 #[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
-pub struct ClipRegion {
-    pub main: LayoutRect,
-    pub image_mask: Option<ImageMask>,
-    #[serde(default, skip_serializing, skip_deserializing)]
-    pub complex_clips: ItemRange<ComplexClipRegion>,
-    #[serde(default, skip_serializing, skip_deserializing)]
-    pub complex_clip_count: usize,
+pub enum LocalClip {
+    Rect(LayoutRect),
+    RoundedRect(LayoutRect, ComplexClipRegion),
+}
+
+impl From<LayoutRect> for LocalClip {
+    fn from(rect: LayoutRect) -> Self {
+        LocalClip::Rect(rect)
+    }
+}
+
+impl LocalClip {
+    pub fn clip_rect(&self) -> &LayoutRect {
+        match *self {
+            LocalClip::Rect(ref rect) => rect,
+            LocalClip::RoundedRect(ref rect, _) => &rect,
+        }
+    }
 }
 
 #[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
@@ -512,48 +531,13 @@ impl BorderRadius {
     }
 }
 
-impl ClipRegion {
-    pub fn new(rect: &LayoutRect,
-               image_mask: Option<ImageMask>)
-               -> ClipRegion {
-        ClipRegion {
-            main: *rect,
-            image_mask: image_mask,
-            complex_clips: ItemRange::default(),
-            complex_clip_count: 0,
-        }
-    }
-
-    pub fn simple(rect: &LayoutRect) -> ClipRegion {
-        ClipRegion {
-            main: *rect,
-            image_mask: None,
-            complex_clips: ItemRange::default(),
-            complex_clip_count: 0,
-        }
-    }
-
-    pub fn empty() -> ClipRegion {
-        ClipRegion {
-            main: LayoutRect::zero(),
-            image_mask: None,
-            complex_clips: ItemRange::default(),
-            complex_clip_count: 0,
-        }
-    }
-
-    pub fn is_complex(&self) -> bool {
-        self.complex_clip_count != 0 || self.image_mask.is_some()
-    }
-}
-
 impl ColorF {
     pub fn new(r: f32, g: f32, b: f32, a: f32) -> ColorF {
         ColorF {
-            r: r,
-            g: g,
-            b: b,
-            a: a,
+            r,
+            g,
+            b,
+            a,
         }
     }
 
@@ -575,8 +559,8 @@ impl ComplexClipRegion {
     /// Create a new complex clip region.
     pub fn new(rect: LayoutRect, radii: BorderRadius) -> ComplexClipRegion {
         ComplexClipRegion {
-            rect: rect,
-            radii: radii,
+            rect,
+            radii,
         }
     }
 }
@@ -652,3 +636,4 @@ define_empty_heap_size_of!(RepeatMode);
 define_empty_heap_size_of!(ImageKey);
 define_empty_heap_size_of!(MixBlendMode);
 define_empty_heap_size_of!(TransformStyle);
+define_empty_heap_size_of!(LocalClip);

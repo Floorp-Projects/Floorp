@@ -160,7 +160,7 @@ WebRenderImageLayer::RenderLayer(wr::DisplayListBuilder& aBuilder,
     DumpLayerInfo("Image Layer async", rect);
 
     WrRect r = aSc.ToRelativeWrRect(rect);
-    aBuilder.PushIFrame(r, r, mPipelineId.ref());
+    aBuilder.PushIFrame(r, mPipelineId.ref());
 
     gfx::Matrix4x4 scTransform = GetTransform();
     // Translate is applied as part of PushIFrame()

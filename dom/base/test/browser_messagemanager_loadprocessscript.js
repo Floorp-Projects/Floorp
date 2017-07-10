@@ -2,6 +2,20 @@ var ppmm = Cc["@mozilla.org/parentprocessmessagemanager;1"]
            .getService(Ci.nsIMessageBroadcaster);
 ppmm.QueryInterface(Ci.nsIProcessScriptLoader);
 
+const BASE_NUMBER_OF_PROCESSES = 3;
+function checkBaseProcessCount(description) {
+  const {childCount} = ppmm;
+  // With preloaded activity-stream, process count is a bit undeterministic, so
+  // allow for some variation
+  if (Services.prefs.getBoolPref("browser.newtabpage.activity-stream.enabled")) {
+    const extraCount = BASE_NUMBER_OF_PROCESSES + 1;
+    ok(childCount === BASE_NUMBER_OF_PROCESSES || childCount === extraCount, `${description} (${BASE_NUMBER_OF_PROCESSES} or ${extraCount})`);
+  }
+  else {
+    is(childCount, BASE_NUMBER_OF_PROCESSES, `${description} (${BASE_NUMBER_OF_PROCESSES})`);
+  }
+}
+
 function processScript() {
   let cpmm = Components.classes["@mozilla.org/childprocessmessagemanager;1"]
            .getService(Components.interfaces.nsISyncMessageSender);
@@ -76,7 +90,7 @@ add_task(async function(){
   }
 
   ppmm.releaseCachedProcesses();
-  is(ppmm.childCount, 3, "Should get back to 3 processes at this point.");
+  checkBaseProcessCount("Should get back to the base number of processes at this point");
 })
 
 // Test that loading a process script loads in all existing processes
@@ -95,7 +109,7 @@ add_task(async function() {
   if (!gMultiProcessBrowser)
     return;
 
-  is(ppmm.childCount, 3, "Should be three processes at this point");
+  checkBaseProcessCount("Should still be at the base number of processes at this point");
 
   // Load something in the main process
   gBrowser.selectedBrowser.loadURI("about:robots");
@@ -125,7 +139,7 @@ add_task(async function() {
     gBrowser.selectedBrowser.loadURI("about:blank");
     await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
 
-    is(ppmm.childCount, 3, "Should be back to three processes at this point");
+    checkBaseProcessCount("Should be back to the base number of processes at this point");
 
     // The new process should have responded
     await check;
