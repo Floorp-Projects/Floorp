@@ -13,6 +13,7 @@
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/BlobBinding.h"
 #include "mozilla/dom/File.h"
+#include "mozilla/dom/FileListBinding.h"
 #include "mozilla/dom/StructuredCloneHolder.h"
 #include "nsGlobalWindow.h"
 #include "nsJSUtils.h"
@@ -52,13 +53,7 @@ enum StackScopedCloneTags {
 // per scope.
 bool IsFileList(JSObject* obj)
 {
-    nsISupports* supports = UnwrapReflectorToISupports(obj);
-    if (!supports)
-        return false;
-    nsCOMPtr<nsIDOMFileList> fileList = do_QueryInterface(supports);
-    if (fileList)
-        return true;
-    return false;
+    return IS_INSTANCE_OF(FileList, obj);
 }
 
 class MOZ_STACK_CLASS StackScopedCloneData
