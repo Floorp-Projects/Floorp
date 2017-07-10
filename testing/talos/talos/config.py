@@ -96,6 +96,7 @@ DEFAULTS = dict(
         'dom.send_after_paint_to_content': True,
         'security.turn_off_all_security_so_that_viruses_can_'
         'take_over_this_computer': True,
+        'browser.newtabpage.activity-stream.default.sites': '',
         'browser.newtabpage.directory.source':
             '${webserver}/directoryLinks.json',
         'browser.newtabpage.introShown': True,

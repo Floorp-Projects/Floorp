@@ -63,17 +63,11 @@
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 18);
+/******/ 	return __webpack_require__(__webpack_require__.s = 19);
 /******/ })
 /************************************************************************/
 /******/ ([
 /* 0 */
-/***/ (function(module, exports) {
-
-module.exports = React;
-
-/***/ }),
-/* 1 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -103,7 +97,7 @@ const globalImportContext = typeof Window === "undefined" ? BACKGROUND_PROCESS :
 //   UNINIT: "UNINIT"
 // }
 const actionTypes = {};
-for (const type of ["BLOCK_URL", "BOOKMARK_URL", "DELETE_BOOKMARK_BY_ID", "DELETE_HISTORY_URL", "DELETE_HISTORY_URL_CONFIRM", "DIALOG_CANCEL", "DIALOG_OPEN", "INIT", "LOCALE_UPDATED", "NEW_TAB_INITIAL_STATE", "NEW_TAB_LOAD", "NEW_TAB_UNLOAD", "NEW_TAB_VISIBLE", "OPEN_NEW_WINDOW", "OPEN_PRIVATE_WINDOW", "PLACES_BOOKMARK_ADDED", "PLACES_BOOKMARK_CHANGED", "PLACES_BOOKMARK_REMOVED", "PLACES_HISTORY_CLEARED", "PLACES_LINK_BLOCKED", "PLACES_LINK_DELETED", "PREFS_INITIAL_VALUES", "PREF_CHANGED", "SCREENSHOT_UPDATED", "SET_PREF", "TELEMETRY_PERFORMANCE_EVENT", "TELEMETRY_UNDESIRED_EVENT", "TELEMETRY_USER_EVENT", "TOP_SITES_UPDATED", "UNINIT"]) {
+for (const type of ["BLOCK_URL", "BOOKMARK_URL", "DELETE_BOOKMARK_BY_ID", "DELETE_HISTORY_URL", "DELETE_HISTORY_URL_CONFIRM", "DIALOG_CANCEL", "DIALOG_OPEN", "INIT", "LOCALE_UPDATED", "NEW_TAB_INITIAL_STATE", "NEW_TAB_LOAD", "NEW_TAB_UNLOAD", "NEW_TAB_VISIBLE", "OPEN_NEW_WINDOW", "OPEN_PRIVATE_WINDOW", "PINNED_SITES_UPDATED", "PLACES_BOOKMARK_ADDED", "PLACES_BOOKMARK_CHANGED", "PLACES_BOOKMARK_REMOVED", "PLACES_HISTORY_CLEARED", "PLACES_LINK_BLOCKED", "PLACES_LINK_DELETED", "PREFS_INITIAL_VALUES", "PREF_CHANGED", "SAVE_TO_POCKET", "SCREENSHOT_UPDATED", "SET_PREF", "TELEMETRY_PERFORMANCE_EVENT", "TELEMETRY_UNDESIRED_EVENT", "TELEMETRY_USER_EVENT", "TOP_SITES_PIN", "TOP_SITES_UNPIN", "TOP_SITES_UPDATED", "UNINIT"]) {
   actionTypes[type] = type;
 }
 
@@ -282,6 +276,12 @@ module.exports = {
 };
 
 /***/ }),
+/* 1 */
+/***/ (function(module, exports) {
+
+module.exports = React;
+
+/***/ }),
 /* 2 */
 /***/ (function(module, exports) {
 
@@ -300,7 +300,42 @@ module.exports = ReactIntl;
 "use strict";
 
 
-const React = __webpack_require__(0);
+/**
+ * shortURL - Creates a short version of a link's url, used for display purposes
+ *            e.g. {url: http://www.foosite.com, eTLD: "com"}  =>  "foosite"
+ *
+ * @param  {obj} link A link object
+ *         {str} link.url (required)- The url of the link
+ *         {str} link.eTLD (required) - The tld of the link
+ *               e.g. for https://foo.org, the tld would be "org"
+ *               Note that this property is added in various queries for ActivityStream
+ *               via Services.eTLD.getPublicSuffix
+ *         {str} link.hostname (optional) - The hostname of the url
+ *               e.g. for http://www.hello.com/foo/bar, the hostname would be "www.hello.com"
+ * @return {str}   A short url
+ */
+module.exports = function shortURL(link) {
+  if (!link.url && !link.hostname) {
+    return "";
+  }
+  const eTLD = link.eTLD;
+
+  const hostname = (link.hostname || new URL(link.url).hostname).replace(/^www\./i, "");
+
+  // Remove the eTLD (e.g., com, net) and the preceding period from the hostname
+  const eTLDLength = (eTLD || "").length || hostname.match(/\.com$/) && 3;
+  const eTLDExtra = eTLDLength > 0 ? -(eTLDLength + 1) : Infinity;
+  return hostname.slice(0, eTLDExtra).toLowerCase();
+};
+
+/***/ }),
+/* 5 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+const React = __webpack_require__(1);
 
 var _require = __webpack_require__(2);
 
@@ -311,10 +346,10 @@ var _require2 = __webpack_require__(3);
 const addLocaleData = _require2.addLocaleData,
       IntlProvider = _require2.IntlProvider;
 
-const TopSites = __webpack_require__(14);
-const Search = __webpack_require__(13);
-const ConfirmDialog = __webpack_require__(9);
-const PreferencesPane = __webpack_require__(12);
+const TopSites = __webpack_require__(15);
+const Search = __webpack_require__(14);
+const ConfirmDialog = __webpack_require__(10);
+const PreferencesPane = __webpack_require__(13);
 
 // Locales that should be displayed RTL
 const RTL_LIST = ["ar", "he", "fa", "ur"];
@@ -385,17 +420,17 @@ class Base extends React.Component {
 module.exports = connect(state => ({ App: state.App, Prefs: state.Prefs }))(Base);
 
 /***/ }),
-/* 5 */
+/* 6 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var _require = __webpack_require__(1);
+var _require = __webpack_require__(0);
 
 const at = _require.actionTypes;
 
-var _require2 = __webpack_require__(16);
+var _require2 = __webpack_require__(17);
 
 const perfSvc = _require2.perfService;
 
@@ -460,7 +495,7 @@ module.exports = class DetectUserSessionStart {
 };
 
 /***/ }),
-/* 6 */
+/* 7 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -468,13 +503,13 @@ module.exports = class DetectUserSessionStart {
 
 /* eslint-env mozilla/frame-script */
 
-var _require = __webpack_require__(17);
+var _require = __webpack_require__(18);
 
 const createStore = _require.createStore,
       combineReducers = _require.combineReducers,
       applyMiddleware = _require.applyMiddleware;
 
-var _require2 = __webpack_require__(1);
+var _require2 = __webpack_require__(0);
 
 const au = _require2.actionUtils;
 
@@ -540,7 +575,7 @@ module.exports.OUTGOING_MESSAGE_NAME = OUTGOING_MESSAGE_NAME;
 module.exports.INCOMING_MESSAGE_NAME = INCOMING_MESSAGE_NAME;
 
 /***/ }),
-/* 7 */
+/* 8 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -549,7 +584,7 @@ module.exports.INCOMING_MESSAGE_NAME = INCOMING_MESSAGE_NAME;
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 
-var _require = __webpack_require__(1);
+var _require = __webpack_require__(0);
 
 const at = _require.actionTypes;
 
@@ -607,12 +642,49 @@ function App() {
   }
 }
 
+/**
+ * insertPinned - Inserts pinned links in their specified slots
+ *
+ * @param {array} a list of links
+ * @param {array} a list of pinned links
+ * @return {array} resulting list of links with pinned links inserted
+ */
+function insertPinned(links, pinned) {
+  // Remove any pinned links
+  const pinnedUrls = pinned.map(link => link && link.url);
+  let newLinks = links.filter(link => link ? !pinnedUrls.includes(link.url) : false);
+  newLinks = newLinks.map(link => {
+    if (link && link.isPinned) {
+      delete link.isPinned;
+      delete link.pinTitle;
+      delete link.pinIndex;
+    }
+    return link;
+  });
+
+  // Then insert them in their specified location
+  pinned.forEach((val, index) => {
+    if (!val) {
+      return;
+    }
+    let link = Object.assign({}, val, { isPinned: true, pinIndex: index, pinTitle: val.title });
+    if (index > newLinks.length) {
+      newLinks[index] = link;
+    } else {
+      newLinks.splice(index, 0, link);
+    }
+  });
+
+  return newLinks;
+}
+
 function TopSites() {
   let prevState = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : INITIAL_STATE.TopSites;
   let action = arguments[1];
 
   let hasMatch;
   let newRows;
+  let pinned;
   switch (action.type) {
     case at.TOP_SITES_UPDATED:
       if (!action.data) {
@@ -621,7 +693,7 @@ function TopSites() {
       return Object.assign({}, prevState, { initialized: true, rows: action.data });
     case at.SCREENSHOT_UPDATED:
       newRows = prevState.rows.map(row => {
-        if (row.url === action.data.url) {
+        if (row && row.url === action.data.url) {
           hasMatch = true;
           return Object.assign({}, row, { screenshot: action.data.screenshot });
         }
@@ -630,7 +702,7 @@ function TopSites() {
       return hasMatch ? Object.assign({}, prevState, { rows: newRows }) : prevState;
     case at.PLACES_BOOKMARK_ADDED:
       newRows = prevState.rows.map(site => {
-        if (site.url === action.data.url) {
+        if (site && site.url === action.data.url) {
           var _action$data2 = action.data;
           const bookmarkGuid = _action$data2.bookmarkGuid,
                 bookmarkTitle = _action$data2.bookmarkTitle,
@@ -643,7 +715,7 @@ function TopSites() {
       return Object.assign({}, prevState, { rows: newRows });
     case at.PLACES_BOOKMARK_REMOVED:
       newRows = prevState.rows.map(site => {
-        if (site.url === action.data.url) {
+        if (site && site.url === action.data.url) {
           const newSite = Object.assign({}, site);
           delete newSite.bookmarkGuid;
           delete newSite.bookmarkTitle;
@@ -655,7 +727,11 @@ function TopSites() {
       return Object.assign({}, prevState, { rows: newRows });
     case at.PLACES_LINK_DELETED:
     case at.PLACES_LINK_BLOCKED:
-      newRows = prevState.rows.filter(val => val.url !== action.data.url);
+      newRows = prevState.rows.filter(val => val && val.url !== action.data.url);
+      return Object.assign({}, prevState, { rows: newRows });
+    case at.PINNED_SITES_UPDATED:
+      pinned = action.data;
+      newRows = insertPinned(prevState.rows, pinned);
       return Object.assign({}, prevState, { rows: newRows });
     default:
       return prevState;
@@ -698,23 +774,24 @@ function Prefs() {
 var reducers = { TopSites, App, Prefs, Dialog };
 module.exports = {
   reducers,
-  INITIAL_STATE
+  INITIAL_STATE,
+  insertPinned
 };
 
 /***/ }),
-/* 8 */
+/* 9 */
 /***/ (function(module, exports) {
 
 module.exports = ReactDOM;
 
 /***/ }),
-/* 9 */
+/* 10 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-const React = __webpack_require__(0);
+const React = __webpack_require__(1);
 
 var _require = __webpack_require__(2);
 
@@ -724,7 +801,7 @@ var _require2 = __webpack_require__(3);
 
 const FormattedMessage = _require2.FormattedMessage;
 
-var _require3 = __webpack_require__(1);
+var _require3 = __webpack_require__(0);
 
 const actionTypes = _require3.actionTypes,
       ac = _require3.actionCreators;
@@ -827,13 +904,13 @@ module.exports._unconnected = ConfirmDialog;
 module.exports.Dialog = ConfirmDialog;
 
 /***/ }),
-/* 10 */
+/* 11 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-const React = __webpack_require__(0);
+const React = __webpack_require__(1);
 
 class ContextMenu extends React.Component {
   constructor(props) {
@@ -910,108 +987,39 @@ class ContextMenu extends React.Component {
 module.exports = ContextMenu;
 
 /***/ }),
-/* 11 */
+/* 12 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-const React = __webpack_require__(0);
+const React = __webpack_require__(1);
 
 var _require = __webpack_require__(3);
 
 const injectIntl = _require.injectIntl;
 
-const ContextMenu = __webpack_require__(10);
+const ContextMenu = __webpack_require__(11);
 
-var _require2 = __webpack_require__(1);
+var _require2 = __webpack_require__(0);
 
-const at = _require2.actionTypes,
-      ac = _require2.actionCreators;
+const ac = _require2.actionCreators;
 
-
-const RemoveBookmark = site => ({
-  id: "menu_action_remove_bookmark",
-  icon: "bookmark-remove",
-  action: ac.SendToMain({
-    type: at.DELETE_BOOKMARK_BY_ID,
-    data: site.bookmarkGuid
-  }),
-  userEvent: "BOOKMARK_DELETE"
-});
-
-const AddBookmark = site => ({
-  id: "menu_action_bookmark",
-  icon: "bookmark",
-  action: ac.SendToMain({
-    type: at.BOOKMARK_URL,
-    data: site.url
-  }),
-  userEvent: "BOOKMARK_ADD"
-});
-
-const OpenInNewWindow = site => ({
-  id: "menu_action_open_new_window",
-  icon: "new-window",
-  action: ac.SendToMain({
-    type: at.OPEN_NEW_WINDOW,
-    data: { url: site.url }
-  }),
-  userEvent: "OPEN_NEW_WINDOW"
-});
-
-const OpenInPrivateWindow = site => ({
-  id: "menu_action_open_private_window",
-  icon: "new-window-private",
-  action: ac.SendToMain({
-    type: at.OPEN_PRIVATE_WINDOW,
-    data: { url: site.url }
-  }),
-  userEvent: "OPEN_PRIVATE_WINDOW"
-});
-
-const BlockUrl = site => ({
-  id: "menu_action_dismiss",
-  icon: "dismiss",
-  action: ac.SendToMain({
-    type: at.BLOCK_URL,
-    data: site.url
-  }),
-  userEvent: "BLOCK"
-});
-
-const DeleteUrl = site => ({
-  id: "menu_action_delete",
-  icon: "delete",
-  action: {
-    type: at.DIALOG_OPEN,
-    data: {
-      onConfirm: [ac.SendToMain({ type: at.DELETE_HISTORY_URL, data: site.url }), ac.UserEvent({ event: "DELETE" })],
-      body_string_id: ["confirm_history_delete_p1", "confirm_history_delete_notice_p2"],
-      confirm_button_string_id: "menu_action_delete"
-    }
-  },
-  userEvent: "DIALOG_OPEN"
-});
+const linkMenuOptions = __webpack_require__(16);
+const DEFAULT_SITE_MENU_OPTIONS = ["CheckPinTopSite", "Separator", "OpenInNewWindow", "OpenInPrivateWindow"];
 
 class LinkMenu extends React.Component {
   getOptions() {
     const props = this.props;
-    const site = props.site;
+    const site = props.site,
+          index = props.index,
+          source = props.source;
 
-    const isBookmark = site.bookmarkGuid;
-    const isDefault = site.isDefault;
+    // Handle special case of default site
 
-    const options = [
+    const propOptions = !site.isDefault ? props.options : DEFAULT_SITE_MENU_OPTIONS;
 
-    // Bookmarks
-    !isDefault && (isBookmark ? RemoveBookmark(site) : AddBookmark(site)), !isDefault && { type: "separator" },
-
-    // Menu items for all sites
-    OpenInNewWindow(site), OpenInPrivateWindow(site),
-
-    // Blocking and deleting
-    !isDefault && { type: "separator" }, !isDefault && BlockUrl(site), !isDefault && DeleteUrl(site)].filter(o => o).map(option => {
+    const options = propOptions.map(o => linkMenuOptions[o](site, index)).map(option => {
       const action = option.action,
             id = option.id,
             type = option.type,
@@ -1024,8 +1032,8 @@ class LinkMenu extends React.Component {
           if (userEvent) {
             props.dispatch(ac.UserEvent({
               event: userEvent,
-              source: props.source,
-              action_position: props.index
+              source,
+              action_position: index
             }));
           }
         };
@@ -1052,13 +1060,13 @@ module.exports = injectIntl(LinkMenu);
 module.exports._unconnected = LinkMenu;
 
 /***/ }),
-/* 12 */
+/* 13 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-const React = __webpack_require__(0);
+const React = __webpack_require__(1);
 
 var _require = __webpack_require__(2);
 
@@ -1069,7 +1077,7 @@ var _require2 = __webpack_require__(3);
 const injectIntl = _require2.injectIntl,
       FormattedMessage = _require2.FormattedMessage;
 
-var _require3 = __webpack_require__(1);
+var _require3 = __webpack_require__(0);
 
 const ac = _require3.actionCreators;
 
@@ -1178,14 +1186,14 @@ module.exports.PreferencesPane = PreferencesPane;
 module.exports.PreferencesInput = PreferencesInput;
 
 /***/ }),
-/* 13 */
+/* 14 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 /* globals ContentSearchUIController */
 
 
-const React = __webpack_require__(0);
+const React = __webpack_require__(1);
 
 var _require = __webpack_require__(2);
 
@@ -1196,7 +1204,7 @@ var _require2 = __webpack_require__(3);
 const FormattedMessage = _require2.FormattedMessage,
       injectIntl = _require2.injectIntl;
 
-var _require3 = __webpack_require__(1);
+var _require3 = __webpack_require__(0);
 
 const ac = _require3.actionCreators;
 
@@ -1277,13 +1285,13 @@ module.exports = connect()(injectIntl(Search));
 module.exports._unconnected = Search;
 
 /***/ }),
-/* 14 */
+/* 15 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-const React = __webpack_require__(0);
+const React = __webpack_require__(1);
 
 var _require = __webpack_require__(2);
 
@@ -1293,14 +1301,15 @@ var _require2 = __webpack_require__(3);
 
 const FormattedMessage = _require2.FormattedMessage;
 
-const shortURL = __webpack_require__(15);
-const LinkMenu = __webpack_require__(11);
+const shortURL = __webpack_require__(4);
+const LinkMenu = __webpack_require__(12);
 
-var _require3 = __webpack_require__(1);
+var _require3 = __webpack_require__(0);
 
 const ac = _require3.actionCreators;
 
 const TOP_SITES_SOURCE = "TOP_SITES";
+const TOP_SITES_CONTEXT_MENU_OPTIONS = ["CheckPinTopSite", "Separator", "OpenInNewWindow", "OpenInPrivateWindow", "Separator", "BlockUrl", "DeleteUrl"];
 
 class TopSite extends React.Component {
   constructor(props) {
@@ -1374,7 +1383,8 @@ class TopSite extends React.Component {
         onUpdate: val => this.setState({ showContextMenu: val }),
         site: link,
         index: index,
-        source: TOP_SITES_SOURCE })
+        source: TOP_SITES_SOURCE,
+        options: TOP_SITES_CONTEXT_MENU_OPTIONS })
     );
   }
 }
@@ -1390,7 +1400,7 @@ const TopSites = props => React.createElement(
   React.createElement(
     "ul",
     { className: "top-sites-list" },
-    props.TopSites.rows.map((link, index) => React.createElement(TopSite, {
+    props.TopSites.rows.map((link, index) => link && React.createElement(TopSite, {
       key: link.url,
       dispatch: props.dispatch,
       link: link,
@@ -1403,42 +1413,118 @@ module.exports._unconnected = TopSites;
 module.exports.TopSite = TopSite;
 
 /***/ }),
-/* 15 */
+/* 16 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
+var _require = __webpack_require__(0);
+
+const at = _require.actionTypes,
+      ac = _require.actionCreators;
+
+const shortURL = __webpack_require__(4);
+
 /**
- * shortURL - Creates a short version of a link's url, used for display purposes
- *            e.g. {url: http://www.foosite.com, eTLD: "com"}  =>  "foosite"
- *
- * @param  {obj} link A link object
- *         {str} link.url (required)- The url of the link
- *         {str} link.eTLD (required) - The tld of the link
- *               e.g. for https://foo.org, the tld would be "org"
- *               Note that this property is added in various queries for ActivityStream
- *               via Services.eTLD.getPublicSuffix
- *         {str} link.hostname (optional) - The hostname of the url
- *               e.g. for http://www.hello.com/foo/bar, the hostname would be "www.hello.com"
- * @return {str}   A short url
+ * List of functions that return items that can be included as menu options in a
+ * LinkMenu. All functions take the site as the first parameter, and optionally
+ * the index of the site.
  */
-module.exports = function shortURL(link) {
-  if (!link.url && !link.hostname) {
-    return "";
-  }
-  const eTLD = link.eTLD;
-
-  const hostname = (link.hostname || new URL(link.url).hostname).replace(/^www\./i, "");
-
-  // Remove the eTLD (e.g., com, net) and the preceding period from the hostname
-  const eTLDLength = (eTLD || "").length || hostname.match(/\.com$/) && 3;
-  const eTLDExtra = eTLDLength > 0 ? -(eTLDLength + 1) : Infinity;
-  return hostname.slice(0, eTLDExtra).toLowerCase();
+module.exports = {
+  Separator: () => ({ type: "separator" }),
+  RemoveBookmark: site => ({
+    id: "menu_action_remove_bookmark",
+    icon: "bookmark-remove",
+    action: ac.SendToMain({
+      type: at.DELETE_BOOKMARK_BY_ID,
+      data: site.bookmarkGuid
+    }),
+    userEvent: "BOOKMARK_DELETE"
+  }),
+  AddBookmark: site => ({
+    id: "menu_action_bookmark",
+    icon: "bookmark",
+    action: ac.SendToMain({
+      type: at.BOOKMARK_URL,
+      data: site.url
+    }),
+    userEvent: "BOOKMARK_ADD"
+  }),
+  OpenInNewWindow: site => ({
+    id: "menu_action_open_new_window",
+    icon: "new-window",
+    action: ac.SendToMain({
+      type: at.OPEN_NEW_WINDOW,
+      data: { url: site.url }
+    }),
+    userEvent: "OPEN_NEW_WINDOW"
+  }),
+  OpenInPrivateWindow: site => ({
+    id: "menu_action_open_private_window",
+    icon: "new-window-private",
+    action: ac.SendToMain({
+      type: at.OPEN_PRIVATE_WINDOW,
+      data: { url: site.url }
+    }),
+    userEvent: "OPEN_PRIVATE_WINDOW"
+  }),
+  BlockUrl: site => ({
+    id: "menu_action_dismiss",
+    icon: "dismiss",
+    action: ac.SendToMain({
+      type: at.BLOCK_URL,
+      data: site.url
+    }),
+    userEvent: "BLOCK"
+  }),
+  DeleteUrl: site => ({
+    id: "menu_action_delete",
+    icon: "delete",
+    action: {
+      type: at.DIALOG_OPEN,
+      data: {
+        onConfirm: [ac.SendToMain({ type: at.DELETE_HISTORY_URL, data: site.url }), ac.UserEvent({ event: "DELETE" })],
+        body_string_id: ["confirm_history_delete_p1", "confirm_history_delete_notice_p2"],
+        confirm_button_string_id: "menu_action_delete"
+      }
+    },
+    userEvent: "DIALOG_OPEN"
+  }),
+  PinTopSite: (site, index) => ({
+    id: "menu_action_pin",
+    icon: "pin",
+    action: ac.SendToMain({
+      type: at.TOP_SITES_PIN,
+      data: { site: { url: site.url, title: shortURL(site) }, index }
+    }),
+    userEvent: "PIN"
+  }),
+  UnpinTopSite: site => ({
+    id: "menu_action_unpin",
+    icon: "unpin",
+    action: ac.SendToMain({
+      type: at.TOP_SITES_UNPIN,
+      data: { site: { url: site.url } }
+    }),
+    userEvent: "UNPIN"
+  }),
+  SaveToPocket: site => ({
+    id: "menu_action_save_to_pocket",
+    icon: "pocket",
+    action: ac.SendToMain({
+      type: at.SAVE_TO_POCKET,
+      data: { site: { url: site.url, title: site.title } }
+    }),
+    userEvent: "SAVE_TO_POCKET"
+  })
 };
 
+module.exports.CheckBookmark = site => site.bookmarkGuid ? module.exports.RemoveBookmark(site) : module.exports.AddBookmark(site);
+module.exports.CheckPinTopSite = (site, index) => site.isPinned ? module.exports.UnpinTopSite(site) : module.exports.PinTopSite(site, index);
+
 /***/ }),
-/* 16 */
+/* 17 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1543,33 +1629,33 @@ module.exports = {
 };
 
 /***/ }),
-/* 17 */
+/* 18 */
 /***/ (function(module, exports) {
 
 module.exports = Redux;
 
 /***/ }),
-/* 18 */
+/* 19 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-const React = __webpack_require__(0);
-const ReactDOM = __webpack_require__(8);
-const Base = __webpack_require__(4);
+const React = __webpack_require__(1);
+const ReactDOM = __webpack_require__(9);
+const Base = __webpack_require__(5);
 
 var _require = __webpack_require__(2);
 
 const Provider = _require.Provider;
 
-const initStore = __webpack_require__(6);
+const initStore = __webpack_require__(7);
 
-var _require2 = __webpack_require__(7);
+var _require2 = __webpack_require__(8);
 
 const reducers = _require2.reducers;
 
-const DetectUserSessionStart = __webpack_require__(5);
+const DetectUserSessionStart = __webpack_require__(6);
 
 new DetectUserSessionStart().sendEventOrAddListener();
 
