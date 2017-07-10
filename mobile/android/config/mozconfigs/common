@@ -41,6 +41,7 @@ fi
 
 ac_add_options --enable-update-channel=${MOZ_UPDATE_CHANNEL}
 
+ac_add_options --with-google-api-keyfile=/builds/gapi.data
 ac_add_options --with-mozilla-api-keyfile=/builds/mozilla-fennec-geoloc-api.key
 
 # MOZ_INSTALL_TRACKING does not guarantee MOZ_UPDATE_CHANNEL will be set so we

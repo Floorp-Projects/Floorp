@@ -30,6 +30,7 @@ config = {
         ('/home/cltbld/.ssh', '/home/mock_mozilla/.ssh'),
         ('/home/cltbld/.hgrc', '/builds/.hgrc'),
         ('/home/cltbld/.boto', '/builds/.boto'),
+        ('/builds/gapi.data', '/builds/gapi.data'),
         ('/builds/relengapi.tok', '/builds/relengapi.tok'),
         ('/tools/tooltool.py', '/builds/tooltool.py'),
         ('/builds/mozilla-api.key', '/builds/mozilla-api.key'),
@@ -38,6 +39,9 @@ config = {
         ('/usr/local/lib/hgext', '/usr/local/lib/hgext'),
     ],
     'secret_files': [
+        {'filename': '/builds/gapi.data',
+         'secret_name': 'project/releng/gecko/build/level-%(scm-level)s/gapi.data',
+         'min_scm_level': 1},
         {'filename': '/builds/mozilla-fennec-geoloc-api.key',
          'secret_name': 'project/releng/gecko/build/level-%(scm-level)s/mozilla-fennec-geoloc-api.key',
          'min_scm_level': 2, 'default': 'try-build-has-no-secrets'},
