@@ -189,6 +189,8 @@ public:
      */
     static void InitNullMetadata();
 
+    static int32_t MaxTextureSize();
+    static int32_t MaxAllocSize();
     static void InitMoz2DLogging();
 
     static bool IsHeadless();
