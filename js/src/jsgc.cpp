@@ -5008,18 +5008,18 @@ GCRuntime::endMarkingSweepGroup()
 }
 
 // Causes the given WeakCache to be swept when run.
-class SweepWeakCacheTask : public GCParallelTask
+class ImmediateSweepWeakCacheTask : public GCParallelTask
 {
     JS::detail::WeakCacheBase& cache;
 
-    SweepWeakCacheTask(const SweepWeakCacheTask&) = delete;
+    ImmediateSweepWeakCacheTask(const ImmediateSweepWeakCacheTask&) = delete;
 
   public:
-    SweepWeakCacheTask(JSRuntime* rt, JS::detail::WeakCacheBase& wc)
+    ImmediateSweepWeakCacheTask(JSRuntime* rt, JS::detail::WeakCacheBase& wc)
       : GCParallelTask(rt), cache(wc)
     {}
 
-    SweepWeakCacheTask(SweepWeakCacheTask&& other)
+    ImmediateSweepWeakCacheTask(ImmediateSweepWeakCacheTask&& other)
       : GCParallelTask(mozilla::Move(other)), cache(other.cache)
     {}
 
@@ -5223,7 +5223,7 @@ GCRuntime::sweepJitDataOnMainThread(FreeOp* fop)
     }
 }
 
-using WeakCacheTaskVector = mozilla::Vector<SweepWeakCacheTask, 0, SystemAllocPolicy>;
+using WeakCacheTaskVector = mozilla::Vector<ImmediateSweepWeakCacheTask, 0, SystemAllocPolicy>;
 
 enum WeakCacheLocation
 {
@@ -5398,7 +5398,7 @@ GCRuntime::beginSweepingSweepGroup()
     sweepActionList = PerSweepGroupActionList;
     sweepActionIndex = 0;
     sweepPhaseIndex = 0;
-    sweepZone = currentSweepGroup;
+    sweepZone = nullptr;
     sweepCache = nullptr;
 }
 
@@ -5668,6 +5668,100 @@ GCRuntime::sweepAtomsTable(SliceBudget& budget)
     return Finished;
 }
 
+class js::gc::WeakCacheSweepIterator
+{
+    JS::Zone*& sweepZone;
+    JS::detail::WeakCacheBase*& sweepCache;
+
+  public:
+    explicit WeakCacheSweepIterator(GCRuntime* gc)
+      : sweepZone(gc->sweepZone.ref()), sweepCache(gc->sweepCache.ref())
+    {
+        // Initialize state when we start sweeping a sweep group.
+        if (!sweepZone) {
+            sweepZone = gc->currentSweepGroup;
+            MOZ_ASSERT(!sweepCache);
+            sweepCache = sweepZone->weakCaches().getFirst();
+            settle();
+        }
+
+        checkState();
+    }
+
+    bool empty(AutoLockHelperThreadState& lock) {
+        return !sweepZone;
+    }
+
+    JS::detail::WeakCacheBase* next(AutoLockHelperThreadState& lock) {
+        if (empty(lock))
+            return nullptr;
+
+        JS::detail::WeakCacheBase* result = sweepCache;
+        sweepCache = sweepCache->getNext();
+        settle();
+        checkState();
+        return result;
+    }
+
+    void settle() {
+        while (sweepZone) {
+            while (sweepCache && !sweepCache->needsIncrementalBarrier())
+                sweepCache = sweepCache->getNext();
+
+            if (sweepCache)
+                break;
+
+            sweepZone = sweepZone->nextNodeInGroup();
+            if (sweepZone)
+                sweepCache = sweepZone->weakCaches().getFirst();
+        }
+    }
+
+  private:
+    void checkState() {
+        MOZ_ASSERT((!sweepZone && !sweepCache) ||
+                   (sweepCache && sweepCache->needsIncrementalBarrier()));
+    }
+};
+
+class IncrementalSweepWeakCacheTask : public GCParallelTask
+{
+    WeakCacheSweepIterator& work_;
+    SliceBudget& budget_;
+    AutoLockHelperThreadState& lock_;
+    JS::detail::WeakCacheBase* cache_;
+
+  public:
+    IncrementalSweepWeakCacheTask(JSRuntime* rt, WeakCacheSweepIterator& work, SliceBudget& budget,
+                                  AutoLockHelperThreadState& lock)
+      : GCParallelTask(rt), work_(work), budget_(budget), lock_(lock),
+        cache_(work.next(lock))
+    {
+        MOZ_ASSERT(cache_);
+        runtime()->gc.startTask(*this, gcstats::PhaseKind::SWEEP_WEAK_CACHES, lock_);
+    }
+
+    ~IncrementalSweepWeakCacheTask() {
+        runtime()->gc.joinTask(*this, gcstats::PhaseKind::SWEEP_WEAK_CACHES, lock_);
+    }
+
+  private:
+    void run() override {
+        do {
+            MOZ_ASSERT(cache_->needsIncrementalBarrier());
+            size_t steps = cache_->sweep();
+            cache_->setNeedsIncrementalBarrier(false);
+
+            AutoLockHelperThreadState lock;
+            budget_.step(steps);
+            if (budget_.isOverBudget())
+                break;
+
+            cache_ = work_.next(lock);
+        } while(cache_);
+    }
+};
+
 /* static */ IncrementalProgress
 GCRuntime::sweepWeakCaches(GCRuntime* gc, SliceBudget& budget)
 {
@@ -5677,23 +5771,20 @@ GCRuntime::sweepWeakCaches(GCRuntime* gc, SliceBudget& budget)
 IncrementalProgress
 GCRuntime::sweepWeakCaches(SliceBudget& budget)
 {
-    for (; sweepZone; sweepZone = sweepZone->nextNodeInGroup()) {
-        if (!sweepCache)
-            sweepCache = sweepZone->weakCaches().getFirst();
-        for (; sweepCache; sweepCache = sweepCache->getNext()) {
-            if (sweepCache->needsIncrementalBarrier()) {
-                size_t steps = sweepCache->sweep();
-                sweepCache->setNeedsIncrementalBarrier(false);
-                budget.step(steps);
-                if (budget.isOverBudget())
-                    return NotFinished;
-            }
-        }
-        sweepCache = nullptr;
-    }
-    sweepZone = currentSweepGroup;
+    WeakCacheSweepIterator work(this);
 
-    return Finished;
+    {
+        gcstats::AutoPhase ap(stats(), gcstats::PhaseKind::SWEEP_COMPARTMENTS);
+        AutoLockHelperThreadState lock;
+        Maybe<IncrementalSweepWeakCacheTask> task;
+        if (!work.empty(lock))
+            task.emplace(rt, work, budget, lock);
+
+        // Runs until budget or work is exhausted.
+    }
+
+    AutoLockHelperThreadState lock;
+    return work.empty(lock) ? Finished : NotFinished;
 }
 
 /* static */ IncrementalProgress
@@ -5821,6 +5912,8 @@ GCRuntime::performSweepActions(SliceBudget& budget, AutoLockForExclusiveAccess& 
               case PerZoneActionList:
                 for (; sweepPhaseIndex < PerZoneSweepPhases.length(); sweepPhaseIndex++) {
                     const auto& actions = PerZoneSweepPhases[sweepPhaseIndex];
+                    if (!sweepZone)
+                        sweepZone = currentSweepGroup;
                     for (; sweepZone; sweepZone = sweepZone->nextNodeInGroup()) {
                         for (; sweepActionIndex < actions.length(); sweepActionIndex++) {
                             const auto& action = actions[sweepActionIndex];
@@ -5829,7 +5922,7 @@ GCRuntime::performSweepActions(SliceBudget& budget, AutoLockForExclusiveAccess& 
                         }
                         sweepActionIndex = 0;
                     }
-                    sweepZone = currentSweepGroup;
+                    sweepZone = nullptr;
                 }
                 sweepPhaseIndex = 0;
                 break;

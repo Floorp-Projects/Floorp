@@ -38,6 +38,7 @@ class AutoRunParallelTask;
 class AutoTraceSession;
 class MarkingValidator;
 struct MovingTracer;
+class WeakCacheSweepIterator;
 
 enum IncrementalProgress
 {
@@ -923,6 +924,14 @@ class GCRuntime
 
     void bufferGrayRoots();
 
+    /*
+     * Concurrent sweep infrastructure.
+     */
+    void startTask(GCParallelTask& task, gcstats::PhaseKind phase, AutoLockHelperThreadState& locked);
+    void joinTask(GCParallelTask& task, gcstats::PhaseKind phase, AutoLockHelperThreadState& locked);
+
+  private:
+
   private:
     enum IncrementalResult
     {
@@ -1249,18 +1258,13 @@ class GCRuntime
     ActiveThreadOrGCTaskData<JS::Zone*> currentSweepGroup;
     ActiveThreadData<SweepActionList> sweepActionList;
     ActiveThreadData<size_t> sweepPhaseIndex;
-    ActiveThreadData<JS::Zone*> sweepZone;
+    ActiveThreadOrGCTaskData<JS::Zone*> sweepZone;
     ActiveThreadData<size_t> sweepActionIndex;
     ActiveThreadData<mozilla::Maybe<AtomSet::Enum>> maybeAtomsToSweep;
-    ActiveThreadData<JS::detail::WeakCacheBase*> sweepCache;
+    ActiveThreadOrGCTaskData<JS::detail::WeakCacheBase*> sweepCache;
     ActiveThreadData<bool> abortSweepAfterCurrentGroup;
 
-    /*
-     * Concurrent sweep infrastructure.
-     */
-    void startTask(GCParallelTask& task, gcstats::PhaseKind phase, AutoLockHelperThreadState& locked);
-    void joinTask(GCParallelTask& task, gcstats::PhaseKind phase, AutoLockHelperThreadState& locked);
-    friend class AutoRunParallelTask;
+    friend class WeakCacheSweepIterator;
 
     /*
      * List head of arenas allocated during the sweep phase.
