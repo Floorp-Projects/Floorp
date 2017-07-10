@@ -62,6 +62,7 @@ function shutdown(aData, aReason) {
   }
 
   Cu.unload(WEBCOMPATREPORTER_JSM);
+  Services.prefs.removeObserver(PREF_WC_REPORTER_ENABLED, prefObserver);
 }
 
 function install(aData, aReason) {}
