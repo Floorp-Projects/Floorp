@@ -11,6 +11,8 @@
 if (NOT AOM_BUILD_CMAKE_AOM_OPTIMIZATION_CMAKE_)
 set(AOM_BUILD_CMAKE_AOM_OPTIMIZATION_CMAKE_ 1)
 
+include("${AOM_ROOT}/build/cmake/util.cmake")
+
 # Translate $flag to one which MSVC understands, and write the new flag to the
 # variable named by $translated_flag (or unset it, when MSVC needs no flag).
 function (get_msvc_intrinsic_flag flag translated_flag)
@@ -33,7 +35,8 @@ endfunction ()
 # Note: the libaom target is always updated because OBJECT libraries have rules
 # that disallow the direct addition of .o files to them as dependencies. Static
 # libraries do not have this limitation.
-function (add_intrinsics_object_library flag opt_name target_to_update sources)
+function (add_intrinsics_object_library flag opt_name target_to_update sources
+          dependent_target)
   set(target_name ${target_to_update}_${opt_name}_intrinsics)
   add_library(${target_name} OBJECT ${${sources}})
 
@@ -45,7 +48,7 @@ function (add_intrinsics_object_library flag opt_name target_to_update sources)
     target_compile_options(${target_name} PUBLIC ${flag})
   endif ()
 
-  target_sources(aom PUBLIC $<TARGET_OBJECTS:${target_name}>)
+  target_sources(${dependent_target} PRIVATE $<TARGET_OBJECTS:${target_name}>)
 
   # Add the new lib target to the global list of aom library targets.
   list(APPEND AOM_LIB_TARGETS ${target_name})
@@ -55,7 +58,7 @@ endfunction ()
 # Adds sources in list named by $sources to $target and adds $flag to the
 # compile flags for each source file.
 function (add_intrinsics_source_to_target flag target sources)
-  target_sources(${target} PUBLIC ${${sources}})
+  target_sources(${target} PRIVATE ${${sources}})
   if (MSVC)
     get_msvc_intrinsic_flag(${flag} "flag")
   endif ()
@@ -128,7 +131,7 @@ function (add_asm_library lib_name asm_sources dependent_target)
                        COMMENT "Building ASM object ${asm_object}"
                        WORKING_DIRECTORY "${AOM_CONFIG_DIR}"
                        VERBATIM)
-    target_sources(${lib_name} PRIVATE "${asm_object}")
+    target_sources(aom PRIVATE "${asm_object}")
   endforeach ()
 
   # The above created a target containing only ASM sources. Cmake needs help
@@ -136,14 +139,7 @@ function (add_asm_library lib_name asm_sources dependent_target)
   # linker language to C. We don't bother with setting the LINKER_LANGUAGE
   # property on the library target because not all generators obey it (looking
   # at you, xcode generator).
-  set(dummy_c_file "${AOM_CONFIG_DIR}/${lib_name}_dummy.c")
-  file(WRITE "${dummy_c_file}"
-       "// Generated file. DO NOT EDIT!\n"
-       "// ${lib_name} needs C file to force link language, ignore me.\n"
-       "void ${lib_name}_dummy_function(void) {}\n")
-  target_sources(${lib_name} PUBLIC ${dummy_c_file})
-
-  target_link_libraries(${dependent_target} ${AOM_LIB_LINK_TYPE} ${lib_name})
+  add_dummy_source_file_to_target("${lib_name}" "c")
 
   # Add the new lib target to the global list of aom library targets.
   list(APPEND AOM_LIB_TARGETS ${lib_name})
@@ -201,6 +197,45 @@ function (add_gas_asm_library lib_name asm_sources dependent_target)
   # Update the sources list passed in to include the converted asm source files.
   list(APPEND asm_sources ${gas_target_sources})
   set(${asm_sources} ${${asm_sources}} PARENT_SCOPE)
+endfunction ()
+
+# Terminates generation if nasm found in PATH does not meet requirements.
+# Currently checks only for presence of required object formats and support for
+# the -Ox argument (multipass optimization).
+function (test_nasm)
+  execute_process(COMMAND ${AS_EXECUTABLE} -hf
+                  OUTPUT_VARIABLE nasm_helptext)
+
+  if (NOT "${nasm_helptext}" MATCHES "-Ox")
+    message(FATAL_ERROR
+            "Unsupported nasm: multipass optimization not supported.")
+  endif ()
+
+  if ("${AOM_TARGET_CPU}" STREQUAL "x86")
+    if ("${AOM_TARGET_SYSTEM}" STREQUAL "Darwin")
+      if (NOT "${nasm_helptext}" MATCHES "macho32")
+        message(FATAL_ERROR
+                "Unsupported nasm: macho32 object format not supported.")
+      endif ()
+    elseif ("${AOM_TARGET_SYSTEM}" STREQUAL "Linux")
+      if (NOT "${nasm_helptext}" MATCHES "elf32")
+        message(FATAL_ERROR
+                "Unsupported nasm: elf32 object format not supported.")
+      endif ()
+    endif ()
+  else ()
+    if ("${AOM_TARGET_SYSTEM}" STREQUAL "Darwin")
+      if (NOT "${nasm_helptext}" MATCHES "macho64")
+        message(FATAL_ERROR
+                "Unsupported nasm: macho64 object format not supported.")
+      endif ()
+    elseif ("${AOM_TARGET_SYSTEM}" STREQUAL "Linux")
+      if (NOT "${nasm_helptext}" MATCHES "elf64")
+        message(FATAL_ERROR
+                "Unsupported nasm: elf64 object format not supported.")
+      endif ()
+    endif ()
+  endif ()
 endfunction ()
 
 endif ()  # AOM_BUILD_CMAKE_AOM_OPTIMIZATION_CMAKE_

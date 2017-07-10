@@ -43,7 +43,6 @@ void reference_idct_1d(const double *in, double *out, int size) {
   }
 }
 
-typedef void (*IdctFuncRef)(const double *in, double *out, int size);
 typedef void (*IdctFunc)(const tran_low_t *in, tran_low_t *out);
 
 class TransTestBase {
@@ -52,10 +51,10 @@ class TransTestBase {
 
  protected:
   void RunInvAccuracyCheck() {
-    tran_low_t *input = new tran_low_t[txfm_size_];
-    tran_low_t *output = new tran_low_t[txfm_size_];
-    double *ref_input = new double[txfm_size_];
-    double *ref_output = new double[txfm_size_];
+    tran_low_t input[64];
+    tran_low_t output[64];
+    double ref_input[64];
+    double ref_output[64];
 
     ACMRandom rnd(ACMRandom::DeterministicSeed());
     const int count_test_block = 5000;
@@ -65,8 +64,8 @@ class TransTestBase {
         ref_input[ni] = static_cast<double>(input[ni]);
       }
 
-      fwd_txfm_(input, output);
-      fwd_txfm_ref_(ref_input, ref_output, txfm_size_);
+      inv_txfm_(input, output);
+      reference_idct_1d(ref_input, ref_output, txfm_size_);
 
       for (int ni = 0; ni < txfm_size_; ++ni) {
         EXPECT_LE(
@@ -74,40 +73,32 @@ class TransTestBase {
             max_error_);
       }
     }
-
-    delete[] input;
-    delete[] output;
-    delete[] ref_input;
-    delete[] ref_output;
   }
 
   double max_error_;
   int txfm_size_;
-  IdctFunc fwd_txfm_;
-  IdctFuncRef fwd_txfm_ref_;
+  IdctFunc inv_txfm_;
 };
 
-typedef std::tr1::tuple<IdctFunc, IdctFuncRef, int, int> IdctParam;
+typedef std::tr1::tuple<IdctFunc, int, int> IdctParam;
 class AV1InvTxfm : public TransTestBase,
                    public ::testing::TestWithParam<IdctParam> {
  public:
   virtual void SetUp() {
-    fwd_txfm_ = GET_PARAM(0);
-    fwd_txfm_ref_ = GET_PARAM(1);
-    txfm_size_ = GET_PARAM(2);
-    max_error_ = GET_PARAM(3);
+    inv_txfm_ = GET_PARAM(0);
+    txfm_size_ = GET_PARAM(1);
+    max_error_ = GET_PARAM(2);
   }
   virtual void TearDown() {}
 };
 
 TEST_P(AV1InvTxfm, RunInvAccuracyCheck) { RunInvAccuracyCheck(); }
 
-INSTANTIATE_TEST_CASE_P(
-    C, AV1InvTxfm,
-    ::testing::Values(IdctParam(&aom_idct4_c, &reference_idct_1d, 4, 1),
-                      IdctParam(&aom_idct8_c, &reference_idct_1d, 8, 2),
-                      IdctParam(&aom_idct16_c, &reference_idct_1d, 16, 4),
-                      IdctParam(&aom_idct32_c, &reference_idct_1d, 32, 6)));
+INSTANTIATE_TEST_CASE_P(C, AV1InvTxfm,
+                        ::testing::Values(IdctParam(&aom_idct4_c, 4, 1),
+                                          IdctParam(&aom_idct8_c, 8, 2),
+                                          IdctParam(&aom_idct16_c, 16, 4),
+                                          IdctParam(&aom_idct32_c, 32, 6)));
 
 #if CONFIG_AV1_ENCODER
 typedef void (*FwdTxfmFunc)(const int16_t *in, tran_low_t *out, int stride);
@@ -140,6 +131,13 @@ class AV1PartialIDctTest
 };
 
 #if !CONFIG_ADAPT_SCAN
+static MB_MODE_INFO get_mbmi() {
+  MB_MODE_INFO mbmi;
+  mbmi.ref_frame[0] = LAST_FRAME;
+  assert(is_inter_block(&mbmi));
+  return mbmi;
+}
+
 TEST_P(AV1PartialIDctTest, RunQuantCheck) {
   int size;
   switch (tx_size_) {
@@ -186,9 +184,10 @@ TEST_P(AV1PartialIDctTest, RunQuantCheck) {
 
       // quantization with maximum allowed step sizes
       test_coef_block1[0] = (output_ref_block[0] / 1336) * 1336;
+      MB_MODE_INFO mbmi = get_mbmi();
       for (int j = 1; j < last_nonzero_; ++j)
         test_coef_block1[get_scan((const AV1_COMMON *)NULL, tx_size_, DCT_DCT,
-                                  0)
+                                  &mbmi)
                              ->scan[j]] = (output_ref_block[j] / 1828) * 1828;
     }
 
@@ -239,7 +238,9 @@ TEST_P(AV1PartialIDctTest, ResultsMatch) {
         max_energy_leftover = 0;
         coef = 0;
       }
-      test_coef_block1[get_scan((const AV1_COMMON *)NULL, tx_size_, DCT_DCT, 0)
+      MB_MODE_INFO mbmi = get_mbmi();
+      test_coef_block1[get_scan((const AV1_COMMON *)NULL, tx_size_, DCT_DCT,
+                                &mbmi)
                            ->scan[j]] = coef;
     }
 

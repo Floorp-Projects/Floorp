@@ -39,9 +39,6 @@ typedef void (*od_filter_dering_direction_func)(uint16_t *y, int ystride,
                                                 const uint16_t *in,
                                                 int threshold, int dir,
                                                 int damping);
-void copy_dering_16bit_to_16bit(uint16_t *dst, int dstride, uint16_t *src,
-                                dering_list *dlist, int dering_count,
-                                int bsize);
 
 int get_filter_skip(int level);
 

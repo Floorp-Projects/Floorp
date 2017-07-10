@@ -12,6 +12,7 @@
 #include <assert.h>
 
 #include "./av1_rtcd.h"
+#include "aom_dsp/txfm_common.h"
 #include "av1/common/enums.h"
 #include "av1/common/av1_fwd_txfm1d.h"
 #include "av1/common/av1_fwd_txfm1d_cfg.h"
@@ -41,9 +42,17 @@ static INLINE void fwd_txfm2d_c(const int16_t *input, int32_t *output,
                                 const int stride, const TXFM_2D_FLIP_CFG *cfg,
                                 int32_t *buf) {
   int c, r;
-  // TODO(sarahparker) must correct for rectangular transforms in follow up
-  const int txfm_size = cfg->row_cfg->txfm_size;
-  const int8_t *shift = cfg->row_cfg->shift;
+  // Note when assigning txfm_size_col, we use the txfm_size from the
+  // row configuration and vice versa. This is intentionally done to
+  // accurately perform rectangular transforms. When the transform is
+  // rectangular, the number of columns will be the same as the
+  // txfm_size stored in the row cfg struct. It will make no difference
+  // for square transforms.
+  const int txfm_size_col = cfg->row_cfg->txfm_size;
+  const int txfm_size_row = cfg->col_cfg->txfm_size;
+  // Take the shift from the larger dimension in the rectangular case.
+  const int8_t *shift = (txfm_size_col > txfm_size_row) ? cfg->row_cfg->shift
+                                                        : cfg->col_cfg->shift;
   const int8_t *stage_range_col = cfg->col_cfg->stage_range;
   const int8_t *stage_range_row = cfg->row_cfg->stage_range;
   const int8_t *cos_bit_col = cfg->col_cfg->cos_bit;
@@ -53,35 +62,97 @@ static INLINE void fwd_txfm2d_c(const int16_t *input, int32_t *output,
 
   // use output buffer as temp buffer
   int32_t *temp_in = output;
-  int32_t *temp_out = output + txfm_size;
+  int32_t *temp_out = output + txfm_size_row;
 
   // Columns
-  for (c = 0; c < txfm_size; ++c) {
+  for (c = 0; c < txfm_size_col; ++c) {
     if (cfg->ud_flip == 0) {
-      for (r = 0; r < txfm_size; ++r) temp_in[r] = input[r * stride + c];
+      for (r = 0; r < txfm_size_row; ++r) temp_in[r] = input[r * stride + c];
     } else {
-      for (r = 0; r < txfm_size; ++r)
+      for (r = 0; r < txfm_size_row; ++r)
         // flip upside down
-        temp_in[r] = input[(txfm_size - r - 1) * stride + c];
+        temp_in[r] = input[(txfm_size_row - r - 1) * stride + c];
     }
-    round_shift_array(temp_in, txfm_size, -shift[0]);
+    round_shift_array(temp_in, txfm_size_row, -shift[0]);
+    // Multiply everything by Sqrt2 on the larger dimension if the
+    // transform is rectangular
+    if (txfm_size_col > txfm_size_row) {
+      for (r = 0; r < txfm_size_row; ++r)
+        temp_in[r] = (int32_t)fdct_round_shift(temp_in[r] * Sqrt2);
+    }
     txfm_func_col(temp_in, temp_out, cos_bit_col, stage_range_col);
-    round_shift_array(temp_out, txfm_size, -shift[1]);
+    round_shift_array(temp_out, txfm_size_row, -shift[1]);
     if (cfg->lr_flip == 0) {
-      for (r = 0; r < txfm_size; ++r) buf[r * txfm_size + c] = temp_out[r];
+      for (r = 0; r < txfm_size_row; ++r)
+        buf[r * txfm_size_col + c] = temp_out[r];
     } else {
-      for (r = 0; r < txfm_size; ++r)
+      for (r = 0; r < txfm_size_row; ++r)
         // flip from left to right
-        buf[r * txfm_size + (txfm_size - c - 1)] = temp_out[r];
+        buf[r * txfm_size_col + (txfm_size_col - c - 1)] = temp_out[r];
     }
   }
 
   // Rows
-  for (r = 0; r < txfm_size; ++r) {
-    txfm_func_row(buf + r * txfm_size, output + r * txfm_size, cos_bit_row,
-                  stage_range_row);
-    round_shift_array(output + r * txfm_size, txfm_size, -shift[2]);
+  for (r = 0; r < txfm_size_row; ++r) {
+    // Multiply everything by Sqrt2 on the larger dimension if the
+    // transform is rectangular
+    if (txfm_size_row > txfm_size_col) {
+      for (c = 0; c < txfm_size_col; ++c)
+        buf[r * txfm_size_col + c] =
+            (int32_t)fdct_round_shift(buf[r * txfm_size_col + c] * Sqrt2);
+    }
+    txfm_func_row(buf + r * txfm_size_col, output + r * txfm_size_col,
+                  cos_bit_row, stage_range_row);
+    round_shift_array(output + r * txfm_size_col, txfm_size_col, -shift[2]);
   }
+}
+
+void av1_fwd_txfm2d_4x8_c(const int16_t *input, int32_t *output, int stride,
+                          int tx_type, int bd) {
+  int32_t txfm_buf[4 * 8];
+  TXFM_2D_FLIP_CFG cfg = av1_get_fwd_txfm_cfg(tx_type, TX_4X8);
+  (void)bd;
+  fwd_txfm2d_c(input, output, stride, &cfg, txfm_buf);
+}
+
+void av1_fwd_txfm2d_8x4_c(const int16_t *input, int32_t *output, int stride,
+                          int tx_type, int bd) {
+  int32_t txfm_buf[8 * 4];
+  TXFM_2D_FLIP_CFG cfg = av1_get_fwd_txfm_cfg(tx_type, TX_8X4);
+  (void)bd;
+  fwd_txfm2d_c(input, output, stride, &cfg, txfm_buf);
+}
+
+void av1_fwd_txfm2d_8x16_c(const int16_t *input, int32_t *output, int stride,
+                           int tx_type, int bd) {
+  int32_t txfm_buf[8 * 16];
+  TXFM_2D_FLIP_CFG cfg = av1_get_fwd_txfm_cfg(tx_type, TX_8X16);
+  (void)bd;
+  fwd_txfm2d_c(input, output, stride, &cfg, txfm_buf);
+}
+
+void av1_fwd_txfm2d_16x8_c(const int16_t *input, int32_t *output, int stride,
+                           int tx_type, int bd) {
+  int32_t txfm_buf[16 * 8];
+  TXFM_2D_FLIP_CFG cfg = av1_get_fwd_txfm_cfg(tx_type, TX_16X8);
+  (void)bd;
+  fwd_txfm2d_c(input, output, stride, &cfg, txfm_buf);
+}
+
+void av1_fwd_txfm2d_16x32_c(const int16_t *input, int32_t *output, int stride,
+                            int tx_type, int bd) {
+  int32_t txfm_buf[16 * 32];
+  TXFM_2D_FLIP_CFG cfg = av1_get_fwd_txfm_cfg(tx_type, TX_16X32);
+  (void)bd;
+  fwd_txfm2d_c(input, output, stride, &cfg, txfm_buf);
+}
+
+void av1_fwd_txfm2d_32x16_c(const int16_t *input, int32_t *output, int stride,
+                            int tx_type, int bd) {
+  int32_t txfm_buf[32 * 16];
+  TXFM_2D_FLIP_CFG cfg = av1_get_fwd_txfm_cfg(tx_type, TX_32X16);
+  (void)bd;
+  fwd_txfm2d_c(input, output, stride, &cfg, txfm_buf);
 }
 
 void av1_fwd_txfm2d_4x4_c(const int16_t *input, int32_t *output, int stride,
@@ -193,10 +264,12 @@ static const TXFM_1D_CFG *fwd_txfm_row_cfg_ls[TX_TYPES_1D][TX_SIZES] = {
 TXFM_2D_FLIP_CFG av1_get_fwd_txfm_cfg(int tx_type, int tx_size) {
   TXFM_2D_FLIP_CFG cfg;
   set_flip_cfg(tx_type, &cfg);
-  int tx_type_col = vtx_tab[tx_type];
-  int tx_type_row = htx_tab[tx_type];
-  cfg.col_cfg = fwd_txfm_col_cfg_ls[tx_type_col][tx_size];
-  cfg.row_cfg = fwd_txfm_row_cfg_ls[tx_type_row][tx_size];
+  const int tx_type_col = vtx_tab[tx_type];
+  const int tx_type_row = htx_tab[tx_type];
+  const int tx_size_col = txsize_vert_map[tx_size];
+  const int tx_size_row = txsize_horz_map[tx_size];
+  cfg.col_cfg = fwd_txfm_col_cfg_ls[tx_type_col][tx_size_col];
+  cfg.row_cfg = fwd_txfm_row_cfg_ls[tx_type_row][tx_size_row];
   return cfg;
 }
 

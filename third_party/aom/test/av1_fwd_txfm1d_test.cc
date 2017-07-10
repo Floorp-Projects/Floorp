@@ -82,7 +82,7 @@ TEST(av1_fwd_txfm1d, clamp_block) {
   int col = 1;
   int block_size = 3;
   int stride = 5;
-  clamp_block(block[row] + col, block_size, stride, -4, 2);
+  clamp_block(block[row] + col, block_size, block_size, stride, -4, 2);
   for (int r = 0; r < stride; r++) {
     for (int c = 0; c < stride; c++) {
       EXPECT_EQ(block[r][c], ref_block[r][c]);

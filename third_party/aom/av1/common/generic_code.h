@@ -47,7 +47,7 @@ void generic_model_init(generic_encoder *model);
 #define OD_CDFS_INIT_Q15(cdfs) \
   { int n_cdfs = sizeof(cdfs)/sizeof(cdfs[0]); \
     int cdf_size = sizeof(cdfs[0])/sizeof(cdfs[0][0]); \
-    int nsyms = cdf_size - CONFIG_EC_ADAPT; \
+    int nsyms = cdf_size - 1; \
     int i_; \
     for (i_ = 0; i_ < n_cdfs; i_++) \
       aom_cdf_init_q15_1D(cdfs[i_], nsyms, cdf_size); \

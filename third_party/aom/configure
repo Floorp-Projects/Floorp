@@ -25,6 +25,7 @@ Advanced options:
   ${toggle_analyzer}              analyzer
   ${toggle_docs}                  documentation
   ${toggle_unit_tests}            unit tests
+  ${toggle_tools}                 tools
   ${toggle_decode_perf_tests}     build decoder perf tests with unit tests
   ${toggle_encode_perf_tests}     build encoder perf tests with unit tests
   --cpu=CPU                       tune for the specified CPU (ARM: cortex-a8, X86: sse3)
@@ -101,6 +102,7 @@ all_platforms="${all_platforms} armv7-linux-gcc"     #neon Cortex-A8
 all_platforms="${all_platforms} armv7-none-rvct"     #neon Cortex-A8
 all_platforms="${all_platforms} armv7-win32-vs12"
 all_platforms="${all_platforms} armv7-win32-vs14"
+all_platforms="${all_platforms} armv7-win32-vs15"
 all_platforms="${all_platforms} armv7s-darwin-gcc"
 all_platforms="${all_platforms} armv8-linux-gcc"
 all_platforms="${all_platforms} mips32-linux-gcc"
@@ -126,6 +128,7 @@ all_platforms="${all_platforms} x86-solaris-gcc"
 all_platforms="${all_platforms} x86-win32-gcc"
 all_platforms="${all_platforms} x86-win32-vs12"
 all_platforms="${all_platforms} x86-win32-vs14"
+all_platforms="${all_platforms} x86-win32-vs15"
 all_platforms="${all_platforms} x86_64-android-gcc"
 all_platforms="${all_platforms} x86_64-darwin9-gcc"
 all_platforms="${all_platforms} x86_64-darwin10-gcc"
@@ -142,11 +145,12 @@ all_platforms="${all_platforms} x86_64-solaris-gcc"
 all_platforms="${all_platforms} x86_64-win64-gcc"
 all_platforms="${all_platforms} x86_64-win64-vs12"
 all_platforms="${all_platforms} x86_64-win64-vs14"
+all_platforms="${all_platforms} x86_64-win64-vs15"
 all_platforms="${all_platforms} generic-gnu"
 
 # all_targets is a list of all targets that can be configured
 # note that these should be in dependency order for now.
-all_targets="libs examples docs"
+all_targets="libs examples docs tools"
 
 # all targets available are enabled, by default.
 for t in ${all_targets}; do
@@ -262,6 +266,10 @@ EXPERIMENT_LIST="
     wedge
     compound_segment
     ext_refs
+    altref2
+    speed_refs
+    gf_groups
+    flex_refs
     global_motion
     new_quant
     supertx
@@ -276,6 +284,7 @@ EXPERIMENT_LIST="
     warped_motion
     q_adapt_probs
     bitstream_debug
+    inter_stats_only
     alt_intra
     palette
     palette_delta_encoding
@@ -284,6 +293,9 @@ EXPERIMENT_LIST="
     pvq
     cfl
     xiphrc
+    dct_only
+    daala_dct4
+    daala_dct8
     cb4x4
     chroma_2x2
     chroma_sub8x8
@@ -293,10 +305,7 @@ EXPERIMENT_LIST="
     adapt_scan
     filter_7bit
     parallel_deblocking
-    parallel_deblocking_15tap
     loopfiltering_across_tiles
-    tile_groups
-    ec_adapt
     tempmv_signaling
     rd_debug
     reference_buffer
@@ -304,6 +313,7 @@ EXPERIMENT_LIST="
     entropy_stats
     masked_tx
     dependent_horztiles
+    dist_8x8
     daala_dist
     tripred
     palette_throughput
@@ -316,8 +326,18 @@ EXPERIMENT_LIST="
     compound_singleref
     aom_qm
     one_sided_compound
+    ext_comp_refs
     smooth_hv
     var_refs
+    rect_intra_pred
+    lgt
+    sbl_symbol
+    ncobmc_adapt_weight
+    bgsprite
+    var_tx_no_tx_mode
+    mrc_tx
+    lpf_direct
+    uv_lvl
 "
 CONFIG_LIST="
     dependency_tracking
@@ -366,6 +386,7 @@ CONFIG_LIST="
     highbitdepth
     experimental
     size_limit
+    colorspace_headers
     ${EXPERIMENT_LIST}
     analyzer
 "
@@ -391,6 +412,7 @@ CMDLINE_SELECT="
     examples
     analyzer
     docs
+    tools
     libc
     as
     size_limit
@@ -423,6 +445,7 @@ CMDLINE_SELECT="
     aom_highbitdepth
     highbitdepth
     experimental
+    colorspace_headers
 "
 
 process_cmdline() {
@@ -474,12 +497,10 @@ post_process_cmdline() {
     soft_enable filter_7bit
     soft_enable reference_buffer
     soft_enable delta_q
-    soft_enable tile_groups
     soft_enable rect_tx
     soft_enable global_motion
     soft_enable ext_tx
     soft_enable cdef
-    soft_enable ec_adapt
     soft_enable ext_intra
     soft_enable mv_compress
     soft_enable ext_refs
@@ -490,11 +511,14 @@ post_process_cmdline() {
     soft_enable loopfiltering_across_tiles
     soft_enable ec_smallmul
     soft_enable var_tx
-    soft_enable one_sided_compound
     soft_enable ext_inter
     soft_enable wedge
     soft_enable compound_segment
     soft_enable interintra
+    soft_enable one_sided_compound
+    soft_enable smooth_hv
+    soft_enable parallel_deblocking
+    soft_enable rect_intra_pred
 
     # Backwards/jenkins compatibility with --enable-aom-highbitdepth
     enabled aom_highbitdepth && enable_feature highbitdepth
@@ -508,12 +532,14 @@ post_process_cmdline() {
     soft_enable tempmv_signaling
 
     # Fix up experiment dependencies
-    enabled pvq && enable_feature ec_adapt
-    enabled pvq && disable_feature chroma_sub8x8
-    enabled pvq && disable_feature cb4x4
+    enabled daala_dist && enable_feature dist_8x8
+    enabled pvq && disable_feature chroma_2x2
     enabled pvq && disable_feature rect_tx
     enabled pvq && disable_feature ext_tx
     enabled pvq && disable_feature var_tx
+    enabled pvq && disable_feature highbitdepth
+    enabled pvq && disable_feature lgt
+    enabled pvq && disable_feature mrc_tx
     enabled palette_throughput && soft_enable palette
     enabled ext_delta_q && soft_enable delta_q
     enabled txk_sel && soft_enable lv_map
@@ -523,6 +549,14 @@ post_process_cmdline() {
     enabled chroma_2x2 && disable_feature chroma_sub8x8
     enabled dpcm_intra && enable_feature ext_tx
     enabled chroma_sub8x8 && enable_feature cb4x4
+    enabled compound_singleref && enable_feature ext_inter
+    enabled warped_motion && disable_feature ncobmc_adapt_weight
+    enabled ncobmc_adapt_weight && enable_feature motion_var
+    enabled bgsprite && enable_feature global_motion
+    enabled ext_comp_refs && enable_feature var_refs
+    enabled ext_comp_refs && disable_feature one_sided_compound
+    enabled altref2 && enable_feature ext_refs
+    enabled rect_tx_ext && enable_feature rect_tx
 
     if ! enabled delta_q && enabled ext_delta_q; then
       log_echo "ext_delta_q requires delta_q, so disabling ext_delta_q"
@@ -536,25 +570,41 @@ post_process_cmdline() {
       log_echo "ec_smallmul requires not ans, so disabling ec_smallmul"
       disable_feature ec_smallmul
     fi
-    if enabled ext_tile; then
-      log_echo "ext_tile not compatible with reference_buffer, so"
-      log_echo "disabling reference_buffer"
-      disable_feature reference_buffer
+    if enabled daala_dct4; then
+      enable_feature dct_only
+      disable_feature mmx
+      disable_feature rect_tx
+      disable_feature var_tx
+      disable_feature lgt
+      enable_feature lowbitdepth
     fi
-    if enabled ext_tile; then
-      log_echo "ext_tile not compatible with tile_groups, so"
-      log_echo "disabling tile_groups"
-      disable_feature tile_groups
+    if enabled daala_dct8; then
+      disable_feature mmx
+      disable_feature rect_tx
+      disable_feature var_tx
+      disable_feature lgt
+      enable_feature lowbitdepth
+    fi
+    if enabled var_tx_no_tx_mode && ! enabled var_tx; then
+      log_echo "var_tx_no_tx_mode requires var_tx, so disabling var_tx_no_tx_mode"
+      disable_feature var_tx_no_tx_mode
+    fi
+    if enabled ext_partition_types; then
+      if enabled fp_mb_stats; then
+        log_echo "ext_partition_types not compatible with fp_mb_stats;"
+        log_echo "disabling fp_mb_stats"
+        disable_feature fp_mb_stats
+      fi
+      if enabled supertx; then
+        log_echo "ext_partition_types not compatible with supertx;"
+        log_echo "disabling supertx"
+        disable_feature supertx
+      fi
     fi
     # Enable accounting and inspection when building the analyzer
     if enabled analyzer; then
       soft_enable accounting
       soft_enable inspection
-    fi
-    if enabled parallel_deblocking_15tap && ! enabled parallel_deblocking; then
-      log_echo "parallel_deblocking_15tap dependes on parallel_deblocking, so"
-      log_echo "enabling parallel_deblocking"
-      soft_enable parallel_deblocking
     fi
 }
 
@@ -620,7 +670,7 @@ EOF
     #
     # Write makefiles for all enabled targets
     #
-    for tgt in libs examples docs solution; do
+    for tgt in libs examples docs tools solution; do
         tgt_fn="$tgt-$toolchain.mk"
 
         if enabled $tgt; then
@@ -724,6 +774,7 @@ process_toolchain() {
         check_add_cflags -Wuninitialized
         check_add_cflags -Wunused
         check_add_cflags -Wsign-compare
+        check_add_cflags -Wstring-conversion
         check_add_cflags -Wlogical-op
         check_add_cflags -Wstack-usage=320000
         # Enabling the following warning (in combination with -Wunused above)

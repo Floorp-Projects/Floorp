@@ -277,12 +277,12 @@ static void cost_coeffs_b(int plane, int block, int blk_row, int blk_col,
   struct macroblock_plane *p = &x->plane[plane];
   struct macroblockd_plane *pd = &xd->plane[plane];
   const PLANE_TYPE type = pd->plane_type;
-  const int ref = is_inter_block(mbmi);
-  const TX_TYPE tx_type = get_tx_type(type, xd, block, tx_size);
-  const SCAN_ORDER *const scan_order = get_scan(cm, tx_size, tx_type, ref);
-  const int rate = av1_cost_coeffs(cpi, x, plane, block, tx_size, scan_order,
-                                   pd->above_context + blk_col,
-                                   pd->left_context + blk_row, 0);
+  const TX_TYPE tx_type =
+      av1_get_tx_type(type, xd, blk_row, blk_col, block, tx_size);
+  const SCAN_ORDER *const scan_order = get_scan(cm, tx_size, tx_type, mbmi);
+  const int rate = av1_cost_coeffs(
+      cpi, x, plane, blk_row, blk_col, block, tx_size, scan_order,
+      pd->above_context + blk_col, pd->left_context + blk_row, 0);
   args->this_rate += rate;
   (void)plane_bsize;
   av1_set_contexts(xd, pd, plane, tx_size, p->eobs[block] > 0, blk_col,
@@ -323,42 +323,48 @@ void av1_tokenize_palette_sb(const AV1_COMP *cpi,
                              const struct ThreadData *const td, int plane,
                              TOKENEXTRA **t, RUN_TYPE dry_run, BLOCK_SIZE bsize,
                              int *rate) {
+  assert(plane == 0 || plane == 1);
   const MACROBLOCK *const x = &td->mb;
   const MACROBLOCKD *const xd = &x->e_mbd;
   const MB_MODE_INFO *const mbmi = &xd->mi[0]->mbmi;
   const uint8_t *const color_map = xd->plane[plane].color_index_map;
   const PALETTE_MODE_INFO *const pmi = &mbmi->palette_mode_info;
-  const int n = pmi->palette_size[plane];
-  int i, j;
-  int this_rate = 0;
-  uint8_t color_order[PALETTE_MAX_SIZE];
-  const aom_prob(
-      *const probs)[PALETTE_COLOR_INDEX_CONTEXTS][PALETTE_COLORS - 1] =
-      plane == 0 ? av1_default_palette_y_color_index_prob
-                 : av1_default_palette_uv_color_index_prob;
+  aom_cdf_prob(
+      *palette_cdf)[PALETTE_COLOR_INDEX_CONTEXTS][CDF_SIZE(PALETTE_COLORS)] =
+      plane ? xd->tile_ctx->palette_uv_color_index_cdf
+            : xd->tile_ctx->palette_y_color_index_cdf;
   int plane_block_width, rows, cols;
   av1_get_block_dimensions(bsize, plane, xd, &plane_block_width, NULL, &rows,
                            &cols);
-  assert(plane == 0 || plane == 1);
 
+  // The first color index does not use context or entropy.
+  (*t)->token = color_map[0];
+  (*t)->palette_cdf = NULL;
+  (*t)->skip_eob_node = 0;
+  ++(*t);
+
+  const int n = pmi->palette_size[plane];
+  const int calc_rate = rate && dry_run == DRY_RUN_COSTCOEFFS;
+  int this_rate = 0;
+  uint8_t color_order[PALETTE_MAX_SIZE];
 #if CONFIG_PALETTE_THROUGHPUT
-  int k;
-  for (k = 1; k < rows + cols - 1; ++k) {
-    for (j = AOMMIN(k, cols - 1); j >= AOMMAX(0, k - rows + 1); --j) {
-      i = k - j;
+  for (int k = 1; k < rows + cols - 1; ++k) {
+    for (int j = AOMMIN(k, cols - 1); j >= AOMMAX(0, k - rows + 1); --j) {
+      int i = k - j;
 #else
-  for (i = 0; i < rows; ++i) {
-    for (j = (i == 0 ? 1 : 0); j < cols; ++j) {
+  for (int i = 0; i < rows; ++i) {
+    for (int j = (i == 0 ? 1 : 0); j < cols; ++j) {
 #endif  // CONFIG_PALETTE_THROUGHPUT
       int color_new_idx;
       const int color_ctx = av1_get_palette_color_index_context(
           color_map, plane_block_width, i, j, n, color_order, &color_new_idx);
       assert(color_new_idx >= 0 && color_new_idx < n);
-      if (dry_run == DRY_RUN_COSTCOEFFS)
+      if (calc_rate) {
         this_rate += cpi->palette_y_color_cost[n - PALETTE_MIN_SIZE][color_ctx]
                                               [color_new_idx];
+      }
       (*t)->token = color_new_idx;
-      (*t)->context_tree = probs[n - PALETTE_MIN_SIZE][color_ctx];
+      (*t)->palette_cdf = palette_cdf[n - PALETTE_MIN_SIZE][color_ctx];
       (*t)->skip_eob_node = 0;
       ++(*t);
     }
@@ -434,17 +440,13 @@ static void tokenize_b(int plane, int block, int blk_row, int blk_col,
   const int segment_id = mbmi->segment_id;
 #endif  // CONFIG_SUEPRTX
   const int16_t *scan, *nb;
-  const TX_TYPE tx_type = get_tx_type(type, xd, block, tx_size);
-  const SCAN_ORDER *const scan_order =
-      get_scan(cm, tx_size, tx_type, is_inter_block(mbmi));
+  const TX_TYPE tx_type =
+      av1_get_tx_type(type, xd, blk_row, blk_col, block, tx_size);
+  const SCAN_ORDER *const scan_order = get_scan(cm, tx_size, tx_type, mbmi);
   const int ref = is_inter_block(mbmi);
   unsigned int(*const counts)[COEFF_CONTEXTS][ENTROPY_TOKENS] =
       td->rd_counts.coef_counts[txsize_sqr_map[tx_size]][type][ref];
-#if CONFIG_EC_ADAPT
   FRAME_CONTEXT *ec_ctx = xd->tile_ctx;
-#else
-  FRAME_CONTEXT *ec_ctx = cpi->common.fc;
-#endif
   aom_cdf_prob(
       *const coef_head_cdfs)[COEFF_CONTEXTS][CDF_SIZE(ENTROPY_TOKENS)] =
       ec_ctx->coef_head_cdfs[txsize_sqr_map[tx_size]][type][ref];
@@ -595,16 +597,31 @@ void tokenize_vartx(ThreadData *td, TOKENEXTRA **t, RUN_TYPE dry_run,
       cost_coeffs_b(plane, block, blk_row, blk_col, plane_bsize, tx_size, arg);
 #endif
   } else {
+#if CONFIG_RECT_TX_EXT
+    int is_qttx = plane_tx_size == quarter_txsize_lookup[plane_bsize];
+    const TX_SIZE sub_txs = is_qttx ? plane_tx_size : sub_tx_size_map[tx_size];
+#else
     // Half the block size in transform block unit.
     const TX_SIZE sub_txs = sub_tx_size_map[tx_size];
+#endif
     const int bsl = tx_size_wide_unit[sub_txs];
     int i;
 
     assert(bsl > 0);
 
     for (i = 0; i < 4; ++i) {
+#if CONFIG_RECT_TX_EXT
+      int is_wide_tx = tx_size_wide_unit[sub_txs] > tx_size_high_unit[sub_txs];
+      const int offsetr =
+          is_qttx ? (is_wide_tx ? i * tx_size_high_unit[sub_txs] : 0)
+                  : blk_row + ((i >> 1) * bsl);
+      const int offsetc =
+          is_qttx ? (is_wide_tx ? 0 : i * tx_size_wide_unit[sub_txs])
+                  : blk_col + ((i & 0x01) * bsl);
+#else
       const int offsetr = blk_row + ((i >> 1) * bsl);
       const int offsetc = blk_col + ((i & 0x01) * bsl);
+#endif
 
       int step = tx_size_wide_unit[sub_txs] * tx_size_high_unit[sub_txs];
 
@@ -666,7 +683,7 @@ void av1_tokenize_sb_vartx(const AV1_COMP *cpi, ThreadData *td, TOKENEXTRA **t,
     }
 #endif
     const struct macroblockd_plane *const pd = &xd->plane[plane];
-#if CONFIG_CB4X4 && !CONFIG_CHROMA_2X2
+#if CONFIG_CHROMA_SUB8X8
     const BLOCK_SIZE plane_bsize =
         AOMMAX(BLOCK_4X4, get_plane_block_size(bsize, pd));
 #else
@@ -681,14 +698,30 @@ void av1_tokenize_sb_vartx(const AV1_COMP *cpi, ThreadData *td, TOKENEXTRA **t,
     int idx, idy;
     int block = 0;
     int step = tx_size_wide_unit[max_tx_size] * tx_size_high_unit[max_tx_size];
-    for (idy = 0; idy < mi_height; idy += bh) {
-      for (idx = 0; idx < mi_width; idx += bw) {
-        tokenize_vartx(td, t, dry_run, max_tx_size, plane_bsize, idy, idx,
-                       block, plane, &arg);
-        block += step;
+
+    const BLOCK_SIZE max_unit_bsize = get_plane_block_size(BLOCK_64X64, pd);
+    int mu_blocks_wide =
+        block_size_wide[max_unit_bsize] >> tx_size_wide_log2[0];
+    int mu_blocks_high =
+        block_size_high[max_unit_bsize] >> tx_size_high_log2[0];
+
+    mu_blocks_wide = AOMMIN(mi_width, mu_blocks_wide);
+    mu_blocks_high = AOMMIN(mi_height, mu_blocks_high);
+
+    for (idy = 0; idy < mi_height; idy += mu_blocks_high) {
+      for (idx = 0; idx < mi_width; idx += mu_blocks_wide) {
+        int blk_row, blk_col;
+        const int unit_height = AOMMIN(mu_blocks_high + idy, mi_height);
+        const int unit_width = AOMMIN(mu_blocks_wide + idx, mi_width);
+        for (blk_row = idy; blk_row < unit_height; blk_row += bh) {
+          for (blk_col = idx; blk_col < unit_width; blk_col += bw) {
+            tokenize_vartx(td, t, dry_run, max_tx_size, plane_bsize, blk_row,
+                           blk_col, block, plane, &arg);
+            block += step;
+          }
+        }
       }
     }
-
 #if !CONFIG_LV_MAP
     if (!dry_run) {
       (*t)->token = EOSB_TOKEN;
