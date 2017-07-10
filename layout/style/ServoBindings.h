@@ -286,7 +286,7 @@ void Gecko_CopyAlternateValuesFrom(nsFont* dest, const nsFont* src);
 
 // Visibility style
 void Gecko_SetImageOrientation(nsStyleVisibility* aVisibility,
-                               double aRadians,
+                               uint8_t aOrientation,
                                bool aFlip);
 void Gecko_SetImageOrientationAsFromImage(nsStyleVisibility* aVisibility);
 void Gecko_CopyImageOrientationFrom(nsStyleVisibility* aDst,
