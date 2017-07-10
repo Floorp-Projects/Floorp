@@ -44,6 +44,12 @@ input {
     background-image: url("assets/glyph-newWindow-private-16.svg"); }
   .icon.icon-settings {
     background-image: url("assets/glyph-settings-16.svg"); }
+  .icon.icon-pin {
+    background-image: url("assets/glyph-pin-16.svg"); }
+  .icon.icon-unpin {
+    background-image: url("assets/glyph-unpin-16.svg"); }
+  .icon.icon-pocket {
+    background-image: url("assets/glyph-pocket-16.svg"); }
   .icon.icon-pin-small {
     background-image: url("assets/glyph-pin-12.svg");
     background-size: 12px;
