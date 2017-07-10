@@ -12,7 +12,7 @@ const TESTCASES = [
     document: `<form><input id="given-name"><input id="family-name">
                <input id="street-addr"><input id="city"><select id="country"></select>
                <input id='email'><input id="tel"></form>`,
-    fieldDetails: [],
+    addressFieldDetails: [],
     profileData: {},
     expectedResult: {
       "street-addr": "",
@@ -34,7 +34,7 @@ const TESTCASES = [
                </select>
                <input id="email" autocomplete="email">
                <input id="tel" autocomplete="tel"></form>`,
-    fieldDetails: [
+    addressFieldDetails: [
       {"section": "", "addressType": "", "contactType": "", "fieldName": "given-name", "element": {}},
       {"section": "", "addressType": "", "contactType": "", "fieldName": "family-name", "element": {}},
       {"section": "", "addressType": "", "contactType": "", "fieldName": "street-address", "element": {}},
@@ -72,7 +72,7 @@ const TESTCASES = [
                </select>
                <input id='email' autocomplete="shipping email">
                <input id="tel" autocomplete="shipping tel"></form>`,
-    fieldDetails: [
+    addressFieldDetails: [
       {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "given-name", "element": {}},
       {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "family-name", "element": {}},
       {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "street-address", "element": {}},
@@ -106,7 +106,7 @@ const TESTCASES = [
                <input id="country" autocomplete="shipping country">
                <input id='email' autocomplete="shipping email">
                <input id="tel" autocomplete="shipping tel"></form>`,
-    fieldDetails: [
+    addressFieldDetails: [
       {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "given-name", "element": {}},
       {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "family-name", "element": {}},
       {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "street-address", "element": {}},
@@ -140,7 +140,7 @@ const TESTCASES = [
                <input id="country" autocomplete="billing country">
                <input id='email' autocomplete="shipping email">
                <input id="tel" autocomplete="shipping tel"></form>`,
-    fieldDetails: [
+    addressFieldDetails: [
       {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "given-name", "element": {}},
       {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "family-name", "element": {}},
       {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "street-address", "element": {}},
@@ -179,7 +179,7 @@ const TESTCASES = [
                  <option value="WA">Washington</option>
                </select>
                </form>`,
-    fieldDetails: [
+    addressFieldDetails: [
       {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "country", "element": {}},
       {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "address-level1", "element": {}},
     ],
@@ -206,7 +206,7 @@ const TESTCASES = [
                  <option value="WA">Washington</option>
                </select>
                </form>`,
-    fieldDetails: [
+    addressFieldDetails: [
       {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "country", "element": {}},
       {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "address-level1", "element": {}},
     ],
@@ -235,7 +235,7 @@ const TESTCASES_INPUT_UNCHANGED = [
                  <option value="WA">Washington</option>
                </select>
                </form>`,
-    fieldDetails: [
+    addressFieldDetails: [
       {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "country", "element": {}},
       {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "address-level1", "element": {}},
     ],
@@ -258,7 +258,7 @@ const TESTCASES_US_STATES = [
                  <option value=""></option>
                  <option value="CA">California</option>
                </select></form>`,
-    fieldDetails: [
+    addressFieldDetails: [
       {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "address-level1", "element": {}},
     ],
     profileData: {
@@ -276,7 +276,7 @@ const TESTCASES_US_STATES = [
                  <option value=""></option>
                  <option value="CA">CA</option>
                </select></form>`,
-    fieldDetails: [
+    addressFieldDetails: [
       {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "address-level1", "element": {}},
     ],
     profileData: {
@@ -294,7 +294,7 @@ const TESTCASES_US_STATES = [
                  <option value=""></option>
                  <option value="US-WA">WA-Washington</option>
                </select></form>`,
-    fieldDetails: [
+    addressFieldDetails: [
       {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "address-level1", "element": {}},
     ],
     profileData: {
@@ -322,8 +322,8 @@ function do_test(testcases, testFn) {
         let handler = new FormAutofillHandler(formLike);
         let promises = [];
 
-        handler.fieldDetails = testcase.fieldDetails;
-        handler.fieldDetails.forEach((field, index) => {
+        handler.addressFieldDetails = testcase.addressFieldDetails;
+        handler.addressFieldDetails.forEach((field, index) => {
           let element = doc.querySelectorAll("input, select")[index];
           field.elementWeakRef = Cu.getWeakReference(element);
           if (!testcase.profileData[field.fieldName]) {
