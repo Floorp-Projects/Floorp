@@ -514,7 +514,7 @@ WindowOrNull(JSObject* aObj)
     MOZ_ASSERT(!js::IsWrapper(aObj));
 
     nsGlobalWindow* win = nullptr;
-    UNWRAP_OBJECT(Window, aObj, win);
+    UNWRAP_NON_WRAPPER_OBJECT(Window, aObj, win);
     return win;
 }
 

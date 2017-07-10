@@ -35,9 +35,7 @@ ServiceWorkerVisible(JSContext* aCx, JSObject* aObj)
     return Preferences::GetBool("dom.serviceWorkers.enabled", false);
   }
 
-  ServiceWorkerGlobalScope* scope = nullptr;
-  nsresult rv = UNWRAP_OBJECT(ServiceWorkerGlobalScope, aObj, scope);
-  return NS_SUCCEEDED(rv);
+  return IS_INSTANCE_OF(ServiceWorkerGlobalScope, aObj);
 }
 
 ServiceWorker::ServiceWorker(nsPIDOMWindowInner* aWindow,
