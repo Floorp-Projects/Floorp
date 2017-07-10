@@ -15,7 +15,6 @@
 #include "nsISimpleEnumerator.h"
 #include "prenv.h"
 #include "nsCRT.h"
-
 #if defined(MOZ_WIDGET_COCOA)
 #include <Carbon/Carbon.h>
 #include "nsILocalFileMac.h"
@@ -554,7 +553,6 @@ nsAppFileLocationProvider::GetFiles(const char* aProp,
       NS_APP_PLUGINS_DIR,
       NS_MACOSX_USER_PLUGIN_DIR,
       NS_MACOSX_LOCAL_PLUGIN_DIR,
-      IsOSXLeopard() ? NS_MACOSX_JAVA2_PLUGIN_DIR : nullptr,
       nullptr
     };
     *aResult = new nsAppDirectoryEnumerator(this, keys);
@@ -588,22 +586,3 @@ nsAppFileLocationProvider::GetFiles(const char* aProp,
   }
   return rv;
 }
-
-#if defined(MOZ_WIDGET_COCOA)
-bool
-nsAppFileLocationProvider::IsOSXLeopard()
-{
-  static SInt32 version = 0;
-
-  if (!version) {
-    OSErr err = ::Gestalt(gestaltSystemVersion, &version);
-    if (err != noErr) {
-      version = 0;
-    } else {
-      version &= 0xFFFF; // The system version is in the low order word
-    }
-  }
-
-  return ((version >= 0x1050) && (version < 0x1060));
-}
-#endif
