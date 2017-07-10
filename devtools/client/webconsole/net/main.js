@@ -5,8 +5,6 @@
 
 /* global BrowserLoader */
 
-var { utils: Cu } = Components;
-
 // Initialize module loader and load all modules of the new inline
 // preview feature. The entire code-base doesn't need any extra
 // privileges and runs entirely in content scope.
@@ -16,7 +14,7 @@ const require = BrowserLoader({
   window}).require;
 
 const NetRequest = require("./net-request");
-const { loadSheet } = require("sdk/stylesheet/utils");
+const { loadSheet } = require("devtools/shared/layout/utils");
 
 // Localization
 const {LocalizationHelper} = require("devtools/shared/l10n");
@@ -58,6 +56,7 @@ this.Locale = {
     } catch (err) {
       console.error(key + ": " + err);
     }
+    return key;
   }
 };
 
@@ -88,8 +87,6 @@ function onNetworkEvent(log) {
   if (log.update) {
     netRequest.updateBody(response);
   }
-
-  return;
 }
 
 // Make the 'onNetworkEvent' accessible from chrome (see webconsole.js)
