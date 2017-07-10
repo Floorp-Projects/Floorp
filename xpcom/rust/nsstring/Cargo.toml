@@ -6,3 +6,4 @@ license = "MPL-2.0"
 description = "Rust bindings to xpcom string types"
 
 [dependencies]
+bitflags = "0.8"

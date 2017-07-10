@@ -45,45 +45,44 @@ SIZE_ALIGN_CHECK(nsFixedCString)
 
 MEMBER_CHECK(nsString, mData)
 MEMBER_CHECK(nsString, mLength)
-MEMBER_CHECK(nsString, mFlags)
+MEMBER_CHECK(nsString, mDataFlags)
+MEMBER_CHECK(nsString, mClassFlags)
 MEMBER_CHECK(nsCString, mData)
 MEMBER_CHECK(nsCString, mLength)
-MEMBER_CHECK(nsCString, mFlags)
+MEMBER_CHECK(nsCString, mDataFlags)
+MEMBER_CHECK(nsCString, mClassFlags)
 MEMBER_CHECK(nsFixedString, mFixedCapacity)
 MEMBER_CHECK(nsFixedString, mFixedBuf)
 MEMBER_CHECK(nsFixedCString, mFixedCapacity)
 MEMBER_CHECK(nsFixedCString, mFixedBuf)
 
-extern "C" void Rust_Test_NsStringFlags(uint32_t* f_none,
-                                        uint32_t* f_terminated,
-                                        uint32_t* f_voided,
-                                        uint32_t* f_shared,
-                                        uint32_t* f_owned,
-                                        uint32_t* f_fixed,
-                                        uint32_t* f_literal,
-                                        uint32_t* f_class_fixed);
+extern "C" void Rust_Test_NsStringFlags(uint16_t* f_terminated,
+                                        uint16_t* f_voided,
+                                        uint16_t* f_shared,
+                                        uint16_t* f_owned,
+                                        uint16_t* f_fixed,
+                                        uint16_t* f_literal,
+                                        uint16_t* f_class_fixed);
 TEST(RustNsString, NsStringFlags) {
-  uint32_t f_none, f_terminated, f_voided, f_shared, f_owned, f_fixed, f_literal, f_class_fixed;
-  Rust_Test_NsStringFlags(&f_none, &f_terminated,
+  uint16_t f_terminated, f_voided, f_shared, f_owned, f_fixed, f_literal, f_class_fixed;
+  Rust_Test_NsStringFlags(&f_terminated,
                           &f_voided, &f_shared,
                           &f_owned, &f_fixed,
                           &f_literal, &f_class_fixed);
-  EXPECT_EQ(f_none, nsAString::F_NONE);
-  EXPECT_EQ(f_none, nsACString::F_NONE);
-  EXPECT_EQ(f_terminated, nsAString::F_TERMINATED);
-  EXPECT_EQ(f_terminated, nsACString::F_TERMINATED);
-  EXPECT_EQ(f_voided, nsAString::F_VOIDED);
-  EXPECT_EQ(f_voided, nsACString::F_VOIDED);
-  EXPECT_EQ(f_shared, nsAString::F_SHARED);
-  EXPECT_EQ(f_shared, nsACString::F_SHARED);
-  EXPECT_EQ(f_owned, nsAString::F_OWNED);
-  EXPECT_EQ(f_owned, nsACString::F_OWNED);
-  EXPECT_EQ(f_fixed, nsAString::F_FIXED);
-  EXPECT_EQ(f_fixed, nsACString::F_FIXED);
-  EXPECT_EQ(f_literal, nsAString::F_LITERAL);
-  EXPECT_EQ(f_literal, nsACString::F_LITERAL);
-  EXPECT_EQ(f_class_fixed, nsAString::F_CLASS_FIXED);
-  EXPECT_EQ(f_class_fixed, nsACString::F_CLASS_FIXED);
+  EXPECT_EQ(f_terminated, uint16_t(nsAString::DataFlags::TERMINATED));
+  EXPECT_EQ(f_terminated, uint16_t(nsACString::DataFlags::TERMINATED));
+  EXPECT_EQ(f_voided, uint16_t(nsAString::DataFlags::VOIDED));
+  EXPECT_EQ(f_voided, uint16_t(nsACString::DataFlags::VOIDED));
+  EXPECT_EQ(f_shared, uint16_t(nsAString::DataFlags::SHARED));
+  EXPECT_EQ(f_shared, uint16_t(nsACString::DataFlags::SHARED));
+  EXPECT_EQ(f_owned, uint16_t(nsAString::DataFlags::OWNED));
+  EXPECT_EQ(f_owned, uint16_t(nsACString::DataFlags::OWNED));
+  EXPECT_EQ(f_fixed, uint16_t(nsAString::DataFlags::FIXED));
+  EXPECT_EQ(f_fixed, uint16_t(nsACString::DataFlags::FIXED));
+  EXPECT_EQ(f_literal, uint16_t(nsAString::DataFlags::LITERAL));
+  EXPECT_EQ(f_literal, uint16_t(nsACString::DataFlags::LITERAL));
+  EXPECT_EQ(f_class_fixed, uint16_t(nsAString::ClassFlags::FIXED));
+  EXPECT_EQ(f_class_fixed, uint16_t(nsACString::ClassFlags::FIXED));
 }
 
 extern "C" void Rust_StringFromCpp(const nsACString* aCStr, const nsAString* aStr);
