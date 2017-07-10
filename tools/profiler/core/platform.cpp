@@ -2113,6 +2113,8 @@ profiler_init(void* aStackTop)
 
   MOZ_RELEASE_ASSERT(!CorePS::Exists());
 
+  SharedLibraryInfo::Initialize();
+
   uint32_t features =
 #if defined(GP_OS_android)
                       ProfilerFeature::Java |
