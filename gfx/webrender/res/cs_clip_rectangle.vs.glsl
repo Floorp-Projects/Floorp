@@ -9,7 +9,7 @@ struct ClipRect {
 };
 
 ClipRect fetch_clip_rect(int index) {
-    vec4 data[2] = fetch_data_2(index);
+    vec4 data[2] = fetch_from_resource_cache_2(index);
     return ClipRect(RectWithSize(data[0].xy, data[0].zw), data[1]);
 }
 
@@ -19,7 +19,7 @@ struct ClipCorner {
 };
 
 ClipCorner fetch_clip_corner(int index) {
-    vec4 data[2] = fetch_data_2(index);
+    vec4 data[2] = fetch_from_resource_cache_2(index);
     return ClipCorner(RectWithSize(data[0].xy, data[0].zw), data[1]);
 }
 
@@ -35,10 +35,10 @@ ClipData fetch_clip(int index) {
     ClipData clip;
 
     clip.rect = fetch_clip_rect(index + 0);
-    clip.top_left = fetch_clip_corner(index + 1);
-    clip.top_right = fetch_clip_corner(index + 2);
-    clip.bottom_left = fetch_clip_corner(index + 3);
-    clip.bottom_right = fetch_clip_corner(index + 4);
+    clip.top_left = fetch_clip_corner(index + 2);
+    clip.top_right = fetch_clip_corner(index + 4);
+    clip.bottom_left = fetch_clip_corner(index + 6);
+    clip.bottom_right = fetch_clip_corner(index + 8);
 
     return clip;
 }

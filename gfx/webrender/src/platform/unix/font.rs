@@ -3,9 +3,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use app_units::Au;
-use webrender_traits::{FontKey, FontRenderMode, GlyphDimensions};
-use webrender_traits::{NativeFontHandle, GlyphOptions};
-use webrender_traits::{GlyphKey};
+use api::{FontKey, FontRenderMode, GlyphDimensions};
+use api::{NativeFontHandle, GlyphOptions};
+use api::{GlyphKey};
 
 use freetype::freetype::{FT_Render_Mode, FT_Pixel_Mode};
 use freetype::freetype::{FT_Done_FreeType, FT_Library_SetLcdFilter};
@@ -65,7 +65,7 @@ impl FontContext {
         }
 
         FontContext {
-            lib: lib,
+            lib,
             faces: HashMap::new(),
         }
     }
@@ -86,7 +86,7 @@ impl FontContext {
             };
             if result.succeeded() && !face.is_null() {
                 self.faces.insert(*font_key, Face {
-                    face: face,
+                    face,
                     //_bytes: bytes
                 });
             } else {

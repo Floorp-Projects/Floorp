@@ -36,7 +36,7 @@
 #define BORDER_RIGHT     2
 #define BORDER_BOTTOM    3
 
-// Border styles as defined in webrender_traits/types.rs
+// Border styles as defined in webrender_api/types.rs
 #define BORDER_STYLE_NONE         0
 #define BORDER_STYLE_SOLID        1
 #define BORDER_STYLE_DOUBLE       2
@@ -140,8 +140,6 @@ vec4[2] fetch_from_resource_cache_2(int address) {
 uniform HIGHP_SAMPLER_FLOAT sampler2D sLayers;
 uniform HIGHP_SAMPLER_FLOAT sampler2D sRenderTasks;
 
-uniform HIGHP_SAMPLER_FLOAT sampler2D sData32;
-
 // Instanced attributes
 in ivec4 aData0;
 in ivec4 aData1;
@@ -152,13 +150,6 @@ in ivec4 aData1;
 // https://github.com/servo/servo/issues/13953
 #define get_fetch_uv(i, vpi)  ivec2(vpi * (i % (WR_MAX_VERTEX_TEXTURE_WIDTH/vpi)), i / (WR_MAX_VERTEX_TEXTURE_WIDTH/vpi))
 
-vec4[2] fetch_data_2(int index) {
-    ivec2 uv = get_fetch_uv(index, 2);
-    return vec4[2](
-        texelFetchOffset(sData32, uv, 0, ivec2(0, 0)),
-        texelFetchOffset(sData32, uv, 0, ivec2(1, 0))
-    );
-}
 
 vec4[8] fetch_from_resource_cache_8(int address) {
     ivec2 uv = get_resource_cache_uv(address);

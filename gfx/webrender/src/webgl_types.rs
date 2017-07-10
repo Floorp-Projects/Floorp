@@ -10,7 +10,7 @@ use offscreen_gl_context::{NativeGLContext, NativeGLContextHandle};
 use offscreen_gl_context::{GLContext, NativeGLContextMethods, GLContextDispatcher};
 use offscreen_gl_context::{OSMesaContext, OSMesaContextHandle};
 use offscreen_gl_context::{ColorAttachmentType, GLContextAttributes, GLLimits};
-use webrender_traits::{WebGLCommand, DeviceIntSize};
+use api::{WebGLCommand, DeviceIntSize};
 
 pub enum GLContextHandleWrapper {
     Native(NativeGLContextHandle),
