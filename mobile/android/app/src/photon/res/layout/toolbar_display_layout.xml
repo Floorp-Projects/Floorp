@@ -48,10 +48,11 @@
         android:orientation="horizontal"
         android:visibility="gone" />
 
-    <org.mozilla.gecko.widget.themed.ThemedImageButton
+    <ImageButton
         android:id="@+id/stop"
-        style="@style/UrlBar.ImageButton"
-        android:background="@drawable/action_bar_button"
+        android:layout_width="@dimen/page_action_button_width"
+        android:layout_height="match_parent"
+        android:background="#00ffffff"
         android:contentDescription="@string/stop"
         android:src="@drawable/urlbar_stop"
         android:visibility="gone" />
