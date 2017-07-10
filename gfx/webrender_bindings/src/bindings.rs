@@ -1631,6 +1631,7 @@ pub extern "C" fn wr_dp_push_border_image(state: &mut WrState,
         BorderDetails::Image(ImageBorder {
                                  image_key: image,
                                  patch: patch.into(),
+                                 fill: false,
                                  outset: outset.into(),
                                  repeat_horizontal: repeat_horizontal.into(),
                                  repeat_vertical: repeat_vertical.into(),
