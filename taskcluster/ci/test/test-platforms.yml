@@ -133,55 +133,35 @@ linux64-jsdcov/opt:
 ##
 # Windows platforms (matching /windows.*/)
 
-# win32 vm
-windows7-32-vm/debug:
-    build-platform: win32/debug
-    test-sets:
-        - windows-vm-tests
-        - headless
-windows7-32-vm/opt:
-    build-platform: win32/opt
-    test-sets:
-        - windows-vm-tests
-        - awsy
-        - desktop-screenshot-capture
-        - headless
-
-# win32 gpu
+# win32
 windows7-32/debug:
     build-platform: win32/debug
     test-sets:
-        - windows-gpu-tests
+        - headless
+        - windows-tests
 windows7-32/opt:
     build-platform: win32/opt
     test-sets:
-        - windows-gpu-tests
-        - desktop-screenshot-capture
-
-# win64 vm
-windows10-64-vm/debug:
-    build-platform: win64/debug
-    test-sets:
-        - windows-vm-tests
-        - headless
-windows10-64-vm/opt:
-    build-platform: win64/opt
-    test-sets:
-        - windows-vm-tests
         - awsy
         - desktop-screenshot-capture
         - headless
+        - windows-talos
+        - windows-tests
 
-# win64 gpu
+# win64
 windows10-64/debug:
     build-platform: win64/debug
     test-sets:
-        - windows-gpu-tests
+        - headless
+        - windows-tests
 windows10-64/opt:
     build-platform: win64/opt
     test-sets:
-        - windows-gpu-tests
+        - awsy
         - desktop-screenshot-capture
+        - headless
+        - windows-talos
+        - windows-tests
 
 windows10-64-asan/opt:
     build-platform: win64-asan/opt
