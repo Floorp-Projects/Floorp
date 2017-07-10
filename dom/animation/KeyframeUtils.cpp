@@ -567,7 +567,8 @@ KeyframeUtils::ParseProperty(nsCSSPropertyID aProperty,
                              &value,
                              data,
                              ParsingMode::Default,
-                             aDocument->GetCompatibilityMode()).Consume();
+                             aDocument->GetCompatibilityMode(),
+                             aDocument->CSSLoader()).Consume();
 }
 
 // ------------------------------------------------------------------

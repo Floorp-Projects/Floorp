@@ -2812,7 +2812,8 @@ CreateDeclarationForServo(nsCSSPropertyID aProperty,
                         &value,
                         data,
                         ParsingMode::Default,
-                        aDocument->GetCompatibilityMode()).Consume();
+                        aDocument->GetCompatibilityMode(),
+                        aDocument->CSSLoader()).Consume();
 
   if (!servoDeclarations) {
     // We got a syntax error.  The spec says this value must be ignored.
@@ -2829,7 +2830,8 @@ CreateDeclarationForServo(nsCSSPropertyID aProperty,
                                            false,
                                            data,
                                            ParsingMode::Default,
-                                           aDocument->GetCompatibilityMode());
+                                           aDocument->GetCompatibilityMode(),
+                                           aDocument->CSSLoader());
   }
 
   return servoDeclarations.forget();
