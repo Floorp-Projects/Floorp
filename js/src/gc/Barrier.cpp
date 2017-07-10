@@ -142,7 +142,7 @@ MovableCellHasher<T>::ensureHash(const Lookup& l)
         return true;
 
     uint64_t unusedId;
-    return l->zoneFromAnyThread()->getUniqueId(l, &unusedId);
+    return l->zoneFromAnyThread()->getOrCreateUniqueId(l, &unusedId);
 }
 
 template <typename T>
