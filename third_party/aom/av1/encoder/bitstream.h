@@ -19,7 +19,11 @@ extern "C" {
 #include "av1/encoder/encoder.h"
 
 #if CONFIG_REFERENCE_BUFFER
-void write_sequence_header(SequenceHeader *seq_params);
+void write_sequence_header(
+#if CONFIG_EXT_TILE
+    AV1_COMMON *const cm,
+#endif  // CONFIG_EXT_TILE
+    SequenceHeader *seq_params);
 #endif
 
 void av1_pack_bitstream(AV1_COMP *const cpi, uint8_t *dest, size_t *size);
@@ -42,7 +46,8 @@ void av1_write_tx_type(const AV1_COMMON *const cm, const MACROBLOCKD *xd,
                        const int supertx_enabled,
 #endif
 #if CONFIG_TXK_SEL
-                       int block, int plane,
+                       int blk_row, int blk_col, int block, int plane,
+                       TX_SIZE tx_size,
 #endif
                        aom_writer *w);
 

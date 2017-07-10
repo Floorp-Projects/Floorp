@@ -6605,7 +6605,7 @@ static INLINE int clamp_64(int64_t value, int low, int high) {
 }
 
 static void update_scan_prob(AV1_COMMON *cm, TX_SIZE tx_size, TX_TYPE tx_type,
-                             int rate_16) {
+                             int rate) {
   FRAME_CONTEXT *pre_fc = cm->pre_fc;
   uint32_t *prev_non_zero_prob = get_non_zero_prob(pre_fc, tx_size, tx_type);
   uint32_t *non_zero_prob = get_non_zero_prob(cm->fc, tx_size, tx_type);
@@ -6615,13 +6615,18 @@ static void update_scan_prob(AV1_COMMON *cm, TX_SIZE tx_size, TX_TYPE tx_type,
   int i;
   for (i = 0; i < tx2d_size; i++) {
     int64_t curr_prob =
-        block_num == 0 ? 0 : (non_zero_count[i] << 16) / block_num;
+        block_num == 0
+            ? 0
+            : (non_zero_count[i] << ADAPT_SCAN_PROB_PRECISION) / block_num;
     int64_t prev_prob = prev_non_zero_prob[i];
     int64_t pred_prob =
-        (curr_prob * rate_16 + prev_prob * ((1 << 16) - rate_16)) >> 16;
+        (curr_prob * rate +
+         prev_prob * ((1 << ADAPT_SCAN_PROB_PRECISION) - rate)) >>
+        ADAPT_SCAN_PROB_PRECISION;
     // TODO(angiebird): reduce the bit usage of probabilities and remove
     // clamp_64()
-    non_zero_prob[i] = clamp_64(pred_prob, 0, UINT16_MAX);
+    non_zero_prob[i] =
+        clamp_64(pred_prob, 0, (1 << ADAPT_SCAN_PROB_PRECISION) - 1);
   }
 }
 
@@ -6819,7 +6824,8 @@ void av1_init_scan_order(AV1_COMMON *cm) {
       int i;
       SCAN_ORDER *sc = &cm->fc->sc[tx_size][tx_type];
       for (i = 0; i < tx2d_size; ++i) {
-        non_zero_prob[i] = (1 << 16) / 2;  // init non_zero_prob to 0.5
+        non_zero_prob[i] =
+            (1 << ADAPT_SCAN_PROB_PRECISION) / 2;  // init non_zero_prob to 0.5
       }
       update_scan_order_facade(cm, tx_size, tx_type);
       sc->scan = get_adapt_scan(cm->fc, tx_size, tx_type);
@@ -6840,7 +6846,7 @@ void av1_adapt_scan_order(AV1_COMMON *cm) {
 #endif  // CONFIG_RECT_TX && (CONFIG_EXT_TX || CONFIG_VAR_TX)
     TX_TYPE tx_type;
     for (tx_type = DCT_DCT; tx_type < TX_TYPES; ++tx_type) {
-      update_scan_prob(cm, tx_size, tx_type, ADAPT_SCAN_UPDATE_RATE_16);
+      update_scan_prob(cm, tx_size, tx_type, ADAPT_SCAN_UPDATE_RATE);
       update_scan_order_facade(cm, tx_size, tx_type);
       update_eob_threshold(cm, tx_size, tx_type);
     }

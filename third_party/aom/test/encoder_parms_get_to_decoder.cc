@@ -41,6 +41,10 @@ struct EncodeParameters {
   int32_t frame_parallel;
   aom_color_range_t color_range;
   aom_color_space_t cs;
+#if CONFIG_COLORSPACE_HEADERS
+  aom_transfer_function_t tf;
+  aom_chroma_sample_position_t csp;
+#endif
   int render_size[2];
   // TODO(JBB): quantizers / bitrate
 };
@@ -48,15 +52,20 @@ struct EncodeParameters {
 const EncodeParameters kAV1EncodeParameterSet[] = {
   { 0, 0, 0, 1, 0, AOM_CR_STUDIO_RANGE, AOM_CS_BT_601, { 0, 0 } },
   { 0, 0, 0, 0, 0, AOM_CR_FULL_RANGE, AOM_CS_BT_709, { 0, 0 } },
+#if CONFIG_COLORSPACE_HEADERS
+  { 0, 0, 1, 0, 0, AOM_CR_FULL_RANGE, AOM_CS_BT_2020_NCL, { 0, 0 } },
+#else
   { 0, 0, 1, 0, 0, AOM_CR_FULL_RANGE, AOM_CS_BT_2020, { 0, 0 } },
+#endif
   { 0, 2, 0, 0, 1, AOM_CR_STUDIO_RANGE, AOM_CS_UNKNOWN, { 640, 480 } },
   // TODO(JBB): Test profiles (requires more work).
 };
 
 class AvxEncoderParmsGetToDecoder
-    : public ::libaom_test::EncoderTest,
-      public ::libaom_test::CodecTestWith2Params<EncodeParameters,
-                                                 EncodePerfTestVideo> {
+    : public ::libaom_test::CodecTestWith2Params<EncodeParameters,
+                                                 EncodePerfTestVideo>,
+      public ::libaom_test::EncoderTest,
+{
  protected:
   AvxEncoderParmsGetToDecoder()
       : EncoderTest(GET_PARAM(0)), encode_parms(GET_PARAM(1)) {}
@@ -77,6 +86,10 @@ class AvxEncoderParmsGetToDecoder
                                   ::libaom_test::Encoder *encoder) {
     if (video->frame() == 1) {
       encoder->Control(AV1E_SET_COLOR_SPACE, encode_parms.cs);
+#if CONFIG_COLORSPACE_HEADERS
+      encoder->Control(AV1E_SET_TRANSFER_FUNCTION, encode_parms.tf);
+      encoder->Control(AV1E_SET_CHROMA_SAMPLE_POSITION, encode_parms.csp);
+#endif
       encoder->Control(AV1E_SET_COLOR_RANGE, encode_parms.color_range);
       encoder->Control(AV1E_SET_LOSSLESS, encode_parms.lossless);
       encoder->Control(AV1E_SET_FRAME_PARALLEL_DECODING,
@@ -114,6 +127,10 @@ class AvxEncoderParmsGetToDecoder
     }
     EXPECT_EQ(encode_parms.color_range, common->color_range);
     EXPECT_EQ(encode_parms.cs, common->color_space);
+#if CONFIG_COLORSPACE_HEADERS
+    EXPECT_EQ(encode_parms.tf, common->transfer_function);
+    EXPECT_EQ(encode_parms.csp, common->chroma_sample_position);
+#endif
     if (encode_parms.render_size[0] > 0 && encode_parms.render_size[1] > 0) {
       EXPECT_EQ(encode_parms.render_size[0], common->render_width);
       EXPECT_EQ(encode_parms.render_size[1], common->render_height);

@@ -133,9 +133,10 @@ void av1_highbd_quantize_fp_sse4_1(
     coeff[0] = _mm_loadu_si128((__m128i const *)src);
 
     qparam[0] =
-        _mm_set_epi32(round_ptr[1], round_ptr[1], round_ptr[1], round_ptr[0]);
-    qparam[1] = _mm_set_epi64x(quant_ptr[1], quant_ptr[0]);
-    qparam[2] = _mm_set_epi64x(dequant_ptr[1], dequant_ptr[0]);
+        _mm_set_epi32(round_ptr[1] >> log_scale, round_ptr[1] >> log_scale,
+                      round_ptr[1] >> log_scale, round_ptr[0] >> log_scale);
+    qparam[1] = _mm_set_epi32(0, quant_ptr[1], 0, quant_ptr[0]);
+    qparam[2] = _mm_set_epi32(0, dequant_ptr[1], 0, dequant_ptr[0]);
 
     // DC and first 3 AC
     quantize_coeff_phase1(&coeff[0], qparam, shift, log_scale, qcoeff, dequant,
@@ -143,8 +144,8 @@ void av1_highbd_quantize_fp_sse4_1(
 
     // update round/quan/dquan for AC
     qparam[0] = _mm_unpackhi_epi64(qparam[0], qparam[0]);
-    qparam[1] = _mm_set_epi64x(quant_ptr[1], quant_ptr[1]);
-    qparam[2] = _mm_set_epi64x(dequant_ptr[1], dequant_ptr[1]);
+    qparam[1] = _mm_set_epi32(0, quant_ptr[1], 0, quant_ptr[1]);
+    qparam[2] = _mm_set_epi32(0, dequant_ptr[1], 0, dequant_ptr[1]);
 
     quantize_coeff_phase2(qcoeff, dequant, &coeff_sign, qparam, shift,
                           log_scale, quanAddr, dquanAddr);

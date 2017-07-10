@@ -194,9 +194,7 @@ static INLINE int aom_read_symbol_(aom_reader *r, aom_cdf_prob *cdf,
                                    int nsymbs ACCT_STR_PARAM) {
   int ret;
   ret = aom_read_cdf(r, cdf, nsymbs, ACCT_STR_NAME);
-#if CONFIG_EC_ADAPT
   update_cdf(cdf, ret, nsymbs);
-#endif
   return ret;
 }
 

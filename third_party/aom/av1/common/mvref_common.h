@@ -66,7 +66,7 @@ static const int mode_2_counter[] = {
 #if CONFIG_EXT_INTER
 #if CONFIG_COMPOUND_SINGLEREF
   0,    // SR_NEAREST_NEARMV
-  1,    // SR_NEAREST_NEWMV
+        //  1,    // SR_NEAREST_NEWMV
   1,    // SR_NEAR_NEWMV
   3,    // SR_ZERO_NEWMV
   1,    // SR_NEW_NEWMV
@@ -196,11 +196,7 @@ static INLINE int is_inside(const TileInfo *const tile, int mi_col, int mi_row,
   const int dependent_horz_tile_flag = 0;
   (void)cm;
 #endif
-#if CONFIG_TILE_GROUPS
   if (dependent_horz_tile_flag && !tile->tg_horz_boundary) {
-#else
-  if (dependent_horz_tile_flag) {
-#endif
     return !(mi_row + mi_pos->row < 0 ||
              mi_col + mi_pos->col < tile->mi_col_start ||
              mi_row + mi_pos->row >= mi_rows ||
@@ -238,10 +234,41 @@ static INLINE int av1_nmv_ctx(const uint8_t ref_mv_count,
   return 0;
 }
 
+#if CONFIG_EXT_COMP_REFS
+static INLINE int8_t av1_uni_comp_ref_idx(const MV_REFERENCE_FRAME *const rf) {
+  // Single ref pred
+  if (rf[1] <= INTRA_FRAME) return -1;
+
+  // Bi-directional comp ref pred
+  if ((rf[0] < BWDREF_FRAME) && (rf[1] >= BWDREF_FRAME)) return -1;
+
+  for (int8_t ref_idx = 0; ref_idx < UNIDIR_COMP_REFS; ++ref_idx) {
+    if (rf[0] == comp_ref0(ref_idx) && rf[1] == comp_ref1(ref_idx))
+      return ref_idx;
+  }
+  return -1;
+}
+#endif  // CONFIG_EXT_COMP_REFS
+
 static INLINE int8_t av1_ref_frame_type(const MV_REFERENCE_FRAME *const rf) {
   if (rf[1] > INTRA_FRAME) {
-    return TOTAL_REFS_PER_FRAME + FWD_RF_OFFSET(rf[0]) +
-           BWD_RF_OFFSET(rf[1]) * FWD_REFS;
+#if CONFIG_EXT_COMP_REFS
+    int8_t uni_comp_ref_idx = av1_uni_comp_ref_idx(rf);
+#if !USE_UNI_COMP_REFS
+    // NOTE: uni-directional comp refs disabled
+    assert(uni_comp_ref_idx < 0);
+#endif  // !USE_UNI_COMP_REFS
+    if (uni_comp_ref_idx >= 0) {
+      assert((TOTAL_REFS_PER_FRAME + FWD_REFS * BWD_REFS + uni_comp_ref_idx) <
+             MODE_CTX_REF_FRAMES);
+      return TOTAL_REFS_PER_FRAME + FWD_REFS * BWD_REFS + uni_comp_ref_idx;
+    } else {
+#endif  // CONFIG_EXT_COMP_REFS
+      return TOTAL_REFS_PER_FRAME + FWD_RF_OFFSET(rf[0]) +
+             BWD_RF_OFFSET(rf[1]) * FWD_REFS;
+#if CONFIG_EXT_COMP_REFS
+    }
+#endif  // CONFIG_EXT_COMP_REFS
   }
 
   return rf[0];
@@ -253,11 +280,24 @@ static MV_REFERENCE_FRAME ref_frame_map[COMP_REFS][2] = {
   { LAST_FRAME, BWDREF_FRAME },  { LAST2_FRAME, BWDREF_FRAME },
   { LAST3_FRAME, BWDREF_FRAME }, { GOLDEN_FRAME, BWDREF_FRAME },
 
+#if CONFIG_ALTREF2
+  { LAST_FRAME, ALTREF2_FRAME },  { LAST2_FRAME, ALTREF2_FRAME },
+  { LAST3_FRAME, ALTREF2_FRAME }, { GOLDEN_FRAME, ALTREF2_FRAME },
+#endif  // CONFIG_ALTREF2
+
   { LAST_FRAME, ALTREF_FRAME },  { LAST2_FRAME, ALTREF_FRAME },
   { LAST3_FRAME, ALTREF_FRAME }, { GOLDEN_FRAME, ALTREF_FRAME }
-#else
+
+  // TODO(zoeliu): Temporarily disable uni-directional comp refs
+#if CONFIG_EXT_COMP_REFS
+  , { LAST_FRAME, LAST2_FRAME }, { LAST_FRAME, LAST3_FRAME },
+  { LAST_FRAME, GOLDEN_FRAME }, { BWDREF_FRAME, ALTREF_FRAME }
+  // TODO(zoeliu): When ALTREF2 is enabled, we may add:
+  //               {BWDREF_FRAME, ALTREF2_FRAME}
+#endif  // CONFIG_EXT_COMP_REFS
+#else  // !CONFIG_EXT_REFS
   { LAST_FRAME, ALTREF_FRAME }, { GOLDEN_FRAME, ALTREF_FRAME }
-#endif
+#endif  // CONFIG_EXT_REFS
 };
 // clang-format on
 
@@ -352,8 +392,14 @@ void av1_update_mv_context(const AV1_COMMON *cm, const MACROBLOCKD *xd,
 #endif  // CONFIG_EXT_INTER
 
 #if CONFIG_WARPED_MOTION
+#if WARPED_MOTION_SORT_SAMPLES
+int sortSamples(int *pts_mv, MV *mv, int *pts, int *pts_inref, int len);
+int findSamples(const AV1_COMMON *cm, MACROBLOCKD *xd, int mi_row, int mi_col,
+                int *pts, int *pts_inref, int *pts_mv);
+#else
 int findSamples(const AV1_COMMON *cm, MACROBLOCKD *xd, int mi_row, int mi_col,
                 int *pts, int *pts_inref);
+#endif  // WARPED_MOTION_SORT_SAMPLES
 #endif  // CONFIG_WARPED_MOTION
 
 #if CONFIG_INTRABC

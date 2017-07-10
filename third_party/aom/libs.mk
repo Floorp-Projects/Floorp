@@ -196,7 +196,7 @@ OBJS-yes += $(LIBAOM_OBJS)
 LIBS-$(if yes,$(CONFIG_STATIC)) += $(BUILD_PFX)libaom.a $(BUILD_PFX)libaom_g.a
 $(BUILD_PFX)libaom_g.a: $(LIBAOM_OBJS)
 
-SO_VERSION_MAJOR := 3
+SO_VERSION_MAJOR := 0
 SO_VERSION_MINOR := 0
 SO_VERSION_PATCH := 0
 ifeq ($(filter darwin%,$(TGT_OS)),$(TGT_OS))

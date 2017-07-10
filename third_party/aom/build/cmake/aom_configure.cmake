@@ -83,6 +83,19 @@ string(STRIP "${AOM_CMAKE_CONFIG}" AOM_CMAKE_CONFIG)
 message("--- aom_configure: Detected CPU: ${AOM_TARGET_CPU}")
 set(AOM_TARGET_SYSTEM ${CMAKE_SYSTEM_NAME})
 
+if (BUILD_SHARED_LIBS)
+  set(CONFIG_PIC 1)
+  set(CONFIG_SHARED 1)
+  set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+
+  if ("${AOM_TARGET_SYSTEM}" STREQUAL "Linux" AND
+      "${AOM_TARGET_CPU}" MATCHES "^armv7")
+    set(AOM_AS_FLAGS ${AOM_AS_FLAGS} --defsym PIC=1)
+  else ()
+    set(AOM_AS_FLAGS ${AOM_AS_FLAGS} -DPIC)
+  endif ()
+endif ()
+
 if (NOT "${AOM_SUPPORTED_CPU_TARGETS}" MATCHES "${AOM_TARGET_CPU}")
   message(FATAL_ERROR "No RTCD support for ${AOM_TARGET_CPU}. Create it, or "
           "add -DAOM_TARGET_CPU=generic to your cmake command line for a "
@@ -90,10 +103,9 @@ if (NOT "${AOM_SUPPORTED_CPU_TARGETS}" MATCHES "${AOM_TARGET_CPU}")
 endif ()
 
 if ("${AOM_TARGET_CPU}" STREQUAL "x86" OR "${AOM_TARGET_CPU}" STREQUAL "x86_64")
-  # TODO(tomfinegan): Support nasm at least as well as the existing build
-  # system.
   if (ENABLE_NASM)
     find_program(AS_EXECUTABLE nasm $ENV{NASM_PATH})
+    test_nasm()
     set(AOM_AS_FLAGS ${AOM_AS_FLAGS} -Ox)
   else ()
     find_program(AS_EXECUTABLE yasm $ENV{YASM_PATH})
@@ -165,6 +177,7 @@ else ()
   add_compiler_flag_if_supported("-Wimplicit-function-declaration")
   add_compiler_flag_if_supported("-Wpointer-arith")
   add_compiler_flag_if_supported("-Wsign-compare")
+  add_compiler_flag_if_supported("-Wstring-conversion")
   add_compiler_flag_if_supported("-Wtype-limits")
   add_compiler_flag_if_supported("-Wuninitialized")
   add_compiler_flag_if_supported("-Wunused")
@@ -223,6 +236,48 @@ if (CONFIG_ANALYZER)
             "--- Enabled CONFIG_INSPECTION, required for CONFIG_ANALYZER.")
   endif ()
 endif ()
+
+if (CONFIG_VAR_TX_NO_TX_MODE AND NOT CONFIG_VAR_TX)
+   message(WARNING
+     "--- CONFIG_VAR_TX_NO_TX_MODE requires CONFIG_VAR_TX, disabling.")
+   set(CONFIG_VAR_TX_NO_TX_MODE 0)
+endif()
+
+if (CONFIG_DAALA_DCT4)
+  if (NOT CONFIG_DCT_ONLY)
+     message(WARNING
+       "--- Enabled CONFIG_DCT_ONLY, needed for CONFIG_DAALA_DCT4.")
+     set(CONFIG_DCT_ONLY 1)
+   endif()
+endif()
+
+if (CONFIG_DAALA_DCT4 OR CONFIG_DAALA_DCT8)
+  if (HAVE_MMX)
+     message(WARNING
+       "--- Disabled HAVE_MMX, incompatible with CONFIG_DAALA_DCTx.")
+     set(HAVE_MMX 0)
+  endif()
+  if (CONFIG_RECT_TX)
+     message(WARNING
+       "--- Disabled CONFIG_RECT_TX, incompatible with  CONFIG_DAALA_DCTx.")
+     set(CONFIG_RECT_TX 0)
+  endif()
+  if (CONFIG_VAR_TX)
+     message(WARNING
+       "--- Disabled CONFIG_VAR_TX, incompatible with CONFIG_DAALA_DCTx.")
+     set(CONFIG_VAR_TX 0)
+  endif()
+  if (CONFIG_LGT)
+     message(WARNING
+       "--- Disabled CONFIG_LGT, incompatible with CONFIG_DAALA_DCTx.")
+     set(CONFIG_LGT 0)
+   endif()
+  if (NOT CONFIG_LOWBITDEPTH)
+     message(WARNING
+       "--- Enabled CONFIG_LOWBITDEPTH, needed for CONFIG_DAALA_DCTx.")
+     set(CONFIG_LOWBITDEPTH 1)
+   endif()
+endif()
 
 if (NOT MSVC)
   aom_push_var(CMAKE_REQUIRED_LIBRARIES "m")

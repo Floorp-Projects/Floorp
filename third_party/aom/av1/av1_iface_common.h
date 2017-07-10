@@ -38,6 +38,10 @@ static void yuvconfig2image(aom_image_t *img, const YV12_BUFFER_CONFIG *yv12,
     }
   }
   img->cs = yv12->color_space;
+#if CONFIG_COLORSPACE_HEADERS
+  img->tf = yv12->transfer_function;
+  img->csp = yv12->chroma_sample_position;
+#endif
   img->range = yv12->color_range;
   img->bit_depth = 8;
   img->w = yv12->y_stride;
@@ -102,6 +106,10 @@ static aom_codec_err_t image2yuvconfig(const aom_image_t *img,
   yv12->y_stride = img->stride[AOM_PLANE_Y];
   yv12->uv_stride = img->stride[AOM_PLANE_U];
   yv12->color_space = img->cs;
+#if CONFIG_COLORSPACE_HEADERS
+  yv12->transfer_function = img->tf;
+  yv12->chroma_sample_position = img->csp;
+#endif
   yv12->color_range = img->range;
 
 #if CONFIG_HIGHBITDEPTH

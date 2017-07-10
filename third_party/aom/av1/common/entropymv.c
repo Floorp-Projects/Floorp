@@ -64,6 +64,11 @@ static const nmv_context default_nmv_context = {
           0 },  // fp_cdf
         160,    // class0_hp bit
         128,    // hp
+#if CONFIG_NEW_MULTISYMBOL
+        { AOM_ICDF(160 * 128), AOM_ICDF(32768), 0 },
+        { AOM_ICDF(128 * 128), AOM_ICDF(32768), 0 },
+        { AOM_ICDF(216 * 128), AOM_ICDF(32768), 0 },
+#endif
     },
     {
         // Horizontal component
@@ -84,6 +89,11 @@ static const nmv_context default_nmv_context = {
           0 },  // fp_cdf
         160,    // class0_hp bit
         128,    // hp
+#if CONFIG_NEW_MULTISYMBOL
+        { AOM_ICDF(160 * 128), AOM_ICDF(32768), 0 },
+        { AOM_ICDF(128 * 128), AOM_ICDF(32768), 0 },
+        { AOM_ICDF(216 * 128), AOM_ICDF(32768), 0 },
+#endif
     } },
 };
 
@@ -130,43 +140,6 @@ static const uint8_t log_in_base_2[] = {
   9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 10
 };
 
-#if CONFIG_GLOBAL_MOTION
-#if GLOBAL_TRANS_TYPES == 7  // All models
-const aom_tree_index av1_global_motion_types_tree[TREE_SIZE(
-    GLOBAL_TRANS_TYPES)] = { -IDENTITY,   2,  -TRANSLATION,  4,
-                             -ROTZOOM,    6,  -AFFINE,       8,
-                             -HOMOGRAPHY, 10, -HORTRAPEZOID, -VERTRAPEZOID };
-
-static const aom_prob default_global_motion_types_prob[GLOBAL_TRANS_TYPES - 1] =
-    { 224, 128, 192, 192, 32, 128 };
-
-#elif GLOBAL_TRANS_TYPES == 6  // Do not allow full homography
-const aom_tree_index
-    av1_global_motion_types_tree[TREE_SIZE(GLOBAL_TRANS_TYPES)] = {
-      -IDENTITY,    2, -TRANSLATION, 4, -ROTZOOM, 6, -AFFINE, 8, -HORTRAPEZOID,
-      -VERTRAPEZOID
-    };
-
-static const aom_prob default_global_motion_types_prob[GLOBAL_TRANS_TYPES - 1] =
-    { 224, 128, 192, 192, 128 };
-
-#elif GLOBAL_TRANS_TYPES == 4  // Upto Affine
-const aom_tree_index av1_global_motion_types_tree[TREE_SIZE(
-    GLOBAL_TRANS_TYPES)] = { -IDENTITY, 2, -TRANSLATION, 4, -ROTZOOM, -AFFINE };
-
-static const aom_prob default_global_motion_types_prob[GLOBAL_TRANS_TYPES - 1] =
-    { 224, 128, 240 };
-
-#elif GLOBAL_TRANS_TYPES == 3  // Upto rotation-zoom
-
-const aom_tree_index av1_global_motion_types_tree[TREE_SIZE(
-    GLOBAL_TRANS_TYPES)] = { -IDENTITY, 2, -TRANSLATION, -ROTZOOM };
-
-static const aom_prob default_global_motion_types_prob[GLOBAL_TRANS_TYPES - 1] =
-    { 224, 128 };
-#endif                         // GLOBAL_TRANS_TYPES
-#endif                         // CONFIG_GLOBAL_MOTION
-
 static INLINE int mv_class_base(MV_CLASS_TYPE c) {
   return c ? CLASS0_SIZE << (c + 2) : 0;
 }
@@ -180,7 +153,7 @@ MV_CLASS_TYPE av1_get_mv_class(int z, int *offset) {
 }
 
 static void inc_mv_component(int v, nmv_component_counts *comp_counts, int incr,
-                             int usehp) {
+                             MvSubpelPrecision precision) {
   int s, z, c, o, d, e, f;
   assert(v != 0); /* should not be zero */
   s = v < 0;
@@ -196,27 +169,34 @@ static void inc_mv_component(int v, nmv_component_counts *comp_counts, int incr,
 
   if (c == MV_CLASS_0) {
     comp_counts->class0[d] += incr;
-    comp_counts->class0_fp[d][f] += incr;
-    if (usehp) comp_counts->class0_hp[e] += incr;
+#if CONFIG_INTRABC
+    if (precision > MV_SUBPEL_NONE)
+#endif
+      comp_counts->class0_fp[d][f] += incr;
+    if (precision > MV_SUBPEL_LOW_PRECISION) comp_counts->class0_hp[e] += incr;
   } else {
     int i;
     int b = c + CLASS0_BITS - 1;  // number of bits
     for (i = 0; i < b; ++i) comp_counts->bits[i][((d >> i) & 1)] += incr;
-    comp_counts->fp[f] += incr;
-    if (usehp) comp_counts->hp[e] += incr;
+#if CONFIG_INTRABC
+    if (precision > MV_SUBPEL_NONE)
+#endif
+      comp_counts->fp[f] += incr;
+    if (precision > MV_SUBPEL_LOW_PRECISION) comp_counts->hp[e] += incr;
   }
 }
 
-void av1_inc_mv(const MV *mv, nmv_context_counts *counts, const int usehp) {
+void av1_inc_mv(const MV *mv, nmv_context_counts *counts,
+                MvSubpelPrecision precision) {
   if (counts != NULL) {
     const MV_JOINT_TYPE j = av1_get_mv_joint(mv);
     ++counts->joints[j];
 
     if (mv_joint_vertical(j))
-      inc_mv_component(mv->row, &counts->comps[0], 1, usehp);
+      inc_mv_component(mv->row, &counts->comps[0], 1, precision);
 
     if (mv_joint_horizontal(j))
-      inc_mv_component(mv->col, &counts->comps[1], 1, usehp);
+      inc_mv_component(mv->col, &counts->comps[1], 1, precision);
   }
 }
 
@@ -258,25 +238,6 @@ void av1_adapt_mv_probs(AV1_COMMON *cm, int allow_hp) {
   }
 }
 
-#if !CONFIG_EC_ADAPT
-void av1_set_mv_cdfs(nmv_context *ctx) {
-  int i;
-  int j;
-  av1_tree_to_cdf(av1_mv_joint_tree, ctx->joints, ctx->joint_cdf);
-
-  for (i = 0; i < 2; ++i) {
-    nmv_component *const comp_ctx = &ctx->comps[i];
-    av1_tree_to_cdf(av1_mv_class_tree, comp_ctx->classes, comp_ctx->class_cdf);
-
-    for (j = 0; j < CLASS0_SIZE; ++j) {
-      av1_tree_to_cdf(av1_mv_fp_tree, comp_ctx->class0_fp[j],
-                      comp_ctx->class0_fp_cdf[j]);
-    }
-    av1_tree_to_cdf(av1_mv_fp_tree, comp_ctx->fp, comp_ctx->fp_cdf);
-  }
-}
-#endif
-
 void av1_init_mv_probs(AV1_COMMON *cm) {
   int i;
   for (i = 0; i < NMV_CONTEXTS; ++i) {
@@ -286,7 +247,4 @@ void av1_init_mv_probs(AV1_COMMON *cm) {
 #if CONFIG_INTRABC
   cm->fc->ndvc = default_nmv_context;
 #endif  // CONFIG_INTRABC
-#if CONFIG_GLOBAL_MOTION
-  av1_copy(cm->fc->global_motion_types_prob, default_global_motion_types_prob);
-#endif  // CONFIG_GLOBAL_MOTION
 }

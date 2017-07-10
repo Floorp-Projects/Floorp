@@ -153,10 +153,21 @@ sadMxN(4, 4)
 sadMxNxK(4, 4, 3)
 sadMxNxK(4, 4, 8)
 sadMxNx4D(4, 4)
+
+#if CONFIG_AV1 && CONFIG_EXT_PARTITION_TYPES
+sadMxN(4, 16)
+sadMxNx4D(4, 16)
+sadMxN(16, 4)
+sadMxNx4D(16, 4)
+sadMxN(8, 32)
+sadMxNx4D(8, 32)
+sadMxN(32, 8)
+sadMxNx4D(32, 8)
+#endif
 /* clang-format on */
 
 #if CONFIG_HIGHBITDEPTH
-        static INLINE
+                static INLINE
     unsigned int highbd_sad(const uint8_t *a8, int a_stride, const uint8_t *b8,
                             int b_stride, int width, int height) {
   int y, x;
@@ -307,11 +318,22 @@ highbd_sadMxN(4, 4)
 highbd_sadMxNxK(4, 4, 3)
 highbd_sadMxNxK(4, 4, 8)
 highbd_sadMxNx4D(4, 4)
+
+#if CONFIG_AV1 && CONFIG_EXT_PARTITION_TYPES
+highbd_sadMxN(4, 16)
+highbd_sadMxNx4D(4, 16)
+highbd_sadMxN(16, 4)
+highbd_sadMxNx4D(16, 4)
+highbd_sadMxN(8, 32)
+highbd_sadMxNx4D(8, 32)
+highbd_sadMxN(32, 8)
+highbd_sadMxNx4D(32, 8)
+#endif
 /* clang-format on */
 #endif  // CONFIG_HIGHBITDEPTH
 
 #if CONFIG_AV1 && CONFIG_EXT_INTER
-            static INLINE
+                            static INLINE
     unsigned int masked_sad(const uint8_t *src, int src_stride,
                             const uint8_t *a, int a_stride, const uint8_t *b,
                             int b_stride, const uint8_t *m, int m_stride,
@@ -367,10 +389,17 @@ MASKSADMxN(8, 8)
 MASKSADMxN(8, 4)
 MASKSADMxN(4, 8)
 MASKSADMxN(4, 4)
+
+#if CONFIG_EXT_PARTITION_TYPES
+MASKSADMxN(4, 16)
+MASKSADMxN(16, 4)
+MASKSADMxN(8, 32)
+MASKSADMxN(32, 8)
+#endif
 /* clang-format on */
 
 #if CONFIG_HIGHBITDEPTH
-                    static INLINE
+                            static INLINE
     unsigned int highbd_masked_sad(const uint8_t *src8, int src_stride,
                                    const uint8_t *a8, int a_stride,
                                    const uint8_t *b8, int b_stride,
@@ -429,6 +458,13 @@ HIGHBD_MASKSADMXN(8, 8)
 HIGHBD_MASKSADMXN(8, 4)
 HIGHBD_MASKSADMXN(4, 8)
 HIGHBD_MASKSADMXN(4, 4)
+
+#if CONFIG_AV1 && CONFIG_EXT_PARTITION_TYPES
+HIGHBD_MASKSADMXN(4, 16)
+HIGHBD_MASKSADMXN(16, 4)
+HIGHBD_MASKSADMXN(8, 32)
+HIGHBD_MASKSADMXN(32, 8)
+#endif
 #endif  // CONFIG_HIGHBITDEPTH
 #endif  // CONFIG_AV1 && CONFIG_EXT_INTER
 
@@ -480,10 +516,17 @@ OBMCSADMxN(8, 8)
 OBMCSADMxN(8, 4)
 OBMCSADMxN(4, 8)
 OBMCSADMxN(4, 4)
+
+#if CONFIG_AV1 && CONFIG_EXT_PARTITION_TYPES
+OBMCSADMxN(4, 16)
+OBMCSADMxN(16, 4)
+OBMCSADMxN(8, 32)
+OBMCSADMxN(32, 8)
+#endif
 /* clang-format on */
 
 #if CONFIG_HIGHBITDEPTH
-                    static INLINE
+                            static INLINE
     unsigned int highbd_obmc_sad(const uint8_t *pre8, int pre_stride,
                                  const int32_t *wsrc, const int32_t *mask,
                                  int width, int height) {
@@ -529,6 +572,13 @@ HIGHBD_OBMCSADMXN(8, 8)
 HIGHBD_OBMCSADMXN(8, 4)
 HIGHBD_OBMCSADMXN(4, 8)
 HIGHBD_OBMCSADMXN(4, 4)
+
+#if CONFIG_AV1 && CONFIG_EXT_PARTITION_TYPES
+HIGHBD_OBMCSADMXN(4, 16)
+HIGHBD_OBMCSADMXN(16, 4)
+HIGHBD_OBMCSADMXN(8, 32)
+HIGHBD_OBMCSADMXN(32, 8)
+#endif
 /* clang-format on */
 #endif  // CONFIG_HIGHBITDEPTH
 #endif  // CONFIG_AV1 && CONFIG_MOTION_VAR

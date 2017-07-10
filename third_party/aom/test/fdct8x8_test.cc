@@ -7,7 +7,7 @@
  * obtain it at www.aomedia.org/license/software. If the Alliance for Open
  * Media Patent License 1.0 was not distributed with this source code in the
  * PATENTS file, you can obtain it at www.aomedia.org/license/patent.
-*/
+ */
 
 #include <math.h>
 #include <stdlib.h>
@@ -40,9 +40,9 @@ const int kSignBiasMaxDiff15 = 10000;
 typedef void (*FdctFunc)(const int16_t *in, tran_low_t *out, int stride);
 typedef void (*IdctFunc)(const tran_low_t *in, uint8_t *out, int stride);
 typedef void (*FhtFunc)(const int16_t *in, tran_low_t *out, int stride,
-                        int tx_type);
+                        TxfmParam *txfm_param);
 typedef void (*IhtFunc)(const tran_low_t *in, uint8_t *out, int stride,
-                        int tx_type);
+                        const TxfmParam *txfm_param);
 
 typedef std::tr1::tuple<FdctFunc, IdctFunc, int, aom_bit_depth_t> Dct8x8Param;
 typedef std::tr1::tuple<FhtFunc, IhtFunc, int, aom_bit_depth_t> Ht8x8Param;
@@ -78,21 +78,36 @@ void reference_8x8_dct_2d(const int16_t input[kNumCoeffs],
 }
 
 void fdct8x8_ref(const int16_t *in, tran_low_t *out, int stride,
-                 int /*tx_type*/) {
+                 TxfmParam * /*txfm_param*/) {
   aom_fdct8x8_c(in, out, stride);
 }
 
-void fht8x8_ref(const int16_t *in, tran_low_t *out, int stride, int tx_type) {
-  av1_fht8x8_c(in, out, stride, tx_type);
+void fht8x8_ref(const int16_t *in, tran_low_t *out, int stride,
+                TxfmParam *txfm_param) {
+  av1_fht8x8_c(in, out, stride, txfm_param);
 }
 
 #if CONFIG_HIGHBITDEPTH
-void iht8x8_10(const tran_low_t *in, uint8_t *out, int stride, int tx_type) {
-  av1_highbd_iht8x8_64_add_c(in, out, stride, tx_type, 10);
+void fht8x8_10(const int16_t *in, tran_low_t *out, int stride,
+               TxfmParam *txfm_param) {
+  av1_fwd_txfm2d_8x8_c(in, out, stride, txfm_param->tx_type, 10);
 }
 
-void iht8x8_12(const tran_low_t *in, uint8_t *out, int stride, int tx_type) {
-  av1_highbd_iht8x8_64_add_c(in, out, stride, tx_type, 12);
+void fht8x8_12(const int16_t *in, tran_low_t *out, int stride,
+               TxfmParam *txfm_param) {
+  av1_fwd_txfm2d_8x8_c(in, out, stride, txfm_param->tx_type, 12);
+}
+
+void iht8x8_10(const tran_low_t *in, uint8_t *out, int stride,
+               const TxfmParam *txfm_param) {
+  av1_inv_txfm2d_add_8x8_c(in, CONVERT_TO_SHORTPTR(out), stride,
+                           txfm_param->tx_type, 10);
+}
+
+void iht8x8_12(const tran_low_t *in, uint8_t *out, int stride,
+               const TxfmParam *txfm_param) {
+  av1_inv_txfm2d_add_8x8_c(in, CONVERT_TO_SHORTPTR(out), stride,
+                           txfm_param->tx_type, 12);
 }
 
 #endif  // CONFIG_HIGHBITDEPTH
@@ -296,7 +311,7 @@ class FwdTrans8x8TestBase {
       ASM_REGISTER_STATE_CHECK(
           RunFwdTxfm(test_input_block, test_temp_block, pitch_));
       ASM_REGISTER_STATE_CHECK(
-          fwd_txfm_ref(test_input_block, ref_temp_block, pitch_, tx_type_));
+          fwd_txfm_ref(test_input_block, ref_temp_block, pitch_, &txfm_param_));
       if (bit_depth_ == AOM_BITS_8) {
         ASM_REGISTER_STATE_CHECK(RunInvTxfm(test_temp_block, dst, pitch_));
 #if CONFIG_HIGHBITDEPTH
@@ -476,10 +491,10 @@ class FwdTrans8x8TestBase {
     }
   }
   int pitch_;
-  int tx_type_;
   FhtFunc fwd_txfm_ref;
   aom_bit_depth_t bit_depth_;
   int mask_;
+  TxfmParam txfm_param_;
 };
 
 class FwdTrans8x8DCT : public FwdTrans8x8TestBase,
@@ -490,11 +505,11 @@ class FwdTrans8x8DCT : public FwdTrans8x8TestBase,
   virtual void SetUp() {
     fwd_txfm_ = GET_PARAM(0);
     inv_txfm_ = GET_PARAM(1);
-    tx_type_ = GET_PARAM(2);
     pitch_ = 8;
     fwd_txfm_ref = fdct8x8_ref;
     bit_depth_ = GET_PARAM(3);
     mask_ = (1 << bit_depth_) - 1;
+    txfm_param_.tx_type = GET_PARAM(2);
   }
 
   virtual void TearDown() { libaom_test::ClearSystemState(); }
@@ -529,21 +544,28 @@ class FwdTrans8x8HT : public FwdTrans8x8TestBase,
   virtual void SetUp() {
     fwd_txfm_ = GET_PARAM(0);
     inv_txfm_ = GET_PARAM(1);
-    tx_type_ = GET_PARAM(2);
     pitch_ = 8;
     fwd_txfm_ref = fht8x8_ref;
     bit_depth_ = GET_PARAM(3);
     mask_ = (1 << bit_depth_) - 1;
+    txfm_param_.tx_type = GET_PARAM(2);
+#if CONFIG_HIGHBITDEPTH
+    switch (bit_depth_) {
+      case AOM_BITS_10: fwd_txfm_ref = fht8x8_10; break;
+      case AOM_BITS_12: fwd_txfm_ref = fht8x8_12; break;
+      default: fwd_txfm_ref = fht8x8_ref; break;
+    }
+#endif
   }
 
   virtual void TearDown() { libaom_test::ClearSystemState(); }
 
  protected:
   void RunFwdTxfm(int16_t *in, tran_low_t *out, int stride) {
-    fwd_txfm_(in, out, stride, tx_type_);
+    fwd_txfm_(in, out, stride, &txfm_param_);
   }
   void RunInvTxfm(tran_low_t *out, uint8_t *dst, int stride) {
-    inv_txfm_(out, dst, stride, tx_type_);
+    inv_txfm_(out, dst, stride, &txfm_param_);
   }
 
   FhtFunc fwd_txfm_;
@@ -606,14 +628,14 @@ INSTANTIATE_TEST_CASE_P(
     C, FwdTrans8x8HT,
     ::testing::Values(
         make_tuple(&av1_fht8x8_c, &av1_iht8x8_64_add_c, 0, AOM_BITS_8),
-        make_tuple(&av1_highbd_fht8x8_c, &iht8x8_10, 0, AOM_BITS_10),
-        make_tuple(&av1_highbd_fht8x8_c, &iht8x8_10, 1, AOM_BITS_10),
-        make_tuple(&av1_highbd_fht8x8_c, &iht8x8_10, 2, AOM_BITS_10),
-        make_tuple(&av1_highbd_fht8x8_c, &iht8x8_10, 3, AOM_BITS_10),
-        make_tuple(&av1_highbd_fht8x8_c, &iht8x8_12, 0, AOM_BITS_12),
-        make_tuple(&av1_highbd_fht8x8_c, &iht8x8_12, 1, AOM_BITS_12),
-        make_tuple(&av1_highbd_fht8x8_c, &iht8x8_12, 2, AOM_BITS_12),
-        make_tuple(&av1_highbd_fht8x8_c, &iht8x8_12, 3, AOM_BITS_12),
+        make_tuple(&fht8x8_10, &iht8x8_10, 0, AOM_BITS_10),
+        make_tuple(&fht8x8_10, &iht8x8_10, 1, AOM_BITS_10),
+        make_tuple(&fht8x8_10, &iht8x8_10, 2, AOM_BITS_10),
+        make_tuple(&fht8x8_10, &iht8x8_10, 3, AOM_BITS_10),
+        make_tuple(&fht8x8_12, &iht8x8_12, 0, AOM_BITS_12),
+        make_tuple(&fht8x8_12, &iht8x8_12, 1, AOM_BITS_12),
+        make_tuple(&fht8x8_12, &iht8x8_12, 2, AOM_BITS_12),
+        make_tuple(&fht8x8_12, &iht8x8_12, 3, AOM_BITS_12),
         make_tuple(&av1_fht8x8_c, &av1_iht8x8_64_add_c, 1, AOM_BITS_8),
         make_tuple(&av1_fht8x8_c, &av1_iht8x8_64_add_c, 2, AOM_BITS_8),
         make_tuple(&av1_fht8x8_c, &av1_iht8x8_64_add_c, 3, AOM_BITS_8)));

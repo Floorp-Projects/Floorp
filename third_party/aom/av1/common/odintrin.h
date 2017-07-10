@@ -89,6 +89,12 @@ extern "C" {
 
 typedef int od_coeff;
 
+/*This is the strength reduced version of ((_a)/(1 << (_b))).
+  This will not work for _b == 0, however currently this is only used for
+   b == 1 anyway.*/
+# define OD_UNBIASED_RSHIFT32(_a, _b) \
+  (((int32_t)(((uint32_t)(_a) >> (32 - (_b))) + (_a))) >> (_b))
+
 #define OD_DIVU_DMAX (1024)
 
 extern uint32_t OD_DIVU_SMALL_CONSTS[OD_DIVU_DMAX][2];

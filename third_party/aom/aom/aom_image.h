@@ -35,6 +35,8 @@ extern "C" {
 #define AOM_IMG_FMT_HAS_ALPHA 0x400    /**< Image has an alpha channel. */
 #define AOM_IMG_FMT_HIGHBITDEPTH 0x800 /**< Image uses 16bit framebuffer. */
 
+#include "./aom_config.h"
+
 /*!\brief List of supported image formats */
 typedef enum aom_img_fmt {
   AOM_IMG_FMT_NONE,
@@ -74,10 +76,28 @@ typedef enum aom_color_space {
   AOM_CS_BT_709 = 2,    /**< BT.709 */
   AOM_CS_SMPTE_170 = 3, /**< SMPTE.170 */
   AOM_CS_SMPTE_240 = 4, /**< SMPTE.240 */
-  AOM_CS_BT_2020 = 5,   /**< BT.2020 */
-  AOM_CS_RESERVED = 6,  /**< Reserved */
-  AOM_CS_SRGB = 7       /**< sRGB */
-} aom_color_space_t;    /**< alias for enum aom_color_space */
+#if CONFIG_COLORSPACE_HEADERS
+  AOM_CS_BT_2020_NCL = 5, /**< BT.2020 non-constant luminance (BT.2100) */
+  AOM_CS_BT_2020_CL = 6,  /**< BT.2020 constant luminance */
+  AOM_CS_SRGB = 7,        /**< sRGB */
+  AOM_CS_ICTCP = 8,       /**< ICtCp, ITU-R BT.2100 */
+  AOM_CS_RESERVED = 9     /**< Values 9..31 are reserved */
+#else
+  AOM_CS_BT_2020 = 5,  /**< BT.2020 */
+  AOM_CS_RESERVED = 6, /**< Reserved */
+  AOM_CS_SRGB = 7      /**< sRGB */
+#endif
+} aom_color_space_t; /**< alias for enum aom_color_space */
+
+#if CONFIG_COLORSPACE_HEADERS
+typedef enum aom_transfer_function {
+  AOM_TF_UNKNOWN = 0,      /**< Unknown */
+  AOM_TF_BT_709 = 1,       /**< BT.709 */
+  AOM_TF_PQ = 2,           /**< PQ TF BT.2100 / ST.2084 */
+  AOM_TF_HLG = 3,          /**< Hybrid Log-Gamma */
+  AOM_TF_RESERVED = 4      /**< Values 4..31 are reserved */
+} aom_transfer_function_t; /**< alias for enum aom_transfer_function */
+#endif
 
 /*!\brief List of supported color range */
 typedef enum aom_color_range {
@@ -85,10 +105,24 @@ typedef enum aom_color_range {
   AOM_CR_FULL_RANGE = 1    /**< YUV/RGB [0..255] */
 } aom_color_range_t;       /**< alias for enum aom_color_range */
 
+#if CONFIG_COLORSPACE_HEADERS
+typedef enum aom_chroma_sample_position {
+  AOM_CSP_UNKNOWN = 0,          /**< Unknown */
+  AOM_CSP_VERTICAL = 1,         /**< Horizontally co-located with luma(0, 0)*/
+                                /**< sample, between two vertical samples */
+  AOM_CSP_COLOCATED = 2,        /**< Co-located with luma(0, 0) sample */
+  AOM_CSP_RESERVED = 3          /**< Reserved value */
+} aom_chroma_sample_position_t; /**< alias for enum aom_transfer_function */
+#endif
+
 /**\brief Image Descriptor */
 typedef struct aom_image {
-  aom_img_fmt_t fmt;       /**< Image Format */
-  aom_color_space_t cs;    /**< Color Space */
+  aom_img_fmt_t fmt;    /**< Image Format */
+  aom_color_space_t cs; /**< Color Space */
+#if CONFIG_COLORSPACE_HEADERS
+  aom_transfer_function_t tf;       /**< transfer function */
+  aom_chroma_sample_position_t csp; /**< chroma sample position */
+#endif
   aom_color_range_t range; /**< Color Range */
 
   /* Image storage dimensions */

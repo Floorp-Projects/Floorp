@@ -23,8 +23,7 @@ extern "C" {
 #endif
 
 static INLINE tran_high_t dct_const_round_shift(tran_high_t input) {
-  tran_high_t rv = ROUND_POWER_OF_TWO(input, DCT_CONST_BITS);
-  return rv;
+  return ROUND_POWER_OF_TWO(input, DCT_CONST_BITS);
 }
 
 static INLINE tran_high_t check_range(tran_high_t input, int bd) {
@@ -51,9 +50,19 @@ static INLINE tran_high_t check_range(tran_high_t input, int bd) {
 }
 
 #define WRAPLOW(x) ((int32_t)check_range(x, 8))
-#if CONFIG_HIGHBITDEPTH
 #define HIGHBD_WRAPLOW(x, bd) ((int32_t)check_range((x), bd))
-#endif  // CONFIG_HIGHBITDEPTH
+
+#if CONFIG_MRC_TX
+// These each perform dct but add coefficients based on a mask
+void aom_imrc32x32_1024_add_c(const tran_low_t *input, uint8_t *dest,
+                              int stride, int *mask);
+
+void aom_imrc32x32_135_add_c(const tran_low_t *input, uint8_t *dest, int stride,
+                             int *mask);
+
+void aom_imrc32x32_34_add_c(const tran_low_t *input, uint8_t *dest, int stride,
+                            int *mask);
+#endif  // CONFIG_MRC_TX
 
 void aom_idct4_c(const tran_low_t *input, tran_low_t *output);
 void aom_idct8_c(const tran_low_t *input, tran_low_t *output);
@@ -63,7 +72,6 @@ void aom_iadst4_c(const tran_low_t *input, tran_low_t *output);
 void aom_iadst8_c(const tran_low_t *input, tran_low_t *output);
 void aom_iadst16_c(const tran_low_t *input, tran_low_t *output);
 
-#if CONFIG_HIGHBITDEPTH
 void aom_highbd_idct4_c(const tran_low_t *input, tran_low_t *output, int bd);
 void aom_highbd_idct8_c(const tran_low_t *input, tran_low_t *output, int bd);
 void aom_highbd_idct16_c(const tran_low_t *input, tran_low_t *output, int bd);
@@ -78,7 +86,6 @@ static INLINE uint16_t highbd_clip_pixel_add(uint16_t dest, tran_high_t trans,
   trans = HIGHBD_WRAPLOW(trans, bd);
   return clip_pixel_highbd(dest + (int)trans, bd);
 }
-#endif
 
 static INLINE uint8_t clip_pixel_add(uint8_t dest, tran_high_t trans) {
   trans = WRAPLOW(trans);

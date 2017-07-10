@@ -40,7 +40,12 @@ static INLINE void fwd_txfm2d_sse4_1(const int16_t *input, int32_t *output,
                                      const int stride,
                                      const TXFM_2D_FLIP_CFG *cfg,
                                      int32_t *txfm_buf) {
-  // TODO(sarahparker) must correct for rectangular transforms in follow up
+  // TODO(sarahparker) This does not currently support rectangular transforms
+  // and will break without splitting txfm_size out into row and col size.
+  // Rectangular transforms use c code only, so it should be ok for now.
+  // It will be corrected when there are sse implementations for rectangular
+  // transforms.
+  assert(cfg->row_cfg->txfm_size == cfg->col_cfg->txfm_size);
   const int txfm_size = cfg->row_cfg->txfm_size;
   const int8_t *shift = cfg->row_cfg->shift;
   const int8_t *stage_range_col = cfg->col_cfg->stage_range;

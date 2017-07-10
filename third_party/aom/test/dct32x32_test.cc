@@ -350,11 +350,6 @@ INSTANTIATE_TEST_CASE_P(
                                  AOM_BITS_8),
                       make_tuple(&aom_fdct32x32_rd_c, &aom_idct32x32_1024_add_c,
                                  1, AOM_BITS_8)));
-INSTANTIATE_TEST_CASE_P(
-    C, PartialTrans32x32Test,
-    ::testing::Values(make_tuple(&aom_highbd_fdct32x32_1_c, AOM_BITS_8),
-                      make_tuple(&aom_highbd_fdct32x32_1_c, AOM_BITS_10),
-                      make_tuple(&aom_highbd_fdct32x32_1_c, AOM_BITS_12)));
 #else
 INSTANTIATE_TEST_CASE_P(
     C, Trans32x32Test,
@@ -362,9 +357,6 @@ INSTANTIATE_TEST_CASE_P(
                                  AOM_BITS_8),
                       make_tuple(&aom_fdct32x32_rd_c, &aom_idct32x32_1024_add_c,
                                  1, AOM_BITS_8)));
-INSTANTIATE_TEST_CASE_P(C, PartialTrans32x32Test,
-                        ::testing::Values(make_tuple(&aom_fdct32x32_1_c,
-                                                     AOM_BITS_8)));
 #endif  // CONFIG_HIGHBITDEPTH
 
 #if HAVE_NEON && !CONFIG_HIGHBITDEPTH
@@ -383,16 +375,7 @@ INSTANTIATE_TEST_CASE_P(
                                  &aom_idct32x32_1024_add_sse2, 0, AOM_BITS_8),
                       make_tuple(&aom_fdct32x32_rd_sse2,
                                  &aom_idct32x32_1024_add_sse2, 1, AOM_BITS_8)));
-INSTANTIATE_TEST_CASE_P(SSE2, PartialTrans32x32Test,
-                        ::testing::Values(make_tuple(&aom_fdct32x32_1_sse2,
-                                                     AOM_BITS_8)));
 #endif  // HAVE_SSE2 && !CONFIG_HIGHBITDEPTH
-
-#if HAVE_AVX2 && !CONFIG_HIGHBITDEPTH
-INSTANTIATE_TEST_CASE_P(AVX2, PartialTrans32x32Test,
-                        ::testing::Values(make_tuple(&aom_fdct32x32_1_avx2,
-                                                     AOM_BITS_8)));
-#endif  // HAVE_AVX2 && !CONFIG_HIGHBITDEPTH
 
 #if HAVE_SSE2 && CONFIG_HIGHBITDEPTH
 INSTANTIATE_TEST_CASE_P(
@@ -401,9 +384,6 @@ INSTANTIATE_TEST_CASE_P(
                                  0, AOM_BITS_8),
                       make_tuple(&aom_fdct32x32_rd_sse2,
                                  &aom_idct32x32_1024_add_c, 1, AOM_BITS_8)));
-INSTANTIATE_TEST_CASE_P(SSE2, PartialTrans32x32Test,
-                        ::testing::Values(make_tuple(&aom_fdct32x32_1_sse2,
-                                                     AOM_BITS_8)));
 #endif  // HAVE_SSE2 && CONFIG_HIGHBITDEPTH
 
 #if HAVE_AVX2 && !CONFIG_HIGHBITDEPTH
@@ -431,8 +411,5 @@ INSTANTIATE_TEST_CASE_P(
                                  &aom_idct32x32_1024_add_msa, 0, AOM_BITS_8),
                       make_tuple(&aom_fdct32x32_rd_msa,
                                  &aom_idct32x32_1024_add_msa, 1, AOM_BITS_8)));
-INSTANTIATE_TEST_CASE_P(MSA, PartialTrans32x32Test,
-                        ::testing::Values(make_tuple(&aom_fdct32x32_1_msa,
-                                                     AOM_BITS_8)));
 #endif  // HAVE_MSA && !CONFIG_HIGHBITDEPTH
 }  // namespace

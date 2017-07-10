@@ -15,8 +15,8 @@
 
 namespace {
 
-class AV1FrameSizeTests : public ::libaom_test::EncoderTest,
-                          public ::testing::Test {
+class AV1FrameSizeTests : public ::testing::Test,
+                          public ::libaom_test::EncoderTest {
  protected:
   AV1FrameSizeTests()
       : EncoderTest(&::libaom_test::kAV1), expected_res_(AOM_CODEC_OK) {}

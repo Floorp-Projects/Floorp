@@ -16,6 +16,7 @@
 #endif  // !CONFIG_PVQ
 
 #include "av1/common/blockd.h"
+#include "av1/decoder/detokenize.h"
 
 #define ACCT_STR __func__
 
@@ -23,7 +24,6 @@
 #include "av1/common/common.h"
 #include "av1/common/entropy.h"
 #include "av1/common/idct.h"
-#include "av1/decoder/detokenize.h"
 
 #define EOB_CONTEXT_NODE 0
 #define ZERO_CONTEXT_NODE 1
@@ -110,16 +110,13 @@ static int decode_coefs(MACROBLOCKD *xd, PLANE_TYPE type, tran_low_t *dqcoeff,
 #endif  // CONFIG_AOM_QM
                         int ctx, const int16_t *scan, const int16_t *nb,
                         int16_t *max_scan_line, aom_reader *r) {
-  FRAME_COUNTS *counts = xd->counts;
-#if CONFIG_EC_ADAPT
   FRAME_CONTEXT *ec_ctx = xd->tile_ctx;
-#else
-  FRAME_CONTEXT *const ec_ctx = xd->fc;
-#endif
   const int max_eob = tx_size_2d[tx_size];
   const int ref = is_inter_block(&xd->mi[0]->mbmi);
 #if CONFIG_AOM_QM
   const qm_val_t *iqmatrix = iqm[!ref][tx_size];
+#else
+  (void)tx_type;
 #endif  // CONFIG_AOM_QM
   int band, c = 0;
   const int tx_size_ctx = txsize_sqr_map[tx_size];
@@ -129,11 +126,6 @@ static int decode_coefs(MACROBLOCKD *xd, PLANE_TYPE type, tran_low_t *dqcoeff,
       ec_ctx->coef_tail_cdfs[tx_size_ctx][type][ref];
   int val = 0;
 
-#if !CONFIG_EC_ADAPT
-  unsigned int *blockz_count;
-  unsigned int(*coef_counts)[COEFF_CONTEXTS][UNCONSTRAINED_NODES + 1] = NULL;
-  unsigned int(*eob_branch_count)[COEFF_CONTEXTS] = NULL;
-#endif
   uint8_t token_cache[MAX_TX_SQUARE];
   const uint8_t *band_translate = get_band_translate(tx_size);
   int dq_shift;
@@ -142,15 +134,6 @@ static int decode_coefs(MACROBLOCKD *xd, PLANE_TYPE type, tran_low_t *dqcoeff,
 #if CONFIG_NEW_QUANT
   const tran_low_t *dqv_val = &dq_val[0][0];
 #endif  // CONFIG_NEW_QUANT
-  (void)tx_type;
-
-  if (counts) {
-#if !CONFIG_EC_ADAPT
-    coef_counts = counts->coef[tx_size_ctx][type][ref];
-    eob_branch_count = counts->eob_branch[tx_size_ctx][type][ref];
-    blockz_count = counts->blockz_count[tx_size_ctx][type][ref][ctx];
-#endif
-  }
 
   dq_shift = av1_get_tx_scale(tx_size);
 
@@ -171,9 +154,6 @@ static int decode_coefs(MACROBLOCKD *xd, PLANE_TYPE type, tran_low_t *dqcoeff,
                                             HEAD_TOKENS + first_pos, ACCT_STR) +
                                 !first_pos;
     if (first_pos) {
-#if !CONFIG_EC_ADAPT
-      if (counts) ++blockz_count[comb_token != 0];
-#endif
       if (comb_token == 0) return 0;
     }
     token = comb_token >> 1;
@@ -181,11 +161,6 @@ static int decode_coefs(MACROBLOCKD *xd, PLANE_TYPE type, tran_low_t *dqcoeff,
     while (!token) {
       *max_scan_line = AOMMAX(*max_scan_line, scan[c]);
       token_cache[scan[c]] = 0;
-#if !CONFIG_EC_ADAPT
-      if (counts && !last_pos) {
-        ++coef_counts[band][ctx][ZERO_TOKEN];
-      }
-#endif
       ++c;
       dqv = dq[1];
       ctx = get_coef_context(nb, token_cache, c);
@@ -201,13 +176,6 @@ static int decode_coefs(MACROBLOCKD *xd, PLANE_TYPE type, tran_low_t *dqcoeff,
     }
 
     more_data = comb_token & 1;
-#if !CONFIG_EC_ADAPT
-    if (counts && !last_pos) {
-      ++coef_counts[band][ctx][token];
-      ++eob_branch_count[band][ctx];
-      if (!more_data) ++coef_counts[band][ctx][EOB_MODEL_TOKEN];
-    }
-#endif
 
     if (token > ONE_TOKEN)
       token +=
@@ -226,16 +194,15 @@ static int decode_coefs(MACROBLOCKD *xd, PLANE_TYPE type, tran_low_t *dqcoeff,
     v = dq_shift ? ROUND_POWER_OF_TWO(v, dq_shift) : v;
 #else
 #if CONFIG_AOM_QM
-    dqv = ((iqmatrix[scan[c]] * (int)dqv) + (1 << (AOM_QM_BITS - 1))) >>
-          AOM_QM_BITS;
+    // Apply quant matrix only for 2D transforms
+    if (IS_2D_TRANSFORM(tx_type))
+      dqv = ((iqmatrix[scan[c]] * (int)dqv) + (1 << (AOM_QM_BITS - 1))) >>
+            AOM_QM_BITS;
 #endif
     v = (val * dqv) >> dq_shift;
 #endif
 
-    v = aom_read_bit(r, ACCT_STR) ? -v : v;
-#if CONFIG_COEFFICIENT_RANGE_CHECKING
-    check_range(v, xd->bd);
-#endif  // CONFIG_COEFFICIENT_RANGE_CHECKING
+    v = (int)check_range(aom_read_bit(r, ACCT_STR) ? -v : v, xd->bd);
 
     dqcoeff[scan[c]] = v;
 
@@ -258,46 +225,47 @@ void av1_decode_palette_tokens(MACROBLOCKD *const xd, int plane,
   const MB_MODE_INFO *const mbmi = &mi->mbmi;
   uint8_t color_order[PALETTE_MAX_SIZE];
   const int n = mbmi->palette_mode_info.palette_size[plane];
-  int i, j;
   uint8_t *const color_map = xd->plane[plane].color_index_map;
-  const aom_prob(
-      *const prob)[PALETTE_COLOR_INDEX_CONTEXTS][PALETTE_COLORS - 1] =
-      plane ? av1_default_palette_uv_color_index_prob
-            : av1_default_palette_y_color_index_prob;
+  aom_cdf_prob(
+      *palette_cdf)[PALETTE_COLOR_INDEX_CONTEXTS][CDF_SIZE(PALETTE_COLORS)] =
+      plane ? xd->tile_ctx->palette_uv_color_index_cdf
+            : xd->tile_ctx->palette_y_color_index_cdf;
   int plane_block_width, plane_block_height, rows, cols;
   av1_get_block_dimensions(mbmi->sb_type, plane, xd, &plane_block_width,
                            &plane_block_height, &rows, &cols);
   assert(plane == 0 || plane == 1);
 
+  // The first color index.
+  color_map[0] = av1_read_uniform(r, n);
+  assert(color_map[0] < n);
+
 #if CONFIG_PALETTE_THROUGHPUT
   // Run wavefront on the palette map index decoding.
-  for (i = 1; i < rows + cols - 1; ++i) {
-    for (j = AOMMIN(i, cols - 1); j >= AOMMAX(0, i - rows + 1); --j) {
+  for (int i = 1; i < rows + cols - 1; ++i) {
+    for (int j = AOMMIN(i, cols - 1); j >= AOMMAX(0, i - rows + 1); --j) {
       const int color_ctx = av1_get_palette_color_index_context(
           color_map, plane_block_width, (i - j), j, n, color_order, NULL);
-      const int color_idx =
-          aom_read_tree(r, av1_palette_color_index_tree[n - 2],
-                        prob[n - 2][color_ctx], ACCT_STR);
+      const int color_idx = aom_read_symbol(
+          r, palette_cdf[n - PALETTE_MIN_SIZE][color_ctx], n, ACCT_STR);
       assert(color_idx >= 0 && color_idx < n);
       color_map[(i - j) * plane_block_width + j] = color_order[color_idx];
     }
   }
   // Copy last column to extra columns.
   if (cols < plane_block_width) {
-    for (i = 0; i < plane_block_height; ++i) {
+    for (int i = 0; i < plane_block_height; ++i) {
       memset(color_map + i * plane_block_width + cols,
              color_map[i * plane_block_width + cols - 1],
              (plane_block_width - cols));
     }
   }
 #else
-  for (i = 0; i < rows; ++i) {
-    for (j = (i == 0 ? 1 : 0); j < cols; ++j) {
+  for (int i = 0; i < rows; ++i) {
+    for (int j = (i == 0 ? 1 : 0); j < cols; ++j) {
       const int color_ctx = av1_get_palette_color_index_context(
           color_map, plane_block_width, i, j, n, color_order, NULL);
-      const int color_idx =
-          aom_read_tree(r, av1_palette_color_index_tree[n - PALETTE_MIN_SIZE],
-                        prob[n - PALETTE_MIN_SIZE][color_ctx], ACCT_STR);
+      const int color_idx = aom_read_symbol(
+          r, palette_cdf[n - PALETTE_MIN_SIZE][color_ctx], n, ACCT_STR);
       assert(color_idx >= 0 && color_idx < n);
       color_map[i * plane_block_width + j] = color_order[color_idx];
     }
@@ -307,7 +275,7 @@ void av1_decode_palette_tokens(MACROBLOCKD *const xd, int plane,
   }
 #endif  // CONFIG_PALETTE_THROUGHPUT
   // Copy last row to extra rows.
-  for (i = rows; i < plane_block_height; ++i) {
+  for (int i = rows; i < plane_block_height; ++i) {
     memcpy(color_map + i * plane_block_width,
            color_map + (rows - 1) * plane_block_width, plane_block_width);
   }

@@ -63,6 +63,14 @@ void av1_highbd_resize_frame444(const uint8_t *const y, int y_stride,
                                 int owidth, int bd);
 #endif  // CONFIG_HIGHBITDEPTH
 
+#if CONFIG_HIGHBITDEPTH
+void av1_resize_and_extend_frame(const YV12_BUFFER_CONFIG *src,
+                                 YV12_BUFFER_CONFIG *dst, int bd);
+#else
+void av1_resize_and_extend_frame(const YV12_BUFFER_CONFIG *src,
+                                 YV12_BUFFER_CONFIG *dst);
+#endif  // CONFIG_HIGHBITDEPTH
+
 YV12_BUFFER_CONFIG *av1_scale_if_required_fast(AV1_COMMON *cm,
                                                YV12_BUFFER_CONFIG *unscaled,
                                                YV12_BUFFER_CONFIG *scaled);
@@ -70,6 +78,17 @@ YV12_BUFFER_CONFIG *av1_scale_if_required_fast(AV1_COMMON *cm,
 YV12_BUFFER_CONFIG *av1_scale_if_required(AV1_COMMON *cm,
                                           YV12_BUFFER_CONFIG *unscaled,
                                           YV12_BUFFER_CONFIG *scaled);
+
+void av1_calculate_scaled_size(int *width, int *height, int num);
+
+#if CONFIG_FRAME_SUPERRES
+void av1_superres_upscale(AV1_COMMON *cm, BufferPool *const pool);
+
+// Returns 1 if a superres upscaled frame is unscaled and 0 otherwise.
+static INLINE int av1_superres_unscaled(const AV1_COMMON *cm) {
+  return (cm->superres_scale_numerator == SCALE_DENOMINATOR);
+}
+#endif  // CONFIG_FRAME_SUPERRES
 
 #ifdef __cplusplus
 }  // extern "C"

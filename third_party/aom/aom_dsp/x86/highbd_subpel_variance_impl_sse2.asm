@@ -75,7 +75,7 @@ SECTION .text
   paddd                m6, m4
   mov                  r1, ssem         ; r1 = unsigned int *sse
   movd               [r1], m7           ; store sse
-  movd                rax, m6           ; store sum as return value
+  movd                eax, m6           ; store sum as return value
 %endif
   RET
 %endmacro

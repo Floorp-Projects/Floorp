@@ -18,51 +18,6 @@
 #include "aom_dsp/txfm_common.h"
 #include "aom_dsp/x86/txfm_common_avx2.h"
 
-static int32_t get_16x16_sum(const int16_t *input, int stride) {
-  __m256i r0, r1, r2, r3, u0, u1;
-  __m256i zero = _mm256_setzero_si256();
-  __m256i sum = _mm256_setzero_si256();
-  const int16_t *blockBound = input + (stride << 4);
-  __m128i v0, v1;
-
-  while (input < blockBound) {
-    r0 = _mm256_loadu_si256((__m256i const *)input);
-    r1 = _mm256_loadu_si256((__m256i const *)(input + stride));
-    r2 = _mm256_loadu_si256((__m256i const *)(input + 2 * stride));
-    r3 = _mm256_loadu_si256((__m256i const *)(input + 3 * stride));
-
-    u0 = _mm256_add_epi16(r0, r1);
-    u1 = _mm256_add_epi16(r2, r3);
-    sum = _mm256_add_epi16(sum, u0);
-    sum = _mm256_add_epi16(sum, u1);
-
-    input += stride << 2;
-  }
-
-  // unpack 16 int16_t into 2x8 int32_t
-  u0 = _mm256_unpacklo_epi16(zero, sum);
-  u1 = _mm256_unpackhi_epi16(zero, sum);
-  u0 = _mm256_srai_epi32(u0, 16);
-  u1 = _mm256_srai_epi32(u1, 16);
-  sum = _mm256_add_epi32(u0, u1);
-
-  u0 = _mm256_srli_si256(sum, 8);
-  u1 = _mm256_add_epi32(sum, u0);
-
-  v0 = _mm_add_epi32(_mm256_extracti128_si256(u1, 1),
-                     _mm256_castsi256_si128(u1));
-  v1 = _mm_srli_si128(v0, 4);
-  v0 = _mm_add_epi32(v0, v1);
-  return (int32_t)_mm_extract_epi32(v0, 0);
-}
-
-void aom_fdct16x16_1_avx2(const int16_t *input, tran_low_t *output,
-                          int stride) {
-  int32_t dc = get_16x16_sum(input, stride);
-  output[0] = (tran_low_t)(dc >> 1);
-  _mm256_zeroupper();
-}
-
 static INLINE void load_buffer_16x16(const int16_t *input, int stride,
                                      int flipud, int fliplr, __m256i *in) {
   if (!flipud) {
@@ -959,8 +914,12 @@ static void fidtx16_avx2(__m256i *in) {
 #endif
 
 void av1_fht16x16_avx2(const int16_t *input, tran_low_t *output, int stride,
-                       int tx_type) {
+                       TxfmParam *txfm_param) {
   __m256i in[16];
+  int tx_type = txfm_param->tx_type;
+#if CONFIG_MRC_TX
+  assert(tx_type != MRC_DCT && "Invalid tx type for tx size");
+#endif
 
   switch (tx_type) {
     case DCT_DCT:
@@ -1081,22 +1040,6 @@ void av1_fht16x16_avx2(const int16_t *input, tran_low_t *output, int stride,
   }
   mm256_transpose_16x16(in, in);
   write_buffer_16x16(in, output);
-  _mm256_zeroupper();
-}
-
-void aom_fdct32x32_1_avx2(const int16_t *input, tran_low_t *output,
-                          int stride) {
-  // left and upper corner
-  int32_t sum = get_16x16_sum(input, stride);
-  // right and upper corner
-  sum += get_16x16_sum(input + 16, stride);
-  // left and lower corner
-  sum += get_16x16_sum(input + (stride << 4), stride);
-  // right and lower corner
-  sum += get_16x16_sum(input + (stride << 4) + 16, stride);
-
-  sum >>= 3;
-  output[0] = (tran_low_t)sum;
   _mm256_zeroupper();
 }
 
@@ -1570,9 +1513,13 @@ static void fidtx32_avx2(__m256i *in0, __m256i *in1) {
 #endif
 
 void av1_fht32x32_avx2(const int16_t *input, tran_low_t *output, int stride,
-                       int tx_type) {
+                       TxfmParam *txfm_param) {
   __m256i in0[32];  // left 32 columns
   __m256i in1[32];  // right 32 columns
+  int tx_type = txfm_param->tx_type;
+#if CONFIG_MRC_TX
+  assert(tx_type != MRC_DCT && "No avx2 32x32 implementation of MRC_DCT");
+#endif
 
   switch (tx_type) {
     case DCT_DCT:

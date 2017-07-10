@@ -13,12 +13,11 @@
 
 #include "./aom_config.h"
 #include "test/ivf_video_source.h"
+#include "test/util.h"
 #include "aom/aomdx.h"
 #include "aom/aom_decoder.h"
 
 namespace {
-
-#define NELEMENTS(x) static_cast<int>(sizeof(x) / sizeof(x[0]))
 
 TEST(DecodeAPI, InvalidParams) {
   static const aom_codec_iface_t *kCodecs[] = {

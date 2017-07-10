@@ -202,9 +202,9 @@ void copy_4x4_16bit_to_16bit_c(uint16_t *dst, int dstride, const uint16_t *src,
     for (j = 0; j < 4; j++) dst[i * dstride + j] = src[i * sstride + j];
 }
 
-void copy_dering_16bit_to_16bit(uint16_t *dst, int dstride, uint16_t *src,
-                                dering_list *dlist, int dering_count,
-                                int bsize) {
+static void copy_dering_16bit_to_16bit(uint16_t *dst, int dstride,
+                                       uint16_t *src, dering_list *dlist,
+                                       int dering_count, int bsize) {
   int bi, bx, by;
 
   if (bsize == BLOCK_8X8) {

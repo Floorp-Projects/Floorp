@@ -41,7 +41,7 @@ static void temporal_filter_predictors_mb_c(
   enum mv_precision mv_precision_uv;
   int uv_stride;
   // TODO(angiebird): change plane setting accordingly
-  ConvolveParams conv_params = get_conv_params(which_mv, 0);
+  ConvolveParams conv_params = get_conv_params(which_mv, which_mv, 0);
 
 #if USE_TEMPORALFILTER_12TAP
 #if CONFIG_DUAL_FILTER
@@ -413,10 +413,10 @@ static void temporal_filter_iterate_c(AV1_COMP *cpi,
               mbd->mi[0]->bmi[0].as_mv[0].as_mv.col, predictor, scale,
               mb_col * 16, mb_row * 16);
 
+// Apply the filter (YUV)
 #if CONFIG_HIGHBITDEPTH
           if (mbd->cur_buf->flags & YV12_FLAG_HIGHBITDEPTH) {
             int adj_strength = strength + 2 * (mbd->bd - 8);
-            // Apply the filter (YUV)
             av1_highbd_temporal_filter_apply(
                 f->y_buffer + mb_y_offset, f->y_stride, predictor, 16, 16,
                 adj_strength, filter_weight, accumulator, count);
@@ -429,7 +429,7 @@ static void temporal_filter_iterate_c(AV1_COMP *cpi,
                 mb_uv_width, mb_uv_height, adj_strength, filter_weight,
                 accumulator + 512, count + 512);
           } else {
-            // Apply the filter (YUV)
+#endif  // CONFIG_HIGHBITDEPTH
             av1_temporal_filter_apply_c(f->y_buffer + mb_y_offset, f->y_stride,
                                         predictor, 16, 16, strength,
                                         filter_weight, accumulator, count);
@@ -441,29 +441,17 @@ static void temporal_filter_iterate_c(AV1_COMP *cpi,
                 f->v_buffer + mb_uv_offset, f->uv_stride, predictor + 512,
                 mb_uv_width, mb_uv_height, strength, filter_weight,
                 accumulator + 512, count + 512);
+#if CONFIG_HIGHBITDEPTH
           }
-#else
-          // Apply the filter (YUV)
-          av1_temporal_filter_apply_c(f->y_buffer + mb_y_offset, f->y_stride,
-                                      predictor, 16, 16, strength,
-                                      filter_weight, accumulator, count);
-          av1_temporal_filter_apply_c(f->u_buffer + mb_uv_offset, f->uv_stride,
-                                      predictor + 256, mb_uv_width,
-                                      mb_uv_height, strength, filter_weight,
-                                      accumulator + 256, count + 256);
-          av1_temporal_filter_apply_c(f->v_buffer + mb_uv_offset, f->uv_stride,
-                                      predictor + 512, mb_uv_width,
-                                      mb_uv_height, strength, filter_weight,
-                                      accumulator + 512, count + 512);
 #endif  // CONFIG_HIGHBITDEPTH
         }
       }
 
+// Normalize filter output to produce AltRef frame
 #if CONFIG_HIGHBITDEPTH
       if (mbd->cur_buf->flags & YV12_FLAG_HIGHBITDEPTH) {
         uint16_t *dst1_16;
         uint16_t *dst2_16;
-        // Normalize filter output to produce AltRef frame
         dst1 = cpi->alt_ref_buffer.y_buffer;
         dst1_16 = CONVERT_TO_SHORTPTR(dst1);
         stride = cpi->alt_ref_buffer.y_stride;
@@ -505,7 +493,7 @@ static void temporal_filter_iterate_c(AV1_COMP *cpi,
           byte += stride - mb_uv_width;
         }
       } else {
-        // Normalize filter output to produce AltRef frame
+#endif  // CONFIG_HIGHBITDEPTH
         dst1 = cpi->alt_ref_buffer.y_buffer;
         stride = cpi->alt_ref_buffer.y_stride;
         byte = mb_y_offset;
@@ -541,43 +529,7 @@ static void temporal_filter_iterate_c(AV1_COMP *cpi,
           }
           byte += stride - mb_uv_width;
         }
-      }
-#else
-      // Normalize filter output to produce AltRef frame
-      dst1 = cpi->alt_ref_buffer.y_buffer;
-      stride = cpi->alt_ref_buffer.y_stride;
-      byte = mb_y_offset;
-      for (i = 0, k = 0; i < 16; i++) {
-        for (j = 0; j < 16; j++, k++) {
-          dst1[byte] =
-              (uint8_t)OD_DIVU(accumulator[k] + (count[k] >> 1), count[k]);
-
-          // move to next pixel
-          byte++;
-        }
-        byte += stride - 16;
-      }
-
-      dst1 = cpi->alt_ref_buffer.u_buffer;
-      dst2 = cpi->alt_ref_buffer.v_buffer;
-      stride = cpi->alt_ref_buffer.uv_stride;
-      byte = mb_uv_offset;
-      for (i = 0, k = 256; i < mb_uv_height; i++) {
-        for (j = 0; j < mb_uv_width; j++, k++) {
-          int m = k + 256;
-
-          // U
-          dst1[byte] =
-              (uint8_t)OD_DIVU(accumulator[k] + (count[k] >> 1), count[k]);
-
-          // V
-          dst2[byte] =
-              (uint8_t)OD_DIVU(accumulator[m] + (count[m] >> 1), count[m]);
-
-          // move to next pixel
-          byte++;
-        }
-        byte += stride - mb_uv_width;
+#if CONFIG_HIGHBITDEPTH
       }
 #endif  // CONFIG_HIGHBITDEPTH
       mb_y_offset += 16;
@@ -650,7 +602,11 @@ static void adjust_arnr_filter(AV1_COMP *cpi, int distance, int group_boost,
   *arnr_strength = strength;
 }
 
-void av1_temporal_filter(AV1_COMP *cpi, int distance) {
+void av1_temporal_filter(AV1_COMP *cpi,
+#if CONFIG_BGSPRITE
+                         YV12_BUFFER_CONFIG *bg,
+#endif  // CONFIG_BGSPRITE
+                         int distance) {
   RATE_CONTROL *const rc = &cpi->rc;
   int frame;
   int frames_to_blur;
@@ -692,9 +648,18 @@ void av1_temporal_filter(AV1_COMP *cpi, int distance) {
   // Setup frame pointers, NULL indicates frame not included in filter.
   for (frame = 0; frame < frames_to_blur; ++frame) {
     const int which_buffer = start_frame - frame;
-    struct lookahead_entry *buf =
-        av1_lookahead_peek(cpi->lookahead, which_buffer);
-    frames[frames_to_blur - 1 - frame] = &buf->img;
+#if CONFIG_BGSPRITE
+    if (frame == frames_to_blur_backward && bg != NULL) {
+      // Insert bg into frames at ARF index.
+      frames[frames_to_blur - 1 - frame] = bg;
+    } else {
+#endif  // CONFIG_BGSPRITE
+      struct lookahead_entry *buf =
+          av1_lookahead_peek(cpi->lookahead, which_buffer);
+      frames[frames_to_blur - 1 - frame] = &buf->img;
+#if CONFIG_BGSPRITE
+    }
+#endif  // CONFIG_BGSPRITE
   }
 
   if (frames_to_blur > 0) {
