@@ -228,7 +228,7 @@ asserts(0-10) == grid-fragmentation-015.html grid-fragmentation-015-ref.html # b
 == grid-fragmentation-dyn4-004.html grid-fragmentation-004-ref.html
 == grid-fragmentation-dyn4-005.html grid-fragmentation-005-ref.html
 == grid-fragmentation-dyn5-005.html grid-fragmentation-005-ref.html
-skip-if(styloVsGecko) == grid-fragmentation-dyn1-006.html grid-fragmentation-006-ref.html
+== grid-fragmentation-dyn1-006.html grid-fragmentation-006-ref.html
 == grid-fragmentation-dyn3-007.html grid-fragmentation-007-ref.html
 == grid-fragmentation-dyn5-007.html grid-fragmentation-007-ref.html
 == grid-fragmentation-dyn5-008.html grid-fragmentation-008-ref.html
