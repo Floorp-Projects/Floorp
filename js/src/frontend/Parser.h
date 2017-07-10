@@ -934,8 +934,13 @@ class Parser final : public ParserBase, private JS::AutoGCRooter
     Node objectBindingPattern(DeclarationKind kind, YieldHandling yieldHandling);
     Node arrayBindingPattern(DeclarationKind kind, YieldHandling yieldHandling);
 
+    enum class TargetBehavior {
+        PermitAssignmentPattern,
+        ForbidAssignmentPattern
+    };
     void checkDestructuringAssignmentTarget(Node expr, TokenPos exprPos,
-                                            PossibleError* possibleError);
+                                            PossibleError* possibleError,
+                                            TargetBehavior behavior = TargetBehavior::PermitAssignmentPattern);
     void checkDestructuringAssignmentElement(Node expr, TokenPos exprPos,
                                              PossibleError* possibleError);
 
