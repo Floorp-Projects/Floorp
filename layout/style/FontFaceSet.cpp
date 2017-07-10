@@ -1389,8 +1389,7 @@ FontFaceSet::IsFontLoadAllowed(nsIURI* aFontLocation, nsIPrincipal* aPrincipal)
                                           EmptyCString(), // mime type
                                           nullptr, // aExtra
                                           &shouldLoad,
-                                          nsContentUtils::GetContentPolicy(),
-                                          nsContentUtils::GetSecurityManager());
+                                          nsContentUtils::GetContentPolicy());
 
   return NS_SUCCEEDED(rv) && NS_CP_ACCEPTED(shouldLoad);
 }

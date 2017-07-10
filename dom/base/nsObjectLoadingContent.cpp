@@ -1562,8 +1562,7 @@ nsObjectLoadingContent::CheckLoadPolicy(int16_t *aContentPolicy)
                                           mContentType,
                                           nullptr, //extra
                                           aContentPolicy,
-                                          nsContentUtils::GetContentPolicy(),
-                                          nsContentUtils::GetSecurityManager());
+                                          nsContentUtils::GetContentPolicy());
   NS_ENSURE_SUCCESS(rv, false);
   if (NS_CP_REJECTED(*aContentPolicy)) {
     LOG(("OBJLC [%p]: Content policy denied load of %s",
@@ -1616,8 +1615,7 @@ nsObjectLoadingContent::CheckProcessPolicy(int16_t *aContentPolicy)
                                  mContentType,
                                  nullptr, //extra
                                  aContentPolicy,
-                                 nsContentUtils::GetContentPolicy(),
-                                 nsContentUtils::GetSecurityManager());
+                                 nsContentUtils::GetContentPolicy());
   NS_ENSURE_SUCCESS(rv, false);
 
   if (NS_CP_REJECTED(*aContentPolicy)) {
