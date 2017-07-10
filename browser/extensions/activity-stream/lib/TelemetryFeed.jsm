@@ -55,8 +55,9 @@ this.TelemetryFeed = class TelemetryFeed {
    * addSession - Start tracking a new session
    *
    * @param  {string} id the portID of the open session
-   * @param  {number} absVisChangeTime absolute timestamp of
+   * @param  {number} absVisChangeTime Optional. Absolute timestamp of
    *                                   document.visibilityState becoming visible
+   * @return {obj}    Session object
    */
   addSession(id, absVisChangeTime) {
     // XXX note that there is a race condition here; we're assuming that no
@@ -78,25 +79,30 @@ this.TelemetryFeed = class TelemetryFeed {
     // introduce, rather than doing the correct by complicated thing.  It may
     // well be worth reexamining this hypothesis after we have more experience
     // with the data.
-    let absBrowserOpenTabStart =
-      perfService.getMostRecentAbsMarkStartByName("browser-open-newtab-start");
+    let absBrowserOpenTabStart;
+    try {
+      absBrowserOpenTabStart = perfService.getMostRecentAbsMarkStartByName("browser-open-newtab-start");
+    } catch (e) {
+      // Just use undefined so it doesn't get sent to the server
+    }
 
-    this.sessions.set(id, {
+    // If we're missing either starting timestamps, treat it as an unexpected
+    // session; otherwise, assume it's the usual behavior.
+    const triggerType = absBrowserOpenTabStart === undefined ||
+      absVisChangeTime === undefined ? "unexpected" : "menu_plus_or_keyboard";
+
+    const session = {
       start_time: Components.utils.now(),
       session_id: String(gUUIDGenerator.generateUUID()),
       page: "about:newtab", // TODO: Handle about:home here and in perf below
       perf: {
         load_trigger_ts: absBrowserOpenTabStart,
-        load_trigger_type: "menu_plus_or_keyboard",
+        load_trigger_type: triggerType,
         visibility_event_rcvd_ts: absVisChangeTime
       }
-    });
-
-    let duration = absVisChangeTime - absBrowserOpenTabStart;
-    this.store.dispatch({
-      type: at.TELEMETRY_PERFORMANCE_EVENT,
-      data: {visability_duration: duration}
-    });
+    };
+    this.sessions.set(id, session);
+    return session;
   }
 
   /**
@@ -133,7 +139,7 @@ this.TelemetryFeed = class TelemetryFeed {
 
     // If the ping is part of a user session, add session-related info
     if (portID) {
-      const session = this.sessions.get(portID);
+      const session = this.sessions.get(portID) || this.addSession(portID);
       Object.assign(ping, {
         session_id: session.session_id,
         page: session.page

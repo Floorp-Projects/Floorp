@@ -1,3 +1,6 @@
+os:
+  - linux
+  - osx
 language: rust
 rust:
   - stable
@@ -5,7 +8,8 @@ rust:
   - nightly
 sudo: false
 before_script:
-  - pip install 'travis-cargo<0.2' --user && export PATH=$HOME/.local/bin:$PATH
+  - pip install -v 'travis-cargo<0.2' --user && export PATH=$HOME/.local/bin:$PATH
+  - if [[ -e ~/Library/Python/2.7/bin ]]; then export PATH=~/Library/Python/2.7/bin:$PATH; fi
 script:
   - cargo build --verbose
   - cargo test --verbose
@@ -15,7 +19,8 @@ after_success:
   - travis-cargo --only nightly doc-upload
 env:
   global:
-    secure: "DoZ8g8iPs+X3xEEucke0Ae02JbkQ1qd1SSv/L2aQqxULmREtRcbzRauhiT+ToQO5Ft1Lul8uck14nPfs4gMr/O3jFFBhEBVpSlbkJx7eNL3kwUdp95UNroA8I43xPN/nccJaHDN6TMTD3+uajTQTje2SyzOQP+1gvdKg17kguvE="
+    - TRAVIS_CARGO_NIGHTLY_FEATURE=unstable_testing
+    - secure: "DoZ8g8iPs+X3xEEucke0Ae02JbkQ1qd1SSv/L2aQqxULmREtRcbzRauhiT+ToQO5Ft1Lul8uck14nPfs4gMr/O3jFFBhEBVpSlbkJx7eNL3kwUdp95UNroA8I43xPN/nccJaHDN6TMTD3+uajTQTje2SyzOQP+1gvdKg17kguvE="
 
 
 

@@ -18,10 +18,10 @@ use std::collections::hash_map::Entry;
 use std::collections::HashSet;
 use std::mem;
 use texture_cache::{TextureCacheItemId, TextureCache};
-use webrender_traits::FontTemplate;
-use webrender_traits::{FontKey, FontRenderMode, ImageData, ImageFormat};
-use webrender_traits::{ImageDescriptor, ColorF, LayoutPoint};
-use webrender_traits::{GlyphKey, GlyphOptions, GlyphInstance, GlyphDimensions};
+use api::FontTemplate;
+use api::{FontKey, FontRenderMode, ImageData, ImageFormat};
+use api::{ImageDescriptor, ColorF, LayoutPoint};
+use api::{GlyphKey, GlyphOptions, GlyphInstance, GlyphDimensions};
 
 pub type GlyphCache = ResourceClassCache<GlyphRequest, Option<TextureCacheItemId>>;
 
@@ -114,10 +114,10 @@ impl GlyphRasterizer {
                     workers: Arc::clone(&workers),
                 }
             ),
-            glyph_rx: glyph_rx,
-            glyph_tx: glyph_tx,
+            glyph_rx,
+            glyph_tx,
             pending_glyphs: HashSet::new(),
-            workers: workers,
+            workers,
             fonts_to_remove: Vec::new(),
         }
     }
@@ -337,8 +337,8 @@ impl GlyphRequest {
     ) -> GlyphRequest {
         GlyphRequest {
             key: GlyphKey::new(font_key, size, color, index, point, render_mode),
-            render_mode: render_mode,
-            glyph_options: glyph_options,
+            render_mode,
+            glyph_options,
         }
     }
 }
