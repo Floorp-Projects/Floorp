@@ -1,0 +1,130 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1222633
+-->
+<head>
+  <title>Test for Bug 1222633</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1222633">Mozilla Bug 1222633</a>
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 1222633 **/
+
+function testPreloadEvent(url, crossorigin, expectLoad) {
+  return new Promise((resolve) => {
+    var link = document.createElement("LINK");
+    link.setAttribute("rel", "preload");
+    link.setAttribute("href", url);
+    link.setAttribute("as", "fetch");
+    if (crossorigin) {
+      link.setAttribute("crossorigin", "");
+    }
+
+    link.addEventListener("load", () => {
+      ok(expectLoad, "not expecting load event for " + url);
+      link.remove();
+      resolve();
+    });
+    link.addEventListener("error", () => {
+      ok(!expectLoad, "not expecting error event for " + url);
+      link.remove();
+      resolve();
+    });
+    document.head.appendChild(link);
+  });
+}
+
+function testCancelPreloadNotCrash(url) {
+  var ios = SpecialPowers.Cc["@mozilla.org/network/io-service;1"].
+            getService(SpecialPowers.Ci.nsIIOService);
+  var prefetch = SpecialPowers.Cc["@mozilla.org/prefetch-service;1"].
+                   getService(SpecialPowers.Ci.nsIPrefetchService);
+
+  var link = document.createElement("LINK");
+  link.setAttribute("rel", "preload");
+  link.setAttribute("href", url);
+  link.setAttribute("as", "fetch");
+  document.head.appendChild(link);
+
+  // Not actually verifying any value, just to ensure cancelPrefetchPreload
+  // won't cause crash.
+  prefetch.cancelPrefetchPreloadURI(ios.newURI(url, null, null), link);
+}
+
+function testChangePrefetchToPreload(url) {
+  return new Promise((resolve) => {
+    var preloaded = false;
+    var link = document.createElement("LINK");
+    link.setAttribute("rel", "prefetch");
+    link.setAttribute("href", url);
+    link.setAttribute("as", "fetch");
+
+    link.addEventListener("load", () => {
+      ok(preloaded, "this will happen only on a preload");
+      ok(true, "not expecting load event for " + url);
+      link.remove();
+      resolve();
+    });
+    link.addEventListener("error", () => {
+      ok(false, "not expecting error event for " + url);
+      link.remove();
+      resolve();
+    });
+    document.head.appendChild(link);
+    preloaded = true;
+    link.setAttribute("rel", "preload");
+  })
+};
+
+const SJS_PATH = window.location.pathname.replace(/[^/]+$/, "file_bug1268962.sjs");
+const SAME_ORIGIN = "http://mochi.test:8888" + SJS_PATH;
+const CROSS_ORIGIN = "http://example.com" + SJS_PATH;
+
+SimpleTest.waitForExplicitFinish();
+
+// test same origin
+testPreloadEvent(SAME_ORIGIN + "?statusCode=200&cacheControl=no-cache", false, false)
+.then(() => testPreloadEvent(SAME_ORIGIN + "?statusCode=404&cacheControl=no-cache", false, false))
+.then(() => testPreloadEvent(SAME_ORIGIN + "?statusCode=200&cacheControl=max-age%3D120", false, true))
+.then(() => testPreloadEvent(SAME_ORIGIN + "?statusCode=404&cacheControl=max-age%3D120", false, false))
+
+// test cross origin without CORS
+.then(() => testPreloadEvent(CROSS_ORIGIN + "?statusCode=200&cacheControl=no-cache", false, true))
+.then(() => testPreloadEvent(CROSS_ORIGIN + "?statusCode=404&cacheControl=no-cache", false, true))
+.then(() => testPreloadEvent(CROSS_ORIGIN + "?statusCode=200&cacheControl=max-age%3D120", false, true))
+.then(() => testPreloadEvent(CROSS_ORIGIN + "?statusCode=404&cacheControl=max-age%3D120", false, true))
+
+// test cross origin by redirection without CORS
+.then(() => testPreloadEvent(SAME_ORIGIN + "?redirect=crossorigin&statusCode=200&cacheControl=no-cache", false, true))
+.then(() => testPreloadEvent(SAME_ORIGIN + "?redirect=crossorigin&statusCode=404&cacheControl=no-cache", false, true))
+.then(() => testPreloadEvent(SAME_ORIGIN + "?redirect=crossorigin&statusCode=200&cacheControl=max-age%3D120", false, true))
+.then(() => testPreloadEvent(SAME_ORIGIN + "?redirect=crossorigin&statusCode=404&cacheControl=max-age%3D120", false, true))
+
+// test cross origin with CORS request but no CORS response
+.then(() => testPreloadEvent(CROSS_ORIGIN + "?statusCode=200&cacheControl=no-cache", true, true))
+.then(() => testPreloadEvent(CROSS_ORIGIN + "?statusCode=404&cacheControl=no-cache", true, true))
+.then(() => testPreloadEvent(CROSS_ORIGIN + "?statusCode=200&cacheControl=max-age%3D120", true, true))
+.then(() => testPreloadEvent(CROSS_ORIGIN + "?statusCode=404&cacheControl=max-age%3D120", true, true))
+
+// test cross origin with CORS request and CORS response
+.then(() => testPreloadEvent(CROSS_ORIGIN + "?statusCode=200&cacheControl=no-cache&allowOrigin=*", true, false))
+.then(() => testPreloadEvent(CROSS_ORIGIN + "?statusCode=404&cacheControl=no-cache&allowOrigin=*", true, false))
+.then(() => testPreloadEvent(CROSS_ORIGIN + "?statusCode=200&cacheControl=max-age%3D120&allowOrigin=*", true, true))
+.then(() => testPreloadEvent(CROSS_ORIGIN + "?statusCode=404&cacheControl=max-age%3D120&allowOrigin=*", true, false))
+.then(() => testChangePrefetchToPreload(SAME_ORIGIN + "?statusCode=200&cacheControl=max-age%3D120", false, true))
+
+// test the crash issue: https://bugzilla.mozilla.org/show_bug.cgi?id=1294159
+.then(() => testCancelPreloadNotCrash(SAME_ORIGIN + "?statusCode=200&cacheControl=max-age%3D120"))
+
+.catch((err) => ok(false, "promise rejected: " + err))
+.then(() => SimpleTest.finish());
+
+</script>
+</body>
+</html>
