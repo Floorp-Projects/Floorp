@@ -157,7 +157,8 @@ MovableCellHasher<T>::hash(const Lookup& l)
     // into another runtime. The zone's uid lock will protect against multiple
     // workers doing this simultaneously.
     MOZ_ASSERT(CurrentThreadCanAccessZone(l->zoneFromAnyThread()) ||
-               l->zoneFromAnyThread()->isSelfHostingZone());
+               l->zoneFromAnyThread()->isSelfHostingZone() ||
+               CurrentThreadIsPerformingGC());
 
     return l->zoneFromAnyThread()->getHashCodeInfallible(l);
 }
