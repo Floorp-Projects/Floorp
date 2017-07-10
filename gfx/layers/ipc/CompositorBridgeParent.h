@@ -111,7 +111,6 @@ public:
                                  const TimeStamp& aTime) { return true; }
   virtual void LeaveTestMode(const uint64_t& aId) { }
   virtual void ApplyAsyncProperties(LayerTransactionParent* aLayerTree) = 0;
-  virtual CompositorAnimationStorage* GetAnimationStorage(const uint64_t& aId) { return nullptr; }
   virtual void FlushApzRepaints(const uint64_t& aLayersId) = 0;
   virtual void GetAPZTestData(const uint64_t& aLayersId,
                               APZTestData* aOutData) { }
@@ -238,7 +237,7 @@ public:
   virtual void LeaveTestMode(const uint64_t& aId) override;
   virtual void ApplyAsyncProperties(LayerTransactionParent* aLayerTree)
                override;
-  virtual CompositorAnimationStorage* GetAnimationStorage(const uint64_t& aId) override;
+  CompositorAnimationStorage* GetAnimationStorage();
   virtual void FlushApzRepaints(const uint64_t& aLayersId) override;
   virtual void GetAPZTestData(const uint64_t& aLayersId,
                               APZTestData* aOutData) override;

@@ -1374,9 +1374,8 @@ AsyncCompositionManager::TransformShadowTree(TimeStamp aCurrentFrame,
     return false;
   }
 
-  // GetAnimationStorage in CompositorBridgeParent expects id as 0
   CompositorAnimationStorage* storage =
-    mCompositorBridge->GetAnimationStorage(0);
+    mCompositorBridge->GetAnimationStorage();
   // First, compute and set the shadow transforms from OMT animations.
   // NB: we must sample animations *before* sampling pan/zoom
   // transforms.

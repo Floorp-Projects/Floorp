@@ -1335,10 +1335,8 @@ CompositorBridgeParent::ApplyAsyncProperties(LayerTransactionParent* aLayerTree)
 }
 
 CompositorAnimationStorage*
-CompositorBridgeParent::GetAnimationStorage(const uint64_t& aId)
+CompositorBridgeParent::GetAnimationStorage()
 {
-  MOZ_ASSERT(aId == 0);
-
   if (!mAnimationStorage) {
     mAnimationStorage = new CompositorAnimationStorage();
   }
@@ -1528,7 +1526,7 @@ CompositorBridgeParent::AllocPLayerTransactionParent(const nsTArray<LayersBacken
 
   mCompositionManager = new AsyncCompositionManager(this, mLayerManager);
 
-  LayerTransactionParent* p = new LayerTransactionParent(mLayerManager, this, GetAnimationStorage(0), 0);
+  LayerTransactionParent* p = new LayerTransactionParent(mLayerManager, this, GetAnimationStorage(), 0);
   p->AddIPDLReference();
   return p;
 }
@@ -1650,7 +1648,7 @@ CompositorBridgeParent::RecvAdoptChild(const uint64_t& child)
     MOZ_ASSERT(sIndirectLayerTrees[child].mParent->mOptions == mOptions);
     NotifyChildCreated(child);
     if (sIndirectLayerTrees[child].mLayerTree) {
-      sIndirectLayerTrees[child].mLayerTree->SetLayerManager(mLayerManager, GetAnimationStorage(0));
+      sIndirectLayerTrees[child].mLayerTree->SetLayerManager(mLayerManager, GetAnimationStorage());
       // Trigger composition to handle a case that mLayerTree was not composited yet
       // by previous CompositorBridgeParent, since nsRefreshDriver might wait composition complete.
       ScheduleComposition();
@@ -1659,7 +1657,7 @@ CompositorBridgeParent::RecvAdoptChild(const uint64_t& child)
       sIndirectLayerTrees[child].mWrBridge->UpdateWebRender(mWrBridge->CompositorScheduler(),
                                                             mWrBridge->GetWebRenderAPI(),
                                                             mWrBridge->CompositableHolder(),
-                                                            GetAnimationStorage(0));
+                                                            GetAnimationStorage());
       // Pretend we composited, since parent CompositorBridgeParent was replaced.
       CrossProcessCompositorBridgeParent* cpcp = sIndirectLayerTrees[child].mCrossProcessParent;
       if (cpcp) {
@@ -1701,7 +1699,7 @@ CompositorBridgeParent::AllocPWebRenderBridgeParent(const wr::PipelineId& aPipel
     new WebRenderCompositableHolder(WebRenderBridgeParent::AllocIdNameSpace());
   MOZ_ASSERT(api); // TODO have a fallback
   api->SetRootPipeline(aPipelineId);
-  RefPtr<CompositorAnimationStorage> animStorage = GetAnimationStorage(0);
+  RefPtr<CompositorAnimationStorage> animStorage = GetAnimationStorage();
   mWrBridge = new WebRenderBridgeParent(this, aPipelineId, mWidget, nullptr, Move(api), Move(holder), Move(animStorage));
   *aIdNamespace = mWrBridge->GetIdNameSpace();
 
