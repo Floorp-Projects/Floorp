@@ -77,29 +77,6 @@ class ServoStyleSet
   typedef ServoElementSnapshotTable SnapshotTable;
 
 public:
-  class AutoAllowStaleStyles
-  {
-  public:
-    explicit AutoAllowStaleStyles(ServoStyleSet* aStyleSet)
-      : mStyleSet(aStyleSet)
-    {
-      if (mStyleSet) {
-        MOZ_ASSERT(!mStyleSet->mAllowResolveStaleStyles);
-        mStyleSet->mAllowResolveStaleStyles = true;
-      }
-    }
-
-    ~AutoAllowStaleStyles()
-    {
-      if (mStyleSet) {
-        mStyleSet->mAllowResolveStaleStyles = false;
-      }
-    }
-
-  private:
-    ServoStyleSet* mStyleSet;
-  };
-
   static bool IsInServoTraversal()
   {
     // The callers of this function are generally main-thread-only _except_
@@ -603,7 +580,6 @@ private:
   UniquePtr<RawServoStyleSet> mRawSet;
   EnumeratedArray<SheetType, SheetType::Count,
                   nsTArray<RefPtr<ServoStyleSheet>>> mSheets;
-  bool mAllowResolveStaleStyles;
   bool mAuthorStyleDisabled;
   StylistState mStylistState;
   uint64_t mUserFontSetUpdateGeneration;
