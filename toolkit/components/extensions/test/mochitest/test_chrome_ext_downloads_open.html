@@ -56,6 +56,10 @@ add_task(async function test_downloads_open_requires_user_interaction() {
 });
 
 add_task(async function downloads_open_invalid_id() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["extensions.webextensions.remote", false]],
+  });
+
   async function pageScript() {
     window.addEventListener("keypress", async function handler() {
       try {

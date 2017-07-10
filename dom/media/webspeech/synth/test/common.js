@@ -58,7 +58,7 @@ function loadFrame(frameId) {
       frame.contentWindow.document.title = frameId;
       resolve(frame);
     });
-    frame.src = 'data:text/html,' + encodeURI('<html><head></head><body></body></html>');
+    frame.src = 'about:blank';
   });
 }
 

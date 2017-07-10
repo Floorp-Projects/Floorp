@@ -171,26 +171,6 @@ RenderThread::NewFrameReady(wr::WindowId aWindowId)
 }
 
 void
-RenderThread::NewScrollFrameReady(wr::WindowId aWindowId, bool aCompositeNeeded)
-{
-  if (mHasShutdown) {
-    return;
-  }
-
-  if (!IsInRenderThread()) {
-    Loop()->PostTask(NewRunnableMethod<wr::WindowId, bool>(
-      "wr::RenderThread::NewScrollFrameReady",
-      this,
-      &RenderThread::NewScrollFrameReady,
-      aWindowId,
-      aCompositeNeeded));
-    return;
-  }
-
-  UpdateAndRender(aWindowId);
-}
-
-void
 RenderThread::RunEvent(wr::WindowId aWindowId, UniquePtr<RendererEvent> aEvent)
 {
   if (!IsInRenderThread()) {
@@ -404,8 +384,10 @@ void wr_notifier_new_frame_ready(WrWindowId aWindowId)
 
 void wr_notifier_new_scroll_frame_ready(WrWindowId aWindowId, bool aCompositeNeeded)
 {
-  mozilla::wr::RenderThread::Get()->NewScrollFrameReady(mozilla::wr::WindowId(aWindowId),
-                                                        aCompositeNeeded);
+  // It is not necessary to update rendering with new_scroll_frame_ready.
+  // WebRenderBridgeParent::CompositeToTarget() is implemented to call
+  // WebRenderAPI::GenerateFrame() if it is necessary to trigger UpdateAndRender().
+  // See Bug 1377688.
 }
 
 void wr_notifier_external_event(WrWindowId aWindowId, size_t aRawEvent)

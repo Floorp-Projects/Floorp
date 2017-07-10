@@ -32,12 +32,14 @@ add_task(async function test_request_permissions_without_prompt() {
   await extension.startup();
 
   let url = await extension.awaitMessage("ready");
-  let win = window.open(url);
-  await extension.awaitMessage("pageReady");
 
-  let winutils = SpecialPowers.getDOMWindowUtils(win);
-  winutils.sendKeyEvent("keypress", KeyEvent.DOM_VK_A, 0, 0);
-  await extension.awaitMessage("permsGranted");
+  await BrowserTestUtils.withNewTab({gBrowser, url}, async browser => {
+    await extension.awaitMessage("pageReady");
+
+    await BrowserTestUtils.synthesizeKey("a", {}, browser);
+
+    await extension.awaitMessage("permsGranted");
+  });
 
   await extension.unload();
 });

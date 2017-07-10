@@ -8199,10 +8199,12 @@ class MRegExp : public MNullaryInstruction
 {
     CompilerGCPointer<RegExpObject*> source_;
     bool mustClone_;
+    bool hasShared_;
 
-    MRegExp(CompilerConstraintList* constraints, RegExpObject* source)
+    MRegExp(CompilerConstraintList* constraints, RegExpObject* source, bool hasShared)
       : source_(source),
-        mustClone_(true)
+        mustClone_(true),
+        hasShared_(hasShared)
     {
         setResultType(MIRType::Object);
         setResultTypeSet(MakeSingletonTypeSet(constraints, source));
@@ -8217,6 +8219,9 @@ class MRegExp : public MNullaryInstruction
     }
     bool mustClone() const {
         return mustClone_;
+    }
+    bool hasShared() const {
+        return hasShared_;
     }
     RegExpObject* source() const {
         return source_;

@@ -157,7 +157,8 @@ function makeTest(manifestPermissions, optionalPermissions, checkFetch = true) {
 add_task(function setup() {
   // Don't bother with prompts in this test.
   return SpecialPowers.pushPrefEnv({
-    set: [["extensions.webextOptionalPermissionPrompts", false]],
+    set: [["extensions.webextensions.remote", false],
+          ["extensions.webextOptionalPermissionPrompts", false]],
   });
 });
 

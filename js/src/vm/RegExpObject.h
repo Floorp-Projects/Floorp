@@ -155,6 +155,11 @@ class RegExpObject : public NativeObject
         sharedRef().init(&shared);
     }
 
+    PreBarriered<RegExpShared*>& sharedRef() {
+        auto& ref = NativeObject::privateRef(PRIVATE_SLOT);
+        return reinterpret_cast<PreBarriered<RegExpShared*>&>(ref);
+    }
+
     static void trace(JSTracer* trc, JSObject* obj);
     void trace(JSTracer* trc);
 
@@ -177,11 +182,6 @@ class RegExpObject : public NativeObject
      */
     static MOZ_MUST_USE bool createShared(JSContext* cx, Handle<RegExpObject*> regexp,
                                           MutableHandleRegExpShared shared);
-
-    PreBarriered<RegExpShared*>& sharedRef() {
-        auto& ref = NativeObject::privateRef(PRIVATE_SLOT);
-        return reinterpret_cast<PreBarriered<RegExpShared*>&>(ref);
-    }
 
     /* Call setShared in preference to setPrivate. */
     void setPrivate(void* priv) = delete;
