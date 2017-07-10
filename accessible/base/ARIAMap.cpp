@@ -133,14 +133,14 @@ static const nsRoleMapEntry sWAIRoleMaps[] =
     eARIASelectableIfDefined,
     eARIAReadonlyOrEditableIfDefined
   },
-  { // combobox, which consists of text input and popup
+  { // combobox
     &nsGkAtoms::combobox,
-    roles::EDITCOMBOBOX,
+    roles::COMBOBOX,
     kUseMapRole,
     eNoValue,
     eOpenCloseAction,
     eNoLiveAttr,
-    eCombobox,
+    kGenericAccType,
     states::COLLAPSED | states::HASPOPUP,
     eARIAAutoComplete,
     eARIAReadonly,
