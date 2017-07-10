@@ -29,8 +29,8 @@ function finish(v) {
 
 function onload() {
   info("iframe loaded");
-  var v = document.body.getElementsByTagName("iframe")[0]
-                  .contentDocument.body.getElementsByTagName("video")[0];
+  var v = SpecialPowers.wrap(document.body.getElementsByTagName("iframe")[0])
+                       .contentDocument.body.getElementsByTagName("video")[0];
 
   // Got 'error' as expected, finish the test.
   if (v.error) {

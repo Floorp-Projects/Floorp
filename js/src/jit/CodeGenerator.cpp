@@ -1141,8 +1141,17 @@ static const VMFunction CloneRegExpObjectInfo =
 void
 CodeGenerator::visitRegExp(LRegExp* lir)
 {
-    pushArg(ImmGCPtr(lir->mir()->source()));
-    callVM(CloneRegExpObjectInfo, lir);
+    Register output = ToRegister(lir->output());
+    Register temp = ToRegister(lir->temp());
+    JSObject* templateObject = lir->mir()->source();
+
+    OutOfLineCode *ool = oolCallVM(CloneRegExpObjectInfo, lir, ArgList(ImmGCPtr(lir->mir()->source())),
+                                   StoreRegisterTo(output));
+    if (lir->mir()->hasShared())
+        masm.createGCObject(output, temp, templateObject, gc::DefaultHeap, ool->entry());
+    else
+        masm.jump(ool->entry());
+    masm.bind(ool->rejoin());
 }
 
 // Amount of space to reserve on the stack when executing RegExps inline.
