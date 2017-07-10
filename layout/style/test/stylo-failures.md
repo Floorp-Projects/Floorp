@@ -62,9 +62,6 @@ to mochitest command.
     * test_system_font_serialization.html [3]
   * different serialization for gradient functions in computed value bug 1367274
     * test_computed_style.html `gradient` [13]
-* Unsupported pseudo-elements or anon boxes
-  * :-moz-tree bits bug 1348488
-    * test_selectors.html `:-moz-tree` [10]
 * Unit should be preserved after parsing servo/servo#15346
   * test_units_time.html [1]
 * getComputedStyle style doesn't contain custom properties bug 1336891
