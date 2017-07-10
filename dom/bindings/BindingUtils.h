@@ -281,7 +281,13 @@ UnwrapObjectInternal(V& obj, U& value, prototypes::ID protoID,
   // Recursive call is OK, because now we're using false for mayBeWrapper and
   // we never reach this code if that boolean is false, so can't keep calling
   // ourselves.
-  nsresult rv = UnwrapObjectInternal<T, false>(unwrappedObj, value,
+  //
+  // Unwrap into a temporary pointer, because in general unwrapping into
+  // something of type U might trigger GC (e.g. release the value currently
+  // stored in there, with arbitrary consequences) and invalidate the
+  // "unwrappedObj" pointer.
+  T* tempValue;
+  nsresult rv = UnwrapObjectInternal<T, false>(unwrappedObj, tempValue,
                                                protoID, protoDepth);
   if (NS_SUCCEEDED(rv)) {
     // It's very important to not update "obj" with the "unwrappedObj" value
@@ -290,6 +296,9 @@ UnwrapObjectInternal(V& obj, U& value, prototypes::ID protoID,
     // converting to the primitive from the unwrappedObj, whereas we want to do
     // it from the original object.
     obj = unwrappedObj;
+    // And now assign to "value"; at this point we don't care if a GC happens
+    // and invalidates unwrappedObj.
+    value = tempValue;
     return NS_OK;
   }
 
