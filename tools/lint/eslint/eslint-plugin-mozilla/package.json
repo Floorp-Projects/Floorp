@@ -28,6 +28,7 @@
     "sax": "^1.2.2"
   },
   "devDependencies": {
+    "eslint": "^4.2.0",
     "mocha": "3.2.0"
   },
   "peerDependencies": {
@@ -39,7 +40,7 @@
   },
   "scripts": {
     "prepack": "node scripts/createExports.js",
-    "test": "mocha -R dot tests",
+    "test": "mocha -R dot --reporter 'reporters/mozilla-format.js' tests",
     "postpublish": "rm -f lib/modules.json lib/environments/saved-globals.json"
   },
   "license": "MPL-2.0"
