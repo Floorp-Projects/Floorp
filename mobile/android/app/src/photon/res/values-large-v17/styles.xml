@@ -73,6 +73,8 @@
     <style name="UrlBar.V17.DisplayLayout" parent="UrlBar.Base.DisplayLayout">
         <item name="android:layout_toStartOf">@id/menu_items</item>
         <item name="android:layout_toEndOf">@id/back</item>
+        <item name="android:paddingStart">0dip</item>
+        <item name="android:paddingEnd">4dip</item>
     </style>
 
     <style name="UrlBar.EditCancel" parent="UrlBar.V17.EditCancel" />

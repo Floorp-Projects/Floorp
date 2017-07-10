@@ -429,7 +429,7 @@
     </style>
 
     <style name="TextAppearance.UrlBar.Title" parent="TextAppearance.Small">
-        <item name="android:textSize">16sp</item>
+        <item name="android:textSize">15sp</item>
     </style>
 
     <!-- BrowserToolbar -->
@@ -452,11 +452,12 @@
         <item name="android:background">@android:color/transparent</item>
     </style>
 
+    <!-- URL bar - Button -->
     <style name="UrlBar.Title" parent="UrlBar.Button">
         <item name="android:textAppearance">@style/TextAppearance.UrlBar.Title</item>
         <item name="android:textColor">@color/url_bar_title</item>
         <item name="android:textColorHint">@color/url_bar_title_hint</item>
-        <item name="android:textColorHighlight">@color/url_bar_title_highlight</item>
+        <item name="android:textColorHighlight">@color/fennec_ui_orange</item>
         <item name="android:textSelectHandle">@drawable/handle_middle</item>
         <item name="android:textSelectHandleLeft">@drawable/handle_start</item>
         <item name="android:textSelectHandleRight">@drawable/handle_end</item>
@@ -471,12 +472,10 @@
         <item name="android:scaleType">center</item>
         <item name="android:layout_gravity">center_vertical</item>
         <item name="android:background">@android:color/transparent</item>
-        <item name="drawableTintList">@color/url_bar_image_color</item>
     </style>
 
     <style name="UrlBar.ImageButton" parent="UrlBar.ImageButtonBase">
-        <item name="android:layout_height">match_parent</item>
-        <item name="android:layout_width">@dimen/browser_toolbar_image_button_width</item>
+        <item name="android:layout_width">@dimen/browser_toolbar_height</item>
     </style>
 
     <!-- TabsLayout -->
@@ -802,23 +801,11 @@
         <item name="android:textColor">@android:color/white</item>
     </style>
 
-    <!-- URL bar - Site identity -->
-    <style name="UrlBar.SiteIdentity" parent="UrlBar.V15.SiteIdentity"/>
-    <style name="UrlBar.Base.SiteIdentity" parent="UrlBar.Button">
-        <item name="android:layout_width">35dp</item>
-        <item name="android:layout_height">@dimen/browser_toolbar_height</item>
-        <item name="android:scaleType">fitCenter</item>
-    </style>
-    <style name="UrlBar.V15.SiteIdentity" parent="UrlBar.Base.SiteIdentity">
-        <item name="android:layout_marginLeft">5dp</item>
-        <item name="android:paddingLeft">5.5dp</item>
-        <item name="android:paddingRight">5.5dp</item>
-    </style>
-
     <style name="UrlBar.Entry" parent="UrlBar.V15.Entry"/>
     <style name="UrlBar.Base.Entry" parent="UrlBar.Button"/>
     <style name="UrlBar.V15.Entry" parent="UrlBar.Base.Entry">
-        <item name="android:layout_marginLeft">5dp</item>
+        <item name="android:layout_marginLeft">8dp</item>
+        <item name="android:layout_marginRight">-6dp</item>
         <item name="android:layout_toLeftOf">@+id/tabs</item>
     </style>
 
@@ -844,7 +831,7 @@
     <style name="UrlBar.TabCounter" parent="UrlBar.V15.TabCounter"/>
     <style name="UrlBar.Base.TabCounter" parent="UrlBar.ImageButton"/>
     <style name="UrlBar.V15.TabCounter" parent="UrlBar.Base.TabCounter">
-        <item name="android:layout_alignTop">@id/tabs</item>
+        <item name="android:layout_marginRight">8dip</item>
         <item name="android:layout_alignRight">@id/tabs</item>
     </style>
 
@@ -869,6 +856,8 @@
     <style name="UrlBar.V15.DisplayLayout" parent="UrlBar.Base.DisplayLayout">
         <item name="android:layout_alignLeft">@id/url_bar_entry</item>
         <item name="android:layout_alignRight">@id/url_bar_entry</item>
+        <item name="android:paddingLeft">1dip</item>
+        <item name="android:paddingRight">4dip</item>
     </style>
 
 </resources>

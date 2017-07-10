@@ -181,6 +181,8 @@
     <style name="UrlBar.V15.DisplayLayout" parent="UrlBar.Base.DisplayLayout">
         <item name="android:layout_toLeftOf">@id/menu_items</item>
         <item name="android:layout_toRightOf">@id/back</item>
+        <item name="android:paddingLeft">0dip</item>
+        <item name="android:paddingRight">4dip</item>
     </style>
 
     <style name="UrlBar.EditCancel" parent="UrlBar.V15.EditCancel" />
