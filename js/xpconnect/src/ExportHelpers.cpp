@@ -150,8 +150,9 @@ public:
                             JS::Handle<JSObject*> aObj)
     {
         {
+            JS::Rooted<JSObject*> obj(aCx, aObj);
             Blob* blob = nullptr;
-            if (NS_SUCCEEDED(UNWRAP_OBJECT(Blob, aObj, blob))) {
+            if (NS_SUCCEEDED(UNWRAP_OBJECT(Blob, &obj, blob))) {
                 BlobImpl* blobImpl = blob->Impl();
                 MOZ_ASSERT(blobImpl);
 

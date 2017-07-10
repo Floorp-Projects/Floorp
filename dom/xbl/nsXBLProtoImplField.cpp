@@ -415,8 +415,10 @@ nsXBLProtoImplField::InstallField(JS::Handle<JSObject*> aBoundNode,
 
   JSAddonId* addonId = MapURIToAddonID(aBindingDocURI);
 
+  // Note: the UNWRAP_OBJECT may mutate boundNode; don't use it after that call.
+  JS::Rooted<JSObject*> boundNode(jsapi.cx(), aBoundNode);
   Element* boundElement = nullptr;
-  rv = UNWRAP_OBJECT(Element, aBoundNode, boundElement);
+  rv = UNWRAP_OBJECT(Element, &boundNode, boundElement);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }

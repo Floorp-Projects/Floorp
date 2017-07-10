@@ -446,10 +446,12 @@ StructuredCloneHolder::WriteFullySerializableObjects(JSContext* aCx,
                                                      JSStructuredCloneWriter* aWriter,
                                                      JS::Handle<JSObject*> aObj)
 {
+  JS::Rooted<JSObject*> obj(aCx, aObj);
+
   // See if this is a ImageData object.
   {
     ImageData* imageData = nullptr;
-    if (NS_SUCCEEDED(UNWRAP_OBJECT(ImageData, aObj, imageData))) {
+    if (NS_SUCCEEDED(UNWRAP_OBJECT(ImageData, &obj, imageData))) {
       return WriteStructuredCloneImageData(aCx, aWriter, imageData);
     }
   }
@@ -457,7 +459,7 @@ StructuredCloneHolder::WriteFullySerializableObjects(JSContext* aCx,
   // Handle URLSearchParams cloning
   {
     URLSearchParams* usp = nullptr;
-    if (NS_SUCCEEDED(UNWRAP_OBJECT(URLSearchParams, aObj, usp))) {
+    if (NS_SUCCEEDED(UNWRAP_OBJECT(URLSearchParams, &obj, usp))) {
       return JS_WriteUint32Pair(aWriter, SCTAG_DOM_URLSEARCHPARAMS, 0) &&
              usp->WriteStructuredClone(aWriter);
     }
@@ -466,7 +468,7 @@ StructuredCloneHolder::WriteFullySerializableObjects(JSContext* aCx,
   // Handle Key cloning
   {
     CryptoKey* key = nullptr;
-    if (NS_SUCCEEDED(UNWRAP_OBJECT(CryptoKey, aObj, key))) {
+    if (NS_SUCCEEDED(UNWRAP_OBJECT(CryptoKey, &obj, key))) {
       return JS_WriteUint32Pair(aWriter, SCTAG_DOM_WEBCRYPTO_KEY, 0) &&
              key->WriteStructuredClone(aWriter);
     }
@@ -476,7 +478,7 @@ StructuredCloneHolder::WriteFullySerializableObjects(JSContext* aCx,
   {
     // Handle WebRTC Certificate cloning
     RTCCertificate* cert = nullptr;
-    if (NS_SUCCEEDED(UNWRAP_OBJECT(RTCCertificate, aObj, cert))) {
+    if (NS_SUCCEEDED(UNWRAP_OBJECT(RTCCertificate, &obj, cert))) {
       MOZ_ASSERT(NS_IsMainThread());
       return JS_WriteUint32Pair(aWriter, SCTAG_DOM_RTC_CERTIFICATE, 0) &&
              cert->WriteStructuredClone(aWriter);
@@ -484,8 +486,8 @@ StructuredCloneHolder::WriteFullySerializableObjects(JSContext* aCx,
   }
 #endif
 
-  if (NS_IsMainThread() && xpc::IsReflector(aObj)) {
-    nsCOMPtr<nsISupports> base = xpc::UnwrapReflectorToISupports(aObj);
+  if (NS_IsMainThread() && xpc::IsReflector(obj)) {
+    nsCOMPtr<nsISupports> base = xpc::UnwrapReflectorToISupports(obj);
     nsCOMPtr<nsIPrincipal> principal = do_QueryInterface(base);
     if (principal) {
       auto nsjsprincipals = nsJSPrincipals::get(principal);
@@ -1011,10 +1013,12 @@ StructuredCloneHolder::CustomWriteHandler(JSContext* aCx,
     return false;
   }
 
+  JS::Rooted<JSObject*> obj(aCx, aObj);
+
   // See if this is a File/Blob object.
   {
     Blob* blob = nullptr;
-    if (NS_SUCCEEDED(UNWRAP_OBJECT(Blob, aObj, blob))) {
+    if (NS_SUCCEEDED(UNWRAP_OBJECT(Blob, &obj, blob))) {
       return WriteBlob(aWriter, blob, this);
     }
   }
@@ -1022,7 +1026,7 @@ StructuredCloneHolder::CustomWriteHandler(JSContext* aCx,
   // See if this is a Directory object.
   {
     Directory* directory = nullptr;
-    if (NS_SUCCEEDED(UNWRAP_OBJECT(Directory, aObj, directory))) {
+    if (NS_SUCCEEDED(UNWRAP_OBJECT(Directory, &obj, directory))) {
       return WriteDirectory(aWriter, directory);
     }
   }
@@ -1030,7 +1034,7 @@ StructuredCloneHolder::CustomWriteHandler(JSContext* aCx,
   // See if this is a FileList object.
   {
     FileList* fileList = nullptr;
-    if (NS_SUCCEEDED(UNWRAP_OBJECT(FileList, aObj, fileList))) {
+    if (NS_SUCCEEDED(UNWRAP_OBJECT(FileList, &obj, fileList))) {
       return WriteFileList(aWriter, fileList, this);
     }
   }
@@ -1038,7 +1042,7 @@ StructuredCloneHolder::CustomWriteHandler(JSContext* aCx,
   // See if this is a FormData object.
   {
     FormData* formData = nullptr;
-    if (NS_SUCCEEDED(UNWRAP_OBJECT(FormData, aObj, formData))) {
+    if (NS_SUCCEEDED(UNWRAP_OBJECT(FormData, &obj, formData))) {
       return WriteFormData(aWriter, formData, this);
     }
   }
@@ -1047,7 +1051,7 @@ StructuredCloneHolder::CustomWriteHandler(JSContext* aCx,
   if (mStructuredCloneScope == StructuredCloneScope::SameProcessSameThread ||
       mStructuredCloneScope == StructuredCloneScope::SameProcessDifferentThread) {
     ImageBitmap* imageBitmap = nullptr;
-    if (NS_SUCCEEDED(UNWRAP_OBJECT(ImageBitmap, aObj, imageBitmap))) {
+    if (NS_SUCCEEDED(UNWRAP_OBJECT(ImageBitmap, &obj, imageBitmap))) {
       return ImageBitmap::WriteStructuredClone(aWriter,
                                                GetSurfaces(),
                                                imageBitmap);
@@ -1057,7 +1061,7 @@ StructuredCloneHolder::CustomWriteHandler(JSContext* aCx,
   // See if this is a StructuredCloneBlob object.
   {
     StructuredCloneBlob* holder = nullptr;
-    if (NS_SUCCEEDED(UNWRAP_OBJECT(StructuredCloneHolder, aObj, holder))) {
+    if (NS_SUCCEEDED(UNWRAP_OBJECT(StructuredCloneHolder, &obj, holder))) {
       return holder->WriteStructuredClone(aCx, aWriter, this);
     }
   }
@@ -1065,8 +1069,8 @@ StructuredCloneHolder::CustomWriteHandler(JSContext* aCx,
   // See if this is a WasmModule.
   if ((mStructuredCloneScope == StructuredCloneScope::SameProcessSameThread ||
        mStructuredCloneScope == StructuredCloneScope::SameProcessDifferentThread) &&
-      JS::IsWasmModuleObject(aObj)) {
-    RefPtr<JS::WasmModule> module = JS::GetWasmModule(aObj);
+      JS::IsWasmModuleObject(obj)) {
+    RefPtr<JS::WasmModule> module = JS::GetWasmModule(obj);
     MOZ_ASSERT(module);
 
     return WriteWasmModule(aWriter, module, this);
@@ -1174,9 +1178,11 @@ StructuredCloneHolder::CustomWriteTransferHandler(JSContext* aCx,
     return false;
   }
 
+  JS::Rooted<JSObject*> obj(aCx, aObj);
+
   {
     MessagePort* port = nullptr;
-    nsresult rv = UNWRAP_OBJECT(MessagePort, aObj, port);
+    nsresult rv = UNWRAP_OBJECT(MessagePort, &obj, port);
     if (NS_SUCCEEDED(rv)) {
       // We use aExtraData to store the index of this new port identifier.
       *aExtraData = mPortIdentifiers.Length();
@@ -1194,7 +1200,7 @@ StructuredCloneHolder::CustomWriteTransferHandler(JSContext* aCx,
     if (mStructuredCloneScope == StructuredCloneScope::SameProcessSameThread ||
         mStructuredCloneScope == StructuredCloneScope::SameProcessDifferentThread) {
       OffscreenCanvas* canvas = nullptr;
-      rv = UNWRAP_OBJECT(OffscreenCanvas, aObj, canvas);
+      rv = UNWRAP_OBJECT(OffscreenCanvas, &obj, canvas);
       if (NS_SUCCEEDED(rv)) {
         MOZ_ASSERT(canvas);
 
@@ -1209,7 +1215,7 @@ StructuredCloneHolder::CustomWriteTransferHandler(JSContext* aCx,
       }
 
       ImageBitmap* bitmap = nullptr;
-      rv = UNWRAP_OBJECT(ImageBitmap, aObj, bitmap);
+      rv = UNWRAP_OBJECT(ImageBitmap, &obj, bitmap);
       if (NS_SUCCEEDED(rv)) {
         MOZ_ASSERT(bitmap);
 

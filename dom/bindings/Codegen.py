@@ -4353,18 +4353,16 @@ class CastableObjectUnwrapper():
                     $*{codeOnFailure}
                   }
                 }
-                JS::Rooted<JS::Value> maybeUncheckedVal(cx, JS::ObjectValue(*maybeUncheckedObj));
                 """,
                 codeOnFailure=(codeOnFailure % { 'securityError': 'true'}))
-            self.substitution["source"] = "maybeUncheckedVal"
-            self.substitution["mutableSource"] = "&maybeUncheckedVal"
+            self.substitution["source"] = "maybeUncheckedObj"
+            self.substitution["mutableSource"] = "&maybeUncheckedObj"
             xpconnectUnwrap = dedent("""
                 nsresult rv;
                 { // Scope for the JSAutoCompartment, because we only
                   // want to be in that compartment for the UnwrapArg call.
-                  JS::Rooted<JSObject*> source(cx, &${source}.toObject());
-                  JSAutoCompartment ac(cx, source);
-                  rv = UnwrapArg<${type}>(cx, source, getter_AddRefs(objPtr));
+                  JSAutoCompartment ac(cx, ${source});
+                  rv = UnwrapArg<${type}>(cx, ${source}, getter_AddRefs(objPtr));
                 }
                 """)
         else:
@@ -4425,7 +4423,7 @@ class CastableObjectUnwrapper():
             $*{uncheckedObjDecl}
             {
               $*{uncheckedObjGet}
-              nsresult rv = UnwrapObject<${protoID}, ${type}>(&${source}.toObject(), ${target});
+              nsresult rv = UnwrapObject<${protoID}, ${type}>(${mutableSource}, ${target});
               if (NS_FAILED(rv)) {
                 $*{codeOnFailure}
               }
