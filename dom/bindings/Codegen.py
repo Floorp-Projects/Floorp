@@ -4337,6 +4337,14 @@ class CastableObjectUnwrapper():
             "target": target,
             "codeOnFailure": codeOnFailure,
         }
+        # Supporting both the "cross origin object" case and the "has
+        # XPConnect impls" case at the same time is a pain, so let's
+        # not do that.  That allows us to assume that our source is
+        # always a Handle or MutableHandle.
+        if allowCrossOriginObj and descriptor.hasXPConnectImpls:
+            raise TypeError("Interface %s both allows a cross-origin 'this' "
+                            "and has XPConnect impls.  We don't support that" %
+                            descriptor.name)
         if allowCrossOriginObj:
             self.substitution["uncheckedObjDecl"] = fill(
                 """
@@ -4357,22 +4365,15 @@ class CastableObjectUnwrapper():
                 codeOnFailure=(codeOnFailure % { 'securityError': 'true'}))
             self.substitution["source"] = "maybeUncheckedObj"
             self.substitution["mutableSource"] = "&maybeUncheckedObj"
-            xpconnectUnwrap = dedent("""
-                nsresult rv;
-                { // Scope for the JSAutoCompartment, because we only
-                  // want to be in that compartment for the UnwrapArg call.
-                  JSAutoCompartment ac(cx, ${source});
-                  rv = UnwrapArg<${type}>(cx, ${source}, getter_AddRefs(objPtr));
-                }
-                """)
+            # No need to set up xpconnectUnwrap, since it won't be
+            # used in the allowCrossOriginObj case.
         else:
             self.substitution["uncheckedObjDecl"] = ""
             self.substitution["uncheckedObjGet"] = ""
             self.substitution["source"] = source
             self.substitution["mutableSource"] = mutableSource
             xpconnectUnwrap = (
-                "JS::Rooted<JSObject*> source(cx, &${source}.toObject());\n"
-                "nsresult rv = UnwrapArg<${type}>(cx, source, getter_AddRefs(objPtr));\n")
+                "nsresult rv = UnwrapXPConnect<${type}>(cx, ${mutableSource}, getter_AddRefs(objPtr));\n")
 
         if descriptor.hasXPConnectImpls:
             self.substitution["codeOnFailure"] = string.Template(

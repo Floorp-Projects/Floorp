@@ -60,7 +60,8 @@ nsresult
 UnwrapWindowProxyImpl(JSContext* cx, JS::Handle<JSObject*> src,
                       nsPIDOMWindowOuter** ppArg);
 
-/** Convert a jsval to an XPCOM pointer. */
+/** Convert a jsval to an XPCOM pointer. Caller must not assume that src will
+    keep the XPCOM pointer rooted. */
 template <class Interface>
 inline nsresult
 UnwrapArg(JSContext* cx, JS::Handle<JSObject*> src, Interface** ppArg)
@@ -75,6 +76,29 @@ UnwrapArg<nsPIDOMWindowOuter>(JSContext* cx, JS::Handle<JSObject*> src,
                               nsPIDOMWindowOuter** ppArg)
 {
   return UnwrapWindowProxyImpl(cx, src, ppArg);
+}
+
+nsresult
+UnwrapXPConnectImpl(JSContext* cx, JS::MutableHandle<JS::Value> src,
+                    const nsIID& iid, void** ppArg);
+
+/*
+ * Convert a jsval being used as a Web IDL interface implementation to an XPCOM
+ * pointer; this is only used for Web IDL interfaces that specify
+ * hasXPConnectImpls.  This is not the same as UnwrapArg because caller _can_
+ * assume that if unwrapping succeeds "val" will be updated so it's rooting the
+ * XPCOM pointer.  Also, UnwrapXPConnect doesn't need to worry about doing
+ * XPCWrappedJS things.
+ *
+ * val must be an ObjectValue.
+ */
+template<class Interface>
+inline nsresult
+UnwrapXPConnect(JSContext* cx, JS::MutableHandle<JS::Value> val,
+                Interface** ppThis)
+{
+  return UnwrapXPConnectImpl(cx, val, NS_GET_TEMPLATE_IID(Interface),
+                             reinterpret_cast<void**>(ppThis));
 }
 
 bool
