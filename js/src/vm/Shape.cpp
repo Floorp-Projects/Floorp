@@ -1120,21 +1120,6 @@ Shape::setObjectFlags(JSContext* cx, BaseShape::Flag flags, TaggedProto proto, S
     return replaceLastProperty(cx, base, proto, lastRoot);
 }
 
-/* static */ inline HashNumber
-StackBaseShape::hash(const Lookup& lookup)
-{
-    HashNumber hash = lookup.flags;
-    hash = RotateLeft(hash, 4) ^ (uintptr_t(lookup.clasp) >> 3);
-    return hash;
-}
-
-/* static */ inline bool
-StackBaseShape::match(const ReadBarriered<UnownedBaseShape*>& key, const Lookup& lookup)
-{
-    return key.unbarrieredGet()->flags == lookup.flags &&
-           key.unbarrieredGet()->clasp_ == lookup.clasp;
-}
-
 inline
 BaseShape::BaseShape(const StackBaseShape& base)
   : clasp_(base.clasp),
@@ -1293,23 +1278,6 @@ inline
 InitialShapeEntry::InitialShapeEntry(Shape* shape, const Lookup::ShapeProto& proto)
   : shape(shape), proto(proto)
 {
-}
-
-/* static */ inline HashNumber
-InitialShapeEntry::hash(const Lookup& lookup)
-{
-    return (RotateLeft(uintptr_t(lookup.clasp) >> 3, 4) ^ lookup.proto.hashCode()) +
-           lookup.nfixed;
-}
-
-/* static */ inline bool
-InitialShapeEntry::match(const InitialShapeEntry& key, const Lookup& lookup)
-{
-    const Shape* shape = key.shape.unbarrieredGet();
-    return lookup.clasp == shape->getObjectClass()
-        && lookup.nfixed == shape->numFixedSlots()
-        && lookup.baseFlags == shape->getObjectFlags()
-        && lookup.proto.match(key.proto);
 }
 
 #ifdef JSGC_HASH_TABLE_CHECKS
