@@ -5736,9 +5736,13 @@ pref("fuzzing.enabled", false);
 #endif
 
 #if defined(XP_WIN)
+#if defined(NIGHTLY_BUILD)
+pref("layers.mlgpu.dev-enabled", true);
+#else
 pref("layers.mlgpu.dev-enabled", false);
+#endif
 
-// Both this and the master "enabled" pref must be on to use Advanced LAyers
+// Both this and the master "enabled" pref must be on to use Advanced Layers
 // on Windows 7.
 pref("layers.mlgpu.enable-on-windows7", false);
 #endif

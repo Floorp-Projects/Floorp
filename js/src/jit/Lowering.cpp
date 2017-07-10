@@ -2379,8 +2379,8 @@ void
 LIRGenerator::visitRegExp(MRegExp* ins)
 {
     if (ins->mustClone()) {
-        LRegExp* lir = new(alloc()) LRegExp();
-        defineReturn(lir, ins);
+        LRegExp* lir = new(alloc()) LRegExp(temp());
+        define(lir, ins);
         assignSafepoint(lir, ins);
     } else {
         RegExpObject* source = ins->source();

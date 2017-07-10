@@ -12079,7 +12079,10 @@ IonBuilder::jsop_regexp(RegExpObject* reobj)
 {
     MOZ_ASSERT(!IsInsideNursery(reobj));
 
-    MRegExp* regexp = MRegExp::New(alloc(), constraints(), reobj);
+    // Determine this while we're still on the main thread to avoid races.
+    bool hasShared = reobj->hasShared();
+
+    MRegExp* regexp = MRegExp::New(alloc(), constraints(), reobj, hasShared);
     current->add(regexp);
     current->push(regexp);
 

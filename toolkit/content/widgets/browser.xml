@@ -240,7 +240,7 @@
           return this._sameProcessAsFrameLoader && this._sameProcessAsFrameLoader.get();
         ]]></getter>
         <setter><![CDATA[
-          this._sameProcessAsFrameLoader = Cu.getWeakReference(val);
+          this._sameProcessAsFrameLoader = Components.utils.getWeakReference(val);
         ]]></setter>
       </property>
 

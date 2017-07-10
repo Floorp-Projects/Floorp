@@ -95,8 +95,6 @@ public:
   virtual void LeaveTestMode(const uint64_t& aId) override;
   virtual void ApplyAsyncProperties(LayerTransactionParent* aLayerTree)
                override;
-  virtual CompositorAnimationStorage*
-    GetAnimationStorage(const uint64_t& aId) override;
   virtual void FlushApzRepaints(const uint64_t& aLayersId) override;
   virtual void GetAPZTestData(const uint64_t& aLayersId,
                               APZTestData* aOutData) override;
