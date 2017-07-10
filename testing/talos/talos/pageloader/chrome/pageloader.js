@@ -326,6 +326,10 @@ var ContentListener = {
 var removeLastAddedListener = null;
 var removeLastAddedMsgListener = null;
 function plLoadPage() {
+  if (profilingInfo) {
+    TalosParentProfiler.beginTest(getCurrentPageShortName() + "_pagecycle_" + pageCycle);
+  }
+
   var pageName = pages[pageIndex].url.spec;
 
   if (removeLastAddedListener) {
@@ -454,23 +458,19 @@ function loadFail() {
 
 var plNextPage = async function() {
   var doNextPage = false;
+
+  if (profilingInfo) {
+    await TalosParentProfiler.finishTest();
+  }
+
   if (pageCycle < numPageCycles) {
     pageCycle++;
     doNextPage = true;
-  } else {
-    if (profilingInfo) {
-      await TalosParentProfiler.finishTest();
-    }
-
-    if (pageIndex < pages.length - 1) {
-      pageIndex++;
-      if (profilingInfo) {
-        TalosParentProfiler.beginTest(getCurrentPageShortName());
-      }
-      recordedName = null;
-      pageCycle = 1;
-      doNextPage = true;
-    }
+  } else if (pageIndex < pages.length - 1) {
+    pageIndex++;
+    recordedName = null;
+    pageCycle = 1;
+    doNextPage = true;
   }
 
   if (doNextPage == true) {
