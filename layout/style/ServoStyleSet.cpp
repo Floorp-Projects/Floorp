@@ -37,7 +37,6 @@ using namespace mozilla::dom;
 
 ServoStyleSet::ServoStyleSet()
   : mPresContext(nullptr)
-  , mAllowResolveStaleStyles(false)
   , mAuthorStyleDisabled(false)
   , mStylistState(StylistState::NotDirty)
   , mUserFontSetUpdateGeneration(0)
@@ -496,8 +495,8 @@ ServoStyleSet::ResolvePseudoElementStyle(Element* aOriginatingElement,
   RefPtr<ServoComputedValues> computedValues;
   if (aPseudoElement) {
     MOZ_ASSERT(aType == aPseudoElement->GetPseudoElementType());
-    computedValues = Servo_ResolveStyle(aPseudoElement, mRawSet.get(),
-                                        mAllowResolveStaleStyles).Consume();
+    computedValues = Servo_ResolveStyle(aPseudoElement,
+                                        mRawSet.get()).Consume();
   } else {
     const ServoComputedValues* parentStyle =
       aParentContext ? aParentContext->ComputedValues() : nullptr;
@@ -1152,8 +1151,7 @@ already_AddRefed<ServoComputedValues>
 ServoStyleSet::ResolveServoStyle(Element* aElement)
 {
   UpdateStylistIfNeeded();
-  return Servo_ResolveStyle(aElement, mRawSet.get(),
-                            mAllowResolveStaleStyles).Consume();
+  return Servo_ResolveStyle(aElement, mRawSet.get()).Consume();
 }
 
 void
