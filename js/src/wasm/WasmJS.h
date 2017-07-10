@@ -167,12 +167,11 @@ class WasmInstanceObject : public NativeObject
     // WeakScopeMap maps from function index to js::Scope. This maps is weak
     // to avoid holding scope objects alive. The scopes are normally created
     // during debugging.
-    using ScopeMap = GCHashMap<uint32_t,
-                               ReadBarriered<WasmFunctionScope*>,
-                               DefaultHasher<uint32_t>,
-                               SystemAllocPolicy>;
-    using WeakScopeMap = JS::WeakCache<ScopeMap>;
-    WeakScopeMap& scopes() const;
+    using ScopeMap = JS::WeakCache<GCHashMap<uint32_t,
+                                             ReadBarriered<WasmFunctionScope*>,
+                                             DefaultHasher<uint32_t>,
+                                             SystemAllocPolicy>>;
+    ScopeMap& scopes() const;
 
   public:
     static const unsigned RESERVED_SLOTS = 4;
@@ -222,13 +221,12 @@ class WasmMemoryObject : public NativeObject
     static bool growImpl(JSContext* cx, const CallArgs& args);
     static bool grow(JSContext* cx, unsigned argc, Value* vp);
 
-    using InstanceSet = GCHashSet<ReadBarrieredWasmInstanceObject,
-                                  MovableCellHasher<ReadBarrieredWasmInstanceObject>,
-                                  SystemAllocPolicy>;
-    using WeakInstanceSet = JS::WeakCache<InstanceSet>;
+    using InstanceSet = JS::WeakCache<GCHashSet<ReadBarrieredWasmInstanceObject,
+                                                MovableCellHasher<ReadBarrieredWasmInstanceObject>,
+                                                SystemAllocPolicy>>;
     bool hasObservers() const;
-    WeakInstanceSet& observers() const;
-    WeakInstanceSet* getOrCreateObservers(JSContext* cx);
+    InstanceSet& observers() const;
+    InstanceSet* getOrCreateObservers(JSContext* cx);
 
   public:
     static const unsigned RESERVED_SLOTS = 2;

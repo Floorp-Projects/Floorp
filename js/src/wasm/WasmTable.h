@@ -31,13 +31,13 @@ namespace wasm {
 
 class Table : public ShareableBase<Table>
 {
-    using InstanceSet = GCHashSet<ReadBarrieredWasmInstanceObject,
-                                  MovableCellHasher<ReadBarrieredWasmInstanceObject>,
-                                  SystemAllocPolicy>;
-    typedef UniquePtr<uint8_t[], JS::FreePolicy> UniqueByteArray;
+    using InstanceSet = JS::WeakCache<GCHashSet<ReadBarrieredWasmInstanceObject,
+                                                MovableCellHasher<ReadBarrieredWasmInstanceObject>,
+                                                SystemAllocPolicy>>;
+    using UniqueByteArray = UniquePtr<uint8_t[], JS::FreePolicy>;
 
     ReadBarrieredWasmTableObject maybeObject_;
-    JS::WeakCache<InstanceSet>   observers_;
+    InstanceSet                  observers_;
     UniqueByteArray              array_;
     const TableKind              kind_;
     uint32_t                     length_;
