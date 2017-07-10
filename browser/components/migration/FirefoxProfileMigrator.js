@@ -138,37 +138,45 @@ FirefoxProfileMigrator.prototype._getResourcesInternal = function(sourceProfileD
     [PlacesBackups.profileRelativeFolderPath]);
   let dictionary = getFileResource(types.OTHERDATA, ["persdict.dat"]);
 
-  let sessionCheckpoints = this._getFileObject(sourceProfileDir, "sessionCheckpoints.json");
-  let sessionFile = this._getFileObject(sourceProfileDir, "sessionstore.jsonlz4");
   let session;
-  if (sessionFile) {
-    session = {
-      type: types.SESSION,
-      migrate(aCallback) {
-        sessionCheckpoints.copyTo(currentProfileDir, "sessionCheckpoints.json");
-        let newSessionFile = currentProfileDir.clone();
-        newSessionFile.append("sessionstore.jsonlz4");
-        let migrationPromise = SessionMigration.migrate(sessionFile.path, newSessionFile.path);
-        migrationPromise.then(function() {
-          let buildID = Services.appinfo.platformBuildID;
-          let mstone = Services.appinfo.platformVersion;
-          // Force the browser to one-off resume the session that we give it:
-          Services.prefs.setBoolPref("browser.sessionstore.resume_session_once", true);
-          // Reset the homepage_override prefs so that the browser doesn't override our
-          // session with the "what's new" page:
-          Services.prefs.setCharPref("browser.startup.homepage_override.mstone", mstone);
-          Services.prefs.setCharPref("browser.startup.homepage_override.buildID", buildID);
-          // It's too early in startup for the pref service to have a profile directory,
-          // so we have to manually tell it where to save the prefs file.
-          let newPrefsFile = currentProfileDir.clone();
-          newPrefsFile.append("prefs.js");
-          Services.prefs.savePrefFile(newPrefsFile);
-          aCallback(true);
-        }, function() {
-          aCallback(false);
-        });
-      }
-    };
+  let env = Cc["@mozilla.org/process/environment;1"].getService(Ci.nsIEnvironment);
+  if (env.get("MOZ_RESET_PROFILE_MIGRATE_SESSION")) {
+    // We only want to restore the previous firefox session if the profile refresh was
+    // triggered by user. The MOZ_RESET_PROFILE_MIGRATE_SESSION would be set when a user-triggered
+    // profile refresh happened in nsAppRunner.cpp. Hence, we detect the MOZ_RESET_PROFILE_MIGRATE_SESSION
+    // to see if session data migration is required.
+    env.set("MOZ_RESET_PROFILE_MIGRATE_SESSION", "");
+    let sessionCheckpoints = this._getFileObject(sourceProfileDir, "sessionCheckpoints.json");
+    let sessionFile = this._getFileObject(sourceProfileDir, "sessionstore.jsonlz4");
+    if (sessionFile) {
+      session = {
+        type: types.SESSION,
+        migrate(aCallback) {
+          sessionCheckpoints.copyTo(currentProfileDir, "sessionCheckpoints.json");
+          let newSessionFile = currentProfileDir.clone();
+          newSessionFile.append("sessionstore.jsonlz4");
+          let migrationPromise = SessionMigration.migrate(sessionFile.path, newSessionFile.path);
+          migrationPromise.then(function() {
+            let buildID = Services.appinfo.platformBuildID;
+            let mstone = Services.appinfo.platformVersion;
+            // Force the browser to one-off resume the session that we give it:
+            Services.prefs.setBoolPref("browser.sessionstore.resume_session_once", true);
+            // Reset the homepage_override prefs so that the browser doesn't override our
+            // session with the "what's new" page:
+            Services.prefs.setCharPref("browser.startup.homepage_override.mstone", mstone);
+            Services.prefs.setCharPref("browser.startup.homepage_override.buildID", buildID);
+            // It's too early in startup for the pref service to have a profile directory,
+            // so we have to manually tell it where to save the prefs file.
+            let newPrefsFile = currentProfileDir.clone();
+            newPrefsFile.append("prefs.js");
+            Services.prefs.savePrefFile(newPrefsFile);
+            aCallback(true);
+          }, function() {
+            aCallback(false);
+          });
+        }
+      };
+    }
   }
 
   // Telemetry related migrations.

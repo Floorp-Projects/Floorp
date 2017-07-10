@@ -3,12 +3,11 @@
 extern crate rand;
 extern crate test;
 extern crate webrender;
-extern crate webrender_traits;
 
 use rand::Rng;
 use test::Bencher;
 use webrender::TexturePage;
-use webrender_traits::{DeviceUintSize as Size};
+use webrender::api::{DeviceUintSize as Size};
 
 #[bench]
 fn bench_coalesce(b: &mut Bencher) {

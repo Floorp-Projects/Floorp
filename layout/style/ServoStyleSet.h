@@ -388,7 +388,6 @@ public:
 
   bool GetKeyframesForName(const nsString& aName,
                            const nsTimingFunction& aTimingFunction,
-                           const ServoComputedValues* aComputedValues,
                            nsTArray<Keyframe>& aKeyframes);
 
   nsTArray<ComputedKeyframeValues>

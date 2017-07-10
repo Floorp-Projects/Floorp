@@ -33,7 +33,7 @@
 //! they're nestable.
 //!
 //! [stacking_contexts]: https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Positioning/Understanding_z_index/The_stacking_context
-//! [newframe]: ../webrender_traits/struct.RenderApi.html#method.set_display_list
+//! [newframe]: ../webrender_api/struct.RenderApi.html#method.set_display_list
 //! [notifier]: renderer/struct.Renderer.html#method.set_render_notifier
 
 #[macro_use]
@@ -59,7 +59,6 @@ mod freelist;
 mod geometry;
 mod glyph_rasterizer;
 mod gpu_cache;
-mod gpu_store;
 mod internal_types;
 mod mask_cache;
 mod prim_store;
@@ -134,7 +133,7 @@ extern crate gleam;
 extern crate num_traits;
 //extern crate notify;
 extern crate time;
-extern crate webrender_traits;
+pub extern crate webrender_api;
 #[cfg(feature = "webgl")]
 extern crate offscreen_gl_context;
 extern crate byteorder;
@@ -146,3 +145,5 @@ extern crate gamma_lut;
 
 pub use renderer::{ExternalImage, ExternalImageSource, ExternalImageHandler};
 pub use renderer::{GraphicsApi, GraphicsApiInfo, ReadPixelsFormat, Renderer, RendererOptions};
+
+pub use webrender_api as api;

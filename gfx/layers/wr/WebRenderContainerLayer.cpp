@@ -151,7 +151,7 @@ WebRenderRefLayer::RenderLayer(wr::DisplayListBuilder& aBuilder,
   DumpLayerInfo("RefLayer", rect);
 
   WrRect r = aSc.ToRelativeWrRect(rect);
-  aBuilder.PushIFrame(r, r, wr::AsPipelineId(mId));
+  aBuilder.PushIFrame(r, wr::AsPipelineId(mId));
 }
 
 } // namespace layers

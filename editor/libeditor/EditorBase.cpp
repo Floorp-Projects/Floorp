@@ -3768,15 +3768,16 @@ EditorBase::GetChildAt(nsIDOMNode* aParent, int32_t aOffset)
  * the node's parent otherwise.
  */
 nsIContent*
-EditorBase::GetNodeAtRangeOffsetPoint(nsIDOMNode* aParentOrNode,
+EditorBase::GetNodeAtRangeOffsetPoint(nsINode* aParentOrNode,
                                       int32_t aOffset)
 {
-  nsCOMPtr<nsINode> parentOrNode = do_QueryInterface(aParentOrNode);
-  NS_ENSURE_TRUE(parentOrNode || !aParentOrNode, nullptr);
-  if (parentOrNode->GetAsText()) {
-    return parentOrNode->AsContent();
+  if (NS_WARN_IF(!aParentOrNode)) {
+    return nullptr;
   }
-  return parentOrNode->GetChildAt(aOffset);
+  if (aParentOrNode->GetAsText()) {
+    return aParentOrNode->AsContent();
+  }
+  return aParentOrNode->GetChildAt(aOffset);
 }
 
 /**

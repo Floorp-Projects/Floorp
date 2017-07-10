@@ -23,7 +23,7 @@ use core_graphics::context::{CGContext, CGContextRef};
 use core_graphics::font::{CGGlyph, CGFont, CGFontRef};
 use core_graphics::geometry::{CGPoint, CGRect, CGSize};
 
-use libc::{self, size_t};
+use libc::{self, size_t, c_void};
 use std::mem;
 use std::ptr;
 
@@ -70,7 +70,7 @@ pub const kCTFontOptionsPreventAutoActivation: CTFontOptions = (1 << 0);
 pub const kCTFontOptionsPreferSystemFont: CTFontOptions = (1 << 2);
 
 #[repr(C)]
-struct __CTFont;
+pub struct __CTFont(c_void);
 
 pub type CTFontRef = *const __CTFont;
 
@@ -193,23 +193,31 @@ impl CTFont {
 
     // Names
     pub fn family_name(&self) -> String {
-        let value = get_string_by_name_key(self, kCTFontFamilyNameKey);
-        value.expect("Fonts should always have a family name.")
+        unsafe {
+            let value = get_string_by_name_key(self, kCTFontFamilyNameKey);
+            value.expect("Fonts should always have a family name.")
+        }
     }
 
     pub fn face_name(&self) -> String {
-        let value = get_string_by_name_key(self, kCTFontSubFamilyNameKey);
-        value.expect("Fonts should always have a face name.")
+        unsafe {
+            let value = get_string_by_name_key(self, kCTFontSubFamilyNameKey);
+            value.expect("Fonts should always have a face name.")
+        }
     }
 
     pub fn unique_name(&self) -> String {
-        let value = get_string_by_name_key(self, kCTFontUniqueNameKey);
-        value.expect("Fonts should always have a unique name.")
+        unsafe {
+            let value = get_string_by_name_key(self, kCTFontUniqueNameKey);
+            value.expect("Fonts should always have a unique name.")
+        }
     }
 
     pub fn postscript_name(&self) -> String {
-        let value = get_string_by_name_key(self, kCTFontPostScriptNameKey);
-        value.expect("Fonts should always have a PostScript name.")
+        unsafe {
+            let value = get_string_by_name_key(self, kCTFontPostScriptNameKey);
+            value.expect("Fonts should always have a PostScript name.")
+        }
     }
 
     pub fn all_traits(&self) -> CTFontTraits {
@@ -307,11 +315,11 @@ impl CTFont {
     pub fn get_bounding_rects_for_glyphs(&self, orientation: CTFontOrientation, glyphs: &[CGGlyph])
                                          -> CGRect {
         unsafe {
-            let mut result = CTFontGetBoundingRectsForGlyphs(self.as_concrete_TypeRef(),
-                                                             orientation,
-                                                             glyphs.as_ptr(),
-                                                             ptr::null_mut(),
-                                                             glyphs.len() as CFIndex);
+            let result = CTFontGetBoundingRectsForGlyphs(self.as_concrete_TypeRef(),
+                                                         orientation,
+                                                         glyphs.as_ptr(),
+                                                         ptr::null_mut(),
+                                                         glyphs.len() as CFIndex);
             result
         }
     }
@@ -357,12 +365,14 @@ pub fn debug_font_names(font: &CTFont) {
         get_string_by_name_key(font, key).unwrap()
     }
 
-    println!("kCTFontFamilyNameKey: {}", get_key(font, kCTFontFamilyNameKey));
-    println!("kCTFontSubFamilyNameKey: {}", get_key(font, kCTFontSubFamilyNameKey));
-    println!("kCTFontStyleNameKey: {}", get_key(font, kCTFontStyleNameKey));
-    println!("kCTFontUniqueNameKey: {}", get_key(font, kCTFontUniqueNameKey));
-    println!("kCTFontFullNameKey: {}", get_key(font, kCTFontFullNameKey));
-    println!("kCTFontPostScriptNameKey: {}", get_key(font, kCTFontPostScriptNameKey));
+    unsafe {
+        println!("kCTFontFamilyNameKey: {}", get_key(font, kCTFontFamilyNameKey));
+        println!("kCTFontSubFamilyNameKey: {}", get_key(font, kCTFontSubFamilyNameKey));
+        println!("kCTFontStyleNameKey: {}", get_key(font, kCTFontStyleNameKey));
+        println!("kCTFontUniqueNameKey: {}", get_key(font, kCTFontUniqueNameKey));
+        println!("kCTFontFullNameKey: {}", get_key(font, kCTFontFullNameKey));
+        println!("kCTFontPostScriptNameKey: {}", get_key(font, kCTFontPostScriptNameKey));
+    }
 }
 
 pub fn debug_font_traits(font: &CTFont) {
@@ -379,7 +389,7 @@ pub fn debug_font_traits(font: &CTFont) {
 //    println!("kCTFontSlantTrait: {}", traits.normalized_slant());
 }
 
-#[cfg(not(feature = "lion"))]
+#[cfg(feature = "mountainlion")]
 pub fn cascade_list_for_languages(font: &CTFont, language_pref_list: &CFArray) -> CFArray {
     unsafe {
         let font_collection_ref =
@@ -464,7 +474,7 @@ extern {
     fn CTFontCopyName(font: CTFontRef, nameKey: CFStringRef) -> CFStringRef;
     //fn CTFontCopyLocalizedName(font: CTFontRef, nameKey: CFStringRef, 
     //                           language: *CFStringRef) -> CFStringRef;
-    #[cfg(not(feature = "lion"))]
+    #[cfg(feature = "mountainlion")]
     fn CTFontCopyDefaultCascadeListForLanguages(font: CTFontRef, languagePrefList: CFArrayRef) -> CFArrayRef;
 
 

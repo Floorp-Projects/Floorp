@@ -292,6 +292,9 @@ user_pref("browser.translation.engine", "bing");
 // Make sure we don't try to load snippets from the network.
 user_pref("browser.aboutHomeSnippets.updateUrl", "nonexistent://test");
 
+// Use an empty list of sites to avoid fetching
+user_pref("browser.newtabpage.activity-stream.default.sites", "");
+
 // Don't fetch directory tiles data from real servers
 user_pref("browser.newtabpage.directory.source", 'data:application/json,{"testing":1}');
 

@@ -32,6 +32,12 @@
             "optional": true,
             "description": "Remove data accumulated on or after this date, represented in milliseconds since the epoch (accessible via the <code>getTime</code> method of the JavaScript <code>Date</code> object). If absent, defaults to 0 (which would remove all browsing data)."
           },
+          "hostnames": {
+            "type": "array",
+            "items": {"type": "string", "format": "hostname"},
+            "optional": true,
+            "description": "Only remove data associated with these hostnames (only applies to cookies)."
+          },
           "originTypes": {
             "type": "object",
             "optional": true,

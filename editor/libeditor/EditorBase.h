@@ -799,7 +799,7 @@ public:
   static bool IsTextNode(nsINode* aNode);
 
   static nsCOMPtr<nsIDOMNode> GetChildAt(nsIDOMNode* aParent, int32_t aOffset);
-  static nsIContent* GetNodeAtRangeOffsetPoint(nsIDOMNode* aParentOrNode,
+  static nsIContent* GetNodeAtRangeOffsetPoint(nsINode* aParentOrNode,
                                                int32_t aOffset);
 
   static nsresult GetStartNodeAndOffset(Selection* aSelection,
