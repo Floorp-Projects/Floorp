@@ -41,7 +41,8 @@
   "scripts": {
     "prepack": "node scripts/createExports.js",
     "test": "mocha -R dot --reporter 'reporters/mozilla-format.js' tests",
-    "postpublish": "rm -f lib/modules.json lib/environments/saved-globals.json"
+    "postpublish": "rm -f lib/modules.json lib/environments/saved-globals.json",
+    "update-tooltool": "./update.sh"
   },
   "license": "MPL-2.0"
 }
