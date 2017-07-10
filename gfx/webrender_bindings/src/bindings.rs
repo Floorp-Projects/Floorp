@@ -1372,7 +1372,9 @@ pub extern "C" fn wr_dp_push_rect(state: &mut WrState,
                                   color: WrColor) {
     assert!(unsafe { !is_in_render_thread() });
 
-    state.frame_builder.dl_builder.push_rect(rect.into(), clip.into(), color.into());
+    state.frame_builder.dl_builder.push_rect(rect.into(),
+                                             Some(LocalClip::Rect(clip.into())),
+                                             color.into());
 }
 
 #[no_mangle]
@@ -1388,7 +1390,7 @@ pub extern "C" fn wr_dp_push_image(state: &mut WrState,
     state.frame_builder
          .dl_builder
          .push_image(bounds.into(),
-                     clip.into(),
+                     Some(LocalClip::Rect(clip.into())),
                      stretch_size.into(),
                      tile_spacing.into(),
                      image_rendering,
@@ -1410,7 +1412,7 @@ pub extern "C" fn wr_dp_push_yuv_planar_image(state: &mut WrState,
     state.frame_builder
          .dl_builder
          .push_yuv_image(bounds.into(),
-                         clip.into(),
+                         Some(LocalClip::Rect(clip.into())),
                          YuvData::PlanarYCbCr(image_key_0, image_key_1, image_key_2),
                          color_space,
                          image_rendering);
@@ -1430,7 +1432,7 @@ pub extern "C" fn wr_dp_push_yuv_NV12_image(state: &mut WrState,
     state.frame_builder
          .dl_builder
          .push_yuv_image(bounds.into(),
-                         clip.into(),
+                         Some(LocalClip::Rect(clip.into())),
                          YuvData::NV12(image_key_0, image_key_1),
                          color_space,
                          image_rendering);
@@ -1449,7 +1451,7 @@ pub extern "C" fn wr_dp_push_yuv_interleaved_image(state: &mut WrState,
     state.frame_builder
          .dl_builder
          .push_yuv_image(bounds.into(),
-                         clip.into(),
+                         Some(LocalClip::Rect(clip.into())),
                          YuvData::InterleavedYCbCr(image_key_0),
                          color_space,
                          image_rendering);
@@ -1475,7 +1477,7 @@ pub extern "C" fn wr_dp_push_text(state: &mut WrState,
     state.frame_builder
          .dl_builder
          .push_text(bounds.into(),
-                    clip.into(),
+                    Some(LocalClip::Rect(clip.into())),
                     &glyph_vector,
                     font_key,
                     colorf,
@@ -1505,7 +1507,10 @@ pub extern "C" fn wr_dp_push_border(state: &mut WrState,
                                                });
     state.frame_builder
          .dl_builder
-         .push_border(rect.into(), clip.into(), widths.into(), border_details);
+         .push_border(rect.into(),
+                      Some(LocalClip::Rect(clip.into())),
+                      widths.into(),
+                      border_details);
 }
 
 #[no_mangle]
@@ -1530,7 +1535,10 @@ pub extern "C" fn wr_dp_push_border_image(state: &mut WrState,
                              });
     state.frame_builder
          .dl_builder
-         .push_border(rect.into(), clip.into(), widths.into(), border_details);
+         .push_border(rect.into(),
+                      Some(LocalClip::Rect(clip.into())),
+                      widths.into(),
+                      border_details);
 }
 
 #[no_mangle]
@@ -1561,7 +1569,10 @@ pub extern "C" fn wr_dp_push_border_gradient(state: &mut WrState,
                                                  });
     state.frame_builder
          .dl_builder
-         .push_border(rect.into(), clip.into(), widths.into(), border_details);
+         .push_border(rect.into(),
+                      Some(LocalClip::Rect(clip.into())),
+                      widths.into(),
+                      border_details);
 }
 
 #[no_mangle]
@@ -1593,7 +1604,10 @@ pub extern "C" fn wr_dp_push_border_radial_gradient(state: &mut WrState,
                                       });
     state.frame_builder
          .dl_builder
-         .push_border(rect.into(), clip.into(), widths.into(), border_details);
+         .push_border(rect.into(),
+                      Some(LocalClip::Rect(clip.into())),
+                      widths.into(),
+                      border_details);
 }
 
 #[no_mangle]
@@ -1618,12 +1632,13 @@ pub extern "C" fn wr_dp_push_linear_gradient(state: &mut WrState,
                                          end_point.into(),
                                          stops_vector,
                                          extend_mode.into());
-    let rect = rect.into();
-    let tile_size = tile_size.into();
-    let tile_spacing = tile_spacing.into();
     state.frame_builder
          .dl_builder
-         .push_gradient(rect, clip.into(), gradient, tile_size, tile_spacing);
+         .push_gradient(rect.into(),
+                        Some(LocalClip::Rect(clip.into())),
+                        gradient,
+                        tile_size.into(),
+                        tile_spacing.into());
 }
 
 #[no_mangle]
@@ -1648,12 +1663,13 @@ pub extern "C" fn wr_dp_push_radial_gradient(state: &mut WrState,
                                                 radius.into(),
                                                 stops_vector,
                                                 extend_mode.into());
-    let rect = rect.into();
-    let tile_size = tile_size.into();
-    let tile_spacing = tile_spacing.into();
     state.frame_builder
          .dl_builder
-         .push_radial_gradient(rect, clip.into(), gradient, tile_size, tile_spacing);
+         .push_radial_gradient(rect.into(),
+                               Some(LocalClip::Rect(clip.into())),
+                               gradient,
+                               tile_size.into(),
+                               tile_spacing.into());
 }
 
 #[no_mangle]
@@ -1672,7 +1688,7 @@ pub extern "C" fn wr_dp_push_box_shadow(state: &mut WrState,
     state.frame_builder
          .dl_builder
          .push_box_shadow(rect.into(),
-                          clip.into(),
+                          Some(LocalClip::Rect(clip.into())),
                           box_bounds.into(),
                           offset.into(),
                           color.into(),
