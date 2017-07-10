@@ -1466,6 +1466,13 @@ struct ObjectGroupCompartment::AllocationSiteKey : public DefaultHasher<Allocati
         return IsAboutToBeFinalizedUnbarriered(script.unsafeGet()) ||
             (proto && IsAboutToBeFinalizedUnbarriered(proto.unsafeGet()));
     }
+
+    bool operator==(const AllocationSiteKey& other) const {
+        return script == other.script &&
+               offset == other.offset &&
+               kind == other.kind &&
+               proto == other.proto;
+    }
 };
 
 class ObjectGroupCompartment::AllocationSiteTable

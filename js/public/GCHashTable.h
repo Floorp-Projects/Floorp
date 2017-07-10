@@ -371,20 +371,24 @@ template <typename Key, typename Value,
 class WeakCache<GCHashMap<Key, Value, HashPolicy, AllocPolicy, MapSweepPolicy>>
   : protected detail::WeakCacheBase
 {
-    using MainMap = GCHashMap<Key, Value, HashPolicy, AllocPolicy, MapSweepPolicy>;
-    using Self = WeakCache<MainMap>;
+    using Map = GCHashMap<Key, Value, HashPolicy, AllocPolicy, MapSweepPolicy>;
+    using Self = WeakCache<Map>;
 
-    MainMap map;
+    Map map;
+    bool needsBarrier;
 
   public:
     template <typename... Args>
     explicit WeakCache(Zone* zone, Args&&... args)
-      : WeakCacheBase(zone), map(mozilla::Forward<Args>(args)...)
+      : WeakCacheBase(zone), map(mozilla::Forward<Args>(args)...), needsBarrier(false)
     {}
     template <typename... Args>
     explicit WeakCache(JSRuntime* rt, Args&&... args)
-      : WeakCacheBase(rt), map(mozilla::Forward<Args>(args)...)
+      : WeakCacheBase(rt), map(mozilla::Forward<Args>(args)...), needsBarrier(false)
     {}
+    ~WeakCache() {
+        MOZ_ASSERT(!needsBarrier);
+    }
 
     bool needsSweep() override {
         return map.needsSweep();
@@ -399,20 +403,120 @@ class WeakCache<GCHashMap<Key, Value, HashPolicy, AllocPolicy, MapSweepPolicy>>
         return steps;
     }
 
-    using Lookup = typename MainMap::Lookup;
-    using AddPtr = typename MainMap::AddPtr;
-    using Ptr = typename MainMap::Ptr;
-    using Range = typename MainMap::Range;
-    struct Enum : public MainMap::Enum { explicit Enum(Self& self) : MainMap::Enum(self.map) {} };
+    bool setNeedsIncrementalBarrier(bool needs) override {
+        MOZ_ASSERT(needsBarrier != needs);
+        needsBarrier = needs;
+        return true;
+    }
 
-    bool initialized() const                   { return map.initialized(); }
-    Ptr lookup(const Lookup& l) const          { return map.lookup(l); }
-    AddPtr lookupForAdd(const Lookup& l) const { return map.lookupForAdd(l); }
-    Range all() const                          { return map.all(); }
-    bool empty() const                         { return map.empty(); }
-    uint32_t count() const                     { return map.count(); }
-    size_t capacity() const                    { return map.capacity(); }
-    bool has(const Lookup& l) const            { return map.lookup(l).found(); }
+    bool needsIncrementalBarrier() const override {
+        return needsBarrier;
+    }
+
+  private:
+    using Entry = typename Map::Entry;
+
+    static bool entryNeedsSweep(const Entry& prior) {
+        Key key(prior.key());
+        Value value(prior.value());
+        bool result = MapSweepPolicy::needsSweep(&key, &value);
+        MOZ_ASSERT(prior.key() == key); // We shouldn't update here.
+        MOZ_ASSERT(prior.value() == value); // We shouldn't update here.
+        return result;
+    }
+
+  public:
+    using Lookup = typename Map::Lookup;
+    using Ptr = typename Map::Ptr;
+    using AddPtr = typename Map::AddPtr;
+
+    struct Range
+    {
+        explicit Range(const typename Map::Range& r)
+          : range(r)
+        {
+            settle();
+        }
+        Range() {}
+
+        bool empty() const { return range.empty(); }
+        const Entry& front() const { return range.front(); }
+
+        void popFront() {
+            range.popFront();
+            settle();
+        }
+
+      private:
+        typename Map::Range range;
+
+        void settle() {
+            while (!empty() && entryNeedsSweep(front()))
+                popFront();
+        }
+    };
+
+    struct Enum : public Map::Enum
+    {
+        explicit Enum(Self& cache)
+          : Map::Enum(cache.map)
+        {
+            // This operation is not allowed while barriers are in place as we
+            // may also need to enumerate the set for sweeping.
+            MOZ_ASSERT(!cache.needsBarrier);
+        }
+    };
+
+    bool initialized() const {
+        return map.initialized();
+    }
+
+    Ptr lookup(const Lookup& l) const {
+        Ptr ptr = map.lookup(l);
+        if (needsBarrier && ptr && entryNeedsSweep(*ptr)) {
+            const_cast<Map&>(map).remove(ptr);
+            return Ptr();
+        }
+        return ptr;
+    }
+
+    AddPtr lookupForAdd(const Lookup& l) const {
+        AddPtr ptr = map.lookupForAdd(l);
+        if (needsBarrier && ptr && entryNeedsSweep(*ptr)) {
+            const_cast<Map&>(map).remove(ptr);
+            return map.lookupForAdd(l);
+        }
+        return ptr;
+    }
+
+    Range all() const {
+        return Range(map.all());
+    }
+
+    bool empty() const {
+        // This operation is not currently allowed while barriers are in place
+        // as it would require iterating the map and the caller expects a
+        // constant time operation.
+        MOZ_ASSERT(!needsBarrier);
+        return map.empty();
+    }
+
+    uint32_t count() const {
+        // This operation is not currently allowed while barriers are in place
+        // as it would require iterating the set and the caller expects a
+        // constant time operation.
+        MOZ_ASSERT(!needsBarrier);
+        return map.count();
+    }
+
+    size_t capacity() const {
+        return map.capacity();
+    }
+
+    bool has(const Lookup& l) const {
+        return lookup(l).found();
+    }
+
     size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const {
         return map.sizeOfExcludingThis(mallocSizeOf);
     }
@@ -420,36 +524,66 @@ class WeakCache<GCHashMap<Key, Value, HashPolicy, AllocPolicy, MapSweepPolicy>>
         return mallocSizeOf(this) + map.sizeOfExcludingThis(mallocSizeOf);
     }
 
-    bool init(uint32_t len = 16) { return map.init(len); }
-    void clear()                 { map.clear(); }
-    void finish()                { map.finish(); }
-    void remove(Ptr p)           { map.remove(p); }
+    bool init(uint32_t len = 16) {
+        MOZ_ASSERT(!needsBarrier);
+        return map.init(len);
+    }
 
-    template<typename KeyInput, typename ValueInput>
-    bool add(AddPtr& p, KeyInput&& k, ValueInput&& v) {
-        return map.add(p, mozilla::Forward<KeyInput>(k), mozilla::Forward<ValueInput>(v));
+    void clear() {
+        // This operation is not currently allowed while barriers are in place
+        // since it doesn't make sense to clear a cache while it is being swept.
+        MOZ_ASSERT(!needsBarrier);
+        map.clear();
+    }
+
+    void finish() {
+        // This operation is not currently allowed while barriers are in place
+        // since it doesn't make sense to destroy a cache while it is being swept.
+        MOZ_ASSERT(!needsBarrier);
+        map.finish();
+    }
+
+    void remove(Ptr p) {
+        // This currently supports removing entries during incremental
+        // sweeping. If we allow these tables to be swept incrementally this may
+        // no longer be possible.
+        map.remove(p);
+    }
+
+    void remove(const Lookup& l) {
+        Ptr p = lookup(l);
+        if (p)
+            remove(p);
     }
 
     template<typename KeyInput>
     bool add(AddPtr& p, KeyInput&& k) {
-        return map.add(p, mozilla::Forward<KeyInput>(k), MainMap::Value());
+        using mozilla::Forward;
+        return map.add(p, Forward<KeyInput>(k));
+    }
+
+    template<typename KeyInput, typename ValueInput>
+    bool add(AddPtr& p, KeyInput&& k, ValueInput&& v) {
+        using mozilla::Forward;
+        return map.add(p, Forward<KeyInput>(k), Forward<ValueInput>(v));
     }
 
     template<typename KeyInput, typename ValueInput>
     bool relookupOrAdd(AddPtr& p, KeyInput&& k, ValueInput&& v) {
-        return map.relookupOrAdd(p, k,
-                                   mozilla::Forward<KeyInput>(k),
-                                   mozilla::Forward<ValueInput>(v));
+        using mozilla::Forward;
+        return map.relookupOrAdd(p, Forward<KeyInput>(k), Forward<ValueInput>(v));
     }
 
     template<typename KeyInput, typename ValueInput>
     bool put(KeyInput&& k, ValueInput&& v) {
-        return map.put(mozilla::Forward<KeyInput>(k), mozilla::Forward<ValueInput>(v));
+        using mozilla::Forward;
+        return map.put(Forward<KeyInput>(k), Forward<ValueInput>(v));
     }
 
     template<typename KeyInput, typename ValueInput>
     bool putNew(KeyInput&& k, ValueInput&& v) {
-        return map.putNew(mozilla::Forward<KeyInput>(k), mozilla::Forward<ValueInput>(v));
+        using mozilla::Forward;
+        return map.putNew(Forward<KeyInput>(k), Forward<ValueInput>(v));
     }
 };
 
