@@ -11,11 +11,20 @@
 #include "mozilla/dom/cache/CacheTypes.h"
 #include "mozilla/ipc/PBackgroundSharedTypes.h"
 #include "mozilla/ipc/IPCStreamUtils.h"
+#include "nsIRandomGenerator.h"
 #include "nsIURI.h"
 #include "nsStreamUtils.h"
 
 namespace mozilla {
 namespace dom {
+
+namespace {
+
+// Const variable for generate padding size
+// XXX This will be tweaked to something more meaningful in Bug 1383656.
+const uint32_t kMaxRandomNumber = 102400;
+
+} // namespace
 
 InternalResponse::InternalResponse(uint16_t aStatus, const nsACString& aStatusText)
   : mType(ResponseType::Default)
@@ -145,6 +154,7 @@ InternalResponse::Clone(CloneType aCloneType)
   clone->mHeaders = new InternalHeaders(*mHeaders);
 
   // Make sure the clone response will have the same padding size.
+  clone->mPaddingInfo = mPaddingInfo;
   clone->mPaddingSize = mPaddingSize;
 
   if (mWrappedResponse) {
@@ -192,6 +202,52 @@ InternalResponse::CORSResponse()
   cors->mHeaders = InternalHeaders::CORSHeaders(Headers());
   cors->mWrappedResponse = this;
   return cors.forget();
+}
+
+uint32_t
+InternalResponse::GetPaddingInfo()
+{
+  // If it's an opaque response, the paddingInfo should be generated only when
+  // paddingSize is unknown size.
+  // If it's not, the paddingInfo should be nothing and the paddingSize should
+  // be unknown size.
+  MOZ_DIAGNOSTIC_ASSERT((mType == ResponseType::Opaque &&
+                         mPaddingSize == UNKNOWN_PADDING_SIZE &&
+                         mPaddingInfo.isSome()) ||
+                        (mType == ResponseType::Opaque &&
+                         mPaddingSize != UNKNOWN_PADDING_SIZE &&
+                         mPaddingInfo.isNothing()) ||
+                        (mType != ResponseType::Opaque &&
+                         mPaddingSize == UNKNOWN_PADDING_SIZE &&
+                         mPaddingInfo.isNothing()));
+  return mPaddingInfo.isSome() ? mPaddingInfo.ref() : 0;
+}
+
+nsresult
+InternalResponse::GeneratePaddingInfo()
+{
+  MOZ_DIAGNOSTIC_ASSERT(mType == ResponseType::Opaque);
+  MOZ_DIAGNOSTIC_ASSERT(mPaddingSize == UNKNOWN_PADDING_SIZE);
+
+  // Utilize random generator to generator a random number
+  nsresult rv;
+  uint32_t randomNumber = 0;
+  nsCOMPtr<nsIRandomGenerator> randomGenerator =
+    do_GetService("@mozilla.org/security/random-generator;1", &rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+
+  MOZ_DIAGNOSTIC_ASSERT(randomGenerator);
+
+  uint8_t* buffer;
+  rv = randomGenerator->GenerateRandomBytes(sizeof(randomNumber), &buffer);
+  if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+
+  memcpy(&randomNumber, buffer, sizeof(randomNumber));
+  free(buffer);
+
+  mPaddingInfo.emplace(randomNumber % kMaxRandomNumber);
+
+  return rv;
 }
 
 int64_t
