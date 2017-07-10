@@ -78,7 +78,7 @@ int ifd_inspect(insp_frame_data *fd, void *decoder) {
       if (mi->mode < INTRA_MODES) {
         mi->uv_mode = mbmi->uv_mode;
       } else {
-        mi->uv_mode = INTRA_INVALID;
+        mi->uv_mode = UV_MODE_INVALID;
       }
       // Block Size
       mi->sb_type = mbmi->sb_type;
@@ -101,7 +101,7 @@ int ifd_inspect(insp_frame_data *fd, void *decoder) {
       mi->cdef_strength += mi->cdef_strength == 3;
 #endif
 #if CONFIG_CFL
-      if (mbmi->uv_mode == DC_PRED) {
+      if (mbmi->uv_mode == UV_DC_PRED) {
         mi->cfl_alpha_idx = mbmi->cfl_alpha_idx;
         mi->cfl_alpha_sign = (mbmi->cfl_alpha_signs[CFL_PRED_V] << CFL_PRED_V) +
                              mbmi->cfl_alpha_signs[CFL_PRED_U];

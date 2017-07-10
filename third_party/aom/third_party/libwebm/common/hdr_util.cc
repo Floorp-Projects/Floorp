@@ -7,12 +7,15 @@
 // be found in the AUTHORS file in the root of the source tree.
 #include "hdr_util.h"
 
+#include <climits>
 #include <cstddef>
 #include <new>
 
 #include "mkvparser/mkvparser.h"
 
 namespace libwebm {
+const int Vp9CodecFeatures::kValueNotPresent = INT_MAX;
+
 bool CopyPrimaryChromaticity(const mkvparser::PrimaryChromaticity& parser_pc,
                              PrimaryChromaticityPtr* muxer_pc) {
   muxer_pc->reset(new (std::nothrow)
@@ -29,9 +32,9 @@ bool MasteringMetadataValuePresent(double value) {
 bool CopyMasteringMetadata(const mkvparser::MasteringMetadata& parser_mm,
                            mkvmuxer::MasteringMetadata* muxer_mm) {
   if (MasteringMetadataValuePresent(parser_mm.luminance_max))
-    muxer_mm->luminance_max = parser_mm.luminance_max;
+    muxer_mm->set_luminance_max(parser_mm.luminance_max);
   if (MasteringMetadataValuePresent(parser_mm.luminance_min))
-    muxer_mm->luminance_min = parser_mm.luminance_min;
+    muxer_mm->set_luminance_min(parser_mm.luminance_min);
 
   PrimaryChromaticityPtr r_ptr(NULL);
   PrimaryChromaticityPtr g_ptr(NULL);
@@ -73,34 +76,37 @@ bool CopyColour(const mkvparser::Colour& parser_colour,
     return false;
 
   if (ColourValuePresent(parser_colour.matrix_coefficients))
-    muxer_colour->matrix_coefficients = parser_colour.matrix_coefficients;
+    muxer_colour->set_matrix_coefficients(parser_colour.matrix_coefficients);
   if (ColourValuePresent(parser_colour.bits_per_channel))
-    muxer_colour->bits_per_channel = parser_colour.bits_per_channel;
-  if (ColourValuePresent(parser_colour.chroma_subsampling_horz))
-    muxer_colour->chroma_subsampling_horz =
-        parser_colour.chroma_subsampling_horz;
-  if (ColourValuePresent(parser_colour.chroma_subsampling_vert))
-    muxer_colour->chroma_subsampling_vert =
-        parser_colour.chroma_subsampling_vert;
+    muxer_colour->set_bits_per_channel(parser_colour.bits_per_channel);
+  if (ColourValuePresent(parser_colour.chroma_subsampling_horz)) {
+    muxer_colour->set_chroma_subsampling_horz(
+        parser_colour.chroma_subsampling_horz);
+  }
+  if (ColourValuePresent(parser_colour.chroma_subsampling_vert)) {
+    muxer_colour->set_chroma_subsampling_vert(
+        parser_colour.chroma_subsampling_vert);
+  }
   if (ColourValuePresent(parser_colour.cb_subsampling_horz))
-    muxer_colour->cb_subsampling_horz = parser_colour.cb_subsampling_horz;
+    muxer_colour->set_cb_subsampling_horz(parser_colour.cb_subsampling_horz);
   if (ColourValuePresent(parser_colour.cb_subsampling_vert))
-    muxer_colour->cb_subsampling_vert = parser_colour.cb_subsampling_vert;
+    muxer_colour->set_cb_subsampling_vert(parser_colour.cb_subsampling_vert);
   if (ColourValuePresent(parser_colour.chroma_siting_horz))
-    muxer_colour->chroma_siting_horz = parser_colour.chroma_siting_horz;
+    muxer_colour->set_chroma_siting_horz(parser_colour.chroma_siting_horz);
   if (ColourValuePresent(parser_colour.chroma_siting_vert))
-    muxer_colour->chroma_siting_vert = parser_colour.chroma_siting_vert;
+    muxer_colour->set_chroma_siting_vert(parser_colour.chroma_siting_vert);
   if (ColourValuePresent(parser_colour.range))
-    muxer_colour->range = parser_colour.range;
-  if (ColourValuePresent(parser_colour.transfer_characteristics))
-    muxer_colour->transfer_characteristics =
-        parser_colour.transfer_characteristics;
+    muxer_colour->set_range(parser_colour.range);
+  if (ColourValuePresent(parser_colour.transfer_characteristics)) {
+    muxer_colour->set_transfer_characteristics(
+        parser_colour.transfer_characteristics);
+  }
   if (ColourValuePresent(parser_colour.primaries))
-    muxer_colour->primaries = parser_colour.primaries;
+    muxer_colour->set_primaries(parser_colour.primaries);
   if (ColourValuePresent(parser_colour.max_cll))
-    muxer_colour->max_cll = parser_colour.max_cll;
+    muxer_colour->set_max_cll(parser_colour.max_cll);
   if (ColourValuePresent(parser_colour.max_fall))
-    muxer_colour->max_fall = parser_colour.max_fall;
+    muxer_colour->set_max_fall(parser_colour.max_fall);
 
   if (parser_colour.mastering_metadata) {
     mkvmuxer::MasteringMetadata muxer_mm;
@@ -116,8 +122,8 @@ bool CopyColour(const mkvparser::Colour& parser_colour,
 //
 //   0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
 //  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-//  |    ID Byte    |             Length            |               |
-//  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+               |
+//  |    ID Byte    |   Length      |                               |
+//  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+                               |
 //  |                                                               |
 //  :               Bytes 1..Length of Codec Feature                :
 //  |                                                               |
@@ -132,51 +138,83 @@ bool CopyColour(const mkvparser::Colour& parser_colour,
 //
 // The X bit is reserved.
 //
-// Currently only profile level is supported. ID byte must be set to 1, and
-// length must be 1. Supported values are:
-//
-//   10: Level 1
-//   11: Level 1.1
-//   20: Level 2
-//   21: Level 2.1
-//   30: Level 3
-//   31: Level 3.1
-//   40: Level 4
-//   41: Level 4.1
-//   50: Level 5
-//   51: Level 5.1
-//   52: Level 5.2
-//   60: Level 6
-//   61: Level 6.1
-//   62: Level 6.2
-//
 // See the following link for more information:
 // http://www.webmproject.org/vp9/profiles/
-int ParseVpxCodecPrivate(const uint8_t* private_data, int32_t length) {
-  const int kVpxCodecPrivateLength = 3;
-  if (!private_data || length != kVpxCodecPrivateLength)
-    return 0;
+bool ParseVpxCodecPrivate(const uint8_t* private_data, int32_t length,
+                          Vp9CodecFeatures* features) {
+  const int kVpxCodecPrivateMinLength = 3;
+  if (!private_data || !features || length < kVpxCodecPrivateMinLength)
+    return false;
 
-  const uint8_t id_byte = *private_data;
-  if (id_byte != 1)
-    return 0;
+  const uint8_t kVp9ProfileId = 1;
+  const uint8_t kVp9LevelId = 2;
+  const uint8_t kVp9BitDepthId = 3;
+  const uint8_t kVp9ChromaSubsamplingId = 4;
+  const int kVpxFeatureLength = 1;
+  int offset = 0;
 
-  const int kVpxProfileLength = 1;
-  const uint8_t length_byte = private_data[1];
-  if (length_byte != kVpxProfileLength)
-    return 0;
+  // Set features to not set.
+  features->profile = Vp9CodecFeatures::kValueNotPresent;
+  features->level = Vp9CodecFeatures::kValueNotPresent;
+  features->bit_depth = Vp9CodecFeatures::kValueNotPresent;
+  features->chroma_subsampling = Vp9CodecFeatures::kValueNotPresent;
+  do {
+    const uint8_t id_byte = private_data[offset++];
+    const uint8_t length_byte = private_data[offset++];
+    if (length_byte != kVpxFeatureLength)
+      return false;
+    if (id_byte == kVp9ProfileId) {
+      const int priv_profile = static_cast<int>(private_data[offset++]);
+      if (priv_profile < 0 || priv_profile > 3)
+        return false;
+      if (features->profile != Vp9CodecFeatures::kValueNotPresent &&
+          features->profile != priv_profile) {
+        return false;
+      }
+      features->profile = priv_profile;
+    } else if (id_byte == kVp9LevelId) {
+      const int priv_level = static_cast<int>(private_data[offset++]);
 
-  const int level = static_cast<int>(private_data[2]);
+      const int kNumLevels = 14;
+      const int levels[kNumLevels] = {10, 11, 20, 21, 30, 31, 40,
+                                      41, 50, 51, 52, 60, 61, 62};
 
-  const int kNumLevels = 14;
-  const int levels[kNumLevels] = {10, 11, 20, 21, 30, 31, 40,
-                                  41, 50, 51, 52, 60, 61, 62};
+      for (int i = 0; i < kNumLevels; ++i) {
+        if (priv_level == levels[i]) {
+          if (features->level != Vp9CodecFeatures::kValueNotPresent &&
+              features->level != priv_level) {
+            return false;
+          }
+          features->level = priv_level;
+          break;
+        }
+      }
+      if (features->level == Vp9CodecFeatures::kValueNotPresent)
+        return false;
+    } else if (id_byte == kVp9BitDepthId) {
+      const int priv_profile = static_cast<int>(private_data[offset++]);
+      if (priv_profile != 8 && priv_profile != 10 && priv_profile != 12)
+        return false;
+      if (features->bit_depth != Vp9CodecFeatures::kValueNotPresent &&
+          features->bit_depth != priv_profile) {
+        return false;
+      }
+      features->bit_depth = priv_profile;
+    } else if (id_byte == kVp9ChromaSubsamplingId) {
+      const int priv_profile = static_cast<int>(private_data[offset++]);
+      if (priv_profile != 0 && priv_profile != 2 && priv_profile != 3)
+        return false;
+      if (features->chroma_subsampling != Vp9CodecFeatures::kValueNotPresent &&
+          features->chroma_subsampling != priv_profile) {
+        return false;
+      }
+      features->chroma_subsampling = priv_profile;
+    } else {
+      // Invalid ID.
+      return false;
+    }
+  } while (offset + kVpxCodecPrivateMinLength <= length);
 
-  for (int i = 0; i < kNumLevels; ++i) {
-    if (level == levels[i])
-      return level;
-  }
-
-  return 0;
+  return true;
 }
 }  // namespace libwebm

@@ -120,11 +120,12 @@ static INLINE int get_max_bit(int x) {
 }
 
 // TODO(angiebird): implement SSE
-static INLINE void clamp_block(int16_t *block, int block_size, int stride,
-                               int low, int high) {
+static INLINE void clamp_block(int16_t *block, int block_size_row,
+                               int block_size_col, int stride, int low,
+                               int high) {
   int i, j;
-  for (i = 0; i < block_size; ++i) {
-    for (j = 0; j < block_size; ++j) {
+  for (i = 0; i < block_size_row; ++i) {
+    for (j = 0; j < block_size_col; ++j) {
       block[i * stride + j] = clamp(block[i * stride + j], low, high);
     }
   }
@@ -207,6 +208,16 @@ static INLINE void set_flip_cfg(int tx_type, TXFM_2D_FLIP_CFG *cfg) {
       assert(0);
   }
 }
+
+#if CONFIG_MRC_TX
+static INLINE void get_mrc_mask(const uint8_t *pred, int pred_stride, int *mask,
+                                int mask_stride, int width, int height) {
+  for (int i = 0; i < height; ++i) {
+    for (int j = 0; j < width; ++j)
+      mask[i * mask_stride + j] = pred[i * pred_stride + j] > 100 ? 1 : 0;
+  }
+}
+#endif  // CONFIG_MRC_TX
 
 #ifdef __cplusplus
 extern "C" {

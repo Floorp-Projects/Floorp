@@ -29,6 +29,24 @@ enum {
 #endif  // CONFIG_SMOOTH_HV
 #endif  // CONFIG_ALT_INTRA
               (1 << TM_PRED),
+#if CONFIG_CFL
+  UV_INTRA_ALL = (1 << UV_DC_PRED) | (1 << UV_V_PRED) | (1 << UV_H_PRED) |
+                 (1 << UV_D45_PRED) | (1 << UV_D135_PRED) |
+                 (1 << UV_D117_PRED) | (1 << UV_D153_PRED) |
+                 (1 << UV_D207_PRED) | (1 << UV_D63_PRED) |
+#if CONFIG_ALT_INTRA
+                 (1 << UV_SMOOTH_PRED) |
+#if CONFIG_SMOOTH_HV
+                 (1 << UV_SMOOTH_V_PRED) | (1 << UV_SMOOTH_H_PRED) |
+#endif  // CONFIG_SMOOTH_HV
+#endif  // CONFIG_ALT_INTRA
+                 (1 << UV_TM_PRED),
+  UV_INTRA_DC = (1 << UV_DC_PRED),
+  UV_INTRA_DC_TM = (1 << UV_DC_PRED) | (1 << UV_TM_PRED),
+  UV_INTRA_DC_H_V = (1 << UV_DC_PRED) | (1 << UV_V_PRED) | (1 << UV_H_PRED),
+  UV_INTRA_DC_TM_H_V = (1 << UV_DC_PRED) | (1 << UV_TM_PRED) |
+                       (1 << UV_V_PRED) | (1 << UV_H_PRED),
+#endif  // CONFIG_CFL
   INTRA_DC = (1 << DC_PRED),
   INTRA_DC_TM = (1 << DC_PRED) | (1 << TM_PRED),
   INTRA_DC_H_V = (1 << DC_PRED) | (1 << V_PRED) | (1 << H_PRED),
@@ -38,6 +56,11 @@ enum {
 
 #if CONFIG_EXT_INTER
 enum {
+#if CONFIG_COMPOUND_SINGLEREF
+// TODO(zoeliu): To further consider following single ref comp modes:
+//               SR_NEAREST_NEARMV, SR_NEAREST_NEWMV, SR_NEAR_NEWMV,
+//               SR_ZERO_NEWMV, and SR_NEW_NEWMV.
+#endif  // CONFIG_COMPOUND_SINGLEREF
   INTER_ALL = (1 << NEARESTMV) | (1 << NEARMV) | (1 << ZEROMV) | (1 << NEWMV) |
               (1 << NEAREST_NEARESTMV) | (1 << NEAR_NEARMV) | (1 << NEW_NEWMV) |
               (1 << NEAREST_NEWMV) | (1 << NEAR_NEWMV) | (1 << NEW_NEARMV) |
@@ -67,7 +90,7 @@ enum {
                             (1 << NEW_NEARMV) | (1 << NEAR_NEWMV) |
                             (1 << NEAR_NEARMV),
 };
-#else
+#else   // !CONFIG_EXT_INTER
 enum {
   INTER_ALL = (1 << NEARESTMV) | (1 << NEARMV) | (1 << ZEROMV) | (1 << NEWMV),
   INTER_NEAREST = (1 << NEARESTMV),
@@ -399,10 +422,6 @@ typedef struct SPEED_FEATURES {
   int intra_y_mode_mask[TX_SIZES];
   int intra_uv_mode_mask[TX_SIZES];
 
-  // These bit masks allow you to enable or disable intra modes for each
-  // prediction block size separately.
-  int intra_y_mode_bsize_mask[BLOCK_SIZES];
-
   // This variable enables an early break out of mode testing if the model for
   // rd built from the prediction signal indicates a value that's much
   // higher than the best rd we've seen so far.
@@ -417,7 +436,7 @@ typedef struct SPEED_FEATURES {
 
   // A binary mask indicating if NEARESTMV, NEARMV, ZEROMV, NEWMV
   // modes are used in order from LSB to MSB for each BLOCK_SIZE.
-  int inter_mode_mask[BLOCK_SIZES];
+  int inter_mode_mask[BLOCK_SIZES_ALL];
 
   // This feature controls whether we do the expensive context update and
   // calculation in the rd coefficient costing loop.

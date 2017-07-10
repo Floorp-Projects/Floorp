@@ -21,8 +21,8 @@ namespace {
 const int kMaxPSNR = 100;
 
 class CpuSpeedTest
-    : public ::libaom_test::EncoderTest,
-      public ::libaom_test::CodecTestWith2Params<libaom_test::TestMode, int> {
+    : public ::libaom_test::CodecTestWith2Params<libaom_test::TestMode, int>,
+      public ::libaom_test::EncoderTest {
  protected:
   CpuSpeedTest()
       : EncoderTest(GET_PARAM(0)), encoding_mode_(GET_PARAM(1)),

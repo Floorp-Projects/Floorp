@@ -12,12 +12,11 @@
 #include "third_party/googletest/src/googletest/include/gtest/gtest.h"
 
 #include "./aom_config.h"
+#include "test/util.h"
 #include "aom/aomcx.h"
 #include "aom/aom_encoder.h"
 
 namespace {
-
-#define NELEMENTS(x) static_cast<int>(sizeof(x) / sizeof(x[0]))
 
 TEST(EncodeAPI, InvalidParams) {
   static const aom_codec_iface_t *kCodecs[] = {

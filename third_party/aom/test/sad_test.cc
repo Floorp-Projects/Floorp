@@ -231,8 +231,8 @@ class SADTestBase : public ::testing::Test {
   ACMRandom rnd_;
 };
 
-class SADx4Test : public SADTestBase,
-                  public ::testing::WithParamInterface<SadMxNx4Param> {
+class SADx4Test : public ::testing::WithParamInterface<SadMxNx4Param>,
+                  public SADTestBase {
  public:
   SADx4Test() : SADTestBase(GET_PARAM(0), GET_PARAM(1), GET_PARAM(3)) {}
 
@@ -257,8 +257,8 @@ class SADx4Test : public SADTestBase,
   }
 };
 
-class SADTest : public SADTestBase,
-                public ::testing::WithParamInterface<SadMxNParam> {
+class SADTest : public ::testing::WithParamInterface<SadMxNParam>,
+                public SADTestBase {
  public:
   SADTest() : SADTestBase(GET_PARAM(0), GET_PARAM(1), GET_PARAM(3)) {}
 
@@ -288,8 +288,8 @@ class SADTest : public SADTestBase,
   }
 };
 
-class SADavgTest : public SADTestBase,
-                   public ::testing::WithParamInterface<SadMxNAvgParam> {
+class SADavgTest : public ::testing::WithParamInterface<SadMxNAvgParam>,
+                   public SADTestBase {
  public:
   SADavgTest() : SADTestBase(GET_PARAM(0), GET_PARAM(1), GET_PARAM(3)) {}
 

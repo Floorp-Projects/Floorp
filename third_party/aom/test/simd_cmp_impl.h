@@ -1590,10 +1590,10 @@ void TestSimd2Args(uint32_t iterations, uint32_t mask, uint32_t maskwidth,
                typeid(CArg2) == typeid(c_v256)) {
       // S64_V256V256
       error = CompareSimd2Args<int64_t, v256, v256, CRet, CArg1, CArg2>(
-          reinterpret_cast<fptr>(u64_store_aligned),
+          reinterpret_cast<fptr>(s64_store_aligned),
           reinterpret_cast<fptr>(v256_load_aligned),
           reinterpret_cast<fptr>(v256_load_aligned), simd, d,
-          reinterpret_cast<fptr>(c_u64_store_aligned),
+          reinterpret_cast<fptr>(c_s64_store_aligned),
           reinterpret_cast<fptr>(c_v256_load_aligned),
           reinterpret_cast<fptr>(c_v256_load_aligned),
           reinterpret_cast<fptr>(ref_simd), ref_d, s1, s2);

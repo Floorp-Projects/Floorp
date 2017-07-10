@@ -676,11 +676,12 @@ void av1_convolve_horiz_ssse3(const uint8_t *src, int src_stride, uint8_t *dst,
   __m128i verf[6];
   __m128i horf[2];
   SubpelFilterCoeffs hCoeffs, vCoeffs;
+  assert(conv_params->do_average == 0 || conv_params->do_average == 1);
   const uint8_t *src_ptr;
-  store_pixel_t store2p = store2pixelTab[conv_params->ref];
-  store_pixel_t store4p = store4pixelTab[conv_params->ref];
-  transpose_to_dst_t transpose_4x4 = trans4x4Tab[conv_params->ref];
-  transpose_to_dst_t transpose_8x8 = trans8x8Tab[conv_params->ref];
+  store_pixel_t store2p = store2pixelTab[conv_params->do_average];
+  store_pixel_t store4p = store4pixelTab[conv_params->do_average];
+  transpose_to_dst_t transpose_4x4 = trans4x4Tab[conv_params->do_average];
+  transpose_to_dst_t transpose_8x8 = trans8x8Tab[conv_params->do_average];
 
   const int tapsNum = filter_params.taps;
   int block_height, block_residu;
@@ -890,10 +891,11 @@ void av1_convolve_vert_ssse3(const uint8_t *src, int src_stride, uint8_t *dst,
   __m128i verf[6];
   SubpelFilterCoeffs vCoeffs;
   const uint8_t *src_ptr;
+  assert(conv_params->do_average == 0 || conv_params->do_average == 1);
   uint8_t *dst_ptr = dst;
-  store_pixel_t store2p = store2pixelTab[conv_params->ref];
-  store_pixel_t store4p = store4pixelTab[conv_params->ref];
-  store_pixel_t store8p = store8pixelTab[conv_params->ref];
+  store_pixel_t store2p = store2pixelTab[conv_params->do_average];
+  store_pixel_t store4p = store4pixelTab[conv_params->do_average];
+  store_pixel_t store8p = store8pixelTab[conv_params->do_average];
   const int tapsNum = filter_params.taps;
 
   if (0 == subpel_y_q4 || 16 != y_step_q4) {

@@ -84,7 +84,7 @@ static void predict_superblock(const AV1_COMP *const cpi, ThreadData *td,
 #if CONFIG_EXT_INTER
                                int mi_row_ori, int mi_col_ori,
 #endif  // CONFIG_EXT_INTER
-                               int mi_row_pred, int mi_col_pred,
+                               int mi_row_pred, int mi_col_pred, int plane,
                                BLOCK_SIZE bsize_pred, int b_sub8x8, int block);
 static int check_supertx_sb(BLOCK_SIZE bsize, TX_SIZE supertx_size,
                             PC_TREE *pc_tree);
@@ -308,7 +308,6 @@ static void set_offsets_without_segment_id(const AV1_COMP *const cpi,
   av1_setup_src_planes(x, cpi->source, mi_row, mi_col);
 
   // R/D setup.
-  x->rddiv = cpi->rd.RDDIV;
   x->rdmult = cpi->rd.RDMULT;
 
   // required by av1_append_sub8x8_mvs_for_idx() and av1_find_best_ref_mvs()
@@ -326,6 +325,10 @@ static void set_offsets(const AV1_COMP *const cpi, const TileInfo *const tile,
   set_offsets_without_segment_id(cpi, tile, x, mi_row, mi_col, bsize);
 
   mbmi = &xd->mi[0]->mbmi;
+#if CONFIG_CFL
+  xd->cfl->mi_row = mi_row;
+  xd->cfl->mi_col = mi_col;
+#endif
 
   // Setup segment ID.
   if (seg->enabled) {
@@ -413,7 +416,6 @@ static void set_offsets_extend(const AV1_COMP *const cpi, ThreadData *td,
   xd->left_available = (mi_col_ori > tile->mi_col_start);
 
   // R/D setup.
-  x->rddiv = cpi->rd.RDDIV;
   x->rdmult = cpi->rd.RDMULT;
 }
 
@@ -539,6 +541,21 @@ static void set_ref_and_pred_mvs(MACROBLOCK *const x, int_mv *const mi_pred_mv,
       mbmi->pred_mv[1] = this_mv;
       mi_pred_mv[1] = this_mv;
     }
+#if CONFIG_COMPOUND_SINGLEREF
+  } else if (is_inter_singleref_comp_mode(mbmi->mode)) {
+    // Special case: SR_NEAR_NEWMV uses 1 + mbmi->ref_mv_idx
+    // (like NEARMV) instead
+    if (mbmi->mode == SR_NEAR_NEWMV) ref_mv_idx += 1;
+
+    if (compound_ref0_mode(mbmi->mode) == NEWMV ||
+        compound_ref1_mode(mbmi->mode) == NEWMV) {
+      int_mv this_mv = curr_ref_mv_stack[ref_mv_idx].this_mv;
+      clamp_mv_ref(&this_mv.as_mv, bw, bh, xd);
+      mbmi_ext->ref_mvs[mbmi->ref_frame[0]][0] = this_mv;
+      mbmi->pred_mv[0] = this_mv;
+      mi_pred_mv[0] = this_mv;
+    }
+#endif  // CONFIG_COMPOUND_SINGLEREF
   } else {
 #endif  // CONFIG_EXT_INTER
     if (mbmi->mode == NEWMV) {
@@ -635,7 +652,6 @@ static void update_state(const AV1_COMP *const cpi, ThreadData *td,
 #if CONFIG_PALETTE
   for (i = 0; i < 2; ++i) pd[i].color_index_map = ctx->color_index_map[i];
 #endif  // CONFIG_PALETTE
-
   // Restore the coding context of the MB to that that was in place
   // when the mode was picked for it
   for (y = 0; y < mi_height; y++)
@@ -814,7 +830,6 @@ static void update_state_supertx(const AV1_COMP *const cpi, ThreadData *td,
     }
     mi_addr->mbmi.segment_id_supertx = MAX_SEGMENTS;
   }
-
   // Restore the coding context of the MB to that that was in place
   // when the mode was picked for it
   for (y = 0; y < mi_height; y++)
@@ -1147,7 +1162,7 @@ static void update_supertx_param_sb(const AV1_COMP *const cpi, ThreadData *td,
 }
 #endif  // CONFIG_SUPERTX
 
-#if CONFIG_MOTION_VAR && CONFIG_NCOBMC
+#if CONFIG_MOTION_VAR && (CONFIG_NCOBMC || CONFIG_NCOBMC_ADAPT_WEIGHT)
 static void set_mode_info_b(const AV1_COMP *const cpi,
                             const TileInfo *const tile, ThreadData *td,
                             int mi_row, int mi_col, BLOCK_SIZE bsize,
@@ -1167,6 +1182,7 @@ static void set_mode_info_sb(const AV1_COMP *const cpi, ThreadData *td,
   BLOCK_SIZE subsize = get_subsize(bsize, partition);
 #if CONFIG_EXT_PARTITION_TYPES
   const BLOCK_SIZE bsize2 = get_subsize(bsize, PARTITION_SPLIT);
+  const int quarter_step = mi_size_wide[bsize] / 4;
 #endif
 #if CONFIG_CB4X4
   const int unify_bsize = 1;
@@ -1245,6 +1261,24 @@ static void set_mode_info_sb(const AV1_COMP *const cpi, ThreadData *td,
       set_mode_info_b(cpi, tile, td, mi_row + hbs, mi_col + hbs, bsize2,
                       &pc_tree->verticalb[2]);
       break;
+    case PARTITION_HORZ_4:
+      for (int i = 0; i < 4; ++i) {
+        int this_mi_row = mi_row + i * quarter_step;
+        if (i > 0 && this_mi_row >= cm->mi_rows) break;
+
+        set_mode_info_b(cpi, tile, td, this_mi_row, mi_col, subsize,
+                        &pc_tree->horizontal4[i]);
+      }
+      break;
+    case PARTITION_VERT_4:
+      for (int i = 0; i < 4; ++i) {
+        int this_mi_col = mi_col + i * quarter_step;
+        if (i > 0 && this_mi_col >= cm->mi_cols) break;
+
+        set_mode_info_b(cpi, tile, td, mi_row, this_mi_col, subsize,
+                        &pc_tree->vertical4[i]);
+      }
+      break;
 #endif  // CONFIG_EXT_PARTITION_TYPES
     default: assert(0 && "Invalid partition type."); break;
   }
@@ -1281,10 +1315,10 @@ static int set_segment_rdmult(const AV1_COMP *const cpi, MACROBLOCK *const x,
   return av1_compute_rd_mult(cpi, segment_qindex + cm->y_dc_delta_q);
 }
 
-#if CONFIG_DAALA_DIST && CONFIG_CB4X4
-static void daala_dist_set_sub8x8_dst(MACROBLOCK *const x, uint8_t *dst8x8,
-                                      BLOCK_SIZE bsize, int bw, int bh,
-                                      int mi_row, int mi_col) {
+#if CONFIG_DIST_8X8 && CONFIG_CB4X4
+static void dist_8x8_set_sub8x8_dst(MACROBLOCK *const x, uint8_t *dst8x8,
+                                    BLOCK_SIZE bsize, int bw, int bh,
+                                    int mi_row, int mi_col) {
   MACROBLOCKD *const xd = &x->e_mbd;
   struct macroblockd_plane *const pd = &xd->plane[0];
   const int dst_stride = pd->dst.stride;
@@ -1294,12 +1328,24 @@ static void daala_dist_set_sub8x8_dst(MACROBLOCK *const x, uint8_t *dst8x8,
 
   if (bsize < BLOCK_8X8) {
     int i, j;
-    uint8_t *dst_sub8x8 = &dst8x8[((mi_row & 1) * 8 + (mi_col & 1)) << 2];
+#if CONFIG_HIGHBITDEPTH
+    if (xd->cur_buf->flags & YV12_FLAG_HIGHBITDEPTH) {
+      uint16_t *dst8x8_16 = (uint16_t *)dst8x8;
+      uint16_t *dst_sub8x8 = &dst8x8_16[((mi_row & 1) * 8 + (mi_col & 1)) << 2];
 
-    for (j = 0; j < bh; ++j)
-      for (i = 0; i < bw; ++i) {
-        dst_sub8x8[j * 8 + i] = dst[j * dst_stride + i];
-      }
+      for (j = 0; j < bh; ++j)
+        for (i = 0; i < bw; ++i)
+          dst_sub8x8[j * 8 + i] = CONVERT_TO_SHORTPTR(dst)[j * dst_stride + i];
+    } else {
+#endif
+      uint8_t *dst_sub8x8 = &dst8x8[((mi_row & 1) * 8 + (mi_col & 1)) << 2];
+
+      for (j = 0; j < bh; ++j)
+        for (i = 0; i < bw; ++i)
+          dst_sub8x8[j * 8 + i] = dst[j * dst_stride + i];
+#if CONFIG_HIGHBITDEPTH
+    }
+#endif
   }
 }
 #endif
@@ -1330,10 +1376,6 @@ static void rd_pick_sb_modes(const AV1_COMP *const cpi, TileDataEnc *tile_data,
   x->pvq_speed = 1;
   x->pvq_coded = 0;
 #endif
-#if CONFIG_CFL
-  // Don't store luma during RDO (we will store the best mode later).
-  x->cfl_store_y = 0;
-#endif
 
   set_offsets(cpi, tile_info, x, mi_row, mi_col, bsize);
   mbmi = &xd->mi[0]->mbmi;
@@ -1341,6 +1383,10 @@ static void rd_pick_sb_modes(const AV1_COMP *const cpi, TileDataEnc *tile_data,
 #if CONFIG_RD_DEBUG
   mbmi->mi_row = mi_row;
   mbmi->mi_col = mi_col;
+#endif
+#if CONFIG_CFL
+  // Don't store luma during RDO. Only store luma when best luma is known
+  x->cfl_store_y = 0;
 #endif
 #if CONFIG_SUPERTX
   // We set tx_size here as skip blocks would otherwise not set it.
@@ -1542,6 +1588,7 @@ static void update_stats(const AV1_COMMON *const cm, ThreadData *td, int mi_row,
 #endif
   if (!frame_is_intra_only(cm)) {
     FRAME_COUNTS *const counts = td->counts;
+    RD_COUNTS *rdc = &td->rd_counts;
     const int inter_block = is_inter_block(mbmi);
     const int seg_ref_active =
         segfeature_active(&cm->seg, mbmi->segment_id, SEG_LVL_REF_FRAME);
@@ -1560,6 +1607,12 @@ static void update_stats(const AV1_COMMON *const cm, ThreadData *td, int mi_row,
 #endif  // CONFIG_EXT_REFS
 
         if (cm->reference_mode == REFERENCE_MODE_SELECT) {
+          if (has_second_ref(mbmi))
+            // This flag is also updated for 4x4 blocks
+            rdc->compound_ref_used_flag = 1;
+          else
+            // This flag is also updated for 4x4 blocks
+            rdc->single_ref_used_flag = 1;
 #if !SUB8X8_COMP_REF
           if (mbmi->sb_type != BLOCK_4X4)
             counts->comp_inter[av1_get_reference_mode_context(cm, xd)]
@@ -1571,24 +1624,53 @@ static void update_stats(const AV1_COMMON *const cm, ThreadData *td, int mi_row,
         }
 
         if (has_second_ref(mbmi)) {
-#if CONFIG_EXT_REFS
-          const int bit = (ref0 == GOLDEN_FRAME || ref0 == LAST3_FRAME);
+#if CONFIG_EXT_COMP_REFS
+          const COMP_REFERENCE_TYPE comp_ref_type = has_uni_comp_refs(mbmi)
+                                                        ? UNIDIR_COMP_REFERENCE
+                                                        : BIDIR_COMP_REFERENCE;
+#if !USE_UNI_COMP_REFS
+          // TODO(zoeliu): Temporarily turn off uni-directional comp refs
+          assert(comp_ref_type == BIDIR_COMP_REFERENCE);
+#endif  // !USE_UNI_COMP_REFS
+          counts->comp_ref_type[av1_get_comp_reference_type_context(xd)]
+                               [comp_ref_type]++;
 
-          counts->comp_ref[av1_get_pred_context_comp_ref_p(cm, xd)][0][bit]++;
-          if (!bit) {
-            counts->comp_ref[av1_get_pred_context_comp_ref_p1(cm, xd)][1]
-                            [ref0 == LAST_FRAME]++;
+          if (comp_ref_type == UNIDIR_COMP_REFERENCE) {
+            const int bit = (ref0 == BWDREF_FRAME);
+            counts->uni_comp_ref[av1_get_pred_context_uni_comp_ref_p(xd)][0]
+                                [bit]++;
+            if (!bit) {
+              const int bit1 = (ref1 == LAST3_FRAME || ref1 == GOLDEN_FRAME);
+              counts->uni_comp_ref[av1_get_pred_context_uni_comp_ref_p1(xd)][1]
+                                  [bit1]++;
+              if (bit1) {
+                counts->uni_comp_ref[av1_get_pred_context_uni_comp_ref_p2(xd)]
+                                    [2][ref1 == GOLDEN_FRAME]++;
+              }
+            }
           } else {
-            counts->comp_ref[av1_get_pred_context_comp_ref_p2(cm, xd)][2]
-                            [ref0 == GOLDEN_FRAME]++;
-          }
+#endif  // CONFIG_EXT_COMP_REFS
+#if CONFIG_EXT_REFS
+            const int bit = (ref0 == GOLDEN_FRAME || ref0 == LAST3_FRAME);
 
-          counts->comp_bwdref[av1_get_pred_context_comp_bwdref_p(cm, xd)][0]
-                             [ref1 == ALTREF_FRAME]++;
-#else
+            counts->comp_ref[av1_get_pred_context_comp_ref_p(cm, xd)][0][bit]++;
+            if (!bit) {
+              counts->comp_ref[av1_get_pred_context_comp_ref_p1(cm, xd)][1]
+                              [ref0 == LAST_FRAME]++;
+            } else {
+              counts->comp_ref[av1_get_pred_context_comp_ref_p2(cm, xd)][2]
+                              [ref0 == GOLDEN_FRAME]++;
+            }
+
+            counts->comp_bwdref[av1_get_pred_context_comp_bwdref_p(cm, xd)][0]
+                               [ref1 == ALTREF_FRAME]++;
+#else   // !CONFIG_EXT_REFS
           counts->comp_ref[av1_get_pred_context_comp_ref_p(cm, xd)][0]
                           [ref0 == GOLDEN_FRAME]++;
 #endif  // CONFIG_EXT_REFS
+#if CONFIG_EXT_COMP_REFS
+          }
+#endif  // CONFIG_EXT_COMP_REFS
         } else {
 #if CONFIG_EXT_REFS
           const int bit = (ref0 == ALTREF_FRAME || ref0 == BWDREF_FRAME);
@@ -1609,7 +1691,7 @@ static void update_stats(const AV1_COMMON *const cm, ThreadData *td, int mi_row,
                                 [ref0 != LAST3_FRAME]++;
             }
           }
-#else
+#else   // !CONFIG_EXT_REFS
           counts->single_ref[av1_get_pred_context_single_ref_p1(xd)][0]
                             [ref0 != LAST_FRAME]++;
           if (ref0 != LAST_FRAME) {
@@ -1619,7 +1701,14 @@ static void update_stats(const AV1_COMMON *const cm, ThreadData *td, int mi_row,
 #endif  // CONFIG_EXT_REFS
         }
 
-#if CONFIG_EXT_INTER && CONFIG_INTERINTRA
+#if CONFIG_EXT_INTER
+#if CONFIG_COMPOUND_SINGLEREF
+        if (!has_second_ref(mbmi))
+          counts->comp_inter_mode[av1_get_inter_mode_context(xd)]
+                                 [is_inter_singleref_comp_mode(mbmi->mode)]++;
+#endif  // CONFIG_COMPOUND_SINGLEREF
+
+#if CONFIG_INTERINTRA
         if (cm->reference_mode != COMPOUND_REFERENCE &&
 #if CONFIG_SUPERTX
             !supertx_enabled &&
@@ -1635,14 +1724,33 @@ static void update_stats(const AV1_COMMON *const cm, ThreadData *td, int mi_row,
             counts->interintra[bsize_group][0]++;
           }
         }
-#endif  // CONFIG_EXT_INTER && CONFIG_INTERINTRA
+#endif  // CONFIG_INTERINTRA
+#endif  // CONFIG_EXT_INTER
 
 #if CONFIG_MOTION_VAR || CONFIG_WARPED_MOTION
+#if CONFIG_WARPED_MOTION
+        set_ref_ptrs(cm, xd, mbmi->ref_frame[0], mbmi->ref_frame[1]);
+#endif
+#if CONFIG_NCOBMC_ADAPT_WEIGHT
+        const MOTION_MODE motion_allowed =
+            motion_mode_allowed_wrapper(0,
+#if CONFIG_GLOBAL_MOTION
+                                        0, xd->global_motion,
+#endif  // CONFIG_GLOBAL_MOTION
+#if CONFIG_WARPED_MOTION
+                                        xd,
+#endif
+                                        mi);
+#else
         const MOTION_MODE motion_allowed = motion_mode_allowed(
-#if CONFIG_GLOBAL_MOTION && SEPARATE_GLOBAL_MOTION
+#if CONFIG_GLOBAL_MOTION
             0, xd->global_motion,
-#endif  // CONFIG_GLOBAL_MOTION && SEPARATE_GLOBAL_MOTION
+#endif  // CONFIG_GLOBAL_MOTION
+#if CONFIG_WARPED_MOTION
+            xd,
+#endif
             mi);
+#endif  // CONFIG_NCOBMC_ADAPT_WEIGHT
 #if CONFIG_SUPERTX
         if (!supertx_enabled)
 #endif  // CONFIG_SUPERTX
@@ -1660,11 +1768,28 @@ static void update_stats(const AV1_COMMON *const cm, ThreadData *td, int mi_row,
         if (motion_allowed > SIMPLE_TRANSLATION)
           counts->motion_mode[mbmi->sb_type][mbmi->motion_mode]++;
 #endif  // CONFIG_MOTION_VAR && CONFIG_WARPED_MOTION
+
+#if CONFIG_NCOBMC_ADAPT_WEIGHT
+        if (mbmi->motion_mode == NCOBMC_ADAPT_WEIGHT) {
+          ADAPT_OVERLAP_BLOCK ao_block =
+              adapt_overlap_block_lookup[mbmi->sb_type];
+          ++counts->ncobmc_mode[ao_block][mbmi->ncobmc_mode[0]];
+          if (mi_size_wide[mbmi->sb_type] != mi_size_high[mbmi->sb_type]) {
+            ++counts->ncobmc_mode[ao_block][mbmi->ncobmc_mode[1]];
+          }
+        }
+#endif
+
 #endif  // CONFIG_MOTION_VAR || CONFIG_WARPED_MOTION
 
 #if CONFIG_EXT_INTER
-        if (cm->reference_mode != SINGLE_REFERENCE &&
+        if (
+#if CONFIG_COMPOUND_SINGLEREF
+            is_inter_anyref_comp_mode(mbmi->mode)
+#else   // !CONFIG_COMPOUND_SINGLEREF
+            cm->reference_mode != SINGLE_REFERENCE &&
             is_inter_compound_mode(mbmi->mode)
+#endif  // CONFIG_COMPOUND_SINGLEREF
 #if CONFIG_MOTION_VAR || CONFIG_WARPED_MOTION
             && mbmi->motion_mode == SIMPLE_TRANSLATION
 #endif  // CONFIG_MOTION_VAR || CONFIG_WARPED_MOTION
@@ -1683,6 +1808,12 @@ static void update_stats(const AV1_COMMON *const cm, ThreadData *td, int mi_row,
       if (has_second_ref(mbmi)) {
         mode_ctx = mbmi_ext->compound_mode_context[mbmi->ref_frame[0]];
         ++counts->inter_compound_mode[mode_ctx][INTER_COMPOUND_OFFSET(mode)];
+#if CONFIG_COMPOUND_SINGLEREF
+      } else if (is_inter_singleref_comp_mode(mode)) {
+        mode_ctx = mbmi_ext->compound_mode_context[mbmi->ref_frame[0]];
+        ++counts->inter_singleref_comp_mode[mode_ctx]
+                                           [INTER_SINGLEREF_COMP_OFFSET(mode)];
+#endif  // CONFIG_COMPOUND_SINGLEREF
       } else {
 #endif  // CONFIG_EXT_INTER
         mode_ctx = av1_mode_context_analyzer(mbmi_ext->mode_context,
@@ -1693,10 +1824,15 @@ static void update_stats(const AV1_COMMON *const cm, ThreadData *td, int mi_row,
 #endif  // CONFIG_EXT_INTER
 
 #if CONFIG_EXT_INTER
+#if CONFIG_COMPOUND_SINGLEREF
+      if (mbmi->mode == NEWMV || mbmi->mode == NEW_NEWMV ||
+          mbmi->mode == SR_NEW_NEWMV) {
+#else   // !CONFIG_COMPOUND_SINGLEREF
       if (mbmi->mode == NEWMV || mbmi->mode == NEW_NEWMV) {
-#else
+#endif  // CONFIG_COMPOUND_SINGLEREF
+#else   // !CONFIG_EXT_INTER
       if (mbmi->mode == NEWMV) {
-#endif
+#endif  // CONFIG_EXT_INTER
         uint8_t ref_frame_type = av1_ref_frame_type(mbmi->ref_frame);
         int idx;
 
@@ -1871,10 +2007,16 @@ static void encode_b(const AV1_COMP *const cpi, const TileInfo *const tile,
   update_state(cpi, td, ctx, mi_row, mi_col, bsize, dry_run);
 #if CONFIG_MOTION_VAR && CONFIG_NCOBMC
   mbmi = &xd->mi[0]->mbmi;
+#if CONFIG_WARPED_MOTION
+  set_ref_ptrs(&cpi->common, xd, mbmi->ref_frame[0], mbmi->ref_frame[1]);
+#endif
   const MOTION_MODE motion_allowed = motion_mode_allowed(
-#if CONFIG_GLOBAL_MOTION && SEPARATE_GLOBAL_MOTION
+#if CONFIG_GLOBAL_MOTION
       0, xd->global_motion,
-#endif  // CONFIG_GLOBAL_MOTION && SEPARATE_GLOBAL_MOTION
+#endif  // CONFIG_GLOBAL_MOTION
+#if CONFIG_WARPED_MOTION
+      xd,
+#endif
       xd->mi[0]);
   check_ncobmc = is_inter_block(mbmi) && motion_allowed >= OBMC_CAUSAL;
   if (!dry_run && check_ncobmc) {
@@ -1922,6 +2064,8 @@ static void encode_sb(const AV1_COMP *const cpi, ThreadData *td,
   const BLOCK_SIZE subsize = get_subsize(bsize, partition);
 #if CONFIG_EXT_PARTITION_TYPES
   const BLOCK_SIZE bsize2 = get_subsize(bsize, PARTITION_SPLIT);
+  int quarter_step = mi_size_wide[bsize] / 4;
+  int i;
 #endif
 
 #if CONFIG_CB4X4
@@ -1932,6 +2076,11 @@ static void encode_sb(const AV1_COMP *const cpi, ThreadData *td,
 #endif
 
   if (mi_row >= cm->mi_rows || mi_col >= cm->mi_cols) return;
+
+#if CONFIG_SPEED_REFS
+  // First scanning pass of an SB is dry run only.
+  if (cpi->sb_scanning_pass_idx == 0) assert(dry_run == DRY_RUN_NORMAL);
+#endif  // CONFIG_SPEED_REFS
 
   if (!dry_run && ctx >= 0) td->counts->partition[ctx][partition]++;
 
@@ -2114,6 +2263,24 @@ static void encode_sb(const AV1_COMP *const cpi, ThreadData *td,
                partition, &pc_tree->verticalb[1], rate);
       encode_b(cpi, tile, td, tp, mi_row + hbs, mi_col + hbs, dry_run, bsize2,
                partition, &pc_tree->verticalb[2], rate);
+      break;
+    case PARTITION_HORZ_4:
+      for (i = 0; i < 4; ++i) {
+        int this_mi_row = mi_row + i * quarter_step;
+        if (i > 0 && this_mi_row >= cm->mi_rows) break;
+
+        encode_b(cpi, tile, td, tp, this_mi_row, mi_col, dry_run, subsize,
+                 partition, &pc_tree->horizontal4[i], rate);
+      }
+      break;
+    case PARTITION_VERT_4:
+      for (i = 0; i < 4; ++i) {
+        int this_mi_col = mi_col + i * quarter_step;
+        if (i > 0 && this_mi_col >= cm->mi_cols) break;
+
+        encode_b(cpi, tile, td, tp, mi_row, this_mi_col, dry_run, subsize,
+                 partition, &pc_tree->vertical4[i], rate);
+      }
       break;
 #endif  // CONFIG_EXT_PARTITION_TYPES
     default: assert(0 && "Invalid partition type."); break;
@@ -2302,8 +2469,7 @@ static void rd_use_partition(AV1_COMP *cpi, ThreadData *td,
 
       if (none_rdc.rate < INT_MAX) {
         none_rdc.rate += cpi->partition_cost[pl][PARTITION_NONE];
-        none_rdc.rdcost =
-            RDCOST(x->rdmult, x->rddiv, none_rdc.rate, none_rdc.dist);
+        none_rdc.rdcost = RDCOST(x->rdmult, none_rdc.rate, none_rdc.dist);
 #if CONFIG_SUPERTX
         none_rate_nocoef += cpi->partition_cost[pl][PARTITION_NONE];
 #endif
@@ -2473,7 +2639,9 @@ static void rd_use_partition(AV1_COMP *cpi, ThreadData *td,
     case PARTITION_VERT_A:
     case PARTITION_VERT_B:
     case PARTITION_HORZ_A:
-    case PARTITION_HORZ_B: assert(0 && "Cannot handle extended partiton types");
+    case PARTITION_HORZ_B:
+    case PARTITION_HORZ_4:
+    case PARTITION_VERT_4: assert(0 && "Cannot handle extended partiton types");
 #endif  //  CONFIG_EXT_PARTITION_TYPES
     default: assert(0); break;
   }
@@ -2481,7 +2649,7 @@ static void rd_use_partition(AV1_COMP *cpi, ThreadData *td,
   if (last_part_rdc.rate < INT_MAX) {
     last_part_rdc.rate += cpi->partition_cost[pl][partition];
     last_part_rdc.rdcost =
-        RDCOST(x->rdmult, x->rddiv, last_part_rdc.rate, last_part_rdc.dist);
+        RDCOST(x->rdmult, last_part_rdc.rate, last_part_rdc.dist);
 #if CONFIG_SUPERTX
     last_part_rate_nocoef += cpi->partition_cost[pl][partition];
 #endif
@@ -2565,8 +2733,7 @@ static void rd_use_partition(AV1_COMP *cpi, ThreadData *td,
     }
     if (chosen_rdc.rate < INT_MAX) {
       chosen_rdc.rate += cpi->partition_cost[pl][PARTITION_SPLIT];
-      chosen_rdc.rdcost =
-          RDCOST(x->rdmult, x->rddiv, chosen_rdc.rate, chosen_rdc.dist);
+      chosen_rdc.rdcost = RDCOST(x->rdmult, chosen_rdc.rate, chosen_rdc.dist);
 #if CONFIG_SUPERTX
       chosen_rate_nocoef += cpi->partition_cost[pl][PARTITION_NONE];
 #endif
@@ -2624,8 +2791,8 @@ static void rd_use_partition(AV1_COMP *cpi, ThreadData *td,
 }
 
 /* clang-format off */
-static const BLOCK_SIZE min_partition_size[BLOCK_SIZES] = {
-#if CONFIG_CB4X4
+static const BLOCK_SIZE min_partition_size[BLOCK_SIZES_ALL] = {
+#if CONFIG_CHROMA_2X2 || CONFIG_CHROMA_SUB8X8
   BLOCK_2X2,   BLOCK_2X2,   BLOCK_2X2,    //    2x2,    2x4,     4x2
 #endif
                             BLOCK_4X4,    //                     4x4
@@ -2634,12 +2801,14 @@ static const BLOCK_SIZE min_partition_size[BLOCK_SIZES] = {
   BLOCK_8X8,   BLOCK_8X8,   BLOCK_16X16,  //  16x32,  32x16,   32x32
   BLOCK_16X16, BLOCK_16X16, BLOCK_16X16,  //  32x64,  64x32,   64x64
 #if CONFIG_EXT_PARTITION
-  BLOCK_16X16, BLOCK_16X16, BLOCK_16X16   // 64x128, 128x64, 128x128
+  BLOCK_16X16, BLOCK_16X16, BLOCK_16X16,  // 64x128, 128x64, 128x128
 #endif  // CONFIG_EXT_PARTITION
+  BLOCK_4X4,   BLOCK_4X4,   BLOCK_8X8,      //   4x16,   16x4,    8x32
+  BLOCK_8X8                                 //   32x8
 };
 
-static const BLOCK_SIZE max_partition_size[BLOCK_SIZES] = {
-#if CONFIG_CB4X4
+static const BLOCK_SIZE max_partition_size[BLOCK_SIZES_ALL] = {
+#if CONFIG_CHROMA_2X2 || CONFIG_CHROMA_SUB8X8
   BLOCK_4X4,     BLOCK_4X4,       BLOCK_4X4,    //    2x2,    2x4,     4x2
 #endif
                                   BLOCK_8X8,    //                     4x4
@@ -2648,13 +2817,15 @@ static const BLOCK_SIZE max_partition_size[BLOCK_SIZES] = {
   BLOCK_64X64,   BLOCK_64X64,   BLOCK_64X64,    //  16x32,  32x16,   32x32
   BLOCK_LARGEST, BLOCK_LARGEST, BLOCK_LARGEST,  //  32x64,  64x32,   64x64
 #if CONFIG_EXT_PARTITION
-  BLOCK_LARGEST, BLOCK_LARGEST, BLOCK_LARGEST   // 64x128, 128x64, 128x128
+  BLOCK_LARGEST, BLOCK_LARGEST, BLOCK_LARGEST,  // 64x128, 128x64, 128x128
 #endif  // CONFIG_EXT_PARTITION
+  BLOCK_16X16,   BLOCK_16X16,   BLOCK_32X32,    //   4x16,   16x4,    8x32
+  BLOCK_32X32                                   //   32x8
 };
 
 // Next square block size less or equal than current block size.
-static const BLOCK_SIZE next_square_size[BLOCK_SIZES] = {
-#if CONFIG_CB4X4
+static const BLOCK_SIZE next_square_size[BLOCK_SIZES_ALL] = {
+#if CONFIG_CHROMA_2X2 || CONFIG_CHROMA_SUB8X8
   BLOCK_2X2,   BLOCK_2X2,     BLOCK_2X2,    //    2x2,    2x4,     4x2
 #endif
                               BLOCK_4X4,    //                     4x4
@@ -2663,8 +2834,10 @@ static const BLOCK_SIZE next_square_size[BLOCK_SIZES] = {
   BLOCK_16X16, BLOCK_16X16,   BLOCK_32X32,  //  16x32,  32x16,   32x32
   BLOCK_32X32, BLOCK_32X32,   BLOCK_64X64,  //  32x64,  64x32,   64x64
 #if CONFIG_EXT_PARTITION
-  BLOCK_64X64, BLOCK_64X64, BLOCK_128X128   // 64x128, 128x64, 128x128
+  BLOCK_64X64, BLOCK_64X64, BLOCK_128X128,  // 64x128, 128x64, 128x128
 #endif  // CONFIG_EXT_PARTITION
+  BLOCK_4X4,   BLOCK_4X4,   BLOCK_8X8,      //   4x16,   16x4,    8x32
+  BLOCK_8X8                                 //   32x8
 };
 /* clang-format on */
 
@@ -3055,8 +3228,7 @@ static void rd_test_partition3(
             cm->fc->supertx_prob[partition_supertx_context_lookup[partition]]
                                 [supertx_size],
             0);
-        sum_rdc.rdcost =
-            RDCOST(x->rdmult, x->rddiv, sum_rdc.rate, sum_rdc.dist);
+        sum_rdc.rdcost = RDCOST(x->rdmult, sum_rdc.rate, sum_rdc.dist);
 
         if (!check_intra_sb(cpi, tile_info, mi_row, mi_col, bsize, pc_tree)) {
           TX_TYPE best_tx = DCT_DCT;
@@ -3071,8 +3243,7 @@ static void rd_test_partition3(
               cm->fc->supertx_prob[partition_supertx_context_lookup[partition]]
                                   [supertx_size],
               1);
-          tmp_rdc.rdcost =
-              RDCOST(x->rdmult, x->rddiv, tmp_rdc.rate, tmp_rdc.dist);
+          tmp_rdc.rdcost = RDCOST(x->rdmult, tmp_rdc.rate, tmp_rdc.dist);
           if (tmp_rdc.rdcost < sum_rdc.rdcost) {
             sum_rdc = tmp_rdc;
             update_supertx_param_sb(cpi, td, mi_row, mi_col, bsize, best_tx,
@@ -3091,8 +3262,7 @@ static void rd_test_partition3(
 #endif
                                          bsize);
         sum_rdc.rate += cpi->partition_cost[pl][partition];
-        sum_rdc.rdcost =
-            RDCOST(x->rdmult, x->rddiv, sum_rdc.rate, sum_rdc.dist);
+        sum_rdc.rdcost = RDCOST(x->rdmult, sum_rdc.rate, sum_rdc.dist);
 #if CONFIG_SUPERTX
         sum_rate_nocoef += cpi->partition_cost[pl][partition];
 #endif
@@ -3161,7 +3331,7 @@ static void rd_pick_partition(const AV1_COMP *const cpi, ThreadData *td,
 #if CONFIG_SUPERTX
   int this_rate_nocoef, sum_rate_nocoef = 0, best_rate_nocoef = INT_MAX;
   int abort_flag;
-  const int supertx_allowed = !frame_is_intra_only(cm) &&
+  const int supertx_allowed = !frame_is_intra_only(cm) && bsize >= BLOCK_8X8 &&
                               bsize <= MAX_SUPERTX_BLOCK_SIZE &&
                               !xd->lossless[0];
 #endif  // CONFIG_SUPERTX
@@ -3341,6 +3511,17 @@ static void rd_pick_partition(const AV1_COMP *const cpi, ThreadData *td,
   }
 #endif
 
+#if CONFIG_SPEED_REFS
+  if (cpi->sb_scanning_pass_idx == 0) {
+    // NOTE: For the 1st pass of scanning, check all the subblocks of equal size
+    //       only.
+    partition_none_allowed = (bsize == MIN_SPEED_REFS_BLKSIZE);
+    partition_horz_allowed = 0;
+    partition_vert_allowed = 0;
+    do_square_split = (bsize > MIN_SPEED_REFS_BLKSIZE);
+  }
+#endif  // CONFIG_SPEED_REFS
+
   // PARTITION_NONE
   if (partition_none_allowed) {
     rd_pick_sb_modes(cpi, tile_data, x, mi_row, mi_col, &this_rdc,
@@ -3354,8 +3535,7 @@ static void rd_pick_partition(const AV1_COMP *const cpi, ThreadData *td,
     if (this_rdc.rate != INT_MAX) {
       if (bsize_at_least_8x8) {
         this_rdc.rate += partition_cost[PARTITION_NONE];
-        this_rdc.rdcost =
-            RDCOST(x->rdmult, x->rddiv, this_rdc.rate, this_rdc.dist);
+        this_rdc.rdcost = RDCOST(x->rdmult, this_rdc.rate, this_rdc.dist);
 #if CONFIG_SUPERTX
         this_rate_nocoef += partition_cost[PARTITION_NONE];
 #endif
@@ -3494,8 +3674,7 @@ static void rd_pick_partition(const AV1_COMP *const cpi, ThreadData *td,
             cm->fc->supertx_prob[partition_supertx_context_lookup
                                      [PARTITION_SPLIT]][supertx_size],
             0);
-        sum_rdc.rdcost =
-            RDCOST(x->rdmult, x->rddiv, sum_rdc.rate, sum_rdc.dist);
+        sum_rdc.rdcost = RDCOST(x->rdmult, sum_rdc.rate, sum_rdc.dist);
 
         if (is_inter_mode(pc_tree->leaf_split[0]->mic.mbmi.mode)) {
           TX_TYPE best_tx = DCT_DCT;
@@ -3512,8 +3691,7 @@ static void rd_pick_partition(const AV1_COMP *const cpi, ThreadData *td,
               cm->fc->supertx_prob[partition_supertx_context_lookup
                                        [PARTITION_SPLIT]][supertx_size],
               1);
-          tmp_rdc.rdcost =
-              RDCOST(x->rdmult, x->rddiv, tmp_rdc.rate, tmp_rdc.dist);
+          tmp_rdc.rdcost = RDCOST(x->rdmult, tmp_rdc.rate, tmp_rdc.dist);
           if (tmp_rdc.rdcost < sum_rdc.rdcost) {
             sum_rdc = tmp_rdc;
             update_supertx_param_sb(cpi, td, mi_row, mi_col, bsize, best_tx,
@@ -3551,6 +3729,11 @@ static void rd_pick_partition(const AV1_COMP *const cpi, ThreadData *td,
             &this_rdc, best_rdc.rdcost - sum_rdc.rdcost, pc_tree->split[idx]);
 #endif  // CONFIG_SUPERTX
 
+#if CONFIG_DIST_8X8 && CONFIG_CB4X4
+        if (bsize == BLOCK_8X8 && this_rdc.rate != INT_MAX) {
+          assert(this_rdc.dist_y < INT64_MAX);
+        }
+#endif
         if (this_rdc.rate == INT_MAX) {
           sum_rdc.rdcost = INT64_MAX;
 #if CONFIG_SUPERTX
@@ -3564,28 +3747,40 @@ static void rd_pick_partition(const AV1_COMP *const cpi, ThreadData *td,
 #if CONFIG_SUPERTX
           sum_rate_nocoef += this_rate_nocoef;
 #endif  // CONFIG_SUPERTX
-#if CONFIG_DAALA_DIST && CONFIG_CB4X4
-          sum_rdc.dist_y += this_rdc.dist_y;
+#if CONFIG_DIST_8X8 && CONFIG_CB4X4
+          if (bsize == BLOCK_8X8) {
+            assert(this_rdc.dist_y < INT64_MAX);
+            sum_rdc.dist_y += this_rdc.dist_y;
+          }
 #endif
         }
       }
       reached_last_index = (idx == 4);
 
-#if CONFIG_DAALA_DIST && CONFIG_CB4X4
+#if CONFIG_DIST_8X8 && CONFIG_CB4X4
       if (reached_last_index && sum_rdc.rdcost != INT64_MAX &&
           bsize == BLOCK_8X8) {
-        int use_activity_masking = 0;
-        int64_t daala_dist;
+        int64_t dist_8x8;
         const int src_stride = x->plane[0].src.stride;
-        daala_dist = av1_daala_dist(x->plane[0].src.buf - 4 * src_stride - 4,
-                                    src_stride, x->decoded_8x8, 8, 8, 8, 1,
-                                    use_activity_masking, x->qindex)
-                     << 4;
-        sum_rdc.dist = sum_rdc.dist - sum_rdc.dist_y + daala_dist;
-        sum_rdc.rdcost =
-            RDCOST(x->rdmult, x->rddiv, sum_rdc.rate, sum_rdc.dist);
+        uint8_t *decoded_8x8;
+
+#if CONFIG_HIGHBITDEPTH
+        if (xd->cur_buf->flags & YV12_FLAG_HIGHBITDEPTH)
+          decoded_8x8 = CONVERT_TO_BYTEPTR(x->decoded_8x8);
+        else
+#endif
+          decoded_8x8 = (uint8_t *)x->decoded_8x8;
+
+        dist_8x8 =
+            av1_dist_8x8(cpi, xd, x->plane[0].src.buf - 4 * src_stride - 4,
+                         src_stride, decoded_8x8, 8, BLOCK_8X8, 8, 8, 8, 8,
+                         x->qindex)
+            << 4;
+        assert(sum_rdc.dist_y < INT64_MAX);
+        sum_rdc.dist = sum_rdc.dist - sum_rdc.dist_y + dist_8x8;
+        sum_rdc.rdcost = RDCOST(x->rdmult, sum_rdc.rate, sum_rdc.dist);
       }
-#endif  // CONFIG_DAALA_DIST && CONFIG_CB4X4
+#endif  // CONFIG_DIST_8X8 && CONFIG_CB4X4
 
 #if CONFIG_SUPERTX
       if (supertx_allowed && sum_rdc.rdcost < INT64_MAX && reached_last_index) {
@@ -3598,8 +3793,7 @@ static void rd_pick_partition(const AV1_COMP *const cpi, ThreadData *td,
             cm->fc->supertx_prob[partition_supertx_context_lookup
                                      [PARTITION_SPLIT]][supertx_size],
             0);
-        sum_rdc.rdcost =
-            RDCOST(x->rdmult, x->rddiv, sum_rdc.rate, sum_rdc.dist);
+        sum_rdc.rdcost = RDCOST(x->rdmult, sum_rdc.rate, sum_rdc.dist);
 
         if (!check_intra_sb(cpi, tile_info, mi_row, mi_col, bsize, pc_tree)) {
           TX_TYPE best_tx = DCT_DCT;
@@ -3616,8 +3810,7 @@ static void rd_pick_partition(const AV1_COMP *const cpi, ThreadData *td,
               cm->fc->supertx_prob[partition_supertx_context_lookup
                                        [PARTITION_SPLIT]][supertx_size],
               1);
-          tmp_rdc.rdcost =
-              RDCOST(x->rdmult, x->rddiv, tmp_rdc.rate, tmp_rdc.dist);
+          tmp_rdc.rdcost = RDCOST(x->rdmult, tmp_rdc.rate, tmp_rdc.dist);
           if (tmp_rdc.rdcost < sum_rdc.rdcost) {
             sum_rdc = tmp_rdc;
             update_supertx_param_sb(cpi, td, mi_row, mi_col, bsize, best_tx,
@@ -3632,7 +3825,7 @@ static void rd_pick_partition(const AV1_COMP *const cpi, ThreadData *td,
 
     if (reached_last_index && sum_rdc.rdcost < best_rdc.rdcost) {
       sum_rdc.rate += partition_cost[PARTITION_SPLIT];
-      sum_rdc.rdcost = RDCOST(x->rdmult, x->rddiv, sum_rdc.rate, sum_rdc.dist);
+      sum_rdc.rdcost = RDCOST(x->rdmult, sum_rdc.rate, sum_rdc.dist);
 #if CONFIG_SUPERTX
       sum_rate_nocoef += partition_cost[PARTITION_SPLIT];
 #endif  // CONFIG_SUPERTX
@@ -3725,14 +3918,14 @@ static void rd_pick_partition(const AV1_COMP *const cpi, ThreadData *td,
                        best_rdc.rdcost - sum_rdc.rdcost);
 #endif  // CONFIG_SUPERTX
 
-#if CONFIG_DAALA_DIST && CONFIG_CB4X4
+#if CONFIG_DIST_8X8 && CONFIG_CB4X4
       if (this_rdc.rate != INT_MAX && bsize == BLOCK_8X8) {
         update_state(cpi, td, &pc_tree->horizontal[1], mi_row + mi_step, mi_col,
                      subsize, DRY_RUN_NORMAL);
         encode_superblock(cpi, td, tp, DRY_RUN_NORMAL, mi_row + mi_step, mi_col,
                           subsize, NULL);
       }
-#endif  // CONFIG_DAALA_DIST && CONFIG_CB4X4
+#endif  // CONFIG_DIST_8X8 && CONFIG_CB4X4
 
       if (this_rdc.rate == INT_MAX) {
         sum_rdc.rdcost = INT64_MAX;
@@ -3746,24 +3939,31 @@ static void rd_pick_partition(const AV1_COMP *const cpi, ThreadData *td,
 #if CONFIG_SUPERTX
         sum_rate_nocoef += this_rate_nocoef;
 #endif  // CONFIG_SUPERTX
-#if CONFIG_DAALA_DIST && CONFIG_CB4X4
+#if CONFIG_DIST_8X8 && CONFIG_CB4X4
         sum_rdc.dist_y += this_rdc.dist_y;
 #endif
       }
-#if CONFIG_DAALA_DIST && CONFIG_CB4X4
+#if CONFIG_DIST_8X8 && CONFIG_CB4X4
       if (sum_rdc.rdcost != INT64_MAX && bsize == BLOCK_8X8) {
-        int use_activity_masking = 0;
-        int64_t daala_dist;
+        int64_t dist_8x8;
         const int src_stride = x->plane[0].src.stride;
-        daala_dist = av1_daala_dist(x->plane[0].src.buf - 4 * src_stride,
-                                    src_stride, x->decoded_8x8, 8, 8, 8, 1,
-                                    use_activity_masking, x->qindex)
-                     << 4;
-        sum_rdc.dist = sum_rdc.dist - sum_rdc.dist_y + daala_dist;
-        sum_rdc.rdcost =
-            RDCOST(x->rdmult, x->rddiv, sum_rdc.rate, sum_rdc.dist);
+        uint8_t *decoded_8x8;
+
+#if CONFIG_HIGHBITDEPTH
+        if (xd->cur_buf->flags & YV12_FLAG_HIGHBITDEPTH)
+          decoded_8x8 = CONVERT_TO_BYTEPTR(x->decoded_8x8);
+        else
+#endif
+          decoded_8x8 = (uint8_t *)x->decoded_8x8;
+
+        dist_8x8 = av1_dist_8x8(cpi, xd, x->plane[0].src.buf - 4 * src_stride,
+                                src_stride, decoded_8x8, 8, BLOCK_8X8, 8, 8, 8,
+                                8, x->qindex)
+                   << 4;
+        sum_rdc.dist = sum_rdc.dist - sum_rdc.dist_y + dist_8x8;
+        sum_rdc.rdcost = RDCOST(x->rdmult, sum_rdc.rate, sum_rdc.dist);
       }
-#endif  // CONFIG_DAALA_DIST && CONFIG_CB4X4
+#endif  // CONFIG_DIST_8X8 && CONFIG_CB4X4
     }
 
 #if CONFIG_SUPERTX
@@ -3777,7 +3977,7 @@ static void rd_pick_partition(const AV1_COMP *const cpi, ThreadData *td,
           cm->fc->supertx_prob[partition_supertx_context_lookup[PARTITION_HORZ]]
                               [supertx_size],
           0);
-      sum_rdc.rdcost = RDCOST(x->rdmult, x->rddiv, sum_rdc.rate, sum_rdc.dist);
+      sum_rdc.rdcost = RDCOST(x->rdmult, sum_rdc.rate, sum_rdc.dist);
 
       if (!check_intra_sb(cpi, tile_info, mi_row, mi_col, bsize, pc_tree)) {
         TX_TYPE best_tx = DCT_DCT;
@@ -3795,8 +3995,7 @@ static void rd_pick_partition(const AV1_COMP *const cpi, ThreadData *td,
                 ->supertx_prob[partition_supertx_context_lookup[PARTITION_HORZ]]
                               [supertx_size],
             1);
-        tmp_rdc.rdcost =
-            RDCOST(x->rdmult, x->rddiv, tmp_rdc.rate, tmp_rdc.dist);
+        tmp_rdc.rdcost = RDCOST(x->rdmult, tmp_rdc.rate, tmp_rdc.dist);
         if (tmp_rdc.rdcost < sum_rdc.rdcost) {
           sum_rdc = tmp_rdc;
           update_supertx_param_sb(cpi, td, mi_row, mi_col, bsize, best_tx,
@@ -3810,7 +4009,7 @@ static void rd_pick_partition(const AV1_COMP *const cpi, ThreadData *td,
 
     if (sum_rdc.rdcost < best_rdc.rdcost) {
       sum_rdc.rate += partition_cost[PARTITION_HORZ];
-      sum_rdc.rdcost = RDCOST(x->rdmult, x->rddiv, sum_rdc.rate, sum_rdc.dist);
+      sum_rdc.rdcost = RDCOST(x->rdmult, sum_rdc.rate, sum_rdc.dist);
 #if CONFIG_SUPERTX
       sum_rate_nocoef += partition_cost[PARTITION_HORZ];
 #endif  // CONFIG_SUPERTX
@@ -3899,14 +4098,14 @@ static void rd_pick_partition(const AV1_COMP *const cpi, ThreadData *td,
                        best_rdc.rdcost - sum_rdc.rdcost);
 #endif  // CONFIG_SUPERTX
 
-#if CONFIG_DAALA_DIST && CONFIG_CB4X4
+#if CONFIG_DIST_8X8 && CONFIG_CB4X4
       if (this_rdc.rate != INT_MAX && bsize == BLOCK_8X8) {
         update_state(cpi, td, &pc_tree->vertical[1], mi_row, mi_col + mi_step,
                      subsize, DRY_RUN_NORMAL);
         encode_superblock(cpi, td, tp, DRY_RUN_NORMAL, mi_row, mi_col + mi_step,
                           subsize, NULL);
       }
-#endif  // CONFIG_DAALA_DIST && CONFIG_CB4X4
+#endif  // CONFIG_DIST_8X8 && CONFIG_CB4X4
 
       if (this_rdc.rate == INT_MAX) {
         sum_rdc.rdcost = INT64_MAX;
@@ -3920,24 +4119,31 @@ static void rd_pick_partition(const AV1_COMP *const cpi, ThreadData *td,
 #if CONFIG_SUPERTX
         sum_rate_nocoef += this_rate_nocoef;
 #endif  // CONFIG_SUPERTX
-#if CONFIG_DAALA_DIST && CONFIG_CB4X4
+#if CONFIG_DIST_8X8 && CONFIG_CB4X4
         sum_rdc.dist_y += this_rdc.dist_y;
 #endif
       }
-#if CONFIG_DAALA_DIST && CONFIG_CB4X4
+#if CONFIG_DIST_8X8 && CONFIG_CB4X4
       if (sum_rdc.rdcost != INT64_MAX && bsize == BLOCK_8X8) {
-        int use_activity_masking = 0;
-        int64_t daala_dist;
+        int64_t dist_8x8;
         const int src_stride = x->plane[0].src.stride;
-        daala_dist =
-            av1_daala_dist(x->plane[0].src.buf - 4, src_stride, x->decoded_8x8,
-                           8, 8, 8, 1, use_activity_masking, x->qindex)
+        uint8_t *decoded_8x8;
+
+#if CONFIG_HIGHBITDEPTH
+        if (xd->cur_buf->flags & YV12_FLAG_HIGHBITDEPTH)
+          decoded_8x8 = CONVERT_TO_BYTEPTR(x->decoded_8x8);
+        else
+#endif
+          decoded_8x8 = (uint8_t *)x->decoded_8x8;
+
+        dist_8x8 =
+            av1_dist_8x8(cpi, xd, x->plane[0].src.buf - 4, src_stride,
+                         decoded_8x8, 8, BLOCK_8X8, 8, 8, 8, 8, x->qindex)
             << 4;
-        sum_rdc.dist = sum_rdc.dist - sum_rdc.dist_y + daala_dist;
-        sum_rdc.rdcost =
-            RDCOST(x->rdmult, x->rddiv, sum_rdc.rate, sum_rdc.dist);
+        sum_rdc.dist = sum_rdc.dist - sum_rdc.dist_y + dist_8x8;
+        sum_rdc.rdcost = RDCOST(x->rdmult, sum_rdc.rate, sum_rdc.dist);
       }
-#endif  // CONFIG_DAALA_DIST && CONFIG_CB4X4
+#endif  // CONFIG_DIST_8X8 && CONFIG_CB4X4
     }
 #if CONFIG_SUPERTX
     if (supertx_allowed && sum_rdc.rdcost < INT64_MAX && !abort_flag) {
@@ -3950,7 +4156,7 @@ static void rd_pick_partition(const AV1_COMP *const cpi, ThreadData *td,
           cm->fc->supertx_prob[partition_supertx_context_lookup[PARTITION_VERT]]
                               [supertx_size],
           0);
-      sum_rdc.rdcost = RDCOST(x->rdmult, x->rddiv, sum_rdc.rate, sum_rdc.dist);
+      sum_rdc.rdcost = RDCOST(x->rdmult, sum_rdc.rate, sum_rdc.dist);
 
       if (!check_intra_sb(cpi, tile_info, mi_row, mi_col, bsize, pc_tree)) {
         TX_TYPE best_tx = DCT_DCT;
@@ -3968,8 +4174,7 @@ static void rd_pick_partition(const AV1_COMP *const cpi, ThreadData *td,
                 ->supertx_prob[partition_supertx_context_lookup[PARTITION_VERT]]
                               [supertx_size],
             1);
-        tmp_rdc.rdcost =
-            RDCOST(x->rdmult, x->rddiv, tmp_rdc.rate, tmp_rdc.dist);
+        tmp_rdc.rdcost = RDCOST(x->rdmult, tmp_rdc.rate, tmp_rdc.dist);
         if (tmp_rdc.rdcost < sum_rdc.rdcost) {
           sum_rdc = tmp_rdc;
           update_supertx_param_sb(cpi, td, mi_row, mi_col, bsize, best_tx,
@@ -3983,7 +4188,7 @@ static void rd_pick_partition(const AV1_COMP *const cpi, ThreadData *td,
 
     if (sum_rdc.rdcost < best_rdc.rdcost) {
       sum_rdc.rate += partition_cost[PARTITION_VERT];
-      sum_rdc.rdcost = RDCOST(x->rdmult, x->rddiv, sum_rdc.rate, sum_rdc.dist);
+      sum_rdc.rdcost = RDCOST(x->rdmult, sum_rdc.rate, sum_rdc.dist);
 #if CONFIG_SUPERTX
       sum_rate_nocoef += partition_cost[PARTITION_VERT];
 #endif  // CONFIG_SUPERTX
@@ -4060,7 +4265,126 @@ static void rd_pick_partition(const AV1_COMP *const cpi, ThreadData *td,
                        bsize2, mi_row + mi_step, mi_col + mi_step, bsize2);
     restore_context(x, &x_ctx, mi_row, mi_col, bsize);
   }
+
+  // PARTITION_HORZ_4
+  // TODO(david.barker): For this and PARTITION_VERT_4,
+  // * Add support for BLOCK_16X16 once we support 2x8 and 8x2 blocks for the
+  //   chroma plane
+  // * Add support for supertx
+  if (bsize == BLOCK_32X32 && partition_horz_allowed && !force_horz_split &&
+      (do_rectangular_split || av1_active_h_edge(cpi, mi_row, mi_step))) {
+    int i;
+    const int quarter_step = mi_size_high[bsize] / 4;
+    PICK_MODE_CONTEXT *ctx_prev = ctx_none;
+
+    subsize = get_subsize(bsize, PARTITION_HORZ_4);
+    av1_zero(sum_rdc);
+
+    for (i = 0; i < 4; ++i) {
+      int this_mi_row = mi_row + i * quarter_step;
+
+      if (i > 0 && this_mi_row >= cm->mi_rows) break;
+
+      if (cpi->sf.adaptive_motion_search) load_pred_mv(x, ctx_prev);
+
+      ctx_prev = &pc_tree->horizontal4[i];
+
+      rd_pick_sb_modes(cpi, tile_data, x, this_mi_row, mi_col, &this_rdc,
+                       PARTITION_HORZ_4, subsize, ctx_prev,
+                       best_rdc.rdcost - sum_rdc.rdcost);
+
+      if (this_rdc.rate == INT_MAX) {
+        sum_rdc.rdcost = INT64_MAX;
+        break;
+      } else {
+        sum_rdc.rate += this_rdc.rate;
+        sum_rdc.dist += this_rdc.dist;
+        sum_rdc.rdcost += this_rdc.rdcost;
+      }
+
+      if (sum_rdc.rdcost >= best_rdc.rdcost) break;
+
+      if (i < 3) {
+        update_state(cpi, td, ctx_prev, this_mi_row, mi_col, subsize, 1);
+        encode_superblock(cpi, td, tp, DRY_RUN_NORMAL, this_mi_row, mi_col,
+                          subsize, NULL);
+      }
+    }
+
+    if (sum_rdc.rdcost < best_rdc.rdcost) {
+      sum_rdc.rate += partition_cost[PARTITION_HORZ_4];
+      sum_rdc.rdcost = RDCOST(x->rdmult, sum_rdc.rate, sum_rdc.dist);
+      if (sum_rdc.rdcost < best_rdc.rdcost) {
+        best_rdc = sum_rdc;
+        pc_tree->partitioning = PARTITION_HORZ_4;
+      }
+    }
+#if !CONFIG_PVQ
+    restore_context(x, &x_ctx, mi_row, mi_col, bsize);
+#else
+    restore_context(x, &x_ctx, mi_row, mi_col, &pre_rdo_buf, bsize);
+#endif
+  }
+  // PARTITION_VERT_4
+  if (bsize == BLOCK_32X32 && partition_vert_allowed && !force_vert_split &&
+      (do_rectangular_split || av1_active_v_edge(cpi, mi_row, mi_step))) {
+    int i;
+    const int quarter_step = mi_size_wide[bsize] / 4;
+    PICK_MODE_CONTEXT *ctx_prev = ctx_none;
+
+    subsize = get_subsize(bsize, PARTITION_VERT_4);
+    av1_zero(sum_rdc);
+
+    for (i = 0; i < 4; ++i) {
+      int this_mi_col = mi_col + i * quarter_step;
+
+      if (i > 0 && this_mi_col >= cm->mi_cols) break;
+
+      if (cpi->sf.adaptive_motion_search) load_pred_mv(x, ctx_prev);
+
+      ctx_prev = &pc_tree->vertical4[i];
+
+      rd_pick_sb_modes(cpi, tile_data, x, mi_row, this_mi_col, &this_rdc,
+                       PARTITION_VERT_4, subsize, ctx_prev,
+                       best_rdc.rdcost - sum_rdc.rdcost);
+
+      if (this_rdc.rate == INT_MAX) {
+        sum_rdc.rdcost = INT64_MAX;
+      } else {
+        sum_rdc.rate += this_rdc.rate;
+        sum_rdc.dist += this_rdc.dist;
+        sum_rdc.rdcost += this_rdc.rdcost;
+      }
+
+      if (sum_rdc.rdcost >= best_rdc.rdcost) break;
+
+      if (i < 3) {
+        update_state(cpi, td, ctx_prev, mi_row, this_mi_col, subsize, 1);
+        encode_superblock(cpi, td, tp, DRY_RUN_NORMAL, mi_row, this_mi_col,
+                          subsize, NULL);
+      }
+    }
+
+    if (sum_rdc.rdcost < best_rdc.rdcost) {
+      sum_rdc.rate += partition_cost[PARTITION_VERT_4];
+      sum_rdc.rdcost = RDCOST(x->rdmult, sum_rdc.rate, sum_rdc.dist);
+      if (sum_rdc.rdcost < best_rdc.rdcost) {
+        best_rdc = sum_rdc;
+        pc_tree->partitioning = PARTITION_VERT_4;
+      }
+    }
+#if !CONFIG_PVQ
+    restore_context(x, &x_ctx, mi_row, mi_col, bsize);
+#else
+    restore_context(x, &x_ctx, mi_row, mi_col, &pre_rdo_buf, bsize);
+#endif
+  }
 #endif  // CONFIG_EXT_PARTITION_TYPES
+
+#if CONFIG_SPEED_REFS
+  // First scanning is done.
+  if (cpi->sb_scanning_pass_idx == 0 && bsize == cm->sb_size) return;
+#endif  // CONFIG_SPEED_REFS
 
   // TODO(jbb): This code added so that we avoid static analysis
   // warning related to the fact that best_rd isn't used after this
@@ -4068,6 +4392,12 @@ static void rd_pick_partition(const AV1_COMP *const cpi, ThreadData *td,
   // checks occur in some sub function and thus are used...
   (void)best_rd;
   *rd_cost = best_rdc;
+
+#if CONFIG_DIST_8X8 && CONFIG_CB4X4
+  if (bsize <= BLOCK_8X8 && rd_cost->rate != INT_MAX) {
+    assert(rd_cost->dist_y < INT64_MAX);
+  }
+#endif  // CONFIG_DIST_8X8 && CONFIG_CB4X4
 #if CONFIG_SUPERTX
   *rate_nocoef = best_rate_nocoef;
 #endif  // CONFIG_SUPERTX
@@ -4093,13 +4423,13 @@ static void rd_pick_partition(const AV1_COMP *const cpi, ThreadData *td,
   x->cfl_store_y = 0;
 #endif
 
-#if CONFIG_DAALA_DIST && CONFIG_CB4X4
+#if CONFIG_DIST_8X8 && CONFIG_CB4X4
   if (best_rdc.rate < INT_MAX && best_rdc.dist < INT64_MAX &&
       bsize == BLOCK_4X4 && pc_tree->index == 3) {
     encode_sb(cpi, td, tile_info, tp, mi_row, mi_col, DRY_RUN_NORMAL, bsize,
               pc_tree, NULL);
   }
-#endif  // CONFIG_DAALA_DIST && CONFIG_CB4X4
+#endif  // CONFIG_DIST_8X8 && CONFIG_CB4X4
 
   if (bsize == cm->sb_size) {
 #if !CONFIG_PVQ && !CONFIG_LV_MAP
@@ -4111,6 +4441,22 @@ static void rd_pick_partition(const AV1_COMP *const cpi, ThreadData *td,
     assert(tp_orig == *tp);
   }
 }
+
+#if CONFIG_SPEED_REFS
+static void restore_mi(const AV1_COMP *const cpi, MACROBLOCK *const x,
+                       int mi_row, int mi_col) {
+  const AV1_COMMON *cm = &cpi->common;
+  MACROBLOCKD *const xd = &x->e_mbd;
+  set_mode_info_offsets(cpi, x, xd, mi_row, mi_col);
+  int x_idx, y;
+  for (y = 0; y < mi_size_high[cm->sb_size]; y++)
+    for (x_idx = 0; x_idx < mi_size_wide[cm->sb_size]; x_idx++)
+      if (mi_col + x_idx < cm->mi_cols && mi_row + y < cm->mi_rows) {
+        memset(xd->mi + y * cm->mi_stride + x_idx, 0, sizeof(*xd->mi));
+        memset(x->mbmi_ext + y * cm->mi_cols + x_idx, 0, sizeof(*x->mbmi_ext));
+      }
+}
+#endif  // CONFIG_SPEED_REFS
 
 static void encode_rd_sb_row(AV1_COMP *cpi, ThreadData *td,
                              TileDataEnc *tile_data, int mi_row,
@@ -4156,8 +4502,6 @@ static void encode_rd_sb_row(AV1_COMP *cpi, ThreadData *td,
     const int idx_str = cm->mi_stride * mi_row + mi_col;
     MODE_INFO **mi = cm->mi_grid_visible + idx_str;
     PC_TREE *const pc_root = td->pc_root[cm->mib_size_log2 - MIN_MIB_SIZE_LOG2];
-
-    av1_update_boundary_info(cm, tile_info, mi_row, mi_col);
 
     if (sf->adaptive_pred_interp_filter) {
       for (i = 0; i < leaf_nodes; ++i)
@@ -4258,12 +4602,35 @@ static void encode_rd_sb_row(AV1_COMP *cpi, ThreadData *td,
         rd_auto_partition_range(cpi, tile_info, xd, mi_row, mi_col,
                                 &x->min_partition_size, &x->max_partition_size);
       }
+#if CONFIG_SPEED_REFS
+      // NOTE: Two scanning passes for the current superblock - the first pass
+      //       is only targeted to collect stats.
+      int m_search_count_backup = *(x->m_search_count_ptr);
+      for (int sb_pass_idx = 0; sb_pass_idx < 2; ++sb_pass_idx) {
+        cpi->sb_scanning_pass_idx = sb_pass_idx;
+        if (frame_is_intra_only(cm) && sb_pass_idx == 0) continue;
+
+        rd_pick_partition(cpi, td, tile_data, tp, mi_row, mi_col, cm->sb_size,
+                          &dummy_rdc,
+#if CONFIG_SUPERTX
+                          &dummy_rate_nocoef,
+#endif  // CONFIG_SUPERTX
+                          INT64_MAX, pc_root);
+        if (sb_pass_idx == 0) {
+          av1_zero(x->pred_mv);
+          pc_root->index = 0;
+          restore_mi(cpi, x, mi_row, mi_col);
+          *(x->m_search_count_ptr) = m_search_count_backup;
+        }
+      }
+#else  // !CONFIG_SPEED_REFS
       rd_pick_partition(cpi, td, tile_data, tp, mi_row, mi_col, cm->sb_size,
                         &dummy_rdc,
 #if CONFIG_SUPERTX
                         &dummy_rate_nocoef,
 #endif  // CONFIG_SUPERTX
                         INT64_MAX, pc_root);
+#endif  // CONFIG_SPEED_REFS
     }
   }
 }
@@ -4329,20 +4696,11 @@ static MV_REFERENCE_FRAME get_frame_type(const AV1_COMP *cpi) {
     return LAST_FRAME;
 }
 
-static TX_MODE select_tx_mode(const AV1_COMP *cpi, MACROBLOCKD *const xd) {
-  int i, all_lossless = 1;
-
-  if (cpi->common.seg.enabled) {
-    for (i = 0; i < MAX_SEGMENTS; ++i) {
-      if (!xd->lossless[i]) {
-        all_lossless = 0;
-        break;
-      }
-    }
-  } else {
-    all_lossless = xd->lossless[0];
-  }
-  if (all_lossless) return ONLY_4X4;
+static TX_MODE select_tx_mode(const AV1_COMP *cpi) {
+  if (cpi->common.all_lossless) return ONLY_4X4;
+#if CONFIG_VAR_TX_NO_TX_MODE
+  return TX_MODE_SELECT;
+#else
   if (cpi->sf.tx_size_search_method == USE_LARGESTALL)
     return ALLOW_32X32 + CONFIG_TX64X64;
   else if (cpi->sf.tx_size_search_method == USE_FULL_RD ||
@@ -4350,6 +4708,7 @@ static TX_MODE select_tx_mode(const AV1_COMP *cpi, MACROBLOCKD *const xd) {
     return TX_MODE_SELECT;
   else
     return cpi->common.tx_mode;
+#endif  // CONFIG_VAR_TX_NO_TX_MODE
 }
 
 void av1_init_tile_data(AV1_COMP *cpi) {
@@ -4372,7 +4731,7 @@ void av1_init_tile_data(AV1_COMP *cpi) {
         TileDataEnc *const tile_data =
             &cpi->tile_data[tile_row * tile_cols + tile_col];
         int i, j;
-        for (i = 0; i < BLOCK_SIZES; ++i) {
+        for (i = 0; i < BLOCK_SIZES_ALL; ++i) {
           for (j = 0; j < MAX_MODES; ++j) {
             tile_data->thresh_freq_fact[i][j] = 32;
             tile_data->mode_map[i][j] = j;
@@ -4415,12 +4774,8 @@ void av1_encode_tile(AV1_COMP *cpi, ThreadData *td, int tile_row,
   int mi_row;
 
 #if CONFIG_DEPENDENT_HORZTILES
-#if CONFIG_TILE_GROUPS
   if ((!cm->dependent_horz_tiles) || (tile_row == 0) ||
       tile_info->tg_horz_boundary) {
-#else
-  if ((!cm->dependent_horz_tiles) || (tile_row == 0)) {
-#endif
     av1_zero_above_context(cm, tile_info->mi_col_start, tile_info->mi_col_end);
   }
 #else
@@ -4504,21 +4859,20 @@ void av1_encode_tile(AV1_COMP *cpi, ThreadData *td, int tile_row,
 #endif
 #endif  // #if CONFIG_PVQ
 
-#if CONFIG_EC_ADAPT
   this_tile->tctx = *cm->fc;
   td->mb.e_mbd.tile_ctx = &this_tile->tctx;
-#endif  // #if CONFIG_EC_ADAPT
 
 #if CONFIG_CFL
   MACROBLOCKD *const xd = &td->mb.e_mbd;
   xd->cfl = &this_tile->cfl;
-  cfl_init(xd->cfl, cm, xd->plane[AOM_PLANE_U].subsampling_x,
-           xd->plane[AOM_PLANE_U].subsampling_y);
+  cfl_init(xd->cfl, cm);
 #endif
 
 #if CONFIG_PVQ
   td->mb.daala_enc.state.adapt = &this_tile->tctx.pvq_context;
 #endif  // CONFIG_PVQ
+
+  av1_setup_across_tile_boundary_info(cm, tile_info);
 
   for (mi_row = tile_info->mi_row_start; mi_row < tile_info->mi_row_end;
        mi_row += cm->mib_size) {
@@ -4656,6 +5010,36 @@ static int do_gm_search_logic(SPEED_FEATURES *const sf, int num_refs_using_gm,
 }
 #endif  // CONFIG_GLOBAL_MOTION
 
+#if CONFIG_PALETTE
+// Estimate if the source frame is screen content, based on the portion of
+// blocks that have no more than 4 (experimentally selected) luma colors.
+static int is_screen_content(const uint8_t *src,
+#if CONFIG_HIGHBITDEPTH
+                             int use_hbd, int bd,
+#endif  // CONFIG_HIGHBITDEPTH
+                             int stride, int width, int height) {
+  assert(src != NULL);
+  int counts = 0;
+  const int blk_w = 16;
+  const int blk_h = 16;
+  const int limit = 4;
+  for (int r = 0; r + blk_h <= height; r += blk_h) {
+    for (int c = 0; c + blk_w <= width; c += blk_w) {
+      const int n_colors =
+#if CONFIG_HIGHBITDEPTH
+          use_hbd ? av1_count_colors_highbd(src + r * stride + c, stride, blk_w,
+                                            blk_h, bd)
+                  :
+#endif  // CONFIG_HIGHBITDEPTH
+                  av1_count_colors(src + r * stride + c, stride, blk_w, blk_h);
+      if (n_colors > 1 && n_colors <= limit) counts++;
+    }
+  }
+  // The threshold is 10%.
+  return counts * blk_h * blk_w * 10 > width * height;
+}
+#endif  // CONFIG_PALETTE
+
 static void encode_frame_internal(AV1_COMP *cpi) {
   ThreadData *const td = &cpi->td;
   MACROBLOCK *const x = &td->mb;
@@ -4681,6 +5065,23 @@ static void encode_frame_internal(AV1_COMP *cpi) {
   av1_zero(*td->counts);
   av1_zero(rdc->coef_counts);
   av1_zero(rdc->comp_pred_diff);
+
+#if CONFIG_PALETTE || CONFIG_INTRABC
+  if (frame_is_intra_only(cm)) {
+#if CONFIG_PALETTE
+    cm->allow_screen_content_tools =
+        cpi->oxcf.content == AOM_CONTENT_SCREEN ||
+        is_screen_content(cpi->source->y_buffer,
+#if CONFIG_HIGHBITDEPTH
+                          cpi->source->flags & YV12_FLAG_HIGHBITDEPTH, xd->bd,
+#endif  // CONFIG_HIGHBITDEPTH
+                          cpi->source->y_stride, cpi->source->y_width,
+                          cpi->source->y_height);
+#else
+    cm->allow_screen_content_tools = cpi->oxcf.content == AOM_CONTENT_SCREEN;
+#endif  // CONFIG_PALETTE
+  }
+#endif  // CONFIG_PALETTE || CONFIG_INTRABC
 
 #if CONFIG_GLOBAL_MOTION
   av1_zero(rdc->global_motion_used);
@@ -4709,6 +5110,8 @@ static void encode_frame_internal(AV1_COMP *cpi) {
         memcpy(&cm->global_motion[frame], &cm->global_motion[pframe],
                sizeof(WarpedMotionParams));
       } else if (ref_buf[frame] &&
+                 ref_buf[frame]->y_crop_width == cpi->source->y_crop_width &&
+                 ref_buf[frame]->y_crop_height == cpi->source->y_crop_height &&
                  do_gm_search_logic(&cpi->sf, num_refs_using_gm, frame)) {
         TransformationType model;
         const int64_t ref_frame_error = av1_frame_error(
@@ -4716,8 +5119,8 @@ static void encode_frame_internal(AV1_COMP *cpi) {
             xd->cur_buf->flags & YV12_FLAG_HIGHBITDEPTH, xd->bd,
 #endif  // CONFIG_HIGHBITDEPTH
             ref_buf[frame]->y_buffer, ref_buf[frame]->y_stride,
-            cpi->source->y_buffer, 0, 0, cpi->source->y_width,
-            cpi->source->y_height, cpi->source->y_stride);
+            cpi->source->y_buffer, cpi->source->y_width, cpi->source->y_height,
+            cpi->source->y_stride);
 
         if (ref_frame_error == 0) continue;
 
@@ -4752,7 +5155,8 @@ static void encode_frame_internal(AV1_COMP *cpi) {
                   ref_buf[frame]->y_buffer, ref_buf[frame]->y_width,
                   ref_buf[frame]->y_height, ref_buf[frame]->y_stride,
                   cpi->source->y_buffer, cpi->source->y_width,
-                  cpi->source->y_height, cpi->source->y_stride, 3);
+                  cpi->source->y_height, cpi->source->y_stride, 5,
+                  best_warp_error);
               if (warp_error < best_warp_error) {
                 best_warp_error = warp_error;
                 // Save the wm_params modified by refine_integerized_param()
@@ -4812,10 +5216,10 @@ static void encode_frame_internal(AV1_COMP *cpi) {
                       cm->uv_dc_delta_q == 0 && cm->uv_ac_delta_q == 0;
     xd->qindex[i] = qindex;
   }
-
+  cm->all_lossless = all_lossless(cm, xd);
   if (!cm->seg.enabled && xd->lossless[0]) x->optimize = 0;
 
-  cm->tx_mode = select_tx_mode(cpi, xd);
+  cm->tx_mode = select_tx_mode(cpi);
 
 #if CONFIG_DELTA_Q
   // Fix delta q resolution for the moment
@@ -4859,18 +5263,32 @@ static void encode_frame_internal(AV1_COMP *cpi) {
 
 #if CONFIG_TEMPMV_SIGNALING
   if (cm->prev_frame) {
-    cm->use_prev_frame_mvs &= !cm->error_resilient_mode &&
-                              cm->width == cm->prev_frame->buf.y_width &&
-                              cm->height == cm->prev_frame->buf.y_height &&
-                              !cm->intra_only && !cm->prev_frame->intra_only;
+    cm->use_prev_frame_mvs &=
+        !cm->error_resilient_mode &&
+#if CONFIG_FRAME_SUPERRES
+        cm->width == cm->last_width && cm->height == cm->last_height &&
+#else
+        cm->width == cm->prev_frame->buf.y_crop_width &&
+        cm->height == cm->prev_frame->buf.y_crop_height &&
+#endif  // CONFIG_FRAME_SUPERRES
+        !cm->intra_only && !cm->prev_frame->intra_only && cm->last_show_frame;
   } else {
     cm->use_prev_frame_mvs = 0;
   }
 #else
-  cm->use_prev_frame_mvs = !cm->error_resilient_mode && cm->prev_frame &&
-                           cm->width == cm->prev_frame->buf.y_crop_width &&
-                           cm->height == cm->prev_frame->buf.y_crop_height &&
-                           !cm->intra_only && cm->last_show_frame;
+  if (cm->prev_frame) {
+    cm->use_prev_frame_mvs = !cm->error_resilient_mode &&
+#if CONFIG_FRAME_SUPERRES
+                             cm->width == cm->last_width &&
+                             cm->height == cm->last_height &&
+#else
+                             cm->width == cm->prev_frame->buf.y_crop_width &&
+                             cm->height == cm->prev_frame->buf.y_crop_height &&
+#endif  // CONFIG_FRAME_SUPERRES
+                             !cm->intra_only && cm->last_show_frame;
+  } else {
+    cm->use_prev_frame_mvs = 0;
+  }
 #endif  // CONFIG_TEMPMV_SIGNALING
 
   // Special case: set prev_mi to NULL when the previous mode info
@@ -4893,6 +5311,8 @@ static void encode_frame_internal(AV1_COMP *cpi) {
                        &cpi->twopass.this_frame_mb_stats);
     }
 #endif
+
+    av1_setup_frame_boundary_info(cm);
 
     // If allowed, encoding tiles in parallel with one thread handling one tile.
     // TODO(geza.lore): The multi-threaded encoder is not safe with more than
@@ -4921,7 +5341,11 @@ static void make_consistent_compound_tools(AV1_COMMON *cm) {
     cm->allow_interintra_compound = 0;
 #endif  // CONFIG_INTERINTRA
 #if CONFIG_COMPOUND_SEGMENT || CONFIG_WEDGE
+#if CONFIG_COMPOUND_SINGLEREF
+  if (frame_is_intra_only(cm))
+#else   // !CONFIG_COMPOUND_SINGLEREF
   if (frame_is_intra_only(cm) || cm->reference_mode == SINGLE_REFERENCE)
+#endif  // CONFIG_COMPOUND_SINGLEREF
     cm->allow_masked_compound = 0;
 #endif  // CONFIG_COMPOUND_SEGMENT || CONFIG_WEDGE
 }
@@ -4942,14 +5366,14 @@ void av1_encode_frame(AV1_COMP *cpi) {
   // side behavior is where the ALT ref buffer has opposite sign bias to
   // the other two.
   if (!frame_is_intra_only(cm)) {
-#if !CONFIG_ONE_SIDED_COMPOUND
+#if !(CONFIG_ONE_SIDED_COMPOUND || CONFIG_EXT_COMP_REFS)
     if ((cm->ref_frame_sign_bias[ALTREF_FRAME] ==
          cm->ref_frame_sign_bias[GOLDEN_FRAME]) ||
         (cm->ref_frame_sign_bias[ALTREF_FRAME] ==
          cm->ref_frame_sign_bias[LAST_FRAME])) {
       cpi->allow_comp_inter_inter = 0;
     } else {
-#endif
+#endif  // !(CONFIG_ONE_SIDED_COMPOUND || CONFIG_EXT_COMP_REFS)
       cpi->allow_comp_inter_inter = 1;
 #if CONFIG_EXT_REFS
       cm->comp_fwd_ref[0] = LAST_FRAME;
@@ -4962,10 +5386,11 @@ void av1_encode_frame(AV1_COMP *cpi) {
     cm->comp_fixed_ref = ALTREF_FRAME;
     cm->comp_var_ref[0] = LAST_FRAME;
     cm->comp_var_ref[1] = GOLDEN_FRAME;
-#endif                          // CONFIG_EXT_REFS
-#if !CONFIG_ONE_SIDED_COMPOUND  // Normative in encoder
+#endif  // CONFIG_EXT_REFS
+#if !(CONFIG_ONE_SIDED_COMPOUND || \
+      CONFIG_EXT_COMP_REFS)  // Normative in encoder
     }
-#endif
+#endif  // !(CONFIG_ONE_SIDED_COMPOUND || CONFIG_EXT_COMP_REFS)
   } else {
     cpi->allow_comp_inter_inter = 0;
   }
@@ -4998,7 +5423,12 @@ void av1_encode_frame(AV1_COMP *cpi) {
     else
       cm->reference_mode = REFERENCE_MODE_SELECT;
 #else
+#if CONFIG_BGSPRITE
+    (void)is_alt_ref;
+    if (!cpi->allow_comp_inter_inter)
+#else
     if (is_alt_ref || !cpi->allow_comp_inter_inter)
+#endif  // CONFIG_BGSPRITE
       cm->reference_mode = SINGLE_REFERENCE;
     else if (mode_thrs[COMPOUND_REFERENCE] > mode_thrs[SINGLE_REFERENCE] &&
              mode_thrs[COMPOUND_REFERENCE] > mode_thrs[REFERENCE_MODE_SELECT] &&
@@ -5017,25 +5447,23 @@ void av1_encode_frame(AV1_COMP *cpi) {
 #if CONFIG_EXT_INTER
     make_consistent_compound_tools(cm);
 #endif  // CONFIG_EXT_INTER
+
+    rdc->single_ref_used_flag = 0;
+    rdc->compound_ref_used_flag = 0;
+
     encode_frame_internal(cpi);
 
     for (i = 0; i < REFERENCE_MODES; ++i)
       mode_thrs[i] = (mode_thrs[i] + rdc->comp_pred_diff[i] / cm->MBs) / 2;
 
     if (cm->reference_mode == REFERENCE_MODE_SELECT) {
-      int single_count_zero = 0;
-      int comp_count_zero = 0;
-
-      for (i = 0; i < COMP_INTER_CONTEXTS; i++) {
-        single_count_zero += counts->comp_inter[i][0];
-        comp_count_zero += counts->comp_inter[i][1];
-      }
-
-      if (comp_count_zero == 0) {
+      // Use a flag that includes 4x4 blocks
+      if (rdc->compound_ref_used_flag == 0) {
         cm->reference_mode = SINGLE_REFERENCE;
         av1_zero(counts->comp_inter);
 #if !CONFIG_REF_ADAPT
-      } else if (single_count_zero == 0) {
+        // Use a flag that includes 4x4 blocks
+      } else if (rdc->single_ref_used_flag == 0) {
         cm->reference_mode = COMPOUND_REFERENCE;
         av1_zero(counts->comp_inter);
 #endif  // !CONFIG_REF_ADAPT
@@ -5046,10 +5474,15 @@ void av1_encode_frame(AV1_COMP *cpi) {
 #endif  // CONFIG_EXT_INTER
 
 #if CONFIG_VAR_TX
+#if CONFIG_RECT_TX_EXT
+    if (cm->tx_mode == TX_MODE_SELECT && cpi->td.mb.txb_split_count == 0 &&
+        counts->quarter_tx_size[1] == 0)
+#else
     if (cm->tx_mode == TX_MODE_SELECT && cpi->td.mb.txb_split_count == 0)
+#endif
       cm->tx_mode = ALLOW_32X32 + CONFIG_TX64X64;
 #else
-#if CONFIG_EXT_TX && CONFIG_RECT_TX && CONFIG_RECT_TX_EXT
+#if CONFIG_RECT_TX_EXT && CONFIG_EXT_TX
     if (cm->tx_mode == TX_MODE_SELECT && counts->quarter_tx_size[1] == 0) {
 #else
     if (cm->tx_mode == TX_MODE_SELECT) {
@@ -5232,12 +5665,20 @@ static void sum_intra_stats(FRAME_COUNTS *counts, MACROBLOCKD *xd,
                             const MODE_INFO *left_mi, const int intraonly,
                             const int mi_row, const int mi_col) {
   const MB_MODE_INFO *const mbmi = &mi->mbmi;
+#if CONFIG_ENTROPY_STATS
   const PREDICTION_MODE y_mode = mbmi->mode;
-  const PREDICTION_MODE uv_mode = mbmi->uv_mode;
+  const UV_PREDICTION_MODE uv_mode = mbmi->uv_mode;
+#else   // CONFIG_ENTROPY_STATS
+  (void)counts;
+  (void)above_mi;
+  (void)left_mi;
+  (void)intraonly;
+#endif  // CONFIG_ENTROPY_STATS
   const BLOCK_SIZE bsize = mbmi->sb_type;
   const int unify_bsize = CONFIG_CB4X4;
 
   if (bsize < BLOCK_8X8 && !unify_bsize) {
+#if CONFIG_ENTROPY_STATS
     int idx, idy;
     const int num_4x4_w = num_4x4_blocks_wide_lookup[bsize];
     const int num_4x4_h = num_4x4_blocks_high_lookup[bsize];
@@ -5253,7 +5694,9 @@ static void sum_intra_stats(FRAME_COUNTS *counts, MACROBLOCKD *xd,
           ++counts->y_mode[0][bmode];
         }
       }
+#endif  // CONFIG_ENTROPY_STATS
   } else {
+#if CONFIG_ENTROPY_STATS
     if (intraonly) {
       const PREDICTION_MODE above = av1_above_block_mode(mi, above_mi, 0);
       const PREDICTION_MODE left = av1_left_block_mode(mi, left_mi, 0);
@@ -5261,6 +5704,7 @@ static void sum_intra_stats(FRAME_COUNTS *counts, MACROBLOCKD *xd,
     } else {
       ++counts->y_mode[size_group_lookup[bsize]][y_mode];
     }
+#endif  // CONFIG_ENTROPY_STATS
 #if CONFIG_FILTER_INTRA
     if (mbmi->mode == DC_PRED
 #if CONFIG_PALETTE
@@ -5271,7 +5715,7 @@ static void sum_intra_stats(FRAME_COUNTS *counts, MACROBLOCKD *xd,
           mbmi->filter_intra_mode_info.use_filter_intra_mode[0];
       ++counts->filter_intra[0][use_filter_intra_mode];
     }
-    if (mbmi->uv_mode == DC_PRED
+    if (mbmi->uv_mode == UV_DC_PRED
 #if CONFIG_CB4X4
         &&
         is_chroma_reference(mi_row, mi_col, bsize, xd->plane[1].subsampling_x,
@@ -5306,7 +5750,9 @@ static void sum_intra_stats(FRAME_COUNTS *counts, MACROBLOCKD *xd,
   (void)mi_col;
   (void)xd;
 #endif
+#if CONFIG_ENTROPY_STATS
   ++counts->uv_mode[y_mode][uv_mode];
+#endif  // CONFIG_ENTROPY_STATS
 }
 
 #if CONFIG_VAR_TX
@@ -5325,9 +5771,17 @@ static void update_txfm_count(MACROBLOCK *x, MACROBLOCKD *xd,
 
   if (blk_row >= max_blocks_high || blk_col >= max_blocks_wide) return;
 
+#if CONFIG_RECT_TX_EXT
+  if (tx_size == plane_tx_size ||
+      mbmi->tx_size == quarter_txsize_lookup[mbmi->sb_type]) {
+#else
   if (tx_size == plane_tx_size) {
+#endif
     ++counts->txfm_partition[ctx][0];
-    mbmi->tx_size = tx_size;
+#if CONFIG_RECT_TX_EXT
+    if (tx_size == plane_tx_size)
+#endif
+      mbmi->tx_size = tx_size;
     txfm_partition_update(xd->above_txfm_context + blk_col,
                           xd->left_txfm_context + blk_row, tx_size, tx_size);
   } else {
@@ -5438,18 +5892,22 @@ static void tx_partition_set_contexts(const AV1_COMMON *const cm,
 
 void av1_update_tx_type_count(const AV1_COMMON *cm, MACROBLOCKD *xd,
 #if CONFIG_TXK_SEL
-                              int block, int plane,
+                              int blk_row, int blk_col, int block, int plane,
 #endif
                               BLOCK_SIZE bsize, TX_SIZE tx_size,
                               FRAME_COUNTS *counts) {
   MB_MODE_INFO *mbmi = &xd->mi[0]->mbmi;
   int is_inter = is_inter_block(mbmi);
+
 #if !CONFIG_TXK_SEL
   TX_TYPE tx_type = mbmi->tx_type;
 #else
+  (void)blk_row;
+  (void)blk_col;
   // Only y plane's tx_type is updated
   if (plane > 0) return;
-  TX_TYPE tx_type = get_tx_type(PLANE_TYPE_Y, xd, block, tx_size);
+  TX_TYPE tx_type =
+      av1_get_tx_type(PLANE_TYPE_Y, xd, blk_row, blk_col, block, tx_size);
 #endif
 #if CONFIG_EXT_TX
   if (get_ext_tx_types(tx_size, bsize, is_inter, cm->reduced_tx_set_used) > 1 &&
@@ -5509,7 +5967,7 @@ static void encode_superblock(const AV1_COMP *const cpi, ThreadData *td,
   x->pvq_coded = (dry_run == OUTPUT_ENABLED) ? 1 : 0;
 #endif
 #if CONFIG_CFL
-  x->cfl_store_y = (dry_run == OUTPUT_ENABLED) ? 1 : 0;
+  x->cfl_store_y = 1;
 #endif
 
   if (!is_inter) {
@@ -5526,13 +5984,8 @@ static void encode_superblock(const AV1_COMP *const cpi, ThreadData *td,
 #if CONFIG_PALETTE
     if (bsize >= BLOCK_8X8 && !dry_run) {
       for (plane = 0; plane <= 1; ++plane) {
-        if (mbmi->palette_mode_info.palette_size[plane] > 0) {
-          mbmi->palette_mode_info.palette_first_color_idx[plane] =
-              xd->plane[plane].color_index_map[0];
-          // TODO(huisu): this increases the use of token buffer. Needs stretch
-          // test to verify.
+        if (mbmi->palette_mode_info.palette_size[plane] > 0)
           av1_tokenize_palette_sb(cpi, td, plane, t, dry_run, bsize, rate);
-        }
       }
     }
 #endif  // CONFIG_PALETTE
@@ -5559,9 +6012,21 @@ static void encode_superblock(const AV1_COMP *const cpi, ThreadData *td,
       av1_setup_pre_planes(xd, ref, cfg, mi_row, mi_col,
                            &xd->block_refs[ref]->sf);
     }
-    av1_build_inter_predictors_sby(cm, xd, mi_row, mi_col, NULL, block_size);
+#if CONFIG_EXT_INTER && CONFIG_COMPOUND_SINGLEREF
+    // Single ref compound mode
+    if (!is_compound && is_inter_singleref_comp_mode(mbmi->mode)) {
+      xd->block_refs[1] = xd->block_refs[0];
+      YV12_BUFFER_CONFIG *cfg = get_ref_frame_buffer(cpi, mbmi->ref_frame[0]);
+#if CONFIG_INTRABC
+      assert(IMPLIES(!is_intrabc_block(mbmi), cfg));
+#else
+      assert(cfg != NULL);
+#endif  // !CONFIG_INTRABC
+      av1_setup_pre_planes(xd, 1, cfg, mi_row, mi_col, &xd->block_refs[1]->sf);
+    }
+#endif  // CONFIG_EXT_INTER && CONFIG_COMPOUND_SINGLEREF
 
-    av1_build_inter_predictors_sbuv(cm, xd, mi_row, mi_col, NULL, block_size);
+    av1_build_inter_predictors_sb(cm, xd, mi_row, mi_col, NULL, block_size);
 #if CONFIG_MOTION_VAR
     if (mbmi->motion_mode == OBMC_CAUSAL) {
 #if CONFIG_NCOBMC
@@ -5587,10 +6052,11 @@ static void encode_superblock(const AV1_COMP *const cpi, ThreadData *td,
 #endif
   }
 
-#if CONFIG_DAALA_DIST && CONFIG_CB4X4
+#if CONFIG_DIST_8X8 && CONFIG_CB4X4
   if (bsize < BLOCK_8X8) {
-    daala_dist_set_sub8x8_dst(x, x->decoded_8x8, bsize, block_size_wide[bsize],
-                              block_size_high[bsize], mi_row, mi_col);
+    dist_8x8_set_sub8x8_dst(x, (uint8_t *)x->decoded_8x8, bsize,
+                            block_size_wide[bsize], block_size_high[bsize],
+                            mi_row, mi_col);
   }
 #endif
 
@@ -5629,13 +6095,16 @@ static void encode_superblock(const AV1_COMP *const cpi, ThreadData *td,
 
       ++td->counts->tx_size[tx_size_cat][tx_size_ctx][depth];
 #endif
-#if CONFIG_EXT_TX && CONFIG_RECT_TX && CONFIG_RECT_TX_EXT
+
+#if CONFIG_RECT_TX_EXT && (CONFIG_EXT_TX || CONFIG_VAR_TX)
       if (is_quarter_tx_allowed(xd, mbmi, is_inter) &&
-          mbmi->tx_size != txsize_sqr_up_map[mbmi->tx_size]) {
-        ++td->counts->quarter_tx_size[mbmi->tx_size ==
-                                      quarter_txsize_lookup[mbmi->sb_type]];
+          quarter_txsize_lookup[bsize] != max_txsize_rect_lookup[bsize] &&
+          (mbmi->tx_size == quarter_txsize_lookup[bsize] ||
+           mbmi->tx_size == max_txsize_rect_lookup[bsize])) {
+        ++td->counts
+              ->quarter_tx_size[mbmi->tx_size == quarter_txsize_lookup[bsize]];
       }
-#endif  // CONFIG_EXT_TX && CONFIG_RECT_TX && CONFIG_RECT_TX_EXT
+#endif
 #if CONFIG_EXT_TX && CONFIG_RECT_TX
       assert(IMPLIES(is_rect_tx(tx_size), is_rect_tx_allowed(xd, mbmi)));
 #endif  // CONFIG_EXT_TX && CONFIG_RECT_TX
@@ -5673,8 +6142,8 @@ static void encode_superblock(const AV1_COMP *const cpi, ThreadData *td,
     }
 
     ++td->counts->tx_size_totals[txsize_sqr_map[tx_size]];
-    ++td->counts
-          ->tx_size_totals[txsize_sqr_map[get_uv_tx_size(mbmi, &xd->plane[1])]];
+    ++td->counts->tx_size_totals[txsize_sqr_map[av1_get_uv_tx_size(
+        mbmi, &xd->plane[1])]];
 #if !CONFIG_TXK_SEL
     av1_update_tx_type_count(cm, xd, bsize, tx_size, td->counts);
 #endif
@@ -5837,7 +6306,7 @@ static void predict_superblock(const AV1_COMP *const cpi, ThreadData *td,
 #if CONFIG_EXT_INTER
                                int mi_row_ori, int mi_col_ori,
 #endif  // CONFIG_EXT_INTER
-                               int mi_row_pred, int mi_col_pred,
+                               int mi_row_pred, int mi_col_pred, int plane,
                                BLOCK_SIZE bsize_pred, int b_sub8x8, int block) {
   // Used in supertx
   // (mi_row_ori, mi_col_ori): location for mv
@@ -5859,28 +6328,39 @@ static void predict_superblock(const AV1_COMP *const cpi, ThreadData *td,
                          &xd->block_refs[ref]->sf);
   }
 
+#if CONFIG_EXT_INTER && CONFIG_COMPOUND_SINGLEREF
+  // Single ref compound mode
+  if (!is_compound && is_inter_singleref_comp_mode(mbmi->mode)) {
+    xd->block_refs[1] = xd->block_refs[0];
+    YV12_BUFFER_CONFIG *cfg = get_ref_frame_buffer(cpi, mbmi->ref_frame[0]);
+    av1_setup_pre_planes(xd, 1, cfg, mi_row_pred, mi_col_pred,
+                         &xd->block_refs[1]->sf);
+  }
+#endif  // CONFIG_EXT_INTER && CONFIG_COMPOUND_SINGLEREF
+
   if (!b_sub8x8)
-    av1_build_inter_predictors_sb_extend(cm, xd,
+    av1_build_inter_predictor_sb_extend(cm, xd,
 #if CONFIG_EXT_INTER
-                                         mi_row_ori, mi_col_ori,
+                                        mi_row_ori, mi_col_ori,
 #endif  // CONFIG_EXT_INTER
-                                         mi_row_pred, mi_col_pred, bsize_pred);
+                                        mi_row_pred, mi_col_pred, plane,
+                                        bsize_pred);
   else
-    av1_build_inter_predictors_sb_sub8x8_extend(cm, xd,
+    av1_build_inter_predictor_sb_sub8x8_extend(cm, xd,
 #if CONFIG_EXT_INTER
-                                                mi_row_ori, mi_col_ori,
+                                               mi_row_ori, mi_col_ori,
 #endif  // CONFIG_EXT_INTER
-                                                mi_row_pred, mi_col_pred,
-                                                bsize_pred, block);
+                                               mi_row_pred, mi_col_pred, plane,
+                                               bsize_pred, block);
 }
 
 static void predict_b_extend(const AV1_COMP *const cpi, ThreadData *td,
                              const TileInfo *const tile, int block,
                              int mi_row_ori, int mi_col_ori, int mi_row_pred,
                              int mi_col_pred, int mi_row_top, int mi_col_top,
-                             uint8_t *dst_buf[3], int dst_stride[3],
+                             int plane, uint8_t *dst_buf, int dst_stride,
                              BLOCK_SIZE bsize_top, BLOCK_SIZE bsize_pred,
-                             RUN_TYPE dry_run, int b_sub8x8, int bextend) {
+                             RUN_TYPE dry_run, int b_sub8x8) {
   // Used in supertx
   // (mi_row_ori, mi_col_ori): location for mv
   // (mi_row_pred, mi_col_pred, bsize_pred): region to predict
@@ -5905,34 +6385,27 @@ static void predict_b_extend(const AV1_COMP *const cpi, ThreadData *td,
 
   set_offsets_extend(cpi, td, tile, mi_row_pred, mi_col_pred, mi_row_ori,
                      mi_col_ori, bsize_pred);
-  xd->plane[0].dst.stride = dst_stride[0];
-  xd->plane[1].dst.stride = dst_stride[1];
-  xd->plane[2].dst.stride = dst_stride[2];
-  xd->plane[0].dst.buf = dst_buf[0] +
-                         (r >> xd->plane[0].subsampling_y) * dst_stride[0] +
-                         (c >> xd->plane[0].subsampling_x);
-  xd->plane[1].dst.buf = dst_buf[1] +
-                         (r >> xd->plane[1].subsampling_y) * dst_stride[1] +
-                         (c >> xd->plane[1].subsampling_x);
-  xd->plane[2].dst.buf = dst_buf[2] +
-                         (r >> xd->plane[2].subsampling_y) * dst_stride[2] +
-                         (c >> xd->plane[2].subsampling_x);
+  xd->plane[plane].dst.stride = dst_stride;
+  xd->plane[plane].dst.buf =
+      dst_buf + (r >> xd->plane[plane].subsampling_y) * dst_stride +
+      (c >> xd->plane[plane].subsampling_x);
 
   predict_superblock(cpi, td,
 #if CONFIG_EXT_INTER
                      mi_row_ori, mi_col_ori,
 #endif  // CONFIG_EXT_INTER
-                     mi_row_pred, mi_col_pred, bsize_pred, b_sub8x8, block);
+                     mi_row_pred, mi_col_pred, plane, bsize_pred, b_sub8x8,
+                     block);
 
-  if (!dry_run && !bextend)
+  if (!dry_run && (plane == 0) && (block == 0 || !b_sub8x8))
     update_stats(&cpi->common, td, mi_row_pred, mi_col_pred, 1);
 }
 
 static void extend_dir(const AV1_COMP *const cpi, ThreadData *td,
                        const TileInfo *const tile, int block, BLOCK_SIZE bsize,
-                       BLOCK_SIZE top_bsize, int mi_row, int mi_col,
-                       int mi_row_top, int mi_col_top, RUN_TYPE dry_run,
-                       uint8_t *dst_buf[3], int dst_stride[3], int dir) {
+                       BLOCK_SIZE top_bsize, int mi_row_ori, int mi_col_ori,
+                       int mi_row, int mi_col, int mi_row_top, int mi_col_top,
+                       int plane, uint8_t *dst_buf, int dst_stride, int dir) {
   // dir: 0-lower, 1-upper, 2-left, 3-right
   //      4-lowerleft, 5-upperleft, 6-lowerright, 7-upperright
   MACROBLOCKD *xd = &td->mb.e_mbd;
@@ -5973,10 +6446,10 @@ static void extend_dir(const AV1_COMP *const cpi, ThreadData *td,
 
     for (j = 0; j < mi_height + ext_offset; j += high_unit)
       for (i = 0; i < mi_width + ext_offset; i += wide_unit)
-        predict_b_extend(cpi, td, tile, block, mi_row, mi_col, mi_row_pred + j,
-                         mi_col_pred + i, mi_row_top, mi_col_top, dst_buf,
-                         dst_stride, top_bsize, extend_bsize, dry_run, b_sub8x8,
-                         1);
+        predict_b_extend(cpi, td, tile, block, mi_row_ori, mi_col_ori,
+                         mi_row_pred + j, mi_col_pred + i, mi_row_top,
+                         mi_col_top, plane, dst_buf, dst_stride, top_bsize,
+                         extend_bsize, 1, b_sub8x8);
   } else if (dir == 2 || dir == 3) {  // left and right
     extend_bsize =
         (mi_height == mi_size_high[BLOCK_8X8] || bsize < BLOCK_8X8 || yss < xss)
@@ -5996,10 +6469,10 @@ static void extend_dir(const AV1_COMP *const cpi, ThreadData *td,
 
     for (j = 0; j < mi_height + ext_offset; j += high_unit)
       for (i = 0; i < mi_width + ext_offset; i += wide_unit)
-        predict_b_extend(cpi, td, tile, block, mi_row, mi_col, mi_row_pred + j,
-                         mi_col_pred + i, mi_row_top, mi_col_top, dst_buf,
-                         dst_stride, top_bsize, extend_bsize, dry_run, b_sub8x8,
-                         1);
+        predict_b_extend(cpi, td, tile, block, mi_row_ori, mi_col_ori,
+                         mi_row_pred + j, mi_col_pred + i, mi_row_top,
+                         mi_col_top, plane, dst_buf, dst_stride, top_bsize,
+                         extend_bsize, 1, b_sub8x8);
   } else {
     extend_bsize = BLOCK_8X8;
 #if CONFIG_CB4X4
@@ -6018,35 +6491,24 @@ static void extend_dir(const AV1_COMP *const cpi, ThreadData *td,
 
     for (j = 0; j < mi_height + ext_offset; j += high_unit)
       for (i = 0; i < mi_width + ext_offset; i += wide_unit)
-        predict_b_extend(cpi, td, tile, block, mi_row, mi_col, mi_row_pred + j,
-                         mi_col_pred + i, mi_row_top, mi_col_top, dst_buf,
-                         dst_stride, top_bsize, extend_bsize, dry_run, b_sub8x8,
-                         1);
+        predict_b_extend(cpi, td, tile, block, mi_row_ori, mi_col_ori,
+                         mi_row_pred + j, mi_col_pred + i, mi_row_top,
+                         mi_col_top, plane, dst_buf, dst_stride, top_bsize,
+                         extend_bsize, 1, b_sub8x8);
   }
 }
 
 static void extend_all(const AV1_COMP *const cpi, ThreadData *td,
                        const TileInfo *const tile, int block, BLOCK_SIZE bsize,
-                       BLOCK_SIZE top_bsize, int mi_row, int mi_col,
-                       int mi_row_top, int mi_col_top, RUN_TYPE dry_run,
-                       uint8_t *dst_buf[3], int dst_stride[3]) {
+                       BLOCK_SIZE top_bsize, int mi_row_ori, int mi_col_ori,
+                       int mi_row, int mi_col, int mi_row_top, int mi_col_top,
+                       int plane, uint8_t *dst_buf, int dst_stride) {
   assert(block >= 0 && block < 4);
-  extend_dir(cpi, td, tile, block, bsize, top_bsize, mi_row, mi_col, mi_row_top,
-             mi_col_top, dry_run, dst_buf, dst_stride, 0);
-  extend_dir(cpi, td, tile, block, bsize, top_bsize, mi_row, mi_col, mi_row_top,
-             mi_col_top, dry_run, dst_buf, dst_stride, 1);
-  extend_dir(cpi, td, tile, block, bsize, top_bsize, mi_row, mi_col, mi_row_top,
-             mi_col_top, dry_run, dst_buf, dst_stride, 2);
-  extend_dir(cpi, td, tile, block, bsize, top_bsize, mi_row, mi_col, mi_row_top,
-             mi_col_top, dry_run, dst_buf, dst_stride, 3);
-  extend_dir(cpi, td, tile, block, bsize, top_bsize, mi_row, mi_col, mi_row_top,
-             mi_col_top, dry_run, dst_buf, dst_stride, 4);
-  extend_dir(cpi, td, tile, block, bsize, top_bsize, mi_row, mi_col, mi_row_top,
-             mi_col_top, dry_run, dst_buf, dst_stride, 5);
-  extend_dir(cpi, td, tile, block, bsize, top_bsize, mi_row, mi_col, mi_row_top,
-             mi_col_top, dry_run, dst_buf, dst_stride, 6);
-  extend_dir(cpi, td, tile, block, bsize, top_bsize, mi_row, mi_col, mi_row_top,
-             mi_col_top, dry_run, dst_buf, dst_stride, 7);
+  for (int i = 0; i < 8; ++i) {
+    extend_dir(cpi, td, tile, block, bsize, top_bsize, mi_row_ori, mi_col_ori,
+               mi_row, mi_col, mi_row_top, mi_col_top, plane, dst_buf,
+               dst_stride, i);
+  }
 }
 
 // This function generates prediction for multiple blocks, between which
@@ -6140,29 +6602,36 @@ static void predict_sb_complex(const AV1_COMP *const cpi, ThreadData *td,
   switch (partition) {
     case PARTITION_NONE:
       assert(bsize < top_bsize);
-      predict_b_extend(cpi, td, tile, 0, mi_row, mi_col, mi_row, mi_col,
-                       mi_row_top, mi_col_top, dst_buf, dst_stride, top_bsize,
-                       bsize, dry_run, 0, 0);
-      extend_all(cpi, td, tile, 0, bsize, top_bsize, mi_row, mi_col, mi_row_top,
-                 mi_col_top, dry_run, dst_buf, dst_stride);
+      for (i = 0; i < MAX_MB_PLANE; ++i) {
+        predict_b_extend(cpi, td, tile, 0, mi_row, mi_col, mi_row, mi_col,
+                         mi_row_top, mi_col_top, i, dst_buf[i], dst_stride[i],
+                         top_bsize, bsize, dry_run, 0);
+        extend_all(cpi, td, tile, 0, bsize, top_bsize, mi_row, mi_col, mi_row,
+                   mi_col, mi_row_top, mi_col_top, i, dst_buf[i],
+                   dst_stride[i]);
+      }
       break;
     case PARTITION_HORZ:
       if (bsize == BLOCK_8X8 && !unify_bsize) {
-        // Fisrt half
-        predict_b_extend(cpi, td, tile, 0, mi_row, mi_col, mi_row, mi_col,
-                         mi_row_top, mi_col_top, dst_buf, dst_stride, top_bsize,
-                         BLOCK_8X8, dry_run, 1, 0);
-        if (bsize < top_bsize)
-          extend_all(cpi, td, tile, 0, subsize, top_bsize, mi_row, mi_col,
-                     mi_row_top, mi_col_top, dry_run, dst_buf, dst_stride);
+        for (i = 0; i < MAX_MB_PLANE; ++i) {
+          // First half
+          predict_b_extend(cpi, td, tile, 0, mi_row, mi_col, mi_row, mi_col,
+                           mi_row_top, mi_col_top, i, dst_buf[i], dst_stride[i],
+                           top_bsize, BLOCK_8X8, dry_run, 1);
+          if (bsize < top_bsize)
+            extend_all(cpi, td, tile, 0, subsize, top_bsize, mi_row, mi_col,
+                       mi_row, mi_col, mi_row_top, mi_col_top, i, dst_buf[i],
+                       dst_stride[i]);
 
-        // Second half
-        predict_b_extend(cpi, td, tile, 2, mi_row, mi_col, mi_row, mi_col,
-                         mi_row_top, mi_col_top, dst_buf1, dst_stride1,
-                         top_bsize, BLOCK_8X8, dry_run, 1, 1);
-        if (bsize < top_bsize)
-          extend_all(cpi, td, tile, 2, subsize, top_bsize, mi_row, mi_col,
-                     mi_row_top, mi_col_top, dry_run, dst_buf1, dst_stride1);
+          // Second half
+          predict_b_extend(cpi, td, tile, 2, mi_row, mi_col, mi_row, mi_col,
+                           mi_row_top, mi_col_top, i, dst_buf1[i],
+                           dst_stride1[i], top_bsize, BLOCK_8X8, dry_run, 1);
+          if (bsize < top_bsize)
+            extend_all(cpi, td, tile, 2, subsize, top_bsize, mi_row, mi_col,
+                       mi_row, mi_col, mi_row_top, mi_col_top, i, dst_buf1[i],
+                       dst_stride1[i]);
+        }
 
         // Smooth
         xd->plane[0].dst.buf = dst_buf[0];
@@ -6172,60 +6641,89 @@ static void predict_sb_complex(const AV1_COMP *const cpi, ThreadData *td,
             mi_col, mi_row_top, mi_col_top, bsize, top_bsize, PARTITION_HORZ,
             0);
       } else {
-        // First half
-        predict_b_extend(cpi, td, tile, 0, mi_row, mi_col, mi_row, mi_col,
-                         mi_row_top, mi_col_top, dst_buf, dst_stride, top_bsize,
-                         subsize, dry_run, 0, 0);
-        if (bsize < top_bsize)
-          extend_all(cpi, td, tile, 0, subsize, top_bsize, mi_row, mi_col,
-                     mi_row_top, mi_col_top, dry_run, dst_buf, dst_stride);
-        else
-          extend_dir(cpi, td, tile, 0, subsize, top_bsize, mi_row, mi_col,
-                     mi_row_top, mi_col_top, dry_run, dst_buf, dst_stride, 0);
+        for (i = 0; i < MAX_MB_PLANE; ++i) {
+#if CONFIG_CB4X4
+          const struct macroblockd_plane *pd = &xd->plane[i];
+          int handle_chroma_sub8x8 = need_handle_chroma_sub8x8(
+              subsize, pd->subsampling_x, pd->subsampling_y);
 
-        if (mi_row + hbs < cm->mi_rows) {
-          // Second half
-          predict_b_extend(cpi, td, tile, 0, mi_row + hbs, mi_col, mi_row + hbs,
-                           mi_col, mi_row_top, mi_col_top, dst_buf1,
-                           dst_stride1, top_bsize, subsize, dry_run, 0, 0);
-          if (bsize < top_bsize)
-            extend_all(cpi, td, tile, 0, subsize, top_bsize, mi_row + hbs,
-                       mi_col, mi_row_top, mi_col_top, dry_run, dst_buf1,
-                       dst_stride1);
-          else
-            extend_dir(cpi, td, tile, 0, subsize, top_bsize, mi_row + hbs,
-                       mi_col, mi_row_top, mi_col_top, dry_run, dst_buf1,
-                       dst_stride1, 1);
+          if (handle_chroma_sub8x8) {
+            int mode_offset_row = CONFIG_CHROMA_SUB8X8 ? hbs : 0;
 
-          // Smooth
-          for (i = 0; i < MAX_MB_PLANE; i++) {
+            predict_b_extend(cpi, td, tile, 0, mi_row + mode_offset_row, mi_col,
+                             mi_row, mi_col, mi_row_top, mi_col_top, i,
+                             dst_buf[i], dst_stride[i], top_bsize, bsize,
+                             dry_run, 0);
+            if (bsize < top_bsize)
+              extend_all(cpi, td, tile, 0, bsize, top_bsize,
+                         mi_row + mode_offset_row, mi_col, mi_row, mi_col,
+                         mi_row_top, mi_col_top, i, dst_buf[i], dst_stride[i]);
+          } else {
+#endif
+            // First half
+            predict_b_extend(cpi, td, tile, 0, mi_row, mi_col, mi_row, mi_col,
+                             mi_row_top, mi_col_top, i, dst_buf[i],
+                             dst_stride[i], top_bsize, subsize, dry_run, 0);
+            if (bsize < top_bsize)
+              extend_all(cpi, td, tile, 0, subsize, top_bsize, mi_row, mi_col,
+                         mi_row, mi_col, mi_row_top, mi_col_top, i, dst_buf[i],
+                         dst_stride[i]);
+            else
+              extend_dir(cpi, td, tile, 0, subsize, top_bsize, mi_row, mi_col,
+                         mi_row, mi_col, mi_row_top, mi_col_top, i, dst_buf[i],
+                         dst_stride[i], 0);
             xd->plane[i].dst.buf = dst_buf[i];
             xd->plane[i].dst.stride = dst_stride[i];
-            av1_build_masked_inter_predictor_complex(
-                xd, dst_buf[i], dst_stride[i], dst_buf1[i], dst_stride1[i],
-                mi_row, mi_col, mi_row_top, mi_col_top, bsize, top_bsize,
-                PARTITION_HORZ, i);
+
+            if (mi_row + hbs < cm->mi_rows) {
+              // Second half
+              predict_b_extend(cpi, td, tile, 0, mi_row + hbs, mi_col,
+                               mi_row + hbs, mi_col, mi_row_top, mi_col_top, i,
+                               dst_buf1[i], dst_stride1[i], top_bsize, subsize,
+                               dry_run, 0);
+              if (bsize < top_bsize)
+                extend_all(cpi, td, tile, 0, subsize, top_bsize, mi_row + hbs,
+                           mi_col, mi_row + hbs, mi_col, mi_row_top, mi_col_top,
+                           i, dst_buf1[i], dst_stride1[i]);
+              else
+                extend_dir(cpi, td, tile, 0, subsize, top_bsize, mi_row + hbs,
+                           mi_col, mi_row + hbs, mi_col, mi_row_top, mi_col_top,
+                           i, dst_buf1[i], dst_stride1[i], 1);
+              // Smooth
+              xd->plane[i].dst.buf = dst_buf[i];
+              xd->plane[i].dst.stride = dst_stride[i];
+              av1_build_masked_inter_predictor_complex(
+                  xd, dst_buf[i], dst_stride[i], dst_buf1[i], dst_stride1[i],
+                  mi_row, mi_col, mi_row_top, mi_col_top, bsize, top_bsize,
+                  PARTITION_HORZ, i);
+            }
+#if CONFIG_CB4X4
           }
+#endif
         }
       }
       break;
     case PARTITION_VERT:
       if (bsize == BLOCK_8X8 && !unify_bsize) {
-        // First half
-        predict_b_extend(cpi, td, tile, 0, mi_row, mi_col, mi_row, mi_col,
-                         mi_row_top, mi_col_top, dst_buf, dst_stride, top_bsize,
-                         BLOCK_8X8, dry_run, 1, 0);
-        if (bsize < top_bsize)
-          extend_all(cpi, td, tile, 0, subsize, top_bsize, mi_row, mi_col,
-                     mi_row_top, mi_col_top, dry_run, dst_buf, dst_stride);
+        for (i = 0; i < MAX_MB_PLANE; ++i) {
+          // First half
+          predict_b_extend(cpi, td, tile, 0, mi_row, mi_col, mi_row, mi_col,
+                           mi_row_top, mi_col_top, i, dst_buf[i], dst_stride[i],
+                           top_bsize, BLOCK_8X8, dry_run, 1);
+          if (bsize < top_bsize)
+            extend_all(cpi, td, tile, 0, subsize, top_bsize, mi_row, mi_col,
+                       mi_row, mi_col, mi_row_top, mi_col_top, i, dst_buf[i],
+                       dst_stride[i]);
 
-        // Second half
-        predict_b_extend(cpi, td, tile, 1, mi_row, mi_col, mi_row, mi_col,
-                         mi_row_top, mi_col_top, dst_buf1, dst_stride1,
-                         top_bsize, BLOCK_8X8, dry_run, 1, 1);
-        if (bsize < top_bsize)
-          extend_all(cpi, td, tile, 1, subsize, top_bsize, mi_row, mi_col,
-                     mi_row_top, mi_col_top, dry_run, dst_buf1, dst_stride1);
+          // Second half
+          predict_b_extend(cpi, td, tile, 1, mi_row, mi_col, mi_row, mi_col,
+                           mi_row_top, mi_col_top, i, dst_buf1[i],
+                           dst_stride1[i], top_bsize, BLOCK_8X8, dry_run, 1);
+          if (bsize < top_bsize)
+            extend_all(cpi, td, tile, 1, subsize, top_bsize, mi_row, mi_col,
+                       mi_row, mi_col, mi_row_top, mi_col_top, i, dst_buf1[i],
+                       dst_stride1[i]);
+        }
 
         // Smooth
         xd->plane[0].dst.buf = dst_buf[0];
@@ -6235,66 +6733,160 @@ static void predict_sb_complex(const AV1_COMP *const cpi, ThreadData *td,
             mi_col, mi_row_top, mi_col_top, bsize, top_bsize, PARTITION_VERT,
             0);
       } else {
-        // bsize: not important, not useful
-        predict_b_extend(cpi, td, tile, 0, mi_row, mi_col, mi_row, mi_col,
-                         mi_row_top, mi_col_top, dst_buf, dst_stride, top_bsize,
-                         subsize, dry_run, 0, 0);
-        if (bsize < top_bsize)
-          extend_all(cpi, td, tile, 0, subsize, top_bsize, mi_row, mi_col,
-                     mi_row_top, mi_col_top, dry_run, dst_buf, dst_stride);
-        else
-          extend_dir(cpi, td, tile, 0, subsize, top_bsize, mi_row, mi_col,
-                     mi_row_top, mi_col_top, dry_run, dst_buf, dst_stride, 3);
+        for (i = 0; i < MAX_MB_PLANE; ++i) {
+#if CONFIG_CB4X4
+          const struct macroblockd_plane *pd = &xd->plane[i];
+          int handle_chroma_sub8x8 = need_handle_chroma_sub8x8(
+              subsize, pd->subsampling_x, pd->subsampling_y);
 
-        if (mi_col + hbs < cm->mi_cols) {
-          predict_b_extend(cpi, td, tile, 0, mi_row, mi_col + hbs, mi_row,
-                           mi_col + hbs, mi_row_top, mi_col_top, dst_buf1,
-                           dst_stride1, top_bsize, subsize, dry_run, 0, 0);
-          if (bsize < top_bsize)
-            extend_all(cpi, td, tile, 0, subsize, top_bsize, mi_row,
-                       mi_col + hbs, mi_row_top, mi_col_top, dry_run, dst_buf1,
-                       dst_stride1);
-          else
-            extend_dir(cpi, td, tile, 0, subsize, top_bsize, mi_row,
-                       mi_col + hbs, mi_row_top, mi_col_top, dry_run, dst_buf1,
-                       dst_stride1, 2);
+          if (handle_chroma_sub8x8) {
+            int mode_offset_col = CONFIG_CHROMA_SUB8X8 ? hbs : 0;
 
-          for (i = 0; i < MAX_MB_PLANE; i++) {
+            predict_b_extend(cpi, td, tile, 0, mi_row, mi_col + mode_offset_col,
+                             mi_row, mi_col, mi_row_top, mi_col_top, i,
+                             dst_buf[i], dst_stride[i], top_bsize, bsize,
+                             dry_run, 0);
+            if (bsize < top_bsize)
+              extend_all(cpi, td, tile, 0, bsize, top_bsize, mi_row,
+                         mi_col + mode_offset_col, mi_row, mi_col, mi_row_top,
+                         mi_col_top, i, dst_buf[i], dst_stride[i]);
+          } else {
+#endif
+            predict_b_extend(cpi, td, tile, 0, mi_row, mi_col, mi_row, mi_col,
+                             mi_row_top, mi_col_top, i, dst_buf[i],
+                             dst_stride[i], top_bsize, subsize, dry_run, 0);
+            if (bsize < top_bsize)
+              extend_all(cpi, td, tile, 0, subsize, top_bsize, mi_row, mi_col,
+                         mi_row, mi_col, mi_row_top, mi_col_top, i, dst_buf[i],
+                         dst_stride[i]);
+            else
+              extend_dir(cpi, td, tile, 0, subsize, top_bsize, mi_row, mi_col,
+                         mi_row, mi_col, mi_row_top, mi_col_top, i, dst_buf[i],
+                         dst_stride[i], 3);
             xd->plane[i].dst.buf = dst_buf[i];
             xd->plane[i].dst.stride = dst_stride[i];
-            av1_build_masked_inter_predictor_complex(
-                xd, dst_buf[i], dst_stride[i], dst_buf1[i], dst_stride1[i],
-                mi_row, mi_col, mi_row_top, mi_col_top, bsize, top_bsize,
-                PARTITION_VERT, i);
+
+            if (mi_col + hbs < cm->mi_cols) {
+              predict_b_extend(cpi, td, tile, 0, mi_row, mi_col + hbs, mi_row,
+                               mi_col + hbs, mi_row_top, mi_col_top, i,
+                               dst_buf1[i], dst_stride1[i], top_bsize, subsize,
+                               dry_run, 0);
+              if (bsize < top_bsize)
+                extend_all(cpi, td, tile, 0, subsize, top_bsize, mi_row,
+                           mi_col + hbs, mi_row, mi_col + hbs, mi_row_top,
+                           mi_col_top, i, dst_buf1[i], dst_stride1[i]);
+              else
+                extend_dir(cpi, td, tile, 0, subsize, top_bsize, mi_row,
+                           mi_col + hbs, mi_row, mi_col + hbs, mi_row_top,
+                           mi_col_top, i, dst_buf1[i], dst_stride1[i], 2);
+
+              // smooth
+              xd->plane[i].dst.buf = dst_buf[i];
+              xd->plane[i].dst.stride = dst_stride[i];
+              av1_build_masked_inter_predictor_complex(
+                  xd, dst_buf[i], dst_stride[i], dst_buf1[i], dst_stride1[i],
+                  mi_row, mi_col, mi_row_top, mi_col_top, bsize, top_bsize,
+                  PARTITION_VERT, i);
+            }
+#if CONFIG_CB4X4
           }
+#endif
         }
       }
       break;
     case PARTITION_SPLIT:
       if (bsize == BLOCK_8X8 && !unify_bsize) {
-        predict_b_extend(cpi, td, tile, 0, mi_row, mi_col, mi_row, mi_col,
-                         mi_row_top, mi_col_top, dst_buf, dst_stride, top_bsize,
-                         BLOCK_8X8, dry_run, 1, 0);
-        predict_b_extend(cpi, td, tile, 1, mi_row, mi_col, mi_row, mi_col,
-                         mi_row_top, mi_col_top, dst_buf1, dst_stride1,
-                         top_bsize, BLOCK_8X8, dry_run, 1, 1);
-        predict_b_extend(cpi, td, tile, 2, mi_row, mi_col, mi_row, mi_col,
-                         mi_row_top, mi_col_top, dst_buf2, dst_stride2,
-                         top_bsize, BLOCK_8X8, dry_run, 1, 1);
-        predict_b_extend(cpi, td, tile, 3, mi_row, mi_col, mi_row, mi_col,
-                         mi_row_top, mi_col_top, dst_buf3, dst_stride3,
-                         top_bsize, BLOCK_8X8, dry_run, 1, 1);
+        for (i = 0; i < MAX_MB_PLANE; i++) {
+          predict_b_extend(cpi, td, tile, 0, mi_row, mi_col, mi_row, mi_col,
+                           mi_row_top, mi_col_top, i, dst_buf[i], dst_stride[i],
+                           top_bsize, BLOCK_8X8, dry_run, 1);
+          predict_b_extend(cpi, td, tile, 1, mi_row, mi_col, mi_row, mi_col,
+                           mi_row_top, mi_col_top, i, dst_buf1[i],
+                           dst_stride1[i], top_bsize, BLOCK_8X8, dry_run, 1);
+          predict_b_extend(cpi, td, tile, 2, mi_row, mi_col, mi_row, mi_col,
+                           mi_row_top, mi_col_top, i, dst_buf2[i],
+                           dst_stride2[i], top_bsize, BLOCK_8X8, dry_run, 1);
+          predict_b_extend(cpi, td, tile, 3, mi_row, mi_col, mi_row, mi_col,
+                           mi_row_top, mi_col_top, i, dst_buf3[i],
+                           dst_stride3[i], top_bsize, BLOCK_8X8, dry_run, 1);
 
-        if (bsize < top_bsize) {
-          extend_all(cpi, td, tile, 0, subsize, top_bsize, mi_row, mi_col,
-                     mi_row_top, mi_col_top, dry_run, dst_buf, dst_stride);
-          extend_all(cpi, td, tile, 1, subsize, top_bsize, mi_row, mi_col,
-                     mi_row_top, mi_col_top, dry_run, dst_buf1, dst_stride1);
-          extend_all(cpi, td, tile, 2, subsize, top_bsize, mi_row, mi_col,
-                     mi_row_top, mi_col_top, dry_run, dst_buf2, dst_stride2);
-          extend_all(cpi, td, tile, 3, subsize, top_bsize, mi_row, mi_col,
-                     mi_row_top, mi_col_top, dry_run, dst_buf3, dst_stride3);
+          if (bsize < top_bsize) {
+            extend_all(cpi, td, tile, 0, subsize, top_bsize, mi_row, mi_col,
+                       mi_row, mi_col, mi_row_top, mi_col_top, i, dst_buf[i],
+                       dst_stride[i]);
+            extend_all(cpi, td, tile, 1, subsize, top_bsize, mi_row, mi_col,
+                       mi_row, mi_col, mi_row_top, mi_col_top, i, dst_buf1[i],
+                       dst_stride1[i]);
+            extend_all(cpi, td, tile, 2, subsize, top_bsize, mi_row, mi_col,
+                       mi_row, mi_col, mi_row_top, mi_col_top, i, dst_buf2[i],
+                       dst_stride2[i]);
+            extend_all(cpi, td, tile, 3, subsize, top_bsize, mi_row, mi_col,
+                       mi_row, mi_col, mi_row_top, mi_col_top, i, dst_buf3[i],
+                       dst_stride3[i]);
+          }
         }
+#if CONFIG_CB4X4
+      } else if (bsize == BLOCK_8X8) {
+        for (i = 0; i < MAX_MB_PLANE; i++) {
+          const struct macroblockd_plane *pd = &xd->plane[i];
+          int handle_chroma_sub8x8 = need_handle_chroma_sub8x8(
+              subsize, pd->subsampling_x, pd->subsampling_y);
+
+          if (handle_chroma_sub8x8) {
+            int mode_offset_row =
+                CONFIG_CHROMA_SUB8X8 && mi_row + hbs < cm->mi_rows ? hbs : 0;
+            int mode_offset_col =
+                CONFIG_CHROMA_SUB8X8 && mi_col + hbs < cm->mi_cols ? hbs : 0;
+
+            predict_b_extend(cpi, td, tile, 0, mi_row + mode_offset_row,
+                             mi_col + mode_offset_col, mi_row, mi_col,
+                             mi_row_top, mi_col_top, i, dst_buf[i],
+                             dst_stride[i], top_bsize, BLOCK_8X8, dry_run, 0);
+            if (bsize < top_bsize)
+              extend_all(cpi, td, tile, 0, BLOCK_8X8, top_bsize,
+                         mi_row + mode_offset_row, mi_col + mode_offset_col,
+                         mi_row, mi_col, mi_row_top, mi_col_top, i, dst_buf[i],
+                         dst_stride[i]);
+          } else {
+            predict_b_extend(cpi, td, tile, 0, mi_row, mi_col, mi_row, mi_col,
+                             mi_row_top, mi_col_top, i, dst_buf[i],
+                             dst_stride[i], top_bsize, subsize, dry_run, 0);
+            if (mi_row < cm->mi_rows && mi_col + hbs < cm->mi_cols)
+              predict_b_extend(cpi, td, tile, 0, mi_row, mi_col + hbs, mi_row,
+                               mi_col + hbs, mi_row_top, mi_col_top, i,
+                               dst_buf1[i], dst_stride1[i], top_bsize, subsize,
+                               dry_run, 0);
+            if (mi_row + hbs < cm->mi_rows && mi_col < cm->mi_cols)
+              predict_b_extend(cpi, td, tile, 0, mi_row + hbs, mi_col,
+                               mi_row + hbs, mi_col, mi_row_top, mi_col_top, i,
+                               dst_buf2[i], dst_stride2[i], top_bsize, subsize,
+                               dry_run, 0);
+            if (mi_row + hbs < cm->mi_rows && mi_col + hbs < cm->mi_cols)
+              predict_b_extend(cpi, td, tile, 0, mi_row + hbs, mi_col + hbs,
+                               mi_row + hbs, mi_col + hbs, mi_row_top,
+                               mi_col_top, i, dst_buf3[i], dst_stride3[i],
+                               top_bsize, subsize, dry_run, 0);
+
+            if (bsize < top_bsize) {
+              extend_all(cpi, td, tile, 0, subsize, top_bsize, mi_row, mi_col,
+                         mi_row, mi_col, mi_row_top, mi_col_top, i, dst_buf[i],
+                         dst_stride[i]);
+              if (mi_row < cm->mi_rows && mi_col + hbs < cm->mi_cols)
+                extend_all(cpi, td, tile, 0, subsize, top_bsize, mi_row,
+                           mi_col + hbs, mi_row, mi_col + hbs, mi_row_top,
+                           mi_col_top, i, dst_buf1[i], dst_stride1[i]);
+              if (mi_row + hbs < cm->mi_rows && mi_col < cm->mi_cols)
+                extend_all(cpi, td, tile, 0, subsize, top_bsize, mi_row + hbs,
+                           mi_col, mi_row + hbs, mi_col, mi_row_top, mi_col_top,
+                           i, dst_buf2[i], dst_stride2[i]);
+              if (mi_row + hbs < cm->mi_rows && mi_col + hbs < cm->mi_cols)
+                extend_all(cpi, td, tile, 0, subsize, top_bsize, mi_row + hbs,
+                           mi_col + hbs, mi_row + hbs, mi_col + hbs, mi_row_top,
+                           mi_col_top, i, dst_buf3[i], dst_stride3[i]);
+            }
+          }
+        }
+#endif
       } else {
         predict_sb_complex(cpi, td, tile, mi_row, mi_col, mi_row_top,
                            mi_col_top, dry_run, subsize, top_bsize, dst_buf,
@@ -6314,10 +6906,16 @@ static void predict_sb_complex(const AV1_COMP *const cpi, ThreadData *td,
                              pc_tree->split[3]);
       }
       for (i = 0; i < MAX_MB_PLANE; i++) {
-#if !CONFIG_CB4X4
+#if CONFIG_CB4X4
+        const struct macroblockd_plane *pd = &xd->plane[i];
+        int handle_chroma_sub8x8 = need_handle_chroma_sub8x8(
+            subsize, pd->subsampling_x, pd->subsampling_y);
+        if (handle_chroma_sub8x8) continue;  // Skip <4x4 chroma smoothing
+#else
         if (bsize == BLOCK_8X8 && i != 0)
           continue;  // Skip <4x4 chroma smoothing
 #endif
+
         if (mi_row < cm->mi_rows && mi_col + hbs < cm->mi_cols) {
           av1_build_masked_inter_predictor_complex(
               xd, dst_buf[i], dst_stride[i], dst_buf1[i], dst_stride1[i],
@@ -6334,9 +6932,6 @@ static void predict_sb_complex(const AV1_COMP *const cpi, ThreadData *td,
                 PARTITION_HORZ, i);
           }
         } else if (mi_row + hbs < cm->mi_rows && mi_col < cm->mi_cols) {
-          if (bsize == BLOCK_8X8 && i != 0)
-            continue;  // Skip <4x4 chroma smoothing
-
           av1_build_masked_inter_predictor_complex(
               xd, dst_buf[i], dst_stride[i], dst_buf2[i], dst_stride2[i],
               mi_row, mi_col, mi_row_top, mi_col_top, bsize, top_bsize,
@@ -6660,8 +7255,7 @@ static void rd_supertx_sb(const AV1_COMP *const cpi, ThreadData *td,
       *tmp_rate = av1_cost_bit(av1_get_skip_prob(cm, xd), 1);
       x->skip = 1;
     } else {
-      if (RDCOST(x->rdmult, x->rddiv, *tmp_rate, *tmp_dist) <
-          RDCOST(x->rdmult, x->rddiv, 0, sse)) {
+      if (RDCOST(x->rdmult, *tmp_rate, *tmp_dist) < RDCOST(x->rdmult, 0, sse)) {
         *tmp_rate += av1_cost_bit(av1_get_skip_prob(cm, xd), 0);
         x->skip = 0;
       } else {
@@ -6671,7 +7265,7 @@ static void rd_supertx_sb(const AV1_COMP *const cpi, ThreadData *td,
       }
     }
     *tmp_rate += base_rate;
-    rd_tx = RDCOST(x->rdmult, x->rddiv, *tmp_rate, *tmp_dist);
+    rd_tx = RDCOST(x->rdmult, *tmp_rate, *tmp_dist);
     if (rd_tx < bestrd_tx * 0.99 || tx_type == DCT_DCT) {
       *best_tx = tx_type;
       bestrd_tx = rd_tx;

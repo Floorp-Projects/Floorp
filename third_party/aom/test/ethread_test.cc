@@ -20,8 +20,8 @@
 
 namespace {
 class AVxEncoderThreadTest
-    : public ::libaom_test::EncoderTest,
-      public ::libaom_test::CodecTestWith2Params<libaom_test::TestMode, int> {
+    : public ::libaom_test::CodecTestWith2Params<libaom_test::TestMode, int>,
+      public ::libaom_test::EncoderTest {
  protected:
   AVxEncoderThreadTest()
       : EncoderTest(GET_PARAM(0)), encoder_initialized_(false),
@@ -30,8 +30,9 @@ class AVxEncoderThreadTest
     aom_codec_dec_cfg_t cfg = aom_codec_dec_cfg_t();
     cfg.w = 1280;
     cfg.h = 720;
+    cfg.allow_lowbitdepth = 1;
     decoder_ = codec_->CreateDecoder(cfg, 0);
-#if CONFIG_AV1 && CONFIG_EXT_TILE
+#if CONFIG_AV1
     if (decoder_->IsAV1()) {
       decoder_->Control(AV1_SET_DECODE_TILE_ROW, -1);
       decoder_->Control(AV1_SET_DECODE_TILE_COL, -1);
@@ -69,20 +70,7 @@ class AVxEncoderThreadTest
   virtual void PreEncodeFrameHook(::libaom_test::VideoSource * /*video*/,
                                   ::libaom_test::Encoder *encoder) {
     if (!encoder_initialized_) {
-#if CONFIG_AV1 && CONFIG_EXT_TILE
-      encoder->Control(AV1E_SET_TILE_COLUMNS, 1);
-      if (codec_ == &libaom_test::kAV1) {
-        // TODO(geza): Start using multiple tile rows when the multi-threaded
-        // encoder can handle them
-        encoder->Control(AV1E_SET_TILE_ROWS, 32);
-      } else {
-        encoder->Control(AV1E_SET_TILE_ROWS, 0);
-      }
-#else
-      // Encode 4 tile columns.
-      encoder->Control(AV1E_SET_TILE_COLUMNS, 2);
-      encoder->Control(AV1E_SET_TILE_ROWS, 0);
-#endif  // CONFIG_AV1 && CONFIG_EXT_TILE
+      SetTileSize(encoder);
 #if CONFIG_LOOPFILTERING_ACROSS_TILES
       encoder->Control(AV1E_SET_TILE_LOOPFILTER, 0);
 #endif  // CONFIG_LOOPFILTERING_ACROSS_TILES
@@ -98,6 +86,12 @@ class AVxEncoderThreadTest
       }
       encoder_initialized_ = true;
     }
+  }
+
+  virtual void SetTileSize(libaom_test::Encoder *encoder) {
+    // Encode 4 tile columns.
+    encoder->Control(AV1E_SET_TILE_COLUMNS, 2);
+    encoder->Control(AV1E_SET_TILE_ROWS, 0);
   }
 
   virtual void FramePktHook(const aom_codec_cx_pkt_t *pkt) {
@@ -169,11 +163,21 @@ class AVxEncoderThreadTest
   std::vector<std::string> md5_dec_;
 };
 
-TEST_P(AVxEncoderThreadTest, EncoderResultTest) { DoTest(); }
+TEST_P(AVxEncoderThreadTest, EncoderResultTest) {
+#if CONFIG_AV1 && CONFIG_EXT_TILE
+  cfg_.large_scale_tile = 0;
+#endif  // CONFIG_AV1 && CONFIG_EXT_TILE
+  DoTest();
+}
 
 class AVxEncoderThreadTestLarge : public AVxEncoderThreadTest {};
 
-TEST_P(AVxEncoderThreadTestLarge, EncoderResultTest) { DoTest(); }
+TEST_P(AVxEncoderThreadTestLarge, EncoderResultTest) {
+#if CONFIG_AV1 && CONFIG_EXT_TILE
+  cfg_.large_scale_tile = 0;
+#endif  // CONFIG_AV1 && CONFIG_EXT_TILE
+  DoTest();
+}
 
 // For AV1, only test speed 0 to 3.
 AV1_INSTANTIATE_TEST_CASE(AVxEncoderThreadTest,
@@ -185,4 +189,36 @@ AV1_INSTANTIATE_TEST_CASE(AVxEncoderThreadTestLarge,
                           ::testing::Values(::libaom_test::kTwoPassGood,
                                             ::libaom_test::kOnePassGood),
                           ::testing::Range(0, 2));
+
+#if CONFIG_AV1 && CONFIG_EXT_TILE
+class AVxEncoderThreadLSTest : public AVxEncoderThreadTest {
+  virtual void SetTileSize(libaom_test::Encoder *encoder) {
+    encoder->Control(AV1E_SET_TILE_COLUMNS, 1);
+    // TODO(geza): Start using multiple tile rows when the multi-threaded
+    // encoder can handle them
+    encoder->Control(AV1E_SET_TILE_ROWS, 32);
+  }
+};
+
+TEST_P(AVxEncoderThreadLSTest, EncoderResultTest) {
+  cfg_.large_scale_tile = 1;
+  DoTest();
+}
+
+class AVxEncoderThreadLSTestLarge : public AVxEncoderThreadLSTest {};
+
+TEST_P(AVxEncoderThreadLSTestLarge, EncoderResultTest) {
+  cfg_.large_scale_tile = 1;
+  DoTest();
+}
+
+AV1_INSTANTIATE_TEST_CASE(AVxEncoderThreadLSTest,
+                          ::testing::Values(::libaom_test::kTwoPassGood,
+                                            ::libaom_test::kOnePassGood),
+                          ::testing::Range(2, 4));
+AV1_INSTANTIATE_TEST_CASE(AVxEncoderThreadLSTestLarge,
+                          ::testing::Values(::libaom_test::kTwoPassGood,
+                                            ::libaom_test::kOnePassGood),
+                          ::testing::Range(0, 2));
+#endif  // CONFIG_AV1 && CONFIG_EXT_TILE
 }  // namespace

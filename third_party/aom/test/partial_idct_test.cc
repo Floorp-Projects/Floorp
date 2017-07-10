@@ -41,13 +41,6 @@ void wrapper(const tran_low_t *in, uint8_t *out, int stride, int bd) {
   fn(in, out, stride);
 }
 
-#if CONFIG_HIGHBITDEPTH
-template <InvTxfmWithBdFunc fn>
-void highbd_wrapper(const tran_low_t *in, uint8_t *out, int stride, int bd) {
-  fn(in, CONVERT_TO_BYTEPTR(out), stride, bd);
-}
-#endif
-
 typedef std::tr1::tuple<FwdTxfmFunc, InvTxfmWithBdFunc, InvTxfmWithBdFunc,
                         TX_SIZE, int, int, int>
     PartialInvTxfmParam;
@@ -285,26 +278,6 @@ TEST_P(PartialIDctTest, DISABLED_Speed) {
 using std::tr1::make_tuple;
 
 const PartialInvTxfmParam c_partial_idct_tests[] = {
-#if CONFIG_HIGHBITDEPTH
-  make_tuple(&aom_highbd_fdct4x4_c,
-             &highbd_wrapper<aom_highbd_idct4x4_16_add_c>,
-             &highbd_wrapper<aom_highbd_idct4x4_16_add_c>, TX_4X4, 16, 8, 2),
-  make_tuple(&aom_highbd_fdct4x4_c,
-             &highbd_wrapper<aom_highbd_idct4x4_16_add_c>,
-             &highbd_wrapper<aom_highbd_idct4x4_16_add_c>, TX_4X4, 16, 10, 2),
-  make_tuple(&aom_highbd_fdct4x4_c,
-             &highbd_wrapper<aom_highbd_idct4x4_16_add_c>,
-             &highbd_wrapper<aom_highbd_idct4x4_16_add_c>, TX_4X4, 16, 12, 2),
-  make_tuple(&aom_highbd_fdct4x4_c,
-             &highbd_wrapper<aom_highbd_idct4x4_16_add_c>,
-             &highbd_wrapper<aom_highbd_idct4x4_1_add_c>, TX_4X4, 1, 8, 2),
-  make_tuple(&aom_highbd_fdct4x4_c,
-             &highbd_wrapper<aom_highbd_idct4x4_16_add_c>,
-             &highbd_wrapper<aom_highbd_idct4x4_1_add_c>, TX_4X4, 1, 10, 2),
-  make_tuple(&aom_highbd_fdct4x4_c,
-             &highbd_wrapper<aom_highbd_idct4x4_16_add_c>,
-             &highbd_wrapper<aom_highbd_idct4x4_1_add_c>, TX_4X4, 1, 12, 2),
-#endif  // CONFIG_HIGHBITDEPTH
   make_tuple(&aom_fdct32x32_c, &wrapper<aom_idct32x32_1024_add_c>,
              &wrapper<aom_idct32x32_1024_add_c>, TX_32X32, 1024, 8, 1),
   make_tuple(&aom_fdct32x32_c, &wrapper<aom_idct32x32_1024_add_c>,
@@ -358,17 +331,6 @@ INSTANTIATE_TEST_CASE_P(NEON, PartialIDctTest,
 
 #if HAVE_SSE2
 const PartialInvTxfmParam sse2_partial_idct_tests[] = {
-#if CONFIG_HIGHBITDEPTH
-  make_tuple(&aom_highbd_fdct4x4_c,
-             &highbd_wrapper<aom_highbd_idct4x4_16_add_c>,
-             &highbd_wrapper<aom_highbd_idct4x4_16_add_sse2>, TX_4X4, 16, 8, 2),
-  make_tuple(
-      &aom_highbd_fdct4x4_c, &highbd_wrapper<aom_highbd_idct4x4_16_add_c>,
-      &highbd_wrapper<aom_highbd_idct4x4_16_add_sse2>, TX_4X4, 16, 10, 2),
-  make_tuple(
-      &aom_highbd_fdct4x4_c, &highbd_wrapper<aom_highbd_idct4x4_16_add_c>,
-      &highbd_wrapper<aom_highbd_idct4x4_16_add_sse2>, TX_4X4, 16, 12, 2),
-#endif  // CONFIG_HIGHBITDEPTH
   make_tuple(&aom_fdct32x32_c, &wrapper<aom_idct32x32_1024_add_c>,
              &wrapper<aom_idct32x32_1024_add_sse2>, TX_32X32, 1024, 8, 1),
   make_tuple(&aom_fdct32x32_c, &wrapper<aom_idct32x32_1024_add_c>,

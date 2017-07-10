@@ -33,7 +33,7 @@ namespace {
 typedef void (*FdctFunc)(const int16_t *in, tran_low_t *out, int stride);
 typedef void (*IdctFunc)(const tran_low_t *in, uint8_t *out, int stride);
 typedef void (*IhtFunc)(const tran_low_t *in, uint8_t *out, int stride,
-                        int tx_type);
+                        const TxfmParam *txfm_param);
 using libaom_test::FhtFunc;
 
 typedef std::tr1::tuple<FdctFunc, IdctFunc, int, aom_bit_depth_t, int>
@@ -41,34 +41,41 @@ typedef std::tr1::tuple<FdctFunc, IdctFunc, int, aom_bit_depth_t, int>
 typedef std::tr1::tuple<FhtFunc, IhtFunc, int, aom_bit_depth_t, int> Ht4x4Param;
 
 void fdct4x4_ref(const int16_t *in, tran_low_t *out, int stride,
-                 int /*tx_type*/) {
+                 TxfmParam * /*txfm_param*/) {
   aom_fdct4x4_c(in, out, stride);
 }
 
-void fht4x4_ref(const int16_t *in, tran_low_t *out, int stride, int tx_type) {
-  av1_fht4x4_c(in, out, stride, tx_type);
+void fht4x4_ref(const int16_t *in, tran_low_t *out, int stride,
+                TxfmParam *txfm_param) {
+  av1_fht4x4_c(in, out, stride, txfm_param);
 }
 
 void fwht4x4_ref(const int16_t *in, tran_low_t *out, int stride,
-                 int /*tx_type*/) {
+                 TxfmParam * /*txfm_param*/) {
   av1_fwht4x4_c(in, out, stride);
 }
 
 #if CONFIG_HIGHBITDEPTH
-void idct4x4_10(const tran_low_t *in, uint8_t *out, int stride) {
-  aom_highbd_idct4x4_16_add_c(in, out, stride, 10);
+void fht4x4_10(const int16_t *in, tran_low_t *out, int stride,
+               TxfmParam *txfm_param) {
+  av1_fwd_txfm2d_4x4_c(in, out, stride, txfm_param->tx_type, 10);
 }
 
-void idct4x4_12(const tran_low_t *in, uint8_t *out, int stride) {
-  aom_highbd_idct4x4_16_add_c(in, out, stride, 12);
+void fht4x4_12(const int16_t *in, tran_low_t *out, int stride,
+               TxfmParam *txfm_param) {
+  av1_fwd_txfm2d_4x4_c(in, out, stride, txfm_param->tx_type, 12);
 }
 
-void iht4x4_10(const tran_low_t *in, uint8_t *out, int stride, int tx_type) {
-  av1_highbd_iht4x4_16_add_c(in, out, stride, tx_type, 10);
+void iht4x4_10(const tran_low_t *in, uint8_t *out, int stride,
+               const TxfmParam *txfm_param) {
+  av1_inv_txfm2d_add_4x4_c(in, CONVERT_TO_SHORTPTR(out), stride,
+                           txfm_param->tx_type, 10);
 }
 
-void iht4x4_12(const tran_low_t *in, uint8_t *out, int stride, int tx_type) {
-  av1_highbd_iht4x4_16_add_c(in, out, stride, tx_type, 12);
+void iht4x4_12(const tran_low_t *in, uint8_t *out, int stride,
+               const TxfmParam *txfm_param) {
+  av1_inv_txfm2d_add_4x4_c(in, CONVERT_TO_SHORTPTR(out), stride,
+                           txfm_param->tx_type, 12);
 }
 
 void iwht4x4_10(const tran_low_t *in, uint8_t *out, int stride) {
@@ -78,16 +85,6 @@ void iwht4x4_10(const tran_low_t *in, uint8_t *out, int stride) {
 void iwht4x4_12(const tran_low_t *in, uint8_t *out, int stride) {
   aom_highbd_iwht4x4_16_add_c(in, out, stride, 12);
 }
-
-#if HAVE_SSE2
-void idct4x4_10_sse2(const tran_low_t *in, uint8_t *out, int stride) {
-  aom_highbd_idct4x4_16_add_sse2(in, out, stride, 10);
-}
-
-void idct4x4_12_sse2(const tran_low_t *in, uint8_t *out, int stride) {
-  aom_highbd_idct4x4_16_add_sse2(in, out, stride, 12);
-}
-#endif  // HAVE_SSE2
 #endif  // CONFIG_HIGHBITDEPTH
 
 class Trans4x4DCT : public libaom_test::TransformTestBase,
@@ -98,13 +95,13 @@ class Trans4x4DCT : public libaom_test::TransformTestBase,
   virtual void SetUp() {
     fwd_txfm_ = GET_PARAM(0);
     inv_txfm_ = GET_PARAM(1);
-    tx_type_ = GET_PARAM(2);
     pitch_ = 4;
     height_ = 4;
     fwd_txfm_ref = fdct4x4_ref;
     bit_depth_ = GET_PARAM(3);
     mask_ = (1 << bit_depth_) - 1;
     num_coeffs_ = GET_PARAM(4);
+    txfm_param_.tx_type = GET_PARAM(2);
   }
   virtual void TearDown() { libaom_test::ClearSystemState(); }
 
@@ -136,23 +133,30 @@ class Trans4x4HT : public libaom_test::TransformTestBase,
   virtual void SetUp() {
     fwd_txfm_ = GET_PARAM(0);
     inv_txfm_ = GET_PARAM(1);
-    tx_type_ = GET_PARAM(2);
     pitch_ = 4;
     height_ = 4;
     fwd_txfm_ref = fht4x4_ref;
     bit_depth_ = GET_PARAM(3);
     mask_ = (1 << bit_depth_) - 1;
     num_coeffs_ = GET_PARAM(4);
+    txfm_param_.tx_type = GET_PARAM(2);
+#if CONFIG_HIGHBITDEPTH
+    switch (bit_depth_) {
+      case AOM_BITS_10: fwd_txfm_ref = fht4x4_10; break;
+      case AOM_BITS_12: fwd_txfm_ref = fht4x4_12; break;
+      default: fwd_txfm_ref = fht4x4_ref; break;
+    }
+#endif
   }
   virtual void TearDown() { libaom_test::ClearSystemState(); }
 
  protected:
   void RunFwdTxfm(const int16_t *in, tran_low_t *out, int stride) {
-    fwd_txfm_(in, out, stride, tx_type_);
+    fwd_txfm_(in, out, stride, &txfm_param_);
   }
 
   void RunInvTxfm(const tran_low_t *out, uint8_t *dst, int stride) {
-    inv_txfm_(out, dst, stride, tx_type_);
+    inv_txfm_(out, dst, stride, &txfm_param_);
   }
 
   FhtFunc fwd_txfm_;
@@ -175,7 +179,6 @@ class Trans4x4WHT : public libaom_test::TransformTestBase,
   virtual void SetUp() {
     fwd_txfm_ = GET_PARAM(0);
     inv_txfm_ = GET_PARAM(1);
-    tx_type_ = GET_PARAM(2);
     pitch_ = 4;
     height_ = 4;
     fwd_txfm_ref = fwht4x4_ref;
@@ -206,32 +209,26 @@ TEST_P(Trans4x4WHT, MemCheck) { RunMemCheck(); }
 TEST_P(Trans4x4WHT, InvAccuracyCheck) { RunInvAccuracyCheck(0); }
 using std::tr1::make_tuple;
 
-#if CONFIG_HIGHBITDEPTH
-INSTANTIATE_TEST_CASE_P(
-    C, Trans4x4DCT,
-    ::testing::Values(
-        make_tuple(&aom_highbd_fdct4x4_c, &idct4x4_10, 0, AOM_BITS_10, 16),
-        make_tuple(&aom_highbd_fdct4x4_c, &idct4x4_12, 0, AOM_BITS_12, 16),
-        make_tuple(&aom_fdct4x4_c, &aom_idct4x4_16_add_c, 0, AOM_BITS_8, 16)));
-#else
 INSTANTIATE_TEST_CASE_P(C, Trans4x4DCT,
                         ::testing::Values(make_tuple(&aom_fdct4x4_c,
                                                      &aom_idct4x4_16_add_c, 0,
                                                      AOM_BITS_8, 16)));
-#endif  // CONFIG_HIGHBITDEPTH
 
 #if CONFIG_HIGHBITDEPTH
 INSTANTIATE_TEST_CASE_P(
+    DISABLED_C, Trans4x4HT,
+    ::testing::Values(make_tuple(&fht4x4_12, &iht4x4_12, 0, AOM_BITS_12, 16),
+                      make_tuple(&fht4x4_12, &iht4x4_12, 1, AOM_BITS_12, 16),
+                      make_tuple(&fht4x4_12, &iht4x4_12, 2, AOM_BITS_12, 16),
+                      make_tuple(&fht4x4_12, &iht4x4_12, 3, AOM_BITS_12, 16)));
+
+INSTANTIATE_TEST_CASE_P(
     C, Trans4x4HT,
     ::testing::Values(
-        make_tuple(&av1_highbd_fht4x4_c, &iht4x4_10, 0, AOM_BITS_10, 16),
-        make_tuple(&av1_highbd_fht4x4_c, &iht4x4_10, 1, AOM_BITS_10, 16),
-        make_tuple(&av1_highbd_fht4x4_c, &iht4x4_10, 2, AOM_BITS_10, 16),
-        make_tuple(&av1_highbd_fht4x4_c, &iht4x4_10, 3, AOM_BITS_10, 16),
-        make_tuple(&av1_highbd_fht4x4_c, &iht4x4_12, 0, AOM_BITS_12, 16),
-        make_tuple(&av1_highbd_fht4x4_c, &iht4x4_12, 1, AOM_BITS_12, 16),
-        make_tuple(&av1_highbd_fht4x4_c, &iht4x4_12, 2, AOM_BITS_12, 16),
-        make_tuple(&av1_highbd_fht4x4_c, &iht4x4_12, 3, AOM_BITS_12, 16),
+        make_tuple(&fht4x4_10, &iht4x4_10, 0, AOM_BITS_10, 16),
+        make_tuple(&fht4x4_10, &iht4x4_10, 1, AOM_BITS_10, 16),
+        make_tuple(&fht4x4_10, &iht4x4_10, 2, AOM_BITS_10, 16),
+        make_tuple(&fht4x4_10, &iht4x4_10, 3, AOM_BITS_10, 16),
         make_tuple(&av1_fht4x4_c, &av1_iht4x4_16_add_c, 0, AOM_BITS_8, 16),
         make_tuple(&av1_fht4x4_c, &av1_iht4x4_16_add_c, 1, AOM_BITS_8, 16),
         make_tuple(&av1_fht4x4_c, &av1_iht4x4_16_add_c, 2, AOM_BITS_8, 16),
@@ -304,18 +301,6 @@ INSTANTIATE_TEST_CASE_P(
 #endif  // HAVE_SSE2 && !CONFIG_HIGHBITDEPTH
 
 #if HAVE_SSE2 && CONFIG_HIGHBITDEPTH
-INSTANTIATE_TEST_CASE_P(
-    SSE2, Trans4x4DCT,
-    ::testing::Values(
-        make_tuple(&aom_highbd_fdct4x4_c, &idct4x4_10_sse2, 0, AOM_BITS_10, 16),
-        make_tuple(&aom_highbd_fdct4x4_sse2, &idct4x4_10_sse2, 0, AOM_BITS_10,
-                   16),
-        make_tuple(&aom_highbd_fdct4x4_c, &idct4x4_12_sse2, 0, AOM_BITS_12, 16),
-        make_tuple(&aom_highbd_fdct4x4_sse2, &idct4x4_12_sse2, 0, AOM_BITS_12,
-                   16),
-        make_tuple(&aom_fdct4x4_sse2, &aom_idct4x4_16_add_c, 0, AOM_BITS_8,
-                   16)));
-
 INSTANTIATE_TEST_CASE_P(
     SSE2, Trans4x4HT,
     ::testing::Values(

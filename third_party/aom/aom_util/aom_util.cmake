@@ -28,7 +28,7 @@ endif ()
 function (setup_aom_util_targets)
   add_library(aom_util OBJECT ${AOM_UTIL_SOURCES})
   set(AOM_LIB_TARGETS ${AOM_LIB_TARGETS} aom_util PARENT_SCOPE)
-  target_sources(aom PUBLIC $<TARGET_OBJECTS:aom_util>)
+  target_sources(aom PRIVATE $<TARGET_OBJECTS:aom_util>)
 endfunction ()
 
 endif ()  # AOM_AOM_UTIL_AOM_UTIL_CMAKE_

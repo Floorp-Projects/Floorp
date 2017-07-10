@@ -92,8 +92,8 @@ void AV1HiprecConvolveTest::RunCheckOutput(hiprec_convolve_func test_impl) {
 
   for (i = 0; i < num_iters; ++i) {
     // Choose random locations within the source block
-    int offset_r = 3 + rnd_.PseudoUniform(w - out_w - 7);
-    int offset_c = 3 + rnd_.PseudoUniform(h - out_h - 7);
+    int offset_r = 3 + rnd_.PseudoUniform(h - out_h - 7);
+    int offset_c = 3 + rnd_.PseudoUniform(w - out_w - 7);
     aom_convolve8_add_src_hip_c(input + offset_r * w + offset_c, w, output,
                                 out_w, hkernel, 16, vkernel, 16, out_w, out_h);
     test_impl(input + offset_r * w + offset_c, w, output2, out_w, hkernel, 16,
@@ -166,8 +166,8 @@ void AV1HighbdHiprecConvolveTest::RunCheckOutput(
 
   for (i = 0; i < num_iters; ++i) {
     // Choose random locations within the source block
-    int offset_r = 3 + rnd_.PseudoUniform(w - out_w - 7);
-    int offset_c = 3 + rnd_.PseudoUniform(h - out_h - 7);
+    int offset_r = 3 + rnd_.PseudoUniform(h - out_h - 7);
+    int offset_c = 3 + rnd_.PseudoUniform(w - out_w - 7);
     aom_highbd_convolve8_add_src_hip_c(input_ptr + offset_r * w + offset_c, w,
                                        output_ptr, out_w, hkernel, 16, vkernel,
                                        16, out_w, out_h, bd);

@@ -28,9 +28,11 @@ INSTANTIATE_TEST_CASE_P(
     SSE2, AV1WarpFilterTest,
     libaom_test::AV1WarpFilter::BuildParams(av1_warp_affine_sse2));
 
+#if HAVE_SSSE3
 INSTANTIATE_TEST_CASE_P(
     SSSE3, AV1WarpFilterTest,
     libaom_test::AV1WarpFilter::BuildParams(av1_warp_affine_ssse3));
+#endif
 
 #if CONFIG_HIGHBITDEPTH && HAVE_SSSE3
 TEST_P(AV1HighbdWarpFilterTest, CheckOutput) {

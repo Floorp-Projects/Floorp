@@ -228,7 +228,7 @@ AOMDecoder::IsSupportedCodec(const nsAString& aCodecType)
   // for a specific aom commit hash so sites can check
   // compatibility.
   auto version = NS_ConvertASCIItoUTF16("av1.experimental.");
-  version.AppendLiteral("aadbb0251996c8ebb8310567bea330ab7ae9abe4");
+  version.AppendLiteral("f5bdeac22930ff4c6b219be49c843db35970b918");
   return aCodecType.EqualsLiteral("av1") ||
          aCodecType.Equals(version);
 }

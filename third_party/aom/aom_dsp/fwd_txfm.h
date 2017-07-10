@@ -20,10 +20,5 @@ static INLINE tran_high_t saturate_int16(tran_high_t value) {
   return result < INT16_MIN ? INT16_MIN : result;
 }
 
-static INLINE tran_high_t fdct_round_shift(tran_high_t input) {
-  tran_high_t rv = ROUND_POWER_OF_TWO(input, DCT_CONST_BITS);
-  return rv;
-}
-
 void aom_fdct32(const tran_high_t *input, tran_high_t *output, int round);
 #endif  // AOM_DSP_FWD_TXFM_H_

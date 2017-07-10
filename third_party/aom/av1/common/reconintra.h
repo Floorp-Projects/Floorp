@@ -73,17 +73,27 @@ static const INTERINTRA_MODE intra_to_interintra_mode[INTRA_MODES] = {
 #define FILTER_INTRA_PREC_BITS 10
 #endif  // CONFIG_FILTER_INTRA
 
+#define CONFIG_INTRA_EDGE_UPSAMPLE CONFIG_INTRA_EDGE
+#define CONFIG_USE_ANGLE_DELTA_SUB8X8 0
+
 #if CONFIG_EXT_INTRA
 static INLINE int av1_is_directional_mode(PREDICTION_MODE mode,
                                           BLOCK_SIZE bsize) {
-  return mode != DC_PRED && mode != TM_PRED &&
-#if CONFIG_ALT_INTRA
-         mode != SMOOTH_PRED &&
-#if CONFIG_SMOOTH_HV
-         mode != SMOOTH_V_PRED && mode != SMOOTH_H_PRED &&
-#endif  // CONFIG_SMOOTH_HV
-#endif  // CONFIG_ALT_INTRA
-         bsize >= BLOCK_8X8;
+#if CONFIG_INTRA_EDGE_UPSAMPLE
+  (void)bsize;
+  return mode >= V_PRED && mode <= D63_PRED;
+#else
+  return mode >= V_PRED && mode <= D63_PRED && bsize >= BLOCK_8X8;
+#endif
+}
+
+static INLINE int av1_use_angle_delta(BLOCK_SIZE bsize) {
+  (void)bsize;
+#if CONFIG_USE_ANGLE_DELTA_SUB8X8
+  return 1;
+#else
+  return bsize >= BLOCK_8X8;
+#endif
 }
 #endif  // CONFIG_EXT_INTRA
 

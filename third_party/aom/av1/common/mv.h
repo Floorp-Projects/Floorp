@@ -35,18 +35,18 @@ typedef struct mv32 {
   int32_t col;
 } MV32;
 
-#if (CONFIG_WARPED_MOTION || CONFIG_MOTION_VAR) && CONFIG_GLOBAL_MOTION
-#define SEPARATE_GLOBAL_MOTION 1
-#endif  // (CONFIG_WARPED_MOTION || CONFIG_MOTION_VAR) && CONFIG_GLOBAL_MOTION
+#if CONFIG_WARPED_MOTION
+#define WARPED_MOTION_SORT_SAMPLES 1
+#endif  // CONFIG_WARPED_MOTION
+
 #if CONFIG_GLOBAL_MOTION || CONFIG_WARPED_MOTION
 // Bits of precision used for the model
 #define WARPEDMODEL_PREC_BITS 16
 #define WARPEDMODEL_ROW3HOMO_PREC_BITS 16
 
 #define WARPEDMODEL_TRANS_CLAMP (128 << WARPEDMODEL_PREC_BITS)
-#define WARPEDMODEL_DIAGAFFINE_CLAMP (1 << (WARPEDMODEL_PREC_BITS + 1))
-#define WARPEDMODEL_NONDIAGAFFINE_CLAMP (1 << (WARPEDMODEL_PREC_BITS - 1))
-#define WARPEDMODEL_ROW3HOMO_CLAMP (1 << (WARPEDMODEL_PREC_BITS - 1))
+#define WARPEDMODEL_NONDIAGAFFINE_CLAMP (1 << (WARPEDMODEL_PREC_BITS - 3))
+#define WARPEDMODEL_ROW3HOMO_CLAMP (1 << (WARPEDMODEL_PREC_BITS - 2))
 
 // Bits of subpel precision for warped interpolation
 #define WARPEDPIXEL_PREC_BITS 6
@@ -87,6 +87,11 @@ typedef enum {
 // GLOBAL_TRANS_TYPES 6 - up to hor/ver trapezoids
 // GLOBAL_TRANS_TYPES 7 - up to full homography
 #define GLOBAL_TRANS_TYPES 4
+
+// First bit indicates whether using identity or not
+// GLOBAL_TYPE_BITS=ceiling(log2(GLOBAL_TRANS_TYPES-1)) is the
+// number of bits needed to cover the remaining possibilities
+#define GLOBAL_TYPE_BITS (get_msb(2 * GLOBAL_TRANS_TYPES - 3))
 
 typedef struct {
 #if CONFIG_GLOBAL_MOTION

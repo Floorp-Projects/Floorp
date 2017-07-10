@@ -27,8 +27,8 @@ int sb_all_skip(const AV1_COMMON *const cm, int mi_row, int mi_col) {
   maxc = cm->mi_cols - mi_col;
   maxr = cm->mi_rows - mi_row;
 
-  maxr = AOMMIN(maxr, cm->mib_size);
-  maxc = AOMMIN(maxc, cm->mib_size);
+  maxr = AOMMIN(maxr, MI_SIZE_64X64);
+  maxc = AOMMIN(maxc, MI_SIZE_64X64);
 
   for (r = 0; r < maxr; r++) {
     for (c = 0; c < maxc; c++) {
@@ -60,8 +60,8 @@ int sb_compute_dering_list(const AV1_COMMON *const cm, int mi_row, int mi_col,
   maxc = cm->mi_cols - mi_col;
   maxr = cm->mi_rows - mi_row;
 
-  maxr = AOMMIN(maxr, cm->mib_size);
-  maxc = AOMMIN(maxc, cm->mib_size);
+  maxr = AOMMIN(maxr, MI_SIZE_64X64);
+  maxc = AOMMIN(maxc, MI_SIZE_64X64);
 
   const int r_step = mi_size_high[BLOCK_8X8];
   const int c_step = mi_size_wide[BLOCK_8X8];
@@ -117,9 +117,9 @@ void copy_rect8_16bit_to_16bit_c(uint16_t *dst, int dstride,
   }
 }
 
-void copy_sb8_16(UNUSED AV1_COMMON *cm, uint16_t *dst, int dstride,
-                 const uint8_t *src, int src_voffset, int src_hoffset,
-                 int sstride, int vsize, int hsize) {
+static void copy_sb8_16(UNUSED AV1_COMMON *cm, uint16_t *dst, int dstride,
+                        const uint8_t *src, int src_voffset, int src_hoffset,
+                        int sstride, int vsize, int hsize) {
 #if CONFIG_HIGHBITDEPTH
   if (cm->use_highbitdepth) {
     const uint16_t *base =
@@ -161,7 +161,7 @@ void av1_cdef_frame(YV12_BUFFER_CONFIG *frame, AV1_COMMON *cm,
   uint16_t src[OD_DERING_INBUF_SIZE];
   uint16_t *linebuf[3];
   uint16_t *colbuf[3];
-  dering_list dlist[MAX_MIB_SIZE * MAX_MIB_SIZE];
+  dering_list dlist[MI_SIZE_64X64 * MI_SIZE_64X64];
   unsigned char *row_dering, *prev_row_dering, *curr_row_dering;
   int dering_count;
   int dir[OD_DERING_NBLOCKS][OD_DERING_NBLOCKS] = { { 0 } };
@@ -178,8 +178,8 @@ void av1_cdef_frame(YV12_BUFFER_CONFIG *frame, AV1_COMMON *cm,
   int chroma_dering =
       xd->plane[1].subsampling_x == xd->plane[1].subsampling_y &&
       xd->plane[2].subsampling_x == xd->plane[2].subsampling_y;
-  nvsb = (cm->mi_rows + MAX_MIB_SIZE - 1) / MAX_MIB_SIZE;
-  nhsb = (cm->mi_cols + MAX_MIB_SIZE - 1) / MAX_MIB_SIZE;
+  nvsb = (cm->mi_rows + MI_SIZE_64X64 - 1) / MI_SIZE_64X64;
+  nhsb = (cm->mi_cols + MI_SIZE_64X64 - 1) / MI_SIZE_64X64;
   av1_setup_dst_planes(xd->plane, cm->sb_size, frame, 0, 0);
   row_dering = aom_malloc(sizeof(*row_dering) * (nhsb + 2) * 2);
   memset(row_dering, 1, sizeof(*row_dering) * (nhsb + 2) * 2);
@@ -202,7 +202,7 @@ void av1_cdef_frame(YV12_BUFFER_CONFIG *frame, AV1_COMMON *cm,
   for (sbr = 0; sbr < nvsb; sbr++) {
     for (pli = 0; pli < nplanes; pli++) {
       const int block_height =
-          (MAX_MIB_SIZE << mi_high_l2[pli]) + 2 * OD_FILT_VBORDER;
+          (MI_SIZE_64X64 << mi_high_l2[pli]) + 2 * OD_FILT_VBORDER;
       fill_rect(colbuf[pli], OD_FILT_HBORDER, block_height, OD_FILT_HBORDER,
                 OD_DERING_VERY_LARGE);
     }
@@ -213,43 +213,41 @@ void av1_cdef_frame(YV12_BUFFER_CONFIG *frame, AV1_COMMON *cm,
       int nhb, nvb;
       int cstart = 0;
       curr_row_dering[sbc] = 0;
-      if (cm->mi_grid_visible[MAX_MIB_SIZE * sbr * cm->mi_stride +
-                              MAX_MIB_SIZE * sbc] == NULL ||
-          cm->mi_grid_visible[MAX_MIB_SIZE * sbr * cm->mi_stride +
-                              MAX_MIB_SIZE * sbc]
+      if (cm->mi_grid_visible[MI_SIZE_64X64 * sbr * cm->mi_stride +
+                              MI_SIZE_64X64 * sbc] == NULL ||
+          cm->mi_grid_visible[MI_SIZE_64X64 * sbr * cm->mi_stride +
+                              MI_SIZE_64X64 * sbc]
                   ->mbmi.cdef_strength == -1) {
         dering_left = 0;
         continue;
       }
       if (!dering_left) cstart = -OD_FILT_HBORDER;
-      nhb = AOMMIN(MAX_MIB_SIZE, cm->mi_cols - MAX_MIB_SIZE * sbc);
-      nvb = AOMMIN(MAX_MIB_SIZE, cm->mi_rows - MAX_MIB_SIZE * sbr);
+      nhb = AOMMIN(MI_SIZE_64X64, cm->mi_cols - MI_SIZE_64X64 * sbc);
+      nvb = AOMMIN(MI_SIZE_64X64, cm->mi_rows - MI_SIZE_64X64 * sbr);
       int tile_top, tile_left, tile_bottom, tile_right;
-      int mi_idx = MAX_MIB_SIZE * sbr * cm->mi_stride + MAX_MIB_SIZE * sbc;
-      BOUNDARY_TYPE boundary_tl =
-          cm->mi_grid_visible[MAX_MIB_SIZE * sbr * cm->mi_stride +
-                              MAX_MIB_SIZE * sbc]
-              ->mbmi.boundary_info;
+      int mi_idx = MI_SIZE_64X64 * sbr * cm->mi_stride + MI_SIZE_64X64 * sbc;
+      MODE_INFO *const mi_tl = cm->mi + mi_idx;
+      BOUNDARY_TYPE boundary_tl = mi_tl->mbmi.boundary_info;
       tile_top = boundary_tl & TILE_ABOVE_BOUNDARY;
       tile_left = boundary_tl & TILE_LEFT_BOUNDARY;
-      /* Right and bottom information appear unreliable, so we use the top
-         and left flags for the next superblocks. */
+
       if (sbr != nvsb - 1 &&
-          cm->mi_grid_visible[mi_idx + MAX_MIB_SIZE * cm->mi_stride])
-        tile_bottom = cm->mi_grid_visible[mi_idx + MAX_MIB_SIZE * cm->mi_stride]
-                          ->mbmi.boundary_info &
-                      TILE_ABOVE_BOUNDARY;
+          (&cm->mi[mi_idx + (MI_SIZE_64X64 - 1) * cm->mi_stride]))
+        tile_bottom = cm->mi[mi_idx + (MI_SIZE_64X64 - 1) * cm->mi_stride]
+                          .mbmi.boundary_info &
+                      TILE_BOTTOM_BOUNDARY;
       else
         tile_bottom = 1;
-      if (sbc != nhsb - 1 && cm->mi_grid_visible[mi_idx + MAX_MIB_SIZE])
-        tile_right =
-            cm->mi_grid_visible[mi_idx + MAX_MIB_SIZE]->mbmi.boundary_info &
-            TILE_LEFT_BOUNDARY;
+
+      if (sbc != nhsb - 1 && (&cm->mi[mi_idx + MI_SIZE_64X64 - 1]))
+        tile_right = cm->mi[mi_idx + MI_SIZE_64X64 - 1].mbmi.boundary_info &
+                     TILE_RIGHT_BOUNDARY;
       else
         tile_right = 1;
+
       const int mbmi_cdef_strength =
-          cm->mi_grid_visible[MAX_MIB_SIZE * sbr * cm->mi_stride +
-                              MAX_MIB_SIZE * sbc]
+          cm->mi_grid_visible[MI_SIZE_64X64 * sbr * cm->mi_stride +
+                              MI_SIZE_64X64 * sbc]
               ->mbmi.cdef_strength;
       level = cm->cdef_strengths[mbmi_cdef_strength] / CLPF_STRENGTHS;
       clpf_strength = cm->cdef_strengths[mbmi_cdef_strength] % CLPF_STRENGTHS;
@@ -261,7 +259,7 @@ void av1_cdef_frame(YV12_BUFFER_CONFIG *frame, AV1_COMMON *cm,
       if ((level == 0 && clpf_strength == 0 && uv_level == 0 &&
            uv_clpf_strength == 0) ||
           (dering_count = sb_compute_dering_list(
-               cm, sbr * MAX_MIB_SIZE, sbc * MAX_MIB_SIZE, dlist,
+               cm, sbr * MI_SIZE_64X64, sbc * MI_SIZE_64X64, dlist,
                get_filter_skip(level) || get_filter_skip(uv_level))) == 0) {
         dering_left = 0;
         continue;
@@ -295,7 +293,7 @@ void av1_cdef_frame(YV12_BUFFER_CONFIG *frame, AV1_COMMON *cm,
         else
           rend = vsize + OD_FILT_VBORDER;
 
-        coffset = sbc * MAX_MIB_SIZE << mi_wide_l2[pli];
+        coffset = sbc * MI_SIZE_64X64 << mi_wide_l2[pli];
         if (sbc == nhsb - 1) {
           /* On the last superblock column, fill in the right border with
              OD_DERING_VERY_LARGE to avoid filtering with the outside. */
@@ -316,14 +314,14 @@ void av1_cdef_frame(YV12_BUFFER_CONFIG *frame, AV1_COMMON *cm,
             cm,
             &src[OD_FILT_VBORDER * OD_FILT_BSTRIDE + OD_FILT_HBORDER + cstart],
             OD_FILT_BSTRIDE, xd->plane[pli].dst.buf,
-            (MAX_MIB_SIZE << mi_high_l2[pli]) * sbr, coffset + cstart,
+            (MI_SIZE_64X64 << mi_high_l2[pli]) * sbr, coffset + cstart,
             xd->plane[pli].dst.stride, rend, cend - cstart);
         if (!prev_row_dering[sbc]) {
-          copy_sb8_16(cm, &src[OD_FILT_HBORDER], OD_FILT_BSTRIDE,
-                      xd->plane[pli].dst.buf,
-                      (MAX_MIB_SIZE << mi_high_l2[pli]) * sbr - OD_FILT_VBORDER,
-                      coffset, xd->plane[pli].dst.stride, OD_FILT_VBORDER,
-                      hsize);
+          copy_sb8_16(
+              cm, &src[OD_FILT_HBORDER], OD_FILT_BSTRIDE,
+              xd->plane[pli].dst.buf,
+              (MI_SIZE_64X64 << mi_high_l2[pli]) * sbr - OD_FILT_VBORDER,
+              coffset, xd->plane[pli].dst.stride, OD_FILT_VBORDER, hsize);
         } else if (sbr > 0) {
           copy_rect(&src[OD_FILT_HBORDER], OD_FILT_BSTRIDE,
                     &linebuf[pli][coffset], stride, OD_FILT_VBORDER, hsize);
@@ -332,10 +330,11 @@ void av1_cdef_frame(YV12_BUFFER_CONFIG *frame, AV1_COMMON *cm,
                     hsize, OD_DERING_VERY_LARGE);
         }
         if (!prev_row_dering[sbc - 1]) {
-          copy_sb8_16(cm, src, OD_FILT_BSTRIDE, xd->plane[pli].dst.buf,
-                      (MAX_MIB_SIZE << mi_high_l2[pli]) * sbr - OD_FILT_VBORDER,
-                      coffset - OD_FILT_HBORDER, xd->plane[pli].dst.stride,
-                      OD_FILT_VBORDER, OD_FILT_HBORDER);
+          copy_sb8_16(
+              cm, src, OD_FILT_BSTRIDE, xd->plane[pli].dst.buf,
+              (MI_SIZE_64X64 << mi_high_l2[pli]) * sbr - OD_FILT_VBORDER,
+              coffset - OD_FILT_HBORDER, xd->plane[pli].dst.stride,
+              OD_FILT_VBORDER, OD_FILT_HBORDER);
         } else if (sbr > 0 && sbc > 0) {
           copy_rect(src, OD_FILT_BSTRIDE,
                     &linebuf[pli][coffset - OD_FILT_HBORDER], stride,
@@ -345,11 +344,12 @@ void av1_cdef_frame(YV12_BUFFER_CONFIG *frame, AV1_COMMON *cm,
                     OD_DERING_VERY_LARGE);
         }
         if (!prev_row_dering[sbc + 1]) {
-          copy_sb8_16(cm, &src[OD_FILT_HBORDER + (nhb << mi_wide_l2[pli])],
-                      OD_FILT_BSTRIDE, xd->plane[pli].dst.buf,
-                      (MAX_MIB_SIZE << mi_high_l2[pli]) * sbr - OD_FILT_VBORDER,
-                      coffset + hsize, xd->plane[pli].dst.stride,
-                      OD_FILT_VBORDER, OD_FILT_HBORDER);
+          copy_sb8_16(
+              cm, &src[OD_FILT_HBORDER + (nhb << mi_wide_l2[pli])],
+              OD_FILT_BSTRIDE, xd->plane[pli].dst.buf,
+              (MI_SIZE_64X64 << mi_high_l2[pli]) * sbr - OD_FILT_VBORDER,
+              coffset + hsize, xd->plane[pli].dst.stride, OD_FILT_VBORDER,
+              OD_FILT_HBORDER);
         } else if (sbr > 0 && sbc < nhsb - 1) {
           copy_rect(&src[hsize + OD_FILT_HBORDER], OD_FILT_BSTRIDE,
                     &linebuf[pli][coffset + hsize], stride, OD_FILT_VBORDER,
@@ -370,7 +370,7 @@ void av1_cdef_frame(YV12_BUFFER_CONFIG *frame, AV1_COMMON *cm,
                   rend + OD_FILT_VBORDER, OD_FILT_HBORDER);
         copy_sb8_16(
             cm, &linebuf[pli][coffset], stride, xd->plane[pli].dst.buf,
-            (MAX_MIB_SIZE << mi_high_l2[pli]) * (sbr + 1) - OD_FILT_VBORDER,
+            (MI_SIZE_64X64 << mi_high_l2[pli]) * (sbr + 1) - OD_FILT_VBORDER,
             coffset, xd->plane[pli].dst.stride, OD_FILT_VBORDER, hsize);
 
         if (tile_top) {
@@ -397,8 +397,8 @@ void av1_cdef_frame(YV12_BUFFER_CONFIG *frame, AV1_COMMON *cm,
               (uint8_t *)&CONVERT_TO_SHORTPTR(
                   xd->plane[pli]
                       .dst.buf)[xd->plane[pli].dst.stride *
-                                    (MAX_MIB_SIZE * sbr << mi_high_l2[pli]) +
-                                (sbc * MAX_MIB_SIZE << mi_wide_l2[pli])],
+                                    (MI_SIZE_64X64 * sbr << mi_high_l2[pli]) +
+                                (sbc * MI_SIZE_64X64 << mi_wide_l2[pli])],
               xd->plane[pli].dst.stride, dst,
               &src[OD_FILT_VBORDER * OD_FILT_BSTRIDE + OD_FILT_HBORDER],
               xdec[pli], ydec[pli], dir, NULL, var, pli, dlist, dering_count,
@@ -408,8 +408,8 @@ void av1_cdef_frame(YV12_BUFFER_CONFIG *frame, AV1_COMMON *cm,
 #endif
           od_dering(&xd->plane[pli]
                          .dst.buf[xd->plane[pli].dst.stride *
-                                      (MAX_MIB_SIZE * sbr << mi_high_l2[pli]) +
-                                  (sbc * MAX_MIB_SIZE << mi_wide_l2[pli])],
+                                      (MI_SIZE_64X64 * sbr << mi_high_l2[pli]) +
+                                  (sbc * MI_SIZE_64X64 << mi_wide_l2[pli])],
                     xd->plane[pli].dst.stride, dst,
                     &src[OD_FILT_VBORDER * OD_FILT_BSTRIDE + OD_FILT_HBORDER],
                     xdec[pli], ydec[pli], dir, NULL, var, pli, dlist,
