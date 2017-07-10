@@ -1433,67 +1433,6 @@ this.PlacesUIUtils = {
   },
 
   /**
-   * WARNING TO ADDON AUTHORS: DO NOT USE THIS METHOD. IT"S LIKELY TO BE REMOVED IN A
-   * FUTURE RELEASE.
-   *
-   * Helpers for consumers of editBookmarkOverlay which don't have a node as their input.
-   * Given a partial node-like object, having at least the itemId property set, this
-   * method completes the rest of the properties necessary for initialising the edit
-   * overlay with it.
-   *
-   * @param aNodeLike
-   *        an object having at least the itemId nsINavHistoryResultNode property set,
-   *        along with any other properties available.
-   */
-  completeNodeLikeObjectForItemId(aNodeLike) {
-    if (this.useAsyncTransactions) {
-      // When async-transactions are enabled, node-likes must have
-      // bookmarkGuid set, and we cannot set it synchronously.
-      throw new Error("completeNodeLikeObjectForItemId cannot be used when " +
-                      "async transactions are enabled");
-    }
-    if (!("itemId" in aNodeLike))
-      throw new Error("itemId missing in aNodeLike");
-
-    let itemId = aNodeLike.itemId;
-    let defGetter = XPCOMUtils.defineLazyGetter.bind(XPCOMUtils, aNodeLike);
-
-    if (!("title" in aNodeLike))
-      defGetter("title", () => PlacesUtils.bookmarks.getItemTitle(itemId));
-
-    if (!("uri" in aNodeLike)) {
-      defGetter("uri", () => {
-        let uri = null;
-        try {
-          uri = PlacesUtils.bookmarks.getBookmarkURI(itemId);
-        } catch (ex) { }
-        return uri ? uri.spec : "";
-      });
-    }
-
-    if (!("type" in aNodeLike)) {
-      defGetter("type", () => {
-        if (aNodeLike.uri.length > 0) {
-          if (/^place:/.test(aNodeLike.uri)) {
-            if (this.isFolderShortcutQueryString(aNodeLike.uri))
-              return Ci.nsINavHistoryResultNode.RESULT_TYPE_FOLDER_SHORTCUT;
-
-            return Ci.nsINavHistoryResultNode.RESULT_TYPE_QUERY;
-          }
-
-          return Ci.nsINavHistoryResultNode.RESULT_TYPE_URI;
-        }
-
-        let itemType = PlacesUtils.bookmarks.getItemType(itemId);
-        if (itemType == PlacesUtils.bookmarks.TYPE_FOLDER)
-          return Ci.nsINavHistoryResultNode.RESULT_TYPE_FOLDER;
-
-        throw new Error("Unexpected item type");
-      });
-    }
-  },
-
-  /**
    * Helpers for consumers of editBookmarkOverlay which don't have a node as their input.
    *
    * Given a bookmark object for either a url bookmark or a folder, returned by
@@ -1508,6 +1447,12 @@ this.PlacesUIUtils = {
   async promiseNodeLikeFromFetchInfo(aFetchInfo) {
     if (aFetchInfo.itemType == PlacesUtils.bookmarks.TYPE_SEPARATOR)
       throw new Error("promiseNodeLike doesn't support separators");
+
+    let parent = {
+      itemId: await PlacesUtils.promiseItemId(aFetchInfo.parentGuid),
+      bookmarkGuid: aFetchInfo.parentGuid,
+      type: Ci.nsINavHistoryResultNode.RESULT_TYPE_FOLDER
+    };
 
     return Object.freeze({
       itemId: await PlacesUtils.promiseItemId(aFetchInfo.guid),
@@ -1530,6 +1475,10 @@ this.PlacesUIUtils = {
         }
 
         return Ci.nsINavHistoryResultNode.RESULT_TYPE_URI;
+      },
+
+      get parent() {
+        return parent;
       }
     });
   },

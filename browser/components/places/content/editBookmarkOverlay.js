@@ -47,17 +47,26 @@ var gEditItemOverlay = {
     let visibleRows = new Set();
     let isParentReadOnly = false;
     let postData = aInitInfo.postData;
-    if (node && "parent" in node) {
-      let parent = node.parent;
-      if (parent) {
-        isParentReadOnly = !PlacesUtils.nodeIsFolder(parent) ||
-                            PlacesUIUtils.isContentsReadOnly(parent);
+    let parentId = -1;
+    let parentGuid = null;
+
+    // This should go away once we stop supporting legacy add-ons, and the code
+    // should throw if a node is not passed.
+    if (node) {
+      if (!node.parent || !node.parent.bookmarkGuid) {
+        throw new Error("Cannot use an incomplete node to initialize the edit bookmark panel");
       }
+      let parent = node.parent;
+      isParentReadOnly = !PlacesUtils.nodeIsFolder(parent) ||
+                          PlacesUIUtils.isContentsReadOnly(parent);
+      parentId = parent.itemId;
+      parentGuid = parent.bookmarkGuid;
     }
+
     let focusedElement = aInitInfo.focusedElement;
     let onPanelReady = aInitInfo.onPanelReady;
 
-    return this._paneInfo = { itemId, itemGuid, isItem,
+    return this._paneInfo = { itemId, itemGuid, parentId, parentGuid, isItem,
                               isURI, uri, title,
                               isBookmark, isFolderShortcut, isParentReadOnly,
                               bulkTagging, uris,
@@ -212,7 +221,7 @@ var gEditItemOverlay = {
     if (this.initialized)
       this.uninitPanel(false);
 
-    let { itemId, isItem, isURI,
+    let { parentId, isItem, isURI,
           isBookmark, bulkTagging, uris,
           visibleRows, focusedElement,
           onPanelReady } = this._setPaneInfo(aInfo);
@@ -268,8 +277,7 @@ var gEditItemOverlay = {
     // not cheap (we don't always have the parent), and there's no use case for
     // this (it's only the Star UI that shows the folderPicker)
     if (showOrCollapse("folderRow", isItem, "folderPicker")) {
-      let containerId = PlacesUtils.bookmarks.getFolderIdForItem(itemId);
-      this._initFolderMenuList(containerId);
+      this._initFolderMenuList(parentId);
     }
 
     // Selection count.
@@ -613,8 +621,7 @@ var gEditItemOverlay = {
 
     // Here we update either the item title or its cached static title
     let newTitle = this._namePicker.value;
-    if (!newTitle &&
-        PlacesUtils.bookmarks.getFolderIdForItem(this._paneInfo.itemId) == PlacesUtils.tagsFolderId) {
+    if (!newTitle && this._paneInfo.parentGuid == PlacesUtils.bookmarks.tagsGuid) {
       // We don't allow setting an empty title for a tag, restore the old one.
       this._initNamePicker();
     } else {
@@ -796,8 +803,7 @@ var gEditItemOverlay = {
     if (aEvent.target.id == "editBMPanel_chooseFolderMenuItem") {
       // reset the selection back to where it was and expand the tree
       // (this menu-item is hidden when the tree is already visible
-      let containerId = PlacesUtils.bookmarks.getFolderIdForItem(this._paneInfo.itemId);
-      let item = this._getFolderMenuItem(containerId);
+      let item = this._getFolderMenuItem(this._paneInfo.parentId);
       this._folderMenuList.selectedItem = item;
       // XXXmano HACK: setTimeout 100, otherwise focus goes back to the
       // menulist right away
@@ -807,7 +813,7 @@ var gEditItemOverlay = {
 
     // Move the item
     let containerId = this._getFolderIdFromMenuList();
-    if (PlacesUtils.bookmarks.getFolderIdForItem(this._paneInfo.itemId) != containerId &&
+    if (this._paneInfo.parentId != containerId &&
         this._paneInfo.itemId != containerId) {
       if (PlacesUIUtils.useAsyncTransactions) {
         (async () => {
@@ -1158,18 +1164,23 @@ var gEditItemOverlay = {
     }
   },
 
-  onItemMoved(aItemId, aOldParent, aOldIndex,
-              aNewParent, aNewIndex, aItemType) {
-    if (!this._paneInfo.isItem ||
-        !this._paneInfo.visibleRows.has("folderRow") ||
-        this._paneInfo.itemId != aItemId ||
-        aNewParent == this._getFolderIdFromMenuList()) {
+  onItemMoved(id, oldParentId, oldIndex, newParentId, newIndex, type, guid,
+              oldParentGuid, newParentGuid) {
+    if (!this._paneInfo.isItem || this._paneInfo.itemId != id) {
+      return;
+    }
+
+    this._paneInfo.parentId = newParentId;
+    this._paneInfo.parentGuid = newParentGuid;
+
+    if (!this._paneInfo.visibleRows.has("folderRow") ||
+        newParentId == this._getFolderIdFromMenuList()) {
       return;
     }
 
     // Just setting selectItem _does not_ trigger oncommand, so we don't
     // recurse.
-    this._folderMenuList.selectedItem = this._getFolderMenuItem(aNewParent);
+    this._folderMenuList.selectedItem = this._getFolderMenuItem(newParentId);
   },
 
   onItemAdded(aItemId, aParentId, aIndex, aItemType, aURI) {
