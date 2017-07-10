@@ -988,6 +988,7 @@ CustomElementReactionsStack::InvokeBackupQueue()
 void
 CustomElementReactionsStack::InvokeReactions(ElementQueue& aElementQueue)
 {
+  // Note: It's possible to re-enter this method.
   for (uint32_t i = 0; i < aElementQueue.Length(); ++i) {
     nsCOMPtr<Element> element = do_QueryReferent(aElementQueue[i]);
 
@@ -998,10 +999,14 @@ CustomElementReactionsStack::InvokeReactions(ElementQueue& aElementQueue)
     RefPtr<CustomElementData> elementData = element->GetCustomElementData();
     MOZ_ASSERT(elementData, "CustomElementData should exist");
 
-    nsTArray<nsAutoPtr<CustomElementReaction>>& reactions =
-      elementData->mReactionQueue;
+    auto& reactions = elementData->mReactionQueue;
     for (uint32_t j = 0; j < reactions.Length(); ++j) {
-      reactions.ElementAt(j)->Invoke(element);
+      // Transfer the ownership of the entry due to reentrant invocation of
+      // this funciton. The entry will be removed when bug 1379573 is landed.
+      auto reaction(Move(reactions.ElementAt(j)));
+      if (reaction) {
+        reaction->Invoke(element);
+      }
     }
     reactions.Clear();
   }
