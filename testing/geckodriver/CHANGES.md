@@ -2,10 +2,21 @@
 
 All notable changes to this program is documented in this file.
 
-## Unreleased
+## 0.18.0 (2017-07-10)
 
 ### Changed
-- Log geckodriver version on startup
+- [`RectResponse`](https://docs.rs/webdriver/0.27.0/webdriver/response/struct.RectResponse.html) permits returning floats for `width` and `height` fields
+- New type [`CookieResponse`](https://docs.rs/webdriver/0.27.0/webdriver/response/struct.CookieResponse.html) for the [`GetNamedCookie` command](https://docs.rs/webdriver/0.27.0/webdriver/command/enum.WebDriverCommand.html#variant.GetNamedCookie) returns a single cookie, as opposed to an array of a single cookie
+- To pick up a prepared profile from the filesystem, it is now possible to pass `["-profile", "/path/to/profile"]` in the `args` array on `moz:firefoxOptions`
+- geckodriver now recommends Firefox 53 and greater
+- Version information (`--version`) contains the hash from from the commit used to build geckodriver
+- geckodriver version logged on startup
+- [webdriver crate](https://crates.io/crates/webdriver) upgraded to version 0.27.0
+- [mozrunner crate](https://crates.io/crates/mozrunner) upgraded to version 0.4.1
+
+### Fixed
+- The [`SetTimeouts`](https://docs.rs/webdriver/0.27.0/webdriver/command/enum.WebDriverCommand.html#variant.SetTimeouts) command maps to the Marionette `setTimeouts` command, which makes geckodriver compatible with Firefox 56 and greater
+- Linux x86 (i686-unknown-linux-musl) builds are fixed
 
 ## 0.17.0 (2017-06-09)
 
