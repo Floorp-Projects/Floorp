@@ -20,7 +20,7 @@ nsTDependentSubstring_CharT::Rebind(const substring_type& str,
   mData = const_cast<char_type*>(static_cast<const char_type*>(str.Data())) + startPos;
   mLength = XPCOM_MIN(length, strLength - startPos);
 
-  SetDataFlags(F_NONE);
+  SetDataFlags(DataFlags(0));
 }
 
 void
@@ -33,7 +33,7 @@ nsTDependentSubstring_CharT::Rebind(const char_type* data, size_type length)
 
   mData = const_cast<char_type*>(static_cast<const char_type*>(data));
   mLength = length;
-  SetDataFlags(F_NONE);
+  SetDataFlags(DataFlags(0));
 }
 
 void
@@ -46,7 +46,7 @@ nsTDependentSubstring_CharT::Rebind(const char_type* aStart, const char_type* aE
 nsTDependentSubstring_CharT::nsTDependentSubstring_CharT(const char_type* aStart,
                                                          const char_type* aEnd)
   : substring_type(const_cast<char_type*>(aStart), uint32_t(aEnd - aStart),
-                   F_NONE)
+                   DataFlags(0), ClassFlags(0))
 {
   MOZ_RELEASE_ASSERT(aStart <= aEnd, "Overflow!");
 }
@@ -66,7 +66,8 @@ nsTDependentSubstring_CharT::nsTDependentSubstring_CharT(char16ptr_t aStart,
 nsTDependentSubstring_CharT::nsTDependentSubstring_CharT(const const_iterator& aStart,
                                                          const const_iterator& aEnd)
   : substring_type(const_cast<char_type*>(aStart.get()),
-                   uint32_t(aEnd.get() - aStart.get()), F_NONE)
+                   uint32_t(aEnd.get() - aStart.get()),
+                   DataFlags(0), ClassFlags(0))
 {
   MOZ_RELEASE_ASSERT(aStart.get() <= aEnd.get(), "Overflow!");
 }

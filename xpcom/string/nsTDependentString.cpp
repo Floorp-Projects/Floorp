@@ -6,8 +6,8 @@
 
 nsTDependentString_CharT::nsTDependentString_CharT(const char_type* aStart,
                                                    const char_type* aEnd)
-  : string_type(const_cast<char_type*>(aStart),
-                uint32_t(aEnd - aStart), F_TERMINATED)
+  : string_type(const_cast<char_type*>(aStart), uint32_t(aEnd - aStart),
+                DataFlags::TERMINATED, ClassFlags(0))
 {
   MOZ_RELEASE_ASSERT(aStart <= aEnd, "Overflow!");
   AssertValidDependentString();
@@ -16,7 +16,7 @@ nsTDependentString_CharT::nsTDependentString_CharT(const char_type* aStart,
 void
 nsTDependentString_CharT::Rebind(const string_type& str, uint32_t startPos)
 {
-  MOZ_ASSERT(str.Flags() & F_TERMINATED, "Unterminated flat string");
+  MOZ_ASSERT(str.GetDataFlags() & DataFlags::TERMINATED, "Unterminated flat string");
 
   // If we currently own a buffer, release it.
   Finalize();
@@ -30,7 +30,7 @@ nsTDependentString_CharT::Rebind(const string_type& str, uint32_t startPos)
   mData = const_cast<char_type*>(static_cast<const char_type*>(str.Data())) + startPos;
   mLength = strLength - startPos;
 
-  SetDataFlags(str.Flags() & (F_TERMINATED | F_LITERAL));
+  SetDataFlags(str.GetDataFlags() & (DataFlags::TERMINATED | DataFlags::LITERAL));
 }
 
 void
