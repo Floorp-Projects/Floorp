@@ -1678,7 +1678,7 @@
 
         // Since the size of videocontrols is expanded with controlBar in <audio>, we
         // should fix the dimensions in order not to recursively trigger reflow afterwards.
-        if (this.isAudioOnly) {
+        if (this.video instanceof HTMLAudioElement) {
           if (givenHeight) {
             this.controlBar.style.height = `${Math.max(givenHeight, this.controlBarMinVisibleHeight)}px`;
           }
