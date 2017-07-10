@@ -22,6 +22,7 @@
 #include "JumpListItem.h"
 #include "nsIObserver.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/ReentrantMonitor.h"
 
 namespace mozilla {
 namespace widget {
@@ -50,6 +51,7 @@ private:
   uint32_t mMaxItems;
   bool mHasCommit;
   nsCOMPtr<nsIThread> mIOThread;
+  ReentrantMonitor mMonitor;
 
   bool IsSeparator(nsCOMPtr<nsIJumpListItem>& item);
   nsresult TransferIObjectArrayToIMutableArray(IObjectArray *objArray, nsIMutableArray *removedItems);
