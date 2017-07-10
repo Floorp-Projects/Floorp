@@ -32,6 +32,8 @@ BUILDER_NAME_PREFIX = {
     'android-4.3-arm7-api-15': 'Android 4.3 armv7 API 15+',
     'android-4.2-x86': 'Android 4.2 x86 Emulator',
     'android-4.3-arm7-api-15-gradle': 'Android 4.3 armv7 API 15+',
+    'win32': 'Windows 7 x86',
+    'win64': 'Windows 10 x64',
 }
 
 test_description_schema = {str(k): v for k, v in test_description_schema.schema.iteritems()}

@@ -103,10 +103,7 @@ jsdcov-code-coverage-tests:
     - mochitest-devtools-chrome
     - xpcshell
 
-##
-# Test sets still being greened up in various ways
-
-windows-vm-tests:
+windows-tests:
     - cppunit
     - crashtest
     - firefox-ui-functional-local
@@ -118,23 +115,30 @@ windows-vm-tests:
     - mochitest
     - mochitest-a11y
     - mochitest-browser-chrome
+    - mochitest-chrome
+    - mochitest-clipboard
     - mochitest-devtools-chrome
+    - mochitest-gpu
     - mochitest-jetpack
     - mochitest-media
+    - mochitest-webgl
+    - reftest
+    - reftest-no-accel
     - web-platform-tests
     - web-platform-tests-reftests
     - xpcshell
 
-windows-gpu-tests:
-    - reftest
-    - reftest-no-accel
-    - mochitest-gpu
-    - mochitest-webgl
-
-# these tests currently run on hardware, but may migrate above when validated
-# see https://bugzilla.mozilla.org/show_bug.cgi?id=1280474#c36
-#    - mochitest-chrome
-#    - mochitest-clipboard
+windows-talos:
+    - talos-chrome
+    - talos-dromaeojs
+    - talos-g1
+    - talos-g2
+    - talos-g4
+    - talos-g5
+    - talos-other
+    - talos-perf-reftest
+    - talos-svgr
+    - talos-tp5o
 
 macosx64-tests:
     - cppunit
