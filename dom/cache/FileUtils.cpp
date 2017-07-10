@@ -6,6 +6,7 @@
 
 #include "mozilla/dom/cache/FileUtils.h"
 
+#include "mozilla/dom/InternalResponse.h"
 #include "mozilla/dom/quota/FileStreams.h"
 #include "mozilla/dom/quota/QuotaManager.h"
 #include "mozilla/SnappyCompressOutputStream.h"
@@ -26,6 +27,7 @@ using mozilla::dom::quota::FileInputStream;
 using mozilla::dom::quota::FileOutputStream;
 using mozilla::dom::quota::PERSISTENCE_TYPE_DEFAULT;
 using mozilla::dom::quota::QuotaManager;
+using mozilla::dom::quota::QuotaObject;
 
 namespace {
 
@@ -38,6 +40,9 @@ enum BodyFileType
 nsresult
 BodyIdToFile(nsIFile* aBaseDir, const nsID& aId, BodyFileType aType,
              nsIFile** aBodyFileOut);
+
+int64_t
+BodyGeneratePadding(const int64_t aBodyFileSize);
 
 } // namespace
 
@@ -248,6 +253,44 @@ BodyOpen(const QuotaInfo& aQuotaInfo, nsIFile* aBaseDir, const nsID& aId,
 
 // static
 nsresult
+BodyMaybeUpdatePaddingSize(const QuotaInfo& aQuotaInfo, nsIFile* aBaseDir,
+                           const nsID& aId, int64_t* aPaddingSizeOut)
+{
+  MOZ_DIAGNOSTIC_ASSERT(aBaseDir);
+  MOZ_DIAGNOSTIC_ASSERT(aPaddingSizeOut);
+
+  nsCOMPtr<nsIFile> bodyFile;
+  nsresult rv =
+    BodyIdToFile(aBaseDir, aId, BODY_FILE_TMP, getter_AddRefs(bodyFile));
+  if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+
+  MOZ_DIAGNOSTIC_ASSERT(bodyFile);
+
+  QuotaManager* quotaManager = QuotaManager::Get();
+  MOZ_DIAGNOSTIC_ASSERT(quotaManager);
+
+  int64_t fileSize = 0;
+  RefPtr<QuotaObject> quotaObject =
+    quotaManager->GetQuotaObject(PERSISTENCE_TYPE_DEFAULT, aQuotaInfo.mGroup,
+                                 aQuotaInfo.mOrigin, bodyFile, &fileSize);
+  MOZ_DIAGNOSTIC_ASSERT(quotaObject);
+  MOZ_DIAGNOSTIC_ASSERT(fileSize >= 0);
+
+  if (*aPaddingSizeOut == InternalResponse::UNKNOWN_PADDING_SIZE) {
+    *aPaddingSizeOut = BodyGeneratePadding(fileSize);
+  }
+
+  MOZ_DIAGNOSTIC_ASSERT(*aPaddingSizeOut >= 0);
+
+  if (!quotaObject->IncreaseSize(*aPaddingSizeOut)) {
+    return NS_ERROR_FILE_NO_DEVICE_SPACE;
+  }
+
+  return rv;
+}
+
+// static
+nsresult
 BodyDeleteFiles(const QuotaInfo& aQuotaInfo, nsIFile* aBaseDir,
                 const nsTArray<nsID>& aIdList)
 {
@@ -308,6 +351,13 @@ BodyIdToFile(nsIFile* aBaseDir, const nsID& aId, BodyFileType aType,
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
   return rv;
+}
+
+int64_t
+BodyGeneratePadding(const int64_t aBodyFileSize)
+{
+  // XXXtt: Will deal with it in the next patch.
+  return 0;
 }
 
 } // namespace
@@ -548,14 +598,26 @@ RemoveNsIFile(const QuotaInfo& aQuotaInfo, nsIFile* aFile)
   rv = aFile->Remove( /* recursive */ false);
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
+  if (fileSize > 0) {
+    DecreaseUsageForQuotaInfo(aQuotaInfo, fileSize);
+  }
+
+  return rv;
+}
+
+// static
+void
+DecreaseUsageForQuotaInfo(const QuotaInfo& aQuotaInfo,
+                          const int64_t& aUpdatingSize)
+{
+  MOZ_DIAGNOSTIC_ASSERT(aUpdatingSize > 0);
+
   QuotaManager* quotaManager = QuotaManager::Get();
   MOZ_DIAGNOSTIC_ASSERT(quotaManager);
 
   quotaManager->DecreaseUsageForOrigin(PERSISTENCE_TYPE_DEFAULT,
                                        aQuotaInfo.mGroup, aQuotaInfo.mOrigin,
-                                       fileSize);
-
-  return rv;
+                                       aUpdatingSize);
 }
 
 } // namespace cache
