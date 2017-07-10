@@ -139,11 +139,8 @@ abstract class BrowserToolbarPhoneBase extends BrowserToolbar {
     public void draw(final Canvas canvas) {
         super.draw(canvas);
 
-        // bug 1375351: Only draw curve in Australis flavor
-        if (SkinConfig.isAustralis()) {
-            if (uiMode == UIMode.DISPLAY) {
-                canvas.drawPath(roundCornerShape, roundCornerPaint);
-            }
+        if (uiMode == UIMode.DISPLAY) {
+            canvas.drawPath(roundCornerShape, roundCornerPaint);
         }
     }
 
