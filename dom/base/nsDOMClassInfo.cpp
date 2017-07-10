@@ -822,23 +822,13 @@ nsDOMClassInfo::PostCreatePrototype(JSContext * cx, JSObject * aProto)
   JS::Rooted<JSObject*> global(cx, ::JS_GetGlobalForObject(cx, proto));
 
   // Only do this if the global object is a window.
-  // XXX Is there a better way to check this?
-  nsISupports *globalNative = XPConnect()->GetNativeOfWrapper(cx, global);
-  nsCOMPtr<nsPIDOMWindowInner> piwin = do_QueryInterface(globalNative);
-  if (!piwin) {
+  nsGlobalWindow* win;
+  if (NS_FAILED(UNWRAP_OBJECT(Window, &global, win))) {
+    // Not a window.
     return NS_OK;
   }
 
-  nsGlobalWindow *win = nsGlobalWindow::Cast(piwin);
   if (win->IsClosedOrClosing()) {
-    return NS_OK;
-  }
-
-  // If the window is in a different compartment than the global object, then
-  // it's likely that global is a sandbox object whose prototype is a window.
-  // Don't do anything in this case.
-  if (win->FastGetGlobalJSObject() &&
-      js::GetObjectCompartment(global) != js::GetObjectCompartment(win->FastGetGlobalJSObject())) {
     return NS_OK;
   }
 

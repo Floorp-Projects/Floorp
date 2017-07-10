@@ -6022,7 +6022,8 @@ nsDocument::CustomElementConstructor(JSContext* aCx, unsigned aArgc, JS::Value* 
 
   JS::Rooted<JSObject*> global(aCx,
     JS_GetGlobalForObject(aCx, &args.callee()));
-  nsCOMPtr<nsPIDOMWindowInner> window = do_QueryWrapper(aCx, global);
+  RefPtr<nsGlobalWindow> window;
+  UNWRAP_OBJECT(Window, global, window);
   MOZ_ASSERT(window, "Should have a non-null window");
 
   nsDocument* document = static_cast<nsDocument*>(window->GetDoc());
