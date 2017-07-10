@@ -1884,7 +1884,7 @@ FunctionConstructor(JSContext* cx, const CallArgs& args, GeneratorKind generator
     // Step 24.
     RootedObject proto(cx);
     if (!isAsync) {
-        if (!GetPrototypeFromCallableConstructor(cx, args, &proto))
+        if (!GetPrototypeFromBuiltinConstructor(cx, args, &proto))
             return false;
     }
 

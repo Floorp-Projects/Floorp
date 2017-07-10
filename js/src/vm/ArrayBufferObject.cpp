@@ -285,8 +285,7 @@ ArrayBufferObject::class_constructor(JSContext* cx, unsigned argc, Value* vp)
     // Step 3 (Inlined 24.1.1.1 AllocateArrayBuffer).
     // 24.1.1.1, step 1 (Inlined 9.1.14 OrdinaryCreateFromConstructor).
     RootedObject proto(cx);
-    RootedObject newTarget(cx, &args.newTarget().toObject());
-    if (!GetPrototypeFromConstructor(cx, newTarget, &proto))
+    if (!GetPrototypeFromBuiltinConstructor(cx, args, &proto))
         return false;
 
     // 24.1.1.1, step 3 (Inlined 6.2.6.1 CreateByteDataBlock, step 2).
