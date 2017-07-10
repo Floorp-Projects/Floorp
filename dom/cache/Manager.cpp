@@ -79,7 +79,9 @@ public:
 
       for (uint32_t i = 0; i < orphanedCacheIdList.Length(); ++i) {
         AutoTArray<nsID, 16> deletedBodyIdList;
-        rv = db::DeleteCacheId(aConn, orphanedCacheIdList[i], deletedBodyIdList);
+        int64_t deletedPaddingSize = 0;
+        rv = db::DeleteCacheId(aConn, orphanedCacheIdList[i], deletedBodyIdList,
+                               &deletedPaddingSize);
         if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
         rv = BodyDeleteFiles(aQuotaInfo, aDBDir, deletedBodyIdList);
@@ -440,6 +442,7 @@ public:
     : SyncDBAction(DBAction::Existing)
     , mManager(aManager)
     , mCacheId(aCacheId)
+    , mDeletedPaddingSize(0)
   { }
 
   virtual nsresult
@@ -449,7 +452,8 @@ public:
     mozStorageTransaction trans(aConn, false,
                                 mozIStorageConnection::TRANSACTION_IMMEDIATE);
 
-    nsresult rv = db::DeleteCacheId(aConn, mCacheId, mDeletedBodyIdList);
+    nsresult rv = db::DeleteCacheId(aConn, mCacheId, mDeletedBodyIdList,
+                                    &mDeletedPaddingSize);
     if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
     rv = trans.Commit();
@@ -471,6 +475,8 @@ private:
   RefPtr<Manager> mManager;
   const CacheId mCacheId;
   nsTArray<nsID> mDeletedBodyIdList;
+  // Track any pad amount associated with orphaned entries.
+  int64_t mDeletedPaddingSize;
 };
 
 // ----------------------------------------------------------------------------
@@ -621,6 +627,7 @@ public:
     , mExpectedAsyncCopyCompletions(1)
     , mAsyncResult(NS_OK)
     , mMutex("cache::Manager::CachePutAllAction")
+    , mDeletedPaddingSize(0)
   {
     MOZ_DIAGNOSTIC_ASSERT(!aPutList.IsEmpty());
     MOZ_DIAGNOSTIC_ASSERT(aPutList.Length() == aRequestStreamList.Length());
@@ -680,7 +687,6 @@ private:
         break;
       }
     }
-
 
     // Always call OnAsyncCopyComplete() manually here.  This covers the
     // case where there is no async copying and also reports any startup
@@ -773,12 +779,15 @@ private:
                         e.mRequestStream ? &e.mRequestBodyId : nullptr,
                         e.mResponse,
                         e.mResponseStream ? &e.mResponseBodyId : nullptr,
-                        mDeletedBodyIdList);
+                        mDeletedBodyIdList, &mDeletedPaddingSize);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         DoResolve(rv);
         return;
       }
     }
+
+    // XXXtt: Write .padding file to the cache directory
+    // UpdateDirectoryFile(mDBDir);
 
     rv = trans.Commit();
     Unused << NS_WARN_IF(NS_FAILED(rv));
@@ -980,6 +989,8 @@ private:
   nsTArray<nsCOMPtr<nsISupports>> mCopyContextList;
 
   Maybe<QuotaInfo> mQuotaInfo;
+  // Track any pad amount associated with overwritten entries.
+  int64_t mDeletedPaddingSize;
 };
 
 // ----------------------------------------------------------------------------
@@ -993,6 +1004,7 @@ public:
     , mCacheId(aCacheId)
     , mArgs(aArgs)
     , mSuccess(false)
+    , mDeletedPaddingSize(0)
   { }
 
   virtual nsresult
@@ -1004,7 +1016,7 @@ public:
 
     nsresult rv = db::CacheDelete(aConn, mCacheId, mArgs.request(),
                                   mArgs.params(), mDeletedBodyIdList,
-                                  &mSuccess);
+                                  &mDeletedPaddingSize, &mSuccess);
     if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
     rv = trans.Commit();
@@ -1033,6 +1045,8 @@ private:
   const CacheDeleteArgs mArgs;
   bool mSuccess;
   nsTArray<nsID> mDeletedBodyIdList;
+  // Track any pad amount associated with deleted entries.
+  int64_t mDeletedPaddingSize;
 };
 
 // ----------------------------------------------------------------------------
@@ -1282,6 +1296,8 @@ public:
       return NS_OK;
     }
 
+    // Don't delete the removing padding size here, we'll delete it on
+    // DeleteOrphanedCacheAction.
     rv = db::StorageForgetCache(aConn, mNamespace, mArgs.key());
     if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
