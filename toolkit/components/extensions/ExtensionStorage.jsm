@@ -13,122 +13,65 @@ const Cr = Components.results;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
-
-XPCOMUtils.defineLazyModuleGetter(this, "ExtensionUtils",
-                                  "resource://gre/modules/ExtensionUtils.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "JSONFile",
-                                  "resource://gre/modules/JSONFile.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "OS",
                                   "resource://gre/modules/osfile.jsm");
-
-const global = this;
-
-function isStructuredCloneHolder(value) {
-  return (value && typeof value === "object" &&
-          Cu.getClassName(value, true) === "StructuredCloneHolder");
-}
-
-class SerializeableMap extends Map {
-  toJSON() {
-    let result = {};
-    for (let [key, value] of this) {
-      if (isStructuredCloneHolder(value)) {
-        value = value.deserialize(global);
-        this.set(key, value);
-      }
-
-      result[key] = value;
-    }
-    return result;
-  }
-
-  /**
-   * Like toJSON, but attempts to serialize every value separately, and
-   * elides any which fail to serialize. Should only be used if initial
-   * JSON serialization fails.
-   *
-   * @returns {object}
-   */
-  toJSONSafe() {
-    let result = {};
-    for (let [key, value] of this) {
-      try {
-        void JSON.serialize(value);
-
-        result[key] = value;
-      } catch (e) {
-        Cu.reportError(new Error(`Failed to serialize browser.storage key "${key}": ${e}`));
-      }
-    }
-    return result;
-  }
-}
+XPCOMUtils.defineLazyModuleGetter(this, "AsyncShutdown",
+                                  "resource://gre/modules/AsyncShutdown.jsm");
 
 /**
- * Serializes an arbitrary value into a StructuredCloneHolder, if
- * appropriate. Existing StructuredCloneHolders are returned unchanged.
- * Non-object values are also returned unchanged. Anything else is
- * serialized, and a new StructuredCloneHolder returned.
+ * Helper function used to sanitize the objects that have to be saved in the ExtensionStorage.
  *
- * This allows us to avoid a second structured clone operation after
- * sending a storage value across a message manager, before cloning it
- * into an extension scope.
+ * @param {BaseContext} context
+ *   The current extension context.
+ * @param {string} key
+ *   The key of the current JSON property.
+ * @param {any} value
+ *   The value of the current JSON property.
  *
- * @param {StructuredCloneHolder|*} value
- *        A value to serialize.
- * @returns {*}
+ * @returns {any}
+ *   The sanitized value of the property.
  */
-function serialize(value) {
-  if (value && typeof value === "object" && !isStructuredCloneHolder(value)) {
-    return new StructuredCloneHolder(value);
+function jsonReplacer(context, key, value) {
+  switch (typeof(value)) {
+    // Serialize primitive types as-is.
+    case "string":
+    case "number":
+    case "boolean":
+      return value;
+
+    case "object":
+      if (value === null) {
+        return value;
+      }
+
+      switch (Cu.getClassName(value, true)) {
+        // Serialize arrays and ordinary objects as-is.
+        case "Array":
+        case "Object":
+          return value;
+
+        // Serialize Date objects and regular expressions as their
+        // string representations.
+        case "Date":
+        case "RegExp":
+          return String(value);
+      }
+      break;
   }
-  return value;
+
+  if (!key) {
+    // If this is the root object, and we can't serialize it, serialize
+    // the value to an empty object.
+    return new context.cloneScope.Object();
+  }
+
+  // Everything else, omit entirely.
+  return undefined;
 }
 
 this.ExtensionStorage = {
-  // Map<extension-id, Promise<JSONFile>>
-  jsonFilePromises: new Map(),
-
+  cache: new Map(),
   listeners: new Map(),
-
-  /**
-   * Asynchronously reads the storage file for the given extension ID
-   * and returns a Promise for its initialized JSONFile object.
-   *
-   * @param {string} extensionId
-   *        The ID of the extension for which to return a file.
-   * @returns {Promise<JSONFile>}
-   */
-  async _readFile(extensionId) {
-    OS.File.makeDir(this.getExtensionDir(extensionId), {
-      ignoreExisting: true,
-      from: OS.Constants.Path.profileDir,
-    });
-
-    let jsonFile = new JSONFile({path: this.getStorageFile(extensionId)});
-    await jsonFile.load();
-
-    jsonFile.data = new SerializeableMap(Object.entries(jsonFile.data));
-
-    return jsonFile;
-  },
-
-  /**
-   * Returns a Promise for initialized JSONFile instance for the
-   * extension's storage file.
-   *
-   * @param {string} extensionId
-   *        The ID of the extension for which to return a file.
-   * @returns {Promise<JSONFile>}
-   */
-  getFile(extensionId) {
-    let promise = this.jsonFilePromises.get(extensionId);
-    if (!promise) {
-      promise = this._readFile(extensionId);
-      this.jsonFilePromises.set(extensionId, promise);
-    }
-    return promise;
-  },
 
   /**
    * Sanitizes the given value, and returns a JSON-compatible
@@ -142,167 +85,129 @@ this.ExtensionStorage = {
    *        The sanitized value.
    */
   sanitize(value, context) {
-    let json = context.jsonStringify(value === undefined ? null : value);
-    if (json == undefined) {
-      throw new ExtensionUtils.ExtensionError("DataCloneError: The object could not be cloned.");
-    }
+    let json = context.jsonStringify(value, jsonReplacer.bind(null, context));
     return JSON.parse(json);
   },
 
-
-  /**
-   * Returns the path to the storage directory within the profile for
-   * the given extension ID.
-   *
-   * @param {string} extensionId
-   *        The ID of the extension for which to return a directory path.
-   * @returns {string}
-   */
   getExtensionDir(extensionId) {
     return OS.Path.join(this.extensionDir, extensionId);
   },
 
-  /**
-   * Returns the path to the JSON storage file for the given extension
-   * ID.
-   *
-   * @param {string} extensionId
-   *        The ID of the extension for which to return a file path.
-   * @returns {string}
-   */
   getStorageFile(extensionId) {
     return OS.Path.join(this.extensionDir, extensionId, "storage.js");
   },
 
-  /**
-   * Asynchronously sets the values of the given storage items for the
-   * given extension.
-   *
-   * @param {string} extensionId
-   *        The ID of the extension for which to set storage values.
-   * @param {object} items
-   *        The storage items to set. For each property in the object,
-   *        the storage value for that property is set to its value in
-   *        said object. Any values which are StructuredCloneHolder
-   *        instances are deserialized before being stored.
-   * @returns {Promise<void>}
-   */
-  async set(extensionId, items) {
-    let jsonFile = await this.getFile(extensionId);
-
-    let changes = {};
-    for (let prop in items) {
-      let item = items[prop];
-      changes[prop] = {oldValue: serialize(jsonFile.data.get(prop)), newValue: serialize(item)};
-      jsonFile.data.set(prop, item);
+  read(extensionId) {
+    if (this.cache.has(extensionId)) {
+      return this.cache.get(extensionId);
     }
 
-    this.notifyListeners(extensionId, changes);
-
-    jsonFile.saveSoon();
-    return null;
-  },
-
-  /**
-   * Asynchronously removes the given storage items for the given
-   * extension ID.
-   *
-   * @param {string} extensionId
-   *        The ID of the extension for which to remove storage values.
-   * @param {Array<string>} items
-   *        A list of storage items to remove.
-   * @returns {Promise<void>}
-   */
-  async remove(extensionId, items) {
-    let jsonFile = await this.getFile(extensionId);
-
-    let changed = false;
-    let changes = {};
-
-    for (let prop of [].concat(items)) {
-      if (jsonFile.data.has(prop)) {
-        changes[prop] = {oldValue: serialize(jsonFile.data.get(prop))};
-        jsonFile.data.delete(prop);
-        changed = true;
+    let path = this.getStorageFile(extensionId);
+    let decoder = new TextDecoder();
+    let promise = OS.File.read(path);
+    promise = promise.then(array => {
+      return JSON.parse(decoder.decode(array));
+    }).catch((error) => {
+      if (!error.becauseNoSuchFile) {
+        Cu.reportError("Unable to parse JSON data for extension storage.");
       }
-    }
-
-    if (changed) {
-      this.notifyListeners(extensionId, changes);
-      jsonFile.saveSoon();
-    }
-    return null;
+      return {};
+    });
+    this.cache.set(extensionId, promise);
+    return promise;
   },
 
-  /**
-   * Asynchronously clears all storage entries for the given extension
-   * ID.
-   *
-   * @param {string} extensionId
-   *        The ID of the extension for which to clear storage.
-   * @returns {Promise<void>}
-   */
-  async clear(extensionId) {
-    let jsonFile = await this.getFile(extensionId);
+  write(extensionId) {
+    let promise = this.read(extensionId).then(extData => {
+      let encoder = new TextEncoder();
+      let array = encoder.encode(JSON.stringify(extData));
+      let path = this.getStorageFile(extensionId);
+      OS.File.makeDir(this.getExtensionDir(extensionId), {
+        ignoreExisting: true,
+        from: OS.Constants.Path.profileDir,
+      });
+      let promise = OS.File.writeAtomic(path, array);
+      return promise;
+    }).catch(() => {
+      // Make sure this promise is never rejected.
+      Cu.reportError("Unable to write JSON data for extension storage.");
+    });
 
-    let changed = false;
-    let changes = {};
+    AsyncShutdown.profileBeforeChange.addBlocker(
+      "ExtensionStorage: Finish writing extension data",
+      promise);
 
-    for (let [prop, oldValue] of jsonFile.data.entries()) {
-      changes[prop] = {oldValue: serialize(oldValue)};
-      jsonFile.data.delete(prop);
-      changed = true;
-    }
-
-    if (changed) {
-      this.notifyListeners(extensionId, changes);
-      jsonFile.saveSoon();
-    }
-    return null;
+    return promise.then(() => {
+      AsyncShutdown.profileBeforeChange.removeBlocker(promise);
+    });
   },
 
-  /**
-   * Asynchronously retrieves the values for the given storage items for
-   * the given extension ID.
-   *
-   * @param {string} extensionId
-   *        The ID of the extension for which to get storage values.
-   * @param {Array<string>|object|null} [keys]
-   *        The storage items to get. If an array, the value of each key
-   *        in the array is returned. If null, the values of all items
-   *        are returned. If an object, the value for each key in the
-   *        object is returned, or that key's value if the item is not
-   *        set.
-   * @returns {Promise<object>}
-   *        An object which a property for each requested key,
-   *        containing that key's storage value. Values are
-   *        StructuredCloneHolder objects which can be deserialized to
-   *        the original storage value.
-   */
-  async get(extensionId, keys) {
-    let jsonFile = await this.getFile(extensionId);
-    let {data} = jsonFile;
+  set(extensionId, items) {
+    return this.read(extensionId).then(extData => {
+      let changes = {};
+      for (let prop in items) {
+        let item = items[prop];
+        changes[prop] = {oldValue: extData[prop], newValue: item};
+        extData[prop] = item;
+      }
 
-    let result = {};
-    if (keys === null) {
-      Object.assign(result, data.toJSON());
-    } else if (typeof(keys) == "object" && !Array.isArray(keys)) {
-      for (let prop in keys) {
-        if (data.has(prop)) {
-          result[prop] = serialize(data.get(prop));
-        } else {
-          result[prop] = keys[prop];
+      this.notifyListeners(extensionId, changes);
+
+      return this.write(extensionId);
+    });
+  },
+
+  remove(extensionId, items) {
+    return this.read(extensionId).then(extData => {
+      let changes = {};
+      for (let prop of [].concat(items)) {
+        changes[prop] = {oldValue: extData[prop]};
+        delete extData[prop];
+      }
+
+      this.notifyListeners(extensionId, changes);
+
+      return this.write(extensionId);
+    });
+  },
+
+  clear(extensionId) {
+    return this.read(extensionId).then(extData => {
+      let changes = {};
+      for (let prop of Object.keys(extData)) {
+        changes[prop] = {oldValue: extData[prop]};
+        delete extData[prop];
+      }
+
+      this.notifyListeners(extensionId, changes);
+
+      return this.write(extensionId);
+    });
+  },
+
+  get(extensionId, keys) {
+    return this.read(extensionId).then(extData => {
+      let result = {};
+      if (keys === null) {
+        Object.assign(result, extData);
+      } else if (typeof(keys) == "object" && !Array.isArray(keys)) {
+        for (let prop in keys) {
+          if (prop in extData) {
+            result[prop] = extData[prop];
+          } else {
+            result[prop] = keys[prop];
+          }
+        }
+      } else {
+        for (let prop of [].concat(keys)) {
+          if (prop in extData) {
+            result[prop] = extData[prop];
+          }
         }
       }
-    } else {
-      for (let prop of [].concat(keys)) {
-        if (data.has(prop)) {
-          result[prop] = serialize(data.get(prop));
-        }
-      }
-    }
 
-    return result;
+      return result;
+    });
   },
 
   addOnChangedListener(extensionId, listener) {
@@ -338,10 +243,7 @@ this.ExtensionStorage = {
       Services.obs.removeObserver(this, "extension-invalidate-storage-cache");
       Services.obs.removeObserver(this, "xpcom-shutdown");
     } else if (topic == "extension-invalidate-storage-cache") {
-      for (let promise of this.jsonFilePromises.values()) {
-        promise.then(jsonFile => { jsonFile.finalize(); });
-      }
-      this.jsonFilePromises.clear();
+      this.cache.clear();
     }
   },
 };
