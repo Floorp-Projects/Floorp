@@ -941,8 +941,12 @@ GetMaxDisplayPortSize(nsIContent* aContent, nsPresContext* aFallbackPrescontext)
 
   // Pick a safe maximum displayport size for sanity purposes. This is the
   // lowest maximum texture size on tileless-platforms (Windows, D3D10).
+  // If the gfx.max-texture-size pref is set, further restrict the displayport
+  // size to fit within that, because the compositor won't upload stuff larger
+  // than this size.
   nscoord safeMaximum = aFallbackPrescontext
-      ? aFallbackPrescontext->DevPixelsToAppUnits(8192);
+      ? aFallbackPrescontext->DevPixelsToAppUnits(
+            std::min(8192, gfxPlatform::MaxTextureSize()))
       : nscoord_MAX;
 
   nsIFrame* frame = aContent->GetPrimaryFrame();
@@ -965,6 +969,7 @@ GetMaxDisplayPortSize(nsIContent* aContent, nsPresContext* aFallbackPrescontext)
   if (maxSizeInDevPixels < 0 || maxSizeInDevPixels == INT_MAX) {
     return safeMaximum;
   }
+  maxSizeInDevPixels = std::min(maxSizeInDevPixels, gfxPlatform::MaxTextureSize());
   return presContext->DevPixelsToAppUnits(maxSizeInDevPixels);
 }
 
