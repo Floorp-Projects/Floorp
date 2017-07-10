@@ -89,8 +89,8 @@ private:
 
 class ElfRelHackCode_Section: public ElfSection {
 public:
-    ElfRelHackCode_Section(Elf_Shdr &s, Elf &e, unsigned int init)
-    : ElfSection(s, nullptr, nullptr), parent(e), init(init) {
+    ElfRelHackCode_Section(Elf_Shdr &s, Elf &e, unsigned int init, unsigned int mprotect_cb)
+    : ElfSection(s, nullptr, nullptr), parent(e), init(init), mprotect_cb(mprotect_cb) {
         std::string file(rundir);
         file += "/inject/";
         switch (parent.getMachine()) {
@@ -125,9 +125,17 @@ public:
         if (symtab == nullptr)
             throw std::runtime_error("Couldn't find a symbol table for the injected code");
 
+        relro = parent.getSegmentByType(PT_GNU_RELRO);
+        align = parent.getSegmentByType(PT_LOAD)->getAlign();
+
         // Find the init symbol
         entry_point = -1;
-        Elf_SymValue *sym = symtab->lookup(init ? "init" : "init_noinit");
+        std::string symbol = "init";
+        if (!init)
+            symbol += "_noinit";
+        if (relro)
+            symbol += "_relro";
+        Elf_SymValue *sym = symtab->lookup(symbol.c_str());
         if (!sym)
             throw std::runtime_error("Couldn't find an 'init' symbol in the injected code");
 
@@ -353,6 +361,14 @@ private:
                     addr = ehdr->getAddr();
                 } else if (strcmp(name, "original_init") == 0) {
                     addr = init;
+                } else if (relro && strcmp(name, "mprotect_cb") == 0) {
+                    addr = mprotect_cb;
+                } else if (relro && strcmp(name, "relro_start") == 0) {
+                    // Align relro segment start to the start of the page it starts in.
+                    addr = relro->getAddr() & ~(align - 1);
+                    // Align relro segment end to the start of the page it ends into.
+                } else if (relro && strcmp(name, "relro_end") == 0) {
+                    addr = (relro->getAddr() + relro->getMemSize()) & ~(align - 1);
                 } else if (strcmp(name, "_GLOBAL_OFFSET_TABLE_") == 0) {
                     // We actually don't need a GOT, but need it as a reference for
                     // GOTOFF relocations. We'll just use the start of the ELF file
@@ -403,7 +419,10 @@ private:
     Elf *elf, &parent;
     std::vector<ElfSection *> code;
     unsigned int init;
+    unsigned int mprotect_cb;
     int entry_point;
+    ElfSegment *relro;
+    unsigned int align;
 };
 
 unsigned int get_addend(Elf_Rel *rel, Elf *elf) {
@@ -503,8 +522,6 @@ int do_relocation_section(Elf *elf, unsigned int rel_type, unsigned int rel_type
         return -1;
     }
 
-    ElfSegment *relro = elf->getSegmentByType(PT_GNU_RELRO);
-
     ElfRel_Section<Rel_Type> *section = (ElfRel_Section<Rel_Type> *)dyn->getSectionForType(Rel_Type::d_tag);
     if (section == nullptr) {
         fprintf(stderr, "No relocations\n");
@@ -599,9 +616,7 @@ int do_relocation_section(Elf *elf, unsigned int rel_type, unsigned int rel_type
             }
             new_rels.push_back(*i);
             init_array_reloc = new_rels.size();
-        } else if (!(loc.getSection()->getFlags() & SHF_WRITE) || (ELF32_R_TYPE(i->r_info) != rel_type) ||
-                   (relro && (i->r_offset >= relro->getAddr()) &&
-                   (i->r_offset < relro->getAddr() + relro->getMemSize()))) {
+        } else if (!(loc.getSection()->getFlags() & SHF_WRITE) || (ELF32_R_TYPE(i->r_info) != rel_type)) {
             // Don't pack relocations happening in non writable sections.
             // Our injected code is likely not to be allowed to write there.
             new_rels.push_back(*i);
@@ -670,10 +685,72 @@ int do_relocation_section(Elf *elf, unsigned int rel_type, unsigned int rel_type
         }
     }
 
+    unsigned int mprotect_cb = 0;
+    // If there is a relro segment, our injected code will run after the linker sets the
+    // corresponding pages read-only. We need to make our code change that to read-write
+    // before applying relocations, which means it needs to call mprotect.
+    // To do that, we need to find a reference to the mprotect symbol. In case the library
+    // already has one, we use that, but otherwise, we add the symbol.
+    // Then the injected code needs to be able to call the corresponding function, which
+    // means it needs access to a pointer to it. We get such a pointer by making the linker
+    // apply a relocation for the symbol at an address our code can read.
+    // The problem here is that there is not much relocated space where we can put such a
+    // pointer, so we abuse the bss section temporarily (it will be restored to a null
+    // value before any code can actually use it)
+    if (elf->getSegmentByType(PT_GNU_RELRO)) {
+        Elf_SymValue *mprotect = symtab->lookup("mprotect", STT(FUNC));
+        if (!mprotect) {
+            symtab->syms.emplace_back();
+            mprotect = &symtab->syms.back();
+            symtab->grow(symtab->syms.size() * symtab->getEntSize());
+            mprotect->name = ((ElfStrtab_Section *)symtab->getLink())->getStr("mprotect");
+            mprotect->info = ELF32_ST_INFO(STB_GLOBAL, STT_FUNC);
+            mprotect->other = STV_DEFAULT;
+            new (&mprotect->value) ElfLocation(nullptr, 0, ElfLocation::ABSOLUTE);
+            mprotect->size = 0;
+            mprotect->defined = false;
+
+            // The DT_VERSYM data (in the .gnu.version section) has the same number of
+            // entries as the symbols table. Since we added one entry there, we need to
+            // add one entry here. Zeroes in the extra data means no version for that
+            // symbol, which is the simplest thing to do.
+            ElfSection *gnu_versym = dyn->getSectionForType(DT_VERSYM);
+            if (gnu_versym) {
+               gnu_versym->grow(gnu_versym->getSize() + gnu_versym->getEntSize());
+            }
+        }
+
+        // Add a relocation for the mprotect symbol.
+        new_rels.emplace_back();
+        Rel_Type &rel = new_rels.back();
+        memset(&rel, 0, sizeof(rel));
+        rel.r_info = ELF32_R_INFO(std::distance(symtab->syms.begin(), std::vector<Elf_SymValue>::iterator(mprotect)), rel_type2);
+
+        // Find the beginning of the bss section, and use an aligned location in there
+        // for the relocation.
+        for (ElfSegment *segment = elf->getSegmentByType(PT_LOAD); segment;
+             segment = elf->getSegmentByType(PT_LOAD, segment)) {
+            if (segment->getFlags() & PF_W == 0)
+                continue;
+            size_t ptr_size = Elf_Addr::size(elf->getClass());
+            size_t aligned_mem_end = (segment->getAddr() + segment->getMemSize() + ptr_size - 1) & ~(ptr_size - 1);
+            size_t aligned_file_end = (segment->getAddr() + segment->getFileSize() + ptr_size - 1) & ~(ptr_size - 1);
+            if (aligned_mem_end - aligned_file_end >= Elf_Addr::size(elf->getClass())) {
+                mprotect_cb = rel.r_offset = aligned_file_end;
+                break;
+            }
+        }
+
+        if (mprotect_cb == 0) {
+            fprintf(stderr, "Couldn't find .bss. Skipping\n");
+            return -1;
+        }
+    }
+
     section->rels.assign(new_rels.begin(), new_rels.end());
     section->shrink(new_rels.size() * section->getEntSize());
 
-    ElfRelHackCode_Section *relhackcode = new ElfRelHackCode_Section(relhackcode_section, *elf, original_init);
+    ElfRelHackCode_Section *relhackcode = new ElfRelHackCode_Section(relhackcode_section, *elf, original_init, mprotect_cb);
     relhackcode->insertBefore(section);
     relhack->insertAfter(relhackcode);
     if (section->getOffset() + section->getSize() >= old_end) {

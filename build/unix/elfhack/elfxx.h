@@ -327,8 +327,19 @@ public:
     SectionInfo getInfo() { return info; }
 
     void shrink(unsigned int newsize) {
-        if (newsize < shdr.sh_size)
+        if (newsize < shdr.sh_size) {
             shdr.sh_size = newsize;
+            markDirty();
+        }
+    }
+
+    void grow(unsigned int newsize) {
+        if (newsize > shdr.sh_size) {
+            data = static_cast<char*>(realloc(data, newsize));
+            memset(data + shdr.sh_size, 0, newsize - shdr.sh_size);
+            shdr.sh_size = newsize;
+            markDirty();
+        }
     }
 
     unsigned int getOffset();
