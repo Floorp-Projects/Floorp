@@ -19,8 +19,7 @@ nsTDependentSubstring_CharT::Rebind(const substring_type& str,
 
   mData = const_cast<char_type*>(static_cast<const char_type*>(str.Data())) + startPos;
   mLength = XPCOM_MIN(length, strLength - startPos);
-
-  SetDataFlags(DataFlags(0));
+  mDataFlags = DataFlags(0);
 }
 
 void
@@ -33,7 +32,7 @@ nsTDependentSubstring_CharT::Rebind(const char_type* data, size_type length)
 
   mData = const_cast<char_type*>(static_cast<const char_type*>(data));
   mLength = length;
-  SetDataFlags(DataFlags(0));
+  mDataFlags = DataFlags(0);
 }
 
 void

@@ -995,7 +995,7 @@ public:
     if (mDataFlags & DataFlags::SHARED) {
       mData = char_traits::sEmptyBuffer;
       mLength = 0;
-      SetDataFlags(DataFlags::TERMINATED);
+      mDataFlags = DataFlags::TERMINATED;
     }
   }
 
@@ -1162,14 +1162,6 @@ protected:
     }
 
     return true;
-  }
-
-  /**
-   * this helper function stores the specified dataFlags in mDataFlags
-   */
-  void SetDataFlags(DataFlags aDataFlags)
-  {
-    mDataFlags = aDataFlags;
   }
 
   void NS_FASTCALL ReplaceLiteral(index_type aCutStart, size_type aCutLength,

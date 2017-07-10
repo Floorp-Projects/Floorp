@@ -20,7 +20,7 @@ nsTAdoptingString_CharT::operator=(const self_type& str)
     Finalize();
     mData = str.mData;
     mLength = str.mLength;
-    SetDataFlags(DataFlags::TERMINATED | DataFlags::OWNED);
+    mDataFlags = DataFlags::TERMINATED | DataFlags::OWNED;
 
     // Make str forget the buffer we just took ownership of.
     new (mutable_str) self_type();
@@ -41,7 +41,7 @@ nsTString_CharT::Rebind(const char_type* data, size_type length)
 
   mData = const_cast<char_type*>(data);
   mLength = length;
-  SetDataFlags(DataFlags::TERMINATED);
+  mDataFlags = DataFlags::TERMINATED;
   AssertValidDependentString();
 }
 

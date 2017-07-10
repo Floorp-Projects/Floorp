@@ -170,7 +170,7 @@ nsTSubstring_CharT::MutatePrep(size_type aCapacity, char_type** aOldData,
   *aOldDataFlags = mDataFlags;
 
   mData = newData;
-  SetDataFlags(newDataFlags);
+  mDataFlags = newDataFlags;
 
   // mLength does not change
 
@@ -413,7 +413,7 @@ nsTSubstring_CharT::AssignLiteral(const char_type* aData, size_type aLength)
   ::ReleaseData(mData, mDataFlags);
   mData = const_cast<char_type*>(aData);
   mLength = aLength;
-  SetDataFlags(DataFlags::TERMINATED | DataFlags::LITERAL);
+  mDataFlags = DataFlags::TERMINATED | DataFlags::LITERAL;
 }
 
 void
@@ -450,7 +450,7 @@ nsTSubstring_CharT::Assign(const self_type& aStr, const fallible_t& aFallible)
 
     mData = aStr.mData;
     mLength = aStr.mLength;
-    SetDataFlags(DataFlags::TERMINATED | DataFlags::SHARED);
+    mDataFlags = DataFlags::TERMINATED | DataFlags::SHARED;
 
     // get an owning reference to the mData
     nsStringBuffer::FromData(mData)->AddRef();
@@ -516,7 +516,7 @@ nsTSubstring_CharT::Adopt(char_type* aData, size_type aLength)
 
     mData = aData;
     mLength = aLength;
-    SetDataFlags(DataFlags::TERMINATED | DataFlags::OWNED);
+    mDataFlags = DataFlags::TERMINATED | DataFlags::OWNED;
 
     STRING_STAT_INCREMENT(Adopt);
     // Treat this as construction of a "StringAdopt" object for leak
@@ -690,7 +690,7 @@ nsTSubstring_CharT::SetCapacity(size_type aCapacity, const fallible_t&)
     ::ReleaseData(mData, mDataFlags);
     mData = char_traits::sEmptyBuffer;
     mLength = 0;
-    SetDataFlags(DataFlags::TERMINATED);
+    mDataFlags = DataFlags::TERMINATED;
     return true;
   }
 
