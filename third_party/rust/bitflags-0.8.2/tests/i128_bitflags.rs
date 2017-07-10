@@ -1,21 +1,21 @@
-#![cfg(feature = "unstable_testing")]
-
 #![allow(dead_code, unused_imports)]
-#![feature(i128_type)]
+#![cfg_attr(feature = "i128", feature(i128_type))]
 
 #[macro_use]
 extern crate bitflags;
 
+#[cfg(feature = "i128")]
 bitflags! {
     /// baz
-    struct Flags128: u128 {
-        const A       = 0x0000_0000_0000_0000_0000_0000_0000_0001;
-        const B       = 0x0000_0000_0000_1000_0000_0000_0000_0000;
-        const C       = 0x8000_0000_0000_0000_0000_0000_0000_0000;
-        const ABC     = A.bits | B.bits | C.bits;
+    flags Flags128: u128 {
+        const A       = 0x0000_0000_0000_0000_0000_0000_0000_0001,
+        const B       = 0x0000_0000_0000_1000_0000_0000_0000_0000,
+        const C       = 0x8000_0000_0000_0000_0000_0000_0000_0000,
+        const ABC     = A.bits | B.bits | C.bits,
     }
 }
 
+#[cfg(feature = "i128")]
 #[test]
 fn test_i128_bitflags() {
     assert_eq!(ABC, A | B | C);
