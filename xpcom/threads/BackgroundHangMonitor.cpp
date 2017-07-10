@@ -26,6 +26,7 @@
 #include "nsXULAppAPI.h"
 #include "GeckoProfiler.h"
 #include "nsNetCID.h"
+#include "nsIHangDetails.h"
 
 #include <algorithm>
 
@@ -238,6 +239,27 @@ public:
   }
 };
 
+/**
+ * HangDetails is the concrete implementaion of nsIHangDetails, and contains the
+ * infromation which we want to expose to observers of the bhr-thread-hang
+ * observer notification.
+ */
+class HangDetails : public nsIHangDetails
+{
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIHANGDETAILS
+
+  HangDetails(uint32_t aDuration, const nsACString& aName)
+    : mDuration(aDuration)
+    , mName(aName)
+    {}
+private:
+  virtual ~HangDetails() {}
+
+  uint32_t mDuration;
+  nsCString mName;
+};
 
 StaticRefPtr<BackgroundHangManager> BackgroundHangManager::sInstance;
 bool BackgroundHangManager::sDisabled = true;
@@ -597,6 +619,19 @@ BackgroundHangThread::ReportHang(PRIntervalTime aHangTime)
   }
   newHistogram.Add(aHangTime, Move(mAnnotations));
 
+  // Notify any observers of the "bhr-thread-hang" topic that a thread has hung.
+  nsCString name;
+  name.AssignASCII(mStats.GetName());
+  SystemGroup::Dispatch("NotifyBHRHangObservers", TaskCategory::Other,
+                        NS_NewRunnableFunction("NotifyBHRHangObservers", [=] {
+    nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
+    if (os) {
+      // NOTE: Make sure to construct this on the main thread.
+      nsCOMPtr<nsIHangDetails> hangDetails = new HangDetails(aHangTime, name);
+      os->NotifyObservers(hangDetails, "bhr-thread-hang", nullptr);
+    }
+  }));
+
   // Process the hang off-main thread. We record a reference to the runnable in
   // mProcessHangRunnables so we can abort this preprocessing and just submit
   // the message if the processing takes too long and our thread is going away.
@@ -877,5 +912,21 @@ BackgroundHangMonitor::ThreadHangStatsIterator::GetNext()
   mThread = mThread->getNext();
   return stats;
 }
+
+NS_IMETHODIMP
+HangDetails::GetDuration(uint32_t* aDuration)
+{
+  *aDuration = mDuration;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HangDetails::GetThreadName(nsACString& aName)
+{
+  aName.Assign(mName);
+  return NS_OK;
+}
+
+NS_IMPL_ISUPPORTS(HangDetails, nsIHangDetails)
 
 } // namespace mozilla
