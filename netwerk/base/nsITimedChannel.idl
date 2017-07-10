@@ -40,6 +40,7 @@ interface nsITimedChannel : nsISupports {
   [noscript] readonly attribute TimeStamp domainLookupStart;
   [noscript] readonly attribute TimeStamp domainLookupEnd;
   [noscript] readonly attribute TimeStamp connectStart;
+  [noscript] readonly attribute TimeStamp secureConnectionStart;
   [noscript] readonly attribute TimeStamp connectEnd;
   [noscript] readonly attribute TimeStamp requestStart;
   [noscript] readonly attribute TimeStamp responseStart;
@@ -84,6 +85,7 @@ interface nsITimedChannel : nsISupports {
   readonly attribute PRTime domainLookupStartTime;
   readonly attribute PRTime domainLookupEndTime;
   readonly attribute PRTime connectStartTime;
+  readonly attribute PRTime secureConnectionStartTime;
   readonly attribute PRTime connectEndTime;
   readonly attribute PRTime requestStartTime;
   readonly attribute PRTime responseStartTime;

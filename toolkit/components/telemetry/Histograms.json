@@ -1900,13 +1900,25 @@
     "n_buckets": 50,
     "description": "HTTP page channel: DNS lookup time (ms)"
   },
-  "HTTP_PAGE_TCP_CONNECTION": {
+  "HTTP_PAGE_TLS_HANDSHAKE": {
     "record_in_processes": ["main", "content"],
     "expires_in_version": "never",
+    "alert_emails": ["necko@mozilla.com", "pmcmanus@mozilla.com"],
+    "bug_numbers": [772589],
     "kind": "exponential",
     "high": 30000,
     "n_buckets": 50,
-    "description": "HTTP page channel: TCP connection setup (ms)"
+    "description": "HTTP page channel: After TCP SYN to Ready for HTTP (ms)"
+  },
+  "HTTP_PAGE_TCP_CONNECTION_2": {
+    "record_in_processes": ["main", "content"],
+    "expires_in_version": "never",
+    "alert_emails": ["necko@mozilla.com", "pmcmanus@mozilla.com"],
+    "bug_numbers": [772589],
+    "kind": "exponential",
+    "high": 30000,
+    "n_buckets": 50,
+    "description": "HTTP page channel: TCP SYN to Ready for HTTP (ms)"
   },
   "HTTP_PAGE_OPEN_TO_FIRST_SENT": {
     "record_in_processes": ["main", "content"],
@@ -2036,13 +2048,25 @@
     "n_buckets": 50,
     "description": "HTTP subitem channel: DNS lookup time (ms)"
   },
-  "HTTP_SUB_TCP_CONNECTION": {
+  "HTTP_SUB_TLS_HANDSHAKE": {
     "record_in_processes": ["main", "content"],
+    "expires_in_version": "never",
+    "alert_emails": ["necko@mozilla.com", "pmcmanus@mozilla.com"],
+    "bug_numbers": [772589],
+    "kind": "exponential",
+    "high": 30000,
+    "n_buckets": 50,
+    "description": "HTTP subitem channel: After TCP SYN to Ready for HTTP (ms)"
+  },
+  "HTTP_SUB_TCP_CONNECTION_2": {
+    "record_in_processes": ["main", "content"],
+    "alert_emails": ["necko@mozilla.com", "pmcmanus@mozilla.com"],
+    "bug_numbers": [772589],
     "expires_in_version": "never",
     "kind": "exponential",
     "high": 30000,
     "n_buckets": 50,
-    "description": "HTTP subitem channel: TCP connection setup (ms)"
+    "description": "HTTP subitem channel: TCP SYN to Ready for HTTP (ms)"
   },
   "HTTP_SUB_OPEN_TO_FIRST_SENT": {
     "record_in_processes": ["main", "content"],

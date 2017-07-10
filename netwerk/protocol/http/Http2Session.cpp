@@ -2434,6 +2434,15 @@ Http2Session::OnTransportStatus(nsITransport* aTransport,
   case NS_NET_STATUS_TLS_HANDSHAKE_ENDED:
   {
     Http2Stream *target = mStreamIDHash.Get(mUseH2Deps ? 0xF : 0x3);
+    if (!target) {
+      // any transaction will do if we can't find the low numbered one
+      // generally this happens when the initial transaction hasn't been
+      // assigned a stream id yet.
+      auto iter = mStreamTransactionHash.Iter();
+      if (!iter.Done()) {
+        target = iter.Data();
+      }
+    }
     nsAHttpTransaction *transaction = target ? target->Transaction() : nullptr;
     if (transaction)
       transaction->OnTransportStatus(aTransport, aStatus, aProgress);

@@ -327,6 +327,8 @@ function test() {
         "The eventTimings data has an incorrect |timings.blocked| property.");
       is(typeof requestItem.eventTimings.timings.dns, "number",
         "The eventTimings data has an incorrect |timings.dns| property.");
+      is(typeof requestItem.eventTimings.timings.ssl, "number",
+        "The eventTimings data has an incorrect |timings.ssl| property.");
       is(typeof requestItem.eventTimings.timings.connect, "number",
         "The eventTimings data has an incorrect |timings.connect| property.");
       is(typeof requestItem.eventTimings.timings.send, "number",
