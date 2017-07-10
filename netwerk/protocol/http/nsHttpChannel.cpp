@@ -6915,6 +6915,15 @@ nsHttpChannel::GetConnectStart(TimeStamp* _retval) {
 }
 
 NS_IMETHODIMP
+nsHttpChannel::GetSecureConnectionStart(TimeStamp* _retval) {
+    if (mTransaction)
+        *_retval = mTransaction->GetSecureConnectionStart();
+    else
+        *_retval = mTransactionTimings.secureConnectionStart;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
 nsHttpChannel::GetConnectEnd(TimeStamp* _retval) {
     if (mTransaction)
         *_retval = mTransaction->GetConnectEnd();

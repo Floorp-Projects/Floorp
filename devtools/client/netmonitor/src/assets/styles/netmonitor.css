@@ -19,6 +19,7 @@
 
   --timing-blocked-color: rgba(235, 83, 104, 0.8);
   --timing-dns-color: rgba(223, 128, 255, 0.8); /* pink */
+  --timing-ssl-color: rgba(217, 102, 41, 0.8); /* orange */
   --timing-connect-color: rgba(217, 102, 41, 0.8); /* orange */
   --timing-send-color: rgba(70, 175, 227, 0.8); /* light blue */
   --timing-wait-color: rgba(94, 136, 176, 0.8); /* blue grey */
@@ -34,6 +35,7 @@
 
   --timing-blocked-color: rgba(235, 83, 104, 0.8);
   --timing-dns-color: rgba(223, 128, 255, 0.8); /* pink */
+  --timing-ssl-color: rgba(217, 102, 41, 0.8); /* orange */
   --timing-connect-color: rgba(217, 102, 41, 0.8); /* orange */
   --timing-send-color: rgba(0, 136, 204, 0.8); /* blue */
   --timing-wait-color: rgba(95, 136, 176, 0.8); /* blue grey */
@@ -681,6 +683,10 @@ body,
 
 .requests-list-timings-box.connect {
   background-color: var(--timing-connect-color);
+}
+
+.requests-list-timings-box.ssl {
+  background-color: var(--timing-ssl-color);
 }
 
 .requests-list-timings-box.send {

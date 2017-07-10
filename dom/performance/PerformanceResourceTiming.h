@@ -128,9 +128,9 @@ public:
 
   DOMHighResTimeStamp SecureConnectionStart() const
   {
-    // This measurement is not available for Navigation Timing either.
-    // There is a different bug submitted for it.
-    return 0;
+    return mTiming && mTiming->TimingAllowed()
+        ? mTiming->SecureConnectionStartHighRes()
+        : 0;
   }
 
   virtual const PerformanceResourceTiming* ToResourceTiming() const override
