@@ -413,7 +413,12 @@ this.ContentSearch = {
 
   _onMessageManageEngines(msg, data) {
     let browserWin = msg.target.ownerGlobal;
-    browserWin.openPreferences("paneGeneral", {origin: "contentSearch"});
+    let pref = Services.prefs.getBoolPref("browser.preferences.useOldOrganization");
+    if (pref) {
+      browserWin.openPreferences("paneSearch", {origin: "contentSearch"});
+    } else {
+      browserWin.openPreferences("general-search", {origin: "contentSearch"});
+    }
   },
 
   async _onMessageGetSuggestions(msg, data) {
