@@ -21,17 +21,18 @@ var gEditItemOverlay = {
     if (!("uris" in aInitInfo) && !("node" in aInitInfo))
       throw new Error("Neither node nor uris set for pane info");
 
+    // Once we stop supporting legacy add-ons the code should throw if a node is
+    // not passed.
     let node = "node" in aInitInfo ? aInitInfo.node : null;
 
     // Since there's no true UI for folder shortcuts (they show up just as their target
     // folders), when the pane shows for them it's opened in read-only mode, showing the
     // properties of the target folder.
     let itemId = node ? node.itemId : -1;
-    let itemGuid = PlacesUIUtils.useAsyncTransactions && node ?
-                     PlacesUtils.getConcreteItemGuid(node) : null;
+    let itemGuid = node ? PlacesUtils.getConcreteItemGuid(node) : null;
     let isItem = itemId != -1;
     let isFolderShortcut = isItem &&
-      node.type == Ci.nsINavHistoryResultNode.RESULT_TYPE_FOLDER_SHORTCUT;
+                           node.type == Ci.nsINavHistoryResultNode.RESULT_TYPE_FOLDER_SHORTCUT;
     let isTag = node && PlacesUtils.nodeIsTagQuery(node);
     if (isTag) {
       itemId = PlacesUtils.getConcreteItemId(node);
@@ -50,10 +51,8 @@ var gEditItemOverlay = {
     let parentId = -1;
     let parentGuid = null;
 
-    // This should go away once we stop supporting legacy add-ons, and the code
-    // should throw if a node is not passed.
-    if (node) {
-      if (!node.parent || !node.parent.bookmarkGuid) {
+    if (node && isItem) {
+      if (!node.parent || (node.parent.itemId > 0 && !node.parent.bookmarkGuid)) {
         throw new Error("Cannot use an incomplete node to initialize the edit bookmark panel");
       }
       let parent = node.parent;
@@ -277,7 +276,7 @@ var gEditItemOverlay = {
     // not cheap (we don't always have the parent), and there's no use case for
     // this (it's only the Star UI that shows the folderPicker)
     if (showOrCollapse("folderRow", isItem, "folderPicker")) {
-      this._initFolderMenuList(parentId);
+      this._initFolderMenuList(parentId).catch(Components.utils.reportError);
     }
 
     // Selection count.
@@ -382,14 +381,16 @@ var gEditItemOverlay = {
    *        The popup to which the menu-item should be added.
    * @param aFolderId
    *        The identifier of the bookmarks folder.
+   * @param aTitle
+   *        The title to use as a label.
    * @return the new menu item.
    */
-  _appendFolderItemToMenupopup(aMenupopup, aFolderId) {
+  _appendFolderItemToMenupopup(aMenupopup, aFolderId, aTitle) {
     // First make sure the folders-separator is visible
     this._element("foldersSeparator").hidden = false;
 
     var folderMenuItem = document.createElement("menuitem");
-    var folderTitle = PlacesUtils.bookmarks.getItemTitle(aFolderId)
+    var folderTitle = aTitle;
     folderMenuItem.folderId = aFolderId;
     folderMenuItem.setAttribute("label", folderTitle);
     folderMenuItem.className = "menuitem-iconic folder-icon";
@@ -397,31 +398,29 @@ var gEditItemOverlay = {
     return folderMenuItem;
   },
 
-  _initFolderMenuList: function EIO__initFolderMenuList(aSelectedFolder) {
+  async _initFolderMenuList(aSelectedFolder) {
     // clean up first
     var menupopup = this._folderMenuList.menupopup;
     while (menupopup.childNodes.length > 6)
       menupopup.removeChild(menupopup.lastChild);
 
-    const bms = PlacesUtils.bookmarks;
-    const annos = PlacesUtils.annotations;
-
     // Build the static list
-    var unfiledItem = this._element("unfiledRootItem");
     if (!this._staticFoldersListBuilt) {
-      unfiledItem.label = bms.getItemTitle(PlacesUtils.unfiledBookmarksFolderId);
+      let unfiledItem = this._element("unfiledRootItem");
+      unfiledItem.label = PlacesUtils.getString("OtherBookmarksFolderTitle");
       unfiledItem.folderId = PlacesUtils.unfiledBookmarksFolderId;
-      var bmMenuItem = this._element("bmRootItem");
-      bmMenuItem.label = bms.getItemTitle(PlacesUtils.bookmarksMenuFolderId);
+      let bmMenuItem = this._element("bmRootItem");
+      bmMenuItem.label = PlacesUtils.getString("BookmarksMenuFolderTitle");
       bmMenuItem.folderId = PlacesUtils.bookmarksMenuFolderId;
-      var toolbarItem = this._element("toolbarFolderItem");
-      toolbarItem.label = bms.getItemTitle(PlacesUtils.toolbarFolderId);
+      let toolbarItem = this._element("toolbarFolderItem");
+      toolbarItem.label = PlacesUtils.getString("BookmarksToolbarFolderTitle");
       toolbarItem.folderId = PlacesUtils.toolbarFolderId;
       this._staticFoldersListBuilt = true;
     }
 
     // List of recently used folders:
-    var folderIds = annos.getItemsWithAnnotation(LAST_USED_ANNO);
+    var folderIds =
+      PlacesUtils.annotations.getItemsWithAnnotation(LAST_USED_ANNO);
 
     /**
      * The value of the LAST_USED_ANNO annotation is the time (in the form of
@@ -432,9 +431,12 @@ var gEditItemOverlay = {
      * set. Then we sort it descendingly based on the time field.
      */
     this._recentFolders = [];
-    for (let i = 0; i < folderIds.length; i++) {
-      var lastUsed = annos.getItemAnnotation(folderIds[i], LAST_USED_ANNO);
-      this._recentFolders.push({ folderId: folderIds[i], lastUsed });
+    for (let folderId of folderIds) {
+      var lastUsed =
+        PlacesUtils.annotations.getItemAnnotation(folderId, LAST_USED_ANNO);
+      let guid = await PlacesUtils.promiseItemGuid(folderId);
+      let title = (await PlacesUtils.bookmarks.fetch(guid)).title;
+      this._recentFolders.push({ folderId, guid, title, lastUsed });
     }
     this._recentFolders.sort(function(a, b) {
       if (b.lastUsed < a.lastUsed)
@@ -447,11 +449,14 @@ var gEditItemOverlay = {
     var numberOfItems = Math.min(MAX_FOLDER_ITEM_IN_MENU_LIST,
                                  this._recentFolders.length);
     for (let i = 0; i < numberOfItems; i++) {
-      this._appendFolderItemToMenupopup(menupopup,
-                                        this._recentFolders[i].folderId);
+      await this._appendFolderItemToMenupopup(menupopup,
+                                              this._recentFolders[i].folderId,
+                                              this._recentFolders[i].title);
     }
 
-    var defaultItem = this._getFolderMenuItem(aSelectedFolder);
+    let selectedFolderGuid = await PlacesUtils.promiseItemGuid(aSelectedFolder);
+    let title = (await PlacesUtils.bookmarks.fetch(selectedFolderGuid)).title;
+    var defaultItem = this._getFolderMenuItem(aSelectedFolder, title);
     this._folderMenuList.selectedItem = defaultItem;
 
     // Set a selectedIndex attribute to show special icons
@@ -615,7 +620,7 @@ var gEditItemOverlay = {
     prefs.setCharPref("browser.bookmarks.editDialog.firstEditField", aNewField);
   },
 
-  onNamePickerChange() {
+  async onNamePickerChange() {
     if (this.readOnly || !(this._paneInfo.isItem || this._paneInfo.isTag))
       return;
 
@@ -632,13 +637,11 @@ var gEditItemOverlay = {
         PlacesUtils.transactionManager.doTransaction(txn);
         return;
       }
-      (async () => {
-        let guid = this._paneInfo.isTag
-                    ? (await PlacesUtils.promiseItemGuid(this._paneInfo.itemId))
-                    : this._paneInfo.itemGuid;
-        PlacesTransactions.EditTitle({ guid, title: newTitle })
-                          .transact().catch(Components.utils.reportError);
-      })().catch(Components.utils.reportError);
+
+      let guid = this._paneInfo.isTag
+                  ? (await PlacesUtils.promiseItemGuid(this._paneInfo.itemId))
+                  : this._paneInfo.itemGuid;
+      await PlacesTransactions.EditTitle({ guid, title: newTitle }).transact();
     }
   },
 
@@ -755,17 +758,9 @@ var gEditItemOverlay = {
 
       this._element("chooseFolderSeparator").hidden =
         this._element("chooseFolderMenuItem").hidden = true;
-      var currentFolder = this._getFolderIdFromMenuList();
-      this._folderTree.selectItems([currentFolder]);
+      this._folderTree.selectItems([this._paneInfo.parentId]);
       this._folderTree.focus();
     }
-  },
-
-  _getFolderIdFromMenuList() {
-    var selectedItem = this._folderMenuList.selectedItem;
-    NS_ASSERT("folderId" in selectedItem,
-              "Invalid menuitem in the folders-menulist");
-    return selectedItem.folderId;
   },
 
   /**
@@ -775,8 +770,11 @@ var gEditItemOverlay = {
    * the new item replaces the last menu-item.
    * @param aFolderId
    *        The identifier of the bookmarks folder.
+   * @param aTitle
+   *        The title to use in case of menuitem creation.
+   * @return handle to the menuitem.
    */
-  _getFolderMenuItem(aFolderId) {
+  _getFolderMenuItem(aFolderId, aTitle) {
     let menupopup = this._folderMenuList.menupopup;
     let menuItem = Array.prototype.find.call(
       menupopup.childNodes, item => item.folderId === aFolderId);
@@ -787,10 +785,10 @@ var gEditItemOverlay = {
     if (menupopup.childNodes.length == 4 + MAX_FOLDER_ITEM_IN_MENU_LIST)
       menupopup.removeChild(menupopup.lastChild);
 
-    return this._appendFolderItemToMenupopup(menupopup, aFolderId);
+    return this._appendFolderItemToMenupopup(menupopup, aFolderId, aTitle);
   },
 
-  onFolderMenuListCommand(aEvent) {
+  async onFolderMenuListCommand(aEvent) {
     // Check for _paneInfo existing as the dialog may be closing but receiving
     // async updates from unresolved promises.
     if (!this._paneInfo) {
@@ -803,7 +801,8 @@ var gEditItemOverlay = {
     if (aEvent.target.id == "editBMPanel_chooseFolderMenuItem") {
       // reset the selection back to where it was and expand the tree
       // (this menu-item is hidden when the tree is already visible
-      let item = this._getFolderMenuItem(this._paneInfo.parentId);
+      let item = this._getFolderMenuItem(this._paneInfo.parentId,
+                                         this._paneInfo.title);
       this._folderMenuList.selectedItem = item;
       // XXXmano HACK: setTimeout 100, otherwise focus goes back to the
       // menulist right away
@@ -812,15 +811,13 @@ var gEditItemOverlay = {
     }
 
     // Move the item
-    let containerId = this._getFolderIdFromMenuList();
+    let containerId = this._folderMenuList.selectedItem.folderId;
     if (this._paneInfo.parentId != containerId &&
         this._paneInfo.itemId != containerId) {
       if (PlacesUIUtils.useAsyncTransactions) {
-        (async () => {
-          let newParentGuid = await PlacesUtils.promiseItemGuid(containerId);
-          let guid = this._paneInfo.itemGuid;
-          await PlacesTransactions.Move({ guid, newParentGuid }).transact();
-        })();
+        let newParentGuid = await PlacesUtils.promiseItemGuid(containerId);
+        let guid = this._paneInfo.itemGuid;
+        await PlacesTransactions.Move({ guid, newParentGuid }).transact();
       } else {
         let txn = new PlacesMoveItemTransaction(this._paneInfo.itemId,
                                                 containerId,
@@ -864,10 +861,10 @@ var gEditItemOverlay = {
       return;
 
     var folderId = PlacesUtils.getConcreteItemId(selectedNode);
-    if (this._getFolderIdFromMenuList() == folderId)
+    if (this._folderMenuList.selectedItem.folderId == folderId)
       return;
 
-    var folderItem = this._getFolderMenuItem(folderId);
+    var folderItem = this._getFolderMenuItem(folderId, selectedNode.title);
     this._folderMenuList.selectedItem = folderItem;
     folderItem.doCommand();
   },
@@ -1075,17 +1072,25 @@ var gEditItemOverlay = {
     this._initTextField(this._tagsField, tags.join(", "));
   },
 
-  _onTagsChange(aItemId, aChangedURI = null) {
+  async _onTagsChange(guid, changedURI = null) {
     let paneInfo = this._paneInfo;
     let updateTagsField = false;
     if (paneInfo.isURI) {
-      if (paneInfo.isBookmark && aItemId == paneInfo.itemId) {
+      if (paneInfo.isBookmark && guid == paneInfo.itemGuid) {
         updateTagsField = true;
       } else if (!paneInfo.isBookmark) {
-        updateTagsField = aChangedURI && aChangedURI.equals(paneInfo.uri);
+        if (!changedURI) {
+          let href = (await PlacesUtils.bookmarks.fetch(guid)).url.href;
+          changedURI = Services.io.newURI(href);
+        }
+        updateTagsField = changedURI.equals(paneInfo.uri);
       }
     } else if (paneInfo.bulkTagging) {
-      if (aChangedURI && paneInfo.uris.some(uri => uri.equals(aChangedURI))) {
+      if (!changedURI) {
+        let href = (await PlacesUtils.bookmarks.fetch(guid)).url.href;
+        changedURI = Services.io.newURI(href);
+      }
+      if (paneInfo.uris.some(uri => uri.equals(changedURI))) {
         updateTagsField = true;
         delete this._paneInfo._cachedCommonTags;
       }
@@ -1093,12 +1098,13 @@ var gEditItemOverlay = {
       throw new Error("_onTagsChange called unexpectedly");
     }
 
-    if (updateTagsField)
-      this._initTagsField().catch(Components.utils.reportError);
-
-    // Any tags change should be reflected in the tags selector.
-    if (this._element("tagsSelector"))
-      this._rebuildTagsSelectorList().catch(Components.utils.reportError);
+    if (updateTagsField) {
+      await this._initTagsField();
+      // Any tags change should be reflected in the tags selector.
+      if (this._element("tagsSelector")) {
+        await this._rebuildTagsSelectorList();
+      }
+    }
   },
 
   _onItemTitleChange(aItemId, aNewTitle) {
@@ -1119,17 +1125,29 @@ var gEditItemOverlay = {
         }
       }
     }
+    // We need to also update title of recent folders.
+    for (let folder of this._recentFolders) {
+      if (folder.folderId == aItemId) {
+        folder.title = aNewTitle;
+        break;
+      }
+    }
   },
 
   // nsINavBookmarkObserver
   onItemChanged(aItemId, aProperty, aIsAnnotationProperty, aValue,
-                aLastModified, aItemType) {
+                aLastModified, aItemType, aParentId, aGuid) {
     if (aProperty == "tags" && this._paneInfo.visibleRows.has("tagsRow")) {
-      this._onTagsChange(aItemId);
-    } else if (aProperty == "title" && this._paneInfo.isItem) {
+      this._onTagsChange(aGuid).catch(Components.utils.reportError);
+      return;
+    }
+    if (aProperty == "title" && this._paneInfo.isItem) {
       // This also updates titles of folders in the folder menu list.
       this._onItemTitleChange(aItemId, aValue);
-    } else if (!this._paneInfo.isItem || this._paneInfo.itemId != aItemId) {
+      return;
+    }
+
+    if (!this._paneInfo.isItem || this._paneInfo.itemId != aItemId) {
       return;
     }
 
@@ -1143,7 +1161,7 @@ var gEditItemOverlay = {
 
         if (this._paneInfo.visibleRows.has("tagsRow")) {
           delete this._paneInfo._cachedCommonTags;
-          this._onTagsChange(aItemId, newURI);
+          this._onTagsChange(aGuid, newURI).catch(Components.utils.reportError);
         }
       }
       break;
@@ -1172,13 +1190,16 @@ var gEditItemOverlay = {
     this._paneInfo.parentGuid = newParentGuid;
 
     if (!this._paneInfo.visibleRows.has("folderRow") ||
-        newParentId == this._getFolderIdFromMenuList()) {
+        newParentId == this._folderMenuList.selectedItem.folderId) {
       return;
     }
 
     // Just setting selectItem _does not_ trigger oncommand, so we don't
     // recurse.
-    this._folderMenuList.selectedItem = this._getFolderMenuItem(newParentId);
+    PlacesUtils.bookmarks.fetch(newParentGuid).then(bm => {
+      this._folderMenuList.selectedItem = this._getFolderMenuItem(newParentId,
+                                                                  bm.title);
+    });
   },
 
   onItemAdded(aItemId, aParentId, aIndex, aItemType, aURI) {
