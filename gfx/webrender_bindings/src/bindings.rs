@@ -545,25 +545,6 @@ impl From<ClipRegion> for WrClipRegion {
     }
 }
 
-#[repr(C)]
-pub struct WrClipRegionToken {
-    _dummy: bool,
-}
-
-impl Into<ClipRegionToken> for WrClipRegionToken {
-    fn into(self) -> ClipRegionToken {
-        // ClipRegionTokens are a zero sized move-only "proof of work"
-        // this doesn't really translate... so uh, pretend it does?
-        unsafe { mem::transmute(()) }
-    }
-}
-
-impl From<ClipRegionToken> for WrClipRegionToken {
-    fn from(_token: ClipRegionToken) -> WrClipRegionToken {
-        WrClipRegionToken { _dummy: true }
-    }
-}
-
 #[repr(u32)]
 #[allow(dead_code)]
 enum WrExternalImageType {
@@ -1280,25 +1261,6 @@ pub extern "C" fn wr_dp_end(state: &mut WrState) {
 }
 
 #[no_mangle]
-pub extern "C" fn wr_dp_push_clip_region(state: &mut WrState,
-                                         main: WrRect,
-                                         complex: *const WrComplexClipRegion,
-                                         complex_count: usize,
-                                         image_mask: *const WrImageMask)
-                                         -> WrClipRegionToken {
-    assert!(unsafe { !is_in_render_thread() });
-
-    let main = main.into();
-    let complex_slice = make_slice(complex, complex_count);
-    let complex_iter = complex_slice.iter().map(|x| x.into());
-    let mask = unsafe { image_mask.as_ref() }.map(|x| x.into());
-
-    let clip_region = state.frame_builder.dl_builder.push_clip_region(&main, complex_iter, mask);
-
-    clip_region.into()
-}
-
-#[no_mangle]
 pub extern "C" fn wr_dp_push_stacking_context(state: &mut WrState,
                                               bounds: WrRect,
                                               animation_id: u64,
@@ -1365,6 +1327,8 @@ pub extern "C" fn wr_dp_pop_stacking_context(state: &mut WrState) {
 #[no_mangle]
 pub extern "C" fn wr_dp_push_clip(state: &mut WrState,
                                   rect: WrRect,
+                                  complex: *const WrComplexClipRegion,
+                                  complex_count: usize,
                                   mask: *const WrImageMask)
                                   -> u64 {
     assert!(unsafe { is_in_main_thread() });
@@ -1375,13 +1339,14 @@ pub extern "C" fn wr_dp_push_clip(state: &mut WrState,
     // Since the clip_rect is the same as the content_rect we can just set the
     // origin to zero.
     let clip_rect = LayoutRect::new(LayoutPoint::zero(), content_rect.size);
+    let complex_slice = make_slice(complex, complex_count);
+    let complex_iter = complex_slice.iter().map(|x| x.into());
     let mut mask : Option<ImageMask> = unsafe { mask.as_ref() }.map(|x| x.into());
     if let Some(ref mut m) = mask {
         m.rect.origin = m.rect.origin - content_rect.origin.to_vector();
     }
 
-    let clip_region = state.frame_builder.dl_builder.push_clip_region(&clip_rect, vec![], mask);
-    let clip_id = state.frame_builder.dl_builder.define_clip(content_rect, clip_region, None);
+    let clip_id = state.frame_builder.dl_builder.define_clip(None, content_rect, clip_rect, complex_iter, mask);
     state.frame_builder.dl_builder.push_clip_id(clip_id);
     // return the u64 id value from inside the ClipId::Clip(..)
     match clip_id {
@@ -1418,8 +1383,7 @@ pub extern "C" fn wr_dp_push_scroll_layer(state: &mut WrState,
         let mut clip_rect: LayoutRect = clip_rect.into();
         clip_rect.origin = clip_rect.origin - content_rect.origin.to_vector();
 
-        let clip_region = state.frame_builder.dl_builder.push_clip_region(&clip_rect, vec![], None);
-        state.frame_builder.dl_builder.define_clip(content_rect, clip_region, Some(clip_id));
+        state.frame_builder.dl_builder.define_clip(Some(clip_id), content_rect, clip_rect, vec![], None);
         state.frame_builder.scroll_clips_defined.insert(clip_id);
     }
     state.frame_builder.dl_builder.push_clip_id(clip_id);
@@ -1466,17 +1430,16 @@ pub extern "C" fn wr_dp_pop_clip_and_scroll_info(state: &mut WrState) {
 #[no_mangle]
 pub extern "C" fn wr_dp_push_iframe(state: &mut WrState,
                                     rect: WrRect,
-                                    clip: WrClipRegionToken,
                                     pipeline_id: WrPipelineId) {
     assert!(unsafe { is_in_main_thread() });
 
-    state.frame_builder.dl_builder.push_iframe(rect.into(), clip.into(), pipeline_id);
+    state.frame_builder.dl_builder.push_iframe(rect.into(), pipeline_id);
 }
 
 #[no_mangle]
 pub extern "C" fn wr_dp_push_rect(state: &mut WrState,
                                   rect: WrRect,
-                                  clip: WrClipRegionToken,
+                                  clip: WrRect,
                                   color: WrColor) {
     assert!(unsafe { !is_in_render_thread() });
 
@@ -1486,7 +1449,7 @@ pub extern "C" fn wr_dp_push_rect(state: &mut WrState,
 #[no_mangle]
 pub extern "C" fn wr_dp_push_image(state: &mut WrState,
                                    bounds: WrRect,
-                                   clip: WrClipRegionToken,
+                                   clip: WrRect,
                                    stretch_size: WrSize,
                                    tile_spacing: WrSize,
                                    image_rendering: WrImageRendering,
@@ -1507,7 +1470,7 @@ pub extern "C" fn wr_dp_push_image(state: &mut WrState,
 #[no_mangle]
 pub extern "C" fn wr_dp_push_yuv_planar_image(state: &mut WrState,
                                               bounds: WrRect,
-                                              clip: WrClipRegionToken,
+                                              clip: WrRect,
                                               image_key_0: WrImageKey,
                                               image_key_1: WrImageKey,
                                               image_key_2: WrImageKey,
@@ -1528,7 +1491,7 @@ pub extern "C" fn wr_dp_push_yuv_planar_image(state: &mut WrState,
 #[no_mangle]
 pub extern "C" fn wr_dp_push_yuv_NV12_image(state: &mut WrState,
                                             bounds: WrRect,
-                                            clip: WrClipRegionToken,
+                                            clip: WrRect,
                                             image_key_0: WrImageKey,
                                             image_key_1: WrImageKey,
                                             color_space: WrYuvColorSpace,
@@ -1548,7 +1511,7 @@ pub extern "C" fn wr_dp_push_yuv_NV12_image(state: &mut WrState,
 #[no_mangle]
 pub extern "C" fn wr_dp_push_yuv_interleaved_image(state: &mut WrState,
                                                    bounds: WrRect,
-                                                   clip: WrClipRegionToken,
+                                                   clip: WrRect,
                                                    image_key_0: WrImageKey,
                                                    color_space: WrYuvColorSpace,
                                                    image_rendering: WrImageRendering) {
@@ -1566,7 +1529,7 @@ pub extern "C" fn wr_dp_push_yuv_interleaved_image(state: &mut WrState,
 #[no_mangle]
 pub extern "C" fn wr_dp_push_text(state: &mut WrState,
                                   bounds: WrRect,
-                                  clip: WrClipRegionToken,
+                                  clip: WrRect,
                                   color: WrColor,
                                   font_key: WrFontKey,
                                   glyphs: *const WrGlyphInstance,
@@ -1595,7 +1558,7 @@ pub extern "C" fn wr_dp_push_text(state: &mut WrState,
 #[no_mangle]
 pub extern "C" fn wr_dp_push_border(state: &mut WrState,
                                     rect: WrRect,
-                                    clip: WrClipRegionToken,
+                                    clip: WrRect,
                                     widths: WrBorderWidths,
                                     top: WrBorderSide,
                                     right: WrBorderSide,
@@ -1619,7 +1582,7 @@ pub extern "C" fn wr_dp_push_border(state: &mut WrState,
 #[no_mangle]
 pub extern "C" fn wr_dp_push_border_image(state: &mut WrState,
                                           rect: WrRect,
-                                          clip: WrClipRegionToken,
+                                          clip: WrRect,
                                           widths: WrBorderWidths,
                                           image: WrImageKey,
                                           patch: WrNinePatchDescriptor,
@@ -1644,7 +1607,7 @@ pub extern "C" fn wr_dp_push_border_image(state: &mut WrState,
 #[no_mangle]
 pub extern "C" fn wr_dp_push_border_gradient(state: &mut WrState,
                                              rect: WrRect,
-                                             clip: WrClipRegionToken,
+                                             clip: WrRect,
                                              widths: WrBorderWidths,
                                              start_point: WrPoint,
                                              end_point: WrPoint,
@@ -1675,7 +1638,7 @@ pub extern "C" fn wr_dp_push_border_gradient(state: &mut WrState,
 #[no_mangle]
 pub extern "C" fn wr_dp_push_border_radial_gradient(state: &mut WrState,
                                                     rect: WrRect,
-                                                    clip: WrClipRegionToken,
+                                                    clip: WrRect,
                                                     widths: WrBorderWidths,
                                                     center: WrPoint,
                                                     radius: WrSize,
@@ -1707,7 +1670,7 @@ pub extern "C" fn wr_dp_push_border_radial_gradient(state: &mut WrState,
 #[no_mangle]
 pub extern "C" fn wr_dp_push_linear_gradient(state: &mut WrState,
                                              rect: WrRect,
-                                             clip: WrClipRegionToken,
+                                             clip: WrRect,
                                              start_point: WrPoint,
                                              end_point: WrPoint,
                                              stops: *const WrGradientStop,
@@ -1737,7 +1700,7 @@ pub extern "C" fn wr_dp_push_linear_gradient(state: &mut WrState,
 #[no_mangle]
 pub extern "C" fn wr_dp_push_radial_gradient(state: &mut WrState,
                                              rect: WrRect,
-                                             clip: WrClipRegionToken,
+                                             clip: WrRect,
                                              center: WrPoint,
                                              radius: WrSize,
                                              stops: *const WrGradientStop,
@@ -1767,7 +1730,7 @@ pub extern "C" fn wr_dp_push_radial_gradient(state: &mut WrState,
 #[no_mangle]
 pub extern "C" fn wr_dp_push_box_shadow(state: &mut WrState,
                                         rect: WrRect,
-                                        clip: WrClipRegionToken,
+                                        clip: WrRect,
                                         box_bounds: WrRect,
                                         offset: WrPoint,
                                         color: WrColor,
