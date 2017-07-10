@@ -27,7 +27,7 @@ nsresult xpcJSWeakReference::Init(JSContext* cx, const JS::Value& object)
     XPCCallContext ccx(cx);
 
     // See if the object is a wrapped native that supports weak references.
-    nsISupports* supports = xpc::UnwrapReflectorToISupports(obj);
+    nsCOMPtr<nsISupports> supports = xpc::UnwrapReflectorToISupports(obj);
     nsCOMPtr<nsISupportsWeakReference> supportsWeakRef =
         do_QueryInterface(supports);
     if (supportsWeakRef) {
