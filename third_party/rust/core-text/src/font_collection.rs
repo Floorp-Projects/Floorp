@@ -18,11 +18,12 @@ use core_foundation::number::CFNumber;
 use core_foundation::set::CFSet;
 use core_foundation::string::{CFString, CFStringRef};
 
+use libc::c_void;
 use std::mem;
 use std::ptr;
 
 #[repr(C)]
-struct __CTFontCollection;
+pub struct __CTFontCollection(c_void);
 
 pub type CTFontCollectionRef = *const __CTFontCollection;
 
