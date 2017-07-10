@@ -488,63 +488,6 @@ impl<'a> Into<ComplexClipRegion> for &'a WrComplexClipRegion {
     }
 }
 
-#[repr(C)]
-#[derive(Debug, Clone, Copy)]
-pub struct WrClipRegion {
-    main: WrRect,
-    complex: ItemRange<ComplexClipRegion>,
-    complex_count: usize,
-    image_mask: WrImageMask,
-    has_image_mask: bool,
-}
-
-impl Into<ClipRegion> for WrClipRegion {
-    fn into(self) -> ClipRegion {
-        ClipRegion {
-            main: self.main.into(),
-            complex_clips: self.complex,
-            complex_clip_count: self.complex_count,
-            image_mask: if self.has_image_mask {
-                Some(self.image_mask.into())
-            } else {
-                None
-            },
-        }
-    }
-}
-impl From<ClipRegion> for WrClipRegion {
-    fn from(clip_region: ClipRegion) -> Self {
-        if let Some(image_mask) = clip_region.image_mask {
-            WrClipRegion {
-                main: clip_region.main.into(),
-                complex: clip_region.complex_clips,
-                complex_count: clip_region.complex_clip_count,
-                image_mask: image_mask.into(),
-                has_image_mask: true,
-            }
-        } else {
-            let blank = WrImageMask {
-                image: ImageKey(0, 0),
-                rect: WrRect {
-                    x: 0f32,
-                    y: 0f32,
-                    width: 0f32,
-                    height: 0f32,
-                },
-                repeat: false,
-            };
-
-            WrClipRegion {
-                main: clip_region.main.into(),
-                complex: clip_region.complex_clips,
-                complex_count: clip_region.complex_clip_count,
-                image_mask: blank,
-                has_image_mask: false,
-            }
-        }
-    }
-}
-
 #[repr(u32)]
 #[allow(dead_code)]
 enum WrExternalImageType {
@@ -1332,21 +1275,12 @@ pub extern "C" fn wr_dp_push_clip(state: &mut WrState,
                                   mask: *const WrImageMask)
                                   -> u64 {
     assert!(unsafe { is_in_main_thread() });
-    let content_rect: LayoutRect = rect.into();
-
-    // Both the clip rect and mask rect need to be relative to the
-    // content rect when the clip region is being used as part of a clip item.
-    // Since the clip_rect is the same as the content_rect we can just set the
-    // origin to zero.
-    let clip_rect = LayoutRect::new(LayoutPoint::zero(), content_rect.size);
+    let clip_rect: LayoutRect = rect.into();
     let complex_slice = make_slice(complex, complex_count);
     let complex_iter = complex_slice.iter().map(|x| x.into());
-    let mut mask : Option<ImageMask> = unsafe { mask.as_ref() }.map(|x| x.into());
-    if let Some(ref mut m) = mask {
-        m.rect.origin = m.rect.origin - content_rect.origin.to_vector();
-    }
+    let mask : Option<ImageMask> = unsafe { mask.as_ref() }.map(|x| x.into());
 
-    let clip_id = state.frame_builder.dl_builder.define_clip(None, content_rect, clip_rect, complex_iter, mask);
+    let clip_id = state.frame_builder.dl_builder.define_clip(None, clip_rect, complex_iter, mask);
     state.frame_builder.dl_builder.push_clip_id(clip_id);
     // return the u64 id value from inside the ClipId::Clip(..)
     match clip_id {
@@ -1376,12 +1310,7 @@ pub extern "C" fn wr_dp_push_scroll_layer(state: &mut WrState,
     // results in undefined behaviour or assertion failures.
     if !state.frame_builder.scroll_clips_defined.contains(&clip_id) {
         let content_rect: LayoutRect = content_rect.into();
-
-        // Both the clip rect and mask rect need to be relative to the
-        // content_rect when the clip region is being used as part of a clip
-        // item. In this case there is no mask rect so that's a no-op.
-        let mut clip_rect: LayoutRect = clip_rect.into();
-        clip_rect.origin = clip_rect.origin - content_rect.origin.to_vector();
+        let clip_rect: LayoutRect = clip_rect.into();
 
         state.frame_builder.dl_builder.define_scroll_frame(Some(clip_id), content_rect, clip_rect, vec![], None);
         state.frame_builder.scroll_clips_defined.insert(clip_id);
