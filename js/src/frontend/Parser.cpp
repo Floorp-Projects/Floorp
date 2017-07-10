@@ -4521,7 +4521,12 @@ Parser<ParseHandler, CharT>::objectBindingPattern(DeclarationKind kind,
             if (!tokenStream.getToken(&tt))
                 return null();
 
-            Node inner = bindingIdentifierOrPattern(kind, yieldHandling, tt);
+            if (!TokenKindIsPossibleIdentifierName(tt)) {
+                error(JSMSG_NO_VARIABLE_NAME);
+                return null();
+            }
+
+            Node inner = bindingIdentifier(kind, yieldHandling);
             if (!inner)
                 return null();
 
@@ -9481,7 +9486,8 @@ Parser<SyntaxParseHandler, char16_t>::newRegExp()
 template <class ParseHandler, typename CharT>
 void
 Parser<ParseHandler, CharT>::checkDestructuringAssignmentTarget(Node expr, TokenPos exprPos,
-                                                                PossibleError* possibleError)
+                                                                PossibleError* possibleError,
+                                                                TargetBehavior behavior)
 {
     // Return early if a pending destructuring error is already present.
     if (possibleError->hasPendingDestructuringError())
@@ -9507,6 +9513,15 @@ Parser<ParseHandler, CharT>::checkDestructuringAssignmentTarget(Node expr, Token
                 possibleError->setPendingDestructuringWarningAt(exprPos,
                                                                 JSMSG_BAD_STRICT_ASSIGN_EVAL);
             }
+            return;
+        }
+    }
+
+    if (behavior == TargetBehavior::ForbidAssignmentPattern) {
+        if (handler.isUnparenthesizedDestructuringPattern(expr) ||
+            handler.isParenthesizedDestructuringPattern(expr))
+        {
+            possibleError->setPendingDestructuringErrorAt(exprPos, JSMSG_BAD_DESTRUCT_TARGET);
             return;
         }
     }
@@ -9912,8 +9927,10 @@ Parser<ParseHandler, CharT>::objectLiteral(YieldHandling yieldHandling,
                                     possibleError);
             if (!inner)
                 return null();
-            if (possibleError)
-                checkDestructuringAssignmentTarget(inner, innerPos, possibleError);
+            if (possibleError) {
+                checkDestructuringAssignmentTarget(inner, innerPos, possibleError,
+                                                   TargetBehavior::ForbidAssignmentPattern);
+            }
             if (!handler.addSpreadProperty(literal, begin, inner))
                 return null();
         } else {
