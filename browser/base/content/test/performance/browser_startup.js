@@ -92,8 +92,6 @@ const startupPhases = {
   // interacting with the first browser window.
   "before handling user events": {blacklist: {
     modules: new Set([
-      "resource://gre/modules/FxAccounts.jsm",
-      "resource://gre/modules/FxAccountsStorage.jsm",
       "resource://gre/modules/LoginManagerContextMenu.jsm",
       "resource://gre/modules/Task.jsm",
     ]),
