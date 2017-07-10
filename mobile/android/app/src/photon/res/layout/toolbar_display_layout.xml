@@ -29,7 +29,7 @@
         android:paddingStart="@dimen/browser_toolbar_site_security_padding_horizontal"
         android:paddingTop="@dimen/browser_toolbar_site_security_padding_vertical"
         android:scaleType="fitCenter"
-        android:src="@drawable/security_mode_icon" />
+        android:src="@drawable/site_security_icon" />
 
     <org.mozilla.gecko.widget.FadedMultiColorTextView
         android:id="@+id/url_bar_title"
