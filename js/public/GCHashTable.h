@@ -362,6 +362,90 @@ class MutableWrappedPtrOperations<JS::GCHashSet<Args...>, Wrapper>
 
 namespace JS {
 
+// Specialize WeakCache for GCHashMap to provide a barriered map that does not
+// need to be swept immediately.
+template <typename Key, typename Value,
+          typename HashPolicy, typename AllocPolicy, typename MapSweepPolicy>
+class WeakCache<GCHashMap<Key, Value, HashPolicy, AllocPolicy, MapSweepPolicy>>
+  : protected detail::WeakCacheBase
+{
+    using MainMap = GCHashMap<Key, Value, HashPolicy, AllocPolicy, MapSweepPolicy>;
+    using Self = WeakCache<MainMap>;
+
+    MainMap map;
+
+  public:
+    template <typename... Args>
+    explicit WeakCache(Zone* zone, Args&&... args)
+      : WeakCacheBase(zone), map(mozilla::Forward<Args>(args)...)
+    {}
+    template <typename... Args>
+    explicit WeakCache(JSRuntime* rt, Args&&... args)
+      : WeakCacheBase(rt), map(mozilla::Forward<Args>(args)...)
+    {}
+
+    bool needsSweep() override {
+        return map.needsSweep();
+    }
+
+    void sweep() override {
+        return map.sweep();
+    }
+
+    using Lookup = typename MainMap::Lookup;
+    using AddPtr = typename MainMap::AddPtr;
+    using Ptr = typename MainMap::Ptr;
+    using Range = typename MainMap::Range;
+    struct Enum : public MainMap::Enum { explicit Enum(Self& self) : MainMap::Enum(self.map) {} };
+
+    bool initialized() const                   { return map.initialized(); }
+    Ptr lookup(const Lookup& l) const          { return map.lookup(l); }
+    AddPtr lookupForAdd(const Lookup& l) const { return map.lookupForAdd(l); }
+    Range all() const                          { return map.all(); }
+    bool empty() const                         { return map.empty(); }
+    uint32_t count() const                     { return map.count(); }
+    size_t capacity() const                    { return map.capacity(); }
+    bool has(const Lookup& l) const            { return map.lookup(l).found(); }
+    size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const {
+        return map.sizeOfExcludingThis(mallocSizeOf);
+    }
+    size_t sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const {
+        return mallocSizeOf(this) + map.sizeOfExcludingThis(mallocSizeOf);
+    }
+
+    bool init(uint32_t len = 16) { return map.init(len); }
+    void clear()                 { map.clear(); }
+    void finish()                { map.finish(); }
+    void remove(Ptr p)           { map.remove(p); }
+
+    template<typename KeyInput, typename ValueInput>
+    bool add(AddPtr& p, KeyInput&& k, ValueInput&& v) {
+        return map.add(p, mozilla::Forward<KeyInput>(k), mozilla::Forward<ValueInput>(v));
+    }
+
+    template<typename KeyInput>
+    bool add(AddPtr& p, KeyInput&& k) {
+        return map.add(p, mozilla::Forward<KeyInput>(k), MainMap::Value());
+    }
+
+    template<typename KeyInput, typename ValueInput>
+    bool relookupOrAdd(AddPtr& p, KeyInput&& k, ValueInput&& v) {
+        return map.relookupOrAdd(p, k,
+                                   mozilla::Forward<KeyInput>(k),
+                                   mozilla::Forward<ValueInput>(v));
+    }
+
+    template<typename KeyInput, typename ValueInput>
+    bool put(KeyInput&& k, ValueInput&& v) {
+        return map.put(mozilla::Forward<KeyInput>(k), mozilla::Forward<ValueInput>(v));
+    }
+
+    template<typename KeyInput, typename ValueInput>
+    bool putNew(KeyInput&& k, ValueInput&& v) {
+        return map.putNew(mozilla::Forward<KeyInput>(k), mozilla::Forward<ValueInput>(v));
+    }
+};
+
 // Specialize WeakCache for GCHashSet to provide a barriered set that does not
 // need to be swept immediately.
 template <typename T, typename HashPolicy, typename AllocPolicy>
