@@ -95,7 +95,7 @@ AnimationEffectReadOnly::GetComputedTimingAt(
     const TimingParams& aTiming,
     double aPlaybackRate)
 {
-  const StickyTimeDuration zeroDuration;
+  static const StickyTimeDuration zeroDuration;
 
   // Always return the same object to benefit from return-value optimization.
   ComputedTiming result;
