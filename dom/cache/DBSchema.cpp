@@ -10,6 +10,7 @@
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/dom/HeadersBinding.h"
 #include "mozilla/dom/InternalHeaders.h"
+#include "mozilla/dom/InternalResponse.h"
 #include "mozilla/dom/RequestBinding.h"
 #include "mozilla/dom/ResponseBinding.h"
 #include "mozilla/dom/cache/CacheTypes.h"
@@ -320,6 +321,7 @@ static nsresult DeleteEntries(mozIStorageConnection* aConn,
                               const nsTArray<EntryId>& aEntryIdList,
                               nsTArray<nsID>& aDeletedBodyIdListOut,
                               nsTArray<IdCount>& aDeletedSecurityIdListOut,
+                              int64_t* aDeletedPaddingSizeOut,
                               uint32_t aPos=0, int32_t aLen=-1);
 static nsresult InsertSecurityInfo(mozIStorageConnection* aConn,
                                    nsICryptoHash* aCrypto,
@@ -599,10 +601,12 @@ CreateCacheId(mozIStorageConnection* aConn, CacheId* aCacheIdOut)
 
 nsresult
 DeleteCacheId(mozIStorageConnection* aConn, CacheId aCacheId,
-              nsTArray<nsID>& aDeletedBodyIdListOut)
+              nsTArray<nsID>& aDeletedBodyIdListOut,
+              int64_t* aDeletedPaddingSizeOut)
 {
   MOZ_ASSERT(!NS_IsMainThread());
   MOZ_DIAGNOSTIC_ASSERT(aConn);
+  MOZ_DIAGNOSTIC_ASSERT(aDeletedPaddingSizeOut);
 
   // Delete the bodies explicitly as we need to read out the body IDs
   // anyway.  These body IDs must be deleted one-by-one as content may
@@ -612,9 +616,12 @@ DeleteCacheId(mozIStorageConnection* aConn, CacheId aCacheId,
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
   AutoTArray<IdCount, 16> deletedSecurityIdList;
+  int64_t deletedPaddingSize = 0;
   rv = DeleteEntries(aConn, matches, aDeletedBodyIdListOut,
-                     deletedSecurityIdList);
+                     deletedSecurityIdList, &deletedPaddingSize);
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+
+  *aDeletedPaddingSizeOut = deletedPaddingSize;
 
   rv = DeleteSecurityInfoList(aConn, deletedSecurityIdList);
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
@@ -793,10 +800,12 @@ CachePut(mozIStorageConnection* aConn, CacheId aCacheId,
          const nsID* aRequestBodyId,
          const CacheResponse& aResponse,
          const nsID* aResponseBodyId,
-         nsTArray<nsID>& aDeletedBodyIdListOut)
+         nsTArray<nsID>& aDeletedBodyIdListOut,
+         int64_t* aDeletedPaddingSizeOut)
 {
   MOZ_ASSERT(!NS_IsMainThread());
   MOZ_DIAGNOSTIC_ASSERT(aConn);
+  MOZ_DIAGNOSTIC_ASSERT(aDeletedPaddingSizeOut);
 
   CacheQueryParams params(false, false, false, false,
                            NS_LITERAL_STRING(""));
@@ -805,8 +814,9 @@ CachePut(mozIStorageConnection* aConn, CacheId aCacheId,
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
   AutoTArray<IdCount, 16> deletedSecurityIdList;
+  int64_t deletedPaddingSize = 0;
   rv = DeleteEntries(aConn, matches, aDeletedBodyIdListOut,
-                     deletedSecurityIdList);
+                     deletedSecurityIdList, &deletedPaddingSize);
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
   rv = InsertEntry(aConn, aCacheId, aRequest, aRequestBodyId, aResponse,
@@ -818,6 +828,8 @@ CachePut(mozIStorageConnection* aConn, CacheId aCacheId,
   rv = DeleteSecurityInfoList(aConn, deletedSecurityIdList);
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
+  *aDeletedPaddingSizeOut = deletedPaddingSize;
+
   return rv;
 }
 
@@ -825,10 +837,12 @@ nsresult
 CacheDelete(mozIStorageConnection* aConn, CacheId aCacheId,
             const CacheRequest& aRequest,
             const CacheQueryParams& aParams,
-            nsTArray<nsID>& aDeletedBodyIdListOut, bool* aSuccessOut)
+            nsTArray<nsID>& aDeletedBodyIdListOut,
+            int64_t* aDeletedPaddingSizeOut, bool* aSuccessOut)
 {
   MOZ_ASSERT(!NS_IsMainThread());
   MOZ_DIAGNOSTIC_ASSERT(aConn);
+  MOZ_DIAGNOSTIC_ASSERT(aDeletedPaddingSizeOut);
   MOZ_DIAGNOSTIC_ASSERT(aSuccessOut);
 
   *aSuccessOut = false;
@@ -842,9 +856,12 @@ CacheDelete(mozIStorageConnection* aConn, CacheId aCacheId,
   }
 
   AutoTArray<IdCount, 16> deletedSecurityIdList;
+  int64_t deletedPaddingSize = 0;
   rv = DeleteEntries(aConn, matches, aDeletedBodyIdListOut,
-                     deletedSecurityIdList);
+                     deletedSecurityIdList, &deletedPaddingSize);
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+
+  *aDeletedPaddingSizeOut = deletedPaddingSize;
 
   rv = DeleteSecurityInfoList(aConn, deletedSecurityIdList);
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
@@ -1334,10 +1351,12 @@ DeleteEntries(mozIStorageConnection* aConn,
               const nsTArray<EntryId>& aEntryIdList,
               nsTArray<nsID>& aDeletedBodyIdListOut,
               nsTArray<IdCount>& aDeletedSecurityIdListOut,
+              int64_t* aDeletedPaddingSizeOut,
               uint32_t aPos, int32_t aLen)
 {
   MOZ_ASSERT(!NS_IsMainThread());
   MOZ_DIAGNOSTIC_ASSERT(aConn);
+  MOZ_DIAGNOSTIC_ASSERT(aDeletedPaddingSizeOut);
 
   if (aEntryIdList.IsEmpty()) {
     return NS_OK;
@@ -1352,24 +1371,36 @@ DeleteEntries(mozIStorageConnection* aConn,
   // Sqlite limits the number of entries allowed for an IN clause,
   // so split up larger operations.
   if (aLen > kMaxEntriesPerStatement) {
+    int64_t overallDeletedPaddingSize = 0;
     uint32_t curPos = aPos;
     int32_t remaining = aLen;
     while (remaining > 0) {
+      int64_t deletedPaddingSize = 0;
       int32_t max = kMaxEntriesPerStatement;
       int32_t curLen = std::min(max, remaining);
       nsresult rv = DeleteEntries(aConn, aEntryIdList, aDeletedBodyIdListOut,
-                                  aDeletedSecurityIdListOut, curPos, curLen);
+                                  aDeletedSecurityIdListOut,
+                                  &deletedPaddingSize, curPos, curLen);
       if (NS_FAILED(rv)) { return rv; }
 
+      MOZ_DIAGNOSTIC_ASSERT(INT64_MAX - deletedPaddingSize >=
+                            overallDeletedPaddingSize);
+      overallDeletedPaddingSize += deletedPaddingSize;
       curPos += curLen;
       remaining -= curLen;
     }
+
+    *aDeletedPaddingSizeOut += overallDeletedPaddingSize;
     return NS_OK;
   }
 
   nsCOMPtr<mozIStorageStatement> state;
   nsAutoCString query(
-    "SELECT request_body_id, response_body_id, response_security_info_id "
+    "SELECT "
+      "request_body_id, "
+      "response_body_id, "
+      "response_security_info_id, "
+      "response_padding_size "
     "FROM entries WHERE id IN ("
   );
   AppendListParamsToQuery(query, aEntryIdList, aPos, aLen);
@@ -1381,6 +1412,7 @@ DeleteEntries(mozIStorageConnection* aConn,
   rv = BindListParamsToQuery(state, aEntryIdList, aPos, aLen);
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
+  int64_t overallPaddingSize = 0;
   bool hasMoreData = false;
   while (NS_SUCCEEDED(state->ExecuteStep(&hasMoreData)) && hasMoreData) {
     // extract 0 to 2 nsID structs per row
@@ -1424,7 +1456,23 @@ DeleteEntries(mozIStorageConnection* aConn,
         aDeletedSecurityIdListOut.AppendElement(IdCount(securityId));
       }
     }
+
+    // It's possible to have null padding size for non-opaque response
+    rv = state->GetIsNull(3, &isNull);
+    if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+
+    if (!isNull) {
+      int64_t paddingSize = 0;
+      rv = state->GetInt64(3, &paddingSize);
+      if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+
+      MOZ_DIAGNOSTIC_ASSERT(paddingSize >= 0);
+      MOZ_DIAGNOSTIC_ASSERT(INT64_MAX - overallPaddingSize >= paddingSize);
+      overallPaddingSize += paddingSize;
+    }
   }
+
+  *aDeletedPaddingSizeOut = overallPaddingSize;
 
   // Dependent records removed via ON DELETE CASCADE
 
@@ -1671,6 +1719,7 @@ InsertEntry(mozIStorageConnection* aConn, CacheId aCacheId,
       "response_body_id, "
       "response_security_info_id, "
       "response_principal_info, "
+      "response_padding_size, "
       "cache_id "
     ") VALUES ("
       ":request_method, "
@@ -1696,6 +1745,7 @@ InsertEntry(mozIStorageConnection* aConn, CacheId aCacheId,
       ":response_body_id, "
       ":response_security_info_id, "
       ":response_principal_info, "
+      ":response_padding_size, "
       ":cache_id "
     ");"
   ), getter_AddRefs(state));
@@ -1813,6 +1863,18 @@ InsertEntry(mozIStorageConnection* aConn, CacheId aCacheId,
                                    serializedInfo);
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
+  if (aResponse.paddingSize() == InternalResponse::UNKNOWN_PADDING_SIZE) {
+    MOZ_DIAGNOSTIC_ASSERT(aResponse.type() != ResponseType::Opaque);
+    rv = state->BindNullByName(NS_LITERAL_CSTRING("response_padding_size"));
+  } else {
+    MOZ_DIAGNOSTIC_ASSERT(aResponse.paddingSize() >= 0);
+    MOZ_DIAGNOSTIC_ASSERT(aResponse.type() == ResponseType::Opaque);
+
+    rv = state->BindInt64ByName(NS_LITERAL_CSTRING("response_padding_size"),
+                                aResponse.paddingSize());
+  }
+  if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+
   rv = state->BindInt64ByName(NS_LITERAL_CSTRING("cache_id"), aCacheId);
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
@@ -1898,7 +1960,7 @@ InsertEntry(mozIStorageConnection* aConn, CacheId aCacheId,
                                      responseUrlList[i]);
     if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
-    rv = state->BindInt64ByName(NS_LITERAL_CSTRING("entry_id"), entryId);
+    rv = state->BindInt32ByName(NS_LITERAL_CSTRING("entry_id"), entryId);
     if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
     rv = state->Execute();
@@ -1925,6 +1987,7 @@ ReadResponse(mozIStorageConnection* aConn, EntryId aEntryId,
       "entries.response_headers_guard, "
       "entries.response_body_id, "
       "entries.response_principal_info, "
+      "entries.response_padding_size, "
       "security_info.data "
     "FROM entries "
     "LEFT OUTER JOIN security_info "
@@ -1986,7 +2049,27 @@ ReadResponse(mozIStorageConnection* aConn, EntryId aEntryId,
       mozilla::ipc::ContentPrincipalInfo(attrs, void_t(), specNoSuffix);
   }
 
-  rv = state->GetBlobAsUTF8String(6, aSavedResponseOut->mValue.channelInfo().securityInfo());
+  bool nullPadding = false;
+  rv = state->GetIsNull(6, &nullPadding);
+  if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+
+  if (nullPadding) {
+    MOZ_DIAGNOSTIC_ASSERT(aSavedResponseOut->mValue.type() !=
+                          ResponseType::Opaque);
+    aSavedResponseOut->mValue.paddingSize() =
+      InternalResponse::UNKNOWN_PADDING_SIZE;
+  } else {
+    MOZ_DIAGNOSTIC_ASSERT(aSavedResponseOut->mValue.type() ==
+                          ResponseType::Opaque);
+    int64_t paddingSize = 0;
+    rv = state->GetInt64(6, &paddingSize);
+    if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+
+    MOZ_DIAGNOSTIC_ASSERT(paddingSize >= 0);
+    aSavedResponseOut->mValue.paddingSize() = paddingSize;
+  }
+
+  rv = state->GetBlobAsUTF8String(7, aSavedResponseOut->mValue.channelInfo().securityInfo());
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
   rv = aConn->CreateStatement(NS_LITERAL_CSTRING(
