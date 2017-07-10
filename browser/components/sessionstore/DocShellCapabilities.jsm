@@ -19,6 +19,8 @@ this.DocShellCapabilities = Object.freeze({
   },
 });
 
+const CAPABILITIES_TO_IGNORE = new Set(["Javascript"]);
+
 /**
  * Internal functionality to save and restore the docShell.allow* properties.
  */
@@ -39,7 +41,8 @@ var DocShellCapabilitiesInternal = {
 
   collect(docShell) {
     let caps = this.allCapabilities(docShell);
-    return caps.filter(cap => !docShell["allow" + cap]);
+    return caps.filter(cap => !docShell["allow" + cap]
+                              && !CAPABILITIES_TO_IGNORE.has(cap));
   },
 
   restore(docShell, disallow) {
