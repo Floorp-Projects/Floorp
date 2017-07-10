@@ -1075,19 +1075,17 @@ var gEditItemOverlay = {
     this._initTextField(this._tagsField, tags.join(", "));
   },
 
-  _onTagsChange(aItemId) {
+  _onTagsChange(aItemId, aChangedURI = null) {
     let paneInfo = this._paneInfo;
     let updateTagsField = false;
     if (paneInfo.isURI) {
       if (paneInfo.isBookmark && aItemId == paneInfo.itemId) {
         updateTagsField = true;
       } else if (!paneInfo.isBookmark) {
-        let changedURI = PlacesUtils.bookmarks.getBookmarkURI(aItemId);
-        updateTagsField = changedURI.equals(paneInfo.uri);
+        updateTagsField = aChangedURI && aChangedURI.equals(paneInfo.uri);
       }
     } else if (paneInfo.bulkTagging) {
-      let changedURI = PlacesUtils.bookmarks.getBookmarkURI(aItemId);
-      if (paneInfo.uris.some(uri => uri.equals(changedURI))) {
+      if (aChangedURI && paneInfo.uris.some(uri => uri.equals(aChangedURI))) {
         updateTagsField = true;
         delete this._paneInfo._cachedCommonTags;
       }
@@ -1145,7 +1143,7 @@ var gEditItemOverlay = {
 
         if (this._paneInfo.visibleRows.has("tagsRow")) {
           delete this._paneInfo._cachedCommonTags;
-          this._onTagsChange(aItemId);
+          this._onTagsChange(aItemId, newURI);
         }
       }
       break;
