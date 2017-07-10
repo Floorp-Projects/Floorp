@@ -284,11 +284,11 @@ template <typename Wrapper, typename... Args>
 class WrappedPtrOperations<JS::GCHashSet<Args...>, Wrapper>
 {
     using Set = JS::GCHashSet<Args...>;
-    using Lookup = typename Set::Lookup;
 
     const Set& set() const { return static_cast<const Wrapper*>(this)->get(); }
 
   public:
+    using Lookup = typename Set::Lookup;
     using AddPtr = typename Set::AddPtr;
     using Entry = typename Set::Entry;
     using Ptr = typename Set::Ptr;
@@ -359,5 +359,97 @@ class MutableWrappedPtrOperations<JS::GCHashSet<Args...>, Wrapper>
 };
 
 } /* namespace js */
+
+namespace JS {
+
+// Specialize WeakCache for GCHashSet to provide a barriered set that does not
+// need to be swept immediately.
+template <typename T, typename HashPolicy, typename AllocPolicy>
+class WeakCache<GCHashSet<T, HashPolicy, AllocPolicy>>
+    : protected detail::WeakCacheBase
+{
+    using Set = GCHashSet<T, HashPolicy, AllocPolicy>;
+    using Self = WeakCache<Set>;
+
+    Set set;
+
+  public:
+    template <typename... Args>
+    explicit WeakCache(Zone* zone, Args&&... args)
+      : WeakCacheBase(zone), set(mozilla::Forward<Args>(args)...)
+    {}
+    template <typename... Args>
+    explicit WeakCache(JSRuntime* rt, Args&&... args)
+      : WeakCacheBase(rt), set(mozilla::Forward<Args>(args)...)
+    {}
+
+    void sweep() override {
+        set.sweep();
+    }
+
+    bool needsSweep() override {
+        return set.needsSweep();
+    }
+
+    // Const interface.
+
+    using Lookup = typename Set::Lookup;
+    using AddPtr = typename Set::AddPtr;
+    using Entry = typename Set::Entry;
+    using Ptr = typename Set::Ptr;
+    using Range = typename Set::Range;
+
+    bool initialized() const                   { return set.initialized(); }
+    Ptr lookup(const Lookup& l) const          { return set.lookup(l); }
+    AddPtr lookupForAdd(const Lookup& l) const { return set.lookupForAdd(l); }
+    Range all() const                          { return set.all(); }
+    bool empty() const                         { return set.empty(); }
+    uint32_t count() const                     { return set.count(); }
+    size_t capacity() const                    { return set.capacity(); }
+    bool has(const Lookup& l) const            { return set.lookup(l).found(); }
+    size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const {
+        return set.sizeOfExcludingThis(mallocSizeOf);
+    }
+    size_t sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const {
+        return mallocSizeOf(this) + set.sizeOfExcludingThis(mallocSizeOf);
+    }
+
+    // Non-const interface.
+
+    struct Enum : public Set::Enum { explicit Enum(Self& o) : Set::Enum(o.set) {} };
+
+    bool init(uint32_t len = 16) { return set.init(len); }
+    void clear()                 { set.clear(); }
+    void finish()                { set.finish(); }
+    void remove(Ptr p)           { set.remove(p); }
+    void remove(const Lookup& l) { set.remove(l); }
+
+    template<typename TInput>
+    bool add(AddPtr& p, TInput&& t) {
+        return set.add(p, mozilla::Forward<TInput>(t));
+    }
+
+    template<typename TInput>
+    bool relookupOrAdd(AddPtr& p, const Lookup& l, TInput&& t) {
+        return set.relookupOrAdd(p, l, mozilla::Forward<TInput>(t));
+    }
+
+    template<typename TInput>
+    bool put(TInput&& t) {
+        return set.put(mozilla::Forward<TInput>(t));
+    }
+
+    template<typename TInput>
+    bool putNew(TInput&& t) {
+        return set.putNew(mozilla::Forward<TInput>(t));
+    }
+
+    template<typename TInput>
+    bool putNew(const Lookup& l, TInput&& t) {
+        return set.putNew(l, mozilla::Forward<TInput>(t));
+    }
+};
+
+} // namespace JS
 
 #endif /* GCHashTable_h */
