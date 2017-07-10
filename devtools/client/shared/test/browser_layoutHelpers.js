@@ -6,7 +6,7 @@
 // Tests that scrollIntoViewIfNeeded works properly.
 const {scrollIntoViewIfNeeded} = require("devtools/client/shared/scroll");
 
-const TEST_URI = TEST_URI_ROOT + "browser_layoutHelpers.html";
+const TEST_URI = TEST_URI_ROOT + "doc_layoutHelpers.html";
 
 add_task(function* () {
   let [host, win] = yield createHost("bottom", TEST_URI);

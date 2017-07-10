@@ -8,9 +8,7 @@
 
 const {Spectrum} = require("devtools/client/shared/widgets/Spectrum");
 
-const TEST_URI = `data:text/html,
-  <link rel="stylesheet" href="chrome://devtools/content/shared/widgets/spectrum.css" type="text/css"/>
-  <div id="spectrum-container" />`;
+const TEST_URI = CHROME_URL_ROOT + "doc_spectrum.html";
 
 add_task(function* () {
   let [host,, doc] = yield createHost("bottom", TEST_URI);
