@@ -384,7 +384,6 @@ ROLE(RADIOBUTTON,
      ROLE_SYSTEM_RADIOBUTTON,
      eNameFromSubtreeRule)
 
-// Equivalent of HTML select element with size="1". See also EDITCOMBOBOX.
 ROLE(COMBOBOX,
      "combobox",
      ATK_ROLE_COMBO_BOX,
@@ -1408,13 +1407,3 @@ ROLE(REGION,
      USE_ROLE_STRING,
      IA2_ROLE_LANDMARK,
      eNoNameRule)
-
-// A composite widget with a text input and popup. Used for ARIA role combobox.
-// See also COMBOBOX.
-ROLE(EDITCOMBOBOX,
-     "editcombobox",
-     ATK_ROLE_COMBO_BOX,
-     NSAccessibilityComboBoxRole,
-     ROLE_SYSTEM_COMBOBOX,
-     ROLE_SYSTEM_COMBOBOX,
-     eNameFromValueRule)
