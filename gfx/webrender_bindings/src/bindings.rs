@@ -1362,7 +1362,7 @@ pub extern "C" fn wr_dp_push_clip(state: &mut WrState,
 #[no_mangle]
 pub extern "C" fn wr_dp_pop_clip(state: &mut WrState) {
     assert!(unsafe { !is_in_render_thread() });
-    state.frame_builder.dl_builder.pop_clip_node();
+    state.frame_builder.dl_builder.pop_clip_id();
 }
 
 #[no_mangle]
@@ -1383,7 +1383,7 @@ pub extern "C" fn wr_dp_push_scroll_layer(state: &mut WrState,
         let mut clip_rect: LayoutRect = clip_rect.into();
         clip_rect.origin = clip_rect.origin - content_rect.origin.to_vector();
 
-        state.frame_builder.dl_builder.define_clip(Some(clip_id), content_rect, clip_rect, vec![], None);
+        state.frame_builder.dl_builder.define_scroll_frame(Some(clip_id), content_rect, clip_rect, vec![], None);
         state.frame_builder.scroll_clips_defined.insert(clip_id);
     }
     state.frame_builder.dl_builder.push_clip_id(clip_id);
