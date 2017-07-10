@@ -57,6 +57,26 @@ FormAutofillHandler.prototype = {
   fieldDetails: null,
 
   /**
+   * Similiar to `fieldDetails`, and `addressFieldDetails` contains the address
+   * records only.
+   */
+  addressFieldDetails: null,
+
+  /**
+   * Similiar to `fieldDetails`, and `creditCardFieldDetails` contains the
+   * Credit Card records only.
+   */
+  creditCardFieldDetails: null,
+
+  get isValidAddressForm() {
+    return this.addressFieldDetails.length > FormAutofillUtils.AUTOFILL_FIELDS_THRESHOLD;
+  },
+
+  get isValidCreditCardForm() {
+    return this.creditCardFieldDetails.some(i => i.fieldName == "cc-number");
+  },
+
+  /**
    * String of the filled profile's guid.
    */
   filledProfileGUID: null,
@@ -95,6 +115,13 @@ FormAutofillHandler.prototype = {
     let fieldDetails = FormAutofillHeuristics.getFormInfo(this.form);
     this.fieldDetails = fieldDetails ? fieldDetails : [];
     log.debug("Collected details on", this.fieldDetails.length, "fields");
+
+    this.addressFieldDetails = this.fieldDetails.filter(
+      detail => FormAutofillUtils.isAddressField(detail.fieldName)
+    );
+    this.creditCardFieldDetails = this.fieldDetails.filter(
+      detail => FormAutofillUtils.isCreditCardField(detail.fieldName)
+    );
   },
 
   getFieldDetailByName(fieldName) {
@@ -167,7 +194,7 @@ FormAutofillHandler.prototype = {
     log.debug("profile in autofillFormFields:", profile);
 
     this.filledProfileGUID = profile.guid;
-    for (let fieldDetail of this.fieldDetails) {
+    for (let fieldDetail of this.addressFieldDetails) {
       // Avoid filling field value in the following cases:
       // 1. the focused input which is filled in FormFillController.
       // 2. a non-empty input field
@@ -228,7 +255,7 @@ FormAutofillHandler.prototype = {
         return;
       }
 
-      for (let fieldDetail of this.fieldDetails) {
+      for (let fieldDetail of this.addressFieldDetails) {
         let element = fieldDetail.elementWeakRef.get();
 
         if (!element) {
@@ -263,7 +290,7 @@ FormAutofillHandler.prototype = {
   previewFormFields(profile) {
     log.debug("preview profile in autofillFormFields:", profile);
 
-    for (let fieldDetail of this.fieldDetails) {
+    for (let fieldDetail of this.addressFieldDetails) {
       let element = fieldDetail.elementWeakRef.get();
       let value = profile[fieldDetail.fieldName] || "";
 
@@ -295,7 +322,7 @@ FormAutofillHandler.prototype = {
   clearPreviewedFormFields() {
     log.debug("clear previewed fields in:", this.form);
 
-    for (let fieldDetail of this.fieldDetails) {
+    for (let fieldDetail of this.addressFieldDetails) {
       let element = fieldDetail.elementWeakRef.get();
       if (!element) {
         log.warn(fieldDetail.fieldName, "is unreachable");
@@ -360,7 +387,7 @@ FormAutofillHandler.prototype = {
   createProfile() {
     let profile = {};
 
-    this.fieldDetails.forEach(detail => {
+    this.addressFieldDetails.forEach(detail => {
       let element = detail.elementWeakRef.get();
       // Remove the unnecessary spaces
       let value = element && element.value.trim();
