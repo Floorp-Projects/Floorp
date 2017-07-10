@@ -16,6 +16,7 @@
 #include "nsTArray.h"
 #include "nsString.h"
 #include "nsPermission.h"
+#include "nsIPrefBranch.h"
 #include "nsHashKeys.h"
 #include "nsCOMArray.h"
 #include "nsDataHashtable.h"
@@ -388,6 +389,8 @@ private:
   // Initially, |false|. Set to |true| once shutdown has started, to avoid
   // reopening the database.
   bool mIsShuttingDown;
+
+  nsCOMPtr<nsIPrefBranch> mDefaultPrefBranch;
 
   friend class DeleteFromMozHostListener;
   friend class CloseDatabaseListener;
