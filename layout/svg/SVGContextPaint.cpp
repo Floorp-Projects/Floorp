@@ -50,18 +50,21 @@ SVGContextPaint::IsAllowedForImageFromURI(nsIURI* aURI)
   // use this feature because we're not sure that image context paint is a
   // good mechanism for wider use, or suitable for specification.)
   //
-  // One case where we may return false here and prevent image context paint
-  // being used by "our" content is in-tree WebExtensions.  These have scheme
-  // 'moz-extension://', but so do other developers' extensions, and we don't
-  // want extension developers coming to rely on image context paint either.
-  // We may be able to provide our in-tree extensions access to context paint
-  // once they are signed. For more information see:
-  // https://bugzilla.mozilla.org/show_bug.cgi?id=1359762#c5
+  // One case that is not covered by chrome:// or resource:// are WebExtensions,
+  // specifically ones that are "ours". WebExtensions are moz-extension://
+  // regardless if the extension is in-tree or not. Since we don't want
+  // extension developers coming to rely on image context paint either, we only
+  // enable context-paint for extensions that are signed by Mozilla.
   //
   nsAutoCString scheme;
   if (NS_SUCCEEDED(aURI->GetScheme(scheme)) &&
       (scheme.EqualsLiteral("chrome") || scheme.EqualsLiteral("resource"))) {
     return true;
+  }
+  RefPtr<BasePrincipal> principal = BasePrincipal::CreateCodebasePrincipal(aURI, OriginAttributes());
+  nsString addonId;
+  if (NS_SUCCEEDED(principal->GetAddonId(addonId))) {
+    return StringEndsWith(addonId, NS_LITERAL_STRING("@mozilla.org"));
   }
   return false;
 }
