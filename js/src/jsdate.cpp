@@ -3095,8 +3095,7 @@ NewDateObject(JSContext* cx, const CallArgs& args, ClippedTime t)
     MOZ_ASSERT(args.isConstructing());
 
     RootedObject proto(cx);
-    RootedObject newTarget(cx, &args.newTarget().toObject());
-    if (!GetPrototypeFromConstructor(cx, newTarget, &proto))
+    if (!GetPrototypeFromBuiltinConstructor(cx, args, &proto))
         return false;
 
     JSObject* obj = NewDateObjectMsec(cx, t, proto);
