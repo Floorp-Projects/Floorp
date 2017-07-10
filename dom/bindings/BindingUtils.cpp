@@ -1716,9 +1716,10 @@ XrayResolveOwnProperty(JSContext* cx, JS::Handle<JSObject*> wrapper,
     // be protected by read-only/non-configurable properties, and any functions
     // we end up with should _always_ be living in our own scope (the XBL scope).
     // Make sure to assert that.
+    JS::Rooted<JSObject*> maybeElement(cx, obj);
     Element* element;
     if (xpc::ObjectScope(wrapper)->IsContentXBLScope() &&
-        NS_SUCCEEDED(UNWRAP_OBJECT(Element, obj, element))) {
+        NS_SUCCEEDED(UNWRAP_OBJECT(Element, &maybeElement, element))) {
       if (!nsContentUtils::LookupBindingMember(cx, element, id, desc)) {
         return false;
       }
@@ -2306,14 +2307,15 @@ ReparentWrapper(JSContext* aCx, JS::Handle<JSObject*> aObjArg)
     }
   }
 
+  JS::Rooted<JSObject*> maybeObjLC(aCx, aObj);
   nsObjectLoadingContent* htmlobject;
-  nsresult rv = UNWRAP_OBJECT(HTMLObjectElement, aObj, htmlobject);
+  nsresult rv = UNWRAP_OBJECT(HTMLObjectElement, &maybeObjLC, htmlobject);
   if (NS_FAILED(rv)) {
     rv = UnwrapObject<prototypes::id::HTMLEmbedElement,
-                      HTMLSharedObjectElement>(aObj, htmlobject);
+                      HTMLSharedObjectElement>(&maybeObjLC, htmlobject);
     if (NS_FAILED(rv)) {
       rv = UnwrapObject<prototypes::id::HTMLAppletElement,
-                        HTMLSharedObjectElement>(aObj, htmlobject);
+                        HTMLSharedObjectElement>(&maybeObjLC, htmlobject);
       if (NS_FAILED(rv)) {
         htmlobject = nullptr;
       }
@@ -2903,9 +2905,16 @@ GenericBindingGetter(JSContext* cx, unsigned argc, JS::Value* vp)
   }
   JS::Rooted<JSObject*> obj(cx, &args.thisv().toObject());
 
+  // NOTE: we want to leave obj in its initial compartment, so don't want to
+  // pass it to UnwrapObject.
+  JS::Rooted<JSObject*> rootSelf(cx, obj);
   void* self;
   {
-    nsresult rv = UnwrapObject<void>(obj, self, protoID, info->depth);
+    binding_detail::MutableObjectHandleWrapper wrapper(&rootSelf);
+    nsresult rv = binding_detail::UnwrapObjectInternal<void, true>(wrapper,
+                                                                   self,
+                                                                   protoID,
+                                                                   info->depth);
     if (NS_FAILED(rv)) {
       return ThrowInvalidThis(cx, args,
                               rv == NS_ERROR_XPC_SECURITY_MANAGER_VETO,
@@ -2942,9 +2951,16 @@ GenericPromiseReturningBindingGetter(JSContext* cx, unsigned argc, JS::Value* vp
   }
   JS::Rooted<JSObject*> obj(cx, &args.thisv().toObject());
 
+  // NOTE: we want to leave obj in its initial compartment, so don't want to
+  // pass it to UnwrapObject.
+  JS::Rooted<JSObject*> rootSelf(cx, obj);
   void* self;
   {
-    nsresult rv = UnwrapObject<void>(obj, self, protoID, info->depth);
+    binding_detail::MutableObjectHandleWrapper wrapper(&rootSelf);
+    nsresult rv = binding_detail::UnwrapObjectInternal<void, true>(wrapper,
+                                                                   self,
+                                                                   protoID,
+                                                                   info->depth);
     if (NS_FAILED(rv)) {
       ThrowInvalidThis(cx, args, rv == NS_ERROR_XPC_SECURITY_MANAGER_VETO,
                        protoID);
@@ -2979,9 +2995,16 @@ GenericBindingSetter(JSContext* cx, unsigned argc, JS::Value* vp)
   }
   JS::Rooted<JSObject*> obj(cx, &args.thisv().toObject());
 
+  // NOTE: we want to leave obj in its initial compartment, so don't want to
+  // pass it to UnwrapObject.
+  JS::Rooted<JSObject*> rootSelf(cx, obj);
   void* self;
   {
-    nsresult rv = UnwrapObject<void>(obj, self, protoID, info->depth);
+    binding_detail::MutableObjectHandleWrapper wrapper(&rootSelf);
+    nsresult rv = binding_detail::UnwrapObjectInternal<void, true>(wrapper,
+                                                                   self,
+                                                                   protoID,
+                                                                   info->depth);
     if (NS_FAILED(rv)) {
       return ThrowInvalidThis(cx, args,
                               rv == NS_ERROR_XPC_SECURITY_MANAGER_VETO,
@@ -3014,9 +3037,16 @@ GenericBindingMethod(JSContext* cx, unsigned argc, JS::Value* vp)
   }
   JS::Rooted<JSObject*> obj(cx, &args.thisv().toObject());
 
+  // NOTE: we want to leave obj in its initial compartment, so don't want to
+  // pass it to UnwrapObject.
+  JS::Rooted<JSObject*> rootSelf(cx, obj);
   void* self;
   {
-    nsresult rv = UnwrapObject<void>(obj, self, protoID, info->depth);
+    binding_detail::MutableObjectHandleWrapper wrapper(&rootSelf);
+    nsresult rv = binding_detail::UnwrapObjectInternal<void, true>(wrapper,
+                                                                   self,
+                                                                   protoID,
+                                                                   info->depth);
     if (NS_FAILED(rv)) {
       return ThrowInvalidThis(cx, args,
                               rv == NS_ERROR_XPC_SECURITY_MANAGER_VETO,
@@ -3052,9 +3082,16 @@ GenericPromiseReturningBindingMethod(JSContext* cx, unsigned argc, JS::Value* vp
   }
   JS::Rooted<JSObject*> obj(cx, &args.thisv().toObject());
 
+  // NOTE: we want to leave obj in its initial compartment, so don't want to
+  // pass it to UnwrapObject.
+  JS::Rooted<JSObject*> rootSelf(cx, obj);
   void* self;
   {
-    nsresult rv = UnwrapObject<void>(obj, self, protoID, info->depth);
+    binding_detail::MutableObjectHandleWrapper wrapper(&rootSelf);
+    nsresult rv = binding_detail::UnwrapObjectInternal<void, true>(wrapper,
+                                                                   self,
+                                                                   protoID,
+                                                                   info->depth);
     if (NS_FAILED(rv)) {
       ThrowInvalidThis(cx, args, rv == NS_ERROR_XPC_SECURITY_MANAGER_VETO,
                        protoID);

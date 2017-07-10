@@ -1525,7 +1525,7 @@ CacheCreator::ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue)
 
   JS::Rooted<JSObject*> obj(aCx, &aValue.toObject());
   Cache* cache = nullptr;
-  nsresult rv = UNWRAP_OBJECT(Cache, obj, cache);
+  nsresult rv = UNWRAP_OBJECT(Cache, &obj, cache);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     FailLoaders(NS_ERROR_FAILURE);
     return;
@@ -1671,7 +1671,7 @@ CacheScriptLoader::ResolvedCallback(JSContext* aCx,
 
   JS::Rooted<JSObject*> obj(aCx, &aValue.toObject());
   mozilla::dom::Response* response = nullptr;
-  rv = UNWRAP_OBJECT(Response, obj, response);
+  rv = UNWRAP_OBJECT(Response, &obj, response);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     Fail(rv);
     return;
