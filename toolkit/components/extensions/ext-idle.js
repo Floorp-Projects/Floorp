@@ -12,7 +12,7 @@ XPCOMUtils.defineLazyServiceGetter(this, "idleService",
 // WeakMap[Extension -> Object]
 let observersMap = new WeakMap();
 
-function getObserverInfo(extension, context) {
+const getIdleObserverInfo = (extension, context) => {
   let observerInfo = observersMap.get(extension);
   if (!observerInfo) {
     observerInfo = {
@@ -31,10 +31,10 @@ function getObserverInfo(extension, context) {
     });
   }
   return observerInfo;
-}
+};
 
-function getObserver(extension, context) {
-  let observerInfo = getObserverInfo(extension, context);
+const getIdleObserver = (extension, context) => {
+  let observerInfo = getIdleObserverInfo(extension, context);
   let {observer, detectionInterval} = observerInfo;
   if (!observer) {
     observer = {
@@ -50,17 +50,17 @@ function getObserver(extension, context) {
     observerInfo.detectionInterval = detectionInterval;
   }
   return observer;
-}
+};
 
-function setDetectionInterval(extension, context, newInterval) {
-  let observerInfo = getObserverInfo(extension, context);
+const setDetectionInterval = (extension, context, newInterval) => {
+  let observerInfo = getIdleObserverInfo(extension, context);
   let {observer, detectionInterval} = observerInfo;
   if (observer) {
     idleService.removeIdleObserver(observer, detectionInterval);
     idleService.addIdleObserver(observer, newInterval);
   }
   observerInfo.detectionInterval = newInterval;
-}
+};
 
 this.idle = class extends ExtensionAPI {
   getAPI(context) {
@@ -81,9 +81,9 @@ this.idle = class extends ExtensionAPI {
             fire.sync(data);
           };
 
-          getObserver(extension, context).on("stateChanged", listener);
+          getIdleObserver(extension, context).on("stateChanged", listener);
           return () => {
-            getObserver(extension, context).off("stateChanged", listener);
+            getIdleObserver(extension, context).off("stateChanged", listener);
           };
         }).api(),
       },

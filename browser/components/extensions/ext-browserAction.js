@@ -37,14 +37,14 @@ const POPUP_PRELOAD_TIMEOUT_MS = 200;
 
 var XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
-function isAncestorOrSelf(target, node) {
+const isAncestorOrSelf = (target, node) => {
   for (; node; node = node.parentNode) {
     if (node === target) {
       return true;
     }
   }
   return false;
-}
+};
 
 // WeakMap[Extension -> BrowserAction]
 const browserActionMap = new WeakMap();

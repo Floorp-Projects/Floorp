@@ -15,11 +15,11 @@ XPCOMUtils.defineLazyModuleGetter(this, "PromiseUtils",
 XPCOMUtils.defineLazyModuleGetter(this, "Services",
                                   "resource://gre/modules/Services.jsm");
 
-function getBrowserWindow(window) {
+const getBrowserWindow = window => {
   return window.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDocShell)
                .QueryInterface(Ci.nsIDocShellTreeItem).rootTreeItem
                .QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindow);
-}
+};
 
 let tabListener = {
   tabReadyInitialized: false,

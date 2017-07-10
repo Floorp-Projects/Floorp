@@ -19,7 +19,7 @@ var {
 } = ExtensionParent;
 
 // WeakMap[Extension -> PageAction]
-var pageActionMap = new WeakMap();
+let pageActionMap = new WeakMap();
 
 function PageAction(options, extension) {
   this.id = null;

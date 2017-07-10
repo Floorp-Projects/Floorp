@@ -17,9 +17,9 @@ var {
   promiseObserved,
 } = ExtensionUtils;
 
-function onXULFrameLoaderCreated({target}) {
+const onXULFrameLoaderCreated = ({target}) => {
   target.messageManager.sendAsyncMessage("AllowScriptsToClose", {});
-}
+};
 
 this.windows = class extends ExtensionAPI {
   getAPI(context) {
