@@ -139,6 +139,9 @@ SubmitToTelemetry(const SandboxReport& aReport)
   case SandboxReport::ProcType::MEDIA_PLUGIN:
     key.AppendLiteral("gmp");
     break;
+  case SandboxReport::ProcType::FILE:
+    key.AppendLiteral("file");
+    break;
   default:
     MOZ_ASSERT(false);
   }
