@@ -6,7 +6,7 @@ use std::sync::Arc;
 use std::os::raw::{c_void, c_char, c_float};
 use gleam::gl;
 
-use webrender_traits::*;
+use webrender_api::*;
 use webrender::renderer::{ReadPixelsFormat, Renderer, RendererOptions};
 use webrender::renderer::{ExternalImage, ExternalImageHandler, ExternalImageSource};
 use webrender::{ApiRecordingReceiver, BinaryRecorder};
@@ -17,7 +17,7 @@ use euclid::{TypedPoint2D, TypedSize2D, TypedRect, TypedTransform3D, SideOffsets
 use euclid::TypedVector2D;
 use rayon;
 
-extern crate webrender_traits;
+extern crate webrender_api;
 
 // Enables binary recording that can be used with `wrench replay`
 // Outputs a wr-record-*.bin file for each window that is shown
@@ -735,7 +735,7 @@ extern "C" {
                                   raw_event: usize);
 }
 
-impl webrender_traits::RenderNotifier for CppNotifier {
+impl webrender_api::RenderNotifier for CppNotifier {
     fn new_frame_ready(&mut self) {
         unsafe {
             wr_notifier_new_frame_ready(self.window_id);
@@ -1189,7 +1189,7 @@ pub unsafe extern "C" fn wr_api_get_namespace(api: &mut WrAPI) -> WrIdNamespace 
 
 pub struct WebRenderFrameBuilder {
     pub root_pipeline_id: WrPipelineId,
-    pub dl_builder: webrender_traits::DisplayListBuilder,
+    pub dl_builder: webrender_api::DisplayListBuilder,
     pub scroll_clips_defined: HashSet<ClipId>,
 }
 
@@ -1198,7 +1198,7 @@ impl WebRenderFrameBuilder {
                content_size: WrSize) -> WebRenderFrameBuilder {
         WebRenderFrameBuilder {
             root_pipeline_id: root_pipeline_id,
-            dl_builder: webrender_traits::DisplayListBuilder::new(root_pipeline_id, content_size.into()),
+            dl_builder: webrender_api::DisplayListBuilder::new(root_pipeline_id, content_size.into()),
             scroll_clips_defined: HashSet::new(),
         }
     }
@@ -1245,7 +1245,7 @@ pub extern "C" fn wr_dp_begin(state: &mut WrState,
 
     state.frame_builder
          .dl_builder
-         .push_stacking_context(webrender_traits::ScrollPolicy::Scrollable,
+         .push_stacking_context(webrender_api::ScrollPolicy::Scrollable,
                                 bounds,
                                 None,
                                 TransformStyle::Flat,
@@ -1309,7 +1309,7 @@ pub extern "C" fn wr_dp_push_stacking_context(state: &mut WrState,
 
     state.frame_builder
          .dl_builder
-         .push_stacking_context(webrender_traits::ScrollPolicy::Scrollable,
+         .push_stacking_context(webrender_api::ScrollPolicy::Scrollable,
                                 bounds,
                                 transform_binding,
                                 transform_style,
