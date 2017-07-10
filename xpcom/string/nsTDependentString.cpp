@@ -29,8 +29,7 @@ nsTDependentString_CharT::Rebind(const string_type& str, uint32_t startPos)
 
   mData = const_cast<char_type*>(static_cast<const char_type*>(str.Data())) + startPos;
   mLength = strLength - startPos;
-
-  SetDataFlags(str.GetDataFlags() & (DataFlags::TERMINATED | DataFlags::LITERAL));
+  mDataFlags = str.GetDataFlags() & (DataFlags::TERMINATED | DataFlags::LITERAL);
 }
 
 void
