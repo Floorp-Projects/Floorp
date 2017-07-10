@@ -14,7 +14,6 @@ import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
 import org.mozilla.gecko.animation.PropertyAnimator;
 import org.mozilla.gecko.animation.ViewHelper;
-import org.mozilla.gecko.skin.SkinConfig;
 import org.mozilla.gecko.widget.themed.ThemedImageView;
 
 import android.content.Context;
@@ -148,13 +147,7 @@ abstract class BrowserToolbarPhoneBase extends BrowserToolbar {
     public void triggerTabsPanelTransition(final PropertyAnimator animator, final boolean areTabsShown) {
         if (areTabsShown) {
             ViewHelper.setAlpha(tabsCounter, 0.0f);
-
-            // bug 1375351: menuIcon only exists in Australis flavor
-            if (SkinConfig.isAustralis()) {
-                ViewHelper.setAlpha(menuIcon, 0.0f);
-            } else {
-                ViewHelper.setAlpha(menuButton, 0.0f);
-            }
+            ViewHelper.setAlpha(menuIcon, 0.0f);
             return;
         }
 
@@ -163,18 +156,9 @@ abstract class BrowserToolbarPhoneBase extends BrowserToolbar {
         buttonsAnimator.attach(tabsCounter,
                                PropertyAnimator.Property.ALPHA,
                                1.0f);
-
-        // bug 1375351: menuIcon only exists in Australis flavor
-        if (SkinConfig.isAustralis()) {
-            buttonsAnimator.attach(menuIcon,
-                    PropertyAnimator.Property.ALPHA,
-                    1.0f);
-        } else {
-            buttonsAnimator.attach(menuButton,
-                    PropertyAnimator.Property.ALPHA,
-                    1.0f);
-        }
-
+        buttonsAnimator.attach(menuIcon,
+                               PropertyAnimator.Property.ALPHA,
+                               1.0f);
         buttonsAnimator.start();
     }
 

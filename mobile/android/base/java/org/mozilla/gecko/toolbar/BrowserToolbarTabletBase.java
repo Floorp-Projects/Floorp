@@ -15,7 +15,6 @@ import org.mozilla.gecko.skin.SkinConfig;
 import org.mozilla.gecko.tabs.TabHistoryController;
 import org.mozilla.gecko.menu.MenuItemActionBar;
 import org.mozilla.gecko.util.HardwareUtils;
-import org.mozilla.gecko.widget.themed.ThemedImageButton;
 import org.mozilla.gecko.widget.themed.ThemedTextView;
 
 import android.content.Context;
@@ -157,16 +156,7 @@ abstract class BrowserToolbarTabletBase extends BrowserToolbar {
 
         backButton.setPrivateMode(isPrivate);
         forwardButton.setPrivateMode(isPrivate);
-
-        // bug 1375351: menuButton is a ThemedImageButton in Photon flavor
-        if (SkinConfig.isPhoton()) {
-            ((ThemedImageButton)menuButton).setPrivateMode(isPrivate);
-        } else {
-            ((ShapedButtonFrameLayout)menuButton).setPrivateMode(isPrivate);
-            // menuIcon only exists in Australis flavor
-            menuIcon.setPrivateMode(isPrivate);
-        }
-
+        menuIcon.setPrivateMode(isPrivate);
         for (int i = 0; i < actionItemBar.getChildCount(); ++i) {
             final MenuItemActionBar child = (MenuItemActionBar) actionItemBar.getChildAt(i);
             child.setPrivateMode(isPrivate);

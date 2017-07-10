@@ -24,6 +24,4 @@
     <item type="id" name="page_progress"/>
     <item type="id" name="mediaControlNotification"/>
 
-    <!-- add this id to make java code pass build. should be removed in Bug 1375351 -->
-    <item type="id" name="menu_icon"/>
 </resources>
