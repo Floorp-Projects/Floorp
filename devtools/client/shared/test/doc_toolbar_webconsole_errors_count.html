@@ -24,8 +24,8 @@
   <script type="text/javascript">
     "use strict";
     let testObj = {};
-    document.querySelector("button").onclick = function() {
-      let test = testObj.fooBug788445 + "warning";
+    document.querySelector("button").onclick = function () {
+      testObj.fooBug788445 + "warning";
       window.foobarBug762996click();
     };
   </script>
