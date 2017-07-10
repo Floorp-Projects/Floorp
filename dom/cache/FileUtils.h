@@ -48,6 +48,10 @@ BodyOpen(const QuotaInfo& aQuotaInfo, nsIFile* aBaseDir, const nsID& aId,
          nsIInputStream** aStreamOut);
 
 nsresult
+BodyMaybeUpdatePaddingSize(const QuotaInfo& aQuotaInfo, nsIFile* aBaseDir,
+                           const nsID& aId, int64_t* aPaddingSizeOut);
+
+nsresult
 BodyDeleteFiles(const QuotaInfo& aQuotaInfo, nsIFile* aBaseDir,
                 const nsTArray<nsID>& aIdList);
 
@@ -70,6 +74,9 @@ RemoveNsIFileRecursively(const QuotaInfo& aQuotaInfo, nsIFile* aFile);
 nsresult
 RemoveNsIFile(const QuotaInfo& aQuotaInfo, nsIFile* aFile);
 
+void
+DecreaseUsageForQuotaInfo(const QuotaInfo& aQuotaInfo,
+                          const int64_t& aUpdatingSize);
 } // namespace cache
 } // namespace dom
 } // namespace mozilla

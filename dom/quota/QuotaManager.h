@@ -177,13 +177,15 @@ public:
   GetQuotaObject(PersistenceType aPersistenceType,
                  const nsACString& aGroup,
                  const nsACString& aOrigin,
-                 nsIFile* aFile);
+                 nsIFile* aFile,
+                 int64_t* aFileSizeOut = nullptr);
 
   already_AddRefed<QuotaObject>
   GetQuotaObject(PersistenceType aPersistenceType,
                  const nsACString& aGroup,
                  const nsACString& aOrigin,
-                 const nsAString& aPath);
+                 const nsAString& aPath,
+                 int64_t* aFileSizeOut = nullptr);
 
   Nullable<bool>
   OriginPersisted(const nsACString& aGroup,
