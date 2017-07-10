@@ -65,7 +65,7 @@ public:
   // nsIFrame
   void Reflow(nsPresContext* aPresContext,
               ReflowOutput& aDesiredSize,
-              const ReflowInput& aReflowInput,
+              const ReflowInput& aMaxSize,
               nsReflowStatus& aStatus) override;
 
   void BuildDisplayList(nsDisplayListBuilder*   aBuilder,
