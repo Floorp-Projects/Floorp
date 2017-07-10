@@ -164,6 +164,7 @@ add_task(async function testExperimentLearnMore() {
 add_task(async function testOpenPreferences() {
   await gCategoryUtilities.openType("experiment");
   let btn = gManagerWindow.document.getElementById("experiments-change-telemetry");
+  Services.prefs.setBoolPref("browser.preferences.useOldOrganization", true);
 
   is_element_visible(btn, "Change telemetry button visible in in-content UI.");
 
