@@ -141,6 +141,7 @@ this.SitePermissions = {
   UNKNOWN: Services.perms.UNKNOWN_ACTION,
   ALLOW: Services.perms.ALLOW_ACTION,
   BLOCK: Services.perms.DENY_ACTION,
+  PROMPT: Services.perms.PROMPT_ACTION,
   ALLOW_COOKIES_FOR_SESSION: Components.interfaces.nsICookiePermission.ACCESS_SESSION,
 
   // Permission scopes.
@@ -148,6 +149,8 @@ this.SitePermissions = {
   SCOPE_TEMPORARY: "{SitePermissions.SCOPE_TEMPORARY}",
   SCOPE_SESSION: "{SitePermissions.SCOPE_SESSION}",
   SCOPE_PERSISTENT: "{SitePermissions.SCOPE_PERSISTENT}",
+
+  _defaultPrefBranch: Services.prefs.getBranch("permissions.default."),
 
   /**
    * Gets all custom permissions for a given URI.
@@ -278,10 +281,13 @@ this.SitePermissions = {
         gPermissionObject[permissionID].states)
       return gPermissionObject[permissionID].states;
 
+    /* Since the permissions we are dealing with have adopted the convention
+     * of treating UNKNOWN == PROMPT, we only include one of either UNKNOWN
+     * or PROMPT in this list, to avoid duplicating states. */
     if (this.getDefault(permissionID) == this.UNKNOWN)
       return [ SitePermissions.UNKNOWN, SitePermissions.ALLOW, SitePermissions.BLOCK ];
 
-    return [ SitePermissions.ALLOW, SitePermissions.BLOCK ];
+    return [ SitePermissions.PROMPT, SitePermissions.ALLOW, SitePermissions.BLOCK ];
   },
 
   /**
@@ -293,11 +299,14 @@ this.SitePermissions = {
    * @return {SitePermissions.state} the default state.
    */
   getDefault(permissionID) {
+    // If the permission has custom logic for getting its default value,
+    // try that first.
     if (permissionID in gPermissionObject &&
         gPermissionObject[permissionID].getDefault)
       return gPermissionObject[permissionID].getDefault();
 
-    return this.UNKNOWN;
+    // Otherwise try to get the default preference for that permission.
+    return this._defaultPrefBranch.getIntPref(permissionID, this.UNKNOWN);
   },
 
   /**
@@ -320,7 +329,8 @@ this.SitePermissions = {
    *             (e.g. SitePermissions.SCOPE_PERSISTENT)
    */
   get(uri, permissionID, browser) {
-    let result = { state: this.UNKNOWN, scope: this.SCOPE_PERSISTENT };
+    let defaultState = this.getDefault(permissionID);
+    let result = { state: defaultState, scope: this.SCOPE_PERSISTENT };
     if (this.isSupportedURI(uri)) {
       let permission = null;
       if (permissionID in gPermissionObject &&
@@ -338,7 +348,7 @@ this.SitePermissions = {
       }
     }
 
-    if (!result.state) {
+    if (result.state == defaultState) {
       // If there's no persistent permission saved, check if we have something
       // set temporarily.
       let value = TemporaryBlockedPermissions.get(browser, permissionID);
@@ -371,7 +381,7 @@ this.SitePermissions = {
    *        This needs to be provided if the scope is SCOPE_TEMPORARY!
    */
   set(uri, permissionID, state, scope = this.SCOPE_PERSISTENT, browser = null) {
-    if (state == this.UNKNOWN) {
+    if (state == this.UNKNOWN || state == this.getDefault(permissionID)) {
       this.remove(uri, permissionID, browser);
       return;
     }
@@ -488,6 +498,7 @@ this.SitePermissions = {
   getMultichoiceStateLabel(state) {
     switch (state) {
       case this.UNKNOWN:
+      case this.PROMPT:
         return gStringBundle.GetStringFromName("state.multichoice.alwaysAsk");
       case this.ALLOW:
         return gStringBundle.GetStringFromName("state.multichoice.allow");
@@ -513,6 +524,8 @@ this.SitePermissions = {
    */
   getCurrentStateLabel(state, scope = null) {
     switch (state) {
+      case this.PROMPT:
+        return gStringBundle.GetStringFromName("state.current.prompt");
       case this.ALLOW:
         if (scope && scope != this.SCOPE_PERSISTENT)
           return gStringBundle.GetStringFromName("state.current.allowedTemporarily");
@@ -553,10 +566,7 @@ var gPermissionObject = {
    */
 
   "image": {
-    getDefault() {
-      return Services.prefs.getIntPref("permissions.default.image") == 2 ?
-               SitePermissions.BLOCK : SitePermissions.ALLOW;
-    }
+    states: [ SitePermissions.ALLOW, SitePermissions.BLOCK ],
   },
 
   "cookie": {
@@ -594,14 +604,16 @@ var gPermissionObject = {
     getDefault() {
       return Services.prefs.getBoolPref("dom.disable_open_during_load") ?
                SitePermissions.BLOCK : SitePermissions.ALLOW;
-    }
+    },
+    states: [ SitePermissions.ALLOW, SitePermissions.BLOCK ],
   },
 
   "install": {
     getDefault() {
       return Services.prefs.getBoolPref("xpinstall.whitelist.required") ?
                SitePermissions.BLOCK : SitePermissions.ALLOW;
-    }
+    },
+    states: [ SitePermissions.ALLOW, SitePermissions.BLOCK ],
   },
 
   "geo": {
