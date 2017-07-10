@@ -178,15 +178,6 @@
 #onboarding-tour-sync-page form > #onboarding-tour-sync-button {
   padding: 10px 20px;
   min-width: 40%;
-  font-size: 15px;
-  font-weight: normal;
-  line-height: 20px;
-  background: #0d96ff;
-  border: none;
-  border-radius: 3px;
-  color: #fff;
-  box-shadow: 0 1px 0 rgba(0,0,0,0.23);
-  cursor: pointer;
   margin: 15px 0;
   float: none;
 }
@@ -261,19 +252,28 @@
   font-size: 15px;
   font-weight: 600;
   line-height: 21px;
-  background: #0d96ff;
+  background: #0a84ff;
   border: none;
-  border-radius: 3px;
+  border-radius: 0;
   color: #fff;
-  box-shadow: 0 1px 0 rgba(0,0,0,0.23);
-  cursor: pointer;
   float: inline-end;
   margin-inline-end: 26px;
   margin-top: -32px;
 }
 
-.onboarding-tour-action-button:active {
-  background: #0881dd;
+.onboarding-tour-action-button:hover:not([disabled="true"]) ,
+#onboarding-notification-action-btn:hover {
+  background: #0060df;
+  cursor: pointer;
+}
+
+.onboarding-tour-action-button:active:not([disabled="true"]),
+#onboarding-notification-action-btn:active  {
+  background: #003EAA;
+}
+
+.onboarding-tour-action-button:disabled {
+  opacity: 0.5;
 }
 
 /* Tour Icons */
@@ -436,13 +436,12 @@
 }
 
 #onboarding-notification-action-btn {
-  background: #0d96ff;
+  background: #0a84ff;
   border: none;
-  border-radius: 3px;
+  border-radius: 0;
   padding: 10px 20px;
   font-size: 14px;
   color: #fff;
-  box-shadow: 0 1px 0 rgba(0,0,0,0.23);
 }
 
 @media all and (max-width: 960px) {
