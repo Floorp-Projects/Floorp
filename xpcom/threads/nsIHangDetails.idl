@@ -1,0 +1,25 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+/**
+ * A scriptable interface for getting information about a BHR detected hang.
+ * This is the type of the subject of the "bhr-thread-hang" observer topic.
+ */
+[scriptable, uuid(23d63fff-38d6-4003-9c57-2c90aca1180a)]
+interface nsIHangDetails : nsISupports
+{
+  /**
+   * The detected duration of the hang.
+   */
+  readonly attribute uint32_t duration;
+
+  /**
+   * The name of the thread which hung
+   */
+  readonly attribute ACString threadName;
+};
+
