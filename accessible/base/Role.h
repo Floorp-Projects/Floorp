@@ -306,9 +306,9 @@ enum Role {
   RADIOBUTTON = 45,
 
   /**
-   * Represents a combo box; a popup button with an associated list box that
-   * provides a set of predefined choices. It is used for html:select with a
-   * size of 1 and xul:menulist. See also ROLE_EDITCOMBOBOX.
+   * Represents a combo box; an edit control with an associated list box that
+   * provides a set of predefined choices. It is used for html:select,
+   * xul:menulist, role="combobox".
    */
   COMBOBOX = 46,
 
@@ -1015,13 +1015,7 @@ enum Role {
    */
   REGION = 173,
 
-  /**
-   * Represents a control with a text input and a popup with a set of predefined
-   * choices. It is used for ARIA's combobox role. See also COMBOBOX.
-   */
-  EDITCOMBOBOX = 174,
-
-  LAST_ROLE = EDITCOMBOBOX
+  LAST_ROLE = REGION
 };
 
 } // namespace role
