@@ -4,28 +4,26 @@
 
 "use strict";
 
-var {Class} = require("sdk/core/heritage");
-
 /**
  * A helper class that stores stack frame objects.  Each frame is
  * assigned an index, and if a frame is added more than once, the same
  * index is used.  Users of the class can get an array of all frames
  * that have been added.
  */
-var StackFrameCache = Class({
+class StackFrameCache {
   /**
    * Initialize this object.
    */
-  initialize: function () {
+  constructor() {
     this._framesToIndices = null;
     this._framesToForms = null;
     this._lastEventSize = 0;
-  },
+  }
 
   /**
    * Prepare to accept frames.
    */
-  initFrames: function () {
+  initFrames() {
     if (this._framesToIndices) {
       // The maps are already initialized.
       return;
@@ -34,28 +32,28 @@ var StackFrameCache = Class({
     this._framesToIndices = new Map();
     this._framesToForms = new Map();
     this._lastEventSize = 0;
-  },
+  }
 
   /**
    * Forget all stored frames and reset to the initialized state.
    */
-  clearFrames: function () {
+  clearFrames() {
     this._framesToIndices.clear();
     this._framesToIndices = null;
     this._framesToForms.clear();
     this._framesToForms = null;
     this._lastEventSize = 0;
-  },
+  }
 
   /**
    * Add a frame to this stack frame cache, and return the index of
    * the frame.
    */
-  addFrame: function (frame) {
+  addFrame(frame) {
     this._assignFrameIndices(frame);
     this._createFrameForms(frame);
     return this._framesToIndices.get(frame);
-  },
+  }
 
   /**
    * A helper method for the memory actor.  This populates the packet
@@ -68,7 +66,7 @@ var StackFrameCache = Class({
    *
    * @returns packet
    */
-  updateFramePacket: function (packet) {
+  updateFramePacket(packet) {
     // Now that we are guaranteed to have a form for every frame, we know the
     // size the "frames" property's array must be. We use that information to
     // create dense arrays even though we populate them out of order.
@@ -81,7 +79,7 @@ var StackFrameCache = Class({
     }
 
     return packet;
-  },
+  }
 
   /**
    * If any new stack frames have been added to this cache since the
@@ -113,7 +111,7 @@ var StackFrameCache = Class({
    *
    * @returns array or null
    */
-  makeEvent: function () {
+  makeEvent() {
     const size = this._framesToForms.size;
     if (!size || size <= this._lastEventSize) {
       return null;
@@ -129,7 +127,7 @@ var StackFrameCache = Class({
     this._lastEventSize = size;
 
     return packet;
-  },
+  }
 
   /**
    * Assigns an index to the given frame and its parents, if an index is not
@@ -138,7 +136,7 @@ var StackFrameCache = Class({
    * @param SavedFrame frame
    *        A frame to assign an index to.
    */
-  _assignFrameIndices: function (frame) {
+  _assignFrameIndices(frame) {
     if (this._framesToIndices.has(frame)) {
       return;
     }
@@ -150,7 +148,7 @@ var StackFrameCache = Class({
 
     const index = this._framesToIndices.size;
     this._framesToIndices.set(frame, index);
-  },
+  }
 
   /**
    * Create the form for the given frame, if one doesn't already exist.
@@ -158,7 +156,7 @@ var StackFrameCache = Class({
    * @param SavedFrame frame
    *        A frame to create a form for.
    */
-  _createFrameForms: function (frame) {
+  _createFrameForms(frame) {
     if (this._framesToForms.has(frame)) {
       return;
     }
@@ -179,7 +177,7 @@ var StackFrameCache = Class({
     }
 
     this._framesToForms.set(frame, form);
-  },
-});
+  }
+}
 
 exports.StackFrameCache = StackFrameCache;
