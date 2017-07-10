@@ -2068,6 +2068,8 @@ class Vendor(MachCommandBase):
                 description='Vendor av1 video codec reference implementation into the source repository.')
     @CommandArgument('-r', '--revision',
         help='Repository tag or commit to update to.')
+    @CommandArgument('--repo',
+        help='Repository url to pull a snapshot from. Supports github and googlesource.')
     @CommandArgument('--ignore-modified', action='store_true',
         help='Ignore modified files in current checkout',
         default=False)
