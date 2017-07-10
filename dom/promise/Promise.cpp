@@ -284,14 +284,13 @@ NativeHandlerCallback(JSContext* aCx, unsigned aArgc, JS::Value* aVp)
 {
   JS::CallArgs args = CallArgsFromVp(aArgc, aVp);
 
-  JS::Rooted<JS::Value> v(aCx,
-                          js::GetFunctionNativeReserved(&args.callee(),
-                                                        SLOT_NATIVEHANDLER));
+  JS::Value v = js::GetFunctionNativeReserved(&args.callee(),
+                                              SLOT_NATIVEHANDLER);
   MOZ_ASSERT(v.isObject());
 
+  JS::Rooted<JSObject*> obj(aCx, &v.toObject());
   PromiseNativeHandler* handler = nullptr;
-  if (NS_FAILED(UNWRAP_OBJECT(PromiseNativeHandler, &v.toObject(),
-                              handler))) {
+  if (NS_FAILED(UNWRAP_OBJECT(PromiseNativeHandler, &obj, handler))) {
     return Throw(aCx, NS_ERROR_UNEXPECTED);
   }
 
