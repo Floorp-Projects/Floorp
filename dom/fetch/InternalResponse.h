@@ -233,6 +233,12 @@ public:
     mBodySize = aBodySize;
   }
 
+  uint32_t
+  GetPaddingInfo();
+
+  nsresult
+  GeneratePaddingInfo();
+
   int64_t
   GetPaddingSize();
 
@@ -307,6 +313,9 @@ private:
   RefPtr<InternalHeaders> mHeaders;
   nsCOMPtr<nsIInputStream> mBody;
   int64_t mBodySize;
+  // It's used to passed to the CacheResponse to generate padding size. Once, we
+  // generate the padding size for resposne, we don't need it anymore.
+  Maybe<uint32_t> mPaddingInfo;
   int64_t mPaddingSize;
 public:
   static const int64_t UNKNOWN_BODY_SIZE = -1;

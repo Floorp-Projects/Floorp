@@ -433,9 +433,12 @@ FetchDriver::BeginAndGetFilteredResponse(InternalResponse* aResponse,
       case LoadTainting::CORS:
         filteredResponse = aResponse->CORSResponse();
         break;
-      case LoadTainting::Opaque:
+      case LoadTainting::Opaque: {
         filteredResponse = aResponse->OpaqueResponse();
+        nsresult rv = filteredResponse->GeneratePaddingInfo();
+        if (NS_WARN_IF(NS_FAILED(rv))) { return nullptr; }
         break;
+      }
       default:
         MOZ_CRASH("Unexpected case");
     }
@@ -614,6 +617,12 @@ FetchDriver::OnStartRequest(nsIRequest* aRequest,
   // Resolves fetch() promise which may trigger code running in a worker.  Make
   // sure the Response is fully initialized before calling this.
   mResponse = BeginAndGetFilteredResponse(response, foundOpaqueRedirect);
+  if (NS_WARN_IF(!mResponse)) {
+    // Fail to generate a paddingInfo for opaque response.
+    MOZ_DIAGNOSTIC_ASSERT(mResponse->Type() == ResponseType::Opaque);
+    FailWithNetworkError();
+    return rv;
+  }
 
   // From "Main Fetch" step 19: SRI-part1.
   if (ShouldCheckSRI(mRequest, mResponse) && mSRIMetadata.IsEmpty()) {
