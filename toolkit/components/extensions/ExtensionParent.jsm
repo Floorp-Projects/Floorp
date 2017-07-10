@@ -667,7 +667,7 @@ ParentAPIManager = {
     };
 
     try {
-      let args = data.noClone ? data.args : Cu.cloneInto(data.args, context.sandbox);
+      let args = Cu.cloneInto(data.args, context.sandbox);
       let pendingBrowser = context.pendingEventBrowser;
       let fun = await context.apiCan.asyncFindAPIPath(data.path);
       let result = context.withPendingBrowser(pendingBrowser,
