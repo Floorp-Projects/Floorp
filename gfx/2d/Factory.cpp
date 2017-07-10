@@ -215,17 +215,6 @@ Factory::Init(const Config& aConfig)
   MOZ_ASSERT(!sConfig);
   sConfig = new Config(aConfig);
 
-  // Make sure we don't completely break rendering because of a typo in the
-  // pref or whatnot.
-  const int32_t kMinAllocPref = 10000000;
-  const int32_t kMinSizePref = 2048;
-  if (sConfig->mMaxAllocSize < kMinAllocPref) {
-    sConfig->mMaxAllocSize = kMinAllocPref;
-  }
-  if (sConfig->mMaxTextureSize < kMinSizePref) {
-    sConfig->mMaxTextureSize = kMinSizePref;
-  }
-
 #ifdef MOZ_ENABLE_FREETYPE
   mFTLock = new Mutex("Factory::mFTLock");
 #endif
