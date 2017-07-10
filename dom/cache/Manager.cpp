@@ -785,6 +785,7 @@ private:
           // It'll generate padding if we've not set it yet.
           rv = BodyMaybeUpdatePaddingSize(mQuotaInfo.ref(), mDBDir,
                                           e.mResponseBodyId,
+                                          e.mResponse.paddingInfo(),
                                           &e.mResponse.paddingSize());
           if (NS_WARN_IF(NS_FAILED(rv))) {
             DoResolve(rv);

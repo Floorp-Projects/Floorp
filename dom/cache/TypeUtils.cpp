@@ -202,6 +202,7 @@ TypeUtils::ToCacheResponseWithoutBody(CacheResponse& aOut,
     aOut.principalInfo() = void_t();
   }
 
+  aOut.paddingInfo() = aIn.GetPaddingInfo();
   aOut.paddingSize() = aIn.GetPaddingSize();
 }
 
