@@ -602,12 +602,6 @@ nsPrefetchService::StartPrefetching()
     // until after all sub-frames have finished loading.
     if (!mStopCount) {
         mHaveProcessed = true;
-        // mAggressive mode is used only for testing. If we are in the
-        // aggressive mode, we will not stop preloads even if page load
-        // stops.
-        if (!mAggressive) {
-          StopCurrentPrefetchsPreloads(true);
-        }
         while (!mPrefetchQueue.empty() &&
                mCurrentNodes.Length() < static_cast<uint32_t>(mMaxParallelism)) {
             ProcessNextPrefetchURI();
@@ -719,14 +713,6 @@ nsPrefetchService::Preload(nsIURI *aURI,
     if (mPreloadDisabled) {
         LOG(("rejected: preload service is disabled\n"));
         return NS_ERROR_ABORT;
-    }
-
-    // mAggressive mode is used for tests only, it make writing tests easier.
-    // In this mode preloads will be fetched even if the page load trigering
-    // them ends.
-    if ((!mStopCount && mHaveProcessed) && !mAggressive) {
-      LOG(("rejected: there is not load active!"));
-      return NS_ERROR_ABORT;
     }
 
     nsresult rv = CheckURIScheme(aURI, aReferrerURI);
