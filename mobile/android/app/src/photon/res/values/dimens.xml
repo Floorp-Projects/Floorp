@@ -21,7 +21,7 @@
     <!-- This value is the height of the Tabs Panel header view
          (browser_toolbar_height) minus the height of the indicator
          (6dp). This value should change when the height of the view changes. -->
-    <dimen name="tabs_panel_indicator_selected_padding_top">42dp</dimen>
+    <dimen name="tabs_panel_indicator_selected_padding_top">50dp</dimen>
 
     <!-- We use two different values for browser_toolbar_height on tablet
          which is inconsistent. Temporary value until bug 1150730 is fixed. -->
