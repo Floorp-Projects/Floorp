@@ -30,7 +30,7 @@ const {setBaseCssDocsUrl, MdnDocsWidget} = require("devtools/client/shared/widge
  * In the test code, the names defined here is used to look up a page
  * served by the test server.
  */
-const BASIC_TESTING_PROPERTY = "html-mdn-css-basic-testing.html";
+const BASIC_TESTING_PROPERTY = "doc_mdn-css-basic-testing.html";
 
 const BASIC_EXPECTED_SUMMARY = "A summary of the property.";
 const BASIC_EXPECTED_SYNTAX = [{type: "comment", text: "/* The part we want   */"},
@@ -48,8 +48,8 @@ add_task(function* () {
   setBaseCssDocsUrl(TEST_URI_ROOT);
 
   yield addTab("about:blank");
-  let [host, win] = yield createHost("bottom", "data:text/html," +
-    "<div class='mdn-container'></div>");
+  let [host, win] = yield createHost("bottom",
+                                     CHROME_URL_ROOT + "doc_mdn-docs-01.html");
   let widget = new MdnDocsWidget(win.document.querySelector("div"));
 
   yield testTheBasics(widget);

@@ -10,7 +10,7 @@ const {getClientCssProperties} = require("devtools/shared/fronts/css-properties"
 const GRAYSCALE_MAX = 100;
 const INVERT_MIN = 0;
 
-const TEST_URI = `data:text/html,<div id="filter-container" />`;
+const TEST_URI = CHROME_URL_ROOT + "doc_filter-editor-01.html";
 
 add_task(function* () {
   let [,, doc] = yield createHost("bottom", TEST_URI);

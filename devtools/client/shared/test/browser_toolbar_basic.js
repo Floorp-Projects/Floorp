@@ -5,7 +5,7 @@
 
 // Tests that the developer toolbar works properly
 
-const TEST_URI = TEST_URI_ROOT + "browser_toolbar_basic.html";
+const TEST_URI = TEST_URI_ROOT + "doc_toolbar_basic.html";
 
 add_task(function* () {
   info("Starting browser_toolbar_basic.js");
