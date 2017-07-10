@@ -26,6 +26,7 @@ label > span {
   padding-inline-end: 0.5em;
   align-self: center;
   text-align: end;
+  -moz-user-select: none;
 }
 
 input,
