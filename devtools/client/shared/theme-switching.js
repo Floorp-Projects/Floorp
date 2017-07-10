@@ -92,7 +92,7 @@
     }
 
     try {
-      const StylesheetUtils = require("sdk/stylesheet/utils");
+      const StylesheetUtils = require("devtools/shared/layout/utils");
       const SCROLLBARS_URL = "chrome://devtools/skin/floating-scrollbars-dark-theme.css";
 
       // TODO: extensions might want to customize scrollbar styles too.
