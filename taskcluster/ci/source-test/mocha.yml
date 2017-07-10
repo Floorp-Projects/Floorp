@@ -1,0 +1,21 @@
+eslint-plugin-mozilla:
+    description: eslint-plugin-mozilla integration tests
+    platform: linux64/opt
+    treeherder:
+        symbol: mocha(epm)
+        kind: test
+        tier: 2
+    worker-type: aws-provisioner-v1/gecko-t-linux-xlarge
+    worker:
+        docker-image: {in-tree: "lint"}
+        max-run-time: 1800
+    run:
+        using: run-task
+        cache-dotcache: true
+        command: >
+            cd /home/worker/checkouts/gecko/tools/lint/eslint/eslint-plugin-mozilla &&
+            cp -r /build/node_modules_eslint-plugin-mozilla node_modules &&
+            npm run test
+    when:
+        files-changed:
+            - 'tools/lint/eslint/eslint-plugin-mozilla/**'
