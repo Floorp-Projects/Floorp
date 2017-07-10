@@ -116,7 +116,6 @@ public:
   typedef mozilla::MetadataTags MetadataTags;
 
   MOZ_DECLARE_WEAKREFERENCE_TYPENAME(HTMLMediaElement)
-  NS_DECL_NSIMUTATIONOBSERVER_CONTENTINSERTED
   NS_DECL_NSIMUTATIONOBSERVER_CONTENTREMOVED
 
   CORSMode GetCORSMode() {
@@ -1411,10 +1410,14 @@ protected:
   uint32_t mCurrentLoadID;
 
   // Points to the child source elements, used to iterate through the children
-  // when selecting a resource to load.  This is the index of the child element
-  // that is the current 'candidate' in:
+  // when selecting a resource to load.  This is the previous sibling of the
+  // child considered the current 'candidate' in:
   // https://html.spec.whatwg.org/multipage/media.html#concept-media-load-algorithm
-  uint32_t mSourcePointer;
+  //
+  // mSourcePointer == nullptr, we will next try to load |GetFirstChild()|.
+  // mSourcePointer == GetLastChild(), we've exhausted all sources, waiting
+  // for new elements to be appended.
+  nsCOMPtr<nsIContent> mSourcePointer;
 
   // Points to the document whose load we're blocking. This is the document
   // we're bound to when loading starts.
