@@ -57,6 +57,7 @@ add_task(async function test_legacy_extension_context() {
   };
 
   let extension = Extension.generate(extensionData);
+  extension.isEmbedded = true;
 
   let waitForExtensionInfo = new Promise((resolve, reject) => {
     extension.on("test-message", function testMessageListener(kind, msg, ...args) {

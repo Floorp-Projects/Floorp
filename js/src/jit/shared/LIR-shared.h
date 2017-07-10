@@ -4769,11 +4769,17 @@ class LOsrArgumentsObject : public LInstructionHelper<1, 1, 0>
     }
 };
 
-class LRegExp : public LCallInstructionHelper<1, 0, 0>
+class LRegExp : public LInstructionHelper<1, 0, 1>
 {
   public:
     LIR_HEADER(RegExp)
 
+    explicit LRegExp(const LDefinition& temp) {
+        setTemp(0, temp);
+    }
+    const LDefinition* temp() {
+        return getTemp(0);
+    }
     const MRegExp* mir() const {
         return mir_->toRegExp();
     }

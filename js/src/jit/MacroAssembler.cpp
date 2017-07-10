@@ -1258,8 +1258,17 @@ MacroAssembler::initGCThing(Register obj, Register temp, JSObject* templateObj,
 
             if (ntemplate->hasPrivate() && !ntemplate->is<TypedArrayObject>()) {
                 uint32_t nfixed = ntemplate->numFixedSlotsForCompilation();
-                storePtr(ImmPtr(ntemplate->getPrivate()),
-                         Address(obj, NativeObject::getPrivateDataOffset(nfixed)));
+                Address privateSlot(obj, NativeObject::getPrivateDataOffset(nfixed));
+                if (ntemplate->is<RegExpObject>()) {
+                    // RegExpObject stores a GC thing (RegExpShared*) in its
+                    // private slot, so we have to use ImmGCPtr.
+                    RegExpObject* regexp = &ntemplate->as<RegExpObject>();
+                    MOZ_ASSERT(regexp->hasShared());
+                    MOZ_ASSERT(ntemplate->getPrivate() == regexp->sharedRef().get());
+                    storePtr(ImmGCPtr(regexp->sharedRef().get()), privateSlot);
+                } else {
+                    storePtr(ImmPtr(ntemplate->getPrivate()), privateSlot);
+                }
             }
         }
     } else if (templateObj->is<InlineTypedObject>()) {
