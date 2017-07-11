@@ -384,6 +384,7 @@ class BuildOptionParser(object):
         'artifact': 'builds/releng_sub_%s_configs/%s_artifact.py',
         'debug-artifact': 'builds/releng_sub_%s_configs/%s_debug_artifact.py',
         'devedition': 'builds/releng_sub_%s_configs/%s_devedition.py',
+        'dmd': 'builds/releng_sub_%s_configs/%s_dmd.py',
     }
     build_pool_cfg_file = 'builds/build_pool_specifics.py'
     branch_cfg_file = 'builds/branch_specifics.py'

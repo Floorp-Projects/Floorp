@@ -56,11 +56,14 @@ class OptionValue(tuple):
     def __eq__(self, other):
         # This is to catch naive comparisons against strings and other
         # types in moz.configure files, as it is really easy to write
-        # value == 'foo'.
-        if not isinstance(other, tuple):
-            raise TypeError('cannot compare a %s against an %s; OptionValue '
-                            'instances are tuples - did you mean to compare '
-                            'against member elements using [x]?' % (
+        # value == 'foo'. We only raise a TypeError for instances that
+        # have content, because value-less instances (like PositiveOptionValue
+        # and NegativeOptionValue) are common and it is trivial to
+        # compare these.
+        if not isinstance(other, tuple) and len(self):
+            raise TypeError('cannot compare a populated %s against an %s; '
+                            'OptionValue instances are tuples - did you mean to '
+                            'compare against member elements using [x]?' % (
                                 type(other).__name__, type(self).__name__))
 
         # Allow explicit tuples to be compared.
