@@ -106,6 +106,15 @@ var testCases = [
     results: { img12_bad: -1, script12_bad: -1 },
     nrOKmessages: 4 // sends 4 ok message
   },
+  {
+    // Test 13: same as Test 5 and Test 11, but:
+    // * using sandbox flag 'allow-scripts' in CSP and not as iframe attribute
+    // * not using allow-same-origin in CSP (so a new NullPrincipal is created).
+    csp: "default-src 'none'; script-src 'unsafe-inline'; sandbox allow-scripts",
+    file: "file_sandbox_5.html",
+    results: { img13_bad: -1, img13a_bad: -1, script13_bad: -1, script13a_bad: -1 },
+    nrOKmessages: 2 // sends 2 ok message
+  },
 ];
 
 // a postMessage handler that is used by sandboxed iframes without
