@@ -162,9 +162,6 @@ public:
   VertexStagingBuffer* GetInstances() {
     return &mInstances;
   }
-  ConstantStagingBuffer* GetItems() {
-    return &mItems;
-  }
 
   bool IsCompatible(const ItemInfo& aItem) override;
   void PrepareForRendering() override;
@@ -201,10 +198,6 @@ protected:
     return true;
   }
 
-  // Prepare the buffer bound to "sItems" in shaders. This is used for opaque
-  // batches when the items can be drawn in front-to-back order.
-  bool PrepareItemBuffer();
-
   // Prepare the mask/opacity buffer bound in most pixel shaders.
   bool SetupPSBuffer0(float aOpacity);
 
@@ -222,9 +215,6 @@ protected:
 
   VertexStagingBuffer mInstances;
   VertexBufferSection mInstanceBuffer;
-
-  ConstantStagingBuffer mItems;
-  ConstantBufferSection mItemBuffer;
 
   ConstantBufferSection mPSBuffer0;
 };
@@ -250,14 +240,20 @@ protected:
   public:
     explicit Txn(BatchRenderPass* aPass)
      : mPass(aPass),
-       mPrevItemPos(aPass->mItems.GetPosition()),
        mPrevInstancePos(aPass->mInstances.GetPosition())
     {}
+
+    bool Add(const Traits& aTraits) {
+      if (!AddImpl(aTraits)) {
+        return Fail();
+      }
+      return true;
+    }
 
     // Add an item based on a draw rect, layer, and optional geometry. This is
     // defined in RenderPassMLGPU-inl.h, since it needs access to
     // ShaderDefinitionsMLGPU-inl.h.
-    bool Add(const Traits& aTraits);
+    bool AddImpl(const Traits& aTraits);
 
     bool Fail() {
       MOZ_ASSERT(!mStatus.isSome() || !mStatus.value());
@@ -277,7 +273,6 @@ protected:
     ~Txn() {
       if (!mStatus.isSome() || !mStatus.value()) {
         mPass->mInstances.RestorePosition(mPrevInstancePos);
-        mPass->mItems.RestorePosition(mPrevItemPos);
       }
     }
 

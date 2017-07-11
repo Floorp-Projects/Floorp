@@ -14,7 +14,6 @@ template <typename Traits>
 static inline bool
 AddShaderTriangles(VertexStagingBuffer* aBuffer,
                    const Traits& aTraits,
-                   uint32_t aItemIndex,
                    const gfx::Polygon* aGeometry = nullptr)
 {
   typedef typename Traits::TriangleVertices TriangleVertices;
@@ -24,15 +23,15 @@ AddShaderTriangles(VertexStagingBuffer* aBuffer,
   if (!aGeometry) {
     TriangleVertices base1 = aTraits.MakeVertex(FirstTriangle());
     TriangleVertices base2 = aTraits.MakeVertex(SecondTriangle());
-    auto data1 = aTraits.MakeVertexData(FirstTriangle(), aItemIndex);
-    auto data2 = aTraits.MakeVertexData(SecondTriangle(), aItemIndex);
+    auto data1 = aTraits.MakeVertexData(FirstTriangle());
+    auto data2 = aTraits.MakeVertexData(SecondTriangle());
     return aBuffer->PrependItem(base1, data1) && aBuffer->PrependItem(base2, data2);
   }
 
   auto triangles = aTraits.GenerateTriangles(*aGeometry);
   for (const auto& triangle : triangles) {
     TriangleVertices base = aTraits.MakeVertex(triangle);
-    auto data = aTraits.MakeVertexData(triangle, aItemIndex);
+    auto data = aTraits.MakeVertexData(triangle);
     if (!aBuffer->PrependItem(base, data)) {
       return false;
     }
@@ -42,27 +41,27 @@ AddShaderTriangles(VertexStagingBuffer* aBuffer,
 
 template <typename Traits>
 inline bool
-BatchRenderPass<Traits>::Txn::Add(const Traits& aTraits)
+BatchRenderPass<Traits>::Txn::AddImpl(const Traits& aTraits)
 {
-  // If this succeeds, but we clip the polygon below, that's okay.
-  // Polygons do not use instanced rendering so this won't break
-  // ordering.
-  if (!aTraits.AddItemTo(mPass)) {
-    return false;
-  }
+  VertexStagingBuffer* instances = mPass->GetInstances();
 
   if (mPass->mGeometry == GeometryMode::Polygon) {
-    size_t itemIndex = mPass->GetItems()->NumItems() - 1;
-    if (aTraits.mItem.geometry) {
-      gfx::Polygon polygon = aTraits.mItem.geometry->ClipPolygon(aTraits.mRect);
+    if (const Maybe<gfx::Polygon>& geometry = aTraits.geometry()) {
+      gfx::Polygon polygon = geometry->ClipPolygon(aTraits.rect());
       if (polygon.IsEmpty()) {
         return true;
       }
-      return AddShaderTriangles(mPass->GetInstances(), aTraits, itemIndex, &polygon);
+      return AddShaderTriangles(instances, aTraits, &polygon);
     }
-    return AddShaderTriangles(mPass->GetInstances(), aTraits, itemIndex);
+    return AddShaderTriangles(instances, aTraits);
   }
-  return aTraits.AddInstanceTo(mPass);
+
+  typedef typename Traits::UnitQuadVertex UnitQuadVertex;
+  typedef typename Traits::UnitQuad UnitQuad;
+
+  UnitQuadVertex base = aTraits.MakeUnitQuadVertex();
+  auto data = aTraits.MakeVertexData(UnitQuad());
+  return instances->AddItem(base, data);
 }
 
 } // namespace layers
