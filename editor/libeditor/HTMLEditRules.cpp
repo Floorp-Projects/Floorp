@@ -352,7 +352,7 @@ HTMLEditRules::BeforeEdit(EditAction action,
     }
     mRangeItem->startNode = selection->GetRangeAt(0)->GetStartContainer();
     mRangeItem->startOffset = selection->GetRangeAt(0)->StartOffset();
-    mRangeItem->endNode = selection->GetRangeAt(0)->GetEndParent();
+    mRangeItem->endNode = selection->GetRangeAt(0)->GetEndContainer();
     mRangeItem->endOffset = selection->GetRangeAt(0)->EndOffset();
     nsCOMPtr<nsINode> selStartNode = mRangeItem->startNode;
     nsCOMPtr<nsINode> selEndNode = mRangeItem->endNode;
@@ -619,7 +619,7 @@ HTMLEditRules::WillDoAction(Selection* aSelection,
     return NS_OK;
   }
 
-  nsCOMPtr<nsINode> selEndNode = range->GetEndParent();
+  nsCOMPtr<nsINode> selEndNode = range->GetEndContainer();
 
   if (selStartNode != selEndNode) {
     NS_ENSURE_STATE(mHTMLEditor);
@@ -2043,7 +2043,7 @@ HTMLEditRules::WillDeleteSelection(Selection* aSelection,
 
         NS_ASSERTION(range->GetStartContainer() == visNode,
                      "selection start not in visNode");
-        NS_ASSERTION(range->GetEndParent() == visNode,
+        NS_ASSERTION(range->GetEndContainer() == visNode,
                      "selection end not in visNode");
 
         so = range->StartOffset();
@@ -2372,7 +2372,7 @@ HTMLEditRules::WillDeleteSelection(Selection* aSelection,
   startNode = aSelection->GetRangeAt(0)->GetStartContainer();
   startOffset = aSelection->GetRangeAt(0)->StartOffset();
   NS_ENSURE_TRUE(startNode, NS_ERROR_FAILURE);
-  nsCOMPtr<nsINode> endNode = aSelection->GetRangeAt(0)->GetEndParent();
+  nsCOMPtr<nsINode> endNode = aSelection->GetRangeAt(0)->GetEndContainer();
   int32_t endOffset = aSelection->GetRangeAt(0)->EndOffset();
   NS_ENSURE_TRUE(endNode, NS_ERROR_FAILURE);
 
@@ -5173,7 +5173,7 @@ HTMLEditRules::ExpandSelectionForDeletion(Selection& aSelection)
 
   nsCOMPtr<nsINode> selStartNode = range->GetStartContainer();
   int32_t selStartOffset = range->StartOffset();
-  nsCOMPtr<nsINode> selEndNode = range->GetEndParent();
+  nsCOMPtr<nsINode> selEndNode = range->GetEndContainer();
   int32_t selEndOffset = range->EndOffset();
 
   // Find current selection common block parent
@@ -5674,7 +5674,7 @@ HTMLEditRules::PromoteRange(nsRange& aRange,
   }
 
   nsCOMPtr<nsINode> startNode = aRange.GetStartContainer();
-  nsCOMPtr<nsINode> endNode = aRange.GetEndParent();
+  nsCOMPtr<nsINode> endNode = aRange.GetEndContainer();
   int32_t startOffset = aRange.StartOffset();
   int32_t endOffset = aRange.EndOffset();
 
@@ -5775,7 +5775,7 @@ HTMLEditRules::GetNodesForOperation(
     // elements needs to be moved.
     for (int32_t i = 0; i < rangeCount; i++) {
       RefPtr<nsRange> r = aArrayOfRanges[i];
-      nsCOMPtr<nsINode> endParent = r->GetEndParent();
+      nsCOMPtr<nsINode> endParent = r->GetEndContainer();
       if (!endParent->IsNodeOfType(nsINode::eTEXT)) {
         continue;
       }

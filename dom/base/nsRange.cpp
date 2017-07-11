@@ -119,7 +119,7 @@ nsRange::CompareNodeToRange(nsINode* aNode, nsRange* aRange,
   }
 
   nsINode* rangeStartParent = aRange->GetStartContainer();
-  nsINode* rangeEndParent = aRange->GetEndParent();
+  nsINode* rangeEndParent = aRange->GetEndContainer();
   int32_t rangeStartOffset = aRange->StartOffset();
   int32_t rangeEndOffset = aRange->EndOffset();
 
@@ -169,7 +169,7 @@ struct IsItemInRangeComparator
                                                 aRange->StartOffset());
     if (cmp == 1) {
       cmp = nsContentUtils::ComparePoints(mNode, mStartOffset,
-                                          aRange->GetEndParent(),
+                                          aRange->GetEndContainer(),
                                           aRange->EndOffset());
       if (cmp == -1) {
         return 0;
@@ -1989,7 +1989,7 @@ ValidateCurrentNode(nsRange* aRange, RangeSubtreeIterator& aIter)
       if (before && node == aRange->GetStartContainer()) {
         before = false;
       }
-      if (after && node == aRange->GetEndParent()) {
+      if (after && node == aRange->GetEndContainer()) {
         after = false;
       }
     }
@@ -2342,13 +2342,13 @@ nsRange::CompareBoundaryPoints(uint16_t aHow, nsRange& aOtherRange,
     case nsIDOMRange::END_TO_START:
       ourNode = mStartParent;
       ourOffset = mStartOffset;
-      otherNode = aOtherRange.GetEndParent();
+      otherNode = aOtherRange.GetEndContainer();
       otherOffset = aOtherRange.EndOffset();
       break;
     case nsIDOMRange::END_TO_END:
       ourNode = mEndParent;
       ourOffset = mEndOffset;
-      otherNode = aOtherRange.GetEndParent();
+      otherNode = aOtherRange.GetEndContainer();
       otherOffset = aOtherRange.EndOffset();
       break;
     default:

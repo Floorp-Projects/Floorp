@@ -1056,12 +1056,12 @@ AccessibleCaretManager::GetFrameForFirstRangeStartOrLastRangeEnd(
   if (findInFirstRangeStart) {
     range = selection->GetRangeAt(0);
     startNode = range->GetStartContainer();
-    endNode = range->GetEndParent();
+    endNode = range->GetEndContainer();
     nodeOffset = range->StartOffset();
     hint = CARET_ASSOCIATE_AFTER;
   } else {
     range = selection->GetRangeAt(selection->RangeCount() - 1);
-    startNode = range->GetEndParent();
+    startNode = range->GetEndContainer();
     endNode = range->GetStartContainer();
     nodeOffset = range->EndOffset();
     hint = CARET_ASSOCIATE_BEFORE;

@@ -144,7 +144,7 @@ HTMLEditor::SetInlineProperty(nsIAtom* aProperty,
 
       // Check for easy case: both range endpoints in same text node
       nsCOMPtr<nsINode> startNode = range->GetStartContainer();
-      nsCOMPtr<nsINode> endNode = range->GetEndParent();
+      nsCOMPtr<nsINode> endNode = range->GetEndContainer();
       if (startNode && startNode == endNode && startNode->GetAsText()) {
         rv = SetInlinePropertyOnTextNode(*startNode->GetAsText(),
                                          range->StartOffset(),
@@ -512,7 +512,7 @@ HTMLEditor::SplitStyleAboveRange(nsRange* inRange,
 
   nsCOMPtr<nsINode> startNode = inRange->GetStartContainer();
   int32_t startOffset = inRange->StartOffset();
-  nsCOMPtr<nsINode> endNode = inRange->GetEndParent();
+  nsCOMPtr<nsINode> endNode = inRange->GetEndContainer();
   int32_t endOffset = inRange->EndOffset();
 
   nsCOMPtr<nsINode> origStartNode = startNode;
@@ -854,7 +854,7 @@ HTMLEditor::PromoteRangeIfStartsOrEndsInNamedAnchor(nsRange& aRange)
   // We assume that <a> is not nested.
   nsCOMPtr<nsINode> startNode = aRange.GetStartContainer();
   int32_t startOffset = aRange.StartOffset();
-  nsCOMPtr<nsINode> endNode = aRange.GetEndParent();
+  nsCOMPtr<nsINode> endNode = aRange.GetEndContainer();
   int32_t endOffset = aRange.EndOffset();
 
   nsCOMPtr<nsINode> parent = startNode;
@@ -896,7 +896,7 @@ HTMLEditor::PromoteInlineRange(nsRange& aRange)
 {
   nsCOMPtr<nsINode> startNode = aRange.GetStartContainer();
   int32_t startOffset = aRange.StartOffset();
-  nsCOMPtr<nsINode> endNode = aRange.GetEndParent();
+  nsCOMPtr<nsINode> endNode = aRange.GetEndContainer();
   int32_t endOffset = aRange.EndOffset();
 
   while (startNode && !startNode->IsHTMLElement(nsGkAtoms::body) &&
@@ -1052,7 +1052,7 @@ HTMLEditor::GetInlinePropertyBase(nsIAtom& aProperty,
 
     nsAutoString firstValue, theValue;
 
-    nsCOMPtr<nsINode> endNode = range->GetEndParent();
+    nsCOMPtr<nsINode> endNode = range->GetEndContainer();
     int32_t endOffset = range->EndOffset();
 
     for (iter->Init(range); !iter->IsDone(); iter->Next()) {
@@ -1265,7 +1265,7 @@ HTMLEditor::RemoveInlinePropertyImpl(nsIAtom* aProperty,
 
       // Check for easy case: both range endpoints in same text node
       nsCOMPtr<nsINode> startNode = range->GetStartContainer();
-      nsCOMPtr<nsINode> endNode = range->GetEndParent();
+      nsCOMPtr<nsINode> endNode = range->GetEndContainer();
       if (startNode && startNode == endNode && startNode->GetAsText()) {
         // We're done with this range!
         if (IsCSSEnabled() &&
@@ -1396,7 +1396,7 @@ HTMLEditor::RelativeFontChange(FontSize aDir)
 
     // Check for easy case: both range endpoints in same text node
     nsCOMPtr<nsINode> startNode = range->GetStartContainer();
-    nsCOMPtr<nsINode> endNode = range->GetEndParent();
+    nsCOMPtr<nsINode> endNode = range->GetEndContainer();
     if (startNode == endNode && IsTextNode(startNode)) {
       rv = RelativeFontChangeOnTextNode(aDir, *startNode->GetAsText(),
                                         range->StartOffset(),

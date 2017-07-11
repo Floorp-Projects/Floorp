@@ -2896,7 +2896,7 @@ EditorBase::SplitNodeImpl(nsIContent& aExistingRightNode,
       MOZ_ASSERT(r->IsPositioned());
       range.mStartNode = r->GetStartContainer();
       range.mStartOffset = r->StartOffset();
-      range.mEndNode = r->GetEndParent();
+      range.mEndNode = r->GetEndContainer();
       range.mEndOffset = r->EndOffset();
 
       savedRanges.AppendElement(range);
@@ -3043,7 +3043,7 @@ EditorBase::JoinNodesImpl(nsINode* aNodeToKeep,
       MOZ_ASSERT(r->IsPositioned());
       range.mStartNode = r->GetStartContainer();
       range.mStartOffset = r->StartOffset();
-      range.mEndNode = r->GetEndParent();
+      range.mEndNode = r->GetEndContainer();
       range.mEndOffset = r->EndOffset();
 
       // If selection endpoint is between the nodes, remember it as being
@@ -3875,7 +3875,7 @@ EditorBase::GetEndNodeAndOffset(Selection* aSelection,
 
   NS_ENSURE_TRUE(range->IsPositioned(), NS_ERROR_FAILURE);
 
-  NS_IF_ADDREF(*aEndNode = range->GetEndParent());
+  NS_IF_ADDREF(*aEndNode = range->GetEndContainer());
   *aEndOffset = range->EndOffset();
   return NS_OK;
 }
@@ -5339,7 +5339,7 @@ EditorBase::GetIMESelectionStartOffsetIn(nsINode* aTextNode)
                    "start offset shouldn't be negative");
         minOffset = std::min(minOffset, range->StartOffset());
       }
-      if (NS_WARN_IF(range->GetEndParent() != aTextNode)) {
+      if (NS_WARN_IF(range->GetEndContainer() != aTextNode)) {
         // ignore the end offset...
       } else {
         MOZ_ASSERT(range->EndOffset() >= 0,

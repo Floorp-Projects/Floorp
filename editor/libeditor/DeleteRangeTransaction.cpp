@@ -58,7 +58,7 @@ DeleteRangeTransaction::DoTransaction()
   // build the child transactions
   nsCOMPtr<nsINode> startParent = rangeToDelete->GetStartContainer();
   int32_t startOffset = rangeToDelete->StartOffset();
-  nsCOMPtr<nsINode> endParent = rangeToDelete->GetEndParent();
+  nsCOMPtr<nsINode> endParent = rangeToDelete->GetEndContainer();
   int32_t endOffset = rangeToDelete->EndOffset();
   MOZ_ASSERT(startParent && endParent);
 
