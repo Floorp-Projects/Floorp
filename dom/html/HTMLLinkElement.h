@@ -118,6 +118,11 @@ public:
   {
     SetHTMLAttr(nsGkAtoms::hreflang, aHreflang, aRv);
   }
+  void GetAs(nsAString& aResult);
+  void SetAs(const nsAString& aAs, ErrorResult& aRv)
+  {
+    SetAttr(nsGkAtoms::as ,aAs, aRv);
+  }
   nsDOMTokenList* Sizes()
   {
     return GetTokenList(nsGkAtoms::sizes);

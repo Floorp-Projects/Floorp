@@ -349,7 +349,7 @@ struct Zone : public JS::shadow::Zone,
 
   private:
     // List of non-ephemeron weak containers to sweep during beginSweepingSweepGroup.
-    js::ZoneGroupData<mozilla::LinkedList<detail::WeakCacheBase>> weakCaches_;
+    js::ZoneGroupOrGCTaskData<mozilla::LinkedList<detail::WeakCacheBase>> weakCaches_;
   public:
     mozilla::LinkedList<detail::WeakCacheBase>& weakCaches() { return weakCaches_.ref(); }
     void registerWeakCache(detail::WeakCacheBase* cachep) {
@@ -507,17 +507,30 @@ struct Zone : public JS::shadow::Zone,
     // Creates a HashNumber based on getUniqueId. Returns false on OOM.
     MOZ_MUST_USE bool getHashCode(js::gc::Cell* cell, js::HashNumber* hashp) {
         uint64_t uid;
-        if (!getUniqueId(cell, &uid))
+        if (!getOrCreateUniqueId(cell, &uid))
             return false;
         *hashp = UniqueIdToHash(uid);
         return true;
     }
 
-    // Puts an existing UID in |uidp|, or creates a new UID for this Cell and
-    // puts that into |uidp|. Returns false on OOM.
-    MOZ_MUST_USE bool getUniqueId(js::gc::Cell* cell, uint64_t* uidp) {
+    // Gets an existing UID in |uidp| if one exists.
+    MOZ_MUST_USE bool maybeGetUniqueId(js::gc::Cell* cell, uint64_t* uidp) {
         MOZ_ASSERT(uidp);
         MOZ_ASSERT(js::CurrentThreadCanAccessZone(this));
+
+        // Get an existing uid, if one has been set.
+        auto p = uniqueIds().lookup(cell);
+        if (p)
+            *uidp = p->value();
+
+        return p.found();
+    }
+
+    // Puts an existing UID in |uidp|, or creates a new UID for this Cell and
+    // puts that into |uidp|. Returns false on OOM.
+    MOZ_MUST_USE bool getOrCreateUniqueId(js::gc::Cell* cell, uint64_t* uidp) {
+        MOZ_ASSERT(uidp);
+        MOZ_ASSERT(js::CurrentThreadCanAccessZone(this) || js::CurrentThreadIsPerformingGC());
 
         // Get an existing uid, if one has been set.
         auto p = uniqueIds().lookupForAdd(cell);
@@ -525,6 +538,8 @@ struct Zone : public JS::shadow::Zone,
             *uidp = p->value();
             return true;
         }
+
+        MOZ_ASSERT(js::CurrentThreadCanAccessZone(this));
 
         // Set a new uid on the cell.
         *uidp = js::gc::NextCellUniqueId(runtimeFromAnyThread());
@@ -549,14 +564,14 @@ struct Zone : public JS::shadow::Zone,
     uint64_t getUniqueIdInfallible(js::gc::Cell* cell) {
         uint64_t uid;
         js::AutoEnterOOMUnsafeRegion oomUnsafe;
-        if (!getUniqueId(cell, &uid))
+        if (!getOrCreateUniqueId(cell, &uid))
             oomUnsafe.crash("failed to allocate uid");
         return uid;
     }
 
     // Return true if this cell has a UID associated with it.
     MOZ_MUST_USE bool hasUniqueId(js::gc::Cell* cell) {
-        MOZ_ASSERT(js::CurrentThreadCanAccessZone(this));
+        MOZ_ASSERT(js::CurrentThreadCanAccessZone(this) || js::CurrentThreadIsPerformingGC());
         return uniqueIds().has(cell);
     }
 

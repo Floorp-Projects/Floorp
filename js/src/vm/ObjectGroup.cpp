@@ -384,58 +384,53 @@ struct ObjectGroupCompartment::NewEntry
           : clasp(clasp), proto(proto), associated(associated)
         {}
 
-        bool hasAssocId() const {
-            return !associated || associated->zone()->hasUniqueId(associated);
-        }
-
-        bool ensureAssocId() const {
-            uint64_t unusedId;
-            return !associated ||
-                   associated->zoneFromAnyThread()->getUniqueId(associated, &unusedId);
-        }
-
-        uint64_t getAssocId() const {
-            return associated ? associated->zone()->getUniqueIdInfallible(associated) : 0;
+        explicit Lookup(const NewEntry& entry)
+          : clasp(entry.group.unbarrieredGet()->clasp()),
+            proto(entry.group.unbarrieredGet()->proto()),
+            associated(entry.associated)
+        {
+            if (associated && associated->is<JSFunction>())
+                clasp = nullptr;
         }
     };
 
     static bool hasHash(const Lookup& l) {
-        return l.proto.hasUniqueId() && l.hasAssocId();
+        return MovableCellHasher<TaggedProto>::hasHash(l.proto) &&
+               MovableCellHasher<JSObject*>::hasHash(l.associated);
     }
 
     static bool ensureHash(const Lookup& l) {
-        return l.proto.ensureUniqueId() && l.ensureAssocId();
+        return MovableCellHasher<TaggedProto>::ensureHash(l.proto) &&
+               MovableCellHasher<JSObject*>::ensureHash(l.associated);
     }
 
     static inline HashNumber hash(const Lookup& lookup) {
-        MOZ_ASSERT(lookup.proto.hasUniqueId());
-        MOZ_ASSERT(lookup.hasAssocId());
         HashNumber hash = uintptr_t(lookup.clasp);
-        hash = mozilla::RotateLeft(hash, 4) ^ Zone::UniqueIdToHash(lookup.proto.uniqueId());
-        hash = mozilla::RotateLeft(hash, 4) ^ Zone::UniqueIdToHash(lookup.getAssocId());
+        hash = mozilla::RotateLeft(hash, 4) ^ MovableCellHasher<TaggedProto>::hash(lookup.proto);
+        hash = mozilla::RotateLeft(hash, 4) ^ MovableCellHasher<JSObject*>::hash(lookup.associated);
         return hash;
     }
 
     static inline bool match(const ObjectGroupCompartment::NewEntry& key, const Lookup& lookup) {
-        TaggedProto proto = key.group.unbarrieredGet()->proto();
-        JSObject* assoc = key.associated;
-        MOZ_ASSERT(proto.hasUniqueId());
-        MOZ_ASSERT_IF(assoc, assoc->zone()->hasUniqueId(assoc));
-        MOZ_ASSERT(lookup.proto.hasUniqueId());
-        MOZ_ASSERT(lookup.hasAssocId());
-
         if (lookup.clasp && key.group.unbarrieredGet()->clasp() != lookup.clasp)
             return false;
-        if (proto.uniqueId() != lookup.proto.uniqueId())
+
+        TaggedProto proto = key.group.unbarrieredGet()->proto();
+        if (!MovableCellHasher<TaggedProto>::match(proto, lookup.proto))
             return false;
-        return !assoc || assoc->zone()->getUniqueIdInfallible(assoc) == lookup.getAssocId();
+
+        return MovableCellHasher<JSObject*>::match(key.associated, lookup.associated);
     }
 
     static void rekey(NewEntry& k, const NewEntry& newKey) { k = newKey; }
 
     bool needsSweep() {
-        return (IsAboutToBeFinalized(&group) ||
-                (associated && IsAboutToBeFinalizedUnbarriered(&associated)));
+        return IsAboutToBeFinalized(&group) ||
+               (associated && IsAboutToBeFinalizedUnbarriered(&associated));
+    }
+
+    bool operator==(const NewEntry& other) const {
+        return group == other.group && associated == other.associated;
     }
 };
 
@@ -1453,6 +1448,13 @@ struct ObjectGroupCompartment::AllocationSiteKey : public DefaultHasher<Allocati
         return IsAboutToBeFinalizedUnbarriered(script.unsafeGet()) ||
             (proto && IsAboutToBeFinalizedUnbarriered(proto.unsafeGet()));
     }
+
+    bool operator==(const AllocationSiteKey& other) const {
+        return script == other.script &&
+               offset == other.offset &&
+               kind == other.kind &&
+               proto == other.proto;
+    }
 };
 
 class ObjectGroupCompartment::AllocationSiteTable
@@ -1557,7 +1559,7 @@ ObjectGroupCompartment::replaceAllocationSiteGroup(JSScript* script, jsbytecode*
 
     AllocationSiteTable::Ptr p = allocationSiteTable->lookup(key);
     MOZ_RELEASE_ASSERT(p);
-    allocationSiteTable->get().remove(p);
+    allocationSiteTable->remove(p);
     {
         AutoEnterOOMUnsafeRegion oomUnsafe;
         if (!allocationSiteTable->putNew(key, group))
@@ -1704,7 +1706,7 @@ ObjectGroupCompartment::removeDefaultNewGroup(const Class* clasp, TaggedProto pr
     auto p = defaultNewTable->lookup(NewEntry::Lookup(clasp, proto, associated));
     MOZ_RELEASE_ASSERT(p);
 
-    defaultNewTable->get().remove(p);
+    defaultNewTable->remove(p);
     defaultNewGroupCache.purge();
 }
 
@@ -1716,7 +1718,7 @@ ObjectGroupCompartment::replaceDefaultNewGroup(const Class* clasp, TaggedProto p
 
     auto p = defaultNewTable->lookup(lookup);
     MOZ_RELEASE_ASSERT(p);
-    defaultNewTable->get().remove(p);
+    defaultNewTable->remove(p);
     defaultNewGroupCache.purge();
     {
         AutoEnterOOMUnsafeRegion oomUnsafe;
@@ -1916,12 +1918,7 @@ ObjectGroupCompartment::checkNewTableAfterMovingGC(NewTable* table)
             CheckGCThingAfterMovingGC(proto.toObject());
         CheckGCThingAfterMovingGC(entry.associated);
 
-        const Class* clasp = entry.group.unbarrieredGet()->clasp();
-        if (entry.associated && entry.associated->is<JSFunction>())
-            clasp = nullptr;
-
-        NewEntry::Lookup lookup(clasp, proto, entry.associated);
-        auto ptr = table->lookup(lookup);
+        auto ptr = table->lookup(NewEntry::Lookup(entry));
         MOZ_RELEASE_ASSERT(ptr.found() && &*ptr == &r.front());
     }
 }

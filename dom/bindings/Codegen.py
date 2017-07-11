@@ -2009,9 +2009,8 @@ class CGHasInstanceHook(CGAbstractStaticMethod):
                     }
 
                     // FIXME Limit this to chrome by checking xpc::AccessCheck::isChrome(obj).
-                    nsISupports* native =
-                      nsContentUtils::XPConnect()->GetNativeOfWrapper(cx,
-                                                                      js::UncheckedUnwrap(instance, /* stopAtWindowProxy = */ false));
+                    nsCOMPtr<nsISupports> native =
+                      xpc::UnwrapReflectorToISupports(js::UncheckedUnwrap(instance, /* stopAtWindowProxy = */ false));
                     nsCOMPtr<nsIDOM${name}> qiResult = do_QueryInterface(native);
                     args.rval().setBoolean(!!qiResult);
                     return true;
@@ -4312,9 +4311,12 @@ def numericValue(t, v):
 
 class CastableObjectUnwrapper():
     """
-    A class for unwrapping an object named by the "source" argument
-    based on the passed-in descriptor and storing it in a variable
-    called by the name in the "target" argument.
+    A class for unwrapping an object stored in a JS Value (or
+    MutableHandle<Value> or Handle<Value>) named by the "source" and
+    "mutableSource" arguments based on the passed-in descriptor and storing it
+    in a variable called by the name in the "target" argument.  The "source"
+    argument should be able to produce a Value or Handle<Value>; the
+    "mutableSource" argument should be able to produce a MutableHandle<Value>
 
     codeOnFailure is the code to run if unwrapping fails.
 
@@ -4325,7 +4327,7 @@ class CastableObjectUnwrapper():
     If allowCrossOriginObj is True, then we'll first do an
     UncheckedUnwrap and then operate on the result.
     """
-    def __init__(self, descriptor, source, target, codeOnFailure,
+    def __init__(self, descriptor, source, mutableSource, target, codeOnFailure,
                  exceptionCode=None, isCallbackReturnValue=False,
                  allowCrossOriginObj=False):
         self.substitution = {
@@ -4334,37 +4336,43 @@ class CastableObjectUnwrapper():
             "target": target,
             "codeOnFailure": codeOnFailure,
         }
+        # Supporting both the "cross origin object" case and the "has
+        # XPConnect impls" case at the same time is a pain, so let's
+        # not do that.  That allows us to assume that our source is
+        # always a Handle or MutableHandle.
+        if allowCrossOriginObj and descriptor.hasXPConnectImpls:
+            raise TypeError("Interface %s both allows a cross-origin 'this' "
+                            "and has XPConnect impls.  We don't support that" %
+                            descriptor.name)
         if allowCrossOriginObj:
             self.substitution["uncheckedObjDecl"] = fill(
                 """
-                JS::Rooted<JSObject*> maybeUncheckedObj(cx);
-                if (xpc::WrapperFactory::IsXrayWrapper(${source})) {
-                  maybeUncheckedObj = js::UncheckedUnwrap(${source});
+                JS::Rooted<JSObject*> maybeUncheckedObj(cx, &${source}.toObject());
+                """,
+                source=source)
+            self.substitution["uncheckedObjGet"] = fill(
+                """
+                if (xpc::WrapperFactory::IsXrayWrapper(maybeUncheckedObj)) {
+                  maybeUncheckedObj = js::UncheckedUnwrap(maybeUncheckedObj);
                 } else {
-                  maybeUncheckedObj = js::CheckedUnwrap(${source});
+                  maybeUncheckedObj = js::CheckedUnwrap(maybeUncheckedObj);
                   if (!maybeUncheckedObj) {
                     $*{codeOnFailure}
                   }
                 }
                 """,
-                source=source,
                 codeOnFailure=(codeOnFailure % { 'securityError': 'true'}))
             self.substitution["source"] = "maybeUncheckedObj"
-            xpconnectUnwrap = dedent("""
-                nsresult rv;
-                { // Scope for the JSAutoCompartment, because we only
-                  // want to be in that compartment for the UnwrapArg call.
-                  JS::Rooted<JSObject*> source(cx, ${source});
-                  JSAutoCompartment ac(cx, ${source});
-                  rv = UnwrapArg<${type}>(cx, source, getter_AddRefs(objPtr));
-                }
-                """)
+            self.substitution["mutableSource"] = "&maybeUncheckedObj"
+            # No need to set up xpconnectUnwrap, since it won't be
+            # used in the allowCrossOriginObj case.
         else:
             self.substitution["uncheckedObjDecl"] = ""
+            self.substitution["uncheckedObjGet"] = ""
             self.substitution["source"] = source
+            self.substitution["mutableSource"] = mutableSource
             xpconnectUnwrap = (
-                "JS::Rooted<JSObject*> source(cx, ${source});\n"
-                "nsresult rv = UnwrapArg<${type}>(cx, source, getter_AddRefs(objPtr));\n")
+                "nsresult rv = UnwrapXPConnect<${type}>(cx, ${mutableSource}, getter_AddRefs(objPtr));\n")
 
         if descriptor.hasXPConnectImpls:
             self.substitution["codeOnFailure"] = string.Template(
@@ -4387,14 +4395,14 @@ class CastableObjectUnwrapper():
                 // they're wrapped in opaque security wrappers for some reason.
                 // XXXbz Wish we could check for a JS-implemented object
                 // that already has a content reflection...
-                if (!IsDOMObject(js::UncheckedUnwrap(${source}))) {
+                if (!IsDOMObject(js::UncheckedUnwrap(&${source}.toObject()))) {
                   nsCOMPtr<nsIGlobalObject> contentGlobal;
                   JS::Handle<JSObject*> callback = CallbackOrNull();
                   if (!callback ||
                       !GetContentGlobalForJSImplementedObject(cx, callback, getter_AddRefs(contentGlobal))) {
                     $*{exceptionCode}
                   }
-                  JS::Rooted<JSObject*> jsImplSourceObj(cx, ${source});
+                  JS::Rooted<JSObject*> jsImplSourceObj(cx, &${source}.toObject());
                   ${target} = new ${type}(jsImplSourceObj, contentGlobal);
                 } else {
                   $*{codeOnFailure}
@@ -4412,9 +4420,10 @@ class CastableObjectUnwrapper():
         }
         return fill(
             """
+            $*{uncheckedObjDecl}
             {
-              $*{uncheckedObjDecl}
-              nsresult rv = UnwrapObject<${protoID}, ${type}>(${source}, ${target});
+              $*{uncheckedObjGet}
+              nsresult rv = UnwrapObject<${protoID}, ${type}>(${mutableSource}, ${target});
               if (NS_FAILED(rv)) {
                 $*{codeOnFailure}
               }
@@ -4427,10 +4436,10 @@ class FailureFatalCastableObjectUnwrapper(CastableObjectUnwrapper):
     """
     As CastableObjectUnwrapper, but defaulting to throwing if unwrapping fails
     """
-    def __init__(self, descriptor, source, target, exceptionCode,
+    def __init__(self, descriptor, source, mutableSource, target, exceptionCode,
                  isCallbackReturnValue, sourceDescription):
         CastableObjectUnwrapper.__init__(
-            self, descriptor, source, target,
+            self, descriptor, source, mutableSource, target,
             'ThrowErrorMessage(cx, MSG_DOES_NOT_IMPLEMENT_INTERFACE, "%s", "%s");\n'
             '%s' % (sourceDescription, descriptor.interface.identifier.name,
                     exceptionCode),
@@ -4495,6 +4504,9 @@ class JSToNativeConversionInfo():
                   template substitution performed on it as follows:
 
           ${val} is a handle to the JS::Value in question
+          ${maybeMutableVal} May be a mutable handle to the JS::Value in
+                             question. This is only OK to use if ${val} is
+                             known to not be undefined.
           ${holderName} replaced by the holder's name, if any
           ${declName} replaced by the declaration's name
           ${haveValue} replaced by an expression that evaluates to a boolean
@@ -4890,6 +4902,7 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
 
         elementConversion = string.Template(elementInfo.template).substitute({
             "val": "temp" + str(nestingLevel),
+            "maybeMutableVal": "&temp" + str(nestingLevel),
             "declName": "slot" + str(nestingLevel),
             # We only need holderName here to handle isExternal()
             # interfaces, which use an internal holder for the
@@ -4999,6 +5012,7 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
 
         valueConversion = string.Template(valueInfo.template).substitute({
             "val": "temp",
+            "maybeMutableVal": "&temp",
             "declName": "slot",
             # We only need holderName here to handle isExternal()
             # interfaces, which use an internal holder for the
@@ -5670,13 +5684,15 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
             if failureCode is not None:
                 templateBody += str(CastableObjectUnwrapper(
                     descriptor,
-                    "&${val}.toObject()",
+                    "${val}",
+                    "${maybeMutableVal}",
                     "${declName}",
                     failureCode))
             else:
                 templateBody += str(FailureFatalCastableObjectUnwrapper(
                     descriptor,
-                    "&${val}.toObject()",
+                    "${val}",
+                    "${maybeMutableVal}",
                     "${declName}",
                     exceptionCode,
                     isCallbackReturnValue,
@@ -6323,6 +6339,9 @@ def instantiateJSToNativeConversion(info, replacements, checkForValue=False):
                     CGGeneric(originalHolderName),
                     holderCtorArgs, CGGeneric(";\n")]))
 
+    if "maybeMutableVal" not in replacements:
+        replacements["maybeMutableVal"] = replacements["val"]
+
     conversion = CGGeneric(
         string.Template(templateBody).substitute(replacements))
 
@@ -6416,6 +6435,8 @@ class CGArgumentConverter(CGThing):
         if member.isMethod() and member.isMaplikeOrSetlikeOrIterableMethod():
             self.replacementVariables["val"] = string.Template(
                 "args.get(${index})").substitute(replacer)
+            self.replacementVariables["maybeMutableVal"] = string.Template(
+                "args[${index}]").substitute(replacer)
         else:
             self.replacementVariables["val"] = string.Template(
                 "args[${index}]").substitute(replacer)
@@ -6487,6 +6508,7 @@ class CGArgumentConverter(CGThing):
         variadicConversion += indent(
             string.Template(typeConversion.template).substitute({
                 "val": val,
+                "maybeMutableVal": val,
                 "declName": "slot",
                 # We only need holderName here to handle isExternal()
                 # interfaces, which use an internal holder for the
@@ -8649,6 +8671,10 @@ class CGAbstractBindingMethod(CGAbstractStaticMethod):
         if self.getThisObj is not None:
             body += self.getThisObj.define() + "\n"
         body += "%s* self;\n" % self.descriptor.nativeType
+        body += dedent(
+            """
+            JS::Rooted<JS::Value> rootSelf(cx, JS::ObjectValue(*obj));
+            """)
 
         # Our descriptor might claim that we're not castable, simply because
         # we're someone's consequential interface.  But for this-unwrapping, we
@@ -8656,7 +8682,10 @@ class CGAbstractBindingMethod(CGAbstractStaticMethod):
         # consumption by CastableObjectUnwrapper.
         body += str(CastableObjectUnwrapper(
             self.descriptor,
-            "obj", "self", self.unwrapFailureCode,
+            "rootSelf",
+            "&rootSelf",
+            "self",
+            self.unwrapFailureCode,
             allowCrossOriginObj=self.allowCrossOriginThis))
 
         return body + self.generate_code().define()
@@ -10188,6 +10217,7 @@ def getUnionTypeTemplateVars(unionType, type, descriptorProvider,
         jsConversion = fill(
             initHolder + conversionInfo.template,
             val="value",
+            maybeMutableVal="value",
             declName="memberSlot",
             holderName=(holderName if ownsMembers else "%s.ref()" % holderName),
             destroyHolder=destroyHolder,
@@ -10207,9 +10237,14 @@ def getUnionTypeTemplateVars(unionType, type, descriptorProvider,
             ctorArgs=ctorArgs,
             jsConversion=jsConversion)
 
+        if ownsMembers:
+            handleType = "JS::Handle<JS::Value>"
+        else:
+            handleType = "JS::MutableHandle<JS::Value>"
+
         setter = ClassMethod("TrySetTo" + name, "bool",
                              [Argument("JSContext*", "cx"),
-                              Argument("JS::Handle<JS::Value>", "value"),
+                              Argument(handleType, "value"),
                               Argument("bool&", "tryNext"),
                               Argument("bool", "passedToJSImpl", default="false")],
                              inline=not ownsMembers,
@@ -11338,14 +11373,23 @@ class CGProxySpecialOperation(CGPerSignatureCall):
                                    descriptor.interface.identifier.name))
             if argumentHandleValue is None:
                 argumentHandleValue = "desc.value()"
+            rootedValue = fill(
+                """
+                JS::Rooted<JS::Value> rootedValue(cx, ${argumentHandleValue});
+                """,
+                argumentHandleValue = argumentHandleValue)
             templateValues = {
                 "declName": argument.identifier.name,
                 "holderName": argument.identifier.name + "_holder",
                 "val": argumentHandleValue,
+                "maybeMutableVal": "&rootedValue",
                 "obj": "obj",
                 "passedToJSImpl": "false"
             }
             self.cgRoot.prepend(instantiateJSToNativeConversion(info, templateValues))
+            # rootedValue needs to come before the conversion, so we
+            # need to prepend it last.
+            self.cgRoot.prepend(CGGeneric(rootedValue))
         elif operation.isGetter() or operation.isDeleter():
             if foundVar is None:
                 self.cgRoot.prepend(CGGeneric("bool found = false;\n"))
@@ -13398,6 +13442,7 @@ class CGDictionary(CGThing):
         member, conversionInfo = memberInfo
         replacements = {
             "val": "temp.ref()",
+            "maybeMutableVal": "temp.ptr()",
             "declName": self.makeMemberName(member.identifier.name),
             # We need a holder name for external interfaces, but
             # it's scoped down to the conversion so we can just use

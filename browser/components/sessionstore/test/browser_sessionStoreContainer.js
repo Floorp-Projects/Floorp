@@ -91,7 +91,7 @@ function waitForNewCookie() {
         Services.obs.removeObserver(observer, topic);
         resolve();
       }
-    }, "cookie-changed");
+    }, "session-cookie-changed");
   });
 }
 

@@ -115,15 +115,14 @@ js_option('--enable-debug',
 add_old_configure_assignment('MOZ_DEBUG',
                              depends('--enable-debug')(lambda v: bool(v)))
 
-imply_option('--enable-rust-debug',
-             depends('--enable-debug')(lambda v: bool(v) or None))
-
 js_option('--enable-rust-debug',
           help='Build Rust code with debug assertions turned on.')
 
-@depends('--enable-rust-debug')
-def debug_rust(debug):
-    if debug:
+@depends('--enable-rust-debug', '--enable-debug')
+def debug_rust(value, debug):
+    if value.origin == 'default':
+        return bool(debug) or None
+    elif bool(value):
         return True
 
 set_config('MOZ_DEBUG_RUST', debug_rust)

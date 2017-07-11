@@ -8,6 +8,8 @@
 loadScripts({ name: 'layout.js', dir: MOCHITESTS_DIR });
 
 async function runTests(browser, accDoc) {
+  loadFrameScripts(browser, { name: 'layout.js', dir: MOCHITESTS_DIR });
+
   let paragraph = findAccessibleChildByID(accDoc, "paragraph", [nsIAccessibleText]);
   let offset = 64; // beginning of 4th stanza
 
@@ -18,7 +20,9 @@ async function runTests(browser, accDoc) {
                                    COORDTYPE_SCREEN_RELATIVE, docX, docY);
   testTextPos(paragraph, offset, [x, docY], COORDTYPE_SCREEN_RELATIVE);
 
-  await zoomContent(browser, 2.0);
+  await ContentTask.spawn(browser, {}, () => {
+    zoomDocument(document, 2.0);
+  });
 
   paragraph = findAccessibleChildByID(accDoc, "paragraph2", [nsIAccessibleText]);
   offset = 52; // // beginning of 4th stanza

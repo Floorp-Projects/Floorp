@@ -16,9 +16,9 @@ function checkTextChangeEvent(event, id, text, start, end, isInserted, isFromUse
 }
 
 async function changeText(browser, id, value, events) {
-  let onEvents = waitForMultipleEvents(events.map(({ isInserted }) => {
+  let onEvents = waitForOrderedEvents(events.map(({ isInserted }) => {
     let eventType = isInserted ? EVENT_TEXT_INSERTED : EVENT_TEXT_REMOVED;
-    return { id, eventType };
+    return [ eventType, id ];
   }));
   // Change text in the subtree.
   await ContentTask.spawn(browser, [id, value], ([contentId, contentValue]) => {

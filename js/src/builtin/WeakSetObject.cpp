@@ -93,8 +93,7 @@ WeakSetObject::construct(JSContext* cx, unsigned argc, Value* vp)
         return false;
 
     RootedObject proto(cx);
-    RootedObject newTarget(cx, &args.newTarget().toObject());
-    if (!GetPrototypeFromConstructor(cx, newTarget, &proto))
+    if (!GetPrototypeFromBuiltinConstructor(cx, args, &proto))
         return false;
 
     Rooted<WeakSetObject*> obj(cx, WeakSetObject::create(cx, proto));
