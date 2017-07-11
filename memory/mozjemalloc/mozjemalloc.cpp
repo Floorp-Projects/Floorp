@@ -1081,27 +1081,6 @@ load_acquire_z(size_t *p)
 	return result;
 }
 
-/*
- * umax2s() provides minimal integer printing functionality, which is
- * especially useful for situations where allocation in vsnprintf() calls would
- * potentially cause deadlock.
- */
-#define	UMAX2S_BUFSIZE	65
-char *
-umax2s(uintmax_t x, char *s)
-{
-	unsigned i;
-
-	i = UMAX2S_BUFSIZE - 1;
-	s[i] = '\0';
-	do {
-		i--;
-		s[i] = "0123456789"[x % 10];
-		x /= 10;
-	} while (x > 0);
-	return (&s[i]);
-}
-
 static void
 _malloc_message(const char *p1, const char *p2, const char *p3, const char *p4)
 {
