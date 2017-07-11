@@ -2894,7 +2894,7 @@ EditorBase::SplitNodeImpl(nsIContent& aExistingRightNode,
     for (uint32_t j = 0; j < range.mSelection->RangeCount(); ++j) {
       RefPtr<nsRange> r = range.mSelection->GetRangeAt(j);
       MOZ_ASSERT(r->IsPositioned());
-      range.mStartNode = r->GetStartParent();
+      range.mStartNode = r->GetStartContainer();
       range.mStartOffset = r->StartOffset();
       range.mEndNode = r->GetEndParent();
       range.mEndOffset = r->EndOffset();
@@ -3041,7 +3041,7 @@ EditorBase::JoinNodesImpl(nsINode* aNodeToKeep,
     for (uint32_t j = 0; j < range.mSelection->RangeCount(); ++j) {
       RefPtr<nsRange> r = range.mSelection->GetRangeAt(j);
       MOZ_ASSERT(r->IsPositioned());
-      range.mStartNode = r->GetStartParent();
+      range.mStartNode = r->GetStartContainer();
       range.mStartOffset = r->StartOffset();
       range.mEndNode = r->GetEndParent();
       range.mEndOffset = r->EndOffset();
@@ -3827,7 +3827,7 @@ EditorBase::GetStartNodeAndOffset(Selection* aSelection,
 
   NS_ENSURE_TRUE(range->IsPositioned(), NS_ERROR_FAILURE);
 
-  NS_IF_ADDREF(*aStartNode = range->GetStartParent());
+  NS_IF_ADDREF(*aStartNode = range->GetStartContainer());
   *aStartOffset = range->StartOffset();
   return NS_OK;
 }
@@ -4491,7 +4491,7 @@ EditorBase::CreateTxnForDeleteRange(nsRange* aRangeToDelete,
   MOZ_ASSERT(aAction != eNone);
 
   // get the node and offset of the insertion point
-  nsCOMPtr<nsINode> node = aRangeToDelete->GetStartParent();
+  nsCOMPtr<nsINode> node = aRangeToDelete->GetStartContainer();
   if (NS_WARN_IF(!node)) {
     return nullptr;
   }
@@ -4902,7 +4902,7 @@ EditorBase::InitializeSelection(nsIDOMEventTarget* aFocusEventTarget)
     // XXX If selection is changed during reframe, this doesn't work well!
     nsRange* firstRange = selection->GetRangeAt(0);
     NS_ENSURE_TRUE(firstRange, NS_ERROR_FAILURE);
-    nsCOMPtr<nsINode> startNode = firstRange->GetStartParent();
+    nsCOMPtr<nsINode> startNode = firstRange->GetStartContainer();
     int32_t startOffset = firstRange->StartOffset();
     FindBetterInsertionPoint(startNode, startOffset);
     Text* textNode = startNode->GetAsText();
@@ -5332,7 +5332,7 @@ EditorBase::GetIMESelectionStartOffsetIn(nsINode* aTextNode)
       if (NS_WARN_IF(!range)) {
         continue;
       }
-      if (NS_WARN_IF(range->GetStartParent() != aTextNode)) {
+      if (NS_WARN_IF(range->GetStartContainer() != aTextNode)) {
         // ignore the start offset...
       } else {
         MOZ_ASSERT(range->StartOffset() >= 0,

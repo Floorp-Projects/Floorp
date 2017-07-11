@@ -73,7 +73,7 @@ public:
     return mRoot;
   }
 
-  nsINode* GetStartParent() const
+  nsINode* GetStartContainer() const
   {
     return mStartParent;
   }

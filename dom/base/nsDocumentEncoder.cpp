@@ -943,7 +943,7 @@ nsDocumentEncoder::SerializeRangeToString(nsRange *aRange,
   if (!mCommonParent)
     return NS_OK;
 
-  nsINode* startParent = aRange->GetStartParent();
+  nsINode* startParent = aRange->GetStartContainer();
   NS_ENSURE_TRUE(startParent, NS_ERROR_FAILURE);
   int32_t startOffset = aRange->StartOffset();
 
