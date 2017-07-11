@@ -1699,6 +1699,23 @@ nsStyleSet::RuleNodeWithReplacement(Element* aElement,
   return ruleWalker.CurrentNode();
 }
 
+static bool
+SkipsParentDisplayBasedStyleFixup(nsStyleContext* aStyleContext)
+{
+  CSSPseudoElementType type = aStyleContext->GetPseudoType();
+  switch (type) {
+    case CSSPseudoElementType::InheritingAnonBox:
+       return nsCSSAnonBoxes::AnonBoxSkipsParentDisplayBasedStyleFixup(
+                aStyleContext->GetPseudo());
+    case CSSPseudoElementType::NonInheritingAnonBox:
+       return true;
+    case CSSPseudoElementType::NotPseudo:
+       return false;
+    default:
+       return !nsCSSPseudoElements::PseudoElementIsFlexOrGridItem(type);
+  }
+}
+
 already_AddRefed<nsStyleContext>
 nsStyleSet::ResolveStyleWithReplacement(Element* aElement,
                                         Element* aPseudoElement,
@@ -1769,11 +1786,13 @@ nsStyleSet::ResolveStyleWithReplacement(Element* aElement,
 #endif
   }
 
-  if (aElement && aElement->IsRootOfAnonymousSubtree()) {
+  if ((aElement && aElement->IsRootOfAnonymousSubtree()) ||
+      SkipsParentDisplayBasedStyleFixup(aOldStyleContext)) {
     // For anonymous subtree roots, don't tweak "display" value based on whether
     // or not the parent is styled as a flex/grid container. (If the parent
     // has anonymous-subtree kids, then we know it's not actually going to get
-    // a flex/grid container frame, anyway.)
+    // a flex/grid container frame, anyway.)  Same for certain anonymous boxes
+    // and most pseudos.
     flags |= eSkipParentDisplayBasedStyleFixup;
   }
 
@@ -1945,11 +1964,11 @@ nsStyleSet::ResolvePseudoElementStyleInternal(
     if (aAnimationFlag == eWithAnimation) {
       flags |= eDoAnimation;
     }
-  } else {
-    // Flex and grid containers don't expect to have any pseudo-element children
-    // aside from ::before and ::after.  So if we have such a child, we're not
-    // actually in a flex/grid container, and we should skip flex/grid item
-    // style fixup.
+  }
+
+  if (!nsCSSPseudoElements::PseudoElementIsFlexOrGridItem(aType)) {
+    // Only pseudo-elements that act as items in flex and grid containers
+    // have parent display-based style fixup.
     flags |= eSkipParentDisplayBasedStyleFixup;
   }
 
@@ -2043,11 +2062,11 @@ nsStyleSet::ProbePseudoElementStyle(Element* aParentElement,
   if (aType == CSSPseudoElementType::before ||
       aType == CSSPseudoElementType::after) {
     flags |= eDoAnimation;
-  } else {
-    // Flex and grid containers don't expect to have any pseudo-element children
-    // aside from ::before and ::after.  So if we have such a child, we're not
-    // actually in a flex/grid container, and we should skip flex/grid item
-    // style fixup.
+  }
+
+  if (!nsCSSPseudoElements::PseudoElementIsFlexOrGridItem(aType)) {
+    // Only pseudo-elements that act as items in flex and grid containers
+    // have parent display-based style fixup.
     flags |= eSkipParentDisplayBasedStyleFixup;
   }
 
@@ -2502,13 +2521,12 @@ nsStyleSet::ReparentStyleContext(nsStyleContext* aStyleContext,
   }
 
   if ((aElement && aElement->IsRootOfAnonymousSubtree()) ||
-      (aStyleContext->IsAnonBox() &&
-       nsCSSAnonBoxes::AnonBoxSkipsParentDisplayBasedStyleFixup(
-         aStyleContext->GetPseudo()))) {
+      SkipsParentDisplayBasedStyleFixup(aStyleContext)) {
     // For anonymous subtree roots, don't tweak "display" value based on whether
     // or not the parent is styled as a flex/grid container. (If the parent
     // has anonymous-subtree kids, then we know it's not actually going to get
-    // a flex/grid container frame, anyway.)  Same for certain anonymous boxes.
+    // a flex/grid container frame, anyway.)  Same for certain anonymous boxes
+    // and most pseudos.
     flags |= eSkipParentDisplayBasedStyleFixup;
   }
 
