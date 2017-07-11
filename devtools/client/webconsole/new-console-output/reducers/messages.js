@@ -27,6 +27,11 @@ const MessageState = Immutable.Record({
   // Map of the form {messageId : tableData}, which represent the data passed
   // as an argument in console.table calls.
   messagesTableDataById: Immutable.Map(),
+  // Map of the form {messageId : {[actor]: properties}}, where `properties` is
+  // a RDP packet containing the properties of the ${actor} grip.
+  // This map is consumed by the ObjectInspector so we only load properties once,
+  // when needed (when an ObjectInspector node is expanded), and then caches them.
+  messagesObjectPropertiesById: Immutable.Map(),
   // Map of the form {groupMessageId : groupArray},
   // where groupArray is the list of of all the parent groups' ids of the groupMessageId.
   groupsById: Immutable.Map(),
@@ -47,6 +52,7 @@ function messages(state = new MessageState(), action, filtersState, prefsState) 
     messagesById,
     messagesUiById,
     messagesTableDataById,
+    messagesObjectPropertiesById,
     networkMessagesUpdateById,
     groupsById,
     currentGroup,
@@ -192,6 +198,18 @@ function messages(state = new MessageState(), action, filtersState, prefsState) 
     case constants.MESSAGE_TABLE_RECEIVE:
       const {id, data} = action;
       return state.set("messagesTableDataById", messagesTableDataById.set(id, data));
+
+    case constants.MESSAGE_OBJECT_PROPERTIES_RECEIVE:
+      return state.set(
+        "messagesObjectPropertiesById",
+        messagesObjectPropertiesById.set(
+          action.id,
+          Object.assign({
+            [action.actor]: action.properties
+          }, messagesObjectPropertiesById.get(action.id))
+        )
+      );
+
     case constants.NETWORK_MESSAGE_UPDATE:
       return state.set(
         "networkMessagesUpdateById",
