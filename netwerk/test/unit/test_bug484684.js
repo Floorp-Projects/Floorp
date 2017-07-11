@@ -7,24 +7,24 @@ const tests = [
 
    "300: " + URL + "\n" +
    "200: filename content-length last-modified file-type\n" +
-   "201: \"file1\" 0 Sun%2C%2001%20Jan%202000%2000%3A00%3A00 FILE \n" +
-   "201: \"%20file2\" 0 Sun%2C%2001%20Jan%202000%2000%3A00%3A00 FILE \n"],
+   "201: \"file1\" 0 Sat%2C%2001%20Jan%202000%2000%3A00%3A00 FILE \n" +
+   "201: \"%20file2\" 0 Sat%2C%2001%20Jan%202000%2000%3A00%3A00 FILE \n"],
   // old Hellsoft unix format
   ["-[RWCEMFA] supervisor         214059       Jan 01  2000    file1\r\n" +
    "-[RWCEMFA] supervisor         214059       Jan 01  2000     file2\r\n",
 
    "300: " + URL + "\n" +
    "200: filename content-length last-modified file-type\n" +
-   "201: \"file1\" 214059 Sun%2C%2001%20Jan%202000%2000%3A00%3A00 FILE \n" +
-   "201: \"file2\" 214059 Sun%2C%2001%20Jan%202000%2000%3A00%3A00 FILE \n"],
+   "201: \"file1\" 214059 Sat%2C%2001%20Jan%202000%2000%3A00%3A00 FILE \n" +
+   "201: \"file2\" 214059 Sat%2C%2001%20Jan%202000%2000%3A00%3A00 FILE \n"],
   // new Hellsoft unix format
   ["- [RWCEAFMS] jrd                    192 Jan 01  2000 file1\r\n"+
    "- [RWCEAFMS] jrd                    192 Jan 01  2000  file2\r\n",
 
    "300: " + URL + "\n" +
    "200: filename content-length last-modified file-type\n" +
-   "201: \"file1\" 192 Sun%2C%2001%20Jan%202000%2000%3A00%3A00 FILE \n" +
-   "201: \"%20file2\" 192 Sun%2C%2001%20Jan%202000%2000%3A00%3A00 FILE \n"],
+   "201: \"file1\" 192 Sat%2C%2001%20Jan%202000%2000%3A00%3A00 FILE \n" +
+   "201: \"%20file2\" 192 Sat%2C%2001%20Jan%202000%2000%3A00%3A00 FILE \n"],
   // DOS format with correct offsets
   ["01-01-00  01:00AM       <DIR>          dir1\r\n" +
    "01-01-00  01:00AM       <JUNCTION>     junction1 -> foo1\r\n" +
@@ -35,12 +35,12 @@ const tests = [
 
    "300: " + URL + "\n" +
    "200: filename content-length last-modified file-type\n" +
-   "201: \"dir1\" 0 Sun%2C%2001%20Jan%202000%2001%3A00%3A00 DIRECTORY \n" +
-   "201: \"junction1\"  Sun%2C%2001%20Jan%202000%2001%3A00%3A00 SYMBOLIC-LINK \n" +
-   "201: \"file1\" 95077 Sun%2C%2001%20Jan%202000%2001%3A00%3A00 FILE \n" +
-   "201: \"%20dir2\" 0 Sun%2C%2001%20Jan%202000%2001%3A00%3A00 DIRECTORY \n" +
-   "201: \"%20junction2\"  Sun%2C%2001%20Jan%202000%2001%3A00%3A00 SYMBOLIC-LINK \n" +
-   "201: \"%20file2\" 95077 Sun%2C%2001%20Jan%202000%2001%3A00%3A00 FILE \n"],
+   "201: \"dir1\" 0 Sat%2C%2001%20Jan%202000%2001%3A00%3A00 DIRECTORY \n" +
+   "201: \"junction1\"  Sat%2C%2001%20Jan%202000%2001%3A00%3A00 SYMBOLIC-LINK \n" +
+   "201: \"file1\" 95077 Sat%2C%2001%20Jan%202000%2001%3A00%3A00 FILE \n" +
+   "201: \"%20dir2\" 0 Sat%2C%2001%20Jan%202000%2001%3A00%3A00 DIRECTORY \n" +
+   "201: \"%20junction2\"  Sat%2C%2001%20Jan%202000%2001%3A00%3A00 SYMBOLIC-LINK \n" +
+   "201: \"%20file2\" 95077 Sat%2C%2001%20Jan%202000%2001%3A00%3A00 FILE \n"],
   // DOS format with wrong offsets
   ["01-01-00  01:00AM       <DIR>       dir1\r\n" +
    "01-01-00  01:00AM     <DIR>             dir2\r\n" +
@@ -53,14 +53,14 @@ const tests = [
 
    "300: " + URL + "\n" +
    "200: filename content-length last-modified file-type\n" +
-   "201: \"dir1\" 0 Sun%2C%2001%20Jan%202000%2001%3A00%3A00 DIRECTORY \n" +
-   "201: \"dir2\" 0 Sun%2C%2001%20Jan%202000%2001%3A00%3A00 DIRECTORY \n" +
-   "201: \"dir3\" 0 Sun%2C%2001%20Jan%202000%2001%3A00%3A00 DIRECTORY \n" +
-   "201: \"junction1\"  Sun%2C%2001%20Jan%202000%2001%3A00%3A00 SYMBOLIC-LINK \n" +
-   "201: \"junction2\"  Sun%2C%2001%20Jan%202000%2001%3A00%3A00 SYMBOLIC-LINK \n" +
-   "201: \"junction3\"  Sun%2C%2001%20Jan%202000%2001%3A00%3A00 SYMBOLIC-LINK \n" +
-   "201: \"file1\" 95077 Sun%2C%2001%20Jan%202000%2001%3A00%3A00 FILE \n" +
-   "201: \"file2\" 95077 Sun%2C%2001%20Jan%202000%2001%3A00%3A00 FILE \n"]
+   "201: \"dir1\" 0 Sat%2C%2001%20Jan%202000%2001%3A00%3A00 DIRECTORY \n" +
+   "201: \"dir2\" 0 Sat%2C%2001%20Jan%202000%2001%3A00%3A00 DIRECTORY \n" +
+   "201: \"dir3\" 0 Sat%2C%2001%20Jan%202000%2001%3A00%3A00 DIRECTORY \n" +
+   "201: \"junction1\"  Sat%2C%2001%20Jan%202000%2001%3A00%3A00 SYMBOLIC-LINK \n" +
+   "201: \"junction2\"  Sat%2C%2001%20Jan%202000%2001%3A00%3A00 SYMBOLIC-LINK \n" +
+   "201: \"junction3\"  Sat%2C%2001%20Jan%202000%2001%3A00%3A00 SYMBOLIC-LINK \n" +
+   "201: \"file1\" 95077 Sat%2C%2001%20Jan%202000%2001%3A00%3A00 FILE \n" +
+   "201: \"file2\" 95077 Sat%2C%2001%20Jan%202000%2001%3A00%3A00 FILE \n"]
 ]
 
 function checkData(request, data, ctx) {
