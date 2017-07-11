@@ -603,6 +603,11 @@ LayerManagerComposite::RenderDebugOverlay(const IntRect& aBounds)
   bool drawFps = gfxPrefs::LayersDrawFPS();
   bool drawFrameColorBars = gfxPrefs::CompositorDrawColorBars();
 
+  // Don't draw diagnostic overlays if we want to snapshot the output.
+  if (mTarget) {
+    return;
+  }
+
   if (drawFps) {
     float alpha = 1;
 #ifdef ANDROID

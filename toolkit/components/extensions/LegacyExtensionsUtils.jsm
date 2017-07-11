@@ -17,6 +17,8 @@ const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "AsyncShutdown",
+                                  "resource://gre/modules/AsyncShutdown.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Extension",
                                   "resource://gre/modules/Extension.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "ExtensionChild",
@@ -205,9 +207,15 @@ class EmbeddedExtension {
 
     // If there is a pending startup,  wait to be completed and then shutdown.
     if (this.startupPromise) {
-      return this.startupPromise.then(() => {
-        this.extension.shutdown();
+      let promise = this.startupPromise.then(() => {
+        return this.extension.shutdown();
       });
+
+      AsyncShutdown.profileChangeTeardown.addBlocker(
+        `Legacy Extension Shutdown: ${this.addonId}`,
+        promise.catch(() => {}));
+
+      return promise;
     }
 
     // Run shutdown now if the embedded webextension has been correctly started

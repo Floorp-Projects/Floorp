@@ -253,6 +253,8 @@ add_task(async function test_backgroundScript() {
         // Make sure the set() handler landed.
         await globalChanges;
 
+        let date = new Date(0);
+
         clearGlobalChanges();
         await storage.set({
           "test-prop1": {
@@ -262,14 +264,21 @@ add_task(async function test_backgroundScript() {
             undef: undefined,
             obj: {},
             arr: [1, 2],
-            date: new Date(0),
+            date,
             regexp: /regexp/,
-            func: function func() {},
-            window,
           },
         });
 
-        await storage.set({"test-prop2": function func() {}});
+        await browser.test.assertRejects(
+          storage.set({
+            window,
+          }),
+          /DataCloneError|cyclic object value/);
+
+        await browser.test.assertRejects(
+          storage.set({"test-prop2": function func() {}}),
+          /DataCloneError/);
+
         const recentChanges = await globalChanges;
 
         browser.test.assertEq("value1", recentChanges["test-prop1"].oldValue, "oldValue correct");
@@ -279,24 +288,26 @@ add_task(async function test_backgroundScript() {
         data = await storage.get({"test-prop1": undefined, "test-prop2": undefined});
         let obj = data["test-prop1"];
 
+        if (areaName === "local") {
+          browser.test.assertEq(String(date), String(obj.date), "date part correct");
+          browser.test.assertEq("/regexp/", obj.regexp.toSource(), "regexp part correct");
+        } else {
+          browser.test.assertEq("1970-01-01T00:00:00.000Z", String(obj.date), "date part correct");
+
+          browser.test.assertEq("object", typeof obj.regexp, "regexp part is an object");
+          browser.test.assertEq(0, Object.keys(obj.regexp).length, "regexp part is an empty object");
+        }
+
         browser.test.assertEq("hello", obj.str, "string part correct");
         browser.test.assertEq(true, obj.bool, "bool part correct");
         browser.test.assertEq(null, obj.null, "null part correct");
         browser.test.assertEq(undefined, obj.undef, "undefined part correct");
-        browser.test.assertEq(undefined, obj.func, "function part correct");
         browser.test.assertEq(undefined, obj.window, "window part correct");
-        browser.test.assertEq("1970-01-01T00:00:00.000Z", obj.date, "date part correct");
-        browser.test.assertEq("/regexp/", obj.regexp, "regexp part correct");
         browser.test.assertEq("object", typeof(obj.obj), "object part correct");
         browser.test.assertTrue(Array.isArray(obj.arr), "array part present");
         browser.test.assertEq(1, obj.arr[0], "arr[0] part correct");
         browser.test.assertEq(2, obj.arr[1], "arr[1] part correct");
         browser.test.assertEq(2, obj.arr.length, "arr.length part correct");
-
-        obj = data["test-prop2"];
-
-        browser.test.assertEq("[object Object]", {}.toString.call(obj), "function serialized as a plain object");
-        browser.test.assertEq(0, Object.keys(obj).length, "function serialized as an empty object");
       } catch (e) {
         browser.test.fail(`Error: ${e} :: ${e.stack}`);
         browser.test.notifyFail("storage");

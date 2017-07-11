@@ -22,6 +22,7 @@ using mozilla::Telemetry::KeyedScalarAction from "mozilla/TelemetryComms.h";
 using mozilla::Telemetry::ChildEventData from "mozilla/TelemetryComms.h";
 using mozilla::Telemetry::DiscardedData from "mozilla/TelemetryComms.h";
 using mozilla::gfx::Feature from "gfxFeature.h";
+using mozilla::gfx::Fallback from "gfxFallback.h";
 
 namespace mozilla {
 namespace gfx {
@@ -120,6 +121,9 @@ child:
   // Update the UI process after a feature's status has changed. This is used
   // outside of the normal startup flow.
   async UpdateFeature(Feature aFeature, FeatureFailure aChange);
+
+  // Notify about:support/Telemetry that a fallback occurred.
+  async UsedFallback(Fallback aFallback, nsCString message);
 };
 
 } // namespace gfx

@@ -159,14 +159,8 @@ public:
   ShaderRenderPass(FrameBuilder* aBuilder, const ItemInfo& aItem);
 
   // Used by ShaderDefinitions for writing traits.
-  VertexStagingBuffer* GetVertices() {
-    return &mVertices;
-  }
   VertexStagingBuffer* GetInstances() {
     return &mInstances;
-  }
-  ConstantStagingBuffer* GetItems() {
-    return &mItems;
   }
 
   bool IsCompatible(const ItemInfo& aItem) override;
@@ -204,15 +198,6 @@ protected:
     return true;
   }
 
-  // Prepare the buffer bound to "sItems" in shaders. This is used for opaque
-  // batches when the items can be drawn in front-to-back order.
-  bool PrepareItemBuffer();
-
-  // Prepare the vertex buffer, if not using a unit quad. This is used for
-  // opaque batches when the items can be drawn in front-to-back order.
-  bool PrepareVertexBuffer();
-  bool PrepareInstanceBuffer();
-
   // Prepare the mask/opacity buffer bound in most pixel shaders.
   bool SetupPSBuffer0(float aOpacity);
 
@@ -228,14 +213,8 @@ protected:
   RefPtr<MaskOperation> mMask;
   bool mHasRectTransformAndClip;
 
-  VertexStagingBuffer mVertices;
-  VertexBufferSection mVertexBuffer;
-
   VertexStagingBuffer mInstances;
   VertexBufferSection mInstanceBuffer;
-
-  ConstantStagingBuffer mItems;
-  ConstantBufferSection mItemBuffer;
 
   ConstantBufferSection mPSBuffer0;
 };
@@ -261,43 +240,20 @@ protected:
   public:
     explicit Txn(BatchRenderPass* aPass)
      : mPass(aPass),
-       mPrevVertexPos(aPass->mVertices.GetPosition()),
-       mPrevItemPos(aPass->mItems.GetPosition()),
        mPrevInstancePos(aPass->mInstances.GetPosition())
     {}
 
-    // Add an item based on a draw rect, layer, and optional geometry. The Traits
-    // must contain, at minimum:
-    //
-    //  - An "mRect" member as a gfx::Rect, containing the draw rect.
-    //  - An "AddInstanceTo" method, which adds instance data for
-    //    shaders using unit-quad vertices.
-    //  - An "AddVerticesTo" method, which adds triangle list vertices
-    //    to a batch's shader data, with optional geometry.
-    //  - An "AddItemTo" method, which adds constant buffer data if
-    //    needed.
-    //
-    bool Add(const Traits& aTraits, const ItemInfo& aInfo) {
-      // If this succeeds, but we clip the polygon below, that's okay.
-      // Polygons do not use instanced rendering so this won't break
-      // ordering.
-      if (!aTraits.AddItemTo(mPass)) {
-        return false;
+    bool Add(const Traits& aTraits) {
+      if (!AddImpl(aTraits)) {
+        return Fail();
       }
-
-      if (mPass->mGeometry == GeometryMode::Polygon) {
-        size_t itemIndex = mPass->GetItems()->NumItems() - 1;
-        if (aInfo.geometry) {
-          gfx::Polygon polygon = aInfo.geometry->ClipPolygon(aTraits.mRect);
-          if (polygon.IsEmpty()) {
-            return true;
-          }
-          return aTraits.AddVerticesTo(mPass, aInfo, itemIndex, &polygon);
-        }
-        return aTraits.AddVerticesTo(mPass, aInfo, itemIndex);
-      }
-      return aTraits.AddInstanceTo(mPass, aInfo);
+      return true;
     }
+
+    // Add an item based on a draw rect, layer, and optional geometry. This is
+    // defined in RenderPassMLGPU-inl.h, since it needs access to
+    // ShaderDefinitionsMLGPU-inl.h.
+    bool AddImpl(const Traits& aTraits);
 
     bool Fail() {
       MOZ_ASSERT(!mStatus.isSome() || !mStatus.value());
@@ -316,9 +272,7 @@ protected:
 
     ~Txn() {
       if (!mStatus.isSome() || !mStatus.value()) {
-        mPass->mVertices.RestorePosition(mPrevVertexPos);
         mPass->mInstances.RestorePosition(mPrevInstancePos);
-        mPass->mItems.RestorePosition(mPrevItemPos);
       }
     }
 
