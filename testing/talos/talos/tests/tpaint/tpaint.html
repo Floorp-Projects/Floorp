@@ -20,8 +20,7 @@ var auto = document.location.search.split("=")[1]; // ?auto=1
  */
 
 async function startTest() {
-  TalosContentProfiler.initFromURLQueryParams(location.search);
-  await TalosContentProfiler.beginTest("tpaint");
+  await TalosContentProfiler.resume("tpaint", true);
   scheduleNextWindow();
 }
 
@@ -42,8 +41,6 @@ function calcMedian( numbers ) {
 }
 
 async function reportTimes() {
-  await TalosContentProfiler.finishTest();
-
   if (window.tpRecordTime)
     window.tpRecordTime(openTime);
 
@@ -55,7 +52,7 @@ async function reportTimes() {
 async function childIsOpen() {
   kidEndTime = window.performance.now();
   openTime = kidEndTime - kidStartTime;
-  await TalosContentProfiler.pause("tpaint");
+  await TalosContentProfiler.pause("tpaint", true);
 
   window.setTimeout(reportTimes, 0);
 }
