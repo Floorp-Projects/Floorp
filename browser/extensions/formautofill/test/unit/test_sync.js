@@ -159,14 +159,15 @@ add_task(async function test_outgoing() {
     expectLocalProfiles([
       {
         guid: existingGUID,
-        _sync: {changeCounter: 0},
       },
       {
         guid: deletedGUID,
-        _sync: {changeCounter: 0},
         deleted: true,
       },
     ]);
+
+    strictEqual(getSyncChangeCounter(profileStorage.addresses, existingGUID), 0);
+    strictEqual(getSyncChangeCounter(profileStorage.addresses, deletedGUID), 0);
   } finally {
     await cleanup(server);
   }
@@ -195,13 +196,14 @@ add_task(async function test_incoming_new() {
     expectLocalProfiles([
       {
         guid: profileID,
-        _sync: {changeCounter: 0},
       }, {
         guid: deletedID,
-        _sync: {changeCounter: 0},
         deleted: true,
       },
     ]);
+
+    strictEqual(getSyncChangeCounter(profileStorage.addresses, profileID), 0);
+    strictEqual(getSyncChangeCounter(profileStorage.addresses, deletedID), 0);
 
     // The sync applied new records - ensure our tracker knew it came from
     // sync and didn't bump the score.
@@ -339,11 +341,10 @@ add_task(async function test_dedupe_multiple_candidates() {
       },
     ]);
     // Make sure these are both syncing.
-    let addrA = profileStorage.addresses.get(aGuid, {rawData: true});
-    ok(addrA._sync);
-
-    let addrB = profileStorage.addresses.get(bGuid, {rawData: true});
-    ok(addrB._sync);
+    strictEqual(getSyncChangeCounter(profileStorage.addresses, aGuid), 0,
+      "A should be marked as syncing");
+    strictEqual(getSyncChangeCounter(profileStorage.addresses, bGuid), 0,
+      "B should be marked as syncing");
   } finally {
     await cleanup(server);
   }
