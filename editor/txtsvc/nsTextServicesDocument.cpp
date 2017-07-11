@@ -2806,16 +2806,19 @@ nsTextServicesDocument::SelectionIsValid()
 
 nsresult
 nsTextServicesDocument::GetRangeEndPoints(nsRange* aRange,
-                                          nsIDOMNode **aStartParent, int32_t *aStartOffset,
-                                          nsIDOMNode **aEndParent, int32_t *aEndOffset)
+                                          nsIDOMNode** aStartContainer,
+                                          int32_t* aStartOffset,
+                                          nsIDOMNode** aEndParent,
+                                          int32_t* aEndOffset)
 {
-  NS_ENSURE_TRUE(aRange && aStartParent && aStartOffset && aEndParent && aEndOffset, NS_ERROR_NULL_POINTER);
+  NS_ENSURE_TRUE(aRange && aStartContainer && aStartOffset &&
+                 aEndParent && aEndOffset, NS_ERROR_NULL_POINTER);
 
-  nsresult rv = aRange->GetStartContainer(aStartParent);
+  nsresult rv = aRange->GetStartContainer(aStartContainer);
 
   NS_ENSURE_SUCCESS(rv, rv);
 
-  NS_ENSURE_TRUE(aStartParent, NS_ERROR_FAILURE);
+  NS_ENSURE_TRUE(aStartContainer, NS_ERROR_FAILURE);
 
   rv = aRange->GetStartOffset(aStartOffset);
 
@@ -2831,11 +2834,13 @@ nsTextServicesDocument::GetRangeEndPoints(nsRange* aRange,
 }
 
 nsresult
-nsTextServicesDocument::CreateRange(nsIDOMNode *aStartParent, int32_t aStartOffset,
-                                    nsIDOMNode *aEndParent, int32_t aEndOffset,
+nsTextServicesDocument::CreateRange(nsIDOMNode* aStartContainer,
+                                    int32_t aStartOffset,
+                                    nsIDOMNode* aEndParent,
+                                    int32_t aEndOffset,
                                     nsRange** aRange)
 {
-  return nsRange::CreateRange(aStartParent, aStartOffset, aEndParent,
+  return nsRange::CreateRange(aStartContainer, aStartOffset, aEndParent,
                               aEndOffset, aRange);
 }
 

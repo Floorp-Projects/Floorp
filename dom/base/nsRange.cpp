@@ -266,15 +266,15 @@ nsRange::nsRange(nsINode* aNode)
 
 /* static */
 nsresult
-nsRange::CreateRange(nsINode* aStartParent, int32_t aStartOffset,
+nsRange::CreateRange(nsINode* aStartContainer, int32_t aStartOffset,
                      nsINode* aEndParent, int32_t aEndOffset,
                      nsRange** aRange)
 {
   MOZ_ASSERT(aRange);
   *aRange = nullptr;
 
-  RefPtr<nsRange> range = new nsRange(aStartParent);
-  nsresult rv = range->SetStartAndEnd(aStartParent, aStartOffset,
+  RefPtr<nsRange> range = new nsRange(aStartContainer);
+  nsresult rv = range->SetStartAndEnd(aStartContainer, aStartOffset,
                                       aEndParent, aEndOffset);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
@@ -285,23 +285,23 @@ nsRange::CreateRange(nsINode* aStartParent, int32_t aStartOffset,
 
 /* static */
 nsresult
-nsRange::CreateRange(nsIDOMNode* aStartParent, int32_t aStartOffset,
+nsRange::CreateRange(nsIDOMNode* aStartContainer, int32_t aStartOffset,
                      nsIDOMNode* aEndParent, int32_t aEndOffset,
                      nsRange** aRange)
 {
-  nsCOMPtr<nsINode> startParent = do_QueryInterface(aStartParent);
+  nsCOMPtr<nsINode> startParent = do_QueryInterface(aStartContainer);
   nsCOMPtr<nsINode> endParent = do_QueryInterface(aEndParent);
   return CreateRange(startParent, aStartOffset, endParent, aEndOffset, aRange);
 }
 
 /* static */
 nsresult
-nsRange::CreateRange(nsIDOMNode* aStartParent, int32_t aStartOffset,
+nsRange::CreateRange(nsIDOMNode* aStartContainer, int32_t aStartOffset,
                      nsIDOMNode* aEndParent, int32_t aEndOffset,
                      nsIDOMRange** aRange)
 {
   RefPtr<nsRange> range;
-  nsresult rv = nsRange::CreateRange(aStartParent, aStartOffset, aEndParent,
+  nsresult rv = nsRange::CreateRange(aStartContainer, aStartOffset, aEndParent,
                                      aEndOffset, getter_AddRefs(range));
   range.forget(aRange);
   return rv;
@@ -1019,12 +1019,12 @@ nsRange::Reset()
  ******************************************************/
 
 NS_IMETHODIMP
-nsRange::GetStartContainer(nsIDOMNode** aStartParent)
+nsRange::GetStartContainer(nsIDOMNode** aStartContainer)
 {
   if (!mIsPositioned)
     return NS_ERROR_NOT_INITIALIZED;
 
-  return CallQueryInterface(mStartContainer, aStartParent);
+  return CallQueryInterface(mStartContainer, aStartContainer);
 }
 
 nsINode*
@@ -1387,22 +1387,22 @@ nsRange::SetEnd(nsINode* aContainer, int32_t aOffset)
 }
 
 nsresult
-nsRange::SetStartAndEnd(nsINode* aStartParent, int32_t aStartOffset,
+nsRange::SetStartAndEnd(nsINode* aStartContainer, int32_t aStartOffset,
                         nsINode* aEndParent, int32_t aEndOffset)
 {
-  if (NS_WARN_IF(!aStartParent) || NS_WARN_IF(!aEndParent)) {
+  if (NS_WARN_IF(!aStartContainer) || NS_WARN_IF(!aEndParent)) {
     return NS_ERROR_INVALID_ARG;
   }
 
-  nsINode* newStartRoot = IsValidBoundary(aStartParent);
+  nsINode* newStartRoot = IsValidBoundary(aStartContainer);
   if (!newStartRoot) {
     return NS_ERROR_DOM_INVALID_NODE_TYPE_ERR;
   }
-  if (!IsValidOffset(aStartParent, aStartOffset)) {
+  if (!IsValidOffset(aStartContainer, aStartOffset)) {
     return NS_ERROR_DOM_INDEX_SIZE_ERR;
   }
 
-  if (aStartParent == aEndParent) {
+  if (aStartContainer == aEndParent) {
     if (!IsValidOffset(aEndParent, aEndOffset)) {
       return NS_ERROR_DOM_INDEX_SIZE_ERR;
     }
@@ -1411,7 +1411,7 @@ nsRange::SetStartAndEnd(nsINode* aStartParent, int32_t aStartOffset,
     if (aStartOffset > aEndOffset) {
       DoSetRange(aEndParent, aEndOffset, aEndParent, aEndOffset, newStartRoot);
     } else {
-      DoSetRange(aStartParent, aStartOffset,
+      DoSetRange(aStartContainer, aStartOffset,
                  aEndParent, aEndOffset, newStartRoot);
     }
     return NS_OK;
@@ -1433,14 +1433,15 @@ nsRange::SetStartAndEnd(nsINode* aStartParent, int32_t aStartOffset,
 
   // If the end point is before the start point, this should be collapsed at
   // the end point.
-  if (nsContentUtils::ComparePoints(aStartParent, aStartOffset,
+  if (nsContentUtils::ComparePoints(aStartContainer, aStartOffset,
                                     aEndParent, aEndOffset) == 1) {
     DoSetRange(aEndParent, aEndOffset, aEndParent, aEndOffset, newEndRoot);
     return NS_OK;
   }
 
   // Otherwise, set the range as specified.
-  DoSetRange(aStartParent, aStartOffset, aEndParent, aEndOffset, newStartRoot);
+  DoSetRange(aStartContainer, aStartOffset,
+             aEndParent, aEndOffset, newStartRoot);
   return NS_OK;
 }
 
@@ -1943,24 +1944,24 @@ CollapseRangeAfterDelete(nsRange* aRange)
 /**
  * Split a data node into two parts.
  *
- * @param aStartNode          The original node we are trying to split.
- * @param aStartIndex         The index at which to split.
+ * @param aStartContainer     The original node we are trying to split.
+ * @param aStartOffset        The offset at which to split.
  * @param aEndNode            The second node.
  * @param aCloneAfterOriginal Set false if the original node should be the
  *                            latter one after split.
  */
-static nsresult SplitDataNode(nsIDOMCharacterData* aStartNode,
-                              uint32_t aStartIndex,
+static nsresult SplitDataNode(nsIDOMCharacterData* aStartContainer,
+                              uint32_t aStartOffset,
                               nsIDOMCharacterData** aEndNode,
                               bool aCloneAfterOriginal = true)
 {
   nsresult rv;
-  nsCOMPtr<nsINode> node = do_QueryInterface(aStartNode);
+  nsCOMPtr<nsINode> node = do_QueryInterface(aStartContainer);
   NS_ENSURE_STATE(node && node->IsNodeOfType(nsINode::eDATA_NODE));
   nsGenericDOMDataNode* dataNode = static_cast<nsGenericDOMDataNode*>(node.get());
 
   nsCOMPtr<nsIContent> newData;
-  rv = dataNode->SplitData(aStartIndex, getter_AddRefs(newData),
+  rv = dataNode->SplitData(aStartOffset, getter_AddRefs(newData),
                            aCloneAfterOriginal);
   NS_ENSURE_SUCCESS(rv, rv);
   return CallQueryInterface(newData, aEndNode);
@@ -3095,23 +3096,24 @@ static nsresult GetPartialTextRect(nsLayoutUtils::RectCallback* aCallback,
 nsRange::CollectClientRectsAndText(nsLayoutUtils::RectCallback* aCollector,
                                    Sequence<nsString>* aTextList,
                                    nsRange* aRange,
-                                   nsINode* aStartParent, int32_t aStartOffset,
+                                   nsINode* aStartContainer,
+                                   int32_t aStartOffset,
                                    nsINode* aEndParent, int32_t aEndOffset,
                                    bool aClampToEdge, bool aFlushLayout)
 {
   // Hold strong pointers across the flush
-  nsCOMPtr<nsINode> startContainer = aStartParent;
+  nsCOMPtr<nsINode> startContainer = aStartContainer;
   nsCOMPtr<nsINode> endContainer = aEndParent;
 
   // Flush out layout so our frames are up to date.
-  if (!aStartParent->IsInUncomposedDoc()) {
+  if (!aStartContainer->IsInUncomposedDoc()) {
     return;
   }
 
   if (aFlushLayout) {
-    aStartParent->OwnerDoc()->FlushPendingNotifications(FlushType::Layout);
+    aStartContainer->OwnerDoc()->FlushPendingNotifications(FlushType::Layout);
     // Recheck whether we're still in the document
-    if (!aStartParent->IsInUncomposedDoc()) {
+    if (!aStartContainer->IsInUncomposedDoc()) {
       return;
     }
   }
@@ -3123,7 +3125,7 @@ nsRange::CollectClientRectsAndText(nsLayoutUtils::RectCallback* aCollector,
 
   if (iter.IsDone()) {
     // the range is collapsed, only continue if the cursor is in a text node
-    nsCOMPtr<nsIContent> content = do_QueryInterface(aStartParent);
+    nsCOMPtr<nsIContent> content = do_QueryInterface(aStartContainer);
     if (content && content->IsNodeOfType(nsINode::eTEXT)) {
       nsTextFrame* textFrame = GetTextFrameForContent(content, aFlushLayout);
       if (textFrame) {
@@ -3618,22 +3620,22 @@ IsLastNonemptyRowGroupOfTable(nsIFrame* aFrame)
 
 void
 nsRange::GetInnerTextNoFlush(DOMString& aValue, ErrorResult& aError,
-                             nsIContent* aStartParent, uint32_t aStartOffset,
+                             nsIContent* aStartContainer, uint32_t aStartOffset,
                              nsIContent* aEndParent, uint32_t aEndOffset)
 {
   InnerTextAccumulator result(aValue);
-  nsIContent* currentNode = aStartParent;
+  nsIContent* currentNode = aStartContainer;
   TreeTraversalState currentState = AFTER_NODE;
-  if (aStartParent->IsNodeOfType(nsINode::eTEXT)) {
-    auto t = static_cast<nsGenericDOMDataNode*>(aStartParent);
-    if (aStartParent == aEndParent) {
+  if (aStartContainer->IsNodeOfType(nsINode::eTEXT)) {
+    auto t = static_cast<nsGenericDOMDataNode*>(aStartContainer);
+    if (aStartContainer == aEndParent) {
       AppendTransformedText(result, t, aStartOffset, aEndOffset);
       return;
     }
     AppendTransformedText(result, t, aStartOffset, t->TextLength());
   } else {
-    if (uint32_t(aStartOffset) < aStartParent->GetChildCount()) {
-      currentNode = aStartParent->GetChildAt(aStartOffset);
+    if (uint32_t(aStartOffset) < aStartContainer->GetChildCount()) {
+      currentNode = aStartContainer->GetChildAt(aStartOffset);
       currentState = AT_NODE;
     }
   }
