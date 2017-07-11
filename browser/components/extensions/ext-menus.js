@@ -61,23 +61,7 @@ var gMenuBuilder = {
 
       // Display the extension icon on the root element.
       if (root.extension.manifest.icons) {
-        let parentWindow = contextData.menu.ownerGlobal;
-        let extension = root.extension;
-
-        let {icon} = IconDetails.getPreferredIcon(extension.manifest.icons, extension,
-                                                  16 * parentWindow.devicePixelRatio);
-
-        // The extension icons in the manifest are not pre-resolved, since
-        // they're sometimes used by the add-on manager when the extension is
-        // not enabled, and its URLs are not resolvable.
-        let resolvedURL = root.extension.baseURI.resolve(icon);
-
-        if (rootElement.localName == "menu") {
-          rootElement.setAttribute("class", "menu-iconic");
-        } else if (rootElement.localName == "menuitem") {
-          rootElement.setAttribute("class", "menuitem-iconic");
-        }
-        rootElement.setAttribute("image", resolvedURL);
+        this.setMenuItemIcon(rootElement, root.extension, contextData, root.extension.manifest.icons);
       }
 
       if (firstItem) {
@@ -212,6 +196,10 @@ var gMenuBuilder = {
         `${makeWidgetId(item.extension.id)}_${item.id}`);
     }
 
+    if (item.icons) {
+      this.setMenuItemIcon(element, item.extension, contextData, item.icons);
+    }
+
     if (item.type == "checkbox") {
       element.setAttribute("type", "checkbox");
       if (item.checked) {
@@ -274,6 +262,26 @@ var gMenuBuilder = {
     });
 
     return element;
+  },
+
+  setMenuItemIcon(element, extension, contextData, icons) {
+    let parentWindow = contextData.menu.ownerGlobal;
+
+    let {icon} = IconDetails.getPreferredIcon(icons, extension,
+                                              16 * parentWindow.devicePixelRatio);
+
+    // The extension icons in the manifest are not pre-resolved, since
+    // they're sometimes used by the add-on manager when the extension is
+    // not enabled, and its URLs are not resolvable.
+    let resolvedURL = extension.baseURI.resolve(icon);
+
+    if (element.localName == "menu") {
+      element.setAttribute("class", "menu-iconic");
+    } else if (element.localName == "menuitem") {
+      element.setAttribute("class", "menuitem-iconic");
+    }
+
+    element.setAttribute("image", resolvedURL);
   },
 
   handleEvent(event) {
