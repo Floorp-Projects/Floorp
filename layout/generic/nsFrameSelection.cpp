@@ -641,7 +641,7 @@ void printRange(nsRange *aDomRange)
     printf("NULL nsIDOMRange\n");
   }
   nsINode* startNode = aDomRange->GetStartContainer();
-  nsINode* endNode = aDomRange->GetEndParent();
+  nsINode* endNode = aDomRange->GetEndContainer();
   int32_t startOffset = aDomRange->StartOffset();
   int32_t endOffset = aDomRange->EndOffset();
 
@@ -838,7 +838,7 @@ nsFrameSelection::MoveCaret(nsDirection       aDirection,
         node =  anchorFocusRange->GetStartContainer();
         offset = anchorFocusRange->StartOffset();
       } else {
-        node = anchorFocusRange->GetEndParent();
+        node = anchorFocusRange->GetEndContainer();
         offset = anchorFocusRange->EndOffset();
       }
       sel->Collapse(node, offset);
@@ -1212,7 +1212,7 @@ nsFrameSelection::AdjustForMaintainedSelection(nsIContent *aContent,
     return false;
 
   nsINode* rangeStartNode = mMaintainRange->GetStartContainer();
-  nsINode* rangeEndNode = mMaintainRange->GetEndParent();
+  nsINode* rangeEndNode = mMaintainRange->GetEndContainer();
   int32_t rangeStartOffset = mMaintainRange->StartOffset();
   int32_t rangeEndOffset = mMaintainRange->EndOffset();
 

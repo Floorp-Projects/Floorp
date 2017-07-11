@@ -7460,7 +7460,7 @@ nsContentUtils::GetSelectionInTextControl(Selection* aSelection,
   // be doing anything in this function that invalidates the node tree.
   nsINode* startParent = range->GetStartContainer();
   uint32_t startOffset = range->StartOffset();
-  nsINode* endParent = range->GetEndParent();
+  nsINode* endParent = range->GetEndContainer();
   uint32_t endOffset = range->EndOffset();
 
   // We have at most two children, consisting of an optional text node followed

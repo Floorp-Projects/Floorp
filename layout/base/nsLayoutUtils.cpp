@@ -9161,7 +9161,7 @@ nsLayoutUtils::GetSelectionBoundingRect(Selection* aSel)
       nsRange::CollectClientRectsAndText(&accumulator, nullptr, range,
                                          range->GetStartContainer(),
                                          range->StartOffset(),
-                                         range->GetEndParent(),
+                                         range->GetEndContainer(),
                                          range->EndOffset(),
                                          true, false);
     }

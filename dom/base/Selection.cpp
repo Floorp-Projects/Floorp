@@ -444,7 +444,7 @@ void printRange(nsRange *aDomRange)
     printf("NULL nsIDOMRange\n");
   }
   nsINode* startNode = aDomRange->GetStartContainer();
-  nsINode* endNode = aDomRange->GetEndParent();
+  nsINode* endNode = aDomRange->GetEndContainer();
   int32_t startOffset = aDomRange->StartOffset();
   int32_t endOffset = aDomRange->EndOffset();
 
@@ -710,7 +710,7 @@ Selection::GetTableSelectionType(nsIDOMRange* aDOMRange,
   nsINode* startNode = range->GetStartContainer();
   if (!startNode) return NS_ERROR_FAILURE;
 
-  nsINode* endNode = range->GetEndParent();
+  nsINode* endNode = range->GetEndContainer();
   if (!endNode) return NS_ERROR_FAILURE;
 
   // Not a single selected node
@@ -863,7 +863,7 @@ Selection::GetAnchorNode()
     return mAnchorFocusRange->GetStartContainer();
   }
 
-  return mAnchorFocusRange->GetEndParent();
+  return mAnchorFocusRange->GetEndContainer();
 }
 
 NS_IMETHODIMP
@@ -893,7 +893,7 @@ Selection::GetFocusNode()
     return nullptr;
 
   if (GetDirection() == eDirNext){
-    return mAnchorFocusRange->GetEndParent();
+    return mAnchorFocusRange->GetEndContainer();
   }
 
   return mAnchorFocusRange->GetStartContainer();
@@ -968,7 +968,7 @@ static nsresult
 CompareToRangeEnd(nsINode* aCompareNode, int32_t aCompareOffset,
                   nsRange* aRange, int32_t* aCmp)
 {
-  nsINode* end = aRange->GetEndParent();
+  nsINode* end = aRange->GetEndContainer();
   NS_ENSURE_STATE(aCompareNode && end);
   // If the nodes that we're comparing are not in the same document,
   // assume that aCompareNode will fall at the end of the ranges.
@@ -1049,7 +1049,7 @@ Selection::SubtractRange(RangeData* aRange, nsRange* aSubtract,
 
   // Also, make a comparison to the range end
   int32_t cmp2;
-  rv = CompareToRangeEnd(range->GetEndParent(),
+  rv = CompareToRangeEnd(range->GetEndContainer(),
                          range->EndOffset(),
                          aSubtract, &cmp2);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -1062,10 +1062,10 @@ Selection::SubtractRange(RangeData* aRange, nsRange* aSubtract,
   if (cmp2 > 0) {
     // We need to add a new RangeData to the output, running from
     // the end of aSubtract to the end of range
-    RefPtr<nsRange> postOverlap = new nsRange(aSubtract->GetEndParent());
+    RefPtr<nsRange> postOverlap = new nsRange(aSubtract->GetEndContainer());
     rv = postOverlap->SetStartAndEnd(
-                        aSubtract->GetEndParent(), aSubtract->EndOffset(),
-                        range->GetEndParent(), range->EndOffset());
+                        aSubtract->GetEndContainer(), aSubtract->EndOffset(),
+                        range->GetEndContainer(), range->EndOffset());
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -1235,7 +1235,7 @@ Selection::AddItemInternal(nsRange* aItem, int32_t* aOutIndex)
   int32_t startIndex, endIndex;
   nsresult rv = GetIndicesForInterval(aItem->GetStartContainer(),
                                       aItem->StartOffset(),
-                                      aItem->GetEndParent(),
+                                      aItem->GetEndContainer(),
                                       aItem->EndOffset(), false,
                                       &startIndex, &endIndex);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -1255,7 +1255,7 @@ Selection::AddItemInternal(nsRange* aItem, int32_t* aOutIndex)
   // If the range is already contained in mRanges, silently succeed
   bool sameRange = EqualsRangeAtPoint(aItem->GetStartContainer(),
                                       aItem->StartOffset(),
-                                      aItem->GetEndParent(),
+                                      aItem->GetEndContainer(),
                                       aItem->EndOffset(), startIndex);
   if (sameRange) {
     *aOutIndex = startIndex;
@@ -1408,7 +1408,7 @@ RangeMatchesBeginPoint(nsRange* aRange, nsINode* aNode, int32_t aOffset)
 static inline bool
 RangeMatchesEndPoint(nsRange* aRange, nsINode* aNode, int32_t aOffset)
 {
-  return aRange->GetEndParent() == aNode && aRange->EndOffset() == aOffset;
+  return aRange->GetEndContainer() == aNode && aRange->EndOffset() == aOffset;
 }
 
 // Selection::EqualsRangeAtPoint
@@ -1812,7 +1812,7 @@ Selection::SelectFrames(nsPresContext* aPresContext, nsRange* aRange,
 
   // We must call first one explicitly
   bool isFirstContentTextNode = startContent->IsNodeOfType(nsINode::eTEXT);
-  nsINode* endNode = aRange->GetEndParent();
+  nsINode* endNode = aRange->GetEndContainer();
   if (isFirstContentTextNode) {
     nsIFrame* frame = startContent->GetPrimaryFrame();
     // The frame could be an SVG text frame, in which case we don't treat it
@@ -1941,7 +1941,7 @@ Selection::LookUpSelection(nsIContent* aContent, int32_t aContentOffset,
   for (uint32_t i = 0; i < overlappingRanges.Length(); i++) {
     nsRange* range = overlappingRanges[i];
     nsINode* startNode = range->GetStartContainer();
-    nsINode* endNode = range->GetEndParent();
+    nsINode* endNode = range->GetEndContainer();
     int32_t startOffset = range->StartOffset();
     int32_t endOffset = range->EndOffset();
 
@@ -2387,7 +2387,7 @@ Selection::RemoveRange(nsRange& aRange, ErrorResult& aRv)
   }
 
   nsINode* beginNode = aRange.GetStartContainer();
-  nsINode* endNode = aRange.GetEndParent();
+  nsINode* endNode = aRange.GetEndContainer();
 
   if (!beginNode || !endNode) {
     // Detached range; nothing else to do here.
@@ -2672,7 +2672,7 @@ Selection::CollapseToEnd(ErrorResult& aRv)
     int16_t reason = mFrameSelection->PopReason() | nsISelectionListener::COLLAPSETOEND_REASON;
     mFrameSelection->PostReason(reason);
   }
-  nsINode* parent = lastRange->GetEndParent();
+  nsINode* parent = lastRange->GetEndContainer();
   if (!parent) {
     aRv.Throw(NS_ERROR_FAILURE);
     return;
@@ -2909,7 +2909,7 @@ Selection::Extend(nsINode& aParentNode, uint32_t aOffset, ErrorResult& aRv)
   RefPtr<nsRange> range = mAnchorFocusRange->CloneRange();
 
   nsINode* startNode = range->GetStartContainer();
-  nsINode* endNode = range->GetEndParent();
+  nsINode* endNode = range->GetEndContainer();
   int32_t startOffset = range->StartOffset();
   int32_t endOffset = range->EndOffset();
 
@@ -2954,7 +2954,8 @@ Selection::Extend(nsINode& aParentNode, uint32_t aOffset, ErrorResult& aRv)
     }
     SetDirection(eDirNext);
     res = difRange->SetStartAndEnd(focusNode, focusOffset,
-                                   range->GetEndParent(), range->EndOffset());
+                                   range->GetEndContainer(),
+                                   range->EndOffset());
     if (NS_FAILED(res)) {
       aRv.Throw(res);
       return;
@@ -2999,7 +3000,7 @@ Selection::Extend(nsINode& aParentNode, uint32_t aOffset, ErrorResult& aRv)
       return;
     }
     SelectFrames(presContext, difRange, false); // deselect now
-    difRange->SetEnd(range->GetEndParent(), range->EndOffset());
+    difRange->SetEnd(range->GetEndContainer(), range->EndOffset());
     SelectFrames(presContext, difRange, true); // must reselect last node
                                                // maybe more
   }
@@ -3291,7 +3292,7 @@ Selection::ContainsPoint(const nsPoint& aPoint)
     nsRange::CollectClientRectsAndText(&checker, nullptr, range,
                                        range->GetStartContainer(),
                                        range->StartOffset(),
-                                       range->GetEndParent(),
+                                       range->GetEndContainer(),
                                        range->EndOffset(),
                                        true, false);
     if (checker.MatchFound()) {

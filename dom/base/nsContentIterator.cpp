@@ -317,7 +317,7 @@ nsContentIterator::Init(nsIDOMRange* aDOMRange)
   // get the end node and offset
   int32_t endIndx = range->EndOffset();
   NS_WARNING_ASSERTION(endIndx >= 0, "bad endIndx");
-  nsINode* endNode = range->GetEndParent();
+  nsINode* endNode = range->GetEndContainer();
   if (NS_WARN_IF(!endNode)) {
     return NS_ERROR_FAILURE;
   }
@@ -1285,7 +1285,7 @@ nsContentSubtreeIterator::Init(nsIDOMRange* aRange)
   mCommonParent = mRange->GetCommonAncestor();
   nsINode* startParent = mRange->GetStartContainer();
   int32_t startOffset = mRange->StartOffset();
-  nsINode* endParent = mRange->GetEndParent();
+  nsINode* endParent = mRange->GetEndContainer();
   int32_t endOffset = mRange->EndOffset();
   MOZ_ASSERT(mCommonParent && startParent && endParent);
   // Bug 767169

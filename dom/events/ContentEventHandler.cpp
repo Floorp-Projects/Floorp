@@ -165,7 +165,7 @@ ContentEventHandler::InitRootContent(Selection* aNormalSelection)
   // the deactive window is <input> or <textarea>, we can compute the
   // selection root from them.
   nsINode* startNode = range->GetStartContainer();
-  nsINode* endNode = range->GetEndParent();
+  nsINode* endNode = range->GetEndContainer();
   if (NS_WARN_IF(!startNode) || NS_WARN_IF(!endNode)) {
     return NS_ERROR_FAILURE;
   }
@@ -690,7 +690,7 @@ ContentEventHandler::GenerateFlatTextContent(nsRange* aRange,
   }
 
   nsINode* startNode = aRange->GetStartContainer();
-  nsINode* endNode = aRange->GetEndParent();
+  nsINode* endNode = aRange->GetEndContainer();
   if (NS_WARN_IF(!startNode) || NS_WARN_IF(!endNode)) {
     return NS_ERROR_FAILURE;
   }
@@ -864,7 +864,7 @@ ContentEventHandler::GenerateFlatFontRanges(nsRange* aRange,
   }
 
   nsINode* startNode = aRange->GetStartContainer();
-  nsINode* endNode = aRange->GetEndParent();
+  nsINode* endNode = aRange->GetEndContainer();
   if (NS_WARN_IF(!startNode) || NS_WARN_IF(!endNode)) {
     return NS_ERROR_FAILURE;
   }
@@ -1307,7 +1307,7 @@ ContentEventHandler::OnQuerySelectedText(WidgetQueryContentEvent* aEvent)
   }
 
   nsINode* const startNode = mFirstSelectedRange->GetStartContainer();
-  nsINode* const endNode = mFirstSelectedRange->GetEndParent();
+  nsINode* const endNode = mFirstSelectedRange->GetEndContainer();
 
   // Make sure the selection is within the root content range.
   if (!nsContentUtils::ContentIsDescendantOf(startNode, mRootContent) ||
@@ -1543,7 +1543,7 @@ ContentEventHandler::GetLastFrameInRangeForTextRect(nsRange* aRange)
   nsCOMPtr<nsIContentIterator> iter = NS_NewPreContentIterator();
   iter->Init(aRange);
 
-  nsINode* endNode = aRange->GetEndParent();
+  nsINode* endNode = aRange->GetEndContainer();
   uint32_t endOffset = static_cast<uint32_t>(aRange->EndOffset());
   // If the end point is start of a text node or specified by its parent and
   // index, the node shouldn't be included into the range.  For example,
@@ -1586,7 +1586,7 @@ ContentEventHandler::GetLastFrameInRangeForTextRect(nsRange* aRange)
 
     if (node->IsNodeOfType(nsINode::eTEXT)) {
       nodePosition.mNode = node;
-      if (node == aRange->GetEndParent()) {
+      if (node == aRange->GetEndContainer()) {
         nodePosition.mOffset = aRange->EndOffset();
       } else {
         nodePosition.mOffset = node->Length();
@@ -3015,7 +3015,7 @@ ContentEventHandler::OnSelectionEvent(WidgetSelectionEvent* aEvent)
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsINode* startNode = range->GetStartContainer();
-  nsINode* endNode = range->GetEndParent();
+  nsINode* endNode = range->GetEndContainer();
   int32_t startNodeOffset = range->StartOffset();
   int32_t endNodeOffset = range->EndOffset();
   AdjustRangeForSelection(mRootContent, &startNode, &startNodeOffset);

@@ -4575,7 +4575,7 @@ HTMLEditor::SetCSSBackgroundColor(const nsAString& aColor)
       // Check for easy case: both range endpoints in same text node
       nsCOMPtr<nsINode> startNode = range->GetStartContainer();
       int32_t startOffset = range->StartOffset();
-      nsCOMPtr<nsINode> endNode = range->GetEndParent();
+      nsCOMPtr<nsINode> endNode = range->GetEndContainer();
       int32_t endOffset = range->EndOffset();
       if (startNode == endNode && IsTextNode(startNode)) {
         // Let's find the block container of the text node
@@ -4867,7 +4867,7 @@ HTMLEditor::GetSelectionContainer()
 
       nsCOMPtr<nsINode> startContainer = range->GetStartContainer();
       int32_t startOffset = range->StartOffset();
-      nsCOMPtr<nsINode> endContainer = range->GetEndParent();
+      nsCOMPtr<nsINode> endContainer = range->GetEndContainer();
       int32_t endOffset = range->EndOffset();
 
       if (startContainer == endContainer && startOffset + 1 == endOffset) {

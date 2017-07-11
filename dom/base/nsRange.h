@@ -78,7 +78,7 @@ public:
     return mStartParent;
   }
 
-  nsINode* GetEndParent() const
+  nsINode* GetEndContainer() const
   {
     return mEndParent;
   }
