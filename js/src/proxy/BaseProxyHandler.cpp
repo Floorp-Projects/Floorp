@@ -325,8 +325,9 @@ BaseProxyHandler::fun_toString(JSContext* cx, HandleObject proxy, unsigned inden
     return nullptr;
 }
 
-RegExpShared*
-BaseProxyHandler::regexp_toShared(JSContext* cx, HandleObject proxy) const
+bool
+BaseProxyHandler::regexp_toShared(JSContext* cx, HandleObject proxy,
+                                  MutableHandleRegExpShared shared) const
 {
     MOZ_CRASH("This should have been a wrapped regexp");
 }

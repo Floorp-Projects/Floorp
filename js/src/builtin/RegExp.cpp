@@ -146,8 +146,8 @@ js::ExecuteRegExpLegacy(JSContext* cx, RegExpStatics* res, Handle<RegExpObject*>
                         HandleLinearString input, size_t* lastIndex, bool test,
                         MutableHandleValue rval)
 {
-    RootedRegExpShared shared(cx, RegExpObject::getShared(cx, reobj));
-    if (!shared)
+    RootedRegExpShared shared(cx);
+    if (!RegExpObject::getShared(cx, reobj, &shared))
         return false;
 
     ScopedMatchPairs matches(&cx->tempLifoAlloc());
@@ -234,8 +234,8 @@ RegExpInitializeIgnoringLastIndex(JSContext* cx, Handle<RegExpObject*> obj,
 
     if (sharedUse == UseRegExpShared) {
         /* Steps 7-8. */
-        RegExpShared* re = cx->zone()->regExps.get(cx, pattern, flags);
-        if (!re)
+        RootedRegExpShared re(cx);
+        if (!cx->zone()->regExps.get(cx, pattern, flags, &re))
             return false;
 
         /* Steps 9-12. */
@@ -340,12 +340,12 @@ regexp_compile_impl(JSContext* cx, const CallArgs& args)
         RegExpFlag flags;
         {
             // Step 3b.
-            RegExpShared* shared = RegExpToShared(cx, patternObj);
-            if (!shared)
+            RootedRegExpShared g(cx);
+            if (!RegExpToShared(cx, patternObj, &g))
                 return false;
 
-            sourceAtom = shared->getSource();
-            flags = shared->getFlags();
+            sourceAtom = g->getSource();
+            flags = g->getFlags();
         }
 
         // Step 5, minus lastIndex zeroing.
@@ -435,14 +435,14 @@ js::regexp_construct(JSContext* cx, unsigned argc, Value* vp)
         RegExpFlag flags;
         {
             // Step 4.a.
-            RegExpShared* shared = RegExpToShared(cx, patternObj);
-            if (!shared)
+            RootedRegExpShared g(cx);
+            if (!RegExpToShared(cx, patternObj, &g))
                 return false;
-            sourceAtom = shared->getSource();
+            sourceAtom = g->getSource();
 
             // Step 4.b.
             // Get original flags in all cases, to compare with passed flags.
-            flags = shared->getFlags();
+            flags = g->getFlags();
         }
 
         // Step 7.
@@ -899,8 +899,8 @@ ExecuteRegExp(JSContext* cx, HandleObject regexp, HandleString string,
     /* Steps 1-2 performed by the caller. */
     Rooted<RegExpObject*> reobj(cx, &regexp->as<RegExpObject>());
 
-    RootedRegExpShared re(cx, RegExpObject::getShared(cx, reobj));
-    if (!re)
+    RootedRegExpShared re(cx);
+    if (!RegExpObject::getShared(cx, reobj, &re))
         return RegExpRunStatus_Error;
 
     RegExpStatics* res;
