@@ -2424,14 +2424,14 @@ HTMLEditor::GetSelectedElement(const nsAString& aTagName,
   rv = range->GetStartOffset(&startOffset);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsIDOMNode> endParent;
-  rv = range->GetEndContainer(getter_AddRefs(endParent));
+  nsCOMPtr<nsIDOMNode> endContainer;
+  rv = range->GetEndContainer(getter_AddRefs(endContainer));
   NS_ENSURE_SUCCESS(rv, rv);
   rv = range->GetEndOffset(&endOffset);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Optimization for a single selected element
-  if (startContainer && startContainer == endParent &&
+  if (startContainer && startContainer == endContainer &&
       endOffset - startOffset == 1) {
     nsCOMPtr<nsIDOMNode> selectedNode = GetChildAt(startContainer, startOffset);
     NS_ENSURE_SUCCESS(rv, NS_OK);

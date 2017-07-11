@@ -1286,15 +1286,15 @@ nsContentSubtreeIterator::Init(nsIDOMRange* aRange)
   mCommonParent = mRange->GetCommonAncestor();
   nsINode* startContainer = mRange->GetStartContainer();
   int32_t startOffset = mRange->StartOffset();
-  nsINode* endParent = mRange->GetEndContainer();
+  nsINode* endContainer = mRange->GetEndContainer();
   int32_t endOffset = mRange->EndOffset();
-  MOZ_ASSERT(mCommonParent && startContainer && endParent);
+  MOZ_ASSERT(mCommonParent && startContainer && endContainer);
   // Bug 767169
   MOZ_ASSERT(uint32_t(startOffset) <= startContainer->Length() &&
-             uint32_t(endOffset) <= endParent->Length());
+             uint32_t(endOffset) <= endContainer->Length());
 
   // short circuit when start node == end node
-  if (startContainer == endParent) {
+  if (startContainer == endContainer) {
     nsINode* child = startContainer->GetFirstChild();
 
     if (!child || startOffset == endOffset) {
@@ -1305,7 +1305,7 @@ nsContentSubtreeIterator::Init(nsIDOMRange* aRange)
   }
 
   // cache ancestors
-  nsContentUtils::GetAncestorsAndOffsets(endParent->AsDOMNode(), endOffset,
+  nsContentUtils::GetAncestorsAndOffsets(endContainer->AsDOMNode(), endOffset,
                                          &mEndNodes, &mEndOffsets);
 
   nsIContent* firstCandidate = nullptr;
@@ -1359,16 +1359,16 @@ nsContentSubtreeIterator::Init(nsIDOMRange* aRange)
 
   // now to find the last node
   offset = mRange->EndOffset();
-  int32_t numChildren = endParent->GetChildCount();
+  int32_t numChildren = endContainer->GetChildCount();
 
   if (offset > numChildren) {
     // Can happen for text nodes
     offset = numChildren;
   }
   if (!offset || !numChildren) {
-    node = endParent;
+    node = endContainer;
   } else {
-    lastCandidate = endParent->GetChildAt(--offset);
+    lastCandidate = endContainer->GetChildAt(--offset);
     NS_ASSERTION(lastCandidate,
                  "tree traversal trouble in nsContentSubtreeIterator::Init");
   }

@@ -4884,13 +4884,13 @@ PresShell::CreateRangePaintInfo(nsIDOMRange* aRange,
   // frame, otherwise get the common ancestor of the two endpoints of the
   // range.
   nsINode* startContainer = range->GetStartContainer();
-  nsINode* endParent = range->GetEndContainer();
+  nsINode* endContainer = range->GetEndContainer();
   nsIDocument* doc = startContainer->GetComposedDoc();
-  if (startContainer == doc || endParent == doc) {
+  if (startContainer == doc || endContainer == doc) {
     ancestorFrame = rootFrame;
   } else {
     nsINode* ancestor =
-      nsContentUtils::GetCommonAncestor(startContainer, endParent);
+      nsContentUtils::GetCommonAncestor(startContainer, endContainer);
     NS_ASSERTION(!ancestor || ancestor->IsNodeOfType(nsINode::eCONTENT),
                  "common ancestor is not content");
     if (!ancestor || !ancestor->IsNodeOfType(nsINode::eCONTENT))
@@ -4944,9 +4944,9 @@ PresShell::CreateRangePaintInfo(nsIDOMRange* aRange,
     nsCOMPtr<nsINode> node = iter->GetCurrentNode();
     BuildDisplayListForNode(node);
   }
-  if (endParent != startContainer &&
-      endParent->NodeType() == nsIDOMNode::TEXT_NODE) {
-    BuildDisplayListForNode(endParent);
+  if (endContainer != startContainer &&
+      endContainer->NodeType() == nsIDOMNode::TEXT_NODE) {
+    BuildDisplayListForNode(endContainer);
   }
 
 #ifdef DEBUG

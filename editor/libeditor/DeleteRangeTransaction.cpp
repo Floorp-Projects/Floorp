@@ -58,11 +58,11 @@ DeleteRangeTransaction::DoTransaction()
   // build the child transactions
   nsCOMPtr<nsINode> startContainer = rangeToDelete->GetStartContainer();
   int32_t startOffset = rangeToDelete->StartOffset();
-  nsCOMPtr<nsINode> endParent = rangeToDelete->GetEndContainer();
+  nsCOMPtr<nsINode> endContainer = rangeToDelete->GetEndContainer();
   int32_t endOffset = rangeToDelete->EndOffset();
-  MOZ_ASSERT(startContainer && endParent);
+  MOZ_ASSERT(startContainer && endContainer);
 
-  if (startContainer == endParent) {
+  if (startContainer == endContainer) {
     // the selection begins and ends in the same node
     nsresult rv =
       CreateTxnsToDeleteBetween(startContainer, startOffset, endOffset);
@@ -77,7 +77,8 @@ DeleteRangeTransaction::DoTransaction()
     rv = CreateTxnsToDeleteNodesBetween(rangeToDelete);
     NS_ENSURE_SUCCESS(rv, rv);
     // delete the relevant content in the end node
-    rv = CreateTxnsToDeleteContent(endParent, endOffset, nsIEditor::ePrevious);
+    rv = CreateTxnsToDeleteContent(endContainer, endOffset,
+                                   nsIEditor::ePrevious);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 

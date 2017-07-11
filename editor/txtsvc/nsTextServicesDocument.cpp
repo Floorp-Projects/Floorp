@@ -2563,7 +2563,7 @@ nsTextServicesDocument::GetUncollapsedSelection(nsITextServicesDocument::TSDBloc
   // selection is not collapsed, and that the input params to this
   // method are initialized to some defaults.
 
-  nsCOMPtr<nsIDOMNode> startContainer, endParent;
+  nsCOMPtr<nsIDOMNode> startContainer, endContainer;
   int32_t startOffset, endOffset;
   int32_t rangeCount, tableCount;
   int32_t e1s1 = 0, e1s2 = 0, e2s1 = 0, e2s2 = 0;
@@ -2600,12 +2600,12 @@ nsTextServicesDocument::GetUncollapsedSelection(nsITextServicesDocument::TSDBloc
 
     rv = GetRangeEndPoints(range,
                            getter_AddRefs(startContainer), &startOffset,
-                           getter_AddRefs(endParent), &endOffset);
+                           getter_AddRefs(endContainer), &endOffset);
 
     NS_ENSURE_SUCCESS(rv, rv);
 
     e1s2 = nsContentUtils::ComparePoints(eStart->mNode, eStartOffset,
-                                         endParent, endOffset);
+                                         endContainer, endOffset);
     e2s1 = nsContentUtils::ComparePoints(eEnd->mNode, eEndOffset,
                                          startContainer, startOffset);
 
@@ -2629,7 +2629,7 @@ nsTextServicesDocument::GetUncollapsedSelection(nsITextServicesDocument::TSDBloc
   e1s1 = nsContentUtils::ComparePoints(eStart->mNode, eStartOffset,
                                        startContainer, startOffset);
   e2s2 = nsContentUtils::ComparePoints(eEnd->mNode, eEndOffset,
-                                       endParent, endOffset);
+                                       endContainer, endOffset);
 
   if (rangeCount > 1) {
     // There are multiple selection ranges, we only deal
@@ -2673,7 +2673,7 @@ nsTextServicesDocument::GetUncollapsedSelection(nsITextServicesDocument::TSDBloc
     p2 = do_QueryInterface(eEnd->mNode);
     o2 = eEndOffset;
   } else {
-    p2 = endParent;
+    p2 = endContainer;
     o2 = endOffset;
   }
 

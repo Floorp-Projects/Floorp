@@ -457,16 +457,16 @@ HTMLEditRules::AfterEditInner(EditAction action,
   RefPtr<Selection> selection = mHTMLEditor->GetSelection();
   NS_ENSURE_STATE(selection);
 
-  nsCOMPtr<nsIDOMNode> rangeStartContainer, rangeEndParent;
+  nsCOMPtr<nsIDOMNode> rangeStartContainer, rangeEndContainer;
   int32_t rangeStartOffset = 0, rangeEndOffset = 0;
   // do we have a real range to act on?
   bool bDamagedRange = false;
   if (mDocChangeRange) {
     mDocChangeRange->GetStartContainer(getter_AddRefs(rangeStartContainer));
-    mDocChangeRange->GetEndContainer(getter_AddRefs(rangeEndParent));
+    mDocChangeRange->GetEndContainer(getter_AddRefs(rangeEndContainer));
     mDocChangeRange->GetStartOffset(&rangeStartOffset);
     mDocChangeRange->GetEndOffset(&rangeEndOffset);
-    if (rangeStartContainer && rangeEndParent) {
+    if (rangeStartContainer && rangeEndContainer) {
       bDamagedRange = true;
     }
   }
@@ -569,7 +569,7 @@ HTMLEditRules::AfterEditInner(EditAction action,
                    GetAsDOMNode(mRangeItem->mStartContainer),
                    mRangeItem->mStartOffset,
                    rangeStartContainer, rangeStartOffset,
-                   rangeEndParent, rangeEndOffset);
+                   rangeEndContainer, rangeEndOffset);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // detect empty doc
@@ -5779,24 +5779,24 @@ HTMLEditRules::GetNodesForOperation(
     // elements needs to be moved.
     for (int32_t i = 0; i < rangeCount; i++) {
       RefPtr<nsRange> r = aArrayOfRanges[i];
-      nsCOMPtr<nsINode> endParent = r->GetEndContainer();
-      if (!endParent->IsNodeOfType(nsINode::eTEXT)) {
+      nsCOMPtr<nsINode> endContainer = r->GetEndContainer();
+      if (!endContainer->IsNodeOfType(nsINode::eTEXT)) {
         continue;
       }
       int32_t offset = r->EndOffset();
 
       if (0 < offset &&
-          offset < static_cast<int32_t>(endParent->Length())) {
+          offset < static_cast<int32_t>(endContainer->Length())) {
         // Split the text node.
         nsCOMPtr<nsIDOMNode> tempNode;
-        nsresult rv = htmlEditor->SplitNode(endParent->AsDOMNode(), offset,
+        nsresult rv = htmlEditor->SplitNode(endContainer->AsDOMNode(), offset,
                                             getter_AddRefs(tempNode));
         NS_ENSURE_SUCCESS(rv, rv);
 
         // Correct the range.
         // The new end parent becomes the parent node of the text.
-        nsCOMPtr<nsIContent> newParent = endParent->GetParent();
-        r->SetEnd(newParent, newParent->IndexOf(endParent));
+        nsCOMPtr<nsIContent> newParent = endContainer->GetParent();
+        r->SetEnd(newParent, newParent->IndexOf(endContainer));
       }
     }
   }
@@ -7917,7 +7917,7 @@ HTMLEditRules::SelectionEndpointInNode(nsINode* aNode,
   uint32_t rangeCount = selection->RangeCount();
   for (uint32_t rangeIdx = 0; rangeIdx < rangeCount; ++rangeIdx) {
     RefPtr<nsRange> range = selection->GetRangeAt(rangeIdx);
-    nsCOMPtr<nsIDOMNode> startContainer, endParent;
+    nsCOMPtr<nsIDOMNode> startContainer, endContainer;
     range->GetStartContainer(getter_AddRefs(startContainer));
     if (startContainer) {
       if (node == startContainer) {
@@ -7929,16 +7929,16 @@ HTMLEditRules::SelectionEndpointInNode(nsINode* aNode,
         return NS_OK;
       }
     }
-    range->GetEndContainer(getter_AddRefs(endParent));
-    if (startContainer == endParent) {
+    range->GetEndContainer(getter_AddRefs(endContainer));
+    if (startContainer == endContainer) {
       continue;
     }
-    if (endParent) {
-      if (node == endParent) {
+    if (endContainer) {
+      if (node == endContainer) {
         *aResult = true;
         return NS_OK;
       }
-      if (EditorUtils::IsDescendantOf(endParent, node)) {
+      if (EditorUtils::IsDescendantOf(endContainer, node)) {
         *aResult = true;
         return NS_OK;
       }
