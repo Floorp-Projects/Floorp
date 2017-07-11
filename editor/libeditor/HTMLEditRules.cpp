@@ -3229,21 +3229,22 @@ HTMLEditRules::WillMakeList(Selection* aSelection,
 
     // get selection location
     NS_ENSURE_STATE(aSelection->RangeCount());
-    nsCOMPtr<nsINode> parent = aSelection->GetRangeAt(0)->GetStartContainer();
+    nsCOMPtr<nsINode> container =
+      aSelection->GetRangeAt(0)->GetStartContainer();
     int32_t offset = aSelection->GetRangeAt(0)->StartOffset();
-    NS_ENSURE_STATE(parent);
+    NS_ENSURE_STATE(container);
 
     // make sure we can put a list here
     NS_ENSURE_STATE(mHTMLEditor);
-    if (!mHTMLEditor->CanContainTag(*parent, listType)) {
+    if (!mHTMLEditor->CanContainTag(*container, listType)) {
       *aCancel = true;
       return NS_OK;
     }
-    rv = SplitAsNeeded(listType, parent, offset);
+    rv = SplitAsNeeded(listType, container, offset);
     NS_ENSURE_SUCCESS(rv, rv);
     NS_ENSURE_STATE(mHTMLEditor);
     nsCOMPtr<Element> theList =
-      mHTMLEditor->CreateNode(listType, parent, offset);
+      mHTMLEditor->CreateNode(listType, container, offset);
     NS_ENSURE_STATE(theList);
 
     NS_ENSURE_STATE(mHTMLEditor);
@@ -3575,27 +3576,27 @@ HTMLEditRules::MakeBasicBlock(Selection& aSelection, nsIAtom& blockType)
     // Get selection location
     NS_ENSURE_STATE(aSelection.GetRangeAt(0) &&
                     aSelection.GetRangeAt(0)->GetStartContainer());
-    OwningNonNull<nsINode> parent =
+    OwningNonNull<nsINode> container =
       *aSelection.GetRangeAt(0)->GetStartContainer();
     int32_t offset = aSelection.GetRangeAt(0)->StartOffset();
 
     if (&blockType == nsGkAtoms::normal ||
         &blockType == nsGkAtoms::_empty) {
       // We are removing blocks (going to "body text")
-      NS_ENSURE_TRUE(htmlEditor->GetBlock(parent), NS_ERROR_NULL_POINTER);
-      OwningNonNull<Element> curBlock = *htmlEditor->GetBlock(parent);
+      NS_ENSURE_TRUE(htmlEditor->GetBlock(container), NS_ERROR_NULL_POINTER);
+      OwningNonNull<Element> curBlock = *htmlEditor->GetBlock(container);
       if (HTMLEditUtils::IsFormatNode(curBlock)) {
         // If the first editable node after selection is a br, consume it.
         // Otherwise it gets pushed into a following block after the split,
         // which is visually bad.
         nsCOMPtr<nsIContent> brNode =
-          htmlEditor->GetNextHTMLNode(parent, offset);
+          htmlEditor->GetNextHTMLNode(container, offset);
         if (brNode && brNode->IsHTMLElement(nsGkAtoms::br)) {
           rv = htmlEditor->DeleteNode(brNode);
           NS_ENSURE_SUCCESS(rv, rv);
         }
         // Do the splits!
-        offset = htmlEditor->SplitNodeDeep(curBlock, *parent->AsContent(),
+        offset = htmlEditor->SplitNodeDeep(curBlock, *container->AsContent(),
                                             offset,
                                             HTMLEditor::EmptyContainers::no);
         NS_ENSURE_STATE(offset != -1);
@@ -3612,7 +3613,7 @@ HTMLEditRules::MakeBasicBlock(Selection& aSelection, nsIAtom& blockType)
     } else {
       // We are making a block.  Consume a br, if needed.
       nsCOMPtr<nsIContent> brNode =
-        htmlEditor->GetNextHTMLNode(parent, offset, true);
+        htmlEditor->GetNextHTMLNode(container, offset, true);
       if (brNode && brNode->IsHTMLElement(nsGkAtoms::br)) {
         rv = htmlEditor->DeleteNode(brNode);
         NS_ENSURE_SUCCESS(rv, rv);
@@ -3620,10 +3621,10 @@ HTMLEditRules::MakeBasicBlock(Selection& aSelection, nsIAtom& blockType)
         arrayOfNodes.RemoveElement(brNode);
       }
       // Make sure we can put a block here
-      rv = SplitAsNeeded(blockType, parent, offset);
+      rv = SplitAsNeeded(blockType, container, offset);
       NS_ENSURE_SUCCESS(rv, rv);
       nsCOMPtr<Element> block =
-        htmlEditor->CreateNode(&blockType, parent, offset);
+        htmlEditor->CreateNode(&blockType, container, offset);
       NS_ENSURE_STATE(block);
       // Remember our new block for postprocessing
       mNewBlock = block;
@@ -3754,16 +3755,16 @@ HTMLEditRules::WillCSSIndent(Selection* aSelection,
   if (ListIsEmptyLine(arrayOfNodes)) {
     // get selection location
     NS_ENSURE_STATE(aSelection->RangeCount());
-    nsCOMPtr<nsINode> parent = aSelection->GetRangeAt(0)->GetStartContainer();
+    nsCOMPtr<nsINode> container = aSelection->GetRangeAt(0)->GetStartContainer();
     int32_t offset = aSelection->GetRangeAt(0)->StartOffset();
-    NS_ENSURE_STATE(parent);
+    NS_ENSURE_STATE(container);
 
     // make sure we can put a block here
-    rv = SplitAsNeeded(*nsGkAtoms::div, parent, offset);
+    rv = SplitAsNeeded(*nsGkAtoms::div, container, offset);
     NS_ENSURE_SUCCESS(rv, rv);
     NS_ENSURE_STATE(mHTMLEditor);
     nsCOMPtr<Element> theBlock = mHTMLEditor->CreateNode(nsGkAtoms::div,
-                                                         parent, offset);
+                                                         container, offset);
     NS_ENSURE_STATE(theBlock);
     // remember our new block for postprocessing
     mNewBlock = theBlock;
@@ -3941,16 +3942,17 @@ HTMLEditRules::WillHTMLIndent(Selection* aSelection,
   if (ListIsEmptyLine(arrayOfNodes)) {
     // get selection location
     NS_ENSURE_STATE(aSelection->RangeCount());
-    nsCOMPtr<nsINode> parent = aSelection->GetRangeAt(0)->GetStartContainer();
+    nsCOMPtr<nsINode> container =
+      aSelection->GetRangeAt(0)->GetStartContainer();
     int32_t offset = aSelection->GetRangeAt(0)->StartOffset();
-    NS_ENSURE_STATE(parent);
+    NS_ENSURE_STATE(container);
 
     // make sure we can put a block here
-    rv = SplitAsNeeded(*nsGkAtoms::blockquote, parent, offset);
+    rv = SplitAsNeeded(*nsGkAtoms::blockquote, container, offset);
     NS_ENSURE_SUCCESS(rv, rv);
     NS_ENSURE_STATE(mHTMLEditor);
     nsCOMPtr<Element> theBlock = mHTMLEditor->CreateNode(nsGkAtoms::blockquote,
-                                                         parent, offset);
+                                                         container, offset);
     NS_ENSURE_STATE(theBlock);
     // remember our new block for postprocessing
     mNewBlock = theBlock;

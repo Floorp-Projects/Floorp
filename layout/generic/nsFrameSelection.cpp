@@ -2386,14 +2386,17 @@ printf("HandleTableSelection: Unselecting mUnselectCellOnMouseUp; rangeCount=%d\
           RefPtr<nsRange> range = mDomSelections[index]->GetRangeAt(i);
           if (!range) return NS_ERROR_NULL_POINTER;
 
-          nsINode* parent = range->GetStartContainer();
-          if (!parent) return NS_ERROR_NULL_POINTER;
+          nsINode* container = range->GetStartContainer();
+          if (!container) {
+            return NS_ERROR_NULL_POINTER;
+          }
 
           int32_t offset = range->StartOffset();
           // Be sure previous selection is a table cell
-          nsIContent* child = parent->GetChildAt(offset);
-          if (child && IsCell(child))
-            previousCellParent = parent;
+          nsIContent* child = container->GetChildAt(offset);
+          if (child && IsCell(child)) {
+            previousCellParent = container;
+          }
 
           // We're done if we didn't find parent of a previously-selected cell
           if (!previousCellParent) break;

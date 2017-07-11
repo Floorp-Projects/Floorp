@@ -2459,8 +2459,8 @@ Selection::RemoveRange(nsRange& aRange, ErrorResult& aRv)
 NS_IMETHODIMP
 Selection::Collapse(nsIDOMNode* aContainer, int32_t aOffset)
 {
-  nsCOMPtr<nsINode> parentNode = do_QueryInterface(aContainer);
-  return Collapse(parentNode, aOffset);
+  nsCOMPtr<nsINode> container = do_QueryInterface(aContainer);
+  return Collapse(container, aOffset);
 }
 
 NS_IMETHODIMP
@@ -2501,18 +2501,18 @@ Selection::Collapse(nsINode& aContainer, uint32_t aOffset, ErrorResult& aRv)
     return;
   }
 
-  nsCOMPtr<nsINode> parentNode = &aContainer;
+  nsCOMPtr<nsINode> container = &aContainer;
 
   RefPtr<nsFrameSelection> frameSelection = mFrameSelection;
   frameSelection->InvalidateDesiredPos();
-  if (!IsValidSelectionPoint(frameSelection, parentNode)) {
+  if (!IsValidSelectionPoint(frameSelection, container)) {
     aRv.Throw(NS_ERROR_FAILURE);
     return;
   }
   nsresult result;
 
   RefPtr<nsPresContext> presContext = GetPresContext();
-  if (!presContext || presContext->Document() != parentNode->OwnerDoc()) {
+  if (!presContext || presContext->Document() != container->OwnerDoc()) {
     aRv.Throw(NS_ERROR_FAILURE);
     return;
   }
@@ -2528,16 +2528,16 @@ Selection::Collapse(nsINode& aContainer, uint32_t aOffset, ErrorResult& aRv)
 
   // Hack to display the caret on the right line (bug 1237236).
   if (frameSelection->GetHint() != CARET_ASSOCIATE_AFTER &&
-      parentNode->IsContent()) {
+      container->IsContent()) {
     int32_t frameOffset;
     nsTextFrame* f =
-      do_QueryFrame(nsCaret::GetFrameAndOffset(this, parentNode,
+      do_QueryFrame(nsCaret::GetFrameAndOffset(this, container,
                                                aOffset, &frameOffset));
     if (f && f->IsAtEndOfLine() && f->HasSignificantTerminalNewline()) {
-      if ((parentNode->AsContent() == f->GetContent() &&
+      if ((container->AsContent() == f->GetContent() &&
            f->GetContentEnd() == int32_t(aOffset)) ||
-          (parentNode == f->GetContent()->GetParentNode() &&
-           parentNode->IndexOf(f->GetContent()) + 1 == int32_t(aOffset))) {
+          (container == f->GetContent()->GetParentNode() &&
+           container->IndexOf(f->GetContent()) + 1 == int32_t(aOffset))) {
         frameSelection->SetHint(CARET_ASSOCIATE_AFTER);
       }
     }
@@ -2549,18 +2549,18 @@ Selection::Collapse(nsINode& aContainer, uint32_t aOffset, ErrorResult& aRv)
   if (oldRange && oldRange->GetRefCount() == 1) {
     range = oldRange;
   } else {
-    range = new nsRange(parentNode);
+    range = new nsRange(container);
   }
-  result = range->CollapseTo(parentNode, aOffset);
+  result = range->CollapseTo(container, aOffset);
   if (NS_FAILED(result)) {
     aRv.Throw(result);
     return;
   }
 
 #ifdef DEBUG_SELECTION
-  nsCOMPtr<nsIContent> content = do_QueryInterface(parentNode);
-  nsCOMPtr<nsIDocument> doc = do_QueryInterface(parentNode);
-  printf ("Sel. Collapse to %p %s %d\n", parentNode.get(),
+  nsCOMPtr<nsIContent> content = do_QueryInterface(container);
+  nsCOMPtr<nsIDocument> doc = do_QueryInterface(container);
+  printf ("Sel. Collapse to %p %s %d\n", container.get(),
           content ? nsAtomCString(content->NodeInfo()->NameAtom()).get()
                   : (doc ? "DOCUMENT" : "???"),
           aOffset);
@@ -2624,12 +2624,12 @@ Selection::CollapseToStart(ErrorResult& aRv)
     int16_t reason = mFrameSelection->PopReason() | nsISelectionListener::COLLAPSETOSTART_REASON;
     mFrameSelection->PostReason(reason);
   }
-  nsINode* parent = firstRange->GetStartContainer();
-  if (!parent) {
+  nsINode* container = firstRange->GetStartContainer();
+  if (!container) {
     aRv.Throw(NS_ERROR_FAILURE);
     return;
   }
-  Collapse(*parent, firstRange->StartOffset(), aRv);
+  Collapse(*container, firstRange->StartOffset(), aRv);
 }
 
 /*
@@ -2673,12 +2673,12 @@ Selection::CollapseToEnd(ErrorResult& aRv)
     int16_t reason = mFrameSelection->PopReason() | nsISelectionListener::COLLAPSETOEND_REASON;
     mFrameSelection->PostReason(reason);
   }
-  nsINode* parent = lastRange->GetEndContainer();
-  if (!parent) {
+  nsINode* container = lastRange->GetEndContainer();
+  if (!container) {
     aRv.Throw(NS_ERROR_FAILURE);
     return;
   }
-  Collapse(*parent, lastRange->EndOffset(), aRv);
+  Collapse(*container, lastRange->EndOffset(), aRv);
 }
 
 /*
@@ -2844,8 +2844,8 @@ a  2  1 deselect from 2 to 1
 NS_IMETHODIMP
 Selection::Extend(nsIDOMNode* aContainer, int32_t aOffset)
 {
-  nsCOMPtr<nsINode> parentNode = do_QueryInterface(aContainer);
-  return Extend(parentNode, aOffset);
+  nsCOMPtr<nsINode> container = do_QueryInterface(aContainer);
+  return Extend(container, aOffset);
 }
 
 NS_IMETHODIMP
