@@ -567,11 +567,22 @@ public:
   void UpdateDuration(const media::TimeUnit& aDuration);
   void UpdateTimestamp(const media::TimeUnit& aTimestamp);
 
+  void SetNextKeyFrameTime(const media::TimeUnit& aTime)
+  {
+    mNextKeyFrameTime = aTime;
+  }
+
+  const media::TimeUnit& NextKeyFrameTime() const
+  {
+    return mNextKeyFrameTime;
+  }
+
 protected:
   ~VideoData();
 
   bool mSentToCompositor;
   UniquePtr<Listener> mListener;
+  media::TimeUnit mNextKeyFrameTime;
 };
 
 class CryptoTrack
