@@ -17,6 +17,7 @@
 #include "SharedBufferMLGPU.h"
 #include "mozilla/layers/LayersHelpers.h"
 #include "mozilla/layers/LayersMessages.h"
+#include "RenderPassMLGPU-inl.h"
 
 namespace mozilla {
 namespace layers {
@@ -209,8 +210,7 @@ RenderPassMLGPU::PrepareForRendering()
 ShaderRenderPass::ShaderRenderPass(FrameBuilder* aBuilder, const ItemInfo& aItem)
  : RenderPassMLGPU(aBuilder, aItem),
    mGeometry(GeometryMode::Unknown),
-   mHasRectTransformAndClip(aItem.HasRectTransformAndClip()),
-   mItems(mDevice)
+   mHasRectTransformAndClip(aItem.HasRectTransformAndClip())
 {
   mMask = aItem.layer->GetMask();
   if (mMask) {
@@ -267,70 +267,23 @@ ShaderRenderPass::SetGeometry(const ItemInfo& aItem, GeometryMode aMode)
   // in the wrong order. We address this by automatically reversing
   // the buffers we use to build vertices.
   if (aItem.renderOrder != RenderOrder::FrontToBack) {
-    mVertices.SetReversed();
     mInstances.SetReversed();
-
-    // For arbitrary geometry items, each vertex explicitly indexes into
-    // the constant buffer, and so we must preserve the association it
-    // created. However for normal unit-quad items, the constant buffer
-    // order must match the vertex order.
-    if (mGeometry != GeometryMode::Polygon) {
-      mItems.SetReversed();
-    }
   }
 }
 
 void
 ShaderRenderPass::PrepareForRendering()
 {
-  if (mItems.IsEmpty()) {
+  if (mInstances.IsEmpty()) {
     return;
   }
-  if (!mVertices.IsEmpty()) {
-    if (!PrepareVertexBuffer()) {
-      return;
-    }
-  } else {
-    if (!PrepareInstanceBuffer()) {
-      return;
-    }
-  }
-  if (!PrepareItemBuffer() ||
+  if (!mDevice->GetSharedVertexBuffer()->Allocate(&mInstanceBuffer, mInstances) ||
       !SetupPSBuffer0(GetOpacity()) ||
       !OnPrepareBuffers())
   {
     return;
   }
   return RenderPassMLGPU::PrepareForRendering();
-}
-
-bool
-ShaderRenderPass::PrepareVertexBuffer()
-{
-  // Geometry batches always build vertices, and do not have an instance buffer.
-  MOZ_ASSERT(!mVertices.IsEmpty());
-  MOZ_ASSERT(mGeometry == GeometryMode::Polygon);
-  MOZ_ASSERT(mInstances.IsEmpty());
-
-  return mDevice->GetSharedVertexBuffer()->Allocate(&mVertexBuffer, mVertices);
-}
-
-bool
-ShaderRenderPass::PrepareInstanceBuffer()
-{
-  // We should not be using the polygon vertex buffer, and we should have
-  // added items.
-  MOZ_ASSERT(mVertices.IsEmpty());
-  MOZ_ASSERT(mGeometry == GeometryMode::UnitQuad);
-  MOZ_ASSERT(!mInstances.IsEmpty());
-
-  return mDevice->GetSharedVertexBuffer()->Allocate(&mInstanceBuffer, mInstances);
-}
-
-bool
-ShaderRenderPass::PrepareItemBuffer()
-{
-  return mDevice->GetSharedVSBuffer()->Allocate(&mItemBuffer, mItems);
 }
 
 bool
@@ -348,7 +301,7 @@ ShaderRenderPass::SetupPSBuffer0(float aOpacity)
 void
 ShaderRenderPass::ExecuteRendering()
 {
-  if (mVertices.IsEmpty() && mInstances.IsEmpty()) {
+  if (mInstances.IsEmpty()) {
     return;
   }
 
@@ -361,19 +314,16 @@ ShaderRenderPass::ExecuteRendering()
   SetupPipeline();
 
   if (mGeometry == GeometryMode::Polygon) {
-    mDevice->SetTopology(MLGPrimitiveTopology::TriangleList);
-    mDevice->SetVertexBuffer(0, &mVertexBuffer);
+    mDevice->SetTopology(MLGPrimitiveTopology::UnitTriangle);
   } else {
     mDevice->SetTopology(MLGPrimitiveTopology::UnitQuad);
-    mDevice->SetVertexBuffer(1, &mInstanceBuffer);
   }
-
-  mDevice->SetVSConstantBuffer(kItemBufferSlot, &mItemBuffer);
+  mDevice->SetVertexBuffer(1, &mInstanceBuffer);
 
   if (mGeometry == GeometryMode::Polygon) {
-    mDevice->Draw(mVertexBuffer.NumVertices(), 0);
+    mDevice->DrawInstanced(3, mInstanceBuffer.NumVertices(), 0, 0);
   } else {
-    mDevice->DrawInstanced(4, mItemBuffer.NumItems(), 0, 0);
+    mDevice->DrawInstanced(4, mInstanceBuffer.NumVertices(), 0, 0);
   }
 }
 
@@ -462,9 +412,9 @@ SolidColorPass::AddToPass(LayerMLGPU* aLayer, ItemInfo& aInfo)
   const LayerIntRegion& region = aLayer->GetShadowVisibleRegion();
   for (auto iter = region.RectIter(); !iter.Done(); iter.Next()) {
     const IntRect rect = iter.Get().ToUnknownRect();
-    ColorTraits traits(Rect(rect), color);
+    ColorTraits traits(aInfo, Rect(rect), color);
 
-    if (!txn.Add(traits, aInfo)) {
+    if (!txn.Add(traits)) {
       return false;
     }
   }
@@ -566,8 +516,8 @@ TexturedRenderPass::AddClippedItem(Txn& aTxn,
     DecomposeIntoNoRepeatRects(aDrawRect, textureCoords, &layerRects, &textureRects);
 
   for (size_t i = 0; i < numRects; i++) {
-    TexturedTraits traits(layerRects[i], textureRects[i]);
-    if (!aTxn.Add(traits, aInfo)) {
+    TexturedTraits traits(aInfo, layerRects[i], textureRects[i]);
+    if (!aTxn.Add(traits)) {
       return false;
     }
   }

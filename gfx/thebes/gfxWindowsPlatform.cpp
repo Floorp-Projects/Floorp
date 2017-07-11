@@ -441,12 +441,12 @@ gfxWindowsPlatform::HandleDeviceReset()
   imgLoader::PrivateBrowsingLoader()->ClearCache(false);
   gfxAlphaBoxBlur::ShutdownBlurCache();
 
-  if (XRE_IsContentProcess()) {
-    // Fetch updated device parameters.
-    FetchAndImportContentDeviceData();
-    UpdateANGLEConfig();
-  }
+  gfxConfig::Reset(Feature::D3D11_COMPOSITING);
+  gfxConfig::Reset(Feature::ADVANCED_LAYERS);
+  gfxConfig::Reset(Feature::D3D11_HW_ANGLE);
+  gfxConfig::Reset(Feature::DIRECT2D);
 
+  InitializeConfig();
   InitializeDevices();
   UpdateANGLEConfig();
   return true;
@@ -1419,6 +1419,11 @@ gfxWindowsPlatform::InitializeAdvancedLayersConfig()
   nsCString message, failureId;
   if (!IsGfxInfoStatusOkay(nsIGfxInfo::FEATURE_ADVANCED_LAYERS, &message, failureId)) {
     al.Disable(FeatureStatus::Blacklisted, message.get(), failureId);
+  } else if (Preferences::GetBool("layers.mlgpu.sanity-test-failed", false)) {
+    al.Disable(
+      FeatureStatus::Broken,
+      "Failed to render sanity test",
+      NS_LITERAL_CSTRING("FEATURE_FAILURE_FAILED_TO_RENDER"));
   }
 }
 

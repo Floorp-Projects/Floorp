@@ -25,7 +25,7 @@
       <xul:button label="&print.label;" accesskey="&print.accesskey;"
         oncommand="this.parentNode.print();" icon="print"/>
 
-      <xul:button label="&pageSetup.label;" accesskey="&pageSetup.accesskey;"
+      <xul:button anonid="pageSetup" label="&pageSetup.label;" accesskey="&pageSetup.accesskey;"
         oncommand="this.parentNode.doPageSetup();"/>
 
       <xul:vbox align="center" pack="center">
@@ -104,8 +104,23 @@
       <field name="mPrintButton">
         document.getAnonymousNodes(this)[0]
       </field>
+      <field name="mPageSetupButton">
+        document.getAnonymousElementByAttribute(this, "anonid", "pageSetup");
+      </field>
+      <field name="mNavigateHomeButton">
+        document.getAnonymousElementByAttribute(this, "anonid", "navigateHome");
+      </field>
+      <field name="mNavigatePreviousButton">
+        document.getAnonymousElementByAttribute(this, "anonid", "navigatePrevious");
+      </field>
       <field name="mPageTextBox">
         document.getAnonymousNodes(this)[5].childNodes[0]
+      </field>
+      <field name="mNavigateNextButton">
+        document.getAnonymousElementByAttribute(this, "anonid", "navigateNext");
+      </field>
+      <field name="mNavigateEndButton">
+        document.getAnonymousElementByAttribute(this, "anonid", "navigateEnd");
       </field>
       <field name="mTotalPages">
         document.getAnonymousNodes(this)[5].childNodes[2]
@@ -127,6 +142,9 @@
       </field>
       <field name="mSimplifyPageCheckbox">
         document.getAnonymousNodes(this)[14]
+      </field>
+      <field name="mSimplifyPageNotAllowed">
+        this.mSimplifyPageCheckbox.disabled
       </field>
       <field name="mSimplifyPageToolbarSeparator">
         document.getAnonymousNodes(this)[15]
@@ -181,6 +199,25 @@
           this.mMessageManager.removeMessageListener("Printing:Preview:UpdatePageCount", this);
           delete this.mMessageManager;
           delete this.mPPBrowser;
+        ]]>
+        </body>
+      </method>
+
+      <method name="disableUpdateTriggers">
+        <parameter name="aDisabled"/>
+        <body>
+        <![CDATA[
+          this.mPrintButton.disabled = aDisabled;
+          this.mPageSetupButton.disabled = aDisabled;
+          this.mNavigateHomeButton.disabled = aDisabled;
+          this.mNavigatePreviousButton.disabled = aDisabled;
+          this.mPageTextBox.disabled = aDisabled;
+          this.mNavigateNextButton.disabled = aDisabled;
+          this.mNavigateEndButton.disabled = aDisabled;
+          this.mScaleCombobox.disabled = aDisabled;
+          this.mPortaitButton.disabled = aDisabled;
+          this.mLandscapeButton.disabled = aDisabled;
+          this.mSimplifyPageCheckbox.disabled = this.mSimplifyPageNotAllowed || aDisabled;
         ]]>
         </body>
       </method>
@@ -355,6 +392,7 @@
       <method name="enableSimplifyPage">
         <body>
         <![CDATA[
+          this.mSimplifyPageNotAllowed = false;
           this.mSimplifyPageCheckbox.disabled = false;
           this.mSimplifyPageCheckbox.setAttribute("tooltiptext",
                this.mSimplifyPageCheckbox.getAttribute("tooltiptext-enabled"));
@@ -365,6 +403,7 @@
       <method name="disableSimplifyPage">
         <body>
         <![CDATA[
+          this.mSimplifyPageNotAllowed = true;
           this.mSimplifyPageCheckbox.disabled = true;
           this.mSimplifyPageCheckbox.setAttribute("tooltiptext",
                this.mSimplifyPageCheckbox.getAttribute("tooltiptext-disabled"));
@@ -389,8 +428,6 @@
           }
 
           this.mPageTextBox.value = 1;
-
-          this.mMessageManager.sendAsyncMessage("Printing:Preview:UpdatePageCount");
         ]]>
         </body>
       </method>

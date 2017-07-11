@@ -27,11 +27,6 @@ cbuffer Layers : register(b1)
   Layer sLayers[682];
 };
 
-cbuffer Items : register(b2)
-{
-  float4 sItems[4096];
-};
-
 cbuffer MaskRects : register(b3)
 {
   float4 sMaskRects[4096];
@@ -60,6 +55,16 @@ float3 ComputeMaskCoords(float4 aPosition, Layer aLayer)
     0.0,            0.0,            0.0, 1.0);
 
   return float3(mul(transform, aPosition / aPosition.w).xy, 1.0) * aPosition.w;
+}
+
+float2 UnitTriangleToPos(const float3 aVertex,
+                         const float2 aPos1,
+                         const float2 aPos2,
+                         const float2 aPos3)
+{
+  return aVertex.x * aPos1 +
+         aVertex.y * aPos2 +
+         aVertex.z * aPos3;
 }
 
 float2 UnitQuadToRect(const float2 aVertex, const float4 aRect)

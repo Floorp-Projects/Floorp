@@ -14,7 +14,7 @@ namespace gfx {
 
 #define GFX_FALLBACK_MAP(_)                                                       \
   /* Name */                                                                      \
-  _(PLACEHOLDER_DO_NOT_USE)                                                       \
+  _(NO_CONSTANT_BUFFER_OFFSETTING)                                                \
   /* Add new entries above this comment */
 
 enum class Fallback : uint32_t {
