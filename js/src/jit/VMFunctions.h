@@ -21,6 +21,7 @@ class NamedLambdaObject;
 class WithScope;
 class InlineTypedObject;
 class GeneratorObject;
+class RegExpObject;
 class TypedArrayObject;
 
 namespace jit {
@@ -339,6 +340,9 @@ template <> struct TypeToArgProperties<Handle<GeneratorObject*> > {
 template <> struct TypeToArgProperties<Handle<PlainObject*> > {
     static const uint32_t result = TypeToArgProperties<PlainObject*>::result | VMFunction::ByRef;
 };
+template <> struct TypeToArgProperties<Handle<RegExpObject*> > {
+    static const uint32_t result = TypeToArgProperties<RegExpObject*>::result | VMFunction::ByRef;
+};
 template <> struct TypeToArgProperties<Handle<WithScope*> > {
     static const uint32_t result = TypeToArgProperties<WithScope*>::result | VMFunction::ByRef;
 };
@@ -423,6 +427,9 @@ template <> struct TypeToRootType<Handle<GeneratorObject*> > {
     static const uint32_t result = VMFunction::RootObject;
 };
 template <> struct TypeToRootType<Handle<PlainObject*> > {
+    static const uint32_t result = VMFunction::RootObject;
+};
+template <> struct TypeToRootType<Handle<RegExpObject*> > {
     static const uint32_t result = VMFunction::RootObject;
 };
 template <> struct TypeToRootType<Handle<LexicalScope*> > {
