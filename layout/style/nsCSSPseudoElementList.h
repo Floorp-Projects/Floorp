@@ -25,8 +25,10 @@
 // OUTPUT_CLASS=nsCSSPseudoElements
 // MACRO_NAME=CSS_PSEUDO_ELEMENT
 
-CSS_PSEUDO_ELEMENT(after, ":after", CSS_PSEUDO_ELEMENT_IS_CSS2)
-CSS_PSEUDO_ELEMENT(before, ":before", CSS_PSEUDO_ELEMENT_IS_CSS2)
+CSS_PSEUDO_ELEMENT(after, ":after", CSS_PSEUDO_ELEMENT_IS_CSS2 |
+                                    CSS_PSEUDO_ELEMENT_IS_FLEX_OR_GRID_ITEM)
+CSS_PSEUDO_ELEMENT(before, ":before", CSS_PSEUDO_ELEMENT_IS_CSS2 |
+                                      CSS_PSEUDO_ELEMENT_IS_FLEX_OR_GRID_ITEM)
 
 CSS_PSEUDO_ELEMENT(backdrop, ":backdrop", 0)
 
