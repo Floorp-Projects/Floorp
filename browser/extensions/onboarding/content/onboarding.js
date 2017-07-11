@@ -250,6 +250,33 @@ var onboardingTourset = {
       return div;
     },
   },
+  "singlesearch": {
+    id: "onboarding-tour-singlesearch",
+    tourNameId: "onboarding.tour-singlesearch",
+    getNotificationStrings(bundle) {
+      return {
+        title: bundle.GetStringFromName("onboarding.notification.onboarding-tour-singlesearch.title"),
+        message: bundle.GetStringFromName("onboarding.notification.onboarding-tour-singlesearch.message"),
+        button: bundle.GetStringFromName("onboarding.button.learnMore"),
+      };
+    },
+    getPage(win, bundle) {
+      let div = win.document.createElement("div");
+      div.innerHTML = `
+        <section class="onboarding-tour-description">
+          <h1 data-l10n-id="onboarding.tour-singlesearch.title"></h1>
+          <p data-l10n-id="onboarding.tour-singlesearch.description"></p>
+        </section>
+        <section class="onboarding-tour-content">
+          <img src="resource://onboarding/img/figure_search.svg" role="presentation"/>
+        </section>
+        <aside class="onboarding-tour-button-container">
+          <button id="onboarding-tour-singlesearch-button" class="onboarding-tour-action-button" data-l10n-id="onboarding.tour-singlesearch.button"></button>
+        </aside>
+      `;
+      return div;
+    },
+  },
 };
 
 /**
