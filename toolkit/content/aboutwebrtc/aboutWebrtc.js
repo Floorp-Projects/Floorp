@@ -139,12 +139,13 @@ Control.prototype = {
   update() {
     this.ctrl.textContent = this._label;
 
+    this.msg.textContent = "";
     if (this._message) {
-      // eslint-disable-next-line no-unsanitized/property
-      this.msg.innerHTML =
-        `<span class="info-label">${this._messageHeader}:</span> ${this._message}`;
-    } else {
-      this.msg.innerHTML = null;
+      this.msg.appendChild(Object.assign(document.createElement("span"), {
+        className: "info-label",
+        textContent: `${this._messageHeader}: `,
+      }));
+      this.msg.appendChild(document.createTextNode(this._message));
     }
   },
 
@@ -306,8 +307,7 @@ var AboutWebRTC = {
       msg.textContent = getString("cannot_retrieve_log");
       parent.appendChild(msg);
       msg = document.createElement("p");
-      // eslint-disable-next-line no-unsanitized/property
-      msg.innerHTML = `${data.error.name}: ${data.error.message}`;
+      msg.textContent = `${data.error.name}: ${data.error.message}`;
       parent.appendChild(msg);
       return;
     }
