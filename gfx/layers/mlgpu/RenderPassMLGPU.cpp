@@ -17,6 +17,7 @@
 #include "SharedBufferMLGPU.h"
 #include "mozilla/layers/LayersHelpers.h"
 #include "mozilla/layers/LayersMessages.h"
+#include "RenderPassMLGPU-inl.h"
 
 namespace mozilla {
 namespace layers {
@@ -429,9 +430,9 @@ SolidColorPass::AddToPass(LayerMLGPU* aLayer, ItemInfo& aInfo)
   const LayerIntRegion& region = aLayer->GetShadowVisibleRegion();
   for (auto iter = region.RectIter(); !iter.Done(); iter.Next()) {
     const IntRect rect = iter.Get().ToUnknownRect();
-    ColorTraits traits(Rect(rect), color);
+    ColorTraits traits(aInfo, Rect(rect), color);
 
-    if (!txn.Add(traits, aInfo)) {
+    if (!txn.Add(traits)) {
       return false;
     }
   }
@@ -533,8 +534,8 @@ TexturedRenderPass::AddClippedItem(Txn& aTxn,
     DecomposeIntoNoRepeatRects(aDrawRect, textureCoords, &layerRects, &textureRects);
 
   for (size_t i = 0; i < numRects; i++) {
-    TexturedTraits traits(layerRects[i], textureRects[i]);
-    if (!aTxn.Add(traits, aInfo)) {
+    TexturedTraits traits(aInfo, layerRects[i], textureRects[i]);
+    if (!aTxn.Add(traits)) {
       return false;
     }
   }
