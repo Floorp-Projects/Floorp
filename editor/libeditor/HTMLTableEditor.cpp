@@ -2937,8 +2937,8 @@ HTMLEditor::GetCellFromRange(nsRange* aRange,
     return NS_ERROR_FAILURE;
   }
 
-  nsCOMPtr<nsIDOMNode> endParent;
-  rv = aRange->GetEndContainer(getter_AddRefs(endParent));
+  nsCOMPtr<nsIDOMNode> endContainer;
+  rv = aRange->GetEndContainer(getter_AddRefs(endContainer));
   NS_ENSURE_SUCCESS(rv, rv);
   NS_ENSURE_TRUE(startContainer, NS_ERROR_FAILURE);
 
@@ -2949,7 +2949,7 @@ HTMLEditor::GetCellFromRange(nsRange* aRange,
   // If a cell is deleted, the range is collapse
   //   (startOffset == endOffset)
   //   so tell caller the cell wasn't found
-  if (startContainer == endParent &&
+  if (startContainer == endContainer &&
       endOffset == startOffset+1 &&
       HTMLEditUtils::IsTableCell(childNode)) {
     // Should we also test if frame is selected? (Use GetCellDataAt())
