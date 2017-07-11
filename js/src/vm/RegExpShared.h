@@ -273,11 +273,10 @@ class RegExpZone
 
     bool empty() const { return set_.empty(); }
 
-    bool get(JSContext* cx, HandleAtom source, RegExpFlag flags, MutableHandleRegExpShared shared);
+    RegExpShared* get(JSContext* cx, HandleAtom source, RegExpFlag flags);
 
     /* Like 'get', but compile 'maybeOpt' (if non-null). */
-    bool get(JSContext* cx, HandleAtom source, JSString* maybeOpt,
-             MutableHandleRegExpShared shared);
+    RegExpShared* get(JSContext* cx, HandleAtom source, JSString* maybeOpt);
 
     size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf);
 };

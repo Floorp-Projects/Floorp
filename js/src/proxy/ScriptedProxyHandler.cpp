@@ -1267,12 +1267,10 @@ ScriptedProxyHandler::fun_toString(JSContext* cx, HandleObject proxy, unsigned i
     return nullptr;
 }
 
-bool
-ScriptedProxyHandler::regexp_toShared(JSContext* cx, HandleObject proxy,
-                                      MutableHandleRegExpShared shared) const
+RegExpShared*
+ScriptedProxyHandler::regexp_toShared(JSContext* cx, HandleObject proxy) const
 {
     MOZ_CRASH("Should not end up in ScriptedProxyHandler::regexp_toShared");
-    return false;
 }
 
 bool
