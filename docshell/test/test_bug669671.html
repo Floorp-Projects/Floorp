@@ -134,11 +134,14 @@ function* test()
   SimpleTest.finish();
 }
 
-// This will call into onChildLoad once it loads.
-var popup = window.open('file_bug669671.sjs?pushed');
-
 var gGen = test();
+var popup;
 
+// Disable RCWN to make cache behavior deterministic.
+SpecialPowers.pushPrefEnv({set: [["network.http.rcwn.enabled", false]]}, () => {
+  // This will call into onChildLoad once it loads.
+  popup = window.open('file_bug669671.sjs?pushed');
+});
 </script>
 </pre>
 </body>
