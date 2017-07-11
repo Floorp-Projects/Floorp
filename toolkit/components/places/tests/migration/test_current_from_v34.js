@@ -51,7 +51,7 @@ function insertBookmark(db, info) {
         { url: url.href, guid: placeGuid,
           rev_host: PlacesUtils.getReversedHost(url) });
     }
-    return await insertItem(db, info);
+    return insertItem(db, info);
   });
 }
 

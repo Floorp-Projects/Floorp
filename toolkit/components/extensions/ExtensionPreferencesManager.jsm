@@ -310,6 +310,6 @@ this.ExtensionPreferencesManager = {
         return "not_controllable";
       }
     }
-    return await ExtensionSettingsStore.getLevelOfControl(extension, STORE_TYPE, name);
+    return ExtensionSettingsStore.getLevelOfControl(extension, STORE_TYPE, name);
   },
 };

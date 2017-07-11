@@ -607,7 +607,7 @@ class CryptoCollection {
 
   async sync(extensionStorageSync) {
     const collection = await this.getCollection();
-    return await extensionStorageSync._syncCollection(collection, {
+    return extensionStorageSync._syncCollection(collection, {
       strategy: "server_wins",
     });
   }
@@ -830,9 +830,9 @@ class ExtensionStorageSync {
    *                 Additional options to be passed to sync().
    * @returns {Promise<SyncResultObject>}
    */
-  async _syncCollection(collection, options) {
+  _syncCollection(collection, options) {
     // FIXME: this should support syncing to self-hosted
-    return await this._requestWithToken(`Syncing ${collection.name}`, async function(token) {
+    return this._requestWithToken(`Syncing ${collection.name}`, function(token) {
       const allOptions = Object.assign({}, {
         remote: prefStorageSyncServerURL,
         headers: {
@@ -840,7 +840,7 @@ class ExtensionStorageSync {
         },
       }, options);
 
-      return await collection.sync(allOptions);
+      return collection.sync(allOptions);
     });
   }
 
@@ -861,7 +861,7 @@ class ExtensionStorageSync {
         const newToken = await this._fxaService.getOAuthToken(FXA_OAUTH_OPTIONS);
 
         // If this fails too, let it go.
-        return await f(newToken);
+        return f(newToken);
       }
       // Otherwise, we don't know how to handle this error, so just reraise.
       throw e;
@@ -873,15 +873,15 @@ class ExtensionStorageSync {
    *
    * @returns {Promise<void>}
    */
-  async _deleteBucket() {
+  _deleteBucket() {
     log.error("Deleting default bucket and everything in it");
-    return await this._requestWithToken("Clearing server", async function(token) {
+    return this._requestWithToken("Clearing server", function(token) {
       const headers = {Authorization: "Bearer " + token};
       const kintoHttp = new KintoHttpClient(prefStorageSyncServerURL, {
         headers: headers,
         timeout: KINTO_REQUEST_TIMEOUT,
       });
-      return await kintoHttp.deleteBucket("default");
+      return kintoHttp.deleteBucket("default");
     });
   }
 
@@ -955,7 +955,7 @@ class ExtensionStorageSync {
       // We had a conflict which was automatically resolved. We now
       // have a new keyring which might have keys for the
       // collections. Recurse.
-      return await this.ensureCanSync(extIds);
+      return this.ensureCanSync(extIds);
     }
 
     // No conflicts. We're good.
@@ -1098,7 +1098,7 @@ class ExtensionStorageSync {
           // Reupload our keyring, which is the only new keyring.
           // We don't want client_wins here because another device
           // could have uploaded another keyring in the meantime.
-          return await this.cryptoCollection.sync(this);
+          return this.cryptoCollection.sync(this);
         }
       }
       throw e;
