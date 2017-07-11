@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "name": "Firefox Screenshots",
-  "version": "10.3.0",
+  "version": "10.4.0",
   "description": "__MSG_addonDescription__",
   "author": "__MSG_addonAuthorsList__",
   "homepage_url": "https://github.com/mozilla-services/screenshots",
@@ -13,8 +13,8 @@
   "default_locale": "en_US",
   "browser_action": {
     "default_icon": {
-      "16": "icons/icon-16.svg",
-      "32": "icons/icon-32.svg"
+      "16": "icons/icon-16-v2.svg",
+      "32": "icons/icon-32-v2.svg"
     },
     "default_title": "Firefox Screenshots",
     "browser_style": false
