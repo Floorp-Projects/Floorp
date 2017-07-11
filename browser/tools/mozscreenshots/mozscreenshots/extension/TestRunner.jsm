@@ -88,6 +88,9 @@ this.TestRunner = {
     Services.prefs.setCharPref("extensions.ui.lastCategory", "addons://list/extension");
     // Don't let the caret blink since it causes false positives for image diffs
     Services.prefs.setIntPref("ui.caretBlinkTime", -1);
+    // Disable some animations that can cause false positives, such as the
+    // reload/stop button spinning animation.
+    Services.prefs.setBoolPref("toolkit.cosmeticAnimations.enabled", false);
 
     let browserWindow = Services.wm.getMostRecentWindow("navigator:browser");
 
@@ -151,6 +154,7 @@ this.TestRunner = {
     gBrowser.unpinTab(gBrowser.selectedTab);
     gBrowser.selectedBrowser.loadURI("data:text/html;charset=utf-8,<h1>Done!");
     browserWindow.restore();
+    Services.prefs.clearUserPref("toolkit.cosmeticAnimations.enabled");
   },
 
   // helpers
