@@ -3,7 +3,7 @@
  */
 
 /* exported getTempFile, loadFormAutofillContent, runHeuristicsTest, sinon,
- *          initProfileStorage
+ *          initProfileStorage, getSyncChangeCounter
  */
 
 "use strict";
@@ -149,6 +149,31 @@ function runHeuristicsTest(patterns, fixturePathPrefix) {
       });
     });
   });
+}
+
+/**
+ * Returns the Sync change counter for a profile storage record. Synced records
+ * store additional metadata for tracking changes and resolving merge conflicts.
+ * Deleting a synced record replaces the record with a tombstone.
+ *
+ * @param   {AutofillRecords} records
+ *          The `AutofillRecords` instance to query.
+ * @param   {string} guid
+ *          The GUID of the record or tombstone.
+ * @returns {number}
+ *          The change counter, or -1 if the record doesn't exist or hasn't
+ *          been synced yet.
+ */
+function getSyncChangeCounter(records, guid) {
+  let record = records._findByGUID(guid, {includeDeleted: true});
+  if (!record) {
+    return -1;
+  }
+  let sync = records._getSyncMetaData(record);
+  if (!sync) {
+    return -1;
+  }
+  return sync.changeCounter;
 }
 
 add_task(async function head_initialize() {
