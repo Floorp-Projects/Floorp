@@ -55,6 +55,10 @@ CustomElementCallback::Call()
         mArgs.name, mArgs.oldValue, mArgs.newValue, rv);
       break;
   }
+
+  // If callbacks throw exceptions, it'll be handled and reported in
+  // Lifecycle*Callback::Call function.
+  rv.SuppressException();
 }
 
 void
