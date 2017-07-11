@@ -837,6 +837,18 @@ WebRenderBridgeParent::RecvClearCachedResources()
     return IPC_OK();
   }
   mCompositorBridge->ObserveLayerUpdate(GetLayersId(), GetChildLayerObserverEpoch(), false);
+
+  // Clear resources
+  // XXX Can we clear more resources?
+  ++mWrEpoch; // Update webrender epoch
+  mApi->ClearRootDisplayList(wr::NewEpoch(mWrEpoch), mPipelineId);
+  // Schedule composition to clean up Pipeline
+  mCompositorScheduler->ScheduleComposition();
+  // Remove animations.
+  for (std::unordered_set<uint64_t>::iterator iter = mActiveAnimations.begin(); iter != mActiveAnimations.end(); iter++) {
+    mAnimStorage->ClearById(*iter);
+  }
+  mActiveAnimations.clear();
   return IPC_OK();
 }
 

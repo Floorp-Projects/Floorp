@@ -29,7 +29,6 @@ static const size_t kMaxConstantBufferSize = 4096 * kConstantBufferElementSize;
 // uniformity.
 static const uint32_t kWorldConstantBufferSlot = 0;
 static const uint32_t kLayerBufferSlot = 1;
-static const uint32_t kItemBufferSlot = 2;
 static const uint32_t kMaskBufferSlot = 3;
 static const uint32_t kBlendConstantBufferSlot = 4;
 static const uint32_t kClearConstantBufferSlot = 2;
@@ -98,41 +97,92 @@ struct BlendVertexShaderConstants {
 
 struct SimpleTraits
 {
-  explicit SimpleTraits(const gfx::Rect& aRect)
-   : mRect(aRect)
+  explicit SimpleTraits(const ItemInfo& aItem, const gfx::Rect& aRect)
+   : mItem(aItem),
+     mRect(aRect)
   {}
 
-  bool AddInstanceTo(ShaderRenderPass* aPass, const ItemInfo& aItem) const;
-  bool AddVerticesTo(ShaderRenderPass* aPass,
-                     const ItemInfo& aItem,
-                     uint32_t aItemIndex,
-                     const gfx::Polygon* aGeometry = nullptr) const;
+  // Helper nonce structs so functions can break vertex data up by each
+  // triangle in a quad, or return vertex info for a unit quad.
+  struct AnyTriangle { };
+  struct FirstTriangle : AnyTriangle { };
+  struct SecondTriangle : AnyTriangle { };
+  struct UnitQuad { };
 
+  // This is the base vertex layout used by all unit quad shaders.
+  struct UnitQuadVertex {
+    gfx::Rect rect;
+    uint32_t layerIndex;
+    int depth;
+  };
+
+  // This is the base vertex layout used by all unit triangle shaders.
+  struct TriangleVertices {
+    gfx::Point p1, p2, p3;
+    uint32_t layerIndex;
+    int depth;
+  };
+
+  // Helper functions for populating a TriangleVertices. The first two use mRect
+  // to generate triangles, the third function uses coordinates from an already
+  // computed triangle.
+  TriangleVertices MakeVertex(const FirstTriangle& aIgnore) const;
+  TriangleVertices MakeVertex(const SecondTriangle& aIgnore) const;
+  TriangleVertices MakeVertex(const gfx::Triangle& aTriangle) const;
+
+  UnitQuadVertex MakeUnitQuadVertex() const;
+
+  // This default GenerateTriangles only computes the 3 points of each triangle
+  // in the polygon. If needed, shaders can override this and return a more
+  // complex triangle, to encode dependent information in extended vertex data.
+  //
+  // AddShaderVertices will deduce this return type. It should be an nsTArray<T>
+  // where T inherits from Triangle.
+  nsTArray<gfx::Triangle> GenerateTriangles(const gfx::Polygon& aPolygon) const;
+
+  // Accessors.
+  const Maybe<gfx::Polygon>& geometry() const;
+  const gfx::Rect& rect() const {
+    return mRect;
+  }
+
+  const ItemInfo& mItem;
   gfx::Rect mRect;
 };
 
 struct ColorTraits : public SimpleTraits
 {
-  ColorTraits(const gfx::Rect& aRect, const gfx::Color& aColor)
-   : SimpleTraits(aRect), mColor(aColor)
+  ColorTraits(const ItemInfo& aItem, const gfx::Rect& aRect, const gfx::Color& aColor)
+   : SimpleTraits(aItem, aRect), mColor(aColor)
   {}
 
-  bool AddItemTo(ShaderRenderPass* aPass) const;
+  // Color data is the same across all vertex types.
+  template <typename VertexType>
+  const gfx::Color& MakeVertexData(const VertexType& aIgnore) const {
+    return mColor;
+  }
 
   gfx::Color mColor;
 };
 
 struct TexturedTraits : public SimpleTraits
 {
-  TexturedTraits(const gfx::Rect& aRect, const gfx::Rect& aTexCoords)
-   : SimpleTraits(aRect), mTexCoords(aTexCoords)
+  TexturedTraits(const ItemInfo& aItem, const gfx::Rect& aRect, const gfx::Rect& aTexCoords)
+   : SimpleTraits(aItem, aRect), mTexCoords(aTexCoords)
   {}
 
-  bool AddVerticesTo(ShaderRenderPass* aPass,
-                     const ItemInfo& aItem,
-                     uint32_t aItemIndex,
-                     const gfx::Polygon* aGeometry = nullptr) const;
-  bool AddItemTo(ShaderRenderPass* aPass) const;
+  // Textured triangles need to compute a texture coordinate for each vertex.
+  nsTArray<gfx::TexturedTriangle> GenerateTriangles(const gfx::Polygon& aPolygon) const;
+
+  struct VertexData {
+    gfx::Point p1, p2, p3;
+  };
+  VertexData MakeVertexData(const FirstTriangle& aIgnore) const;
+  VertexData MakeVertexData(const SecondTriangle& aIgnore) const;
+  VertexData MakeVertexData(const gfx::TexturedTriangle& aTriangle) const;
+  const gfx::Rect& MakeVertexData(const UnitQuad& aIgnore) const {
+    return mTexCoords;
+  }
 
   gfx::Rect mTexCoords;
 };

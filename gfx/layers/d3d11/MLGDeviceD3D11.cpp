@@ -17,6 +17,7 @@
 #include "mozilla/widget/WinCompositorWidget.h"
 #include "MLGShaders.h"
 #include "TextureD3D11.h"
+#include "gfxConfig.h"
 #include "gfxPrefs.h"
 
 namespace mozilla {
@@ -791,8 +792,13 @@ MLGDeviceD3D11::Initialize()
     if (SUCCEEDED(hr)) {
       if (IsWin8OrLater()) {
         mCanUseConstantBufferOffsetBinding = (options.ConstantBufferOffsetting != FALSE);
+      } else {
+        gfxConfig::EnableFallback(Fallback::NO_CONSTANT_BUFFER_OFFSETTING,
+                                  "Unsupported by driver");
       }
       mCanUseClearView = (options.ClearView != FALSE);
+    } else {
+      gfxCriticalNote << "Failed to query D3D11.1 feature support: " << hexa(hr);
     }
   }
 
@@ -822,6 +828,21 @@ MLGDeviceD3D11::Initialize()
       &vertices);
     if (!mUnitQuadVB) {
       return Fail("FEATURE_FAILURE_UNIT_QUAD_BUFFER");
+    }
+  }
+
+  {
+    struct Vertex3D { float x; float y; float z; };
+    Vertex3D vertices[3] = {
+      { 1.0f, 0.0f, 0.0f }, { 0.0f, 1.0f, 0.0f }, { 0.0f, 0.0f, 1.0f }
+    };
+    mUnitTriangleVB = CreateBuffer(
+      MLGBufferType::Vertex,
+      sizeof(Vertex3D) * 3,
+      MLGUsage::Immutable,
+      &vertices);
+    if (!mUnitTriangleVB) {
+      return Fail("FEATURE_FAILURE_UNIT_TRIANGLE_BUFFER");
     }
   }
 
@@ -884,35 +905,50 @@ MLGDeviceD3D11::Initialize()
     return Fail("FEATURE_FAILURE_CRITICAL_SHADER_FAILURE");
   }
 
+  // Common unit quad layout: vPos, vRect, vLayerIndex, vDepth
+# define BASE_UNIT_QUAD_LAYOUT \
+      { "POSITION", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 }, \
+      { "TEXCOORD", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 1, 0, D3D11_INPUT_PER_INSTANCE_DATA, 1 }, \
+      { "TEXCOORD", 1, DXGI_FORMAT_R32_UINT, 1, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_INSTANCE_DATA, 1 }, \
+      { "TEXCOORD", 2, DXGI_FORMAT_R32_SINT, 1, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_INSTANCE_DATA, 1 }
+
+  // Common unit triangle layout: vUnitPos, vPos1-3, vLayerIndex, vDepth
+# define BASE_UNIT_TRIANGLE_LAYOUT \
+      { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 }, \
+      { "POSITION", 1, DXGI_FORMAT_R32G32_FLOAT, 1, 0, D3D11_INPUT_PER_INSTANCE_DATA, 1 }, \
+      { "POSITION", 2, DXGI_FORMAT_R32G32_FLOAT, 1, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_INSTANCE_DATA, 1 }, \
+      { "POSITION", 3, DXGI_FORMAT_R32G32_FLOAT, 1, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_INSTANCE_DATA, 1 }, \
+      { "TEXCOORD", 0, DXGI_FORMAT_R32_UINT, 1, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_INSTANCE_DATA, 1 }, \
+      { "TEXCOORD", 1, DXGI_FORMAT_R32_SINT, 1, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_INSTANCE_DATA, 1 }
+
   // Initialize input layouts.
   {
     D3D11_INPUT_ELEMENT_DESC inputDesc[] = {
-      // vPos
-      { "POSITION", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-      // vRect
-      { "TEXCOORD", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 1, 0, D3D11_INPUT_PER_INSTANCE_DATA, 1 },
-      // vLayerOffset
-      { "TEXCOORD", 1, DXGI_FORMAT_R32_UINT, 1, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_INSTANCE_DATA, 1 },
-      // vDepth
-      { "TEXCOORD", 2, DXGI_FORMAT_R32_SINT, 1, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_INSTANCE_DATA, 1 },
+      BASE_UNIT_QUAD_LAYOUT,
+      // vTexRect
+      { "TEXCOORD", 3, DXGI_FORMAT_R32G32B32A32_FLOAT, 1, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_INSTANCE_DATA, 1 }
     };
     if (!InitInputLayout(inputDesc, MOZ_ARRAY_LENGTH(inputDesc), sTexturedQuadVS, VertexShaderID::TexturedQuad)) {
-      return Fail("FEATURE_FAILURE_UNIT_QUAD_INPUT_LAYOUT");
+      return Fail("FEATURE_FAILURE_UNIT_QUAD_TEXTURED_LAYOUT");
     }
-    // Propagate the input layout to other vertex shaders that use the same.
-    // All quad-based layer shaders use the same layout.
-    mInputLayouts[VertexShaderID::ColoredQuad] = mInputLayouts[VertexShaderID::TexturedQuad];
   }
   {
     D3D11_INPUT_ELEMENT_DESC inputDesc[] = {
-      // vLayerPos
-      { "POSITION", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-      // vTexCoord
-      { "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-      // vLayerOffset
-      { "TEXCOORD", 1, DXGI_FORMAT_R32_UINT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-      // vDepth
-      { "TEXCOORD", 2, DXGI_FORMAT_R32_SINT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+      BASE_UNIT_QUAD_LAYOUT,
+      // vColor
+      { "TEXCOORD", 3, DXGI_FORMAT_R32G32B32A32_FLOAT, 1, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_INSTANCE_DATA, 1 }
+    };
+    if (!InitInputLayout(inputDesc, MOZ_ARRAY_LENGTH(inputDesc), sColoredQuadVS, VertexShaderID::ColoredQuad)) {
+      return Fail("FEATURE_FAILURE_UNIT_QUAD_COLORED_LAYOUT");
+    }
+  }
+  {
+    D3D11_INPUT_ELEMENT_DESC inputDesc[] = {
+      BASE_UNIT_TRIANGLE_LAYOUT,
+      // vTexCoord1, vTexCoord2, vTexCoord3
+      { "TEXCOORD", 2, DXGI_FORMAT_R32G32_FLOAT, 1, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_INSTANCE_DATA, 1 },
+      { "TEXCOORD", 3, DXGI_FORMAT_R32G32_FLOAT, 1, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_INSTANCE_DATA, 1 },
+      { "TEXCOORD", 4, DXGI_FORMAT_R32G32_FLOAT, 1, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_INSTANCE_DATA, 1 }
     };
     if (!InitInputLayout(inputDesc, MOZ_ARRAY_LENGTH(inputDesc), sTexturedVertexVS, VertexShaderID::TexturedVertex)) {
       return Fail("FEATURE_FAILURE_TEXTURED_INPUT_LAYOUT");
@@ -922,19 +958,18 @@ MLGDeviceD3D11::Initialize()
   }
   {
     D3D11_INPUT_ELEMENT_DESC inputDesc[] = {
-      // vPos
-      { "POSITION", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-      // vLayerOffset
-      { "TEXCOORD", 0, DXGI_FORMAT_R32_UINT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-      // vDepth
-      { "TEXCOORD", 1, DXGI_FORMAT_R32_SINT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-      // vIndex
-      { "TEXCOORD", 2, DXGI_FORMAT_R32_UINT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+      BASE_UNIT_TRIANGLE_LAYOUT,
+      { "TEXCOORD", 2, DXGI_FORMAT_R32G32B32A32_FLOAT, 1, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_INSTANCE_DATA, 1 }
     };
     if (!InitInputLayout(inputDesc, MOZ_ARRAY_LENGTH(inputDesc), sColoredVertexVS, VertexShaderID::ColoredVertex)) {
       return Fail("FEATURE_FAILURE_COLORED_INPUT_LAYOUT");
     }
   }
+
+# undef BASE_UNIT_QUAD_LAYOUT
+# undef BASE_UNIT_TRIANGLE_LAYOUT
+
+  // Ancillary shaders that are not used for batching.
   {
     D3D11_INPUT_ELEMENT_DESC inputDesc[] = {
       // vPos
@@ -1403,14 +1438,28 @@ MLGDeviceD3D11::SetVertexShader(VertexShaderID aShader)
     InitVertexShader(aShader);
     MOZ_ASSERT(mInputLayouts[aShader]);
   }
-  if (mCurrentVertexShader != mVertexShaders[aShader]) {
-    mCtx->VSSetShader(mVertexShaders[aShader], nullptr, 0);
-    mCurrentVertexShader = mVertexShaders[aShader];
+  SetVertexShader(mVertexShaders[aShader]);
+  SetInputLayout(mInputLayouts[aShader]);
+}
+
+void
+MLGDeviceD3D11::SetInputLayout(ID3D11InputLayout* aLayout)
+{
+  if (mCurrentInputLayout == aLayout) {
+    return;
   }
-  if (mCurrentInputLayout != mInputLayouts[aShader]) {
-    mCtx->IASetInputLayout(mInputLayouts[aShader]);
-    mCurrentInputLayout = mInputLayouts[aShader];
+  mCtx->IASetInputLayout(aLayout);
+  mCurrentInputLayout = aLayout;
+}
+
+void
+MLGDeviceD3D11::SetVertexShader(ID3D11VertexShader* aShader)
+{
+  if (mCurrentVertexShader == aShader) {
+    return;
   }
+  mCtx->VSSetShader(aShader, nullptr, 0);
+  mCurrentVertexShader = aShader;
 }
 
 void
@@ -1502,11 +1551,14 @@ MLGDeviceD3D11::SetPrimitiveTopology(MLGPrimitiveTopology aTopology)
   case MLGPrimitiveTopology::TriangleList:
     topology = D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
     break;
-  case MLGPrimitiveTopology::UnitQuad: {
+  case MLGPrimitiveTopology::UnitQuad:
     SetVertexBuffer(0, mUnitQuadVB, sizeof(float) * 2, 0);
     topology = D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP;
     break;
-  }
+  case MLGPrimitiveTopology::UnitTriangle:
+    SetVertexBuffer(0, mUnitTriangleVB, sizeof(float) * 3, 0);
+    topology = D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
+    break;
   default:
     MOZ_ASSERT_UNREACHABLE("Unknown topology");
     break;
@@ -1929,6 +1981,130 @@ MLGDeviceD3D11::CopyTexture(MLGTexture* aDest,
     aTarget.x, aTarget.y, 0,
     source->GetTexture(), 0,
     &box);
+}
+
+bool
+MLGDeviceD3D11::VerifyConstantBufferOffsetting()
+{
+  RefPtr<ID3D11VertexShader> vs;
+  HRESULT hr = mDevice->CreateVertexShader(
+    sTestConstantBuffersVS.mData,
+    sTestConstantBuffersVS.mLength,
+    nullptr,
+    getter_AddRefs(vs));
+  if (FAILED(hr)) {
+    gfxCriticalNote << "Failed creating vertex shader for buffer test: " << hexa(hr);
+    return false;
+  }
+
+  D3D11_INPUT_ELEMENT_DESC inputDesc[] = {
+    { "POSITION", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 }
+  };
+
+  RefPtr<ID3D11InputLayout> layout;
+  hr = mDevice->CreateInputLayout(
+    inputDesc,
+    sizeof(inputDesc) / sizeof(inputDesc[0]),
+    sTestConstantBuffersVS.mData,
+    sTestConstantBuffersVS.mLength,
+    getter_AddRefs(layout));
+  if (FAILED(hr)) {
+    gfxCriticalNote << "Failed creating input layout for buffer test: " << hexa(hr);
+    return false;
+  }
+
+  RefPtr<MLGRenderTarget> rt = CreateRenderTarget(IntSize(2, 2), MLGRenderTargetFlags::Default);
+  if (!rt) {
+    return false;
+  }
+
+  static const size_t kConstantSize = 4 * sizeof(float);
+  static const size_t kMinConstants = 16;
+  static const size_t kNumBindings = 3;
+
+  RefPtr<MLGBuffer> buffer = CreateBuffer(
+    MLGBufferType::Constant,
+    kConstantSize * kMinConstants * kNumBindings,
+    MLGUsage::Dynamic,
+    nullptr);
+  if (!buffer) {
+    return false;
+  }
+
+  // Populate the buffer. The shader will pick R from buffer 1, G from buffer
+  // 2, and B from buffer 3.
+  {
+    MLGMappedResource map;
+    if (!Map(buffer, MLGMapType::WRITE_DISCARD, &map)) {
+      return false;
+    }
+
+    *reinterpret_cast<Color*>(map.mData) =
+      Color(1.0f, 0.2f, 0.3f, 1.0f);
+    *reinterpret_cast<Color*>(map.mData + kConstantSize * kMinConstants) =
+      Color(0.4f, 0.0f, 0.5f, 1.0f);
+    *reinterpret_cast<Color*>(map.mData + (kConstantSize * kMinConstants) * 2) =
+      Color(0.6f, 0.7f, 1.0f, 1.0f);
+
+    Unmap(buffer);
+  }
+
+  Clear(rt, Color(0.0f, 0.0f, 0.0f, 1.0f));
+  SetRenderTarget(rt);
+  SetViewport(IntRect(0, 0, 2, 2));
+  SetScissorRect(Nothing());
+  SetBlendState(MLGBlendState::Over);
+
+  SetTopology(MLGPrimitiveTopology::UnitQuad);
+  SetInputLayout(layout);
+  SetVertexShader(vs);
+  SetPixelShader(PixelShaderID::ColoredQuad);
+
+  ID3D11Buffer* buffers[3] = {
+    buffer->AsD3D11()->GetBuffer(),
+    buffer->AsD3D11()->GetBuffer(),
+    buffer->AsD3D11()->GetBuffer()
+  };
+  UINT offsets[3] = { 0 * kMinConstants, 1 * kMinConstants, 2 * kMinConstants };
+  UINT counts[3] = { kMinConstants, kMinConstants, kMinConstants };
+
+  mCtx1->VSSetConstantBuffers1(0, 3, buffers, offsets, counts);
+  mCtx->Draw(4, 0);
+
+  // Kill bindings to resources.
+  SetRenderTarget(nullptr);
+
+  ID3D11Buffer* nulls[3] = { nullptr, nullptr, nullptr };
+  mCtx->VSSetConstantBuffers(0, 3, nulls);
+
+  RefPtr<MLGTexture> copy = CreateTexture(
+    IntSize(2, 2),
+    SurfaceFormat::B8G8R8A8,
+    MLGUsage::Staging,
+    MLGTextureFlags::None);
+  if (!copy) {
+    return false;
+  }
+
+  CopyTexture(copy, IntPoint(0, 0), rt->GetTexture(), IntRect(0, 0, 2, 2));
+
+  uint8_t r, g, b, a;
+  {
+    MLGMappedResource map;
+    if (!Map(copy, MLGMapType::READ, &map)) {
+      return false;
+    }
+    r = map.mData[0];
+    g = map.mData[1];
+    b = map.mData[2];
+    a = map.mData[3];
+    Unmap(copy);
+  }
+
+  return r == 255 &&
+         g == 0 &&
+         b == 255 &&
+         a == 255;
 }
 
 static D3D11_BOX

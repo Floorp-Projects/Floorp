@@ -428,7 +428,6 @@ UNIFIED_SOURCES += [
     'mlgpu/PaintedLayerMLGPU.cpp',
     'mlgpu/RenderPassMLGPU.cpp',
     'mlgpu/RenderViewMLGPU.cpp',
-    'mlgpu/ShaderDefinitionsMLGPU.cpp',
     'mlgpu/SharedBufferMLGPU.cpp',
     'mlgpu/StagingBuffer.cpp',
     'mlgpu/TexturedLayerMLGPU.cpp',

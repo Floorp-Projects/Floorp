@@ -397,8 +397,11 @@ ShouldLimitDeviceResets(uint32_t count, int32_t deltaMilliseconds)
 }
 
 void
-GPUProcessManager::TriggerDeviceResetForTesting()
+GPUProcessManager::SimulateDeviceReset()
 {
+  // Make sure we rebuild environment and configuration for accelerated features.
+  gfxPlatform::GetPlatform()->CompositorUpdated();
+
   if (mProcess) {
     OnRemoteProcessDeviceReset(mProcess);
   } else {
