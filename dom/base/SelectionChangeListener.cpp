@@ -21,7 +21,7 @@ using namespace mozilla::dom;
 SelectionChangeListener::RawRangeData::RawRangeData(const nsRange* aRange)
 {
   mozilla::ErrorResult rv;
-  mStartParent = aRange->GetStartContainer(rv);
+  mStartContainer = aRange->GetStartContainer(rv);
   rv.SuppressException();
   mEndParent = aRange->GetEndContainer(rv);
   rv.SuppressException();
@@ -35,7 +35,7 @@ bool
 SelectionChangeListener::RawRangeData::Equals(const nsRange* aRange)
 {
   mozilla::ErrorResult rv;
-  bool eq = mStartParent == aRange->GetStartContainer(rv);
+  bool eq = mStartContainer == aRange->GetStartContainer(rv);
   rv.SuppressException();
   eq = eq && mEndParent == aRange->GetEndContainer(rv);
   rv.SuppressException();
@@ -52,7 +52,8 @@ ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback& aCallback,
                             const char* aName,
                             uint32_t aFlags = 0)
 {
-  ImplCycleCollectionTraverse(aCallback, aField.mStartParent, "mStartParent", aFlags);
+  ImplCycleCollectionTraverse(aCallback, aField.mStartContainer,
+                              "mStartContainer", aFlags);
   ImplCycleCollectionTraverse(aCallback, aField.mEndParent, "mEndParent", aFlags);
 }
 
