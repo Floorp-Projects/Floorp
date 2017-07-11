@@ -755,13 +755,13 @@ nsRange::ParentChainChanged(nsIContent *aContent)
 NS_IMETHODIMP
 nsRange::IsPointInRange(nsIDOMNode* aContainer, int32_t aOffset, bool* aResult)
 {
-  nsCOMPtr<nsINode> parent = do_QueryInterface(aContainer);
-  if (!parent) {
+  nsCOMPtr<nsINode> container = do_QueryInterface(aContainer);
+  if (!container) {
     return NS_ERROR_DOM_NOT_OBJECT_ERR;
   }
 
   ErrorResult rv;
-  *aResult = IsPointInRange(*parent, aOffset, rv);
+  *aResult = IsPointInRange(*container, aOffset, rv);
   return rv.StealNSResult();
 }
 
@@ -783,11 +783,11 @@ nsRange::IsPointInRange(nsINode& aContainer, uint32_t aOffset, ErrorResult& aRv)
 NS_IMETHODIMP
 nsRange::ComparePoint(nsIDOMNode* aContainer, int32_t aOffset, int16_t* aResult)
 {
-  nsCOMPtr<nsINode> parent = do_QueryInterface(aContainer);
-  NS_ENSURE_TRUE(parent, NS_ERROR_DOM_HIERARCHY_REQUEST_ERR);
+  nsCOMPtr<nsINode> container = do_QueryInterface(aContainer);
+  NS_ENSURE_TRUE(container, NS_ERROR_DOM_HIERARCHY_REQUEST_ERR);
 
   ErrorResult rv;
-  *aResult = ComparePoint(*parent, aOffset, rv);
+  *aResult = ComparePoint(*container, aOffset, rv);
   return rv.StealNSResult();
 }
 
@@ -1217,13 +1217,13 @@ nsRange::SetStart(nsINode& aNode, uint32_t aOffset, ErrorResult& aRv)
 NS_IMETHODIMP
 nsRange::SetStart(nsIDOMNode* aContainer, int32_t aOffset)
 {
-  nsCOMPtr<nsINode> parent = do_QueryInterface(aContainer);
-  if (!parent) {
+  nsCOMPtr<nsINode> container = do_QueryInterface(aContainer);
+  if (!container) {
     return NS_ERROR_DOM_NOT_OBJECT_ERR;
   }
 
   ErrorResult rv;
-  SetStart(*parent, aOffset, rv);
+  SetStart(*container, aOffset, rv);
   return rv.StealNSResult();
 }
 
@@ -1273,8 +1273,8 @@ nsRange::SetStartBefore(nsINode& aNode, ErrorResult& aRv)
 
   AutoInvalidateSelection atEndOfBlock(this);
   int32_t offset = -1;
-  nsINode* parent = GetContainerAndOffsetBefore(&aNode, &offset);
-  aRv = SetStart(parent, offset);
+  nsINode* container = GetContainerAndOffsetBefore(&aNode, &offset);
+  aRv = SetStart(container, offset);
 }
 
 NS_IMETHODIMP
@@ -1309,8 +1309,8 @@ nsRange::SetStartAfter(nsINode& aNode, ErrorResult& aRv)
 
   AutoInvalidateSelection atEndOfBlock(this);
   int32_t offset = -1;
-  nsINode* parent = GetContainerAndOffsetAfter(&aNode, &offset);
-  aRv = SetStart(parent, offset);
+  nsINode* container = GetContainerAndOffsetAfter(&aNode, &offset);
+  aRv = SetStart(container, offset);
 }
 
 NS_IMETHODIMP
@@ -1349,13 +1349,13 @@ nsRange::SetEnd(nsINode& aNode, uint32_t aOffset, ErrorResult& aRv)
 NS_IMETHODIMP
 nsRange::SetEnd(nsIDOMNode* aContainer, int32_t aOffset)
 {
-  nsCOMPtr<nsINode> parent = do_QueryInterface(aContainer);
-  if (!parent) {
+  nsCOMPtr<nsINode> container = do_QueryInterface(aContainer);
+  if (!container) {
     return NS_ERROR_DOM_NOT_OBJECT_ERR;
   }
 
   ErrorResult rv;
-  SetEnd(*parent, aOffset, rv);
+  SetEnd(*container, aOffset, rv);
   return rv.StealNSResult();
 }
 
@@ -1467,8 +1467,8 @@ nsRange::SetEndBefore(nsINode& aNode, ErrorResult& aRv)
 
   AutoInvalidateSelection atEndOfBlock(this);
   int32_t offset = -1;
-  nsINode* parent = GetContainerAndOffsetBefore(&aNode, &offset);
-  aRv = SetEnd(parent, offset);
+  nsINode* container = GetContainerAndOffsetBefore(&aNode, &offset);
+  aRv = SetEnd(container, offset);
 }
 
 NS_IMETHODIMP
@@ -1503,8 +1503,8 @@ nsRange::SetEndAfter(nsINode& aNode, ErrorResult& aRv)
 
   AutoInvalidateSelection atEndOfBlock(this);
   int32_t offset = -1;
-  nsINode* parent = GetContainerAndOffsetAfter(&aNode, &offset);
-  aRv = SetEnd(parent, offset);
+  nsINode* container = GetContainerAndOffsetAfter(&aNode, &offset);
+  aRv = SetEnd(container, offset);
 }
 
 NS_IMETHODIMP
@@ -1574,21 +1574,21 @@ nsRange::SelectNode(nsINode& aNode, ErrorResult& aRv)
     return;
   }
 
-  nsINode* parent = aNode.GetParentNode();
-  nsINode* newRoot = IsValidBoundary(parent);
+  nsINode* container = aNode.GetParentNode();
+  nsINode* newRoot = IsValidBoundary(container);
   if (!newRoot) {
     aRv.Throw(NS_ERROR_DOM_INVALID_NODE_TYPE_ERR);
     return;
   }
 
-  int32_t index = parent->IndexOf(&aNode);
+  int32_t index = container->IndexOf(&aNode);
   if (index < 0) {
     aRv.Throw(NS_ERROR_DOM_INVALID_NODE_TYPE_ERR);
     return;
   }
 
   AutoInvalidateSelection atEndOfBlock(this);
-  DoSetRange(parent, index, parent, index + 1, newRoot);
+  DoSetRange(container, index, container, index + 1, newRoot);
 }
 
 NS_IMETHODIMP
