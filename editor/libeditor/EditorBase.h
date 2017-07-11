@@ -806,7 +806,7 @@ public:
                                         nsIDOMNode** outStartNode,
                                         int32_t* outStartOffset);
   static nsresult GetStartNodeAndOffset(Selection* aSelection,
-                                        nsINode** aStartNode,
+                                        nsINode** aStartContainer,
                                         int32_t* aStartOffset);
   static nsresult GetEndNodeAndOffset(Selection* aSelection,
                                       nsIDOMNode** outEndNode,
@@ -824,7 +824,7 @@ public:
    * Helpers to add a node to the selection.
    * Used by table cell selection methods.
    */
-  nsresult CreateRange(nsIDOMNode* aStartParent, int32_t aStartOffset,
+  nsresult CreateRange(nsIDOMNode* aStartContainer, int32_t aStartOffset,
                        nsIDOMNode* aEndParent, int32_t aEndOffset,
                        nsRange** aRange);
 
@@ -865,7 +865,7 @@ public:
                                   Selection* aSelection,
                                   nsIDOMNode* previousSelectedNode,
                                   int32_t previousSelectedOffset,
-                                  nsIDOMNode* aStartNode,
+                                  nsIDOMNode* aStartContainer,
                                   int32_t aStartOffset,
                                   nsIDOMNode* aEndNode,
                                   int32_t aEndOffset);
