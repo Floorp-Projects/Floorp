@@ -753,12 +753,32 @@ StackTrace::Get(Thread* aT)
   StackTrace tmp;
   {
     AutoUnlockState unlock;
-    uint32_t skipFrames = 2;
-    if (MozStackWalk(StackWalkCallback, skipFrames,
-                     MaxFrames, &tmp, 0, nullptr)) {
-      // Handle the common case first.  All is ok.  Nothing to do.
-    } else {
-      tmp.mLength = 0;
+    // In each of the following cases, skipFrames is chosen so that the
+    // first frame in each stack trace is a replace_* function.
+#ifdef XP_MACOSX
+    // This avoids MozStackWalk(), which has become unusably slow on Mac due to
+    // changes in libunwind.
+    //
+    // This code is cribbed from the Gecko Profiler, which also uses
+    // FramePointerStackWalk() on Mac: Registers::SyncPopulate() for the frame
+    // pointer, and GetStackTop() for the stack end.
+    void* fp;
+    asm (
+        // Dereference %rbp to get previous %rbp
+        "movq (%%rbp), %0\n\t"
+        :
+        "=r"(fp)
+    );
+    void* stackEnd = pthread_get_stackaddr_np(pthread_self());
+    bool ok = FramePointerStackWalk(StackWalkCallback, /* skipFrames = */ 0,
+                                    MaxFrames, &tmp,
+                                    reinterpret_cast<void**>(fp), stackEnd);
+#else
+    bool ok = MozStackWalk(StackWalkCallback, /* skipFrames = */ 2,
+                           MaxFrames, &tmp, 0, nullptr);
+#endif
+    if (!ok) {
+      tmp.mLength = 0; // re-zero in case the stack walk function changed it
     }
   }
 
