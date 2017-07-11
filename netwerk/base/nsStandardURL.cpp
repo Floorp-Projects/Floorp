@@ -140,6 +140,7 @@ static NS_DEFINE_CID(kStandardURLCID, NS_STANDARDURL_CID);
 nsIIDNService *nsStandardURL::gIDN = nullptr;
 bool nsStandardURL::gInitialized = false;
 char nsStandardURL::gHostLimitDigits[] = { '/', '\\', '?', '#', 0 };
+bool nsStandardURL::gPunycodeHost = true;
 
 // Invalid host characters
 // We still allow % because it is in the ID of addons.
@@ -359,6 +360,8 @@ nsStandardURL::InitGlobalObjects()
 #endif
         PrefsChanged(prefBranch, nullptr);
     }
+
+    Preferences::AddBoolVarCache(&gPunycodeHost, "network.standard-url.punycode-host", true);
 }
 
 void
@@ -1341,9 +1344,14 @@ nsStandardURL::GetSpec(nsACString &result)
 {
     MOZ_ASSERT(mSpec.Length() <= (uint32_t) net_GetURLMaxLength(),
                "The spec should never be this long, we missed a check.");
-    result = mSpec;
+    nsresult rv = NS_OK;
+    if (gPunycodeHost) {
+        result = mSpec;
+    } else { // XXX: This code path may be slow
+        rv = GetDisplaySpec(result);
+    }
     CALL_RUST_GETTER_STR(result, GetSpec, result);
-    return NS_OK;
+    return rv;
 }
 
 // result may contain unescaped UTF-8 characters
@@ -1395,10 +1403,21 @@ nsStandardURL::GetDisplaySpec(nsACString &aUnicodeSpec)
 NS_IMETHODIMP
 nsStandardURL::GetDisplayHostPort(nsACString &aUnicodeHostPort)
 {
-    nsresult rv = GetDisplayHost(aUnicodeHostPort);
+    nsAutoCString unicodeHostPort;
+
+    nsresult rv = GetDisplayHost(unicodeHostPort);
     if (NS_FAILED(rv)) {
         return rv;
     }
+
+    if (StringBeginsWith(Hostport(), NS_LITERAL_CSTRING("["))) {
+        aUnicodeHostPort.AssignLiteral("[");
+        aUnicodeHostPort.Append(unicodeHostPort);
+        aUnicodeHostPort.AppendLiteral("]");
+    } else {
+        aUnicodeHostPort.Assign(unicodeHostPort);
+    }
+
     uint32_t pos = mHost.mPos + mHost.mLen;
     if (pos < mPath.mPos)
         aUnicodeHostPort += Substring(mSpec, pos, mPath.mPos - pos);
@@ -1487,7 +1506,12 @@ nsStandardURL::GetPassword(nsACString &result)
 NS_IMETHODIMP
 nsStandardURL::GetHostPort(nsACString &result)
 {
-    nsresult rv = GetAsciiHostPort(result);
+    nsresult rv;
+    if (gPunycodeHost) {
+        rv = GetAsciiHostPort(result);
+    } else {
+        rv = GetDisplayHostPort(result);
+    }
     CALL_RUST_GETTER_STR(result, GetHostPort, result);
     return rv;
 }
@@ -1495,7 +1519,12 @@ nsStandardURL::GetHostPort(nsACString &result)
 NS_IMETHODIMP
 nsStandardURL::GetHost(nsACString &result)
 {
-    nsresult rv = GetAsciiHost(result);
+    nsresult rv;
+    if (gPunycodeHost) {
+        rv = GetAsciiHost(result);
+    } else {
+        rv = GetDisplayHost(result);
+    }
     CALL_RUST_GETTER_STR(result, GetHost, result);
     return rv;
 }

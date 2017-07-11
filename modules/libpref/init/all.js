@@ -1995,6 +1995,10 @@ pref("network.standard-url.max-length", 1048576);
 // C++ implementation. Requires restart for changes to take effect.
 pref("network.standard-url.enable-rust", false);
 
+// Whether nsIURI.host/.hostname/.spec should return a punycode string
+// If set to false we will revert to previous behaviour and return a unicode string.
+pref("network.standard-url.punycode-host", true);
+
 // Idle timeout for ftp control connections - 5 minute default
 pref("network.ftp.idleConnectionTimeout", 300);
 
