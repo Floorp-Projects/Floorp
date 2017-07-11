@@ -19,11 +19,16 @@ function debug(aMsg) {
 
 class GeckoViewContent extends GeckoViewModule {
   init() {
-    this.messageManager.loadFrameScript(
-      "chrome://geckoview/content/GeckoViewContent.js", true);
+    this.frameScriptLoaded = false;
   }
 
   register() {
+    if (!this.frameScriptLoaded) {
+      this.messageManager.loadFrameScript(
+        "chrome://geckoview/content/GeckoViewContent.js", true);
+      this.frameScriptLoaded = true;
+    }
+
     this.window.addEventListener("MozDOMFullScreen:Entered", this,
                                  /* capture */ true, /* untrusted */ false);
     this.window.addEventListener("MozDOMFullScreen:Exited", this,
