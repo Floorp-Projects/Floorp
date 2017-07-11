@@ -487,7 +487,7 @@ public class UrlInputFragment extends Fragment implements View.OnClickListener, 
 
         urlAutoCompleteFilter.onFilter(searchText, view);
 
-        if (searchText.length() == 0) {
+        if (searchText.trim().isEmpty()) {
             clearView.setVisibility(View.GONE);
             searchViewContainer.setVisibility(View.GONE);
         } else {
