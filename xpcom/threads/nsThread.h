@@ -93,7 +93,7 @@ public:
   static bool SaveMemoryReportNearOOM(ShouldSaveMemoryReport aShouldSave);
 #endif
 
-  static const char* sMainThreadRunnableName;
+  static const nsACString* sMainThreadRunnableName;
 
 private:
   void DoMainThreadSpecificProcessing(bool aReallyWait);

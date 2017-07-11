@@ -99,7 +99,7 @@ static LazyLogModule sThreadLog("nsThread");
 
 NS_DECL_CI_INTERFACE_GETTER(nsThread)
 
-const char* nsThread::sMainThreadRunnableName = nullptr;
+const nsACString* nsThread::sMainThreadRunnableName = nullptr;
 
 //-----------------------------------------------------------------------------
 // Because we do not have our own nsIFactory, we have to implement nsIClassInfo
@@ -1422,15 +1422,17 @@ nsThread::ProcessNextEvent(bool aMayWait, bool* aResult)
 
       // If we're on the main thread, we want to record our current runnable's
       // name in a static so that BHR can record it.
-      const char* restoreRunnableName = nullptr;
+      const nsACString* restoreRunnableName = nullptr;
       auto clear = MakeScopeExit([&] {
         if (MAIN_THREAD == mIsMainThread) {
+          MOZ_ASSERT(NS_IsMainThread());
           sMainThreadRunnableName = restoreRunnableName;
         }
       });
       if (MAIN_THREAD == mIsMainThread) {
+        MOZ_ASSERT(NS_IsMainThread());
         restoreRunnableName = sMainThreadRunnableName;
-        sMainThreadRunnableName = name.get();
+        sMainThreadRunnableName = &name;
       }
 #endif
 

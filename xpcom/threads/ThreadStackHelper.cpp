@@ -138,7 +138,7 @@ ThreadStackHelper::GetStacksInternal(Stack* aStack,
   ScopedSetPtr<NativeStack> nativeStackPtr(mNativeStackToFill, aNativeStack);
 #endif
 
-  char nameBuffer[1000] = {0};
+  Vector<char, 1000> nameBuffer;
   auto callback = [&, this] (void** aPCs, size_t aCount, bool aIsMainThread) {
     // NOTE: We cannot allocate any memory in this callback, as the target
     // thread is suspended, so we first copy it into a stack-allocated buffer,
@@ -149,9 +149,10 @@ ThreadStackHelper::GetStacksInternal(Stack* aStack,
     // main thread, so we only want to read sMainThreadRunnableName and copy its
     // value in the case that we are currently suspending the main thread.
     if (aIsMainThread && nsThread::sMainThreadRunnableName) {
-      strncpy(nameBuffer, nsThread::sMainThreadRunnableName, sizeof(nameBuffer));
-      // Make sure the string is null-terminated.
-      nameBuffer[sizeof(nameBuffer) - 1] = '\0';
+      MOZ_ALWAYS_TRUE(
+        nameBuffer.append(nsThread::sMainThreadRunnableName->BeginReading(),
+                          std::min(uint32_t(nameBuffer.sMaxInlineStorage),
+                                   uint32_t(nsThread::sMainThreadRunnableName->Length()))));
     }
 
 #ifdef MOZ_THREADSTACKHELPER_PSEUDO
@@ -177,8 +178,8 @@ ThreadStackHelper::GetStacksInternal(Stack* aStack,
   }
 
   // Copy the name buffer allocation into the output string.
-  if (nameBuffer[0] != 0) {
-    aRunnableName = nameBuffer;
+  if (nameBuffer.length() > 0) {
+    aRunnableName.AssignASCII(nameBuffer.begin(), nameBuffer.length());
   }
 #endif
 }
