@@ -349,6 +349,24 @@ NullPrincipalURI::SchemeIs(const char* aScheme, bool* _schemeIs)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+NullPrincipalURI::GetDisplaySpec(nsACString &aUnicodeSpec)
+{
+  return GetSpec(aUnicodeSpec);
+}
+
+NS_IMETHODIMP
+NullPrincipalURI::GetDisplayHostPort(nsACString &aUnicodeHostPort)
+{
+  return GetHostPort(aUnicodeHostPort);
+}
+
+NS_IMETHODIMP
+NullPrincipalURI::GetDisplayHost(nsACString &aUnicodeHost)
+{
+  return GetHost(aUnicodeHost);
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 //// nsIIPCSerializableURI
 

@@ -229,6 +229,24 @@ nsJARURI::GetSpecIgnoringRef(nsACString &aSpec)
 }
 
 NS_IMETHODIMP
+nsJARURI::GetDisplaySpec(nsACString &aUnicodeSpec)
+{
+    return GetSpec(aUnicodeSpec);
+}
+
+NS_IMETHODIMP
+nsJARURI::GetDisplayHostPort(nsACString &aUnicodeHostPort)
+{
+    return GetHostPort(aUnicodeHostPort);
+}
+
+NS_IMETHODIMP
+nsJARURI::GetDisplayHost(nsACString &aUnicodeHost)
+{
+    return GetHost(aUnicodeHost);
+}
+
+NS_IMETHODIMP
 nsJARURI::GetHasRef(bool *result)
 {
     return mJAREntry->GetHasRef(result);
