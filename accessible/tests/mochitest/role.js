@@ -24,6 +24,7 @@ const ROLE_DETAILS = nsIAccessibleRole.ROLE_DETAILS;
 const ROLE_DIAGRAM = nsIAccessibleRole.ROLE_DIAGRAM;
 const ROLE_DIALOG = nsIAccessibleRole.ROLE_DIALOG;
 const ROLE_DOCUMENT = nsIAccessibleRole.ROLE_DOCUMENT;
+const ROLE_EDITCOMBOBOX = nsIAccessibleRole.ROLE_EDITCOMBOBOX;
 const ROLE_EMBEDDED_OBJECT = nsIAccessibleRole.ROLE_EMBEDDED_OBJECT;
 const ROLE_ENTRY = nsIAccessibleRole.ROLE_ENTRY;
 const ROLE_EQUATION = nsIAccessibleRole.ROLE_EQUATION;
