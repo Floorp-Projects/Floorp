@@ -344,8 +344,9 @@ Gecko_GetStyleContext(RawGeckoElementBorrowed aElement,
   }
 
   // FIXME(emilio): Is there a shorter path?
-  nsCSSFrameConstructor* fc =
-    aElement->OwnerDoc()->GetShell()->GetPresContext()->FrameConstructor();
+  nsIPresShell* shell = aElement->OwnerDoc()->GetShell();
+  NS_ENSURE_TRUE(shell, nullptr);
+  nsCSSFrameConstructor* fc = shell->GetPresContext()->FrameConstructor();
 
   // NB: This is only called for CalcStyleDifference, and we handle correctly
   // the display: none case since Servo still has the older style.
