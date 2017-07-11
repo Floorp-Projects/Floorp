@@ -376,7 +376,6 @@ window.requestAnimFrame = (function()
       _onInitScene: function _onInitScene()
       {
          this.sceneGlitchCount = this.testScore = this.testState = 0;
-         Profiler.resume(this.interval && this.interval.label);
          this.sceneStartTime = Date.now();
          this.sceneCompletedTime = null;
       },
@@ -415,7 +414,6 @@ window.requestAnimFrame = (function()
                   var name = this.interval.label.replace(/Test [0-9] - /g, "");
                   name = name.replace(/, /g, "- ");
                   GameHandler.benchmarkLabels.push(name);
-                  Profiler.pause(this.interval.label);
                   if (typeof console !== "undefined")
                   {
                      console.log(score + " [" + this.interval.label + "]");
@@ -6135,7 +6133,9 @@ if (typeof Benchmark == "undefined" || !Benchmark)
       // the benchmark info scene is displayed first and responsible for allowing the
       // benchmark to start once images required by the game engines have been loaded
       loader.onLoadCallback(function() {
-         infoScene.ready();
+         TalosContentProfiler.resume("begin", true).then(() => {
+           infoScene.ready();
+         });
       });
    };
    
