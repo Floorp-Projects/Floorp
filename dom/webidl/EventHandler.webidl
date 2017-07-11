@@ -68,7 +68,7 @@ interface GlobalEventHandlers {
            attribute EventHandler onmouseout;
            attribute EventHandler onmouseover;
            attribute EventHandler onmouseup;
-           //(Not implemented)attribute EventHandler onmousewheel;
+           attribute EventHandler onwheel;
            attribute EventHandler onpause;
            attribute EventHandler onplay;
            attribute EventHandler onplaying;
