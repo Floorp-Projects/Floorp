@@ -1432,14 +1432,28 @@ MLGDeviceD3D11::SetVertexShader(VertexShaderID aShader)
     InitVertexShader(aShader);
     MOZ_ASSERT(mInputLayouts[aShader]);
   }
-  if (mCurrentVertexShader != mVertexShaders[aShader]) {
-    mCtx->VSSetShader(mVertexShaders[aShader], nullptr, 0);
-    mCurrentVertexShader = mVertexShaders[aShader];
+  SetVertexShader(mVertexShaders[aShader]);
+  SetInputLayout(mInputLayouts[aShader]);
+}
+
+void
+MLGDeviceD3D11::SetInputLayout(ID3D11InputLayout* aLayout)
+{
+  if (mCurrentInputLayout == aLayout) {
+    return;
   }
-  if (mCurrentInputLayout != mInputLayouts[aShader]) {
-    mCtx->IASetInputLayout(mInputLayouts[aShader]);
-    mCurrentInputLayout = mInputLayouts[aShader];
+  mCtx->IASetInputLayout(aLayout);
+  mCurrentInputLayout = aLayout;
+}
+
+void
+MLGDeviceD3D11::SetVertexShader(ID3D11VertexShader* aShader)
+{
+  if (mCurrentVertexShader == aShader) {
+    return;
   }
+  mCtx->VSSetShader(aShader, nullptr, 0);
+  mCurrentVertexShader = aShader;
 }
 
 void
@@ -1961,6 +1975,130 @@ MLGDeviceD3D11::CopyTexture(MLGTexture* aDest,
     aTarget.x, aTarget.y, 0,
     source->GetTexture(), 0,
     &box);
+}
+
+bool
+MLGDeviceD3D11::VerifyConstantBufferOffsetting()
+{
+  RefPtr<ID3D11VertexShader> vs;
+  HRESULT hr = mDevice->CreateVertexShader(
+    sTestConstantBuffersVS.mData,
+    sTestConstantBuffersVS.mLength,
+    nullptr,
+    getter_AddRefs(vs));
+  if (FAILED(hr)) {
+    gfxCriticalNote << "Failed creating vertex shader for buffer test: " << hexa(hr);
+    return false;
+  }
+
+  D3D11_INPUT_ELEMENT_DESC inputDesc[] = {
+    { "POSITION", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 }
+  };
+
+  RefPtr<ID3D11InputLayout> layout;
+  hr = mDevice->CreateInputLayout(
+    inputDesc,
+    sizeof(inputDesc) / sizeof(inputDesc[0]),
+    sTestConstantBuffersVS.mData,
+    sTestConstantBuffersVS.mLength,
+    getter_AddRefs(layout));
+  if (FAILED(hr)) {
+    gfxCriticalNote << "Failed creating input layout for buffer test: " << hexa(hr);
+    return false;
+  }
+
+  RefPtr<MLGRenderTarget> rt = CreateRenderTarget(IntSize(2, 2), MLGRenderTargetFlags::Default);
+  if (!rt) {
+    return false;
+  }
+
+  static const size_t kConstantSize = 4 * sizeof(float);
+  static const size_t kMinConstants = 16;
+  static const size_t kNumBindings = 3;
+
+  RefPtr<MLGBuffer> buffer = CreateBuffer(
+    MLGBufferType::Constant,
+    kConstantSize * kMinConstants * kNumBindings,
+    MLGUsage::Dynamic,
+    nullptr);
+  if (!buffer) {
+    return false;
+  }
+
+  // Populate the buffer. The shader will pick R from buffer 1, G from buffer
+  // 2, and B from buffer 3.
+  {
+    MLGMappedResource map;
+    if (!Map(buffer, MLGMapType::WRITE_DISCARD, &map)) {
+      return false;
+    }
+
+    *reinterpret_cast<Color*>(map.mData) =
+      Color(1.0f, 0.2f, 0.3f, 1.0f);
+    *reinterpret_cast<Color*>(map.mData + kConstantSize * kMinConstants) =
+      Color(0.4f, 0.0f, 0.5f, 1.0f);
+    *reinterpret_cast<Color*>(map.mData + (kConstantSize * kMinConstants) * 2) =
+      Color(0.6f, 0.7f, 1.0f, 1.0f);
+
+    Unmap(buffer);
+  }
+
+  Clear(rt, Color(0.0f, 0.0f, 0.0f, 1.0f));
+  SetRenderTarget(rt);
+  SetViewport(IntRect(0, 0, 2, 2));
+  SetScissorRect(Nothing());
+  SetBlendState(MLGBlendState::Over);
+
+  SetTopology(MLGPrimitiveTopology::UnitQuad);
+  SetInputLayout(layout);
+  SetVertexShader(vs);
+  SetPixelShader(PixelShaderID::ColoredQuad);
+
+  ID3D11Buffer* buffers[3] = {
+    buffer->AsD3D11()->GetBuffer(),
+    buffer->AsD3D11()->GetBuffer(),
+    buffer->AsD3D11()->GetBuffer()
+  };
+  UINT offsets[3] = { 0 * kMinConstants, 1 * kMinConstants, 2 * kMinConstants };
+  UINT counts[3] = { kMinConstants, kMinConstants, kMinConstants };
+
+  mCtx1->VSSetConstantBuffers1(0, 3, buffers, offsets, counts);
+  mCtx->Draw(4, 0);
+
+  // Kill bindings to resources.
+  SetRenderTarget(nullptr);
+
+  ID3D11Buffer* nulls[3] = { nullptr, nullptr, nullptr };
+  mCtx->VSSetConstantBuffers(0, 3, nulls);
+
+  RefPtr<MLGTexture> copy = CreateTexture(
+    IntSize(2, 2),
+    SurfaceFormat::B8G8R8A8,
+    MLGUsage::Staging,
+    MLGTextureFlags::None);
+  if (!copy) {
+    return false;
+  }
+
+  CopyTexture(copy, IntPoint(0, 0), rt->GetTexture(), IntRect(0, 0, 2, 2));
+
+  uint8_t r, g, b, a;
+  {
+    MLGMappedResource map;
+    if (!Map(copy, MLGMapType::READ, &map)) {
+      return false;
+    }
+    r = map.mData[0];
+    g = map.mData[1];
+    b = map.mData[2];
+    a = map.mData[3];
+    Unmap(copy);
+  }
+
+  return r == 255 &&
+         g == 0 &&
+         b == 255 &&
+         a == 255;
 }
 
 static D3D11_BOX
