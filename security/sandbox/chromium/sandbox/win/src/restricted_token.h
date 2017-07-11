@@ -25,9 +25,6 @@
 
 namespace sandbox {
 
-// Whether we are allowing restricting SIDs in the access tokens or not.
-extern bool gUseRestricting;
-
 // Handles the creation of a restricted token using the effective token or
 // any token handle.
 // Sample usage:

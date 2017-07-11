@@ -216,7 +216,6 @@ static int do_main(int argc, char* argv[], char* envp[])
 #if defined(XP_WIN) && defined(MOZ_SANDBOX)
   sandbox::BrokerServices* brokerServices =
     sandboxing::GetInitializedBrokerServices();
-  sandboxing::NetworkDriveCheck();
   sandboxing::PermissionsService* permissionsService =
     sandboxing::GetPermissionsService();
 #if defined(MOZ_CONTENT_SANDBOX)
