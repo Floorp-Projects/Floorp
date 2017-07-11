@@ -16,6 +16,7 @@
   <string name="menu_trackers_blocked_title">المتعقبات المحجوبة</string>
   <string name="share_dialog_title">شارك عبر</string>
   <string name="notification_erase_text">امسح تأريخ التصفح</string>
+  <string name="notification_action_open">افتح</string>
   <string name="shortcut_erase_short_label">امسح</string>
   <string name="shortcut_erase_long_label">امسح تأريخ التصفح</string>
   <string name="text_selection_search_action">ابحث مع الحفاظ على الخصوصية</string>
@@ -62,6 +63,12 @@
   <string name="external_app_prompt_no_app_title">ابحث عن تطبيق يدعم فتح الرابط</string>
   <string name="external_app_prompt_no_app">لا يوجد أي تطبيق على جهازك يدعم فتح هذا الرابط. يمكنك مغادرة %1$s للبحث في %2$s عن تطبيق يدعم الرابط.</string>
   <string name="external_multiple_apps_matched_exit">أتريد مغادرة التصفح الخاص؟</string>
+  <string name="download_snackbar_finished">اكتمل %1$s</string>
+  <string name="download_snackbar_open">افتح</string>
+  <string name="download_dialog_warning"><![CDATA["الملفات المُنزّلة "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">&#1604;&#1606; &#1578;&#1615;&#1581;&#1584;&#1601;</b>" عندما تمسح تأريخ %1$s."]]></string>
+  <string name="download_dialog_title">نزّل ملفًا</string>
+  <string name="download_dialog_action_cancel">ألغِ</string>
+  <string name="download_dialog_action_download">نزّل</string>
   <string name="errorpage_title">هناك مشكلة في تحميل الصفحة</string>
   <string name="errorpage_refresh">أعِد المحاولة</string>
   <string name="error_connectionfailure_title">تعذّر الاتصال</string>
@@ -94,4 +101,5 @@
   <string name="firstrun_close_button">حسنًا، فهمت</string>
   <string name="firstrun_skip_button">تخطّ</string>
   <string name="firstrun_next_button">التالي</string>
+  <string name="content_blocking_disabled">-</string>
 </resources>

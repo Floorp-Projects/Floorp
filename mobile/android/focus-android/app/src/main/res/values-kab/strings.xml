@@ -16,6 +16,7 @@
   <string name="menu_trackers_blocked_title">Ineḍfaṛen ttwaḥebsen</string>
   <string name="share_dialog_title">Bdu s</string>
   <string name="notification_erase_text">Sfeḍ amazray n tunigin</string>
+  <string name="notification_action_open">Ldi</string>
   <string name="shortcut_erase_short_label">Sfeḍ</string>
   <string name="shortcut_erase_long_label">Sfeḍ amazray n tunigin</string>
   <string name="text_selection_search_action">Anadi uslig</string>
@@ -62,6 +63,12 @@
   <string name="external_app_prompt_no_app_title">Aff-d asnas izemren ad d-yeldi aseγwen</string>
   <string name="external_app_prompt_no_app">Ulac asnas deg ibenk-ik izemren ad d-yeldi aseγwen-agi. Tebγiḍ ad teffγeḍ si %1$s sakin ad d-nadiḍ %2$s akken ad d-tafeḍ asnas ilaqen.</string>
   <string name="external_multiple_apps_matched_exit">Ffeγ si tunigin tusligt?</string>
+  <string name="download_snackbar_finished">%1$s yefuk</string>
+  <string name="download_snackbar_open">Ldi</string>
+  <string name="download_dialog_warning"><![CDATA["Ifuyla i d_saliḍ "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">" ur k-ttru&#7717;un ara"</b>m\'ara ad tekseḍ amazray %1$s.]]></string>
+  <string name="download_dialog_title">Sider afaylu</string>
+  <string name="download_dialog_action_cancel">Sefsex</string>
+  <string name="download_dialog_action_download">Sider</string>
   <string name="errorpage_title">Ugur deg usali n usebter</string>
   <string name="errorpage_refresh">Σreḍ tikelt-nniḍen</string>
   <string name="error_connectionfailure_title">Igguma ad iqqen</string>
@@ -94,4 +101,5 @@
   <string name="firstrun_close_button">IH, Awi-t-id!</string>
   <string name="firstrun_skip_button">Suref</string>
   <string name="firstrun_next_button">Γer zdat</string>
+  <string name="content_blocking_disabled">-</string>
 </resources>

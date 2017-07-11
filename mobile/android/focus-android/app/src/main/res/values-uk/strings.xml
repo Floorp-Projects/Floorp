@@ -16,6 +16,7 @@
   <string name="menu_trackers_blocked_title">Заблоковано стеження</string>
   <string name="share_dialog_title">Поділитись через</string>
   <string name="notification_erase_text">Стерти історію перегляду</string>
+  <string name="notification_action_open">Відкрити</string>
   <string name="shortcut_erase_short_label">Стерти</string>
   <string name="shortcut_erase_long_label">Стерти історію перегляду</string>
   <string name="text_selection_search_action">Приватний пошук</string>
@@ -62,6 +63,12 @@
   <string name="external_app_prompt_no_app_title">Знайдіть програму, яка може відкрити посилання</string>
   <string name="external_app_prompt_no_app">Жодна з програм на вашому пристрої не здатна відкрити це посилання. Ви можете вийти з %1$s для пошуку відповідної програми у %2$s.</string>
   <string name="external_multiple_apps_matched_exit">Вийти з приватного перегляду?</string>
+  <string name="download_snackbar_finished">%1$s завантажено</string>
+  <string name="download_snackbar_open">Відкрити</string>
+  <string name="download_dialog_warning"><![CDATA["Завантажені файли "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">&#1085;&#1077; &#1073;&#1091;&#1076;&#1091;&#1090;&#1100; &#1074;&#1080;&#1076;&#1072;&#1083;&#1077;&#1085;&#1110;</b>" при стиранні історії %1$s."]]></string>
+  <string name="download_dialog_title">Завантажити файл</string>
+  <string name="download_dialog_action_cancel">Скасувати</string>
+  <string name="download_dialog_action_download">Завантажити</string>
   <string name="errorpage_title">Проблема при завантаженні сторінки</string>
   <string name="errorpage_refresh">Спробувати знову</string>
   <string name="error_connectionfailure_title">Не вдалося з\'єднатися</string>
@@ -94,4 +101,5 @@
   <string name="firstrun_close_button">Гаразд, зрозуміло!</string>
   <string name="firstrun_skip_button">Пропустити</string>
   <string name="firstrun_next_button">Далі</string>
+  <string name="content_blocking_disabled">-</string>
 </resources>

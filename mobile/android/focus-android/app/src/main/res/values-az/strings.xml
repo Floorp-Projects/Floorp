@@ -16,6 +16,7 @@
   <string name="menu_trackers_blocked_title">İzləyicilər bloklandı</string>
   <string name="share_dialog_title">Bununla paylaş:</string>
   <string name="notification_erase_text">Səyahət keçmişini poz</string>
+  <string name="notification_action_open">Aç</string>
   <string name="shortcut_erase_short_label">Poz</string>
   <string name="shortcut_erase_long_label">Səyahət keçmişini poz</string>
   <string name="text_selection_search_action">Məxfi Axtar</string>
@@ -62,6 +63,12 @@
   <string name="external_app_prompt_no_app_title">Keçid aça bilən tətbiq tap</string>
   <string name="external_app_prompt_no_app">Cihazınızdakı heç bir tətbiq bu keçidi aça bilmir. %1$s səyyahını tərk edərək %2$s ilə bunu bacaran tətbiq axtara bilərsiz.</string>
   <string name="external_multiple_apps_matched_exit">Məxfi Səyahətdən çıxırsın?</string>
+  <string name="download_snackbar_finished">%1$s endirildi</string>
+  <string name="download_snackbar_open">Aç</string>
+  <string name="download_dialog_warning"><![CDATA["Endirilən fayllar %1$s tarixçəsini pozduqda belə "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">silinm&#601;y&#601;c&#601;kl&#601;r</b>.]]></string>
+  <string name="download_dialog_title">Fay Endir</string>
+  <string name="download_dialog_action_cancel">Ləğv et</string>
+  <string name="download_dialog_action_download">Endir</string>
   <string name="errorpage_title">Səhifəni yükləmək mümkün olmadı</string>
   <string name="errorpage_refresh">Təkrar Yoxla</string>
   <string name="error_connectionfailure_title">Qoşulmaq mümkün olmadı</string>
@@ -94,4 +101,5 @@
   <string name="firstrun_close_button">Tamam, başa düşdüm!</string>
   <string name="firstrun_skip_button">Keç</string>
   <string name="firstrun_next_button">Sonrakı</string>
+  <string name="content_blocking_disabled">-</string>
 </resources>

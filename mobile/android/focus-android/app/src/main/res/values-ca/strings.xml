@@ -16,6 +16,7 @@
   <string name="menu_trackers_blocked_title">Elements blocats</string>
   <string name="share_dialog_title">Comparteix mitjançant</string>
   <string name="notification_erase_text">Esborra l\'historial de navegació</string>
+  <string name="notification_action_open">Obre</string>
   <string name="shortcut_erase_short_label">Esborra</string>
   <string name="shortcut_erase_long_label">Esborra l\'historial de navegació</string>
   <string name="text_selection_search_action">Cerca privada</string>
@@ -62,6 +63,12 @@
   <string name="external_app_prompt_no_app_title">Cerca una aplicació que pugui obrir aquest enllaç</string>
   <string name="external_app_prompt_no_app">No hi ha cap aplicació en el dispositiu que pugui obrir aquest enllaç. Podeu sortir del %1$s per cercar al %2$s una aplicació que pugui obrir-lo.</string>
   <string name="external_multiple_apps_matched_exit">Voleu sortir de la navegació privada?</string>
+  <string name="download_snackbar_finished">%1$s ha acabat</string>
+  <string name="download_snackbar_open">Obre</string>
+  <string name="download_dialog_warning"><![CDATA["Els fitxers que baixeu "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">no s\'eliminaran</b>" quan esborreu l\'historial del %1$s."]]></string>
+  <string name="download_dialog_title">Baixa el fitxer</string>
+  <string name="download_dialog_action_cancel">Cancel·la</string>
+  <string name="download_dialog_action_download">Baixa</string>
   <string name="errorpage_title">S\'ha produït un problema en carregar la pàgina</string>
   <string name="errorpage_refresh">Torna-ho a provar</string>
   <string name="error_connectionfailure_title">No s\'ha pogut connectar</string>
@@ -94,4 +101,5 @@
   <string name="firstrun_close_button">Entesos</string>
   <string name="firstrun_skip_button">Omet</string>
   <string name="firstrun_next_button">Següent</string>
+  <string name="content_blocking_disabled">-</string>
 </resources>

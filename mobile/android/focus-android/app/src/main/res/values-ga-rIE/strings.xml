@@ -16,6 +16,7 @@
   <string name="menu_trackers_blocked_title">Lorgairí blocáilte</string>
   <string name="share_dialog_title">Comhroinn trí</string>
   <string name="notification_erase_text">Glan an stair bhrabhsála</string>
+  <string name="notification_action_open">Oscail</string>
   <string name="shortcut_erase_short_label">Glan</string>
   <string name="shortcut_erase_long_label">Glan an stair bhrabhsála</string>
   <string name="text_selection_search_action">Cuardach Príobháideach</string>
@@ -46,13 +47,13 @@
   <string name="content_description_dismiss_input">Díbir</string>
   <string name="content_description_erase">Glan an stair bhrabhsála</string>
   <string name="content_description_lock">Ceangal slán</string>
-  <string name="accessibility_announcement_loading">Á luchtú</string>
+  <string name="accessibility_announcement_loading">Á lódáil</string>
   <string name="accessibility_announcement_loading_finished">Luchtaíodh an suíomh Gréasáin</string>
   <string name="content_description_menu">Tuilleadh roghanna</string>
   <string name="content_description_forward">Téigh ar aghaidh</string>
-  <string name="content_description_reload">Athluchtaigh an suíomh</string>
+  <string name="content_description_reload">Athlódáil an suíomh</string>
   <string name="content_description_back">Téigh ar gcúl</string>
-  <string name="content_description_stop">Stop ag luchtú an tsuímh</string>
+  <string name="content_description_stop">Stop ag lódáil an tsuímh</string>
   <string name="content_description_customtab_exit">Fill ar an aip roimhe seo</string>
   <string name="content_description_blocking_switch">Cuir cosc ar lorgairí</string>
   <string name="context_menu_paste_go">Greamaigh agus Téigh</string>
@@ -62,13 +63,19 @@
   <string name="external_app_prompt_no_app_title">Aimsigh aip lenar féidir an nasc seo a oscailt</string>
   <string name="external_app_prompt_no_app">Níl aon aip ar do ghléas atá in ann an nasc seo a oscailt. Is féidir leat %1$s a fhágáil chun aip oiriúnach a lorg in %2$s.</string>
   <string name="external_multiple_apps_matched_exit">Scoir de Bhrabhsáil Phríobháideach?</string>
-  <string name="errorpage_title">Fadhb i rith luchtú an leathanaigh</string>
+  <string name="download_snackbar_finished">%1$s críochnaithe</string>
+  <string name="download_snackbar_open">Oscail</string>
+  <string name="download_dialog_warning"><![CDATA[<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">N&#237; scriostar</b>" comhaid íoslódáilte nuair a scriosann tú stair %1$s."]]></string>
+  <string name="download_dialog_title">Comhad a Íoslódáil</string>
+  <string name="download_dialog_action_cancel">Cealaigh</string>
+  <string name="download_dialog_action_download">Íoslódáil</string>
+  <string name="errorpage_title">Fadhb i rith lódáil an leathanaigh</string>
   <string name="errorpage_refresh">Bain Triail Eile As</string>
   <string name="error_connectionfailure_title">Ní féidir ceangal a bhunú</string>
-  <string name="error_connectionfailure_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n        "<li>D\'fh&#233;adfadh nach bhfuil f&#225;il ar an su&#237;omh n&#243; go bhfuil s&#233; r&#243;-ghn&#243;thach faoi l&#225;thair. Bain triail eile as ar ball beag.</li>"\n        "<li>Mura bhfuil t&#250; in ann leathanach ar bith a lucht&#250;, cinntigh ceangal sonra&#237; n&#243; Wi-Fi do ghl&#233;is.</li>"\n      "</ul>]]></string>
+  <string name="error_connectionfailure_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n        "<li>D\'fh&#233;adfadh nach bhfuil f&#225;il ar an su&#237;omh n&#243; go bhfuil s&#233; r&#243;ghn&#243;thach faoi l&#225;thair. Bain triail eile as ar ball beag.</li>"\n        "<li>Mura bhfuil t&#250; in ann leathanach ar bith a l&#243;d&#225;il, cinntigh ceangal sonra&#237; n&#243; Wi-Fi do ghl&#233;is.</li>"\n      "</ul>]]></string>
   <string name="error_timeout_title">Ceangal imithe thar am</string>
   <string name="error_hostLookup_title">Níor aimsíodh an freastalaí</string>
-  <string name="error_hostLookup_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n        "<li>"Scr&#250;daigh an seoladh le haghaidh bot&#250;n cos&#250;il le\n          "<strong>ww</strong>".example.com in &#225;it\n          "<strong>www</strong>.example.com</li>"\n        "<li>Mura bhfuil t&#250; in ann leathanach ar bith a lucht&#250;, d&#233;an seice&#225;il ar cheangal sonra&#237; n&#243; ceangal Wi-Fi an ghl&#233;is.</li>"\n      "</ul>]]></string>
+  <string name="error_hostLookup_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n        "<li>"Scr&#250;daigh an seoladh le haghaidh bot&#250;n cos&#250;il le\n          "<strong>ww</strong>".example.com in &#225;it\n          "<strong>www</strong>.example.com</li>"\n        "<li>Mura bhfuil t&#250; in ann leathanach ar bith a l&#243;d&#225;il, d&#233;an seice&#225;il ar cheangal sonra&#237; n&#243; ceangal Wi-Fi an ghl&#233;is.</li>"\n      "</ul>]]></string>
   <string name="error_malformedURI_title">Níl an seoladh bailí</string>
   <string name="error_malformedURI_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>"De ghn&#225;th scr&#237;obhtar seolta&#237; Gr&#233;as&#225;in mar seo "<strong>http://www.example.com/</strong></li>"\n  "<li>"B&#237; cinnte gur tulslaiseanna at&#225; agat (.i. "<strong>/</strong>).</li>\n</ul>]]></string>
   <string name="error_redirectLoop_title">Níl an leathanach ag atreorú i gceart</string>
@@ -78,7 +85,7 @@
   <string name="error_sslhandshake_title">Níorbh fhéidir ceangal slán a bhunú</string>
   <string name="error_sslhandshake_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>B\'fh&#233;idir gur fadhb i gcumra&#237;ocht an fhreastala&#237; at&#225; ann, n&#243; b\'fh&#233;idir\ngo bhfuil duine &#233;igin ag d&#233;anamh aithrise ar an bhfreastala&#237;.</li>"\n  "<li>M&#225; &#233;ir&#237;onn leat ceangal leis an bhfreastala&#237; seo de ghn&#225;th, b\'fh&#233;idir\ngur fadhb shealadach &#237; agus gur f&#233;idir leat iarracht a dh&#233;anamh n&#237;os d&#233;ana&#237;.</li>\n</ul>]]></string>
   <string name="error_generic_title">Úps</string>
-  <string name="error_generic_message">Ní féidir linn an leathanach seo a luchtú ar chúis éigin.</string>
+  <string name="error_generic_message">Ní féidir linn an leathanach seo a lódáil ar chúis éigin.</string>
   <string name="contextmenu_link_share">Comhroinn an nasc</string>
   <string name="contextmenu_link_copy">Cóipeáil seoladh an naisc</string>
   <string name="contextmenu_image_share">Comhroinn an íomhá</string>
@@ -94,4 +101,5 @@
   <string name="firstrun_close_button">OK, tuigim!</string>
   <string name="firstrun_skip_button">Ná bac leis</string>
   <string name="firstrun_next_button">Ar Aghaidh</string>
+  <string name="content_blocking_disabled">-</string>
 </resources>

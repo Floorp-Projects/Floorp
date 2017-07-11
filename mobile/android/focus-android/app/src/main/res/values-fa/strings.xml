@@ -16,6 +16,7 @@
   <string name="menu_trackers_blocked_title">دنبال کننده‌های مسدود شده</string>
   <string name="share_dialog_title">اشتراک‌گذاری از طریق</string>
   <string name="notification_erase_text">پاک کردن تاریخچهٔ مرورگر</string>
+  <string name="notification_action_open">باز کردن</string>
   <string name="shortcut_erase_short_label">پاک کردن</string>
   <string name="shortcut_erase_long_label">پاک کردن تاریخچهٔ مرورگر</string>
   <string name="text_selection_search_action">جست‌وجو ناشناس</string>
@@ -62,6 +63,12 @@
   <string name="external_app_prompt_no_app_title">برنامه‌ای برای باز کردن پیوند پیدا کنید</string>
   <string name="external_app_prompt_no_app">هیچکدام از برنامه‌های روی دستگاه شما امکان باز کردن این پیوند را ندارند. می‌توانید از %1$s خارج شوید تا در %2$s برای برنامه‌ای که بتواند اینکار را انجام دهد جست‌وجو کنید.</string>
   <string name="external_multiple_apps_matched_exit">از مرور ناشناس خارج می‌شوید؟</string>
+  <string name="download_snackbar_finished">%1$s پایان‌یافته است</string>
+  <string name="download_snackbar_open">باز کردن</string>
+  <string name="download_dialog_warning"><![CDATA["وقتی تاریخ‌چه %1$s را پاک می‌کنید، پرونده‌های دریافت شده "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">&#1662;&#1575;&#1705; &#1606;&#1582;&#1608;&#1575;&#1607;&#1606;&#1583; &#1588;&#1583;</b>.]]></string>
+  <string name="download_dialog_title">دریافت پرونده</string>
+  <string name="download_dialog_action_cancel">انصراف</string>
+  <string name="download_dialog_action_download">دریافت</string>
   <string name="errorpage_title">مشکل در بارگیری صفحه</string>
   <string name="errorpage_refresh">تلاش مجدد</string>
   <string name="error_connectionfailure_title">اتصال ناموفق بود</string>
@@ -94,4 +101,5 @@
   <string name="firstrun_close_button">باشه، گرفتم!</string>
   <string name="firstrun_skip_button">رد کردن</string>
   <string name="firstrun_next_button">بعدی</string>
+  <string name="content_blocking_disabled">-</string>
 </resources>

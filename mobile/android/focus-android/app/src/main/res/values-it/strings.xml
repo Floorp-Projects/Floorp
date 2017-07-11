@@ -16,6 +16,7 @@
   <string name="menu_trackers_blocked_title">Elementi traccianti bloccati</string>
   <string name="share_dialog_title">Condividi con</string>
   <string name="notification_erase_text">Elimina cronologia di navigazione</string>
+  <string name="notification_action_open">Apri</string>
   <string name="shortcut_erase_short_label">Elimina</string>
   <string name="shortcut_erase_long_label">Elimina cronologia di navigazione</string>
   <string name="text_selection_search_action">Ricerca anonima</string>
@@ -62,6 +63,12 @@
   <string name="external_app_prompt_no_app_title">Trova un app per aprire il link</string>
   <string name="external_app_prompt_no_app">Nessuna delle app sul dispositivo è in grado di aprire questo link. È possibile uscire da %1$s e cercare una app adatta in %2$s.</string>
   <string name="external_multiple_apps_matched_exit">Uscire da Navigazione anonima?</string>
+  <string name="download_snackbar_finished">%1$s completato</string>
+  <string name="download_snackbar_open">Apri</string>
+  <string name="download_dialog_warning"><![CDATA["I file scaricati "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">non verranno eliminati</b>" quando si elimina la cronologia di %1$s."]]></string>
+  <string name="download_dialog_title">Download file</string>
+  <string name="download_dialog_action_cancel">Annulla</string>
+  <string name="download_dialog_action_download">Scarica</string>
   <string name="errorpage_title">Errore caricamento pagina</string>
   <string name="errorpage_refresh">Riprova</string>
   <string name="error_connectionfailure_title">Connessione non riuscita</string>
@@ -94,4 +101,5 @@
   <string name="firstrun_close_button">Ho capito!</string>
   <string name="firstrun_skip_button">Ignora</string>
   <string name="firstrun_next_button">Avanti</string>
+  <string name="content_blocking_disabled">-</string>
 </resources>

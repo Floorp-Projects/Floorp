@@ -16,6 +16,7 @@
   <string name="menu_trackers_blocked_title">Počet zablokovaných sledovacích prvkov</string>
   <string name="share_dialog_title">Zdieľať cez</string>
   <string name="notification_erase_text">Vymazať históriu prehliadania</string>
+  <string name="notification_action_open">Otvoriť</string>
   <string name="shortcut_erase_short_label">Vymazať</string>
   <string name="shortcut_erase_long_label">Vymazať históriu</string>
   <string name="text_selection_search_action">Súkromné vyhľadávanie</string>
@@ -62,6 +63,12 @@
   <string name="external_app_prompt_no_app_title">Nájsť aplikáciu, ktorá môže otvoriť tento odkaz</string>
   <string name="external_app_prompt_no_app">Žiadna aplikácia na vašom zariadení nie je schopná otvoriť tento odkaz. Môžete opustiť aplikáciu %1$s a nájsť vhodnú aplikáciu v %2$s.</string>
   <string name="external_multiple_apps_matched_exit">Ukončiť režim Súkromné prehliadanie?</string>
+  <string name="download_snackbar_finished">Preberanie súboru %1$s sa dokončilo</string>
+  <string name="download_snackbar_open">Otvoriť</string>
+  <string name="download_dialog_warning"><![CDATA["Prevzaté súbory "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">nebud&#250; odstr&#225;nen&#233;</b>" pri vymazaní histórie prehliadania aplikácie %1$s."]]></string>
+  <string name="download_dialog_title">Prevzatie súboru</string>
+  <string name="download_dialog_action_cancel">Zrušiť</string>
+  <string name="download_dialog_action_download">Prevziať</string>
   <string name="errorpage_title">Problém pri načítaní stránky</string>
   <string name="errorpage_refresh">Skúsiť znova</string>
   <string name="error_connectionfailure_title">Nie je možné sa pripojiť</string>
@@ -94,4 +101,5 @@
   <string name="firstrun_close_button">Ok, rozumiem!</string>
   <string name="firstrun_skip_button">Preskočiť</string>
   <string name="firstrun_next_button">Ďalej</string>
+  <string name="content_blocking_disabled">-</string>
 </resources>

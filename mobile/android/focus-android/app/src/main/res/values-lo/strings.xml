@@ -16,6 +16,7 @@
   <string name="menu_trackers_blocked_title">ຕົວຕິດຕາມໄດ້ຖືກບັອກ</string>
   <string name="share_dialog_title">ແບ່ງປັນຜ່ານທາງ</string>
   <string name="notification_erase_text">ລຶບປະຫວັດການທ່ອງເວັບ</string>
+  <string name="notification_action_open">ເປີດ</string>
   <string name="shortcut_erase_short_label">ລຶບ</string>
   <string name="shortcut_erase_long_label">ລຶບປະຫວັດການທ່ອງເວັບ</string>
   <string name="text_selection_search_action">ຄົ້ນຫາຢ່າງເປັນສ່ວນຕົວ</string>
@@ -31,7 +32,7 @@
   <string name="preference_privacy_block_social">ບັອກຕົວຕິດຕາມຂອງສືສັງຄົມອອນໄລນ໌</string>
   <string name="preference_privacy_block_content">ບັອກຕົວຕິດຕາມຂອງເນື້ອຫາຕ່າງໆ</string>
   <string name="preference_privacy_block_content_summary">ອາດຈະເຮັດໃຫ້ບາງວິດີໂອ ແລະ ຫນ້າເວັບບໍ່ສົມບູນ</string>
-  <string name="preference_privacy_secure_mode">ການຫລັກເຮັດ</string>
+  <string name="preference_privacy_secure_mode">ອຳພາງຕົວຕົນ</string>
   <string name="preference_privacy_secure_mode_summary">ປິດໂຫມດອຳພາງຕົວຕົນເພື່ອຈັບພາບຫນ້າຈໍ ແລະ ເບິງເວັບໄຊທ໌ທີ່ທ່ານໄດ້ເຂົ້າໄປເບິງໂດຍໃຊ້ %1$s ໃນລາຍຊື່ແອັບຂອງທ່ານ</string>
   <string name="preference_category_performance">ປະສິດທິພາບ</string>
   <string name="preference_performance_block_webfonts">ບັອກຕົວອັກສອນເວັບ</string>
@@ -62,6 +63,12 @@
   <string name="external_app_prompt_no_app_title">ຊອກຫາແອັບທີ່ສາມາດເປີດລີ້ງນີ້</string>
   <string name="external_app_prompt_no_app">ບໍ່ມີແອັບໃດເລີຍໃນອຸປະກອນຂອງທ່ານທີ່ຈະສາມາດເປີດລີ້ງນີ້ໄດ້. ທ່ານສາມາດອອກຈາກ %1$s ເພື່ອຄົ້ນຫາ %2$s ແອັບທີ່ສາມາດເປີດລີ້ງນີ້ໄດ້.</string>
   <string name="external_multiple_apps_matched_exit">ຕ້ອງການອອກຈາກການທອງເວັບແບບສ່ວນຕົວບໍ່?</string>
+  <string name="download_snackbar_finished">ສຳເລັດແລ້ວ %1$s</string>
+  <string name="download_snackbar_open">ເປີດ</string>
+  <string name="download_dialog_warning"><![CDATA[ໄຟລ໌ທີ່ດາວໂຫລດແລ້ວ<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">&#3720;&#3760;&#3738;&#3789;&#3784;&#3780;&#3732;&#3785;&#3734;&#3767;&#3713;&#3749;&#3771;&#3738;&#3757;&#3757;&#3713;</b>ເມື່ອທ່ານລົບລ້າງປະຫວັດຂອງ %1$s]]></string>
+  <string name="download_dialog_title">ດາວໂຫລດໄຟລ໌</string>
+  <string name="download_dialog_action_cancel">ຍົກເລີກ</string>
+  <string name="download_dialog_action_download">ດາວໂຫລດ</string>
   <string name="errorpage_title">ເກີດມີບັນຫາໃນການໂຫລດຫນ້າເວັບ</string>
   <string name="errorpage_refresh">ລອງໃຫມ່ອີກຄັ້ງ</string>
   <string name="error_connectionfailure_title">ບໍ່ສາມາດເຊື່ອມຕໍ່ໄດ້</string>
@@ -94,4 +101,5 @@
   <string name="firstrun_close_button">ຕົກລົງ, ເຂົ້າໃຈແລ້ວ!</string>
   <string name="firstrun_skip_button">ຂ້າມໄປ</string>
   <string name="firstrun_next_button">ຕໍ່ໄປ</string>
+  <string name="content_blocking_disabled">-</string>
 </resources>

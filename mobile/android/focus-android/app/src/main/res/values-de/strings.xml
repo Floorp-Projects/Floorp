@@ -16,6 +16,7 @@
   <string name="menu_trackers_blocked_title">Verfolger blockiert</string>
   <string name="share_dialog_title">Teilen über</string>
   <string name="notification_erase_text">Browser-Chronik löschen</string>
+  <string name="notification_action_open">Öffnen</string>
   <string name="shortcut_erase_short_label">Löschen</string>
   <string name="shortcut_erase_long_label">Browser-Chronik löschen</string>
   <string name="text_selection_search_action">Privat Suchen</string>
@@ -32,7 +33,7 @@
   <string name="preference_privacy_block_content">Andere Inhaltsverfolgung blockieren</string>
   <string name="preference_privacy_block_content_summary">Kann einige Videos und Webseiten stören</string>
   <string name="preference_privacy_secure_mode">Tarnung</string>
-  <string name="preference_privacy_secure_mode_summary">Deaktivieren Sie den Tarnmodus, um Bildschirmfotos aufzunehmen und mit %1$s besuchte Websites in Ihrer Recent-Apps-Liste anzuzeigen</string>
+  <string name="preference_privacy_secure_mode_summary">Deaktivieren Sie den Tarnmodus, um Bildschirmfotos zuzulassen und mit %1$s besuchte Websites in der Liste Ihrer zuletzt verwendeten Apps anzuzeigen.</string>
   <string name="preference_category_performance">Leistung</string>
   <string name="preference_performance_block_webfonts">Web-Schriftarten blockieren</string>
   <string name="preference_performance_block_webfonts_summary">Kann zu fehlenden Symbolen oder Grafiken führen</string>
@@ -62,6 +63,12 @@
   <string name="external_app_prompt_no_app_title">App zum Öffnen des Links finden</string>
   <string name="external_app_prompt_no_app">Anscheinend kann keine der Apps auf Ihrem Gerät diesen Link öffnen. Sie können %1$s verlassen und bei %2$s nach einer App dafür suchen.</string>
   <string name="external_multiple_apps_matched_exit">Privaten Modus verlassen?</string>
+  <string name="download_snackbar_finished">%1$s abgeschlossen</string>
+  <string name="download_snackbar_open">Öffnen</string>
+  <string name="download_dialog_warning"><![CDATA["Heruntergeladene Dateien werden beim Löschen der Chronik von %1$s "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">nicht gel&#246;scht</b>.]]></string>
+  <string name="download_dialog_title">Datei herunterladen</string>
+  <string name="download_dialog_action_cancel">Abbrechen</string>
+  <string name="download_dialog_action_download">Herunterladen</string>
   <string name="errorpage_title">Seiten-Ladefehler</string>
   <string name="errorpage_refresh">Erneut versuchen</string>
   <string name="error_connectionfailure_title">Verbindung fehlgeschlagen</string>
@@ -94,4 +101,5 @@
   <string name="firstrun_close_button">Ok, verstanden!</string>
   <string name="firstrun_skip_button">Überspringen</string>
   <string name="firstrun_next_button">Weiter</string>
+  <string name="content_blocking_disabled">–</string>
 </resources>

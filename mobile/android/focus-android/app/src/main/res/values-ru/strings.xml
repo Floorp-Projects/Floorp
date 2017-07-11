@@ -16,6 +16,7 @@
   <string name="menu_trackers_blocked_title">Трекеров заблокировано</string>
   <string name="share_dialog_title">Поделиться через</string>
   <string name="notification_erase_text">Удалить историю веб-сёрфинга</string>
+  <string name="notification_action_open">Открыть</string>
   <string name="shortcut_erase_short_label">Удалить</string>
   <string name="shortcut_erase_long_label">Удалить историю веб-сёрфинга</string>
   <string name="text_selection_search_action">Искать приватно</string>
@@ -62,6 +63,12 @@
   <string name="external_app_prompt_no_app_title">Найдите приложение, которое может открыть эту ссылку</string>
   <string name="external_app_prompt_no_app">Ни одно из приложений на вашем устройстве не может открыть эту ссылку. Вы можете выйти из %1$s для поиска подходящего приложения в %2$s.</string>
   <string name="external_multiple_apps_matched_exit">Выйти из приватного просмотра?</string>
+  <string name="download_snackbar_finished">%1$s загружено</string>
+  <string name="download_snackbar_open">Открыть</string>
+  <string name="download_dialog_warning"><![CDATA["Загруженные файлы "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">&#1085;&#1077; &#1073;&#1091;&#1076;&#1091;&#1090; &#1091;&#1076;&#1072;&#1083;&#1077;&#1085;&#1099;</b>, когда вы сотрёте историю %1$s.]]></string>
+  <string name="download_dialog_title">Загрузить файл</string>
+  <string name="download_dialog_action_cancel">Отмена</string>
+  <string name="download_dialog_action_download">Загрузить</string>
   <string name="errorpage_title">Проблема при загрузке страницы</string>
   <string name="errorpage_refresh">Попробовать снова</string>
   <string name="error_connectionfailure_title">Не удалось подключиться</string>
@@ -94,4 +101,5 @@
   <string name="firstrun_close_button">ОК, понятно!</string>
   <string name="firstrun_skip_button">Пропустить</string>
   <string name="firstrun_next_button">Далее</string>
+  <string name="content_blocking_disabled">-</string>
 </resources>

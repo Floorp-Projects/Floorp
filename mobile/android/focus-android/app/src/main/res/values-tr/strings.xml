@@ -16,6 +16,7 @@
   <string name="menu_trackers_blocked_title">Engellenen takipçi</string>
   <string name="share_dialog_title">Paylaş</string>
   <string name="notification_erase_text">Gezinti geçmişini sil</string>
+  <string name="notification_action_open">Aç</string>
   <string name="shortcut_erase_short_label">Sil</string>
   <string name="shortcut_erase_long_label">Gezinti geçmişini sil</string>
   <string name="text_selection_search_action">Gizli arama</string>
@@ -62,6 +63,12 @@
   <string name="external_app_prompt_no_app_title">Bağlantıyı açabilecek bir uygulama bul</string>
   <string name="external_app_prompt_no_app">Cihazınızdaki uygulamalar bu bağlantıyı açamıyor. %2$s mağazasında uygun bir uygulama aramak için %1$s\'tan çıkabilirsiniz.</string>
   <string name="external_multiple_apps_matched_exit">Gizli Gezinti\'den çıkılsın mı?</string>
+  <string name="download_snackbar_finished">%1$s indirildi</string>
+  <string name="download_snackbar_open">Aç</string>
+  <string name="download_dialog_warning"><![CDATA["%1$s geçmişini sildiğinizde, indirmiş olduğunuz dosyalar "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">silinmez</b>.]]></string>
+  <string name="download_dialog_title">Dosya İndir</string>
+  <string name="download_dialog_action_cancel">Vazgeç</string>
+  <string name="download_dialog_action_download">İndir</string>
   <string name="errorpage_title">Sayfa yükleme sorunu</string>
   <string name="errorpage_refresh">Yeniden dene</string>
   <string name="error_connectionfailure_title">Bağlanılamadı</string>
@@ -94,4 +101,5 @@
   <string name="firstrun_close_button">Anladım!</string>
   <string name="firstrun_skip_button">Geç</string>
   <string name="firstrun_next_button">İleri</string>
+  <string name="content_blocking_disabled">-</string>
 </resources>

@@ -16,6 +16,7 @@
   <string name="menu_trackers_blocked_title">Pśeslědowaki blokěrowane</string>
   <string name="share_dialog_title">Źěliś pśez</string>
   <string name="notification_erase_text">Pśeglědowańsku historiju lašowaś</string>
+  <string name="notification_action_open">Wócyniś</string>
   <string name="shortcut_erase_short_label">Lašowaś</string>
   <string name="shortcut_erase_long_label">Pśeglědowańsku historiju lašowaś</string>
   <string name="text_selection_search_action">Priwatnje pytaś</string>
@@ -62,6 +63,12 @@
   <string name="external_app_prompt_no_app_title">Nałoženje pytaś, kótarež móžo wótkaz wócyniś</string>
   <string name="external_app_prompt_no_app">Žedno z nałoženjow na wašom rěźe njamóžo toś ten wótkaz wócyniś. Móžośo %1$s spušćiś, aby %2$s za nałoženim pśepytował.</string>
   <string name="external_multiple_apps_matched_exit">Priwatny modus spušćiś?</string>
+  <string name="download_snackbar_finished">%1$s dokóńcony</string>
+  <string name="download_snackbar_open">Wócyniś</string>
+  <string name="download_dialog_warning"><![CDATA["Ześěgnjene dataje se "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">njewula&#353;uju</b>, gaž historiju %1$s lašujośo.]]></string>
+  <string name="download_dialog_title">Dataju ześěgnuś</string>
+  <string name="download_dialog_action_cancel">Pśetergnuś</string>
+  <string name="download_dialog_action_download">Ześěgnuś</string>
   <string name="errorpage_title">Zmólka pśi cytanju boka</string>
   <string name="errorpage_refresh">Hyšći raz wopytaś</string>
   <string name="error_connectionfailure_title">Žeden zwisk móžny</string>
@@ -94,4 +101,5 @@
   <string name="firstrun_close_button">W pórěźe, som zrozměł!</string>
   <string name="firstrun_skip_button">Pśeskócyś</string>
   <string name="firstrun_next_button">Dalej</string>
+  <string name="content_blocking_disabled">-</string>
 </resources>

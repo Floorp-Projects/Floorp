@@ -16,6 +16,7 @@
   <string name="menu_trackers_blocked_title">Trackers blockerade</string>
   <string name="share_dialog_title">Dela via</string>
   <string name="notification_erase_text">Radera webbhistorik</string>
+  <string name="notification_action_open">Öppna</string>
   <string name="shortcut_erase_short_label">Radera</string>
   <string name="shortcut_erase_long_label">Radera webbhistorik</string>
   <string name="text_selection_search_action">Sök privat</string>
@@ -62,6 +63,12 @@
   <string name="external_app_prompt_no_app_title">Hitta en app som kan öppna länken</string>
   <string name="external_app_prompt_no_app">Ingen av apparna på din enhet kan öppna denna länk. Du kan lämna %1$s för att söka i %2$s efter en app som kan göra detta.</string>
   <string name="external_multiple_apps_matched_exit">Avsluta Privat surfning?</string>
+  <string name="download_snackbar_finished">%1$s slutförd</string>
+  <string name="download_snackbar_open">Öppna</string>
+  <string name="download_dialog_warning"><![CDATA["Hämtade filer "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">kommer inte att raderas</b>" när du raderar historik för %1$s."]]></string>
+  <string name="download_dialog_title">Hämta fil</string>
+  <string name="download_dialog_action_cancel">Avbryt</string>
+  <string name="download_dialog_action_download">Hämta</string>
   <string name="errorpage_title">Fel vid sidhämtning</string>
   <string name="errorpage_refresh">Försök igen</string>
   <string name="error_connectionfailure_title">Det går inte att ansluta</string>
@@ -94,4 +101,5 @@
   <string name="firstrun_close_button">OK, jag förstår!</string>
   <string name="firstrun_skip_button">Hoppa över</string>
   <string name="firstrun_next_button">Nästa</string>
+  <string name="content_blocking_disabled">-</string>
 </resources>

@@ -16,10 +16,11 @@
   <string name="menu_trackers_blocked_title">Pelacak terblokir</string>
   <string name="share_dialog_title">Bagikan via</string>
   <string name="notification_erase_text">Hapus riwayat penjelajahan</string>
+  <string name="notification_action_open">Buka</string>
   <string name="shortcut_erase_short_label">Hapus</string>
   <string name="shortcut_erase_long_label">Hapus riwayat penjelajahan</string>
   <string name="text_selection_search_action">Mencari Secara Privat</string>
-  <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s menempatkan Anda dalam kendali.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Gunakan sebagai peramban privat:\n  "<ul>"\n    "<li>Cari dan menjelajah langsung di dalam aplikasi</li>"\n    "<li>Memblokir pelacak (atau ubah di pengaturan untuk izinkan pelacak)</li>"\n    "<li>Hapus untuk menghilangkan kuki termasuk juga pencarian dan riwayat penjelajahan</li>"\n  "</ul>"\n "</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s diproduksi oleh Mozilla. Misi kami adalah untuk memelihara Internet yang sehat dan terbuka.<br/>" "<a href="%2$s">Pelajari lebih lanjut</a></p>]]></string>
+  <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s menempatkan Anda dalam kendali.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Gunakan sebagai peramban privat:\n  "<ul>"\n    "<li>Cari dan menjelajah langsung di dalam aplikasi</li>"\n    "<li>Memblokir pelacak (atau ubah di setelan untuk izinkan pelacak)</li>"\n    "<li>Hapus untuk menghilangkan kuki termasuk juga riwayat pencarian dan penjelajahan</li>"\n  "</ul>"\n "</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s diproduksi oleh Mozilla. Misi kami adalah untuk memelihara Internet yang sehat dan terbuka.<br/>" "<a href="%2$s">Pelajari lebih lanjut</a></p>]]></string>
   <string name="preference_category_search">Cari</string>
   <string name="preference_search_engine_default">Baku</string>
   <string name="preference_language">Bahasa</string>
@@ -34,7 +35,7 @@
   <string name="preference_privacy_secure_mode">Mode Siluman</string>
   <string name="preference_privacy_secure_mode_summary">Nonaktifkan mode siluman untuk mengambil tangkapan layar dan melihat situs yang Anda kunjungi menggunakan %1$s di daftar Aplikasi Terakhir</string>
   <string name="preference_category_performance">Kinerja</string>
-  <string name="preference_performance_block_webfonts">Blokir font Web</string>
+  <string name="preference_performance_block_webfonts">Blokir fon Web</string>
   <string name="preference_performance_block_webfonts_summary">Dapat menyebabkan hilangnya ikon atau gambar</string>
   <string name="preference_performance_block_images">Blokir gambar</string>
   <string name="preference_default_browser">Jadikan peramban utama</string>
@@ -62,6 +63,12 @@
   <string name="external_app_prompt_no_app_title">Temukan aplikasi yang dapat membuka tautan</string>
   <string name="external_app_prompt_no_app">Tak ada satu pun aplikasi di perangkat Anda dapat membuka tautan ini. Anda dapat meninggalkan %1$s untuk mencari di %2$s untuk mendapatkan aplikasi yang mampu.</string>
   <string name="external_multiple_apps_matched_exit">Keluar dari Penjelajahan Pribadi?</string>
+  <string name="download_snackbar_finished">%1$s selesai</string>
+  <string name="download_snackbar_open">Buka</string>
+  <string name="download_dialog_warning"><![CDATA["Berkas terunduh "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">tidak akan dihapus</b>" ketika Anda menghapus riwayat %1$s."]]></string>
+  <string name="download_dialog_title">Unduh Berkas</string>
+  <string name="download_dialog_action_cancel">Batal</string>
+  <string name="download_dialog_action_download">Unduh</string>
   <string name="errorpage_title">Bermasalah memuat laman</string>
   <string name="errorpage_refresh">Coba Lagi</string>
   <string name="error_connectionfailure_title">Tidak dapat tersambung</string>
@@ -94,4 +101,5 @@
   <string name="firstrun_close_button">Oke, beres!</string>
   <string name="firstrun_skip_button">Lewati</string>
   <string name="firstrun_next_button">Lanjutkan</string>
+  <string name="content_blocking_disabled">-</string>
 </resources>

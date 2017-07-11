@@ -16,6 +16,7 @@
   <string name="menu_trackers_blocked_title">Blokkolt nyomkövetők</string>
   <string name="share_dialog_title">Megosztás ezzel</string>
   <string name="notification_erase_text">Előzmények törlése</string>
+  <string name="notification_action_open">Megnyitás</string>
   <string name="shortcut_erase_short_label">Törlés</string>
   <string name="shortcut_erase_long_label">Böngészési előzmények törlése</string>
   <string name="text_selection_search_action">Privát keresés</string>
@@ -62,6 +63,12 @@
   <string name="external_app_prompt_no_app_title">Keressen egy appot, amely meg tudja nyitni a hivatkozást</string>
   <string name="external_app_prompt_no_app">Az eszközön lévő appok egyike sem tudja megnyitni ezt a hivatkozást. Kiléphet a %1$sból, és kereshet egy megfelelőt itt: %2$s.</string>
   <string name="external_multiple_apps_matched_exit">Kilép a privát böngészésből?</string>
+  <string name="download_snackbar_finished">%1$s kész</string>
+  <string name="download_snackbar_open">Megnyitás</string>
+  <string name="download_dialog_warning"><![CDATA["A letöltött fájlok "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">nem ker&#252;lnek t&#246;rl&#233;sre</b>, ha törli a %1$s előzményeit.]]></string>
+  <string name="download_dialog_title">Fájl letöltése</string>
+  <string name="download_dialog_action_cancel">Mégse</string>
+  <string name="download_dialog_action_download">Letöltés</string>
   <string name="errorpage_title">Probléma az oldal betöltése közben</string>
   <string name="errorpage_refresh">Próbálja újra</string>
   <string name="error_connectionfailure_title">A kapcsolódás sikertelen</string>
@@ -94,4 +101,5 @@
   <string name="firstrun_close_button">Rendben, értem!</string>
   <string name="firstrun_skip_button">Kihagyás</string>
   <string name="firstrun_next_button">Következő</string>
+  <string name="content_blocking_disabled">–</string>
 </resources>

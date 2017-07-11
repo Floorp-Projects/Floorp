@@ -16,11 +16,12 @@
   <string name="menu_trackers_blocked_title">Sledilci zavrnjeni</string>
   <string name="share_dialog_title">Deli preko</string>
   <string name="notification_erase_text">Počisti zgodovino brskanja</string>
+  <string name="notification_action_open">Odpri</string>
   <string name="shortcut_erase_short_label">Izbriši</string>
   <string name="shortcut_erase_long_label">Počisti zgodovino brskanja</string>
   <string name="text_selection_search_action">Iščite zasebno</string>
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s daje nadzor v va&#353;e roke.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Uporabljajte ga kot zaseben brskalnik:\n  "<ul>"\n    "<li>I&#353;&#269;ite in brskajte naravnost iz aplikacije</li>"\n    "<li>Zavra&#269;ajte sledilce (ali spremenite nastavitve zavra&#269;anja sledilcev)</li>"\n    "<li>Bri&#353;ite pi&#353;kotke ter zgodovino strani in iskanja</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s razvija Mozilla. Na&#353;e poslanstvo je spodbujati zdrav in odprt internet.<br/>\n<a href="%2$s">Ve&#269; o tem</a></p>]]></string>
-  <string name="preference_category_search">Išči</string>
+  <string name="preference_category_search">Iskanje</string>
   <string name="preference_search_engine_default">Privzet</string>
   <string name="preference_language">Jezik</string>
   <string name="preference_language_systemdefault">Privzet v sistemu</string>
@@ -62,6 +63,12 @@
   <string name="external_app_prompt_no_app_title">Poišči aplikacijo, ki lahko odpre povezavo</string>
   <string name="external_app_prompt_no_app">Nobena aplikacija na napravi ne more odpreti te povezave. Lahko zapustite %1$s in v %2$s poiščete aplikacijo, ki jo lahko.</string>
   <string name="external_multiple_apps_matched_exit">Končam zasebno brskanje?</string>
+  <string name="download_snackbar_finished">Datoteka %1$s končana</string>
+  <string name="download_snackbar_open">Odpri</string>
+  <string name="download_dialog_warning"><![CDATA["Ob izbrisu zgodovine %1$sa prenesene datoteke "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">ne bodo izbrisane</b>.]]></string>
+  <string name="download_dialog_title">Prenos datoteke</string>
+  <string name="download_dialog_action_cancel">Prekliči</string>
+  <string name="download_dialog_action_download">Prenesi</string>
   <string name="errorpage_title">Napaka pri nalaganju strani</string>
   <string name="errorpage_refresh">Poskusi znova</string>
   <string name="error_connectionfailure_title">Povezave ni mogoče vzpostaviti</string>
@@ -94,4 +101,5 @@
   <string name="firstrun_close_button">V redu, razumem!</string>
   <string name="firstrun_skip_button">Preskoči</string>
   <string name="firstrun_next_button">Naprej</string>
+  <string name="content_blocking_disabled">-</string>
 </resources>

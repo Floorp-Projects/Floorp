@@ -1,0 +1,105 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+  <string name="action_cancel">Batal</string>
+  <string name="action_ok">OK</string>
+  <string name="urlbar_hint">Cari atau masukkan alamat</string>
+  <string name="teaser">Pelayaran peribadi automatik.\nLayar. Padam. Ulang.</string>
+  <string name="feedback_erase">Sejarah pelayaran anda telah dipadam.</string>
+  <string name="search_hint">Cari %1$s</string>
+  <string name="menu_share">Kongsi…</string>
+  <string name="menu_open_with_default_browser">Buka dengan %1$s</string>
+  <string name="menu_open_with_a_browser">Buka dengan…</string>
+  <string name="menu_settings">Tetapan</string>
+  <string name="menu_about">Perihal</string>
+  <string name="menu_help">Bantuan</string>
+  <string name="menu_rights">Hak Anda</string>
+  <string name="menu_trackers_blocked_title">Penjejak disekat</string>
+  <string name="share_dialog_title">Kongsi via</string>
+  <string name="notification_erase_text">Padam sejarah pelayaran</string>
+  <string name="notification_action_open">Buka</string>
+  <string name="shortcut_erase_short_label">Padam</string>
+  <string name="shortcut_erase_long_label">Padam sejarah pelayaran</string>
+  <string name="text_selection_search_action">Cari secara Rahsia</string>
+  <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s membolehkan anda mengawal.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Gunakannya sebagai pelayar peribadi:\n  "<ul>"\n    "<li>Cari dan melayar terus dalam app</li>"\n    "<li>Sekat penjejak (atau kemaskini tetapan untuk izinkan penjejak)</li>"\n    "<li>Padam untuk hapuskan kuki serta sejarah carian dan pelayaran</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s dihasilkan oleh Mozilla. Misi kami adalah untuk memupuk internet yang sihat dan terbuka.<br/>\n<a href="%2$s">Ketahui selanjutnya</a></p>]]></string>
+  <string name="preference_category_search">Carian</string>
+  <string name="preference_search_engine_default">Piawai</string>
+  <string name="preference_language">Bahasa</string>
+  <string name="preference_language_systemdefault">Piawai sistem</string>
+  <string name="preference_dialog_title_search_engine">Carian piawai</string>
+  <string name="preference_category_privacy">Privasi</string>
+  <string name="preference_privacy_block_ads">Sekat penjejak iklan</string>
+  <string name="preference_privacy_block_analytics">Sekat penjejak analitik</string>
+  <string name="preference_privacy_block_social">Sekat penjejak sosial</string>
+  <string name="preference_privacy_block_content">Sekat penjejak kandungan lain</string>
+  <string name="preference_privacy_block_content_summary">Boleh mengganggu beberapa video dan laman Web</string>
+  <string name="preference_privacy_secure_mode">Halimunan</string>
+  <string name="preference_privacy_secure_mode_summary">Tutup mod halimunan untuk mengambil skrinshot dan melihat laman yang dilawati menggunakan %1$s dalam senarai Apps Terkini</string>
+  <string name="preference_category_performance">Prestasi</string>
+  <string name="preference_performance_block_webfonts">Sekat fon Web</string>
+  <string name="preference_performance_block_webfonts_summary">Boleh menyebabkan imej atau ikon hilang</string>
+  <string name="preference_performance_block_images">Sekat imej</string>
+  <string name="preference_default_browser">Jadikan pelayar piawai</string>
+  <string name="preference_category_mozilla">Mozilla</string>
+  <string name="preference_mozilla_telemetry">Hantar data penggunaan anonimus</string>
+  <string name="preference_mozilla_telemetry_summary">Ketahui selanjutnya</string>
+  <string name="preference_about">Perihal %1$s</string>
+  <string name="content_description_clear_input">Hapuskan input</string>
+  <string name="content_description_dismiss_input">Abai</string>
+  <string name="content_description_erase">Padam sejarah pelayaran</string>
+  <string name="content_description_lock">Sambungan selamat</string>
+  <string name="accessibility_announcement_loading">Memuatkan</string>
+  <string name="accessibility_announcement_loading_finished">Laman web dimuatkan</string>
+  <string name="content_description_menu">Pilihan lain</string>
+  <string name="content_description_forward">Navigasi depan</string>
+  <string name="content_description_reload">Muat semula laman web</string>
+  <string name="content_description_back">Navigasi undur</string>
+  <string name="content_description_stop">Hentikan memuat laman web</string>
+  <string name="content_description_customtab_exit">Kembalikan aplikasi terdahulu</string>
+  <string name="content_description_blocking_switch">Sekat penjejak</string>
+  <string name="context_menu_paste_go">Tampal &amp; Lancarkan</string>
+  <string name="your_rights">Hak Anda</string>
+  <string name="external_app_prompt_title">Buka pautan guna aplikasi lain</string>
+  <string name="external_app_prompt">Anda boleh keluar dari %1$s untuk membuka pautan ini dalam %2$s.</string>
+  <string name="external_app_prompt_no_app_title">Cari aplikasi yang boleh buka pautan</string>
+  <string name="external_app_prompt_no_app">Tiada aplikasi pada peranti anda dapat membuka pautan ini. Anda boleh tinggalkan %1$s untuk mencari %2$s aplikasi yang boleh melaksanakannya.</string>
+  <string name="external_multiple_apps_matched_exit">Tamatkan Pelayaran Peribadi?</string>
+  <string name="download_snackbar_finished">%1$s sudah siap</string>
+  <string name="download_snackbar_open">Buka</string>
+  <string name="download_dialog_warning"><![CDATA["Fail yang dimuat turun "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">tidak akan dihapus</b>" apabila anda padam sejarah %1$s."]]></string>
+  <string name="download_dialog_title">Muat Turun Fail</string>
+  <string name="download_dialog_action_cancel">Batal</string>
+  <string name="download_dialog_action_download">Muat turun</string>
+  <string name="errorpage_title">Masalah memuatkan halaman</string>
+  <string name="errorpage_refresh">Cuba Lagi</string>
+  <string name="error_connectionfailure_title">Tidak dapat menyambung</string>
+  <string name="error_connectionfailure_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n        "<li>Laman ini tidak tersedia buat masa ini atau terlalu sibuk. Cuba lagi selepas beberapa saat.</li>"\n        "<li>Jika anda tidak dapat memuatkan sebarang halaman, semak data peranti telefon atau sambungan Wi-Fi anda.</li>"\n      "</ul>]]></string>
+  <string name="error_timeout_title">Sambungan tamat masa</string>
+  <string name="error_hostLookup_title">Pelayan tidak ditemui</string>
+  <string name="error_hostLookup_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n        "<li>"Semak alamat untuk kesilapan seperti\n          "<strong>ww</strong>".example.com yang sepatutnya\n          "<strong>www</strong>.example.com</li>"\n        "<li>Jika anda tidak dapat memuat sebarang halaman, semak data peranti atau sambungan Wi-Fi anda.</li>"\n      "</ul>]]></string>
+  <string name="error_malformedURI_title">Alamat tidak sah</string>
+  <string name="error_malformedURI_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>"Alamat Web lazimnya ditulis begini "<strong>http://www.example.com/</strong></li>"\n  "<li>"Pastikan anda menggunakan garis miring hadapan (iaitu "<strong>/</strong>).</li>\n</ul>]]></string>
+  <string name="error_redirectLoop_title">Halaman tidak diarahkan semula dengan betul</string>
+  <string name="error_redirectLoop_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Masalah ini kadangkala disebabkan oleh menyahdayakan atau enggan menerima kuki.</li>\n</ul>]]></string>
+  <string name="error_unsupportedprotocol_title">Alamat tidak difahami</string>
+  <string name="error_unsupportedprotocol_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Anda mungkin perlu memasang perisian lain untuk membuka alamat ini.</li>\n</ul>]]></string>
+  <string name="error_sslhandshake_title">Sambungan selamat gagal</string>
+  <string name="error_sslhandshake_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Ini mungkin masalah dengan konfigurasi pelayan, atau boleh jadi\nada pihak yang cuba menyamar sebagai pelayan.</li>"\n  "<li>Jika anda pernah berjaya mendapatkan hubungan dengan pelayan ini dulu, ralat ini mungkin\nsementara dan anda boleh cuba lagi nanti.</li>\n</ul>]]></string>
+  <string name="error_generic_title">Oops</string>
+  <string name="error_generic_message">Kami tidak dapat memuat halaman ini untuk sebab-sebab tertentu.</string>
+  <string name="contextmenu_link_share">Kongsi pautan</string>
+  <string name="contextmenu_link_copy">Salin alamat pautan</string>
+  <string name="contextmenu_image_share">Kongsi imej</string>
+  <string name="contextmenu_image_copy">Salin alamat imej</string>
+  <string name="contextmenu_image_save">Simpan imej</string>
+  <string name="contextmenu_image_warning"><![CDATA["Imej yang disimpan dan dikongsi "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">tidak akan dihapus</b>" apabila anda padam sejarah %1$s."]]></string>
+  <string name="firstrun_tracking_title">Layari seperti tiada yang memerhati</string>
+  <string name="firstrun_tracking_text">Secara automatik menyekat penjejakan dalam talian semasa anda melayar. Kemudian, padamkan halaman dan kuki yang dilawati dengan menyentuh ikon sampah di dalam aplikasi atau di dalam notifikasi anda.</string>
+  <string name="firstrun_defaultbrowser_title">Tingkatkan privasi anda</string>
+  <string name="firstrun_defaultbrowser_text">Tetapkan %1$s sebagai pelayar piawai anda dan dapatkan manfaat daripada pelayaran peribadi apabila anda membuat pautan ke Web dari aplikasi Android yang lain.</string>
+  <string name="firstrun_breaking_title">Pemulihan pantas apabila\nmenyekat = memisahkan</string>
+  <string name="firstrun_breaking_text">Apabila sekatan penjejak dalam talian menyebabkan laman rosak, nyahaktifkan sekatan dengan satu tap sahaja di dalam menu alatan.</string>
+  <string name="firstrun_close_button">OK, faham!</string>
+  <string name="firstrun_skip_button">Langkau</string>
+  <string name="firstrun_next_button">Seterusnya</string>
+  <string name="content_blocking_disabled">-</string>
+</resources>

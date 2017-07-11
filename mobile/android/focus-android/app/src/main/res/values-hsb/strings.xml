@@ -16,6 +16,7 @@
   <string name="menu_trackers_blocked_title">Přesćěhowaki zablokowane</string>
   <string name="share_dialog_title">Dźělić přez</string>
   <string name="notification_erase_text">Přehladowansku historiju zhašeć</string>
+  <string name="notification_action_open">Wočinić</string>
   <string name="shortcut_erase_short_label">Zhašeć</string>
   <string name="shortcut_erase_long_label">Přehladowansku historiju zhašeć</string>
   <string name="text_selection_search_action">Priwatnje pytać</string>
@@ -62,6 +63,12 @@
   <string name="external_app_prompt_no_app_title">Nałoženje pytać, kotrež móže wotkaz wočinić</string>
   <string name="external_app_prompt_no_app">Žane z nałoženjow na wašim graće njemóže tutón wotkaz wočinić. Móžeće %1$s wopušćić, zo byšće %2$s za nałoženjom přepytował.</string>
   <string name="external_multiple_apps_matched_exit">Priwatny modus wopušćić?</string>
+  <string name="download_snackbar_finished">%1$s dokónčeny</string>
+  <string name="download_snackbar_open">Wočinić</string>
+  <string name="download_dialog_warning"><![CDATA["Sćehnjene dataje so "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">njezha&#353;eja</b>, hdyž historiju %1$s zhašeće.]]></string>
+  <string name="download_dialog_title">Dataju sćahnyć</string>
+  <string name="download_dialog_action_cancel">Přetorhnyć</string>
+  <string name="download_dialog_action_download">Sćahnyć</string>
   <string name="errorpage_title">Zmylk při čitanju strony</string>
   <string name="errorpage_refresh">Hišće raz spytać</string>
   <string name="error_connectionfailure_title">Žadyn zwisk móžny</string>
@@ -94,4 +101,5 @@
   <string name="firstrun_close_button">W porjadku, sym zrozumił!</string>
   <string name="firstrun_skip_button">Přeskočić</string>
   <string name="firstrun_next_button">Dale</string>
+  <string name="content_blocking_disabled">-</string>
 </resources>

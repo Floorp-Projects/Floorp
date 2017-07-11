@@ -16,6 +16,7 @@
   <string name="menu_trackers_blocked_title">追跡者がブロックされました</string>
   <string name="share_dialog_title">共有</string>
   <string name="notification_erase_text">閲覧履歴を消去</string>
+  <string name="notification_action_open">開く</string>
   <string name="shortcut_erase_short_label">消去</string>
   <string name="shortcut_erase_long_label">閲覧履歴を消去</string>
   <string name="text_selection_search_action">プライベートに検索</string>
@@ -32,7 +33,7 @@
   <string name="preference_privacy_block_content">他の追跡コンテンツをブロック</string>
   <string name="preference_privacy_block_content_summary">動画やウェブページが正常に表示されない場合があります</string>
   <string name="preference_privacy_secure_mode">ステルス</string>
-  <string name="preference_privacy_secure_mode_summary">ステルスモードを無効化してスクリーンショットを撮り、最近使ったアプリ一覧に %1$s を使って訪れたサイトを表示</string>
+  <string name="preference_privacy_secure_mode_summary">スクリーンショットの撮影や %1$s を使って訪れたサイトを最近使ったアプリ一覧に表示するには、ステルスモードを無効化してください</string>
   <string name="preference_category_performance">パフォーマンス</string>
   <string name="preference_performance_block_webfonts">ウェブフォントをブロック</string>
   <string name="preference_performance_block_webfonts_summary">アイコンや画像が正常に表示されない場合があります</string>
@@ -62,6 +63,12 @@
   <string name="external_app_prompt_no_app_title">リンクを開けるアプリを探す</string>
   <string name="external_app_prompt_no_app">お使いの端末にはこのリンクを開けるアプリがありません。%1$s を離れて、開けるアプリを %2$s で探すことができます。</string>
   <string name="external_multiple_apps_matched_exit">プライベートブラウジングを終了しますか？</string>
+  <string name="download_snackbar_finished">%1$s 完了</string>
+  <string name="download_snackbar_open">開く</string>
+  <string name="download_dialog_warning"><![CDATA["ダウンロードされたファイルは %1$s の履歴を消去しても "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">&#21066;&#38500;&#12373;&#12428;&#12414;&#12379;&#12435;</b>。]]></string>
+  <string name="download_dialog_title">ファイルをダウンロード</string>
+  <string name="download_dialog_action_cancel">キャンセル</string>
+  <string name="download_dialog_action_download">ダウンロード</string>
   <string name="errorpage_title">ページ読み込みエラー</string>
   <string name="errorpage_refresh">再試行</string>
   <string name="error_connectionfailure_title">正常に接続できませんでした</string>
@@ -94,4 +101,5 @@
   <string name="firstrun_close_button">了解しました</string>
   <string name="firstrun_skip_button">スキップ</string>
   <string name="firstrun_next_button">次へ</string>
+  <string name="content_blocking_disabled">-</string>
 </resources>

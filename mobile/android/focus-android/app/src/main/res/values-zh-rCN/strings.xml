@@ -16,6 +16,7 @@
   <string name="menu_trackers_blocked_title">已拦截跟踪器</string>
   <string name="share_dialog_title">分享方式</string>
   <string name="notification_erase_text">擦除浏览记录</string>
+  <string name="notification_action_open">打开</string>
   <string name="shortcut_erase_short_label">擦除</string>
   <string name="shortcut_erase_long_label">擦除浏览记录</string>
   <string name="text_selection_search_action">私密搜索</string>
@@ -62,6 +63,12 @@
   <string name="external_app_prompt_no_app_title">查找可以打开链接的应用</string>
   <string name="external_app_prompt_no_app">您的设备上的应用都不能打开此链接。您可以离开 %1$s 以搜索 %2$s 来找出适合的应用。</string>
   <string name="external_multiple_apps_matched_exit">退出隐私浏览模式？</string>
+  <string name="download_snackbar_finished">%1$s 完成</string>
+  <string name="download_snackbar_open">打开</string>
+  <string name="download_dialog_warning"><![CDATA[清除 %1$s 的历史记录时，<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">&#19981;&#20250;&#21024;&#38500;</b>已下载的文件。]]></string>
+  <string name="download_dialog_title">下载文件</string>
+  <string name="download_dialog_action_cancel">取消</string>
+  <string name="download_dialog_action_download">下载</string>
   <string name="errorpage_title">加载页面遇到问题</string>
   <string name="errorpage_refresh">重试</string>
   <string name="error_connectionfailure_title">无法连接</string>
@@ -94,4 +101,5 @@
   <string name="firstrun_close_button">明白了！</string>
   <string name="firstrun_skip_button">跳过</string>
   <string name="firstrun_next_button">下一步</string>
+  <string name="content_blocking_disabled">-</string>
 </resources>

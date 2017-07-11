@@ -16,6 +16,7 @@
   <string name="menu_trackers_blocked_title">Trackers geblokkeerd</string>
   <string name="share_dialog_title">Delen via</string>
   <string name="notification_erase_text">Navigatiegeschiedenis wissen</string>
+  <string name="notification_action_open">Openen</string>
   <string name="shortcut_erase_short_label">Wissen</string>
   <string name="shortcut_erase_long_label">Navigatiegeschiedenis wissen</string>
   <string name="text_selection_search_action">Privé zoeken</string>
@@ -62,6 +63,12 @@
   <string name="external_app_prompt_no_app_title">Een app zoeken die de koppeling kan openen</string>
   <string name="external_app_prompt_no_app">Geen enkele app op uw apparaat kan deze koppeling openen. U kunt %1$s verlaten om bij %2$s naar een app te zoeken die dat wel kan.</string>
   <string name="external_multiple_apps_matched_exit">Privénavigatie afsluiten?</string>
+  <string name="download_snackbar_finished">%1$s is voltooid</string>
+  <string name="download_snackbar_open">Openen</string>
+  <string name="download_dialog_warning"><![CDATA["Gedownloade bestanden "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">worden niet verwijderd</b>" als u geschiedenis van %1$s wist."]]></string>
+  <string name="download_dialog_title">Bestand downloaden</string>
+  <string name="download_dialog_action_cancel">Annuleren</string>
+  <string name="download_dialog_action_download">Downloaden</string>
   <string name="errorpage_title">Probleem bij het laden van de pagina</string>
   <string name="errorpage_refresh">Opnieuw proberen</string>
   <string name="error_connectionfailure_title">Kan geen verbinding maken</string>
@@ -94,4 +101,5 @@
   <string name="firstrun_close_button">OK, begrepen!</string>
   <string name="firstrun_skip_button">Overslaan</string>
   <string name="firstrun_next_button">Volgende</string>
+  <string name="content_blocking_disabled">-</string>
 </resources>

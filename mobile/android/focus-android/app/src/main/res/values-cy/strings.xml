@@ -13,7 +13,7 @@
   <string name="menu_about">Ynghylch</string>
   <string name="menu_help">Cymorth</string>
   <string name="menu_rights">Eich Hawliau</string>
-  <string name="menu_trackers_blocked_title">Tracwyr wedi eu rhwystro</string>
+  <string name="menu_trackers_blocked_title">Rhwystro tracwyr</string>
   <string name="share_dialog_title">Rhannu drwy</string>
   <string name="notification_erase_text">Dileu\'r hanes pori</string>
   <string name="shortcut_erase_short_label">Dileu</string>

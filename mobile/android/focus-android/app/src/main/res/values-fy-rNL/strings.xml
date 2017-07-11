@@ -16,6 +16,7 @@
   <string name="menu_trackers_blocked_title">Trackers blokkearre</string>
   <string name="share_dialog_title">Diele fia</string>
   <string name="notification_erase_text">Navigaasjeskiednis wiskje</string>
+  <string name="notification_action_open">Iepenje</string>
   <string name="shortcut_erase_short_label">Wiskje</string>
   <string name="shortcut_erase_long_label">Navigaasjeskiednis wiskje</string>
   <string name="text_selection_search_action">Privee sykje</string>
@@ -62,6 +63,12 @@
   <string name="external_app_prompt_no_app_title">Fyn in app dy\'t dizze keppeling iepenje kin</string>
   <string name="external_app_prompt_no_app">Gjin inkelde app op jo apparaat kin dizze keppeling iepenje. Jo kinne %1$s ferlitte en %2$s iepenje om in geskikte app te finen.</string>
   <string name="external_multiple_apps_matched_exit">Priveenavigaasje ôfslute?</string>
+  <string name="download_snackbar_finished">%1$s is foltôge</string>
+  <string name="download_snackbar_open">Iepenje</string>
+  <string name="download_dialog_warning"><![CDATA["Downloade bestannen "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">wurde net fuortsmiten</b>" as jo skiednis fan %1$s wiskje."]]></string>
+  <string name="download_dialog_title">Bestân downloade</string>
+  <string name="download_dialog_action_cancel">Annulearje</string>
+  <string name="download_dialog_action_download">Downloade</string>
   <string name="errorpage_title">Probleem by it laden fan de side</string>
   <string name="errorpage_refresh">Opnij probearje</string>
   <string name="error_connectionfailure_title">Kin gjin ferbining meitsje</string>
@@ -94,4 +101,5 @@
   <string name="firstrun_close_button">OK, begrepen!</string>
   <string name="firstrun_skip_button">Oerslaan</string>
   <string name="firstrun_next_button">Folgjende</string>
+  <string name="content_blocking_disabled">-</string>
 </resources>

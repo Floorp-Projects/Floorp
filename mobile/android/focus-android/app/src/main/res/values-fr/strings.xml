@@ -16,6 +16,7 @@
   <string name="menu_trackers_blocked_title">Traqueurs bloqués</string>
   <string name="share_dialog_title">Partager avec</string>
   <string name="notification_erase_text">Effacer l’historique de navigation</string>
+  <string name="notification_action_open">Ouvrir</string>
   <string name="shortcut_erase_short_label">Effacer</string>
   <string name="shortcut_erase_long_label">Effacer l’historique de navigation</string>
   <string name="text_selection_search_action">Faire une recherche privée</string>
@@ -62,6 +63,12 @@
   <string name="external_app_prompt_no_app_title">Trouver une application capable d’ouvrir ce lien</string>
   <string name="external_app_prompt_no_app">Aucune des applications de votre appareil n’est capable d’ouvrir ce lien. Vous pouvez quitter %1$s pour rechercher dans %2$s une application qui en est capable.</string>
   <string name="external_multiple_apps_matched_exit">Quitter la navigation privée ?</string>
+  <string name="download_snackbar_finished">%1$s terminé</string>
+  <string name="download_snackbar_open">Ouvrir</string>
+  <string name="download_dialog_warning"><![CDATA["Les fichiers téléchargés "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">ne seront pas supprim&#233;s</b>" lorsque vous effacez l’historique de %1$s."]]></string>
+  <string name="download_dialog_title">Télécharger le fichier</string>
+  <string name="download_dialog_action_cancel">Annuler</string>
+  <string name="download_dialog_action_download">Télécharger</string>
   <string name="errorpage_title">Erreur de chargement de la page</string>
   <string name="errorpage_refresh">Réessayer</string>
   <string name="error_connectionfailure_title">La connexion a échoué</string>
@@ -94,4 +101,5 @@
   <string name="firstrun_close_button">OK</string>
   <string name="firstrun_skip_button">Ignorer</string>
   <string name="firstrun_next_button">Suivant</string>
+  <string name="content_blocking_disabled">-</string>
 </resources>

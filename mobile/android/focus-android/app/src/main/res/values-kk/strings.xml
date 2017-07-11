@@ -16,6 +16,7 @@
   <string name="menu_trackers_blocked_title">Блокталған трекерлер</string>
   <string name="share_dialog_title">Арқылы бөлісу</string>
   <string name="notification_erase_text">Шолу тарихын өшіру</string>
+  <string name="notification_action_open">Ашу</string>
   <string name="shortcut_erase_short_label">Өшіру</string>
   <string name="shortcut_erase_long_label">Шолу тарихын өшіру</string>
   <string name="text_selection_search_action">Жеке шолыңыз</string>
@@ -62,6 +63,12 @@
   <string name="external_app_prompt_no_app_title">Сілтемені аша алатын қолданбаны табу</string>
   <string name="external_app_prompt_no_app">Құрылғыңыздағы бірде-бір қолданба бұл сілтемені аша алмайды. Оны аша алатын қолданбасын %2$s ішінен іздеу үшін, сіз %1$s ішінен шыға аласыз.</string>
   <string name="external_multiple_apps_matched_exit">Жекелік шолу режимінен шығу керек пе?</string>
+  <string name="download_snackbar_finished">%1$s аяқталған</string>
+  <string name="download_snackbar_open">Ашу</string>
+  <string name="download_dialog_warning"><![CDATA["Сіз %1$s тарихын өшірген кезде жүктеліп алынған файлдар "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">&#1257;&#1096;&#1110;&#1088;&#1110;&#1083;&#1084;&#1077;&#1081;&#1076;&#1110;</b>.]]></string>
+  <string name="download_dialog_title">Файлды жүктеп алу</string>
+  <string name="download_dialog_action_cancel">Бас тарту</string>
+  <string name="download_dialog_action_download">Жүктеп алу</string>
   <string name="errorpage_title">Парақты жүктегенде қате кетті</string>
   <string name="errorpage_refresh">Қайталап көру</string>
   <string name="error_connectionfailure_title">Байланысты орнату сәтсіз аяқталды</string>
@@ -94,4 +101,5 @@
   <string name="firstrun_close_button">Жақсы, түсіндім!</string>
   <string name="firstrun_skip_button">Аттап кету</string>
   <string name="firstrun_next_button">Келесі</string>
+  <string name="content_blocking_disabled">-</string>
 </resources>

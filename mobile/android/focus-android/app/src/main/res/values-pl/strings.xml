@@ -16,6 +16,7 @@
   <string name="menu_trackers_blocked_title">Zablokowano:</string>
   <string name="share_dialog_title">Udostępnij przez</string>
   <string name="notification_erase_text">Usuń historię przeglądania</string>
+  <string name="notification_action_open">Otwórz</string>
   <string name="shortcut_erase_short_label">Usuń historię</string>
   <string name="shortcut_erase_long_label">Usuń historię przeglądania</string>
   <string name="text_selection_search_action">Wyszukaj prywatnie</string>
@@ -62,6 +63,12 @@
   <string name="external_app_prompt_no_app_title">Wyszukiwanie aplikacji mogącej otworzyć odnośnik</string>
   <string name="external_app_prompt_no_app">Żadna aplikacja na urządzeniu nie może otworzyć tego odnośnika. Można wyjść z aplikacji %1$s, aby wyszukać odpowiednią aplikację w „%2$s”.</string>
   <string name="external_multiple_apps_matched_exit">Wyjść z trybu prywatnego?</string>
+  <string name="download_snackbar_finished">Ukończono „%1$s”</string>
+  <string name="download_snackbar_open">Otwórz</string>
+  <string name="download_dialog_warning"><![CDATA["Pobrane pliki "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">nie zostan&#261; usuni&#281;te</b>" po wyczyszczeniu historii programu %1$s."]]></string>
+  <string name="download_dialog_title">Pobieranie pliku</string>
+  <string name="download_dialog_action_cancel">Anuluj</string>
+  <string name="download_dialog_action_download">Pobierz</string>
   <string name="errorpage_title">Błąd wczytywania strony</string>
   <string name="errorpage_refresh">Spróbuj ponownie</string>
   <string name="error_connectionfailure_title">Nie można połączyć</string>
@@ -94,4 +101,5 @@
   <string name="firstrun_close_button">OK!</string>
   <string name="firstrun_skip_button">Pomiń</string>
   <string name="firstrun_next_button">Dalej</string>
+  <string name="content_blocking_disabled">—</string>
 </resources>

@@ -16,6 +16,7 @@
   <string name="menu_trackers_blocked_title">ตัวติดตามที่ถูกปิดกั้น</string>
   <string name="share_dialog_title">แบ่งปันผ่าน</string>
   <string name="notification_erase_text">ล้างประวัติการท่องเว็บ</string>
+  <string name="notification_action_open">เปิด</string>
   <string name="shortcut_erase_short_label">ล้าง</string>
   <string name="shortcut_erase_long_label">ล้างประวัติการท่องเว็บ</string>
   <string name="text_selection_search_action">ค้นหาแบบส่วนตัว</string>
@@ -62,6 +63,12 @@
   <string name="external_app_prompt_no_app_title">ค้นหาแอปที่สามารถเปิดลิงก์</string>
   <string name="external_app_prompt_no_app">ไม่มีแอปบนอุปกรณ์ของคุณที่สามารถเปิดลิงก์นี้ คุณสามารถออกจาก %1$s เพื่อค้นหา %2$s สำหรับแอปที่สามารถ</string>
   <string name="external_multiple_apps_matched_exit">ออกจากการท่องเว็บแบบส่วนตัว?</string>
+  <string name="download_snackbar_finished">%1$s เสร็จแล้ว</string>
+  <string name="download_snackbar_open">เปิด</string>
+  <string name="download_dialog_warning"><![CDATA[ไฟล์ที่ดาวน์โหลด<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">&#3592;&#3632;&#3652;&#3617;&#3656;&#3606;&#3641;&#3585;&#3621;&#3610;</b>เมื่อคุณล้างประวัติของ %1$s]]></string>
+  <string name="download_dialog_title">ดาวน์โหลดไฟล์</string>
+  <string name="download_dialog_action_cancel">ยกเลิก</string>
+  <string name="download_dialog_action_download">ดาวน์โหลด</string>
   <string name="errorpage_title">เกิดปัญหาในการโหลดหน้า</string>
   <string name="errorpage_refresh">ลองอีกครั้ง</string>
   <string name="error_connectionfailure_title">ไม่สามารถเชื่อมต่อ</string>
@@ -94,4 +101,5 @@
   <string name="firstrun_close_button">ตกลง เข้าใจแล้ว!</string>
   <string name="firstrun_skip_button">ข้าม</string>
   <string name="firstrun_next_button">ถัดไป</string>
+  <string name="content_blocking_disabled">-</string>
 </resources>

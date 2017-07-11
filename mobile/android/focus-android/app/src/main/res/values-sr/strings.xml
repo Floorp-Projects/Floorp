@@ -16,6 +16,7 @@
   <string name="menu_trackers_blocked_title">Блокирани трагачи</string>
   <string name="share_dialog_title">Подели преко</string>
   <string name="notification_erase_text">Обришите историју прегледања</string>
+  <string name="notification_action_open">Отвори</string>
   <string name="shortcut_erase_short_label">Обриши</string>
   <string name="shortcut_erase_long_label">Обриши историју прегледања</string>
   <string name="text_selection_search_action">Претражујте приватно</string>
@@ -62,6 +63,12 @@
   <string name="external_app_prompt_no_app_title">Пронађите апликацију која може отворити ову везу</string>
   <string name="external_app_prompt_no_app">Ниједна апликација на вашем уређају не може отворити ову везу. Можете угасити %1$s и претражити %2$s да бисте нашли неку.</string>
   <string name="external_multiple_apps_matched_exit">Изаћи из приватног режима?</string>
+  <string name="download_snackbar_finished">%1$s завршено</string>
+  <string name="download_snackbar_open">Отвори</string>
+  <string name="download_dialog_warning"><![CDATA["Преузете датотеке "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">&#1085;&#1077;&#1115;&#1077; &#1073;&#1080;&#1090;&#1080; &#1086;&#1073;&#1088;&#1080;&#1089;&#1072;&#1085;&#1077;</b>" када обришете %1$s историју."]]></string>
+  <string name="download_dialog_title">Преузми датотеку</string>
+  <string name="download_dialog_action_cancel">Откажи</string>
+  <string name="download_dialog_action_download">Преузми</string>
   <string name="errorpage_title">Проблем при учитавању странице</string>
   <string name="errorpage_refresh">Покушај поново</string>
   <string name="error_connectionfailure_title">Повезивање није успело</string>
@@ -94,4 +101,5 @@
   <string name="firstrun_close_button">У реду, разумем!</string>
   <string name="firstrun_skip_button">Прескочи</string>
   <string name="firstrun_next_button">Следеће</string>
+  <string name="content_blocking_disabled">-</string>
 </resources>

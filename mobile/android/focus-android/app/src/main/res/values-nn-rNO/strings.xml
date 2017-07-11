@@ -16,6 +16,7 @@
   <string name="menu_trackers_blocked_title">Sporarar blokkerte</string>
   <string name="share_dialog_title">Del via</string>
   <string name="notification_erase_text">Slett nettlesarhistorikk</string>
+  <string name="notification_action_open">Opne</string>
   <string name="shortcut_erase_short_label">Slett</string>
   <string name="shortcut_erase_long_label">Slett nettlesarhistorikk</string>
   <string name="text_selection_search_action">Søk privat</string>
@@ -62,6 +63,12 @@
   <string name="external_app_prompt_no_app_title">Finn ein app som kan opne lenka</string>
   <string name="external_app_prompt_no_app">Ingen av appane på eininga di kan opne denne lenka. Du kan gå ut av %1$s for å søke på %2$s etter ein app som kan gjere dette.</string>
   <string name="external_multiple_apps_matched_exit">Avslutte privat nettlesing?</string>
+  <string name="download_snackbar_finished">%1$s ferdig</string>
+  <string name="download_snackbar_open">Opne</string>
+  <string name="download_dialog_warning"><![CDATA["Nedlasta filer "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">vil ikkje bli fjerna</b>" når du slettar %1$s-historikken."]]></string>
+  <string name="download_dialog_title">Last ned fil</string>
+  <string name="download_dialog_action_cancel">Avbryt</string>
+  <string name="download_dialog_action_download">Last ned</string>
   <string name="errorpage_title">Problem med lasting av sida</string>
   <string name="errorpage_refresh">Prøv igjen</string>
   <string name="error_connectionfailure_title">Kan ikkje kople til</string>
@@ -94,4 +101,5 @@
   <string name="firstrun_close_button">OK, eg forstår det!</string>
   <string name="firstrun_skip_button">Hopp over</string>
   <string name="firstrun_next_button">Neste</string>
+  <string name="content_blocking_disabled">-</string>
 </resources>

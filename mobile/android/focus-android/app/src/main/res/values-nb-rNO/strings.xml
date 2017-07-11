@@ -16,6 +16,7 @@
   <string name="menu_trackers_blocked_title">Sporere blokkert</string>
   <string name="share_dialog_title">Del via</string>
   <string name="notification_erase_text">Slett nettleserhistorikk</string>
+  <string name="notification_action_open">Åpne</string>
   <string name="shortcut_erase_short_label">Slett</string>
   <string name="shortcut_erase_long_label">Slett nettleserhistorikk</string>
   <string name="text_selection_search_action">Søk privat</string>
@@ -62,6 +63,12 @@
   <string name="external_app_prompt_no_app_title">Finn en app som kan åpne lenken</string>
   <string name="external_app_prompt_no_app">Ingen av appene på din enhet kan åpne denne lenken. Du kan gå ut av %1$s for å søke på %2$s etter en app som kan gjøre dette.</string>
   <string name="external_multiple_apps_matched_exit">Avslutt privat nettlesing?</string>
+  <string name="download_snackbar_finished">%1$s ferdig</string>
+  <string name="download_snackbar_open">Åpne</string>
+  <string name="download_dialog_warning"><![CDATA["Nedlastede filer "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">vil ikke bli fjernet</b>" når du sletter %1$s-historikken."]]></string>
+  <string name="download_dialog_title">Last ned fil</string>
+  <string name="download_dialog_action_cancel">Avbryt</string>
+  <string name="download_dialog_action_download">Last ned</string>
   <string name="errorpage_title">Problem ved lasting av siden</string>
   <string name="errorpage_refresh">Prøv igjen</string>
   <string name="error_connectionfailure_title">Kan ikke koble til</string>
@@ -94,4 +101,5 @@
   <string name="firstrun_close_button">OK, jeg forstår det!</string>
   <string name="firstrun_skip_button">Hopp over</string>
   <string name="firstrun_next_button">Neste</string>
+  <string name="content_blocking_disabled">-</string>
 </resources>

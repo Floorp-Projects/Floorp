@@ -1,0 +1,105 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+  <string name="action_cancel">გაუქმება</string>
+  <string name="action_ok">კარგი</string>
+  <string name="urlbar_hint">მოძებნეთ ან შეიყვანეთ მისამართი</string>
+  <string name="teaser">მხოლოდ თვალიერების პირადი რეჟიმი.\nმონახულება. წაშლა. თავიდან დაწყება.</string>
+  <string name="feedback_erase">მონახულებული გვერდების ისტორია წაიშალა.</string>
+  <string name="search_hint">მოძებნა: %1$s</string>
+  <string name="menu_share">გაზიარება…</string>
+  <string name="menu_open_with_default_browser">გახსნა %1$s-ით</string>
+  <string name="menu_open_with_a_browser">გახსნა…</string>
+  <string name="menu_settings">პარამეტრები</string>
+  <string name="menu_about">შესახებ</string>
+  <string name="menu_help">დახმარება</string>
+  <string name="menu_rights">თქვენი უფლებები</string>
+  <string name="menu_trackers_blocked_title">მეთვალყურე ელემენტები შეიზღუდა</string>
+  <string name="share_dialog_title">გაზიარება</string>
+  <string name="notification_erase_text">ისტორიის წაშლა</string>
+  <string name="notification_action_open">გახსნა</string>
+  <string name="shortcut_erase_short_label">წაშლა</string>
+  <string name="shortcut_erase_long_label">ისტორიის წაშლა</string>
+  <string name="text_selection_search_action">მოძებნეთ უსაფრთხოდ</string>
+  <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s &#4306;&#4304;&#4307;&#4315;&#4317;&#4306;&#4330;&#4308;&#4315;&#4311; &#4315;&#4304;&#4320;&#4311;&#4309;&#4312;&#4321; &#4321;&#4304;&#4307;&#4304;&#4309;&#4308;&#4308;&#4305;&#4321;.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"&#4306;&#4304;&#4315;&#4317;&#4312;&#4327;&#4308;&#4316;&#4308;&#4311; &#4320;&#4317;&#4306;&#4317;&#4320;&#4330; &#4318;&#4312;&#4320;&#4304;&#4307;&#4312; &#4305;&#4320;&#4304;&#4323;&#4310;&#4308;&#4320;&#4312;:\n  "<ul>"\n    "<li>&#4315;&#4317;&#4331;&#4308;&#4305;&#4316;&#4308;&#4311; &#4307;&#4304; &#4307;&#4304;&#4304;&#4311;&#4309;&#4304;&#4314;&#4312;&#4308;&#4320;&#4308;&#4311; &#4306;&#4309;&#4308;&#4320;&#4307;&#4308;&#4305;&#4312;</li>"\n    "<li>&#4328;&#4308;&#4310;&#4326;&#4323;&#4307;&#4308;&#4311; &#4315;&#4308;&#4311;&#4309;&#4304;&#4314;&#4327;&#4323;&#4320;&#4308; &#4308;&#4314;&#4308;&#4315;&#4308;&#4316;&#4322;&#4308;&#4305;&#4312; (&#4318;&#4304;&#4320;&#4304;&#4315;&#4308;&#4322;&#4320;&#4308;&#4305;&#4312;&#4307;&#4304;&#4316; &#4307;&#4304;&#4328;&#4309;&#4308;&#4305;&#4304;&#4330; &#4328;&#4308;&#4312;&#4331;&#4314;&#4308;&#4305;&#4304;)</li>"\n    "<li>&#4306;&#4304;&#4304;&#4321;&#4323;&#4324;&#4311;&#4304;&#4309;&#4308;&#4311; &#4307;&#4304; &#4332;&#4304;&#4328;&#4304;&#4314;&#4308;&#4311; &#4324;&#4323;&#4316;&#4311;&#4323;&#4328;&#4308;&#4305;&#4312;, &#4331;&#4312;&#4308;&#4305;&#4312;&#4321; &#4307;&#4304; &#4311;&#4309;&#4304;&#4314;&#4312;&#4308;&#4320;&#4308;&#4305;&#4312;&#4321; &#4312;&#4321;&#4322;&#4317;&#4320;&#4312;&#4304;</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s &#4328;&#4308;&#4325;&#4315;&#4316;&#4312;&#4314;&#4312;&#4304; Mozilla-&#4321; &#4315;&#4312;&#4308;&#4320;. &#4329;&#4309;&#4308;&#4316;&#4312; &#4315;&#4312;&#4310;&#4304;&#4316;&#4312;, &#4312;&#4316;&#4322;&#4308;&#4320;&#4316;&#4308;&#4322;&#4312;&#4321; &#4306;&#4304;&#4334;&#4321;&#4316;&#4312;&#4314;&#4317;&#4305;&#4304; &#4307;&#4304; &#4321;&#4312;&#4335;&#4304;&#4316;&#4321;&#4304;&#4326;&#4308;&#4304;.<br/>\n<a href="%2$s">&#4328;&#4308;&#4312;&#4322;&#4327;&#4309;&#4308;&#4311; &#4315;&#4308;&#4322;&#4312;</a></p>]]></string>
+  <string name="preference_category_search">ძიება</string>
+  <string name="preference_search_engine_default">ნაგულისხმევი</string>
+  <string name="preference_language">ენა</string>
+  <string name="preference_language_systemdefault">სისტემის ნაგულისხმევი</string>
+  <string name="preference_dialog_title_search_engine">ნაგულისხმევი საძიებო სისტემა</string>
+  <string name="preference_category_privacy">პირადულობა</string>
+  <string name="preference_privacy_block_ads">სარეკლამო ელემენტების შეზღუდვა</string>
+  <string name="preference_privacy_block_analytics">სტატისტიკური აღრიცხვის ელემენტების შეზღუდვა</string>
+  <string name="preference_privacy_block_social">სოციალური ელემენტების შეზღუდვა</string>
+  <string name="preference_privacy_block_content">სხვა მეთვალყურე ელემენტების შეზღუდვა</string>
+  <string name="preference_privacy_block_content_summary">შესაძლოა ზოგიერთმა საიტმა ან ვიდეომ, არ იმუშაოს</string>
+  <string name="preference_privacy_secure_mode">ფარული</string>
+  <string name="preference_privacy_secure_mode_summary">გამორთეთ ფარული რეჟიმი ეკრანისთვის სურათის გადასაღებად და %1$s-ით მონახულებული საიტების ბოლოს გამოყენებული პროგრამების სიაში სანახავად</string>
+  <string name="preference_category_performance">წარმადობა</string>
+  <string name="preference_performance_block_webfonts">საიტის შრიფტების შეზღუდვა</string>
+  <string name="preference_performance_block_webfonts_summary">შესაძლოა ხატულების და სურათების ნაწილი გაქრეს</string>
+  <string name="preference_performance_block_images">სურათების შეზღუდვა</string>
+  <string name="preference_default_browser">ნაგულისხმევ ბრაუზერად დაყენება</string>
+  <string name="preference_category_mozilla">Mozilla</string>
+  <string name="preference_mozilla_telemetry">გამოყენების შესახებ, ანონიმური მონაცემების გაგზავნა</string>
+  <string name="preference_mozilla_telemetry_summary">შეიტყვეთ მეტი</string>
+  <string name="preference_about">%1$s-ის შესახებ</string>
+  <string name="content_description_clear_input">შეტანილის გასუფთავება</string>
+  <string name="content_description_dismiss_input">დახურვა</string>
+  <string name="content_description_erase">ისტორიის წაშლა</string>
+  <string name="content_description_lock">დაცული კავშირი</string>
+  <string name="accessibility_announcement_loading">იტვირთება</string>
+  <string name="accessibility_announcement_loading_finished">საიტი იტვირთება</string>
+  <string name="content_description_menu">დამატებითი პარამეტრები</string>
+  <string name="content_description_forward">გადასვლა წინ</string>
+  <string name="content_description_reload">საიტის ხელახლა ჩატვირთვა</string>
+  <string name="content_description_back">გადასვლა უკან</string>
+  <string name="content_description_stop">საიტის ჩატვირთვის შეჩერება</string>
+  <string name="content_description_customtab_exit">წინა პროგრამაზე დაბრუნება</string>
+  <string name="content_description_blocking_switch">მეთვალყურე ელემენტების შეზღუდვა</string>
+  <string name="context_menu_paste_go">ჩასმა &amp; გადასვლა</string>
+  <string name="your_rights">თქვენი უფლებები</string>
+  <string name="external_app_prompt_title">ბმულის სხვა პროგრამით გახსნა</string>
+  <string name="external_app_prompt">შეგიძლიათ დატოვოთ %1$s ბმულის %2$s-ში გასახსნელად.</string>
+  <string name="external_app_prompt_no_app_title">პროგრამის მოძიება, რომელიც გახსნის ბმულს</string>
+  <string name="external_app_prompt_no_app">თქვენს მოწყობილობაზე არსებულ არცერთ პროგრამას არ შეუძლია ამ ბმულის გახსნა. შეგიძლიათ დატოვოთ %1$s საჭირო პროგრამის %2$s-ში მოსაძიებლად.</string>
+  <string name="external_multiple_apps_matched_exit">გსურთ პირადი დათვალიერებიდან გასვლა?</string>
+  <string name="download_snackbar_finished">%1$s დასრულდა</string>
+  <string name="download_snackbar_open">გახსნა</string>
+  <string name="download_dialog_warning"><![CDATA["ჩამოტვირთული ფაილები "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">&#4304;&#4320; &#4332;&#4304;&#4312;&#4328;&#4314;&#4308;&#4305;&#4304;</b>" %1$s-ის ისტორიის გასუფთავებისას."]]></string>
+  <string name="download_dialog_title">ფაილის ჩამოტვირთვა</string>
+  <string name="download_dialog_action_cancel">გაუქმება</string>
+  <string name="download_dialog_action_download">ჩამოტვირთვა</string>
+  <string name="errorpage_title">ხარვეზები გვერდის ჩატვირთვისას</string>
+  <string name="errorpage_refresh">ხელახლა ცდა</string>
+  <string name="error_connectionfailure_title">დაკავშირება ვერ ხერხდება</string>
+  <string name="error_connectionfailure_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n        "<li>&#4308;&#4321; &#4321;&#4304;&#4312;&#4322;&#4312; &#4328;&#4308;&#4321;&#4304;&#4331;&#4314;&#4317;&#4304; &#4307;&#4320;&#4317;&#4308;&#4305;&#4312;&#4311; &#4315;&#4312;&#4323;&#4332;&#4309;&#4307;&#4317;&#4315;&#4308;&#4314;&#4312;&#4304; &#4304;&#4316; &#4331;&#4304;&#4314;&#4312;&#4304;&#4316; &#4307;&#4304;&#4322;&#4309;&#4312;&#4320;&#4311;&#4323;&#4314;&#4312;&#4304;. &#4321;&#4330;&#4304;&#4307;&#4308;&#4311; &#4334;&#4308;&#4314;&#4304;&#4334;&#4314;&#4304; &#4320;&#4304;&#4315;&#4307;&#4308;&#4316;&#4312;&#4315;&#4308; &#4332;&#4323;&#4311;&#4328;&#4312;.</li>"\n        "<li>&#4311;&#4323; &#4321;&#4334;&#4309;&#4304; &#4321;&#4304;&#4312;&#4322;&#4308;&#4305;&#4312;&#4321; &#4306;&#4304;&#4334;&#4321;&#4316;&#4304;&#4321;&#4304;&#4330; &#4309;&#4308;&#4320; &#4304;&#4334;&#4308;&#4320;&#4334;&#4308;&#4305;&#4311;, &#4315;&#4304;&#4328;&#4312;&#4316; &#4328;&#4308;&#4304;&#4315;&#4317;&#4332;&#4315;&#4308;&#4311; &#4315;&#4317;&#4332;&#4327;&#4317;&#4305;&#4312;&#4314;&#4317;&#4305;&#4312;&#4321; &#4315;&#4317;&#4305;&#4312;&#4314;&#4323;&#4320;&#4312; &#4304;&#4316; Wi-Fi &#4313;&#4304;&#4309;&#4328;&#4312;&#4320;&#4312;.</li>"\n      "</ul>]]></string>
+  <string name="error_timeout_title">კავშირის დრო ამოიწურა</string>
+  <string name="error_hostLookup_title">გვერდი ვერ მოიძებნა</string>
+  <string name="error_hostLookup_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n        "<li>"&#4328;&#4308;&#4304;&#4315;&#4317;&#4332;&#4315;&#4308;&#4311; &#4304;&#4313;&#4320;&#4308;&#4324;&#4312;&#4314;&#4312; &#4315;&#4312;&#4321;&#4304;&#4315;&#4304;&#4320;&#4311;&#4312;&#4321; &#4321;&#4312;&#4321;&#4332;&#4317;&#4320;&#4308;\n          "<strong>ww</strong>".example.com-&#4312;&#4321; &#4316;&#4304;&#4330;&#4309;&#4314;&#4304;&#4307; &#4323;&#4316;&#4307;&#4304; &#4312;&#4327;&#4317;&#4321;\n          "<strong>www</strong>.example.com</li>"\n        "<li>&#4311;&#4323; &#4309;&#4308;&#4320;&#4330;&#4308;&#4320;&#4311;&#4312; &#4321;&#4304;&#4312;&#4322;&#4312;&#4321; &#4329;&#4304;&#4322;&#4309;&#4312;&#4320;&#4311;&#4309;&#4304;&#4321; &#4309;&#4308;&#4320; &#4304;&#4334;&#4308;&#4320;&#4334;&#4308;&#4305;&#4311;, &#4328;&#4308;&#4304;&#4315;&#4317;&#4332;&#4315;&#4308;&#4311; &#4315;&#4317;&#4332;&#4327;&#4317;&#4305;&#4312;&#4314;&#4317;&#4305;&#4312;&#4321; &#4315;&#4317;&#4305;&#4312;&#4314;&#4323;&#4320;&#4312; &#4304;&#4316; Wi-Fi &#4313;&#4304;&#4309;&#4328;&#4312;&#4320;&#4312;.</li>"\n      "</ul>]]></string>
+  <string name="error_malformedURI_title">მისამართი არასწორია</string>
+  <string name="error_malformedURI_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>"&#4321;&#4304;&#4312;&#4322;&#4312;&#4321; &#4315;&#4312;&#4321;&#4304;&#4315;&#4304;&#4320;&#4311;&#4308;&#4305;&#4312;, &#4329;&#4309;&#4308;&#4323;&#4314;&#4308;&#4305;&#4320;&#4312;&#4309;, &#4304;&#4321;&#4308; &#4312;&#4332;&#4308;&#4320;&#4308;&#4305;&#4304; "<strong>http://www.example.com/</strong></li>"\n  "<li>"&#4307;&#4304;&#4320;&#4332;&#4315;&#4323;&#4316;&#4307;&#4312;&#4311;, &#4320;&#4317;&#4315; &#4332;&#4312;&#4316; &#4306;&#4304;&#4307;&#4304;&#4334;&#4320;&#4312;&#4314; &#4334;&#4304;&#4310;&#4308;&#4305;&#4321; &#4312;&#4327;&#4308;&#4316;&#4308;&#4305;&#4311; (&#4304;&#4321;&#4308;&#4311;&#4321;: "<strong>/</strong>).</li>\n</ul>]]></string>
+  <string name="error_redirectLoop_title">ეს გვერდი არამართებულად გადამისამართდა</string>
+  <string name="error_redirectLoop_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>&#4304;&#4315; &#4334;&#4304;&#4320;&#4309;&#4308;&#4310;&#4321;, &#4310;&#4317;&#4306;&#4335;&#4308;&#4320; &#4312;&#4332;&#4309;&#4308;&#4309;&#4321; &#4324;&#4323;&#4316;&#4311;&#4323;&#4328;&#4308;&#4305;&#4312;&#4321; &#4323;&#4304;&#4320;&#4327;&#4317;&#4324;&#4304;, &#4304;&#4316; &#4306;&#4304;&#4315;&#4317;&#4320;&#4311;&#4309;&#4304;.</li>\n</ul>]]></string>
+  <string name="error_unsupportedprotocol_title">მისამართის გაუგებარია</string>
+  <string name="error_unsupportedprotocol_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>&#4304;&#4315; &#4305;&#4315;&#4323;&#4314;&#4312;&#4321; &#4306;&#4304;&#4321;&#4304;&#4334;&#4321;&#4316;&#4308;&#4314;&#4304;&#4307;, &#4321;&#4304;&#4309;&#4304;&#4320;&#4304;&#4323;&#4307;&#4317;&#4307;, &#4321;&#4334;&#4309;&#4304; &#4318;&#4320;&#4317;&#4306;&#4320;&#4304;&#4315;&#4312;&#4321; &#4307;&#4304;&#4327;&#4308;&#4316;&#4308;&#4305;&#4304;&#4304; &#4321;&#4304;&#4333;&#4312;&#4320;&#4317;.</li>\n</ul>]]></string>
+  <string name="error_sslhandshake_title">უსაფრთხო დაკავშირება ვერ მოხერხდა</string>
+  <string name="error_sslhandshake_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>&#4308;&#4321; &#4328;&#4308;&#4312;&#4331;&#4314;&#4308;&#4305;&#4304; &#4321;&#4304;&#4312;&#4322;&#4312;&#4321; &#4306;&#4304;&#4323;&#4315;&#4304;&#4320;&#4311;&#4304;&#4317;&#4305;&#4312;&#4321; &#4305;&#4320;&#4304;&#4314;&#4312; &#4312;&#4327;&#4317;&#4321;, &#4304;&#4316;\n&#4309;&#4312;&#4316;&#4315;&#4308; &#4315;&#4312;&#4321; &#4328;&#4308;&#4330;&#4309;&#4314;&#4304;&#4321; &#4330;&#4307;&#4312;&#4314;&#4317;&#4305;&#4307;&#4308;&#4321;.</li>"\n  "<li>&#4311;&#4323; &#4304;&#4315; &#4321;&#4304;&#4312;&#4322;&#4321; &#4315;&#4304;&#4316;&#4304;&#4315;&#4307;&#4308; &#4332;&#4304;&#4320;&#4315;&#4304;&#4322;&#4308;&#4305;&#4312;&#4311; &#4323;&#4313;&#4304;&#4309;&#4328;&#4312;&#4320;&#4307;&#4308;&#4305;&#4317;&#4307;&#4312;&#4311;, &#4334;&#4304;&#4320;&#4309;&#4308;&#4310;&#4312; &#4328;&#4308;&#4321;&#4304;&#4331;&#4314;&#4317;&#4304;\n&#4307;&#4320;&#4317;&#4308;&#4305;&#4312;&#4311;&#4312; &#4312;&#4327;&#4317;&#4321; &#4307;&#4304; &#4315;&#4317;&#4306;&#4309;&#4312;&#4304;&#4316;&#4308;&#4305;&#4312;&#4311; &#4328;&#4308;&#4306;&#4312;&#4331;&#4314;&#4312;&#4304;&#4311; &#4313;&#4309;&#4314;&#4304;&#4309; &#4321;&#4330;&#4304;&#4307;&#4317;&#4311;.</li>\n</ul>]]></string>
+  <string name="error_generic_title">უი</string>
+  <string name="error_generic_message">ამ გვერდის ჩატვირთვა, რატომღაც ვერ მოხერხდა.</string>
+  <string name="contextmenu_link_share">ბმულის გაზიარება</string>
+  <string name="contextmenu_link_copy">მისამართის დაკოპირება</string>
+  <string name="contextmenu_image_share">სურათის გაზიარება</string>
+  <string name="contextmenu_image_copy">სურათის მისამართის დაკოპირება</string>
+  <string name="contextmenu_image_save">სურათის შენახვა</string>
+  <string name="contextmenu_image_warning"><![CDATA["შენახული და გაზიარებული სურათები "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">&#4304;&#4320; &#4332;&#4304;&#4312;&#4328;&#4314;&#4308;&#4305;&#4304;</b>" %1$s-ის ისტორიის გასუფთავებისას."]]></string>
+  <string name="firstrun_tracking_title">იმოგზაურეთ ინტერნეტში მეთვალყურეების გარეშე</string>
+  <string name="firstrun_tracking_text">გვერდების მონახულებისას, თვალყურის დევნებისგან ავტომატური დაცვა. მონახულებული გვერდების ისტორია და ფუნთუშები, შეგიძლიათ, სანაგვე ურნის ხატულაზე შეხებით წაშალოთ, პროგრამაშივე, ან შეტყობინებებში.</string>
+  <string name="firstrun_defaultbrowser_title">გააძლიერეთ პირადი მონაცემების დაცვა</string>
+  <string name="firstrun_defaultbrowser_text">დააყენეთ %1$s ნაგულისხმევ ბრაუზერად და დაიცავით პირადი მონაცემების უსაფრთხოება, სხვა Android პროგრამებიდან ინტერნეტ ბმულზე გადასვლის დროსაც.</string>
+  <string name="firstrun_breaking_title">სწრაფი გასწორება, როცა\nელემენტების შეზღუდვა, საიტს აფერხებს</string>
+  <string name="firstrun_breaking_text">როცა, მეთვალყურე ელემენტების შეზღუდვის გამო, საიტი გამართულად ვერ მუშაობს, შეზღუდვის გამორთვა შესაძლებელია ხელსაწყოების მენიუზე შეხებით.</string>
+  <string name="firstrun_close_button">კარგი, გასაგებია!</string>
+  <string name="firstrun_skip_button">გამოტოვება</string>
+  <string name="firstrun_next_button">შემდეგი</string>
+  <string name="content_blocking_disabled">-</string>
+</resources>

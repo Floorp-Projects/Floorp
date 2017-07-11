@@ -16,6 +16,7 @@
   <string name="menu_trackers_blocked_title">Rastreadores bloqueados</string>
   <string name="share_dialog_title">Compartir vía</string>
   <string name="notification_erase_text">Eliminar historial de navegación</string>
+  <string name="notification_action_open">Abrir</string>
   <string name="shortcut_erase_short_label">Eliminar</string>
   <string name="shortcut_erase_long_label">Eliminar historial de navegación</string>
   <string name="text_selection_search_action">Búsqueda privada</string>
@@ -62,6 +63,12 @@
   <string name="external_app_prompt_no_app_title">Buscar una app que pueda abrir el enlace</string>
   <string name="external_app_prompt_no_app">Ninguna de las aplicaciones en tu dispositivo puede abrir este enlace. Puedes salir de %1$s para buscar en %2$s por una app que pueda.</string>
   <string name="external_multiple_apps_matched_exit">¿Salir de la navegación privada?</string>
+  <string name="download_snackbar_finished">%1$s finalizado</string>
+  <string name="download_snackbar_open">Abrir</string>
+  <string name="download_dialog_warning"><![CDATA["Los archivos descargados "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">no ser&#225;n eliminados</b>" cuando limpies el historial de %1$s."]]></string>
+  <string name="download_dialog_title">Descargar archivo</string>
+  <string name="download_dialog_action_cancel">Cancelar</string>
+  <string name="download_dialog_action_download">Descargar</string>
   <string name="errorpage_title">Problemas al cargar la página</string>
   <string name="errorpage_refresh">Volver a intentarlo</string>
   <string name="error_connectionfailure_title">No se pudo conectar</string>
@@ -94,4 +101,5 @@
   <string name="firstrun_close_button">Ok, ¡ya caché!</string>
   <string name="firstrun_skip_button">Saltar</string>
   <string name="firstrun_next_button">Siguiente</string>
+  <string name="content_blocking_disabled">-</string>
 </resources>
