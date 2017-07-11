@@ -7,9 +7,9 @@ from marionette_driver import Wait
 
 
 class TestBaseTabbarSessionRestoreButton(PuppeteerMixin, MarionetteTestCase):
-    def setUp(self, prefValue=True):
+    def setUp(self, restore_button_pref=1):
         super(TestBaseTabbarSessionRestoreButton, self).setUp()
-        self.marionette.enforce_gecko_prefs({'browser.tabs.restorebutton': prefValue})
+        self.marionette.enforce_gecko_prefs({'browser.tabs.restorebutton': restore_button_pref})
 
         # Each list element represents a window of tabs loaded at
         # some testing URL, the URLS are arbitrary.
@@ -96,7 +96,7 @@ class TestTabbarSessionRestoreButton(TestBaseTabbarSessionRestoreButton):
 
 class TestNoTabbarSessionRestoreButton(TestBaseTabbarSessionRestoreButton):
     def setUp(self):
-        super(TestNoTabbarSessionRestoreButton, self).setUp(False)
+        super(TestNoTabbarSessionRestoreButton, self).setUp(restore_button_pref=0)
 
     def test_pref_off_button_does_not_show(self):
         wrapper = self.puppeteer.windows.current.tabbar.restore_tabs_button_wrapper
