@@ -38,6 +38,9 @@ document.getElementById("onboarding-overlay")
     case "onboarding-tour-search-button":
       Mozilla.UITour.openSearchPanel(() => {});
       break;
+    case "onboarding-tour-singlesearch-button":
+      Mozilla.UITour.showMenu("urlbar");
+      break;
     case "onboarding-tour-sync-button":
       let emailInput = document.getElementById("onboarding-tour-sync-email-input");
       if (emailInput.checkValidity()) {
