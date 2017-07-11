@@ -697,6 +697,77 @@ class AutofillRecords {
   }
 
   /**
+   * Finds a local record with matching common fields and a different GUID.
+   * Sync uses this method to find and update unsynced local records with
+   * fields that match incoming remote records. This avoids creating
+   * duplicate profiles with the same information.
+   *
+   * @param   {Object} record
+   *          The remote record.
+   * @returns {string|null}
+   *          The GUID of the matching local record, or `null` if no records
+   *          match.
+   */
+  findDuplicateGUID(record) {
+    if (!record.guid) {
+      throw new Error("Record missing GUID");
+    }
+    if (record.deleted) {
+      // Tombstones don't carry enough info to de-dupe, and we should have
+      // handled them separately when applying the record.
+      throw new Error("Tombstones can't have duplicates");
+    }
+    let records = this._store.data[this._collectionName];
+    for (let profile of records) {
+      if (profile.deleted) {
+        continue;
+      }
+      if (profile.guid == record.guid) {
+        throw new Error(`Record ${record.guid} already exists`);
+      }
+      if (this._getSyncMetaData(profile)) {
+        // This record has already been uploaded, so it can't be a dupe of
+        // another incoming item.
+        continue;
+      }
+      let keys = new Set(Object.keys(record));
+      for (let key of Object.keys(profile)) {
+        keys.add(key);
+      }
+      // Ignore internal and computed fields when matching records. Internal
+      // fields are synced, but almost certainly have different values than the
+      // local record, and we'll update them in `reconcile`. Computed fields
+      // aren't synced at all.
+      for (let field of INTERNAL_FIELDS) {
+        keys.delete(field);
+      }
+      for (let field of this.VALID_COMPUTED_FIELDS) {
+        keys.delete(field);
+      }
+      if (!keys.size) {
+        // This shouldn't ever happen; a valid record will always have fields
+        // that aren't computed or internal. Sync can't do anything about that,
+        // so we ignore the dubious local record instead of throwing.
+        continue;
+      }
+      let same = true;
+      for (let key of keys) {
+        // For now, we ensure that both (or neither) records have the field
+        // with matching values. This doesn't account for the version yet
+        // (bug 1377204).
+        same = key in profile == key in record && profile[key] == record[key];
+        if (!same) {
+          break;
+        }
+      }
+      if (same) {
+        return profile.guid;
+      }
+    }
+    return null;
+  }
+
+  /**
    * Internal helper functions.
    */
 

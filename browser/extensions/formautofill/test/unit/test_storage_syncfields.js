@@ -361,6 +361,34 @@ add_task(async function test_changeGUID() {
   ok(!profileStorage.addresses.get(guid_u1), "old guid no longer exists.");
 });
 
+add_task(async function test_findDuplicateGUID() {
+  let profileStorage = await initProfileStorage(TEST_STORE_FILE_NAME,
+                                                [TEST_ADDRESS_1]);
+
+  let [record] = profileStorage.addresses.getAll({rawData: true});
+  Assert.throws(() => profileStorage.addresses.findDuplicateGUID(record),
+                /Record \w+ already exists/,
+                "Should throw if the GUID already exists");
+
+  // Add a malformed record, passing `sourceSync` to work around the record
+  // normalization logic that would prevent this.
+  let timeLastModified = Date.now();
+  let timeCreated = timeLastModified - 60 * 1000;
+
+  profileStorage.addresses.add({
+    guid: profileStorage.addresses._generateGUID(),
+    version: 1,
+    timeCreated,
+    timeLastModified,
+  }, {sourceSync: true});
+
+  strictEqual(profileStorage.addresses.findDuplicateGUID({
+    guid: profileStorage.addresses._generateGUID(),
+    timeCreated,
+    timeLastModified,
+  }), null, "Should ignore internal fields and malformed records");
+});
+
 add_task(async function test_reset() {
   let profileStorage = await initProfileStorage(TEST_STORE_FILE_NAME,
                                                 [TEST_ADDRESS_1, TEST_ADDRESS_2]);
