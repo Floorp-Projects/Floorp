@@ -92,3 +92,7 @@
   shaders:
    - DiagnosticTextPS
 
+- type: vs_4_0
+  file: test-features-vs.hlsl
+  shaders:
+   - TestConstantBuffersVS

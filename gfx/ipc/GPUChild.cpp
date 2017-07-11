@@ -280,6 +280,13 @@ GPUChild::RecvUpdateFeature(const Feature& aFeature, const FeatureFailure& aChan
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult
+GPUChild::RecvUsedFallback(const Fallback& aFallback, const nsCString& aMessage)
+{
+  gfxConfig::EnableFallback(aFallback, aMessage.get());
+  return IPC_OK();
+}
+
 class DeferredDeleteGPUChild : public Runnable
 {
 public:

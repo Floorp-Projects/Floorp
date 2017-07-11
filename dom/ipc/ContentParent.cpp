@@ -5432,7 +5432,7 @@ ContentParent::RecvDeviceReset()
 {
   GPUProcessManager* pm = GPUProcessManager::Get();
   if (pm) {
-    pm->TriggerDeviceResetForTesting();
+    pm->SimulateDeviceReset();
   }
 
   return IPC_OK();

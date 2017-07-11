@@ -67,7 +67,8 @@ enum class MLGPrimitiveTopology
   Unknown = 0,
   TriangleStrip = 1,
   TriangleList = 2,
-  UnitQuad = 3
+  UnitQuad = 3,
+  UnitTriangle = 4
 };
 
 struct MLGMappedResource

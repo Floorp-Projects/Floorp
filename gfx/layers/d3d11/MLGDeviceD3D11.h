@@ -272,6 +272,10 @@ private:
   bool InitSamplerStates();
   bool InitBlendStates();
   bool InitDepthStencilState();
+  bool VerifyConstantBufferOffsetting() override;
+
+  void SetInputLayout(ID3D11InputLayout* aLayout);
+  void SetVertexShader(ID3D11VertexShader* aShader);
 
 private:
   RefPtr<ID3D11Device> mDevice;
@@ -302,6 +306,7 @@ private:
 
   RefPtr<MLGRenderTarget> mCurrentRT;
   RefPtr<MLGBuffer> mUnitQuadVB;
+  RefPtr<MLGBuffer> mUnitTriangleVB;
   RefPtr<ID3D11VertexShader> mCurrentVertexShader;
   RefPtr<ID3D11InputLayout> mCurrentInputLayout;
   RefPtr<ID3D11PixelShader> mCurrentPixelShader;
