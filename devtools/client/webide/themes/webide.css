@@ -138,9 +138,11 @@ window.busy-determined #action-busy-undetermined {
   background-repeat: no-repeat, repeat;
   background-size: 35%, auto;
   background-position: center center, top left;
-%ifndef XP_MACOSX
   border-top: 1px solid #AAA;
-%endif
+}
+
+:root[platform="mac"] #deck {
+  border-top-width: 0;
 }
 
 .devtools-horizontal-splitter {

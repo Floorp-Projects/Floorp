@@ -4,5 +4,5 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 [features/devtools@mozilla.org] chrome.jar:
-% locale devtools @AB_CD@ %locale/@AB_CD@/
-  locale/@AB_CD@/ (en-US/*)
+%   locale devtools @AB_CD@ %locale/@AB_CD@/devtools/client/
+    locale/@AB_CD@/devtools/client/ (%*)
