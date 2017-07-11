@@ -105,6 +105,34 @@ const EXPECTED_APPMENU_SUBVIEW_REFLOWS = [
    */
 ];
 
+const WIN_DEBUG_E10S = Services.appinfo.OS == "WINNT" &&
+                       AppConstants.DEBUG &&
+                       gMultiProcessBrowser;
+
+if (WIN_DEBUG_E10S) {
+  // Bug 1380671 - For some reason, on Windows Debug with e10s disabled in
+  // automation, we fire more popuppositioned events causing reflows.
+  EXPECTED_APPMENU_SUBVIEW_REFLOWS.push(
+    [
+      "get_alignmentPosition@chrome://global/content/bindings/popup.xml",
+      "adjustArrowPosition@chrome://global/content/bindings/popup.xml",
+      "onxblpopuppositioned@chrome://global/content/bindings/popup.xml",
+    ],
+
+    [
+      "get_alignmentPosition@chrome://global/content/bindings/popup.xml",
+      "adjustArrowPosition@chrome://global/content/bindings/popup.xml",
+      "onxblpopuppositioned@chrome://global/content/bindings/popup.xml",
+    ],
+
+    [
+      "get_alignmentPosition@chrome://global/content/bindings/popup.xml",
+      "adjustArrowPosition@chrome://global/content/bindings/popup.xml",
+      "onxblpopuppositioned@chrome://global/content/bindings/popup.xml",
+    ],
+  );
+}
+
 add_task(async function() {
   await ensureNoPreloadedBrowser();
 
