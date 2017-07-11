@@ -16,7 +16,6 @@ import com.leanplum.LeanplumActivityHelper;
 
 import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.MmaConstants;
-import org.mozilla.gecko.fxa.FirefoxAccounts;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -45,17 +44,11 @@ public class MmaLeanplumImp implements MmaInterface {
         Map<String, Object> attributes = new HashMap<>();
         boolean installedFocus = isPackageInstalled(activity, "org.mozilla.focus");
         boolean installedKlar = isPackageInstalled(activity, "org.mozilla.klar");
-        if (installedFocus) {
-            attributes.put("Focus Installed", true);
+        if (installedFocus || installedKlar) {
+            attributes.put("focus", true);
         } else {
-            attributes.put("Focus Installed", false);
+            attributes.put("focus", false);
         }
-        if (installedKlar) {
-            attributes.put("Klar Installed", true);
-        } else {
-            attributes.put("Klar Installed", false);
-        }
-
 
         final SharedPreferences sharedPreferences = activity.getPreferences(0);
         String deviceId = sharedPreferences.getString(KEY_ANDROID_PREF_STRING_LEANPLUM_DEVICE_ID, null);
@@ -64,20 +57,6 @@ public class MmaLeanplumImp implements MmaInterface {
             sharedPreferences.edit().putString(KEY_ANDROID_PREF_STRING_LEANPLUM_DEVICE_ID, deviceId).apply();
         }
         Leanplum.setDeviceId(deviceId);
-        if (MmaDelegate.isDefaultBrowser(activity)) {
-            attributes.put("Default Browser", true);
-        } else {
-            attributes.put("Default Browser", false);
-        }
-
-        // In order to trigger the campaign lazily, you check the account existence as an attribute,
-        // not when account login success callback is invoked. Because the attribute update lazily when process start.
-        if (FirefoxAccounts.firefoxAccountsExist(activity)) {
-            attributes.put("Signed In Sync", true);
-        } else {
-            attributes.put("Signed In Sync", false);
-        }
-
         Leanplum.start(activity, attributes);
 
         // this is special to Leanplum. Since we defer LeanplumActivityHelper's onResume call till
