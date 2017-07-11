@@ -1217,7 +1217,7 @@ mozInlineSpellChecker::MakeSpellCheckRange(
     }
   } else {
     int32_t endOffset = -1;
-    endNode = nsRange::GetParentAndOffsetAfter(endNode, &endOffset);
+    endNode = nsRange::GetContainerAndOffsetAfter(endNode, &endOffset);
     rv = range->SetStartAndEnd(startNode, aStartOffset, endNode, endOffset);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
