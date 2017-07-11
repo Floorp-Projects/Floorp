@@ -496,7 +496,7 @@ Damp.prototype = {
 
   startTest(doneCallback, config) {
     this._onTestComplete = function(results) {
-      Profiler.mark("DAMP - end", true);
+      TalosParentProfiler.pause("DAMP - end");
       doneCallback(results);
     };
     this._config = config;
@@ -507,7 +507,7 @@ Damp.prototype = {
     this._dampTab = this._win.gBrowser.selectedTab;
     this._win.gBrowser.selectedBrowser.focus(); // Unfocus the URL bar to avoid caret blink
 
-    Profiler.mark("DAMP - start", true);
+    TalosParentProfiler.resume("DAMP - start");
 
     let tests = [];
     tests = tests.concat(this._getToolLoadingTests(SIMPLE_URL, "simple"));
