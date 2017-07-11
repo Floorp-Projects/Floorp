@@ -35,6 +35,11 @@ const TEST_PROFILE_1 = {
   email: "timbl@w3.org",
 };
 
+const TEST_PROFILE_2 = {
+  "street-address": "Some Address",
+  country: "US",
+};
+
 function expectLocalProfiles(expected) {
   let profiles = profileStorage.addresses.getAll({
     rawData: true,
@@ -42,15 +47,6 @@ function expectLocalProfiles(expected) {
   });
   expected.sort((a, b) => a.guid.localeCompare(b.guid));
   profiles.sort((a, b) => a.guid.localeCompare(b.guid));
-  let doCheckObject = (a, b) => {
-    for (let key of Object.keys(a)) {
-      if (typeof a[key] == "object") {
-        doCheckObject(a[key], b[key]);
-      } else {
-        equal(a[key], b[key]);
-      }
-    }
-  };
   try {
     deepEqual(profiles.map(p => p.guid), expected.map(p => p.guid));
     for (let i = 0; i < expected.length; i++) {
@@ -58,7 +54,7 @@ function expectLocalProfiles(expected) {
       let thisGot = profiles[i];
       // always check "deleted".
       equal(thisExpected.deleted, thisGot.deleted);
-      doCheckObject(thisExpected, thisGot);
+      ok(objectMatches(thisGot, thisExpected));
     }
   } catch (ex) {
     do_print("Comparing expected profiles:");
@@ -150,6 +146,7 @@ add_task(async function test_outgoing() {
     // The tracker should have a score recorded for the 2 additions we had.
     equal(engine._tracker.score, SCORE_INCREMENT_XLARGE * 2);
 
+    engine.lastSync = 0;
     await engine.sync();
 
     Assert.equal(collection.count(), 2);
@@ -191,6 +188,7 @@ add_task(async function test_incoming_new() {
     // The tracker should start with no score.
     equal(engine._tracker.score, 0);
 
+    engine.lastSync = 0;
     await engine.sync();
 
     expectLocalProfiles([
@@ -218,6 +216,7 @@ add_task(async function test_tombstones() {
   try {
     let existingGUID = profileStorage.addresses.add(TEST_PROFILE_1);
 
+    engine.lastSync = 0;
     await engine.sync();
 
     Assert.equal(collection.count(), 1);
@@ -252,6 +251,7 @@ add_task(async function test_reconcile_both_modified_identical() {
       entry: TEST_PROFILE_1,
     }), Date.now() / 1000));
 
+    engine.lastSync = 0;
     await engine.sync();
 
     expectLocalProfiles([{guid}]);
@@ -260,7 +260,51 @@ add_task(async function test_reconcile_both_modified_identical() {
   }
 });
 
-add_task(async function test_dedupe_identical() {
+add_task(async function test_incoming_dupes() {
+  let {server, engine} = await setup();
+  try {
+    // Create a profile locally, then sync to upload the new profile to the
+    // server.
+    let guid1 = profileStorage.addresses.add(TEST_PROFILE_1);
+
+    engine.lastSync = 0;
+    await engine.sync();
+
+    // Create another profile locally, but don't sync it yet.
+    profileStorage.addresses.add(TEST_PROFILE_2);
+
+    // Now create two records on the server with the same contents as our local
+    // profiles, but different GUIDs.
+    let guid1_dupe = Utils.makeGUID();
+    server.insertWBO("foo", "addresses", new ServerWBO(guid1_dupe, encryptPayload({
+      id: guid1_dupe,
+      entry: TEST_PROFILE_1,
+    }), engine.lastSync + 10));
+    let guid2_dupe = Utils.makeGUID();
+    server.insertWBO("foo", "addresses", new ServerWBO(guid2_dupe, encryptPayload({
+      id: guid2_dupe,
+      entry: TEST_PROFILE_2,
+    }), engine.lastSync + 10));
+
+    // Sync again. We should download `guid1_dupe` and `guid2_dupe`, then
+    // reconcile changes.
+    await engine.sync();
+
+    expectLocalProfiles([
+      // We uploaded `guid1` during the first sync. Even though its contents
+      // are the same as `guid1_dupe`, we keep both.
+      Object.assign({}, TEST_PROFILE_1, {guid: guid1}),
+      Object.assign({}, TEST_PROFILE_1, {guid: guid1_dupe}),
+      // However, we didn't upload `guid2` before downloading `guid2_dupe`, so
+      // we *should* dedupe `guid2` to `guid2_dupe`.
+      Object.assign({}, TEST_PROFILE_2, {guid: guid2_dupe}),
+    ]);
+  } finally {
+    await cleanup(server);
+  }
+});
+
+add_task(async function test_dedupe_identical_unsynced() {
   let {server, engine} = await setup();
   try {
     // create a record locally.
@@ -274,13 +318,44 @@ add_task(async function test_dedupe_identical() {
       entry: TEST_PROFILE_1,
     }), Date.now() / 1000));
 
+    engine.lastSync = 0;
     await engine.sync();
 
-    // Should no longer have the local guid
+    // Should have 1 item locally with GUID changed to the remote one.
+    // There's no tombstone as the original was unsynced.
     expectLocalProfiles([
       {
         guid: remoteGuid,
       },
+    ]);
+  } finally {
+    await cleanup(server);
+  }
+});
+
+add_task(async function test_dedupe_identical_synced() {
+  let {server, engine} = await setup();
+  try {
+    // create a record locally.
+    let localGuid = profileStorage.addresses.add(TEST_PROFILE_1);
+
+    // sync it - it will no longer be a candidate for de-duping.
+    engine.lastSync = 0;
+    await engine.sync();
+
+    // and an identical record on the server but different GUID.
+    let remoteGuid = Utils.makeGUID();
+    server.insertWBO("foo", "addresses", new ServerWBO(remoteGuid, encryptPayload({
+      id: remoteGuid,
+      entry: TEST_PROFILE_1,
+    }), engine.lastSync + 10));
+
+    await engine.sync();
+
+    // Should have 2 items locally, since the first was synced.
+    expectLocalProfiles([
+      {guid: localGuid},
+      {guid: remoteGuid},
     ]);
   } finally {
     await cleanup(server);
@@ -297,29 +372,32 @@ add_task(async function test_dedupe_multiple_candidates() {
     // that's OK. We'll write a tombstone for A when we dedupe A to B, and
     // overwrite that tombstone when we see A.
 
-    let aRecord = {
+    let localRecord = {
       "given-name": "Mark",
       "family-name": "Hammond",
       "organization": "Mozilla",
       "country": "AU",
       "tel": "+12345678910",
     };
-    // We don't pass `sourceSync` so that the records are marked as NEW.
-    let aGuid = profileStorage.addresses.add(aRecord);
+    let serverRecord = Object.assign({
+      "version": 1,
+    }, localRecord);
 
-    let bRecord = Cu.cloneInto(aRecord, {});
-    let bGuid = profileStorage.addresses.add(bRecord);
+    // We don't pass `sourceSync` so that the records are marked as NEW.
+    let aGuid = profileStorage.addresses.add(localRecord);
+    let bGuid = profileStorage.addresses.add(localRecord);
 
     // Insert B before A.
     server.insertWBO("foo", "addresses", new ServerWBO(bGuid, encryptPayload({
       id: bGuid,
-      entry: bRecord,
+      entry: serverRecord,
     }), Date.now() / 1000));
     server.insertWBO("foo", "addresses", new ServerWBO(aGuid, encryptPayload({
       id: aGuid,
-      entry: aRecord,
+      entry: serverRecord,
     }), Date.now() / 1000));
 
+    engine.lastSync = 0;
     await engine.sync();
 
     expectLocalProfiles([
