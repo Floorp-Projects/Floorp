@@ -12,7 +12,6 @@ use bloom::StyleBloom;
 use cache::LRUCache;
 use data::{EagerPseudoStyles, ElementData};
 use dom::{OpaqueNode, TNode, TElement, SendElement};
-use error_reporting::ParseErrorReporter;
 use euclid::Size2D;
 use fnv::FnvHashMap;
 use font_metrics::FontMetricsProvider;
@@ -121,9 +120,6 @@ pub struct SharedStyleContext<'a> {
 
     /// Guards for pre-acquired locks
     pub guards: StylesheetGuards<'a>,
-
-    ///The CSS error reporter for all CSS loaded in this layout thread
-    pub error_reporter: &'a ParseErrorReporter,
 
     /// The current timer for transitions and animations. This is needed to test
     /// them.
@@ -295,6 +291,11 @@ impl CascadeInputs {
     /// Takes the visited rule node.
     pub fn take_visited_rules(&mut self) -> Option<StrongRuleNode> {
         self.visited_rules.take()
+    }
+
+    /// Whether there are any visited values.
+    pub fn has_visited_values(&self) -> bool {
+        self.visited_values.is_some()
     }
 
     /// Gets a reference to the visited computed values. Panic if the element

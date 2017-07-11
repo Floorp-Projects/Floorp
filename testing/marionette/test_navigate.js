@@ -10,10 +10,17 @@ Cu.import("chrome://marionette/content/navigate.js");
 
 add_test(function test_isLoadEventExpected() {
   Assert.throws(() => navigate.isLoadEventExpected(undefined),
-      /Expected destination URL/);
+      /Expected at least one URL/);
 
   equal(true, navigate.isLoadEventExpected("http://a/"));
-  equal(false, navigate.isLoadEventExpected("javascript:whatever"));
+  equal(true, navigate.isLoadEventExpected("http://a/", "http://a/"));
+
+  equal(true, navigate.isLoadEventExpected("http://a/", "http://a/#"));
+  equal(true, navigate.isLoadEventExpected("http://a/#", "http://a/"));
+  equal(true, navigate.isLoadEventExpected("http://a/#a", "http://a/#A"));
+  equal(false, navigate.isLoadEventExpected("http://a/#a", "http://a/#a"));
+
+  equal(false, navigate.isLoadEventExpected("http://a/", "javascript:whatever"));
 
   run_next_test();
 });

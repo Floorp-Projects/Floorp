@@ -1,0 +1,27 @@
+<!DOCTYPE HTML>
+<html class="reftest-wait">
+<style type="text/css">
+a {
+  border-bottom: 1px solid transparent;
+  transition: all 2s linear;
+}
+a.start {
+  border-bottom: 1px solid #000000;
+}
+/* Can be anything, just need to ensure pseudos cascade */
+:before {
+  color: blue;
+}
+</style>
+<a href="http://www.example.com/">example</a>
+<script>
+let a0 = document.querySelectorAll("a")[0];
+a0.classList.add("start");
+requestIdleCallback(() => {
+  a0.classList.remove("start");
+  requestIdleCallback(() => {
+    a0.classList.add("start");
+    document.documentElement.removeAttribute("class");
+  });
+});
+</script>

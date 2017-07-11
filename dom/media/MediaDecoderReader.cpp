@@ -75,9 +75,7 @@ MediaDecoderReader::MediaDecoderReader(const MediaDecoderReaderInit& aInit)
       GetMediaThreadPool(MediaThreadType::PLAYBACK),
       "MediaDecoderReader::mTaskQueue",
       /* aSupportsTailDispatch = */ true))
-  , mWatchManager(this, mTaskQueue)
   , mBuffered(mTaskQueue, TimeIntervals(), "MediaDecoderReader::mBuffered (Canonical)")
-  , mDuration(mTaskQueue, NullableTimeUnit(), "MediaDecoderReader::mDuration (Mirror)")
   , mIgnoreAudioOutputFormat(false)
   , mHitAudioDecodeError(false)
   , mShutdown(false)
@@ -90,26 +88,7 @@ MediaDecoderReader::MediaDecoderReader(const MediaDecoderReaderInit& aInit)
 nsresult
 MediaDecoderReader::Init()
 {
-  // Dispatch initialization that needs to happen on that task queue.
-  mTaskQueue->Dispatch(
-    NewRunnableMethod("MediaDecoderReader::InitializationTask",
-                      this,
-                      &MediaDecoderReader::InitializationTask));
   return InitInternal();
-}
-
-void
-MediaDecoderReader::InitializationTask()
-{
-  if (!mDecoder) {
-    return;
-  }
-  if (mDecoder->CanonicalDurationOrNull()) {
-    mDuration.Connect(mDecoder->CanonicalDurationOrNull());
-  }
-
-  // Initialize watchers.
-  mWatchManager.Watch(mDuration, &MediaDecoderReader::UpdateBuffered);
 }
 
 MediaDecoderReader::~MediaDecoderReader()
@@ -140,6 +119,14 @@ size_t MediaDecoderReader::SizeOfVideoQueueInFrames()
 size_t MediaDecoderReader::SizeOfAudioQueueInFrames()
 {
   return mAudioQueue.GetSize();
+}
+
+void
+MediaDecoderReader::UpdateDuration(const media::TimeUnit& aDuration)
+{
+  MOZ_ASSERT(OnTaskQueue());
+  mDuration = Some(aDuration);
+  UpdateBuffered();
 }
 
 nsresult MediaDecoderReader::ResetDecode(TrackSet aTracks)
@@ -203,13 +190,12 @@ MediaDecoderReader::GetBuffered()
 {
   MOZ_ASSERT(OnTaskQueue());
 
-  AutoPinned<MediaResource> stream(mResource);
-
-  if (!mDuration.Ref().isSome()) {
+  if (mDuration.isNothing()) {
     return TimeIntervals();
   }
 
-  return GetEstimatedBufferedTimeRanges(stream, mDuration.Ref().ref().ToMicroseconds());
+  AutoPinned<MediaResource> stream(mResource);
+  return GetEstimatedBufferedTimeRanges(stream, mDuration->ToMicroseconds());
 }
 
 RefPtr<MediaDecoderReader::MetadataPromise>
@@ -371,11 +357,7 @@ MediaDecoderReader::Shutdown()
   mBaseVideoPromise.RejectIfExists(NS_ERROR_DOM_MEDIA_END_OF_STREAM, __func__);
 
   ReleaseResources();
-  mDuration.DisconnectIfConnected();
   mBuffered.DisconnectAll();
-
-  // Shut down the watch manager before shutting down our task queue.
-  mWatchManager.Shutdown();
 
   mDecoder = nullptr;
 

@@ -523,7 +523,6 @@ impl AnimationValue {
     /// Construct an AnimationValue from a property declaration
     pub fn from_declaration(decl: &PropertyDeclaration, context: &mut Context,
                             initial: &ComputedValues) -> Option<Self> {
-        use error_reporting::create_error_reporter;
         use properties::LonghandId;
         use properties::DeclaredValue;
 
@@ -587,7 +586,6 @@ impl AnimationValue {
             },
             PropertyDeclaration::WithVariables(id, ref variables) => {
                 let custom_props = context.style().custom_properties();
-                let reporter = create_error_reporter();
                 match id {
                     % for prop in data.longhands:
                     % if prop.animatable:
@@ -612,7 +610,6 @@ impl AnimationValue {
                                 };
                                 result = AnimationValue::from_declaration(&declaration, context, initial);
                             },
-                            &reporter,
                             quirks_mode);
                         result
                     },
@@ -2272,9 +2269,11 @@ impl Animatable for MatrixDecomposed3D {
     /// https://drafts.csswg.org/css-transforms/#interpolation-of-decomposed-3d-matrix-values
     fn add_weighted(&self, other: &Self, self_portion: f64, other_portion: f64)
         -> Result<Self, ()> {
-        assert!(self_portion + other_portion == 1.0f64 ||
-                other_portion == 1.0f64,
-                "add_weighted should only be used for interpolating or accumulating transforms");
+        use std::f64;
+
+        debug_assert!((self_portion + other_portion - 1.0f64).abs() <= f64::EPSILON ||
+                      other_portion == 1.0f64,
+                      "add_weighted should only be used for interpolating or accumulating transforms");
 
         let mut sum = *self;
 
