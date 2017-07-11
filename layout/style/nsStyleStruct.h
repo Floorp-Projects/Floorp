@@ -2047,15 +2047,6 @@ struct nsStyleImageOrientation
     return nsStyleImageOrientation(orientation);
   }
 
-  static nsStyleImageOrientation CreateAsOrientationAndFlip(uint8_t aOrientation,
-                                                            bool aFlip) {
-    MOZ_ASSERT(aOrientation <= ANGLE_270);
-    if (aFlip) {
-      aOrientation |= FLIP_MASK;
-    }
-    return nsStyleImageOrientation(aOrientation);
-  }
-
   static nsStyleImageOrientation CreateAsFlip() {
     return nsStyleImageOrientation(FLIP_MASK);
   }
