@@ -147,8 +147,8 @@ public:
    * When you set both start and end of a range, you should use
    * SetStartAndEnd() instead.
    */
-  nsresult SetStart(nsINode* aParent, int32_t aOffset);
-  nsresult SetEnd(nsINode* aParent, int32_t aOffset);
+  nsresult SetStart(nsINode* aContainer, int32_t aOffset);
+  nsresult SetEnd(nsINode* aContainer, int32_t aOffset);
 
   already_AddRefed<nsRange> CloneRange() const;
 
@@ -166,11 +166,11 @@ public:
   /**
    * CollapseTo() works similar to call both SetStart() and SetEnd() with
    * same node and offset.  This just calls SetStartAndParent() to set
-   * collapsed range at aParent and aOffset.
+   * collapsed range at aContainer and aOffset.
    */
-  nsresult CollapseTo(nsINode* aParent, int32_t aOffset)
+  nsresult CollapseTo(nsINode* aContainer, int32_t aOffset)
   {
-    return SetStartAndEnd(aParent, aOffset, aParent, aOffset);
+    return SetStartAndEnd(aContainer, aOffset, aContainer, aOffset);
   }
 
   /**
@@ -222,7 +222,8 @@ public:
   CloneContents(ErrorResult& aErr);
   int16_t CompareBoundaryPoints(uint16_t aHow, nsRange& aOther,
                                 ErrorResult& aErr);
-  int16_t ComparePoint(nsINode& aParent, uint32_t aOffset, ErrorResult& aErr);
+  int16_t ComparePoint(nsINode& aContainer, uint32_t aOffset,
+                       ErrorResult& aErr);
   void DeleteContents(ErrorResult& aRv);
   already_AddRefed<mozilla::dom::DocumentFragment>
     ExtractContents(ErrorResult& aErr);
@@ -233,7 +234,7 @@ public:
   uint32_t GetEndOffset(ErrorResult& aRv) const;
   void InsertNode(nsINode& aNode, ErrorResult& aErr);
   bool IntersectsNode(nsINode& aNode, ErrorResult& aRv);
-  bool IsPointInRange(nsINode& aParent, uint32_t aOffset, ErrorResult& aErr);
+  bool IsPointInRange(nsINode& aContainer, uint32_t aOffset, ErrorResult& aErr);
 
   // *JS() methods are mapped to Range.*() of DOM.
   // They may move focus only when the range represents normal selection.

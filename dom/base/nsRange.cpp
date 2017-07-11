@@ -753,9 +753,9 @@ nsRange::ParentChainChanged(nsIContent *aContent)
  * Utilities for comparing points: API from nsIDOMRange
  ******************************************************/
 NS_IMETHODIMP
-nsRange::IsPointInRange(nsIDOMNode* aParent, int32_t aOffset, bool* aResult)
+nsRange::IsPointInRange(nsIDOMNode* aContainer, int32_t aOffset, bool* aResult)
 {
-  nsCOMPtr<nsINode> parent = do_QueryInterface(aParent);
+  nsCOMPtr<nsINode> parent = do_QueryInterface(aContainer);
   if (!parent) {
     return NS_ERROR_DOM_NOT_OBJECT_ERR;
   }
@@ -766,9 +766,9 @@ nsRange::IsPointInRange(nsIDOMNode* aParent, int32_t aOffset, bool* aResult)
 }
 
 bool
-nsRange::IsPointInRange(nsINode& aParent, uint32_t aOffset, ErrorResult& aRv)
+nsRange::IsPointInRange(nsINode& aContainer, uint32_t aOffset, ErrorResult& aRv)
 {
-  uint16_t compareResult = ComparePoint(aParent, aOffset, aRv);
+  uint16_t compareResult = ComparePoint(aContainer, aOffset, aRv);
   // If the node isn't in the range's document, it clearly isn't in the range.
   if (aRv.ErrorCodeIs(NS_ERROR_DOM_WRONG_DOCUMENT_ERR)) {
     aRv.SuppressException();
@@ -781,9 +781,9 @@ nsRange::IsPointInRange(nsINode& aParent, uint32_t aOffset, ErrorResult& aRv)
 // returns -1 if point is before range, 0 if point is in range,
 // 1 if point is after range.
 NS_IMETHODIMP
-nsRange::ComparePoint(nsIDOMNode* aParent, int32_t aOffset, int16_t* aResult)
+nsRange::ComparePoint(nsIDOMNode* aContainer, int32_t aOffset, int16_t* aResult)
 {
-  nsCOMPtr<nsINode> parent = do_QueryInterface(aParent);
+  nsCOMPtr<nsINode> parent = do_QueryInterface(aContainer);
   NS_ENSURE_TRUE(parent, NS_ERROR_DOM_HIERARCHY_REQUEST_ERR);
 
   ErrorResult rv;
@@ -792,7 +792,7 @@ nsRange::ComparePoint(nsIDOMNode* aParent, int32_t aOffset, int16_t* aResult)
 }
 
 int16_t
-nsRange::ComparePoint(nsINode& aParent, uint32_t aOffset, ErrorResult& aRv)
+nsRange::ComparePoint(nsINode& aContainer, uint32_t aOffset, ErrorResult& aRv)
 {
   // our range is in a good state?
   if (!mIsPositioned) {
@@ -800,30 +800,30 @@ nsRange::ComparePoint(nsINode& aParent, uint32_t aOffset, ErrorResult& aRv)
     return 0;
   }
 
-  if (!nsContentUtils::ContentIsDescendantOf(&aParent, mRoot)) {
+  if (!nsContentUtils::ContentIsDescendantOf(&aContainer, mRoot)) {
     aRv.Throw(NS_ERROR_DOM_WRONG_DOCUMENT_ERR);
     return 0;
   }
 
-  if (aParent.NodeType() == nsIDOMNode::DOCUMENT_TYPE_NODE) {
+  if (aContainer.NodeType() == nsIDOMNode::DOCUMENT_TYPE_NODE) {
     aRv.Throw(NS_ERROR_DOM_INVALID_NODE_TYPE_ERR);
     return 0;
   }
 
-  if (aOffset > aParent.Length()) {
+  if (aOffset > aContainer.Length()) {
     aRv.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
     return 0;
   }
 
   int32_t cmp;
-  if ((cmp = nsContentUtils::ComparePoints(&aParent, aOffset,
+  if ((cmp = nsContentUtils::ComparePoints(&aContainer, aOffset,
                                            mStartContainer,
                                            mStartOffset)) <= 0) {
 
     return cmp;
   }
   if (nsContentUtils::ComparePoints(mEndContainer, mEndOffset,
-                                    &aParent, aOffset) == -1) {
+                                    &aContainer, aOffset) == -1) {
     return 1;
   }
 
@@ -1215,9 +1215,9 @@ nsRange::SetStart(nsINode& aNode, uint32_t aOffset, ErrorResult& aRv)
 }
 
 NS_IMETHODIMP
-nsRange::SetStart(nsIDOMNode* aParent, int32_t aOffset)
+nsRange::SetStart(nsIDOMNode* aContainer, int32_t aOffset)
 {
-  nsCOMPtr<nsINode> parent = do_QueryInterface(aParent);
+  nsCOMPtr<nsINode> parent = do_QueryInterface(aContainer);
   if (!parent) {
     return NS_ERROR_DOM_NOT_OBJECT_ERR;
   }
@@ -1228,28 +1228,28 @@ nsRange::SetStart(nsIDOMNode* aParent, int32_t aOffset)
 }
 
 /* virtual */ nsresult
-nsRange::SetStart(nsINode* aParent, int32_t aOffset)
+nsRange::SetStart(nsINode* aContainer, int32_t aOffset)
 {
-  nsINode* newRoot = IsValidBoundary(aParent);
+  nsINode* newRoot = IsValidBoundary(aContainer);
   if (!newRoot) {
     return NS_ERROR_DOM_INVALID_NODE_TYPE_ERR;
   }
 
-  if (!IsValidOffset(aParent, aOffset)) {
+  if (!IsValidOffset(aContainer, aOffset)) {
     return NS_ERROR_DOM_INDEX_SIZE_ERR;
   }
 
   // Collapse if not positioned yet, if positioned in another doc or
   // if the new start is after end.
   if (!mIsPositioned || newRoot != mRoot ||
-      nsContentUtils::ComparePoints(aParent, aOffset,
+      nsContentUtils::ComparePoints(aContainer, aOffset,
                                     mEndContainer, mEndOffset) == 1) {
-    DoSetRange(aParent, aOffset, aParent, aOffset, newRoot);
+    DoSetRange(aContainer, aOffset, aContainer, aOffset, newRoot);
 
     return NS_OK;
   }
 
-  DoSetRange(aParent, aOffset, mEndContainer, mEndOffset, mRoot);
+  DoSetRange(aContainer, aOffset, mEndContainer, mEndOffset, mRoot);
 
   return NS_OK;
 }
@@ -1347,9 +1347,9 @@ nsRange::SetEnd(nsINode& aNode, uint32_t aOffset, ErrorResult& aRv)
 }
 
 NS_IMETHODIMP
-nsRange::SetEnd(nsIDOMNode* aParent, int32_t aOffset)
+nsRange::SetEnd(nsIDOMNode* aContainer, int32_t aOffset)
 {
-  nsCOMPtr<nsINode> parent = do_QueryInterface(aParent);
+  nsCOMPtr<nsINode> parent = do_QueryInterface(aContainer);
   if (!parent) {
     return NS_ERROR_DOM_NOT_OBJECT_ERR;
   }
@@ -1360,14 +1360,14 @@ nsRange::SetEnd(nsIDOMNode* aParent, int32_t aOffset)
 }
 
 /* virtual */ nsresult
-nsRange::SetEnd(nsINode* aParent, int32_t aOffset)
+nsRange::SetEnd(nsINode* aContainer, int32_t aOffset)
 {
-  nsINode* newRoot = IsValidBoundary(aParent);
+  nsINode* newRoot = IsValidBoundary(aContainer);
   if (!newRoot) {
     return NS_ERROR_DOM_INVALID_NODE_TYPE_ERR;
   }
 
-  if (!IsValidOffset(aParent, aOffset)) {
+  if (!IsValidOffset(aContainer, aOffset)) {
     return NS_ERROR_DOM_INDEX_SIZE_ERR;
   }
 
@@ -1375,13 +1375,13 @@ nsRange::SetEnd(nsINode* aParent, int32_t aOffset)
   // if the new end is before start.
   if (!mIsPositioned || newRoot != mRoot ||
       nsContentUtils::ComparePoints(mStartContainer, mStartOffset,
-                                    aParent, aOffset) == 1) {
-    DoSetRange(aParent, aOffset, aParent, aOffset, newRoot);
+                                    aContainer, aOffset) == 1) {
+    DoSetRange(aContainer, aOffset, aContainer, aOffset, newRoot);
 
     return NS_OK;
   }
 
-  DoSetRange(mStartContainer, mStartOffset, aParent, aOffset, mRoot);
+  DoSetRange(mStartContainer, mStartOffset, aContainer, aOffset, mRoot);
 
   return NS_OK;
 }
@@ -1967,11 +1967,11 @@ static nsresult SplitDataNode(nsIDOMCharacterData* aStartNode,
 }
 
 NS_IMETHODIMP
-PrependChild(nsINode* aParent, nsINode* aChild)
+PrependChild(nsINode* aContainer, nsINode* aChild)
 {
-  nsCOMPtr<nsINode> first = aParent->GetFirstChild();
+  nsCOMPtr<nsINode> first = aContainer->GetFirstChild();
   ErrorResult rv;
-  aParent->InsertBefore(*aChild, first, rv);
+  aContainer->InsertBefore(*aChild, first, rv);
   return rv.StealNSResult();
 }
 

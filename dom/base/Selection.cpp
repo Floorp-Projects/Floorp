@@ -2457,50 +2457,51 @@ Selection::RemoveRange(nsRange& aRange, ErrorResult& aRv)
  * Collapse sets the whole selection to be one point.
  */
 NS_IMETHODIMP
-Selection::Collapse(nsIDOMNode* aParentNode, int32_t aOffset)
+Selection::Collapse(nsIDOMNode* aContainer, int32_t aOffset)
 {
-  nsCOMPtr<nsINode> parentNode = do_QueryInterface(aParentNode);
+  nsCOMPtr<nsINode> parentNode = do_QueryInterface(aContainer);
   return Collapse(parentNode, aOffset);
 }
 
 NS_IMETHODIMP
-Selection::CollapseNative(nsINode* aParentNode, int32_t aOffset)
+Selection::CollapseNative(nsINode* aContainer, int32_t aOffset)
 {
-  return Collapse(aParentNode, aOffset);
+  return Collapse(aContainer, aOffset);
 }
 
 void
-Selection::CollapseJS(nsINode* aNode, uint32_t aOffset, ErrorResult& aRv)
+Selection::CollapseJS(nsINode* aContainer, uint32_t aOffset, ErrorResult& aRv)
 {
   AutoRestore<bool> calledFromJSRestorer(mCalledByJS);
   mCalledByJS = true;
-  if (!aNode) {
+  if (!aContainer) {
     RemoveAllRanges(aRv);
     return;
   }
-  Collapse(*aNode, aOffset, aRv);
+  Collapse(*aContainer, aOffset, aRv);
 }
 
 nsresult
-Selection::Collapse(nsINode* aParentNode, int32_t aOffset)
+Selection::Collapse(nsINode* aContainer, int32_t aOffset)
 {
-  if (!aParentNode)
+  if (!aContainer) {
     return NS_ERROR_INVALID_ARG;
+  }
 
   ErrorResult result;
-  Collapse(*aParentNode, static_cast<uint32_t>(aOffset), result);
+  Collapse(*aContainer, static_cast<uint32_t>(aOffset), result);
   return result.StealNSResult();
 }
 
 void
-Selection::Collapse(nsINode& aParentNode, uint32_t aOffset, ErrorResult& aRv)
+Selection::Collapse(nsINode& aContainer, uint32_t aOffset, ErrorResult& aRv)
 {
   if (!mFrameSelection) {
     aRv.Throw(NS_ERROR_NOT_INITIALIZED); // Can't do selection
     return;
   }
 
-  nsCOMPtr<nsINode> parentNode = &aParentNode;
+  nsCOMPtr<nsINode> parentNode = &aContainer;
 
   RefPtr<nsFrameSelection> frameSelection = mFrameSelection;
   frameSelection->InvalidateDesiredPos();
@@ -2841,39 +2842,40 @@ a  2  1 deselect from 2 to 1
  * We don't need to know the direction, because we always change the focus.
  */
 NS_IMETHODIMP
-Selection::Extend(nsIDOMNode* aParentNode, int32_t aOffset)
+Selection::Extend(nsIDOMNode* aContainer, int32_t aOffset)
 {
-  nsCOMPtr<nsINode> parentNode = do_QueryInterface(aParentNode);
+  nsCOMPtr<nsINode> parentNode = do_QueryInterface(aContainer);
   return Extend(parentNode, aOffset);
 }
 
 NS_IMETHODIMP
-Selection::ExtendNative(nsINode* aParentNode, int32_t aOffset)
+Selection::ExtendNative(nsINode* aContainer, int32_t aOffset)
 {
-  return Extend(aParentNode, aOffset);
+  return Extend(aContainer, aOffset);
 }
 
 void
-Selection::ExtendJS(nsINode& aNode, uint32_t aOffset, ErrorResult& aRv)
+Selection::ExtendJS(nsINode& aContainer, uint32_t aOffset, ErrorResult& aRv)
 {
   AutoRestore<bool> calledFromJSRestorer(mCalledByJS);
   mCalledByJS = true;
-  Extend(aNode, aOffset, aRv);
+  Extend(aContainer, aOffset, aRv);
 }
 
 nsresult
-Selection::Extend(nsINode* aParentNode, int32_t aOffset)
+Selection::Extend(nsINode* aContainer, int32_t aOffset)
 {
-  if (!aParentNode)
+  if (!aContainer) {
     return NS_ERROR_INVALID_ARG;
+  }
 
   ErrorResult result;
-  Extend(*aParentNode, static_cast<uint32_t>(aOffset), result);
+  Extend(*aContainer, static_cast<uint32_t>(aOffset), result);
   return result.StealNSResult();
 }
 
 void
-Selection::Extend(nsINode& aParentNode, uint32_t aOffset, ErrorResult& aRv)
+Selection::Extend(nsINode& aContainer, uint32_t aOffset, ErrorResult& aRv)
 {
   // First, find the range containing the old focus point:
   if (!mAnchorFocusRange) {
@@ -2887,13 +2889,13 @@ Selection::Extend(nsINode& aParentNode, uint32_t aOffset, ErrorResult& aRv)
   }
 
   nsresult res;
-  if (!IsValidSelectionPoint(mFrameSelection, &aParentNode)) {
+  if (!IsValidSelectionPoint(mFrameSelection, &aContainer)) {
     aRv.Throw(NS_ERROR_FAILURE);
     return;
   }
 
   RefPtr<nsPresContext> presContext = GetPresContext();
-  if (!presContext || presContext->Document() != aParentNode.OwnerDoc()) {
+  if (!presContext || presContext->Document() != aContainer.OwnerDoc()) {
     aRv.Throw(NS_ERROR_FAILURE);
     return;
   }
@@ -2930,12 +2932,12 @@ Selection::Extend(nsINode& aParentNode, uint32_t aOffset, ErrorResult& aRv)
   //compare old cursor to new cursor
   shouldClearRange |= disconnected;
   int32_t result2 = nsContentUtils::ComparePoints(focusNode, focusOffset,
-                                                  &aParentNode, aOffset,
+                                                  &aContainer, aOffset,
                                                   &disconnected);
   //compare anchor to new cursor
   shouldClearRange |= disconnected;
   int32_t result3 = nsContentUtils::ComparePoints(anchorNode, anchorOffset,
-                                                  &aParentNode, aOffset,
+                                                  &aContainer, aOffset,
                                                   &disconnected);
 
   // If the points are disconnected, the range will be collapsed below,
@@ -2945,10 +2947,10 @@ Selection::Extend(nsINode& aParentNode, uint32_t aOffset, ErrorResult& aRv)
     SelectFrames(presContext, range, false);
   }
 
-  RefPtr<nsRange> difRange = new nsRange(&aParentNode);
+  RefPtr<nsRange> difRange = new nsRange(&aContainer);
   if ((result1 == 0 && result3 < 0) || (result1 <= 0 && result2 < 0)){//a1,2  a,1,2
     //select from 1 to 2 unless they are collapsed
-    range->SetEnd(aParentNode, aOffset, aRv);
+    range->SetEnd(aContainer, aOffset, aRv);
     if (aRv.Failed()) {
       return;
     }
@@ -2970,7 +2972,7 @@ Selection::Extend(nsINode& aParentNode, uint32_t aOffset, ErrorResult& aRv)
   else if (result1 == 0 && result3 > 0){//2, a1
     //select from 2 to 1a
     SetDirection(eDirPrevious);
-    range->SetStart(aParentNode, aOffset, aRv);
+    range->SetStart(aContainer, aOffset, aRv);
     if (aRv.Failed()) {
       return;
     }
@@ -2983,14 +2985,14 @@ Selection::Extend(nsINode& aParentNode, uint32_t aOffset, ErrorResult& aRv)
   }
   else if (result3 <= 0 && result2 >= 0) {//a,2,1 or a2,1 or a,21 or a21
     //deselect from 2 to 1
-    res = difRange->SetStartAndEnd(&aParentNode, aOffset,
+    res = difRange->SetStartAndEnd(&aContainer, aOffset,
                                    focusNode, focusOffset);
     if (NS_FAILED(res)) {
       aRv.Throw(res);
       return;
     }
 
-    range->SetEnd(aParentNode, aOffset, aRv);
+    range->SetEnd(aContainer, aOffset, aRv);
     if (aRv.Failed()) {
       return;
     }
@@ -3013,7 +3015,7 @@ Selection::Extend(nsINode& aParentNode, uint32_t aOffset, ErrorResult& aRv)
       }
     }
     SetDirection(eDirNext);
-    range->SetEnd(aParentNode, aOffset, aRv);
+    range->SetEnd(aContainer, aOffset, aRv);
     if (aRv.Failed()) {
       return;
     }
@@ -3049,13 +3051,13 @@ Selection::Extend(nsINode& aParentNode, uint32_t aOffset, ErrorResult& aRv)
   else if (result2 <= 0 && result3 >= 0) {//1,2,a or 12,a or 1,2a or 12a
     //deselect from 1 to 2
     res = difRange->SetStartAndEnd(focusNode, focusOffset,
-                                   &aParentNode, aOffset);
+                                   &aContainer, aOffset);
     if (NS_FAILED(res)) {
       aRv.Throw(res);
       return;
     }
     SetDirection(eDirPrevious);
-    range->SetStart(aParentNode, aOffset, aRv);
+    range->SetStart(aContainer, aOffset, aRv);
     if (aRv.Failed()) {
       return;
     }
@@ -3074,7 +3076,7 @@ Selection::Extend(nsINode& aParentNode, uint32_t aOffset, ErrorResult& aRv)
       range->SetEnd(startNode, startOffset);
     }
     SetDirection(eDirPrevious);
-    range->SetStart(aParentNode, aOffset, aRv);
+    range->SetStart(aContainer, aOffset, aRv);
     if (aRv.Failed()) {
       return;
     }
@@ -3105,7 +3107,7 @@ Selection::Extend(nsINode& aParentNode, uint32_t aOffset, ErrorResult& aRv)
   }
   else if (result2 >= 0 && result1 >= 0) {//2,1,a or 21,a or 2,1a or 21a
     //select from 2 to 1
-    range->SetStart(aParentNode, aOffset, aRv);
+    range->SetStart(aContainer, aOffset, aRv);
     if (aRv.Failed()) {
       return;
     }
@@ -3140,7 +3142,7 @@ Selection::Extend(nsINode& aParentNode, uint32_t aOffset, ErrorResult& aRv)
     printf("    direction changed to %s\n",
            GetDirection() == eDirNext? "eDirNext":"eDirPrevious");
   }
-  nsCOMPtr<nsIContent> content = do_QueryInterface(&aParentNode);
+  nsCOMPtr<nsIContent> content = do_QueryInterface(&aContainer);
   printf ("Sel. Extend to %p %s %d\n", content.get(),
           nsAtomCString(content->NodeInfo()->NameAtom()).get(), aOffset);
 #endif
@@ -3155,10 +3157,10 @@ Selection::Extend(nsINode& aParentNode, uint32_t aOffset, ErrorResult& aRv)
 }
 
 NS_IMETHODIMP
-Selection::SelectAllChildren(nsIDOMNode* aParentNode)
+Selection::SelectAllChildren(nsIDOMNode* aNode)
 {
   ErrorResult result;
-  nsCOMPtr<nsINode> node = do_QueryInterface(aParentNode);
+  nsCOMPtr<nsINode> node = do_QueryInterface(aNode);
   NS_ENSURE_TRUE(node, NS_ERROR_INVALID_ARG);
   SelectAllChildren(*node, result);
   return result.StealNSResult();
