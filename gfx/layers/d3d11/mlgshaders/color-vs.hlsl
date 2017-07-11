@@ -5,27 +5,13 @@
 #include "common-vs.hlsl"
 #include "color-common.hlsl"
 
-struct ColorItem
-{
-  float4 color;
-};
-#define SIZEOF_COLORITEM 1
-
-ColorItem GetItem(uint aIndex)
-{
-  uint offset = aIndex * SIZEOF_COLORITEM;
-  ColorItem item;
-  item.color = sItems[offset + 0];
-  return item;
-}
-
 struct VS_COLORQUAD
 {
   float2 vPos : POSITION;
   float4 vRect : TEXCOORD0;
   uint vLayerId : TEXCOORD1;
   int vDepth : TEXCOORD2;
-  uint vIndex : SV_InstanceID;
+  float4 vColor : TEXCOORD3;
 };
 
 struct VS_COLORVERTEX
@@ -36,7 +22,7 @@ struct VS_COLORVERTEX
   float2 vPos3 : POSITION3;
   uint vLayerId : TEXCOORD0;
   int vDepth : TEXCOORD1;
-  uint vIndex : TEXCOORD2;
+  float4 vColor : TEXCOORD2;
 };
 
 VS_COLOROUTPUT ColorImpl(float4 aColor, const VertexInfo aInfo)
@@ -52,7 +38,6 @@ VS_COLOROUTPUT ColorImpl(float4 aColor, const VertexInfo aInfo)
 
 VS_COLOROUTPUT_CLIPPED ColoredQuadVS(const VS_COLORQUAD aInput)
 {
-  ColorItem item = GetItem(aInput.vIndex);
   float4 worldPos = ComputeClippedPosition(
     aInput.vPos,
     aInput.vRect,
@@ -61,14 +46,13 @@ VS_COLOROUTPUT_CLIPPED ColoredQuadVS(const VS_COLORQUAD aInput)
 
   VS_COLOROUTPUT_CLIPPED output;
   output.vPosition = worldPos;
-  output.vColor = item.color;
+  output.vColor = aInput.vColor;
   return output;
 }
 
 VS_COLOROUTPUT ColoredVertexVS(const VS_COLORVERTEX aInput)
 {
   float2 layerPos = UnitTriangleToPos(aInput.vUnitPos, aInput.vPos1, aInput.vPos2, aInput.vPos3);
-  ColorItem item = GetItem(aInput.vIndex);
   VertexInfo info = ComputePosition(layerPos, aInput.vLayerId, aInput.vDepth);
-  return ColorImpl(item.color, info);
+  return ColorImpl(aInput.vColor, info);
 }

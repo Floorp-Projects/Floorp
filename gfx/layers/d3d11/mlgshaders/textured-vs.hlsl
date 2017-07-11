@@ -18,8 +18,6 @@ VS_SAMPLEOUTPUT TexturedQuadImpl(const VertexInfo aInfo, const float2 aTexCoord)
 
 VS_SAMPLEOUTPUT_CLIPPED TexturedQuadVS(const VS_TEXTUREDINPUT aVertex)
 {
-  TexturedItem item = GetItem(aVertex.vIndex);
-
   float4 worldPos = ComputeClippedPosition(
     aVertex.vPos,
     aVertex.vRect,
@@ -28,7 +26,7 @@ VS_SAMPLEOUTPUT_CLIPPED TexturedQuadVS(const VS_TEXTUREDINPUT aVertex)
 
   VS_SAMPLEOUTPUT_CLIPPED output;
   output.vPosition = worldPos;
-  output.vTexCoords = UnitQuadToRect(aVertex.vPos, item.texCoords);
+  output.vTexCoords = UnitQuadToRect(aVertex.vPos, aVertex.vTexRect);
   return output;
 }
 

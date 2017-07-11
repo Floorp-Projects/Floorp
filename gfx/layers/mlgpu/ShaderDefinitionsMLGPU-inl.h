@@ -11,34 +11,16 @@ namespace mozilla {
 namespace layers {
 namespace mlg {
 
-// This is a helper class for writing vertices for unit-quad based
-// shaders, since they all share the same input layout.
-struct SimpleVertex
+inline const Maybe<gfx::Polygon>&
+SimpleTraits::geometry() const
 {
-  SimpleVertex(const gfx::Rect& aRect,
-               uint32_t aLayerIndex,
-               int aDepth)
-   : rect(aRect),
-     layerIndex(aLayerIndex),
-     depth(aDepth)
-  {}
-
-  gfx::Rect rect;
-  uint32_t layerIndex;
-  int depth;
-};
+  return mItem.geometry;
+}
 
 inline nsTArray<gfx::Triangle>
 SimpleTraits::GenerateTriangles(const gfx::Polygon& aPolygon) const
 {
   return aPolygon.ToTriangles();
-}
-
-inline bool
-SimpleTraits::AddInstanceTo(ShaderRenderPass* aPass) const
-{
-  return aPass->GetInstances()->AddItem(SimpleVertex(
-    mRect, mItem.layerIndex, mItem.sortOrder));
 }
 
 inline SimpleTraits::TriangleVertices
@@ -71,16 +53,11 @@ SimpleTraits::MakeVertex(const gfx::Triangle& aTriangle) const
   return v;
 }
 
-inline bool
-ColorTraits::AddItemTo(ShaderRenderPass* aPass) const
+inline SimpleTraits::UnitQuadVertex
+SimpleTraits::MakeUnitQuadVertex() const
 {
-  return aPass->GetItems()->AddItem(mColor);
-}
-
-inline bool
-TexturedTraits::AddItemTo(ShaderRenderPass* aPass) const
-{
-  return aPass->GetItems()->AddItem(mTexCoords);
+  UnitQuadVertex v = { mRect, mItem.layerIndex, mItem.sortOrder };
+  return v;
 }
 
 inline nsTArray<gfx::TexturedTriangle>
@@ -90,21 +67,21 @@ TexturedTraits::GenerateTriangles(const gfx::Polygon& aPolygon) const
 }
 
 inline TexturedTraits::VertexData
-TexturedTraits::MakeVertexData(const FirstTriangle& aIgnore, uint32_t aItemIndex) const
+TexturedTraits::MakeVertexData(const FirstTriangle& aIgnore) const
 {
   VertexData v = { mTexCoords.BottomLeft(), mTexCoords.TopLeft(), mTexCoords.TopRight() };
   return v;
 }
 
 inline TexturedTraits::VertexData
-TexturedTraits::MakeVertexData(const SecondTriangle& aIgnore, uint32_t aItemIndex) const
+TexturedTraits::MakeVertexData(const SecondTriangle& aIgnore) const
 {
   VertexData v = { mTexCoords.TopRight(), mTexCoords.BottomRight(), mTexCoords.BottomLeft() };
   return v;
 }
 
 inline TexturedTraits::VertexData
-TexturedTraits::MakeVertexData(const gfx::TexturedTriangle& aTriangle, uint32_t aItemIndex) const
+TexturedTraits::MakeVertexData(const gfx::TexturedTriangle& aTriangle) const
 {
   VertexData v = { aTriangle.textureCoords.p1, aTriangle.textureCoords.p2, aTriangle.textureCoords.p3 };
   return v;
