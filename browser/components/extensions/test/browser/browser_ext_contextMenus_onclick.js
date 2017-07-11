@@ -107,9 +107,9 @@ add_task(async function() {
     info(`onClicked from: ${await extension.awaitMessage("onClicked-fired")}`);
   }
 
-  async function getCounts(page) {
+  function getCounts(page) {
     extension.sendMessage(page, "get-click-counts");
-    return await extension.awaitMessage("click-counts");
+    return extension.awaitMessage("click-counts");
   }
   async function resetCounts() {
     extension.sendMessage("tab", "clear-click-counts");

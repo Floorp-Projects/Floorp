@@ -1029,9 +1029,9 @@ async function createItemsFromBookmarksTree(tree, restoring = false,
 
     return guid;
   }
-  return await createItem(tree,
-                          tree.parentGuid,
-                          tree.index);
+  return createItem(tree,
+                    tree.parentGuid,
+                    tree.index);
 }
 
 /** ***************************************************************************

@@ -28,14 +28,14 @@ const getPrivacyAPI = (extension, name, callback) => {
         value: await callback(),
       };
     },
-    async set(details) {
+    set(details) {
       checkScope(details.scope);
-      return await ExtensionPreferencesManager.setSetting(
+      return ExtensionPreferencesManager.setSetting(
         extension, name, details.value);
     },
-    async clear(details) {
+    clear(details) {
       checkScope(details.scope);
-      return await ExtensionPreferencesManager.removeSetting(
+      return ExtensionPreferencesManager.removeSetting(
         extension, name);
     },
   };

@@ -52,7 +52,7 @@ async function syncIdToId(syncId) {
 async function getFolderChildrenIDs(folderId) {
   let folderSyncId = PlacesSyncUtils.bookmarks.guidToSyncId(await PlacesUtils.promiseItemGuid(folderId));
   let syncIds = await PlacesSyncUtils.bookmarks.fetchChildSyncIds(folderSyncId);
-  return Promise.all(syncIds.map(async (syncId) => await syncIdToId(syncId)));
+  return Promise.all(syncIds.map((syncId) => syncIdToId(syncId)));
 }
 
 async function createFolder(parentId, title) {

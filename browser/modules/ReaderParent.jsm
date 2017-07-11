@@ -122,7 +122,7 @@ var ReaderParent = {
    * @resolves JS object representing the article, or null if no article is found.
    */
   async _getArticle(url, browser) {
-    return await ReaderMode.downloadAndParseDocument(url).catch(e => {
+    return ReaderMode.downloadAndParseDocument(url).catch(e => {
       if (e && e.newURL) {
         // Pass up the error so we can navigate the browser in question to the new URL:
         throw e;

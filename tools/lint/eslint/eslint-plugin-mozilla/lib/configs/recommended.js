@@ -264,6 +264,9 @@ module.exports = {
     // Disallow multiple spaces in regular expressions
     "no-regex-spaces": "error",
 
+    // Disallows unnecessary `return await ...`.
+    "no-return-await": "error",
+
     // Disallow assignments where both sides are exactly the same
     "no-self-assign": "error",
 

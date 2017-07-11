@@ -834,9 +834,7 @@ var Bookmarks = Object.freeze({
       throw new Error("numberOfItems argument must be greater than zero");
     }
 
-    return (async function() {
-      return await fetchRecentBookmarks(numberOfItems);
-    })();
+    return fetchRecentBookmarks(numberOfItems);
   },
 
   /**

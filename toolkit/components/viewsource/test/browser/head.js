@@ -76,7 +76,7 @@ function waitForViewSourceWindow() {
  * @param browser - the <xul:browser> to open view source for.
  * @returns the new tab or window which shows the source.
  */
-async function openViewSource(browser) {
+function openViewSource(browser) {
   let openPromise;
   if (Services.prefs.getBoolPref("view_source.tab")) {
     openPromise = BrowserTestUtils.waitForNewTab(gBrowser, null);
@@ -86,7 +86,7 @@ async function openViewSource(browser) {
 
   window.BrowserViewSource(browser);
 
-  return (await openPromise);
+  return openPromise;
 }
 
 /**
@@ -120,7 +120,7 @@ async function openViewPartialSource(aCSSSelector) {
   EventUtils.synthesizeMouseAtCenter(item, {});
   await popupHiddenPromise;
 
-  return (await openPromise);
+  return openPromise;
 }
 
 /**
@@ -153,7 +153,7 @@ async function openViewFrameSourceTab(aCSSSelector) {
   EventUtils.synthesizeMouseAtCenter(item, {});
   await popupHiddenPromise;
 
-  return (await newTabPromise);
+  return newTabPromise;
 }
 
 registerCleanupFunction(function() {
