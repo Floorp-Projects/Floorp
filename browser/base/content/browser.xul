@@ -1225,6 +1225,7 @@
 #ifdef MOZ_PHOTON_THEME
       <toolbarbutton id="library-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
                      oncommand="PanelUI.showSubView('appMenu-libraryView', this, null, true);"
+                     closemenu="none"
                      label="&places.library.title;"/>
 #endif
     </toolbarpalette>
