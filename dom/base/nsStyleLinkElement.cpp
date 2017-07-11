@@ -430,7 +430,7 @@ nsStyleLinkElement::DoUpdateStyleSheet(nsIDocument* aOldDocument,
   Element* oldScopeElement = nullptr;
   if (mStyleSheet) {
     if (mStyleSheet->IsServo()) {
-      MOZ_ASSERT(!thisContent->OwnerDoc()->IsScopedStyleEnabled(),
+      MOZ_ASSERT(!aOldDocument->IsScopedStyleEnabled(),
                  "stylo: ServoStyleSheets don't support <style scoped>");
     } else {
       oldScopeElement = mStyleSheet->AsGecko()->GetScopeElement();
