@@ -55,10 +55,3 @@ Parsing CSS involves a series of steps:
 
   See [Servo’s `style` crate](https://github.com/mozilla/servo/tree/master/components/style)
   for an example of a parser based on rust-cssparser.
-
-
-TODO
-----
-
-* Figure out float and integer overflow in parsing. (Clamp instead?)
-* Make it fast! (Add a fast path in identifier tokenization?)
