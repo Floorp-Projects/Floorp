@@ -1082,21 +1082,23 @@ load_acquire_z(size_t *p)
 }
 
 static void
-_malloc_message(const char *p1, const char *p2, const char *p3, const char *p4)
+_malloc_message(const char *p)
 {
 #if !defined(MOZ_MEMORY_WINDOWS)
 #define	_write	write
 #endif
-	// Pretend to check _write() errors to suppress gcc warnings about
-	// warn_unused_result annotations in some versions of glibc headers.
-	if (_write(STDERR_FILENO, p1, (unsigned int) strlen(p1)) < 0)
-		return;
-	if (_write(STDERR_FILENO, p2, (unsigned int) strlen(p2)) < 0)
-		return;
-	if (_write(STDERR_FILENO, p3, (unsigned int) strlen(p3)) < 0)
-		return;
-	if (_write(STDERR_FILENO, p4, (unsigned int) strlen(p4)) < 0)
-		return;
+  // Pretend to check _write() errors to suppress gcc warnings about
+  // warn_unused_result annotations in some versions of glibc headers.
+  if (_write(STDERR_FILENO, p, (unsigned int) strlen(p)) < 0)
+    return;
+}
+
+template <typename... Args>
+static void
+_malloc_message(const char *p, Args... args)
+{
+  _malloc_message(p);
+  _malloc_message(args...);
 }
 
 #include "mozilla/Assertions.h"
@@ -1526,7 +1528,7 @@ pages_unmap(void *addr, size_t size)
 {
 	if (VirtualFree(addr, 0, MEM_RELEASE) == 0) {
 		_malloc_message(_getprogname(),
-		    ": (malloc) Error in VirtualFree()\n", "", "");
+		    ": (malloc) Error in VirtualFree()\n");
 		if (opt_abort)
 			moz_abort();
 	}
@@ -3996,7 +3998,7 @@ arenas_fallback()
 	 * In practice, this is an extremely unlikely failure.
 	 */
 	_malloc_message(_getprogname(),
-	    ": (malloc) Error initializing arena\n", "", "");
+	    ": (malloc) Error initializing arena\n");
 	if (opt_abort)
 		moz_abort();
 
@@ -4338,8 +4340,7 @@ malloc_init_hard(void)
 #ifdef MALLOC_STATIC_SIZES
 	if (pagesize % (size_t) result) {
 		_malloc_message(_getprogname(),
-				"Compile-time page size does not divide the runtime one.\n",
-				"", "");
+				"Compile-time page size does not divide the runtime one.\n");
 		moz_abort();
 	}
 #else
