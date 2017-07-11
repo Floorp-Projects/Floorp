@@ -235,8 +235,8 @@ RangeUpdater::SelAdjCreateNode(nsINode* aParent,
     if (item->mStartContainer == aParent && item->mStartOffset > aPosition) {
       item->mStartOffset++;
     }
-    if (item->endNode == aParent && item->endOffset > aPosition) {
-      item->endOffset++;
+    if (item->mEndContainer == aParent && item->mEndOffset > aPosition) {
+      item->mEndOffset++;
     }
   }
   return NS_OK;
@@ -273,8 +273,8 @@ RangeUpdater::SelAdjDeleteNode(nsINode* aNode)
     if (item->mStartContainer == parent && item->mStartOffset > offset) {
       item->mStartOffset--;
     }
-    if (item->endNode == parent && item->endOffset > offset) {
-      item->endOffset--;
+    if (item->mEndContainer == parent && item->mEndOffset > offset) {
+      item->mEndOffset--;
     }
 
     // check for range endpoints that are in aNode
@@ -282,9 +282,9 @@ RangeUpdater::SelAdjDeleteNode(nsINode* aNode)
       item->mStartContainer = parent;
       item->mStartOffset = offset;
     }
-    if (item->endNode == aNode) {
-      item->endNode   = parent;
-      item->endOffset = offset;
+    if (item->mEndContainer == aNode) {
+      item->mEndContainer = parent;
+      item->mEndOffset = offset;
     }
 
     // check for range endpoints that are in descendants of aNode
@@ -296,10 +296,10 @@ RangeUpdater::SelAdjDeleteNode(nsINode* aNode)
     }
 
     // avoid having to call IsDescendantOf() for common case of range startnode == range endnode.
-    if (item->endNode == oldStart ||
-        EditorUtils::IsDescendantOf(item->endNode, aNode)) {
-      item->endNode   = parent;
-      item->endOffset = offset;
+    if (item->mEndContainer == oldStart ||
+        EditorUtils::IsDescendantOf(item->mEndContainer, aNode)) {
+      item->mEndContainer = parent;
+      item->mEndOffset = offset;
     }
   }
 }
@@ -338,11 +338,11 @@ RangeUpdater::SelAdjSplitNode(nsIContent& aOldRightNode,
         item->mStartContainer = aNewLeftNode;
       }
     }
-    if (item->endNode == &aOldRightNode) {
-      if (item->endOffset > aOffset) {
-        item->endOffset -= aOffset;
+    if (item->mEndContainer == &aOldRightNode) {
+      if (item->mEndOffset > aOffset) {
+        item->mEndOffset -= aOffset;
       } else {
-        item->endNode = aNewLeftNode;
+        item->mEndContainer = aNewLeftNode;
       }
     }
   }
@@ -386,21 +386,21 @@ RangeUpdater::SelAdjJoinNodes(nsINode& aLeftNode,
       item->mStartContainer = &aRightNode;
     }
 
-    if (item->endNode == &aParent) {
+    if (item->mEndContainer == &aParent) {
       // adjust end point in aParent
-      if (item->endOffset > aOffset) {
-        item->endOffset--;
-      } else if (item->endOffset == aOffset) {
+      if (item->mEndOffset > aOffset) {
+        item->mEndOffset--;
+      } else if (item->mEndOffset == aOffset) {
         // join keeps right hand node
-        item->endNode = &aRightNode;
-        item->endOffset = aOldLeftNodeLength;
+        item->mEndContainer = &aRightNode;
+        item->mEndOffset = aOldLeftNodeLength;
       }
-    } else if (item->endNode == &aRightNode) {
+    } else if (item->mEndContainer == &aRightNode) {
       // adjust end point in aRightNode
-       item->endOffset += aOldLeftNodeLength;
-    } else if (item->endNode == &aLeftNode) {
+       item->mEndOffset += aOldLeftNodeLength;
+    } else if (item->mEndContainer == &aLeftNode) {
       // adjust end point in aLeftNode
-      item->endNode = &aRightNode;
+      item->mEndContainer = &aRightNode;
     }
   }
 
@@ -430,8 +430,8 @@ RangeUpdater::SelAdjInsertText(Text& aTextNode,
     if (item->mStartContainer == &aTextNode && item->mStartOffset > aOffset) {
       item->mStartOffset += len;
     }
-    if (item->endNode == &aTextNode && item->endOffset > aOffset) {
-      item->endOffset += len;
+    if (item->mEndContainer == &aTextNode && item->mEndOffset > aOffset) {
+      item->mEndOffset += len;
     }
   }
   return;
@@ -463,10 +463,10 @@ RangeUpdater::SelAdjDeleteText(nsIContent* aTextNode,
         item->mStartOffset = 0;
       }
     }
-    if (item->endNode == aTextNode && item->endOffset > aOffset) {
-      item->endOffset -= aLength;
-      if (item->endOffset < 0) {
-        item->endOffset = 0;
+    if (item->mEndContainer == aTextNode && item->mEndOffset > aOffset) {
+      item->mEndOffset -= aLength;
+      if (item->mEndOffset < 0) {
+        item->mEndOffset = 0;
       }
     }
   }
@@ -512,8 +512,8 @@ RangeUpdater::DidReplaceContainer(Element* aOriginalNode,
     if (item->mStartContainer == aOriginalNode) {
       item->mStartContainer = aNewNode;
     }
-    if (item->endNode == aOriginalNode) {
-      item->endNode = aNewNode;
+    if (item->mEndContainer == aOriginalNode) {
+      item->mEndContainer = aNewNode;
     }
   }
   return NS_OK;
@@ -556,11 +556,11 @@ RangeUpdater::DidRemoveContainer(nsINode* aNode,
       item->mStartOffset += (int32_t)aNodeOrigLen - 1;
     }
 
-    if (item->endNode == aNode) {
-      item->endNode = aParent;
-      item->endOffset += aOffset;
-    } else if (item->endNode == aParent && item->endOffset > aOffset) {
-      item->endOffset += (int32_t)aNodeOrigLen - 1;
+    if (item->mEndContainer == aNode) {
+      item->mEndContainer = aParent;
+      item->mEndOffset += aOffset;
+    } else if (item->mEndContainer == aParent && item->mEndOffset > aOffset) {
+      item->mEndOffset += (int32_t)aNodeOrigLen - 1;
     }
   }
   return NS_OK;
@@ -619,8 +619,8 @@ RangeUpdater::DidMoveNode(nsINode* aOldParent, int32_t aOldOffset,
         item->mStartOffset > aOldOffset) {
       item->mStartOffset--;
     }
-    if (item->endNode == aOldParent && item->endOffset > aOldOffset) {
-      item->endOffset--;
+    if (item->mEndContainer == aOldParent && item->mEndOffset > aOldOffset) {
+      item->mEndOffset--;
     }
 
     // and like an insert in aNewParent
@@ -628,8 +628,8 @@ RangeUpdater::DidMoveNode(nsINode* aOldParent, int32_t aOldOffset,
         item->mStartOffset > aNewOffset) {
       item->mStartOffset++;
     }
-    if (item->endNode == aNewParent && item->endOffset > aNewOffset) {
-      item->endOffset++;
+    if (item->mEndContainer == aNewParent && item->mEndOffset > aNewOffset) {
+      item->mEndOffset++;
     }
   }
 }
@@ -648,7 +648,7 @@ RangeItem::~RangeItem()
 {
 }
 
-NS_IMPL_CYCLE_COLLECTION(RangeItem, mStartContainer, endNode)
+NS_IMPL_CYCLE_COLLECTION(RangeItem, mStartContainer, mEndContainer)
 NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(RangeItem, AddRef)
 NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(RangeItem, Release)
 
@@ -658,8 +658,8 @@ RangeItem::StoreRange(nsRange* aRange)
   MOZ_ASSERT(aRange);
   mStartContainer = aRange->GetStartContainer();
   mStartOffset = aRange->StartOffset();
-  endNode = aRange->GetEndContainer();
-  endOffset = aRange->EndOffset();
+  mEndContainer = aRange->GetEndContainer();
+  mEndOffset = aRange->EndOffset();
 }
 
 already_AddRefed<nsRange>
@@ -667,7 +667,7 @@ RangeItem::GetRange()
 {
   RefPtr<nsRange> range = new nsRange(mStartContainer);
   if (NS_FAILED(range->SetStartAndEnd(mStartContainer, mStartOffset,
-                                      endNode, endOffset))) {
+                                      mEndContainer, mEndOffset))) {
     return nullptr;
   }
   return range.forget();

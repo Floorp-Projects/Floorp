@@ -23,7 +23,7 @@ SelectionChangeListener::RawRangeData::RawRangeData(const nsRange* aRange)
   mozilla::ErrorResult rv;
   mStartContainer = aRange->GetStartContainer(rv);
   rv.SuppressException();
-  mEndParent = aRange->GetEndContainer(rv);
+  mEndContainer = aRange->GetEndContainer(rv);
   rv.SuppressException();
   mStartOffset = aRange->GetStartOffset(rv);
   rv.SuppressException();
@@ -37,7 +37,7 @@ SelectionChangeListener::RawRangeData::Equals(const nsRange* aRange)
   mozilla::ErrorResult rv;
   bool eq = mStartContainer == aRange->GetStartContainer(rv);
   rv.SuppressException();
-  eq = eq && mEndParent == aRange->GetEndContainer(rv);
+  eq = eq && mEndContainer == aRange->GetEndContainer(rv);
   rv.SuppressException();
   eq = eq && mStartOffset == aRange->GetStartOffset(rv);
   rv.SuppressException();
@@ -54,7 +54,8 @@ ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback& aCallback,
 {
   ImplCycleCollectionTraverse(aCallback, aField.mStartContainer,
                               "mStartContainer", aFlags);
-  ImplCycleCollectionTraverse(aCallback, aField.mEndParent, "mEndParent", aFlags);
+  ImplCycleCollectionTraverse(aCallback, aField.mEndContainer,
+                              "mEndContainer", aFlags);
 }
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(SelectionChangeListener)
