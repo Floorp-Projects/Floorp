@@ -167,7 +167,8 @@ public:
   // Query whether a fallback has been toggled.
   static bool UseFallback(Fallback aFallback);
 
-  // Enable a fallback.
+  // Add a log entry denoting that a given fallback had to be used. This can
+  // be called from any thread in the UI or GPU process.
   static void EnableFallback(Fallback aFallback, const char* aMessage);
 
   // Run a callback for each initialized FeatureState.
