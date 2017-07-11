@@ -10,9 +10,6 @@ pub type ino_t = u32;
 pub type blkcnt_t = i32;
 pub type blksize_t = i32;
 pub type nlink_t = u32;
-pub type fsblkcnt_t = ::c_ulong;
-pub type fsfilcnt_t = ::c_ulong;
-pub type rlim_t = c_ulong;
 
 s! {
     pub struct aiocb {
@@ -86,7 +83,7 @@ s! {
         pub sa_flags: ::c_int,
         pub sa_sigaction: ::sighandler_t,
         pub sa_mask: sigset_t,
-        _restorer: *mut ::c_void,
+        pub sa_restorer: ::dox::Option<extern fn()>,
         _resv: [::c_int; 1],
     }
 
@@ -105,19 +102,6 @@ s! {
         pub si_code: ::c_int,
         pub si_errno: ::c_int,
         pub _pad: [::c_int; 29],
-    }
-
-    pub struct glob64_t {
-        pub gl_pathc: ::size_t,
-        pub gl_pathv: *mut *mut ::c_char,
-        pub gl_offs: ::size_t,
-        pub gl_flags: ::c_int,
-
-        __unused1: *mut ::c_void,
-        __unused2: *mut ::c_void,
-        __unused3: *mut ::c_void,
-        __unused4: *mut ::c_void,
-        __unused5: *mut ::c_void,
     }
 
     pub struct ipc_perm {
@@ -238,15 +222,6 @@ s! {
         pub mem_unit: ::c_uint,
         pub _f: [::c_char; 8],
     }
-
-    // FIXME this is actually a union
-    pub struct sem_t {
-        #[cfg(target_pointer_width = "32")]
-        __size: [::c_char; 16],
-        #[cfg(target_pointer_width = "64")]
-        __size: [::c_char; 32],
-        __align: [::c_long; 0],
-    }
 }
 
 pub const __SIZEOF_PTHREAD_CONDATTR_T: usize = 4;
@@ -257,31 +232,3 @@ pub const __SIZEOF_PTHREAD_MUTEXATTR_T: usize = 4;
 pub const RLIM_INFINITY: ::rlim_t = 0x7fffffff;
 
 pub const SYS_gettid: ::c_long = 4222;   // Valid for O32
-
-#[link(name = "util")]
-extern {
-    pub fn sysctl(name: *mut ::c_int,
-                  namelen: ::c_int,
-                  oldp: *mut ::c_void,
-                  oldlenp: *mut ::size_t,
-                  newp: *mut ::c_void,
-                  newlen: ::size_t)
-                  -> ::c_int;
-    pub fn ioctl(fd: ::c_int, request: ::c_ulong, ...) -> ::c_int;
-    pub fn backtrace(buf: *mut *mut ::c_void,
-                     sz: ::c_int) -> ::c_int;
-    pub fn glob64(pattern: *const ::c_char,
-                  flags: ::c_int,
-                  errfunc: ::dox::Option<extern fn(epath: *const ::c_char,
-                                                   errno: ::c_int)
-                                                   -> ::c_int>,
-                  pglob: *mut glob64_t) -> ::c_int;
-    pub fn globfree64(pglob: *mut glob64_t);
-    pub fn ptrace(request: ::c_uint, ...) -> ::c_long;
-    pub fn pthread_attr_getaffinity_np(attr: *const ::pthread_attr_t,
-                                       cpusetsize: ::size_t,
-                                       cpuset: *mut ::cpu_set_t) -> ::c_int;
-    pub fn pthread_attr_setaffinity_np(attr: *mut ::pthread_attr_t,
-                                       cpusetsize: ::size_t,
-                                       cpuset: *const ::cpu_set_t) -> ::c_int;
-}

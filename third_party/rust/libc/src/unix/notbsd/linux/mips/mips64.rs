@@ -3,15 +3,13 @@ pub type blksize_t = i64;
 pub type c_char = i8;
 pub type c_long = i64;
 pub type c_ulong = u64;
-pub type fsblkcnt_t = ::c_ulong;
-pub type fsfilcnt_t = ::c_ulong;
 pub type ino_t = u64;
 pub type nlink_t = u64;
 pub type off_t = i64;
-pub type rlim_t = ::c_ulong;
 pub type suseconds_t = i64;
 pub type time_t = i64;
 pub type wchar_t = i32;
+pub type clock_t = i64;
 
 s! {
     pub struct aiocb {
@@ -85,7 +83,7 @@ s! {
         pub sa_flags: ::c_int,
         pub sa_sigaction: ::sighandler_t,
         pub sa_mask: sigset_t,
-        _restorer: *mut ::c_void,
+        pub sa_restorer: ::dox::Option<extern fn()>,
     }
 
     pub struct stack_t {
@@ -186,6 +184,14 @@ s! {
         pub c_cc: [::cc_t; ::NCCS],
     }
 
+    pub struct flock {
+        pub l_type: ::c_short,
+        pub l_whence: ::c_short,
+        pub l_start: ::off_t,
+        pub l_len: ::off_t,
+        pub l_pid: ::pid_t,
+    }
+
     pub struct sysinfo {
         pub uptime: ::c_long,
         pub loads: [::c_ulong; 3],
@@ -202,12 +208,6 @@ s! {
         pub mem_unit: ::c_uint,
         pub _f: [::c_char; 0],
     }
-
-    // FIXME this is actually a union
-    pub struct sem_t {
-        __size: [::c_char; 32],
-        __align: [::c_long; 0],
-    }
 }
 
 pub const __SIZEOF_PTHREAD_CONDATTR_T: usize = 4;
@@ -218,8 +218,3 @@ pub const __SIZEOF_PTHREAD_RWLOCK_T: usize = 56;
 pub const RLIM_INFINITY: ::rlim_t = 0xffff_ffff_ffff_ffff;
 
 pub const SYS_gettid: ::c_long = 5178;   // Valid for n64
-
-#[link(name = "util")]
-extern {
-    pub fn ioctl(fd: ::c_int, request: ::c_ulong, ...) -> ::c_int;
-}
