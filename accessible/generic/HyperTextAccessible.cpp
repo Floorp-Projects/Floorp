@@ -1787,22 +1787,23 @@ HyperTextAccessible::SelectionRanges(nsTArray<a11y::TextRange>* aRanges) const
 
   for (uint32_t idx = 0; idx < sel->RangeCount(); idx++) {
     nsRange* DOMRange = sel->GetRangeAt(idx);
-    HyperTextAccessible* startParent =
+    HyperTextAccessible* startContainer =
       nsAccUtils::GetTextContainer(DOMRange->GetStartContainer());
     HyperTextAccessible* endParent =
       nsAccUtils::GetTextContainer(DOMRange->GetEndContainer());
-    if (!startParent || !endParent)
+    if (!startContainer || !endParent) {
       continue;
+    }
 
     int32_t startOffset =
-      startParent->DOMPointToOffset(DOMRange->GetStartContainer(),
-                                    DOMRange->StartOffset(), false);
+      startContainer->DOMPointToOffset(DOMRange->GetStartContainer(),
+                                       DOMRange->StartOffset(), false);
     int32_t endOffset =
       endParent->DOMPointToOffset(DOMRange->GetEndContainer(),
                                   DOMRange->EndOffset(), true);
 
     TextRange tr(IsTextField() ? const_cast<HyperTextAccessible*>(this) : mDoc,
-                    startParent, startOffset, endParent, endOffset);
+                    startContainer, startOffset, endParent, endOffset);
     *(aRanges->AppendElement()) = Move(tr);
   }
 }

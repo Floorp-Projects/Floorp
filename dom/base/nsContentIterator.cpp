@@ -1284,18 +1284,18 @@ nsContentSubtreeIterator::Init(nsIDOMRange* aRange)
 
   // get the start node and offset, convert to nsINode
   mCommonParent = mRange->GetCommonAncestor();
-  nsINode* startParent = mRange->GetStartContainer();
+  nsINode* startContainer = mRange->GetStartContainer();
   int32_t startOffset = mRange->StartOffset();
   nsINode* endParent = mRange->GetEndContainer();
   int32_t endOffset = mRange->EndOffset();
-  MOZ_ASSERT(mCommonParent && startParent && endParent);
+  MOZ_ASSERT(mCommonParent && startContainer && endParent);
   // Bug 767169
-  MOZ_ASSERT(uint32_t(startOffset) <= startParent->Length() &&
+  MOZ_ASSERT(uint32_t(startOffset) <= startContainer->Length() &&
              uint32_t(endOffset) <= endParent->Length());
 
   // short circuit when start node == end node
-  if (startParent == endParent) {
-    nsINode* child = startParent->GetFirstChild();
+  if (startContainer == endParent) {
+    nsINode* child = startContainer->GetFirstChild();
 
     if (!child || startOffset == endOffset) {
       // Text node, empty container, or collapsed
@@ -1315,14 +1315,14 @@ nsContentSubtreeIterator::Init(nsIDOMRange* aRange)
   int32_t offset = mRange->StartOffset();
 
   nsINode* node = nullptr;
-  if (!startParent->GetChildCount()) {
+  if (!startContainer->GetChildCount()) {
     // no children, start at the node itself
-    node = startParent;
+    node = startContainer;
   } else {
-    nsIContent* child = startParent->GetChildAt(offset);
+    nsIContent* child = startContainer->GetChildAt(offset);
     if (!child) {
       // offset after last child
-      node = startParent;
+      node = startContainer;
     } else {
       firstCandidate = child;
     }
