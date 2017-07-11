@@ -22,6 +22,8 @@ function run_test() {
   prefs.setBoolPref("network.http.spdy.enabled", true);
   prefs.setBoolPref("network.http.spdy.enabled.http2", true);
   prefs.setCharPref("network.dns.localDomains", "foo.example.com, bar.example.com");
+  // Disable rcwn to make cache behavior deterministic.
+  prefs.setBoolPref("network.http.rcwn.enabled", false);
 
   // The moz-http2 cert is for foo.example.com and is signed by CA.cert.der
   // so add that cert to the trust list as a signing cert.  // the foo.example.com domain name.
