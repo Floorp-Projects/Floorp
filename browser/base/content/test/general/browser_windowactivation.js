@@ -4,7 +4,8 @@
 
 /* eslint-env mozilla/frame-script */
 
-var testPage = "data:text/html;charset=utf-8,<body><style>:-moz-window-inactive { background-color: red; }</style><div id='area'></div></body>";
+const testPage = getRootDirectory(gTestPath) + "file_window_activation.html";
+const testPage2 = getRootDirectory(gTestPath) + "file_window_activation2.html";
 
 var colorChangeNotifications = 0;
 var otherWindow;
@@ -107,7 +108,7 @@ function sendGetBackgroundRequest(ifChanged) {
 }
 
 function runOtherWindowTests() {
-  otherWindow = window.open("data:text/html;charset=utf-8,<body>Hi</body>", "", "chrome");
+  otherWindow = window.open(testPage2, "", "chrome");
   waitForFocus(function() {
     sendGetBackgroundRequest(true);
   }, otherWindow);
