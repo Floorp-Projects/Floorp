@@ -46,7 +46,6 @@ struct StandardURLParams
   nsCString originCharset;
   bool isMutable;
   bool supportsFileURL;
-  uint32_t hostEncoding;
 };
 
 struct JARURIParams

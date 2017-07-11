@@ -139,8 +139,6 @@ interface nsIURI : nsISupports
      *
      * If this attribute is set to a value that only has a host part, the port
      * will not be reset. To reset the port as well use setHostAndPort.
-     *
-     * Characters are NOT escaped.
      */
     attribute AUTF8String hostPort;
 
@@ -152,10 +150,8 @@ interface nsIURI : nsISupports
 
     /**
      * The host is the internet domain name to which this URI refers.  It could
-     * be an IPv4 (or IPv6) address literal.  If supported, it could be a
-     * non-ASCII internationalized domain name.
-     *
-     * Characters are NOT escaped.
+     * be an IPv4 (or IPv6) address literal. Otherwise it is an ASCII or punycode
+     * encoded string.
      */
     attribute AUTF8String host;
 
@@ -307,4 +303,24 @@ interface nsIURI : nsISupports
      * Some characters may be escaped.
      */
     attribute AUTF8String query;
+
+    /**
+     * If the URI has a punycode encoded hostname, this will hold the UTF8
+     * representation of that hostname (if that representation doesn't contain
+     * blacklisted characters, and the network.IDN_show_punycode pref is false)
+     * Otherwise, if the hostname is ASCII, it will return the same as .asciiHost
+     */
+    readonly attribute AUTF8String displayHost;
+
+    /**
+     * The displayHost:port (or simply the displayHost, if port == -1).
+     */
+    readonly attribute AUTF8String displayHostPort;
+
+    /**
+     * Returns the same as calling .spec, only with a UTF8 encoded hostname
+     * (if that hostname doesn't contain blacklisted characters, and
+     * the network.IDN_show_punycode pref is false)
+     */
+    readonly attribute AUTF8String displaySpec;
 };

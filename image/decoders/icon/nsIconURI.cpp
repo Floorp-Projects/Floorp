@@ -118,6 +118,24 @@ nsMozIconURI::GetSpecIgnoringRef(nsACString& result)
 }
 
 NS_IMETHODIMP
+nsMozIconURI::GetDisplaySpec(nsACString& aUnicodeSpec)
+{
+  return GetSpec(aUnicodeSpec);
+}
+
+NS_IMETHODIMP
+nsMozIconURI::GetDisplayHostPort(nsACString& aUnicodeHostPort)
+{
+  return GetHostPort(aUnicodeHostPort);
+}
+
+NS_IMETHODIMP
+nsMozIconURI::GetDisplayHost(nsACString& aUnicodeHost)
+{
+  return GetHost(aUnicodeHost);
+}
+
+NS_IMETHODIMP
 nsMozIconURI::GetHasRef(bool* result)
 {
   *result = false;
