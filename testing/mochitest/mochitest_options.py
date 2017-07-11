@@ -838,6 +838,11 @@ class MochitestArguments(ArgumentContainer):
             "geckomediaplugin": 20000,
         }
 
+        # a11y tests leak 248 bytes when we try to run with USER_LIMITED access
+        # token level for Windows sandbox. Bug 1379643 tracks fixing this.
+        if os.name == 'nt' and options.flavor == 'a11y':
+            options.leakThresholds["default"] += 248
+
         # XXX We can't normalize test_paths in the non build_obj case here,
         # because testRoot depends on the flavor, which is determined by the
         # mach command and therefore not finalized yet. Conversely, test paths
