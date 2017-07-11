@@ -36,16 +36,31 @@ Cu.import("resource://services-sync/status.js");
 Cu.import("resource://services-sync/telemetry.js");
 Cu.import("resource://services-sync/util.js");
 
-const ENGINE_MODULES = {
-  Addons: {module: "addons.js", symbol: "AddonsEngine"},
-  Bookmarks: {module: "bookmarks.js", symbol: "BookmarksEngine"},
-  Form: {module: "forms.js", symbol: "FormEngine"},
-  History: {module: "history.js", symbol: "HistoryEngine"},
-  Password: {module: "passwords.js", symbol: "PasswordEngine"},
-  Prefs: {module: "prefs.js", symbol: "PrefsEngine"},
-  Tab: {module: "tabs.js", symbol: "TabEngine"},
-  ExtensionStorage: {module: "extension-storage.js", symbol: "ExtensionStorageEngine"},
-};
+function getEngineModules() {
+  let result = {
+    Addons: {module: "addons.js", symbol: "AddonsEngine"},
+    Bookmarks: {module: "bookmarks.js", symbol: "BookmarksEngine"},
+    Form: {module: "forms.js", symbol: "FormEngine"},
+    History: {module: "history.js", symbol: "HistoryEngine"},
+    Password: {module: "passwords.js", symbol: "PasswordEngine"},
+    Prefs: {module: "prefs.js", symbol: "PrefsEngine"},
+    Tab: {module: "tabs.js", symbol: "TabEngine"},
+    ExtensionStorage: {module: "extension-storage.js", symbol: "ExtensionStorageEngine"},
+  }
+  if (Svc.Prefs.get("engine.addresses.available", false)) {
+    result["Addresses"] = {
+      module: "resource://formautofill/FormAutofillSync.jsm",
+      symbol: "AddressesEngine",
+    };
+  }
+  if (Svc.Prefs.get("engine.creditcards.available", false)) {
+    result["CreditCards"] = {
+      module: "resource://formautofill/FormAutofillSync.jsm",
+      symbol: "CreditCardsEngine",
+    };
+  }
+  return result;
+}
 
 const STORAGE_INFO_TYPES = [INFO_COLLECTIONS,
                             INFO_COLLECTION_USAGE,
@@ -355,6 +370,8 @@ Sync11Service.prototype = {
   async _registerEngines() {
     this.engineManager = new EngineManager(this);
 
+    let engineModules = getEngineModules();
+
     let engines = [];
     // We allow a pref, which has no default value, to limit the engines
     // which are registered. We expect only tests will use this.
@@ -363,7 +380,7 @@ Sync11Service.prototype = {
       this._log.info("Registering custom set of engines", engines);
     } else {
       // default is all engines.
-      engines = Object.keys(ENGINE_MODULES);
+      engines = Object.keys(engineModules);
     }
 
     let declined = [];
@@ -379,11 +396,11 @@ Sync11Service.prototype = {
     this.clientsEngine = clientsEngine;
 
     for (let name of engines) {
-      if (!(name in ENGINE_MODULES)) {
+      if (!(name in engineModules)) {
         this._log.info("Do not know about engine: " + name);
         continue;
       }
-      let {module, symbol} = ENGINE_MODULES[name];
+      let {module, symbol} = engineModules[name];
       if (!module.includes(":")) {
         module = "resource://services-sync/engines/" + module;
       }

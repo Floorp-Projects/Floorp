@@ -60,7 +60,8 @@ const EMPTY_UID = "0".repeat(32);
 
 // The set of engines we record telemetry for - any other engines are ignored.
 const ENGINES = new Set(["addons", "bookmarks", "clients", "forms", "history",
-                         "passwords", "prefs", "tabs", "extension-storage"]);
+                         "passwords", "prefs", "tabs", "extension-storage",
+                         "addresses", "creditcards"]);
 
 // A regex we can use to replace the profile dir in error messages. We use a
 // regexp so we can simply replace all case-insensitive occurences.
