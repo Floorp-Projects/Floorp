@@ -37,8 +37,17 @@ class WeakCacheBase : public mozilla::LinkedListElement<WeakCacheBase>
     WeakCacheBase(WeakCacheBase&& other) = default;
     virtual ~WeakCacheBase() {}
 
-    virtual void sweep() = 0;
+    virtual size_t sweep() = 0;
     virtual bool needsSweep() = 0;
+
+    virtual bool setNeedsIncrementalBarrier(bool needs) {
+        // Derived classes do not support incremental barriers by default.
+        return false;
+    }
+    virtual bool needsIncrementalBarrier() const {
+        // Derived classes do not support incremental barriers by default.
+        return false;
+    }
 };
 } // namespace detail
 
@@ -67,8 +76,9 @@ class WeakCache : protected detail::WeakCacheBase,
     const T& get() const { return cache; }
     T& get() { return cache; }
 
-    void sweep() override {
+    size_t sweep() override {
         GCPolicy<T>::sweep(&cache);
+        return 0;
     }
 
     bool needsSweep() override {

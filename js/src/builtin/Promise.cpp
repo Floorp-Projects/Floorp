@@ -1291,7 +1291,6 @@ PromiseConstructor(JSContext* cx, unsigned argc, Value* vp)
 
     // Steps 3-10.
     RootedObject newTarget(cx, &args.newTarget().toObject());
-    RootedObject originalNewTarget(cx, newTarget);
     bool needsWrapping = false;
 
     // If the constructor is called via an Xray wrapper, then the newTarget
@@ -1322,9 +1321,11 @@ PromiseConstructor(JSContext* cx, unsigned argc, Value* vp)
     // Promises, with the unprivileged one resolved with the resolution of the
     // privileged one.
     if (IsWrapper(newTarget)) {
-        newTarget = CheckedUnwrap(newTarget);
-        MOZ_ASSERT(newTarget);
-        MOZ_ASSERT(newTarget != originalNewTarget);
+        JSObject* unwrappedNewTarget = CheckedUnwrap(newTarget);
+        MOZ_ASSERT(unwrappedNewTarget);
+        MOZ_ASSERT(unwrappedNewTarget != newTarget);
+
+        newTarget = unwrappedNewTarget;
         {
             AutoCompartment ac(cx, newTarget);
             RootedObject promiseCtor(cx);
@@ -1340,10 +1341,15 @@ PromiseConstructor(JSContext* cx, unsigned argc, Value* vp)
     }
 
     RootedObject proto(cx);
-    if (!GetPrototypeFromConstructor(cx, needsWrapping ? newTarget : originalNewTarget, &proto))
-        return false;
-    if (needsWrapping && !cx->compartment()->wrap(cx, &proto))
-        return false;
+    if (needsWrapping) {
+        if (!GetPrototypeFromConstructor(cx, newTarget, &proto))
+            return false;
+        if (!cx->compartment()->wrap(cx, &proto))
+            return false;
+    } else {
+        if (!GetPrototypeFromBuiltinConstructor(cx, args, &proto))
+            return false;
+    }
     Rooted<PromiseObject*> promise(cx, PromiseObject::create(cx, executor, proto, needsWrapping));
     if (!promise)
         return false;

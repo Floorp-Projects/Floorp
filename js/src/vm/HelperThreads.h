@@ -224,8 +224,7 @@ class GlobalHelperThreadState
         return gcParallelWorklist_;
     }
 
-    bool canStartWasmCompile(const AutoLockHelperThreadState& lock,
-                             bool assumeThreadAvailable = false);
+    bool canStartWasmCompile(const AutoLockHelperThreadState& lock);
     bool canStartPromiseTask(const AutoLockHelperThreadState& lock);
     bool canStartIonCompile(const AutoLockHelperThreadState& lock);
     bool canStartIonFreeTask(const AutoLockHelperThreadState& lock);
@@ -388,13 +387,6 @@ struct HelperThread
         return maybeCurrentTaskAs<wasm::CompileTask*>();
     }
 
-    /*
-     * Perform wasm compilation work on behalf of a thread that is running a
-     * wasm ModuleGenerator and would otherwise block waiting for other
-     * compilation threads. Return true if work was performed, otherwise false.
-     */
-    bool handleWasmIdleWorkload(AutoLockHelperThreadState& locked);
-
     /* Any source being parsed/emitted on this thread. */
     ParseTask* parseTask() {
         return maybeCurrentTaskAs<ParseTask*>();
@@ -429,7 +421,7 @@ struct HelperThread
         return nullptr;
     }
 
-    void handleWasmWorkload(AutoLockHelperThreadState& locked, bool assumeThreadAvailable = false);
+    void handleWasmWorkload(AutoLockHelperThreadState& locked);
     void handlePromiseTaskWorkload(AutoLockHelperThreadState& locked);
     void handleIonWorkload(AutoLockHelperThreadState& locked);
     void handleIonFreeWorkload(AutoLockHelperThreadState& locked);

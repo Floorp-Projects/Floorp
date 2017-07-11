@@ -76,6 +76,8 @@ pref("devtools.promote.layoutview", 1);
 pref("devtools.promote.layoutview.showPromoteBar", true);
 
 // Grid highlighter preferences
+pref("devtools.gridinspector.gridOutlineMaxColumns", 50);
+pref("devtools.gridinspector.gridOutlineMaxRows", 50);
 pref("devtools.gridinspector.showGridAreas", false);
 pref("devtools.gridinspector.showGridLineNumbers", false);
 pref("devtools.gridinspector.showInfiniteLines", false);

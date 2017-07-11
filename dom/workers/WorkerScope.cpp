@@ -1104,17 +1104,13 @@ BEGIN_WORKERS_NAMESPACE
 bool
 IsWorkerGlobal(JSObject* object)
 {
-  nsIGlobalObject* globalObject = nullptr;
-  return NS_SUCCEEDED(UNWRAP_OBJECT(WorkerGlobalScope, object,
-                                    globalObject)) && !!globalObject;
+  return IS_INSTANCE_OF(WorkerGlobalScope, object);
 }
 
 bool
 IsDebuggerGlobal(JSObject* object)
 {
-  nsIGlobalObject* globalObject = nullptr;
-  return NS_SUCCEEDED(UNWRAP_OBJECT(WorkerDebuggerGlobalScope, object,
-                                    globalObject)) && !!globalObject;
+  return IS_INSTANCE_OF(WorkerDebuggerGlobalScope, object);
 }
 
 bool

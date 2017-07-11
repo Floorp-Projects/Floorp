@@ -115,6 +115,9 @@
 #![allow(non_camel_case_types)]
 #![deny(warnings)]
 
+#[macro_use]
+extern crate bitflags;
+
 use std::ops::{Deref, DerefMut};
 use std::marker::PhantomData;
 use std::borrow;
@@ -131,18 +134,35 @@ use std::os::raw::c_void;
 // Internal Implemenation Flags //
 //////////////////////////////////
 
-const F_NONE: u32 = 0; // no flags
+mod data_flags {
+    bitflags! {
+        // While this has the same layout as u16, it cannot be passed
+        // over FFI safely as a u16.
+        #[repr(C)]
+        pub flags DataFlags : u16 {
+            const TERMINATED = 1 << 0, // IsTerminated returns true
+            const VOIDED = 1 << 1, // IsVoid returns true
+            const SHARED = 1 << 2, // mData points to a heap-allocated, shared buffer
+            const OWNED = 1 << 3, // mData points to a heap-allocated, raw buffer
+            const FIXED = 1 << 4, // mData points to a fixed-size writable, dependent buffer
+            const LITERAL = 1 << 5, // mData points to a string literal; TERMINATED will also be set
+        }
+    }
+}
 
-// data flags are in the lower 16-bits
-const F_TERMINATED: u32 = 1 << 0; // IsTerminated returns true
-const F_VOIDED: u32 = 1 << 1; // IsVoid returns true
-const F_SHARED: u32 = 1 << 2; // mData points to a heap-allocated, shared buffer
-const F_OWNED: u32 = 1 << 3; // mData points to a heap-allocated, raw buffer
-const F_FIXED: u32 = 1 << 4; // mData points to a fixed-size writable, dependent buffer
-const F_LITERAL: u32 = 1 << 5; // mData points to a string literal; F_TERMINATED will also be set
+mod class_flags {
+    bitflags! {
+        // While this has the same layout as u16, it cannot be passed
+        // over FFI safely as a u16.
+        #[repr(C)]
+        pub flags ClassFlags : u16 {
+            const FIXED = 1 << 0, // indicates that |this| is of type nsTFixedString
+        }
+    }
+}
 
-// class flags are in the upper 16-bits
-const F_CLASS_FIXED: u32 = 1 << 16; // indicates that |this| is of type nsTFixedString
+use data_flags::DataFlags;
+use class_flags::ClassFlags;
 
 ////////////////////////////////////
 // Generic String Bindings Macros //
@@ -182,7 +202,8 @@ macro_rules! define_string_types {
         pub struct $StringRepr {
             data: *const $char_t,
             length: u32,
-            flags: u32,
+            dataflags: DataFlags,
+            classflags: ClassFlags,
         }
 
         impl Deref for $StringRepr {
@@ -387,7 +408,8 @@ macro_rules! define_string_types {
                     hdr: $StringRepr {
                         data: ptr::null(),
                         length: 0,
-                        flags: F_NONE,
+                        dataflags: DataFlags::empty(),
+                        classflags: ClassFlags::empty(),
                     },
                     _marker: PhantomData,
                 }
@@ -440,7 +462,8 @@ macro_rules! define_string_types {
                     hdr: $StringRepr {
                         data: if s.is_empty() { ptr::null() } else { s.as_ptr() },
                         length: s.len() as u32,
-                        flags: F_NONE,
+                        dataflags: DataFlags::empty(),
+                        classflags: ClassFlags::empty(),
                     },
                     _marker: PhantomData,
                 }
@@ -454,11 +477,11 @@ macro_rules! define_string_types {
                     return $String::new();
                 }
 
-                // SAFETY NOTE: This method produces an F_OWNED ns[C]String from
-                // a Box<[$char_t]>. this is only safe because in the Gecko
-                // tree, we use the same allocator for Rust code as for C++
-                // code, meaning that our box can be legally freed with
-                // libc::free().
+                // SAFETY NOTE: This method produces an data_flags::OWNED
+                // ns[C]String from a Box<[$char_t]>. this is only safe
+                // because in the Gecko tree, we use the same allocator for
+                // Rust code as for C++ code, meaning that our box can be
+                // legally freed with libc::free().
                 let length = s.len() as u32;
                 let ptr = s.as_ptr();
                 mem::forget(s);
@@ -469,7 +492,8 @@ macro_rules! define_string_types {
                     hdr: $StringRepr {
                         data: ptr,
                         length: length,
-                        flags: F_OWNED,
+                        dataflags: data_flags::OWNED,
+                        classflags: ClassFlags::empty(),
                     },
                     _marker: PhantomData,
                 }
@@ -559,7 +583,8 @@ macro_rules! define_string_types {
                         hdr: $StringRepr {
                             data: ptr::null(),
                             length: 0,
-                            flags: F_CLASS_FIXED,
+                            dataflags: DataFlags::empty(),
+                            classflags: class_flags::FIXED,
                         },
                         _marker: PhantomData,
                     },
@@ -998,14 +1023,8 @@ pub mod test_helpers {
         nsString,
         nsCStringRepr,
         nsStringRepr,
-        F_NONE,
-        F_TERMINATED,
-        F_VOIDED,
-        F_SHARED,
-        F_OWNED,
-        F_FIXED,
-        F_LITERAL,
-        F_CLASS_FIXED,
+        data_flags,
+        class_flags,
     };
     use std::mem;
 
@@ -1099,10 +1118,12 @@ pub mod test_helpers {
 
     member_check!(nsStringRepr, nsString<'static>, data, Rust_Test_Member_nsString_mData);
     member_check!(nsStringRepr, nsString<'static>, length, Rust_Test_Member_nsString_mLength);
-    member_check!(nsStringRepr, nsString<'static>, flags, Rust_Test_Member_nsString_mFlags);
+    member_check!(nsStringRepr, nsString<'static>, dataflags, Rust_Test_Member_nsString_mDataFlags);
+    member_check!(nsStringRepr, nsString<'static>, classflags, Rust_Test_Member_nsString_mClassFlags);
     member_check!(nsCStringRepr, nsCString<'static>, data, Rust_Test_Member_nsCString_mData);
     member_check!(nsCStringRepr, nsCString<'static>, length, Rust_Test_Member_nsCString_mLength);
-    member_check!(nsCStringRepr, nsCString<'static>, flags, Rust_Test_Member_nsCString_mFlags);
+    member_check!(nsCStringRepr, nsCString<'static>, dataflags, Rust_Test_Member_nsCString_mDataFlags);
+    member_check!(nsCStringRepr, nsCString<'static>, classflags, Rust_Test_Member_nsCString_mClassFlags);
     member_check!(nsFixedString<'static>, capacity, Rust_Test_Member_nsFixedString_mFixedCapacity);
     member_check!(nsFixedString<'static>, buffer, Rust_Test_Member_nsFixedString_mFixedBuf);
     member_check!(nsFixedCString<'static>, capacity, Rust_Test_Member_nsFixedCString_mFixedCapacity);
@@ -1110,23 +1131,21 @@ pub mod test_helpers {
 
     #[no_mangle]
     #[allow(non_snake_case)]
-    pub extern fn Rust_Test_NsStringFlags(f_none: *mut u32,
-                                          f_terminated: *mut u32,
-                                          f_voided: *mut u32,
-                                          f_shared: *mut u32,
-                                          f_owned: *mut u32,
-                                          f_fixed: *mut u32,
-                                          f_literal: *mut u32,
-                                          f_class_fixed: *mut u32) {
+    pub extern fn Rust_Test_NsStringFlags(f_terminated: *mut u16,
+                                          f_voided: *mut u16,
+                                          f_shared: *mut u16,
+                                          f_owned: *mut u16,
+                                          f_fixed: *mut u16,
+                                          f_literal: *mut u16,
+                                          f_class_fixed: *mut u16) {
         unsafe {
-            *f_none = F_NONE;
-            *f_terminated = F_TERMINATED;
-            *f_voided = F_VOIDED;
-            *f_shared = F_SHARED;
-            *f_owned = F_OWNED;
-            *f_fixed = F_FIXED;
-            *f_literal = F_LITERAL;
-            *f_class_fixed = F_CLASS_FIXED;
+            *f_terminated = data_flags::TERMINATED.bits();
+            *f_voided = data_flags::VOIDED.bits();
+            *f_shared = data_flags::SHARED.bits();
+            *f_owned = data_flags::OWNED.bits();
+            *f_fixed = data_flags::FIXED.bits();
+            *f_literal = data_flags::LITERAL.bits();
+            *f_class_fixed = class_flags::FIXED.bits();
         }
     }
 }

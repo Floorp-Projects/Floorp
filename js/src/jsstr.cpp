@@ -3209,8 +3209,7 @@ js::StringConstructor(JSContext* cx, unsigned argc, Value* vp)
 
     if (args.isConstructing()) {
         RootedObject proto(cx);
-        RootedObject newTarget(cx, &args.newTarget().toObject());
-        if (!GetPrototypeFromConstructor(cx, newTarget, &proto))
+        if (!GetPrototypeFromBuiltinConstructor(cx, args, &proto))
             return false;
 
         StringObject* strobj = StringObject::create(cx, str, proto);

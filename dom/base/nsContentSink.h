@@ -154,7 +154,8 @@ protected:
   nsresult ProcessLink(const nsAString& aAnchor,
                        const nsAString& aHref, const nsAString& aRel,
                        const nsAString& aTitle, const nsAString& aType,
-                       const nsAString& aMedia, const nsAString& aCrossOrigin);
+                       const nsAString& aMedia, const nsAString& aCrossOrigin,
+                       const nsAString& aAs);
 
   virtual nsresult ProcessStyleLink(nsIContent* aElement,
                                     const nsAString& aHref,
@@ -163,8 +164,10 @@ protected:
                                     const nsAString& aType,
                                     const nsAString& aMedia);
 
-  void PrefetchHref(const nsAString &aHref, nsINode *aSource,
-                    bool aExplicit);
+  void PrefetchPreloadHref(const nsAString &aHref, nsINode *aSource,
+                           uint32_t aLinkTypes, const nsAString& aAs,
+                           const nsAString& aType,
+                           const nsAString& aMedia);
 
   // For PrefetchDNS() aHref can either be the usual
   // URI format or of the form "//www.hostname.com" without a scheme.

@@ -1033,6 +1033,8 @@ uprv_convertToPosix(uint32_t hostid, char *posixID, int32_t posixIDCapacity, UEr
     const char *pPosixID = NULL;
 
 #ifdef USE_WINDOWS_LCID_MAPPING_API
+    char locName[LOCALE_NAME_MAX_LENGTH] = {};      // ICU name can't be longer than Windows name
+
     // Note: Windows primary lang ID 0x92 in LCID is used for Central Kurdish and
     // GetLocaleInfo() maps such LCID to "ku". However, CLDR uses "ku" for
     // Northern Kurdish and "ckb" for Central Kurdish. For this reason, we cannot
@@ -1040,7 +1042,6 @@ uprv_convertToPosix(uint32_t hostid, char *posixID, int32_t posixIDCapacity, UEr
     if ((hostid & 0x3FF) != 0x92) {
         int32_t tmpLen = 0;
         UChar windowsLocaleName[LOCALE_NAME_MAX_LENGTH];  // ULOC_FULLNAME_CAPACITY > LOCALE_NAME_MAX_LENGTH
-        char locName[LOCALE_NAME_MAX_LENGTH];             // ICU name can't be longer than Windows name
 
         // Note: LOCALE_ALLOW_NEUTRAL_NAMES was enabled in Windows7+, prior versions did not handle neutral (no-region) locale names.
         tmpLen = LCIDToLocaleName(hostid, (PWSTR)windowsLocaleName, UPRV_LENGTHOF(windowsLocaleName), LOCALE_ALLOW_NEUTRAL_NAMES);
