@@ -159,9 +159,6 @@ public:
   ShaderRenderPass(FrameBuilder* aBuilder, const ItemInfo& aItem);
 
   // Used by ShaderDefinitions for writing traits.
-  VertexStagingBuffer* GetVertices() {
-    return &mVertices;
-  }
   VertexStagingBuffer* GetInstances() {
     return &mInstances;
   }
@@ -208,11 +205,6 @@ protected:
   // batches when the items can be drawn in front-to-back order.
   bool PrepareItemBuffer();
 
-  // Prepare the vertex buffer, if not using a unit quad. This is used for
-  // opaque batches when the items can be drawn in front-to-back order.
-  bool PrepareVertexBuffer();
-  bool PrepareInstanceBuffer();
-
   // Prepare the mask/opacity buffer bound in most pixel shaders.
   bool SetupPSBuffer0(float aOpacity);
 
@@ -227,9 +219,6 @@ protected:
   GeometryMode mGeometry;
   RefPtr<MaskOperation> mMask;
   bool mHasRectTransformAndClip;
-
-  VertexStagingBuffer mVertices;
-  VertexBufferSection mVertexBuffer;
 
   VertexStagingBuffer mInstances;
   VertexBufferSection mInstanceBuffer;
@@ -261,7 +250,6 @@ protected:
   public:
     explicit Txn(BatchRenderPass* aPass)
      : mPass(aPass),
-       mPrevVertexPos(aPass->mVertices.GetPosition()),
        mPrevItemPos(aPass->mItems.GetPosition()),
        mPrevInstancePos(aPass->mInstances.GetPosition())
     {}
@@ -316,7 +304,6 @@ protected:
 
     ~Txn() {
       if (!mStatus.isSome() || !mStatus.value()) {
-        mPass->mVertices.RestorePosition(mPrevVertexPos);
         mPass->mInstances.RestorePosition(mPrevInstancePos);
         mPass->mItems.RestorePosition(mPrevItemPos);
       }

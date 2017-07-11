@@ -30,7 +30,10 @@ struct VS_COLORQUAD
 
 struct VS_COLORVERTEX
 {
-  float2 vLayerPos : POSITION;
+  float3 vUnitPos : POSITION0;
+  float2 vPos1 : POSITION1;
+  float2 vPos2 : POSITION2;
+  float2 vPos3 : POSITION3;
   uint vLayerId : TEXCOORD0;
   int vDepth : TEXCOORD1;
   uint vIndex : TEXCOORD2;
@@ -64,7 +67,8 @@ VS_COLOROUTPUT_CLIPPED ColoredQuadVS(const VS_COLORQUAD aInput)
 
 VS_COLOROUTPUT ColoredVertexVS(const VS_COLORVERTEX aInput)
 {
+  float2 layerPos = UnitTriangleToPos(aInput.vUnitPos, aInput.vPos1, aInput.vPos2, aInput.vPos3);
   ColorItem item = GetItem(aInput.vIndex);
-  VertexInfo info = ComputePosition(aInput.vLayerPos, aInput.vLayerId, aInput.vDepth);
+  VertexInfo info = ComputePosition(layerPos, aInput.vLayerId, aInput.vDepth);
   return ColorImpl(item.color, info);
 }
