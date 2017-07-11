@@ -6,6 +6,10 @@
 
 include('../templates.mozbuild')
 
+TEST_HARNESS_FILES.xpcshell.devtools.shared.tests += [
+    'tests/shared-xpcshell-head.js',
+]
+
 DIRS += [
     'acorn',
     'apps',
