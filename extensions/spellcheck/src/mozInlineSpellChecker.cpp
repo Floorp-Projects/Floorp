@@ -1484,7 +1484,7 @@ nsresult mozInlineSpellChecker::DoSpellCheck(mozInlineSpellWordUtil& aWordUtil,
     // accidentally used later
     nsINode* beginNode = aStatus->mRange->GetStartContainer();
     int32_t beginOffset = aStatus->mRange->StartOffset();
-    nsINode* endNode = aStatus->mRange->GetEndParent();
+    nsINode* endNode = aStatus->mRange->GetEndContainer();
     int32_t endOffset = aStatus->mRange->EndOffset();
 
     // Now check that we're still looking at a range that's under
