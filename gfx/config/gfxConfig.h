@@ -62,6 +62,9 @@ public:
   //  5. Return the default status.
   static FeatureStatus GetValue(Feature aFeature);
 
+  // Reset the entire state of a feature.
+  static void Reset(Feature aFeature);
+
   // Initialize the base value of a parameter. The return value is aEnable.
   static bool SetDefault(Feature aFeature,
                          bool aEnable,
