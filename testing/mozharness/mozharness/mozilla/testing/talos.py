@@ -142,6 +142,12 @@ class Talos(TestingMixin, MercurialScript, BlobUploadMixin, TooltoolMixin,
             "default": 0,
             "help": "The interval between samples taken by the profiler (milliseconds)"
         }],
+        [["--enable-stylo"], {
+            "action": "store_true",
+            "dest": "enable_stylo",
+            "default": False,
+            "help": "Run tests with Stylo enabled"
+        }],
     ] + testing_config_options + copy.deepcopy(blobupload_config_options) \
                                + copy.deepcopy(code_coverage_config_options)
 
@@ -556,6 +562,9 @@ class Talos(TestingMixin, MercurialScript, BlobUploadMixin, TooltoolMixin,
             env['MOZ_DEVELOPER_REPO_DIR'] = self.repo_path
         if self.obj_path is not None:
             env['MOZ_DEVELOPER_OBJ_DIR'] = self.obj_path
+
+        if self.config['enable_stylo'] or 'stylo' in self.buildbot_config['properties'].get('platform'):
+            env['STYLO_FORCE_ENABLED'] = '1'
 
         # sets a timeout for how long talos should run without output
         output_timeout = self.config.get('talos_output_timeout', 3600)
