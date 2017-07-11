@@ -90,10 +90,6 @@ interface Element : Node {
   [ChromeOnly]
   readonly attribute float fontSizeInflation;
 
-  // Mozilla specific stuff
-  [Pure]
-           attribute EventHandler onwheel;
-
   // Selectors API
   /**
    * Returns whether this element would be selected by the given selector
