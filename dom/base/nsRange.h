@@ -177,7 +177,7 @@ public:
    * Retrieves node and offset for setting start or end of a range to
    * before or after aNode.
    */
-  static nsINode* GetParentAndOffsetAfter(nsINode* aNode, int32_t* aOffset)
+  static nsINode* GetContainerAndOffsetAfter(nsINode* aNode, int32_t* aOffset)
   {
     MOZ_ASSERT(aNode);
     MOZ_ASSERT(aOffset);
