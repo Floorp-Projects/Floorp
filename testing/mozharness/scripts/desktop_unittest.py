@@ -150,6 +150,12 @@ class DesktopUnittest(TestingMixin, MercurialScript, BlobUploadMixin, MozbaseMix
             "default": False,
             "help": "Forcibly enable parallel traversal in Stylo with STYLO_THREADS=4"}
          ],
+        [["--enable-stylo"], {
+            "action": "store_true",
+            "dest": "enable_stylo",
+            "default": False,
+            "help": "Run tests with Stylo enabled"}
+         ],
         [["--enable-webrender"], {
             "action": "store_true",
             "dest": "enable_webrender",
@@ -215,6 +221,9 @@ class DesktopUnittest(TestingMixin, MercurialScript, BlobUploadMixin, MozbaseMix
 
         if c['e10s']:
             perfherder_options.append('e10s')
+
+        if c['enable_stylo']:
+            perfherder_options.append('stylo')
 
         self.resource_monitor_perfherder_id = ('.'.join(perfherder_parts),
                                                perfherder_options)
@@ -709,6 +718,8 @@ class DesktopUnittest(TestingMixin, MercurialScript, BlobUploadMixin, MozbaseMix
                     env['MOZ_WEBRENDER'] = '1'
 
                 env['STYLO_THREADS'] = '4' if self.config['parallel_stylo_traversal'] else '1'
+                if self.config['enable_stylo']:
+                    env['STYLO_FORCE_ENABLED'] = '1'
 
                 env = self.query_env(partial_env=env, log_level=INFO)
                 cmd_timeout = self.get_timeout_for_category(suite_category)
