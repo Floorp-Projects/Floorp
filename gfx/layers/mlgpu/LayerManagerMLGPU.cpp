@@ -263,7 +263,8 @@ LayerManagerMLGPU::EndTransaction(const TimeStamp& aTimeStamp, EndTransactionFla
     }
   }
 
-  mDrawDiagnostics = gfxPrefs::LayersDrawFPS();
+  // Don't draw the diagnostic overlay if we want to snapshot the output.
+  mDrawDiagnostics = gfxPrefs::LayersDrawFPS() && !mTarget;
   mUsingInvalidation = gfxPrefs::AdvancedLayersUseInvalidation();
 
   // Compute transforms - and the changed area, if enabled.
