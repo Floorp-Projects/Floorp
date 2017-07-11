@@ -3862,14 +3862,14 @@ EditorBase::GetEndNodeAndOffset(Selection* aSelection,
 
 nsresult
 EditorBase::GetEndNodeAndOffset(Selection* aSelection,
-                                nsINode** aEndNode,
+                                nsINode** aEndContainer,
                                 int32_t* aEndOffset)
 {
   MOZ_ASSERT(aSelection);
-  MOZ_ASSERT(aEndNode);
+  MOZ_ASSERT(aEndContainer);
   MOZ_ASSERT(aEndOffset);
 
-  *aEndNode = nullptr;
+  *aEndContainer = nullptr;
   *aEndOffset = 0;
 
   NS_ENSURE_TRUE(aSelection->RangeCount(), NS_ERROR_FAILURE);
@@ -3879,7 +3879,7 @@ EditorBase::GetEndNodeAndOffset(Selection* aSelection,
 
   NS_ENSURE_TRUE(range->IsPositioned(), NS_ERROR_FAILURE);
 
-  NS_IF_ADDREF(*aEndNode = range->GetEndContainer());
+  NS_IF_ADDREF(*aEndContainer = range->GetEndContainer());
   *aEndOffset = range->EndOffset();
   return NS_OK;
 }
@@ -4664,12 +4664,12 @@ EditorBase::CreateTxnForDeleteRange(nsRange* aRangeToDelete,
 nsresult
 EditorBase::CreateRange(nsIDOMNode* aStartContainer,
                         int32_t aStartOffset,
-                        nsIDOMNode* aEndParent,
+                        nsIDOMNode* aEndContainer,
                         int32_t aEndOffset,
                         nsRange** aRange)
 {
   return nsRange::CreateRange(aStartContainer, aStartOffset,
-                              aEndParent, aEndOffset, aRange);
+                              aEndContainer, aEndOffset, aRange);
 }
 
 nsresult
@@ -4818,14 +4818,14 @@ EditorBase::HandleInlineSpellCheck(EditAction action,
                                    int32_t previousSelectedOffset,
                                    nsIDOMNode* aStartContainer,
                                    int32_t aStartOffset,
-                                   nsIDOMNode* aEndNode,
+                                   nsIDOMNode* aEndContainer,
                                    int32_t aEndOffset)
 {
   // Have to cast action here because this method is from an IDL
   return mInlineSpellChecker ? mInlineSpellChecker->SpellCheckAfterEditorChange(
                                  (int32_t)action, aSelection,
                                  previousSelectedNode, previousSelectedOffset,
-                                 aStartContainer, aStartOffset, aEndNode,
+                                 aStartContainer, aStartOffset, aEndContainer,
                                  aEndOffset)
                              : NS_OK;
 }

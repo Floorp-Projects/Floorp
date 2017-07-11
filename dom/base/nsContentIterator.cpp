@@ -46,16 +46,16 @@ NodeToParentOffset(nsINode* aNode, int32_t* aOffset)
 static bool
 NodeIsInTraversalRange(nsINode* aNode, bool aIsPreMode,
                        nsINode* aStartContainer, int32_t aStartOffset,
-                       nsINode* aEndNode, int32_t aEndOffset)
+                       nsINode* aEndContainer, int32_t aEndOffset)
 {
-  if (NS_WARN_IF(!aStartContainer) || NS_WARN_IF(!aEndNode) ||
+  if (NS_WARN_IF(!aStartContainer) || NS_WARN_IF(!aEndContainer) ||
       NS_WARN_IF(!aNode)) {
     return false;
   }
 
   // If a leaf node contains an end point of the traversal range, it is
   // always in the traversal range.
-  if (aNode == aStartContainer || aNode == aEndNode) {
+  if (aNode == aStartContainer || aNode == aEndContainer) {
     if (aNode->IsNodeOfType(nsINode::eDATA_NODE)) {
       return true; // text node or something
     }
@@ -63,9 +63,9 @@ NodeIsInTraversalRange(nsINode* aNode, bool aIsPreMode,
       MOZ_ASSERT(aNode != aStartContainer || !aStartOffset,
         "aStartContainer doesn't have children and not a data node, "
         "aStartOffset should be 0");
-      MOZ_ASSERT(aNode != aEndNode || !aEndOffset,
-        "aStartContainer doesn't have children and not a data node, "
-        "aStartOffset should be 0");
+      MOZ_ASSERT(aNode != aEndContainer || !aEndOffset,
+        "aEndContainer doesn't have children and not a data node, "
+        "aEndOffset should be 0");
       return true;
     }
   }
@@ -84,7 +84,7 @@ NodeIsInTraversalRange(nsINode* aNode, bool aIsPreMode,
 
   return nsContentUtils::ComparePoints(aStartContainer, aStartOffset,
                                        parent, indx) <= 0 &&
-         nsContentUtils::ComparePoints(aEndNode, aEndOffset,
+         nsContentUtils::ComparePoints(aEndContainer, aEndOffset,
                                        parent, indx) >= 0;
 }
 

@@ -163,10 +163,10 @@ public:
   static nsresult GetRangeEndPoints(nsRange* aRange,
                                     nsIDOMNode** aStartContainer,
                                     int32_t* aStartOffset,
-                                    nsIDOMNode** aParent2,
-                                    int32_t* aOffset2);
+                                    nsIDOMNode** aEndContainer,
+                                    int32_t* aEndOffset);
   static nsresult CreateRange(nsIDOMNode* aStartContainer, int32_t aStartOffset,
-                              nsIDOMNode* aEndParent, int32_t aEndOffset,
+                              nsIDOMNode* aEndContainer, int32_t aEndOffset,
                               nsRange** aRange);
 
 private:
