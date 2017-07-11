@@ -626,6 +626,8 @@ function BuildConditionSandbox(aURL) {
     sandbox.isDebugBuild = gDebug.isDebugBuild;
     var prefs = CC["@mozilla.org/preferences-service;1"].
                 getService(CI.nsIPrefBranch);
+    var env = CC["@mozilla.org/process/environment;1"].
+                getService(CI.nsIEnvironment);
 
     // xr.XPCOMABI throws exception for configurations without full ABI
     // support (mobile builds on ARM)
@@ -719,7 +721,9 @@ function BuildConditionSandbox(aURL) {
 #endif
 
 #ifdef MOZ_STYLO
-    sandbox.stylo = prefs.getBoolPref("layout.css.servo.enabled", false) && !gCompareStyloToGecko;
+    sandbox.stylo =
+       (!!env.get("STYLO_FORCE_ENABLED") || prefs.getBoolPref("layout.css.servo.enabled", false)) &&
+        !gCompareStyloToGecko;
     sandbox.styloVsGecko = gCompareStyloToGecko;
 #else
     sandbox.stylo = false;
