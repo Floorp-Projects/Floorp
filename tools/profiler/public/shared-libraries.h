@@ -132,8 +132,6 @@ CompareAddresses(const SharedLibrary& first, const SharedLibrary& second)
 class SharedLibraryInfo {
 public:
   static SharedLibraryInfo GetInfoForSelf();
-  static void Initialize();
-
   SharedLibraryInfo() {}
 
   void AddSharedLibrary(SharedLibrary entry)
