@@ -2464,6 +2464,16 @@
     "releaseChannelCollection": "opt-out",
     "description": "Recorded once for each HTTP 401 response. The value records the type of authentication and the TLS-enabled status. (0=basic/clear, 1=basic/tls, 2=digest/clear, 3=digest/tls, 4=ntlm/clear, 5=ntlm/tls, 6=negotiate/clear, 7=negotiate/tls)"
   },
+  "HTTP_CHILD_OMT_STATS": {
+    "record_in_processes": ["content"],
+    "alert_emails": ["necko@mozilla.com"],
+    "bug_numbers": [1357682],
+    "expires_in_version": "61",
+    "kind": "categorical",
+    "keyed": true,
+    "description": "Stats about success rate of HTTP OMT request in content process, keyed by content policy.",
+    "labels": ["success", "successMainThread", "failListener", "failListenerChain", "notRequested"]
+  },
   "TCP_FAST_OPEN": {
     "record_in_processes": ["main", "content"],
     "expires_in_version": "61",
