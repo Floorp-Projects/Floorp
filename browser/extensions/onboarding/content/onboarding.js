@@ -245,19 +245,43 @@ class Onboarding {
     await this._loadCSS();
     this._bundle = Services.strings.createBundle(BUNDLE_URI);
 
-    this._overlayIcon = this._renderOverlayIcon();
-    this._overlay = this._renderOverlay();
-    this._window.document.body.appendChild(this._overlayIcon);
-    this._window.document.body.appendChild(this._overlay);
-
     this._loadJS(UITOUR_JS_URI);
-    this._loadJS(TOUR_AGENT_JS_URI);
 
-    this._overlayIcon.addEventListener("click", this);
-    this._overlay.addEventListener("click", this);
+    this._window.addEventListener("resize", this);
+
     // Destroy on unload. This is to ensure we remove all the stuff we left.
     // No any leak out there.
     this._window.addEventListener("unload", () => this.destroy());
+
+    this.uiInitialized = false;
+    this._resizeTimerId =
+      this._window.requestIdleCallback(() => this._resizeUI());
+  }
+
+  _resizeUI() {
+    // Don't show the overlay UI before we get to a better, responsive design.
+    if (this._window.document.body.getBoundingClientRect().width < 960) {
+      this.destroy();
+    } else {
+      this._initUI();
+    }
+  }
+
+  _initUI() {
+    if (this.uiInitialized) {
+      return;
+    }
+    this.uiInitialized = true;
+
+    this._overlayIcon = this._renderOverlayIcon();
+    this._overlayIcon.addEventListener("click", this);
+    this._window.document.body.appendChild(this._overlayIcon);
+
+    this._overlay = this._renderOverlay();
+    this._overlay.addEventListener("click", this);
+    this._window.document.body.appendChild(this._overlay);
+
+    this._loadJS(TOUR_AGENT_JS_URI);
 
     this._initPrefObserver();
     this._initNotification();
@@ -328,6 +352,14 @@ class Onboarding {
   }
 
   handleEvent(evt) {
+    if (evt.type === "resize") {
+      this._window.cancelIdleCallback(this._resizeTimerId);
+      this._resizeTimerId =
+        this._window.requestIdleCallback(() => this._resizeUI());
+
+      return;
+    }
+
     switch (evt.target.id) {
       case "onboarding-overlay-icon":
       case "onboarding-overlay-close-btn":
@@ -356,12 +388,19 @@ class Onboarding {
   }
 
   destroy() {
+    if (!this.uiInitialized) {
+      return;
+    }
+    this.uiInitialized = false;
+
     this._clearPrefObserver();
     this._overlayIcon.remove();
     this._overlay.remove();
     if (this._notificationBar) {
       this._notificationBar.remove();
     }
+
+    this._overlayIcon = this._overlay = this._notificationBar = null;
   }
 
   toggleOverlay() {
