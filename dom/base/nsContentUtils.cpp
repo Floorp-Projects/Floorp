@@ -7458,7 +7458,7 @@ nsContentUtils::GetSelectionInTextControl(Selection* aSelection,
 
   // All the node pointers here are raw pointers for performance.  We shouldn't
   // be doing anything in this function that invalidates the node tree.
-  nsINode* startParent = range->GetStartParent();
+  nsINode* startParent = range->GetStartContainer();
   uint32_t startOffset = range->StartOffset();
   nsINode* endParent = range->GetEndParent();
   uint32_t endOffset = range->EndOffset();

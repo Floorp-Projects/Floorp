@@ -309,7 +309,7 @@ nsContentIterator::Init(nsIDOMRange* aDOMRange)
   // get the start node and offset
   int32_t startIndx = range->StartOffset();
   NS_WARNING_ASSERTION(startIndx >= 0, "bad startIndx");
-  nsINode* startNode = range->GetStartParent();
+  nsINode* startNode = range->GetStartContainer();
   if (NS_WARN_IF(!startNode)) {
     return NS_ERROR_FAILURE;
   }
@@ -1283,7 +1283,7 @@ nsContentSubtreeIterator::Init(nsIDOMRange* aRange)
 
   // get the start node and offset, convert to nsINode
   mCommonParent = mRange->GetCommonAncestor();
-  nsINode* startParent = mRange->GetStartParent();
+  nsINode* startParent = mRange->GetStartContainer();
   int32_t startOffset = mRange->StartOffset();
   nsINode* endParent = mRange->GetEndParent();
   int32_t endOffset = mRange->EndOffset();

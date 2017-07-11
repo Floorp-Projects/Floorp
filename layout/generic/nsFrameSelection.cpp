@@ -640,7 +640,7 @@ void printRange(nsRange *aDomRange)
   {
     printf("NULL nsIDOMRange\n");
   }
-  nsINode* startNode = aDomRange->GetStartParent();
+  nsINode* startNode = aDomRange->GetStartContainer();
   nsINode* endNode = aDomRange->GetEndParent();
   int32_t startOffset = aDomRange->StartOffset();
   int32_t endOffset = aDomRange->EndOffset();
@@ -835,7 +835,7 @@ nsFrameSelection::MoveCaret(nsDirection       aDirection,
       nsINode* node;
       int32_t offset;
       if (aDirection == eDirPrevious) {
-        node =  anchorFocusRange->GetStartParent();
+        node =  anchorFocusRange->GetStartContainer();
         offset = anchorFocusRange->StartOffset();
       } else {
         node = anchorFocusRange->GetEndParent();
@@ -1211,7 +1211,7 @@ nsFrameSelection::AdjustForMaintainedSelection(nsIContent *aContent,
   if (!mDomSelections[index])
     return false;
 
-  nsINode* rangeStartNode = mMaintainRange->GetStartParent();
+  nsINode* rangeStartNode = mMaintainRange->GetStartContainer();
   nsINode* rangeEndNode = mMaintainRange->GetEndParent();
   int32_t rangeStartOffset = mMaintainRange->StartOffset();
   int32_t rangeEndOffset = mMaintainRange->EndOffset();
@@ -1311,7 +1311,7 @@ nsFrameSelection::HandleDrag(nsIFrame *aFrame, nsPoint aPoint)
   if (mMaintainRange &&
       mMaintainedAmount != eSelectNoAmount) {
 
-    nsINode* rangenode = mMaintainRange->GetStartParent();
+    nsINode* rangenode = mMaintainRange->GetStartContainer();
     int32_t rangeOffset = mMaintainRange->StartOffset();
     int32_t relativePosition =
       nsContentUtils::ComparePoints(rangenode, rangeOffset,
@@ -2104,11 +2104,11 @@ GetFirstSelectedContent(nsRange* aRange)
     return nullptr;
   }
 
-  NS_PRECONDITION(aRange->GetStartParent(), "Must have start parent!");
-  NS_PRECONDITION(aRange->GetStartParent()->IsElement(),
+  NS_PRECONDITION(aRange->GetStartContainer(), "Must have start parent!");
+  NS_PRECONDITION(aRange->GetStartContainer()->IsElement(),
                   "Unexpected parent");
 
-  return aRange->GetStartParent()->GetChildAt(aRange->StartOffset());
+  return aRange->GetStartContainer()->GetChildAt(aRange->StartOffset());
 }
 
 // Table selection support.
@@ -2386,7 +2386,7 @@ printf("HandleTableSelection: Unselecting mUnselectCellOnMouseUp; rangeCount=%d\
           RefPtr<nsRange> range = mDomSelections[index]->GetRangeAt(i);
           if (!range) return NS_ERROR_NULL_POINTER;
 
-          nsINode* parent = range->GetStartParent();
+          nsINode* parent = range->GetStartContainer();
           if (!parent) return NS_ERROR_NULL_POINTER;
 
           int32_t offset = range->StartOffset();
@@ -2737,7 +2737,7 @@ nsFrameSelection::GetFirstCellNodeInRange(nsRange *aRange) const
 {
   if (!aRange) return nullptr;
 
-  nsINode* startParent = aRange->GetStartParent();
+  nsINode* startParent = aRange->GetStartContainer();
   if (!startParent)
     return nullptr;
 

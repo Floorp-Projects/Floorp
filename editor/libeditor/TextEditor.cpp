@@ -714,7 +714,7 @@ TextEditor::InsertLineBreak()
   if (!cancel && !handled) {
     // get the (collapsed) selection location
     NS_ENSURE_STATE(selection->GetRangeAt(0));
-    nsCOMPtr<nsINode> selNode = selection->GetRangeAt(0)->GetStartParent();
+    nsCOMPtr<nsINode> selNode = selection->GetRangeAt(0)->GetStartContainer();
     int32_t selOffset = selection->GetRangeAt(0)->StartOffset();
     NS_ENSURE_STATE(selNode);
 
