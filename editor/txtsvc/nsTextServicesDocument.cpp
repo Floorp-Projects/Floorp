@@ -2808,11 +2808,11 @@ nsresult
 nsTextServicesDocument::GetRangeEndPoints(nsRange* aRange,
                                           nsIDOMNode** aStartContainer,
                                           int32_t* aStartOffset,
-                                          nsIDOMNode** aEndParent,
+                                          nsIDOMNode** aEndContainer,
                                           int32_t* aEndOffset)
 {
   NS_ENSURE_TRUE(aRange && aStartContainer && aStartOffset &&
-                 aEndParent && aEndOffset, NS_ERROR_NULL_POINTER);
+                 aEndContainer && aEndOffset, NS_ERROR_NULL_POINTER);
 
   nsresult rv = aRange->GetStartContainer(aStartContainer);
 
@@ -2824,11 +2824,11 @@ nsTextServicesDocument::GetRangeEndPoints(nsRange* aRange,
 
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = aRange->GetEndContainer(aEndParent);
+  rv = aRange->GetEndContainer(aEndContainer);
 
   NS_ENSURE_SUCCESS(rv, rv);
 
-  NS_ENSURE_TRUE(aEndParent, NS_ERROR_FAILURE);
+  NS_ENSURE_TRUE(aEndContainer, NS_ERROR_FAILURE);
 
   return aRange->GetEndOffset(aEndOffset);
 }
@@ -2836,11 +2836,11 @@ nsTextServicesDocument::GetRangeEndPoints(nsRange* aRange,
 nsresult
 nsTextServicesDocument::CreateRange(nsIDOMNode* aStartContainer,
                                     int32_t aStartOffset,
-                                    nsIDOMNode* aEndParent,
+                                    nsIDOMNode* aEndContainer,
                                     int32_t aEndOffset,
                                     nsRange** aRange)
 {
-  return nsRange::CreateRange(aStartContainer, aStartOffset, aEndParent,
+  return nsRange::CreateRange(aStartContainer, aStartOffset, aEndContainer,
                               aEndOffset, aRange);
 }
 

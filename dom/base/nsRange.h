@@ -48,13 +48,13 @@ public:
   explicit nsRange(nsINode* aNode);
 
   static nsresult CreateRange(nsIDOMNode* aStartContainer, int32_t aStartOffset,
-                              nsIDOMNode* aEndParent, int32_t aEndOffset,
+                              nsIDOMNode* aEndContainer, int32_t aEndOffset,
                               nsRange** aRange);
   static nsresult CreateRange(nsIDOMNode* aStartContainer, int32_t aStartOffset,
-                              nsIDOMNode* aEndParent, int32_t aEndOffset,
+                              nsIDOMNode* aEndContainer, int32_t aEndOffset,
                               nsIDOMRange** aRange);
   static nsresult CreateRange(nsINode* aStartContainer, int32_t aStartOffset,
-                              nsINode* aEndParent, int32_t aEndOffset,
+                              nsINode* aEndContainer, int32_t aEndOffset,
                               nsRange** aRange);
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
@@ -161,7 +161,7 @@ public:
    * the range will be collapsed at the end point.
    */
   nsresult SetStartAndEnd(nsINode* aStartContainer, int32_t aStartOffset,
-                          nsINode* aEndParent, int32_t aEndOffset);
+                          nsINode* aEndContainer, int32_t aEndOffset);
 
   /**
    * CollapseTo() works similar to call both SetStart() and SetEnd() with
@@ -272,7 +272,7 @@ public:
                                   mozilla::ErrorResult& aError,
                                   nsIContent* aStartContainer,
                                   uint32_t aStartOffset,
-                                  nsIContent* aEndParent,
+                                  nsIContent* aEndContainer,
                                   uint32_t aEndOffset);
 
   nsINode* GetParentObject() const { return mOwner; }
@@ -328,7 +328,8 @@ public:
                                         nsRange* aRange,
                                         nsINode* aStartContainer,
                                         int32_t aStartOffset,
-                                        nsINode* aEndParent, int32_t aEndOffset,
+                                        nsINode* aEndContainer,
+                                        int32_t aEndOffset,
                                         bool aClampToEdge, bool aFlushLayout);
 
   /**

@@ -2229,7 +2229,7 @@ HTMLEditor::CreateListOfNodesToPaste(
               nsTArray<OwningNonNull<nsINode>>& outNodeList,
               nsINode* aStartContainer,
               int32_t aStartOffset,
-              nsINode* aEndNode,
+              nsINode* aEndContainer,
               int32_t aEndOffset)
 {
   // If no info was provided about the boundary between context and stream,
@@ -2237,13 +2237,13 @@ HTMLEditor::CreateListOfNodesToPaste(
   if (!aStartContainer) {
     aStartContainer = &aFragment;
     aStartOffset = 0;
-    aEndNode = &aFragment;
+    aEndContainer = &aFragment;
     aEndOffset = aFragment.Length();
   }
 
   RefPtr<nsRange> docFragRange;
   nsresult rv = nsRange::CreateRange(aStartContainer, aStartOffset,
-                                     aEndNode, aEndOffset,
+                                     aEndContainer, aEndOffset,
                                      getter_AddRefs(docFragRange));
   MOZ_ASSERT(NS_SUCCEEDED(rv));
   NS_ENSURE_SUCCESS(rv, );
