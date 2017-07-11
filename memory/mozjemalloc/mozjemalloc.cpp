@@ -969,11 +969,9 @@ const uint8_t kAllocJunk = 0xe4;
 const uint8_t kAllocPoison = 0xe5;
 
 #ifdef MOZ_DEBUG
-static bool	opt_abort = true;
 static bool	opt_junk = true;
 static bool	opt_zero = false;
 #else
-static bool	opt_abort = false;
 static const bool	opt_junk = false;
 static const bool	opt_zero = false;
 #endif
@@ -1489,8 +1487,6 @@ pages_unmap(void *addr, size_t size)
 	if (VirtualFree(addr, 0, MEM_RELEASE) == 0) {
 		_malloc_message(_getprogname(),
 		    ": (malloc) Error in VirtualFree()\n");
-		if (opt_abort)
-			moz_abort();
 	}
 }
 #else
@@ -1577,8 +1573,6 @@ pages_map(void *addr, size_t size)
 				_malloc_message(_getprogname(),
 					": (malloc) Error in munmap(): ", buf, "\n");
 			}
-			if (opt_abort)
-				moz_abort();
 		}
 		ret = nullptr;
 	}
@@ -1607,8 +1601,6 @@ pages_unmap(void *addr, size_t size)
 			_malloc_message(_getprogname(),
 				": (malloc) Error in munmap(): ", buf, "\n");
 		}
-		if (opt_abort)
-			moz_abort();
 	}
 }
 #endif
@@ -3940,8 +3932,6 @@ arenas_fallback()
 	 */
 	_malloc_message(_getprogname(),
 	    ": (malloc) Error initializing arena\n");
-	if (opt_abort)
-		moz_abort();
 
 	return arenas[0];
 }
@@ -4315,12 +4305,6 @@ MALLOC_OUT:
 
 			for (j = 0; j < nreps; j++) {
 				switch (opts[i]) {
-				case 'a':
-					opt_abort = false;
-					break;
-				case 'A':
-					opt_abort = true;
-					break;
 				case 'f':
 					opt_dirty_max >>= 1;
 					break;
@@ -4776,7 +4760,6 @@ jemalloc_stats_impl(jemalloc_stats_t *stats)
 	/*
 	 * Gather runtime settings.
 	 */
-	stats->opt_abort = opt_abort;
 	stats->opt_junk = opt_junk;
 	stats->opt_zero = opt_zero;
 	stats->narenas = narenas;
