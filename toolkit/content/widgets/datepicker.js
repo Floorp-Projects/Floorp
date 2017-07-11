@@ -24,8 +24,8 @@ function DatePicker(context) {
      *           {Number} year [optional]
      *           {Number} month [optional]
      *           {Number} date [optional]
-     *           {String} min
-     *           {String} max
+     *           {Number} min
+     *           {Number} max
      *           {Number} step
      *           {Number} stepBase
      *           {Number} firstDayOfWeek
