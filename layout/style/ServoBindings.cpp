@@ -1313,10 +1313,10 @@ Gecko_CopyAlternateValuesFrom(nsFont* aDest, const nsFont* aSrc)
 
 void
 Gecko_SetImageOrientation(nsStyleVisibility* aVisibility,
-                          uint8_t aOrientation, bool aFlip)
+                          double aRadians, bool aFlip)
 {
   aVisibility->mImageOrientation =
-    nsStyleImageOrientation::CreateAsOrientationAndFlip(aOrientation, aFlip);
+    nsStyleImageOrientation::CreateAsAngleAndFlip(aRadians, aFlip);
 }
 
 void
