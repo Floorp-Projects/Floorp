@@ -7,7 +7,6 @@ include protocol PPluginBackgroundDestroyer;
 include protocol PPluginModule;
 include protocol PPluginScriptableObject;
 include protocol PBrowserStream;
-include protocol PPluginStream;
 include protocol PStreamNotify;
 include protocol PPluginSurface;
 
@@ -68,7 +67,6 @@ intr protocol PPluginInstance
   manages PPluginBackgroundDestroyer;
   manages PPluginScriptableObject;
   manages PBrowserStream;
-  manages PPluginStream;
   manages PStreamNotify;
   manages PPluginSurface;
 
@@ -289,12 +287,6 @@ child:
   intr NPP_NewStream(PBrowserStream actor, nsCString mimeType, bool seekable)
     returns (NPError rv,
              uint16_t stype);
-
-parent:
-  /* NPN_NewStream */
-  intr PPluginStream(nsCString mimeType,
-                    nsCString target)
-    returns (NPError result);
 
 parent:
   intr PluginFocusChange(bool gotFocus);
