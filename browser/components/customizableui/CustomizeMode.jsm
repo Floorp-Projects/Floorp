@@ -35,10 +35,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "LightweightThemeManager",
                                   "resource://gre/modules/LightweightThemeManager.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "SessionStore",
                                   "resource:///modules/sessionstore/SessionStore.jsm");
-XPCOMUtils.defineLazyGetter(this, "gWidgetsBundle", function() {
-  const kUrl = "chrome://browser/locale/customizableui/customizableWidgets.properties";
-  return Services.strings.createBundle(kUrl);
-});
 
 XPCOMUtils.defineLazyPreferenceGetter(this, "gPhotonStructure",
   "browser.photon.structure.enabled", false);
@@ -847,11 +843,6 @@ CustomizeMode.prototype = {
         fragment.appendChild(paletteItem);
       }
 
-      if (gPhotonStructure) {
-        let flexSpace = CustomizableUI.createSpecialWidget("spring", this.document);
-        fragment.appendChild(this.wrapToolbarItem(flexSpace, "palette"));
-      }
-
       this.visiblePalette.appendChild(fragment);
       this._stowedPalette = this.window.gNavToolbox.palette;
       this.window.gNavToolbox.palette = this.visiblePalette;
@@ -887,18 +878,20 @@ CustomizeMode.prototype = {
       let nextChild;
       while (paletteChild) {
         nextChild = paletteChild.nextElementSibling;
-        let itemId = paletteChild.firstChild.id;
-        if (CustomizableUI.isSpecialWidget(itemId)) {
-          this.visiblePalette.removeChild(paletteChild);
-        } else {
-          // XXXunf Currently this doesn't destroy the (now unused) node in the
-          //       API provider case. It would be good to do so, but we need to
-          //       keep strong refs to it in CustomizableUI (can't iterate of
-          //       WeakMaps), and there's the question of what behavior
-          //       wrappers should have if consumers keep hold of them.
+        let provider = CustomizableUI.getWidget(paletteChild.id).provider;
+        if (provider == CustomizableUI.PROVIDER_XUL) {
           let unwrappedPaletteItem =
             await this.deferredUnwrapToolbarItem(paletteChild);
           this._stowedPalette.appendChild(unwrappedPaletteItem);
+        } else if (provider == CustomizableUI.PROVIDER_API) {
+          // XXXunf Currently this doesn't destroy the (now unused) node. It would
+          //       be good to do so, but we need to keep strong refs to it in
+          //       CustomizableUI (can't iterate of WeakMaps), and there's the
+          //       question of what behavior wrappers should have if consumers
+          //       keep hold of them.
+          // widget.destroyInstance(widgetNode);
+        } else if (provider == CustomizableUI.PROVIDER_SPECIAL) {
+          this.visiblePalette.removeChild(paletteChild);
         }
 
         paletteChild = nextChild;
@@ -1032,10 +1025,6 @@ CustomizeMode.prototype = {
     if (!aIsUpdate) {
       wrapper.addEventListener("mousedown", this);
       wrapper.addEventListener("mouseup", this);
-    }
-
-    if (CustomizableUI.isSpecialWidget(aNode.id)) {
-      wrapper.setAttribute("title", gWidgetsBundle.GetStringFromName(aNode.nodeName + ".label"));
     }
 
     return wrapper;
@@ -2069,11 +2058,6 @@ CustomizeMode.prototype = {
       log.debug("Could not get a position for " + aTargetNode.nodeName + "#" + aTargetNode.id + "." + aTargetNode.className);
     }
     let position = placement ? placement.position : null;
-
-    // Force creating a new spacer/spring/separator if dragging from the palette
-    if (CustomizableUI.isSpecialWidget(aDraggedItemId) && aOriginArea.id == kPaletteId) {
-      aDraggedItemId = aDraggedItemId.match(/^customizableui-special-(spring|spacer|separator)/)[1];
-    }
 
     // Is the target area the same as the origin? Since we've already handled
     // the possibility that the target is the customization palette, we know
