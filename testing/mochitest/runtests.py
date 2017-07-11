@@ -1397,6 +1397,9 @@ toolbar#nav-bar {
         if manifest:
             if options.extra_mozinfo_json:
                 mozinfo.update(options.extra_mozinfo_json)
+            if 'STYLO_FORCE_ENABLED' in os.environ:
+                mozinfo.update({'stylo': True})
+
             info = mozinfo.info
 
             # Bug 1089034 - imptest failure expectations are encoded as
