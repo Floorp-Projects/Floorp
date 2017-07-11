@@ -7,10 +7,9 @@ use fnv::FnvHasher;
 use print_tree::PrintTree;
 use std::collections::{HashMap, HashSet};
 use std::hash::BuildHasherDefault;
-use webrender_traits::{ClipId, LayerPoint, LayerRect, LayerToScrollTransform};
-use webrender_traits::{LayerToWorldTransform, PipelineId, ScrollClamping, ScrollEventPhase};
-use webrender_traits::{ScrollLayerRect, ScrollLayerState, ScrollLocation, WorldPoint};
-use webrender_traits::{as_scroll_parent_rect, LayerVector2D};
+use api::{ClipId, LayerPoint, LayerRect, LayerToScrollTransform};
+use api::{LayerToWorldTransform, PipelineId, ScrollClamping, ScrollEventPhase};
+use api::{LayerVector2D, ScrollLayerState, ScrollLocation, WorldPoint};
 
 pub type ScrollStates = HashMap<ClipId, ScrollingState, BuildHasherDefault<FnvHasher>>;
 
@@ -231,7 +230,7 @@ impl ClipScrollTree {
         let root_viewport = self.nodes[&root_reference_frame_id].local_clip_rect;
         self.update_node_transform(root_reference_frame_id,
                                    &LayerToWorldTransform::create_translation(pan.x, pan.y, 0.0),
-                                   &as_scroll_parent_rect(&root_viewport),
+                                   &root_viewport,
                                    LayerVector2D::zero(),
                                    LayerVector2D::zero());
     }
@@ -239,54 +238,56 @@ impl ClipScrollTree {
     fn update_node_transform(&mut self,
                              layer_id: ClipId,
                              parent_reference_frame_transform: &LayerToWorldTransform,
-                             parent_viewport_rect: &ScrollLayerRect,
+                             parent_viewport_rect: &LayerRect,
                              parent_scroll_offset: LayerVector2D,
                              parent_accumulated_scroll_offset: LayerVector2D) {
         // TODO(gw): This is an ugly borrow check workaround to clone these.
         //           Restructure this to avoid the clones!
         let (reference_frame_transform,
-             viewport_rect,
+             combined_local_viewport_rect,
              scroll_offset,
              accumulated_scroll_offset,
              node_children) = {
-            match self.nodes.get_mut(&layer_id) {
-                Some(node) => {
-                    node.update_transform(parent_reference_frame_transform,
-                                          parent_viewport_rect,
-                                          parent_scroll_offset,
-                                          parent_accumulated_scroll_offset);
 
-                    // The transformation we are passing is the transformation of the parent
-                    // reference frame and the offset is the accumulated offset of all the nodes
-                    // between us and the parent reference frame. If we are a reference frame,
-                    // we need to reset both these values.
-                    let (transform, offset, accumulated_scroll_offset) = match node.node_type {
-                        NodeType::ReferenceFrame(..) =>
-                            (node.world_viewport_transform,
-                             LayerVector2D::zero(),
-                             LayerVector2D::zero()),
-                        _ => {
-                            let scroll_offset = node.scroll_offset();
-                            (*parent_reference_frame_transform,
-                             scroll_offset,
-                             scroll_offset + parent_accumulated_scroll_offset)
-                        }
-                    };
-
-                    (transform,
-                     as_scroll_parent_rect(&node.combined_local_viewport_rect),
-                     offset,
-                     accumulated_scroll_offset,
-                     node.children.clone())
-                }
+            let mut node = match self.nodes.get_mut(&layer_id) {
+                Some(node) => node,
                 None => return,
-            }
+            };
+            node.update_transform(parent_reference_frame_transform,
+                                  parent_viewport_rect,
+                                  parent_scroll_offset,
+                                  parent_accumulated_scroll_offset);
+
+            // The transformation we are passing is the transformation of the parent
+            // reference frame and the offset is the accumulated offset of all the nodes
+            // between us and the parent reference frame. If we are a reference frame,
+            // we need to reset both these values.
+            let (reference_frame_transform, scroll_offset, accumulated_scroll_offset) = match node.node_type {
+                NodeType::ReferenceFrame(..) =>
+                    (node.world_viewport_transform,
+                     LayerVector2D::zero(),
+                     LayerVector2D::zero()),
+                NodeType::Clip(..) =>
+                    (*parent_reference_frame_transform,
+                     LayerVector2D::zero(),
+                     parent_accumulated_scroll_offset),
+                NodeType::ScrollFrame(ref scrolling) =>
+                    (*parent_reference_frame_transform,
+                     scrolling.offset,
+                     scrolling.offset + parent_accumulated_scroll_offset),
+            };
+
+            (reference_frame_transform,
+             node.combined_local_viewport_rect,
+             scroll_offset,
+             accumulated_scroll_offset,
+             node.children.clone())
         };
 
         for child_layer_id in node_children {
             self.update_node_transform(child_layer_id,
                                        &reference_frame_transform,
-                                       &viewport_rect,
+                                       &combined_local_viewport_rect,
                                        scroll_offset,
                                        accumulated_scroll_offset);
         }
@@ -313,7 +314,6 @@ impl ClipScrollTree {
                 node.set_scroll_origin(&pending_offset, clamping);
             }
         }
-
     }
 
     pub fn generate_new_clip_id(&mut self, pipeline_id: PipelineId) -> ClipId {
@@ -365,6 +365,7 @@ impl ClipScrollTree {
             NodeType::Clip(ref info) => {
                 pt.new_level("Clip".to_owned());
                 pt.add_item(format!("screen_bounding_rect: {:?}", info.screen_bounding_rect));
+                pt.add_item(format!("screen_inner_rect: {:?}", info.screen_inner_rect));
 
                 pt.new_level(format!("Clip Sources [{}]", info.clip_sources.len()));
                 for source in &info.clip_sources {
@@ -382,9 +383,9 @@ impl ClipScrollTree {
         }
 
         pt.add_item(format!("content_size: {:?}", node.content_size));
-        pt.add_item(format!("combined_local_viewport_rect: {:?}", node.combined_local_viewport_rect));
         pt.add_item(format!("local_viewport_rect: {:?}", node.local_viewport_rect));
         pt.add_item(format!("local_clip_rect: {:?}", node.local_clip_rect));
+        pt.add_item(format!("combined_local_viewport_rect: {:?}", node.combined_local_viewport_rect));
         pt.add_item(format!("world_viewport_transform: {:?}", node.world_viewport_transform));
         pt.add_item(format!("world_content_transform: {:?}", node.world_content_transform));
 

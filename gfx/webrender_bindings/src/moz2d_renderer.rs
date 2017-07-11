@@ -1,4 +1,4 @@
-use webrender_traits::*;
+use webrender_api::*;
 use bindings::{WrByteSlice, MutByteSlice, wr_moz2d_render_cb};
 use rayon::ThreadPool;
 

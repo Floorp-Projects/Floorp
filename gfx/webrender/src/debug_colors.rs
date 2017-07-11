@@ -4,7 +4,7 @@
 
 #![allow(dead_code)]
 
-use webrender_traits::ColorF;
+use api::ColorF;
 
 // A subset of the standard CSS colors, useful for defining GPU tag colors etc.
 

@@ -7,7 +7,7 @@ use glutin;
 use std::env;
 use std::path::PathBuf;
 use webrender;
-use webrender_traits::*;
+use webrender::api::*;
 
 struct Notifier {
     window_proxy: glutin::WindowProxy,
@@ -16,7 +16,7 @@ struct Notifier {
 impl Notifier {
     fn new(window_proxy: glutin::WindowProxy) -> Notifier {
         Notifier {
-            window_proxy: window_proxy,
+            window_proxy,
         }
     }
 }

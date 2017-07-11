@@ -419,7 +419,6 @@ public:
     const nsTimingFunction& timingFunction = aSrc.GetTimingFunction();
     return styleSet->GetKeyframesForName(aSrc.GetName(),
                                          timingFunction,
-                                         mComputedValues,
                                          aKeyframes);
   }
   void SetKeyframes(KeyframeEffectReadOnly& aEffect,

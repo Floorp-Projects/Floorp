@@ -140,7 +140,6 @@ public class GeckoHlsPlayer implements BaseHlsPlayer, ExoPlayer.EventListener {
             return;
         }
         assertTrue(mDemuxerCallbacks != null);
-        assertTrue(mTracksInfo != null);
 
         if (DEBUG) {
             Log.d(LOGTAG, "[checkInitDone] VReady:" + mTracksInfo.videoReady() +
@@ -149,7 +148,9 @@ public class GeckoHlsPlayer implements BaseHlsPlayer, ExoPlayer.EventListener {
                     ",hasA:" + mTracksInfo.hasAudio());
         }
         if (mTracksInfo.videoReady() && mTracksInfo.audioReady()) {
-            mDemuxerCallbacks.onInitialized(mTracksInfo.hasAudio(), mTracksInfo.hasVideo());
+            if (mDemuxerCallbacks != null) {
+                mDemuxerCallbacks.onInitialized(mTracksInfo.hasAudio(), mTracksInfo.hasVideo());
+            }
             mIsDemuxerInitDone = true;
         }
     }
@@ -207,41 +208,65 @@ public class GeckoHlsPlayer implements BaseHlsPlayer, ExoPlayer.EventListener {
     public final class ComponentListener {
 
         // General purpose implementation
-        public synchronized void onDataArrived(int trackType) {
-            if (DEBUG) { Log.d(LOGTAG, "[CB][onDataArrived] id " + mPlayerId); }
-            if (!mIsPlayerInitDone) {
-                return;
+        public void onDataArrived(int trackType) {
+            synchronized (GeckoHlsPlayer.this) {
+                if (DEBUG) { Log.d(LOGTAG, "[CB][onDataArrived] id " + mPlayerId); }
+                if (!mIsPlayerInitDone) {
+                    return;
+                }
+                assertTrue(mResourceCallbacks != null);
+                assertTrue(mTracksInfo != null);
+
+                if (mTracksInfo == null || mResourceCallbacks == null) {
+                    Log.e(LOGTAG, "Encounter an abnormal calling sequence.");
+                    return;
+                }
+                mTracksInfo.onDataArrived(trackType);
+                mResourceCallbacks.onDataArrived();
+
+                checkInitDone();
             }
-            assertTrue(mResourceCallbacks != null);
-            assertTrue(mTracksInfo != null);
-            mTracksInfo.onDataArrived(trackType);
-            mResourceCallbacks.onDataArrived();
-            checkInitDone();
         }
 
-        public synchronized void onVideoInputFormatChanged(Format format) {
-            if (DEBUG) {
-                Log.d(LOGTAG, "[CB] onVideoInputFormatChanged [" + format + "]");
-                Log.d(LOGTAG, "[CB] SampleMIMEType [" +
-                              format.sampleMimeType + "], ContainerMIMEType [" +
-                              format.containerMimeType + "], id : " + mPlayerId);
+        public void onVideoInputFormatChanged(Format format) {
+            synchronized (GeckoHlsPlayer.this) {
+                if (DEBUG) {
+                    Log.d(LOGTAG, "[CB] onVideoInputFormatChanged [" + format + "]");
+                    Log.d(LOGTAG, "[CB] SampleMIMEType [" +
+                            format.sampleMimeType + "], ContainerMIMEType [" +
+                            format.containerMimeType + "], id : " + mPlayerId);
+                }
+                if (!mIsPlayerInitDone) {
+                    return;
+                }
+                assertTrue(mTracksInfo != null);
+
+                if (mTracksInfo == null) {
+                    Log.e(LOGTAG, "Encounter a abnormal calling sequence. mTracksInfo is null");
+                    return;
+                }
+                mTracksInfo.onVideoInfoUpdated();
+                checkInitDone();
             }
-            if (!mIsPlayerInitDone) {
-                return;
-            }
-            assertTrue(mTracksInfo != null);
-            mTracksInfo.onVideoInfoUpdated();
-            checkInitDone();
         }
 
-        public synchronized void onAudioInputFormatChanged(Format format) {
-            if (DEBUG) { Log.d(LOGTAG, "[CB] onAudioInputFormatChanged [" + format + "], mPlayerId :" + mPlayerId); }
-            if (!mIsPlayerInitDone) {
-                return;
+        public void onAudioInputFormatChanged(Format format) {
+            synchronized (GeckoHlsPlayer.this) {
+                if (DEBUG) {
+                    Log.d(LOGTAG, "[CB] onAudioInputFormatChanged [" + format + "], mPlayerId :" + mPlayerId);
+                }
+                if (!mIsPlayerInitDone) {
+                    return;
+                }
+                assertTrue(mTracksInfo != null);
+
+                if (mTracksInfo == null) {
+                    Log.e(LOGTAG, "Encounter a abnormal calling sequence. mTracksInfo is null");
+                    return;
+                }
+                mTracksInfo.onAudioInfoUpdated();
+                checkInitDone();
             }
-            assertTrue(mTracksInfo != null);
-            mTracksInfo.onAudioInfoUpdated();
-            checkInitDone();
         }
     }
 
@@ -260,13 +285,12 @@ public class GeckoHlsPlayer implements BaseHlsPlayer, ExoPlayer.EventListener {
         );
     }
 
-    private long getDuration() {
-        assertTrue(mPlayer != null);
-        if (isLiveStream()) {
-            return 0L;
-        }
+    private synchronized long getDuration() {
+        long duration = 0L;
         // Value returned by getDuration() is in milliseconds.
-        long duration = Math.max(0L, mPlayer.getDuration() * 1000L);
+        if (mPlayer != null && !isLiveStream()) {
+            duration = Math.max(0L, mPlayer.getDuration() * 1000L);
+        }
         if (DEBUG) { Log.d(LOGTAG, "getDuration : " + duration  + "(Us)"); }
         return duration;
     }
@@ -299,7 +323,7 @@ public class GeckoHlsPlayer implements BaseHlsPlayer, ExoPlayer.EventListener {
     }
 
     @Override
-    public void onLoadingChanged(boolean isLoading) {
+    public synchronized void onLoadingChanged(boolean isLoading) {
         if (DEBUG) { Log.d(LOGTAG, "loading [" + isLoading + "]"); }
         if (!isLoading) {
             // To update buffered position.
@@ -308,7 +332,7 @@ public class GeckoHlsPlayer implements BaseHlsPlayer, ExoPlayer.EventListener {
     }
 
     @Override
-    public void onPlayerStateChanged(boolean playWhenReady, int state) {
+    public synchronized void onPlayerStateChanged(boolean playWhenReady, int state) {
         if (DEBUG) { Log.d(LOGTAG, "state [" + playWhenReady + ", " + getStateString(state) + "]"); }
         if (state == ExoPlayer.STATE_READY) {
             mPlayer.setPlayWhenReady(true);
@@ -329,7 +353,7 @@ public class GeckoHlsPlayer implements BaseHlsPlayer, ExoPlayer.EventListener {
     }
 
     @Override
-    public void onPlayerError(ExoPlaybackException e) {
+    public synchronized void onPlayerError(ExoPlaybackException e) {
         if (DEBUG) { Log.e(LOGTAG, "playerFailed" , e); }
         mIsPlayerInitDone = false;
         if (mResourceCallbacks != null) {
@@ -348,52 +372,52 @@ public class GeckoHlsPlayer implements BaseHlsPlayer, ExoPlayer.EventListener {
 
             MappedTrackInfo mappedTrackInfo = mTrackSelector.getCurrentMappedTrackInfo();
             if (mappedTrackInfo == null) {
-              Log.d(LOGTAG, "Tracks []");
-              return;
+                Log.d(LOGTAG, "Tracks []");
+                return;
             }
             Log.d(LOGTAG, "Tracks [");
             // Log tracks associated to renderers.
             for (int rendererIndex = 0; rendererIndex < mappedTrackInfo.length; rendererIndex++) {
-              TrackGroupArray rendererTrackGroups = mappedTrackInfo.getTrackGroups(rendererIndex);
-              TrackSelection trackSelection = trackSelections.get(rendererIndex);
-              if (rendererTrackGroups.length > 0) {
-                Log.d(LOGTAG, "  Renderer:" + rendererIndex + " [");
-                for (int groupIndex = 0; groupIndex < rendererTrackGroups.length; groupIndex++) {
-                  TrackGroup trackGroup = rendererTrackGroups.get(groupIndex);
-                  String adaptiveSupport = getAdaptiveSupportString(trackGroup.length,
-                          mappedTrackInfo.getAdaptiveSupport(rendererIndex, groupIndex, false));
-                  Log.d(LOGTAG, "    Group:" + groupIndex + ", adaptive_supported=" + adaptiveSupport + " [");
-                  for (int trackIndex = 0; trackIndex < trackGroup.length; trackIndex++) {
-                    String status = getTrackStatusString(trackSelection, trackGroup, trackIndex);
-                    String formatSupport = getFormatSupportString(
-                            mappedTrackInfo.getTrackFormatSupport(rendererIndex, groupIndex, trackIndex));
-                    Log.d(LOGTAG, "      " + status + " Track:" + trackIndex +
-                                  ", " + Format.toLogString(trackGroup.getFormat(trackIndex)) +
-                                  ", supported=" + formatSupport);
-                  }
-                  Log.d(LOGTAG, "    ]");
+                TrackGroupArray rendererTrackGroups = mappedTrackInfo.getTrackGroups(rendererIndex);
+                TrackSelection trackSelection = trackSelections.get(rendererIndex);
+                if (rendererTrackGroups.length > 0) {
+                    Log.d(LOGTAG, "  Renderer:" + rendererIndex + " [");
+                    for (int groupIndex = 0; groupIndex < rendererTrackGroups.length; groupIndex++) {
+                        TrackGroup trackGroup = rendererTrackGroups.get(groupIndex);
+                        String adaptiveSupport = getAdaptiveSupportString(trackGroup.length,
+                                mappedTrackInfo.getAdaptiveSupport(rendererIndex, groupIndex, false));
+                        Log.d(LOGTAG, "    Group:" + groupIndex + ", adaptive_supported=" + adaptiveSupport + " [");
+                        for (int trackIndex = 0; trackIndex < trackGroup.length; trackIndex++) {
+                            String status = getTrackStatusString(trackSelection, trackGroup, trackIndex);
+                            String formatSupport = getFormatSupportString(
+                                    mappedTrackInfo.getTrackFormatSupport(rendererIndex, groupIndex, trackIndex));
+                            Log.d(LOGTAG, "      " + status + " Track:" + trackIndex + ", " +
+                                    Format.toLogString(trackGroup.getFormat(trackIndex)) +
+                                    ", supported=" + formatSupport);
+                        }
+                        Log.d(LOGTAG, "    ]");
+                    }
+                    Log.d(LOGTAG, "  ]");
                 }
-                Log.d(LOGTAG, "  ]");
-              }
             }
             // Log tracks not associated with a renderer.
             TrackGroupArray unassociatedTrackGroups = mappedTrackInfo.getUnassociatedTrackGroups();
             if (unassociatedTrackGroups.length > 0) {
-              Log.d(LOGTAG, "  Renderer:None [");
-              for (int groupIndex = 0; groupIndex < unassociatedTrackGroups.length; groupIndex++) {
-                Log.d(LOGTAG, "    Group:" + groupIndex + " [");
-                TrackGroup trackGroup = unassociatedTrackGroups.get(groupIndex);
-                for (int trackIndex = 0; trackIndex < trackGroup.length; trackIndex++) {
-                  String status = getTrackStatusString(false);
-                  String formatSupport = getFormatSupportString(
-                          RendererCapabilities.FORMAT_UNSUPPORTED_TYPE);
-                  Log.d(LOGTAG, "      " + status + " Track:" + trackIndex +
+                Log.d(LOGTAG, "  Renderer:None [");
+                for (int groupIndex = 0; groupIndex < unassociatedTrackGroups.length; groupIndex++) {
+                    Log.d(LOGTAG, "    Group:" + groupIndex + " [");
+                    TrackGroup trackGroup = unassociatedTrackGroups.get(groupIndex);
+                    for (int trackIndex = 0; trackIndex < trackGroup.length; trackIndex++) {
+                        String status = getTrackStatusString(false);
+                        String formatSupport = getFormatSupportString(
+                                RendererCapabilities.FORMAT_UNSUPPORTED_TYPE);
+                        Log.d(LOGTAG, "      " + status + " Track:" + trackIndex +
                                 ", " + Format.toLogString(trackGroup.getFormat(trackIndex)) +
                                 ", supported=" + formatSupport);
+                    }
+                    Log.d(LOGTAG, "    ]");
                 }
-                Log.d(LOGTAG, "    ]");
-              }
-              Log.d(LOGTAG, "  ]");
+                Log.d(LOGTAG, "  ]");
             }
             Log.d(LOGTAG, "]");
         }
@@ -419,7 +443,7 @@ public class GeckoHlsPlayer implements BaseHlsPlayer, ExoPlayer.EventListener {
     }
 
     @Override
-    public void onTimelineChanged(Timeline timeline, Object manifest) {
+    public synchronized void onTimelineChanged(Timeline timeline, Object manifest) {
         // For now, we use the interface ExoPlayer.getDuration() for gecko,
         // so here we create local variable 'window' & 'peroid' to obtain
         // the dynamic duration.
@@ -578,10 +602,9 @@ public class GeckoHlsPlayer implements BaseHlsPlayer, ExoPlayer.EventListener {
     }
 
     @Override
-    public long getBufferedPosition() {
-        assertTrue(mPlayer != null);
+    public synchronized long getBufferedPosition() {
         // Value returned by getBufferedPosition() is in milliseconds.
-        long bufferedPos = Math.max(0L, mPlayer.getBufferedPosition() * 1000L);
+        long bufferedPos = mPlayer == null ? 0L : Math.max(0L, mPlayer.getBufferedPosition() * 1000L);
         if (DEBUG) { Log.d(LOGTAG, "getBufferedPosition : " + bufferedPos + "(Us)"); }
         return bufferedPos;
     }
@@ -648,7 +671,7 @@ public class GeckoHlsPlayer implements BaseHlsPlayer, ExoPlayer.EventListener {
     }
 
     @Override
-    public boolean seek(long positionUs) {
+    public synchronized boolean seek(long positionUs) {
         // positionUs : microseconds.
         // NOTE : 1) It's not possible to seek media by tracktype via ExoPlayer Interface.
         //        2) positionUs is samples PTS from MFR, we need to re-adjust it
@@ -672,7 +695,9 @@ public class GeckoHlsPlayer implements BaseHlsPlayer, ExoPlayer.EventListener {
             assertTrue(startTime != Long.MAX_VALUE);
             mPlayer.seekTo(positionUs / 1000 - startTime / 1000);
         } catch (Exception e) {
-            mDemuxerCallbacks.onError(DemuxerError.UNKNOWN.code());
+            if (mDemuxerCallbacks != null) {
+                mDemuxerCallbacks.onError(DemuxerError.UNKNOWN.code());
+            }
             return false;
         }
         return true;

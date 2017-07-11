@@ -7,9 +7,9 @@
 //! The API surface provided here should be roughly the same to the one provided
 //! in webgl_types, modulo completely compiled-out stuff.
 
-use webrender_traits::DeviceIntSize;
-use webrender_traits::{GLContextAttributes, GLLimits};
-use webrender_traits::WebGLCommand;
+use api::DeviceIntSize;
+use api::{GLContextAttributes, GLLimits};
+use api::WebGLCommand;
 
 pub struct GLContextHandleWrapper;
 

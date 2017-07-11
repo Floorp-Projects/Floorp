@@ -17,9 +17,9 @@ use std::mem;
 use std::slice::Iter;
 use time;
 use util;
-use webrender_traits::{ExternalImageType, ImageData, ImageFormat};
-use webrender_traits::{DeviceUintRect, DeviceUintSize, DeviceUintPoint};
-use webrender_traits::{DevicePoint, ImageDescriptor};
+use api::{ExternalImageType, ImageData, ImageFormat};
+use api::{DeviceUintRect, DeviceUintSize, DeviceUintPoint};
+use api::{DevicePoint, ImageDescriptor};
 
 /// The number of bytes we're allowed to use for a texture.
 const MAX_BYTES_PER_TEXTURE: u32 = 1024 * 1024 * 256;  // 256MB
@@ -77,8 +77,8 @@ pub struct TexturePage {
 impl TexturePage {
     pub fn new(texture_id: CacheTextureId, texture_size: DeviceUintSize) -> TexturePage {
         let mut page = TexturePage {
-            texture_id: texture_id,
-            texture_size: texture_size,
+            texture_id,
+            texture_size,
             free_list: FreeRectList::new(),
             coalesce_vec: Vec::new(),
             allocations: 0,
@@ -496,7 +496,7 @@ impl TextureCacheItem {
            user_data: [f32; 2])
            -> TextureCacheItem {
         TextureCacheItem {
-            texture_id: texture_id,
+            texture_id,
             uv_rect: UvRect {
                 uv0: DevicePoint::new(rect.origin.x as f32,
                                       rect.origin.y as f32),
@@ -505,7 +505,7 @@ impl TextureCacheItem {
             },
             allocated_rect: rect,
             uv_rect_handle: GpuCacheHandle::new(),
-            user_data: user_data,
+            user_data,
         }
     }
 }
@@ -603,7 +603,7 @@ impl TextureCache {
             items: FreeList::new(),
             pending_updates: TextureUpdateList::new(),
             arena: TextureCacheArena::new(),
-            max_texture_size: max_texture_size,
+            max_texture_size,
         }
     }
 
@@ -642,7 +642,7 @@ impl TextureCache {
             return AllocationResult {
                 item: self.items.get(image_id).clone(),
                 kind: AllocationKind::Standalone,
-                image_id: image_id,
+                image_id,
             }
         }
 
@@ -717,7 +717,7 @@ impl TextureCache {
                     self.pending_updates.push(update_op);
 
                     free_texture_levels.push(FreeTextureLevel {
-                        texture_id: texture_id,
+                        texture_id,
                     });
                 }
                 let free_texture_level = free_texture_levels.pop().unwrap();
@@ -739,7 +739,7 @@ impl TextureCache {
         AllocationResult {
             item: cache_item,
             kind: AllocationKind::TexturePage,
-            image_id: image_id,
+            image_id,
         }
     }
 
@@ -773,7 +773,7 @@ impl TextureCache {
                             height: dirty.size.height,
                             data: bytes,
                             stride: Some(stride),
-                            offset: offset,
+                            offset,
                         }
                     }
                     None => {
@@ -793,7 +793,7 @@ impl TextureCache {
 
         let update_op = TextureUpdate {
             id: existing_item.texture_id,
-            op: op,
+            op,
         };
 
         self.pending_updates.push(update_op);
@@ -845,7 +845,7 @@ impl TextureCache {
                                         rect: result.item.allocated_rect,
                                         id: ext_image.id,
                                         channel_index: ext_image.channel_index,
-                                        stride: stride,
+                                        stride,
                                         offset: descriptor.offset,
                                     },
                                 };
@@ -866,7 +866,7 @@ impl TextureCache {
                                 width: result.item.allocated_rect.size.width,
                                 height: result.item.allocated_rect.size.height,
                                 data: bytes,
-                                stride: stride,
+                                stride,
                                 offset: descriptor.offset,
                             },
                         };
@@ -888,10 +888,10 @@ impl TextureCache {
                                 let update_op = TextureUpdate {
                                     id: result.item.texture_id,
                                     op: TextureUpdateOp::Create {
-                                        width: width,
-                                        height: height,
-                                        format: format,
-                                        filter: filter,
+                                        width,
+                                        height,
+                                        format,
+                                        filter,
                                         mode: RenderTargetMode::None,
                                         data: Some(data),
                                     },
@@ -905,10 +905,10 @@ impl TextureCache {
                         let update_op = TextureUpdate {
                             id: result.item.texture_id,
                             op: TextureUpdateOp::Create {
-                                width: width,
-                                height: height,
-                                format: format,
-                                filter: filter,
+                                width,
+                                height,
+                                format,
+                                filter,
                                 mode: RenderTargetMode::None,
                                 data: Some(data),
                             },
@@ -953,9 +953,9 @@ fn texture_create_op(texture_size: DeviceUintSize, format: ImageFormat, mode: Re
     TextureUpdateOp::Create {
         width: texture_size.width,
         height: texture_size.height,
-        format: format,
+        format,
         filter: TextureFilter::Linear,
-        mode: mode,
+        mode,
         data: None,
     }
 }
@@ -967,9 +967,9 @@ fn texture_grow_op(texture_size: DeviceUintSize,
     TextureUpdateOp::Grow {
         width: texture_size.width,
         height: texture_size.height,
-        format: format,
+        format,
         filter: TextureFilter::Linear,
-        mode: mode,
+        mode,
     }
 }
 

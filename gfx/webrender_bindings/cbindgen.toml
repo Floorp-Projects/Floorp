@@ -15,7 +15,7 @@ language = "C++"
 
 [parse]
 parse_deps = true
-include = ["webrender", "webrender_traits"]
+include = ["webrender", "webrender_api"]
 
 [fn]
 prefix = "WR_INLINE"

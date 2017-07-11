@@ -65,11 +65,10 @@ impl ColorU {
 
     pub fn new(r: u8, g: u8, b: u8, a: u8) -> ColorU {
         ColorU {
-            r: r,
-            g: g,
-            b: b,
-            a: a,
+            r,
+            g,
+            b,
+            a,
         }
     }
 }
-
