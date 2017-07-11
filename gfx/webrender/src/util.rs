@@ -4,10 +4,10 @@
 
 use std::f32::consts::{FRAC_1_SQRT_2};
 use euclid::{Point2D, Rect, Size2D};
-use euclid::{TypedRect, TypedPoint2D, TypedSize2D, TypedTransform3D};
-use webrender_traits::{DeviceIntRect, DeviceIntPoint, DeviceIntSize};
-use webrender_traits::{LayerRect, WorldPoint3D, LayerToWorldTransform};
-use webrender_traits::{BorderRadius, ComplexClipRegion, LayoutRect};
+use euclid::{TypedRect, TypedPoint2D, TypedSize2D, TypedTransform2D, TypedTransform3D};
+use api::{DeviceIntRect, DevicePoint, DeviceRect, DeviceSize};
+use api::{LayerRect, WorldPoint3D, LayerToWorldTransform};
+use api::{BorderRadius, ComplexClipRegion, LayoutRect};
 use num_traits::Zero;
 
 // Matches the definition of SK_ScalarNearlyZero in Skia.
@@ -18,6 +18,8 @@ pub trait MatrixHelpers<Src, Dst> {
     fn transform_rect(&self, rect: &TypedRect<f32, Src>) -> TypedRect<f32, Dst>;
     fn is_identity(&self) -> bool;
     fn preserves_2d_axis_alignment(&self) -> bool;
+    fn inverse_project(&self, target: &TypedPoint2D<f32, Dst>) -> Option<TypedPoint2D<f32, Src>>;
+    fn inverse_rect_footprint(&self, rect: &TypedRect<f32, Dst>) -> TypedRect<f32, Src>;
 }
 
 impl<Src, Dst> MatrixHelpers<Src, Dst> for TypedTransform3D<f32, Src, Dst> {
@@ -63,6 +65,31 @@ impl<Src, Dst> MatrixHelpers<Src, Dst> for TypedTransform3D<f32, Src, Dst> {
         }
 
         col0 < 2 && col1 < 2 && row0 < 2 && row1 < 2
+    }
+
+    fn inverse_project(&self, target: &TypedPoint2D<f32, Dst>) -> Option<TypedPoint2D<f32, Src>> {
+        let m: TypedTransform2D<f32, Src, Dst>;
+        m = TypedTransform2D::column_major(self.m11 - target.x * self.m14,
+                                           self.m21 - target.x * self.m24,
+                                           self.m41 - target.x * self.m44,
+                                           self.m12 - target.y * self.m14,
+                                           self.m22 - target.y * self.m24,
+                                           self.m42 - target.y * self.m44);
+        m.inverse()
+         .map(|inv| TypedPoint2D::new(inv.m31, inv.m32))
+    }
+
+    fn inverse_rect_footprint(&self, rect: &TypedRect<f32, Dst>) -> TypedRect<f32, Src> {
+        TypedRect::from_points(&[
+            self.inverse_project(&rect.origin)
+                .unwrap_or(TypedPoint2D::zero()),
+            self.inverse_project(&rect.top_right())
+                .unwrap_or(TypedPoint2D::zero()),
+            self.inverse_project(&rect.bottom_left())
+                .unwrap_or(TypedPoint2D::zero()),
+            self.inverse_project(&rect.bottom_right())
+                .unwrap_or(TypedPoint2D::zero()),
+        ])
     }
 }
 
@@ -175,6 +202,13 @@ pub struct TransformedRect {
     pub kind: TransformedRectKind,
 }
 
+// Having an unlimited bounding box is fine up until we try
+// to cast it to `i32`, where we get `-2147483648` for any
+// values larger than or equal to 2^31.
+//Note: clamping to i32::MIN and i32::MAX is not a solution,
+// with explanation left as an exercise for the reader.
+const MAX_COORD: f32 = 1.0e9;
+
 impl TransformedRect {
     pub fn new(rect: &LayerRect,
                transform: &LayerToWorldTransform,
@@ -186,80 +220,43 @@ impl TransformedRect {
             TransformedRectKind::Complex
         };
 
-        // FIXME(gw): This code is meant to be a fast path for simple transforms.
-        // However, it fails on transforms that translate Z but result in an
-        // axis aligned rect.
 
-/*
-        match kind {
-            TransformedRectKind::AxisAligned => {
-                let v0 = transform.transform_point(&rect.origin);
-                let v1 = transform.transform_point(&rect.top_right());
-                let v2 = transform.transform_point(&rect.bottom_left());
-                let v3 = transform.transform_point(&rect.bottom_right());
+        let vertices = [
+            transform.transform_point3d(&rect.origin.to_3d()),
+            transform.transform_point3d(&rect.bottom_left().to_3d()),
+            transform.transform_point3d(&rect.bottom_right().to_3d()),
+            transform.transform_point3d(&rect.top_right().to_3d()),
+        ];
 
-                let screen_min_dp = Point2D::new(DevicePixel((v0.x * device_pixel_ratio).floor() as i32),
-                                                 DevicePixel((v0.y * device_pixel_ratio).floor() as i32));
-                let screen_max_dp = Point2D::new(DevicePixel((v3.x * device_pixel_ratio).ceil() as i32),
-                                                 DevicePixel((v3.y * device_pixel_ratio).ceil() as i32));
+        let (mut xs, mut ys) = ([0.0; 4], [0.0; 4]);
 
-                let screen_rect_dp = Rect::new(screen_min_dp, Size2D::new(screen_max_dp.x - screen_min_dp.x,
-                                                                          screen_max_dp.y - screen_min_dp.y));
+        for (vertex, (x, y)) in vertices.iter().zip(xs.iter_mut().zip(ys.iter_mut())) {
+            *x = get_normal(vertex.x).unwrap_or(0.0);
+            *y = get_normal(vertex.y).unwrap_or(0.0);
+        }
 
-                TransformedRect {
-                    local_rect: *rect,
-                    vertices: [
-                        Point4D::new(v0.x, v0.y, 0.0, 1.0),
-                        Point4D::new(v1.x, v1.y, 0.0, 1.0),
-                        Point4D::new(v2.x, v2.y, 0.0, 1.0),
-                        Point4D::new(v3.x, v3.y, 0.0, 1.0),
-                    ],
-                    bounding_rect: screen_rect_dp,
-                    kind: kind,
-                }
-            }
-            TransformedRectKind::Complex => {
-                */
-                let vertices = [
-                    transform.transform_point3d(&rect.origin.to_3d()),
-                    transform.transform_point3d(&rect.bottom_left().to_3d()),
-                    transform.transform_point3d(&rect.bottom_right().to_3d()),
-                    transform.transform_point3d(&rect.top_right().to_3d()),
-                ];
+        xs.sort_by(|a, b| a.partial_cmp(b).unwrap());
+        ys.sort_by(|a, b| a.partial_cmp(b).unwrap());
 
-                let (mut xs, mut ys) = ([0.0; 4], [0.0; 4]);
+        let outer_min_dp = (DevicePoint::new(xs[0], ys[0]) * device_pixel_ratio).floor();
+        let outer_max_dp = (DevicePoint::new(xs[3], ys[3]) * device_pixel_ratio).ceil();
+        let inner_min_dp = (DevicePoint::new(xs[1], ys[1]) * device_pixel_ratio).ceil();
+        let inner_max_dp = (DevicePoint::new(xs[2], ys[2]) * device_pixel_ratio).floor();
 
-                for (vertex, (x, y)) in vertices.iter().zip(xs.iter_mut().zip(ys.iter_mut())) {
-                    *x = get_normal(vertex.x).unwrap_or(0.0);
-                    *y = get_normal(vertex.y).unwrap_or(0.0);
-                }
+        let max_rect = DeviceRect::new(DevicePoint::new(-MAX_COORD, -MAX_COORD),
+                                       DeviceSize::new(2.0*MAX_COORD, 2.0*MAX_COORD));
+        let bounding_rect = DeviceRect::new(outer_min_dp, (outer_max_dp - outer_min_dp).to_size())
+            .intersection(&max_rect).unwrap_or(max_rect).to_i32();
+        let inner_rect = DeviceRect::new(inner_min_dp, (inner_max_dp - inner_min_dp).to_size())
+            .intersection(&max_rect).unwrap_or(max_rect).to_i32();
 
-                xs.sort_by(|a, b| a.partial_cmp(b).unwrap());
-                ys.sort_by(|a, b| a.partial_cmp(b).unwrap());
-
-                let outer_min_dp = DeviceIntPoint::new((xs[0] * device_pixel_ratio).floor() as i32,
-                                                       (ys[0] * device_pixel_ratio).floor() as i32);
-                let outer_max_dp = DeviceIntPoint::new((xs[3] * device_pixel_ratio).ceil() as i32,
-                                                       (ys[3] * device_pixel_ratio).ceil() as i32);
-                let inner_min_dp = DeviceIntPoint::new((xs[1] * device_pixel_ratio).ceil() as i32,
-                                                       (ys[1] * device_pixel_ratio).ceil() as i32);
-                let inner_max_dp = DeviceIntPoint::new((xs[2] * device_pixel_ratio).floor() as i32,
-                                                       (ys[2] * device_pixel_ratio).floor() as i32);
-
-                TransformedRect {
-                    local_rect: *rect,
-                    vertices: vertices,
-                    bounding_rect: DeviceIntRect::new(outer_min_dp,
-                                                      DeviceIntSize::new(outer_max_dp.x.saturating_sub(outer_min_dp.x),
-                                                                         outer_max_dp.y.saturating_sub(outer_min_dp.y))),
-                    inner_rect: DeviceIntRect::new(inner_min_dp,
-                                                   DeviceIntSize::new(inner_max_dp.x.saturating_sub(inner_min_dp.x),
-                                                                      inner_max_dp.y.saturating_sub(inner_min_dp.y))),
-                    kind: kind,
-                }
-                /*
-            }
-        }*/
+        TransformedRect {
+            local_rect: *rect,
+            vertices,
+            bounding_rect,
+            inner_rect,
+            kind,
+        }
     }
 }
 
@@ -326,4 +323,23 @@ pub fn recycle_vec<T>(mut old_vec: Vec<T>) -> Vec<T> {
     old_vec.clear();
 
     return old_vec;
+}
+
+
+#[cfg(test)]
+pub mod test {
+    use super::*;
+    use euclid::{Point2D, Radians, Transform3D};
+    use std::f32::consts::PI;
+
+    #[test]
+    fn inverse_project() {
+        let m0 = Transform3D::identity();
+        let p0 = Point2D::new(1.0, 2.0);
+        // an identical transform doesn't need any inverse projection
+        assert_eq!(m0.inverse_project(&p0), Some(p0));
+        let m1 = Transform3D::create_rotation(0.0, 1.0, 0.0, Radians::new(PI / 3.0));
+        // rotation by 60 degrees would imply scaling of X component by a factor of 2
+        assert_eq!(m1.inverse_project(&p0), Some(Point2D::new(2.0, 2.0)));
+    }
 }

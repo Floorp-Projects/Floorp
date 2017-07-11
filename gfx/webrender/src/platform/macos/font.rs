@@ -15,9 +15,9 @@ use core_text::font_descriptor::kCTFontDefaultOrientation;
 use core_text;
 use std::collections::HashMap;
 use std::collections::hash_map::Entry;
-use webrender_traits::{ColorU, FontKey, FontRenderMode, GlyphDimensions};
-use webrender_traits::{GlyphKey, GlyphOptions, SubpixelPoint};
-use webrender_traits::NativeFontHandle;
+use api::{ColorU, FontKey, FontRenderMode, GlyphDimensions};
+use api::{GlyphKey, GlyphOptions, SubpixelPoint};
+use api::NativeFontHandle;
 use gamma_lut::{GammaLut, Color as ColorLut};
 
 pub struct FontContext {

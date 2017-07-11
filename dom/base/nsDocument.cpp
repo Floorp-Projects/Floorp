@@ -13491,11 +13491,30 @@ nsDocument::IsThirdParty()
   return mIsThirdParty.value();
 }
 
+static bool
+IsAboutReader(nsIURI* aURI)
+{
+  if (!aURI) {
+    return false;
+  }
+
+  nsCString spec;
+  aURI->GetSpec(spec);
+
+  // Reader mode URLs look like about:reader?[...].
+  return StringBeginsWith(spec, NS_LITERAL_CSTRING("about:reader"));
+}
+
 bool
 nsIDocument::IsScopedStyleEnabled()
 {
   if (mIsScopedStyleEnabled == eScopedStyle_Unknown) {
+    // We allow <style scoped> in about:reader pages since on Android
+    // we use it to inject some in-page UI.  (We currently don't
+    // support styling about:reader pages in stylo anyway, so for
+    // now it's OK to enable it here.)
     mIsScopedStyleEnabled = nsContentUtils::IsChromeDoc(this) ||
+                            IsAboutReader(mDocumentURI) ||
                             nsContentUtils::IsScopedStylePrefEnabled()
                               ? eScopedStyle_Enabled
                               : eScopedStyle_Disabled;

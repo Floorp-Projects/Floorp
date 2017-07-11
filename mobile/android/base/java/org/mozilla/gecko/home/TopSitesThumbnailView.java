@@ -35,6 +35,7 @@ public class TopSitesThumbnailView extends CropImageView {
 
     // Paint for drawing the border.
     private final Paint mBorderPaint;
+    private boolean mDrawBorder;
 
     public TopSitesThumbnailView(Context context) {
         this(context, null);
@@ -69,7 +70,7 @@ public class TopSitesThumbnailView extends CropImageView {
     public void onDraw(Canvas canvas) {
         super.onDraw(canvas);
 
-        if (getBackground() == null) {
+        if (mDrawBorder) {
             mBorderPaint.setStrokeWidth(mStrokeWidth);
             canvas.drawRect(0, 0, getWidth(), getHeight(), mBorderPaint);
         }
@@ -98,5 +99,9 @@ public class TopSitesThumbnailView extends CropImageView {
         Drawable drawable = getResources().getDrawable(R.drawable.top_sites_thumbnail_bg);
         drawable.setColorFilter(color, Mode.SRC_ATOP);
         setBackgroundDrawable(drawable);
+    }
+
+    public void setDrawDefaultBorder(boolean drawDefaultBorder) {
+        this.mDrawBorder = drawDefaultBorder;
     }
 }

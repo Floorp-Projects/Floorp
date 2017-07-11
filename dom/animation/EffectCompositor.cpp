@@ -271,13 +271,20 @@ EffectCompositor::RequestRestyle(dom::Element* aElement,
     elementsToRestyle.LookupForAdd(key).OrInsert([]() { return false; });
     mPresContext->PresShell()->SetNeedThrottledAnimationFlush();
   } else {
-    // Get() returns 0 if the element is not found. It will also return
-    // false if the element is found but does not have a pending restyle.
-    bool hasPendingRestyle = elementsToRestyle.Get(key);
-    if (!hasPendingRestyle) {
+    bool skipRestyle;
+    // Update hashtable first in case PostRestyleForAnimation mutates it.
+    // (It shouldn't, but just to be sure.)
+    if (auto p = elementsToRestyle.LookupForAdd(key)) {
+      skipRestyle = p.Data();
+      p.Data() = true;
+    } else {
+      skipRestyle = false;
+      p.OrInsert([]() { return true; });
+    }
+
+    if (!skipRestyle) {
       PostRestyleForAnimation(aElement, aPseudoType, aCascadeLevel);
     }
-    elementsToRestyle.Put(key, true);
   }
 
   if (aRestyleType == RestyleType::Layer) {

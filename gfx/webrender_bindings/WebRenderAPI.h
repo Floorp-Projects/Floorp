@@ -229,7 +229,6 @@ public:
                                  wr::ImageRendering aFilter);
 
   void PushIFrame(const WrRect& aBounds,
-                  const WrRect& aClip,
                   wr::PipelineId aPipeline);
 
   // XXX WrBorderSides are passed with Range.
