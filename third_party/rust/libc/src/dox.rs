@@ -26,6 +26,9 @@ mod imp {
     #[lang = "copy"]
     pub trait Copy {}
 
+    #[lang = "freeze"]
+    pub trait Freeze {}
+
     #[lang = "sync"]
     pub trait Sync {}
     impl<T> Sync for T {}

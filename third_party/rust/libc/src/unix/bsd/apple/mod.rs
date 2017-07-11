@@ -665,6 +665,12 @@ pub const F_ALLOCATEALL: ::c_uint = 0x04;
 pub const F_PEOFPOSMODE: ::c_int = 3;
 pub const F_VOLPOSMODE: ::c_int = 4;
 
+pub const AT_FDCWD: ::c_int = -2;
+pub const AT_EACCESS: ::c_int = 0x0010;
+pub const AT_SYMLINK_NOFOLLOW: ::c_int = 0x0020;
+pub const AT_SYMLINK_FOLLOW: ::c_int = 0x0040;
+pub const AT_REMOVEDIR: ::c_int = 0x0080;
+
 pub const O_ACCMODE: ::c_int = 3;
 
 pub const TIOCMODG: ::c_ulong = 0x40047403;
@@ -730,6 +736,32 @@ pub const TIOCDSIMICROCODE: ::c_uint = 0x20007455;
 pub const TIOCPTYGRANT: ::c_uint = 0x20007454;
 pub const TIOCPTYGNAME: ::c_uint = 0x40807453;
 pub const TIOCPTYUNLK: ::c_uint = 0x20007452;
+
+pub const B0: speed_t = 0;
+pub const B50: speed_t = 50;
+pub const B75: speed_t = 75;
+pub const B110: speed_t = 110;
+pub const B134: speed_t = 134;
+pub const B150: speed_t = 150;
+pub const B200: speed_t = 200;
+pub const B300: speed_t = 300;
+pub const B600: speed_t = 600;
+pub const B1200: speed_t = 1200;
+pub const B1800: speed_t = 1800;
+pub const B2400: speed_t = 2400;
+pub const B4800: speed_t = 4800;
+pub const B9600: speed_t = 9600;
+pub const B19200: speed_t = 19200;
+pub const B38400: speed_t = 38400;
+pub const B7200: speed_t = 7200;
+pub const B14400: speed_t = 14400;
+pub const B28800: speed_t = 28800;
+pub const B57600: speed_t = 57600;
+pub const B76800: speed_t = 76800;
+pub const B115200: speed_t = 115200;
+pub const B230400: speed_t = 230400;
+pub const EXTA: speed_t = 19200;
+pub const EXTB: speed_t = 38400;
 
 pub const SIGTRAP: ::c_int = 5;
 
@@ -819,13 +851,104 @@ pub const MINCORE_MODIFIED: ::c_int = 0x4;
 pub const MINCORE_REFERENCED_OTHER: ::c_int = 0x8;
 pub const MINCORE_MODIFIED_OTHER: ::c_int = 0x10;
 
-pub const AF_UNIX: ::c_int = 1;
+pub const AF_UNSPEC: ::c_int = 0;
+pub const AF_LOCAL: ::c_int = 1;
+pub const AF_UNIX: ::c_int = AF_LOCAL;
 pub const AF_INET: ::c_int = 2;
+pub const AF_IMPLINK: ::c_int = 3;
+pub const AF_PUP: ::c_int = 4;
+pub const AF_CHAOS: ::c_int = 5;
+pub const AF_NS: ::c_int = 6;
+pub const AF_ISO: ::c_int = 7;
+pub const AF_OSI: ::c_int = AF_ISO;
+pub const AF_ECMA: ::c_int = 8;
+pub const AF_DATAKIT: ::c_int = 9;
+pub const AF_CCITT: ::c_int = 10;
+pub const AF_SNA: ::c_int = 11;
+pub const AF_DECnet: ::c_int = 12;
+pub const AF_DLI: ::c_int = 13;
+pub const AF_LAT: ::c_int = 14;
+pub const AF_HYLINK: ::c_int = 15;
+pub const AF_APPLETALK: ::c_int = 16;
+pub const AF_ROUTE: ::c_int = 17;
+pub const AF_LINK: ::c_int = 18;
+pub const pseudo_AF_XTP: ::c_int = 19;
+pub const AF_COIP: ::c_int = 20;
+pub const AF_CNT: ::c_int = 21;
+pub const pseudo_AF_RTIP: ::c_int = 22;
+pub const AF_IPX: ::c_int = 23;
+pub const AF_SIP: ::c_int = 24;
+pub const pseudo_AF_PIP: ::c_int = 25;
+pub const AF_ISDN: ::c_int = 28;
+pub const AF_E164: ::c_int = AF_ISDN;
+pub const pseudo_AF_KEY: ::c_int = 29;
 pub const AF_INET6: ::c_int = 30;
+pub const AF_NATM: ::c_int = 31;
+pub const AF_SYSTEM: ::c_int = 32;
+pub const AF_NETBIOS: ::c_int = 33;
+pub const AF_PPP: ::c_int = 34;
+pub const pseudo_AF_HDRCMPLT: ::c_int = 35;
+#[doc(hidden)]
+pub const AF_MAX: ::c_int = 40;
+
+pub const PF_UNSPEC: ::c_int = AF_UNSPEC;
+pub const PF_LOCAL: ::c_int = AF_LOCAL;
+pub const PF_UNIX: ::c_int =  PF_LOCAL;
+pub const PF_INET: ::c_int =  AF_INET;
+pub const PF_IMPLINK: ::c_int = AF_IMPLINK;
+pub const PF_PUP: ::c_int =  AF_PUP;
+pub const PF_CHAOS: ::c_int = AF_CHAOS;
+pub const PF_NS: ::c_int =  AF_NS;
+pub const PF_ISO: ::c_int =  AF_ISO;
+pub const PF_OSI: ::c_int =  AF_ISO;
+pub const PF_ECMA: ::c_int =  AF_ECMA;
+pub const PF_DATAKIT: ::c_int = AF_DATAKIT;
+pub const PF_CCITT: ::c_int = AF_CCITT;
+pub const PF_SNA: ::c_int =  AF_SNA;
+pub const PF_DECnet: ::c_int = AF_DECnet;
+pub const PF_DLI: ::c_int =  AF_DLI;
+pub const PF_LAT: ::c_int =  AF_LAT;
+pub const PF_HYLINK: ::c_int = AF_HYLINK;
+pub const PF_APPLETALK: ::c_int = AF_APPLETALK;
+pub const PF_ROUTE: ::c_int = AF_ROUTE;
+pub const PF_LINK: ::c_int =  AF_LINK;
+pub const PF_XTP: ::c_int =  pseudo_AF_XTP;
+pub const PF_COIP: ::c_int =  AF_COIP;
+pub const PF_CNT: ::c_int =  AF_CNT;
+pub const PF_SIP: ::c_int =  AF_SIP;
+pub const PF_IPX: ::c_int =  AF_IPX;
+pub const PF_RTIP: ::c_int =  pseudo_AF_RTIP;
+pub const PF_PIP: ::c_int =  pseudo_AF_PIP;
+pub const PF_ISDN: ::c_int =  AF_ISDN;
+pub const PF_KEY: ::c_int =  pseudo_AF_KEY;
+pub const PF_INET6: ::c_int = AF_INET6;
+pub const PF_NATM: ::c_int =  AF_NATM;
+pub const PF_SYSTEM: ::c_int = AF_SYSTEM;
+pub const PF_NETBIOS: ::c_int = AF_NETBIOS;
+pub const PF_PPP: ::c_int =  AF_PPP;
+#[doc(hidden)]
+pub const PF_MAX: ::c_int =  AF_MAX;
+
+#[doc(hidden)]
+pub const NET_MAXID: ::c_int = AF_MAX;
+
+pub const NET_RT_DUMP: ::c_int = 1;
+pub const NET_RT_FLAGS: ::c_int = 2;
+pub const NET_RT_IFLIST: ::c_int = 3;
+#[doc(hidden)]
+pub const NET_RT_MAXID: ::c_int = 10;
+
+pub const SOMAXCONN: ::c_int = 128;
+
+pub const SOCK_MAXADDRLEN: ::c_int = 255;
+
 pub const SOCK_STREAM: ::c_int = 1;
 pub const SOCK_DGRAM: ::c_int = 2;
 pub const SOCK_RAW: ::c_int = 3;
+pub const SOCK_RDM: ::c_int = 4;
 pub const SOCK_SEQPACKET: ::c_int = 5;
+pub const IPPROTO_ICMP: ::c_int = 1;
+pub const IPPROTO_ICMPV6: ::c_int = 58;
 pub const IPPROTO_TCP: ::c_int = 6;
 pub const IPPROTO_IP: ::c_int = 0;
 pub const IPPROTO_IPV6: ::c_int = 41;
@@ -852,6 +975,10 @@ pub const SO_USELOOPBACK: ::c_int = 0x0040;
 pub const SO_LINGER: ::c_int = 0x0080;
 pub const SO_OOBINLINE: ::c_int = 0x0100;
 pub const SO_REUSEPORT: ::c_int = 0x0200;
+pub const SO_TIMESTAMP: ::c_int = 0x0400;
+pub const SO_DONTTRUNC: ::c_int = 0x2000;
+pub const SO_WANTMORE: ::c_int = 0x4000;
+pub const SO_WANTOOBFLAG: ::c_int = 0x8000;
 pub const SO_SNDBUF: ::c_int = 0x1001;
 pub const SO_RCVBUF: ::c_int = 0x1002;
 pub const SO_SNDLOWAT: ::c_int = 0x1003;
@@ -860,8 +987,31 @@ pub const SO_SNDTIMEO: ::c_int = 0x1005;
 pub const SO_RCVTIMEO: ::c_int = 0x1006;
 pub const SO_ERROR: ::c_int = 0x1007;
 pub const SO_TYPE: ::c_int = 0x1008;
+pub const SO_NREAD: ::c_int = 0x1020;
+pub const SO_NKE: ::c_int = 0x1021;
+pub const SO_NOSIGPIPE: ::c_int = 0x1022;
+pub const SO_NOADDRERR: ::c_int = 0x1023;
+pub const SO_NWRITE: ::c_int = 0x1024;
 
+pub const MSG_OOB: ::c_int =  0x1;
 pub const MSG_PEEK: ::c_int = 0x2;
+pub const MSG_DONTROUTE: ::c_int = 0x4;
+pub const MSG_EOR: ::c_int =  0x8;
+pub const MSG_TRUNC: ::c_int = 0x10;
+pub const MSG_CTRUNC: ::c_int = 0x20;
+pub const MSG_WAITALL: ::c_int = 0x40;
+pub const MSG_DONTWAIT: ::c_int = 0x80;
+pub const MSG_EOF: ::c_int =  0x100;
+pub const MSG_FLUSH: ::c_int = 0x400;
+pub const MSG_HOLD: ::c_int = 0x800;
+pub const MSG_SEND: ::c_int = 0x1000;
+pub const MSG_HAVEMORE: ::c_int = 0x2000;
+pub const MSG_RCVMORE: ::c_int = 0x4000;
+// pub const MSG_COMPAT: ::c_int = 0x8000;
+
+pub const SCM_RIGHTS: ::c_int = 0x01;
+pub const SCM_TIMESTAMP: ::c_int = 0x02;
+pub const SCM_CREDS: ::c_int = 0x03;
 
 pub const IFF_LOOPBACK: ::c_int = 0x8;
 
@@ -887,15 +1037,6 @@ pub const MAP_NOCACHE: ::c_int = 0x0400;
 pub const MAP_JIT: ::c_int = 0x0800;
 
 pub const IPPROTO_RAW: ::c_int = 255;
-
-pub const SO_NREAD: ::c_int = 0x1020;
-pub const SO_NKE: ::c_int = 0x1021;
-pub const SO_NOSIGPIPE: ::c_int = 0x1022;
-pub const SO_NOADDRERR: ::c_int = 0x1023;
-pub const SO_NWRITE: ::c_int = 0x1024;
-pub const SO_DONTTRUNC: ::c_int = 0x2000;
-pub const SO_WANTMORE: ::c_int = 0x4000;
-pub const SO_WANTOOBFLAG: ::c_int = 0x8000;
 
 pub const _SC_ARG_MAX: ::c_int = 1;
 pub const _SC_CHILD_MAX: ::c_int = 2;
@@ -1375,6 +1516,13 @@ pub const P_ALL: idtype_t = 0;
 pub const P_PID: idtype_t = 1;
 pub const P_PGID: idtype_t = 2;
 
+pub const XATTR_NOFOLLOW: ::c_int = 0x0001;
+pub const XATTR_CREATE: ::c_int = 0x0002;
+pub const XATTR_REPLACE: ::c_int = 0x0004;
+pub const XATTR_NOSECURITY: ::c_int = 0x0008;
+pub const XATTR_NODEFAULT: ::c_int = 0x0010;
+pub const XATTR_SHOWCOMPRESSION: ::c_int = 0x0020;
+
 f! {
     pub fn WSTOPSIG(status: ::c_int) -> ::c_int {
         status >> 8
@@ -1410,6 +1558,8 @@ extern {
     pub fn aio_cancel(fd: ::c_int, aiocbp: *mut aiocb) -> ::c_int;
     pub fn lio_listio(mode: ::c_int, aiocb_list: *const *mut aiocb,
                       nitems: ::c_int, sevp: *mut sigevent) -> ::c_int;
+
+    pub fn dirfd(dirp: *mut ::DIR) -> ::c_int;
 
     pub fn lutimes(file: *const ::c_char, times: *const ::timeval) -> ::c_int;
 
@@ -1457,6 +1607,14 @@ extern {
     pub fn pthread_setname_np(name: *const ::c_char) -> ::c_int;
     pub fn pthread_get_stackaddr_np(thread: ::pthread_t) -> *mut ::c_void;
     pub fn pthread_get_stacksize_np(thread: ::pthread_t) -> ::size_t;
+    pub fn pthread_condattr_setpshared(attr: *mut pthread_condattr_t,
+                                       pshared: ::c_int) -> ::c_int;
+    pub fn pthread_condattr_getpshared(attr: *const pthread_condattr_t,
+                                       pshared: *mut ::c_int) -> ::c_int;
+    pub fn pthread_mutexattr_setpshared(attr: *mut pthread_mutexattr_t,
+                                        pshared: ::c_int) -> ::c_int;
+    pub fn pthread_mutexattr_getpshared(attr: *const pthread_mutexattr_t,
+                                        pshared: *mut ::c_int) -> ::c_int;
     pub fn __error() -> *mut ::c_int;
     pub fn backtrace(buf: *mut *mut ::c_void,
                      sz: ::c_int) -> ::c_int;
@@ -1516,32 +1674,26 @@ extern {
     pub fn getpriority(which: ::c_int, who: ::id_t) -> ::c_int;
     pub fn setpriority(which: ::c_int, who: ::id_t, prio: ::c_int) -> ::c_int;
 
-    pub fn openat(dirfd: ::c_int, pathname: *const ::c_char,
-                  flags: ::c_int, ...) -> ::c_int;
-    pub fn faccessat(dirfd: ::c_int, pathname: *const ::c_char,
-                     mode: ::c_int, flags: ::c_int) -> ::c_int;
-    pub fn fchmodat(dirfd: ::c_int, pathname: *const ::c_char,
-                    mode: ::mode_t, flags: ::c_int) -> ::c_int;
-    pub fn fchownat(dirfd: ::c_int, pathname: *const ::c_char,
-                    owner: ::uid_t, group: ::gid_t,
+    pub fn getxattr(path: *const ::c_char, name: *const ::c_char,
+                    value: *mut ::c_void, size: ::size_t, position: u32,
+                    flags: ::c_int) -> ::ssize_t;
+    pub fn fgetxattr(filedes: ::c_int, name: *const ::c_char,
+                     value: *mut ::c_void, size: ::size_t, position: u32,
+                     flags: ::c_int) -> ::ssize_t;
+    pub fn setxattr(path: *const ::c_char, name: *const ::c_char,
+                    value: *const ::c_void, size: ::size_t, position: u32,
                     flags: ::c_int) -> ::c_int;
-    #[cfg_attr(target_os = "macos", link_name = "fstatat$INODE64")]
-    pub fn fstatat(dirfd: ::c_int, pathname: *const ::c_char,
-                   buf: *mut stat, flags: ::c_int) -> ::c_int;
-    pub fn linkat(olddirfd: ::c_int, oldpath: *const ::c_char,
-                  newdirfd: ::c_int, newpath: *const ::c_char,
-                  flags: ::c_int) -> ::c_int;
-   pub fn mkdirat(dirfd: ::c_int, pathname: *const ::c_char,
-                  mode: ::mode_t) -> ::c_int;
-   pub fn readlinkat(dirfd: ::c_int, pathname: *const ::c_char,
-                     buf: *mut ::c_char, bufsiz: ::size_t) -> ::ssize_t;
-   pub fn renameat(olddirfd: ::c_int, oldpath: *const ::c_char,
-                   newdirfd: ::c_int, newpath: *const ::c_char)
-                   -> ::c_int;
-   pub fn symlinkat(target: *const ::c_char, newdirfd: ::c_int,
-                    linkpath: *const ::c_char) -> ::c_int;
-   pub fn unlinkat(dirfd: ::c_int, pathname: *const ::c_char,
-                   flags: ::c_int) -> ::c_int;
+    pub fn fsetxattr(filedes: ::c_int, name: *const ::c_char,
+                     value: *const ::c_void, size: ::size_t, position: u32,
+                     flags: ::c_int) -> ::c_int;
+    pub fn listxattr(path: *const ::c_char, list: *mut ::c_char,
+                     size: ::size_t, flags: ::c_int) -> ::ssize_t;
+    pub fn flistxattr(filedes: ::c_int, list: *mut ::c_char,
+                      size: ::size_t, flags: ::c_int) -> ::ssize_t;
+    pub fn removexattr(path: *const ::c_char, name: *const ::c_char,
+                       flags: ::c_int) -> ::c_int;
+    pub fn fremovexattr(filedes: ::c_int, name: *const ::c_char,
+                        flags: ::c_int) -> ::c_int;
 
     pub fn initgroups(user: *const ::c_char, basegroup: ::c_int) -> ::c_int;
 
@@ -1549,7 +1701,9 @@ extern {
                link_name = "waitid$UNIX2003")]
     pub fn waitid(idtype: idtype_t, id: id_t, infop: *mut ::siginfo_t,
                   options: ::c_int) -> ::c_int;
-
+    pub fn brk(addr: *const ::c_void) -> *mut ::c_void;
+    pub fn sbrk(increment: ::c_int) -> *mut ::c_void;
+    pub fn settimeofday(tv: *const ::timeval, tz: *const ::timezone) -> ::c_int;
 }
 
 cfg_if! {

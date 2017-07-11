@@ -4,8 +4,7 @@ dist: trusty
 services:
   - docker
 install:
-  - curl https://static.rust-lang.org/rustup.sh |
-    sh -s -- --add-target=$TARGET --disable-sudo -y --prefix=`rustc --print sysroot`
+  - if [ -z "$NO_ADD" ]; then rustup target add $TARGET; fi
 script:
   - cargo build
   - cargo build --no-default-features
@@ -17,7 +16,6 @@ script:
       sh ci/run.sh $TARGET;
     fi
   - rustc ci/style.rs && ./style src
-osx_image: xcode7.3
 env:
   global:
     secure: "e2/3QjgRN9atOuSHp22TrYG7QVKcYUWY48Hi9b60w+r1+BhPkTseIJLte7WefRhdXtqpjjUJTooKDhnurFOeHaCT+nmBgiv+FPU893sBl4bhesY4m0vgUJVbNZcs6lTImYekWVb+aqjGdgV/XAgCw7c3kPmrZV0MzGDWL64Xaps="
@@ -25,26 +23,26 @@ matrix:
   include:
     # 1.0.0 compat
     - os: linux
-      env: TARGET=x86_64-unknown-linux-gnu
+      env: TARGET=x86_64-unknown-linux-gnu NO_ADD=1
       rust: 1.0.0
       script: cargo build
       install:
 
     # build documentation
     - os: linux
-      env: TARGET=x86_64-unknown-linux-gnu
+      env: TARGET=x86_64-unknown-linux-gnu NO_ADD=1
       rust: nightly
       script: sh ci/dox.sh
 
     # stable compat
     - os: linux
-      env: TARGET=x86_64-unknown-linux-gnu
+      env: TARGET=x86_64-unknown-linux-gnu NO_ADD=1
       rust: stable
     - os: linux
       env: TARGET=i686-unknown-linux-gnu
       rust: stable
     - os: osx
-      env: TARGET=x86_64-apple-darwin
+      env: TARGET=x86_64-apple-darwin NO_ADD=1
       rust: stable
     - os: osx
       env: TARGET=i686-apple-darwin
@@ -52,6 +50,16 @@ matrix:
     - os: linux
       env: TARGET=arm-linux-androideabi
       rust: stable
+    - os: linux
+      env: TARGET=aarch64-linux-android
+      rust: stable
+    - os: linux
+      env: TARGET=i686-linux-android
+      rust: stable
+    # as of 2017/05/03 x86_64-linux-android are not on stable
+    - os: linux
+      env: TARGET=x86_64-linux-android
+      rust: beta
     - os: linux
       env: TARGET=x86_64-unknown-linux-musl
       rust: stable
@@ -65,9 +73,11 @@ matrix:
       env: TARGET=aarch64-unknown-linux-gnu
       rust: stable
     - os: osx
+      osx_image: xcode8.2
       env: TARGET=i386-apple-ios
       rust: stable
     - os: osx
+      osx_image: xcode8.2
       env: TARGET=x86_64-apple-ios
       rust: stable
     - os: linux
@@ -94,18 +104,18 @@ matrix:
 
     # beta
     - os: linux
-      env: TARGET=x86_64-unknown-linux-gnu
+      env: TARGET=x86_64-unknown-linux-gnu NO_ADD=1
       rust: beta
     - os: osx
-      env: TARGET=x86_64-apple-darwin
+      env: TARGET=x86_64-apple-darwin NO_ADD=1
       rust: beta
 
     # nightly
     - os: linux
-      env: TARGET=x86_64-unknown-linux-gnu
+      env: TARGET=x86_64-unknown-linux-gnu NO_ADD=1
       rust: nightly
     - os: osx
-      env: TARGET=x86_64-apple-darwin
+      env: TARGET=x86_64-apple-darwin NO_ADD=1
       rust: nightly
 
     # QEMU based targets that compile in an emulator
