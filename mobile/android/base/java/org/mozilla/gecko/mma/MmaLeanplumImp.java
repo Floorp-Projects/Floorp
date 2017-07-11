@@ -9,6 +9,7 @@ package org.mozilla.gecko.mma;
 import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 
 import com.leanplum.Leanplum;
 import com.leanplum.LeanplumActivityHelper;
@@ -17,6 +18,7 @@ import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.MmaConstants;
 import org.mozilla.gecko.fxa.FirefoxAccounts;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
@@ -26,7 +28,7 @@ public class MmaLeanplumImp implements MmaInterface {
     private static final String KEY_ANDROID_PREF_STRING_LEANPLUM_DEVICE_ID = "android.not_a_preference.leanplum.device_id";
 
     @Override
-    public void init(final Activity activity, Map<String, ?> attributes) {
+    public void init(final Activity activity) {
         if (activity == null) {
             return;
         }
@@ -40,6 +42,21 @@ public class MmaLeanplumImp implements MmaInterface {
             Leanplum.setAppIdForDevelopmentMode(MmaConstants.MOZ_LEANPLUM_SDK_CLIENTID, MmaConstants.MOZ_LEANPLUM_SDK_KEY);
         }
 
+        Map<String, Object> attributes = new HashMap<>();
+        boolean installedFocus = isPackageInstalled(activity, "org.mozilla.focus");
+        boolean installedKlar = isPackageInstalled(activity, "org.mozilla.klar");
+        if (installedFocus) {
+            attributes.put("Focus Installed", true);
+        } else {
+            attributes.put("Focus Installed", false);
+        }
+        if (installedKlar) {
+            attributes.put("Klar Installed", true);
+        } else {
+            attributes.put("Klar Installed", false);
+        }
+
+
         final SharedPreferences sharedPreferences = activity.getPreferences(0);
         String deviceId = sharedPreferences.getString(KEY_ANDROID_PREF_STRING_LEANPLUM_DEVICE_ID, null);
         if (deviceId == null) {
@@ -47,12 +64,21 @@ public class MmaLeanplumImp implements MmaInterface {
             sharedPreferences.edit().putString(KEY_ANDROID_PREF_STRING_LEANPLUM_DEVICE_ID, deviceId).apply();
         }
         Leanplum.setDeviceId(deviceId);
-
-        if (attributes != null) {
-            Leanplum.start(activity, attributes);
+        if (MmaDelegate.isDefaultBrowser(activity)) {
+            attributes.put("Default Browser", true);
         } else {
-            Leanplum.start(activity);
+            attributes.put("Default Browser", false);
         }
+
+        // In order to trigger the campaign lazily, you check the account existence as an attribute,
+        // not when account login success callback is invoked. Because the attribute update lazily when process start.
+        if (FirefoxAccounts.firefoxAccountsExist(activity)) {
+            attributes.put("Signed In Sync", true);
+        } else {
+            attributes.put("Signed In Sync", false);
+        }
+
+        Leanplum.start(activity, attributes);
 
         // this is special to Leanplum. Since we defer LeanplumActivityHelper's onResume call till
         // switchboard completes loading. We miss the call to LeanplumActivityHelper.onResume.
@@ -93,4 +119,13 @@ public class MmaLeanplumImp implements MmaInterface {
         Leanplum.stop();
     }
 
+    private static boolean isPackageInstalled(final Context context, String packageName) {
+        try {
+            PackageManager pm = context.getPackageManager();
+            pm.getPackageInfo(packageName, 0);
+            return true;
+        } catch (PackageManager.NameNotFoundException e) {
+            return false;
+        }
+    }
 }
