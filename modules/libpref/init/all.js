@@ -2860,6 +2860,13 @@ pref("layout.css.font-display.enabled", false);
 // Is support for variation fonts enabled?
 pref("layout.css.font-variations.enabled", false);
 
+// Is support for the frames() timing function enabled?
+#ifdef RELEASE_OR_BETA
+pref("layout.css.frames-timing.enabled", false);
+#else
+pref("layout.css.frames-timing.enabled", true);
+#endif
+
 // Are sets of prefixed properties supported?
 pref("layout.css.prefixes.border-image", true);
 pref("layout.css.prefixes.transforms", true);

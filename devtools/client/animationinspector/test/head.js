@@ -32,12 +32,15 @@ registerCleanupFunction(() => {
   Services.prefs.clearUserPref("devtools.debugger.log");
 });
 
-// WebAnimations API is not enabled by default in all release channels yet, see
-// Bug 1264101.
-function enableWebAnimationsAPI() {
+// Some animation features are not enabled by default in release/beta channels
+// yet including:
+// * parts of the Web Animations API (Bug 1264101), and
+// * the frames() timing function (Bug 1379582).
+function enableAnimationFeatures() {
   return new Promise(resolve => {
     SpecialPowers.pushPrefEnv({"set": [
-      ["dom.animations-api.core.enabled", true]
+      ["dom.animations-api.core.enabled", true],
+      ["layout.css.frames-timing.enabled", true],
     ]}, resolve);
   });
 }
@@ -49,7 +52,7 @@ function enableWebAnimationsAPI() {
  */
 var _addTab = addTab;
 addTab = function (url) {
-  return enableWebAnimationsAPI().then(() => _addTab(url)).then(tab => {
+  return enableAnimationFeatures().then(() => _addTab(url)).then(tab => {
     let browser = tab.linkedBrowser;
     info("Loading the helper frame script " + FRAME_SCRIPT_URL);
     browser.messageManager.loadFrameScript(FRAME_SCRIPT_URL, false);

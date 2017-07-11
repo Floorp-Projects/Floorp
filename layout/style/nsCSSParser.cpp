@@ -76,6 +76,7 @@ static bool sWebkitPrefixedAliasesEnabled;
 static bool sWebkitDevicePixelRatioEnabled;
 static bool sMozGradientsEnabled;
 static bool sControlCharVisibility;
+static bool sFramesTimingFunctionEnabled;
 
 const uint32_t
 nsCSSProps::kParserVariantTable[eCSSProperty_COUNT_no_shorthands] = {
@@ -7857,7 +7858,8 @@ CSSParserImpl::ParseVariant(nsCSSValue& aValue,
       }
       return CSSParseResult::Ok;
     }
-    if (tk->mIdent.LowerCaseEqualsLiteral("frames")) {
+    if (sFramesTimingFunctionEnabled &&
+        tk->mIdent.LowerCaseEqualsLiteral("frames")) {
       if (!ParseTransitionFramesTimingFunctionValues(aValue)) {
         SkipUntil(')');
         return CSSParseResult::Error;
@@ -17838,6 +17840,8 @@ nsCSSParser::Startup()
                                "layout.css.prefixes.gradients");
   Preferences::AddBoolVarCache(&sControlCharVisibility,
                                "layout.css.control-characters.visible");
+  Preferences::AddBoolVarCache(&sFramesTimingFunctionEnabled,
+                               "layout.css.frames-timing.enabled");
 }
 
 nsCSSParser::nsCSSParser(mozilla::css::Loader* aLoader,
