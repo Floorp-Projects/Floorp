@@ -868,15 +868,10 @@ DeviceManagerDx::ForceDeviceReset(ForcedDeviceResetReason aReason)
   Telemetry::Accumulate(Telemetry::FORCED_DEVICE_RESET_REASON, uint32_t(aReason));
   {
     MutexAutoLock lock(mDeviceLock);
-    mDeviceResetReason = Some(DeviceResetReason::FORCED_RESET);
+    if (!mDeviceResetReason) {
+      mDeviceResetReason = Some(DeviceResetReason::FORCED_RESET);
+    }
   }
-}
-
-void
-DeviceManagerDx::NotifyD3D9DeviceReset()
-{
-  MutexAutoLock lock(mDeviceLock);
-  mDeviceResetReason = Some(DeviceResetReason::D3D9_RESET);
 }
 
 void

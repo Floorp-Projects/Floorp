@@ -143,6 +143,13 @@ gfxConfig::Reenable(Feature aFeature, Fallback aFallback)
 }
 
 /* static */ void
+gfxConfig::Reset(Feature aFeature)
+{
+  FeatureState& state = sConfig->GetState(aFeature);
+  state.Reset();
+}
+
+/* static */ void
 gfxConfig::Inherit(Feature aFeature, FeatureStatus aStatus)
 {
   FeatureState& state = sConfig->GetState(aFeature);
