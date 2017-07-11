@@ -19,11 +19,16 @@ function debug(aMsg) {
 
 class GeckoViewScroll extends GeckoViewModule {
   init() {
-    this.messageManager.loadFrameScript(
-      "chrome://geckoview/content/GeckoViewScrollContent.js", true);
+    debug("init");
+    this.frameScriptLoaded = false;
   }
 
   register() {
+    if (!this.frameScriptLoaded) {
+      this.messageManager.loadFrameScript(
+        "chrome://geckoview/content/GeckoViewScrollContent.js", true);
+      this.frameScriptLoaded = true;
+    }
     this.messageManager.addMessageListener("GeckoView:ScrollChanged", this);
   }
 
