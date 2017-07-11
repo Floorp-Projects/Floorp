@@ -6,6 +6,7 @@
 #include "MLGDevice.h"
 #include "mozilla/layers/TextureHost.h"
 #include "BufferCache.h"
+#include "gfxConfig.h"
 #include "gfxPrefs.h"
 #include "gfxUtils.h"
 #include "ShaderDefinitionsMLGPU.h"
@@ -89,10 +90,14 @@ MLGDevice::Initialize()
   // We allow this to be pref'd off for testing. Switching it off enables
   // Direct3D 11.0/Windows 7/OpenGL-style buffer code paths.
   if (!gfxPrefs::AdvancedLayersEnableBufferSharing()) {
+    gfxConfig::EnableFallback(Fallback::NO_CONSTANT_BUFFER_OFFSETTING,
+                              "Disabled by pref");
     mCanUseConstantBufferOffsetBinding = false;
   }
-  if (mCanUseConstantBufferOffsetBinding) {
-    mCanUseConstantBufferOffsetBinding = VerifyConstantBufferOffsetting();
+  if (mCanUseConstantBufferOffsetBinding && !VerifyConstantBufferOffsetting()) {
+    gfxConfig::EnableFallback(Fallback::NO_CONSTANT_BUFFER_OFFSETTING,
+                              "Constant buffer offset binding does not work");
+    mCanUseConstantBufferOffsetBinding = false;
   }
 
   // We allow this to be pref'd off for testing. Disabling it turns on

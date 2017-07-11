@@ -17,6 +17,7 @@
 #include "mozilla/widget/WinCompositorWidget.h"
 #include "MLGShaders.h"
 #include "TextureD3D11.h"
+#include "gfxConfig.h"
 #include "gfxPrefs.h"
 
 namespace mozilla {
@@ -791,8 +792,13 @@ MLGDeviceD3D11::Initialize()
     if (SUCCEEDED(hr)) {
       if (IsWin8OrLater()) {
         mCanUseConstantBufferOffsetBinding = (options.ConstantBufferOffsetting != FALSE);
+      } else {
+        gfxConfig::EnableFallback(Fallback::NO_CONSTANT_BUFFER_OFFSETTING,
+                                  "Unsupported by driver");
       }
       mCanUseClearView = (options.ClearView != FALSE);
+    } else {
+      gfxCriticalNote << "Failed to query D3D11.1 feature support: " << hexa(hr);
     }
   }
 
