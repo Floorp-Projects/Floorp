@@ -4,6 +4,7 @@
 <html>
 <head>
 <script src="chrome://talos-powers-content/content/TalosPowersContent.js"></script>
+<script type="text/javascript" src="chrome://talos-powers-content/content/TalosContentProfiler.js"></script>
 <script language="javascript" type="text/javascript">
 const kTotalTicks = 100;
 var start;
@@ -20,7 +21,9 @@ function init() {
 }
 
 function content_focused() {
-  video.play();
+  TalosContentProfiler.resume("glvideo start", true).then(() => {
+    video.play();
+  });
 }
 
 function playingListener() {
@@ -33,7 +36,9 @@ var tickCount = 0;
 function tick() {
   if (tickCount >= kTotalTicks) {
     var elapsed = performance.now() - start;
-    reportResult(elapsed, kTotalTicks);
+    TalosContentProfiler.pause("glvideo end", true).then(() => {
+      reportResult(elapsed, kTotalTicks);
+    });
     return;
   }
 
