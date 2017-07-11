@@ -70,6 +70,7 @@ const startupPhases = {
     modules: new Set([
       "resource:///modules/AboutNewTab.jsm",
       "resource:///modules/DirectoryLinksProvider.jsm",
+      "resource:///modules/RecentWindow.jsm",
       "resource://gre/modules/BookmarkHTMLUtils.jsm",
       "resource://gre/modules/Bookmarks.jsm",
       "resource://gre/modules/ContextualIdentityService.jsm",
