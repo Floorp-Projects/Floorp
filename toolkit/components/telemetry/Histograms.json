@@ -13018,9 +13018,9 @@
   },
   "CONTENT_PAINT_TIME": {
     "record_in_processes": ["main", "content"],
-    "alert_emails": ["danderson@mozilla.com"],
+    "alert_emails": ["danderson@mozilla.com","gfx-telemetry-alerts@mozilla.com"],
     "bug_numbers": [1309442],
-    "expires_in_version": "56",
+    "expires_in_version": "60",
     "kind": "exponential",
     "high": 1000,
     "n_buckets": 50,
@@ -13028,9 +13028,9 @@
   },
   "CONTENT_LARGE_PAINT_PHASE_WEIGHT": {
     "record_in_processes": ["main", "content"],
-    "alert_emails": ["danderson@mozilla.com"],
+    "alert_emails": ["danderson@mozilla.com","gfx-telemetry-alerts@mozilla.com"],
     "bug_numbers": [1309442],
-    "expires_in_version": "56",
+    "expires_in_version": "60",
     "keyed": true,
     "kind": "linear",
     "high": 100,
