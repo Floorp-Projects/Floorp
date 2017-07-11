@@ -1266,7 +1266,7 @@ nsRange::SetStartBefore(nsINode& aNode, ErrorResult& aRv)
 
   AutoInvalidateSelection atEndOfBlock(this);
   int32_t offset = -1;
-  nsINode* parent = GetParentAndOffsetBefore(&aNode, &offset);
+  nsINode* parent = GetContainerAndOffsetBefore(&aNode, &offset);
   aRv = SetStart(parent, offset);
 }
 
@@ -1456,7 +1456,7 @@ nsRange::SetEndBefore(nsINode& aNode, ErrorResult& aRv)
 
   AutoInvalidateSelection atEndOfBlock(this);
   int32_t offset = -1;
-  nsINode* parent = GetParentAndOffsetBefore(&aNode, &offset);
+  nsINode* parent = GetContainerAndOffsetBefore(&aNode, &offset);
   aRv = SetEnd(parent, offset);
 }
 
