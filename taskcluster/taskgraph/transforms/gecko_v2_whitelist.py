@@ -49,6 +49,7 @@ JOB_NAME_WHITELIST = set([
     'linux64-stylo-debug',
     'linux64-stylo-opt',
     'linux64-valgrind-opt',
+    'linux64-dmd-opt',
     'macosx64-add-on-devel',
     'macosx64-clang-tidy',
     'macosx64-debug',
@@ -59,6 +60,7 @@ JOB_NAME_WHITELIST = set([
     'macosx64-devedition-opt',
     'macosx64-st-an-debug',
     'macosx64-st-an-opt',
+    'macosx64-dmd-opt',
     'shell-haz-debug',
     'sm-arm-sim-debug',
     'sm-arm64-sim-debug',
@@ -81,6 +83,7 @@ JOB_NAME_WHITELIST = set([
     'win32-pgo',
     'win32-st-an-debug',
     'win32-st-an-opt',
+    'win32-dmd-opt',
     'win64-add-on-devel',
     'win64-clang-tidy',
     'win64-debug',
@@ -93,6 +96,7 @@ JOB_NAME_WHITELIST = set([
     'win64-st-an-opt',
     'win64-asan-debug',
     'win64-asan-opt',
+    'win64-dmd-opt',
 ])
 
 JOB_NAME_WHITELIST_ERROR = """\

@@ -180,6 +180,7 @@ nsDOMCSSAttributeDeclaration::GetServoCSSParsingEnvironment() const
   return {
     mElement->GetURLDataForStyleAttr(),
     mElement->OwnerDoc()->GetCompatibilityMode(),
+    mElement->OwnerDoc()->CSSLoader(),
   };
 }
 

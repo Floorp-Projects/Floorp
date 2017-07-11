@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<style>
+  .bar:before {
+    content:'SHOULD NOT BE ORANGE'
+  }
+  .foo:before {
+    content:'SHOULD BE ORANGE'
+  }
+  .foo:before {
+    background-color: orange;
+  }
+</style>
+<div class="bar"></div>
+<div class="foo"></div>

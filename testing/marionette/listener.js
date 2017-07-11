@@ -222,7 +222,14 @@ var loadListener = {
    * Callback for registered DOM events.
    */
   handleEvent(event) {
-    let location = event.target.baseURI || event.target.location.href;
+    // Only care about events from the currently selected browsing context,
+    // whereby some of those do not bubble up to the window.
+    if (event.target != curContainer.frame &&
+        event.target != curContainer.frame.document) {
+      return;
+    }
+
+    let location = event.target.documentURI || event.target.location.href;
     logger.debug(`Received DOM event "${event.type}" for "${location}"`);
 
     switch (event.type) {
@@ -235,51 +242,49 @@ var loadListener = {
         break;
 
       case "pagehide":
-        if (event.target === curContainer.frame.document) {
-          this.seenUnload = true;
+        this.seenUnload = true;
 
-          removeEventListener("hashchange", this);
-          removeEventListener("pagehide", this);
+        removeEventListener("hashchange", this);
+        removeEventListener("pagehide", this);
 
-          // Now wait until the target page has been loaded
-          addEventListener("DOMContentLoaded", this, false);
-          addEventListener("pageshow", this, false);
-        }
+        // Now wait until the target page has been loaded
+        addEventListener("DOMContentLoaded", this, false);
+        addEventListener("pageshow", this, false);
+
         break;
 
       case "hashchange":
-        if (event.target === curContainer.frame) {
-          this.stop();
-          sendOk(this.command_id);
-        }
+        this.stop();
+        sendOk(this.command_id);
+
         break;
 
       case "DOMContentLoaded":
-        if (event.target.baseURI.startsWith("about:certerror")) {
+        if (event.target.documentURI.startsWith("about:certerror")) {
           this.stop();
           sendError(new InsecureCertificateError(), this.command_id);
 
-        } else if (/about:.*(error)\?/.exec(event.target.baseURI)) {
+        } else if (/about:.*(error)\?/.exec(event.target.documentURI)) {
           this.stop();
           sendError(new UnknownError("Reached error page: " +
-              event.target.baseURI), this.command_id);
+              event.target.documentURI), this.command_id);
 
         // Return early with a page load strategy of eager, and also
         // special-case about:blocked pages which should be treated as
         // non-error pages but do not raise a pageshow event.
         } else if ((capabilities.get("pageLoadStrategy") ===
             session.PageLoadStrategy.Eager) ||
-            /about:blocked\?/.exec(event.target.baseURI)) {
+            /about:blocked\?/.exec(event.target.documentURI)) {
           this.stop();
           sendOk(this.command_id);
         }
+
         break;
 
       case "pageshow":
-        if (event.target === curContainer.frame.document) {
-          this.stop();
-          sendOk(this.command_id);
-        }
+        this.stop();
+        sendOk(this.command_id);
+
         break;
     }
   },
@@ -1132,9 +1137,9 @@ function get(msg) {
   try {
     if (typeof url == "string") {
       try {
-        let requestedURL = new URL(url).toString();
         if (loadEventExpected === null) {
-          loadEventExpected = navigate.isLoadEventExpected(requestedURL);
+          loadEventExpected = navigate.isLoadEventExpected(
+              curContainer.frame.location, url);
         }
       } catch (e) {
         let err = new InvalidArgumentError("Malformed URL: " + e.message);
