@@ -267,7 +267,6 @@ ShaderRenderPass::SetGeometry(const ItemInfo& aItem, GeometryMode aMode)
   // in the wrong order. We address this by automatically reversing
   // the buffers we use to build vertices.
   if (aItem.renderOrder != RenderOrder::FrontToBack) {
-    mVertices.SetReversed();
     mInstances.SetReversed();
 
     // For arbitrary geometry items, each vertex explicitly indexes into
@@ -283,48 +282,17 @@ ShaderRenderPass::SetGeometry(const ItemInfo& aItem, GeometryMode aMode)
 void
 ShaderRenderPass::PrepareForRendering()
 {
-  if (mItems.IsEmpty()) {
+  if (mInstances.IsEmpty()) {
     return;
   }
-  if (!mVertices.IsEmpty()) {
-    if (!PrepareVertexBuffer()) {
-      return;
-    }
-  } else {
-    if (!PrepareInstanceBuffer()) {
-      return;
-    }
-  }
-  if (!PrepareItemBuffer() ||
+  if (!mDevice->GetSharedVertexBuffer()->Allocate(&mInstanceBuffer, mInstances) ||
+      !PrepareItemBuffer() ||
       !SetupPSBuffer0(GetOpacity()) ||
       !OnPrepareBuffers())
   {
     return;
   }
   return RenderPassMLGPU::PrepareForRendering();
-}
-
-bool
-ShaderRenderPass::PrepareVertexBuffer()
-{
-  // Geometry batches always build vertices, and do not have an instance buffer.
-  MOZ_ASSERT(!mVertices.IsEmpty());
-  MOZ_ASSERT(mGeometry == GeometryMode::Polygon);
-  MOZ_ASSERT(mInstances.IsEmpty());
-
-  return mDevice->GetSharedVertexBuffer()->Allocate(&mVertexBuffer, mVertices);
-}
-
-bool
-ShaderRenderPass::PrepareInstanceBuffer()
-{
-  // We should not be using the polygon vertex buffer, and we should have
-  // added items.
-  MOZ_ASSERT(mVertices.IsEmpty());
-  MOZ_ASSERT(mGeometry == GeometryMode::UnitQuad);
-  MOZ_ASSERT(!mInstances.IsEmpty());
-
-  return mDevice->GetSharedVertexBuffer()->Allocate(&mInstanceBuffer, mInstances);
 }
 
 bool
@@ -348,7 +316,7 @@ ShaderRenderPass::SetupPSBuffer0(float aOpacity)
 void
 ShaderRenderPass::ExecuteRendering()
 {
-  if (mVertices.IsEmpty() && mInstances.IsEmpty()) {
+  if (mInstances.IsEmpty()) {
     return;
   }
 
@@ -361,19 +329,18 @@ ShaderRenderPass::ExecuteRendering()
   SetupPipeline();
 
   if (mGeometry == GeometryMode::Polygon) {
-    mDevice->SetTopology(MLGPrimitiveTopology::TriangleList);
-    mDevice->SetVertexBuffer(0, &mVertexBuffer);
+    mDevice->SetTopology(MLGPrimitiveTopology::UnitTriangle);
   } else {
     mDevice->SetTopology(MLGPrimitiveTopology::UnitQuad);
-    mDevice->SetVertexBuffer(1, &mInstanceBuffer);
   }
+  mDevice->SetVertexBuffer(1, &mInstanceBuffer);
 
   mDevice->SetVSConstantBuffer(kItemBufferSlot, &mItemBuffer);
 
   if (mGeometry == GeometryMode::Polygon) {
-    mDevice->Draw(mVertexBuffer.NumVertices(), 0);
+    mDevice->DrawInstanced(3, mInstanceBuffer.NumVertices(), 0, 0);
   } else {
-    mDevice->DrawInstanced(4, mItemBuffer.NumItems(), 0, 0);
+    mDevice->DrawInstanced(4, mInstanceBuffer.NumVertices(), 0, 0);
   }
 }
 

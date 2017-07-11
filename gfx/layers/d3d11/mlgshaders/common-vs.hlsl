@@ -62,6 +62,16 @@ float3 ComputeMaskCoords(float4 aPosition, Layer aLayer)
   return float3(mul(transform, aPosition / aPosition.w).xy, 1.0) * aPosition.w;
 }
 
+float2 UnitTriangleToPos(const float3 aVertex,
+                         const float2 aPos1,
+                         const float2 aPos2,
+                         const float2 aPos3)
+{
+  return aVertex.x * aPos1 +
+         aVertex.y * aPos2 +
+         aVertex.z * aPos3;
+}
+
 float2 UnitQuadToRect(const float2 aVertex, const float4 aRect)
 {
   return float2(aRect.x + aVertex.x * aRect.z, aRect.y + aVertex.y * aRect.w);

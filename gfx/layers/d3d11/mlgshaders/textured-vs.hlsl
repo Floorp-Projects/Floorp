@@ -34,7 +34,18 @@ VS_SAMPLEOUTPUT_CLIPPED TexturedQuadVS(const VS_TEXTUREDINPUT aVertex)
 
 VS_SAMPLEOUTPUT TexturedVertexVS(const VS_TEXTUREDVERTEX aVertex)
 {
-  VertexInfo info = ComputePosition(aVertex.vLayerPos, aVertex.vLayerId, aVertex.vDepth);
+  float2 layerPos = UnitTriangleToPos(
+    aVertex.vUnitPos,
+    aVertex.vPos1,
+    aVertex.vPos2,
+    aVertex.vPos3);
 
-  return TexturedQuadImpl(info, aVertex.vTexCoord);
+  float2 texCoord = UnitTriangleToPos(
+    aVertex.vUnitPos,
+    aVertex.vTexCoord1,
+    aVertex.vTexCoord2,
+    aVertex.vTexCoord3);
+
+  VertexInfo info = ComputePosition(layerPos, aVertex.vLayerId, aVertex.vDepth);
+  return TexturedQuadImpl(info, texCoord);
 }
