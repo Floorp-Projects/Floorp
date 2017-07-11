@@ -183,8 +183,12 @@ CryptoWrapper.prototype = {
     return this.cleartext;
   },
 
+  cleartextToString() {
+    return JSON.stringify(this.cleartext);
+  },
+
   toString: function toString() {
-    let payload = this.deleted ? "DELETED" : JSON.stringify(this.cleartext);
+    let payload = this.deleted ? "DELETED" : this.cleartextToString();
 
     return "{ " +
       "id: " + this.id + "  " +
