@@ -3,7 +3,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-var { classes: Cc, interfaces: Ci, utils: Cu } = Components;
+const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
+
+Cu.import("resource://gre/modules/GeckoViewContentModule.jsm");
 
 var dump = Cu.import("resource://gre/modules/AndroidLog.jsm", {})
            .AndroidLog.d.bind(null, "ViewScrollContent");
@@ -12,12 +14,18 @@ function debug(aMsg) {
   // dump(aMsg);
 }
 
-var ScrollListener = {
-  init: function() {
+class GeckoViewScrollContent extends GeckoViewContentModule {
+  register() {
+    debug("register");
     addEventListener("scroll", this, false);
-  },
+  }
 
-  handleEvent: function(aEvent) {
+  unregister() {
+    debug("unregister");
+    removeEventListener("scroll", this);
+  }
+
+  handleEvent(aEvent) {
     if (aEvent.originalTarget.defaultView != content) {
       return;
     }
@@ -31,7 +39,6 @@ var ScrollListener = {
                            scrollY: Math.round(content.scrollY) });
         break;
     }
-  },
-};
-
-ScrollListener.init();
+  }
+}
+var scrollListener = new GeckoViewScrollContent("GeckoViewScroll", this);
