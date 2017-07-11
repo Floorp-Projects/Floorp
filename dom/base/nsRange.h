@@ -188,7 +188,7 @@ public:
     }
     return parentNode;
   }
-  static nsINode* GetParentAndOffsetBefore(nsINode* aNode, int32_t* aOffset)
+  static nsINode* GetContainerAndOffsetBefore(nsINode* aNode, int32_t* aOffset)
   {
     MOZ_ASSERT(aNode);
     MOZ_ASSERT(aOffset);
