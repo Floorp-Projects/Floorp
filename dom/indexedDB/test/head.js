@@ -82,7 +82,7 @@ function setFinishedCallback(callback, win)
     win = window;
   }
   ContentTask.spawn(win.gBrowser.selectedBrowser, null, async function() {
-    return await new Promise(resolve => {
+    return new Promise(resolve => {
       content.wrappedJSObject.testFinishedCallback = (result, exception) => {
         info("got finished callback");
         resolve({result, exception});
