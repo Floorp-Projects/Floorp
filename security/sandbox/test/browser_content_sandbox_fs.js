@@ -29,6 +29,20 @@ function createFile(path) {
   });
 }
 
+
+// Creates a symlink at |path| and returns a promise that resolves with true
+// if the symlink was successfully created, otherwise false. Include imports
+// so this can be safely serialized and run remotely by ContentTask.spawn.
+function createSymlink(path) {
+  Components.utils.import("resource://gre/modules/osfile.jsm");
+  // source location for the symlink can be anything
+  return OS.File.unixSymLink("/Users", path).then(function(value) {
+    return true;
+  }, function(reason) {
+    return false;
+  });
+}
+
 // Deletes file at |path| and returns a promise that resolves with true
 // if the file was successfully deleted, otherwise false. Include imports
 // so this can be safely serialized and run remotely by ContentTask.spawn.
@@ -207,7 +221,8 @@ async function createFileInHome() {
   }
 }
 
-// Test if the content process can create a temp file, should pass
+// Test if the content process can create a temp file, should pass. Also test
+// that the content process cannot create symlinks or delete files.
 async function createTempFile() {
   let browser = gBrowser.selectedBrowser;
   let path = fileInTempDir().path;
@@ -218,9 +233,14 @@ async function createTempFile() {
   if (isMac()) {
     // On macOS we do not allow file deletion - it is not needed by the content
     // process itself, and macOS uses a different permission to control access
-    // to revoking it is easy.
+    // so revoking it is easy.
     ok(fileDeleted == false,
-       "deleting a file in the content temp is not permitted");
+       "deleting a file in content temp is not permitted");
+
+    let path = fileInTempDir().path;
+    let symlinkCreated = await ContentTask.spawn(browser, path, createSymlink);
+    ok(symlinkCreated == false,
+       "created a symlink in content temp is not permitted");
   } else {
     ok(fileDeleted == true, "deleting a file in content temp is permitted");
   }
