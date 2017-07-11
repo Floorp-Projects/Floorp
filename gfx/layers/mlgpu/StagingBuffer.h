@@ -51,6 +51,15 @@ public:
     return AppendItem(aItem);
   }
 
+  // Helper for adding a single item as two components.
+  template <typename T1, typename T2>
+  bool AddItem(const T1& aItem1, const T2& aItem2) {
+    if (mReversed) {
+      return PrependItem(aItem1, aItem2);
+    }
+    return AppendItem(aItem1, aItem2);
+  }
+
   // This may only be called on forward buffers.
   template <typename T>
   bool AppendItem(const T& aItem) {
@@ -77,9 +86,9 @@ public:
     return true;
   }
 
-  // Prepend an item in two stages.
+  // Append an item in two stages.
   template <typename T1, typename T2>
-  bool PrependItem(const T1& aFirst, const T2& aSecond) {
+  bool AppendItem(const T1& aFirst, const T2& aSecond) {
     struct Combined {
       T1 first;
       T2 second;
@@ -88,7 +97,7 @@ public:
     // The combined value must be packed.
     static_assert(sizeof(value) == sizeof(aFirst) + sizeof(aSecond),
                   "Items must be packed within struct");
-    return PrependItem(value);
+    return AppendItem(value);
   }
 
   // This may only be called on reversed buffers.
@@ -115,6 +124,20 @@ public:
 
     mNumItems++;
     return true;
+  }
+
+  // Prepend an item in two stages.
+  template <typename T1, typename T2>
+  bool PrependItem(const T1& aFirst, const T2& aSecond) {
+    struct Combined {
+      T1 first;
+      T2 second;
+    } value = { aFirst, aSecond };
+
+    // The combined value must be packed.
+    static_assert(sizeof(value) == sizeof(aFirst) + sizeof(aSecond),
+                  "Items must be packed within struct");
+    return PrependItem(value);
   }
 
   size_t NumBytes() const {

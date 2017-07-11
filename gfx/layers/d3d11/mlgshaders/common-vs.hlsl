@@ -27,11 +27,6 @@ cbuffer Layers : register(b1)
   Layer sLayers[682];
 };
 
-cbuffer Items : register(b2)
-{
-  float4 sItems[4096];
-};
-
 cbuffer MaskRects : register(b3)
 {
   float4 sMaskRects[4096];

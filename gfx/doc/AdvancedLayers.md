@@ -95,29 +95,24 @@ Advanced Layers currently has five layer-related shader pipelines:
  - Blend (ContainerLayers with mix-blend modes)
 
 There are also three special shader pipelines:
+
  - MaskCombiner, which is used to combine mask layers into a single texture.
  - Clear, which is used for fast region-based clears when not directly supported by the GPU.
  - Diagnostic, which is used to display the diagnostic overlay texture.
 
-The basic layer shaders follow a unified structure. Each pipeline has a vertex and pixel shader.
-The vertex shader takes a layers ID, a z-buffer depth, a vertex (in a triangle list), and any
-ancillary data needed for the pixel shader. Often this ancillary data is just an index into
-a constant buffer (more on this below).
-
-The vertex shader applies transforms and sends data down to the pixel shader, which performs
-clipping and masking.
+The layer shaders follow a unified structure. Each pipeline has a vertex and pixel shader.
+The vertex shader takes a layers ID, a z-buffer depth, a unit position in either a unit
+square or unit triangle, and either rectangular or triangular geometry. Shaders can also
+have ancillary data needed like texture coordinates or colors.
 
 Most of the time, layers have simple rectangular clips with simple rectilinear transforms, and
-pixel shaders do not need to perform masking or clipping. We take advantage of this for common
-layer types, and use a second set of vertex and pixel shaders. These shaders have a unified
-input layout: a draw rect, a layers ID, and a z-buffer depth. The pipeline uses a unit quad
-as input. Ancillary data is stored in a constant buffer, which is indexed by the instance ID.
-This path performs clipping in the vertex shader, and the pixel shader does not support masks.
+pixel shaders do not need to perform masking or clipping. For these layers we use a fast-path
+pipeline, using unit-quad shaders that are able to clip geometry so the pixel shader does not
+have to. This type of pipeline does not support complex masks.
 
-Most shader types use ancillary data (such as texture coordinates, or a color value). This is
-stored in a constant buffer, which is bound to the vertex shader. Unit quad shaders use
-instancing to access the buffer. Full-fledged, triangle list shaders store the index in each
-vertex.
+If a layer has a complex mask, a rotation or 3d transform, or a complex operation like blending,
+then we use shaders capable of handling arbitrary geometry. Their input is a unit triangle,
+and these shaders are generally more expensive.
 
 All of the shader-specific data is modelled in ShaderDefinitionsMLGPU.h.
 
