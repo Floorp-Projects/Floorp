@@ -16,9 +16,11 @@ function DateKeeper(props) {
         MONTHS_IN_A_YEAR = 12,
         YEAR_VIEW_SIZE = 200,
         YEAR_BUFFER_SIZE = 10,
-        // The min and max values are derived from the ECMAScript spec:
+        // The min value is 0001-01-01 based on HTML spec:
+        // https://html.spec.whatwg.org/#valid-date-string
+        MIN_DATE = -62135596800000,
+        // The max value is derived from the ECMAScript spec:
         // http://ecma-international.org/ecma-262/5.1/#sec-15.9.1.1
-        MIN_DATE = -8640000000000000,
         MAX_DATE = 8640000000000000;
 
   DateKeeper.prototype = {
@@ -43,8 +45,8 @@ function DateKeeper(props) {
      * @param  {Number} year
      * @param  {Number} month
      * @param  {Number} day
-     * @param  {String} min
-     * @param  {String} max
+     * @param  {Number} min
+     * @param  {Number} max
      * @param  {Number} step
      * @param  {Number} stepBase
      * @param  {Number} firstDayOfWeek
@@ -57,8 +59,9 @@ function DateKeeper(props) {
 
       this.state = {
         step, firstDayOfWeek, weekends, calViewSize,
-        min: new Date(min != undefined ? min : MIN_DATE),
-        max: new Date(max != undefined ? max : MAX_DATE),
+        // min & max are NaN if empty or invalid
+        min: new Date(Number.isNaN(min) ? MIN_DATE : min),
+        max: new Date(Number.isNaN(max) ? MAX_DATE : max),
         stepBase: new Date(stepBase),
         today: this._newUTCDate(today.getFullYear(), today.getMonth(), today.getDate()),
         weekHeaders: this._getWeekHeaders(firstDayOfWeek, weekends),
