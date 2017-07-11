@@ -212,6 +212,12 @@ function getCleanedPacket(key, packet) {
           existingPacket.networkInfo.response.transferredSize;
       }
     }
+
+    if (res.helperResult) {
+      if (res.helperResult.object) {
+        res.helperResult.object.actor = existingPacket.helperResult.object.actor;
+      }
+    }
   } else {
     res = packet;
   }
