@@ -2865,8 +2865,6 @@ js::NativeDeleteProperty(JSContext* cx, HandleNativeObject obj, HandleId id,
         return CallJSDeletePropertyOp(cx, obj->getClass()->getDelProperty(), obj, id, result);
     }
 
-    cx->runtime()->gc.poke();
-
     // Step 6. Non-configurable property.
     if (GetPropertyAttributes(obj, prop) & JSPROP_PERMANENT)
         return result.failCantDelete();
