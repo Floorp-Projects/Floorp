@@ -116,6 +116,12 @@ var UI = {
 
     this.configureSimulator = this.configureSimulator.bind(this);
     Simulators.on("configure", this.configureSimulator);
+
+    // This allows to use mac specific selectors in webide css files, using
+    // `:root[platform="mac"]`.
+    if (navigator.platform.startsWith("Mac")) {
+      document.documentElement.setAttribute("platform", "mac");
+    }
   },
 
   destroy: function () {
