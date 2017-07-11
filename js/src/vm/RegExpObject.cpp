@@ -116,13 +116,16 @@ VectorMatchPairs::allocOrExpandArray(size_t pairCount)
 
 /* RegExpObject */
 
-/* static */ RegExpShared*
-RegExpObject::getShared(JSContext* cx, Handle<RegExpObject*> regexp)
+/* static */ bool
+RegExpObject::getShared(JSContext* cx, Handle<RegExpObject*> regexp,
+                        MutableHandleRegExpShared shared)
 {
-    if (regexp->hasShared())
-        return regexp->sharedRef();
+    if (regexp->hasShared()) {
+        shared.set(regexp->sharedRef());
+        return true;
+    }
 
-    return createShared(cx, regexp);
+    return createShared(cx, regexp, shared);
 }
 
 /* static */ bool
@@ -267,17 +270,17 @@ RegExpObject::create(JSContext* cx, HandleAtom source, RegExpFlag flags,
     return regexp;
 }
 
-/* static */ RegExpShared*
-RegExpObject::createShared(JSContext* cx, Handle<RegExpObject*> regexp)
+/* static */ bool
+RegExpObject::createShared(JSContext* cx, Handle<RegExpObject*> regexp,
+                           MutableHandleRegExpShared shared)
 {
     MOZ_ASSERT(!regexp->hasShared());
     RootedAtom source(cx, regexp->getSource());
-    RegExpShared* shared = cx->zone()->regExps.get(cx, source, regexp->getFlags());
-    if (!shared)
-        return nullptr;
+    if (!cx->zone()->regExps.get(cx, source, regexp->getFlags(), shared))
+        return false;
 
     regexp->setShared(*shared);
-    return shared;
+    return true;
 }
 
 Shape*
@@ -885,8 +888,8 @@ RegExpShared::dumpBytecode(JSContext* cx, MutableHandleRegExpShared re, bool mat
 RegExpObject::dumpBytecode(JSContext* cx, Handle<RegExpObject*> regexp,
                            bool match_only, HandleLinearString input)
 {
-    RootedRegExpShared shared(cx, getShared(cx, regexp));
-    if (!shared)
+    RootedRegExpShared shared(cx);
+    if (!getShared(cx, regexp, &shared))
         return false;
 
     return RegExpShared::dumpBytecode(cx, &shared, match_only, input);
@@ -1286,35 +1289,39 @@ RegExpCompartment::sweep(JSRuntime* rt)
     }
 }
 
-RegExpShared*
-RegExpZone::get(JSContext* cx, HandleAtom source, RegExpFlag flags)
+bool
+RegExpZone::get(JSContext* cx, HandleAtom source, RegExpFlag flags,
+                MutableHandleRegExpShared result)
 {
     DependentAddPtr<Set> p(cx, set_, Key(source, flags));
-    if (p)
-        return *p;
+    if (p) {
+        result.set(*p);
+        return true;
+    }
 
     auto shared = Allocate<RegExpShared>(cx);
     if (!shared)
-        return nullptr;
+        return false;
 
     new (shared) RegExpShared(source, flags);
 
     if (!p.add(cx, set_, Key(source, flags), shared)) {
         ReportOutOfMemory(cx);
-        return nullptr;
+        return false;
     }
 
-    return shared;
+    result.set(shared);
+    return true;
 }
 
-RegExpShared*
-RegExpZone::get(JSContext* cx, HandleAtom atom, JSString* opt)
+bool
+RegExpZone::get(JSContext* cx, HandleAtom atom, JSString* opt, MutableHandleRegExpShared shared)
 {
     RegExpFlag flags = RegExpFlag(0);
     if (opt && !ParseRegExpFlags(cx, opt, &flags))
-        return nullptr;
+        return false;
 
-    return get(cx, atom, flags);
+    return get(cx, atom, flags, shared);
 }
 
 size_t
@@ -1346,8 +1353,8 @@ js::CloneRegExpObject(JSContext* cx, JSObject* obj_)
 
     Rooted<JSAtom*> source(cx, regex->getSource());
 
-    RegExpShared* shared = RegExpObject::getShared(cx, regex);
-    if (!shared)
+    RootedRegExpShared shared(cx);
+    if (!RegExpObject::getShared(cx, regex, &shared))
         return nullptr;
 
     clone->initAndZeroLastIndex(source, shared->getFlags(), cx);
@@ -1486,10 +1493,10 @@ js::CloneScriptRegExpObject(JSContext* cx, RegExpObject& reobj)
                                 TenuredObject);
 }
 
-JS_FRIEND_API(RegExpShared*)
-js::RegExpToSharedNonInline(JSContext* cx, HandleObject obj)
+JS_FRIEND_API(bool)
+js::RegExpToSharedNonInline(JSContext* cx, HandleObject obj, MutableHandleRegExpShared shared)
 {
-    return RegExpToShared(cx, obj);
+    return RegExpToShared(cx, obj, shared);
 }
 
 JS::ubi::Node::Size

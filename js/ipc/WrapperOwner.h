@@ -60,7 +60,8 @@ class WrapperOwner : public virtual JavaScriptShared
     bool getPrototypeIfOrdinary(JSContext* cx, JS::HandleObject proxy, bool* isOrdinary,
                                 JS::MutableHandleObject protop);
 
-    js::RegExpShared* regexp_toShared(JSContext* cx, JS::HandleObject proxy);
+    bool regexp_toShared(JSContext* cx, JS::HandleObject proxy,
+                         js::MutableHandle<js::RegExpShared*> shared);
 
     nsresult instanceOf(JSObject* obj, const nsID* id, bool* bp);
 
