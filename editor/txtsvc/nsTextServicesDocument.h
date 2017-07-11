@@ -160,10 +160,12 @@ public:
   NS_IMETHOD DidDeleteSelection(nsISelection *aSelection) override;
 
   /* Helper functions */
-  static nsresult GetRangeEndPoints(nsRange* aRange, nsIDOMNode** aParent1,
-                                    int32_t* aOffset1, nsIDOMNode** aParent2,
+  static nsresult GetRangeEndPoints(nsRange* aRange,
+                                    nsIDOMNode** aStartContainer,
+                                    int32_t* aStartOffset,
+                                    nsIDOMNode** aParent2,
                                     int32_t* aOffset2);
-  static nsresult CreateRange(nsIDOMNode* aStartParent, int32_t aStartOffset,
+  static nsresult CreateRange(nsIDOMNode* aStartContainer, int32_t aStartOffset,
                               nsIDOMNode* aEndParent, int32_t aEndOffset,
                               nsRange** aRange);
 

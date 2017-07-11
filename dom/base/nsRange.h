@@ -47,13 +47,13 @@ class nsRange final : public nsIDOMRange,
 public:
   explicit nsRange(nsINode* aNode);
 
-  static nsresult CreateRange(nsIDOMNode* aStartParent, int32_t aStartOffset,
+  static nsresult CreateRange(nsIDOMNode* aStartContainer, int32_t aStartOffset,
                               nsIDOMNode* aEndParent, int32_t aEndOffset,
                               nsRange** aRange);
-  static nsresult CreateRange(nsIDOMNode* aStartParent, int32_t aStartOffset,
+  static nsresult CreateRange(nsIDOMNode* aStartContainer, int32_t aStartOffset,
                               nsIDOMNode* aEndParent, int32_t aEndOffset,
                               nsIDOMRange** aRange);
-  static nsresult CreateRange(nsINode* aStartParent, int32_t aStartOffset,
+  static nsresult CreateRange(nsINode* aStartContainer, int32_t aStartOffset,
                               nsINode* aEndParent, int32_t aEndOffset,
                               nsRange** aRange);
 
@@ -160,7 +160,7 @@ public:
    * collapsed at the end point.  Similarly, if they are in different root,
    * the range will be collapsed at the end point.
    */
-  nsresult SetStartAndEnd(nsINode* aStartParent, int32_t aStartOffset,
+  nsresult SetStartAndEnd(nsINode* aStartContainer, int32_t aStartOffset,
                           nsINode* aEndParent, int32_t aEndOffset);
 
   /**
@@ -270,7 +270,7 @@ public:
 
   static void GetInnerTextNoFlush(mozilla::dom::DOMString& aValue,
                                   mozilla::ErrorResult& aError,
-                                  nsIContent* aStartParent,
+                                  nsIContent* aStartContainer,
                                   uint32_t aStartOffset,
                                   nsIContent* aEndParent,
                                   uint32_t aEndOffset);
@@ -326,7 +326,8 @@ public:
   static void CollectClientRectsAndText(nsLayoutUtils::RectCallback* aCollector,
                                         mozilla::dom::Sequence<nsString>* aTextList,
                                         nsRange* aRange,
-                                        nsINode* aStartParent, int32_t aStartOffset,
+                                        nsINode* aStartContainer,
+                                        int32_t aStartOffset,
                                         nsINode* aEndParent, int32_t aEndOffset,
                                         bool aClampToEdge, bool aFlushLayout);
 
