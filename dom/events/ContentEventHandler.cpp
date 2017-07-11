@@ -164,7 +164,7 @@ ContentEventHandler::InitRootContent(Selection* aNormalSelection)
   // selection range still keeps storing the nodes.  If the active element of
   // the deactive window is <input> or <textarea>, we can compute the
   // selection root from them.
-  nsINode* startNode = range->GetStartParent();
+  nsINode* startNode = range->GetStartContainer();
   nsINode* endNode = range->GetEndParent();
   if (NS_WARN_IF(!startNode) || NS_WARN_IF(!endNode)) {
     return NS_ERROR_FAILURE;
@@ -689,7 +689,7 @@ ContentEventHandler::GenerateFlatTextContent(nsRange* aRange,
     return NS_OK;
   }
 
-  nsINode* startNode = aRange->GetStartParent();
+  nsINode* startNode = aRange->GetStartContainer();
   nsINode* endNode = aRange->GetEndParent();
   if (NS_WARN_IF(!startNode) || NS_WARN_IF(!endNode)) {
     return NS_ERROR_FAILURE;
@@ -863,7 +863,7 @@ ContentEventHandler::GenerateFlatFontRanges(nsRange* aRange,
     return NS_OK;
   }
 
-  nsINode* startNode = aRange->GetStartParent();
+  nsINode* startNode = aRange->GetStartContainer();
   nsINode* endNode = aRange->GetEndParent();
   if (NS_WARN_IF(!startNode) || NS_WARN_IF(!endNode)) {
     return NS_ERROR_FAILURE;
@@ -1306,7 +1306,7 @@ ContentEventHandler::OnQuerySelectedText(WidgetQueryContentEvent* aEvent)
     return NS_OK;
   }
 
-  nsINode* const startNode = mFirstSelectedRange->GetStartParent();
+  nsINode* const startNode = mFirstSelectedRange->GetStartContainer();
   nsINode* const endNode = mFirstSelectedRange->GetEndParent();
 
   // Make sure the selection is within the root content range.
@@ -1364,7 +1364,7 @@ ContentEventHandler::OnQuerySelectedText(WidgetQueryContentEvent* aEvent)
     NS_ASSERTION(mFirstSelectedRange->Collapsed(),
       "When mSelection doesn't have selection, mFirstSelectedRange must be "
       "collapsed");
-    anchorNode = focusNode = mFirstSelectedRange->GetStartParent();
+    anchorNode = focusNode = mFirstSelectedRange->GetStartContainer();
     if (NS_WARN_IF(!anchorNode)) {
       return NS_ERROR_FAILURE;
     }
@@ -1508,7 +1508,7 @@ ContentEventHandler::GetFirstFrameInRangeForTextRect(nsRange* aRange)
       // If the range starts at the end of a text node, we need to find
       // next node which causes text.
       int32_t offsetInNode =
-        node == aRange->GetStartParent() ? aRange->StartOffset() : 0;
+        node == aRange->GetStartContainer() ? aRange->StartOffset() : 0;
       if (static_cast<uint32_t>(offsetInNode) < node->Length()) {
         nodePosition.mNode = node;
         nodePosition.mOffset = offsetInNode;
@@ -1567,7 +1567,7 @@ ContentEventHandler::GetLastFrameInRangeForTextRect(nsRange* aRange)
     // endNode is same as start node of the range, the text node shouldn't be
     // next of range end even if the offset is 0.  This could occur with empty
     // text node.
-    if (!endOffset && aRange->GetStartParent() != endNode) {
+    if (!endOffset && aRange->GetStartContainer() != endNode) {
       nextNodeOfRangeEnd = endNode;
     }
   } else if (endOffset < endNode->GetChildCount()) {
@@ -1906,7 +1906,8 @@ ContentEventHandler::OnQueryTextRectArray(WidgetQueryContentEvent* aEvent)
           return rv;
         }
         startsBetweenLineBreaker =
-          range->GetStartParent() == rangeToPrevOffset->GetStartParent() &&
+          range->GetStartContainer() ==
+            rangeToPrevOffset->GetStartContainer() &&
           range->StartOffset() == rangeToPrevOffset->StartOffset();
       }
     }
@@ -2840,7 +2841,7 @@ ContentEventHandler::GetStartOffset(nsRange* aRange,
   MOZ_ASSERT(aRange);
   return GetFlatTextLengthInRange(
            NodePosition(mRootContent, 0),
-           NodePosition(aRange->GetStartParent(), aRange->StartOffset()),
+           NodePosition(aRange->GetStartContainer(), aRange->StartOffset()),
            mRootContent, aOffset, aLineBreakType);
 }
 
@@ -2854,7 +2855,7 @@ ContentEventHandler::AdjustCollapsedRangeMaybeIntoTextNode(nsRange* aRange)
     return NS_ERROR_INVALID_ARG;
   }
 
-  nsCOMPtr<nsINode> parentNode = aRange->GetStartParent();
+  nsCOMPtr<nsINode> parentNode = aRange->GetStartContainer();
   int32_t offsetInParentNode = aRange->StartOffset();
   if (NS_WARN_IF(!parentNode) || NS_WARN_IF(offsetInParentNode < 0)) {
     return NS_ERROR_INVALID_ARG;
@@ -2906,7 +2907,7 @@ ContentEventHandler::GetStartFrameAndOffset(const nsRange* aRange,
   aFrame = nullptr;
   aOffsetInFrame = -1;
 
-  nsINode* node = aRange->GetStartParent();
+  nsINode* node = aRange->GetStartContainer();
   if (NS_WARN_IF(!node) ||
       NS_WARN_IF(!node->IsNodeOfType(nsINode::eCONTENT))) {
     return NS_ERROR_FAILURE;
@@ -3013,7 +3014,7 @@ ContentEventHandler::OnSelectionEvent(WidgetSelectionEvent* aEvent)
                                   aEvent->mExpandToClusterBoundary);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsINode* startNode = range->GetStartParent();
+  nsINode* startNode = range->GetStartContainer();
   nsINode* endNode = range->GetEndParent();
   int32_t startNodeOffset = range->StartOffset();
   int32_t endNodeOffset = range->EndOffset();

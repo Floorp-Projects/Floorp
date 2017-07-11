@@ -1611,7 +1611,7 @@ HyperTextAccessible::SelectionBoundsAt(int32_t aSelectionNum,
   nsRange* range = ranges[aSelectionNum];
 
   // Get start and end points.
-  nsINode* startNode = range->GetStartParent();
+  nsINode* startNode = range->GetStartContainer();
   nsINode* endNode = range->GetEndParent();
   int32_t startOffset = range->StartOffset(), endOffset = range->EndOffset();
 
@@ -1788,14 +1788,14 @@ HyperTextAccessible::SelectionRanges(nsTArray<a11y::TextRange>* aRanges) const
   for (uint32_t idx = 0; idx < sel->RangeCount(); idx++) {
     nsRange* DOMRange = sel->GetRangeAt(idx);
     HyperTextAccessible* startParent =
-      nsAccUtils::GetTextContainer(DOMRange->GetStartParent());
+      nsAccUtils::GetTextContainer(DOMRange->GetStartContainer());
     HyperTextAccessible* endParent =
       nsAccUtils::GetTextContainer(DOMRange->GetEndParent());
     if (!startParent || !endParent)
       continue;
 
     int32_t startOffset =
-      startParent->DOMPointToOffset(DOMRange->GetStartParent(),
+      startParent->DOMPointToOffset(DOMRange->GetStartContainer(),
                                     DOMRange->StartOffset(), false);
     int32_t endOffset =
       endParent->DOMPointToOffset(DOMRange->GetEndParent(),
@@ -2160,7 +2160,7 @@ HyperTextAccessible::GetSpellTextAttr(nsINode* aNode,
     // the previous range.  So we check to see if the range starts before the
     // point in which case the point is in the missspelled range, otherwise it
     // must be before the range and after the previous one if any.
-    nsINode* startNode = range->GetStartParent();
+    nsINode* startNode = range->GetStartContainer();
     int32_t startNodeOffset = range->StartOffset();
     if (nsContentUtils::ComparePoints(startNode, startNodeOffset, aNode,
                                       aNodeOffset) <= 0) {

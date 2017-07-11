@@ -644,7 +644,7 @@ HTMLEditor::HandleKeyPressEvent(WidgetKeyboardEvent* aKeyboardEvent)
       RefPtr<Selection> selection = GetSelection();
       NS_ENSURE_TRUE(selection && selection->RangeCount(), NS_ERROR_FAILURE);
 
-      nsCOMPtr<nsINode> node = selection->GetRangeAt(0)->GetStartParent();
+      nsCOMPtr<nsINode> node = selection->GetRangeAt(0)->GetStartContainer();
       MOZ_ASSERT(node);
 
       nsCOMPtr<Element> blockParent = GetBlock(*node);
@@ -1799,7 +1799,7 @@ HTMLEditor::GetCSSBackgroundColorState(bool* aMixed,
   NS_ENSURE_STATE(selection && selection->GetRangeAt(0));
 
   // get selection location
-  nsCOMPtr<nsINode> parent = selection->GetRangeAt(0)->GetStartParent();
+  nsCOMPtr<nsINode> parent = selection->GetRangeAt(0)->GetStartContainer();
   int32_t offset = selection->GetRangeAt(0)->StartOffset();
   NS_ENSURE_TRUE(parent, NS_ERROR_NULL_POINTER);
 
@@ -2011,11 +2011,11 @@ HTMLEditor::MakeOrChangeList(const nsAString& aListType,
     bool isCollapsed = selection->Collapsed();
 
     NS_ENSURE_TRUE(selection->GetRangeAt(0) &&
-                   selection->GetRangeAt(0)->GetStartParent() &&
-                   selection->GetRangeAt(0)->GetStartParent()->IsContent(),
+                   selection->GetRangeAt(0)->GetStartContainer() &&
+                   selection->GetRangeAt(0)->GetStartContainer()->IsContent(),
                    NS_ERROR_FAILURE);
     OwningNonNull<nsIContent> node =
-      *selection->GetRangeAt(0)->GetStartParent()->AsContent();
+      *selection->GetRangeAt(0)->GetStartContainer()->AsContent();
     int32_t offset = selection->GetRangeAt(0)->StartOffset();
 
     if (isCollapsed) {
@@ -2148,11 +2148,11 @@ HTMLEditor::InsertBasicBlock(const nsAString& aBlockType)
     bool isCollapsed = selection->Collapsed();
 
     NS_ENSURE_TRUE(selection->GetRangeAt(0) &&
-                   selection->GetRangeAt(0)->GetStartParent() &&
-                   selection->GetRangeAt(0)->GetStartParent()->IsContent(),
+                   selection->GetRangeAt(0)->GetStartContainer() &&
+                   selection->GetRangeAt(0)->GetStartContainer()->IsContent(),
                    NS_ERROR_FAILURE);
     OwningNonNull<nsIContent> node =
-      *selection->GetRangeAt(0)->GetStartParent()->AsContent();
+      *selection->GetRangeAt(0)->GetStartContainer()->AsContent();
     int32_t offset = selection->GetRangeAt(0)->StartOffset();
 
     if (isCollapsed) {
@@ -2219,11 +2219,11 @@ HTMLEditor::Indent(const nsAString& aIndent)
     bool isCollapsed = selection->Collapsed();
 
     NS_ENSURE_TRUE(selection->GetRangeAt(0) &&
-                   selection->GetRangeAt(0)->GetStartParent() &&
-                   selection->GetRangeAt(0)->GetStartParent()->IsContent(),
+                   selection->GetRangeAt(0)->GetStartContainer() &&
+                   selection->GetRangeAt(0)->GetStartContainer()->IsContent(),
                    NS_ERROR_FAILURE);
     OwningNonNull<nsIContent> node =
-      *selection->GetRangeAt(0)->GetStartParent()->AsContent();
+      *selection->GetRangeAt(0)->GetStartContainer()->AsContent();
     int32_t offset = selection->GetRangeAt(0)->StartOffset();
 
     if (aIndent.EqualsLiteral("indent")) {
@@ -2253,7 +2253,8 @@ HTMLEditor::Indent(const nsAString& aIndent)
         NS_ENSURE_SUCCESS(rv, rv);
         // reposition selection to before the space character
         NS_ENSURE_STATE(selection->GetRangeAt(0));
-        rv = selection->Collapse(selection->GetRangeAt(0)->GetStartParent(), 0);
+        rv = selection->Collapse(selection->GetRangeAt(0)->GetStartContainer(),
+                                 0);
         NS_ENSURE_SUCCESS(rv, rv);
       }
     }
@@ -4572,7 +4573,7 @@ HTMLEditor::SetCSSBackgroundColor(const nsAString& aColor)
       nsCOMPtr<Element> cachedBlockParent;
 
       // Check for easy case: both range endpoints in same text node
-      nsCOMPtr<nsINode> startNode = range->GetStartParent();
+      nsCOMPtr<nsINode> startNode = range->GetStartContainer();
       int32_t startOffset = range->StartOffset();
       nsCOMPtr<nsINode> endNode = range->GetEndParent();
       int32_t endOffset = range->EndOffset();
@@ -4864,7 +4865,7 @@ HTMLEditor::GetSelectionContainer()
     if (rangeCount == 1) {
       RefPtr<nsRange> range = selection->GetRangeAt(0);
 
-      nsCOMPtr<nsINode> startContainer = range->GetStartParent();
+      nsCOMPtr<nsINode> startContainer = range->GetStartContainer();
       int32_t startOffset = range->StartOffset();
       nsCOMPtr<nsINode> endContainer = range->GetEndParent();
       int32_t endOffset = range->EndOffset();
@@ -4885,7 +4886,7 @@ HTMLEditor::GetSelectionContainer()
       for (int32_t i = 0; i < rangeCount; i++) {
         RefPtr<nsRange> range = selection->GetRangeAt(i);
 
-        nsCOMPtr<nsINode> startContainer = range->GetStartParent();
+        nsCOMPtr<nsINode> startContainer = range->GetStartContainer();
         if (!focusNode) {
           focusNode = startContainer;
         } else if (focusNode != startContainer) {

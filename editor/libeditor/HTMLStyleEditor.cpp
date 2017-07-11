@@ -143,7 +143,7 @@ HTMLEditor::SetInlineProperty(nsIAtom* aProperty,
       NS_ENSURE_SUCCESS(rv, rv);
 
       // Check for easy case: both range endpoints in same text node
-      nsCOMPtr<nsINode> startNode = range->GetStartParent();
+      nsCOMPtr<nsINode> startNode = range->GetStartContainer();
       nsCOMPtr<nsINode> endNode = range->GetEndParent();
       if (startNode && startNode == endNode && startNode->GetAsText()) {
         rv = SetInlinePropertyOnTextNode(*startNode->GetAsText(),
@@ -510,7 +510,7 @@ HTMLEditor::SplitStyleAboveRange(nsRange* inRange,
 {
   NS_ENSURE_TRUE(inRange, NS_ERROR_NULL_POINTER);
 
-  nsCOMPtr<nsINode> startNode = inRange->GetStartParent();
+  nsCOMPtr<nsINode> startNode = inRange->GetStartContainer();
   int32_t startOffset = inRange->StartOffset();
   nsCOMPtr<nsINode> endNode = inRange->GetEndParent();
   int32_t endOffset = inRange->EndOffset();
@@ -852,7 +852,7 @@ nsresult
 HTMLEditor::PromoteRangeIfStartsOrEndsInNamedAnchor(nsRange& aRange)
 {
   // We assume that <a> is not nested.
-  nsCOMPtr<nsINode> startNode = aRange.GetStartParent();
+  nsCOMPtr<nsINode> startNode = aRange.GetStartContainer();
   int32_t startOffset = aRange.StartOffset();
   nsCOMPtr<nsINode> endNode = aRange.GetEndParent();
   int32_t endOffset = aRange.EndOffset();
@@ -894,7 +894,7 @@ HTMLEditor::PromoteRangeIfStartsOrEndsInNamedAnchor(nsRange& aRange)
 nsresult
 HTMLEditor::PromoteInlineRange(nsRange& aRange)
 {
-  nsCOMPtr<nsINode> startNode = aRange.GetStartParent();
+  nsCOMPtr<nsINode> startNode = aRange.GetStartContainer();
   int32_t startOffset = aRange.StartOffset();
   nsCOMPtr<nsINode> endNode = aRange.GetEndParent();
   int32_t endOffset = aRange.EndOffset();
@@ -993,7 +993,7 @@ HTMLEditor::GetInlinePropertyBase(nsIAtom& aProperty,
     bool firstNodeInRange = true;
 
     if (isCollapsed) {
-      nsCOMPtr<nsINode> collapsedNode = range->GetStartParent();
+      nsCOMPtr<nsINode> collapsedNode = range->GetStartContainer();
       NS_ENSURE_TRUE(collapsedNode, NS_ERROR_FAILURE);
       bool isSet, theSetting;
       nsString tOutString;
@@ -1264,7 +1264,7 @@ HTMLEditor::RemoveInlinePropertyImpl(nsIAtom* aProperty,
       NS_ENSURE_SUCCESS(rv, rv);
 
       // Check for easy case: both range endpoints in same text node
-      nsCOMPtr<nsINode> startNode = range->GetStartParent();
+      nsCOMPtr<nsINode> startNode = range->GetStartContainer();
       nsCOMPtr<nsINode> endNode = range->GetEndParent();
       if (startNode && startNode == endNode && startNode->GetAsText()) {
         // We're done with this range!
@@ -1363,9 +1363,9 @@ HTMLEditor::RelativeFontChange(FontSize aDir)
 
     // Let's see in what kind of element the selection is
     NS_ENSURE_TRUE(selection->RangeCount() &&
-                   selection->GetRangeAt(0)->GetStartParent(), NS_OK);
+                   selection->GetRangeAt(0)->GetStartContainer(), NS_OK);
     OwningNonNull<nsINode> selectedNode =
-      *selection->GetRangeAt(0)->GetStartParent();
+      *selection->GetRangeAt(0)->GetStartContainer();
     if (IsTextNode(selectedNode)) {
       NS_ENSURE_TRUE(selectedNode->GetParentNode(), NS_OK);
       selectedNode = *selectedNode->GetParentNode();
@@ -1395,7 +1395,7 @@ HTMLEditor::RelativeFontChange(FontSize aDir)
     NS_ENSURE_SUCCESS(rv, rv);
 
     // Check for easy case: both range endpoints in same text node
-    nsCOMPtr<nsINode> startNode = range->GetStartParent();
+    nsCOMPtr<nsINode> startNode = range->GetStartContainer();
     nsCOMPtr<nsINode> endNode = range->GetEndParent();
     if (startNode == endNode && IsTextNode(startNode)) {
       rv = RelativeFontChangeOnTextNode(aDir, *startNode->GetAsText(),
