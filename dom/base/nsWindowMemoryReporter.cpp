@@ -922,6 +922,7 @@ nsWindowMemoryReporter::CheckForGhostWindows(
   KillCheckTimer();
 
   nsTHashtable<nsCStringHashKey> nonDetachedWindowDomains;
+  nsDataHashtable<nsISupportsHashKey, nsCString> domainMap;
 
   // Populate nonDetachedWindowDomains.
   for (auto iter = windowsById->Iter(); !iter.Done(); iter.Next()) {
@@ -936,8 +937,13 @@ nsWindowMemoryReporter::CheckForGhostWindows(
     nsCOMPtr<nsIURI> uri = GetWindowURI(window);
     nsAutoCString domain;
     if (uri) {
-      tldService->GetBaseDomain(uri, 0, domain);
+      domain = domainMap.LookupForAdd(uri).OrInsert([&]() {
+        nsCString d;
+        tldService->GetBaseDomain(uri, 0, d);
+        return d;
+      });
     }
+
     nonDetachedWindowDomains.PutEntry(domain);
   }
 
