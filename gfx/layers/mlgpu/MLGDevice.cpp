@@ -86,10 +86,13 @@ MLGDevice::Initialize()
     return Fail("FEATURE_FAILURE_MIN_MAX_CB_BIND_SIZE", "Minimum constant buffer bind size not met");
   }
 
-  // We allow this to be pref'd off for testing. Switching it on enables
+  // We allow this to be pref'd off for testing. Switching it off enables
   // Direct3D 11.0/Windows 7/OpenGL-style buffer code paths.
   if (!gfxPrefs::AdvancedLayersEnableBufferSharing()) {
     mCanUseConstantBufferOffsetBinding = false;
+  }
+  if (mCanUseConstantBufferOffsetBinding) {
+    mCanUseConstantBufferOffsetBinding = VerifyConstantBufferOffsetting();
   }
 
   // We allow this to be pref'd off for testing. Disabling it turns on

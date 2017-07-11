@@ -418,6 +418,12 @@ protected:
 
   virtual void SetPrimitiveTopology(MLGPrimitiveTopology aTopology) = 0;
 
+  // Optionally run a runtime test to determine if constant buffer offset
+  // binding works.
+  virtual bool VerifyConstantBufferOffsetting() {
+    return true;
+  }
+
   // Used during initialization to record failure reasons.
   bool Fail(const nsCString& aFailureId, const nsCString* aMessage);
 
