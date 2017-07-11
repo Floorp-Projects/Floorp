@@ -427,11 +427,11 @@ nsStyleLinkElement::DoUpdateStyleSheet(nsIDocument* aOldDocument,
     return NS_OK;
   }
 
+  // XXXheycam ServoStyleSheets do not support <style scoped>.
   Element* oldScopeElement = nullptr;
   if (mStyleSheet) {
     if (mStyleSheet->IsServo()) {
-      MOZ_ASSERT(!aOldDocument->IsScopedStyleEnabled(),
-                 "stylo: ServoStyleSheets don't support <style scoped>");
+      NS_WARNING("stylo: ServoStyleSheets don't support <style scoped>");
     } else {
       oldScopeElement = mStyleSheet->AsGecko()->GetScopeElement();
     }
