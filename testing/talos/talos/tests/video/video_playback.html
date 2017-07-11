@@ -4,6 +4,7 @@
 <html>
 <head>
 <script src="chrome://talos-powers-content/content/TalosPowersContent.js"></script>
+<script src="chrome://talos-powers-content/content/TalosContentProfiler.js"></script>
 <script language="javascript" type="text/javascript">
 const MEASUREMENT1_MS = 3000;
 const MEASUREMENT2_MS = 2000;
@@ -75,15 +76,17 @@ function prepare() {
 }
 
 function startTest() {
-  vdo.playbackRate = PLAYBACK_RATE;
-  start1 = performance.now();
-  paintedFramesStart1 = vdo.mozPaintedFrames;
-  vdo.play();
-  setTimeout(function() {
-    start2 = performance.now();
-    paintedFramesStart2 = vdo.mozPaintedFrames;
-    setTimeout(measurementEnded, MEASUREMENT2_MS);
-  }, MEASUREMENT1_MS);
+  TalosContentProfiler.resume("start test " + test[testIndex], true).then(() => {
+    vdo.playbackRate = PLAYBACK_RATE;
+    start1 = performance.now();
+    paintedFramesStart1 = vdo.mozPaintedFrames;
+    vdo.play();
+    setTimeout(function() {
+      start2 = performance.now();
+      paintedFramesStart2 = vdo.mozPaintedFrames;
+      setTimeout(measurementEnded, MEASUREMENT2_MS);
+    }, MEASUREMENT1_MS);
+  });
 }
 
 function measurementEnded() {
@@ -97,16 +100,18 @@ function measurementEnded() {
   testResult.names.push(test[testIndex] + "_scale_" + viewMode[viewModeIndex] + "_inclip");
   testResult.values.push(timePerFrame2);
 
-  if (viewMode[viewModeIndex] == "fullscreen") {
-    // Exit fullscreen mode
-    if (document.exitFullscreen) {
-      document.exitFullscreen();
-    } else if (document.mozCancelFullScreen) {
-      document.mozCancelFullScreen();
+  TalosContentProfiler.pause("done test" + test[testIndex], true).then(() => {
+    if (viewMode[viewModeIndex] == "fullscreen") {
+      // Exit fullscreen mode
+      if (document.exitFullscreen) {
+        document.exitFullscreen();
+      } else if (document.mozCancelFullScreen) {
+        document.mozCancelFullScreen();
+      }
+    } else {
+      nextTest();
     }
-  } else {
-    nextTest();
-  }
+  });
 }
 
 function nextTest() {
