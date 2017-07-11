@@ -32,9 +32,6 @@
   <menuitem label="Three"/>
 </menupopup>
 
-<button id="anchorhidden" label="HiddenAnchor" hidden="true"/>
-<button id="anchorextra" label="ExtraAnchor"/>
-
 <script type="application/javascript"><![CDATA[
 
 
@@ -141,27 +138,6 @@ function runTests() {
     menupopup.hidePopup();
     await popuphidden;
     await menupopuphidden;
-
-    // A popup with a hidden anchor should not update
-    let anchorhidden = document.getElementById("anchorhidden");
-    popupshown = waitForPanel(panel, "popupshown");
-    panel.openPopup(anchorhidden, "after_start");
-    await popupshown;
-
-    let oldtop = panel.getBoundingClientRect().top;
-
-    // Show and adjust anchors. The panel should not update or hide due to this.
-    anchorhidden.hidden = false;
-    document.getElementById("anchorextra").hidden = true;
-    await new Promise(r => { SimpleTest.executeSoon(r); });
-
-    let newtop = panel.getBoundingClientRect().top;
-    is(panel.state, "open", "panel is still open after showing anchor");
-    is(oldtop, newtop, "panel top did not change after showing anchor");
-
-    popuphidden = waitForPanel(panel, "popuphidden");
-    panel.hidePopup();
-    await popuphidden;
 
     // The panel should no longer follow anchors.
     panel.setAttribute("followanchor", "false");
