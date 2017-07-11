@@ -1218,6 +1218,10 @@ panelview:not([mainView]) .subviewbutton.panel-subview-footer > .toolbarbutton-t
   margin: 0;
 }
 
+%ifdef MOZ_PHOTON_THEME
+#widget-overflow-fixed-list .toolbarbutton-1 > .toolbarbutton-text,
+#widget-overflow-list .toolbarbutton-1 > .toolbarbutton-text,
+%endif
 .subviewbutton:not(.panel-subview-footer) > .toolbarbutton-text,
 /* Bookmark items need a more specific selector. */
 .PanelUI-subView .subviewbutton:not(.panel-subview-footer) > .menu-text,
