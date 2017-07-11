@@ -20,7 +20,7 @@
 
           mm.addMessageListener("TabPaint:OpenFromContent", function openFromContent() {
             let target = document.getElementById("target");
-            let now = Date.now();
+            let now = Date.now();  // eslint-disable-line mozilla/avoid-Date-timing
             let href = "target.html?" + now;
             target.href = href;
             target.click();

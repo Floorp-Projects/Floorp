@@ -54,6 +54,7 @@ function dumpConsoleAndQuit() {
   // Close window asynchronously, there might still be startup operations that still need to run
   window.setTimeout(function() {
     if (window.dump) {
+      // eslint-disable-next-line mozilla/avoid-Date-timing
       dumpLog("__startTimestamp" + Date.now() + "__endTimestamp\n");
     }
     goQuitApplication();

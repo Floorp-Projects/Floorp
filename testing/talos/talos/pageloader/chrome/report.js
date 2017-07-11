@@ -80,7 +80,7 @@ Report.prototype.getReport = function() {
     report += "_x_x_mozilla_cycle_collect," + this.totalCCTime + "\n";
     report += "__end_cc_report\n";
   }
-  var now = (new Date()).getTime();
+  var now = (new Date()).getTime();  // eslint-disable-line mozilla/avoid-Date-timing
   report += "__startTimestamp" + now + "__endTimestamp\n"; // timestamp for determning shutdown time, used by talos
 
   return report;
