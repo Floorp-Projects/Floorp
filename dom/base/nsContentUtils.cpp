@@ -7460,7 +7460,7 @@ nsContentUtils::GetSelectionInTextControl(Selection* aSelection,
   // be doing anything in this function that invalidates the node tree.
   nsINode* startContainer = range->GetStartContainer();
   uint32_t startOffset = range->StartOffset();
-  nsINode* endParent = range->GetEndContainer();
+  nsINode* endContainer = range->GetEndContainer();
   uint32_t endOffset = range->EndOffset();
 
   // We have at most two children, consisting of an optional text node followed
@@ -7471,8 +7471,8 @@ nsContentUtils::GetSelectionInTextControl(Selection* aSelection,
   nsCOMPtr<nsIContent> lastChild = aRoot->GetLastChild();
   NS_ASSERTION(startContainer == aRoot || startContainer == firstChild ||
                startContainer == lastChild, "Unexpected startContainer");
-  NS_ASSERTION(endParent == aRoot || endParent == firstChild ||
-               endParent == lastChild, "Unexpected endParent");
+  NS_ASSERTION(endContainer == aRoot || endContainer == firstChild ||
+               endContainer == lastChild, "Unexpected endContainer");
   // firstChild is either text or a <br> (hence an element).
   MOZ_ASSERT_IF(firstChild,
                 firstChild->IsNodeOfType(nsINode::eTEXT) || firstChild->IsElement());
@@ -7491,8 +7491,8 @@ nsContentUtils::GetSelectionInTextControl(Selection* aSelection,
         (startContainer != aRoot && startContainer != firstChild)) {
       startOffset = firstChild->Length();
     }
-    if ((endParent == aRoot && endOffset != 0) ||
-        (endParent != aRoot && endParent != firstChild)) {
+    if ((endContainer == aRoot && endOffset != 0) ||
+        (endContainer != aRoot && endContainer != firstChild)) {
       endOffset = firstChild->Length();
     }
   }

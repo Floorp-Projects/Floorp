@@ -1789,9 +1789,9 @@ HyperTextAccessible::SelectionRanges(nsTArray<a11y::TextRange>* aRanges) const
     nsRange* DOMRange = sel->GetRangeAt(idx);
     HyperTextAccessible* startContainer =
       nsAccUtils::GetTextContainer(DOMRange->GetStartContainer());
-    HyperTextAccessible* endParent =
+    HyperTextAccessible* endContainer =
       nsAccUtils::GetTextContainer(DOMRange->GetEndContainer());
-    if (!startContainer || !endParent) {
+    if (!startContainer || !endContainer) {
       continue;
     }
 
@@ -1799,11 +1799,11 @@ HyperTextAccessible::SelectionRanges(nsTArray<a11y::TextRange>* aRanges) const
       startContainer->DOMPointToOffset(DOMRange->GetStartContainer(),
                                        DOMRange->StartOffset(), false);
     int32_t endOffset =
-      endParent->DOMPointToOffset(DOMRange->GetEndContainer(),
-                                  DOMRange->EndOffset(), true);
+      endContainer->DOMPointToOffset(DOMRange->GetEndContainer(),
+                                     DOMRange->EndOffset(), true);
 
     TextRange tr(IsTextField() ? const_cast<HyperTextAccessible*>(this) : mDoc,
-                    startContainer, startOffset, endParent, endOffset);
+                    startContainer, startOffset, endContainer, endOffset);
     *(aRanges->AppendElement()) = Move(tr);
   }
 }
