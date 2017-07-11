@@ -28,13 +28,48 @@ struct SimpleVertex
   int depth;
 };
 
-bool
-SimpleTraits::AddInstanceTo(ShaderRenderPass* aPass, const ItemInfo& aItem) const
+inline nsTArray<gfx::Triangle>
+SimpleTraits::GenerateTriangles(const gfx::Polygon& aPolygon) const
 {
-  return aPass->GetInstances()->AddItem(SimpleVertex(
-    mRect, aItem.layerIndex, aItem.sortOrder));
+  return aPolygon.ToTriangles();
 }
 
+inline bool
+SimpleTraits::AddInstanceTo(ShaderRenderPass* aPass) const
+{
+  return aPass->GetInstances()->AddItem(SimpleVertex(
+    mRect, mItem.layerIndex, mItem.sortOrder));
+}
+
+inline SimpleTraits::TriangleVertices
+SimpleTraits::MakeVertex(const FirstTriangle& aIgnore) const
+{
+  TriangleVertices v = {
+    mRect.BottomLeft(), mRect.TopLeft(), mRect.TopRight(),
+    mItem.layerIndex, mItem.sortOrder
+  };
+  return v;
+}
+
+inline SimpleTraits::TriangleVertices
+SimpleTraits::MakeVertex(const SecondTriangle& aIgnore) const
+{
+  TriangleVertices v = {
+    mRect.TopRight(), mRect.BottomRight(), mRect.BottomLeft(),
+    mItem.layerIndex, mItem.sortOrder
+  };
+  return v;
+}
+
+inline SimpleTraits::TriangleVertices
+SimpleTraits::MakeVertex(const gfx::Triangle& aTriangle) const
+{
+  TriangleVertices v = {
+    aTriangle.p1, aTriangle.p2, aTriangle.p3,
+    mItem.layerIndex, mItem.sortOrder
+  };
+  return v;
+}
 
 inline bool
 ColorTraits::AddItemTo(ShaderRenderPass* aPass) const
@@ -46,6 +81,33 @@ inline bool
 TexturedTraits::AddItemTo(ShaderRenderPass* aPass) const
 {
   return aPass->GetItems()->AddItem(mTexCoords);
+}
+
+inline nsTArray<gfx::TexturedTriangle>
+TexturedTraits::GenerateTriangles(const gfx::Polygon& aPolygon) const
+{
+  return GenerateTexturedTriangles(aPolygon, mRect, mTexCoords);
+}
+
+inline TexturedTraits::VertexData
+TexturedTraits::MakeVertexData(const FirstTriangle& aIgnore, uint32_t aItemIndex) const
+{
+  VertexData v = { mTexCoords.BottomLeft(), mTexCoords.TopLeft(), mTexCoords.TopRight() };
+  return v;
+}
+
+inline TexturedTraits::VertexData
+TexturedTraits::MakeVertexData(const SecondTriangle& aIgnore, uint32_t aItemIndex) const
+{
+  VertexData v = { mTexCoords.TopRight(), mTexCoords.BottomRight(), mTexCoords.BottomLeft() };
+  return v;
+}
+
+inline TexturedTraits::VertexData
+TexturedTraits::MakeVertexData(const gfx::TexturedTriangle& aTriangle, uint32_t aItemIndex) const
+{
+  VertexData v = { aTriangle.textureCoords.p1, aTriangle.textureCoords.p2, aTriangle.textureCoords.p3 };
+  return v;
 }
 
 } // namespace mlg
