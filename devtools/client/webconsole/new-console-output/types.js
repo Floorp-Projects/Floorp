@@ -31,6 +31,7 @@ exports.ConsoleMessage = function (props) {
     source: null,
     timeStamp: null,
     type: null,
+    helperType: null,
     level: null,
     messageText: null,
     parameters: null,

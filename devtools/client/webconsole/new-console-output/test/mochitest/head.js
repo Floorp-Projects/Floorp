@@ -4,7 +4,7 @@
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 /* import-globals-from ../../../../framework/test/shared-head.js */
 /* exported WCUL10n, openNewTabAndConsole, waitForMessages, waitFor, findMessage,
-   openContextMenu, hideContextMenu, loadDocument */
+   openContextMenu, hideContextMenu, loadDocument, waitForNodeMutation */
 
 "use strict";
 
@@ -184,5 +184,23 @@ function loadDocument(browser, url) {
   return new Promise(resolve => {
     browser.addEventListener("load", resolve, {capture: true, once: true});
     BrowserTestUtils.loadURI(gBrowser.selectedBrowser, url);
+  });
+}
+
+/**
+* Returns a promise that resolves when the node passed as an argument mutate
+* according to the passed configuration.
+*
+* @param {Node} node - The node to observe mutations on.
+* @param {Object} observeConfig - A configuration object for MutationObserver.observe.
+* @returns {Promise}
+*/
+function waitForNodeMutation(node, observeConfig = {}) {
+  return new Promise(resolve => {
+    const observer = new MutationObserver(mutations => {
+      resolve(mutations);
+      observer.disconnect();
+    });
+    observer.observe(node, observeConfig);
   });
 }
