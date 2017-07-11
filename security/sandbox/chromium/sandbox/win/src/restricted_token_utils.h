@@ -40,6 +40,7 @@ DWORD CreateRestrictedToken(TokenLevel security_level,
                             IntegrityLevel integrity_level,
                             TokenType token_type,
                             bool lockdown_default_dacl,
+                            bool use_restricting_sids,
                             base::win::ScopedHandle* token);
 
 // Sets the integrity label on a object handle.

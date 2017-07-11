@@ -42,6 +42,7 @@ class PolicyBase final : public TargetPolicy {
   ResultCode SetTokenLevel(TokenLevel initial, TokenLevel lockdown) override;
   TokenLevel GetInitialTokenLevel() const override;
   TokenLevel GetLockdownTokenLevel() const override;
+  void SetDoNotUseRestrictingSIDs() final;
   ResultCode SetJobLevel(JobLevel job_level, uint32_t ui_exceptions) override;
   JobLevel GetJobLevel() const override;
   ResultCode SetJobMemoryLimit(size_t memory_limit) override;
@@ -127,6 +128,7 @@ class PolicyBase final : public TargetPolicy {
   // The user-defined global policy settings.
   TokenLevel lockdown_level_;
   TokenLevel initial_level_;
+  bool use_restricting_sids_ = true;
   JobLevel job_level_;
   uint32_t ui_exceptions_;
   size_t memory_limit_;
