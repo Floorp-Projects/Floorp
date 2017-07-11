@@ -68,6 +68,12 @@ class WebPlatformTest(TestingMixin, MercurialScript, BlobUploadMixin, CodeCovera
             "default": False,
             "help": "Forcibly enable parallel traversal in Stylo with STYLO_THREADS=4"}
          ],
+        [["--enable-stylo"], {
+            "action": "store_true",
+            "dest": "enable_stylo",
+            "default": False,
+            "help": "Run tests with Stylo enabled"}
+         ],
     ] + copy.deepcopy(testing_config_options) + \
         copy.deepcopy(blobupload_config_options) + \
         copy.deepcopy(code_coverage_config_options)
@@ -254,6 +260,8 @@ class WebPlatformTest(TestingMixin, MercurialScript, BlobUploadMixin, CodeCovera
             env['MOZ_WEBRENDER'] = '1'
 
         env['STYLO_THREADS'] = '4' if self.config['parallel_stylo_traversal'] else '1'
+        if self.config['enable_stylo']:
+            env['STYLO_FORCE_ENABLED'] = '1'
 
         env = self.query_env(partial_env=env, log_level=INFO)
 
