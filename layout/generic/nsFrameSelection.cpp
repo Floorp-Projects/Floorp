@@ -2849,15 +2849,17 @@ nsFrameSelection::SelectCellElement(nsIContent *aCellElement)
 }
 
 nsresult
-nsFrameSelection::CreateAndAddRange(nsINode *aParentNode, int32_t aOffset)
+nsFrameSelection::CreateAndAddRange(nsINode* aContainer, int32_t aOffset)
 {
-  if (!aParentNode) return NS_ERROR_NULL_POINTER;
+  if (!aContainer) {
+    return NS_ERROR_NULL_POINTER;
+  }
 
-  RefPtr<nsRange> range = new nsRange(aParentNode);
+  RefPtr<nsRange> range = new nsRange(aContainer);
 
   // Set range around child at given offset
-  nsresult rv = range->SetStartAndEnd(aParentNode, aOffset,
-                                      aParentNode, aOffset + 1);
+  nsresult rv = range->SetStartAndEnd(aContainer, aOffset,
+                                      aContainer, aOffset + 1);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
