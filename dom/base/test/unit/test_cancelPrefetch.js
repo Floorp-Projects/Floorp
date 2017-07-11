@@ -54,7 +54,7 @@ add_test(function test_cancel1() {
   do_check_true(prefetch.hasMoreElements(), 'There is still request in ' +
                                             'the queue');
 
-  prefetch.cancelPrefetchURI(uri, node1);
+  prefetch.cancelPrefetchPreloadURI(uri, node1);
 
   do_check_false(prefetch.hasMoreElements(), 'There is no request in the ' +
                                              'queue');
@@ -71,12 +71,12 @@ add_test(function test_cancel2() {
 
   do_check_true(prefetch.hasMoreElements(), 'There are requests in the queue');
 
-  prefetch.cancelPrefetchURI(uri, node1);
+  prefetch.cancelPrefetchPreloadURI(uri, node1);
 
   do_check_true(prefetch.hasMoreElements(), 'There is still one more request ' +
                                             'in the queue');
 
-  prefetch.cancelPrefetchURI(uri, node2);
+  prefetch.cancelPrefetchPreloadURI(uri, node2);
 
   do_check_false(prefetch.hasMoreElements(), 'There is no request in the queue');
   run_next_test();
@@ -93,7 +93,7 @@ add_test(function test_cancel3() {
   var didFail = 0;
 
   try {
-    prefetch.cancelPrefetchURI(uri, node2);
+    prefetch.cancelPrefetchPreloadURI(uri, node2, true);
   } catch(e) {
     didFail = 1;
   }
@@ -102,7 +102,7 @@ add_test(function test_cancel3() {
   do_check_true(prefetch.hasMoreElements(), 'There is still a request ' +
                                             'in the queue');
 
-  prefetch.cancelPrefetchURI(uri, node1);
+  prefetch.cancelPrefetchPreloadURI(uri, node1);
   do_check_false(prefetch.hasMoreElements(), 'There is no request in the queue');
   run_next_test();
 });
@@ -119,7 +119,7 @@ add_test(function test_cancel4() {
   var didFail = 0;
 
   try {
-    prefetch.cancelPrefetchURI(uri2, node1);
+    prefetch.cancelPrefetchPreloadURI(uri2, node1);
   } catch(e) {
     didFail = 1;
   }
@@ -128,7 +128,7 @@ add_test(function test_cancel4() {
   do_check_true(prefetch.hasMoreElements(), 'There is still a request ' +
                                             'in the queue');
 
-  prefetch.cancelPrefetchURI(uri1, node1);
+  prefetch.cancelPrefetchPreloadURI(uri1, node1);
   do_check_false(prefetch.hasMoreElements(), 'There is no request in the queue');
   run_next_test();
 });

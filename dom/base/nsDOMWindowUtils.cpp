@@ -1281,6 +1281,16 @@ nsDOMWindowUtils::SendNativeTouchTap(int32_t aScreenX,
 }
 
 NS_IMETHODIMP
+nsDOMWindowUtils::SuppressAnimation(bool aSuppress)
+{
+  nsIWidget* widget = GetWidget();
+  if (widget) {
+    widget->SuppressAnimation(aSuppress);
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsDOMWindowUtils::ClearNativeTouchSequence(nsIObserver* aObserver)
 {
   nsCOMPtr<nsIWidget> widget = GetWidget();
@@ -3217,16 +3227,16 @@ nsDOMWindowUtils::GetFileId(JS::Handle<JS::Value> aFile, JSContext* aCx,
     return NS_OK;
   }
 
-  JSObject* obj = aFile.toObjectOrNull();
+  JS::Rooted<JSObject*> obj(aCx, aFile.toObjectOrNull());
 
   IDBMutableFile* mutableFile = nullptr;
-  if (NS_SUCCEEDED(UNWRAP_OBJECT(IDBMutableFile, obj, mutableFile))) {
+  if (NS_SUCCEEDED(UNWRAP_OBJECT(IDBMutableFile, &obj, mutableFile))) {
     *_retval = mutableFile->GetFileId();
     return NS_OK;
   }
 
   Blob* blob = nullptr;
-  if (NS_SUCCEEDED(UNWRAP_OBJECT(Blob, obj, blob))) {
+  if (NS_SUCCEEDED(UNWRAP_OBJECT(Blob, &obj, blob))) {
     *_retval = blob->GetFileId();
     return NS_OK;
   }
@@ -3244,10 +3254,10 @@ nsDOMWindowUtils::GetFilePath(JS::HandleValue aFile, JSContext* aCx,
     return NS_OK;
   }
 
-  JSObject* obj = aFile.toObjectOrNull();
+  JS::Rooted<JSObject*> obj(aCx, aFile.toObjectOrNull());
 
   File* file = nullptr;
-  if (NS_SUCCEEDED(UNWRAP_OBJECT(File, obj, file))) {
+  if (NS_SUCCEEDED(UNWRAP_OBJECT(File, &obj, file))) {
     nsString filePath;
     ErrorResult rv;
     file->GetMozFullPathInternal(filePath, rv);

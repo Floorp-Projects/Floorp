@@ -60,7 +60,8 @@ nsresult
 UnwrapWindowProxyImpl(JSContext* cx, JS::Handle<JSObject*> src,
                       nsPIDOMWindowOuter** ppArg);
 
-/** Convert a jsval to an XPCOM pointer. */
+/** Convert a jsval to an XPCOM pointer. Caller must not assume that src will
+    keep the XPCOM pointer rooted. */
 template <class Interface>
 inline nsresult
 UnwrapArg(JSContext* cx, JS::Handle<JSObject*> src, Interface** ppArg)
@@ -75,6 +76,29 @@ UnwrapArg<nsPIDOMWindowOuter>(JSContext* cx, JS::Handle<JSObject*> src,
                               nsPIDOMWindowOuter** ppArg)
 {
   return UnwrapWindowProxyImpl(cx, src, ppArg);
+}
+
+nsresult
+UnwrapXPConnectImpl(JSContext* cx, JS::MutableHandle<JS::Value> src,
+                    const nsIID& iid, void** ppArg);
+
+/*
+ * Convert a jsval being used as a Web IDL interface implementation to an XPCOM
+ * pointer; this is only used for Web IDL interfaces that specify
+ * hasXPConnectImpls.  This is not the same as UnwrapArg because caller _can_
+ * assume that if unwrapping succeeds "val" will be updated so it's rooting the
+ * XPCOM pointer.  Also, UnwrapXPConnect doesn't need to worry about doing
+ * XPCWrappedJS things.
+ *
+ * val must be an ObjectValue.
+ */
+template<class Interface>
+inline nsresult
+UnwrapXPConnect(JSContext* cx, JS::MutableHandle<JS::Value> val,
+                Interface** ppThis)
+{
+  return UnwrapXPConnectImpl(cx, val, NS_GET_TEMPLATE_IID(Interface),
+                             reinterpret_cast<void**>(ppThis));
 }
 
 bool
@@ -186,45 +210,95 @@ IsDOMObject(JSObject* obj)
   return IsDOMClass(js::GetObjectClass(obj));
 }
 
+// There are two valid ways to use UNWRAP_OBJECT: Either obj needs to
+// be a MutableHandle<JSObject*>, or value needs to be a strong-reference
+// smart pointer type (OwningNonNull or RefPtr or nsCOMPtr), in which case obj
+// can be anything that converts to JSObject*.
 #define UNWRAP_OBJECT(Interface, obj, value)                                 \
   mozilla::dom::UnwrapObject<mozilla::dom::prototypes::id::Interface,        \
+    mozilla::dom::Interface##Binding::NativeType>(obj, value)
+
+// Test whether the given object is an instance of the given interface.
+#define IS_INSTANCE_OF(Interface, obj)                                  \
+  mozilla::dom::IsInstanceOf<mozilla::dom::prototypes::id::Interface,   \
+                             mozilla::dom::Interface##Binding::NativeType>(obj)
+
+// Unwrap the given non-wrapper object.  This can be used with any obj that
+// converts to JSObject*; as long as that JSObject* is live the return value
+// will be valid.
+#define UNWRAP_NON_WRAPPER_OBJECT(Interface, obj, value)                        \
+  mozilla::dom::UnwrapNonWrapperObject<mozilla::dom::prototypes::id::Interface, \
     mozilla::dom::Interface##Binding::NativeType>(obj, value)
 
 // Some callers don't want to set an exception when unwrapping fails
 // (for example, overload resolution uses unwrapping to tell what sort
 // of thing it's looking at).
 // U must be something that a T* can be assigned to (e.g. T* or an RefPtr<T>).
-template <class T, typename U>
+//
+// The obj argument will be mutated to point to CheckedUnwrap of itself if the
+// passed-in value is not a DOM object and CheckedUnwrap succeeds.
+//
+// If mayBeWrapper is true, there are three valid ways to invoke
+// UnwrapObjectInternal: Either obj needs to be a class wrapping a
+// MutableHandle<JSObject*>, with an assignment operator that sets the handle to
+// the given object, or U needs to be a strong-reference smart pointer type
+// (OwningNonNull or RefPtr or nsCOMPtr), or the value being stored in "value"
+// must not escape past being tested for falsiness immediately after the
+// UnwrapObjectInternal call.
+//
+// If mayBeWrapper is false, obj can just be a JSObject*, and U anything that a
+// T* can be assigned to.
+namespace binding_detail {
+template <class T, bool mayBeWrapper, typename U, typename V>
 MOZ_ALWAYS_INLINE nsresult
-UnwrapObject(JSObject* obj, U& value, prototypes::ID protoID,
-             uint32_t protoDepth)
+UnwrapObjectInternal(V& obj, U& value, prototypes::ID protoID,
+                     uint32_t protoDepth)
 {
   /* First check to see whether we have a DOM object */
   const DOMJSClass* domClass = GetDOMClass(obj);
-  if (!domClass) {
-    /* Maybe we have a security wrapper or outer window? */
-    if (!js::IsWrapper(obj)) {
-      /* Not a DOM object, not a wrapper, just bail */
-      return NS_ERROR_XPC_BAD_CONVERT_JS;
-    }
-
-    obj = js::CheckedUnwrap(obj, /* stopAtWindowProxy = */ false);
-    if (!obj) {
-      return NS_ERROR_XPC_SECURITY_MANAGER_VETO;
-    }
-    MOZ_ASSERT(!js::IsWrapper(obj));
-    domClass = GetDOMClass(obj);
-    if (!domClass) {
-      /* We don't have a DOM object */
-      return NS_ERROR_XPC_BAD_CONVERT_JS;
+  if (domClass) {
+    /* This object is a DOM object.  Double-check that it is safely
+       castable to T by checking whether it claims to inherit from the
+       class identified by protoID. */
+    if (domClass->mInterfaceChain[protoDepth] == protoID) {
+      value = UnwrapDOMObject<T>(obj);
+      return NS_OK;
     }
   }
 
-  /* This object is a DOM object.  Double-check that it is safely
-     castable to T by checking whether it claims to inherit from the
-     class identified by protoID. */
-  if (domClass->mInterfaceChain[protoDepth] == protoID) {
-    value = UnwrapDOMObject<T>(obj);
+  /* Maybe we have a security wrapper or outer window? */
+  if (!mayBeWrapper || !js::IsWrapper(obj)) {
+    /* Not a DOM object, not a wrapper, just bail */
+    return NS_ERROR_XPC_BAD_CONVERT_JS;
+  }
+
+  JSObject* unwrappedObj =
+    js::CheckedUnwrap(obj, /* stopAtWindowProxy = */ false);
+  if (!unwrappedObj) {
+    return NS_ERROR_XPC_SECURITY_MANAGER_VETO;
+  }
+  MOZ_ASSERT(!js::IsWrapper(unwrappedObj));
+  // Recursive call is OK, because now we're using false for mayBeWrapper and
+  // we never reach this code if that boolean is false, so can't keep calling
+  // ourselves.
+  //
+  // Unwrap into a temporary pointer, because in general unwrapping into
+  // something of type U might trigger GC (e.g. release the value currently
+  // stored in there, with arbitrary consequences) and invalidate the
+  // "unwrappedObj" pointer.
+  T* tempValue;
+  nsresult rv = UnwrapObjectInternal<T, false>(unwrappedObj, tempValue,
+                                               protoID, protoDepth);
+  if (NS_SUCCEEDED(rv)) {
+    // It's very important to not update "obj" with the "unwrappedObj" value
+    // until we know the unwrap has succeeded.  Otherwise, in a situation in
+    // which we have an overload of object and primitive we could end up
+    // converting to the primitive from the unwrappedObj, whereas we want to do
+    // it from the original object.
+    obj = unwrappedObj;
+    // And now assign to "value"; at this point we don't care if a GC happens
+    // and invalidates unwrappedObj.
+    value = tempValue;
     return NS_OK;
   }
 
@@ -232,12 +306,121 @@ UnwrapObject(JSObject* obj, U& value, prototypes::ID protoID,
   return NS_ERROR_XPC_BAD_CONVERT_JS;
 }
 
-template <prototypes::ID PrototypeID, class T, typename U>
+struct MutableObjectHandleWrapper {
+  explicit MutableObjectHandleWrapper(JS::MutableHandle<JSObject*> aHandle)
+    : mHandle(aHandle)
+  {
+  }
+
+  void operator=(JSObject* aObject)
+  {
+    MOZ_ASSERT(aObject);
+    mHandle.set(aObject);
+  }
+
+  operator JSObject*() const
+  {
+    return mHandle;
+  }
+
+private:
+  JS::MutableHandle<JSObject*> mHandle;
+};
+
+struct MutableValueHandleWrapper {
+  explicit MutableValueHandleWrapper(JS::MutableHandle<JS::Value> aHandle)
+    : mHandle(aHandle)
+  {
+  }
+
+  void operator=(JSObject* aObject)
+  {
+    MOZ_ASSERT(aObject);
+    mHandle.setObject(*aObject);
+  }
+
+  operator JSObject*() const
+  {
+    return &mHandle.toObject();
+  }
+
+private:
+  JS::MutableHandle<JS::Value> mHandle;
+};
+
+} // namespace binding_detail
+
+// UnwrapObject overloads that ensure we have a MutableHandle to keep it alive.
+template<prototypes::ID PrototypeID, class T, typename U>
 MOZ_ALWAYS_INLINE nsresult
-UnwrapObject(JSObject* obj, U& value)
+UnwrapObject(JS::MutableHandle<JSObject*> obj, U& value)
 {
-  return UnwrapObject<T>(obj, value, PrototypeID,
-                         PrototypeTraits<PrototypeID>::Depth);
+  binding_detail::MutableObjectHandleWrapper wrapper(obj);
+  return binding_detail::UnwrapObjectInternal<T, true>(
+    wrapper, value, PrototypeID, PrototypeTraits<PrototypeID>::Depth);
+}
+
+template<prototypes::ID PrototypeID, class T, typename U>
+MOZ_ALWAYS_INLINE nsresult
+UnwrapObject(JS::MutableHandle<JS::Value> obj, U& value)
+{
+  MOZ_ASSERT(obj.isObject());
+  binding_detail::MutableValueHandleWrapper wrapper(obj);
+  return binding_detail::UnwrapObjectInternal<T, true>(
+    wrapper, value, PrototypeID, PrototypeTraits<PrototypeID>::Depth);
+}
+
+// UnwrapObject overloads that ensure we have a strong ref to keep it alive.
+template<prototypes::ID PrototypeID, class T, typename U>
+MOZ_ALWAYS_INLINE nsresult
+UnwrapObject(JSObject* obj, RefPtr<U>& value)
+{
+  return binding_detail::UnwrapObjectInternal<T, true>(
+    obj, value, PrototypeID, PrototypeTraits<PrototypeID>::Depth);
+}
+
+template<prototypes::ID PrototypeID, class T, typename U>
+MOZ_ALWAYS_INLINE nsresult
+UnwrapObject(JSObject* obj, nsCOMPtr<U>& value)
+{
+  return binding_detail::UnwrapObjectInternal<T, true>(
+    obj, value, PrototypeID, PrototypeTraits<PrototypeID>::Depth);
+}
+
+template<prototypes::ID PrototypeID, class T, typename U>
+MOZ_ALWAYS_INLINE nsresult
+UnwrapObject(JSObject* obj, OwningNonNull<U>& value)
+{
+  return binding_detail::UnwrapObjectInternal<T, true>(
+    obj, value, PrototypeID, PrototypeTraits<PrototypeID>::Depth);
+}
+
+// An UnwrapObject overload that just calls one of the JSObject* ones.
+template<prototypes::ID PrototypeID, class T, typename U>
+MOZ_ALWAYS_INLINE nsresult
+UnwrapObject(JS::Handle<JS::Value> obj, U& value)
+{
+  MOZ_ASSERT(obj.isObject());
+  return UnwrapObject<PrototypeID, T>(&obj.toObject(), value);
+}
+
+template<prototypes::ID PrototypeID, class T>
+MOZ_ALWAYS_INLINE bool
+IsInstanceOf(JSObject* obj)
+{
+  void* ignored;
+  nsresult unwrapped = binding_detail::UnwrapObjectInternal<T, true>(
+    obj, ignored, PrototypeID, PrototypeTraits<PrototypeID>::Depth);
+  return NS_SUCCEEDED(unwrapped);
+}
+
+template<prototypes::ID PrototypeID, class T, typename U>
+MOZ_ALWAYS_INLINE nsresult
+UnwrapNonWrapperObject(JSObject* obj, U& value)
+{
+  MOZ_ASSERT(!js::IsWrapper(obj));
+  return binding_detail::UnwrapObjectInternal<T, false>(
+    obj, value, PrototypeID, PrototypeTraits<PrototypeID>::Depth);
 }
 
 MOZ_ALWAYS_INLINE bool

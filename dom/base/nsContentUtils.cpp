@@ -7724,10 +7724,10 @@ nsContentUtils::GenerateUUIDInPlace(nsID& aUUID)
 }
 
 bool
-nsContentUtils::PrefetchEnabled(nsIDocShell* aDocShell)
+nsContentUtils::PrefetchPreloadEnabled(nsIDocShell* aDocShell)
 {
   //
-  // SECURITY CHECK: disable prefetching from mailnews!
+  // SECURITY CHECK: disable prefetching and preloading from mailnews!
   //
   // walk up the docshell tree to see if any containing
   // docshell are of type MAIL.
@@ -7744,7 +7744,7 @@ nsContentUtils::PrefetchEnabled(nsIDocShell* aDocShell)
     uint32_t appType = 0;
     nsresult rv = docshell->GetAppType(&appType);
     if (NS_FAILED(rv) || appType == nsIDocShell::APP_TYPE_MAIL) {
-      return false; // do not prefetch, preconnect from mailnews
+      return false; // do not prefetch, preload, preconnect from mailnews
     }
 
     docshell->GetParent(getter_AddRefs(parentItem));

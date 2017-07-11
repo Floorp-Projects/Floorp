@@ -496,25 +496,25 @@ Number(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
-    /* Sample JS_CALLEE before clobbering. */
-    bool isConstructing = args.isConstructing();
-
     if (args.length() > 0) {
         if (!ToNumber(cx, args[0]))
             return false;
-        args.rval().set(args[0]);
-    } else {
-        args.rval().setInt32(0);
     }
 
-    if (!isConstructing)
+    if (!args.isConstructing()) {
+        if (args.length() > 0)
+            args.rval().set(args[0]);
+        else
+            args.rval().setInt32(0);
         return true;
+    }
 
-    RootedObject newTarget(cx, &args.newTarget().toObject());
     RootedObject proto(cx);
-    if (!GetPrototypeFromConstructor(cx, newTarget, &proto))
+    if (!GetPrototypeFromBuiltinConstructor(cx, args, &proto))
         return false;
-    JSObject* obj = NumberObject::create(cx, args.rval().toNumber(), proto);
+
+    double d = args.length() > 0 ? args[0].toNumber() : 0;
+    JSObject* obj = NumberObject::create(cx, d, proto);
     if (!obj)
         return false;
     args.rval().setObject(*obj);

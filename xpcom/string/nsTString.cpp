@@ -11,7 +11,7 @@ nsTAdoptingString_CharT::operator=(const self_type& str)
   // the nature of this class...
   self_type* mutable_str = const_cast<self_type*>(&str);
 
-  if (str.mFlags & F_OWNED) {
+  if (str.mDataFlags & DataFlags::OWNED) {
     // We want to do what Adopt() does, but without actually incrementing
     // the Adopt count.  Note that we can be a little more straightforward
     // about this than Adopt() is, because we know that str.mData is
@@ -20,7 +20,7 @@ nsTAdoptingString_CharT::operator=(const self_type& str)
     Finalize();
     mData = str.mData;
     mLength = str.mLength;
-    SetDataFlags(F_TERMINATED | F_OWNED);
+    mDataFlags = DataFlags::TERMINATED | DataFlags::OWNED;
 
     // Make str forget the buffer we just took ownership of.
     new (mutable_str) self_type();
@@ -41,7 +41,7 @@ nsTString_CharT::Rebind(const char_type* data, size_type length)
 
   mData = const_cast<char_type*>(data);
   mLength = length;
-  SetDataFlags(F_TERMINATED);
+  mDataFlags = DataFlags::TERMINATED;
   AssertValidDependentString();
 }
 

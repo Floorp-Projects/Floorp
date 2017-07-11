@@ -2245,14 +2245,36 @@ nsCookieService::NotifyThirdParty(nsIURI *aHostURI, bool aIsAccepted, nsIChannel
 // cookies.
 void
 nsCookieService::NotifyChanged(nsISupports     *aSubject,
-                               const char16_t *aData)
+                               const char16_t *aData,
+                               bool aOldCookieIsSession)
 {
   const char* topic = mDBState == mPrivateDBState ?
       "private-cookie-changed" : "cookie-changed";
   nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
-  if (os) {
-    os->NotifyObservers(aSubject, topic, aData);
+  if (!os) {
+    return;
   }
+  // Notify for topic "private-cookie-changed" or "cookie-changed"
+  os->NotifyObservers(aSubject, topic, aData);
+
+  // Notify for topic "session-cookie-changed" to update the copy of session
+  // cookies in session restore component.
+  // Ignore private session cookies since they will not be restored.
+  if (mDBState == mPrivateDBState) {
+    return;
+  }
+  // Filter out notifications for individual non-session cookies.
+  if (NS_LITERAL_STRING("changed").Equals(aData) ||
+      NS_LITERAL_STRING("deleted").Equals(aData) ||
+      NS_LITERAL_STRING("added").Equals(aData)) {
+    nsCOMPtr<nsICookie> xpcCookie = do_QueryInterface(aSubject);
+    MOZ_ASSERT(xpcCookie);
+    auto cookie = static_cast<nsCookie*>(xpcCookie.get());
+    if (!cookie->IsSession() && !aOldCookieIsSession) {
+      return;
+    }
+  }
+  os->NotifyObservers(aSubject, "session-cookie-changed", aData);
 }
 
 already_AddRefed<nsIArray>
@@ -3606,6 +3628,7 @@ nsCookieService::AddInternal(const nsCookieKey             &aKey,
   foundCookie = FindCookie(aKey, aCookie->Host(),
                            aCookie->Name(), aCookie->Path(), exactIter);
   bool foundSecureExact = foundCookie && exactIter.Cookie()->IsSecure();
+  bool oldCookieIsSession = false;
   if (mLeaveSecureAlone) {
     // Step1, call FindSecureCookie(). FindSecureCookie() would
     // find the existing cookie with the security flag and has
@@ -3647,6 +3670,7 @@ nsCookieService::AddInternal(const nsCookieKey             &aKey,
   nsCOMPtr<nsIArray> purgedList;
   if (foundCookie) {
     oldCookie = exactIter.Cookie();
+    oldCookieIsSession = oldCookie->IsSession();
 
     // Check if the old cookie is stale (i.e. has already expired). If so, we
     // need to be careful about the semantics of removing it and adding the new
@@ -3780,7 +3804,7 @@ nsCookieService::AddInternal(const nsCookieKey             &aKey,
     NotifyChanged(purgedList, u"batch-deleted");
   }
 
-  NotifyChanged(aCookie, foundCookie ? u"changed" : u"added");
+  NotifyChanged(aCookie, foundCookie ? u"changed" : u"added", oldCookieIsSession);
 }
 
 /******************************************************************************

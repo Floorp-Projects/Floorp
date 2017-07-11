@@ -167,7 +167,7 @@ HTMLLinkElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
   }
 
   if (IsInComposedDoc()) {
-    TryDNSPrefetchPreconnectOrPrefetchOrPrerender();
+    TryDNSPrefetchOrPreconnectOrPrefetchOrPreloadOrPrerender();
   }
 
   void (HTMLLinkElement::*update)() = &HTMLLinkElement::UpdateStyleSheetInternal;
@@ -199,7 +199,7 @@ HTMLLinkElement::UnbindFromTree(bool aDeep, bool aNullParent)
   // mCachedURI based on data that is invalid - due to a call to GetHostname.
   CancelDNSPrefetch(HTML_LINK_DNS_PREFETCH_DEFERRED,
                     HTML_LINK_DNS_PREFETCH_REQUESTED);
-  CancelPrefetch();
+  CancelPrefetchOrPreload();
 
   // If this link is ever reinserted into a document, it might
   // be under a different xml:base, so forget the cached state now.
@@ -229,6 +229,11 @@ HTMLLinkElement::ParseAttribute(int32_t aNamespaceID,
   if (aNamespaceID == kNameSpaceID_None) {
     if (aAttribute == nsGkAtoms::crossorigin) {
       ParseCORSValue(aValue, aResult);
+      return true;
+    }
+
+    if (aAttribute == nsGkAtoms::as) {
+      ParseAsValue(aValue, aResult);
       return true;
     }
 
@@ -284,7 +289,7 @@ HTMLLinkElement::BeforeSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
       (aName == nsGkAtoms::href || aName == nsGkAtoms::rel)) {
     CancelDNSPrefetch(HTML_LINK_DNS_PREFETCH_DEFERRED,
                       HTML_LINK_DNS_PREFETCH_REQUESTED);
-    CancelPrefetch();
+    CancelPrefetchOrPreload();
   }
 
   return nsGenericHTMLElement::BeforeSetAttr(aNameSpaceID, aName,
@@ -315,7 +320,9 @@ HTMLLinkElement::AfterSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
          aName == nsGkAtoms::rel ||
          aName == nsGkAtoms::title ||
          aName == nsGkAtoms::media ||
-         aName == nsGkAtoms::type)) {
+         aName == nsGkAtoms::type ||
+         aName == nsGkAtoms::as ||
+         aName == nsGkAtoms::crossorigin)) {
       bool dropSheet = false;
       if (aName == nsGkAtoms::rel) {
         nsAutoString value;
@@ -328,7 +335,13 @@ HTMLLinkElement::AfterSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
 
       if ((aName == nsGkAtoms::rel || aName == nsGkAtoms::href) &&
           IsInComposedDoc()) {
-        TryDNSPrefetchPreconnectOrPrefetchOrPrerender();
+        TryDNSPrefetchOrPreconnectOrPrefetchOrPreloadOrPrerender();
+      }
+
+      if ((aName == nsGkAtoms::as || aName == nsGkAtoms::type ||
+           aName == nsGkAtoms::crossorigin || aName == nsGkAtoms::media) &&
+          IsInComposedDoc()) {
+        UpdatePreload(aName, aValue, aOldValue);
       }
 
       UpdateStyleSheetInternal(nullptr, nullptr,
@@ -347,6 +360,11 @@ HTMLLinkElement::AfterSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
           aName == nsGkAtoms::media ||
           aName == nsGkAtoms::type) {
         UpdateStyleSheetInternal(nullptr, nullptr, true);
+      }
+      if ((aName == nsGkAtoms::as || aName == nsGkAtoms::type ||
+           aName == nsGkAtoms::crossorigin || aName == nsGkAtoms::media) &&
+          IsInComposedDoc()) {
+        UpdatePreload(aName, aValue, aOldValue);
       }
     }
   }
@@ -393,6 +411,7 @@ static const DOMTokenListSupportedToken sSupportedRelValues[] = {
   "preconnect",
   "icon",
   "search",
+  "preload",
   nullptr
 };
 
@@ -502,6 +521,12 @@ JSObject*
 HTMLLinkElement::WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
   return HTMLLinkElementBinding::Wrap(aCx, this, aGivenProto);
+}
+
+void
+HTMLLinkElement::GetAs(nsAString& aResult)
+{
+  GetEnumAttr(nsGkAtoms::as, EmptyCString().get(), aResult);
 }
 
 } // namespace dom

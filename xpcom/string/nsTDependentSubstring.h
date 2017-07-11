@@ -39,7 +39,8 @@ public:
   }
 
   nsTDependentSubstring_CharT(const char_type* aData, size_type aLength)
-    : substring_type(const_cast<char_type*>(aData), aLength, F_NONE)
+    : substring_type(const_cast<char_type*>(aData), aLength,
+                     DataFlags(0), ClassFlags(0))
   {
   }
 

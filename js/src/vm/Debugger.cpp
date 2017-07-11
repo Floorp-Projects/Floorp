@@ -8106,6 +8106,8 @@ DebuggerFrame::getArguments(JSContext *cx, HandleDebuggerFrame frame,
         if (!proto)
             return false;
         arguments = DebuggerArguments::create(cx, proto, frame);
+        if (!arguments)
+            return false;
     } else {
         arguments = nullptr;
     }

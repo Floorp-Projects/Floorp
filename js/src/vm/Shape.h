@@ -659,8 +659,15 @@ struct StackBaseShape : public DefaultHasher<ReadBarriered<UnownedBaseShape*>>
         }
     };
 
-    static inline HashNumber hash(const Lookup& lookup);
-    static inline bool match(const ReadBarriered<UnownedBaseShape*>& key, const Lookup& lookup);
+    static HashNumber hash(const Lookup& lookup) {
+        HashNumber hash = lookup.flags;
+        hash = mozilla::RotateLeft(hash, 4) ^ (uintptr_t(lookup.clasp) >> 3);
+        return hash;
+    }
+    static inline bool match(const ReadBarriered<UnownedBaseShape*>& key, const Lookup& lookup) {
+        return key.unbarrieredGet()->flags == lookup.flags &&
+               key.unbarrieredGet()->clasp_ == lookup.clasp;
+    }
 };
 
 static MOZ_ALWAYS_INLINE js::HashNumber
@@ -1304,15 +1311,6 @@ class InitialShapeProto
         MOZ_ASSERT(key < JSProto_LIMIT);
     }
 
-    HashNumber hashCode() const {
-        return proto_.hashCode() ^ HashNumber(key_);
-    }
-    template <typename T>
-    bool match(const InitialShapeProto<T>& other) const {
-        return key_ == other.key_ &&
-               proto_.uniqueId() == other.proto_.unbarrieredGet().uniqueId();
-    }
-
     JSProtoKey key() const {
         return key_;
     }
@@ -1321,6 +1319,31 @@ class InitialShapeProto
     }
     void setProto(TaggedProto proto) {
         proto_ = proto;
+    }
+
+    bool operator==(const InitialShapeProto& other) const {
+        return key_ == other.key_ && proto_ == other.proto_;
+    }
+};
+
+template <>
+struct MovableCellHasher<InitialShapeProto<ReadBarriered<TaggedProto>>>
+{
+    using Key = InitialShapeProto<ReadBarriered<TaggedProto>>;
+    using Lookup = InitialShapeProto<TaggedProto>;
+
+    static bool hasHash(const Lookup& l) {
+        return MovableCellHasher<TaggedProto>::hasHash(l.proto());
+    }
+    static bool ensureHash(const Lookup& l) {
+        return MovableCellHasher<TaggedProto>::ensureHash(l.proto());
+    }
+    static HashNumber hash(const Lookup& l) {
+        return HashNumber(l.key()) ^ MovableCellHasher<TaggedProto>::hash(l.proto());
+    }
+    static bool match(const Key& k, const Lookup& l) {
+        return k.key() == l.key() &&
+               MovableCellHasher<TaggedProto>::match(k.proto().unbarrieredGet(), l.proto());
     }
 };
 
@@ -1370,9 +1393,21 @@ struct InitialShapeEntry
     inline InitialShapeEntry();
     inline InitialShapeEntry(Shape* shape, const Lookup::ShapeProto& proto);
 
-    static inline HashNumber hash(const Lookup& lookup);
-    static inline bool match(const InitialShapeEntry& key, const Lookup& lookup);
-    static void rekey(InitialShapeEntry& k, const InitialShapeEntry& newKey) { k = newKey; }
+    static HashNumber hash(const Lookup& lookup) {
+        return (mozilla::RotateLeft(uintptr_t(lookup.clasp) >> 3, 4) ^
+                MovableCellHasher<ShapeProto>::hash(lookup.proto)) +
+               lookup.nfixed;
+    }
+    static inline bool match(const InitialShapeEntry& key, const Lookup& lookup) {
+        const Shape* shape = key.shape.unbarrieredGet();
+        return lookup.clasp == shape->getObjectClass()
+            && lookup.nfixed == shape->numFixedSlots()
+            && lookup.baseFlags == shape->getObjectFlags()
+            && MovableCellHasher<ShapeProto>::match(key.proto, lookup.proto);
+    }
+    static void rekey(InitialShapeEntry& k, const InitialShapeEntry& newKey) {
+        k = newKey;
+    }
 
     bool needsSweep() {
         Shape* ushape = shape.unbarrieredGet();
@@ -1380,6 +1415,10 @@ struct InitialShapeEntry
         JSObject* protoObj = uproto.raw();
         return (gc::IsAboutToBeFinalizedUnbarriered(&ushape) ||
                 (uproto.isObject() && gc::IsAboutToBeFinalizedUnbarriered(&protoObj)));
+    }
+
+    bool operator==(const InitialShapeEntry& other) const {
+        return shape == other.shape && proto == other.proto;
     }
 };
 
