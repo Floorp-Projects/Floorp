@@ -80,7 +80,7 @@ public:
 
   nsINode* GetEndContainer() const
   {
-    return mEndParent;
+    return mEndContainer;
   }
 
   int32_t StartOffset() const
@@ -213,7 +213,7 @@ public:
 
   bool Collapsed() const
   {
-    return mIsPositioned && mStartContainer == mEndParent &&
+    return mIsPositioned && mStartContainer == mEndContainer &&
            mStartOffset == mEndOffset;
   }
   already_AddRefed<mozilla::dom::DocumentFragment>
@@ -425,7 +425,7 @@ protected:
   nsCOMPtr<nsIDocument> mOwner;
   nsCOMPtr<nsINode> mRoot;
   nsCOMPtr<nsINode> mStartContainer;
-  nsCOMPtr<nsINode> mEndParent;
+  nsCOMPtr<nsINode> mEndContainer;
   RefPtr<mozilla::dom::Selection> mSelection;
   int32_t mStartOffset;
   int32_t mEndOffset;

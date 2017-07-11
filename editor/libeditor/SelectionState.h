@@ -42,8 +42,8 @@ public:
 
   nsCOMPtr<nsINode> mStartContainer;
   int32_t mStartOffset;
-  nsCOMPtr<nsINode> endNode;
-  int32_t endOffset;
+  nsCOMPtr<nsINode> mEndContainer;
+  int32_t mEndOffset;
 };
 
 /**
@@ -192,9 +192,9 @@ public:
   {
     mRangeItem = new RangeItem();
     mRangeItem->mStartContainer = *mNode;
-    mRangeItem->endNode = *mNode;
+    mRangeItem->mEndContainer = *mNode;
     mRangeItem->mStartOffset = *mOffset;
-    mRangeItem->endOffset = *mOffset;
+    mRangeItem->mEndOffset = *mOffset;
     mRangeUpdater.RegisterRangeItem(mRangeItem);
   }
 
@@ -207,9 +207,9 @@ public:
   {
     mRangeItem = new RangeItem();
     mRangeItem->mStartContainer = do_QueryInterface(*mDOMNode);
-    mRangeItem->endNode = do_QueryInterface(*mDOMNode);
+    mRangeItem->mEndContainer = do_QueryInterface(*mDOMNode);
     mRangeItem->mStartOffset = *mOffset;
-    mRangeItem->endOffset = *mOffset;
+    mRangeItem->mEndOffset = *mOffset;
     mRangeUpdater.RegisterRangeItem(mRangeItem);
   }
 

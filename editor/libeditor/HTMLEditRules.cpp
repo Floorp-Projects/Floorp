@@ -352,10 +352,10 @@ HTMLEditRules::BeforeEdit(EditAction action,
     }
     mRangeItem->mStartContainer = selection->GetRangeAt(0)->GetStartContainer();
     mRangeItem->mStartOffset = selection->GetRangeAt(0)->StartOffset();
-    mRangeItem->endNode = selection->GetRangeAt(0)->GetEndContainer();
-    mRangeItem->endOffset = selection->GetRangeAt(0)->EndOffset();
+    mRangeItem->mEndContainer = selection->GetRangeAt(0)->GetEndContainer();
+    mRangeItem->mEndOffset = selection->GetRangeAt(0)->EndOffset();
     nsCOMPtr<nsINode> selStartNode = mRangeItem->mStartContainer;
-    nsCOMPtr<nsINode> selEndNode = mRangeItem->endNode;
+    nsCOMPtr<nsINode> selEndNode = mRangeItem->mEndContainer;
 
     // Register with range updater to track this as we perturb the doc
     htmlEditor->mRangeUpdater.RegisterRangeItem(mRangeItem);
@@ -518,15 +518,15 @@ HTMLEditRules::AfterEditInner(EditAction action,
       // also do this for original selection endpoints.
       NS_ENSURE_STATE(mHTMLEditor);
       NS_ENSURE_STATE(mRangeItem->mStartContainer);
-      NS_ENSURE_STATE(mRangeItem->endNode);
+      NS_ENSURE_STATE(mRangeItem->mEndContainer);
       WSRunObject(mHTMLEditor, mRangeItem->mStartContainer,
                   mRangeItem->mStartOffset).AdjustWhitespace();
       // we only need to handle old selection endpoint if it was different from start
-      if (mRangeItem->mStartContainer != mRangeItem->endNode ||
-          mRangeItem->mStartOffset != mRangeItem->endOffset) {
+      if (mRangeItem->mStartContainer != mRangeItem->mEndContainer ||
+          mRangeItem->mStartOffset != mRangeItem->mEndOffset) {
         NS_ENSURE_STATE(mHTMLEditor);
-        WSRunObject(mHTMLEditor, mRangeItem->endNode,
-                    mRangeItem->endOffset).AdjustWhitespace();
+        WSRunObject(mHTMLEditor, mRangeItem->mEndContainer,
+                    mRangeItem->mEndOffset).AdjustWhitespace();
       }
     }
 
@@ -6115,24 +6115,24 @@ HTMLEditRules::GetParagraphFormatNodes(
 nsresult
 HTMLEditRules::BustUpInlinesAtRangeEndpoints(RangeItem& item)
 {
-  bool isCollapsed = item.mStartContainer == item.endNode &&
-                     item.mStartOffset == item.endOffset;
+  bool isCollapsed = item.mStartContainer == item.mEndContainer &&
+                     item.mStartOffset == item.mEndOffset;
 
-  nsCOMPtr<nsIContent> endInline = GetHighestInlineParent(*item.endNode);
+  nsCOMPtr<nsIContent> endInline = GetHighestInlineParent(*item.mEndContainer);
 
   // if we have inline parents above range endpoints, split them
   if (endInline && !isCollapsed) {
     nsCOMPtr<nsINode> resultEndNode = endInline->GetParentNode();
     NS_ENSURE_STATE(mHTMLEditor);
-    // item.endNode must be content if endInline isn't null
+    // item.mEndContainer must be content if endInline isn't null
     int32_t resultEndOffset =
-      mHTMLEditor->SplitNodeDeep(*endInline, *item.endNode->AsContent(),
-                                 item.endOffset,
+      mHTMLEditor->SplitNodeDeep(*endInline, *item.mEndContainer->AsContent(),
+                                 item.mEndOffset,
                                  EditorBase::EmptyContainers::no);
     NS_ENSURE_TRUE(resultEndOffset != -1, NS_ERROR_FAILURE);
     // reset range
-    item.endNode = resultEndNode;
-    item.endOffset = resultEndOffset;
+    item.mEndContainer = resultEndNode;
+    item.mEndOffset = resultEndOffset;
   }
 
   nsCOMPtr<nsIContent> startInline =
