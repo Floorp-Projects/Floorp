@@ -165,8 +165,6 @@ let FormAutofillDoorhanger = {
       anchorElement.classList.add("notification-anchor-icon");
       anchorElement.setAttribute("role", "button");
       anchorElement.setAttribute("tooltiptext", tooltiptext);
-      anchorElement.style.setProperty("-moz-context-properties", "fill");
-      anchorElement.style.fill = "currentcolor";
       notificationPopupBox.appendChild(anchorElement);
     }
   },
