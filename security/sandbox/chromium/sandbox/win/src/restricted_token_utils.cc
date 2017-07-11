@@ -83,11 +83,6 @@ DWORD CreateRestrictedToken(TokenLevel security_level,
       sid_exceptions.push_back(WinWorldSid);
       sid_exceptions.push_back(WinInteractiveSid);
       privilege_exceptions.push_back(SE_CHANGE_NOTIFY_NAME);
-      // This breaks web audio, so we don't want to do this in the restricting
-      // SIDs (normal) case. See bug 1378061.
-      if (!gUseRestricting) {
-        restricted_token.AddUserSidForDenyOnly();
-      }
       restricted_token.AddRestrictingSid(WinBuiltinUsersSid);
       restricted_token.AddRestrictingSid(WinWorldSid);
       restricted_token.AddRestrictingSid(WinRestrictedCodeSid);
