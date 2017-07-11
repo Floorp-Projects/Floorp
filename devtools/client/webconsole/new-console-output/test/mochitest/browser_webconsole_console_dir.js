@@ -93,13 +93,3 @@ add_task(async function () {
 function findConsoleDir(node, index) {
   return node.querySelectorAll(".dir.message")[index];
 }
-
-function waitForNodeMutation(node, observeConfig = {}) {
-  return new Promise(resolve => {
-    const observer = new MutationObserver(mutations => {
-      resolve(mutations);
-      observer.disconnect();
-    });
-    observer.observe(node, observeConfig);
-  });
-}
