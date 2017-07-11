@@ -119,9 +119,9 @@ static NPNetscapeFuncs sBrowserFuncs = {
   _geturl,
   _posturl,
   _requestread,
-  _newstream,
-  _write,
-  _destroystream,
+  nullptr,
+  nullptr,
+  nullptr,
   _status,
   _useragent,
   _memalloc,
@@ -774,127 +774,6 @@ _posturl(NPP npp, const char *relativeURL, const char *target,
   return MakeNewNPAPIStreamInternal(npp, relativeURL, target,
                                     eNPPStreamTypeInternal_Post, false, nullptr,
                                     len, buf);
-}
-
-NPError
-_newstream(NPP npp, NPMIMEType type, const char* target, NPStream* *result)
-{
-  if (!NS_IsMainThread()) {
-    NPN_PLUGIN_LOG(PLUGIN_LOG_ALWAYS,("NPN_newstream called from the wrong thread\n"));
-    return NPERR_INVALID_PARAM;
-  }
-  NPN_PLUGIN_LOG(PLUGIN_LOG_NORMAL,
-  ("NPN_NewStream: npp=%p, type=%s, target=%s\n", (void*)npp,
-   (const char *)type, target));
-
-  NPError err = NPERR_INVALID_INSTANCE_ERROR;
-  if (npp && npp->ndata) {
-    nsNPAPIPluginInstance *inst = (nsNPAPIPluginInstance*)npp->ndata;
-
-    PluginDestructionGuard guard(inst);
-
-    nsCOMPtr<nsIOutputStream> stream;
-    if (NS_SUCCEEDED(inst->NewStreamFromPlugin((const char*) type, target,
-                                               getter_AddRefs(stream)))) {
-      auto* wrapper = new nsNPAPIStreamWrapper(stream, nullptr);
-      if (wrapper) {
-        (*result) = &wrapper->mNPStream;
-        err = NPERR_NO_ERROR;
-      } else {
-        err = NPERR_OUT_OF_MEMORY_ERROR;
-      }
-    } else {
-      err = NPERR_GENERIC_ERROR;
-    }
-  }
-  return err;
-}
-
-int32_t
-_write(NPP npp, NPStream *pstream, int32_t len, void *buffer)
-{
-  if (!NS_IsMainThread()) {
-    NPN_PLUGIN_LOG(PLUGIN_LOG_ALWAYS,("NPN_write called from the wrong thread\n"));
-    return 0;
-  }
-  NPN_PLUGIN_LOG(PLUGIN_LOG_NORMAL,
-                 ("NPN_Write: npp=%p, url=%s, len=%d, buffer=%s\n", (void*)npp,
-                  pstream->url, len, (char*)buffer));
-
-  // negative return indicates failure to the plugin
-  if (!npp)
-    return -1;
-
-  PluginDestructionGuard guard(npp);
-
-  nsNPAPIStreamWrapper* wrapper = static_cast<nsNPAPIStreamWrapper*>(pstream->ndata);
-  if (!wrapper) {
-    return -1;
-  }
-
-  nsIOutputStream* stream = wrapper->GetOutputStream();
-  if (!stream) {
-    return -1;
-  }
-
-  uint32_t count = 0;
-  nsresult rv = stream->Write((char *)buffer, len, &count);
-
-  if (NS_FAILED(rv)) {
-    return -1;
-  }
-
-  return (int32_t)count;
-}
-
-NPError
-_destroystream(NPP npp, NPStream *pstream, NPError reason)
-{
-  if (!NS_IsMainThread()) {
-    NPN_PLUGIN_LOG(PLUGIN_LOG_ALWAYS,("NPN_destroystream called from the wrong thread\n"));
-    return NPERR_INVALID_PARAM;
-  }
-  NPN_PLUGIN_LOG(PLUGIN_LOG_NORMAL,
-                 ("NPN_DestroyStream: npp=%p, url=%s, reason=%d\n", (void*)npp,
-                  pstream->url, (int)reason));
-
-  if (!npp)
-    return NPERR_INVALID_INSTANCE_ERROR;
-
-  PluginDestructionGuard guard(npp);
-
-  nsNPAPIStreamWrapper *streamWrapper = static_cast<nsNPAPIStreamWrapper*>(pstream->ndata);
-  if (!streamWrapper) {
-    return NPERR_INVALID_PARAM;
-  }
-
-  nsNPAPIPluginStreamListener *listener = streamWrapper->GetStreamListener();
-  if (listener) {
-    // This type of stream is going from the browser to the plugin. It's either the
-    // initial src/data stream or another stream resulting from NPN_GetURL* or
-    // NPN_PostURL*.
-    //
-    // Calling OnStopBinding on the listener may cause it to be deleted due to the
-    // releasing of its last references.
-    listener->OnStopBinding(nullptr, NS_BINDING_ABORTED);
-  } else {
-    // This type of stream (NPStream) was created via NPN_NewStream. The plugin holds
-    // the reference until it is to be deleted here. Deleting the wrapper will
-    // release the wrapped nsIOutputStream.
-    //
-    // The NPStream the plugin references should always be a sub-object of its own
-    // 'ndata', which is our nsNPAPIStramWrapper. See bug 548441.
-    NS_ASSERTION((char*)streamWrapper <= (char*)pstream &&
-                 ((char*)pstream) + sizeof(*pstream)
-                     <= ((char*)streamWrapper) + sizeof(*streamWrapper),
-                 "pstream is not a subobject of wrapper");
-    delete streamWrapper;
-  }
-
-  // 'listener' and/or 'streamWrapper' may be invalid (deleted) at this point. Don't
-  // touch them again!
-
-  return NPERR_NO_ERROR;
 }
 
 void
