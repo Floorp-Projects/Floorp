@@ -55,7 +55,7 @@ HeadlessWidget::Create(nsIWidget* aParent,
 
   mBounds = aRect;
   mRestoreBounds = aRect;
-  mVisible = true;
+  mVisible = false;
   mEnabled = true;
 
   if (aParent) {
@@ -131,6 +131,8 @@ HeadlessWidget::Show(bool aState)
   // Top-level windows are activated/raised when shown.
   if (aState && mTopLevel == this)
     RaiseWindow();
+
+  ApplySizeModeSideEffects();
 }
 
 bool
@@ -246,18 +248,29 @@ HeadlessWidget::SetSizeMode(nsSizeMode aMode)
   if (aMode == mSizeMode) {
     return;
   }
-  if (mSizeMode == nsSizeMode_Normal) {
-    // Store the last normal size bounds so it can be restored when entering
-    // normal mode again.
-    mRestoreBounds = mBounds;
-  }
 
   nsBaseWidget::SetSizeMode(aMode);
 
   // Normally in real widget backends a window event would be triggered that
   // would cause the window manager to handle resizing the window. In headless
   // the window must manually be resized.
-  switch(aMode) {
+  ApplySizeModeSideEffects();
+}
+
+void
+HeadlessWidget::ApplySizeModeSideEffects()
+{
+  if (!mVisible || mEffectiveSizeMode == mSizeMode) {
+    return;
+  }
+
+  if (mEffectiveSizeMode == nsSizeMode_Normal) {
+    // Store the last normal size bounds so it can be restored when entering
+    // normal mode again.
+    mRestoreBounds = mBounds;
+  }
+
+  switch(mSizeMode) {
   case nsSizeMode_Normal: {
     Resize(mRestoreBounds.x, mRestoreBounds.y, mRestoreBounds.width, mRestoreBounds.height, false);
     break;
@@ -281,6 +294,8 @@ HeadlessWidget::SetSizeMode(nsSizeMode aMode)
   default:
     break;
   }
+
+  mEffectiveSizeMode = mSizeMode;
 }
 
 nsresult
