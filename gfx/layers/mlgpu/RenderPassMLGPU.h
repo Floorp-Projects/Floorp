@@ -254,38 +254,10 @@ protected:
        mPrevInstancePos(aPass->mInstances.GetPosition())
     {}
 
-    // Add an item based on a draw rect, layer, and optional geometry. The Traits
-    // must contain, at minimum:
-    //
-    //  - An "mRect" member as a gfx::Rect, containing the draw rect.
-    //  - An "AddInstanceTo" method, which adds instance data for
-    //    shaders using unit-quad vertices.
-    //  - An "AddVerticesTo" method, which adds triangle list vertices
-    //    to a batch's shader data, with optional geometry.
-    //  - An "AddItemTo" method, which adds constant buffer data if
-    //    needed.
-    //
-    bool Add(const Traits& aTraits, const ItemInfo& aInfo) {
-      // If this succeeds, but we clip the polygon below, that's okay.
-      // Polygons do not use instanced rendering so this won't break
-      // ordering.
-      if (!aTraits.AddItemTo(mPass)) {
-        return false;
-      }
-
-      if (mPass->mGeometry == GeometryMode::Polygon) {
-        size_t itemIndex = mPass->GetItems()->NumItems() - 1;
-        if (aInfo.geometry) {
-          gfx::Polygon polygon = aInfo.geometry->ClipPolygon(aTraits.mRect);
-          if (polygon.IsEmpty()) {
-            return true;
-          }
-          return aTraits.AddVerticesTo(mPass, aInfo, itemIndex, &polygon);
-        }
-        return aTraits.AddVerticesTo(mPass, aInfo, itemIndex);
-      }
-      return aTraits.AddInstanceTo(mPass, aInfo);
-    }
+    // Add an item based on a draw rect, layer, and optional geometry. This is
+    // defined in RenderPassMLGPU-inl.h, since it needs access to
+    // ShaderDefinitionsMLGPU-inl.h.
+    bool Add(const Traits& aTraits);
 
     bool Fail() {
       MOZ_ASSERT(!mStatus.isSome() || !mStatus.value());
