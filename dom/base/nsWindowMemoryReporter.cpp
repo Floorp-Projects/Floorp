@@ -35,7 +35,8 @@ const int32_t kTimeBetweenChecks = 45; /* seconds */
 nsWindowMemoryReporter::nsWindowMemoryReporter()
   : mLastCheckForGhostWindows(TimeStamp::NowLoRes()),
     mCycleCollectorIsRunning(false),
-    mCheckTimerWaitingForCCEnd(false)
+    mCheckTimerWaitingForCCEnd(false),
+    mGhostWindowCount(0)
 {
 }
 
@@ -944,6 +945,7 @@ nsWindowMemoryReporter::CheckForGhostWindows(
   // if it's not null.
   uint32_t ghostTimeout = GetGhostTimeout();
   TimeStamp now = mLastCheckForGhostWindows;
+  mGhostWindowCount = 0;
   for (auto iter = mDetachedWindows.Iter(); !iter.Done(); iter.Next()) {
     nsWeakPtr weakKey = do_QueryInterface(iter.Key());
     nsCOMPtr<mozIDOMWindow> iwindow = do_QueryReferent(weakKey);
@@ -994,6 +996,7 @@ nsWindowMemoryReporter::CheckForGhostWindows(
       } else if ((now - timeStamp).ToSeconds() > ghostTimeout) {
         // This definitely is a ghost window, so add it to aOutGhostIDs, if
         // that is not null.
+        mGhostWindowCount++;
         if (aOutGhostIDs && window) {
           aOutGhostIDs->PutEntry(window->WindowID());
         }
@@ -1008,9 +1011,7 @@ NS_IMPL_ISUPPORTS(nsWindowMemoryReporter::GhostWindowsReporter,
 /* static */ int64_t
 nsWindowMemoryReporter::GhostWindowsReporter::DistinguishedAmount()
 {
-  nsTHashtable<nsUint64HashKey> ghostWindows;
-  sWindowReporter->CheckForGhostWindows(&ghostWindows);
-  return ghostWindows.Count();
+  return sWindowReporter->mGhostWindowCount;
 }
 
 void

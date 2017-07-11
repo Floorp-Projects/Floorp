@@ -199,6 +199,8 @@ private:
   bool mCycleCollectorIsRunning;
 
   bool mCheckTimerWaitingForCCEnd;
+
+  int64_t mGhostWindowCount;
 };
 
 #endif // nsWindowMemoryReporter_h__
