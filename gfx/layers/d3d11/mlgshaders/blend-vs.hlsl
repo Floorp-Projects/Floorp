@@ -35,7 +35,18 @@ VS_BLEND_OUTPUT BlendImpl(const VertexInfo aInfo, float2 aTexCoord)
 
 VS_BLEND_OUTPUT BlendVertexVS(const VS_TEXTUREDVERTEX aVertex)
 {
-  VertexInfo info = ComputePosition(aVertex.vLayerPos, aVertex.vLayerId, aVertex.vDepth);
+  float2 layerPos = UnitTriangleToPos(
+    aVertex.vUnitPos,
+    aVertex.vPos1,
+    aVertex.vPos2,
+    aVertex.vPos3);
 
-  return BlendImpl(info, aVertex.vTexCoord);
+  float2 texCoord = UnitTriangleToPos(
+    aVertex.vUnitPos,
+    aVertex.vTexCoord1,
+    aVertex.vTexCoord2,
+    aVertex.vTexCoord3);
+
+  VertexInfo info = ComputePosition(layerPos, aVertex.vLayerId, aVertex.vDepth);
+  return BlendImpl(info, texCoord);
 }

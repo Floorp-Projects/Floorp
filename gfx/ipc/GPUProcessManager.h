@@ -144,7 +144,7 @@ public:
 
   void OnProcessLaunchComplete(GPUProcessHost* aHost) override;
   void OnProcessUnexpectedShutdown(GPUProcessHost* aHost) override;
-  void TriggerDeviceResetForTesting();
+  void SimulateDeviceReset();
   void OnInProcessDeviceReset();
   void OnRemoteProcessDeviceReset(GPUProcessHost* aHost) override;
   void NotifyListenersOnCompositeDeviceReset();

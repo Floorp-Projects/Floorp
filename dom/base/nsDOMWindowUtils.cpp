@@ -4241,7 +4241,7 @@ nsDOMWindowUtils::TriggerDeviceReset()
 
   GPUProcessManager* pm = GPUProcessManager::Get();
   if (pm) {
-    pm->TriggerDeviceResetForTesting();
+    pm->SimulateDeviceReset();
   }
   return NS_OK;
 }

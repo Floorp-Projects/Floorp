@@ -3,22 +3,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifdef VERTEX_SHADER
-struct TexturedItem
-{
-  float4 texCoords;
-};
-#define SIZEOF_TEXTUREDITEM 1
-
-TexturedItem GetItem(uint aIndex)
-{
-  uint offset = aIndex * SIZEOF_TEXTUREDITEM;
-  TexturedItem item;
-  item.texCoords = sItems[offset + 0];
-  return item;
-}
-#endif
-
 // Instanced version.
 struct VS_TEXTUREDINPUT
 {
@@ -26,16 +10,21 @@ struct VS_TEXTUREDINPUT
   float4 vRect : TEXCOORD0;
   uint vLayerId : TEXCOORD1;
   int vDepth : TEXCOORD2;
-  uint vIndex : SV_InstanceID;
+  float4 vTexRect : TEXCOORD3;
 };
 
 // Non-instanced version.
 struct VS_TEXTUREDVERTEX
 {
-  float2 vLayerPos : POSITION;
-  float2 vTexCoord : TEXCOORD0;
-  uint vLayerId : TEXCOORD1;
-  int vDepth : TEXCOORD2;
+  float3 vUnitPos : POSITION0;
+  float2 vPos1: POSITION1;
+  float2 vPos2: POSITION2;
+  float2 vPos3: POSITION3;
+  uint vLayerId : TEXCOORD0;
+  int vDepth : TEXCOORD1;
+  float2 vTexCoord1 : TEXCOORD2;
+  float2 vTexCoord2 : TEXCOORD3;
+  float2 vTexCoord3 : TEXCOORD4;
 };
 
 struct VS_SAMPLEOUTPUT

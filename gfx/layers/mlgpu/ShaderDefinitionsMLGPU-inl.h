@@ -11,41 +11,80 @@ namespace mozilla {
 namespace layers {
 namespace mlg {
 
-// This is a helper class for writing vertices for unit-quad based
-// shaders, since they all share the same input layout.
-struct SimpleVertex
+inline const Maybe<gfx::Polygon>&
+SimpleTraits::geometry() const
 {
-  SimpleVertex(const gfx::Rect& aRect,
-               uint32_t aLayerIndex,
-               int aDepth)
-   : rect(aRect),
-     layerIndex(aLayerIndex),
-     depth(aDepth)
-  {}
-
-  gfx::Rect rect;
-  uint32_t layerIndex;
-  int depth;
-};
-
-bool
-SimpleTraits::AddInstanceTo(ShaderRenderPass* aPass, const ItemInfo& aItem) const
-{
-  return aPass->GetInstances()->AddItem(SimpleVertex(
-    mRect, aItem.layerIndex, aItem.sortOrder));
+  return mItem.geometry;
 }
 
-
-inline bool
-ColorTraits::AddItemTo(ShaderRenderPass* aPass) const
+inline nsTArray<gfx::Triangle>
+SimpleTraits::GenerateTriangles(const gfx::Polygon& aPolygon) const
 {
-  return aPass->GetItems()->AddItem(mColor);
+  return aPolygon.ToTriangles();
 }
 
-inline bool
-TexturedTraits::AddItemTo(ShaderRenderPass* aPass) const
+inline SimpleTraits::TriangleVertices
+SimpleTraits::MakeVertex(const FirstTriangle& aIgnore) const
 {
-  return aPass->GetItems()->AddItem(mTexCoords);
+  TriangleVertices v = {
+    mRect.BottomLeft(), mRect.TopLeft(), mRect.TopRight(),
+    mItem.layerIndex, mItem.sortOrder
+  };
+  return v;
+}
+
+inline SimpleTraits::TriangleVertices
+SimpleTraits::MakeVertex(const SecondTriangle& aIgnore) const
+{
+  TriangleVertices v = {
+    mRect.TopRight(), mRect.BottomRight(), mRect.BottomLeft(),
+    mItem.layerIndex, mItem.sortOrder
+  };
+  return v;
+}
+
+inline SimpleTraits::TriangleVertices
+SimpleTraits::MakeVertex(const gfx::Triangle& aTriangle) const
+{
+  TriangleVertices v = {
+    aTriangle.p1, aTriangle.p2, aTriangle.p3,
+    mItem.layerIndex, mItem.sortOrder
+  };
+  return v;
+}
+
+inline SimpleTraits::UnitQuadVertex
+SimpleTraits::MakeUnitQuadVertex() const
+{
+  UnitQuadVertex v = { mRect, mItem.layerIndex, mItem.sortOrder };
+  return v;
+}
+
+inline nsTArray<gfx::TexturedTriangle>
+TexturedTraits::GenerateTriangles(const gfx::Polygon& aPolygon) const
+{
+  return GenerateTexturedTriangles(aPolygon, mRect, mTexCoords);
+}
+
+inline TexturedTraits::VertexData
+TexturedTraits::MakeVertexData(const FirstTriangle& aIgnore) const
+{
+  VertexData v = { mTexCoords.BottomLeft(), mTexCoords.TopLeft(), mTexCoords.TopRight() };
+  return v;
+}
+
+inline TexturedTraits::VertexData
+TexturedTraits::MakeVertexData(const SecondTriangle& aIgnore) const
+{
+  VertexData v = { mTexCoords.TopRight(), mTexCoords.BottomRight(), mTexCoords.BottomLeft() };
+  return v;
+}
+
+inline TexturedTraits::VertexData
+TexturedTraits::MakeVertexData(const gfx::TexturedTriangle& aTriangle) const
+{
+  VertexData v = { aTriangle.textureCoords.p1, aTriangle.textureCoords.p2, aTriangle.textureCoords.p3 };
+  return v;
 }
 
 } // namespace mlg

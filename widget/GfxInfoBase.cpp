@@ -1381,6 +1381,11 @@ GfxInfoBase::DescribeFeatures(JSContext* aCx, JS::Handle<JSObject*> aObj)
   if (advancedLayers != FeatureStatus::Unused) {
     InitFeatureObject(aCx, aObj, "advancedLayers", FEATURE_ADVANCED_LAYERS,
                       Some(advancedLayers), &obj);
+
+    if (gfxConfig::UseFallback(Fallback::NO_CONSTANT_BUFFER_OFFSETTING)) {
+      JS::Rooted<JS::Value> trueVal(aCx, JS::BooleanValue(true));
+      JS_SetProperty(aCx, obj, "noConstantBufferOffsetting", trueVal);
+    }
   }
 }
 
