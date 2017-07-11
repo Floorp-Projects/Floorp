@@ -62,12 +62,18 @@ public:
   ContinueConsumeBlobBody(BlobImpl* aBlobImpl);
 
   void
-  CancelPump();
+  ShutDownMainThreadConsuming();
 
   workers::WorkerPrivate*
   GetWorkerPrivate() const
   {
     return mWorkerPrivate;
+  }
+
+  void
+  NullifyConsumeBodyPump()
+  {
+    mConsumeBodyPump = nullptr;
   }
 
 private:
@@ -100,13 +106,18 @@ private:
   // Always set whenever the FetchBodyConsumer is created on the worker thread.
   workers::WorkerPrivate* mWorkerPrivate;
 
-  nsMainThreadPtrHandle<nsIInputStreamPump> mConsumeBodyPump;
+  // Touched on the main-thread only.
+  nsCOMPtr<nsIInputStreamPump> mConsumeBodyPump;
 
   // Only ever set once, always on target thread.
   FetchConsumeType mConsumeType;
   RefPtr<Promise> mConsumePromise;
 
+  // touched only on the target thread.
   bool mBodyConsumed;
+
+  // touched only on the main-thread.
+  bool mShuttingDown;
 };
 
 } // namespace dom

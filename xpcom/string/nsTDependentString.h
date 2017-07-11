@@ -31,7 +31,8 @@ public:
   nsTDependentString_CharT(const char_type* aStart, const char_type* aEnd);
 
   nsTDependentString_CharT(const char_type* aData, uint32_t aLength)
-    : string_type(const_cast<char_type*>(aData), aLength, F_TERMINATED)
+    : string_type(const_cast<char_type*>(aData), aLength,
+                  DataFlags::TERMINATED, ClassFlags(0))
   {
     AssertValidDependentString();
   }
@@ -46,7 +47,8 @@ public:
   explicit
   nsTDependentString_CharT(const char_type* aData)
     : string_type(const_cast<char_type*>(aData),
-                  uint32_t(char_traits::length(aData)), F_TERMINATED)
+                  uint32_t(char_traits::length(aData)),
+                  DataFlags::TERMINATED, ClassFlags(0))
   {
     AssertValidDependentString();
   }

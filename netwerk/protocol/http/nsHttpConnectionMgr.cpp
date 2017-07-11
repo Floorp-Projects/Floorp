@@ -4164,7 +4164,9 @@ nsHalfOpenSocket::StartFastOpen()
             SetupBackupTimer();
         }
     }
-    mEnt->mDoNotDestroy = false;
+    if (mEnt) {
+      mEnt->mDoNotDestroy = false;
+    }
     return rv;
 }
 

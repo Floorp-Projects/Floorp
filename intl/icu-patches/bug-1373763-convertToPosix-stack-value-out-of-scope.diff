@@ -1,0 +1,34 @@
+Move the stack allocated buffer to the top-level, so its value can be accessed after the if-statement.
+
+https://ssl.icu-project.org/trac/ticket/13263
+
+diff --git a/intl/icu/source/common/locmap.cpp b/intl/icu/source/common/locmap.cpp
+--- a/intl/icu/source/common/locmap.cpp
++++ b/intl/icu/source/common/locmap.cpp
+@@ -1028,24 +1028,25 @@ U_CAPI int32_t
+ uprv_convertToPosix(uint32_t hostid, char *posixID, int32_t posixIDCapacity, UErrorCode* status)
+ {
+     uint16_t langID;
+     uint32_t localeIndex;
+     UBool bLookup = TRUE;
+     const char *pPosixID = NULL;
+ 
+ #ifdef USE_WINDOWS_LCID_MAPPING_API
++    char locName[LOCALE_NAME_MAX_LENGTH] = {};      // ICU name can't be longer than Windows name
++
+     // Note: Windows primary lang ID 0x92 in LCID is used for Central Kurdish and
+     // GetLocaleInfo() maps such LCID to "ku". However, CLDR uses "ku" for
+     // Northern Kurdish and "ckb" for Central Kurdish. For this reason, we cannot
+     // use the Windows API to resolve locale ID for this specific case.
+     if ((hostid & 0x3FF) != 0x92) {
+         int32_t tmpLen = 0;
+         UChar windowsLocaleName[LOCALE_NAME_MAX_LENGTH];  // ULOC_FULLNAME_CAPACITY > LOCALE_NAME_MAX_LENGTH
+-        char locName[LOCALE_NAME_MAX_LENGTH];             // ICU name can't be longer than Windows name
+ 
+         // Note: LOCALE_ALLOW_NEUTRAL_NAMES was enabled in Windows7+, prior versions did not handle neutral (no-region) locale names.
+         tmpLen = LCIDToLocaleName(hostid, (PWSTR)windowsLocaleName, UPRV_LENGTHOF(windowsLocaleName), LOCALE_ALLOW_NEUTRAL_NAMES);
+         if (tmpLen > 1) {
+             int32_t i = 0;
+             // Only need to look up in table if have _, eg for de-de_phoneb type alternate sort.
+             bLookup = FALSE;
+             for (i = 0; i < UPRV_LENGTHOF(locName); i++)

@@ -2271,7 +2271,9 @@ ScrollFrameHelper::ScrollToWithOrigin(nsPoint aScrollPosition,
   }
 
   nsPresContext* presContext = mOuter->PresContext();
-  TimeStamp now = presContext->RefreshDriver()->MostRecentRefresh();
+  TimeStamp now = presContext->RefreshDriver()->IsTestControllingRefreshesEnabled()
+                ? presContext->RefreshDriver()->MostRecentRefresh()
+                : TimeStamp::Now();
   bool isSmoothScroll = (aMode == nsIScrollableFrame::SMOOTH) &&
                           IsSmoothScrollingEnabled();
 

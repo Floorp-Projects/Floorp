@@ -399,7 +399,7 @@ js::regexp_construct(JSContext* cx, unsigned argc, Value* vp)
         return false;
 
     // We can delay step 3 and step 4a until later, during
-    // GetPrototypeFromCallableConstructor calls. Accessing the new.target
+    // GetPrototypeFromBuiltinConstructor calls. Accessing the new.target
     // and the callee from the stack is unobservable.
     if (!args.isConstructing()) {
         // Step 3.b.
@@ -447,7 +447,7 @@ js::regexp_construct(JSContext* cx, unsigned argc, Value* vp)
 
         // Step 7.
         RootedObject proto(cx);
-        if (!GetPrototypeFromCallableConstructor(cx, args, &proto))
+        if (!GetPrototypeFromBuiltinConstructor(cx, args, &proto))
             return false;
 
         Rooted<RegExpObject*> regexp(cx, RegExpAlloc(cx, GenericObject, proto));
@@ -506,7 +506,7 @@ js::regexp_construct(JSContext* cx, unsigned argc, Value* vp)
 
     // Step 7.
     RootedObject proto(cx);
-    if (!GetPrototypeFromCallableConstructor(cx, args, &proto))
+    if (!GetPrototypeFromBuiltinConstructor(cx, args, &proto))
         return false;
 
     Rooted<RegExpObject*> regexp(cx, RegExpAlloc(cx, GenericObject, proto));

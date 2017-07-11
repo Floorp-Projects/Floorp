@@ -78,6 +78,18 @@ reflectString({
   attribute: "target",
 });
 
+// .as (String)
+reflectLimitedEnumerated({
+  element: document.createElement("link"),
+  attribute: "as",
+  validValues: [ "fetch", "audio", "font", "image", "script", "style",  "track", "video" ],
+  invalidValues: [
+    "", "audi", "doc", "Emb", "foobar", "FOOBAR", " fOoBaR  ", "OBJ", "document", "embed", "manifest", "object", "report", "serviceworker", "sharedworker", "worker", "xslt"
+  ],
+  defaultValue: { invalid: "", missing: "" },
+  nullable: false,
+})
+
 </script>
 </pre>
 </body>

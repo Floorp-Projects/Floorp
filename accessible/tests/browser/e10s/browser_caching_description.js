@@ -26,7 +26,7 @@ const tests = [{
     attr: 'aria-describedby',
     value: 'description'
   }],
-  waitFor: [{ eventType: EVENT_DESCRIPTION_CHANGE, id: 'image' }],
+  waitFor: [[EVENT_DESCRIPTION_CHANGE, 'image']],
   expected: 'aria description'
 }, {
   desc: 'No description from @aria-describedby since it is the same as the ' +
@@ -35,7 +35,7 @@ const tests = [{
     attr: 'alt',
     value: 'aria description'
   }],
-  waitFor: [{ eventType: EVENT_REORDER, id: 'body' }],
+  waitFor: [[EVENT_REORDER, 'body']],
   expected: ''
 }, {
   desc: 'Description from @aria-describedby attribute when @alt and ' +
@@ -44,7 +44,7 @@ const tests = [{
     attr: 'aria-describedby',
     value: 'description2'
   }],
-  waitFor: [{ eventType: EVENT_DESCRIPTION_CHANGE, id: 'image' }],
+  waitFor: [[EVENT_DESCRIPTION_CHANGE, 'image']],
   expected: 'another description'
 }, {
   desc: 'Description from @aria-describedby attribute when @title (used for ' +
@@ -55,7 +55,7 @@ const tests = [{
     attr: 'title',
     value: 'title'
   }],
-  waitFor: [{ eventType: EVENT_REORDER, id: 'body' }],
+  waitFor: [[EVENT_REORDER, 'body']],
   expected: 'another description'
 }, {
   desc: 'No description from @aria-describedby since it is the same as the ' +
@@ -64,14 +64,14 @@ const tests = [{
     attr: 'title',
     value: 'another description'
   }],
-  waitFor: [{ eventType: EVENT_NAME_CHANGE, id: 'image' }],
+  waitFor: [[EVENT_NAME_CHANGE, 'image']],
   expected: ''
 }, {
   desc: 'No description with only @title attribute which is used as the name',
   attrs: [{
     attr: 'aria-describedby'
   }],
-  waitFor: [{ eventType: EVENT_DESCRIPTION_CHANGE, id: 'image' }],
+  waitFor: [[EVENT_DESCRIPTION_CHANGE, 'image']],
   expected: ''
 }, {
   desc: 'Description from @title attribute when @alt and @atitle are not the ' +
@@ -80,7 +80,7 @@ const tests = [{
     attr: 'alt',
     value: 'aria description'
   }],
-  waitFor: [{ eventType: EVENT_REORDER, id: 'body' }],
+  waitFor: [[EVENT_REORDER, 'body']],
   expected: 'another description'
 }, {
   desc: 'No description from @title since it is the same as the @alt ' +
@@ -89,7 +89,7 @@ const tests = [{
     attr: 'alt',
     value: 'another description'
   }],
-  waitFor: [{ eventType: EVENT_NAME_CHANGE, id: 'image' }],
+  waitFor: [[EVENT_NAME_CHANGE, 'image']],
   expected: ''
 }, {
   desc: 'No description from @aria-describedby since it is the same as the ' +
@@ -98,7 +98,7 @@ const tests = [{
     attr: 'aria-describedby',
     value: 'description2'
   }],
-  waitFor: [{ eventType: EVENT_DESCRIPTION_CHANGE, id: 'image' }],
+  waitFor: [[EVENT_DESCRIPTION_CHANGE, 'image']],
   expected: ''
 }, {
   desc: 'Description from @aria-describedby attribute when it is different ' +
@@ -107,7 +107,7 @@ const tests = [{
     attr: 'aria-describedby',
     value: 'description'
   }],
-  waitFor: [{ eventType: EVENT_DESCRIPTION_CHANGE, id: 'image' }],
+  waitFor: [[EVENT_DESCRIPTION_CHANGE, 'image']],
   expected: 'aria description'
 }, {
   desc: 'No description from @aria-describedby since it is the same as the ' +
@@ -116,7 +116,7 @@ const tests = [{
     attr: 'alt',
     value: 'aria description'
   }],
-  waitFor: [{ eventType: EVENT_NAME_CHANGE, id: 'image' }],
+  waitFor: [[EVENT_NAME_CHANGE, 'image']],
   expected: ''
 }, {
   desc: 'Description from @aria-describedby attribute when @alt (used for ' +
@@ -126,7 +126,7 @@ const tests = [{
     attr: 'aria-describedby',
     value: 'description2'
   }],
-  waitFor: [{ eventType: EVENT_DESCRIPTION_CHANGE, id: 'image' }],
+  waitFor: [[EVENT_DESCRIPTION_CHANGE, 'image']],
   expected: 'another description'
 }];
 
@@ -144,7 +144,7 @@ addAccessibleTask(`
       info(desc);
       let onUpdate;
       if (waitFor) {
-        onUpdate = waitForMultipleEvents(waitFor);
+        onUpdate = waitForOrderedEvents(waitFor);
       }
       if (attrs) {
         for (let { attr, value } of attrs) {

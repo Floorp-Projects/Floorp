@@ -1708,12 +1708,10 @@ nsXPCComponents_Exception::HasInstance(nsIXPConnectWrappedNative* wrapper,
 {
     using namespace mozilla::dom;
 
-    RootedValue v(cx, val);
     if (bp) {
-        Exception* e;
-        *bp = (v.isObject() &&
-               NS_SUCCEEDED(UNWRAP_OBJECT(Exception, &v.toObject(), e))) ||
-              JSValIsInterfaceOfType(cx, v, NS_GET_IID(nsIException));
+        *bp = (val.isObject() &&
+               IS_INSTANCE_OF(Exception, &val.toObject())) ||
+              JSValIsInterfaceOfType(cx, val, NS_GET_IID(nsIException));
     }
     return NS_OK;
 }
@@ -2539,7 +2537,7 @@ nsXPCComponents_Utils::ImportGlobalProperties(HandleValue aPropertyList,
 
     // Don't allow doing this if the global is a Window
     nsGlobalWindow* win;
-    if (NS_SUCCEEDED(UNWRAP_OBJECT(Window, global, win))) {
+    if (NS_SUCCEEDED(UNWRAP_OBJECT(Window, &global, win))) {
         return NS_ERROR_NOT_AVAILABLE;
     }
 
