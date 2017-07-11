@@ -7,14 +7,13 @@
 package org.mozilla.gecko.mma;
 
 import android.app.Activity;
+import android.app.Application;
 import android.content.Context;
-
-import java.util.Map;
 
 
 public class MmaStubImp implements MmaInterface {
     @Override
-    public void init(Activity activity, Map<String, ?> attributes) {
+    public void init(Activity activity) {
 
     }
 
@@ -37,5 +36,4 @@ public class MmaStubImp implements MmaInterface {
     public void stop() {
 
     }
-
 }
