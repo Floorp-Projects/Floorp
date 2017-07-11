@@ -342,7 +342,9 @@ JSTerm.prototype = {
           this.clearHistory();
           break;
         case "inspectObject":
-          this.inspectObjectActor(helperResult.object);
+          if (!this.hud.NEW_CONSOLE_OUTPUT_ENABLED) {
+            this.inspectObjectActor(helperResult.object);
+          }
           break;
         case "error":
           try {
@@ -361,9 +363,14 @@ JSTerm.prototype = {
     }
 
     // Hide undefined results coming from JSTerm helper functions.
-    if (!errorMessage && result && typeof result == "object" &&
-        result.type == "undefined" &&
-        helperResult && !helperHasRawOutput) {
+    if (!errorMessage
+        && result
+        && typeof result == "object"
+        && result.type == "undefined"
+        && helperResult
+        && !helperHasRawOutput
+        && !(this.hud.NEW_CONSOLE_OUTPUT_ENABLED && helperResult.type === "inspectObject")
+    ) {
       callback && callback();
       return;
     }

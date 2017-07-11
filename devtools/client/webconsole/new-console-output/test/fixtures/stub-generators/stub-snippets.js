@@ -145,7 +145,8 @@ p {
 const evaluationResultCommands = [
   "new Date(0)",
   "asdf()",
-  "1 + @"
+  "1 + @",
+  "inspect({a: 1})"
 ];
 
 let evaluationResult = new Map(evaluationResultCommands.map(cmd => [cmd, cmd]));
