@@ -307,16 +307,20 @@
 }
 
 /* Tour Icons */
-#onboarding-tour-search {
+#onboarding-tour-search,
+#onboarding-tour-singlesearch {
   background-image: url("img/icons_search.svg");
 }
 
 #onboarding-tour-search.onboarding-active,
-#onboarding-tour-search:hover {
+#onboarding-tour-search:hover,
+#onboarding-tour-singlesearch.onboarding-active,
+#onboarding-tour-singlesearch:hover {
   background-image: url("img/icons_search-colored.svg");
 }
 
-#onboarding-notification-bar[data-target-tour-id=onboarding-tour-search] #onboarding-notification-tour-icon {
+#onboarding-notification-bar[data-target-tour-id=onboarding-tour-search] #onboarding-notification-tour-icon,
+#onboarding-notification-bar[data-target-tour-id=onboarding-tour-singlesearch] #onboarding-notification-tour-icon {
   background-image: url("img/icons_search-notification.svg");
 }
 

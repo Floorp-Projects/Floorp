@@ -27,12 +27,13 @@ const PREF_WHITELIST = [
 ];
 
 [
-  "onboarding-tour-private-browsing",
   "onboarding-tour-addons",
   "onboarding-tour-customize",
   "onboarding-tour-default-browser",
   "onboarding-tour-library",
+  "onboarding-tour-private-browsing",
   "onboarding-tour-search",
+  "onboarding-tour-singlesearch",
   "onboarding-tour-sync",
 ].forEach(tourId => PREF_WHITELIST.push(`browser.onboarding.tour.${tourId}.completed`));
 
