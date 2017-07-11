@@ -26,6 +26,7 @@
 #include "nsINamed.h"
 #include "nsITimer.h"
 #include "ScreenHelperWin.h"
+#include "HeadlessScreenHelper.h"
 #include "mozilla/widget/ScreenManager.h"
 
 // These are two messages that the code in winspool.drv on Windows 7 explicitly
@@ -252,8 +253,12 @@ nsAppShell::Init()
 
   if (XRE_IsParentProcess()) {
     ScreenManager& screenManager = ScreenManager::GetSingleton();
-    screenManager.SetHelper(mozilla::MakeUnique<ScreenHelperWin>());
-    ScreenHelperWin::RefreshScreens();
+    if (gfxPlatform::IsHeadless()) {
+      screenManager.SetHelper(mozilla::MakeUnique<HeadlessScreenHelper>());
+    } else {
+      screenManager.SetHelper(mozilla::MakeUnique<ScreenHelperWin>());
+      ScreenHelperWin::RefreshScreens();
+    }
   }
 
   return nsBaseAppShell::Init();
