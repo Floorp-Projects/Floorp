@@ -2868,7 +2868,7 @@ struct SavedRange final
 {
   RefPtr<Selection> mSelection;
   nsCOMPtr<nsINode> mStartContainer;
-  nsCOMPtr<nsINode> mEndNode;
+  nsCOMPtr<nsINode> mEndContainer;
   int32_t mStartOffset;
   int32_t mEndOffset;
 };
@@ -2896,7 +2896,7 @@ EditorBase::SplitNodeImpl(nsIContent& aExistingRightNode,
       MOZ_ASSERT(r->IsPositioned());
       range.mStartContainer = r->GetStartContainer();
       range.mStartOffset = r->StartOffset();
-      range.mEndNode = r->GetEndContainer();
+      range.mEndContainer = r->GetEndContainer();
       range.mEndOffset = r->EndOffset();
 
       savedRanges.AppendElement(range);
@@ -2982,9 +2982,9 @@ EditorBase::SplitNodeImpl(nsIContent& aExistingRightNode,
       }
     }
 
-    if (range.mEndNode == &aExistingRightNode) {
+    if (range.mEndContainer == &aExistingRightNode) {
       if (range.mEndOffset < aOffset) {
-        range.mEndNode = &aNewLeftNode;
+        range.mEndContainer = &aNewLeftNode;
       } else {
         range.mEndOffset -= aOffset;
       }
@@ -2993,7 +2993,8 @@ EditorBase::SplitNodeImpl(nsIContent& aExistingRightNode,
     RefPtr<nsRange> newRange;
     nsresult rv = nsRange::CreateRange(range.mStartContainer,
                                        range.mStartOffset,
-                                       range.mEndNode, range.mEndOffset,
+                                       range.mEndContainer,
+                                       range.mEndOffset,
                                        getter_AddRefs(newRange));
     NS_ENSURE_SUCCESS(rv, rv);
     rv = range.mSelection->AddRange(newRange);
@@ -3044,7 +3045,7 @@ EditorBase::JoinNodesImpl(nsINode* aNodeToKeep,
       MOZ_ASSERT(r->IsPositioned());
       range.mStartContainer = r->GetStartContainer();
       range.mStartOffset = r->StartOffset();
-      range.mEndNode = r->GetEndContainer();
+      range.mEndContainer = r->GetEndContainer();
       range.mEndOffset = r->EndOffset();
 
       // If selection endpoint is between the nodes, remember it as being
@@ -3057,10 +3058,10 @@ EditorBase::JoinNodesImpl(nsINode* aNodeToKeep,
           range.mStartContainer = aNodeToJoin;
           range.mStartOffset = firstNodeLength;
         }
-        if (range.mEndNode == parent &&
+        if (range.mEndContainer == parent &&
             joinOffset < range.mEndOffset &&
             range.mEndOffset <= keepOffset) {
-          range.mEndNode = aNodeToJoin;
+          range.mEndContainer = aNodeToJoin;
           range.mEndOffset = firstNodeLength;
         }
       }
@@ -3133,16 +3134,17 @@ EditorBase::JoinNodesImpl(nsINode* aNodeToKeep,
     }
 
     // Check to see if we joined nodes where selection ends.
-    if (range.mEndNode == aNodeToJoin) {
-      range.mEndNode = aNodeToKeep;
-    } else if (range.mEndNode == aNodeToKeep) {
+    if (range.mEndContainer == aNodeToJoin) {
+      range.mEndContainer = aNodeToKeep;
+    } else if (range.mEndContainer == aNodeToKeep) {
       range.mEndOffset += firstNodeLength;
     }
 
     RefPtr<nsRange> newRange;
     nsresult rv = nsRange::CreateRange(range.mStartContainer,
                                        range.mStartOffset,
-                                       range.mEndNode, range.mEndOffset,
+                                       range.mEndContainer,
+                                       range.mEndOffset,
                                        getter_AddRefs(newRange));
     NS_ENSURE_SUCCESS(rv, rv);
     rv = range.mSelection->AddRange(newRange);
