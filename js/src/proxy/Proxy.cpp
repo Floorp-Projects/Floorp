@@ -575,12 +575,12 @@ Proxy::fun_toString(JSContext* cx, HandleObject proxy, unsigned indent)
     return handler->fun_toString(cx, proxy, indent);
 }
 
-RegExpShared*
-Proxy::regexp_toShared(JSContext* cx, HandleObject proxy)
+bool
+Proxy::regexp_toShared(JSContext* cx, HandleObject proxy, MutableHandleRegExpShared shared)
 {
     if (!CheckRecursionLimit(cx))
-        return nullptr;
-    return proxy->as<ProxyObject>().handler()->regexp_toShared(cx, proxy);
+        return false;
+    return proxy->as<ProxyObject>().handler()->regexp_toShared(cx, proxy, shared);
 }
 
 bool

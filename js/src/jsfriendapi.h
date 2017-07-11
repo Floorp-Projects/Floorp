@@ -1181,8 +1181,9 @@ extern JS_FRIEND_API(unsigned)
 GetEnterCompartmentDepth(JSContext* cx);
 #endif
 
-extern JS_FRIEND_API(RegExpShared*)
-RegExpToSharedNonInline(JSContext* cx, JS::HandleObject regexp);
+extern JS_FRIEND_API(bool)
+RegExpToSharedNonInline(JSContext* cx, JS::HandleObject regexp,
+                        JS::MutableHandle<RegExpShared*> shared);
 
 /* Implemented in CrossCompartmentWrapper.cpp. */
 typedef enum NukeReferencesToWindow {
