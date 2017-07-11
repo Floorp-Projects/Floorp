@@ -118,14 +118,14 @@ nsRange::CompareNodeToRange(nsINode* aNode, nsRange* aRange,
     nodeEnd = nodeStart + 1;
   }
 
-  nsINode* rangeStartParent = aRange->GetStartContainer();
+  nsINode* rangeStartContainer = aRange->GetStartContainer();
   nsINode* rangeEndParent = aRange->GetEndContainer();
   int32_t rangeStartOffset = aRange->StartOffset();
   int32_t rangeEndOffset = aRange->EndOffset();
 
   // is RANGE(start) <= NODE(start) ?
   bool disconnected = false;
-  *outNodeBefore = nsContentUtils::ComparePoints(rangeStartParent,
+  *outNodeBefore = nsContentUtils::ComparePoints(rangeStartContainer,
                                                  rangeStartOffset,
                                                  parent, nodeStart,
                                                  &disconnected) > 0;
@@ -289,9 +289,10 @@ nsRange::CreateRange(nsIDOMNode* aStartContainer, int32_t aStartOffset,
                      nsIDOMNode* aEndParent, int32_t aEndOffset,
                      nsRange** aRange)
 {
-  nsCOMPtr<nsINode> startParent = do_QueryInterface(aStartContainer);
+  nsCOMPtr<nsINode> startContainer = do_QueryInterface(aStartContainer);
   nsCOMPtr<nsINode> endParent = do_QueryInterface(aEndParent);
-  return CreateRange(startParent, aStartOffset, endParent, aEndOffset, aRange);
+  return CreateRange(startContainer, aStartOffset,
+                     endParent, aEndOffset, aRange);
 }
 
 /* static */
@@ -3442,18 +3443,18 @@ nsRange::ExcludeNonSelectableNodes(nsTArray<RefPtr<nsRange>>* aOutRanges)
           }
 
           // Create a new range for the remainder.
-          nsINode* startParent = node;
+          nsINode* startContainer = node;
           int32_t startOffset = 0;
           // Don't start *inside* a node with independent selection though
           // (e.g. <input>).
           if (content && content->HasIndependentSelection()) {
-            nsINode* parent = startParent->GetParent();
+            nsINode* parent = startContainer->GetParent();
             if (parent) {
-              startOffset = parent->IndexOf(startParent);
-              startParent = parent;
+              startOffset = parent->IndexOf(startContainer);
+              startContainer = parent;
             }
           }
-          rv = CreateRange(startParent, startOffset, endParent, endOffset,
+          rv = CreateRange(startContainer, startOffset, endParent, endOffset,
                            getter_AddRefs(newRange));
           if (NS_FAILED(rv) || newRange->Collapsed()) {
             newRange = nullptr;

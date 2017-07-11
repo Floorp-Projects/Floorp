@@ -2563,7 +2563,7 @@ nsTextServicesDocument::GetUncollapsedSelection(nsITextServicesDocument::TSDBloc
   // selection is not collapsed, and that the input params to this
   // method are initialized to some defaults.
 
-  nsCOMPtr<nsIDOMNode> startParent, endParent;
+  nsCOMPtr<nsIDOMNode> startContainer, endParent;
   int32_t startOffset, endOffset;
   int32_t rangeCount, tableCount;
   int32_t e1s1 = 0, e1s2 = 0, e2s1 = 0, e2s2 = 0;
@@ -2599,7 +2599,7 @@ nsTextServicesDocument::GetUncollapsedSelection(nsITextServicesDocument::TSDBloc
     NS_ENSURE_STATE(range);
 
     rv = GetRangeEndPoints(range,
-                           getter_AddRefs(startParent), &startOffset,
+                           getter_AddRefs(startContainer), &startOffset,
                            getter_AddRefs(endParent), &endOffset);
 
     NS_ENSURE_SUCCESS(rv, rv);
@@ -2607,7 +2607,7 @@ nsTextServicesDocument::GetUncollapsedSelection(nsITextServicesDocument::TSDBloc
     e1s2 = nsContentUtils::ComparePoints(eStart->mNode, eStartOffset,
                                          endParent, endOffset);
     e2s1 = nsContentUtils::ComparePoints(eEnd->mNode, eEndOffset,
-                                         startParent, startOffset);
+                                         startContainer, startOffset);
 
     // Break out of the loop if the text block intersects the current range.
 
@@ -2627,7 +2627,7 @@ nsTextServicesDocument::GetUncollapsedSelection(nsITextServicesDocument::TSDBloc
   // Now that we have an intersecting range, find out more info:
 
   e1s1 = nsContentUtils::ComparePoints(eStart->mNode, eStartOffset,
-                                       startParent, startOffset);
+                                       startContainer, startOffset);
   e2s2 = nsContentUtils::ComparePoints(eEnd->mNode, eEndOffset,
                                        endParent, endOffset);
 
@@ -2662,7 +2662,7 @@ nsTextServicesDocument::GetUncollapsedSelection(nsITextServicesDocument::TSDBloc
     p1 = do_QueryInterface(eStart->mNode);
     o1 = eStartOffset;
   } else {
-    p1 = startParent;
+    p1 = startContainer;
     o1 = startOffset;
   }
 

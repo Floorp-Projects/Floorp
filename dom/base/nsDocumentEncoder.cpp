@@ -943,8 +943,8 @@ nsDocumentEncoder::SerializeRangeToString(nsRange *aRange,
   if (!mCommonParent)
     return NS_OK;
 
-  nsINode* startParent = aRange->GetStartContainer();
-  NS_ENSURE_TRUE(startParent, NS_ERROR_FAILURE);
+  nsINode* startContainer = aRange->GetStartContainer();
+  NS_ENSURE_TRUE(startContainer, NS_ERROR_FAILURE);
   int32_t startOffset = aRange->StartOffset();
 
   nsINode* endParent = aRange->GetEndContainer();
@@ -959,7 +959,7 @@ nsDocumentEncoder::SerializeRangeToString(nsRange *aRange,
   mEndOffsets.Clear();
 
   nsContentUtils::GetAncestors(mCommonParent, mCommonAncestors);
-  nsCOMPtr<nsIDOMNode> sp = do_QueryInterface(startParent);
+  nsCOMPtr<nsIDOMNode> sp = do_QueryInterface(startContainer);
   nsContentUtils::GetAncestorsAndOffsets(sp, startOffset,
                                          &mStartNodes, &mStartOffsets);
   nsCOMPtr<nsIDOMNode> ep = do_QueryInterface(endParent);
@@ -975,23 +975,21 @@ nsDocumentEncoder::SerializeRangeToString(nsRange *aRange,
   rv = SerializeRangeContextStart(mCommonAncestors, aOutputString);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if ((startParent == endParent) && IsTextNode(startParent))
-  {
+  if ((startContainer == endParent) && IsTextNode(startContainer)) {
     if (mFlags & SkipInvisibleContent) {
       // Check that the parent is visible if we don't a frame.
       // IsVisibleNode() will do it when there's a frame.
-      nsCOMPtr<nsIContent> content = do_QueryInterface(startParent);
+      nsCOMPtr<nsIContent> content = do_QueryInterface(startContainer);
       if (content && !content->GetPrimaryFrame()) {
         nsIContent* parent = content->GetParent();
         if (!parent || !IsVisibleNode(parent))
           return NS_OK;
       }
     }
-    rv = SerializeNodeStart(startParent, startOffset, endOffset, aOutputString);
+    rv = SerializeNodeStart(startContainer, startOffset, endOffset,
+                            aOutputString);
     NS_ENSURE_SUCCESS(rv, rv);
-  }
-  else
-  {
+  } else {
     rv = SerializeRangeNodes(aRange, mCommonParent, aOutputString, 0);
     NS_ENSURE_SUCCESS(rv, rv);
   }
