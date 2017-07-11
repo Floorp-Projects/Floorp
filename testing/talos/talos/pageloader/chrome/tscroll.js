@@ -86,6 +86,7 @@ function testScroll(target, stepSize, opt_reportFunc, opt_numSteps) {
           resolve();
         });
 
+        // eslint-disable-next-line mozilla/avoid-Date-timing
         imported.src = "../../scripts/talos-debug.js?dummy=" + Date.now(); // For some browsers to re-read
         document.head.appendChild(imported);
         return;
@@ -116,7 +117,7 @@ function testScroll(target, stepSize, opt_reportFunc, opt_numSteps) {
   function myNow() {
     return (win.performance && win.performance.now) ?
             win.performance.now() :
-            Date.now();
+            Date.now();  // eslint-disable-line mozilla/avoid-Date-timing
   }
 
   var isWindow = target.self === target;

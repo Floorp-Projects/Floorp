@@ -155,6 +155,7 @@ var TabPaint = {
     return new Promise((resolve) => {
       this.Profiler.resume("tabpaint parent start");
 
+      // eslint-disable-next-line mozilla/avoid-Date-timing
       gBrowser.selectedTab = gBrowser.addTab(TARGET_URI + "?" + Date.now(), {
         triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
       });

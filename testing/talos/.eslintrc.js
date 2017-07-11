@@ -22,5 +22,13 @@ module.exports = {
     "TalosPowersParent": true,
     "TalosContentProfiler": true,
     "tpRecordTime": true
+  },
+
+  "plugins": [
+    "mozilla"
+  ],
+
+  "rules": {
+    "mozilla/avoid-Date-timing": "error"
   }
 };

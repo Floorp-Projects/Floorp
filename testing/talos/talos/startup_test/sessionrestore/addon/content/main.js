@@ -29,7 +29,7 @@ addEventListener("load", function() {
 
       // Next one is required by the test harness but not used
       dumpLog("__startTimestamp" +
-              Date.now() +
+              Date.now() +  // eslint-disable-line mozilla/avoid-Date-timing
               "__endTimestamp\n\n");
       goQuitApplication();
   });
