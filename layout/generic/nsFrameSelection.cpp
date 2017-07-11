@@ -2740,13 +2740,14 @@ nsFrameSelection::GetFirstCellNodeInRange(nsRange *aRange) const
 {
   if (!aRange) return nullptr;
 
-  nsINode* startParent = aRange->GetStartContainer();
-  if (!startParent)
+  nsINode* startContainer = aRange->GetStartContainer();
+  if (!startContainer) {
     return nullptr;
+  }
 
   int32_t offset = aRange->StartOffset();
 
-  nsIContent* childContent = startParent->GetChildAt(offset);
+  nsIContent* childContent = startContainer->GetChildAt(offset);
   if (!childContent)
     return nullptr;
   // Don't return node if not a cell

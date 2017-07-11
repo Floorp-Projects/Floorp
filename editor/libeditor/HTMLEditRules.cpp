@@ -457,17 +457,18 @@ HTMLEditRules::AfterEditInner(EditAction action,
   RefPtr<Selection> selection = mHTMLEditor->GetSelection();
   NS_ENSURE_STATE(selection);
 
-  nsCOMPtr<nsIDOMNode> rangeStartParent, rangeEndParent;
+  nsCOMPtr<nsIDOMNode> rangeStartContainer, rangeEndParent;
   int32_t rangeStartOffset = 0, rangeEndOffset = 0;
   // do we have a real range to act on?
   bool bDamagedRange = false;
   if (mDocChangeRange) {
-    mDocChangeRange->GetStartContainer(getter_AddRefs(rangeStartParent));
+    mDocChangeRange->GetStartContainer(getter_AddRefs(rangeStartContainer));
     mDocChangeRange->GetEndContainer(getter_AddRefs(rangeEndParent));
     mDocChangeRange->GetStartOffset(&rangeStartOffset);
     mDocChangeRange->GetEndOffset(&rangeEndOffset);
-    if (rangeStartParent && rangeEndParent)
+    if (rangeStartContainer && rangeEndParent) {
       bDamagedRange = true;
+    }
   }
 
   if (bDamagedRange && !((action == EditAction::undo) ||
@@ -567,7 +568,7 @@ HTMLEditRules::AfterEditInner(EditAction action,
                    action, selection,
                    GetAsDOMNode(mRangeItem->mStartContainer),
                    mRangeItem->mStartOffset,
-                   rangeStartParent, rangeStartOffset,
+                   rangeStartContainer, rangeStartOffset,
                    rangeEndParent, rangeEndOffset);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -7916,20 +7917,20 @@ HTMLEditRules::SelectionEndpointInNode(nsINode* aNode,
   uint32_t rangeCount = selection->RangeCount();
   for (uint32_t rangeIdx = 0; rangeIdx < rangeCount; ++rangeIdx) {
     RefPtr<nsRange> range = selection->GetRangeAt(rangeIdx);
-    nsCOMPtr<nsIDOMNode> startParent, endParent;
-    range->GetStartContainer(getter_AddRefs(startParent));
-    if (startParent) {
-      if (node == startParent) {
+    nsCOMPtr<nsIDOMNode> startContainer, endParent;
+    range->GetStartContainer(getter_AddRefs(startContainer));
+    if (startContainer) {
+      if (node == startContainer) {
         *aResult = true;
         return NS_OK;
       }
-      if (EditorUtils::IsDescendantOf(startParent, node)) {
+      if (EditorUtils::IsDescendantOf(startContainer, node)) {
         *aResult = true;
         return NS_OK;
       }
     }
     range->GetEndContainer(getter_AddRefs(endParent));
-    if (startParent == endParent) {
+    if (startContainer == endParent) {
       continue;
     }
     if (endParent) {

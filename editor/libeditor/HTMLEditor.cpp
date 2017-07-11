@@ -2417,9 +2417,9 @@ HTMLEditor::GetSelectedElement(const nsAString& aTagName,
   RefPtr<nsRange> range = selection->GetRangeAt(0);
   NS_ENSURE_STATE(range);
 
-  nsCOMPtr<nsIDOMNode> startParent;
+  nsCOMPtr<nsIDOMNode> startContainer;
   int32_t startOffset, endOffset;
-  nsresult rv = range->GetStartContainer(getter_AddRefs(startParent));
+  nsresult rv = range->GetStartContainer(getter_AddRefs(startContainer));
   NS_ENSURE_SUCCESS(rv, rv);
   rv = range->GetStartOffset(&startOffset);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -2431,8 +2431,9 @@ HTMLEditor::GetSelectedElement(const nsAString& aTagName,
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Optimization for a single selected element
-  if (startParent && startParent == endParent && endOffset - startOffset == 1) {
-    nsCOMPtr<nsIDOMNode> selectedNode = GetChildAt(startParent, startOffset);
+  if (startContainer && startContainer == endParent &&
+      endOffset - startOffset == 1) {
+    nsCOMPtr<nsIDOMNode> selectedNode = GetChildAt(startContainer, startOffset);
     NS_ENSURE_SUCCESS(rv, NS_OK);
     if (selectedNode) {
       selectedNode->GetNodeName(domTagName);
