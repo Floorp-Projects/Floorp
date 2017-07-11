@@ -92,15 +92,14 @@ protected:
   }
 
 private:
-#if defined(ANDROID) && ANDROID_VERSION < 16
   // Bug 1093893: Translate tkill to tgkill for pthread_kill; fixed in
   // bionic commit 10c8ce59a (in JB and up; API level 16 = Android 4.1).
+  // Bug 1376653: musl also needs this, and security-wise it's harmless.
   static intptr_t TKillCompatTrap(const sandbox::arch_seccomp_data& aArgs,
                                   void *aux)
   {
     return syscall(__NR_tgkill, getpid(), aArgs.args[0], aArgs.args[1]);
   }
-#endif
 
   static intptr_t SetNoNewPrivsTrap(ArgsRef& aArgs, void* aux) {
     if (gSetSandboxFilter == nullptr) {
@@ -241,11 +240,9 @@ public:
         .Else(InvalidSyscall());
     }
 
-#if defined(ANDROID) && ANDROID_VERSION < 16
       // Polyfill with tgkill; see above.
     case __NR_tkill:
       return Trap(TKillCompatTrap, nullptr);
-#endif
 
       // Yield
     case __NR_sched_yield:
