@@ -302,6 +302,7 @@ private:
 
   RefPtr<MLGRenderTarget> mCurrentRT;
   RefPtr<MLGBuffer> mUnitQuadVB;
+  RefPtr<MLGBuffer> mUnitTriangleVB;
   RefPtr<ID3D11VertexShader> mCurrentVertexShader;
   RefPtr<ID3D11InputLayout> mCurrentInputLayout;
   RefPtr<ID3D11PixelShader> mCurrentPixelShader;

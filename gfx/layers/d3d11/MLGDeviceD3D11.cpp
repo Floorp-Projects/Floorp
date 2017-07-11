@@ -825,6 +825,21 @@ MLGDeviceD3D11::Initialize()
     }
   }
 
+  {
+    struct Vertex3D { float x; float y; float z; };
+    Vertex3D vertices[3] = {
+      { 1.0f, 0.0f, 0.0f }, { 0.0f, 1.0f, 0.0f }, { 0.0f, 0.0f, 1.0f }
+    };
+    mUnitTriangleVB = CreateBuffer(
+      MLGBufferType::Vertex,
+      sizeof(Vertex3D) * 3,
+      MLGUsage::Immutable,
+      &vertices);
+    if (!mUnitTriangleVB) {
+      return Fail("FEATURE_FAILURE_UNIT_TRIANGLE_BUFFER");
+    }
+  }
+
   // Define pixel shaders.
 #define LAZY_PS(cxxName, enumName) mLazyPixelShaders[PixelShaderID::enumName] = &s##cxxName;
   LAZY_PS(TexturedVertexRGB, TexturedVertexRGB);
@@ -891,7 +906,7 @@ MLGDeviceD3D11::Initialize()
       { "POSITION", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
       // vRect
       { "TEXCOORD", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 1, 0, D3D11_INPUT_PER_INSTANCE_DATA, 1 },
-      // vLayerOffset
+      // vLayerIndex
       { "TEXCOORD", 1, DXGI_FORMAT_R32_UINT, 1, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_INSTANCE_DATA, 1 },
       // vDepth
       { "TEXCOORD", 2, DXGI_FORMAT_R32_SINT, 1, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_INSTANCE_DATA, 1 },
@@ -905,14 +920,19 @@ MLGDeviceD3D11::Initialize()
   }
   {
     D3D11_INPUT_ELEMENT_DESC inputDesc[] = {
-      // vLayerPos
-      { "POSITION", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-      // vTexCoord
-      { "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-      // vLayerOffset
-      { "TEXCOORD", 1, DXGI_FORMAT_R32_UINT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-      // vDepth
-      { "TEXCOORD", 2, DXGI_FORMAT_R32_SINT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+      // vUnitPos
+      { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+      // vPos1, vPos2, vPos3
+      { "POSITION", 1, DXGI_FORMAT_R32G32_FLOAT, 1, 0, D3D11_INPUT_PER_INSTANCE_DATA, 1 },
+      { "POSITION", 2, DXGI_FORMAT_R32G32_FLOAT, 1, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_INSTANCE_DATA, 1 },
+      { "POSITION", 3, DXGI_FORMAT_R32G32_FLOAT, 1, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_INSTANCE_DATA, 1 },
+      // vLayerIndex, vDepth
+      { "TEXCOORD", 0, DXGI_FORMAT_R32_UINT, 1, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_INSTANCE_DATA, 1 },
+      { "TEXCOORD", 1, DXGI_FORMAT_R32_SINT, 1, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_INSTANCE_DATA, 1 },
+      // vTexCoord1, vTexCoord2, vTexCoord3
+      { "TEXCOORD", 2, DXGI_FORMAT_R32G32_FLOAT, 1, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_INSTANCE_DATA, 1 },
+      { "TEXCOORD", 3, DXGI_FORMAT_R32G32_FLOAT, 1, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_INSTANCE_DATA, 1 },
+      { "TEXCOORD", 4, DXGI_FORMAT_R32G32_FLOAT, 1, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_INSTANCE_DATA, 1 },
     };
     if (!InitInputLayout(inputDesc, MOZ_ARRAY_LENGTH(inputDesc), sTexturedVertexVS, VertexShaderID::TexturedVertex)) {
       return Fail("FEATURE_FAILURE_TEXTURED_INPUT_LAYOUT");
@@ -922,14 +942,16 @@ MLGDeviceD3D11::Initialize()
   }
   {
     D3D11_INPUT_ELEMENT_DESC inputDesc[] = {
-      // vPos
-      { "POSITION", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-      // vLayerOffset
-      { "TEXCOORD", 0, DXGI_FORMAT_R32_UINT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-      // vDepth
-      { "TEXCOORD", 1, DXGI_FORMAT_R32_SINT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-      // vIndex
-      { "TEXCOORD", 2, DXGI_FORMAT_R32_UINT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+      // vUnitPos
+      { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+      // vPos1, vPos2, vPos3
+      { "POSITION", 1, DXGI_FORMAT_R32G32_FLOAT, 1, 0, D3D11_INPUT_PER_INSTANCE_DATA, 1 },
+      { "POSITION", 2, DXGI_FORMAT_R32G32_FLOAT, 1, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_INSTANCE_DATA, 1 },
+      { "POSITION", 3, DXGI_FORMAT_R32G32_FLOAT, 1, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_INSTANCE_DATA, 1 },
+      // vLayerIndex, vDepth, vIndex
+      { "TEXCOORD", 0, DXGI_FORMAT_R32_UINT, 1, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_INSTANCE_DATA, 1 },
+      { "TEXCOORD", 1, DXGI_FORMAT_R32_SINT, 1, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_INSTANCE_DATA, 1 },
+      { "TEXCOORD", 2, DXGI_FORMAT_R32_UINT, 1, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_INSTANCE_DATA, 1 },
     };
     if (!InitInputLayout(inputDesc, MOZ_ARRAY_LENGTH(inputDesc), sColoredVertexVS, VertexShaderID::ColoredVertex)) {
       return Fail("FEATURE_FAILURE_COLORED_INPUT_LAYOUT");
@@ -1502,11 +1524,14 @@ MLGDeviceD3D11::SetPrimitiveTopology(MLGPrimitiveTopology aTopology)
   case MLGPrimitiveTopology::TriangleList:
     topology = D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
     break;
-  case MLGPrimitiveTopology::UnitQuad: {
+  case MLGPrimitiveTopology::UnitQuad:
     SetVertexBuffer(0, mUnitQuadVB, sizeof(float) * 2, 0);
     topology = D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP;
     break;
-  }
+  case MLGPrimitiveTopology::UnitTriangle:
+    SetVertexBuffer(0, mUnitTriangleVB, sizeof(float) * 3, 0);
+    topology = D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
+    break;
   default:
     MOZ_ASSERT_UNREACHABLE("Unknown topology");
     break;

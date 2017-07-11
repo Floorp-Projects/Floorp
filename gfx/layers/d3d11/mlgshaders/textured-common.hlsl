@@ -32,10 +32,15 @@ struct VS_TEXTUREDINPUT
 // Non-instanced version.
 struct VS_TEXTUREDVERTEX
 {
-  float2 vLayerPos : POSITION;
-  float2 vTexCoord : TEXCOORD0;
-  uint vLayerId : TEXCOORD1;
-  int vDepth : TEXCOORD2;
+  float3 vUnitPos : POSITION0;
+  float2 vPos1: POSITION1;
+  float2 vPos2: POSITION2;
+  float2 vPos3: POSITION3;
+  uint vLayerId : TEXCOORD0;
+  int vDepth : TEXCOORD1;
+  float2 vTexCoord1 : TEXCOORD2;
+  float2 vTexCoord2 : TEXCOORD3;
+  float2 vTexCoord3 : TEXCOORD4;
 };
 
 struct VS_SAMPLEOUTPUT
