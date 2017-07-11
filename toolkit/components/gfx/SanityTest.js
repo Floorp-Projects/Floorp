@@ -18,9 +18,13 @@ const PAGE_HEIGHT = 166;
 const DRIVER_PREF = "sanity-test.driver-version";
 const DEVICE_PREF = "sanity-test.device-id";
 const VERSION_PREF = "sanity-test.version";
+const ADVANCED_LAYERS_PREF = "sanity-test.advanced-layers";
 const DISABLE_VIDEO_PREF = "media.hardware-video-decoding.failed";
 const RUNNING_PREF = "sanity-test.running";
 const TIMEOUT_SEC = 20;
+
+const AL_ENABLED_PREF = "layers.mlgpu.dev-enabled";
+const AL_TEST_FAILED_PREF = "layers.mlgpu.sanity-test-failed";
 
 // GRAPHICS_SANITY_TEST histogram enumeration values
 const TEST_PASSED = 0;
@@ -34,6 +38,7 @@ const REASON_FIRST_RUN = 0;
 const REASON_FIREFOX_CHANGED = 1;
 const REASON_DEVICE_CHANGED = 2;
 const REASON_DRIVER_CHANGED = 3;
+const REASON_AL_CONFIG_CHANGED = 4;
 
 // GRAPHICS_SANITY_TEST_OS_SNAPSHOT histogram enumeration values
 const SNAPSHOT_VIDEO_OK = 0;
@@ -120,7 +125,7 @@ function verifyLayersRendering(ctx) {
   return testPixel(ctx, 18, 18, 255, 0, 0, 255, 64);
 }
 
-function testCompositor(win, ctx) {
+function testCompositor(test, win, ctx) {
   takeWindowSnapshot(win, ctx);
   var testPassed = true;
 
@@ -131,8 +136,16 @@ function testCompositor(win, ctx) {
   }
 
   if (!verifyLayersRendering(ctx)) {
+    // Try disabling advanced layers if it was enabled. Also trgiger
+    // a device reset so the screen redraws.
+    if (Preferences.get(AL_ENABLED_PREF, false)) {
+      Preferences.set(AL_TEST_FAILED_PREF, true);
+      test.utils.triggerDeviceReset();
+    }
     reportResult(TEST_FAILED_RENDER);
     testPassed = false;
+  } else {
+    Preferences.set(AL_TEST_FAILED_PREF, false);
   }
 
   if (testPassed) {
@@ -174,7 +187,7 @@ var listener = {
 
     // Perform the compositor backbuffer test, which currently we use for
     // actually deciding whether to enable hardware media decoding.
-    testCompositor(this.win, this.ctx);
+    testCompositor(this, this.win, this.ctx);
 
     this.endTest();
   },
@@ -246,6 +259,7 @@ SanityTest.prototype = {
     // gpu or drivers.
     var buildId = Services.appinfo.platformBuildID;
     var gfxinfo = Cc["@mozilla.org/gfx/info;1"].getService(Ci.nsIGfxInfo);
+    var hasAL = Preferences.get(AL_ENABLED_PREF, false);
 
     if (Preferences.get(RUNNING_PREF, false)) {
       Preferences.set(DISABLE_VIDEO_PREF, true);
@@ -269,7 +283,8 @@ SanityTest.prototype = {
     // TODO: Handle dual GPU setups
     if (checkPref(DRIVER_PREF, gfxinfo.adapterDriverVersion, REASON_DRIVER_CHANGED) &&
         checkPref(DEVICE_PREF, gfxinfo.adapterDeviceID, REASON_DEVICE_CHANGED) &&
-        checkPref(VERSION_PREF, buildId, REASON_FIREFOX_CHANGED)) {
+        checkPref(VERSION_PREF, buildId, REASON_FIREFOX_CHANGED) &&
+        checkPref(ADVANCED_LAYERS_PREF, hasAL, REASON_AL_CONFIG_CHANGED)) {
       return false;
     }
 
@@ -279,6 +294,7 @@ SanityTest.prototype = {
     Preferences.set(DRIVER_PREF, gfxinfo.adapterDriverVersion);
     Preferences.set(DEVICE_PREF, gfxinfo.adapterDeviceID);
     Preferences.set(VERSION_PREF, buildId);
+    Preferences.set(ADVANCED_LAYERS_PREF, hasAL);
 
     // Update the prefs so that this test doesn't run again until the next update.
     Preferences.set(RUNNING_PREF, true);
