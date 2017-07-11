@@ -8,7 +8,7 @@ use euclid::{Point2D, Size2D, Rect, vec2};
 use std::collections::vec_deque::VecDeque;
 use std::f32;
 use std::mem;
-use webrender_traits::ColorF;
+use api::ColorF;
 use time::precise_time_ns;
 
 const GRAPH_WIDTH: f32 = 1024.0;
@@ -45,7 +45,7 @@ pub struct IntProfileCounter {
 impl IntProfileCounter {
     fn new(description: &'static str) -> IntProfileCounter {
         IntProfileCounter {
-            description: description,
+            description,
             value: 0,
         }
     }
@@ -94,7 +94,7 @@ pub struct ResourceProfileCounter {
 impl ResourceProfileCounter {
     fn new(description: &'static str) -> ResourceProfileCounter {
         ResourceProfileCounter {
-            description: description,
+            description,
             value: 0,
             size: 0,
         }
@@ -134,9 +134,9 @@ pub struct TimeProfileCounter {
 impl TimeProfileCounter {
     pub fn new(description: &'static str, invert: bool) -> TimeProfileCounter {
         TimeProfileCounter {
-            description: description,
+            description,
             nanoseconds: 0,
-            invert: invert,
+            invert,
         }
     }
 
@@ -195,13 +195,13 @@ pub struct AverageTimeProfileCounter {
 impl AverageTimeProfileCounter {
     pub fn new(description: &'static str, invert: bool, average_over_ns: u64) -> AverageTimeProfileCounter {
         AverageTimeProfileCounter {
-            description: description,
-            average_over_ns: average_over_ns,
+            description,
+            average_over_ns,
             start_ns: precise_time_ns(),
             sum_ns: 0,
             num_samples: 0,
             nanoseconds: 0,
-            invert: invert,
+            invert,
         }
     }
 
@@ -425,7 +425,7 @@ struct ProfileGraph {
 impl ProfileGraph {
     fn new(max_samples: usize) -> ProfileGraph {
         ProfileGraph {
-            max_samples: max_samples,
+            max_samples,
             values: VecDeque::new(),
         }
     }
@@ -556,8 +556,8 @@ impl GpuFrameCollection {
             self.frames.pop_back();
         }
         self.frames.push_front(GpuFrame {
-            total_time: total_time,
-            samples: samples,
+            total_time,
+            samples,
         });
     }
 }

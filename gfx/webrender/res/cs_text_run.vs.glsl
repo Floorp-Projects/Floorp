@@ -31,8 +31,9 @@ void main(void) {
     vec2 pos = mix(local_rect.xy,
                    local_rect.xy + local_rect.zw,
                    aPosition.xy);
-	vUv = mix(st0, st1, aPosition.xy);
-	vColor = text.color;
+
+    vUv = mix(st0, st1, aPosition.xy);
+    vColor = text.color;
 
     gl_Position = uTransform * vec4(pos, 0.0, 1.0);
 }

@@ -169,9 +169,13 @@ class PastebinProvider(object):
 class FormatProvider(MachCommandBase):
     @Command('clang-format', category='misc',
              description='Run clang-format on current changes')
-    @CommandArgument('--show', '-s', action='store_true',
+    @CommandArgument('--show', '-s', action='store_true', default=False,
                      help='Show diff output on instead of applying changes')
-    def clang_format(self, show=False):
+    @CommandArgument('--path', '-p', nargs='+', default=None,
+                     help='Specify the path(s) to reformat')
+    def clang_format(self, show, path):
+        # Run clang-format or clang-format-diff on the local changes
+        # or files/directories
         import urllib2
 
         plat = platform.system()
@@ -193,7 +197,8 @@ class FormatProvider(MachCommandBase):
         self.prompt = True
 
         try:
-            if not self.locate_or_fetch(fmt):
+            clang_format = self.locate_or_fetch(fmt)
+            if not clang_format:
                 return 1
             clang_format_diff = self.locate_or_fetch(fmt_diff, python_script=True)
             if not clang_format_diff:
@@ -203,33 +208,14 @@ class FormatProvider(MachCommandBase):
             print("HTTP error {0}: {1}".format(e.code, e.reason))
             return 1
 
-        from subprocess import Popen, PIPE
-
-        if os.path.exists(".hg"):
-            diff_process = Popen(["hg", "diff", "-U0", "-r", ".^",
-                                  "--include", "glob:**.c", "--include", "glob:**.cpp",
-                                  "--include", "glob:**.h",
-                                  "--exclude", "listfile:.clang-format-ignore"], stdout=PIPE)
+        if path is None:
+            return self.run_clang_format_diff(clang_format_diff, show)
         else:
-            git_process = Popen(["git", "diff", "--no-color", "-U0", "HEAD^"], stdout=PIPE)
-            try:
-                diff_process = Popen(["filterdiff", "--include=*.h", "--include=*.cpp",
-                                      "--exclude-from-file=.clang-format-ignore"],
-                                     stdin=git_process.stdout, stdout=PIPE)
-            except OSError as e:
-                if e.errno == errno.ENOENT:
-                    print("Can't find filterdiff. Please install patchutils.")
-                else:
-                    print("OSError {0}: {1}".format(e.code, e.reason))
-                return 1
-
-        args = [sys.executable, clang_format_diff, "-p1"]
-        if not show:
-            args.append("-i")
-        cf_process = Popen(args, stdin=diff_process.stdout)
-        return cf_process.communicate()[0]
+            return self.run_clang_format_path(clang_format, show, path)
 
     def locate_or_fetch(self, root, python_script=False):
+        # Download the clang-format binary & python clang-format-diff if doesn't
+        # exists
         import urllib2
         import hashlib
         bin_sha = {
@@ -269,6 +255,91 @@ class FormatProvider(MachCommandBase):
             os.chmod(temp, os.stat(temp).st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
             os.rename(temp, target)
         return target
+
+    def run_clang_format_diff(self, clang_format_diff, show):
+        # Run clang-format on the diff
+        # Note that this will potentially miss a lot things
+        from subprocess import Popen, PIPE
+
+        if os.path.exists(".hg"):
+            diff_process = Popen(["hg", "diff", "-U0", "-r", ".^",
+                                  "--include", "glob:**.c", "--include", "glob:**.cpp",
+                                  "--include", "glob:**.h",
+                                  "--exclude", "listfile:.clang-format-ignore"], stdout=PIPE)
+        else:
+            git_process = Popen(["git", "diff", "--no-color", "-U0", "HEAD^"], stdout=PIPE)
+            try:
+                diff_process = Popen(["filterdiff", "--include=*.h",
+                                      "--include=*.cpp", "--include=*.c",
+                                      "--exclude-from-file=.clang-format-ignore"],
+                                     stdin=git_process.stdout, stdout=PIPE)
+            except OSError as e:
+                if e.errno == errno.ENOENT:
+                    print("Can't find filterdiff. Please install patchutils.")
+                else:
+                    print("OSError {0}: {1}".format(e.code, e.reason))
+                return 1
+
+        args = [sys.executable, clang_format_diff, "-p1"]
+        if not show:
+            args.append("-i")
+        cf_process = Popen(args, stdin=diff_process.stdout)
+        return cf_process.communicate()[0]
+
+    def generate_path_list(self, paths):
+        pathToThirdparty = os.path.join(self.topsrcdir,
+                                        "tools",
+                                        "rewriting",
+                                        "ThirdPartyPaths.txt")
+        with open(pathToThirdparty) as f:
+            # Normalize the path (no trailing /)
+            ignored_dir = tuple(d.rstrip('/') for d in f.read().splitlines())
+
+        extensions = ('.cpp', '.c', '.h')
+
+        path_list = []
+        for f in paths:
+            if f.startswith(ignored_dir):
+                print("clang-format: Ignored third party code '{0}'".format(f))
+                continue
+
+            if os.path.isdir(f):
+                # Processing a directory, generate the file list
+                for folder, subs, files in os.walk(f):
+                    subs.sort()
+                    for filename in sorted(files):
+                        f_in_dir = os.path.join(folder, filename)
+                        if f_in_dir.endswith(extensions):
+                            # Supported extension
+                            path_list.append(f_in_dir)
+            else:
+                if f.endswith(extensions):
+                    path_list.append(f)
+
+        return path_list
+
+    def run_clang_format_path(self, clang_format, show, paths):
+        # Run clang-format on files or directories directly
+        from subprocess import Popen
+
+        args = [clang_format, "-i"]
+
+        path_list = self.generate_path_list(paths)
+
+        if path_list == []:
+            return
+
+        args += path_list
+
+        # Run clang-format
+        cf_process = Popen(args)
+        if show:
+            # show the diff
+            if os.path.exists(".hg"):
+                cf_process = Popen(["hg", "diff"] + path_list)
+            else:
+                cf_process = Popen(["git", "diff"] + path_list)
+        return cf_process.communicate()[0]
 
 
 def mozregression_import():

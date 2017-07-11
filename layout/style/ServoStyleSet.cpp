@@ -1030,7 +1030,6 @@ ServoStyleSet::AssertTreeIsClean()
 bool
 ServoStyleSet::GetKeyframesForName(const nsString& aName,
                                    const nsTimingFunction& aTimingFunction,
-                                   const ServoComputedValues* aComputedValues,
                                    nsTArray<Keyframe>& aKeyframes)
 {
   UpdateStylistIfNeeded();
@@ -1039,7 +1038,6 @@ ServoStyleSet::GetKeyframesForName(const nsString& aName,
   return Servo_StyleSet_GetKeyframesForName(mRawSet.get(),
                                             &name,
                                             &aTimingFunction,
-                                            aComputedValues,
                                             &aKeyframes);
 }
 

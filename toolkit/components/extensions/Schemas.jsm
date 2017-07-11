@@ -811,6 +811,22 @@ class InjectionContext extends Context {
  * format.
  */
 const FORMATS = {
+  hostname(string, context) {
+    let valid = true;
+
+    try {
+      valid = new URL(`http://${string}`).host === string;
+    } catch (e) {
+      valid = false;
+    }
+
+    if (!valid) {
+      throw new Error(`Invalid hostname ${string}`);
+    }
+
+    return string;
+  },
+
   url(string, context) {
     let url = new URL(string).href;
 
