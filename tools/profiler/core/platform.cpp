@@ -848,9 +848,6 @@ MergeStacksIntoProfile(PSLockRef aLock, bool aIsSynchronous,
     }
   }
 
-  // Start the sample with a root entry.
-  aBuffer->addEntry(ProfileBufferEntry::Sample("(root)"));
-
   // While the pseudo-stack array is ordered oldest-to-youngest, the JS and
   // native arrays are ordered youngest-to-oldest. We must add frames to aInfo
   // oldest-to-youngest. Thus, iterate over the pseudo-stack forwards and JS

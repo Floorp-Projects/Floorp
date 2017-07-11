@@ -37,7 +37,6 @@ class ProfilerMarker;
   macro(Marker,          ProfilerMarker*) \
   macro(ResidentMemory,  double) \
   macro(Responsiveness,  double) \
-  macro(Sample,          const char*) \
   macro(ThreadId,        int) \
   macro(Time,            double) \
   macro(UnsharedMemory,  double)
