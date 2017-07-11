@@ -350,11 +350,11 @@ HTMLEditRules::BeforeEdit(EditAction action,
     if (NS_WARN_IF(!selection) || !selection->RangeCount()) {
       return NS_ERROR_UNEXPECTED;
     }
-    mRangeItem->startNode = selection->GetRangeAt(0)->GetStartContainer();
-    mRangeItem->startOffset = selection->GetRangeAt(0)->StartOffset();
+    mRangeItem->mStartContainer = selection->GetRangeAt(0)->GetStartContainer();
+    mRangeItem->mStartOffset = selection->GetRangeAt(0)->StartOffset();
     mRangeItem->endNode = selection->GetRangeAt(0)->GetEndContainer();
     mRangeItem->endOffset = selection->GetRangeAt(0)->EndOffset();
-    nsCOMPtr<nsINode> selStartNode = mRangeItem->startNode;
+    nsCOMPtr<nsINode> selStartNode = mRangeItem->mStartContainer;
     nsCOMPtr<nsINode> selEndNode = mRangeItem->endNode;
 
     // Register with range updater to track this as we perturb the doc
@@ -517,13 +517,13 @@ HTMLEditRules::AfterEditInner(EditAction action,
 
       // also do this for original selection endpoints.
       NS_ENSURE_STATE(mHTMLEditor);
-      NS_ENSURE_STATE(mRangeItem->startNode);
+      NS_ENSURE_STATE(mRangeItem->mStartContainer);
       NS_ENSURE_STATE(mRangeItem->endNode);
-      WSRunObject(mHTMLEditor, mRangeItem->startNode,
-                  mRangeItem->startOffset).AdjustWhitespace();
+      WSRunObject(mHTMLEditor, mRangeItem->mStartContainer,
+                  mRangeItem->mStartOffset).AdjustWhitespace();
       // we only need to handle old selection endpoint if it was different from start
-      if (mRangeItem->startNode != mRangeItem->endNode ||
-          mRangeItem->startOffset != mRangeItem->endOffset) {
+      if (mRangeItem->mStartContainer != mRangeItem->endNode ||
+          mRangeItem->mStartOffset != mRangeItem->endOffset) {
         NS_ENSURE_STATE(mHTMLEditor);
         WSRunObject(mHTMLEditor, mRangeItem->endNode,
                     mRangeItem->endOffset).AdjustWhitespace();
@@ -563,11 +563,12 @@ HTMLEditRules::AfterEditInner(EditAction action,
   NS_ENSURE_STATE(mHTMLEditor);
 
   nsresult rv =
-    mHTMLEditor->HandleInlineSpellCheck(action, selection,
-                                        GetAsDOMNode(mRangeItem->startNode),
-                                        mRangeItem->startOffset,
-                                        rangeStartParent, rangeStartOffset,
-                                        rangeEndParent, rangeEndOffset);
+    mHTMLEditor->HandleInlineSpellCheck(
+                   action, selection,
+                   GetAsDOMNode(mRangeItem->mStartContainer),
+                   mRangeItem->mStartOffset,
+                   rangeStartParent, rangeStartOffset,
+                   rangeEndParent, rangeEndOffset);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // detect empty doc
@@ -6114,7 +6115,8 @@ HTMLEditRules::GetParagraphFormatNodes(
 nsresult
 HTMLEditRules::BustUpInlinesAtRangeEndpoints(RangeItem& item)
 {
-  bool isCollapsed = ((item.startNode == item.endNode) && (item.startOffset == item.endOffset));
+  bool isCollapsed = item.mStartContainer == item.endNode &&
+                     item.mStartOffset == item.endOffset;
 
   nsCOMPtr<nsIContent> endInline = GetHighestInlineParent(*item.endNode);
 
@@ -6133,19 +6135,21 @@ HTMLEditRules::BustUpInlinesAtRangeEndpoints(RangeItem& item)
     item.endOffset = resultEndOffset;
   }
 
-  nsCOMPtr<nsIContent> startInline = GetHighestInlineParent(*item.startNode);
+  nsCOMPtr<nsIContent> startInline =
+    GetHighestInlineParent(*item.mStartContainer);
 
   if (startInline) {
     nsCOMPtr<nsINode> resultStartNode = startInline->GetParentNode();
     NS_ENSURE_STATE(mHTMLEditor);
     int32_t resultStartOffset =
-      mHTMLEditor->SplitNodeDeep(*startInline, *item.startNode->AsContent(),
-                                 item.startOffset,
+      mHTMLEditor->SplitNodeDeep(*startInline,
+                                 *item.mStartContainer->AsContent(),
+                                 item.mStartOffset,
                                  EditorBase::EmptyContainers::no);
     NS_ENSURE_TRUE(resultStartOffset != -1, NS_ERROR_FAILURE);
     // reset range
-    item.startNode = resultStartNode;
-    item.startOffset = resultStartOffset;
+    item.mStartContainer = resultStartNode;
+    item.mStartOffset = resultStartOffset;
   }
 
   return NS_OK;
