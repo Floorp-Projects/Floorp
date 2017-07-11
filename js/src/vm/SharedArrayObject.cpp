@@ -273,8 +273,7 @@ SharedArrayBufferObject::class_constructor(JSContext* cx, unsigned argc, Value* 
     // Step 3 (Inlined 24.2.1.1 AllocateSharedArrayBuffer).
     // 24.2.1.1, step 1 (Inlined 9.1.14 OrdinaryCreateFromConstructor).
     RootedObject proto(cx);
-    RootedObject newTarget(cx, &args.newTarget().toObject());
-    if (!GetPrototypeFromConstructor(cx, newTarget, &proto))
+    if (!GetPrototypeFromBuiltinConstructor(cx, args, &proto))
         return false;
 
     // 24.2.1.1, step 3 (Inlined 6.2.7.2 CreateSharedByteDataBlock, step 2).

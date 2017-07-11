@@ -1002,17 +1002,6 @@ js::GetPrototypeFromConstructor(JSContext* cx, HandleObject newTarget, MutableHa
     return true;
 }
 
-bool
-js::GetPrototypeFromCallableConstructor(JSContext* cx, const CallArgs& args, MutableHandleObject proto)
-{
-    RootedObject newTarget(cx);
-    if (args.isConstructing())
-        newTarget = &args.newTarget().toObject();
-    else
-        newTarget = &args.callee();
-    return GetPrototypeFromConstructor(cx, newTarget, proto);
-}
-
 JSObject*
 js::CreateThisForFunction(JSContext* cx, HandleObject callee, HandleObject newTarget,
                           NewObjectKind newKind)

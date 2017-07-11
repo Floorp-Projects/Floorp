@@ -211,6 +211,10 @@ public:
   {
     MOZ_ASSERT(NS_IsMainThread());
 
+    // The loading is completed. Let's nullify the pump before continuing the
+    // consuming of the body.
+    mFetchBodyConsumer->NullifyConsumeBodyPump();
+
     // If the binding requested cancel, we don't need to call
     // ContinueConsumeBody, since that is the originator.
     if (aStatus == NS_BINDING_ABORTED) {
@@ -225,8 +229,6 @@ public:
                                                  aResultLength,
                                                  nonconstResult);
       if (!r->Dispatch()) {
-        // XXXcatalinb: The worker is shutting down, the pump will be canceled
-        // by FetchBodyWorkerHolder::Notify.
         NS_WARNING("Could not dispatch ConsumeBodyRunnable");
         // Return failure so that aResult is freed.
         return NS_ERROR_FAILURE;
@@ -282,12 +284,12 @@ NS_INTERFACE_MAP_BEGIN(ConsumeBodyDoneObserver<Derived>)
 NS_INTERFACE_MAP_END
 
 template <class Derived>
-class CancelPumpRunnable final : public WorkerMainThreadRunnable
+class ShutDownMainThreadConsumingRunnable final : public WorkerMainThreadRunnable
 {
   RefPtr<FetchBodyConsumer<Derived>> mBodyConsumer;
 
 public:
-  explicit CancelPumpRunnable(FetchBodyConsumer<Derived>* aBodyConsumer)
+  explicit ShutDownMainThreadConsumingRunnable(FetchBodyConsumer<Derived>* aBodyConsumer)
     : WorkerMainThreadRunnable(aBodyConsumer->GetWorkerPrivate(),
                                NS_LITERAL_CSTRING("Fetch :: Cancel Pump"))
     , mBodyConsumer(aBodyConsumer)
@@ -296,7 +298,7 @@ public:
   bool
   MainThreadRun() override
   {
-    mBodyConsumer->CancelPump();
+    mBodyConsumer->ShutDownMainThreadConsuming();
     return true;
   }
 };
@@ -396,6 +398,7 @@ FetchBodyConsumer<Derived>::FetchBodyConsumer(nsIEventTarget* aMainThreadEventTa
   , mConsumeType(aType)
   , mConsumePromise(aPromise)
   , mBodyConsumed(false)
+  , mShuttingDown(false)
 {
   MOZ_ASSERT(aMainThreadEventTarget);
   MOZ_ASSERT(aBody);
@@ -405,8 +408,6 @@ FetchBodyConsumer<Derived>::FetchBodyConsumer(nsIEventTarget* aMainThreadEventTa
 template <class Derived>
 FetchBodyConsumer<Derived>::~FetchBodyConsumer()
 {
-  NS_ProxyRelease("FetchBodyConsumer::mBody",
-                  mTargetThread, mBody.forget());
 }
 
 template <class Derived>
@@ -445,6 +446,11 @@ void
 FetchBodyConsumer<Derived>::BeginConsumeBodyMainThread()
 {
   AssertIsOnMainThread();
+
+  // Nothing to do.
+  if (mShuttingDown) {
+    return;
+  }
 
   AutoFailConsumeBody<Derived> autoReject(this);
 
@@ -503,10 +509,9 @@ FetchBodyConsumer<Derived>::BeginConsumeBodyMainThread()
   }
 
   // Now that everything succeeded, we can assign the pump to a pointer that
-  // stays alive for the lifetime of the FetchBody.
-  mConsumeBodyPump =
-    new nsMainThreadPtrHolder<nsIInputStreamPump>("FetchBodyConsumer::mConsumeBodyPump",
-                                                  pump, mMainThreadEventTarget);
+  // stays alive for the lifetime of the FetchConsumer.
+  mConsumeBodyPump = pump;
+
   // It is ok for retargeting to fail and reads to happen on the main thread.
   autoReject.DontFail();
 
@@ -528,14 +533,15 @@ FetchBodyConsumer<Derived>::ContinueConsumeBody(nsresult aStatus,
                                                 uint8_t* aResult)
 {
   AssertIsOnTargetThread();
-  // Just a precaution to ensure ContinueConsumeBody is not called out of
-  // sync with a body read.
-  MOZ_ASSERT(mBody->BodyUsed());
 
   if (mBodyConsumed) {
     return;
   }
   mBodyConsumed = true;
+
+  // Just a precaution to ensure ContinueConsumeBody is not called out of
+  // sync with a body read.
+  MOZ_ASSERT(mBody->BodyUsed());
 
   auto autoFree = mozilla::MakeScopeExit([&] {
     free(aResult);
@@ -551,40 +557,12 @@ FetchBodyConsumer<Derived>::ContinueConsumeBody(nsresult aStatus,
 
   if (NS_WARN_IF(NS_FAILED(aStatus))) {
     localPromise->MaybeReject(NS_ERROR_DOM_ABORT_ERR);
-
-    // If binding aborted, cancel the pump. We can't assert mConsumeBodyPump.
-    // In the (admittedly rare) situation that BeginConsumeBodyMainThread()
-    // context switches out, and the worker thread gets canceled before the
-    // pump is setup, mConsumeBodyPump will be null.
-    // We've to use the !! form since non-main thread pointer access on
-    // a nsMainThreadPtrHandle is not permitted.
-    if (aStatus == NS_BINDING_ABORTED && !!mConsumeBodyPump) {
-      if (NS_IsMainThread()) {
-        CancelPump();
-      } else {
-        MOZ_ASSERT(mWorkerPrivate);
-        // In case of worker thread, we block the worker while the request is
-        // canceled on the main thread. This ensures that OnStreamComplete has
-        // a valid FetchBody around to call CancelPump and we don't release the
-        // FetchBody on the main thread.
-        RefPtr<CancelPumpRunnable<Derived>> r =
-          new CancelPumpRunnable<Derived>(this);
-        ErrorResult rv;
-        r->Dispatch(Terminating, rv);
-        if (rv.Failed()) {
-          NS_WARNING("Could not dispatch CancelPumpRunnable. Nothing we can do here");
-          // None of our callers are callled directly from JS, so there is no
-          // point in trying to propagate this failure out of here.  And
-          // localPromise is already rejected.  Just suppress the failure.
-          rv.SuppressException();
-        }
-      }
-    }
   }
 
-  // Release the pump and then early exit if there was an error.
-  // Uses NS_ProxyRelease internally, so this is safe.
-  mConsumeBodyPump = nullptr;
+  // We need to nullify mConsumeBodyPump on the main-thread and, in case it has
+  // not been created yet, we need to block the creation setting mShuttingDown
+  // to true.
+  ShutDownMainThreadConsuming();
 
   // Don't warn here since we warned above.
   if (NS_FAILED(aStatus)) {
@@ -668,9 +646,6 @@ void
 FetchBodyConsumer<Derived>::ContinueConsumeBlobBody(BlobImpl* aBlobImpl)
 {
   AssertIsOnTargetThread();
-  // Just a precaution to ensure ContinueConsumeBody is not called out of
-  // sync with a body read.
-  MOZ_ASSERT(mBody->BodyUsed());
   MOZ_ASSERT(mConsumeType == CONSUME_BLOB);
 
   if (mBodyConsumed) {
@@ -678,12 +653,15 @@ FetchBodyConsumer<Derived>::ContinueConsumeBlobBody(BlobImpl* aBlobImpl)
   }
   mBodyConsumed = true;
 
+  // Just a precaution to ensure ContinueConsumeBody is not called out of
+  // sync with a body read.
+  MOZ_ASSERT(mBody->BodyUsed());
+
   MOZ_ASSERT(mConsumePromise);
   RefPtr<Promise> localPromise = mConsumePromise.forget();
 
-  // Release the pump and then early exit if there was an error.
-  // Uses NS_ProxyRelease internally, so this is safe.
-  mConsumeBodyPump = nullptr;
+  // Release the pump.
+  ShutDownMainThreadConsuming();
 
   RefPtr<dom::Blob> blob =
     dom::Blob::Create(mBody->DerivedClass()->GetParentObject(), aBlobImpl);
@@ -696,11 +674,35 @@ FetchBodyConsumer<Derived>::ContinueConsumeBlobBody(BlobImpl* aBlobImpl)
 
 template <class Derived>
 void
-FetchBodyConsumer<Derived>::CancelPump()
+FetchBodyConsumer<Derived>::ShutDownMainThreadConsuming()
 {
-  AssertIsOnMainThread();
-  MOZ_ASSERT(mConsumeBodyPump);
-  mConsumeBodyPump->Cancel(NS_BINDING_ABORTED);
+  if (!NS_IsMainThread()) {
+    MOZ_ASSERT(mWorkerPrivate);
+    // In case of worker thread, we block the worker while the request is
+    // canceled on the main thread. This ensures that OnStreamComplete has a
+    // valid FetchConsumer around to call ShutDownMainThreadConsuming and we
+    // don't release the FetchConsumer on the main thread.
+    RefPtr<ShutDownMainThreadConsumingRunnable<Derived>> r =
+      new ShutDownMainThreadConsumingRunnable<Derived>(this);
+
+    IgnoredErrorResult rv;
+    r->Dispatch(Terminating, rv);
+    if (NS_WARN_IF(rv.Failed())) {
+      return;
+    }
+
+    MOZ_DIAGNOSTIC_ASSERT(mShuttingDown);
+    return;
+  }
+
+  // We need this because maybe, mConsumeBodyPump has not been created yet. We
+  // must be sure that we don't try to do it.
+  mShuttingDown = true;
+
+  if (mConsumeBodyPump) {
+    mConsumeBodyPump->Cancel(NS_BINDING_ABORTED);
+    mConsumeBodyPump = nullptr;
+  }
 }
 
 template <class Derived>

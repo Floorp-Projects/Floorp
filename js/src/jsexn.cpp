@@ -442,7 +442,7 @@ Error(JSContext* cx, unsigned argc, Value* vp)
 
     // ES6 19.5.1.1 mandates the .prototype lookup happens before the toString
     RootedObject proto(cx);
-    if (!GetPrototypeFromCallableConstructor(cx, args, &proto))
+    if (!GetPrototypeFromBuiltinConstructor(cx, args, &proto))
         return false;
 
     /* Compute the error message, if any. */

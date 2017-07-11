@@ -93,7 +93,7 @@ var SessionCookiesInternal = {
         this._removeCookies(subject);
         break;
       default:
-        throw new Error("Unhandled cookie-changed notification.");
+        throw new Error("Unhandled session-cookie-changed notification.");
     }
   },
 
@@ -107,7 +107,7 @@ var SessionCookiesInternal = {
     }
     this._reloadCookies();
     this._initialized = true;
-    Services.obs.addObserver(this, "cookie-changed");
+    Services.obs.addObserver(this, "session-cookie-changed");
 
     // Listen for privacy level changes to reload cookies when needed.
     Services.prefs.addObserver("browser.sessionstore.privacy_level", () => {

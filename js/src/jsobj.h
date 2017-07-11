@@ -1152,8 +1152,21 @@ NewObjectWithTaggedProtoIsCachable(JSContext* cx, Handle<TaggedProto> proto,
 extern bool
 GetPrototypeFromConstructor(JSContext* cx, js::HandleObject newTarget, js::MutableHandleObject proto);
 
-extern bool
-GetPrototypeFromCallableConstructor(JSContext* cx, const CallArgs& args, js::MutableHandleObject proto);
+MOZ_ALWAYS_INLINE bool
+GetPrototypeFromBuiltinConstructor(JSContext* cx, const CallArgs& args, js::MutableHandleObject proto)
+{
+    // When proto is set to nullptr, the caller is expected to select the
+    // correct default built-in prototype for this constructor.
+    if (!args.isConstructing() || &args.newTarget().toObject() == &args.callee()) {
+        proto.set(nullptr);
+        return true;
+    }
+
+    // We're calling this constructor from a derived class, retrieve the
+    // actual prototype from newTarget.
+    RootedObject newTarget(cx, &args.newTarget().toObject());
+    return GetPrototypeFromConstructor(cx, newTarget, proto);
+}
 
 // Specialized call for constructing |this| with a known function callee,
 // and a known prototype.
