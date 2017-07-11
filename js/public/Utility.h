@@ -78,7 +78,7 @@ enum ThreadType {
 # if defined(DEBUG) || defined(JS_OOM_BREAKPOINT)
 extern bool InitThreadType(void);
 extern void SetThreadType(ThreadType);
-extern uint32_t GetThreadType(void);
+extern JS_FRIEND_API(uint32_t) GetThreadType(void);
 # else
 inline bool InitThreadType(void) { return true; }
 inline void SetThreadType(ThreadType t) {};
