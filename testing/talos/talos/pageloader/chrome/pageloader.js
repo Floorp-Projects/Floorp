@@ -4,6 +4,7 @@
 
 /* import-globals-from memory.js */
 /* import-globals-from report.js */
+/* eslint mozilla/avoid-Date-timing: "off" */
 
 try {
   if (Cc === undefined) {
