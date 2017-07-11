@@ -142,7 +142,7 @@ MovableCellHasher<T>::ensureHash(const Lookup& l)
         return true;
 
     uint64_t unusedId;
-    return l->zoneFromAnyThread()->getUniqueId(l, &unusedId);
+    return l->zoneFromAnyThread()->getOrCreateUniqueId(l, &unusedId);
 }
 
 template <typename T>
@@ -157,7 +157,8 @@ MovableCellHasher<T>::hash(const Lookup& l)
     // into another runtime. The zone's uid lock will protect against multiple
     // workers doing this simultaneously.
     MOZ_ASSERT(CurrentThreadCanAccessZone(l->zoneFromAnyThread()) ||
-               l->zoneFromAnyThread()->isSelfHostingZone());
+               l->zoneFromAnyThread()->isSelfHostingZone() ||
+               CurrentThreadIsPerformingGC());
 
     return l->zoneFromAnyThread()->getHashCodeInfallible(l);
 }
@@ -180,11 +181,25 @@ MovableCellHasher<T>::match(const Key& k, const Lookup& l)
     Zone* zone = k->zoneFromAnyThread();
     if (zone != l->zoneFromAnyThread())
         return false;
-    MOZ_ASSERT(zone->hasUniqueId(k));
-    MOZ_ASSERT(zone->hasUniqueId(l));
 
-    // Since both already have a uid (from hash), the get is infallible.
-    return zone->getUniqueIdInfallible(k) == zone->getUniqueIdInfallible(l);
+#ifdef DEBUG
+    // Incremental table sweeping means that existing table entries may no
+    // longer have unique IDs. We fail the match in that case and the entry is
+    // removed from the table later on.
+    if (!zone->hasUniqueId(k)) {
+        Key key = k;
+        MOZ_ASSERT(IsAboutToBeFinalizedUnbarriered(&key));
+    }
+    MOZ_ASSERT(zone->hasUniqueId(l));
+#endif
+
+    uint64_t keyId;
+    if (!zone->maybeGetUniqueId(k, &keyId)) {
+        // Key is dead and cannot match lookup which must be live.
+        return false;
+    }
+
+    return keyId == zone->getUniqueIdInfallible(l);
 }
 
 #ifdef JS_BROKEN_GCC_ATTRIBUTE_WARNING

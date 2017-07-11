@@ -475,7 +475,7 @@ nsTString_CharT::ReplaceChar( const char* aSet, char_type aNewChar )
   }
 }
 
-void ReleaseData(void* aData, uint32_t aFlags);
+void ReleaseData(void* aData, nsAString::DataFlags aFlags);
 
 void
 nsTString_CharT::ReplaceSubstring(const char_type* aTarget,
@@ -555,7 +555,7 @@ nsTString_CharT::ReplaceSubstring(const self_type& aTarget,
   // rest of the algorithm relies on having access to all of the original
   // string.  In other words, we over-allocate in the shrinking case.
   char_type* oldData;
-  uint32_t oldFlags;
+  DataFlags oldFlags;
   if (!MutatePrep(XPCOM_MAX(mLength, newLength.value()), &oldData, &oldFlags))
     return false;
   if (oldData) {

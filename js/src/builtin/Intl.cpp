@@ -989,7 +989,7 @@ Collator(JSContext* cx, const CallArgs& args)
 
     // Steps 2-5 (Inlined 9.1.14, OrdinaryCreateFromConstructor).
     RootedObject proto(cx);
-    if (args.isConstructing() && !GetPrototypeFromCallableConstructor(cx, args, &proto))
+    if (!GetPrototypeFromBuiltinConstructor(cx, args, &proto))
         return false;
 
     if (!proto) {
@@ -1557,7 +1557,7 @@ NumberFormat(JSContext* cx, const CallArgs& args, bool construct)
 
     // Step 2 (Inlined 9.1.14, OrdinaryCreateFromConstructor).
     RootedObject proto(cx);
-    if (args.isConstructing() && !GetPrototypeFromCallableConstructor(cx, args, &proto))
+    if (!GetPrototypeFromBuiltinConstructor(cx, args, &proto))
         return false;
 
     if (!proto) {
@@ -2432,7 +2432,7 @@ DateTimeFormat(JSContext* cx, const CallArgs& args, bool construct, DateTimeForm
 
     // Step 2 (Inlined 9.1.14, OrdinaryCreateFromConstructor).
     RootedObject proto(cx);
-    if (args.isConstructing() && !GetPrototypeFromCallableConstructor(cx, args, &proto))
+    if (!GetPrototypeFromBuiltinConstructor(cx, args, &proto))
         return false;
 
     if (!proto) {
@@ -3540,7 +3540,7 @@ PluralRules(JSContext* cx, unsigned argc, Value* vp)
 
     // Step 2 (Inlined 9.1.14, OrdinaryCreateFromConstructor).
     RootedObject proto(cx);
-    if (!GetPrototypeFromCallableConstructor(cx, args, &proto))
+    if (!GetPrototypeFromBuiltinConstructor(cx, args, &proto))
         return false;
 
     if (!proto) {

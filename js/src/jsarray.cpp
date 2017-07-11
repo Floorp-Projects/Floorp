@@ -3515,7 +3515,7 @@ ArrayConstructorImpl(JSContext* cx, CallArgs& args, bool isConstructor)
 {
     RootedObject proto(cx);
     if (isConstructor) {
-        if (!GetPrototypeFromCallableConstructor(cx, args, &proto))
+        if (!GetPrototypeFromBuiltinConstructor(cx, args, &proto))
             return false;
     } else {
         // We're emulating |new Array(n)| with |std_Array(n)| in self-hosted JS,

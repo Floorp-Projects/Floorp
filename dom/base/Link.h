@@ -14,6 +14,7 @@
 #include "mozilla/IHistory.h"
 #include "mozilla/MemoryReporting.h"
 #include "nsIContent.h" // for nsLinkState
+#include "nsIContentPolicyBase.h"
 
 namespace mozilla {
 
@@ -123,8 +124,10 @@ public:
                          nsWrapperCache::FlagsType aRequestedFlag);
 
   // This is called by HTMLLinkElement.
-  void TryDNSPrefetchPreconnectOrPrefetchOrPrerender();
-  void CancelPrefetch();
+  void TryDNSPrefetchOrPreconnectOrPrefetchOrPreloadOrPrerender();
+  void UpdatePreload(nsIAtom* aName, const nsAttrValue* aValue,
+                     const nsAttrValue* aOldValue);
+  void CancelPrefetchOrPreload();
 
   bool HasPendingLinkUpdate() const { return mHasPendingLinkUpdate; }
   void SetHasPendingLinkUpdate() { mHasPendingLinkUpdate = true; }
@@ -140,6 +143,8 @@ public:
   void SetIsInDNSPrefetch() { mInDNSPrefetch = true; }
   void ClearIsInDNSPrefetch() { mInDNSPrefetch = false; }
 
+  static void ParseAsValue(const nsAString& aValue, nsAttrValue& aResult);
+  static nsContentPolicyType AsValueToContentPolicy(const nsAttrValue& aValue);
 protected:
   virtual ~Link();
 
@@ -168,6 +173,11 @@ private:
   already_AddRefed<nsIURI> GetURIToMutate();
   void SetHrefAttribute(nsIURI *aURI);
 
+  void GetContentPolicyMimeTypeMedia(nsAttrValue& aAsAttr,
+                                     nsContentPolicyType& aPolicyType,
+                                     nsString& aMimeType,
+                                     nsAString& aMedia);
+
   mutable nsCOMPtr<nsIURI> mCachedURI;
 
   Element * const mElement;
@@ -188,6 +198,27 @@ private:
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(Link, MOZILLA_DOM_LINK_IMPLEMENTATION_IID)
+
+enum ASDestination : uint8_t {
+  DESTINATION_INVALID,
+  DESTINATION_AUDIO,
+  DESTINATION_DOCUMENT,
+  DESTINATION_EMBED,
+  DESTINATION_FONT,
+  DESTINATION_IMAGE,
+  DESTINATION_MANIFEST,
+  DESTINATION_OBJECT,
+  DESTINATION_REPORT,
+  DESTINATION_SCRIPT,
+  DESTINATION_SERVICEWORKER,
+  DESTINATION_SHAREDWORKER,
+  DESTINATION_STYLE,
+  DESTINATION_TRACK,
+  DESTINATION_VIDEO,
+  DESTINATION_WORKER,
+  DESTINATION_XSLT,
+  DESTINATION_FETCH
+};
 
 } // namespace dom
 } // namespace mozilla

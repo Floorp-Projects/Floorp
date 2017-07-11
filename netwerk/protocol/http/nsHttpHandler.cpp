@@ -333,6 +333,15 @@ nsHttpHandler::SetFastOpenOSSupport()
     }
 #endif
 
+#ifdef XP_WIN
+  if (mFastOpenSupported) {
+    // We have some problems with lavasoft software and tcp fast open.
+    if (GetModuleHandleW(L"pmls64.dll") || GetModuleHandleW(L"rlls64.dll")) {
+      mFastOpenSupported = false;
+    }
+  }
+#endif
+
     LOG(("nsHttpHandler::SetFastOpenOSSupport %s supported.\n",
          mFastOpenSupported ? "" : "not"));
 }

@@ -620,6 +620,10 @@ WebSocketImpl::Disconnect()
 
   AssertIsOnTargetThread();
 
+  // DontKeepAliveAnyMore() and DisconnectInternal() can release the object. So
+  // hold a reference to this until the end of the method.
+  RefPtr<WebSocketImpl> kungfuDeathGrip = this;
+
   // Disconnect can be called from some control event (such as Notify() of
   // WorkerHolder). This will be schedulated before any other sync/async
   // runnable. In order to prevent some double Disconnect() calls, we use this
@@ -640,10 +644,6 @@ WebSocketImpl::Disconnect()
     // where to, exactly?
     rv.SuppressException();
   }
-
-  // DontKeepAliveAnyMore() can release the object. So hold a reference to this
-  // until the end of the method.
-  RefPtr<WebSocketImpl> kungfuDeathGrip = this;
 
   NS_ReleaseOnMainThread("WebSocketImpl::mChannel", mChannel.forget());
   NS_ReleaseOnMainThread("WebSocketImpl::mService", mService.forget());

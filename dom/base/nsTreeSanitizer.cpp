@@ -152,6 +152,7 @@ nsIAtom** const kAttributesHTML[] = {
   &nsGkAtoms::accesskey,
   &nsGkAtoms::action,
   &nsGkAtoms::alt,
+  &nsGkAtoms::as,
   &nsGkAtoms::autocomplete,
   &nsGkAtoms::autofocus,
   &nsGkAtoms::autoplay,

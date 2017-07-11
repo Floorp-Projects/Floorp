@@ -464,8 +464,9 @@ public:
 protected:
 
   // allow subclasses to initialize fields directly
-  nsTString_CharT(char_type* aData, size_type aLength, uint32_t aFlags)
-    : substring_type(aData, aLength, aFlags)
+  nsTString_CharT(char_type* aData, size_type aLength, DataFlags aDataFlags,
+                  ClassFlags aClassFlags)
+    : substring_type(aData, aLength, aDataFlags, aClassFlags)
   {
   }
 
@@ -500,7 +501,8 @@ public:
 
   nsTFixedString_CharT(char_type* aData, size_type aStorageSize)
     : string_type(aData, uint32_t(char_traits::length(aData)),
-                  F_TERMINATED | F_FIXED | F_CLASS_FIXED)
+                  DataFlags::TERMINATED | DataFlags::FIXED,
+                  ClassFlags::FIXED)
     , mFixedCapacity(aStorageSize - 1)
     , mFixedBuf(aData)
   {
@@ -508,7 +510,8 @@ public:
 
   nsTFixedString_CharT(char_type* aData, size_type aStorageSize,
                        size_type aLength)
-    : string_type(aData, aLength, F_TERMINATED | F_FIXED | F_CLASS_FIXED)
+    : string_type(aData, aLength, DataFlags::TERMINATED | DataFlags::FIXED,
+                  ClassFlags::FIXED)
     , mFixedCapacity(aStorageSize - 1)
     , mFixedBuf(aData)
   {
@@ -714,13 +717,15 @@ public:
 public:
 
   nsTXPIDLString_CharT()
-    : string_type(char_traits::sEmptyBuffer, 0, F_TERMINATED | F_VOIDED)
+    : string_type(char_traits::sEmptyBuffer, 0,
+                  DataFlags::TERMINATED | DataFlags::VOIDED, ClassFlags(0))
   {
   }
 
   // copy-constructor required to avoid default
   nsTXPIDLString_CharT(const self_type& aStr)
-    : string_type(char_traits::sEmptyBuffer, 0, F_TERMINATED | F_VOIDED)
+    : string_type(char_traits::sEmptyBuffer, 0,
+                  DataFlags::TERMINATED | DataFlags::VOIDED, ClassFlags(0))
   {
     Assign(aStr);
   }
@@ -732,7 +737,7 @@ public:
   const char_type* get() const
 #endif
   {
-    return (mFlags & F_VOIDED) ? nullptr : mData;
+    return (mDataFlags & DataFlags::VOIDED) ? nullptr : mData;
   }
 
   // this case operator is the reason why this class cannot just be a

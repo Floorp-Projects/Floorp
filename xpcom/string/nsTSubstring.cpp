@@ -19,12 +19,13 @@ const nsTSubstring_CharT::size_type nsTSubstring_CharT::kMaxCapacity =
 
 #ifdef XPCOM_STRING_CONSTRUCTOR_OUT_OF_LINE
 nsTSubstring_CharT::nsTSubstring_CharT(char_type* aData, size_type aLength,
-                                       uint32_t aFlags)
-  : nsTStringRepr_CharT(aData, aLength, aFlags)
+                                       DataFlags aDataFlags,
+                                       ClassFlags aClassFlags)
+  : nsTStringRepr_CharT(aData, aLength, aDataFlags, aClassFlags)
 {
   MOZ_RELEASE_ASSERT(CheckCapacity(aLength), "String is too large.");
 
-  if (aFlags & F_OWNED) {
+  if (aDataFlags & DataFlags::OWNED) {
     STRING_STAT_INCREMENT(Adopt);
     MOZ_LOG_CTOR(mData, "StringAdopt", 1);
   }
@@ -49,11 +50,11 @@ AsFixedString(const nsTSubstring_CharT* aStr)
  */
 bool
 nsTSubstring_CharT::MutatePrep(size_type aCapacity, char_type** aOldData,
-                               uint32_t* aOldFlags)
+                               DataFlags* aOldDataFlags)
 {
   // initialize to no old data
   *aOldData = nullptr;
-  *aOldFlags = 0;
+  *aOldDataFlags = DataFlags(0);
 
   size_type curCapacity = Capacity();
 
@@ -72,7 +73,7 @@ nsTSubstring_CharT::MutatePrep(size_type aCapacity, char_type** aOldData,
 
   if (curCapacity != 0) {
     if (aCapacity <= curCapacity) {
-      mFlags &= ~F_VOIDED;  // mutation clears voided flag
+      mDataFlags &= ~DataFlags::VOIDED;  // mutation clears voided flag
       return true;
     }
   }
@@ -113,9 +114,9 @@ nsTSubstring_CharT::MutatePrep(size_type aCapacity, char_type** aOldData,
   //
   // several cases:
   //
-  //  (1) we have a shared buffer (mFlags & F_SHARED)
-  //  (2) we have an owned buffer (mFlags & F_OWNED)
-  //  (3) we have a fixed buffer (mFlags & F_FIXED)
+  //  (1) we have a shared buffer (mDataFlags & DataFlags::SHARED)
+  //  (2) we have an owned buffer (mDataFlags & DataFlags::OWNED)
+  //  (3) we have a fixed buffer (mDataFlags & DataFlags::FIXED)
   //  (4) we have a readonly buffer
   //
   // requiring that we in some cases preserve the data before creating
@@ -125,7 +126,7 @@ nsTSubstring_CharT::MutatePrep(size_type aCapacity, char_type** aOldData,
   size_type storageSize = (aCapacity + 1) * sizeof(char_type);
 
   // case #1
-  if (mFlags & F_SHARED) {
+  if (mDataFlags & DataFlags::SHARED) {
     nsStringBuffer* hdr = nsStringBuffer::FromData(mData);
     if (!hdr->IsReadonly()) {
       nsStringBuffer* newHdr = nsStringBuffer::Realloc(hdr, storageSize);
@@ -135,23 +136,23 @@ nsTSubstring_CharT::MutatePrep(size_type aCapacity, char_type** aOldData,
 
       hdr = newHdr;
       mData = (char_type*)hdr->Data();
-      mFlags &= ~F_VOIDED;  // mutation clears voided flag
+      mDataFlags &= ~DataFlags::VOIDED;  // mutation clears voided flag
       return true;
     }
   }
 
   char_type* newData;
-  uint32_t newDataFlags;
+  DataFlags newDataFlags;
 
   // if we have a fixed buffer of sufficient size, then use it.  this helps
   // avoid heap allocations.
-  if ((mFlags & F_CLASS_FIXED) &&
+  if ((mClassFlags & ClassFlags::FIXED) &&
       (aCapacity < AsFixedString(this)->mFixedCapacity)) {
     newData = AsFixedString(this)->mFixedBuf;
-    newDataFlags = F_TERMINATED | F_FIXED;
+    newDataFlags = DataFlags::TERMINATED | DataFlags::FIXED;
   } else {
     // if we reach here then, we must allocate a new buffer.  we cannot
-    // make use of our F_OWNED or F_FIXED buffers because they are not
+    // make use of our DataFlags::OWNED or DataFlags::FIXED buffers because they are not
     // large enough.
 
     nsStringBuffer* newHdr =
@@ -161,20 +162,20 @@ nsTSubstring_CharT::MutatePrep(size_type aCapacity, char_type** aOldData,
     }
 
     newData = (char_type*)newHdr->Data();
-    newDataFlags = F_TERMINATED | F_SHARED;
+    newDataFlags = DataFlags::TERMINATED | DataFlags::SHARED;
   }
 
   // save old data and flags
   *aOldData = mData;
-  *aOldFlags = mFlags;
+  *aOldDataFlags = mDataFlags;
 
   mData = newData;
-  SetDataFlags(newDataFlags);
+  mDataFlags = newDataFlags;
 
   // mLength does not change
 
   // though we are not necessarily terminated at the moment, now is probably
-  // still the best time to set F_TERMINATED.
+  // still the best time to set DataFlags::TERMINATED.
 
   return true;
 }
@@ -182,8 +183,8 @@ nsTSubstring_CharT::MutatePrep(size_type aCapacity, char_type** aOldData,
 void
 nsTSubstring_CharT::Finalize()
 {
-  ::ReleaseData(mData, mFlags);
-  // mData, mLength, and mFlags are purposefully left dangling
+  ::ReleaseData(mData, mDataFlags);
+  // mData, mLength, and mDataFlags are purposefully left dangling
 }
 
 bool
@@ -201,7 +202,7 @@ nsTSubstring_CharT::ReplacePrep(index_type aCutStart,
   }
 
   if (aCutStart == mLength && Capacity() > newTotalLen.value()) {
-    mFlags &= ~F_VOIDED;
+    mDataFlags &= ~DataFlags::VOIDED;
     mData[newTotalLen.value()] = char_type(0);
     mLength = newTotalLen.value();
     return true;
@@ -216,7 +217,7 @@ nsTSubstring_CharT::ReplacePrepInternal(index_type aCutStart, size_type aCutLen,
                                         size_type aFragLen, size_type aNewLen)
 {
   char_type* oldData;
-  uint32_t oldFlags;
+  DataFlags oldFlags;
   if (!MutatePrep(aNewLen, &oldData, &oldFlags)) {
     return false;  // out-of-memory
   }
@@ -266,7 +267,7 @@ nsTSubstring_CharT::Capacity() const
   // return 0 to indicate an immutable or 0-sized buffer
 
   size_type capacity;
-  if (mFlags & F_SHARED) {
+  if (mDataFlags & DataFlags::SHARED) {
     // if the string is readonly, then we pretend that it has no capacity.
     nsStringBuffer* hdr = nsStringBuffer::FromData(mData);
     if (hdr->IsReadonly()) {
@@ -274,9 +275,9 @@ nsTSubstring_CharT::Capacity() const
     } else {
       capacity = (hdr->StorageSize() / sizeof(char_type)) - 1;
     }
-  } else if (mFlags & F_FIXED) {
+  } else if (mDataFlags & DataFlags::FIXED) {
     capacity = AsFixedString(this)->mFixedCapacity;
-  } else if (mFlags & F_OWNED) {
+  } else if (mDataFlags & DataFlags::OWNED) {
     // we don't store the capacity of an adopted buffer because that would
     // require an additional member field.  the best we can do is base the
     // capacity on our length.  remains to be seen if this is the right
@@ -293,10 +294,10 @@ bool
 nsTSubstring_CharT::EnsureMutable(size_type aNewLen)
 {
   if (aNewLen == size_type(-1) || aNewLen == mLength) {
-    if (mFlags & (F_FIXED | F_OWNED)) {
+    if (mDataFlags & (DataFlags::FIXED | DataFlags::OWNED)) {
       return true;
     }
-    if ((mFlags & F_SHARED) &&
+    if ((mDataFlags & DataFlags::SHARED) &&
         !nsStringBuffer::FromData(mData)->IsReadonly()) {
       return true;
     }
@@ -409,10 +410,10 @@ nsTSubstring_CharT::AssignASCII(const char* aData, size_type aLength,
 void
 nsTSubstring_CharT::AssignLiteral(const char_type* aData, size_type aLength)
 {
-  ::ReleaseData(mData, mFlags);
+  ::ReleaseData(mData, mDataFlags);
   mData = const_cast<char_type*>(aData);
   mLength = aLength;
-  SetDataFlags(F_TERMINATED | F_LITERAL);
+  mDataFlags = DataFlags::TERMINATED | DataFlags::LITERAL;
 }
 
 void
@@ -435,27 +436,27 @@ nsTSubstring_CharT::Assign(const self_type& aStr, const fallible_t& aFallible)
 
   if (!aStr.mLength) {
     Truncate();
-    mFlags |= aStr.mFlags & F_VOIDED;
+    mDataFlags |= aStr.mDataFlags & DataFlags::VOIDED;
     return true;
   }
 
-  if (aStr.mFlags & F_SHARED) {
+  if (aStr.mDataFlags & DataFlags::SHARED) {
     // nice! we can avoid a string copy :-)
 
     // |aStr| should be null-terminated
-    NS_ASSERTION(aStr.mFlags & F_TERMINATED, "shared, but not terminated");
+    NS_ASSERTION(aStr.mDataFlags & DataFlags::TERMINATED, "shared, but not terminated");
 
-    ::ReleaseData(mData, mFlags);
+    ::ReleaseData(mData, mDataFlags);
 
     mData = aStr.mData;
     mLength = aStr.mLength;
-    SetDataFlags(F_TERMINATED | F_SHARED);
+    mDataFlags = DataFlags::TERMINATED | DataFlags::SHARED;
 
     // get an owning reference to the mData
     nsStringBuffer::FromData(mData)->AddRef();
     return true;
-  } else if (aStr.mFlags & F_LITERAL) {
-    MOZ_ASSERT(aStr.mFlags & F_TERMINATED, "Unterminated literal");
+  } else if (aStr.mDataFlags & DataFlags::LITERAL) {
+    MOZ_ASSERT(aStr.mDataFlags & DataFlags::TERMINATED, "Unterminated literal");
 
     AssignLiteral(aStr.mData, aStr.mLength);
     return true;
@@ -486,7 +487,7 @@ nsTSubstring_CharT::Assign(const substring_tuple_type& aTuple,
 
   // don't use ReplacePrep here because it changes the length
   char_type* oldData;
-  uint32_t oldFlags;
+  DataFlags oldFlags;
   if (!MutatePrep(length, &oldData, &oldFlags)) {
     return false;
   }
@@ -505,7 +506,7 @@ void
 nsTSubstring_CharT::Adopt(char_type* aData, size_type aLength)
 {
   if (aData) {
-    ::ReleaseData(mData, mFlags);
+    ::ReleaseData(mData, mDataFlags);
 
     if (aLength == size_type(-1)) {
       aLength = char_traits::length(aData);
@@ -515,7 +516,7 @@ nsTSubstring_CharT::Adopt(char_type* aData, size_type aLength)
 
     mData = aData;
     mLength = aLength;
-    SetDataFlags(F_TERMINATED | F_OWNED);
+    mDataFlags = DataFlags::TERMINATED | DataFlags::OWNED;
 
     STRING_STAT_INCREMENT(Adopt);
     // Treat this as construction of a "StringAdopt" object for leak
@@ -686,15 +687,15 @@ nsTSubstring_CharT::SetCapacity(size_type aCapacity, const fallible_t&)
 
   // if our capacity is reduced to zero, then free our buffer.
   if (aCapacity == 0) {
-    ::ReleaseData(mData, mFlags);
+    ::ReleaseData(mData, mDataFlags);
     mData = char_traits::sEmptyBuffer;
     mLength = 0;
-    SetDataFlags(F_TERMINATED);
+    mDataFlags = DataFlags::TERMINATED;
     return true;
   }
 
   char_type* oldData;
-  uint32_t oldFlags;
+  DataFlags oldFlags;
   if (!MutatePrep(aCapacity, &oldData, &oldFlags)) {
     return false;  // out-of-memory
   }
@@ -746,9 +747,9 @@ nsTSubstring_CharT::SetIsVoid(bool aVal)
 {
   if (aVal) {
     Truncate();
-    mFlags |= F_VOIDED;
+    mDataFlags |= DataFlags::VOIDED;
   } else {
-    mFlags &= ~F_VOIDED;
+    mDataFlags &= ~DataFlags::VOIDED;
   }
 }
 
@@ -1148,19 +1149,19 @@ size_t
 nsTSubstring_CharT::SizeOfExcludingThisIfUnshared(
     mozilla::MallocSizeOf aMallocSizeOf) const
 {
-  if (mFlags & F_SHARED) {
+  if (mDataFlags & DataFlags::SHARED) {
     return nsStringBuffer::FromData(mData)->
       SizeOfIncludingThisIfUnshared(aMallocSizeOf);
   }
-  if (mFlags & F_OWNED) {
+  if (mDataFlags & DataFlags::OWNED) {
     return aMallocSizeOf(mData);
   }
 
   // If we reach here, exactly one of the following must be true:
-  // - F_VOIDED is set, and mData points to sEmptyBuffer;
-  // - F_FIXED is set, and mData points to a buffer within a string
+  // - DataFlags::VOIDED is set, and mData points to sEmptyBuffer;
+  // - DataFlags::FIXED is set, and mData points to a buffer within a string
   //   object (e.g. nsAutoString);
-  // - None of F_SHARED, F_OWNED, F_FIXED is set, and mData points to a buffer
+  // - None of DataFlags::SHARED, DataFlags::OWNED, DataFlags::FIXED is set, and mData points to a buffer
   //   owned by something else.
   //
   // In all three cases, we don't measure it.
@@ -1172,12 +1173,12 @@ nsTSubstring_CharT::SizeOfExcludingThisEvenIfShared(
     mozilla::MallocSizeOf aMallocSizeOf) const
 {
   // This is identical to SizeOfExcludingThisIfUnshared except for the
-  // F_SHARED case.
-  if (mFlags & F_SHARED) {
+  // DataFlags::SHARED case.
+  if (mDataFlags & DataFlags::SHARED) {
     return nsStringBuffer::FromData(mData)->
       SizeOfIncludingThisEvenIfShared(aMallocSizeOf);
   }
-  if (mFlags & F_OWNED) {
+  if (mDataFlags & DataFlags::OWNED) {
     return aMallocSizeOf(mData);
   }
   return 0;

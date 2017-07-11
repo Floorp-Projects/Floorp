@@ -3,6 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsISupports.idl"
+#include "nsIContentPolicy.idl"
 
 interface nsIURI;
 interface nsIDOMNode;
@@ -26,12 +27,26 @@ interface nsIPrefetchService : nsISupports
                      in boolean aExplicit);
 
     /**
+     * Start a preload of the specified URI.
+     *
+     * @param aURI the URI of the document to preload
+     * @param aReferrerURI the URI of the referring page
+     * @param aSource the DOM node (such as a <link> tag) that requested this
+     *        fetch, or null if the prefetch was not requested by a DOM node.
+     * @param aPolicyType content policy to be used for this load.
+     */
+    void preloadURI(in nsIURI aURI,
+                    in nsIURI aReferrerURI,
+                    in nsIDOMNode aSource,
+                    in nsContentPolicyType aPolicyType);
+
+    /**
      * Find out if there are any prefetches running or queued
      */
     boolean hasMoreElements();
 
     /**
-     * Cancel prefetch
+     * Cancel prefetch or preload for a nsIDomNode.
      */
-    void cancelPrefetchURI(in nsIURI aURI, in nsIDOMNode aSource);
+    void cancelPrefetchPreloadURI(in nsIURI aURI, in nsIDOMNode aSource);
 };

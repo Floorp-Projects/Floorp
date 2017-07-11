@@ -7,15 +7,19 @@
 const { addons, createClass, DOM: dom, PropTypes } =
   require("devtools/client/shared/vendor/react");
 
+const Services = require("Services");
 const Types = require("../types");
 const { getStr } = require("../utils/l10n");
 
 // The delay prior to executing the grid cell highlighting.
 const GRID_HIGHLIGHTING_DEBOUNCE = 50;
 
-// Minimum height/width a grid cell can be
-const MIN_CELL_HEIGHT = 5;
-const MIN_CELL_WIDTH = 5;
+// Prefs for the max number of rows/cols a grid container can have for
+// the outline to display.
+const GRID_OUTLINE_MAX_ROWS_PREF =
+  Services.prefs.getIntPref("devtools.gridinspector.gridOutlineMaxRows");
+const GRID_OUTLINE_MAX_COLUMNS_PREF =
+  Services.prefs.getIntPref("devtools.gridinspector.gridOutlineMaxColumns");
 
 // Move SVG grid to the right 100 units, so that it is not flushed against the edge of
 // layout border
@@ -57,8 +61,18 @@ module.exports = createClass({
     let { width, height } = selectedGrid
                             ? this.getTotalWidthAndHeight(selectedGrid)
                             : { width: 0, height: 0 };
+    let showOutline;
 
-    this.setState({ height, width, selectedGrid, showOutline: true });
+    if (selectedGrid) {
+      const { cols, rows } = selectedGrid.gridFragments[0];
+
+      // Show the grid outline if both the rows/columns are less than or equal
+      // to their max prefs.
+      showOutline = (cols.lines.length <= GRID_OUTLINE_MAX_COLUMNS_PREF) &&
+                    (rows.lines.length <= GRID_OUTLINE_MAX_ROWS_PREF);
+    }
+
+    this.setState({ height, width, selectedGrid, showOutline });
   },
 
   /**
@@ -219,14 +233,6 @@ module.exports = createClass({
 
       for (let columnNumber = 1; columnNumber <= numberOfColumns; columnNumber++) {
         width = GRID_CELL_SCALE_FACTOR * (cols.tracks[columnNumber - 1].breadth / 100);
-
-        // If a grid cell is less than the minimum pixels in width or height,
-        // do not render the outline at all.
-        if (width < MIN_CELL_WIDTH || height < MIN_CELL_HEIGHT) {
-          this.setState({ showOutline: false });
-
-          return [];
-        }
 
         const gridAreaName = this.getGridAreaName(columnNumber, rowNumber, areas);
         const gridCell = this.renderGridCell(id, gridFragmentIndex, x, y,
