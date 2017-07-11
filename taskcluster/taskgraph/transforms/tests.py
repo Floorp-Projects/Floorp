@@ -699,6 +699,23 @@ def set_test_type(config, tests):
 
 
 @transforms.add
+def enable_stylo(config, tests):
+    """
+    Force Stylo on for all its tests, except Stylo vs. Gecko reftests where the
+    test harness will handle this.
+    """
+    for test in tests:
+        if '-stylo' not in test['test-platform']:
+            yield test
+            continue
+
+        if 'reftest-stylo' not in test['suite']:
+            test['mozharness'].setdefault('extra-options', []).append('--enable-stylo')
+
+        yield test
+
+
+@transforms.add
 def parallel_stylo_tests(config, tests):
     """Ensure that any stylo tests running with e10s enabled also test
     parallel traversal in the style system."""
