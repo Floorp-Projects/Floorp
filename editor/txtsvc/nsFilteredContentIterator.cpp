@@ -211,9 +211,9 @@ ContentToParentOffset(nsIContent *aContent, nsIDOMNode **aParent,
 static bool
 ContentIsInTraversalRange(nsIContent *aContent,   bool aIsPreMode,
                           nsIDOMNode *aStartContainer, int32_t aStartOffset,
-                          nsIDOMNode *aEndNode,   int32_t aEndOffset)
+                          nsIDOMNode *aEndContainer, int32_t aEndOffset)
 {
-  NS_ENSURE_TRUE(aStartContainer && aEndNode && aContent, false);
+  NS_ENSURE_TRUE(aStartContainer && aEndContainer && aContent, false);
 
   nsCOMPtr<nsIDOMNode> parentNode;
   int32_t indx = 0;
@@ -228,7 +228,7 @@ ContentIsInTraversalRange(nsIContent *aContent,   bool aIsPreMode,
   int32_t startRes =
     nsContentUtils::ComparePoints(aStartContainer, aStartOffset,
                                   parentNode, indx);
-  int32_t endRes = nsContentUtils::ComparePoints(aEndNode, aEndOffset,
+  int32_t endRes = nsContentUtils::ComparePoints(aEndContainer, aEndOffset,
                                                  parentNode, indx);
   return (startRes <= 0) && (endRes >= 0);
 }

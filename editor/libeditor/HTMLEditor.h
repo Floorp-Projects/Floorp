@@ -650,7 +650,7 @@ protected:
                                 nsTArray<OwningNonNull<nsINode>>& outNodeList,
                                 nsINode* aStartContainer,
                                 int32_t aStartOffset,
-                                nsINode* aEndNode,
+                                nsINode* aEndContainer,
                                 int32_t aEndOffset);
   nsresult CreateTagStack(nsTArray<nsString>& aTagStack,
                           nsIDOMNode* aNode);
