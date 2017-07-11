@@ -30,6 +30,7 @@ class GeckoViewModule {
       (aEvent, aData, aCallback) => {
         if (aData.module == this.moduleName) {
           this.register();
+          this.messageManager.sendAsyncMessage("GeckoView:Register", aData);
         }
       }, "GeckoView:Register"
     );
@@ -37,6 +38,7 @@ class GeckoViewModule {
     this.eventDispatcher.registerListener(
       (aEvent, aData, aCallback) => {
         if (aData.module == this.moduleName) {
+          this.messageManager.sendAsyncMessage("GeckoView:Unregister", aData);
           this.unregister();
         }
       }, "GeckoView:Unregister"
