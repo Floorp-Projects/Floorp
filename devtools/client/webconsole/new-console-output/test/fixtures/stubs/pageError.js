@@ -19,6 +19,7 @@ stubPreparedMessages.set("ReferenceError: asdf is not defined", new ConsoleMessa
   "source": "javascript",
   "timeStamp": 1476573167137,
   "type": "log",
+  "helperType": null,
   "level": "error",
   "messageText": "ReferenceError: asdf is not defined",
   "parameters": null,
@@ -73,6 +74,7 @@ stubPreparedMessages.set("SyntaxError: redeclaration of let a", new ConsoleMessa
   "source": "javascript",
   "timeStamp": 1487992945524,
   "type": "log",
+  "helperType": null,
   "level": "error",
   "messageText": "SyntaxError: redeclaration of let a",
   "parameters": null,
@@ -117,6 +119,7 @@ stubPreparedMessages.set("TypeError longString message", new ConsoleMessage({
   "source": "javascript",
   "timeStamp": 1493109507061,
   "type": "log",
+  "helperType": null,
   "level": "error",
   "messageText": {
     "type": "longString",

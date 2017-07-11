@@ -19,6 +19,7 @@ stubPreparedMessages.set("console.log('foobar', 'test')", new ConsoleMessage({
   "source": "console-api",
   "timeStamp": 1479159894798,
   "type": "log",
+  "helperType": null,
   "level": "log",
   "messageText": null,
   "parameters": [
@@ -45,6 +46,7 @@ stubPreparedMessages.set("console.log(undefined)", new ConsoleMessage({
   "source": "console-api",
   "timeStamp": 1479159896036,
   "type": "log",
+  "helperType": null,
   "level": "log",
   "messageText": null,
   "parameters": [
@@ -72,6 +74,7 @@ stubPreparedMessages.set("console.warn('danger, will robinson!')", new ConsoleMe
   "source": "console-api",
   "timeStamp": 1479159897333,
   "type": "warn",
+  "helperType": null,
   "level": "warn",
   "messageText": null,
   "parameters": [
@@ -97,6 +100,7 @@ stubPreparedMessages.set("console.log(NaN)", new ConsoleMessage({
   "source": "console-api",
   "timeStamp": 1479159898667,
   "type": "log",
+  "helperType": null,
   "level": "log",
   "messageText": null,
   "parameters": [
@@ -124,6 +128,7 @@ stubPreparedMessages.set("console.log(null)", new ConsoleMessage({
   "source": "console-api",
   "timeStamp": 1479159900151,
   "type": "log",
+  "helperType": null,
   "level": "log",
   "messageText": null,
   "parameters": [
@@ -151,6 +156,7 @@ stubPreparedMessages.set("console.log('鼬')", new ConsoleMessage({
   "source": "console-api",
   "timeStamp": 1479159901470,
   "type": "log",
+  "helperType": null,
   "level": "log",
   "messageText": null,
   "parameters": [
@@ -176,6 +182,7 @@ stubPreparedMessages.set("console.clear()", new ConsoleMessage({
   "source": "console-api",
   "timeStamp": 1479159902721,
   "type": "clear",
+  "helperType": null,
   "level": "log",
   "messageText": null,
   "parameters": [
@@ -201,6 +208,7 @@ stubPreparedMessages.set("console.count('bar')", new ConsoleMessage({
   "source": "console-api",
   "timeStamp": 1479159903982,
   "type": "log",
+  "helperType": null,
   "level": "debug",
   "messageText": "bar: 1",
   "parameters": null,
@@ -224,6 +232,7 @@ stubPreparedMessages.set("console.assert(false, {message: 'foobar'})", new Conso
   "source": "console-api",
   "timeStamp": 1479159905182,
   "type": "assert",
+  "helperType": null,
   "level": "error",
   "messageText": null,
   "parameters": [
@@ -278,6 +287,7 @@ stubPreparedMessages.set("console.log('hello \nfrom \rthe \"string world!')", ne
   "source": "console-api",
   "timeStamp": 1479159906444,
   "type": "log",
+  "helperType": null,
   "level": "log",
   "messageText": null,
   "parameters": [
@@ -303,6 +313,7 @@ stubPreparedMessages.set("console.log('úṇĩçödê țĕșť')", new ConsoleMe
   "source": "console-api",
   "timeStamp": 1479159907704,
   "type": "log",
+  "helperType": null,
   "level": "log",
   "messageText": null,
   "parameters": [
@@ -328,6 +339,7 @@ stubPreparedMessages.set("console.dirxml(window)", new ConsoleMessage({
   "source": "console-api",
   "timeStamp": 1479159908948,
   "type": "log",
+  "helperType": null,
   "level": "log",
   "messageText": null,
   "parameters": [
@@ -365,6 +377,7 @@ stubPreparedMessages.set("console.log('myarray', ['red', 'green', 'blue'])", new
   "source": "console-api",
   "timeStamp": 1493123239624,
   "type": "log",
+  "helperType": null,
   "level": "log",
   "messageText": null,
   "parameters": [
@@ -408,6 +421,7 @@ stubPreparedMessages.set("console.log('myregex', /a.b.c/)", new ConsoleMessage({
   "source": "console-api",
   "timeStamp": 1493123770223,
   "type": "log",
+  "helperType": null,
   "level": "log",
   "messageText": null,
   "parameters": [
@@ -443,6 +457,7 @@ stubPreparedMessages.set("console.table(['red', 'green', 'blue']);", new Console
   "source": "console-api",
   "timeStamp": 1493124761377,
   "type": "table",
+  "helperType": null,
   "level": "log",
   "messageText": null,
   "parameters": [
@@ -485,6 +500,7 @@ stubPreparedMessages.set("console.log('myobject', {red: 'redValue', green: 'gree
   "source": "console-api",
   "timeStamp": 1493125748177,
   "type": "log",
+  "helperType": null,
   "level": "log",
   "messageText": null,
   "parameters": [
@@ -544,6 +560,7 @@ stubPreparedMessages.set("console.map('mymap')", new ConsoleMessage({
   "source": "console-api",
   "timeStamp": 1493125410207,
   "type": "log",
+  "helperType": null,
   "level": "log",
   "messageText": null,
   "parameters": [
@@ -592,6 +609,7 @@ stubPreparedMessages.set("console.trace()", new ConsoleMessage({
   "source": "console-api",
   "timeStamp": 1479159910198,
   "type": "trace",
+  "helperType": null,
   "level": "log",
   "messageText": null,
   "parameters": [],
@@ -637,6 +655,7 @@ stubPreparedMessages.set("console.time('bar')", new ConsoleMessage({
   "source": "console-api",
   "timeStamp": 1479159911476,
   "type": "nullMessage",
+  "helperType": null,
   "level": "log",
   "messageText": null,
   "parameters": null,
@@ -660,6 +679,7 @@ stubPreparedMessages.set("timerAlreadyExists", new ConsoleMessage({
   "source": "console-api",
   "timeStamp": 1494362489620,
   "type": "time",
+  "helperType": null,
   "level": "warn",
   "messageText": "Timer “bar” already exists.",
   "parameters": null,
@@ -683,6 +703,7 @@ stubPreparedMessages.set("console.timeEnd('bar')", new ConsoleMessage({
   "source": "console-api",
   "timeStamp": 1479159911478,
   "type": "timeEnd",
+  "helperType": null,
   "level": "log",
   "messageText": "bar: 1.36ms",
   "parameters": null,
@@ -706,6 +727,7 @@ stubPreparedMessages.set("timerDoesntExist", new ConsoleMessage({
   "source": "console-api",
   "timeStamp": 1494362489622,
   "type": "timeEnd",
+  "helperType": null,
   "level": "warn",
   "messageText": "Timer “bar” doesn’t exist.",
   "parameters": null,
@@ -729,6 +751,7 @@ stubPreparedMessages.set("console.table('bar')", new ConsoleMessage({
   "source": "console-api",
   "timeStamp": 1479159912655,
   "type": "log",
+  "helperType": null,
   "level": "log",
   "messageText": null,
   "parameters": [
@@ -754,6 +777,7 @@ stubPreparedMessages.set("console.table(['a', 'b', 'c'])", new ConsoleMessage({
   "source": "console-api",
   "timeStamp": 1479159913807,
   "type": "table",
+  "helperType": null,
   "level": "log",
   "messageText": null,
   "parameters": [
@@ -795,6 +819,7 @@ stubPreparedMessages.set("console.group('bar')", new ConsoleMessage({
   "source": "console-api",
   "timeStamp": 1479159914984,
   "type": "startGroup",
+  "helperType": null,
   "level": "log",
   "messageText": null,
   "parameters": [
@@ -820,6 +845,7 @@ stubPreparedMessages.set("console.groupEnd('bar')", new ConsoleMessage({
   "source": "console-api",
   "timeStamp": 1492540770051,
   "type": "endGroup",
+  "helperType": null,
   "level": "log",
   "messageText": null,
   "parameters": null,
@@ -843,6 +869,7 @@ stubPreparedMessages.set("console.groupCollapsed('foo')", new ConsoleMessage({
   "source": "console-api",
   "timeStamp": 1479159916153,
   "type": "startGroupCollapsed",
+  "helperType": null,
   "level": "log",
   "messageText": null,
   "parameters": [
@@ -868,6 +895,7 @@ stubPreparedMessages.set("console.groupEnd('foo')", new ConsoleMessage({
   "source": "console-api",
   "timeStamp": 1492540770585,
   "type": "endGroup",
+  "helperType": null,
   "level": "log",
   "messageText": null,
   "parameters": null,
@@ -891,6 +919,7 @@ stubPreparedMessages.set("console.group()", new ConsoleMessage({
   "source": "console-api",
   "timeStamp": 1479159917524,
   "type": "startGroup",
+  "helperType": null,
   "level": "log",
   "messageText": null,
   "parameters": [
@@ -916,6 +945,7 @@ stubPreparedMessages.set("console.groupEnd()", new ConsoleMessage({
   "source": "console-api",
   "timeStamp": 1491902018685,
   "type": "endGroup",
+  "helperType": null,
   "level": "log",
   "messageText": null,
   "parameters": null,
@@ -939,6 +969,7 @@ stubPreparedMessages.set("console.log(%cfoobar)", new ConsoleMessage({
   "source": "console-api",
   "timeStamp": 1479159919144,
   "type": "log",
+  "helperType": null,
   "level": "log",
   "messageText": null,
   "parameters": [
@@ -968,6 +999,7 @@ stubPreparedMessages.set("console.group(%cfoo%cbar)", new ConsoleMessage({
   "source": "console-api",
   "timeStamp": 1491902018670,
   "type": "startGroup",
+  "helperType": null,
   "level": "log",
   "messageText": null,
   "parameters": [
@@ -997,6 +1029,7 @@ stubPreparedMessages.set("console.groupEnd(%cfoo%cbar)", new ConsoleMessage({
   "source": "console-api",
   "timeStamp": 1492540772083,
   "type": "endGroup",
+  "helperType": null,
   "level": "log",
   "messageText": null,
   "parameters": null,
@@ -1020,6 +1053,7 @@ stubPreparedMessages.set("console.groupCollapsed(%cfoo%cbaz)", new ConsoleMessag
   "source": "console-api",
   "timeStamp": 1491902018683,
   "type": "startGroupCollapsed",
+  "helperType": null,
   "level": "log",
   "messageText": null,
   "parameters": [
@@ -1049,6 +1083,7 @@ stubPreparedMessages.set("console.groupEnd(%cfoo%cbaz)", new ConsoleMessage({
   "source": "console-api",
   "timeStamp": 1492540772669,
   "type": "endGroup",
+  "helperType": null,
   "level": "log",
   "messageText": null,
   "parameters": null,
@@ -1072,6 +1107,7 @@ stubPreparedMessages.set("console.dir({C, M, Y, K})", new ConsoleMessage({
   "source": "console-api",
   "timeStamp": 1499698054958,
   "type": "dir",
+  "helperType": null,
   "level": "log",
   "messageText": null,
   "parameters": [
