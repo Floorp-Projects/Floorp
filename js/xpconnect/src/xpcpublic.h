@@ -77,7 +77,8 @@ private:
 JSObject*
 TransplantObject(JSContext* cx, JS::HandleObject origobj, JS::HandleObject target);
 
-bool IsContentXBLScope(JSCompartment* compartment);
+bool IsContentXBLCompartment(JSCompartment* compartment);
+bool IsContentXBLScope(JS::Realm* realm);
 bool IsInContentXBLScope(JSObject* obj);
 
 // Return a raw XBL scope object corresponding to contentScope, which must
