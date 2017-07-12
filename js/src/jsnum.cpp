@@ -1118,26 +1118,10 @@ static const JSFunctionSpec number_methods[] = {
     JS_FS_END
 };
 
-// ES6 draft ES6 15.7.3.12
-static bool
-Number_isInteger(JSContext* cx, unsigned argc, Value* vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-    if (args.length() < 1 || !args[0].isNumber()) {
-        args.rval().setBoolean(false);
-        return true;
-    }
-    Value val = args[0];
-    args.rval().setBoolean(val.isInt32() ||
-                           (mozilla::IsFinite(val.toDouble()) &&
-                            JS::ToInteger(val.toDouble()) == val.toDouble()));
-    return true;
-}
-
 
 static const JSFunctionSpec number_static_methods[] = {
     JS_SELF_HOSTED_FN("isFinite", "Number_isFinite", 1,0),
-    JS_FN("isInteger", Number_isInteger, 1, 0),
+    JS_SELF_HOSTED_FN("isInteger", "Number_isInteger", 1,0),
     JS_SELF_HOSTED_FN("isNaN", "Number_isNaN", 1,0),
     JS_SELF_HOSTED_FN("isSafeInteger", "Number_isSafeInteger", 1,0),
     JS_FS_END
