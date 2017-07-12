@@ -96,8 +96,7 @@ XPCWrappedNativeScope::XPCWrappedNativeScope(JSContext* cx,
         mWrappedNativeProtoMap(ClassInfo2WrappedNativeProtoMap::newMap(XPC_NATIVE_PROTO_MAP_LENGTH)),
         mComponents(nullptr),
         mNext(nullptr),
-        mGlobalJSObject(aGlobal),
-        mIsAddonScope(false)
+        mGlobalJSObject(aGlobal)
 {
     // add ourselves to the scopes list
     {
@@ -397,7 +396,7 @@ XPCWrappedNativeScope::EnsureAddonScope(JSContext* cx, JSAddonId* addonId)
     JS::RootedObject global(cx, GetGlobalJSObject());
     MOZ_ASSERT(js::IsObjectInContextCompartment(global, cx));
     MOZ_ASSERT(!IsContentXBLScope());
-    MOZ_ASSERT(!mIsAddonScope);
+    MOZ_ASSERT(!IsAddonScope());
     MOZ_ASSERT(addonId);
     MOZ_ASSERT(nsContentUtils::IsSystemPrincipal(GetPrincipal()));
 
@@ -429,7 +428,7 @@ XPCWrappedNativeScope::EnsureAddonScope(JSContext* cx, JSAddonId* addonId)
     NS_ENSURE_SUCCESS(rv, nullptr);
     mAddonScopes.AppendElement(&v.toObject());
 
-    CompartmentPrivate::Get(js::UncheckedUnwrap(&v.toObject()))->scope->mIsAddonScope = true;
+    CompartmentPrivate::Get(js::UncheckedUnwrap(&v.toObject()))->isAddonCompartment = true;
     return &v.toObject();
 }
 

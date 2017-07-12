@@ -178,6 +178,7 @@ CompartmentPrivate::CompartmentPrivate(JSCompartment* c)
     , addonCallInterposition(false)
     , allowCPOWs(false)
     , isContentXBLCompartment(false)
+    , isAddonCompartment(false)
     , universalXPConnectEnabled(false)
     , forcePermissiveCOWs(false)
     , wasNuked(false)
@@ -446,9 +447,15 @@ IsInContentXBLScope(JSObject* obj)
 }
 
 bool
+IsAddonCompartment(JSCompartment* compartment)
+{
+    return CompartmentPrivate::Get(compartment)->isAddonCompartment;
+}
+
+bool
 IsInAddonScope(JSObject* obj)
 {
-    return ObjectScope(obj)->IsAddonScope();
+    return IsAddonCompartment(js::GetObjectCompartment(obj));
 }
 
 bool
