@@ -3527,10 +3527,20 @@ nsStyleDisplay::CalcDifference(const nsStyleDisplay& aNewData) const
   }
 
   if (mFloat != aNewData.mFloat) {
-    // Changing which side we float on doesn't affect descendants directly
+    // Our descendants aren't impacted when our float area only changes
+    // placement but not size/shape. (e.g. if we change which side we float to).
+    // But our ancestors/siblings are potentially impacted, so we need to send
+    // the non-descendant reflow hints.
     hint |= nsChangeHint_AllReflowHints &
             ~(nsChangeHint_ClearDescendantIntrinsics |
               nsChangeHint_NeedDirtyReflow);
+  }
+
+  if (aNewData.mFloat != StyleFloat::None &&
+      !mShapeOutside.DefinitelyEquals(aNewData.mShapeOutside)) {
+    // If we are floating, and our shape-outside property changes, it requires
+    // the entire frame to be reconstructed.
+    hint |= nsChangeHint_ReconstructFrame;
   }
 
   if (mVerticalAlign != aNewData.mVerticalAlign) {
@@ -3692,8 +3702,7 @@ nsStyleDisplay::CalcDifference(const nsStyleDisplay& aNewData) const
        mAnimationFillModeCount != aNewData.mAnimationFillModeCount ||
        mAnimationPlayStateCount != aNewData.mAnimationPlayStateCount ||
        mAnimationIterationCountCount != aNewData.mAnimationIterationCountCount ||
-       mScrollSnapCoordinate != aNewData.mScrollSnapCoordinate ||
-       !mShapeOutside.DefinitelyEquals(aNewData.mShapeOutside))) {
+       mScrollSnapCoordinate != aNewData.mScrollSnapCoordinate)) {
     hint |= nsChangeHint_NeutralChange;
   }
 
