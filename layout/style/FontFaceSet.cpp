@@ -107,7 +107,6 @@ FontFaceSet::FontFaceSet(nsPIDOMWindowInner* aWindow, nsIDocument* aDocument)
   , mHasLoadingFontFacesIsDirty(false)
   , mDelayedLoadCheck(false)
   , mBypassCache(false)
-  , mPrivateBrowsing(false)
 {
   MOZ_ASSERT(mDocument, "We should get a valid document from the caller!");
 
@@ -136,11 +135,6 @@ FontFaceSet::FontFaceSet(nsPIDOMWindowInner* aWindow, nsIDocument* aDocument)
          (flags & nsIRequest::LOAD_BYPASS_CACHE))) {
       mBypassCache = true;
     }
-  }
-
-  // Same for the "private browsing" flag.
-  if (nsCOMPtr<nsILoadContext> loadContext = mDocument->GetLoadContext()) {
-    mPrivateBrowsing = loadContext->UsePrivateBrowsing();
   }
 
   if (!mDocument->DidFireDOMContentLoaded()) {
@@ -1455,6 +1449,13 @@ FontFaceSet::SyncLoadFontData(gfxUserFontEntry* aFontToLoad,
   return NS_OK;
 }
 
+bool
+FontFaceSet::GetPrivateBrowsing()
+{
+  nsCOMPtr<nsILoadContext> loadContext = mDocument->GetLoadContext();
+  return loadContext && loadContext->UsePrivateBrowsing();
+}
+
 void
 FontFaceSet::OnFontFaceStatusChanged(FontFace* aFontFace)
 {
@@ -1863,7 +1864,7 @@ FontFaceSet::UserFontSet::SyncLoadFontData(gfxUserFontEntry* aFontToLoad,
 /* virtual */ bool
 FontFaceSet::UserFontSet::GetPrivateBrowsing()
 {
-  return mFontFaceSet && mFontFaceSet->mPrivateBrowsing;
+  return mFontFaceSet && mFontFaceSet->GetPrivateBrowsing();
 }
 
 /* virtual */ void
