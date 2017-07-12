@@ -1704,6 +1704,9 @@ pref("browser.onboarding.hidden", false);
 // So use `browser.onboarding.notification.finished` to let the AS page know
 // if our notification is finished and safe to show their snippet.
 pref("browser.onboarding.notification.finished", false);
+pref("browser.onboarding.notification.mute-duration-on-first-session-ms", 300000); // 5 mins
+pref("browser.onboarding.notification.max-life-time-per-tour-ms", 432000000); // 5 days
+pref("browser.onboarding.notification.max-prompt-count-per-tour", 8);
 pref("browser.onboarding.newtour", "private,addons,customize,search,default,sync");
 pref("browser.onboarding.updatetour", "");
 
