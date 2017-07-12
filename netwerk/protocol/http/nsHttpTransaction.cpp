@@ -242,6 +242,7 @@ nsHttpTransaction::Init(uint32_t caps,
     MOZ_ASSERT(NS_IsMainThread());
 
     mTopLevelOuterContentWindowId = topLevelOuterContentWindowId;
+    LOG(("  window-id = %" PRIx64, mTopLevelOuterContentWindowId));
 
     mActivityDistributor = services::GetActivityDistributor();
     if (!mActivityDistributor) {
@@ -1837,8 +1838,11 @@ nsHttpTransaction::DispatchedAsBlocking()
 void
 nsHttpTransaction::RemoveDispatchedAsBlocking()
 {
-    if (!mRequestContext || !mDispatchedAsBlocking)
+    if (!mRequestContext || !mDispatchedAsBlocking) {
+        LOG(("nsHttpTransaction::RemoveDispatchedAsBlocking this=%p not blocking",
+             this));
         return;
+    }
 
     uint32_t blockers = 0;
     nsresult rv = mRequestContext->RemoveBlockingTransaction(&blockers);
