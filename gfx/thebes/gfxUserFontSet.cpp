@@ -1099,7 +1099,10 @@ gfxUserFontSet::GetFamily(const nsAString& aFamilyName)
 ///////////////////////////////////////////////////////////////////////////////
 
 nsTHashtable<gfxUserFontSet::UserFontCache::Entry>*
-    gfxUserFontSet::UserFontCache::sUserFonts = nullptr;
+gfxUserFontSet::UserFontCache::sUserFonts = nullptr;
+
+uint32_t
+gfxUserFontSet::UserFontCache::sGeneration = 0;
 
 NS_IMPL_ISUPPORTS(gfxUserFontSet::UserFontCache::Flusher, nsIObserver)
 
@@ -1232,6 +1235,8 @@ gfxUserFontSet::UserFontCache::CacheFont(gfxFontEntry* aFontEntry)
     }
     sUserFonts->PutEntry(Key(data->mURI, principal, aFontEntry,
                              data->mPrivate));
+
+    ++sGeneration;
 
 #ifdef DEBUG_USERFONT_CACHE
     printf("userfontcache added fontentry: %p\n", aFontEntry);
