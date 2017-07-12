@@ -33,6 +33,25 @@
   background: url("img/overlay-icon.svg") no-repeat;
 }
 
+#onboarding-notification-icon::after,
+#onboarding-overlay-icon::after {
+  background: #5ce6e6;
+  position: absolute;
+  font-size: 12px;
+  border: 1px solid #fff;
+  text-align: center;
+  color: #10404a;
+}
+
+#onboarding-overlay-icon::after {
+  content: attr(aria-label);
+  top: -6px;
+  offset-inline-start: 32px;
+  border-radius: 22px;
+  padding: 5px 8px;
+  min-width: 100px;
+}
+
 #onboarding-overlay-dialog,
 .onboarding-hidden {
   display: none;
@@ -406,18 +425,11 @@
   --height: 22px;
   --vpadding: 3px;
   content: attr(data-tooltip);
-  background: #5ce6e6;
-  position: absolute;
   top: 0;
   offset-inline-start: 68px;
-  color: #10404a;
-  font-size: 12px;
   line-height: calc(var(--height) - var(--vpadding) * 2);
-  max-width: 90px;
   border-radius: calc(var(--height) / 2);
-  border: 1px solid #fff;
   padding: var(--vpadding) 10px;
-  text-align: center;
 }
 
 #onboarding-notification-close-btn {
