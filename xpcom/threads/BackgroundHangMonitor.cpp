@@ -622,15 +622,34 @@ BackgroundHangThread::ReportHang(PRIntervalTime aHangTime)
   // Notify any observers of the "bhr-thread-hang" topic that a thread has hung.
   nsCString name;
   name.AssignASCII(mStats.GetName());
-  SystemGroup::Dispatch("NotifyBHRHangObservers", TaskCategory::Other,
-                        NS_NewRunnableFunction("NotifyBHRHangObservers", [=] {
+  nsCOMPtr<nsIRunnable> runnable = NS_NewRunnableFunction("NotifyBHRHangObservers", [=] {
     nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
     if (os) {
       // NOTE: Make sure to construct this on the main thread.
       nsCOMPtr<nsIHangDetails> hangDetails = new HangDetails(aHangTime, name);
       os->NotifyObservers(hangDetails, "bhr-thread-hang", nullptr);
     }
-  }));
+  });
+  if (SystemGroup::Initialized()) {
+    // XXX(HACK): This is really sketchy. We need to keep a reference to the
+    // runnable in case the dispatch fails. If it fails, the already_AddRefed
+    // runnable which we passed in has been leaked, and we need to free it
+    // ourselves. The only time when this should fail is if we're shutting down.
+    //
+    // Most components just avoid dispatching runnables during shutdown, but BHR
+    // is not shut down until way too late, so we cannot do that. Instead, we
+    // just detect that the dispatch failed and manually unleak the leaked
+    // nsIRunnable in that situation.
+    nsresult rv = SystemGroup::Dispatch("NotifyBHRHangObservers",
+                                        TaskCategory::Other,
+                                        do_AddRef(runnable.get()));
+    if (NS_FAILED(rv)) {
+      // NOTE: We go through `get()` here in order to avoid the
+      // MOZ_NO_ADDREF_RELEASE_ON_RETURN static analysis.
+      nsrefcnt refcnt = runnable.get()->Release();
+      MOZ_RELEASE_ASSERT(refcnt == 1, "runnable should have had 1 reference leaked");
+    }
+  }
 
   // Process the hang off-main thread. We record a reference to the runnable in
   // mProcessHangRunnables so we can abort this preprocessing and just submit
