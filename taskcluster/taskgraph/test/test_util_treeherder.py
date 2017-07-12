@@ -6,7 +6,6 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 import unittest
 from taskgraph.util.treeherder import split_symbol, join_symbol
-from mozunit import main
 
 
 class TestSymbols(unittest.TestCase):
@@ -22,7 +21,3 @@ class TestSymbols(unittest.TestCase):
 
     def test_join_with_group(self):
         self.assertEqual(join_symbol('ab', 'xy'), 'ab(xy)')
-
-
-if __name__ == '__main__':
-    main()

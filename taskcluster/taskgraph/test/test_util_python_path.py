@@ -5,8 +5,7 @@
 from __future__ import absolute_import, print_function, unicode_literals
 
 import unittest
-from taskgraph.util import python_path
-from mozunit import main
+from ..util import python_path
 
 
 class TestObject(object):
@@ -27,11 +26,6 @@ class TestPythonPath(unittest.TestCase):
 
     def test_find_object_exists(self):
         """find_object finds an existing object"""
-        from taskgraph.test.test_util_python_path import TestObject
         obj = python_path.find_object(
             "taskgraph.test.test_util_python_path:TestObject.testClassProperty")
         self.assertIs(obj, TestObject.testClassProperty)
-
-
-if __name__ == '__main__':
-    main()
