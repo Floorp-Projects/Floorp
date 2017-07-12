@@ -735,7 +735,7 @@ GPUProcessManager::CreateContentCompositorBridge(base::ProcessId aOtherProcess,
     return false;
   }
 
-  if (EnsureGPUReady()) {
+  if (mGPUChild) {
     mGPUChild->SendNewContentCompositorBridge(Move(parentPipe));
   } else {
     if (!CompositorBridgeParent::CreateForContent(Move(parentPipe))) {
@@ -812,7 +812,7 @@ GPUProcessManager::CreateContentVRManager(base::ProcessId aOtherProcess,
     return false;
   }
 
-  if (EnsureGPUReady()) {
+  if (mGPUChild) {
     mGPUChild->SendNewContentVRManager(Move(parentPipe));
   } else {
     if (!VRManagerParent::CreateForContent(Move(parentPipe))) {
