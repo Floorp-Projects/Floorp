@@ -924,42 +924,45 @@ js::GetIterator(JSContext* cx, HandleObject obj, unsigned flags)
         // The iterator object for JSITER_ENUMERATE never escapes, so we don't
         // care that the "proper" prototype is set.  This also lets us reuse an
         // old, inactive iterator object.
-        {
-            JSObject* pobj = obj;
-            do {
-                if (!CanCacheIterableObject(cx, pobj)) {
-                    guards.clear();
-                    goto miss;
-                }
-
-                ReceiverGuard guard(pobj);
-                key = (key + (key << 16)) ^ guard.hash();
-                if (!guards.append(guard))
-                    return nullptr;
-
-                pobj = pobj->staticPrototype();
-            } while (pobj);
-        }
-
-        if (PropertyIteratorObject* iterobj = cx->caches().nativeIterCache.get(key)) {
-            NativeIterator* ni = iterobj->getNativeIterator();
-            if (!(ni->flags & (JSITER_ACTIVE|JSITER_UNREUSABLE)) &&
-                ni->guard_key == key &&
-                ni->guard_length == guards.length() &&
-                Compare(reinterpret_cast<ReceiverGuard*>(ni->guard_array),
-                        guards.begin(), ni->guard_length) &&
-                iterobj->compartment() == cx->compartment())
-            {
-                UpdateNativeIterator(ni, obj);
-                RegisterEnumerator(cx, iterobj, ni);
-                if (guards.length() == 2)
-                    cx->compartment()->lastCachedNativeIterator = iterobj;
-                return iterobj;
+        JSObject* pobj = obj;
+        while (true) {
+            if (!CanCacheIterableObject(cx, pobj)) {
+                guards.clear();
+                break;
             }
+
+            ReceiverGuard guard(pobj);
+            key = (key + (key << 16)) ^ guard.hash();
+            if (!guards.append(guard))
+                return nullptr;
+
+            pobj = pobj->staticPrototype();
+            if (pobj)
+                continue;
+
+            PropertyIteratorObject* iterobj = cx->caches().nativeIterCache.get(key);
+            if (!iterobj)
+                break;
+
+            NativeIterator* ni = iterobj->getNativeIterator();
+            if ((ni->flags & (JSITER_ACTIVE|JSITER_UNREUSABLE)) ||
+                ni->guard_key != key ||
+                ni->guard_length != guards.length() ||
+                !Compare(reinterpret_cast<ReceiverGuard*>(ni->guard_array),
+                         guards.begin(), ni->guard_length) ||
+                iterobj->compartment() != cx->compartment())
+            {
+                break;
+            }
+
+            UpdateNativeIterator(ni, obj);
+            RegisterEnumerator(cx, iterobj, ni);
+            if (guards.length() == 2)
+                cx->compartment()->lastCachedNativeIterator = iterobj;
+            return iterobj;
         }
     }
 
-  miss:
     RootedObject res(cx);
     if (!GetCustomIterator(cx, obj, flags, &res))
         return nullptr;
