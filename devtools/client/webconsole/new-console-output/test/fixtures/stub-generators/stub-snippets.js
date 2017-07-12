@@ -121,6 +121,11 @@ console.groupCollapsed(
 console.groupEnd();
 `});
 
+consoleApi.set("console.dir({C, M, Y, K})", {
+  keys: ["console.dir({C, M, Y, K})"],
+  code: "console.dir({cyan: 'C', magenta: 'M', yellow: 'Y', black: 'K'});"
+});
+
 // CSS messages
 const cssMessage = new Map();
 
