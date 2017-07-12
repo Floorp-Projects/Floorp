@@ -1405,7 +1405,7 @@ DoCompareFallback(JSContext* cx, void* payload, ICCompare_Fallback* stub_, Handl
 
     // Perform the compare operation.
     bool out;
-    switch(op) {
+    switch (op) {
       case JSOP_LT:
         if (!LessThan(cx, &lhsCopy, &rhsCopy, &out))
             return false;
@@ -1454,6 +1454,19 @@ DoCompareFallback(JSContext* cx, void* payload, ICCompare_Fallback* stub_, Handl
         // TODO: Discard all stubs in this IC and replace with inert megamorphic stub.
         // But for now we just bail.
         return true;
+    }
+
+    if (engine ==  ICStubEngine::Baseline) {
+        RootedScript script(cx, info.outerScript(cx));
+        CompareIRGenerator gen(cx, script, pc, stub->state().mode(), op, lhs, rhs);
+        bool attached = false;
+        if (gen.tryAttachStub()) {
+            ICStub* newStub = AttachBaselineCacheIRStub(cx, gen.writerRef(), gen.cacheKind(),
+                                                        engine, script, stub, &attached);
+            if (newStub)
+                 JitSpew(JitSpew_BaselineIC, "  Attached CacheIR stub");
+            return true;
+        }
     }
 
     // Try to generate new stubs.

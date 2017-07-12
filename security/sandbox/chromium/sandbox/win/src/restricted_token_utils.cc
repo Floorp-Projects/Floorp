@@ -22,6 +22,7 @@ DWORD CreateRestrictedToken(TokenLevel security_level,
                             IntegrityLevel integrity_level,
                             TokenType token_type,
                             bool lockdown_default_dacl,
+                            bool use_restricting_sids,
                             base::win::ScopedHandle* token) {
   RestrictedToken restricted_token;
   restricted_token.Init(NULL);  // Initialized with the current process token
@@ -45,9 +46,12 @@ DWORD CreateRestrictedToken(TokenLevel security_level,
       deny_sids = false;
       remove_privileges = false;
 
-      unsigned err_code = restricted_token.AddRestrictingSidAllSids();
-      if (ERROR_SUCCESS != err_code)
-        return err_code;
+      if (use_restricting_sids) {
+        unsigned err_code = restricted_token.AddRestrictingSidAllSids();
+        if (ERROR_SUCCESS != err_code) {
+          return err_code;
+        }
+      }
 
       break;
     }
@@ -71,11 +75,13 @@ DWORD CreateRestrictedToken(TokenLevel security_level,
       sid_exceptions.push_back(WinInteractiveSid);
       sid_exceptions.push_back(WinAuthenticatedUserSid);
       privilege_exceptions.push_back(SE_CHANGE_NOTIFY_NAME);
-      restricted_token.AddRestrictingSid(WinBuiltinUsersSid);
-      restricted_token.AddRestrictingSid(WinWorldSid);
-      restricted_token.AddRestrictingSid(WinRestrictedCodeSid);
-      restricted_token.AddRestrictingSidCurrentUser();
-      restricted_token.AddRestrictingSidLogonSession();
+      if (use_restricting_sids) {
+        restricted_token.AddRestrictingSid(WinBuiltinUsersSid);
+        restricted_token.AddRestrictingSid(WinWorldSid);
+        restricted_token.AddRestrictingSid(WinRestrictedCodeSid);
+        restricted_token.AddRestrictingSidCurrentUser();
+        restricted_token.AddRestrictingSidLogonSession();
+      }
       break;
     }
     case USER_LIMITED: {
@@ -83,32 +89,33 @@ DWORD CreateRestrictedToken(TokenLevel security_level,
       sid_exceptions.push_back(WinWorldSid);
       sid_exceptions.push_back(WinInteractiveSid);
       privilege_exceptions.push_back(SE_CHANGE_NOTIFY_NAME);
-      // This breaks web audio, so we don't want to do this in the restricting
-      // SIDs (normal) case. See bug 1378061.
-      if (!gUseRestricting) {
-        restricted_token.AddUserSidForDenyOnly();
-      }
-      restricted_token.AddRestrictingSid(WinBuiltinUsersSid);
-      restricted_token.AddRestrictingSid(WinWorldSid);
-      restricted_token.AddRestrictingSid(WinRestrictedCodeSid);
+      if (use_restricting_sids) {
+        restricted_token.AddRestrictingSid(WinBuiltinUsersSid);
+        restricted_token.AddRestrictingSid(WinWorldSid);
+        restricted_token.AddRestrictingSid(WinRestrictedCodeSid);
 
-      // This token has to be able to create objects in BNO.
-      // Unfortunately, on Vista+, it needs the current logon sid
-      // in the token to achieve this. You should also set the process to be
-      // low integrity level so it can't access object created by other
-      // processes.
-      restricted_token.AddRestrictingSidLogonSession();
+        // This token has to be able to create objects in BNO.
+        // Unfortunately, on Vista+, it needs the current logon sid
+        // in the token to achieve this. You should also set the process to be
+        // low integrity level so it can't access object created by other
+        // processes.
+        restricted_token.AddRestrictingSidLogonSession();
+      }
       break;
     }
     case USER_RESTRICTED: {
       privilege_exceptions.push_back(SE_CHANGE_NOTIFY_NAME);
       restricted_token.AddUserSidForDenyOnly();
-      restricted_token.AddRestrictingSid(WinRestrictedCodeSid);
+      if (use_restricting_sids) {
+        restricted_token.AddRestrictingSid(WinRestrictedCodeSid);
+      }
       break;
     }
     case USER_LOCKDOWN: {
       restricted_token.AddUserSidForDenyOnly();
-      restricted_token.AddRestrictingSid(WinNullSid);
+      if (use_restricting_sids) {
+        restricted_token.AddRestrictingSid(WinNullSid);
+      }
       break;
     }
     default: {

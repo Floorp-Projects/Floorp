@@ -7,8 +7,6 @@
   <title>Cross-domain stylesheet tests for Bug 1196740</title>
   <script>
     SpecialPowers.setBoolPref("security.sri.enable", true);
-    // TODO: Bug 1324406: Treat 'data:' documents as unique, opaque origins
-    SpecialPowers.setBoolPref("security.data_uri.unique_opaque_origin", true);
   </script>
 </head>
 <body>

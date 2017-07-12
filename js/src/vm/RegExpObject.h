@@ -143,8 +143,7 @@ class RegExpObject : public NativeObject
 
     static bool isOriginalFlagGetter(JSNative native, RegExpFlag* mask);
 
-    static MOZ_MUST_USE bool getShared(JSContext* cx, Handle<RegExpObject*> regexp,
-                                       MutableHandleRegExpShared shared);
+    static RegExpShared* getShared(JSContext* cx, Handle<RegExpObject*> regexp);
 
     bool hasShared() {
         return !!sharedRef();
@@ -180,8 +179,7 @@ class RegExpObject : public NativeObject
      * Precondition: the syntax for |source| has already been validated.
      * Side effect: sets the private field.
      */
-    static MOZ_MUST_USE bool createShared(JSContext* cx, Handle<RegExpObject*> regexp,
-                                          MutableHandleRegExpShared shared);
+    static RegExpShared* createShared(JSContext* cx, Handle<RegExpObject*> regexp);
 
     /* Call setShared in preference to setPrivate. */
     void setPrivate(void* priv) = delete;
@@ -197,13 +195,13 @@ bool
 ParseRegExpFlags(JSContext* cx, JSString* flagStr, RegExpFlag* flagsOut);
 
 /* Assuming GetBuiltinClass(obj) is ESClass::RegExp, return a RegExpShared for obj. */
-inline bool
-RegExpToShared(JSContext* cx, HandleObject obj, MutableHandleRegExpShared shared)
+inline RegExpShared*
+RegExpToShared(JSContext* cx, HandleObject obj)
 {
     if (obj->is<RegExpObject>())
-        return RegExpObject::getShared(cx, obj.as<RegExpObject>(), shared);
+        return RegExpObject::getShared(cx, obj.as<RegExpObject>());
 
-    return Proxy::regexp_toShared(cx, obj, shared);
+    return Proxy::regexp_toShared(cx, obj);
 }
 
 template<XDRMode mode>

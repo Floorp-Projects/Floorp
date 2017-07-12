@@ -10,6 +10,7 @@
 #include <stdint.h>
 #include "mozilla/Decimal.h"
 #include "mozilla/UniquePtr.h"
+#include "nsIConstraintValidation.h"
 #include "nsString.h"
 #include "nsError.h"
 
@@ -59,6 +60,14 @@ public:
   virtual bool IsRangeUnderflow() const;
   virtual bool HasStepMismatch(bool aUseZeroIfValueNaN) const;
   virtual bool HasBadInput() const;
+
+  nsresult GetValidationMessage(nsAString& aValidationMessage,
+                                nsIConstraintValidation::ValidityStateType aType);
+  virtual nsresult GetValueMissingMessage(nsXPIDLString& aMessage);
+  virtual nsresult GetTypeMismatchMessage(nsXPIDLString& aMessage);
+  virtual nsresult GetRangeOverflowMessage(nsXPIDLString& aMessage);
+  virtual nsresult GetRangeUnderflowMessage(nsXPIDLString& aMessage);
+  virtual nsresult GetBadInputMessage(nsXPIDLString& aMessage);
 
   virtual nsresult MinMaxStepAttrChanged();
 

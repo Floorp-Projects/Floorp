@@ -183,6 +183,10 @@ TokenLevel PolicyBase::GetLockdownTokenLevel() const {
   return lockdown_level_;
 }
 
+void PolicyBase::SetDoNotUseRestrictingSIDs() {
+  use_restricting_sids_ = false;
+}
+
 ResultCode PolicyBase::SetJobLevel(JobLevel job_level, uint32_t ui_exceptions) {
   if (memory_limit_ && job_level == JOB_NONE) {
     return SBOX_ERROR_BAD_PARAMS;
@@ -437,7 +441,8 @@ ResultCode PolicyBase::MakeTokens(base::win::ScopedHandle* initial,
   // with the process and therefore with any thread that is not impersonating.
   DWORD result =
       CreateRestrictedToken(lockdown_level_, integrity_level_, PRIMARY,
-                            lockdown_default_dacl_, lockdown);
+                            lockdown_default_dacl_, use_restricting_sids_,
+                            lockdown);
   if (ERROR_SUCCESS != result)
     return SBOX_ERROR_GENERIC;
 
@@ -493,7 +498,8 @@ ResultCode PolicyBase::MakeTokens(base::win::ScopedHandle* initial,
   // what we need (before reaching main( ))
   result =
       CreateRestrictedToken(initial_level_, integrity_level_, IMPERSONATION,
-                            lockdown_default_dacl_, initial);
+                            lockdown_default_dacl_, use_restricting_sids_,
+                            initial);
   if (ERROR_SUCCESS != result)
     return SBOX_ERROR_GENERIC;
 

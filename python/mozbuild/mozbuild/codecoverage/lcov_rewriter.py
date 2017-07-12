@@ -507,6 +507,7 @@ class UrlFinder(object):
                 src_prefix = ''.join(_prefix(pattern_prefix))
                 self._install_mapping[objdir_path] = (mozpath.join(src_prefix, full_leaf),
                                                       is_pp)
+                break
             offset += 1
 
     def _install_info(self, objdir_path):

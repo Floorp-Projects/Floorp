@@ -374,7 +374,8 @@ interface nsIMemoryReporterManager : nsISupports
    * of low-{virtual,physical}-memory events that have occurred since the
    * process started.
    *
-   * |ghostWindows| (UNITS_COUNT)  The number of ghost windows.
+   * |ghostWindows| (UNITS_COUNT)  A cached value of the number of ghost
+   * windows. This should have been updated within the past 60s.
    *
    * |pageFaultsHard| (UNITS_COUNT_CUMULATIVE)  The number of hard (a.k.a.
    * major) page faults that have occurred since the process started.

@@ -232,7 +232,7 @@ template <typename CharT>
 extern UTF8CharsZ
 CharsToNewUTF8CharsZ(JSContext* maybeCx, const mozilla::Range<CharT> chars);
 
-uint32_t
+JS_PUBLIC_API(uint32_t)
 Utf8ToOneUcs4Char(const uint8_t* utf8Buffer, int utf8Length);
 
 /*
@@ -241,13 +241,13 @@ Utf8ToOneUcs4Char(const uint8_t* utf8Buffer, int utf8Length);
  * - On success, returns a malloc'd TwoByteCharsZ, and updates |outlen| to hold
  *   its length;  the length value excludes the trailing null.
  */
-extern TwoByteCharsZ
+extern JS_PUBLIC_API(TwoByteCharsZ)
 UTF8CharsToNewTwoByteCharsZ(JSContext* cx, const UTF8Chars utf8, size_t* outlen);
 
 /*
  * Like UTF8CharsToNewTwoByteCharsZ, but for ConstUTF8CharsZ.
  */
-extern TwoByteCharsZ
+extern JS_PUBLIC_API(TwoByteCharsZ)
 UTF8CharsToNewTwoByteCharsZ(JSContext* cx, const ConstUTF8CharsZ& utf8, size_t* outlen);
 
 /*
@@ -255,10 +255,10 @@ UTF8CharsToNewTwoByteCharsZ(JSContext* cx, const ConstUTF8CharsZ& utf8, size_t* 
  * will be replaced by \uFFFD. No exception will be thrown for malformed UTF-8
  * input.
  */
-extern TwoByteCharsZ
+extern JS_PUBLIC_API(TwoByteCharsZ)
 LossyUTF8CharsToNewTwoByteCharsZ(JSContext* cx, const UTF8Chars utf8, size_t* outlen);
 
-extern TwoByteCharsZ
+extern JS_PUBLIC_API(TwoByteCharsZ)
 LossyUTF8CharsToNewTwoByteCharsZ(JSContext* cx, const ConstUTF8CharsZ& utf8, size_t* outlen);
 
 /*
@@ -308,7 +308,7 @@ FindSmallestEncoding(UTF8Chars utf8);
   * report an error if the string contains non-Latin-1 codepoints.  Returns
   * Latin1CharsZ() on failure.
  */
-extern Latin1CharsZ
+extern JS_PUBLIC_API(Latin1CharsZ)
 UTF8CharsToNewLatin1CharsZ(JSContext* cx, const UTF8Chars utf8, size_t* outlen);
 
 /*
@@ -316,14 +316,14 @@ UTF8CharsToNewLatin1CharsZ(JSContext* cx, const UTF8Chars utf8, size_t* outlen);
  * storing its length (excluding null terminator) in |*outlen|.  Non-Latin-1
  * codepoints are replaced by '?'.  Returns Latin1CharsZ() on failure.
  */
-extern Latin1CharsZ
+extern JS_PUBLIC_API(Latin1CharsZ)
 LossyUTF8CharsToNewLatin1CharsZ(JSContext* cx, const UTF8Chars utf8, size_t* outlen);
 
 /*
  * Returns true if all characters in the given null-terminated string are
  * ASCII, i.e. < 0x80, false otherwise.
  */
-extern bool
+extern JS_PUBLIC_API(bool)
 StringIsASCII(const char* s);
 
 } // namespace JS

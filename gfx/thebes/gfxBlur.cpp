@@ -28,9 +28,6 @@ gfxAlphaBoxBlur::gfxAlphaBoxBlur()
 
 gfxAlphaBoxBlur::~gfxAlphaBoxBlur()
 {
-  if (mData) {
-    free(mData);
-  }
 }
 
 already_AddRefed<gfxContext>
@@ -91,6 +88,7 @@ gfxAlphaBoxBlur::InitDrawTarget(const DrawTarget* aReferenceDT,
   } else {
     // Make an alpha-only surface to draw on. We will play with the data after
     // everything is drawn to create a blur effect.
+    // This will be freed when the DrawTarget dies
     mData = static_cast<uint8_t*>(calloc(1, blurDataSize));
     if (!mData) {
       return nullptr;
@@ -109,8 +107,19 @@ gfxAlphaBoxBlur::InitDrawTarget(const DrawTarget* aReferenceDT,
   }
 
   if (!mDrawTarget || !mDrawTarget->IsValid()) {
+    if (mData) {
+      free(mData);
+    }
+
     return nullptr;
   }
+
+  if (mData) {
+    mDrawTarget->AddUserData(reinterpret_cast<UserDataKey*>(mDrawTarget.get()),
+                              mData,
+                              free);
+  }
+
   mDrawTarget->SetTransform(Matrix::Translation(-mBlur.GetRect().TopLeft()));
   return do_AddRef(mDrawTarget);
 }

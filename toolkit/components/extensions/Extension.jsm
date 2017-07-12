@@ -383,6 +383,7 @@ this.ExtensionData = class {
       } catch (e) {
         // Always return a list, even if the directory does not exist (or is
         // not a directory) for symmetry with the ZipReader behavior.
+        Cu.reportError(e);
       }
       iter.close();
 
@@ -640,6 +641,34 @@ this.ExtensionData = class {
     }
   }
 
+  async _promiseLocaleMap() {
+    let locales = new Map();
+
+    let entries = await this.readDirectory("_locales");
+    for (let file of entries) {
+      if (file.isDir) {
+        let locale = this.normalizeLocaleCode(file.name);
+        locales.set(locale, file.name);
+      }
+    }
+
+    return locales;
+  }
+
+  _setupLocaleData(locales) {
+    if (this.localeData) {
+      return this.localeData.locales;
+    }
+
+    this.localeData = new LocaleData({
+      defaultLocale: this.defaultLocale,
+      locales,
+      builtinMessages: this.builtinMessages,
+    });
+
+    return locales;
+  }
+
   // Reads the list of locales available in the extension, and returns a
   // Promise which resolves to a Map upon completion.
   // Each map key is a Gecko-compatible locale code, and each value is the
@@ -649,23 +678,8 @@ this.ExtensionData = class {
   promiseLocales() {
     if (!this._promiseLocales) {
       this._promiseLocales = (async () => {
-        let locales = new Map();
-
-        let entries = await this.readDirectory("_locales");
-        for (let file of entries) {
-          if (file.isDir) {
-            let locale = this.normalizeLocaleCode(file.name);
-            locales.set(locale, file.name);
-          }
-        }
-
-        this.localeData = new LocaleData({
-          defaultLocale: this.defaultLocale,
-          locales,
-          builtinMessages: this.builtinMessages,
-        });
-
-        return locales;
+        let locales = this._promiseLocaleMap();
+        return this._setupLocaleData(locales);
       })();
     }
 
@@ -885,6 +899,13 @@ this.Extension = class extends ExtensionData {
     return common == this.baseURI.spec;
   }
 
+  async promiseLocales(locale) {
+    let locales = await StartupCache.locales
+      .get([this.id, "@@all_locales"], () => this._promiseLocaleMap());
+
+    return this._setupLocaleData(locales);
+  }
+
   readLocaleFile(locale) {
     return StartupCache.locales.get([this.id, this.version, locale],
                                     () => super.readLocaleFile(locale))
@@ -1053,6 +1074,10 @@ this.Extension = class extends ExtensionData {
 
   startup() {
     this.startupPromise = this._startup();
+
+    this._startupComplete = this.startupPromise.catch(() => {});
+    OS.File.shutdown.addBlocker("Extension startup", this._startupComplete);
+
     return this.startupPromise;
   }
 
@@ -1080,7 +1105,10 @@ this.Extension = class extends ExtensionData {
 
     TelemetryStopwatch.start("WEBEXT_EXTENSION_STARTUP_MS", this);
     try {
-      let [, perms] = await Promise.all([this.loadManifest(), ExtensionPermissions.get(this)]);
+      let [perms] = await Promise.all([
+        ExtensionPermissions.get(this),
+        this.loadManifest(),
+      ]);
 
       if (!this.hasShutdown) {
         await this.initLocale();
@@ -1132,7 +1160,7 @@ this.Extension = class extends ExtensionData {
       this.emit("ready");
       TelemetryStopwatch.finish("WEBEXT_EXTENSION_STARTUP_MS", this);
     } catch (e) {
-      dump(`Extension error: ${e.message} ${e.filename || e.fileName}:${e.lineNumber} :: ${e.stack || new Error().stack}\n`);
+      dump(`Extension error: ${e.message || e} ${e.filename || e.fileName}:${e.lineNumber} :: ${e.stack || new Error().stack}\n`);
       Cu.reportError(e);
 
       if (this.policy) {

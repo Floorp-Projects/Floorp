@@ -9,7 +9,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=602256
 <body onload="SimpleTest.executeSoon(run_test)">
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=602256">Mozilla Bug 602256</a>
 <div id="content">
-  <iframe id="iframe" src="data:text/html,<p%20id='text'>Start</p>"></iframe>
+  <iframe id="iframe" src="start_historyframe.html"></iframe>
 </div>
 <pre id="test">
 <script type="application/javascript">
@@ -50,9 +50,10 @@ function getContent() {
   return gFrame.contentDocument.getElementById("text").textContent;
 }
 
-var START = "data:text/html,<p%20id='text'>Start</p>";
-var URL1 = "data:text/html,<p%20id='text'>Test1</p>";
-var URL2 = "data:text/html,<p%20id='text'>Test2</p>";
+var BASE_URI = "http://mochi.test:8888/tests/docshell/test/";
+var START = BASE_URI + "start_historyframe.html";
+var URL1 = BASE_URI + "url1_historyframe.html";
+var URL2 = BASE_URI + "url2_historyframe.html";
 
 function run_test() {
   window.location.hash = "START";

@@ -2227,6 +2227,26 @@ CacheIRCompiler::emitLoadTypeOfObjectResult()
 }
 
 bool
+CacheIRCompiler::emitCompareStringResult()
+{
+    AutoOutputRegister output(*this);
+
+    Register left = allocator.useRegister(masm, reader.stringOperandId());
+    Register right = allocator.useRegister(masm, reader.stringOperandId());
+    JSOp op = reader.jsop();
+
+    AutoScratchRegisterMaybeOutput scratch(allocator, masm, output);
+
+    FailurePath* failure;
+    if (!addFailurePath(&failure))
+        return false;
+
+    masm.compareStrings(op, left, right, scratch, failure->label());
+    masm.tagValue(JSVAL_TYPE_BOOLEAN, scratch, output.valueReg());
+    return true;
+}
+
+bool
 CacheIRCompiler::emitCallPrintString()
 {
     const char* str = reinterpret_cast<char*>(reader.pointer());

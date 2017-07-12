@@ -27,7 +27,7 @@ if CONFIG['OS_ARCH'] == 'Linux':
         DEFINES['_FX_CPU_'] = '_FX_X86_'
 
 # pdfium
-SOURCES += [
+UNIFIED_SOURCES += [
     'pdfium/fpdfsdk/cba_annotiterator.cpp',
     'pdfium/fpdfsdk/cfx_systemhandler.cpp',
     'pdfium/fpdfsdk/cpdfsdk_annot.cpp',
@@ -71,14 +71,20 @@ if CONFIG['OS_TARGET'] == 'WINNT':
     ]
 
 # fdrm
-SOURCES += [
-    'pdfium/core/fdrm/crypto/fx_crypt.cpp',
+UNIFIED_SOURCES += [
     'pdfium/core/fdrm/crypto/fx_crypt_aes.cpp',
+]
+SOURCES += [
+    # not able to be unified because of the error:
+    # - 'GET_UINT32': macro redefinition
+    # - 'PUT_UINT32': macro redefinition
+    # - 'P': macro redefinition
+    'pdfium/core/fdrm/crypto/fx_crypt.cpp',
     'pdfium/core/fdrm/crypto/fx_crypt_sha.cpp',
 ]
 
 # formfiller
-SOURCES += [
+UNIFIED_SOURCES += [
     'pdfium/fpdfsdk/formfiller/cba_fontmap.cpp',
     'pdfium/fpdfsdk/formfiller/cffl_checkbox.cpp',
     'pdfium/fpdfsdk/formfiller/cffl_combobox.cpp',
@@ -91,7 +97,7 @@ SOURCES += [
 ]
 
 # fpdfapi
-SOURCES += [
+UNIFIED_SOURCES += [
     'pdfium/core/fpdfapi/cmaps/CNS1/Adobe-CNS1-UCS2_5.cpp',
     'pdfium/core/fpdfapi/cmaps/CNS1/B5pc-H_0.cpp',
     'pdfium/core/fpdfapi/cmaps/CNS1/B5pc-V_0.cpp',
@@ -228,7 +234,6 @@ SOURCES += [
     'pdfium/core/fpdfapi/parser/fpdf_parser_utility.cpp',
     'pdfium/core/fpdfapi/render/cpdf_charposlist.cpp',
     'pdfium/core/fpdfapi/render/cpdf_devicebuffer.cpp',
-    'pdfium/core/fpdfapi/render/cpdf_dibsource.cpp',
     'pdfium/core/fpdfapi/render/cpdf_dibtransferfunc.cpp',
     'pdfium/core/fpdfapi/render/cpdf_docrenderdata.cpp',
     'pdfium/core/fpdfapi/render/cpdf_imagecacheentry.cpp',
@@ -245,9 +250,14 @@ SOURCES += [
     'pdfium/core/fpdfapi/render/cpdf_type3cache.cpp',
     'pdfium/core/fpdfapi/render/cpdf_type3glyphs.cpp',
 ]
+SOURCES += [
+    # not able to be unified because of the error:
+    # - '`anonymous-namespace'::kMaxImageDimension': redefinition; different storage class
+    'pdfium/core/fpdfapi/render/cpdf_dibsource.cpp',
+]
 
 # fpdfdoc
-SOURCES += [
+UNIFIED_SOURCES += [
     'pdfium/core/fpdfdoc/cline.cpp',
     'pdfium/core/fpdfdoc/clines.cpp',
     'pdfium/core/fpdfdoc/cpdf_aaction.cpp',
@@ -265,11 +275,9 @@ SOURCES += [
     'pdfium/core/fpdfdoc/cpdf_formcontrol.cpp',
     'pdfium/core/fpdfdoc/cpdf_formfield.cpp',
     'pdfium/core/fpdfdoc/cpdf_iconfit.cpp',
-    'pdfium/core/fpdfdoc/cpdf_interform.cpp',
     'pdfium/core/fpdfdoc/cpdf_link.cpp',
     'pdfium/core/fpdfdoc/cpdf_linklist.cpp',
     'pdfium/core/fpdfdoc/cpdf_metadata.cpp',
-    'pdfium/core/fpdfdoc/cpdf_nametree.cpp',
     'pdfium/core/fpdfdoc/cpdf_numbertree.cpp',
     'pdfium/core/fpdfdoc/cpdf_occontext.cpp',
     'pdfium/core/fpdfdoc/cpdf_pagelabel.cpp',
@@ -282,11 +290,17 @@ SOURCES += [
     'pdfium/core/fpdfdoc/cpvt_wordinfo.cpp',
     'pdfium/core/fpdfdoc/csection.cpp',
     'pdfium/core/fpdfdoc/ctypeset.cpp',
+]
+SOURCES += [
+    # not able to be unified because of the error:
+    # - '`anonymous-namespace'::nMaxRecursion': redefinition; different storage class
+    'pdfium/core/fpdfdoc/cpdf_interform.cpp',
+    'pdfium/core/fpdfdoc/cpdf_nametree.cpp',
     'pdfium/core/fpdfdoc/doc_tagged.cpp',
 ]
 
 # fpdftext
-SOURCES += [
+UNIFIED_SOURCES += [
     'pdfium/core/fpdftext/cpdf_linkextract.cpp',
     'pdfium/core/fpdftext/cpdf_textpage.cpp',
     'pdfium/core/fpdftext/cpdf_textpagefind.cpp',
@@ -294,9 +308,8 @@ SOURCES += [
 ]
 
 # fxcodec
-SOURCES += [
+UNIFIED_SOURCES += [
     'pdfium/core/fxcodec/codec/fx_codec.cpp',
-    'pdfium/core/fxcodec/codec/fx_codec_fax.cpp',
     'pdfium/core/fxcodec/codec/fx_codec_flate.cpp',
     'pdfium/core/fxcodec/codec/fx_codec_icc.cpp',
     'pdfium/core/fxcodec/codec/fx_codec_jbig.cpp',
@@ -321,9 +334,14 @@ SOURCES += [
     'pdfium/core/fxcodec/jbig2/JBig2_SymbolDict.cpp',
     'pdfium/core/fxcodec/jbig2/JBig2_TrdProc.cpp',
 ]
+SOURCES += [
+    # not able to be unified because of the error:
+    # - '`anonymous-namespace'::kMaxImageDimension': redefinition; different storage class
+    'pdfium/core/fxcodec/codec/fx_codec_fax.cpp',
+]
 
 # fxcrt
-SOURCES += [
+UNIFIED_SOURCES += [
     'pdfium/core/fxcrt/fx_basic_array.cpp',
     'pdfium/core/fxcrt/fx_basic_bstring.cpp',
     'pdfium/core/fxcrt/fx_basic_buffer.cpp',
@@ -345,14 +363,14 @@ SOURCES += [
 ]
 
 # fxedit
-SOURCES += [
+UNIFIED_SOURCES += [
     'pdfium/fpdfsdk/fxedit/fxet_ap.cpp',
     'pdfium/fpdfsdk/fxedit/fxet_edit.cpp',
     'pdfium/fpdfsdk/fxedit/fxet_list.cpp',
 ]
 
 # fxge
-SOURCES += [
+UNIFIED_SOURCES += [
     'pdfium/core/fxge/agg/fx_agg_driver.cpp',
     'pdfium/core/fxge/dib/fx_dib_composite.cpp',
     'pdfium/core/fxge/dib/fx_dib_convert.cpp',
@@ -397,23 +415,31 @@ SOURCES += [
     'pdfium/core/fxge/ifx_renderdevicedriver.cpp',
 ]
 if CONFIG['OS_TARGET'] == 'WINNT':
-    SOURCES += [
+    UNIFIED_SOURCES += [
         'pdfium/core/fxge/win32/cfx_psrenderer.cpp',
         'pdfium/core/fxge/win32/cpsoutput.cpp',
         'pdfium/core/fxge/win32/fx_win32_device.cpp',
         'pdfium/core/fxge/win32/fx_win32_dib.cpp',
-        'pdfium/core/fxge/win32/fx_win32_dwrite.cpp',
-        'pdfium/core/fxge/win32/fx_win32_gdipext.cpp',
         'pdfium/core/fxge/win32/fx_win32_print.cpp',
     ]
-if CONFIG['OS_TARGET'] == 'Darwin':
     SOURCES += [
+        # not able to be unified because of the error:
+        # - 'boolean': redefinition; different basic types
+        # - 'BOOLEAN': redefinition; different basic types
+        'pdfium/core/fxge/win32/fx_win32_dwrite.cpp',
+    ]
+    SOURCES += [
+        # avoid other files being polluted by WIN32_LEAN_AND_MEAN macro
+        'pdfium/core/fxge/win32/fx_win32_gdipext.cpp',
+    ]
+if CONFIG['OS_TARGET'] == 'Darwin':
+    UNIFIED_SOURCES += [
         'pdfium/core/fxge/apple/fx_apple_platform.cpp',
         'pdfium/core/fxge/apple/fx_mac_imp.cpp',
         'pdfium/core/fxge/apple/fx_quartz_device.cpp',
     ]
 if CONFIG['OS_TARGET'] == 'Android':
-    SOURCES += [
+    UNIFIED_SOURCES += [
         'pdfium/core/fxge/android/cfpf_skiadevicemodule.cpp',
         'pdfium/core/fxge/android/cfpf_skiafont.cpp',
         'pdfium/core/fxge/android/cfpf_skiafontmgr.cpp',
@@ -422,12 +448,12 @@ if CONFIG['OS_TARGET'] == 'Android':
     ]
 
 # javascript
-SOURCES += [
+UNIFIED_SOURCES += [
     'pdfium/fpdfsdk/javascript/JS_Runtime_Stub.cpp',
 ]
 
 # pdfwindow
-SOURCES += [
+UNIFIED_SOURCES += [
     'pdfium/fpdfsdk/pdfwindow/cpwl_color.cpp',
     'pdfium/fpdfsdk/pdfwindow/PWL_Button.cpp',
     'pdfium/fpdfsdk/pdfwindow/PWL_Caret.cpp',
@@ -444,7 +470,7 @@ SOURCES += [
 ]
 
 # third_party:fx_agg
-SOURCES += [
+UNIFIED_SOURCES += [
     'pdfium/third_party/agg23/agg_curves.cpp',
     'pdfium/third_party/agg23/agg_path_storage.cpp',
     'pdfium/third_party/agg23/agg_rasterizer_scanline_aa.cpp',
@@ -453,11 +479,15 @@ SOURCES += [
 ]
 
 # third_party:bigint
-SOURCES += [
-    'pdfium/third_party/bigint/BigInteger.cc',
+UNIFIED_SOURCES += [
     'pdfium/third_party/bigint/BigIntegerUtils.cc',
-    'pdfium/third_party/bigint/BigUnsigned.cc',
     'pdfium/third_party/bigint/BigUnsignedInABase.cc',
+]
+SOURCES += [
+    # not able to be unified because of the error:
+    # - 'DTRT_ALIASED': macro redefinition
+    'pdfium/third_party/bigint/BigInteger.cc',
+    'pdfium/third_party/bigint/BigUnsigned.cc',
 ]
 
 # third_party:fx_freetype
@@ -470,7 +500,7 @@ USE_LIBS += [
 ]
 
 # third_party:fx_lcms2
-SOURCES += [
+UNIFIED_SOURCES += [
     'pdfium/third_party/lcms2-2.6/src/cmscam02.c',
     'pdfium/third_party/lcms2-2.6/src/cmscgats.c',
     'pdfium/third_party/lcms2-2.6/src/cmscnvrt.c',
@@ -484,18 +514,29 @@ SOURCES += [
     'pdfium/third_party/lcms2-2.6/src/cmslut.c',
     'pdfium/third_party/lcms2-2.6/src/cmsmd5.c',
     'pdfium/third_party/lcms2-2.6/src/cmsmtrx.c',
-    'pdfium/third_party/lcms2-2.6/src/cmsnamed.c',
     'pdfium/third_party/lcms2-2.6/src/cmsopt.c',
     'pdfium/third_party/lcms2-2.6/src/cmspack.c',
     'pdfium/third_party/lcms2-2.6/src/cmspcs.c',
     'pdfium/third_party/lcms2-2.6/src/cmsplugin.c',
-    'pdfium/third_party/lcms2-2.6/src/cmsps2.c',
     'pdfium/third_party/lcms2-2.6/src/cmssamp.c',
     'pdfium/third_party/lcms2-2.6/src/cmssm.c',
-    'pdfium/third_party/lcms2-2.6/src/cmstypes.c',
     'pdfium/third_party/lcms2-2.6/src/cmsvirt.c',
     'pdfium/third_party/lcms2-2.6/src/cmswtpnt.c',
     'pdfium/third_party/lcms2-2.6/src/cmsxform.c',
+]
+SOURCES += [
+    # not able to be unified because of the error:
+    # - function 'cmsUInt32Number mywcslen(const wchar_t *)' already has a body
+    'pdfium/third_party/lcms2-2.6/src/cmsnamed.c',
+
+    # not able to be unified because of the error:
+    # - 'WriteCLUT': redefinition; different basic types
+    'pdfium/third_party/lcms2-2.6/src/cmsps2.c',
+
+    # not able to be unified because of the error:
+    # - function 'cmsUInt32Number mywcslen(const wchar_t *)' already has a body
+    # - 'WriteCLUT': redefinition; different basic types
+    'pdfium/third_party/lcms2-2.6/src/cmstypes.c',
 ]
 
 # third_party:fx_zlib

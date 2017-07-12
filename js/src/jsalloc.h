@@ -17,6 +17,8 @@
 #include "js/TypeDecls.h"
 #include "js/Utility.h"
 
+extern JS_PUBLIC_API(void) JS_ReportOutOfMemory(JSContext* cx);
+
 namespace js {
 
 enum class AllocFunction {
@@ -24,7 +26,6 @@ enum class AllocFunction {
     Calloc,
     Realloc
 };
-
 /* Policy for using system memory functions and doing no error reporting. */
 class SystemAllocPolicy
 {

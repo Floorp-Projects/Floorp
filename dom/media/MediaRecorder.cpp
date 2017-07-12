@@ -459,6 +459,14 @@ public:
 
   void NotifyTrackRemoved(const RefPtr<MediaStreamTrack>& aTrack) override
   {
+    // Handle possible early removal of direct video listener
+    if (mEncoder) {
+      RefPtr<VideoStreamTrack> videoTrack = aTrack->AsVideoStreamTrack();
+      if (videoTrack) {
+        videoTrack->RemoveDirectListener(mEncoder->GetVideoSink());
+      }
+    }
+
     RefPtr<MediaInputPort> foundInputPort;
     for (RefPtr<MediaInputPort> inputPort : mInputPorts) {
       if (aTrack->IsForwardedThrough(inputPort)) {

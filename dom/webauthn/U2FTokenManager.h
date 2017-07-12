@@ -52,16 +52,15 @@ private:
   void MaybeAbortTransaction(uint64_t aTransactionId,
                              const nsresult& aError);
   void MaybeConfirmRegister(uint64_t aTransactionId,
-                            const nsTArray<uint8_t>& aRegister);
-  void MaybeConfirmSign(uint64_t aTransactionId,
-                        const nsTArray<uint8_t>& aKeyHandle,
-                        const nsTArray<uint8_t>& aSignature);
+                            U2FRegisterResult& aResult);
+  void MaybeConfirmSign(uint64_t aTransactionId, U2FSignResult& aResult);
   // Using a raw pointer here, as the lifetime of the IPC object is managed by
   // the PBackground protocol code. This means we cannot be left holding an
   // invalid IPC protocol object after the transaction is finished.
   WebAuthnTransactionParent* mTransactionParent;
   RefPtr<U2FTokenTransport> mTokenManagerImpl;
-  RefPtr<ResultPromise> mResultPromise;
+  RefPtr<U2FRegisterPromise> mRegisterPromise;
+  RefPtr<U2FSignPromise> mSignPromise;
   // Guards the asynchronous promise resolution of token manager impls.
   // We don't need to protect this with a lock as it will only be modified
   // and checked on the PBackground thread in the parent process.

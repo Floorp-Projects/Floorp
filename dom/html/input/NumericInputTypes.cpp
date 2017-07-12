@@ -11,13 +11,6 @@
 #include "nsTextEditorState.h"
 
 bool
-NumberInputType::IsMutable() const
-{
-  return !mInputElement->IsDisabled() &&
-         !mInputElement->HasAttr(kNameSpaceID_None, nsGkAtoms::readonly);
-}
-
-bool
 NumericInputTypeBase::IsRangeOverflow() const
 {
   mozilla::Decimal maximum = mInputElement->GetMaximum();
@@ -69,6 +62,43 @@ NumericInputTypeBase::HasStepMismatch(bool aUseZeroIfValueNaN) const
 
   // Value has to be an integral multiple of step.
   return NS_floorModulo(value - GetStepBase(), step) != mozilla::Decimal(0);
+}
+
+nsresult
+NumericInputTypeBase::GetRangeOverflowMessage(nsXPIDLString& aMessage)
+{
+  // We want to show the value as parsed when it's a number
+  mozilla::Decimal maximum = mInputElement->GetMaximum();
+  MOZ_ASSERT(!maximum.isNaN());
+
+  nsAutoString maxStr;
+  char buf[32];
+  mozilla::DebugOnly<bool> ok = maximum.toString(buf,
+                                                 mozilla::ArrayLength(buf));
+  maxStr.AssignASCII(buf);
+  MOZ_ASSERT(ok, "buf not big enough");
+
+  const char16_t* params[] = { maxStr.get() };
+  return nsContentUtils::FormatLocalizedString(nsContentUtils::eDOM_PROPERTIES,
+    "FormValidationNumberRangeOverflow", params, aMessage);
+}
+
+nsresult
+NumericInputTypeBase::GetRangeUnderflowMessage(nsXPIDLString& aMessage)
+{
+  mozilla::Decimal minimum = mInputElement->GetMinimum();
+  MOZ_ASSERT(!minimum.isNaN());
+
+  nsAutoString minStr;
+  char buf[32];
+  mozilla::DebugOnly<bool> ok = minimum.toString(buf,
+                                                 mozilla::ArrayLength(buf));
+  minStr.AssignASCII(buf);
+  MOZ_ASSERT(ok, "buf not big enough");
+
+  const char16_t* params[] = { minStr.get() };
+  return nsContentUtils::FormatLocalizedString(nsContentUtils::eDOM_PROPERTIES,
+    "FormValidationNumberRangeUnderflow", params, aMessage);
 }
 
 bool
@@ -134,6 +164,27 @@ NumberInputType::HasBadInput() const
     return true;
   }
   return false;
+}
+
+nsresult
+NumberInputType::GetValueMissingMessage(nsXPIDLString& aMessage)
+{
+  return nsContentUtils::GetLocalizedString(nsContentUtils::eDOM_PROPERTIES,
+    "FormValidationBadInputNumber", aMessage);
+}
+
+nsresult
+NumberInputType::GetBadInputMessage(nsXPIDLString& aMessage)
+{
+  return nsContentUtils::GetLocalizedString(nsContentUtils::eDOM_PROPERTIES,
+    "FormValidationBadInputNumber", aMessage);
+}
+
+bool
+NumberInputType::IsMutable() const
+{
+  return !mInputElement->IsDisabled() &&
+         !mInputElement->HasAttr(kNameSpaceID_None, nsGkAtoms::readonly);
 }
 
 /* input type=range */
