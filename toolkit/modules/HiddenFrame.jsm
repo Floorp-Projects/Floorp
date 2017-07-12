@@ -12,7 +12,7 @@ Cu.import("resource://gre/modules/PromiseUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
-const XUL_PAGE = "data:application/vnd.mozilla.xul+xml;charset=utf-8,<window%20id='win'/>";
+const XUL_PAGE = "chrome://global/content/win.xul";
 
 const gAllHiddenFrames = new WeakSet();
 
