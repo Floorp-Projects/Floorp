@@ -2278,7 +2278,12 @@ void nsHttpConnectionMgr::OnMsgUpdateClassOfServiceOnTransaction(int32_t arg, AR
     uint32_t cos = static_cast<uint32_t>(arg);
     nsHttpTransaction *trans = static_cast<nsHttpTransaction *>(param);
 
+    uint32_t previous = trans->ClassOfService();
     trans->SetClassOfService(cos);
+
+    if ((previous ^ cos) & (NS_HTTP_LOAD_AS_BLOCKING | NS_HTTP_LOAD_UNBLOCKED)) {
+        Unused << RescheduleTransaction(trans, trans->Priority());
+    }
 }
 
 void
