@@ -62,7 +62,7 @@ function addDiv(t, attrs) {
   return div;
 }
 
-const isStylo = SpecialPowers.getBoolPref('layout.css.servo.enabled', false);
+const isStylo = SpecialPowers.DOMWindowUtils.isStyledByServo;
 
 test(function(t) {
   addStyle(t,
