@@ -2495,6 +2495,9 @@ public class BrowserApp extends GeckoApp
             } else if (!TextUtils.isEmpty(tabURL)) {
                 url = tabURL;
                 telemetryMsg = "urlbar-url";
+                if (splashScreen != null) {
+                    splashScreen.setVisibility(View.GONE);
+                }
             }
         }
 

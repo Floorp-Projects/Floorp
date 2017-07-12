@@ -7,8 +7,8 @@
                                        android:orientation="vertical">
 
     <ImageView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="116dp"
+        android:layout_height="121dp"
         android:layout_centerInParent="true"
         android:src="@drawable/firefox_logo"/>
 
