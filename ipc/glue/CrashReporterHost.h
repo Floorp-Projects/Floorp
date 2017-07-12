@@ -15,6 +15,7 @@
 #ifdef MOZ_CRASHREPORTER
 #include "nsExceptionHandler.h"
 #endif
+#include "nsIThread.h"
 
 namespace mozilla {
 namespace ipc {
