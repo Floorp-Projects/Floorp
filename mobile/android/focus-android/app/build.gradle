@@ -148,7 +148,7 @@ dependencies {
         transitive = false
     }
 
-    compile 'org.mozilla.telemetry:telemetry:1.0.0'
+    compile 'org.mozilla.telemetry:telemetry:1.1.0'
 
     focusCompile 'com.adjust.sdk:adjust-android:4.11.4'
     focusCompile 'com.google.android.gms:play-services-analytics:10.2.6' // Required by Adjust
