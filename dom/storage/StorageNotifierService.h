@@ -24,12 +24,6 @@ public:
                              const char16_t* aStorageType,
                              bool aPrivateBrowsing) = 0;
 
-  virtual bool
-  IsPrivateBrowsing() const = 0;
-
-  virtual nsIPrincipal*
-  GetPrincipal() const = 0;
-
   virtual nsIEventTarget*
   GetEventTarget() const = 0;
 };
