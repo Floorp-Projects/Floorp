@@ -817,7 +817,7 @@ static bool
 IsMarkedBlack(Cell* cell)
 {
     TenuredCell* tc = &cell->asTenured();
-    return tc->isMarkedAny() && !tc->isMarkedGray();
+    return tc->isMarkedBlack();
 }
 
 static bool

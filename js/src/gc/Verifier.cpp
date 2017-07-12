@@ -653,8 +653,7 @@ CheckGrayMarkingTracer::checkCell(Cell* cell)
 
     TenuredCell* tenuredCell = &cell->asTenured();
     TenuredCell* tenuredParent = &parent->asTenured();
-    if (tenuredParent->isMarkedAny() && !tenuredParent->isMarkedGray() &&
-        tenuredCell->isMarkedGray())
+    if (tenuredParent->isMarkedBlack() && tenuredCell->isMarkedGray())
     {
         failures++;
         fprintf(stderr, "Found black to gray edge to %s %p\n",
