@@ -130,6 +130,9 @@ void
 ClearContentXBLScope(JSObject* global);
 
 bool
+IsAddonCompartment(JSCompartment* c);
+
+bool
 IsInAddonScope(JSObject* obj);
 
 JSObject*
