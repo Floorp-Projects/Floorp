@@ -8,7 +8,6 @@
 
 #include "gfxFont.h"
 #include "gfxFontFamilyList.h"
-#include "gfxFontSrcURI.h"
 #include "nsRefPtrHashtable.h"
 #include "nsCOMPtr.h"
 #include "nsIURI.h"
@@ -56,7 +55,7 @@ struct gfxFontFaceSrc {
     uint32_t               mFormatFlags;
 
     nsString               mLocalName;     // full font name if local
-    RefPtr<gfxFontSrcURI>  mURI;           // uri if url
+    nsCOMPtr<nsIURI>       mURI;           // uri if url
     nsCOMPtr<nsIURI>       mReferrer;      // referrer url if url
     mozilla::net::ReferrerPolicy mReferrerPolicy;
     nsCOMPtr<nsIPrincipal> mOriginPrincipal; // principal if url
@@ -67,9 +66,6 @@ struct gfxFontFaceSrc {
 inline bool
 operator==(const gfxFontFaceSrc& a, const gfxFontFaceSrc& b)
 {
-    // The mReferrer and mOriginPrincipal comparisons aren't safe OMT.
-    MOZ_ASSERT(NS_IsMainThread());
-
     if (a.mSourceType != b.mSourceType) {
         return false;
     }
@@ -80,7 +76,7 @@ operator==(const gfxFontFaceSrc& a, const gfxFontFaceSrc& b)
             bool equals;
             return a.mUseOriginPrincipal == b.mUseOriginPrincipal &&
                    a.mFormatFlags == b.mFormatFlags &&
-                   (a.mURI == b.mURI || a.mURI->Equals(b.mURI)) &&
+                   NS_SUCCEEDED(a.mURI->Equals(b.mURI, &equals)) && equals &&
                    NS_SUCCEEDED(a.mReferrer->Equals(b.mReferrer, &equals)) &&
                      equals &&
                    a.mReferrerPolicy == b.mReferrerPolicy &&
@@ -111,7 +107,7 @@ public:
     size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
     nsTArray<uint8_t> mMetadata;  // woff metadata block (compressed), if any
-    RefPtr<gfxFontSrcURI>  mURI;       // URI of the source, if it was url()
+    nsCOMPtr<nsIURI>  mURI;       // URI of the source, if it was url()
     nsCOMPtr<nsIPrincipal> mPrincipal; // principal for the download, if url()
     nsString          mLocalName; // font name used for the source, if local()
     nsString          mRealName;  // original fullname from the font resource
@@ -302,7 +298,7 @@ public:
         // The aPrivate flag is set for requests coming from private windows,
         // so we can avoid leaking fonts cached in private windows mode out to
         // normal windows.
-        static gfxFontEntry* GetFont(gfxFontSrcURI* aSrcURI,
+        static gfxFontEntry* GetFont(nsIURI* aSrcURI,
                                      nsIPrincipal* aPrincipal,
                                      gfxUserFontEntry* aUserFontEntry,
                                      bool              aPrivate);
@@ -368,14 +364,14 @@ public:
         // or rendering, and that must match between a font-set's userfont
         // entry and the corresponding "real" font entry.
         struct Key {
-            RefPtr<gfxFontSrcURI>   mURI;
+            nsCOMPtr<nsIURI>        mURI;
             nsCOMPtr<nsIPrincipal>  mPrincipal; // use nullptr with data: URLs
             // The font entry MUST notify the cache when it is destroyed
             // (by calling ForgetFont()).
             gfxFontEntry* MOZ_NON_OWNING_REF mFontEntry;
             bool                    mPrivate;
 
-            Key(gfxFontSrcURI* aURI, nsIPrincipal* aPrincipal,
+            Key(nsIURI* aURI, nsIPrincipal* aPrincipal,
                 gfxFontEntry* aFontEntry, bool aPrivate)
                 : mURI(aURI),
                   mPrincipal(aPrincipal),
@@ -415,7 +411,7 @@ public:
                     aKey->mPrincipal->GetHashValue(&principalHash);
                 }
                 return mozilla::HashGeneric(principalHash + int(aKey->mPrivate),
-                                            aKey->mURI->Hash(),
+                                            nsURIHashKey::HashKey(aKey->mURI),
                                             HashFeatures(aKey->mFontEntry->mFeatureSettings),
                                             mozilla::HashString(aKey->mFontEntry->mFamilyName),
                                             (aKey->mFontEntry->mStyle |
@@ -426,7 +422,7 @@ public:
 
             enum { ALLOW_MEMMOVE = false };
 
-            gfxFontSrcURI* GetURI() const { return mURI; }
+            nsIURI* GetURI() const { return mURI; }
             nsIPrincipal* GetPrincipal() const { return mPrincipal; }
             gfxFontEntry* GetFontEntry() const { return mFontEntry; }
             bool IsPrivate() const { return mPrivate; }
@@ -464,7 +460,7 @@ public:
             // to remove entries from the mAllowedFontSets tables.
             nsDataHashtable<nsPtrHashKey<gfxUserFontSet>, bool> mAllowedFontSets;
 
-            RefPtr<gfxFontSrcURI>  mURI;
+            nsCOMPtr<nsIURI>       mURI;
             nsCOMPtr<nsIPrincipal> mPrincipal; // or nullptr for data: URLs
 
             // The "real" font entry corresponding to this downloaded font.
