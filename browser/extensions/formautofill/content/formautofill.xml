@@ -169,7 +169,7 @@
             this, "anonid", "autofill-warning"
           );
 
-          this.allFieldCategories = JSON.parse(this.getAttribute("ac-value")).categories;
+          let {categories: allFieldCategories, focusedCategory} = JSON.parse(this.getAttribute("ac-value"));
 
           /**
            * Update the text on the footer.
@@ -181,10 +181,15 @@
            *        Used to determine if it has the extra categories other than the focued category. If
            *        the value is true, we show "Also fill ...", otherwise, show "Fill ..." only.
            */
-          this._updateText = (categories = this.allFieldCategories, hasExtraCategories = true) => {
+          this._updateText = (categories = allFieldCategories, hasExtraCategories = true) => {
             let warningTextTmplKey = hasExtraCategories ? "phishingWarningMessage" : "phishingWarningMessage2";
             let sep = this._stringBundle.GetStringFromName("fieldNameSeparator");
-            let categoriesText = categories.map(this._stringBundle.GetStringFromName).join(sep);
+            // Show the categories in certain order to conform with the spec.
+            let orderedCategoryList = ["address", "name", "organization", "tel", "email"];
+            let showCategories = hasExtraCategories ?
+              orderedCategoryList.filter(category => categories.includes(category) && category != focusedCategory) :
+              [focusedCategory];
+            let categoriesText = showCategories.map(this._stringBundle.GetStringFromName).join(sep);
 
             this._warningTextBox.textContent = this._stringBundle.formatStringFromName(warningTextTmplKey,
               [categoriesText], 1);
@@ -201,12 +206,10 @@
            * the exact category that we're going to fill in.
            *
            * @private
-           * @param {string} focusedCategory
-           *        The category that the focused input's field belongs to.
            * @param {string[]} categories
            *        The categories of all the fields contained in the selected address.
            */
-          this._updateWarningMsgHandler = ({data: {focusedCategory, categories}} = {data: {}}) => {
+          this._updateWarningMsgHandler = ({data: {categories}} = {data: {}}) => {
             let hasSelectedAddress = focusedCategory && categories;
             // If the length of categories is 1, that means all the fillable fields are in the same
             // category. We will change the way to inform user according to this flag.
@@ -216,10 +219,7 @@
               return;
             }
 
-            let showCategories = hasExtraCategories ?
-                                 categories.filter(category => category != focusedCategory) :
-                                 [focusedCategory];
-            this._updateText(showCategories, hasExtraCategories);
+            this._updateText(categories, hasExtraCategories);
           };
 
           this._adjustAcItem();
