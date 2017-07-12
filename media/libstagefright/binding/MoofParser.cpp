@@ -394,11 +394,29 @@ Moof::Moof(Box& aBox, Trex& aTrex, Mvhd& aMvhd, Mdhd& aMdhd, Edts& aEdts, Sinf& 
   : mRange(aBox.Range())
   , mMaxRoundingError(35000)
 {
+  nsTArray<Box> psshBoxes;
   for (Box box = aBox.FirstChild(); box.IsAvailable(); box = box.Next()) {
     if (box.IsType("traf")) {
       ParseTraf(box, aTrex, aMvhd, aMdhd, aEdts, aSinf, aDecodeTime, aIsAudio);
     }
+    if (box.IsType("pssh")) {
+      psshBoxes.AppendElement(box);
+    }
   }
+
+  // The EME spec requires that PSSH boxes which are contiguous in the
+  // file are dispatched to the media element in a single "encrypted" event.
+  // So append contiguous boxes here.
+  for (size_t i = 0; i < psshBoxes.Length(); ++i) {
+    Box box = psshBoxes[i];
+    if (i == 0 || box.Offset() != psshBoxes[i - 1].NextOffset()) {
+      mPsshes.AppendElement();
+    }
+    nsTArray<uint8_t>& pssh = mPsshes.LastElement();
+    pssh.AppendElements(box.Header());
+    pssh.AppendElements(box.Read());
+  }
+
   if (IsValid()) {
     if (mIndex.Length()) {
       // Ensure the samples are contiguous with no gaps.

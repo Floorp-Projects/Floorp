@@ -591,6 +591,8 @@ public:
   nsTArray<uint32_t> mEncryptedSizes;
   nsTArray<uint8_t> mIV;
   nsTArray<nsCString> mSessionIds;
+  nsTArray<nsTArray<uint8_t>> mInitDatas;
+  nsString mInitDataType;
 };
 
 // MediaRawData is a MediaData container used to store demuxed, still compressed
