@@ -44,7 +44,7 @@ let patterns = [
   { i: "x{ '<t>\n}",      o: "declaration but found \u2018'<s>\u2019." },
 ];
 
-const isStylo = SpecialPowers.getBoolPref('layout.css.servo.enabled', false);
+const isStylo = SpecialPowers.DOMWindowUtils.isStyledByServo;
 
 // Stylo's CSS parser only reports the 'url(' token, not the actual bad URL.
 if (!isStylo) {
