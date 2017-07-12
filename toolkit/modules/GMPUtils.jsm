@@ -13,7 +13,6 @@ this.EXPORTED_SYMBOLS = [ "GMP_PLUGIN_IDS",
                           "OPEN_H264_ID",
                           "WIDEVINE_ID" ];
 
-Cu.import("resource://gre/modules/Preferences.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/AppConstants.jsm");
 
@@ -54,7 +53,7 @@ this.GMPUtils = {
       return true;
     }
 
-    if (!GMPPrefs.get(GMPPrefs.KEY_EME_ENABLED, true)) {
+    if (!GMPPrefs.getBool(GMPPrefs.KEY_EME_ENABLED, true)) {
       return true;
     }
 
@@ -96,7 +95,7 @@ this.GMPUtils = {
    *          The plugin to check.
    */
   _isPluginVisible(aPlugin) {
-    return GMPPrefs.get(GMPPrefs.KEY_PLUGIN_VISIBLE, false, aPlugin.id);
+    return GMPPrefs.getBool(GMPPrefs.KEY_PLUGIN_VISIBLE, false, aPlugin.id);
   },
 
   /**
@@ -107,7 +106,7 @@ this.GMPUtils = {
    *          The plugin to check.
    */
   _isPluginForceSupported(aPlugin) {
-    return GMPPrefs.get(GMPPrefs.KEY_PLUGIN_FORCE_SUPPORTED, false, aPlugin.id);
+    return GMPPrefs.getBool(GMPPrefs.KEY_PLUGIN_FORCE_SUPPORTED, false, aPlugin.id);
   },
 };
 
@@ -140,28 +139,70 @@ this.GMPPrefs = {
   KEY_LOGGING_DUMP:             "media.gmp.log.dump",
 
   /**
-   * Obtains the specified preference in relation to the specified plugin.
+   * Obtains the specified string preference in relation to the specified plugin.
    * @param aKey The preference key value to use.
    * @param aDefaultValue The default value if no preference exists.
    * @param aPlugin The plugin to scope the preference to.
    * @return The obtained preference value, or the defaultValue if none exists.
    */
-  get(aKey, aDefaultValue, aPlugin) {
+  getString(aKey, aDefaultValue, aPlugin) {
     if (aKey === this.KEY_APP_DISTRIBUTION ||
         aKey === this.KEY_APP_DISTRIBUTION_VERSION) {
       return Services.prefs.getDefaultBranch(null).getCharPref(aKey, "default");
     }
-    return Preferences.get(this.getPrefKey(aKey, aPlugin), aDefaultValue);
+    return Services.prefs.getStringPref(this.getPrefKey(aKey, aPlugin), aDefaultValue);
   },
 
   /**
-   * Sets the specified preference in relation to the specified plugin.
+   * Obtains the specified int preference in relation to the specified plugin.
+   * @param aKey The preference key value to use.
+   * @param aDefaultValue The default value if no preference exists.
+   * @param aPlugin The plugin to scope the preference to.
+   * @return The obtained preference value, or the defaultValue if none exists.
+   */
+  getInt(aKey, aDefaultValue, aPlugin) {
+    return Services.prefs.getIntPref(this.getPrefKey(aKey, aPlugin), aDefaultValue);
+  },
+
+  /**
+   * Obtains the specified bool preference in relation to the specified plugin.
+   * @param aKey The preference key value to use.
+   * @param aDefaultValue The default value if no preference exists.
+   * @param aPlugin The plugin to scope the preference to.
+   * @return The obtained preference value, or the defaultValue if none exists.
+   */
+  getBool(aKey, aDefaultValue, aPlugin) {
+    return Services.prefs.getBoolPref(this.getPrefKey(aKey, aPlugin), aDefaultValue);
+  },
+
+  /**
+   * Sets the specified string preference in relation to the specified plugin.
    * @param aKey The preference key value to use.
    * @param aVal The value to set.
    * @param aPlugin The plugin to scope the preference to.
    */
-  set(aKey, aVal, aPlugin) {
-    Preferences.set(this.getPrefKey(aKey, aPlugin), aVal);
+  setString(aKey, aVal, aPlugin) {
+    Services.prefs.setStringPref(this.getPrefKey(aKey, aPlugin), aVal);
+  },
+
+  /**
+   * Sets the specified bool preference in relation to the specified plugin.
+   * @param aKey The preference key value to use.
+   * @param aVal The value to set.
+   * @param aPlugin The plugin to scope the preference to.
+   */
+  setBool(aKey, aVal, aPlugin) {
+    Services.prefs.setBoolPref(this.getPrefKey(aKey, aPlugin), aVal);
+  },
+
+  /**
+   * Sets the specified int preference in relation to the specified plugin.
+   * @param aKey The preference key value to use.
+   * @param aVal The value to set.
+   * @param aPlugin The plugin to scope the preference to.
+   */
+  setInt(aKey, aVal, aPlugin) {
+    Services.prefs.setIntPref(this.getPrefKey(aKey, aPlugin), aVal);
   },
 
   /**
@@ -172,7 +213,7 @@ this.GMPPrefs = {
    * @return true if the preference is set, false otherwise.
    */
   isSet(aKey, aPlugin) {
-    return Preferences.isSet(this.getPrefKey(aKey, aPlugin));
+    return Services.prefs.prefHasUserValue(this.getPrefKey(aKey, aPlugin));
   },
 
   /**
@@ -182,7 +223,7 @@ this.GMPPrefs = {
    * @param aPlugin The plugin to scope the preference to.
    */
   reset(aKey, aPlugin) {
-    Preferences.reset(this.getPrefKey(aKey, aPlugin));
+    Services.prefs.clearUserPref(this.getPrefKey(aKey, aPlugin));
   },
 
   /**

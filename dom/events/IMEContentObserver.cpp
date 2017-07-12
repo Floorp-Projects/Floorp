@@ -336,11 +336,11 @@ IMEContentObserver::InitWithEditor(nsPresContext* aPresContext,
   nsCOMPtr<nsIDOMRange> selDomRange;
   if (NS_SUCCEEDED(mSelection->GetRangeAt(0, getter_AddRefs(selDomRange)))) {
     nsRange* selRange = static_cast<nsRange*>(selDomRange.get());
-    if (NS_WARN_IF(!selRange) || NS_WARN_IF(!selRange->GetStartParent())) {
+    if (NS_WARN_IF(!selRange) || NS_WARN_IF(!selRange->GetStartContainer())) {
       return false;
     }
 
-    mRootContent = selRange->GetStartParent()->
+    mRootContent = selRange->GetStartContainer()->
                      GetSelectionRootContent(presShell);
   } else {
     mRootContent = mEditableNode->GetSelectionRootContent(presShell);

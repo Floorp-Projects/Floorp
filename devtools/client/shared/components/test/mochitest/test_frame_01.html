@@ -293,14 +293,11 @@ window.onload = Task.async(function* () {
       sourceUrl: "https://bugzilla.mozilla.org/original.js",
     };
     let mockSourceMapService = {
-      originalPositionFor: function () {
-	// Return a phony promise-like thing that resolves
-	// immediately.
-	return {
-	  then: function (consequence) {
-	    consequence(resolvedLocation);
-	  },
-	};
+      subscribe: function (url, line, column, callback) {
+	// Resolve immediately.
+        callback(true, resolvedLocation.sourceUrl, resolvedLocation.line);
+      },
+      unsubscribe: function (url, line, column, callback) {
       },
     };
     yield checkFrameComponent({

@@ -55,4 +55,7 @@ add_task(async function () {
 
   ok(true, "Inspector selected and new node got selected");
   is(nodeFront.displayName, "h1", "The expected node was selected");
+
+  is(msg.querySelector(".arrow").classList.contains("expanded"), false,
+    "The object inspector wasn't expanded");
 });

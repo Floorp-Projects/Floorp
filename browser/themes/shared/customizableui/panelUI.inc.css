@@ -1603,6 +1603,7 @@ toolbarpaletteitem[place="palette"] > .toolbarbutton-1 > .toolbarbutton-menubutt
 toolbarpaletteitem[place="palette"] > #search-container {
   min-width: 7em;
   width: 7em;
+  min-height: 37px;
 }
 
 .toolbaritem-combined-buttons@inAnyPanel@ {

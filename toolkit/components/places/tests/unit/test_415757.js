@@ -28,10 +28,6 @@ function uri_in_db(aURI) {
 const TOTAL_SITES = 20;
 
 // main
-function run_test() {
-  run_next_test();
-}
-
 add_task(async function test_execute() {
   // add pages to global history
   for (let i = 0; i < TOTAL_SITES; i++) {

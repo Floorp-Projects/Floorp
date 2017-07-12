@@ -73,7 +73,7 @@ macosx64-dmd/opt:
 macosx64-devedition/opt:
     description: "MacOS X Dev Edition x64"
     index:
-        product: firefox
+        product: devedition
         job-name: macosx64-devedition-opt
     treeherder:
         platform: macosx64-devedition/opt

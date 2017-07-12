@@ -131,10 +131,11 @@ async function task_setCountRank(aURI, aCount, aRank, aSearch, aBookmark) {
 
   // If this is supposed to be a bookmark, add it.
   if (aBookmark) {
-    PlacesUtils.bookmarks.insertBookmark(PlacesUtils.unfiledBookmarksFolderId,
-                                         aURI,
-                                         PlacesUtils.bookmarks.DEFAULT_INDEX,
-                                         "test_book");
+    await PlacesUtils.bookmarks.insert({
+      parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+      title: "test_book",
+      url: aURI,
+    });
 
     // And add the tag if we need to.
     if (aBookmark == "tag") {

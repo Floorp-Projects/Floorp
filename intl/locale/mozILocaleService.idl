@@ -83,6 +83,22 @@ interface mozILocaleService : nsISupports
                             [retval, array, size_is(aCount)] out string aLocales);
 
   /**
+   * Returns a list of locales to use for any regional specific operations
+   * like date formatting, calendars, unit formatting etc.
+   *
+   * The result is a ordered list of valid locale IDs and it should be
+   * used for all APIs that accept list of locales, like ECMA402 and L10n APIs.
+   *
+   * This API always returns at least one locale.
+   *
+   * Example: ["en-US", "de", "pl", "sr-Cyrl", "zh-Hans-HK"]
+   *
+   * (See LocaleService.h for a more C++-friendly version of this.)
+   */
+  void getRegionalPrefsLocales([optional] out unsigned long aCount,
+                        [retval, array, size_is(aCount)] out string aOutArray);
+
+  /**
    * Negotiates the best locales out of a ordered list of requested locales and
    * a list of available locales.
    *

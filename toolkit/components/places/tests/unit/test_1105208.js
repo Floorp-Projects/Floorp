@@ -18,7 +18,3 @@ add_task(async function() {
 
   unfiledRoot.containerOpen = false;
 });
-
-function run_test() {
-  run_next_test();
-}

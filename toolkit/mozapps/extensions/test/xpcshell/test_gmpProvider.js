@@ -144,8 +144,8 @@ add_task(async function test_installed() {
     file.append(addon.id);
     file.append(TEST_VERSION);
     gPrefs.setBoolPref(gGetKey(GMPScope.GMPPrefs.KEY_PLUGIN_ENABLED, mockAddon.id), false);
-    gPrefs.setCharPref(gGetKey(GMPScope.GMPPrefs.KEY_PLUGIN_LAST_UPDATE, mockAddon.id),
-                      "" + TEST_TIME_SEC);
+    gPrefs.setIntPref(gGetKey(GMPScope.GMPPrefs.KEY_PLUGIN_LAST_UPDATE, mockAddon.id),
+                      TEST_TIME_SEC);
     gPrefs.setCharPref(gGetKey(GMPScope.GMPPrefs.KEY_PLUGIN_VERSION, mockAddon.id),
                       TEST_VERSION);
 

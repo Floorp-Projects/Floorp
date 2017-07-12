@@ -129,8 +129,8 @@ public:
   nsresult      RemoveItem(nsRange* aRange);
   nsresult      RemoveCollapsedRanges();
   nsresult      Clear(nsPresContext* aPresContext);
-  nsresult      Collapse(nsINode* aParentNode, int32_t aOffset);
-  nsresult      Extend(nsINode* aParentNode, int32_t aOffset);
+  nsresult      Collapse(nsINode* aContainer, int32_t aOffset);
+  nsresult      Extend(nsINode* aContainer, int32_t aOffset);
   nsRange*      GetRangeAt(int32_t aIndex) const;
 
   // Get the anchor-to-focus range if we don't care which end is
@@ -145,7 +145,10 @@ public:
   void         ReplaceAnchorFocusRange(nsRange *aRange);
   void         AdjustAnchorFocusForMultiRange(nsDirection aDirection);
 
-  //  NS_IMETHOD   GetPrimaryFrameForRangeEndpoint(nsIDOMNode *aNode, int32_t aOffset, bool aIsEndNode, nsIFrame **aResultFrame);
+  //  NS_IMETHOD   GetPrimaryFrameForRangeEndpoint(nsIDOMNode* aContainer,
+  //                                               int32_t aOffset,
+  //                                               bool aIsEndNode,
+  //                                               nsIFrame** aResultFrame);
   NS_IMETHOD   GetPrimaryFrameForAnchorNode(nsIFrame **aResultFrame);
   NS_IMETHOD   GetPrimaryFrameForFocusNode(nsIFrame **aResultFrame, int32_t *aOffset, bool aVisual);
 
@@ -179,12 +182,12 @@ public:
   // *JS() methods are mapped to Selection.*().
   // They may move focus only when the range represents normal selection.
   // These methods shouldn't be used by non-JS callers.
-  void CollapseJS(nsINode* aNode, uint32_t aOffset,
+  void CollapseJS(nsINode* aContainer, uint32_t aOffset,
                   mozilla::ErrorResult& aRv);
   void CollapseToStartJS(mozilla::ErrorResult& aRv);
   void CollapseToEndJS(mozilla::ErrorResult& aRv);
 
-  void ExtendJS(nsINode& aNode, uint32_t aOffset,
+  void ExtendJS(nsINode& aContainer, uint32_t aOffset,
                 mozilla::ErrorResult& aRv);
 
   void SelectAllChildrenJS(nsINode& aNode, mozilla::ErrorResult& aRv);
@@ -259,10 +262,10 @@ public:
   void ResetColors(mozilla::ErrorResult& aRv);
 
   // Non-JS callers should use the following methods.
-  void Collapse(nsINode& aNode, uint32_t aOffset, mozilla::ErrorResult& aRv);
+  void Collapse(nsINode& aContainer, uint32_t aOffset, ErrorResult& aRv);
   void CollapseToStart(mozilla::ErrorResult& aRv);
   void CollapseToEnd(mozilla::ErrorResult& aRv);
-  void Extend(nsINode& aNode, uint32_t aOffset, mozilla::ErrorResult& aRv);
+  void Extend(nsINode& aContainer, uint32_t aOffset, ErrorResult& aRv);
   void AddRange(nsRange& aRange, mozilla::ErrorResult& aRv);
   void SelectAllChildren(nsINode& aNode, mozilla::ErrorResult& aRv);
   void SetBaseAndExtent(nsINode& aAnchorNode, uint32_t aAnchorOffset,

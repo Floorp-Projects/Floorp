@@ -17,7 +17,7 @@ const TOPICDATA_FORCE_PLACES_INIT = "force-places-init";
 var bg = Cc["@mozilla.org/browser/browserglue;1"].
          getService(Ci.nsIObserver);
 
-function run_test() {
+add_task(async function setup() {
   // Create our bookmarks.html from bookmarks.glue.html.
   create_bookmarks_html("bookmarks.glue.html");
 
@@ -26,14 +26,12 @@ function run_test() {
   // Create our JSON backup from bookmarks.glue.json.
   create_JSON_backup("bookmarks.glue.json");
 
-  run_next_test();
-}
+  do_register_cleanup(function() {
+    remove_bookmarks_html();
+    remove_all_JSON_backups();
 
-do_register_cleanup(function() {
-  remove_bookmarks_html();
-  remove_all_JSON_backups();
-
-  return PlacesUtils.bookmarks.eraseEverything();
+    return PlacesUtils.bookmarks.eraseEverything();
+  });
 });
 
 function simulatePlacesInit() {
@@ -46,11 +44,10 @@ function simulatePlacesInit() {
 add_task(async function test_checkPreferences() {
   // Initialize Places through the History Service and check that a new
   // database has been created.
+  let promiseComplete = promiseTopicObserved("places-browser-init-complete");
   Assert.equal(PlacesUtils.history.databaseStatus,
                PlacesUtils.history.DATABASE_STATUS_CREATE);
-
-  // Wait for Places init notification.
-  await promiseTopicObserved("places-browser-init-complete");
+  await promiseComplete;
 
   // Ensure preferences status.
   Assert.ok(!Services.prefs.getBoolPref(PREF_AUTO_EXPORT_HTML));

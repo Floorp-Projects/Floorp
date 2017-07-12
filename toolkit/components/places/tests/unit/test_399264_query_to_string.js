@@ -22,9 +22,6 @@ function query_string(aFolderID) {
 }
 
 function run_test() {
-  var bs = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
-           getService(Ci.nsINavBookmarksService);
-
   const QUERIES = [
       "folder=PLACES_ROOT",
       "folder=BOOKMARKS_MENU",
@@ -33,13 +30,12 @@ function run_test() {
       "folder=TOOLBAR"
   ];
   const FOLDER_IDS = [
-      bs.placesRoot,
-      bs.bookmarksMenuFolder,
-      bs.tagsFolder,
-      bs.unfiledBookmarksFolder,
-      bs.toolbarFolder
+    PlacesUtils.placesRootId,
+    PlacesUtils.bookmarksMenuFolderId,
+    PlacesUtils.tagsFolderId,
+    PlacesUtils.unfiledBookmarksFolderId,
+    PlacesUtils.toolbarFolderId,
   ];
-
 
   for (var i = 0; i < QUERIES.length; i++) {
     var result = query_string(FOLDER_IDS[i]);

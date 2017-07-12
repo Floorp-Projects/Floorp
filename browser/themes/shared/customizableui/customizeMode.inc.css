@@ -371,6 +371,21 @@ toolbarpaletteitem[place="toolbar"]:not([mousedown="true"]):-moz-focusring {
   outline-offset: -5px;
 }
 
+toolbarpaletteitem[place=palette] > toolbarspring {
+  width: 7em;
+  min-width: 7em;
+  outline: 1px solid GrayText;
+  outline-offset: -8px;
+  height: 37px;
+}
+
+toolbarpaletteitem[place=toolbar] > toolbarspring {
+  outline: 1px solid GrayText;
+  outline-offset: -2px;
+  margin-top: 5px;
+  margin-bottom: 5px;
+}
+
 :root:not([photon-structure]) #wrapper-edit-controls[place="palette"] > #edit-controls > toolbarbutton,
 :root:not([photon-structure]) #wrapper-edit-controls[place="palette"] > #edit-controls > separator,
 :root:not([photon-structure]) #wrapper-zoom-controls[place="palette"] > #zoom-controls > toolbarbutton,

@@ -53,6 +53,7 @@
 #include "mozilla/GeckoStyleContext.h"
 #include "mozilla/Keyframe.h"
 #include "mozilla/Mutex.h"
+#include "mozilla/Preferences.h"
 #include "mozilla/ServoElementSnapshot.h"
 #include "mozilla/ServoRestyleManager.h"
 #include "mozilla/StyleAnimationValue.h"
@@ -88,6 +89,7 @@ using namespace mozilla::dom;
 static Mutex* sServoFontMetricsLock = nullptr;
 static RWLock* sServoLangFontPrefsLock = nullptr;
 
+static bool sFramesTimingFunctionEnabled;
 
 static
 const nsFont*
@@ -344,8 +346,9 @@ Gecko_GetStyleContext(RawGeckoElementBorrowed aElement,
   }
 
   // FIXME(emilio): Is there a shorter path?
-  nsCSSFrameConstructor* fc =
-    aElement->OwnerDoc()->GetShell()->GetPresContext()->FrameConstructor();
+  nsIPresShell* shell = aElement->OwnerDoc()->GetShell();
+  NS_ENSURE_TRUE(shell, nullptr);
+  nsCSSFrameConstructor* fc = shell->GetPresContext()->FrameConstructor();
 
   // NB: This is only called for CalcStyleDifference, and we handle correctly
   // the display: none case since Servo still has the older style.
@@ -761,6 +764,11 @@ Gecko_GetPositionInSegment(RawGeckoAnimationPropertySegmentBorrowed aSegment,
   return ComputedTimingFunction::GetPortion(aSegment->mTimingFunction,
                                             positionInSegment,
                                             aBeforeFlag);
+}
+
+bool
+Gecko_IsFramesTimingEnabled() {
+  return sFramesTimingFunctionEnabled;
 }
 
 RawServoAnimationValueBorrowedOrNull
@@ -2338,6 +2346,9 @@ InitializeServo()
 
   sServoFontMetricsLock = new Mutex("Gecko_GetFontMetrics");
   sServoLangFontPrefsLock = new RWLock("nsPresContext::GetDefaultFont");
+
+  Preferences::AddBoolVarCache(&sFramesTimingFunctionEnabled,
+                               "layout.css.frames-timing.enabled");
 }
 
 void

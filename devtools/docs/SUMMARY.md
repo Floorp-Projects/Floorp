@@ -25,6 +25,7 @@
   * [Debugger](tools/debugger-panel.md)
   * [Responsive Design Mode](tools/responsive-design-mode.md)
   * [HTTP Inspector](tools/http-inspector.md)
+  * [Console](tools/console-panel.md)
 * [Frontend](frontend/frontend.md)
   * [Panel SVGs](frontend/svgs.md)
   * [React](frontend/react.md)

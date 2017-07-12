@@ -5,7 +5,6 @@
 
 package org.mozilla.gecko.home;
 
-import java.lang.ref.WeakReference;
 import java.util.concurrent.Future;
 
 import android.content.Context;
@@ -21,7 +20,6 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-import org.mozilla.gecko.AboutPages;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.Tab;
 import org.mozilla.gecko.Tabs;
@@ -205,13 +203,12 @@ public class TwoLinePageRow extends LinearLayout
     protected void updateDisplayedUrl() {
         final Tab selectedTab = Tabs.getInstance().getSelectedTab();
         final boolean isPrivate = (selectedTab != null) && (selectedTab.isPrivate());
-        final Tab.TabType type = selectedTab != null ? selectedTab.getType() : Tab.TabType.BROWSING;
 
         // We always want to display the underlying page url, however for readermode pages
         // we navigate to the about:reader equivalent, hence we need to use that url when finding
         // existing tabs
         final String navigationUrl = mHasReaderCacheItem ? ReaderModeUtils.getAboutReaderForUrl(mPageUrl) : mPageUrl;
-        Tab tab = Tabs.getInstance().getFirstTabForUrl(navigationUrl, isPrivate, type);
+        Tab tab = Tabs.getInstance().getFirstTabForUrl(navigationUrl, isPrivate);
 
 
         if (!mShowIcons || tab == null) {

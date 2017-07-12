@@ -1882,8 +1882,7 @@ var BrowserApp = {
           isPrivate: (data.isPrivate === true),
           pinned: (data.pinned === true),
           delayLoad: (delayLoad === true),
-          desktopMode: (data.desktopMode === true),
-          tabType: ("tabType" in data) ? data.tabType : "BROWSING"
+          desktopMode: (data.desktopMode === true)
         };
 
         params.userRequested = url;
@@ -3401,13 +3400,6 @@ nsBrowserAccess.prototype = {
                   aWhere == Ci.nsIBrowserDOMWindow.OPEN_SWITCHTAB);
     let isPrivate = false;
 
-    if (aOpener != null) {
-      let parent = BrowserApp.getTabForWindow(aOpener.top);
-      if (parent != null) {
-        newTab = newTab && parent.tabType != "CUSTOMTAB";
-      }
-    }
-
     if (newTab) {
       let parentId = -1;
       if (!isExternal && aOpener) {
@@ -3587,9 +3579,6 @@ Tab.prototype = {
     // Java and new tabs from Gecko.
     let stub = false;
 
-    // The authoritative list of possible tab types is the TabType enum in Tab.java.
-    this.type = "tabType" in aParams ? aParams.tabType : "BROWSING";
-
     if (!aParams.zombifying) {
       if ("tabID" in aParams) {
         this.id = aParams.tabID;
@@ -3612,7 +3601,6 @@ Tab.prototype = {
       let message = {
         type: "Tab:Added",
         tabID: this.id,
-        tabType: this.type,
         uri: truncate(uri, MAX_URI_LENGTH),
         parentId: this.parentId,
         tabIndex: ("tabIndex" in aParams) ? aParams.tabIndex : -1,
@@ -3675,8 +3663,7 @@ Tab.prototype = {
       desktopMode: this.desktopMode,
       isPrivate: isPrivate,
       tabId: this.id,
-      parentId: this.parentId,
-      type: this.type
+      parentId: this.parentId
     };
 
     if (aParams.delayLoad) {

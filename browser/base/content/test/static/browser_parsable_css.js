@@ -16,6 +16,9 @@ let whitelist = [
   // The debugger uses cross-browser CSS.
   {sourceName: /devtools\/client\/debugger\/new\/debugger.css/i,
    isFromDevTools: true},
+   // Reps uses cross-browser CSS.
+   {sourceName: /devtools\/client\/shared\/components\/reps\/reps.css/i,
+   isFromDevTools: true},
   // PDFjs is futureproofing its pseudoselectors, and those rules are dropped.
   {sourceName: /web\/viewer\.css$/i,
    errorMessage: /Unknown pseudo-class.*(fullscreen|selection)/i,
