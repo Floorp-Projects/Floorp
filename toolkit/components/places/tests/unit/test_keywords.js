@@ -83,30 +83,6 @@ function expectBookmarkNotifications() {
   return observer;
 }
 
-// This test must be the first one, since it creates the keywords cache.
-add_task(async function test_invalidURL() {
-  await PlacesTestUtils.addVisits("http://test.com/");
-  // Change to url to an invalid one, there's no API for that, so we must do
-  // that manually.
-  await PlacesUtils.withConnectionWrapper("test_invalidURL", async function(db) {
-    await db.execute(
-      `UPDATE moz_places SET url = :broken, url_hash = hash(:broken)
-       WHERE id = (SELECT id FROM moz_places WHERE url_hash = hash(:url))`,
-      { url: "http://test.com/", broken: "<invalid url>" });
-
-    await db.execute(
-      `INSERT INTO moz_keywords (keyword, place_id)
-       VALUES (:kw, (SELECT id FROM moz_places WHERE url_hash = hash(:broken)))`,
-      { broken: "<invalid url>", kw: "keyword" });
-  });
-  await check_keyword(false, "http://broken.com/", "keyword");
-  await check_keyword(false, null, "keyword");
-  await PlacesUtils.withConnectionWrapper("test_invalidURL", async function(db) {
-    let rows = await db.execute(`SELECT * FROM moz_keywords`);
-    Assert.equal(rows.length, 0, "The broken keyword should have been removed");
-  });
-});
-
 add_task(async function test_invalid_input() {
   Assert.throws(() => PlacesUtils.keywords.fetch(null),
                 /Invalid keyword/);
@@ -438,7 +414,7 @@ add_task(async function test_sameURIDifferentKeyword() {
   await check_keyword(false, "http://example.com/", "keyword2");
   await check_keyword(false, "http://example.com/", "keyword3");
 
-  check_no_orphans();
+  await check_no_orphans();
 });
 
 add_task(async function test_deleteKeywordMultipleBookmarks() {
@@ -492,7 +468,7 @@ add_task(async function test_deleteKeywordMultipleBookmarks() {
   await PlacesUtils.bookmarks.remove(bookmark2);
   Assert.equal((await foreign_count("http://example.com/")), fc); // -2 bookmarks
 
-  check_no_orphans();
+  await check_no_orphans();
 });
 
 add_task(async function test_multipleKeywordsSamePostData() {
@@ -505,7 +481,7 @@ add_task(async function test_multipleKeywordsSamePostData() {
 
   await PlacesUtils.keywords.remove("keyword");
 
-  check_no_orphans();
+  await check_no_orphans();
 });
 
 add_task(async function test_oldPostDataAPI() {
@@ -520,7 +496,7 @@ add_task(async function test_oldPostDataAPI() {
   await PlacesUtils.keywords.remove("keyword");
   await PlacesUtils.bookmarks.remove(bookmark);
 
-  check_no_orphans();
+  await check_no_orphans();
 });
 
 add_task(async function test_oldKeywordsAPI() {
@@ -544,7 +520,7 @@ add_task(async function test_oldKeywordsAPI() {
 
   await PlacesUtils.bookmarks.remove(bookmark);
 
-  check_no_orphans();
+  await check_no_orphans();
 });
 
 add_task(async function test_bookmarkURLChange() {

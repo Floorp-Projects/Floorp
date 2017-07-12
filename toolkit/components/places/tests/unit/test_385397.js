@@ -6,10 +6,6 @@
 
 const TOTAL_SITES = 20;
 
-function run_test() {
-  run_next_test();
-}
-
 add_task(async function test_execute() {
   let now = (Date.now() - 10000) * 1000;
 

@@ -1683,7 +1683,7 @@ var BookmarkingUI = {
     this._uninitView();
 
     if (this._hasBookmarksObserver) {
-      PlacesUtils.removeLazyBookmarkObserver(this);
+      PlacesUtils.bookmarks.removeObserver(this);
     }
 
     if (this._pendingUpdate) {
@@ -1728,7 +1728,7 @@ var BookmarkingUI = {
          // Start observing bookmarks if needed.
          if (!this._hasBookmarksObserver) {
            try {
-             PlacesUtils.addLazyBookmarkObserver(this);
+             PlacesUtils.bookmarks.addObserver(this);
              this._hasBookmarksObserver = true;
            } catch (ex) {
              Components.utils.reportError("BookmarkingUI failed adding a bookmarks observer: " + ex);

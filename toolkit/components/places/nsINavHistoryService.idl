@@ -1265,19 +1265,24 @@ interface nsINavHistoryService : nsISupports
   const unsigned short DATABASE_STATUS_OK = 0;
 
   /**
-   * Set when database did not exist and we created a new one
+   * Set when database did not exist and we created a new one.
    */
   const unsigned short DATABASE_STATUS_CREATE = 1;
 
   /**
-   * Set when database was corrupt and we replaced it
+   * Set when database was corrupt and we replaced it with a new one.
    */
   const unsigned short DATABASE_STATUS_CORRUPT = 2;
 
   /**
-   * Set when database schema has been upgraded
+   * Set when database schema has been upgraded.
    */
   const unsigned short DATABASE_STATUS_UPGRADED = 3;
+
+  /**
+   * Set when database couldn't be opened.
+   */
+  const unsigned short DATABASE_STATUS_LOCKED = 4;
 
   /**
    * Returns the current database status

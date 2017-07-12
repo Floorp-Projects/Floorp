@@ -30,11 +30,6 @@
 
 /******************************************************************************/
 
-.objectLink:hover {
-  cursor: pointer;
-  text-decoration: underline;
-}
-
 .inline {
   display: inline;
   white-space: normal;
@@ -49,15 +44,15 @@
 .objectBox-string,
 .objectBox-symbol,
 .objectBox-text,
-.objectLink-textNode,
+.objectBox-textNode,
 .objectBox-table {
   white-space: pre-wrap;
 }
 
 .objectBox-number,
-.objectLink-styleRule,
-.objectLink-element,
-.objectLink-textNode,
+.objectBox-styleRule,
+.objectBox-element,
+.objectBox-textNode,
 .objectBox-array > .length {
   color: var(--number-color);
 }
@@ -68,13 +63,13 @@
   color: var(--string-color);
 }
 
-.objectLink-function,
+.objectBox-function,
 .objectBox-stackTrace,
-.objectLink-profile {
+.objectBox-profile {
   color: var(--object-color);
 }
 
-.objectLink-Location {
+.objectBox-Location {
   font-style: italic;
   color: var(--location-color);
 }
@@ -87,7 +82,7 @@
   color: var(--null-color);
 }
 
-.objectLink-sourceLink {
+.objectBox-sourceLink {
   position: absolute;
   right: 4px;
   top: 2px;
@@ -107,11 +102,11 @@
 
 /******************************************************************************/
 
-.objectLink-event,
-.objectLink-eventLog,
-.objectLink-regexp,
-.objectLink-object,
-.objectLink-Date {
+.objectBox-event,
+.objectBox-eventLog,
+.objectBox-regexp,
+.objectBox-object,
+.objectBox-Date {
   font-weight: bold;
   color: var(--object-color);
   white-space: pre-wrap;
@@ -119,17 +114,15 @@
 
 /******************************************************************************/
 
-.objectLink-object .nodeName,
-.objectLink-NamedNodeMap .nodeName,
-.objectLink-NamedNodeMap .objectEqual,
-.objectLink-NamedNodeMap .arrayLeftBracket,
-.objectLink-NamedNodeMap .arrayRightBracket,
-.objectLink-Attr .attrEqual,
-.objectLink-Attr .attrTitle {
+.objectBox-object .nodeName,
+.objectBox-NamedNodeMap .nodeName,
+.objectBox-NamedNodeMap .objectEqual,
+.objectBox-Attr .attrEqual,
+.objectBox-Attr .attrTitle {
   color: var(--node-color);
 }
 
-.objectLink-object .nodeName {
+.objectBox-object .nodeName {
   font-weight: normal;
 }
 
@@ -139,21 +132,20 @@
 .objectRightBrace,
 .arrayLeftBracket,
 .arrayRightBracket {
-  cursor: pointer;
-  font-weight: bold;
+  color: var(--theme-highlight-blue);
 }
 
 /******************************************************************************/
 /* Cycle reference*/
 
-.objectLink-Reference {
+.objectBox-Reference {
   font-weight: bold;
   color: var(--reference-color);
 }
 
-.objectBox-array > .objectTitle {
-  font-weight: bold;
-  color: var(--object-color);
+[class*="objectBox-"] > .objectTitle {
+  color: var(--theme-highlight-blue);
+  font-style: italic;
 }
 
 .caption {
@@ -198,4 +190,61 @@
 .objectBox-textNode:hover .open-inspector svg,
 .open-inspector svg:hover {
   fill: rgb(65, 175, 230);
+}
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+.tree {
+  overflow: auto;
+  display: inline-block;
+}
+
+.tree.nowrap {
+  white-space: nowrap;
+}
+
+.tree.noselect {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  -o-user-select: none;
+  user-select: none;
+}
+
+.tree button {
+  display: block;
+}
+
+.tree .node {
+  padding: 0 0.25em;
+  position: relative;
+  cursor: pointer;
+}
+
+.tree .node.focused {
+  color: white;
+  background-color: var(--theme-selection-background);
+}
+
+.arrow svg {
+  fill: var(--theme-splitter-color);
+  transition: transform 0.125s ease;
+  width: 10px;
+  margin-inline-end: 5px;
+  transform: rotate(-90deg);
+}
+
+html[dir="rtl"] .arrow svg,
+.arrow svg:dir(rtl),
+.arrow svg:-moz-locale-dir(rtl) {
+  transform: rotate(90deg);
+}
+
+.arrow.expanded.expanded svg {
+  transform: rotate(0deg);
+}
+
+.object-label {
+  color: var(--theme-highlight-blue);
 }

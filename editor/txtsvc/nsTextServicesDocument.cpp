@@ -2563,7 +2563,7 @@ nsTextServicesDocument::GetUncollapsedSelection(nsITextServicesDocument::TSDBloc
   // selection is not collapsed, and that the input params to this
   // method are initialized to some defaults.
 
-  nsCOMPtr<nsIDOMNode> startParent, endParent;
+  nsCOMPtr<nsIDOMNode> startContainer, endContainer;
   int32_t startOffset, endOffset;
   int32_t rangeCount, tableCount;
   int32_t e1s1 = 0, e1s2 = 0, e2s1 = 0, e2s2 = 0;
@@ -2599,15 +2599,15 @@ nsTextServicesDocument::GetUncollapsedSelection(nsITextServicesDocument::TSDBloc
     NS_ENSURE_STATE(range);
 
     rv = GetRangeEndPoints(range,
-                           getter_AddRefs(startParent), &startOffset,
-                           getter_AddRefs(endParent), &endOffset);
+                           getter_AddRefs(startContainer), &startOffset,
+                           getter_AddRefs(endContainer), &endOffset);
 
     NS_ENSURE_SUCCESS(rv, rv);
 
     e1s2 = nsContentUtils::ComparePoints(eStart->mNode, eStartOffset,
-                                         endParent, endOffset);
+                                         endContainer, endOffset);
     e2s1 = nsContentUtils::ComparePoints(eEnd->mNode, eEndOffset,
-                                         startParent, startOffset);
+                                         startContainer, startOffset);
 
     // Break out of the loop if the text block intersects the current range.
 
@@ -2627,9 +2627,9 @@ nsTextServicesDocument::GetUncollapsedSelection(nsITextServicesDocument::TSDBloc
   // Now that we have an intersecting range, find out more info:
 
   e1s1 = nsContentUtils::ComparePoints(eStart->mNode, eStartOffset,
-                                       startParent, startOffset);
+                                       startContainer, startOffset);
   e2s2 = nsContentUtils::ComparePoints(eEnd->mNode, eEndOffset,
-                                       endParent, endOffset);
+                                       endContainer, endOffset);
 
   if (rangeCount > 1) {
     // There are multiple selection ranges, we only deal
@@ -2662,7 +2662,7 @@ nsTextServicesDocument::GetUncollapsedSelection(nsITextServicesDocument::TSDBloc
     p1 = do_QueryInterface(eStart->mNode);
     o1 = eStartOffset;
   } else {
-    p1 = startParent;
+    p1 = startContainer;
     o1 = startOffset;
   }
 
@@ -2673,7 +2673,7 @@ nsTextServicesDocument::GetUncollapsedSelection(nsITextServicesDocument::TSDBloc
     p2 = do_QueryInterface(eEnd->mNode);
     o2 = eEndOffset;
   } else {
-    p2 = endParent;
+    p2 = endContainer;
     o2 = endOffset;
   }
 
@@ -2806,36 +2806,41 @@ nsTextServicesDocument::SelectionIsValid()
 
 nsresult
 nsTextServicesDocument::GetRangeEndPoints(nsRange* aRange,
-                                          nsIDOMNode **aStartParent, int32_t *aStartOffset,
-                                          nsIDOMNode **aEndParent, int32_t *aEndOffset)
+                                          nsIDOMNode** aStartContainer,
+                                          int32_t* aStartOffset,
+                                          nsIDOMNode** aEndContainer,
+                                          int32_t* aEndOffset)
 {
-  NS_ENSURE_TRUE(aRange && aStartParent && aStartOffset && aEndParent && aEndOffset, NS_ERROR_NULL_POINTER);
+  NS_ENSURE_TRUE(aRange && aStartContainer && aStartOffset &&
+                 aEndContainer && aEndOffset, NS_ERROR_NULL_POINTER);
 
-  nsresult rv = aRange->GetStartContainer(aStartParent);
+  nsresult rv = aRange->GetStartContainer(aStartContainer);
 
   NS_ENSURE_SUCCESS(rv, rv);
 
-  NS_ENSURE_TRUE(aStartParent, NS_ERROR_FAILURE);
+  NS_ENSURE_TRUE(aStartContainer, NS_ERROR_FAILURE);
 
   rv = aRange->GetStartOffset(aStartOffset);
 
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = aRange->GetEndContainer(aEndParent);
+  rv = aRange->GetEndContainer(aEndContainer);
 
   NS_ENSURE_SUCCESS(rv, rv);
 
-  NS_ENSURE_TRUE(aEndParent, NS_ERROR_FAILURE);
+  NS_ENSURE_TRUE(aEndContainer, NS_ERROR_FAILURE);
 
   return aRange->GetEndOffset(aEndOffset);
 }
 
 nsresult
-nsTextServicesDocument::CreateRange(nsIDOMNode *aStartParent, int32_t aStartOffset,
-                                    nsIDOMNode *aEndParent, int32_t aEndOffset,
+nsTextServicesDocument::CreateRange(nsIDOMNode* aStartContainer,
+                                    int32_t aStartOffset,
+                                    nsIDOMNode* aEndContainer,
+                                    int32_t aEndOffset,
                                     nsRange** aRange)
 {
-  return nsRange::CreateRange(aStartParent, aStartOffset, aEndParent,
+  return nsRange::CreateRange(aStartContainer, aStartOffset, aEndContainer,
                               aEndOffset, aRange);
 }
 

@@ -9,6 +9,9 @@ let { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
+const TABLISTENER_JSM = "chrome://webcompat-reporter/content/TabListener.jsm";
+const WIDGET_ID = "webcompat-reporter-button";
+
 XPCOMUtils.defineLazyModuleGetter(this, "CustomizableUI",
   "resource:///modules/CustomizableUI.jsm");
 
@@ -21,9 +24,6 @@ XPCOMUtils.defineLazyGetter(this, "wcStyleURI", function() {
   return Services.io.newURI("chrome://webcompat-reporter/skin/lightbulb.css");
 });
 
-const WIDGET_ID = "webcompat-reporter-button";
-const TABLISTENER_JSM = "chrome://webcompat-reporter/content/TabListener.jsm";
-
 let WebCompatReporter = {
   get endpoint() {
     return Services.urlFormatter.formatURLPref(
@@ -31,14 +31,13 @@ let WebCompatReporter = {
   },
 
   init() {
-    /* global TabListener */
-    Cu.import(TABLISTENER_JSM);
-
     let styleSheetService = Cc["@mozilla.org/content/style-sheet-service;1"]
       .getService(Ci.nsIStyleSheetService);
     this._sheetType = styleSheetService.AUTHOR_SHEET;
     this._cachedSheet = styleSheetService.preloadSheet(wcStyleURI,
                                                        this._sheetType);
+
+    XPCOMUtils.defineLazyModuleGetter(this, "TabListener", TABLISTENER_JSM);
 
     CustomizableUI.createWidget({
       id: WIDGET_ID,
@@ -62,7 +61,7 @@ let WebCompatReporter = {
       .getInterface(Ci.nsIDOMWindowUtils)
       .addSheet(this._cachedSheet, this._sheetType);
     // Attach listeners to new window.
-    win._webcompatReporterTabListener = new TabListener(win);
+    win._webcompatReporterTabListener = new this.TabListener(win);
   },
 
   onWindowClosed(win) {
@@ -84,7 +83,10 @@ let WebCompatReporter = {
     }
 
     CustomizableUI.removeListener(this);
-    Cu.unload(TABLISTENER_JSM);
+
+    if (Cu.isModuleLoaded(TABLISTENER_JSM)) {
+      Cu.unload(TABLISTENER_JSM);
+    }
   },
 
   // This method injects a framescript that should send back a screenshot blob

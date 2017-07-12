@@ -181,10 +181,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.regex.Pattern;
 
-import static org.mozilla.gecko.Tab.TabType;
-import static org.mozilla.gecko.Tabs.INVALID_TAB_ID;
 import static org.mozilla.gecko.mma.MmaDelegate.NEW_TAB;
-
 public class BrowserApp extends GeckoApp
                         implements ActionModePresenter,
                                    AnchoredPopup.OnVisibilityChangeListener,
@@ -445,11 +442,6 @@ public class BrowserApp extends GeckoApp
         }
 
         super.onTabChanged(tab, msg, data);
-    }
-
-    @Override
-    protected boolean saveAsLastSelectedTab(Tab tab) {
-        return tab.getType() == TabType.BROWSING;
     }
 
     private void updateEditingModeForTab(final Tab selectedTab) {
@@ -1189,38 +1181,6 @@ public class BrowserApp extends GeckoApp
 
         for (BrowserAppDelegate delegate : delegates) {
             delegate.onResume(this);
-        }
-    }
-
-    @Override
-    protected void restoreLastSelectedTab() {
-        if (mLastSelectedTabId < 0) {
-            // Normally, session restore will select the correct tab when starting up, however this
-            // is linked to Gecko powering up. If we're not the first activity to launch, the
-            // previously running activity might have already overwritten this by selecting a tab of
-            // its own.
-            // Therefore we check whether the session file parser has left a note for us with the
-            // correct tab to be initially selected on *BrowserApp* startup.
-            SharedPreferences prefs = getSharedPreferencesForProfile();
-            mLastSelectedTabId = prefs.getInt(STARTUP_SELECTED_TAB, INVALID_TAB_ID);
-            mLastSessionUUID = prefs.getString(STARTUP_SESSION_UUID, null);
-
-            SharedPreferences.Editor editor = prefs.edit();
-            editor.remove(STARTUP_SELECTED_TAB);
-            editor.remove(STARTUP_SESSION_UUID);
-            editor.apply();
-        }
-
-        final Tabs tabs = Tabs.getInstance();
-        final Tab tabToSelect = tabs.getTab(mLastSelectedTabId);
-
-        if (tabToSelect != null && GeckoApplication.getSessionUUID().equals(mLastSessionUUID) &&
-                tabToSelect.getType() == TabType.BROWSING) {
-            tabs.selectTab(mLastSelectedTabId);
-        } else {
-            if (!tabs.selectLastTab(TabType.BROWSING)) {
-                tabs.loadUrl(Tabs.getHomepageForStartupTab(this), Tabs.LOADURL_NEW_TAB);
-            }
         }
     }
 
@@ -2433,9 +2393,9 @@ public class BrowserApp extends GeckoApp
         final Tab tab;
 
         if (AboutPages.isAboutReader(url)) {
-            tab = tabs.getFirstReaderTabForUrl(url, selectedTab.isPrivate(), selectedTab.getType());
+            tab = tabs.getFirstReaderTabForUrl(url, selectedTab.isPrivate());
         } else {
-            tab = tabs.getFirstTabForUrl(url, selectedTab.isPrivate(), selectedTab.getType());
+            tab = tabs.getFirstTabForUrl(url, selectedTab.isPrivate());
         }
 
         if (tab == null) {

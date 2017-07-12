@@ -9,10 +9,6 @@
  * browser.bookmarks.autoExportHTML is set to true.
  */
 
-function run_test() {
-  run_next_test();
-}
-
 add_task(async function() {
   remove_bookmarks_html();
 
@@ -23,8 +19,8 @@ add_task(async function() {
   Cc["@mozilla.org/browser/browserglue;1"].getService(Ci.nsISupports);
 
   // Initialize Places through the History Service.
-  Cc["@mozilla.org/browser/nav-history-service;1"]
-    .getService(Ci.nsINavHistoryService);
+  Assert.equal(PlacesUtils.history.databaseStatus,
+               PlacesUtils.history.DATABASE_STATUS_CREATE);
 
   Services.obs.addObserver(function observer() {
     Services.obs.removeObserver(observer, "profile-before-change");

@@ -4,24 +4,25 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-function run_test() {
+add_task(async function test_query_title_update() {
   try {
-  var histsvc = Cc["@mozilla.org/browser/nav-history-service;1"].
-                getService(Ci.nsINavHistoryService);
-  var bmsvc = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
-              getService(Ci.nsINavBookmarksService);
+    var histsvc = Cc["@mozilla.org/browser/nav-history-service;1"].
+                  getService(Ci.nsINavHistoryService);
   } catch (ex) {
     do_throw("Unable to initialize Places services");
   }
 
   // create a query bookmark
-  var queryId = bmsvc.insertBookmark(bmsvc.toolbarFolder, uri("place:"),
-                                     0 /* first item */, "test query");
+  let bmQuery = await PlacesUtils.bookmarks.insert({
+    parentGuid: PlacesUtils.bookmarks.toolbarGuid,
+    title: "test query",
+    url: "place:",
+  });
 
   // query for that query
   var options = histsvc.getNewQueryOptions();
-  var query = histsvc.getNewQuery();
-  query.setFolders([bmsvc.toolbarFolder], 1);
+  let query = histsvc.getNewQuery();
+  query.setFolders([PlacesUtils.toolbarFolderId], 1);
   var result = histsvc.executeQuery(query, options);
   var root = result.root;
   root.containerOpen = true;
@@ -29,10 +30,13 @@ function run_test() {
   do_check_eq(queryNode.title, "test query");
 
   // change the title
-  bmsvc.setItemTitle(queryId, "foo");
+  await PlacesUtils.bookmarks.update({
+    guid: bmQuery.guid,
+    title: "foo",
+  });
 
   // confirm the node was updated
   do_check_eq(queryNode.title, "foo");
 
   root.containerOpen = false;
-}
+});

@@ -4,10 +4,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-function run_test() {
-  run_next_test();
-}
-
 add_task(async function test_execute() {
   let count_visited_URIs = ["http://www.test-link.com/",
                             "http://www.test-typed.com/",

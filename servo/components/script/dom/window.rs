@@ -386,10 +386,7 @@ impl Window {
 
     fn new_paint_worklet(&self) -> Root<Worklet> {
         debug!("Creating new paint worklet.");
-        let worklet = Worklet::new(self, WorkletGlobalScopeType::Paint);
-        let executor = Arc::new(worklet.executor());
-        let _ = self.layout_chan.send(Msg::SetPaintWorkletExecutor(executor));
-        worklet
+        Worklet::new(self, WorkletGlobalScopeType::Paint)
     }
 
     pub fn permission_state_invocation_results(&self) -> &DOMRefCell<HashMap<String, PermissionState>> {
@@ -2000,7 +1997,8 @@ impl Runnable for PostMessageHandler {
 impl Window {
     pub fn post_message(&self, origin: Option<ImmutableOrigin>, data: StructuredCloneData) {
         let runnable = PostMessageHandler::new(self, origin, data);
-        let msg = CommonScriptMsg::RunnableMsg(ScriptThreadEventCategory::DomEvent, box runnable);
+        let runnable = self.get_runnable_wrapper().wrap_runnable(box runnable);
+        let msg = CommonScriptMsg::RunnableMsg(ScriptThreadEventCategory::DomEvent, runnable);
         // TODO(#12718): Use the "posted message task source".
         let _ = self.script_chan.send(msg);
     }

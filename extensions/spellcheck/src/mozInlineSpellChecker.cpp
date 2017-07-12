@@ -1217,7 +1217,7 @@ mozInlineSpellChecker::MakeSpellCheckRange(
     }
   } else {
     int32_t endOffset = -1;
-    endNode = nsRange::GetParentAndOffsetAfter(endNode, &endOffset);
+    endNode = nsRange::GetContainerAndOffsetAfter(endNode, &endOffset);
     rv = range->SetStartAndEnd(startNode, aStartOffset, endNode, endOffset);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
@@ -1482,9 +1482,9 @@ nsresult mozInlineSpellChecker::DoSpellCheck(mozInlineSpellWordUtil& aWordUtil,
   {
     // Scope for the node/offset pairs here so they don't get
     // accidentally used later
-    nsINode* beginNode = aStatus->mRange->GetStartParent();
+    nsINode* beginNode = aStatus->mRange->GetStartContainer();
     int32_t beginOffset = aStatus->mRange->StartOffset();
-    nsINode* endNode = aStatus->mRange->GetEndParent();
+    nsINode* endNode = aStatus->mRange->GetEndContainer();
     int32_t endOffset = aStatus->mRange->EndOffset();
 
     // Now check that we're still looking at a range that's under

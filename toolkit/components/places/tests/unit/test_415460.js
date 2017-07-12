@@ -28,10 +28,6 @@ function search_has_result(aTerms) {
   return (cc == 1);
 }
 
-function run_test() {
-  run_next_test();
-}
-
 add_task(async function test_execute() {
   const SEARCH_TERM = "ユニコード";
   const TEST_URL = "http://example.com/" + SEARCH_TERM + "/";

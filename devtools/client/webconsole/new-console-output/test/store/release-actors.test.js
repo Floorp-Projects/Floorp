@@ -9,6 +9,10 @@ const {
 } = require("devtools/client/webconsole/new-console-output/test/helpers");
 const { stubPackets } = require("devtools/client/webconsole/new-console-output/test/fixtures/stubs/index");
 
+const {
+  getAllMessagesById,
+} = require("devtools/client/webconsole/new-console-output/selectors/messages");
+
 const expect = require("expect");
 
 describe("Release actor enhancer:", () => {
@@ -20,42 +24,85 @@ describe("Release actor enhancer:", () => {
 
   describe("Client proxy", () => {
     it("properly releases backend actors when limit is reached", () => {
-      let proxyExecuted = 0;
-      const { dispatch } = setupStore([], {
+      const logLimit = 100;
+      let releasedActors = [];
+      const { dispatch, getState } = setupStore([], {
         proxy: {
           releaseActor: (actor) => {
-            proxyExecuted++;
+            releasedActors.push(actor);
           }
         }
-      });
+      }, { logLimit });
 
-      const logCount = 1001;
+      // Add a log message with loaded object properties.
+      dispatch(actions.messageAdd(
+        stubPackets.get("console.log('myarray', ['red', 'green', 'blue'])")));
+
+      let messages = getAllMessagesById(getState());
+      const firstMessage = messages.first();
+      const firstMessageActor = firstMessage.parameters[1].actor;
+      const arrayProperties = Symbol();
+      const arraySubProperties = Symbol();
+      const [id] = [...messages.keys()];
+      dispatch(actions.messageObjectPropertiesReceive(
+        id, "fakeActor1", arrayProperties));
+      dispatch(actions.messageObjectPropertiesReceive(
+        id, "fakeActor2", arraySubProperties));
+
+      const logCount = logLimit + 1;
       const packet = clonePacket(stubPackets.get(
         "console.assert(false, {message: 'foobar'})"));
+      const secondMessageActor = packet.message.arguments[0].actor;
 
       for (let i = 1; i <= logCount; i++) {
         packet.message.arguments.push(`message num ${i}`);
         dispatch(actions.messageAdd(packet));
       }
 
-      expect(proxyExecuted).toBe(1);
+      expect(releasedActors.length).toBe(4);
+      expect(releasedActors).toInclude(firstMessageActor);
+      expect(releasedActors).toInclude("fakeActor1");
+      expect(releasedActors).toInclude("fakeActor2");
+      expect(releasedActors).toInclude(secondMessageActor);
     });
 
     it("properly releases backend actors after clear", () => {
-      let proxyExecuted = 0;
-      const { dispatch } = setupStore([], {
+      let releasedActors = [];
+      const { dispatch, getState } = setupStore([], {
         proxy: {
           releaseActor: (actor) => {
-            proxyExecuted++;
+            releasedActors.push(actor);
           }
         }
       });
 
-      dispatch(actions.messageAdd(clonePacket(stubPackets.get(
-        "console.assert(false, {message: 'foobar'})"))));
+      // Add a log message with loaded object properties.
+      dispatch(actions.messageAdd(
+        stubPackets.get("console.log('myarray', ['red', 'green', 'blue'])")));
+
+      let messages = getAllMessagesById(getState());
+      const firstMessage = messages.first();
+      const firstMessageActor = firstMessage.parameters[1].actor;
+      const arrayProperties = Symbol();
+      const arraySubProperties = Symbol();
+      const [id] = [...messages.keys()];
+      dispatch(actions.messageObjectPropertiesReceive(
+        id, "fakeActor1", arrayProperties));
+      dispatch(actions.messageObjectPropertiesReceive(
+        id, "fakeActor2", arraySubProperties));
+
+      const packet = clonePacket(stubPackets.get(
+        "console.assert(false, {message: 'foobar'})"));
+      const secondMessageActor = packet.message.arguments[0].actor;
+      dispatch(actions.messageAdd(packet));
+
       dispatch(actions.messagesClear());
 
-      expect(proxyExecuted).toBe(1);
+      expect(releasedActors.length).toBe(4);
+      expect(releasedActors).toInclude(firstMessageActor);
+      expect(releasedActors).toInclude("fakeActor1");
+      expect(releasedActors).toInclude("fakeActor2");
+      expect(releasedActors).toInclude(secondMessageActor);
     });
   });
 });

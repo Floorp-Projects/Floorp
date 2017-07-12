@@ -228,48 +228,13 @@ public final class IntentHelper implements BundleEventListener {
     }
 
     public static Intent getTabSwitchIntent(final Tab tab) {
-        final Intent intent;
-        switch (tab.getType()) {
-            case CUSTOMTAB:
-                if (tab.getCustomTabIntent() != null) {
-                    intent = tab.getCustomTabIntent().getUnsafe();
-                } else {
-                    intent = new Intent(Intent.ACTION_VIEW);
-                    intent.setData(Uri.parse(tab.getURL()));
-                }
-                break;
-            case WEBAPP:
-                intent = new Intent(GeckoApp.ACTION_WEBAPP);
-                final String manifestPath = tab.getManifestPath();
-                try {
-                    intent.setData(getStartUriFromManifest(manifestPath));
-                } catch (IOException | JSONException e) {
-                    Log.e(LOGTAG, "Failed to get start URI from manifest", e);
-                    intent.setData(Uri.parse(tab.getURL()));
-                }
-                intent.putExtra(WebAppActivity.MANIFEST_PATH, manifestPath);
-                break;
-            default:
-                intent = new Intent(GeckoApp.ACTION_SWITCH_TAB);
-                break;
-        }
-
-        intent.setClassName(AppConstants.ANDROID_PACKAGE_NAME, tab.getTargetClassNameForTab());
+        final Intent intent = new Intent(GeckoApp.ACTION_SWITCH_TAB);
+        intent.setClassName(AppConstants.ANDROID_PACKAGE_NAME, AppConstants.MOZ_ANDROID_BROWSER_INTENT_CLASS);
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         intent.putExtra(BrowserContract.SKIP_TAB_QUEUE_FLAG, true);
         intent.putExtra(INTENT_EXTRA_TAB_ID, tab.getId());
         intent.putExtra(INTENT_EXTRA_SESSION_UUID, GeckoApplication.getSessionUUID());
         return intent;
-    }
-
-    // TODO: When things have settled down a bit, we should split this and everything similar
-    // TODO: in the WebAppActivity into a dedicated WebAppManifest class (bug 1353868).
-    private static Uri getStartUriFromManifest(String manifestPath) throws IOException, JSONException {
-        File manifestFile = new File(manifestPath);
-        final JSONObject manifest = FileUtils.readJSONObjectFromFile(manifestFile);
-        final JSONObject manifestField = manifest.getJSONObject("manifest");
-
-        return Uri.parse(manifestField.getString("start_url"));
     }
 
     /**

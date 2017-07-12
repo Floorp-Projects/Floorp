@@ -72,12 +72,9 @@ AutoCompleteInput.prototype = {
   }
 }
 
-function run_test() {
-  do_test_pending();
-  PlacesTestUtils.addVisits(url).then(continue_test);
-}
+add_task(async function test_autocomplete_non_english() {
+  await PlacesTestUtils.addVisits(url);
 
-function continue_test() {
   var controller = Components.classes["@mozilla.org/autocomplete/controller;1"].
                    getService(Components.interfaces.nsIAutoCompleteController);
 
@@ -87,25 +84,27 @@ function continue_test() {
 
   controller.input = input;
 
-  var numSearchesStarted = 0;
-  input.onSearchBegin = function() {
-    numSearchesStarted++;
-    do_check_eq(numSearchesStarted, 1);
-  };
+  return new Promise(resolve => {
+    var numSearchesStarted = 0;
+    input.onSearchBegin = function() {
+      numSearchesStarted++;
+      do_check_eq(numSearchesStarted, 1);
+    };
 
-  input.onSearchComplete = function() {
-    do_check_eq(numSearchesStarted, 1);
-    do_check_eq(controller.searchStatus,
-                Ci.nsIAutoCompleteController.STATUS_COMPLETE_MATCH);
+    input.onSearchComplete = function() {
+      do_check_eq(numSearchesStarted, 1);
+      do_check_eq(controller.searchStatus,
+                  Ci.nsIAutoCompleteController.STATUS_COMPLETE_MATCH);
 
-    // test that we found the entry we added
-    do_check_eq(controller.matchCount, 1);
+      // test that we found the entry we added
+      do_check_eq(controller.matchCount, 1);
 
-    // Make sure the url is the same according to spec, so it can be deleted
-    do_check_eq(controller.getValueAt(0), url.spec);
+      // Make sure the url is the same according to spec, so it can be deleted
+      do_check_eq(controller.getValueAt(0), url.spec);
 
-    do_test_finished();
-  };
+      resolve();
+    };
 
-  controller.startSearch(searchTerm);
-}
+    controller.startSearch(searchTerm);
+  });
+});

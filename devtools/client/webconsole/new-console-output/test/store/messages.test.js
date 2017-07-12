@@ -11,6 +11,7 @@ const {
   getAllRepeatById,
   getCurrentGroup,
   getVisibleMessages,
+  getAllMessagesObjectPropertiesById,
 } = require("devtools/client/webconsole/new-console-output/selectors/messages");
 const {
   clonePacket,
@@ -755,6 +756,117 @@ describe("Message reducer:", () => {
       dispatch(actions.messageAdd(stubPackets.get("console.log('foobar', 'test')")));
 
       expect(getAllMessagesTableDataById(getState()).size).toBe(0);
+    });
+  });
+
+  describe("messagesObjectPropertiesById", () => {
+    it(`adds messagesObjectPropertiesById data in response to
+        MESSAGE_OBJECT_PROPERTIES_RECEIVE action`, () => {
+      const { dispatch, getState } = setupStore([]);
+
+      // Add 2 log messages with loaded object properties.
+      dispatch(actions.messageAdd(
+        stubPackets.get("console.log('myarray', ['red', 'green', 'blue'])")));
+      dispatch(actions.messageAdd(stubPackets.get(
+"console.log('myobject', {red: 'redValue', green: 'greenValue', blue: 'blueValue'});")));
+
+      let messages = getAllMessagesById(getState());
+
+      const arrayProperties = Symbol();
+      const arraySubProperties = Symbol();
+      const objectProperties = Symbol();
+      const objectSubProperties = Symbol();
+      const [id1, id2] = [...messages.keys()];
+      dispatch(actions.messageObjectPropertiesReceive(
+        id1, "fakeActor1", arrayProperties));
+      dispatch(actions.messageObjectPropertiesReceive(
+        id1, "fakeActor2", arraySubProperties));
+      dispatch(actions.messageObjectPropertiesReceive(
+        id2, "fakeActor3", objectProperties));
+      dispatch(actions.messageObjectPropertiesReceive(
+        id2, "fakeActor4", objectSubProperties));
+
+      let loadedProperties = getAllMessagesObjectPropertiesById(getState());
+      expect(loadedProperties.size).toBe(2);
+
+      expect(loadedProperties.get(id1)).toEqual({
+        fakeActor1: arrayProperties,
+        fakeActor2: arraySubProperties,
+      });
+
+      expect(loadedProperties.get(id2)).toEqual({
+        fakeActor3: objectProperties,
+        fakeActor4: objectSubProperties,
+      });
+    });
+
+    it("resets messagesObjectPropertiesById in response to MESSAGES_CLEAR action", () => {
+      const { dispatch, getState } = setupStore([
+        "console.log('myarray', ['red', 'green', 'blue'])"
+      ]);
+
+      let messages = getAllMessagesById(getState());
+      const properties = Symbol("properties");
+      const message = messages.first();
+      const {actor} = message.parameters[1];
+
+      dispatch(actions.messageObjectPropertiesReceive(message.id, actor, properties));
+
+      let loadedProperties = getAllMessagesObjectPropertiesById(getState());
+      expect(loadedProperties.size).toBe(1);
+      expect(loadedProperties.get(message.id)).toEqual({
+        [actor]: properties
+      });
+
+      dispatch(actions.messagesClear());
+
+      expect(getAllMessagesObjectPropertiesById(getState()).size).toBe(0);
+    });
+
+    it("cleans messagesObjectPropertiesById when messages are pruned", () => {
+      const { dispatch, getState } = setupStore([], null, {
+        logLimit: 2
+      });
+
+      // Add 2 log messages with loaded object properties.
+      dispatch(actions.messageAdd(
+        stubPackets.get("console.log('myarray', ['red', 'green', 'blue'])")));
+      dispatch(actions.messageAdd(stubPackets.get(
+"console.log('myobject', {red: 'redValue', green: 'greenValue', blue: 'blueValue'});")));
+
+      let messages = getAllMessagesById(getState());
+
+      const arrayProperties = Symbol();
+      const arraySubProperties = Symbol();
+      const objectProperties = Symbol();
+      const objectSubProperties = Symbol();
+      const [id1, id2] = [...messages.keys()];
+      dispatch(actions.messageObjectPropertiesReceive(
+        id1, "fakeActor1", arrayProperties));
+      dispatch(actions.messageObjectPropertiesReceive(
+        id1, "fakeActor2", arraySubProperties));
+      dispatch(actions.messageObjectPropertiesReceive(
+        id2, "fakeActor3", objectProperties));
+      dispatch(actions.messageObjectPropertiesReceive(
+        id2, "fakeActor4", objectSubProperties));
+
+      let loadedProperties = getAllMessagesObjectPropertiesById(getState());
+      expect(loadedProperties.size).toBe(2);
+
+      // This addition will remove the first message.
+      dispatch(actions.messageAdd(stubPackets.get("console.log(undefined)")));
+
+      loadedProperties = getAllMessagesObjectPropertiesById(getState());
+      expect(loadedProperties.size).toBe(1);
+      expect(loadedProperties.get(id2)).toEqual({
+        fakeActor3: objectProperties,
+        fakeActor4: objectSubProperties,
+      });
+
+      // This addition will remove the second table message.
+      dispatch(actions.messageAdd(stubPackets.get("console.log('foobar', 'test')")));
+
+      expect(getAllMessagesObjectPropertiesById(getState()).size).toBe(0);
     });
   });
 });

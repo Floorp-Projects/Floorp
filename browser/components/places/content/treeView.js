@@ -94,6 +94,15 @@ PlacesTreeView.prototype = {
       selection.selectEventsSuppressed = false;
   },
 
+  uninit() {
+    if (this._editingObservers) {
+      for (let observer of this._editingObservers.values()) {
+        observer.disconnect();
+      }
+      delete this._editingObservers;
+    }
+  },
+
   /**
    * Plain Container: container result nodes which may never include sub
    * hierarchies.
@@ -969,6 +978,31 @@ PlacesTreeView.prototype = {
     NS_ASSERT(this._result, "Need to have a result to update");
     if (!this._tree)
       return;
+
+    // If we are currently editing, don't invalidate the container until we
+    // finish.
+    if (this._tree.element.getAttribute("editing")) {
+      if (!this._editingObservers) {
+        this._editingObservers = new Map();
+      }
+      if (!this._editingObservers.has(aContainer)) {
+        let mutationObserver = new MutationObserver(() => {
+          Services.tm.dispatchToMainThread(
+            () => this.invalidateContainer(aContainer));
+          let observer = this._editingObservers.get(aContainer);
+          observer.disconnect();
+          this._editingObservers.delete(aContainer);
+        });
+
+        mutationObserver.observe(this._tree.element, {
+          attributes: true,
+          attributeFilter: ["editing"],
+        });
+
+        this._editingObservers.set(aContainer, mutationObserver);
+      }
+      return;
+    }
 
     let startReplacement, replaceCount;
     if (aContainer == this._rootNode) {

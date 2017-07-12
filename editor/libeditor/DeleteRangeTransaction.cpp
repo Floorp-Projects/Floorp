@@ -56,28 +56,29 @@ DeleteRangeTransaction::DoTransaction()
   rangeToDelete.swap(mRangeToDelete);
 
   // build the child transactions
-  nsCOMPtr<nsINode> startParent = rangeToDelete->GetStartParent();
+  nsCOMPtr<nsINode> startContainer = rangeToDelete->GetStartContainer();
   int32_t startOffset = rangeToDelete->StartOffset();
-  nsCOMPtr<nsINode> endParent = rangeToDelete->GetEndParent();
+  nsCOMPtr<nsINode> endContainer = rangeToDelete->GetEndContainer();
   int32_t endOffset = rangeToDelete->EndOffset();
-  MOZ_ASSERT(startParent && endParent);
+  MOZ_ASSERT(startContainer && endContainer);
 
-  if (startParent == endParent) {
+  if (startContainer == endContainer) {
     // the selection begins and ends in the same node
     nsresult rv =
-      CreateTxnsToDeleteBetween(startParent, startOffset, endOffset);
+      CreateTxnsToDeleteBetween(startContainer, startOffset, endOffset);
     NS_ENSURE_SUCCESS(rv, rv);
   } else {
     // the selection ends in a different node from where it started.  delete
     // the relevant content in the start node
     nsresult rv =
-      CreateTxnsToDeleteContent(startParent, startOffset, nsIEditor::eNext);
+      CreateTxnsToDeleteContent(startContainer, startOffset, nsIEditor::eNext);
     NS_ENSURE_SUCCESS(rv, rv);
     // delete the intervening nodes
     rv = CreateTxnsToDeleteNodesBetween(rangeToDelete);
     NS_ENSURE_SUCCESS(rv, rv);
     // delete the relevant content in the end node
-    rv = CreateTxnsToDeleteContent(endParent, endOffset, nsIEditor::ePrevious);
+    rv = CreateTxnsToDeleteContent(endContainer, endOffset,
+                                   nsIEditor::ePrevious);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -91,7 +92,7 @@ DeleteRangeTransaction::DoTransaction()
   if (bAdjustSelection) {
     RefPtr<Selection> selection = mEditorBase->GetSelection();
     NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
-    rv = selection->Collapse(startParent, startOffset);
+    rv = selection->Collapse(startContainer, startOffset);
     NS_ENSURE_SUCCESS(rv, rv);
   }
   // else do nothing - dom range gravity will adjust selection

@@ -92,7 +92,7 @@ GetContainingModuleHandle()
                          GET_MODULE_HANDLE_EX_UNCHANGED_REFCOUNT,
                          reinterpret_cast<LPCTSTR>(&GetContainingModuleHandle),
                          &thisModule)) {
-    return nullptr;
+    return 0;
   }
 #endif
   return reinterpret_cast<uintptr_t>(thisModule);
