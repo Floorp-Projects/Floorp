@@ -544,9 +544,6 @@ private:
   // Called when the owner's activity changed.
   void NotifyCompositor();
 
-  MediaEventSource<RefPtr<layers::KnowsCompositor>>*
-  CompositorUpdatedEvent() override { return &mCompositorUpdatedEvent; }
-
   void OnPlaybackEvent(MediaEventType aEvent);
   void OnPlaybackErrorEvent(const MediaResult& aError);
 
@@ -561,8 +558,6 @@ private:
 
   void ConnectMirrors(MediaDecoderStateMachine* aObject);
   void DisconnectMirrors();
-
-  MediaEventProducer<RefPtr<layers::KnowsCompositor>> mCompositorUpdatedEvent;
 
   // The state machine object for handling the decoding. It is safe to
   // call methods of this object from other threads. Its internal data
