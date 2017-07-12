@@ -482,9 +482,14 @@ var PlacesCommandHook = {
       let docInfo = await this._getPageDetails(aBrowser);
 
       try {
-        info.title = docInfo.isErrorPage ?
-          (await PlacesUtils.history.fetch(aBrowser.currentURI)).title :
-          aBrowser.contentTitle;
+        if (docInfo.isErrorPage) {
+          let entry = await PlacesUtils.history.fetch(aBrowser.currentURI);
+          if (entry) {
+            info.title = entry.title;
+          }
+        } else {
+          info.title = aBrowser.contentTitle;
+        }
         info.title = info.title || url.href;
         description = docInfo.description;
         charset = aBrowser.characterSet;
