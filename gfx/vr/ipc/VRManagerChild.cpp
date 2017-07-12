@@ -192,15 +192,13 @@ VRManagerChild::AllocPVRLayerChild(const uint32_t& aDisplayID,
                                    const float& aRightEyeHeight,
                                    const uint32_t& aGroup)
 {
-  RefPtr<VRLayerChild> layer = new VRLayerChild(aDisplayID, this);
-  return layer.forget().take();
+  return VRLayerChild::CreateIPDLActor();
 }
 
 bool
 VRManagerChild::DeallocPVRLayerChild(PVRLayerChild* actor)
 {
-  delete actor;
-  return true;
+  return VRLayerChild::DestroyIPDLActor(actor);
 }
 
 void
