@@ -63,8 +63,6 @@ public:
 
     FontFaceSet* GetFontFaceSet() { return mFontFaceSet; }
 
-    nsIPrincipal* GetStandardFontLoadPrincipal() override;
-
     virtual nsresult CheckFontLoad(const gfxFontFaceSrc* aFontFaceSrc,
                                    nsIPrincipal** aPrincipal,
                                    bool* aBypassCache) override;
@@ -263,7 +261,6 @@ private:
 
   nsresult StartLoad(gfxUserFontEntry* aUserFontEntry,
                      const gfxFontFaceSrc* aFontFaceSrc);
-  nsIPrincipal* GetStandardFontLoadPrincipal();
   nsresult CheckFontLoad(const gfxFontFaceSrc* aFontFaceSrc,
                          nsIPrincipal** aPrincipal,
                          bool* aBypassCache);
