@@ -9,6 +9,7 @@ import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.util.StringUtils;
 
 import android.database.Cursor;
+import android.support.annotation.Nullable;
 import android.text.TextUtils;
 import android.view.View;
 import android.widget.AdapterView.AdapterContextMenuInfo;
@@ -26,6 +27,8 @@ public class HomeContextMenuInfo extends AdapterContextMenuInfo {
     /* package-private */ int historyId = -1;
     public int bookmarkId = -1;
     public RemoveItemType itemType = null;
+
+    /* package-private */ @Nullable Boolean isAsPinned;
 
     // Item type to be handled with "Remove" selection.
     /* package-private */ enum RemoveItemType {
@@ -53,6 +56,10 @@ public class HomeContextMenuInfo extends AdapterContextMenuInfo {
 
     /* package-private */ boolean canRemove() {
         return hasBookmarkId() || hasHistoryId() || hasPartnerBookmarkId();
+    }
+
+    /* package-private */ void updateAsPinned(boolean pinnedState) {
+        isAsPinned = pinnedState;
     }
 
     private boolean hasHistoryId() {
