@@ -149,7 +149,7 @@ public:
 
   nsresult ConsoleError();
   void PrintErrorOnConsole(const char* aBundleURI,
-                           const char16_t* aError,
+                           const char* aError,
                            const char16_t** aFormatStrings,
                            uint32_t aFormatStringsLen);
 
@@ -298,7 +298,7 @@ class PrintErrorOnConsoleRunnable final : public WorkerMainThreadRunnable
 public:
   PrintErrorOnConsoleRunnable(WebSocketImpl* aImpl,
                               const char* aBundleURI,
-                              const char16_t* aError,
+                              const char* aError,
                               const char16_t** aFormatStrings,
                               uint32_t aFormatStringsLen)
     : WorkerMainThreadRunnable(aImpl->mWorkerPrivate,
@@ -322,7 +322,7 @@ private:
   WebSocketImpl* mImpl;
 
   const char* mBundleURI;
-  const char16_t* mError;
+  const char* mError;
   const char16_t** mFormatStrings;
   uint32_t mFormatStringsLen;
 };
@@ -331,7 +331,7 @@ private:
 
 void
 WebSocketImpl::PrintErrorOnConsole(const char *aBundleURI,
-                                   const char16_t *aError,
+                                   const char *aError,
                                    const char16_t **aFormatStrings,
                                    uint32_t aFormatStringsLen)
 {
@@ -561,11 +561,11 @@ WebSocketImpl::ConsoleError()
 
   if (mWebSocket->ReadyState() < WebSocket::OPEN) {
     PrintErrorOnConsole("chrome://global/locale/appstrings.properties",
-                        u"connectionFailure",
+                        "connectionFailure",
                         formatStrings, ArrayLength(formatStrings));
   } else {
     PrintErrorOnConsole("chrome://global/locale/appstrings.properties",
-                        u"netInterrupt",
+                        "netInterrupt",
                         formatStrings, ArrayLength(formatStrings));
   }
   /// todo some specific errors - like for message too large
@@ -1618,7 +1618,7 @@ WebSocketImpl::Init(JSContext* aCx,
     mSecure = true;
 
     const char16_t* params[] = { reportSpec.get(), u"wss" };
-    CSP_LogLocalizedStr(u"upgradeInsecureRequest",
+    CSP_LogLocalizedStr("upgradeInsecureRequest",
                         params, ArrayLength(params),
                         EmptyString(), // aSourceFile
                         EmptyString(), // aScriptSample

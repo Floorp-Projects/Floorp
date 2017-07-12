@@ -860,11 +860,7 @@ nsresult nsPrefBranch::GetDefaultFromPropertiesFile(const char *aPrefName, char1
   if (NS_FAILED(rv))
     return rv;
 
-  // string names are in unicode
-  nsAutoString stringId;
-  stringId.AssignASCII(aPrefName);
-
-  return bundle->GetStringFromName(stringId.get(), return_buf);
+  return bundle->GetStringFromName(aPrefName, return_buf);
 }
 
 nsPrefBranch::PrefName

@@ -193,9 +193,7 @@ NSSErrorsService::GetErrorMessage(nsresult aXPCOMErrorCode, nsAString &aErrorMes
   }
 
   nsAutoString msg;
-  nsresult rv =
-    theBundle->GetStringFromName(NS_ConvertASCIItoUTF16(id_str).get(),
-                                 getter_Copies(msg));
+  nsresult rv = theBundle->GetStringFromName(id_str, getter_Copies(msg));
   if (NS_SUCCEEDED(rv)) {
     aErrorMessage = msg;
   }

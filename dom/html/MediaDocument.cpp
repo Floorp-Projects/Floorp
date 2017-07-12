@@ -383,15 +383,15 @@ MediaDocument::UpdateTitleAndCharset(const nsACString& aTypeStr,
       if (!fileStr.IsEmpty()) {
         const char16_t *formatStrings[4]  = {fileStr.get(), typeStr.get(),
           widthStr.get(), heightStr.get()};
-        NS_ConvertASCIItoUTF16 fmtName(aFormatNames[eWithDimAndFile]);
-        mStringBundle->FormatStringFromName(fmtName.get(), formatStrings, 4,
+        mStringBundle->FormatStringFromName(aFormatNames[eWithDimAndFile],
+                                            formatStrings, 4,
                                             getter_Copies(title));
       }
       else {
         const char16_t *formatStrings[3]  = {typeStr.get(), widthStr.get(),
           heightStr.get()};
-        NS_ConvertASCIItoUTF16 fmtName(aFormatNames[eWithDim]);
-        mStringBundle->FormatStringFromName(fmtName.get(), formatStrings, 3,
+        mStringBundle->FormatStringFromName(aFormatNames[eWithDim],
+                                            formatStrings, 3,
                                             getter_Copies(title));
       }
     }
@@ -399,14 +399,14 @@ MediaDocument::UpdateTitleAndCharset(const nsACString& aTypeStr,
     // If we got a filename, display it
       if (!fileStr.IsEmpty()) {
         const char16_t *formatStrings[2] = {fileStr.get(), typeStr.get()};
-        NS_ConvertASCIItoUTF16 fmtName(aFormatNames[eWithFile]);
-        mStringBundle->FormatStringFromName(fmtName.get(), formatStrings, 2,
+        mStringBundle->FormatStringFromName(aFormatNames[eWithFile],
+                                            formatStrings, 2,
                                             getter_Copies(title));
       }
       else {
         const char16_t *formatStrings[1] = {typeStr.get()};
-        NS_ConvertASCIItoUTF16 fmtName(aFormatNames[eWithNoInfo]);
-        mStringBundle->FormatStringFromName(fmtName.get(), formatStrings, 1,
+        mStringBundle->FormatStringFromName(aFormatNames[eWithNoInfo],
+                                            formatStrings, 1,
                                             getter_Copies(title));
       }
     }
@@ -420,8 +420,8 @@ MediaDocument::UpdateTitleAndCharset(const nsACString& aTypeStr,
     nsXPIDLString titleWithStatus;
     const nsPromiseFlatString& status = PromiseFlatString(aStatus);
     const char16_t *formatStrings[2] = {title.get(), status.get()};
-    mStringBundle->FormatStringFromName(u"TitleWithStatus", formatStrings, 2,
-                                        getter_Copies(titleWithStatus));
+    mStringBundle->FormatStringFromName("TitleWithStatus", formatStrings,
+                                        2, getter_Copies(titleWithStatus));
     SetTitle(titleWithStatus);
   }
 }

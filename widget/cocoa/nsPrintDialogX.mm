@@ -308,7 +308,7 @@ static const char sHeaderFooterTags[][4] =  {"", "&T", "&U", "&D", "&P", "&PT"};
     return @"";
 
   nsXPIDLString intlString;
-  mPrintBundle->GetStringFromName(NS_ConvertUTF8toUTF16(aKey).get(), getter_Copies(intlString));
+  mPrintBundle->GetStringFromName(aKey, getter_Copies(intlString));
   NSMutableString* s = [NSMutableString stringWithUTF8String:NS_ConvertUTF16toUTF8(intlString).get()];
 
   // Remove all underscores (they're used in the GTK dialog for accesskeys).

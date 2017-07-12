@@ -89,7 +89,7 @@ ProfileResetCleanup(nsIToolkitProfile* aOldProfile)
 
   nsXPIDLString resetBackupDirectoryName;
 
-  static const char16_t* kResetBackupDirectory = u"resetBackupDirectory";
+  static const char* kResetBackupDirectory = "resetBackupDirectory";
   rv = sb->FormatStringFromName(kResetBackupDirectory, params, 2,
                                 getter_Copies(resetBackupDirectoryName));
 
