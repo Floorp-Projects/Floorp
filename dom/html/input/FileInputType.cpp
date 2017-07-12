@@ -21,3 +21,11 @@ FileInputType::IsValueMissing() const
 
   return mInputElement->GetFilesOrDirectoriesInternal().IsEmpty();
 }
+
+nsresult
+FileInputType::GetValueMissingMessage(nsXPIDLString& aMessage)
+{
+  return nsContentUtils::GetLocalizedString(nsContentUtils::eDOM_PROPERTIES,
+                                            "FormValidationFileMissing",
+                                            aMessage);
+}

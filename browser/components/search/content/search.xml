@@ -1588,6 +1588,21 @@
             return;
 
           let panelWidth = parseInt(this.popup.clientWidth);
+
+          // There's one weird thing to guard against: when layout pixels
+          // aren't an integral multiple of device pixels, the last button
+          // of each row sometimes gets pushed to the next row, depending on the
+          // panel and button widths.
+          // This is likely because the clientWidth getter rounds the value, but
+          // the panel's border width is not an integer.
+          // As a workaround, decrement the width if the scale is not an integer.
+          let scale = window.QueryInterface(Ci.nsIInterfaceRequestor)
+                            .getInterface(Ci.nsIDOMWindowUtils)
+                            .screenPixelsPerCSSPixel;
+          if (Math.floor(scale) != scale) {
+            --panelWidth;
+          }
+
           // The + 1 is because the last button doesn't have a right border.
           let enginesPerRow = Math.floor((panelWidth + 1) / this.buttonWidth);
           let buttonWidth = Math.floor(panelWidth / enginesPerRow);
@@ -1659,20 +1674,7 @@
               // width not being an integral multiple of the button width.  (See
               // the "There will be an emtpy area" comment above.)  Increase the
               // width of the last dummy item by the remainder.
-              //
-              // There's one weird thing to guard against: when layout pixels
-              // aren't an integral multiple of device pixels, the settings
-              // button sometimes gets pushed to a new row, depending on the
-              // panel and button widths.  It's as if `remainder` is somehow
-              // too big, even though it's an integer.  To work around that,
-              // decrement the remainder if the scale is not an integer.
-              let scale = window.QueryInterface(Ci.nsIInterfaceRequestor)
-                                .getInterface(Ci.nsIDOMWindowUtils)
-                                .screenPixelsPerCSSPixel;
               let remainder = panelWidth - (enginesPerRow * buttonWidth);
-              if (Math.floor(scale) != scale) {
-                remainder--;
-              }
               let width = remainder + buttonWidth;
               let lastDummyItem = this.settingsButtonCompact.previousSibling;
               lastDummyItem.setAttribute("width", width);

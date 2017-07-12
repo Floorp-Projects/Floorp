@@ -324,9 +324,6 @@ partial interface Window {
    */
   [ChromeOnly, Throws] readonly attribute MozSelfSupport MozSelfSupport;
 
-  [Pure]
-           attribute EventHandler onwheel;
-
            attribute EventHandler ondevicemotion;
            attribute EventHandler ondeviceorientation;
            attribute EventHandler onabsolutedeviceorientation;

@@ -43,14 +43,6 @@ void LowerSandbox();
  */
 sandbox::BrokerServices* GetInitializedBrokerServices();
 
-/**
- * Checks to see if we are running from a network drive and sets a flag in
- * sandbox code to disable the use of restricting SIDs.
- * Using restricting SIDs blocks access to network drives and prevents DLL
- * loading during initial sandboxed child process start-up.
- */
-void NetworkDriveCheck();
-
 PermissionsService* GetPermissionsService();
 
 } // sandboxing

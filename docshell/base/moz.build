@@ -115,6 +115,7 @@ LOCAL_INCLUDES += [
     '/layout/generic',
     '/layout/style',
     '/layout/xul',
+    '/netwerk/base',
     '/netwerk/protocol/viewsource',
     '/toolkit/components/browser',
     '/tools/profiler',

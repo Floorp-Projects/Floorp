@@ -409,6 +409,8 @@ public:
   // Return the maximum number of elements that can be bound to a constant
   // buffer. This is different than the maximum size of a buffer (there is
   // no such limit on Direct3D 11.1).
+  //
+  // The return value must be a power of two.
   size_t GetMaxConstantBufferBindSize() const {
     return mMaxConstantBufferBindSize;
   }
