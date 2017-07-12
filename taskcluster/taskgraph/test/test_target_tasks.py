@@ -6,11 +6,11 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 import unittest
 
-from .. import target_tasks
-from .. import try_option_syntax
-from ..graph import Graph
-from ..taskgraph import TaskGraph
-from ..task import Task
+from taskgraph import target_tasks
+from taskgraph import try_option_syntax
+from taskgraph.graph import Graph
+from taskgraph.taskgraph import TaskGraph
+from taskgraph.task import Task
 from mozunit import main
 
 
