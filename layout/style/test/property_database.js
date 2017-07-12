@@ -1028,8 +1028,8 @@ var gCSSProperties = {
     inherited: false,
     type: CSS_TYPE_LONGHAND,
     initial_values: [ "ease" ],
-    other_values: [ "cubic-bezier(0.25, 0.1, 0.25, 1.0)", "linear", "ease-in", "ease-out", "ease-in-out", "linear, ease-in, cubic-bezier(0.1, 0.2, 0.8, 0.9)", "cubic-bezier(0.5, 0.5, 0.5, 0.5)", "cubic-bezier(0.25, 1.5, 0.75, -0.5)", "step-start", "step-end", "steps(1)", "steps(2, start)", "steps(386)", "steps(3, end)", "frames(2)", "frames(1000)", "frames( 2 )" ],
-    invalid_values: [ "none", "auto", "cubic-bezier(0.25, 0.1, 0.25)", "cubic-bezier(0.25, 0.1, 0.25, 0.25, 1.0)", "cubic-bezier(-0.5, 0.5, 0.5, 0.5)", "cubic-bezier(1.5, 0.5, 0.5, 0.5)", "cubic-bezier(0.5, 0.5, -0.5, 0.5)", "cubic-bezier(0.5, 0.5, 1.5, 0.5)", "steps(2, step-end)", "steps(0)", "steps(-2)", "steps(0, step-end, 1)", "frames(1)", "frames(-2)", "frames", "frames()", "frames(,)", "frames(a)", "frames(2.0)", "frames(2.5)", "frames(2 3)" ]
+    other_values: [ "cubic-bezier(0.25, 0.1, 0.25, 1.0)", "linear", "ease-in", "ease-out", "ease-in-out", "linear, ease-in, cubic-bezier(0.1, 0.2, 0.8, 0.9)", "cubic-bezier(0.5, 0.5, 0.5, 0.5)", "cubic-bezier(0.25, 1.5, 0.75, -0.5)", "step-start", "step-end", "steps(1)", "steps(2, start)", "steps(386)", "steps(3, end)" ],
+    invalid_values: [ "none", "auto", "cubic-bezier(0.25, 0.1, 0.25)", "cubic-bezier(0.25, 0.1, 0.25, 0.25, 1.0)", "cubic-bezier(-0.5, 0.5, 0.5, 0.5)", "cubic-bezier(1.5, 0.5, 0.5, 0.5)", "cubic-bezier(0.5, 0.5, -0.5, 0.5)", "cubic-bezier(0.5, 0.5, 1.5, 0.5)", "steps(2, step-end)", "steps(0)", "steps(-2)", "steps(0, step-end, 1)" ]
   },
   "-moz-appearance": {
     domProp: "MozAppearance",
@@ -5701,6 +5701,14 @@ if (IsCSSPropertyPrefEnabled("layout.css.font-variations.enabled")) {
       "'wdth\" 1", "\"wdth' 1" // mismatched quotes
     ]
   }
+}
+
+if (IsCSSPropertyPrefEnabled("layout.css.frames-timing.enabled")) {
+  gCSSProperties["animation-timing-function"].other_values.push(
+    "frames(2)", "frames(1000)", "frames( 2 )");
+  gCSSProperties["animation-timing-function"].invalid_values.push(
+    "frames(1)", "frames(-2)", "frames", "frames()", "frames(,)",
+    "frames(a)", "frames(2.0)", "frames(2.5)", "frames(2 3)");
 }
 
 if (IsCSSPropertyPrefEnabled("svg.paint-order.enabled")) {

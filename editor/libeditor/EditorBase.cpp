@@ -2867,8 +2867,8 @@ EditorBase::CreateTxnForJoinNode(nsINode& aLeftNode,
 struct SavedRange final
 {
   RefPtr<Selection> mSelection;
-  nsCOMPtr<nsINode> mStartNode;
-  nsCOMPtr<nsINode> mEndNode;
+  nsCOMPtr<nsINode> mStartContainer;
+  nsCOMPtr<nsINode> mEndContainer;
   int32_t mStartOffset;
   int32_t mEndOffset;
 };
@@ -2894,9 +2894,9 @@ EditorBase::SplitNodeImpl(nsIContent& aExistingRightNode,
     for (uint32_t j = 0; j < range.mSelection->RangeCount(); ++j) {
       RefPtr<nsRange> r = range.mSelection->GetRangeAt(j);
       MOZ_ASSERT(r->IsPositioned());
-      range.mStartNode = r->GetStartParent();
+      range.mStartContainer = r->GetStartContainer();
       range.mStartOffset = r->StartOffset();
-      range.mEndNode = r->GetEndParent();
+      range.mEndContainer = r->GetEndContainer();
       range.mEndOffset = r->EndOffset();
 
       savedRanges.AppendElement(range);
@@ -2974,25 +2974,27 @@ EditorBase::SplitNodeImpl(nsIContent& aExistingRightNode,
     }
 
     // Split the selection into existing node and new node.
-    if (range.mStartNode == &aExistingRightNode) {
+    if (range.mStartContainer == &aExistingRightNode) {
       if (range.mStartOffset < aOffset) {
-        range.mStartNode = &aNewLeftNode;
+        range.mStartContainer = &aNewLeftNode;
       } else {
         range.mStartOffset -= aOffset;
       }
     }
 
-    if (range.mEndNode == &aExistingRightNode) {
+    if (range.mEndContainer == &aExistingRightNode) {
       if (range.mEndOffset < aOffset) {
-        range.mEndNode = &aNewLeftNode;
+        range.mEndContainer = &aNewLeftNode;
       } else {
         range.mEndOffset -= aOffset;
       }
     }
 
     RefPtr<nsRange> newRange;
-    nsresult rv = nsRange::CreateRange(range.mStartNode, range.mStartOffset,
-                                       range.mEndNode, range.mEndOffset,
+    nsresult rv = nsRange::CreateRange(range.mStartContainer,
+                                       range.mStartOffset,
+                                       range.mEndContainer,
+                                       range.mEndOffset,
                                        getter_AddRefs(newRange));
     NS_ENSURE_SUCCESS(rv, rv);
     rv = range.mSelection->AddRange(newRange);
@@ -3041,25 +3043,25 @@ EditorBase::JoinNodesImpl(nsINode* aNodeToKeep,
     for (uint32_t j = 0; j < range.mSelection->RangeCount(); ++j) {
       RefPtr<nsRange> r = range.mSelection->GetRangeAt(j);
       MOZ_ASSERT(r->IsPositioned());
-      range.mStartNode = r->GetStartParent();
+      range.mStartContainer = r->GetStartContainer();
       range.mStartOffset = r->StartOffset();
-      range.mEndNode = r->GetEndParent();
+      range.mEndContainer = r->GetEndContainer();
       range.mEndOffset = r->EndOffset();
 
       // If selection endpoint is between the nodes, remember it as being
       // in the one that is going away instead.  This simplifies later selection
       // adjustment logic at end of this method.
-      if (range.mStartNode) {
-        if (range.mStartNode == parent &&
+      if (range.mStartContainer) {
+        if (range.mStartContainer == parent &&
             joinOffset < range.mStartOffset &&
             range.mStartOffset <= keepOffset) {
-          range.mStartNode = aNodeToJoin;
+          range.mStartContainer = aNodeToJoin;
           range.mStartOffset = firstNodeLength;
         }
-        if (range.mEndNode == parent &&
+        if (range.mEndContainer == parent &&
             joinOffset < range.mEndOffset &&
             range.mEndOffset <= keepOffset) {
-          range.mEndNode = aNodeToJoin;
+          range.mEndContainer = aNodeToJoin;
           range.mEndOffset = firstNodeLength;
         }
       }
@@ -3125,22 +3127,24 @@ EditorBase::JoinNodesImpl(nsINode* aNodeToKeep,
     }
 
     // Check to see if we joined nodes where selection starts.
-    if (range.mStartNode == aNodeToJoin) {
-      range.mStartNode = aNodeToKeep;
-    } else if (range.mStartNode == aNodeToKeep) {
+    if (range.mStartContainer == aNodeToJoin) {
+      range.mStartContainer = aNodeToKeep;
+    } else if (range.mStartContainer == aNodeToKeep) {
       range.mStartOffset += firstNodeLength;
     }
 
     // Check to see if we joined nodes where selection ends.
-    if (range.mEndNode == aNodeToJoin) {
-      range.mEndNode = aNodeToKeep;
-    } else if (range.mEndNode == aNodeToKeep) {
+    if (range.mEndContainer == aNodeToJoin) {
+      range.mEndContainer = aNodeToKeep;
+    } else if (range.mEndContainer == aNodeToKeep) {
       range.mEndOffset += firstNodeLength;
     }
 
     RefPtr<nsRange> newRange;
-    nsresult rv = nsRange::CreateRange(range.mStartNode, range.mStartOffset,
-                                       range.mEndNode, range.mEndOffset,
+    nsresult rv = nsRange::CreateRange(range.mStartContainer,
+                                       range.mStartOffset,
+                                       range.mEndContainer,
+                                       range.mEndOffset,
                                        getter_AddRefs(newRange));
     NS_ENSURE_SUCCESS(rv, rv);
     rv = range.mSelection->AddRange(newRange);
@@ -3808,14 +3812,14 @@ EditorBase::GetStartNodeAndOffset(Selection* aSelection,
 
 nsresult
 EditorBase::GetStartNodeAndOffset(Selection* aSelection,
-                                  nsINode** aStartNode,
+                                  nsINode** aStartContainer,
                                   int32_t* aStartOffset)
 {
   MOZ_ASSERT(aSelection);
-  MOZ_ASSERT(aStartNode);
+  MOZ_ASSERT(aStartContainer);
   MOZ_ASSERT(aStartOffset);
 
-  *aStartNode = nullptr;
+  *aStartContainer = nullptr;
   *aStartOffset = 0;
 
   if (!aSelection->RangeCount()) {
@@ -3827,7 +3831,7 @@ EditorBase::GetStartNodeAndOffset(Selection* aSelection,
 
   NS_ENSURE_TRUE(range->IsPositioned(), NS_ERROR_FAILURE);
 
-  NS_IF_ADDREF(*aStartNode = range->GetStartParent());
+  NS_IF_ADDREF(*aStartContainer = range->GetStartContainer());
   *aStartOffset = range->StartOffset();
   return NS_OK;
 }
@@ -3858,14 +3862,14 @@ EditorBase::GetEndNodeAndOffset(Selection* aSelection,
 
 nsresult
 EditorBase::GetEndNodeAndOffset(Selection* aSelection,
-                                nsINode** aEndNode,
+                                nsINode** aEndContainer,
                                 int32_t* aEndOffset)
 {
   MOZ_ASSERT(aSelection);
-  MOZ_ASSERT(aEndNode);
+  MOZ_ASSERT(aEndContainer);
   MOZ_ASSERT(aEndOffset);
 
-  *aEndNode = nullptr;
+  *aEndContainer = nullptr;
   *aEndOffset = 0;
 
   NS_ENSURE_TRUE(aSelection->RangeCount(), NS_ERROR_FAILURE);
@@ -3875,7 +3879,7 @@ EditorBase::GetEndNodeAndOffset(Selection* aSelection,
 
   NS_ENSURE_TRUE(range->IsPositioned(), NS_ERROR_FAILURE);
 
-  NS_IF_ADDREF(*aEndNode = range->GetEndParent());
+  NS_IF_ADDREF(*aEndContainer = range->GetEndContainer());
   *aEndOffset = range->EndOffset();
   return NS_OK;
 }
@@ -4491,7 +4495,7 @@ EditorBase::CreateTxnForDeleteRange(nsRange* aRangeToDelete,
   MOZ_ASSERT(aAction != eNone);
 
   // get the node and offset of the insertion point
-  nsCOMPtr<nsINode> node = aRangeToDelete->GetStartParent();
+  nsCOMPtr<nsINode> node = aRangeToDelete->GetStartContainer();
   if (NS_WARN_IF(!node)) {
     return nullptr;
   }
@@ -4658,14 +4662,14 @@ EditorBase::CreateTxnForDeleteRange(nsRange* aRangeToDelete,
 }
 
 nsresult
-EditorBase::CreateRange(nsIDOMNode* aStartParent,
+EditorBase::CreateRange(nsIDOMNode* aStartContainer,
                         int32_t aStartOffset,
-                        nsIDOMNode* aEndParent,
+                        nsIDOMNode* aEndContainer,
                         int32_t aEndOffset,
                         nsRange** aRange)
 {
-  return nsRange::CreateRange(aStartParent, aStartOffset, aEndParent,
-                              aEndOffset, aRange);
+  return nsRange::CreateRange(aStartContainer, aStartOffset,
+                              aEndContainer, aEndOffset, aRange);
 }
 
 nsresult
@@ -4812,16 +4816,16 @@ EditorBase::HandleInlineSpellCheck(EditAction action,
                                    Selection* aSelection,
                                    nsIDOMNode* previousSelectedNode,
                                    int32_t previousSelectedOffset,
-                                   nsIDOMNode* aStartNode,
+                                   nsIDOMNode* aStartContainer,
                                    int32_t aStartOffset,
-                                   nsIDOMNode* aEndNode,
+                                   nsIDOMNode* aEndContainer,
                                    int32_t aEndOffset)
 {
   // Have to cast action here because this method is from an IDL
   return mInlineSpellChecker ? mInlineSpellChecker->SpellCheckAfterEditorChange(
                                  (int32_t)action, aSelection,
                                  previousSelectedNode, previousSelectedOffset,
-                                 aStartNode, aStartOffset, aEndNode,
+                                 aStartContainer, aStartOffset, aEndContainer,
                                  aEndOffset)
                              : NS_OK;
 }
@@ -4902,7 +4906,7 @@ EditorBase::InitializeSelection(nsIDOMEventTarget* aFocusEventTarget)
     // XXX If selection is changed during reframe, this doesn't work well!
     nsRange* firstRange = selection->GetRangeAt(0);
     NS_ENSURE_TRUE(firstRange, NS_ERROR_FAILURE);
-    nsCOMPtr<nsINode> startNode = firstRange->GetStartParent();
+    nsCOMPtr<nsINode> startNode = firstRange->GetStartContainer();
     int32_t startOffset = firstRange->StartOffset();
     FindBetterInsertionPoint(startNode, startOffset);
     Text* textNode = startNode->GetAsText();
@@ -5332,14 +5336,14 @@ EditorBase::GetIMESelectionStartOffsetIn(nsINode* aTextNode)
       if (NS_WARN_IF(!range)) {
         continue;
       }
-      if (NS_WARN_IF(range->GetStartParent() != aTextNode)) {
+      if (NS_WARN_IF(range->GetStartContainer() != aTextNode)) {
         // ignore the start offset...
       } else {
         MOZ_ASSERT(range->StartOffset() >= 0,
                    "start offset shouldn't be negative");
         minOffset = std::min(minOffset, range->StartOffset());
       }
-      if (NS_WARN_IF(range->GetEndParent() != aTextNode)) {
+      if (NS_WARN_IF(range->GetEndContainer() != aTextNode)) {
         // ignore the end offset...
       } else {
         MOZ_ASSERT(range->EndOffset() >= 0,

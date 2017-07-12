@@ -110,7 +110,7 @@ function LivemarkService() {
   Services.obs.addObserver(this, PlacesUtils.TOPIC_SHUTDOWN, true);
 
   // Observe bookmarks but don't init the service just for that.
-  PlacesUtils.addLazyBookmarkObserver(this, true);
+  PlacesUtils.bookmarks.addObserver(this, true);
 }
 
 LivemarkService.prototype = {

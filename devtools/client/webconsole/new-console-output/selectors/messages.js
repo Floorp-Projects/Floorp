@@ -21,6 +21,10 @@ function getAllMessagesTableDataById(state) {
   return state.messages.messagesTableDataById;
 }
 
+function getAllMessagesObjectPropertiesById(state) {
+  return state.messages.messagesObjectPropertiesById;
+}
+
 function getAllGroupsById(state) {
   return state.messages.groupsById;
 }
@@ -51,4 +55,5 @@ module.exports = {
   getVisibleMessages,
   getAllRepeatById,
   getAllNetworkMessagesUpdateById,
+  getAllMessagesObjectPropertiesById,
 };

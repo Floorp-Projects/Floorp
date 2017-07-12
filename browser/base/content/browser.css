@@ -268,6 +268,10 @@ window:not([chromehidden~="toolbar"]) #nav-bar[nonemptyoverflow] > .overflow-but
   -moz-window-dragging: inherit;
 }
 
+toolbarpaletteitem {
+  -moz-window-dragging: no-drag;
+}
+
 %ifdef XP_MACOSX
 #titlebar-fullscreen-button {
   -moz-appearance: -moz-mac-fullscreen-button;
@@ -746,6 +750,18 @@ html|input.urlbar-input[textoverflow]:not([focused]) {
 
 #main-window[customizing] :-moz-any(#urlbar, .searchbar-textbox) > .autocomplete-textbox-container > .textbox-input-box {
   visibility: hidden;
+}
+
+/* Flexible spacer sizing (matching url bar) */
+toolbarpaletteitem[place=toolbar][id^=wrapper-customizableui-special-spring],
+toolbarspring {
+  -moz-box-flex: 1;
+  min-width: 40px;
+}
+
+#nav-bar toolbarpaletteitem[id^=wrapper-customizableui-special-spring],
+#nav-bar toolbarspring {
+  -moz-box-flex: 80;
 }
 
 /* ::::: Unified Back-/Forward Button ::::: */
@@ -1359,6 +1375,7 @@ toolbarpaletteitem[place="palette"] {
   height: calc(39px + 3em);
   margin-inline-end: 24px;
   overflow: visible;
+  vertical-align: top;
 }
 
 toolbarpaletteitem[place="palette"][hidden] {

@@ -425,13 +425,13 @@ var pedanticChecks = report => {
           + stat.nominated);
 
         // bytesSent
-        ok(stat.bytesSent > 20000 && stat.bytesSent < 800000,
-          stat.type + ".bytesSent is a sane number (20,000<>800,000)for a short test. value="
+        ok(stat.bytesSent > 20000,
+          stat.type + ".bytesSent is a sane number (>20,000) for a short test. value="
           + stat.bytesSent);
 
         // bytesReceived
-        ok(stat.bytesReceived > 20000 && stat.bytesReceived < 800000,
-          stat.type + ".bytesReceived is a sane number (20,000<>800,000) for a short test. value="
+        ok(stat.bytesReceived > 20000,
+          stat.type + ".bytesReceived is a sane number (>20,000) for a short test. value="
           + stat.bytesReceived);
 
         // lastPacketSentTimestamp

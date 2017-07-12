@@ -359,6 +359,41 @@
     </panelview>
 
   </panelmultiview>
+
+  <!-- This menu is here because not having it in the menu in which it's used flickers
+       when hover styles overlap. See https://bugzilla.mozilla.org/show_bug.cgi?id=1378427 .
+       -->
+  <menupopup id="customizationPanelItemContextMenu"
+             onpopupshowing="gCustomizeMode.onPanelContextMenuShowing(event)">
+    <menuitem oncommand="gCustomizeMode.addToPanel(document.popupNode)"
+              id="customizationPanelItemContextMenuPin"
+              photonaccesskey="&customizeMenu.pinToOverflowMenu.accesskey;"
+              photonlabel="&customizeMenu.pinToOverflowMenu.label;"
+              accesskey="&customizeMenu.moveToPanel.accesskey;"
+              label="&customizeMenu.moveToPanel.label;"
+              closemenu="single"
+              class="customize-context-moveToPanel"/>
+    <menuitem oncommand="gCustomizeMode.addToToolbar(document.popupNode)"
+              id="customizationPanelItemContextMenuUnpin"
+              closemenu="single"
+              class="customize-context-moveToToolbar"
+              photonaccesskey="&customizeMenu.unpinFromOverflowMenu.accesskey;"
+              photonlabel="&customizeMenu.unpinFromOverflowMenu.label;"
+              accesskey="&customizeMenu.moveToToolbar.accesskey;"
+              label="&customizeMenu.moveToToolbar.label;"/>
+    <menuitem oncommand="gCustomizeMode.removeFromArea(document.popupNode)"
+              closemenu="single"
+              class="customize-context-removeFromPanel"
+              photonaccesskey="&customizeMenu.removeFromToolbar.accesskey;"
+              photonlabel="&customizeMenu.removeFromToolbar.label;"
+              accesskey="&customizeMenu.removeFromMenu.accesskey;"
+              label="&customizeMenu.removeFromMenu.label;"/>
+    <menuseparator/>
+    <menuitem command="cmd_CustomizeToolbars"
+              class="viewCustomizeToolbar"
+              accesskey="&viewCustomizeToolbar.accesskey;"
+              label="&viewCustomizeToolbar.label;"/>
+  </menupopup>
 </panel>
 
 <panel id="widget-overflow"
@@ -488,28 +523,6 @@
     </popupnotificationcontent>
   </popupnotification>
 </panel>
-
-<menupopup id="customizationPanelItemContextMenu">
-  <menuitem oncommand="gCustomizeMode.addToToolbar(document.popupNode)"
-            closemenu="single"
-            class="customize-context-moveToToolbar"
-            photonaccesskey="&customizeMenu.unpinFromOverflowMenu.accesskey;"
-            photonlabel="&customizeMenu.unpinFromOverflowMenu.label;"
-            accesskey="&customizeMenu.moveToToolbar.accesskey;"
-            label="&customizeMenu.moveToToolbar.label;"/>
-  <menuitem oncommand="gCustomizeMode.removeFromArea(document.popupNode)"
-            closemenu="single"
-            class="customize-context-removeFromPanel"
-            photonaccesskey="&customizeMenu.removeFromToolbar.accesskey;"
-            photonlabel="&customizeMenu.removeFromToolbar.label;"
-            accesskey="&customizeMenu.removeFromMenu.accesskey;"
-            label="&customizeMenu.removeFromMenu.label;"/>
-  <menuseparator/>
-  <menuitem command="cmd_CustomizeToolbars"
-            class="viewCustomizeToolbar"
-            accesskey="&viewCustomizeToolbar.accesskey;"
-            label="&viewCustomizeToolbar.label;"/>
-</menupopup>
 
 <menupopup id="customizationPaletteItemContextMenu">
   <menuitem oncommand="gCustomizeMode.addToToolbar(document.popupNode)"

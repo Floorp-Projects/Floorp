@@ -8,8 +8,6 @@ Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 var hs = Cc["@mozilla.org/browser/nav-history-service;1"].
          getService(Ci.nsINavHistoryService);
-var bs = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
-         getService(Ci.nsINavBookmarksService);
 
 /**
  * The callback object for runInBatchMode.
@@ -51,5 +49,5 @@ function run_test() {
 
   // checking the bookmark service
   do_test_pending();
-  bs.runInBatchMode(new callback(bs), null);
+  PlacesUtils.bookmarks.runInBatchMode(new callback(PlacesUtils.bookmarks), null);
 }

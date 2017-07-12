@@ -312,7 +312,17 @@ var CustomizableUIInternal = {
     SearchWidgetTracker.init();
   },
 
+  _updatePanelContextMenuLocation(window) {
+    let panelID = gPhotonStructure ? "widget-overflow" : "PanelUI-popup";
+    let contextMenu = window.document.getElementById("customizationPanelItemContextMenu");
+    window.document.getElementById(panelID).appendChild(contextMenu);
+  },
+
   _updateAreasForPhoton() {
+    for (let [win, ] of gBuildWindows) {
+      this._updatePanelContextMenuLocation(win);
+    }
+
     if (gPhotonStructure) {
       if (gAreas.has(CustomizableUI.AREA_PANEL)) {
         this.unregisterArea(CustomizableUI.AREA_PANEL, true);
@@ -509,6 +519,8 @@ var CustomizableUIInternal = {
     }
 
     // PROVIDER_SPECIAL gets treated the same as PROVIDER_XUL.
+    // XXXgijs: this causes bugs in code that depends on widgetWrapper.provider
+    // giving an accurate answer... filed as bug 1379821
     let wrapper = new XULWidgetGroupWrapper(aWidgetId);
     gGroupWrapperCache.set(aWidgetId, wrapper);
     return wrapper;
@@ -863,15 +875,15 @@ var CustomizableUIInternal = {
     }
   },
 
-  ensureButtonContextMenu(aNode, aAreaNode) {
+  ensureButtonContextMenu(aNode, aAreaNode, forcePanel) {
     const kPanelItemContextMenu = "customizationPanelItemContextMenu";
 
     let currentContextMenu = aNode.getAttribute("context") ||
                              aNode.getAttribute("contextmenu");
-    let place = CustomizableUI.getPlaceForItem(aAreaNode);
-    let contextMenuForPlace = place == "panel" ?
-                                kPanelItemContextMenu :
-                                null;
+    let contextMenuForPlace =
+      (forcePanel || "panel" == CustomizableUI.getPlaceForItem(aAreaNode)) ?
+      kPanelItemContextMenu :
+      null;
     if (contextMenuForPlace && !currentContextMenu) {
       aNode.setAttribute("context", contextMenuForPlace);
     } else if (currentContextMenu == kPanelItemContextMenu &&
@@ -953,11 +965,11 @@ var CustomizableUIInternal = {
     for (let child of aPanelContents.children) {
       if (child.localName != "toolbarbutton") {
         if (child.localName == "toolbaritem") {
-          this.ensureButtonContextMenu(child, aPanelContents);
+          this.ensureButtonContextMenu(child, aPanelContents, true);
         }
         continue;
       }
-      this.ensureButtonContextMenu(child, aPanelContents);
+      this.ensureButtonContextMenu(child, aPanelContents, true);
       child.setAttribute("wrap", "true");
     }
 
@@ -1074,6 +1086,7 @@ var CustomizableUIInternal = {
 
       aWindow.addEventListener("unload", this);
       aWindow.addEventListener("command", this, true);
+      this._updatePanelContextMenuLocation(aWindow);
 
       this.notifyListeners("onWindowOpened", aWindow);
     }
@@ -1280,9 +1293,6 @@ var CustomizableUIInternal = {
     let nodeName = "toolbar" + aId.match(/spring|spacer|separator/)[0];
     let node = aDocument.createElementNS(kNSXUL, nodeName);
     node.id = this.ensureSpecialWidgetId(aId);
-    if (nodeName == "toolbarspring") {
-      node.flex = 1;
-    }
     return node;
   },
 
@@ -2720,18 +2730,18 @@ var CustomizableUIInternal = {
   },
 
   canWidgetMoveToArea(aWidgetId, aArea) {
-    let placement = this.getPlacementOfWidget(aWidgetId);
-    if (placement && placement.area != aArea) {
-      // Special widgets can't move to the menu panel.
-      if (this.isSpecialWidget(aWidgetId) && gAreas.has(aArea) &&
-          gAreas.get(aArea).get("type") == CustomizableUI.TYPE_MENU_PANEL) {
-        return false;
-      }
-      // For everything else, just return whether the widget is removable.
-      return this.isWidgetRemovable(aWidgetId);
+    // Special widgets can't move to the menu panel.
+    if (this.isSpecialWidget(aWidgetId) && gAreas.has(aArea) &&
+        gAreas.get(aArea).get("type") == CustomizableUI.TYPE_MENU_PANEL) {
+      return false;
     }
-
-    return true;
+    let placement = this.getPlacementOfWidget(aWidgetId);
+    // Items in the palette can move, and items can move within their area:
+    if (!placement || placement.area == aArea) {
+      return true;
+    }
+    // For everything else, just return whether the widget is removable.
+    return this.isWidgetRemovable(aWidgetId);
   },
 
   ensureWidgetPlacedInWindow(aWidgetId, aWindow) {
@@ -3804,6 +3814,15 @@ this.CustomizableUI = {
   isBuiltinToolbar(aToolbarId) {
     return CustomizableUIInternal._builtinToolbars.has(aToolbarId);
   },
+
+  /**
+   * Create an instance of a spring, spacer or separator.
+   * @param aId       the type of special widget (spring, spacer or separator)
+   * @param aDocument the document in which to create it.
+   */
+  createSpecialWidget(aId, aDocument) {
+    return CustomizableUIInternal.createSpecialWidget(aId, aDocument);
+  },
 };
 Object.freeze(this.CustomizableUI);
 Object.freeze(this.CustomizableUI.windows);
@@ -4256,6 +4275,7 @@ OverflowableToolbar.prototype = {
         this._collapsed.set(child.id, this._target.clientWidth);
         child.setAttribute("overflowedItem", true);
         child.setAttribute("cui-anchorid", this._chevron.id);
+        CustomizableUIInternal.ensureButtonContextMenu(child, this._toolbar, gPhotonStructure);
         CustomizableUIInternal.notifyListeners("onWidgetOverflow", child, this._target);
 
         this._list.insertBefore(child, this._list.firstChild);
@@ -4316,6 +4336,7 @@ OverflowableToolbar.prototype = {
       }
       child.removeAttribute("cui-anchorid");
       child.removeAttribute("overflowedItem");
+      CustomizableUIInternal.ensureButtonContextMenu(child, this._target);
       CustomizableUIInternal.notifyListeners("onWidgetUnderflow", child, this._target);
     }
 
@@ -4395,6 +4416,7 @@ OverflowableToolbar.prototype = {
         this._collapsed.set(aNode.id, minSize);
         aNode.setAttribute("cui-anchorid", this._chevron.id);
         aNode.setAttribute("overflowedItem", true);
+        CustomizableUIInternal.ensureButtonContextMenu(aNode, aContainer, gPhotonStructure);
         CustomizableUIInternal.notifyListeners("onWidgetOverflow", aNode, this._target);
       } else if (!nowInBar) {
         // If it is not overflowed and not in the toolbar, and was not overflowed
@@ -4410,6 +4432,7 @@ OverflowableToolbar.prototype = {
       this._collapsed.delete(aNode.id);
       aNode.removeAttribute("cui-anchorid");
       aNode.removeAttribute("overflowedItem");
+      CustomizableUIInternal.ensureButtonContextMenu(aNode, aContainer);
       CustomizableUIInternal.notifyListeners("onWidgetUnderflow", aNode, this._target);
 
       if (!this._collapsed.size) {
