@@ -193,6 +193,11 @@ var onboardingTourset = {
     getPage(win, bundle) {
       let div = win.document.createElement("div");
       div.classList.add("onboarding-no-button");
+      // The email validation pattern used in the form comes from IETF rfc5321,
+      // which is identical to server-side checker of Firefox Account. See
+      // discussion in https://bugzilla.mozilla.org/show_bug.cgi?id=1378770#c6
+      // for detail.
+      let emailRegex = "^[\\w.!#$%&’*+\\/=?^`{|}~-]{1,64}@[a-z\\d](?:[a-z\\d-]{0,253}[a-z\\d])?(?:\\.[a-z\\d](?:[a-z\\d-]{0,253}[a-z\\d])?)+$";
       div.innerHTML = `
         <section class="onboarding-tour-description">
           <h1 data-l10n-id="onboarding.tour-sync.title2"></h1>
@@ -202,14 +207,16 @@ var onboardingTourset = {
           <form>
             <h3 data-l10n-id="onboarding.tour-sync.form.title"></h3>
             <p data-l10n-id="onboarding.tour-sync.form.description"></p>
-            <input id="onboarding-tour-sync-email-input" type="text"></input><br />
+            <input id="onboarding-tour-sync-email-input" type="email" required="true"></input><br />
             <button id="onboarding-tour-sync-button" class="onboarding-tour-action-button" data-l10n-id="onboarding.tour-sync.button"></button>
           </form>
           <img src="resource://onboarding/img/figure_sync.svg" />
         </section>
       `;
-      div.querySelector("#onboarding-tour-sync-email-input").placeholder =
+      let emailInput = div.querySelector("#onboarding-tour-sync-email-input");
+      emailInput.placeholder =
         bundle.GetStringFromName("onboarding.tour-sync.email-input.placeholder");
+      emailInput.pattern = emailRegex;
       return div;
     },
   },
