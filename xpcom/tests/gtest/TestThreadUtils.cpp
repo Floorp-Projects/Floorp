@@ -3,6 +3,7 @@
 * file, You can obtain one at http:mozilla.org/MPL/2.0/. */
 
 #include "nsThreadUtils.h"
+#include "mozilla/IdleTaskRunner.h"
 #include "mozilla/UniquePtr.h"
 
 #include "gtest/gtest.h"
@@ -673,6 +674,79 @@ TEST(ThreadUtils, IdleRunnableMethod)
     ASSERT_TRUE(idleInheritedSetDeadline->mRunnableExecuted);
     ASSERT_TRUE(idleInheritedSetDeadline->mSetDeadlineCalled);
   }
+}
+
+TEST(ThreadUtils, IdleTaskRunner)
+{
+  using namespace mozilla;
+
+  // Repeating.
+  int cnt1 = 0;
+  RefPtr<IdleTaskRunner> runner1 =
+    IdleTaskRunner::Create([&cnt1](TimeStamp) { cnt1++; return true; },
+                           10,
+                           3,
+                           true,
+                           nullptr);
+
+  // Non-repeating but callback always return false so it's still repeating.
+  int cnt2 = 0;
+  RefPtr<IdleTaskRunner> runner2 =
+    IdleTaskRunner::Create([&cnt2](TimeStamp) { cnt2++; return false; },
+                           10,
+                           3,
+                           false,
+                           nullptr);
+
+  // Repeating until cnt3 >= 2 by returning 'true' in MayStopProcessing callback.
+  // The strategy is to stop repeating as early as possible so that
+  // we are more probable to catch the bug if it didn't stop as expected.
+  int cnt3 = 0;
+  RefPtr<IdleTaskRunner> runner3 =
+    IdleTaskRunner::Create([&cnt3](TimeStamp) { cnt3++; return true; },
+                           10,
+                           3,
+                           true,
+                           [&cnt3]{ return cnt3 >= 2; });
+
+  // Non-repeating can callback return true so the callback will
+  // be only run once.
+  int cnt4 = 0;
+  RefPtr<IdleTaskRunner> runner4 =
+    IdleTaskRunner::Create([&cnt4](TimeStamp) { cnt4++; return true; },
+                           10,
+                           3,
+                           false,
+                           nullptr);
+
+  // Firstly we wait until the two repeating tasks reach their limits.
+  MOZ_ALWAYS_TRUE(SpinEventLoopUntil([&]() { return cnt1 >= 100; }));
+  MOZ_ALWAYS_TRUE(SpinEventLoopUntil([&]() { return cnt2 >= 100; }));
+
+  // At any point ==> 0 <= cnt3 <= 2 since MayStopProcessing() would return
+  // true when cnt3 >= 2.
+  MOZ_ALWAYS_TRUE(SpinEventLoopUntil([&]() {
+    if (cnt3 > 2) {
+      EXPECT_TRUE(false) << "MaybeContinueProcess() doesn't work.";
+      return true; // Stop on failure.
+    }
+    return cnt3 == 2; // Stop finish if we have reached its max value.
+  }));
+
+  // At any point ==> 0 <= cnt4 <= 1 since this is a non-repeating
+  // idle runner.
+  MOZ_ALWAYS_TRUE(SpinEventLoopUntil([&]() {
+    // At any point: 0 <= cnt4 <= 1
+    if (cnt4 > 1) {
+      EXPECT_TRUE(false) << "The 'mRepeating' flag doesn't work.";
+      return true; // Stop on failure.
+    }
+    return cnt4 == 1;
+  }));
+
+  // The repeating timer with no "exit" condition requires an explicit
+  // Cancel() call.
+  runner1->Cancel();
 }
 
 // {9e70a320-be02-11d1-8031-006008159b5a}
