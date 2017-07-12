@@ -106,6 +106,10 @@ def main():
             if m:
                 extensionDir = '%s:/%s' % (m.group(0)[1:2], extensionDir[3:])
                 extensionDir = extensionDir.replace('/', '\\')
+    if sys.platform == 'darwin':
+        # Needed to avoid tab crashes on mac due to level 3 sandboxing
+        sourceRoot = os.path.join(extensionDir, '..', '..', '..', '..')
+        os.environ['MOZ_DEVELOPER_REPO_DIR'] = os.path.abspath(sourceRoot)
 
     TPS = TPSTestRunner(extensionDir,
                         binary=options.binary,
