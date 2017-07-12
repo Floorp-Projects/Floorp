@@ -491,15 +491,6 @@ xul|textbox.tree-input {
   padding-left: unset;
 }
 
-xul|textbox[type="search"]:not([searchbutton]) > .textbox-input-box > .textbox-search-icons > .textbox-search-icon {
-  visibility: hidden;
-}
-
-xul|textbox[type="search"]:not([searchbutton]) > .textbox-input-box > .textbox-search-sign {
-  list-style-image: url(chrome://global/skin/icons/search-textbox.svg);
-  margin-inline-end: 5px;
-}
-
 html|input[type="email"],
 html|input[type="tel"],
 html|input[type="text"],
