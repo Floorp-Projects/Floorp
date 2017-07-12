@@ -20,6 +20,12 @@ import java.util.HashSet;
 import java.util.UUID;
 
 import static org.junit.Assert.*;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.only;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
 @RunWith(RobolectricTestRunner.class)
 public class SettingsMeasurementTest {
@@ -128,5 +134,87 @@ public class SettingsMeasurementTest {
 
         assertTrue(object.get(keyStringSetPreference) instanceof String);
         assertEquals("[chicken, waffles]", object.get(keyStringSetPreference));
+    }
+
+    @Test
+    public void testSettingsProviderIsUsed() {
+        final SettingsMeasurement.SettingsProvider settingsProvider = mock(SettingsMeasurement.SettingsProvider.class);
+        doReturn(true).when(settingsProvider).containsKey(anyString());
+        doReturn("value").when(settingsProvider).getValue(anyString());
+
+        final TelemetryConfiguration configuration = new TelemetryConfiguration(RuntimeEnvironment.application)
+                .setSettingsProvider(settingsProvider)
+                .setPreferencesImportantForTelemetry("a", "b", "c");
+
+        final SettingsMeasurement measurement = new SettingsMeasurement(configuration);
+
+        measurement.flush();
+
+        verify(settingsProvider).update(configuration);
+
+        verify(settingsProvider).containsKey("a");
+        verify(settingsProvider).getValue("a");
+
+        verify(settingsProvider).containsKey("b");
+        verify(settingsProvider).getValue("b");
+
+        verify(settingsProvider).containsKey("c");
+        verify(settingsProvider).getValue("c");
+
+        verify(settingsProvider).release();
+    }
+
+    @Test
+    public void testCustomSettingsProvider() throws Exception {
+        // A custom settings provider that will return for an integer key x the value x * 2. For all
+        // not even integer keys it will pretent that they are not in the settings.
+        final SettingsMeasurement.SettingsProvider settingsProvider = new SettingsMeasurement.SettingsProvider() {
+            @Override
+            public void update(TelemetryConfiguration configuration) {}
+
+            @Override
+            public boolean containsKey(String key) {
+                return Integer.parseInt(key) % 2 == 0;
+            }
+
+            @Override
+            public Object getValue(String key) {
+                return Integer.parseInt(key) * 2;
+            }
+
+            @Override
+            public void release() {}
+        };
+
+        final TelemetryConfiguration configuration = new TelemetryConfiguration(RuntimeEnvironment.application)
+                .setSettingsProvider(settingsProvider)
+                .setPreferencesImportantForTelemetry("1", "2", "3", "4");
+
+        final SettingsMeasurement measurement = new SettingsMeasurement(configuration);
+
+        measurement.flush();
+
+        final Object value = measurement.flush();
+
+        assertNotNull(value);
+        assertTrue(value instanceof JSONObject);
+
+        final JSONObject object = (JSONObject) value;
+
+        assertEquals(4, object.length());
+
+        assertTrue(object.has("1"));
+        assertTrue(object.isNull("1"));
+
+        assertTrue(object.has("2"));
+        assertTrue(object.get("2") instanceof String);
+        assertEquals("4", object.get("2"));
+
+        assertTrue(object.has("3"));
+        assertTrue(object.isNull("3"));
+
+        assertTrue(object.has("4"));
+        assertTrue(object.get("4") instanceof String);
+        assertEquals("8", object.get("4"));
     }
 }

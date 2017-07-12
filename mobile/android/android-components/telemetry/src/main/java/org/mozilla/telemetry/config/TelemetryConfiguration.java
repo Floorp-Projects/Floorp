@@ -7,6 +7,7 @@ package org.mozilla.telemetry.config;
 import android.content.Context;
 import android.content.SharedPreferences;
 
+import org.mozilla.telemetry.measurement.SettingsMeasurement;
 import org.mozilla.telemetry.util.ContextUtils;
 
 import java.io.File;
@@ -55,6 +56,7 @@ public class TelemetryConfiguration {
     private int maximumNumberOfEventsPerPing;
     private int maximumNumberOfPingsPerType;
     private int maximumNumberOfPingUploadsPerDay;
+    private SettingsMeasurement.SettingsProvider settingsProvider;
 
     public TelemetryConfiguration(Context context) {
         this.context = context.getApplicationContext();
@@ -76,6 +78,7 @@ public class TelemetryConfiguration {
         setMaximumNumberOfEventsPerPing(DEFAULT_MAXIMUM_NUMBER_OF_PINGS_PER_EVENT);
         setMaximumNumberOfPingsPerType(DEFAULT_MAXIMUM_PINGS_PER_TYPE);
         setMaximumNumberOfPingUploadsPerDay(DEFAULT_MAXIMUM_PING_UPLOADS_PER_DAY);
+        setSettingsProvider(new SettingsMeasurement.SharedPreferenceSettingsProvider());
     }
 
     /**
@@ -391,6 +394,21 @@ public class TelemetryConfiguration {
      */
     public TelemetryConfiguration setMaximumNumberOfPingUploadsPerDay(int maximumNumberOfPingUploadsPerDay) {
         this.maximumNumberOfPingUploadsPerDay = maximumNumberOfPingUploadsPerDay;
+        return this;
+    }
+
+    /**
+     * Get the provider for reading app settings.
+     */
+    public SettingsMeasurement.SettingsProvider getSettingsProvider() {
+        return settingsProvider;
+    }
+
+    /**
+     * Set a provider for reading app settings.
+     */
+    public TelemetryConfiguration setSettingsProvider(SettingsMeasurement.SettingsProvider settingsProvider) {
+        this.settingsProvider = settingsProvider;
         return this;
     }
 }
