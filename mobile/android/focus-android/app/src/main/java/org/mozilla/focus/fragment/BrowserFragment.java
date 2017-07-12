@@ -539,12 +539,14 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
 
                 // We can't show a snackbar outside of the app. So let's show a toast instead.
                 Toast.makeText(getContext(), R.string.feedback_erase, Toast.LENGTH_SHORT).show();
+
+                TelemetryWrapper.eraseBackToAppEvent();
             } else {
                 // Just go back to the home screen.
                 eraseAndShowHomeScreen();
-            }
 
-            TelemetryWrapper.eraseBackEvent();
+                TelemetryWrapper.eraseBackToHomeEvent();
+            }
         }
 
         return true;

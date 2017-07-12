@@ -88,6 +88,8 @@ public final class TelemetryWrapper {
         private static final String FIREFOX = "firefox";
         private static final String SELECTION = "selection";
         private static final String ERASE = "erase";
+        private static final String ERASE_TO_HOME = "erase_home";
+        private static final String ERASE_TO_APP = "erase_app";
         private static final String IMAGE = "image";
         private static final String LINK = "link";
         private static final String CUSTOM_TAB = "custom_tab";
@@ -279,8 +281,12 @@ public final class TelemetryWrapper {
         TelemetryEvent.create(Category.ACTION, Method.CLICK, Object.ERASE_BUTTON).queue();
     }
 
-    public static void eraseBackEvent() {
-        TelemetryEvent.create(Category.ACTION, Method.CLICK, Object.BACK_BUTTON, Value.ERASE).queue();
+    public static void eraseBackToHomeEvent() {
+        TelemetryEvent.create(Category.ACTION, Method.CLICK, Object.BACK_BUTTON, Value.ERASE_TO_HOME).queue();
+    }
+
+    public static void eraseBackToAppEvent() {
+        TelemetryEvent.create(Category.ACTION, Method.CLICK, Object.BACK_BUTTON, Value.ERASE_TO_APP).queue();
     }
 
     public static void eraseNotificationEvent() {
