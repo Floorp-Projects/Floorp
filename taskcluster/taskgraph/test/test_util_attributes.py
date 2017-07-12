@@ -9,6 +9,7 @@ from taskgraph.util.attributes import (
     attrmatch,
     match_run_on_projects,
 )
+from mozunit import main
 
 
 class Attrmatch(unittest.TestCase):
@@ -89,3 +90,7 @@ class MatchRunOnProjects(unittest.TestCase):
         self.assertTrue(match_run_on_projects('mozilla-central', ['release', 'try', 'date']))
         self.assertTrue(match_run_on_projects('mozilla-beta', ['release', 'try', 'date']))
         self.assertTrue(match_run_on_projects('mozilla-release', ['release', 'try', 'date']))
+
+
+if __name__ == '__main__':
+    main()
