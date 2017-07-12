@@ -24,6 +24,12 @@ interface amIAddonManagerStartup : nsISupports
   [implicit_jscontext]
   void initializeExtensions(in jsval locations);
 
+  [implicit_jscontext]
+  jsval encodeBlob(in jsval value);
+
+  [implicit_jscontext]
+  jsval decodeBlob(in jsval value);
+
   /**
    * Resets the internal state of the startup service, and allows
    * initializeExtensions() to be called again. Does *not* fully unregister

@@ -6272,8 +6272,8 @@ JS_GetRegExpFlags(JSContext* cx, HandleObject obj)
     AssertHeapIsIdle();
     CHECK_REQUEST(cx);
 
-    RootedRegExpShared shared(cx);
-    if (!RegExpToShared(cx, obj, &shared))
+    RegExpShared* shared = RegExpToShared(cx, obj);
+    if (!shared)
         return false;
     return shared->getFlags();
 }
@@ -6284,8 +6284,8 @@ JS_GetRegExpSource(JSContext* cx, HandleObject obj)
     AssertHeapIsIdle();
     CHECK_REQUEST(cx);
 
-    RootedRegExpShared shared(cx);
-    if (!RegExpToShared(cx, obj, &shared))
+    RegExpShared* shared = RegExpToShared(cx, obj);
+    if (!shared)
         return nullptr;
     return shared->getSource();
 }

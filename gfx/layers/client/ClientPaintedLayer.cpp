@@ -263,9 +263,11 @@ ClientPaintedLayer::CapturePaintedContent()
     Factory::CreateDrawTarget(gfxPlatform::GetPlatform()->GetDefaultContentBackend(),
                               imageSize, gfx::SurfaceFormat::B8G8R8A8);
 
+  // We don't clear the rect here like WRPaintedBlobLayers do
+  // because ContentClient already clears the surface for us during BeginPaint.
   RefPtr<DrawTargetCapture> captureDT = refDT->CreateCaptureDT(imageSize);
-  captureDT->ClearRect(Rect(0, 0, imageSize.width, imageSize.height));
   captureDT->SetTransform(Matrix().PreTranslate(-bounds.x, -bounds.y));
+
   RefPtr<gfxContext> ctx = gfxContext::CreatePreservingTransformOrNull(captureDT);
   MOZ_ASSERT(ctx); // already checked the target above
 

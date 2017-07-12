@@ -101,6 +101,12 @@ public:
 
 class IncrementalFinalizeRunnable;
 
+struct JSHolderInfo
+{
+  void* mHolder;
+  nsScriptObjectTracer* mTracer;
+};
+
 class CycleCollectedJSRuntime
 {
   friend class JSGCThingParticipant;
@@ -308,7 +314,8 @@ private:
 
   mozilla::TimeStamp mLatestNurseryCollectionStart;
 
-  nsDataHashtable<nsPtrHashKey<void>, nsScriptObjectTracer*> mJSHolders;
+  SegmentedVector<JSHolderInfo, 1024, InfallibleAllocPolicy> mJSHolders;
+  nsDataHashtable<nsPtrHashKey<void>, JSHolderInfo*> mJSHolderMap;
 
   typedef nsDataHashtable<nsFuncPtrHashKey<DeferredFinalizeFunction>, void*>
     DeferredFinalizerTable;

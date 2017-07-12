@@ -34,7 +34,8 @@ const int32_t kTimeBetweenChecks = 45; /* seconds */
 nsWindowMemoryReporter::nsWindowMemoryReporter()
   : mLastCheckForGhostWindows(TimeStamp::NowLoRes()),
     mCycleCollectorIsRunning(false),
-    mCheckTimerWaitingForCCEnd(false)
+    mCheckTimerWaitingForCCEnd(false),
+    mGhostWindowCount(0)
 {
 }
 
@@ -119,8 +120,7 @@ nsWindowMemoryReporter::Init()
                     /* weakRef = */ true);
   }
 
-  RegisterStrongMemoryReporter(new GhostWindowsReporter());
-  RegisterGhostWindowsDistinguishedAmount(GhostWindowsReporter::DistinguishedAmount);
+  RegisterGhostWindowsDistinguishedAmount(GhostWindowsDistinguishedAmount);
 }
 
 /* static */ nsWindowMemoryReporter*
@@ -491,6 +491,17 @@ nsWindowMemoryReporter::CollectReports(nsIHandleReportCallback* aHandleReport,
       aData);
   }
 
+  MOZ_COLLECT_REPORT(
+    "ghost-windows", KIND_OTHER, UNITS_COUNT, ghostWindows.Count(),
+"The number of ghost windows present (the number of nodes underneath "
+"explicit/window-objects/top(none)/ghost, modulo race conditions).  A ghost "
+"window is not shown in any tab, does not share a domain with any non-detached "
+"windows, and has met these criteria for at least "
+"memory.ghost_window_timeout_seconds, or has survived a round of "
+"about:memory's minimize memory usage button.\n\n"
+"Ghost windows can happen legitimately, but they are often indicative of "
+"leaks in the browser or add-ons.");
+
   WindowPaths windowPaths;
   WindowPaths topWindowPaths;
 
@@ -734,6 +745,7 @@ nsWindowMemoryReporter::CheckForGhostWindows(
   KillCheckTimer();
 
   nsTHashtable<nsCStringHashKey> nonDetachedWindowDomains;
+  nsDataHashtable<nsISupportsHashKey, nsCString> domainMap;
 
   // Populate nonDetachedWindowDomains.
   for (auto iter = windowsById->Iter(); !iter.Done(); iter.Next()) {
@@ -748,8 +760,13 @@ nsWindowMemoryReporter::CheckForGhostWindows(
     nsCOMPtr<nsIURI> uri = GetWindowURI(window);
     nsAutoCString domain;
     if (uri) {
-      tldService->GetBaseDomain(uri, 0, domain);
+      domain = domainMap.LookupForAdd(uri).OrInsert([&]() {
+        nsCString d;
+        tldService->GetBaseDomain(uri, 0, d);
+        return d;
+      });
     }
+
     nonDetachedWindowDomains.PutEntry(domain);
   }
 
@@ -757,6 +774,7 @@ nsWindowMemoryReporter::CheckForGhostWindows(
   // if it's not null.
   uint32_t ghostTimeout = GetGhostTimeout();
   TimeStamp now = mLastCheckForGhostWindows;
+  mGhostWindowCount = 0;
   for (auto iter = mDetachedWindows.Iter(); !iter.Done(); iter.Next()) {
     nsWeakPtr weakKey = do_QueryInterface(iter.Key());
     nsCOMPtr<mozIDOMWindow> iwindow = do_QueryReferent(weakKey);
@@ -809,21 +827,17 @@ nsWindowMemoryReporter::CheckForGhostWindows(
         // that is not null.
         if (aOutGhostIDs && window) {
           aOutGhostIDs->PutEntry(window->WindowID());
+          mGhostWindowCount++;
         }
       }
     }
   }
 }
 
-NS_IMPL_ISUPPORTS(nsWindowMemoryReporter::GhostWindowsReporter,
-                  nsIMemoryReporter)
-
 /* static */ int64_t
-nsWindowMemoryReporter::GhostWindowsReporter::DistinguishedAmount()
+nsWindowMemoryReporter::GhostWindowsDistinguishedAmount()
 {
-  nsTHashtable<nsUint64HashKey> ghostWindows;
-  sWindowReporter->CheckForGhostWindows(&ghostWindows);
-  return ghostWindows.Count();
+  return sWindowReporter->mGhostWindowCount;
 }
 
 void

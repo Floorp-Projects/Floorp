@@ -455,21 +455,10 @@ js::TraceNullableEdge(JSTracer* trc, ReadBarriered<T>* thingp, const char* name)
 
 template <typename T>
 JS_PUBLIC_API(void)
-JS::TraceEdge(JSTracer* trc, JS::Heap<T>* thingp, const char* name)
+js::gc::TraceExternalEdge(JSTracer* trc, T* thingp, const char* name)
 {
-    MOZ_ASSERT(thingp);
-    if (InternalBarrierMethods<T>::isMarkable(*thingp->unsafeGet()))
-        DispatchToTracer(trc, ConvertToBase(thingp->unsafeGet()), name);
-}
-
-JS_PUBLIC_API(void)
-JS::TraceEdge(JSTracer* trc, JS::TenuredHeap<JSObject*>* thingp, const char* name)
-{
-    MOZ_ASSERT(thingp);
-    if (JSObject* ptr = thingp->unbarrieredGetPtr()) {
-        DispatchToTracer(trc, &ptr, name);
-        thingp->setPtr(ptr);
-    }
+    MOZ_ASSERT(InternalBarrierMethods<T>::isMarkable(*thingp));
+    DispatchToTracer(trc, ConvertToBase(thingp), name);
 }
 
 template <typename T>
@@ -583,10 +572,10 @@ FOR_EACH_GC_POINTER_TYPE(INSTANTIATE_ALL_VALID_TRACE_FUNCTIONS)
 #undef INSTANTIATE_ALL_VALID_TRACE_FUNCTIONS
 
 #define INSTANTIATE_PUBLIC_TRACE_FUNCTIONS(type) \
-    template JS_PUBLIC_API(void) JS::TraceEdge<type>(JSTracer*, JS::Heap<type>*, const char*); \
     template JS_PUBLIC_API(void) JS::UnsafeTraceRoot<type>(JSTracer*, type*, const char*); \
     template JS_PUBLIC_API(void) js::UnsafeTraceManuallyBarrieredEdge<type>(JSTracer*, type*, \
-                                                                            const char*);
+                                                                            const char*); \
+    template JS_PUBLIC_API(void) js::gc::TraceExternalEdge<type>(JSTracer*, type*, const char*);
 FOR_EACH_PUBLIC_GC_POINTER_TYPE(INSTANTIATE_PUBLIC_TRACE_FUNCTIONS)
 FOR_EACH_PUBLIC_TAGGED_GC_POINTER_TYPE(INSTANTIATE_PUBLIC_TRACE_FUNCTIONS)
 #undef INSTANTIATE_PUBLIC_TRACE_FUNCTIONS

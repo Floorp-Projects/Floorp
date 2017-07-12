@@ -32,6 +32,7 @@
 #include "nsIImageToPixbuf.h"
 #endif
 #include "nsXULAppAPI.h"
+#include "gfxPlatform.h"
 
 #include <glib.h>
 #include <glib-object.h>
@@ -85,6 +86,10 @@ nsresult
 nsGNOMEShellService::Init()
 {
   nsresult rv;
+
+  if (gfxPlatform::IsHeadless()) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
 
   // GConf, GSettings or GIO _must_ be available, or we do not allow
   // CreateInstance to succeed.

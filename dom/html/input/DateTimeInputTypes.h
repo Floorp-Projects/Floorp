@@ -20,12 +20,21 @@ public:
   bool HasStepMismatch(bool aUseZeroIfValueNaN) const override;
   bool HasBadInput() const override;
 
+  nsresult GetRangeOverflowMessage(nsXPIDLString& aMessage) override;
+  nsresult GetRangeUnderflowMessage(nsXPIDLString& aMessage) override;
+
   nsresult MinMaxStepAttrChanged() override;
 
 protected:
   explicit DateTimeInputTypeBase(mozilla::dom::HTMLInputElement* aInputElement)
     : InputType(aInputElement)
   {}
+
+  /**
+   * Checks preference "dom.forms.datetime" to determine if input date and time
+   * should be supported.
+   */
+  static bool IsInputDateTimeEnabled();
 
   bool IsMutable() const override;
 
@@ -57,6 +66,12 @@ public:
   {
     return new (aMemory) DateInputType(aInputElement);
   }
+
+  // Currently, for input date and time, only date can have an invalid value, as
+  // we forbid or autocorrect values that are not in the valid range for time.
+  // For example, in 12hr format, if user enters '2' in the hour field, it will
+  // be treated as '02' and automatically advance to the next field.
+  nsresult GetBadInputMessage(nsXPIDLString& aMessage) override;
 
   bool ConvertStringToNumber(nsAString& aValue,
                              mozilla::Decimal& aResultValue) const override;

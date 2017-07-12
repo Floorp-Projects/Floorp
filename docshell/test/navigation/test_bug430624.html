@@ -25,7 +25,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=430624
 
 function onLoad() {
   window.frames[0].frameElement.onload = onReload;
-  window.frames[0].location = window.frames[0].location;
+  window.frames[0].frameElement.srcdoc = window.frames[0].frameElement.srcdoc;
 }
 
 function onReload() {
@@ -49,7 +49,7 @@ SimpleTest.waitForExplicitFinish();
 </script>
 </pre>
 
-<iframe onload="onLoad()" src="data:text/html;charset=utf-8,<body contenteditable>contentEditable</body>"></iframe>
+<iframe onload="onLoad()" srcdoc="<body contenteditable>contentEditable</body>"></iframe>
 
 </body>
 </html>
