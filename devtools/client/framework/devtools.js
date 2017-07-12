@@ -22,6 +22,9 @@ loader.lazyRequireGetter(this, "DebuggerServer", "devtools/server/main", true);
 loader.lazyRequireGetter(this, "DebuggerClient", "devtools/shared/client/main", true);
 loader.lazyImporter(this, "BrowserToolboxProcess", "resource://devtools/client/framework/ToolboxProcess.jsm");
 
+loader.lazyRequireGetter(this, "WebExtensionInspectedWindowFront",
+      "devtools/shared/fronts/webextension-inspected-window", true);
+
 const {defaultTools: DefaultTools, defaultThemes: DefaultThemes} =
   require("devtools/client/definitions");
 const EventEmitter = require("devtools/shared/old-event-emitter");
@@ -577,6 +580,14 @@ DevTools.prototype = {
    */
   initBrowserToolboxProcessForAddon: function (addonID) {
     BrowserToolboxProcess.init({ addonID });
+  },
+
+  /**
+   * Compatibility layer for web-extensions. Used by DevToolsShim for
+   * browser/components/extensions/ext-devtools-inspectedWindow.js
+   */
+  createWebExtensionInspectedWindowFront: function (tabTarget) {
+    return new WebExtensionInspectedWindowFront(tabTarget.client, tabTarget.form);
   },
 
   /**
