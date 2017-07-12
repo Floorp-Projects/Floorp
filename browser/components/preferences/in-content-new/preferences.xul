@@ -180,17 +180,19 @@
     <html:a class="help-button" target="_blank" aria-label="&helpButton2.label;">&helpButton2.label;</html:a>
 
     <vbox class="main-content" flex="1">
-      <hbox pack="end">
-        <textbox type="search" id="searchInput" hidden="true" clickSelectsAll="true"/>
-      </hbox>
-      <prefpane id="mainPrefPane">
+      <vbox class="pane-container">
+        <hbox class="search-container" pack="end">
+          <textbox type="search" id="searchInput" hidden="true" clickSelectsAll="true"/>
+        </hbox>
+        <prefpane id="mainPrefPane">
 #include searchResults.xul
 #include main.xul
 #include search.xul
 #include privacy.xul
 #include containers.xul
 #include sync.xul
-      </prefpane>
+        </prefpane>
+      </vbox>
     </vbox>
   </hbox>
 
