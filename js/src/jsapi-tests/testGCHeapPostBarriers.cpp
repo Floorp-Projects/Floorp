@@ -212,8 +212,8 @@ BEGIN_TEST(testUnbarrieredEquality)
     using namespace js::gc;
     TenuredCell* cell = &obj->asTenured();
     TenuredCell* cell2 = &obj2->asTenured();
-    cell->markIfUnmarked(GRAY);
-    cell2->markIfUnmarked(GRAY);
+    cell->markIfUnmarked(MarkColor::Gray);
+    cell2->markIfUnmarked(MarkColor::Gray);
     MOZ_ASSERT(cell->isMarkedGray());
     MOZ_ASSERT(cell2->isMarkedGray());
 
