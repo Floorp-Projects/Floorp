@@ -18,6 +18,7 @@ MediaDecoderStateMachine* OggDecoder::CreateStateMachine()
   RefPtr<OggDemuxer> demuxer = new OggDemuxer(mResource);
   MediaDecoderReaderInit init(this);
   init.mVideoFrameContainer = GetVideoFrameContainer();
+  init.mKnowsCompositor = GetCompositor();
   mReader = new MediaFormatReader(init, demuxer);
   demuxer->SetChainingEvents(&mReader->TimedMetadataProducer(),
                              &mReader->MediaNotSeekableProducer());

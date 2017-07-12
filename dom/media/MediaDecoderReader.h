@@ -67,6 +67,7 @@ struct MOZ_STACK_CLASS MediaDecoderReaderInit
   AbstractMediaDecoder* const mDecoder;
   MediaResource* mResource = nullptr;
   VideoFrameContainer* mVideoFrameContainer = nullptr;
+  already_AddRefed<layers::KnowsCompositor> mKnowsCompositor;
 
   explicit MediaDecoderReaderInit(AbstractMediaDecoder* aDecoder)
     : mDecoder(aDecoder)
@@ -110,7 +111,7 @@ public:
 
   // The caller must ensure that Shutdown() is called before aDecoder is
   // destroyed.
-  explicit MediaDecoderReader(const MediaDecoderReaderInit& aInit);
+  explicit MediaDecoderReader(MediaDecoderReaderInit& aInit);
 
   // Initializes the reader, returns NS_OK on success, or NS_ERROR_FAILURE
   // on failure.

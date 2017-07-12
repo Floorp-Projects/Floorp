@@ -9,6 +9,7 @@
 #include "AutoTaskQueue.h"
 #include "Layers.h"
 #include "MediaData.h"
+#include "MediaDecoderOwner.h"
 #include "MediaInfo.h"
 #include "MediaResource.h"
 #include "VideoFrameContainer.h"
@@ -22,8 +23,6 @@
 #include "mozilla/SyncRunnable.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/Unused.h"
-#include "mozilla/dom/HTMLMediaElement.h"
-#include "mozilla/layers/ShadowLayers.h"
 #include "nsContentUtils.h"
 #include "nsPrintfCString.h"
 #include "nsSize.h"
@@ -1094,7 +1093,7 @@ MediaFormatReader::DemuxerProxy::NotifyDataArrived()
   });
 }
 
-MediaFormatReader::MediaFormatReader(const MediaDecoderReaderInit& aInit,
+MediaFormatReader::MediaFormatReader(MediaDecoderReaderInit& aInit,
                                      MediaDataDemuxer* aDemuxer)
   : MediaDecoderReader(aInit)
   , mAudio(this, MediaData::AUDIO_DATA,
@@ -1106,6 +1105,7 @@ MediaFormatReader::MediaFormatReader(const MediaDecoderReaderInit& aInit,
   , mPendingNotifyDataArrived(false)
   , mLastReportedNumDecodedFrames(0)
   , mPreviousDecodedKeyframeTime_us(sNoPreviousDecodedKeyframe)
+  , mKnowsCompositor(aInit.mKnowsCompositor)
   , mInitDone(false)
   , mTrackDemuxersMayBlock(false)
   , mSeekScheduled(false)
@@ -1214,37 +1214,10 @@ MediaFormatReader::TearDownDecoders()
   return MediaDecoderReader::Shutdown();
 }
 
-void
-MediaFormatReader::InitLayersBackendType()
-{
-  // Extract the layer manager backend type so that platform decoders
-  // can determine whether it's worthwhile using hardware accelerated
-  // video decoding.
-  if (!mDecoder) {
-    return;
-  }
-  MediaDecoderOwner* owner = mDecoder->GetOwner();
-  if (!owner) {
-    NS_WARNING("MediaFormatReader without a decoder owner, can't get HWAccel");
-    return;
-  }
-
-  dom::HTMLMediaElement* element = owner->GetMediaElement();
-  NS_ENSURE_TRUE_VOID(element);
-
-  RefPtr<LayerManager> layerManager =
-    nsContentUtils::LayerManagerForDocument(element->OwnerDoc());
-  NS_ENSURE_TRUE_VOID(layerManager);
-
-  mKnowsCompositor = layerManager->AsShadowForwarder();
-}
-
 nsresult
 MediaFormatReader::InitInternal()
 {
   MOZ_ASSERT(NS_IsMainThread(), "Must be on main thread.");
-
-  InitLayersBackendType();
 
   mAudio.mTaskQueue = new TaskQueue(
     GetMediaThreadPool(MediaThreadType::PLATFORM_DECODER),

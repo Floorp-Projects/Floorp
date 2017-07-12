@@ -68,7 +68,7 @@ public:
   size_t mSize;
 };
 
-MediaDecoderReader::MediaDecoderReader(const MediaDecoderReaderInit& aInit)
+MediaDecoderReader::MediaDecoderReader(MediaDecoderReaderInit& aInit)
   : mAudioCompactor(mAudioQueue)
   , mDecoder(aInit.mDecoder)
   , mTaskQueue(new TaskQueue(
