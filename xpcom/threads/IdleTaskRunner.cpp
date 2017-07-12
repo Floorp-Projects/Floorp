@@ -10,28 +10,25 @@
 namespace mozilla {
 
 already_AddRefed<IdleTaskRunner>
-IdleTaskRunner::Create(const CallbackType& aCallback, uint32_t aDelay,
-                       int64_t aBudget, bool aRepeating,
-                       const MayStopProcessingCallbackType& aMayStopProcessing)
+IdleTaskRunner::Create(IdleTaskRunnerCallback aCallback, uint32_t aDelay,
+                       int64_t aBudget, bool aRepeating, void* aData)
 {
-  if (aMayStopProcessing && aMayStopProcessing()) {
+  if (sShuttingDown) {
     return nullptr;
   }
 
   RefPtr<IdleTaskRunner> runner =
-    new IdleTaskRunner(aCallback, aDelay, aBudget, aRepeating, aMayStopProcessing);
+    new IdleTaskRunner(aCallback, aDelay, aBudget, aRepeating, aData);
   runner->Schedule(false); // Initial scheduling shouldn't use idle dispatch.
   return runner.forget();
 }
 
-IdleTaskRunner::IdleTaskRunner(const CallbackType& aCallback,
+IdleTaskRunner::IdleTaskRunner(IdleTaskRunnerCallback aCallback,
                                uint32_t aDelay, int64_t aBudget,
-                               bool aRepeating,
-                               const MayStopProcessingCallbackType& aMayStopProcessing)
+                               bool aRepeating, void* aData)
   : mCallback(aCallback), mDelay(aDelay)
   , mBudget(TimeDuration::FromMilliseconds(aBudget))
-  , mRepeating(aRepeating), mTimerActive(false)
-  , mMayStopProcessing(aMayStopProcessing)
+  , mRepeating(aRepeating), mTimerActive(false), mData(aData)
 {
 }
 
@@ -43,25 +40,18 @@ IdleTaskRunner::Run()
   }
 
   // Deadline is null when called from timer.
-  TimeStamp now = TimeStamp::Now();
   bool deadLineWasNull = mDeadline.IsNull();
   bool didRun = false;
-  bool allowIdleDispatch = false;
-  if (deadLineWasNull || ((now + mBudget) < mDeadline)) {
+  if (deadLineWasNull || ((TimeStamp::Now() + mBudget) < mDeadline)) {
     CancelTimer();
-    didRun = mCallback(mDeadline);
-    // If we didn't do meaningful work, don't schedule using immediate
-    // idle dispatch, since that could lead to a loop until the idle
-    // period ends.
-    allowIdleDispatch = didRun;
-  } else if (now >= mDeadline) {
-    allowIdleDispatch = true;
+    didRun = mCallback(mDeadline, mData);
   }
 
   if (mCallback && (mRepeating || !didRun)) {
-    Schedule(allowIdleDispatch);
-  } else {
-    mCallback = nullptr;
+    // If we didn't do meaningful work, don't schedule using immediate
+    // idle dispatch, since that could lead to a loop until the idle
+    // period ends.
+    Schedule(didRun);
   }
 
   return NS_OK;
@@ -95,7 +85,7 @@ void IdleTaskRunner::SetTimer(uint32_t aDelay, nsIEventTarget* aTarget)
   if (mTimer) {
     mTimer->SetTarget(mTarget);
     mTimer->InitWithNamedFuncCallback(TimedOut, this, aDelay,
-                                      nsITimer::TYPE_ONE_SHOT, "IdleTaskRunner");
+                                      nsITimer::TYPE_ONE_SHOT);
     mTimerActive = true;
   }
 }
@@ -124,12 +114,11 @@ IdleTaskRunner::Schedule(bool aAllowIdleDispatch)
     return;
   }
 
-  if (mMayStopProcessing && mMayStopProcessing()) {
+  if (sShuttingDown) {
     Cancel();
     return;
   }
 
-  TimeStamp deadline = mDeadline;
   mDeadline = TimeStamp();
   TimeStamp now = TimeStamp::Now();
   TimeStamp hint = nsRefreshDriver::GetIdleDeadlineHint(now);
@@ -154,18 +143,10 @@ IdleTaskRunner::Schedule(bool aAllowIdleDispatch)
         mScheduleTimer->Cancel();
       }
 
-      uint32_t lateScheduleDelayMs;
-      if (deadline.IsNull()) {
-        lateScheduleDelayMs = 16;
-      } else {
-        lateScheduleDelayMs =
-          (uint32_t)((deadline - now).ToMilliseconds());
-      }
-      mScheduleTimer->InitWithNamedFuncCallback(ScheduleTimedOut, 
-                                                this, 
-                                                lateScheduleDelayMs,
-                                                nsITimer::TYPE_ONE_SHOT_LOW_PRIORITY,
-                                                "IdleTaskRunner");
+      // We weren't allowed to do idle dispatch immediately, do it after a
+      // short timeout.
+      mScheduleTimer->InitWithNamedFuncCallback(ScheduleTimedOut, this, 16,
+                                                nsITimer::TYPE_ONE_SHOT_LOW_PRIORITY);
     }
   }
 }
