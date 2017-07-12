@@ -11963,6 +11963,25 @@ GarbageCollectionEvent::toJSObject(JSContext* cx) const
 }
 
 JS_PUBLIC_API(bool)
+FireOnGarbageCollectionHookRequired(JSContext* cx)
+{
+    AutoCheckCannotGC noGC;
+
+    for (ZoneGroupsIter group(cx->runtime()); !group.done(); group.next()) {
+        for (Debugger* dbg : group->debuggerList()) {
+            if (dbg->enabled &&
+                dbg->observedGC(cx->runtime()->gc.majorGCCount()) &&
+                dbg->getHook(Debugger::OnGarbageCollection))
+            {
+                return true;
+            }
+        }
+    }
+
+    return false;
+}
+
+JS_PUBLIC_API(bool)
 FireOnGarbageCollectionHook(JSContext* cx, JS::dbg::GarbageCollectionEvent::Ptr&& data)
 {
     AutoObjectVector triggered(cx);
