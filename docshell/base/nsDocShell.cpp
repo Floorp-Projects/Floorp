@@ -205,6 +205,7 @@
 #include "nsIIDNService.h"
 #include "nsIInputStreamChannel.h"
 #include "nsINestedURI.h"
+#include "nsIOService.h"
 #include "nsISHContainer.h"
 #include "nsISHistory.h"
 #include "nsISecureBrowserUI.h"
@@ -10962,11 +10963,17 @@ nsDocShell::DoURILoad(nsIURI* aURI,
   bool inherit = false;
 
   if (aPrincipalToInherit) {
+    bool isData;
+    bool isURIUniqueOrigin = nsIOService::IsDataURIUniqueOpaqueOrigin() &&
+                             NS_SUCCEEDED(aURI->SchemeIs("data", &isData)) &&
+                             isData;
+    // If aURI is data: URI and is treated as a unique opaque origin, we don't
+    // want to inherit principal.
     inherit = nsContentUtils::ChannelShouldInheritPrincipal(
       aPrincipalToInherit,
       aURI,
       true, // aInheritForAboutBlank
-      isSrcdoc);
+      isSrcdoc) && !isURIUniqueOrigin ;
   }
 
   nsLoadFlags loadFlags = mDefaultLoadFlags;

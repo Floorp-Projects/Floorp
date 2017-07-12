@@ -271,11 +271,11 @@ Wrapper::fun_toString(JSContext* cx, HandleObject proxy, unsigned indent) const
     return fun_toStringHelper(cx, target, indent);
 }
 
-bool
-Wrapper::regexp_toShared(JSContext* cx, HandleObject proxy, MutableHandleRegExpShared shared) const
+RegExpShared*
+Wrapper::regexp_toShared(JSContext* cx, HandleObject proxy) const
 {
     RootedObject target(cx, proxy->as<ProxyObject>().target());
-    return RegExpToShared(cx, target, shared);
+    return RegExpToShared(cx, target);
 }
 
 bool

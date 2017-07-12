@@ -7,6 +7,7 @@
 #include "AddonManagerStartup-inlines.h"
 
 #include "jsapi.h"
+#include "jsfriendapi.h"
 #include "js/TracingAPI.h"
 #include "xpcpublic.h"
 
@@ -17,9 +18,12 @@
 #include "mozilla/ScopeExit.h"
 #include "mozilla/Services.h"
 #include "mozilla/Unused.h"
+#include "mozilla/ErrorResult.h"
+#include "mozilla/dom/ipc/StructuredCloneData.h"
 
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsAppRunner.h"
+#include "nsContentUtils.h"
 #include "nsIAddonInterposition.h"
 #include "nsXULAppAPI.h"
 
@@ -62,6 +66,7 @@ WrapNSResult(nsresult aRv)
 
 
 using Compression::LZ4;
+using dom::ipc::StructuredCloneData;
 
 #ifdef XP_WIN
 #  define READ_BINARYMODE "rb"
@@ -151,6 +156,66 @@ ReadFile(const char* path)
   return result;
 }
 
+static const char STRUCTURED_CLONE_MAGIC[] = "mozJSSCLz40v001";
+
+template <typename T>
+static Result<nsCString, nsresult>
+DecodeLZ4(const nsACString& lz4, const T& magicNumber)
+{
+  constexpr auto HEADER_SIZE = sizeof(magicNumber) + 4;
+
+  // Note: We want to include the null terminator here.
+  nsDependentCSubstring magic(magicNumber, sizeof(magicNumber));
+
+  if (lz4.Length() < HEADER_SIZE || StringHead(lz4, magic.Length()) != magic) {
+    return Err(NS_ERROR_UNEXPECTED);
+  }
+
+  auto data = lz4.BeginReading() + magic.Length();
+  auto size = LittleEndian::readUint32(data);
+  data += 4;
+
+  nsCString result;
+  if (!result.SetLength(size, fallible) ||
+      !LZ4::decompress(data, result.BeginWriting(), size)) {
+    return Err(NS_ERROR_UNEXPECTED);
+  }
+
+  return result;
+}
+
+// Our zlib headers redefine this to MOZ_Z_compress, which breaks LZ4::compress
+#undef compress
+
+template <typename T>
+static Result<nsCString, nsresult>
+EncodeLZ4(const nsACString& data, const T& magicNumber)
+{
+  // Note: We want to include the null terminator here.
+  nsDependentCSubstring magic(magicNumber, sizeof(magicNumber));
+
+  nsAutoCString result;
+  result.Append(magic);
+
+  auto off = result.Length();
+  result.SetLength(off + 4);
+
+  LittleEndian::writeUint32(result.BeginWriting() + off, data.Length());
+  off += 4;
+
+  auto size = LZ4::maxCompressedSize(data.Length());
+  result.SetLength(off + size);
+
+  size = LZ4::compress(data.BeginReading(), data.Length(),
+                       result.BeginWriting() + off);
+
+  result.SetLength(off + size);
+  return result;
+}
+
+static_assert(sizeof STRUCTURED_CLONE_MAGIC % 8 == 0,
+              "Magic number should be an array of uint64_t");
+
 /**
  * Reads the contents of a LZ4-compressed file, as stored by the OS.File
  * module, and returns the decompressed contents on success.
@@ -162,7 +227,6 @@ static Result<nsCString, nsresult>
 ReadFileLZ4(const char* path)
 {
   static const char MAGIC_NUMBER[] = "mozLz40";
-  constexpr auto HEADER_SIZE = sizeof(MAGIC_NUMBER) + 4;
 
   nsCString result;
 
@@ -171,23 +235,8 @@ ReadFileLZ4(const char* path)
     return result;
   }
 
-  // Note: We want to include the null terminator here.
-  nsDependentCSubstring magic(MAGIC_NUMBER, sizeof(MAGIC_NUMBER));
-
-  if (lz4.Length() < HEADER_SIZE || StringHead(lz4, magic.Length()) != magic) {
-    return Err(NS_ERROR_UNEXPECTED);
-  }
-
-  auto size = LittleEndian::readUint32(lz4.get() + magic.Length());
-
-  if (!result.SetLength(size, fallible) ||
-      !LZ4::decompress(lz4.get() + HEADER_SIZE, result.BeginWriting(), size)) {
-    return Err(NS_ERROR_UNEXPECTED);
-  }
-
-  return result;
+  return DecodeLZ4(lz4, MAGIC_NUMBER);
 }
-
 
 static bool
 ParseJSON(JSContext* cx, nsACString& jsonData, JS::MutableHandleValue result)
@@ -585,6 +634,68 @@ AddonManagerStartup::InitializeExtensions(JS::HandleValue locations, JSContext* 
   }
 
   return NS_OK;
+}
+
+nsresult
+AddonManagerStartup::EncodeBlob(JS::HandleValue value, JSContext* cx, JS::MutableHandleValue result)
+{
+  StructuredCloneData holder;
+
+  ErrorResult rv;
+  holder.Write(cx, value, rv);
+  if (rv.Failed()) {
+    return rv.StealNSResult();
+  }
+
+  nsAutoCString scData;
+
+  auto& data = holder.Data();
+  auto iter = data.Iter();
+  while (!iter.Done()) {
+    scData.Append(nsDependentCSubstring(iter.Data(), iter.RemainingInSegment()));
+    iter.Advance(data, iter.RemainingInSegment());
+  }
+
+  nsCString lz4;
+  MOZ_TRY_VAR(lz4, EncodeLZ4(scData, STRUCTURED_CLONE_MAGIC));
+
+  JS::RootedObject obj(cx);
+  NS_TRY(nsContentUtils::CreateArrayBuffer(cx, lz4, &obj.get()));
+
+  result.set(JS::ObjectValue(*obj));
+  return NS_OK;
+}
+
+nsresult
+AddonManagerStartup::DecodeBlob(JS::HandleValue value, JSContext* cx, JS::MutableHandleValue result)
+{
+  NS_ENSURE_TRUE(value.isObject() &&
+                 JS_IsArrayBufferObject(&value.toObject()) &&
+                 JS_ArrayBufferHasData(&value.toObject()),
+                 NS_ERROR_INVALID_ARG);
+
+  StructuredCloneData holder;
+
+  nsCString data;
+  {
+    JS::AutoCheckCannotGC nogc;
+
+    auto obj = &value.toObject();
+    bool isShared;
+
+    nsDependentCSubstring lz4(
+      reinterpret_cast<char*>(JS_GetArrayBufferData(obj, &isShared, nogc)),
+      JS_GetArrayBufferByteLength(obj));
+
+    MOZ_TRY_VAR(data, DecodeLZ4(lz4, STRUCTURED_CLONE_MAGIC));
+  }
+
+  bool ok = holder.CopyExternalData(data.get(), data.Length());
+  NS_ENSURE_TRUE(ok, NS_ERROR_OUT_OF_MEMORY);
+
+  ErrorResult rv;
+  holder.Read(cx, result, rv);
+  return rv.StealNSResult();;
 }
 
 nsresult

@@ -82,17 +82,13 @@ function waitForShow(n) {
 }
 
 function* test() {
-  var popup = window.open('data:text/html,' +
-                          '<html><body onload="opener.childLoad(1)" ' +
-                                      'onpageshow="opener.childPageshow(1)">' +
-                                'Popup 1' +
-                                '</body></html>');
+  var popup = window.open('file_bfcache_plus_hash_1.html');
   waitForLoad(1);
   yield undefined;
 
   popup.history.pushState('', '', '');
 
-  popup.location = 'data:text/html,<html><body onload="opener.childLoad(2)">Popup 2</body></html>';
+  popup.location = 'file_bfcache_plus_hash_2.html';
   waitForLoad(2);
   yield undefined;
 

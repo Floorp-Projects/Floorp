@@ -5,14 +5,29 @@
 
 #include "BufferCache.h"
 #include "MLGDevice.h"
+#include "ShaderDefinitionsMLGPU.h"
 #include "mozilla/MathAlgorithms.h"
 
 namespace mozilla {
 namespace layers {
 
+using namespace mlg;
+
 BufferCache::BufferCache(MLGDevice* aDevice)
- : mDevice(aDevice)
+ : mDevice(aDevice),
+   mFirstSizeClass(CeilingLog2(kConstantBufferElementSize)),
+   mFrameNumber(0),
+   mNextSizeClassToShrink(0)
 {
+  // Create a cache of buffers for each size class, where each size class is a
+  // power of 2 between the minimum and maximum size of a constant buffer.
+  size_t maxBindSize = mDevice->GetMaxConstantBufferBindSize();
+  MOZ_ASSERT(IsPowerOfTwo(maxBindSize));
+
+  size_t lastSizeClass = CeilingLog2(maxBindSize);
+  MOZ_ASSERT(lastSizeClass >= mFirstSizeClass);
+
+  mCaches.resize(lastSizeClass - mFirstSizeClass + 1);
 }
 
 BufferCache::~BufferCache()
@@ -22,105 +37,64 @@ BufferCache::~BufferCache()
 RefPtr<MLGBuffer>
 BufferCache::GetOrCreateBuffer(size_t aBytes)
 {
-  // Try to take a buffer from the expired frame. If none exists, make a new one.
-  RefPtr<MLGBuffer> buffer = mExpired.Take(aBytes);
-  if (!buffer) {
-    // Round up to the nearest size class, but not over 1024 bytes.
-    size_t roundedUp = std::max(std::min(RoundUpPow2(aBytes), size_t(1024)), aBytes);
-    buffer = mDevice->CreateBuffer(MLGBufferType::Constant, roundedUp, MLGUsage::Dynamic, nullptr);
-    if (!buffer) {
-      return nullptr;
-    }
+  size_t sizeClass = CeilingLog2(aBytes);
+  size_t sizeClassIndex = sizeClass - mFirstSizeClass;
+  if (sizeClassIndex >= mCaches.size()) {
+    return mDevice->CreateBuffer(MLGBufferType::Constant, aBytes, MLGUsage::Dynamic, nullptr);
   }
 
-  MOZ_ASSERT(buffer->GetSize() >= aBytes);
+  CachePool& pool = mCaches[sizeClassIndex];
 
-  // Assign this buffer to the current frame, so it becomes available again once
-  // this frame expires.
-  mCurrent.Put(buffer);
+  // See if we've cached a buffer that wasn't used in the past 2 frames. A buffer
+  // used this frame could have already been mapped and written to, and a buffer
+  // used the previous frame might still be in-use by the GPU. While the latter
+  // case is okay, it causes aliasing in the driver. Since content is double
+  // buffered we do not let the compositor get more than 1 frames ahead, and a
+  // count of 2 frames should ensure the buffer is unused.
+  if (!pool.empty() && mFrameNumber >= pool.front().mLastUsedFrame + 2) {
+    RefPtr<MLGBuffer> buffer = pool.front().mBuffer;
+    pool.pop_front();
+    pool.push_back(CacheEntry(mFrameNumber, buffer));
+    MOZ_RELEASE_ASSERT(buffer->GetSize() >= aBytes);
+    return buffer;
+  }
+
+  // Allocate a new buffer and cache it.
+  size_t bytes = (size_t(1) << sizeClass);
+  MOZ_ASSERT(bytes >= aBytes);
+
+  RefPtr<MLGBuffer> buffer =
+    mDevice->CreateBuffer(MLGBufferType::Constant, bytes, MLGUsage::Dynamic, nullptr);
+  if (!buffer) {
+    return nullptr;
+  }
+
+  pool.push_back(CacheEntry(mFrameNumber, buffer));
   return buffer;
 }
 
 void
 BufferCache::EndFrame()
 {
-  BufferPool empty;
-  mExpired = Move(mPrevious);
-  mPrevious = Move(mCurrent);
-  mCurrent = Move(empty);
-}
+  // Consider a buffer dead after ~5 seconds assuming 60 fps.
+  static size_t kMaxUnusedFrameCount = 60 * 5;
 
-RefPtr<MLGBuffer>
-BufferPool::Take(size_t aBytes)
-{
-  MOZ_ASSERT(aBytes >= 16);
-
-  // We need to bump the request up to the nearest size class. For example,
-  // a request of 24 bytes must allocate from the 32 byte pool.
-  SizeClass sc = GetSizeClassFromHighBit(CeilingLog2(aBytes));
-  if (sc == SizeClass::Huge) {
-    return TakeHugeBuffer(aBytes);
-  }
-
-  if (mClasses[sc].IsEmpty()) {
-    return nullptr;
-  }
-
-  RefPtr<MLGBuffer> buffer = mClasses[sc].LastElement();
-  mClasses[sc].RemoveElementAt(mClasses[sc].Length() - 1);
-  return buffer.forget();
-}
-
-void
-BufferPool::Put(MLGBuffer* aBuffer)
-{
-  MOZ_ASSERT(aBuffer->GetSize() >= 16);
-
-  // When returning buffers, we bump them into a lower size class. For example
-  // a 24 byte buffer cannot be re-used for a 32-byte allocation, so it goes
-  // into the 16-byte class.
-  SizeClass sc = GetSizeClassFromHighBit(FloorLog2(aBuffer->GetSize()));
-  if (sc == SizeClass::Huge) {
-    mHugeBuffers.push_back(aBuffer);
-  } else {
-    mClasses[sc].AppendElement(aBuffer);
-  }
-}
-
-RefPtr<MLGBuffer>
-BufferPool::TakeHugeBuffer(size_t aBytes)
-{
-  static const size_t kMaxSearches = 3;
-  size_t numSearches = std::min(kMaxSearches, mHugeBuffers.size());
-
-  for (size_t i = 0; i < numSearches; i++) {
-    RefPtr<MLGBuffer> buffer = mHugeBuffers.front();
-    mHugeBuffers.pop_front();
-
-    // Don't pick buffers that are massively overallocated.
-    if (buffer->GetSize() >= aBytes && buffer->GetSize() <= aBytes * 2) {
-      return buffer.forget();
+  // At the end of each frame we pick one size class and see if it has any
+  // buffers that haven't been used for many frames. If so we clear them.
+  // The next frame we'll search the next size class. (This is just to spread
+  // work over more than one frame.)
+  CachePool& pool = mCaches[mNextSizeClassToShrink];
+  while (!pool.empty()) {
+    // Since the deque is sorted oldest-to-newest, front-to-back, we can stop
+    // searching as soon as a buffer is active.
+    if (mFrameNumber - pool.front().mLastUsedFrame < kMaxUnusedFrameCount) {
+      break;
     }
-
-    // Return the buffer to the list.
-    mHugeBuffers.push_back(buffer);
+    pool.pop_front();
   }
+  mNextSizeClassToShrink = (mNextSizeClassToShrink + 1) % mCaches.size();
 
-  return nullptr;
-}
-
-/* static */ BufferPool::SizeClass
-BufferPool::GetSizeClassFromHighBit(size_t aBit)
-{
-  // If the size is smaller than our smallest size class (which should
-  // never happen), or bigger than our largest size class, we dump it
-  // in the catch-all "huge" list.
-  static const size_t kBitForFirstClass = 4;
-  static const size_t kBitForLastClass = kBitForFirstClass + size_t(SizeClass::Huge);
-  if (aBit < kBitForFirstClass || aBit >= kBitForLastClass) {
-    return SizeClass::Huge;
-  }
-  return SizeClass(aBit - kBitForFirstClass);
+  mFrameNumber++;
 }
 
 } // namespace layers

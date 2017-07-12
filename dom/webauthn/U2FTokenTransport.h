@@ -18,7 +18,43 @@
 namespace mozilla {
 namespace dom {
 
-typedef MozPromise<nsresult, nsresult, false> ResultPromise;
+class U2FRegisterResult {
+public:
+  explicit U2FRegisterResult(nsTArray<uint8_t>&& aRegistration)
+    : mRegistration(aRegistration)
+  { }
+
+  void ConsumeRegistration(nsTArray<uint8_t>& aBuffer) {
+    aBuffer = Move(mRegistration);
+  }
+
+private:
+  nsTArray<uint8_t> mRegistration;
+};
+
+class U2FSignResult {
+public:
+  explicit U2FSignResult(nsTArray<uint8_t>&& aKeyHandle,
+                         nsTArray<uint8_t>&& aSignature)
+    : mKeyHandle(aKeyHandle)
+    , mSignature(aSignature)
+  { }
+
+  void ConsumeKeyHandle(nsTArray<uint8_t>& aBuffer) {
+    aBuffer = Move(mKeyHandle);
+  }
+
+  void ConsumeSignature(nsTArray<uint8_t>& aBuffer) {
+    aBuffer = Move(mSignature);
+  }
+
+private:
+  nsTArray<uint8_t> mKeyHandle;
+  nsTArray<uint8_t> mSignature;
+};
+
+typedef MozPromise<U2FRegisterResult, nsresult, true> U2FRegisterPromise;
+typedef MozPromise<U2FSignResult, nsresult, true> U2FSignPromise;
 
 class U2FTokenTransport
 {
@@ -26,18 +62,15 @@ public:
   NS_INLINE_DECL_REFCOUNTING(U2FTokenTransport);
   U2FTokenTransport() {}
 
-  virtual RefPtr<ResultPromise>
+  virtual RefPtr<U2FRegisterPromise>
   Register(const nsTArray<WebAuthnScopedCredentialDescriptor>& aDescriptors,
            const nsTArray<uint8_t>& aApplication,
-           const nsTArray<uint8_t>& aChallenge,
-           /* out */ nsTArray<uint8_t>& aRegistration) = 0;
+           const nsTArray<uint8_t>& aChallenge) = 0;
 
-  virtual RefPtr<ResultPromise>
+  virtual RefPtr<U2FSignPromise>
   Sign(const nsTArray<WebAuthnScopedCredentialDescriptor>& aDescriptors,
        const nsTArray<uint8_t>& aApplication,
-       const nsTArray<uint8_t>& aChallenge,
-       /* out */ nsTArray<uint8_t>& aKeyHandle,
-       /* out */ nsTArray<uint8_t>& aSignature) = 0;
+       const nsTArray<uint8_t>& aChallenge) = 0;
 
   virtual void Cancel() = 0;
 

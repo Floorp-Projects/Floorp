@@ -36,13 +36,12 @@ U2FHIDTokenManager::~U2FHIDTokenManager()
 // ASN.1  attestation certificate
 // *      attestation signature
 //
-RefPtr<ResultPromise>
+RefPtr<U2FRegisterPromise>
 U2FHIDTokenManager::Register(const nsTArray<WebAuthnScopedCredentialDescriptor>& aDescriptors,
                              const nsTArray<uint8_t>& aApplication,
-                             const nsTArray<uint8_t>& aChallenge,
-                             /* out */ nsTArray<uint8_t>& aRegistration)
+                             const nsTArray<uint8_t>& aChallenge)
 {
-  return ResultPromise::CreateAndReject(NS_ERROR_NOT_IMPLEMENTED, __func__);
+  return U2FRegisterPromise::CreateAndReject(NS_ERROR_NOT_IMPLEMENTED, __func__);
 }
 
 // A U2F Sign operation creates a signature over the "param" arguments (plus
@@ -61,14 +60,12 @@ U2FHIDTokenManager::Register(const nsTArray<WebAuthnScopedCredentialDescriptor>&
 //  4     Counter
 //  *     Signature
 //
-RefPtr<ResultPromise>
+RefPtr<U2FSignPromise>
 U2FHIDTokenManager::Sign(const nsTArray<WebAuthnScopedCredentialDescriptor>& aDescriptors,
                          const nsTArray<uint8_t>& aApplication,
-                         const nsTArray<uint8_t>& aChallenge,
-                         /* out */ nsTArray<uint8_t>& aKeyHandle,
-                         /* out */ nsTArray<uint8_t>& aSignature)
+                         const nsTArray<uint8_t>& aChallenge)
 {
-  return ResultPromise::CreateAndReject(NS_ERROR_NOT_IMPLEMENTED, __func__);
+  return U2FSignPromise::CreateAndReject(NS_ERROR_NOT_IMPLEMENTED, __func__);
 }
 
 void
