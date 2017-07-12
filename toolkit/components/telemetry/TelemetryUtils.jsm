@@ -34,6 +34,7 @@ this.TelemetryUtils = {
     ShutdownPingSender: "toolkit.telemetry.shutdownPingSender.enabled",
     TelemetryEnabled: "toolkit.telemetry.enabled",
     Unified: "toolkit.telemetry.unified",
+    UpdatePing: "toolkit.telemetry.updatePing.enabled",
     NewProfilePingEnabled: "toolkit.telemetry.newProfilePing.enabled",
     NewProfilePingDelay: "toolkit.telemetry.newProfilePing.delay",
     PreviousBuildID: "toolkit.telemetry.previousBuildID",
