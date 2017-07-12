@@ -196,6 +196,50 @@ Hash(const char *buf, nsACString &hash)
     return NS_OK;
 }
 
+bool
+IsInSubpathOfAppCacheManifest(nsIApplicationCache *cache, nsACString const& uriSpec)
+{
+    MOZ_ASSERT(cache);
+
+    nsresult rv;
+
+    nsCOMPtr<nsIURI> uri;
+    rv = NS_NewURI(getter_AddRefs(uri), uriSpec);
+    if (NS_FAILED(rv)) {
+      return false;
+    }
+
+    nsCOMPtr<nsIURL> url(do_QueryInterface(uri, &rv));
+    if (NS_FAILED(rv)) {
+      return false;
+    }
+
+    nsAutoCString directory;
+    rv = url->GetDirectory(directory);
+    if (NS_FAILED(rv)) {
+      return false;
+    }
+
+    nsCOMPtr<nsIURI> manifestURI;
+    rv = cache->GetManifestURI(getter_AddRefs(manifestURI));
+    if (NS_FAILED(rv)) {
+      return false;
+    }
+
+    nsCOMPtr<nsIURL> manifestURL(do_QueryInterface(manifestURI, &rv));
+    if (NS_FAILED(rv)) {
+      return false;
+    }
+
+    nsAutoCString manifestDirectory;
+    rv = manifestURL->GetDirectory(manifestDirectory);
+    if (NS_FAILED(rv)) {
+      return false;
+    }
+
+    return StringBeginsWith(directory, manifestDirectory);
+}
+
 } // unnamed namespace
 
 // We only treat 3xx responses as redirects if they have a Location header and
@@ -3503,6 +3547,12 @@ nsHttpChannel::ProcessFallback(bool *waitingForRedirectCallback)
         return NS_OK;
     }
 
+    if (!IsInSubpathOfAppCacheManifest(mApplicationCache, mFallbackKey)) {
+        // Refuse to fallback if the fallback key is not contained in the same
+        // path as the cache manifest.
+        return NS_OK;
+    }
+
     MOZ_ASSERT(fallbackEntryType & nsIApplicationCache::ITEM_FALLBACK,
                "Fallback entry not marked correctly!");
 
@@ -4602,6 +4652,17 @@ nsHttpChannel::OnOfflineCacheEntryAvailable(nsICacheEntry *aEntry,
 
         if (namespaceType &
             nsIApplicationCacheNamespace::NAMESPACE_FALLBACK) {
+
+            nsAutoCString namespaceSpec;
+            rv = namespaceEntry->GetNamespaceSpec(namespaceSpec);
+            NS_ENSURE_SUCCESS(rv, rv);
+
+            // This prevents fallback attacks injected by an insecure subdirectory
+            // for the whole origin (or a parent directory).
+            if (!IsInSubpathOfAppCacheManifest(mApplicationCache, namespaceSpec)) {
+                return NS_OK;
+            }
+
             rv = namespaceEntry->GetData(mFallbackKey);
             NS_ENSURE_SUCCESS(rv, rv);
         }
