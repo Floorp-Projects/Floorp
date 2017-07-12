@@ -235,6 +235,7 @@ public:
 
   nsTArray<Saiz> mSaizs;
   nsTArray<Saio> mSaios;
+  nsTArray<nsTArray<uint8_t>> mPsshes;
 
 private:
     // aDecodeTime is updated to the end of the parsed TRAF on return.
