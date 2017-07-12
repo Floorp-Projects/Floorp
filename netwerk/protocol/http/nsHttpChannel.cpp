@@ -129,6 +129,7 @@ static bool sRCWNEnabled = false;
 static uint32_t sRCWNQueueSizeNormal = 50;
 static uint32_t sRCWNQueueSizePriority = 10;
 static uint32_t sRCWNSmallResourceSizeKB = 256;
+static uint32_t sRCWNMaxWaitMs = 500;
 
 // True if the local cache should be bypassed when processing a request.
 #define BYPASS_LOCAL_CACHE(loadFlags) \
@@ -6101,6 +6102,7 @@ nsHttpChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *context)
         Preferences::AddUintVarCache(&sRCWNQueueSizeNormal, "network.http.rcwn.cache_queue_normal_threshold");
         Preferences::AddUintVarCache(&sRCWNQueueSizePriority, "network.http.rcwn.cache_queue_priority_threshold");
         Preferences::AddUintVarCache(&sRCWNSmallResourceSizeKB, "network.http.rcwn.small_resource_size_kb");
+        Preferences::AddUintVarCache(&sRCWNMaxWaitMs, "network.http.rcwn.max_wait_before_racing_ms");
     }
 
     rv = NS_CheckPortSafety(mURI);
@@ -9252,6 +9254,9 @@ nsHttpChannel::MaybeRaceCacheWithNetwork()
         // We use microseconds in CachePerfStats but we need milliseconds
         // for TriggerNetwork.
         mRaceDelay /= 1000;
+        if (mRaceDelay > sRCWNMaxWaitMs) {
+            mRaceDelay = sRCWNMaxWaitMs;
+        }
     }
 
     MOZ_ASSERT(sRCWNEnabled, "The pref must be truned on.");
