@@ -324,4 +324,14 @@ describe("ConsoleAPICall component:", () => {
         .toBe("Window http://example.com/browser/devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/test-console-api.html");
     });
   });
+
+  describe("console.dir", () => {
+    it("renders", () => {
+      const message = stubPreparedMessages.get("console.dir({C, M, Y, K})");
+      const wrapper = render(ConsoleApiCall({ message, serviceContainer }));
+
+      expect(wrapper.find(".message-body").text())
+        .toBe(`Object { cyan: "C", magenta: "M", yellow: "Y", black: "K" }`);
+    });
+  });
 });

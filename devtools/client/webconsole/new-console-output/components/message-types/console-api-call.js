@@ -68,6 +68,7 @@ function ConsoleApiCall(props) {
     parameters,
     userProvidedStyles,
     serviceContainer,
+    type,
   };
 
   if (type === "trace") {
@@ -134,6 +135,7 @@ function formatReps(options = {}) {
     parameters,
     serviceContainer,
     userProvidedStyles,
+    type,
   } = options;
 
   return (
@@ -148,6 +150,7 @@ function formatReps(options = {}) {
         serviceContainer,
         useQuotes: false,
         loadedObjectProperties,
+        type,
       }))
       // Interleave spaces.
       .reduce((arr, v, i) => {
