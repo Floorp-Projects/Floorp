@@ -7,10 +7,10 @@ from __future__ import absolute_import, print_function, unicode_literals
 import unittest
 import os
 
-from taskgraph import create
-from taskgraph.graph import Graph
-from taskgraph.taskgraph import TaskGraph
-from taskgraph.task import Task
+from .. import create
+from ..graph import Graph
+from ..taskgraph import TaskGraph
+from ..task import Task
 
 from mozunit import main
 

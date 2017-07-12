@@ -6,8 +6,8 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 import unittest
 
-from taskgraph.util import yaml
-from mozunit import main, MockedOpen
+from ..util import yaml
+from mozunit import MockedOpen
 
 FOO_YML = """\
 prop:
@@ -21,7 +21,3 @@ class TestYaml(unittest.TestCase):
         with MockedOpen({'/dir1/dir2/foo.yml': FOO_YML}):
             self.assertEqual(yaml.load_yaml("/dir1/dir2", "foo.yml"),
                              {'prop': ['val1']})
-
-
-if __name__ == '__main__':
-    main()
