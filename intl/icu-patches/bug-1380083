@@ -1,0 +1,34 @@
+Bug 1380083 Change backslaches to forward slashes. Upstream: http://bugs.icu-project.org/trac/changeset/40102
+
+diff --git a/intl/icu/source/common/putil.cpp b/intl/icu/source/common/putil.cpp
+--- a/intl/icu/source/common/putil.cpp
++++ b/intl/icu/source/common/putil.cpp
+@@ -96,25 +96,25 @@
+ #   define WIN32_LEAN_AND_MEAN
+ #endif
+ #   define VC_EXTRALEAN
+ #   define NOUSER
+ #   define NOSERVICE
+ #   define NOIME
+ #   define NOMCX
+ #   include <windows.h>
+-#   include "unicode\uloc.h"
++#   include "unicode/uloc.h"
+ #if U_PLATFORM_HAS_WINUWP_API == 0
+ #   include "wintz.h"
+ #else // U_PLATFORM_HAS_WINUWP_API
+ typedef PVOID LPMSG; // TODO: figure out how to get rid of this typedef
+ #include <Windows.Globalization.h>
+ #include <windows.system.userprofile.h>
+-#include <wrl\wrappers\corewrappers.h>
+-#include <wrl\client.h>
++#include <wrl/wrappers/corewrappers.h>
++#include <wrl/client.h>
+
+ using namespace ABI::Windows::Foundation;
+ using namespace Microsoft::WRL;
+ using namespace Microsoft::WRL::Wrappers;
+ #endif
+ #elif U_PLATFORM == U_PF_OS400
+ #   include <float.h>
+ #   include <qusec.h>       /* error code structure */
