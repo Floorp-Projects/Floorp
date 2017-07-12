@@ -8,6 +8,9 @@
  */
 
 add_task(function* () {
+  // Disable rcwn to make cache behavior deterministic.
+  yield pushPref("network.http.rcwn.enabled", false);
+
   let { tab, monitor } = yield initNetMonitor(STATUS_CODES_URL, true);
   info("Starting test... ");
 
