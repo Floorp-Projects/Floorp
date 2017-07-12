@@ -49,7 +49,7 @@ public class DefaultBrowserPreference extends Preference {
 
     public void update() {
         if (switchView != null) {
-            final Browsers browsers = new Browsers(getContext(), "http://www.mozilla.org");
+            final Browsers browsers = new Browsers(getContext(), Browsers.TRADITIONAL_BROWSER_URL);
             switchView.setChecked(browsers.isDefaultBrowser(getContext()));
         }
     }

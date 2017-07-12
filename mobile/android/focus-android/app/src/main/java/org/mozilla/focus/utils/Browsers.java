@@ -61,6 +61,9 @@ public class Browsers {
         }
     }
 
+    // Sample URL handled by traditional web browsers. Used to find installed (basic) web browsers.
+    public static final String TRADITIONAL_BROWSER_URL = "http://www.mozilla.org";
+
     private final Map<String, ActivityInfo> browsers;
     private final ActivityInfo defaultBrowser;
     // This will contain installed firefox branded browser ordered by priority from Firefox,
