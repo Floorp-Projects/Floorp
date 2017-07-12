@@ -32,13 +32,13 @@ async function test_bookmarks_popup({isNewBookmark, popupShowFn, popupEditFn,
         () => BookmarkingUI.status != BookmarkingUI.STATUS_UPDATING,
         "BookmarkingUI should not be updating");
 
-      is(bookmarkStar.hasAttribute("starred"), !isNewBookmark,
-         "Page should only be starred prior to popupshown if editing bookmark");
-      is(bookmarkPanel.state, "closed", "Panel should be 'closed' to start test");
+      Assert.equal(bookmarkStar.hasAttribute("starred"), !isNewBookmark,
+                   "Page should only be starred prior to popupshown if editing bookmark");
+      Assert.equal(bookmarkPanel.state, "closed", "Panel should be 'closed' to start test");
       let shownPromise = promisePopupShown(bookmarkPanel);
       await popupShowFn(browser);
       await shownPromise;
-      is(bookmarkPanel.state, "open", "Panel should be 'open' after shownPromise is resolved");
+      Assert.equal(bookmarkPanel.state, "open", "Panel should be 'open' after shownPromise is resolved");
 
     editBookmarkPanelRemoveButtonRect =
       document.getElementById("editBookmarkPanelRemoveButton").getBoundingClientRect();
@@ -48,9 +48,9 @@ async function test_bookmarks_popup({isNewBookmark, popupShowFn, popupEditFn,
       }
       let bookmarks = [];
       await PlacesUtils.bookmarks.fetch({url: "about:home"}, bm => bookmarks.push(bm));
-      is(bookmarks.length, 1, "Only one bookmark should exist");
-      is(bookmarkStar.getAttribute("starred"), "true", "Page is starred");
-      is(bookmarkPanelTitle.value,
+      Assert.equal(bookmarks.length, 1, "Only one bookmark should exist");
+      Assert.equal(bookmarkStar.getAttribute("starred"), "true", "Page is starred");
+      Assert.equal(bookmarkPanelTitle.value,
         isNewBookmark ?
           gNavigatorBundle.getString("editBookmarkPanel.pageBookmarkedTitle") :
           gNavigatorBundle.getString("editBookmarkPanel.editBookmarkTitle"),
@@ -58,19 +58,26 @@ async function test_bookmarks_popup({isNewBookmark, popupShowFn, popupEditFn,
 
       if (!shouldAutoClose) {
         await new Promise(resolve => setTimeout(resolve, 400));
-        is(bookmarkPanel.state, "open", "Panel should still be 'open' for non-autoclose");
+        Assert.equal(bookmarkPanel.state, "open", "Panel should still be 'open' for non-autoclose");
+      }
+
+      let onItemRemovedPromise = Promise.resolve();
+      if (isBookmarkRemoved) {
+        onItemRemovedPromise = PlacesTestUtils.waitForNotification("onItemRemoved",
+          (id, parentId, index, type, itemUrl) => "about:home" == itemUrl.spec);
       }
 
       let hiddenPromise = promisePopupHidden(bookmarkPanel);
       if (popupHideFn) {
         await popupHideFn();
       }
-      await hiddenPromise;
-      is(bookmarkStar.hasAttribute("starred"), !isBookmarkRemoved,
+      await Promise.all([hiddenPromise, onItemRemovedPromise]);
+
+      Assert.equal(bookmarkStar.hasAttribute("starred"), !isBookmarkRemoved,
          "Page is starred after closing");
     } finally {
       let bookmark = await PlacesUtils.bookmarks.fetch({url: "about:home"});
-      is(!!bookmark, !isBookmarkRemoved,
+      Assert.equal(!!bookmark, !isBookmarkRemoved,
          "bookmark should not be present if a panel action should've removed it");
       if (bookmark) {
         await PlacesUtils.bookmarks.remove(bookmark);
@@ -323,7 +330,7 @@ add_task(async function bookmarks_menu_new_bookmark_remove_bookmark() {
     },
     shouldAutoClose: true,
     popupHideFn() {
-      document.getElementById("editBookmarkPanelRemoveButton").click();
+      document.getElementById("editBookmarkPanelRemoveButton").doCommand();
     },
     isBookmarkRemoved: true,
   });

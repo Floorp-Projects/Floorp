@@ -91,11 +91,11 @@ var StarUI = {
 
           if (this._uriForRemoval) {
             if (this._isNewBookmark) {
-              if (!PlacesUtils.useAsyncTransactions) {
+              if (!PlacesUIUtils.useAsyncTransactions) {
                 PlacesUtils.transactionManager.undoTransaction();
                 break;
               }
-              PlacesTransactions().undo().catch(Cu.reportError);
+              PlacesTransactions.undo().catch(Cu.reportError);
               break;
             }
             // Remove all bookmarks for the bookmark's url, this also removes
