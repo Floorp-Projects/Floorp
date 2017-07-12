@@ -32,6 +32,9 @@
     <item android:id="@+id/home_remove"
           android:title="@string/contextmenu_remove"/>
 
+    <item android:id="@+id/home_as_pin"
+        android:title="@string/contextmenu_top_sites_pin"/>
+
     <item android:id="@+id/home_add_to_launcher"
           android:title="@string/contextmenu_add_to_launcher"/>
 

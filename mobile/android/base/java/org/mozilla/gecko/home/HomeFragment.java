@@ -16,6 +16,7 @@ import org.mozilla.gecko.R;
 import org.mozilla.gecko.SnackbarBuilder;
 import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
+import org.mozilla.gecko.activitystream.ActivityStream;
 import org.mozilla.gecko.bookmarks.BookmarkUtils;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.db.BrowserContract.SuggestedSites;
@@ -162,7 +163,7 @@ public abstract class HomeFragment extends Fragment {
             return;
         }
 
-        HomeContextMenuInfo info = (HomeContextMenuInfo) menuInfo;
+        final HomeContextMenuInfo info = (HomeContextMenuInfo) menuInfo;
 
         // Don't show the context menu for folders if full bookmark management isn't enabled.
         final boolean enableFullBookmarkManagement = BookmarkUtils.isEnabled(getContext());
@@ -209,7 +210,41 @@ public abstract class HomeFragment extends Fragment {
             menu.findItem(R.id.home_share).setVisible(false);
             menu.findItem(R.id.home_add_to_launcher).setVisible(false);
             menu.findItem(R.id.home_set_as_homepage).setVisible(false);
+
+            menu.findItem(R.id.home_as_pin).setVisible(false);
+            return;
         }
+
+        // If Activity Stream is disabled, simply hide "AS Pin" menu item as classic Top Sites do not
+        // support pinning from outside of the Top Site tiles.
+        if (!ActivityStream.isEnabled(getContext())) {
+            menu.findItem(R.id.home_as_pin).setVisible(false);
+            return;
+        }
+
+        // Asynchronously update pin state for this item.
+        // This code should be superseded by context menu unification work in Bug 1377292.
+        final MenuItem asPinItem = menu.findItem(R.id.home_as_pin);
+        // Do not let user interact with this menu item before we figure out pinned state.
+        asPinItem.setEnabled(false);
+
+        (new UIAsyncTask.WithoutParams<Boolean>(ThreadUtils.getBackgroundHandler()) {
+            @Override
+            protected Boolean doInBackground() {
+                return BrowserDB.from(getContext()).isPinnedForAS(
+                        getContext().getContentResolver(), info.url);
+            }
+
+            @Override
+            protected void onPostExecute(Boolean hasPin) {
+                if (hasPin) {
+                    asPinItem.setTitle(R.string.contextmenu_top_sites_unpin);
+                }
+
+                info.updateAsPinned(hasPin);
+                asPinItem.setEnabled(true);
+            }
+        }).execute();
     }
 
     @Override
@@ -327,6 +362,12 @@ public abstract class HomeFragment extends Fragment {
                 getResources().getResourceEntryName(itemId));
             return true;
         }
+
+        if (itemId == R.id.home_as_pin) {
+            new ToggleASPinTask(getActivity(), info).execute();
+            return true;
+        }
+
         return false;
     }
 
@@ -397,6 +438,59 @@ public abstract class HomeFragment extends Fragment {
 
         load();
         mIsLoaded = true;
+    }
+
+    private static class ToggleASPinTask extends UIAsyncTask.WithoutParams<Void> {
+        private final WeakReference<Activity> activityWeakReference;
+        private final Context context;
+        private final HomeContextMenuInfo info;
+        private final BrowserDB db;
+        private final ContentResolver cr;
+        private final boolean toggleWillPin;
+
+        ToggleASPinTask(Activity activity, HomeContextMenuInfo info) {
+            super(ThreadUtils.getBackgroundHandler());
+
+            this.activityWeakReference = new WeakReference<Activity>(activity);
+            this.context = activity.getApplicationContext();
+            this.db = BrowserDB.from(context);
+            this.info = info;
+            this.cr = context.getContentResolver();
+
+            if (info.isAsPinned == null) {
+                throw new IllegalStateException("Tried changing pinned state before it's determined.");
+            }
+
+            this.toggleWillPin = !info.isAsPinned;
+        }
+
+        @Override
+        protected Void doInBackground() {
+            if (toggleWillPin) {
+                db.pinSiteForAS(cr, info.url, info.title);
+            } else {
+                db.unpinSiteForAS(cr, info.url);
+            }
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            final Activity activity = activityWeakReference.get();
+            if (activity == null || activity.isFinishing()) {
+                return;
+            }
+
+            int messageId = R.string.home_pinned_site;
+            if (!toggleWillPin) {
+                messageId = R.string.home_unpinned_site;
+            }
+
+            SnackbarBuilder.builder(activity)
+                    .message(messageId)
+                    .duration(Snackbar.LENGTH_LONG)
+                    .buildAndShow();
+        }
     }
 
     static class RemoveItemTask extends UIAsyncTask.WithoutParams<Void> {
