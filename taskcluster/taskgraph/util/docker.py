@@ -119,7 +119,7 @@ def create_context_tar(topsrcdir, context_dir, out_path, prefix):
                 archive_files[archive_path] = fs_path
 
     with open(out_path, 'wb') as fh:
-        create_tar_gz_from_files(fh, archive_files, '%s.tar.gz' % prefix, forcemode=0644)
+        create_tar_gz_from_files(fh, archive_files, '%s.tar.gz' % prefix)
 
     h = hashlib.sha256()
     with open(out_path, 'rb') as fh:
