@@ -246,8 +246,8 @@ BEGIN_TEST(testUnbarrieredEquality)
         JS::Heap<JSObject*> heap2(obj2);
         heap.get();
         heap2.get();
-        CHECK(cell->isMarkedAny());
-        CHECK(cell2->isMarkedAny());
+        CHECK(cell->isMarkedBlack());
+        CHECK(cell2->isMarkedBlack());
     }
 
     return true;

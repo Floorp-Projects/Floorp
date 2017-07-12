@@ -1063,7 +1063,7 @@ inline void
 js::GCMarker::eagerlyMarkChildren(Shape* shape)
 {
     MOZ_ASSERT_IF(markColor() == GRAY, shape->isMarkedGray());
-    MOZ_ASSERT_IF(markColor() == BLACK, shape->isMarkedAny());
+    MOZ_ASSERT_IF(markColor() == BLACK, shape->isMarkedBlack());
 
     do {
         // Special case: if a base shape has a shape table then all its pointers
@@ -2441,7 +2441,7 @@ void
 GCMarker::repush(JSObject* obj)
 {
     MOZ_ASSERT_IF(markColor() == GRAY, gc::TenuredCell::fromPointer(obj)->isMarkedGray());
-    MOZ_ASSERT_IF(markColor() == BLACK, gc::TenuredCell::fromPointer(obj)->isMarkedAny());
+    MOZ_ASSERT_IF(markColor() == BLACK, gc::TenuredCell::fromPointer(obj)->isMarkedBlack());
     pushTaggedPtr(obj);
 }
 
@@ -3319,8 +3319,7 @@ FOR_EACH_PUBLIC_TAGGED_GC_POINTER_TYPE(INSTANTIATE_ALL_VALID_HEAP_TRACE_FUNCTION
 struct AssertNonGrayTracer : public JS::CallbackTracer {
     explicit AssertNonGrayTracer(JSRuntime* rt) : JS::CallbackTracer(rt) {}
     void onChild(const JS::GCCellPtr& thing) override {
-        MOZ_ASSERT_IF(thing.asCell()->isTenured(),
-                      !thing.asCell()->asTenured().isMarkedGray());
+        MOZ_ASSERT(!thing.asCell()->isMarkedGray());
     }
 };
 #endif
@@ -3448,7 +3447,7 @@ GetMarkInfo(Cell* rawCell)
     TenuredCell* cell = &rawCell->asTenured();
     if (cell->isMarkedGray())
         return MarkInfo::GRAY;
-    if (cell->isMarkedAny())
+    if (cell->isMarkedBlack())
         return MarkInfo::BLACK;
     return MarkInfo::UNMARKED;
 }
