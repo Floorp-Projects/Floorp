@@ -7,7 +7,6 @@
 #include "FontFaceSet.h"
 
 #include "gfxFontConstants.h"
-#include "gfxFontSrcURI.h"
 #include "mozilla/css/Declaration.h"
 #include "mozilla/css/Loader.h"
 #include "mozilla/dom/FontFaceSetBinding.h"
@@ -632,7 +631,7 @@ FontFaceSet::StartLoad(gfxUserFontEntry* aUserFontEntry,
   // being loaded might have a different origin from the principal of the
   // stylesheet that initiated the font load.
   rv = NS_NewChannelWithTriggeringPrincipal(getter_AddRefs(channel),
-                                            aFontFaceSrc->mURI->get(),
+                                            aFontFaceSrc->mURI,
                                             mDocument,
                                             aUserFontEntry->GetPrincipal(),
                                             nsILoadInfo::SEC_REQUIRE_CORS_DATA_INHERITS,
@@ -641,8 +640,7 @@ FontFaceSet::StartLoad(gfxUserFontEntry* aUserFontEntry,
   NS_ENSURE_SUCCESS(rv, rv);
 
   RefPtr<nsFontFaceLoader> fontLoader =
-    new nsFontFaceLoader(aUserFontEntry, aFontFaceSrc->mURI->get(), this,
-                         channel);
+    new nsFontFaceLoader(aUserFontEntry, aFontFaceSrc->mURI, this, channel);
 
   if (LOG_ENABLED()) {
     LOG(("userfonts (%p) download start - font uri: (%s) "
@@ -684,8 +682,7 @@ FontFaceSet::StartLoad(gfxUserFontEntry* aUserFontEntry,
   rv = NS_NewStreamLoader(getter_AddRefs(streamLoader), fontLoader);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  mozilla::net::PredictorLearn(aFontFaceSrc->mURI->get(),
-                               mDocument->GetDocumentURI(),
+  mozilla::net::PredictorLearn(aFontFaceSrc->mURI, mDocument->GetDocumentURI(),
                                nsINetworkPredictor::LEARN_LOAD_SUBRESOURCE,
                                loadGroup);
 
@@ -1122,8 +1119,7 @@ FontFaceSet::FindOrCreateUserFontEntryFromFontFace(const nsAString& aFamilyName,
           break;
         case eCSSUnit_URL: {
           face->mSourceType = gfxFontFaceSrc::eSourceType_URL;
-          nsIURI* uri = val.GetURLValue();
-          face->mURI = uri ? new gfxFontSrcURI(uri) : nullptr;
+          face->mURI = val.GetURLValue();
           URLValue* url = val.GetURLStructValue();
           face->mReferrer = url->mExtraData->GetReferrer();
           face->mReferrerPolicy = mDocument->GetReferrerPolicy();
@@ -1404,7 +1400,7 @@ FontFaceSet::SyncLoadFontData(gfxUserFontEntry* aFontToLoad,
   // whether we use SEC_ALLOW_CROSS_ORIGIN_DATA_INHERITS or not, to be more
   // restrictive we use SEC_REQUIRE_SAME_ORIGIN_DATA_INHERITS.
   rv = NS_NewChannelWithTriggeringPrincipal(getter_AddRefs(channel),
-                                            aFontFaceSrc->mURI->get(),
+                                            aFontFaceSrc->mURI,
                                             mDocument,
                                             aFontToLoad->GetPrincipal(),
                                             nsILoadInfo::SEC_REQUIRE_SAME_ORIGIN_DATA_INHERITS,
