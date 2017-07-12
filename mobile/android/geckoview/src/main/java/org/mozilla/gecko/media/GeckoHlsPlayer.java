@@ -99,10 +99,17 @@ public class GeckoHlsPlayer implements BaseHlsPlayer, ExoPlayer.EventListener {
         private boolean mAudioInfoUpdated = false;
         private boolean mVideoDataArrived = false;
         private boolean mAudioDataArrived = false;
-        HlsMediaTracksInfo(int numVideoTracks, int numAudioTracks) {
-            this.mNumVideoTracks = numVideoTracks;
-            this.mNumAudioTracks = numAudioTracks;
+        HlsMediaTracksInfo() {}
+        public void reset() {
+            mNumVideoTracks = 0;
+            mNumAudioTracks = 0;
+            mVideoInfoUpdated = false;
+            mAudioInfoUpdated = false;
+            mVideoDataArrived = false;
+            mAudioDataArrived = false;
         }
+        public void updateNumOfVideoTracks(int numOfTracks) { mNumVideoTracks = numOfTracks; }
+        public void updateNumOfAudioTracks(int numOfTracks) { mNumAudioTracks = numOfTracks; }
         public boolean hasVideo() { return mNumVideoTracks > 0; }
         public boolean hasAudio() { return mNumAudioTracks > 0; }
         public int getNumOfVideoTracks() { return mNumVideoTracks; }
@@ -123,7 +130,7 @@ public class GeckoHlsPlayer implements BaseHlsPlayer, ExoPlayer.EventListener {
             return !hasAudio() || (mAudioInfoUpdated && mAudioDataArrived);
         }
     }
-    private HlsMediaTracksInfo mTracksInfo = null;
+    private HlsMediaTracksInfo mTracksInfo = new HlsMediaTracksInfo();
 
     private boolean mIsPlayerInitDone = false;
     private boolean mIsDemuxerInitDone = false;
@@ -162,9 +169,7 @@ public class GeckoHlsPlayer implements BaseHlsPlayer, ExoPlayer.EventListener {
         public void onDataArrived(final int trackType) {
             assertTrue(mMainHandler != null);
             assertTrue(mComponentListener != null);
-            if (!mIsPlayerInitDone) {
-                return;
-            }
+
             if (mMainHandler != null && mComponentListener != null) {
                 mMainHandler.post(new Runnable() {
                     @Override
@@ -179,9 +184,7 @@ public class GeckoHlsPlayer implements BaseHlsPlayer, ExoPlayer.EventListener {
         public void onVideoInputFormatChanged(final Format format) {
             assertTrue(mMainHandler != null);
             assertTrue(mComponentListener != null);
-            if (!mIsPlayerInitDone) {
-                return;
-            }
+
             if (mMainHandler != null && mComponentListener != null) {
                 mMainHandler.post(new Runnable() {
                     @Override
@@ -196,9 +199,7 @@ public class GeckoHlsPlayer implements BaseHlsPlayer, ExoPlayer.EventListener {
         public void onAudioInputFormatChanged(final Format format) {
             assertTrue(mMainHandler != null);
             assertTrue(mComponentListener != null);
-            if (!mIsPlayerInitDone) {
-                return;
-            }
+
             if (mMainHandler != null && mComponentListener != null) {
                 mMainHandler.post(new Runnable() {
                     @Override
@@ -220,16 +221,8 @@ public class GeckoHlsPlayer implements BaseHlsPlayer, ExoPlayer.EventListener {
                 if (!mIsPlayerInitDone) {
                     return;
                 }
-                assertTrue(mResourceCallbacks != null);
-                assertTrue(mTracksInfo != null);
-
-                if (mTracksInfo == null || mResourceCallbacks == null) {
-                    Log.e(LOGTAG, "Encounter an abnormal calling sequence.");
-                    return;
-                }
                 mTracksInfo.onDataArrived(trackType);
                 mResourceCallbacks.onDataArrived();
-
                 checkInitDone();
             }
         }
@@ -246,12 +239,6 @@ public class GeckoHlsPlayer implements BaseHlsPlayer, ExoPlayer.EventListener {
                 if (!mIsPlayerInitDone) {
                     return;
                 }
-                assertTrue(mTracksInfo != null);
-
-                if (mTracksInfo == null) {
-                    Log.e(LOGTAG, "Encounter a abnormal calling sequence. mTracksInfo is null");
-                    return;
-                }
                 mTracksInfo.onVideoInfoUpdated();
                 checkInitDone();
             }
@@ -264,12 +251,6 @@ public class GeckoHlsPlayer implements BaseHlsPlayer, ExoPlayer.EventListener {
                     Log.d(LOGTAG, "[CB] onAudioInputFormatChanged [" + format + "], mPlayerId :" + mPlayerId);
                 }
                 if (!mIsPlayerInitDone) {
-                    return;
-                }
-                assertTrue(mTracksInfo != null);
-
-                if (mTracksInfo == null) {
-                    Log.e(LOGTAG, "Encounter a abnormal calling sequence. mTracksInfo is null");
                     return;
                 }
                 mTracksInfo.onAudioInfoUpdated();
@@ -321,14 +302,7 @@ public class GeckoHlsPlayer implements BaseHlsPlayer, ExoPlayer.EventListener {
 
     // Called on Gecko's main thread
     @Override
-    public void addResourceWrapperCallbackListener(BaseHlsPlayer.ResourceCallbacks callback) {
-        if (DEBUG) { Log.d(LOGTAG, " addResourceWrapperCallbackListener ..."); }
-        mResourceCallbacks = callback;
-    }
-
-    // Called on Gecko's main thread
-    @Override
-    public void addDemuxerWrapperCallbackListener(BaseHlsPlayer.DemuxerCallbacks callback) {
+    public synchronized void addDemuxerWrapperCallbackListener(BaseHlsPlayer.DemuxerCallbacks callback) {
         if (DEBUG) { Log.d(LOGTAG, " addDemuxerWrapperCallbackListener ..."); }
         mDemuxerCallbacks = callback;
     }
@@ -438,7 +412,7 @@ public class GeckoHlsPlayer implements BaseHlsPlayer, ExoPlayer.EventListener {
             }
             Log.d(LOGTAG, "]");
         }
-        mTracksInfo = null;
+        mTracksInfo.reset();
         int numVideoTracks = 0;
         int numAudioTracks = 0;
         for (int j = 0; j < ignored.length; j++) {
@@ -456,7 +430,8 @@ public class GeckoHlsPlayer implements BaseHlsPlayer, ExoPlayer.EventListener {
                 }
             }
         }
-        mTracksInfo = new HlsMediaTracksInfo(numVideoTracks, numAudioTracks);
+        mTracksInfo.updateNumOfVideoTracks(numVideoTracks);
+        mTracksInfo.updateNumOfAudioTracks(numAudioTracks);
     }
 
     // Called on GeckoHlsPlayerThread from ExoPlayer
@@ -591,11 +566,12 @@ public class GeckoHlsPlayer implements BaseHlsPlayer, ExoPlayer.EventListener {
     // =======================================================================
     // Called on Gecko Main Thread
     @Override
-    public synchronized void init(final String url) {
+    public synchronized void init(final String url, BaseHlsPlayer.ResourceCallbacks callback) {
         if (DEBUG) { Log.d(LOGTAG, " init"); }
-        assertTrue(mResourceCallbacks != null);
+        assertTrue(callback != null);
         assertTrue(!mIsPlayerInitDone);
 
+        mResourceCallbacks = callback;
         mThread = new HandlerThread("GeckoHlsPlayerThread");
         mThread.start();
         mMainHandler = new Handler(mThread.getLooper());
@@ -644,8 +620,6 @@ public class GeckoHlsPlayer implements BaseHlsPlayer, ExoPlayer.EventListener {
     @Override
     public synchronized int getNumberOfTracks(TrackType trackType) {
         if (DEBUG) { Log.d(LOGTAG, "getNumberOfTracks : type " + trackType); }
-        assertTrue(mTracksInfo != null);
-
         if (trackType == TrackType.VIDEO) {
             return mTracksInfo.getNumOfVideoTracks();
         } else if (trackType == TrackType.AUDIO) {
@@ -656,10 +630,9 @@ public class GeckoHlsPlayer implements BaseHlsPlayer, ExoPlayer.EventListener {
 
     // Called on MFR's TaskQueue
     @Override
-    public GeckoVideoInfo getVideoInfo(int index) {
+    public synchronized GeckoVideoInfo getVideoInfo(int index) {
         if (DEBUG) { Log.d(LOGTAG, "getVideoInfo"); }
         assertTrue(mVRenderer != null);
-        assertTrue(mTracksInfo != null);
         if (!mTracksInfo.hasVideo()) {
             return null;
         }
@@ -677,10 +650,9 @@ public class GeckoHlsPlayer implements BaseHlsPlayer, ExoPlayer.EventListener {
 
     // Called on MFR's TaskQueue
     @Override
-    public GeckoAudioInfo getAudioInfo(int index) {
+    public synchronized GeckoAudioInfo getAudioInfo(int index) {
         if (DEBUG) { Log.d(LOGTAG, "getAudioInfo"); }
         assertTrue(mARenderer != null);
-        assertTrue(mTracksInfo != null);
         if (!mTracksInfo.hasAudio()) {
             return null;
         }
