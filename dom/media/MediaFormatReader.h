@@ -547,7 +547,6 @@ private:
   class ShutdownPromisePool;
   UniquePtr<ShutdownPromisePool> mShutdownPromisePool;
 
-  MediaEventListener mCompositorUpdatedListener;
   MediaEventListener mOnTrackWaitingForKeyListener;
 
   void OnFirstDemuxCompleted(TrackInfo::TrackType aType,
