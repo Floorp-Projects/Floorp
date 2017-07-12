@@ -271,6 +271,15 @@ NPError
 _posturl(NPP npp, const char* relativeURL, const char *target, uint32_t len,
             const char *buf, NPBool file);
 
+NPError
+_newstream(NPP npp, NPMIMEType type, const char* window, NPStream** pstream);
+
+int32_t
+_write(NPP npp, NPStream *pstream, int32_t len, void *buffer);
+
+NPError
+_destroystream(NPP npp, NPStream *pstream, NPError reason);
+
 void
 _status(NPP npp, const char *message);
 

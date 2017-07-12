@@ -175,6 +175,14 @@ protected:
     virtual bool
     DeallocPBrowserStreamChild(PBrowserStreamChild* stream) override;
 
+    virtual PPluginStreamChild*
+    AllocPPluginStreamChild(const nsCString& mimeType,
+                            const nsCString& target,
+                            NPError* result) override;
+
+    virtual bool
+    DeallocPPluginStreamChild(PPluginStreamChild* stream) override;
+
     virtual PStreamNotifyChild*
     AllocPStreamNotifyChild(const nsCString& url, const nsCString& target,
                             const bool& post, const nsCString& buffer,
