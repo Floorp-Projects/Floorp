@@ -20,6 +20,7 @@ MediaDecoderStateMachine* WebMDecoder::CreateStateMachine()
 {
   MediaDecoderReaderInit init(this);
   init.mVideoFrameContainer = GetVideoFrameContainer();
+  init.mKnowsCompositor = GetCompositor();
   mReader = new MediaFormatReader(init, new WebMDemuxer(mResource));
   return new MediaDecoderStateMachine(this, mReader);
 }
