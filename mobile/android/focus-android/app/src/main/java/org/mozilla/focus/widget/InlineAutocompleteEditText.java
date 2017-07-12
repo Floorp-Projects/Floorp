@@ -519,7 +519,7 @@ public class InlineAutocompleteEditText extends android.support.v7.widget.AppCom
 
             if (UrlUtils.isSearchQuery(text)) {
                 doAutocomplete = false;
-            } else if (textLength == textLengthBeforeChange - 1) {
+            } else if (textLength == textLengthBeforeChange - 1 || textLength == 0) {
                 // If you're hitting backspace (the string is getting smaller), don't autocomplete
                 doAutocomplete = false;
             }
