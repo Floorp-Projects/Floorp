@@ -35,11 +35,20 @@ function SetForEach(callbackfn, thisArg = undefined) {
 
     // Steps 5-8.
     var values = callFunction(std_Set_iterator, S);
+
+    // Inlined: SetIteratorNext
+    var setIterationResult = setIteratorTemp.setIterationResult;
+    if (!setIterationResult)
+        setIterationResult = setIteratorTemp.setIterationResult = _CreateSetIterationResult();
+
     while (true) {
-        var result = callFunction(SetIteratorNext, values);
-        if (result.done)
+        var done = _GetNextSetEntryForIterator(values, setIterationResult);
+        if (done)
             break;
-        var value = result.value;
+
+        var value = setIterationResult[0];
+        setIterationResult[0] = null;
+
         callContentFunction(callbackfn, thisArg, value, value, S);
     }
 }
@@ -71,9 +80,8 @@ function SetIteratorNext() {
     // Steps 8-9 (omitted).
 
     var setIterationResult = setIteratorTemp.setIterationResult;
-    if (!setIterationResult) {
+    if (!setIterationResult)
         setIterationResult = setIteratorTemp.setIterationResult = _CreateSetIterationResult();
-    }
 
     var retVal = {value: undefined, done: true};
 
