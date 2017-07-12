@@ -55,8 +55,14 @@ add_task(async function bookmark() {
       StarUI.panel.addEventListener("popupshown", resolve, { once: true });
     });
 
+    let onItemRemovedPromise = PlacesTestUtils.waitForNotification("onItemRemoved",
+      (id, parentId, index, type, itemUrl) => url == itemUrl.spec);
+
     // Click the remove-bookmark button in the panel.
     StarUI._element("editBookmarkPanelRemoveButton").click();
+
+    // Wait for the bookmark to be removed before continuing.
+    await onItemRemovedPromise;
 
     // Open the panel again.
     await promisePageActionPanelOpen();
