@@ -128,8 +128,10 @@
     _(IntrinsicIsSetIterator)       \
     _(IntrinsicIsStringIterator)    \
                                     \
+    _(IntrinsicIsMapObject)         \
     _(IntrinsicGetNextMapEntryForIterator) \
                                     \
+    _(IntrinsicIsSetObject)         \
     _(IntrinsicGetNextSetEntryForIterator) \
                                     \
     _(IntrinsicNewArrayIterator)    \
