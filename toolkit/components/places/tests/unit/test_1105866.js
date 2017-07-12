@@ -57,7 +57,3 @@ add_task(async function test_non_item_query() {
   Assert.strictEqual(root.bookmarkGuid, "");
   Assert.strictEqual(PlacesUtils.asQuery(root).targetFolderGuid, "");
 });
-
-function run_test() {
-  run_next_test();
-}

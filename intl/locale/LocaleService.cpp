@@ -220,6 +220,18 @@ LocaleService::GetAppLocalesAsBCP47(nsTArray<nsCString>& aRetVal)
 }
 
 void
+LocaleService::GetRegionalPrefsLocales(nsTArray<nsCString>& aRetVal)
+{
+  bool useOSLocales = Preferences::GetBool("intl.regional_prefs.use_os_locales", false);
+
+  if (useOSLocales && OSPreferences::GetInstance()->GetSystemLocales(aRetVal)) {
+    return;
+  }
+
+  GetAppLocalesAsBCP47(aRetVal);
+}
+
+void
 LocaleService::AssignAppLocales(const nsTArray<nsCString>& aAppLocales)
 {
   MOZ_ASSERT(!mIsServer, "This should only be called for LocaleService in client mode.");
@@ -609,6 +621,23 @@ LocaleService::GetAppLocaleAsBCP47(nsACString& aRetVal)
   aRetVal = mAppLocales[0];
 
   SanitizeForBCP47(aRetVal);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+LocaleService::GetRegionalPrefsLocales(uint32_t* aCount, char*** aOutArray)
+{
+  AutoTArray<nsCString,10> rgLocales;
+
+  GetRegionalPrefsLocales(rgLocales);
+
+  *aCount = rgLocales.Length();
+  *aOutArray = static_cast<char**>(moz_xmalloc(*aCount * sizeof(char*)));
+
+  for (uint32_t i = 0; i < *aCount; i++) {
+    (*aOutArray)[i] = moz_xstrdup(rgLocales[i].get());
+  }
+
   return NS_OK;
 }
 

@@ -199,3 +199,39 @@ function promiseNewSearchEngine(basename) {
     });
   });
 }
+
+let gPageActionPanel = document.getElementById("page-action-panel");
+
+function promisePageActionPanelOpen() {
+  let button = document.getElementById("urlbar-page-action-button");
+  let shownPromise = promisePageActionPanelShown();
+  EventUtils.synthesizeMouseAtCenter(button, {});
+  return shownPromise;
+}
+
+function promisePageActionPanelShown() {
+  return promisePageActionPanelEvent("popupshown");
+}
+
+function promisePageActionPanelHidden() {
+  return promisePageActionPanelEvent("popuphidden");
+}
+
+function promisePageActionPanelEvent(name) {
+  return new Promise(resolve => {
+    gPageActionPanel.addEventListener(name, () => {
+      executeSoon(resolve);
+    }, { once: true });
+  });
+}
+
+function promisePageActionViewShown() {
+  return new Promise(resolve => {
+    gPageActionPanel.addEventListener("ViewShown", (event) => {
+      let target = event.originalTarget;
+      window.setTimeout(() => {
+        resolve(target);
+      }, 5000);
+    }, { once: true });
+  });
+}

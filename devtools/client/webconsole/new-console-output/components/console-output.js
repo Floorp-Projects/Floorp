@@ -15,6 +15,7 @@ const {
   getAllMessagesById,
   getAllMessagesUiById,
   getAllMessagesTableDataById,
+  getAllMessagesObjectPropertiesById,
   getAllNetworkMessagesUpdateById,
   getVisibleMessages,
   getAllRepeatById,
@@ -36,6 +37,7 @@ const ConsoleOutput = createClass({
     dispatch: PropTypes.func.isRequired,
     timestampsVisible: PropTypes.bool,
     messagesTableData: PropTypes.object.isRequired,
+    messagesObjectProperties: PropTypes.object.isRequired,
     messagesRepeat: PropTypes.object.isRequired,
     networkMessagesUpdate: PropTypes.object.isRequired,
     visibleMessages: PropTypes.array.isRequired,
@@ -82,6 +84,7 @@ const ConsoleOutput = createClass({
       messages,
       messagesUi,
       messagesTableData,
+      messagesObjectProperties,
       messagesRepeat,
       networkMessagesUpdate,
       serviceContainer,
@@ -91,13 +94,15 @@ const ConsoleOutput = createClass({
     let messageNodes = visibleMessages.map((messageId) => MessageContainer({
       dispatch,
       key: messageId,
+      messageId,
       serviceContainer,
       open: messagesUi.includes(messageId),
       tableData: messagesTableData.get(messageId),
       timestampsVisible,
       repeat: messagesRepeat[messageId],
       networkMessageUpdate: networkMessagesUpdate[messageId],
-      getMessage: () => messages.get(messageId)
+      getMessage: () => messages.get(messageId),
+      loadedObjectProperties: messagesObjectProperties.get(messageId),
     }));
 
     return (
@@ -130,6 +135,7 @@ function mapStateToProps(state, props) {
     visibleMessages: getVisibleMessages(state),
     messagesUi: getAllMessagesUiById(state),
     messagesTableData: getAllMessagesTableDataById(state),
+    messagesObjectProperties: getAllMessagesObjectPropertiesById(state),
     messagesRepeat: getAllRepeatById(state),
     networkMessagesUpdate: getAllNetworkMessagesUpdateById(state),
     timestampsVisible: state.ui.timestampsVisible,
