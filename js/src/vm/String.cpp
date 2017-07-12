@@ -208,7 +208,7 @@ JSString::dumpRepresentationHeader(js::GenericPrinter& out, int indent, const ch
     if (flags & FLAT_BIT)               out.put(" FLAT");
     if (flags & HAS_BASE_BIT)           out.put(" HAS_BASE");
     if (flags & INLINE_CHARS_BIT)       out.put(" INLINE_CHARS");
-    if (flags & ATOM_BIT)               out.put(" ATOM");
+    if (flags & NON_ATOM_BIT)           out.put(" NON_ATOM");
     if (isPermanentAtom())              out.put(" PERMANENT");
     if (flags & LATIN1_CHARS_BIT)       out.put(" LATIN1");
     if (flags & INDEX_VALUE_BIT)        out.put(" INDEX_VALUE(%u)", getIndexValue());
@@ -497,9 +497,13 @@ JSRope::flattenInternal(JSContext* maybecx)
             wholeCapacity = capacity;
             wholeChars = const_cast<CharT*>(left.nonInlineChars<CharT>(nogc));
             pos = wholeChars + left.d.u1.length;
-            JS_STATIC_ASSERT(!(EXTENSIBLE_FLAGS & DEPENDENT_FLAGS));
-            left.d.u1.flags ^= (EXTENSIBLE_FLAGS | DEPENDENT_FLAGS);
+            static_assert((EXTENSIBLE_FLAGS & DEPENDENT_FLAGS) == NON_ATOM_BIT,
+                          "extensible and dependent flags must only overlap on NON_ATOM_BIT");
+            left.d.u1.flags ^= (EXTENSIBLE_FLAGS | DEPENDENT_FLAGS) & ~NON_ATOM_BIT;
             left.d.s.u3.base = (JSLinearString*)this;  /* will be true on exit */
+            MOZ_ASSERT(!static_cast<JSString&>(left).isExtensible());
+            MOZ_ASSERT(left.isDependent());
+            MOZ_ASSERT(!left.isAtom());
             StringWriteBarrierPostRemove(maybecx, &left.d.s.u2.left);
             StringWriteBarrierPost(maybecx, (JSString**)&left.d.s.u3.base);
             goto visit_right_child;
@@ -1102,7 +1106,7 @@ JSExternalString::ensureFlat(JSContext* cx)
 
     // Transform the string into a non-external, flat string.
     setNonInlineChars<char16_t>(s);
-    d.u1.flags = FLAT_BIT;
+    d.u1.flags = FLAT_FLAGS;
 
     return &this->asFlat();
 }
