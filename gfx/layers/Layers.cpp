@@ -2491,11 +2491,20 @@ LayerManager::IsLogEnabled()
   return MOZ_LOG_TEST(GetLog(), LogLevel::Debug);
 }
 
-void
+bool
 LayerManager::SetPendingScrollUpdateForNextTransaction(FrameMetrics::ViewID aScrollId,
                                                        const ScrollUpdateInfo& aUpdateInfo)
 {
+  Layer* withPendingTransform = DepthFirstSearch<ForwardIterator>(GetRoot(),
+      [](Layer* aLayer) {
+        return aLayer->HasPendingTransform();
+      });
+  if (withPendingTransform) {
+    return false;
+  }
+
   mPendingScrollUpdates[aScrollId] = aUpdateInfo;
+  return true;
 }
 
 Maybe<ScrollUpdateInfo>
