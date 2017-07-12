@@ -501,13 +501,13 @@ AndroidDynamicToolbarAnimator::AdoptToolbarPixels(mozilla::ipc::Shmem&& aMem, co
   mCompositorToolbarPixelsSize = aSize;
 }
 
-Effect*
-AndroidDynamicToolbarAnimator::GetToolbarEffect(CompositorOGL* gl)
+void
+AndroidDynamicToolbarAnimator::UpdateToolbarSnapshotTexture(CompositorOGL* gl)
 {
   MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
   // if the compositor has shutdown, do not create any new rendering objects.
   if (mCompositorShutdown) {
-    return nullptr;
+    return;
   }
 
   if (mCompositorToolbarPixels) {
@@ -535,6 +535,16 @@ AndroidDynamicToolbarAnimator::GetToolbarEffect(CompositorOGL* gl)
       mCompositorSendResponseForSnapshotUpdate = false;
       CompositorThreadHolder::Loop()->PostTask(NewRunnableMethod(this, &AndroidDynamicToolbarAnimator::PostToolbarReady));
     }
+  }
+}
+
+Effect*
+AndroidDynamicToolbarAnimator::GetToolbarEffect()
+{
+  MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
+  // if the compositor has shutdown, do not create any new rendering objects.
+  if (mCompositorShutdown) {
+    return nullptr;
   }
 
   if (mCompositorToolbarTexture) {
