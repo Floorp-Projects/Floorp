@@ -885,18 +885,6 @@ CanCacheIterableObject(JSContext* cx, JSObject* obj)
 JSObject*
 js::GetIterator(JSContext* cx, HandleObject obj, unsigned flags)
 {
-    if (MOZ_UNLIKELY(obj->is<PropertyIteratorObject>() || obj->is<LegacyGeneratorObject>()))
-        return obj;
-
-    // We should only call the enumerate trap for "for-in".
-    // Or when we call GetIterator from the Proxy [[Enumerate]] hook.
-    // JSITER_ENUMERATE is just an optimization and the same
-    // as flags == 0 otherwise.
-    if (flags == 0 || flags == JSITER_ENUMERATE) {
-        if (MOZ_UNLIKELY(obj->is<ProxyObject>()))
-            return Proxy::enumerate(cx, obj);
-    }
-
     Vector<ReceiverGuard, 8> guards(cx);
     uint32_t key = 0;
     if (flags == JSITER_ENUMERATE) {
@@ -961,6 +949,18 @@ js::GetIterator(JSContext* cx, HandleObject obj, unsigned flags)
                 cx->compartment()->lastCachedNativeIterator = iterobj;
             return iterobj;
         }
+    }
+
+    if (MOZ_UNLIKELY(obj->is<PropertyIteratorObject>() || obj->is<LegacyGeneratorObject>()))
+        return obj;
+
+    // We should only call the enumerate trap for "for-in".
+    // Or when we call GetIterator from the Proxy [[Enumerate]] hook.
+    // JSITER_ENUMERATE is just an optimization and the same
+    // as flags == 0 otherwise.
+    if (flags == 0 || flags == JSITER_ENUMERATE) {
+        if (MOZ_UNLIKELY(obj->is<ProxyObject>()))
+            return Proxy::enumerate(cx, obj);
     }
 
     RootedObject res(cx);
