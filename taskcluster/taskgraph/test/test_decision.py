@@ -11,7 +11,7 @@ import shutil
 import unittest
 import tempfile
 
-from taskgraph import decision
+from .. import decision
 from mozunit import main
 
 

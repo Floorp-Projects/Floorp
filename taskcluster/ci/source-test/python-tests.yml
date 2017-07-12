@@ -11,7 +11,7 @@ taskgraph-tests:
         max-run-time: 1800
     run:
         using: mach
-        mach: python-test --subsuite taskgraph
+        mach: taskgraph python-tests
     when:
         files-changed:
             - 'taskcluster/**/*.py'
