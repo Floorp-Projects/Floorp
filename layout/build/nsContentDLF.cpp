@@ -22,6 +22,7 @@
 #include "nsIScriptSecurityManager.h"
 #include "nsString.h"
 #include "nsContentCID.h"
+#include "nsLayoutUtils.h"
 #include "nsNetUtil.h"
 #include "nsCRT.h"
 #include "nsIViewSourceChannel.h"
@@ -31,6 +32,7 @@
 #include "nsMimeTypes.h"
 #include "DecoderTraits.h"
 
+using mozilla::StyleBackendType;
 
 // plugins
 #include "nsIPluginHost.h"
@@ -140,9 +142,14 @@ nsContentDLF::CreateInstance(const char* aCommand,
                              const nsACString& aContentType,
                              nsIDocShell* aContainer,
                              nsISupports* aExtraInfo,
+                             int16_t aStyleBackendType,
                              nsIStreamListener** aDocListener,
                              nsIContentViewer** aDocViewer)
 {
+  MOZ_ASSERT(aStyleBackendType == nsIDocumentLoaderFactory::STYLE_BACKEND_TYPE_NONE ||
+             aStyleBackendType == nsIDocumentLoaderFactory::STYLE_BACKEND_TYPE_GECKO ||
+             aStyleBackendType == nsIDocumentLoaderFactory::STYLE_BACKEND_TYPE_SERVO);
+
   // Make a copy of aContentType, because we're possibly going to change it.
   nsAutoCString contentType(aContentType);
 
@@ -186,7 +193,8 @@ nsContentDLF::CreateInstance(const char* aCommand,
     return CreateDocument(aCommand,
                           aChannel, aLoadGroup,
                           aContainer, kHTMLDocumentCID,
-                          aDocListener, aDocViewer);
+                          aDocListener, aDocViewer,
+                          (StyleBackendType)aStyleBackendType);
   }
 
   // Try XML
@@ -194,7 +202,8 @@ nsContentDLF::CreateInstance(const char* aCommand,
     return CreateDocument(aCommand,
                           aChannel, aLoadGroup,
                           aContainer, kXMLDocumentCID,
-                          aDocListener, aDocViewer);
+                          aDocListener, aDocViewer,
+                          (StyleBackendType)aStyleBackendType);
   }
 
   // Try SVG
@@ -202,7 +211,8 @@ nsContentDLF::CreateInstance(const char* aCommand,
     return CreateDocument(aCommand,
                           aChannel, aLoadGroup,
                           aContainer, kSVGDocumentCID,
-                          aDocListener, aDocViewer);
+                          aDocListener, aDocViewer,
+                          (StyleBackendType)aStyleBackendType);
   }
 
   // Try XUL
@@ -220,7 +230,8 @@ nsContentDLF::CreateInstance(const char* aCommand,
     return CreateDocument(aCommand,
                           aChannel, aLoadGroup,
                           aContainer, kVideoDocumentCID,
-                          aDocListener, aDocViewer);
+                          aDocListener, aDocViewer,
+                          (StyleBackendType)aStyleBackendType);
   }
 
   // Try image types
@@ -228,7 +239,8 @@ nsContentDLF::CreateInstance(const char* aCommand,
     return CreateDocument(aCommand,
                           aChannel, aLoadGroup,
                           aContainer, kImageDocumentCID,
-                          aDocListener, aDocViewer);
+                          aDocListener, aDocViewer,
+                          (StyleBackendType)aStyleBackendType);
   }
 
   RefPtr<nsPluginHost> pluginHost = nsPluginHost::GetInst();
@@ -239,7 +251,8 @@ nsContentDLF::CreateInstance(const char* aCommand,
     return CreateDocument(aCommand,
                           aChannel, aLoadGroup,
                           aContainer, kPluginDocumentCID,
-                          aDocListener, aDocViewer);
+                          aDocListener, aDocViewer,
+                          (StyleBackendType)aStyleBackendType);
   }
 
   // If we get here, then we weren't able to create anything. Sorry!
@@ -345,7 +358,8 @@ nsContentDLF::CreateDocument(const char* aCommand,
                              nsIDocShell* aContainer,
                              const nsCID& aDocumentCID,
                              nsIStreamListener** aDocListener,
-                             nsIContentViewer** aContentViewer)
+                             nsIContentViewer** aContentViewer,
+                             StyleBackendType aStyleBackendType /* = StyleBackendType::None */)
 {
   nsresult rv = NS_ERROR_FAILURE;
 
@@ -365,6 +379,17 @@ nsContentDLF::CreateDocument(const char* aCommand,
   // Create the document
   nsCOMPtr<nsIDocument> doc = do_CreateInstance(aDocumentCID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
+
+  // Set style backend type before document loading. Can't set None as the
+  // backend type, it would hit an assertion.
+  if (aStyleBackendType != StyleBackendType::None) {
+    // To dynamically switch the backend type, check stylo is enabled or not
+    // before setting the backend type. If stylo is not enabled, we always set
+    // backend type to gecko.
+    doc->SetStyleBackendType(
+        nsLayoutUtils::StyloEnabled() ? aStyleBackendType
+                                      : StyleBackendType::Gecko);
+  }
 
   // Create the content viewer  XXX: could reuse content viewer here!
   nsCOMPtr<nsIContentViewer> contentViewer = NS_NewContentViewer();
