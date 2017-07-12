@@ -12,9 +12,8 @@
 #include "jsobj.h"
 
 #include "builtin/TypedObject.h"
+#include "vm/ShapedObject.h"
 #include "vm/UnboxedObject.h"
-
-#include "jsobjinlines.h"
 
 namespace js {
 
@@ -34,8 +33,7 @@ ReceiverGuard::ReceiverGuard(JSObject* obj)
             return;
         }
     }
-    shape = obj->maybeShape();
-    MOZ_ASSERT(shape);
+    shape = obj->as<ShapedObject>().shape();
 }
 
 MOZ_ALWAYS_INLINE
