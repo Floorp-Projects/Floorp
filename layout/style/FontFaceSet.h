@@ -14,6 +14,7 @@
 #include "nsICSSLoaderObserver.h"
 
 struct gfxFontFaceSrc;
+class gfxFontSrcPrincipal;
 class gfxUserFontEntry;
 class nsFontFaceLoader;
 class nsIPrincipal;
@@ -63,10 +64,10 @@ public:
 
     FontFaceSet* GetFontFaceSet() { return mFontFaceSet; }
 
-    nsIPrincipal* GetStandardFontLoadPrincipal() override;
+    gfxFontSrcPrincipal* GetStandardFontLoadPrincipal() override;
 
     virtual nsresult CheckFontLoad(const gfxFontFaceSrc* aFontFaceSrc,
-                                   nsIPrincipal** aPrincipal,
+                                   gfxFontSrcPrincipal** aPrincipal,
                                    bool* aBypassCache) override;
 
     virtual bool IsFontLoadAllowed(nsIURI* aFontLocation,
@@ -166,6 +167,15 @@ public:
     return set ? set->GetPresContext() : nullptr;
   }
 
+  void UpdateStandardFontLoadPrincipal();
+
+  bool HasStandardFontLoadPrincipalChanged()
+  {
+    bool changed = mHasStandardFontLoadPrincipalChanged;
+    mHasStandardFontLoadPrincipalChanged = false;
+    return changed;
+  }
+
   nsIDocument* Document() const { return mDocument; }
 
   // -- Web IDL --------------------------------------------------------------
@@ -263,9 +273,9 @@ private:
 
   nsresult StartLoad(gfxUserFontEntry* aUserFontEntry,
                      const gfxFontFaceSrc* aFontFaceSrc);
-  nsIPrincipal* GetStandardFontLoadPrincipal();
+  gfxFontSrcPrincipal* GetStandardFontLoadPrincipal();
   nsresult CheckFontLoad(const gfxFontFaceSrc* aFontFaceSrc,
-                         nsIPrincipal** aPrincipal,
+                         gfxFontSrcPrincipal** aPrincipal,
                          bool* aBypassCache);
   bool IsFontLoadAllowed(nsIURI* aFontLocation, nsIPrincipal* aPrincipal);
   nsresult SyncLoadFontData(gfxUserFontEntry* aFontToLoad,
@@ -317,6 +327,20 @@ private:
   // The document this is a FontFaceSet for.
   nsCOMPtr<nsIDocument> mDocument;
 
+  // The document's node principal, which is the principal font loads for
+  // this FontFaceSet will generally use.  (This principal is not used for
+  // @font-face rules in UA and user sheets, where the principal of the
+  // sheet is used instead.)
+  //
+  // This field is used from GetStandardFontLoadPrincipal.  When on a
+  // style worker thread, we use mStandardFontLoadPrincipal assuming
+  // it is up to date.  Because mDocument's principal can change over time,
+  // its value must be updated by a call to UpdateStandardFontLoadPrincipal
+  // before a restyle.  (When called while on the main thread,
+  // GetStandardFontLoadPrincipal will call UpdateStandardFontLoadPrincipal
+  // to ensure its value is up to date.)
+  RefPtr<gfxFontSrcPrincipal> mStandardFontLoadPrincipal;
+
   // A Promise that is fulfilled once all of the FontFace objects
   // in mRuleFaces and mNonRuleFaces that started or were loading at the
   // time the Promise was created have finished loading.  It is rejected if
@@ -365,6 +389,10 @@ private:
   // Whether the docshell for our document indicates that we are in private
   // browsing mode.
   bool mPrivateBrowsing;
+
+  // Whether mStandardFontLoadPrincipal has changed since the last call to
+  // HasStandardFontLoadPrincipalChanged.
+  bool mHasStandardFontLoadPrincipalChanged;
 };
 
 } // namespace dom
