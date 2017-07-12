@@ -258,6 +258,11 @@ private:
     OnDemuxFailed(TrackType::kAudioTrack, aError);
   }
 
+  // Dispatches an "encrypted" event is any sample in array has initData
+  // present.
+  void MaybeDispatchEncryptedEvent(
+    const nsTArray<RefPtr<MediaRawData>>& aSamples);
+
   void DoEvictData(const media::TimeUnit& aPlaybackTime, int64_t aSizeToEvict);
 
   struct TrackData

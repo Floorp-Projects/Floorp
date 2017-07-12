@@ -73,6 +73,7 @@ Box::Box(BoxContext* aContext, uint64_t aOffset, const Box* aParent)
       bytes != sizeof(header)) {
     return;
   }
+  mHeader.AppendElements(header, sizeof(header));
 
   uint64_t size = BigEndian::readUint32(header);
   if (size == 1) {
@@ -91,6 +92,7 @@ Box::Box(BoxContext* aContext, uint64_t aOffset, const Box* aParent)
     }
     size = BigEndian::readUint64(bigLength);
     mBodyOffset = bigLengthRange.mEnd;
+    mHeader.AppendElements(bigLength, sizeof(bigLength));
   } else if (size == 0) {
     // box extends to end of file.
     size = mContext->mByteRanges.LastInterval().mEnd - aOffset;
@@ -143,7 +145,7 @@ Box::FirstChild() const
 }
 
 nsTArray<uint8_t>
-Box::Read()
+Box::Read() const
 {
   nsTArray<uint8_t> out;
   Unused << Read(&out, mRange);
@@ -151,7 +153,7 @@ Box::Read()
 }
 
 bool
-Box::Read(nsTArray<uint8_t>* aDest, const MediaByteRange& aRange)
+Box::Read(nsTArray<uint8_t>* aDest, const MediaByteRange& aRange) const
 {
   int64_t length;
   if (!mContext->mSource->Length(&length)) {
