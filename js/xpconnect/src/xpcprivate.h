@@ -1011,7 +1011,9 @@ public:
 
     nsAutoPtr<JSObject2JSObjectMap> mWaiverWrapperMap;
 
-    bool IsContentXBLScope() { return mIsContentXBLScope; }
+    JSCompartment* Compartment() const { return js::GetObjectCompartment(mGlobalJSObject); }
+
+    bool IsContentXBLScope() { return xpc::IsContentXBLCompartment(Compartment()); }
     bool AllowContentXBLScope();
     bool UseContentXBLScope() { return mUseContentXBLScope; }
     void ClearContentXBLScope() { mContentXBLScope = nullptr; }
@@ -1078,7 +1080,6 @@ private:
 
     JS::WeakMapPtr<JSObject*, JSObject*> mXrayExpandos;
 
-    bool mIsContentXBLScope;
     bool mIsAddonScope;
 
     // For remote XUL domains, we run all XBL in the content scope for compat
@@ -2795,6 +2796,7 @@ public:
         , writeToGlobalPrototype(false)
         , sameZoneAs(cx)
         , freshZone(false)
+        , isContentXBLScope(false)
         , invisibleToDebugger(false)
         , discardSource(false)
         , metadata(cx)
@@ -2816,6 +2818,7 @@ public:
     bool writeToGlobalPrototype;
     JS::RootedObject sameZoneAs;
     bool freshZone;
+    bool isContentXBLScope;
     bool invisibleToDebugger;
     bool discardSource;
     GlobalProperties globalProperties;
@@ -3091,6 +3094,10 @@ public:
     // to opt into CPOWs. It's necessary for the implementation of
     // RemoteAddonsParent.jsm.
     bool allowCPOWs;
+
+    // True if this compartment is a content XBL compartment. Every global in
+    // such a compartment is a content XBL scope.
+    bool isContentXBLCompartment;
 
     // This is only ever set during mochitest runs when enablePrivilege is called.
     // It's intended as a temporary stopgap measure until we can finish ripping out

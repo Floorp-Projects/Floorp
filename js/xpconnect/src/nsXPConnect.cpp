@@ -1377,7 +1377,7 @@ IsChromeOrXBL(JSContext* cx, JSObject* /* unused */)
     // Note that, for performance, we don't check AllowXULXBLForPrincipal here,
     // and instead rely on the fact that AllowContentXBLScope() only returns false in
     // remote XUL situations.
-    return AccessCheck::isChrome(c) || IsContentXBLScope(c) || !AllowContentXBLScope(c);
+    return AccessCheck::isChrome(c) || IsContentXBLCompartment(c) || !AllowContentXBLScope(c);
 }
 
 namespace workers {
