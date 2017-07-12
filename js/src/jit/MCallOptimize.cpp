@@ -12,6 +12,7 @@
 
 #include "builtin/AtomicsObject.h"
 #include "builtin/Intl.h"
+#include "builtin/MapObject.h"
 #include "builtin/SIMD.h"
 #include "builtin/TestingFunctions.h"
 #include "builtin/TypedObject.h"
@@ -313,10 +314,14 @@ IonBuilder::inlineNativeCall(CallInfo& callInfo, JSFunction* target)
         return inlineFinishBoundFunctionInit(callInfo);
 
       // Map intrinsics.
+      case InlinableNative::IntrinsicIsMapObject:
+        return inlineHasClass(callInfo, &MapObject::class_);
       case InlinableNative::IntrinsicGetNextMapEntryForIterator:
         return inlineGetNextEntryForIterator(callInfo, MGetNextEntryForIterator::Map);
 
       // Set intrinsics.
+      case InlinableNative::IntrinsicIsSetObject:
+        return inlineHasClass(callInfo, &SetObject::class_);
       case InlinableNative::IntrinsicGetNextSetEntryForIterator:
         return inlineGetNextEntryForIterator(callInfo, MGetNextEntryForIterator::Set);
 
