@@ -870,16 +870,24 @@ CanCacheIterableObject(JSContext* cx, JSObject* obj)
 {
     if (!CanCompareIterableObjectToCache(obj))
         return false;
-    if (obj->isNative()) {
-        if (obj->is<TypedArrayObject>() ||
-            obj->hasUncacheableProto() ||
-            obj->getClass()->getNewEnumerate() ||
-            obj->getClass()->getEnumerate() ||
-            obj->as<NativeObject>().containsPure(cx->names().iteratorIntrinsic))
-        {
-            return false;
-        }
+
+    if (!obj->isNative()) {
+        MOZ_ASSERT(obj->is<UnboxedPlainObject>());
+        return true;
     }
+
+    // Typed arrays have indexed properties not captured by the Shape guard.
+    // Enumerate hooks may add extra properties.
+    const Class* clasp = obj->getClass();
+    if (MOZ_UNLIKELY(IsTypedArrayClass(clasp) || clasp->getNewEnumerate() || clasp->getEnumerate()))
+        return false;
+
+    if (obj->hasUncacheableProto())
+        return false;
+
+    if (MOZ_UNLIKELY(obj->as<NativeObject>().containsPure(cx->names().iteratorIntrinsic)))
+        return false;
+
     return true;
 }
 
