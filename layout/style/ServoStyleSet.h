@@ -583,7 +583,6 @@ private:
   bool mAuthorStyleDisabled;
   StylistState mStylistState;
   uint64_t mUserFontSetUpdateGeneration;
-  uint32_t mUserFontCacheUpdateGeneration;
 
   bool mNeedsRestyleAfterEnsureUniqueInner;
 
