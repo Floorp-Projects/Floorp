@@ -700,6 +700,8 @@ class Onboarding {
 
   _renderOverlayIcon() {
     let img = this._window.document.createElement("div");
+    let tooltip = this._bundle.formatStringFromName("onboarding.overlay-icon-tooltip", [BRAND_SHORT_NAME], 1);
+    img.setAttribute("aria-label", tooltip);
     img.id = "onboarding-overlay-icon";
     return img;
   }
