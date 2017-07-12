@@ -115,6 +115,26 @@ const startupPhases = {
   }},
 };
 
+if (!gBrowser.selectedBrowser.isRemoteBrowser) {
+  // With e10s disabled, Places and RecentWindow.jsm (from a
+  // SessionSaver.jsm timer) intermittently get loaded earlier. Likely
+  // due to messages from the 'content' process arriving synchronously
+  // instead of crossing a process boundary.
+  info("merging the 'before handling user events' blacklist into the " +
+       "'before first paint' one when e10s is disabled.");
+  let from = startupPhases["before handling user events"].blacklist;
+  let to = startupPhases["before first paint"].blacklist;
+  for (let scriptType in from) {
+    if (!(scriptType in to)) {
+      to[scriptType] = from[scriptType];
+    } else {
+      for (let item of from[scriptType])
+        to[scriptType].add(item);
+    }
+  }
+  startupPhases["before handling user events"].blacklist = null;
+}
+
 add_task(async function() {
   if (!AppConstants.NIGHTLY_BUILD && !AppConstants.DEBUG) {
     ok(!("@mozilla.org/test/startuprecorder;1" in Cc),
