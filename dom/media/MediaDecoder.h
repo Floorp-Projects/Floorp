@@ -512,6 +512,8 @@ protected:
     return mCurrentPosition.Ref();
   }
 
+  already_AddRefed<layers::KnowsCompositor> GetCompositor();
+
   // Official duration of the media resource as observed by script.
   double mDuration;
 

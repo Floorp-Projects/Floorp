@@ -30,6 +30,7 @@ HLSDecoder::CreateStateMachine()
   MOZ_ASSERT(resourceWrapper);
   MediaDecoderReaderInit init(this);
   init.mVideoFrameContainer = GetVideoFrameContainer();
+  init.mKnowsCompositor = GetCompositor();
   mReader =
     new MediaFormatReader(init, new HLSDemuxer(resourceWrapper->GetPlayerId()));
 

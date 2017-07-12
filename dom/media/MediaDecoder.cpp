@@ -1058,19 +1058,23 @@ MediaDecoder::DurationChanged()
   }
 }
 
+already_AddRefed<KnowsCompositor>
+MediaDecoder::GetCompositor()
+{
+  MediaDecoderOwner* owner = GetOwner();
+  nsIDocument* ownerDoc = owner ? owner->GetDocument() : nullptr;
+  RefPtr<LayerManager> layerManager =
+    ownerDoc ? nsContentUtils::LayerManagerForDocument(ownerDoc) : nullptr;
+  RefPtr<KnowsCompositor> knows =
+    layerManager ? layerManager->AsShadowForwarder() : nullptr;
+  return knows.forget();
+}
+
 void
 MediaDecoder::NotifyCompositor()
 {
-  MediaDecoderOwner* owner = GetOwner();
-  NS_ENSURE_TRUE_VOID(owner);
-
-  nsIDocument* ownerDoc = owner->GetDocument();
-  NS_ENSURE_TRUE_VOID(ownerDoc);
-
-  RefPtr<LayerManager> layerManager =
-    nsContentUtils::LayerManagerForDocument(ownerDoc);
-  if (layerManager) {
-    RefPtr<KnowsCompositor> knowsCompositor = layerManager->AsShadowForwarder();
+  RefPtr<KnowsCompositor> knowsCompositor = GetCompositor();
+  if (knowsCompositor) {
     mCompositorUpdatedEvent.Notify(knowsCompositor);
   }
 }
