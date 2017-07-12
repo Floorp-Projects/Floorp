@@ -474,12 +474,6 @@ gfxUserFontEntry::ContinueLoad()
     }
 }
 
-static bool
-IgnorePrincipal(gfxFontSrcURI* aURI)
-{
-    return aURI->InheritsSecurityContext();
-}
-
 void
 gfxUserFontEntry::DoLoadNextSrc(bool aForceAsync)
 {
@@ -541,16 +535,9 @@ gfxUserFontEntry::DoLoadNextSrc(bool aForceAsync)
                     currSrc.mFormatFlags)) {
 
                 if (ServoStyleSet* set = ServoStyleSet::Current()) {
-                    // Only support style worker threads synchronously getting
-                    // entries from the font cache when it's not a data: URI
-                    // @font-face that came from UA or user sheets, since we
-                    // were not able to call IsFontLoadAllowed ahead of time
-                    // for these entries.
-                    if (currSrc.mUseOriginPrincipal && IgnorePrincipal(currSrc.mURI)) {
-                        set->AppendTask(PostTraversalTask::LoadFontEntry(this));
-                        SetLoadState(STATUS_LOAD_PENDING);
-                        return;
-                    }
+                    set->AppendTask(PostTraversalTask::LoadFontEntry(this));
+                    SetLoadState(STATUS_LOAD_PENDING);
+                    return;
                 }
 
                 gfxFontSrcPrincipal* principal = nullptr;
@@ -578,14 +565,6 @@ gfxUserFontEntry::DoLoadNextSrc(bool aForceAsync)
                             }
                             return;
                         }
-                    }
-
-                    if (ServoStyleSet* set = ServoStyleSet::Current()) {
-                        // If we need to start a font load and we're on a style
-                        // worker thread, we have to defer it.
-                        set->AppendTask(PostTraversalTask::LoadFontEntry(this));
-                        SetLoadState(STATUS_LOAD_PENDING);
-                        return;
                     }
 
                     // record the principal returned by CheckFontLoad,
@@ -1155,6 +1134,12 @@ gfxUserFontSet::UserFontCache::Flusher::Observe(nsISupports* aSubject,
     }
 
     return NS_OK;
+}
+
+static bool
+IgnorePrincipal(gfxFontSrcURI* aURI)
+{
+    return aURI->InheritsSecurityContext();
 }
 
 bool
