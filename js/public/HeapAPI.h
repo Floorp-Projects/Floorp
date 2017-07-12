@@ -67,7 +67,7 @@ static const uint32_t GRAY = 1;
 
 /*
  * Two bits determine the mark color as follows:
- *   BLACK_BIT   GRAY_OR_BLACK_BIT   color
+ *    BlackBit      GrayOrBlackBit   color
  *       0               0           white
  *       0               1           gray
  *       1               0           black
