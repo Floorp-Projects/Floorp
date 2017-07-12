@@ -1326,12 +1326,6 @@ FontFaceSet::LogMessage(gfxUserFontEntry* aUserFontEntry,
   return NS_OK;
 }
 
-nsIPrincipal*
-FontFaceSet::GetStandardFontLoadPrincipal()
-{
-  return mDocument->NodePrincipal();
-}
-
 nsresult
 FontFaceSet::CheckFontLoad(const gfxFontFaceSrc* aFontFaceSrc,
                            nsIPrincipal** aPrincipal,
@@ -1350,7 +1344,7 @@ FontFaceSet::CheckFontLoad(const gfxFontFaceSrc* aFontFaceSrc,
   // use document principal, original principal if flag set
   // this enables user stylesheets to load font files via
   // @font-face rules
-  *aPrincipal = GetStandardFontLoadPrincipal();
+  *aPrincipal = mDocument->NodePrincipal();
 
   NS_ASSERTION(aFontFaceSrc->mOriginPrincipal,
                "null origin principal in @font-face rule");
@@ -1801,15 +1795,6 @@ FontFaceSet::UserFontSet::CheckFontLoad(const gfxFontFaceSrc* aFontFaceSrc,
     return NS_ERROR_FAILURE;
   }
   return mFontFaceSet->CheckFontLoad(aFontFaceSrc, aPrincipal, aBypassCache);
-}
-
-/* virtual */ nsIPrincipal*
-FontFaceSet::UserFontSet::GetStandardFontLoadPrincipal()
-{
-  if (!mFontFaceSet) {
-    return nullptr;
-  }
-  return mFontFaceSet->GetStandardFontLoadPrincipal();
 }
 
 /* virtual */ bool
