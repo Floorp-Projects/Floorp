@@ -11,8 +11,6 @@
 #include "nsIStreamLoader.h"
 #include "nsIThreadRetargetableRequest.h"
 #include "nsIUnicodeDecoder.h"
-#include "nsIObserver.h"
-#include "nsWeakReference.h"
 
 #include "nsCharSeparatedTokenizer.h"
 #include "nsDOMString.h"
@@ -860,42 +858,26 @@ public:
 // In order to keep it alive all the time, we use a WorkerHolder, if created on
 // workers, plus a wrapper.
 template <class Derived>
-class FetchBodyWrapper final : public nsIObserver
-                             , public nsSupportsWeakReference
+class FetchBodyWrapper final
 {
 public:
   friend class ReleaseObjectHelper;
 
-  NS_DECL_THREADSAFE_ISUPPORTS
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(FetchBodyWrapper<Derived>)
 
   static already_AddRefed<FetchBodyWrapper<Derived>>
-  Create(FetchBody<Derived>* aBody, nsIGlobalObject* aOwner)
+  Create(FetchBody<Derived>* aBody)
   {
     MOZ_ASSERT(aBody);
 
     RefPtr<FetchBodyWrapper<Derived>> wrapper =
-      new FetchBodyWrapper<Derived>(aBody, aOwner);
+      new FetchBodyWrapper<Derived>(aBody);
 
     if (!NS_IsMainThread()) {
       WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();
       MOZ_ASSERT(workerPrivate);
 
       if (!wrapper->RegisterWorkerHolder(workerPrivate)) {
-        return nullptr;
-      }
-    } else {
-      nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
-      if (NS_WARN_IF(!os)) {
-        return nullptr;
-      }
-
-      nsresult rv = os->AddObserver(wrapper, DOM_WINDOW_DESTROYED_TOPIC, true);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return nullptr;
-      }
-
-      rv = os->AddObserver(wrapper, DOM_WINDOW_FROZEN_TOPIC, true);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
         return nullptr;
       }
     }
@@ -908,14 +890,6 @@ public:
   {
     AssertIsOnTargetThread();
 
-    if (NS_IsMainThread()) {
-      nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
-      if (os) {
-        os->RemoveObserver(this, DOM_WINDOW_DESTROYED_TOPIC);
-        os->RemoveObserver(this, DOM_WINDOW_FROZEN_TOPIC);
-      }
-    }
-
     mWorkerHolder = nullptr;
     mBody = nullptr;
   }
@@ -926,29 +900,10 @@ public:
     return mBody;
   }
 
-  NS_IMETHOD
-  Observe(nsISupports* aSubject, const char* aTopic,
-          const char16_t* aData) override
-  {
-    AssertIsOnMainThread();
-
-    MOZ_ASSERT((strcmp(aTopic, DOM_WINDOW_FROZEN_TOPIC) == 0) ||
-               (strcmp(aTopic, DOM_WINDOW_DESTROYED_TOPIC) == 0));
-
-    nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(mOwner);
-    if (SameCOMIdentity(aSubject, window)) {
-      mBody->ContinueConsumeBody(this, NS_BINDING_ABORTED, 0, nullptr);
-    }
-
-    return NS_OK;
-  }
-
 private:
-  explicit FetchBodyWrapper(FetchBody<Derived>* aBody,
-                            nsIGlobalObject* aOwner)
+  explicit FetchBodyWrapper(FetchBody<Derived>* aBody)
     : mTargetThread(NS_GetCurrentThread())
     , mBody(aBody)
-    , mOwner(aOwner)
   {}
 
   ~FetchBodyWrapper()
@@ -982,24 +937,12 @@ private:
 
   nsCOMPtr<nsIThread> mTargetThread;
   RefPtr<FetchBody<Derived>> mBody;
-  nsCOMPtr<nsIGlobalObject> mOwner;
 
   // Set when consuming the body is attempted on a worker.
   // Unset when consumption is done/aborted.
   // This WorkerHolder keeps alive the wrapper via a cycle.
   UniquePtr<workers::WorkerHolder> mWorkerHolder;
 };
-
-template <class Derived>
-NS_IMPL_ADDREF(FetchBodyWrapper<Derived>)
-
-template <class Derived>
-NS_IMPL_RELEASE(FetchBodyWrapper<Derived>)
-
-template <class Derived>
-NS_IMPL_QUERY_INTERFACE(FetchBodyWrapper<Derived>,
-                        nsIObserver,
-                        nsISupportsWeakReference)
 
 template <class Derived>
 bool
@@ -1355,7 +1298,7 @@ FetchBody<Derived>::BeginConsumeBody()
   // object able to keep the current worker alive (if we are running in a
   // worker).
   RefPtr<FetchBodyWrapper<Derived>> wrapper =
-    FetchBodyWrapper<Derived>::Create(this, mOwner);
+    FetchBodyWrapper<Derived>::Create(this);
   if (!wrapper) {
     return NS_ERROR_FAILURE;
   }
