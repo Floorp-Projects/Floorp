@@ -38,6 +38,7 @@ class FlexfecSender {
                 uint32_t ssrc,
                 uint32_t protected_media_ssrc,
                 const std::vector<RtpExtension>& rtp_header_extensions,
+                rtc::ArrayView<const RtpExtensionSize> extension_sizes,
                 Clock* clock);
   ~FlexfecSender();
 
@@ -79,6 +80,7 @@ class FlexfecSender {
   // Implementation.
   UlpfecGenerator ulpfec_generator_;
   const RtpHeaderExtensionMap rtp_header_extension_map_;
+  const size_t header_extensions_size_;
 };
 
 }  // namespace webrtc

@@ -291,7 +291,7 @@ bool RTPSenderVideo::SendVideo(RtpVideoCodecTypes video_type,
                                size_t payload_size,
                                const RTPFragmentationHeader* fragmentation,
                                const RTPVideoHeader* video_header,
-                               const char* rid) {
+                               const StreamId* rtpStreamId) {
   if (payload_size == 0)
     return false;
 
@@ -325,11 +325,8 @@ bool RTPSenderVideo::SendVideo(RtpVideoCodecTypes video_type,
         rtp_header->SetExtension<VideoOrientation>(current_rotation);
       last_rotation_ = current_rotation;
     }
-    if (rid && rid[0]) {
-      const size_t len = strlen(rid);
-      if (len) {
-        rtp_header->SetExtensionWithLength<StreamId>(len - 1, rid);
-      }
+    if (rtpStreamId && !rtpStreamId->empty()) {
+       rtp_header->SetExtension<RtpStreamId>(*rtpStreamId);
     }
 
     // FEC settings.
