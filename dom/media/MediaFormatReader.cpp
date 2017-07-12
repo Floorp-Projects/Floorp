@@ -1115,12 +1115,6 @@ MediaFormatReader::MediaFormatReader(MediaDecoderReaderInit& aInit,
 {
   MOZ_ASSERT(aDemuxer);
   MOZ_COUNT_CTOR(MediaFormatReader);
-
-  AbstractMediaDecoder* decoder = aInit.mDecoder;
-  if (decoder && decoder->CompositorUpdatedEvent()) {
-    mCompositorUpdatedListener = decoder->CompositorUpdatedEvent()->Connect(
-      mTaskQueue, this, &MediaFormatReader::NotifyCompositorUpdated);
-  }
   mOnTrackWaitingForKeyListener = OnTrackWaitingForKey().Connect(
     mTaskQueue, this, &MediaFormatReader::NotifyWaitingForKey);
 }
@@ -3115,6 +3109,14 @@ MediaFormatReader::SetVideoNullDecode(bool aIsNullDecode)
 {
   MOZ_ASSERT(OnTaskQueue());
   return SetNullDecode(TrackType::kVideoTrack, aIsNullDecode);
+}
+
+void
+MediaFormatReader::UpdateCompositor(
+  already_AddRefed<layers::KnowsCompositor> aCompositor)
+{
+  MOZ_ASSERT(OnTaskQueue());
+  mKnowsCompositor = aCompositor;
 }
 
 void
