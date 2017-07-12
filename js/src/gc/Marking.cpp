@@ -244,7 +244,7 @@ js::CheckTracedThing(JSTracer* trc, T* thing)
         MOZ_ASSERT_IF(gcMarker->shouldCheckCompartments(),
                       zone->isCollecting() || zone->isAtomsZone());
 
-        MOZ_ASSERT_IF(gcMarker->markColor() == GRAY,
+        MOZ_ASSERT_IF(gcMarker->markColor() == MarkColor::Gray,
                       !zone->isGCMarkingBlack() || zone->isAtomsZone());
 
         MOZ_ASSERT(!(zone->isGCSweeping() || zone->isGCFinished() || zone->isGCCompacting()));
@@ -295,17 +295,16 @@ ShouldTraceCrossCompartment(JSTracer* trc, JSObject* src, Cell* cell)
     if (!trc->isMarkingTracer())
         return true;
 
-    uint32_t color = GCMarker::fromTracer(trc)->markColor();
-    MOZ_ASSERT(color == BLACK || color == GRAY);
+    MarkColor color = GCMarker::fromTracer(trc)->markColor();
 
     if (!cell->isTenured()) {
-        MOZ_ASSERT(color == BLACK);
+        MOZ_ASSERT(color == MarkColor::Black);
         return false;
     }
     TenuredCell& tenured = cell->asTenured();
 
     JS::Zone* zone = tenured.zone();
-    if (color == BLACK) {
+    if (color == MarkColor::Black) {
         /*
          * Having black->gray edges violates our promise to the cycle
          * collector. This can happen if we're collecting a compartment and it
@@ -619,7 +618,7 @@ js::TraceProcessGlobalRoot(JSTracer* trc, T* thing, const char* name)
     // permanent atoms, so likewise require no subsquent marking.
     CheckTracedThing(trc, *ConvertToBase(&thing));
     if (trc->isMarkingTracer())
-        thing->markIfUnmarked(gc::BLACK);
+        thing->markIfUnmarked(gc::MarkColor::Black);
     else
         DoCallback(trc->asCallbackTracer(), ConvertToBase(&thing), name);
 }
@@ -983,7 +982,7 @@ js::GCMarker::mark(T* thing)
     MOZ_ASSERT(!IsInsideNursery(gc::TenuredCell::fromPointer(thing)));
     return gc::ParticipatesInCC<T>::value
            ? gc::TenuredCell::fromPointer(thing)->markIfUnmarked(markColor())
-           : gc::TenuredCell::fromPointer(thing)->markIfUnmarked(gc::BLACK);
+           : gc::TenuredCell::fromPointer(thing)->markIfUnmarked(gc::MarkColor::Black);
 }
 
 
@@ -1062,8 +1061,8 @@ Shape::traceChildren(JSTracer* trc)
 inline void
 js::GCMarker::eagerlyMarkChildren(Shape* shape)
 {
-    MOZ_ASSERT_IF(markColor() == GRAY, shape->isMarkedGray());
-    MOZ_ASSERT_IF(markColor() == BLACK, shape->isMarkedBlack());
+    MOZ_ASSERT_IF(markColor() == MarkColor::Gray, shape->isMarkedGray());
+    MOZ_ASSERT_IF(markColor() == MarkColor::Black, shape->isMarkedBlack());
 
     do {
         // Special case: if a base shape has a shape table then all its pointers
@@ -2343,7 +2342,7 @@ MarkStackIter::saveValueArray(NativeObject* obj, uintptr_t index, HeapSlot::Kind
 GCMarker::GCMarker(JSRuntime* rt)
   : JSTracer(rt, JSTracer::TracerKindTag::Marking, ExpandWeakMaps),
     stack(size_t(-1)),
-    color(BLACK),
+    color(MarkColor::Black),
     unmarkedArenaStackTop(nullptr)
 #ifdef DEBUG
   , markLaterArenas(0)
@@ -2366,7 +2365,7 @@ GCMarker::start()
     MOZ_ASSERT(!started);
     started = true;
 #endif
-    color = BLACK;
+    color = MarkColor::Black;
     linearWeakMarkingDisabled_ = false;
 
     MOZ_ASSERT(!unmarkedArenaStackTop);
@@ -2398,7 +2397,7 @@ GCMarker::stop()
 void
 GCMarker::reset()
 {
-    color = BLACK;
+    color = MarkColor::Black;
 
     stack.reset();
     MOZ_ASSERT(isMarkStackEmpty());
@@ -2440,8 +2439,8 @@ GCMarker::pushValueArray(JSObject* obj, HeapSlot* start, HeapSlot* end)
 void
 GCMarker::repush(JSObject* obj)
 {
-    MOZ_ASSERT_IF(markColor() == GRAY, gc::TenuredCell::fromPointer(obj)->isMarkedGray());
-    MOZ_ASSERT_IF(markColor() == BLACK, gc::TenuredCell::fromPointer(obj)->isMarkedBlack());
+    MOZ_ASSERT_IF(markColor() == MarkColor::Gray, gc::TenuredCell::fromPointer(obj)->isMarkedGray());
+    MOZ_ASSERT_IF(markColor() == MarkColor::Black, gc::TenuredCell::fromPointer(obj)->isMarkedBlack());
     pushTaggedPtr(obj);
 }
 
@@ -3465,14 +3464,14 @@ GetMarkWordAddress(Cell* cell)
 }
 
 uintptr_t
-GetMarkMask(Cell* cell, uint32_t color)
+GetMarkMask(Cell* cell, uint32_t colorBit)
 {
-    MOZ_ASSERT(color == 0 || color == 1);
+    MOZ_ASSERT(colorBit == 0 || colorBit == 1);
 
     if (!cell->isTenured())
         return 0;
 
-    ColorBit bit = color == 0 ? ColorBit::BlackBit : ColorBit::GrayOrBlackBit;
+    ColorBit bit = colorBit == 0 ? ColorBit::BlackBit : ColorBit::GrayOrBlackBit;
     uintptr_t* wordp;
     uintptr_t mask;
     js::gc::detail::GetGCThingMarkWordAndMask(uintptr_t(cell), bit, &wordp, &mask);
