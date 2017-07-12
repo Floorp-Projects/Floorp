@@ -8,7 +8,6 @@
 
 #include "gfxFont.h"
 #include "gfxFontFamilyList.h"
-#include "gfxFontSrcPrincipal.h"
 #include "gfxFontSrcURI.h"
 #include "nsRefPtrHashtable.h"
 #include "nsCOMPtr.h"
@@ -60,7 +59,7 @@ struct gfxFontFaceSrc {
     RefPtr<gfxFontSrcURI>  mURI;           // uri if url
     nsCOMPtr<nsIURI>       mReferrer;      // referrer url if url
     mozilla::net::ReferrerPolicy mReferrerPolicy;
-    RefPtr<gfxFontSrcPrincipal> mOriginPrincipal; // principal if url
+    nsCOMPtr<nsIPrincipal> mOriginPrincipal; // principal if url
 
     RefPtr<gfxFontFaceBufferSource> mBuffer;
 };
@@ -113,7 +112,7 @@ public:
 
     nsTArray<uint8_t> mMetadata;  // woff metadata block (compressed), if any
     RefPtr<gfxFontSrcURI>  mURI;       // URI of the source, if it was url()
-    RefPtr<gfxFontSrcPrincipal> mPrincipal; // principal for the download, if url()
+    nsCOMPtr<nsIPrincipal> mPrincipal; // principal for the download, if url()
     nsString          mLocalName; // font name used for the source, if local()
     nsString          mRealName;  // original fullname from the font resource
     uint32_t          mSrcIndex;  // index in the rule's source list
@@ -258,10 +257,10 @@ public:
     // returns the Principal (for use in the key when caching the loaded font),
     // and whether the load should bypass the cache (force-reload).
     virtual nsresult CheckFontLoad(const gfxFontFaceSrc* aFontFaceSrc,
-                                   gfxFontSrcPrincipal** aPrincipal,
+                                   nsIPrincipal** aPrincipal,
                                    bool* aBypassCache) = 0;
 
-    virtual gfxFontSrcPrincipal* GetStandardFontLoadPrincipal() = 0;
+    virtual nsIPrincipal* GetStandardFontLoadPrincipal() = 0;
 
     // check whether content policies allow the given URI to load.
     virtual bool IsFontLoadAllowed(nsIURI* aFontLocation,
@@ -304,7 +303,7 @@ public:
         // so we can avoid leaking fonts cached in private windows mode out to
         // normal windows.
         static gfxFontEntry* GetFont(gfxFontSrcURI* aSrcURI,
-                                     gfxFontSrcPrincipal* aPrincipal,
+                                     nsIPrincipal* aPrincipal,
                                      gfxUserFontEntry* aUserFontEntry,
                                      bool              aPrivate);
 
@@ -370,13 +369,13 @@ public:
         // entry and the corresponding "real" font entry.
         struct Key {
             RefPtr<gfxFontSrcURI>   mURI;
-            RefPtr<gfxFontSrcPrincipal> mPrincipal; // use nullptr with data: URLs
+            nsCOMPtr<nsIPrincipal>  mPrincipal; // use nullptr with data: URLs
             // The font entry MUST notify the cache when it is destroyed
             // (by calling ForgetFont()).
             gfxFontEntry* MOZ_NON_OWNING_REF mFontEntry;
             bool                    mPrivate;
 
-            Key(gfxFontSrcURI* aURI, gfxFontSrcPrincipal* aPrincipal,
+            Key(gfxFontSrcURI* aURI, nsIPrincipal* aPrincipal,
                 gfxFontEntry* aFontEntry, bool aPrivate)
                 : mURI(aURI),
                   mPrincipal(aPrincipal),
@@ -411,8 +410,10 @@ public:
             static KeyTypePointer KeyToPointer(KeyType aKey) { return &aKey; }
 
             static PLDHashNumber HashKey(const KeyTypePointer aKey) {
-                PLDHashNumber principalHash =
-                    aKey->mPrincipal ? aKey->mPrincipal->Hash() : 0;
+                uint32_t principalHash = 0;
+                if (aKey->mPrincipal) {
+                    aKey->mPrincipal->GetHashValue(&principalHash);
+                }
                 return mozilla::HashGeneric(principalHash + int(aKey->mPrivate),
                                             aKey->mURI->Hash(),
                                             HashFeatures(aKey->mFontEntry->mFeatureSettings),
@@ -426,7 +427,7 @@ public:
             enum { ALLOW_MEMMOVE = false };
 
             gfxFontSrcURI* GetURI() const { return mURI; }
-            gfxFontSrcPrincipal* GetPrincipal() const { return mPrincipal; }
+            nsIPrincipal* GetPrincipal() const { return mPrincipal; }
             gfxFontEntry* GetFontEntry() const { return mFontEntry; }
             bool IsPrivate() const { return mPrivate; }
 
@@ -464,7 +465,7 @@ public:
             nsDataHashtable<nsPtrHashKey<gfxUserFontSet>, bool> mAllowedFontSets;
 
             RefPtr<gfxFontSrcURI>  mURI;
-            RefPtr<gfxFontSrcPrincipal> mPrincipal; // or nullptr for data: URLs
+            nsCOMPtr<nsIPrincipal> mPrincipal; // or nullptr for data: URLs
 
             // The "real" font entry corresponding to this downloaded font.
             // The font entry MUST notify the cache when it is destroyed
@@ -628,7 +629,7 @@ public:
     // since we can't make that class a friend
     void SetLoader(nsFontFaceLoader* aLoader) { mLoader = aLoader; }
     nsFontFaceLoader* GetLoader() { return mLoader; }
-    gfxFontSrcPrincipal* GetPrincipal() { return mPrincipal; }
+    nsIPrincipal* GetPrincipal() { return mPrincipal; }
     uint32_t GetSrcIndex() { return mSrcIndex; }
     void GetFamilyNameAndURIForLogging(nsACString& aFamilyName,
                                        nsACString& aURI);
@@ -707,7 +708,7 @@ protected:
     // methods of nsFontFaceLoader this reference is nulled out.
     nsFontFaceLoader* MOZ_NON_OWNING_REF mLoader; // current loader for this entry, if any
     gfxUserFontSet*          mFontSet; // font-set which owns this userfont entry
-    RefPtr<gfxFontSrcPrincipal> mPrincipal;
+    nsCOMPtr<nsIPrincipal>   mPrincipal;
 };
 
 
