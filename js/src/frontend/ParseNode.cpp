@@ -413,7 +413,8 @@ PushNodeChildren(ParseNode* pn, NodeStack* stack)
       // statements in the catch block.
       case PNK_CATCH: {
         MOZ_ASSERT(pn->isArity(PN_TERNARY));
-        stack->push(pn->pn_kid1);
+        if (pn->pn_kid1)
+            stack->push(pn->pn_kid1);
         if (pn->pn_kid2)
             stack->push(pn->pn_kid2);
         stack->push(pn->pn_kid3);
