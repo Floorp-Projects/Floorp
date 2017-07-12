@@ -37,6 +37,7 @@
 #include "jsscriptinlines.h"
 
 #include "vm/NativeObject-inl.h"
+#include "vm/ReceiverGuard-inl.h"
 #include "vm/Stack-inl.h"
 #include "vm/String-inl.h"
 

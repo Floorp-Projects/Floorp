@@ -15,6 +15,7 @@
 
 #include "vm/EnvironmentObject-inl.h"
 #include "vm/ObjectGroup-inl.h"
+#include "vm/ReceiverGuard-inl.h"
 
 using namespace js;
 using namespace js::jit;
