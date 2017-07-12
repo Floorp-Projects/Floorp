@@ -101,15 +101,15 @@
 #   define NOIME
 #   define NOMCX
 #   include <windows.h>
-#   include "unicode\uloc.h"
+#   include "unicode/uloc.h"
 #if U_PLATFORM_HAS_WINUWP_API == 0
 #   include "wintz.h"
 #else // U_PLATFORM_HAS_WINUWP_API
 typedef PVOID LPMSG; // TODO: figure out how to get rid of this typedef
 #include <Windows.Globalization.h>
 #include <windows.system.userprofile.h>
-#include <wrl\wrappers\corewrappers.h>
-#include <wrl\client.h>
+#include <wrl/wrappers/corewrappers.h>
+#include <wrl/client.h>
 
 using namespace ABI::Windows::Foundation;
 using namespace Microsoft::WRL;
