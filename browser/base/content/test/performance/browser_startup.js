@@ -61,30 +61,17 @@ const startupPhases = {
   // before first paint and delayed it.
   "before first paint": {blacklist: {
     components: new Set([
-      "PageIconProtocolHandler.js",
-      "PlacesCategoriesStarter.js",
       "UnifiedComplete.js",
-      "nsPlacesExpiration.js",
       "nsSearchService.js",
     ]),
     modules: new Set([
-      "chrome://webcompat-reporter/content/TabListener.jsm",
       "resource:///modules/AboutNewTab.jsm",
       "resource:///modules/DirectoryLinksProvider.jsm",
-      "resource:///modules/RecentWindow.jsm",
-      "resource://gre/modules/BookmarkHTMLUtils.jsm",
-      "resource://gre/modules/Bookmarks.jsm",
-      "resource://gre/modules/ContextualIdentityService.jsm",
       "resource://gre/modules/NewTabUtils.jsm",
       "resource://gre/modules/PageThumbs.jsm",
-      "resource://gre/modules/PlacesSyncUtils.jsm",
-      "resource://gre/modules/Promise.jsm",
-      "resource://gre/modules/Sqlite.jsm",
+      "resource://gre/modules/Promise.jsm", // imported by devtools during _delayedStartup
     ]),
     services: new Set([
-      "@mozilla.org/browser/annotation-service;1",
-      "@mozilla.org/browser/favicon-service;1",
-      "@mozilla.org/browser/nav-bookmarks-service;1",
       "@mozilla.org/browser/search-service;1",
     ])
   }},
@@ -93,23 +80,52 @@ const startupPhases = {
   // Anything loaded at this phase or before gets in the way of the user
   // interacting with the first browser window.
   "before handling user events": {blacklist: {
+    components: new Set([
+      "PageIconProtocolHandler.js",
+      "PlacesCategoriesStarter.js",
+      "nsPlacesExpiration.js",
+    ]),
     modules: new Set([
+      "chrome://webcompat-reporter/content/TabListener.jsm",
+      "chrome://webcompat-reporter/content/WebCompatReporter.jsm",
+      "resource:///modules/RecentWindow.jsm",
+      "resource://gre/modules/BookmarkHTMLUtils.jsm",
+      "resource://gre/modules/Bookmarks.jsm",
+      "resource://gre/modules/ContextualIdentityService.jsm",
       "resource://gre/modules/FxAccounts.jsm",
       "resource://gre/modules/FxAccountsStorage.jsm",
+      "resource://gre/modules/PlacesSyncUtils.jsm",
+      "resource://gre/modules/Sqlite.jsm",
+    ]),
+    services: new Set([
+      "@mozilla.org/browser/annotation-service;1",
+      "@mozilla.org/browser/favicon-service;1",
+      "@mozilla.org/browser/nav-bookmarks-service;1",
+    ])
+  }},
+
+  // Things that are expected to be completely out of the startup path
+  // and loaded lazily when used for the first time by the user should
+  // be blacklisted here.
+  "before becoming idle": {blacklist: {
+    modules: new Set([
       "resource://gre/modules/LoginManagerContextMenu.jsm",
       "resource://gre/modules/Task.jsm",
     ]),
   }},
 };
 
-function test() {
+add_task(async function() {
   if (!AppConstants.NIGHTLY_BUILD && !AppConstants.DEBUG) {
     ok(!("@mozilla.org/test/startuprecorder;1" in Cc),
        "the startup recorder component shouldn't exist in this non-nightly non-debug build.");
     return;
   }
 
-  let data = Cc["@mozilla.org/test/startuprecorder;1"].getService().wrappedJSObject.data.code;
+  let startupRecorder = Cc["@mozilla.org/test/startuprecorder;1"].getService().wrappedJSObject;
+  await startupRecorder.done;
+
+  let data = startupRecorder.data.code;
   // Keep only the file name for components, as the path is an absolute file
   // URL rather than a resource:// URL like for modules.
   for (let phase in data) {
@@ -167,4 +183,4 @@ function test() {
       }
     }
   }
-}
+});
