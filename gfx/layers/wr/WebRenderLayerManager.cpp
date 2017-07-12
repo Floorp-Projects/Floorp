@@ -520,7 +520,7 @@ WebRenderLayerManager::EndTransactionInternal(DrawPaintedLayerCallback aCallback
   }
 
   bool sync = mTarget != nullptr;
-  mLatestTransactionId = mTransactionIdAllocator->GetTransactionId();
+  mLatestTransactionId = mTransactionIdAllocator->GetTransactionId(/*aThrottle*/ true);
 
   {
     AutoProfilerTracing
