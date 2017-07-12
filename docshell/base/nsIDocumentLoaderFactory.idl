@@ -24,12 +24,19 @@ interface nsIPrincipal;
 
 [scriptable, uuid(e795239e-9d3c-47c4-b063-9e600fb3b287)]
 interface nsIDocumentLoaderFactory : nsISupports {
+    // StyleBackendType is used to choose the style backend type for the created
+    // document. Use STYLE_BACKEND_TYPE_NONE as the default.
+    const short STYLE_BACKEND_TYPE_NONE  = 0;
+    const short STYLE_BACKEND_TYPE_GECKO = 1;
+    const short STYLE_BACKEND_TYPE_SERVO = 2;
+
     nsIContentViewer createInstance(in string aCommand,
                               in nsIChannel aChannel,
                               in nsILoadGroup aLoadGroup,
                               in ACString aContentType, 
                               in nsIDocShell aContainer,
                               in nsISupports aExtraInfo,
+                              in short aStyleBackendType,
                               out nsIStreamListener aDocListenerResult);
 
     nsIContentViewer createInstanceForDocument(in nsISupports aContainer,
