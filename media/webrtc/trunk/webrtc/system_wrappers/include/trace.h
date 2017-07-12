@@ -60,7 +60,7 @@ class Trace {
   static void set_aec_debug_size(uint32_t size) { aec_debug_size_ = size; }
   static bool aec_debug() { return aec_debug_; }
   static uint32_t aec_debug_size() { return aec_debug_size_; }
-  static void aec_debug_filename(char *buffer, size_t size);
+  static std::string aec_debug_filename();
   static void set_aec_debug_filename(const char* filename) {
     aec_filename_base_ = filename;
   }
@@ -97,13 +97,6 @@ class Trace {
   static uint32_t aec_debug_size_;
   static std::string aec_filename_base_;
 };
-
-extern "C" {
-  extern int AECDebug();
-  extern uint32_t AECDebugMaxSize();
-  extern void AECDebugEnable(uint32_t enable);
-  extern void AECDebugFilenameBase(char *buffer, size_t size);
-}
 
 }  // namespace webrtc
 
