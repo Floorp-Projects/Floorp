@@ -40,6 +40,7 @@ ServoStyleSet::ServoStyleSet()
   , mAuthorStyleDisabled(false)
   , mStylistState(StylistState::NotDirty)
   , mUserFontSetUpdateGeneration(0)
+  , mUserFontCacheUpdateGeneration(0)
   , mNeedsRestyleAfterEnsureUniqueInner(false)
 {
 }
@@ -298,12 +299,20 @@ ServoStyleSet::PreTraverseSync()
   // it so force computation early.
   mPresContext->Document()->GetDocumentState();
 
-  // Ensure that the @font-face data is not stale
   if (gfxUserFontSet* userFontSet = mPresContext->Document()->GetUserFontSet()) {
+    // Ensure that the @font-face data is not stale
     uint64_t generation = userFontSet->GetGeneration();
     if (generation != mUserFontSetUpdateGeneration) {
       mPresContext->DeviceContext()->UpdateFontCacheUserFonts(userFontSet);
       mUserFontSetUpdateGeneration = generation;
+    }
+
+    // Ensure that the user font cache holds up-to-date data on whether
+    // our font set is allowed to re-use fonts from the cache.
+    uint32_t cacheGeneration = gfxUserFontSet::UserFontCache::Generation();
+    if (cacheGeneration != mUserFontCacheUpdateGeneration) {
+      gfxUserFontSet::UserFontCache::UpdateAllowedFontSets(userFontSet);
+      mUserFontCacheUpdateGeneration = cacheGeneration;
     }
   }
 
