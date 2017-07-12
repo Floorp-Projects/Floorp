@@ -1,4 +1,4 @@
-skip pref(dom.animations-api.core.enabled,true) load 1239889-1.html
+pref(dom.animations-api.core.enabled,true) load 1239889-1.html
 pref(dom.animations-api.core.enabled,true) load 1244595-1.html
 pref(dom.animations-api.core.enabled,true) load 1216842-1.html
 pref(dom.animations-api.core.enabled,true) load 1216842-2.html
