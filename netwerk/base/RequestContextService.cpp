@@ -12,12 +12,17 @@
 #include "RequestContextService.h"
 
 #include "mozilla/Atomics.h"
+#include "mozilla/Logging.h"
 #include "mozilla/Services.h"
 
 #include "mozilla/net/PSpdyPush.h"
 
 namespace mozilla {
 namespace net {
+
+LazyLogModule gRequestContextLog("RequestContext");
+#undef LOG
+#define LOG(args) MOZ_LOG(gRequestContextLog, LogLevel::Info, args)
 
 // nsIRequestContext
 class RequestContext final : public nsIRequestContext
@@ -42,10 +47,13 @@ RequestContext::RequestContext(const uint64_t aID)
   : mID(aID)
   , mBlockingTransactionCount(0)
 {
+  LOG(("RequestContext::RequestContext this=%p id=%" PRIx64, this, mID));
 }
 
 RequestContext::~RequestContext()
 {
+  LOG(("RequestContext::~RequestContext this=%p blockers=%u",
+       this, static_cast<uint32_t>(mBlockingTransactionCount)));
 }
 
 NS_IMETHODIMP
@@ -60,6 +68,8 @@ NS_IMETHODIMP
 RequestContext::AddBlockingTransaction()
 {
   mBlockingTransactionCount++;
+  LOG(("RequestContext::AddBlockingTransaction this=%p blockers=%u",
+       this, static_cast<uint32_t>(mBlockingTransactionCount)));
   return NS_OK;
 }
 
@@ -68,6 +78,8 @@ RequestContext::RemoveBlockingTransaction(uint32_t *outval)
 {
   NS_ENSURE_ARG_POINTER(outval);
   mBlockingTransactionCount--;
+  LOG(("RequestContext::RemoveBlockingTransaction this=%p blockers=%u",
+       this, static_cast<uint32_t>(mBlockingTransactionCount)));
   *outval = mBlockingTransactionCount;
   return NS_OK;
 }
@@ -220,3 +232,5 @@ RequestContextService::Observe(nsISupports *subject, const char *topic,
 
 } // ::mozilla::net
 } // ::mozilla
+
+#undef LOG

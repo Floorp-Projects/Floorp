@@ -106,6 +106,8 @@ Http2Stream::~Http2Stream()
 {
   ClearTransactionsBlockedOnTunnel();
   mStreamID = Http2Session::kDeadStreamID;
+
+  LOG3(("Http2Stream::~Http2Stream %p", this));
 }
 
 // ReadSegments() is used to write data down the socket. Generally, HTTP
