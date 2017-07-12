@@ -212,6 +212,9 @@ public:
   // Resume audio playback.
   void Resume();
 
+  // Reset stream to default device.
+  void ResetDefaultDevice();
+
   // Return the position in microseconds of the audio frame being played by
   // the audio hardware, compensated for playback rate change. Thread-safe.
   int64_t GetPosition();
