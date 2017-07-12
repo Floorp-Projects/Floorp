@@ -42,8 +42,7 @@ public class GeckoHLSResourceWrapper {
 
         mPlayer = GeckoPlayerFactory.getPlayer();
         try {
-            mPlayer.addResourceWrapperCallbackListener(callback);
-            mPlayer.init(url);
+            mPlayer.init(url, callback);
         } catch (Exception e) {
             Log.e(LOGTAG, "Failed to create GeckoHlsResourceWrapper !", e);
             callback.onError(BaseHlsPlayer.ResourceError.UNKNOWN.code());
