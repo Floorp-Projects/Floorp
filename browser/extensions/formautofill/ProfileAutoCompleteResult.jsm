@@ -43,6 +43,7 @@ this.ProfileAutoCompleteResult = function(searchString,
     primary: "",
     secondary: "",
     categories: FormAutofillUtils.getCategoriesFromFieldNames(allFieldNames),
+    focusedCategory: FormAutofillUtils.getCategoryFromFieldName(focusedFieldName),
   });
 };
 
