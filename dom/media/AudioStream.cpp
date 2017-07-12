@@ -474,6 +474,16 @@ AudioStream::Shutdown()
   mState = SHUTDOWN;
 }
 
+void
+AudioStream::ResetDefaultDevice()
+{
+  MonitorAutoLock mon(mMonitor);
+  auto r = InvokeCubeb(cubeb_stream_reset_default_device);
+  if (!(r == CUBEB_OK || r == CUBEB_ERROR_NOT_SUPPORTED)) {
+    mState = ERRORED;
+  }
+}
+
 int64_t
 AudioStream::GetPosition()
 {
