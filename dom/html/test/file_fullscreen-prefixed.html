@@ -103,7 +103,7 @@ class TestCase {
         }
       };
       this.changeListeners("add", eventType, handleEvent);
-      actionCallback();
+      SimpleTest.waitForFocus(() => actionCallback());
     });
   }
 

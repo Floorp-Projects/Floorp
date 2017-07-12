@@ -305,7 +305,7 @@ function testNamespaces(followupTestFn) {
       });
     }
 
-    elem.requestFullscreen();
+    SimpleTest.waitForFocus(() => elem.requestFullscreen());
   }
 
   runNextNamespaceTest();
