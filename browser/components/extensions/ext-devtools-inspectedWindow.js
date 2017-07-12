@@ -4,16 +4,15 @@
 
 /* global getDevToolsTargetForContext */
 
+XPCOMUtils.defineLazyModuleGetter(this, "DevToolsShim",
+                                  "chrome://devtools-shim/content/DevToolsShim.jsm");
+
 var {
   SpreadArgs,
 } = ExtensionCommon;
 
 this.devtools_inspectedWindow = class extends ExtensionAPI {
   getAPI(context) {
-    const {
-      WebExtensionInspectedWindowFront,
-    } = require("devtools/shared/fronts/webextension-inspected-window");
-
     // Lazily retrieve and store an inspectedWindow actor front per child context.
     let waitForInspectedWindowFront;
     async function getInspectedWindowFront() {
@@ -22,7 +21,7 @@ this.devtools_inspectedWindow = class extends ExtensionAPI {
       // because the first time that the target has been cloned, it is not ready to be used to create
       // the front instance until it is connected to the remote debugger successfully).
       const clonedTarget = await getDevToolsTargetForContext(context);
-      return new WebExtensionInspectedWindowFront(clonedTarget.client, clonedTarget.form);
+      return DevToolsShim.createWebExtensionInspectedWindowFront(clonedTarget);
     }
 
     function getToolboxOptions() {
