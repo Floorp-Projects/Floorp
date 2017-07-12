@@ -8,7 +8,8 @@ import json
 import os
 import unittest
 
-from .. import files_changed
+from taskgraph import files_changed
+from mozunit import main
 
 PARAMS = {
     'head_repository': 'https://hg.mozilla.org/mozilla-central',
@@ -71,3 +72,7 @@ class TestCheck(unittest.TestCase):
 
     def test_check_match(self):
         self.assertTrue(files_changed.check(PARAMS, ["devtools/**"]))
+
+
+if __name__ == '__main__':
+    main()
