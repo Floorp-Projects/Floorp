@@ -3459,10 +3459,12 @@ BytecodeEmitter::checkSideEffects(ParseNode* pn, bool* answer)
 
       case PNK_CATCH:
         MOZ_ASSERT(pn->isArity(PN_TERNARY));
-        if (!checkSideEffects(pn->pn_kid1, answer))
-            return false;
-        if (*answer)
-            return true;
+        if (ParseNode* name = pn->pn_kid1) {
+            if (!checkSideEffects(name, answer))
+                return false;
+            if (*answer)
+                return true;
+        }
         if (ParseNode* cond = pn->pn_kid2) {
             if (!checkSideEffects(cond, answer))
                 return false;
@@ -6660,24 +6662,30 @@ BytecodeEmitter::emitCatch(ParseNode* pn)
         return false;
 
     ParseNode* pn2 = pn->pn_kid1;
-    switch (pn2->getKind()) {
-      case PNK_ARRAY:
-      case PNK_OBJECT:
-        if (!emitDestructuringOps(pn2, DestructuringDeclaration))
-            return false;
+    if (!pn2) {
+        // Catch parameter was omitted; just discard the exception.
         if (!emit1(JSOP_POP))
             return false;
-        break;
+    } else {
+        switch (pn2->getKind()) {
+          case PNK_ARRAY:
+          case PNK_OBJECT:
+            if (!emitDestructuringOps(pn2, DestructuringDeclaration))
+                return false;
+            if (!emit1(JSOP_POP))
+                return false;
+            break;
 
-      case PNK_NAME:
-        if (!emitLexicalInitialization(pn2))
-            return false;
-        if (!emit1(JSOP_POP))
-            return false;
-        break;
+          case PNK_NAME:
+            if (!emitLexicalInitialization(pn2))
+                return false;
+            if (!emit1(JSOP_POP))
+                return false;
+            break;
 
-      default:
-        MOZ_ASSERT(0);
+          default:
+            MOZ_ASSERT(0);
+        }
     }
 
     // If there is a guard expression, emit it and arrange to jump to the next
@@ -6921,7 +6929,9 @@ BytecodeEmitter::emitLexicalScope(ParseNode* pn)
     EmitterScope emitterScope(this);
     ScopeKind kind;
     if (body->isKind(PNK_CATCH))
-        kind = body->pn_kid1->isKind(PNK_NAME) ? ScopeKind::SimpleCatch : ScopeKind::Catch;
+        kind = (!body->pn_kid1 || body->pn_kid1->isKind(PNK_NAME))
+               ? ScopeKind::SimpleCatch
+               : ScopeKind::Catch;
     else
         kind = ScopeKind::Lexical;
 
